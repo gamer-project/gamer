@@ -1,0 +1,20 @@
+#!/bin/bash
+
+#PBS -N GAMER 
+#PBS -M hyschive@ntu.edu.tw
+#PBS -m abe
+#PBS -q workq
+#PBS -k n
+#PBS -l walltime=720:00:00
+#PBS -l nodes=16:ppn=6
+##PBS -o stdout
+##PBS -e stderr
+##PBS -W depend=afterok:JOB_ID
+
+cd $PBS_O_WORKDIR
+
+# for openmpi-1.6.0
+#mpirun -np 32 -npernode 2 ./Dizzy 1>>stdout 2>>stderr
+
+# for openmpi-1.4.3-qlc
+mpirun -np 32 -npernode 2 -hostfile $PBS_NODEFILE -bind-to-socket ./Dizzy 1>>stdout 2>>stderr

@@ -1,0 +1,86 @@
+#include "Copyright.h"
+#include "GAMER.h"
+
+
+
+
+//-------------------------------------------------------------------------------------------------------
+// Function    :  Aux_RecordCorrUnphy
+// Description :  Record the number of cells corrected by the option "OPT__CORR_UNPHY"
+//
+// Note        :  1. The number of corrected cells is recorded in NCorrUnphy in the file "Flu_Close.cpp"
+//                2. The total number of cell updates recorded here for individual time-step integration is
+//                    only approximate since it can change during one global time-step
+//-------------------------------------------------------------------------------------------------------
+void Aux_RecordCorrUnphy()
+{
+
+   const char FileName[] = "Record__NCorrUnphy";
+   static bool FirstTime = true;
+
+   long NCorrAllRank[NLEVEL];
+   FILE *File = NULL;
+
+
+// collect data from all ranks
+   MPI_Reduce( NCorrUnphy, NCorrAllRank, NLEVEL, MPI_LONG, MPI_SUM, 0, MPI_COMM_WORLD );
+
+
+// only rank 0 needs to take a note
+   if ( MPI_Rank == 0 )
+   {
+//    header
+      if ( FirstTime )
+      {
+         if ( Aux_CheckFileExist(FileName) )
+            Aux_Message( stderr, "WARNING : file \"%s\" already exists !!\n", FileName );
+
+         FirstTime = false;
+
+         File = fopen( FileName, "a" );
+
+         fprintf( File, "#%13s %9s %10s", "Time", "Step", "NCorrAllLv" );
+         for (int lv=0; lv<NLEVEL; lv++)  fprintf( File, "%16s %2d ", "Level", lv );
+
+         fprintf( File, "\n" );
+
+         fclose( File );
+      }
+
+
+//    count the total number of cells and cell updates
+      long   NCorrAllLv=0, NUpdate;
+      double Frac;
+
+      for (int lv=0; lv<NLEVEL; lv++)  NCorrAllLv += NCorrAllRank[lv];
+
+      File = fopen( FileName, "a" );
+
+      fprintf( File, "%14.7e %9ld %10ld", Time[0], Step, NCorrAllLv );
+
+      for (int lv=0; lv<NLEVEL; lv++)
+      {
+         NUpdate = NPatchTotal[lv]*CUBE( PATCH_SIZE );
+#        ifdef INDIVIDUAL_TIMESTEP
+         NUpdate = NUpdate*(1<<(lv+1));
+#        endif
+
+         if ( NUpdate == 0 )     Frac = 0.0;
+         else                    Frac = 100.0 * NCorrAllRank[lv] / NUpdate;
+
+         fprintf( File, " %8ld(%8.2e%%)", NCorrAllRank[lv], Frac );
+      }
+
+      fprintf( File, "\n" );
+
+      fclose( File );
+
+   } // if ( MPI_Rank == 0 )
+
+
+// reset the counter
+   for (int lv=0; lv<NLEVEL; lv++)  NCorrUnphy[lv] = 0;
+
+} // FUNCTION : Aux_RecordCorrUnphy
+
+

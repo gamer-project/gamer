@@ -1,0 +1,7 @@
+# parameters for the two particles force test
+1           TwoParAcc_Mode          #1/2/3 : 3D test/1D test/1D self-force test
+123         TwoParAcc_RSeed         #random seed for setting particle position
+-1          TwoParAcc_NTest         #number of tests (<=0: default)
+-1.0        TwoParAcc_MinR          #minimum distance between two particles (<=0: default = 0.1*dh[0])
+-1.0        TwoParAcc_MaxR          #maximum distance between two particles (<=0: default = 1.5*PatchSize*dh[0])
+-1          TwoParAcc_LogSample     #(1/0/-1) --> evenly sample in (log/linear/default) scale

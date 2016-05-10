@@ -1,0 +1,6 @@
+# parameters for the HYDRO Jeans instability test
+1.0e-6      Jeans_RhoAmp            # amplitude of the density perturbation (assuming background density = 1.0)
+1.0         Jeans_Cs                # sound speed
+0.0         Jeans_v0                # background velocity
++1          Jeans_Sign              # (>0/<0) -> (stable:right/left-moving wave; unstable:growing/decaying wave) 
+0.2         Jeans_Phase0            # initial phase shift

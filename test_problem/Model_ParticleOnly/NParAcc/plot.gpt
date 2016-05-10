@@ -1,0 +1,28 @@
+#
+
+reset
+
+set key top left
+set log x
+
+F='Record__NParAcc'
+dh0=0.00781250
+dh1=0.5*dh0
+dh2=0.5*dh1
+
+# plot numerical vs. direct-N
+set xlabel 'r [in base-level cell]'
+set ylabel 'F_{numerical} / F_{direct-N}'
+plot F u ($6/dh0):(abs($15/$16)) w p pt 6 ps 0.4 lc 6 tit 'Absolute' \
+    ,F u ($6/dh0):(abs($10/$11)) w p pt 2 ps 0.2 lc 7 tit 'Radial' \
+    ,1 lc -1 notit
+
+pause mouse
+
+
+# plot numerical vs. model density profile
+set ylabel 'F_{numerical} / F_{profile}'
+plot F u ($6/dh0):(abs($15/$12)) w p pt 6 ps 0.4 lc 6 tit 'Absolute' \
+    ,F u ($6/dh0):(abs($10/$12)) w p pt 2 ps 0.2 lc 7 tit 'Radial' \
+
+pause -1

@@ -1,0 +1,19 @@
+#!/bin/bash
+#PBS -N SphereAnalysis
+#PBS -M hyschive@ntu.edu.tw
+#PBS -m abe
+#PBS -k oe
+#PBS -q workq
+#PBS -l walltime=720:00:00
+#PBS -l nodes=1:ppn=6
+##PBS -W depend=afterok:JOB_ID
+##PBS -W depend=afterany:JOB_ID
+
+cd $PBS_O_WORKDIR
+
+FILE_IN=??
+START_ID=??
+END_ID=??
+DELTA_ID=1
+
+source MultiFiles__GAMER_SphereAnalysis.sh $FILE_IN $START_ID $END_ID $DELTA_ID 1>stdout 2>stderr

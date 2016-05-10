@@ -1,0 +1,24 @@
+#
+
+reset
+
+set key bottom
+set xrange [0.1:30]
+#set yrange [0.8:1.3]
+
+dh0=0.00781250
+dh1=0.5*dh0
+dh2=0.5*dh1
+
+#for test 1/2
+set log x
+set xlabel 'r'
+set ylabel 'F_{num} / F_{ana}'
+plot 'Record__TwoParAcc' u ($8/dh1):21 w p notit
+
+# for test 3
+#set xlabel 'r'
+#set ylabel 'F_{num}'
+#plot 'Record__TwoParAcc' u ($8/dh1):18 w p notit
+
+pause -1

@@ -1,0 +1,9 @@
+# parameters for the HYDRO Riemann problem test
+0           Riemann_Prob            # target Riemann problem (0 : Sod's shock tube
+                                    #                         1 : strong shock
+                                    #                         2 : two shocks
+                                    #                         3 : Einfeldt's 1-2-0-3
+                                    #                         4 : Einfeldt's 1-1-2-5
+                                    #                         5 : sonic rarefaction wave
++1          Riemann_LR              # wave propagation direction (>0/<0 --> positive/negative direction)
+0           Riemann_XYZ             # wave propagation direction (0/1/2 --> x/y/z)

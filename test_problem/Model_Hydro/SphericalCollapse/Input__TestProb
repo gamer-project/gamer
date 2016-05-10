@@ -1,0 +1,8 @@
+# parameters for the HYDRO blast wave test
+1.0         SCollapse_Dens_Bg          # background mass density
+1.0e-2      SCollapse_Dens_Delta       # top-hat mass density --> total density = Dens_Bg*( 1 + Dens_Delta )
+1.0e-08     SCollapse_Engy_Bg          # background energy density
+1.0e-1      SCollapse_Radius           # top-hat radius
+-1.0        SCollapse_Center[x]        # top-hat center x (<0 -> default = box center)
+-1.0        SCollapse_Center[y]        # top-hat center y (<0 -> default = box center)
+-1.0        SCollapse_Center[z]        # top-hat center z (<0 -> default = box center)

@@ -1,0 +1,10 @@
+# parameters for the N particles force test
+1           NParAcc_Mode         #1/2/3 : Plummer/Burkert/NFW
+123         NParAcc_RSeed        #random seed for setting particle position
+-1.0        NParAcc_MaxR         #maximum distance from the origin (<=0: default = 0.5*BoxSize - PatchSize*2*dh[0])
+-1.0        NParAcc_Rho0         #density parameter in the assumed density profile (<=0: default = 1.0)
+-1.0        NParAcc_R0           #scale radius in the assumed density profile (<=0: default = PatchSize*dh[0])
+-1          NParAcc_NBinR        #number of radial bins in the mass profile table (<=1: default = 1000)
+1           NParAcc_ComprDirN    #0/1 : (not) calculate the direct N-body acceleration for comparison
+2           NParAcc_AddSoft      #0/1/2: no soften / (e^2+r^2)^(3/2) / (e^5+r^5)^(5/3)
+-1          NParAcc_Soft         #soften legnth (<0.0: default = 1.40*dh[MaxLv])

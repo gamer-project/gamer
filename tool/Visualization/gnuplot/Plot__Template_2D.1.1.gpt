@@ -1,0 +1,104 @@
+# -----------------------------------------------------------
+# GNUPLOT template 2D v1.0
+# -----------------------------------------------------------
+
+
+reset
+
+
+# target files
+# -----------------------------------------------------------
+FILE_IN_PREFIX  = 'InputFile'
+FILE_IN_SUFFIX  = ''
+FILE_OUT_PREFIX = 'Fig__XXX'
+START_ID        = 9
+END_ID          = 9
+DELTA_ID        = 1
+PAUSE           = 0.5   # <= 0.0 --> mouse
+
+
+# dimensions and coordinates of the input array
+# -----------------------------------------------------------
+DIM_X          = 512          # array size x
+DIM_Y          = 2560         # array size y
+DH             = 100.0/2560   # grid size
+CORNER_X       = 0.0          # corner coordinate x
+CORNER_Y       = 0.0          # corner coordinate y
+
+
+# terminal
+# -----------------------------------------------------------
+ set term x11 enhanced
+#set term png enhanced crop size 1280,800
+#set term postscript eps enhanced color 'Helvetica' 16
+
+
+# plot style
+# -----------------------------------------------------------
+ set palette @MATLAB
+#set key reverse Left spacing 2 right
+ set xlabel 'x'
+ set ylabel 'y'
+#set format x  '10^{%T}'
+#set format y  '10^{%T}'
+ set size ratio -1
+ set xrange  [CORNER_X:CORNER_X+DIM_X*DH]
+ set yrange  [CORNER_Y:CORNER_Y+DIM_Y*DH]
+
+
+# log scale plot
+# -----------------------------------------------------------
+#set log cb
+#set format cb '10^{%T}'
+#set cbrange [XX:XX]
+
+
+# set the output file extension automatically
+# -----------------------------------------------------------
+if      ( GPVAL_TERM eq 'pngcairo'   ) FILE_OUT_EXT='png'; \
+else if ( GPVAL_TERM eq 'postscript' ) FILE_OUT_EXT='eps'; \
+else if ( GPVAL_TERM ne 'x11'        ) print 'Unkown terminal for settting the output file extension !!'; quit
+
+
+
+# loop over all files
+# -----------------------------------------------------------
+print 'Start plotting ...'
+
+do for [ID=START_ID:END_ID:DELTA_ID] {
+
+#  set the input and output filenames
+   ID1     = ID%10
+   ID2     = (ID%100)/10 
+   ID3     = (ID%1000)/100
+   ID4     = ID/1000
+   FILE_IN = sprintf( '%s_00%d%d%d%d%s', FILE_IN_PREFIX, ID4, ID3, ID2, ID1, FILE_IN_SUFFIX )
+
+   if ( GPVAL_TERM ne 'x11' ) { set output sprintf( '%s_00%d%d%d%d.%s', FILE_OUT_PREFIX, ID4, ID3, ID2, ID1, FILE_OUT_EXT ) }
+
+
+#  load the physical time
+   DUMP_TABLE = './Record__Dump'
+   NHEADER      = 1
+   LOAD_TIME    = sprintf( "awk '{if(NR==%d+%d) {print $2}}' %s", NHEADER, ID+1, DUMP_TABLE )
+   TIME         = system( LOAD_TIME )*1.0    # *1.0 --> convert string to number
+
+
+#  set title
+   set title sprintf( 'DataID %d%d%d%d (t = %5.2f)', ID4, ID3, ID2, ID1, TIME )
+   print sprintf( '   Plotting DataID %d%d%d%d (t = %5.2f) ...', ID4, ID3, ID2, ID1, TIME )
+
+
+#  plot
+   plot FILE_IN binary array=(DIM_X,DIM_Y) dx=DH origin=(CORNER_X+0.5*DH,CORNER_Y+0.5*DH) w image notitle
+
+
+   if ( GPVAL_TERM eq 'x11' ) { if ( PAUSE <= 0.0 ) { pause mouse }   else { pause PAUSE } };
+
+} #do for [ID=START_ID:END_ID:DELTA_ID] 
+
+
+print 'Done';
+if ( GPVAL_TERM eq 'x11' ) { pause -1 };
+
+

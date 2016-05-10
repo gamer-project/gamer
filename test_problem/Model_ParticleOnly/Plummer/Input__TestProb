@@ -1,0 +1,6 @@
+# parameters for the Plummer model test
+123         Plummer_RSeed        #random seed for setting particle position and velocity
+-1.0        Plummer_MaxR         #maximum distance from the origin (<=0: default = 0.375)
+-1.0        Plummer_Rho0         #peak density (<=0: default = 1.0)
+-1.0        Plummer_R0           #scale radius (<=0: default = 0.1)
+-1          Plummer_NBinR        #number of radial bins in the mass profile table (<=1: default = 1000)

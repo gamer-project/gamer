@@ -1,0 +1,8 @@
+set size ratio -1
+
+ID0=0
+ID1=242
+
+plot [0:1] [0:1] for [t=ID0:ID1] 'Particle_00'.(t/1000).(t%1000/100).(t%100/10).(t%10) u 3:4 w p notitle
+
+pause -1

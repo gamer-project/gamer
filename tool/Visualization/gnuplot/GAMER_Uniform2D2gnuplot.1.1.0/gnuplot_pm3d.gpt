@@ -1,0 +1,38 @@
+#
+
+reset
+
+#FILE_IN  = XXX
+#FILE_OUT = XXX
+#GPT_TERM = XXX
+
+set term    `echo $GPT_TERM`
+set output "`echo $FILE_OUT`"
+set title  "`echo $FILE_OUT`"
+
+set pm3d map
+#set pm3d corners2color c1
+#set pm3d corners2color mean
+set pm3d corners2color max
+#set contour base
+#set palette rgbformulae 7,5,15
+set palette rgbformulae 21,22,23
+#set palette negative
+
+#set xrange [0:992]
+#set yrange [0:2016]
+#set zrange [min:max]
+#set cbrange [min:max]
+#set size square
+set size ratio -1
+set log zcb
+#set xtics 1000
+#set ytics 1000
+
+#set pm3d at s 
+#unset surface
+#unset hidden3d
+#unset grid
+
+splot "`echo $FILE_TEMP`" u 3:4:6 notitle
+

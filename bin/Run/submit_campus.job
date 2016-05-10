@@ -1,0 +1,21 @@
+#!/bin/bash
+
+#PBS -N GAMER
+#PBS -M hyschive@gmail.com
+#PBS -m abe
+#PBS -k n
+##PBS -q secondary
+#PBS -q ncsa
+#PBS -l walltime=4:00:00
+#PBS -m abe
+#PBS -l nodes=1:ppn=20:TeslaK40M
+##PBS -l nodes=1:ppn=20
+##PBS -W depend=afterok:JOB_ID
+
+cd $PBS_O_WORKDIR
+
+##************************************************
+##*** remember to set "OPT__GPUID_SELECT = -1" ***
+##************************************************
+
+mpirun -map-by ppr:1:socket:pe=10 ./Dizzy 1>>stdout 2>>stderr

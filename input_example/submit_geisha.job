@@ -1,0 +1,14 @@
+#!/bin/bash
+#PBS -N GAMER.1.0.beta5.3.0
+#PBS -M b88202011@ntu.edu.tw
+#PBS -m abe
+#PBS -k oe
+#PBS -q work
+#PBS -l walltime=720:00:00
+#PBS -l nodes=4:ppn=2
+##PBS -W depend=afterok:JOB_ID
+
+cd $PBS_O_WORKDIR
+NPROCS=`wc -l < $PBS_NODEFILE`
+
+time mpirun -np $NPROCS ./Dizzy 1>stdout 2>stderr

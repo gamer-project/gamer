@@ -1,0 +1,11 @@
+#!/bin/sh
+
+#BSUB -J GAMER.1.0.beta5.3.0
+#BSUB -q gpu_8
+#BSUB -a openmpi-qlc
+#BSUB -R 'select[type==any] span[ptile=2] rusage[ngpus=2]'
+#BSUB -o lsf.stdout
+#BSUB -e lsf.stderr
+#BSUB -n 8
+
+mpirun.lsf ./Dizzy 1>stdout 2>stderr

@@ -1,0 +1,4 @@
+
+This tool will check whether the peak and average densities for the first NCheck (-n NCheck)
+data rows are monotonically decreasing.
+
