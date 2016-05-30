@@ -12,14 +12,13 @@
 //
 // Note        :  1. We have assumed that all particles will only go to the ***NEARBY 26 patches***
 //                   --> In the cases that particles cross the coarse-fine boundary, particles are sent to the 
-//                       corresponding sibling-son (cross coarse -> fine) or father-sibling (cross fine -> coarse) patches
+//                       corresponding sibling-son (cross C->F) or father-sibling (cross F->C) patches
+//                   --> But note that for C->F we only send particles to the sibling patches and do NOT
+//                       send them to the sibling-son patches in this function. These particles are stored in
+//                       the sibling patches temporarily for the velocity correction in KDK (because we don't
+//                       have potential at lv+1 level at this point), and are send to lv+1 level after that.
 //                2. After calculating the target sibling patch, the particles' position will be re-mapped
 //                   into the simulation domain if periodic B.C. is assumed
-//                3. After calling this function, all particles should be home and reside in the "leaf" patches
-//                4. This function should always be called after updating particles' position
-//                   --> Be careful not to call this function BEFORE updating particles at the next level
-//                   --> Otherwise, particles crossing from coarse to fine patches may be updated twice
-//                   --> Special care must be taken for the individual time-step update
 //
 // Parameter   :  lv : Target refinement level
 //-------------------------------------------------------------------------------------------------------
@@ -50,6 +49,10 @@ void Par_PassParticle2Sibling( const int lv )
       NPar  = amr->patch[0][lv][PID]->NPar;
       EdgeL = amr->patch[0][lv][PID]->EdgeL;
       EdgeR = amr->patch[0][lv][PID]->EdgeR;
+
+
+//    0. skip patches with no particles
+      if ( NPar == 0 )  continue;
 
 
 //    1. allocate memory for the escaping particle list
@@ -114,70 +117,50 @@ void Par_PassParticle2Sibling( const int lv )
             } // if ( OPT__BC_POT == BC_POT_PERIODIC  &&  ijk[d] != 1 )
          } // for (int d=0; d<3; d++)
 
-
          TSib = SibID[ ijk[2] ][ ijk[1] ][ ijk[0] ];
 
-//       2-3. deal with escaping particles (i.e., particles lying outside the patch)
-         if ( TSib != -1 )
+
+//       2-3. remove particles lying outside the active region for non-periodic B.C. (by setting mass=-1.0)
+         if (  OPT__BC_POT != BC_POT_PERIODIC  &&
+               !Par_WithinActiveRegion( ParPos[0][ParID], ParPos[1][ParID], ParPos[2][ParID] )  )
          {
             RemoveParList[ NRemove ++ ] = p;
 
-//          2-3-1. remove particles lying outside the active region for non-periodic B.C. (by setting mass=-1.0)
-            if (  OPT__BC_POT != BC_POT_PERIODIC  &&
-                  !Par_WithinActiveRegion( ParPos[0][ParID], ParPos[1][ParID], ParPos[2][ParID] )  )
-            {
-               AveDensity -= amr->Par->Mass[ParID] / ( amr->BoxSize[0]*amr->BoxSize[1]*amr->BoxSize[2] );
+            AveDensity -= amr->Par->Mass[ParID] / ( amr->BoxSize[0]*amr->BoxSize[1]*amr->BoxSize[2] );
 
-               amr->Par->Mass[ParID] = -1.0;
+            amr->Par->Mass[ParID] = -1.0;
 
-               amr->Par->NPar_Active --;
+            amr->Par->NPar_Active --;
 
-               if ( OPT__VERBOSE )
-                  Aux_Message( stderr, "\nWARNING : removing particle %10d (Pos = [%14.7e, %14.7e, %14.7e], Time = %13.7e)\n",
-                               ParID, ParPos[0][ParID], ParPos[1][ParID], ParPos[2][ParID], Time[lv] );
-            }
+            if ( OPT__VERBOSE )
+               Aux_Message( stderr, "\nWARNING : removing particle %10d (Pos = [%14.7e, %14.7e, %14.7e], Time = %13.7e)\n",
+                            ParID, ParPos[0][ParID], ParPos[1][ParID], ParPos[2][ParID], Time[lv] );
+         }
 
-//          2-3-2. store the information of escaping particles to be transferred to sibling patches
-            else
-            {
-//             make sure that there is enough memory
-               if ( amr->patch[0][lv][PID]->NPar_Escp[TSib] >= ArraySize[TSib] )
-               {
-                  ArraySize[TSib] += NGuess;
-                  amr->patch[0][lv][PID]->ParList_Escp[TSib] = (long*)realloc( amr->patch[0][lv][PID]->ParList_Escp[TSib],
-                                                                               ArraySize[TSib]*sizeof(long) );
-               }
 
-               amr->patch[0][lv][PID]->ParList_Escp[TSib][ amr->patch[0][lv][PID]->NPar_Escp[TSib] ++ ] = ParID;
-
-#              ifdef DEBUG_PARTICLE
-               if ( amr->Par->Mass[ParID] == -1.0 )
-                  Aux_Error( ERROR_INFO, "Storing escaping particles which have been removed (lv %d, PID %d, TSib %d, ParID %d) !!\n",
-                             lv, PID, TSib, ParID );
-#              endif
-
-               NPar_Escp_Tot ++;
-            }
-         } // if ( TSib != -1 )
-
-//       2.4. remove particles lying outside the active region for non-periodic B.C. (but lying within the patch)
-         else
+//       2-4. deal with escaping particles (i.e., particles lying outside the patch but still within the active region)
+         else if ( TSib != -1 )
          {
-            if (  !Par_WithinActiveRegion( ParPos[0][ParID], ParPos[1][ParID], ParPos[2][ParID] )  )
+            RemoveParList[ NRemove ++ ] = p;
+
+//          make sure that there is enough memory
+            if ( amr->patch[0][lv][PID]->NPar_Escp[TSib] >= ArraySize[TSib] )
             {
-               RemoveParList[ NRemove ++ ] = p;
-
-               AveDensity -= amr->Par->Mass[ParID] / ( amr->BoxSize[0]*amr->BoxSize[1]*amr->BoxSize[2] );
-
-               amr->Par->Mass[ParID] = -1.0;
-
-               amr->Par->NPar_Active --;
-
-               if ( OPT__VERBOSE )
-                  Aux_Message( stderr, "\nWARNING : removing particle %10d (Pos = [%14.7e, %14.7e, %14.7e], Time = %13.7e)\n",
-                               ParID, ParPos[0][ParID], ParPos[1][ParID], ParPos[2][ParID], Time[lv] );
+               ArraySize[TSib] += NGuess;
+               amr->patch[0][lv][PID]->ParList_Escp[TSib] = (long*)realloc( amr->patch[0][lv][PID]->ParList_Escp[TSib],
+                                                                            ArraySize[TSib]*sizeof(long) );
             }
-         } // if ( TSib != -1 ) ... else ...
+
+            amr->patch[0][lv][PID]->ParList_Escp[TSib][ amr->patch[0][lv][PID]->NPar_Escp[TSib] ++ ] = ParID;
+
+#           ifdef DEBUG_PARTICLE
+            if ( amr->Par->Mass[ParID] == -1.0 )
+               Aux_Error( ERROR_INFO, "Storing escaping particles which have been removed (lv %d, PID %d, TSib %d, ParID %d) !!\n",
+                          lv, PID, TSib, ParID );
+#           endif
+
+            NPar_Escp_Tot ++;
+         } // else if ( TSib != -1 )
       } // for (int p=0; p<NPar; p++)
 
 
@@ -219,8 +202,9 @@ void Par_PassParticle2Sibling( const int lv )
 
 
 //       5. for patches with sons, pass particles to their sons (coarse --> fine)
-         if ( amr->patch[0][lv][PID]->son != -1 )  Par_PassParticle2Son( lv, PID );
-
+//       *** we now do this after the correction step of KDK so that particles just travel from lv to lv+1
+//       *** can have their velocity corrected at lv first (because we don't have potential at lv+1 at this point)
+//       if ( amr->patch[0][lv][PID]->son != -1 )  Par_PassParticle2Son( lv, PID );
       } // for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
 
 
@@ -277,7 +261,6 @@ void Par_PassParticle2Sibling( const int lv )
 #           endif
          }
       } // for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++); for (int s=0; s<26; s++)
-
    } // if ( NPar_Escp_Tot > 0 )
 
 
@@ -301,7 +284,7 @@ void Par_PassParticle2Sibling( const int lv )
 //
 // Note        :  1. Active region is defined as [RemoveCell ... BoxSize-RemoveCell]
 //                2. Useful only for non-periodic particles
-//                   --> for removing particles lying too close to the simulation boundaries, where
+//                   --> For removing particles lying too close to the simulation boundaries, where
 //                       the potential extrapolation can lead to large errors
 //
 // Parameter   :  x/y/z : Input coordinates

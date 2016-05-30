@@ -54,7 +54,7 @@ void EvolveLevel( const int lv, const double dTime )
 // ===============================================================================================
 
 
-//    2. update particles (prediction for KDK)
+//    2. update particles (prediction for KDK) and exchange particles
 // ===============================================================================================
 #     ifdef PARTICLE
       if ( OPT__VERBOSE  &&  MPI_Rank == 0 )
@@ -228,7 +228,7 @@ void EvolveLevel( const int lv, const double dTime )
 // ===============================================================================================
 
 
-//    5. correct particles velocity, exchange particles between nearby patches
+//    5. correct particles velocity and send particles to lv+1
 // ===============================================================================================
 #     ifdef PARTICLE
       if ( amr->Par->Integ == PAR_INTEG_KDK )
@@ -240,6 +240,13 @@ void EvolveLevel( const int lv, const double dTime )
 
          if ( OPT__VERBOSE  &&  MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );
       }
+
+      if ( OPT__VERBOSE  &&  MPI_Rank == 0 )
+         Aux_Message( stdout, "   Lv %2d: Par_PassParticle2Son %12s ... ", lv, "" );
+
+      Par_PassParticle2Son_AllPatchAtThisLevel( lv );
+
+      if ( OPT__VERBOSE  &&  MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );
 #     endif
 // ===============================================================================================
 

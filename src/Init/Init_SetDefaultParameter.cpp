@@ -432,7 +432,7 @@ void Init_SetDefaultParameter()
                                          "PAR_INTEG", "PAR_INTEG_KDK"  );
    }
 
-   if (  OPT__BC_POT == BC_POT_ISOLATED  &&  amr->Par->RemoveCell < 0.0  )
+   if ( OPT__BC_POT == BC_POT_ISOLATED  &&  amr->Par->RemoveCell < 0.0 )
    {
       switch ( amr->Par->Interp )
       {
@@ -872,6 +872,21 @@ void Init_SetDefaultParameter()
                       "OPT__CK_PARTICLE" );
    }
 #  endif
+
+
+// (17) RemoveCell is useless for periodic B.C.
+#  ifdef PARTICLE
+   if ( OPT__BC_POT == BC_POT_PERIODIC  &&  amr->Par->RemoveCell >= 0.0 )
+   {
+      amr->Par->RemoveCell = -1.0;
+
+      if ( MPI_Rank == 0 )    
+      {
+         Aux_Message( stderr, "WARNING : \"%s\" is useless in the periodic BC ", "PAR_REMOVE_CELL" );
+         Aux_Message( stderr, "and has been reset to %14.7e !!\n", amr->Par->RemoveCell );
+      }
+   }
+#  endif // #ifdef PARTICLE
 
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", __FUNCTION__ );

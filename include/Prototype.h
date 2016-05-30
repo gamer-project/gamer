@@ -417,6 +417,7 @@ void Par_Init_Function();
 void Par_Output_Particle( const char *comment );
 void Par_FindHomePatch_Base( const int *BaseP );
 void Par_PassParticle2Son( const int FaLv, const int FaPID );
+void Par_PassParticle2Son_AllPatchAtThisLevel( const int FaLv );
 void Par_PassParticle2Father( const int FaLv, const int FaPID );
 void Par_Aux_Check_Particle( const char *comment );
 void Par_CollectParticleFromDescendant( const int FaLv, const int FaPID );

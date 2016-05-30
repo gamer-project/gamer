@@ -11,12 +11,13 @@
 // Description :  Pass particles from father to sons 
 //
 // Note        :  1. After calling this function, father patch will have no particles (NPar == 0)
-//                   --> particles should always reside in "leaf" patches
+//                   --> Particles should always reside in "leaf" patches
 //                2. This function should always be called after new son patches are allocated
-//                   --> invoked by "Init_Refine, Refine, & LB_Refine_AllocateNewPatch"
+//                   --> Invoked by "Init_Refine, Refine, & LB_Refine_AllocateNewPatch"
 //                3. This function can also be used even when son patches already have particles
-//                   --> the case where particles just cross a coarse-fine boundary (from coarse to fine)
-//                   --> invoked by "Par_PassParticle2Sibling"
+//                   --> The case where particles just cross a coarse-fine boundary (from coarse to fine)
+//                   --> Invoked by "Par_PassParticle2Sibling_AllPatchAtThisLevel", which is invoked
+//                       in EvolveLevel after the velocity correction in KDK
 //
 // Parameter   :  FaLv  : Father's refinement level
 //                FaPID : Father's patch ID
