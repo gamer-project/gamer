@@ -13,7 +13,7 @@ EXECUTABLE := Dizzy
 # (a) common options (applied to all models)
 # -------------------------------------------------------------------------------
 # model: HYDRO/MHD/ELBDM/PAR_ONLY (PAR_ONLY must work with PARTICLE)
-SIMU_OPTION += -DMODEL=HYDRO
+SIMU_OPTION += -DMODEL=ELBDM
 
 # self-gravity
 SIMU_OPTION += -DGRAVITY
@@ -23,20 +23,20 @@ SIMU_OPTION += -DPOT_SCHEME=SOR
 
 # store GRA_GHOST_SIZE ghost-zone potential for each patch on each side (in patch->pot_ext) 
 # --> currently only for improving accuracy for particles around the patch boundaries (by Par->ImproveAcc)
-#SIMU_OPTION += -DSTORE_POT_GHOST
+SIMU_OPTION += -DSTORE_POT_GHOST
 
 # use unsplitting method to couple gravity to the target model (e.g., hydro, MHD, ELBDM)
 # --> must be off if GRAVITY is off
-SIMU_OPTION += -DUNSPLIT_GRAVITY
+#SIMU_OPTION += -DUNSPLIT_GRAVITY
 
 # individual time-step (default: shared time-step)
-SIMU_OPTION += -DINDIVIDUAL_TIMESTEP
+#SIMU_OPTION += -DINDIVIDUAL_TIMESTEP
 
 # comoving frame
-SIMU_OPTION += -DCOMOVING
+#SIMU_OPTION += -DCOMOVING
 
 # particles (must work with GRAVITY; set MODEL=PAR_ONLY for particle-only simulations)
-#SIMU_OPTION += -DPARTICLE
+SIMU_OPTION += -DPARTICLE
 
 
 # (b) hydro options
@@ -64,10 +64,10 @@ else ifeq "$(findstring MODEL=MHD, $(SIMU_OPTION))" "MODEL=MHD"
 # ------------------------------------------------------------------------------------
 else ifeq "$(findstring MODEL=ELBDM, $(SIMU_OPTION))" "MODEL=ELBDM"
 # enforce the mass conservation
-SIMU_OPTION += -DCONSERVE_MASS
+#SIMU_OPTION += -DCONSERVE_MASS
 
 # 4-th order Laplacian
-SIMU_OPTION += -DLAPLACIAN_4TH
+#SIMU_OPTION += -DLAPLACIAN_4TH
 
 # include the quartic self-interaction potential (must turn on GRAVITY as well, not work with COMOVING yet)
 #SIMU_OPTION += -DQUARTIC_SELF_INTERACTION
@@ -91,10 +91,10 @@ endif # MODEL
 SIMU_OPTION += -DGAMER_OPTIMIZATION
 
 # debug mode 
-#SIMU_OPTION += -DGAMER_DEBUG
+SIMU_OPTION += -DGAMER_DEBUG
 
 # measure the elapsing wall-clock time of different parts of the program
-SIMU_OPTION += -DTIMING
+#SIMU_OPTION += -DTIMING
 
 # measure the elapsing wall-clock time of different parts of the GPU solvers (will disable CPU/GPU overlapping)
 #SIMU_OPTION += -DTIMING_SOLVER
@@ -103,19 +103,19 @@ SIMU_OPTION += -DTIMING
 SIMU_OPTION += -DINTEL
 
 # double precision (not supported for the GPU + self-gravity mode in non-Fermi GPUs)
-#SIMU_OPTION += -DFLOAT8
+SIMU_OPTION += -DFLOAT8
 
 # serial mode (in which no MPI libraries are required)
-#SIMU_OPTION += -DSERIAL
+SIMU_OPTION += -DSERIAL
 
 # load-balance parallelization (one must not turn on the option "SERIAL") (HILBERT)
-SIMU_OPTION += -DLOAD_BALANCE=HILBERT
+#SIMU_OPTION += -DLOAD_BALANCE=HILBERT
 
 # overlap MPI communication with computation (experimental, only supported in LOAD_BALANCE)
 #SIMU_OPTION += -DOVERLAP_MPI
 
 # enable OpenMP parallelization
-SIMU_OPTION += -DOPENMP
+#SIMU_OPTION += -DOPENMP
 
 # work on the NAOC Laohu GPU cluster
 #SIMU_OPTION += -DLAOHU
@@ -521,6 +521,9 @@ endif
 
 ifeq "$(findstring OPENMP, $(SIMU_OPTION))" ""
 CXXWARN_FLAG += -Wno-unknown-pragmas
+   ifeq "$(findstring INTEL, $(SIMU_OPTION))" "INTEL"
+      CXXWARN_FLAG += -diag-disable 3180 
+   endif
 endif
 
 ifeq "$(findstring INTEL, $(SIMU_OPTION))" "INTEL"

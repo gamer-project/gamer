@@ -1168,6 +1168,7 @@ void Check_InputPara( const char *FileName )
    LoadField( "Par_Interp",              &RS.Par_Interp,              SID, TID, NonFatal, &RT.Par_Interp,               1, NonFatal );
    LoadField( "Par_Integ",               &RS.Par_Integ,               SID, TID, NonFatal, &RT.Par_Integ,                1, NonFatal );
    LoadField( "Par_ImproveAcc",          &RS.Par_ImproveAcc,          SID, TID, NonFatal, &RT.Par_ImproveAcc,           1, NonFatal );
+   LoadField( "Par_PredictPos",          &RS.Par_PredictPos,          SID, TID, NonFatal, &RT.Par_PredictPos,           1, NonFatal );
    LoadField( "Par_RemoveCell",          &RS.Par_RemoveCell,          SID, TID, NonFatal, &RT.Par_RemoveCell,           1, NonFatal );
 #  endif
 
@@ -1188,6 +1189,7 @@ void Check_InputPara( const char *FileName )
 #  endif
 #  ifdef PARTICLE 
    LoadField( "Dt__ParVel",              &RS.Dt__ParVel,              SID, TID, NonFatal, &RT.Dt__ParVel,               1, NonFatal );
+   LoadField( "Dt__ParVelMax",           &RS.Dt__ParVelMax,           SID, TID, NonFatal, &RT.Dt__ParVelMax,            1, NonFatal );
 #  endif
 #  ifdef COMOVING
    LoadField( "Dt__MaxDeltaA",           &RS.Dt__MaxDeltaA,           SID, TID, NonFatal, &RT.Dt__MaxDeltaA,            1, NonFatal );

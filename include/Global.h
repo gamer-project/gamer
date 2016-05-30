@@ -143,7 +143,7 @@ extern double     LB_INPUT__WLI_MAX;                  // LB->WLI_Max loaded from
 // (2-5) particle
 // ============================================================================================================
 #ifdef PARTICLE 
-extern double     DT__PARVEL;
+extern double     DT__PARVEL, DT__PARVEL_MAX;
 extern real       MinDtInfo_ParVel[NLEVEL];
 extern bool       OPT__OUTPUT_PARTICLE, OPT__CK_PARTICLE, OPT__PAR_LEVEL;
 #endif

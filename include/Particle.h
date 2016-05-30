@@ -35,6 +35,7 @@ void Aux_Error( const char *File, const int Line, const char *Func, const char *
 //                Integ       : Integration scheme (PAR_INTEG_EULER, PAR_INTEG_KDK)
 //                ImproveAcc  : Improve force accuracy around the patch boundaries
 //                              (by using potential in the patch ghost zone instead of nearby patch or interpolation)
+//                PredictPos  : Predict particle position during mass assignment
 //                RemoveCell  : remove particles RemoveCell-base-level-cells away from the boundary (for non-periodic BC only
 //                GhostSize   : Number of ghost zones required for interpolation scheme
 //                ParVar      : Pointer arrays to different particle variables (Mass, Pos, Vel, ...)
@@ -64,6 +65,7 @@ struct Particle_t
    ParInterp_t Interp;
    ParInteg_t  Integ;
    bool        ImproveAcc;
+   bool        PredictPos;
    double      RemoveCell;
    int         GhostSize;
    real       *ParVar [NPAR_VAR    ];
@@ -95,6 +97,7 @@ struct Particle_t
       Interp     = PAR_INTERP_NONE;
       Integ      = PAR_INTEG_NONE;
       ImproveAcc = true;
+      PredictPos = true;
       RemoveCell = -999.9;
 
       for (int lv=0; lv<NLEVEL; lv++)  NPar_Lv[lv] = 0;

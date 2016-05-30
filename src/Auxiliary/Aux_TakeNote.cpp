@@ -481,6 +481,7 @@ void Aux_TakeNote()
       fprintf( Note, "Par->Integ                %d\n",      amr->Par->Integ       );
       fprintf( Note, "Par->GhostSize            %d\n",      amr->Par->GhostSize   );
       fprintf( Note, "Par->ImproveAcc           %d\n",      amr->Par->ImproveAcc  );
+      fprintf( Note, "Par->PredictPos           %d\n",      amr->Par->PredictPos  );
       fprintf( Note, "Par->RemoveCell           %13.7e\n",  amr->Par->RemoveCell  );
       fprintf( Note, "***********************************************************************************\n" );
       fprintf( Note, "\n\n");
@@ -511,6 +512,7 @@ void Aux_TakeNote()
 #     endif
 #     ifdef PARTICLE
       fprintf( Note, "DT__PARVEL                %13.7e\n",  DT__PARVEL              );
+      fprintf( Note, "DT__PARVEL_MAX           %14.7e\n",   DT__PARVEL_MAX          );
 #     endif
 #     ifdef COMOVING
       fprintf( Note, "DT__MAX_DELTA_A           %13.7e\n",  DT__MAX_DELTA_A         );

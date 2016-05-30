@@ -24,6 +24,7 @@
 -1          PAR_INTERP              # particle interpolation scheme: (-1, 1, 2, 3) -> (default, NGP, CIC, TSC) [3]
 -1          PAR_INTEG               # particle integration scheme: (-1, 1, 2) -> (default, Euler, KDK) [2]
 1           PAR_IMPROVE_ACC         # improve force accuracy around patch boundaries (must turn on STORE_POT_GHOST)
+1           PAR_PREDICT_POS         # predict particle position during mass assignment
 -1.0        PAR_REMOVE_CELL         # remove particles X-root-cells away from the boundary (for non-periodic BC only; <0.0:default)
 
 0.01        A_INIT                  # initial scale factor ##COMOVING ONLY##
@@ -34,6 +35,7 @@
 -1.0        DT__GRAVITY             # time-step: gravity solver coefficient (<0:default)
 0.0         DT__PHASE               # time-step: phase rotation coefficient (<0:default; 0:off) ##ELBDM ONLY##
 -1.0        DT__PARVEL              # time-step: particle velocity (<0:default) ##PARTICLE ONLY##
+-1.0        DT__PARVEL_MAX          # time-step: maximum allowed dt from particle velocity (<0:off) ##PARTICLE ONLY##
 0.01        DT__MAX_DELTA_A         # time-step: maximum variation of the scale factor A ##COMOVING ONLY##
 0           OPT__ADAPTIVE_DT        # time-step: allow time-step to change in each sub-step ##NOT SUPPORTED YET##
 1           OPT__RECORD_DT          # time-step: record the information of the time-step determination

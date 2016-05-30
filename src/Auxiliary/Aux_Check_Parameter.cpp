@@ -1114,16 +1114,8 @@ void Aux_Check_Parameter()
 #     error : ERROR : currently PARTICLE must work with GRAVITY !!
 #  endif
 
-#  ifdef INDIVIDUAL_TIMESTEP
-#     error : ERROR : currently PARTICLE dost NOT support INDIVIDUAL_TIMESTEP !!
-#  endif
-
 #  ifdef COMOVING
 #     error : ERROR : currently PARTICLE dost NOT support COMOVING !! 
-#  endif
-
-#  ifdef SUPPORT_HDF5
-#     error : ERROR : currently PARTICLE does NOT support SUPPORT_HDF5 !!
 #  endif
 
    if ( amr->Par->NPar < 0 )    

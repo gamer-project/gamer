@@ -69,7 +69,7 @@ Procedure for outputting new variables:
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2100)
+// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2101)
 // Description :  Output all simulation data in the HDF5 format, which can be used as a restart file
 //                or loaded by YT
 //
@@ -898,7 +898,7 @@ void FillIn_KeyInfo( KeyInfo_t &KeyInfo )
 
    const time_t CalTime       = time( NULL );   // calendar time
 
-   KeyInfo.FormatVersion      = 2100;
+   KeyInfo.FormatVersion      = 2101;
    KeyInfo.Model              = MODEL;
    KeyInfo.NLevel             = NLEVEL;
    KeyInfo.PatchSize          = PATCH_SIZE;
@@ -1320,11 +1320,12 @@ void FillIn_InputPara( InputPara_t &InputPara )
 
 // particle
 #  ifdef PARTICLE
-   InputPara.Par_Npar                = amr->Par->NPar;
+   InputPara.Par_NPar                = amr->Par->NPar;
    InputPara.Par_Init                = amr->Par->Init;
    InputPara.Par_Interp              = amr->Par->Interp;
    InputPara.Par_Integ               = amr->Par->Integ;
    InputPara.Par_ImproveAcc          = amr->Par->ImproveAcc;
+   InputPara.Par_PredictPos          = amr->Par->PredictPos;
    InputPara.Par_RemoveCell          = amr->Par->RemoveCell;
 #  endif
 
@@ -1345,6 +1346,7 @@ void FillIn_InputPara( InputPara_t &InputPara )
 #  endif
 #  ifdef PARTICLE 
    InputPara.Dt__ParVel              = DT__PARVEL;
+   InputPara.Dt__ParVelMax           = DT__PARVEL_MAX;
 #  endif
 #  ifdef COMOVING
    InputPara.Dt__MaxDeltaA           = DT__MAX_DELTA_A;
@@ -1838,11 +1840,12 @@ void GetCompound_InputPara( hid_t &H5_TypeID )
 
 // particle
 #  ifdef PARTICLE
-   H5Tinsert( H5_TypeID, "Par_Npar",                HOFFSET(InputPara_t,Par_Npar               ), H5T_NATIVE_LONG    );
+   H5Tinsert( H5_TypeID, "Par_NPar",                HOFFSET(InputPara_t,Par_NPar               ), H5T_NATIVE_LONG    );
    H5Tinsert( H5_TypeID, "Par_Init",                HOFFSET(InputPara_t,Par_Init               ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "Par_Interp",              HOFFSET(InputPara_t,Par_Interp             ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "Par_Integ",               HOFFSET(InputPara_t,Par_Integ              ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "Par_ImproveAcc",          HOFFSET(InputPara_t,Par_ImproveAcc         ), H5T_NATIVE_INT     );
+   H5Tinsert( H5_TypeID, "Par_PredictPos",          HOFFSET(InputPara_t,Par_PredictPos         ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "Par_RemoveCell",          HOFFSET(InputPara_t,Par_RemoveCell         ), H5T_NATIVE_INT     );
 #  endif
 
@@ -1863,6 +1866,7 @@ void GetCompound_InputPara( hid_t &H5_TypeID )
 #  endif
 #  ifdef PARTICLE 
    H5Tinsert( H5_TypeID, "Dt__ParVel",              HOFFSET(InputPara_t,Dt__ParVel             ), H5T_NATIVE_DOUBLE  );
+   H5Tinsert( H5_TypeID, "Dt__ParVelMax",           HOFFSET(InputPara_t,Dt__ParVelMax          ), H5T_NATIVE_DOUBLE  );
 #  endif
 #  ifdef COMOVING
    H5Tinsert( H5_TypeID, "Dt__MaxDeltaA",           HOFFSET(InputPara_t,Dt__MaxDeltaA          ), H5T_NATIVE_DOUBLE  );

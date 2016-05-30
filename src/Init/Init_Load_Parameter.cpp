@@ -123,9 +123,14 @@ void Init_Load_Parameter()
    amr->Par->ImproveAcc = (bool)temp_int;
 
    getline( &input_line, &len, File );
+   sscanf( input_line, "%d%s",   &temp_int,                 string );
+   amr->Par->PredictPos = (bool)temp_int;
+
+   getline( &input_line, &len, File );
    sscanf( input_line, "%lf%s",  &amr->Par->RemoveCell,     string );
 
 #  else
+   getline( &input_line, &len, File );
    getline( &input_line, &len, File );
    getline( &input_line, &len, File );
    getline( &input_line, &len, File );
@@ -173,6 +178,11 @@ void Init_Load_Parameter()
    getline( &input_line, &len, File );
 #  ifdef PARTICLE 
    sscanf( input_line, "%lf%s",  &DT__PARVEL,               string );
+#  endif
+
+   getline( &input_line, &len, File );
+#  ifdef PARTICLE 
+   sscanf( input_line, "%lf%s",  &DT__PARVEL_MAX,           string );
 #  endif
 
    getline( &input_line, &len, File );

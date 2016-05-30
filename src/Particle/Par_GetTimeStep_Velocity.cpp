@@ -9,7 +9,7 @@
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Par_GetTimeStep_Velocity
 // Description :  Estimate the evolution time-step and physical time interval by the maximum particle velocity
-//                --> dt = DT__PARVEL*dh/v_max
+//                --> dt = DT__PARVEL*dh/v_max, where v_max = max(vx,vy,vz,all_particles)
 //
 // Note        :  Physical coordinates : dTime == dt
 //                Comoving coordinates : dTime == dt*(Hubble parameter)*(scale factor)^3 == delta(scale factor)
@@ -30,7 +30,6 @@ void Par_GetTimeStep_Velocity( double &dt, double &dTime, int &MinDtLv, real &Mi
    real  *MaxVel   = MinDtInfo_ParVel;    // "MinDtInfo_ParVel" is a global variable
    double dt_local = __FLT_MAX__;         // initialize it as an extremely large number
    double dt_min, dt_tmp;
-   real   TempVel;
    long   ParID;
 
 
@@ -39,20 +38,23 @@ void Par_GetTimeStep_Velocity( double &dt, double &dTime, int &MinDtLv, real &Mi
    {
       for (int lv=0; lv<NLEVEL; lv++)
       {
-         MaxVel[lv] = __FLT_MIN__;
+         MaxVel[lv] = 0.0;
 
          for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
          for (int p=0; p<amr->patch[0][lv][PID]->NPar; p++)
          {
-            ParID      = amr->patch[0][lv][PID]->ParList[p];
-            TempVel    = SQRT( SQR(Vel[0][ParID]) + SQR(Vel[1][ParID]) + SQR(Vel[2][ParID]) );
-            MaxVel[lv] = MAX( TempVel, MaxVel[lv] ); 
+            ParID = amr->patch[0][lv][PID]->ParList[p];
+
+            for (int d=0; d<3; d++)
+            MaxVel[lv] = MAX( MaxVel[lv], FABS(Vel[d][ParID]) );
          }
       }
    }
 
 
 // get the time-step in one rank
+   MinDtLv = -1;  // indicating that MinDtVar cannot be obtained
+
    for (int lv=0; lv<NLEVEL; lv++)
    {
       dt_tmp  = amr->dh[lv] / MaxVel[lv];
@@ -76,8 +78,14 @@ void Par_GetTimeStep_Velocity( double &dt, double &dTime, int &MinDtLv, real &Mi
 
 
 // verify the minimum time-step
-   if ( dt_min == __FLT_MAX__ )
-      Aux_Error( ERROR_INFO, "time-step estimation by particle velocity is incorrect (dt_min = %13.7e) !!\n", dt_min );
+   if ( dt_min == __FLT_MAX__  &&  amr->Par->NPar_Active > 0 )
+   {
+      Aux_Message( stderr, "WARNING : time-step estimation by particle velocity is incorrect (dt_min = %13.7e) !!\n", dt_min );
+      Aux_Message( stderr, "          --> Likely all particles have zero velocity\n" );
+
+      if ( DT__PARVEL_MAX < 0.0 )
+      Aux_Message( stderr, "          --> You might want to set DT__PARVEL_MAX properly\n" );
+   }
 
 
 // gather the minimum time-step information from all ranks
@@ -115,12 +123,9 @@ void Par_GetTimeStep_Velocity( double &dt, double &dTime, int &MinDtLv, real &Mi
    delete [] MinDtVar_AllRank;
 #  endif // #ifndef SERIAL 
    */
+
 #  ifndef SERIAL
 #  error : ERROR : only SERIAL work here
-#  endif
-
-#  ifdef INDIVIDUAL_TIMESTEP
-#  error : ERROR : INDIVIDUAL_TIMESTEP needs to be checked here
 #  endif
 
 #  ifdef COMOVING
@@ -128,7 +133,8 @@ void Par_GetTimeStep_Velocity( double &dt, double &dTime, int &MinDtLv, real &Mi
 #  endif
 
 
-   dt    = DT__PARVEL * dt_min;
+   dt = DT__PARVEL * dt_min;
+   if ( DT__PARVEL_MAX >= 0.0 )  dt = MIN( dt, DT__PARVEL_MAX );
    dTime = dt / dt_dTime;
 
 } // FUNCTION : Par_GetTimeStep_Velocity

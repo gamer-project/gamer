@@ -274,11 +274,12 @@ struct InputPara_t
 
 // particle
 #  ifdef PARTICLE
-   long   Par_Npar;
+   long   Par_NPar;
    int    Par_Init;
    int    Par_Interp;
    int    Par_Integ;
    int    Par_ImproveAcc;
+   int    Par_PredictPos;
    double Par_RemoveCell;
 #  endif
 
@@ -299,6 +300,7 @@ struct InputPara_t
 #  endif
 #  ifdef PARTICLE 
    double Dt__ParVel;
+   double Dt__ParVelMax;
 #  endif
 #  ifdef COMOVING
    double Dt__MaxDeltaA;
