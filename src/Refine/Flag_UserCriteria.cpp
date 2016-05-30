@@ -25,9 +25,9 @@ bool Flag_UserCriteria( const int i, const int j, const int k, const int lv, con
    /*
    const double dh     = amr->dh[lv];                                                  // grid size
    const int    scale  = amr->scale[lv];                                               // grid scale
-   const double Pos[3] = { amr->patch[0][lv][PID]->Edge[0] + (i+0.5)*dh,               // x,y,z position
-                           amr->patch[0][lv][PID]->Edge[1] + (j+0.5)*dh,
-                           amr->patch[0][lv][PID]->Edge[2] + (k+0.5)*dh  };  
+   const double Pos[3] = { amr->patch[0][lv][PID]->EdgeL[0] + (i+0.5)*dh,              // x,y,z position
+                           amr->patch[0][lv][PID]->EdgeL[1] + (j+0.5)*dh,
+                           amr->patch[0][lv][PID]->EdgeL[2] + (k+0.5)*dh  };  
 
    const real (*Rho )[PS1][PS1] = amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[DENS];  // density
    const real (*MomX)[PS1][PS1] = amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[MOMX];  // momentum x

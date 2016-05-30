@@ -42,8 +42,8 @@
 0           OPT__DT_USER            # time-step: user-defined --> edit "Mis_GetTimeStep_UserCriteria"
 
 -1          REGRID_COUNT            # refine every REGRID_COUNT sub-step (<0:default [4])
--1          FLAG_BUFFER_SIZE        # number of buffer cells for the flag operation (<0:default [8])
-0           MAX_LEVEL               # maximum refinement level (0 ... NLEVEL-1) (<0:default [NLEVEL-1])
+0           FLAG_BUFFER_SIZE        # number of buffer cells for the flag operation (<0:default [8])
+1           MAX_LEVEL               # maximum refinement level (0 ... NLEVEL-1) (<0:default [NLEVEL-1])
 0           OPT__FLAG_RHO           # flag: density (Input__Flag_Rho)
 0           OPT__FLAG_RHO_GRADIENT  # flag: density gradient (Input__Flag_RhoGradient) 
 0           OPT__FLAG_PRES_GRADIENT # flag: pressure gradient (Input__Flag_PresGradient) ##HYDRO ONLY##
@@ -93,7 +93,7 @@
 -1          POT_GPU_NPGROUP         # number of patch groups sent into GPU for the Poisson solver (<0:default)
 0           OPT__GRA_P5_GRADIENT    # 5-points gradient in the Gravity solver (must have GRA/USG_GHOST_SIZE >= 2)
 1           OPT__GRAVITY_TYPE       # different sources of gravity : (1,2,3)->(self-gravity,external gravity,both) ##HYDRO ONLY##
-0           OPT__EXTERNAL_POT       # add the external potential (does not work with OPT__GRAVITY_TYPE == 2) ##ELBDM ONLY##
+1           OPT__EXTERNAL_POT       # add the external potential (does not work with OPT__GRAVITY_TYPE == 2) ##ELBDM ONLY##
 
 1           OPT__INIT               # initialization option : (1, 2, 3) -> (StartOver, RESTART, UM_START)
 1           OPT__RESTART_HEADER     # RESTART header : (0, 1) -> (skip/check the header info)

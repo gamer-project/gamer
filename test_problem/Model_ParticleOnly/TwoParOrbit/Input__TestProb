@@ -1,3 +1,3 @@
 # parameters for the two particles force test
 1.0         TwoParAcc_M    # particle mass
-0.3         TwoParAcc_R    # radius of the orbit
+0.15        TwoParAcc_R    # radius of the orbit
