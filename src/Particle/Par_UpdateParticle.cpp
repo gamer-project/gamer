@@ -235,9 +235,13 @@ void Par_UpdateParticle( const int lv, const double TimeNew, const double TimeOl
 
                for (int p=0; p<amr->patch[0][lv][PID]->NPar; p++)
                {
-//                6.1.1 calculate the nearest grid index
                   ParID = amr->patch[0][lv][PID]->ParList[p];
 
+//                6.1.0 skip particles
+                  if (  ( UpdateStep == PAR_UPSTEP_PRED && ParTime[ParID] >= TimeNew )  ||
+                        ( UpdateStep == PAR_UPSTEP_CORR && ParTime[ParID] >= (real)0.0 )  )  continue;
+
+//                6.1.1 calculate the nearest grid index
                   for (int d=0; d<3; d++)    
                   {
                      idx[d] = int( ( Pos[d][ParID] - amr->patch[0][lv][PID]->EdgeL[d] )*_dh );
@@ -325,6 +329,10 @@ void Par_UpdateParticle( const int lv, const double TimeNew, const double TimeOl
                for (int p=0; p<amr->patch[0][lv][PID]->NPar; p++)
                {
                   ParID = amr->patch[0][lv][PID]->ParList[p];
+
+//                6.2.0 skip particles
+                  if (  ( UpdateStep == PAR_UPSTEP_PRED && ParTime[ParID] >= TimeNew )  ||
+                        ( UpdateStep == PAR_UPSTEP_CORR && ParTime[ParID] >= (real)0.0 )  )  continue;
 
                   for (int d=0; d<3; d++)
                   {
@@ -440,6 +448,10 @@ void Par_UpdateParticle( const int lv, const double TimeNew, const double TimeOl
                for (int p=0; p<amr->patch[0][lv][PID]->NPar; p++)
                {
                   ParID = amr->patch[0][lv][PID]->ParList[p];
+
+//                6.3.0 skip particles
+                  if (  ( UpdateStep == PAR_UPSTEP_PRED && ParTime[ParID] >= TimeNew )  ||
+                        ( UpdateStep == PAR_UPSTEP_CORR && ParTime[ParID] >= (real)0.0 )  )  continue;
 
                   for (int d=0; d<3; d++)
                   {

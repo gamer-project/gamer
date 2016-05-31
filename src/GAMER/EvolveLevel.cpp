@@ -234,11 +234,20 @@ void EvolveLevel( const int lv, const double dTime )
       if ( amr->Par->Integ == PAR_INTEG_KDK )
       {
          if ( OPT__VERBOSE  &&  MPI_Rank == 0 )
-            Aux_Message( stdout, "   Lv %2d: Par_UpdateParticle (correct) %5s... ", lv, "" );
+            Aux_Message( stdout, "   Lv %2d: Par_UpdateParticle (correct Lv %2d)... ", lv, lv );
 
          Par_UpdateParticle( lv, Time[lv]+dTime_SubStep, Time[lv], PAR_UPSTEP_CORR );
 
          if ( OPT__VERBOSE  &&  MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );
+
+         if ( lv > 0 ) {
+         if ( OPT__VERBOSE  &&  MPI_Rank == 0 )
+            Aux_Message( stdout, "   Lv %2d: Par_UpdateParticle (correct Lv %2d)... ", lv, lv-1 );
+
+//       apply velocity correction for particles just travelling from lv to lv-1
+         Par_UpdateParticle( lv-1, Time[lv]+dTime_SubStep, Time[lv], PAR_UPSTEP_CORR );
+
+         if ( OPT__VERBOSE  &&  MPI_Rank == 0 )    Aux_Message( stdout, "done\n" ); }
       }
 
       if ( OPT__VERBOSE  &&  MPI_Rank == 0 )
