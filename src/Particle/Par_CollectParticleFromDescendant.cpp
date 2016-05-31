@@ -14,59 +14,89 @@ static void CollectParticle( const int FaLv, const int FaPID, int &NPar_SoFar, l
 //
 // Note        :  1. Parlist in all descendants will NOT be changeed after calling this function
 //                2. This function assumes that father and all descendants are always in the same rank
-//                   --> does NOT work with LOAD_BALANCE
+//                   --> Does NOT work with LOAD_BALANCE
 //                3. The array "ParList_Desc" will be allocated for the target patch
-//                   --> must be deleted afterward (e.g., in the function "Gra_AdvanceDt")
+//                   --> Must be deleted afterward by calling Par_CollectParticleFromDescendant_FreeMemory
+//                       (e.g., in the function "Gra_AdvanceDt")
 //                4. Do not take into account it's own particles (particles at FaLv)
-//                   --> do nothing if this patch is a leaf patch (ParList_Desc will NOT be allocated)
+//                   --> Do nothing if this patch is a leaf patch (ParList_Desc will NOT be allocated)
 //                5. This function assumes that all particles live in the leaf patch
 //                6. When using OpenMP, one must ensure that different threads do NOT invoke this function
 //                   for the same patch at the same time !!!
 //                   --> Because this function will modify "NPar_Desc & ParList_Desc" for the target patch
+//                7. Invoded by Gra_AdvanceDt (and Main when DEBUG is on)
 //
 // Parameter   :  FaLv  : Father's refinement level
-//                FaPID : Father's patch ID
 //
-// Return      :  NPar_Desc and ParList_Desc for the patch FaPID at FaLv
+// Return      :  NPar_Desc and ParList_Desc for all patches at FaLv
 //-------------------------------------------------------------------------------------------------------
-void Par_CollectParticleFromDescendant( const int FaLv, const int FaPID )
+void Par_CollectParticleFromDescendant( const int FaLv )
 {
 
-// check
-#  ifdef DEBUG_PARTICLE
-   if ( amr->patch[0][FaLv][FaPID]->NPar_Desc != -1  ||  amr->patch[0][FaLv][FaPID]->ParList_Desc != NULL )
-      Aux_Error( ERROR_INFO, "Desc variables have been initialized already !!\n" );
-#  endif
+   for (int FaPID=0; FaPID<amr->NPatchComma[FaLv][1]; FaPID++)
+   {
+//    check
+#     ifdef DEBUG_PARTICLE
+      if ( amr->patch[0][FaLv][FaPID]->NPar_Desc != -1  ||  amr->patch[0][FaLv][FaPID]->ParList_Desc != NULL )
+         Aux_Error( ERROR_INFO, "Desc variables have been initialized already !!\n" );
+#     endif
 
-// nothing to do if father has no son
-   if ( amr->patch[0][FaLv][FaPID]->son == -1 )    return;
-
-
-// 1. get the total number of particles in all descendants
-   amr->patch[0][FaLv][FaPID]->NPar_Desc = Par_CountParticleInDescendant( FaLv, FaPID );
+//    nothing to do if father has no son
+      if ( amr->patch[0][FaLv][FaPID]->son == -1 )    continue;
 
 
-// nothing to do if there are no particles in descendants
-   if ( amr->patch[0][FaLv][FaPID]->NPar_Desc == 0 )  return;
+//    1. get the total number of particles in all descendants
+      amr->patch[0][FaLv][FaPID]->NPar_Desc = Par_CountParticleInDescendant( FaLv, FaPID );
 
 
-// 2. allocate the array ParList_Desc
-   amr->patch[0][FaLv][FaPID]->ParList_Desc = new long [ amr->patch[0][FaLv][FaPID]->NPar_Desc ];
+//    nothing to do if there are no particles in descendants
+      if ( amr->patch[0][FaLv][FaPID]->NPar_Desc == 0 )  continue;
 
 
-// 3. gather the particle lists from all descendants
-   int NPar_SoFar = 0;
-   CollectParticle( FaLv, FaPID, NPar_SoFar, amr->patch[0][FaLv][FaPID]->ParList_Desc );
+//    2. allocate the array ParList_Desc
+      amr->patch[0][FaLv][FaPID]->ParList_Desc = new long [ amr->patch[0][FaLv][FaPID]->NPar_Desc ];
 
 
-// check the particle count
-#  ifdef DEBUG_PARTICLE
-   if ( NPar_SoFar != amr->patch[0][FaLv][FaPID]->NPar_Desc )
-      Aux_Error( ERROR_INFO, "NPar_SoFar (%d) != NPar_Desc (%d) !!\n", 
-                 NPar_SoFar, amr->patch[0][FaLv][FaPID]->NPar_Desc );
-#  endif
+//    3. gather the particle lists from all descendants
+      int NPar_SoFar = 0;
+      CollectParticle( FaLv, FaPID, NPar_SoFar, amr->patch[0][FaLv][FaPID]->ParList_Desc );
+
+
+//    check the particle count
+#     ifdef DEBUG_PARTICLE
+      if ( NPar_SoFar != amr->patch[0][FaLv][FaPID]->NPar_Desc )
+         Aux_Error( ERROR_INFO, "NPar_SoFar (%d) != NPar_Desc (%d) !!\n", 
+                    NPar_SoFar, amr->patch[0][FaLv][FaPID]->NPar_Desc );
+#     endif
+   } // for (int FaPID=0; FaPID<amr->NPatchComma[FaLv][1]; FaPID++)
 
 } // FUNCTION : Par_CollectParticleFromDescendant
+
+
+
+//-------------------------------------------------------------------------------------------------------
+// Function    :  Par_CollectParticleFromDescendant_FreeMemory
+// Description :  Release the memory allocated by Par_CollectParticleFromDescendant
+//
+// Note        :  1. Invoded by Gra_AdvanceDt (and Main when DEBUG is on)
+//
+// Parameter   :  FaLv  : Father's refinement level
+//-------------------------------------------------------------------------------------------------------
+void Par_CollectParticleFromDescendant_FreeMemory( const int FaLv )
+{
+
+   for (int FaPID=0; FaPID<amr->NPatchComma[FaLv][1]; FaPID++)
+   {
+      if ( amr->patch[0][FaLv][FaPID]->ParList_Desc != NULL )
+      {
+         delete [] amr->patch[0][FaLv][FaPID]->ParList_Desc;
+         amr->patch[0][FaLv][FaPID]->ParList_Desc = NULL;
+      }
+
+      amr->patch[0][FaLv][FaPID]->NPar_Desc = -1;
+   }
+
+} // FUNCTION : Par_CollectParticleFromDescendant_FreeMemory
 
 
 

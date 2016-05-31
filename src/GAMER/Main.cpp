@@ -359,7 +359,7 @@ int main( int argc, char *argv[] )
 
 //       collect particles from all descendant patches
 #        ifdef PARTICLE
-         Par_CollectParticleForPoisson( lv );
+         Par_CollectParticleFromDescendant( lv );
 #        endif
 
          if ( lv == 0 )    
@@ -376,7 +376,7 @@ int main( int argc, char *argv[] )
 
 //       free variables of descendant particles
 #        ifdef PARTICLE
-         Par_ReleaseParticleForPoisson( lv );
+         Par_CollectParticleFromDescendant_FreeMemory( lv );
 #        endif
 
          if ( OPT__VERBOSE  &&  MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );

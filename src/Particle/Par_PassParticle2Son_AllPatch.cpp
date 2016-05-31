@@ -7,7 +7,7 @@
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Par_PassParticle2Son_AllPatchAtThisLevel
+// Function    :  Par_PassParticle2Son_AllPatch
 // Description :  Pass particles from father to sons for all patches at the target level
 //
 // Note        :  1. It simply invokes Par_PassParticle2Son for all patches at the target level
@@ -15,7 +15,7 @@
 //
 // Parameter   :  FaLv  : Father's refinement level
 //-------------------------------------------------------------------------------------------------------
-void Par_PassParticle2Son_AllPatchAtThisLevel( const int FaLv )
+void Par_PassParticle2Son_AllPatch( const int FaLv )
 {
 
    for (int FaPID=0; FaPID<amr->NPatchComma[FaLv][1]; FaPID++)
@@ -23,7 +23,7 @@ void Par_PassParticle2Son_AllPatchAtThisLevel( const int FaLv )
       if ( amr->patch[0][FaLv][FaPID]->son != -1 )    Par_PassParticle2Son( FaLv, FaPID );
    }
 
-} // FUNCTION : Par_PassParticle2Son_AllPatchAtThisLevel 
+} // FUNCTION : Par_PassParticle2Son_AllPatch 
 
 
 

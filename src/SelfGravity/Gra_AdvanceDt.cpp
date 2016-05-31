@@ -71,7 +71,7 @@ void Gra_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, co
 
 // collect particles from all descendant patches
 #  ifdef PARTICLE
-   if ( Poisson )    Par_CollectParticleForPoisson( lv );
+   if ( Poisson )    Par_CollectParticleFromDescendant( lv );
 #  endif
 
 
@@ -130,84 +130,10 @@ void Gra_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, co
 
 // free variables of descendant particles
 #  ifdef PARTICLE
-   if ( Poisson )    Par_ReleaseParticleForPoisson( lv );
+   if ( Poisson )    Par_CollectParticleFromDescendant_FreeMemory( lv );
 #  endif
 
 } // FUNCTION : Gra_AdvanceDt
-
-
-
-#ifdef PARTICLE
-//-------------------------------------------------------------------------------------------------------
-// Function    :  Par_CollectParticleForPoisson
-// Description :  Collect particles from all descendants (sons, grandsons, ...) for the Poisson solver
-//
-// Note        :  1. Invoke Par_CollectParticleFromDescendant for all Lv=lv patches and Lv=lv-1 patches
-//                   adjacent to the lv <-> lv-1 boundaries
-//                2. One must call Par_ReleaseParticleForPoisson later to properly free the array "ParList_Desc"
-//                3. This function will also be invoded by Main when DEBUG is on
-//
-// Parameter   :  lv : Targeted refinement level 
-//-------------------------------------------------------------------------------------------------------
-void Par_CollectParticleForPoisson( const int lv )
-{
-
-// collect particles for all lv patches
-   for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)   Par_CollectParticleFromDescendant( lv, PID );
-
-// collect particles for all lv-1 patches adjacent to the lv <-> lv-1 boundaries
-   if ( lv > 0 )
-   {
-      const int FaLv = lv - 1;
-      int SibPID;
-
-      for (int PID=0; PID<amr->NPatchComma[FaLv][1]; PID++)
-      {
-         if ( amr->patch[0][FaLv][PID]->son == -1 )
-         {
-            for (int s=0; s<26; s++)
-            {
-               SibPID = amr->patch[0][FaLv][PID]->sibling[s];
-
-               if ( SibPID >= 0  &&  amr->patch[0][FaLv][SibPID]->son != -1 )
-               {
-                  Par_CollectParticleFromDescendant( FaLv, PID );
-                  break;
-               }
-            }
-         }
-      } // for (int PID=0; PID<amr->NPatchComma[FaLv][1]; PID++)
-   } // if ( lv > 0 )
-
-} // FUNCTION : Par_CollectParticleForPoisson
-
-
-
-//-------------------------------------------------------------------------------------------------------
-// Function    :  Par_ReleaseParticleForPoisson
-// Description :  Release the memory allocated by Par_CollectParticleForPoisson
-//
-// Note        :  1. This function will also be invoded by Main when DEBUG is on
-//
-// Parameter   :  lv : Targeted refinement level 
-//-------------------------------------------------------------------------------------------------------
-void Par_ReleaseParticleForPoisson( const int lv )
-{
-
-   for (int TLv=lv; TLv>=0 && TLv>=lv-1; TLv--)
-   for (int PID=0; PID<amr->NPatchComma[TLv][1]; PID++)
-   {
-      if ( amr->patch[0][TLv][PID]->ParList_Desc != NULL )
-      {
-         delete [] amr->patch[0][TLv][PID]->ParList_Desc;
-         amr->patch[0][TLv][PID]->ParList_Desc = NULL;
-      }
-
-      amr->patch[0][TLv][PID]->NPar_Desc = -1;
-   }
-
-} // FUNCTION : Par_ReleaseParticleForPoisson
-#endif // #ifdef PARTICLE
 
 
 

@@ -253,7 +253,7 @@ void EvolveLevel( const int lv, const double dTime )
       if ( OPT__VERBOSE  &&  MPI_Rank == 0 )
          Aux_Message( stdout, "   Lv %2d: Par_PassParticle2Son %12s ... ", lv, "" );
 
-      Par_PassParticle2Son_AllPatchAtThisLevel( lv );
+      Par_PassParticle2Son_AllPatch( lv );
 
       if ( OPT__VERBOSE  &&  MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );
 #     endif

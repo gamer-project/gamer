@@ -16,7 +16,7 @@
 //                   --> Invoked by "Init_Refine, Refine, & LB_Refine_AllocateNewPatch"
 //                3. This function can also be used even when son patches already have particles
 //                   --> The case where particles just cross a coarse-fine boundary (from coarse to fine)
-//                   --> Invoked by "Par_PassParticle2Sibling_AllPatchAtThisLevel", which is invoked
+//                   --> Invoked by "Par_PassParticle2Sibling_AllPatch", which is invoked
 //                       in EvolveLevel after the velocity correction in KDK
 //
 // Parameter   :  FaLv  : Father's refinement level
