@@ -24,8 +24,10 @@ bool Flag_UserCriteria( const int i, const int j, const int k, const int lv, con
 
    bool Flag = false;
 
-   if ( amr->patch[0][lv][PID]->son == -1 )     Flag = amr->patch[0][lv][PID]->NPar > 0;
-   else                                         Flag = Par_CountParticleInDescendant( lv, PID ) > 0;
+   const int NParMin = 0;
+
+   if ( amr->patch[0][lv][PID]->son == -1 )     Flag = amr->patch[0][lv][PID]->NPar > NParMin;
+   else                                         Flag = Par_CountParticleInDescendant( lv, PID ) > NParMin;
 
    return Flag;
 

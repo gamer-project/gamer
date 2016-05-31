@@ -30,7 +30,7 @@ SIMU_OPTION += -DSTORE_POT_GHOST
 #SIMU_OPTION += -DUNSPLIT_GRAVITY
 
 # individual time-step (default: shared time-step)
-#SIMU_OPTION += -DINDIVIDUAL_TIMESTEP
+SIMU_OPTION += -DINDIVIDUAL_TIMESTEP
 
 # comoving frame
 #SIMU_OPTION += -DCOMOVING

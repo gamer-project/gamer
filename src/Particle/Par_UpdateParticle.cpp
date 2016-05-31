@@ -85,15 +85,18 @@ void Par_UpdateParticle( const int lv, const double TimeNew, const double TimeOl
    int PotSg;
 
 #  ifdef STORE_POT_GHOST
-   if      (  Mis_CompareRealValue( PrepPotTime, amr->PotSgTime[lv][   amr->PotSg[lv] ], NULL, false )  )
-      PotSg =   amr->PotSg[lv];
+   if (  ( OPT__GRAVITY_TYPE == GRAVITY_SELF || OPT__GRAVITY_TYPE == GRAVITY_BOTH )  &&  amr->Par->ImproveAcc  )
+   {
+      if      (  Mis_CompareRealValue( PrepPotTime, amr->PotSgTime[lv][   amr->PotSg[lv] ], NULL, false )  )
+         PotSg =   amr->PotSg[lv];
 
-   else if (  Mis_CompareRealValue( PrepPotTime, amr->PotSgTime[lv][ 1-amr->PotSg[lv] ], NULL, false )  )
-      PotSg = 1-amr->PotSg[lv];
+      else if (  Mis_CompareRealValue( PrepPotTime, amr->PotSgTime[lv][ 1-amr->PotSg[lv] ], NULL, false )  )
+         PotSg = 1-amr->PotSg[lv];
 
-   else
-      Aux_Error( ERROR_INFO, "Cannot determine PotSg (lv %d, PrepTime %20.14e, SgTime[0] %20.14e, SgTime[1] %20.14e !!\n",
-                 lv, PrepPotTime, amr->PotSgTime[lv][0], amr->PotSgTime[lv][1] );
+      else
+         Aux_Error( ERROR_INFO, "Cannot determine PotSg (lv %d, PrepTime %20.14e, SgTime[0] %20.14e, SgTime[1] %20.14e !!\n",
+                    lv, PrepPotTime, amr->PotSgTime[lv][0], amr->PotSgTime[lv][1] );
+   }
 #  endif
 
 
