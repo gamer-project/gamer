@@ -20,23 +20,30 @@ extern double ExtAcc_AuxArray[EXT_ACC_NAUX_MAX];
 //
 // Note        :  1. Does not work with "P5_Gradient"
 //                2. Does not take into account the "periodic B.C." when updating particles
-//                   --> after update, the particles' position may lie outside the simulation box
-//                   --> it will be corrected in the function "Par_PassParticle2Sibling"
+//                   --> After update, the particles' position may lie outside the simulation box
+//                   --> It will be corrected in the function "Par_PassParticle2Sibling"
 //                   (however, periodic B.C. is taken into account when calculating the gravitational force)
 //                3. For the K-D-K scheme, this function performs either prediction (K-D) or correction (last K) operation
 //                   --> Use the input parameter "UpdateStep" to control
 //                4. For the Euler scheme, this function completes the full update
 //                   --> UpdateStep==PAR_UPSTEP_CORR is meaningless
+//                5. For KDK, particle time is set to -0.5*dt after the K-D operation to indicate that they require
+//                   velocity correction (the last K operation) later. Otherwise particles just cross from fine to coarse
+//                   grids cannot be distinguished from those already in the coarse grid, while we only want to apply
+//                   velocity correction to the former. After the velocity correction, particle time is set to TimeNew
+//                   For Euler, particle time is set to TimeNew in the PAR_UPSTEP_PRED step
+//                6. Particle time may not be synchronized (so different particles may have different time).
+//                   --> For example, particles just cross from coarse (lv) to fine (lv+1) grids may have time greater than
+//                       other particles at lv+1. Also, particles just cross from fine (lv) to coarse (lv-1) grids may have
+//                       time less than other particles at lv-1.
+//                   --> Only update particles with time < TimeNew
 //
 // Parameter   :  lv          : Target refinement level
 //                TimeNew     : Targeted physical time to reach
 //                TimeOld     : Physical time before update
-//                              --> This function updates physical time from TimeOld to TimeNew
-//                dt          : Time interval to advance solution (can be different from TimeNew-TimeOld in COMOVING)
 //                UpdateStep  : PAR_UPSTEP_PRED/PAR_UPSTEP_CORR (CORR is for PAR_INTEG_KDK only)
 //-------------------------------------------------------------------------------------------------------
-void Par_UpdateParticle( const int lv, const double TimeNew, const double TimeOld, const real dt,
-                         const ParUpStep_t UpdateStep )
+void Par_UpdateParticle( const int lv, const double TimeNew, const double TimeOld, const ParUpStep_t UpdateStep )
 {
 
    const ParInterp_t IntScheme  = amr->Par->Interp;
@@ -54,8 +61,9 @@ void Par_UpdateParticle( const int lv, const double TimeNew, const double TimeOl
    const int  AccSize           = PS1 + 2*ParGhost;
    const real Const_8           = (real)8.0;
 
-   real *Pos[3] = { amr->Par->PosX, amr->Par->PosY, amr->Par->PosZ };
-   real *Vel[3] = { amr->Par->VelX, amr->Par->VelY, amr->Par->VelZ };
+   real *Pos[3]  = { amr->Par->PosX, amr->Par->PosY, amr->Par->PosZ };
+   real *Vel[3]  = { amr->Par->VelX, amr->Par->VelY, amr->Par->VelZ };
+   real *ParTime = amr->Par->Time;
 
    real *Pot = new real [ 8*CUBE(PotSize) ];             // 8: number of patches per patch group
    real *Acc = new real [ 3*CUBE(AccSize) ];             // 3: three dimension
@@ -66,13 +74,11 @@ void Par_UpdateParticle( const int lv, const double TimeNew, const double TimeOl
    bool   GotYou;
    long   ParID;
    real   Acc_Temp[3];
-   double PhyCorner_ExtAcc[3], PhyCorner_ExtPot[3], x, y, z;
+   double PhyCorner_ExtAcc[3], PhyCorner_ExtPot[3], x, y, z, dt, dt_half;
 
 
 // determine the coefficient for calculating acceleration
-   real GraConst = ( OPT__GRA_P5_GRADIENT ) ? -dt/(12.0*dh) : -dt/(2.0*dh);   // but P5 is NOT supported yet
-
-   if ( amr->Par->Integ == PAR_INTEG_KDK )   GraConst *= (real)0.5;           // for KDK, velocity is updated by 0.5*dt only
+   real GraConst = ( OPT__GRA_P5_GRADIENT ) ? -1.0/(12.0*dh) : -1.0/(2.0*dh); // but P5 is NOT supported yet
 
 
 // determine PotSg for STORE_POT_GHOST
@@ -92,6 +98,10 @@ void Par_UpdateParticle( const int lv, const double TimeNew, const double TimeOl
 
 
 // check
+#  ifdef COMOVING
+#  error : ERROR : does not support COMOVING because time-step has not been converted to comoving !!
+#  endif
+
 #  ifdef DEBUG_PARTICLE
 // Par->ImproveAcc only works particle interpolation schemes with ParGhost == 1 (CIC & TSC)
    if ( amr->Par->ImproveAcc  &&  PotGhost != GRA_GHOST_SIZE )
@@ -185,11 +195,7 @@ void Par_UpdateParticle( const int lv, const double TimeNew, const double TimeOl
 
 //          4. external gravity (currently useful only for HYDRO)
             if ( OPT__GRAVITY_TYPE == GRAVITY_EXTERNAL  ||  OPT__GRAVITY_TYPE == GRAVITY_BOTH )
-            {
                CPU_ExternalAcc( Acc_Temp, x, y, z, PrepPotTime, ExtAcc_AuxArray );
-
-               for (int d=0; d<3; d++)    Acc_Temp[d] *= dt;
-            }
 
 //          5. self-gravity
             if ( OPT__GRAVITY_TYPE == GRAVITY_SELF  ||  OPT__GRAVITY_TYPE == GRAVITY_BOTH )
@@ -264,11 +270,15 @@ void Par_UpdateParticle( const int lv, const double TimeNew, const double TimeOl
 //                6.1.2-1: Euler method
                   if ( amr->Par->Integ == PAR_INTEG_EULER )
                   {
+                     dt = TimeNew - ParTime[ParID];
+
                      for (int d=0; d<3; d++)
                      {
                         Pos[d][ParID] += Vel  [d][ParID]*dt;   // update position first for a full dt
-                        Vel[d][ParID] += Acc3D[d][ idx[2] ][ idx[1] ][ idx[0] ]; // 1.0*dt has been absorbed in GraConst
+                        Vel[d][ParID] += Acc3D[d][ idx[2] ][ idx[1] ][ idx[0] ]*dt;
                      }
+
+                     ParTime[ParID] = TimeNew;
                   }
 
 //                6.1.2-2: KDK scheme
@@ -276,16 +286,29 @@ void Par_UpdateParticle( const int lv, const double TimeNew, const double TimeOl
                   {
 //                   KDK prediction
                      if ( UpdateStep == PAR_UPSTEP_PRED )
-                     for (int d=0; d<3; d++)
                      {
-                        Vel[d][ParID] += Acc3D[d][ idx[2] ][ idx[1] ][ idx[0] ]; // predict velocity for 0.5*dt (absorbed in GraConst)
-                        Pos[d][ParID] += Vel  [d][ParID]*dt;   // update position by the half-step velocity for a full dt
+                        dt      = TimeNew - ParTime[ParID];
+                        dt_half = 0.5*dt;
+
+                        for (int d=0; d<3; d++)
+                        {
+                           Vel[d][ParID] += Acc3D[d][ idx[2] ][ idx[1] ][ idx[0] ]*dt_half; // predict velocity for 0.5*dt
+                           Pos[d][ParID] += Vel  [d][ParID]*dt;   // update position by the half-step velocity for a full dt
+                        }
+
+                        ParTime[ParID] = -dt_half;   // negative --> indicating that it requires velocity correction
                      }
 
 //                   KDK correction for velocity
                      else // UpdateStep == PAR_UPSTEP_CORR
-                     for (int d=0; d<3; d++)
-                        Vel[d][ParID] += Acc3D[d][ idx[2] ][ idx[1] ][ idx[0] ]; // correct velocity for 0.5*dt (absorbed in GraConst)
+                     {
+                        dt_half = -ParTime[ParID];
+
+                        for (int d=0; d<3; d++)
+                           Vel[d][ParID] += Acc3D[d][ idx[2] ][ idx[1] ][ idx[0] ]*dt_half; // correct velocity for 0.5*dt
+
+                        ParTime[ParID] = TimeNew;
+                     }
                   } // amr->Par->Integ
                } // for (int p=0; p<amr->patch[0][lv][PID]->NPar; p++)
             } // PAR_INTERP_NGP
@@ -346,6 +369,8 @@ void Par_UpdateParticle( const int lv, const double TimeNew, const double TimeOl
 //                6.2.3-1: Euler method
                   if ( amr->Par->Integ == PAR_INTEG_EULER )
                   {
+                     dt = TimeNew - ParTime[ParID];
+
                      for (int d=0; d<3; d++)
                      {
                         Pos[d][ParID] += Vel[d][ParID]*dt;  // update position first for a full dt
@@ -354,8 +379,10 @@ void Par_UpdateParticle( const int lv, const double TimeNew, const double TimeOl
                         for (int j=0; j<2; j++)
                         for (int i=0; i<2; i++)
                         Vel[d][ParID] += Acc3D[d][ idxLR[k][2] ][ idxLR[j][1] ][ idxLR[i][0] ]
-                                        *Frac[i][0]*Frac[j][1]*Frac[k][2];    // 1.0*dt has been absorbed in GraConst
+                                        *Frac[i][0]*Frac[j][1]*Frac[k][2]*dt;
                      }
+
+                     ParTime[ParID] = TimeNew;
                   }
 
 //                6.1.2-2: KDK scheme
@@ -363,26 +390,39 @@ void Par_UpdateParticle( const int lv, const double TimeNew, const double TimeOl
                   {
 //                   KDK prediction
                      if ( UpdateStep == PAR_UPSTEP_PRED )
-                     for (int d=0; d<3; d++)
                      {
-                        for (int k=0; k<2; k++)
-                        for (int j=0; j<2; j++)
-                        for (int i=0; i<2; i++)
-                        Vel[d][ParID] += Acc3D[d][ idxLR[k][2] ][ idxLR[j][1] ][ idxLR[i][0] ]
-                                        *Frac[i][0]*Frac[j][1]*Frac[k][2]; // predict velocity for 0.5*dt (absorbed in GraConst) 
+                        dt      = TimeNew - ParTime[ParID];
+                        dt_half = 0.5*dt;
 
-                        Pos[d][ParID] += Vel[d][ParID]*dt;  // update position by the half-step velocity for a full dt
+                        for (int d=0; d<3; d++)
+                        {
+                           for (int k=0; k<2; k++)
+                           for (int j=0; j<2; j++)
+                           for (int i=0; i<2; i++)
+                           Vel[d][ParID] += Acc3D[d][ idxLR[k][2] ][ idxLR[j][1] ][ idxLR[i][0] ]
+                                           *Frac[i][0]*Frac[j][1]*Frac[k][2]*dt_half;  // predict velocity for 0.5*dt
+
+                           Pos[d][ParID] += Vel[d][ParID]*dt;  // update position by the half-step velocity for a full dt
+                        }
+
+                        ParTime[ParID] = -dt_half;   // negative --> indicating that it requires velocity correction
                      }
 
 //                   KDK correction for velocity
                      else // UpdateStep == PAR_UPSTEP_CORR
-                     for (int d=0; d<3; d++)
                      {
-                        for (int k=0; k<2; k++)
-                        for (int j=0; j<2; j++)
-                        for (int i=0; i<2; i++)
-                        Vel[d][ParID] += Acc3D[d][ idxLR[k][2] ][ idxLR[j][1] ][ idxLR[i][0] ]
-                                        *Frac[i][0]*Frac[j][1]*Frac[k][2]; // correct velocity for 0.5*dt (absorbed in GraConst)
+                        dt_half = -ParTime[ParID];
+
+                        for (int d=0; d<3; d++)
+                        {
+                           for (int k=0; k<2; k++)
+                           for (int j=0; j<2; j++)
+                           for (int i=0; i<2; i++)
+                           Vel[d][ParID] += Acc3D[d][ idxLR[k][2] ][ idxLR[j][1] ][ idxLR[i][0] ]
+                                           *Frac[i][0]*Frac[j][1]*Frac[k][2]*dt_half; // correct velocity for 0.5*dt
+                        }
+
+                        ParTime[ParID] = TimeNew;
                      }
                   } // amr->Par->Integ
                } // for (int p=0; p<amr->patch[0][lv][PID]->NPar; p++)
@@ -447,6 +487,8 @@ void Par_UpdateParticle( const int lv, const double TimeNew, const double TimeOl
 //                6.3.3-1: Euler method
                   if ( amr->Par->Integ == PAR_INTEG_EULER )
                   {
+                     dt = TimeNew - ParTime[ParID];
+
                      for (int d=0; d<3; d++)
                      {
                         Pos[d][ParID] += Vel[d][ParID]*dt;  // update position first for a full dt 
@@ -455,8 +497,10 @@ void Par_UpdateParticle( const int lv, const double TimeNew, const double TimeOl
                         for (int j=0; j<3; j++)
                         for (int i=0; i<3; i++)
                         Vel[d][ParID] += Acc3D[d][ idxLCR[k][2] ][ idxLCR[j][1] ][ idxLCR[i][0] ]
-                                        *Frac[i][0]*Frac[j][1]*Frac[k][2];    // 1.0*dt has been absorbed in GraConst
+                                        *Frac[i][0]*Frac[j][1]*Frac[k][2]*dt;
                      }
+
+                     ParTime[ParID] = TimeNew;
                   }
 
 //                6.3.3-2: KDK scheme
@@ -464,26 +508,39 @@ void Par_UpdateParticle( const int lv, const double TimeNew, const double TimeOl
                   {
 //                   KDK prediction
                      if ( UpdateStep == PAR_UPSTEP_PRED )
-                     for (int d=0; d<3; d++)
                      {
-                        for (int k=0; k<3; k++)
-                        for (int j=0; j<3; j++)
-                        for (int i=0; i<3; i++)
-                        Vel[d][ParID] += Acc3D[d][ idxLCR[k][2] ][ idxLCR[j][1] ][ idxLCR[i][0] ]
-                                        *Frac[i][0]*Frac[j][1]*Frac[k][2]; // predict velocity for 0.5*dt (absorbed in GraConst) 
+                        dt      = TimeNew - ParTime[ParID];
+                        dt_half = 0.5*dt;
 
-                        Pos[d][ParID] += Vel[d][ParID]*dt;  // update position by the half-step velocity for a full dt
+                        for (int d=0; d<3; d++)
+                        {
+                           for (int k=0; k<3; k++)
+                           for (int j=0; j<3; j++)
+                           for (int i=0; i<3; i++)
+                           Vel[d][ParID] += Acc3D[d][ idxLCR[k][2] ][ idxLCR[j][1] ][ idxLCR[i][0] ]
+                                           *Frac[i][0]*Frac[j][1]*Frac[k][2]*dt_half;  // predict velocity for 0.5*dt
+
+                           Pos[d][ParID] += Vel[d][ParID]*dt;  // update position by the half-step velocity for a full dt
+                        }
+
+                        ParTime[ParID] = -dt_half;   // negative --> indicating that it requires velocity correction
                      }
 
 //                   KDK correction for velocity
                      else // UpdateStep == PAR_UPSTEP_CORR
-                     for (int d=0; d<3; d++)
                      {
-                        for (int k=0; k<3; k++)
-                        for (int j=0; j<3; j++)
-                        for (int i=0; i<3; i++)
-                        Vel[d][ParID] += Acc3D[d][ idxLCR[k][2] ][ idxLCR[j][1] ][ idxLCR[i][0] ]
-                                        *Frac[i][0]*Frac[j][1]*Frac[k][2]; // correct velocity for 0.5*dt (absorbed in GraConst)
+                        dt_half = -ParTime[ParID];
+
+                        for (int d=0; d<3; d++)
+                        {
+                           for (int k=0; k<3; k++)
+                           for (int j=0; j<3; j++)
+                           for (int i=0; i<3; i++)
+                           Vel[d][ParID] += Acc3D[d][ idxLCR[k][2] ][ idxLCR[j][1] ][ idxLCR[i][0] ]
+                                           *Frac[i][0]*Frac[j][1]*Frac[k][2]*dt_half; // correct velocity for 0.5*dt
+                        }
+
+                        ParTime[ParID] = TimeNew;
                      }
                   } // amr->Par->Integ
                } // for (int p=0; p<amr->patch[0][lv][PID]->NPar; p++)

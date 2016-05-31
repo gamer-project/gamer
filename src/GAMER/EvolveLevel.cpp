@@ -60,7 +60,7 @@ void EvolveLevel( const int lv, const double dTime )
       if ( OPT__VERBOSE  &&  MPI_Rank == 0 )
          Aux_Message( stdout, "   Lv %2d: Par_UpdateParticle (predict) %5s... ", lv, "" );
 
-      Par_UpdateParticle( lv, Time[lv]+dTime_SubStep, Time[lv], dt_SubStep, PAR_UPSTEP_PRED );
+      Par_UpdateParticle( lv, Time[lv]+dTime_SubStep, Time[lv], PAR_UPSTEP_PRED );
 
       if ( OPT__VERBOSE  &&  MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );
 
@@ -236,7 +236,7 @@ void EvolveLevel( const int lv, const double dTime )
          if ( OPT__VERBOSE  &&  MPI_Rank == 0 )
             Aux_Message( stdout, "   Lv %2d: Par_UpdateParticle (correct) %5s... ", lv, "" );
 
-         Par_UpdateParticle( lv, Time[lv]+dTime_SubStep, Time[lv], dt_SubStep, PAR_UPSTEP_CORR );
+         Par_UpdateParticle( lv, Time[lv]+dTime_SubStep, Time[lv], PAR_UPSTEP_CORR );
 
          if ( OPT__VERBOSE  &&  MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );
       }
