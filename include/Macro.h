@@ -374,30 +374,6 @@
 #endif
 
 
-// sibling index offset for the non-periodic B.C.
-#define SIB_OFFSET_NONPERIODIC   ( -100 )
-
-
-// son index offset for LOAD_BALANCE
-#ifdef LOAD_BALANCE
-#  define SON_OFFSET_LB          ( -1000 )
-#endif
-
-
-// flag used in "Buf_RecordBoundaryFlag" and "Flag_Buffer" (must be negative)
-#ifndef SERIAL
-#  define BUFFER_IS_FLAGGED      ( -999 )
-#endif
-
-
-// tiny constant for miscellaneous usages
-#ifdef FLOAT8
-#  define TINY_VALUE       1.e-13
-#else
-#  define TINY_VALUE       1.e-05
-#endif
-
-
 // extreme values
 #ifndef __INT_MAX__
 #  define __INT_MAX__      2147483647
@@ -421,6 +397,36 @@
 
 #ifndef __FLT_MIN__
 #  define __FLT_MIN__      1.17549435e-38F
+#endif
+
+
+// sibling index offset for the non-periodic B.C.
+#define SIB_OFFSET_NONPERIODIC   ( -100 )
+
+
+// son index offset for LOAD_BALANCE
+#ifdef LOAD_BALANCE
+#  define SON_OFFSET_LB          ( -1000 )
+#endif
+
+
+// flag used in "Buf_RecordBoundaryFlag" and "Flag_Buffer" (must be negative)
+#ifndef SERIAL
+#  define BUFFER_IS_FLAGGED      ( -999 )
+#endif
+
+
+// marker indicating that the array "pot_ext" has NOT been properly set
+#if ( defined GRAVITY  &&  defined STORE_POT_GHOST )
+#  define POT_EXT_NEED_INIT      __FLT_MAX__
+#endif
+
+
+// tiny constant for miscellaneous usages
+#ifdef FLOAT8
+#  define TINY_VALUE       1.e-13
+#else
+#  define TINY_VALUE       1.e-05
 #endif
 
 

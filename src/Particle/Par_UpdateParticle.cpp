@@ -150,7 +150,7 @@ void Par_UpdateParticle( const int lv, const double TimeNew, const double TimeOl
       if ( OPT__GRAVITY_TYPE == GRAVITY_SELF  ||  OPT__GRAVITY_TYPE == GRAVITY_BOTH )
       {
 #        ifdef STORE_POT_GHOST
-         if ( amr->Par->ImproveAcc  &&  lv > 0 )
+         if ( amr->Par->ImproveAcc )
          {
             for (int PID=PID0, P=0; PID<PID0+8; PID++, P++)
             {

@@ -94,7 +94,7 @@ SIMU_OPTION += -DGAMER_OPTIMIZATION
 SIMU_OPTION += -DGAMER_DEBUG
 
 # measure the elapsing wall-clock time of different parts of the program
-#SIMU_OPTION += -DTIMING
+SIMU_OPTION += -DTIMING
 
 # measure the elapsing wall-clock time of different parts of the GPU solvers (will disable CPU/GPU overlapping)
 #SIMU_OPTION += -DTIMING_SOLVER
@@ -115,7 +115,7 @@ SIMU_OPTION += -DSERIAL
 #SIMU_OPTION += -DOVERLAP_MPI
 
 # enable OpenMP parallelization
-#SIMU_OPTION += -DOPENMP
+SIMU_OPTION += -DOPENMP
 
 # work on the NAOC Laohu GPU cluster
 #SIMU_OPTION += -DLAOHU
@@ -277,7 +277,7 @@ CC_FILE     += Init_FFTW.cpp  Gra_Close.cpp  Gra_Prepare_Flu.cpp  Gra_Prepare_Po
                End_MemFree_PoissonGravity.cpp  Init_Set_Default_SOR_Parameter.cpp \
                Init_Set_Default_MG_Parameter.cpp  Poi_GetAverageDensity.cpp  Init_GreenFuncK.cpp \
                Init_ExternalPot.cpp  Poi_BoundaryCondition_Extrapolation.cpp  CPU_ExternalAcc.cpp \
-               Gra_Prepare_USG.cpp  Init_ExternalAcc.cpp
+               Gra_Prepare_USG.cpp  Init_ExternalAcc.cpp  Poi_StorePotWithGhostZone.cpp
 
 vpath %.cu     SelfGravity/GPU_Poisson  SelfGravity/GPU_Gravity
 vpath %.cpp    SelfGravity/CPU_Poisson  SelfGravity/CPU_Gravity  SelfGravity

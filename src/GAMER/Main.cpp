@@ -363,7 +363,13 @@ int main( int argc, char *argv[] )
 #        endif
 
          if ( lv == 0 )    
+         {
             CPU_PoissonSolver_FFT( Poi_Coeff, amr->PotSg[lv], Time[lv] );
+
+#           ifdef STORE_POT_GHOST
+            if ( amr->Par->ImproveAcc )   Poi_StorePotWithGhostZone( lv, amr->PotSg[lv], true );
+#           endif
+         }
 
          else              
          {

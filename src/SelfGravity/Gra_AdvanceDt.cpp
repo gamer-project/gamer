@@ -84,8 +84,12 @@ void Gra_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, co
          TIMING_FUNC(   CPU_PoissonSolver_FFT( Poi_Coeff, SaveSg_Pot, TimeNew ),
                         Timer_Gra_Advance[lv],   false   );   
 
-         amr->PotSg    [0]             = SaveSg_Pot;
-         amr->PotSgTime[0][SaveSg_Pot] = TimeNew;
+         amr->PotSg    [lv]             = SaveSg_Pot;
+         amr->PotSgTime[lv][SaveSg_Pot] = TimeNew;
+
+#        ifdef STORE_POT_GHOST
+         if ( amr->Par->ImproveAcc )   Poi_StorePotWithGhostZone( lv, SaveSg_Pot, true );
+#        endif
 
          TIMING_FUNC(   Buf_GetBufferData( lv, NULL_INT, SaveSg_Pot, POT_FOR_POISSON, _POTE, Pot_ParaBuf, USELB_YES ),
                         Timer_GetBuf[lv][1],   true   );

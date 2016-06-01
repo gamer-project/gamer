@@ -429,6 +429,9 @@ struct patch_t
       pot     = new real [PATCH_SIZE][PATCH_SIZE][PATCH_SIZE];
 #     ifdef STORE_POT_GHOST
       pot_ext = new real [GRA_NXT][GRA_NXT][GRA_NXT];
+
+      pot_ext[0][0][0] = POT_EXT_NEED_INIT;  // indicating that this array has NOT been properly set
+                                             // (used by Poi_StorePotWithGhostZone)
 #     endif
 
    } // METHOD : gnew

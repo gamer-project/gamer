@@ -343,7 +343,16 @@ void EvolveLevel( const int lv, const double dTime )
 //       refine
          if ( OPT__VERBOSE  &&  MPI_Rank == 0 )    Aux_Message( stdout, "   Lv %2d: Refine %27s... ", lv, "" );
 
-         TIMING_FUNC(   Refine( lv, USELB_YES ),   Timer_Refine[lv],   true   );
+         TIMING_FUNC(   Refine( lv, USELB_YES ),   Timer_Refine[lv],   false   );
+
+#        ifdef STORE_POT_GHOST
+         if ( amr->Par->ImproveAcc )
+         TIMING_FUNC(   Poi_StorePotWithGhostZone( lv+1, amr->PotSg[lv+1], false ),   Timer_Refine[lv],   false   );
+#        endif
+
+#        ifdef TIMING
+         Timer_Refine[lv]->WorkingID ++;
+#        endif
 
 #        ifdef LOAD_BALANCE
          TIMING_FUNC(   Buf_GetBufferData( lv,   amr->FluSg[lv  ], NULL_INT, DATA_AFTER_REFINE, _FLU,  Flu_ParaBuf,
