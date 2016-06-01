@@ -10,19 +10,20 @@ static bool WithinRho( const int idx[], const int RhoSize );
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Par_MassAssignment
-// Description :  Deposit particles mass to grid
+// Description :  Deposit particle mass to grid
 //
 // Note        :  1. Three different schemes are supported
 //                   (1) NGP : Nearest-Grid-Point
 //                   (2) CIC : Could-In-Cell
 //                   (3) TSC : Triangular-Shaped-Cloud
-//                2. This function assumes that all input particles have been synchronized
-//                3. The deposited density field will be stored in Rho
+//                2. The deposited density field will be stored in Rho
 //                   --> This array will be initialized as zero only if "InitZero=true"
-//                4. Particles having no contribution to Rho (which has the range EdgeL[d] <= r[d] < EdgeL[d]+RhoSize*dh )
+//                3. Particles having no contribution to Rho (which has the range EdgeL[d] <= r[d] < EdgeL[d]+RhoSize*dh )
 //                   will be ignored
-//                5. Particles position will be evolved by dt
+//                4. Particles position will be predicted to the target physical time if PredictPos is on
 //                   --> But they will NOT be stored back to the global Pos array
+//                   --> Also remember to skip particles waiting for velocity correction since they have time
+//                       temporarily set to -dt (moreover, they should already be synchronized with TargetTime)
 //
 // Parameter   :  ParList      : List of target particle IDs
 //                NPar         : Number of particles
@@ -31,7 +32,8 @@ static bool WithinRho( const int idx[], const int RhoSize );
 //                RhoSize      : Size of Rho in 1D
 //                EdgeL        : Left edge of the array Rho
 //                dh           : cell size of Rho
-//                dt           : Time interval for predicting the particles position
+//                PredictPos   : true --> predict particle position to TargetTime
+//                TargetTime   : Target time for predicting the particle position
 //                InitZero     : True --> initialize Rho as zero
 //                Periodic     : True --> apply periodic boundary condition
 //                PeriodicSize : Number of cells in the periodic box (in the unit of dh)
@@ -39,16 +41,16 @@ static bool WithinRho( const int idx[], const int RhoSize );
 // Return      :  Rho
 //-------------------------------------------------------------------------------------------------------
 void Par_MassAssignment( const long *ParList, const long NPar, const ParInterp_t IntScheme, real *Rho,
-                         const int RhoSize, const double *EdgeL, const double dh, const real dt, const bool InitZero,
-                         const bool Periodic, const int PeriodicSize[3] )
+                         const int RhoSize, const double *EdgeL, const double dh, const bool PredictPos,
+                         const double TargetTime, const bool InitZero, const bool Periodic, const int PeriodicSize[3] )
 {
 
 // check
 #  ifdef DEBUG_PARTICLE
-   if ( NPar > 0  &&  ParList == NULL )   Aux_Error( ERROR_INFO, "ParList == NULL for NPar = %ld !!\n", NPar );
-   if ( Rho == NULL )                     Aux_Error( ERROR_INFO, "Rho == NULL !!\n" );
-   if ( EdgeL == NULL )                   Aux_Error( ERROR_INFO, "EdgeL == NULL !!\n" );
-   if ( dt < 0.0 )                        Aux_Error( ERROR_INFO, "dt = %14.7e < 0.0 !!\n", dt );
+   if ( NPar > 0  &&  ParList == NULL )      Aux_Error( ERROR_INFO, "ParList == NULL for NPar = %ld !!\n", NPar );
+   if ( Rho == NULL )                        Aux_Error( ERROR_INFO, "Rho == NULL !!\n" );
+   if ( EdgeL == NULL )                      Aux_Error( ERROR_INFO, "EdgeL == NULL !!\n" );
+   if ( PredictPos  &&  TargetTime < 0.0 )   Aux_Error( ERROR_INFO, "TargetTime = %14.7e < 0.0 !!\n", TargetTime );
    if ( Periodic )
       for (int d=0; d<3; d++)
          if ( RhoSize > PeriodicSize[d] )
@@ -82,30 +84,28 @@ void Par_MassAssignment( const long *ParList, const long NPar, const ParInterp_t
    }
 
 
-// 3. predict particles position
-   if ( dt != (real)0.0 )
+// 3. predict particle position
+   real dt;
+
+   if ( PredictPos )
    {
-      real *Vel[3] = { NULL, NULL, NULL };
-
-      for (int d=0; d<3; d++)    Vel[d] = new real [NPar];
-
-      for (long  p=0; p<NPar; p++)
+      for (long p=0; p<NPar; p++)
       {
          ParID = ParList[p];
 
-         Vel[0][p] = amr->Par->VelX[ParID];
-         Vel[1][p] = amr->Par->VelY[ParID];
-         Vel[2][p] = amr->Par->VelZ[ParID];
+//       skip particles waiting for velocity correction (they should already be synchronized with TargetTime)
+         if ( amr->Par->Time[ParID] < (real)0.0 )  continue;
+
+         dt = TargetTime - amr->Par->Time[ParID];
+
+         Pos[0][p] += amr->Par->VelX[ParID]*dt;
+         Pos[1][p] += amr->Par->VelY[ParID]*dt;
+         Pos[2][p] += amr->Par->VelZ[ParID]*dt;
       }
-
-      for (long p=0; p<NPar; p++)
-      for (int d=0; d<3; d++)    Pos[d][p] += Vel[d][p]*dt;
-
-      for (int d=0; d<3; d++)    delete [] Vel[d];
-   } // if ( dt != (real)0.0 )
+   } // if ( PredictPos )
 
 
-// 4. deposit particles mass
+// 4. deposit particle mass
    const double _dh  = 1.0 / dh;
    const double _dh3 = CUBE(_dh);
 

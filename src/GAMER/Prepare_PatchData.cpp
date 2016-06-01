@@ -752,7 +752,6 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
             const double EdgeL[3]        = { amr->patch[0][lv][PID0]->EdgeL[0] - GhostSize*dh,
                                              amr->patch[0][lv][PID0]->EdgeL[1] - GhostSize*dh,
                                              amr->patch[0][lv][PID0]->EdgeL[2] - GhostSize*dh };
-            const double dt              = 0.0;                   // NEEDS TO BE REVISED
 
 
 //          (c1) determine the array index for DENS
@@ -807,8 +806,8 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
 #              endif
 
 //             (c2-2) deposit particles mass
-               Par_MassAssignment( ParList, NPar, amr->Par->Interp, ArrayDens, PGSize1D,
-                                   EdgeL, dh, dt, (InitZero && LocalID==0), Periodic, PeriodicSize );
+               Par_MassAssignment( ParList, NPar, amr->Par->Interp, ArrayDens, PGSize1D, EdgeL, dh,
+                                   amr->Par->PredictPos, PrepTime, (InitZero && LocalID==0), Periodic, PeriodicSize );
             } // for (int LocalID=0; LocalID<8; LocalID++ )
 
 
@@ -849,8 +848,8 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
 #                    endif
 
 //                   (c3-1-2) deposit particles mass
-                     Par_MassAssignment( ParList, NPar, amr->Par->Interp, ArrayDens, PGSize1D,
-                                         EdgeL, dh, dt, InitZero_No, Periodic, PeriodicSize );
+                     Par_MassAssignment( ParList, NPar, amr->Par->Interp, ArrayDens, PGSize1D, EdgeL, dh,
+                                         amr->Par->PredictPos, PrepTime, InitZero_No, Periodic, PeriodicSize );
                   } // for (int Count=0; Count<TABLE_04( Side ); Count++)
                } // if ( SibPID0 >= 0 )
 
@@ -891,8 +890,8 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
 #                 endif
 
 //                (c3-2-2) deposit particles mass
-                  Par_MassAssignment( ParList, NPar, amr->Par->Interp, ArrayDens, PGSize1D,
-                                      EdgeL, dh, dt, InitZero_No, Periodic, PeriodicSize );
+                  Par_MassAssignment( ParList, NPar, amr->Par->Interp, ArrayDens, PGSize1D, EdgeL, dh,
+                                      amr->Par->PredictPos, PrepTime, InitZero_No, Periodic, PeriodicSize );
 
                } // else if ( SibPID0 == -1 )
             } // for (int Side=0; Side<26; Side++) if ( amr->Par->GhostSize > 0  ||  GhostSize > 0 )
