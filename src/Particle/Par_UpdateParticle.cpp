@@ -82,9 +82,11 @@ void Par_UpdateParticle( const int lv, const double TimeNew, const double TimeOl
 
 
 // determine PotSg for STORE_POT_GHOST
-   int PotSg;
-
 #  ifdef STORE_POT_GHOST
+   int  PotSg;
+   real PotWeighting0, PotWeighting1;
+   bool PotNeedInterpolate = false;
+
    if (  ( OPT__GRAVITY_TYPE == GRAVITY_SELF || OPT__GRAVITY_TYPE == GRAVITY_BOTH )  &&  amr->Par->ImproveAcc  )
    {
       if      (  Mis_CompareRealValue( PrepPotTime, amr->PotSgTime[lv][   amr->PotSg[lv] ], NULL, false )  )
@@ -94,8 +96,21 @@ void Par_UpdateParticle( const int lv, const double TimeNew, const double TimeOl
          PotSg = 1-amr->PotSg[lv];
 
       else
+      {
+#        ifdef INDIVIDUAL_TIMESTEP
+         if ( UpdateStep == PAR_UPSTEP_PRED )
+         Aux_Error( ERROR_INFO, "Potential interpolation is unnecessary (lv %d, PrepTime %20.14e, SgTime[0] %20.14e, SgTime[1] %20.14e !!\n",
+                    lv, PrepPotTime, amr->PotSgTime[lv][0], amr->PotSgTime[lv][1] );
+
+         PotNeedInterpolate = true;
+         PotWeighting0      = ( +amr->PotSgTime[lv][1] - PrepPotTime ) / ( amr->PotSgTime[lv][1] - amr->PotSgTime[lv][0] );
+         PotWeighting1      = ( -amr->PotSgTime[lv][0] + PrepPotTime ) / ( amr->PotSgTime[lv][1] - amr->PotSgTime[lv][0] );
+         PotSg              = -1;   // useless
+#        else
          Aux_Error( ERROR_INFO, "Cannot determine PotSg (lv %d, PrepTime %20.14e, SgTime[0] %20.14e, SgTime[1] %20.14e !!\n",
                     lv, PrepPotTime, amr->PotSgTime[lv][0], amr->PotSgTime[lv][1] );
+#        endif
+      }
    }
 #  endif
 
@@ -156,7 +171,19 @@ void Par_UpdateParticle( const int lv, const double TimeNew, const double TimeOl
             {
                if ( amr->patch[0][lv][PID]->NPar == 0 )  continue;   // skip patches with no particles
 
-               memcpy( Pot3D[P], amr->patch[PotSg][lv][PID]->pot_ext, CUBE(PotSize)*sizeof(real) );
+//             temporal interpolation is required for correcting the velocity of particles just crossing
+//             from fine to coarse grids
+               if ( PotNeedInterpolate )
+               {
+                  for (int k=0; k<PotSize; k++)
+                  for (int j=0; j<PotSize; j++)
+                  for (int i=0; i<PotSize; i++)
+                     Pot3D[P][k][j][i] =   PotWeighting0*amr->patch[0][lv][PID]->pot_ext[k][j][i]
+                                         + PotWeighting1*amr->patch[1][lv][PID]->pot_ext[k][j][i];
+               }
+
+               else
+                  memcpy( Pot3D[P], amr->patch[PotSg][lv][PID]->pot_ext, CUBE(PotSize)*sizeof(real) );
             }
          }
 
@@ -164,7 +191,7 @@ void Par_UpdateParticle( const int lv, const double TimeNew, const double TimeOl
 #        endif
             Prepare_PatchData( lv, PrepPotTime, Pot, PotGhost, 1, &PID0, _POTE,
                                OPT__GRA_INT_SCHEME, UNIT_PATCH, NSIDE_26, IntPhase_No, FluBC_None, OPT__BC_POT, GetTotDens_No );
-      }
+      } // if ( OPT__GRAVITY_TYPE == GRAVITY_SELF  ||  OPT__GRAVITY_TYPE == GRAVITY_BOTH )
 
       for (int PID=PID0, P=0; PID<PID0+8; PID++, P++)
       {

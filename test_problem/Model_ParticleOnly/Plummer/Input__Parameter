@@ -6,7 +6,7 @@
 1           MPI_NRANK_X[0]          # number of MPI ranks in the x direction 
 1           MPI_NRANK_X[1]          # number of MPI ranks in the y direction 
 1           MPI_NRANK_X[2]          # number of MPI ranks in the z direction 
-1           OMP_NTHREAD             # number of OpenMP threads (<=0:default [omp_get_max_threads])
+-1          OMP_NTHREAD             # number of OpenMP threads (<=0:default [omp_get_max_threads])
 -1.0        END_T                   # end physical time of simulation (<0:default -> must be defined in Init_TestProb/RESTART)
 -1          END_STEP                # end step of simulation (<0:default -> must be defined in Init_TestProb)
 
@@ -42,8 +42,8 @@
 0           OPT__DT_USER            # time-step: user-defined --> edit "Mis_GetTimeStep_UserCriteria"
 
 -1          REGRID_COUNT            # refine every REGRID_COUNT sub-step (<0:default [4])
-8           FLAG_BUFFER_SIZE        # number of buffer cells for the flag operation (<0:default [8])
-0           MAX_LEVEL               # maximum refinement level (0 ... NLEVEL-1) (<0:default [NLEVEL-1])
+0           FLAG_BUFFER_SIZE        # number of buffer cells for the flag operation (<0:default [8])
+2           MAX_LEVEL               # maximum refinement level (0 ... NLEVEL-1) (<0:default [NLEVEL-1])
 0           OPT__FLAG_RHO           # flag: density (Input__Flag_Rho)
 0           OPT__FLAG_RHO_GRADIENT  # flag: density gradient (Input__Flag_RhoGradient) 
 0           OPT__FLAG_PRES_GRADIENT # flag: pressure gradient (Input__Flag_PresGradient) ##HYDRO ONLY##
