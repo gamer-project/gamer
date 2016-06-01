@@ -103,7 +103,7 @@ SIMU_OPTION += -DTIMING
 SIMU_OPTION += -DINTEL
 
 # double precision (not supported for the GPU + self-gravity mode in non-Fermi GPUs)
-SIMU_OPTION += -DFLOAT8
+#SIMU_OPTION += -DFLOAT8
 
 # serial mode (in which no MPI libraries are required)
 SIMU_OPTION += -DSERIAL

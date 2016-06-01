@@ -605,7 +605,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
                   {
                      Aux_Message( stderr, "ERROR : targeted time for temporal interpolation is incorrect !!\n" );
                      Aux_Message( stderr, "        (lv %d, T_Prep %20.14e, T_Min %20.14e, T_Max %20.14e)\n", 
-                                  PrepTime, Time_Prev[lv-1], Time[lv-1] );
+                                  lv-1, PrepTime, Time_Prev[lv-1], Time[lv-1] );
                      MPI_Exit();
                   }
                }

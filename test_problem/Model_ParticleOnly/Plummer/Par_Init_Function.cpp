@@ -8,6 +8,8 @@ extern real Plummer_MaxR;
 extern real Plummer_Rho0;
 extern real Plummer_R0;
 extern int  Plummer_NBinR;
+extern bool Plummer_Collision;
+extern real Plummer_Collision_D;
 
 double MassProf_Plummer( const double r );
 static void RanVec_FixRadius( const double r, double RanVec[] );
@@ -35,11 +37,12 @@ void Par_Init_Function()
    real *Pos[3] = { amr->Par->PosX, amr->Par->PosY, amr->Par->PosZ };
    real *Vel[3] = { amr->Par->VelX, amr->Par->VelY, amr->Par->VelZ };
 
-   const double Cen[3]   = { 0.5*amr->BoxSize[0],
-                             0.5*amr->BoxSize[1],
-                             0.5*amr->BoxSize[2] };
-   const double TotM_Inf = 4.0/3.0*M_PI*CUBE(Plummer_R0)*Plummer_Rho0;
-   const double Vmax_Fac = sqrt( 2.0*NEWTON_G*TotM_Inf );
+   const double Cen[3]      = { 0.5*amr->BoxSize[0],
+                                0.5*amr->BoxSize[1],
+                                0.5*amr->BoxSize[2] };
+   const double TotM_Inf    = 4.0/3.0*M_PI*CUBE(Plummer_R0)*Plummer_Rho0;
+   const double Vmax_Fac    = sqrt( 2.0*NEWTON_G*TotM_Inf );
+   const double Coll_Offset = 0.5*Plummer_Collision_D/sqrt(3.0);
 
    double *Table_MassProf_r = NULL;
    double *Table_MassProf_M = NULL;
@@ -50,12 +53,14 @@ void Par_Init_Function()
 
 // ============================================================================================================
 // set the random seed
-   srand( Plummer_RSeed );
+   srand( Plummer_RSeed + MPI_Rank*1000000 );
 
 
 // determine the total enclosed mass within the maximum radius
    TotM = MassProf_Plummer( Plummer_MaxR );   
    ParM = TotM / amr->Par->NPar;
+
+   if ( Plummer_Collision )   ParM *= 2.0;
 
 
 // construct the mass profile table
@@ -98,6 +103,10 @@ void Par_Init_Function()
 //    randomly set the position vector with a given radius
       RanVec_FixRadius( RanR, RanVec );
       for (int d=0; d<3; d++)    Pos[d][p] = RanVec[d] + Cen[d];
+
+//    set position offset for the Plummer collision test
+      if ( Plummer_Collision )
+      for (int d=0; d<3; d++)    Pos[d][p] += Coll_Offset*( (p<amr->Par->NPar/2)?-1.0:+1.0 );
 
 
 //    velocity

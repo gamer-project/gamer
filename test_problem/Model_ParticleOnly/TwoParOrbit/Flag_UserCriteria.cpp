@@ -35,6 +35,11 @@ bool Flag_UserCriteria( const int i, const int j, const int k, const int lv, con
 
    Flag = Radius < 0.1;
 
+   /*
+   if ( amr->patch[0][lv][PID]->son == -1 )     Flag = amr->patch[0][lv][PID]->NPar > 0;
+   else                                         Flag = Par_CountParticleInDescendant( lv, PID ) > 0;
+   */
+
    return Flag;
 
 } // FUNCTION : Flag_UserCriteria

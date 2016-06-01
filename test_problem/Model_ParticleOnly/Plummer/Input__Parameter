@@ -1,4 +1,4 @@
-2.0         BOX_SIZE                # size of the simulation box (Mpc/h in COMOVING)
+3.0         BOX_SIZE                # size of the simulation box (Mpc/h in COMOVING)
 64          NX0_TOT[0]              # number of base-level grids in the x direction
 64          NX0_TOT[1]              # number of base-level grids in the y direction
 64          NX0_TOT[2]              # number of base-level grids in the z direction
@@ -42,7 +42,7 @@
 0           OPT__DT_USER            # time-step: user-defined --> edit "Mis_GetTimeStep_UserCriteria"
 
 -1          REGRID_COUNT            # refine every REGRID_COUNT sub-step (<0:default [4])
-0           FLAG_BUFFER_SIZE        # number of buffer cells for the flag operation (<0:default [8])
+-1          FLAG_BUFFER_SIZE        # number of buffer cells for the flag operation (<0:default [8])
 2           MAX_LEVEL               # maximum refinement level (0 ... NLEVEL-1) (<0:default [NLEVEL-1])
 0           OPT__FLAG_RHO           # flag: density (Input__Flag_Rho)
 0           OPT__FLAG_RHO_GRADIENT  # flag: density gradient (Input__Flag_RhoGradient) 
@@ -126,7 +126,7 @@
 0           OPT__OUTPUT_POT         # output the potential field 
 2           OPT__OUTPUT_MODE        # (1, 2, 3) -> (const step, const dt, dump table)
 5           OUTPUT_STEP             # output data every OUTPUT_STEP step
-2.0e-1      OUTPUT_DT               # output data every OUTPUT_DT time interval
+1.0e0       OUTPUT_DT               # output data every OUTPUT_DT time interval
 0.0         OUTPUT_PART_X           # x coordinate for the option OPT__OUTPUT_PART
 0.0         OUTPUT_PART_Y           # y coordinate for the option OPT__OUTPUT_PART
 0.0         OUTPUT_PART_Z           # z coordinate for the option OPT__OUTPUT_PART

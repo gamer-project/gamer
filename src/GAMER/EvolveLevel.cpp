@@ -345,6 +345,12 @@ void EvolveLevel( const int lv, const double dTime )
 
          TIMING_FUNC(   Refine( lv, USELB_YES ),   Timer_Refine[lv],   false   );
 
+         Time          [lv+1]                     = Time[lv];
+         amr->FluSgTime[lv+1][ amr->FluSg[lv+1] ] = Time[lv];
+#        ifdef GRAVITY
+         amr->PotSgTime[lv+1][ amr->PotSg[lv+1] ] = Time[lv];
+#        endif
+
 #        ifdef STORE_POT_GHOST
          if ( amr->Par->ImproveAcc )
          TIMING_FUNC(   Poi_StorePotWithGhostZone( lv+1, amr->PotSg[lv+1], false ),   Timer_Refine[lv],   false   );
@@ -377,13 +383,6 @@ void EvolveLevel( const int lv, const double dTime )
 #        endif
 
          if ( OPT__VERBOSE  &&  MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );
-
-
-         Time          [lv+1]                     = Time[lv];
-         amr->FluSgTime[lv+1][ amr->FluSg[lv+1] ] = Time[lv];
-#        ifdef GRAVITY
-         amr->PotSgTime[lv+1][ amr->PotSg[lv+1] ] = Time[lv];
-#        endif
 
          if ( OPT__PATCH_COUNT == 2 )  Aux_PatchCount();
 

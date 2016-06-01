@@ -19,7 +19,7 @@
 // Return      :  "true"  if the flag criteria are satisfied
 //                "false" if the flag criteria are not satisfied
 //-------------------------------------------------------------------------------------------------------
-bool Flag_UserCriteria( const int i, const int j, const int k, const int lv, const int PID, const real Threshold )
+bool Flag_UserCriteria( const int i, const int j, const int k, const int lv, const int PID, const double Threshold )
 {
 
    bool Flag = false;
