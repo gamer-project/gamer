@@ -2,14 +2,15 @@
 #include "GAMER.h"
 
 extern Timer_t *Timer_Flu_Advance[NLEVEL];
+extern Timer_t *Timer_Gra_Advance[NLEVEL];
 extern Timer_t *Timer_FixUp      [NLEVEL];
 extern Timer_t *Timer_Flag       [NLEVEL];
 extern Timer_t *Timer_Refine     [NLEVEL];
 extern Timer_t *Timer_Lv         [NLEVEL];
 extern Timer_t *Timer_GetBuf     [NLEVEL][8];
-#ifdef GRAVITY
-extern Timer_t *Timer_Gra_Advance[NLEVEL];
-#endif
+extern Timer_t *Timer_Par_Update [NLEVEL][3];
+extern Timer_t *Timer_Par_2Sib   [NLEVEL];
+extern Timer_t *Timer_Par_2Son   [NLEVEL];
 
 
 
@@ -60,14 +61,15 @@ void EvolveLevel( const int lv, const double dTime )
       if ( OPT__VERBOSE  &&  MPI_Rank == 0 )
          Aux_Message( stdout, "   Lv %2d: Par_UpdateParticle (predict) %5s... ", lv, "" );
 
-      Par_UpdateParticle( lv, Time[lv]+dTime_SubStep, Time[lv], PAR_UPSTEP_PRED );
+      TIMING_FUNC(   Par_UpdateParticle( lv, Time[lv]+dTime_SubStep, Time[lv], PAR_UPSTEP_PRED ),
+                     Timer_Par_Update[lv][0],   true   );
 
       if ( OPT__VERBOSE  &&  MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );
 
       if ( OPT__VERBOSE  &&  MPI_Rank == 0 )
          Aux_Message( stdout, "   Lv %2d: Par_PassParticle2Sibling %9s... ", lv, "" );
 
-      Par_PassParticle2Sibling( lv );
+      TIMING_FUNC(   Par_PassParticle2Sibling( lv ),   Timer_Par_2Sib[lv],   true   );
 
       if ( OPT__VERBOSE  &&  MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );
 #     endif
@@ -236,24 +238,28 @@ void EvolveLevel( const int lv, const double dTime )
          if ( OPT__VERBOSE  &&  MPI_Rank == 0 )
             Aux_Message( stdout, "   Lv %2d: Par_UpdateParticle (correct Lv %2d)... ", lv, lv );
 
-         Par_UpdateParticle( lv, Time[lv]+dTime_SubStep, Time[lv], PAR_UPSTEP_CORR );
+         TIMING_FUNC(   Par_UpdateParticle( lv, Time[lv]+dTime_SubStep, Time[lv], PAR_UPSTEP_CORR ),
+                        Timer_Par_Update[lv][1],   true   );
 
          if ( OPT__VERBOSE  &&  MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );
 
-         if ( lv > 0 ) {
-         if ( OPT__VERBOSE  &&  MPI_Rank == 0 )
-            Aux_Message( stdout, "   Lv %2d: Par_UpdateParticle (correct Lv %2d)... ", lv, lv-1 );
+         if ( lv > 0 )
+         {
+            if ( OPT__VERBOSE  &&  MPI_Rank == 0 )
+               Aux_Message( stdout, "   Lv %2d: Par_UpdateParticle (correct Lv %2d)... ", lv, lv-1 );
 
-//       apply velocity correction for particles just travelling from lv to lv-1
-         Par_UpdateParticle( lv-1, Time[lv]+dTime_SubStep, Time[lv], PAR_UPSTEP_CORR );
+//          apply velocity correction for particles just travelling from lv to lv-1
+            TIMING_FUNC(   Par_UpdateParticle( lv-1, Time[lv]+dTime_SubStep, Time[lv], PAR_UPSTEP_CORR ),
+                           Timer_Par_Update[lv][2],   true   );
 
-         if ( OPT__VERBOSE  &&  MPI_Rank == 0 )    Aux_Message( stdout, "done\n" ); }
+            if ( OPT__VERBOSE  &&  MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );
+         }
       }
 
       if ( OPT__VERBOSE  &&  MPI_Rank == 0 )
          Aux_Message( stdout, "   Lv %2d: Par_PassParticle2Son %12s ... ", lv, "" );
 
-      Par_PassParticle2Son_AllPatch( lv );
+      TIMING_FUNC(   Par_PassParticle2Son_AllPatch( lv ),   Timer_Par_2Son[lv],   true   );
 
       if ( OPT__VERBOSE  &&  MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );
 #     endif

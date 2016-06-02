@@ -157,7 +157,7 @@ void Par_FindHomePatch_Base( const int *BaseP )
             const real *ParPos[3] = { amr->Par->PosX, amr->Par->PosY, amr->Par->PosZ };
             amr->patch[0][0][TPID]->AddParticle( 1, &ParID, &amr->Par->NPar_Lv[0], ParPos, amr->Par->NPar, __FUNCTION__ );
 #           else
-            amr->patch[0][0][TPID]->AddParticle( 1, &ParID, &amr->Par->NPar_Lv[0],  );
+            amr->patch[0][0][TPID]->AddParticle( 1, &ParID, &amr->Par->NPar_Lv[0] );
 #           endif
          }
       } // for (long p=0; p<amr->Par->NPar; p++)

@@ -7,6 +7,7 @@
 
 extern Timer_t *Timer_Gra_Advance[NLEVEL];
 extern Timer_t *Timer_GetBuf     [NLEVEL][8];
+extern Timer_t *Timer_Par_Collect[NLEVEL];
 
 
 
@@ -71,7 +72,8 @@ void Gra_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, co
 
 // collect particles from all descendant patches
 #  ifdef PARTICLE
-   if ( Poisson )    Par_CollectParticleFromDescendant( lv );
+   if ( Poisson )    TIMING_FUNC(   Par_CollectParticleFromDescendant( lv ),
+                                    Timer_Par_Collect[lv],   false   );
 #  endif
 
 
@@ -88,7 +90,9 @@ void Gra_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, co
          amr->PotSgTime[lv][SaveSg_Pot] = TimeNew;
 
 #        ifdef STORE_POT_GHOST
-         if ( amr->Par->ImproveAcc )   Poi_StorePotWithGhostZone( lv, SaveSg_Pot, true );
+         if ( amr->Par->ImproveAcc )
+         TIMING_FUNC(   Poi_StorePotWithGhostZone( lv, SaveSg_Pot, true ),
+                        Timer_Gra_Advance[lv],   false   );   
 #        endif
 
          TIMING_FUNC(   Buf_GetBufferData( lv, NULL_INT, SaveSg_Pot, POT_FOR_POISSON, _POTE, Pot_ParaBuf, USELB_YES ),
@@ -134,7 +138,8 @@ void Gra_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, co
 
 // free variables of descendant particles
 #  ifdef PARTICLE
-   if ( Poisson )    Par_CollectParticleFromDescendant_FreeMemory( lv );
+   if ( Poisson )    TIMING_FUNC(   Par_CollectParticleFromDescendant_FreeMemory( lv ),
+                                    Timer_Par_Collect[lv],   true   );
 #  endif
 
 } // FUNCTION : Gra_AdvanceDt

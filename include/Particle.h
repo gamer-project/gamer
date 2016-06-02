@@ -7,9 +7,9 @@
 #  error : ERROR : PARTICLE is not defined !!
 #endif
 
-//#ifdef GAMER_DEBUG
+#ifdef GAMER_DEBUG
 #  define DEBUG_PARTICLE
-//#endif
+#endif
 
 // Factors used in "AddParticle" and "RemoveParticle" to determine the ratio between ParListSize and NPar
 // PARLIST_GROWTH_FACTOR must >= 1.0; PARLIST_REDUCE_FACTOR must <= 1.0

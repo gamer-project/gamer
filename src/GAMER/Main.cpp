@@ -221,6 +221,10 @@ Timer_t *Timer_Flag       [NLEVEL];
 Timer_t *Timer_Refine     [NLEVEL];
 Timer_t *Timer_GetBuf     [NLEVEL][8];
 Timer_t *Timer_Lv         [NLEVEL];
+Timer_t *Timer_Par_Update [NLEVEL][3];
+Timer_t *Timer_Par_2Sib   [NLEVEL];
+Timer_t *Timer_Par_2Son   [NLEVEL];
+Timer_t *Timer_Par_Collect[NLEVEL];
 #endif
 
 #ifdef TIMING_SOLVER
