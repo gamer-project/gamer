@@ -65,19 +65,16 @@ void Par_MassAssignment( const long *ParList, const long NPar, const ParInterp_t
    if ( NPar == 0 )  return;
 
 
-// 2. prepare the particle data
+// 2. copy particle position since they might be modified during the position prediction
    real *Pos[3] = { NULL, NULL, NULL };
-   real *Mass   = NULL;
    long  ParID;
 
-   Mass = new real [NPar];
    for (int d=0; d<3; d++)    Pos[d] = new real [NPar];
 
    for (long p=0; p<NPar; p++)
    {
       ParID = ParList[p];
 
-      Mass  [p] = amr->Par->Mass[ParID];
       Pos[0][p] = amr->Par->PosX[ParID];
       Pos[1][p] = amr->Par->PosY[ParID];
       Pos[2][p] = amr->Par->PosZ[ParID];
@@ -121,6 +118,8 @@ void Par_MassAssignment( const long *ParList, const long NPar, const ParInterp_t
       {
          for (long p=0; p<NPar; p++)
          {
+            ParID = ParList[p];
+
 //          4.1.1 calculate the nearest grid index
             for (int d=0; d<3; d++)    
             {
@@ -140,7 +139,7 @@ void Par_MassAssignment( const long *ParList, const long NPar, const ParInterp_t
             }
 
 //          4.1.2 assign mass if within the Rho array
-            ParDens = Mass[p]*_dh3;
+            ParDens = amr->Par->Mass[ParID]*_dh3;
 
             if (  WithinRho( idx, RhoSize )  )
                Rho3D[ idx[2] ][ idx[1] ][ idx[0] ] += ParDens;
@@ -158,6 +157,8 @@ void Par_MassAssignment( const long *ParList, const long NPar, const ParInterp_t
 
          for (long p=0; p<NPar; p++)
          {
+            ParID = ParList[p];
+
             for (int d=0; d<3; d++)
             {
 //             4.2.1 calculate the array index of the left and right cells
@@ -187,7 +188,7 @@ void Par_MassAssignment( const long *ParList, const long NPar, const ParInterp_t
             } // for (int d=0; d<3; d++)
 
 //          4.2.3 assign mass if within the Rho array
-            ParDens = Mass[p]*_dh3;
+            ParDens = amr->Par->Mass[ParID]*_dh3;
 
             for (int k=0; k<2; k++) {  idx[2] = idxLR[k][2];
             for (int j=0; j<2; j++) {  idx[1] = idxLR[j][1];
@@ -211,6 +212,8 @@ void Par_MassAssignment( const long *ParList, const long NPar, const ParInterp_t
 
          for (long p=0; p<NPar; p++)
          {
+            ParID = ParList[p];
+
             for (int d=0; d<3; d++)
             {
 //             4.3.1 calculate the array index of the left, central, and right cells
@@ -242,7 +245,7 @@ void Par_MassAssignment( const long *ParList, const long NPar, const ParInterp_t
             } // for (int d=0; d<3; d++)
 
 //          4.3.3 assign mass if within the Rho array
-            ParDens = Mass[p]*_dh3;
+            ParDens = amr->Par->Mass[ParID]*_dh3;
 
             for (int k=0; k<3; k++) {  idx[2] = idxLCR[k][2];
             for (int j=0; j<3; j++) {  idx[1] = idxLCR[j][1];
@@ -260,7 +263,6 @@ void Par_MassAssignment( const long *ParList, const long NPar, const ParInterp_t
 
 
 // 5. free memory
-   delete [] Mass;
    for (int d=0; d<3; d++)    delete [] Pos[d];
 
 } // FUNCTION : Par_MassAssignment
