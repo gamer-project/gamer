@@ -4,7 +4,7 @@ set size ratio -1
 set samples 1000
 
 ID0 = 0
-ID1 = 126
+ID1 = 55
 R   = 0.15 
 C   = 0.5
 

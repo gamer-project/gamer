@@ -180,6 +180,13 @@ void Aux_TakeNote()
 #     endif // MODEL
 
 //    e. options in PARTICLE
+#     ifdef PARTICLE
+#     ifdef STORE_PAR_ACC
+      fprintf( Note, "STORE_PAR_ACC             ON\n" );
+#     else
+      fprintf( Note, "STORE_PAR_ACC             OFF\n" );
+#     endif
+#     endif
 
       fprintf( Note, "***********************************************************************************\n" );
       fprintf( Note, "\n\n");

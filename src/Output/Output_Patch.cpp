@@ -206,17 +206,27 @@ void Output_Patch( const int lv, const int PID, const int FluSg, const int PotSg
    fprintf( File, "== PARTICLE DATA == \n" );
    fprintf( File, "===================\n" );
    fprintf( File, "\n" );
-   fprintf( File, "%5s  %10s  %13s  %13s  %13s  %13s  %13s  %13s  %13s\n", 
-            "No.", "ParID", "Mass", "X", "Y", "Z", "Vx", "Vy", "Vz" );
+   fprintf( File, "%5s  %10s  %13s  %13s  %13s  %13s  %13s  %13s  %13s  %13s", 
+            "No.", "ParID", "Mass", "X", "Y", "Z", "Vx", "Vy", "Vz", "Time" );
+#  ifdef STORE_PAR_ACC
+   fprintf( File, "  %13s  %13s  %13s", "AccX", "AccY", "AccZ" );
+#  endif
+   fprintf( File, "\n" );
 
    for (int p=0; p<Relation->NPar; p++)
    {
       ParID = Relation->ParList[p];
 
-      fprintf( File, "%5d  %10ld  %13.6e  %13.6e  %13.6e  %13.6e  %13.6e  %13.6e  %13.6e\n", 
+      fprintf( File, "%5d  %10ld  %13.6e  %13.6e  %13.6e  %13.6e  %13.6e  %13.6e  %13.6e  %13.6e", 
                p, ParID, amr->Par->Mass[ ParID ],
                amr->Par->PosX[ ParID ], amr->Par->PosY[ ParID ], amr->Par->PosZ[ ParID ],
-               amr->Par->VelX[ ParID ], amr->Par->VelY[ ParID ], amr->Par->VelZ[ ParID ] );
+               amr->Par->VelX[ ParID ], amr->Par->VelY[ ParID ], amr->Par->VelZ[ ParID ],
+               amr->Par->Time[ ParID ] );
+#     ifdef STORE_PAR_ACC
+      fprintf( File, "  %13.6e  %13.6e  %13.6e",
+               amr->Par->AccX[ ParID ], amr->Par->AccY[ ParID ], amr->Par->AccZ[ ParID ] );
+#     endif
+      fprintf( File, "\n" );
    }
 #  endif // #ifdef PARTICLE
 

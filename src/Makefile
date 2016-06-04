@@ -77,6 +77,8 @@ endif # MODEL
 
 # (e) PARTICLE options
 # ------------------------------------------------------------------------------------
+# store particle acceleration
+SIMU_OPTION += -DSTORE_PAR_ACC
 
 
 # (f) optimization and compilation options

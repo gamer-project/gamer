@@ -427,7 +427,8 @@ void Par_CollectParticleFromDescendant( const int FaLv, const int FaPID );
 void Par_MassAssignment( const long *ParList, const long NPar, const ParInterp_t IntScheme, real *Rho,
                          const int RhoSize, const double *EdgeL, const double dh, const bool PredictPos,
                          const double TargetTime, const bool InitZero, const bool Periodic, const int PeriodicSize[3] );
-void Par_UpdateParticle( const int lv, const double TimeNew, const double TimeOld, const ParUpStep_t Operation );
+void Par_UpdateParticle( const int lv, const double TimeNew, const double TimeOld, const ParUpStep_t UpdateStep,
+                         const bool StoreAcc, const bool UseStoredAcc );
 void Par_GetTimeStep_Velocity( double &dt, double &dTime, int &MinDtLv, real &MinDtVar, const double dt_dTime );
 void Par_PassParticle2Sibling( const int lv );
 bool Par_WithinActiveRegion( const real x, const real y, const real z );

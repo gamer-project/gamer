@@ -37,6 +37,12 @@ void EvolveLevel( const int lv, const double dTime )
    const int    NSubStep      = 1;
 #  endif
    const double dTime_SubStep = dTime/NSubStep;
+#  ifdef PARTICLE
+   const bool   StoreAcc_Yes     = true;
+   const bool   StoreAcc_No      = false;
+   const bool   UseStoredAcc_Yes = true;
+   const bool   UseStoredAcc_No  = false;
+#  endif
 
    double dt_SubStep;
 
@@ -61,8 +67,16 @@ void EvolveLevel( const int lv, const double dTime )
       if ( OPT__VERBOSE  &&  MPI_Rank == 0 )
          Aux_Message( stdout, "   Lv %2d: Par_UpdateParticle (predict) %5s... ", lv, "" );
 
-      TIMING_FUNC(   Par_UpdateParticle( lv, Time[lv]+dTime_SubStep, Time[lv], PAR_UPSTEP_PRED ),
+#     ifdef STORE_PAR_ACC
+      TIMING_FUNC(   Par_UpdateParticle( lv, Time[lv]+dTime_SubStep, Time[lv], PAR_UPSTEP_PRED,
+                                         (amr->Par->Integ == PAR_INTEG_EULER) ? StoreAcc_Yes    : StoreAcc_No,
+                                         (amr->Par->Integ == PAR_INTEG_EULER) ? UseStoredAcc_No : UseStoredAcc_Yes ),
                      Timer_Par_Update[lv][0],   true   );
+#     else
+      TIMING_FUNC(   Par_UpdateParticle( lv, Time[lv]+dTime_SubStep, Time[lv], PAR_UPSTEP_PRED,
+                                         StoreAcc_No, UseStoredAcc_No ),
+                     Timer_Par_Update[lv][0],   true   );
+#     endif
 
       if ( OPT__VERBOSE  &&  MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );
 
@@ -238,8 +252,15 @@ void EvolveLevel( const int lv, const double dTime )
          if ( OPT__VERBOSE  &&  MPI_Rank == 0 )
             Aux_Message( stdout, "   Lv %2d: Par_UpdateParticle (correct Lv %2d)... ", lv, lv );
 
-         TIMING_FUNC(   Par_UpdateParticle( lv, Time[lv]+dTime_SubStep, Time[lv], PAR_UPSTEP_CORR ),
+#        ifdef STORE_PAR_ACC
+         TIMING_FUNC(   Par_UpdateParticle( lv, Time[lv]+dTime_SubStep, Time[lv], PAR_UPSTEP_CORR,
+                                            StoreAcc_Yes, UseStoredAcc_No ),
                         Timer_Par_Update[lv][1],   true   );
+#        else
+         TIMING_FUNC(   Par_UpdateParticle( lv, Time[lv]+dTime_SubStep, Time[lv], PAR_UPSTEP_CORR,
+                                            StoreAcc_No,  UseStoredAcc_No ),
+                        Timer_Par_Update[lv][1],   true   );
+#        endif
 
          if ( OPT__VERBOSE  &&  MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );
 
@@ -249,8 +270,15 @@ void EvolveLevel( const int lv, const double dTime )
                Aux_Message( stdout, "   Lv %2d: Par_UpdateParticle (correct Lv %2d)... ", lv, lv-1 );
 
 //          apply velocity correction for particles just travelling from lv to lv-1
-            TIMING_FUNC(   Par_UpdateParticle( lv-1, Time[lv]+dTime_SubStep, Time[lv], PAR_UPSTEP_CORR ),
+#           ifdef STORE_PAR_ACC
+            TIMING_FUNC(   Par_UpdateParticle( lv-1, Time[lv]+dTime_SubStep, Time[lv], PAR_UPSTEP_CORR,
+                                               StoreAcc_Yes, UseStoredAcc_No ),
                            Timer_Par_Update[lv][2],   true   );
+#           else
+            TIMING_FUNC(   Par_UpdateParticle( lv-1, Time[lv]+dTime_SubStep, Time[lv], PAR_UPSTEP_CORR,
+                                               StoreAcc_No,  UseStoredAcc_No ),
+                           Timer_Par_Update[lv][2],   true   );
+#           endif
 
             if ( OPT__VERBOSE  &&  MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );
          }

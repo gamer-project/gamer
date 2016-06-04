@@ -31,6 +31,9 @@ void Par_Output_Particle( const char *FileName )
    fprintf( File, "#Time %20.14e   Step %13ld   Active / Inactive Particles %13ld / %13ld\n\n",
             Time[0], Step, amr->Par->NPar_Active, amr->Par->NPar-amr->Par->NPar_Active );
    fprintf( File, "#%9s  %21s  %21s  %21s  %21s  %21s  %21s  %21s  %21s", "ID", "Mass", "X", "Y", "Z", "Vx", "Vy", "Vz", "Time" );
+#  ifdef STORE_PAR_ACC
+   fprintf( File, "  %21s  %21s  %21s", "AccX", "AccY", "AccZ" );
+#  endif
    fprintf( File, "\n" );
 
    for (long p=0; p<amr->Par->NPar; p++)

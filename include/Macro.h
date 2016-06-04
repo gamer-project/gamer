@@ -209,7 +209,11 @@
 #ifdef PARTICLE
 
 // number of variables stored in each particle (excluding the passive variables)
-#  define NPAR_VAR      ( 8 + 0 )
+#  ifdef STORE_PAR_ACC
+#  define NPAR_VAR      ( 11 + 0 )
+#  else
+#  define NPAR_VAR      (  8 + 0 )
+#  endif
 #  define NPAR_PASSIVE     0
 //#  define NPAR_PASSIVE     NPASSIVE
 
@@ -222,6 +226,9 @@
 #  define  PAR_VELY        5
 #  define  PAR_VELZ        6
 #  define  PAR_TIME        7
+#  define  PAR_ACCX        8
+#  define  PAR_ACCY        9
+#  define  PAR_ACCZ       10
 
 #endif // #ifdef PARTICLE
 

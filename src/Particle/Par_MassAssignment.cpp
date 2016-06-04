@@ -93,7 +93,7 @@ void Par_MassAssignment( const long *ParList, const long NPar, const ParInterp_t
 //       skip particles waiting for velocity correction (they should already be synchronized with TargetTime)
          if ( amr->Par->Time[ParID] < (real)0.0 )  continue;
 
-         dt = TargetTime - amr->Par->Time[ParID];
+         dt = (real)TargetTime - amr->Par->Time[ParID];
 
          Pos[0][p] += amr->Par->VelX[ParID]*dt;
          Pos[1][p] += amr->Par->VelY[ParID]*dt;

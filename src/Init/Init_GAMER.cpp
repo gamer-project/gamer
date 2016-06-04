@@ -226,6 +226,20 @@ void Init_GAMER( int *argc, char ***argv )
 #  endif // #ifdef GARVITY
 
 
+// initialize particle acceleration
+#  if ( defined PARTICLE  &&  defined STORE_PAR_ACC )
+   if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ...\n", "Calculating particle acceleration" ); 
+
+   const bool StoreAcc_Yes    = true;
+   const bool UseStoredAcc_No = false;
+
+   for (int lv=0; lv<NLEVEL; lv++)
+   Par_UpdateParticle( lv, amr->PotSgTime[lv][ amr->PotSg[lv] ], NULL_REAL, PAR_UPSTEP_ACC_ONLY, StoreAcc_Yes, UseStoredAcc_No );
+
+   if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", "Calculating particle acceleration" ); 
+#  endif
+
+
 // initialize the array "MinDtInfo_Fluid" since the kernel "CUFLU_GetMaxCFL" will NOT work during initialization
    real MinDtVar_AllLv_Fluid[NLEVEL][NCOMP];
    if ( OPT__ADAPTIVE_DT )     

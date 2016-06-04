@@ -46,6 +46,7 @@ void Aux_Error( const char *File, const int Line, const char *Func, const char *
 //                Pos         : Particle position
 //                Vel         : Particle velocity
 //                Time        : Particle physical time
+//                Acc         : Particle acceleration (only when STORE_PAR_ACC is on)
 //
 // Method      :  Particle_t     : Constructor 
 //               ~Particle_t     : Destructor
@@ -79,6 +80,11 @@ struct Particle_t
    real       *VelY;
    real       *VelZ;
    real       *Time;
+#  ifdef STORE_PAR_ACC
+   real       *AccX;
+   real       *AccY;
+   real       *AccZ;
+#  endif
 
 
    //===================================================================================
@@ -113,6 +119,11 @@ struct Particle_t
       VelY = NULL;
       VelZ = NULL;
       Time = NULL;
+#     ifdef STORE_PAR_ACC 
+      AccX = NULL;
+      AccY = NULL;
+      AccZ = NULL;
+#     endif
 
    } // METHOD : Particle_t
 
@@ -191,6 +202,11 @@ struct Particle_t
       VelY = ParVar[PAR_VELY];
       VelZ = ParVar[PAR_VELZ];
       Time = ParVar[PAR_TIME];
+#     ifdef STORE_PAR_ACC 
+      AccX = ParVar[PAR_ACCX];
+      AccY = ParVar[PAR_ACCY];
+      AccZ = ParVar[PAR_ACCZ];
+#     endif
 
    } // METHOD : InitVar
 
@@ -242,6 +258,11 @@ struct Particle_t
          VelY = ParVar[PAR_VELY];
          VelZ = ParVar[PAR_VELZ];
          Time = ParVar[PAR_TIME];
+#        ifdef STORE_PAR_ACC 
+         AccX = ParVar[PAR_ACCX];
+         AccY = ParVar[PAR_ACCY];
+         AccZ = ParVar[PAR_ACCZ];
+#        endif
       }
 
 
