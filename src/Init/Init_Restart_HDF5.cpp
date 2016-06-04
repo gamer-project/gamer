@@ -951,6 +951,10 @@ void Check_Makefile( const char *FileName )
 #  error : unsupported MODEL !!
 #  endif // MODEL
 
+#  ifdef PARTICLE
+   LoadField( "StoreParAcc",        &RS.StoreParAcc,        SID, TID, NonFatal, &RT.StoreParAcc,         1, NonFatal );
+#  endif
+
 
 // 5. close all objects
    Status = H5Tclose( TID );

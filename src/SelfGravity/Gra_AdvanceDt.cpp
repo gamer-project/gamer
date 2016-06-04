@@ -89,7 +89,7 @@ void Gra_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, co
          amr->PotSg    [lv]             = SaveSg_Pot;
          amr->PotSgTime[lv][SaveSg_Pot] = TimeNew;
 
-#        ifdef STORE_POT_GHOST
+#        if ( defined STORE_POT_GHOST  &&  defined PARTICLE )
          if ( amr->Par->ImproveAcc )
          TIMING_FUNC(   Poi_StorePotWithGhostZone( lv, SaveSg_Pot, true ),
                         Timer_Gra_Advance[lv],   false   );   

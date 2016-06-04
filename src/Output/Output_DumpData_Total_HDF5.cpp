@@ -69,7 +69,7 @@ Procedure for outputting new variables:
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2101)
+// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2102)
 // Description :  Output all simulation data in the HDF5 format, which can be used as a restart file
 //                or loaded by YT
 //
@@ -898,7 +898,7 @@ void FillIn_KeyInfo( KeyInfo_t &KeyInfo )
 
    const time_t CalTime       = time( NULL );   // calendar time
 
-   KeyInfo.FormatVersion      = 2101;
+   KeyInfo.FormatVersion      = 2102;
    KeyInfo.Model              = MODEL;
    KeyInfo.NLevel             = NLEVEL;
    KeyInfo.PatchSize          = PATCH_SIZE;
@@ -1124,6 +1124,14 @@ void FillIn_Makefile( Makefile_t &Makefile )
 #  else
 #  error : unsupported MODEL !!
 #  endif // MODEL
+
+#  ifdef PARTICLE
+#  ifdef STORE_PAR_ACC
+   Makefile.StoreParAcc        = 1;
+#  else
+   Makefile.StoreParAcc        = 0;
+#  endif
+#  endif
 
 } // FUNCTION : FillIn_Makefile
 
@@ -1681,6 +1689,10 @@ void GetCompound_Makefile( hid_t &H5_TypeID )
 #  else
 #  error : unsupported MODEL !!
 #  endif // MODEL
+
+#  ifdef PARTICLE
+   H5Tinsert( H5_TypeID, "StoreParAcc",        HOFFSET(Makefile_t,StoreParAcc       ), H5T_NATIVE_INT );
+#  endif
 
 } // FUNCTION : GetCompound_Makefile
 

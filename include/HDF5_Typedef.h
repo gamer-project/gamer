@@ -125,6 +125,10 @@ struct Makefile_t
 #  error : unsupported MODEL !!
 #  endif // MODEL
 
+#  ifdef PARTICLE
+   int StoreParAcc;
+#  endif
+
 }; // struct Makefile_t
 
 

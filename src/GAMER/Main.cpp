@@ -370,7 +370,7 @@ int main( int argc, char *argv[] )
          {
             CPU_PoissonSolver_FFT( Poi_Coeff, amr->PotSg[lv], Time[lv] );
 
-#           ifdef STORE_POT_GHOST
+#           if ( defined STORE_POT_GHOST  &&  defined PARTICLE )
             if ( amr->Par->ImproveAcc )   Poi_StorePotWithGhostZone( lv, amr->PotSg[lv], true );
 #           endif
          }

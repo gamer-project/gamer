@@ -385,7 +385,7 @@ void EvolveLevel( const int lv, const double dTime )
          amr->PotSgTime[lv+1][ amr->PotSg[lv+1] ] = Time[lv];
 #        endif
 
-#        ifdef STORE_POT_GHOST
+#        if ( defined STORE_POT_GHOST  &&  defined PARTICLE )
          if ( amr->Par->ImproveAcc )
          TIMING_FUNC(   Poi_StorePotWithGhostZone( lv+1, amr->PotSg[lv+1], false ),   Timer_Refine[lv],   false   );
 #        endif
