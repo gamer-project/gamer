@@ -305,6 +305,7 @@ struct InputPara_t
 #  ifdef PARTICLE 
    double Dt__ParVel;
    double Dt__ParVelMax;
+   double Dt__ParAcc;
 #  endif
 #  ifdef COMOVING
    double Dt__MaxDeltaA;

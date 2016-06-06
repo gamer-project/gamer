@@ -164,11 +164,11 @@ void Mis_GetTimeStep()
 // 1.8 CRITERION EIGHT : particle evolution
 // =============================================================================================================
 #  ifdef PARTICLE
-   double dTime8, dt8;
-   real   MinDtVar_ParVel;
-   int    MinDtLv_ParVel;
+   double dTime8[2], dt8[2];
+   real   MinDtVar_ParVelAcc[2];
+   int    MinDtLv_ParVelAcc[2];
 
-   Par_GetTimeStep_Velocity( dt8, dTime8, MinDtLv_ParVel, MinDtVar_ParVel, dt_dTime );
+   Par_GetTimeStep_VelAcc( dt8, dTime8, MinDtLv_ParVelAcc, MinDtVar_ParVelAcc, dt_dTime );
 #  endif // #ifdef PARTICLE
 
 
@@ -198,7 +198,10 @@ void Mis_GetTimeStep()
 #  endif
 
 #  ifdef PARTICLE
-   dTime_Base= fmin( dTime_Base, dTime8 );
+   dTime_Base= fmin( dTime_Base, dTime8[0] );
+
+   if ( DT__PARACC > 0.0 )
+   dTime_Base= fmin( dTime_Base, dTime8[1] );
 #  endif
 
 
@@ -266,7 +269,11 @@ void Mis_GetTimeStep()
 
 #     if ( PARTICLE )
       fprintf( File, "Particle  : dt = %12.6e, dTime = %12.6e, lv = %2d, MaxVel = %13.6e\n", 
-               dt8, dTime8, MinDtLv_ParVel, MinDtVar_ParVel );
+               dt8[0], dTime8[0], MinDtLv_ParVelAcc[0], MinDtVar_ParVelAcc[0] );
+
+      if ( DT__PARACC > 0.0 )
+      fprintf( File, "            dt = %12.6e, dTime = %12.6e, lv = %2d, MaxAcc = %13.6e\n", 
+               dt8[1], dTime8[1], MinDtLv_ParVelAcc[1], MinDtVar_ParVelAcc[1] );
 #     endif
 
 #     ifdef COMOVING

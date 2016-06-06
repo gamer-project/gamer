@@ -36,6 +36,7 @@
 0.0         DT__PHASE               # time-step: phase rotation coefficient (<0:default; 0:off) ##ELBDM ONLY##
 -1.0        DT__PARVEL              # time-step: particle velocity (<0:default) ##PARTICLE ONLY##
 -1.0        DT__PARVEL_MAX          # time-step: maximum allowed dt from particle velocity (<0:off) ##PARTICLE ONLY##
+-1.0        DT__PARACC              # time-step: particle acceleration (<0:default=0.5; 0:off) ##PARTICLE + STORE_PAR_ACC ONLY##
 0.01        DT__MAX_DELTA_A         # time-step: maximum variation of the scale factor A ##COMOVING ONLY##
 0           OPT__ADAPTIVE_DT        # time-step: allow time-step to change in each sub-step ##NOT SUPPORTED YET##
 1           OPT__RECORD_DT          # time-step: record the information of the time-step determination

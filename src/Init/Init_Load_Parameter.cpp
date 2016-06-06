@@ -186,6 +186,11 @@ void Init_Load_Parameter()
 #  endif
 
    getline( &input_line, &len, File );
+#  ifdef PARTICLE 
+   sscanf( input_line, "%lf%s",  &DT__PARACC,               string );
+#  endif
+
+   getline( &input_line, &len, File );
 #  ifdef COMOVING
    sscanf( input_line, "%lf%s",  &DT__MAX_DELTA_A,          string );
 #  endif

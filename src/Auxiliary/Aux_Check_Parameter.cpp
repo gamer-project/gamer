@@ -1141,6 +1141,14 @@ void Aux_Check_Parameter()
    if ( DT__PARVEL < 0.0 )
       Aux_Error( ERROR_INFO, "DT__PARVEL (%14.7e) is not within the normal range [>=0] !!\n", DT__PARVEL );
 
+#  ifdef STORE_PAR_ACC
+   if ( DT__PARACC < 0.0 )
+      Aux_Error( ERROR_INFO, "DT__PARACC (%14.7e) is not within the normal range [>=0] !!\n", DT__PARACC );
+#  else
+   if ( DT__PARACC != 0.0 )
+      Aux_Error( ERROR_INFO, "DT__PARACC (%14.7e) is NOT supported when STORE_PAR_ACC is off !!\n", DT__PARACC );
+#  endif
+
 
 // warning 
 // ------------------------------
@@ -1148,6 +1156,9 @@ void Aux_Check_Parameter()
 
    if ( DT__PARVEL > 1.0 )
       Aux_Message( stderr, "WARNING : DT__PARVEL (%13.7e) is not within the normal range [<=1.0] !!\n", DT__PARVEL );
+
+   if ( DT__PARACC > 1.0 )
+      Aux_Message( stderr, "WARNING : DT__PARACC (%13.7e) is not within the normal range [<=1.0] !!\n", DT__PARACC );
 
    if ( OPT__OVERLAP_MPI )
       Aux_Message( stderr, "WARNING : PARTICLE does not support OPT__OVERLAP_MPI !!\n" );

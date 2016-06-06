@@ -131,6 +131,18 @@ void Init_SetDefaultParameter()
       if ( MPI_Rank == 0 ) Aux_Message( stdout, "NOTE : parameter \"%s\" is set to the default value = %13.7e\n", 
                                         "DT__PARVEL", DT__PARVEL );
    } // if ( DT__PARVEL < 0.0 )
+
+   if ( DT__PARACC < 0.0 )
+   {
+#     ifdef STORE_PAR_ACC
+      DT__PARACC = 0.50;
+#     else
+      DT__PARACC = 0.00;   // disable it
+#     endif
+
+      if ( MPI_Rank == 0 ) Aux_Message( stdout, "NOTE : parameter \"%s\" is set to the default value = %13.7e\n", 
+                                        "DT__PARACC", DT__PARACC );
+   } // if ( DT__PARACC < 0.0 )
 #  endif
 
 

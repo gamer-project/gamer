@@ -127,8 +127,8 @@ double         LB_INPUT__WLI_MAX;
 
 // (2-5) particle
 #ifdef PARTICLE 
-double         DT__PARVEL, DT__PARVEL_MAX;
-real           MinDtInfo_ParVel[NLEVEL];
+double         DT__PARVEL, DT__PARVEL_MAX, DT__PARACC;
+real           MinDtInfo_ParVelAcc[2][NLEVEL];
 bool           OPT__OUTPUT_PARTICLE, OPT__CK_PARTICLE, OPT__PAR_LEVEL;
 #endif
 

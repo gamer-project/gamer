@@ -520,6 +520,7 @@ void Aux_TakeNote()
 #     ifdef PARTICLE
       fprintf( Note, "DT__PARVEL                %13.7e\n",  DT__PARVEL              );
       fprintf( Note, "DT__PARVEL_MAX           %14.7e\n",   DT__PARVEL_MAX          );
+      fprintf( Note, "DT__PARACC                %13.7e\n",  DT__PARACC              );
 #     endif
 #     ifdef COMOVING
       fprintf( Note, "DT__MAX_DELTA_A           %13.7e\n",  DT__MAX_DELTA_A         );
