@@ -1387,6 +1387,7 @@ void FillIn_InputPara( InputPara_t &InputPara )
    InputPara.Opt__Flag_Region        = OPT__FLAG_REGION;
 #  ifdef PARTICLE
    InputPara.Opt__Flag_NParPatch     = OPT__FLAG_NPAR_PATCH;
+   InputPara.Opt__Flag_NParCell      = OPT__FLAG_NPAR_CELL;
 #  endif
    InputPara.Opt__PatchCount         = OPT__PATCH_COUNT;
 #  ifdef PARTICLE
@@ -1548,6 +1549,7 @@ void FillIn_InputPara( InputPara_t &InputPara )
 
 #     ifdef PARTICLE
       InputPara.FlagTable_NParPatch   [lv]    = FlagTable_NParPatch   [lv];
+      InputPara.FlagTable_NParCell    [lv]    = FlagTable_NParCell    [lv];
 #     endif
    }
 
@@ -1922,6 +1924,7 @@ void GetCompound_InputPara( hid_t &H5_TypeID )
    H5Tinsert( H5_TypeID, "Opt__Flag_Region",        HOFFSET(InputPara_t,Opt__Flag_Region       ), H5T_NATIVE_INT     );
 #  ifdef PARTICLE
    H5Tinsert( H5_TypeID, "Opt__Flag_NParPatch",     HOFFSET(InputPara_t,Opt__Flag_NParPatch    ), H5T_NATIVE_INT     );
+   H5Tinsert( H5_TypeID, "Opt__Flag_NParCell",      HOFFSET(InputPara_t,Opt__Flag_NParCell     ), H5T_NATIVE_INT     );
 #  endif
    H5Tinsert( H5_TypeID, "Opt__PatchCount",         HOFFSET(InputPara_t,Opt__PatchCount        ), H5T_NATIVE_INT     );
 #  ifdef PARTICLE
@@ -2068,6 +2071,7 @@ void GetCompound_InputPara( hid_t &H5_TypeID )
 #  endif
 #  ifdef PARTICLE
    H5Tinsert( H5_TypeID, "FlagTable_NParPatch",    HOFFSET(InputPara_t,FlagTable_NParPatch     ), H5_TypeID_Arr_NLvM1Int      );
+   H5Tinsert( H5_TypeID, "FlagTable_NParCell",     HOFFSET(InputPara_t,FlagTable_NParCell      ), H5_TypeID_Arr_NLvM1Int      );
 #  endif
 
 

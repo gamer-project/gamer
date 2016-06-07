@@ -337,6 +337,7 @@ struct InputPara_t
    int    Opt__Flag_Region;
 #  ifdef PARTICLE
    int    Opt__Flag_NParPatch;
+   int    Opt__Flag_NParCell;
 #  endif
    int    Opt__PatchCount;
 #  ifdef PARTICLE
@@ -483,6 +484,7 @@ struct InputPara_t
 #  endif
 #  ifdef PARTICLE
    int    FlagTable_NParPatch   [NLEVEL-1]; 
+   int    FlagTable_NParCell    [NLEVEL-1];
 #  endif
    
 }; // struct InputPara_t

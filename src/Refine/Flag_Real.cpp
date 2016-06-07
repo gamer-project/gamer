@@ -36,7 +36,7 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
    for (int PID=0; PID<amr->num[lv]; PID++)  amr->patch[0][lv][PID]->flag = false;
 
 
-// set sibling IDs
+// set sibling indices
    const int SibID_Array[3][3][3]     = {  { {18, 10, 19}, {14,   4, 16}, {20, 11, 21} }, 
                                            { { 6,  2,  7}, { 0, 999,  1}, { 8,  3,  9} }, 
                                            { {22, 12, 23}, {15,   5, 17}, {24, 13, 25} }  };
@@ -50,6 +50,12 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
    const IntScheme_t Lohner_IntScheme = INT_MINMOD1D;          // interpolation scheme for Lohner
 #  ifndef GRAVITY
    const OptPotBC_t OPT__BC_POT       = BC_POT_NONE;
+#  endif
+#  ifdef PARTICLE
+   const bool PredictPos_No           = false;                 // used by Par_MassAssignment
+   const bool InitZero_Yes            = true;
+   const bool Periodic_No             = false;
+   const bool UnitDens_Yes            = true;
 #  endif
 
 //###NOTE: no refinement is allowed near the simulation boundary if the isolated BC for self-gravity is selected
@@ -85,6 +91,12 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
 #  endif // MODEL
 
    Lohner_Stride = Lohner_NVar*Lohner_NCell*Lohner_NCell*Lohner_NCell;  // stride of array for one patch
+
+
+// collect particles from all descendant patches
+#  ifdef PARTICLE
+   if ( OPT__FLAG_NPAR_CELL )    Par_CollectParticleFromDescendant( lv );
+#  endif
       
 
 //###ISSUE: use atomic ??      
@@ -96,6 +108,8 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
       real (*Lohner_Var)                 = NULL;   // array storing the variables for Lohner
       real (*Lohner_Ave)                 = NULL;   // array storing the averages of Lohner_Var for Lohner
       real (*Lohner_Slope)               = NULL;   // array storing the slopes of Lohner_Var for Lohner
+      real (*ParCount)[PS1][PS1]         = NULL;   // declare as **real** to be consistent with Par_MassAssignment
+
       int  i_start, i_end, j_start, j_end, k_start, k_end, SibID, SibPID, PID;
       bool ProperNesting, NextPatch;
 
@@ -104,6 +118,10 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
 #     elif ( MODEL == MHD )
 #     warning : WAIT MHD !!!
 #     endif // MODEL
+
+#     ifdef PARTICLE
+      if ( OPT__FLAG_NPAR_CELL )    ParCount = new real [PS1][PS1][PS1];
+#     endif
 
       if ( Lohner_NVar > 0 )    
       { 
@@ -202,6 +220,44 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
                                       Lohner_NVar );
 
 
+//             count the number of particles on each cell
+#              ifdef PARTICLE
+               if ( OPT__FLAG_NPAR_CELL )
+               {
+                  long *ParList = NULL;
+                  int   NPar;
+
+//                determine the number of particles and the particle list
+                  if ( amr->patch[0][lv][PID]->son == -1 )
+                  {
+                     NPar    = amr->patch[0][lv][PID]->NPar;
+                     ParList = amr->patch[0][lv][PID]->ParList;
+                  }
+
+                  else
+                  {
+                     NPar    = amr->patch[0][lv][PID]->NPar_Desc;
+                     ParList = amr->patch[0][lv][PID]->ParList_Desc;
+                  }
+
+#                 ifdef DEBUG_PARTICLE
+                  if ( NPar < 0 )
+                     Aux_Error( ERROR_INFO, "NPar (%d) has not been calculated (lv %d, PID %d) !!\n",
+                                NPar, lv, PID );
+
+                  if ( NPar > 0  &&  ParList == NULL )
+                     Aux_Error( ERROR_INFO, "ParList == NULL for NPar_Desc (%d) > 0 (lv %d, PID %d) !!\n",
+                                NPar, lv, PID );
+#                 endif
+
+//                deposit particles mass on grids (assuming unit density)
+                  Par_MassAssignment( ParList, NPar, PAR_INTERP_NGP, ParCount[0][0], PS1,
+                                      amr->patch[0][lv][PID]->EdgeL, amr->dh[lv], PredictPos_No, NULL_REAL,
+                                      InitZero_Yes, Periodic_No, NULL, UnitDens_Yes );
+               } // if ( OPT__FLAG_NPAR_CELL )
+#              endif // #ifdef PARTICLE
+
+
 //             loop over all cells within the target patch
                for (int k=0; k<PS1; k++)  {  if ( NextPatch )  break;
                                              k_start = ( k - FLAG_BUFFER_SIZE < 0    ) ? 0 : 1;
@@ -217,7 +273,7 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
 
 //                check if the targeted cell satisfies the refinement criteria (useless pointers are always == NULL)
                   if (  lv < MAX_LEVEL  &&  Flag_Check( lv, PID, i, j, k, Fluid, Pot, Pres, Lohner_Var+LocalID*Lohner_Stride,
-                                                        Lohner_Ave, Lohner_Slope, Lohner_NVar )  )
+                                                        Lohner_Ave, Lohner_Slope, Lohner_NVar, ParCount )  )
                   {
 //                   flag itself
                      amr->patch[0][lv][PID]->flag = true;
@@ -294,11 +350,8 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
       } // for (int PID0=0; PID0<amr->NPatchComma[lv][1]; PID0+=8)
 
 
-#     if   ( MODEL == HYDRO )
-      if ( OPT__FLAG_PRES_GRADIENT )   delete [] Pres;
-#     elif ( MODEL == MHD )
-#     warning : WAIT MHD !!!
-#     endif // MODEL
+      if ( Pres     != NULL )    delete [] Pres;
+      if ( ParCount != NULL )    delete [] ParCount;
 
       if ( Lohner_NVar > 0 )    
       {
@@ -308,6 +361,12 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
       }
 
    } // OpenMP parallel region
+
+
+// free variables of descendant particles
+#  ifdef PARTICLE
+   if ( OPT__FLAG_NPAR_CELL )    Par_CollectParticleFromDescendant_FreeMemory( lv );
+#  endif
 
 
 // apply the proper-nesting constraint again (should also apply to the buffer patches)

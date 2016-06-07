@@ -37,12 +37,18 @@ static bool WithinRho( const int idx[], const int RhoSize );
 //                InitZero     : True --> initialize Rho as zero
 //                Periodic     : True --> apply periodic boundary condition
 //                PeriodicSize : Number of cells in the periodic box (in the unit of dh)
+//                UnitDens     : Assign unit density to each particle regardless of the real particle mass
+//                               and cell size
+//                               --> Useful for counting the number of particles on each cell (together
+//                                   with IntScheme == PAR_INTERP_NGP), which can be used as a refinement
+//                                   criterion (OPT__FLAG_NPAR_CELL)
 //              
 // Return      :  Rho
 //-------------------------------------------------------------------------------------------------------
 void Par_MassAssignment( const long *ParList, const long NPar, const ParInterp_t IntScheme, real *Rho,
                          const int RhoSize, const double *EdgeL, const double dh, const bool PredictPos,
-                         const double TargetTime, const bool InitZero, const bool Periodic, const int PeriodicSize[3] )
+                         const double TargetTime, const bool InitZero, const bool Periodic, const int PeriodicSize[3],
+                         const bool UnitDens )
 {
 
 // check
@@ -145,7 +151,8 @@ void Par_MassAssignment( const long *ParList, const long NPar, const ParInterp_t
                Aux_Error( ERROR_INFO, "Mass[%ld] = %14.7e < 0.0 !!\n", ParID, amr->Par->Mass[ParID] );
 #           endif
 
-            ParDens = amr->Par->Mass[ParID]*_dh3;
+            if ( UnitDens )   ParDens = (real)1.0;
+            else              ParDens = amr->Par->Mass[ParID]*_dh3;
 
             if (  WithinRho( idx, RhoSize )  )
                Rho3D[ idx[2] ][ idx[1] ][ idx[0] ] += ParDens;
@@ -199,7 +206,9 @@ void Par_MassAssignment( const long *ParList, const long NPar, const ParInterp_t
             if ( amr->Par->Mass[ParID] < (real)0.0 )
                Aux_Error( ERROR_INFO, "Mass[%ld] = %14.7e < 0.0 !!\n", ParID, amr->Par->Mass[ParID] );
 #           endif
-            ParDens = amr->Par->Mass[ParID]*_dh3;
+
+            if ( UnitDens )   ParDens = (real)1.0;
+            else              ParDens = amr->Par->Mass[ParID]*_dh3;
 
             for (int k=0; k<2; k++) {  idx[2] = idxLR[k][2];
             for (int j=0; j<2; j++) {  idx[1] = idxLR[j][1];
@@ -261,7 +270,9 @@ void Par_MassAssignment( const long *ParList, const long NPar, const ParInterp_t
             if ( amr->Par->Mass[ParID] < (real)0.0 )
                Aux_Error( ERROR_INFO, "Mass[%ld] = %14.7e < 0.0 !!\n", ParID, amr->Par->Mass[ParID] );
 #           endif
-            ParDens = amr->Par->Mass[ParID]*_dh3;
+
+            if ( UnitDens )   ParDens = (real)1.0;
+            else              ParDens = amr->Par->Mass[ParID]*_dh3;
 
             for (int k=0; k<3; k++) {  idx[2] = idxLCR[k][2];
             for (int j=0; j<3; j++) {  idx[1] = idxLCR[j][1];

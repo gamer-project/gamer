@@ -205,7 +205,8 @@ void FindFather( const int lv, const int Mode );
 void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc );
 bool Flag_Check( const int lv, const int PID, const int i, const int j, const int k, 
                  const real Fluid[][PS1][PS1][PS1], const real Pot[][PS1][PS1], const real Pres[][PS1][PS1],
-                 const real *Lohner_Var, const real *Lohner_Ave, const real *Lohner_Slope, const int Lohner_NVar );
+                 const real *Lohner_Var, const real *Lohner_Ave, const real *Lohner_Slope, const int Lohner_NVar,
+                 const real ParCount[][PS1][PS1] );
 bool Flag_UserCriteria( const int i, const int j, const int k, const int lv, const int PID, const double Threshold);
 bool Flag_Region( const int i, const int j, const int k, const int lv, const int PID );
 bool Flag_Lohner( const int i, const int j, const int k, const OptLohnerForm_t Form, const real *Var1D, const real *Ave1D,
@@ -426,7 +427,8 @@ void Par_Aux_Check_Particle( const char *comment );
 void Par_CollectParticleFromDescendant( const int FaLv, const int FaPID );
 void Par_MassAssignment( const long *ParList, const long NPar, const ParInterp_t IntScheme, real *Rho,
                          const int RhoSize, const double *EdgeL, const double dh, const bool PredictPos,
-                         const double TargetTime, const bool InitZero, const bool Periodic, const int PeriodicSize[3] );
+                         const double TargetTime, const bool InitZero, const bool Periodic, const int PeriodicSize[3],
+                         const bool UnitDens );
 void Par_UpdateParticle( const int lv, const double TimeNew, const double TimeOld, const ParUpStep_t UpdateStep,
                          const bool StoreAcc, const bool UseStoredAcc );
 void Par_GetTimeStep_VelAcc( double dt[2], double dTime[2], int MinDtLv[2], real MinDtVar[2], const double dt_dTime );

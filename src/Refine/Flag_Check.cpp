@@ -22,18 +22,21 @@ static bool Check_Gradient( const int i, const int j, const int k, const real In
 //                Lohner_Ave     : Input array storing the averages for the Lohner error estimator
 //                Lohner_Slope   : Input array storing the slopes for the Lohner error estimator
 //                Lohner_NVar    : Number of variables stored in Lohner_Ave and Lohner_Slope
+//                ParCount       : Input array storing the number of particles on each cell
+//                                 (note that it has the **real** type)
 //
 // Return      :  "true"  if any  of the refinement criteria is satisfied
 //                "false" if none of the refinement criteria is satisfied
 //-------------------------------------------------------------------------------------------------------
 bool Flag_Check( const int lv, const int PID, const int i, const int j, const int k, 
                  const real Fluid[][PS1][PS1][PS1], const real Pot[][PS1][PS1], const real Pres[][PS1][PS1],
-                 const real *Lohner_Var, const real *Lohner_Ave, const real *Lohner_Slope, const int Lohner_NVar )
+                 const real *Lohner_Var, const real *Lohner_Ave, const real *Lohner_Slope, const int Lohner_NVar,
+                 const real ParCount[][PS1][PS1] )
 {
    
    bool Flag = false;
 
-// 0. check whether the input cell is within the regions allowed to be refined
+// check whether the input cell is within the regions allowed to be refined
 // ===========================================================================================
    if ( OPT__FLAG_REGION )
    {
@@ -41,8 +44,19 @@ bool Flag_Check( const int lv, const int PID, const int i, const int j, const in
    }
 
 
+#  ifdef PARTICLE
+// check the number of particles on each cell
+// ===========================================================================================
+   if ( OPT__FLAG_NPAR_CELL )
+   {
+      Flag |= ( ParCount[k][j][i] > FlagTable_NParCell[lv] );
+      if ( Flag )    return Flag;
+   }
+#  endif
+
+
 #  ifdef DENS
-// 1. check density magnitude
+// check density magnitude
 // ===========================================================================================
    if ( OPT__FLAG_RHO )
    {
@@ -51,7 +65,7 @@ bool Flag_Check( const int lv, const int PID, const int i, const int j, const in
    }
 
 
-// 2. check density gradient
+// check density gradient
 // ===========================================================================================
    if ( OPT__FLAG_RHO_GRADIENT )
    {
@@ -61,7 +75,7 @@ bool Flag_Check( const int lv, const int PID, const int i, const int j, const in
 #  endif
 
 
-// 3. check pressure gradient
+// check pressure gradient
 // ===========================================================================================
 #  if   ( MODEL == HYDRO )
    if ( OPT__FLAG_PRES_GRADIENT )
@@ -74,7 +88,7 @@ bool Flag_Check( const int lv, const int PID, const int i, const int j, const in
 #  endif // MODEL
 
 
-// 4. check ELBDM energy density
+// check ELBDM energy density
 // ===========================================================================================
 #  if ( MODEL == ELBDM )
    if ( OPT__FLAG_ENGY_DENSITY )
@@ -86,7 +100,7 @@ bool Flag_Check( const int lv, const int PID, const int i, const int j, const in
 #  endif
 
 
-// 5. check Lohner's error estimator
+// check Lohner's error estimator
 // ===========================================================================================
    if ( Lohner_NVar > 0 )
    {
@@ -96,7 +110,7 @@ bool Flag_Check( const int lv, const int PID, const int i, const int j, const in
    }
 
 
-// 6. check user-defined criteria
+// check user-defined criteria
 // ===========================================================================================
    if ( OPT__FLAG_USER )
    {

@@ -56,6 +56,8 @@
 -1          OPT__FLAG_LOHNER_FORM   # form of the Lohner error estimator (-1,0,1,2,3)->(default[1],FLASH1/2,form-invariant1/2)
 1           OPT__FLAG_USER          # flag: user-defined (Input__Flag_User) --> edit "Flag_UserCriteria"
 0           OPT__FLAG_REGION        # flag: specify the regions allowed to be refined --> edit "Flag_Region"
+1           OPT__FLAG_NPAR_PATCH    # flag: # of particles per patch (Input__Flag_NParPatch) (0/1/2:off/itself/siblings as well)
+0           OPT__FLAG_NPAR_CELL     # flag: # of particles per cell  (Input__Flag_NParCell)
 1           OPT__PATCH_COUNT        # count the patch # (0=off, 1=every step, 2=every sub-step)
 1           OPT__PAR_LEVEL          # get the number of active particles at each level ##PARTICLE ONLY##
 

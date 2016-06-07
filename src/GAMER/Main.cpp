@@ -129,8 +129,8 @@ double         LB_INPUT__WLI_MAX;
 #ifdef PARTICLE 
 double         DT__PARVEL, DT__PARVEL_MAX, DT__PARACC;
 real           MinDtInfo_ParVelAcc[2][NLEVEL];
-bool           OPT__OUTPUT_PARTICLE, OPT__CK_PARTICLE, OPT__PAR_LEVEL;
-int            OPT__FLAG_NPAR_PATCH, FlagTable_NParPatch[NLEVEL-1];
+bool           OPT__OUTPUT_PARTICLE, OPT__CK_PARTICLE, OPT__PAR_LEVEL, OPT__FLAG_NPAR_CELL;
+int            OPT__FLAG_NPAR_PATCH, FlagTable_NParPatch[NLEVEL-1], FlagTable_NParCell[NLEVEL-1];
 #endif
 
 

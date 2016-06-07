@@ -1227,6 +1227,7 @@ void Check_InputPara( const char *FileName )
    LoadField( "Opt__Flag_Region",        &RS.Opt__Flag_Region,        SID, TID, NonFatal, &RT.Opt__Flag_Region,         1, NonFatal );
 #  ifdef PARTICLE
    LoadField( "Opt__Flag_NParPatch",     &RS.Opt__Flag_NParPatch,     SID, TID, NonFatal, &RT.Opt__Flag_NParPatch,      1, NonFatal );
+   LoadField( "Opt__Flag_NParCell",      &RS.Opt__Flag_NParCell,      SID, TID, NonFatal, &RT.Opt__Flag_NParCell,       1, NonFatal );
 #  endif
    LoadField( "Opt__PatchCount",         &RS.Opt__PatchCount,         SID, TID, NonFatal, &RT.Opt__PatchCount,          1, NonFatal );
 #  ifdef PARTICLE
@@ -1381,24 +1382,25 @@ void Check_InputPara( const char *FileName )
 // initialize as -1 (to work with NLvRestart < NLEVEL)
    for (int lv=0; lv<NLEVEL-1; lv++)
    {
-      RS.FlagTable_Rho         [lv]    = -1.0; 
-      RS.FlagTable_RhoGradient [lv]    = -1.0; 
+      RS.FlagTable_Rho         [lv]    = -1.0;
+      RS.FlagTable_RhoGradient [lv]    = -1.0;
 
       for (int t=0; t<3; t++)
-      RS.FlagTable_Lohner      [lv][t] = -1.0; 
+      RS.FlagTable_Lohner      [lv][t] = -1.0;
 
-      RS.FlagTable_User        [lv]    = -1.0; 
+      RS.FlagTable_User        [lv]    = -1.0;
 
 #     if   ( MODEL == HYDRO )
-      RS.FlagTable_PresGradient[lv]    = -1.0; 
+      RS.FlagTable_PresGradient[lv]    = -1.0;
 
 #     elif ( MODEL == ELBDM )
       for (int t=0; t<2; t++)
-      RS.FlagTable_EngyDensity [lv][t] = -1.0; 
+      RS.FlagTable_EngyDensity [lv][t] = -1.0;
 #     endif
 
 #     ifdef PARTICLE
-      RS.FlagTable_NParPatch   [lv]    = -1; 
+      RS.FlagTable_NParPatch   [lv]    = -1;
+      RS.FlagTable_NParCell    [lv]    = -1;
 #     endif
    }
 
@@ -1442,6 +1444,9 @@ void Check_InputPara( const char *FileName )
 #  ifdef PARTICLE
    if ( OPT__FLAG_NPAR_PATCH )
    LoadField( "FlagTable_NParPatch",      RS.FlagTable_NParPatch,     SID, TID, NonFatal,  RT.FlagTable_NParPatch,     N1, NonFatal );
+
+   if ( OPT__FLAG_NPAR_CELL )
+   LoadField( "FlagTable_NParCell",       RS.FlagTable_NParCell,      SID, TID, NonFatal,  RT.FlagTable_NParCell,      N1, NonFatal );
 #  endif
 
 

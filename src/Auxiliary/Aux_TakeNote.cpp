@@ -565,6 +565,7 @@ void Aux_TakeNote()
       fprintf( Note, "OPT__FLAG_REGION          %d\n",      OPT__FLAG_REGION        );
 #     ifdef PARTICLE
       fprintf( Note, "OPT__FLAG_NPAR_PATCH      %d\n",      OPT__FLAG_NPAR_PATCH    );
+      fprintf( Note, "OPT__FLAG_NPAR_CELL       %d\n",      OPT__FLAG_NPAR_CELL     );
 #     endif
       fprintf( Note, "OPT__PATCH_COUNT          %d\n",      OPT__PATCH_COUNT        );
 #     ifdef PARTICLE
@@ -943,6 +944,16 @@ void Aux_TakeNote()
          fprintf( Note, "***********************************************************************************\n" );
          fprintf( Note, "  Level      # of Particles\n" );
          for (int lv=0; lv<MAX_LEVEL; lv++)  fprintf( Note, "%7d%20d\n", lv, FlagTable_NParPatch[lv] );
+         fprintf( Note, "***********************************************************************************\n" );
+         fprintf( Note, "\n\n");
+      }
+
+      if ( OPT__FLAG_NPAR_CELL )
+      {
+         fprintf( Note, "Flag Criterion (# of Particles per Cell)\n" );
+         fprintf( Note, "***********************************************************************************\n" );
+         fprintf( Note, "  Level      # of Particles\n" );
+         for (int lv=0; lv<MAX_LEVEL; lv++)  fprintf( Note, "%7d%20d\n", lv, FlagTable_NParCell[lv] );
          fprintf( Note, "***********************************************************************************\n" );
          fprintf( Note, "\n\n");
       }
