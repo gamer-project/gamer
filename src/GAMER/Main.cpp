@@ -324,9 +324,30 @@ int main( int argc, char *argv[] )
 //    ---------------------------------------------------------------------------------------------------
 
 
-//    c. restrict all data and re-calculate potential in the debug mode (in order to check the RESTART process)
+//    c. synchronize particles, restrict data, and re-calculate potential in the debug mode
+//       (in order to check the RESTART process)
 //    ---------------------------------------------------------------------------------------------------
 #     ifdef GAMER_DEBUG
+
+//    synchronize all particles
+#     if ( defined PARTICLE  &&  defined STORE_PAR_ACC )
+      if ( OPT__VERBOSE  &&  MPI_Rank == 0 )
+         Aux_Message( stdout, "   DEBUG: synchronize particles             ... " );
+
+      if (  Par_Synchronize( Time[0], PAR_SYNC_FORCE ) != 0  )
+         Aux_Error( ERROR_INFO, "particle synchronization failed !!\n" );
+
+//    particles may cross patch boundaries after synchronization
+      for (int lv=0; lv<NLEVEL; lv++)
+      {
+         Par_PassParticle2Sibling( lv );
+         Par_PassParticle2Son_AllPatch( lv );
+      }
+
+      if ( OPT__VERBOSE  &&  MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );
+#     endif
+
+//    restrict data
       for (int lv=MAX_LEVEL-1; lv>=0; lv--)
       {
          if ( NPatchTotal[lv+1] == 0 )    continue;
@@ -346,6 +367,7 @@ int main( int argc, char *argv[] )
          if ( OPT__VERBOSE  &&  MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );
       }
 
+//    calculate gravitational potential
 #     ifdef GRAVITY
       if ( OPT__GRAVITY_TYPE == GRAVITY_SELF  ||  OPT__GRAVITY_TYPE == GRAVITY_BOTH )
       for (int lv=0; lv<=MAX_LEVEL; lv++)

@@ -33,10 +33,11 @@ void Aux_Error( const char *File, const int Line, const char *Func, const char *
 //                Init        : Initialization methods (1/2/3 --> call function/restart/load from file)
 //                Interp      : Mass/acceleration interpolation scheme (NGP,CIC,TSC)
 //                Integ       : Integration scheme (PAR_INTEG_EULER, PAR_INTEG_KDK)
+//                SyncDump    : Synchronize particles in the output files (with PAR_SYNC_TEMP)
 //                ImproveAcc  : Improve force accuracy around the patch boundaries
 //                              (by using potential in the patch ghost zone instead of nearby patch or interpolation)
 //                PredictPos  : Predict particle position during mass assignment
-//                RemoveCell  : remove particles RemoveCell-base-level-cells away from the boundary (for non-periodic BC only
+//                RemoveCell  : remove particles RemoveCell-base-level-cells away from the boundary (for non-periodic BC only)
 //                GhostSize   : Number of ghost zones required for interpolation scheme
 //                ParVar      : Pointer arrays to different particle variables (Mass, Pos, Vel, ...)
 //                Passive     : Pointer arrays to different passive variables (e.g., metalicity)
@@ -65,6 +66,7 @@ struct Particle_t
    ParInit_t   Init;
    ParInterp_t Interp;
    ParInteg_t  Integ;
+   bool        SyncDump;
    bool        ImproveAcc;
    bool        PredictPos;
    double      RemoveCell;
@@ -102,6 +104,7 @@ struct Particle_t
       Init       = PAR_INIT_NONE;
       Interp     = PAR_INTERP_NONE;
       Integ      = PAR_INTEG_NONE;
+      SyncDump   = true;
       ImproveAcc = true;
       PredictPos = true;
       RemoveCell = -999.9;

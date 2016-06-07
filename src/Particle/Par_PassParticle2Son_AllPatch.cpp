@@ -18,6 +18,9 @@
 void Par_PassParticle2Son_AllPatch( const int FaLv )
 {
 
+// nothing to do if there is no patch at FaLv+1
+   if ( FaLv == TOP_LEVEL  ||  NPatchTotal[FaLv+1] == 0 )   return;
+
    for (int FaPID=0; FaPID<amr->NPatchComma[FaLv][1]; FaPID++)
    {
       if ( amr->patch[0][FaLv][FaPID]->son != -1 )    Par_PassParticle2Son( FaLv, FaPID );

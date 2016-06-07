@@ -426,7 +426,7 @@ void Init_SetDefaultParameter()
    for (int lv=0; lv<NLEVEL; lv++)  amr->ResPower2[lv] = NBits0 + lv;
 
 
-// (14) particle interpolation scheme, integration scheme, and removing zones
+// (14) particle options
 #  ifdef PARTICLE
    if ( amr->Par->Interp == PAR_INTERP_DEFAULT )
    {

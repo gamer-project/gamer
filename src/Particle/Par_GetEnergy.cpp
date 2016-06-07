@@ -16,6 +16,10 @@ extern double ExtPot_AuxArray[EXT_POT_NAUX_MAX];
 // Note        :  1. Use "call by reference" to return Ek and Ep
 //                2. Return Ep=0.0 if GRAVITY is off  
 //                3. External potential is included, but external acceleration is NOT included
+//                4. Particles may NOT be full synchronized when calculating their energies
+//                   --> But it is found to have a minimal effect since most particles are synchronized
+//                   --> We don't want to synchronize particles in this routine (by calling Par_Synchronize)
+//                       since particles may move outside the current patch which requires additional workload
 // 
 // Parameter   :  Ek :  Total kinematic energy to be returned
 //                Ep :  Total potential energy to be returned
@@ -356,6 +360,7 @@ void Par_GetEnergy( double &Ek, double &Ep )
 #  endif // #ifdef GRAVITY ... else ...
 
 } // FUNCTION : Par_GetEnergy
+
 
 
 #endif // #ifdef PARTICLE

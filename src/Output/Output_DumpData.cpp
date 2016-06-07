@@ -197,6 +197,12 @@ void Output_DumpData( const int Stage )
 // output data
    if ( OutputData || OutputData_RunTime )
    {
+//    synchronize all particles
+#     ifdef PARTICLE
+      int ParSyncStatus = -1;
+      if ( amr->Par->SyncDump )  ParSyncStatus = Par_Synchronize( Time[0], PAR_SYNC_TEMP );
+#     endif
+
       if ( OPT__OUTPUT_TOTAL )      Output_DumpData_Total( FileName_Total );
       if ( OPT__OUTPUT_PART  )      Output_DumpData_Part( OPT__OUTPUT_PART, OPT__OUTPUT_BASE, OUTPUT_PART_X, 
                                                           OUTPUT_PART_Y, OUTPUT_PART_Z, FileName_Part );
@@ -220,7 +226,12 @@ void Output_DumpData( const int Stage )
       }
 
       PreviousDumpStep = Step;
-   }
+
+//    restore particle attributes to the values before synchronization
+#     ifdef PARTICLE
+      if ( ParSyncStatus == 0 )  Par_Synchronize_Restore( Time[0] );
+#     endif
+   } // if ( OutputData || OutputData_RunTime )
 
 } // FUNCTION : Output_DumpData
 

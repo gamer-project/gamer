@@ -23,6 +23,7 @@
 1           PAR_INIT                # initialization option for particles: (1, 2, 3) -> (FUNCTION, RESTART, FILE)
 -1          PAR_INTERP              # particle interpolation scheme: (-1, 1, 2, 3) -> (default, NGP, CIC, TSC) [3]
 -1          PAR_INTEG               # particle integration scheme: (-1, 1, 2) -> (default, Euler, KDK) [2]
+1           PAR_SYNC_DUMP           # synchronize particles in data dumps (must turn on STORE_PAR_ACC)
 1           PAR_IMPROVE_ACC         # improve force accuracy around patch boundaries (must turn on STORE_POT_GHOST)
 1           PAR_PREDICT_POS         # predict particle position during mass assignment
 -1.0        PAR_REMOVE_CELL         # remove particles X-root-cells away from the boundary (for non-periodic BC only; <0.0:default)

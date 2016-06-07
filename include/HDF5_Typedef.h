@@ -282,6 +282,7 @@ struct InputPara_t
    int    Par_Init;
    int    Par_Interp;
    int    Par_Integ;
+   int    Par_SyncDump;
    int    Par_ImproveAcc;
    int    Par_PredictPos;
    double Par_RemoveCell;

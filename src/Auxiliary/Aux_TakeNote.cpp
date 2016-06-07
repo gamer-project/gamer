@@ -486,6 +486,7 @@ void Aux_TakeNote()
       fprintf( Note, "Par->Init                 %d\n",      amr->Par->Init        );
       fprintf( Note, "Par->Interp               %d\n",      amr->Par->Interp      );
       fprintf( Note, "Par->Integ                %d\n",      amr->Par->Integ       );
+      fprintf( Note, "Par->SyncDump             %d\n",      amr->Par->SyncDump    );
       fprintf( Note, "Par->GhostSize            %d\n",      amr->Par->GhostSize   );
       fprintf( Note, "Par->ImproveAcc           %d\n",      amr->Par->ImproveAcc  );
       fprintf( Note, "Par->PredictPos           %d\n",      amr->Par->PredictPos  );
