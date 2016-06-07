@@ -484,7 +484,7 @@ void Init_SetDefaultParameter()
 
 
 // (17) Riemann solver for OPT__CORR_UNPHY
-#  if ( MODEL == HYDRO || MODEL == MHD )
+#  if ( MODEL == HYDRO  ||  MODEL == MHD )
    if ( OPT__CORR_UNPHY  &&  OPT__CORR_UNPHY_SCHEME == RSOLVER_DEFAULT )
    {
       OPT__CORR_UNPHY_SCHEME = RSOLVER_ROE;
@@ -899,6 +899,19 @@ void Init_SetDefaultParameter()
       }
    }
 #  endif // #ifdef PARTICLE
+
+
+// (18) OPT__CORR_UNPHY is supported only for HYDRO and MHD
+#  if ( MODEL != HYDRO  &&  MODEL != MHD )
+   if ( OPT__CORR_UNPHY )
+   {
+      OPT__CORR_UNPHY        = false;
+
+      if ( MPI_Rank == 0 )    
+         Aux_Message( stderr, "WARNING : option \"%s\" is not supported for this model and hence is disabled !!\n",
+                      "OPT__CORR_UNPHY" );
+   }
+#  endif
 
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", __FUNCTION__ );

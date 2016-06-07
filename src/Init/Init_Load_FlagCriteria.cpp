@@ -13,10 +13,6 @@
 void Init_Load_FlagCriteria()
 {
    
-// nothing to do if there is no refined level 
-   if ( MAX_LEVEL == 0 )   return;
-
-
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... ", __FUNCTION__ );
 
 
@@ -30,21 +26,26 @@ void Init_Load_FlagCriteria()
    double FlagTable_EngyDensity[NLEVEL-1][2];
 #  endif
 
+#  ifndef PARTICLE
+   const bool OPT__FLAG_NPAR_PATCH    = false;
+   int    *FlagTable_NParPatch        = NULL;
+#  endif
+
 #  if   ( MODEL == HYDRO  ||  MODEL == MHD )
    const bool OPT__FLAG_LOHNER = ( OPT__FLAG_LOHNER_DENS || OPT__FLAG_LOHNER_ENGY || OPT__FLAG_LOHNER_PRES );
 #  elif ( MODEL == ELBDM )
    const bool OPT__FLAG_LOHNER = OPT__FLAG_LOHNER_DENS;
 #  endif
 
-   const int  NFlagMode         = 6;
+   const int  NFlagMode         = 7;
    const bool Flag[NFlagMode]   = { OPT__FLAG_RHO, OPT__FLAG_RHO_GRADIENT, OPT__FLAG_PRES_GRADIENT, 
-                                    OPT__FLAG_ENGY_DENSITY, OPT__FLAG_LOHNER, OPT__FLAG_USER };
+                                    OPT__FLAG_ENGY_DENSITY, OPT__FLAG_LOHNER, OPT__FLAG_USER, (bool)OPT__FLAG_NPAR_PATCH };
    const char ModeName[][100]   = { "OPT__FLAG_RHO", "OPT__FLAG_RHO_GRADIENT", "OPT__FLAG_PRES_GRADIENT", 
-                                    "OPT__FLAG_ENGY_DENSITY", "OPT__FLAG_LOHNER", "OPT__FLAG_USER" };
+                                    "OPT__FLAG_ENGY_DENSITY", "OPT__FLAG_LOHNER", "OPT__FLAG_USER", "OPT__FLAG_NPAR_PATCH" };
    const char FileName[][100]   = { "Input__Flag_Rho", "Input__Flag_RhoGradient", "Input__Flag_PresGradient", 
-                                    "Input__Flag_EngyDensity", "Input__Flag_Lohner", "Input__Flag_User" };
+                                    "Input__Flag_EngyDensity", "Input__Flag_Lohner", "Input__Flag_User", "Input__Flag_NParPatch" };
    double *FlagTable[NFlagMode] = { FlagTable_Rho, FlagTable_RhoGradient, FlagTable_PresGradient, 
-                                    NULL, NULL, FlagTable_User };
+                                    NULL, NULL, FlagTable_User, NULL };
 
    FILE *File;
    char *input_line = NULL, TargetName[100];
@@ -70,7 +71,15 @@ void Init_Load_FlagCriteria()
       for (int t=0; t<2; t++)
       FlagTable_EngyDensity [lv][t] = -1.0;
 #     endif
+
+#     ifdef PARTICLE
+      FlagTable_NParPatch   [lv]    = -1;
+#     endif
    }
+
+
+// nothing to do if there is no refinement level
+   if ( MAX_LEVEL == 0 )   return;
 
 
    for (int FlagMode=0; FlagMode<NFlagMode; FlagMode++)
@@ -105,12 +114,14 @@ void Init_Load_FlagCriteria()
                           lv, TargetName );
             }
 
-//          OPT__FLAG_ENGY_DENSITY and OPT__FLAG_LOHNER hav two and three columns to be loaded, respectively
+//          OPT__FLAG_ENGY_DENSITY and OPT__FLAG_LOHNER have two and three columns to be loaded, respectively
             if      ( FlagMode == 3 )  sscanf( input_line, "%d%lf%lf", &Trash, &FlagTable_EngyDensity[lv][0],
                                                                                &FlagTable_EngyDensity[lv][1] );
             else if ( FlagMode == 4 )  sscanf( input_line, "%d%lf%lf%lf", &Trash, &FlagTable_Lohner[lv][0],
                                                                                   &FlagTable_Lohner[lv][1], 
                                                                                   &FlagTable_Lohner[lv][2] );
+//          OPT__FLAG_NPAR_PATCH load integers
+            else if ( FlagMode == 6 )  sscanf( input_line, "%d%d",  &Trash, &FlagTable_NParPatch[lv] );
             else                       sscanf( input_line, "%d%lf", &Trash, &FlagTable[FlagMode][lv] );
          }
 

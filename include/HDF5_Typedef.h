@@ -335,6 +335,9 @@ struct InputPara_t
    int    Opt__Flag_LohnerForm;
    int    Opt__Flag_User;
    int    Opt__Flag_Region;
+#  ifdef PARTICLE
+   int    Opt__Flag_NParPatch;
+#  endif
    int    Opt__PatchCount;
 #  ifdef PARTICLE
    int    Opt__ParLevel;
@@ -477,6 +480,9 @@ struct InputPara_t
    double FlagTable_PresGradient[NLEVEL-1];
 #  elif ( MODEL == ELBDM )
    double FlagTable_EngyDensity [NLEVEL-1][2];
+#  endif
+#  ifdef PARTICLE
+   int    FlagTable_NParPatch   [NLEVEL-1]; 
 #  endif
    
 }; // struct InputPara_t

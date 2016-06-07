@@ -563,6 +563,9 @@ void Aux_TakeNote()
                                                                                                          "UNKNOWN" );
       fprintf( Note, "OPT__FLAG_USER            %d\n",      OPT__FLAG_USER          );
       fprintf( Note, "OPT__FLAG_REGION          %d\n",      OPT__FLAG_REGION        );
+#     ifdef PARTICLE
+      fprintf( Note, "OPT__FLAG_NPAR_PATCH      %d\n",      OPT__FLAG_NPAR_PATCH    );
+#     endif
       fprintf( Note, "OPT__PATCH_COUNT          %d\n",      OPT__PATCH_COUNT        );
 #     ifdef PARTICLE
       fprintf( Note, "OPT__PAR_LEVEL            %d\n",      OPT__PAR_LEVEL          );
@@ -913,7 +916,7 @@ void Aux_TakeNote()
       if ( OPT__FLAG_LOHNER_DENS )
 #     endif
       {
-         fprintf( Note, "Flag Criterion (Lohner error estimator)\n" );
+         fprintf( Note, "Flag Criterion (Lohner Error Estimator)\n" );
          fprintf( Note, "***********************************************************************************\n" );
          fprintf( Note, "  Level           Threshold              Filter              Soften\n" );
          for (int lv=0; lv<MAX_LEVEL; lv++)   
@@ -932,6 +935,18 @@ void Aux_TakeNote()
          fprintf( Note, "***********************************************************************************\n" );
          fprintf( Note, "\n\n");
       }
+
+#     ifdef PARTICLE
+      if ( OPT__FLAG_NPAR_PATCH )
+      {
+         fprintf( Note, "Flag Criterion (# of Particles per Patch)\n" );
+         fprintf( Note, "***********************************************************************************\n" );
+         fprintf( Note, "  Level      # of Particles\n" );
+         for (int lv=0; lv<MAX_LEVEL; lv++)  fprintf( Note, "%7d%20d\n", lv, FlagTable_NParPatch[lv] );
+         fprintf( Note, "***********************************************************************************\n" );
+         fprintf( Note, "\n\n");
+      }
+#     endif
    
    
 //    record the grid size in different refinement level

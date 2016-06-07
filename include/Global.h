@@ -146,6 +146,7 @@ extern double     LB_INPUT__WLI_MAX;                  // LB->WLI_Max loaded from
 extern double     DT__PARVEL, DT__PARVEL_MAX, DT__PARACC;
 extern real       MinDtInfo_ParVelAcc[2][NLEVEL];
 extern bool       OPT__OUTPUT_PARTICLE, OPT__CK_PARTICLE, OPT__PAR_LEVEL;
+extern int        OPT__FLAG_NPAR_PATCH, FlagTable_NParPatch[NLEVEL-1];
 #endif
 
 

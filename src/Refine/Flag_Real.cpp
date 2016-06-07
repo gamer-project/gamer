@@ -250,6 +250,45 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
 
                   } // check flag
                }}} // k, j, i
+
+
+//             flag based on the number particles per patch (which doesn't need to go through all cells one-by-one)
+#              ifdef PARTICLE
+               if ( lv < MAX_LEVEL  &&  OPT__FLAG_NPAR_PATCH != 0 )
+               {
+                  const int NParFlag = FlagTable_NParPatch[lv];
+                  bool Flag;
+
+                  if ( amr->patch[0][lv][PID]->son == -1 )  Flag = amr->patch[0][lv][PID]->NPar             > NParFlag;
+                  else                                      Flag = Par_CountParticleInDescendant( lv, PID ) > NParFlag;
+
+                  if ( Flag )
+                  {
+//                   flag itself
+                     amr->patch[0][lv][PID]->flag = true;
+
+//                   flag all siblings for OPT__FLAG_NPAR_PATCH == 2
+                     if ( OPT__FLAG_NPAR_PATCH == 2 )
+                     {
+                        for (int s=0; s<26; s++)
+                        {
+                           SibPID = amr->patch[0][lv][PID]->sibling[s];
+
+#                          ifdef GAMER_DEBUG
+                           if ( SibPID == -1 )  
+                              Aux_Error( ERROR_INFO, "SibPID == -1 --> proper-nesting check failed !!\n" );
+
+                           if ( SibPID <= SIB_OFFSET_NONPERIODIC  &&  NoRefineNearBoundary )
+                              Aux_Error( ERROR_INFO, "SibPID == %d when NoRefineNearBoundary is on !!\n", SibPID );
+#                          endif
+
+                           if ( SibPID >= 0 )   amr->patch[0][lv][SibPID]->flag = true;
+                        }
+                     }
+                  } // if ( Flag )
+               } // if ( OPT__FLAG_NPAR_PATCH != 0 )
+#              endif // #ifdef PARTICLE
+
             } // if ( ProperNesting )
          } // for (int LocalID=0; LocalID<8; LocalID++)
       } // for (int PID0=0; PID0<amr->NPatchComma[lv][1]; PID0+=8)

@@ -54,8 +54,9 @@
 0           OPT__FLAG_LOHNER_ENGY   # flag: Lohner (Input__Flag_Lohner) (HYDRO:energy density; ELBDM:useless)
 0           OPT__FLAG_LOHNER_PRES   # flag: Lohner (Input__Flag_Lohner) (HYDRO:pressure      ; ELBDM:useless)
 -1          OPT__FLAG_LOHNER_FORM   # form of the Lohner error estimator (-1,0,1,2,3)->(default[1],FLASH1/2,form-invariant1/2)
-1           OPT__FLAG_USER          # flag: user-defined (Input__Flag_User) --> edit "Flag_UserCriteria"
+0           OPT__FLAG_USER          # flag: user-defined (Input__Flag_User) --> edit "Flag_UserCriteria"
 0           OPT__FLAG_REGION        # flag: specify the regions allowed to be refined --> edit "Flag_Region"
+2           OPT__FLAG_NPAR_PATCH    # flag: # of particles per patch (Input__Flag_NParPatch) (0/1/2:off/itself/siblings as well)
 1           OPT__PATCH_COUNT        # count the patch # (0=off, 1=every step, 2=every sub-step)
 1           OPT__PAR_LEVEL          # get the number of active particles at each level ##PARTICLE ONLY##
 
@@ -82,7 +83,7 @@
 1           OPT__FIXUP_RESTRICT     # perform the restrict operation to correct the coarse-grid data
 0           OPT__OVERLAP_MPI        # overlap MPI time with CPU/GPU computation (currently for LOAD_BALANCE only)
 0           OPT__RESET_FLUID        # reset fluid variables after each update --> edit "Flu_ResetByUser"
-1           OPT__CORR_UNPHY         # correct unphysical fluid solver results (for HYDRO only; for other models --> edit "Flu_Close")
+0           OPT__CORR_UNPHY         # correct unphysical fluid solver results (for HYDRO only; for other models --> edit "Flu_Close")
 
 1.0         NEWTON_G                # gravitational constant (<=0:default -> must be defined in Init_TestProb) ##USELESS IN COMOVING##
 -1.0        SOR_OMEGA               # over-relaxation parameter for SOR (<0:default)

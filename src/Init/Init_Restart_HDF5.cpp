@@ -1225,6 +1225,9 @@ void Check_InputPara( const char *FileName )
    LoadField( "Opt__Flag_LohnerForm",    &RS.Opt__Flag_LohnerForm,    SID, TID, NonFatal, &RT.Opt__Flag_LohnerForm,     1, NonFatal );
    LoadField( "Opt__Flag_User",          &RS.Opt__Flag_User,          SID, TID, NonFatal, &RT.Opt__Flag_User,           1, NonFatal );
    LoadField( "Opt__Flag_Region",        &RS.Opt__Flag_Region,        SID, TID, NonFatal, &RT.Opt__Flag_Region,         1, NonFatal );
+#  ifdef PARTICLE
+   LoadField( "Opt__Flag_NParPatch",     &RS.Opt__Flag_NParPatch,     SID, TID, NonFatal, &RT.Opt__Flag_NParPatch,      1, NonFatal );
+#  endif
    LoadField( "Opt__PatchCount",         &RS.Opt__PatchCount,         SID, TID, NonFatal, &RT.Opt__PatchCount,          1, NonFatal );
 #  ifdef PARTICLE
    LoadField( "Opt__ParLevel",           &RS.Opt__ParLevel,           SID, TID, NonFatal, &RT.Opt__ParLevel,            1, NonFatal );
@@ -1393,6 +1396,10 @@ void Check_InputPara( const char *FileName )
       for (int t=0; t<2; t++)
       RS.FlagTable_EngyDensity [lv][t] = -1.0; 
 #     endif
+
+#     ifdef PARTICLE
+      RS.FlagTable_NParPatch   [lv]    = -1; 
+#     endif
    }
 
    if ( OPT__FLAG_RHO )
@@ -1430,6 +1437,11 @@ void Check_InputPara( const char *FileName )
          Aux_Message( stderr, "WARNING : \"%s[%d][%d]\" : RESTART file (%20.14e) != runtime (%20.14e) !!\n", 
                        "FlagTable_EngyDensity", lv, t, RS.FlagTable_EngyDensity[lv][t],  RT.FlagTable_EngyDensity[lv][t] );
    }}
+#  endif
+
+#  ifdef PARTICLE
+   if ( OPT__FLAG_NPAR_PATCH )
+   LoadField( "FlagTable_NParPatch",      RS.FlagTable_NParPatch,     SID, TID, NonFatal,  RT.FlagTable_NParPatch,     N1, NonFatal );
 #  endif
 
 

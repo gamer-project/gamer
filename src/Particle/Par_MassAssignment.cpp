@@ -139,6 +139,12 @@ void Par_MassAssignment( const long *ParList, const long NPar, const ParInterp_t
             }
 
 //          4.1.2 assign mass if within the Rho array
+//          check for inactive particles (which have negative mass)
+#           ifdef DEBUG_PARTICLE
+            if ( amr->Par->Mass[ParID] < (real)0.0 )
+               Aux_Error( ERROR_INFO, "Mass[%ld] = %14.7e < 0.0 !!\n", ParID, amr->Par->Mass[ParID] );
+#           endif
+
             ParDens = amr->Par->Mass[ParID]*_dh3;
 
             if (  WithinRho( idx, RhoSize )  )
@@ -188,6 +194,11 @@ void Par_MassAssignment( const long *ParList, const long NPar, const ParInterp_t
             } // for (int d=0; d<3; d++)
 
 //          4.2.3 assign mass if within the Rho array
+//          check for inactive particles (which have negative mass)
+#           ifdef DEBUG_PARTICLE
+            if ( amr->Par->Mass[ParID] < (real)0.0 )
+               Aux_Error( ERROR_INFO, "Mass[%ld] = %14.7e < 0.0 !!\n", ParID, amr->Par->Mass[ParID] );
+#           endif
             ParDens = amr->Par->Mass[ParID]*_dh3;
 
             for (int k=0; k<2; k++) {  idx[2] = idxLR[k][2];
@@ -245,6 +256,11 @@ void Par_MassAssignment( const long *ParList, const long NPar, const ParInterp_t
             } // for (int d=0; d<3; d++)
 
 //          4.3.3 assign mass if within the Rho array
+//          check for inactive particles (which have negative mass)
+#           ifdef DEBUG_PARTICLE
+            if ( amr->Par->Mass[ParID] < (real)0.0 )
+               Aux_Error( ERROR_INFO, "Mass[%ld] = %14.7e < 0.0 !!\n", ParID, amr->Par->Mass[ParID] );
+#           endif
             ParDens = amr->Par->Mass[ParID]*_dh3;
 
             for (int k=0; k<3; k++) {  idx[2] = idxLCR[k][2];

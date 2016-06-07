@@ -69,7 +69,7 @@ Procedure for outputting new variables:
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2103)
+// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2104)
 // Description :  Output all simulation data in the HDF5 format, which can be used as a restart file
 //                or loaded by YT
 //
@@ -898,7 +898,7 @@ void FillIn_KeyInfo( KeyInfo_t &KeyInfo )
 
    const time_t CalTime       = time( NULL );   // calendar time
 
-   KeyInfo.FormatVersion      = 2103;
+   KeyInfo.FormatVersion      = 2104;
    KeyInfo.Model              = MODEL;
    KeyInfo.NLevel             = NLEVEL;
    KeyInfo.PatchSize          = PATCH_SIZE;
@@ -1385,6 +1385,9 @@ void FillIn_InputPara( InputPara_t &InputPara )
    InputPara.Opt__Flag_LohnerForm    = OPT__FLAG_LOHNER_FORM;
    InputPara.Opt__Flag_User          = OPT__FLAG_USER;
    InputPara.Opt__Flag_Region        = OPT__FLAG_REGION;
+#  ifdef PARTICLE
+   InputPara.Opt__Flag_NParPatch     = OPT__FLAG_NPAR_PATCH;
+#  endif
    InputPara.Opt__PatchCount         = OPT__PATCH_COUNT;
 #  ifdef PARTICLE
    InputPara.Opt__ParLevel           = OPT__PAR_LEVEL;
@@ -1541,6 +1544,10 @@ void FillIn_InputPara( InputPara_t &InputPara )
 #     elif ( MODEL == ELBDM )
       for (int t=0; t<2; t++)
       InputPara.FlagTable_EngyDensity [lv][t] = FlagTable_EngyDensity [lv][t];
+#     endif
+
+#     ifdef PARTICLE
+      InputPara.FlagTable_NParPatch   [lv]    = FlagTable_NParPatch   [lv];
 #     endif
    }
 
@@ -1826,6 +1833,7 @@ void GetCompound_InputPara( hid_t &H5_TypeID )
 
    const hid_t   H5_TypeID_Arr_3Int          = H5Tarray_create( H5T_NATIVE_INT,    1, &H5_ArrDims_3Var      );
    const hid_t   H5_TypeID_Arr_6Int          = H5Tarray_create( H5T_NATIVE_INT,    1, &H5_ArrDims_6Var      );
+   const hid_t   H5_TypeID_Arr_NLvM1Int      = H5Tarray_create( H5T_NATIVE_INT,    1, &H5_ArrDims_NLvM1     );
    const hid_t   H5_TypeID_Arr_NLvM1Double   = H5Tarray_create( H5T_NATIVE_DOUBLE, 1, &H5_ArrDims_NLvM1     );
    const hid_t   H5_TypeID_Arr_NLvM1_2Double = H5Tarray_create( H5T_NATIVE_DOUBLE, 2,  H5_ArrDims_NLvM1_2   );
    const hid_t   H5_TypeID_Arr_NLvM1_3Double = H5Tarray_create( H5T_NATIVE_DOUBLE, 2,  H5_ArrDims_NLvM1_3   );
@@ -1912,6 +1920,9 @@ void GetCompound_InputPara( hid_t &H5_TypeID )
    H5Tinsert( H5_TypeID, "Opt__Flag_LohnerForm",    HOFFSET(InputPara_t,Opt__Flag_LohnerForm   ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "Opt__Flag_User",          HOFFSET(InputPara_t,Opt__Flag_User         ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "Opt__Flag_Region",        HOFFSET(InputPara_t,Opt__Flag_Region       ), H5T_NATIVE_INT     );
+#  ifdef PARTICLE
+   H5Tinsert( H5_TypeID, "Opt__Flag_NParPatch",     HOFFSET(InputPara_t,Opt__Flag_NParPatch    ), H5T_NATIVE_INT     );
+#  endif
    H5Tinsert( H5_TypeID, "Opt__PatchCount",         HOFFSET(InputPara_t,Opt__PatchCount        ), H5T_NATIVE_INT     );
 #  ifdef PARTICLE
    H5Tinsert( H5_TypeID, "Opt__ParLevel",           HOFFSET(InputPara_t,Opt__ParLevel          ), H5T_NATIVE_INT     );
@@ -2054,6 +2065,9 @@ void GetCompound_InputPara( hid_t &H5_TypeID )
    H5Tinsert( H5_TypeID, "FlagTable_PresGradient", HOFFSET(InputPara_t,FlagTable_PresGradient  ), H5_TypeID_Arr_NLvM1Double   );
 #  elif ( MODEL == ELBDM )
    H5Tinsert( H5_TypeID, "FlagTable_EngyDensity",  HOFFSET(InputPara_t,FlagTable_EngyDensity   ), H5_TypeID_Arr_NLvM1_2Double );
+#  endif
+#  ifdef PARTICLE
+   H5Tinsert( H5_TypeID, "FlagTable_NParPatch",    HOFFSET(InputPara_t,FlagTable_NParPatch     ), H5_TypeID_Arr_NLvM1Int      );
 #  endif
 
 

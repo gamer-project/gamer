@@ -99,7 +99,7 @@ void Aux_Check_Parameter()
 
    if ( FLAG_BUFFER_SIZE > PATCH_SIZE )   Aux_Error( ERROR_INFO, "FLAG_BUFFER_SIZE > PATCH_SIZE !!\n" );
 
-   if ( REGRID_COUNT <= 0 )   Aux_Error( ERROR_INFO, "REGRID_COUNT <= 0 !!\n" );
+   if ( REGRID_COUNT <= 0 )   Aux_Error( ERROR_INFO, "REGRID_COUNT (%d) <= 0 !!\n", REGRID_COUNT );
 
    if ( OPT__OUTPUT_MODE != OUTPUT_CONST_STEP  &&  OPT__OUTPUT_MODE != OUTPUT_CONST_DT  &&
         OPT__OUTPUT_MODE != OUTPUT_USE_TABLE )
@@ -1153,6 +1153,9 @@ void Aux_Check_Parameter()
    if ( DT__PARACC != 0.0 )
       Aux_Error( ERROR_INFO, "DT__PARACC (%14.7e) is NOT supported when STORE_PAR_ACC is off !!\n", DT__PARACC );
 #  endif
+
+   if ( OPT__FLAG_NPAR_PATCH < 0  ||  OPT__FLAG_NPAR_PATCH > 2 )
+      Aux_Error( ERROR_INFO, "unsupported option \"OPT__FLAG_NPAR_PATCH = %d\" [0/1/2] !!\n", OPT__FLAG_NPAR_PATCH );
 
 
 // warning 

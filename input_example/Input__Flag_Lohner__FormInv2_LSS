@@ -1,4 +1,4 @@
-  Level           Threshold              Filter              Soften
+# Level           Threshold              Filter              Soften
       0                0.60                0.62               50.00 
       1                0.60                0.62               50.00  
       2                0.60                0.62               50.00

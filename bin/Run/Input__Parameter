@@ -45,8 +45,8 @@
 
 -1          REGRID_COUNT            # refine every REGRID_COUNT sub-step (<0:default [4])
 -1          FLAG_BUFFER_SIZE        # number of buffer cells for the flag operation (<0:default [8])
--1          MAX_LEVEL               # maximum refinement level (0 ... NLEVEL-1) (<0:default [NLEVEL-1])
-1           OPT__FLAG_RHO           # flag: density (Input__Flag_Rho)
+0           MAX_LEVEL               # maximum refinement level (0 ... NLEVEL-1) (<0:default [NLEVEL-1])
+0           OPT__FLAG_RHO           # flag: density (Input__Flag_Rho)
 0           OPT__FLAG_RHO_GRADIENT  # flag: density gradient (Input__Flag_RhoGradient) 
 0           OPT__FLAG_PRES_GRADIENT # flag: pressure gradient (Input__Flag_PresGradient) ##HYDRO ONLY##
 0           OPT__FLAG_ENGY_DENSITY  # flag: energy density (Input_Flag_EngyDensity) ##ELBDM ONLY##
@@ -56,7 +56,8 @@
 -1          OPT__FLAG_LOHNER_FORM   # form of the Lohner error estimator (-1,0,1,2,3)->(default[1],FLASH1/2,form-invariant1/2)
 0           OPT__FLAG_USER          # flag: user-defined (Input__Flag_User) --> edit "Flag_UserCriteria"
 0           OPT__FLAG_REGION        # flag: specify the regions allowed to be refined --> edit "Flag_Region"
-1           OPT__PATCH_COUNT        # count the patch # (0=off, 1=every step, 2=every sub-step)
+0           OPT__FLAG_NPAR_PATCH    # flag: # of particles per patch (Input__Flag_NParPatch) (0/1/2:off/itself/siblings as well)
+1           OPT__PATCH_COUNT        # count the number of patches (0=off, 1=every step, 2=every sub-step)
 1           OPT__PAR_LEVEL          # get the number of active particles at each level ##PARTICLE ONLY##
 
 0.1         LB_INPUT__WLI_MAX       # threshold for redistributing patches at all levels ##LOAD_BALANCE ONLY##

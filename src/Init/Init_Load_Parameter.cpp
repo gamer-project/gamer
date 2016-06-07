@@ -141,6 +141,7 @@ void Init_Load_Parameter()
    getline( &input_line, &len, File );
    getline( &input_line, &len, File );
    getline( &input_line, &len, File );
+   getline( &input_line, &len, File );
 #  endif // #ifdef PARTICLE ... else ...
 
    getline( &input_line, &len, File );
@@ -277,6 +278,11 @@ void Init_Load_Parameter()
    getline( &input_line, &len, File );
    sscanf( input_line, "%d%s",   &temp_int,                 string );
    OPT__FLAG_REGION = (bool)temp_int;
+
+   getline( &input_line, &len, File );
+#  ifdef PARTICLE
+   sscanf( input_line, "%d%s",   &OPT__FLAG_NPAR_PATCH,     string );
+#  endif
 
    getline( &input_line, &len, File );
    sscanf( input_line, "%d%s",   &OPT__PATCH_COUNT,         string );
