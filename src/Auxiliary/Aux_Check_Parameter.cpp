@@ -229,6 +229,10 @@ void Aux_Check_Parameter()
    if ( OPT__TIMING_MPI )  Aux_Error( ERROR_INFO, "OPT__TIMING_MPI only works when TIMING is on !!\n" );
 #  endif
 
+#  ifndef INDIVIDUAL_TIMESTEP
+   if ( OPT__INT_TIME )    Aux_Error( ERROR_INFO, "OPT__INT_TIME only works when INDIVIDUAL_TIMESTEP is on !!\n" );
+#  endif
+
 
 // general warnings
 // =======================================================================================

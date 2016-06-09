@@ -103,7 +103,7 @@ void Init_GAMER( int *argc, char ***argv )
 // initialize the array recording the previous physical time as an arbitrary "negative" number
    for (int lv=0; lv<NLEVEL; lv++)
    {
-      Time_Prev[lv] = -9999.9;
+      Time_Prev[lv] = -__FLT_MAX__;
 
       amr->FluSgTime[lv][ 1-amr->FluSg[lv] ] = Time_Prev[lv];
 #     ifdef GRAVITY

@@ -1,11 +1,11 @@
 #include "Copyright.h"
 #include "GAMER.h"
 
-void InterpolateGhostZone( const int lv, const int PID, real IntData[], const int SibID, const bool IntTime, 
-                           const double PrepTime, const int GhostSize, const int FluSg, const int PotSg, 
-                           const IntScheme_t IntScheme, const int NTSib[], int *TSib[], const int TVar, const int NVar_Tot,
-                           const int NVar_Flu, const int TFluVarIdxList[], const int NVar_Der, const int TDerVarList[], 
-                           const bool IntPhase, const OptFluBC_t FluBC[], const OptPotBC_t PotBC, const int BC_Face[] );
+void InterpolateGhostZone( const int lv, const int PID, real IntData[], const int SibID, const double PrepTime,
+                           const int GhostSize, const IntScheme_t IntScheme, const int NTSib[], int *TSib[],
+                           const int TVar, const int NVar_Tot, const int NVar_Flu, const int TFluVarIdxList[],
+                           const int NVar_Der, const int TDerVarList[], const bool IntPhase,
+                           const OptFluBC_t FluBC[], const OptPotBC_t PotBC, const int BC_Face[] );
 static void SetTargetSibling( int NTSib[], int *TSib[] );
 static int Table_01( const int SibID, const char dim, const int Count, const int GhostSize );
 static int Table_02( const int lv, const int PID, const int Side );
@@ -24,8 +24,8 @@ static int Table_02( const int lv, const int PID, const int Side );
 //                   ghost-zone values by spatial interpolation if the corresponding sibling patches do
 //                   NOT exist
 //                4. Use PrepTime to determine the physical time to prepare data
-//                   --> Currently it must be equal to either Time[lv] or Time_Prev[lv]
-//                   --> Temporal interpolation at Lv=lv is NOT supported
+//                   --> Temporal interpolation/extrapolation will be conducted automatically if PrepTime
+//                       is NOT equal to the time of data stored previously (e.g., FluSgTime[0/1])
 //                4. Use "patch group" as the preparation unit
 //                   --> The data of all patches within the same patch group will be prepared 
 //                5. It is assumed that both _FLU and _PASSIVE are stored in the same Sg
@@ -112,6 +112,10 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
 
    if (  GetTotDens  &&  !(TVar & _DENS)  )
       Aux_Error( ERROR_INFO, "GetTotDens must work with _DENS !!\n" );
+
+#  ifndef INDIVIDUAL_TIMESTEP
+   if ( OPT__INT_TIME )    Aux_Error( ERROR_INFO, "OPT__INT_TIME only works when INDIVIDUAL_TIMESTEP is on !!\n" );
+#  endif
 
    if ( MPI_Rank == 0 )
    if (  ( NSide == NSIDE_00  &&  GhostSize != 0 )  ||  ( NSide != NSIDE_00  &&  GhostSize == 0 )  )
@@ -561,60 +565,11 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
                                                FaSibPID, lv, PID0, FaPID, Side ); 
 #              endif
 
-               bool IntTime; 
-               int  IntFluSg; 
-               int  IntPotSg = NULL_INT;
-
-               if      (  Mis_CompareRealValue( PrepTime,      Time[lv-1], NULL, false )  )
-               {
-                  IntTime  = false;
-                  IntFluSg = amr->FluSg[lv-1];
-#                 ifdef GRAVITY
-                  IntPotSg = amr->PotSg[lv-1];
-#                 endif
-               }
-
-               else if (  Mis_CompareRealValue( PrepTime, Time_Prev[lv-1], NULL, false )  )
-               {
-                  IntTime  = false;
-                  IntFluSg = 1 - amr->FluSg[lv-1];
-#                 ifdef GRAVITY
-                  IntPotSg = 1 - amr->PotSg[lv-1];
-#                 endif
-               }
-
-               else
-               {
-#                 ifndef INDIVIDUAL_TIMESTEP
-                  Aux_Error( ERROR_INFO, "lv %d: PrepTime %20.14e, Time[lv-1] %20.14e, Time_Prev[lv-1] %20.14e !!\n",
-                             lv, PrepTime, Time[lv-1], Time_Prev[lv-1] );
-#                 endif
-
-                  IntTime  = ( OPT__INT_TIME ) ? true : false;
-                  IntFluSg = 1 - amr->FluSg[lv-1];
-#                 ifdef GRAVITY
-                  IntPotSg = 1 - amr->PotSg[lv-1];
-#                 endif
-               }
-
-
-//             verify if the targeted time for temporal interpolation is within the permitted range
-               if ( IntTime )
-               {
-                  if ( PrepTime <= Time_Prev[lv-1]  ||  PrepTime-Time[lv-1] >= 1.e-12*fabs(Time[lv-1]) )
-                  {
-                     Aux_Message( stderr, "ERROR : targeted time for temporal interpolation is incorrect !!\n" );
-                     Aux_Message( stderr, "        (lv %d, T_Prep %20.14e, T_Min %20.14e, T_Max %20.14e)\n", 
-                                  lv-1, PrepTime, Time_Prev[lv-1], Time[lv-1] );
-                     MPI_Exit();
-                  }
-               }
-
 
 //             perform interpolation and store the results in IntData
-               InterpolateGhostZone( lv-1, FaSibPID, IntData, Side, IntTime, PrepTime, GhostSize, IntFluSg, IntPotSg, 
-                                     IntScheme, NTSib, TSib, TVar, NVar_Tot, NVar_Flu, TFluVarIdxList, NVar_Der, TDerVarList,
-                                     IntPhase, FluBC, PotBC, BC_Face );
+               InterpolateGhostZone( lv-1, FaSibPID, IntData, Side, PrepTime, GhostSize, IntScheme, NTSib, TSib,
+                                     TVar, NVar_Tot, NVar_Flu, TFluVarIdxList, NVar_Der, TDerVarList, IntPhase,
+                                     FluBC, PotBC, BC_Face );
 
 
 //             properly copy data from IntData array to Array

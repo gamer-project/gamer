@@ -110,7 +110,7 @@
 -2          OPT__GPUID_SELECT       # GPU ID selection mode : (-3, -2, -1, >=0) -> by (Laohu, CUDA, MPI rank, Input)
 0           INIT_SUBSAMPLING_NCELL  # perform sub-sampling during initialization (0, >0) -> (off, # of sub-sampling cells)
 
-1           OPT__INT_TIME           # perform the "temporal interpolation" for the individual time-step scheme
+1           OPT__INT_TIME           # perform "temporal interpolation" for the individual time-step scheme
 1           OPT__INT_PHASE          # interpolation on phase (only 4-7 schemes are supported) ##ELBDM ONLY##
                                     # interpolation:(-1,1,2,3,4,5,6,7->Def,MinMod-3D,MinMod-1D,vanLeer,CQuad,Quad,CQuar,Quar)
 -1          OPT__FLU_INT_SCHEME     # ghost-zone fluid variables in the fluid solver
@@ -126,7 +126,7 @@
 0           OPT__OUTPUT_TEST_ERROR  # output the test problem errors --> edit "Output_TestProbErr"
 0           OPT__OUTPUT_PARTICLE    # output the particle text file ##PARTICLE ONLY##
 0           OPT__OUTPUT_BASEPS      # output the base-level power spectrum
-1           OPT__OUTPUT_BASE        # only output the base-level data for the option "OPT__OUTPUT_PART"
+0           OPT__OUTPUT_BASE        # only output the base-level data for the option "OPT__OUTPUT_PART"
 0           OPT__OUTPUT_POT         # output the potential field 
 1           OPT__OUTPUT_MODE        # (1, 2, 3) -> (const step, const dt, dump table)
 5           OUTPUT_STEP             # output data every OUTPUT_STEP step

@@ -18,17 +18,16 @@ static int Table_01( const int SibID, const int Side, const char dim, const int 
 //                5. Data preparation order: FLU -> PASSIVE -> DERIVED --> POTE --> GRA_RHO
 //                   ** DERIVED must be prepared immediately after FLU and PASSIVE so that both FLU, PASSIVE, and DERIVED
 //                      can be prepared at the same time for the non-periodic BC. **
+//                6. Use PrepTime to determine the physical time to prepare data
+//                   --> Temporal interpolation/extrapolation will be conducted automatically if PrepTime
+//                       is NOT equal to the time of data stored previously (e.g., FluSgTime[0/1])
 // 
-// Parameter   :  lv             : Targeted "coarse-grid" refinement level 
+// Parameter   :  lv             : Target "coarse-grid" refinement level
 //                PID            : Patch ID at level "lv" used for interpolation 
 //                IntData        : Array to store the interpolation result 
 //                SibID          : Sibling index (0~25) used to determine the interpolation region
-//                IntTime        : true  : Need to perform the interpolation in time 
-//                                 false : Does NOT need to perform the interpolation in time
-//                PrepTime       : Targeted physical time to prepare data
+//                PrepTime       : Target physical time to prepare data
 //                GhostSize      : Number of ghost zones
-//                FluSg          : Fluid     sandglass of the data at level "lv" used for interpolation
-//                PotSg          : Potential sandglass of the data at level "lv" used for interpolation
 //                IntScheme      : Interpolation scheme
 //                                 --> currently supported schemes include
 //                                     INT_MINMOD1D : MinMod-1D
@@ -39,8 +38,8 @@ static int Table_01( const int SibID, const int Side, const char dim, const int 
 //                                     INT_CQUAR    : conservative quartic
 //                                     INT_QUAR     : quartic
 //                NTSib          : Number of targeted sibling patches along different sibling directions 
-//                TSib           : Targeted sibling indices along different sibling directions
-//                TVar           : Targeted variables to be prepared
+//                TSib           : Target sibling indices along different sibling directions
+//                TVar           : Target variables to be prepared
 //                                 --> Supported variables in different models:
 //                                     HYDRO : _DENS, _MOMX, _MOMY, _MOMZ, _ENGY, _FLU, _VELX, _VELY, _VELZ, _PRES,
 //                                             [, _POTE] [, _PASSIVE]
@@ -56,26 +55,26 @@ static int Table_01( const int SibID, const int Side, const char dim, const int 
 //                PotBC          : Gravity boundary condition
 //                BC_Face        : Priority of the B.C. along different boundary faces (z>y>x)
 //-------------------------------------------------------------------------------------------------------
-void InterpolateGhostZone( const int lv, const int PID, real IntData[], const int SibID, const bool IntTime, 
-                           const double PrepTime, const int GhostSize, const int FluSg, const int PotSg, 
-                           const IntScheme_t IntScheme, const int NTSib[], int *TSib[], const int TVar, const int NVar_Tot,
-                           const int NVar_Flu, const int TFluVarIdxList[], const int NVar_Der, const int TDerVarList[], 
-                           const bool IntPhase, const OptFluBC_t FluBC[], const OptPotBC_t PotBC, const int BC_Face[] )
+void InterpolateGhostZone( const int lv, const int PID, real IntData[], const int SibID, const double PrepTime,
+                           const int GhostSize, const IntScheme_t IntScheme, const int NTSib[], int *TSib[],
+                           const int TVar, const int NVar_Tot, const int NVar_Flu, const int TFluVarIdxList[],
+                           const int NVar_Der, const int TDerVarList[], const bool IntPhase,
+                           const OptFluBC_t FluBC[], const OptPotBC_t PotBC, const int BC_Face[] )
 {
 
 // check
 #  ifdef GAMER_DEBUG
-#  ifndef INDIVIDUAL_TIMESTEP
-   if ( IntTime )
-      Aux_Error( ERROR_INFO, "\"interpolation in time\" is unnecessary for the shared time-step scheme !!\n" );
-#  endif
-
 // nothing to do if GhostSize == 0
    if ( GhostSize == 0 )   
    {
       Aux_Message( stderr, "WARNING : GhostSize == 0 !!\n" );
       return;
    }
+
+// temporal interpolation should be unnecessary for the shared time-step integration
+#  ifndef INDIVIDUAL_TIMESTEP
+   if ( OPT__INT_TIME )    Aux_Error( ERROR_INFO, "OPT__INT_TIME only works when INDIVIDUAL_TIMESTEP is on !!\n" );
+#  endif
 #  endif // #ifdef GAMER_DEBUG
 
 
@@ -118,10 +117,6 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData[], const in
    const int    GhostSize_Padded = GhostSize + (GhostSize&1);
    const int    CGrid            = (GhostSize+1)/2 + 2*CGhost;    // number of coarse grids required for interpolation
    const int    La               = CGrid - CGhost;                // number of coarse grids in the central region
-   const int    FluSg_IntT       = 1 - FluSg;                     // sandglass for temporal interpolation
-#  ifdef GRAVITY
-   const int    PotSg_IntT       = 1 - PotSg;
-#  endif
 
    for (int d=0; d<3; d++)    
    {
@@ -140,6 +135,127 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData[], const in
 // coarse-grid array stored all data required for interpolation (including the ghost zones in each side)
    real *CData_Ptr = NULL;
    real *CData     = new real [ NVar_Tot*CSize3D ];
+
+
+// temporal interpolation parameters
+   bool FluIntTime;
+   int  FluSg, FluSg_IntT;
+   real FluWeighting, FluWeighting_IntT;
+
+   if      (  Mis_CompareRealValue( PrepTime, amr->FluSgTime[lv][   amr->FluSg[lv] ], NULL, false )  )
+   {
+      FluIntTime        = false;
+      FluSg             = amr->FluSg[lv];
+      FluSg_IntT        = NULL_INT;
+      FluWeighting      = NULL_REAL;
+      FluWeighting_IntT = NULL_REAL;
+   }
+
+   else if (  Mis_CompareRealValue( PrepTime, amr->FluSgTime[lv][ 1-amr->FluSg[lv] ], NULL, false )  )
+   {
+      FluIntTime        = false;
+      FluSg             = 1 - amr->FluSg[lv];
+      FluSg_IntT        = NULL_INT;
+      FluWeighting      = NULL_REAL;
+      FluWeighting_IntT = NULL_REAL;
+   }
+
+   else
+   {
+#     ifndef INDIVIDUAL_TIMESTEP
+      Aux_Error( ERROR_INFO, "Cannot determine FluSg (lv %d, PrepTime %20.14e, SgTime[0] %20.14e, SgTime[1] %20.14e !!\n",
+                 lv, PrepTime, amr->FluSgTime[lv][0], amr->FluSgTime[lv][1] );
+#     endif
+
+//    print warning messages if temporal extrapolation is required
+      const double TimeMin = MIN( amr->FluSgTime[lv][0], amr->FluSgTime[lv][1] );
+      const double TimeMax = MAX( amr->FluSgTime[lv][0], amr->FluSgTime[lv][1] );
+
+      if ( PrepTime < TimeMin  ||  PrepTime-TimeMax >= 1.0e-12*TimeMax )
+         Aux_Message( stderr, "WARNING : temporal extrapolation (lv %d, T_Prep %20.14e, T_Min %20.14e, T_Max %20.14e)\n",
+                      lv, PrepTime, TimeMin, TimeMax );
+
+      if ( OPT__INT_TIME )
+      {
+         FluIntTime        = true;
+         FluSg             = 0;
+         FluSg_IntT        = 1;
+         FluWeighting      =   ( +amr->FluSgTime[lv][FluSg_IntT] - PrepTime )
+                             / (  amr->FluSgTime[lv][FluSg_IntT] - amr->FluSgTime[lv][FluSg] );
+         FluWeighting_IntT =   ( -amr->FluSgTime[lv][FluSg     ] + PrepTime )
+                             / (  amr->FluSgTime[lv][FluSg_IntT] - amr->FluSgTime[lv][FluSg] );
+      }
+
+      else
+      {
+         FluIntTime        = false;
+         FluSg             = amr->FluSg[lv]; // set to the current Sg
+         FluSg_IntT        = NULL_INT;
+         FluWeighting      = NULL_REAL;
+         FluWeighting_IntT = NULL_REAL;
+      }
+   } // Mis_CompareRealValue
+
+#  ifdef GRAVITY
+   bool PotIntTime;
+   int  PotSg, PotSg_IntT;
+   real PotWeighting, PotWeighting_IntT;
+
+   if      (  Mis_CompareRealValue( PrepTime, amr->PotSgTime[lv][   amr->PotSg[lv] ], NULL, false )  )
+   {
+      PotIntTime        = false;
+      PotSg             = amr->PotSg[lv];
+      PotSg_IntT        = NULL_INT;
+      PotWeighting      = NULL_REAL;
+      PotWeighting_IntT = NULL_REAL;
+   }
+
+   else if (  Mis_CompareRealValue( PrepTime, amr->PotSgTime[lv][ 1-amr->PotSg[lv] ], NULL, false )  )
+   {
+      PotIntTime        = false;
+      PotSg             = 1 - amr->PotSg[lv];
+      PotSg_IntT        = NULL_INT;
+      PotWeighting      = NULL_REAL;
+      PotWeighting_IntT = NULL_REAL;
+   }
+
+   else
+   {
+#     ifndef INDIVIDUAL_TIMESTEP
+      Aux_Error( ERROR_INFO, "Cannot determine PotSg (lv %d, PrepTime %20.14e, SgTime[0] %20.14e, SgTime[1] %20.14e !!\n",
+                 lv, PrepTime, amr->PotSgTime[lv][0], amr->PotSgTime[lv][1] );
+#     endif
+
+//    print warning messages if temporal extrapolation is required
+      const double TimeMin = MIN( amr->PotSgTime[lv][0], amr->PotSgTime[lv][1] );
+      const double TimeMax = MAX( amr->PotSgTime[lv][0], amr->PotSgTime[lv][1] );
+
+      if ( PrepTime < TimeMin  ||  PrepTime-TimeMax >= 1.0e-12*TimeMax )
+         Aux_Message( stderr, "WARNING : temporal extrapolation (lv %d, T_Prep %20.14e, T_Min %20.14e, T_Max %20.14e)\n",
+                      lv, PrepTime, TimeMin, TimeMax );
+
+      if ( OPT__INT_TIME )
+      {
+         PotIntTime        = true;
+         PotSg             = 0;
+         PotSg_IntT        = 1;
+         PotWeighting      =   ( +amr->PotSgTime[lv][PotSg_IntT] - PrepTime )
+                             / ( amr->PotSgTime[lv][PotSg_IntT] - amr->PotSgTime[lv][PotSg] );
+         PotWeighting_IntT =   ( -amr->PotSgTime[lv][PotSg     ] + PrepTime )
+                             / ( amr->PotSgTime[lv][PotSg_IntT] - amr->PotSgTime[lv][PotSg] );
+      }
+
+      else
+      {
+         PotIntTime        = false;
+         PotSg             = amr->PotSg[lv]; // set to the current Sg
+         PotSg_IntT        = NULL_INT;
+         PotWeighting      = NULL_REAL;
+         PotWeighting_IntT = NULL_REAL;
+      }
+   } // Mis_CompareRealValue
+#  endif // #ifdef GRAVITY
+
 
 
 // a. fill up the central region of CData
@@ -172,9 +288,9 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData[], const in
 
          CData_Ptr[Idx] = amr->patch[FluSg][lv][PID]->fluid[TFluVarIdx][k1][j1][i1];
 
-         if ( IntTime ) // temporal interpolation
-         CData_Ptr[Idx] = (real)0.5*( CData_Ptr[Idx] + 
-                                      amr->patch[FluSg_IntT][lv][PID]->fluid[TFluVarIdx][k1][j1][i1] );
+         if ( FluIntTime ) // temporal interpolation
+         CData_Ptr[Idx] =   FluWeighting     *CData_Ptr[Idx]
+                          + FluWeighting_IntT*amr->patch[FluSg_IntT][lv][PID]->fluid[TFluVarIdx][k1][j1][i1];
 
          Idx ++;
       }}}
@@ -195,9 +311,10 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData[], const in
          CData_Ptr[Idx] = amr->patch[FluSg][lv][PID]->fluid[MOMX][k1][j1][i1] /
                           amr->patch[FluSg][lv][PID]->fluid[DENS][k1][j1][i1];
 
-         if ( IntTime ) // temporal interpolation
-         CData_Ptr[Idx] = (real)0.5*( CData_Ptr[Idx] + amr->patch[FluSg_IntT][lv][PID]->fluid[MOMX][k1][j1][i1] /
-                                                       amr->patch[FluSg_IntT][lv][PID]->fluid[DENS][k1][j1][i1] );
+         if ( FluIntTime ) // temporal interpolation
+         CData_Ptr[Idx] =   FluWeighting     *CData_Ptr[Idx]
+                          + FluWeighting_IntT*( amr->patch[FluSg_IntT][lv][PID]->fluid[MOMX][k1][j1][i1] /
+                                                amr->patch[FluSg_IntT][lv][PID]->fluid[DENS][k1][j1][i1] );
          Idx ++;
       }}}
 
@@ -214,9 +331,10 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData[], const in
          CData_Ptr[Idx] = amr->patch[FluSg][lv][PID]->fluid[MOMY][k1][j1][i1] /
                           amr->patch[FluSg][lv][PID]->fluid[DENS][k1][j1][i1];
 
-         if ( IntTime ) // temporal interpolation
-         CData_Ptr[Idx] = (real)0.5*( CData_Ptr[Idx] + amr->patch[FluSg_IntT][lv][PID]->fluid[MOMY][k1][j1][i1] /
-                                                       amr->patch[FluSg_IntT][lv][PID]->fluid[DENS][k1][j1][i1] );
+         if ( FluIntTime ) // temporal interpolation
+         CData_Ptr[Idx] =   FluWeighting     *CData_Ptr[Idx]
+                          + FluWeighting_IntT*( amr->patch[FluSg_IntT][lv][PID]->fluid[MOMY][k1][j1][i1] /
+                                                amr->patch[FluSg_IntT][lv][PID]->fluid[DENS][k1][j1][i1] );
          Idx ++;
       }}}
 
@@ -233,9 +351,10 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData[], const in
          CData_Ptr[Idx] = amr->patch[FluSg][lv][PID]->fluid[MOMZ][k1][j1][i1] /
                           amr->patch[FluSg][lv][PID]->fluid[DENS][k1][j1][i1];
 
-         if ( IntTime ) // temporal interpolation
-         CData_Ptr[Idx] = (real)0.5*( CData_Ptr[Idx] + amr->patch[FluSg_IntT][lv][PID]->fluid[MOMZ][k1][j1][i1] /
-                                                       amr->patch[FluSg_IntT][lv][PID]->fluid[DENS][k1][j1][i1] );
+         if ( FluIntTime ) // temporal interpolation
+         CData_Ptr[Idx] =   FluWeighting     *CData_Ptr[Idx]
+                          + FluWeighting_IntT*( amr->patch[FluSg_IntT][lv][PID]->fluid[MOMZ][k1][j1][i1] /
+                                                amr->patch[FluSg_IntT][lv][PID]->fluid[DENS][k1][j1][i1] );
          Idx ++;
       }}}
 
@@ -253,11 +372,12 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData[], const in
 
          CData_Ptr[Idx] = Hydro_GetPressure( Fluid, Gamma_m1, PositivePres );
 
-         if ( IntTime ) // temporal interpolation
+         if ( FluIntTime ) // temporal interpolation
          {
             for (int v=0; v<NCOMP; v++)   Fluid[v] = amr->patch[FluSg_IntT][lv][PID]->fluid[v][k1][j1][i1];
 
-            CData_Ptr[Idx] = (real)0.5*(  CData_Ptr[Idx] + Hydro_GetPressure( Fluid, Gamma_m1, PositivePres )  );
+            CData_Ptr[Idx] = FluWeighting     *CData_Ptr[Idx]
+                           + FluWeighting_IntT*Hydro_GetPressure( Fluid, Gamma_m1, PositivePres );
          }
 
          Idx ++;
@@ -287,8 +407,9 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData[], const in
 
          CData_Ptr[Idx] = amr->patch[PotSg][lv][PID]->pot[k1][j1][i1];
 
-         if ( IntTime ) // temporal interpolation
-         CData_Ptr[Idx] = (real)0.5*( CData_Ptr[Idx] + amr->patch[PotSg_IntT][lv][PID]->pot[k1][j1][i1] );
+         if ( PotIntTime ) // temporal interpolation
+         CData_Ptr[Idx] =   PotWeighting     *CData_Ptr[Idx]
+                          + PotWeighting_IntT*amr->patch[PotSg_IntT][lv][PID]->pot[k1][j1][i1];
 
          Idx ++;
       }}}
@@ -335,9 +456,9 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData[], const in
 
                CData_Ptr[Idx] = amr->patch[FluSg][lv][SibPID]->fluid[TFluVarIdx][k2][j2][i2];
 
-               if ( IntTime ) // temporal interpolation
-               CData_Ptr[Idx] = (real)0.5*( CData_Ptr[Idx] + 
-                                            amr->patch[FluSg_IntT][lv][SibPID]->fluid[TFluVarIdx][k2][j2][i2] );
+               if ( FluIntTime ) // temporal interpolation
+               CData_Ptr[Idx] =   FluWeighting     *CData_Ptr[Idx]
+                                + FluWeighting_IntT*amr->patch[FluSg_IntT][lv][SibPID]->fluid[TFluVarIdx][k2][j2][i2];
 
                Idx ++;
             }}}
@@ -358,9 +479,10 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData[], const in
                CData_Ptr[Idx] = amr->patch[FluSg][lv][SibPID]->fluid[MOMX][k2][j2][i2] /
                                 amr->patch[FluSg][lv][SibPID]->fluid[DENS][k2][j2][i2];
 
-               if ( IntTime ) // temporal interpolation
-               CData_Ptr[Idx] = (real)0.5*( CData_Ptr[Idx] + amr->patch[FluSg_IntT][lv][SibPID]->fluid[MOMX][k2][j2][i2] /
-                                                             amr->patch[FluSg_IntT][lv][SibPID]->fluid[DENS][k2][j2][i2] );
+               if ( FluIntTime ) // temporal interpolation
+               CData_Ptr[Idx] =   FluWeighting     *CData_Ptr[Idx]
+                                + FluWeighting_IntT*( amr->patch[FluSg_IntT][lv][SibPID]->fluid[MOMX][k2][j2][i2] /
+                                                      amr->patch[FluSg_IntT][lv][SibPID]->fluid[DENS][k2][j2][i2] );
                Idx ++;
             }}}
 
@@ -377,9 +499,10 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData[], const in
                CData_Ptr[Idx] = amr->patch[FluSg][lv][SibPID]->fluid[MOMY][k2][j2][i2] /
                                 amr->patch[FluSg][lv][SibPID]->fluid[DENS][k2][j2][i2];
 
-               if ( IntTime ) // temporal interpolation
-               CData_Ptr[Idx] = (real)0.5*( CData_Ptr[Idx] + amr->patch[FluSg_IntT][lv][SibPID]->fluid[MOMY][k2][j2][i2] /
-                                                             amr->patch[FluSg_IntT][lv][SibPID]->fluid[DENS][k2][j2][i2] );
+               if ( FluIntTime ) // temporal interpolation
+               CData_Ptr[Idx] =   FluWeighting     *CData_Ptr[Idx]
+                                + FluWeighting_IntT*( amr->patch[FluSg_IntT][lv][SibPID]->fluid[MOMY][k2][j2][i2] /
+                                                      amr->patch[FluSg_IntT][lv][SibPID]->fluid[DENS][k2][j2][i2] );
                Idx ++;
             }}}
 
@@ -396,9 +519,10 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData[], const in
                CData_Ptr[Idx] = amr->patch[FluSg][lv][SibPID]->fluid[MOMZ][k2][j2][i2] /
                                 amr->patch[FluSg][lv][SibPID]->fluid[DENS][k2][j2][i2];
 
-               if ( IntTime ) // temporal interpolation
-               CData_Ptr[Idx] = (real)0.5*( CData_Ptr[Idx] + amr->patch[FluSg_IntT][lv][SibPID]->fluid[MOMZ][k2][j2][i2] /
-                                                             amr->patch[FluSg_IntT][lv][SibPID]->fluid[DENS][k2][j2][i2] );
+               if ( FluIntTime ) // temporal interpolation
+               CData_Ptr[Idx] =   FluWeighting     *CData_Ptr[Idx]
+                                + FluWeighting_IntT*( amr->patch[FluSg_IntT][lv][SibPID]->fluid[MOMZ][k2][j2][i2] /
+                                                      amr->patch[FluSg_IntT][lv][SibPID]->fluid[DENS][k2][j2][i2] );
                Idx ++;
             }}}
 
@@ -416,11 +540,12 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData[], const in
 
                CData_Ptr[Idx] = Hydro_GetPressure( Fluid, Gamma_m1, PositivePres );
 
-               if ( IntTime ) // temporal interpolation
+               if ( FluIntTime ) // temporal interpolation
                {
                   for (int v=0; v<NCOMP; v++)   Fluid[v] = amr->patch[FluSg_IntT][lv][SibPID]->fluid[v][k2][j2][i2];
 
-                  CData_Ptr[Idx] = (real)0.5*(  CData_Ptr[Idx] + Hydro_GetPressure( Fluid, Gamma_m1, PositivePres )  );
+                  CData_Ptr[Idx] =  FluWeighting     *CData_Ptr[Idx]
+                                  + FluWeighting_IntT*Hydro_GetPressure( Fluid, Gamma_m1, PositivePres );
                }
 
                Idx ++;
@@ -449,8 +574,9 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData[], const in
 
                CData_Ptr[Idx] = amr->patch[PotSg][lv][SibPID]->pot[k2][j2][i2];
 
-               if ( IntTime ) // temporal interpolation
-               CData_Ptr[Idx] = (real)0.5*( CData_Ptr[Idx] + amr->patch[PotSg_IntT][lv][SibPID]->pot[k2][j2][i2] );
+               if ( PotIntTime ) // temporal interpolation
+               CData_Ptr[Idx] =   PotWeighting     *CData_Ptr[Idx]
+                                + PotWeighting_IntT*amr->patch[PotSg_IntT][lv][SibPID]->pot[k2][j2][i2];
 
                Idx ++;
             }}}
@@ -747,7 +873,7 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData[], const in
 // 
 // Parameter   :  SibID       : Sibling index ONE (0~25)
 //                Side        : Sibling index TWO (0~25)
-//                dim         : Targeted spatial direction (x/y/z)
+//                dim         : Target spatial direction (x/y/z)
 //                w01 ... w21 : Returned values  
 //-------------------------------------------------------------------------------------------------------
 int Table_01( const int SibID, const int Side, const char dim, const int w01, const int w02,

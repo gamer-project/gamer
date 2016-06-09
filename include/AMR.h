@@ -113,10 +113,10 @@ struct AMR_t
 #        endif
 
          FluSgTime[lv][   FluSg[lv] ] = 0.0;          // must be initialized as zero
-         FluSgTime[lv][ 1-FluSg[lv] ] = __FLT_MAX__;  // can be initialized arbitrarily
+         FluSgTime[lv][ 1-FluSg[lv] ] = -__FLT_MAX__; // initialized as negative for debug
 #        ifdef GRAVITY
          PotSgTime[lv][   PotSg[lv] ] = 0.0;          // must be initialized as zero
-         PotSgTime[lv][ 1-PotSg[lv] ] = __FLT_MAX__;  // can be initialized arbitrarily
+         PotSgTime[lv][ 1-PotSg[lv] ] = -__FLT_MAX__; // initialized as negative for debug
 #        endif
       }
 
