@@ -11,7 +11,9 @@ static real *RecvBuf     = NULL;
 static int   SendBufSize = -1;
 static int   RecvBufSize = -1;
 
+#ifdef TIMING
 extern Timer_t *Timer_MPI[3];
+#endif
 
 
 
@@ -394,7 +396,9 @@ void LB_GetBufferData( const int lv, const int FluSg, const int PotSg, const Get
 
 // 3. prepare the send array
 // ============================================================================================================
+#  ifdef TIMING
    if ( OPT__TIMING_MPI )  Timer_MPI[0]->Start();
+#  endif
 
    switch ( GetBufMode )
    {
@@ -660,13 +664,17 @@ void LB_GetBufferData( const int lv, const int FluSg, const int PotSg, const Get
          Aux_Error( ERROR_INFO, "incorrect parameter %s = %d !!\n", "GetBufMode", GetBufMode );
    } // switch ( GetBufMode )
 
+#  ifdef TIMING
    if ( OPT__TIMING_MPI )  Timer_MPI[0]->Stop( false );
+#  endif
 
 
 
 // 4. transfer data by MPI_Alltoallv
 // ============================================================================================================
+#  ifdef TIMING
    if ( OPT__TIMING_MPI )  Timer_MPI[1]->Start();
+#  endif
 
 #  ifdef FLOAT8   
    MPI_Alltoallv( SendBuf, Send_NCount, Send_NDisp, MPI_DOUBLE, 
@@ -676,13 +684,17 @@ void LB_GetBufferData( const int lv, const int FluSg, const int PotSg, const Get
                   RecvBuf, Recv_NCount, Recv_NDisp, MPI_FLOAT,  MPI_COMM_WORLD );
 #  endif
 
+#  ifdef TIMING
    if ( OPT__TIMING_MPI )  Timer_MPI[1]->Stop( false );
+#  endif
 
 
 
 // 5. store the received data to their corresponding patches
 // ============================================================================================================
+#  ifdef TIMING
    if ( OPT__TIMING_MPI )  Timer_MPI[2]->Start();
+#  endif
 
    switch ( GetBufMode )
    {
@@ -949,12 +961,15 @@ void LB_GetBufferData( const int lv, const int FluSg, const int PotSg, const Get
          Aux_Error( ERROR_INFO, "incorrect parameter %s = %d !!\n", "GetBufMode", GetBufMode );
    } // switch ( GetBufMode )
 
+#  ifdef TIMING
    if ( OPT__TIMING_MPI )  Timer_MPI[2]->Stop( false );
+#  endif
 
 
 
 // 6. record the achieved MPI bandwidth
 // ============================================================================================================
+#  ifdef TIMING
    if ( OPT__TIMING_MPI )
    {
       char FileName[100];
@@ -996,6 +1011,7 @@ void LB_GetBufferData( const int lv, const int FluSg, const int PotSg, const Get
       for (int t=0; t<3; t++)    Timer_MPI[t]->Reset();
 
    } // if ( OPT__TIMING_MPI )
+#  endif // #ifdef TIMING
 
 
 // free memory   

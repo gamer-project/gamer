@@ -225,6 +225,10 @@ void Aux_Check_Parameter()
    if ( INT_MONO_COEFF < 1.0  ||  INT_MONO_COEFF > 4.0 )
       Aux_Error( ERROR_INFO, "INT_MONO_COEFF (%14.7e) is not within the correct range [1...4] !!\n", INT_MONO_COEFF );
 
+#  ifndef TIMING
+   if ( OPT__TIMING_MPI )  Aux_Error( ERROR_INFO, "OPT__TIMING_MPI only works when TIMING is on !!\n" );
+#  endif
+
 
 // general warnings
 // =======================================================================================

@@ -1,6 +1,7 @@
 #include "Copyright.h"
 #include "GAMER.h"
 
+#ifdef TIMING
 extern Timer_t *Timer_Flu_Advance[NLEVEL];
 extern Timer_t *Timer_Gra_Advance[NLEVEL];
 extern Timer_t *Timer_FixUp      [NLEVEL];
@@ -11,6 +12,7 @@ extern Timer_t *Timer_GetBuf     [NLEVEL][8];
 extern Timer_t *Timer_Par_Update [NLEVEL][3];
 extern Timer_t *Timer_Par_2Sib   [NLEVEL];
 extern Timer_t *Timer_Par_2Son   [NLEVEL];
+#endif
 
 
 
