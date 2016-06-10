@@ -207,30 +207,142 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
    }
 
 
-// determine the Sg to load data
-   int FluSg;
+// temporal interpolation parameters
+   bool FluIntTime;
+   int  FluSg, FluSg_IntT;
+   real FluWeighting, FluWeighting_IntT;
 
+   if ( NVar_Flu + NVar_Der != 0 ) {
    if      (  Mis_CompareRealValue( PrepTime, amr->FluSgTime[lv][   amr->FluSg[lv] ], NULL, false )  )
-      FluSg =   amr->FluSg[lv];
+   {
+      FluIntTime        = false;
+      FluSg             = amr->FluSg[lv];
+      FluSg_IntT        = NULL_INT;
+      FluWeighting      = NULL_REAL;
+      FluWeighting_IntT = NULL_REAL;
+   }
+
    else if (  Mis_CompareRealValue( PrepTime, amr->FluSgTime[lv][ 1-amr->FluSg[lv] ], NULL, false )  )
-      FluSg = 1-amr->FluSg[lv];
+   {
+      FluIntTime        = false;
+      FluSg             = 1 - amr->FluSg[lv];
+      FluSg_IntT        = NULL_INT;
+      FluWeighting      = NULL_REAL;
+      FluWeighting_IntT = NULL_REAL;
+   }
+
    else
-      if ( NVar_Flu + NVar_Der != 0 )
-         Aux_Error( ERROR_INFO, "Cannot determine FluSg (lv %d, PrepTime %20.14e, SgTime[0] %20.14e, SgTime[1] %20.14e !!\n",
-                    lv, PrepTime, amr->FluSgTime[lv][0], amr->FluSgTime[lv][1] );
+   {
+//    check
+#     ifdef INDIVIDUAL_TIMESTEP
+      if ( !OPT__ADAPTIVE_DT ) 
+#     endif
+      Aux_Error( ERROR_INFO, "cannot determine FluSg (lv %d, PrepTime %20.14e, SgTime[0] %20.14e, SgTime[1] %20.14e !!\n",
+                 lv, PrepTime, amr->FluSgTime[lv][0], amr->FluSgTime[lv][1] );
+
+//    print warning messages if temporal extrapolation is required
+      const double TimeMin = MIN( amr->FluSgTime[lv][0], amr->FluSgTime[lv][1] );
+      const double TimeMax = MAX( amr->FluSgTime[lv][0], amr->FluSgTime[lv][1] );
+
+      if ( TimeMin < 0.0 )
+         Aux_Error( ERROR_INFO, "TimeMin (%21.14e) < 0.0 ==> one of the fluid arrays has not been initialized !!\n", TimeMin );
+
+      if ( PrepTime < TimeMin  ||  PrepTime-TimeMax >= 1.0e-12*TimeMax )
+         Aux_Message( stderr, "WARNING : temporal extrapolation (lv %d, T_Prep %20.14e, T_Min %20.14e, T_Max %20.14e)\n",
+                      lv, PrepTime, TimeMin, TimeMax );
+
+      if ( OPT__INT_TIME )
+      {
+         FluIntTime        = true;
+         FluSg             = 0;
+         FluSg_IntT        = 1;
+         FluWeighting      =   ( +amr->FluSgTime[lv][FluSg_IntT] - PrepTime )
+                             / (  amr->FluSgTime[lv][FluSg_IntT] - amr->FluSgTime[lv][FluSg] );
+         FluWeighting_IntT =   ( -amr->FluSgTime[lv][FluSg     ] + PrepTime )
+                             / (  amr->FluSgTime[lv][FluSg_IntT] - amr->FluSgTime[lv][FluSg] );
+      }
+
+      else
+      {
+         FluIntTime        = false;
+         FluSg             = amr->FluSg[lv]; // set to the current Sg
+         FluSg_IntT        = NULL_INT;
+         FluWeighting      = NULL_REAL;
+         FluWeighting_IntT = NULL_REAL;
+      }
+   } // Mis_CompareRealValue
+   } // if ( NVar_Flu + NVar_Der != 0 )
 
 #  ifdef GRAVITY
-   int PotSg;
+   bool PotIntTime;
+   int  PotSg, PotSg_IntT;
+   real PotWeighting, PotWeighting_IntT;
 
+   if ( PrepPot ) {
    if      (  Mis_CompareRealValue( PrepTime, amr->PotSgTime[lv][   amr->PotSg[lv] ], NULL, false )  )
-      PotSg =   amr->PotSg[lv];
+   {
+      PotIntTime        = false;
+      PotSg             = amr->PotSg[lv];
+      PotSg_IntT        = NULL_INT;
+      PotWeighting      = NULL_REAL;
+      PotWeighting_IntT = NULL_REAL;
+   }
+
    else if (  Mis_CompareRealValue( PrepTime, amr->PotSgTime[lv][ 1-amr->PotSg[lv] ], NULL, false )  )
-      PotSg = 1-amr->PotSg[lv];
+   {
+      PotIntTime        = false;
+      PotSg             = 1 - amr->PotSg[lv];
+      PotSg_IntT        = NULL_INT;
+      PotWeighting      = NULL_REAL;
+      PotWeighting_IntT = NULL_REAL;
+   }
+
    else
-      if ( PrepPot )
-         Aux_Error( ERROR_INFO, "Cannot determine PotSg (lv %d, PrepTime %20.14e, SgTime[0] %20.14e, SgTime[1] %20.14e !!\n",
-                    lv, PrepTime, amr->PotSgTime[lv][0], amr->PotSgTime[lv][1] );
-#  endif
+   {
+//    check
+#     ifdef INDIVIDUAL_TIMESTEP
+#     ifdef PARTICLE
+      if ( !OPT__ADAPTIVE_DT  &&  amr->Par->ImproveAcc )
+#     else
+      if ( !OPT__ADAPTIVE_DT ) 
+#     endif // PARTICLE
+#     endif // INDIVIDUAL_TIMESTEP
+      Aux_Error( ERROR_INFO, "cannot determine PotSg (lv %d, PrepTime %20.14e, SgTime[0] %20.14e, SgTime[1] %20.14e !!\n",
+                 lv, PrepTime, amr->PotSgTime[lv][0], amr->PotSgTime[lv][1] );
+
+//    print warning messages if temporal extrapolation is required
+      const double TimeMin = MIN( amr->PotSgTime[lv][0], amr->PotSgTime[lv][1] );
+      const double TimeMax = MAX( amr->PotSgTime[lv][0], amr->PotSgTime[lv][1] );
+
+      if ( TimeMin < 0.0 )
+         Aux_Error( ERROR_INFO, "TimeMin (%21.14e) < 0.0 ==> one of the potential arrays has not been initialized !!\n", TimeMin );
+
+      if ( PrepTime < TimeMin  ||  PrepTime-TimeMax >= 1.0e-12*TimeMax )
+         Aux_Message( stderr, "WARNING : temporal extrapolation (lv %d, T_Prep %20.14e, T_Min %20.14e, T_Max %20.14e)\n",
+                      lv, PrepTime, TimeMin, TimeMax );
+
+      if ( OPT__INT_TIME )
+      {
+         PotIntTime        = true;
+         PotSg             = 0;
+         PotSg_IntT        = 1;
+         PotWeighting      =   ( +amr->PotSgTime[lv][PotSg_IntT] - PrepTime )
+                             / ( amr->PotSgTime[lv][PotSg_IntT] - amr->PotSgTime[lv][PotSg] );
+         PotWeighting_IntT =   ( -amr->PotSgTime[lv][PotSg     ] + PrepTime )
+                             / ( amr->PotSgTime[lv][PotSg_IntT] - amr->PotSgTime[lv][PotSg] );
+      }
+
+      else
+      {
+         PotIntTime        = false;
+         PotSg             = amr->PotSg[lv]; // set to the current Sg
+         PotSg_IntT        = NULL_INT;
+         PotWeighting      = NULL_REAL;
+         PotWeighting_IntT = NULL_REAL;
+      }
+   } // Mis_CompareRealValue
+   } // if ( PrepPot )
+#  endif // #ifdef GRAVITY
 
 
 // determine the priority of different boundary faces (z>y>x) to set the corner cells properly for the non-periodic B.C.
@@ -300,8 +412,12 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
                                                       Idx1 = IDX321( Disp_i, J, K, PGSize1D, PGSize1D );
                for (int i=0; i<PATCH_SIZE; i++)    {
                
-                  Array_Ptr[ Idx1 ++ ] = amr->patch[FluSg][lv][PID]->fluid[TFluVarIdx][k][j][i];
-               
+                  Array_Ptr[Idx1] = amr->patch[FluSg][lv][PID]->fluid[TFluVarIdx][k][j][i];
+
+                  if ( FluIntTime ) // temporal interpolation
+                  Array_Ptr[Idx1] =   FluWeighting     *Array_Ptr[Idx1]
+                                    + FluWeighting_IntT*amr->patch[FluSg_IntT][lv][PID]->fluid[TFluVarIdx][k][j][i];
+                  Idx1 ++;
                }}}
 
                Array_Ptr += PGSize3D;
@@ -317,8 +433,14 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
                                                       Idx1 = IDX321( Disp_i, J, K, PGSize1D, PGSize1D );
                for (int i=0; i<PATCH_SIZE; i++)    {
                
-                  Array_Ptr[ Idx1 ++ ] = amr->patch[FluSg][lv][PID]->fluid[MOMX][k][j][i] /
-                                         amr->patch[FluSg][lv][PID]->fluid[DENS][k][j][i];   
+                  Array_Ptr[Idx1] = amr->patch[FluSg][lv][PID]->fluid[MOMX][k][j][i] /
+                                    amr->patch[FluSg][lv][PID]->fluid[DENS][k][j][i];   
+
+                  if ( FluIntTime ) // temporal interpolation
+                  Array_Ptr[Idx1] =   FluWeighting     *Array_Ptr[Idx1]
+                                    + FluWeighting_IntT*( amr->patch[FluSg_IntT][lv][PID]->fluid[MOMX][k][j][i] /
+                                                          amr->patch[FluSg_IntT][lv][PID]->fluid[DENS][k][j][i] );
+                  Idx1 ++;
                }}}
 
                Array_Ptr += PGSize3D;
@@ -331,8 +453,14 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
                                                       Idx1 = IDX321( Disp_i, J, K, PGSize1D, PGSize1D );
                for (int i=0; i<PATCH_SIZE; i++)    {
                
-                  Array_Ptr[ Idx1 ++ ] = amr->patch[FluSg][lv][PID]->fluid[MOMY][k][j][i] /
-                                         amr->patch[FluSg][lv][PID]->fluid[DENS][k][j][i];   
+                  Array_Ptr[Idx1] = amr->patch[FluSg][lv][PID]->fluid[MOMY][k][j][i] /
+                                    amr->patch[FluSg][lv][PID]->fluid[DENS][k][j][i];   
+
+                  if ( FluIntTime ) // temporal interpolation
+                  Array_Ptr[Idx1] =   FluWeighting     *Array_Ptr[Idx1]
+                                    + FluWeighting_IntT*( amr->patch[FluSg_IntT][lv][PID]->fluid[MOMY][k][j][i] /
+                                                          amr->patch[FluSg_IntT][lv][PID]->fluid[DENS][k][j][i] );
+                  Idx1 ++;
                }}}
 
                Array_Ptr += PGSize3D;
@@ -345,8 +473,14 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
                                                       Idx1 = IDX321( Disp_i, J, K, PGSize1D, PGSize1D );
                for (int i=0; i<PATCH_SIZE; i++)    {
                
-                  Array_Ptr[ Idx1 ++ ] = amr->patch[FluSg][lv][PID]->fluid[MOMZ][k][j][i] /
-                                         amr->patch[FluSg][lv][PID]->fluid[DENS][k][j][i];   
+                  Array_Ptr[Idx1] = amr->patch[FluSg][lv][PID]->fluid[MOMZ][k][j][i] /
+                                    amr->patch[FluSg][lv][PID]->fluid[DENS][k][j][i];   
+
+                  if ( FluIntTime ) // temporal interpolation
+                  Array_Ptr[Idx1] =   FluWeighting     *Array_Ptr[Idx1]
+                                    + FluWeighting_IntT*( amr->patch[FluSg_IntT][lv][PID]->fluid[MOMZ][k][j][i] /
+                                                          amr->patch[FluSg_IntT][lv][PID]->fluid[DENS][k][j][i] );
+                  Idx1 ++;
                }}}
 
                Array_Ptr += PGSize3D;
@@ -361,7 +495,17 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
                
                   for (int v=0; v<NCOMP; v++)   Fluid[v] = amr->patch[FluSg][lv][PID]->fluid[v][k][j][i];
 
-                  Array_Ptr[ Idx1 ++ ] = Hydro_GetPressure( Fluid, Gamma_m1, PositivePres );
+                  Array_Ptr[Idx1] = Hydro_GetPressure( Fluid, Gamma_m1, PositivePres );
+
+                  if ( FluIntTime ) // temporal interpolation
+                  {
+                     for (int v=0; v<NCOMP; v++)   Fluid[v] = amr->patch[FluSg_IntT][lv][PID]->fluid[v][k][j][i];
+
+                     Array_Ptr[Idx1] =   FluWeighting     *Array_Ptr[Idx1]
+                                       + FluWeighting_IntT*Hydro_GetPressure( Fluid, Gamma_m1, PositivePres );
+                  }
+
+                  Idx1 ++;
                }}}
 
                Array_Ptr += PGSize3D;
@@ -386,8 +530,12 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
                                                       Idx1 = IDX321( Disp_i, J, K, PGSize1D, PGSize1D );
                for (int i=0; i<PATCH_SIZE; i++)    {
                
-                  Array_Ptr[ Idx1 ++ ] = amr->patch[PotSg][lv][PID]->pot[k][j][i];
+                  Array_Ptr[Idx1] = amr->patch[PotSg][lv][PID]->pot[k][j][i];
                
+                  if ( PotIntTime ) // temporal interpolation
+                  Array_Ptr[Idx1] =   PotWeighting     *Array_Ptr[Idx1]
+                                    + PotWeighting_IntT*amr->patch[PotSg_IntT][lv][PID]->pot[k][j][i];
+                  Idx1 ++;
                }}}
 
                Array_Ptr += PGSize3D;
@@ -437,8 +585,12 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
                                                       Idx1 = IDX321( Disp_i, J, K, PGSize1D, PGSize1D );
                      for (I2=Disp_i2; I2<Disp_i2+Loop_i; I2++) {
 
-                        Array_Ptr[ Idx1 ++ ] = amr->patch[FluSg][lv][SibPID]->fluid[TFluVarIdx][K2][J2][I2];
+                        Array_Ptr[Idx1] = amr->patch[FluSg][lv][SibPID]->fluid[TFluVarIdx][K2][J2][I2];
 
+                        if ( FluIntTime ) // temporal interpolation
+                        Array_Ptr[Idx1] =   FluWeighting     *Array_Ptr[Idx1]
+                                          + FluWeighting_IntT*amr->patch[FluSg_IntT][lv][SibPID]->fluid[TFluVarIdx][K2][J2][I2];
+                        Idx1 ++;
                      }}}
 
                      Array_Ptr += PGSize3D;
@@ -454,9 +606,14 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
                                                       Idx1 = IDX321( Disp_i, J, K, PGSize1D, PGSize1D );
                      for (I2=Disp_i2; I2<Disp_i2+Loop_i; I2++) {
 
-                        Array_Ptr[ Idx1 ++ ] = amr->patch[FluSg][lv][SibPID]->fluid[MOMX][K2][J2][I2] /
-                                               amr->patch[FluSg][lv][SibPID]->fluid[DENS][K2][J2][I2];
+                        Array_Ptr[Idx1] = amr->patch[FluSg][lv][SibPID]->fluid[MOMX][K2][J2][I2] /
+                                          amr->patch[FluSg][lv][SibPID]->fluid[DENS][K2][J2][I2];
 
+                        if ( FluIntTime ) // temporal interpolation
+                        Array_Ptr[Idx1] =   FluWeighting     *Array_Ptr[Idx1]
+                                          + FluWeighting_IntT*( amr->patch[FluSg_IntT][lv][SibPID]->fluid[MOMX][K2][J2][I2] /
+                                                                amr->patch[FluSg_IntT][lv][SibPID]->fluid[DENS][K2][J2][I2] );
+                        Idx1 ++;
                      }}}
 
                      Array_Ptr += PGSize3D;
@@ -469,9 +626,14 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
                                                       Idx1 = IDX321( Disp_i, J, K, PGSize1D, PGSize1D );
                      for (I2=Disp_i2; I2<Disp_i2+Loop_i; I2++) {
 
-                        Array_Ptr[ Idx1 ++ ] = amr->patch[FluSg][lv][SibPID]->fluid[MOMY][K2][J2][I2] /
-                                               amr->patch[FluSg][lv][SibPID]->fluid[DENS][K2][J2][I2];
+                        Array_Ptr[Idx1] = amr->patch[FluSg][lv][SibPID]->fluid[MOMY][K2][J2][I2] /
+                                          amr->patch[FluSg][lv][SibPID]->fluid[DENS][K2][J2][I2];
 
+                        if ( FluIntTime ) // temporal interpolation
+                        Array_Ptr[Idx1] =   FluWeighting     *Array_Ptr[Idx1]
+                                          + FluWeighting_IntT*( amr->patch[FluSg_IntT][lv][SibPID]->fluid[MOMY][K2][J2][I2] /
+                                                                amr->patch[FluSg_IntT][lv][SibPID]->fluid[DENS][K2][J2][I2] );
+                        Idx1 ++;
                      }}}
 
                      Array_Ptr += PGSize3D;
@@ -484,9 +646,14 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
                                                       Idx1 = IDX321( Disp_i, J, K, PGSize1D, PGSize1D );
                      for (I2=Disp_i2; I2<Disp_i2+Loop_i; I2++) {
 
-                        Array_Ptr[ Idx1 ++ ] = amr->patch[FluSg][lv][SibPID]->fluid[MOMZ][K2][J2][I2] /
-                                               amr->patch[FluSg][lv][SibPID]->fluid[DENS][K2][J2][I2];
+                        Array_Ptr[Idx1] = amr->patch[FluSg][lv][SibPID]->fluid[MOMZ][K2][J2][I2] /
+                                          amr->patch[FluSg][lv][SibPID]->fluid[DENS][K2][J2][I2];
 
+                        if ( FluIntTime ) // temporal interpolation
+                        Array_Ptr[Idx1] =   FluWeighting     *Array_Ptr[Idx1]
+                                          + FluWeighting_IntT*( amr->patch[FluSg_IntT][lv][SibPID]->fluid[MOMZ][K2][J2][I2] /
+                                                                amr->patch[FluSg_IntT][lv][SibPID]->fluid[DENS][K2][J2][I2] );
+                        Idx1 ++;
                      }}}
 
                      Array_Ptr += PGSize3D;
@@ -501,7 +668,16 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
 
                         for (int v=0; v<NCOMP; v++)   Fluid[v] = amr->patch[FluSg][lv][SibPID]->fluid[v][K2][J2][I2];
 
-                        Array_Ptr[ Idx1 ++ ] = Hydro_GetPressure( Fluid, Gamma_m1, PositivePres );
+                        Array_Ptr[Idx1] = Hydro_GetPressure( Fluid, Gamma_m1, PositivePres );
+
+                        if ( FluIntTime ) // temporal interpolation
+                        {
+                           for (int v=0; v<NCOMP; v++)   Fluid[v] = amr->patch[FluSg_IntT][lv][SibPID]->fluid[v][K2][J2][I2];
+
+                           Array_Ptr[Idx1] =   FluWeighting     *Array_Ptr[Idx1]
+                                             + FluWeighting_IntT*Hydro_GetPressure( Fluid, Gamma_m1, PositivePres );
+                           Idx1 ++;
+                        }
                      }}}
 
                      Array_Ptr += PGSize3D;
@@ -526,8 +702,12 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
                                                       Idx1 = IDX321( Disp_i, J, K, PGSize1D, PGSize1D );
                      for (I2=Disp_i2; I2<Disp_i2+Loop_i; I2++) {
 
-                        Array_Ptr[ Idx1 ++ ] = amr->patch[PotSg][lv][SibPID]->pot[K2][J2][I2];
+                        Array_Ptr[Idx1] = amr->patch[PotSg][lv][SibPID]->pot[K2][J2][I2];
 
+                        if ( PotIntTime ) // temporal interpolation
+                        Array_Ptr[Idx1] =   PotWeighting     *Array_Ptr[Idx1]
+                                          + PotWeighting_IntT*amr->patch[PotSg_IntT][lv][SibPID]->pot[K2][J2][I2];
+                        Idx1 ++;
                      }}}
 
                      Array_Ptr += PGSize3D;
@@ -556,7 +736,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
                real *IntData     = new real [ NVar_Tot*FSize[0]*FSize[1]*FSize[2] ];
 
 
-//             determine the parameters for the spatial and temporal interpolations
+//             determine the target PID at lv-1
                const int FaPID    = amr->patch[0][lv][PID0]->father;
                const int FaSibPID = amr->patch[0][lv-1][FaPID]->sibling[Side];
 

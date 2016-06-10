@@ -142,6 +142,7 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData[], const in
    int  FluSg, FluSg_IntT;
    real FluWeighting, FluWeighting_IntT;
 
+   if ( NVar_Flu + NVar_Der != 0 ) {
    if      (  Mis_CompareRealValue( PrepTime, amr->FluSgTime[lv][   amr->FluSg[lv] ], NULL, false )  )
    {
       FluIntTime        = false;
@@ -162,14 +163,18 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData[], const in
 
    else
    {
+//    check
 #     ifndef INDIVIDUAL_TIMESTEP
-      Aux_Error( ERROR_INFO, "Cannot determine FluSg (lv %d, PrepTime %20.14e, SgTime[0] %20.14e, SgTime[1] %20.14e !!\n",
+      Aux_Error( ERROR_INFO, "cannot determine FluSg (lv %d, PrepTime %20.14e, SgTime[0] %20.14e, SgTime[1] %20.14e !!\n",
                  lv, PrepTime, amr->FluSgTime[lv][0], amr->FluSgTime[lv][1] );
 #     endif
 
 //    print warning messages if temporal extrapolation is required
       const double TimeMin = MIN( amr->FluSgTime[lv][0], amr->FluSgTime[lv][1] );
       const double TimeMax = MAX( amr->FluSgTime[lv][0], amr->FluSgTime[lv][1] );
+
+      if ( TimeMin < 0.0 )
+         Aux_Error( ERROR_INFO, "TimeMin (%21.14e) < 0.0 ==> one of the fluid arrays has not been initialized !!\n", TimeMin );
 
       if ( PrepTime < TimeMin  ||  PrepTime-TimeMax >= 1.0e-12*TimeMax )
          Aux_Message( stderr, "WARNING : temporal extrapolation (lv %d, T_Prep %20.14e, T_Min %20.14e, T_Max %20.14e)\n",
@@ -195,12 +200,14 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData[], const in
          FluWeighting_IntT = NULL_REAL;
       }
    } // Mis_CompareRealValue
+   } // if ( NVar_Flu + NVar_Der != 0 )
 
 #  ifdef GRAVITY
    bool PotIntTime;
    int  PotSg, PotSg_IntT;
    real PotWeighting, PotWeighting_IntT;
 
+   if ( PrepPot ) {
    if      (  Mis_CompareRealValue( PrepTime, amr->PotSgTime[lv][   amr->PotSg[lv] ], NULL, false )  )
    {
       PotIntTime        = false;
@@ -221,14 +228,18 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData[], const in
 
    else
    {
+//    check
 #     ifndef INDIVIDUAL_TIMESTEP
-      Aux_Error( ERROR_INFO, "Cannot determine PotSg (lv %d, PrepTime %20.14e, SgTime[0] %20.14e, SgTime[1] %20.14e !!\n",
+      Aux_Error( ERROR_INFO, "cannot determine PotSg (lv %d, PrepTime %20.14e, SgTime[0] %20.14e, SgTime[1] %20.14e !!\n",
                  lv, PrepTime, amr->PotSgTime[lv][0], amr->PotSgTime[lv][1] );
 #     endif
 
 //    print warning messages if temporal extrapolation is required
       const double TimeMin = MIN( amr->PotSgTime[lv][0], amr->PotSgTime[lv][1] );
       const double TimeMax = MAX( amr->PotSgTime[lv][0], amr->PotSgTime[lv][1] );
+
+      if ( TimeMin < 0.0 )
+         Aux_Error( ERROR_INFO, "TimeMin (%21.14e) < 0.0 ==> one of the potential arrays has not been initialized !!\n", TimeMin );
 
       if ( PrepTime < TimeMin  ||  PrepTime-TimeMax >= 1.0e-12*TimeMax )
          Aux_Message( stderr, "WARNING : temporal extrapolation (lv %d, T_Prep %20.14e, T_Min %20.14e, T_Max %20.14e)\n",
@@ -240,9 +251,9 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData[], const in
          PotSg             = 0;
          PotSg_IntT        = 1;
          PotWeighting      =   ( +amr->PotSgTime[lv][PotSg_IntT] - PrepTime )
-                             / ( amr->PotSgTime[lv][PotSg_IntT] - amr->PotSgTime[lv][PotSg] );
+                             / (  amr->PotSgTime[lv][PotSg_IntT] - amr->PotSgTime[lv][PotSg] );
          PotWeighting_IntT =   ( -amr->PotSgTime[lv][PotSg     ] + PrepTime )
-                             / ( amr->PotSgTime[lv][PotSg_IntT] - amr->PotSgTime[lv][PotSg] );
+                             / (  amr->PotSgTime[lv][PotSg_IntT] - amr->PotSgTime[lv][PotSg] );
       }
 
       else
@@ -254,6 +265,7 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData[], const in
          PotWeighting_IntT = NULL_REAL;
       }
    } // Mis_CompareRealValue
+   } // if ( PrepPot )
 #  endif // #ifdef GRAVITY
 
 

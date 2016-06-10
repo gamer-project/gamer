@@ -10,8 +10,14 @@
 // Function    :  Poi_Prepare_Pot
 // Description :  Fill up the h_Pot_Array_P_In array with the coarse-grid (lv-1) potential for the Poisson solver 
 //
-// Parameter   :  lv                : Targeted refinement level
-//                PrepTime          : Targeted physical time to prepare the coarse-grid data
+// Note        :  1. We don't call "Prepare_PatchData" since it always prepare data for a **patch group** but
+//                   here we may want to prepare data for a single **patch**
+//                2. Use PrepTime to determine the physical time to prepare data
+//                   --> Temporal interpolation/extrapolation will be conducted automatically if PrepTime
+//                       is NOT equal to the time of data stored previously (e.g., FluSgTime[0/1])
+//
+// Parameter   :  lv                : Target refinement level
+//                PrepTime          : Target physical time to prepare the coarse-grid data
 //                h_Pot_Array_P_In  : Host array to store the prepared coarse-grid potential
 //                NPG               : Number of patch groups prepared at a time
 //                PID0_List         : List recording the patch indicies with LocalID==0 to be udpated
@@ -21,39 +27,85 @@ void Poi_Prepare_Pot( const int lv, const double PrepTime, real h_Pot_Array_P_In
 {
 
 // check
+#  ifdef GAMER_DEBUG
    if ( lv == 0 )    Aux_Error( ERROR_INFO, "incorrect parameter %s = %d !!\n", "lv", lv );
+
+// temporal interpolation should be unnecessary for the shared time-step integration
+#  ifndef INDIVIDUAL_TIMESTEP
+   if ( OPT__INT_TIME )    Aux_Error( ERROR_INFO, "OPT__INT_TIME only works when INDIVIDUAL_TIMESTEP is on !!\n" );
+#  endif
+#  endif
 
 
 //###REVISE: support interpolation schemes requiring 2 ghost cells on each side
    const int IntGhost = 1;    // assuming interpolation ghost-zone == 1
    const int CGhost   = (POT_GHOST_SIZE+1)/2 + IntGhost;
    const int CWidth   = PATCH_SIZE + 2*CGhost;
+   const int FaLv     = lv - 1;
 
 
-// determine the parameters for the spatial and temporal interpolations
-   bool IntTime, IntSg;
+// temporal interpolation parameters
+   bool PotIntTime;
+   int  PotSg, PotSg_IntT;
+   real PotWeighting, PotWeighting_IntT;
 
-   if      (  Mis_CompareRealValue( PrepTime,      Time[lv-1], NULL, false )  )
+   if      (  Mis_CompareRealValue( PrepTime, amr->PotSgTime[FaLv][   amr->PotSg[FaLv] ], NULL, false )  )
    {
-      IntTime = false;
-      IntSg   = amr->PotSg[lv-1];
+      PotIntTime        = false;
+      PotSg             = amr->PotSg[FaLv];
+      PotSg_IntT        = NULL_INT;
+      PotWeighting      = NULL_REAL;
+      PotWeighting_IntT = NULL_REAL;
    }
 
-   else if (  Mis_CompareRealValue( PrepTime, Time_Prev[lv-1], NULL, false )  )
+   else if (  Mis_CompareRealValue( PrepTime, amr->PotSgTime[FaLv][ 1-amr->PotSg[FaLv] ], NULL, false )  )
    {
-      IntTime = false;
-      IntSg   = 1 - amr->PotSg[lv-1];
+      PotIntTime        = false;
+      PotSg             = 1 - amr->PotSg[FaLv];
+      PotSg_IntT        = NULL_INT;
+      PotWeighting      = NULL_REAL;
+      PotWeighting_IntT = NULL_REAL;
    }
 
    else
    {
+//    check
 #     ifndef INDIVIDUAL_TIMESTEP
-      Aux_Error( ERROR_INFO, "lv %d: PrepTime %20.14e, Time[lv-1] %20.14e, Time_Prev[lv-1] %20.14e !!\n",
-                 lv, PrepTime, Time[lv-1], Time_Prev[lv-1] );
+      Aux_Error( ERROR_INFO, "cannot determine PotSg (lv %d, PrepTime %20.14e, SgTime[0] %20.14e, SgTime[1] %20.14e !!\n",
+                 FaLv, PrepTime, amr->PotSgTime[FaLv][0], amr->PotSgTime[FaLv][1] );
 #     endif
-      IntTime = ( OPT__INT_TIME ) ? true : false;
-      IntSg   = 1 - amr->PotSg[lv-1];
-   }
+
+//    print warning messages if temporal extrapolation is required
+      const double TimeMin = MIN( amr->PotSgTime[FaLv][0], amr->PotSgTime[FaLv][1] );
+      const double TimeMax = MAX( amr->PotSgTime[FaLv][0], amr->PotSgTime[FaLv][1] );
+
+      if ( TimeMin < 0.0 )
+         Aux_Error( ERROR_INFO, "TimeMin (%21.14e) < 0.0 ==> one of the potential arrays has not been initialized !!\n", TimeMin );
+
+      if ( PrepTime < TimeMin  ||  PrepTime-TimeMax >= 1.0e-12*TimeMax )
+         Aux_Message( stderr, "WARNING : temporal extrapolation (lv %d, T_Prep %20.14e, T_Min %20.14e, T_Max %20.14e)\n",
+                      FaLv, PrepTime, TimeMin, TimeMax );
+
+      if ( OPT__INT_TIME )
+      {
+         PotIntTime        = true;
+         PotSg             = 0;
+         PotSg_IntT        = 1;
+         PotWeighting      =   ( +amr->PotSgTime[FaLv][PotSg_IntT] - PrepTime )
+                             / (  amr->PotSgTime[FaLv][PotSg_IntT] - amr->PotSgTime[FaLv][PotSg] );
+         PotWeighting_IntT =   ( -amr->PotSgTime[FaLv][PotSg     ] + PrepTime )
+                             / (  amr->PotSgTime[FaLv][PotSg_IntT] - amr->PotSgTime[FaLv][PotSg] );
+      }
+
+      else
+      {
+         PotIntTime        = false;
+         PotSg             = amr->PotSg[FaLv]; // set to the current Sg
+         PotSg_IntT        = NULL_INT;
+         PotWeighting      = NULL_REAL;
+         PotWeighting_IntT = NULL_REAL;
+      }
+   } // Mis_CompareRealValue
 
 
 #  pragma omp parallel
@@ -82,28 +134,19 @@ void Poi_Prepare_Pot( const int lv, const double PrepTime, real h_Pot_Array_P_In
          for (int j=0; j<PATCH_SIZE; j++)    {  J = j + CGhost;
          for (int i=0; i<PATCH_SIZE; i++)    {  I = i + CGhost;
 
-            CPot[K][J][I] = amr->patch[IntSg][lv-1][FaPID]->pot[k][j][i];
+            CPot[K][J][I] = amr->patch[PotSg][FaLv][FaPID]->pot[k][j][i];
 
+            if ( PotIntTime ) // temporal interpolation
+            CPot[K][J][I] =   PotWeighting     *CPot[K][J][I]
+                            + PotWeighting_IntT*amr->patch[PotSg_IntT][FaLv][FaPID]->pot[k][j][i];
          }}}
-
-//       interpolation in time
-         if ( IntTime )
-         {
-            for (int k=0; k<PATCH_SIZE; k++)    {  K = k + CGhost;
-            for (int j=0; j<PATCH_SIZE; j++)    {  J = j + CGhost;
-            for (int i=0; i<PATCH_SIZE; i++)    {  I = i + CGhost;
-
-               CPot[K][J][I] = 0.5 * ( CPot[K][J][I] + amr->patch[!IntSg][lv-1][FaPID]->pot[k][j][i] );
-
-            }}}
-         }
 
 
 //       b. fill up the ghost zone (no spatial interpolation is required) of the CPot array
 // ------------------------------------------------------------------------------------------------------------
          for (int sib=0; sib<26; sib++)   // we always need coarse-grid ghost zones in 26 sibling directions
          {
-            FaSibPID = amr->patch[0][lv-1][FaPID]->sibling[sib];
+            FaSibPID = amr->patch[0][FaLv][FaPID]->sibling[sib];
 
 #           ifdef GAMER_DEBUG
             if ( FaSibPID < 0 )  Aux_Error( ERROR_INFO, "incorrect parameter %s = %d !!\n", "FaSibPID", FaSibPID );
@@ -123,24 +166,12 @@ void Poi_Prepare_Pot( const int lv, const double PrepTime, real h_Pot_Array_P_In
             for (int j=0; j<Loop_j; j++)  {  J = j + Disp_j;   J2 = j + Disp_j2;
             for (int i=0; i<Loop_i; i++)  {  I = i + Disp_i;   I2 = i + Disp_i2;
 
-               CPot[K][J][I] = amr->patch[IntSg][lv-1][FaSibPID]->pot[K2][J2][I2];
+               CPot[K][J][I] = amr->patch[PotSg][FaLv][FaSibPID]->pot[K2][J2][I2];
 
+               if ( PotIntTime ) // temporal interpolation
+               CPot[K][J][I] =   PotWeighting     *CPot[K][J][I]
+                               + PotWeighting_IntT*amr->patch[PotSg_IntT][FaLv][FaSibPID]->pot[K2][J2][I2];
             }}}
-
-//          interpolation in time
-            if ( IntTime )
-            {
-               for (int k=0; k<Loop_k; k++)  {  K = k + Disp_k;   K2 = k + Disp_k2;
-               for (int j=0; j<Loop_j; j++)  {  J = j + Disp_j;   J2 = j + Disp_j2;
-               for (int i=0; i<Loop_i; i++)  {  I = i + Disp_i;   I2 = i + Disp_i2;
-
-                  CPot[K][J][I] = (real)0.5*( CPot[K][J][I] + 
-                                              amr->patch[!IntSg][lv-1][FaSibPID]->pot[K2][J2][I2] );
-
-               }}}
-
-            }
-
          } // for (int sib=0; sib<26; sib++)
 
 
