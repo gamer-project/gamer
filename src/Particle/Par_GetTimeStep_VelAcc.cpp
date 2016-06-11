@@ -36,6 +36,11 @@ void Par_GetTimeStep_VelAcc( double dt[2], double dTime[2], int MinDtLv[2], real
    const real *Acc[3] = { NULL, NULL, NULL };
 #  endif
    const bool  UseAcc = ( DT__PARACC > 0.0 );
+#  ifdef OPENMP
+   const int   NT     = OMP_NTHREAD;   // number of OpenMP threads
+#  else
+   const int   NT     = 1;
+#  endif
 
 #  ifndef STORE_PAR_ACC
    if ( UseAcc )
@@ -43,34 +48,65 @@ void Par_GetTimeStep_VelAcc( double dt[2], double dTime[2], int MinDtLv[2], real
 #  endif
 
    real  *MaxVel      = MinDtInfo_ParVelAcc[0];       // "MinDtInfo_ParVelAcc" is a global variable
-   real  *MaxAcc      = MinDtInfo_ParVelAcc[1];
+   real  *MaxAcc      = MinDtInfo_ParVelAcc[1];       // useless if UseAcc == false
    double dt_local[2] = { __FLT_MAX__, __FLT_MAX__ }; // initialize as extremely large numbers
+
    double dt_min[2], dt_tmp[2];
+   int    TID;
    long   ParID;
+
+   real *MaxVel_OMP = new real [NT];
+   real *MaxAcc_OMP = new real [NT];
 
 
 // get the maximum particle velocity and acceleration at each level
    if ( !OPT__ADAPTIVE_DT )
+   for (int lv=0; lv<NLEVEL; lv++)
    {
-      for (int lv=0; lv<NLEVEL; lv++)
-      {
-         MaxVel[lv] = 0.0;    // don't assign negative values since we assume it to be positive-definite
-         MaxAcc[lv] = 0.0;
+      MaxVel[lv] = (real)0.0;    // don't assign negative values since we assume it to be positive-definite
+      MaxAcc[lv] = (real)0.0;
 
+      for (int t=0; t<NT; t++)
+      {
+         MaxVel_OMP[t] = (real)0.0;
+         MaxAcc_OMP[t] = (real)0.0;
+      }
+
+//###NOTE: OpenMP may not improve performance here
+#     pragma omp parallel private( TID, ParID )
+      {
+#        ifdef OPENMP
+         TID = omp_get_thread_num();
+#        else
+         TID = 0;
+#        endif
+
+#        pragma omp for schedule( runtime )
          for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
          for (int p=0; p<amr->patch[0][lv][PID]->NPar; p++)
          {
             ParID = amr->patch[0][lv][PID]->ParList[p];
 
             for (int d=0; d<3; d++)
-            MaxVel[lv] = MAX( MaxVel[lv], FABS(Vel[d][ParID]) );
+            MaxVel_OMP[TID] = MAX( MaxVel_OMP[TID], FABS(Vel[d][ParID]) );
 
             if ( UseAcc )
             for (int d=0; d<3; d++)
-            MaxAcc[lv] = MAX( MaxAcc[lv], FABS(Acc[d][ParID]) );
+            MaxAcc_OMP[TID] = MAX( MaxAcc_OMP[TID], FABS(Acc[d][ParID]) );
          }
+      } // end of OpenMP parallel region
+
+//    compare the maximum velocity and acceleration evaluated by different OMP threads
+      for (int t=0; t<NT; t++)
+      {
+         MaxVel[lv] = MAX( MaxVel_OMP[t], MaxVel[lv] );
+         if ( UseAcc )
+         MaxAcc[lv] = MAX( MaxAcc_OMP[t], MaxAcc[lv] );
       }
-   }
+   } // for (int lv=0; lv<NLEVEL; lv++)
+
+   delete [] MaxVel_OMP;
+   delete [] MaxAcc_OMP;
 
 
 // get the time-step in one rank

@@ -135,7 +135,7 @@ void Hydro_GetMaxAcc( real MaxAcc[] )
    real   (*Pot_Array)[GRA_NXT][GRA_NXT][GRA_NXT] = NULL;
    real   Acc[3], Coeff;
    double PhyCorner[3], x, y, z, dh_half;
-   int    TID = 0;     // thread ID
+   int    TID;    // thread ID
 
    real *MaxAcc_OMP = new real [NT];
 
@@ -159,6 +159,8 @@ void Hydro_GetMaxAcc( real MaxAcc[] )
 
 #        ifdef OPENMP
          TID = omp_get_thread_num();
+#        else
+         TID = 0;
 #        endif
 
 //       loop over all patches

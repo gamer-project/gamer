@@ -32,6 +32,7 @@ void Par_GetEnergy( double &Ek, double &Ep )
 // 1. kinematic energy
    double Ek_local = 0.0;
 
+#  pragma omp parallel for schedule( runtime ) reduction( +:Ek_local )
    for (long p=0; p<amr->Par->NPar; p++)
    {
 //    skip inactive and massless particles
@@ -52,17 +53,12 @@ void Par_GetEnergy( double &Ek, double &Ep )
    const int  PotGhost          = amr->Par->GhostSize;
    const int  PotSize           = PS1 + 2*PotGhost;
 
-   real *Pos[3] = { amr->Par->PosX, amr->Par->PosY, amr->Par->PosZ };
-   real *Mass   = amr->Par->Mass;
-   real *Pot    = new real [ 8*CUBE(PotSize) ];       // 8: number of patches per patch group
+   const real *Pos[3] = { amr->Par->PosX, amr->Par->PosY, amr->Par->PosZ };
+   const real *Mass   = amr->Par->Mass;
 
-   real (*Pot3D)[PotSize][PotSize][PotSize] = ( real (*)[PotSize][PotSize][PotSize] )Pot;
-
-   double Ep_local = 0.0, PrepPotTime;
-   bool   GotYou;
-   long   ParID;
+   double Ep_local = 0.0;
+   double PrepPotTime, dh, _dh;
    int    PotSg;
-   double PhyCorner_ExtPot[3], x, y, z, dh, _dh;
 
 
 // check
@@ -102,6 +98,20 @@ void Par_GetEnergy( double &Ek, double &Ep )
 #     endif
 
 
+//    OpenMP parallel region
+#     pragma omp parallel
+      {
+
+//    per-thread variables
+      bool   GotYou;
+      long   ParID;
+      double PhyCorner_ExtPot[3], x, y, z;
+
+      real *Pot = new real [ 8*CUBE(PotSize) ];    // 8: number of patches per patch group
+      real (*Pot3D)[PotSize][PotSize][PotSize] = ( real (*)[PotSize][PotSize][PotSize] )Pot;
+
+
+#     pragma omp for schedule( runtime ) reduction( +:Ep_local )
       for (int PID0=0; PID0<amr->NPatchComma[lv][1]; PID0+=8)
       {
 //       2-1. find the patch groups with particles 
@@ -178,9 +188,9 @@ void Par_GetEnergy( double &Ek, double &Ep )
 
                   for (int p=0; p<amr->patch[0][lv][PID]->NPar; p++)
                   {
-//                   calculate the nearest grid index
                      ParID = amr->patch[0][lv][PID]->ParList[p];
 
+//                   calculate the nearest grid index
                      for (int d=0; d<3; d++)    
                      {
                         idx[d] = int( ( Pos[d][ParID] - amr->patch[0][lv][PID]->EdgeL[d] )*_dh );
@@ -344,11 +354,12 @@ void Par_GetEnergy( double &Ek, double &Ep )
             } // switch ( IntScheme )
          } // for (int PID=PID0, P=0; PID<PID0+8; PID++, P++)
       } // for (int PID0=0; PID0<amr->NPatchComma[lv][1]; PID0+=8)
+
+//    2-5. free memory
+      delete [] Pot;
+
+      } // end of OpenMP parallel region
    } // for (int lv=0; lv<NLEVEL; lv++)
-
-
-// 2-5. free memory
-   delete [] Pot;
 
 
 // 2.6. gather from all ranks

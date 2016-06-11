@@ -72,6 +72,7 @@ void Par_UpdateParticle( const int lv, const double TimeNew, const double TimeOl
    const int  PotSize           = PS1 + 2*PotGhost;
    const int  AccSize           = PS1 + 2*ParGhost;
    const real Const_8           = (real)8.0;
+   const real GraConst          = ( OPT__GRA_P5_GRADIENT ) ? -1.0/(12.0*dh) : -1.0/(2.0*dh); // but P5 is NOT supported yet
 
    real *ParPos[3] = { amr->Par->PosX, amr->Par->PosY, amr->Par->PosZ };
    real *ParVel[3] = { amr->Par->VelX, amr->Par->VelY, amr->Par->VelZ };
@@ -80,27 +81,12 @@ void Par_UpdateParticle( const int lv, const double TimeNew, const double TimeOl
 #  endif
    real *ParTime   = amr->Par->Time;
 
-   real *Pot = new real [ 8*CUBE(PotSize) ];             // 8: number of patches per patch group
-   real *Acc = new real [ 3*CUBE(AccSize) ];             // 3: three dimension
-
-   real (*Pot3D)[PotSize][PotSize][PotSize] = ( real (*)[PotSize][PotSize][PotSize] )Pot;
-   real (*Acc3D)[AccSize][AccSize][AccSize] = ( real (*)[AccSize][AccSize][AccSize] )Acc;
-
-   bool   GotYou;
-   long   ParID;
-   real   Acc_Temp[3], dt, dt_half;
-   double PhyCorner_ExtAcc[3], PhyCorner_ExtPot[3], x, y, z;
-
-
-// determine the coefficient for calculating acceleration
-   real GraConst = ( OPT__GRA_P5_GRADIENT ) ? -1.0/(12.0*dh) : -1.0/(2.0*dh); // but P5 is NOT supported yet
-
 
 // determine PotSg for STORE_POT_GHOST
 #  ifdef STORE_POT_GHOST
    int  PotSg;
    real PotWeighting0, PotWeighting1;
-   bool PotNeedInterpolate = false;
+   bool PotIntTime = false;
 
    if (  ( OPT__GRAVITY_TYPE == GRAVITY_SELF || OPT__GRAVITY_TYPE == GRAVITY_BOTH )  &&  amr->Par->ImproveAcc  )
    {
@@ -117,10 +103,10 @@ void Par_UpdateParticle( const int lv, const double TimeNew, const double TimeOl
          Aux_Error( ERROR_INFO, "Potential interpolation is unnecessary (lv %d, PrepTime %20.14e, SgTime[0] %20.14e, SgTime[1] %20.14e !!\n",
                     lv, PrepPotTime, amr->PotSgTime[lv][0], amr->PotSgTime[lv][1] );
 
-         PotNeedInterpolate = true;
-         PotWeighting0      = ( +amr->PotSgTime[lv][1] - PrepPotTime ) / ( amr->PotSgTime[lv][1] - amr->PotSgTime[lv][0] );
-         PotWeighting1      = ( -amr->PotSgTime[lv][0] + PrepPotTime ) / ( amr->PotSgTime[lv][1] - amr->PotSgTime[lv][0] );
-         PotSg              = -1;   // useless
+         PotIntTime    = true;
+         PotWeighting0 = ( +amr->PotSgTime[lv][1] - PrepPotTime ) / ( amr->PotSgTime[lv][1] - amr->PotSgTime[lv][0] );
+         PotWeighting1 = ( -amr->PotSgTime[lv][0] + PrepPotTime ) / ( amr->PotSgTime[lv][1] - amr->PotSgTime[lv][0] );
+         PotSg         = -1;   // useless
 #        else
          Aux_Error( ERROR_INFO, "Cannot determine PotSg (lv %d, PrepTime %20.14e, SgTime[0] %20.14e, SgTime[1] %20.14e !!\n",
                     lv, PrepPotTime, amr->PotSgTime[lv][0], amr->PotSgTime[lv][1] );
@@ -182,6 +168,24 @@ void Par_UpdateParticle( const int lv, const double TimeNew, const double TimeOl
 #  endif // #ifdef DEBUG_PARTICLE
 
 
+// OpenMP parallel region
+#  pragma omp parallel
+   {
+
+// per-thread variables
+   real *Pot = new real [ 8*CUBE(PotSize) ];    // 8: number of patches per patch group
+   real *Acc = new real [ 3*CUBE(AccSize) ];    // 3: three dimension
+
+   real (*Pot3D)[PotSize][PotSize][PotSize] = ( real (*)[PotSize][PotSize][PotSize] )Pot;
+   real (*Acc3D)[AccSize][AccSize][AccSize] = ( real (*)[AccSize][AccSize][AccSize] )Acc;
+
+   bool   GotYou;
+   long   ParID;
+   real   Acc_Temp[3], dt, dt_half;
+   double PhyCorner_ExtAcc[3], PhyCorner_ExtPot[3], x, y, z;
+
+
+#  pragma omp for schedule( runtime )
    for (int PID0=0; PID0<amr->NPatchComma[lv][1]; PID0+=8)
    {
 //    1. find the patch groups with target particles
@@ -232,7 +236,7 @@ void Par_UpdateParticle( const int lv, const double TimeNew, const double TimeOl
 
 //             temporal interpolation is required for correcting the velocity of particles just crossing
 //             from fine to coarse grids
-               if ( PotNeedInterpolate )
+               if ( PotIntTime )
                {
                   for (int k=0; k<PotSize; k++)
                   for (int j=0; j<PotSize; j++)
@@ -608,10 +612,11 @@ void Par_UpdateParticle( const int lv, const double TimeNew, const double TimeOl
       } // for (int PID=PID0, P=0; PID<PID0+8; PID++, P++)
    } // for (int PID0=0; PID0<amr->NPatchComma[lv][1]; PID0+=8)
 
-
 // 6. free memory
    delete [] Pot;
    delete [] Acc;
+
+   } // end of OpenMP parallel region
 
 } // FUNCTION : Par_UpdateParticle
 

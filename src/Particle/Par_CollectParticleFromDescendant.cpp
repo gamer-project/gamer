@@ -33,6 +33,8 @@ static void CollectParticle( const int FaLv, const int FaPID, int &NPar_SoFar, l
 void Par_CollectParticleFromDescendant( const int FaLv )
 {
 
+//###NOTE: OpenMP may not improve performance here
+#  pragma omp parallel for schedule( runtime )
    for (int FaPID=0; FaPID<amr->NPatchComma[FaLv][1]; FaPID++)
    {
 //    check

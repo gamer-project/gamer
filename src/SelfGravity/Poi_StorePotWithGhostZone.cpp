@@ -38,19 +38,27 @@ void Poi_StorePotWithGhostZone( const int lv, const int PotSg, const bool AllPat
    const int    PotSize     = PS1 + 2*PotGhost;
    const int    PotSizeCube = CUBE(PotSize);
 
-   real *Pot = new real [ 8*PotSizeCube ];   // 8: number of patches per patch group
-
-   for (int PID0=0; PID0<amr->NPatchComma[lv][1]; PID0+=8)
+// OpenMP parallel region
+#  pragma omp parallel
    {
-      if ( AllPatch  ||  amr->patch[PotSg][lv][PID0]->pot_ext[0][0][0] == POT_EXT_NEED_INIT )
-      {
-         Prepare_PatchData( lv, PrepPotTime, Pot, PotGhost, 1, &PID0, _POTE, OPT__REF_POT_INT_SCHEME,
-                            UNIT_PATCH, NSIDE_26, IntPhase_No, FluBC_None, OPT__BC_POT, GetTotDens_No );
+//    per-thread variables
+      real *Pot = new real [ 8*PotSizeCube ];   // 8: number of patches per patch group
 
-         for (int PID=PID0, P=0; PID<PID0+8; PID++, P++)
-            memcpy( amr->patch[PotSg][lv][PID]->pot_ext, Pot+P*PotSizeCube, PotSizeCube*sizeof(real) );
+#     pragma omp for schedule( runtime )
+      for (int PID0=0; PID0<amr->NPatchComma[lv][1]; PID0+=8)
+      {
+         if ( AllPatch  ||  amr->patch[PotSg][lv][PID0]->pot_ext[0][0][0] == POT_EXT_NEED_INIT )
+         {
+            Prepare_PatchData( lv, PrepPotTime, Pot, PotGhost, 1, &PID0, _POTE, OPT__REF_POT_INT_SCHEME,
+                               UNIT_PATCH, NSIDE_26, IntPhase_No, FluBC_None, OPT__BC_POT, GetTotDens_No );
+
+            for (int PID=PID0, P=0; PID<PID0+8; PID++, P++)
+               memcpy( amr->patch[PotSg][lv][PID]->pot_ext, Pot+P*PotSizeCube, PotSizeCube*sizeof(real) );
+         }
       }
-   }
+
+      delete [] Pot;
+   } // end of OpenMP parallel region
 
 } // FUNCTION : Poi_StorePotWithGhostZone
 

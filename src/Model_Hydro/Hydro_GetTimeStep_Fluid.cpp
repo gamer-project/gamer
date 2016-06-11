@@ -147,7 +147,7 @@ void Hydro_GetMaxCFL( real MaxCFL[], real MinDtVar_AllLv[][NCOMP] )
    real  *MaxCFL_OMP           = new real [NT];
    real (*MinDtVar_OMP)[NCOMP] = new real [NT][NCOMP];
    real Fluid[NCOMP], _Rho, Vx, Vy, Vz, Pres, Cs, MaxV, MaxCFL_candidate;
-   int  TID = 0;  // thread ID
+   int  TID;   // thread ID
 
 
 // loop over all levels
@@ -161,6 +161,8 @@ void Hydro_GetMaxCFL( real MaxCFL[], real MinDtVar_AllLv[][NCOMP] )
       {
 #        ifdef OPENMP
          TID = omp_get_thread_num();
+#        else
+         TID = 0;
 #        endif
 
 //       loop over all patches
