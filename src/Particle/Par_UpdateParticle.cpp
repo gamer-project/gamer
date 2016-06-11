@@ -184,22 +184,38 @@ void Par_UpdateParticle( const int lv, const double TimeNew, const double TimeOl
 
    for (int PID0=0; PID0<amr->NPatchComma[lv][1]; PID0+=8)
    {
-//    1. find the patch groups with particles 
+//    1. find the patch groups with target particles
 //    --> use patch group as the calculation unit since "Prepare_PatchData" only work with patch group
-//    --> some patches may not have particles ...
+//    --> disadvantage: some patches may not have particles ... (they will be skipped later)
       GotYou = false;
 
       for (int PID=PID0; PID<PID0+8; PID++)
       {
          if ( amr->patch[0][lv][PID]->NPar > 0 )
          {
-            GotYou = true;
-            break;
+            if ( UpdateStep == PAR_UPSTEP_CORR )
+            {
+               for (int p=0; p<amr->patch[0][lv][PID]->NPar; p++)
+               {
+                  ParID = amr->patch[0][lv][PID]->ParList[p];
+
+                  if ( ParTime[ParID] < (real)0.0 )
+                  {
+                     GotYou = true;
+                     break;
+                  }
+               }
+            }
+
+            else // UpdateStep == PAR_UPSTEP_PRED  ||  UpdateStep == PAR_UPSTEP_ACC_ONLY
+               GotYou = true;
          }
-      }
+
+         if ( GotYou )  break;
+      } // for (int PID=PID0; PID<PID0+8; PID++)
 
 
-//    nothing to do if there are no particles in the target patch group
+//    nothing to do if there are no target particles in the target patch group
       if ( !GotYou )    continue;
 
 
