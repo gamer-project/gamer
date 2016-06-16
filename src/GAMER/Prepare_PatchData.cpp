@@ -875,19 +875,21 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
          {
 //          we must initialize the density array as zero if there are no other density fields
 #           if ( MODEL == PAR_ONLY )
-            const bool   InitZero        = true;
+            const bool   InitZero         = true;
 #           else
-            const bool   InitZero        = false;
+            const bool   InitZero         = false;
 #           endif
-            const bool   InitZero_No     = false;
-            const bool   Periodic        = ( FluBC[0] == BC_FLU_PERIODIC );
-            const int    PeriodicSize[3] = { NX0_TOT[0]*(1<<lv), 
-                                             NX0_TOT[1]*(1<<lv), 
-                                             NX0_TOT[2]*(1<<lv) };
-            const double EdgeL[3]        = { amr->patch[0][lv][PID0]->EdgeL[0] - GhostSize*dh,
-                                             amr->patch[0][lv][PID0]->EdgeL[1] - GhostSize*dh,
-                                             amr->patch[0][lv][PID0]->EdgeL[2] - GhostSize*dh };
-            const bool   UnitDens_No     = false;
+            const bool   InitZero_No      = false;
+            const bool   Periodic         = ( FluBC[0] == BC_FLU_PERIODIC );
+            const int    PeriodicSize[3]  = { NX0_TOT[0]*(1<<lv), 
+                                              NX0_TOT[1]*(1<<lv), 
+                                              NX0_TOT[2]*(1<<lv) };
+            const double EdgeL[3]         = { amr->patch[0][lv][PID0]->EdgeL[0] - GhostSize*dh,
+                                              amr->patch[0][lv][PID0]->EdgeL[1] - GhostSize*dh,
+                                              amr->patch[0][lv][PID0]->EdgeL[2] - GhostSize*dh };
+            const bool   UnitDens_No      = false;
+            const bool   CheckFarAway_Yes = true;
+            const bool   CheckFarAway_No  = false;
 
 
 //          (c1) determine the array index for DENS
@@ -944,7 +946,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
 //             (c2-2) deposit particles mass
                Par_MassAssignment( ParList, NPar, amr->Par->Interp, ArrayDens, PGSize1D, EdgeL, dh,
                                    amr->Par->PredictPos, PrepTime, (InitZero && LocalID==0), Periodic, PeriodicSize,
-                                   UnitDens_No );
+                                   UnitDens_No, CheckFarAway_No );
             } // for (int LocalID=0; LocalID<8; LocalID++ )
 
 
@@ -987,7 +989,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
 //                   (c3-1-2) deposit particles mass
                      Par_MassAssignment( ParList, NPar, amr->Par->Interp, ArrayDens, PGSize1D, EdgeL, dh,
                                          amr->Par->PredictPos, PrepTime, InitZero_No, Periodic, PeriodicSize,
-                                         UnitDens_No );
+                                         UnitDens_No, CheckFarAway_Yes );
                   } // for (int Count=0; Count<TABLE_04( Side ); Count++)
                } // if ( SibPID0 >= 0 )
 
@@ -1030,7 +1032,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
 //                (c3-2-2) deposit particles mass
                   Par_MassAssignment( ParList, NPar, amr->Par->Interp, ArrayDens, PGSize1D, EdgeL, dh,
                                       amr->Par->PredictPos, PrepTime, InitZero_No, Periodic, PeriodicSize,
-                                      UnitDens_No );
+                                      UnitDens_No, CheckFarAway_Yes );
 
                } // else if ( SibPID0 == -1 )
             } // for (int Side=0; Side<26; Side++) if ( amr->Par->GhostSize > 0  ||  GhostSize > 0 )

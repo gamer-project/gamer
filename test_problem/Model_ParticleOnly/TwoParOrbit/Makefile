@@ -518,7 +518,7 @@ COMMONFLAG := $(INCLUDE) $(SIMU_OPTION) $(SIMU_PARA)
 ifeq "$(findstring INTEL, $(SIMU_OPTION))" "INTEL"
 CXXWARN_FLAG := -w1
 else
-CXXWARN_FLAG := -Wextra -Wall -Wimplicit -Wswitch -Wformat -Wchar-subscripts -Wparentheses -Wmultichar \
+CXXWARN_FLAG := -Wextra -Wall -Wswitch -Wformat -Wchar-subscripts -Wparentheses -Wmultichar \
                 -Wtrigraphs -Wpointer-arith -Wcast-align -Wreturn-type -Wno-unused-function 
 endif
 

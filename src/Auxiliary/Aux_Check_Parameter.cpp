@@ -1165,6 +1165,14 @@ void Aux_Check_Parameter()
    if ( OPT__FLAG_NPAR_PATCH < 0  ||  OPT__FLAG_NPAR_PATCH > 2 )
       Aux_Error( ERROR_INFO, "unsupported option \"OPT__FLAG_NPAR_PATCH = %d\" [0/1/2] !!\n", OPT__FLAG_NPAR_PATCH );
 
+   if ( OPT__BC_FLU[0] == BC_FLU_PERIODIC )
+   for (int d=0; d<3; d++)
+   {
+      if ( NX0_TOT[d]/PS2 == 1 )
+         Aux_Error( ERROR_INFO, "\"%s\" does NOT work for NX0_TOT[%d] = 2*PATCH_SIZE when periodic BC is adopted !!\n",
+                    "Par_MassAssignment", d );
+   }
+
 
 // warning 
 // ------------------------------
@@ -1178,14 +1186,6 @@ void Aux_Check_Parameter()
 
    if ( OPT__OVERLAP_MPI )
       Aux_Message( stderr, "WARNING : PARTICLE does not support OPT__OVERLAP_MPI !!\n" );
-
-   if ( OPT__BC_FLU[0] == BC_FLU_PERIODIC )
-   for (int d=0; d<3; d++)
-   {
-      if ( NX0_TOT[d]/PS2 == 1 )
-         Aux_Message( stderr, "WRANING : \"%s\" may not work properly for NX0_TOT[%d] = 2*PATCH_SIZE !!\n",
-                      "Par_MassAssignment", d );
-   }
 
 #  ifdef STORE_POT_GHOST
    if ( !amr->Par->ImproveAcc )

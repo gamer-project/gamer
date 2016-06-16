@@ -56,6 +56,7 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
    const bool InitZero_Yes            = true;
    const bool Periodic_No             = false;
    const bool UnitDens_Yes            = true;
+   const bool CheckFarAway_No         = false;
 #  endif
 
 //###NOTE: no refinement is allowed near the simulation boundary if the isolated BC for self-gravity is selected
@@ -253,7 +254,7 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
 //                deposit particles mass on grids (assuming unit density)
                   Par_MassAssignment( ParList, NPar, PAR_INTERP_NGP, ParCount[0][0], PS1,
                                       amr->patch[0][lv][PID]->EdgeL, amr->dh[lv], PredictPos_No, NULL_REAL,
-                                      InitZero_Yes, Periodic_No, NULL, UnitDens_Yes );
+                                      InitZero_Yes, Periodic_No, NULL, UnitDens_Yes, CheckFarAway_No );
                } // if ( OPT__FLAG_NPAR_CELL )
 #              endif // #ifdef PARTICLE
 
