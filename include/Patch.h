@@ -31,6 +31,11 @@ long  LB_Corner2Index( const int lv, const int Corner[], const Check_t Check );
 //                                  --> Ghost-zone potential are obtained from the Poisson solver directly
 //                                      (not from exchanging potential between sibling patches)
 //                                  --> Currently the base-level patches do not store pot_ext
+//                rho_ext         : Density with 1 ghost cell on each side
+//                                  --> Only allocated temporarily in the function Prepare_PatchData for storing
+//                                      particle mass density
+//                                  --> Note that even with NGP mass assignment which requires no ghost zone we
+//                                      still allocate rho_ext as (PS1+2)^3
 //                flux[6]         : Fluid flux (for the flux-correction operation)
 //                flux_passive[6] : Passive variable flux (for the flux-correction operation)
 //                flux_debug[6]   : Fluid flux for the debug mode (ensuring that the round-off errors are 
@@ -100,10 +105,13 @@ struct patch_t
 
 #  ifdef GRAVITY
    real (*pot)[PATCH_SIZE][PATCH_SIZE];
-
 #  ifdef STORE_POT_GHOST
    real (*pot_ext)[GRA_NXT][GRA_NXT];
 #  endif
+#  endif // GRAVITY
+
+#  ifdef PARTICLE
+   real (*rho_ext)[RHOEXT_NXT][RHOEXT_NXT];
 #  endif
 
    real (*flux        [6])[PATCH_SIZE][PATCH_SIZE];
@@ -148,6 +156,7 @@ struct patch_t
    // Parameter   :  x,y,z    : Scale indices of the patch corner
    //                FaPID    : Patch ID of the father patch    
    //                FluData  : true --> Allocate hydrodynamic array(s) "fluid" (and "passive")
+   //                                    "rho_ext" will NOT be allocated here even if PARTICLE is on
    //                PotData  : true --> Allocate potential array "pot" (has no effect if "GRAVITY" is turned off)
    //                                    "pot_ext" will be allocated as well if STORE_POT_GHOST is on
    //                lv       : Refinement level of the newly created patch
@@ -195,6 +204,9 @@ struct patch_t
 #     ifdef STORE_POT_GHOST
       pot_ext = NULL;
 #     endif
+#     endif // GRAVITY
+#     ifdef PARTICLE
+      rho_ext = NULL;
 #     endif
 
 //    set the patch edge
@@ -392,7 +404,7 @@ struct patch_t
    void hdelete()
    {
 
-      if ( fluid != NULL )    
+      if ( fluid != NULL )
       {
          delete [] fluid;
          fluid = NULL;
@@ -400,6 +412,14 @@ struct patch_t
 
 #     if ( NPASSIVE > 0 )
       passive = NULL;
+#     endif
+
+#     ifdef PARTICLE
+      if ( rho_ext != NULL )
+      {
+         delete [] rho_ext;
+         rho_ext = NULL;
+      }
 #     endif
 
    } // METHOD : hdelete
@@ -445,14 +465,14 @@ struct patch_t
    void gdelete()
    {
 
-      if ( pot != NULL )    
+      if ( pot != NULL )
       {
          delete [] pot;
          pot = NULL;
       }
 
 #     ifdef STORE_POT_GHOST
-      if ( pot_ext != NULL )    
+      if ( pot_ext != NULL )
       {
          delete [] pot_ext;
          pot_ext = NULL;
@@ -471,7 +491,7 @@ struct patch_t
    //
    // Note        :  1. Particles in the list must already lie inside the target patch
    //                   --> It will be checked in the debug mode
-   //                2. If ParList already exists, new particles will be attached to the existing particle list 
+   //                2. If ParList already exists, new particles will be attached to the existing particle list
    //                3. Also update the total number of particles at the target level
    //
    // Parameter   :  NNew     : Number of new particles to be added 
@@ -496,11 +516,11 @@ struct patch_t
       if ( NNew < 0 )                        Aux_Error( ERROR_INFO, "\"%s\": NNew (%d) < 0 !!\n",   Comment, NNew );
       if ( NPar < 0 )                        Aux_Error( ERROR_INFO, "\"%s\": NPar (%d) < 0 !!\n",   Comment, NPar );
 
-//    check 2: particle indices in NewList are NEW 
+//    check 2: particle indices in NewList are NEW
       for (int q=0; q<NPar; q++)
       for (int p=0; p<NNew; p++)
       {
-         if ( ParList[q] == NewList[p] )  
+         if ( ParList[q] == NewList[p] )
             Aux_Error( ERROR_INFO, "\"%s\": repeated particle index (NewList[%d] = %ld) !!\n", Comment, p, NewList[p] );
       }
 
@@ -508,7 +528,7 @@ struct patch_t
       for (int q=0; q<NNew; q++)
       for (int p=0; p<NNew; p++)
       {
-         if ( p != q  &&  NewList[q] == NewList[p] )  
+         if ( p != q  &&  NewList[q] == NewList[p] )
             Aux_Error( ERROR_INFO, "\"%s\": duplicate particle index (NewList[%d] = NewList[%d] = %ld) !!\n", 
                        Comment, p, q, NewList[p] );
       }
@@ -531,7 +551,7 @@ struct patch_t
       {
          const long ParID = NewList[p];
 
-         if ( ParID >= NParTot )    
+         if ( ParID >= NParTot )
             Aux_Error( ERROR_INFO, "\"%s\": Particle ID (%ld) >= Total number of active + inactive particles (%ld) !!\n", 
                        Comment, ParID, NParTot );
       }
@@ -631,7 +651,7 @@ struct patch_t
       for (int q=0; q<NRemove; q++)
       for (int p=0; p<NRemove; p++)
       {
-         if ( p != q  &&  RemoveList[q] == RemoveList[p] )  
+         if ( p != q  &&  RemoveList[q] == RemoveList[p] )
             Aux_Error( ERROR_INFO, "duplicate index (RemoveList[%d] = RemoveList[%d] = %d) !!\n", 
                        p, q, RemoveList[p] );
       }

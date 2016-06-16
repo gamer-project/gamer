@@ -52,7 +52,7 @@ static int Table_01( const int SibID, const int Side, const char dim, const int 
 //                TDerVarList    : List recording the target derived variables
 //                IntPhase       : true --> Perform interpolation on rho/phase instead of real/imag parts in ELBDM
 //                FluBC          : Fluid boundary condition
-//                PotBC          : Gravity boundary condition
+//                PotBC          : Gravity boundary condition (not used currently)
 //                BC_Face        : Priority of the B.C. along different boundary faces (z>y>x)
 //-------------------------------------------------------------------------------------------------------
 void InterpolateGhostZone( const int lv, const int PID, real IntData[], const int SibID, const double PrepTime,

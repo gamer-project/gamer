@@ -442,6 +442,7 @@ void Par_CollectParticleFromDescendant( const int FaLv );
 void Par_CollectParticleFromDescendant_FreeMemory( const int FaLv );
 int  Par_Synchronize( const double SyncTime, const ParSync_t SyncOption );
 void Par_Synchronize_Restore( const double SyncTime );
+void Prepare_PatchData_FreeParticleDensityArray( const int lv );
 #endif
 
 

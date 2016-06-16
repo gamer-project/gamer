@@ -33,6 +33,10 @@ void Par_Init_Function()
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ...\n", __FUNCTION__ );
 
 
+// synchronize all particles to the physical time at the base level
+   for (long p=0; p<amr->Par->NPar; p++)  amr->Par->Time[p] = Time[0];
+
+
    real *Mass   =   amr->Par->Mass;
    real *Pos[3] = { amr->Par->PosX, amr->Par->PosY, amr->Par->PosZ };
    real *Vel[3] = { amr->Par->VelX, amr->Par->VelY, amr->Par->VelZ };

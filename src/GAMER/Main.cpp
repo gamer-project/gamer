@@ -407,9 +407,11 @@ int main( int argc, char *argv[] )
 
          Buf_GetBufferData( lv, NULL_INT, amr->PotSg[lv], POT_FOR_POISSON, _POTE, Pot_ParaBuf, USELB_YES );
 
-//       free variables of descendant particles
+//       free memory for descendant particles and density arrays with ghost zones (rho_ext)
 #        ifdef PARTICLE
          Par_CollectParticleFromDescendant_FreeMemory( lv );
+
+         Prepare_PatchData_FreeParticleDensityArray( lv );
 #        endif
 
          if ( OPT__VERBOSE  &&  MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );

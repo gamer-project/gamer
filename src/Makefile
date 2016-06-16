@@ -350,6 +350,12 @@ vpath %.cpp    LoadBalance
 
 # location of libraries
 # -------------------------------------------------------------------------------
+# dxl (gcc, serial)
+#CUDA_TOOLKIT_PATH :=
+#FFTW_PATH         := /usr
+#MPI_PATH          :=
+#HDF5_PATH         := /home/hyschive/software/miniconda2
+
 # campus UIUC (intel-15.0 + openmpi-1.8.4)
 CUDA_TOOLKIT_PATH := /usr/local/cuda/7.0
 FFTW_PATH         := /projects/ncsa/grav/softwares/fftw/2.1.5

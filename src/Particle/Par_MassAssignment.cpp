@@ -125,18 +125,20 @@ void Par_MassAssignment( const long *ParList, const long NPar, const ParInterp_t
    const double _dh                 = 1.0 / dh;
    const double _dh3                = CUBE(_dh);
    const double Ghost_Phy           = amr->Par->GhostSize*dh;
-   const real   PeriodicSize_Phy[3] = { PeriodicSize[0]*dh, PeriodicSize[1]*dh, PeriodicSize[2]*dh };
 
    real (*Rho3D)[RhoSize][RhoSize] = ( real (*)[RhoSize][RhoSize] )Rho;
 
    int  idx[3];      // array index for Rho
    real ParDens;     // mass density of the cloud
-   real EdgeWithGhostL[3], EdgeWithGhostR[3];
+   real EdgeWithGhostL[3], EdgeWithGhostR[3], PeriodicSize_Phy[3];
 
    for (int d=0; d<3; d++)
    {
-      EdgeWithGhostL[d] = real( EdgeL[d] - Ghost_Phy );
-      EdgeWithGhostR[d] = real( EdgeL[d] + Ghost_Phy + RhoSize*dh );
+      EdgeWithGhostL  [d] = real( EdgeL[d] - Ghost_Phy );
+      EdgeWithGhostR  [d] = real( EdgeL[d] + Ghost_Phy + RhoSize*dh );
+
+      if ( Periodic )
+      PeriodicSize_Phy[d] = real( PeriodicSize[d]*dh );
    }
 
 

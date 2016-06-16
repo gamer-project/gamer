@@ -20,6 +20,7 @@
 //                   reference values to estimate errors
 //
 // Parameter   :  comment  : You can put the location where this function is invoked in this string
+//                           (not used currently)
 //-------------------------------------------------------------------------------------------------------
 void Aux_Check_Conservation( const char *comment )
 {

@@ -399,6 +399,9 @@ void Aux_TakeNote()
 #     ifdef UNSPLIT_GRAVITY
       fprintf( Note, "#define USG_GHOST_SIZE    %d\n",      USG_GHOST_SIZE          );
 #     endif
+#     ifdef PARTICLE
+      fprintf( Note, "#define RHOEXT_GHOST_SIZE %d\n",      RHOEXT_GHOST_SIZE       );
+#     endif
 #     endif
       fprintf( Note, "#define FLU_NXT           %d\n",      FLU_NXT                 );
 #     ifdef GRAVITY
@@ -409,6 +412,9 @@ void Aux_TakeNote()
       fprintf( Note, "#define USG_NXT_F         %d\n",      USG_NXT_F               );
       fprintf( Note, "#define USG_NXT_G         %d\n",      USG_NXT_G               );
 #     endif
+#     endif
+#     ifdef PARTICLE
+      fprintf( Note, "#define RHOEXT_NXT        %d\n",      RHOEXT_NXT              );
 #     endif
 #     ifdef GPU
       fprintf( Note, "#define FLU_BLOCK_SIZE_X  %d\n",      FLU_BLOCK_SIZE_X        );

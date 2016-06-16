@@ -350,6 +350,12 @@
 #  endif // #ifdef UNSPLIT_GRAVITY
 
 
+// number of density ghost zones for storing the temporary particle mass density (in the array rho_ext)
+#  ifdef PARTICLE
+#     define RHOEXT_GHOST_SIZE  2
+#  endif
+
+
 // number of density ghost zones for the Poisson solver
 #     define RHO_GHOST_SIZE      ( POT_GHOST_SIZE-1 )
 
@@ -378,6 +384,9 @@
 #  endif
 #else
 #  define USG_NXT_F     ( 1 )                                           // still define USG_NXT_F ...
+#endif
+#ifdef PARTICLE
+#  define RHOEXT_NXT    ( PATCH_SIZE   + 2*RHOEXT_GHOST_SIZE )          // array rho_ext of each patch
 #endif
 
 

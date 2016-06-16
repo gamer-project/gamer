@@ -32,16 +32,21 @@ static int Table_02( const int lv, const int PID, const int Side );
 //                6. Data preparation order: FLU -> PASSIVE -> DERIVED --> POTE --> GRA_RHO
 //                   ** DERIVED must be prepared immediately after FLU and PASSIVE so that both FLU, PASSIVE, and DERIVED
 //                      can be prepared at the same time for the non-periodic BC. **
+//                7. If GetTotDens == true and PARTICLE is on, the rho_ext arrays of patches at Lv=lv will be allocated
+//                   to store the partice mass density
+//                   --> amr->patch[0][lv][PID]->rho_ext
+//                   --> These arrays must be deallocated manually by calling Prepare_PatchData_FreeParticleDensityArray
+//                       (currently it's called by Gra_AdvanceDt)
 //
-// Parameter   :  lv             : Targeted refinement level
-//                PrepTime       : Targeted physical time to prepare data
+// Parameter   :  lv             : Target refinement level
+//                PrepTime       : Target physical time to prepare data
 //                                 --> Currently it must be equal to either Time[lv] or Time_Prev[lv]
 //                                 --> Temporal interpolation at Lv=lv is NOT supported
 //                h_Input_Array  : Host array to store the prepared data
 //                GhostSize      : Number of ghost zones to be prepared
 //                NPG            : Number of patch groups prepared at a time
 //                PID0_List      : List recording the patch indicies with LocalID==0 to be prepared
-//                TVar           : Targeted variables to be prepared
+//                TVar           : Target variables to be prepared
 //                                 --> Supported variables in different models:
 //                                     HYDRO : _DENS, _MOMX, _MOMY, _MOMZ, _ENGY, _FLU, _VELX, _VELY, _VELZ, _PRES,
 //                                             [, _POTE] [, _PASSIVE]
@@ -361,9 +366,108 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
    }
 
 
+// determine the patch list for assigning particle mass
+#  ifdef PARTICLE
+   const int NNearByPatchMax   = 64;   // maximum number of neaby patches of a patch group (including 8 local patches)
+   const int ParMass_NPatchMax = NPG*NNearByPatchMax;
+   const int RhoExtGhost       = RHOEXT_GHOST_SIZE;   // number of ghost zones for the rho_ext array (typically 2)
+   const int RhoExtSize        = PS1 + 2*RhoExtGhost;
+
+   int *ParMass_PID_List   = NULL;
+   int  ParMass_NPatch_Dup = 0;        // number of patches (including duplicates) for the particle mass assignment
+   int  ParMass_NPatch;
+
+// constant settings related to particle mass assignment
+   const bool InitZero_Yes     = true;
+   const bool InitZero_No      = false;
+   const bool Periodic_No      = false;
+   const bool UnitDens_No      = false;
+   const bool CheckFarAway_Yes = true;
+   const bool CheckFarAway_No  = false;
+
+
+   if ( GetTotDens )
+   {
+      int NearBy_PID_List[NNearByPatchMax];
+      int NPar, NNearByPatch;
+
+      ParMass_PID_List = new int [ParMass_NPatchMax];
+
+      for (int TID=0; TID<NPG; TID++)
+      {
+//       collect nearby patches
+         NNearByPatch = 0;
+
+         for (int PID=PID0_List[TID]; PID<PID0_List[TID]+8; PID++)
+            NearBy_PID_List[ NNearByPatch ++ ] = PID;
+
+         if ( amr->Par->GhostSize > 0  ||  GhostSize > 0 )
+         for (int Side=0; Side<26; Side++)
+         {
+            const int SibPID0 = Table_02( lv, PID0_List[TID], Side );   // the 0th patch of the sibling patch group
+
+            if ( SibPID0 >= 0 )
+            {
+               for (int Count=0; Count<TABLE_04( Side ); Count++)
+               {
+#                 ifdef DEBUG_PARTICLE
+                  if ( NNearByPatch >= NNearByPatchMax )
+                     Aux_Error( ERROR_INFO, "NNearByPatch (%d) >= NNearByPatchMax (%d) !!\n",
+                                NNearByPatch, NNearByPatchMax );
+#                 endif
+
+                  NearBy_PID_List[ NNearByPatch ++ ] = TABLE_03( Side, Count ) + SibPID0;
+               }
+            }
+         }
+
+
+//       collect patches whose particles have not been assigned on grids
+         for (int t=0; t<NNearByPatch; t++)
+         {
+            const int PID = NearBy_PID_List[t];
+
+//          get the number of particles
+            if ( amr->patch[0][lv][PID]->son == -1 )  NPar = amr->patch[0][lv][PID]->NPar;
+            else                                      NPar = amr->patch[0][lv][PID]->NPar_Desc;
+
+#           ifdef DEBUG_PARTICLE
+            if ( NPar < 0 )   Aux_Error( ERROR_INFO, "NPar (%d) has not been calculated (lv %d, PID %d) !!\n",
+                                         NPar, lv, PID );
+#           endif
+
+//          record PID (exclude patches with no particles)
+            if ( amr->patch[0][lv][PID]->rho_ext == NULL  &&  NPar > 0 )
+            {
+#              ifdef DEBUG_PARTICLE
+               if ( ParMass_NPatch_Dup >= ParMass_NPatchMax )
+                  Aux_Error( ERROR_INFO, "ParMass_NPatch_Dup (%d) >= ParMass_NPatchMax (%d) !!\n",
+                             ParMass_NPatch_Dup, ParMass_NPatchMax );
+#              endif
+
+               ParMass_PID_List[ ParMass_NPatch_Dup ++ ] = PID;
+            }
+         }
+      } // for (int TID=0; TID<NPG; TID++)
+
+
+//    sort PID list and remove duplicate patches
+      Mis_Heapsort( ParMass_NPatch_Dup, ParMass_PID_List, NULL );
+
+      ParMass_NPatch = ( ParMass_NPatch_Dup > 0 ) ? 1 : 0;
+
+      for (int t=1; t<ParMass_NPatch_Dup; t++)
+         if ( ParMass_PID_List[t] != ParMass_PID_List[t-1] )
+            ParMass_PID_List[ ParMass_NPatch ++ ] = ParMass_PID_List[t];
+
+   } // if ( GetTotDens )
+#  endif // #ifdef PARTICLE
+
+
 // start to prepare data
 #  pragma omp parallel
    {
+//    thread-private variables
       int  J, K, I2, J2, K2, Idx1, Idx2, PID0, TFluVarIdx, BC_Sibling, BC_Idx_Start[3], BC_Idx_End[3];
       double xyz0[3];   // corner coordinates for the user-specified B.C.
 #     if ( MODEL == HYDRO  ||  MODEL == MHD )
@@ -373,6 +477,66 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
 //    Array : array to store the prepared data of one patch group (including the ghost-zone data) 
       real *Array_Ptr = NULL;
       real *Array     = new real [ NVar_Tot*PGSize3D ];
+
+
+//    assign particle mass on grids
+#     ifdef PARTICLE
+      if ( GetTotDens )
+      {
+         long  *ParList = NULL;
+         int    NPar, PID;
+         double EdgeL[3];  
+
+#        pragma omp for schedule( runtime )
+         for (int t=0; t<ParMass_NPatch; t++)
+         {
+            PID = ParMass_PID_List[t];
+
+//          allocate the rho_ext array
+#           ifdef DEBUG_PARTICLE
+            if ( amr->patch[0][lv][PID]->rho_ext != NULL )
+               Aux_Error( ERROR_INFO, "lv %d, PID %d, rho_ext != NULL !!\n", lv, PID );
+#           endif
+
+            amr->patch[0][lv][PID]->rho_ext = new real [RhoExtSize][RhoExtSize][RhoExtSize];
+
+//          determine the number of particles and the particle list
+            if ( amr->patch[0][lv][PID]->son == -1 )
+            {
+               NPar    = amr->patch[0][lv][PID]->NPar;
+               ParList = amr->patch[0][lv][PID]->ParList;
+            }
+
+            else
+            {
+               NPar    = amr->patch[0][lv][PID]->NPar_Desc;
+               ParList = amr->patch[0][lv][PID]->ParList_Desc;
+            }
+
+#           ifdef DEBUG_PARTICLE
+            if ( NPar <= 0 )
+               Aux_Error( ERROR_INFO, "NPar (%d) <= 0 (lv %d, PID %d) !!\n", NPar, lv, PID );
+
+            if ( NPar > 0  &&  ParList == NULL )
+               Aux_Error( ERROR_INFO, "ParList == NULL for NPar_Desc (%d) > 0 (lv %d, PID %d) !!\n",
+                          NPar, lv, PID );
+#           endif
+
+//          set the left edge of the rho_ext array
+            for (int d=0; d<3; d++)    EdgeL[d] = amr->patch[0][lv][PID]->EdgeL[d] - RhoExtGhost*dh;
+
+//          deposit particle mass on grids (don't have to worry about the periodicity here since all
+//          input particles should be close to the target patches even with position prediction)
+            Par_MassAssignment( ParList, NPar, amr->Par->Interp, amr->patch[0][lv][PID]->rho_ext[0][0], RhoExtSize,
+                                EdgeL, dh, amr->Par->PredictPos, PrepTime, InitZero_Yes, Periodic_No, NULL,
+                                UnitDens_No, CheckFarAway_No );
+         } // for (int t=0; t<ParMass_NPatch; t++)
+
+//       synchronize all threads before preparing the total density array since it needs rho_ext of nearby patches
+#        pragma omp barrier
+
+      } // if ( GetTotDens )
+#     endif // #ifdef PARTICLE
 
       
 //    prepare eight nearby patches (one patch group) at a time 
@@ -868,30 +1032,11 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
          } // for (int Side=0; Side<NSide; Side++)
             
 
-//       c. deposit particles mass for the "GetTotDens" mode
+//       c. deposit particle mass for the "GetTotDens" mode
 // ------------------------------------------------------------------------------------------------------------
 #        ifdef PARTICLE
          if ( GetTotDens )
          {
-//          we must initialize the density array as zero if there are no other density fields
-#           if ( MODEL == PAR_ONLY )
-            const bool   InitZero         = true;
-#           else
-            const bool   InitZero         = false;
-#           endif
-            const bool   InitZero_No      = false;
-            const bool   Periodic         = ( FluBC[0] == BC_FLU_PERIODIC );
-            const int    PeriodicSize[3]  = { NX0_TOT[0]*(1<<lv), 
-                                              NX0_TOT[1]*(1<<lv), 
-                                              NX0_TOT[2]*(1<<lv) };
-            const double EdgeL[3]         = { amr->patch[0][lv][PID0]->EdgeL[0] - GhostSize*dh,
-                                              amr->patch[0][lv][PID0]->EdgeL[1] - GhostSize*dh,
-                                              amr->patch[0][lv][PID0]->EdgeL[2] - GhostSize*dh };
-            const bool   UnitDens_No      = false;
-            const bool   CheckFarAway_Yes = true;
-            const bool   CheckFarAway_No  = false;
-
-
 //          (c1) determine the array index for DENS
             real *ArrayDens = NULL;
             int   DensIdx   = -1;
@@ -911,46 +1056,56 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
 
             ArrayDens = Array + DensIdx*PGSize3D;
 
+//          initialize the density array as zero if there are no other density fields
+#           if ( MODEL == PAR_ONLY )
+            for (int t=0; t<PGSize3D; t++)   ArrayDens[t] = (real)0.0;   
+#           endif
 
-//          (c2) deposit particles in the central eight patches
-            long *ParList   = NULL;
-            int   NPar;
 
+//          (c2) deposit particle mass in the central eight patches
             for (int LocalID=0; LocalID<8; LocalID++ )
             {
                const int PID = PID0 + LocalID;
 
-//             (c2-1) determine the number of particles and the particle list
-               if ( amr->patch[0][lv][PID]->son == -1 )
-               {
-                  NPar    = amr->patch[0][lv][PID]->NPar;
-                  ParList = amr->patch[0][lv][PID]->ParList;
-               }
+//             skip patches without particles
+               int NPar;
+               if ( amr->patch[0][lv][PID]->son == -1 )  NPar = amr->patch[0][lv][PID]->NPar;
+               else                                      NPar = amr->patch[0][lv][PID]->NPar_Desc;
 
-               else
-               {
-                  NPar    = amr->patch[0][lv][PID]->NPar_Desc;
-                  ParList = amr->patch[0][lv][PID]->ParList_Desc;
-               }
+               if ( NPar == 0 )  continue;
 
 #              ifdef DEBUG_PARTICLE
-               if ( NPar < 0 )
-                  Aux_Error( ERROR_INFO, "NPar (%d) has not been calculated (lv %d, PID %d) !!\n",
-                             NPar, lv, PID );
+               if ( amr->patch[0][lv][PID]->rho_ext == NULL )
+                  Aux_Error( ERROR_INFO, "lv %d, PID %d, rho_ext == NULL !!\n", lv, PID );
 
-               if ( NPar > 0  &&  ParList == NULL )
-                  Aux_Error( ERROR_INFO, "ParList == NULL for NPar_Desc (%d) > 0 (lv %d, PID %d) !!\n",
-                             NPar, lv, PID );
+               if ( NPar < 0 )   Aux_Error( ERROR_INFO, "lv %d, PID %d, NPar (%d) < 0 !!\n", lv, PID, NPar );
 #              endif
 
-//             (c2-2) deposit particles mass
-               Par_MassAssignment( ParList, NPar, amr->Par->Interp, ArrayDens, PGSize1D, EdgeL, dh,
-                                   amr->Par->PredictPos, PrepTime, (InitZero && LocalID==0), Periodic, PeriodicSize,
-                                   UnitDens_No, CheckFarAway_No );
+//             calculate the offset between rho_nxt and ArrayDens
+               const int Disp_i = TABLE_02( LocalID, 'x', GhostSize-RhoExtGhost, GhostSize+PATCH_SIZE-RhoExtGhost );
+               const int Disp_j = TABLE_02( LocalID, 'y', GhostSize-RhoExtGhost, GhostSize+PATCH_SIZE-RhoExtGhost );
+               const int Disp_k = TABLE_02( LocalID, 'z', GhostSize-RhoExtGhost, GhostSize+PATCH_SIZE-RhoExtGhost );
+
+//             take care of the case with GhostSize < RhoExtGhost
+               const int is = ( Disp_i >= 0 ) ? 0 : -Disp_i;
+               const int js = ( Disp_j >= 0 ) ? 0 : -Disp_j;
+               const int ks = ( Disp_k >= 0 ) ? 0 : -Disp_k;
+               const int ie = ( RhoExtSize+Disp_i <= PGSize1D ) ? RhoExtSize-1 : PGSize1D-Disp_i-1;
+               const int je = ( RhoExtSize+Disp_j <= PGSize1D ) ? RhoExtSize-1 : PGSize1D-Disp_j-1;
+               const int ke = ( RhoExtSize+Disp_k <= PGSize1D ) ? RhoExtSize-1 : PGSize1D-Disp_k-1;
+
+//             add particle density to the total density array
+               for (int k=ks; k<=ke; k++)  {  K    = k + Disp_k;
+               for (int j=js; j<=je; j++)  {  Idx1 = IDX321( is+Disp_i, j+Disp_j, K, PGSize1D, PGSize1D );
+               for (int i=is; i<=ie; i++)  {
+
+                  ArrayDens[ Idx1 ++ ] += amr->patch[0][lv][PID]->rho_ext[k][j][i];
+
+               }}}
             } // for (int LocalID=0; LocalID<8; LocalID++ )
 
 
-//          (c3) deposit particles in the sibling patches
+//          (c3) deposit particle mass in the sibling patches
             if ( amr->Par->GhostSize > 0  ||  GhostSize > 0 )
             for (int Side=0; Side<26; Side++)
             {
@@ -959,37 +1114,54 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
 //             (c3-1) if the targeted sibling patch exists --> loop over nearby patches at the same level
                if ( SibPID0 >= 0 )
                {
+//                LG = LargeGhost : for the case with GhostSize >= RhoExtSize
+                  const int is_LG = TABLE_01( Side, 'x', RhoExtSize-GhostSize-RhoExtGhost, 0, 0 );
+                  const int js_LG = TABLE_01( Side, 'y', RhoExtSize-GhostSize-RhoExtGhost, 0, 0 );
+                  const int ks_LG = TABLE_01( Side, 'z', RhoExtSize-GhostSize-RhoExtGhost, 0, 0 );
+                  const int ie_LG = TABLE_01( Side, 'x', GhostSize+RhoExtGhost, RhoExtSize, GhostSize+RhoExtGhost ) + is_LG - 1;
+                  const int je_LG = TABLE_01( Side, 'y', GhostSize+RhoExtGhost, RhoExtSize, GhostSize+RhoExtGhost ) + js_LG - 1;
+                  const int ke_LG = TABLE_01( Side, 'z', GhostSize+RhoExtGhost, RhoExtSize, GhostSize+RhoExtGhost ) + ks_LG - 1;
+
+//###OPTIMIZATION: simplify TABLE_03 and TABLE_04
                   for (int Count=0; Count<TABLE_04( Side ); Count++)
                   {
                      const int SibPID = TABLE_03( Side, Count ) + SibPID0;
 
-//                   (c3-1-1) determine the number of particles and the particle list
-                     if ( amr->patch[0][lv][SibPID]->son == -1 )
-                     {
-                        NPar    = amr->patch[0][lv][SibPID]->NPar;
-                        ParList = amr->patch[0][lv][SibPID]->ParList;
-                     }
+//                   skip patches without particles
+                     int NPar;
+                     if ( amr->patch[0][lv][SibPID]->son == -1 )  NPar = amr->patch[0][lv][SibPID]->NPar;
+                     else                                         NPar = amr->patch[0][lv][SibPID]->NPar_Desc;
 
-                     else
-                     {
-                        NPar    = amr->patch[0][lv][SibPID]->NPar_Desc;
-                        ParList = amr->patch[0][lv][SibPID]->ParList_Desc;
-                     }
+                     if ( NPar == 0 )  continue;
 
 #                    ifdef DEBUG_PARTICLE
-                     if ( NPar < 0 )
-                        Aux_Error( ERROR_INFO, "NPar (%d) has not been calculated (lv %d, SibPID %d) !!\n",
-                                   NPar, lv, SibPID );
+                     if ( amr->patch[0][lv][SibPID]->rho_ext == NULL )
+                        Aux_Error( ERROR_INFO, "lv %d, SibPID %d, rho_ext == NULL !!\n", lv, SibPID );
 
-                     if ( NPar > 0  &&  ParList == NULL )
-                        Aux_Error( ERROR_INFO, "ParList == NULL for NPar (%d) > 0 (lv %d, SibPID %d) !!\n",
-                                   NPar, lv, SibPID );
+                     if ( NPar < 0 )   Aux_Error( ERROR_INFO, "lv %d, SibPID %d, NPar (%d) < 0 !!\n", lv, SibPID, NPar );
 #                    endif
 
-//                   (c3-1-2) deposit particles mass
-                     Par_MassAssignment( ParList, NPar, amr->Par->Interp, ArrayDens, PGSize1D, EdgeL, dh,
-                                         amr->Par->PredictPos, PrepTime, InitZero_No, Periodic, PeriodicSize,
-                                         UnitDens_No, CheckFarAway_Yes );
+//                   calculate the offset between rho_nxt and ArrayDens
+                     const int Disp_i = Table_01( Side, 'x', Count, GhostSize-RhoExtGhost ) - is_LG;
+                     const int Disp_j = Table_01( Side, 'y', Count, GhostSize-RhoExtGhost ) - js_LG;
+                     const int Disp_k = Table_01( Side, 'z', Count, GhostSize-RhoExtGhost ) - ks_LG;
+
+//                   take care of the case with GhostSize < RhoExtGhost
+                     const int is = ( is_LG+Disp_i >= 0 ) ? is_LG : -Disp_i;
+                     const int js = ( js_LG+Disp_j >= 0 ) ? js_LG : -Disp_j;
+                     const int ks = ( ks_LG+Disp_k >= 0 ) ? ks_LG : -Disp_k;
+                     const int ie = ( ie_LG+Disp_i < PGSize1D ) ? ie_LG : PGSize1D-Disp_i-1;
+                     const int je = ( je_LG+Disp_j < PGSize1D ) ? je_LG : PGSize1D-Disp_j-1;
+                     const int ke = ( ke_LG+Disp_k < PGSize1D ) ? ke_LG : PGSize1D-Disp_k-1;
+                     
+//                   add particle density to the total density array
+                     for (int k=ks; k<=ke; k++)  {  K    = k + Disp_k;
+                     for (int j=js; j<=je; j++)  {  Idx1 = IDX321( is+Disp_i, j+Disp_j, K, PGSize1D, PGSize1D );
+                     for (int i=is; i<=ie; i++)  {
+
+                        ArrayDens[ Idx1 ++ ] += amr->patch[0][lv][SibPID]->rho_ext[k][j][i];
+
+                     }}}
                   } // for (int Count=0; Count<TABLE_04( Side ); Count++)
                } // if ( SibPID0 >= 0 )
 
@@ -997,13 +1169,18 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
 //             (c3-2) if the targeted sibling patch does not exist --> find the father sibling patch
                else if ( SibPID0 == -1 )
                {
-//                interpolation should never be applied to the base level
+//                root-level patches should never have sibling ID == -1
 #                 ifdef DEBUG_PARTICLE
-                  if ( lv == 0 )    Aux_Error( ERROR_INFO, "performing interpolation at the base level !!\n" );
+                  if ( lv == 0 )    Aux_Error( ERROR_INFO, "SibPID0 == -1 at the root level !!\n" );
 #                 endif
 
-                  const int FaPID    = amr->patch[0][lv][PID0]->father;
-                  const int FaSibPID = amr->patch[0][lv-1][FaPID]->sibling[Side];
+                  const int FaPID       = amr->patch[0][lv][PID0]->father;
+                  const int FaSibPID    = amr->patch[0][lv-1][FaPID]->sibling[Side];
+                  const double EdgeL[3] = { amr->patch[0][lv][PID0]->EdgeL[0] - GhostSize*dh,
+                                            amr->patch[0][lv][PID0]->EdgeL[1] - GhostSize*dh,
+                                            amr->patch[0][lv][PID0]->EdgeL[2] - GhostSize*dh };
+                  long *ParList = NULL;
+                  int   NPar;
 
 #                 ifdef DEBUG_PARTICLE
                   if ( FaSibPID < 0 )  Aux_Error( ERROR_INFO, "FaSibPID = %d < 0 (lv %d, PID0 %d, FaPID %d, sib %d) !!\n",
@@ -1014,8 +1191,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
                                 amr->patch[0][lv-1][FaSibPID]->son, lv, PID0, FaPID, FaSibPID, Side ); 
 #                 endif
 
-//                (c3-2-1) determine the number of particles and the particle list
-//                         (father-sibling patch must NOT have son)
+//                (c3-2-1) determine the number of particles and the particle list (father-sibling patch must NOT have son)
                   NPar    = amr->patch[0][lv-1][FaSibPID]->NPar;
                   ParList = amr->patch[0][lv-1][FaSibPID]->ParList;
 
@@ -1029,11 +1205,11 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
                                 NPar, lv-1, FaSibPID );
 #                 endif
 
-//                (c3-2-2) deposit particles mass
+//                (c3-2-2) deposit particle mass
+                  if ( NPar > 0 )
                   Par_MassAssignment( ParList, NPar, amr->Par->Interp, ArrayDens, PGSize1D, EdgeL, dh,
-                                      amr->Par->PredictPos, PrepTime, InitZero_No, Periodic, PeriodicSize,
+                                      amr->Par->PredictPos, PrepTime, InitZero_No, Periodic_No, NULL,
                                       UnitDens_No, CheckFarAway_Yes );
-
                } // else if ( SibPID0 == -1 )
             } // for (int Side=0; Side<26; Side++) if ( amr->Par->GhostSize > 0  ||  GhostSize > 0 )
          } // if ( GetTotDens )
@@ -1090,6 +1266,10 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
 // free memroy
    for (int s=0; s<26; s++)   delete [] TSib[s];
 
+#  ifdef PARTICLE
+   if ( GetTotDens )    delete [] ParMass_PID_List;
+#  endif
+
 } // FUNCTION : Prepare_PatchData
 
 
@@ -1103,7 +1283,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
 // Description :  Return the displacement for the function "Prepare_PatchData"
 //
 // Parameter   :  SibID     : Sibling index (0~25) 
-//                dim       : Targeted spatial direction (x/y/z)
+//                dim       : Target spatial direction (x/y/z)
 //                Count     : Patch counter (0~3)
 //                GhostSize : Number of ghost zones
 //-------------------------------------------------------------------------------------------------------
@@ -1288,8 +1468,8 @@ int Table_01( const int SibID, const char dim, const int Count, const int GhostS
 //
 // Note        :  Work for the function "Prepare_PatchData" 
 //
-// Parameter   :  lv    : Targeted refinement level 
-//                PID   : Targeted patch ID to find its sibling patches
+// Parameter   :  lv    : Target refinement level 
+//                PID   : Target patch ID to find its sibling patches
 //                Side  : Sibling index (0~25) 
 //-------------------------------------------------------------------------------------------------------
 int Table_02( const int lv, const int PID, const int Side )
@@ -1453,7 +1633,7 @@ int Table_02( const int lv, const int PID, const int Side )
 //                       case "SetTargetSibling" and "SetReceiveSibling" must be declared consistently
 // 
 // Parameter   :  NTSib : Number of targeted sibling patches along different sibling directions 
-//                TSib  : Targeted sibling indices along different sibling directions
+//                TSib  : Target sibling indices along different sibling directions
 //-------------------------------------------------------------------------------------------------------
 void SetTargetSibling( int NTSib[], int *TSib[] )
 {
@@ -1781,3 +1961,34 @@ void SetTargetSibling( int NTSib[], int *TSib[] )
    TSib[25][ 6] = 18;
 
 } // FUNCTION : SetTargetSibling
+
+
+
+#ifdef PARTICLE
+//-------------------------------------------------------------------------------------------------------
+// Function    :  Prepare_PatchData_FreeParticleDensityArray
+// Description :  Free the rho_ext arrays, which are allocated in Prepare_PatchData temporarily
+//                for storing the partice mass density
+//
+// Note        :  1. Currently this function is called by Gra_AdvanceDt after solving the gravitatinal
+//                   potential
+//                2. Apply to buffer patches as well
+//
+// Parameter   :  lv : Target refinement level
+//-------------------------------------------------------------------------------------------------------
+void Prepare_PatchData_FreeParticleDensityArray( const int lv )
+{
+
+// apply to buffer patches as well
+   for (int PID=0; PID<amr->NPatchComma[lv][27]; PID++)
+   {
+      if ( amr->patch[0][lv][PID]->rho_ext != NULL )
+      {
+         delete [] amr->patch[0][lv][PID]->rho_ext;
+
+         amr->patch[0][lv][PID]->rho_ext = NULL;
+      }
+   }
+
+} // FUNCTION : Prepare_PatchData_FreeParticleDensityArray
+#endif // #ifdef PARTICLE

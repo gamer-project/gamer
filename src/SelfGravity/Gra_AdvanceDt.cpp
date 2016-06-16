@@ -142,10 +142,16 @@ void Gra_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, co
    }
 
 
-// free variables of descendant particles
+// free memory for descendant particles and density arrays with ghost zones (rho_ext)
 #  ifdef PARTICLE
-   if ( Poisson )    TIMING_FUNC(   Par_CollectParticleFromDescendant_FreeMemory( lv ),
-                                    Timer_Par_Collect[lv],   true   );
+   if ( Poisson )
+   {
+      TIMING_FUNC(   Par_CollectParticleFromDescendant_FreeMemory( lv ),
+                     Timer_Par_Collect[lv],   false  );
+
+      TIMING_FUNC(   Prepare_PatchData_FreeParticleDensityArray( lv ),
+                     Timer_Par_Collect[lv],   true   );
+   }
 #  endif
 
 } // FUNCTION : Gra_AdvanceDt

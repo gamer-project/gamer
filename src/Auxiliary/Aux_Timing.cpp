@@ -335,7 +335,6 @@ void Timing__EvolveLevel( const char FileName[], const double Time_LB_Main[][3] 
    const int NSubStep = 1;
 #  endif
 
-   const char Comment[][4] = { "Max", "Min", "Ave" };
    FILE *File = ( MPI_Rank == 0 ) ? fopen( FileName, "a" ) : NULL;
 
    double Total[NSubStep][NLEVEL], Flu_Advance[NSubStep][NLEVEL], Gra_Advance[NSubStep][NLEVEL], FixUp[NSubStep][NLEVEL];
