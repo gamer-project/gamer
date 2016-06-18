@@ -46,7 +46,7 @@ void EvolveLevel( const int lv, const double dTime )
    const bool   UseStoredAcc_No  = false;
 #  endif
 
-   double dt_SubStep;
+   double dt_SubStep, TimeOld, TimeNew;
 
 
 // sub-step loop for INDIVIDUAL_TIMESTEP
@@ -60,6 +60,12 @@ void EvolveLevel( const int lv, const double dTime )
 //    1. calculate the evolution time-step
 // ===============================================================================================
       dt_SubStep = Mis_dTime2dt( Time[lv], dTime_SubStep ); 
+      TimeOld    = Time[lv];
+      TimeNew    = Time[lv] + dTime_SubStep;
+
+//    synchronize the time array (avoid round-off errors)
+      if (  lv > 0  &&  Mis_CompareRealValue( TimeNew, Time[lv-1], NULL, false )  )
+      TimeNew    = Time[lv-1];
 // ===============================================================================================
 
 
@@ -70,12 +76,12 @@ void EvolveLevel( const int lv, const double dTime )
          Aux_Message( stdout, "   Lv %2d: Par_UpdateParticle (predict) %5s... ", lv, "" );
 
 #     ifdef STORE_PAR_ACC
-      TIMING_FUNC(   Par_UpdateParticle( lv, Time[lv]+dTime_SubStep, Time[lv], PAR_UPSTEP_PRED,
+      TIMING_FUNC(   Par_UpdateParticle( lv, TimeNew, TimeOld, PAR_UPSTEP_PRED,
                                          (amr->Par->Integ == PAR_INTEG_EULER) ? StoreAcc_Yes    : StoreAcc_No,
                                          (amr->Par->Integ == PAR_INTEG_EULER) ? UseStoredAcc_No : UseStoredAcc_Yes ),
                      Timer_Par_Update[lv][0],   true   );
 #     else
-      TIMING_FUNC(   Par_UpdateParticle( lv, Time[lv]+dTime_SubStep, Time[lv], PAR_UPSTEP_PRED,
+      TIMING_FUNC(   Par_UpdateParticle( lv, TimeNew, TimeOld, PAR_UPSTEP_PRED,
                                          StoreAcc_No, UseStoredAcc_No ),
                      Timer_Par_Update[lv][0],   true   );
 #     endif
@@ -107,7 +113,7 @@ void EvolveLevel( const int lv, const double dTime )
 #        endif
 
 //       advance patches needed to be sent
-         TIMING_FUNC(   Flu_AdvanceDt( lv, Time[lv]+dTime_SubStep, Time[lv], dt_SubStep, SaveSg_Flu, true, true ),
+         TIMING_FUNC(   Flu_AdvanceDt( lv, TimeNew, TimeOld, dt_SubStep, SaveSg_Flu, true, true ),
                         Timer_Flu_Advance[lv],   false   );
 
 #        pragma omp parallel sections num_threads(2)
@@ -130,7 +136,7 @@ void EvolveLevel( const int lv, const double dTime )
 #           pragma omp section
             {
 //             advance patches not needed to be sent
-               TIMING_FUNC(   Flu_AdvanceDt( lv, Time[lv]+dTime_SubStep, Time[lv], dt_SubStep, SaveSg_Flu, true, false ),
+               TIMING_FUNC(   Flu_AdvanceDt( lv, TimeNew, TimeOld, dt_SubStep, SaveSg_Flu, true, false ),
                               Timer_Flu_Advance[lv],   true   );
             }
          } // OpenMP parallel sections
@@ -143,7 +149,7 @@ void EvolveLevel( const int lv, const double dTime )
 
       else
       {
-         TIMING_FUNC(   Flu_AdvanceDt( lv, Time[lv]+dTime_SubStep, Time[lv], dt_SubStep, SaveSg_Flu, false, false ),
+         TIMING_FUNC(   Flu_AdvanceDt( lv, TimeNew, TimeOld, dt_SubStep, SaveSg_Flu, false, false ),
                         Timer_Flu_Advance[lv],   true   );
 
 #        ifdef GRAVITY
@@ -159,7 +165,7 @@ void EvolveLevel( const int lv, const double dTime )
       } // if ( OPT__OVERLAP_MPI ) ... else ...
 
       amr->FluSg    [lv]             = SaveSg_Flu;
-      amr->FluSgTime[lv][SaveSg_Flu] = Time[lv] + dTime_SubStep;
+      amr->FluSgTime[lv][SaveSg_Flu] = TimeNew;
 
       if ( OPT__VERBOSE  &&  MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );
 // ===============================================================================================
@@ -174,7 +180,7 @@ void EvolveLevel( const int lv, const double dTime )
          Aux_Message( stdout, "   Lv %2d: Gra_AdvanceDt, counter = %8ld ... ", lv, AdvanceCounter[lv] );
 
       if ( lv == 0 )
-         Gra_AdvanceDt( lv, Time[lv]+dTime_SubStep, Time[lv], dt_SubStep, SaveSg_Flu, SaveSg_Pot, SelfGravity, true, false, false );
+         Gra_AdvanceDt( lv, TimeNew, TimeOld, dt_SubStep, SaveSg_Flu, SaveSg_Pot, SelfGravity, true, false, false );
 
       else // lv > 0
       {
@@ -186,7 +192,7 @@ void EvolveLevel( const int lv, const double dTime )
 #           endif
 
 //          advance patches needed to be sent
-            TIMING_FUNC(   Gra_AdvanceDt( lv, Time[lv]+dTime_SubStep, Time[lv], dt_SubStep, SaveSg_Flu, SaveSg_Pot,
+            TIMING_FUNC(   Gra_AdvanceDt( lv, TimeNew, TimeOld, dt_SubStep, SaveSg_Flu, SaveSg_Pot,
                            SelfGravity, true, true, true ),
                            Timer_Gra_Advance[lv],   false   );
 
@@ -208,7 +214,7 @@ void EvolveLevel( const int lv, const double dTime )
 #              pragma omp section
                {
 //                advance patches not needed to be sent
-                  TIMING_FUNC(   Gra_AdvanceDt( lv, Time[lv]+dTime_SubStep, Time[lv], dt_SubStep, SaveSg_Flu, SaveSg_Pot,
+                  TIMING_FUNC(   Gra_AdvanceDt( lv, TimeNew, TimeOld, dt_SubStep, SaveSg_Flu, SaveSg_Pot,
                                  SelfGravity, true, true, false),
                                  Timer_Gra_Advance[lv],   true   );
                }
@@ -222,7 +228,7 @@ void EvolveLevel( const int lv, const double dTime )
 
          else
          {
-            TIMING_FUNC(   Gra_AdvanceDt( lv, Time[lv]+dTime_SubStep, Time[lv], dt_SubStep, SaveSg_Flu, SaveSg_Pot,
+            TIMING_FUNC(   Gra_AdvanceDt( lv, TimeNew, TimeOld, dt_SubStep, SaveSg_Flu, SaveSg_Pot,
                                           SelfGravity, true, false, false ),
                            Timer_Gra_Advance[lv],   true   );
 
@@ -237,7 +243,7 @@ void EvolveLevel( const int lv, const double dTime )
          } // if ( OPT__OVERLAP_MPI ) ... else ...
 
          amr->PotSg    [lv]             = SaveSg_Pot;
-         amr->PotSgTime[lv][SaveSg_Pot] = Time[lv] + dTime_SubStep;
+         amr->PotSgTime[lv][SaveSg_Pot] = TimeNew;
 
       } // if ( lv == 0 ) ... else ...
 
@@ -255,11 +261,11 @@ void EvolveLevel( const int lv, const double dTime )
             Aux_Message( stdout, "   Lv %2d: Par_UpdateParticle (correct Lv %2d)... ", lv, lv );
 
 #        ifdef STORE_PAR_ACC
-         TIMING_FUNC(   Par_UpdateParticle( lv, Time[lv]+dTime_SubStep, Time[lv], PAR_UPSTEP_CORR,
+         TIMING_FUNC(   Par_UpdateParticle( lv, TimeNew, TimeOld, PAR_UPSTEP_CORR,
                                             StoreAcc_Yes, UseStoredAcc_No ),
                         Timer_Par_Update[lv][1],   true   );
 #        else
-         TIMING_FUNC(   Par_UpdateParticle( lv, Time[lv]+dTime_SubStep, Time[lv], PAR_UPSTEP_CORR,
+         TIMING_FUNC(   Par_UpdateParticle( lv, TimeNew, TimeOld, PAR_UPSTEP_CORR,
                                             StoreAcc_No,  UseStoredAcc_No ),
                         Timer_Par_Update[lv][1],   true   );
 #        endif
@@ -273,11 +279,11 @@ void EvolveLevel( const int lv, const double dTime )
 
 //          apply velocity correction for particles just travelling from lv to lv-1
 #           ifdef STORE_PAR_ACC
-            TIMING_FUNC(   Par_UpdateParticle( lv-1, Time[lv]+dTime_SubStep, Time[lv], PAR_UPSTEP_CORR,
+            TIMING_FUNC(   Par_UpdateParticle( lv-1, TimeNew, TimeOld, PAR_UPSTEP_CORR,
                                                StoreAcc_Yes, UseStoredAcc_No ),
                            Timer_Par_Update[lv][2],   true   );
 #           else
-            TIMING_FUNC(   Par_UpdateParticle( lv-1, Time[lv]+dTime_SubStep, Time[lv], PAR_UPSTEP_CORR,
+            TIMING_FUNC(   Par_UpdateParticle( lv-1, TimeNew, TimeOld, PAR_UPSTEP_CORR,
                                                StoreAcc_No,  UseStoredAcc_No ),
                            Timer_Par_Update[lv][2],   true   );
 #           endif
@@ -303,8 +309,8 @@ void EvolveLevel( const int lv, const double dTime )
 // ===============================================================================================
 
 
-      Time_Prev     [lv]  = Time[lv];
-      Time          [lv] += dTime_SubStep;
+      Time_Prev     [lv] = TimeOld;
+      Time          [lv] = TimeNew;
       AdvanceCounter[lv] ++;
 
       if ( AdvanceCounter[lv] >= __LONG_MAX__ ) Aux_Message( stderr, "WARNING : AdvanceCounter overflow !!\n" );
@@ -441,10 +447,6 @@ void EvolveLevel( const int lv, const double dTime )
 #     endif
 
    } // for (int SubStep=0; SubStep<NSubStep; SubStep++ )
-
-
-// synchronize the time array
-   if ( lv > 0 )  Time[lv] = Time[lv-1];
 
 } // FUNCTION : EvolveLevel
 

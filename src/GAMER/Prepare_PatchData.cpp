@@ -401,7 +401,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
          for (int PID=PID0_List[TID]; PID<PID0_List[TID]+8; PID++)
             NearBy_PID_List[ NNearByPatch ++ ] = PID;
 
-         if ( amr->Par->GhostSize > 0  ||  GhostSize > 0 )
+         if ( amr->Par->GhostSize > 0  ||  GhostSize > 0  ||  amr->Par->PredictPos )
          for (int Side=0; Side<26; Side++)
          {
             const int SibPID0 = Table_02( lv, PID0_List[TID], Side );   // the 0th patch of the sibling patch group
@@ -1106,7 +1106,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
 
 
 //          (c3) deposit particle mass in the sibling patches
-            if ( amr->Par->GhostSize > 0  ||  GhostSize > 0 )
+            if ( amr->Par->GhostSize > 0  ||  GhostSize > 0  ||  amr->Par->PredictPos )
             for (int Side=0; Side<26; Side++)
             {
                const int SibPID0 = Table_02( lv, PID0, Side );    // the 0th patch of the sibling patch group
@@ -1118,9 +1118,9 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
                   const int is_LG = TABLE_01( Side, 'x', RhoExtSize-GhostSize-RhoExtGhost, 0, 0 );
                   const int js_LG = TABLE_01( Side, 'y', RhoExtSize-GhostSize-RhoExtGhost, 0, 0 );
                   const int ks_LG = TABLE_01( Side, 'z', RhoExtSize-GhostSize-RhoExtGhost, 0, 0 );
-                  const int ie_LG = TABLE_01( Side, 'x', GhostSize+RhoExtGhost, RhoExtSize, GhostSize+RhoExtGhost ) + is_LG - 1;
-                  const int je_LG = TABLE_01( Side, 'y', GhostSize+RhoExtGhost, RhoExtSize, GhostSize+RhoExtGhost ) + js_LG - 1;
-                  const int ke_LG = TABLE_01( Side, 'z', GhostSize+RhoExtGhost, RhoExtSize, GhostSize+RhoExtGhost ) + ks_LG - 1;
+                  const int ie_LG = TABLE_01( Side, 'x', RhoExtSize-1, RhoExtSize-1, GhostSize+RhoExtGhost-1 );
+                  const int je_LG = TABLE_01( Side, 'y', RhoExtSize-1, RhoExtSize-1, GhostSize+RhoExtGhost-1 );
+                  const int ke_LG = TABLE_01( Side, 'z', RhoExtSize-1, RhoExtSize-1, GhostSize+RhoExtGhost-1 );
 
 //###OPTIMIZATION: simplify TABLE_03 and TABLE_04
                   for (int Count=0; Count<TABLE_04( Side ); Count++)

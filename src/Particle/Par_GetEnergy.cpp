@@ -32,7 +32,8 @@ void Par_GetEnergy( double &Ek, double &Ep )
 // 1. kinematic energy
    double Ek_local = 0.0;
 
-#  pragma omp parallel for schedule( runtime ) reduction( +:Ek_local )
+// use static schedule to give the same reduction result everytime
+#  pragma omp parallel for schedule( static ) reduction( +:Ek_local )
    for (long p=0; p<amr->Par->NPar; p++)
    {
 //    skip inactive and massless particles
@@ -111,7 +112,8 @@ void Par_GetEnergy( double &Ek, double &Ep )
       real (*Pot3D)[PotSize][PotSize][PotSize] = ( real (*)[PotSize][PotSize][PotSize] )Pot;
 
 
-#     pragma omp for schedule( runtime ) reduction( +:Ep_local )
+//    use static schedule to give the same reduction result everytime
+#     pragma omp for schedule( static ) reduction( +:Ep_local )
       for (int PID0=0; PID0<amr->NPatchComma[lv][1]; PID0+=8)
       {
 //       2-1. find the patch groups with particles 
