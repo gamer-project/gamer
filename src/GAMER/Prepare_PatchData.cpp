@@ -135,9 +135,10 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
 #  endif // #ifdef GAMER_DEBUG
 
 
-   const double dh       = amr->dh[lv];
-   const int    PGSize1D = 2*( PATCH_SIZE + GhostSize );    // size of a single patch group including the ghost zone
-   const int    PGSize3D = CUBE( PGSize1D );
+   const double dh               = amr->dh[lv];
+   const int    PGSize1D         = 2*( PATCH_SIZE + GhostSize );  // size of a single patch group including the ghost zone
+   const int    PGSize3D         = CUBE( PGSize1D );
+   const int    GhostSize_Padded = GhostSize + (GhostSize&1);
 
 #  if   ( MODEL == HYDRO )
 #  if ( defined MIN_PRES_DENS  ||  defined MIN_PRES )
@@ -161,12 +162,12 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
 #  endif
 
 #  ifdef GRAVITY
-   const bool PrepPot      = ( TVar & _POTE     ) ? true : false;
+   const bool PrepPot = ( TVar & _POTE ) ? true : false;
 #  endif
 
 
 // TFluVarIdxList : List recording the targeted fluid (and passive) variable indices ( = [0 ... NCOMP+NPASSIVE-1] )
-   int  NTSib[26], *TSib[26], NVar_Flu, NVar_Der, NVar_Tot, TFluVarIdxList[NCOMP+NPASSIVE];
+   int NTSib[26], *TSib[26], NVar_Flu, NVar_Der, NVar_Tot, TFluVarIdxList[NCOMP+NPASSIVE];
 
 // set up the targeted sibling indices for the function "InterpolateGhostZone"
    SetTargetSibling( NTSib, TSib );
@@ -460,6 +461,12 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
          if ( ParMass_PID_List[t] != ParMass_PID_List[t-1] )
             ParMass_PID_List[ ParMass_NPatch ++ ] = ParMass_PID_List[t];
 
+
+//    allocate temporary density arrays for all target patches
+//    (do not parallelize it with OpenMP since it would actually deteriorate performance)
+      for (int t=0; t<ParMass_NPatch; t++)
+         amr->patch[0][lv][ ParMass_PID_List[t] ]->rho_ext = new real [RhoExtSize][RhoExtSize][RhoExtSize];
+
    } // if ( GetTotDens )
 #  endif // #ifdef PARTICLE
 
@@ -474,9 +481,13 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
       real Fluid[NCOMP];
 #     endif
 
-//    Array : array to store the prepared data of one patch group (including the ghost-zone data) 
+//    Array: array to store the prepared data of one patch group (including the ghost-zone data)
       real *Array_Ptr = NULL;
       real *Array     = new real [ NVar_Tot*PGSize3D ];
+
+
+//    IntData: array to store the interpolation results (allocate with the maximum required size)
+      real *IntData = new real [ NVar_Tot*PS2*PS2*GhostSize_Padded ];
 
 
 //    assign particle mass on grids
@@ -492,13 +503,10 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
          {
             PID = ParMass_PID_List[t];
 
-//          allocate the rho_ext array
 #           ifdef DEBUG_PARTICLE
-            if ( amr->patch[0][lv][PID]->rho_ext != NULL )
-               Aux_Error( ERROR_INFO, "lv %d, PID %d, rho_ext != NULL !!\n", lv, PID );
+            if ( amr->patch[0][lv][PID]->rho_ext == NULL )
+               Aux_Error( ERROR_INFO, "lv %d, PID %d, rho_ext == NULL !!\n", lv, PID );
 #           endif
-
-            amr->patch[0][lv][PID]->rho_ext = new real [RhoExtSize][RhoExtSize][RhoExtSize];
 
 //          determine the number of particles and the particle list
             if ( amr->patch[0][lv][PID]->son == -1 )
@@ -527,18 +535,20 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
 
 //          deposit particle mass on grids (don't have to worry about the periodicity here since all
 //          input particles should be close to the target patches even with position prediction)
+//          --> remember to initialize rho_ext as zero (by InitZero_Yes)
             Par_MassAssignment( ParList, NPar, amr->Par->Interp, amr->patch[0][lv][PID]->rho_ext[0][0], RhoExtSize,
                                 EdgeL, dh, amr->Par->PredictPos, PrepTime, InitZero_Yes, Periodic_No, NULL,
                                 UnitDens_No, CheckFarAway_No );
          } // for (int t=0; t<ParMass_NPatch; t++)
-
-//       synchronize all threads before preparing the total density array since it needs rho_ext of nearby patches
-#        pragma omp barrier
-
       } // if ( GetTotDens )
 #     endif // #ifdef PARTICLE
 
-      
+
+//    note that the total density array needs rho_ext of nearby patches
+//    --> the next omp task must wait for the previous one
+//    --> but since there is an implicit barrier at the end of a for construct --> no need to call "pragma omp barrier"
+
+
 //    prepare eight nearby patches (one patch group) at a time 
 #     pragma omp for schedule( runtime )
       for (int TID=0; TID<NPG; TID++)
@@ -890,14 +900,11 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
 #              endif
 
 
-//             allocate the array to store the interpolation result
-               const int GhostSize_Padded = GhostSize + (GhostSize&1);
-
+//             get the array size to store the interpolation result
                int FSize[3];
                for (int d=0; d<3; d++)  FSize[d] = TABLE_01( Side, 'x'+d, GhostSize_Padded, 2*PATCH_SIZE, GhostSize_Padded );
 
                real *IntData_Ptr = NULL;
-               real *IntData     = new real [ NVar_Tot*FSize[0]*FSize[1]*FSize[2] ];
 
 
 //             determine the target PID at lv-1
@@ -946,8 +953,6 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
                   Array_Ptr   += PGSize3D;
                   IntData_Ptr += FSize[0]*FSize[1]*FSize[2];
                }
-
-               delete [] IntData;
 
             } // else if ( SibPID0 == -1 )
 
@@ -1259,6 +1264,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
       } // for (int TID=0; TID<NPG; TID++)
 
       delete [] Array;
+      delete [] IntData;
 
    } // OpenMP parallel region
 
