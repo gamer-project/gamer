@@ -29,11 +29,11 @@ void Init_Set_Default_SOR_Parameter( double &SOR_Omega, int &SOR_Max_Iter, int &
 
    const double Default_Omega[5] = { 1.49, 1.57, 1.62, 1.65, 1.69 };    // for POT_GHOST_SIZE = [1,2,3,4,5]
 #  ifdef FLOAT8
-   const int  Default_MaxIter  = 100;
+   const int    Default_MaxIter  = 110;
 #  else
-   const int  Default_MaxIter  = 60;
+   const int    Default_MaxIter  = 60;
 #  endif
-   const int  Default_MinIter  = 10;
+   const int    Default_MinIter  = 10;
 
    if ( SOR_Omega < 0.0 )     
    {
