@@ -10,6 +10,8 @@ extern real Plummer_R0;
 extern int  Plummer_NBinR;
 extern bool Plummer_Collision;
 extern real Plummer_Collision_D;
+extern real Plummer_Center[3];
+extern real Plummer_BulkVel[3];
 
 double MassProf_Plummer( const double r );
 static void RanVec_FixRadius( const double r, double RanVec[] );
@@ -41,9 +43,6 @@ void Par_Init_Function()
    real *Pos[3] = { amr->Par->PosX, amr->Par->PosY, amr->Par->PosZ };
    real *Vel[3] = { amr->Par->VelX, amr->Par->VelY, amr->Par->VelZ };
 
-   const double Cen[3]      = { 0.5*amr->BoxSize[0],
-                                0.5*amr->BoxSize[1],
-                                0.5*amr->BoxSize[2] };
    const double TotM_Inf    = 4.0/3.0*M_PI*CUBE(Plummer_R0)*Plummer_Rho0;
    const double Vmax_Fac    = sqrt( 2.0*NEWTON_G*TotM_Inf );
    const double Coll_Offset = 0.5*Plummer_Collision_D/sqrt(3.0);
@@ -106,11 +105,15 @@ void Par_Init_Function()
 
 //    randomly set the position vector with a given radius
       RanVec_FixRadius( RanR, RanVec );
-      for (int d=0; d<3; d++)    Pos[d][p] = RanVec[d] + Cen[d];
+      for (int d=0; d<3; d++)    Pos[d][p] = RanVec[d] + Plummer_Center[d];
 
 //    set position offset for the Plummer collision test
       if ( Plummer_Collision )
       for (int d=0; d<3; d++)    Pos[d][p] += Coll_Offset*( (p<amr->Par->NPar/2)?-1.0:+1.0 );
+
+//    check periodicity
+      if ( OPT__BC_POT == BC_POT_PERIODIC )
+      for (int d=0; d<3; d++)    Pos[d][p] = FMOD( Pos[d][p]+(real)amr->BoxSize[d], (real)amr->BoxSize[d] );
 
 
 //    velocity
@@ -128,7 +131,7 @@ void Par_Init_Function()
 
 //    randomly set the velocity vector with the given amplitude (RanV*Vmax)
       RanVec_FixRadius( RanV*Vmax, RanVec );
-      for (int d=0; d<3; d++)    Vel[d][p] = RanVec[d];
+      for (int d=0; d<3; d++)    Vel[d][p] = RanVec[d] + Plummer_BulkVel[d];
 
    } // for (int p=0; p<amr->Par->NPar; p++)
 

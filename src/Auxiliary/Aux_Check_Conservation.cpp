@@ -56,7 +56,8 @@ void Aux_Check_Conservation( const char *comment )
 
 #  elif ( MODEL == ELBDM )
 #  if ( defined GRAVITY  &&  !defined COMOVING )
-   const bool ELBDM_GetEngy    = ( OPT__BC_POT == BC_POT_ISOLATED );
+// const bool ELBDM_GetEngy    = ( OPT__BC_POT == BC_POT_ISOLATED );
+   const bool ELBDM_GetEngy    = true;    // note that energy is NOT conserved for the periodic BC
 #  else
    const bool ELBDM_GetEngy    = false;
 #  endif

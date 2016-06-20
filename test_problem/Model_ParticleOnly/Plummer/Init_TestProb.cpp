@@ -22,6 +22,8 @@ real Plummer_R0;           // scale radius
 int  Plummer_NBinR;        // number of radial bins in the mass profile table
 bool Plummer_Collision;    // true/false --> test Plummer collision/single Plummer
 real Plummer_Collision_D;  // distance between two Plummer clouds for the Plummer collision test
+real Plummer_Center[3];    // central coordinates
+real Plummer_BulkVel[3];   // bulk velocity
 
 real Plummer_FreeT;        // free-fall time at Plummer_R0
 // =======================================================================================
@@ -83,18 +85,22 @@ void Init_TestProb()
    {
       Aux_Message( stdout, "\n" );
       Aux_Message( stdout, "%s test :\n", TestProb );
-      Aux_Message( stdout, "=============================================================================\n"   );
-      Aux_Message( stdout, " Note: random seed for setting particle position    = %d\n",     Plummer_RSeed     );
-      Aux_Message( stdout, "       maximum radius                               = %13.7e\n", Plummer_MaxR      );
-      Aux_Message( stdout, "       density parameter                            = %13.7e\n", Plummer_Rho0      );
-      Aux_Message( stdout, "       scale radius                                 = %13.7e\n", Plummer_R0        );
-      Aux_Message( stdout, "       number of radial bins in the mass profile    = %d\n",     Plummer_NBinR     );
-      Aux_Message( stdout, "       free fall time at scale radius               = %13.7e\n", Plummer_FreeT     );
-      Aux_Message( stdout, "       test mode                                    = %s\n",    (Plummer_Collision)?
+      Aux_Message( stdout, "=============================================================================\n" );
+      Aux_Message( stdout, " Note: random seed for setting particle position    = %d\n",      Plummer_RSeed );
+      Aux_Message( stdout, "       maximum radius                               = %13.7e\n",  Plummer_MaxR );
+      Aux_Message( stdout, "       density parameter                            = %13.7e\n",  Plummer_Rho0 );
+      Aux_Message( stdout, "       scale radius                                 = %13.7e\n",  Plummer_R0 );
+      Aux_Message( stdout, "       number of radial bins in the mass profile    = %d\n",      Plummer_NBinR );
+      Aux_Message( stdout, "       free fall time at scale radius               = %13.7e\n",  Plummer_FreeT );
+      Aux_Message( stdout, "       test mode                                    = %s\n",     (Plummer_Collision)?
                                                                                              "collision":"single cloud" );
+      for (int d=0; d<3; d++)
+      Aux_Message( stdout, "       central coordinate [%d]                       = %14.7e\n", d, Plummer_Center[d] );
       if ( Plummer_Collision )
-      Aux_Message( stdout, "       initial distance between two clouds          = %13.7e\n", Plummer_Collision_D );
-      Aux_Message( stdout, "=============================================================================\n"   );
+      Aux_Message( stdout, "       initial distance between two clouds          = %13.7e\n",  Plummer_Collision_D );
+      for (int d=0; d<3; d++)
+      Aux_Message( stdout, "       bulk velocity [%d]                            = %14.7e\n", d, Plummer_BulkVel[d] );
+      Aux_Message( stdout, "=============================================================================\n" );
       Aux_Message( stdout, "\n" );
    }
 
@@ -236,11 +242,48 @@ void LoadTestProbParameter()
 #  ifdef FLOAT8
    getline( &input_line, &len, File );
    sscanf( input_line, "%lf%s",  &Plummer_Collision_D,    string );
+
+   getline( &input_line, &len, File );
+   sscanf( input_line, "%lf%s",  &Plummer_Center[0],      string );
+
+   getline( &input_line, &len, File );
+   sscanf( input_line, "%lf%s",  &Plummer_Center[1],      string );
+
+   getline( &input_line, &len, File );
+   sscanf( input_line, "%lf%s",  &Plummer_Center[2],      string );
+
+   getline( &input_line, &len, File );
+   sscanf( input_line, "%lf%s",  &Plummer_BulkVel[0],     string );
+
+   getline( &input_line, &len, File );
+   sscanf( input_line, "%lf%s",  &Plummer_BulkVel[1],     string );
+
+   getline( &input_line, &len, File );
+   sscanf( input_line, "%lf%s",  &Plummer_BulkVel[2],     string );
+
 #  else
+
    getline( &input_line, &len, File );
    sscanf( input_line, "%f%s",   &Plummer_Collision_D,    string );
-#  endif
 
+   getline( &input_line, &len, File );
+   sscanf( input_line, "%f%s",   &Plummer_Center[0],      string );
+
+   getline( &input_line, &len, File );
+   sscanf( input_line, "%f%s",   &Plummer_Center[1],      string );
+
+   getline( &input_line, &len, File );
+   sscanf( input_line, "%f%s",   &Plummer_Center[2],      string );
+
+   getline( &input_line, &len, File );
+   sscanf( input_line, "%f%s",   &Plummer_BulkVel[0],     string );
+
+   getline( &input_line, &len, File );
+   sscanf( input_line, "%f%s",   &Plummer_BulkVel[1],     string );
+
+   getline( &input_line, &len, File );
+   sscanf( input_line, "%f%s",   &Plummer_BulkVel[2],     string );
+#  endif
 
    fclose( File );
    if ( input_line != NULL )     free( input_line );
@@ -288,6 +331,15 @@ void LoadTestProbParameter()
 
       if ( MPI_Rank == 0 )  Aux_Message( stdout, "NOTE : parameter \"%s\" is set to the default value = %13.7e\n",
                                          "Plummer_Collision_D", Plummer_Collision_D );
+   }
+
+   for (int d=0; d<3; d++)
+   if ( Plummer_Center[d] < 0.0 )
+   {
+      Plummer_Center[d] = 0.5*amr->BoxSize[d];
+
+      if ( MPI_Rank == 0 )  Aux_Message( stdout, "NOTE : parameter \"%s[%d]\" is set to the default value = %13.7e\n",
+                                         "Plummer_Center", d, Plummer_Center[d] );
    }
 
    if ( Plummer_RSeed < 0   )    Aux_Error( ERROR_INFO, "Plummer_RSeed (%d) < 0 !!\n",         Plummer_RSeed );

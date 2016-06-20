@@ -40,9 +40,9 @@ FLOAT8          = 1     # (0/1) -> (single/double precision)
 #set format y "10^{%T}"
  set pointsize 0.6
 #set xyplane at 0.0
- set xrange [0.0:2.0]
- set yrange [0.0:2.0]
- set zrange [0.0:2.0]
+ set xrange [0.5:2.5]
+ set yrange [0.5:2.5]
+ set zrange [0.0:3.0]
 
  if ( VIEW == 0 ) { set view equal xyz; set xlabel "x"; set ylabel "y"; set zlabel "z"; }
  if ( VIEW == 1 ) { set size ratio -1 ; set xlabel "x"; set ylabel "y"; }

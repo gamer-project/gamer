@@ -382,10 +382,13 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
    const bool InitZero_Yes     = true;
    const bool InitZero_No      = false;
    const bool Periodic_No      = false;
+   const bool Periodic_Yes     = true;
    const bool UnitDens_No      = false;
    const bool CheckFarAway_Yes = true;
    const bool CheckFarAway_No  = false;
-
+   const int  PeriodicNCell[3] = { NX0_TOT[0]*(1<<lv), 
+                                   NX0_TOT[1]*(1<<lv), 
+                                   NX0_TOT[2]*(1<<lv) };
 
    if ( GetTotDens )
    {
@@ -533,8 +536,9 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
 //          set the left edge of the rho_ext array
             for (int d=0; d<3; d++)    EdgeL[d] = amr->patch[0][lv][PID]->EdgeL[d] - RhoExtGhost*dh;
 
-//          deposit particle mass on grids (don't have to worry about the periodicity here since all
-//          input particles should be close to the target patches even with position prediction)
+//          deposit particle mass on grids 
+//          --> don't have to worry about the periodicity here since all input particles should be close to the
+//              target patches even with position prediction ==> Periodic_No
 //          --> remember to initialize rho_ext as zero (by InitZero_Yes)
             Par_MassAssignment( ParList, NPar, amr->Par->Interp, amr->patch[0][lv][PID]->rho_ext[0][0], RhoExtSize,
                                 EdgeL, dh, amr->Par->PredictPos, PrepTime, InitZero_Yes, Periodic_No, NULL,
@@ -1210,10 +1214,10 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
                                 NPar, lv-1, FaSibPID );
 #                 endif
 
-//                (c3-2-2) deposit particle mass
+//                (c3-2-2) deposit particle mass (need to take care of the periodicity here ==> Periodic_Yes)
                   if ( NPar > 0 )
                   Par_MassAssignment( ParList, NPar, amr->Par->Interp, ArrayDens, PGSize1D, EdgeL, dh,
-                                      amr->Par->PredictPos, PrepTime, InitZero_No, Periodic_No, NULL,
+                                      amr->Par->PredictPos, PrepTime, InitZero_No, Periodic_Yes, PeriodicNCell,
                                       UnitDens_No, CheckFarAway_Yes );
                } // else if ( SibPID0 == -1 )
             } // for (int Side=0; Side<26; Side++) if ( amr->Par->GhostSize > 0  ||  GhostSize > 0 )
