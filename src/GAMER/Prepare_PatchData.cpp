@@ -1217,7 +1217,8 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
 //                (c3-2-2) deposit particle mass (need to take care of the periodicity here ==> Periodic_Yes)
                   if ( NPar > 0 )
                   Par_MassAssignment( ParList, NPar, amr->Par->Interp, ArrayDens, PGSize1D, EdgeL, dh,
-                                      amr->Par->PredictPos, PrepTime, InitZero_No, Periodic_Yes, PeriodicNCell,
+                                      amr->Par->PredictPos, PrepTime, InitZero_No,
+                                      (FluBC[0]==BC_FLU_PERIODIC)?Periodic_Yes:Periodic_No, PeriodicNCell,
                                       UnitDens_No, CheckFarAway_Yes );
                } // else if ( SibPID0 == -1 )
             } // for (int Side=0; Side<26; Side++) if ( amr->Par->GhostSize > 0  ||  GhostSize > 0 )
