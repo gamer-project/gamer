@@ -598,6 +598,10 @@ struct patch_t
    //                RemoveList  : List storing the array indices of "ParList" to be removed
    //                              **array indices, NOT particle indices**
    //                NPar_Lv     : Pointer to amr->Par->NPar_Lv[TargetLv]
+   //                              --> NPar_Lv will NOT be updated if it's NULL
+   //                              --> This is useful for OpenMP, for which different threads
+   //                                  may tend to update NPar_Lv at the same time
+   //                              --> So for NPar_Lv == NULL, one must update NPar_Lv later manually
    //                RemoveAll   : true --> remove all particle in this patch
    //===================================================================================
    void RemoveParticle( const int NRemove, const int *RemoveList, long *NPar_Lv, const bool RemoveAll )
@@ -607,15 +611,14 @@ struct patch_t
       if ( RemoveAll )
       {
 //       update the particle number at the target level
-#        ifdef DEBUG_PARTICLE
-         if ( NPar_Lv == NULL)   Aux_Error( ERROR_INFO, "NPar_Lv == NULL !!\n" );
-#        endif
+         if ( NPar_Lv != NULL )
+         {
+            *NPar_Lv -= NPar;
 
-         *NPar_Lv -= NPar;
-
-#        ifdef DEBUG_PARTICLE
-         if ( *NPar_Lv < 0 )  Aux_Error( ERROR_INFO, "NPar_Lv = %ld < 0 !!\n", *NPar_Lv );
-#        endif
+#           ifdef DEBUG_PARTICLE
+            if ( *NPar_Lv < 0 )  Aux_Error( ERROR_INFO, "NPar_Lv = %ld < 0 !!\n", *NPar_Lv );
+#           endif
+         }
 
 
 //       remove all particles
@@ -663,8 +666,6 @@ struct patch_t
             Aux_Error( ERROR_INFO, "RemoveList is NOT in ascending numerical order ([%d]=%d <= [%d]=%d) !!\n", 
                        p, RemoveList[p], p-1, RemoveList[p-1] );
       }
-
-      if ( NPar_Lv == NULL)   Aux_Error( ERROR_INFO, "NPar_Lv == NULL !!\n" );
 #     endif // #ifdef DEBUG_PARTICLE
 
 
@@ -695,11 +696,14 @@ struct patch_t
 
 
 //    update the particle number at the target level
-      *NPar_Lv -= NRemove;
+      if ( NPar_Lv != NULL )
+      {
+         *NPar_Lv -= NRemove;
 
-#     ifdef DEBUG_PARTICLE
-      if ( *NPar_Lv < 0 )  Aux_Error( ERROR_INFO, "NPar_Lv = %ld < 0 !!\n", *NPar_Lv );
-#     endif
+#        ifdef DEBUG_PARTICLE
+         if ( *NPar_Lv < 0 )  Aux_Error( ERROR_INFO, "NPar_Lv = %ld < 0 !!\n", *NPar_Lv );
+#        endif
+      }
 
    } // METHOD : RemoveParticle
 #  endif // #ifdef PARTICLE

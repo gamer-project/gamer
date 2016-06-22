@@ -42,8 +42,10 @@ void Aux_Error( const char *File, const int Line, const char *Func, const char *
 //                                  [ 0, start of buffer patches [s=0], start of buffer patches [s=1]
 //                                   ... start of buffer patches [s=25], total # of patches (=num[lv]) ]
 //                              (3) Parallel, with LOAD_BALANCE:
-//                                  [ 0, start of sibling-buffer patches, start of father-buffer patches, same as [2], ...]
-//                               --> In all cases, [1] gives the total number of "real" patches
+//                                  [ 0, start of sibling-buffer patches, start of father-buffer patches,
+//                                    total # of patches (=num[lv]), same as [3], ...]
+//                               --> In all cases, [ 1] gives the total number of "real" patches
+//                                                 [26] gives the total number of "real+buffer" patches
 //                dh          : Grid size at each level
 //                BoxSize     : Simulation box physical size
 //                BoxScale    : Simulation box scale

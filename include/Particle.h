@@ -168,7 +168,7 @@ struct Particle_t
    // Description :  Initialize the particle attribute arrays and some other variables
    //
    // Note        :  1. NPar must be set properly (>=0) in advance 
-   //                2. Initialize both "NPar_Active" and "NPar_Active" as NPar
+   //                2. Initialize both "NPar_Active" and "ParListSize" as NPar
    //                3. Set "GhostSize" ("Interp" must be set in advance)
    //
    // Parameter   :  None

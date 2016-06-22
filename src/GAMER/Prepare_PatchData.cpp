@@ -1271,7 +1271,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
       delete [] Array;
       delete [] IntData;
 
-   } // OpenMP parallel region
+   } // end of OpenMP parallel region
 
 
 // free memroy

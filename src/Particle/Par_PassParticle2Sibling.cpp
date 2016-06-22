@@ -38,12 +38,17 @@ void Par_PassParticle2Sibling( const int lv )
                                      (NX0_TOT[2]*(1<<TOP_LEVEL))*dh_min }; // prevent from the round-off error problem
    real *ParPos[3]               = { amr->Par->PosX, amr->Par->PosY, amr->Par->PosZ };
 
-   int     NPar, NGuess, NRemove, ArraySize[26], ijk[3], Side, TSib, SibPID, FaPID, FaSib, FaSibPID, NPar_Escp_Tot=0;
+   int     NPar_Escp_Tot=0, NPar_Inactive_Tot=0;
+   double  InactiveMass=0.0;
+   int     NPar, NGuess, NPar_Remove, ArraySize[26], ijk[3], Side, TSib, SibPID, FaPID, FaSib, FaSibPID;
    long    ParID;
    int    *RemoveParList;
-   double *EdgeL=NULL, *EdgeR=NULL;
+   double *EdgeL, *EdgeR;
 
+#  pragma omp parallel private( NPar, NGuess, NPar_Remove, ArraySize, ijk, TSib, ParID, RemoveParList, EdgeL, EdgeR )
+   {
 
+#  pragma omp for schedule( runtime ) reduction( +:NPar_Escp_Tot, NPar_Inactive_Tot, InactiveMass )
    for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
    {
       NPar  = amr->patch[0][lv][PID]->NPar;
@@ -62,13 +67,13 @@ void Par_PassParticle2Sibling( const int lv )
       {
          ArraySize                           [s] = NGuess;
          amr->patch[0][lv][PID]->NPar_Escp   [s] = 0;
-         amr->patch[0][lv][PID]->ParList_Escp[s] = (long*)malloc( ArraySize[s]*sizeof(long) );
+         amr->patch[0][lv][PID]->ParList_Escp[s] = NULL;    // allocate only when necessary (==> better performance)
       }
 
 
 //    2. record the escaping particles
       RemoveParList = new int [NPar];
-      NRemove       = 0;
+      NPar_Remove   = 0;
 
       for (int p=0; p<NPar; p++)
       {
@@ -124,13 +129,17 @@ void Par_PassParticle2Sibling( const int lv )
          if (  OPT__BC_POT != BC_POT_PERIODIC  &&
                !Par_WithinActiveRegion( ParPos[0][ParID], ParPos[1][ParID], ParPos[2][ParID] )  )
          {
-            RemoveParList[ NRemove ++ ] = p;
+            RemoveParList[ NPar_Remove ++ ] = p;
 
-            AveDensity -= amr->Par->Mass[ParID] / ( amr->BoxSize[0]*amr->BoxSize[1]*amr->BoxSize[2] );
+//          set it later due to OpenMP
+//          AveDensity -= amr->Par->Mass[ParID] / ( amr->BoxSize[0]*amr->BoxSize[1]*amr->BoxSize[2] );
+            InactiveMass += amr->Par->Mass[ParID];
 
             amr->Par->Mass[ParID] = -1.0;
 
-            amr->Par->NPar_Active --;
+//          set it later due to OpenMP
+//          amr->Par->NPar_Active --;
+            NPar_Inactive_Tot ++;
 
             if ( OPT__VERBOSE )
                Aux_Message( stderr, "\nWARNING : removing particle %10d (Pos = [%14.7e, %14.7e, %14.7e], Time = %13.7e)\n",
@@ -141,7 +150,11 @@ void Par_PassParticle2Sibling( const int lv )
 //       2-4. deal with escaping particles (i.e., particles lying outside the patch but still within the active region)
          else if ( TSib != -1 )
          {
-            RemoveParList[ NRemove ++ ] = p;
+            RemoveParList[ NPar_Remove ++ ] = p;
+
+//          allocate ParList_Escp if it's not allocated yet
+            if ( amr->patch[0][lv][PID]->ParList_Escp[TSib] == NULL )
+               amr->patch[0][lv][PID]->ParList_Escp[TSib] = (long*)malloc( ArraySize[TSib]*sizeof(long) );
 
 //          make sure that there is enough memory
             if ( amr->patch[0][lv][PID]->NPar_Escp[TSib] >= ArraySize[TSib] )
@@ -164,12 +177,19 @@ void Par_PassParticle2Sibling( const int lv )
       } // for (int p=0; p<NPar; p++)
 
 
-//    3. remove the escaping particles
-//###NOTE : No OpenMP since RemoveParticle will modify amr->Par->NPar_Lv[]
-      amr->patch[0][lv][PID]->RemoveParticle( NRemove, RemoveParList, &amr->Par->NPar_Lv[lv], RemoveAllPar_No );
+//    3. remove the escaping particles (set amr->Par->NPar_Lv later due to OpenMP)
+      amr->patch[0][lv][PID]->RemoveParticle( NPar_Remove, RemoveParList, NULL, RemoveAllPar_No );
       delete [] RemoveParList;
 
    } // for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
+
+   } // end of OpenMP parallel region
+
+
+// update some global variables after the OpenMP parallel region
+   AveDensity            -= InactiveMass / ( amr->BoxSize[0]*amr->BoxSize[1]*amr->BoxSize[2] );
+   amr->Par->NPar_Active -= NPar_Inactive_Tot;
+   amr->Par->NPar_Lv[lv] -= NPar_Escp_Tot + NPar_Inactive_Tot;
 
 
    if ( NPar_Escp_Tot > 0 )
