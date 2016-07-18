@@ -36,10 +36,10 @@ void Par_PassParticle2Sibling( const int lv )
    const double BoxEdge[3]       = { (NX0_TOT[0]*(1<<TOP_LEVEL))*dh_min, 
                                      (NX0_TOT[1]*(1<<TOP_LEVEL))*dh_min, 
                                      (NX0_TOT[2]*(1<<TOP_LEVEL))*dh_min }; // prevent from the round-off error problem
+   const double _BoxVolume       = 1.0 / ( amr->BoxSize[0]*amr->BoxSize[1]*amr->BoxSize[2] );
    real *ParPos[3]               = { amr->Par->PosX, amr->Par->PosY, amr->Par->PosZ };
 
-   int     NPar_Escp_Tot=0, NPar_Inactive_Tot=0;
-   double  InactiveMass=0.0;
+   int     NPar_Escp_Tot=0;
    int     NPar, NGuess, NPar_Remove, ArraySize[26], ijk[3], Side, TSib, SibPID, FaPID, FaSib, FaSibPID;
    long    ParID;
    int    *RemoveParList;
@@ -48,7 +48,7 @@ void Par_PassParticle2Sibling( const int lv )
 #  pragma omp parallel private( NPar, NGuess, NPar_Remove, ArraySize, ijk, TSib, ParID, RemoveParList, EdgeL, EdgeR )
    {
 
-#  pragma omp for schedule( runtime ) reduction( +:NPar_Escp_Tot, NPar_Inactive_Tot, InactiveMass )
+#  pragma omp for schedule( runtime ) reduction( +:NPar_Escp_Tot )
    for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
    {
       NPar  = amr->patch[0][lv][PID]->NPar;
@@ -125,21 +125,15 @@ void Par_PassParticle2Sibling( const int lv )
          TSib = SibID[ ijk[2] ][ ijk[1] ][ ijk[0] ];
 
 
-//       2-3. remove particles lying outside the active region for non-periodic B.C. (by setting mass=-1.0)
+//       2-3. remove particles lying outside the active region for non-periodic B.C. (by setting mass as PAR_INACTIVE_OUTSIDE)
          if (  OPT__BC_POT != BC_POT_PERIODIC  &&
                !Par_WithinActiveRegion( ParPos[0][ParID], ParPos[1][ParID], ParPos[2][ParID] )  )
          {
             RemoveParList[ NPar_Remove ++ ] = p;
 
-//          set it later due to OpenMP
-//          AveDensity -= amr->Par->Mass[ParID] / ( amr->BoxSize[0]*amr->BoxSize[1]*amr->BoxSize[2] );
-            InactiveMass += amr->Par->Mass[ParID];
-
-            amr->Par->Mass[ParID] = -1.0;
-
-//          set it later due to OpenMP
-//          amr->Par->NPar_Active --;
-            NPar_Inactive_Tot ++;
+//          use OpenMP critical construct since RemoveOneParticle will modify some global variables
+#           pragma omp critical
+            amr->Par->RemoveOneParticle( ParID, PAR_INACTIVE_OUTSIDE, lv, &AveDensity, _BoxVolume );
 
             if ( OPT__VERBOSE )
                Aux_Message( stderr, "\nWARNING : removing particle %10d (Pos = [%14.7e, %14.7e, %14.7e], Time = %13.7e)\n",
@@ -167,7 +161,7 @@ void Par_PassParticle2Sibling( const int lv )
             amr->patch[0][lv][PID]->ParList_Escp[TSib][ amr->patch[0][lv][PID]->NPar_Escp[TSib] ++ ] = ParID;
 
 #           ifdef DEBUG_PARTICLE
-            if ( amr->Par->Mass[ParID] == -1.0 )
+            if ( amr->Par->Mass[ParID] < 0.0 )
                Aux_Error( ERROR_INFO, "Storing escaping particles which have been removed (lv %d, PID %d, TSib %d, ParID %d) !!\n",
                           lv, PID, TSib, ParID );
 #           endif
@@ -186,10 +180,8 @@ void Par_PassParticle2Sibling( const int lv )
    } // end of OpenMP parallel region
 
 
-// update some global variables after the OpenMP parallel region
-   AveDensity            -= InactiveMass / ( amr->BoxSize[0]*amr->BoxSize[1]*amr->BoxSize[2] );
-   amr->Par->NPar_Active -= NPar_Inactive_Tot;
-   amr->Par->NPar_Lv[lv] -= NPar_Escp_Tot + NPar_Inactive_Tot;
+// update the global variable NPar_Lv after the OpenMP parallel region
+   amr->Par->NPar_Lv[lv] -= NPar_Escp_Tot;
 
 
    if ( NPar_Escp_Tot > 0 )

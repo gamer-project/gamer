@@ -14,6 +14,7 @@
 //                3. there are no missing or redundant particles
 //                4. no active particles have mass=-1.0
 //                5/6. each particle has one and only one home patch
+//                7. NPar == NPar_Active + NPar_Inactive
 //
 // Note        :  None 
 //
@@ -22,7 +23,7 @@
 void Par_Aux_Check_Particle( const char *comment )
 {
 
-   const int   NCheck    = 6;
+   const int   NCheck    = 7;
    const real *ParPos[3] = { amr->Par->PosX, amr->Par->PosY, amr->Par->PosZ };
 
    int     PassAll    = true;
@@ -195,6 +196,26 @@ void Par_Aux_Check_Particle( const char *comment )
                }
 
                Aux_Message( stderr, "Check 6: %4d  %10ld\n", MPI_Rank, p );
+            }
+         }
+
+
+//       Check 7: consistency of the number of particles
+         if ( amr->Par->NPar_Active + amr->Par->NPar_Inactive != amr->Par->NPar )
+         {
+            if ( PassAll )
+            {
+               Aux_Message( stderr, "\"%s\" : <%s> FAILED at Time = %13.7e, Step = %ld, Rank = %d !!\n",
+                            comment, __FUNCTION__, Time[0], Step, MPI_Rank );
+               PassAll = false;
+            }
+
+            if ( PassCheck[6] )
+            {
+               Aux_Message( stderr, "Check 7: NPar_Active (%ld) + NPar_Inactive (%ld) = %ld != NPar (%ld) !!\n",
+                            amr->Par->NPar_Active, amr->Par->NPar_Inactive,
+                            amr->Par->NPar_Active+amr->Par->NPar_Inactive, amr->Par->NPar );
+               PassCheck[6] = false;
             }
          }
 

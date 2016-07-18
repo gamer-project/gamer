@@ -52,8 +52,7 @@ void Par_Aux_InitCheck()
 
          if (  !Par_WithinActiveRegion( Pos[0][ParID], Pos[1][ParID], Pos[2][ParID] )  )
          {
-            amr->Par->Mass[ParID] = (real)-1.0;
-            amr->Par->NPar_Active --;
+            amr->Par->RemoveOneParticle( ParID, PAR_INACTIVE_OUTSIDE, NULL_INT, NULL, NULL_REAL );
 
             if ( OPT__VERBOSE )
                Aux_Message( stderr, "\nWARNING : removing particle %10d (Pos = [%14.7e, %14.7e, %14.7e], Time = %13.7e)\n",

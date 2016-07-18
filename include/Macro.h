@@ -438,6 +438,13 @@
 #endif
 
 
+// markers for inactive particles
+#ifdef PARTICLE
+#  define PAR_INACTIVE_OUTSIDE   ( -1.0 )
+#  define PAR_INACTIVE_MPI       ( -2.0 )
+#endif
+
+
 // tiny constant for miscellaneous usages
 #ifdef FLOAT8
 #  define TINY_VALUE       1.e-13
