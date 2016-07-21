@@ -291,6 +291,31 @@ void Init_Parallelization()
 #  endif
 
 
+// 6. number of particles for each rank (only during the initialization)
+   if ( OPT__INIT != INIT_RESTART )
+   {
+      if ( amr->Par->NPar_Active_AllRank < 0 )
+         Aux_Error( ERROR_INFO, "NPar_Active_AllRank = %ld < 0 !!\n", amr->Par->NPar_Active_AllRank );
+
+      const int NPar_per_Rank  = amr->Par->NPar_Active_AllRank / MPI_NRank; 
+      const int Rank_with_more = amr->Par->NPar_Active_AllRank % MPI_NRank;
+
+//    assuming all particles are active initially (some of them may be marked as inactive when calling Par_Aux_InitCheck)
+      amr->Par->NPar_AcPlusInac = NPar_per_Rank;
+
+      if ( MPI_Rank < Rank_with_more )    amr->Par->NPar_AcPlusInac ++;
+
+#     ifdef GAMER_DEBUG
+      long NPar_Sum = 0;
+      MPI_Reduce( &amr->Par->NPar_AcPlusInac, &NPar_Sum, 1, MPI_LONG, MPI_SUM, 0, MPI_COMM_WORLD );
+
+      if ( MPI_Rank == 0  &&  NPar_Sum != amr->Par->NPar_Active_AllRank )
+         Aux_Error( ERROR_INFO, "Total number of active particles in all ranks (%ld) != expected (%ld) !!\n",
+                    NPar_Sum, amr->Par->NPar_Active_AllRank );
+#     endif
+   } // if ( OPT__INIT != INIT_RESTART )
+
+
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );
 
 } // FUNCTION : Init_Parallelization

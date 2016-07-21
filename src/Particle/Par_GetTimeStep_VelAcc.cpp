@@ -29,6 +29,11 @@
 void Par_GetTimeStep_VelAcc( double dt[2], double dTime[2], int MinDtLv[2], real MinDtVar[2], const double dt_dTime )
 {
 
+#  ifdef COMOVING
+#  error : ERROR : COMOVING needs to be checked here
+#  endif
+
+
    const real *Vel[3] = { amr->Par->VelX, amr->Par->VelY, amr->Par->VelZ };
 #  ifdef STORE_PAR_ACC
    const real *Acc[3] = { amr->Par->AccX, amr->Par->AccY, amr->Par->AccZ };
@@ -151,7 +156,7 @@ void Par_GetTimeStep_VelAcc( double dt[2], double dTime[2], int MinDtLv[2], real
 
 
 // verify the minimum time-step
-   if ( dt_min[0] == __FLT_MAX__  &&  amr->Par->NPar_Active > 0 )
+   if ( dt_min[0] == __FLT_MAX__  &&  amr->Par->NPar_Active_AllRank > 0 )
    {
       Aux_Message( stderr, "WARNING : time-step estimation by particle velocity is incorrect (dt_min = %13.7e) !!\n", dt_min[0] );
       Aux_Message( stderr, "          --> Likely all particles have zero velocity\n" );
@@ -160,38 +165,41 @@ void Par_GetTimeStep_VelAcc( double dt[2], double dTime[2], int MinDtLv[2], real
       Aux_Message( stderr, "          --> You might want to set DT__PARVEL_MAX properly\n" );
    }
 
-   if ( UseAcc  &&  dt_min[1] == __FLT_MAX__  &&  amr->Par->NPar_Active > 0 )
+   if ( UseAcc  &&  dt_min[1] == __FLT_MAX__  &&  amr->Par->NPar_Active_AllRank > 0 )
       Aux_Error( ERROR_INFO, "time-step estimation by particle acceleration is incorrect (dt_min = %13.7e) !!\n", dt_min[1] );
 
 
 
 // gather the minimum time-step information from all ranks
-   /*
 #  ifndef SERIAL
-   double *dt_AllRank     = new double [MPI_NRank];
-   int    *MinDtLv_AllRank  = new int    [MPI_NRank];
-   real   *MinDtVar_AllRank = new real   [MPI_NRank];
+   double (*dt_AllRank      )[2] = new double [MPI_NRank][2];
+   int    (*MinDtLv_AllRank )[2] = new int    [MPI_NRank][2];
+   real   (*MinDtVar_AllRank)[2] = new real   [MPI_NRank][2];
    
-   MPI_Gather( &dt_local, 1, MPI_DOUBLE, dt_AllRank,       1, MPI_DOUBLE, 0, MPI_COMM_WORLD );
-   MPI_Gather( &MinDtLv,  1, MPI_INT,    MinDtLv_AllRank,  1, MPI_INT,    0, MPI_COMM_WORLD );
+   MPI_Gather( dt_local, 2, MPI_DOUBLE, dt_AllRank,       2, MPI_DOUBLE, 0, MPI_COMM_WORLD );
+   MPI_Gather( MinDtLv,  2, MPI_INT,    MinDtLv_AllRank,  2, MPI_INT,    0, MPI_COMM_WORLD );
 #  ifdef FLOAT8
-   MPI_Gather( &MinDtVar, 1, MPI_DOUBLE, MinDtVar_AllRank, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD );
+   MPI_Gather( MinDtVar, 2, MPI_DOUBLE, MinDtVar_AllRank, 2, MPI_DOUBLE, 0, MPI_COMM_WORLD );
 #  else
-   MPI_Gather( &MinDtVar, 1, MPI_FLOAT,  MinDtVar_AllRank, 1, MPI_FLOAT,  0, MPI_COMM_WORLD );
+   MPI_Gather( MinDtVar, 2, MPI_FLOAT,  MinDtVar_AllRank, 2, MPI_FLOAT,  0, MPI_COMM_WORLD );
 #  endif
 
    if ( MPI_Rank == 0 )
    {
       for (int Rank=0; Rank<MPI_NRank; Rank++)
       {
-         if ( dt_AllRank[Rank] == dt_min )
+         for (int t=0; t<2; t++)
          {
-            MinDtLv  = MinDtLv_AllRank [Rank];
-            MinDtVar = MinDtVar_AllRank[Rank];
-            break;
-         }
+            if ( dt_AllRank[Rank][t] == dt_min[t] )
+            {
+               MinDtLv [t] = MinDtLv_AllRank [Rank][t];
+               MinDtVar[t] = MinDtVar_AllRank[Rank][t];
+               break;
+            }
 
-         if ( Rank == MPI_NRank-1 )    Aux_Message( stderr, "WARNING : no match of \"dt_min\" was found !!\n" );
+            if ( Rank == MPI_NRank-1 )
+               Aux_Message( stderr, "WARNING : no match of \"dt_min[%d]\" was found !!\n", t );
+         }
       }
    }
 
@@ -199,15 +207,6 @@ void Par_GetTimeStep_VelAcc( double dt[2], double dTime[2], int MinDtLv[2], real
    delete [] MinDtLv_AllRank;
    delete [] MinDtVar_AllRank;
 #  endif // #ifndef SERIAL 
-   */
-
-#  ifndef SERIAL
-#  error : ERROR : only SERIAL work here
-#  endif
-
-#  ifdef COMOVING
-#  error : ERROR : COMOVING needs to be checked here
-#  endif
 
 
    dt[0] = DT__PARVEL * dt_min[0];

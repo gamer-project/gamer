@@ -1126,8 +1126,19 @@ void Aux_Check_Parameter()
 #     error : ERROR : currently PARTICLE dost NOT support COMOVING !! 
 #  endif
 
-   if ( amr->Par->NPar < 0 )    
-      Aux_Error( ERROR_INFO, "Number of particles = %ld < 0 !!\n", amr->Par->NPar );
+#  if ( !defined SERIAL  &&  !defined LOAD_BALANCE )
+#     error : ERROR : PARTICLE must work with either SERIAL or LOAD_BALANCE !!
+#  endif
+
+   if ( OPT__INIT != INIT_RESTART ) {
+   if ( amr->Par->NPar_Active_AllRank < 0 )
+      Aux_Error( ERROR_INFO, "Total number of particles in all MPI ranks = %ld < 0 !!\n",
+                 amr->Par->NPar_Active_AllRank );
+
+   if ( amr->Par->NPar_AcPlusInac < 0  ||  amr->Par->NPar_AcPlusInac > amr->Par->NPar_Active_AllRank )
+      Aux_Error( ERROR_INFO, "Incorrect total number of particles in MPI rank %d = %ld !!\n",
+                 MPI_Rank, amr->Par->NPar_AcPlusInac );
+   }
 
    if ( amr->Par->Init < 1  ||  amr->Par->Init > 3 )
       Aux_Error( ERROR_INFO, "unsupported option \"amr->Par->Init = %d\" [1/2/3] !!\n", amr->Par->Init );

@@ -71,7 +71,7 @@ void Par_PassParticle2Son( const int FaLv, const int FaPID )
 //###NOTE : No OpenMP since AddParticle will modify amr->Par->NPar_Lv[]
 #     ifdef DEBUG_PARTICLE
       amr->patch[0][SonLv][SonPID]->AddParticle( NNewForSon[LocalID], NewListForSon[LocalID], &amr->Par->NPar_Lv[SonLv],
-                                                 ParPos, amr->Par->NPar, __FUNCTION__ );
+                                                 ParPos, amr->Par->NPar_AcPlusInac, __FUNCTION__ );
 #     else
       amr->patch[0][SonLv][SonPID]->AddParticle( NNewForSon[LocalID], NewListForSon[LocalID], &amr->Par->NPar_Lv[SonLv] );
 #     endif

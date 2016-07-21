@@ -203,7 +203,7 @@ void Par_PassParticle2Sibling( const int lv )
                amr->patch[0][lv][PID]->AddParticle( amr->patch[0][lv][SibPID]->NPar_Escp   [ MirSib[s] ],
                                                     amr->patch[0][lv][SibPID]->ParList_Escp[ MirSib[s] ],
                                                    &amr->Par->NPar_Lv[lv],
-                                                    (const real **)ParPos, amr->Par->NPar, Comment );
+                                                    (const real **)ParPos, amr->Par->NPar_AcPlusInac, Comment );
 #              else
                amr->patch[0][lv][PID]->AddParticle( amr->patch[0][lv][SibPID]->NPar_Escp   [ MirSib[s] ],
                                                     amr->patch[0][lv][SibPID]->ParList_Escp[ MirSib[s] ],
@@ -245,7 +245,7 @@ void Par_PassParticle2Sibling( const int lv )
 
 #           ifdef DEBUG_PARTICLE
             if ( FaSib == -1 )
-               Aux_Error( ERROR_INFO, "FaSib == -1 (FaLv %d, FaPID %d, Sib %d) !!\n", FaLv, FaPID, s );
+               Aux_Error( ERROR_INFO, "FaSib == -1 (lv %d, PID %d, Sib %d) !!\n", lv, PID, s );
 #           endif
 
             FaPID    = amr->patch[0][lv][PID]->father;
@@ -265,7 +265,7 @@ void Par_PassParticle2Sibling( const int lv )
             amr->patch[0][FaLv][FaSibPID]->AddParticle( amr->patch[0][lv][PID]->NPar_Escp   [s],
                                                         amr->patch[0][lv][PID]->ParList_Escp[s],
                                                        &amr->Par->NPar_Lv[FaLv],
-                                                        (const real **)ParPos, amr->Par->NPar, Comment );
+                                                        (const real **)ParPos, amr->Par->NPar_AcPlusInac, Comment );
 #           else
             amr->patch[0][FaLv][FaSibPID]->AddParticle( amr->patch[0][lv][PID]->NPar_Escp   [s],
                                                         amr->patch[0][lv][PID]->ParList_Escp[s],

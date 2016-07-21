@@ -107,7 +107,7 @@ void Init_Load_Parameter()
 // particle
 #  ifdef PARTICLE
    getline( &input_line, &len, File );
-   sscanf( input_line, "%ld%s",  &amr->Par->NPar,           string );
+   sscanf( input_line, "%ld%s",  &amr->Par->NPar_Active_AllRank, string );
 
    getline( &input_line, &len, File );
    sscanf( input_line, "%d%s",   &amr->Par->Init,           string );

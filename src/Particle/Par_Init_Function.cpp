@@ -26,7 +26,7 @@ void Par_Init_Function()
 
 
 // synchronize all particles to the physical time at the base level
-   for (long p=0; p<amr->Par->NPar; p++)  amr->Par->Time[p] = Time[0];
+   for (long p=0; p<amr->Par->NPar_AcPlusInac; p++)   amr->Par->Time[p] = Time[0];
 
 
    real *Mass   =   amr->Par->Mass;
@@ -50,7 +50,7 @@ void Par_Init_Function()
 
    srand( RSeed );
 
-   for (long p=0; p<amr->Par->NPar; p++)
+   for (long p=0; p<amr->Par->NPar_AcPlusInac; p++)
    {
       Mass[p] = ( (real)rand()/RAND_MAX )*( MassMax - MassMin ) + MassMin;
 

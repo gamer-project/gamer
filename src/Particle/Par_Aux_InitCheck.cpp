@@ -13,6 +13,7 @@
 // Note        :  1. Invoked by "Init_GAMER"
 //                2. Check if all particles lie within the simulation box
 //                3. Remove particles outside the active region for non-periodic B.C.
+//                4. There should be no inactive particles before calling this function
 //
 // Parameter   :  None
 //-------------------------------------------------------------------------------------------------------
@@ -28,10 +29,10 @@ void Par_Aux_InitCheck()
 
 // 1. all active particles should lie within the simulation domain
 // (periodicity should be taken care of in the initial condition, not here)
-   for (long ParID=0; ParID<amr->Par->NPar; ParID++)
+   for (long ParID=0; ParID<amr->Par->NPar_AcPlusInac; ParID++)
    {
-//    skip inactive particles
-      if ( Mass[ParID] < 0.0 )   continue;
+//    there should be no inactive particles initially
+      if ( Mass[ParID] < 0.0 )   Aux_Error( ERROR_INFO, "Mass[%ld] = %14.7e < 0.0 !!\n", ParID, Mass[ParID] );
 
       for (int d=0; d<3; d++)
       {
@@ -45,13 +46,11 @@ void Par_Aux_InitCheck()
 // 2. remove particles outside the active region for non-periodic B.C.
    if ( OPT__BC_POT != BC_POT_PERIODIC )
    {
-      for (long ParID=0; ParID<amr->Par->NPar; ParID++)
+      for (long ParID=0; ParID<amr->Par->NPar_AcPlusInac; ParID++)
       {
-//       skip inactive particles
-         if ( Mass[ParID] < 0.0 )   continue;
-
          if (  !Par_WithinActiveRegion( Pos[0][ParID], Pos[1][ParID], Pos[2][ParID] )  )
          {
+//          we don't need to modify NPar_Lv and AveDensity here since they will be reset soon
             amr->Par->RemoveOneParticle( ParID, PAR_INACTIVE_OUTSIDE, NULL_INT, NULL, NULL_REAL );
 
             if ( OPT__VERBOSE )

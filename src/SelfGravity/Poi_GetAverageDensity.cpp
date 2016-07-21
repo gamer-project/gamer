@@ -150,15 +150,18 @@ void Poi_GetAverageDensity()
 // 4. add other components (e.g., particles)
 // ==================================================================================================
 #  ifdef PARTICLE
-   double ParMassSum = 0.0;
+   double ParMassSum_local=0.0, ParMassSum_total;
 
-   for (long p=0; p<amr->Par->NPar; p++)
+   for (long p=0; p<amr->Par->NPar_AcPlusInac; p++)
    {
 //    skip inactive and massless particles
-      if ( amr->Par->Mass[p] > (real)0.0 )   ParMassSum += (double)amr->Par->Mass[p];
+      if ( amr->Par->Mass[p] > (real)0.0 )   ParMassSum_local += (double)amr->Par->Mass[p];
    }
 
-   AveDensity += ParMassSum / ( amr->BoxSize[0]*amr->BoxSize[1]*amr->BoxSize[2] );
+// sum over all MPI ranks
+   MPI_Allreduce( &ParMassSum_local, &ParMassSum_total, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD );
+
+   AveDensity += ParMassSum_total / ( amr->BoxSize[0]*amr->BoxSize[1]*amr->BoxSize[2] );
 #  endif
 
 

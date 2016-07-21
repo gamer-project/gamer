@@ -21,35 +21,62 @@ void Par_Output_Particle( const char *FileName )
 
 
 // check
-   if ( Aux_CheckFileExist(FileName) )
+   if ( MPI_Rank == 0  &&  Aux_CheckFileExist(FileName) )
       Aux_Message( stderr, "WARNING : file \"%s\" already exists and will be overwritten !!\n", FileName );
 
 
-// output particles
-   FILE *File = fopen( FileName, "w" );
+// set the offset of particle ID for MPI
+   int NPar_AcPlusInac_AllRank[MPI_NRank], ParID_Offset=0, NPar_AcPlusInac_MyRank=(int)amr->Par->NPar_AcPlusInac;
 
-   fprintf( File, "#Time %20.14e   Step %13ld   Active / Inactive Particles %13ld / %13ld\n\n",
-            Time[0], Step, amr->Par->NPar_Active, amr->Par->NPar-amr->Par->NPar_Active );
-   fprintf( File, "#%9s  %21s  %21s  %21s  %21s  %21s  %21s  %21s  %21s", "ID", "Mass", "X", "Y", "Z", "Vx", "Vy", "Vz", "Time" );
-#  ifdef STORE_PAR_ACC
-   fprintf( File, "  %21s  %21s  %21s", "AccX", "AccY", "AccZ" );
-#  endif
-   fprintf( File, "\n" );
+   MPI_Allgather( &NPar_AcPlusInac_MyRank, 1, MPI_INT, NPar_AcPlusInac_AllRank, 1, MPI_INT, MPI_COMM_WORLD ); 
 
-   for (long p=0; p<amr->Par->NPar; p++)
+   for (int r=1; r<=MPI_Rank; r++)  ParID_Offset = ParID_Offset + NPar_AcPlusInac_AllRank[r-1];
+
+
+// header
+   if ( MPI_Rank == 0 )
    {
-//    skip inactive particles
-      if ( amr->Par->Mass[p] < 0.0 )   continue;
+      FILE *File = fopen( FileName, "w" );
 
-      fprintf( File, "%10ld", p );
-
-      for (int v=0; v<NPAR_VAR;     v++)     fprintf(  File, "  %21.14e", amr->Par->ParVar [v][p] );
-      for (int v=0; v<NPAR_PASSIVE; v++)     fprintf(  File, "  %21.14e", amr->Par->Passive[v][p] );
-
+      fprintf( File, "#Time %20.14e   Step %13ld   Active Particles %13ld\n\n",
+               Time[0], Step, amr->Par->NPar_Active_AllRank );
+      fprintf( File, "#%9s  %21s  %21s  %21s  %21s  %21s  %21s  %21s  %21s", "ID", "Mass", "X", "Y", "Z", "Vx", "Vy", "Vz", "Time" );
+#     ifdef STORE_PAR_ACC
+      fprintf( File, "  %21s  %21s  %21s", "AccX", "AccY", "AccZ" );
+#     endif
+      for (int v=0; v<NPAR_PASSIVE; v++)
+      fprintf( File, "  %18s-%d%d", "Passive", v/10, v%10 );
       fprintf( File, "\n" );
+
+      fclose( File );
    }
 
-   fclose( File );
+
+// data
+   for (int TargetMPIRank=0; TargetMPIRank<MPI_NRank; TargetMPIRank++)
+   {
+      if ( MPI_Rank == TargetMPIRank )
+      {
+         FILE *File = fopen( FileName, "a" );
+
+         for (long p=0; p<amr->Par->NPar_AcPlusInac; p++)
+         {
+//          skip inactive particles
+            if ( amr->Par->Mass[p] < 0.0 )   continue;
+
+            fprintf( File, "%10ld", ParID_Offset + p );
+
+            for (int v=0; v<NPAR_VAR;     v++)     fprintf(  File, "  %21.14e", amr->Par->ParVar [v][p] );
+            for (int v=0; v<NPAR_PASSIVE; v++)     fprintf(  File, "  %21.14e", amr->Par->Passive[v][p] );
+
+            fprintf( File, "\n" );
+         }
+
+         fclose( File );
+      } // if ( MPI_Rank == TargetMPIRank )
+
+      MPI_Barrier( MPI_COMM_WORLD );
+   } // for (int TargetMPIRank=0; TargetMPIRank<MPI_NRank; TargetMPIRank++)
 
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s (DumpID = %d) ... done\n", __FUNCTION__, DumpID );

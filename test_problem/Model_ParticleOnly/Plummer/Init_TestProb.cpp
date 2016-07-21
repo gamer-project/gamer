@@ -62,10 +62,6 @@ void Init_TestProb()
 # error : ERROR : "COMOVING must be OFF" in the Plummer model test !!
 # endif
 
-# ifndef SERIAL
-# error : ERROR : "Currently only support SERIAL" in the Plummer model test !!
-# endif
-
 
 // set the initialization and output functions
    Init_Function_Ptr      = Par_TestProbSol_Plummer;

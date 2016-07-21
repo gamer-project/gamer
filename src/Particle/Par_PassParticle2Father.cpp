@@ -48,7 +48,7 @@ void Par_PassParticle2Father( const int FaLv, const int FaPID )
 //###NOTE : No OpenMP since AddParticle will modify amr->Par->NPar_Lv[]
 #  ifdef DEBUG_PARTICLE
    const real *ParPos[3] = { amr->Par->PosX, amr->Par->PosY, amr->Par->PosZ };
-   amr->patch[0][FaLv][FaPID]->AddParticle( NParSon, ParListSon, &amr->Par->NPar_Lv[FaLv], ParPos, amr->Par->NPar, __FUNCTION__ );
+   amr->patch[0][FaLv][FaPID]->AddParticle( NParSon, ParListSon, &amr->Par->NPar_Lv[FaLv], ParPos, amr->Par->NPar_AcPlusInac, __FUNCTION__ );
 #  else
    amr->patch[0][FaLv][FaPID]->AddParticle( NParSon, ParListSon, &amr->Par->NPar_Lv[FaLv] );
 #  endif

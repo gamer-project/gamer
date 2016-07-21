@@ -60,7 +60,7 @@ int Par_Synchronize( const double SyncTime, const ParSync_t SyncOption )
    {
       if ( Backup_NPar >= 0 )    Aux_Error( ERROR_INFO, "backup arrays have already been allocated !!\n" );
 
-      MemUnit       = MAX( 1, amr->Par->NPar/100 );   // set arbitrarily (but must > 0)
+      MemUnit       = MAX( 1, amr->Par->NPar_Active/100 );  // set arbitrarily (but must > 0)
       MemSize       = MemUnit;
       Backup_NPar   = 0;
       Backup_ParID  = ( long *      )malloc(   MemSize*sizeof(long) );
@@ -83,7 +83,7 @@ int Par_Synchronize( const double SyncTime, const ParSync_t SyncOption )
 
    real dt;
 
-   for (long p=0; p<amr->Par->NPar; p++)
+   for (long p=0; p<amr->Par->NPar_AcPlusInac; p++)
    {
 //    skip inactive particles
       if ( amr->Par->Mass[p] < 0.0 )   continue;
@@ -125,7 +125,7 @@ int Par_Synchronize( const double SyncTime, const ParSync_t SyncOption )
 
          ParTime[p] = SyncTime_Real;
       } // if (  ! Mis_CompareRealValue( SyncTime_Real, amr->Par->Time[p], NULL, false )  )
-   } // for (long p=0; p<amr->Par->NPar; p++)
+   } // for (long p=0; p<amr->Par->NPar_AcPlusInac; p++)
 
 
    CurrentSyncTime = SyncTime;

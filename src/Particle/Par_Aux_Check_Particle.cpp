@@ -14,7 +14,8 @@
 //                3. there are no missing or redundant particles
 //                4. no active particles have mass=-1.0
 //                5/6. each particle has one and only one home patch
-//                7. NPar == NPar_Active + NPar_Inactive
+//                7. NPar_AcPlusInac == NPar_Active + NPar_Inactive
+//                8. NPar_Active_AllRank = sum(NPar_Active, All ranks) 
 //
 // Note        :  None 
 //
@@ -23,22 +24,26 @@
 void Par_Aux_Check_Particle( const char *comment )
 {
 
-   const int   NCheck    = 7;
+   const int   NCheck    = 8;
    const real *ParPos[3] = { amr->Par->PosX, amr->Par->PosY, amr->Par->PosZ };
 
    int     PassAll    = true;
    long    NParInLeaf = 0;
-   bool   *ParHome    = new bool [amr->Par->NPar];    // true/false --> particle has home/is homeless
-   int     NPar;
-   long    ParID;
+   bool   *ParHome    = new bool [amr->Par->NPar_AcPlusInac];  // true/false --> particle has home/is homeless
+   int     NParInPatch;
+   long    ParID, NPar_Active_AllRank_Expect;
    double *EdgeL, *EdgeR;
    int     PassCheck[NCheck];
 
 
 // initialize the check list
-   for (long p=0; p<amr->Par->NPar; p++)  ParHome[p] = false;
+   for (long p=0; p<amr->Par->NPar_AcPlusInac; p++)   ParHome[p] = false;
 
    for (int t=0; t<NCheck; t++)  PassCheck[t] = true;
+
+
+// get the total number of active particles
+   MPI_Allreduce( &amr->Par->NPar_Active, &NPar_Active_AllRank_Expect, 1, MPI_LONG, MPI_SUM, MPI_COMM_WORLD );
 
 
 // start checking
@@ -50,19 +55,19 @@ void Par_Aux_Check_Particle( const char *comment )
          for (int lv=0; lv<NLEVEL; lv++)
          for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
          {
-            NPar = amr->patch[0][lv][PID]->NPar;
+            NParInPatch = amr->patch[0][lv][PID]->NPar;
 
             if ( amr->patch[0][lv][PID]->son == -1 )  
             {
 //             count the number of particles in the leaf patches
-               NParInLeaf += NPar;
+               NParInLeaf += NParInPatch;
 
 
 //             Check 1: check whether or not all particles find their home patches
                EdgeL = amr->patch[0][lv][PID]->EdgeL;
                EdgeR = amr->patch[0][lv][PID]->EdgeR;
 
-               for (int p=0; p<NPar; p++)
+               for (int p=0; p<NParInPatch; p++)
                {
                   ParID = amr->patch[0][lv][PID]->ParList[p];
 
@@ -133,11 +138,11 @@ void Par_Aux_Check_Particle( const char *comment )
                                   MPI_Rank, lv, PID, ParID, ParPos[0][ParID], ParPos[1][ParID], ParPos[2][ParID],
                                   amr->Par->Mass[ParID] );
                   }
-               } // for (int p=0; p<NPar; p++)
+               } // for (int p=0; p<NParInPatch; p++)
             } // if ( amr->patch[0][lv][PID]->son == -1 )
 
 //          Check 2: particles should only reside in the leaf patches
-            else if ( NPar != 0 )
+            else if ( NParInPatch != 0 )
             {
                if ( PassAll )
                {
@@ -152,7 +157,7 @@ void Par_Aux_Check_Particle( const char *comment )
                   PassCheck[1] = false;
                }
 
-               Aux_Message( stderr, "Check 2: %4d  %2d  %7d  %7d  %7d\n", MPI_Rank, lv, PID, amr->patch[0][lv][PID]->son, NPar );
+               Aux_Message( stderr, "Check 2: %4d  %2d  %7d  %7d  %7d\n", MPI_Rank, lv, PID, amr->patch[0][lv][PID]->son, NParInPatch );
             } // if ( amr->patch[0][lv][PID]->son == -1 ) ... else ...
          } // for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++); for (int lv=0; lv<NLEVEL; lv++)
 
@@ -169,16 +174,16 @@ void Par_Aux_Check_Particle( const char *comment )
 
             if ( PassCheck[2] )
             {
-               Aux_Message( stderr, "Check 3: total number of active particles in the leaf patches (%ld) != expect (%ld) !!\n",
+               Aux_Message( stderr, "Check 3: total number of active particles found in the leaf patches (%ld) != expect (%ld) !!\n",
                             NParInLeaf, amr->Par->NPar_Active );
-               Aux_Message( stderr, "         (inactive + active particles = %ld)\n", amr->Par->NPar );
+               Aux_Message( stderr, "         (inactive + active particles = %ld)\n", amr->Par->NPar_AcPlusInac );
                PassCheck[2] = false;
             }
          }
 
 
 //       Check 6: check if any active particle is homeless
-         for (long p=0; p<amr->Par->NPar; p++)
+         for (long p=0; p<amr->Par->NPar_AcPlusInac; p++)
          {
             if ( amr->Par->Mass[p] >= 0.0  &&  ParHome[p] == false )
             {
@@ -200,8 +205,8 @@ void Par_Aux_Check_Particle( const char *comment )
          }
 
 
-//       Check 7: consistency of the number of particles
-         if ( amr->Par->NPar_Active + amr->Par->NPar_Inactive != amr->Par->NPar )
+//       Check 7/8: consistency of the number of particles
+         if ( amr->Par->NPar_Active + amr->Par->NPar_Inactive != amr->Par->NPar_AcPlusInac )
          {
             if ( PassAll )
             {
@@ -212,10 +217,27 @@ void Par_Aux_Check_Particle( const char *comment )
 
             if ( PassCheck[6] )
             {
-               Aux_Message( stderr, "Check 7: NPar_Active (%ld) + NPar_Inactive (%ld) = %ld != NPar (%ld) !!\n",
+               Aux_Message( stderr, "Check 7: NPar_Active (%ld) + NPar_Inactive (%ld) = %ld != NPar_AcPlusInac (%ld) !!\n",
                             amr->Par->NPar_Active, amr->Par->NPar_Inactive,
-                            amr->Par->NPar_Active+amr->Par->NPar_Inactive, amr->Par->NPar );
+                            amr->Par->NPar_Active+amr->Par->NPar_Inactive, amr->Par->NPar_AcPlusInac );
                PassCheck[6] = false;
+            }
+         }
+
+         if ( amr->Par->NPar_Active_AllRank != NPar_Active_AllRank_Expect )
+         {
+            if ( PassAll )
+            {
+               Aux_Message( stderr, "\"%s\" : <%s> FAILED at Time = %13.7e, Step = %ld, Rank = %d !!\n",
+                            comment, __FUNCTION__, Time[0], Step, MPI_Rank );
+               PassAll = false;
+            }
+
+            if ( PassCheck[7] )
+            {
+               Aux_Message( stderr, "Check 8: NPar_Active_AllRank (%ld) != expect (%ld) !!\n",
+                            amr->Par->NPar_Active_AllRank, NPar_Active_AllRank_Expect );
+               PassCheck[7] = false;
             }
          }
 

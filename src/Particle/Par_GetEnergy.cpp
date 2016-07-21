@@ -34,7 +34,7 @@ void Par_GetEnergy( double &Ek, double &Ep )
 
 // use static schedule to give the same reduction result everytime
 #  pragma omp parallel for schedule( static ) reduction( +:Ek_local )
-   for (long p=0; p<amr->Par->NPar; p++)
+   for (long p=0; p<amr->Par->NPar_AcPlusInac; p++)
    {
 //    skip inactive and massless particles
       if ( amr->Par->Mass[p] > 0.0 )

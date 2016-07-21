@@ -11,7 +11,7 @@
 #  define DEBUG_PARTICLE
 #endif
 
-// Factors used in "AddParticle" and "RemoveParticle" to determine the ratio between ParListSize and NPar
+// Factors used in "Add(One)Particle" and "Remove(One)Particle" to resize the allocated arrays
 // PARLIST_GROWTH_FACTOR must >= 1.0; PARLIST_REDUCE_FACTOR must <= 1.0
 #  define PARLIST_GROWTH_FACTOR     1.1
 #  define PARLIST_REDUCE_FACTOR     0.8
@@ -25,15 +25,16 @@ void Aux_Error( const char *File, const int Line, const char *Func, const char *
 // Structure   :  Particle_t 
 // Description :  Data structure of particles
 //
-// Data Member :  ParListSize          : Size of the particle data arrays (must be >= NPar) 
+// Data Member :  ParListSize          : Size of the particle data arrays (must be >= NPar_AcPlusInac) 
 //                InactiveParListSize  : Size of the inactive particle list (InactiveParList)
-//                NPar                 : Total number of particles (active + inactive)
-//                NPar_Active          : Total number of active particles
+//                NPar_Active_AllRank  : Total number of active particles summed up over all MPI ranks
+//                NPar_AcPlusInac      : Total number of particles (active + inactive) in this MPI rank
+//                NPar_Active          : Total number of active particles in this MPI rank
 //                                       --> Inactive particles: particles removed from simulations because of
 //                                        (1) lying outside the active region (mass == PAR_INACTIVE_OUTSIDE)
 //                                        (2) being sent to other MPI ranks   (mass == PAR_INACTIVE_MPI)
-//                NPar_Inactive        : Total number of inactive particles
-//                NPar_Lv              : Total number of active particles at each level
+//                NPar_Inactive        : Total number of inactive particles in this MPI rank
+//                NPar_Lv              : Total number of active particles at each level in this MPI rank
 //                Init                 : Initialization methods (1/2/3 --> call function/restart/load from file)
 //                Interp               : Mass/acceleration interpolation scheme (NGP,CIC,TSC)
 //                Integ                : Integration scheme (PAR_INTEG_EULER, PAR_INTEG_KDK)
@@ -68,7 +69,8 @@ struct Particle_t
 // ===================================================================================
    long        ParListSize;
    long        InactiveParListSize;
-   long        NPar;
+   long        NPar_Active_AllRank;
+   long        NPar_AcPlusInac;
    long        NPar_Active;
    long        NPar_Inactive;
    long        NPar_Lv[NLEVEL];
@@ -110,14 +112,15 @@ struct Particle_t
    Particle_t()
    {
 
-      NPar       = -1;
-      Init       = PAR_INIT_NONE;
-      Interp     = PAR_INTERP_NONE;
-      Integ      = PAR_INTEG_NONE;
-      SyncDump   = true;
-      ImproveAcc = true;
-      PredictPos = true;
-      RemoveCell = -999.9;
+      NPar_Active_AllRank = -1;
+      NPar_AcPlusInac     = -1;
+      Init                = PAR_INIT_NONE;
+      Interp              = PAR_INTERP_NONE;
+      Integ               = PAR_INTEG_NONE;
+      SyncDump            = true;
+      ImproveAcc          = true;
+      PredictPos          = true;
+      RemoveCell          = -999.9;
 
       for (int lv=0; lv<NLEVEL; lv++)  NPar_Lv[lv] = 0;
 
@@ -185,8 +188,8 @@ struct Particle_t
    // Constructor :  InitVar
    // Description :  Initialize the particle attribute arrays and some other variables
    //
-   // Note        :  1. NPar must be set properly (>=0) in advance 
-   //                2. Initialize both "NPar_Active" and "ParListSize" as NPar
+   // Note        :  1. NPar_AcPlusInac must be set properly (>=0) in advance 
+   //                2. Initialize both "NPar_Active" and "ParListSize" as NPar_AcPlusInac
    //                3. Set "GhostSize" ("Interp" must be set in advance)
    //
    // Parameter   :  None
@@ -195,13 +198,13 @@ struct Particle_t
    {
 
 //    check
-      if ( NPar < 0 )                     Aux_Error( ERROR_INFO, "NPar (%d) < 0 !!\n", NPar );
+      if ( NPar_AcPlusInac < 0 )          Aux_Error( ERROR_INFO, "NPar_AcPlusInac (%ld) < 0 !!\n", NPar_AcPlusInac );
       if ( Interp == PAR_INTERP_NONE )    Aux_Error( ERROR_INFO, "Interp == NONE !!\n" );
 
 //    initialize NPar_Active, NPar_Inactive, ParListSize, and InactiveParListSize
-      NPar_Active         = NPar;                        // assuming all particles are active initially
+      NPar_Active         = NPar_AcPlusInac;             // assuming all particles are active initially
       NPar_Inactive       = 0;
-      ParListSize         = NPar;                        // set ParListSize = NPar at the beginning
+      ParListSize         = NPar_AcPlusInac;             // set ParListSize = NPar_AcPlusInac at the beginning
       InactiveParListSize = MAX( 1, ParListSize/100 );   // set arbitrarily (but must > 0)
 
 //    set the number of ghost zones for the interpolation scheme
@@ -260,7 +263,7 @@ struct Particle_t
 
 //    check
 #     ifdef DEBUG_PARTICLE
-      if ( NPar < 0 )            Aux_Error( ERROR_INFO, "NPar (%d) < 0 !!\n", NPar );
+      if ( NPar_AcPlusInac < 0 ) Aux_Error( ERROR_INFO, "NPar_AcPlusInac (%ld) < 0 !!\n", NPar_AcPlusInac );
       if ( NewVar     == NULL )  Aux_Error( ERROR_INFO, "NewVar == NULL !!\n" );
 #     if ( NPAR_PASSIVE > 0 )
       if ( NewPassive == NULL )  Aux_Error( ERROR_INFO, "NewVar == NULL !!\n" );
@@ -279,8 +282,8 @@ struct Particle_t
          NPar_Inactive --;
 
 #        ifdef DEBUG_PARTICLE
-         if ( ParID < 0  ||  ParID >= NPar )
-            Aux_Error( ERROR_INFO, "Incorrect ParID (%ld), NPar = %ld !!\n", ParID, NPar );
+         if ( ParID < 0  ||  ParID >= NPar_AcPlusInac )
+            Aux_Error( ERROR_INFO, "Incorrect ParID (%ld), NPar_AcPlusInac = %ld !!\n", ParID, NPar_AcPlusInac );
 #        endif
       }
 
@@ -288,7 +291,7 @@ struct Particle_t
       else
       {
 //       allocate enough memory for the particle variable array
-         if ( NPar >= ParListSize )
+         if ( NPar_AcPlusInac >= ParListSize )
          {
             ParListSize = (int)ceil( PARLIST_GROWTH_FACTOR*(ParListSize+1) );
 
@@ -310,8 +313,8 @@ struct Particle_t
 #           endif
          }
 
-         ParID = NPar;
-         NPar ++;
+         ParID = NPar_AcPlusInac;
+         NPar_AcPlusInac ++;
       } // if ( NPar_Inactive > 0 ) ... else ...
 
 
@@ -360,7 +363,7 @@ struct Particle_t
 
 //    check
 #     ifdef DEBUG_PARTICLE
-      if ( ParID < 0  ||  ParID >= NPar )
+      if ( ParID < 0  ||  ParID >= NPar_AcPlusInac )
          Aux_Error( ERROR_INFO, "Wrong ParID (%ld) !!\n", ParID );
 
       if ( Marker != PAR_INACTIVE_OUTSIDE  &&  Marker != PAR_INACTIVE_MPI )
@@ -390,9 +393,9 @@ struct Particle_t
       NPar_Inactive ++;
 
 #     ifdef DEBUG_PARTICLE
-      if ( NPar_Active + NPar_Inactive != NPar )
-         Aux_Error( ERROR_INFO, "NPar_Active (%ld) + NPar_Inactive (%ld) != NPar (%ld) !!\n",
-                    NPar_Active, NPar_Inactive, NPar );
+      if ( NPar_Active + NPar_Inactive != NPar_AcPlusInac )
+         Aux_Error( ERROR_INFO, "NPar_Active (%ld) + NPar_Inactive (%ld) != NPar_AcPlusInac (%ld) !!\n",
+                    NPar_Active, NPar_Inactive, NPar_AcPlusInac );
 #     endif
 
    } // METHOD : RemoveOneParticle

@@ -69,7 +69,7 @@ Procedure for outputting new variables:
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2104)
+// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2105)
 // Description :  Output all simulation data in the HDF5 format, which can be used as a restart file
 //                or loaded by YT
 //
@@ -898,7 +898,7 @@ void FillIn_KeyInfo( KeyInfo_t &KeyInfo )
 
    const time_t CalTime       = time( NULL );   // calendar time
 
-   KeyInfo.FormatVersion      = 2104;
+   KeyInfo.FormatVersion      = 2105;
    KeyInfo.Model              = MODEL;
    KeyInfo.NLevel             = NLEVEL;
    KeyInfo.PatchSize          = PATCH_SIZE;
@@ -1328,7 +1328,7 @@ void FillIn_InputPara( InputPara_t &InputPara )
 
 // particle
 #  ifdef PARTICLE
-   InputPara.Par_NPar                = amr->Par->NPar;
+   InputPara.Par_NPar_Active_AllRank = amr->Par->NPar_Active_AllRank;
    InputPara.Par_Init                = amr->Par->Init;
    InputPara.Par_Interp              = amr->Par->Interp;
    InputPara.Par_Integ               = amr->Par->Integ;
@@ -1336,6 +1336,7 @@ void FillIn_InputPara( InputPara_t &InputPara )
    InputPara.Par_ImproveAcc          = amr->Par->ImproveAcc;
    InputPara.Par_PredictPos          = amr->Par->PredictPos;
    InputPara.Par_RemoveCell          = amr->Par->RemoveCell;
+   InputPara.Par_GhostSize           = amr->Par->GhostSize;
 #  endif
 
 // cosmology
@@ -1864,7 +1865,7 @@ void GetCompound_InputPara( hid_t &H5_TypeID )
 
 // particle
 #  ifdef PARTICLE
-   H5Tinsert( H5_TypeID, "Par_NPar",                HOFFSET(InputPara_t,Par_NPar               ), H5T_NATIVE_LONG    );
+   H5Tinsert( H5_TypeID, "Par_NPar_Active_AllRank", HOFFSET(InputPara_t,Par_NPar_Active_AllRank), H5T_NATIVE_LONG    );
    H5Tinsert( H5_TypeID, "Par_Init",                HOFFSET(InputPara_t,Par_Init               ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "Par_Interp",              HOFFSET(InputPara_t,Par_Interp             ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "Par_Integ",               HOFFSET(InputPara_t,Par_Integ              ), H5T_NATIVE_INT     );
@@ -1872,6 +1873,7 @@ void GetCompound_InputPara( hid_t &H5_TypeID )
    H5Tinsert( H5_TypeID, "Par_ImproveAcc",          HOFFSET(InputPara_t,Par_ImproveAcc         ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "Par_PredictPos",          HOFFSET(InputPara_t,Par_PredictPos         ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "Par_RemoveCell",          HOFFSET(InputPara_t,Par_RemoveCell         ), H5T_NATIVE_INT     );
+   H5Tinsert( H5_TypeID, "Par_GhostSize",           HOFFSET(InputPara_t,Par_GhostSize          ), H5T_NATIVE_INT     );
 #  endif
 
 // cosmology

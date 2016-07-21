@@ -93,7 +93,7 @@ SIMU_OPTION += -DSTORE_PAR_ACC
 SIMU_OPTION += -DGAMER_OPTIMIZATION
 
 # debug mode 
-#SIMU_OPTION += -DGAMER_DEBUG
+SIMU_OPTION += -DGAMER_DEBUG
 
 # measure the elapsing wall-clock time of different parts of the program
 SIMU_OPTION += -DTIMING
@@ -105,13 +105,13 @@ SIMU_OPTION += -DTIMING
 SIMU_OPTION += -DINTEL
 
 # double precision (not supported for the GPU + self-gravity mode in non-Fermi GPUs)
-#SIMU_OPTION += -DFLOAT8
+SIMU_OPTION += -DFLOAT8
 
 # serial mode (in which no MPI libraries are required)
-SIMU_OPTION += -DSERIAL
+#SIMU_OPTION += -DSERIAL
 
 # load-balance parallelization (one must not turn on the option "SERIAL") (HILBERT)
-#SIMU_OPTION += -DLOAD_BALANCE=HILBERT
+SIMU_OPTION += -DLOAD_BALANCE=HILBERT
 
 # overlap MPI communication with computation (experimental, only supported in LOAD_BALANCE)
 #SIMU_OPTION += -DOVERLAP_MPI
@@ -296,7 +296,7 @@ CC_FILE     += Par_Init_Function.cpp  Par_Output_Particle.cpp  Par_FindHomePatch
                Par_MassAssignment.cpp  Par_UpdateParticle.cpp  Par_GetTimeStep_VelAcc.cpp \
                Par_PassParticle2Sibling.cpp  Par_CountParticleInDescendant.cpp  Par_GetEnergy.cpp \
                Par_Aux_InitCheck.cpp  Par_Aux_GetParticleLevel.cpp  Par_PassParticle2Son_AllPatch.cpp \
-               Par_Synchronize.cpp
+               Par_Synchronize.cpp  Par_Init_RedistributeByRectangular.cpp
 
 vpath %.cu     Particle/GPU
 vpath %.cpp    Particle/CPU  Particle
@@ -353,7 +353,7 @@ vpath %.cpp    LoadBalance
 # dxl (gcc, serial)
 #CUDA_TOOLKIT_PATH :=
 #FFTW_PATH         := /usr
-#MPI_PATH          :=
+#MPI_PATH          := /usr
 #HDF5_PATH         := /home/hyschive/software/miniconda2
 
 # campus UIUC (intel-15.0 + openmpi-1.8.4)

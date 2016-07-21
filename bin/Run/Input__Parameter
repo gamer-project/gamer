@@ -19,7 +19,7 @@
 0           OPT__BC_POT             # gravity boundary condition : (0,1) -> (periodic, isolated)
 -1.0        GFUNC_COEFF0            # Green's function coefficient at the origin for the isolated BC (<0:default [NoPar/Par:0.0/4.X])
 
-0           PAR_NPAR                # number of particles
+0           PAR_NPAR                # total number of particles
 1           PAR_INIT                # initialization option for particles: (1, 2, 3) -> (FUNCTION, RESTART, FILE)
 -1          PAR_INTERP              # particle interpolation scheme: (-1, 1, 2, 3) -> (default, NGP, CIC, TSC) [3]
 -1          PAR_INTEG               # particle integration scheme: (-1, 1, 2) -> (default, Euler, KDK) [2]

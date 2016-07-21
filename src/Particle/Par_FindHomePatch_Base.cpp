@@ -52,7 +52,7 @@ void Par_FindHomePatch_Base( const int *BaseP )
 // Stage 2: store the particle indices into the particle list of each patch
    for (int Stage=0; Stage<2; Stage++)
    {
-      for (long ParID=0; ParID<amr->Par->NPar; ParID++)
+      for (long ParID=0; ParID<amr->Par->NPar_AcPlusInac; ParID++)
       {
 //       0. skip inactive particles
          if ( amr->Par->Mass[ParID] < 0.0 )  continue;
@@ -155,7 +155,7 @@ void Par_FindHomePatch_Base( const int *BaseP )
 //###NOTE : No OpenMP since AddParticle will modify amr->Par->NPar_Lv[]
 #           ifdef DEBUG_PARTICLE
             const real *ParPos[3] = { amr->Par->PosX, amr->Par->PosY, amr->Par->PosZ };
-            amr->patch[0][0][TPID]->AddParticle( 1, &ParID, &amr->Par->NPar_Lv[0], ParPos, amr->Par->NPar, __FUNCTION__ );
+            amr->patch[0][0][TPID]->AddParticle( 1, &ParID, &amr->Par->NPar_Lv[0], ParPos, amr->Par->NPar_AcPlusInac, __FUNCTION__ );
 #           else
             amr->patch[0][0][TPID]->AddParticle( 1, &ParID, &amr->Par->NPar_Lv[0] );
 #           endif

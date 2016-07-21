@@ -487,16 +487,15 @@ void Aux_TakeNote()
 #     else
       fprintf( Note, "DEBUG_PARTICLE            OFF\n" );
 #     endif
-      fprintf( Note, "Par->NPar                 %ld\n",     amr->Par->NPar        );
-      fprintf( Note, "Par->NPar_Active          %ld\n",     amr->Par->NPar_Active );
-      fprintf( Note, "Par->Init                 %d\n",      amr->Par->Init        );
-      fprintf( Note, "Par->Interp               %d\n",      amr->Par->Interp      );
-      fprintf( Note, "Par->Integ                %d\n",      amr->Par->Integ       );
-      fprintf( Note, "Par->SyncDump             %d\n",      amr->Par->SyncDump    );
-      fprintf( Note, "Par->GhostSize            %d\n",      amr->Par->GhostSize   );
-      fprintf( Note, "Par->ImproveAcc           %d\n",      amr->Par->ImproveAcc  );
-      fprintf( Note, "Par->PredictPos           %d\n",      amr->Par->PredictPos  );
-      fprintf( Note, "Par->RemoveCell           %13.7e\n",  amr->Par->RemoveCell  );
+      fprintf( Note, "Par->NPar_Active_AllRank  %ld\n",     amr->Par->NPar_Active_AllRank );
+      fprintf( Note, "Par->Init                 %d\n",      amr->Par->Init                );
+      fprintf( Note, "Par->Interp               %d\n",      amr->Par->Interp              );
+      fprintf( Note, "Par->Integ                %d\n",      amr->Par->Integ               );
+      fprintf( Note, "Par->SyncDump             %d\n",      amr->Par->SyncDump            );
+      fprintf( Note, "Par->GhostSize            %d\n",      amr->Par->GhostSize           );
+      fprintf( Note, "Par->ImproveAcc           %d\n",      amr->Par->ImproveAcc          );
+      fprintf( Note, "Par->PredictPos           %d\n",      amr->Par->PredictPos          );
+      fprintf( Note, "Par->RemoveCell           %13.7e\n",  amr->Par->RemoveCell          );
       fprintf( Note, "***********************************************************************************\n" );
       fprintf( Note, "\n\n");
 #     endif

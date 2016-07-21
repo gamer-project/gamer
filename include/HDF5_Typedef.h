@@ -278,7 +278,7 @@ struct InputPara_t
 
 // particle
 #  ifdef PARTICLE
-   long   Par_NPar;
+   long   Par_NPar_Active_AllRank;
    int    Par_Init;
    int    Par_Interp;
    int    Par_Integ;
@@ -286,6 +286,7 @@ struct InputPara_t
    int    Par_ImproveAcc;
    int    Par_PredictPos;
    double Par_RemoveCell;
+   int    Par_GhostSize;
 #  endif
 
 // cosmology
