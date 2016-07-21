@@ -61,6 +61,10 @@ void Par_Aux_InitCheck()
    }
 
 
+// 3. get the total number of active particles in all MPI ranks
+   MPI_Allreduce( &amr->Par->NPar_Active, &amr->Par->NPar_Active_AllRank, 1, MPI_LONG, MPI_SUM, MPI_COMM_WORLD );
+
+
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", __FUNCTION__ );
 
 } // FUNCTION : Par_Aux_InitCheck
