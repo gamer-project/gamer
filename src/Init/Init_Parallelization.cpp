@@ -244,9 +244,10 @@ void Init_Parallelization()
 
 // 5. left/right edges of each subdomain
 #  ifndef SERIAL
-   const double SubDomain_Size[3] = { amr->BoxSize[0]/MPI_NRank_X[0], 
-                                      amr->BoxSize[1]/MPI_NRank_X[1], 
-                                      amr->BoxSize[2]/MPI_NRank_X[2] };
+   const double dh_min             = amr->dh[TOP_LEVEL];
+   const int    SubDomain_Scale[3] = { amr->BoxScale[0]/MPI_NRank_X[0],
+                                       amr->BoxScale[1]/MPI_NRank_X[1],
+                                       amr->BoxScale[2]/MPI_NRank_X[2] };
 
    double (*SubDomain_EdgeL)[3] = new double [MPI_NRank][3];
    double (*SubDomain_EdgeR)[3] = new double [MPI_NRank][3];
@@ -266,9 +267,9 @@ void Init_Parallelization()
       for (int j=0; j<MPI_NRank_X[1]; j++)
       for (int i=0; i<MPI_NRank_X[0]; i++)
       {
-         SubDomain_EdgeL3D[k][j][i][0] = (double)i*SubDomain_Size[0];
-         SubDomain_EdgeL3D[k][j][i][1] = (double)j*SubDomain_Size[1];
-         SubDomain_EdgeL3D[k][j][i][2] = (double)k*SubDomain_Size[2];
+         SubDomain_EdgeL3D[k][j][i][0] = (double)(i*SubDomain_Scale[0])*dh_min;
+         SubDomain_EdgeL3D[k][j][i][1] = (double)(j*SubDomain_Scale[1])*dh_min;
+         SubDomain_EdgeL3D[k][j][i][2] = (double)(k*SubDomain_Scale[2])*dh_min;
       }
 
 //    force EdgeR == EdgeL at the same sub-domain interfaces
@@ -288,7 +289,7 @@ void Init_Parallelization()
 
    delete [] SubDomain_EdgeL;
    delete [] SubDomain_EdgeR;
-#  endif
+#  endif // ifndef SERIAL
 
 
 // 6. number of particles for each rank (only during the initialization)
