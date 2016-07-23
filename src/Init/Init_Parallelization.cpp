@@ -293,6 +293,7 @@ void Init_Parallelization()
 
 
 // 6. number of particles for each rank (only during the initialization)
+#  ifdef PARTICLE
    if ( OPT__INIT != INIT_RESTART )
    {
       if ( amr->Par->NPar_Active_AllRank < 0 )
@@ -306,7 +307,8 @@ void Init_Parallelization()
 
       if ( MPI_Rank < Rank_with_more )    amr->Par->NPar_AcPlusInac ++;
 
-#     ifdef GAMER_DEBUG
+//    check
+#     ifdef DEBUG_PARTICLE
       long NPar_Sum = 0;
       MPI_Reduce( &amr->Par->NPar_AcPlusInac, &NPar_Sum, 1, MPI_LONG, MPI_SUM, 0, MPI_COMM_WORLD );
 
@@ -315,6 +317,7 @@ void Init_Parallelization()
                     NPar_Sum, amr->Par->NPar_Active_AllRank );
 #     endif
    } // if ( OPT__INIT != INIT_RESTART )
+#  endif // #ifdef PARTICLE
 
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );

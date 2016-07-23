@@ -160,7 +160,7 @@ void Init_GAMER( int *argc, char ***argv )
 #  ifndef SERIAL
    if ( amr->Par->Init != PAR_INIT_BY_RESTART )    Par_Init_RedistributeByRectangular();
 #  endif
-#  endif
+#  endif // #ifdef PARTICLE
 
 
 // initialize the AMR structure and fluid field
