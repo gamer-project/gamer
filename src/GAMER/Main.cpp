@@ -386,7 +386,12 @@ int main( int argc, char *argv[] )
 
 //       collect particles from all descendant patches
 #        ifdef PARTICLE
-         Par_CollectParticleFromDescendant( lv );
+#        ifdef LOAD_BALANCE
+         const bool PredictPos = amr->Par->PredictPos;
+#        else
+         const bool PredictPos = false;
+#        endif
+         Par_CollectParticleFromDescendant( lv, PredictPos, Time[lv] );
 #        endif
 
          if ( lv == 0 )    

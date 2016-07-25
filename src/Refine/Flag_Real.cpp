@@ -96,7 +96,7 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
 
 // collect particles from all descendant patches
 #  ifdef PARTICLE
-   if ( OPT__FLAG_NPAR_CELL )    Par_CollectParticleFromDescendant( lv );
+   if ( OPT__FLAG_NPAR_CELL )    Par_CollectParticleFromDescendant( lv, PredictPos_No, NULL_REAL );
 #  endif
       
 

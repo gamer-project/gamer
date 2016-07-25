@@ -11,8 +11,9 @@ static void CollectParticle( const int FaLv, const int FaPID, int &NPar_SoFar, l
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Par_CollectParticleFromDescendant
 // Description :  Collect particles from all descendants (sons, grandsons, ...) to father
+//                --> Will call Par_LB_CollectParticleFromDescendant for LOAD_BALANCE
 //
-// Note        :  1. Parlist in all descendants will NOT be changeed after calling this function
+// Note        :  1. ParList in all descendants will NOT be changeed after calling this function
 //                2. This function assumes that father and all descendants are always in the same rank
 //                   --> Does NOT work with LOAD_BALANCE
 //                3. The array "ParList_Desc" will be allocated for the target patch
@@ -24,14 +25,27 @@ static void CollectParticle( const int FaLv, const int FaPID, int &NPar_SoFar, l
 //                6. When using OpenMP, one must ensure that different threads do NOT invoke this function
 //                   for the same patch at the same time !!!
 //                   --> Because this function will modify "NPar_Desc & ParList_Desc" for the target patch
-//                7. Invoded by Gra_AdvanceDt (and Main when DEBUG is on)
+//                7. Invoked by Gra_AdvanceDt (and Main when DEBUG is on)
 //
-// Parameter   :  FaLv  : Father's refinement level
+// Parameter   :  FaLv        : Father's refinement leve
+//                PredictPos  : true --> predict particle position to TargetTime (for LOAD_BALANCE only)
+//                TargetTime  : Target time for predicting the particle position (for LOAD_BALANCE only)
 //
-// Return      :  NPar_Desc and ParList_Desc for all patches at FaLv
+// Return      :  NPar_Desc and ParList_Desc for all non-leaf patches at FaLv
 //-------------------------------------------------------------------------------------------------------
-void Par_CollectParticleFromDescendant( const int FaLv )
+void Par_CollectParticleFromDescendant( const int FaLv, const bool PredictPos, const double TargetTime )
 {
+
+// nothing to do for the max level
+   if ( FaLv >= MAX_LEVEL )   return;
+
+
+// call the parallel version instead
+#  ifdef LOAD_BALANCE
+   Par_LB_CollectParticleFromDescendant( FaLv, PredictPos, TargetTime );
+   return;
+#  endif
+
 
 //###NOTE: OpenMP may not improve performance here
 #  pragma omp parallel for schedule( runtime )
@@ -40,7 +54,8 @@ void Par_CollectParticleFromDescendant( const int FaLv )
 //    check
 #     ifdef DEBUG_PARTICLE
       if ( amr->patch[0][FaLv][FaPID]->NPar_Desc != -1  ||  amr->patch[0][FaLv][FaPID]->ParList_Desc != NULL )
-         Aux_Error( ERROR_INFO, "Desc variables have been initialized already !!\n" );
+         Aux_Error( ERROR_INFO, "Desc variables have been initialized already (FaLv %d, FaPID %d, NPar_Dens %d) !!\n",
+                    FaLv, FaPID, amr->patch[0][FaLv][FaPID]->NPar_Desc );
 #     endif
 
 //    nothing to do if father has no son

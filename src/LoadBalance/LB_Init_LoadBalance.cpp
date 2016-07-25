@@ -371,10 +371,8 @@ void LB_RedistributeRealPatch( const int lv, real **ParVar_Old, real **Passive_O
    for (int r=0; r<MPI_NRank; r++)
    {
       Send_NCount_Patch  [r] = 0;
-      Recv_NCount_Patch  [r] = 0;
 #     ifdef PARTICLE
       Send_NCount_ParData[r] = 0;
-      Recv_NCount_ParData[r] = 0;
 #     endif
    }
    Send_NDisp_Patch  [0] = 0;

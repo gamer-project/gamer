@@ -158,7 +158,7 @@ void Init_GAMER( int *argc, char ***argv )
    Par_Aux_InitCheck();
 
 #  ifndef SERIAL
-   if ( amr->Par->Init != PAR_INIT_BY_RESTART )    Par_Init_RedistributeByRectangular();
+   if ( amr->Par->Init != PAR_INIT_BY_RESTART )    Par_LB_RedistributeByRectangular();
 #  endif
 #  endif // #ifdef PARTICLE
 

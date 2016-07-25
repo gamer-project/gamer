@@ -7,10 +7,10 @@
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Par_Init_RedistributeByRectangular
-// Description :  Redistribute particles assuming the rectangular domain decomposition 
+// Function    :  Par_LB_RedistributeByRectangular
+// Description :  Redistribute particles assuming the rectangular domain decomposition
 //
-// Note        :  1. Invoked by "Init_GAMER"
+// Note        :  1. Usefully only during the initialization when calling "Init_GAMER"
 //                2. Some particles may already be marked as inactive by "Par_Aux_InitCheck"
 //                   --> These particles will NOT be sent to the new rank
 //                3. Redistribute the Time, Mass, Pos, Vel, and all passive variables of particles
@@ -20,7 +20,7 @@
 //
 // Return      :  amr->Par->Mass,PosX/Y/Z,VelX/Y/Z,Passive
 //-------------------------------------------------------------------------------------------------------
-void Par_Init_RedistributeByRectangular()
+void Par_LB_RedistributeByRectangular()
 {
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ...\n", __FUNCTION__ );
@@ -48,8 +48,8 @@ void Par_Init_RedistributeByRectangular()
 
    SubDomain_EdgeR_AllRank = new double [MPI_NRank][3];
 
-   MPI_Allgather( amr->ParaVar->SubDomain_EdgeR, 3, MPI_DOUBLE, SubDomain_EdgeR_AllRank, 3, MPI_DOUBLE, MPI_COMM_WORLD ); 
-   
+   MPI_Allgather( amr->ParaVar->SubDomain_EdgeR, 3, MPI_DOUBLE, SubDomain_EdgeR_AllRank, 3, MPI_DOUBLE, MPI_COMM_WORLD );
+
    for (long ParID=0; ParID<amr->Par->NPar_AcPlusInac; ParID++)
    {
 //    TRank is set to -1 for inactive particles
@@ -86,7 +86,7 @@ void Par_Init_RedistributeByRectangular()
    } // for (long ParID=0; ParID<amr->Par->NPar_AcPlusInac; ParID++)
 
 
-// 2. construct the MPI send and recv data list 
+// 2. construct the MPI send and recv data list
    MPI_Alltoall( Send_Count, 1, MPI_INT, Recv_Count, 1, MPI_INT, MPI_COMM_WORLD );
 
    Send_Disp[0] = 0;
@@ -154,7 +154,7 @@ void Par_Init_RedistributeByRectangular()
       RecvBuf         = *(AttPtrPtr[v]);
 
 //    3-6. redistribute data
-#     ifdef FLOAT8   
+#     ifdef FLOAT8
       MPI_Alltoallv( SendBuf, Send_Count, Send_Disp, MPI_DOUBLE, RecvBuf, Recv_Count, Recv_Disp, MPI_DOUBLE, MPI_COMM_WORLD );
 #     else
       MPI_Alltoallv( SendBuf, Send_Count, Send_Disp, MPI_FLOAT,  RecvBuf, Recv_Count, Recv_Disp, MPI_FLOAT,  MPI_COMM_WORLD );
@@ -228,7 +228,7 @@ void Par_Init_RedistributeByRectangular()
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", __FUNCTION__ );
 
-} // FUNCTION : Par_Init_RedistributeByRectangular
+} // FUNCTION : Par_LB_RedistributeByRectangular
 
 
 

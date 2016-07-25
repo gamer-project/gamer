@@ -122,9 +122,9 @@ void Par_MassAssignment( const long *ParList, const long NPar, const ParInterp_t
 
 
 // 4. deposit particle mass
-   const double _dh                 = 1.0 / dh;
-   const double _dh3                = CUBE(_dh);
-   const double Ghost_Phy           = amr->Par->GhostSize*dh;
+   const double _dh       = 1.0 / dh;
+   const double _dh3      = CUBE(_dh);
+   const double Ghost_Phy = amr->Par->GhostSize*dh;
 
    real (*Rho3D)[RhoSize][RhoSize] = ( real (*)[RhoSize][RhoSize] )Rho;
 

@@ -185,6 +185,7 @@ void Par_UpdateParticle( const int lv, const double TimeNew, const double TimeOl
    double PhyCorner_ExtAcc[3], PhyCorner_ExtPot[3], x, y, z;
 
 
+// loop over all **real** patch groups
 #  pragma omp for schedule( runtime )
    for (int PID0=0; PID0<amr->NPatchComma[lv][1]; PID0+=8)
    {

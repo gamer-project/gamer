@@ -72,7 +72,12 @@ void Gra_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, co
 
 // collect particles from all descendant patches
 #  ifdef PARTICLE
-   if ( Poisson )    TIMING_FUNC(   Par_CollectParticleFromDescendant( lv ),
+#  ifdef LOAD_BALANCE
+   const bool PredictPos = amr->Par->PredictPos;
+#  else
+   const bool PredictPos = false;
+#  endif
+   if ( Poisson )    TIMING_FUNC(   Par_CollectParticleFromDescendant( lv, PredictPos, TimeNew ),
                                     Timer_Par_Collect[lv],   false   );
 #  endif
 

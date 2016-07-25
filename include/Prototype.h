@@ -424,7 +424,6 @@ void Par_PassParticle2Son( const int FaLv, const int FaPID );
 void Par_PassParticle2Son_AllPatch( const int FaLv );
 void Par_PassParticle2Father( const int FaLv, const int FaPID );
 void Par_Aux_Check_Particle( const char *comment );
-void Par_CollectParticleFromDescendant( const int FaLv, const int FaPID );
 void Par_MassAssignment( const long *ParList, const long NPar, const ParInterp_t IntScheme, real *Rho,
                          const int RhoSize, const double *EdgeL, const double dh, const bool PredictPos,
                          const double TargetTime, const bool InitZero, const bool Periodic, const int PeriodicSize[3],
@@ -438,13 +437,20 @@ int  Par_CountParticleInDescendant( const int FaLv, const int FaPID );
 void Par_GetEnergy( double &Ek, double &Ep );
 void Par_Aux_InitCheck();
 void Par_Aux_GetParticleLevel();
-void Par_CollectParticleFromDescendant( const int FaLv );
+void Par_CollectParticleFromDescendant( const int FaLv, const bool PredictPos, const double TargetTime );
 void Par_CollectParticleFromDescendant_FreeMemory( const int FaLv );
 int  Par_Synchronize( const double SyncTime, const ParSync_t SyncOption );
 void Par_Synchronize_Restore( const double SyncTime );
 void Prepare_PatchData_FreeParticleDensityArray( const int lv );
-void Par_Init_RedistributeByRectangular();
+#ifdef LOAD_BALANCE
+void Par_LB_RedistributeByRectangular();
+void Par_LB_CollectParticleFromDescendant( const int FaLv, const bool PredictPos, const double TargetTime );
+void Par_LB_SendParticle( const int NParVar, const int *SendBuf_NPatchEachRank,
+                          const int *SendBuf_NParEachPatch, const long *SendBuf_LBIdxEachPatch, const real *SendBuf_ParDataEachPatch,
+                          int *&RecvBuf_NPatchEachRank, int *&RecvBuf_NParEachPatch, long *&RecvBuf_LBIdxEachPatch,
+                          real *&RecvBuf_ParDataEachPatch, int &NRecvPatchTotal, int &NRecvParTotal );
 #endif
+#endif // #ifdef PARTICLE
 
 
 

@@ -79,6 +79,8 @@ long  LB_Corner2Index( const int lv, const int Corner[], const Check_t Check );
 //                ParList         : List recording the IDs of all particles belonging to this leaf patch
 //                NPar_Desc       : Number of particles belonging to the descendants (sons, grandsons, ...) of this patch
 //                ParList_Desc    : List recording the IDs of all particles belonging to the descendants of this patch
+//                MassPos_Desc    : Pointer arrays storing the mass and position of all particles belonging to the descendants
+//                                  of this patch (for LOAD_BALANCE only)
 //                NPar_Escp       : Number of particles escaping from this patch
 //                ParList_Escp    : List recording the IDs of all particles escaping from this patch
 //
@@ -140,6 +142,9 @@ struct patch_t
 
    int    NPar_Desc;
    long  *ParList_Desc;
+#  ifdef LOAD_BALANCE
+   real  *MassPos_Desc[4];
+#  endif
 
    int    NPar_Escp[26];
    long  *ParList_Escp[26];
@@ -241,6 +246,10 @@ struct patch_t
       NPar_Desc    = -1;         // -1 : indicating that NPar_Desc is not calculated yet
       ParList_Desc = NULL;
 
+#     ifdef LOAD_BALANCE
+      for (int v=0; v<4; v++)    MassPos_Desc[v] = NULL;
+#     endif
+
       for (int s=0; s<26; s++)
       {
          NPar_Escp   [s] = -1;   // -1 : indicating that NPar_Escp is not calculated yet
@@ -279,6 +288,15 @@ struct patch_t
          delete [] ParList_Desc;
          ParList_Desc = NULL;
       }
+
+#     ifdef LOAD_BALANCE
+      for (int v=0; v<4; v++)
+      if ( MassPos_Desc[v] != NULL )
+      {
+         delete [] MassPos_Desc[v];
+         MassPos_Desc[v] = NULL;
+      }
+#     endif
 
       for (int s=0; s<26; s++)
       if ( ParList_Escp[s] != NULL )
