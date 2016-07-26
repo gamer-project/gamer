@@ -225,20 +225,33 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
 #              ifdef PARTICLE
                if ( OPT__FLAG_NPAR_CELL )
                {
-                  long *ParList = NULL;
-                  int   NPar;
+                  long  *ParList = NULL;
+                  int    NPar;
+                  bool   UseInputMassPos;
+                  real **InputMassPos = NULL;
 
 //                determine the number of particles and the particle list
                   if ( amr->patch[0][lv][PID]->son == -1 )
                   {
-                     NPar    = amr->patch[0][lv][PID]->NPar;
-                     ParList = amr->patch[0][lv][PID]->ParList;
+                     NPar            = amr->patch[0][lv][PID]->NPar;
+                     ParList         = amr->patch[0][lv][PID]->ParList;
+                     UseInputMassPos = false;
+                     InputMassPos    = NULL;
                   }
 
                   else
                   {
-                     NPar    = amr->patch[0][lv][PID]->NPar_Desc;
-                     ParList = amr->patch[0][lv][PID]->ParList_Desc;
+#                    ifdef LOAD_BALANCE
+                     NPar            = amr->patch[0][lv][PID]->NPar_Away;
+                     ParList         = NULL;
+                     UseInputMassPos = true;
+                     InputMassPos    = amr->patch[0][lv][PID]->ParMassPos_Away;
+#                    else
+                     NPar            = amr->patch[0][lv][PID]->NPar_Desc;
+                     ParList         = amr->patch[0][lv][PID]->ParList_Desc;
+                     UseInputMassPos = false;
+                     InputMassPos    = NULL;
+#                    endif
                   }
 
 #                 ifdef DEBUG_PARTICLE
@@ -246,15 +259,23 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
                      Aux_Error( ERROR_INFO, "NPar (%d) has not been calculated (lv %d, PID %d) !!\n",
                                 NPar, lv, PID );
 
-                  if ( NPar > 0  &&  ParList == NULL )
-                     Aux_Error( ERROR_INFO, "ParList == NULL for NPar_Desc (%d) > 0 (lv %d, PID %d) !!\n",
+                  if ( NPar > 0 )
+                  {
+                     if ( UseInputMassPos  &&  InputMassPos == NULL )
+                     Aux_Error( ERROR_INFO, "InputMassPos == NULL for NPar (%d) > 0 (lv %d, PID %d) !!\n",
                                 NPar, lv, PID );
+
+                     else if ( !UseInputMassPos  &&  ParList == NULL )
+                     Aux_Error( ERROR_INFO, "ParList == NULL for NPar (%d) > 0 (lv %d, PID %d) !!\n",
+                                NPar, lv, PID );
+                  }
 #                 endif
 
-//                deposit particles mass on grids (assuming unit density)
+//                deposit particle mass onto grids (assuming unit density)
                   Par_MassAssignment( ParList, NPar, PAR_INTERP_NGP, ParCount[0][0], PS1,
                                       amr->patch[0][lv][PID]->EdgeL, amr->dh[lv], PredictPos_No, NULL_REAL,
-                                      InitZero_Yes, Periodic_No, NULL, UnitDens_Yes, CheckFarAway_No );
+                                      InitZero_Yes, Periodic_No, NULL, UnitDens_Yes, CheckFarAway_No,
+                                      UseInputMassPos, InputMassPos );
                } // if ( OPT__FLAG_NPAR_CELL )
 #              endif // #ifdef PARTICLE
 

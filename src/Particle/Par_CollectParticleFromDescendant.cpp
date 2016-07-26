@@ -3,7 +3,9 @@
 
 #ifdef PARTICLE
 
+# ifndef LOAD_BALANCE
 static void CollectParticle( const int FaLv, const int FaPID, int &NPar_SoFar, long *ParList );
+#endif
 
 
 
@@ -43,8 +45,11 @@ void Par_CollectParticleFromDescendant( const int FaLv, const bool PredictPos, c
 // call the parallel version instead
 #  ifdef LOAD_BALANCE
    Par_LB_CollectParticleFromDescendant( FaLv, PredictPos, TargetTime );
+
    return;
-#  endif
+
+
+#  else
 
 
 //###NOTE: OpenMP may not improve performance here
@@ -87,6 +92,10 @@ void Par_CollectParticleFromDescendant( const int FaLv, const bool PredictPos, c
 #     endif
    } // for (int FaPID=0; FaPID<amr->NPatchComma[FaLv][1]; FaPID++)
 
+
+#  endif // #ifdef LOAD_BALANCE ... else ...
+
+
 } // FUNCTION : Par_CollectParticleFromDescendant
 
 
@@ -102,6 +111,10 @@ void Par_CollectParticleFromDescendant( const int FaLv, const bool PredictPos, c
 void Par_CollectParticleFromDescendant_FreeMemory( const int FaLv )
 {
 
+#  ifdef LOAD_BALANCE
+
+#  else
+
    for (int FaPID=0; FaPID<amr->NPatchComma[FaLv][1]; FaPID++)
    {
       if ( amr->patch[0][FaLv][FaPID]->ParList_Desc != NULL )
@@ -113,10 +126,13 @@ void Par_CollectParticleFromDescendant_FreeMemory( const int FaLv )
       amr->patch[0][FaLv][FaPID]->NPar_Desc = -1;
    }
 
+#  endif // #ifdef LOAD_BALANCE ... else ...
+
 } // FUNCTION : Par_CollectParticleFromDescendant_FreeMemory
 
 
 
+# ifndef LOAD_BALANCE
 //-------------------------------------------------------------------------------------------------------
 // Function    :  CollectParticle 
 // Description :  Collect particles from all descendants (sons, grandsons, ...) of the target patch
@@ -158,6 +174,7 @@ void CollectParticle( const int FaLv, const int FaPID, int &NPar_SoFar, long *Pa
    }
 
 } // FUNCTION : CollectParticle
+#endif // #ifndef LOAD_BALANCE
 
 
 

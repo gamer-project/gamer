@@ -12,11 +12,11 @@
 //                descendants (sons, grandsons, ...) to father
 //
 // Note        :  1. ParList in all descendants will NOT be changeed after calling this function
-//                2. Array MassPos_Desc will be allocated for patches at FaLv with particles in descendant patches
+//                2. Array ParMassPos_Away will be allocated for patches at FaLv with particles in descendant patches
 //                   --> Must be deleted afterward by calling Par_LB_CollectParticleFromDescendant_FreeMemory
 //                       (e.g., in the function "Gra_AdvanceDt")
 //                3. Do not take into account it's own particles (particles at FaLv)
-//                   --> Do nothing if this patch is a leaf patch (ParList_Desc will NOT be allocated)
+//                   --> Do nothing if this patch is a leaf patch (ParMassPos_Away array will NOT be allocated)
 //                4. This function assumes that all particles live in the leaf patch
 //                5. Invoked by Par_CollectParticleFromDescendant
 //                6. This function only collects particle mass and position
@@ -30,7 +30,7 @@
 //                                  send particle velocity
 //                TargetTime  : Target time for predicting the particle position
 //
-// Return      :  NPar_Desc and MassPos_Desc array for all non-leaf patches at FaLv
+// Return      :  NPar_Away and ParMassPos_Away array for all non-leaf patches at FaLv
 //-------------------------------------------------------------------------------------------------------
 void Par_LB_CollectParticleFromDescendant( const int FaLv, const bool PredictPos, const double TargetTime )
 {
@@ -50,15 +50,15 @@ void Par_LB_CollectParticleFromDescendant( const int FaLv, const bool PredictPos
 #  ifdef DEBUG_PARTICLE
    for (int FaPID=0; FaPID<amr->NPatchComma[FaLv][1]; FaPID++)
    {
-      if ( amr->patch[0][FaLv][FaPID]->NPar_Desc != -1 )
-         Aux_Error( ERROR_INFO, "Desc variables have been initialized already (FaLv %d, FaPID %d, NPar_Dens %d) !!\n",
-                    FaLv, FaPID, amr->patch[0][FaLv][FaPID]->NPar_Desc );
+      if ( amr->patch[0][FaLv][FaPID]->NPar_Away != -1 )
+         Aux_Error( ERROR_INFO, "particle parameters have been initialized already (FaLv %d, FaPID %d, NPar_Away %d) !!\n",
+                    FaLv, FaPID, amr->patch[0][FaLv][FaPID]->NPar_Away );
 
       for (int v=0; v<NParVar; v++)
       {
-         if ( amr->patch[0][FaLv][FaPID]->MassPos_Desc[v] != NULL )
-            Aux_Error( ERROR_INFO, "Desc variables have been initialized already (FaLv %d, FaPID %d, NPar_Dens %d, v %d) !!\n",
-                       FaLv, FaPID, amr->patch[0][FaLv][FaPID]->NPar_Desc, v );
+         if ( amr->patch[0][FaLv][FaPID]->ParMassPos_Away[v] != NULL )
+            Aux_Error( ERROR_INFO, "particle parameters have been initialized already (FaLv %d, FaPID %d, NPar_Away %d, v %d) !!\n",
+                       FaLv, FaPID, amr->patch[0][FaLv][FaPID]->NPar_Away, v );
       }
    }
 #  endif // #ifdef DEBUG_PARTICLE
@@ -255,7 +255,7 @@ void Par_LB_CollectParticleFromDescendant( const int FaLv, const bool PredictPos
    int *FaPIDList = new int [NRecvPatchTotal];
    int  RecvBuf_Idx;
 
-   for (int FaPID=0; FaPID<amr->NPatchComma[FaLv][1]; FaPID++)    amr->patch[0][FaLv][FaPID]->NPar_Desc = 0;
+   for (int FaPID=0; FaPID<amr->NPatchComma[FaLv][1]; FaPID++)    amr->patch[0][FaLv][FaPID]->NPar_Away = 0;
 
 #  ifdef DEBUG_PARTICLE
    for (int t=0; t<NRecvPatchTotal; t++)  FaPIDList[t] = -1;
@@ -281,7 +281,7 @@ void Par_LB_CollectParticleFromDescendant( const int FaLv, const bool PredictPos
 #     endif
 
 //    accumulate the number of particles in descendant patches
-      amr->patch[0][FaLv][FaPID_Match]->NPar_Desc += RecvBuf_NParEachPatch[RecvBuf_Idx];
+      amr->patch[0][FaLv][FaPID_Match]->NPar_Away += RecvBuf_NParEachPatch[RecvBuf_Idx];
 
 //    construct the list mapping array index to PID
       FaPIDList[RecvBuf_Idx] = FaPID_Match;
@@ -295,64 +295,64 @@ void Par_LB_CollectParticleFromDescendant( const int FaLv, const bool PredictPos
 #  endif
 
 
-// 3-3. allocate the MassPos_Desc array for each patch
+// 3-3. allocate the ParMassPos_Away array for each patch
    for (int FaPID=0; FaPID<amr->NPatchComma[FaLv][1]; FaPID++)
    {
-      if ( amr->patch[0][FaLv][FaPID]->NPar_Desc > 0 )
+      if ( amr->patch[0][FaLv][FaPID]->NPar_Away > 0 )
       {
          for (int v=0; v<NParVar; v++)
-            amr->patch[0][FaLv][FaPID]->MassPos_Desc[v] = new real [ amr->patch[0][FaLv][FaPID]->NPar_Desc ];
+            amr->patch[0][FaLv][FaPID]->ParMassPos_Away[v] = new real [ amr->patch[0][FaLv][FaPID]->NPar_Away ];
 
 //       reset to zero since it will be updated again when storing particle data
-         amr->patch[0][FaLv][FaPID]->NPar_Desc = 0;
+         amr->patch[0][FaLv][FaPID]->NPar_Away = 0;
       }
    }
 
 
 // 3-4. store the received particle data
    const real *RecvPtr = RecvBuf_ParDataEachPatch;
-   int NPar_Desc_Old;
+   int NPar_Away_Old;
 
    for (int t=0; t<NRecvPatchTotal; t++)
    {
       FaPID_Match   = FaPIDList[t];
-      NPar_Desc_Old = amr->patch[0][FaLv][FaPID_Match]->NPar_Desc;
+      NPar_Away_Old = amr->patch[0][FaLv][FaPID_Match]->NPar_Away;
 
-      amr->patch[0][FaLv][FaPID_Match]->NPar_Desc += RecvBuf_NParEachPatch[t];
+      amr->patch[0][FaLv][FaPID_Match]->NPar_Away += RecvBuf_NParEachPatch[t];
 
 #     ifdef DEBUG_PARTICLE
       if ( RecvBuf_NParEachPatch[t] <= 0 )
          Aux_Error( ERROR_INFO, "RecvBuf_NParEachPatch[%d] = %d <= 0 !!\n", t, RecvBuf_NParEachPatch[t] );
 #     endif
 
-      for (int p=NPar_Desc_Old; p<amr->patch[0][FaLv][FaPID_Match]->NPar_Desc; p++)
+      for (int p=NPar_Away_Old; p<amr->patch[0][FaLv][FaPID_Match]->NPar_Away; p++)
       {
 #        ifdef DEBUG_PARTICLE
          for (int v=0; v<NParVar; v++)
          {
-            if ( amr->patch[0][FaLv][FaPID_Match]->MassPos_Desc[v] == NULL )
-               Aux_Error( ERROR_INFO, "Desc variables have NOT been initialized (FaLv %d, FaPID %d, NPar_Dens %d, v %d) !!\n",
-                          FaLv, FaPID_Match, amr->patch[0][FaLv][FaPID_Match]->NPar_Desc, v );
+            if ( amr->patch[0][FaLv][FaPID_Match]->ParMassPos_Away[v] == NULL )
+               Aux_Error( ERROR_INFO, "particle parameters have NOT been initialized (FaLv %d, FaPID %d, NPar_Away %d, v %d) !!\n",
+                          FaLv, FaPID_Match, amr->patch[0][FaLv][FaPID_Match]->NPar_Away, v );
          }
 #        endif
 
          for (int v=0; v<NParVar; v++)
-            amr->patch[0][FaLv][FaPID_Match]->MassPos_Desc[v][p] = *RecvPtr++;
+            amr->patch[0][FaLv][FaPID_Match]->ParMassPos_Away[v][p] = *RecvPtr++;
 
 #        ifdef DEBUG_PARTICLE
 //       we do not transfer inactive particles
-         if ( amr->patch[0][FaLv][FaPID_Match]->MassPos_Desc[PAR_MASS][p] < (real)0.0 )
-            Aux_Error( ERROR_INFO, "found inactive descendant particle (FaLv %d, FaPID %d, Mass %14.7e, particle %d) !!\n",
-                       FaLv, FaPID_Match, amr->patch[0][FaLv][FaPID_Match]->MassPos_Desc[PAR_MASS][p], p );
+         if ( amr->patch[0][FaLv][FaPID_Match]->ParMassPos_Away[PAR_MASS][p] < (real)0.0 )
+            Aux_Error( ERROR_INFO, "found inactive particle (FaLv %d, FaPID %d, Mass %14.7e, particle %d) !!\n",
+                       FaLv, FaPID_Match, amr->patch[0][FaLv][FaPID_Match]->ParMassPos_Away[PAR_MASS][p], p );
 
 //       check if particle lie within the target patch (may not when PredictPos is on)
          if ( !PredictPos )
          {
             const double *EdgeL     = amr->patch[0][FaLv][FaPID_Match]->EdgeL;
             const double *EdgeR     = amr->patch[0][FaLv][FaPID_Match]->EdgeR;
-            const real    ParPos[3] = { amr->patch[0][FaLv][FaPID_Match]->MassPos_Desc[PAR_POSX][p],
-                                        amr->patch[0][FaLv][FaPID_Match]->MassPos_Desc[PAR_POSY][p],
-                                        amr->patch[0][FaLv][FaPID_Match]->MassPos_Desc[PAR_POSZ][p] };
+            const real    ParPos[3] = { amr->patch[0][FaLv][FaPID_Match]->ParMassPos_Away[PAR_POSX][p],
+                                        amr->patch[0][FaLv][FaPID_Match]->ParMassPos_Away[PAR_POSY][p],
+                                        amr->patch[0][FaLv][FaPID_Match]->ParMassPos_Away[PAR_POSZ][p] };
 
             for (int d=0; d<3; d++)
             {
@@ -362,7 +362,7 @@ void Par_LB_CollectParticleFromDescendant( const int FaLv, const bool PredictPos
             }
          }
 #        endif // #ifdef DEBUG_PARTICLE
-      } // for (int p=NPar_Desc_Old; p<amr->patch[0][FaLv][FaPID_Match]->NPar_Desc; p++)
+      } // for (int p=NPar_Away_Old; p<amr->patch[0][FaLv][FaPID_Match]->NPar_Away; p++)
    } // for (int t=0; t<NRecvPatchTotal; t++)
 
 
@@ -371,7 +371,7 @@ void Par_LB_CollectParticleFromDescendant( const int FaLv, const bool PredictPos
    long NParLocal_Get=0, NParLocal_Check=0, NParAllRank_Get, NParAllRank_Check;
 
    for (int FaPID=0; FaPID<amr->NPatchComma[FaLv][1]; FaPID++)
-      NParLocal_Get += amr->patch[0][FaLv][FaPID]->NPar + amr->patch[0][FaLv][FaPID]->NPar_Desc;
+      NParLocal_Get += amr->patch[0][FaLv][FaPID]->NPar + amr->patch[0][FaLv][FaPID]->NPar_Away;
 
    for (int lv=FaLv; lv<=MAX_LEVEL; lv++)    NParLocal_Check += amr->Par->NPar_Lv[lv];
 

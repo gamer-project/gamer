@@ -27,6 +27,9 @@
         {   for (int t=0; t<(SCount); t++)   (RBuf)[t] = (SBuf)[t];  }
 #define MPI_Allgatherv( SBuf, SCount, SType, RBuf, RCount, RDisp, RType, MPI_COMM ) \
         {   for (int t=0; t<(SCount); t++)   (RBuf)[t] = (SBuf)[t];  }
+#define MPI_Scatterv( SBuf, SCount, SDisp, SType, RBuf, RCount, RType, Root, MPI_COMM ) \
+        {   for (int t=0; t<((SCount)[0]); t++)    (RBuf)[t] = (SBuf)[t];  }
+
 
 #define Buf_AllocateBufferPatch( Tpatch, lv ) {}
 #define Buf_GetBufferData( lv, FluSg, PotSg, GetBufMode, TVar, ParaBuf, UseLBFunc ) {}

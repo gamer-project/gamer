@@ -55,7 +55,7 @@ void Aux_Error( const char *File, const int Line, const char *Func, const char *
 //                LB          : Variables for load-balance
 //                ResPower2   : ceil(  log2( effective resolution at lv )  ) --> mainly used by LOAD_BALANCE
 //
-// Method      :  AMR_t    : Constructor 
+// Method      :  AMR_t    : Constructor
 //               ~AMR_t    : Destructor
 //                pnew     : Allocate one patch
 //                pdelete  : Deallocate one patch
@@ -79,9 +79,9 @@ struct AMR_t
 #  endif
 #  endif
 
-   int    num         [NLEVEL];          
-   int    scale       [NLEVEL];        
-   int    FluSg       [NLEVEL]; 
+   int    num         [NLEVEL];
+   int    scale       [NLEVEL];
+   int    FluSg       [NLEVEL];
    double FluSgTime   [NLEVEL][2];
 #  ifdef GRAVITY
    int    PotSg       [NLEVEL];
@@ -93,7 +93,7 @@ struct AMR_t
    double BoxSize     [3];
    int    BoxScale    [3];
    bool   WithFlux;
-   
+
 
 
    //===================================================================================
@@ -127,7 +127,7 @@ struct AMR_t
       for (int PID=0; PID<MAX_PATCH; PID++)
          patch[Sg][lv][PID] = NULL;
 
-      for (int lv=0; lv<NLEVEL; lv++)  
+      for (int lv=0; lv<NLEVEL; lv++)
       for (int m=0; m<28; m++)
          NPatchComma[lv][m] = 0;
 
@@ -190,11 +190,11 @@ struct AMR_t
 
    //===================================================================================
    // Method      :  pnew
-   // Description :  allocate a single patch 
+   // Description :  allocate a single patch
    //
-   // Note        :  a. Each patch contains two patch pointers --> SANDGLASS (Sg) = 0 / 1 
+   // Note        :  a. Each patch contains two patch pointers --> SANDGLASS (Sg) = 0 / 1
    //                b. Sg = 0 : Store both data and relation (father,son.sibling,corner,flag,flux)
-   //                   Sg = 1 : Store only data 
+   //                   Sg = 1 : Store only data
    //
    // Parameter   :  lv       : Targeted refinement level
    //                x,y,z    : Physical coordinates of the patch corner
@@ -226,7 +226,7 @@ struct AMR_t
 
    //===================================================================================
    // Method      :  pdelete
-   // Description :  Deallocate a single patch 
+   // Description :  Deallocate a single patch
    //
    // Note        :  a. This function should NOT be applied to the base-level patches (unless
    //                   the option "LOAD_BALANCE" is turned on, in which the base-level patches need
@@ -300,7 +300,7 @@ struct AMR_t
       for (int PID=0; PID<num[lv]; PID++)
       {
 #        ifdef GAMER_DEBUG
-         if ( patch[Sg][lv][PID] == NULL )  
+         if ( patch[Sg][lv][PID] == NULL )
             Aux_Error( ERROR_INFO, "amr->patch[%d][%d][%d] does not exist (==NULL) !!\n", Sg, lv, PID );
 #        endif
 

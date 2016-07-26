@@ -20,10 +20,10 @@ long  LB_Corner2Index( const int lv, const int Corner[], const Check_t Check );
 
 
 //-------------------------------------------------------------------------------------------------------
-// Structure   :  patch_t 
-// Description :  Data structure of a single patch 
+// Structure   :  patch_t
+// Description :  Data structure of a single patch
 //
-// Data Member :  fluid           : Fluid variables (mass density, momentum density x, y ,z, energy density) 
+// Data Member :  fluid           : Fluid variables (mass density, momentum density x, y ,z, energy density)
 //                passive         : Passively advected variables (e.g., metal density)
 //                pot             : Potential
 //                pot_ext         : Potential with GRA_GHOST_SIZE ghost cells on each side
@@ -31,14 +31,14 @@ long  LB_Corner2Index( const int lv, const int Corner[], const Check_t Check );
 //                                  --> Ghost-zone potential are obtained from the Poisson solver directly
 //                                      (not from exchanging potential between sibling patches)
 //                                  --> Currently the base-level patches do not store pot_ext
-//                rho_ext         : Density with 1 ghost cell on each side
+//                rho_ext         : Density with RHOEXT_GHOST_SIZE (typically 2) ghost cells on each side
 //                                  --> Only allocated temporarily in the function Prepare_PatchData for storing
 //                                      particle mass density
 //                                  --> Note that even with NGP mass assignment which requires no ghost zone we
-//                                      still allocate rho_ext as (PS1+2)^3
+//                                      still allocate rho_ext as (PS1+RHOEXT_GHOST_SIZE)^3
 //                flux[6]         : Fluid flux (for the flux-correction operation)
 //                flux_passive[6] : Passive variable flux (for the flux-correction operation)
-//                flux_debug[6]   : Fluid flux for the debug mode (ensuring that the round-off errors are 
+//                flux_debug[6]   : Fluid flux for the debug mode (ensuring that the round-off errors are
 //                                  exactly the same in different parallelization parameters/strategies)
 //                corner[3]       : Grid indices of the cell at patch corner
 //                                  --> Note that for an external patch its recorded "corner" will lie outside
@@ -49,44 +49,48 @@ long  LB_Corner2Index( const int lv, const int Corner[], const Check_t Check );
 //
 //                                  NOTE FOR NON-PERIODIC BOUNDARY CONDITIONS:
 //                                  If a target sibling patch is an external patch (which lies outside the simulation domain),
-//                                  the corresponding sibling index is set to "SIB_OFFSET_NONPERIODIC-Sibling", where Sibling 
+//                                  the corresponding sibling index is set to "SIB_OFFSET_NONPERIODIC-Sibling", where Sibling
 //                                  represents the sibling direction of the boundary region.
-//                                  (e.g., if amr->sibling[XX] lies outside the -y boundary (boundary sibling = 2), we set 
+//                                  (e.g., if amr->sibling[XX] lies outside the -y boundary (boundary sibling = 2), we set
 //                                   amr->sibling[XX] = SIB_OFFSET_NONPERIODIC-2 = -102 for SIB_OFFSET_NONPERIODIC==-100)
-//                                  --> All patches without sibling patches along the XX direction will have 
+//                                  --> All patches without sibling patches along the XX direction will have
 //                                      "amr->sibling[XX] < 0"
 //
 //                father          : Patch ID of the father patch
 //                son             : Patch ID of the child patch (-1->no son)
 //
-//                                  LOAD_BALANCE NOTE: 
+//                                  LOAD_BALANCE NOTE:
 //                                  For patches with sons living abroad (not at the same rank as iteself), their son indices
-//                                  are set to "SON_OFFSET_LB-SonRank", where SonRank represents the MPI rank where their 
-//                                  sons live. (e.g., if the real son at rank 123, the son index is set to 
+//                                  are set to "SON_OFFSET_LB-SonRank", where SonRank represents the MPI rank where their
+//                                  sons live. (e.g., if the real son at rank 123, the son index is set to
 //                                  SON_OFFSET_LB-123=-1123 for SON_OFFSET_LB==-1000)
-//                                  --> All patches with sons will have SonPID != -1
+//                                  --> All patches (i.e., both real and buffer patches) with sons will have SonPID != -1
 //
 //                flag            : Refinement flag (true/false)
 //                EdgeL/R         : Left and right edge of the patch
-//                PaddedCr1D      : 1D corner coordiniate padded with two base-level patches on each side 
+//                PaddedCr1D      : 1D corner coordiniate padded with two base-level patches on each side
 //                                  in each direction, normalized to the finest-level patch scale (PATCH_SIZE)
 //                                  --> each PaddedCr1D defines a unique 3D position
-//                                  --> patches at different levels with the same PaddedCr1D have the same 
+//                                  --> patches at different levels with the same PaddedCr1D have the same
 //                                      3D corner coordinates
 //                LB_Idx          : Space-filling-curve index for load balance
 //                NPar            : Number of particles belonging to this leaf patch
-//                ParListSize     : Size of the array ParList (ParListSize can be >= NPar) 
+//                ParListSize     : Size of the array ParList (ParListSize can be >= NPar)
 //                ParList         : List recording the IDs of all particles belonging to this leaf patch
 //                NPar_Desc       : Number of particles belonging to the descendants (sons, grandsons, ...) of this patch
+//                                  (for SERIAL only)
 //                ParList_Desc    : List recording the IDs of all particles belonging to the descendants of this patch
-//                MassPos_Desc    : Pointer arrays storing the mass and position of all particles belonging to the descendants
-//                                  of this patch (for LOAD_BALANCE only)
+//                                  (for SERIAL only)
+//                NPar_Away       : Number of particles collected from other ranks and stored in the ParMassPos_Away array
+//                                  (for LOAD_BALANCE only)
+//                ParMassPos_Away : Pointer arrays storing the mass and position of NPar_Away particles collected from other ranks
+//                                  (for LOAD_BALANCE only)
 //                NPar_Escp       : Number of particles escaping from this patch
 //                ParList_Escp    : List recording the IDs of all particles escaping from this patch
 //
-// Method      :  patch_t         : Constructor 
+// Method      :  patch_t         : Constructor
 //               ~patch_t         : Destructor
-//                fnew            : Allocate one flux array 
+//                fnew            : Allocate one flux array
 //                fdelete         : Deallocate one flux array
 //                hnew            : Allocate hydrodynamic array
 //                hdelete         : Deallocate hydrodynamic array
@@ -140,10 +144,12 @@ struct patch_t
    int    ParListSize;
    long  *ParList;
 
+#  ifdef LOAD_BALANCE
+   int    NPar_Away;
+   real  *ParMassPos_Away[4];
+#  else
    int    NPar_Desc;
    long  *ParList_Desc;
-#  ifdef LOAD_BALANCE
-   real  *MassPos_Desc[4];
 #  endif
 
    int    NPar_Escp[26];
@@ -153,13 +159,13 @@ struct patch_t
 
 
    //===================================================================================
-   // Constructor :  patch_t 
+   // Constructor :  patch_t
    // Description :  Constructor of the structure "patch_t"
    //
    // Note        :  Initialize the data members
    //
    // Parameter   :  x,y,z    : Scale indices of the patch corner
-   //                FaPID    : Patch ID of the father patch    
+   //                FaPID    : Patch ID of the father patch
    //                FluData  : true --> Allocate hydrodynamic array(s) "fluid" (and "passive")
    //                                    "rho_ext" will NOT be allocated here even if PARTICLE is on
    //                PotData  : true --> Allocate potential array "pot" (has no effect if "GRAVITY" is turned off)
@@ -172,7 +178,7 @@ struct patch_t
             const int lv, const int BoxScale[], const double dh_min )
    {
 
-      corner[0] = x; 
+      corner[0] = x;
       corner[1] = y;
       corner[2] = z;
       father    = FaPID;
@@ -196,7 +202,7 @@ struct patch_t
 
       PaddedCr1D = Mis_Idx3D2Idx1D( BoxNScale_Padded, Cr_Padded );
       LB_Idx     = LB_Corner2Index( lv, corner, CHECK_OFF );   // this number can be wrong for external patches
-      
+
       for (int s=0; s<26; s++ )  sibling[s] = -1;     // -1 <--> NO sibling
 
       flag    = false;
@@ -222,7 +228,7 @@ struct patch_t
          EdgeR[d] = (double)( corner[d] + PScale )*dh_min;
       }
 
-      for (int s=0; s<6; s++)    
+      for (int s=0; s<6; s++)
       {
          flux        [s] = NULL;
 #        if ( NPASSIVE > 0 )
@@ -243,11 +249,13 @@ struct patch_t
       ParListSize  = 0;          // must be initialized as 0
       ParList      = NULL;
 
+#     ifdef LOAD_BALANCE
+      NPar_Away    = -1;         // -1 : indicating that NPar_Away is not calculated yet
+      for (int v=0; v<4; v++)
+      ParMassPos_Away[v] = NULL;
+#     else
       NPar_Desc    = -1;         // -1 : indicating that NPar_Desc is not calculated yet
       ParList_Desc = NULL;
-
-#     ifdef LOAD_BALANCE
-      for (int v=0; v<4; v++)    MassPos_Desc[v] = NULL;
 #     endif
 
       for (int s=0; s<26; s++)
@@ -262,7 +270,7 @@ struct patch_t
 
 
    //===================================================================================
-   // Destructor  :  ~patch_t 
+   // Destructor  :  ~patch_t
    // Description :  Destructor of the structure "patch_t"
    //
    // Note        :  Deallocate flux and data arrays
@@ -283,18 +291,18 @@ struct patch_t
          ParList = NULL;
       }
 
+#     ifdef LOAD_BALANCE
+      for (int v=0; v<4; v++)
+      if ( ParMassPos_Away[v] != NULL )
+      {
+         delete [] ParMassPos_Away[v];
+         ParMassPos_Away[v] = NULL;
+      }
+#     else
       if ( ParList_Desc != NULL )
       {
          delete [] ParList_Desc;
          ParList_Desc = NULL;
-      }
-
-#     ifdef LOAD_BALANCE
-      for (int v=0; v<4; v++)
-      if ( MassPos_Desc[v] != NULL )
-      {
-         delete [] MassPos_Desc[v];
-         MassPos_Desc[v] = NULL;
       }
 #     endif
 
@@ -311,12 +319,12 @@ struct patch_t
 
 
    //===================================================================================
-   // Method      :  fnew 
+   // Method      :  fnew
    // Description :  Allocate flux array in the given direction
    //
    // Note        :  Flux array is initialized as zero
    //
-   // Parameter   :  SibID : Targeted ID of the flux array (0,1,2,3,4,5) <--> (-x,+x,-y,+y,-z,+z) 
+   // Parameter   :  SibID : Targeted ID of the flux array (0,1,2,3,4,5) <--> (-x,+x,-y,+y,-z,+z)
    //===================================================================================
    void fnew( const int SibID )
    {
@@ -333,7 +341,7 @@ struct patch_t
 #     endif
 
       flux[SibID] = new real [NFLUX+NPASSIVE][PATCH_SIZE][PATCH_SIZE];
-            
+
       for(int v=0; v<NFLUX+NPASSIVE; v++)
       for(int m=0; m<PATCH_SIZE; m++)
       for(int n=0; n<PATCH_SIZE; n++)
@@ -345,7 +353,7 @@ struct patch_t
 
 #     ifdef GAMER_DEBUG
       flux_debug[SibID] = new real [NFLUX+NPASSIVE][PATCH_SIZE][PATCH_SIZE];
-            
+
       for(int v=0; v<NFLUX+NPASSIVE; v++)
       for(int m=0; m<PATCH_SIZE; m++)
       for(int n=0; n<PATCH_SIZE; n++)
@@ -358,7 +366,7 @@ struct patch_t
 
    //===================================================================================
    // Method      :  fdelete
-   // Description :  Deallocate all flux arrays allocated previously 
+   // Description :  Deallocate all flux arrays allocated previously
    //===================================================================================
    void fdelete()
    {
@@ -386,7 +394,7 @@ struct patch_t
 
 
    //===================================================================================
-   // Method      :  hnew 
+   // Method      :  hnew
    // Description :  Allocate hydrodynamic array
    //
    // Note        :  An error message will be displayed if array has already been allocated
@@ -405,7 +413,7 @@ struct patch_t
 #     endif // GAMER_DEBUG
 
       fluid = new real [NCOMP+NPASSIVE][PATCH_SIZE][PATCH_SIZE][PATCH_SIZE];
-      fluid[0][0][0][0] = -1; 
+      fluid[0][0][0][0] = -1;
 
 #     if ( NPASSIVE > 0 )
       passive = fluid + NCOMP;
@@ -446,7 +454,7 @@ struct patch_t
 
 #  ifdef GRAVITY
    //===================================================================================
-   // Method      :  gnew 
+   // Method      :  gnew
    // Description :  Allocate potential array
    //
    // Note        :  An error message will be displayed if array has already been allocated
@@ -512,7 +520,7 @@ struct patch_t
    //                2. If ParList already exists, new particles will be attached to the existing particle list
    //                3. Also update the total number of particles at the target level
    //
-   // Parameter   :  NNew     : Number of new particles to be added 
+   // Parameter   :  NNew     : Number of new particles to be added
    //                NewList  : List storing the indices of new particles
    //                NPar_Lv  : Pointer to amr->Par->NPar_Lv[TargetLv]
    //                ParPos   : Particle position list             (debug only)
@@ -547,7 +555,7 @@ struct patch_t
       for (int p=0; p<NNew; p++)
       {
          if ( p != q  &&  NewList[q] == NewList[p] )
-            Aux_Error( ERROR_INFO, "\"%s\": duplicate particle index (NewList[%d] = NewList[%d] = %ld) !!\n", 
+            Aux_Error( ERROR_INFO, "\"%s\": duplicate particle index (NewList[%d] = NewList[%d] = %ld) !!\n",
                        Comment, p, q, NewList[p] );
       }
 
@@ -555,7 +563,7 @@ struct patch_t
       for (int p=0; p<NNew; p++)
       {
          const long ParID = NewList[p];
-         
+
          for (int d=0; d<3; d++)
          {
             if ( ParPos[d][ParID] < EdgeL[d]  ||  ParPos[d][ParID] >= EdgeR[d] )
@@ -570,7 +578,7 @@ struct patch_t
          const long ParID = NewList[p];
 
          if ( ParID >= NParTot )
-            Aux_Error( ERROR_INFO, "\"%s\": Particle ID (%ld) >= Total number of active + inactive particles (%ld) !!\n", 
+            Aux_Error( ERROR_INFO, "\"%s\": Particle ID (%ld) >= Total number of active + inactive particles (%ld) !!\n",
                        Comment, ParID, NParTot );
       }
 
@@ -584,7 +592,7 @@ struct patch_t
 
 //    allocate enough memory for the particle list array
       const int NPar_New = NPar + NNew;
-      if ( NPar_New > ParListSize )   
+      if ( NPar_New > ParListSize )
       {
          ParListSize = (int)ceil( PARLIST_GROWTH_FACTOR*NPar_New );
          ParList     = (long*)realloc( ParList, ParListSize*sizeof(long) );
@@ -607,12 +615,12 @@ struct patch_t
    // Method      :  RemoveParticle
    // Description :  Remove particles from the particle list
    //
-   // Note        :  1. The numbers stored in RemoveList are "array indices of ParList" 
+   // Note        :  1. The numbers stored in RemoveList are "array indices of ParList"
    //                   instead of "particle indices stored in ParList"
    //                2. The numbers stored in RemoveList must be in ascending numerical order
    //                3. Also update the total number of particles at the target level
    //
-   // Parameter   :  NRemove     : Number of particles to be removed 
+   // Parameter   :  NRemove     : Number of particles to be removed
    //                RemoveList  : List storing the array indices of "ParList" to be removed
    //                              **array indices, NOT particle indices**
    //                NPar_Lv     : Pointer to amr->Par->NPar_Lv[TargetLv]
@@ -673,7 +681,7 @@ struct patch_t
       for (int p=0; p<NRemove; p++)
       {
          if ( p != q  &&  RemoveList[q] == RemoveList[p] )
-            Aux_Error( ERROR_INFO, "duplicate index (RemoveList[%d] = RemoveList[%d] = %d) !!\n", 
+            Aux_Error( ERROR_INFO, "duplicate index (RemoveList[%d] = RemoveList[%d] = %d) !!\n",
                        p, q, RemoveList[p] );
       }
 
@@ -681,7 +689,7 @@ struct patch_t
       for (int p=1; p<NRemove; p++)
       {
          if ( RemoveList[p] <= RemoveList[p-1] )
-            Aux_Error( ERROR_INFO, "RemoveList is NOT in ascending numerical order ([%d]=%d <= [%d]=%d) !!\n", 
+            Aux_Error( ERROR_INFO, "RemoveList is NOT in ascending numerical order ([%d]=%d <= [%d]=%d) !!\n",
                        p, RemoveList[p], p-1, RemoveList[p-1] );
       }
 #     endif // #ifdef DEBUG_PARTICLE
@@ -726,7 +734,7 @@ struct patch_t
    } // METHOD : RemoveParticle
 #  endif // #ifdef PARTICLE
 
-   
+
 }; // struct patch_t
 
 

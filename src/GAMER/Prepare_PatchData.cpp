@@ -18,7 +18,7 @@ static int Table_02( const int lv, const int PID, const int Side );
 // Description :  Prepare the uniform data including ghost zones for the target patches or patch groups
 //
 // Note        :  1. Use the input parameter "TVar" to control the target variables
-//                   --> TVar can be any combination of the symbolic constants defined in "Macro.h" 
+//                   --> TVar can be any combination of the symbolic constants defined in "Macro.h"
 //                       (e.g., "TVar = _DENS", "TVar = _MOMX|ENGY", or "TVar = _FLU|_POTE")
 //                2. If "GhostSize != 0" --> the function "InterpolateGhostZone" will be used to fill up the
 //                   ghost-zone values by spatial interpolation if the corresponding sibling patches do
@@ -27,7 +27,7 @@ static int Table_02( const int lv, const int PID, const int Side );
 //                   --> Temporal interpolation/extrapolation will be conducted automatically if PrepTime
 //                       is NOT equal to the time of data stored previously (e.g., FluSgTime[0/1])
 //                4. Use "patch group" as the preparation unit
-//                   --> The data of all patches within the same patch group will be prepared 
+//                   --> The data of all patches within the same patch group will be prepared
 //                5. It is assumed that both _FLU and _PASSIVE are stored in the same Sg
 //                6. Data preparation order: FLU -> PASSIVE -> DERIVED --> POTE --> GRA_RHO
 //                   ** DERIVED must be prepared immediately after FLU and PASSIVE so that both FLU, PASSIVE, and DERIVED
@@ -50,7 +50,7 @@ static int Table_02( const int lv, const int PID, const int Side );
 //                                 --> Supported variables in different models:
 //                                     HYDRO : _DENS, _MOMX, _MOMY, _MOMZ, _ENGY, _FLU, _VELX, _VELY, _VELZ, _PRES,
 //                                             [, _POTE] [, _PASSIVE]
-//                                     MHD   : 
+//                                     MHD   :
 //                                     ELBDM : _DENS, _REAL, _IMAG [, _POTE]
 //                IntScheme      : Interpolation scheme
 //                                 --> currently supported schemes include
@@ -61,7 +61,7 @@ static int Table_02( const int lv, const int PID, const int Side );
 //                                     INT_QUAD     : quadratic
 //                                     INT_CQUAR    : conservative quartic
 //                                     INT_QUAR     : quartic
-//                PrepUnit       : Whether or not to separate the prepared data into individual patches 
+//                PrepUnit       : Whether or not to separate the prepared data into individual patches
 //                                 --> UNIT_PATCH      : prepare data "patch by patch"
 //                                     UNIT_PATCHGROUP : prepare data "patch group by patch group"
 //                NSide          : Number of sibling directions to prepare data
@@ -104,7 +104,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
    if (  GhostSize > 0  &&  ( TVar & ( _FLU | _PASSIVE | _DERIVED ) )  )
    {
       for (int f=0; f<6; f++)
-      if ( FluBC[f] != BC_FLU_PERIODIC    &&  FluBC[f] != BC_FLU_OUTFLOW  &&  
+      if ( FluBC[f] != BC_FLU_PERIODIC    &&  FluBC[f] != BC_FLU_OUTFLOW  &&
            FluBC[f] != BC_FLU_REFLECTING  &&  FluBC[f] != BC_FLU_USER        )
          Aux_Error( ERROR_INFO, "unsupported parameter %s[%d] = %d !!\n", "FluBC", f, FluBC[f] );
 
@@ -203,10 +203,10 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
    NVar_Tot = NVar_Flu + NVar_Der;
 
 #  ifdef GRAVITY
-   if ( PrepPot )    NVar_Tot ++; 
+   if ( PrepPot )    NVar_Tot ++;
 #  endif
 
-   if ( NVar_Tot == 0 )    
+   if ( NVar_Tot == 0 )
    {
       Aux_Message( stderr, "WARNING : no targeted variable is found !!\n" );
       return;
@@ -241,7 +241,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
    {
 //    check
 #     ifdef INDIVIDUAL_TIMESTEP
-      if ( !OPT__ADAPTIVE_DT ) 
+      if ( !OPT__ADAPTIVE_DT )
 #     endif
       Aux_Error( ERROR_INFO, "cannot determine FluSg (lv %d, PrepTime %20.14e, SgTime[0] %20.14e, SgTime[1] %20.14e !!\n",
                  lv, PrepTime, amr->FluSgTime[lv][0], amr->FluSgTime[lv][1] );
@@ -310,7 +310,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
 #     ifdef PARTICLE
       if ( !OPT__ADAPTIVE_DT  &&  amr->Par->ImproveAcc )
 #     else
-      if ( !OPT__ADAPTIVE_DT ) 
+      if ( !OPT__ADAPTIVE_DT )
 #     endif // PARTICLE
 #     endif // INDIVIDUAL_TIMESTEP
       Aux_Error( ERROR_INFO, "cannot determine PotSg (lv %d, PrepTime %20.14e, SgTime[0] %20.14e, SgTime[1] %20.14e !!\n",
@@ -386,8 +386,8 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
    const bool UnitDens_No      = false;
    const bool CheckFarAway_Yes = true;
    const bool CheckFarAway_No  = false;
-   const int  PeriodicNCell[3] = { NX0_TOT[0]*(1<<lv), 
-                                   NX0_TOT[1]*(1<<lv), 
+   const int  PeriodicNCell[3] = { NX0_TOT[0]*(1<<lv),
+                                   NX0_TOT[1]*(1<<lv),
                                    NX0_TOT[2]*(1<<lv) };
 
    if ( GetTotDens )
@@ -426,14 +426,20 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
          }
 
 
-//       collect patches whose particles have not been assigned on grids
+//       collect patches whose particles have not been assigned onto grids
          for (int t=0; t<NNearByPatch; t++)
          {
             const int PID = NearBy_PID_List[t];
 
 //          get the number of particles
+#           ifdef LOAD_BALANCE
+            if ( amr->patch[0][lv][PID]->son == -1  &&  PID < amr->NPatchComma[lv][1] )
+                                                      NPar = amr->patch[0][lv][PID]->NPar;
+            else                                      NPar = amr->patch[0][lv][PID]->NPar_Away;
+#           else
             if ( amr->patch[0][lv][PID]->son == -1 )  NPar = amr->patch[0][lv][PID]->NPar;
             else                                      NPar = amr->patch[0][lv][PID]->NPar_Desc;
+#           endif
 
 #           ifdef DEBUG_PARTICLE
             if ( NPar < 0 )   Aux_Error( ERROR_INFO, "NPar (%d) has not been calculated (lv %d, PID %d) !!\n",
@@ -478,7 +484,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
 #  pragma omp parallel
    {
 //    thread-private variables
-      int  J, K, I2, J2, K2, Idx1, Idx2, PID0, TFluVarIdx, BC_Sibling, BC_Idx_Start[3], BC_Idx_End[3];
+      int    J, K, I2, J2, K2, Idx1, Idx2, PID0, TFluVarIdx, BC_Sibling, BC_Idx_Start[3], BC_Idx_End[3];
       double xyz0[3];   // corner coordinates for the user-specified B.C.
 #     if ( MODEL == HYDRO  ||  MODEL == MHD )
       real Fluid[NCOMP];
@@ -497,9 +503,12 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
 #     ifdef PARTICLE
       if ( GetTotDens )
       {
+//       thread-private variables
          long  *ParList = NULL;
          int    NPar, PID;
-         double EdgeL[3];  
+         double EdgeL[3];
+         bool   UseInputMassPos;
+         real **InputMassPos = NULL;
 
 #        pragma omp for schedule( runtime )
          for (int t=0; t<ParMass_NPatch; t++)
@@ -512,37 +521,68 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
 #           endif
 
 //          determine the number of particles and the particle list
-            if ( amr->patch[0][lv][PID]->son == -1 )
+#           ifdef LOAD_BALANCE
+            if ( amr->patch[0][lv][PID]->son == -1  &&  PID < amr->NPatchComma[lv][1] )
             {
-               NPar    = amr->patch[0][lv][PID]->NPar;
-               ParList = amr->patch[0][lv][PID]->ParList;
+               NPar            = amr->patch[0][lv][PID]->NPar;
+               ParList         = amr->patch[0][lv][PID]->ParList;
+               UseInputMassPos = false;
+               InputMassPos    = NULL;
             }
 
             else
             {
-               NPar    = amr->patch[0][lv][PID]->NPar_Desc;
-               ParList = amr->patch[0][lv][PID]->ParList_Desc;
+               NPar            = amr->patch[0][lv][PID]->NPar_Away;
+               ParList         = NULL;
+               UseInputMassPos = true;
+               InputMassPos    = amr->patch[0][lv][PID]->ParMassPos_Away;
             }
+
+#           else
+
+            if ( amr->patch[0][lv][PID]->son == -1 )
+            {
+               NPar            = amr->patch[0][lv][PID]->NPar;
+               ParList         = amr->patch[0][lv][PID]->ParList;
+               UseInputMassPos = false;
+               InputMassPos    = NULL;
+            }
+
+            else
+            {
+               NPar            = amr->patch[0][lv][PID]->NPar_Desc;
+               ParList         = amr->patch[0][lv][PID]->ParList_Desc;
+               UseInputMassPos = false;
+               InputMassPos    = NULL;
+            }
+#           endif // #ifdef LOAD_BALANCE ... else ...
 
 #           ifdef DEBUG_PARTICLE
             if ( NPar <= 0 )
                Aux_Error( ERROR_INFO, "NPar (%d) <= 0 (lv %d, PID %d) !!\n", NPar, lv, PID );
 
-            if ( NPar > 0  &&  ParList == NULL )
-               Aux_Error( ERROR_INFO, "ParList == NULL for NPar_Desc (%d) > 0 (lv %d, PID %d) !!\n",
+            else
+            {
+               if ( UseInputMassPos  &&  InputMassPos == NULL )
+               Aux_Error( ERROR_INFO, "InputMassPos == NULL for NPar (%d) > 0 (lv %d, PID %d) !!\n",
                           NPar, lv, PID );
-#           endif
+
+               else if ( !UseInputMassPos  &&  ParList == NULL )
+               Aux_Error( ERROR_INFO, "ParList == NULL for NPar (%d) > 0 (lv %d, PID %d) !!\n",
+                          NPar, lv, PID );
+            }
+#           endif // #ifdef DEBUG_PARTICLE
 
 //          set the left edge of the rho_ext array
             for (int d=0; d<3; d++)    EdgeL[d] = amr->patch[0][lv][PID]->EdgeL[d] - RhoExtGhost*dh;
 
-//          deposit particle mass on grids 
+//          deposit particle mass on grids
 //          --> don't have to worry about the periodicity here since all input particles should be close to the
 //              target patches even with position prediction ==> Periodic_No
 //          --> remember to initialize rho_ext as zero (by InitZero_Yes)
             Par_MassAssignment( ParList, NPar, amr->Par->Interp, amr->patch[0][lv][PID]->rho_ext[0][0], RhoExtSize,
-                                EdgeL, dh, amr->Par->PredictPos, PrepTime, InitZero_Yes, Periodic_No, NULL,
-                                UnitDens_No, CheckFarAway_No );
+                                EdgeL, dh, (amr->Par->PredictPos && !UseInputMassPos), PrepTime, InitZero_Yes,
+                                Periodic_No, NULL, UnitDens_No, CheckFarAway_No, UseInputMassPos, InputMassPos );
          } // for (int t=0; t<ParMass_NPatch; t++)
       } // if ( GetTotDens )
 #     endif // #ifdef PARTICLE
@@ -550,17 +590,17 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
 
 //    note that the total density array needs rho_ext of nearby patches
 //    --> the next omp task must wait for the previous one
-//    --> but since there is an implicit barrier at the end of a for construct --> no need to call "pragma omp barrier"
+//    --> but since there is an implicit barrier at the end of the **for** construct --> no need to call "pragma omp barrier"
 
 
-//    prepare eight nearby patches (one patch group) at a time 
+//    prepare eight nearby patches (one patch group) at a time
 #     pragma omp for schedule( runtime )
       for (int TID=0; TID<NPG; TID++)
       {
          PID0 = PID0_List[TID];
 
 #        ifdef GAMER_DEBUG
-         if ( PID0 < 0  ||  PID0 >= amr->num[lv] )  
+         if ( PID0 < 0  ||  PID0 >= amr->num[lv] )
             Aux_Error( ERROR_INFO, "PID0 (%d) is not within the correct range [%d ... %d] !!\n", PID0, 0, amr->num[lv]-1 );
 
          if ( PID0%8 != 0 )
@@ -568,7 +608,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
 #        endif
 
          for (int d=0; d<3; d++)    xyz0[d] = amr->patch[0][lv][PID0]->EdgeL[d] + (0.5-GhostSize)*dh;
-         
+
 //       a. fill up the central region of Array (ghost zone is not filled up yet)
 // ------------------------------------------------------------------------------------------------------------
          for (int LocalID=0; LocalID<8; LocalID++ )
@@ -579,17 +619,17 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
             const int Disp_k = TABLE_02( LocalID, 'z', GhostSize, GhostSize+PATCH_SIZE );
 
             Array_Ptr = Array;
-            
+
 //          (a1) fluid data
             for (int v=0; v<NVar_Flu; v++)
-            {  
+            {
                TFluVarIdx = TFluVarIdxList[v];
 
                for (int k=0; k<PATCH_SIZE; k++)    {  K    = k + Disp_k;
                for (int j=0; j<PATCH_SIZE; j++)    {  J    = j + Disp_j;
                                                       Idx1 = IDX321( Disp_i, J, K, PGSize1D, PGSize1D );
                for (int i=0; i<PATCH_SIZE; i++)    {
-               
+
                   Array_Ptr[Idx1] = amr->patch[FluSg][lv][PID]->fluid[TFluVarIdx][k][j][i];
 
                   if ( FluIntTime ) // temporal interpolation
@@ -610,9 +650,9 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
                for (int j=0; j<PATCH_SIZE; j++)    {  J    = j + Disp_j;
                                                       Idx1 = IDX321( Disp_i, J, K, PGSize1D, PGSize1D );
                for (int i=0; i<PATCH_SIZE; i++)    {
-               
+
                   Array_Ptr[Idx1] = amr->patch[FluSg][lv][PID]->fluid[MOMX][k][j][i] /
-                                    amr->patch[FluSg][lv][PID]->fluid[DENS][k][j][i];   
+                                    amr->patch[FluSg][lv][PID]->fluid[DENS][k][j][i];
 
                   if ( FluIntTime ) // temporal interpolation
                   Array_Ptr[Idx1] =   FluWeighting     *Array_Ptr[Idx1]
@@ -630,9 +670,9 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
                for (int j=0; j<PATCH_SIZE; j++)    {  J    = j + Disp_j;
                                                       Idx1 = IDX321( Disp_i, J, K, PGSize1D, PGSize1D );
                for (int i=0; i<PATCH_SIZE; i++)    {
-               
+
                   Array_Ptr[Idx1] = amr->patch[FluSg][lv][PID]->fluid[MOMY][k][j][i] /
-                                    amr->patch[FluSg][lv][PID]->fluid[DENS][k][j][i];   
+                                    amr->patch[FluSg][lv][PID]->fluid[DENS][k][j][i];
 
                   if ( FluIntTime ) // temporal interpolation
                   Array_Ptr[Idx1] =   FluWeighting     *Array_Ptr[Idx1]
@@ -650,9 +690,9 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
                for (int j=0; j<PATCH_SIZE; j++)    {  J    = j + Disp_j;
                                                       Idx1 = IDX321( Disp_i, J, K, PGSize1D, PGSize1D );
                for (int i=0; i<PATCH_SIZE; i++)    {
-               
+
                   Array_Ptr[Idx1] = amr->patch[FluSg][lv][PID]->fluid[MOMZ][k][j][i] /
-                                    amr->patch[FluSg][lv][PID]->fluid[DENS][k][j][i];   
+                                    amr->patch[FluSg][lv][PID]->fluid[DENS][k][j][i];
 
                   if ( FluIntTime ) // temporal interpolation
                   Array_Ptr[Idx1] =   FluWeighting     *Array_Ptr[Idx1]
@@ -670,7 +710,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
                for (int j=0; j<PATCH_SIZE; j++)    {  J    = j + Disp_j;
                                                       Idx1 = IDX321( Disp_i, J, K, PGSize1D, PGSize1D );
                for (int i=0; i<PATCH_SIZE; i++)    {
-               
+
                   for (int v=0; v<NCOMP; v++)   Fluid[v] = amr->patch[FluSg][lv][PID]->fluid[v][k][j][i];
 
                   Array_Ptr[Idx1] = Hydro_GetPressure( Fluid, Gamma_m1, PositivePres );
@@ -707,9 +747,9 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
                for (int j=0; j<PATCH_SIZE; j++)    {  J    = j + Disp_j;
                                                       Idx1 = IDX321( Disp_i, J, K, PGSize1D, PGSize1D );
                for (int i=0; i<PATCH_SIZE; i++)    {
-               
+
                   Array_Ptr[Idx1] = amr->patch[PotSg][lv][PID]->pot[k][j][i];
-               
+
                   if ( PotIntTime ) // temporal interpolation
                   Array_Ptr[Idx1] =   PotWeighting     *Array_Ptr[Idx1]
                                     + PotWeighting_IntT*amr->patch[PotSg_IntT][lv][PID]->pot[k][j][i];
@@ -742,7 +782,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
                const int Disp_i2 = TABLE_01( Side, 'x', PATCH_SIZE-GhostSize, 0, 0 );
                const int Disp_j2 = TABLE_01( Side, 'y', PATCH_SIZE-GhostSize, 0, 0 );
                const int Disp_k2 = TABLE_01( Side, 'z', PATCH_SIZE-GhostSize, 0, 0 );
-                  
+
 //###OPTIMIZATION: simplify TABLE_03 and TABLE_04
                for (int Count=0; Count<TABLE_04( Side ); Count++)
                {
@@ -750,7 +790,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
                   const int Disp_i = Table_01( Side, 'x', Count, GhostSize );
                   const int Disp_j = Table_01( Side, 'y', Count, GhostSize );
                   const int Disp_k = Table_01( Side, 'z', Count, GhostSize );
-                  
+
                   Array_Ptr = Array;
 
 //                (b1-1) fluid data
@@ -892,7 +932,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
                   }
 #                 endif // #ifdef GRAVITY
                } // for (int Count=0; Count<TABLE_04( Side ); Count++)
-            } // if ( SibPID0 >= 0 )  
+            } // if ( SibPID0 >= 0 )
 
 
 //          (b2) if the targeted sibling patch does not exist --> interpolate from patches at level lv-1
@@ -917,7 +957,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
 
 #              ifdef GAMER_DEBUG
                if ( FaSibPID < 0 )  Aux_Error( ERROR_INFO, "FaSibPID = %d < 0 (lv %d, PID0 %d, FaPID %d, sib %d) !!\n",
-                                               FaSibPID, lv, PID0, FaPID, Side ); 
+                                               FaSibPID, lv, PID0, FaPID, Side );
 #              endif
 
 
@@ -980,14 +1020,14 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
                   switch ( FluBC[ BC_Face[BC_Sibling] ] )
                   {
 #                    if ( MODEL == HYDRO  ||  MODEL == MHD )
-                     case BC_FLU_OUTFLOW:    
+                     case BC_FLU_OUTFLOW:
                         Hydro_BoundaryCondition_Outflow   ( Array_Ptr, BC_Face[BC_Sibling], NVar_Flu+NVar_Der, GhostSize,
                                                             PGSize1D, PGSize1D, PGSize1D, BC_Idx_Start, BC_Idx_End );
                      break;
 
                      case BC_FLU_REFLECTING:
                         Hydro_BoundaryCondition_Reflecting( Array_Ptr, BC_Face[BC_Sibling], NVar_Flu,          GhostSize,
-                                                            PGSize1D, PGSize1D, PGSize1D, BC_Idx_Start, BC_Idx_End, 
+                                                            PGSize1D, PGSize1D, PGSize1D, BC_Idx_Start, BC_Idx_End,
                                                             TFluVarIdxList, NVar_Der, TDerVarList );
                      break;
 #                    if ( MODEL == MHD )
@@ -997,11 +1037,11 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
 
                      case BC_FLU_USER:
                         Flu_BoundaryCondition_User        ( Array_Ptr,                      NVar_Flu,
-                                                            PGSize1D, PGSize1D, PGSize1D, BC_Idx_Start, BC_Idx_End, 
+                                                            PGSize1D, PGSize1D, PGSize1D, BC_Idx_Start, BC_Idx_End,
                                                             TFluVarIdxList, PrepTime, dh, xyz0, TVar );
                      break;
 
-                     default: 
+                     default:
                         Aux_Error( ERROR_INFO, "unsupported fluid B.C. (%d) !!\n", FluBC[ BC_Face[BC_Sibling] ] );
                   } // switch ( FluBC[ BC_Face[BC_Sibling] ] )
 
@@ -1016,10 +1056,10 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
                {
 //                check
 #                 ifdef GAMER_DEBUG
-                  if ( lv != 0 )   
+                  if ( lv != 0 )
                      Aux_Error( ERROR_INFO, "preparing the potential field outside the simulation domain at lv (%d) > 0 !!\n",
                                 lv );
-                  
+
                   if ( PotBC != BC_POT_ISOLATED )
                      Aux_Error( ERROR_INFO, "preparing the potential field for non-isolated BC !!\n" );
 #                 endif
@@ -1039,7 +1079,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
                Aux_Error( ERROR_INFO, "SibPID0 == %d (lv %d, PID0 %d, Side %d) !!\n", SibPID0, lv, PID0, Side );
 
          } // for (int Side=0; Side<NSide; Side++)
-            
+
 
 //       c. deposit particle mass for the "GetTotDens" mode
 // ------------------------------------------------------------------------------------------------------------
@@ -1067,7 +1107,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
 
 //          initialize the density array as zero if there are no other density fields
 #           if ( MODEL == PAR_ONLY )
-            for (int t=0; t<PGSize3D; t++)   ArrayDens[t] = (real)0.0;   
+            for (int t=0; t<PGSize3D; t++)   ArrayDens[t] = (real)0.0;
 #           endif
 
 
@@ -1078,8 +1118,14 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
 
 //             skip patches without particles
                int NPar;
+#              ifdef LOAD_BALANCE
+               if ( amr->patch[0][lv][PID]->son == -1  &&  PID < amr->NPatchComma[lv][1] )
+                                                         NPar = amr->patch[0][lv][PID]->NPar;
+               else                                      NPar = amr->patch[0][lv][PID]->NPar_Away;
+#              else
                if ( amr->patch[0][lv][PID]->son == -1 )  NPar = amr->patch[0][lv][PID]->NPar;
                else                                      NPar = amr->patch[0][lv][PID]->NPar_Desc;
+#              endif
 
                if ( NPar == 0 )  continue;
 
@@ -1138,8 +1184,14 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
 
 //                   skip patches without particles
                      int NPar;
+#                    ifdef LOAD_BALANCE
+                     if ( amr->patch[0][lv][SibPID]->son == -1  &&  SibPID < amr->NPatchComma[lv][1] )
+                                                                  NPar = amr->patch[0][lv][SibPID]->NPar;
+                     else                                         NPar = amr->patch[0][lv][SibPID]->NPar_Away;
+#                    else
                      if ( amr->patch[0][lv][SibPID]->son == -1 )  NPar = amr->patch[0][lv][SibPID]->NPar;
                      else                                         NPar = amr->patch[0][lv][SibPID]->NPar_Desc;
+#                    endif
 
                      if ( NPar == 0 )  continue;
 
@@ -1162,7 +1214,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
                      const int ie = ( ie_LG+Disp_i < PGSize1D ) ? ie_LG : PGSize1D-Disp_i-1;
                      const int je = ( je_LG+Disp_j < PGSize1D ) ? je_LG : PGSize1D-Disp_j-1;
                      const int ke = ( ke_LG+Disp_k < PGSize1D ) ? ke_LG : PGSize1D-Disp_k-1;
-                     
+
 //                   add particle density to the total density array
                      for (int k=ks; k<=ke; k++)  {  K    = k + Disp_k;
                      for (int j=js; j<=je; j++)  {  Idx1 = IDX321( is+Disp_i, j+Disp_j, K, PGSize1D, PGSize1D );
@@ -1183,43 +1235,70 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
                   if ( lv == 0 )    Aux_Error( ERROR_INFO, "SibPID0 == -1 at the root level !!\n" );
 #                 endif
 
-                  const int FaPID       = amr->patch[0][lv][PID0]->father;
-                  const int FaSibPID    = amr->patch[0][lv-1][FaPID]->sibling[Side];
+                  const int    FaPID    = amr->patch[0][lv][PID0]->father;
+                  const int    FaSibPID = amr->patch[0][lv-1][FaPID]->sibling[Side];
                   const double EdgeL[3] = { amr->patch[0][lv][PID0]->EdgeL[0] - GhostSize*dh,
                                             amr->patch[0][lv][PID0]->EdgeL[1] - GhostSize*dh,
                                             amr->patch[0][lv][PID0]->EdgeL[2] - GhostSize*dh };
-                  long *ParList = NULL;
-                  int   NPar;
+                  long  *ParList = NULL;
+                  int    NPar;
+                  bool   UseInputMassPos;
+                  real **InputMassPos = NULL;
 
 #                 ifdef DEBUG_PARTICLE
                   if ( FaSibPID < 0 )  Aux_Error( ERROR_INFO, "FaSibPID = %d < 0 (lv %d, PID0 %d, FaPID %d, sib %d) !!\n",
-                                                  FaSibPID, lv, PID0, FaPID, Side ); 
+                                                  FaSibPID, lv, PID0, FaPID, Side );
 
                   if ( amr->patch[0][lv-1][FaSibPID]->son != -1 )
                      Aux_Error( ERROR_INFO, "FaSibPID->son = %d != -1 (lv %d, PID0 %d, FaPID %d, FaSibPID %d, sib %d) !!\n",
-                                amr->patch[0][lv-1][FaSibPID]->son, lv, PID0, FaPID, FaSibPID, Side ); 
+                                amr->patch[0][lv-1][FaSibPID]->son, lv, PID0, FaPID, FaSibPID, Side );
 #                 endif
 
 //                (c3-2-1) determine the number of particles and the particle list (father-sibling patch must NOT have son)
-                  NPar    = amr->patch[0][lv-1][FaSibPID]->NPar;
-                  ParList = amr->patch[0][lv-1][FaSibPID]->ParList;
+                  if ( FaSibPID < amr->NPatchComma[lv-1][1] )
+                  {
+                     NPar            = amr->patch[0][lv-1][FaSibPID]->NPar;
+                     ParList         = amr->patch[0][lv-1][FaSibPID]->ParList;
+                     UseInputMassPos = false;
+                     InputMassPos    = NULL;
+                  }
+
+                  else
+                  {
+#                    ifdef LOAD_BALANCE
+                     NPar            = amr->patch[0][lv-1][FaSibPID]->NPar_Away;
+                     ParList         = NULL;
+                     UseInputMassPos = true;
+                     InputMassPos    = amr->patch[0][lv-1][FaSibPID]->ParMassPos_Away;
+#                    else
+                     Aux_Error( ERROR_INFO, "FaSibPID (%d) is not a real patch (NReal %d) !!\n",
+                                FaSibPID, amr->NPatchComma[lv-1][1] );
+#                    endif // #ifdef LOAD_BALANCE
+                  }
 
 #                 ifdef DEBUG_PARTICLE
                   if ( NPar < 0 )
                      Aux_Error( ERROR_INFO, "NPar (%d) has not been calculated (lv %d, FaSibPID %d) !!\n",
                                 NPar, lv-1, FaSibPID );
 
-                  if ( NPar > 0  &&  ParList == NULL )
+                  if ( NPar > 0 )
+                  {
+                     if ( UseInputMassPos  &&  InputMassPos == NULL )
+                     Aux_Error( ERROR_INFO, "InputMassPos == NULL for NPar (%d) > 0 (lv %d, FaSibPID %d) !!\n",
+                                NPar, lv-1, FaSibPID );
+
+                     else if ( !UseInputMassPos  &&  ParList == NULL )
                      Aux_Error( ERROR_INFO, "ParList == NULL for NPar (%d) > 0 (lv %d, FaSibPID %d) !!\n",
                                 NPar, lv-1, FaSibPID );
-#                 endif
+                  }
+#                 endif // #ifdef DEBUG_PARTICLE
 
 //                (c3-2-2) deposit particle mass (need to take care of the periodicity here ==> Periodic_Yes)
                   if ( NPar > 0 )
                   Par_MassAssignment( ParList, NPar, amr->Par->Interp, ArrayDens, PGSize1D, EdgeL, dh,
-                                      amr->Par->PredictPos, PrepTime, InitZero_No,
+                                      (amr->Par->PredictPos && !UseInputMassPos), PrepTime, InitZero_No,
                                       (FluBC[0]==BC_FLU_PERIODIC)?Periodic_Yes:Periodic_No, PeriodicNCell,
-                                      UnitDens_No, CheckFarAway_Yes );
+                                      UnitDens_No, CheckFarAway_Yes, UseInputMassPos, InputMassPos );
                } // else if ( SibPID0 == -1 )
             } // for (int Side=0; Side<26; Side++) if ( amr->Par->GhostSize > 0  ||  GhostSize > 0 )
          } // if ( GetTotDens )
@@ -1244,7 +1323,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
                Array_Ptr   = Array;
                InArray_Ptr = h_Input_Array + N*NVar_Tot*PSize3D;
                Idx2        = 0;
-               
+
                for (int v=0; v<NVar_Tot; v++)
                {
                   for (int k=Disp_k; k<Disp_k+PSize1D; k++)
@@ -1286,14 +1365,14 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
 
 
 // ============
-// |  Tables  | 
+// |  Tables  |
 // ============
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Table_01 
+// Function    :  Table_01
 // Description :  Return the displacement for the function "Prepare_PatchData"
 //
-// Parameter   :  SibID     : Sibling index (0~25) 
+// Parameter   :  SibID     : Sibling index (0~25)
 //                dim       : Target spatial direction (x/y/z)
 //                Count     : Patch counter (0~3)
 //                GhostSize : Number of ghost zones
@@ -1309,7 +1388,7 @@ int Table_01( const int SibID, const char dim, const int Count, const int GhostS
          {
             case 0:case 6: case 8: case 14: case 15: case 18: case 20: case 22: case 24:
                return 0;
-               
+
             case 2: case 3:
             {
                switch ( Count )
@@ -1317,11 +1396,11 @@ int Table_01( const int SibID, const char dim, const int Count, const int GhostS
                   case 0: case 2:   return GhostSize;
                   case 1: case 3:   return GhostSize + PATCH_SIZE;
                   default:
-                     Aux_Error( ERROR_INFO, "incorrect parameter %s = %d, %s = %d !!\n", 
+                     Aux_Error( ERROR_INFO, "incorrect parameter %s = %d, %s = %d !!\n",
                                 "SibID", SibID, "Count", Count );
                }
             }
-               
+
             case 4: case 5:
             {
                switch ( Count )
@@ -1329,11 +1408,11 @@ int Table_01( const int SibID, const char dim, const int Count, const int GhostS
                   case 0: case 1:   return GhostSize;
                   case 2: case 3:   return GhostSize + PATCH_SIZE;
                   default:
-                     Aux_Error( ERROR_INFO, "incorrect parameter %s = %d, %s = %d !!\n", 
+                     Aux_Error( ERROR_INFO, "incorrect parameter %s = %d, %s = %d !!\n",
                                 "SibID", SibID, "Count", Count );
                }
             }
-               
+
             case 10: case 11: case 12: case 13:
             {
                switch ( Count )
@@ -1341,11 +1420,11 @@ int Table_01( const int SibID, const char dim, const int Count, const int GhostS
                   case 0:  return GhostSize;
                   case 1:  return GhostSize + PATCH_SIZE;
                   default:
-                     Aux_Error( ERROR_INFO, "incorrect parameter %s = %d, %s = %d !!\n", 
+                     Aux_Error( ERROR_INFO, "incorrect parameter %s = %d, %s = %d !!\n",
                                 "SibID", SibID, "Count", Count );
                }
             }
-               
+
             case 1: case 7: case 9: case 16: case 17: case 19: case 21: case 23: case 25:
                return GhostSize + 2*PATCH_SIZE;
 
@@ -1362,7 +1441,7 @@ int Table_01( const int SibID, const char dim, const int Count, const int GhostS
          {
             case 2: case 6: case 7: case 10: case 12: case 18: case 19: case 22: case 23:
                return 0;
-               
+
             case 0: case 1:
             {
                switch ( Count )
@@ -1370,7 +1449,7 @@ int Table_01( const int SibID, const char dim, const int Count, const int GhostS
                   case 0: case 1:   return GhostSize;
                   case 2: case 3:   return GhostSize + PATCH_SIZE;
                   default:
-                     Aux_Error( ERROR_INFO, "incorrect parameter %s = %d, %s = %d !!\n", 
+                     Aux_Error( ERROR_INFO, "incorrect parameter %s = %d, %s = %d !!\n",
                                 "SibID", SibID, "Count", Count );
                }
             }
@@ -1382,25 +1461,25 @@ int Table_01( const int SibID, const char dim, const int Count, const int GhostS
                   case 0: case 2:   return GhostSize;
                   case 1: case 3:   return GhostSize + PATCH_SIZE;
                   default:
-                     Aux_Error( ERROR_INFO, "incorrect parameter %s = %d, %s = %d !!\n", 
+                     Aux_Error( ERROR_INFO, "incorrect parameter %s = %d, %s = %d !!\n",
                                 "SibID", SibID, "Count", Count );
                }
             }
 
             case 14: case 15: case 16: case 17:
             {
-               switch ( Count ) 
+               switch ( Count )
                {
                   case 0:  return GhostSize;
                   case 1:  return GhostSize + PATCH_SIZE;
                   default:
-                     Aux_Error( ERROR_INFO, "incorrect parameter %s = %d, %s = %d !!\n", 
+                     Aux_Error( ERROR_INFO, "incorrect parameter %s = %d, %s = %d !!\n",
                                 "SibID", SibID, "Count", Count );
                }
             }
-                  
+
             case 3: case 8: case 9: case 11: case 13: case 20: case 21: case 24: case 25:
-               return GhostSize + 2*PATCH_SIZE; 
+               return GhostSize + 2*PATCH_SIZE;
 
             default:
                Aux_Error( ERROR_INFO, "incorrect parameter %s = %d !!\n", "SibID", SibID );
@@ -1415,7 +1494,7 @@ int Table_01( const int SibID, const char dim, const int Count, const int GhostS
          {
             case 4: case 10: case 11: case 14: case 16: case 18: case 19: case 20: case 21:
                return 0;
-               
+
             case 0: case 1:
             {
                switch ( Count )
@@ -1423,23 +1502,23 @@ int Table_01( const int SibID, const char dim, const int Count, const int GhostS
                   case 0: case 2:   return GhostSize;
                   case 1: case 3:   return GhostSize + PATCH_SIZE;
                   default:
-                     Aux_Error( ERROR_INFO, "incorrect parameter %s = %d, %s = %d !!\n", 
+                     Aux_Error( ERROR_INFO, "incorrect parameter %s = %d, %s = %d !!\n",
                                 "SibID", SibID, "Count", Count );
                }
             }
-               
+
             case 2: case 3:
             {
                switch ( Count )
                {
                   case 0: case 1:   return GhostSize;
-                  case 2: case 3:   return GhostSize + PATCH_SIZE;                     
+                  case 2: case 3:   return GhostSize + PATCH_SIZE;
                   default:
-                     Aux_Error( ERROR_INFO, "incorrect parameter %s = %d, %s = %d !!\n", 
+                     Aux_Error( ERROR_INFO, "incorrect parameter %s = %d, %s = %d !!\n",
                                 "SibID", SibID, "Count", Count );
                }
             }
-               
+
             case 6: case 7: case 8: case 9:
             {
                switch ( Count )
@@ -1447,11 +1526,11 @@ int Table_01( const int SibID, const char dim, const int Count, const int GhostS
                   case 0:  return GhostSize;
                   case 1:  return GhostSize + PATCH_SIZE;
                   default:
-                     Aux_Error( ERROR_INFO, "incorrect parameter %s = %d, %s = %d !!\n", 
+                     Aux_Error( ERROR_INFO, "incorrect parameter %s = %d, %s = %d !!\n",
                                 "SibID", SibID, "Count", Count );
                }
             }
-                  
+
             case 5: case 12: case 13: case 15: case 17: case 22: case 23: case 24: case 25:
                return GhostSize + 2*PATCH_SIZE;
 
@@ -1474,14 +1553,14 @@ int Table_01( const int SibID, const char dim, const int Count, const int GhostS
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Table_02 
-// Description :  Return the patch ID of the 0th patch (local ID = 0) of the sibling patch group 
+// Function    :  Table_02
+// Description :  Return the patch ID of the 0th patch (local ID = 0) of the sibling patch group
 //
-// Note        :  Work for the function "Prepare_PatchData" 
+// Note        :  Work for the function "Prepare_PatchData"
 //
-// Parameter   :  lv    : Target refinement level 
+// Parameter   :  lv    : Target refinement level
 //                PID   : Target patch ID to find its sibling patches
-//                Side  : Sibling index (0~25) 
+//                Side  : Sibling index (0~25)
 //-------------------------------------------------------------------------------------------------------
 int Table_02( const int lv, const int PID, const int Side )
 {
@@ -1490,7 +1569,7 @@ int Table_02( const int lv, const int PID, const int Side )
 
    switch ( Side )
    {
-      case 0: 
+      case 0:
          Sib = amr->patch[0][lv][PID  ]->sibling[0];
          if ( Sib >= 0 )  return Sib-1;
          else             return Sib;
@@ -1515,7 +1594,7 @@ int Table_02( const int lv, const int PID, const int Side )
          if ( Sib >= 0 )  return Sib-3;
          else             return Sib;
 
-      case 5: 
+      case 5:
          Sib = amr->patch[0][lv][PID+3]->sibling[5];
          if ( Sib >= 0 )  return Sib;
          else             return Sib;
@@ -1540,7 +1619,7 @@ int Table_02( const int lv, const int PID, const int Side )
          if ( Sib >= 0 )  return Sib;
          else             return Sib;
 
-      case 10: 
+      case 10:
          Sib = amr->patch[0][lv][PID  ]->sibling[10];
          if ( Sib >= 0 )  return Sib-5;
          else             return Sib;
@@ -1565,7 +1644,7 @@ int Table_02( const int lv, const int PID, const int Side )
          if ( Sib >= 0 )  return Sib-6;
          else             return Sib;
 
-      case 15: 
+      case 15:
          Sib = amr->patch[0][lv][PID+3]->sibling[15];
          if ( Sib >= 0 )  return Sib-1;
          else             return Sib;
@@ -1590,7 +1669,7 @@ int Table_02( const int lv, const int PID, const int Side )
          if ( Sib >= 0 )  return Sib-5;
          else             return Sib;
 
-      case 20: 
+      case 20:
          Sib = amr->patch[0][lv][PID+2]->sibling[20];
          if ( Sib >= 0 )  return Sib-6;
          else             return Sib;
@@ -1615,7 +1694,7 @@ int Table_02( const int lv, const int PID, const int Side )
          if ( Sib >= 0 )  return Sib-1;
          else             return Sib;
 
-      case 25: 
+      case 25:
          Sib = amr->patch[0][lv][PID+7]->sibling[25];
          if ( Sib >= 0 )  return Sib;
          else             return Sib;
@@ -1633,17 +1712,17 @@ int Table_02( const int lv, const int PID, const int Side )
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  SetTargetSibling 
+// Function    :  SetTargetSibling
 // Description :  Set the targeted sibling directions for preparing the ghost-zone data at the coarse-grid level
 //
 // Note        :  1. Work for the function "Prepare_PatchData"
 //                2. TSib needs to be deallocated manually
-//                3. Sibling directions recorded in TSib must be in ascending numerical order for filling the 
+//                3. Sibling directions recorded in TSib must be in ascending numerical order for filling the
 //                   non-periodic ghost-zone data in the function "InterpolateGhostZone"
-//                   --> Therefore, this function CANNOT be applied in ""LB_RecordExchangeDataPatchID", in which 
+//                   --> Therefore, this function CANNOT be applied in ""LB_RecordExchangeDataPatchID", in which
 //                       case "SetTargetSibling" and "SetReceiveSibling" must be declared consistently
-// 
-// Parameter   :  NTSib : Number of targeted sibling patches along different sibling directions 
+//
+// Parameter   :  NTSib : Number of targeted sibling patches along different sibling directions
 //                TSib  : Target sibling indices along different sibling directions
 //-------------------------------------------------------------------------------------------------------
 void SetTargetSibling( int NTSib[], int *TSib[] )
@@ -1654,7 +1733,7 @@ void SetTargetSibling( int NTSib[], int *TSib[] )
    for (int t=18; t<26; t++)  NTSib[t] =  7;
 
    for (int s=0; s<26; s++)   TSib[s] = new int [ NTSib[s] ];
-   
+
    TSib[ 0][ 0] =  1;
    TSib[ 0][ 1] =  2;
    TSib[ 0][ 2] =  3;
@@ -1672,7 +1751,7 @@ void SetTargetSibling( int NTSib[], int *TSib[] )
    TSib[ 0][14] = 21;
    TSib[ 0][15] = 23;
    TSib[ 0][16] = 25;
-   
+
    TSib[ 1][ 0] =  0;
    TSib[ 1][ 1] =  2;
    TSib[ 1][ 2] =  3;
@@ -1690,7 +1769,7 @@ void SetTargetSibling( int NTSib[], int *TSib[] )
    TSib[ 1][14] = 20;
    TSib[ 1][15] = 22;
    TSib[ 1][16] = 24;
-   
+
    TSib[ 2][ 0] =  0;
    TSib[ 2][ 1] =  1;
    TSib[ 2][ 2] =  3;
@@ -1708,7 +1787,7 @@ void SetTargetSibling( int NTSib[], int *TSib[] )
    TSib[ 2][14] = 21;
    TSib[ 2][15] = 24;
    TSib[ 2][16] = 25;
-   
+
    TSib[ 3][ 0] =  0;
    TSib[ 3][ 1] =  1;
    TSib[ 3][ 2] =  2;
@@ -1726,7 +1805,7 @@ void SetTargetSibling( int NTSib[], int *TSib[] )
    TSib[ 3][14] = 19;
    TSib[ 3][15] = 22;
    TSib[ 3][16] = 23;
-   
+
    TSib[ 4][ 0] =  0;
    TSib[ 4][ 1] =  1;
    TSib[ 4][ 2] =  2;
@@ -1744,7 +1823,7 @@ void SetTargetSibling( int NTSib[], int *TSib[] )
    TSib[ 4][14] = 23;
    TSib[ 4][15] = 24;
    TSib[ 4][16] = 25;
-   
+
    TSib[ 5][ 0] =  0;
    TSib[ 5][ 1] =  1;
    TSib[ 5][ 2] =  2;
@@ -1762,7 +1841,7 @@ void SetTargetSibling( int NTSib[], int *TSib[] )
    TSib[ 5][14] = 19;
    TSib[ 5][15] = 20;
    TSib[ 5][16] = 21;
-   
+
    TSib[ 6][ 0] =  1;
    TSib[ 6][ 1] =  3;
    TSib[ 6][ 2] =  4;
@@ -1774,7 +1853,7 @@ void SetTargetSibling( int NTSib[], int *TSib[] )
    TSib[ 6][ 8] = 17;
    TSib[ 6][ 9] = 21;
    TSib[ 6][10] = 25;
-   
+
    TSib[ 7][ 0] =  0;
    TSib[ 7][ 1] =  3;
    TSib[ 7][ 2] =  4;
@@ -1786,7 +1865,7 @@ void SetTargetSibling( int NTSib[], int *TSib[] )
    TSib[ 7][ 8] = 15;
    TSib[ 7][ 9] = 20;
    TSib[ 7][10] = 24;
-   
+
    TSib[ 8][ 0] =  1;
    TSib[ 8][ 1] =  2;
    TSib[ 8][ 2] =  4;
@@ -1798,7 +1877,7 @@ void SetTargetSibling( int NTSib[], int *TSib[] )
    TSib[ 8][ 8] = 17;
    TSib[ 8][ 9] = 19;
    TSib[ 8][10] = 23;
-   
+
    TSib[ 9][ 0] =  0;
    TSib[ 9][ 1] =  2;
    TSib[ 9][ 2] =  4;
@@ -1810,7 +1889,7 @@ void SetTargetSibling( int NTSib[], int *TSib[] )
    TSib[ 9][ 8] = 15;
    TSib[ 9][ 9] = 18;
    TSib[ 9][10] = 22;
-   
+
    TSib[10][ 0] =  0;
    TSib[10][ 1] =  1;
    TSib[10][ 2] =  3;
@@ -1822,7 +1901,7 @@ void SetTargetSibling( int NTSib[], int *TSib[] )
    TSib[10][ 8] = 17;
    TSib[10][ 9] = 24;
    TSib[10][10] = 25;
-   
+
    TSib[11][ 0] =  0;
    TSib[11][ 1] =  1;
    TSib[11][ 2] =  2;
@@ -1834,7 +1913,7 @@ void SetTargetSibling( int NTSib[], int *TSib[] )
    TSib[11][ 8] = 17;
    TSib[11][ 9] = 22;
    TSib[11][10] = 23;
-   
+
    TSib[12][ 0] =  0;
    TSib[12][ 1] =  1;
    TSib[12][ 2] =  3;
@@ -1846,7 +1925,7 @@ void SetTargetSibling( int NTSib[], int *TSib[] )
    TSib[12][ 8] = 16;
    TSib[12][ 9] = 20;
    TSib[12][10] = 21;
-   
+
    TSib[13][ 0] =  0;
    TSib[13][ 1] =  1;
    TSib[13][ 2] =  2;
@@ -1858,7 +1937,7 @@ void SetTargetSibling( int NTSib[], int *TSib[] )
    TSib[13][ 8] = 16;
    TSib[13][ 9] = 18;
    TSib[13][10] = 19;
-   
+
    TSib[14][ 0] =  1;
    TSib[14][ 1] =  2;
    TSib[14][ 2] =  3;
@@ -1870,7 +1949,7 @@ void SetTargetSibling( int NTSib[], int *TSib[] )
    TSib[14][ 8] = 17;
    TSib[14][ 9] = 23;
    TSib[14][10] = 25;
-   
+
    TSib[15][ 0] =  1;
    TSib[15][ 1] =  2;
    TSib[15][ 2] =  3;
@@ -1882,7 +1961,7 @@ void SetTargetSibling( int NTSib[], int *TSib[] )
    TSib[15][ 8] = 16;
    TSib[15][ 9] = 19;
    TSib[15][10] = 21;
-   
+
    TSib[16][ 0] =  0;
    TSib[16][ 1] =  2;
    TSib[16][ 2] =  3;
@@ -1894,7 +1973,7 @@ void SetTargetSibling( int NTSib[], int *TSib[] )
    TSib[16][ 8] = 15;
    TSib[16][ 9] = 22;
    TSib[16][10] = 24;
-   
+
    TSib[17][ 0] =  0;
    TSib[17][ 1] =  2;
    TSib[17][ 2] =  3;
@@ -1906,7 +1985,7 @@ void SetTargetSibling( int NTSib[], int *TSib[] )
    TSib[17][ 8] = 14;
    TSib[17][ 9] = 18;
    TSib[17][10] = 20;
-   
+
    TSib[18][ 0] =  1;
    TSib[18][ 1] =  3;
    TSib[18][ 2] =  5;
@@ -1914,7 +1993,7 @@ void SetTargetSibling( int NTSib[], int *TSib[] )
    TSib[18][ 4] = 13;
    TSib[18][ 5] = 17;
    TSib[18][ 6] = 25;
-   
+
    TSib[19][ 0] =  0;
    TSib[19][ 1] =  3;
    TSib[19][ 2] =  5;
@@ -1922,7 +2001,7 @@ void SetTargetSibling( int NTSib[], int *TSib[] )
    TSib[19][ 4] = 13;
    TSib[19][ 5] = 15;
    TSib[19][ 6] = 24;
-   
+
    TSib[20][ 0] =  1;
    TSib[20][ 1] =  2;
    TSib[20][ 2] =  5;
@@ -1930,7 +2009,7 @@ void SetTargetSibling( int NTSib[], int *TSib[] )
    TSib[20][ 4] = 12;
    TSib[20][ 5] = 17;
    TSib[20][ 6] = 23;
-   
+
    TSib[21][ 0] =  0;
    TSib[21][ 1] =  2;
    TSib[21][ 2] =  5;
@@ -1938,7 +2017,7 @@ void SetTargetSibling( int NTSib[], int *TSib[] )
    TSib[21][ 4] = 12;
    TSib[21][ 5] = 15;
    TSib[21][ 6] = 22;
-   
+
    TSib[22][ 0] =  1;
    TSib[22][ 1] =  3;
    TSib[22][ 2] =  4;
@@ -1946,7 +2025,7 @@ void SetTargetSibling( int NTSib[], int *TSib[] )
    TSib[22][ 4] = 11;
    TSib[22][ 5] = 16;
    TSib[22][ 6] = 21;
-   
+
    TSib[23][ 0] =  0;
    TSib[23][ 1] =  3;
    TSib[23][ 2] =  4;
@@ -1954,7 +2033,7 @@ void SetTargetSibling( int NTSib[], int *TSib[] )
    TSib[23][ 4] = 11;
    TSib[23][ 5] = 14;
    TSib[23][ 6] = 20;
-   
+
    TSib[24][ 0] =  1;
    TSib[24][ 1] =  2;
    TSib[24][ 2] =  4;
@@ -1962,7 +2041,7 @@ void SetTargetSibling( int NTSib[], int *TSib[] )
    TSib[24][ 4] = 10;
    TSib[24][ 5] = 16;
    TSib[24][ 6] = 19;
-   
+
    TSib[25][ 0] =  0;
    TSib[25][ 1] =  2;
    TSib[25][ 2] =  4;

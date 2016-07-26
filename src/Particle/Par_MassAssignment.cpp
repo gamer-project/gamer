@@ -31,49 +31,71 @@ static bool FarAwayParticle( real ParPosX, real ParPosY, real ParPosZ, const boo
 //                   --> It is because for that extreme case we need to consider both the target particles and their
 //                       image particles when assigning mass to a single array (Rho), which is not considered here!
 //
-// Parameter   :  ParList      : List of target particle IDs
-//                NPar         : Number of particles
-//                IntScheme    : Particle interpolation scheme
-//                Rho          : Array to store the output density field (assumed to be a cubic array)
-//                RhoSize      : Size of Rho in 1D
-//                EdgeL        : Left edge of the array Rho
-//                dh           : cell size of Rho
-//                PredictPos   : true --> predict particle position to TargetTime
-//                TargetTime   : Target time for predicting the particle position
-//                InitZero     : True --> initialize Rho as zero
-//                Periodic     : True --> apply periodic boundary condition
-//                PeriodicSize : Number of cells in the periodic box (in the unit of dh)
-//                UnitDens     : Assign unit density to each particle regardless of the real particle mass
-//                               and cell size
-//                               --> Useful for counting the number of particles on each cell (together
-//                                   with IntScheme == PAR_INTERP_NGP), which can be used as a refinement
-//                                   criterion (OPT__FLAG_NPAR_CELL)
-//                CheckFarAway : True --> check whether the input particles are far away from the given density array
-//                                    --> If true, don't calculate their mass assignment cell indices at all
-//                                    --> This may will improve performance when some the input particles have no 
-//                                        contribution at all to the given density array. However, it may also introduce
-//                                        additional overhead if all input particles are guaranteed to have contribution
-//                                        to the density array.
+// Parameter   :  ParList         : List of target particle IDs
+//                NPar            : Number of particles
+//                IntScheme       : Particle interpolation scheme
+//                Rho             : Array to store the output density field (assumed to be a cubic array)
+//                RhoSize         : Size of Rho in 1D
+//                EdgeL           : Left edge of the array Rho
+//                dh              : cell size of Rho
+//                PredictPos      : true --> predict particle position to TargetTime
+//                TargetTime      : Target time for predicting the particle position
+//                InitZero        : True --> initialize Rho as zero
+//                Periodic        : True --> apply periodic boundary condition
+//                PeriodicSize    : Number of cells in the periodic box (in the unit of dh)
+//                UnitDens        : Assign unit density to each particle regardless of the real particle mass
+//                                  and cell size
+//                                  --> Useful for counting the number of particles on each cell (together
+//                                      with IntScheme == PAR_INTERP_NGP), which can be used as a refinement
+//                                      criterion (OPT__FLAG_NPAR_CELL)
+//                CheckFarAway    : True --> check whether the input particles are far away from the given density array
+//                                       --> If true, don't calculate their mass assignment cell indices at all
+//                                       --> This may will improve performance when some the input particles have no
+//                                           contribution at all to the given density array. However, it may also introduce
+//                                           additional overhead if all input particles are guaranteed to have contribution
+//                                           to the density array.
+//                UseInputMassPos : Use the input array "InputMassPos" to obtain particle mass and position
+//                                  --> Used by LOAD_BALANCE, where particle position and mass may be stored in the
+//                                      ParMassPos_Away array of each patch
+//                                  --> ParList becomes useless and must be set to NULL
+//                                  --> Does not work with PredictPos since we don't have the information of particle
+//                                      time and velocity
+//                InputMassPos    : Particle mass and position arrays used by UseInputMassPos
 //
 // Return      :  Rho
 //-------------------------------------------------------------------------------------------------------
 void Par_MassAssignment( const long *ParList, const long NPar, const ParInterp_t IntScheme, real *Rho,
                          const int RhoSize, const double *EdgeL, const double dh, const bool PredictPos,
                          const double TargetTime, const bool InitZero, const bool Periodic, const int PeriodicSize[3],
-                         const bool UnitDens, const bool CheckFarAway )
+                         const bool UnitDens, const bool CheckFarAway, const bool UseInputMassPos, real **InputMassPos )
 {
 
 // check
 #  ifdef DEBUG_PARTICLE
-   if ( NPar > 0  &&  ParList == NULL )      Aux_Error( ERROR_INFO, "ParList == NULL for NPar = %ld !!\n", NPar );
-   if ( Rho == NULL )                        Aux_Error( ERROR_INFO, "Rho == NULL !!\n" );
-   if ( EdgeL == NULL )                      Aux_Error( ERROR_INFO, "EdgeL == NULL !!\n" );
+   if ( Rho == NULL )   Aux_Error( ERROR_INFO, "Rho == NULL !!\n" );
+   if ( EdgeL == NULL )    Aux_Error( ERROR_INFO, "EdgeL == NULL !!\n" );
    if ( PredictPos  &&  TargetTime < 0.0 )   Aux_Error( ERROR_INFO, "TargetTime = %14.7e < 0.0 !!\n", TargetTime );
    if ( Periodic )
       for (int d=0; d<3; d++)
          if ( RhoSize > PeriodicSize[d] )
             Aux_Error( ERROR_INFO, "RhoSize (%d) > PeriodicSize[%d] (%d) !!\n", RhoSize, d, PeriodicSize[d] );
-#  endif
+   if ( UseInputMassPos )
+   {
+      if ( ParList != NULL )  Aux_Error( ERROR_INFO, "ParList != NULL for UseInputMassPos !!\n" );
+      if ( PredictPos )    Aux_Error( ERROR_INFO, "PredictPos does NOT work with UseInputMassPos !!\n" );
+      if ( NPar > 0  &&  InputMassPos == NULL )
+         Aux_Error( ERROR_INFO, "InputMassPos == NULL for UseInputMassPos (NPar = %ld) !!\n", NPar );
+
+#     ifndef LOAD_BALANCE
+      Aux_Message( stderr, "WARNING : are you sure you want to use UseInputMassPos when LOAD_BALANCE is off !?\n" );
+#     endif
+   }
+   else
+   {
+      if ( NPar > 0  &&  ParList == NULL )   Aux_Error( ERROR_INFO, "ParList == NULL for NPar = %ld !!\n", NPar );
+      if ( InputMassPos != NULL )   Aux_Error( ERROR_INFO, "InputMassPos != NULL when UseInputMassPos is off !!\n" );
+   }
+#  endif // #ifdef DEBUG_PARTICLE
 
 
 // 1. initialization
@@ -83,19 +105,33 @@ void Par_MassAssignment( const long *ParList, const long NPar, const ParInterp_t
    if ( NPar == 0 )  return;
 
 
-// 2. copy particle position since they might be modified during the position prediction
+// 2. set up attribute arrays, copy particle position since they might be modified during the position prediction
+   real *Mass   = NULL;
    real *Pos[3] = { NULL, NULL, NULL };
    long  ParID;
 
-   for (int d=0; d<3; d++)    Pos[d] = new real [NPar];
-
-   for (long p=0; p<NPar; p++)
+   if ( UseInputMassPos )
    {
-      ParID = ParList[p];
+      Mass   = InputMassPos[PAR_MASS];
+      Pos[0] = InputMassPos[PAR_POSX];
+      Pos[1] = InputMassPos[PAR_POSY];
+      Pos[2] = InputMassPos[PAR_POSZ];
+   }
 
-      Pos[0][p] = amr->Par->PosX[ParID];
-      Pos[1][p] = amr->Par->PosY[ParID];
-      Pos[2][p] = amr->Par->PosZ[ParID];
+   else
+   {
+      Mass = amr->Par->Mass;
+
+      for (int d=0; d<3; d++)    Pos[d] = new real [NPar];
+
+      for (long p=0; p<NPar; p++)
+      {
+         ParID = ParList[p];
+
+         Pos[0][p] = amr->Par->PosX[ParID];
+         Pos[1][p] = amr->Par->PosY[ParID];
+         Pos[2][p] = amr->Par->PosZ[ParID];
+      }
    }
 
 
@@ -149,7 +185,7 @@ void Par_MassAssignment( const long *ParList, const long NPar, const ParInterp_t
       {
          for (long p=0; p<NPar; p++)
          {
-            ParID = ParList[p];
+            ParID = ( UseInputMassPos ) ? p : ParList[p];
 
 //          4.1.0 discard particles far away from the target region
             if (  CheckFarAway  &&  FarAwayParticle( Pos[0][p], Pos[1][p], Pos[2][p], Periodic, PeriodicSize_Phy,
@@ -157,7 +193,7 @@ void Par_MassAssignment( const long *ParList, const long NPar, const ParInterp_t
                continue;
 
 //          4.1.1 calculate the nearest grid index
-            for (int d=0; d<3; d++)    
+            for (int d=0; d<3; d++)
             {
                idx[d] = (int)FLOOR( ( Pos[d][p] - EdgeL[d] )*_dh );
 
@@ -177,12 +213,12 @@ void Par_MassAssignment( const long *ParList, const long NPar, const ParInterp_t
 //          4.1.2 assign mass if within the Rho array
 //          check for inactive particles (which have negative mass)
 #           ifdef DEBUG_PARTICLE
-            if ( amr->Par->Mass[ParID] < (real)0.0 )
-               Aux_Error( ERROR_INFO, "Mass[%ld] = %14.7e < 0.0 !!\n", ParID, amr->Par->Mass[ParID] );
+            if ( Mass[ParID] < (real)0.0 )
+               Aux_Error( ERROR_INFO, "Mass[%ld] = %14.7e < 0.0 !!\n", ParID, Mass[ParID] );
 #           endif
 
             if ( UnitDens )   ParDens = (real)1.0;
-            else              ParDens = amr->Par->Mass[ParID]*_dh3;
+            else              ParDens = Mass[ParID]*_dh3;
 
             if (  WithinRho( idx, RhoSize )  )
                Rho3D[ idx[2] ][ idx[1] ][ idx[0] ] += ParDens;
@@ -200,7 +236,7 @@ void Par_MassAssignment( const long *ParList, const long NPar, const ParInterp_t
 
          for (long p=0; p<NPar; p++)
          {
-            ParID = ParList[p];
+            ParID = ( UseInputMassPos ) ? p : ParList[p];
 
 //          4.2.0 discard particles far away from the target region
             if (  CheckFarAway  &&  FarAwayParticle( Pos[0][p], Pos[1][p], Pos[2][p], Periodic, PeriodicSize_Phy,
@@ -238,12 +274,12 @@ void Par_MassAssignment( const long *ParList, const long NPar, const ParInterp_t
 //          4.2.3 assign mass if within the Rho array
 //          check for inactive particles (which have negative mass)
 #           ifdef DEBUG_PARTICLE
-            if ( amr->Par->Mass[ParID] < (real)0.0 )
-               Aux_Error( ERROR_INFO, "Mass[%ld] = %14.7e < 0.0 !!\n", ParID, amr->Par->Mass[ParID] );
+            if ( Mass[ParID] < (real)0.0 )
+               Aux_Error( ERROR_INFO, "Mass[%ld] = %14.7e < 0.0 !!\n", ParID, Mass[ParID] );
 #           endif
 
             if ( UnitDens )   ParDens = (real)1.0;
-            else              ParDens = amr->Par->Mass[ParID]*_dh3;
+            else              ParDens = Mass[ParID]*_dh3;
 
             for (int k=0; k<2; k++) {  idx[2] = idxLR[k][2];
             for (int j=0; j<2; j++) {  idx[1] = idxLR[j][1];
@@ -267,7 +303,7 @@ void Par_MassAssignment( const long *ParList, const long NPar, const ParInterp_t
 
          for (long p=0; p<NPar; p++)
          {
-            ParID = ParList[p];
+            ParID = ( UseInputMassPos ) ? p : ParList[p];
 
 //          4.3.0 discard particles far away from the target region
             if (  CheckFarAway  &&  FarAwayParticle( Pos[0][p], Pos[1][p], Pos[2][p], Periodic, PeriodicSize_Phy,
@@ -307,12 +343,12 @@ void Par_MassAssignment( const long *ParList, const long NPar, const ParInterp_t
 //          4.3.3 assign mass if within the Rho array
 //          check for inactive particles (which have negative mass)
 #           ifdef DEBUG_PARTICLE
-            if ( amr->Par->Mass[ParID] < (real)0.0 )
-               Aux_Error( ERROR_INFO, "Mass[%ld] = %14.7e < 0.0 !!\n", ParID, amr->Par->Mass[ParID] );
+            if ( Mass[ParID] < (real)0.0 )
+               Aux_Error( ERROR_INFO, "Mass[%ld] = %14.7e < 0.0 !!\n", ParID, Mass[ParID] );
 #           endif
 
             if ( UnitDens )   ParDens = (real)1.0;
-            else              ParDens = amr->Par->Mass[ParID]*_dh3;
+            else              ParDens = Mass[ParID]*_dh3;
 
             for (int k=0; k<3; k++) {  idx[2] = idxLCR[k][2];
             for (int j=0; j<3; j++) {  idx[1] = idxLCR[j][1];
@@ -330,7 +366,8 @@ void Par_MassAssignment( const long *ParList, const long NPar, const ParInterp_t
 
 
 // 5. free memory
-   for (int d=0; d<3; d++)    delete [] Pos[d];
+   for (int d=0; d<3; d++)
+      if ( Pos[d] != NULL )   delete [] Pos[d];
 
 } // FUNCTION : Par_MassAssignment
 
@@ -340,7 +377,7 @@ void Par_MassAssignment( const long *ParList, const long NPar, const ParInterp_t
 // Function    :  WithinRho
 // Description :  Check whether the input cell lies within the Rho array
 //
-// Parameter   :  idx      : Cell indices 
+// Parameter   :  idx      : Cell indices
 //                RhoSize  : Size of the Rho array
 //
 // Return      :  true --> within the target region
@@ -375,7 +412,7 @@ bool WithinRho( const int idx[], const int RhoSize )
 //                PeriodicSize_Phy  : Size of the periodic box
 //                EdgeL/R           : Left and right edge of the density array
 //
-// Return      :  (true / false) <--> particle (has no / does have) contribution to the give density array 
+// Return      :  (true / false) <--> particle (has no / does have) contribution to the give density array
 //-------------------------------------------------------------------------------------------------------
 bool FarAwayParticle( real ParPosX, real ParPosY, real ParPosZ, const bool Periodic, const real PeriodicSize_Phy[],
                       const real EdgeL[], const real EdgeR[] )

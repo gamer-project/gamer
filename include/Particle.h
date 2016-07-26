@@ -22,10 +22,10 @@ void Aux_Error( const char *File, const int Line, const char *Func, const char *
 
 
 //-------------------------------------------------------------------------------------------------------
-// Structure   :  Particle_t 
+// Structure   :  Particle_t
 // Description :  Data structure of particles
 //
-// Data Member :  ParListSize          : Size of the particle data arrays (must be >= NPar_AcPlusInac) 
+// Data Member :  ParListSize          : Size of the particle data arrays (must be >= NPar_AcPlusInac)
 //                InactiveParListSize  : Size of the inactive particle list (InactiveParList)
 //                NPar_Active_AllRank  : Total number of active particles summed up over all MPI ranks
 //                NPar_AcPlusInac      : Total number of particles (active + inactive) in this MPI rank
@@ -56,7 +56,7 @@ void Aux_Error( const char *File, const int Line, const char *Func, const char *
 //                Time                 : Particle physical time
 //                Acc                  : Particle acceleration (only when STORE_PAR_ACC is on)
 //
-// Method      :  Particle_t        : Constructor 
+// Method      :  Particle_t        : Constructor
 //               ~Particle_t        : Destructor
 //                InitVar           : Initialize arrays and some variables
 //                AddOneParticle    : Add one new particle into the particle list
@@ -102,12 +102,12 @@ struct Particle_t
 
 
    //===================================================================================
-   // Constructor :  Particle_t 
+   // Constructor :  Particle_t
    // Description :  Constructor of the structure "Particle_t"
    //
    // Note        :  Initialize the data members
    //
-   // Parameter   :  None 
+   // Parameter   :  None
    //===================================================================================
    Particle_t()
    {
@@ -137,7 +137,7 @@ struct Particle_t
       VelY = NULL;
       VelZ = NULL;
       Time = NULL;
-#     ifdef STORE_PAR_ACC 
+#     ifdef STORE_PAR_ACC
       AccX = NULL;
       AccY = NULL;
       AccZ = NULL;
@@ -148,10 +148,10 @@ struct Particle_t
 
 
    //===================================================================================
-   // Destructor  :  ~Particle_t 
+   // Destructor  :  ~Particle_t
    // Description :  Destructor of the structure "Particle_t"
    //
-   // Note        :  Free memory 
+   // Note        :  Free memory
    //===================================================================================
    ~Particle_t()
    {
@@ -188,7 +188,7 @@ struct Particle_t
    // Constructor :  InitVar
    // Description :  Initialize the particle attribute arrays and some other variables
    //
-   // Note        :  1. NPar_AcPlusInac must be set properly (>=0) in advance 
+   // Note        :  1. NPar_AcPlusInac must be set properly (>=0) in advance
    //                2. Initialize both "NPar_Active" and "ParListSize" as NPar_AcPlusInac
    //                3. Set "GhostSize" ("Interp" must be set in advance)
    //
@@ -306,7 +306,7 @@ struct Particle_t
             VelY = ParVar[PAR_VELY];
             VelZ = ParVar[PAR_VELZ];
             Time = ParVar[PAR_TIME];
-#           ifdef STORE_PAR_ACC 
+#           ifdef STORE_PAR_ACC
             AccX = ParVar[PAR_ACCX];
             AccY = ParVar[PAR_ACCY];
             AccZ = ParVar[PAR_ACCZ];

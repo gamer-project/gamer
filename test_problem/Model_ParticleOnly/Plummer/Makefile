@@ -300,6 +300,13 @@ CC_FILE     += Par_Init_Function.cpp  Par_Output_Particle.cpp  Par_FindHomePatch
 
 vpath %.cu     Particle/GPU
 vpath %.cpp    Particle/CPU  Particle
+
+ifeq "$(findstring LOAD_BALANCE, $(SIMU_OPTION))" "LOAD_BALANCE"
+CC_FILE     += Par_LB_RedistributeByRectangular.cpp  Par_LB_SendParticle.cpp  Par_LB_CollectParticleFromDescendant.cpp
+
+vpath %.cpp    Particle/LoadBalance
+endif # LOAD_BALANCE
+
 endif # PARTICLE
 
 
@@ -353,7 +360,7 @@ vpath %.cpp    LoadBalance
 # dxl (gcc, serial)
 #CUDA_TOOLKIT_PATH :=
 #FFTW_PATH         := /usr
-#MPI_PATH          :=
+#MPI_PATH          := /usr
 #HDF5_PATH         := /home/hyschive/software/miniconda2
 
 # campus UIUC (intel-15.0 + openmpi-1.8.4)
