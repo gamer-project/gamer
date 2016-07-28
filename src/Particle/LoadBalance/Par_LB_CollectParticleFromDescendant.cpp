@@ -13,8 +13,7 @@
 //
 // Note        :  1. ParList in all descendants will NOT be changeed after calling this function
 //                2. Array ParMassPos_Away will be allocated for patches at FaLv with particles in descendant patches
-//                   --> Must be deleted afterward by calling Par_LB_CollectParticleFromDescendant_FreeMemory
-//                       (e.g., in the function "Gra_AdvanceDt")
+//                   --> Must be deallocated afterward by calling Par_LB_CollectParticleFromDescendant_FreeMemory
 //                3. Do not take into account it's own particles (particles at FaLv)
 //                   --> Do nothing if this patch is a leaf patch (ParMassPos_Away array will NOT be allocated)
 //                4. This function assumes that all particles live in the leaf patch
@@ -223,18 +222,28 @@ void Par_LB_CollectParticleFromDescendant( const int FaLv, const bool PredictPos
 
 
 // 2. send data to all ranks
-// these arrays will be allocated by Par_LB_SendParticle (using call by reference)
-   int  *RecvBuf_NPatchEachRank;
-   int  *RecvBuf_NParEachPatch;
-   long *RecvBuf_LBIdxEachPatch;
-   real *RecvBuf_ParDataEachPatch;
+// these arrays will be allocated by Par_LB_SendParticle (using call by reference) and must be free'd later
+   int  *RecvBuf_NPatchEachRank   = NULL;
+   int  *RecvBuf_NParEachPatch    = NULL;
+   long *RecvBuf_LBIdxEachPatch   = NULL;
+   real *RecvBuf_ParDataEachPatch = NULL;
 
-// Par_LB_SendParticle will also return the total number of patches and particles received (using call by reference)
+// 2-1. exchange data
+   const bool Exchange_NPatchEachRank_Yes = true;
+   const bool Exchange_LBIdxEachRank_Yes  = true;
    int NRecvPatchTotal, NRecvParTotal;
 
+// note that Par_LB_SendParticle will also return the total number of patches and particles received (using call by reference)
    Par_LB_SendParticle( NParVar, SendBuf_NPatchEachRank, SendBuf_NParEachPatch, SendBuf_LBIdxEachPatch,
-                        SendBuf_ParDataEachPatch, RecvBuf_NPatchEachRank, RecvBuf_NParEachPatch, RecvBuf_LBIdxEachPatch,
-                        RecvBuf_ParDataEachPatch, NRecvPatchTotal, NRecvParTotal );
+                        SendBuf_ParDataEachPatch, RecvBuf_NPatchEachRank, RecvBuf_NParEachPatch,
+                        RecvBuf_LBIdxEachPatch, RecvBuf_ParDataEachPatch, NRecvPatchTotal, NRecvParTotal,
+                        Exchange_NPatchEachRank_Yes, Exchange_LBIdxEachRank_Yes );
+
+// 2-2. free memory
+   delete [] SendBuf_NPatchEachRank;
+   delete [] SendBuf_NParEachPatch;
+   delete [] SendBuf_LBIdxEachPatch;
+   delete [] SendBuf_ParDataEachPatch;
 
 
 
@@ -265,7 +274,7 @@ void Par_LB_CollectParticleFromDescendant( const int FaLv, const bool PredictPos
    {
 #     ifdef DEBUG_PARTICLE
       if ( Match_LBIdxEachPatch[t] == -1 )
-         Aux_Error( ERROR_INFO, "LBIdx (%ld) found no matching (FaLv %d) !!\n", RecvBuf_LBIdxEachPatch[t], FaLv );
+         Aux_Error( ERROR_INFO, "LBIdx (%ld) found no match (FaLv %d) !!\n", RecvBuf_LBIdxEachPatch[t], FaLv );
 #     endif
 
       FaPID_Match = amr->LB->IdxList_Real_IdxTable[FaLv][ Match_LBIdxEachPatch[t] ];
@@ -345,7 +354,7 @@ void Par_LB_CollectParticleFromDescendant( const int FaLv, const bool PredictPos
             Aux_Error( ERROR_INFO, "found inactive particle (FaLv %d, FaPID %d, Mass %14.7e, particle %d) !!\n",
                        FaLv, FaPID_Match, amr->patch[0][FaLv][FaPID_Match]->ParMassPos_Away[PAR_MASS][p], p );
 
-//       check if particle lie within the target patch (may not when PredictPos is on)
+//       check if the received particle lies within the target patch (may not when PredictPos is on)
          if ( !PredictPos )
          {
             const double *EdgeL     = amr->patch[0][FaLv][FaPID_Match]->EdgeL;

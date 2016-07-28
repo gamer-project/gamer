@@ -445,10 +445,12 @@ void Prepare_PatchData_FreeParticleDensityArray( const int lv );
 #ifdef LOAD_BALANCE
 void Par_LB_RedistributeByRectangular();
 void Par_LB_CollectParticleFromDescendant( const int FaLv, const bool PredictPos, const double TargetTime );
+void Par_LB_CollectParticleFromRealPatch( const int lv, const int NSendPatchTotal, const int *PID_List );
 void Par_LB_SendParticle( const int NParVar, const int *SendBuf_NPatchEachRank,
                           const int *SendBuf_NParEachPatch, const long *SendBuf_LBIdxEachPatch, const real *SendBuf_ParDataEachPatch,
                           int *&RecvBuf_NPatchEachRank, int *&RecvBuf_NParEachPatch, long *&RecvBuf_LBIdxEachPatch,
-                          real *&RecvBuf_ParDataEachPatch, int &NRecvPatchTotal, int &NRecvParTotal );
+                          real *&RecvBuf_ParDataEachPatch, int &NRecvPatchTotal, int &NRecvParTotal,
+                          const bool Exchange_NPatchEachRank, const bool Exchange_LBIdxEachRank );
 #endif
 #endif // #ifdef PARTICLE
 

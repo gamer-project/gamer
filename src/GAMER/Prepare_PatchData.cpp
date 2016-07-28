@@ -563,9 +563,13 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
 
             else
             {
-               if ( UseInputMassPos  &&  InputMassPos == NULL )
-               Aux_Error( ERROR_INFO, "InputMassPos == NULL for NPar (%d) > 0 (lv %d, PID %d) !!\n",
-                          NPar, lv, PID );
+               if ( UseInputMassPos )
+               {
+                  for (int v=0; v<4; v++)
+                  if ( InputMassPos[v] == NULL )
+                  Aux_Error( ERROR_INFO, "InputMassPos[%d] == NULL for NPar (%d) > 0 (lv %d, PID %d) !!\n",
+                             v, NPar, lv, PID );
+               }
 
                else if ( !UseInputMassPos  &&  ParList == NULL )
                Aux_Error( ERROR_INFO, "ParList == NULL for NPar (%d) > 0 (lv %d, PID %d) !!\n",
@@ -1283,9 +1287,13 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
 
                   if ( NPar > 0 )
                   {
-                     if ( UseInputMassPos  &&  InputMassPos == NULL )
-                     Aux_Error( ERROR_INFO, "InputMassPos == NULL for NPar (%d) > 0 (lv %d, FaSibPID %d) !!\n",
-                                NPar, lv-1, FaSibPID );
+                     if ( UseInputMassPos )
+                     {
+                        for (int v=0; v<4; v++)
+                        if ( InputMassPos[v] == NULL )
+                        Aux_Error( ERROR_INFO, "InputMassPos[%d] == NULL for NPar (%d) > 0 (lv %d, FaSibPID %d) !!\n",
+                                   v, NPar, lv-1, FaSibPID );
+                     }
 
                      else if ( !UseInputMassPos  &&  ParList == NULL )
                      Aux_Error( ERROR_INFO, "ParList == NULL for NPar (%d) > 0 (lv %d, FaSibPID %d) !!\n",

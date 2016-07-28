@@ -261,9 +261,13 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
 
                   if ( NPar > 0 )
                   {
-                     if ( UseInputMassPos  &&  InputMassPos == NULL )
-                     Aux_Error( ERROR_INFO, "InputMassPos == NULL for NPar (%d) > 0 (lv %d, PID %d) !!\n",
-                                NPar, lv, PID );
+                     if ( UseInputMassPos )
+                     {
+                        for (int v=0; v<4; v++)
+                           if ( InputMassPos[v] == NULL )
+                              Aux_Error( ERROR_INFO, "InputMassPos[%d] == NULL for NPar (%d) > 0 (lv %d, PID %d) !!\n",
+                                         v, NPar, lv, PID );
+                     }
 
                      else if ( !UseInputMassPos  &&  ParList == NULL )
                      Aux_Error( ERROR_INFO, "ParList == NULL for NPar (%d) > 0 (lv %d, PID %d) !!\n",

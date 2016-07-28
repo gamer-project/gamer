@@ -43,8 +43,9 @@ long  LB_Corner2Index( const int lv, const int Corner[], const Check_t Check );
 //                corner[3]       : Grid indices of the cell at patch corner
 //                                  --> Note that for an external patch its recorded "corner" will lie outside
 //                                      the simulation domain. In other words, periodicity is NOT used to
-//                                      convert the corner to that of the corresponding real patch
+//                                      convert corner to that of the corresponding real patch
 //                                  --> For example, external patches can have corner < 0
+//                                  --> Similar things applied to EdgeL/R as well
 //                sibling[26]     : Patch IDs of the 26 sibling patches (-1->no sibling; -1XX->external)
 //
 //                                  NOTE FOR NON-PERIODIC BOUNDARY CONDITIONS:
@@ -68,6 +69,11 @@ long  LB_Corner2Index( const int lv, const int Corner[], const Check_t Check );
 //
 //                flag            : Refinement flag (true/false)
 //                EdgeL/R         : Left and right edge of the patch
+//                                  --> Note that for an external patch its recorded "EdgeL/R" will lie outside
+//                                      the simulation domain. In other words, periodicity is NOT used to
+//                                      convert edges to that of the corresponding real patch
+//                                  --> For example, external patches can have EdgeL < 0.0
+//                                  --> Similar things applied to corner[3] as well
 //                PaddedCr1D      : 1D corner coordiniate padded with two base-level patches on each side
 //                                  in each direction, normalized to the finest-level patch scale (PATCH_SIZE)
 //                                  --> each PaddedCr1D defines a unique 3D position
@@ -201,7 +207,7 @@ struct patch_t
 #     endif
 
       PaddedCr1D = Mis_Idx3D2Idx1D( BoxNScale_Padded, Cr_Padded );
-      LB_Idx     = LB_Corner2Index( lv, corner, CHECK_OFF );   // this number can be wrong for external patches
+      LB_Idx     = LB_Corner2Index( lv, corner, CHECK_OFF );   // this number always assumes periodicity
 
       for (int s=0; s<26; s++ )  sibling[s] = -1;     // -1 <--> NO sibling
 
