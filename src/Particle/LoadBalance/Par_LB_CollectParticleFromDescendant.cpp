@@ -150,7 +150,6 @@ void Par_LB_CollectParticleFromDescendant( const int FaLv, const bool PredictPos
 // 1-4. fill the send buffers
    long ParID;
    int  NParThisPatch;
-   real dt;
 
    for (int lv=FaLv+1; lv<=MAX_LEVEL; lv++)
    for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
@@ -195,20 +194,18 @@ void Par_LB_CollectParticleFromDescendant( const int FaLv, const bool PredictPos
 //       predict particle position to TargetTime
          if ( PredictPos )
          {
-//          skip particles waiting for velocity correction
-//          --> NOT necessary here since we are collecting particles from **higher** levels
+//          there should be no particles waiting for velocity correction since we are collecting particles from **higher** levels
 //          if ( amr->Par->Time[ParID] < (real)0.0 )  continue;
 #           ifdef DEBUG_PARTICLE
             if ( amr->Par->Time[ParID] < (real)0.0 )  Aux_Error( ERROR_INFO, "ParTime[%ld] = %21.14e < 0.0 !!\n",
                  ParID, amr->Par->Time[ParID] );
 #           endif
 
-            dt = (real)TargetTime - amr->Par->Time[ParID];
-
 //          note that we don't have to worry about the periodic BC here (in other word, Pos can lie outside the box)
-            SendBuf_ParDataEachPatch[ Offset_ParDataEachPatch[TRank] + PAR_POSX ] += amr->Par->VelX[ParID]*dt;
-            SendBuf_ParDataEachPatch[ Offset_ParDataEachPatch[TRank] + PAR_POSY ] += amr->Par->VelY[ParID]*dt;
-            SendBuf_ParDataEachPatch[ Offset_ParDataEachPatch[TRank] + PAR_POSZ ] += amr->Par->VelZ[ParID]*dt;
+            Par_PredictPos( 1, &ParID, SendBuf_ParDataEachPatch + Offset_ParDataEachPatch[TRank] + PAR_POSX,
+                                       SendBuf_ParDataEachPatch + Offset_ParDataEachPatch[TRank] + PAR_POSY,
+                                       SendBuf_ParDataEachPatch + Offset_ParDataEachPatch[TRank] + PAR_POSZ,
+                            TargetTime );
          }
 
 //       update array offset

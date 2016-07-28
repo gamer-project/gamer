@@ -442,10 +442,13 @@ void Par_CollectParticleFromDescendant_FreeMemory( const int FaLv );
 int  Par_Synchronize( const double SyncTime, const ParSync_t SyncOption );
 void Par_Synchronize_Restore( const double SyncTime );
 void Prepare_PatchData_FreeParticleDensityArray( const int lv );
+void Par_PredictPos( const long NPar, const long *ParList, real *ParPosX, real *ParPosY, real *ParPosZ,
+                     const double TargetTime );
 #ifdef LOAD_BALANCE
 void Par_LB_RedistributeByRectangular();
 void Par_LB_CollectParticleFromDescendant( const int FaLv, const bool PredictPos, const double TargetTime );
-void Par_LB_CollectParticleFromRealPatch( const int lv, const int NSendPatchTotal, const int *PID_List );
+void Par_LB_CollectParticleFromRealPatch( const int lv, const int NSendPatchTotal, const int *PID_List, const bool PredictPos,
+                                          const double TargetTime );
 void Par_LB_SendParticle( const int NParVar, const int *SendBuf_NPatchEachRank,
                           const int *SendBuf_NParEachPatch, const long *SendBuf_LBIdxEachPatch, const real *SendBuf_ParDataEachPatch,
                           int *&RecvBuf_NPatchEachRank, int *&RecvBuf_NParEachPatch, long *&RecvBuf_LBIdxEachPatch,

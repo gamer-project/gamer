@@ -136,25 +136,7 @@ void Par_MassAssignment( const long *ParList, const long NPar, const ParInterp_t
 
 
 // 3. predict particle position
-   real dt;
-
-   if ( PredictPos )
-   {
-      for (long p=0; p<NPar; p++)
-      {
-         ParID = ParList[p];
-
-//       skip particles waiting for velocity correction (they should already be synchronized with TargetTime)
-         if ( amr->Par->Time[ParID] < (real)0.0 )  continue;
-
-         dt = (real)TargetTime - amr->Par->Time[ParID];
-
-//       note that we don't have to worry about the periodic BC here (in other word, Pos can lie outside the box)
-         Pos[0][p] += amr->Par->VelX[ParID]*dt;
-         Pos[1][p] += amr->Par->VelY[ParID]*dt;
-         Pos[2][p] += amr->Par->VelZ[ParID]*dt;
-      }
-   } // if ( PredictPos )
+   if ( PredictPos )    Par_PredictPos( NPar, ParList, Pos[0], Pos[1], Pos[2], TargetTime );
 
 
 // 4. deposit particle mass

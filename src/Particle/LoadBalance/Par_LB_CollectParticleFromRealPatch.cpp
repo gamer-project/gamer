@@ -27,7 +27,7 @@
 //                                        send particle velocity
 //                TargetTime        : Target time for predicting the particle position
 //
-// Return      :  NPar_Away and ParMassPos_Away array for all patches specified in PID_List
+// Return      :  NPar_Away and ParMassPos_Away (if NPar_Away > 0) for all patches specified in PID_List
 //-------------------------------------------------------------------------------------------------------
 void Par_LB_CollectParticleFromRealPatch( const int lv, const int NSendPatchTotal, const int *PID_List, const bool PredictPos,
                                           const double TargetTime )
@@ -234,8 +234,22 @@ void Par_LB_CollectParticleFromRealPatch( const int lv, const int NSendPatchTota
             SendPtr[PAR_POSY] = amr->Par->ParVar[PAR_POSY][ParID];
             SendPtr[PAR_POSZ] = amr->Par->ParVar[PAR_POSZ][ParID];
 
+//          predict particle position to TargetTime
+            if ( PredictPos )
+            {
+//             there should be no particles waiting for velocity correction since we are collecting particles from **higher** levels
+//             if ( amr->Par->Time[ParID] < (real)0.0 )  continue;
+#              ifdef DEBUG_PARTICLE
+               if ( amr->Par->Time[ParID] < (real)0.0 )  Aux_Error( ERROR_INFO, "ParTime[%ld] = %21.14e < 0.0 !!\n",
+                    ParID, amr->Par->Time[ParID] );
+#              endif
+
+//             note that we don't have to worry about the periodic BC here (in other word, Pos can lie outside the box)
+               Par_PredictPos( 1, &ParID, SendPtr+PAR_POSX, SendPtr+PAR_POSY, SendPtr+PAR_POSZ, TargetTime );
+            }
+
             SendPtr += NParVar;
-         }
+         } // for (int p=0; p<NParThisPatch; p++)
       } // if ( amr->patch[0][lv][PID_Match]->son == -1 )
 
       else
@@ -252,6 +266,8 @@ void Par_LB_CollectParticleFromRealPatch( const int lv, const int NSendPatchTota
          for (int p=0; p<NParThisPatch; p++)
          {
 //          here we have assumed that both PAR_MASS, PAR_POSX/Y/Z < NParVar
+//          (also note that these particle position should have already been predicted to TargetTime
+//          by Par_LB_CollectParticleFromDescendant)
             SendPtr[PAR_MASS] = ParMassPos_Away[PAR_MASS][p];
             SendPtr[PAR_POSX] = ParMassPos_Away[PAR_POSX][p];
             SendPtr[PAR_POSY] = ParMassPos_Away[PAR_POSY][p];

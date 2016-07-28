@@ -1,13 +1,13 @@
 
 
 
-# name of the executable file 
+# name of the executable file
 #######################################################################################################
 EXECUTABLE := Dizzy
 
 
 
-# simulation options 
+# simulation options
 #######################################################################################################
 
 # (a) common options (applied to all models)
@@ -21,7 +21,7 @@ SIMU_OPTION += -DGRAVITY
 # Poisson solver: SOR/MG (successive-overrelaxation/multigrid)
 SIMU_OPTION += -DPOT_SCHEME=SOR
 
-# store GRA_GHOST_SIZE ghost-zone potential for each patch on each side (in patch->pot_ext) 
+# store GRA_GHOST_SIZE ghost-zone potential for each patch on each side (in patch->pot_ext)
 # --> currently only for improving accuracy for particles around the patch boundaries (by Par->ImproveAcc)
 SIMU_OPTION += -DSTORE_POT_GHOST
 
@@ -92,7 +92,7 @@ SIMU_OPTION += -DSTORE_PAR_ACC
 # optimization mode
 SIMU_OPTION += -DGAMER_OPTIMIZATION
 
-# debug mode 
+# debug mode
 #SIMU_OPTION += -DGAMER_DEBUG
 
 # measure the elapsing wall-clock time of different parts of the program
@@ -211,14 +211,14 @@ CC_FILE     += Hydro_Init_StartOver_AssignData.cpp  Hydro_Aux_Check_Negative.cpp
                Hydro_GetPressure.cpp
 
 vpath %.cu     Model_Hydro/GPU_Hydro
-vpath %.cpp    Model_Hydro/CPU_Hydro  Model_Hydro  
+vpath %.cpp    Model_Hydro/CPU_Hydro  Model_Hydro
 
 ifeq "$(findstring GRAVITY, $(SIMU_OPTION))" "GRAVITY"
 CUDA_FILE   += CUPOT_HydroGravitySolver.cu
 
 CC_FILE     += CPU_HydroGravitySolver.cpp  Hydro_GetTimeStep_Gravity.cpp
 
-vpath %.cu     Model_Hydro/GPU_HydroGravity 
+vpath %.cu     Model_Hydro/GPU_HydroGravity
 vpath %.cpp    Model_Hydro/CPU_HydroGravity
 endif
 
@@ -265,7 +265,7 @@ endif # MODEL
 # ------------------------------------------------------------------------------------
 ifeq "$(findstring GRAVITY, $(SIMU_OPTION))" "GRAVITY"
 CUDA_FILE   += CUAPI_MemAllocate_PoissonGravity.cu  CUAPI_MemFree_PoissonGravity.cu \
-               CUAPI_Asyn_PoissonGravitySolver.cu      
+               CUAPI_Asyn_PoissonGravitySolver.cu
 
 CUDA_FILE   += CUPOT_PoissonSolver_SOR_10to14cube.cu  CUPOT_PoissonSolver_SOR_16to18cube.cu \
                CUPOT_PoissonSolver_MG.cu
@@ -296,13 +296,14 @@ CC_FILE     += Par_Init_Function.cpp  Par_Output_Particle.cpp  Par_FindHomePatch
                Par_MassAssignment.cpp  Par_UpdateParticle.cpp  Par_GetTimeStep_VelAcc.cpp \
                Par_PassParticle2Sibling.cpp  Par_CountParticleInDescendant.cpp  Par_GetEnergy.cpp \
                Par_Aux_InitCheck.cpp  Par_Aux_GetParticleLevel.cpp  Par_PassParticle2Son_AllPatch.cpp \
-               Par_Synchronize.cpp
+               Par_Synchronize.cpp  Par_PredictPos.cpp
 
 vpath %.cu     Particle/GPU
 vpath %.cpp    Particle/CPU  Particle
 
 ifeq "$(findstring LOAD_BALANCE, $(SIMU_OPTION))" "LOAD_BALANCE"
-CC_FILE     += Par_LB_RedistributeByRectangular.cpp  Par_LB_SendParticle.cpp  Par_LB_CollectParticleFromDescendant.cpp
+CC_FILE     += Par_LB_RedistributeByRectangular.cpp  Par_LB_SendParticle.cpp  Par_LB_CollectParticleFromDescendant.cpp \
+               Par_LB_CollectParticleFromRealPatch.cpp
 
 vpath %.cpp    Particle/LoadBalance
 endif # LOAD_BALANCE
@@ -315,7 +316,7 @@ endif # PARTICLE
 ifeq "$(findstring SERIAL, $(SIMU_OPTION))" ""
 CC_FILE     += Flu_AllocateFluxArray_Buffer.cpp
 
-CC_FILE     += Flag_Buffer.cpp  Refine_Buffer.cpp  
+CC_FILE     += Flag_Buffer.cpp  Refine_Buffer.cpp
 
 CC_FILE     += Buf_AllocateBufferPatch.cpp  Buf_AllocateBufferPatch_Base.cpp  Buf_GetBufferData.cpp \
                Buf_RecordExchangeDataPatchID.cpp  Buf_RecordExchangeFluxPatchID.cpp Buf_SortBoundaryPatch.cpp \
@@ -323,10 +324,10 @@ CC_FILE     += Buf_AllocateBufferPatch.cpp  Buf_AllocateBufferPatch_Base.cpp  Bu
                Buf_ResetBufferFlux.cpp
 
 CC_FILE     += MPI_ExchangeBoundaryFlag.cpp  MPI_ExchangeBufferPosition.cpp  MPI_ExchangeData.cpp \
-               Init_MPI.cpp  MPI_Exit.cpp  
+               Init_MPI.cpp  MPI_Exit.cpp
 
 CC_FILE     += Output_BoundaryFlagList.cpp  Output_ExchangeDataPatchList.cpp  Output_ExchangeFluxPatchList.cpp \
-               Output_ExchangePatchMap.cpp 
+               Output_ExchangePatchMap.cpp
 
 CC_FILE     += Aux_RecordBoundaryPatch.cpp
 
@@ -464,13 +465,13 @@ endif
 # -------------------------------------------------------------------------------
 LIB :=
 ifeq "$(findstring GPU, $(SIMU_OPTION))" "GPU"
-LIB += -L$(CUDA_TOOLKIT_PATH)/lib64 
-#LIB += -L$(CUDA_TOOLKIT_PATH)/lib 
-LIB += -lcudart 
+LIB += -L$(CUDA_TOOLKIT_PATH)/lib64
+#LIB += -L$(CUDA_TOOLKIT_PATH)/lib
+LIB += -lcudart
 endif
 
 ifeq "$(findstring INTEL, $(SIMU_OPTION))" "INTEL"
-LIB += -limf 
+LIB += -limf
 endif
 
 ifeq "$(findstring LAOHU, $(SIMU_OPTION))" "LAOHU"
@@ -478,18 +479,18 @@ LIB += -L$(GPUID_PATH) -lgpudevmgr
 endif
 
 ifeq "$(findstring GRAVITY, $(SIMU_OPTION))" "GRAVITY"
-   LIB += -L$(FFTW_PATH)/lib 
+   LIB += -L$(FFTW_PATH)/lib
    ifeq "$(findstring FLOAT8, $(SIMU_OPTION))" "FLOAT8"
       ifeq "$(findstring SERIAL, $(SIMU_OPTION))" "SERIAL"
-         LIB += -ldrfftw -ldfftw 
+         LIB += -ldrfftw -ldfftw
       else
-         LIB += -ldrfftw_mpi -ldfftw_mpi -ldrfftw -ldfftw 
+         LIB += -ldrfftw_mpi -ldfftw_mpi -ldrfftw -ldfftw
       endif
    else
       ifeq "$(findstring SERIAL, $(SIMU_OPTION))" "SERIAL"
-         LIB += -lsrfftw -lsfftw 
+         LIB += -lsrfftw -lsfftw
       else
-         LIB += -lsrfftw_mpi -lsfftw_mpi -lsrfftw -lsfftw 
+         LIB += -lsrfftw_mpi -lsfftw_mpi -lsrfftw -lsfftw
       endif
    endif
 endif
@@ -507,9 +508,9 @@ LIB += -L$(HDF5_PATH)/lib -lhdf5
 endif
 
 
-# headers 
+# headers
 # -------------------------------------------------------------------------------
-INCLUDE := -I../include 
+INCLUDE := -I../include
 
 ifeq "$(findstring SERIAL, $(SIMU_OPTION))" ""
 INCLUDE += -I$(MPI_PATH)/include
@@ -532,13 +533,13 @@ ifeq "$(findstring INTEL, $(SIMU_OPTION))" "INTEL"
 CXXWARN_FLAG := -w1
 else
 CXXWARN_FLAG := -Wextra -Wall -Wswitch -Wformat -Wchar-subscripts -Wparentheses -Wmultichar \
-                -Wtrigraphs -Wpointer-arith -Wcast-align -Wreturn-type -Wno-unused-function 
+                -Wtrigraphs -Wpointer-arith -Wcast-align -Wreturn-type -Wno-unused-function
 endif
 
 ifeq "$(findstring OPENMP, $(SIMU_OPTION))" ""
 CXXWARN_FLAG += -Wno-unknown-pragmas
    ifeq "$(findstring INTEL, $(SIMU_OPTION))" "INTEL"
-      CXXWARN_FLAG += -diag-disable 3180 
+      CXXWARN_FLAG += -diag-disable 3180
    endif
 endif
 
@@ -592,7 +593,7 @@ else ifeq "$(findstring GPU_ARCH=KEPLER, $(SIMU_OPTION))" "GPU_ARCH=KEPLER"
 endif
 
 # Poisson/gravity solvers flags
-NVCCFLAG_POT += -Xptxas -dlcm=ca 
+NVCCFLAG_POT += -Xptxas -dlcm=ca
 
 
 # implicit rules (do NOT modify the order of the following rules)
@@ -617,13 +618,13 @@ $(OBJ_PATH)/%.o : %.cpp
 $(EXECUTABLE) : $(OBJ)
 	$(CXX) -o $@ $^ $(LIB) $(OPENMP)
 	rm ./*.linkinfo -f
-	cp $(EXECUTABLE) ../bin/Run/ 
+	cp $(EXECUTABLE) ../bin/Run/
 
 
 # clean
 # -------------------------------------------------------------------------------
 .PHONY: clean
-clean : 
+clean :
 	rm -f $(OBJ_PATH)/*
 	rm -f $(EXECUTABLE)
 	rm ./*.linkinfo -f

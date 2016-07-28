@@ -296,7 +296,7 @@ CC_FILE     += Par_Init_Function.cpp  Par_Output_Particle.cpp  Par_FindHomePatch
                Par_MassAssignment.cpp  Par_UpdateParticle.cpp  Par_GetTimeStep_VelAcc.cpp \
                Par_PassParticle2Sibling.cpp  Par_CountParticleInDescendant.cpp  Par_GetEnergy.cpp \
                Par_Aux_InitCheck.cpp  Par_Aux_GetParticleLevel.cpp  Par_PassParticle2Son_AllPatch.cpp \
-               Par_Synchronize.cpp
+               Par_Synchronize.cpp  Par_PredictPos.cpp
 
 vpath %.cu     Particle/GPU
 vpath %.cpp    Particle/CPU  Particle
