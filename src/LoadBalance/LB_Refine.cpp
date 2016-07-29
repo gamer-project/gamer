@@ -103,6 +103,13 @@ void LB_Refine( const int FaLv )
       LB_RecordOverlapMPIPatchID( SonLv );
    }
 
+// 4.6 list for exchanging particles
+#  ifdef PARTICLE
+   Par_LB_RecordExchangeParticlePatchID( SonLv );
+   if ( SonLv < MAX_LEVEL )
+   Par_LB_RecordExchangeParticlePatchID( SonLv+1 );
+#  endif
+
 
 // 5. miscellaneous 
 // ==========================================================================================

@@ -13,7 +13,7 @@
 // Note        :  1. Skip particles with time < 0.0
 //                   --> These are the particles waiting for velocity correction in the KDK scheme
 //                   --> We assume that they have already been synchronized with TargetTime
-//                2. Called by "Par_MassAssignment, Par_LB_CollectParticleFromDescendant, and
+//                2. Called by "Par_MassAssignment, Par_LB_CollectParticle2OneLevel, and
 //                   Par_LB_CollectParticleFromRealPatch"
 //
 // Parmaeter   :  NPar        : Number of target particles

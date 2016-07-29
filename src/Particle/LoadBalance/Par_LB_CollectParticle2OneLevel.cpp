@@ -7,35 +7,45 @@
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Par_LB_CollectParticleFromDescendant
-// Description :  Parallel version of Par_CollectParticleFromDescendant for collecting particles from all
-//                descendants (sons, grandsons, ...) to father
+// Function    :  Par_LB_CollectParticle2OneLevel
+// Description :  Parallel version of Par_CollectParticle2OneLevel for collecting particles from all
+//                descendants (sons, grandsons, ...) to patches at a target level
 //
 // Note        :  1. ParList in all descendants will NOT be changeed after calling this function
 //                2. Array ParMassPos_Away will be allocated for patches at FaLv with particles in descendant patches
-//                   --> Must be deallocated afterward by calling Par_LB_CollectParticleFromDescendant_FreeMemory
+//                   --> Must be deallocated afterward by calling Par_LB_CollectParticle2OneLevel_FreeMemory
 //                3. Do not take into account it's own particles (particles at FaLv)
 //                   --> Do nothing if this patch is a leaf patch (ParMassPos_Away array will NOT be allocated)
 //                4. This function assumes that all particles live in the leaf patch
-//                5. Invoked by Par_CollectParticleFromDescendant
+//                5. Invoked by Par_CollectParticle2OneLevel
 //                6. This function only collects particle mass and position
 //                   --> Mainly for depositing particle mass onto grids
 //                   --> Particle position are predicted before sending to other ranks so that we don't have to
 //                       send particle velocity
+//                7. When SibBufPatch is on, this function will also collect particles for sibling-buffer patchesat FaLv
+//                   --> Moreover, if FaSibBufPatch is also on, it will also collect particles for
+//                       father-sibling-buffer patches at FaLv-1 (if FaLv > 0)
+//                       --> Useful for constructing the density field at FaLv for the Poisson solver at FaLv
 //
-// Parameter   :  FaLv        : Father's refinement level
-//                PredictPos  : Predict particle position, which is useful for particle mass assignement
-//                              --> We send particle position **after** prediction so that we don't have to
-//                                  send particle velocity
-//                TargetTime  : Target time for predicting the particle position
+// Parameter   :  FaLv           : Father's refinement level
+//                PredictPos     : Predict particle position, which is useful for particle mass assignement
+//                                 --> We send particle position **after** prediction so that we don't have to
+//                                     send particle velocity
+//                TargetTime     : Target time for predicting the particle position
+//                SibBufPatch    : true --> Collect particles for sibling-buffer patches at FaLv as well
+//                FaSibBufPatch  : true --> Collect particles for father-sibling-buffer patches at FaLv-1 as well
+//                                          (do nothing if FaLv==0)
 //
 // Return      :  NPar_Away and ParMassPos_Away array for all non-leaf patches at FaLv
 //-------------------------------------------------------------------------------------------------------
-void Par_LB_CollectParticleFromDescendant( const int FaLv, const bool PredictPos, const double TargetTime )
+void Par_LB_CollectParticle2OneLevel( const int FaLv, const bool PredictPos, const double TargetTime,
+                                      const bool SibBufPatch, const bool FaSibBufPatch )
 {
 
-// nothing to do for the max level
-   if ( FaLv >= MAX_LEVEL )   return;
+// nothing to do for levels above the max level
+// (but note that if SibBufPatch or FaSibBufPatch is on, we need to collect particles for buffer patches
+// even when FaLv == MAX_LEVEL)
+   if ( FaLv > MAX_LEVEL )    return;
 
 
    const int NParVar = 4;  // mass*1 + position*3
@@ -61,6 +71,23 @@ void Par_LB_CollectParticleFromDescendant( const int FaLv, const bool PredictPos
       }
    }
 #  endif // #ifdef DEBUG_PARTICLE
+
+
+// 0. jump to step 5 if the target level is the maximum level --> just collect particles for buffer patches
+   if ( FaLv == MAX_LEVEL )
+   {
+//    0-1. sibling-buffer patches at FaLv
+      if ( SibBufPatch )
+         Par_LB_CollectParticleFromRealPatch( FaLv,   amr->Par->RecvPar_NPatch[FaLv][0], amr->Par->RecvPar_PIDList[FaLv][0],
+                                              PredictPos, TargetTime );
+
+//    0-2. father-sibling-buffer patches at FaLv-1
+      if ( FaSibBufPatch  &&  FaLv > 0 )
+         Par_LB_CollectParticleFromRealPatch( FaLv-1, amr->Par->RecvPar_NPatch[FaLv][1], amr->Par->RecvPar_PIDList[FaLv][1],
+                                              PredictPos, TargetTime );
+
+      return;
+   }
 
 
 // 1. prepare the send buffers
@@ -393,7 +420,19 @@ void Par_LB_CollectParticleFromDescendant( const int FaLv, const bool PredictPos
 #  endif // #ifdef DEBUG_PARTICLE
 
 
-// 5. free memory
+// 5. collect particles for buffer patches
+// 5-1. sibling-buffer patches at FaLv
+   if ( SibBufPatch )
+      Par_LB_CollectParticleFromRealPatch( FaLv,   amr->Par->RecvPar_NPatch[FaLv][0], amr->Par->RecvPar_PIDList[FaLv][0],
+                                           PredictPos, TargetTime );
+
+// 5-2. father-sibling-buffer patches at FaLv-1
+   if ( FaSibBufPatch  &&  FaLv > 0 )
+      Par_LB_CollectParticleFromRealPatch( FaLv-1, amr->Par->RecvPar_NPatch[FaLv][1], amr->Par->RecvPar_PIDList[FaLv][1],
+                                           PredictPos, TargetTime );
+
+
+// 6. free memory
    delete [] RecvBuf_NPatchEachRank;
    delete [] RecvBuf_NParEachPatch;
    delete [] RecvBuf_LBIdxEachPatch;
@@ -406,7 +445,109 @@ void Par_LB_CollectParticleFromDescendant( const int FaLv, const bool PredictPos
    delete [] Match_LBIdxEachPatch;
    delete [] FaPIDList;
 
-} // FUNCTION : Par_LB_CollectParticleFromDescendant
+} // FUNCTION : Par_LB_CollectParticle2OneLevel
+
+
+
+//-------------------------------------------------------------------------------------------------------
+// Function    :  Par_LB_CollectParticle2OneLevel_FreeMemory
+// Description :  Release the memory allocated by Par_LB_CollectParticle2OneLevel
+//
+// Note        :  1. Invoded by Par_CollectParticle2OneLevel_FreeMemory
+//
+// Parameter   :  lv           : Target refinement level
+//                SibBufPatch    : true --> Release memory for sibling-buffer patches at lv as well
+//                FaSibBufPatch  : true --> Release memory for father-sibling-buffer patches at lv-1 as well
+//                                          (do nothing if lv==0)
+//
+// Return      :  None
+//-------------------------------------------------------------------------------------------------------
+void Par_LB_CollectParticle2OneLevel_FreeMemory( const int lv, const bool SibBufPatch, const bool FaSibBufPatch )
+{
+
+   const int NParVar = 4;
+
+
+// 1. real patches at lv
+   for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
+   {
+      for (int v=0; v<NParVar; v++)
+      {
+         if ( amr->patch[0][lv][PID]->ParMassPos_Away[v] != NULL )
+         {
+            delete [] amr->patch[0][lv][PID]->ParMassPos_Away[v];
+            amr->patch[0][lv][PID]->ParMassPos_Away[v] = NULL;
+         }
+      }
+
+//    -1 : indicating that NPar_Away is not calculated yet
+      amr->patch[0][lv][PID]->NPar_Away = -1;
+   }
+
+
+// 2. sibling-buffer patches at lv
+   if ( SibBufPatch )
+   for (int p=0; p<amr->Par->RecvPar_NPatch[lv][0]; p++)
+   {
+      const int PID = amr->Par->RecvPar_PIDList[lv][0][p];
+
+      for (int v=0; v<NParVar; v++)
+      {
+         if ( amr->patch[0][lv][PID]->ParMassPos_Away[v] != NULL )
+         {
+            delete [] amr->patch[0][lv][PID]->ParMassPos_Away[v];
+            amr->patch[0][lv][PID]->ParMassPos_Away[v] = NULL;
+         }
+      }
+
+//    -1 : indicating that NPar_Away is not calculated yet
+      amr->patch[0][lv][PID]->NPar_Away = -1;
+   }
+
+
+// 3. father-sibling-buffer patches at lv-1
+   const int FaLv = lv - 1;
+
+   if ( FaSibBufPatch  &&  FaLv >= 0 )
+   for (int p=0; p<amr->Par->RecvPar_NPatch[lv][1]; p++)
+   {
+      const int FaPID = amr->Par->RecvPar_PIDList[lv][1][p];
+
+      for (int v=0; v<NParVar; v++)
+      {
+         if ( amr->patch[0][FaLv][FaPID]->ParMassPos_Away[v] != NULL )
+         {
+            delete [] amr->patch[0][FaLv][FaPID]->ParMassPos_Away[v];
+            amr->patch[0][FaLv][FaPID]->ParMassPos_Away[v] = NULL;
+         }
+      }
+
+//    -1 : indicating that NPar_Away is not calculated yet
+      amr->patch[0][FaLv][FaPID]->NPar_Away = -1;
+   }
+
+
+// check: if we do everthing correctly, no patches (either real or buffer patches) at lv and lv-1
+//        should have ParMassPos_Away allocated
+#  ifdef DEBUG_PARTICLE
+   for (int TLv=lv; (TLv>=lv-1 && TLv>=0); TLv--)
+   {
+//    loop over all real and buffer patches
+      for (int PID=0; PID<amr->num[TLv]; PID++)
+      {
+         for (int v=0; v<NParVar; v++)
+         if ( amr->patch[0][TLv][PID]->ParMassPos_Away[v] != NULL )
+            Aux_Error( ERROR_INFO, "lv %d, PID %d, v %d, ParMassPos_Away != NULL !!\n",
+                       TLv, PID, v );
+
+         if ( amr->patch[0][TLv][PID]->NPar_Away != -1 )
+            Aux_Error( ERROR_INFO, "lv %d, PID %d, NPar_Away = %d != -1 !!\n",
+                       TLv, PID, amr->patch[0][TLv][PID]->NPar_Away );
+      }
+   }
+#  endif // #ifdef DEBUG_PARTICLE
+
+} // FUNCTION : Par_LB_CollectParticle2OneLevel_FreeMemory
 
 
 

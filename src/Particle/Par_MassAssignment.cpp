@@ -348,8 +348,8 @@ void Par_MassAssignment( const long *ParList, const long NPar, const ParInterp_t
 
 
 // 5. free memory
-   for (int d=0; d<3; d++)
-      if ( Pos[d] != NULL )   delete [] Pos[d];
+   if ( !UseInputMassPos )
+      for (int d=0; d<3; d++)    delete [] Pos[d];
 
 } // FUNCTION : Par_MassAssignment
 

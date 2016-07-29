@@ -57,6 +57,8 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
    const bool Periodic_No             = false;
    const bool UnitDens_Yes            = true;
    const bool CheckFarAway_No         = false;
+   const bool SibBufPatch_No          = false;
+   const bool FaSibBufPatch_No        = false;
 #  endif
 
 //###NOTE: no refinement is allowed near the simulation boundary if the isolated BC for self-gravity is selected
@@ -94,9 +96,9 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
    Lohner_Stride = Lohner_NVar*Lohner_NCell*Lohner_NCell*Lohner_NCell;  // stride of array for one patch
 
 
-// collect particles from all descendant patches
+// collect particles to **real** patches at lv
 #  ifdef PARTICLE
-   if ( OPT__FLAG_NPAR_CELL )    Par_CollectParticleFromDescendant( lv, PredictPos_No, NULL_REAL );
+   if ( OPT__FLAG_NPAR_CELL )    Par_CollectParticle2OneLevel( lv, PredictPos_No, NULL_REAL, SibBufPatch_No, FaSibBufPatch_No );
 #  endif
       
 
@@ -389,9 +391,9 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
    } // OpenMP parallel region
 
 
-// free variables of descendant particles
+// free memory allocated by Par_CollectParticle2OneLevel
 #  ifdef PARTICLE
-   if ( OPT__FLAG_NPAR_CELL )    Par_CollectParticleFromDescendant_FreeMemory( lv );
+   if ( OPT__FLAG_NPAR_CELL )    Par_CollectParticle2OneLevel_FreeMemory( lv, SibBufPatch_No, FaSibBufPatch_No );
 #  endif
 
 

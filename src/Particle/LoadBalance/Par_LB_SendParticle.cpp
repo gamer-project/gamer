@@ -38,8 +38,8 @@
 //                RecvBuf_LBIdxEachPatch (if Exchange_LBIdxEachRank == true), RecvBuf_ParDataEachPatch,
 //                NRecvPatchTotal, NRecvPatchTotal
 //-------------------------------------------------------------------------------------------------------
-void Par_LB_SendParticle( const int NParVar, const int *SendBuf_NPatchEachRank,
-                          const int *SendBuf_NParEachPatch, const long *SendBuf_LBIdxEachPatch, const real *SendBuf_ParDataEachPatch,
+void Par_LB_SendParticle( const int NParVar, int *SendBuf_NPatchEachRank, int *SendBuf_NParEachPatch,
+                          long *SendBuf_LBIdxEachPatch, real *SendBuf_ParDataEachPatch,
                           int *&RecvBuf_NPatchEachRank, int *&RecvBuf_NParEachPatch, long *&RecvBuf_LBIdxEachPatch,
                           real *&RecvBuf_ParDataEachPatch, int &NRecvPatchTotal, int &NRecvParTotal,
                           const bool Exchange_NPatchEachRank, const bool Exchange_LBIdxEachRank )

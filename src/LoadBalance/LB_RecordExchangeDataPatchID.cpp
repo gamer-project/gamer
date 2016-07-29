@@ -6,8 +6,8 @@
 
 
 static void SetTargetSibling( int NTSib[], int* TSib_List[] );
-static void SetTargetLocalID( int NTLocalID[], int *TLocalID[] );
-static void SetTargetSibPID0( const int lv, const int PID0, int SibPID0_List[] );
+       void SetTargetLocalID( int NTLocalID[], int *TLocalID[] );
+       void SetTargetSibPID0( const int lv, const int PID0, int SibPID0_List[] );
 static void SetSiblingMask( int SibMask_Check[], int SibMask_Clear[], int SibMask_Duplicate[] );
 static void SetReceiveSibling( int* RSib_List[] );
 
@@ -18,14 +18,14 @@ static void SetReceiveSibling( int* RSib_List[] );
 // Function    :  LB_RecordExchangeDataPatchID
 // Description :  Construct the MPI sending and receiving data lists for exchanging both hydro
 //                and potential data
-// 
+//
 // Note        :  1. LB_RecvH_IDList is unsorted --> use "LB_RecvH_IDList_Idxtable" to obtain the correct order
 //                   <--> All other lists are sorted
 //                2. This function will NOT deallocate any fluid/pot arrays allocated previously
 //
 // Parameter   :  Lv          : Targeted refinement level for recording MPI lists
 //                AfterRefine : Record the difference between old and new MPI lists after grid refinement
-//                              --> Minimizing the MPI time after grid refinement by only exchanging the 
+//                              --> Minimizing the MPI time after grid refinement by only exchanging the
 //                                  buffer data that do not exist in the old MPI lists
 //-------------------------------------------------------------------------------------------------------
 void LB_RecordExchangeDataPatchID( const int Lv, const bool AfterRefine )
@@ -48,7 +48,7 @@ void LB_RecordExchangeDataPatchID( const int Lv, const bool AfterRefine )
    int  SibMask_Check[27], SibMask_Clear[27], SibMask_Duplicate[27];
    long SibLBIdx;
 
-   int   MemSize_H[MPI_NRank], *LB_RecvH_SibList_Unsorted[MPI_NRank], *SibList_H, *Match_H; 
+   int   MemSize_H[MPI_NRank], *LB_RecvH_SibList_Unsorted[MPI_NRank], *SibList_H, *Match_H;
    int   Old_RecvH_NList[MPI_NRank], *Old_RecvH_SibList[MPI_NRank], *Old_RecvH_PCr1D_IdxTable[MPI_NRank];
   ulong *Old_RecvH_PCr1D[MPI_NRank];
 
@@ -174,7 +174,7 @@ void LB_RecordExchangeDataPatchID( const int Lv, const bool AfterRefine )
 
 //             2.1.2 potential
 //###OPTIMIZATION: these buffer patches are allocated for the gravity solver at the base level and the
-//                 time-step estimation --> only need to exchange "GRA_GHOST_SIZE" cells 
+//                 time-step estimation --> only need to exchange "GRA_GHOST_SIZE" cells
 #              ifdef GRAVITY
 //             record sibling indices
                if (  ( SibList_G[SibIdx] & SibMask_Check[RSib] ) == false  )
@@ -214,7 +214,7 @@ void LB_RecordExchangeDataPatchID( const int Lv, const bool AfterRefine )
 
 #           ifdef GAMER_DEBUG
             if ( FaSibPID0 < 0 )
-               Aux_Error( ERROR_INFO, "Lv %d, SonPID0 %d, FaPID %d has no sibling [%d] !!\n", 
+               Aux_Error( ERROR_INFO, "Lv %d, SonPID0 %d, FaPID %d has no sibling [%d] !!\n",
                           Lv, SonPID0, FaPID, s );
 #           endif
 
@@ -226,7 +226,7 @@ void LB_RecordExchangeDataPatchID( const int Lv, const bool AfterRefine )
 
 #              ifdef GAMER_DEBUG
                if ( FaSibPID == -1 )
-                  Aux_Error( ERROR_INFO, "Lv %d, FaSibPID0 %d has no sibling [%d] !!\n", 
+                  Aux_Error( ERROR_INFO, "Lv %d, FaSibPID0 %d has no sibling [%d] !!\n",
                              Lv, FaSibPID0, Side );
 #              endif
             }
@@ -373,9 +373,9 @@ void LB_RecordExchangeDataPatchID( const int Lv, const bool AfterRefine )
          if ( LB_RecvH_NList[TRank] >= MemSize_H[TRank] )
          {
             MemSize_H                [TRank] += MemUnit_H;
-            LB_RecvH_IDList          [TRank]  = (int*)realloc( LB_RecvH_IDList          [TRank], 
+            LB_RecvH_IDList          [TRank]  = (int*)realloc( LB_RecvH_IDList          [TRank],
                                                                MemSize_H[TRank]*sizeof(int) );
-            LB_RecvH_SibList_Unsorted[TRank]  = (int*)realloc( LB_RecvH_SibList_Unsorted[TRank], 
+            LB_RecvH_SibList_Unsorted[TRank]  = (int*)realloc( LB_RecvH_SibList_Unsorted[TRank],
                                                                MemSize_H[TRank]*sizeof(int) );
          }
 
@@ -401,9 +401,9 @@ void LB_RecordExchangeDataPatchID( const int Lv, const bool AfterRefine )
          if ( LB_RecvG_NList[TRank] >= MemSize_G[TRank] )
          {
             MemSize_G                [TRank] += MemUnit_G;
-            LB_RecvG_IDList          [TRank]  = (int*)realloc( LB_RecvG_IDList          [TRank], 
+            LB_RecvG_IDList          [TRank]  = (int*)realloc( LB_RecvG_IDList          [TRank],
                                                                MemSize_G[TRank]*sizeof(int) );
-            LB_RecvG_SibList_Unsorted[TRank]  = (int*)realloc( LB_RecvG_SibList_Unsorted[TRank], 
+            LB_RecvG_SibList_Unsorted[TRank]  = (int*)realloc( LB_RecvG_SibList_Unsorted[TRank],
                                                                MemSize_G[TRank]*sizeof(int) );
          }
 
@@ -427,10 +427,10 @@ void LB_RecordExchangeDataPatchID( const int Lv, const bool AfterRefine )
 // 4.1.2 get the displacement and total count
    Send_Disp_H[0] = 0;
    Recv_Disp_H[0] = 0;
-   for (int r=1; r<MPI_NRank; r++)  
+   for (int r=1; r<MPI_NRank; r++)
    {
-      Send_Disp_H[r] = Send_Disp_H[r-1] + LB_RecvH_NList[r-1]; 
-      Recv_Disp_H[r] = Recv_Disp_H[r-1] + LB_SendH_NList[r-1]; 
+      Send_Disp_H[r] = Send_Disp_H[r-1] + LB_RecvH_NList[r-1];
+      Recv_Disp_H[r] = Recv_Disp_H[r-1] + LB_SendH_NList[r-1];
    }
    NSend_Total_H = Send_Disp_H[MPI_NRank-1] + LB_RecvH_NList[MPI_NRank-1];
    NRecv_Total_H = Recv_Disp_H[MPI_NRank-1] + LB_SendH_NList[MPI_NRank-1];
@@ -446,10 +446,10 @@ void LB_RecordExchangeDataPatchID( const int Lv, const bool AfterRefine )
 // 4.2.2 prepare the MPI buffers
    Send_Disp_G[0] = 0;
    Recv_Disp_G[0] = 0;
-   for (int r=1; r<MPI_NRank; r++)  
+   for (int r=1; r<MPI_NRank; r++)
    {
-      Send_Disp_G[r] = Send_Disp_G[r-1] + LB_RecvG_NList[r-1]; 
-      Recv_Disp_G[r] = Recv_Disp_G[r-1] + LB_SendG_NList[r-1]; 
+      Send_Disp_G[r] = Send_Disp_G[r-1] + LB_RecvG_NList[r-1];
+      Recv_Disp_G[r] = Recv_Disp_G[r-1] + LB_SendG_NList[r-1];
    }
    NSend_Total_G = Send_Disp_G[MPI_NRank-1] + LB_RecvG_NList[MPI_NRank-1];
    NRecv_Total_G = Recv_Disp_G[MPI_NRank-1] + LB_SendG_NList[MPI_NRank-1];
@@ -457,7 +457,7 @@ void LB_RecordExchangeDataPatchID( const int Lv, const bool AfterRefine )
 
 
 
-// 5. sort the recv list 
+// 5. sort the recv list
 // ============================================================================================================
 // 5.1 hydro
 // 5.1.1 allocate memory
@@ -539,7 +539,7 @@ void LB_RecordExchangeDataPatchID( const int Lv, const bool AfterRefine )
                if ( Old_RecvH_SibList[r][OID] & (1<< s) )   Old_RecvH_SibList[r][OID] |= SibMask_Duplicate[ s];
 
 //             record SibDiff List
-               LB_RecvH_SibDiffList[r][NID] = LB_RecvH_SibList[r][NID] & ( ~Old_RecvH_SibList[r][OID] ); 
+               LB_RecvH_SibDiffList[r][NID] = LB_RecvH_SibList[r][NID] & ( ~Old_RecvH_SibList[r][OID] );
             }
          }
 
@@ -555,7 +555,7 @@ void LB_RecordExchangeDataPatchID( const int Lv, const bool AfterRefine )
 
       for (int t=1; t<LB_RecvH_NList[r]; t++)
          if ( TempIDList[t] == TempIDList[t-1] )
-            Aux_Error( ERROR_INFO, "Lv %d, Rank %d, repeated recv fluid PID %d !!\n", 
+            Aux_Error( ERROR_INFO, "Lv %d, Rank %d, repeated recv fluid PID %d !!\n",
                        Lv, r, TempIDList[t] );
 
       delete [] TempIDList;
@@ -600,7 +600,7 @@ void LB_RecordExchangeDataPatchID( const int Lv, const bool AfterRefine )
       LB_SendG_LBIdxList      [r] = LB_SendG_LBIdxList      [0] + Recv_Disp_G[r];
 
 //    5.2.3 get the sorted LBIdx list
-      for (int t=0; t<LB_RecvG_NList[r]; t++)  
+      for (int t=0; t<LB_RecvG_NList[r]; t++)
          LB_RecvG_LBIdxList[r][t] = amr->patch[0][Lv][ LB_RecvG_IDList[r][t] ]->LB_Idx;
 
       Mis_Heapsort( LB_RecvG_NList[r], LB_RecvG_LBIdxList[r], LB_RecvG_IDList_IdxTable[r] );
@@ -622,7 +622,7 @@ void LB_RecordExchangeDataPatchID( const int Lv, const bool AfterRefine )
       {
          Match_G = new int [ LB_RecvG_NList[r] ];
 
-//       match patches with the same LB_Idx 
+//       match patches with the same LB_Idx
          Mis_Matching_int( Old_RecvG_NList[r], Old_RecvG_PCr1D[r], LB_RecvG_NList[r], LB_RecvG_PCr1D[r], Match_G );
 
 //       remove sibling directions already exist in the previous MPI lists
@@ -644,7 +644,7 @@ void LB_RecordExchangeDataPatchID( const int Lv, const bool AfterRefine )
                if ( Old_RecvG_SibList[r][OID] & (1<< s) )   Old_RecvG_SibList[r][OID] |= SibMask_Duplicate[ s];
 
 //             record SibDiff List
-               LB_RecvG_SibDiffList[r][NID] = LB_RecvG_SibList[r][NID] & ( ~Old_RecvG_SibList[r][OID] ); 
+               LB_RecvG_SibDiffList[r][NID] = LB_RecvG_SibList[r][NID] & ( ~Old_RecvG_SibList[r][OID] );
             }
          }
 
@@ -660,7 +660,7 @@ void LB_RecordExchangeDataPatchID( const int Lv, const bool AfterRefine )
 
       for (int t=1; t<LB_RecvG_NList[r]; t++)
          if ( TempIDList[t] == TempIDList[t-1] )
-            Aux_Error( ERROR_INFO, "Lv %d, Rank %d, repeated recv potential PID %d !!\n", 
+            Aux_Error( ERROR_INFO, "Lv %d, Rank %d, repeated recv potential PID %d !!\n",
                        Lv, r, TempIDList[t] );
 
       delete [] TempIDList;
@@ -680,14 +680,14 @@ void LB_RecordExchangeDataPatchID( const int Lv, const bool AfterRefine )
    int  *RecvBuf_SibDiffList_H = LB_SendH_SibDiffList[0];
    long *RecvBuf_LBIdx_H       = LB_SendH_LBIdxList  [0];
 
-   MPI_Alltoallv( SendBuf_SibList_H,     LB_RecvH_NList, Send_Disp_H, MPI_INT, 
+   MPI_Alltoallv( SendBuf_SibList_H,     LB_RecvH_NList, Send_Disp_H, MPI_INT,
                   RecvBuf_SibList_H,     LB_SendH_NList, Recv_Disp_H, MPI_INT,  MPI_COMM_WORLD );
 
    if ( AfterRefine )
-   MPI_Alltoallv( SendBuf_SibDiffList_H, LB_RecvH_NList, Send_Disp_H, MPI_INT, 
+   MPI_Alltoallv( SendBuf_SibDiffList_H, LB_RecvH_NList, Send_Disp_H, MPI_INT,
                   RecvBuf_SibDiffList_H, LB_SendH_NList, Recv_Disp_H, MPI_INT,  MPI_COMM_WORLD );
 
-   MPI_Alltoallv( SendBuf_LBIdx_H,       LB_RecvH_NList, Send_Disp_H, MPI_LONG, 
+   MPI_Alltoallv( SendBuf_LBIdx_H,       LB_RecvH_NList, Send_Disp_H, MPI_LONG,
                   RecvBuf_LBIdx_H,       LB_SendH_NList, Recv_Disp_H, MPI_LONG, MPI_COMM_WORLD );
 
 
@@ -700,14 +700,14 @@ void LB_RecordExchangeDataPatchID( const int Lv, const bool AfterRefine )
    int  *RecvBuf_SibDiffList_G = LB_SendG_SibDiffList[0];
    long *RecvBuf_LBIdx_G       = LB_SendG_LBIdxList  [0];
 
-   MPI_Alltoallv( SendBuf_SibList_G,     LB_RecvG_NList, Send_Disp_G, MPI_INT, 
+   MPI_Alltoallv( SendBuf_SibList_G,     LB_RecvG_NList, Send_Disp_G, MPI_INT,
                   RecvBuf_SibList_G,     LB_SendG_NList, Recv_Disp_G, MPI_INT,  MPI_COMM_WORLD );
 
    if ( AfterRefine )
-   MPI_Alltoallv( SendBuf_SibDiffList_G, LB_RecvG_NList, Send_Disp_G, MPI_INT, 
+   MPI_Alltoallv( SendBuf_SibDiffList_G, LB_RecvG_NList, Send_Disp_G, MPI_INT,
                   RecvBuf_SibDiffList_G, LB_SendG_NList, Recv_Disp_G, MPI_INT,  MPI_COMM_WORLD );
 
-   MPI_Alltoallv( SendBuf_LBIdx_G,       LB_RecvG_NList, Send_Disp_G, MPI_LONG, 
+   MPI_Alltoallv( SendBuf_LBIdx_G,       LB_RecvG_NList, Send_Disp_G, MPI_LONG,
                   RecvBuf_LBIdx_G,       LB_SendG_NList, Recv_Disp_G, MPI_LONG, MPI_COMM_WORLD );
 #  endif // #ifdef GRAVITY
 
@@ -722,14 +722,14 @@ void LB_RecordExchangeDataPatchID( const int Lv, const bool AfterRefine )
       Match_H = new int [ LB_SendH_NList[r] ];
 
 //    7.1.2 match the corresponding PID
-      Mis_Matching_int( amr->NPatchComma[Lv][1], amr->LB->IdxList_Real[Lv], LB_SendH_NList[r], 
+      Mis_Matching_int( amr->NPatchComma[Lv][1], amr->LB->IdxList_Real[Lv], LB_SendH_NList[r],
                         LB_SendH_LBIdxList[r], Match_H );
 
 //    7.1.3 check: all targeted patches must be found
-      #ifdef GAMER_DEBUG       
+      #ifdef GAMER_DEBUG
       for (int t=0; t<LB_SendH_NList[r]; t++)
          if ( Match_H[t] == -1 )
-            Aux_Error( ERROR_INFO, "Lv %d, TRank %d, LB_Idx %ld found no matching patches (hydro) !!\n", 
+            Aux_Error( ERROR_INFO, "Lv %d, TRank %d, LB_Idx %ld found no matching patches (hydro) !!\n",
                        Lv, r, LB_SendH_LBIdxList[r][t] );
 #     endif
 
@@ -753,7 +753,7 @@ void LB_RecordExchangeDataPatchID( const int Lv, const bool AfterRefine )
                         LB_SendG_LBIdxList[r], Match_G );
 
 //    7.2.3 check: all targeted patches must be found
-      #ifdef GAMER_DEBUG       
+      #ifdef GAMER_DEBUG
       for (int t=0; t<LB_SendG_NList[r]; t++)
          if ( Match_G[t] == -1 )
             Aux_Error( ERROR_INFO, "Lv %d, TRank %d, LB_Idx %ld found no matching patches (potential) !!\n",
@@ -804,7 +804,7 @@ void LB_RecordExchangeDataPatchID( const int Lv, const bool AfterRefine )
 //
 // Note        :  1. Faster than using TABLE_03 and TABLE_04
 //                2. TLocalID needs to be deallocated manually
-// 
+//
 // Parameter   :  NTLocalID   : Number of targeted local indices along different sibling directions
 //                TLocalID    : Targeted local indices along different sibling directions
 //-------------------------------------------------------------------------------------------------------
@@ -814,75 +814,75 @@ void SetTargetLocalID( int NTLocalID[], int *TLocalID[] )
    for (int s= 0; s< 6; s++)  NTLocalID[s] = 4;
    for (int s= 6; s<18; s++)  NTLocalID[s] = 2;
    for (int s=18; s<26; s++)  NTLocalID[s] = 1;
-   
+
    for (int s=0; s<26; s++)   TLocalID[s] = new int [ NTLocalID[s] ];
-   
+
    TLocalID[ 0][0] = 0;
    TLocalID[ 0][1] = 3;
    TLocalID[ 0][2] = 5;
    TLocalID[ 0][3] = 6;
-   
+
    TLocalID[ 1][0] = 0;
    TLocalID[ 1][1] = 2;
    TLocalID[ 1][2] = 3;
    TLocalID[ 1][3] = 5;
-   
+
    TLocalID[ 2][0] = 0;
    TLocalID[ 2][1] = 2;
    TLocalID[ 2][2] = 3;
    TLocalID[ 2][3] = 5;
-   
+
    TLocalID[ 3][0] = 0;
    TLocalID[ 3][1] = 1;
    TLocalID[ 3][2] = 3;
    TLocalID[ 3][3] = 6;
-   
+
    TLocalID[ 4][0] = 0;
    TLocalID[ 4][1] = 2;
    TLocalID[ 4][2] = 3;
    TLocalID[ 4][3] = 4;
-   
+
    TLocalID[ 5][0] = 0;
    TLocalID[ 5][1] = 1;
    TLocalID[ 5][2] = 2;
    TLocalID[ 5][3] = 4;
-   
+
    TLocalID[ 6][0] = 0;
    TLocalID[ 6][1] = 3;
-   
+
    TLocalID[ 7][0] = 0;
    TLocalID[ 7][1] = 3;
-   
+
    TLocalID[ 8][0] = 0;
    TLocalID[ 8][1] = 5;
-   
+
    TLocalID[ 9][0] = 0;
    TLocalID[ 9][1] = 3;
-   
+
    TLocalID[10][0] = 0;
    TLocalID[10][1] = 2;
-   
+
    TLocalID[11][0] = 0;
    TLocalID[11][1] = 3;
-   
+
    TLocalID[12][0] = 0;
    TLocalID[12][1] = 2;
-   
+
    TLocalID[13][0] = 0;
    TLocalID[13][1] = 1;
-   
+
    TLocalID[14][0] = 0;
    TLocalID[14][1] = 1;
-   
+
    TLocalID[15][0] = 0;
    TLocalID[15][1] = 3;
-   
+
    TLocalID[16][0] = 0;
    TLocalID[16][1] = 2;
-   
+
    TLocalID[17][0] = 0;
    TLocalID[17][1] = 2;
-   
+
    TLocalID[18][0] = 0;
    TLocalID[19][0] = 0;
    TLocalID[20][0] = 0;
@@ -891,21 +891,21 @@ void SetTargetLocalID( int NTLocalID[], int *TLocalID[] )
    TLocalID[23][0] = 0;
    TLocalID[24][0] = 0;
    TLocalID[25][0] = 0;
-   
+
 } // FUNCTION : SetTargetLocalID
 
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  SetTargetSibPID0 
+// Function    :  SetTargetSibPID0
 // Description :  Set the starting patch indices of the targeted sibling patches for the input patch group
 //
 // Note        :  This function can be used to replace "Table_02" in "Prepare_PatchData"
-// 
+//
 // Parameter   :  lv             : Targeted refinement level
 //                PID0           : Patch index with LocalID==0 in the targeted patch group
 //                SibPID0_List   : Array storing the patch indices of the sibling patches along different
-//                                 directions 
+//                                 directions
 //-------------------------------------------------------------------------------------------------------
 void SetTargetSibPID0( const int lv, const int PID0, int SibPID0_List[] )
 {
@@ -945,10 +945,10 @@ void SetTargetSibPID0( const int lv, const int PID0, int SibPID0_List[] )
 // Function    :  SetSiblingMask
 // Description :  Set the mask for determining which part of patch data to be sent
 //
-// Note        :  Element 0 ~ 25 : data in 26 sibling directions 
+// Note        :  Element 0 ~ 25 : data in 26 sibling directions
 //                Element 26     : entire patch data
-// 
-// Parameter   :  SibMask_Check     : Mask for checking whether the targeted sibling direction has already 
+//
+// Parameter   :  SibMask_Check     : Mask for checking whether the targeted sibling direction has already
 //                                    been included
 //                SibMask_Clear     : Mask for clearing the duplicated sibling directions
 //                SibMask_Duplicate : Mask for checking if there are duplicate targeted sibling directions
@@ -956,7 +956,7 @@ void SetTargetSibPID0( const int lv, const int PID0, int SibPID0_List[] )
 void SetSiblingMask( int SibMask_Check[], int SibMask_Clear[], int SibMask_Duplicate[] )
 {
 
-// check 
+// check
    SibMask_Check[ 0] = (1<<26) | (1<< 0);
    SibMask_Check[ 1] = (1<<26) | (1<< 1);
    SibMask_Check[ 2] = (1<<26) | (1<< 2);
@@ -976,7 +976,7 @@ void SetSiblingMask( int SibMask_Check[], int SibMask_Clear[], int SibMask_Dupli
    SibMask_Check[15] = (1<<26) | (1<<15) | (1<<0) | (1<<5);
    SibMask_Check[16] = (1<<26) | (1<<16) | (1<<1) | (1<<4);
    SibMask_Check[17] = (1<<26) | (1<<17) | (1<<1) | (1<<5);
-                                       
+
    SibMask_Check[18] = (1<<26) | (1<<18) | (1<<0) | (1<<2) | (1<<4) | (1<<6) | (1<<10) | (1<<14);
    SibMask_Check[19] = (1<<26) | (1<<19) | (1<<1) | (1<<2) | (1<<4) | (1<<7) | (1<<10) | (1<<16);
    SibMask_Check[20] = (1<<26) | (1<<20) | (1<<0) | (1<<3) | (1<<4) | (1<<8) | (1<<11) | (1<<14);
@@ -989,7 +989,7 @@ void SetSiblingMask( int SibMask_Check[], int SibMask_Clear[], int SibMask_Dupli
    SibMask_Check[26] = (1<<26);
 
 
-// duplicate 
+// duplicate
    SibMask_Duplicate[ 0] = (1<<18) | (1<<14) | (1<<20) | (1<< 6) | (1<< 8) | (1<<22) | (1<<15) | (1<<24);
    SibMask_Duplicate[ 1] = (1<<19) | (1<<16) | (1<<21) | (1<< 7) | (1<< 9) | (1<<23) | (1<<17) | (1<<25);
    SibMask_Duplicate[ 2] = (1<<18) | (1<<10) | (1<<19) | (1<< 6) | (1<< 7) | (1<<22) | (1<<12) | (1<<23);
@@ -1030,13 +1030,13 @@ void SetSiblingMask( int SibMask_Check[], int SibMask_Clear[], int SibMask_Dupli
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  SetReceiveSibling 
+// Function    :  SetReceiveSibling
 // Description :  Set the sibling directions for receiving ghost-zone data at coarse-grid level
 //
 // Note        :  1. RSib_List needs to be deallocated manually
-//                2. The order of sibling indices recorded in RSib_List must be defined consistently with those 
+//                2. The order of sibling indices recorded in RSib_List must be defined consistently with those
 //                   defined in "SetTargetSibling"
-// 
+//
 // Parameter   :  RSib_List   : Targeted sibling indices along different sibling directions
 //-------------------------------------------------------------------------------------------------------
 void SetReceiveSibling( int* RSib_List[] )
@@ -1049,7 +1049,7 @@ void SetReceiveSibling( int* RSib_List[] )
    for (int t=18; t<26; t++)  NRSib[t] =  8;
 
    for (int s=0; s<26; s++)   RSib_List[s] = new int [ NRSib[s] ];
-   
+
    RSib_List[ 0][ 0] =  1;
    RSib_List[ 0][ 1] = 25;
    RSib_List[ 0][ 2] = 24;
@@ -1068,7 +1068,7 @@ void SetReceiveSibling( int* RSib_List[] )
    RSib_List[ 0][15] = 14;
    RSib_List[ 0][16] = 19;
    RSib_List[ 0][17] = 18;
-                          
+
    RSib_List[ 1][ 0] =  0;
    RSib_List[ 1][ 1] = 25;
    RSib_List[ 1][ 2] = 24;
@@ -1087,7 +1087,7 @@ void SetReceiveSibling( int* RSib_List[] )
    RSib_List[ 1][15] = 14;
    RSib_List[ 1][16] = 19;
    RSib_List[ 1][17] = 18;
-                          
+
    RSib_List[ 2][ 0] =  3;
    RSib_List[ 2][ 1] = 25;
    RSib_List[ 2][ 2] = 13;
@@ -1106,7 +1106,7 @@ void SetReceiveSibling( int* RSib_List[] )
    RSib_List[ 2][15] = 19;
    RSib_List[ 2][16] = 10;
    RSib_List[ 2][17] = 18;
-                          
+
    RSib_List[ 3][ 0] =  2;
    RSib_List[ 3][ 1] = 25;
    RSib_List[ 3][ 2] = 13;
@@ -1125,7 +1125,7 @@ void SetReceiveSibling( int* RSib_List[] )
    RSib_List[ 3][15] = 19;
    RSib_List[ 3][16] = 10;
    RSib_List[ 3][17] = 18;
-                          
+
    RSib_List[ 4][ 0] =  5;
    RSib_List[ 4][ 1] = 25;
    RSib_List[ 4][ 2] = 13;
@@ -1144,7 +1144,7 @@ void SetReceiveSibling( int* RSib_List[] )
    RSib_List[ 4][15] = 19;
    RSib_List[ 4][16] = 10;
    RSib_List[ 4][17] = 18;
-                          
+
    RSib_List[ 5][ 0] =  4;
    RSib_List[ 5][ 1] = 25;
    RSib_List[ 5][ 2] = 13;
@@ -1163,7 +1163,7 @@ void SetReceiveSibling( int* RSib_List[] )
    RSib_List[ 5][15] = 19;
    RSib_List[ 5][16] = 10;
    RSib_List[ 5][17] = 18;
-                          
+
    RSib_List[ 6][ 0] =  9;
    RSib_List[ 6][ 1] = 25;
    RSib_List[ 6][ 2] = 24;
@@ -1176,7 +1176,7 @@ void SetReceiveSibling( int* RSib_List[] )
    RSib_List[ 6][ 9] = 20;
    RSib_List[ 6][10] = 19;
    RSib_List[ 6][11] = 18;
-                          
+
    RSib_List[ 7][ 0] =  8;
    RSib_List[ 7][ 1] = 25;
    RSib_List[ 7][ 2] = 24;
@@ -1189,7 +1189,7 @@ void SetReceiveSibling( int* RSib_List[] )
    RSib_List[ 7][ 9] = 20;
    RSib_List[ 7][10] = 19;
    RSib_List[ 7][11] = 18;
-                          
+
    RSib_List[ 8][ 0] =  7;
    RSib_List[ 8][ 1] = 25;
    RSib_List[ 8][ 2] = 24;
@@ -1202,7 +1202,7 @@ void SetReceiveSibling( int* RSib_List[] )
    RSib_List[ 8][ 9] = 20;
    RSib_List[ 8][10] = 19;
    RSib_List[ 8][11] = 18;
-                          
+
    RSib_List[ 9][ 0] =  6;
    RSib_List[ 9][ 1] = 25;
    RSib_List[ 9][ 2] = 24;
@@ -1215,7 +1215,7 @@ void SetReceiveSibling( int* RSib_List[] )
    RSib_List[ 9][ 9] = 20;
    RSib_List[ 9][10] = 19;
    RSib_List[ 9][11] = 18;
-                          
+
    RSib_List[10][ 0] = 13;
    RSib_List[10][ 1] = 25;
    RSib_List[10][ 2] = 24;
@@ -1228,7 +1228,7 @@ void SetReceiveSibling( int* RSib_List[] )
    RSib_List[10][ 9] = 19;
    RSib_List[10][10] = 10;
    RSib_List[10][11] = 18;
-                          
+
    RSib_List[11][ 0] = 12;
    RSib_List[11][ 1] = 25;
    RSib_List[11][ 2] = 13;
@@ -1241,7 +1241,7 @@ void SetReceiveSibling( int* RSib_List[] )
    RSib_List[11][ 9] = 19;
    RSib_List[11][10] = 10;
    RSib_List[11][11] = 18;
-                          
+
    RSib_List[12][ 0] = 11;
    RSib_List[12][ 1] = 25;
    RSib_List[12][ 2] = 13;
@@ -1254,7 +1254,7 @@ void SetReceiveSibling( int* RSib_List[] )
    RSib_List[12][ 9] = 19;
    RSib_List[12][10] = 10;
    RSib_List[12][11] = 18;
-                          
+
    RSib_List[13][ 0] = 10;
    RSib_List[13][ 1] = 25;
    RSib_List[13][ 2] = 13;
@@ -1267,7 +1267,7 @@ void SetReceiveSibling( int* RSib_List[] )
    RSib_List[13][ 9] = 20;
    RSib_List[13][10] = 19;
    RSib_List[13][11] = 18;
-                          
+
    RSib_List[14][ 0] = 17;
    RSib_List[14][ 1] = 25;
    RSib_List[14][ 2] = 24;
@@ -1280,7 +1280,7 @@ void SetReceiveSibling( int* RSib_List[] )
    RSib_List[14][ 9] = 14;
    RSib_List[14][10] = 19;
    RSib_List[14][11] = 18;
-                          
+
    RSib_List[15][ 0] = 16;
    RSib_List[15][ 1] = 25;
    RSib_List[15][ 2] = 24;
@@ -1293,7 +1293,7 @@ void SetReceiveSibling( int* RSib_List[] )
    RSib_List[15][ 9] = 14;
    RSib_List[15][10] = 19;
    RSib_List[15][11] = 18;
-                          
+
    RSib_List[16][ 0] = 15;
    RSib_List[16][ 1] = 25;
    RSib_List[16][ 2] = 24;
@@ -1306,7 +1306,7 @@ void SetReceiveSibling( int* RSib_List[] )
    RSib_List[16][ 9] = 14;
    RSib_List[16][10] = 19;
    RSib_List[16][11] = 18;
-                          
+
    RSib_List[17][ 0] = 14;
    RSib_List[17][ 1] = 25;
    RSib_List[17][ 2] = 24;
@@ -1319,7 +1319,7 @@ void SetReceiveSibling( int* RSib_List[] )
    RSib_List[17][ 9] = 16;
    RSib_List[17][10] = 19;
    RSib_List[17][11] = 18;
-                          
+
    RSib_List[18][ 0] = 25;
    RSib_List[18][ 1] = 24;
    RSib_List[18][ 2] = 23;
@@ -1328,7 +1328,7 @@ void SetReceiveSibling( int* RSib_List[] )
    RSib_List[18][ 5] = 20;
    RSib_List[18][ 6] = 19;
    RSib_List[18][ 7] = 18;
-                          
+
    RSib_List[19][ 0] = 24;
    RSib_List[19][ 1] = 25;
    RSib_List[19][ 2] = 23;
@@ -1337,7 +1337,7 @@ void SetReceiveSibling( int* RSib_List[] )
    RSib_List[19][ 5] = 20;
    RSib_List[19][ 6] = 19;
    RSib_List[19][ 7] = 18;
-                          
+
    RSib_List[20][ 0] = 23;
    RSib_List[20][ 1] = 25;
    RSib_List[20][ 2] = 24;
@@ -1346,7 +1346,7 @@ void SetReceiveSibling( int* RSib_List[] )
    RSib_List[20][ 5] = 20;
    RSib_List[20][ 6] = 19;
    RSib_List[20][ 7] = 18;
-                          
+
    RSib_List[21][ 0] = 22;
    RSib_List[21][ 1] = 25;
    RSib_List[21][ 2] = 24;
@@ -1355,7 +1355,7 @@ void SetReceiveSibling( int* RSib_List[] )
    RSib_List[21][ 5] = 20;
    RSib_List[21][ 6] = 19;
    RSib_List[21][ 7] = 18;
-                          
+
    RSib_List[22][ 0] = 21;
    RSib_List[22][ 1] = 25;
    RSib_List[22][ 2] = 24;
@@ -1364,7 +1364,7 @@ void SetReceiveSibling( int* RSib_List[] )
    RSib_List[22][ 5] = 20;
    RSib_List[22][ 6] = 19;
    RSib_List[22][ 7] = 18;
-                          
+
    RSib_List[23][ 0] = 20;
    RSib_List[23][ 1] = 25;
    RSib_List[23][ 2] = 24;
@@ -1373,7 +1373,7 @@ void SetReceiveSibling( int* RSib_List[] )
    RSib_List[23][ 5] = 21;
    RSib_List[23][ 6] = 19;
    RSib_List[23][ 7] = 18;
-                          
+
    RSib_List[24][ 0] = 19;
    RSib_List[24][ 1] = 25;
    RSib_List[24][ 2] = 24;
@@ -1382,7 +1382,7 @@ void SetReceiveSibling( int* RSib_List[] )
    RSib_List[24][ 5] = 21;
    RSib_List[24][ 6] = 20;
    RSib_List[24][ 7] = 18;
-                          
+
    RSib_List[25][ 0] = 18;
    RSib_List[25][ 1] = 25;
    RSib_List[25][ 2] = 24;
@@ -1397,14 +1397,14 @@ void SetReceiveSibling( int* RSib_List[] )
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  SetTargetSibling 
+// Function    :  SetTargetSibling
 // Description :  Set the targeted sibling directions for looping over all father-sibling patches
 //
 // Note        :  1. TSib needs to be deallocated manually
-//                2. The order of sibling indices recorded in TSib must be defined consistently with those 
+//                2. The order of sibling indices recorded in TSib must be defined consistently with those
 //                   defined in "SetReceiveSibling"
-// 
-// Parameter   :  NTSib : Number of targeted sibling patches along different sibling directions 
+//
+// Parameter   :  NTSib : Number of targeted sibling patches along different sibling directions
 //                TSib  : Targeted sibling indices along different sibling directions
 //-------------------------------------------------------------------------------------------------------
 void SetTargetSibling( int NTSib[], int* TSib[] )
@@ -1415,7 +1415,7 @@ void SetTargetSibling( int NTSib[], int* TSib[] )
    for (int t=18; t<26; t++)  NTSib[t] =  7;
 
    for (int s=0; s<26; s++)   TSib[s] = new int [ NTSib[s] ];
-   
+
    TSib[ 0][ 0] = 10;
    TSib[ 0][ 1] = 19;
    TSib[ 0][ 2] =  4;
@@ -1433,7 +1433,7 @@ void SetTargetSibling( int NTSib[], int* TSib[] )
    TSib[ 0][14] = 17;
    TSib[ 0][15] = 13;
    TSib[ 0][16] = 25;
-   
+
    TSib[ 1][ 0] = 18;
    TSib[ 1][ 1] = 10;
    TSib[ 1][ 2] = 14;
@@ -1451,7 +1451,7 @@ void SetTargetSibling( int NTSib[], int* TSib[] )
    TSib[ 1][14] =  5;
    TSib[ 1][15] = 24;
    TSib[ 1][16] = 13;
-   
+
    TSib[ 2][ 0] = 14;
    TSib[ 2][ 1] =  4;
    TSib[ 2][ 2] = 16;
@@ -1469,7 +1469,7 @@ void SetTargetSibling( int NTSib[], int* TSib[] )
    TSib[ 2][14] = 24;
    TSib[ 2][15] = 13;
    TSib[ 2][16] = 25;
-   
+
    TSib[ 3][ 0] = 18;
    TSib[ 3][ 1] = 10;
    TSib[ 3][ 2] = 19;
@@ -1487,7 +1487,7 @@ void SetTargetSibling( int NTSib[], int* TSib[] )
    TSib[ 3][14] = 15;
    TSib[ 3][15] =  5;
    TSib[ 3][16] = 17;
-   
+
    TSib[ 4][ 0] =  6;
    TSib[ 4][ 1] =  2;
    TSib[ 4][ 2] =  7;
@@ -1505,7 +1505,7 @@ void SetTargetSibling( int NTSib[], int* TSib[] )
    TSib[ 4][14] = 24;
    TSib[ 4][15] = 13;
    TSib[ 4][16] = 25;
-   
+
    TSib[ 5][ 0] = 18;
    TSib[ 5][ 1] = 10;
    TSib[ 5][ 2] = 19;
@@ -1523,7 +1523,7 @@ void SetTargetSibling( int NTSib[], int* TSib[] )
    TSib[ 5][14] =  8;
    TSib[ 5][15] =  3;
    TSib[ 5][16] =  9;
-   
+
    TSib[ 6][ 0] =  4;
    TSib[ 6][ 1] = 16;
    TSib[ 6][ 2] = 11;
@@ -1535,7 +1535,7 @@ void SetTargetSibling( int NTSib[], int* TSib[] )
    TSib[ 6][ 8] = 17;
    TSib[ 6][ 9] = 13;
    TSib[ 6][10] = 25;
-   
+
    TSib[ 7][ 0] = 14;
    TSib[ 7][ 1] =  4;
    TSib[ 7][ 2] = 20;
@@ -1547,7 +1547,7 @@ void SetTargetSibling( int NTSib[], int* TSib[] )
    TSib[ 7][ 8] =  5;
    TSib[ 7][ 9] = 24;
    TSib[ 7][10] = 13;
-   
+
    TSib[ 8][ 0] = 10;
    TSib[ 8][ 1] = 19;
    TSib[ 8][ 2] =  4;
@@ -1559,7 +1559,7 @@ void SetTargetSibling( int NTSib[], int* TSib[] )
    TSib[ 8][ 8] = 23;
    TSib[ 8][ 9] =  5;
    TSib[ 8][10] = 17;
-   
+
    TSib[ 9][ 0] = 18;
    TSib[ 9][ 1] = 10;
    TSib[ 9][ 2] = 14;
@@ -1571,7 +1571,7 @@ void SetTargetSibling( int NTSib[], int* TSib[] )
    TSib[ 9][ 8] = 12;
    TSib[ 9][ 9] = 15;
    TSib[ 9][10] =  5;
-   
+
    TSib[10][ 0] =  0;
    TSib[10][ 1] =  1;
    TSib[10][ 2] =  8;
@@ -1583,7 +1583,7 @@ void SetTargetSibling( int NTSib[], int* TSib[] )
    TSib[10][ 8] = 24;
    TSib[10][ 9] = 13;
    TSib[10][10] = 25;
-   
+
    TSib[11][ 0] =  6;
    TSib[11][ 1] =  2;
    TSib[11][ 2] =  7;
@@ -1595,7 +1595,7 @@ void SetTargetSibling( int NTSib[], int* TSib[] )
    TSib[11][ 8] = 15;
    TSib[11][ 9] =  5;
    TSib[11][10] = 17;
-   
+
    TSib[12][ 0] = 14;
    TSib[12][ 1] =  4;
    TSib[12][ 2] = 16;
@@ -1607,7 +1607,7 @@ void SetTargetSibling( int NTSib[], int* TSib[] )
    TSib[12][ 8] =  8;
    TSib[12][ 9] =  3;
    TSib[12][10] =  9;
-   
+
    TSib[13][ 0] = 18;
    TSib[13][ 1] = 10;
    TSib[13][ 2] = 19;
@@ -1619,7 +1619,7 @@ void SetTargetSibling( int NTSib[], int* TSib[] )
    TSib[13][ 8] =  7;
    TSib[13][ 9] =  0;
    TSib[13][10] =  1;
-   
+
    TSib[14][ 0] =  2;
    TSib[14][ 1] =  7;
    TSib[14][ 2] =  1;
@@ -1631,7 +1631,7 @@ void SetTargetSibling( int NTSib[], int* TSib[] )
    TSib[14][ 8] = 17;
    TSib[14][ 9] = 13;
    TSib[14][10] = 25;
-   
+
    TSib[15][ 0] = 10;
    TSib[15][ 1] = 19;
    TSib[15][ 2] =  4;
@@ -1643,7 +1643,7 @@ void SetTargetSibling( int NTSib[], int* TSib[] )
    TSib[15][ 8] =  1;
    TSib[15][ 9] =  3;
    TSib[15][10] =  9;
-   
+
    TSib[16][ 0] =  6;
    TSib[16][ 1] =  2;
    TSib[16][ 2] =  0;
@@ -1655,7 +1655,7 @@ void SetTargetSibling( int NTSib[], int* TSib[] )
    TSib[16][ 8] =  5;
    TSib[16][ 9] = 24;
    TSib[16][10] = 13;
-   
+
    TSib[17][ 0] = 18;
    TSib[17][ 1] = 10;
    TSib[17][ 2] = 14;
@@ -1667,7 +1667,7 @@ void SetTargetSibling( int NTSib[], int* TSib[] )
    TSib[17][ 8] =  0;
    TSib[17][ 9] =  8;
    TSib[17][10] =  3;
-   
+
    TSib[18][ 0] =  1;
    TSib[18][ 1] =  3;
    TSib[18][ 2] =  9;
@@ -1675,7 +1675,7 @@ void SetTargetSibling( int NTSib[], int* TSib[] )
    TSib[18][ 4] = 17;
    TSib[18][ 5] = 13;
    TSib[18][ 6] = 25;
-   
+
    TSib[19][ 0] =  0;
    TSib[19][ 1] =  8;
    TSib[19][ 2] =  3;
@@ -1683,7 +1683,7 @@ void SetTargetSibling( int NTSib[], int* TSib[] )
    TSib[19][ 4] =  5;
    TSib[19][ 5] = 24;
    TSib[19][ 6] = 13;
-   
+
    TSib[20][ 0] =  2;
    TSib[20][ 1] =  7;
    TSib[20][ 2] =  1;
@@ -1691,7 +1691,7 @@ void SetTargetSibling( int NTSib[], int* TSib[] )
    TSib[20][ 4] = 23;
    TSib[20][ 5] =  5;
    TSib[20][ 6] = 17;
-   
+
    TSib[21][ 0] =  6;
    TSib[21][ 1] =  2;
    TSib[21][ 2] =  0;
@@ -1699,7 +1699,7 @@ void SetTargetSibling( int NTSib[], int* TSib[] )
    TSib[21][ 4] = 12;
    TSib[21][ 5] = 15;
    TSib[21][ 6] =  5;
-   
+
    TSib[22][ 0] =  4;
    TSib[22][ 1] = 16;
    TSib[22][ 2] = 11;
@@ -1707,7 +1707,7 @@ void SetTargetSibling( int NTSib[], int* TSib[] )
    TSib[22][ 4] =  1;
    TSib[22][ 5] =  3;
    TSib[22][ 6] =  9;
-   
+
    TSib[23][ 0] = 14;
    TSib[23][ 1] =  4;
    TSib[23][ 2] = 20;
@@ -1715,7 +1715,7 @@ void SetTargetSibling( int NTSib[], int* TSib[] )
    TSib[23][ 4] =  0;
    TSib[23][ 5] =  8;
    TSib[23][ 6] =  3;
-   
+
    TSib[24][ 0] = 10;
    TSib[24][ 1] = 19;
    TSib[24][ 2] =  4;
@@ -1723,7 +1723,7 @@ void SetTargetSibling( int NTSib[], int* TSib[] )
    TSib[24][ 4] =  2;
    TSib[24][ 5] =  7;
    TSib[24][ 6] =  1;
-   
+
    TSib[25][ 0] = 18;
    TSib[25][ 1] = 10;
    TSib[25][ 2] = 14;

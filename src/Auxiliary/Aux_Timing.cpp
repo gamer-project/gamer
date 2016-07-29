@@ -414,7 +414,7 @@ void Timing__EvolveLevel( const char FileName[], const double Time_LB_Main[][3] 
             ParCollect [SubStep][lv]    += Timer_Par_Collect[lv]   ->GetValue( t );
          }
 
-//       subtract the Par_CollectParticleFromDescendan time from the Gra_AdvanceDt time (only necessary for refinement levels)
+//       subtract the Par_CollectParticle2OneLevel time from the Gra_AdvanceDt time (only necessary for refinement levels)
          if ( lv > 0 )  Gra_Advance[SubStep][lv] -= ParCollect[SubStep][lv]; 
 
          if ( OPT__TIMING_BALANCE )

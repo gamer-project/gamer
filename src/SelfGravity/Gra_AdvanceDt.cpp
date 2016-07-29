@@ -70,14 +70,18 @@ void Gra_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, co
 #  endif
 
 
-// collect particles from all descendant patches
+// collect particles to the target level
 #  ifdef PARTICLE
 #  ifdef LOAD_BALANCE
-   const bool PredictPos = amr->Par->PredictPos;
+   const bool PredictPos    = amr->Par->PredictPos;
+   const bool SibBufPatch   = true;
+   const bool FaSibBufPatch = true;
 #  else
-   const bool PredictPos = false;
+   const bool PredictPos    = false;
+   const bool SibBufPatch   = NULL_BOOL;
+   const bool FaSibBufPatch = NULL_BOOL;
 #  endif
-   if ( Poisson )    TIMING_FUNC(   Par_CollectParticleFromDescendant( lv, PredictPos, TimeNew ),
+   if ( Poisson )    TIMING_FUNC(   Par_CollectParticle2OneLevel( lv, PredictPos, TimeNew, SibBufPatch, FaSibBufPatch ),
                                     Timer_Par_Collect[lv],   false   );
 #  endif
 
@@ -147,11 +151,11 @@ void Gra_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, co
    }
 
 
-// free memory for descendant particles and density arrays with ghost zones (rho_ext)
+// free memory for collecting particles from other ranks and levels, and free density arrays with ghost zones (rho_ext)
 #  ifdef PARTICLE
    if ( Poisson )
    {
-      TIMING_FUNC(   Par_CollectParticleFromDescendant_FreeMemory( lv ),
+      TIMING_FUNC(   Par_CollectParticle2OneLevel_FreeMemory( lv, SibBufPatch, FaSibBufPatch ),
                      Timer_Par_Collect[lv],   false  );
 
       TIMING_FUNC(   Prepare_PatchData_FreeParticleDensityArray( lv ),

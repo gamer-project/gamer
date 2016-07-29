@@ -14,10 +14,10 @@
 // Note        :  1. Target patches (those in PID_List) must be buffer patches in level "lv"
 //                2. Currently this function only collects particle mass and position
 //                   --> For particle mass assignment only
-//                3. This function is called by Par_LB_CollectParticleFromDescendant
+//                3. This function is called by Par_LB_CollectParticle2OneLevel
 //                4. Array ParMassPos_Away will be allocated for all target patches with particles in the
 //                   corresponding real patches
-//                   --> Must be deallocated afterward by calling Par_LB_CollectParticleFromDescendant_FreeMemory
+//                   --> Must be deallocated afterward by calling Par_LB_CollectParticle2OneLevel_FreeMemory
 //
 // Parameter   :  lv                : Target refinement level
 //                NSendPatchTotal   : Total number of patches in the PID_List
@@ -267,7 +267,7 @@ void Par_LB_CollectParticleFromRealPatch( const int lv, const int NSendPatchTota
          {
 //          here we have assumed that both PAR_MASS, PAR_POSX/Y/Z < NParVar
 //          (also note that these particle position should have already been predicted to TargetTime
-//          by Par_LB_CollectParticleFromDescendant)
+//          by Par_LB_CollectParticle2OneLevel)
             SendPtr[PAR_MASS] = ParMassPos_Away[PAR_MASS][p];
             SendPtr[PAR_POSX] = ParMassPos_Away[PAR_POSX][p];
             SendPtr[PAR_POSY] = ParMassPos_Away[PAR_POSY][p];

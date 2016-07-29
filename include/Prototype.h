@@ -437,8 +437,9 @@ int  Par_CountParticleInDescendant( const int FaLv, const int FaPID );
 void Par_GetEnergy( double &Ek, double &Ep );
 void Par_Aux_InitCheck();
 void Par_Aux_GetParticleLevel();
-void Par_CollectParticleFromDescendant( const int FaLv, const bool PredictPos, const double TargetTime );
-void Par_CollectParticleFromDescendant_FreeMemory( const int FaLv );
+void Par_CollectParticle2OneLevel( const int FaLv, const bool PredictPos, const double TargetTime,
+                                   const bool SibBufPatch, const bool FaSibBufPatch );
+void Par_CollectParticle2OneLevel_FreeMemory( const int FaLv, const bool SibBufPatch, const bool FaSibBufPatch );
 int  Par_Synchronize( const double SyncTime, const ParSync_t SyncOption );
 void Par_Synchronize_Restore( const double SyncTime );
 void Prepare_PatchData_FreeParticleDensityArray( const int lv );
@@ -446,14 +447,17 @@ void Par_PredictPos( const long NPar, const long *ParList, real *ParPosX, real *
                      const double TargetTime );
 #ifdef LOAD_BALANCE
 void Par_LB_RedistributeByRectangular();
-void Par_LB_CollectParticleFromDescendant( const int FaLv, const bool PredictPos, const double TargetTime );
+void Par_LB_CollectParticle2OneLevel( const int FaLv, const bool PredictPos, const double TargetTime,
+                                      const bool SibBufPatch, const bool FaSibBufPatch );
+void Par_LB_CollectParticle2OneLevel_FreeMemory( const int lv, const bool SibBufPatch, const bool FaSibBufPatch );
 void Par_LB_CollectParticleFromRealPatch( const int lv, const int NSendPatchTotal, const int *PID_List, const bool PredictPos,
                                           const double TargetTime );
-void Par_LB_SendParticle( const int NParVar, const int *SendBuf_NPatchEachRank,
-                          const int *SendBuf_NParEachPatch, const long *SendBuf_LBIdxEachPatch, const real *SendBuf_ParDataEachPatch,
+void Par_LB_SendParticle( const int NParVar, int *SendBuf_NPatchEachRank, int *SendBuf_NParEachPatch,
+                          long *SendBuf_LBIdxEachPatch, real *SendBuf_ParDataEachPatch,
                           int *&RecvBuf_NPatchEachRank, int *&RecvBuf_NParEachPatch, long *&RecvBuf_LBIdxEachPatch,
                           real *&RecvBuf_ParDataEachPatch, int &NRecvPatchTotal, int &NRecvParTotal,
                           const bool Exchange_NPatchEachRank, const bool Exchange_LBIdxEachRank );
+void Par_LB_RecordExchangeParticlePatchID( const int Lv );
 #endif
 #endif // #ifdef PARTICLE
 

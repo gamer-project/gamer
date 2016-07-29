@@ -292,7 +292,7 @@ ifeq "$(findstring PARTICLE, $(SIMU_OPTION))" "PARTICLE"
 CUDA_FILE   +=
 
 CC_FILE     += Par_Init_Function.cpp  Par_Output_Particle.cpp  Par_FindHomePatch_Base.cpp  Par_PassParticle2Son.cpp \
-               Par_Aux_Check_Particle.cpp  Par_PassParticle2Father.cpp  Par_CollectParticleFromDescendant.cpp \
+               Par_Aux_Check_Particle.cpp  Par_PassParticle2Father.cpp  Par_CollectParticle2OneLevel.cpp \
                Par_MassAssignment.cpp  Par_UpdateParticle.cpp  Par_GetTimeStep_VelAcc.cpp \
                Par_PassParticle2Sibling.cpp  Par_CountParticleInDescendant.cpp  Par_GetEnergy.cpp \
                Par_Aux_InitCheck.cpp  Par_Aux_GetParticleLevel.cpp  Par_PassParticle2Son_AllPatch.cpp \
@@ -302,8 +302,8 @@ vpath %.cu     Particle/GPU
 vpath %.cpp    Particle/CPU  Particle
 
 ifeq "$(findstring LOAD_BALANCE, $(SIMU_OPTION))" "LOAD_BALANCE"
-CC_FILE     += Par_LB_RedistributeByRectangular.cpp  Par_LB_SendParticle.cpp  Par_LB_CollectParticleFromDescendant.cpp \
-               Par_LB_CollectParticleFromRealPatch.cpp
+CC_FILE     += Par_LB_RedistributeByRectangular.cpp  Par_LB_SendParticle.cpp  Par_LB_CollectParticle2OneLevel.cpp \
+               Par_LB_CollectParticleFromRealPatch.cpp  Par_LB_RecordExchangeParticlePatchID.cpp
 
 vpath %.cpp    Particle/LoadBalance
 endif # LOAD_BALANCE

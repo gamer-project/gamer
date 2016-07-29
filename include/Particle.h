@@ -40,13 +40,31 @@ void Aux_Error( const char *File, const int Line, const char *Func, const char *
 //                Integ                : Integration scheme (PAR_INTEG_EULER, PAR_INTEG_KDK)
 //                SyncDump             : Synchronize particles in the output files (with PAR_SYNC_TEMP)
 //                ImproveAcc           : Improve force accuracy around the patch boundaries
-//                                       (by using potential in the patch ghost zone instead of nearby patch or interpolation)
+//                                       (by using potential in the patch ghost zone instead of nearby patch
+//                                       or interpolation)
 //                PredictPos           : Predict particle position during mass assignment
-//                RemoveCell           : remove particles RemoveCell-base-level-cells away from the boundary (for non-periodic BC only)
+//                RemoveCell           : remove particles RemoveCell-base-level-cells away from the boundary
+//                                       (for non-periodic BC only)
 //                GhostSize            : Number of ghost zones required for interpolation scheme
 //                ParVar               : Pointer arrays to different particle variables (Mass, Pos, Vel, ...)
 //                Passive              : Pointer arrays to different passive variables (e.g., metalicity)
 //                InactiveParList      : List of inactive particle IDs
+//                RecvPar_NPatch       : Number of buffer patches to receive particles from other ranks
+//                                       --> Mainly for the Poisson solver
+//                                       --> For LOAD_BALANCE only
+//                RecvPar_PIDList      : Patch IDs list to receive particles from other ranks
+//                                       --> Mainly for the Poisson solver
+//                                       --> For LOAD_BALANCE only
+//                                       --> Both RecvPar_NPatch and RecvPar_PIDList have the dimension [NLEVEL][2]
+//                                           [lv][0/1] is for receiving particles at lv/lv-1 around real patches at lv
+//                                           --> Mainly for the Poisson solver at lv (i.e., for calculating the
+//                                               total density field at lv)
+//                                           --> More specific,
+//                                               [lv][0] is for receiving the particles of sibling-buffer patches at lv
+//                                               adjacent to real patches at lv
+//                                               [lv][1] is for receiving the particles of father-sibling-buffer patches at lv-1
+//                                               adjacent to real patches at lv
+//                                           --> Both are constructed by calling Par_LB_RecordExchangeParticlePatchID( lv )
 //                Mass                 : Particle mass
 //                                       Mass < 0.0 --> this particle has been removed from simulations
 //                                                  --> PAR_INACTIVE_OUTSIDE: fly outside the simulation box
@@ -85,6 +103,11 @@ struct Particle_t
    real       *ParVar [NPAR_VAR    ];
    real       *Passive[NPAR_PASSIVE];
    long       *InactiveParList;
+
+#  ifdef LOAD_BALANCE
+   int         RecvPar_NPatch [NLEVEL][2];
+   int        *RecvPar_PIDList[NLEVEL][2];
+#  endif
 
    real       *Mass;
    real       *PosX;
@@ -128,6 +151,15 @@ struct Particle_t
       for (int v=0; v<NPAR_PASSIVE; v++)  Passive[v] = NULL;
 
       InactiveParList = NULL;
+
+#     ifdef LOAD_BALANCE
+      for (int lv=0; lv<NLEVEL; lv++)
+      for (int t=0; t<2; t++)
+      {
+         RecvPar_NPatch [lv][t] = 0;
+         RecvPar_PIDList[lv][t] = NULL;
+      }
+#     endif
 
       Mass = NULL;
       PosX = NULL;
@@ -179,6 +211,20 @@ struct Particle_t
          free( InactiveParList );
          InactiveParList = NULL;
       }
+
+#     ifdef LOAD_BALANCE
+      for (int lv=0; lv<NLEVEL; lv++)
+      for (int t=0; t<2; t++)
+      {
+         RecvPar_NPatch[lv][t] = 0;
+
+         if ( RecvPar_PIDList[lv][t] != NULL )
+         {
+            free( RecvPar_PIDList[lv][t] );
+            RecvPar_PIDList[lv][t] = NULL;
+         }
+      }
+#     endif
 
    } // METHOD : ~Particle_t
 

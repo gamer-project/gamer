@@ -137,7 +137,12 @@ void LB_Init_LoadBalance( const bool DuringRestart )
 //    3.5 list for overlapping MPI time with CPU/GPU computation
       if ( OPT__OVERLAP_MPI )
       LB_RecordOverlapMPIPatchID( lv );
-   }
+
+//    3.6 list for exchanging particles
+#     ifdef PARTICLE
+      Par_LB_RecordExchangeParticlePatchID( lv );
+#     endif
+   } // for (int lv=0; lv<NLEVEL; lv++)
 
 
 // 4. get the buffer data

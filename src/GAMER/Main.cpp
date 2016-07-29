@@ -384,14 +384,18 @@ int main( int argc, char *argv[] )
          const double Poi_Coeff = 4.0*M_PI*NEWTON_G;
 #        endif
 
-//       collect particles from all descendant patches
+//       collect particles to the target level
 #        ifdef PARTICLE
 #        ifdef LOAD_BALANCE
-         const bool PredictPos = amr->Par->PredictPos;
+         const bool PredictPos    = amr->Par->PredictPos;
+         const bool SibBufPatch   = true;
+         const bool FaSibBufPatch = true;
 #        else
-         const bool PredictPos = false;
+         const bool PredictPos    = false;
+         const bool SibBufPatch   = NULL_BOOL;
+         const bool FaSibBufPatch = NULL_BOOL;
 #        endif
-         Par_CollectParticleFromDescendant( lv, PredictPos, Time[lv] );
+         Par_CollectParticle2OneLevel( lv, PredictPos, Time[lv], SibBufPatch, FaSibBufPatch );
 #        endif
 
          if ( lv == 0 )    
@@ -412,9 +416,9 @@ int main( int argc, char *argv[] )
 
          Buf_GetBufferData( lv, NULL_INT, amr->PotSg[lv], POT_FOR_POISSON, _POTE, Pot_ParaBuf, USELB_YES );
 
-//       free memory for descendant particles and density arrays with ghost zones (rho_ext)
+//       free memory for collecting particles from other ranks and levels, and free density arrays with ghost zones (rho_ext)
 #        ifdef PARTICLE
-         Par_CollectParticleFromDescendant_FreeMemory( lv );
+         Par_CollectParticle2OneLevel_FreeMemory( lv, SibBufPatch, FaSibBufPatch );
 
          Prepare_PatchData_FreeParticleDensityArray( lv );
 #        endif

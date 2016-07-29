@@ -1727,7 +1727,7 @@ int Table_02( const int lv, const int PID, const int Side )
 //                2. TSib needs to be deallocated manually
 //                3. Sibling directions recorded in TSib must be in ascending numerical order for filling the
 //                   non-periodic ghost-zone data in the function "InterpolateGhostZone"
-//                   --> Therefore, this function CANNOT be applied in ""LB_RecordExchangeDataPatchID", in which
+//                   --> Therefore, this function CANNOT be applied in "LB_RecordExchangeDataPatchID", in which
 //                       case "SetTargetSibling" and "SetReceiveSibling" must be declared consistently
 //
 // Parameter   :  NTSib : Number of targeted sibling patches along different sibling directions
