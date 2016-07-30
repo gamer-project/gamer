@@ -183,10 +183,6 @@ void Output_Patch( const int lv, const int PID, const int FluSg, const int PotSg
 
          for (int v=0; v<NPASSIVE; v++)   
          fprintf( File, " %13s", "" );
-
-#        ifdef PARTICLE
-         fprintf( File, " %13s", "" );
-#        endif
       } // if ( FluData->fluid != NULL ) ... else ...
 
 //    output potential

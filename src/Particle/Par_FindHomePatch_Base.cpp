@@ -82,7 +82,7 @@ void Par_FindHomePatch_Base( const int *BaseP )
          TPID = BaseP3D[ ijk[2] ][ ijk[1] ][ ijk[0] ];
 
 
-//       3. check the home patch carefully to prevent from any issue results from round-off error
+//       3. check the home patch carefully to prevent from any issue resulting from round-off errors
          Pass = true;
 
          for (int d=0; d<3; d++)

@@ -19,13 +19,13 @@ extern Timer_t *Timer_Par_Collect[NLEVEL];
 // Note        :  1. Poisson solver : lv = 0 : invoke the function "CPU_PoissonSolver_FFT"
 //                                    lv > 0 : invoke the function "InvokeSolver"
 //                2. Gravity solver : invoke the function "InvokeSolver"
-//                3. The updated potential and fluid variables will be stored in the same sandglass 
+//                3. The updated potential and fluid variables will be stored in the same sandglass
 //                4. PotSg at lv=0 will be updated here, but PotSg at at lv>0 and FluSg at lv>=0 will NOT be updated
 //                   (they will be updated in EvolveLevel instead)
 //                   --> It is because the lv-0 Poisson and Gravity solvers are invoked separately, and Gravity solver
-//                       needs to call PreparePatchData to get the updated potential
+//                       needs to call Prepare_PatchData to get the updated potential
 //
-// Parameter   :  lv             : Targeted refinement level 
+// Parameter   :  lv             : Targeted refinement level
 //                TimeNew        : Targeted physical time to reach
 //                TimeOld        : Physical time before update
 //                                 --> For Gravity solver, this function updates physical time from TimeOld to TimeNew
@@ -46,10 +46,10 @@ void Gra_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, co
 {
 
 // check
-   if ( Poisson  &&  ( SaveSg_Pot != 0 &&  SaveSg_Pot != 1 )  )   
+   if ( Poisson  &&  ( SaveSg_Pot != 0 &&  SaveSg_Pot != 1 )  )
       Aux_Error( ERROR_INFO, "incorrect SaveSg_Pot (%d) !!\n", SaveSg_Pot );
 
-   if ( Gravity  &&  ( SaveSg_Flu != 0 &&  SaveSg_Flu != 1 )  )   
+   if ( Gravity  &&  ( SaveSg_Flu != 0 &&  SaveSg_Flu != 1 )  )
       Aux_Error( ERROR_INFO, "incorrect SaveSg_Flu (%d) !!\n", SaveSg_Flu );
 
    if ( !Poisson  &&  !Gravity )
@@ -87,13 +87,13 @@ void Gra_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, co
 
 
 // the base-level Poisson solver is implemented using the FFTW library (with CPUs only)
-   if ( lv == 0 )    
+   if ( lv == 0 )
    {
 //    do not need to calculate the gravitational potential if self-gravity is disabled
       if ( Poisson )
       {
          TIMING_FUNC(   CPU_PoissonSolver_FFT( Poi_Coeff, SaveSg_Pot, TimeNew ),
-                        Timer_Gra_Advance[lv],   false   );   
+                        Timer_Gra_Advance[lv],   false   );
 
          amr->PotSg    [lv]             = SaveSg_Pot;
          amr->PotSgTime[lv][SaveSg_Pot] = TimeNew;
@@ -101,19 +101,19 @@ void Gra_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, co
 #        if ( defined STORE_POT_GHOST  &&  defined PARTICLE )
          if ( amr->Par->ImproveAcc )
          TIMING_FUNC(   Poi_StorePotWithGhostZone( lv, SaveSg_Pot, true ),
-                        Timer_Gra_Advance[lv],   false   );   
+                        Timer_Gra_Advance[lv],   false   );
 #        endif
 
          TIMING_FUNC(   Buf_GetBufferData( lv, NULL_INT, SaveSg_Pot, POT_FOR_POISSON, _POTE, Pot_ParaBuf, USELB_YES ),
                         Timer_GetBuf[lv][1],   true   );
       }
 
-      if ( Gravity )  
+      if ( Gravity )
       {
-//       TIMING_FUNC(   InvokeSolver( GRAVITY_SOLVER, lv, TimeNew, TimeOld, dt, NULL_REAL, SaveSg_Flu, NULL_INT, 
+//       TIMING_FUNC(   InvokeSolver( GRAVITY_SOLVER, lv, TimeNew, TimeOld, dt, NULL_REAL, SaveSg_Flu, NULL_INT,
 //                                    OverlapMPI, Overlap_Sync ),
 //                      Timer_Gra_Advance[lv],   true   );
-  
+
          TIMING_FUNC(   InvokeSolver( GRAVITY_SOLVER, lv, TimeNew, TimeOld, dt, NULL_REAL, SaveSg_Flu, NULL_INT, false, false ),
                         Timer_Gra_Advance[lv],   false   );
 
@@ -133,20 +133,20 @@ void Gra_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, co
    } // if ( lv == 0 )
 
 
-   else // lv > 0 
+   else // lv > 0
    {
       if      (  Poisson  &&  !Gravity )
       InvokeSolver( POISSON_SOLVER,             lv, TimeNew, TimeOld, NULL_REAL, Poi_Coeff, NULL_INT,   SaveSg_Pot,
                     OverlapMPI, Overlap_Sync );
 
-      else if ( !Poisson  &&   Gravity )  
+      else if ( !Poisson  &&   Gravity )
       InvokeSolver( GRAVITY_SOLVER,             lv, TimeNew, TimeOld, dt,        NULL_REAL, SaveSg_Flu, NULL_INT,
                     OverlapMPI, Overlap_Sync );
 
-      else if (  Poisson  &&   Gravity )  
+      else if (  Poisson  &&   Gravity )
       InvokeSolver( POISSON_AND_GRAVITY_SOLVER, lv, TimeNew, TimeOld, dt,        Poi_Coeff, SaveSg_Flu, SaveSg_Pot,
                     OverlapMPI, Overlap_Sync );
-      
+
       if ( Gravity  &&  OPT__RESET_FLUID )   Flu_ResetByUser( lv, SaveSg_Flu, TimeNew );
    }
 

@@ -66,8 +66,8 @@ void Par_LB_CollectParticleFromRealPatch( const int lv, const int NSendPatchTota
 #  endif // #ifdef DEBUG_PARTICLE
 
 
-// nothing to do if there is no target patch
-   if ( NSendPatchTotal == 0 )   return;
+// must NOT call return here even if NSendPatchTotal==0 since this rank still needs to SEND data to other ranks
+// if ( NSendPatchTotal == 0 )   return;
 
 
 // 1. exchange the target load-balance indices between all ranks
@@ -344,25 +344,18 @@ void Par_LB_CollectParticleFromRealPatch( const int lv, const int NSendPatchTota
             {
 //             always assume periodic B.C. in this check since we don't allocate buffer patches lying outside
 //             the simulation domain for non-periodic B.C.
-//             --> do NOT use the EdgeL/R stored in each patch for this check since they do not consider periodicity
-               const double dh_min     = amr->dh[TOP_LEVEL];
-               const int    PatchScale = PS1*amr->scale[lv];
-               const real   ParPos[3]  = { amr->patch[0][lv][PID_Match]->ParMassPos_Away[PAR_POSX][p],
+//             --> we can use EdgeL/R stored in each patch directly since they assume periodicity as well
+               const double *EdgeL     = amr->patch[0][lv][PID_Match]->EdgeL;
+               const double *EdgeR     = amr->patch[0][lv][PID_Match]->EdgeR;
+               const real    ParPos[3] = { amr->patch[0][lv][PID_Match]->ParMassPos_Away[PAR_POSX][p],
                                            amr->patch[0][lv][PID_Match]->ParMassPos_Away[PAR_POSY][p],
                                            amr->patch[0][lv][PID_Match]->ParMassPos_Away[PAR_POSZ][p] };
 
-               double EdgeL, EdgeR;
-               int    Cr_Periodic;
-
                for (int d=0; d<3; d++)
                {
-                  Cr_Periodic = ( amr->patch[0][lv][PID_Match]->corner[d] + amr->BoxScale[d] ) % amr->BoxScale[d];
-                  EdgeL       = (double)( Cr_Periodic              )*dh_min;
-                  EdgeR       = (double)( Cr_Periodic + PatchScale )*dh_min;
-
-                  if ( ParPos[d] < EdgeL  ||  ParPos[d] >= EdgeR )
+                  if ( ParPos[d] < EdgeL[d]  ||  ParPos[d] >= EdgeR[d] )
                      Aux_Error( ERROR_INFO, "wrong home patch (L/R edge = %13.6e/%13.6e, pos[%d] = %13.6e, particle %d, lv %d, PID %d) !!\n",
-                                EdgeL, EdgeR, d, ParPos[d], p, lv, PID_Match );
+                                EdgeL[d], EdgeR[d], d, ParPos[d], p, lv, PID_Match );
                }
             } // if ( !PredictPos )
 #           endif // #ifdef DEBUG_PARTICLE

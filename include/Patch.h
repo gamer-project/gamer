@@ -45,7 +45,7 @@ long  LB_Corner2Index( const int lv, const int Corner[], const Check_t Check );
 //                                      the simulation domain. In other words, periodicity is NOT used to
 //                                      convert corner to that of the corresponding real patch
 //                                  --> For example, external patches can have corner < 0
-//                                  --> Similar things applied to EdgeL/R as well
+//                                  --> Different from EdgeL/R, which always assume periodicity
 //                sibling[26]     : Patch IDs of the 26 sibling patches (-1->no sibling; -1XX->external)
 //
 //                                  NOTE FOR NON-PERIODIC BOUNDARY CONDITIONS:
@@ -69,11 +69,13 @@ long  LB_Corner2Index( const int lv, const int Corner[], const Check_t Check );
 //
 //                flag            : Refinement flag (true/false)
 //                EdgeL/R         : Left and right edge of the patch
-//                                  --> Note that for an external patch its recorded "EdgeL/R" will lie outside
-//                                      the simulation domain. In other words, periodicity is NOT used to
-//                                      convert edges to that of the corresponding real patch
-//                                  --> For example, external patches can have EdgeL < 0.0
-//                                  --> Similar things applied to corner[3] as well
+//                                  --> Note that we always apply periodicity to EdgeL/R. So for an external patch its
+//                                      recorded "EdgeL/R" will still lie inside the simulation domain and will be
+//                                      exactly the same as the EdgeL/R of the corresponding real patches.
+//                                  --> For example, the external patches just outside the simulation left edge will have
+//                                      EdgeL = BoxSize-PatchSize*dh[lv] and EdgeR = BoxSize, and for those just outside
+//                                      the simulation right edge will have EdgeL = 0 and EdgeR = PatchSize*dh[lv]
+//                                  --> Different from corner[3], which do NOT assume periodicity
 //                PaddedCr1D      : 1D corner coordiniate padded with two base-level patches on each side
 //                                  in each direction, normalized to the finest-level patch scale (PATCH_SIZE)
 //                                  --> each PaddedCr1D defines a unique 3D position
@@ -230,8 +232,18 @@ struct patch_t
       const int PScale = PS1*( 1<<(TOP_LEVEL-lv) );
       for (int d=0; d<3; d++)
       {
+//       to ensure that buffer patches and their corresponding real patches have the same EdgeL/R, do not write EdgeR[d] as
+//       EdgeR[d] = (double)(  ( corner[d] + BoxScale[d] + PScale ) % BoxScale[d] )*dh_min;
+//       --> otherwise the buffer patches just outside the simulation left edge (and the real patches just inside the simulation
+//           right edge) will have EdgeR==0 instead of EdgeR==BoxSize
+         EdgeL[d] = (double)(  ( corner[d] + BoxScale[d] ) % BoxScale[d]           )*dh_min;
+         EdgeR[d] = (double)(  ( corner[d] + BoxScale[d] ) % BoxScale[d] + PScale  )*dh_min;
+
+//       do no use the following non-periodic version anymore --> it does not work with the current particle implementation
+         /*
          EdgeL[d] = (double)corner[d]*dh_min;
          EdgeR[d] = (double)( corner[d] + PScale )*dh_min;
+         */
       }
 
       for (int s=0; s<6; s++)

@@ -37,6 +37,7 @@ static int Table_02( const int lv, const int PID, const int Side );
 //                   --> amr->patch[0][lv][PID]->rho_ext
 //                   --> These arrays must be deallocated manually by calling Prepare_PatchData_FreeParticleDensityArray
 //                       (currently it's called by Gra_AdvanceDt)
+//                8. Patches stored in PID0_List must be real patches (cannot NOT be buffer patches)
 //
 // Parameter   :  lv             : Target refinement level
 //                PrepTime       : Target physical time to prepare data
@@ -132,6 +133,12 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
       Aux_Error( ERROR_INFO, "GhostSize (%d) > maximum allowed (%d) for GetTotDens with particles!!\n",
                  GhostSize, PS1 - amr->Par->GhostSize );
 #  endif
+
+// target patches must be real patches
+   for (int TID=0; TID<NPG; TID++)
+      if ( PID0_List[TID] < 0  ||  PID0_List[TID] >= amr->NPatchComma[lv][1] )
+         Aux_Error( ERROR_INFO, "incorrect target PID %d (NReal = %d) !!\n", PID0_List[TID], amr->NPatchComma[lv][1] );
+
 #  endif // #ifdef GAMER_DEBUG
 
 
@@ -580,9 +587,11 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
 //          set the left edge of the rho_ext array
             for (int d=0; d<3; d++)    EdgeL[d] = amr->patch[0][lv][PID]->EdgeL[d] - RhoExtGhost*dh;
 
-//          deposit particle mass on grids
-//          --> don't have to worry about the periodicity here since all input particles should be close to the
-//              target patches even with position prediction ==> Periodic_No
+//          deposit particle mass on grids (**from particles to their home patch**)
+//          --> don't have to worry about the periodicity (even for external buffer patches) here since
+//              (1) all input particles should be close to the target patches even with position prediction
+//              (2) amr->patch[0][lv][PID]->EdgeL/R already assumes periodicity for external buffer patches
+//              --> Periodic_No, CheckFarAway_No
 //          --> remember to initialize rho_ext as zero (by InitZero_Yes)
             Par_MassAssignment( ParList, NPar, amr->Par->Interp, amr->patch[0][lv][PID]->rho_ext[0][0], RhoExtSize,
                                 EdgeL, dh, (amr->Par->PredictPos && !UseInputMassPos), PrepTime, InitZero_Yes,
@@ -1301,7 +1310,10 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
                   }
 #                 endif // #ifdef DEBUG_PARTICLE
 
-//                (c3-2-2) deposit particle mass (need to take care of the periodicity here ==> Periodic_Yes)
+//                (c3-2-2) deposit particle mass on grids (**from particles in father-sibling patches**)
+//                         --> need to take care of the periodicity here since particles may have position far
+//                             away from the target patch boundaries (i.e., the values stored in patch->EdgeL/R)
+//                             --> Periodic_Yes, CheckFarAway_Yes
                   if ( NPar > 0 )
                   Par_MassAssignment( ParList, NPar, amr->Par->Interp, ArrayDens, PGSize1D, EdgeL, dh,
                                       (amr->Par->PredictPos && !UseInputMassPos), PrepTime, InitZero_No,

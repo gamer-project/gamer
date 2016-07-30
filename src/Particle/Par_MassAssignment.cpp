@@ -108,7 +108,7 @@ void Par_MassAssignment( const long *ParList, const long NPar, const ParInterp_t
 // 2. set up attribute arrays, copy particle position since they might be modified during the position prediction
    real *Mass   = NULL;
    real *Pos[3] = { NULL, NULL, NULL };
-   long  ParID;
+   long  ParID, Idx;
 
    if ( UseInputMassPos )
    {
@@ -120,7 +120,7 @@ void Par_MassAssignment( const long *ParList, const long NPar, const ParInterp_t
 
    else
    {
-      Mass = amr->Par->Mass;
+      Mass = new real [NPar];
 
       for (int d=0; d<3; d++)    Pos[d] = new real [NPar];
 
@@ -128,6 +128,7 @@ void Par_MassAssignment( const long *ParList, const long NPar, const ParInterp_t
       {
          ParID = ParList[p];
 
+         Mass  [p] = amr->Par->Mass[ParID];
          Pos[0][p] = amr->Par->PosX[ParID];
          Pos[1][p] = amr->Par->PosY[ParID];
          Pos[2][p] = amr->Par->PosZ[ParID];
@@ -137,6 +138,21 @@ void Par_MassAssignment( const long *ParList, const long NPar, const ParInterp_t
 
 // 3. predict particle position
    if ( PredictPos )    Par_PredictPos( NPar, ParList, Pos[0], Pos[1], Pos[2], TargetTime );
+
+
+// 3-half: sort particles by their x coordinates to fix the order of mass assignment
+//         --> in order to have the same round-off errors in serial and parallel runs
+//             for ensuring reproducibility in the debug mode
+#  ifdef DEBUG_PARTICLE
+   real *PosX_tmp      = new real [NPar];
+   int  *Sort_IdxTable = new int  [NPar];
+
+   memcpy( PosX_tmp, Pos[0], sizeof(real)*NPar );
+
+   Mis_Heapsort( NPar, PosX_tmp, Sort_IdxTable );
+
+   delete [] PosX_tmp;
+#  endif
 
 
 // 4. deposit particle mass
@@ -167,17 +183,21 @@ void Par_MassAssignment( const long *ParList, const long NPar, const ParInterp_t
       {
          for (long p=0; p<NPar; p++)
          {
-            ParID = ( UseInputMassPos ) ? p : ParList[p];
+#           ifdef DEBUG_PARTICLE
+            Idx = Sort_IdxTable[p];
+#           else
+            Idx = p;
+#           endif
 
 //          4.1.0 discard particles far away from the target region
-            if (  CheckFarAway  &&  FarAwayParticle( Pos[0][p], Pos[1][p], Pos[2][p], Periodic, PeriodicSize_Phy,
-                                                     EdgeWithGhostL, EdgeWithGhostR )  )
+            if (  CheckFarAway  &&  FarAwayParticle( Pos[0][Idx], Pos[1][Idx], Pos[2][Idx],
+                                                     Periodic, PeriodicSize_Phy, EdgeWithGhostL, EdgeWithGhostR )  )
                continue;
 
 //          4.1.1 calculate the nearest grid index
             for (int d=0; d<3; d++)
             {
-               idx[d] = (int)FLOOR( ( Pos[d][p] - EdgeL[d] )*_dh );
+               idx[d] = (int)FLOOR( ( Pos[d][Idx] - EdgeL[d] )*_dh );
 
 //             periodicity
                if ( Periodic )
@@ -195,12 +215,12 @@ void Par_MassAssignment( const long *ParList, const long NPar, const ParInterp_t
 //          4.1.2 assign mass if within the Rho array
 //          check for inactive particles (which have negative mass)
 #           ifdef DEBUG_PARTICLE
-            if ( Mass[ParID] < (real)0.0 )
-               Aux_Error( ERROR_INFO, "Mass[%ld] = %14.7e < 0.0 !!\n", ParID, Mass[ParID] );
+            if ( Mass[Idx] < (real)0.0 )
+               Aux_Error( ERROR_INFO, "Mass[%ld] = %14.7e < 0.0 !!\n", Idx, Mass[Idx] );
 #           endif
 
             if ( UnitDens )   ParDens = (real)1.0;
-            else              ParDens = Mass[ParID]*_dh3;
+            else              ParDens = Mass[Idx]*_dh3;
 
             if (  WithinRho( idx, RhoSize )  )
                Rho3D[ idx[2] ][ idx[1] ][ idx[0] ] += ParDens;
@@ -218,17 +238,21 @@ void Par_MassAssignment( const long *ParList, const long NPar, const ParInterp_t
 
          for (long p=0; p<NPar; p++)
          {
-            ParID = ( UseInputMassPos ) ? p : ParList[p];
+#           ifdef DEBUG_PARTICLE
+            Idx = Sort_IdxTable[p];
+#           else
+            Idx = p;
+#           endif
 
 //          4.2.0 discard particles far away from the target region
-            if (  CheckFarAway  &&  FarAwayParticle( Pos[0][p], Pos[1][p], Pos[2][p], Periodic, PeriodicSize_Phy,
-                                                     EdgeWithGhostL, EdgeWithGhostR )  )
+            if (  CheckFarAway  &&  FarAwayParticle( Pos[0][Idx], Pos[1][Idx], Pos[2][Idx],
+                                                     Periodic, PeriodicSize_Phy, EdgeWithGhostL, EdgeWithGhostR )  )
                continue;
 
             for (int d=0; d<3; d++)
             {
 //             4.2.1 calculate the array index of the left and right cells
-               dr      [d]  = ( Pos[d][p] - EdgeL[d] )*_dh - 0.5;
+               dr      [d]  = ( Pos[d][Idx] - EdgeL[d] )*_dh - 0.5;
                idxLR[0][d]  = (int)FLOOR( dr[d] );
                idxLR[1][d]  = idxLR[0][d] + 1;
                dr      [d] -= (double)idxLR[0][d];
@@ -256,12 +280,12 @@ void Par_MassAssignment( const long *ParList, const long NPar, const ParInterp_t
 //          4.2.3 assign mass if within the Rho array
 //          check for inactive particles (which have negative mass)
 #           ifdef DEBUG_PARTICLE
-            if ( Mass[ParID] < (real)0.0 )
-               Aux_Error( ERROR_INFO, "Mass[%ld] = %14.7e < 0.0 !!\n", ParID, Mass[ParID] );
+            if ( Mass[Idx] < (real)0.0 )
+               Aux_Error( ERROR_INFO, "Mass[%ld] = %14.7e < 0.0 !!\n", Idx, Mass[Idx] );
 #           endif
 
             if ( UnitDens )   ParDens = (real)1.0;
-            else              ParDens = Mass[ParID]*_dh3;
+            else              ParDens = Mass[Idx]*_dh3;
 
             for (int k=0; k<2; k++) {  idx[2] = idxLR[k][2];
             for (int j=0; j<2; j++) {  idx[1] = idxLR[j][1];
@@ -285,17 +309,21 @@ void Par_MassAssignment( const long *ParList, const long NPar, const ParInterp_t
 
          for (long p=0; p<NPar; p++)
          {
-            ParID = ( UseInputMassPos ) ? p : ParList[p];
+#           ifdef DEBUG_PARTICLE
+            Idx = Sort_IdxTable[p];
+#           else
+            Idx = p;
+#           endif
 
 //          4.3.0 discard particles far away from the target region
-            if (  CheckFarAway  &&  FarAwayParticle( Pos[0][p], Pos[1][p], Pos[2][p], Periodic, PeriodicSize_Phy,
-                                                     EdgeWithGhostL, EdgeWithGhostR )  )
+            if (  CheckFarAway  &&  FarAwayParticle( Pos[0][Idx], Pos[1][Idx], Pos[2][Idx],
+                                                     Periodic, PeriodicSize_Phy, EdgeWithGhostL, EdgeWithGhostR )  )
                continue;
 
             for (int d=0; d<3; d++)
             {
 //             4.3.1 calculate the array index of the left, central, and right cells
-               dr       [d]  = ( Pos[d][p] - EdgeL[d] )*_dh;
+               dr       [d]  = ( Pos[d][Idx] - EdgeL[d] )*_dh;
                idxLCR[1][d]  = (int)FLOOR( dr[d] );
                idxLCR[0][d]  = idxLCR[1][d] - 1;
                idxLCR[2][d]  = idxLCR[1][d] + 1;
@@ -325,12 +353,12 @@ void Par_MassAssignment( const long *ParList, const long NPar, const ParInterp_t
 //          4.3.3 assign mass if within the Rho array
 //          check for inactive particles (which have negative mass)
 #           ifdef DEBUG_PARTICLE
-            if ( Mass[ParID] < (real)0.0 )
-               Aux_Error( ERROR_INFO, "Mass[%ld] = %14.7e < 0.0 !!\n", ParID, Mass[ParID] );
+            if ( Mass[Idx] < (real)0.0 )
+               Aux_Error( ERROR_INFO, "Mass[%ld] = %14.7e < 0.0 !!\n", Idx, Mass[Idx] );
 #           endif
 
             if ( UnitDens )   ParDens = (real)1.0;
-            else              ParDens = Mass[ParID]*_dh3;
+            else              ParDens = Mass[Idx]*_dh3;
 
             for (int k=0; k<3; k++) {  idx[2] = idxLCR[k][2];
             for (int j=0; j<3; j++) {  idx[1] = idxLCR[j][1];
@@ -349,7 +377,14 @@ void Par_MassAssignment( const long *ParList, const long NPar, const ParInterp_t
 
 // 5. free memory
    if ( !UseInputMassPos )
+   {
+      delete [] Mass;
       for (int d=0; d<3; d++)    delete [] Pos[d];
+   }
+
+#  ifdef DEBUG_PARTICLE
+   delete [] Sort_IdxTable;
+#  endif
 
 } // FUNCTION : Par_MassAssignment
 
