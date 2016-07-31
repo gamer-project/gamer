@@ -11,11 +11,11 @@
 // Description :  Evaluate the average density for the Poisson solver
 //
 // Note        :  1. For the Poisson solver with the periodic BC (in both physical and comoving frames,
-//                   the average density will be subtracted from the total density at each cell when 
-//                   solving the Poisson equation at the refined levels in order to be consistent with the 
+//                   the average density will be subtracted from the total density at each cell when
+//                   solving the Poisson equation at the refined levels in order to be consistent with the
 //                   base-level periodic FFT solver
-//             :  2. For the Poisson solver with the isolated BC in the comoving frames, the UNITY will be 
-//                   subtracted from the total density at each cell when solving the Poisson equation at 
+//             :  2. For the Poisson solver with the isolated BC in the comoving frames, the UNITY will be
+//                   subtracted from the total density at each cell when solving the Poisson equation at
 //                   all levels in order to be consistent with the Poisson eq. in the comoving frame
 //                3. For the debug mode, we perform summation in a specific order in order to ensure that
 //                   the round-off errors will be the same in runs with different numbers of MPI ranks
@@ -104,11 +104,63 @@ void Poi_GetAverageDensity()
    {
 //    sort
       Mis_Heapsort( NPatch_Sum, Cr1D_All, Cr1D_IdxTable );
-   
-//    get averaged density
+
+//    get average density
       for (int t=0; t<NPatch_Sum; t++)    AveDensity += Rho_All[ Cr1D_IdxTable[t] ];
       AveDensity /= (double)NX0_TOT[0]*NX0_TOT[1]*NX0_TOT[2];
    }
+
+// add particle mass
+#  ifdef PARTICLE
+   long    NPar_AcPlusInac_AllRank[MPI_NRank], NPar_AcPlusInac_Sum;
+   int     Count[MPI_NRank];
+   double  ParMassSum;
+   real   *ParMass_AllRank = NULL;
+
+// get the total number of active + inactive particles in each rank
+   MPI_Gather( &amr->Par->NPar_AcPlusInac, 1, MPI_LONG, NPar_AcPlusInac_AllRank, 1, MPI_LONG, 0, MPI_COMM_WORLD );
+
+   if ( MPI_Rank == 0 )
+   {
+      NPar_AcPlusInac_Sum = 0;
+      for (int r=0; r<MPI_NRank; r++)  NPar_AcPlusInac_Sum += NPar_AcPlusInac_AllRank[r];
+
+      ParMass_AllRank = new real [NPar_AcPlusInac_Sum];
+
+//    here we have assumed that "integer" type is enough !!
+      for (int r=0; r<MPI_NRank; r++)  Count[r] = NPar_AcPlusInac_AllRank[r];
+
+      Disp[0] = 0;
+      for (int r=1; r<MPI_NRank; r++)  Disp[r] = Disp[r-1] + Count[r-1];
+   }
+
+// collect particle mass from all ranks
+#  ifdef FLOAT8
+   MPI_Gatherv( amr->Par->Mass, amr->Par->NPar_AcPlusInac, MPI_DOUBLE,
+                ParMass_AllRank, Count, Disp, MPI_DOUBLE, 0, MPI_COMM_WORLD );
+#  else
+   MPI_Gatherv( amr->Par->Mass, amr->Par->NPar_AcPlusInac, MPI_FLOAT,
+                ParMass_AllRank, Count, Disp, MPI_FLOAT,  0, MPI_COMM_WORLD );
+#  endif
+
+   if ( MPI_Rank == 0 )
+   {
+//    sort
+      Mis_Heapsort( NPar_AcPlusInac_Sum, ParMass_AllRank, NULL );
+
+//    add average particle density
+      ParMassSum = 0.0;
+      for (long p=0; p<NPar_AcPlusInac_Sum; p++)
+      {
+//       skip inactive and massless particles
+         if ( ParMass_AllRank[p] > (real)0.0 )  ParMassSum += (double)ParMass_AllRank[p];
+      }
+
+      AveDensity += ParMassSum / ( amr->BoxSize[0]*amr->BoxSize[1]*amr->BoxSize[2] );
+
+      delete [] ParMass_AllRank;
+   }
+#  endif // #ifdef PARTICLE
 
 // broadcast
    MPI_Bcast( &AveDensity, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD );
@@ -128,7 +180,7 @@ void Poi_GetAverageDensity()
 // ==================================================================================================
 #  else // #ifdef GAMER_DEBUG
 
-// evaluate the sum of density (we only use the base-level data because the restriction condition is assumed 
+// evaluate the sum of density (we only use the base-level data because the restriction condition is assumed
 // to be fulfilled
    double AveDensity_local = 0.0;
 
@@ -144,11 +196,7 @@ void Poi_GetAverageDensity()
 // average
    AveDensity /= (double)NX0_TOT[0]*NX0_TOT[1]*NX0_TOT[2];
 
-#  endif // #ifdef GAMER_DEBUG ... else ...
-
-
-// 4. add other components (e.g., particles)
-// ==================================================================================================
+// add particle mass
 #  ifdef PARTICLE
    double ParMassSum_local=0.0, ParMassSum_total;
 
@@ -162,10 +210,12 @@ void Poi_GetAverageDensity()
    MPI_Allreduce( &ParMassSum_local, &ParMassSum_total, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD );
 
    AveDensity += ParMassSum_total / ( amr->BoxSize[0]*amr->BoxSize[1]*amr->BoxSize[2] );
-#  endif
+#  endif // #ifdef PARTICLE
+
+#  endif // #ifdef GAMER_DEBUG ... else ...
 
 
-// 5. output results
+// 4. output results
    if ( MPI_Rank == 0 )
    {
       Aux_Message( stdout, "NOTE : background density = %20.14e\n", AveDensity );
