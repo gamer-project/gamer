@@ -302,8 +302,9 @@ vpath %.cu     Particle/GPU
 vpath %.cpp    Particle/CPU  Particle
 
 ifeq "$(findstring LOAD_BALANCE, $(SIMU_OPTION))" "LOAD_BALANCE"
-CC_FILE     += Par_LB_RedistributeByRectangular.cpp  Par_LB_SendParticle.cpp  Par_LB_CollectParticle2OneLevel.cpp \
-               Par_LB_CollectParticleFromRealPatch.cpp  Par_LB_RecordExchangeParticlePatchID.cpp
+CC_FILE     += Par_LB_RedistributeByRectangular.cpp  Par_LB_ExchangeParticle.cpp  Par_LB_CollectParticle2OneLevel.cpp \
+               Par_LB_CollectParticleFromRealPatch.cpp  Par_LB_RecordExchangeParticlePatchID.cpp \
+               Par_LB_MapBuffer2RealPatch.cpp
 
 vpath %.cpp    Particle/LoadBalance
 endif # LOAD_BALANCE

@@ -7,8 +7,8 @@
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Par_LB_SendParticle
-// Description :  Send particles to other MPI ranks
+// Function    :  Par_LB_ExchangeParticle
+// Description :  Exchange particles between different MPI ranks
 //
 // Note        :  1. SendBuf_XXX must be preallocated and will NOT be deallocated in this function
 //                2. RecvBuf_XXX will be allocated in this function (using call by reference) and must be
@@ -38,11 +38,11 @@
 //                RecvBuf_LBIdxEachPatch (if Exchange_LBIdxEachRank == true), RecvBuf_ParDataEachPatch,
 //                NRecvPatchTotal, NRecvPatchTotal
 //-------------------------------------------------------------------------------------------------------
-void Par_LB_SendParticle( const int NParVar, int *SendBuf_NPatchEachRank, int *SendBuf_NParEachPatch,
-                          long *SendBuf_LBIdxEachPatch, real *SendBuf_ParDataEachPatch,
-                          int *&RecvBuf_NPatchEachRank, int *&RecvBuf_NParEachPatch, long *&RecvBuf_LBIdxEachPatch,
-                          real *&RecvBuf_ParDataEachPatch, int &NRecvPatchTotal, int &NRecvParTotal,
-                          const bool Exchange_NPatchEachRank, const bool Exchange_LBIdxEachRank )
+void Par_LB_ExchangeParticle( const int NParVar, int *SendBuf_NPatchEachRank, int *SendBuf_NParEachPatch,
+                              long *SendBuf_LBIdxEachPatch, real *SendBuf_ParDataEachPatch,
+                              int *&RecvBuf_NPatchEachRank, int *&RecvBuf_NParEachPatch, long *&RecvBuf_LBIdxEachPatch,
+                              real *&RecvBuf_ParDataEachPatch, int &NRecvPatchTotal, int &NRecvParTotal,
+                              const bool Exchange_NPatchEachRank, const bool Exchange_LBIdxEachRank )
 {
 
 // check
@@ -168,7 +168,7 @@ void Par_LB_SendParticle( const int NParVar, int *SendBuf_NPatchEachRank, int *S
    delete [] RecvCount_ParDataEachPatch;
    delete [] RecvDisp_ParDataEachPatch;
 
-} // FUNCTION : Par_LB_SendParticle
+} // FUNCTION : Par_LB_ExchangeParticle
 
 
 

@@ -78,20 +78,26 @@ void Par_LB_CollectParticle2OneLevel( const int FaLv, const bool PredictPos, con
    {
 //    0-1. sibling-buffer patches at FaLv
       if ( SibBufPatch )
-         Par_LB_CollectParticleFromRealPatch( FaLv,   amr->Par->RecvPar_NPatch[FaLv][0], amr->Par->RecvPar_PIDList[FaLv][0],
-                                              PredictPos, TargetTime );
+         Par_LB_CollectParticleFromRealPatch(
+            FaLv,
+            amr->Par->R2B_Buff_NPatchTotal[FaLv][0], amr->Par->R2B_Buff_PIDList[FaLv][0], amr->Par->R2B_Buff_NPatchEachRank[FaLv][0],
+            amr->Par->R2B_Real_NPatchTotal[FaLv][0], amr->Par->R2B_Real_PIDList[FaLv][0], amr->Par->R2B_Real_NPatchEachRank[FaLv][0],
+            PredictPos, TargetTime );
 
 //    0-2. father-sibling-buffer patches at FaLv-1
       if ( FaSibBufPatch  &&  FaLv > 0 )
-         Par_LB_CollectParticleFromRealPatch( FaLv-1, amr->Par->RecvPar_NPatch[FaLv][1], amr->Par->RecvPar_PIDList[FaLv][1],
-                                              PredictPos, TargetTime );
+         Par_LB_CollectParticleFromRealPatch(
+            FaLv-1,
+            amr->Par->R2B_Buff_NPatchTotal[FaLv][1], amr->Par->R2B_Buff_PIDList[FaLv][1], amr->Par->R2B_Buff_NPatchEachRank[FaLv][1],
+            amr->Par->R2B_Real_NPatchTotal[FaLv][1], amr->Par->R2B_Real_PIDList[FaLv][1], amr->Par->R2B_Real_NPatchEachRank[FaLv][1],
+            PredictPos, TargetTime );
 
       return;
    }
 
 
 // 1. prepare the send buffers
-// these arrays (except NParForEachRank) will be deallocated by Par_LB_SendParticle
+// these arrays (except NParForEachRank) will be deallocated by Par_LB_ExchangeParticle
    int  *NParForEachRank          = new int [MPI_NRank];
    int  *NPatchForEachRank        = new int [MPI_NRank];
    int  *SendBuf_NPatchEachRank   = NPatchForEachRank;
@@ -246,7 +252,7 @@ void Par_LB_CollectParticle2OneLevel( const int FaLv, const bool PredictPos, con
 
 
 // 2. send data to all ranks
-// these arrays will be allocated by Par_LB_SendParticle (using call by reference) and must be free'd later
+// these arrays will be allocated by Par_LB_ExchangeParticle (using call by reference) and must be free'd later
    int  *RecvBuf_NPatchEachRank   = NULL;
    int  *RecvBuf_NParEachPatch    = NULL;
    long *RecvBuf_LBIdxEachPatch   = NULL;
@@ -257,11 +263,11 @@ void Par_LB_CollectParticle2OneLevel( const int FaLv, const bool PredictPos, con
    const bool Exchange_LBIdxEachRank_Yes  = true;
    int NRecvPatchTotal, NRecvParTotal;
 
-// note that Par_LB_SendParticle will also return the total number of patches and particles received (using call by reference)
-   Par_LB_SendParticle( NParVar, SendBuf_NPatchEachRank, SendBuf_NParEachPatch, SendBuf_LBIdxEachPatch,
-                        SendBuf_ParDataEachPatch, RecvBuf_NPatchEachRank, RecvBuf_NParEachPatch,
-                        RecvBuf_LBIdxEachPatch, RecvBuf_ParDataEachPatch, NRecvPatchTotal, NRecvParTotal,
-                        Exchange_NPatchEachRank_Yes, Exchange_LBIdxEachRank_Yes );
+// note that Par_LB_ExchangeParticle will also return the total number of patches and particles received (using call by reference)
+   Par_LB_ExchangeParticle( NParVar, SendBuf_NPatchEachRank, SendBuf_NParEachPatch, SendBuf_LBIdxEachPatch,
+                            SendBuf_ParDataEachPatch, RecvBuf_NPatchEachRank, RecvBuf_NParEachPatch,
+                            RecvBuf_LBIdxEachPatch, RecvBuf_ParDataEachPatch, NRecvPatchTotal, NRecvParTotal,
+                            Exchange_NPatchEachRank_Yes, Exchange_LBIdxEachRank_Yes );
 
 // 2-2. free memory
    delete [] SendBuf_NPatchEachRank;
@@ -288,7 +294,9 @@ void Par_LB_CollectParticle2OneLevel( const int FaLv, const bool PredictPos, con
    int *FaPIDList = new int [NRecvPatchTotal];
    int  RecvBuf_Idx;
 
-   for (int FaPID=0; FaPID<amr->NPatchComma[FaLv][1]; FaPID++)    amr->patch[0][FaLv][FaPID]->NPar_Away = 0;
+// only set NPar_Away for non-leaf real patches --> leaf real patches will always have NPar_Away == -1
+   for (int FaPID=0; FaPID<amr->NPatchComma[FaLv][1]; FaPID++)
+      if ( amr->patch[0][FaLv][FaPID]->son != -1 )    amr->patch[0][FaLv][FaPID]->NPar_Away = 0;
 
 #  ifdef DEBUG_PARTICLE
    for (int t=0; t<NRecvPatchTotal; t++)  FaPIDList[t] = -1;
@@ -404,7 +412,8 @@ void Par_LB_CollectParticle2OneLevel( const int FaLv, const bool PredictPos, con
    long NParLocal_Get=0, NParLocal_Check=0, NParAllRank_Get, NParAllRank_Check;
 
    for (int FaPID=0; FaPID<amr->NPatchComma[FaLv][1]; FaPID++)
-      NParLocal_Get += amr->patch[0][FaLv][FaPID]->NPar + amr->patch[0][FaLv][FaPID]->NPar_Away;
+      NParLocal_Get += ( amr->patch[0][FaLv][FaPID]->son == -1 ) ? amr->patch[0][FaLv][FaPID]->NPar :
+                                                                   amr->patch[0][FaLv][FaPID]->NPar_Away;
 
    for (int lv=FaLv; lv<=MAX_LEVEL; lv++)    NParLocal_Check += amr->Par->NPar_Lv[lv];
 
@@ -423,13 +432,19 @@ void Par_LB_CollectParticle2OneLevel( const int FaLv, const bool PredictPos, con
 // 5. collect particles for buffer patches
 // 5-1. sibling-buffer patches at FaLv
    if ( SibBufPatch )
-      Par_LB_CollectParticleFromRealPatch( FaLv,   amr->Par->RecvPar_NPatch[FaLv][0], amr->Par->RecvPar_PIDList[FaLv][0],
-                                           PredictPos, TargetTime );
+      Par_LB_CollectParticleFromRealPatch(
+         FaLv,
+         amr->Par->R2B_Buff_NPatchTotal[FaLv][0], amr->Par->R2B_Buff_PIDList[FaLv][0], amr->Par->R2B_Buff_NPatchEachRank[FaLv][0],
+         amr->Par->R2B_Real_NPatchTotal[FaLv][0], amr->Par->R2B_Real_PIDList[FaLv][0], amr->Par->R2B_Real_NPatchEachRank[FaLv][0],
+         PredictPos, TargetTime );
 
 // 5-2. father-sibling-buffer patches at FaLv-1
    if ( FaSibBufPatch  &&  FaLv > 0 )
-      Par_LB_CollectParticleFromRealPatch( FaLv-1, amr->Par->RecvPar_NPatch[FaLv][1], amr->Par->RecvPar_PIDList[FaLv][1],
-                                           PredictPos, TargetTime );
+      Par_LB_CollectParticleFromRealPatch(
+         FaLv-1,
+         amr->Par->R2B_Buff_NPatchTotal[FaLv][1], amr->Par->R2B_Buff_PIDList[FaLv][1], amr->Par->R2B_Buff_NPatchEachRank[FaLv][1],
+         amr->Par->R2B_Real_NPatchTotal[FaLv][1], amr->Par->R2B_Real_PIDList[FaLv][1], amr->Par->R2B_Real_NPatchEachRank[FaLv][1],
+         PredictPos, TargetTime );
 
 
 // 6. free memory
@@ -487,9 +502,9 @@ void Par_LB_CollectParticle2OneLevel_FreeMemory( const int lv, const bool SibBuf
 
 // 2. sibling-buffer patches at lv
    if ( SibBufPatch )
-   for (int p=0; p<amr->Par->RecvPar_NPatch[lv][0]; p++)
+   for (int p=0; p<amr->Par->R2B_Buff_NPatchTotal[lv][0]; p++)
    {
-      const int PID = amr->Par->RecvPar_PIDList[lv][0][p];
+      const int PID = amr->Par->R2B_Buff_PIDList[lv][0][p];
 
       for (int v=0; v<NParVar; v++)
       {
@@ -509,9 +524,9 @@ void Par_LB_CollectParticle2OneLevel_FreeMemory( const int lv, const bool SibBuf
    const int FaLv = lv - 1;
 
    if ( FaSibBufPatch  &&  FaLv >= 0 )
-   for (int p=0; p<amr->Par->RecvPar_NPatch[lv][1]; p++)
+   for (int p=0; p<amr->Par->R2B_Buff_NPatchTotal[lv][1]; p++)
    {
-      const int FaPID = amr->Par->RecvPar_PIDList[lv][1][p];
+      const int FaPID = amr->Par->R2B_Buff_PIDList[lv][1][p];
 
       for (int v=0; v<NParVar; v++)
       {

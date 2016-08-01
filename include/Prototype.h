@@ -450,14 +450,18 @@ void Par_LB_RedistributeByRectangular();
 void Par_LB_CollectParticle2OneLevel( const int FaLv, const bool PredictPos, const double TargetTime,
                                       const bool SibBufPatch, const bool FaSibBufPatch );
 void Par_LB_CollectParticle2OneLevel_FreeMemory( const int lv, const bool SibBufPatch, const bool FaSibBufPatch );
-void Par_LB_CollectParticleFromRealPatch( const int lv, const int NSendPatchTotal, const int *PID_List, const bool PredictPos,
-                                          const double TargetTime );
-void Par_LB_SendParticle( const int NParVar, int *SendBuf_NPatchEachRank, int *SendBuf_NParEachPatch,
-                          long *SendBuf_LBIdxEachPatch, real *SendBuf_ParDataEachPatch,
-                          int *&RecvBuf_NPatchEachRank, int *&RecvBuf_NParEachPatch, long *&RecvBuf_LBIdxEachPatch,
-                          real *&RecvBuf_ParDataEachPatch, int &NRecvPatchTotal, int &NRecvParTotal,
-                          const bool Exchange_NPatchEachRank, const bool Exchange_LBIdxEachRank );
-void Par_LB_RecordExchangeParticlePatchID( const int Lv );
+void Par_LB_CollectParticleFromRealPatch( const int lv,
+                                          const int Buff_NPatchTotal, const int *Buff_PIDList, int *Buff_NPatchEachRank,
+                                          const int Real_NPatchTotal, const int *Real_PIDList, int *Real_NPatchEachRank,
+                                          const bool PredictPos, const double TargetTime );
+void Par_LB_ExchangeParticle( const int NParVar, int *SendBuf_NPatchEachRank, int *SendBuf_NParEachPatch,
+                              long *SendBuf_LBIdxEachPatch, real *SendBuf_ParDataEachPatch,
+                              int *&RecvBuf_NPatchEachRank, int *&RecvBuf_NParEachPatch, long *&RecvBuf_LBIdxEachPatch,
+                              real *&RecvBuf_ParDataEachPatch, int &NRecvPatchTotal, int &NRecvParTotal,
+                              const bool Exchange_NPatchEachRank, const bool Exchange_LBIdxEachRank );
+void Par_LB_RecordExchangeParticlePatchID( const int MainLv );
+void Par_LB_MapBuffer2RealPatch( const int lv, const int  Buff_NPatchTotal, int *&Buff_PIDList, int *Buff_NPatchEachRank,
+                                                     int &Real_NPatchTotal, int *&Real_PIDList, int *Real_NPatchEachRank );
 #endif
 #endif // #ifdef PARTICLE
 

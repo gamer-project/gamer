@@ -49,13 +49,18 @@ void Aux_Error( const char *File, const int Line, const char *Func, const char *
 //                ParVar               : Pointer arrays to different particle variables (Mass, Pos, Vel, ...)
 //                Passive              : Pointer arrays to different passive variables (e.g., metalicity)
 //                InactiveParList      : List of inactive particle IDs
-//                RecvPar_NPatch       : Number of buffer patches to receive particles from other ranks
+//                R2B_Real_NPatchTotal : see R2B_Buff_NPatchTotal
+//                R2B_Real_NPatchEachRank : see R2B_Buff_NPatchEachRank
+//                R2B_Real_PIDList     : see R2B_Buff_PIDList
+//                R2B_Buff_NPatchTotal : Number of buffer patches to receive particles from the corresponding real patches
+//                                       --> R2B : Real to Buffer
 //                                       --> Mainly for the Poisson solver
 //                                       --> For LOAD_BALANCE only
-//                RecvPar_PIDList      : Patch IDs list to receive particles from other ranks
+//                R2B_Buff_NPatchEachRank :  Number of buffer patches to receive data from different MPI ranks
+//                R2B_Buff_PIDList     : Buffer patch IDs list to receive particles from other ranks
 //                                       --> Mainly for the Poisson solver
 //                                       --> For LOAD_BALANCE only
-//                                       --> Both RecvPar_NPatch and RecvPar_PIDList have the dimension [NLEVEL][2]
+//                                       --> It has the dimension [NLEVEL][2]
 //                                           [lv][0/1] is for receiving particles at lv/lv-1 around real patches at lv
 //                                           --> Mainly for the Poisson solver at lv (i.e., for calculating the
 //                                               total density field at lv)
@@ -105,8 +110,12 @@ struct Particle_t
    long       *InactiveParList;
 
 #  ifdef LOAD_BALANCE
-   int         RecvPar_NPatch [NLEVEL][2];
-   int        *RecvPar_PIDList[NLEVEL][2];
+   int         R2B_Real_NPatchTotal   [NLEVEL][2];
+   int        *R2B_Real_NPatchEachRank[NLEVEL][2];
+   int        *R2B_Real_PIDList       [NLEVEL][2];
+   int         R2B_Buff_NPatchTotal   [NLEVEL][2];
+   int        *R2B_Buff_NPatchEachRank[NLEVEL][2];
+   int        *R2B_Buff_PIDList       [NLEVEL][2];
 #  endif
 
    real       *Mass;
@@ -156,8 +165,12 @@ struct Particle_t
       for (int lv=0; lv<NLEVEL; lv++)
       for (int t=0; t<2; t++)
       {
-         RecvPar_NPatch [lv][t] = 0;
-         RecvPar_PIDList[lv][t] = NULL;
+         R2B_Real_NPatchTotal   [lv][t] = 0;
+         R2B_Real_NPatchEachRank[lv][t] = NULL;
+         R2B_Real_PIDList       [lv][t] = NULL;
+         R2B_Buff_NPatchTotal   [lv][t] = 0;
+         R2B_Buff_NPatchEachRank[lv][t] = NULL;
+         R2B_Buff_PIDList       [lv][t] = NULL;
       }
 #     endif
 
@@ -216,14 +229,34 @@ struct Particle_t
       for (int lv=0; lv<NLEVEL; lv++)
       for (int t=0; t<2; t++)
       {
-         RecvPar_NPatch[lv][t] = 0;
+         R2B_Real_NPatchTotal[lv][t] = 0;
+         R2B_Buff_NPatchTotal[lv][t] = 0;
 
-         if ( RecvPar_PIDList[lv][t] != NULL )
+         if ( R2B_Real_NPatchEachRank[lv][t] != NULL )
          {
-            free( RecvPar_PIDList[lv][t] );
-            RecvPar_PIDList[lv][t] = NULL;
+            delete [] R2B_Real_NPatchEachRank[lv][t];
+            R2B_Real_NPatchEachRank[lv][t] = NULL;
          }
-      }
+
+         if ( R2B_Buff_NPatchEachRank[lv][t] != NULL )
+         {
+            delete [] R2B_Buff_NPatchEachRank[lv][t];
+            R2B_Buff_NPatchEachRank[lv][t] = NULL;
+         }
+
+         if ( R2B_Real_PIDList[lv][t] != NULL )
+         {
+            delete [] R2B_Real_PIDList[lv][t];
+            R2B_Real_PIDList[lv][t] = NULL;
+         }
+
+//       R2B_Buff_PIDList is allocated using "malloc"
+         if ( R2B_Buff_PIDList[lv][t] != NULL )
+         {
+            free( R2B_Buff_PIDList[lv][t] );
+            R2B_Buff_PIDList[lv][t] = NULL;
+         }
+      } // for lv, t
 #     endif
 
    } // METHOD : ~Particle_t
@@ -238,9 +271,9 @@ struct Particle_t
    //                2. Initialize both "NPar_Active" and "ParListSize" as NPar_AcPlusInac
    //                3. Set "GhostSize" ("Interp" must be set in advance)
    //
-   // Parameter   :  None
+   // Parameter   :  NRank : Total number of MPI ranks
    //===================================================================================
-   void InitVar()
+   void InitVar( const int NRank )
    {
 
 //    check
@@ -267,6 +300,15 @@ struct Particle_t
       for (int v=0; v<NPAR_PASSIVE; v++)  Passive[v] = (real*)malloc( ParListSize*sizeof(real) );
 
       InactiveParList = (long*)malloc( InactiveParListSize*sizeof(long) );
+
+#     ifdef LOAD_BALANCE
+      for (int lv=0; lv<NLEVEL; lv++)
+      for (int t=0; t<2; t++)
+      {
+         R2B_Real_NPatchEachRank[lv][t] = new int [NRank];
+         R2B_Buff_NPatchEachRank[lv][t] = new int [NRank];
+      }
+#     endif
 
       Mass = ParVar[PAR_MASS];
       PosX = ParVar[PAR_POSX];

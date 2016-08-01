@@ -90,6 +90,8 @@ long  LB_Corner2Index( const int lv, const int Corner[], const Check_t Check );
 //                ParList_Desc    : List recording the IDs of all particles belonging to the descendants of this patch
 //                                  (for SERIAL only)
 //                NPar_Away       : Number of particles collected from other ranks and stored in the ParMassPos_Away array
+//                                  --> Only used for non-leaf real patches and all buffer patches
+//                                  --> For leaf real patches, it should always be -1
 //                                  (for LOAD_BALANCE only)
 //                ParMassPos_Away : Pointer arrays storing the mass and position of NPar_Away particles collected from other ranks
 //                                  (for LOAD_BALANCE only)

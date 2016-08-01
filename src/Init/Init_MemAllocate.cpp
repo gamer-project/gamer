@@ -46,7 +46,7 @@ void Init_MemAllocate()
 
 // d. allocate particles
 #  ifdef PARTICLE
-   amr->Par->InitVar();
+   amr->Par->InitVar( MPI_NRank );
 #  endif
 
 

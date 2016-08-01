@@ -778,6 +778,23 @@ void LB_RedistributeParticle_Init( real **ParVar_Old, real **Passive_Old )
 // remove inactive particle list since we will not redistribute inactive particles
    free( amr->Par->InactiveParList );
 
+// remove other arrays allocated by amr->Par->InitVar
+   for (int lv=0; lv<NLEVEL; lv++)
+   for (int t=0; t<2; t++)
+   {
+      if ( amr->Par->R2B_Real_NPatchEachRank[lv][t] != NULL )
+      {
+         delete [] amr->Par->R2B_Real_NPatchEachRank[lv][t];
+         amr->Par->R2B_Real_NPatchEachRank[lv][t] = NULL;
+      }
+
+      if ( amr->Par->R2B_Buff_NPatchEachRank[lv][t] != NULL )
+      {
+         delete [] amr->Par->R2B_Buff_NPatchEachRank[lv][t];
+         amr->Par->R2B_Buff_NPatchEachRank[lv][t] = NULL;
+      }
+   }
+
 
 // get the total number of particles at each rank after data redistribution
    int  TRank, Send_NPar[MPI_NRank], Recv_NPar[MPI_NRank], Recv_NPar_Sum;
@@ -801,7 +818,7 @@ void LB_RedistributeParticle_Init( real **ParVar_Old, real **Passive_Old )
 
 // reset particle variables (do not reset NPar_Lv since we will need it for debug in LB_RedistributeRealPatch)
    amr->Par->NPar_AcPlusInac = Recv_NPar_Sum;
-   amr->Par->InitVar();
+   amr->Par->InitVar( MPI_NRank );
 
 // reset the total number of particles to be zero since we will update it again when calling LB_RedistributeRealPatch
    amr->Par->NPar_AcPlusInac = 0;
