@@ -49,27 +49,33 @@ void Aux_Error( const char *File, const int Line, const char *Func, const char *
 //                ParVar               : Pointer arrays to different particle variables (Mass, Pos, Vel, ...)
 //                Passive              : Pointer arrays to different passive variables (e.g., metalicity)
 //                InactiveParList      : List of inactive particle IDs
-//                R2B_Real_NPatchTotal : see R2B_Buff_NPatchTotal
+//                R2B_Real_NPatchTotal    : see R2B_Buff_NPatchTotal
 //                R2B_Real_NPatchEachRank : see R2B_Buff_NPatchEachRank
-//                R2B_Real_PIDList     : see R2B_Buff_PIDList
-//                R2B_Buff_NPatchTotal : Number of buffer patches to receive particles from the corresponding real patches
-//                                       --> R2B : Real to Buffer
-//                                       --> Mainly for the Poisson solver
-//                                       --> For LOAD_BALANCE only
+//                R2B_Real_PIDList        : see R2B_Buff_PIDList
+//                R2B_Buff_NPatchTotal    : Number of buffer patches to receive particles from the corresponding real patches
+//                                          --> R2B : Real to Buffer
+//                                          --> Mainly for the Poisson solver
+//                                          --> For LOAD_BALANCE only
 //                R2B_Buff_NPatchEachRank :  Number of buffer patches to receive data from different MPI ranks
-//                R2B_Buff_PIDList     : Buffer patch IDs list to receive particles from other ranks
-//                                       --> Mainly for the Poisson solver
-//                                       --> For LOAD_BALANCE only
-//                                       --> It has the dimension [NLEVEL][2]
-//                                           [lv][0/1] is for receiving particles at lv/lv-1 around real patches at lv
-//                                           --> Mainly for the Poisson solver at lv (i.e., for calculating the
-//                                               total density field at lv)
-//                                           --> More specific,
-//                                               [lv][0] is for receiving the particles of sibling-buffer patches at lv
-//                                               adjacent to real patches at lv
-//                                               [lv][1] is for receiving the particles of father-sibling-buffer patches at lv-1
-//                                               adjacent to real patches at lv
-//                                           --> Both are constructed by calling Par_LB_RecordExchangeParticlePatchID( lv )
+//                R2B_Buff_PIDList        : Buffer patch IDs list to receive particles from other ranks
+//                                          --> Mainly for the Poisson solver
+//                                          --> For LOAD_BALANCE only
+//                                          --> It has the dimension [NLEVEL][2]
+//                                              [lv][0/1] is for receiving particles at lv/lv-1 around real patches at lv
+//                                              --> Mainly for the Poisson solver at lv (i.e., for calculating the
+//                                                  total density field at lv)
+//                                              --> More specific,
+//                                                  [lv][0] is for receiving the particles of sibling-buffer patches at lv
+//                                                  adjacent to real patches at lv
+//                                                  [lv][1] is for receiving the particles of father-sibling-buffer patches at lv-1
+//                                                  adjacent to real patches at lv
+//                                              --> Both are constructed by calling Par_LB_RecordExchangeParticlePatchID( lv )
+//                B2R_Real_NPatchTotal    : Similar to R2B_Real_NPatchTotal,    but for sending particles from buffer to real patches
+//                B2R_Real_NPatchEachRank : Similar to R2B_Real_NPatchEachRank, ...
+//                B2R_Real_PIDList        : Similar to R2B_Real_PIDList,        ...
+//                B2R_Buff_NPatchTotal    : Similar to R2B_Buff_NPatchTotal,    ...
+//                B2R_Buff_NPatchEachRank : Similar to R2B_Buff_NPatchEachRank, ...
+//                B2R_Buff_PIDList        : Similar to R2B_Buff_PIDList,        ...
 //                Mass                 : Particle mass
 //                                       Mass < 0.0 --> this particle has been removed from simulations
 //                                                  --> PAR_INACTIVE_OUTSIDE: fly outside the simulation box
@@ -116,6 +122,13 @@ struct Particle_t
    int         R2B_Buff_NPatchTotal   [NLEVEL][2];
    int        *R2B_Buff_NPatchEachRank[NLEVEL][2];
    int        *R2B_Buff_PIDList       [NLEVEL][2];
+
+   int         B2R_Real_NPatchTotal   [NLEVEL][2];
+   int        *B2R_Real_NPatchEachRank[NLEVEL][2];
+   int        *B2R_Real_PIDList       [NLEVEL][2];
+   int         B2R_Buff_NPatchTotal   [NLEVEL][2];
+   int        *B2R_Buff_NPatchEachRank[NLEVEL][2];
+   int        *B2R_Buff_PIDList       [NLEVEL][2];
 #  endif
 
    real       *Mass;
@@ -171,6 +184,13 @@ struct Particle_t
          R2B_Buff_NPatchTotal   [lv][t] = 0;
          R2B_Buff_NPatchEachRank[lv][t] = NULL;
          R2B_Buff_PIDList       [lv][t] = NULL;
+
+         B2R_Real_NPatchTotal   [lv][t] = 0;
+         B2R_Real_NPatchEachRank[lv][t] = NULL;
+         B2R_Real_PIDList       [lv][t] = NULL;
+         B2R_Buff_NPatchTotal   [lv][t] = 0;
+         B2R_Buff_NPatchEachRank[lv][t] = NULL;
+         B2R_Buff_PIDList       [lv][t] = NULL;
       }
 #     endif
 
@@ -256,8 +276,36 @@ struct Particle_t
             free( R2B_Buff_PIDList[lv][t] );
             R2B_Buff_PIDList[lv][t] = NULL;
          }
+
+         B2R_Real_NPatchTotal[lv][t] = 0;
+         B2R_Buff_NPatchTotal[lv][t] = 0;
+
+         if ( B2R_Real_NPatchEachRank[lv][t] != NULL )
+         {
+            delete [] B2R_Real_NPatchEachRank[lv][t];
+            B2R_Real_NPatchEachRank[lv][t] = NULL;
+         }
+
+         if ( B2R_Buff_NPatchEachRank[lv][t] != NULL )
+         {
+            delete [] B2R_Buff_NPatchEachRank[lv][t];
+            B2R_Buff_NPatchEachRank[lv][t] = NULL;
+         }
+
+         if ( B2R_Real_PIDList[lv][t] != NULL )
+         {
+            delete [] B2R_Real_PIDList[lv][t];
+            B2R_Real_PIDList[lv][t] = NULL;
+         }
+
+//       B2R_Buff_PIDList is allocated using "malloc"
+         if ( B2R_Buff_PIDList[lv][t] != NULL )
+         {
+            free( B2R_Buff_PIDList[lv][t] );
+            B2R_Buff_PIDList[lv][t] = NULL;
+         }
       } // for lv, t
-#     endif
+#     endif // LOAD_BALANCE
 
    } // METHOD : ~Particle_t
 
@@ -321,6 +369,12 @@ struct Particle_t
 
          R2B_Real_NPatchEachRank[lv][t] = new int [NRank];
          R2B_Buff_NPatchEachRank[lv][t] = new int [NRank];
+
+         if ( B2R_Real_NPatchEachRank[lv][t] != NULL )   delete [] B2R_Real_NPatchEachRank[lv][t];
+         if ( B2R_Buff_NPatchEachRank[lv][t] != NULL )   delete [] B2R_Buff_NPatchEachRank[lv][t];
+
+         B2R_Real_NPatchEachRank[lv][t] = new int [NRank];
+         B2R_Buff_NPatchEachRank[lv][t] = new int [NRank];
       }
 #     endif
 

@@ -11,14 +11,16 @@
 // Description :  Pass particles lying outside the current home patches to the sibling patches
 //
 // Note        :  1. We have assumed that all particles will only go to the ***NEARBY 26 patches***
-//                   --> In the cases that particles cross the coarse-fine boundary, particles are sent to the 
+//                   --> In the cases that particles cross the coarse-fine boundary, particles are sent to the
 //                       corresponding sibling-son (cross C->F) or father-sibling (cross F->C) patches
 //                   --> But note that for C->F we only send particles to the sibling patches and do NOT
 //                       send them to the sibling-son patches in this function. These particles are stored in
 //                       the sibling patches temporarily for the velocity correction in KDK (because we don't
-//                       have potential at lv+1 level at this point), and are send to lv+1 level after that.
-//                2. After calculating the target sibling patch, the particles' position will be re-mapped
+//                       have potential at lv+1 level at this point), and are sent to lv+1 level after that.
+//                2. After calculating the target sibling patch, the particle position will be re-mapped
 //                   into the simulation domain if periodic B.C. is assumed
+//                3. Particles transferred to buffer patches (at either lv or lv-1) will be resent to their
+//                   corresponding real patches by calling "Par_LB_SendParticle2RealPatch"
 //
 // Parameter   :  lv : Target refinement level
 //-------------------------------------------------------------------------------------------------------
@@ -29,12 +31,12 @@ void Par_PassParticle2Sibling( const int lv )
    const bool   RemoveAllPar_No  = false;
    const int    MirSib[26]       = { 1,0,3,2,5,4,9,8,7,6,13,12,11,10,17,16,15,14,25,24,23,22,21,20,19,18 };
    const double GuessEscapeRatio = 0.5*( CUBE(PS1) - CUBE(PS1-2) )/CUBE(PS1);
-   const int    SibID[3][3][3]   = {  { {18, 10, 19}, {14,  4, 16}, {20, 11, 21} }, 
-                                      { { 6,  2,  7}, { 0, -1,  1}, { 8,  3,  9} }, 
+   const int    SibID[3][3][3]   = {  { {18, 10, 19}, {14,  4, 16}, {20, 11, 21} },
+                                      { { 6,  2,  7}, { 0, -1,  1}, { 8,  3,  9} },
                                       { {22, 12, 23}, {15,  5, 17}, {24, 13, 25} }  };
    const double dh_min           = amr->dh[TOP_LEVEL];
-   const double BoxEdge[3]       = { (NX0_TOT[0]*(1<<TOP_LEVEL))*dh_min, 
-                                     (NX0_TOT[1]*(1<<TOP_LEVEL))*dh_min, 
+   const double BoxEdge[3]       = { (NX0_TOT[0]*(1<<TOP_LEVEL))*dh_min,
+                                     (NX0_TOT[1]*(1<<TOP_LEVEL))*dh_min,
                                      (NX0_TOT[2]*(1<<TOP_LEVEL))*dh_min }; // prevent from the round-off error problem
    const double _BoxVolume       = 1.0 / ( amr->BoxSize[0]*amr->BoxSize[1]*amr->BoxSize[2] );
    real *ParPos[3]               = { amr->Par->PosX, amr->Par->PosY, amr->Par->PosZ };
@@ -49,6 +51,7 @@ void Par_PassParticle2Sibling( const int lv )
    {
 
 #  pragma omp for schedule( runtime ) reduction( +:NPar_Escp_Tot )
+// loop over all **real** patches
    for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
    {
       NPar  = amr->patch[0][lv][PID]->NPar;
@@ -111,7 +114,7 @@ void Par_PassParticle2Sibling( const int lv )
 
 #                 ifdef DEBUG_PARTICLE
                   if ( BoxEdge[d] != EdgeR[d] )
-                     Aux_Error( ERROR_INFO, "Dim %d: BoxEdge (%20.14e) != EdgeR (%20.14e) !!\n", 
+                     Aux_Error( ERROR_INFO, "Dim %d: BoxEdge (%20.14e) != EdgeR (%20.14e) !!\n",
                                 d, BoxEdge[d], EdgeR[d] );
 
                   if ( ParPos[d][ParID] < 0.0  ||  ParPos[d][ParID] >= BoxEdge[d] )
@@ -186,7 +189,8 @@ void Par_PassParticle2Sibling( const int lv )
 
    if ( NPar_Escp_Tot > 0 )
    {
-      for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
+//    loop over all real **and buffer** patches
+      for (int PID=0; PID<amr->num[lv]; PID++)
       {
 //       4. gather the escaping particles from the 26 sibling patches (coarse --> coarse)
          for (int s=0; s<26; s++)
@@ -198,6 +202,10 @@ void Par_PassParticle2Sibling( const int lv )
             {
 //###NOTE : No OpenMP since AddParticle will modify amr->Par->NPar_Lv[]
 #              ifdef DEBUG_PARTICLE
+               if ( SibPID >= amr->NPatchComma[lv][1] )
+                  Aux_Error( ERROR_INFO, "buffer patch cannot have escaping particles (PID %d, s %d, SibPID %d, NPar_Escp %d) !!\n",
+                             PID, s, SibPID, amr->patch[0][lv][SibPID]->NPar_Escp[ MirSib[s] ] );
+
                char Comment[100];
                sprintf( Comment, "%s C->C", __FUNCTION__ );
                amr->patch[0][lv][PID]->AddParticle( amr->patch[0][lv][SibPID]->NPar_Escp   [ MirSib[s] ],
@@ -210,7 +218,7 @@ void Par_PassParticle2Sibling( const int lv )
                                                    &amr->Par->NPar_Lv[lv] );
 #              endif
             }
-         }
+         } // for (int s=0; s<26; s++)
 
 
 //       5. for patches with sons, pass particles to their sons (coarse --> fine)
@@ -233,7 +241,7 @@ void Par_PassParticle2Sibling( const int lv )
          if ( SibPID == -1  &&  amr->patch[0][lv][PID]->NPar_Escp[s] > 0 )
          {
 //          find the correct father->sibling patch index
-            for (int d=0; d<3; d++)    
+            for (int d=0; d<3; d++)
             {
                ijk[d] = TABLE_01( s,     'x'+d, 0, 1, 2 );
                Side   = TABLE_02( PID%8, 'x'+d, -1, +1 );
@@ -241,14 +249,17 @@ void Par_PassParticle2Sibling( const int lv )
                if (  ( Side < 0 && ijk[d] == 2 )  ||  ( Side > 0 && ijk[d] == 0 )  )   ijk[d] = 1;
             }
 
-            FaSib    = SibID[ ijk[2] ][ ijk[1] ][ ijk[0] ];
+            FaSib = SibID[ ijk[2] ][ ijk[1] ][ ijk[0] ];
+            FaPID = amr->patch[0][lv][PID]->father;
 
 #           ifdef DEBUG_PARTICLE
             if ( FaSib == -1 )
                Aux_Error( ERROR_INFO, "FaSib == -1 (lv %d, PID %d, Sib %d) !!\n", lv, PID, s );
+
+            if ( FaPID < 0 )
+               Aux_Error( ERROR_INFO, "FaPID = %d < 0 (lv %d, PID %d) !!\n", FaPID, lv, PID );
 #           endif
 
-            FaPID    = amr->patch[0][lv][PID]->father;
             FaSibPID = amr->patch[0][FaLv][FaPID]->sibling[FaSib];
 
 #           ifdef DEBUG_PARTICLE
@@ -257,7 +268,7 @@ void Par_PassParticle2Sibling( const int lv )
 #           endif
 
 
-//          add particles to the target father->sibling patch
+//          add particles to the target father->sibling patch (which can be real of buffer patches)
 //###NOTE : No OpenMP since AddParticle will modify amr->Par->NPar_Lv[]
 #           ifdef DEBUG_PARTICLE
             char Comment[100];
@@ -295,8 +306,8 @@ void Par_PassParticle2Sibling( const int lv )
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Par_WithinActiveRegion 
-// Description :  Check whether the input coordinates are within the active region 
+// Function    :  Par_WithinActiveRegion
+// Description :  Check whether the input coordinates are within the active region
 //
 // Note        :  1. Active region is defined as [RemoveCell ... BoxSize-RemoveCell]
 //                2. Useful only for non-periodic particles
@@ -305,7 +316,7 @@ void Par_PassParticle2Sibling( const int lv )
 //
 // Parameter   :  x/y/z : Input coordinates
 //
-// Return      :  true/false  : inside/outside the active region 
+// Return      :  true/false  : inside/outside the active region
 //-------------------------------------------------------------------------------------------------------
 bool Par_WithinActiveRegion( const real x, const real y, const real z )
 {
@@ -318,7 +329,7 @@ bool Par_WithinActiveRegion( const real x, const real y, const real z )
 
    return true;
 
-} // FUCNTION Par_WithinActiveRegion 
+} // FUCNTION Par_WithinActiveRegion
 
 
 
