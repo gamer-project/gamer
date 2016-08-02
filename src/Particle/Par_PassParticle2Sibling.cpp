@@ -41,7 +41,7 @@ void Par_PassParticle2Sibling( const int lv )
    const double _BoxVolume       = 1.0 / ( amr->BoxSize[0]*amr->BoxSize[1]*amr->BoxSize[2] );
    real *ParPos[3]               = { amr->Par->PosX, amr->Par->PosY, amr->Par->PosZ };
 
-   int     NPar_Escp_Tot=0;
+   int     NPar_Remove_Tot=0;
    int     NPar, NGuess, NPar_Remove, ArraySize[26], ijk[3], Side, TSib, SibPID, FaPID, FaSib, FaSibPID;
    long    ParID;
    int    *RemoveParList;
@@ -50,7 +50,7 @@ void Par_PassParticle2Sibling( const int lv )
 #  pragma omp parallel private( NPar, NGuess, NPar_Remove, ArraySize, ijk, TSib, ParID, RemoveParList, EdgeL, EdgeR )
    {
 
-#  pragma omp for schedule( runtime ) reduction( +:NPar_Escp_Tot )
+#  pragma omp for schedule( runtime ) reduction( +:NPar_Remove_Tot )
 // loop over all **real** patches
    for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
    {
@@ -133,10 +133,11 @@ void Par_PassParticle2Sibling( const int lv )
                !Par_WithinActiveRegion( ParPos[0][ParID], ParPos[1][ParID], ParPos[2][ParID] )  )
          {
             RemoveParList[ NPar_Remove ++ ] = p;
+            NPar_Remove_Tot ++;
 
-//          use OpenMP critical construct since RemoveOneParticle will modify some global variables
+//          use OpenMP critical construct since RemoveOneParticle will modify AveDensity, which is a global variable
 #           pragma omp critical
-            amr->Par->RemoveOneParticle( ParID, PAR_INACTIVE_OUTSIDE, lv, &AveDensity, _BoxVolume );
+            amr->Par->RemoveOneParticle( ParID, PAR_INACTIVE_OUTSIDE, &AveDensity, _BoxVolume );
 
             if ( OPT__VERBOSE )
                Aux_Message( stderr, "\nWARNING : removing particle %10d (Pos = [%14.7e, %14.7e, %14.7e], Time = %13.7e)\n",
@@ -148,6 +149,7 @@ void Par_PassParticle2Sibling( const int lv )
          else if ( TSib != -1 )
          {
             RemoveParList[ NPar_Remove ++ ] = p;
+            NPar_Remove_Tot ++;
 
 //          allocate ParList_Escp if it's not allocated yet
             if ( amr->patch[0][lv][PID]->ParList_Escp[TSib] == NULL )
@@ -168,8 +170,6 @@ void Par_PassParticle2Sibling( const int lv )
                Aux_Error( ERROR_INFO, "Storing escaping particles which have been removed (lv %d, PID %d, TSib %d, ParID %d) !!\n",
                           lv, PID, TSib, ParID );
 #           endif
-
-            NPar_Escp_Tot ++;
          } // else if ( TSib != -1 )
       } // for (int p=0; p<NPar; p++)
 
@@ -184,10 +184,10 @@ void Par_PassParticle2Sibling( const int lv )
 
 
 // update the global variable NPar_Lv after the OpenMP parallel region
-   amr->Par->NPar_Lv[lv] -= NPar_Escp_Tot;
+   amr->Par->NPar_Lv[lv] -= NPar_Remove_Tot;
 
 
-   if ( NPar_Escp_Tot > 0 )
+   if ( NPar_Remove_Tot > 0 )
    {
 //    loop over all real **and buffer** patches
       for (int PID=0; PID<amr->num[lv]; PID++)
@@ -284,14 +284,31 @@ void Par_PassParticle2Sibling( const int lv )
 #           endif
          }
       } // for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++); for (int s=0; s<26; s++)
-   } // if ( NPar_Escp_Tot > 0 )
+   } // if ( NPar_Remove_Tot > 0 )
 
 
-// 7. get the total number of active particles in all MPI ranks
+// 7. send particles from buffer patches to the corresponding real patches
+#  ifdef LOAD_BALANCE
+// 7-1. sibling-buffer patches at lv
+      Par_LB_CollectParticleFromBufferPatch(
+         lv,
+         amr->Par->B2R_Buff_NPatchTotal[lv][0], amr->Par->B2R_Buff_PIDList[lv][0], amr->Par->B2R_Buff_NPatchEachRank[lv][0],
+         amr->Par->B2R_Real_NPatchTotal[lv][0], amr->Par->B2R_Real_PIDList[lv][0], amr->Par->B2R_Real_NPatchEachRank[lv][0] );
+
+// 7-2. father-sibling-buffer patches at lv-1
+   if ( lv > 0 )
+      Par_LB_CollectParticleFromBufferPatch(
+         lv,
+         amr->Par->B2R_Buff_NPatchTotal[lv][1], amr->Par->B2R_Buff_PIDList[lv][1], amr->Par->B2R_Buff_NPatchEachRank[lv][1],
+         amr->Par->B2R_Real_NPatchTotal[lv][1], amr->Par->B2R_Real_PIDList[lv][1], amr->Par->B2R_Real_NPatchEachRank[lv][1] );
+#  endif
+
+
+// 8. get the total number of active particles in all MPI ranks
    MPI_Allreduce( &amr->Par->NPar_Active, &amr->Par->NPar_Active_AllRank, 1, MPI_LONG, MPI_SUM, MPI_COMM_WORLD );
 
 
-// free memory
+// 9. free memory
    for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
    for (int s=0; s<26; s++)
    {

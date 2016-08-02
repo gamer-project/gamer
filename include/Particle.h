@@ -409,12 +409,13 @@ struct Particle_t
    //
    // Parameter   :  NewVar      : Array storing the         variables of new particles
    //                NewPassive  : Array storing the passive variables of new particles
-   //                lv          : Refinement level of the target particle
    //                AveDens     : Pointer to the global variable AveDensity
+   //                              --> Do nothing if AveDens == NULL
    //                _BoxVolume  : 1.0 / ( amr->BoxSize[0]*amr->BoxSize[1]*amr->BoxSize[2] )
+   //
+   // Return      :  Index of the new particle (ParID)
    //===================================================================================
-   void AddOneParticle( const real *NewVar, const real *NewPassive, const int lv,
-                        double *AveDens, const double _BoxVolume )
+   long AddOneParticle( const real *NewVar, const real *NewPassive, double *AveDens, const double _BoxVolume )
    {
 
 //    check
@@ -424,7 +425,6 @@ struct Particle_t
 #     if ( NPAR_PASSIVE > 0 )
       if ( NewPassive == NULL )  Aux_Error( ERROR_INFO, "NewVar == NULL !!\n" );
 #     endif
-      if ( AveDens == NULL )     Aux_Error( ERROR_INFO, "AveDens == NULL !!\n" );
 #     endif
 
 
@@ -478,12 +478,15 @@ struct Particle_t
       for (int v=0; v<NPAR_VAR;     v++)  ParVar [v][ParID] = NewVar    [v];
       for (int v=0; v<NPAR_PASSIVE; v++)  Passive[v][ParID] = NewPassive[v];
 
-      *AveDens += Mass[ParID] * _BoxVolume;
+      if ( AveDens != NULL )  *AveDens += Mass[ParID] * _BoxVolume;
 
 
-//    3. update the active particle number (assuming all new particles are active)
+//    3. update the total number of active particles (assuming all new particles are active)
       NPar_Active ++;
-      NPar_Lv[lv] ++;
+
+
+//    4. return the new particle index
+      return ParID;
 
    } // METHOD : AddOneParticle
 
@@ -507,14 +510,13 @@ struct Particle_t
    // Parameter   :  ParID       : Particle ID to be removed
    //                Marker      : Value assigned to the mass of the particle being removed
    //                              (PAR_INACTIVE_OUTSIDE or PAR_INACTIVE_MPI)
-   //                lv          : Refinement level of the target particle
-   //                              --> For modifying NPar_Lv (do nothing if lv == NULL_INT)
    //                AveDens     : Pointer to the global variable AveDensity
    //                              --> Do nothing if AveDens == NULL
    //                _BoxVolume  : 1.0 / ( amr->BoxSize[0]*amr->BoxSize[1]*amr->BoxSize[2] )
+   //
+   // Return      :  None
    //===================================================================================
-   void RemoveOneParticle( const long ParID, const real Marker, const int lv,
-                           double *AveDens, const double _BoxVolume )
+   void RemoveOneParticle( const long ParID, const real Marker, double *AveDens, const double _BoxVolume )
    {
 
 //    check
@@ -544,8 +546,7 @@ struct Particle_t
       if ( AveDens != NULL )  *AveDens -= Mass[ParID] * _BoxVolume;
       Mass[ParID] = Marker;
 
-      NPar_Active --;
-      if ( lv != NULL_INT )   NPar_Lv[lv] --;
+      NPar_Active   --;
       NPar_Inactive ++;
 
 #     ifdef DEBUG_PARTICLE

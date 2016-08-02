@@ -117,7 +117,7 @@ void Par_LB_CollectParticleFromRealPatch( const int lv,
                     lv, PID, amr->patch[0][lv][PID]->son, amr->patch[0][lv][PID]->NPar_Away );
    }
 
-// check Real_NPatchEachRank_Check and Real_NPatchTotal
+// check Real_NPatchEachRank and Real_NPatchTotal
    int Real_NPatchEachRank_Check[MPI_NRank], Real_NPatchTotal_Check=0;
 
    MPI_Alltoall( Buff_NPatchEachRank, 1, MPI_INT, Real_NPatchEachRank_Check, 1, MPI_INT, MPI_COMM_WORLD );
@@ -140,7 +140,7 @@ void Par_LB_CollectParticleFromRealPatch( const int lv,
 // if ( Buff_NPatchTotal == 0 )   return;
 
 
-// 1. get the number of particles to be sent back
+// 1. get the number of particles to be sent
    int *SendBuf_NParEachPatch = new int [Real_NPatchTotal];
 
    int PID, NParThisPatch, NSendParTotal = 0;
@@ -165,7 +165,7 @@ void Par_LB_CollectParticleFromRealPatch( const int lv,
    } // for (int t=0; t<Real_NPatchTotal; t++)
 
 
-// 2. prepare the particle data to be sent back
+// 2. prepare the particle data to be sent
    const int NParVar = 4;  // mass*1 + position*3
 
    real *SendBuf_ParDataEachPatch = new real [ NSendParTotal*NParVar ];
@@ -204,18 +204,10 @@ void Par_LB_CollectParticleFromRealPatch( const int lv,
             SendPtr[PAR_POSZ] = amr->Par->ParVar[PAR_POSZ][ParID];
 
 //          predict particle position to TargetTime
-            if ( PredictPos )
-            {
-//             there should be no particles waiting for velocity correction since we are collecting particles from **higher** levels
-//             if ( amr->Par->Time[ParID] < (real)0.0 )  continue;
-#              ifdef DEBUG_PARTICLE
-               if ( amr->Par->Time[ParID] < (real)0.0 )  Aux_Error( ERROR_INFO, "ParTime[%ld] = %21.14e < 0.0 !!\n",
-                    ParID, amr->Par->Time[ParID] );
-#              endif
-
-//             note that we don't have to worry about the periodic BC here (in other word, Pos can lie outside the box)
-               Par_PredictPos( 1, &ParID, SendPtr+PAR_POSX, SendPtr+PAR_POSY, SendPtr+PAR_POSZ, TargetTime );
-            }
+//          --> note that we need to skip particles waiting for velocity correction since these are leaf real patches
+//              which may have particles just been updated
+//          --> also note that we don't have to worry about the periodic BC here (in other word, Pos can lie outside the box)
+            if ( PredictPos )    Par_PredictPos( 1, &ParID, SendPtr+PAR_POSX, SendPtr+PAR_POSY, SendPtr+PAR_POSZ, TargetTime );
 
             SendPtr += NParVar;
          } // for (int p=0; p<NParThisPatch; p++)
@@ -248,7 +240,7 @@ void Par_LB_CollectParticleFromRealPatch( const int lv,
    } // for (int t=0; t<Real_NPatchTotal; t++)
 
 
-// 3. send the number of particles and their attributes back
+// 3. send the number of particles and their attributes
    const bool Exchange_NPatchEachRank_No = false;
    const bool Exchange_LBIdxEachRank_No  = false;
 
@@ -262,7 +254,7 @@ void Par_LB_CollectParticleFromRealPatch( const int lv,
 
    int NRecvPatchTotal, NRecvParTotal;  // returned from Par_LB_ExchangeParticle
 
-// note that we don't exchange NPatchEachRank (which is already known) and LBIdxEachRank (which is useless)
+// note that we don't exchange NPatchEachRank (which is already known) and LBIdxEachRank (which is useless here)
    Par_LB_ExchangeParticle(
       NParVar,
       SendBuf_NPatchEachRank, SendBuf_NParEachPatch, SendBuf_LBIdxEachRank, SendBuf_ParDataEachPatch,
@@ -276,8 +268,8 @@ void Par_LB_CollectParticleFromRealPatch( const int lv,
 #  endif
 
 // free the send buffer in advance to save memory
-   delete [] SendBuf_ParDataEachPatch;
    delete [] SendBuf_NParEachPatch;
+   delete [] SendBuf_ParDataEachPatch;
 
 
 // 4. store the received particle data to each patch

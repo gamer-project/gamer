@@ -50,8 +50,8 @@ void Par_Aux_InitCheck()
       {
          if (  !Par_WithinActiveRegion( Pos[0][ParID], Pos[1][ParID], Pos[2][ParID] )  )
          {
-//          we don't need to modify NPar_Lv and AveDensity here since they will be reset soon
-            amr->Par->RemoveOneParticle( ParID, PAR_INACTIVE_OUTSIDE, NULL_INT, NULL, NULL_REAL );
+//          we don't need to modify AveDensity here since it will be recalculated soon
+            amr->Par->RemoveOneParticle( ParID, PAR_INACTIVE_OUTSIDE, NULL, NULL_REAL );
 
             if ( OPT__VERBOSE )
                Aux_Message( stderr, "\nWARNING : removing particle %10d (Pos = [%14.7e, %14.7e, %14.7e], Time = %13.7e)\n",
