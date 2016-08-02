@@ -296,15 +296,29 @@ struct Particle_t
       }
 
 //    allocate arrays (use malloc so that realloc can be used later to resize the array)
-      for (int v=0; v<NPAR_VAR;     v++)  ParVar [v] = (real*)malloc( ParListSize*sizeof(real) );
-      for (int v=0; v<NPAR_PASSIVE; v++)  Passive[v] = (real*)malloc( ParListSize*sizeof(real) );
+//    --> free memory first since other functions (e.g., LB_Init_LoadBalance) will call InitVar again
+      for (int v=0; v<NPAR_VAR; v++)
+      {
+         if ( ParVar[v] != NULL )   free( ParVar[v] );
+         ParVar[v] = (real*)malloc( ParListSize*sizeof(real) );
+      }
 
+      for (int v=0; v<NPAR_PASSIVE; v++)
+      {
+         if ( Passive[v] != NULL )  free( Passive[v] );
+         Passive[v] = (real*)malloc( ParListSize*sizeof(real) );
+      }
+
+      if ( InactiveParList != NULL )   free( InactiveParList );
       InactiveParList = (long*)malloc( InactiveParListSize*sizeof(long) );
 
 #     ifdef LOAD_BALANCE
       for (int lv=0; lv<NLEVEL; lv++)
       for (int t=0; t<2; t++)
       {
+         if ( R2B_Real_NPatchEachRank[lv][t] != NULL )   delete [] R2B_Real_NPatchEachRank[lv][t];
+         if ( R2B_Buff_NPatchEachRank[lv][t] != NULL )   delete [] R2B_Buff_NPatchEachRank[lv][t];
+
          R2B_Real_NPatchEachRank[lv][t] = new int [NRank];
          R2B_Buff_NPatchEachRank[lv][t] = new int [NRank];
       }

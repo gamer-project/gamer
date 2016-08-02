@@ -19,7 +19,7 @@ static void LB_RedistributeParticle_End( real **ParVar_Old, real **Passive_Old )
 // Description :  Initialize the load-balance process
 //
 // Note        :  1. Patches at all levels will be redistributed, and all patch relations will be reconstructed
-//                2. All parameters in the data structure "LB_t LB" will be reconstructed 
+//                2. All parameters in the data structure "LB_t LB" will be reconstructed
 //                3. Data structure "ParaVar_t ParaVar" will be removed
 //                4. This function is used in both initialization phase and run-time data redistribution
 //                5. Data in the buffer patches will be filled up
@@ -27,7 +27,7 @@ static void LB_RedistributeParticle_End( real **ParVar_Old, real **Passive_Old )
 //                7. Particles will also be redistributed
 //
 // Parameter   :  DuringRestart  : true --> This function is invoked during the RESTART process
-//                                      --> In this case, no "LB_SetCutPoint" and "LB_RedistributeRealPatch" are required 
+//                                      --> In this case, no "LB_SetCutPoint" and "LB_RedistributeRealPatch" are required
 //                                          since these tasks are already done in the function "Init_Reload"
 //-------------------------------------------------------------------------------------------------------
 void LB_Init_LoadBalance( const bool DuringRestart )
@@ -196,7 +196,7 @@ void LB_SetCutPoint( const int lv, long *CutPoint, const bool InputLBIdxList, lo
    const int NPG_per_Rank   = NPG/MPI_NRank;
    const int Rank_with_more = NPG%MPI_NRank;
    int *LoadList = NULL;
-   
+
    if ( MPI_Rank == 0 )
    {
       LoadList= new int [MPI_NRank];
@@ -278,7 +278,7 @@ void LB_SetCutPoint( const int lv, long *CutPoint, const bool InputLBIdxList, lo
          CutPoint[MPI_NRank] = LBIdx_Max + 1;
       }
    }
-    
+
 
 // 5. broadcast the cut points
    MPI_Bcast( CutPoint, MPI_NRank+1, MPI_LONG, 0, MPI_COMM_WORLD );
@@ -298,7 +298,7 @@ void LB_SetCutPoint( const int lv, long *CutPoint, const bool InputLBIdxList, lo
          if ( LoadList[r] > Load_Max )   Load_Max = LoadList[r];
       }
 
-      Aux_Message( stdout, "   Load_Ave %9.3e, Load_Max %8d --> Load Imbalance = %6.2f%%\n", 
+      Aux_Message( stdout, "   Load_Ave %9.3e, Load_Max %8d --> Load Imbalance = %6.2f%%\n",
                    Load_Ave, Load_Max, (Load_Max==0) ? 0.0 : 100.0*(Load_Max-Load_Ave)/Load_Ave );
       Aux_Message( stdout, "   =============================================================================\n" );
    }
@@ -551,10 +551,10 @@ void LB_RedistributeRealPatch( const int lv, real **ParVar_Old, real **Passive_O
    for (int v=0; v<NCOMP; v++)
    {
 #     ifdef FLOAT8
-      MPI_Alltoallv( SendBuf_Flu + v*SendDataSize1v, Send_NCount_Data1v, Send_NDisp_Data1v, MPI_DOUBLE, 
+      MPI_Alltoallv( SendBuf_Flu + v*SendDataSize1v, Send_NCount_Data1v, Send_NDisp_Data1v, MPI_DOUBLE,
                      RecvBuf_Flu + v*RecvDataSize1v, Recv_NCount_Data1v, Recv_NDisp_Data1v, MPI_DOUBLE, MPI_COMM_WORLD );
 #     else
-      MPI_Alltoallv( SendBuf_Flu + v*SendDataSize1v, Send_NCount_Data1v, Send_NDisp_Data1v, MPI_FLOAT, 
+      MPI_Alltoallv( SendBuf_Flu + v*SendDataSize1v, Send_NCount_Data1v, Send_NDisp_Data1v, MPI_FLOAT,
                      RecvBuf_Flu + v*RecvDataSize1v, Recv_NCount_Data1v, Recv_NDisp_Data1v, MPI_FLOAT,  MPI_COMM_WORLD );
 #     endif
    }
@@ -562,10 +562,10 @@ void LB_RedistributeRealPatch( const int lv, real **ParVar_Old, real **Passive_O
 // 5.3 potential
 #  ifdef GRAVITY
 #  ifdef FLOAT8
-   MPI_Alltoallv( SendBuf_Pot, Send_NCount_Data1v, Send_NDisp_Data1v, MPI_DOUBLE, 
+   MPI_Alltoallv( SendBuf_Pot, Send_NCount_Data1v, Send_NDisp_Data1v, MPI_DOUBLE,
                   RecvBuf_Pot, Recv_NCount_Data1v, Recv_NDisp_Data1v, MPI_DOUBLE, MPI_COMM_WORLD );
 #  else
-   MPI_Alltoallv( SendBuf_Pot, Send_NCount_Data1v, Send_NDisp_Data1v, MPI_FLOAT, 
+   MPI_Alltoallv( SendBuf_Pot, Send_NCount_Data1v, Send_NDisp_Data1v, MPI_FLOAT,
                   RecvBuf_Pot, Recv_NCount_Data1v, Recv_NDisp_Data1v, MPI_FLOAT,  MPI_COMM_WORLD );
 #  endif
 #  endif
@@ -662,10 +662,10 @@ void LB_RedistributeRealPatch( const int lv, real **ParVar_Old, real **Passive_O
       LB_Idx = RecvBuf_LBIdx[PID0];
 
       LB_Index2Corner( lv, LB_Idx, Cr0, CHECK_ON );
-      
+
       for (int d=0; d<3; d++)    Cr0[d] -= Cr0[d]%PGScale; // currently this line has no effect
 
-//    father patch is still unkown ...      
+//    father patch is still unkown ...
       amr->pnew( lv, Cr0[0],        Cr0[1],        Cr0[2],        -1, true, true );
       amr->pnew( lv, Cr0[0]+PScale, Cr0[1],        Cr0[2],        -1, true, true );
       amr->pnew( lv, Cr0[0],        Cr0[1]+PScale, Cr0[2],        -1, true, true );
@@ -772,27 +772,17 @@ void LB_RedistributeParticle_Init( real **ParVar_Old, real **Passive_Old )
 {
 
 // backup the old particle attribute arrays
-   for (int v=0; v<NPAR_VAR;     v++)  ParVar_Old [v] = amr->Par->ParVar [v];
-   for (int v=0; v<NPAR_PASSIVE; v++)  Passive_Old[v] = amr->Par->Passive[v];
-
-// remove inactive particle list since we will not redistribute inactive particles
-   free( amr->Par->InactiveParList );
-
-// remove other arrays allocated by amr->Par->InitVar
-   for (int lv=0; lv<NLEVEL; lv++)
-   for (int t=0; t<2; t++)
+// remember to reset ParVar and Passive to NULL so that amr->Par->InitVar will NOT delete these arrays
+   for (int v=0; v<NPAR_VAR; v++)
    {
-      if ( amr->Par->R2B_Real_NPatchEachRank[lv][t] != NULL )
-      {
-         delete [] amr->Par->R2B_Real_NPatchEachRank[lv][t];
-         amr->Par->R2B_Real_NPatchEachRank[lv][t] = NULL;
-      }
+      ParVar_Old      [v] = amr->Par->ParVar[v];
+      amr->Par->ParVar[v] = NULL;
+   }
 
-      if ( amr->Par->R2B_Buff_NPatchEachRank[lv][t] != NULL )
-      {
-         delete [] amr->Par->R2B_Buff_NPatchEachRank[lv][t];
-         amr->Par->R2B_Buff_NPatchEachRank[lv][t] = NULL;
-      }
+   for (int v=0; v<NPAR_PASSIVE; v++)
+   {
+      Passive_Old      [v] = amr->Par->Passive[v];
+      amr->Par->Passive[v] = NULL;
    }
 
 
