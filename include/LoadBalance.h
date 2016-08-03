@@ -12,7 +12,7 @@
 // Structure   :  LB_t
 // Description :  Data structure for the load-balance parallelization
 //
-// Data_Member :  MPI_NRank               : Number of MPI ranks ( == global variable "MPI_NRank" ) 
+// Data_Member :  MPI_NRank               : Number of MPI ranks ( == global variable "MPI_NRank" )
 //                OverlapMPI_FluSyncN     : Number of patches with LocalID==0 which will NOT be overlapped with
 //                                          the MPI communication (fluid solver)
 //                OverlapMPI_FluSyncPID0  : Patch indices with LocalID==0 which will NOT be overlapped with
@@ -117,7 +117,7 @@ struct LB_t
    int   *IdxList_Real_IdxTable  [NLEVEL];
    ulong *PaddedCr1DList         [NLEVEL];
    int   *PaddedCr1DList_IdxTable[NLEVEL];
-   
+
    int   *SendH_NList            [NLEVEL];
    int  **SendH_IDList           [NLEVEL];
    int  **SendH_SibList          [NLEVEL];
@@ -140,13 +140,13 @@ struct LB_t
    int  *RecvX_NResList          [NLEVEL];
    int **RecvX_IDList            [NLEVEL];
    int **RecvX_SibList           [NLEVEL];
-   
+
    int  *SendR_NList             [NLEVEL];
    int **SendR_IDList            [NLEVEL];
    int **SendR_IDList_IdxTable   [NLEVEL];
    int  *RecvR_NList             [NLEVEL];
    int **RecvR_IDList            [NLEVEL];
-   
+
    int  *SendF_NList             [NLEVEL];
    int **SendF_IDList            [NLEVEL];
    int **SendF_SibList           [NLEVEL];
@@ -154,7 +154,7 @@ struct LB_t
    int **RecvF_IDList            [NLEVEL];
    int **RecvF_IDList_IdxTable   [NLEVEL];
    int **RecvF_SibList           [NLEVEL];
-   
+
 #  ifdef GRAVITY
    int   *SendG_NList            [NLEVEL];
    int  **SendG_IDList           [NLEVEL];
@@ -174,12 +174,12 @@ struct LB_t
 
 
    //===================================================================================
-   // Constructor :  LB_t 
+   // Constructor :  LB_t
    // Description :  Constructor of the structure "LB_t"
    //
-   // Note        :  1. Allocate memory for pointers whose sizes depend on the number of MPI ranks 
+   // Note        :  1. Allocate memory for pointers whose sizes depend on the number of MPI ranks
    //                2. Initialize pointers as NULL and counters as zero.
-   //                3. "IdxList_Real, IdxList_Real_IdxTable, PaddedCr1DList, and 
+   //                3. "IdxList_Real, IdxList_Real_IdxTable, PaddedCr1DList, and
    //                   PaddedCr1DList_IdxTable", whose sizes can not be determined during
    //                   initialization, are NOT allocated with memory
    //
@@ -215,7 +215,7 @@ struct LB_t
          IdxList_Real_IdxTable  [lv] = NULL;
          PaddedCr1DList         [lv] = NULL;
          PaddedCr1DList_IdxTable[lv] = NULL;
-   
+
          SendH_NList            [lv] = new int   [MPI_NRank];
          SendH_IDList           [lv] = new int*  [MPI_NRank];
          SendH_SibList          [lv] = new int*  [MPI_NRank];
@@ -325,7 +325,7 @@ struct LB_t
             RecvG_PCr1D          [lv][r] = NULL;
             RecvG_PCr1D_IdxTable [lv][r] = NULL;
 #           endif
-         } // for (int r=0; r<MPI_NRank; r++)         
+         } // for (int r=0; r<MPI_NRank; r++)
       } // for (int lv=0; lv<NLEVEL; lv++)
 
    } // METHOD : LB_t
@@ -333,7 +333,7 @@ struct LB_t
 
 
    //===================================================================================
-   // Constructor :  ~LB_t 
+   // Constructor :  ~LB_t
    // Description :  Destructor of the structure "LB_t"
    //
    // Note        :  1. Deallocate memory previously allocated
@@ -344,7 +344,7 @@ struct LB_t
 
       for (int lv=0; lv<NLEVEL; lv++)
       {
-//       miscellaneous                
+//       miscellaneous
          if ( OverlapMPI_FluSyncPID0 [lv] != NULL )   delete [] OverlapMPI_FluSyncPID0 [lv];
          if ( OverlapMPI_FluAsyncPID0[lv] != NULL )   delete [] OverlapMPI_FluAsyncPID0[lv];
 #        ifdef GRAVITY
@@ -370,7 +370,7 @@ struct LB_t
          PaddedCr1DList_IdxTable[lv] = NULL;
 
 
-//       NList         
+//       NList
          if ( SendH_NList   [lv] != NULL )   delete [] SendH_NList   [lv];
          if ( RecvH_NList   [lv] != NULL )   delete [] RecvH_NList   [lv];
          if ( SendX_NList   [lv] != NULL )   delete [] SendX_NList   [lv];
@@ -402,17 +402,17 @@ struct LB_t
 #        endif
 
 
-//       IDList         
+//       IDList
          for (int r=0; r<MPI_NRank; r++)
          {
-            if ( r == 0 ) 
+            if ( r == 0 )
             {
             if ( SendH_IDList         [lv][r] != NULL )  delete [] SendH_IDList         [lv][r];
             if ( SendH_SibList        [lv][r] != NULL )  delete [] SendH_SibList        [lv][r];
             if ( SendH_SibDiffList    [lv][r] != NULL )  delete [] SendH_SibDiffList    [lv][r];
             if ( SendH_LBIdxList      [lv][r] != NULL )  delete [] SendH_LBIdxList      [lv][r];
             if ( RecvH_IDList_IdxTable[lv][r] != NULL )  delete [] RecvH_IDList_IdxTable[lv][r];
-            if ( RecvH_SibList        [lv][r] != NULL )  delete [] RecvH_SibList        [lv][r]; 
+            if ( RecvH_SibList        [lv][r] != NULL )  delete [] RecvH_SibList        [lv][r];
             if ( RecvH_SibDiffList    [lv][r] != NULL )  delete [] RecvH_SibDiffList    [lv][r];
             if ( RecvH_LBIdxList      [lv][r] != NULL )  delete [] RecvH_LBIdxList      [lv][r];
             if ( RecvH_PCr1D          [lv][r] != NULL )  delete [] RecvH_PCr1D          [lv][r];
@@ -567,17 +567,17 @@ struct LB_t
 
    //===================================================================================
    // Constructor :  reset
-   // Description :  Reset memory for re-distributing all patches at all levels 
+   // Description :  Reset memory for re-distributing all patches at all levels
    //
-   // Note        :  Pointers whose sizes depend on the number of MPI ranks are NOT deallocated 
+   // Note        :  Pointers whose sizes depend on the number of MPI ranks are NOT deallocated
    //===================================================================================
    void reset()
    {
       WLI = NULL_REAL;
 
       for (int lv=0; lv<NLEVEL; lv++)
-      {      
-//       miscellaneous                
+      {
+//       miscellaneous
          OverlapMPI_FluSyncPID0 [lv] = 0;
          OverlapMPI_FluAsyncPID0[lv] = 0;
 #        ifdef GRAVITY
@@ -609,10 +609,10 @@ struct LB_t
 
          for (int r=0; r<MPI_NRank; r++)
          {
-//          miscellaneous                
+//          miscellaneous
             CutPoint      [lv][r] = -1;
 
-//          NList      
+//          NList
             SendH_NList   [lv][r] = 0;
             RecvH_NList   [lv][r] = 0;
             SendX_NList   [lv][r] = 0;
@@ -628,7 +628,7 @@ struct LB_t
             RecvG_NList   [lv][r] = 0;
 #           endif
 
-//          IDList         
+//          IDList
             if ( r == 0 )
             {
             if ( SendH_IDList         [lv][r] != NULL )  delete [] SendH_IDList         [lv][r];

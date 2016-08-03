@@ -27,10 +27,10 @@ long  LB_Corner2Index( const int lv, const int Corner[], const Check_t Check );
 //                passive         : Passively advected variables (e.g., metal density)
 //                pot             : Potential
 //                pot_ext         : Potential with GRA_GHOST_SIZE ghost cells on each side
-//                                  --> Allocated only if STORE_POT_EXT is on (used for Par->ImproveAcc only)
+//                                  --> Allocated only if STORE_POT_EXT is on
 //                                  --> Ghost-zone potential are obtained from the Poisson solver directly
 //                                      (not from exchanging potential between sibling patches)
-//                                  --> Currently the base-level patches do not store pot_ext
+//                                  --> Currently it is used for Par->ImproveAcc only
 //                rho_ext         : Density with RHOEXT_GHOST_SIZE (typically 2) ghost cells on each side
 //                                  --> Only allocated temporarily in the function Prepare_PatchData for storing
 //                                      particle mass density

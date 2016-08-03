@@ -20,8 +20,8 @@ extern Timer_t *Timer_Par_2Son   [NLEVEL];
 //-------------------------------------------------------------------------------------------------------
 // Function    :  EvolveLevel
 // Description :  Advance all physical attributes one time-step
-// 
-// Note        :  1. Each step contains TWO sub-steps, and each of which will evolve the solution 
+//
+// Note        :  1. Each step contains TWO sub-steps, and each of which will evolve the solution
 //                   at lv by 0.5*dTime
 //
 // Parameter   :  lv    : Targeted refinement level
@@ -59,7 +59,7 @@ void EvolveLevel( const int lv, const double dTime )
 
 //    1. calculate the evolution time-step
 // ===============================================================================================
-      dt_SubStep = Mis_dTime2dt( Time[lv], dTime_SubStep ); 
+      dt_SubStep = Mis_dTime2dt( Time[lv], dTime_SubStep );
       TimeOld    = Time[lv];
       TimeNew    = Time[lv] + dTime_SubStep;
 
@@ -120,10 +120,10 @@ void EvolveLevel( const int lv, const double dTime )
          {
 #           pragma omp section
             {
-//             transfer data simultaneously               
+//             transfer data simultaneously
 #              ifdef GRAVITY
                if ( SelfGravity )
-               TIMING_FUNC(   Buf_GetBufferData( lv, SaveSg_Flu, NULL_INT, DATA_GENERAL, _DENS, Rho_ParaBuf, 
+               TIMING_FUNC(   Buf_GetBufferData( lv, SaveSg_Flu, NULL_INT, DATA_GENERAL, _DENS, Rho_ParaBuf,
                                                  USELB_YES ),
                               Timer_GetBuf[lv][0],   true   );
 #              else
@@ -198,9 +198,9 @@ void EvolveLevel( const int lv, const double dTime )
 
 #           pragma omp parallel sections num_threads(2)
             {
-#              pragma omp section         
+#              pragma omp section
                {
-//                transfer data simultaneously               
+//                transfer data simultaneously
                   if ( SelfGravity )
                   TIMING_FUNC(   Buf_GetBufferData( lv, NULL_INT, SaveSg_Pot, POT_FOR_POISSON, _POTE,
                                                     Pot_ParaBuf, USELB_YES ),
@@ -340,15 +340,15 @@ void EvolveLevel( const int lv, const double dTime )
          if ( OPT__VERBOSE  &&  MPI_Rank == 0 )    Aux_Message( stdout, "   Lv %2d: Flu_FixUp %24s... ", lv, "" );
 
          if ( OPT__FIXUP_FLUX )
-         TIMING_FUNC(   Buf_GetBufferData( lv, NULL_INT, NULL_INT, COARSE_FINE_FLUX, _FLUX|_FLUX_PASSIVE, NULL_INT, 
+         TIMING_FUNC(   Buf_GetBufferData( lv, NULL_INT, NULL_INT, COARSE_FINE_FLUX, _FLUX|_FLUX_PASSIVE, NULL_INT,
                                            USELB_YES ),
                         Timer_GetBuf[lv][6],   true   );
 
          TIMING_FUNC(   Flu_FixUp( lv, dt_SubStep ),   Timer_FixUp[lv],   true   );
 
-#        ifdef LOAD_BALANCE 
-         if ( OPT__FIXUP_RESTRICT )    
-         TIMING_FUNC(   LB_GetBufferData( lv, amr->FluSg[lv], NULL_INT, DATA_RESTRICT, _FLU, NULL_INT ),   
+#        ifdef LOAD_BALANCE
+         if ( OPT__FIXUP_RESTRICT )
+         TIMING_FUNC(   LB_GetBufferData( lv, amr->FluSg[lv], NULL_INT, DATA_RESTRICT, _FLU, NULL_INT ),
                         Timer_GetBuf[lv][7],   true   );
 #        endif
 
@@ -393,15 +393,6 @@ void EvolveLevel( const int lv, const double dTime )
          amr->PotSgTime[lv+1][ amr->PotSg[lv+1] ] = Time[lv];
 #        endif
 
-#        if ( defined STORE_POT_GHOST  &&  defined PARTICLE )
-         if ( amr->Par->ImproveAcc )
-         TIMING_FUNC(   Poi_StorePotWithGhostZone( lv+1, amr->PotSg[lv+1], false ),   Timer_Refine[lv],   false   );
-#        endif
-
-#        ifdef TIMING
-         Timer_Refine[lv]->WorkingID ++;
-#        endif
-
 #        ifdef LOAD_BALANCE
          TIMING_FUNC(   Buf_GetBufferData( lv,   amr->FluSg[lv  ], NULL_INT, DATA_AFTER_REFINE, _FLU,  Flu_ParaBuf,
                                            USELB_YES ),
@@ -424,6 +415,15 @@ void EvolveLevel( const int lv, const double dTime )
                         Timer_GetBuf[lv][5],    true    );
 #        endif
 
+//       must call Poi_StorePotWithGhostZone AFTER collecting potential for buffer patches
+#        ifdef STORE_POT_GHOST
+         TIMING_FUNC(   Poi_StorePotWithGhostZone( lv+1, amr->PotSg[lv+1], false ),   Timer_Refine[lv],   false   );
+#        endif
+
+#        ifdef TIMING
+         Timer_Refine[lv]->WorkingID ++;
+#        endif
+
          if ( OPT__VERBOSE  &&  MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );
 
          if ( OPT__PATCH_COUNT == 2 )  Aux_PatchCount();
@@ -439,7 +439,7 @@ void EvolveLevel( const int lv, const double dTime )
          Timer_GetBuf[lv][4]->WorkingID ++;
          Timer_GetBuf[lv][5]->WorkingID ++;
       } // if ( lv != NLEVEL-1  &&  AdvanceCounter[lv] % REGRID_COUNT == 0 ) ... else ...
-#     endif 
+#     endif
 
 #     ifdef TIMING
       MPI_Barrier( MPI_COMM_WORLD );

@@ -98,14 +98,14 @@ void Gra_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, co
          amr->PotSg    [lv]             = SaveSg_Pot;
          amr->PotSgTime[lv][SaveSg_Pot] = TimeNew;
 
-#        if ( defined STORE_POT_GHOST  &&  defined PARTICLE )
-         if ( amr->Par->ImproveAcc )
+         TIMING_FUNC(   Buf_GetBufferData( lv, NULL_INT, SaveSg_Pot, POT_FOR_POISSON, _POTE, Pot_ParaBuf, USELB_YES ),
+                        Timer_GetBuf[lv][1],   true   );
+
+//       must call Poi_StorePotWithGhostZone AFTER collecting potential for buffer patches
+#        ifdef STORE_POT_GHOST
          TIMING_FUNC(   Poi_StorePotWithGhostZone( lv, SaveSg_Pot, true ),
                         Timer_Gra_Advance[lv],   false   );
 #        endif
-
-         TIMING_FUNC(   Buf_GetBufferData( lv, NULL_INT, SaveSg_Pot, POT_FOR_POISSON, _POTE, Pot_ParaBuf, USELB_YES ),
-                        Timer_GetBuf[lv][1],   true   );
       }
 
       if ( Gravity )

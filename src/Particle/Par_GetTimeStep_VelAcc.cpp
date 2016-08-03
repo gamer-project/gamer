@@ -16,9 +16,9 @@
 // Note        :  1. Physical coordinates : dTime == dt
 //                   Comoving coordinates : dTime == dt*(Hubble parameter)*(scale factor)^3 == delta(scale factor)
 //                2. Particle acceleration criterion is used only when DT__PARACC > 0.0
-// 
+//
 // Parameter   :  dt       : Time interval to advance solution
-//                dTime    : Time interval to update physical time 
+//                dTime    : Time interval to update physical time
 //                MinDtLv  : Refinement level determining the smallest time-step
 //                MinDtVar : Maximum velocity and acceleration determining the minimum time-step
 //                           [0/1] ==> [velocity/acceleration]
@@ -131,7 +131,7 @@ void Par_GetTimeStep_VelAcc( double dt[2], double dTime[2], int MinDtLv[2], real
       dt_tmp[1] *= double( 1<<(lv+1) );
 #     endif
 
-      if ( dt_tmp[0] < dt_local[0] )    
+      if ( dt_tmp[0] < dt_local[0] )
       {
          dt_local[0] = dt_tmp[0];
          MinDtLv [0] = lv;
@@ -139,7 +139,7 @@ void Par_GetTimeStep_VelAcc( double dt[2], double dTime[2], int MinDtLv[2], real
       }
 
       if ( UseAcc )
-      if ( dt_tmp[1] < dt_local[1] )    
+      if ( dt_tmp[1] < dt_local[1] )
       {
          dt_local[1] = dt_tmp[1];
          MinDtLv [1] = lv;
@@ -175,7 +175,7 @@ void Par_GetTimeStep_VelAcc( double dt[2], double dTime[2], int MinDtLv[2], real
    double (*dt_AllRank      )[2] = new double [MPI_NRank][2];
    int    (*MinDtLv_AllRank )[2] = new int    [MPI_NRank][2];
    real   (*MinDtVar_AllRank)[2] = new real   [MPI_NRank][2];
-   
+
    MPI_Gather( dt_local, 2, MPI_DOUBLE, dt_AllRank,       2, MPI_DOUBLE, 0, MPI_COMM_WORLD );
    MPI_Gather( MinDtLv,  2, MPI_INT,    MinDtLv_AllRank,  2, MPI_INT,    0, MPI_COMM_WORLD );
 #  ifdef FLOAT8
@@ -185,28 +185,26 @@ void Par_GetTimeStep_VelAcc( double dt[2], double dTime[2], int MinDtLv[2], real
 #  endif
 
    if ( MPI_Rank == 0 )
+   for (int t=0; t<2; t++)
    {
       for (int Rank=0; Rank<MPI_NRank; Rank++)
       {
-         for (int t=0; t<2; t++)
+         if ( dt_AllRank[Rank][t] == dt_min[t] )
          {
-            if ( dt_AllRank[Rank][t] == dt_min[t] )
-            {
-               MinDtLv [t] = MinDtLv_AllRank [Rank][t];
-               MinDtVar[t] = MinDtVar_AllRank[Rank][t];
-               break;
-            }
-
-            if ( Rank == MPI_NRank-1 )
-               Aux_Message( stderr, "WARNING : no match of \"dt_min[%d]\" was found !!\n", t );
+            MinDtLv [t] = MinDtLv_AllRank [Rank][t];
+            MinDtVar[t] = MinDtVar_AllRank[Rank][t];
+            break;
          }
+
+         if ( Rank == MPI_NRank-1 )
+            Aux_Message( stderr, "WARNING : no match of \"dt_min[%d]\" was found !!\n", t );
       }
    }
 
    delete [] dt_AllRank;
    delete [] MinDtLv_AllRank;
    delete [] MinDtVar_AllRank;
-#  endif // #ifndef SERIAL 
+#  endif // #ifndef SERIAL
 
 
    dt[0] = DT__PARVEL * dt_min[0];

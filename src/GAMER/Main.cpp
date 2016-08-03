@@ -402,8 +402,11 @@ int main( int argc, char *argv[] )
          {
             CPU_PoissonSolver_FFT( Poi_Coeff, amr->PotSg[lv], Time[lv] );
 
-#           if ( defined STORE_POT_GHOST  &&  defined PARTICLE )
-            if ( amr->Par->ImproveAcc )   Poi_StorePotWithGhostZone( lv, amr->PotSg[lv], true );
+            Buf_GetBufferData( lv, NULL_INT, amr->PotSg[lv], POT_FOR_POISSON, _POTE, Pot_ParaBuf, USELB_YES );
+
+//          must call Poi_StorePotWithGhostZone AFTER collecting potential for buffer patches
+#           ifdef STORE_POT_GHOST
+            Poi_StorePotWithGhostZone( lv, amr->PotSg[lv], true );
 #           endif
          }
 
@@ -412,9 +415,9 @@ int main( int argc, char *argv[] )
             Buf_GetBufferData( lv, amr->FluSg[lv], NULL_INT, DATA_GENERAL, _DENS, Rho_ParaBuf, USELB_YES );
 
             InvokeSolver( POISSON_SOLVER, lv, Time[lv], NULL_REAL, NULL_REAL, Poi_Coeff, NULL_INT, amr->PotSg[lv], false, false );
-         }
 
-         Buf_GetBufferData( lv, NULL_INT, amr->PotSg[lv], POT_FOR_POISSON, _POTE, Pot_ParaBuf, USELB_YES );
+            Buf_GetBufferData( lv, NULL_INT, amr->PotSg[lv], POT_FOR_POISSON, _POTE, Pot_ParaBuf, USELB_YES );
+         }
 
 //       free memory for collecting particles from other ranks and levels, and free density arrays with ghost zones (rho_ext)
 #        ifdef PARTICLE

@@ -5,7 +5,7 @@
 
 // ****************************************************************************
 // ** This header defines the "typedef and enum" in GAMER.                   **
-// ** Please DO NOT modify the number assigned to any enumerator constant !! ** 
+// ** Please DO NOT modify the number assigned to any enumerator constant !! **
 // ****************************************************************************
 
 #include "Macro.h"

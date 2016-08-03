@@ -39,7 +39,7 @@ extern int        MPI_SibRank[26];                    // sibling MPI rank ID: sa
 extern int        NX0[3];                             //  of base-level cells per process in x/y/z directions
 extern int        NPatchTotal[NLEVEL];                // total number of patches in all ranks
 extern int       *BaseP;                              // table recording the IDs of the base-level patches
-extern int        Flu_ParaBuf;                        // number of parallel buffers to exchange all fluid 
+extern int        Flu_ParaBuf;                        // number of parallel buffers to exchange all fluid
                                                       // variables for the fluid solver and fluid refinement
 
 extern double     BOX_SIZE, DT__FLUID, DT__FLUID_INIT, END_T, OUTPUT_DT;
@@ -76,7 +76,7 @@ extern OptLohnerForm_t   OPT__FLAG_LOHNER_FORM;
 // (2-1) fluid solver in different models
 #if   ( MODEL == HYDRO )
 extern double     FlagTable_PresGradient[NLEVEL-1];   // refinement criterion of pressure gradient
-extern double     GAMMA, MINMOD_COEFF, EP_COEFF; 
+extern double     GAMMA, MINMOD_COEFF, EP_COEFF;
 extern LR_Limiter_t  OPT__LR_LIMITER;
 extern WAF_Limiter_t OPT__WAF_LIMITER;
 extern OptRSolver_t  OPT__CORR_UNPHY_SCHEME;
@@ -111,7 +111,7 @@ extern int        Rho_ParaBuf;                        // number of parallel buff
 
 extern real      *GreenFuncK;
 extern double     GFUNC_COEFF0;
-extern double     DT__GRAVITY; 
+extern double     DT__GRAVITY;
 extern double     NEWTON_G;
 extern int        POT_GPU_NPGROUP;
 extern bool       OPT__OUTPUT_POT, OPT__GRA_P5_GRADIENT, OPT__EXTERNAL_POT;
@@ -142,7 +142,7 @@ extern double     LB_INPUT__WLI_MAX;                  // LB->WLI_Max loaded from
 
 // (2-5) particle
 // ============================================================================================================
-#ifdef PARTICLE 
+#ifdef PARTICLE
 extern double     DT__PARVEL, DT__PARVEL_MAX, DT__PARACC;
 extern real       MinDtInfo_ParVelAcc[2][NLEVEL];
 extern bool       OPT__OUTPUT_PARTICLE, OPT__CK_PARTICLE, OPT__PAR_LEVEL, OPT__FLAG_NPAR_CELL;
