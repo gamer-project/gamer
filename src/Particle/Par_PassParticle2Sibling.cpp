@@ -287,16 +287,19 @@ void Par_PassParticle2Sibling( const int lv )
 
 
 // 7. send particles from buffer patches to the corresponding real patches
+//    --> note that after calling the following rourtines, some particles may reside in **non-leaf** real patches
+//    --> they will be sent again to leaf real patches after the velocity correction operation
+//        (by the function Par_PassParticle2Son_AllPatch)
 #  ifdef LOAD_BALANCE
 // 7-1. sibling-buffer patches at lv
-      Par_LB_CollectParticleFromBufferPatch(
+      Par_LB_ExchangeParticleBetweenPatch(
          lv,
          amr->Par->B2R_Buff_NPatchTotal[lv][0], amr->Par->B2R_Buff_PIDList[lv][0], amr->Par->B2R_Buff_NPatchEachRank[lv][0],
          amr->Par->B2R_Real_NPatchTotal[lv][0], amr->Par->B2R_Real_PIDList[lv][0], amr->Par->B2R_Real_NPatchEachRank[lv][0] );
 
 // 7-2. father-sibling-buffer patches at lv-1
    if ( lv > 0 )
-      Par_LB_CollectParticleFromBufferPatch(
+      Par_LB_ExchangeParticleBetweenPatch(
          lv,
          amr->Par->B2R_Buff_NPatchTotal[lv][1], amr->Par->B2R_Buff_PIDList[lv][1], amr->Par->B2R_Buff_NPatchEachRank[lv][1],
          amr->Par->B2R_Real_NPatchTotal[lv][1], amr->Par->B2R_Real_PIDList[lv][1], amr->Par->B2R_Real_NPatchEachRank[lv][1] );

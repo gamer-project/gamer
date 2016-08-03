@@ -454,10 +454,10 @@ void Par_LB_CollectParticleFromRealPatch( const int lv,
                                           const int Buff_NPatchTotal, const int *Buff_PIDList, int *Buff_NPatchEachRank,
                                           const int Real_NPatchTotal, const int *Real_PIDList, int *Real_NPatchEachRank,
                                           const bool PredictPos, const double TargetTime );
-void Par_LB_CollectParticleFromBufferPatch( const int lv,
-                                            const int Buff_NPatchTotal, const int *Buff_PIDList, int *Buff_NPatchEachRank,
-                                            const int Real_NPatchTotal, const int *Real_PIDList, int *Real_NPatchEachRank );
-void Par_LB_ExchangeParticle( const int NParVar, int *SendBuf_NPatchEachRank, int *SendBuf_NParEachPatch,
+void Par_LB_ExchangeParticleBetweenPatch( const int lv,
+                                          const int Send_NPatchTotal, const int *Send_PIDList, int *Send_NPatchEachRank,
+                                          const int Recv_NPatchTotal, const int *Recv_PIDList, int *Recv_NPatchEachRank );
+void Par_LB_SendParticleData( const int NParVar, int *SendBuf_NPatchEachRank, int *SendBuf_NParEachPatch,
                               long *SendBuf_LBIdxEachPatch, real *SendBuf_ParDataEachPatch,
                               int *&RecvBuf_NPatchEachRank, int *&RecvBuf_NParEachPatch, long *&RecvBuf_LBIdxEachPatch,
                               real *&RecvBuf_ParDataEachPatch, int &NRecvPatchTotal, int &NRecvParTotal,

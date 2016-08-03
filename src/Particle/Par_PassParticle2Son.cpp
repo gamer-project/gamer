@@ -18,9 +18,10 @@
 //                   --> The case where particles just cross a coarse-fine boundary (from coarse to fine)
 //                   --> Invoked by "Par_PassParticle2Sibling_AllPatch", which is invoked
 //                       in EvolveLevel after the velocity correction in KDK
+//                4. Target father patch can be either real or buffer
 //
-// Parameter   :  FaLv  : Father's refinement level
-//                FaPID : Father's patch ID
+// Parameter   :  FaLv  : Father refinement level
+//                FaPID : Father patch ID
 //-------------------------------------------------------------------------------------------------------
 void Par_PassParticle2Son( const int FaLv, const int FaPID )
 {

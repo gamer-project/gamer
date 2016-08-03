@@ -97,7 +97,7 @@ void Par_LB_CollectParticle2OneLevel( const int FaLv, const bool PredictPos, con
 
 
 // 1. prepare the send buffers
-// these arrays (except NParForEachRank) will be deallocated by Par_LB_ExchangeParticle
+// these arrays (except NParForEachRank) will be deallocated by Par_LB_SendParticleData
    int  *NParForEachRank          = new int [MPI_NRank];
    int  *NPatchForEachRank        = new int [MPI_NRank];
    int  *SendBuf_NPatchEachRank   = NPatchForEachRank;
@@ -252,7 +252,7 @@ void Par_LB_CollectParticle2OneLevel( const int FaLv, const bool PredictPos, con
 
 
 // 2. send data to all ranks
-// these arrays will be allocated by Par_LB_ExchangeParticle (using call by reference) and must be free'd later
+// these arrays will be allocated by Par_LB_SendParticleData (using call by reference) and must be free'd later
    int  *RecvBuf_NPatchEachRank   = NULL;
    int  *RecvBuf_NParEachPatch    = NULL;
    long *RecvBuf_LBIdxEachPatch   = NULL;
@@ -263,8 +263,8 @@ void Par_LB_CollectParticle2OneLevel( const int FaLv, const bool PredictPos, con
    const bool Exchange_LBIdxEachRank_Yes  = true;
    int NRecvPatchTotal, NRecvParTotal;
 
-// note that Par_LB_ExchangeParticle will also return the total number of patches and particles received (using call by reference)
-   Par_LB_ExchangeParticle( NParVar, SendBuf_NPatchEachRank, SendBuf_NParEachPatch, SendBuf_LBIdxEachPatch,
+// note that Par_LB_SendParticleData will also return the total number of patches and particles received (using call by reference)
+   Par_LB_SendParticleData( NParVar, SendBuf_NPatchEachRank, SendBuf_NParEachPatch, SendBuf_LBIdxEachPatch,
                             SendBuf_ParDataEachPatch, RecvBuf_NPatchEachRank, RecvBuf_NParEachPatch,
                             RecvBuf_LBIdxEachPatch, RecvBuf_ParDataEachPatch, NRecvPatchTotal, NRecvParTotal,
                             Exchange_NPatchEachRank_Yes, Exchange_LBIdxEachRank_Yes );

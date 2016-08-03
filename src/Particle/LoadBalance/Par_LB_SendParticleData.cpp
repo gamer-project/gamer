@@ -7,7 +7,7 @@
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Par_LB_ExchangeParticle
+// Function    :  Par_LB_SendParticleData
 // Description :  Exchange particles between different MPI ranks
 //
 // Note        :  1. SendBuf_XXX must be preallocated and will NOT be deallocated in this function
@@ -38,7 +38,7 @@
 //                RecvBuf_LBIdxEachPatch (if Exchange_LBIdxEachRank == true), RecvBuf_ParDataEachPatch,
 //                NRecvPatchTotal, NRecvPatchTotal
 //-------------------------------------------------------------------------------------------------------
-void Par_LB_ExchangeParticle( const int NParVar, int *SendBuf_NPatchEachRank, int *SendBuf_NParEachPatch,
+void Par_LB_SendParticleData( const int NParVar, int *SendBuf_NPatchEachRank, int *SendBuf_NParEachPatch,
                               long *SendBuf_LBIdxEachPatch, real *SendBuf_ParDataEachPatch,
                               int *&RecvBuf_NPatchEachRank, int *&RecvBuf_NParEachPatch, long *&RecvBuf_LBIdxEachPatch,
                               real *&RecvBuf_ParDataEachPatch, int &NRecvPatchTotal, int &NRecvParTotal,
@@ -168,7 +168,7 @@ void Par_LB_ExchangeParticle( const int NParVar, int *SendBuf_NPatchEachRank, in
    delete [] RecvCount_ParDataEachPatch;
    delete [] RecvDisp_ParDataEachPatch;
 
-} // FUNCTION : Par_LB_ExchangeParticle
+} // FUNCTION : Par_LB_SendParticleData
 
 
 

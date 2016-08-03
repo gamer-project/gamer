@@ -135,7 +135,7 @@ void Par_LB_CollectParticleFromRealPatch( const int lv,
 #  endif // #ifdef DEBUG_PARTICLE
 
 
-// must NOT call "return" here even if Buff/Real_NPatchTotal==0 since this rank still needs to call Par_LB_ExchangeParticle
+// must NOT call "return" here even if Buff/Real_NPatchTotal==0 since this rank still needs to call Par_LB_SendParticleData
 // if ( Real_NPatchTotal == 0 )   return;
 // if ( Buff_NPatchTotal == 0 )   return;
 
@@ -246,16 +246,16 @@ void Par_LB_CollectParticleFromRealPatch( const int lv,
 
    int  *SendBuf_NPatchEachRank   = Real_NPatchEachRank;
    int  *RecvBuf_NPatchEachRank   = Buff_NPatchEachRank;
-   int  *RecvBuf_NParEachPatch    = NULL;   // will be allocated by Par_LB_ExchangeParticle and must be free'd later
-   real *RecvBuf_ParDataEachPatch = NULL;   // will be allocated by Par_LB_ExchangeParticle and must be free'd later
+   int  *RecvBuf_NParEachPatch    = NULL;   // will be allocated by Par_LB_SendParticleData and must be free'd later
+   real *RecvBuf_ParDataEachPatch = NULL;   // will be allocated by Par_LB_SendParticleData and must be free'd later
 
    long *SendBuf_LBIdxEachRank    = NULL;   // useless and does not need to be allocated
-   long *RecvBuf_LBIdxEachRank    = NULL;   // useless and will not be allocated by Par_LB_ExchangeParticle
+   long *RecvBuf_LBIdxEachRank    = NULL;   // useless and will not be allocated by Par_LB_SendParticleData
 
-   int NRecvPatchTotal, NRecvParTotal;  // returned from Par_LB_ExchangeParticle
+   int NRecvPatchTotal, NRecvParTotal;  // returned from Par_LB_SendParticleData
 
 // note that we don't exchange NPatchEachRank (which is already known) and LBIdxEachRank (which is useless here)
-   Par_LB_ExchangeParticle(
+   Par_LB_SendParticleData(
       NParVar,
       SendBuf_NPatchEachRank, SendBuf_NParEachPatch, SendBuf_LBIdxEachRank, SendBuf_ParDataEachPatch,
       RecvBuf_NPatchEachRank, RecvBuf_NParEachPatch, RecvBuf_LBIdxEachRank, RecvBuf_ParDataEachPatch,
