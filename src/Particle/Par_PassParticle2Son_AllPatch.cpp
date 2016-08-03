@@ -23,7 +23,8 @@ void Par_PassParticle2Son_AllPatch( const int FaLv )
 
    for (int FaPID=0; FaPID<amr->NPatchComma[FaLv][1]; FaPID++)
    {
-      if ( amr->patch[0][FaLv][FaPID]->son != -1 )    Par_PassParticle2Son( FaLv, FaPID );
+//    patches with sons in other ranks (those with SonPID<-1) will be dealt with later
+      if ( amr->patch[0][FaLv][FaPID]->son >= 0 )  Par_PassParticle2Son( FaLv, FaPID );
    }
 
 } // FUNCTION : Par_PassParticle2Son_AllPatch 

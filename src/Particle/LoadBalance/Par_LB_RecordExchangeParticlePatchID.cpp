@@ -39,6 +39,15 @@ extern void SetTargetSibPID0( const int lv, const int PID0, int SibPID0_List[] )
 //                            considers **leaf** real patches (since only these patches can have particles)
 //                        --> Therefore, B2R list is a subset of the R2B list
 //
+//                3. F2S : send particles from fathers to sons
+//                   3-1. Exact procedure is to sent particles from particles in real father patches at lv-1 to the
+//                        father-buffer patches of the corresponding real son patches at lv, and then call
+//                        Par_PassParticle2Son to transfer particles from the father-buffer patches to their real son
+//                        patches in the same rank
+//                        --> So this function only records the real father patches at lv-1 and the corresponding
+//                        father-buffer patches at lv-1
+//                        --> These particles will be passed to the real son patches at lv in the function "Par_LB_PassParticle2Son"
+//
 // Parameter   :  MainLv   : Main target refinement level
 //
 // Return      :  R2B_Real/Buff_NPatchTotal[lv][0/1], R2B_Real/Buff_NPatchEachRank[lv][0/1], R2B_Real/Buff_PIDList[lv][0/1]
@@ -242,6 +251,9 @@ void Par_LB_RecordExchangeParticlePatchID( const int MainLv )
 
 
 // 5. map buffer patches to real patches
+   const bool UseInputLBIdx_Yes = true;
+   const bool UseInputLBIdx_No  = false;
+
    for (int t=0; t<NLv; t++)
    {
       lv = RelatedLv[t];
@@ -252,14 +264,16 @@ void Par_LB_RecordExchangeParticlePatchID( const int MainLv )
                                       amr->Par->R2B_Buff_NPatchEachRank[MainLv][t],
                                       amr->Par->R2B_Real_NPatchTotal   [MainLv][t],
                                       amr->Par->R2B_Real_PIDList       [MainLv][t],
-                                      amr->Par->R2B_Real_NPatchEachRank[MainLv][t] );
+                                      amr->Par->R2B_Real_NPatchEachRank[MainLv][t],
+                                      UseInputLBIdx_No, NULL );
 //    5-2. B2R list
       Par_LB_MapBuffer2RealPatch( lv, amr->Par->B2R_Buff_NPatchTotal   [MainLv][t],
                                       amr->Par->B2R_Buff_PIDList       [MainLv][t],
                                       amr->Par->B2R_Buff_NPatchEachRank[MainLv][t],
                                       amr->Par->B2R_Real_NPatchTotal   [MainLv][t],
                                       amr->Par->B2R_Real_PIDList       [MainLv][t],
-                                      amr->Par->B2R_Real_NPatchEachRank[MainLv][t] );
+                                      amr->Par->B2R_Real_NPatchEachRank[MainLv][t],
+                                      UseInputLBIdx_No, NULL );
    }
 
 

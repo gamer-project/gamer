@@ -30,8 +30,15 @@ void Par_PassParticle2Son( const int FaLv, const int FaPID )
    const int SonLv   = FaLv + 1;
 
 
-// nothing to do if father has no son or no home particles
-   if ( SonPID0 == -1  ||  NPar == 0  ||  FaLv == TOP_LEVEL )     return;
+#  ifdef DEBUG_PARTICLE
+   if ( SonPID0 < -1 )
+      Aux_Error( ERROR_INFO, "This function does NOT work with sons living abroad (FaLv %d, FaPID %d, SonPID0 %d) !!\n",
+                 FaLv, FaPID, SonPID0 );
+#  endif
+
+
+// nothing to do if father has no son or no particles at home
+   if ( SonPID0 < 0  ||  NPar == 0  ||  FaLv >= MAX_LEVEL )    return;
 
 
 // 1. allocate the new particle list for each son

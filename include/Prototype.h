@@ -464,7 +464,8 @@ void Par_LB_ExchangeParticle( const int NParVar, int *SendBuf_NPatchEachRank, in
                               const bool Exchange_NPatchEachRank, const bool Exchange_LBIdxEachRank );
 void Par_LB_RecordExchangeParticlePatchID( const int MainLv );
 void Par_LB_MapBuffer2RealPatch( const int lv, const int  Buff_NPatchTotal, int *&Buff_PIDList, int *Buff_NPatchEachRank,
-                                                     int &Real_NPatchTotal, int *&Real_PIDList, int *Real_NPatchEachRank );
+                                                     int &Real_NPatchTotal, int *&Real_PIDList, int *Real_NPatchEachRank,
+                                 const bool UseInputLBIdx, long *Buff_LBIdxList_Input );
 #endif
 #endif // #ifdef PARTICLE
 

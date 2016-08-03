@@ -11,12 +11,17 @@
 // Description :  Obtain the indices of real patches corresponding to the input buffer patches
 //
 // Note        :  1. Target patches (those in Buff_PIDList) must be buffer patches at level "lv"
+//                   --> Unless UseInputLBIdx==true, in which case we don't care whether patches stored in
+//                       Buff_PIDList are buffer or real patches
+//                       --> Useful for constructing the PID lists for exchanging particles between fathers
+//                           and son (the F2S lists constructed in Par_LB_RecordExchangeParticlePatchID)
+//                           --> Since in this special case Buff_PIDList actually stores the PID of real father
+//                               patches at lv-1
 //                2. Arrays "Buff_PIDList, Buff_NPatchEachRank, and Real_NPatchEachRank" must be preallocated
 //                   Array "Real_PIDList" will be allocated (using call-by-reference) here and must be free'd
 //                   manually by calling "delete []"
 //                3. Input array "Buff_PIDList" will be sorted according to their target MPI rank
 //                4. Both "Buff_PIDList, Real_NPatchTotal, and Real_PIDList" are inputted as "call-by-reference"
-//
 //
 // Parameter   :  lv                   : Target refinement level
 //                Buff_NPatchTotal     : Total number of buffer patches in the Buff_PIDList
@@ -30,11 +35,14 @@
 //                                       --> It will be allocated (using call-by-reference) by this function and must be
 //                                           free'd manulally later
 //                Real_NPatchEachRank  : Output array to store the number of real patches belonging to each rank
+//                UseInputLBIdx        : true --> Use the input load-balance indices instead of recalculating it
+//                Buff_LBIdxList_Input : Load-balance indices used by UseInputLBIdx
 //
 // Return      :  Buff_PIDList, Buff_NPatchEachRank, Real_NPatchTotal, Real_PIDList, Real_NPatchEachRank
 //-------------------------------------------------------------------------------------------------------
 void Par_LB_MapBuffer2RealPatch( const int lv, const int  Buff_NPatchTotal, int *&Buff_PIDList, int *Buff_NPatchEachRank,
-                                                     int &Real_NPatchTotal, int *&Real_PIDList, int *Real_NPatchEachRank )
+                                                     int &Real_NPatchTotal, int *&Real_PIDList, int *Real_NPatchEachRank,
+                                 const bool UseInputLBIdx, long *Buff_LBIdxList_Input )
 {
 
 // nothing to do for levels above MAX_LEVEL
@@ -54,8 +62,13 @@ void Par_LB_MapBuffer2RealPatch( const int lv, const int  Buff_NPatchTotal, int 
 
       if ( Real_NPatchEachRank == NULL )
          Aux_Error( ERROR_INFO, "Real_NPatchEachRank == NULL (Buff_NPatchTotal = %d) !!\n", Buff_NPatchTotal );
+
+      if ( UseInputLBIdx  &&  Buff_LBIdxList_Input == NULL )
+         Aux_Error( ERROR_INFO, "Buff_LBIdxList_Input == NULL (Buff_NPatchTotal = %d) !!\n", Buff_NPatchTotal );
    }
 
+// PID stored in Buff_PIDList needs to be buffer patches only if UseInputLBIdx == false
+   if ( !UseInputLBIdx )
    for (int t=0; t<Buff_NPatchTotal; t++)
    {
       if ( Buff_PIDList[t] < amr->NPatchComma[lv][1]  ||  Buff_PIDList[t] >= amr->num[lv] )
@@ -73,8 +86,16 @@ void Par_LB_MapBuffer2RealPatch( const int lv, const int  Buff_NPatchTotal, int 
 // 1-1. get the LB_Idx of all target buffer patches
 // --> note that the LB_Idx stored in each patch always assumes periodicity
 // --> so external buffer patches can still find the corresponding real patches correctly
-   long *Buff_LBIdxList = new long [Buff_NPatchTotal];
-   for (int t=0; t<Buff_NPatchTotal; t++)    Buff_LBIdxList[t] = amr->patch[0][lv][ Buff_PIDList[t] ]->LB_Idx;
+   long *Buff_LBIdxList = NULL;
+
+   if ( UseInputLBIdx )
+      Buff_LBIdxList = Buff_LBIdxList_Input;
+
+   else
+   {
+      Buff_LBIdxList = new long [Buff_NPatchTotal];
+      for (int t=0; t<Buff_NPatchTotal; t++)    Buff_LBIdxList[t] = amr->patch[0][lv][ Buff_PIDList[t] ]->LB_Idx;
+   }
 
 // 1-2. get the number of patches to be exchanged between different ranks
    int TRank;
@@ -180,6 +201,7 @@ void Par_LB_MapBuffer2RealPatch( const int lv, const int  Buff_NPatchTotal, int 
 
 
 // 3. free memory
+   if ( !UseInputLBIdx )
    delete [] Buff_LBIdxList;
    delete [] SendDisp_LBIdxList;
    delete [] RecvDisp_LBIdxList;
