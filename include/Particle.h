@@ -76,6 +76,12 @@ void Aux_Error( const char *File, const int Line, const char *Func, const char *
 //                B2R_Buff_NPatchTotal    : Similar to R2B_Buff_NPatchTotal,    ...
 //                B2R_Buff_NPatchEachRank : Similar to R2B_Buff_NPatchEachRank, ...
 //                B2R_Buff_PIDList        : Similar to R2B_Buff_PIDList,        ...
+//                F2S_Send_NPatchTotal    : Similar to R2B_Real_NPatchTotal,    but for sending particles from father to son patches
+//                F2S_Send_NPatchEachRank : Similar to R2B_Real_NPatchEachRank, ...
+//                F2S_Send_PIDList        : Similar to R2B_Real_PIDList,        ...
+//                F2S_Recv_NPatchTotal    : Similar to R2B_Buff_NPatchTotal,    ...
+//                F2S_Recv_NPatchEachRank : Similar to R2B_Buff_NPatchEachRank, ...
+//                F2S_Recv_PIDList        : Similar to R2B_Buff_PIDList,        ...
 //                Mass                 : Particle mass
 //                                       Mass < 0.0 --> this particle has been removed from simulations
 //                                                  --> PAR_INACTIVE_OUTSIDE: fly outside the simulation box
@@ -129,7 +135,14 @@ struct Particle_t
    int         B2R_Buff_NPatchTotal   [NLEVEL][2];
    int        *B2R_Buff_NPatchEachRank[NLEVEL][2];
    int        *B2R_Buff_PIDList       [NLEVEL][2];
-#  endif
+
+   int         F2S_Send_NPatchTotal   [NLEVEL];
+   int        *F2S_Send_NPatchEachRank[NLEVEL];
+   int        *F2S_Send_PIDList       [NLEVEL];
+   int         F2S_Recv_NPatchTotal   [NLEVEL];
+   int        *F2S_Recv_NPatchEachRank[NLEVEL];
+   int        *F2S_Recv_PIDList       [NLEVEL];
+#  endif // #ifdef LOAD_BALANCE
 
    real       *Mass;
    real       *PosX;
@@ -176,8 +189,8 @@ struct Particle_t
 
 #     ifdef LOAD_BALANCE
       for (int lv=0; lv<NLEVEL; lv++)
-      for (int t=0; t<2; t++)
       {
+         for (int t=0; t<2; t++) {
          R2B_Real_NPatchTotal   [lv][t] = 0;
          R2B_Real_NPatchEachRank[lv][t] = NULL;
          R2B_Real_PIDList       [lv][t] = NULL;
@@ -191,8 +204,16 @@ struct Particle_t
          B2R_Buff_NPatchTotal   [lv][t] = 0;
          B2R_Buff_NPatchEachRank[lv][t] = NULL;
          B2R_Buff_PIDList       [lv][t] = NULL;
-      }
-#     endif
+         }
+
+         F2S_Send_NPatchTotal   [lv]    = 0;
+         F2S_Send_NPatchEachRank[lv]    = NULL;
+         F2S_Send_PIDList       [lv]    = NULL;
+         F2S_Recv_NPatchTotal   [lv]    = 0;
+         F2S_Recv_NPatchEachRank[lv]    = NULL;
+         F2S_Recv_PIDList       [lv]    = NULL;
+      } // for (int lv=0; lv<NLEVEL; lv++)
+#     endif // #ifdef LOAD_BALANCE
 
       Mass = NULL;
       PosX = NULL;
@@ -247,8 +268,8 @@ struct Particle_t
 
 #     ifdef LOAD_BALANCE
       for (int lv=0; lv<NLEVEL; lv++)
-      for (int t=0; t<2; t++)
       {
+         for (int t=0; t<2; t++) {
          R2B_Real_NPatchTotal[lv][t] = 0;
          R2B_Buff_NPatchTotal[lv][t] = 0;
 
@@ -277,6 +298,7 @@ struct Particle_t
             R2B_Buff_PIDList[lv][t] = NULL;
          }
 
+
          B2R_Real_NPatchTotal[lv][t] = 0;
          B2R_Buff_NPatchTotal[lv][t] = 0;
 
@@ -304,7 +326,37 @@ struct Particle_t
             free( B2R_Buff_PIDList[lv][t] );
             B2R_Buff_PIDList[lv][t] = NULL;
          }
-      } // for lv, t
+         } // for (int t=0; t<2; t++)
+
+
+         F2S_Send_NPatchTotal[lv] = 0;
+         F2S_Recv_NPatchTotal[lv] = 0;
+
+         if ( F2S_Send_NPatchEachRank[lv] != NULL )
+         {
+            delete [] F2S_Send_NPatchEachRank[lv];
+            F2S_Send_NPatchEachRank[lv] = NULL;
+         }
+
+         if ( F2S_Recv_NPatchEachRank[lv] != NULL )
+         {
+            delete [] F2S_Recv_NPatchEachRank[lv];
+            F2S_Recv_NPatchEachRank[lv] = NULL;
+         }
+
+//       F2S_Send_PIDList is allocated using "malloc"
+         if ( F2S_Send_PIDList[lv] != NULL )
+         {
+            free( F2S_Send_PIDList[lv] );
+            F2S_Send_PIDList[lv] = NULL;
+         }
+
+         if ( F2S_Recv_PIDList[lv] != NULL )
+         {
+            delete [] F2S_Recv_PIDList[lv];
+            F2S_Recv_PIDList[lv] = NULL;
+         }
+      } // for (int lv=0; lv<NLEVE; lv++)
 #     endif // LOAD_BALANCE
 
    } // METHOD : ~Particle_t
@@ -362,8 +414,8 @@ struct Particle_t
 
 #     ifdef LOAD_BALANCE
       for (int lv=0; lv<NLEVEL; lv++)
-      for (int t=0; t<2; t++)
       {
+         for (int t=0; t<2; t++) {
          if ( R2B_Real_NPatchEachRank[lv][t] != NULL )   delete [] R2B_Real_NPatchEachRank[lv][t];
          if ( R2B_Buff_NPatchEachRank[lv][t] != NULL )   delete [] R2B_Buff_NPatchEachRank[lv][t];
 
@@ -375,8 +427,15 @@ struct Particle_t
 
          B2R_Real_NPatchEachRank[lv][t] = new int [NRank];
          B2R_Buff_NPatchEachRank[lv][t] = new int [NRank];
+         }
+
+         if ( F2S_Send_NPatchEachRank[lv] != NULL )      delete [] F2S_Send_NPatchEachRank[lv];
+         if ( F2S_Recv_NPatchEachRank[lv] != NULL )      delete [] F2S_Recv_NPatchEachRank[lv];
+
+         F2S_Send_NPatchEachRank[lv] = new int [NRank];
+         F2S_Recv_NPatchEachRank[lv] = new int [NRank];
       }
-#     endif
+#     endif // #ifdef LOAD_BALANCE
 
       Mass = ParVar[PAR_MASS];
       PosX = ParVar[PAR_POSX];
