@@ -204,8 +204,8 @@ void Init_GAMER( int *argc, char ***argv )
       if ( OPT__BC_POT == BC_POT_ISOLATED )  Init_GreenFuncK();
 
 
-//    evaluate the average density if it is not set yet (may already be set in Init_Restart)
-      if ( AveDensity <= 0.0 )   Poi_GetAverageDensity();
+//    evaluate the initial average density if it is not set yet (may already be set in Init_Restart)
+      if ( AveDensity_Init <= 0.0 )    Poi_GetAverageDensity();
 
 
 //    evaluate the gravitational potential

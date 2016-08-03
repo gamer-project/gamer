@@ -625,7 +625,7 @@ void Output_DumpData_Total( const char *FileName )
       fseek( File, HeaderOffset_SimuInfo, SEEK_SET );
 
 #     ifndef GRAVITY
-      const double AveDensity = NULL_REAL;
+      const double AveDensity_Init = NULL_REAL;
 #     endif
 
       fwrite( &CheckCode,                 sizeof(long),                    1,             File );
@@ -635,7 +635,7 @@ void Output_DumpData_Total( const char *FileName )
       fwrite( NPatchTotal,                sizeof(int),                NLEVEL,             File );
       fwrite( NDataPatch_Total,           sizeof(int),                NLEVEL,             File );
       fwrite( AdvanceCounter,             sizeof(long),               NLEVEL,             File );
-      fwrite( &AveDensity,                sizeof(double),                  1,             File );
+      fwrite( &AveDensity_Init,           sizeof(double),                  1,             File );
 
 
 //    move the file position indicator to the end of the header ==> prepare to output patch data

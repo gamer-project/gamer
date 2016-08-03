@@ -38,7 +38,6 @@ void Par_PassParticle2Sibling( const int lv )
    const double BoxEdge[3]       = { (NX0_TOT[0]*(1<<TOP_LEVEL))*dh_min,
                                      (NX0_TOT[1]*(1<<TOP_LEVEL))*dh_min,
                                      (NX0_TOT[2]*(1<<TOP_LEVEL))*dh_min }; // prevent from the round-off error problem
-   const double _BoxVolume       = 1.0 / ( amr->BoxSize[0]*amr->BoxSize[1]*amr->BoxSize[2] );
    real *ParPos[3]               = { amr->Par->PosX, amr->Par->PosY, amr->Par->PosZ };
 
    int     NPar_Remove_Tot=0;
@@ -135,9 +134,9 @@ void Par_PassParticle2Sibling( const int lv )
             RemoveParList[ NPar_Remove ++ ] = p;
             NPar_Remove_Tot ++;
 
-//          use OpenMP critical construct since RemoveOneParticle will modify AveDensity, which is a global variable
+//          use OpenMP critical construct since RemoveOneParticle will modify NPar_Active/Inactive, which are global variables
 #           pragma omp critical
-            amr->Par->RemoveOneParticle( ParID, PAR_INACTIVE_OUTSIDE, &AveDensity, _BoxVolume );
+            amr->Par->RemoveOneParticle( ParID, PAR_INACTIVE_OUTSIDE );
 
             if ( OPT__VERBOSE )
                Aux_Message( stderr, "\nWARNING : removing particle %10d (Pos = [%14.7e, %14.7e, %14.7e], Time = %13.7e)\n",

@@ -906,7 +906,7 @@ void FillIn_KeyInfo( KeyInfo_t &KeyInfo )
    KeyInfo.Step               = Step;
 #  ifdef GRAVITY
    KeyInfo.OutputPot          = (OPT__OUTPUT_POT) ? 1 : 0;
-   KeyInfo.AveDens            = AveDensity;
+   KeyInfo.AveDens_Init       = AveDensity_Init;
    KeyInfo.Gravity            = 1;
 #  else
    KeyInfo.Gravity            = 0;
@@ -1616,7 +1616,7 @@ void GetCompound_KeyInfo( hid_t &H5_TypeID )
    H5Tinsert( H5_TypeID, "Time",               HOFFSET(KeyInfo_t,Time           ),    H5_TypeID_Arr_NLvDouble );
    H5Tinsert( H5_TypeID, "CellSize",           HOFFSET(KeyInfo_t,CellSize       ),    H5_TypeID_Arr_NLvDouble );
 #  ifdef GRAVITY
-   H5Tinsert( H5_TypeID, "AveDens",            HOFFSET(KeyInfo_t,AveDens        ),    H5T_NATIVE_DOUBLE       );
+   H5Tinsert( H5_TypeID, "AveDens_Init",       HOFFSET(KeyInfo_t,AveDens_Init   ),    H5T_NATIVE_DOUBLE       );
 #  endif
 
    H5Tinsert( H5_TypeID, "CodeVersion",        HOFFSET(KeyInfo_t,CodeVersion    ),    H5_TypeID_VarStr        );

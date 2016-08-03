@@ -188,7 +188,7 @@ void Init_Restart_v1( const char FileName[] )
    for (int lv=0; lv<NLv_Restart; lv++)   AdvanceCounter[lv] = (long)Counter_tmp[lv]; }
    if ( FormatVersion >= 1200 )
 #  ifdef GRAVITY
-   fread( &AveDensity,      sizeof(double),           1, File );
+   fread( &AveDensity_Init, sizeof(double),           1, File );
 #  else
    fseek( File, sizeof(double), SEEK_CUR );
 #  endif

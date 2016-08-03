@@ -103,7 +103,7 @@ extern real       MinDtInfo_Phase[NLEVEL];            // maximum time derivative
 // (2-2) self-gravity
 // ============================================================================================================
 #ifdef GRAVITY
-extern double     AveDensity;                         // average density in all levels
+extern double     AveDensity_Init;                    // initial average mass density (in all levels)
 extern real       MinDtInfo_Gravity[NLEVEL];          // maximum gravitational acceleration at each level
 extern int        Pot_ParaBuf;                        // number of parallel buffers to exchange potential for the
                                                       // Poisson/Gravity solvers and the potential refinement

@@ -250,7 +250,7 @@ void Init_TestProb()
       if ( OPT__GRAVITY_TYPE == GRAVITY_SELF  ||  OPT__GRAVITY_TYPE == GRAVITY_BOTH )
       {
 //       average density is useless in this test
-//       if ( AveDensity <= 0.0 )   Poi_GetAverageDensity();
+//       if ( AveDensity_Init <= 0.0 )    Poi_GetAverageDensity();
 
 
 //       evaluate the gravitational potential

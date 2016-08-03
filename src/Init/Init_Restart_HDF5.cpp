@@ -162,7 +162,7 @@ void Init_Restart_HDF5( const char *FileName )
    LoadField( "Time",                KeyInfo.Time,               H5_SetID_KeyInfo, H5_TypeID_KeyInfo, Fatal,  NullPtr,       -1, NonFatal );
    LoadField( "CellSize",            KeyInfo.CellSize,           H5_SetID_KeyInfo, H5_TypeID_KeyInfo, Fatal,  NullPtr,       -1, NonFatal );
 #  ifdef GRAVITY
-   LoadField( "AveDens",            &KeyInfo.AveDens,            H5_SetID_KeyInfo, H5_TypeID_KeyInfo, Fatal,  NullPtr,       -1, NonFatal );
+   LoadField( "AveDens_Init",       &KeyInfo.AveDens_Init,       H5_SetID_KeyInfo, H5_TypeID_KeyInfo, Fatal,  NullPtr,       -1, NonFatal );
 #  endif
 
    LoadField( "CodeVersion",        &KeyInfo.CodeVersion,        H5_SetID_KeyInfo, H5_TypeID_KeyInfo, Fatal,  NullPtr,       -1, NonFatal );
@@ -183,9 +183,9 @@ void Init_Restart_HDF5( const char *FileName )
       AdvanceCounter[lv] = KeyInfo.AdvanceCounter[lv];
    }
 
-   Step       = KeyInfo.Step;
+   Step            = KeyInfo.Step;
 #  ifdef GRAVITY
-   AveDensity = KeyInfo.AveDens;
+   AveDensity_Init = KeyInfo.AveDens_Init;
 #  endif
 
 

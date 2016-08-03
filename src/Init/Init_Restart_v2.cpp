@@ -220,7 +220,7 @@ void Init_Restart()
    fread( NDataPatch_Total, sizeof(int),    NLv_Restart, File );
    fread( AdvanceCounter,   sizeof(long),   NLv_Restart, File );
 #  ifdef GRAVITY
-   fread( &AveDensity,      sizeof(double),           1, File );
+   fread( &AveDensity_Init, sizeof(double),           1, File );
 #  else
    fseek( File, sizeof(double), SEEK_CUR );
 #  endif

@@ -186,8 +186,7 @@ void Par_LB_CollectParticleFromBufferPatch( const int lv,
          for (int v=0; v<NPAR_PASSIVE; v++)  *SendPtr++ = amr->Par->Passive[v][ParID];
 
 //       2-2. remove this particle from the particle repository of this rank
-//       (don't have to update the average density since particles are just sent to other ranks)
-         amr->Par->RemoveOneParticle( ParID, PAR_INACTIVE_MPI, NULL, NULL_REAL );
+         amr->Par->RemoveOneParticle( ParID, PAR_INACTIVE_MPI );
       }
 
 //    2-3. remove all particles in this buffer patch
@@ -247,8 +246,7 @@ void Par_LB_CollectParticleFromBufferPatch( const int lv,
 //    4-2. add particles to the particle repository
       for (int p=0; p<NParThisPatch; p++)
       {
-//       don't have to update the average density since particles are just received from other ranks
-         ParID    = amr->Par->AddOneParticle( RecvPtr, RecvPtr+NPAR_VAR, NULL, NULL_REAL );
+         ParID    = amr->Par->AddOneParticle( RecvPtr, RecvPtr+NPAR_VAR );
          RecvPtr += NParVar;
 
 //       store the new particle index

@@ -30,8 +30,8 @@ void Poi_Prepare_Rho( const int lv, const double PrepTime, real h_Rho_Array_P[][
 
 // subtract the background density to be consistent with the periodic (and/or comoving) base-level FFT solver
 #  ifdef GAMER_DEBUG
-   if ( OPT__BC_POT == BC_POT_PERIODIC  &&  AveDensity <= 0.0 )
-      Aux_Error( ERROR_INFO, "AveDensity (%14.7e) hasn't been set properly !!\n", AveDensity );
+   if ( OPT__BC_POT == BC_POT_PERIODIC  &&  AveDensity_Init <= 0.0 )
+      Aux_Error( ERROR_INFO, "AveDensity_Init (%14.7e) hasn't been set properly !!\n", AveDensity_Init );
 #  endif
 
 #  ifdef COMOVING
@@ -41,7 +41,7 @@ void Poi_Prepare_Rho( const int lv, const double PrepTime, real h_Rho_Array_P[][
 #  endif
 
    real RhoSubtract = NULL_REAL;
-   if      ( OPT__BC_POT == BC_POT_PERIODIC )   RhoSubtract = AveDensity;
+   if      ( OPT__BC_POT == BC_POT_PERIODIC )   RhoSubtract = AveDensity_Init;
    else if ( Comoving )                         RhoSubtract = (real)1.0;
 
    if ( OPT__BC_POT == BC_POT_PERIODIC  ||  Comoving )

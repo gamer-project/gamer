@@ -406,16 +406,15 @@ struct Particle_t
    //                2. Please provide all necessary information of the new particle
    //                3. If there are inactive particles, their IDs will be reassigned
    //                   to the newly added particles
+   //                4. Note that the global variable "AveDensity_Init" will NOT be recalculated
+   //                   automatically here
    //
    // Parameter   :  NewVar      : Array storing the         variables of new particles
    //                NewPassive  : Array storing the passive variables of new particles
-   //                AveDens     : Pointer to the global variable AveDensity
-   //                              --> Do nothing if AveDens == NULL
-   //                _BoxVolume  : 1.0 / ( amr->BoxSize[0]*amr->BoxSize[1]*amr->BoxSize[2] )
    //
    // Return      :  Index of the new particle (ParID)
    //===================================================================================
-   long AddOneParticle( const real *NewVar, const real *NewPassive, double *AveDens, const double _BoxVolume )
+   long AddOneParticle( const real *NewVar, const real *NewPassive )
    {
 
 //    check
@@ -478,8 +477,6 @@ struct Particle_t
       for (int v=0; v<NPAR_VAR;     v++)  ParVar [v][ParID] = NewVar    [v];
       for (int v=0; v<NPAR_PASSIVE; v++)  Passive[v][ParID] = NewPassive[v];
 
-      if ( AveDens != NULL )  *AveDens += Mass[ParID] * _BoxVolume;
-
 
 //    3. update the total number of active particles (assuming all new particles are active)
       NPar_Active ++;
@@ -496,7 +493,7 @@ struct Particle_t
    // Method      :  RemoveOneParticle
    // Description :  Remove ONE particle from the particle list
    //
-   // Note        :  1. This function will modify NPar_Active, NPar_Inactive, NPar_Lv, and the input AveDens
+   // Note        :  1. This function will modify NPar_Active and NPar_Inactive
    //                   --> Since these are global variables, one must be careful for the OpenMP
    //                       implementation to avoid data race
    //                   --> For example, use the **critical** construct
@@ -506,17 +503,16 @@ struct Particle_t
    //                   --> IDs of all removed particles will be recorded in the array InactiveParList
    //                   --> These IDs will be reassigned to new particles added later on when
    //                       calling AddOneParticle
+   //                3. Note that the global variable "AveDensity_Init" will NOT be recalculated
+   //                   automatically here
    //
    // Parameter   :  ParID       : Particle ID to be removed
    //                Marker      : Value assigned to the mass of the particle being removed
    //                              (PAR_INACTIVE_OUTSIDE or PAR_INACTIVE_MPI)
-   //                AveDens     : Pointer to the global variable AveDensity
-   //                              --> Do nothing if AveDens == NULL
-   //                _BoxVolume  : 1.0 / ( amr->BoxSize[0]*amr->BoxSize[1]*amr->BoxSize[2] )
    //
    // Return      :  None
    //===================================================================================
-   void RemoveOneParticle( const long ParID, const real Marker, double *AveDens, const double _BoxVolume )
+   void RemoveOneParticle( const long ParID, const real Marker )
    {
 
 //    check
@@ -543,7 +539,6 @@ struct Particle_t
 
 
 //    3. remove the target particle
-      if ( AveDens != NULL )  *AveDens -= Mass[ParID] * _BoxVolume;
       Mass[ParID] = Marker;
 
       NPar_Active   --;

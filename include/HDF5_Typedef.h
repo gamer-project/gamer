@@ -54,7 +54,7 @@ struct KeyInfo_t
    double Time    [NLEVEL];
    double CellSize[NLEVEL];         // amr->dh[lv]
 #  ifdef GRAVITY
-   double AveDens;                  // AveDensity
+   double AveDens_Init;             // AveDensity_Init
 #  endif
 
    char  *CodeVersion;

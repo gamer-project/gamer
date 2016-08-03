@@ -39,7 +39,7 @@ void Poi_GetAverageDensity()
                    "OPT__INIT_RESTRICT" );
 
 // initialize it to zero
-   AveDensity = 0.0;
+   AveDensity_Init = 0.0;
 
 
 // 1. for OOC computing (no longer useful)
@@ -106,8 +106,8 @@ void Poi_GetAverageDensity()
       Mis_Heapsort( NPatch_Sum, Cr1D_All, Cr1D_IdxTable );
 
 //    get average density
-      for (int t=0; t<NPatch_Sum; t++)    AveDensity += Rho_All[ Cr1D_IdxTable[t] ];
-      AveDensity /= (double)NX0_TOT[0]*NX0_TOT[1]*NX0_TOT[2];
+      for (int t=0; t<NPatch_Sum; t++)    AveDensity_Init += Rho_All[ Cr1D_IdxTable[t] ];
+      AveDensity_Init /= (double)NX0_TOT[0]*NX0_TOT[1]*NX0_TOT[2];
    }
 
 // add particle mass
@@ -156,14 +156,14 @@ void Poi_GetAverageDensity()
          if ( ParMass_AllRank[p] > (real)0.0 )  ParMassSum += (double)ParMass_AllRank[p];
       }
 
-      AveDensity += ParMassSum / ( amr->BoxSize[0]*amr->BoxSize[1]*amr->BoxSize[2] );
+      AveDensity_Init += ParMassSum / ( amr->BoxSize[0]*amr->BoxSize[1]*amr->BoxSize[2] );
 
       delete [] ParMass_AllRank;
    }
 #  endif // #ifdef PARTICLE
 
 // broadcast
-   MPI_Bcast( &AveDensity, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD );
+   MPI_Bcast( &AveDensity_Init, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD );
 
 // free memory
    delete [] Rho_Local;
@@ -182,19 +182,19 @@ void Poi_GetAverageDensity()
 
 // evaluate the sum of density (we only use the base-level data because the restriction condition is assumed
 // to be fulfilled
-   double AveDensity_local = 0.0;
+   double AveDensity_Init_local = 0.0;
 
    for (int PID=0; PID<amr->NPatchComma[0][1]; PID++)
    for (int k=0; k<PATCH_SIZE; k++)
    for (int j=0; j<PATCH_SIZE; j++)
    for (int i=0; i<PATCH_SIZE; i++)
-      AveDensity_local += amr->patch[ amr->FluSg[0] ][0][PID]->fluid[DENS][k][j][i];
+      AveDensity_Init_local += amr->patch[ amr->FluSg[0] ][0][PID]->fluid[DENS][k][j][i];
 
 // sum over all MPI ranks
-   MPI_Allreduce( &AveDensity_local, &AveDensity, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD );
+   MPI_Allreduce( &AveDensity_Init_local, &AveDensity_Init, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD );
 
 // average
-   AveDensity /= (double)NX0_TOT[0]*NX0_TOT[1]*NX0_TOT[2];
+   AveDensity_Init /= (double)NX0_TOT[0]*NX0_TOT[1]*NX0_TOT[2];
 
 // add particle mass
 #  ifdef PARTICLE
@@ -209,7 +209,7 @@ void Poi_GetAverageDensity()
 // sum over all MPI ranks
    MPI_Allreduce( &ParMassSum_local, &ParMassSum_total, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD );
 
-   AveDensity += ParMassSum_total / ( amr->BoxSize[0]*amr->BoxSize[1]*amr->BoxSize[2] );
+   AveDensity_Init += ParMassSum_total / ( amr->BoxSize[0]*amr->BoxSize[1]*amr->BoxSize[2] );
 #  endif // #ifdef PARTICLE
 
 #  endif // #ifdef GAMER_DEBUG ... else ...
@@ -218,10 +218,10 @@ void Poi_GetAverageDensity()
 // 4. output results
    if ( MPI_Rank == 0 )
    {
-      Aux_Message( stdout, "NOTE : background density = %20.14e\n", AveDensity );
+      Aux_Message( stdout, "NOTE : background density = %20.14e\n", AveDensity_Init );
 
 #     ifdef COMOVING
-      const double Deviation = fabs( AveDensity - 1.0 );
+      const double Deviation = fabs( AveDensity_Init - 1.0 );
       if ( Deviation > 1.0e-5 )
       {
          Aux_Message( stderr, "WARNING : background density deviates from unity by %20.14e ", Deviation );
@@ -232,7 +232,7 @@ void Poi_GetAverageDensity()
 
 
 // check
-   if ( AveDensity <= 0.0 )   Aux_Error( ERROR_INFO, "average density (%14.7e) <= 0.0 !!\n", AveDensity );
+   if ( AveDensity_Init <= 0.0 )    Aux_Error( ERROR_INFO, "average density (%14.7e) <= 0.0 !!\n", AveDensity_Init );
 
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", __FUNCTION__ );

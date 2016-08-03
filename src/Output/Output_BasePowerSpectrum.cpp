@@ -229,7 +229,8 @@ void GetBasePowerSpectrum( real *RhoK, const int j_start, const int dj, double *
 
 
 // normalization: SQR(AveRho) accounts for Delta=Rho/AveRho
-   const double Coeff = amr->BoxSize[0]*amr->BoxSize[1]*amr->BoxSize[2] / SQR( (double)Nx*(double)Ny*(double)Nz*AveDensity );
+// --> we have assumed that the total mass in the simulation is conserved (since we don't recalculate it here)
+   const double Coeff = amr->BoxSize[0]*amr->BoxSize[1]*amr->BoxSize[2] / SQR( (double)Nx*(double)Ny*(double)Nz*AveDensity_Init );
    double Norm;
 
 #  ifdef DIMENSIONLESS_FORM

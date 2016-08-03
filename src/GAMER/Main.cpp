@@ -96,7 +96,7 @@ real           MinDtInfo_Phase[NLEVEL];
 
 // (2-2) self-gravity
 #ifdef GRAVITY
-double           AveDensity = -1.0;    // initialize it as <= 0 to check if it is properly set later
+double           AveDensity_Init = -1.0;     // initialize it as <= 0 to check if it is properly set later
 real             MinDtInfo_Gravity[NLEVEL];
 int              Pot_ParaBuf, Rho_ParaBuf;
 
