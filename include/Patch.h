@@ -84,17 +84,38 @@ long  LB_Corner2Index( const int lv, const int Corner[], const Check_t Check );
 //                LB_Idx          : Space-filling-curve index for load balance
 //                NPar            : Number of particles belonging to this leaf patch
 //                ParListSize     : Size of the array ParList (ParListSize can be >= NPar)
-//                ParList         : List recording the IDs of all particles belonging to this leaf patch
-//                NPar_Desc       : Number of particles belonging to the descendants (sons, grandsons, ...) of this patch
-//                                  (for SERIAL only)
-//                ParList_Desc    : List recording the IDs of all particles belonging to the descendants of this patch
-//                                  (for SERIAL only)
-//                NPar_Away       : Number of particles collected from other ranks and stored in the ParMassPos_Away array
-//                                  --> Only used for non-leaf real patches and all buffer patches
-//                                  --> For leaf real patches, it should always be -1
-//                                  (for LOAD_BALANCE only)
-//                ParMassPos_Away : Pointer arrays storing the mass and position of NPar_Away particles collected from other ranks
-//                                  (for LOAD_BALANCE only)
+//                ParList         : List recording the IDs of all particles belonging to this leaf real patch
+//                NPar_Copy       : Number of particles collected from other patches. There are three kinds of patches that
+//                                  can have NPar_Copy != -1
+//                                  --> (1) Non-leaf real   patches (both SERIAL and LOAD_BALANCE)
+//                                          --> Particles collected from the descendants (sons, grandsons, ...) of this patch
+//                                      (2) Non-leaf buffer patches (LOAD_BALANCE only)
+//                                          --> Particles collected from the corresponding non-leaf real patches in (1)
+//                                      (3) Leaf     buffer patches (LOAD_BALANCE only)
+//                                          --> Particles collected from the corresponding leaf real patches
+//                                              (those with NPar and ParList property set)
+//                                  --> **Leaf real** patches will always have NPar_Copy == -1
+//                                  --> In SERIAL mode, these non-leaf real patches will have their particle
+//                                      IDs stored in ParList_Copy, which points to the same particle repository
+//                                      (i.e., the amr->Par->ParVar/Passive arrays). In comparison, in LOAD_BALANCE mode,
+//                                      since particles corresponding to NPar_Copy may be collected from other ranks,
+//                                      these patches will allocate a local particle attribute array called ParMassPos_Copy
+//                                      (since currently we only collect mass and position for these particles).
+//                                  --> Note that non-leaf patches may have NPar>0 temporarily after updating particle position.
+//                                      It's because particles travelling from coarse to fine grids will stay in coarse grids
+//                                      temporarily until the velocity correction is done.
+//                                      --> For these patches, NPar_Copy will be **the sum of NPar and the number of particles
+//                                          collected from other patches**, and ParList_Copy (or ParMassPos_Copy) will contain
+//                                          information of particles belonging to NPar as well.
+//                                      --> It makes implementation simplier. For leaf real patches, one only needs to consider
+//                                          NPar and ParList. While for all other patches, one only needs to consider NPar_Copy,
+//                                          ParList_Copy (or ParMassPos_Copy). One never needs to consider both.
+//                ParList_Copy    : List recording the IDs of all particles belonging to the descendants of this patch
+//                                  (and particles temporarily locate in this patch waiting for the velocity correction, see
+//                                  discussion above)
+//                                  --> for SERIAL only
+//                ParMassPos_Copy : Pointer arrays storing the mass and position of NPar_Copy particles collected from other patches
+//                                  --> for LOAD_BALANCE only
 //                NPar_Escp       : Number of particles escaping from this patch
 //                ParList_Escp    : List recording the IDs of all particles escaping from this patch
 //
@@ -154,12 +175,11 @@ struct patch_t
    int    ParListSize;
    long  *ParList;
 
+   int    NPar_Copy;
 #  ifdef LOAD_BALANCE
-   int    NPar_Away;
-   real  *ParMassPos_Away[4];
+   real  *ParMassPos_Copy[4];
 #  else
-   int    NPar_Desc;
-   long  *ParList_Desc;
+   long  *ParList_Copy;
 #  endif
 
    int    NPar_Escp[26];
@@ -269,13 +289,12 @@ struct patch_t
       ParListSize  = 0;          // must be initialized as 0
       ParList      = NULL;
 
+      NPar_Copy    = -1;         // -1 : indicating that NPar_Copy is not calculated yet
 #     ifdef LOAD_BALANCE
-      NPar_Away    = -1;         // -1 : indicating that NPar_Away is not calculated yet
       for (int v=0; v<4; v++)
-      ParMassPos_Away[v] = NULL;
+      ParMassPos_Copy[v] = NULL;
 #     else
-      NPar_Desc    = -1;         // -1 : indicating that NPar_Desc is not calculated yet
-      ParList_Desc = NULL;
+      ParList_Copy = NULL;
 #     endif
 
       for (int s=0; s<26; s++)
@@ -305,34 +324,18 @@ struct patch_t
 #     endif
 
 #     ifdef PARTICLE
-      if ( ParList != NULL )
-      {
-         free( ParList );
-         ParList = NULL;
-      }
+      if ( ParList != NULL )              free( ParList );
 
 #     ifdef LOAD_BALANCE
       for (int v=0; v<4; v++)
-      if ( ParMassPos_Away[v] != NULL )
-      {
-         delete [] ParMassPos_Away[v];
-         ParMassPos_Away[v] = NULL;
-      }
+      if ( ParMassPos_Copy[v] != NULL )   delete [] ParMassPos_Copy[v];
 #     else
-      if ( ParList_Desc != NULL )
-      {
-         delete [] ParList_Desc;
-         ParList_Desc = NULL;
-      }
+      if ( ParList_Copy != NULL )         delete [] ParList_Copy;
 #     endif
 
       for (int s=0; s<26; s++)
-      if ( ParList_Escp[s] != NULL )
-      {
-         free( ParList_Escp[s] );
-         ParList_Escp[s] = NULL;
-      }
-#     endif
+      if ( ParList_Escp[s] != NULL )      free( ParList_Escp[s] );
+#     endif // #ifdef PARTICLE
 
    } // METHOD : ~patch_t
 

@@ -438,22 +438,18 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
          {
             const int PID = NearBy_PID_List[t];
 
-//          get the number of particles
-#           ifdef LOAD_BALANCE
+//          get the number of particles (note that PID can be a buffer patch)
             if ( amr->patch[0][lv][PID]->son == -1  &&  PID < amr->NPatchComma[lv][1] )
-                                                      NPar = amr->patch[0][lv][PID]->NPar;
-            else                                      NPar = amr->patch[0][lv][PID]->NPar_Away;
-#           else
-            if ( amr->patch[0][lv][PID]->son == -1 )  NPar = amr->patch[0][lv][PID]->NPar;
-            else                                      NPar = amr->patch[0][lv][PID]->NPar_Desc;
-#           endif
+               NPar = amr->patch[0][lv][PID]->NPar;
+            else
+               NPar = amr->patch[0][lv][PID]->NPar_Copy;
 
 #           ifdef DEBUG_PARTICLE
             if ( NPar < 0 )   Aux_Error( ERROR_INFO, "NPar (%d) has not been calculated (lv %d, PID %d) !!\n",
                                          NPar, lv, PID );
 #           endif
 
-//          record PID (exclude patches with no particles)
+//          record PID (exclude patches with no particles or with particles deposited onto rho_ext already)
             if ( amr->patch[0][lv][PID]->rho_ext == NULL  &&  NPar > 0 )
             {
 #              ifdef DEBUG_PARTICLE
@@ -528,41 +524,34 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
 #           endif
 
 //          determine the number of particles and the particle list
-#           ifdef LOAD_BALANCE
             if ( amr->patch[0][lv][PID]->son == -1  &&  PID < amr->NPatchComma[lv][1] )
             {
                NPar            = amr->patch[0][lv][PID]->NPar;
                ParList         = amr->patch[0][lv][PID]->ParList;
                UseInputMassPos = false;
                InputMassPos    = NULL;
+
+#              ifdef DEBUG_PARTICLE
+               if ( amr->patch[0][lv][PID]->NPar_Copy != -1 )
+                  Aux_Error( ERROR_INFO, "lv %d, PID %d, NPar_Copy = %d != -1 !!\n",
+                             lv, PID, amr->patch[0][lv][PID]->NPar_Copy );
+#              endif
             }
 
             else
             {
-               NPar            = amr->patch[0][lv][PID]->NPar_Away;
+//             note that amr->patch[0][lv][PID]->NPar>0 is still possible
+               NPar            = amr->patch[0][lv][PID]->NPar_Copy;
+#              ifdef LOAD_BALANCE
                ParList         = NULL;
                UseInputMassPos = true;
-               InputMassPos    = amr->patch[0][lv][PID]->ParMassPos_Away;
-            }
-
-#           else
-
-            if ( amr->patch[0][lv][PID]->son == -1 )
-            {
-               NPar            = amr->patch[0][lv][PID]->NPar;
-               ParList         = amr->patch[0][lv][PID]->ParList;
+               InputMassPos    = amr->patch[0][lv][PID]->ParMassPos_Copy;
+#              else
+               ParList         = amr->patch[0][lv][PID]->ParList_Copy;
                UseInputMassPos = false;
                InputMassPos    = NULL;
+#              endif
             }
-
-            else
-            {
-               NPar            = amr->patch[0][lv][PID]->NPar_Desc;
-               ParList         = amr->patch[0][lv][PID]->ParList_Desc;
-               UseInputMassPos = false;
-               InputMassPos    = NULL;
-            }
-#           endif // #ifdef LOAD_BALANCE ... else ...
 
 #           ifdef DEBUG_PARTICLE
             if ( NPar <= 0 )
@@ -578,7 +567,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
                              v, NPar, lv, PID );
                }
 
-               else if ( !UseInputMassPos  &&  ParList == NULL )
+               else if ( ParList == NULL )
                Aux_Error( ERROR_INFO, "ParList == NULL for NPar (%d) > 0 (lv %d, PID %d) !!\n",
                           NPar, lv, PID );
             }
@@ -1130,24 +1119,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
                const int PID = PID0 + LocalID;
 
 //             skip patches without particles
-               int NPar;
-#              ifdef LOAD_BALANCE
-               if ( amr->patch[0][lv][PID]->son == -1  &&  PID < amr->NPatchComma[lv][1] )
-                                                         NPar = amr->patch[0][lv][PID]->NPar;
-               else                                      NPar = amr->patch[0][lv][PID]->NPar_Away;
-#              else
-               if ( amr->patch[0][lv][PID]->son == -1 )  NPar = amr->patch[0][lv][PID]->NPar;
-               else                                      NPar = amr->patch[0][lv][PID]->NPar_Desc;
-#              endif
-
-               if ( NPar == 0 )  continue;
-
-#              ifdef DEBUG_PARTICLE
-               if ( amr->patch[0][lv][PID]->rho_ext == NULL )
-                  Aux_Error( ERROR_INFO, "lv %d, PID %d, rho_ext == NULL !!\n", lv, PID );
-
-               if ( NPar < 0 )   Aux_Error( ERROR_INFO, "lv %d, PID %d, NPar (%d) < 0 !!\n", lv, PID, NPar );
-#              endif
+               if ( amr->patch[0][lv][PID]->rho_ext == NULL )  continue;
 
 //             calculate the offset between rho_nxt and ArrayDens
                const int Disp_i = TABLE_02( LocalID, 'x', GhostSize-RhoExtGhost, GhostSize+PATCH_SIZE-RhoExtGhost );
@@ -1196,24 +1168,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
                      const int SibPID = TABLE_03( Side, Count ) + SibPID0;
 
 //                   skip patches without particles
-                     int NPar;
-#                    ifdef LOAD_BALANCE
-                     if ( amr->patch[0][lv][SibPID]->son == -1  &&  SibPID < amr->NPatchComma[lv][1] )
-                                                                  NPar = amr->patch[0][lv][SibPID]->NPar;
-                     else                                         NPar = amr->patch[0][lv][SibPID]->NPar_Away;
-#                    else
-                     if ( amr->patch[0][lv][SibPID]->son == -1 )  NPar = amr->patch[0][lv][SibPID]->NPar;
-                     else                                         NPar = amr->patch[0][lv][SibPID]->NPar_Desc;
-#                    endif
-
-                     if ( NPar == 0 )  continue;
-
-#                    ifdef DEBUG_PARTICLE
-                     if ( amr->patch[0][lv][SibPID]->rho_ext == NULL )
-                        Aux_Error( ERROR_INFO, "lv %d, SibPID %d, rho_ext == NULL !!\n", lv, SibPID );
-
-                     if ( NPar < 0 )   Aux_Error( ERROR_INFO, "lv %d, SibPID %d, NPar (%d) < 0 !!\n", lv, SibPID, NPar );
-#                    endif
+                     if ( amr->patch[0][lv][SibPID]->rho_ext == NULL )  continue;
 
 //                   calculate the offset between rho_nxt and ArrayDens
                      const int Disp_i = Table_01( Side, 'x', Count, GhostSize-RhoExtGhost ) - is_LG;
@@ -1279,14 +1234,14 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
                   else
                   {
 #                    ifdef LOAD_BALANCE
-                     NPar            = amr->patch[0][lv-1][FaSibPID]->NPar_Away;
+                     NPar            = amr->patch[0][lv-1][FaSibPID]->NPar_Copy;
                      ParList         = NULL;
                      UseInputMassPos = true;
-                     InputMassPos    = amr->patch[0][lv-1][FaSibPID]->ParMassPos_Away;
+                     InputMassPos    = amr->patch[0][lv-1][FaSibPID]->ParMassPos_Copy;
 #                    else
                      Aux_Error( ERROR_INFO, "FaSibPID (%d) is not a real patch (NReal %d) !!\n",
                                 FaSibPID, amr->NPatchComma[lv-1][1] );
-#                    endif // #ifdef LOAD_BALANCE
+#                    endif
                   }
 
 #                 ifdef DEBUG_PARTICLE
@@ -1304,7 +1259,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
                                    v, NPar, lv-1, FaSibPID );
                      }
 
-                     else if ( !UseInputMassPos  &&  ParList == NULL )
+                     else if ( ParList == NULL )
                      Aux_Error( ERROR_INFO, "ParList == NULL for NPar (%d) > 0 (lv %d, FaSibPID %d) !!\n",
                                 NPar, lv-1, FaSibPID );
                   }

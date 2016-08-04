@@ -239,20 +239,31 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
                      ParList         = amr->patch[0][lv][PID]->ParList;
                      UseInputMassPos = false;
                      InputMassPos    = NULL;
+
+#                    ifdef DEBUG_PARTICLE
+                     if ( amr->patch[0][lv][PID]->NPar_Copy != -1 )
+                        Aux_Error( ERROR_INFO, "lv %d, PID %d, NPar_Copy = %d != -1 !!\n",
+                                   lv, PID, amr->patch[0][lv][PID]->NPar_Copy );
+#                    endif
                   }
 
                   else
                   {
+                     NPar            = amr->patch[0][lv][PID]->NPar_Copy;
 #                    ifdef LOAD_BALANCE
-                     NPar            = amr->patch[0][lv][PID]->NPar_Away;
                      ParList         = NULL;
                      UseInputMassPos = true;
-                     InputMassPos    = amr->patch[0][lv][PID]->ParMassPos_Away;
+                     InputMassPos    = amr->patch[0][lv][PID]->ParMassPos_Copy;
 #                    else
-                     NPar            = amr->patch[0][lv][PID]->NPar_Desc;
-                     ParList         = amr->patch[0][lv][PID]->ParList_Desc;
+                     ParList         = amr->patch[0][lv][PID]->ParList_Copy;
                      UseInputMassPos = false;
                      InputMassPos    = NULL;
+#                    endif
+
+#                    ifdef DEBUG_PARTICLE
+                     if ( amr->patch[0][lv][PID]->NPar != 0 )
+                        Aux_Error( ERROR_INFO, "lv %d, PID %d, NPar = %d != 0 !!\n",
+                                   lv, PID, amr->patch[0][lv][PID]->NPar );
 #                    endif
                   }
 
