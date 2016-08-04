@@ -39,7 +39,7 @@ void Par_PassParticle2Son( const int FaLv, const int FaPID )
 
 
 // nothing to do if father has no son or no particles at home
-   if ( SonPID0 < 0  ||  NPar == 0  ||  FaLv >= MAX_LEVEL )    return;
+   if ( SonPID0 < 0  ||  NPar == 0 )   return;
 
 
 // 1. allocate the new particle list for each son

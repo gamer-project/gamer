@@ -15,7 +15,7 @@
 void Mis_GetTotalPatchNumber( const int lv )
 {
 
-   if ( lv < 0  ||  lv > NLEVEL-1 )
+   if ( lv < 0  ||  lv > TOP_LEVEL )
       Aux_Error( ERROR_INFO, "incorrect parameter %s = %d !!\n", "lv", lv );
 
    MPI_Allreduce( &amr->NPatchComma[lv][1], &NPatchTotal[lv], 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD );

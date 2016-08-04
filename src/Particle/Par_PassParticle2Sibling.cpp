@@ -297,10 +297,11 @@ void Par_PassParticle2Sibling( const int lv )
          amr->Par->B2R_Buff_NPatchTotal[lv][0], amr->Par->B2R_Buff_PIDList[lv][0], amr->Par->B2R_Buff_NPatchEachRank[lv][0],
          amr->Par->B2R_Real_NPatchTotal[lv][0], amr->Par->B2R_Real_PIDList[lv][0], amr->Par->B2R_Real_NPatchEachRank[lv][0] );
 
-// 7-2. father-sibling-buffer patches at lv-1
-   if ( lv > 0 )
+// 7-2. father-sibling-buffer patches at lv-1 (FaLv)
+//      --> note that XXX[lv][1] is for exchanging patches at lv-1
+   if ( FaLv >= 0 )
       Par_LB_ExchangeParticleBetweenPatch(
-         lv,
+         FaLv,
          amr->Par->B2R_Buff_NPatchTotal[lv][1], amr->Par->B2R_Buff_PIDList[lv][1], amr->Par->B2R_Buff_NPatchEachRank[lv][1],
          amr->Par->B2R_Real_NPatchTotal[lv][1], amr->Par->B2R_Real_PIDList[lv][1], amr->Par->B2R_Real_NPatchEachRank[lv][1] );
 #  endif

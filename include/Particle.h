@@ -243,119 +243,32 @@ struct Particle_t
    {
 
       for (int v=0; v<NPAR_VAR; v++)
-      {
-         if ( ParVar[v] != NULL )
-         {
-            free( ParVar[v] );
-            ParVar[v] = NULL;
-         }
-      }
+         if ( ParVar[v] != NULL )      free( ParVar[v] );
 
       for (int v=0; v<NPAR_PASSIVE; v++)
-      {
-         if ( Passive[v] != NULL )
-         {
-            free( Passive[v] );
-            Passive[v] = NULL;
-         }
-      }
+         if ( Passive[v] != NULL )     free( Passive[v] );
 
-      if ( InactiveParList != NULL )
-      {
-         free( InactiveParList );
-         InactiveParList = NULL;
-      }
+      if ( InactiveParList != NULL )   free( InactiveParList );
 
 #     ifdef LOAD_BALANCE
       for (int lv=0; lv<NLEVEL; lv++)
       {
          for (int t=0; t<2; t++) {
-         R2B_Real_NPatchTotal[lv][t] = 0;
-         R2B_Buff_NPatchTotal[lv][t] = 0;
+         if ( R2B_Real_NPatchEachRank[lv][t] != NULL )   delete [] R2B_Real_NPatchEachRank[lv][t];
+         if ( R2B_Buff_NPatchEachRank[lv][t] != NULL )   delete [] R2B_Buff_NPatchEachRank[lv][t];
+         if ( R2B_Real_PIDList       [lv][t] != NULL )   delete [] R2B_Real_PIDList       [lv][t];
+         if ( R2B_Buff_PIDList       [lv][t] != NULL )   free(     R2B_Buff_PIDList       [lv][t] );
 
-         if ( R2B_Real_NPatchEachRank[lv][t] != NULL )
-         {
-            delete [] R2B_Real_NPatchEachRank[lv][t];
-            R2B_Real_NPatchEachRank[lv][t] = NULL;
-         }
-
-         if ( R2B_Buff_NPatchEachRank[lv][t] != NULL )
-         {
-            delete [] R2B_Buff_NPatchEachRank[lv][t];
-            R2B_Buff_NPatchEachRank[lv][t] = NULL;
-         }
-
-         if ( R2B_Real_PIDList[lv][t] != NULL )
-         {
-            delete [] R2B_Real_PIDList[lv][t];
-            R2B_Real_PIDList[lv][t] = NULL;
-         }
-
-//       R2B_Buff_PIDList is allocated using "malloc"
-         if ( R2B_Buff_PIDList[lv][t] != NULL )
-         {
-            free( R2B_Buff_PIDList[lv][t] );
-            R2B_Buff_PIDList[lv][t] = NULL;
-         }
-
-
-         B2R_Real_NPatchTotal[lv][t] = 0;
-         B2R_Buff_NPatchTotal[lv][t] = 0;
-
-         if ( B2R_Real_NPatchEachRank[lv][t] != NULL )
-         {
-            delete [] B2R_Real_NPatchEachRank[lv][t];
-            B2R_Real_NPatchEachRank[lv][t] = NULL;
-         }
-
-         if ( B2R_Buff_NPatchEachRank[lv][t] != NULL )
-         {
-            delete [] B2R_Buff_NPatchEachRank[lv][t];
-            B2R_Buff_NPatchEachRank[lv][t] = NULL;
-         }
-
-         if ( B2R_Real_PIDList[lv][t] != NULL )
-         {
-            delete [] B2R_Real_PIDList[lv][t];
-            B2R_Real_PIDList[lv][t] = NULL;
-         }
-
-//       B2R_Buff_PIDList is allocated using "malloc"
-         if ( B2R_Buff_PIDList[lv][t] != NULL )
-         {
-            free( B2R_Buff_PIDList[lv][t] );
-            B2R_Buff_PIDList[lv][t] = NULL;
-         }
+         if ( B2R_Real_NPatchEachRank[lv][t] != NULL )   delete [] B2R_Real_NPatchEachRank[lv][t];
+         if ( B2R_Buff_NPatchEachRank[lv][t] != NULL )   delete [] B2R_Buff_NPatchEachRank[lv][t];
+         if ( B2R_Real_PIDList       [lv][t] != NULL )   delete [] B2R_Real_PIDList       [lv][t];
+         if ( B2R_Buff_PIDList       [lv][t] != NULL )   free(     B2R_Buff_PIDList       [lv][t] );
          } // for (int t=0; t<2; t++)
 
-
-         F2S_Send_NPatchTotal[lv] = 0;
-         F2S_Recv_NPatchTotal[lv] = 0;
-
-         if ( F2S_Send_NPatchEachRank[lv] != NULL )
-         {
-            delete [] F2S_Send_NPatchEachRank[lv];
-            F2S_Send_NPatchEachRank[lv] = NULL;
-         }
-
-         if ( F2S_Recv_NPatchEachRank[lv] != NULL )
-         {
-            delete [] F2S_Recv_NPatchEachRank[lv];
-            F2S_Recv_NPatchEachRank[lv] = NULL;
-         }
-
-//       F2S_Send_PIDList is allocated using "malloc"
-         if ( F2S_Send_PIDList[lv] != NULL )
-         {
-            free( F2S_Send_PIDList[lv] );
-            F2S_Send_PIDList[lv] = NULL;
-         }
-
-         if ( F2S_Recv_PIDList[lv] != NULL )
-         {
-            delete [] F2S_Recv_PIDList[lv];
-            F2S_Recv_PIDList[lv] = NULL;
-         }
+         if ( F2S_Send_NPatchEachRank[lv] != NULL )      delete [] F2S_Send_NPatchEachRank[lv];
+         if ( F2S_Recv_NPatchEachRank[lv] != NULL )      delete [] F2S_Recv_NPatchEachRank[lv];
+         if ( F2S_Send_PIDList       [lv] != NULL )      free(     F2S_Send_PIDList       [lv] );
+         if ( F2S_Recv_PIDList       [lv] != NULL )      delete [] F2S_Recv_PIDList       [lv];
       } // for (int lv=0; lv<NLEVE; lv++)
 #     endif // LOAD_BALANCE
 
@@ -422,19 +335,39 @@ struct Particle_t
          R2B_Real_NPatchEachRank[lv][t] = new int [NRank];
          R2B_Buff_NPatchEachRank[lv][t] = new int [NRank];
 
+         for (int r=0; r<NRank; r++)
+         {
+            R2B_Real_NPatchEachRank[lv][t][r] = 0;
+            R2B_Buff_NPatchEachRank[lv][t][r] = 0;
+         }
+
+
          if ( B2R_Real_NPatchEachRank[lv][t] != NULL )   delete [] B2R_Real_NPatchEachRank[lv][t];
          if ( B2R_Buff_NPatchEachRank[lv][t] != NULL )   delete [] B2R_Buff_NPatchEachRank[lv][t];
 
          B2R_Real_NPatchEachRank[lv][t] = new int [NRank];
          B2R_Buff_NPatchEachRank[lv][t] = new int [NRank];
+
+         for (int r=0; r<NRank; r++)
+         {
+            B2R_Real_NPatchEachRank[lv][t][r] = 0;
+            B2R_Buff_NPatchEachRank[lv][t][r] = 0;
          }
+         } // for (int t=0; t<2; t++) {
+
 
          if ( F2S_Send_NPatchEachRank[lv] != NULL )      delete [] F2S_Send_NPatchEachRank[lv];
          if ( F2S_Recv_NPatchEachRank[lv] != NULL )      delete [] F2S_Recv_NPatchEachRank[lv];
 
          F2S_Send_NPatchEachRank[lv] = new int [NRank];
          F2S_Recv_NPatchEachRank[lv] = new int [NRank];
-      }
+
+         for (int r=0; r<NRank; r++)
+         {
+            F2S_Send_NPatchEachRank[lv][r] = 0;
+            F2S_Recv_NPatchEachRank[lv][r] = 0;
+         }
+      } // for (int lv=0; lv<NLEVEL; lv++)
 #     endif // #ifdef LOAD_BALANCE
 
       Mass = ParVar[PAR_MASS];

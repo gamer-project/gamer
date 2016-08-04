@@ -72,8 +72,8 @@ void Par_LB_ExchangeParticleBetweenPatch( const int lv,
       const int PID = Check_PIDList[m][t];
 
       if ( PID < 0  ||  PID >= amr->num[lv] )
-         Aux_Error( ERROR_INFO, "This is NOT a correct patch index (t %d, PID %d, NReal %d, NTotal %d) !!\n",
-                    t, PID, amr->NPatchComma[lv][1], amr->num[lv] );
+         Aux_Error( ERROR_INFO, "This is NOT a correct patch index (lv %d, m %d, t %d, PID %d, NReal %d, NTotal %d) !!\n",
+                    lv, m, t, PID, amr->NPatchComma[lv][1], amr->num[lv] );
 
       if ( amr->patch[0][lv][PID]->NPar < 0 )
          Aux_Error( ERROR_INFO, "lv %d, PID %d, NPar = %d < 0 !!\n", lv, PID, amr->patch[0][lv][PID]->NPar );
@@ -94,14 +94,14 @@ void Par_LB_ExchangeParticleBetweenPatch( const int lv,
 
    for (int r=0; r<MPI_NRank; r++)
    if ( Recv_NPatchEachRank[r] != Recv_NPatchEachRank_Check[r] )
-      Aux_Error( ERROR_INFO, "Recv_NPatchEachRank[%d] (%d) != expected (%d) !!\n",
-                 r, Recv_NPatchEachRank[r], Recv_NPatchEachRank_Check[r] );
+      Aux_Error( ERROR_INFO, "lv %d, Recv_NPatchEachRank[%d] (%d) != expected (%d) !!\n",
+                 lv, r, Recv_NPatchEachRank[r], Recv_NPatchEachRank_Check[r] );
 
    for (int r=0; r<MPI_NRank; r++)  Recv_NPatchTotal_Check += Recv_NPatchEachRank_Check[r];
 
    if ( Recv_NPatchTotal != Recv_NPatchTotal_Check )
-      Aux_Error( ERROR_INFO, "Recv_NPatchTotal (%d) != expected (%d) !!\n",
-                 Recv_NPatchTotal, Recv_NPatchTotal_Check );
+      Aux_Error( ERROR_INFO, "lv %d, Recv_NPatchTotal (%d) != expected (%d) !!\n",
+                 lv, Recv_NPatchTotal, Recv_NPatchTotal_Check );
 #  endif // #ifdef DEBUG_PARTICLE
 
 
