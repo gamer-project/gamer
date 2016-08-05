@@ -56,7 +56,7 @@ static bool FarAwayParticle( real ParPosX, real ParPosY, real ParPosZ, const boo
 //                                           to the density array.
 //                UseInputMassPos : Use the input array "InputMassPos" to obtain particle mass and position
 //                                  --> Used by LOAD_BALANCE, where particle position and mass may be stored in the
-//                                      ParMassPos_Away array of each patch
+//                                      ParMassPos_Copy array of each patch
 //                                  --> ParList becomes useless and must be set to NULL
 //                                  --> Does not work with PredictPos since we don't have the information of particle
 //                                      time and velocity

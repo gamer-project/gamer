@@ -19,7 +19,7 @@
 //                   --> For particle mass assignment only
 //                   --> But it should be generalized to work with arbitrary particle attributes
 //                4. This function is called by Par_LB_CollectParticle2OneLevel
-//                5. Array ParMassPos_Away will be allocated for all target buffer patches with particles in the
+//                5. Array ParMassPos_Copy will be allocated for all target buffer patches with particles in the
 //                   corresponding real patches
 //                   --> Must be deallocated afterward by calling Par_LB_CollectParticle2OneLevel_FreeMemory
 //
@@ -35,7 +35,7 @@
 //                                           send particle velocity
 //                TargetTime           : Target time for predicting the particle position
 //
-// Return      :  NPar_Away and ParMassPos_Away (if NPar_Away > 0) for all buffer patches specified in Buff_PIDList
+// Return      :  NPar_Copy and ParMassPos_Copy (if NPar_Copy > 0) for all buffer patches specified in Buff_PIDList
 //-------------------------------------------------------------------------------------------------------
 void Par_LB_CollectParticleFromRealPatch( const int lv,
                                           const int Buff_NPatchTotal, const int *Buff_PIDList, int *Buff_NPatchEachRank,
@@ -86,13 +86,13 @@ void Par_LB_CollectParticleFromRealPatch( const int lv,
       if ( amr->patch[0][lv][PID]->NPar > 0 )
          Aux_Error( ERROR_INFO, "lv %d, PID %d, NPar = %d > 0 !!\n", lv, PID, amr->patch[0][lv][PID]->NPar );
 
-      if ( amr->patch[0][lv][PID]->NPar_Away >= 0 )
-         Aux_Error( ERROR_INFO, "lv %d, PID %d, NPar_Away = %d >= 0 !!\n", lv, PID, amr->patch[0][lv][PID]->NPar_Away );
+      if ( amr->patch[0][lv][PID]->NPar_Copy >= 0 )
+         Aux_Error( ERROR_INFO, "lv %d, PID %d, NPar_Copy = %d >= 0 !!\n", lv, PID, amr->patch[0][lv][PID]->NPar_Copy );
 
       for (int v=0; v<4; v++)
-      if ( amr->patch[0][lv][PID]->ParMassPos_Away[v] != NULL )
-         Aux_Error( ERROR_INFO, "lv %d, PID %d, NPar_Away = %d, ParMassPos_Away[%d] != NULL !!\n",
-                    lv, PID, amr->patch[0][lv][PID]->NPar_Away, v );
+      if ( amr->patch[0][lv][PID]->ParMassPos_Copy[v] != NULL )
+         Aux_Error( ERROR_INFO, "lv %d, PID %d, NPar_Copy = %d, ParMassPos_Copy[%d] != NULL !!\n",
+                    lv, PID, amr->patch[0][lv][PID]->NPar_Copy, v );
    } // for (int t=0; t<Buff_NPatchTotal; t++)
 
    for (int t=0; t<Real_NPatchTotal; t++)
@@ -106,15 +106,15 @@ void Par_LB_CollectParticleFromRealPatch( const int lv,
       if ( amr->patch[0][lv][PID]->NPar < 0 )
          Aux_Error( ERROR_INFO, "lv %d, PID %d, NPar = %d < 0 !!\n", lv, PID, amr->patch[0][lv][PID]->NPar );
 
-//    all leaf real patches should have NPar_Away == -1
-      if ( amr->patch[0][lv][PID]->son == -1  &&  amr->patch[0][lv][PID]->NPar_Away >= 0 )
-         Aux_Error( ERROR_INFO, "lv %d, PID %d has no son, NPar_Away = %d >= 0 !!\n",
-                    lv, PID, amr->patch[0][lv][PID]->NPar_Away );
+//    all leaf real patches should have NPar_Copy == -1
+      if ( amr->patch[0][lv][PID]->son == -1  &&  amr->patch[0][lv][PID]->NPar_Copy >= 0 )
+         Aux_Error( ERROR_INFO, "lv %d, PID %d has no son, NPar_Copy = %d >= 0 !!\n",
+                    lv, PID, amr->patch[0][lv][PID]->NPar_Copy );
 
-//    all non-leaf real patches should have NPar_Away >= 0 set by Par_LB_CollectParticle2OneLevel
-      if ( amr->patch[0][lv][PID]->son != -1  &&  amr->patch[0][lv][PID]->NPar_Away < 0 )
-         Aux_Error( ERROR_INFO, "lv %d, PID %d, SonPID %d, NPar_Away = %d < 0 !!\n",
-                    lv, PID, amr->patch[0][lv][PID]->son, amr->patch[0][lv][PID]->NPar_Away );
+//    all non-leaf real patches should have NPar_Copy >= 0 set by Par_LB_CollectParticle2OneLevel
+      if ( amr->patch[0][lv][PID]->son != -1  &&  amr->patch[0][lv][PID]->NPar_Copy < 0 )
+         Aux_Error( ERROR_INFO, "lv %d, PID %d, SonPID %d, NPar_Copy = %d < 0 !!\n",
+                    lv, PID, amr->patch[0][lv][PID]->son, amr->patch[0][lv][PID]->NPar_Copy );
    }
 
 // check Real_NPatchEachRank and Real_NPatchTotal
@@ -152,7 +152,7 @@ void Par_LB_CollectParticleFromRealPatch( const int lv,
 
 //    we assume that non-leaf real patches have already collected particles from their descendant patches
       if ( amr->patch[0][lv][PID]->son == -1 )  NParThisPatch = amr->patch[0][lv][PID]->NPar;
-      else                                      NParThisPatch = amr->patch[0][lv][PID]->NPar_Away;
+      else                                      NParThisPatch = amr->patch[0][lv][PID]->NPar_Copy;
 
 #     ifdef DEBUG_PARTICLE
       if ( NParThisPatch < 0 )
@@ -172,7 +172,7 @@ void Par_LB_CollectParticleFromRealPatch( const int lv,
 
    real  *SendPtr         = SendBuf_ParDataEachPatch;
    long  *ParList         = NULL;
-   real **ParMassPos_Away = NULL;
+   real **ParMassPos_Copy = NULL;
    long   ParID;
 
    for (int t=0; t<Real_NPatchTotal; t++)
@@ -215,12 +215,12 @@ void Par_LB_CollectParticleFromRealPatch( const int lv,
 
       else
       {
-         ParMassPos_Away = amr->patch[0][lv][PID]->ParMassPos_Away;
+         ParMassPos_Copy = amr->patch[0][lv][PID]->ParMassPos_Copy;
 
 #        ifdef DEBUG_PARTICLE
          for (int v=0; v<4; v++)
-            if ( ParMassPos_Away[v] == NULL )
-               Aux_Error( ERROR_INFO, "ParMassPos_Away[%d] == NULL for NParThisPatch (%d) > 0 (lv %d, PID %d) !!\n",
+            if ( ParMassPos_Copy[v] == NULL )
+               Aux_Error( ERROR_INFO, "ParMassPos_Copy[%d] == NULL for NParThisPatch (%d) > 0 (lv %d, PID %d) !!\n",
                           v, NParThisPatch, lv, PID );
 #        endif
 
@@ -229,10 +229,10 @@ void Par_LB_CollectParticleFromRealPatch( const int lv,
 //          here we have assumed that both PAR_MASS, PAR_POSX/Y/Z < NParVar
 //          (also note that these particle position should have already been predicted to TargetTime
 //          by Par_LB_CollectParticle2OneLevel)
-            SendPtr[PAR_MASS] = ParMassPos_Away[PAR_MASS][p];
-            SendPtr[PAR_POSX] = ParMassPos_Away[PAR_POSX][p];
-            SendPtr[PAR_POSY] = ParMassPos_Away[PAR_POSY][p];
-            SendPtr[PAR_POSZ] = ParMassPos_Away[PAR_POSZ][p];
+            SendPtr[PAR_MASS] = ParMassPos_Copy[PAR_MASS][p];
+            SendPtr[PAR_POSX] = ParMassPos_Copy[PAR_POSX][p];
+            SendPtr[PAR_POSY] = ParMassPos_Copy[PAR_POSY][p];
+            SendPtr[PAR_POSZ] = ParMassPos_Copy[PAR_POSZ][p];
 
             SendPtr += NParVar;
          }
@@ -281,26 +281,26 @@ void Par_LB_CollectParticleFromRealPatch( const int lv,
       NParThisPatch = RecvBuf_NParEachPatch[t];
 
 //    4-1. set the number of particles in this patch
-      amr->patch[0][lv][PID]->NPar_Away = NParThisPatch;
+      amr->patch[0][lv][PID]->NPar_Copy = NParThisPatch;
 
       if ( NParThisPatch > 0 )
       {
-//       4-2. allocate the ParMassPos_Away array
+//       4-2. allocate the ParMassPos_Copy array
          for (int v=0; v<NParVar; v++)
-            amr->patch[0][lv][PID]->ParMassPos_Away[v] = new real [NParThisPatch];
+            amr->patch[0][lv][PID]->ParMassPos_Copy[v] = new real [NParThisPatch];
 
          for (int p=0; p<NParThisPatch; p++)
          {
 //          4-3. store the particle mass and position
             for (int v=0; v<NParVar; v++)
-               amr->patch[0][lv][PID]->ParMassPos_Away[v][p] = *RecvPtr++;
+               amr->patch[0][lv][PID]->ParMassPos_Copy[v][p] = *RecvPtr++;
 
 //          4-4. check
 #           ifdef DEBUG_PARTICLE
 //          we do not transfer inactive particles
-            if ( amr->patch[0][lv][PID]->ParMassPos_Away[PAR_MASS][p] < (real)0.0 )
+            if ( amr->patch[0][lv][PID]->ParMassPos_Copy[PAR_MASS][p] < (real)0.0 )
                Aux_Error( ERROR_INFO, "found inactive particle (lv %d, PID %d, Mass %14.7e, particle %d) !!\n",
-                          lv, PID, amr->patch[0][lv][PID]->ParMassPos_Away[PAR_MASS][p], p );
+                          lv, PID, amr->patch[0][lv][PID]->ParMassPos_Copy[PAR_MASS][p], p );
 
 //          check if the received particle lies within the target patch (may not when PredictPos is on)
             if ( !PredictPos )
@@ -310,9 +310,9 @@ void Par_LB_CollectParticleFromRealPatch( const int lv,
 //             --> we can use EdgeL/R stored in each patch directly since they assume periodicity as well
                const double *EdgeL     = amr->patch[0][lv][PID]->EdgeL;
                const double *EdgeR     = amr->patch[0][lv][PID]->EdgeR;
-               const real    ParPos[3] = { amr->patch[0][lv][PID]->ParMassPos_Away[PAR_POSX][p],
-                                           amr->patch[0][lv][PID]->ParMassPos_Away[PAR_POSY][p],
-                                           amr->patch[0][lv][PID]->ParMassPos_Away[PAR_POSZ][p] };
+               const real    ParPos[3] = { amr->patch[0][lv][PID]->ParMassPos_Copy[PAR_POSX][p],
+                                           amr->patch[0][lv][PID]->ParMassPos_Copy[PAR_POSY][p],
+                                           amr->patch[0][lv][PID]->ParMassPos_Copy[PAR_POSZ][p] };
 
                for (int d=0; d<3; d++)
                {
