@@ -296,8 +296,8 @@ void ReadOption( int argc, char **argv )
 // buffer size
    int NSide, NGhost;
    Int_Table( IntScheme, NSide, NGhost );
-// BufSize = NGhost*2;
-   BufSize = 8;
+   BufSize = NGhost*2;
+// BufSize = 8;
 
 
 // set up OpenMP
@@ -2101,7 +2101,8 @@ void Refine2TargetLevel()
    const bool ELBDM_IntPhase = false;
 #  endif
 
-   int   FaPID, FSize, CSize, NextIdx, CSize3[3], CRange[3], FSize3[3];
+   int   FaPID, NextIdx, CSize3[3], CRange[3], FSize3[3];
+   long  CSize, FSize;
    real *CData = NULL, *FData = NULL;
 
 #  ifdef OPENMP
@@ -2188,8 +2189,8 @@ void Refine2TargetLevel()
 //             allocate memory
                CSize = PATCH_SIZE + 2*Buffer;
                FSize = PATCH_SIZE + 2*Buffer;
-               CData = new real [ (long)NOut*CSize*CSize*CSize ];
-               FData = new real [ (long)NOut*FSize*FSize*FSize ];
+               CData = new real [ (long)NOut*CUBE(CSize) ];
+               FData = new real [ (long)NOut*CUBE(FSize) ];
 
 
 //###OPTIMIZATION : prepare the coarse-grid data "only once" for all son patches
@@ -2235,7 +2236,7 @@ void Refine2TargetLevel()
                      real *const FData_Imag = FData + IMAG*CUBE(FSize);
 
 //                   get the wrapped phase (store in the REAL component)
-                     for (int t=0; t<CUBE(CSize); t++)   CData_Real[t] = ATAN2( CData_Imag[t], CData_Real[t] );
+                     for (long t=0; t<CUBE(CSize); t++)  CData_Real[t] = ATAN2( CData_Imag[t], CData_Real[t] );
 
 //                   interpolate density 
                      Interpolate( CData_Dens, CSize3, CStart, CRange, FData_Dens, FSize3, FStart, 1, IntScheme, 
@@ -2248,7 +2249,7 @@ void Refine2TargetLevel()
 //                   retrieve real and imaginary parts
                      real Amp, Phase, Rho;
 
-                     for (int t=0; t<CUBE(FSize); t++)
+                     for (long t=0; t<CUBE(FSize); t++)
                      {
                         Phase = FData_Real[t];
                         Rho   = FData_Dens[t];

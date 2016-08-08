@@ -36,20 +36,21 @@ void Int_MinMod1D( const real CData[], const int CSize[3], const int CStart[3], 
    const int Fdz = FSize[0]*FSize[1];
 
    real Slope_x, Slope_y, Slope_z, LSlope, RSlope;
-   int Cx, Cy, Cz, Fx, Fy, Fz, CID, FID, CID0, FID0;
+   int  Cx, Cy, Cz, Fx, Fy, Fz;
+   long CID, FID, CID0, FID0;
 
 
    for (int v=0; v<NComp; v++)
    {
-      CID0 = v*CSize[0]*CSize[1]*CSize[2];
-      FID0 = v*FSize[0]*FSize[1]*FSize[2];
+      CID0 = (long)v*CSize[0]*CSize[1]*CSize[2];
+      FID0 = (long)v*FSize[0]*FSize[1]*FSize[2];
 
       for ( Cz=CStart[2], Fz=FStart[2]; Cz<CStart[2]+CRange[2]; Cz++, Fz+=2 )
       for ( Cy=CStart[1], Fy=FStart[1]; Cy<CStart[1]+CRange[1]; Cy++, Fy+=2 )
       for ( Cx=CStart[0], Fx=FStart[0]; Cx<CStart[0]+CRange[0]; Cx++, Fx+=2 )
       {
-         CID = CID0 + Cz*Cdz + Cy*Cdy + Cx*Cdx;
-         FID = FID0 + Fz*Fdz + Fy*Fdy + Fx*Fdx;
+         CID = CID0 + (long)Cz*Cdz + Cy*Cdy + Cx*Cdx;
+         FID = FID0 + (long)Fz*Fdz + Fy*Fdy + Fx*Fdx;
 
          LSlope = CData[CID    ] - CData[CID-Cdx];
          RSlope = CData[CID+Cdx] - CData[CID    ];
