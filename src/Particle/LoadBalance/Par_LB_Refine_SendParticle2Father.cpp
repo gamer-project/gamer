@@ -11,7 +11,7 @@
 // Description :  Send particles to leaf real patches at FaLv after grid refinement
 //
 // Note        :  1. Called by LB_Refine
-//                2. After deleting patches at FaLv+1, their particles may temporarily resides in buffer patches
+//                2. After deleting patches at FaLv+1, their particles may temporarily reside in buffer patches
 //                   at FaLv. This function send these particles to their corresponding real patches at Falv.
 //                3. The input array RefineS2F_Send_PIDList must be free'd manually after calling this function
 //
@@ -48,9 +48,12 @@ void Par_LB_Refine_SendParticle2Father( const int FaLv, const int RefineS2F_Send
                                      UseInputLBIdx_No, NULL );
 // check
 #  ifdef DEBUG_PARTICLE
-// no particles should be sent to itself
+// no particles should be exchanged within the same rank
+   if ( RefineS2F_Send_NPatchEachRank[MPI_Rank] != 0 )
+      Aux_Error( ERROR_INFO, "%d patches are sent to itself !!\n", RefineS2F_Send_NPatchEachRank[MPI_Rank] );
+
    if ( RefineS2F_Recv_NPatchEachRank[MPI_Rank] != 0 )
-      Aux_Error( ERROR_INFO, "%d patches are sent to itself !!\n", RefineS2F_Recv_NPatchEachRank[MPI_Rank] );
+      Aux_Error( ERROR_INFO, "%d patches are received from itself !!\n", RefineS2F_Recv_NPatchEachRank[MPI_Rank] );
 
 // all recv patches should have no particles and sons
    for (int t=0; t<RefineS2F_Recv_NPatchTotal; t++)
@@ -73,7 +76,7 @@ void Par_LB_Refine_SendParticle2Father( const int FaLv, const int RefineS2F_Send
       RefineS2F_Recv_NPatchTotal, RefineS2F_Recv_PIDList, RefineS2F_Recv_NPatchEachRank );
 
 
-// 3. free memory (RefineS2F_Send_PIDList is free'd by LB_Refine)
+// 3. free memory (RefineS2F_Send_PIDList will be free'd by LB_Refine)
    delete [] RefineS2F_Recv_PIDList;
 
 } // FUNCTION : Par_LB_Refine_SendParticle2Father

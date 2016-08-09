@@ -5,15 +5,19 @@
 
 
 
-void LB_Refine_GetNewRealPatchList( const int FaLv, int &NNew_Home, int *&NewPID_Home, int &NNew_Away,
-                                    ulong *&NewCr1D_Away, real *&NewCData_Away, int &NDel_Home, int *&DelPID_Home,
-                                    int &NDel_Away, ulong *&DelCr1D_Away );
+void LB_Refine_GetNewRealPatchList( const int FaLv, int &NNew_Home, int *&NewPID_Home, int &NNew_Away, 
+                                    ulong *&NewCr1D_Away, real *&NewCData_Away, int &NDel_Home, int *&DelPID_Home, 
+                                    int &NDel_Away, ulong *&DelCr1D_Away,
+                                    int &RefineF2S_Send_NPatchTotal, int *&RefineF2S_Send_PIDList,
+                                    long *&RefineF2S_Send_LBIdxList );
 void LB_Refine_AllocateNewPatch( const int FaLv, int NNew_Home, int *NewPID_Home, int NNew_Away,
                                  ulong *NewCr1D_Away, real *NewCData_Away, int NDel_Home, int *DelPID_Home,
                                  int NDel_Away, ulong *DelCr1D_Away,
                                  int &RefineS2F_Send_NPatchTotal, int *&RefineS2F_Send_PIDList );
 #ifdef PARTICLE
 void Par_LB_Refine_SendParticle2Father( const int FaLv, const int RefineS2F_Send_NPatchTotal, int *RefineS2F_Send_PIDList );
+void Par_LB_Refine_SendParticle2Son( const int FaLv, const int RefineF2S_Send_NPatchTotal, int *RefineF2S_Send_PIDList,
+                                     long *RefineF2S_Send_LBIdxList );
 #endif
 
 
@@ -48,11 +52,16 @@ void LB_Refine( const int FaLv )
 
 // 0. initialize variables for exchanging particles
 // ==========================================================================================
-   int  RefineS2F_Send_NPatchTotal = 0;
-   int *RefineS2F_Send_PIDList     = NULL;
+   int   RefineS2F_Send_NPatchTotal = 0;
+   int  *RefineS2F_Send_PIDList     = NULL;
+   int   RefineF2S_Send_NPatchTotal = 0;
+   int  *RefineF2S_Send_PIDList     = NULL;
+   long *RefineF2S_Send_LBIdxList   = NULL;
 
 #  ifdef PARTICLE
-   RefineS2F_Send_PIDList = new int [ amr->NPatchComma[FaLv][3] - amr->NPatchComma[FaLv][1] ];
+   RefineS2F_Send_PIDList   = new int  [ amr->NPatchComma[FaLv][3] - amr->NPatchComma[FaLv][1] ];
+   RefineF2S_Send_PIDList   = new int  [ amr->NPatchComma[FaLv][1] ];
+   RefineF2S_Send_LBIdxList = new long [ amr->NPatchComma[FaLv][1] ];
 #  endif
 
 
@@ -72,7 +81,8 @@ void LB_Refine( const int FaLv )
    real  *NewCData_Away=NULL;
 
    LB_Refine_GetNewRealPatchList( FaLv, NNew_Home, NewPID_Home, NNew_Away, NewCr1D_Away, NewCData_Away,
-                                  NDel_Home, DelPID_Home, NDel_Away, DelCr1D_Away );
+                                  NDel_Home, DelPID_Home, NDel_Away, DelCr1D_Away,
+                                  RefineF2S_Send_NPatchTotal, RefineF2S_Send_PIDList, RefineF2S_Send_LBIdxList );
 
 
 // 3. allocate/deallocate son patches at FaLv+1
@@ -129,7 +139,11 @@ void LB_Refine( const int FaLv )
 // 5. send particles to leaf real patches
 // ==========================================================================================
 #  ifdef PARTICLE
+// 5.1 send particles from buffer patches at FaLv to their corresponding real patches
    Par_LB_Refine_SendParticle2Father( FaLv, RefineS2F_Send_NPatchTotal, RefineS2F_Send_PIDList );
+
+// 5.2 send particles from real patches at FaLv to their real son patches living abroad
+   Par_LB_Refine_SendParticle2Son( FaLv, RefineF2S_Send_NPatchTotal, RefineF2S_Send_PIDList, RefineF2S_Send_LBIdxList );
 #  endif
 
 
@@ -163,6 +177,8 @@ void LB_Refine( const int FaLv )
 
 #  ifdef PARTICLE
    delete [] RefineS2F_Send_PIDList;
+   delete [] RefineF2S_Send_PIDList;
+   delete [] RefineF2S_Send_LBIdxList;
 #  endif
 
 } // FUNCTION : LB_Refine

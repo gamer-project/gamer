@@ -45,10 +45,6 @@ void Par_LB_MapBuffer2RealPatch( const int lv, const int  Buff_NPatchTotal, int 
                                  const bool UseInputLBIdx, long *Buff_LBIdxList_Input )
 {
 
-// nothing to do for levels above MAX_LEVEL
-   if ( lv > MAX_LEVEL )   return;
-
-
 #  ifdef DEBUG_PARTICLE
    if ( lv < 0  ||  lv >= NLEVEL )     Aux_Error( ERROR_INFO, "incorrect target level (%d) !!\n", lv );
    if ( Buff_NPatchTotal < 0 )         Aux_Error( ERROR_INFO, "Buff_NPatchTotal = %d < 0 !!\n", Buff_NPatchTotal );

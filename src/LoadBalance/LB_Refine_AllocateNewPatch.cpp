@@ -49,8 +49,8 @@ static void DeallocateSonPatch( const int FaLv, const int FaPID, const int NNew_
 //                DelCr1D_Away   : Padded 1D corner of away patches at FaLv to deallocate son patches
 //
 //                PARTICLE-only parameters (call-by-reference)
-//                RefineS2F_Send_NPatchTotal : Total number of patches for exchanging particles from fathers to sons
-//                RefineS2F_Send_PIDList     : Patch indices for exchanging particles from fathers to sons
+//                RefineS2F_Send_NPatchTotal : Total number of patches for exchanging particles from sons to fathers
+//                RefineS2F_Send_PIDList     : Patch indices for exchanging particles from sons to fathers
 //-------------------------------------------------------------------------------------------------------
 void LB_Refine_AllocateNewPatch( const int FaLv, int NNew_Home, int *NewPID_Home, int NNew_Away, 
                                  ulong *NewCr1D_Away, real *NewCData_Away, int NDel_Home, int *DelPID_Home, 
@@ -820,8 +820,8 @@ int AllocateSonPatch( const int FaLv, const int *Cr, const int PScale, const int
 //                SwitchIdx         : Element in NewSonPID0_Real to be reset
 //
 //                PARTICLE-only parameters (call-by-reference)
-//                RefineS2F_Send_NPatchTotal : Total number of patches for exchanging particles from fathers to sons
-//                RefineS2F_Send_PIDList     : Patch indices for exchanging particles from fathers to sons
+//                RefineS2F_Send_NPatchTotal : Total number of patches for exchanging particles from sons to fathers
+//                RefineS2F_Send_PIDList     : Patch indices for exchanging particles from sons to fathers
 //-------------------------------------------------------------------------------------------------------
 void DeallocateSonPatch( const int FaLv, const int FaPID, const int NNew_Real0, int NewSonPID0_Real[], 
                          int SwitchIdx, int &RefineS2F_Send_NPatchTotal, int *&RefineS2F_Send_PIDList )
@@ -853,9 +853,9 @@ void DeallocateSonPatch( const int FaLv, const int FaPID, const int NNew_Real0, 
    if ( FaPID >= amr->NPatchComma[FaLv][1]  &&  amr->patch[0][FaLv][FaPID]->NPar > 0 )
    {
 #     ifdef DEBUG_PARTICLE
-      const int NFaBuff = amr->NPatchComma[FaLv][3] - amr->NPatchComma[FaLv][1];
-      if ( RefineS2F_Send_NPatchTotal >= NFaBuff )
-         Aux_Error( ERROR_INFO, "target index (%d) >= NFaBuff (%d) !!\n", RefineS2F_Send_NPatchTotal, NFaBuff );
+      const int FaNBuff = amr->NPatchComma[FaLv][3] - amr->NPatchComma[FaLv][1];
+      if ( RefineS2F_Send_NPatchTotal >= FaNBuff )
+         Aux_Error( ERROR_INFO, "target index (%d) >= FaNBuff (%d) !!\n", RefineS2F_Send_NPatchTotal, FaNBuff );
 #     endif
 
       RefineS2F_Send_PIDList[ RefineS2F_Send_NPatchTotal ++ ] = FaPID;

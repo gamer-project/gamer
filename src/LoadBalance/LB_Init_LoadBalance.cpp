@@ -520,6 +520,11 @@ void LB_RedistributeRealPatch( const int lv, real **ParVar_Old, real **Passive_O
       Counter        [TRank] ++;
 #     ifdef PARTICLE
       Counter_ParData[TRank] += amr->patch[0][lv][PID]->NPar*NParVar;
+
+//    free particle variables to avoid warning messages when deleting patches with particles
+      amr->patch[0][lv][PID]->NPar = 0;
+      free( amr->patch[0][lv][PID]->ParList );
+      amr->patch[0][lv][PID]->ParList = NULL;
 #     endif
    } // for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
 
@@ -624,7 +629,8 @@ void LB_RedistributeRealPatch( const int lv, real **ParVar_Old, real **Passive_O
    for (long p=NPar_AcPlusInac_Previous; p<amr->Par->NPar_AcPlusInac; p++)
    {
 #     ifdef DEBUG_PARTICLE
-      if ( p >= amr->Par->ParListSize )   Aux_Error( ERROR_INFO, "p (%ld) >= ParListSize (%ld) !!\n", p, amr->Par->ParListSize );
+      if ( p >= amr->Par->ParListSize )
+         Aux_Error( ERROR_INFO, "p (%ld) >= ParListSize (%ld) !!\n", p, amr->Par->ParListSize );
 #     endif
 
       for (int v=0; v<NPAR_VAR; v++)      amr->Par->ParVar [v][p] = *RecvPtr++;

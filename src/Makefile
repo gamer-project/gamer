@@ -305,7 +305,7 @@ ifeq "$(findstring LOAD_BALANCE, $(SIMU_OPTION))" "LOAD_BALANCE"
 CC_FILE     += Par_LB_RedistributeByRectangular.cpp  Par_LB_SendParticleData.cpp  Par_LB_CollectParticle2OneLevel.cpp \
                Par_LB_CollectParticleFromRealPatch.cpp  Par_LB_RecordExchangeParticlePatchID.cpp \
                Par_LB_MapBuffer2RealPatch.cpp  Par_LB_ExchangeParticleBetweenPatch.cpp \
-               Par_LB_Refine_SendParticle2Father.cpp
+               Par_LB_Refine_SendParticle2Father.cpp  Par_LB_Refine_SendParticle2Son.cpp
 
 vpath %.cpp    Particle/LoadBalance
 endif # LOAD_BALANCE

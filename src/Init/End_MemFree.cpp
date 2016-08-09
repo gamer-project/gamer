@@ -21,6 +21,17 @@ void End_MemFree()
 // a. deallocate the AMR structure
    if ( amr != NULL )   
    {
+//    free particle variables first to avoid warning messages when deleting patches with particles
+#     ifdef PARTICLE
+      for (int lv=0; lv<NLEVEL; lv++)
+      for (int PID=0; PID<amr->num[lv]; PID++)
+      {
+         amr->patch[0][lv][PID]->NPar = 0;
+         free( amr->patch[0][lv][PID]->ParList );
+         amr->patch[0][lv][PID]->ParList = NULL;
+      }
+#     endif
+
       delete amr;
       amr = NULL;
    }

@@ -307,7 +307,7 @@ void Par_LB_RecordExchangeParticlePatchID( const int MainLv )
    {
       lv = RelatedLv[t];
 
-//    5-1. R2B list
+//    6-1. R2B list
       Par_LB_MapBuffer2RealPatch( lv, amr->Par->R2B_Buff_NPatchTotal   [MainLv][t],
                                       amr->Par->R2B_Buff_PIDList       [MainLv][t],
                                       amr->Par->R2B_Buff_NPatchEachRank[MainLv][t],
@@ -315,7 +315,7 @@ void Par_LB_RecordExchangeParticlePatchID( const int MainLv )
                                       amr->Par->R2B_Real_PIDList       [MainLv][t],
                                       amr->Par->R2B_Real_NPatchEachRank[MainLv][t],
                                       UseInputLBIdx_No, NULL );
-//    5-2. B2R list
+//    6-2. B2R list
       Par_LB_MapBuffer2RealPatch( lv, amr->Par->B2R_Buff_NPatchTotal   [MainLv][t],
                                       amr->Par->B2R_Buff_PIDList       [MainLv][t],
                                       amr->Par->B2R_Buff_NPatchEachRank[MainLv][t],
@@ -325,14 +325,14 @@ void Par_LB_RecordExchangeParticlePatchID( const int MainLv )
                                       UseInputLBIdx_No, NULL );
    } // for (int t=0; t<NLv; t++)
 
-// 5-3. F2S list
+// 6-3. F2S list
    if ( FaLv >= 0 )
    {
       int   SonPID;
       long  SonLBIdx;
       long *SonLBIdxList = new long [ amr->Par->F2S_Send_NPatchTotal[FaLv] ];
 
-//    5-3-1. get the LBIdx of sons living abroad
+//    6-3-1. get the LBIdx of sons living abroad
 //###NOTE: faster version can only be applied to the Hilbert space-filling curve
       for (int p=0; p<amr->Par->F2S_Send_NPatchTotal[FaLv]; p++)
       {
@@ -346,7 +346,7 @@ void Par_LB_RecordExchangeParticlePatchID( const int MainLv )
          SonLBIdxList[p] = SonLBIdx;
       }
 
-//    5-3-2. find the real patches at MainLv corresponding to SonLBIdxList
+//    6-3-2. find the real patches at MainLv corresponding to SonLBIdxList
       Par_LB_MapBuffer2RealPatch( MainLv, amr->Par->F2S_Send_NPatchTotal   [FaLv],
                                           amr->Par->F2S_Send_PIDList       [FaLv],
                                           amr->Par->F2S_Send_NPatchEachRank[FaLv],
@@ -366,7 +366,7 @@ void Par_LB_RecordExchangeParticlePatchID( const int MainLv )
                     amr->Par->F2S_Recv_NPatchEachRank[FaLv][MPI_Rank], FaLv );
 #     endif
 
-//    5-3-3. record the father-buffer patches to actually receive particles
+//    6-3-3. record the father-buffer patches to actually receive particles
       for (int p=0; p<amr->Par->F2S_Recv_NPatchTotal[FaLv]; p++)
       {
          SonPID = amr->Par->F2S_Recv_PIDList[FaLv][p];
@@ -386,7 +386,7 @@ void Par_LB_RecordExchangeParticlePatchID( const int MainLv )
    } // if ( FaLv >= 0 )
 
 
-// 6. free memory
+// 7. free memory
    for (int s=0; s<26; s++)   delete [] TLocalID[s];
 
 } // FUNCTION : Par_LB_RecordExchangeParticlePatchID

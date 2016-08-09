@@ -326,8 +326,8 @@ struct patch_t
 #     ifdef PARTICLE
 
 #     ifdef DEBUG_PARTICLE
-      if ( rho_ext != NULL )  Aux_Message( stderr, "WARNING : rho_ext != NULL !!\n" );
-      if ( ParList != NULL )  Aux_Message( stderr, "WARNING : ParList != NULL !!\n" );
+      if ( rho_ext != NULL )              Aux_Message( stderr, "WARNING : rho_ext != NULL !!\n" );
+      if ( ParList != NULL )              Aux_Message( stderr, "WARNING : ParList != NULL !!\n" );
 #     ifdef LOAD_BALANCE
       for (int v=0; v<4; v++)
       if ( ParMassPos_Copy[v] != NULL )   Aux_Message( stderr, "WARNING : ParMassPos_Copy[%d] != NULL !!\n", v );
@@ -337,21 +337,20 @@ struct patch_t
       for (int s=0; s<26; s++)
       if ( ParList_Escp[s] != NULL )      Aux_Message( stderr, "WARNING : ParList_Escp[%d] != NULL !!\n", s );
 
-      if ( NPar != 0 )           Aux_Message( stderr, "NPar = %d != 0 !!\n", NPar );
-      if ( NPar_Copy != -1 )     Aux_Message( stderr, "NPar_Copy = %d != -1 !!\n", NPar_Copy );
+      if ( NPar != 0 )                    Aux_Message( stderr, "NPar = %d != 0 !!\n", NPar );
+      if ( NPar_Copy != -1 )              Aux_Message( stderr, "NPar_Copy = %d != -1 !!\n", NPar_Copy );
       for (int s=0; s<26; s++)
-      if ( NPar_Escp[s] != -1 )  Aux_Message( stderr, "NPar_Escp[%d] = %d != -1 !!\n", s, NPar_Escp[s] );
+      if ( NPar_Escp[s] != -1 )           Aux_Message( stderr, "NPar_Escp[%d] = %d != -1 !!\n", s, NPar_Escp[s] );
 #     endif // #ifdef DEBUG_PARTICLE
 
+      if ( rho_ext != NULL )              delete [] rho_ext;
       if ( ParList != NULL )              free( ParList );
-
 #     ifdef LOAD_BALANCE
       for (int v=0; v<4; v++)
       if ( ParMassPos_Copy[v] != NULL )   delete [] ParMassPos_Copy[v];
 #     else
       if ( ParList_Copy != NULL )         delete [] ParList_Copy;
 #     endif
-
       for (int s=0; s<26; s++)
       if ( ParList_Escp[s] != NULL )      free( ParList_Escp[s] );
 

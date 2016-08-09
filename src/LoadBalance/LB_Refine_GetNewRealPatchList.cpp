@@ -36,12 +36,19 @@ void PrepareCData( const int FaLv, const int FaPID, real *const FaData,
 //                NDel_Away      : Number of away patches at FaLv to deallocate son patches
 //                DelCr1D_Away   : Padded 1D corner of away patches at FaLv to deallocate son patches
 //
+//                PARTICLE-only parameters (call-by-reference)
+//                RefineF2S_Send_NPatchTotal : Total number of patches for exchanging particles from fathers to sons
+//                RefineF2S_Send_PIDList     : Patch indices for exchanging particles from fathers to sons
+//                RefineF2S_Send_LBIdxList   : Load-balance indices for exchanging particles from fathers to sons
+//
 // Return      :  NNew_Home, NewPID_Home, NNew_Away, NewCr1D_Away, NewCData_Away, NDel_Home, DelPID_Home,
 //                NDel_Away, DelCr1D_Away
 //-------------------------------------------------------------------------------------------------------
 void LB_Refine_GetNewRealPatchList( const int FaLv, int &NNew_Home, int *&NewPID_Home, int &NNew_Away, 
                                     ulong *&NewCr1D_Away, real *&NewCData_Away, int &NDel_Home, int *&DelPID_Home, 
-                                    int &NDel_Away, ulong *&DelCr1D_Away )
+                                    int &NDel_Away, ulong *&DelCr1D_Away,
+                                    int &RefineF2S_Send_NPatchTotal, int *&RefineF2S_Send_PIDList,
+                                    long *&RefineF2S_Send_LBIdxList )
 {
 
 // 1. construct the unsorted new/delete lists for real patches
@@ -142,7 +149,19 @@ void LB_Refine_GetNewRealPatchList( const int FaLv, int &NNew_Home, int *&NewPID
             NewCr1D_Send[TRank][ NNew_Send[TRank] ] = TP->PaddedCr1D;
             NewPID_Send [TRank][ NNew_Send[TRank] ] = FaPID;
             NNew_Send   [TRank] ++;
-         }
+
+#           ifdef PARTICLE
+#           ifdef DEBUG_PARTICLE
+            if ( RefineF2S_Send_NPatchTotal >= FaNReal )
+               Aux_Error( ERROR_INFO, "target index (%d) >= FaNReal (%d) !!\n", RefineF2S_Send_NPatchTotal, FaNReal );
+#           endif
+
+            RefineF2S_Send_PIDList  [RefineF2S_Send_NPatchTotal] = FaPID;
+            RefineF2S_Send_LBIdxList[RefineF2S_Send_NPatchTotal] = LBIdx;  // this is the LBIdx of one of the sons
+
+            RefineF2S_Send_NPatchTotal ++;
+#           endif // #ifdef PARTICLE
+         } // if ( TRank == MPI_Rank ) ... else ...
       } // if ( TP->flag  &&  TP->son == -1 )
 
 
