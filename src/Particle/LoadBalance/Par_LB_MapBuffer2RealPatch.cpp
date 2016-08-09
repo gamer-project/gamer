@@ -156,8 +156,11 @@ void Par_LB_MapBuffer2RealPatch( const int lv, const int  Buff_NPatchTotal, int 
                   Real_LBIdxList_Sort, RecvCount_LBIdxList, RecvDisp_LBIdxList, MPI_LONG, MPI_COMM_WORLD );
 
 // 1-6. store the sorted PID list
-   delete [] Buff_PIDList;
-   Buff_PIDList = Buff_PIDList_Sort;
+   memcpy( Buff_PIDList, Buff_PIDList_Sort, Buff_NPatchTotal*sizeof(int) );
+   delete [] Buff_PIDList_Sort;
+// do NOT use the following codes since we don't know whether Buff_PIDList is allocated by malloc or new
+// delete [] Buff_PIDList;
+// Buff_PIDList = Buff_PIDList_Sort
 
 
 // 2. get the PID list corresponding to the received LBIdx list
