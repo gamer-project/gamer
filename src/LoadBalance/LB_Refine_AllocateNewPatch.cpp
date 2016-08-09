@@ -14,7 +14,7 @@ static int AllocateSonPatch( const int FaLv, const int *Cr, const int PScale, co
                              const int CGhost_Flu, const int NSide_Flu, const int CGhost_Pot, const int NSide_Pot,
                              const int BC_Face[], const int FluVarIdxList[] );
 static void DeallocateSonPatch( const int FaLv, const int FaPID, const int NNew_Real0, int NewSonPID0_Real[], 
-                                const int SwitchIdx );
+                                int SwitchIdx, int &RefineS2F_Send_NPatchTotal, int *&RefineS2F_Send_PIDList );
 
 
 
@@ -47,10 +47,15 @@ static void DeallocateSonPatch( const int FaLv, const int FaPID, const int NNew_
 //                DelPID_Home    : Patch indices of home patches at FaLv to deallocate son patches
 //                NDel_Away      : Number of away patches at FaLv to deallocate son patches
 //                DelCr1D_Away   : Padded 1D corner of away patches at FaLv to deallocate son patches
+//
+//                PARTICLE-only parameters (call-by-reference)
+//                RefineS2F_Send_NPatchTotal : Total number of patches for exchanging particles from fathers to sons
+//                RefineS2F_Send_PIDList     : Patch indices for exchanging particles from fathers to sons
 //-------------------------------------------------------------------------------------------------------
 void LB_Refine_AllocateNewPatch( const int FaLv, int NNew_Home, int *NewPID_Home, int NNew_Away, 
                                  ulong *NewCr1D_Away, real *NewCData_Away, int NDel_Home, int *DelPID_Home, 
-                                 int NDel_Away, ulong *DelCr1D_Away )
+                                 int NDel_Away, ulong *DelCr1D_Away,
+                                 int &RefineS2F_Send_NPatchTotal, int *&RefineS2F_Send_PIDList )
 {
 
    const int SonLv    = FaLv + 1;
@@ -300,7 +305,8 @@ void LB_Refine_AllocateNewPatch( const int FaLv, int NNew_Home, int *NewPID_Home
    {
       FaPID = DelPID_Home[t];
 
-      DeallocateSonPatch( FaLv, FaPID, NNew_Real0, NewSonPID0_Real, SwitchIdx-- );
+      DeallocateSonPatch( FaLv, FaPID, NNew_Real0, NewSonPID0_Real, SwitchIdx--,
+                          RefineS2F_Send_NPatchTotal, RefineS2F_Send_PIDList );
    } 
 
 // 5.2 away patches
@@ -308,7 +314,8 @@ void LB_Refine_AllocateNewPatch( const int FaLv, int NNew_Home, int *NewPID_Home
    {
       FaPID = DelPID_Away[t];
 
-      DeallocateSonPatch( FaLv, FaPID, NNew_Real0, NewSonPID0_Real, SwitchIdx-- );
+      DeallocateSonPatch( FaLv, FaPID, NNew_Real0, NewSonPID0_Real, SwitchIdx--,
+                          RefineS2F_Send_NPatchTotal, RefineS2F_Send_PIDList );
    }
 
 
@@ -778,9 +785,9 @@ int AllocateSonPatch( const int FaLv, const int *Cr, const int PScale, const int
    } // for (int LocalID=0; LocalID<8; LocalID++)
 
 
-// 4. pass particles from father to son
+// 4. pass particles from father to son if they are in the same rank
 #  ifdef PARTICLE
-   Par_PassParticle2Son( FaLv, FaPID );
+   if ( FaPID >= 0  &&  FaPID < amr->NPatchComma[FaLv][1] )    Par_PassParticle2Son( FaLv, FaPID );
 #  endif
 
 
@@ -811,9 +818,13 @@ int AllocateSonPatch( const int FaLv, const int *Cr, const int PScale, const int
 //                NewSonPID0_Real   : List recording the indices of all newly-allocated real patches 
 //                                    with LocalID==0
 //                SwitchIdx         : Element in NewSonPID0_Real to be reset
+//
+//                PARTICLE-only parameters (call-by-reference)
+//                RefineS2F_Send_NPatchTotal : Total number of patches for exchanging particles from fathers to sons
+//                RefineS2F_Send_PIDList     : Patch indices for exchanging particles from fathers to sons
 //-------------------------------------------------------------------------------------------------------
 void DeallocateSonPatch( const int FaLv, const int FaPID, const int NNew_Real0, int NewSonPID0_Real[], 
-                         int SwitchIdx )
+                         int SwitchIdx, int &RefineS2F_Send_NPatchTotal, int *&RefineS2F_Send_PIDList )
 {
 
    const int MirSib[26] = { 1,0,3,2,5,4,9,8,7,6,13,12,11,10,17,16,15,14,25,24,23,22,21,20,19,18 };
@@ -837,7 +848,19 @@ void DeallocateSonPatch( const int FaLv, const int FaPID, const int NNew_Real0, 
 // pass particles from sons to father
 #  ifdef PARTICLE
    Par_PassParticle2Father( FaLv, FaPID );
-#  endif
+
+// record the father patch indices for exchanging particles if they are buffer patches with particles
+   if ( FaPID >= amr->NPatchComma[FaLv][1]  &&  amr->patch[0][FaLv][FaPID]->NPar > 0 )
+   {
+#     ifdef DEBUG_PARTICLE
+      const int NFaBuff = amr->NPatchComma[FaLv][3] - amr->NPatchComma[FaLv][1];
+      if ( RefineS2F_Send_NPatchTotal >= NFaBuff )
+         Aux_Error( ERROR_INFO, "target index (%d) >= NFaBuff (%d) !!\n", RefineS2F_Send_NPatchTotal, NFaBuff );
+#     endif
+
+      RefineS2F_Send_PIDList[ RefineS2F_Send_NPatchTotal ++ ] = FaPID;
+   }
+#  endif // #ifdef PARTICLE
 
 
 // deallocate the unflagged child patches and reset sibling indices to -1

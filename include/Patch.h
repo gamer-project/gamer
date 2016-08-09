@@ -289,7 +289,7 @@ struct patch_t
       ParListSize  = 0;          // must be initialized as 0
       ParList      = NULL;
 
-      NPar_Copy    = -1;         // -1 : indicating that NPar_Copy is not calculated yet
+      NPar_Copy    = -1;         // -1 : indicating that it has not been calculated yet
 #     ifdef LOAD_BALANCE
       for (int v=0; v<4; v++)
       ParMassPos_Copy[v] = NULL;
@@ -299,7 +299,7 @@ struct patch_t
 
       for (int s=0; s<26; s++)
       {
-         NPar_Escp   [s] = -1;   // -1 : indicating that NPar_Escp is not calculated yet
+         NPar_Escp   [s] = -1;   // -1 : indicating that it has not been calculated yet
          ParList_Escp[s] = NULL;
       }
 #     endif
@@ -324,6 +324,25 @@ struct patch_t
 #     endif
 
 #     ifdef PARTICLE
+
+#     ifdef DEBUG_PARTICLE
+      if ( rho_ext != NULL )  Aux_Message( stderr, "WARNING : rho_ext != NULL !!\n" );
+      if ( ParList != NULL )  Aux_Message( stderr, "WARNING : ParList != NULL !!\n" );
+#     ifdef LOAD_BALANCE
+      for (int v=0; v<4; v++)
+      if ( ParMassPos_Copy[v] != NULL )   Aux_Message( stderr, "WARNING : ParMassPos_Copy[%d] != NULL !!\n", v );
+#     else
+      if ( ParList_Copy != NULL )         Aux_Message( stderr, "WARNING : ParList_Copy != NULL !!\n" );
+#     endif
+      for (int s=0; s<26; s++)
+      if ( ParList_Escp[s] != NULL )      Aux_Message( stderr, "WARNING : ParList_Escp[%d] != NULL !!\n", s );
+
+      if ( NPar != 0 )           Aux_Message( stderr, "NPar = %d != 0 !!\n", NPar );
+      if ( NPar_Copy != -1 )     Aux_Message( stderr, "NPar_Copy = %d != -1 !!\n", NPar_Copy );
+      for (int s=0; s<26; s++)
+      if ( NPar_Escp[s] != -1 )  Aux_Message( stderr, "NPar_Escp[%d] = %d != -1 !!\n", s, NPar_Escp[s] );
+#     endif // #ifdef DEBUG_PARTICLE
+
       if ( ParList != NULL )              free( ParList );
 
 #     ifdef LOAD_BALANCE
@@ -335,6 +354,7 @@ struct patch_t
 
       for (int s=0; s<26; s++)
       if ( ParList_Escp[s] != NULL )      free( ParList_Escp[s] );
+
 #     endif // #ifdef PARTICLE
 
    } // METHOD : ~patch_t

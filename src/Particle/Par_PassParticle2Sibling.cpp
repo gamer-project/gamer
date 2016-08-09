@@ -318,7 +318,7 @@ void Par_PassParticle2Sibling( const int lv )
       if ( amr->patch[0][lv][PID]->ParList_Escp[s] != NULL )   free( amr->patch[0][lv][PID]->ParList_Escp[s] );
 
       amr->patch[0][lv][PID]->ParList_Escp[s] = NULL;
-      amr->patch[0][lv][PID]->NPar_Escp   [s] = 0;
+      amr->patch[0][lv][PID]->NPar_Escp   [s] = -1;      // -1: indicate that it has not been calculated yet
    }
 
 } // FUNCTION : Par_PassParticle2Sibling

@@ -20,17 +20,33 @@
 void Par_PassParticle2Father( const int FaLv, const int FaPID )
 {
 
+#  ifdef DEBUG_PARTICLE
+   if ( FaLv < 0  ||  FaLv > TOP_LEVEL )
+      Aux_Error( ERROR_INFO, "incorrect FaLv = %d !!\n", FaLv );
+
+   if ( FaPID < 0  ||  FaPID >= amr->num[FaLv] )
+      Aux_Error( ERROR_INFO, "incorrect FaPID = %d (FaLv %d, NPatch %d) !!\n", FaPID, FaLv, amr->num[FaLv] );
+#  endif
+
+
    const int SonPID0 = amr->patch[0][FaLv][FaPID]->son;
    const int SonLv   = FaLv + 1;
 
 
+#  ifdef DEBUG_PARTICLE
+   if ( SonPID0 < -1 )
+      Aux_Error( ERROR_INFO, "This function does NOT work with sons living abroad (FaLv %d, FaPID %d, SonPID0 %d) !!\n",
+                 FaLv, FaPID, SonPID0 );
+#  endif
+
+
 // nothing to do if father has no son
-   if ( SonPID0 == -1  ||  FaLv == TOP_LEVEL )     return;
+   if ( SonPID0 == -1 )    return;
 
 
 // 1. get the total number of particles in all sons
    int NParSon = 0;
-   for (int SonPID=SonPID0; SonPID<SonPID0+8; SonPID++)        NParSon += amr->patch[0][SonLv][SonPID]->NPar;
+   for (int SonPID=SonPID0; SonPID<SonPID0+8; SonPID++)  NParSon += amr->patch[0][SonLv][SonPID]->NPar;
 
 
 // nothing to do if sons have no particles
