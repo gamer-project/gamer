@@ -304,7 +304,20 @@ void Par_PassParticle2Sibling( const int lv )
          FaLv,
          amr->Par->B2R_Buff_NPatchTotal[lv][1], amr->Par->B2R_Buff_PIDList[lv][1], amr->Par->B2R_Buff_NPatchEachRank[lv][1],
          amr->Par->B2R_Real_NPatchTotal[lv][1], amr->Par->B2R_Real_PIDList[lv][1], amr->Par->B2R_Real_NPatchEachRank[lv][1] );
+
+// 7-3. check: no buffer patches at lv and lv-1 can have particles at this point
+#  ifdef DEBUG_PARTICLE
+   for (int PID=amr->NPatchComma[lv][1]; PID<amr->NPatchComma[lv][3]; PID++)
+      if ( amr->patch[0][lv][PID]->NPar != 0 )
+         Aux_Error( ERROR_INFO, "Buffer patch has particles (lv %d, PID %d, NPar %d) !!\n",
+                    lv, PID, amr->patch[0][lv][PID]->NPar );
+   if ( FaLv >= 0 )
+   for (int FaPID=amr->NPatchComma[FaLv][1]; FaPID<amr->NPatchComma[FaLv][3]; FaPID++)
+      if ( amr->patch[0][FaLv][FaPID]->NPar != 0 )
+         Aux_Error( ERROR_INFO, "Buffer patch has particles (FaLv %d, FaPID %d, NPar %d) !!\n",
+                    FaLv, FaPID, amr->patch[0][FaLv][FaPID]->NPar );
 #  endif
+#  endif // #ifdef LOAD_BALANCE
 
 
 // 8. get the total number of active particles in all MPI ranks

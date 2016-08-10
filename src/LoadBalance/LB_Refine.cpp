@@ -131,8 +131,13 @@ void LB_Refine( const int FaLv )
 // 4.6 list for exchanging particles
 #  ifdef PARTICLE
    Par_LB_RecordExchangeParticlePatchID( SonLv );
+
    if ( SonLv < MAX_LEVEL )
    Par_LB_RecordExchangeParticlePatchID( SonLv+1 );
+
+// only for reconstructing the amr->Par->B2R_Real/Buffer_NPatchTotal[FaLv][0] lists
+   if ( FaLv >= 0 )
+   Par_LB_RecordExchangeParticlePatchID( FaLv );
 #  endif
 
 

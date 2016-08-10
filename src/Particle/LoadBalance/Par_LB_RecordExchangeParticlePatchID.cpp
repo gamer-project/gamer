@@ -39,7 +39,7 @@ extern void SetTargetSibPID0( const int lv, const int PID0, int SibPID0_List[] )
 //                            considers **leaf** real patches (since only these patches can have particles)
 //                        --> Therefore, B2R list is a subset of the R2B list
 //
-//                3. F2S : send particles from fathers (art MainLv-1) to sons (at MainLv)
+//                3. F2S : send particles from fathers (at MainLv-1) to sons (at MainLv)
 //                   3-1. Exact procedure is to sent particles from real father patches at MainLv-1 to the father-buffer
 //                        patches at MainLv, and then call Par_PassParticle2Son to transfer particles from father-buffer
 //                        patches to their real son patches in the same rank

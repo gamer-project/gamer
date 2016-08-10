@@ -63,6 +63,19 @@ void Par_PassParticle2Son_AllPatch( const int FaLv )
 
       Par_PassParticle2Son( FaLv, FaBufPID );
    }
+
+// check: neither non-leaf real patches nor buffer patches (either leaf of non-leaf) at FaLv can have particles at this point
+#  ifdef DEBUG_PARTICLE
+   for (int FaPID=0; FaPID<amr->NPatchComma[FaLv][1]; FaPID++)
+      if ( amr->patch[0][FaLv][FaPID]->son != -1  &&  amr->patch[0][FaLv][FaPID]->NPar != 0 )
+         Aux_Error( ERROR_INFO, "Non-leaf real patch has particles (FaLv %d, FaPID %d, NPar %d) !!\n",
+                    FaLv, FaPID, amr->patch[0][FaLv][FaPID]->NPar );
+
+   for (int FaPID=amr->NPatchComma[FaLv][1]; FaPID<amr->NPatchComma[FaLv][3]; FaPID++)
+      if ( amr->patch[0][FaLv][FaPID]->NPar != 0 )
+         Aux_Error( ERROR_INFO, "Buffer patch has particles (FaLv %d, FaPID %d, NPar %d) !!\n",
+                    FaLv, FaPID, amr->patch[0][FaLv][FaPID]->NPar );
+#  endif
 #  endif // #ifdef LOAD_BALANCE
 
 } // FUNCTION : Par_PassParticle2Son_AllPatch
