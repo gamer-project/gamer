@@ -241,8 +241,9 @@ void Par_LB_CollectParticleFromRealPatch( const int lv,
 
 
 // 3. send the number of particles and their attributes
-   const bool Exchange_NPatchEachRank_No = false;
-   const bool Exchange_LBIdxEachRank_No  = false;
+   const bool Exchange_NPatchEachRank_No   = false;
+   const bool Exchange_LBIdxEachRank_No    = false;
+   const bool Exchange_ParDataEachRank_Yes = true;
 
    int  *SendBuf_NPatchEachRank   = Real_NPatchEachRank;
    int  *RecvBuf_NPatchEachRank   = Buff_NPatchEachRank;
@@ -259,7 +260,7 @@ void Par_LB_CollectParticleFromRealPatch( const int lv,
       NParVar,
       SendBuf_NPatchEachRank, SendBuf_NParEachPatch, SendBuf_LBIdxEachRank, SendBuf_ParDataEachPatch,
       RecvBuf_NPatchEachRank, RecvBuf_NParEachPatch, RecvBuf_LBIdxEachRank, RecvBuf_ParDataEachPatch,
-      NRecvPatchTotal, NRecvParTotal, Exchange_NPatchEachRank_No, Exchange_LBIdxEachRank_No );
+      NRecvPatchTotal, NRecvParTotal, Exchange_NPatchEachRank_No, Exchange_LBIdxEachRank_No, Exchange_ParDataEachRank_Yes );
 
 #  ifdef DEBUG_PARTICLE
    if ( NRecvPatchTotal != Buff_NPatchTotal )

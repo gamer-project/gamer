@@ -37,8 +37,8 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
 
 
 // set sibling indices
-   const int SibID_Array[3][3][3]     = {  { {18, 10, 19}, {14,   4, 16}, {20, 11, 21} }, 
-                                           { { 6,  2,  7}, { 0, 999,  1}, { 8,  3,  9} }, 
+   const int SibID_Array[3][3][3]     = {  { {18, 10, 19}, {14,   4, 16}, {20, 11, 21} },
+                                           { { 6,  2,  7}, { 0, 999,  1}, { 8,  3,  9} },
                                            { {22, 12, 23}, {15,   5, 17}, {24, 13, 25} }  };
    const bool IntPhase_No             = false;                 // for invoking "Prepare_PatchData"
    const bool GetTotDens_No           = false;                 // for invoking "Prepare_PatchData"
@@ -59,11 +59,13 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
    const bool CheckFarAway_No         = false;
    const bool SibBufPatch_No          = false;
    const bool FaSibBufPatch_No        = false;
+   const bool JustCountNPar_Yes       = true;
+   const bool JustCountNPar_No        = false;
 #  endif
 
 //###NOTE: no refinement is allowed near the simulation boundary if the isolated BC for self-gravity is selected
 #  ifdef GRAVITY
-   const bool NoRefineNearBoundary    =  (  ( OPT__GRAVITY_TYPE == GRAVITY_SELF || OPT__GRAVITY_TYPE == GRAVITY_BOTH )  && 
+   const bool NoRefineNearBoundary    =  (  ( OPT__GRAVITY_TYPE == GRAVITY_SELF || OPT__GRAVITY_TYPE == GRAVITY_BOTH )  &&
                                             OPT__BC_POT == BC_POT_ISOLATED  ) ? true : false;
 #  else
    const bool NoRefineNearBoundary    = false;
@@ -98,11 +100,17 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
 
 // collect particles to **real** patches at lv
 #  ifdef PARTICLE
-   if ( OPT__FLAG_NPAR_CELL )    Par_CollectParticle2OneLevel( lv, PredictPos_No, NULL_REAL, SibBufPatch_No, FaSibBufPatch_No );
-#  endif
-      
+   if ( OPT__FLAG_NPAR_CELL )
+      Par_CollectParticle2OneLevel( lv, PredictPos_No, NULL_REAL, SibBufPatch_No, FaSibBufPatch_No, JustCountNPar_No );
 
-//###ISSUE: use atomic ??      
+// Par_CollectParticle2OneLevel with JustCountNPar_No will set NPar_Copy for each patch as well
+// --> so call Par_CollectParticle2OneLevel with JustCountNPar_Yes only when OPT__FLAG_NPAR_CELL == false
+   else if ( OPT__FLAG_NPAR_PATCH != 0 )
+      Par_CollectParticle2OneLevel( lv, PredictPos_No, NULL_REAL, SibBufPatch_No, FaSibBufPatch_No, JustCountNPar_Yes );
+#  endif
+
+
+//###ISSUE: use atomic ??
 #  pragma omp parallel
    {
       const real (*Fluid)[PS1][PS1][PS1] = NULL;
@@ -126,8 +134,8 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
       if ( OPT__FLAG_NPAR_CELL )    ParCount = new real [PS1][PS1][PS1];
 #     endif
 
-      if ( Lohner_NVar > 0 )    
-      { 
+      if ( Lohner_NVar > 0 )
+      {
          Lohner_Var   = new real [ 8*Lohner_NVar*Lohner_NCell *Lohner_NCell *Lohner_NCell  ]; // 8: number of local patches
          Lohner_Ave   = new real [ 3*Lohner_NVar*Lohner_NAve  *Lohner_NAve  *Lohner_NAve   ]; // 3: X/Y/Z of 1 patch
          Lohner_Slope = new real [ 3*Lohner_NVar*Lohner_NSlope*Lohner_NSlope*Lohner_NSlope ]; // 3: X/Y/Z of 1 patch
@@ -140,8 +148,8 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
       for (int PID0=0; PID0<amr->NPatchComma[lv][1]; PID0+=8)
       {
 //       prepare the ghost-zone data for Lohner
-         if ( Lohner_NVar > 0 )    
-            Prepare_PatchData( lv, Time[lv], Lohner_Var, Lohner_NGhost, NPG, &PID0, Lohner_TVar, 
+         if ( Lohner_NVar > 0 )
+            Prepare_PatchData( lv, Time[lv], Lohner_Var, Lohner_NGhost, NPG, &PID0, Lohner_TVar,
                                Lohner_IntScheme, UNIT_PATCH, NSIDE_26, IntPhase_No, OPT__BC_FLU, OPT__BC_POT, GetTotDens_No );
 
 
@@ -198,13 +206,13 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
                {
                   const real Gamma_m1 = GAMMA - (real)1.0;
                   real (*FluData)[PS1][PS1][PS1] = amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid;
-                  real Ek; 
+                  real Ek;
 
                   for (int k=0; k<PS1; k++)
                   for (int j=0; j<PS1; j++)
                   for (int i=0; i<PS1; i++)
                   {
-                     Ek = (real)0.5*( FluData[MOMX][k][j][i]*FluData[MOMX][k][j][i] + 
+                     Ek = (real)0.5*( FluData[MOMX][k][j][i]*FluData[MOMX][k][j][i] +
                                       FluData[MOMY][k][j][i]*FluData[MOMY][k][j][i] +
                                       FluData[MOMZ][k][j][i]*FluData[MOMZ][k][j][i] ) / FluData[DENS][k][j][i];
 
@@ -218,7 +226,7 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
 
 
 //             evaluate the averages and slopes along x/y/z for Lohner
-               if ( Lohner_NVar > 0 )    
+               if ( Lohner_NVar > 0 )
                   Prepare_for_Lohner( OPT__FLAG_LOHNER_FORM, Lohner_Var+LocalID*Lohner_Stride, Lohner_Ave, Lohner_Slope,
                                       Lohner_NVar );
 
@@ -228,14 +236,14 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
                if ( OPT__FLAG_NPAR_CELL )
                {
                   long  *ParList = NULL;
-                  int    NPar;
+                  int    NParThisPatch;
                   bool   UseInputMassPos;
                   real **InputMassPos = NULL;
 
 //                determine the number of particles and the particle list
                   if ( amr->patch[0][lv][PID]->son == -1 )
                   {
-                     NPar            = amr->patch[0][lv][PID]->NPar;
+                     NParThisPatch   = amr->patch[0][lv][PID]->NPar;
                      ParList         = amr->patch[0][lv][PID]->ParList;
                      UseInputMassPos = false;
                      InputMassPos    = NULL;
@@ -249,7 +257,7 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
 
                   else
                   {
-                     NPar            = amr->patch[0][lv][PID]->NPar_Copy;
+                     NParThisPatch   = amr->patch[0][lv][PID]->NPar_Copy;
 #                    ifdef LOAD_BALANCE
                      ParList         = NULL;
                      UseInputMassPos = true;
@@ -268,28 +276,28 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
                   }
 
 #                 ifdef DEBUG_PARTICLE
-                  if ( NPar < 0 )
+                  if ( NParThisPatch < 0 )
                      Aux_Error( ERROR_INFO, "NPar (%d) has not been calculated (lv %d, PID %d) !!\n",
-                                NPar, lv, PID );
+                                NParThisPatch, lv, PID );
 
-                  if ( NPar > 0 )
+                  if ( NParThisPatch > 0 )
                   {
                      if ( UseInputMassPos )
                      {
                         for (int v=0; v<4; v++)
                            if ( InputMassPos[v] == NULL )
                               Aux_Error( ERROR_INFO, "InputMassPos[%d] == NULL for NPar (%d) > 0 (lv %d, PID %d) !!\n",
-                                         v, NPar, lv, PID );
+                                         v, NParThisPatch, lv, PID );
                      }
 
                      else if ( !UseInputMassPos  &&  ParList == NULL )
                      Aux_Error( ERROR_INFO, "ParList == NULL for NPar (%d) > 0 (lv %d, PID %d) !!\n",
-                                NPar, lv, PID );
+                                NParThisPatch, lv, PID );
                   }
 #                 endif
 
 //                deposit particle mass onto grids (assuming unit density)
-                  Par_MassAssignment( ParList, NPar, PAR_INTERP_NGP, ParCount[0][0], PS1,
+                  Par_MassAssignment( ParList, NParThisPatch, PAR_INTERP_NGP, ParCount[0][0], PS1,
                                       amr->patch[0][lv][PID]->EdgeL, amr->dh[lv], PredictPos_No, NULL_REAL,
                                       InitZero_Yes, Periodic_No, NULL, UnitDens_Yes, CheckFarAway_No,
                                       UseInputMassPos, InputMassPos );
@@ -302,7 +310,7 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
                                              k_start = ( k - FLAG_BUFFER_SIZE < 0    ) ? 0 : 1;
                                              k_end   = ( k + FLAG_BUFFER_SIZE >= PS1 ) ? 2 : 1;
 
-               for (int j=0; j<PS1; j++)  {  if ( NextPatch )  break; 
+               for (int j=0; j<PS1; j++)  {  if ( NextPatch )  break;
                                              j_start = ( j - FLAG_BUFFER_SIZE < 0    ) ? 0 : 1;
                                              j_end   = ( j + FLAG_BUFFER_SIZE >= PS1 ) ? 2 : 1;
 
@@ -324,12 +332,12 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
                      {
                         SibID = SibID_Array[kk][jj][ii];
 
-                        if ( SibID != 999 )  
+                        if ( SibID != 999 )
                         {
                            SibPID = amr->patch[0][lv][PID]->sibling[SibID];
 
 #                          ifdef GAMER_DEBUG
-                           if ( SibPID == -1 )  
+                           if ( SibPID == -1 )
                               Aux_Error( ERROR_INFO, "SibPID == -1 --> proper-nesting check failed !!\n" );
 
                            if ( SibPID <= SIB_OFFSET_NONPERIODIC  &&  NoRefineNearBoundary )
@@ -352,12 +360,18 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
                if ( lv < MAX_LEVEL  &&  OPT__FLAG_NPAR_PATCH != 0 )
                {
                   const int NParFlag = FlagTable_NParPatch[lv];
-                  bool Flag;
+                  int NParThisPatch;
 
-                  if ( amr->patch[0][lv][PID]->son == -1 )  Flag = amr->patch[0][lv][PID]->NPar             > NParFlag;
-                  else                                      Flag = Par_CountParticleInDescendant( lv, PID ) > NParFlag;
+                  if ( amr->patch[0][lv][PID]->son == -1 )  NParThisPatch = amr->patch[0][lv][PID]->NPar;
+                  else                                      NParThisPatch = amr->patch[0][lv][PID]->NPar_Copy;
 
-                  if ( Flag )
+#                 ifdef DEBUG_PARTICLE
+                  if ( NParThisPatch < 0 )
+                     Aux_Error( ERROR_INFO, "NPar (%d) has not been calculated (lv %d, PID %d) !!\n",
+                                NParThisPatch, lv, PID );
+#                 endif
+
+                  if ( NParThisPatch > NParFlag )
                   {
 //                   flag itself
                      amr->patch[0][lv][PID]->flag = true;
@@ -369,8 +383,8 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
                         {
                            SibPID = amr->patch[0][lv][PID]->sibling[s];
 
-#                          ifdef GAMER_DEBUG
-                           if ( SibPID == -1 )  
+#                          ifdef DEBUG_PARTICLE
+                           if ( SibPID == -1 )
                               Aux_Error( ERROR_INFO, "SibPID == -1 --> proper-nesting check failed !!\n" );
 
                            if ( SibPID <= SIB_OFFSET_NONPERIODIC  &&  NoRefineNearBoundary )
@@ -380,7 +394,7 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
                            if ( SibPID >= 0 )   amr->patch[0][lv][SibPID]->flag = true;
                         }
                      }
-                  } // if ( Flag )
+                  } // if ( NParThisPatch > NParFlag  )
                } // if ( OPT__FLAG_NPAR_PATCH != 0 )
 #              endif // #ifdef PARTICLE
 
@@ -392,7 +406,7 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
       if ( Pres     != NULL )    delete [] Pres;
       if ( ParCount != NULL )    delete [] ParCount;
 
-      if ( Lohner_NVar > 0 )    
+      if ( Lohner_NVar > 0 )
       {
          delete [] Lohner_Var;
          delete [] Lohner_Ave;
@@ -404,7 +418,8 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
 
 // free memory allocated by Par_CollectParticle2OneLevel
 #  ifdef PARTICLE
-   if ( OPT__FLAG_NPAR_CELL )    Par_CollectParticle2OneLevel_FreeMemory( lv, SibBufPatch_No, FaSibBufPatch_No );
+   if ( OPT__FLAG_NPAR_CELL  ||  OPT__FLAG_NPAR_PATCH != 0 )
+      Par_CollectParticle2OneLevel_FreeMemory( lv, SibBufPatch_No, FaSibBufPatch_No );
 #  endif
 
 
@@ -441,16 +456,16 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
    } // for (int PID=0; PID<amr->num[lv]; PID++)
 
 
-// invoke the load-balance functions 
+// invoke the load-balance functions
 #  ifdef LOAD_BALANCE
    if ( UseLBFunc == USELB_YES )
    {
 //    grandson check
       if ( lv < NLEVEL-2 )    LB_GrandsonCheck( lv );
 
-//    exchange the flagged buffer patches 
-      LB_ExchangeFlaggedBuffer( lv );    
-    
+//    exchange the flagged buffer patches
+      LB_ExchangeFlaggedBuffer( lv );
+
       return;
    }
 #  endif
@@ -461,7 +476,7 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
 // grandson check
    if ( lv < NLEVEL-2 )
    {
-//###ISSUE: use atomic ??      
+//###ISSUE: use atomic ??
 //#     pragma omp parallel for private( SonPID )
       for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
       {
@@ -475,7 +490,7 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
                {
 //                flag the corresponding siblings of patch PID
                   Flag_Grandson( lv, PID, LocalID );
-   
+
 //                flag the patch PID
                   amr->patch[0][lv][PID]->flag = true;
                }
@@ -485,7 +500,7 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
    }  // if ( lv < NLEVEL-2 )
 
 
-// set up the BounFlag_NList and BounFlag_PosList 
+// set up the BounFlag_NList and BounFlag_PosList
    Buf_RecordBoundaryFlag( lv );
 
 } // FUNCTION : Flag_Real
@@ -498,7 +513,7 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
 //                condition is satisfied at level "lv+2"
 //
 // Note        :  Properly take care of the non-periodic BC where there are no buffer patches outside the simulation box
-//                and hence the proper-nesting constraint cannot be applied to the real patches adajacent to the simulation 
+//                and hence the proper-nesting constraint cannot be applied to the real patches adajacent to the simulation
 //                boundary (sibling index <= SIB_OFFSET_NONPERIODIC)
 //
 // Parameter   :  lv      : Targeted level to be flagged
@@ -522,7 +537,7 @@ void Flag_Grandson( const int lv, const int PID, const int LocalID )
          SibPID = amr->patch[0][lv][PID]->sibling[10];   if ( SibPID >= 0 )   amr->patch[0][lv][SibPID]->flag = true;
 
 #        ifdef GAMER_DEBUG
-         SibPID = amr->patch[0][lv][PID]->sibling[ 0];   if ( SibPID == -1 )  Aux_Error( ERROR_INFO, "SibPID == -1 !!\n" );  
+         SibPID = amr->patch[0][lv][PID]->sibling[ 0];   if ( SibPID == -1 )  Aux_Error( ERROR_INFO, "SibPID == -1 !!\n" );
          SibPID = amr->patch[0][lv][PID]->sibling[ 2];   if ( SibPID == -1 )  Aux_Error( ERROR_INFO, "SibPID == -1 !!\n" );
          SibPID = amr->patch[0][lv][PID]->sibling[ 4];   if ( SibPID == -1 )  Aux_Error( ERROR_INFO, "SibPID == -1 !!\n" );
          SibPID = amr->patch[0][lv][PID]->sibling[ 6];   if ( SibPID == -1 )  Aux_Error( ERROR_INFO, "SibPID == -1 !!\n" );
@@ -531,7 +546,7 @@ void Flag_Grandson( const int lv, const int PID, const int LocalID )
          SibPID = amr->patch[0][lv][PID]->sibling[10];   if ( SibPID == -1 )  Aux_Error( ERROR_INFO, "SibPID == -1 !!\n" );
 #        endif
          break;
-      
+
 
       case 1:
          SibPID = amr->patch[0][lv][PID]->sibling[ 1];   if ( SibPID >= 0 )   amr->patch[0][lv][SibPID]->flag = true;
@@ -543,7 +558,7 @@ void Flag_Grandson( const int lv, const int PID, const int LocalID )
          SibPID = amr->patch[0][lv][PID]->sibling[10];   if ( SibPID >= 0 )   amr->patch[0][lv][SibPID]->flag = true;
 
 #        ifdef GAMER_DEBUG
-         SibPID = amr->patch[0][lv][PID]->sibling[ 1];   if ( SibPID == -1 )  Aux_Error( ERROR_INFO, "SibPID == -1 !!\n" );  
+         SibPID = amr->patch[0][lv][PID]->sibling[ 1];   if ( SibPID == -1 )  Aux_Error( ERROR_INFO, "SibPID == -1 !!\n" );
          SibPID = amr->patch[0][lv][PID]->sibling[ 7];   if ( SibPID == -1 )  Aux_Error( ERROR_INFO, "SibPID == -1 !!\n" );
          SibPID = amr->patch[0][lv][PID]->sibling[19];   if ( SibPID == -1 )  Aux_Error( ERROR_INFO, "SibPID == -1 !!\n" );
          SibPID = amr->patch[0][lv][PID]->sibling[16];   if ( SibPID == -1 )  Aux_Error( ERROR_INFO, "SibPID == -1 !!\n" );
@@ -552,7 +567,7 @@ void Flag_Grandson( const int lv, const int PID, const int LocalID )
          SibPID = amr->patch[0][lv][PID]->sibling[10];   if ( SibPID == -1 )  Aux_Error( ERROR_INFO, "SibPID == -1 !!\n" );
 #        endif
          break;
-      
+
 
       case 2:
          SibPID = amr->patch[0][lv][PID]->sibling[ 3];   if ( SibPID >= 0 )   amr->patch[0][lv][SibPID]->flag = true;
@@ -564,7 +579,7 @@ void Flag_Grandson( const int lv, const int PID, const int LocalID )
          SibPID = amr->patch[0][lv][PID]->sibling[ 4];   if ( SibPID >= 0 )   amr->patch[0][lv][SibPID]->flag = true;
 
 #        ifdef GAMER_DEBUG
-         SibPID = amr->patch[0][lv][PID]->sibling[ 3];   if ( SibPID == -1 )  Aux_Error( ERROR_INFO, "SibPID == -1 !!\n" );  
+         SibPID = amr->patch[0][lv][PID]->sibling[ 3];   if ( SibPID == -1 )  Aux_Error( ERROR_INFO, "SibPID == -1 !!\n" );
          SibPID = amr->patch[0][lv][PID]->sibling[ 8];   if ( SibPID == -1 )  Aux_Error( ERROR_INFO, "SibPID == -1 !!\n" );
          SibPID = amr->patch[0][lv][PID]->sibling[11];   if ( SibPID == -1 )  Aux_Error( ERROR_INFO, "SibPID == -1 !!\n" );
          SibPID = amr->patch[0][lv][PID]->sibling[20];   if ( SibPID == -1 )  Aux_Error( ERROR_INFO, "SibPID == -1 !!\n" );
@@ -574,7 +589,7 @@ void Flag_Grandson( const int lv, const int PID, const int LocalID )
 #        endif
          break;
 
-      
+
       case 3:
          SibPID = amr->patch[0][lv][PID]->sibling[ 5];   if ( SibPID >= 0 )   amr->patch[0][lv][SibPID]->flag = true;
          SibPID = amr->patch[0][lv][PID]->sibling[15];   if ( SibPID >= 0 )   amr->patch[0][lv][SibPID]->flag = true;
@@ -585,7 +600,7 @@ void Flag_Grandson( const int lv, const int PID, const int LocalID )
          SibPID = amr->patch[0][lv][PID]->sibling[ 2];   if ( SibPID >= 0 )   amr->patch[0][lv][SibPID]->flag = true;
 
 #        ifdef GAMER_DEBUG
-         SibPID = amr->patch[0][lv][PID]->sibling[ 5];   if ( SibPID == -1 )  Aux_Error( ERROR_INFO, "SibPID == -1 !!\n" );  
+         SibPID = amr->patch[0][lv][PID]->sibling[ 5];   if ( SibPID == -1 )  Aux_Error( ERROR_INFO, "SibPID == -1 !!\n" );
          SibPID = amr->patch[0][lv][PID]->sibling[15];   if ( SibPID == -1 )  Aux_Error( ERROR_INFO, "SibPID == -1 !!\n" );
          SibPID = amr->patch[0][lv][PID]->sibling[12];   if ( SibPID == -1 )  Aux_Error( ERROR_INFO, "SibPID == -1 !!\n" );
          SibPID = amr->patch[0][lv][PID]->sibling[22];   if ( SibPID == -1 )  Aux_Error( ERROR_INFO, "SibPID == -1 !!\n" );
@@ -595,7 +610,7 @@ void Flag_Grandson( const int lv, const int PID, const int LocalID )
 #        endif
          break;
 
-      
+
       case 4:
          SibPID = amr->patch[0][lv][PID]->sibling[ 1];   if ( SibPID >= 0 )   amr->patch[0][lv][SibPID]->flag = true;
          SibPID = amr->patch[0][lv][PID]->sibling[21];   if ( SibPID >= 0 )   amr->patch[0][lv][SibPID]->flag = true;
@@ -606,7 +621,7 @@ void Flag_Grandson( const int lv, const int PID, const int LocalID )
          SibPID = amr->patch[0][lv][PID]->sibling[ 4];   if ( SibPID >= 0 )   amr->patch[0][lv][SibPID]->flag = true;
 
 #        ifdef GAMER_DEBUG
-         SibPID = amr->patch[0][lv][PID]->sibling[ 1];   if ( SibPID == -1 )  Aux_Error( ERROR_INFO, "SibPID == -1 !!\n" );  
+         SibPID = amr->patch[0][lv][PID]->sibling[ 1];   if ( SibPID == -1 )  Aux_Error( ERROR_INFO, "SibPID == -1 !!\n" );
          SibPID = amr->patch[0][lv][PID]->sibling[21];   if ( SibPID == -1 )  Aux_Error( ERROR_INFO, "SibPID == -1 !!\n" );
          SibPID = amr->patch[0][lv][PID]->sibling[ 9];   if ( SibPID == -1 )  Aux_Error( ERROR_INFO, "SibPID == -1 !!\n" );
          SibPID = amr->patch[0][lv][PID]->sibling[16];   if ( SibPID == -1 )  Aux_Error( ERROR_INFO, "SibPID == -1 !!\n" );
@@ -615,7 +630,7 @@ void Flag_Grandson( const int lv, const int PID, const int LocalID )
          SibPID = amr->patch[0][lv][PID]->sibling[ 4];   if ( SibPID == -1 )  Aux_Error( ERROR_INFO, "SibPID == -1 !!\n" );
 #        endif
          break;
-      
+
 
       case 5:
          SibPID = amr->patch[0][lv][PID]->sibling[ 0];   if ( SibPID >= 0 )   amr->patch[0][lv][SibPID]->flag = true;
@@ -627,7 +642,7 @@ void Flag_Grandson( const int lv, const int PID, const int LocalID )
          SibPID = amr->patch[0][lv][PID]->sibling[ 5];   if ( SibPID >= 0 )   amr->patch[0][lv][SibPID]->flag = true;
 
 #        ifdef GAMER_DEBUG
-         SibPID = amr->patch[0][lv][PID]->sibling[ 0];   if ( SibPID == -1 )  Aux_Error( ERROR_INFO, "SibPID == -1 !!\n" );  
+         SibPID = amr->patch[0][lv][PID]->sibling[ 0];   if ( SibPID == -1 )  Aux_Error( ERROR_INFO, "SibPID == -1 !!\n" );
          SibPID = amr->patch[0][lv][PID]->sibling[24];   if ( SibPID == -1 )  Aux_Error( ERROR_INFO, "SibPID == -1 !!\n" );
          SibPID = amr->patch[0][lv][PID]->sibling[ 8];   if ( SibPID == -1 )  Aux_Error( ERROR_INFO, "SibPID == -1 !!\n" );
          SibPID = amr->patch[0][lv][PID]->sibling[15];   if ( SibPID == -1 )  Aux_Error( ERROR_INFO, "SibPID == -1 !!\n" );
@@ -636,7 +651,7 @@ void Flag_Grandson( const int lv, const int PID, const int LocalID )
          SibPID = amr->patch[0][lv][PID]->sibling[ 5];   if ( SibPID == -1 )  Aux_Error( ERROR_INFO, "SibPID == -1 !!\n" );
 #        endif
          break;
-      
+
 
       case 6:
          SibPID = amr->patch[0][lv][PID]->sibling[ 1];   if ( SibPID >= 0 )   amr->patch[0][lv][SibPID]->flag = true;
@@ -648,7 +663,7 @@ void Flag_Grandson( const int lv, const int PID, const int LocalID )
          SibPID = amr->patch[0][lv][PID]->sibling[ 5];   if ( SibPID >= 0 )   amr->patch[0][lv][SibPID]->flag = true;
 
 #        ifdef GAMER_DEBUG
-         SibPID = amr->patch[0][lv][PID]->sibling[ 1];   if ( SibPID == -1 )  Aux_Error( ERROR_INFO, "SibPID == -1 !!\n" );  
+         SibPID = amr->patch[0][lv][PID]->sibling[ 1];   if ( SibPID == -1 )  Aux_Error( ERROR_INFO, "SibPID == -1 !!\n" );
          SibPID = amr->patch[0][lv][PID]->sibling[23];   if ( SibPID == -1 )  Aux_Error( ERROR_INFO, "SibPID == -1 !!\n" );
          SibPID = amr->patch[0][lv][PID]->sibling[ 7];   if ( SibPID == -1 )  Aux_Error( ERROR_INFO, "SibPID == -1 !!\n" );
          SibPID = amr->patch[0][lv][PID]->sibling[17];   if ( SibPID == -1 )  Aux_Error( ERROR_INFO, "SibPID == -1 !!\n" );
@@ -657,7 +672,7 @@ void Flag_Grandson( const int lv, const int PID, const int LocalID )
          SibPID = amr->patch[0][lv][PID]->sibling[ 5];   if ( SibPID == -1 )  Aux_Error( ERROR_INFO, "SibPID == -1 !!\n" );
 #        endif
          break;
-       
+
 
       case 7:
          SibPID = amr->patch[0][lv][PID]->sibling[ 1];   if ( SibPID >= 0 )   amr->patch[0][lv][SibPID]->flag = true;
@@ -669,7 +684,7 @@ void Flag_Grandson( const int lv, const int PID, const int LocalID )
          SibPID = amr->patch[0][lv][PID]->sibling[13];   if ( SibPID >= 0 )   amr->patch[0][lv][SibPID]->flag = true;
 
 #        ifdef GAMER_DEBUG
-         SibPID = amr->patch[0][lv][PID]->sibling[ 1];   if ( SibPID == -1 )  Aux_Error( ERROR_INFO, "SibPID == -1 !!\n" );  
+         SibPID = amr->patch[0][lv][PID]->sibling[ 1];   if ( SibPID == -1 )  Aux_Error( ERROR_INFO, "SibPID == -1 !!\n" );
          SibPID = amr->patch[0][lv][PID]->sibling[ 3];   if ( SibPID == -1 )  Aux_Error( ERROR_INFO, "SibPID == -1 !!\n" );
          SibPID = amr->patch[0][lv][PID]->sibling[ 5];   if ( SibPID == -1 )  Aux_Error( ERROR_INFO, "SibPID == -1 !!\n" );
          SibPID = amr->patch[0][lv][PID]->sibling[25];   if ( SibPID == -1 )  Aux_Error( ERROR_INFO, "SibPID == -1 !!\n" );
@@ -679,7 +694,7 @@ void Flag_Grandson( const int lv, const int PID, const int LocalID )
 #        endif
          break;
 
-      
+
       default:
          Aux_Error( ERROR_INFO, "incorrect parameter %s = %d !!\n", "LocalID", LocalID );
 

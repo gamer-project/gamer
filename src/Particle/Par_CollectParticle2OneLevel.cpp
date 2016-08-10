@@ -42,6 +42,10 @@ static void CollectParticle( const int FaLv, const int FaPID, int &NPar_SoFar, l
 //                   --> Moreover, if FaSibBufPatch is also on, it will also collect particles for
 //                       father-sibling-buffer patches at FaLv-1 (if FaLv > 0)
 //                       --> Useful for constructing the density field at FaLv for the Poisson solver at FaLv
+//                8. Option "JustCountNPar" can be used to count the number of particles in each real patch at FaLv
+//                   --> Do NOT collect particle indices
+//                       --> ParList_Copy will NOT be allocated
+//                   --> Particle count is stored in NPar_Copy
 //
 // Parameter   :  FaLv           : Target refinement leve
 //                PredictPos     : true --> Predict particle position to TargetTime (for LOAD_BALANCE only)
@@ -50,18 +54,20 @@ static void CollectParticle( const int FaLv, const int FaPID, int &NPar_SoFar, l
 //                                          (for LOAD_BALANCE only)
 //                FaSibBufPatch  : true --> Collect particles for father-sibling-buffer patches at FaLv-1 as well
 //                                          (do nothing if FaLv==0) (for LOAD_BALANCE only)
+//                JustCountNPar  : Just count the number of particles in each real patch at FaLv. Don't collect
+//                                 particle indices (or collect particle mass and position for LOAD_BALANCE)
 //
-// Return      :  NPar_Copy and ParList_Copy for all non-leaf real patches at FaLv
+// Return      :  NPar_Copy and ParList_Copy (if JustCountNPar == false) for all non-leaf real patches at FaLv
 //-------------------------------------------------------------------------------------------------------
 void Par_CollectParticle2OneLevel( const int FaLv, const bool PredictPos, const double TargetTime,
-                                   const bool SibBufPatch, const bool FaSibBufPatch )
+                                   const bool SibBufPatch, const bool FaSibBufPatch, const bool JustCountNPar )
 {
 
 // call the parallel version instead
 #  ifdef LOAD_BALANCE
 // note that if SibBufPatch or FaSibBufPatch is on, we need to call Par_LB_CollectParticle2OneLevel
 // even when FaLv == MAX_LEVEL
-   Par_LB_CollectParticle2OneLevel( FaLv, PredictPos, TargetTime, SibBufPatch, FaSibBufPatch );
+   Par_LB_CollectParticle2OneLevel( FaLv, PredictPos, TargetTime, SibBufPatch, FaSibBufPatch, JustCountNPar );
 
    return;
 
@@ -86,6 +92,7 @@ void Par_CollectParticle2OneLevel( const int FaLv, const bool PredictPos, const 
 
 
 //    nothing to do if this father has no son
+//    --> leaf patches will always have NPar_Copy == -1
       if ( amr->patch[0][FaLv][FaPID]->son == -1 )    continue;
 
 
@@ -109,8 +116,8 @@ void Par_CollectParticle2OneLevel( const int FaLv, const bool PredictPos, const 
 #     endif
 
 
-//    3. nothing to do if this patch has no particles at all
-      if ( amr->patch[0][FaLv][FaPID]->NPar_Copy == 0 )  continue;
+//    3. nothing to do if we only want to count particles (or if this patch has no particles at all)
+      if ( JustCountNPar  ||  amr->patch[0][FaLv][FaPID]->NPar_Copy == 0 )    continue;
 
 
 //    4. allocate the array ParList_Copy
@@ -156,8 +163,7 @@ void Par_CollectParticle2OneLevel( const int FaLv, const bool PredictPos, const 
 //                   "Par_LB_CollectParticle2OneLevel_FreeMemory"
 //
 // Parameter   :  FaLv           : Target refinement leve
-//                SibBufPatch    : true --> Release memory for sibling-buffer patches at FaLv as well
-//                                          (for LOAD_BALANCE only)
+//                SibBufPatch    : true --> Release memory for sibling-buffer patches at FaLv as well (for LOAD_BALANCE only)
 //                FaSibBufPatch  : true --> Release memory for father-sibling-buffer patches at FaLv-1 as well
 //                                          (do nothing if FaLv==0) (for LOAD_BALANCE only)
 //

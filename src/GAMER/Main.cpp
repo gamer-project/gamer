@@ -387,15 +387,17 @@ int main( int argc, char *argv[] )
 //       collect particles to the target level
 #        ifdef PARTICLE
 #        ifdef LOAD_BALANCE
-         const bool PredictPos    = amr->Par->PredictPos;
-         const bool SibBufPatch   = true;
-         const bool FaSibBufPatch = true;
+         const bool PredictPos       = amr->Par->PredictPos;
+         const bool SibBufPatch      = true;
+         const bool FaSibBufPatch    = true;
+         const bool JustCountNPar_No = false;
 #        else
-         const bool PredictPos    = false;
-         const bool SibBufPatch   = NULL_BOOL;
-         const bool FaSibBufPatch = NULL_BOOL;
+         const bool PredictPos       = false;
+         const bool SibBufPatch      = NULL_BOOL;
+         const bool FaSibBufPatch    = NULL_BOOL;
+         const bool JustCountNPar_No = false;
 #        endif
-         Par_CollectParticle2OneLevel( lv, PredictPos, Time[lv], SibBufPatch, FaSibBufPatch );
+         Par_CollectParticle2OneLevel( lv, PredictPos, Time[lv], SibBufPatch, FaSibBufPatch, JustCountNPar_No );
 #        endif
 
          if ( lv == 0 )    

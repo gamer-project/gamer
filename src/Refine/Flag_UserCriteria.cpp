@@ -62,13 +62,6 @@ bool Flag_UserCriteria( const int i, const int j, const int k, const int lv, con
 
    Flag = Radius < Threshold;
    */
-
-
-   /*
-// Example 3 : flag if there is any particle within the patch
-   if ( amr->patch[0][lv][PID]->son == -1 )     Flag = amr->patch[0][lv][PID]->NPar > 0;
-   else                                         Flag = Par_CountParticleInDescendant( lv, PID ) > 0;
-   */
 // ##########################################################################################################
 
 

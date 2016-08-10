@@ -38,6 +38,13 @@
 //                       father-sibling-buffer patches at FaLv-1 (if FaLv > 0)
 //                       --> Useful for constructing the density field at FaLv for the Poisson solver at FaLv
 //                       --> These data will be stored in NPar_Copy and ParMassPos_Copy as well
+//                7. Option "JustCountNPar" can be used to count the number of particles in each real patch at FaLv
+//                   --> Do NOT collect other particle data (e.g., particle mass and position)
+//                   --> Particle count is stored in NPar_Copy
+//                   --> ParMassPos_Copy will NOT be allocated
+//                   --> Currently it does NOT work with the options SibBufPatch and FaSibBufPatch
+//                       --> It only counts particles for **real** patches at FaLv
+//                   --> Does NOT work with "PredictPos"
 //
 // Parameter   :  FaLv           : Father's refinement level
 //                PredictPos     : Predict particle position, which is useful for particle mass assignement
@@ -47,13 +54,15 @@
 //                SibBufPatch    : true --> Collect particles for sibling-buffer patches at FaLv as well
 //                FaSibBufPatch  : true --> Collect particles for father-sibling-buffer patches at FaLv-1 as well
 //                                          (do nothing if FaLv==0)
+//                JustCountNPar  : Just count the number of particles in each real patch at FaLv. Don't collect
+//                                 other particle data (e.g., particle mass and position)
 //
-// Return      :  NPar_Copy and ParMassPos_Copy array for all non-leaf patches at FaLv
+// Return      :  NPar_Copy and ParMassPos_Copy array (if JustCountNPar == false) for all non-leaf patches at FaLv
 //                (and for sibling-buffer patches at FaLv if SibBufPatch is on, and for father-sibling-buffer
 //                patches at FaLv-1 if FaSibBufPatch is on and FaLv>0)
 //-------------------------------------------------------------------------------------------------------
 void Par_LB_CollectParticle2OneLevel( const int FaLv, const bool PredictPos, const double TargetTime,
-                                      const bool SibBufPatch, const bool FaSibBufPatch )
+                                      const bool SibBufPatch, const bool FaSibBufPatch, const bool JustCountNPar )
 {
 
 // nothing to do for levels above the max level
@@ -71,6 +80,13 @@ void Par_LB_CollectParticle2OneLevel( const int FaLv, const bool PredictPos, con
 #  endif
 
 #  ifdef DEBUG_PARTICLE
+   if ( JustCountNPar )
+   {
+      if ( PredictPos )       Aux_Error( ERROR_INFO, "JustCountNPar does NOT work with PredictPos !!\n" );
+      if ( SibBufPatch )      Aux_Error( ERROR_INFO, "JustCountNPar does NOT work with SibBufPatch !!\n" );
+      if ( FaSibBufPatch )    Aux_Error( ERROR_INFO, "JustCountNPar does NOT work with FaSibBufPatch !!\n" );
+   }
+
    for (int FaPID=0; FaPID<amr->NPatchComma[FaLv][1]; FaPID++)
    {
       if ( amr->patch[0][FaLv][FaPID]->NPar_Copy != -1 )
@@ -88,10 +104,11 @@ void Par_LB_CollectParticle2OneLevel( const int FaLv, const bool PredictPos, con
 
 
 // 0. jump to step 5 if the target level is the maximum level --> just collect particles for buffer patches
+//    (note that we don't have to set NPar_Copy here since leaf real patches always have NPar_Copy == -1)
    if ( FaLv == MAX_LEVEL )
    {
 //    0-1. sibling-buffer patches at FaLv
-      if ( SibBufPatch )
+      if ( SibBufPatch  &&  !JustCountNPar )
          Par_LB_CollectParticleFromRealPatch(
             FaLv,
             amr->Par->R2B_Buff_NPatchTotal[FaLv][0], amr->Par->R2B_Buff_PIDList[FaLv][0], amr->Par->R2B_Buff_NPatchEachRank[FaLv][0],
@@ -99,7 +116,7 @@ void Par_LB_CollectParticle2OneLevel( const int FaLv, const bool PredictPos, con
             PredictPos, TargetTime );
 
 //    0-2. father-sibling-buffer patches at FaLv-1
-      if ( FaSibBufPatch  &&  FaLv > 0 )
+      if ( FaSibBufPatch  &&  FaLv > 0  &&  !JustCountNPar )
          Par_LB_CollectParticleFromRealPatch(
             FaLv-1,
             amr->Par->R2B_Buff_NPatchTotal[FaLv][1], amr->Par->R2B_Buff_PIDList[FaLv][1], amr->Par->R2B_Buff_NPatchEachRank[FaLv][1],
@@ -107,11 +124,10 @@ void Par_LB_CollectParticle2OneLevel( const int FaLv, const bool PredictPos, con
             PredictPos, TargetTime );
 
       return;
-   }
+   } // if ( FaLv == MAX_LEVEL )
 
 
 // 1. prepare the send buffers
-// these arrays (except NParForEachRank) will be deallocated by Par_LB_SendParticleData
    int  *NParForEachRank          = new int [MPI_NRank];
    int  *NPatchForEachRank        = new int [MPI_NRank];
    int  *SendBuf_NPatchEachRank   = NPatchForEachRank;
@@ -176,13 +192,14 @@ void Par_LB_CollectParticle2OneLevel( const int FaLv, const bool PredictPos, con
 
    SendBuf_NParEachPatch    = new int  [NSendPatchTotal];
    SendBuf_LBIdxEachPatch   = new long [NSendPatchTotal];
+   if ( !JustCountNPar )
    SendBuf_ParDataEachPatch = new real [ NSendParTotal*NParVar ];
 
 
 // 1-3. set the array offsets of each send buffer
    int *Offset_NParEachPatch    = new int [MPI_NRank];
    int *Offset_LBIdxEachPatch   = Offset_NParEachPatch;
-   int *Offset_ParDataEachPatch = new int [MPI_NRank];
+   int *Offset_ParDataEachPatch = new int [MPI_NRank];   // actually useless in the JustCountNPar mode
 
    Offset_NParEachPatch   [0] = 0;
    Offset_ParDataEachPatch[0] = 0;
@@ -229,6 +246,7 @@ void Par_LB_CollectParticle2OneLevel( const int FaLv, const bool PredictPos, con
       SendBuf_NParEachPatch [ Offset_NParEachPatch[TRank] ] = NParThisPatch;
       SendBuf_LBIdxEachPatch[ Offset_NParEachPatch[TRank] ] = LB_Idx;
 
+      if ( !JustCountNPar )
       for (int p=0; p<NParThisPatch; p++)
       {
          ParID = amr->patch[0][lv][PID]->ParList[p];
@@ -275,18 +293,20 @@ void Par_LB_CollectParticle2OneLevel( const int FaLv, const bool PredictPos, con
 // 2-1. exchange data
    const bool Exchange_NPatchEachRank_Yes = true;
    const bool Exchange_LBIdxEachRank_Yes  = true;
+   const bool Exchange_ParDataEachRank    = !JustCountNPar;
    int NRecvPatchTotal, NRecvParTotal;
 
 // note that Par_LB_SendParticleData will also return the total number of patches and particles received (using call by reference)
    Par_LB_SendParticleData( NParVar, SendBuf_NPatchEachRank, SendBuf_NParEachPatch, SendBuf_LBIdxEachPatch,
                             SendBuf_ParDataEachPatch, RecvBuf_NPatchEachRank, RecvBuf_NParEachPatch,
                             RecvBuf_LBIdxEachPatch, RecvBuf_ParDataEachPatch, NRecvPatchTotal, NRecvParTotal,
-                            Exchange_NPatchEachRank_Yes, Exchange_LBIdxEachRank_Yes );
+                            Exchange_NPatchEachRank_Yes, Exchange_LBIdxEachRank_Yes, Exchange_ParDataEachRank );
 
 // 2-2. free memory
    delete [] SendBuf_NPatchEachRank;
    delete [] SendBuf_NParEachPatch;
    delete [] SendBuf_LBIdxEachPatch;
+   if ( !JustCountNPar )
    delete [] SendBuf_ParDataEachPatch;
 
 
@@ -305,7 +325,7 @@ void Par_LB_CollectParticle2OneLevel( const int FaLv, const bool PredictPos, con
 
 // 3-2. get the number of particles to be allocated for each patch (note that there may be duplicate LBIdx)
 //      (also construct the list mapping array index to PID)
-   int *FaPIDList = new int [NRecvPatchTotal];
+   int *FaPIDList = new int [NRecvPatchTotal];  // actually useless in the JustCountNPar mode
    int  RecvBuf_Idx;
 
 // initialize NPar_Copy as NPar (instead of 0) for non-leaf real patches
@@ -349,6 +369,7 @@ void Par_LB_CollectParticle2OneLevel( const int FaLv, const bool PredictPos, con
 
 
 // 3-3. allocate the ParMassPos_Copy array for each patch
+   if ( !JustCountNPar )
    for (int FaPID=0; FaPID<amr->NPatchComma[FaLv][1]; FaPID++)
    {
       if ( amr->patch[0][FaLv][FaPID]->NPar_Copy > 0 )
@@ -367,6 +388,7 @@ void Par_LB_CollectParticle2OneLevel( const int FaLv, const bool PredictPos, con
    const real *RecvPtr = RecvBuf_ParDataEachPatch;
    int NPar_Copy_Old;
 
+   if ( !JustCountNPar )
    for (int t=0; t<NRecvPatchTotal; t++)
    {
       FaPID_Match   = FaPIDList[t];
@@ -423,6 +445,7 @@ void Par_LB_CollectParticle2OneLevel( const int FaLv, const bool PredictPos, con
 // 4. add particles temporarily residing in this patch to the ParMassPos_Copy array
    int idx;
 
+   if ( !JustCountNPar )
    for (int FaPID=0; FaPID<amr->NPatchComma[FaLv][1]; FaPID++)
    {
       if ( amr->patch[0][FaLv][FaPID]->son != -1  &&  amr->patch[0][FaLv][FaPID]->NPar > 0 )
@@ -478,7 +501,7 @@ void Par_LB_CollectParticle2OneLevel( const int FaLv, const bool PredictPos, con
 
 // 6. collect particles for buffer patches
 // 6-1. sibling-buffer patches at FaLv
-   if ( SibBufPatch )
+   if ( SibBufPatch  &&  !JustCountNPar )
       Par_LB_CollectParticleFromRealPatch(
          FaLv,
          amr->Par->R2B_Buff_NPatchTotal[FaLv][0], amr->Par->R2B_Buff_PIDList[FaLv][0], amr->Par->R2B_Buff_NPatchEachRank[FaLv][0],
@@ -486,7 +509,7 @@ void Par_LB_CollectParticle2OneLevel( const int FaLv, const bool PredictPos, con
          PredictPos, TargetTime );
 
 // 6-2. father-sibling-buffer patches at FaLv-1
-   if ( FaSibBufPatch  &&  FaLv > 0 )
+   if ( FaSibBufPatch  &&  FaLv > 0  &&  !JustCountNPar )
       Par_LB_CollectParticleFromRealPatch(
          FaLv-1,
          amr->Par->R2B_Buff_NPatchTotal[FaLv][1], amr->Par->R2B_Buff_PIDList[FaLv][1], amr->Par->R2B_Buff_NPatchEachRank[FaLv][1],
@@ -498,6 +521,7 @@ void Par_LB_CollectParticle2OneLevel( const int FaLv, const bool PredictPos, con
    delete [] RecvBuf_NPatchEachRank;
    delete [] RecvBuf_NParEachPatch;
    delete [] RecvBuf_LBIdxEachPatch;
+   if ( !JustCountNPar )
    delete [] RecvBuf_ParDataEachPatch;
 
    delete [] NParForEachRank;
@@ -517,7 +541,7 @@ void Par_LB_CollectParticle2OneLevel( const int FaLv, const bool PredictPos, con
 //
 // Note        :  1. Invoded by Par_CollectParticle2OneLevel_FreeMemory
 //
-// Parameter   :  lv           : Target refinement level
+// Parameter   :  lv             : Target refinement level
 //                SibBufPatch    : true --> Release memory for sibling-buffer patches at lv as well
 //                FaSibBufPatch  : true --> Release memory for father-sibling-buffer patches at lv-1 as well
 //                                          (do nothing if lv==0)
