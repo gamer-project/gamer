@@ -846,6 +846,12 @@ void LB_RedistributeParticle_End( real **ParVar_Old, real **Passive_Old )
    if ( amr->Par->NPar_AcPlusInac != amr->Par->NPar_Active )
       Aux_Error( ERROR_INFO, "NPar_AcPlusInac (%ld) != NPar_Active (%ld) !!\n", amr->Par->NPar_AcPlusInac, amr->Par->NPar_Active );
 
+   long NPar_Lv_Sum=0;
+   for (int lv=0; lv<NLEVEL; lv++)  NPar_Lv_Sum += amr->Par->NPar_Lv[lv];
+
+   if ( NPar_Lv_Sum != amr->Par->NPar_Active )
+      Aux_Error( ERROR_INFO, "NPar_Lv_Sum (%ld) != expect (%ld) !!\n", NPar_Lv_Sum, amr->Par->NPar_Active );
+
 #  ifdef DEBUG_PARTICLE
    long NPar_Active_AllRank_Check;
 

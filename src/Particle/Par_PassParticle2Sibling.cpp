@@ -38,6 +38,7 @@ void Par_PassParticle2Sibling( const int lv )
    const double BoxEdge[3]       = { (NX0_TOT[0]*(1<<TOP_LEVEL))*dh_min,
                                      (NX0_TOT[1]*(1<<TOP_LEVEL))*dh_min,
                                      (NX0_TOT[2]*(1<<TOP_LEVEL))*dh_min }; // prevent from the round-off error problem
+// ParPos should NOT be used after calling Par_LB_ExchangeParticleBetweenPatch since amr->Par->ParVar may be reallocated
    real *ParPos[3]               = { amr->Par->PosX, amr->Par->PosY, amr->Par->PosZ };
 
    int     NPar_Remove_Tot=0;
@@ -168,6 +169,17 @@ void Par_PassParticle2Sibling( const int lv )
             if ( amr->Par->Mass[ParID] < 0.0 )
                Aux_Error( ERROR_INFO, "Storing escaping particles which have been removed (lv %d, PID %d, TSib %d, ParID %d) !!\n",
                           lv, PID, TSib, ParID );
+
+//          usually it happens when particle position is NaN
+            if ( amr->patch[0][lv][PID]->sibling[TSib] < -1 )
+            {
+               Aux_Message( stderr, "ERROR : This particle lies outside the simulation box (lv %d, PID %d, TSib %d, sib %d, ParID %ld) !!\n",
+                            lv, PID, TSib, amr->patch[0][lv][PID]->sibling[TSib], ParID );
+               Aux_Message( stderr, "        --> ParPos = (%21.14e, %21.14e, %21.14e)\n",
+                            ParPos[0][ParID], ParPos[1][ParID], ParPos[2][ParID] );
+               Output_Patch( lv, PID, amr->FluSg[lv], amr->PotSg[lv], "debug" );
+               MPI_Exit();
+            }
 #           endif
          } // else if ( TSib != -1 )
       } // for (int p=0; p<NPar; p++)

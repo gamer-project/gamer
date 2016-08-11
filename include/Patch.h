@@ -608,7 +608,7 @@ struct patch_t
 
          for (int d=0; d<3; d++)
          {
-            if ( ParPos[d][ParID] < EdgeL[d]  ||  ParPos[d][ParID] >= EdgeR[d] )
+            if ( ParPos[d][ParID] != ParPos[d][ParID]  ||  ParPos[d][ParID] < EdgeL[d]  ||  ParPos[d][ParID] >= EdgeR[d] )
                Aux_Error( ERROR_INFO, "\"%s\": wrong home patch (L/R edge = %13.6e/%13.6e, pos[%d][%d] = %13.6e) !!\n",
                           Comment, EdgeL[d], EdgeR[d], d, ParID, ParPos[d][ParID] );
          }

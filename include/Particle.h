@@ -329,38 +329,29 @@ struct Particle_t
       for (int lv=0; lv<NLEVEL; lv++)
       {
          for (int t=0; t<2; t++) {
-         if ( R2B_Real_NPatchEachRank[lv][t] != NULL )   delete [] R2B_Real_NPatchEachRank[lv][t];
-         if ( R2B_Buff_NPatchEachRank[lv][t] != NULL )   delete [] R2B_Buff_NPatchEachRank[lv][t];
+            if ( R2B_Real_NPatchEachRank[lv][t] == NULL )   R2B_Real_NPatchEachRank[lv][t] = new int [NRank];
+            if ( R2B_Buff_NPatchEachRank[lv][t] == NULL )   R2B_Buff_NPatchEachRank[lv][t] = new int [NRank];
 
-         R2B_Real_NPatchEachRank[lv][t] = new int [NRank];
-         R2B_Buff_NPatchEachRank[lv][t] = new int [NRank];
-
-         for (int r=0; r<NRank; r++)
-         {
-            R2B_Real_NPatchEachRank[lv][t][r] = 0;
-            R2B_Buff_NPatchEachRank[lv][t][r] = 0;
-         }
+            for (int r=0; r<NRank; r++)
+            {
+               R2B_Real_NPatchEachRank[lv][t][r] = 0;
+               R2B_Buff_NPatchEachRank[lv][t][r] = 0;
+            }
 
 
-         if ( B2R_Real_NPatchEachRank[lv][t] != NULL )   delete [] B2R_Real_NPatchEachRank[lv][t];
-         if ( B2R_Buff_NPatchEachRank[lv][t] != NULL )   delete [] B2R_Buff_NPatchEachRank[lv][t];
+            if ( B2R_Real_NPatchEachRank[lv][t] == NULL )   B2R_Real_NPatchEachRank[lv][t] = new int [NRank];
+            if ( B2R_Buff_NPatchEachRank[lv][t] == NULL )   B2R_Buff_NPatchEachRank[lv][t] = new int [NRank];
 
-         B2R_Real_NPatchEachRank[lv][t] = new int [NRank];
-         B2R_Buff_NPatchEachRank[lv][t] = new int [NRank];
-
-         for (int r=0; r<NRank; r++)
-         {
-            B2R_Real_NPatchEachRank[lv][t][r] = 0;
-            B2R_Buff_NPatchEachRank[lv][t][r] = 0;
-         }
-         } // for (int t=0; t<2; t++) {
+            for (int r=0; r<NRank; r++)
+            {
+               B2R_Real_NPatchEachRank[lv][t][r] = 0;
+               B2R_Buff_NPatchEachRank[lv][t][r] = 0;
+            }
+         } // for (int t=0; t<2; t++)
 
 
-         if ( F2S_Send_NPatchEachRank[lv] != NULL )      delete [] F2S_Send_NPatchEachRank[lv];
-         if ( F2S_Recv_NPatchEachRank[lv] != NULL )      delete [] F2S_Recv_NPatchEachRank[lv];
-
-         F2S_Send_NPatchEachRank[lv] = new int [NRank];
-         F2S_Recv_NPatchEachRank[lv] = new int [NRank];
+         if ( F2S_Send_NPatchEachRank[lv] == NULL )   F2S_Send_NPatchEachRank[lv] = new int [NRank];
+         if ( F2S_Recv_NPatchEachRank[lv] == NULL )   F2S_Recv_NPatchEachRank[lv] = new int [NRank];
 
          for (int r=0; r<NRank; r++)
          {
@@ -416,6 +407,13 @@ struct Particle_t
 #     if ( NPAR_PASSIVE > 0 )
       if ( NewPassive == NULL )  Aux_Error( ERROR_INFO, "NewVar == NULL !!\n" );
 #     endif
+      if ( NewVar[PAR_MASS] < (real)0.0 )
+         Aux_Error( ERROR_INFO, "Adding an inactive particle (mass = %21.14e) !!\n", NewVar[PAR_MASS] );
+      if ( NewVar[PAR_POSX] != NewVar[PAR_POSX] ||
+           NewVar[PAR_POSY] != NewVar[PAR_POSY] ||
+           NewVar[PAR_POSZ] != NewVar[PAR_POSZ]   )
+         Aux_Error( ERROR_INFO, "Adding a particle with strange position (%21.14e, %21.14e, %21.14e) !!\n",
+                    NewVar[PAR_POSX], NewVar[PAR_POSY], NewVar[PAR_POSZ] );
 #     endif
 
 
