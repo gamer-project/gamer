@@ -264,7 +264,7 @@ void Par_UpdateParticle( const int lv, const double TimeNew, const double TimeOl
 
          if ( !UseStoredAcc )
          {
-            for (int d=0; d<3; d++)    
+            for (int d=0; d<3; d++)
             {
                PhyCorner_ExtAcc[d] = amr->patch[0][lv][PID]->EdgeL[d] + (0.5-ParGhost)*dh;
                PhyCorner_ExtPot[d] = amr->patch[0][lv][PID]->EdgeL[d] + (0.5-PotGhost)*dh;
@@ -345,7 +345,7 @@ void Par_UpdateParticle( const int lv, const double TimeNew, const double TimeOl
             else if ( UpdateStep == PAR_UPSTEP_CORR )
             {
 //             during the prediction step, we store particle time as -0.5*dt (which must be < 0.0) to indicate that
-//             these particles require velocity correction 
+//             these particles require velocity correction
                dt_half = -ParTime[ParID];
 
                if ( dt_half <= (real)0.0 )   continue;
@@ -368,7 +368,7 @@ void Par_UpdateParticle( const int lv, const double TimeNew, const double TimeOl
 
 //             calculate the nearest grid index
                if ( !UseStoredAcc )
-               for (int d=0; d<3; d++)    
+               for (int d=0; d<3; d++)
                {
                   idx[d] = int( ( ParPos[d][ParID] - amr->patch[0][lv][PID]->EdgeL[d] )*_dh );
 
@@ -431,7 +431,7 @@ void Par_UpdateParticle( const int lv, const double TimeNew, const double TimeOl
 
 //                prevent from round-off errors
 //                (CIC should be clear off this issue unless round-off erros are comparable to dh)
-                  if ( idxLR[0][d] < 0 )  
+                  if ( idxLR[0][d] < 0 )
                   {
 #                    ifdef DEBUG_PARTICLE
                      if (  ! Mis_CompareRealValue( ParPos[d][ParID], (real)amr->patch[0][lv][PID]->EdgeL[d], NULL, false )  )

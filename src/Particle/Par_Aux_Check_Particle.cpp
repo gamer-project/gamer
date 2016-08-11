@@ -8,18 +8,18 @@
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Par_Aux_Check_Particle
-// Description :  Verify that 
+// Description :  Verify that
 //                1.   particles reside in their home patches
 //                2.   particles always reside in the leaf patches
 //                3.   there are no missing or redundant particles
 //                4.   no active particles have mass=-1.0
 //                5/6. each particle has one and only one home patch
 //                7.   NPar_AcPlusInac == NPar_Active + NPar_Inactive
-//                8.   NPar_Active_AllRank = sum(NPar_Active, All ranks) 
+//                8.   NPar_Active_AllRank = sum(NPar_Active, All ranks)
 //                9.   NPar_Active = sum(NPar_Lv, all levels)
 //                10.  All patches have NPar_Copy == -1
 //
-// Note        :  None 
+// Note        :  None
 //
 // Parameter   :  comment  : You can put the location where this function is invoked in this string
 //-------------------------------------------------------------------------------------------------------
@@ -59,7 +59,7 @@ void Par_Aux_Check_Particle( const char *comment )
          {
             NParThisPatch = amr->patch[0][lv][PID]->NPar;
 
-            if ( amr->patch[0][lv][PID]->son == -1 )  
+            if ( amr->patch[0][lv][PID]->son == -1 )
             {
 //             count the number of particles in the leaf patches
                NParInLeaf += NParThisPatch;
@@ -109,12 +109,12 @@ void Par_Aux_Check_Particle( const char *comment )
 
                         if ( PassCheck[0] )
                         {
-                           Aux_Message( stderr, "Check 1: %4s  %2s  %7s  %10s  %3s  %20s  %20s  %20s\n", 
+                           Aux_Message( stderr, "Check 1: %4s  %2s  %7s  %10s  %3s  %20s  %20s  %20s\n",
                                         "Rank", "Lv", "PID", "ParID", "Dim", "EdgeL", "EdgeR", "ParPos"  );
                            PassCheck[0] = false;
                         }
 
-                        Aux_Message( stderr, "Check 1: %4d  %2d  %7d  %10ld  %3d  %20.13e  %20.13e  %20.13e\n", 
+                        Aux_Message( stderr, "Check 1: %4d  %2d  %7d  %10ld  %3d  %20.13e  %20.13e  %20.13e\n",
                                      MPI_Rank, lv, PID, ParID, d, EdgeL[d], EdgeR[d], ParPos[d][ParID] );
                      }
                   } // for (int d=0; d<3; d++)
@@ -131,12 +131,12 @@ void Par_Aux_Check_Particle( const char *comment )
 
                      if ( PassCheck[3] )
                      {
-                        Aux_Message( stderr, "Check 4: %4s  %2s  %7s  %10s  %20s  %20s  %20s  %20s\n", 
+                        Aux_Message( stderr, "Check 4: %4s  %2s  %7s  %10s  %20s  %20s  %20s  %20s\n",
                                      "Rank", "Lv", "PID", "ParID", "PosX", "PosY", "PosZ", "Mass"  );
                         PassCheck[3] = false;
                      }
 
-                     Aux_Message( stderr, "Check 4: %4d  %2d  %7d  %10ld  %20.13e  %20.13e  %20.13e  %20.13e\n", 
+                     Aux_Message( stderr, "Check 4: %4d  %2d  %7d  %10ld  %20.13e  %20.13e  %20.13e  %20.13e\n",
                                   MPI_Rank, lv, PID, ParID, ParPos[0][ParID], ParPos[1][ParID], ParPos[2][ParID],
                                   amr->Par->Mass[ParID] );
                   }
@@ -295,11 +295,11 @@ void Par_Aux_Check_Particle( const char *comment )
       MPI_Barrier( MPI_COMM_WORLD );
 
    } // for (int TargetRank=0; TargetRank<MPI_NRank; TargetRank++)
-   
+
 
    if ( PassAll )
    {
-      if ( MPI_Rank == 0 )   
+      if ( MPI_Rank == 0 )
          Aux_Message( stdout, "\"%s\" : <%s> PASSED at Time = %13.7e, Step = %ld\n", comment, __FUNCTION__, Time[0], Step );
    }
 

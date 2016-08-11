@@ -8,7 +8,7 @@
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Par_FindHomePatch_Base
-// Description :  Find the particle's home patch at the base level 
+// Description :  Find the particle's home patch at the base level
 //
 // Note        :  1. This function use the array "BaseP" to find the home patch
 //                   --> It should NOT be used for LOAD_BALANCE except during the initialization
@@ -30,7 +30,7 @@ void Par_FindHomePatch_Base( const int *BaseP )
 
 
    const double PS0  = PS1*amr->dh[0];                               // base-level patch size
-   const int  NP0[3] = { NX0[0]/PS1+4, NX0[1]/PS1+4, NX0[2]/PS1+4 }; // number of base-level patches including 
+   const int  NP0[3] = { NX0[0]/PS1+4, NX0[1]/PS1+4, NX0[2]/PS1+4 }; // number of base-level patches including
                                                                      // 2 buffer patches on each sides
 
 // 1D -> 3D array
@@ -59,7 +59,7 @@ void Par_FindHomePatch_Base( const int *BaseP )
 
 
 //       1. evaluate the relative particle position and get the corresponding array indices in BaseP3D
-         for (int d=0; d<3; d++)    
+         for (int d=0; d<3; d++)
          {
 #           ifdef SERIAL
             dr [d] = Pos[d][ParID];
@@ -71,7 +71,7 @@ void Par_FindHomePatch_Base( const int *BaseP )
 #           ifdef DEBUG_PARTICLE
 //          check: whether the array index is within the correct range
             if ( ijk[d] < 2  ||  ijk[d] > NP0[d]-3 )
-               Aux_Error( ERROR_INFO, "particle (%ld) lies outside the target sub-domain (ijk[%d] = %d) !!\n", 
+               Aux_Error( ERROR_INFO, "particle (%ld) lies outside the target sub-domain (ijk[%d] = %d) !!\n",
                           ParID, d, ijk[d] );
 #           endif // #ifdef DEBUG_PARTICLE
 
@@ -117,7 +117,7 @@ void Par_FindHomePatch_Base( const int *BaseP )
                   Aux_Message( stderr, "WARNING : correct home patch has been found (PID %d)\n", SibPID );
                   for (int dd=0; dd<3; dd++)
                   Aux_Message( stderr, "          L/R edge[%d] %13.7e/%13.7e, particle pos[%d] %13.7e\n",
-                               dd, amr->patch[0][0][SibPID]->EdgeL[dd], amr->patch[0][0][SibPID]->EdgeR[dd], 
+                               dd, amr->patch[0][0][SibPID]->EdgeL[dd], amr->patch[0][0][SibPID]->EdgeR[dd],
                                dd, Pos[dd][ParID] );
 
                   TPID = SibPID;
@@ -134,7 +134,7 @@ void Par_FindHomePatch_Base( const int *BaseP )
 //       check: whether the particle indeed lies in the target home patch
          for (int d=0; d<3; d++)
          {
-            if ( Pos[d][ParID] <  amr->patch[0][0][TPID]->EdgeL[d]  ||  
+            if ( Pos[d][ParID] <  amr->patch[0][0][TPID]->EdgeL[d]  ||
                  Pos[d][ParID] >= amr->patch[0][0][TPID]->EdgeR[d]     )
                Aux_Error( ERROR_INFO, "wrong home patch (PID %d, L/R edge %13.7e/%13.7e, particle pos[%d][%d] %13.7e) !!\n",
                           TPID, amr->patch[0][0][TPID]->EdgeL[d], amr->patch[0][0][TPID]->EdgeR[d], d, ParID, Pos[d][ParID] );
@@ -146,8 +146,8 @@ void Par_FindHomePatch_Base( const int *BaseP )
 #        endif // #ifdef DEBUG_PARTICLE
 
 
-//       4-Stage0. count the accumulated number of particles 
-         if ( Stage == 0 )    NParList[TPID] ++; 
+//       4-Stage0. count the accumulated number of particles
+         if ( Stage == 0 )    NParList[TPID] ++;
 
 //       4-Stage1. store the particle index into the particle list
          else

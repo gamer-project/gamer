@@ -8,7 +8,7 @@
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Par_Aux_InitCheck
-// Description :  Check the initial condition of particles 
+// Description :  Check the initial condition of particles
 //
 // Note        :  1. Invoked by "Init_GAMER"
 //                2. Check if all particles lie within the simulation box

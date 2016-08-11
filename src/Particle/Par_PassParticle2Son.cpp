@@ -8,7 +8,7 @@
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Par_PassParticle2Son
-// Description :  Pass particles from father to sons 
+// Description :  Pass particles from father to sons
 //
 // Note        :  1. After calling this function, father patch will have no particles (NPar == 0)
 //                   --> Particles should always reside in "leaf" patches
@@ -43,9 +43,9 @@ void Par_PassParticle2Son( const int FaLv, const int FaPID )
 
 
 // 1. allocate the new particle list for each son
-   long *NewListForSon[8]; 
+   long *NewListForSon[8];
    int   NNewForSon[8];
-   for (int LocalID=0; LocalID<8; LocalID++)    
+   for (int LocalID=0; LocalID<8; LocalID++)
    {
       NewListForSon[LocalID] = new long [NPar];    // this is the maximum array size required
       NNewForSon   [LocalID] = 0;

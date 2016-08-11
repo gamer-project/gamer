@@ -11,20 +11,26 @@ extern double ExtPot_AuxArray[EXT_POT_NAUX_MAX];
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Par_GetEnergy
-// Description :  Calculate particles kinematic and potential energy  
+// Description :  Calculate particles kinematic and potential energy
 //
 // Note        :  1. Use "call by reference" to return Ek and Ep
-//                2. Return Ep=0.0 if GRAVITY is off  
+//                2. Return Ep=0.0 if GRAVITY is off
 //                3. External potential is included, but external acceleration is NOT included
 //                4. Particles may NOT be full synchronized when calculating their energies
 //                   --> But it is found to have a minimal effect since most particles are synchronized
 //                   --> We don't want to synchronize particles in this routine (by calling Par_Synchronize)
 //                       since particles may move outside the current patch which requires additional workload
-// 
+//                5. Results obtained from serial (with SERIAL on) and parallel codes (with LOAD_BALANCE) on
+//                   can be slightly different due to round-off errors
+//                   --> We do not correct it even in the debug mode because it should have no impact on the
+//                       actual simulation variables
+//                   --> Different number of OpenMP threads can also results in different results again
+//                       due to round-off errors
+//
 // Parameter   :  Ek :  Total kinematic energy to be returned
 //                Ep :  Total potential energy to be returned
 //
-// Return      :  Ek, Ep 
+// Return      :  Ek, Ep
 //-------------------------------------------------------------------------------------------------------
 void Par_GetEnergy( double &Ek, double &Ep )
 {
@@ -116,7 +122,7 @@ void Par_GetEnergy( double &Ek, double &Ep )
 #     pragma omp for schedule( static ) reduction( +:Ep_local )
       for (int PID0=0; PID0<amr->NPatchComma[lv][1]; PID0+=8)
       {
-//       2-1. find the patch groups with particles 
+//       2-1. find the patch groups with particles
 //       --> use patch group as the calculation unit since "Prepare_PatchData" only work with patch group
 //       --> some patches may not have particles ...
          GotYou = false;
@@ -165,7 +171,7 @@ void Par_GetEnergy( double &Ek, double &Ep )
          {
             if ( amr->patch[0][lv][PID]->NPar == 0 )  continue;   // skip patches with no particles
 
-            for (int d=0; d<3; d++)    
+            for (int d=0; d<3; d++)
                PhyCorner_ExtPot[d] = amr->patch[0][lv][PID]->EdgeL[d] + ( 0.5 - PotGhost )*dh;
 
 //          2-3. external potential (currently useful only for ELBDM)
@@ -193,7 +199,7 @@ void Par_GetEnergy( double &Ek, double &Ep )
                      ParID = amr->patch[0][lv][PID]->ParList[p];
 
 //                   calculate the nearest grid index
-                     for (int d=0; d<3; d++)    
+                     for (int d=0; d<3; d++)
                      {
                         idx[d] = int( ( Pos[d][ParID] - amr->patch[0][lv][PID]->EdgeL[d] )*_dh );
 
@@ -249,7 +255,7 @@ void Par_GetEnergy( double &Ek, double &Ep )
 
 //                      prevent from round-off errors
 //                      (CIC should be clear off this issue unless round-off erros are comparable to dh)
-                        if ( idxLR[0][d] < 0 )  
+                        if ( idxLR[0][d] < 0 )
                         {
 #                          ifdef DEBUG_PARTICLE
                            if (  ! Mis_CompareRealValue( Pos[d][ParID], (real)amr->patch[0][lv][PID]->EdgeL[d], NULL, false )  )

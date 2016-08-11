@@ -8,7 +8,7 @@
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Par_Init_Function
-// Description :  Initialize the particle position and velocity 
+// Description :  Initialize the particle position and velocity
 //
 // Note        :  1. Invoked by "Init_GAMER"
 //                2. Periodicity should be taken care of in this function
@@ -36,7 +36,7 @@ void Par_Init_Function()
 
 // ============================================================================================================
 // exmaple : randomly initialize
-   /* 
+   /*
    const uint RSeed     = 2;                                         // random seed
    const real MassMin   = TINY_VALUE;                                // minimum value of particle mass
    const real MassMax   = 1.0;                                       // maximum value of particle mass

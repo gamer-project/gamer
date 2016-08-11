@@ -8,7 +8,7 @@
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Par_Aux_GetParticleLevel
-// Description :  Record the number of active particles at each level 
+// Description :  Record the number of active particles at each level
 //
 // Note        :  1. Output filename is "Record__ParLevel"
 //                2. It will also check whether the sum of the numbers of active particles

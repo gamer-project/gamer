@@ -6,7 +6,7 @@
 
 // static global variables
 static double CurrentSyncTime   = -1.0;
-static long   Backup_NPar       = -1; 
+static long   Backup_NPar       = -1;
 static long  *Backup_ParID      = NULL;
 static real (*Backup_ParVar)[7] = NULL;
 
@@ -94,7 +94,7 @@ int Par_Synchronize( const double SyncTime, const ParSync_t SyncOption )
          if ( SyncOption == PAR_SYNC_TEMP )
          {
 //          allocate enough memory for the backup array
-            if ( Backup_NPar >= MemSize )  
+            if ( Backup_NPar >= MemSize )
             {
                MemSize      += MemUnit;
                Backup_ParID  = ( long *      )realloc( Backup_ParID,    MemSize*sizeof(long) );

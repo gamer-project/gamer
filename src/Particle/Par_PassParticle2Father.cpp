@@ -56,11 +56,11 @@ void Par_PassParticle2Father( const int FaLv, const int FaPID )
 // 2. gather the particle lists from all sons
    long *ParListSon = new long [NParSon];
    int  t = 0;
-   for (int SonPID=SonPID0; SonPID<SonPID0+8; SonPID++)  
+   for (int SonPID=SonPID0; SonPID<SonPID0+8; SonPID++)
    for (int p=0; p<amr->patch[0][SonLv][SonPID]->NPar; p++)    ParListSon[ t++ ] = amr->patch[0][SonLv][SonPID]->ParList[p];
 
 
-// 3. add particles to father 
+// 3. add particles to father
 //###NOTE : No OpenMP since AddParticle will modify amr->Par->NPar_Lv[]
 #  ifdef DEBUG_PARTICLE
    const real *ParPos[3] = { amr->Par->PosX, amr->Par->PosY, amr->Par->PosZ };
