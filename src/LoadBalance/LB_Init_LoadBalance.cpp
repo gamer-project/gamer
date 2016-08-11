@@ -366,7 +366,8 @@ void LB_RedistributeRealPatch( const int lv, real **ParVar_Old, real **Passive_O
 #  endif
 
 #  ifdef PARTICLE
-   const int NParVar = NPAR_VAR + NPAR_PASSIVE;
+   const int  NParVar           = NPAR_VAR + NPAR_PASSIVE;
+   const bool RemoveAllParticle = true;
 
    int  NSend_Total_ParData, NRecv_Total_ParData;
    long ParID;
@@ -550,12 +551,16 @@ void LB_RedistributeRealPatch( const int lv, real **ParVar_Old, real **Passive_O
 #     ifdef PARTICLE
       Counter_ParData[TRank] += amr->patch[0][lv][PID]->NPar*NParVar;
 
-//    free particle variables to avoid warning messages when deleting patches with particles
-      amr->patch[0][lv][PID]->NPar = 0;
-      free( amr->patch[0][lv][PID]->ParList );
-      amr->patch[0][lv][PID]->ParList = NULL;
+//    detach particles from patches to avoid warning messages when deleting patches with particles
+      amr->patch[0][lv][PID]->RemoveParticle( NULL_INT, NULL, &amr->Par->NPar_Lv[lv], RemoveAllParticle );
 #     endif
    } // for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
+
+// check if all particles are detached from patches at lv
+#  ifdef DEBUG_PARTICLE
+   if ( amr->Par->NPar_Lv[lv] != 0 )
+      Aux_Error( ERROR_INFO, "NPar_Lv[%d] = %ld != 0 !!\n", lv, amr->Par->NPar_Lv[lv] );
+#  endif
 
 
 // 4. delete old patches and allocate the MPI recv buffers
@@ -662,29 +667,26 @@ void LB_RedistributeRealPatch( const int lv, real **ParVar_Old, real **Passive_O
 #  endif
 
 
-// 7. reset particle parameters and reassign particle attribute arrays
+// 7. reset particle parameters and add particles to the particle repository
 // ==========================================================================================
-   real *RecvPtr = NULL;
+   const real *RecvPtr = NULL;
 
 #  ifdef PARTICLE
-// record the updated number of particles
-   const long NPar_AcPlusInac_Previous = amr->Par->NPar_AcPlusInac;
-   amr->Par->NPar_AcPlusInac += NRecv_Total_ParData / NParVar;
+   const long NParToBeAdded = NRecv_Total_ParData / NParVar;
+   const long NParPrevious  = amr->Par->NPar_AcPlusInac;
 
-// reset NPar_Lv since AddParticle will update it later
-   amr->Par->NPar_Lv[lv] = 0;
+#  ifdef DEBUG_PARTICLE
+   if ( NParPrevious + NParToBeAdded > amr->Par->ParListSize )
+      Aux_Error( ERROR_INFO, "NParExpect (%ld) >= ParListSize (%ld) !!\n",
+                 NParPrevious + NParToBeAdded, amr->Par->ParListSize );
+#  endif
 
-// assign particle attribute arrays
+// add particles to the repository
    RecvPtr = RecvBuf_ParData;
-   for (long p=NPar_AcPlusInac_Previous; p<amr->Par->NPar_AcPlusInac; p++)
+   for (long p=0; p<NParToBeAdded; p++)
    {
-#     ifdef DEBUG_PARTICLE
-      if ( p >= amr->Par->ParListSize )
-         Aux_Error( ERROR_INFO, "p (%ld) >= ParListSize (%ld) !!\n", p, amr->Par->ParListSize );
-#     endif
-
-      for (int v=0; v<NPAR_VAR; v++)      amr->Par->ParVar [v][p] = *RecvPtr++;
-      for (int v=0; v<NPAR_PASSIVE; v++)  amr->Par->Passive[v][p] = *RecvPtr++;
+      amr->Par->AddOneParticle( RecvPtr, RecvPtr+NPAR_VAR );
+      RecvPtr += NParVar;
    }
 
 // free memory
@@ -710,7 +712,7 @@ void LB_RedistributeRealPatch( const int lv, real **ParVar_Old, real **Passive_O
    for (int t=0; t<NRecv_Total_Patch; t++)   ParListSizeMax = MAX( ParListSizeMax, RecvBuf_NPar[t] );
 
    ParList = new long [ParListSizeMax];
-   ParID   = NPar_AcPlusInac_Previous;
+   ParID   = NParPrevious;
 #  endif
 
    for (int PID0=0; PID0<NRecv_Total_Patch; PID0+=8)
@@ -763,7 +765,7 @@ void LB_RedistributeRealPatch( const int lv, real **ParVar_Old, real **Passive_O
          char Comment[100];
          sprintf( Comment, "%s, PID %d, NPar %d", __FUNCTION__, PID, RecvBuf_NPar[PID] );
          amr->patch[0][lv][PID]->AddParticle( RecvBuf_NPar[PID], ParList, &amr->Par->NPar_Lv[lv],
-                                              (const real **)ParPos, amr->Par->NPar_AcPlusInac, Comment );
+                                              ParPos, amr->Par->NPar_AcPlusInac, Comment );
 #        else
          amr->patch[0][lv][PID]->AddParticle( RecvBuf_NPar[PID], ParList, &amr->Par->NPar_Lv[lv] );
 #        endif
@@ -875,8 +877,11 @@ void LB_RedistributeParticle_Init( real **ParVar_Old, real **Passive_Old )
    amr->Par->NPar_AcPlusInac = Recv_NPar_Sum;
    amr->Par->InitVar( MPI_NRank );
 
-// reset the total number of particles to be zero since we will update it again when calling LB_RedistributeRealPatch
+// reset the total number of particles to be zero
+// --> so particle attribute arrays (i.e., ParVar and Passive) are pre-allocated, but it contain no active particle yet
+// --> we will add active particles in LB_RedistributeRealPatch
    amr->Par->NPar_AcPlusInac = 0;
+   amr->Par->NPar_Active     = 0;
 
 } // FUNCTION : LB_RedistributeParticle_Init
 
