@@ -40,7 +40,7 @@ void Par_Output_Particle( const char *FileName )
 
       fprintf( File, "#Time %20.14e   Step %13ld   Active Particles %13ld\n\n",
                Time[0], Step, amr->Par->NPar_Active_AllRank );
-      fprintf( File, "#%9s  %21s  %21s  %21s  %21s  %21s  %21s  %21s  %21s", "ID", "Mass", "X", "Y", "Z", "Vx", "Vy", "Vz", "Time" );
+      fprintf( File, "#  %20s  %21s  %21s  %21s  %21s  %21s  %21s  %21s", "Mass", "X", "Y", "Z", "Vx", "Vy", "Vz", "Time" );
 #     ifdef STORE_PAR_ACC
       fprintf( File, "  %21s  %21s  %21s", "AccX", "AccY", "AccZ" );
 #     endif
@@ -63,8 +63,6 @@ void Par_Output_Particle( const char *FileName )
          {
 //          skip inactive particles
             if ( amr->Par->Mass[p] < 0.0 )   continue;
-
-            fprintf( File, "%10ld", ParID_Offset + p );
 
             for (int v=0; v<NPAR_VAR;     v++)     fprintf(  File, "  %21.14e", amr->Par->ParVar [v][p] );
             for (int v=0; v<NPAR_PASSIVE; v++)     fprintf(  File, "  %21.14e", amr->Par->Passive[v][p] );
