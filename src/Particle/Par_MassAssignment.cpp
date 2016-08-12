@@ -30,6 +30,12 @@ static bool FarAwayParticle( real ParPosX, real ParPosY, real ParPosZ, const boo
 //                   two patches (i.e., one patch group) along one direction (i.e., NX0_TOT[0/1/2] = 2*PATCH_SIZE)
 //                   --> It is because for that extreme case we need to consider both the target particles and their
 //                       image particles when assigning mass to a single array (Rho), which is not considered here!
+//                6. In debug mode, particles are sorted according to their x and y coordinates before mass deposition
+//                   --> Ensure the same round-off errors when running with different number of nodes
+//                   --> Note that currently we do not sort particles with their z coordinate
+//                       --> So if there are particles with exactly the same x and y coordinates, the order of mass
+//                           deposition for these particles are not specified
+//                           --> Can lead to different round-off errors
 //
 // Parameter   :  ParList         : List of target particle IDs
 //                NPar            : Number of particles
@@ -143,16 +149,51 @@ void Par_MassAssignment( const long *ParList, const long NPar, const ParInterp_t
 // 3-half: sort particles by their x coordinates to fix the order of mass assignment
 //         --> in order to have the same round-off errors in serial and parallel runs
 //             for ensuring reproducibility in the debug mode
+//         --> for particles with the same x coordinates, sort them by y coordinates further
 #  ifdef DEBUG_PARTICLE
    real *PosX_tmp      = new real [NPar];
-   int  *Sort_IdxTable = new int  [NPar];
+   int  *Sort_IdxTable = new int  [NPar];    // it will actually fail if "long" is required for NPar
+   long  NParSameX, Idx0;
 
    memcpy( PosX_tmp, Pos[0], sizeof(real)*NPar );
 
    Mis_Heapsort( NPar, PosX_tmp, Sort_IdxTable );
 
+// sort by y further
+   for (long t=0; t<NPar-1; t++)
+   {
+      NParSameX = 1;    // 1 --> itself
+      Idx0      = t;
+
+//    find all particles with the same x coordinate
+      while ( Idx0+NParSameX<NPar  &&  PosX_tmp[Idx0] == PosX_tmp[Idx0+NParSameX] )    NParSameX ++;
+
+      if ( NParSameX > 1 )
+      {
+         int  *SortByX_IdxTable = new int  [NParSameX];
+         int  *SortByY_IdxTable = new int  [NParSameX];
+         real *PosY_tmp         = new real [NParSameX];
+
+         for (long m=0; m<NParSameX; m++)
+         {
+            SortByX_IdxTable[m] = Sort_IdxTable[ Idx0 + m ];
+            PosY_tmp        [m] = Pos[1][ SortByX_IdxTable[m] ];
+         }
+
+         Mis_Heapsort( NParSameX, PosY_tmp, SortByY_IdxTable );
+
+         for (long m=0; m<NParSameX; m++)    Sort_IdxTable[ Idx0 + m ] = SortByX_IdxTable[ SortByY_IdxTable[m] ];
+
+         t += NParSameX - 1;
+
+         delete [] SortByX_IdxTable;
+         delete [] SortByY_IdxTable;
+         delete [] PosY_tmp;
+      } // if ( NParSameX > 1 )
+   } // for (long t=0; t<NPar-1; t++)
+
    delete [] PosX_tmp;
-#  endif
+#  endif // #ifdef DEBUG_PARTICLE
 
 
 // 4. deposit particle mass
