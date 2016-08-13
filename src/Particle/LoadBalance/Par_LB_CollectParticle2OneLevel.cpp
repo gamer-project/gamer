@@ -455,9 +455,9 @@ void Par_LB_CollectParticle2OneLevel( const int FaLv, const bool PredictPos, con
             ParID = amr->patch[0][FaLv][FaPID]->ParList[p];
             idx   = amr->patch[0][FaLv][FaPID]->NPar_Copy + p;
 
-//          4-1. check if this particle is indeed waiting for the velocity correction (i.e., ParTime = -dt_half < 0.0)
+//          4-1. check if this particle is indeed waiting for the velocity correction (i.e., ParTime = -dt_half < 0.0 for KDK)
 #           ifdef DEBUG_PARTICLE
-            if ( amr->Par->Time[ParID] >= (real)0.0 )
+            if ( amr->Par->Integ == PAR_INTEG_KDK  &&  amr->Par->Time[ParID] >= (real)0.0 )
                Aux_Error( ERROR_INFO, "This particle shouldn't be here (FaLv %d, FaPID %d, ParID %ld, ParTime %21.14e) !!\n",
                           FaLv, FaPID, ParID, amr->Par->Time[ParID] );
 #           endif

@@ -163,7 +163,8 @@ void Par_GetEnergy( double &Ek, double &Ep )
             else
 #           endif
                Prepare_PatchData( lv, PrepPotTime, Pot, PotGhost, 1, &PID0, _POTE,
-                                  OPT__GRA_INT_SCHEME, UNIT_PATCH, NSIDE_26, IntPhase_No, FluBC_None, OPT__BC_POT, GetTotDens_No );
+                                  OPT__GRA_INT_SCHEME, UNIT_PATCH, (PotGhost==0)?NSIDE_00:NSIDE_26, IntPhase_No, FluBC_None,
+                                  OPT__BC_POT, GetTotDens_No );
          } // if ( OPT__GRAVITY_TYPE == GRAVITY_SELF  ||  OPT__GRAVITY_TYPE == GRAVITY_BOTH )
 
 

@@ -104,7 +104,8 @@ void Par_CollectParticle2OneLevel( const int FaLv, const bool PredictPos, const 
       amr->patch[0][FaLv][FaPID]->NPar_Copy += amr->patch[0][FaLv][FaPID]->NPar;
 
 #     ifdef DEBUG_PARTICLE
-//    check if these particles are indeed waiting for the velocity correction (i.e., ParTime = -dt_half < 0.0)
+//    check if these particles are indeed waiting for the velocity correction (i.e., ParTime = -dt_half < 0.0 for KDK)
+      if ( amr->Par->Integ == PAR_INTEG_KDK )
       for (int p=0; p<amr->patch[0][FaLv][FaPID]->NPar; p++)
       {
          const long ParID = amr->patch[0][FaLv][FaPID]->ParList[p];
