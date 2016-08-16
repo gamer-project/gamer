@@ -430,8 +430,8 @@ void Aux_TakeNote()
 #     endif // #ifdef GPU
       fprintf( Note, "#define TINY_VALUE        %13.7e\n",  TINY_VALUE              );
 #     ifdef PARTICLE
-      fprintf( Note, "#define NPAR_VAR          %d\n",      NPAR_VAR                );
-      fprintf( Note, "#define NPAR_PASSIVE      %d\n",      NPAR_PASSIVE            );
+      fprintf( Note, "#define PAR_NVAR          %d\n",      PAR_NVAR                );
+      fprintf( Note, "#define PAR_NPASSIVE      %d\n",      PAR_NPASSIVE            );
 #     endif
       fprintf( Note, "***********************************************************************************\n" );
       fprintf( Note, "\n\n");

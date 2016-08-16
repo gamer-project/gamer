@@ -117,8 +117,8 @@ struct Particle_t
    bool        PredictPos;
    double      RemoveCell;
    int         GhostSize;
-   real       *ParVar [NPAR_VAR    ];
-   real       *Passive[NPAR_PASSIVE];
+   real       *ParVar [PAR_NVAR    ];
+   real       *Passive[PAR_NPASSIVE];
    long       *InactiveParList;
 
 #  ifdef LOAD_BALANCE
@@ -182,8 +182,8 @@ struct Particle_t
 
       for (int lv=0; lv<NLEVEL; lv++)  NPar_Lv[lv] = 0;
 
-      for (int v=0; v<NPAR_VAR;     v++)  ParVar [v] = NULL;
-      for (int v=0; v<NPAR_PASSIVE; v++)  Passive[v] = NULL;
+      for (int v=0; v<PAR_NVAR;     v++)  ParVar [v] = NULL;
+      for (int v=0; v<PAR_NPASSIVE; v++)  Passive[v] = NULL;
 
       InactiveParList = NULL;
 
@@ -242,10 +242,10 @@ struct Particle_t
    ~Particle_t()
    {
 
-      for (int v=0; v<NPAR_VAR; v++)
+      for (int v=0; v<PAR_NVAR; v++)
          if ( ParVar[v] != NULL )      free( ParVar[v] );
 
-      for (int v=0; v<NPAR_PASSIVE; v++)
+      for (int v=0; v<PAR_NPASSIVE; v++)
          if ( Passive[v] != NULL )     free( Passive[v] );
 
       if ( InactiveParList != NULL )   free( InactiveParList );
@@ -310,13 +310,13 @@ struct Particle_t
 
 //    allocate arrays (use malloc so that realloc can be used later to resize the array)
 //    --> free memory first since other functions (e.g., LB_Init_LoadBalance) will call InitVar again
-      for (int v=0; v<NPAR_VAR; v++)
+      for (int v=0; v<PAR_NVAR; v++)
       {
          if ( ParVar[v] != NULL )   free( ParVar[v] );
          ParVar[v] = (real*)malloc( ParListSize*sizeof(real) );
       }
 
-      for (int v=0; v<NPAR_PASSIVE; v++)
+      for (int v=0; v<PAR_NPASSIVE; v++)
       {
          if ( Passive[v] != NULL )  free( Passive[v] );
          Passive[v] = (real*)malloc( ParListSize*sizeof(real) );
@@ -404,7 +404,7 @@ struct Particle_t
 #     ifdef DEBUG_PARTICLE
       if ( NPar_AcPlusInac < 0 ) Aux_Error( ERROR_INFO, "NPar_AcPlusInac (%ld) < 0 !!\n", NPar_AcPlusInac );
       if ( NewVar     == NULL )  Aux_Error( ERROR_INFO, "NewVar == NULL !!\n" );
-#     if ( NPAR_PASSIVE > 0 )
+#     if ( PAR_NPASSIVE > 0 )
       if ( NewPassive == NULL )  Aux_Error( ERROR_INFO, "NewVar == NULL !!\n" );
 #     endif
       if ( NewVar[PAR_MASS] < (real)0.0 )
@@ -440,8 +440,8 @@ struct Particle_t
          {
             ParListSize = (int)ceil( PARLIST_GROWTH_FACTOR*(ParListSize+1) );
 
-            for (int v=0; v<NPAR_VAR;     v++)  ParVar [v] = (real*)realloc( ParVar [v], ParListSize*sizeof(real) );
-            for (int v=0; v<NPAR_PASSIVE; v++)  Passive[v] = (real*)realloc( Passive[v], ParListSize*sizeof(real) );
+            for (int v=0; v<PAR_NVAR;     v++)  ParVar [v] = (real*)realloc( ParVar [v], ParListSize*sizeof(real) );
+            for (int v=0; v<PAR_NPASSIVE; v++)  Passive[v] = (real*)realloc( Passive[v], ParListSize*sizeof(real) );
 
             Mass = ParVar[PAR_MASS];
             PosX = ParVar[PAR_POSX];
@@ -464,8 +464,8 @@ struct Particle_t
 
 
 //    2. record the data of new particles
-      for (int v=0; v<NPAR_VAR;     v++)  ParVar [v][ParID] = NewVar    [v];
-      for (int v=0; v<NPAR_PASSIVE; v++)  Passive[v][ParID] = NewPassive[v];
+      for (int v=0; v<PAR_NVAR;     v++)  ParVar [v][ParID] = NewVar    [v];
+      for (int v=0; v<PAR_NPASSIVE; v++)  Passive[v][ParID] = NewPassive[v];
 
 
 //    3. update the total number of active particles (assuming all new particles are active)

@@ -157,6 +157,9 @@ void Init_Restart_HDF5( const char *FileName )
 
    LoadField( "Step",               &KeyInfo.Step,               H5_SetID_KeyInfo, H5_TypeID_KeyInfo, Fatal,  NullPtr,       -1, NonFatal );
    LoadField( "AdvanceCounter",      KeyInfo.AdvanceCounter,     H5_SetID_KeyInfo, H5_TypeID_KeyInfo, Fatal,  NullPtr,       -1, NonFatal );
+#  ifdef PARTICLE
+   LoadField( "Par_NPar",           &KeyInfo.Par_NPar,           H5_SetID_KeyInfo, H5_TypeID_KeyInfo, Fatal,  NullPtr,       -1, NonFatal );
+#  endif
 
    LoadField( "BoxSize",             KeyInfo.BoxSize,            H5_SetID_KeyInfo, H5_TypeID_KeyInfo, Fatal,  amr->BoxSize,   3,    Fatal );
    LoadField( "Time",                KeyInfo.Time,               H5_SetID_KeyInfo, H5_TypeID_KeyInfo, Fatal,  NullPtr,       -1, NonFatal );
@@ -183,9 +186,12 @@ void Init_Restart_HDF5( const char *FileName )
       AdvanceCounter[lv] = KeyInfo.AdvanceCounter[lv];
    }
 
-   Step            = KeyInfo.Step;
+   Step                          = KeyInfo.Step;
 #  ifdef GRAVITY
-   AveDensity_Init = KeyInfo.AveDens_Init;
+   AveDensity_Init               = KeyInfo.AveDens_Init;
+#  endif
+#  ifdef PARTICLE
+   amr->Par->NPar_Active_AllRank = KeyInfo.Par_NPar;
 #  endif
 
 
@@ -1047,10 +1053,9 @@ void Check_SymConst( const char *FileName )
 #  endif // #ifdef GRAVITY
 
 #  ifdef PARTICLE
-   LoadField( "NPar_Var",             &RS.NPar_Var,             SID, TID, NonFatal, &RT.NPar_Var,              1,    Fatal );
-   LoadField( "NPar_Passive",         &RS.NPar_Passive,         SID, TID, NonFatal, &RT.NPar_Passive,          1,    Fatal );
-   LoadField( "PM_GhostSize",         &RS.PM_GhostSize,         SID, TID, NonFatal, &RT.PM_GhostSize,          1, NonFatal );
-   LoadField( "PM_Nxt",               &RS.PM_Nxt,               SID, TID, NonFatal, &RT.PM_Nxt,                1, NonFatal );
+   LoadField( "Par_NVar",             &RS.Par_NVar,             SID, TID, NonFatal, &RT.Par_NVar,              1,    Fatal );
+   LoadField( "Par_NPassive",         &RS.Par_NPassive,         SID, TID, NonFatal, &RT.Par_NPassive,          1,    Fatal );
+   LoadField( "RhoExt_GhostSize",     &RS.RhoExt_GhostSize,     SID, TID, NonFatal, &RT.RhoExt_GhostSize,      1, NonFatal );
    LoadField( "Debug_Particle",       &RS.Debug_Particle,       SID, TID, NonFatal, &RT.Debug_Particle,        1, NonFatal );
    LoadField( "ParList_GrowthFactor", &RS.ParList_GrowthFactor, SID, TID, NonFatal, &RT.ParList_GrowthFactor,  1, NonFatal );
    LoadField( "ParList_ReduceFactor", &RS.ParList_ReduceFactor, SID, TID, NonFatal, &RT.ParList_ReduceFactor,  1, NonFatal );
@@ -1167,7 +1172,6 @@ void Check_InputPara( const char *FileName )
 
 // particle
 #  ifdef PARTICLE
-// LoadField( "Par_NPar_Active_AllRank", &RS.Par_NPar_Active_AllRank, SID, TID, NonFatal, &RT.Par_NPar_Active_AllRank,  1, NonFatal );
    LoadField( "Par_Init",                &RS.Par_Init,                SID, TID, NonFatal, &RT.Par_Init,                 1, NonFatal );
    LoadField( "Par_Interp",              &RS.Par_Interp,              SID, TID, NonFatal, &RT.Par_Interp,               1, NonFatal );
    LoadField( "Par_Integ",               &RS.Par_Integ,               SID, TID, NonFatal, &RT.Par_Integ,                1, NonFatal );

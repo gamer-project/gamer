@@ -106,7 +106,7 @@ void Par_LB_RedistributeByRectangular()
 
 
 // 3. redistribute particle attributes (one attribute at a time to save memory)
-   const int NAtt = 8 + NPAR_PASSIVE;
+   const int NAtt = 8 + PAR_NPASSIVE;  // 8 = mass, pos*3, vel*3, time --> do not transfer acceleration
    int Offset[MPI_NRank];
 
    real *SendBuf = new real [Send_Count_Sum];

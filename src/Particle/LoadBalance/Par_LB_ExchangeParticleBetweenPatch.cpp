@@ -134,7 +134,7 @@ void Par_LB_ExchangeParticleBetweenPatch( const int lv,
 
 // 2. prepare the particle data to be sent (and then remove these particles from this rank)
    const bool RemoveAllPar_Yes = true;
-   const int  NParVar          = NPAR_VAR + NPAR_PASSIVE;
+   const int  NParVar          = PAR_NVAR + PAR_NPASSIVE;
 
    real *SendBuf_ParDataEachPatch = new real [ NSendParTotal*NParVar ];
 
@@ -163,8 +163,8 @@ void Par_LB_ExchangeParticleBetweenPatch( const int lv,
          ParID = ParList[p];
 
 //       2-1. store particle data into the MPI send buffer
-         for (int v=0; v<NPAR_VAR;     v++)  *SendPtr++ = amr->Par->ParVar [v][ParID];
-         for (int v=0; v<NPAR_PASSIVE; v++)  *SendPtr++ = amr->Par->Passive[v][ParID];
+         for (int v=0; v<PAR_NVAR;     v++)  *SendPtr++ = amr->Par->ParVar [v][ParID];
+         for (int v=0; v<PAR_NPASSIVE; v++)  *SendPtr++ = amr->Par->Passive[v][ParID];
 
 //       2-2. remove this particle from the particle repository of this rank
          amr->Par->RemoveOneParticle( ParID, PAR_INACTIVE_MPI );
@@ -228,7 +228,7 @@ void Par_LB_ExchangeParticleBetweenPatch( const int lv,
 //    4-2. add particles to the particle repository
       for (int p=0; p<NParThisPatch; p++)
       {
-         ParID    = amr->Par->AddOneParticle( RecvPtr, RecvPtr+NPAR_VAR );
+         ParID    = amr->Par->AddOneParticle( RecvPtr, RecvPtr+PAR_NVAR );
          RecvPtr += NParVar;
 
 //       store the new particle index

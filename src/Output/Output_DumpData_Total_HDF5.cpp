@@ -896,30 +896,33 @@ void Output_DumpData_Total_HDF5( const char *FileName )
 void FillIn_KeyInfo( KeyInfo_t &KeyInfo )
 {
 
-   const time_t CalTime       = time( NULL );   // calendar time
+   const time_t CalTime  = time( NULL );   // calendar time
 
-   KeyInfo.FormatVersion      = 2105;
-   KeyInfo.Model              = MODEL;
-   KeyInfo.NLevel             = NLEVEL;
-   KeyInfo.PatchSize          = PATCH_SIZE;
-   KeyInfo.DumpID             = DumpID;
-   KeyInfo.Step               = Step;
+   KeyInfo.FormatVersion = 2105;
+   KeyInfo.Model         = MODEL;
+   KeyInfo.NLevel        = NLEVEL;
+   KeyInfo.PatchSize     = PATCH_SIZE;
+   KeyInfo.DumpID        = DumpID;
+   KeyInfo.Step          = Step;
 #  ifdef GRAVITY
-   KeyInfo.OutputPot          = (OPT__OUTPUT_POT) ? 1 : 0;
-   KeyInfo.AveDens_Init       = AveDensity_Init;
-   KeyInfo.Gravity            = 1;
+   KeyInfo.OutputPot     = (OPT__OUTPUT_POT) ? 1 : 0;
+   KeyInfo.AveDens_Init  = AveDensity_Init;
+   KeyInfo.Gravity       = 1;
 #  else
-   KeyInfo.Gravity            = 0;
+   KeyInfo.Gravity       = 0;
 #  endif
 #  ifdef PARTICLE
-   KeyInfo.Particle           = 1;
+   KeyInfo.Particle      = 1;
 #  else
-   KeyInfo.Particle           = 0;
+   KeyInfo.Particle      = 0;
 #  endif
 #  ifdef FLOAT8
-   KeyInfo.Float8             = 1;
+   KeyInfo.Float8        = 1;
 #  else
-   KeyInfo.Float8             = 0;
+   KeyInfo.Float8        = 0;
+#  endif
+#  ifdef PARTICLE
+   KeyInfo.Par_NPar      = amr->Par->NPar_Active_AllRank;
 #  endif
 
    for (int d=0; d<3; d++)
@@ -1203,8 +1206,9 @@ void FillIn_SymConst( SymConst_t &SymConst )
 
 
 #  ifdef PARTICLE
-   SymConst.NPar_Var             = NPAR_VAR;
-   SymConst.NPar_Passive         = NPAR_PASSIVE;
+   SymConst.Par_NVar             = PAR_NVAR;
+   SymConst.Par_NPassive         = PAR_NPASSIVE;
+   SymConst.RhoExt_GhostSize     = RHOEXT_GHOST_SIZE;
 
 #  ifdef DEBUG_PARTICLE
    SymConst.Debug_Particle       = 1;
@@ -1328,7 +1332,6 @@ void FillIn_InputPara( InputPara_t &InputPara )
 
 // particle
 #  ifdef PARTICLE
-   InputPara.Par_NPar_Active_AllRank = amr->Par->NPar_Active_AllRank;
    InputPara.Par_Init                = amr->Par->Init;
    InputPara.Par_Interp              = amr->Par->Interp;
    InputPara.Par_Integ               = amr->Par->Integ;
@@ -1611,6 +1614,9 @@ void GetCompound_KeyInfo( hid_t &H5_TypeID )
 
    H5Tinsert( H5_TypeID, "Step",               HOFFSET(KeyInfo_t,Step           ),    H5T_NATIVE_LONG         );
    H5Tinsert( H5_TypeID, "AdvanceCounter",     HOFFSET(KeyInfo_t,AdvanceCounter ),    H5_TypeID_Arr_NLvLong   );
+#  ifdef PARTICLE
+   H5Tinsert( H5_TypeID, "Par_NPar",           HOFFSET(KeyInfo_t,Par_NPar),           H5T_NATIVE_LONG         );
+#  endif
 
    H5Tinsert( H5_TypeID, "BoxSize",            HOFFSET(KeyInfo_t,BoxSize        ),    H5_TypeID_Arr_3Double   );
    H5Tinsert( H5_TypeID, "Time",               HOFFSET(KeyInfo_t,Time           ),    H5_TypeID_Arr_NLvDouble );
@@ -1764,8 +1770,9 @@ void GetCompound_SymConst( hid_t &H5_TypeID )
 #  endif // #ifdef GRAVITY
 
 #  ifdef PARTICLE
-   H5Tinsert( H5_TypeID, "NPar_Var",             HOFFSET(SymConst_t,NPar_Var            ), H5T_NATIVE_INT    );
-   H5Tinsert( H5_TypeID, "NPar_Passive",         HOFFSET(SymConst_t,NPar_Passive        ), H5T_NATIVE_INT    );
+   H5Tinsert( H5_TypeID, "Par_NVar",             HOFFSET(SymConst_t,Par_NVar            ), H5T_NATIVE_INT    );
+   H5Tinsert( H5_TypeID, "Par_NPassive",         HOFFSET(SymConst_t,Par_NPassive        ), H5T_NATIVE_INT    );
+   H5Tinsert( H5_TypeID, "RhoExt_GhostSize",     HOFFSET(SymConst_t,RhoExt_GhostSize    ), H5T_NATIVE_INT    );
    H5Tinsert( H5_TypeID, "Debug_Particle",       HOFFSET(SymConst_t,Debug_Particle      ), H5T_NATIVE_INT    );
    H5Tinsert( H5_TypeID, "ParList_GrowthFactor", HOFFSET(SymConst_t,ParList_GrowthFactor), H5T_NATIVE_DOUBLE );
    H5Tinsert( H5_TypeID, "ParList_ReduceFactor", HOFFSET(SymConst_t,ParList_ReduceFactor), H5T_NATIVE_DOUBLE );
@@ -1865,14 +1872,13 @@ void GetCompound_InputPara( hid_t &H5_TypeID )
 
 // particle
 #  ifdef PARTICLE
-   H5Tinsert( H5_TypeID, "Par_NPar_Active_AllRank", HOFFSET(InputPara_t,Par_NPar_Active_AllRank), H5T_NATIVE_LONG    );
    H5Tinsert( H5_TypeID, "Par_Init",                HOFFSET(InputPara_t,Par_Init               ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "Par_Interp",              HOFFSET(InputPara_t,Par_Interp             ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "Par_Integ",               HOFFSET(InputPara_t,Par_Integ              ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "Par_SyncDump",            HOFFSET(InputPara_t,Par_SyncDump           ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "Par_ImproveAcc",          HOFFSET(InputPara_t,Par_ImproveAcc         ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "Par_PredictPos",          HOFFSET(InputPara_t,Par_PredictPos         ), H5T_NATIVE_INT     );
-   H5Tinsert( H5_TypeID, "Par_RemoveCell",          HOFFSET(InputPara_t,Par_RemoveCell         ), H5T_NATIVE_INT     );
+   H5Tinsert( H5_TypeID, "Par_RemoveCell",          HOFFSET(InputPara_t,Par_RemoveCell         ), H5T_NATIVE_DOUBLE  );
    H5Tinsert( H5_TypeID, "Par_GhostSize",           HOFFSET(InputPara_t,Par_GhostSize          ), H5T_NATIVE_INT     );
 #  endif
 

@@ -49,6 +49,9 @@ struct KeyInfo_t
 
    long   Step;
    long   AdvanceCounter[NLEVEL];
+#  ifdef PARTICLE
+   long   Par_NPar;                 // amr->Par->NPar_Active_AllRank
+#  endif
 
    double BoxSize [3];
    double Time    [NLEVEL];
@@ -189,10 +192,9 @@ struct SymConst_t
 
 
 #  ifdef PARTICLE
-   int    NPar_Var;
-   int    NPar_Passive;
-   int    PM_GhostSize;
-   int    PM_Nxt;
+   int    Par_NVar;
+   int    Par_NPassive;
+   int    RhoExt_GhostSize;
 
    int    Debug_Particle;
 
@@ -278,7 +280,6 @@ struct InputPara_t
 
 // particle
 #  ifdef PARTICLE
-   long   Par_NPar_Active_AllRank;
    int    Par_Init;
    int    Par_Interp;
    int    Par_Integ;

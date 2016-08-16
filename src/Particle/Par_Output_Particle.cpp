@@ -44,7 +44,7 @@ void Par_Output_Particle( const char *FileName )
 #     ifdef STORE_PAR_ACC
       fprintf( File, "  %21s  %21s  %21s", "AccX", "AccY", "AccZ" );
 #     endif
-      for (int v=0; v<NPAR_PASSIVE; v++)
+      for (int v=0; v<PAR_NPASSIVE; v++)
       fprintf( File, "  %18s-%d%d", "Passive", v/10, v%10 );
       fprintf( File, "\n" );
 
@@ -64,8 +64,8 @@ void Par_Output_Particle( const char *FileName )
 //          skip inactive particles
             if ( amr->Par->Mass[p] < 0.0 )   continue;
 
-            for (int v=0; v<NPAR_VAR;     v++)     fprintf(  File, "  %21.14e", amr->Par->ParVar [v][p] );
-            for (int v=0; v<NPAR_PASSIVE; v++)     fprintf(  File, "  %21.14e", amr->Par->Passive[v][p] );
+            for (int v=0; v<PAR_NVAR;     v++)     fprintf(  File, "  %21.14e", amr->Par->ParVar [v][p] );
+            for (int v=0; v<PAR_NPASSIVE; v++)     fprintf(  File, "  %21.14e", amr->Par->Passive[v][p] );
 
             fprintf( File, "\n" );
          }
