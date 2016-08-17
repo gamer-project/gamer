@@ -26,46 +26,34 @@ void Aux_PatchCount()
 
 
    long   MaxNPatch;
-   int    NRank;
-   int    (*NPatch_Local)[NLEVEL], (*NPatch_Gather)[NLEVEL];
+   int    NPatch_Local[NLEVEL], (*NPatch_Gather)[NLEVEL];
    double (*Coverage_Gather)[NLEVEL], Coverage_Total[NLEVEL];
 
 
 // a. gather information from all GAMER ranks
-   NRank        = MPI_NRank;
-   NPatch_Local = new int [1][NLEVEL];
+   for (int lv=0; lv<NLEVEL; lv++)  NPatch_Local[lv] = amr->NPatchComma[lv][1];
 
-   for (int lv=0; lv<NLEVEL; lv++)  NPatch_Local[0][lv] = amr->NPatchComma[lv][1];
-
-   NPatch_Gather   = new int    [NRank][NLEVEL];
-   Coverage_Gather = new double [NRank][NLEVEL];
+   NPatch_Gather   = new int    [MPI_NRank][NLEVEL];
+   Coverage_Gather = new double [MPI_NRank][NLEVEL];
 
 #  ifdef SERIAL
-   for (int r=0; r<NRank/MPI_NRank; r++)
-   for (int lv=0; lv<NLEVEL; lv++)     NPatch_Gather[r][lv] = NPatch_Local[r][lv];
+   for (int lv=0; lv<NLEVEL; lv++)     NPatch_Gather[0][lv] = NPatch_Local[lv];
 #  else
-   MPI_Gather( NPatch_Local, NRank/MPI_NRank*NLEVEL, MPI_INT, NPatch_Gather, NRank/MPI_NRank*NLEVEL, 
-               MPI_INT, 0, MPI_COMM_WORLD ); 
+   MPI_Gather( NPatch_Local, NLEVEL, MPI_INT, NPatch_Gather, NLEVEL, MPI_INT, 0, MPI_COMM_WORLD );
 #  endif
 
 
    if ( MPI_Rank == 0 )
    {
-//    b. evaluate the coverage ratio of each MPI rank
       for (int lv=0; lv<NLEVEL; lv++)
       {
          MaxNPatch = (NX0_TOT[0]/PATCH_SIZE)*(NX0_TOT[1]/PATCH_SIZE)*(NX0_TOT[2]/PATCH_SIZE)*(long)(1L<<3*lv);
 
-         for (int r=0; r<NRank; r++)
+//       b. evaluate the coverage ratio of each MPI rank
+         for (int r=0; r<MPI_NRank; r++)
             Coverage_Gather[r][lv] = 100.0*NPatch_Gather[r][lv]/MaxNPatch*MPI_NRank;
-      }
 
-
-//    c. evaluate the coverage ratio of the entire simulation domain
-      for (int lv=0; lv<NLEVEL; lv++)
-      {
-         MaxNPatch = (NX0_TOT[0]/PATCH_SIZE)*(NX0_TOT[1]/PATCH_SIZE)*(NX0_TOT[2]/PATCH_SIZE)*(long)(1L<<3*lv);
-
+//       c. evaluate the coverage ratio of the entire simulation domain
          Coverage_Total[lv] = 100.0*NPatchTotal[lv]/MaxNPatch;
       }
 
@@ -79,10 +67,10 @@ void Aux_PatchCount()
       for (int lv=0; lv<NLEVEL; lv++)     fprintf( File, "%12s%2d ", "Level", lv );
       fprintf( File, "\n" );
 
-      for (int r=0; r<NRank; r++)
+      for (int r=0; r<MPI_NRank; r++)
       {
          fprintf( File, "%4d", r );
-         for (int lv=0; lv<NLEVEL; lv++)  fprintf( File, "%6d(%6.2lf%%)", NPatch_Gather[r][lv], 
+         for (int lv=0; lv<NLEVEL; lv++)  fprintf( File, "%6d(%6.2lf%%)", NPatch_Gather[r][lv],
                                                                           Coverage_Gather[r][lv] );
          fprintf( File, "\n" );
       }
@@ -154,7 +142,6 @@ void Aux_PatchCount()
 #  endif
 
 
-   delete [] NPatch_Local;
    delete [] NPatch_Gather;
    delete [] Coverage_Gather;
 
