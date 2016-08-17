@@ -17,7 +17,7 @@
 AMR_t            *amr = NULL;
 
 double            Time[NLEVEL]           = { 0.0 };
-long              AdvanceCounter[NLEVEL] = { 0 }; 
+long              AdvanceCounter[NLEVEL] = { 0 };
 long              NCorrUnphy[NLEVEL]     = { 0 };
 long              Step                   = 0;
 int               DumpID                 = 0;
@@ -26,15 +26,15 @@ double            DumpTime               = 0.0;
 double            dTime_Base;
 double            Time_Prev            [NLEVEL];
 real              MinDtInfo_Fluid      [NLEVEL];
-double            FlagTable_Rho        [NLEVEL-1]; 
-double            FlagTable_RhoGradient[NLEVEL-1]; 
+double            FlagTable_Rho        [NLEVEL-1];
+double            FlagTable_RhoGradient[NLEVEL-1];
 double            FlagTable_Lohner     [NLEVEL-1][3];
 double            FlagTable_User       [NLEVEL-1];
 double           *DumpTable = NULL;
 int               DumpTable_NDump;
 
 int               MPI_Rank, MPI_Rank_X[3], MPI_SibRank[26], NX0[3], NPatchTotal[NLEVEL];
-int              *BaseP = NULL; 
+int              *BaseP = NULL;
 int               Flu_ParaBuf;
 
 double            BOX_SIZE, DT__FLUID, DT__FLUID_INIT, END_T, OUTPUT_DT;
@@ -126,7 +126,7 @@ double         LB_INPUT__WLI_MAX;
 #endif
 
 // (2-5) particle
-#ifdef PARTICLE 
+#ifdef PARTICLE
 double         DT__PARVEL, DT__PARVEL_MAX, DT__PARACC;
 real           MinDtInfo_ParVelAcc[2][NLEVEL];
 bool           OPT__OUTPUT_PARTICLE, OPT__CK_PARTICLE, OPT__PAR_LEVEL, OPT__FLAG_NPAR_CELL;
@@ -243,12 +243,12 @@ Timer_t *Timer_Poi_PrePot_F[NLEVEL];
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  main
-// Description :  GAMER main function 
+// Description :  GAMER main function
 //-------------------------------------------------------------------------------------------------------
 int main( int argc, char *argv[] )
 {
 
-// initialization 
+// initialization
 // ======================================================================================================
    Timer_t  Timer_Total( 1 );
    Timer_Total.Start();
@@ -308,9 +308,9 @@ int main( int argc, char *argv[] )
 //    ---------------------------------------------------------------------------------------------------
       TIMING_FUNC(   Mis_GetTimeStep(),   Timer_Main[1],   false   );
 
-      if ( MPI_Rank == 0  &&  Step%1 == 0 )   
+      if ( MPI_Rank == 0  &&  Step%1 == 0 )
       {
-         Aux_Message( stdout, "Time : %13.7e -> %13.7e,    Step : %7ld -> %7ld,    dt = %14.7e\n", 
+         Aux_Message( stdout, "Time : %13.7e -> %13.7e,    Step : %7ld -> %7ld,    dt = %14.7e\n",
                       Time[0], Time[0]+dTime_Base, Step, Step+1, dTime_Base );
       }
 
@@ -359,7 +359,7 @@ int main( int argc, char *argv[] )
 //       to ensure the same round-off errors for the father patches with newly refined son patches in the RESTART process
          Flu_Restrict( lv, amr->FluSg[lv+1], amr->FluSg[lv], NULL_INT, NULL_INT, _FLU );
 
-#        ifdef LOAD_BALANCE 
+#        ifdef LOAD_BALANCE
          LB_GetBufferData( lv, amr->FluSg[lv], NULL_INT, DATA_RESTRICT, _FLU, NULL_INT );
 #        endif
 
@@ -400,7 +400,7 @@ int main( int argc, char *argv[] )
          Par_CollectParticle2OneLevel( lv, PredictPos, Time[lv], SibBufPatch, FaSibBufPatch, JustCountNPar_No );
 #        endif
 
-         if ( lv == 0 )    
+         if ( lv == 0 )
          {
             CPU_PoissonSolver_FFT( Poi_Coeff, amr->PotSg[lv], Time[lv] );
 
@@ -412,7 +412,7 @@ int main( int argc, char *argv[] )
 #           endif
          }
 
-         else              
+         else
          {
             Buf_GetBufferData( lv, amr->FluSg[lv], NULL_INT, DATA_GENERAL, _DENS, Rho_ParaBuf, USELB_YES );
 
@@ -432,6 +432,18 @@ int main( int argc, char *argv[] )
 
       } // for (int lv=0; lv<=MAX_LEVEL; lv++)
 #     endif // #ifdef GRAVITY
+
+#     if ( defined PARTICLE  &&  defined STORE_PAR_ACC )
+      if ( OPT__VERBOSE  &&  MPI_Rank == 0 )    Aux_Message( stdout, "   DEBUG: recalculate particle acceleration ... " );
+
+      const bool StoreAcc_Yes    = true;
+      const bool UseStoredAcc_No = false;
+
+      for (int lv=0; lv<NLEVEL; lv++)
+      Par_UpdateParticle( lv, amr->PotSgTime[lv][ amr->PotSg[lv] ], NULL_REAL, PAR_UPSTEP_ACC_ONLY, StoreAcc_Yes, UseStoredAcc_No );
+
+      if ( OPT__VERBOSE  &&  MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );
+#     endif
 #     endif // #ifdef GAMER_DEBUG
 
 
@@ -442,7 +454,7 @@ int main( int argc, char *argv[] )
       if ( OPT__PATCH_COUNT == 1 )
       TIMING_FUNC(   Aux_PatchCount(),           Timer_Main[4],   false   );
 
-      if ( OPT__RECORD_MEMORY )   
+      if ( OPT__RECORD_MEMORY )
       TIMING_FUNC(   Aux_GetMemInfo(),           Timer_Main[4],   false   );
 
       if ( OPT__RECORD_USER     )
@@ -460,7 +472,7 @@ int main( int argc, char *argv[] )
 //    ---------------------------------------------------------------------------------------------------
 
 
-//    e. check whether to manually terminate the run 
+//    e. check whether to manually terminate the run
 //    ---------------------------------------------------------------------------------------------------
       int Terminate = false;
 
@@ -477,9 +489,9 @@ int main( int argc, char *argv[] )
 
       if ( amr->LB->WLI > amr->LB->WLI_Max )
       {
-         if ( MPI_Rank == 0 )    
+         if ( MPI_Rank == 0 )
          {
-            Aux_Message( stdout, "Weighted load-imbalance factor (%13.7e) > threshold (%13.7e) ", 
+            Aux_Message( stdout, "Weighted load-imbalance factor (%13.7e) > threshold (%13.7e) ",
                          amr->LB->WLI, amr->LB->WLI_Max );
             Aux_Message( stdout, "--> redistributing all patches ...\n" );
          }
