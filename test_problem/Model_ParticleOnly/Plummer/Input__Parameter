@@ -139,8 +139,8 @@
 0           OPT__VERBOSE            # output the detail of simulation progress
 0           OPT__TIMING_BALANCE     # record the max/min elapsed time for different code sections (may slowe down the run)
 0           OPT__TIMING_MPI         # record the MPI bandwidth achieved by LB_GetBufferData ##LOAD_BALANCE ONLY##
-0           OPT__RECORD_MEMORY      # record memory consumption during simulations
-0           OPT__RECORD_PERFORMANCE # record the code performance
+1           OPT__RECORD_MEMORY      # record memory consumption during simulations
+1           OPT__RECORD_PERFORMANCE # record the code performance
 0           OPT__MANUAL_CONTROL     # support dump/stop dynamically by creating the file DUMP_GAMER_DUMP/STOP_GAMER_STOP
 0           OPT__RECORD_USER        # record user-specified information --> edit "Aux_RecordUser"
 
