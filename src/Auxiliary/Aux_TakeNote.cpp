@@ -574,7 +574,7 @@ void Aux_TakeNote()
 #     endif
       fprintf( Note, "OPT__PATCH_COUNT          %d\n",      OPT__PATCH_COUNT        );
 #     ifdef PARTICLE
-      fprintf( Note, "OPT__PAR_LEVEL            %d\n",      OPT__PAR_LEVEL          );
+      fprintf( Note, "OPT__PARTICLE_COUNT       %d\n",      OPT__PARTICLE_COUNT     );
 #     endif
       fprintf( Note, "***********************************************************************************\n" );
       fprintf( Note, "\n\n");

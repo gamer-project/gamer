@@ -295,8 +295,7 @@ void Init_Load_Parameter()
 
    getline( &input_line, &len, File );
 #  ifdef PARTICLE
-   sscanf( input_line, "%d%s",   &temp_int,                 string );
-   OPT__PAR_LEVEL = (bool)temp_int;
+   sscanf( input_line, "%d%s",   &OPT__PARTICLE_COUNT,      string );
 #  endif
 
    getline( &input_line, &len, File );

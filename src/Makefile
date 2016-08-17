@@ -102,10 +102,10 @@ SIMU_OPTION += -DTIMING
 #SIMU_OPTION += -DTIMING_SOLVER
 
 # intel compiler (default: GNU compiler)
-SIMU_OPTION += -DINTEL
+#SIMU_OPTION += -DINTEL
 
 # double precision (not supported for the GPU + self-gravity mode in non-Fermi GPUs)
-#SIMU_OPTION += -DFLOAT8
+SIMU_OPTION += -DFLOAT8
 
 # serial mode (in which no MPI libraries are required)
 #SIMU_OPTION += -DSERIAL
@@ -295,7 +295,7 @@ CC_FILE     += Par_Init_Function.cpp  Par_Output_Particle.cpp  Par_FindHomePatch
                Par_Aux_Check_Particle.cpp  Par_PassParticle2Father.cpp  Par_CollectParticle2OneLevel.cpp \
                Par_MassAssignment.cpp  Par_UpdateParticle.cpp  Par_GetTimeStep_VelAcc.cpp \
                Par_PassParticle2Sibling.cpp  Par_CountParticleInDescendant.cpp  Par_GetEnergy.cpp \
-               Par_Aux_InitCheck.cpp  Par_Aux_GetParticleLevel.cpp  Par_PassParticle2Son_AllPatch.cpp \
+               Par_Aux_InitCheck.cpp  Par_Aux_ParticleCount.cpp  Par_PassParticle2Son_AllPatch.cpp \
                Par_Synchronize.cpp  Par_PredictPos.cpp
 
 vpath %.cu     Particle/GPU
@@ -362,15 +362,15 @@ vpath %.cpp    LoadBalance
 # -------------------------------------------------------------------------------
 # dxl (gcc, serial)
 #CUDA_TOOLKIT_PATH :=
-#FFTW_PATH         := /usr
-#MPI_PATH          := /usr
-#HDF5_PATH         := /home/hyschive/software/miniconda2
+FFTW_PATH         := /usr
+MPI_PATH          := /usr
+HDF5_PATH         := /home/hyschive/software/miniconda2
 
 # campus UIUC (intel-15.0 + openmpi-1.8.4)
-CUDA_TOOLKIT_PATH := /usr/local/cuda/7.0
-FFTW_PATH         := /projects/ncsa/grav/softwares/fftw/2.1.5
-MPI_PATH          := /usr/local/mpi/openmpi-1.8.4-intel-15.0
-HDF5_PATH         := /projects/ncsa/grav/softwares/miniconda2
+#CUDA_TOOLKIT_PATH := /usr/local/cuda/7.0
+#FFTW_PATH         := /projects/ncsa/grav/softwares/fftw/2.1.5
+#MPI_PATH          := /usr/local/mpi/openmpi-1.8.4-intel-15.0
+#HDF5_PATH         := /projects/ncsa/grav/softwares/miniconda2
 
 # hulk (openmpi-intel-qlc)
 #CUDA_TOOLKIT_PATH := /opt/gpu/cuda/4.2
@@ -486,7 +486,8 @@ ifeq "$(findstring GRAVITY, $(SIMU_OPTION))" "GRAVITY"
       ifeq "$(findstring SERIAL, $(SIMU_OPTION))" "SERIAL"
          LIB += -ldrfftw -ldfftw
       else
-         LIB += -ldrfftw_mpi -ldfftw_mpi -ldrfftw -ldfftw
+#        LIB += -ldrfftw_mpi -ldfftw_mpi -ldrfftw -ldfftw
+         LIB += -lrfftw_mpi -lfftw_mpi -lrfftw -lfftw
       endif
    else
       ifeq "$(findstring SERIAL, $(SIMU_OPTION))" "SERIAL"

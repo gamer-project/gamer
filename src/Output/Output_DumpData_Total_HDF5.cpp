@@ -1395,7 +1395,7 @@ void FillIn_InputPara( InputPara_t &InputPara )
 #  endif
    InputPara.Opt__PatchCount         = OPT__PATCH_COUNT;
 #  ifdef PARTICLE
-   InputPara.Opt__ParLevel           = OPT__PAR_LEVEL;
+   InputPara.Opt__ParticleCount      = OPT__PARTICLE_COUNT;
 #  endif
 
 // load balance
@@ -1936,7 +1936,7 @@ void GetCompound_InputPara( hid_t &H5_TypeID )
 #  endif
    H5Tinsert( H5_TypeID, "Opt__PatchCount",         HOFFSET(InputPara_t,Opt__PatchCount        ), H5T_NATIVE_INT     );
 #  ifdef PARTICLE
-   H5Tinsert( H5_TypeID, "Opt__ParLevel",           HOFFSET(InputPara_t,Opt__ParLevel          ), H5T_NATIVE_INT     );
+   H5Tinsert( H5_TypeID, "Opt__ParticleCount",      HOFFSET(InputPara_t,Opt__ParticleCount     ), H5T_NATIVE_INT     );
 #  endif
 
 // load balance

@@ -1236,7 +1236,7 @@ void Check_InputPara( const char *FileName )
 #  endif
    LoadField( "Opt__PatchCount",         &RS.Opt__PatchCount,         SID, TID, NonFatal, &RT.Opt__PatchCount,          1, NonFatal );
 #  ifdef PARTICLE
-   LoadField( "Opt__ParLevel",           &RS.Opt__ParLevel,           SID, TID, NonFatal, &RT.Opt__ParLevel,            1, NonFatal );
+   LoadField( "Opt__ParticleCount",      &RS.Opt__ParticleCount,      SID, TID, NonFatal, &RT.Opt__ParticleCount,       1, NonFatal );
 #  endif
 
 // load balance

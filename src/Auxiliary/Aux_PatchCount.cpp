@@ -6,7 +6,7 @@
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Aux_PatchCount
-// Description :  Count the total number of patches at each level
+// Description :  Count the total number of patches at each level in each rank
 //
 // Note        :  OPT__PATCH_COUNT = 1/2 --> count the number of patches every step/sub-step
 //-------------------------------------------------------------------------------------------------------
@@ -25,7 +25,7 @@ void Aux_PatchCount()
    }
 
 
-   long   MaxNPatch;
+   long   MaxNPatch, NPatchAllLevel;
    int    NPatch_Local[NLEVEL], (*NPatch_Gather)[NLEVEL];
    double (*Coverage_Gather)[NLEVEL], Coverage_Total[NLEVEL];
 
@@ -45,9 +45,12 @@ void Aux_PatchCount()
 
    if ( MPI_Rank == 0 )
    {
+      NPatchAllLevel = 0;
+
       for (int lv=0; lv<NLEVEL; lv++)
       {
-         MaxNPatch = (NX0_TOT[0]/PATCH_SIZE)*(NX0_TOT[1]/PATCH_SIZE)*(NX0_TOT[2]/PATCH_SIZE)*(long)(1L<<3*lv);
+         NPatchAllLevel += NPatchTotal[lv];
+         MaxNPatch       = (NX0_TOT[0]/PATCH_SIZE)*(NX0_TOT[1]/PATCH_SIZE)*(NX0_TOT[2]/PATCH_SIZE)*(long)(1L<<3*lv);
 
 //       b. evaluate the coverage ratio of each MPI rank
          for (int r=0; r<MPI_NRank; r++)
@@ -61,24 +64,23 @@ void Aux_PatchCount()
 //    d. write to the file "Record__PatchCount"
       FILE *File = fopen( FileName, "a" );
 
-      fprintf( File, "Time = %13.7e,  Step = %7ld\n\n", Time[0], Step );
+      fprintf( File, "Time = %13.7e,  Step = %7ld,  NPatch = %10ld\n\n", Time[0], Step, NPatchAllLevel );
 
       fprintf( File, "%4s", "Rank" );
-      for (int lv=0; lv<NLEVEL; lv++)     fprintf( File, "%12s%2d ", "Level", lv );
+      for (int lv=0; lv<NLEVEL; lv++)     fprintf( File, "%13s %-2d", "Level", lv );
       fprintf( File, "\n" );
 
       for (int r=0; r<MPI_NRank; r++)
       {
          fprintf( File, "%4d", r );
-         for (int lv=0; lv<NLEVEL; lv++)  fprintf( File, "%6d(%6.2lf%%)", NPatch_Gather[r][lv],
-                                                                          Coverage_Gather[r][lv] );
+         for (int lv=0; lv<NLEVEL; lv++)  fprintf( File, "%7d(%6.2lf%%)", NPatch_Gather[r][lv], Coverage_Gather[r][lv] );
          fprintf( File, "\n" );
       }
 
       fprintf( File, "-------------------------------------------------------------------------------------" );
       fprintf( File, "----------------------------\n" );
       fprintf( File, "%4s", "Sum:" );
-      for (int lv=0; lv<NLEVEL; lv++)     fprintf( File, "%6d(%6.2lf%%)", NPatchTotal[lv], Coverage_Total[lv] );
+      for (int lv=0; lv<NLEVEL; lv++)     fprintf( File, "%7d(%6.2lf%%)", NPatchTotal[lv], Coverage_Total[lv] );
       fprintf( File, "\n" );
 
 
@@ -117,7 +119,7 @@ void Aux_PatchCount()
 
 //    e3. record the load-imbalance factors
       fprintf( File, "%4s", "LIM:" );
-      for (int lv=0; lv<NLEVEL; lv++)  fprintf( File, "%6d(%6.2f%%)", Load_Max[lv], 100.0*Load_Imb[lv] );
+      for (int lv=0; lv<NLEVEL; lv++)  fprintf( File, "%7d(%6.2f%%)", Load_Max[lv], 100.0*Load_Imb[lv] );
       fprintf( File, "\n" );
       fprintf( File, "Weighted load-imbalance factor = %6.2f%%\n", 100.0*WLI );
 

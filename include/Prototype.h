@@ -436,7 +436,7 @@ bool Par_WithinActiveRegion( const real x, const real y, const real z );
 int  Par_CountParticleInDescendant( const int FaLv, const int FaPID );
 void Par_GetEnergy( double &Ek, double &Ep );
 void Par_Aux_InitCheck();
-void Par_Aux_GetParticleLevel();
+void Par_Aux_ParticleCount();
 void Par_CollectParticle2OneLevel( const int FaLv, const bool PredictPos, const double TargetTime,
                                    const bool SibBufPatch, const bool FaSibBufPatch, const bool JustCountNPar );
 void Par_CollectParticle2OneLevel_FreeMemory( const int FaLv, const bool SibBufPatch, const bool FaSibBufPatch );

@@ -153,7 +153,7 @@ void Aux_Check_Parameter()
                  OPT__UM_START_LEVEL );
 
    if (  OPT__INIT == INIT_UM  &&  ( OPT__UM_START_NVAR < 1 || OPT__UM_START_NVAR > NCOMP )  )
-      Aux_Error( ERROR_INFO, "incorrect option \"OPT__UM_START_NVAR  = %d\" [1 ... NCOMP] !!\n",
+      Aux_Error( ERROR_INFO, "incorrect option \"OPT__UM_START_NVAR = %d\" [1 ... NCOMP] !!\n",
                  OPT__UM_START_NVAR );
 
    if ( OPT__INIT == INIT_UM  &&  OPT__UM_START_NVAR != 1  &&  OPT__UM_FACTOR_5OVER3 )
@@ -232,6 +232,9 @@ void Aux_Check_Parameter()
 #  ifndef INDIVIDUAL_TIMESTEP
    if ( OPT__INT_TIME )    Aux_Error( ERROR_INFO, "OPT__INT_TIME only works when INDIVIDUAL_TIMESTEP is on !!\n" );
 #  endif
+
+   if ( OPT__PATCH_COUNT < 0  ||  OPT__PATCH_COUNT > 2 )
+      Aux_Error( ERROR_INFO, "incorrect option \"OPT__PATCH_COUNT = %d\" [0/1/2] !!\n", OPT__PATCH_COUNT );
 
 
 // general warnings
@@ -1183,6 +1186,9 @@ void Aux_Check_Parameter()
          Aux_Error( ERROR_INFO, "\"%s\" does NOT work for NX0_TOT[%d] = 2*PATCH_SIZE when periodic BC is adopted !!\n",
                     "Par_MassAssignment", d );
    }
+
+   if ( OPT__PARTICLE_COUNT < 0  ||  OPT__PARTICLE_COUNT > 2 )
+      Aux_Error( ERROR_INFO, "incorrect option \"OPT__PARTICLE_COUNT = %d\" [0/1/2] !!\n", OPT__PARTICLE_COUNT );
 
 
 // warning 

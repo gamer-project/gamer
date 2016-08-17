@@ -129,8 +129,8 @@ double         LB_INPUT__WLI_MAX;
 #ifdef PARTICLE
 double         DT__PARVEL, DT__PARVEL_MAX, DT__PARACC;
 real           MinDtInfo_ParVelAcc[2][NLEVEL];
-bool           OPT__OUTPUT_PARTICLE, OPT__CK_PARTICLE, OPT__PAR_LEVEL, OPT__FLAG_NPAR_CELL;
-int            OPT__FLAG_NPAR_PATCH, FlagTable_NParPatch[NLEVEL-1], FlagTable_NParCell[NLEVEL-1];
+bool           OPT__OUTPUT_PARTICLE, OPT__CK_PARTICLE, OPT__FLAG_NPAR_CELL;
+int            OPT__PARTICLE_COUNT, OPT__FLAG_NPAR_PATCH, FlagTable_NParPatch[NLEVEL-1], FlagTable_NParCell[NLEVEL-1];
 #endif
 
 
@@ -269,11 +269,11 @@ int main( int argc, char *argv[] )
 
    Output_DumpData( 0 );
 
-   if ( OPT__PATCH_COUNT > 0 )   Aux_PatchCount();
-   if ( OPT__RECORD_MEMORY   )   Aux_GetMemInfo();
-   if ( OPT__RECORD_USER     )   Aux_RecordUser();
+   if ( OPT__PATCH_COUNT > 0 )      Aux_PatchCount();
+   if ( OPT__RECORD_MEMORY )        Aux_GetMemInfo();
+   if ( OPT__RECORD_USER )          Aux_RecordUser();
 #  ifdef PARTICLE
-   if ( OPT__PAR_LEVEL       )   Par_Aux_GetParticleLevel();
+   if ( OPT__PARTICLE_COUNT > 0 )   Par_Aux_ParticleCount();
 #  endif
 
    Aux_Check();
@@ -464,8 +464,8 @@ int main( int argc, char *argv[] )
       TIMING_FUNC(   Aux_RecordCorrUnphy(),      Timer_Main[4],   false   );
 
 #     ifdef PARTICLE
-      if ( OPT__PAR_LEVEL )
-      TIMING_FUNC(   Par_Aux_GetParticleLevel(), Timer_Main[4],   false   );
+      if ( OPT__PARTICLE_COUNT == 1 )
+      TIMING_FUNC(   Par_Aux_ParticleCount(),    Timer_Main[4],   false   );
 #     endif
 
       TIMING_FUNC(   Aux_Check(),                Timer_Main[4],   false   );
@@ -499,8 +499,12 @@ int main( int argc, char *argv[] )
          TIMING_FUNC(   amr->LB->reset(),                        Timer_Main[5],   false   );
          TIMING_FUNC(   LB_Init_LoadBalance( DuringRestart_No ), Timer_Main[5],   false   );
          TIMING_FUNC(   Aux_PatchCount(),                        Timer_Main[5],   false   );
+#        ifdef PARTICLE
+         if ( OPT__PARTICLE_COUNT > 0 )
+         TIMING_FUNC(   Par_Aux_ParticleCount(),                 Timer_Main[5],   false   );
+#        endif
       }
-#     endif
+#     endif // #ifdef LOAD_BALANCE
 //    ---------------------------------------------------------------------------------------------------
 
 

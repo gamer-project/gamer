@@ -343,7 +343,7 @@ struct InputPara_t
 #  endif
    int    Opt__PatchCount;
 #  ifdef PARTICLE
-   int    Opt__ParLevel;
+   int    Opt__ParticleCount;
 #  endif
 
 // load balance

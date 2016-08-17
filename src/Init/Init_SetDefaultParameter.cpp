@@ -589,7 +589,7 @@ void Init_SetDefaultParameter()
 
 // (5) for Load-balance simulation
 #  ifdef LOAD_BALANCE
-// (5-1) always turn on "OPT__PATCH_COUNT"
+// (5-1) always turn on "OPT__PATCH_COUNT" in order to record the weighted-load-imbalance (WLI) factor
    if ( OPT__PATCH_COUNT <= 0 )
    {
       OPT__PATCH_COUNT = 1;
