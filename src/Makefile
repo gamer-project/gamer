@@ -93,7 +93,7 @@ SIMU_OPTION += -DSTORE_PAR_ACC
 SIMU_OPTION += -DGAMER_OPTIMIZATION
 
 # debug mode
-SIMU_OPTION += -DGAMER_DEBUG
+#SIMU_OPTION += -DGAMER_DEBUG
 
 # measure the elapsing wall-clock time of different parts of the program
 SIMU_OPTION += -DTIMING

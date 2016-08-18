@@ -673,7 +673,16 @@ void LB_GetBufferData( const int lv, const int FluSg, const int PotSg, const Get
 // 4. transfer data by MPI_Alltoallv
 // ============================================================================================================
 #  ifdef TIMING
-   if ( OPT__TIMING_MPI )  Timer_MPI[1]->Start();
+   if ( OPT__TIMING_MPI )
+   {
+//    add barrier before timing transferring data through MPI
+//    --> so that the timing results (i.e., the MPI bandwidth reported by OPT__TIMING_MPI ) does NOT include
+//        the time waiting for other ranks to reach here
+//    --> make the MPI bandwidth measured here more accurate
+      MPI_Barrier( MPI_COMM_WORLD );
+
+      Timer_MPI[1]->Start();
+   }
 #  endif
 
 #  ifdef FLOAT8

@@ -102,6 +102,8 @@ void Gra_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, co
          amr->PotSg    [lv]             = SaveSg_Pot;
          amr->PotSgTime[lv][SaveSg_Pot] = TimeNew;
 
+//       note that the MPI bandwidth achieved in the following command may be much lower than normal
+//       because of switching back from the MPI buffer used by FFTW
          TIMING_FUNC(   Buf_GetBufferData( lv, NULL_INT, SaveSg_Pot, POT_FOR_POISSON, _POTE, Pot_ParaBuf, USELB_YES ),
                         Timer_GetBuf[lv][1],   true   );
 
