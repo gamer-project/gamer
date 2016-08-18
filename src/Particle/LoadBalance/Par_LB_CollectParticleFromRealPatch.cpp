@@ -171,7 +171,8 @@ void Par_LB_CollectParticleFromRealPatch( const int lv,
 // 2. prepare the particle data to be sent
    const int NParVar = 4;  // mass*1 + position*3
 
-   real *SendBuf_ParDataEachPatch = new real [ NSendParTotal*NParVar ];
+// reuse the MPI send buffer declared in LB_GetBufferData for better MPI performance
+   real *SendBuf_ParDataEachPatch = LB_GetBufferData_MemAllocate_Send( NSendParTotal*NParVar );
 
    real  *SendPtr         = SendBuf_ParDataEachPatch;
    long  *ParList         = NULL;
@@ -251,7 +252,8 @@ void Par_LB_CollectParticleFromRealPatch( const int lv,
    int  *SendBuf_NPatchEachRank   = Real_NPatchEachRank;
    int  *RecvBuf_NPatchEachRank   = Buff_NPatchEachRank;
    int  *RecvBuf_NParEachPatch    = NULL;   // will be allocated by Par_LB_SendParticleData and must be free'd later
-   real *RecvBuf_ParDataEachPatch = NULL;   // will be allocated by Par_LB_SendParticleData and must be free'd later
+   real *RecvBuf_ParDataEachPatch = NULL;   // a pointer to the MPI recv buffer declared in LB_GetBufferData
+                                            // --> don't have to be free'd here
 
    long *SendBuf_LBIdxEachRank    = NULL;   // useless and does not need to be allocated
    long *RecvBuf_LBIdxEachRank    = NULL;   // useless and will not be allocated by Par_LB_SendParticleData
@@ -274,7 +276,6 @@ void Par_LB_CollectParticleFromRealPatch( const int lv,
 
 // free the send buffer in advance to save memory
    delete [] SendBuf_NParEachPatch;
-   delete [] SendBuf_ParDataEachPatch;
 
 
 // 4. store the received particle data to each patch
@@ -335,7 +336,6 @@ void Par_LB_CollectParticleFromRealPatch( const int lv,
 
 // 5. free memory
    delete [] RecvBuf_NParEachPatch;
-   delete [] RecvBuf_ParDataEachPatch;
 
 } // FUNCTION : Par_LB_CollectParticleFromRealPatch
 

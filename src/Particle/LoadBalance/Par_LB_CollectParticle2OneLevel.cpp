@@ -217,10 +217,11 @@ void Par_LB_CollectParticle2OneLevel( const int FaLv, const bool PredictPos, con
       NSendParTotal   += NParForEachRank  [r];
    }
 
-   SendBuf_NParEachPatch    = new int  [NSendPatchTotal];
-   SendBuf_LBIdxEachPatch   = new long [NSendPatchTotal];
-   if ( !JustCountNPar )
-   SendBuf_ParDataEachPatch = new real [ NSendParTotal*NParVar ];
+   SendBuf_NParEachPatch  = new int  [NSendPatchTotal];
+   SendBuf_LBIdxEachPatch = new long [NSendPatchTotal];
+
+// reuse the MPI send buffer declared in LB_GetBufferData for better MPI performance
+   if ( !JustCountNPar )   SendBuf_ParDataEachPatch = LB_GetBufferData_MemAllocate_Send( NSendParTotal*NParVar );
 
 
 // 1-3. set the array offsets of each send buffer
@@ -312,6 +313,7 @@ void Par_LB_CollectParticle2OneLevel( const int FaLv, const bool PredictPos, con
 
 // 2. send data to all ranks
 // these arrays will be allocated by Par_LB_SendParticleData (using call by reference) and must be free'd later
+// --> except for RecvBuf_ParDataEachPatch, which is just a pointer to the MPI recv buffer declared in LB_GetBufferData
    int  *RecvBuf_NPatchEachRank   = NULL;
    int  *RecvBuf_NParEachPatch    = NULL;
    long *RecvBuf_LBIdxEachPatch   = NULL;
@@ -337,8 +339,6 @@ void Par_LB_CollectParticle2OneLevel( const int FaLv, const bool PredictPos, con
    delete [] SendBuf_NPatchEachRank;
    delete [] SendBuf_NParEachPatch;
    delete [] SendBuf_LBIdxEachPatch;
-   if ( !JustCountNPar )
-   delete [] SendBuf_ParDataEachPatch;
 
 
 
@@ -562,8 +562,6 @@ void Par_LB_CollectParticle2OneLevel( const int FaLv, const bool PredictPos, con
    delete [] RecvBuf_NPatchEachRank;
    delete [] RecvBuf_NParEachPatch;
    delete [] RecvBuf_LBIdxEachPatch;
-   if ( !JustCountNPar )
-   delete [] RecvBuf_ParDataEachPatch;
 
    delete [] NParForEachRank;
    delete [] Offset_NParEachPatch;

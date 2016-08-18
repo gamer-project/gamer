@@ -4,12 +4,13 @@
 #ifdef LOAD_BALANCE
 
 
-const real BufSizeFactor = 1.2;  // SendBufSize = int(NSend_Total*BufSizeFactor); same for the recv buffer (must be >= 1.0)
+const real BufSizeFactor = 1.2;  // Send/RecvBufSize = int(NSend/NRecv*BufSizeFactor) --> must be >= 1.0
 
-static real *SendBuf     = NULL;
-static real *RecvBuf     = NULL;
-static int   SendBufSize = -1;
-static int   RecvBufSize = -1;
+// MPI buffers are shared by some particle routines
+static real *MPI_SendBuf_Shared = NULL;
+static real *MPI_RecvBuf_Shared = NULL;
+static int   SendBufSize        = -1;
+static int   RecvBufSize        = -1;
 
 #ifdef TIMING
 extern Timer_t *Timer_MPI[3];
@@ -375,22 +376,10 @@ void LB_GetBufferData( const int lv, const int FluSg, const int PotSg, const Get
    NSend_Total = Send_NDisp[ MPI_NRank-1 ] + Send_NCount[ MPI_NRank-1 ];
    NRecv_Total = Recv_NDisp[ MPI_NRank-1 ] + Recv_NCount[ MPI_NRank-1 ];
 
+
 // allocate send/recv buffers (only when the current buffer size is not large enough --> improve performance)
-   if ( NSend_Total > SendBufSize )
-   {
-      if ( SendBuf != NULL )  delete [] SendBuf;
-
-      SendBufSize = int(NSend_Total*BufSizeFactor);   // allocate BufSizeFactor more memory to make it last longer
-      SendBuf     = new real [SendBufSize];
-   }
-
-   if ( NRecv_Total > RecvBufSize )
-   {
-      if ( RecvBuf != NULL )  delete [] RecvBuf;
-
-      RecvBufSize = int(NRecv_Total*BufSizeFactor);   // allocate BufSizeFactor more memory to make it last longer
-      RecvBuf     = new real [RecvBufSize];
-   }
+   real *SendBuf = LB_GetBufferData_MemAllocate_Send( NSend_Total );
+   real *RecvBuf = LB_GetBufferData_MemAllocate_Recv( NRecv_Total );
 
 
 
@@ -1034,26 +1023,88 @@ void LB_GetBufferData( const int lv, const int FluSg, const int PotSg, const Get
 
 
 //-------------------------------------------------------------------------------------------------------
+// Function    :  LB_GetBufferData_MemAllocate_Send
+// Description :  Allocate the MPI send buffer used by LG_GetBufferData (and Par_LB_SendParticleData)
+//
+// Note        :  1. Call LB_GetBufferData_MemFree to free memory
+//                2. This function is used by some particle routines as well
+//                3. We reallocate send/recv buffers only when the current buffer size is not large enough
+//                   --> It greatly improves MPI performance
+//
+// Parameter   :  NSend : Number of elements (with the type "real) to be sent
+//
+// Return      :  Pointer to the MPI send buffer
+//-------------------------------------------------------------------------------------------------------
+real *LB_GetBufferData_MemAllocate_Send( const int NSend )
+{
+
+   if ( NSend > SendBufSize )
+   {
+      if ( MPI_SendBuf_Shared != NULL )   delete [] MPI_SendBuf_Shared;
+
+//    allocate BufSizeFactor more memory to sustain longer
+      SendBufSize        = int(NSend*BufSizeFactor);
+      MPI_SendBuf_Shared = new real [SendBufSize];
+   }
+
+   return MPI_SendBuf_Shared;
+
+} // FUNCTION : LB_GetBufferData_MemAllocate_Send
+
+
+
+//-------------------------------------------------------------------------------------------------------
+// Function    :  LB_GetBufferData_MemAllocate_Recv
+// Description :  Allocate the MPI recv buffer used by LG_GetBufferData (and Par_LB_SendParticleData)
+//
+// Note        :  1. Call LB_GetBufferData_MemFree to free memory
+//                2. This function is used by some particle routines as well
+//                3. We reallocate send/recv buffers only when the current buffer size is not large enough
+//                   --> It greatly improves MPI performance
+//
+// Parameter   :  NRecv : Number of elements (with the type "real) to be sent
+//
+// Return      :  Pointer to the MPI recv buffer
+//-------------------------------------------------------------------------------------------------------
+real *LB_GetBufferData_MemAllocate_Recv( const int NRecv )
+{
+
+   if ( NRecv > RecvBufSize )
+   {
+      if ( MPI_RecvBuf_Shared != NULL )   delete [] MPI_RecvBuf_Shared;
+
+//    allocate BufSizeFactor more memory to sustain longer
+      RecvBufSize        = int(NRecv*BufSizeFactor);
+      MPI_RecvBuf_Shared = new real [RecvBufSize];
+   }
+
+   return MPI_RecvBuf_Shared;
+
+} // FUNCTION : LB_GetBufferData_MemAllocate_Recv
+
+
+
+//-------------------------------------------------------------------------------------------------------
 // Function    :  LB_GetBufferData_MemFree
 // Description :  Free the MPI send and recv buffers
 //
-// Note        :  This function is invoded by "End_MemFree"
+// Note        :  This function is invoked by "End_MemFree"
 //
 // Parameter   :  None
 //-------------------------------------------------------------------------------------------------------
 void LB_GetBufferData_MemFree()
 {
 
-   if ( SendBuf != NULL )
+   if ( MPI_SendBuf_Shared != NULL )
    {
-      delete [] SendBuf;
-      SendBuf = NULL;
+      delete [] MPI_SendBuf_Shared;
+      MPI_SendBuf_Shared = NULL;
    }
 
-   if ( RecvBuf != NULL )
+   if ( MPI_RecvBuf_Shared != NULL )
    {
-      delete [] RecvBuf;
-      RecvBuf = NULL;
+      delete [] MPI_RecvBuf_Shared;
+      MPI_RecvBuf_Shared = NULL;
    }
 
 } // FUNCTION : LB_GetBufferData_MemFree

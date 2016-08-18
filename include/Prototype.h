@@ -315,6 +315,8 @@ void LB_FindFather( const int SonLv, const bool SearchAllSon, const int NInput, 
 void LB_FindSonNotHome( const int FaLv, const bool SearchAllFa, const int NInput, int* TargetFaPID );
 void LB_GetBufferData( const int lv, const int FluSg, const int PotSg, const GetBufMode_t GetBufMode,
                        const int TVar, const int ParaBuf );
+real*LB_GetBufferData_MemAllocate_Send( const int NSend );
+real*LB_GetBufferData_MemAllocate_Recv( const int NRecv );
 void LB_GrandsonCheck( const int lv );
 void LB_Init_LoadBalance( const bool DuringRestart );
 void LB_SetCutPoint( const int lv, long *CutPoint, const bool InputLBIdxList, long *LBIdx_AllRank );

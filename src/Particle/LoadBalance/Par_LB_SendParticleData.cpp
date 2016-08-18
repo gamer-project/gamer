@@ -13,6 +13,8 @@
 // Note        :  1. SendBuf_XXX must be preallocated and will NOT be deallocated in this function
 //                2. RecvBuf_XXX will be allocated in this function (using call by reference) and must be
 //                   deallocated manually after calling this function
+//                   --> Except for RecvBuf_ParDataEachPatch, which is just a pointer to the MPI recv buffer
+//                       declared in LB_GetBufferData
 //                3. SendBuf_ParDataEachPatch format: [ParID][ParAttribute] instead of [ParAttribute][ParID]
 //                4. Called by "Par_LB_CollectParticleFromRealPatch, Par_LB_CollectParticle2OneLevel, and
 //                   Par_LB_ExchangeParticleBetweenPatch"
@@ -185,9 +187,10 @@ void Par_LB_SendParticleData( const int NParVar, int *SendBuf_NPatchEachRank, in
          RecvDisp_ParDataEachPatch[r] = RecvDisp_ParDataEachPatch[r-1] + RecvCount_ParDataEachPatch[r-1];
       }
 
-//    exchange data
-      RecvBuf_ParDataEachPatch = new real [ NRecvParTotal*NParVar ];
+//    reuse the MPI recv buffer declared in LB_GetBufferData for better MPI performance
+      RecvBuf_ParDataEachPatch = LB_GetBufferData_MemAllocate_Recv( NRecvParTotal*NParVar );
 
+//    exchange data
 #     ifdef FLOAT8
       MPI_Alltoallv( SendBuf_ParDataEachPatch, SendCount_ParDataEachPatch, SendDisp_ParDataEachPatch, MPI_DOUBLE,
                      RecvBuf_ParDataEachPatch, RecvCount_ParDataEachPatch, RecvDisp_ParDataEachPatch, MPI_DOUBLE, MPI_COMM_WORLD );
