@@ -89,7 +89,7 @@ struct Timer_t
          Aux_Error( ERROR_INFO, "timer is exhausted !!\n" );
 
       if ( Status[WorkingID] )
-         Aux_Message( stderr, "WARNING : the timer has already been started (WorkingID = %u) !!\n", WorkingID );
+         Aux_Message( stderr, "WARNING : timer has already been started (WorkingID = %u) !!\n", WorkingID );
 #     endif
 
       timeval tv;
@@ -117,7 +117,7 @@ struct Timer_t
          Aux_Error( ERROR_INFO, "timer is exhausted !!\n" );
 
       if ( !Status[WorkingID] )
-         Aux_Message( stderr, "WARNING : the timer has NOT been started (WorkingID = %u) !!\n", WorkingID );
+         Aux_Message( stderr, "WARNING : timer has NOT been started (WorkingID = %u) !!\n", WorkingID );
 #     endif
 
       timeval tv;
@@ -142,11 +142,11 @@ struct Timer_t
    {
 #     ifdef GAMER_DEBUG
       if ( TargetID >= NTimer )
-         Aux_Error( ERROR_INFO, "the queried timer does NOT exist (TargetID = %u, NTimer = %u) !!\n",
+         Aux_Error( ERROR_INFO, "timer does NOT exist (TargetID = %u, NTimer = %u) !!\n",
                     TargetID, NTimer );
 
       if ( Status[TargetID] )
-         Aux_Message( stderr, "WARNING : the timer is still ticking (TargetID = %u) !!\n", TargetID );
+         Aux_Message( stderr, "WARNING : timer is still ticking (TargetID = %u) !!\n", TargetID );
 #     endif
 
       return Time[TargetID]*1.e-6f;
@@ -167,7 +167,7 @@ struct Timer_t
       {
 #        ifdef GAMER_DEBUG
          if ( Status[t] )
-            Aux_Message( stderr, "WARNING : resetting a using timer (WorkingID = %u) !!\n", t );
+            Aux_Message( stderr, "WARNING : resetting a ticking timer (WorkingID = %u) !!\n", t );
 #        endif
 
          Time[t]   = 0;

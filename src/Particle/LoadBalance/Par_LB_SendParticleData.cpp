@@ -76,12 +76,11 @@ void Par_LB_SendParticleData( const int NParVar, int *SendBuf_NPatchEachRank, in
 
 // start timing
 #  ifdef TIMING
-   const uint Timer_WorkingID = Timer->WorkingID;
-   double time0, time1, dtime;
+   double time0, dtime;
 
    if ( Timer != NULL )
    {
-      if ( OPT__TIMING_MPI )  time0 = Timer->GetValue( Timer_WorkingID );
+      if ( OPT__TIMING_MPI )  time0 = Timer->GetValue( Timer->WorkingID );
 
       Timer->Start();
    }
@@ -211,8 +210,7 @@ void Par_LB_SendParticleData( const int NParVar, int *SendBuf_NPatchEachRank, in
 
       if ( OPT__TIMING_MPI )
       {
-         time1 = Timer->GetValue( Timer_WorkingID );
-         dtime = time1 - time0;
+         dtime = Timer->GetValue( Timer->WorkingID-1 ) - time0;
 
 //       output to the same log file as LB_GetBufferData
          char FileName[100];
@@ -220,17 +218,11 @@ void Par_LB_SendParticleData( const int NParVar, int *SendBuf_NPatchEachRank, in
 
          FILE *File = fopen( FileName, "a" );
 
-         static bool FirstTime = true;
-         if ( FirstTime )  fprintf( File, "%3s %2s %8s %4s %4s %8s %8s %8s %8s %8s %10s %10s\n",
-                                    "Rk", "Lv", "Mode", "NVar", "NBuf", "Prep(s)", "Close(s)", "MPI(s)", "Send(MB)", "Recv(MB)",
-                                    "Send(MB/s)", "Recv(MB/s)" );
-         FirstTime = false;
-
          const double SendMB = (double)NSendParTotal*NParVar*sizeof(real)*1.0e-6;
          const double RecvMB = (double)NRecvParTotal*NParVar*sizeof(real)*1.0e-6;
 
-         fprintf( File, "%3d %11s %4d %4s %8s %8s %8.3f %8.3f %8.3f %10.3f %10.3f\n",
-                  MPI_Rank, Timer_Comment, NParVar, "", "", "", dtime, SendMB, RecvMB, SendMB/dtime, RecvMB/dtime );
+         fprintf( File, "%19s %4d %4s %8s %8s %8.3f %8.3f %8.3f %10.3f %10.3f\n",
+                  Timer_Comment, NParVar, "X", "X", "X", dtime, SendMB, RecvMB, SendMB/dtime, RecvMB/dtime );
 
          fclose( File );
       } // if ( OPT__TIMING_MPI )

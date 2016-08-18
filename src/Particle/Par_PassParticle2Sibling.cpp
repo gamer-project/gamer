@@ -320,8 +320,8 @@ void Par_PassParticle2Sibling( const int lv, const bool TimingSendPar )
       Timer[0] = Timer_Par_MPI[lv][0];
       Timer[1] = Timer_Par_MPI[lv][1];
 
-      sprintf( Timer_Comment[0], "%2d B2R-Sib",  lv );
-      sprintf( Timer_Comment[1], "%2d B2R-FSib", lv );
+      sprintf( Timer_Comment[0], "%3d %15s", lv, "Par_2Sib-Sib" );
+      sprintf( Timer_Comment[1], "%3d %15s", lv, "Par_2Sib-FaSib" );
    }
 #  endif
 

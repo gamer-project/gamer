@@ -53,7 +53,7 @@ void Par_PassParticle2Son_AllPatch( const int FaLv, const bool TimingSendPar )
    if ( TimingSendPar )
    {
       Timer = Timer_Par_MPI[FaLv][2];
-      sprintf( Timer_Comment, "%2d F2S", FaLv );
+      sprintf( Timer_Comment, "%3d %15s", FaLv, "Par_2Son" );
    }
 #  endif
 

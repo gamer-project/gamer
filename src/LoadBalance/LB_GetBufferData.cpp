@@ -993,16 +993,16 @@ void LB_GetBufferData( const int lv, const int FluSg, const int PotSg, const Get
       FILE *File = fopen( FileName, "a" );
 
       static bool FirstTime = true;
-      if ( FirstTime )  fprintf( File, "%3s %2s %8s %4s %4s %8s %8s %8s %8s %8s %10s %10s\n",
-                                 "Rk", "Lv", "Mode", "NVar", "NBuf", "Prep(s)", "Close(s)", "MPI(s)", "Send(MB)", "Recv(MB)",
+      if ( FirstTime )  fprintf( File, "%3s %15s %4s %4s %8s %8s %8s %8s %8s %10s %10s\n",
+                                 "Lv", "Mode", "NVar", "NBuf", "Prep(s)", "Close(s)", "MPI(s)", "Send(MB)", "Recv(MB)",
                                  "Send(MB/s)", "Recv(MB/s)" );
       FirstTime = false;
 
       const double SendMB = NSend_Total*sizeof(real)*1.0e-6;
       const double RecvMB = NRecv_Total*sizeof(real)*1.0e-6;
 
-      fprintf( File, "%3d %2d %8s %4d %4d %8.3f %8.3f %8.3f %8.3f %8.3f %10.3f %10.3f\n",
-               MPI_Rank, lv, ModeName, NVar_Tot, (GetBufMode==DATA_RESTRICT || GetBufMode==COARSE_FINE_FLUX)?-1:ParaBuf,
+      fprintf( File, "%3d %15s %4d %4d %8.3f %8.3f %8.3f %8.3f %8.3f %10.3f %10.3f\n",
+               lv, ModeName, NVar_Tot, (GetBufMode==DATA_RESTRICT || GetBufMode==COARSE_FINE_FLUX)?-1:ParaBuf,
                Timer_MPI[0]->GetValue(0), Timer_MPI[2]->GetValue(0), Timer_MPI[1]->GetValue(0),
                SendMB, RecvMB, SendMB/Timer_MPI[1]->GetValue(0), RecvMB/Timer_MPI[1]->GetValue(0) );
 

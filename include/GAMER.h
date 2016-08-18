@@ -29,8 +29,7 @@
 #     ifdef SERIAL
 #        include <drfftw.h>
 #     else
-//#        include <drfftw_mpi.h>
-#        include <rfftw_mpi.h>
+#        include <drfftw_mpi.h>
 #     endif
 #  else
 #     ifdef SERIAL

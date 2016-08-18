@@ -127,8 +127,8 @@ void Par_LB_CollectParticle2OneLevel( const int FaLv, const bool PredictPos, con
 //    0-1. sibling-buffer patches at FaLv
       if ( SibBufPatch  &&  !JustCountNPar )
       {
-         char Timer_Comment[20];
-         sprintf( Timer_Comment, "%2d R2B-Sib", FaLv );
+         char Timer_Comment[50];
+         sprintf( Timer_Comment, "%3d %15s", FaLv, "Par_Coll2Sib" );
 
          Par_LB_CollectParticleFromRealPatch(
             FaLv,
@@ -140,8 +140,8 @@ void Par_LB_CollectParticle2OneLevel( const int FaLv, const bool PredictPos, con
 //    0-2. father-sibling-buffer patches at FaLv-1
       if ( FaSibBufPatch  &&  FaLv > 0  &&  !JustCountNPar )
       {
-         char Timer_Comment[20];
-         sprintf( Timer_Comment, "%2d R2B-FSib", FaLv );
+         char Timer_Comment[50];
+         sprintf( Timer_Comment, "%3d %15s", FaLv, "Par_Coll2FaSib" );
 
          Par_LB_CollectParticleFromRealPatch(
             FaLv-1,
@@ -323,8 +323,8 @@ void Par_LB_CollectParticle2OneLevel( const int FaLv, const bool PredictPos, con
    const bool Exchange_ParDataEachRank    = !JustCountNPar;
    int  NRecvPatchTotal, NRecvParTotal;
 
-   char Timer_Comment[20];
-   sprintf( Timer_Comment, "%2d ParColl", FaLv );
+   char Timer_Comment[50];
+   sprintf( Timer_Comment, "%3d %15s", FaLv, "Par_Collect" );
 
 // note that Par_LB_SendParticleData will also return the total number of patches and particles received (using call by reference)
    Par_LB_SendParticleData( NParVar, SendBuf_NPatchEachRank, SendBuf_NParEachPatch, SendBuf_LBIdxEachPatch,
@@ -534,8 +534,8 @@ void Par_LB_CollectParticle2OneLevel( const int FaLv, const bool PredictPos, con
 // 6-1. sibling-buffer patches at FaLv
    if ( SibBufPatch  &&  !JustCountNPar )
    {
-      char Timer_Comment[20];
-      sprintf( Timer_Comment, "%2d R2B-Sib", FaLv );
+      char Timer_Comment[50];
+      sprintf( Timer_Comment, "%3d %15s", FaLv, "Par_Coll2Sib" );
 
       Par_LB_CollectParticleFromRealPatch(
          FaLv,
@@ -547,8 +547,8 @@ void Par_LB_CollectParticle2OneLevel( const int FaLv, const bool PredictPos, con
 // 6-2. father-sibling-buffer patches at FaLv-1
    if ( FaSibBufPatch  &&  FaLv > 0  &&  !JustCountNPar )
    {
-      char Timer_Comment[20];
-      sprintf( Timer_Comment, "%2d R2B-FSib", FaLv );
+      char Timer_Comment[50];
+      sprintf( Timer_Comment, "%3d %15s", FaLv, "Par_Coll2FaSib" );
 
       Par_LB_CollectParticleFromRealPatch(
          FaLv-1,
