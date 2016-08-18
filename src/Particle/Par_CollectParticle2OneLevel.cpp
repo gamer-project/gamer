@@ -56,18 +56,21 @@ static void CollectParticle( const int FaLv, const int FaPID, int &NPar_SoFar, l
 //                                          (do nothing if FaLv==0) (for LOAD_BALANCE only)
 //                JustCountNPar  : Just count the number of particles in each real patch at FaLv. Don't collect
 //                                 particle indices (or collect particle mass and position for LOAD_BALANCE)
+//                TimingSendPar  : Measure the elapsed time of the routine "Par_LB_SendParticleData" in
+//                                 Par_LB_CollectParticle2OneLevel (for LOAD_BALANCE only)
 //
 // Return      :  NPar_Copy and ParList_Copy (if JustCountNPar == false) for all non-leaf real patches at FaLv
 //-------------------------------------------------------------------------------------------------------
 void Par_CollectParticle2OneLevel( const int FaLv, const bool PredictPos, const double TargetTime,
-                                   const bool SibBufPatch, const bool FaSibBufPatch, const bool JustCountNPar )
+                                   const bool SibBufPatch, const bool FaSibBufPatch, const bool JustCountNPar,
+                                   const bool TimingSendPar )
 {
 
 // call the parallel version instead
 #  ifdef LOAD_BALANCE
 // note that if SibBufPatch or FaSibBufPatch is on, we need to call Par_LB_CollectParticle2OneLevel
 // even when FaLv == MAX_LEVEL
-   Par_LB_CollectParticle2OneLevel( FaLv, PredictPos, TargetTime, SibBufPatch, FaSibBufPatch, JustCountNPar );
+   Par_LB_CollectParticle2OneLevel( FaLv, PredictPos, TargetTime, SibBufPatch, FaSibBufPatch, JustCountNPar, TimingSendPar );
 
    return;
 

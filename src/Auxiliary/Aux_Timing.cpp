@@ -24,6 +24,7 @@ extern Timer_t *Timer_Par_Update [NLEVEL][3];
 extern Timer_t *Timer_Par_2Sib   [NLEVEL];
 extern Timer_t *Timer_Par_2Son   [NLEVEL];
 extern Timer_t *Timer_Par_Collect[NLEVEL];
+extern Timer_t *Timer_Par_MPI    [NLEVEL][6];
 
 #ifdef TIMING_SOLVER
 extern Timer_t *Timer_Pre         [NLEVEL][4];
@@ -86,6 +87,7 @@ void Aux_CreateTimer()
       Timer_Par_2Sib   [lv] = new Timer_t( N );
       Timer_Par_2Son   [lv] = new Timer_t( N );
       Timer_Par_Collect[lv] = new Timer_t( N );
+      for (int t=0; t<6; t++)    Timer_Par_MPI   [lv][t] = new Timer_t( N );
 
 #     ifdef TIMING_SOLVER
       for (int v=0; v<4; v++)
@@ -133,6 +135,7 @@ void Aux_DeleteTimer()
       delete Timer_Par_2Sib   [lv];
       delete Timer_Par_2Son   [lv];
       delete Timer_Par_Collect[lv];
+      for (int t=0; t<6; t++)    delete Timer_Par_MPI   [lv][t];
 
 #     ifdef TIMING_SOLVER
       for (int v=0; v<4; v++)
@@ -174,6 +177,7 @@ void Aux_ResetTimer()
       Timer_Par_2Sib   [lv]->Reset();
       Timer_Par_2Son   [lv]->Reset();
       Timer_Par_Collect[lv]->Reset();
+      for (int t=0; t<6; t++)    Timer_Par_MPI   [lv][t]->Reset();
 
 #     ifdef TIMING_SOLVER
       for (int v=0; v<4; v++)

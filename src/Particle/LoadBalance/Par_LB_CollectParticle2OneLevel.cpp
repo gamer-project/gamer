@@ -3,6 +3,10 @@
 
 #if ( defined PARTICLE  &&  defined LOAD_BALANCE )
 
+#ifdef TIMING
+extern Timer_t *Timer_Par_MPI[NLEVEL][6];
+#endif
+
 
 
 
@@ -56,13 +60,15 @@
 //                                          (do nothing if FaLv==0)
 //                JustCountNPar  : Just count the number of particles in each real patch at FaLv. Don't collect
 //                                 other particle data (e.g., particle mass and position)
+//                TimingSendPar  : Measure the elapsed time of the routine "Par_LB_SendParticleData"
 //
 // Return      :  NPar_Copy and ParMassPos_Copy array (if JustCountNPar == false) for all non-leaf patches at FaLv
 //                (and for sibling-buffer patches at FaLv if SibBufPatch is on, and for father-sibling-buffer
 //                patches at FaLv-1 if FaSibBufPatch is on and FaLv>0)
 //-------------------------------------------------------------------------------------------------------
 void Par_LB_CollectParticle2OneLevel( const int FaLv, const bool PredictPos, const double TargetTime,
-                                      const bool SibBufPatch, const bool FaSibBufPatch, const bool JustCountNPar )
+                                      const bool SibBufPatch, const bool FaSibBufPatch, const bool JustCountNPar,
+                                      const bool TimingSendPar )
 {
 
 // nothing to do for levels above the max level
@@ -72,6 +78,17 @@ void Par_LB_CollectParticle2OneLevel( const int FaLv, const bool PredictPos, con
 
 
    const int NParVar = 4;  // mass*1 + position*3
+
+   Timer_t *Timer[3] = { NULL, NULL, NULL };
+
+#  ifdef TIMING
+   if ( TimingSendPar )
+   {
+      Timer[0] = Timer_Par_MPI[FaLv][3];
+      Timer[1] = Timer_Par_MPI[FaLv][4];
+      Timer[2] = Timer_Par_MPI[FaLv][5];
+   }
+#  endif
 
 
 // check
@@ -109,19 +126,29 @@ void Par_LB_CollectParticle2OneLevel( const int FaLv, const bool PredictPos, con
    {
 //    0-1. sibling-buffer patches at FaLv
       if ( SibBufPatch  &&  !JustCountNPar )
+      {
+         char Timer_Comment[20];
+         sprintf( Timer_Comment, "%2d R2B-Sib", FaLv );
+
          Par_LB_CollectParticleFromRealPatch(
             FaLv,
             amr->Par->R2B_Buff_NPatchTotal[FaLv][0], amr->Par->R2B_Buff_PIDList[FaLv][0], amr->Par->R2B_Buff_NPatchEachRank[FaLv][0],
             amr->Par->R2B_Real_NPatchTotal[FaLv][0], amr->Par->R2B_Real_PIDList[FaLv][0], amr->Par->R2B_Real_NPatchEachRank[FaLv][0],
-            PredictPos, TargetTime );
+            PredictPos, TargetTime, Timer[1], Timer_Comment );
+      }
 
 //    0-2. father-sibling-buffer patches at FaLv-1
       if ( FaSibBufPatch  &&  FaLv > 0  &&  !JustCountNPar )
+      {
+         char Timer_Comment[20];
+         sprintf( Timer_Comment, "%2d R2B-FSib", FaLv );
+
          Par_LB_CollectParticleFromRealPatch(
             FaLv-1,
             amr->Par->R2B_Buff_NPatchTotal[FaLv][1], amr->Par->R2B_Buff_PIDList[FaLv][1], amr->Par->R2B_Buff_NPatchEachRank[FaLv][1],
             amr->Par->R2B_Real_NPatchTotal[FaLv][1], amr->Par->R2B_Real_PIDList[FaLv][1], amr->Par->R2B_Real_NPatchEachRank[FaLv][1],
-            PredictPos, TargetTime );
+            PredictPos, TargetTime, Timer[2], Timer_Comment );
+      }
 
       return;
    } // if ( FaLv == MAX_LEVEL )
@@ -294,13 +321,17 @@ void Par_LB_CollectParticle2OneLevel( const int FaLv, const bool PredictPos, con
    const bool Exchange_NPatchEachRank_Yes = true;
    const bool Exchange_LBIdxEachRank_Yes  = true;
    const bool Exchange_ParDataEachRank    = !JustCountNPar;
-   int NRecvPatchTotal, NRecvParTotal;
+   int  NRecvPatchTotal, NRecvParTotal;
+
+   char Timer_Comment[20];
+   sprintf( Timer_Comment, "%2d ParColl", FaLv );
 
 // note that Par_LB_SendParticleData will also return the total number of patches and particles received (using call by reference)
    Par_LB_SendParticleData( NParVar, SendBuf_NPatchEachRank, SendBuf_NParEachPatch, SendBuf_LBIdxEachPatch,
-                            SendBuf_ParDataEachPatch, RecvBuf_NPatchEachRank, RecvBuf_NParEachPatch,
+                            SendBuf_ParDataEachPatch, NSendParTotal, RecvBuf_NPatchEachRank, RecvBuf_NParEachPatch,
                             RecvBuf_LBIdxEachPatch, RecvBuf_ParDataEachPatch, NRecvPatchTotal, NRecvParTotal,
-                            Exchange_NPatchEachRank_Yes, Exchange_LBIdxEachRank_Yes, Exchange_ParDataEachRank );
+                            Exchange_NPatchEachRank_Yes, Exchange_LBIdxEachRank_Yes, Exchange_ParDataEachRank,
+                            Timer[0], Timer_Comment );
 
 // 2-2. free memory
    delete [] SendBuf_NPatchEachRank;
@@ -502,19 +533,29 @@ void Par_LB_CollectParticle2OneLevel( const int FaLv, const bool PredictPos, con
 // 6. collect particles for buffer patches
 // 6-1. sibling-buffer patches at FaLv
    if ( SibBufPatch  &&  !JustCountNPar )
+   {
+      char Timer_Comment[20];
+      sprintf( Timer_Comment, "%2d R2B-Sib", FaLv );
+
       Par_LB_CollectParticleFromRealPatch(
          FaLv,
          amr->Par->R2B_Buff_NPatchTotal[FaLv][0], amr->Par->R2B_Buff_PIDList[FaLv][0], amr->Par->R2B_Buff_NPatchEachRank[FaLv][0],
          amr->Par->R2B_Real_NPatchTotal[FaLv][0], amr->Par->R2B_Real_PIDList[FaLv][0], amr->Par->R2B_Real_NPatchEachRank[FaLv][0],
-         PredictPos, TargetTime );
+         PredictPos, TargetTime, Timer[1], Timer_Comment );
+   }
 
 // 6-2. father-sibling-buffer patches at FaLv-1
    if ( FaSibBufPatch  &&  FaLv > 0  &&  !JustCountNPar )
+   {
+      char Timer_Comment[20];
+      sprintf( Timer_Comment, "%2d R2B-FSib", FaLv );
+
       Par_LB_CollectParticleFromRealPatch(
          FaLv-1,
          amr->Par->R2B_Buff_NPatchTotal[FaLv][1], amr->Par->R2B_Buff_PIDList[FaLv][1], amr->Par->R2B_Buff_NPatchEachRank[FaLv][1],
          amr->Par->R2B_Real_NPatchTotal[FaLv][1], amr->Par->R2B_Real_PIDList[FaLv][1], amr->Par->R2B_Real_NPatchEachRank[FaLv][1],
-         PredictPos, TargetTime );
+         PredictPos, TargetTime, Timer[2], Timer_Comment );
+   }
 
 
 // 7. free memory

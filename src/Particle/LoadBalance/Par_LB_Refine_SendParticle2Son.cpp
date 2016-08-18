@@ -106,7 +106,8 @@ void Par_LB_Refine_SendParticle2Son( const int FaLv, const int RefineF2S_Send_NP
    Par_LB_ExchangeParticleBetweenPatch(
       FaLv,
       RefineF2S_Send_NPatchTotal, RefineF2S_Send_PIDList, RefineF2S_Send_NPatchEachRank,
-      RefineF2S_Recv_NPatchTotal, RefineF2S_Recv_PIDList, RefineF2S_Recv_NPatchEachRank );
+      RefineF2S_Recv_NPatchTotal, RefineF2S_Recv_PIDList, RefineF2S_Recv_NPatchEachRank,
+      NULL, NULL );
 
 
 // 3. pass particles from father-buffer patches to their real son patches in the same rank

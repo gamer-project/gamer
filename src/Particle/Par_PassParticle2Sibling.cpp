@@ -3,6 +3,10 @@
 
 #ifdef PARTICLE
 
+#ifdef TIMING
+extern Timer_t *Timer_Par_MPI[NLEVEL][6];
+#endif
+
 
 
 
@@ -22,9 +26,12 @@
 //                3. Particles transferred to buffer patches (at either lv or lv-1) will be resent to their
 //                   corresponding real patches by calling "Par_LB_SendParticle2RealPatch"
 //
-// Parameter   :  lv : Target refinement level
+// Parameter   :  lv             : Target refinement level
+//                TimingSendPar  : Measure the elapsed time of the routine "Par_LB_SendParticleData",
+//                                 which is called by "Par_LB_ExchangeParticleBetweenPatch"
+//                                 --> LOAD_BALANCE only
 //-------------------------------------------------------------------------------------------------------
-void Par_PassParticle2Sibling( const int lv )
+void Par_PassParticle2Sibling( const int lv, const bool TimingSendPar )
 {
 
    const int    FaLv             = lv - 1;
@@ -303,19 +310,36 @@ void Par_PassParticle2Sibling( const int lv )
 //    --> they will be sent again to leaf real patches after the velocity correction operation
 //        (by the function Par_PassParticle2Son_AllPatch)
 #  ifdef LOAD_BALANCE
+
+   Timer_t *Timer[2] = { NULL, NULL };
+   char Timer_Comment[2][20];
+
+#  ifdef TIMING
+   if ( TimingSendPar )
+   {
+      Timer[0] = Timer_Par_MPI[lv][0];
+      Timer[1] = Timer_Par_MPI[lv][1];
+
+      sprintf( Timer_Comment[0], "%2d B2R-Sib",  lv );
+      sprintf( Timer_Comment[1], "%2d B2R-FSib", lv );
+   }
+#  endif
+
 // 7-1. sibling-buffer patches at lv
-      Par_LB_ExchangeParticleBetweenPatch(
-         lv,
-         amr->Par->B2R_Buff_NPatchTotal[lv][0], amr->Par->B2R_Buff_PIDList[lv][0], amr->Par->B2R_Buff_NPatchEachRank[lv][0],
-         amr->Par->B2R_Real_NPatchTotal[lv][0], amr->Par->B2R_Real_PIDList[lv][0], amr->Par->B2R_Real_NPatchEachRank[lv][0] );
+   Par_LB_ExchangeParticleBetweenPatch(
+      lv,
+      amr->Par->B2R_Buff_NPatchTotal[lv][0], amr->Par->B2R_Buff_PIDList[lv][0], amr->Par->B2R_Buff_NPatchEachRank[lv][0],
+      amr->Par->B2R_Real_NPatchTotal[lv][0], amr->Par->B2R_Real_PIDList[lv][0], amr->Par->B2R_Real_NPatchEachRank[lv][0],
+      Timer[0], Timer_Comment[0] );
 
 // 7-2. father-sibling-buffer patches at lv-1 (FaLv)
 //      --> note that XXX[lv][1] is for exchanging patches at lv-1
    if ( FaLv >= 0 )
-      Par_LB_ExchangeParticleBetweenPatch(
-         FaLv,
-         amr->Par->B2R_Buff_NPatchTotal[lv][1], amr->Par->B2R_Buff_PIDList[lv][1], amr->Par->B2R_Buff_NPatchEachRank[lv][1],
-         amr->Par->B2R_Real_NPatchTotal[lv][1], amr->Par->B2R_Real_PIDList[lv][1], amr->Par->B2R_Real_NPatchEachRank[lv][1] );
+   Par_LB_ExchangeParticleBetweenPatch(
+      FaLv,
+      amr->Par->B2R_Buff_NPatchTotal[lv][1], amr->Par->B2R_Buff_PIDList[lv][1], amr->Par->B2R_Buff_NPatchEachRank[lv][1],
+      amr->Par->B2R_Real_NPatchTotal[lv][1], amr->Par->B2R_Real_PIDList[lv][1], amr->Par->B2R_Real_NPatchEachRank[lv][1],
+      Timer[1], Timer_Comment[1] );
 
 // 7-3. check: no buffer patches at lv and lv-1 can have particles at this point
 #  ifdef DEBUG_PARTICLE

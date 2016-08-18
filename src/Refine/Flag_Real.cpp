@@ -61,6 +61,7 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
    const bool FaSibBufPatch_No        = false;
    const bool JustCountNPar_Yes       = true;
    const bool JustCountNPar_No        = false;
+   const bool TimingSendPar_No        = false;
 #  endif
 
 //###NOTE: no refinement is allowed near the simulation boundary if the isolated BC for self-gravity is selected
@@ -101,12 +102,14 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
 // collect particles to **real** patches at lv
 #  ifdef PARTICLE
    if ( OPT__FLAG_NPAR_CELL )
-      Par_CollectParticle2OneLevel( lv, PredictPos_No, NULL_REAL, SibBufPatch_No, FaSibBufPatch_No, JustCountNPar_No );
+      Par_CollectParticle2OneLevel( lv, PredictPos_No, NULL_REAL, SibBufPatch_No, FaSibBufPatch_No, JustCountNPar_No,
+                                    TimingSendPar_No );
 
 // Par_CollectParticle2OneLevel with JustCountNPar_No will set NPar_Copy for each patch as well
 // --> so call Par_CollectParticle2OneLevel with JustCountNPar_Yes only when OPT__FLAG_NPAR_CELL == false
    else if ( OPT__FLAG_NPAR_PATCH != 0 )
-      Par_CollectParticle2OneLevel( lv, PredictPos_No, NULL_REAL, SibBufPatch_No, FaSibBufPatch_No, JustCountNPar_Yes );
+      Par_CollectParticle2OneLevel( lv, PredictPos_No, NULL_REAL, SibBufPatch_No, FaSibBufPatch_No, JustCountNPar_Yes,
+                                    TimingSendPar_No );
 #  endif
 
 

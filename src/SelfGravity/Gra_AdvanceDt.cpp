@@ -72,19 +72,20 @@ void Gra_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, co
 
 // collect particles to the target level
 #  ifdef PARTICLE
+   const bool TimingSendPar_Yes = true;
 #  ifdef LOAD_BALANCE
-   const bool PredictPos       = amr->Par->PredictPos;
-   const bool SibBufPatch      = true;
-   const bool FaSibBufPatch    = true;
-   const bool JustCountNPar_No = false;
+   const bool PredictPos        = amr->Par->PredictPos;
+   const bool SibBufPatch       = true;
+   const bool FaSibBufPatch     = true;
+   const bool JustCountNPar_No  = false;
 #  else
-   const bool PredictPos       = false;
-   const bool SibBufPatch      = NULL_BOOL;
-   const bool FaSibBufPatch    = NULL_BOOL;
-   const bool JustCountNPar_No = false;
+   const bool PredictPos        = false;
+   const bool SibBufPatch       = NULL_BOOL;
+   const bool FaSibBufPatch     = NULL_BOOL;
+   const bool JustCountNPar_No  = false;
 #  endif
    if ( Poisson )    TIMING_FUNC(   Par_CollectParticle2OneLevel( lv, PredictPos, TimeNew, SibBufPatch, FaSibBufPatch,
-                                                                  JustCountNPar_No ),
+                                                                  JustCountNPar_No, TimingSendPar_Yes ),
                                     Timer_Par_Collect[lv],   false   );
 #  endif
 

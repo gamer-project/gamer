@@ -3,6 +3,10 @@
 
 #ifdef PARTICLE
 
+#ifdef TIMING
+extern Timer_t *Timer_Par_MPI[NLEVEL][6];
+#endif
+
 
 
 
@@ -19,9 +23,12 @@
 //                       Par_PassParticle2Son again
 //                2. It is invoked in EvolveLevel after the velocity correction in KDK
 //
-// Parameter   :  FaLv  : Father's refinement level
+// Parameter   :  FaLv           : Father's refinement level
+//                TimingSendPar  : Measure the elapsed time of the routine "Par_LB_SendParticleData",
+//                                 which is called by "Par_LB_ExchangeParticleBetweenPatch"
+//                                 --> LOAD_BALANCE only
 //-------------------------------------------------------------------------------------------------------
-void Par_PassParticle2Son_AllPatch( const int FaLv )
+void Par_PassParticle2Son_AllPatch( const int FaLv, const bool TimingSendPar )
 {
 
 // nothing to do if there is no patch at FaLv+1
@@ -40,11 +47,22 @@ void Par_PassParticle2Son_AllPatch( const int FaLv )
 #  ifdef LOAD_BALANCE
    int FaBufPID;
 
+   Timer_t *Timer = NULL;
+   char Timer_Comment[20];
+#  ifdef TIMING
+   if ( TimingSendPar )
+   {
+      Timer = Timer_Par_MPI[FaLv][2];
+      sprintf( Timer_Comment, "%2d F2S", FaLv );
+   }
+#  endif
+
 // collect particles from other ranks to the father-buffer patches in this rank
    Par_LB_ExchangeParticleBetweenPatch(
       FaLv,
       amr->Par->F2S_Send_NPatchTotal[FaLv], amr->Par->F2S_Send_PIDList[FaLv], amr->Par->F2S_Send_NPatchEachRank[FaLv],
-      amr->Par->F2S_Recv_NPatchTotal[FaLv], amr->Par->F2S_Recv_PIDList[FaLv], amr->Par->F2S_Recv_NPatchEachRank[FaLv] );
+      amr->Par->F2S_Recv_NPatchTotal[FaLv], amr->Par->F2S_Recv_PIDList[FaLv], amr->Par->F2S_Recv_NPatchEachRank[FaLv],
+      Timer, Timer_Comment );
 
 // pass particles from father-buffer patches to their real son patches in the same rank
    for (int t=0; t<amr->Par->F2S_Recv_NPatchTotal[FaLv]; t++)

@@ -226,6 +226,7 @@ Timer_t *Timer_Par_Update [NLEVEL][3];
 Timer_t *Timer_Par_2Sib   [NLEVEL];
 Timer_t *Timer_Par_2Son   [NLEVEL];
 Timer_t *Timer_Par_Collect[NLEVEL];
+Timer_t *Timer_Par_MPI    [NLEVEL][6];
 #endif
 
 #ifdef TIMING_SOLVER
@@ -339,10 +340,12 @@ int main( int argc, char *argv[] )
          Aux_Error( ERROR_INFO, "particle synchronization failed !!\n" );
 
 //    particles may cross patch boundaries after synchronization
+      const bool TimingSendPar_No = false;
+
       for (int lv=0; lv<NLEVEL; lv++)
       {
-         Par_PassParticle2Sibling( lv );
-         Par_PassParticle2Son_AllPatch( lv );
+         Par_PassParticle2Sibling     ( lv, TimingSendPar_No );
+         Par_PassParticle2Son_AllPatch( lv, TimingSendPar_No );
       }
 
       if ( OPT__VERBOSE  &&  MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );
@@ -386,6 +389,7 @@ int main( int argc, char *argv[] )
 
 //       collect particles to the target level
 #        ifdef PARTICLE
+         const bool TimingSendPar_No = false;
 #        ifdef LOAD_BALANCE
          const bool PredictPos       = amr->Par->PredictPos;
          const bool SibBufPatch      = true;
@@ -397,7 +401,8 @@ int main( int argc, char *argv[] )
          const bool FaSibBufPatch    = NULL_BOOL;
          const bool JustCountNPar_No = false;
 #        endif
-         Par_CollectParticle2OneLevel( lv, PredictPos, Time[lv], SibBufPatch, FaSibBufPatch, JustCountNPar_No );
+         Par_CollectParticle2OneLevel( lv, PredictPos, Time[lv], SibBufPatch, FaSibBufPatch, JustCountNPar_No,
+                                       TimingSendPar_No );
 #        endif
 
          if ( lv == 0 )

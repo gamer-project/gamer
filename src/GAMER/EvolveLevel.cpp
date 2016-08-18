@@ -40,10 +40,11 @@ void EvolveLevel( const int lv, const double dTime )
 #  endif
    const double dTime_SubStep = dTime/NSubStep;
 #  ifdef PARTICLE
-   const bool   StoreAcc_Yes     = true;
-   const bool   StoreAcc_No      = false;
-   const bool   UseStoredAcc_Yes = true;
-   const bool   UseStoredAcc_No  = false;
+   const bool   StoreAcc_Yes      = true;
+   const bool   StoreAcc_No       = false;
+   const bool   UseStoredAcc_Yes  = true;
+   const bool   UseStoredAcc_No   = false;
+   const bool   TimingSendPar_Yes = true;
 #  endif
 
    double dt_SubStep, TimeOld, TimeNew;
@@ -91,7 +92,7 @@ void EvolveLevel( const int lv, const double dTime )
       if ( OPT__VERBOSE  &&  MPI_Rank == 0 )
          Aux_Message( stdout, "   Lv %2d: Par_PassParticle2Sibling %9s... ", lv, "" );
 
-      TIMING_FUNC(   Par_PassParticle2Sibling( lv ),   Timer_Par_2Sib[lv],   true   );
+      TIMING_FUNC(   Par_PassParticle2Sibling( lv, TimingSendPar_Yes ),   Timer_Par_2Sib[lv],   true   );
 
       if ( OPT__VERBOSE  &&  MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );
 #     endif
@@ -295,7 +296,7 @@ void EvolveLevel( const int lv, const double dTime )
       if ( OPT__VERBOSE  &&  MPI_Rank == 0 )
          Aux_Message( stdout, "   Lv %2d: Par_PassParticle2Son %12s ... ", lv, "" );
 
-      TIMING_FUNC(   Par_PassParticle2Son_AllPatch( lv ),   Timer_Par_2Son[lv],   true   );
+      TIMING_FUNC(   Par_PassParticle2Son_AllPatch( lv, TimingSendPar_Yes ),   Timer_Par_2Son[lv],   true   );
 
       if ( OPT__VERBOSE  &&  MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );
 #     endif

@@ -14,12 +14,17 @@
 //                2. RecvBuf_XXX will be allocated in this function (using call by reference) and must be
 //                   deallocated manually after calling this function
 //                3. SendBuf_ParDataEachPatch format: [ParID][ParAttribute] instead of [ParAttribute][ParID]
+//                4. Called by "Par_LB_CollectParticleFromRealPatch, Par_LB_CollectParticle2OneLevel, and
+//                   Par_LB_ExchangeParticleBetweenPatch"
+//                   --> Par_LB_ExchangeParticleBetweenPatch is called by
+//                       "Par_PassParticle2Sibling and Par_PassParticle2Son_AllPatch"
 //
 // Parameter   :  NParVar                  : Number of particle attributes to be sent
 //                SendBuf_NPatchEachRank   : MPI send buffer --> number of patches sent to each rank
 //                SendBuf_NParEachPatch    : MPI send buffer --> number of particles in each patch to be sent
 //                SendBuf_LBIdxEachPatch   : MPI send buffer --> load-balance index of each patch to be sent
 //                SendBuf_ParDataEachPatch : MPI send buffer --> particle data in each patch to be sent
+//                NSendParTotal            : Total number of particles sent to all ranks (used by OPT__TIMING_MPI only)
 //                RecvBuf_XXX              : MPI recv buffer
 //                NRecvPatchTotal          : Total number of patches   received from all ranks
 //                NRecvParTotal            : Total number of particles received from all ranks
@@ -34,6 +39,9 @@
 //                                                   --> RecvBuf_LBIdxEachPatch will NOT be allocated
 //                                                   --> Useful in Par_LB_CollectParticleFromRealPatch.cpp
 //                Exchange_ParDataEachRank : true  : Exchange SendBuf_ParDataEachPatch to get RecvBuf_ParDataEachPatch
+//                Timer                    : Timer used by the options "TIMING" and "OPT__TIMING_MPI"
+//                                           --> Do nothing if Timer == NULL
+//                Timer_Comment            : String used by "OPT__TIMING_MPI"
 //
 // Return      :  RecvBuf_NPatchEachRank (if Exchange_NPatchEachRank == true), RecvBuf_NParEachPatch,
 //                RecvBuf_LBIdxEachPatch (if Exchange_LBIdxEachRank == true),
@@ -41,11 +49,11 @@
 //                NRecvPatchTotal, NRecvPatchTotal
 //-------------------------------------------------------------------------------------------------------
 void Par_LB_SendParticleData( const int NParVar, int *SendBuf_NPatchEachRank, int *SendBuf_NParEachPatch,
-                              long *SendBuf_LBIdxEachPatch, real *SendBuf_ParDataEachPatch,
+                              long *SendBuf_LBIdxEachPatch, real *SendBuf_ParDataEachPatch, const int NSendParTotal,
                               int *&RecvBuf_NPatchEachRank, int *&RecvBuf_NParEachPatch, long *&RecvBuf_LBIdxEachPatch,
                               real *&RecvBuf_ParDataEachPatch, int &NRecvPatchTotal, int &NRecvParTotal,
                               const bool Exchange_NPatchEachRank, const bool Exchange_LBIdxEachRank,
-                              const bool Exchange_ParDataEachRank )
+                              const bool Exchange_ParDataEachRank, Timer_t *Timer, const char *Timer_Comment )
 {
 
 // check
@@ -59,6 +67,24 @@ void Par_LB_SendParticleData( const int NParVar, int *SendBuf_NPatchEachRank, in
         SendBuf_LBIdxEachPatch   == NULL )   Aux_Error( ERROR_INFO, "SendBuf_LBIdxEachPatch == NULL !!\n" );
    if ( !Exchange_NPatchEachRank  &&
         RecvBuf_NPatchEachRank   == NULL )   Aux_Error( ERROR_INFO, "RecvBuf_NParEachPatch == NULL !!\n" );
+#  ifdef TIMING
+   if ( Timer != NULL  &&  OPT__TIMING_MPI  &&  Timer_Comment == NULL )
+      Aux_Error( ERROR_INFO, "Timer_Comment == NULL !!\n" );
+#  endif
+#  endif
+
+
+// start timing
+#  ifdef TIMING
+   const uint Timer_WorkingID = Timer->WorkingID;
+   double time0, time1, dtime;
+
+   if ( Timer != NULL )
+   {
+      if ( OPT__TIMING_MPI )  time0 = Timer->GetValue( Timer_WorkingID );
+
+      Timer->Start();
+   }
 #  endif
 
 
@@ -175,6 +201,41 @@ void Par_LB_SendParticleData( const int NParVar, int *SendBuf_NPatchEachRank, in
    delete [] SendDisp_NParEachPatch;
    delete [] RecvCount_NParEachPatch;
    delete [] RecvDisp_NParEachPatch;
+
+
+// stop timing
+#  ifdef TIMING
+   if ( Timer != NULL )
+   {
+      Timer->Stop( true );
+
+      if ( OPT__TIMING_MPI )
+      {
+         time1 = Timer->GetValue( Timer_WorkingID );
+         dtime = time1 - time0;
+
+//       output to the same log file as LB_GetBufferData
+         char FileName[100];
+         sprintf( FileName, "Record__TimingMPI_Rank%d%d%d", MPI_Rank/100, (MPI_Rank%100)/10, MPI_Rank%10 );
+
+         FILE *File = fopen( FileName, "a" );
+
+         static bool FirstTime = true;
+         if ( FirstTime )  fprintf( File, "%3s %2s %8s %4s %4s %8s %8s %8s %8s %8s %10s %10s\n",
+                                    "Rk", "Lv", "Mode", "NVar", "NBuf", "Prep(s)", "Close(s)", "MPI(s)", "Send(MB)", "Recv(MB)",
+                                    "Send(MB/s)", "Recv(MB/s)" );
+         FirstTime = false;
+
+         const double SendMB = (double)NSendParTotal*NParVar*sizeof(real)*1.0e-6;
+         const double RecvMB = (double)NRecvParTotal*NParVar*sizeof(real)*1.0e-6;
+
+         fprintf( File, "%3d %11s %4d %4s %8s %8s %8.3f %8.3f %8.3f %10.3f %10.3f\n",
+                  MPI_Rank, Timer_Comment, NParVar, "", "", "", dtime, SendMB, RecvMB, SendMB/dtime, RecvMB/dtime );
+
+         fclose( File );
+      } // if ( OPT__TIMING_MPI )
+   } // if ( Timer != NULL )
+#  endif // #ifdef TIMING
 
 } // FUNCTION : Par_LB_SendParticleData
 

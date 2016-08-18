@@ -73,7 +73,8 @@ void Par_LB_Refine_SendParticle2Father( const int FaLv, const int RefineS2F_Send
    Par_LB_ExchangeParticleBetweenPatch(
       FaLv,
       RefineS2F_Send_NPatchTotal, RefineS2F_Send_PIDList, RefineS2F_Send_NPatchEachRank,
-      RefineS2F_Recv_NPatchTotal, RefineS2F_Recv_PIDList, RefineS2F_Recv_NPatchEachRank );
+      RefineS2F_Recv_NPatchTotal, RefineS2F_Recv_PIDList, RefineS2F_Recv_NPatchEachRank,
+      NULL, NULL );
 
 
 // 3. free memory (RefineS2F_Send_PIDList will be free'd by LB_Refine)

@@ -22,17 +22,17 @@ extern Timer_t *Timer_MPI[3];
 // Function    :  LB_GetBufferData
 // Description :  Fill up the data(flux) of buffer(real) patches
 //
-// Note        :  1. This function is the alternative to "Buf_GetBufferData" in LOAD_BALANCE, and is 
+// Note        :  1. This function is the alternative to "Buf_GetBufferData" in LOAD_BALANCE, and is
 //                   invoked by "Buf_GetBufferData" and "Flu_FixUp"
-//                2. The modes "POT_FOR_POISSON" and "POT_AFTER_REFINE" can be applied to the potential 
-//                   data only. For others modes, the number of variables to be exchanged depends on 
+//                2. The modes "POT_FOR_POISSON" and "POT_AFTER_REFINE" can be applied to the potential
+//                   data only. For others modes, the number of variables to be exchanged depends on
 //                   the input parameter "TVar".
 //
-// Parameter   :  lv          : Targeted refinement level to exchage data  
-//                FluSg       : Sandglass of the requested fluid data (useless in POT_FOR_POISSON, 
+// Parameter   :  lv          : Targeted refinement level to exchage data
+//                FluSg       : Sandglass of the requested fluid data (useless in POT_FOR_POISSON,
 //                              POT_AFTER_REFINEPOT, COARSE_FINE_FLUX )
 //                PotSg       : Sandglass of the requested potential data (useless in COARSE_FINE_FLUX)
-//                GetBufMode  : Targeted mode. Each mode has its own MPI lists, by which the amount of data 
+//                GetBufMode  : Targeted mode. Each mode has its own MPI lists, by which the amount of data
 //                              to be transferred can be minimized.
 //                              --> DATA_GENERAL      : data for general-purpose (sibling and coarse-grid data)
 //                                  DATA_AFTER_REFINE : subset of DATA_GENERAL after refine
@@ -44,7 +44,7 @@ extern Timer_t *Timer_MPI[3];
 //                TVar        : Targeted variables to exchange
 //                              --> Supported variables in different models:
 //                                  HYDRO : _DENS, _MOMX, _MOMY, _MOMZ, _ENGY, _FLU [, _POTE] [, _PASSIVE]
-//                                  MHD   : 
+//                                  MHD   :
 //                                  ELBDM : _DENS, _REAL, _IMAG, _FLU [, _POTE]
 //                                  In addition, the flux variables (e.g., _FLUX_DENS) are also supported
 //                              Restrictions :
@@ -54,7 +54,7 @@ extern Timer_t *Timer_MPI[3];
 //                                  d. POT_FOR_POISSON and POT_AFTER_REFINE only work with _POTE
 //                ParaBuf     : Number of ghost zones to exchange (useless in DATA_RESTRICT and COARSE_FINE_FLUX )
 //-------------------------------------------------------------------------------------------------------
-void LB_GetBufferData( const int lv, const int FluSg, const int PotSg, const GetBufMode_t GetBufMode, 
+void LB_GetBufferData( const int lv, const int FluSg, const int PotSg, const GetBufMode_t GetBufMode,
                        const int TVar, const int ParaBuf )
 {
 
@@ -81,11 +81,11 @@ void LB_GetBufferData( const int lv, const int FluSg, const int PotSg, const Get
                  "POT_FOR_POISSON and POT_AFTER_REFINE", "_POTE" );
 
    if (  ( GetBufMode == DATA_GENERAL || GetBufMode == DATA_AFTER_FIXUP || GetBufMode == DATA_AFTER_REFINE ||
-           GetBufMode == POT_FOR_POISSON || GetBufMode == POT_AFTER_REFINE )  && 
+           GetBufMode == POT_FOR_POISSON || GetBufMode == POT_AFTER_REFINE )  &&
          ( ParaBuf < 0 || ParaBuf > PATCH_SIZE )  )
-      Aux_Error( ERROR_INFO, "incorrect parameter %s = %d --> accepted range = [0 ... PATCH_SIZE] !!\n", 
+      Aux_Error( ERROR_INFO, "incorrect parameter %s = %d --> accepted range = [0 ... PATCH_SIZE] !!\n",
                  "ParaBuf", ParaBuf );
-   
+
 #  else // #ifdef GRAVITY ... else ...
    if (  ( GetBufMode == DATA_GENERAL || GetBufMode == DATA_AFTER_FIXUP || GetBufMode == DATA_AFTER_REFINE ||
            GetBufMode == DATA_RESTRICT )  &&  !( TVar & (_FLU|_PASSIVE) )  )
@@ -93,7 +93,7 @@ void LB_GetBufferData( const int lv, const int FluSg, const int PotSg, const Get
 
    if (  ( GetBufMode == DATA_GENERAL || GetBufMode == DATA_AFTER_FIXUP || GetBufMode == DATA_AFTER_REFINE )  &&
          ( ParaBuf < 0 || ParaBuf > PATCH_SIZE )  )
-      Aux_Error( ERROR_INFO, "incorrect parameter %s = %d --> range=[0 ... PATCH_SIZE] !!\n", 
+      Aux_Error( ERROR_INFO, "incorrect parameter %s = %d --> range=[0 ... PATCH_SIZE] !!\n",
                  "ParaBuf", ParaBuf );
 #  endif // #ifdef GRAVITY ... else ...
 
@@ -108,7 +108,7 @@ void LB_GetBufferData( const int lv, const int FluSg, const int PotSg, const Get
 
 
 // determine the components to be prepared (TFluVarIdx : targeted fluid variable indices ( = [0 ... NCOMP+NPASSIVE-1] )
-   bool ExchangeFlu = TVar & ( _FLU | _PASSIVE );  // whether or not to exchage the fluid data 
+   bool ExchangeFlu = TVar & ( _FLU | _PASSIVE );  // whether or not to exchage the fluid data
 #  ifdef GRAVITY
    bool ExchangePot = TVar & _POTE;                // whether or not to exchange the potential data
 #  endif
@@ -122,14 +122,14 @@ void LB_GetBufferData( const int lv, const int FluSg, const int PotSg, const Get
 
    NVar_Tot = NVar_Flu;
 #  ifdef GRAVITY
-   if ( ExchangePot )   NVar_Tot ++; 
+   if ( ExchangePot )   NVar_Tot ++;
 
    if ( GetBufMode == POT_FOR_POISSON  ||  GetBufMode == POT_AFTER_REFINE )
    {
       ExchangeFlu = false;
       ExchangePot = true;
       NVar_Flu    = 0;
-      NVar_Tot    = 1; 
+      NVar_Tot    = 1;
    }
 #  endif
 
@@ -145,7 +145,7 @@ void LB_GetBufferData( const int lv, const int FluSg, const int PotSg, const Get
    const int DataUnit_Flux = PS1*PS1*NVar_Flu;
 
    int   NSend_Total, NRecv_Total, SPID, RPID, SSib, RSib, Counter;
-   int   DataUnit_Buf[27], LoopStart[27][3], LoopEnd[27][3]; 
+   int   DataUnit_Buf[27], LoopStart[27][3], LoopEnd[27][3];
    int   LoopStart_X[6][3], LoopEnd_X[6][3];
    real *SendPtr=NULL, *RecvPtr=NULL;
    int  *Send_NList=NULL, *Recv_NList=NULL, *Send_NResList=NULL, *Recv_NResList=NULL;
@@ -234,7 +234,7 @@ void LB_GetBufferData( const int lv, const int FluSg, const int PotSg, const Get
          Recv_SibList         = amr->LB->RecvF_SibList        [lv];
          break;
 
-      default: 
+      default:
          Aux_Error( ERROR_INFO, "incorrect parameter %s = %d !!\n", "GetBufMode", GetBufMode );
    } // switch ( GetBufMode )
 
@@ -381,7 +381,7 @@ void LB_GetBufferData( const int lv, const int FluSg, const int PotSg, const Get
       if ( SendBuf != NULL )  delete [] SendBuf;
 
       SendBufSize = int(NSend_Total*BufSizeFactor);   // allocate BufSizeFactor more memory to make it last longer
-      SendBuf     = new real [SendBufSize]; 
+      SendBuf     = new real [SendBufSize];
    }
 
    if ( NRecv_Total > RecvBufSize )
@@ -389,7 +389,7 @@ void LB_GetBufferData( const int lv, const int FluSg, const int PotSg, const Get
       if ( RecvBuf != NULL )  delete [] RecvBuf;
 
       RecvBufSize = int(NRecv_Total*BufSizeFactor);   // allocate BufSizeFactor more memory to make it last longer
-      RecvBuf     = new real [RecvBufSize]; 
+      RecvBuf     = new real [RecvBufSize];
    }
 
 
@@ -419,7 +419,7 @@ void LB_GetBufferData( const int lv, const int FluSg, const int PotSg, const Get
                SSib = Send_SibList[r][t];
 
 #              ifdef GAMER_DEBUG
-               if ( ExchangeFlu ) 
+               if ( ExchangeFlu )
                {
                   if ( amr->patch[FluSg][lv][SPID]->fluid == NULL )
                      Aux_Error( ERROR_INFO, "Send mode %d, ptr[%d][%d][%d]->fluid has not been allocated !!\n",
@@ -452,8 +452,8 @@ void LB_GetBufferData( const int lv, const int FluSg, const int PotSg, const Get
 //                   fluid data
                      if ( ExchangeFlu )
                      for (int v=0; v<NVar_Flu; v++)
-                     {  
-                        TFluVarIdx = TFluVarIdxList[v]; 
+                     {
+                        TFluVarIdx = TFluVarIdxList[v];
 
                         for (int k=LoopStart[s][2]; k<LoopEnd[s][2]; k++)
                         for (int j=LoopStart[s][1]; j<LoopEnd[s][1]; j++)
@@ -515,7 +515,7 @@ void LB_GetBufferData( const int lv, const int FluSg, const int PotSg, const Get
 //                   fluid data
                      if ( ExchangeFlu )
                      for (int v=0; v<NVar_Flu; v++)
-                     {  
+                     {
                         TFluVarIdx = TFluVarIdxList[v];
 
                         for (int k=LoopStart[s][2]; k<LoopEnd[s][2]; k++)
@@ -562,8 +562,8 @@ void LB_GetBufferData( const int lv, const int FluSg, const int PotSg, const Get
 //                   fluid data
                      if ( ExchangeFlu )
                      for (int v=0; v<NVar_Flu; v++)
-                     {  
-                        TFluVarIdx = TFluVarIdxList[v]; 
+                     {
+                        TFluVarIdx = TFluVarIdxList[v];
 
                         for (int k=LoopStart_X[s][2]; k<LoopEnd_X[s][2]; k++)
                         for (int j=LoopStart_X[s][1]; j<LoopEnd_X[s][1]; j++)
@@ -603,7 +603,7 @@ void LB_GetBufferData( const int lv, const int FluSg, const int PotSg, const Get
 //             fluid data
                if ( ExchangeFlu )
                for (int v=0; v<NVar_Flu; v++)
-               {  
+               {
                   TFluVarIdx = TFluVarIdxList[v];
 
                   memcpy( SendPtr, &amr->patch[FluSg][lv][SPID]->fluid[TFluVarIdx][0][0][0],
@@ -648,8 +648,8 @@ void LB_GetBufferData( const int lv, const int FluSg, const int PotSg, const Get
 #              endif
 
                for (int v=0; v<NVar_Flu; v++)
-               {  
-                  TFluVarIdx = TFluVarIdxList[v]; 
+               {
+                  TFluVarIdx = TFluVarIdxList[v];
 
                   memcpy( SendPtr, FluxPtr[TFluVarIdx], PS1*PS1*sizeof(real) );
 
@@ -660,7 +660,7 @@ void LB_GetBufferData( const int lv, const int FluSg, const int PotSg, const Get
          break; // case COARSE_FINE_FLUX :
 
 
-      default: 
+      default:
          Aux_Error( ERROR_INFO, "incorrect parameter %s = %d !!\n", "GetBufMode", GetBufMode );
    } // switch ( GetBufMode )
 
@@ -676,11 +676,11 @@ void LB_GetBufferData( const int lv, const int FluSg, const int PotSg, const Get
    if ( OPT__TIMING_MPI )  Timer_MPI[1]->Start();
 #  endif
 
-#  ifdef FLOAT8   
-   MPI_Alltoallv( SendBuf, Send_NCount, Send_NDisp, MPI_DOUBLE, 
+#  ifdef FLOAT8
+   MPI_Alltoallv( SendBuf, Send_NCount, Send_NDisp, MPI_DOUBLE,
                   RecvBuf, Recv_NCount, Recv_NDisp, MPI_DOUBLE, MPI_COMM_WORLD );
 #  else
-   MPI_Alltoallv( SendBuf, Send_NCount, Send_NDisp, MPI_FLOAT, 
+   MPI_Alltoallv( SendBuf, Send_NCount, Send_NDisp, MPI_FLOAT,
                   RecvBuf, Recv_NCount, Recv_NDisp, MPI_FLOAT,  MPI_COMM_WORLD );
 #  endif
 
@@ -748,7 +748,7 @@ void LB_GetBufferData( const int lv, const int FluSg, const int PotSg, const Get
 //                   fluid data
                      if ( ExchangeFlu )
                      for (int v=0; v<NVar_Flu; v++)
-                     {  
+                     {
                         TFluVarIdx = TFluVarIdxList[v];
 
                         for (int k=LoopStart[s][2]; k<LoopEnd[s][2]; k++)
@@ -760,7 +760,7 @@ void LB_GetBufferData( const int lv, const int FluSg, const int PotSg, const Get
 #                    ifdef GRAVITY
 //                   potential data
                      if ( ExchangePot )
-                     {  
+                     {
                         for (int k=LoopStart[s][2]; k<LoopEnd[s][2]; k++)
                         for (int j=LoopStart[s][1]; j<LoopEnd[s][1]; j++)
                         for (int i=LoopStart[s][0]; i<LoopEnd[s][0]; i++)
@@ -811,8 +811,8 @@ void LB_GetBufferData( const int lv, const int FluSg, const int PotSg, const Get
 //                   fluid data
                      if ( ExchangeFlu )
                      for (int v=0; v<NVar_Flu; v++)
-                     {  
-                        TFluVarIdx = TFluVarIdxList[v]; 
+                     {
+                        TFluVarIdx = TFluVarIdxList[v];
 
                         for (int k=LoopStart[s][2]; k<LoopEnd[s][2]; k++)
                         for (int j=LoopStart[s][1]; j<LoopEnd[s][1]; j++)
@@ -823,7 +823,7 @@ void LB_GetBufferData( const int lv, const int FluSg, const int PotSg, const Get
 #                    ifdef GRAVITY
 //                   potential data
                      if ( ExchangePot )
-                     {  
+                     {
                         for (int k=LoopStart[s][2]; k<LoopEnd[s][2]; k++)
                         for (int j=LoopStart[s][1]; j<LoopEnd[s][1]; j++)
                         for (int i=LoopStart[s][0]; i<LoopEnd[s][0]; i++)
@@ -858,8 +858,8 @@ void LB_GetBufferData( const int lv, const int FluSg, const int PotSg, const Get
 //                   fluid data
                      if ( ExchangeFlu )
                      for (int v=0; v<NVar_Flu; v++)
-                     {  
-                        TFluVarIdx = TFluVarIdxList[v]; 
+                     {
+                        TFluVarIdx = TFluVarIdxList[v];
 
                         for (int k=LoopStart_X[s][2]; k<LoopEnd_X[s][2]; k++)
                         for (int j=LoopStart_X[s][1]; j<LoopEnd_X[s][1]; j++)
@@ -899,7 +899,7 @@ void LB_GetBufferData( const int lv, const int FluSg, const int PotSg, const Get
 //             fluid data
                if ( ExchangeFlu )
                for (int v=0; v<NVar_Flu; v++)
-               {  
+               {
                   TFluVarIdx = TFluVarIdxList[v];
 
                   memcpy( &amr->patch[FluSg][lv][RPID]->fluid[TFluVarIdx][0][0][0], RecvPtr,
@@ -946,7 +946,7 @@ void LB_GetBufferData( const int lv, const int FluSg, const int PotSg, const Get
 //             add (not replace) flux array with the received flux
                for (int v=0; v<NVar_Flu; v++)
                {
-                  TFluVarIdx = TFluVarIdxList[v]; 
+                  TFluVarIdx = TFluVarIdxList[v];
 
                   for (int m=0; m<PS1; m++)
                   for (int n=0; n<PS1; n++)
@@ -957,7 +957,7 @@ void LB_GetBufferData( const int lv, const int FluSg, const int PotSg, const Get
          break; // case COARSE_FINE_FLUX :
 
 
-      default: 
+      default:
          Aux_Error( ERROR_INFO, "incorrect parameter %s = %d !!\n", "GetBufMode", GetBufMode );
    } // switch ( GetBufMode )
 
@@ -974,7 +974,7 @@ void LB_GetBufferData( const int lv, const int FluSg, const int PotSg, const Get
    {
       char FileName[100];
       sprintf( FileName, "Record__TimingMPI_Rank%d%d%d", MPI_Rank/100, (MPI_Rank%100)/10, MPI_Rank%10 );
-      
+
       char ModeName[100];
       switch ( GetBufMode )
       {
@@ -989,7 +989,7 @@ void LB_GetBufferData( const int lv, const int FluSg, const int PotSg, const Get
          case COARSE_FINE_FLUX :    sprintf( ModeName, "%s", "Flux"                     );   break;
          default:                   Aux_Error( ERROR_INFO, "incorrect parameter %s = %d !!\n", "GetBufMode", GetBufMode );
       }
-      
+
       FILE *File = fopen( FileName, "a" );
 
       static bool FirstTime = true;
@@ -1000,12 +1000,12 @@ void LB_GetBufferData( const int lv, const int FluSg, const int PotSg, const Get
 
       const double SendMB = NSend_Total*sizeof(real)*1.0e-6;
       const double RecvMB = NRecv_Total*sizeof(real)*1.0e-6;
-      
+
       fprintf( File, "%3d %2d %8s %4d %4d %8.3f %8.3f %8.3f %8.3f %8.3f %10.3f %10.3f\n",
                MPI_Rank, lv, ModeName, NVar_Tot, (GetBufMode==DATA_RESTRICT || GetBufMode==COARSE_FINE_FLUX)?-1:ParaBuf,
                Timer_MPI[0]->GetValue(0), Timer_MPI[2]->GetValue(0), Timer_MPI[1]->GetValue(0),
                SendMB, RecvMB, SendMB/Timer_MPI[1]->GetValue(0), RecvMB/Timer_MPI[1]->GetValue(0) );
-      
+
       fclose( File );
 
       for (int t=0; t<3; t++)    Timer_MPI[t]->Reset();
@@ -1014,7 +1014,7 @@ void LB_GetBufferData( const int lv, const int FluSg, const int PotSg, const Get
 #  endif // #ifdef TIMING
 
 
-// free memory   
+// free memory
    delete [] Send_NCount;
    delete [] Recv_NCount;
    delete [] Send_NDisp;
@@ -1026,13 +1026,13 @@ void LB_GetBufferData( const int lv, const int FluSg, const int PotSg, const Get
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  LB_GetBufferData_MemFree
-// Description :  Free the MPI send and recv buffers 
+// Description :  Free the MPI send and recv buffers
 //
 // Note        :  This function is invoded by "End_MemFree"
 //
-// Parameter   :  None 
+// Parameter   :  None
 //-------------------------------------------------------------------------------------------------------
-void LB_GetBufferData_MemFree() 
+void LB_GetBufferData_MemFree()
 {
 
    if ( SendBuf != NULL )

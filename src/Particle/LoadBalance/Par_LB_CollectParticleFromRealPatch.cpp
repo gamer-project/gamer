@@ -34,13 +34,16 @@
 //                                       --> We send particle position **after** prediction so that we don't have to
 //                                           send particle velocity
 //                TargetTime           : Target time for predicting the particle position
+//                Timer                : Timer used by "Par_LB_SendParticleData"
+//                Timer_Comment        : String used by "Par_LB_SendParticleData"
 //
 // Return      :  NPar_Copy and ParMassPos_Copy (if NPar_Copy > 0) for all buffer patches specified in Buff_PIDList
 //-------------------------------------------------------------------------------------------------------
 void Par_LB_CollectParticleFromRealPatch( const int lv,
                                           const int Buff_NPatchTotal, const int *Buff_PIDList, int *Buff_NPatchEachRank,
                                           const int Real_NPatchTotal, const int *Real_PIDList, int *Real_NPatchEachRank,
-                                          const bool PredictPos, const double TargetTime )
+                                          const bool PredictPos, const double TargetTime,
+                                          Timer_t *Timer, const char *Timer_Comment )
 {
 
 // nothing to do for levels above MAX_LEVEL
@@ -258,9 +261,10 @@ void Par_LB_CollectParticleFromRealPatch( const int lv,
 // note that we don't exchange NPatchEachRank (which is already known) and LBIdxEachRank (which is useless here)
    Par_LB_SendParticleData(
       NParVar,
-      SendBuf_NPatchEachRank, SendBuf_NParEachPatch, SendBuf_LBIdxEachRank, SendBuf_ParDataEachPatch,
+      SendBuf_NPatchEachRank, SendBuf_NParEachPatch, SendBuf_LBIdxEachRank, SendBuf_ParDataEachPatch, NSendParTotal,
       RecvBuf_NPatchEachRank, RecvBuf_NParEachPatch, RecvBuf_LBIdxEachRank, RecvBuf_ParDataEachPatch,
-      NRecvPatchTotal, NRecvParTotal, Exchange_NPatchEachRank_No, Exchange_LBIdxEachRank_No, Exchange_ParDataEachRank_Yes );
+      NRecvPatchTotal, NRecvParTotal, Exchange_NPatchEachRank_No, Exchange_LBIdxEachRank_No, Exchange_ParDataEachRank_Yes,
+      Timer, Timer_Comment );
 
 #  ifdef DEBUG_PARTICLE
    if ( NRecvPatchTotal != Buff_NPatchTotal )

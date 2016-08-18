@@ -17,7 +17,7 @@
 //                2. All Target patches (those in Send_PIDList and Recv_PIDList) must be patches at the same level "lv"
 //                3. Currently this function exchange all particles attributes (both ParVar and Passive arrays)
 //                   --> But it can be generalized to work with arbitrary particle attributes
-//                4. This function is called by Par_PassParticle2Sibling and Par_PassParticle2Son
+//                4. This function is called by "Par_PassParticle2Sibling and Par_PassParticle2Son_AllPatch"
 //
 // Parameter   :  lv                   : Target refinement level
 //                Send_NPatchTotal     : Total number of patches in Send_PIDList
@@ -26,13 +26,16 @@
 //                Recv_NPatchTotal     : Total number of patches in Recv_PIDList
 //                Recv_PIDList         : Patch indices to receive particles
 //                Recv_NPatchEachRank  : Number of patches to receive particles from each rank
+//                Timer                : Timer used by "Par_LB_SendParticleData"
+//                Timer_Comment        : String used by "Par_LB_SendParticleData"
 //
 // Return      :  New particles will be added to the particle repository of this rank and linked to the
 //                target recv patches
 //-------------------------------------------------------------------------------------------------------
 void Par_LB_ExchangeParticleBetweenPatch( const int lv,
                                           const int Send_NPatchTotal, const int *Send_PIDList, int *Send_NPatchEachRank,
-                                          const int Recv_NPatchTotal, const int *Recv_PIDList, int *Recv_NPatchEachRank )
+                                          const int Recv_NPatchTotal, const int *Recv_PIDList, int *Recv_NPatchEachRank,
+                                          Timer_t *Timer, const char *Timer_Comment )
 {
 
 // nothing to do for levels above MAX_LEVEL
@@ -193,9 +196,10 @@ void Par_LB_ExchangeParticleBetweenPatch( const int lv,
 // note that we don't exchange NPatchEachRank (which is already known) and LBIdxEachRank (which is useless here)
    Par_LB_SendParticleData(
       NParVar,
-      SendBuf_NPatchEachRank, SendBuf_NParEachPatch, SendBuf_LBIdxEachRank, SendBuf_ParDataEachPatch,
+      SendBuf_NPatchEachRank, SendBuf_NParEachPatch, SendBuf_LBIdxEachRank, SendBuf_ParDataEachPatch, NSendParTotal,
       RecvBuf_NPatchEachRank, RecvBuf_NParEachPatch, RecvBuf_LBIdxEachRank, RecvBuf_ParDataEachPatch,
-      NRecvPatchTotal, NRecvParTotal, Exchange_NPatchEachRank_No, Exchange_LBIdxEachRank_No, Exchange_ParDataEachRank_Yes );
+      NRecvPatchTotal, NRecvParTotal, Exchange_NPatchEachRank_No, Exchange_LBIdxEachRank_No, Exchange_ParDataEachRank_Yes,
+      Timer, Timer_Comment );
 
 #  ifdef DEBUG_PARTICLE
    if ( NRecvPatchTotal != Recv_NPatchTotal )
