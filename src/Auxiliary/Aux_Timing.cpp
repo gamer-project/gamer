@@ -226,7 +226,40 @@ void Aux_RecordTiming()
             Aux_Message( stderr, "WARNING : file \"%s\" already exists !!\n", FileName );
 
          FirstTime = false;
-      }
+
+//       output header
+         File = fopen( FileName, "a" );
+
+         fprintf( File, "# Flu_Adv    : evolve fluid variables\n" );
+         fprintf( File, "# Gra_Adv    : calculate gravitational potential and acceleration\n" );
+         fprintf( File, "# FixUp      : use fine-grid data to correct coarse-grid data\n" );
+         fprintf( File, "# Flag       : check refinement criteria\n" );
+         fprintf( File, "# Refine     : allocate/remove patches on a higher level\n" );
+         fprintf( File, "# Buf_Rho    : MPI for exchanging density for the Poisson solver\n" );
+         fprintf( File, "# Buf_Pot    : MPI for exchanging potential\n" );
+         fprintf( File, "# Buf_Flu1   : MPI for exchanging fluid data after advance\n" );
+         fprintf( File, "# Buf_Flu2   : MPI for exchanging fluid data after fix-up\n" );
+         fprintf( File, "# Buf_Ref    : MPI for exchanging fluid data and potential after grid refinement\n" );
+         fprintf( File, "# Buf_Flux   : MPI for exchanging fluxes across coarse-fine boundaries\n" );
+         fprintf( File, "# Buf_Res    : MPI for exchanging restricted fluid data in the father buffer patches (LOAD_BALANCE only)\n" );
+         fprintf( File, "# Par_KD     : kick-drift for particles\n" );
+         fprintf( File, "# Par_K      : last kick for particles staying at the same level\n" );
+         fprintf( File, "# Par_K-1    : last kick for particles entering coarser grids\n" );
+         fprintf( File, "# Par_2Sib   : pass particles to sibling patches after drift\n" );
+         fprintf( File, "# -MPI_Sib   : MPI for exchanging particles staying at the same level after drift (included in Par_2Sib)\n" );
+         fprintf( File, "# -MPI_FaSib : MPI for exchanging particles entering coarser grids after drift (included in Par_2Sib)\n" );
+         fprintf( File, "# Par_2Son   : pass particles to son patches after the last kick\n" );
+         fprintf( File, "# -MPI       : MPI for exchanging particles after the last kick (included in Par_2Son)\n" );
+         fprintf( File, "# Par_Coll   : collect particles from finer grids for the Poisson solver\n" );
+         fprintf( File, "# -MPI_Real  : MPI for collecting particles from leaf patches in other ranks (included in Par_Coll)\n" );
+         fprintf( File, "# -MPI_Sib   : MPI for collecting particles to sibling buffer patches (included in Par_Coll)\n" );
+         fprintf( File, "# -MPI_FaSib : MPI for collecting particles to father-sibling buffer patches (included in Par_Coll)\n" );
+         fprintf( File, "#--------------------------------------------------------------------------------------" );
+         fprintf( File, "---------------------------------------\n\n" );
+
+
+         fclose( File );
+      } // if ( FirstTime )
 
 
       File = fopen( FileName, "a" );
