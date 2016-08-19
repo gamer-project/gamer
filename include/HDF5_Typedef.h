@@ -451,6 +451,7 @@ struct InputPara_t
 
 // miscellaneous
    int    Opt__Verbose;
+   int    Opt__TimingBarrier;
    int    Opt__TimingBalance;
    int    Opt__TimingMPI;   
    int    Opt__RecordMemory;

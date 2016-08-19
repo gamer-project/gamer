@@ -15,7 +15,7 @@
 void Aux_Check_Parameter()
 {
 
-   if ( MPI_Rank == 0 )    Aux_Message( stdout, "Aux_Check_Parameter ... \n" ); 
+   if ( MPI_Rank == 0 )    Aux_Message( stdout, "Aux_Check_Parameter ... \n" );
 
 
 // general errors
@@ -26,7 +26,7 @@ void Aux_Check_Parameter()
 
 #  if ( defined TIMING_SOLVER  &&  !defined TIMING )
 #     error : ERROR : option TIMING_SOLVER must work with the option TIMING !!
-#  endif 
+#  endif
 
 #  if ( defined OPENMP  &&  !defined _OPENMP )
 #     error : ERROR : something is wrong in OpenMP, the macro "_OPENMP" is NOT defined !!
@@ -34,7 +34,7 @@ void Aux_Check_Parameter()
 
 #  if ( defined OVERLAP_MPI  &&  !defined LOAD_BALANCE )
 #     error : ERROR : option OVERLAP_MPI must work with the option LOAD_BALANCE !!
-#  endif 
+#  endif
 
 #  if ( !defined GRAVITY  &&  defined UNSPLIT_GRAVITY )
 #     error : ERROR : please turn off UNSPLIT_GRAVITY when GRAVITY is off !!
@@ -60,11 +60,11 @@ void Aux_Check_Parameter()
    MPI_Comm_size( MPI_COMM_WORLD, &NRank );
 #  endif
 
-   if ( MPI_NRank != NRank )  
+   if ( MPI_NRank != NRank )
       Aux_Error( ERROR_INFO, "MPI_NRank (%d) != MPI_Comm_size (%d) !!\n", MPI_NRank, NRank );
 
    if ( NX0_TOT[0] <= 0  ||  NX0_TOT[1] <= 0  ||  NX0_TOT[2] <= 0 )
-      Aux_Error( ERROR_INFO, "incorrect number of base-level grids --> NX0_TOT[0/1/2] = [%d,%d,%d] !!\n", 
+      Aux_Error( ERROR_INFO, "incorrect number of base-level grids --> NX0_TOT[0/1/2] = [%d,%d,%d] !!\n",
                  NX0_TOT[0], NX0_TOT[1], NX0_TOT[2] );
 
    if ( NX0_TOT[0]%PS2 != 0  ||  NX0_TOT[1]%PS2 != 0  ||  NX0_TOT[2]%PS2 != 0 )
@@ -80,7 +80,7 @@ void Aux_Check_Parameter()
 #  ifdef LOAD_BALANCE
    if ( OPT__INIT != INIT_RESTART )
 #  endif
-   if ( NX0_TOT[0]%(PS2*MPI_NRank_X[0]) != 0  ||  NX0_TOT[1]%(PS2*MPI_NRank_X[1]) != 0  ||  
+   if ( NX0_TOT[0]%(PS2*MPI_NRank_X[0]) != 0  ||  NX0_TOT[1]%(PS2*MPI_NRank_X[1]) != 0  ||
         NX0_TOT[2]%(PS2*MPI_NRank_X[2]) != 0 )
       Aux_Error( ERROR_INFO, "number of base-level patches in each direction in one rank must be \"%s\" !!\n",
                  "a multiple of TWO" );
@@ -105,14 +105,14 @@ void Aux_Check_Parameter()
         OPT__OUTPUT_MODE != OUTPUT_USE_TABLE )
       Aux_Error( ERROR_INFO, "unsupported option \"OPT__OUTPUT_MODE = %d\" [1/2/3] !!\n", OPT__OUTPUT_MODE );
 
-   if ( OPT__OUTPUT_MODE == OUTPUT_CONST_STEP  &&  OUTPUT_STEP <= 0 )    
+   if ( OPT__OUTPUT_MODE == OUTPUT_CONST_STEP  &&  OUTPUT_STEP <= 0 )
       Aux_Error( ERROR_INFO, "OUTPUT_STEP <= 0 !!\n" );
 
-   if ( OPT__OUTPUT_MODE == OUTPUT_CONST_DT  &&  OUTPUT_DT <= 0 )      
+   if ( OPT__OUTPUT_MODE == OUTPUT_CONST_DT  &&  OUTPUT_DT <= 0 )
       Aux_Error( ERROR_INFO, "OUTPUT_DT <= 0 !!\n" );
 
    if ( OPT__RESTART_HEADER != RESTART_HEADER_CHECK  &&  OPT__RESTART_HEADER != RESTART_HEADER_SKIP )
-      Aux_Error( ERROR_INFO, "unsupported option \"OPT__RESTART_HEADER = %d\" [0/1] !!\n", 
+      Aux_Error( ERROR_INFO, "unsupported option \"OPT__RESTART_HEADER = %d\" [0/1] !!\n",
                  OPT__RESTART_HEADER );
 
    if ( OPT__OUTPUT_TOTAL != OUTPUT_TOTAL_NONE  &&  OPT__OUTPUT_TOTAL != OUTPUT_FORMAT_HDF5  &&
@@ -124,8 +124,8 @@ void Aux_Check_Parameter()
       Aux_Error( ERROR_INFO, "please turn on SUPPORT_HDF5 in the Makefile for OPT__OUTPUT_TOTAL == 1 !!\n" );
 #  endif
 
-   if ( OPT__OUTPUT_PART != OUTPUT_PART_NONE  &&  OPT__OUTPUT_PART != OUTPUT_DIAG  &&  
-        OPT__OUTPUT_PART != OUTPUT_XY  &&  OPT__OUTPUT_PART != OUTPUT_YZ  &&  OPT__OUTPUT_PART != OUTPUT_XZ  &&  
+   if ( OPT__OUTPUT_PART != OUTPUT_PART_NONE  &&  OPT__OUTPUT_PART != OUTPUT_DIAG  &&
+        OPT__OUTPUT_PART != OUTPUT_XY  &&  OPT__OUTPUT_PART != OUTPUT_YZ  &&  OPT__OUTPUT_PART != OUTPUT_XZ  &&
         OPT__OUTPUT_PART != OUTPUT_X   &&  OPT__OUTPUT_PART != OUTPUT_Y   &&  OPT__OUTPUT_PART != OUTPUT_Z )
       Aux_Error( ERROR_INFO, "unsupported option \"OPT__OUTPUT_PART = %d\" [0 ~ 6] !!\n", OPT__OUTPUT_PART );
 
@@ -136,20 +136,20 @@ void Aux_Check_Parameter()
    if (  ( OPT__OUTPUT_PART == OUTPUT_XZ  ||  OPT__OUTPUT_PART == OUTPUT_X  ||  OPT__OUTPUT_PART == OUTPUT_Z )  &&
          ( OUTPUT_PART_Y < 0.0  ||  OUTPUT_PART_Y >= amr->BoxSize[1] )  )
       Aux_Error( ERROR_INFO, "incorrect OUTPUT_PART_Y (out of range [0<=Y<%lf]) !!\n", amr->BoxSize[1] );
-      
+
    if (  ( OPT__OUTPUT_PART == OUTPUT_XY  ||  OPT__OUTPUT_PART == OUTPUT_X  ||  OPT__OUTPUT_PART == OUTPUT_Y )  &&
          ( OUTPUT_PART_Z < 0.0  ||  OUTPUT_PART_Z >= amr->BoxSize[2] )  )
       Aux_Error( ERROR_INFO, "incorrect OUTPUT_PART_Z (out of range [0<=Z<%lf]) !!\n", amr->BoxSize[2] );
 
    if (  OPT__OUTPUT_PART == OUTPUT_DIAG  &&  ( NX0_TOT[0] != NX0_TOT[1] || NX0_TOT[0] != NX0_TOT[2] )  )
-      Aux_Error( ERROR_INFO, "option \"%s\" only works with CUBIC domain !!\n", 
+      Aux_Error( ERROR_INFO, "option \"%s\" only works with CUBIC domain !!\n",
                  "OPT__OUTPUT_PART == 7 (OUTPUT_DIAG)" );
 
    if (  OPT__OUTPUT_BASEPS  &&  ( NX0_TOT[0] != NX0_TOT[1] || NX0_TOT[0] != NX0_TOT[2] )  )
       Aux_Error( ERROR_INFO, "option \"%s\" only works with CUBIC domain !!\n", "OPT__OUTPUT_BASEPS" );
 
    if (  OPT__INIT == INIT_UM  &&  ( OPT__UM_START_LEVEL < 0 || OPT__UM_START_LEVEL > NLEVEL-1 )  )
-      Aux_Error( ERROR_INFO, "incorrect option \"OPT__UM_START_LEVEL = %d\" [0 ... NLEVEL-1] !!\n", 
+      Aux_Error( ERROR_INFO, "incorrect option \"OPT__UM_START_LEVEL = %d\" [0 ... NLEVEL-1] !!\n",
                  OPT__UM_START_LEVEL );
 
    if (  OPT__INIT == INIT_UM  &&  ( OPT__UM_START_NVAR < 1 || OPT__UM_START_NVAR > NCOMP )  )
@@ -206,7 +206,7 @@ void Aux_Check_Parameter()
 #  endif
 
    for (int f=0; f<6; f++)
-   if ( OPT__BC_FLU[f] != BC_FLU_PERIODIC    &&  OPT__BC_FLU[f] != BC_FLU_OUTFLOW  &&  
+   if ( OPT__BC_FLU[f] != BC_FLU_PERIODIC    &&  OPT__BC_FLU[f] != BC_FLU_OUTFLOW  &&
         OPT__BC_FLU[f] != BC_FLU_REFLECTING  &&  OPT__BC_FLU[f] != BC_FLU_USER        )
       Aux_Error( ERROR_INFO, "unsupported option \"OPT__BC_FLU[%d] = %d\" [0/1/2/3] !!\n", f, OPT__BC_FLU[f] );
 
@@ -246,7 +246,7 @@ void Aux_Check_Parameter()
 #  ifdef OPENMP
 #  pragma omp parallel
 #  pragma omp master
-   { 
+   {
       if ( OMP_NTHREAD != omp_get_num_threads() )
          Aux_Message( stderr, "WARNING : OMP_NTHREAD (%d) != omp_get_num_threads (%d) at MPI_Rank %d !!\n",
                       OMP_NTHREAD, omp_get_num_threads(), MPI_Rank );
@@ -315,7 +315,7 @@ void Aux_Check_Parameter()
 #     ifdef OPENMP
       omp_set_nested( true );
 
-      if ( !omp_get_nested() )   
+      if ( !omp_get_nested() )
          Aux_Message( stderr, "WARNING : OpenMP nested parallelism is NOT supported for the option \"%s\" !!\n",
                       "OPT__OVERLAP_MPI" );
 
@@ -332,9 +332,39 @@ void Aux_Check_Parameter()
            OPT__BC_FLU[3] != BC_FLU_USER || OPT__BC_FLU[4] != BC_FLU_USER || OPT__BC_FLU[5] != BC_FLU_USER   )   )
       Aux_Message( stderr, "WARNING : corner cells may not be well defined when mixing user-defined BC with others !!\n" );
 
+   if ( OPT__TIMING_BARRIER )
+      Aux_Message( stderr, "WARNING : option \"%s\" may deteriorate performance (especially if %s is on) ...\n",
+                   "OPT__TIMING_BARRIER", "OPT__OVERLAP_MPI" );
+
+   if ( OPT__TIMING_BARRIER  &&  !OPT__TIMING_BALANCE )
+   {
+      Aux_Message( stderr, "WARNING : option \"%s\" is on, but the time waiting for other ranks will NOT be included in individual timers ...\n",
+                   "OPT__TIMING_BARRIER" );
+      Aux_Message( stderr, "          --> the sum of individual timer may be less than the total elapsed time due to load imbalance ...\n" );
+   }
+
+#  ifdef TIMING
+   if ( !OPT__TIMING_BARRIER )
+   {
+      Aux_Message( stderr, "WARNING : option \"%s\" is off for TIMING\n", "OPT__TIMING_BARRIER" );
+      Aux_Message( stderr, "          --> Some timing results (especially MPI and particle routines) may be less accurate due to load imbalance ...\n" );
+   }
+#  endif
+
+   if (  ( OPT__TIMING_BALANCE || OPT__TIMING_MPI )  &&  !OPT__TIMING_BARRIER  )
+   {
+      Aux_Message( stderr, "WARNING : option \"%s\" is off for OPT__TIMING_BALANCE/OPT__TIMING_MPI\n", "OPT__TIMING_BARRIER" );
+      Aux_Message( stderr, "          --> Some timing results (especially MPI and particle routines) may be less accurate due to load imbalance ...\n" );
+   }
+
+#  ifdef PARTICLE
    if ( OPT__TIMING_BALANCE )
-      Aux_Message( stderr, "WARNING : option \"%s\" may deteriorate the performance (especially if %s is on) !!\n",
-                   "OPT__TIMING_BALANCE", "OPT__OVERLAP_MPI" );
+   {
+      Aux_Message( stderr, "WARNING : option \"%s\" does NOT work well for particle routines\n", "OPT__TIMING_BARRIER" );
+      Aux_Message( stderr, "          --> Because many particle routines call MPI_Barrier implicitly\n" );
+      Aux_Message( stderr, "              (so as Gra_AdvanceDt when PARTICLE is on)\n" );
+   }
+#  endif
 
    if (  OPT__INIT == INIT_UM  &&  OPT__UM_FACTOR_5OVER3  )
    {
@@ -394,7 +424,7 @@ void Aux_Check_Parameter()
    }
 
 
-// warnings 
+// warnings
 // ------------------------------
    if ( MPI_Rank == 0 ) {
 
@@ -445,10 +475,10 @@ void Aux_Check_Parameter()
 #  endif
 
 
-// warnings 
+// warnings
 // ------------------------------
 #  ifndef GRAVITY
-   if ( MPI_Rank == 0 )   
+   if ( MPI_Rank == 0 )
       Aux_Message( stderr, "WARNING : option \"%s\" is useless if the option \"%s\" is NOT turned on !!\n",
                    "COMOVING", "GRAVITY" );
 #  endif
@@ -459,38 +489,38 @@ void Aux_Check_Parameter()
 
 // fluid solver in all models
 // =======================================================================================
-  
+
 // errors
 // ------------------------------
-   if ( Flu_ParaBuf > PATCH_SIZE )  
+   if ( Flu_ParaBuf > PATCH_SIZE )
       Aux_Error( ERROR_INFO, "Flu_ParaBuf (%d) > PATCH_SIZE (%d) !!\n", Flu_ParaBuf, PATCH_SIZE );
 
    if ( GPU_NSTREAM < 1 )  Aux_Error( ERROR_INFO, "GPU_NSTREAM < 1 !!\n" );
 
    if ( FLU_GPU_NPGROUP % GPU_NSTREAM != 0 )    Aux_Error( ERROR_INFO, "FLU_GPU_NPGROUP%%GPU_NSTREAM != 0 !!\n" );
 
-   if ( OPT__FLU_INT_SCHEME != INT_MINMOD3D  &&  OPT__FLU_INT_SCHEME != INT_MINMOD1D  &&  
-        OPT__FLU_INT_SCHEME != INT_VANLEER   &&  OPT__FLU_INT_SCHEME != INT_CQUAD     &&  
+   if ( OPT__FLU_INT_SCHEME != INT_MINMOD3D  &&  OPT__FLU_INT_SCHEME != INT_MINMOD1D  &&
+        OPT__FLU_INT_SCHEME != INT_VANLEER   &&  OPT__FLU_INT_SCHEME != INT_CQUAD     &&
         OPT__FLU_INT_SCHEME != INT_QUAD      &&  OPT__FLU_INT_SCHEME != INT_CQUAR     &&
         OPT__FLU_INT_SCHEME != INT_QUAR )
       Aux_Error( ERROR_INFO, "unsupported input parameter \"%s = %d\" !!\n",
                  "OPT__FLU_INT_SCHEME", OPT__FLU_INT_SCHEME );
 
-   if ( OPT__REF_FLU_INT_SCHEME != INT_MINMOD3D  &&  OPT__REF_FLU_INT_SCHEME != INT_MINMOD1D  &&  
-        OPT__REF_FLU_INT_SCHEME != INT_VANLEER   &&  OPT__REF_FLU_INT_SCHEME != INT_CQUAD     &&  
+   if ( OPT__REF_FLU_INT_SCHEME != INT_MINMOD3D  &&  OPT__REF_FLU_INT_SCHEME != INT_MINMOD1D  &&
+        OPT__REF_FLU_INT_SCHEME != INT_VANLEER   &&  OPT__REF_FLU_INT_SCHEME != INT_CQUAD     &&
         OPT__REF_FLU_INT_SCHEME != INT_QUAD      &&  OPT__REF_FLU_INT_SCHEME != INT_CQUAR     &&
         OPT__REF_FLU_INT_SCHEME != INT_QUAR )
       Aux_Error( ERROR_INFO, "unsupported input parameter \"%s = %d\" !!\n",
                  "OPT__REF_FLU_INT_SCHEME", OPT__REF_FLU_INT_SCHEME );
 
    if ( OPT__FIXUP_FLUX  &&  !amr->WithFlux )
-      Aux_Error( ERROR_INFO, "%s is turned on but amr->WithFlux is off !!\n", "OPT__FIXUP_FLUX" ); 
+      Aux_Error( ERROR_INFO, "%s is turned on but amr->WithFlux is off !!\n", "OPT__FIXUP_FLUX" );
 
 #  if ( NLEVEL > 1 )
    int Trash_RefFlu, NGhost_RefFlu;
    Int_Table( OPT__REF_FLU_INT_SCHEME, Trash_RefFlu, NGhost_RefFlu );
    if ( Flu_ParaBuf < NGhost_RefFlu )
-      Aux_Error( ERROR_INFO, "Flu_ParaBuf (%d) < NGhost_RefFlu (%d) --> refinement will fail !!\n", 
+      Aux_Error( ERROR_INFO, "Flu_ParaBuf (%d) < NGhost_RefFlu (%d) --> refinement will fail !!\n",
                  Flu_ParaBuf, NGhost_RefFlu );
 #  endif
 
@@ -498,20 +528,20 @@ void Aux_Check_Parameter()
       Aux_Error( ERROR_INFO, "\"%s\" is NOT supported for \"%s\" !!\n", "OPT__OVERLAP_MPI", "OPT__RESET_FLUID" );
 
 
-// warnings 
+// warnings
 // ------------------------------
    if ( MPI_Rank == 0 ) {
 
    if ( OPT__CK_FLUX_ALLOCATE  &&  !amr->WithFlux )
-      Aux_Message( stderr, "WARNING : option \"%s\" is useless since no flux is required !!\n", 
+      Aux_Message( stderr, "WARNING : option \"%s\" is useless since no flux is required !!\n",
                    OPT__CK_FLUX_ALLOCATE );
 
    if ( DT__FLUID < 0.0  ||  DT__FLUID > 1.0 )
-      Aux_Message( stderr, "WARNING : DT__FLUID (%14.7e) is not within the normal range [0...1] !!\n", 
+      Aux_Message( stderr, "WARNING : DT__FLUID (%14.7e) is not within the normal range [0...1] !!\n",
                    DT__FLUID );
 
    if ( DT__FLUID_INIT < 0.0  ||  DT__FLUID_INIT > 1.0 )
-      Aux_Message( stderr, "WARNING : DT__FLUID_INIT (%14.7e) is not within the normal range [0...1] !!\n", 
+      Aux_Message( stderr, "WARNING : DT__FLUID_INIT (%14.7e) is not within the normal range [0...1] !!\n",
                    DT__FLUID_INIT );
 
    if ( OPT__RESET_FLUID  &&   OPT__INIT == INIT_UM )
@@ -567,7 +597,7 @@ void Aux_Check_Parameter()
       Aux_Error( ERROR_INFO, "currently the passively advected scalars can only work with the periodic BC !!\n" );
 #  endif
 
-   if ( OPT__CK_NEGATIVE < 0  ||  OPT__CK_NEGATIVE > 3 ) 
+   if ( OPT__CK_NEGATIVE < 0  ||  OPT__CK_NEGATIVE > 3 )
       Aux_Error( ERROR_INFO, "unsupported parameter \"%s = %d\" !!\n", "OPT__CK_NEGATIVE", OPT__CK_NEGATIVE );
 
    if ( OPT__CORR_UNPHY  &&  ( OPT__CORR_UNPHY_SCHEME != RSOLVER_ROE && OPT__CORR_UNPHY_SCHEME != RSOLVER_HLLC &&
@@ -575,7 +605,7 @@ void Aux_Check_Parameter()
       Aux_Error( ERROR_INFO, "unsupported parameter \"%s = %d\" !!\n", "OPT__CORR_UNPHY_SCHEME", OPT__CORR_UNPHY_SCHEME );
 
 
-// warnings 
+// warnings
 // ------------------------------
    if ( MPI_Rank == 0 ) {
 
@@ -607,13 +637,13 @@ void Aux_Check_Parameter()
       Aux_Message( stderr,           "pressure may happen !!\n" );
 #  endif
 
-#  ifdef MIN_PRES 
-   Aux_Message( stderr, "WARNING : MIN_PRES (%14.7e) is on --> please make sure that this value is reasonable !!\n", 
+#  ifdef MIN_PRES
+   Aux_Message( stderr, "WARNING : MIN_PRES (%14.7e) is on --> please make sure that this value is reasonable !!\n",
                 MIN_PRES );
 #  endif
 
 #  ifdef MIN_PRES_DENS
-   Aux_Message( stderr, "WARNING : MIN_PRES_DENS (%14.7e) is on --> please make sure that this value is reasonable !!\n", 
+   Aux_Message( stderr, "WARNING : MIN_PRES_DENS (%14.7e) is on --> please make sure that this value is reasonable !!\n",
                 MIN_PRES_DENS );
 #  endif
 
@@ -624,7 +654,7 @@ void Aux_Check_Parameter()
       Aux_Message( stderr, "WARNING : option \"%s\" is disabled in HYDRO !!\n", "OPT__FIXUP_RESTRICT" );
 
    if ( OPT__CK_FLUX_ALLOCATE  &&  !OPT__FIXUP_FLUX )
-      Aux_Message( stderr, "WARNING : option %s is useless since %s is off !!\n", 
+      Aux_Message( stderr, "WARNING : option %s is useless since %s is off !!\n",
                    OPT__CK_FLUX_ALLOCATE, OPT__FIXUP_FLUX );
 
    } // if ( MPI_Rank == 0 )
@@ -642,17 +672,17 @@ void Aux_Check_Parameter()
                  "extrema-preserving" );
 #  endif
 
-   if ( OPT__LR_LIMITER != VANLEER  &&  OPT__LR_LIMITER != GMINMOD  &&  OPT__LR_LIMITER != ALBADA  &&  
+   if ( OPT__LR_LIMITER != VANLEER  &&  OPT__LR_LIMITER != GMINMOD  &&  OPT__LR_LIMITER != ALBADA  &&
         OPT__LR_LIMITER != EXTPRE   &&  OPT__LR_LIMITER != VL_GMINMOD )
-      Aux_Error( ERROR_INFO, "unsupported data reconstruction limiter (OPT__LR_IMITER = %d) !!\n", 
+      Aux_Error( ERROR_INFO, "unsupported data reconstruction limiter (OPT__LR_IMITER = %d) !!\n",
                  OPT__LR_LIMITER );
 
 
-// warnings 
+// warnings
 // ------------------------------
    if ( MPI_Rank == 0 ) {
 
-   if (  ( OPT__LR_LIMITER == GMINMOD || OPT__LR_LIMITER == EXTPRE || OPT__LR_LIMITER == VL_GMINMOD )  &&  
+   if (  ( OPT__LR_LIMITER == GMINMOD || OPT__LR_LIMITER == EXTPRE || OPT__LR_LIMITER == VL_GMINMOD )  &&
          ( MINMOD_COEFF < 1.0 || MINMOD_COEFF > 2.0 )  )
       Aux_Message( stderr, "WARNING : MinMod limiter coefficient (%14.7e) is not within the range [1...2] !!\n",
                    MINMOD_COEFF );
@@ -748,16 +778,16 @@ void Aux_Check_Parameter()
 #     error : ERROR : please set FLU_GHOST_SIZE = 2 for the WAF scheme !!
 #  endif
 
-   if ( OPT__WAF_LIMITER != WAF_SUPERBEE  &&  OPT__WAF_LIMITER != WAF_VANLEER  &&  
+   if ( OPT__WAF_LIMITER != WAF_SUPERBEE  &&  OPT__WAF_LIMITER != WAF_VANLEER  &&
         OPT__WAF_LIMITER != WAF_ALBADA    &&  OPT__WAF_LIMITER != WAF_MINBEE      )
       Aux_Error( ERROR_INFO, "unsupported WAF flux limiter (%d) !!\n", OPT__WAF_LIMITER );
 #  endif // if ( FLU_SCHEME == WAF )
 
 
-// check for RTVD 
+// check for RTVD
 // ------------------------------
-#  if ( FLU_SCHEME == RTVD ) 
-   
+#  if ( FLU_SCHEME == RTVD )
+
 #  if ( FLU_GHOST_SIZE != 3 )
 #     error : ERROR : please set FLU_GHOST_SIZE = 3 for the relaxing TVD scheme !!
 #  endif
@@ -774,9 +804,9 @@ void Aux_Check_Parameter()
 // errors
 // ------------------------------
 
-// warnings 
+// warnings
 // ------------------------------
-  
+
 
 
 // fluid solver in ELBDM
@@ -829,12 +859,12 @@ void Aux_Check_Parameter()
       Aux_Error( ERROR_INFO, "unsupported option \"OPT__BC_FLU[%d] = %d\" [0/1/3] !!\n", f, OPT__BC_FLU[f] );
 
 
-// warnings 
+// warnings
 // ------------------------------
    if ( MPI_Rank == 0 ) {
 
    if ( !ELBDM_TAYLOR3_AUTO  &&  ELBDM_TAYLOR3_COEFF < 1.0/8.0 )
-      Aux_Message( stderr, "WARNING : ELBDM_TAYLOR3_COEFF (%13.7e) < 0.125 is unconditionally unstable !!\n", 
+      Aux_Message( stderr, "WARNING : ELBDM_TAYLOR3_COEFF (%13.7e) < 0.125 is unconditionally unstable !!\n",
                    ELBDM_TAYLOR3_COEFF );
 
 #  ifdef LAPLACIAN_4TH
@@ -843,15 +873,15 @@ void Aux_Check_Parameter()
    const double dt_fluid_max = 0.25*M_PI;
 #  endif
    if ( DT__FLUID > dt_fluid_max )
-      Aux_Message( stderr, "WARNING : DT__FLUID (%13.7e) > %13.7e is unconditionally unstable (even with %s) !!\n", 
+      Aux_Message( stderr, "WARNING : DT__FLUID (%13.7e) > %13.7e is unconditionally unstable (even with %s) !!\n",
                    DT__FLUID, dt_fluid_max, "ELBDM_TAYLOR3_AUTO" );
 
    if ( DT__FLUID_INIT > dt_fluid_max )
-      Aux_Message( stderr, "WARNING : DT__FLUID_INIT (%13.7e) > %13.7e is unconditionally unstable (even with %s) !!\n", 
+      Aux_Message( stderr, "WARNING : DT__FLUID_INIT (%13.7e) > %13.7e is unconditionally unstable (even with %s) !!\n",
                    DT__FLUID_INIT, dt_fluid_max, "ELBDM_TAYLOR3_AUTO" );
 
    if ( !ELBDM_TAYLOR3_AUTO )
-   {   
+   {
 //    stability limit for ELBDM_TAYLOR3_COEFF == 1.0/6.0
 #     ifdef LAPLACIAN_4TH
       const double dt_fluid_max_normal = SQRT(27.0)*M_PI/32.0;
@@ -861,34 +891,34 @@ void Aux_Check_Parameter()
 
       if ( DT__FLUID > dt_fluid_max_normal  &&  ELBDM_TAYLOR3_COEFF <= 1.0/6.0 )
       {
-         Aux_Message( stderr, "WARNING : DT__FLUID (%13.7e) > stability limit (%13.7e) for ELBDM_TAYLOR3_COEFF <= 1/6\n", 
+         Aux_Message( stderr, "WARNING : DT__FLUID (%13.7e) > stability limit (%13.7e) for ELBDM_TAYLOR3_COEFF <= 1/6\n",
                       DT__FLUID, dt_fluid_max_normal );
-         Aux_Message( stderr, "          --> Please either (a) set ELBDM_TAYLOR3_COEFF (%13.7e) > 1/6\n", 
-                      ELBDM_TAYLOR3_COEFF ); 
+         Aux_Message( stderr, "          --> Please either (a) set ELBDM_TAYLOR3_COEFF (%13.7e) > 1/6\n",
+                      ELBDM_TAYLOR3_COEFF );
          Aux_Message( stderr, "                            (b) set DT__FLUID smaller (c) turn on ELBDM_TAYLOR3_AUTO\n" );
       }
 
       if ( DT__FLUID_INIT > dt_fluid_max_normal  &&  ELBDM_TAYLOR3_COEFF <= 1.0/6.0 )
       {
-         Aux_Message( stderr, "WARNING : DT__FLUID_INIT (%13.7e) > stability limit (%13.7e) for ELBDM_TAYLOR3_COEFF <= 1/6\n", 
+         Aux_Message( stderr, "WARNING : DT__FLUID_INIT (%13.7e) > stability limit (%13.7e) for ELBDM_TAYLOR3_COEFF <= 1/6\n",
                       DT__FLUID_INIT, dt_fluid_max_normal );
-         Aux_Message( stderr, "          --> Please either (a) set ELBDM_TAYLOR3_COEFF (%13.7e) > 1/6\n", 
-                      ELBDM_TAYLOR3_COEFF ); 
+         Aux_Message( stderr, "          --> Please either (a) set ELBDM_TAYLOR3_COEFF (%13.7e) > 1/6\n",
+                      ELBDM_TAYLOR3_COEFF );
          Aux_Message( stderr, "                            (b) set DT__FLUID_INIT smaller (c) turn on ELBDM_TAYLOR3_AUTO\n" );
       }
    }
 
    if ( DT__PHASE < 0.0  ||  DT__PHASE > 1.0 )
-      Aux_Message( stderr, "WARNING : DT__PHASE (%13.7e) is not within the normal range [0...1] !!\n", 
+      Aux_Message( stderr, "WARNING : DT__PHASE (%13.7e) is not within the normal range [0...1] !!\n",
                    DT__PHASE );
 
    if ( OPT__CK_FLUX_ALLOCATE  &&  !OPT__FIXUP_FLUX )
-      Aux_Message( stderr, "WARNING : option %s is useless since %s is off !!\n", 
+      Aux_Message( stderr, "WARNING : option %s is useless since %s is off !!\n",
                    OPT__CK_FLUX_ALLOCATE, OPT__FIXUP_FLUX );
 
 #  ifdef CONSERVE_MASS
    if ( !OPT__FIXUP_FLUX )
-      Aux_Message( stderr, "WARNING : option \"%s\" is disabled in ELBDM even though CONSERVE_MASS is on !!\n", 
+      Aux_Message( stderr, "WARNING : option \"%s\" is disabled in ELBDM even though CONSERVE_MASS is on !!\n",
                    "OPT__FIXUP_FLUX" );
 #  else
    if ( OPT__FIXUP_FLUX )
@@ -939,39 +969,39 @@ void Aux_Check_Parameter()
    }
 #  endif
 
-   if ( Pot_ParaBuf > PATCH_SIZE )  
+   if ( Pot_ParaBuf > PATCH_SIZE )
       Aux_Error( ERROR_INFO, "Pot_ParaBuf (%d) > PATCH_SIZE (%d) !!\n", Pot_ParaBuf, PATCH_SIZE );
 
-   if ( Rho_ParaBuf > PATCH_SIZE )  
+   if ( Rho_ParaBuf > PATCH_SIZE )
       Aux_Error( ERROR_INFO, "Rho_ParaBuf (%d) > PATCH_SIZE (%d) !!\n", Rho_ParaBuf, PATCH_SIZE );
 
 #  if ( POT_SCHEME == SOR )
    if ( SOR_MIN_ITER < 3 )    Aux_Error( ERROR_INFO, "SOR_MIN_ITER < 3 !!\n" );
 #  endif
 
-   if ( POT_GPU_NPGROUP % GPU_NSTREAM != 0 )    
+   if ( POT_GPU_NPGROUP % GPU_NSTREAM != 0 )
       Aux_Error( ERROR_INFO, "POT_GPU_NPGROUP %% GPU_NSTREAM != 0 !!\n" );
 
    if ( OPT__POT_INT_SCHEME != INT_CQUAD  &&  OPT__POT_INT_SCHEME != INT_QUAD )
       Aux_Error( ERROR_INFO, "unsupported input parameter \"%s = %d\" !!\n",
                  "OPT__POT_INT_SCHEME", OPT__POT_INT_SCHEME );
 
-   if ( OPT__RHO_INT_SCHEME != INT_MINMOD3D  &&  OPT__RHO_INT_SCHEME != INT_MINMOD1D  &&  
-        OPT__RHO_INT_SCHEME != INT_VANLEER   &&  OPT__RHO_INT_SCHEME != INT_CQUAD     &&  
+   if ( OPT__RHO_INT_SCHEME != INT_MINMOD3D  &&  OPT__RHO_INT_SCHEME != INT_MINMOD1D  &&
+        OPT__RHO_INT_SCHEME != INT_VANLEER   &&  OPT__RHO_INT_SCHEME != INT_CQUAD     &&
         OPT__RHO_INT_SCHEME != INT_QUAD      &&  OPT__RHO_INT_SCHEME != INT_CQUAR     &&
         OPT__RHO_INT_SCHEME != INT_QUAR )
       Aux_Error( ERROR_INFO, "unsupported input parameter \"%s = %d\" !!\n",
                  "OPT__RHO_INT_SCHEME", OPT__RHO_INT_SCHEME );
 
-   if ( OPT__GRA_INT_SCHEME != INT_MINMOD3D  &&  OPT__GRA_INT_SCHEME != INT_MINMOD1D  &&  
-        OPT__GRA_INT_SCHEME != INT_VANLEER   &&  OPT__GRA_INT_SCHEME != INT_CQUAD     &&  
+   if ( OPT__GRA_INT_SCHEME != INT_MINMOD3D  &&  OPT__GRA_INT_SCHEME != INT_MINMOD1D  &&
+        OPT__GRA_INT_SCHEME != INT_VANLEER   &&  OPT__GRA_INT_SCHEME != INT_CQUAD     &&
         OPT__GRA_INT_SCHEME != INT_QUAD      &&  OPT__GRA_INT_SCHEME != INT_CQUAR     &&
         OPT__GRA_INT_SCHEME != INT_QUAR )
       Aux_Error( ERROR_INFO, "unsupported input parameter \"%s = %d\" !!\n",
                  "OPT__GRA_INT_SCHEME", OPT__GRA_INT_SCHEME );
 
-   if ( OPT__REF_POT_INT_SCHEME != INT_MINMOD3D  &&  OPT__REF_POT_INT_SCHEME != INT_MINMOD1D  &&  
-        OPT__REF_POT_INT_SCHEME != INT_VANLEER   &&  OPT__REF_POT_INT_SCHEME != INT_CQUAD     &&  
+   if ( OPT__REF_POT_INT_SCHEME != INT_MINMOD3D  &&  OPT__REF_POT_INT_SCHEME != INT_MINMOD1D  &&
+        OPT__REF_POT_INT_SCHEME != INT_VANLEER   &&  OPT__REF_POT_INT_SCHEME != INT_CQUAD     &&
         OPT__REF_POT_INT_SCHEME != INT_QUAD      &&  OPT__REF_POT_INT_SCHEME != INT_CQUAR     &&
         OPT__REF_POT_INT_SCHEME != INT_QUAR )
       Aux_Error( ERROR_INFO, "unsupported input parameter \"%s = %d\" !!\n",
@@ -981,7 +1011,7 @@ void Aux_Check_Parameter()
    int Trash_RefPot, NGhost_RefPot;
    Int_Table( OPT__REF_POT_INT_SCHEME, Trash_RefPot, NGhost_RefPot );
    if ( Pot_ParaBuf < NGhost_RefPot )
-      Aux_Error( ERROR_INFO, "Pot_ParaBuf (%d) < NGhost_RefPot (%d) --> refinement will fail !!\n", 
+      Aux_Error( ERROR_INFO, "Pot_ParaBuf (%d) < NGhost_RefPot (%d) --> refinement will fail !!\n",
                  Pot_ParaBuf, NGhost_RefPot );
 #  endif
 
@@ -1021,7 +1051,7 @@ void Aux_Check_Parameter()
 #  endif
 
    if ( DT__GRAVITY < 0.0  ||  DT__GRAVITY > 1.0 )
-      Aux_Message( stderr, "WARNING : DT__GRAVITY (%14.7e) is not within the normal range [0...1] !!\n", 
+      Aux_Message( stderr, "WARNING : DT__GRAVITY (%14.7e) is not within the normal range [0...1] !!\n",
                    DT__GRAVITY );
 
    if (  ( OPT__GRAVITY_TYPE == GRAVITY_SELF || OPT__GRAVITY_TYPE == GRAVITY_BOTH )  &&  OPT__BC_POT == BC_POT_ISOLATED  )
@@ -1085,8 +1115,8 @@ void Aux_Check_Parameter()
 
 // errors
 // ------------------------------
-  
-// warnings 
+
+// warnings
 // ------------------------------
 
 
@@ -1094,14 +1124,14 @@ void Aux_Check_Parameter()
 // gravity solver in ELBDM
 // =======================================================================================
 #  elif ( MODEL == ELBDM )
-  
+
 // errors
 // ------------------------------
    if ( OPT__GRAVITY_TYPE == GRAVITY_EXTERNAL  ||  OPT__GRAVITY_TYPE == GRAVITY_BOTH )
       Aux_Error( ERROR_INFO, "ELBDM does NOT support external gravity (OPT__GRAVITY_TYPE == 2/3) --> use external potential !!\n" );
-  
 
-// warnings 
+
+// warnings
 // ------------------------------
 #  if ( GRA_GHOST_SIZE != 0  &&  !defined STORE_POT_GHOST )
 #     warning : WARNING : GRA_GHOST_SIZE != 0 in ELBDM when STORE_POT_GHOST is off !!
@@ -1111,14 +1141,14 @@ void Aux_Check_Parameter()
 #  else
 #  error : unsupported MODEL !!
 #  endif // MODEL
-  
+
 #endif // GRAVITY
 
 
 // particle
 // =======================================================================================
 #ifdef PARTICLE
-   
+
 // errors
 // ------------------------------
 #  ifndef GRAVITY
@@ -1126,7 +1156,7 @@ void Aux_Check_Parameter()
 #  endif
 
 #  ifdef COMOVING
-#     error : ERROR : currently PARTICLE dost NOT support COMOVING !! 
+#     error : ERROR : currently PARTICLE dost NOT support COMOVING !!
 #  endif
 
 #  if ( !defined SERIAL  &&  !defined LOAD_BALANCE )
@@ -1191,7 +1221,7 @@ void Aux_Check_Parameter()
       Aux_Error( ERROR_INFO, "incorrect option \"OPT__PARTICLE_COUNT = %d\" [0/1/2] !!\n", OPT__PARTICLE_COUNT );
 
 
-// warning 
+// warning
 // ------------------------------
    if ( MPI_Rank == 0 ) {
 
@@ -1224,6 +1254,6 @@ void Aux_Check_Parameter()
 #endif // PARTICLE
 
 
-   if ( MPI_Rank == 0 )    Aux_Message( stdout, "Aux_Check_Parameter ... done\n" ); 
+   if ( MPI_Rank == 0 )    Aux_Message( stdout, "Aux_Check_Parameter ... done\n" );
 
 } // FUNCTION : Aux_Check_Parameter

@@ -1503,6 +1503,7 @@ void FillIn_InputPara( InputPara_t &InputPara )
 
 // miscellaneous
    InputPara.Opt__Verbose            = OPT__VERBOSE;
+   InputPara.Opt__TimingBarrier      = OPT__TIMING_BARRIER;
    InputPara.Opt__TimingBalance      = OPT__TIMING_BALANCE;
    InputPara.Opt__TimingMPI          = OPT__TIMING_MPI;
    InputPara.Opt__RecordMemory       = OPT__RECORD_MEMORY;
@@ -2044,6 +2045,7 @@ void GetCompound_InputPara( hid_t &H5_TypeID )
 
 // miscellaneous
    H5Tinsert( H5_TypeID, "Opt__Verbose",            HOFFSET(InputPara_t,Opt__Verbose           ), H5T_NATIVE_INT     );
+   H5Tinsert( H5_TypeID, "Opt__TimingBarrier",      HOFFSET(InputPara_t,Opt__TimingBarrier     ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "Opt__TimingBalance",      HOFFSET(InputPara_t,Opt__TimingBalance     ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "Opt__TimingMPI",          HOFFSET(InputPara_t,Opt__TimingMPI         ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "Opt__RecordMemory",       HOFFSET(InputPara_t,Opt__RecordMemory      ), H5T_NATIVE_INT     );

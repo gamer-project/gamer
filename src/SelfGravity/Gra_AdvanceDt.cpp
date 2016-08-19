@@ -161,11 +161,14 @@ void Gra_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, co
 #  ifdef PARTICLE
    if ( Poisson )
    {
-      TIMING_FUNC(   Par_CollectParticle2OneLevel_FreeMemory( lv, SibBufPatch, FaSibBufPatch ),
-                     Timer_Par_Collect[lv],   false  );
+//    don't use the TIMING_FUNC macro since we don't want to call MPI_Barrier here even when OPT__TIMING_BARRIER is on
+//    --> otherwise OPT__TIMING_BALANCE will fail because all ranks are synchronized before and after Gra_AdvanceDt
+      Timer_Par_Collect[lv]->Start();
 
-      TIMING_FUNC(   Prepare_PatchData_FreeParticleDensityArray( lv ),
-                     Timer_Par_Collect[lv],   true   );
+      Par_CollectParticle2OneLevel_FreeMemory( lv, SibBufPatch, FaSibBufPatch );
+      Prepare_PatchData_FreeParticleDensityArray( lv );
+
+      Timer_Par_Collect[lv]->Stop( true );
    }
 #  endif
 

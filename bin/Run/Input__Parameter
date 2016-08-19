@@ -137,8 +137,9 @@
 -1          INIT_DUMPID             # set the first dump ID (<0:default)
 
 0           OPT__VERBOSE            # output the detail of simulation progress
-0           OPT__TIMING_BALANCE     # record the max/min elapsed time for different code sections (may slowe down the run)
-0           OPT__TIMING_MPI         # record the MPI bandwidth achieved by LB_GetBufferData ##LOAD_BALANCE ONLY##
+-1          OPT__TIMING_BARRIER     # synchronize before timing --> more accurate, but may slow down the run (<0:default)
+0           OPT__TIMING_BALANCE     # record the max/min elapsed time in various code sections for checking load balance
+0           OPT__TIMING_MPI         # record the MPI bandwidth achieved in various code sections ##LOAD_BALANCE ONLY##
 1           OPT__RECORD_MEMORY      # record memory consumption during simulations
 1           OPT__RECORD_PERFORMANCE # record the code performance
 1           OPT__MANUAL_CONTROL     # support dump/stop dynamically by creating the file DUMP_GAMER_DUMP/STOP_GAMER_STOP

@@ -82,16 +82,13 @@ void Par_LB_SendParticleData( const int NParVar, int *SendBuf_NPatchEachRank, in
 
    if ( Timer != NULL )
    {
-      if ( OPT__TIMING_MPI )
-      {
-//       add barrier before timing transferring data through MPI
-//       --> so that the timing results (i.e., the MPI bandwidth reported by OPT__TIMING_MPI ) does NOT include
-//           the time waiting for other ranks to reach here
-//       --> make the MPI bandwidth measured here more accurate
-         MPI_Barrier( MPI_COMM_WORLD );
+//    it's better to add barrier before timing transferring data through MPI
+//    --> so that the timing results (i.e., the MPI bandwidth reported by OPT__TIMING_MPI ) does NOT include
+//        the time waiting for other ranks to reach here
+//    --> make the MPI bandwidth measured here more accurate
+      if ( OPT__TIMING_BARRIER )    MPI_Barrier( MPI_COMM_WORLD );
 
-         time0 = Timer->GetValue( Timer->WorkingID );
-      }
+      if ( OPT__TIMING_MPI )  time0 = Timer->GetValue( Timer->WorkingID );
 
       Timer->Start();
    }

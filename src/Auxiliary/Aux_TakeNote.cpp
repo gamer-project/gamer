@@ -810,6 +810,7 @@ void Aux_TakeNote()
       fprintf( Note, "Parameters of Miscellaneous Purposes\n" );
       fprintf( Note, "***********************************************************************************\n" );
       fprintf( Note, "OPT__VERBOSE              %d\n",      OPT__VERBOSE            );
+      fprintf( Note, "OPT__TIMING_BARRIER       %d\n",      OPT__TIMING_BARRIER     );
       fprintf( Note, "OPT__TIMING_BALANCE       %d\n",      OPT__TIMING_BALANCE     );
       fprintf( Note, "OPT__TIMING_MPI           %d\n",      OPT__TIMING_MPI         );
       fprintf( Note, "OPT__RECORD_MEMORY        %d\n",      OPT__RECORD_MEMORY      );

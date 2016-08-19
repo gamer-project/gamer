@@ -636,6 +636,9 @@ void Init_Load_Parameter()
    OPT__VERBOSE = (bool)temp_int;
 
    getline( &input_line, &len, File );
+   sscanf( input_line, "%d%s",   &OPT__TIMING_BARRIER,      string );
+
+   getline( &input_line, &len, File );
    sscanf( input_line, "%d%s",   &temp_int,                 string );
    OPT__TIMING_BALANCE = (bool)temp_int;
 

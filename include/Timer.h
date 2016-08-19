@@ -10,7 +10,7 @@ void Aux_Message( FILE *Type, const char *Format, ... );
 
 
 //-------------------------------------------------------------------------------------------------------
-// Structure   :  Timer_t 
+// Structure   :  Timer_t
 // Description :  Data structure for measuring the elapsed time
 //
 // Data Member :  Status    : The status of each timer : (false / true) <--> (stop / ticking)
@@ -18,7 +18,7 @@ void Aux_Message( FILE *Type, const char *Format, ... );
 //                WorkingID : The currently working ID of the array "Time"
 //                NTimer    : The number of timers
 //
-// Method      :  Timer_t   : Constructor 
+// Method      :  Timer_t   : Constructor
 //               ~Timer_t   : Destructor
 //                Start     : Start timing
 //                Stop      : Stop timing
@@ -38,10 +38,10 @@ struct Timer_t
 
 
    //===================================================================================
-   // Constructor :  Timer_t 
+   // Constructor :  Timer_t
    // Description :  Constructor of the structure "Timer_t"
    //
-   // Note        :  Allocate and initialize all data member 
+   // Note        :  Allocate and initialize all data member
    //                a. The WorkingID is initialized as "0"
    //                b. The Status is initialized as "false"
    //                c. The timer is initialized as "0"
@@ -55,26 +55,26 @@ struct Timer_t
       Time      = new ulong [NTimer];
       Status    = new bool  [NTimer];
 
-      for (uint t=0; t<NTimer; t++)     
+      for (uint t=0; t<NTimer; t++)
       {
          Time  [t] = 0;
          Status[t] = false;
       }
-   } 
+   }
 
 
 
    //===================================================================================
-   // Destructor  :  ~Timer_t 
+   // Destructor  :  ~Timer_t
    // Description :  Destructor of the structure "Timer_t"
    //
-   // Note        :  Release memory 
+   // Note        :  Release memory
    //===================================================================================
    ~Timer_t()
    {
       delete [] Time;
       delete [] Status;
-   } 
+   }
 
 
 
@@ -104,11 +104,11 @@ struct Timer_t
 
    //===================================================================================
    // Method      :  Stop
-   // Description :  Stop timing and set status as "false" 
+   // Description :  Stop timing and set status as "false"
    //
    // Note        :  Increase the WorkingID if the input parameter "Next == true"
    //
-   // Parameter   :  Next : (true / false) --> (increase / not increase) the WorkingID 
+   // Parameter   :  Next : (true / false) --> (increase / not increase) the WorkingID
    //===================================================================================
    void Stop( const bool Next )
    {
@@ -156,12 +156,12 @@ struct Timer_t
 
    //===================================================================================
    // Method      :  Reset
-   // Description :  Reset all timers and set WorkingID as "0" 
+   // Description :  Reset all timers and set WorkingID as "0"
    //
-   // Note        :  All timing information previously recorded will be lost after 
-   //                invoking this function 
+   // Note        :  All timing information previously recorded will be lost after
+   //                invoking this function
    //===================================================================================
-   void Reset() 
+   void Reset()
    {
       for (uint t=0; t<NTimer; t++)
       {
@@ -185,7 +185,7 @@ struct Timer_t
 
 #  define TIMING_FUNC( call, timer, next )                        \
    {                                                              \
-      if ( OPT__TIMING_BALANCE ) MPI_Barrier( MPI_COMM_WORLD );   \
+      if ( OPT__TIMING_BARRIER ) MPI_Barrier( MPI_COMM_WORLD );   \
       timer->Start();                                             \
       call;                                                       \
       timer->Stop( next );                                        \
@@ -204,7 +204,7 @@ struct Timer_t
 #  ifdef GPU
 #     define GPU_SYNC()  CUAPI_Synchronize()
 #  else
-#     define GPU_SYNC() 
+#     define GPU_SYNC()
 #  endif
 
 #  define TIMING_SYNC( call, timer )            \

@@ -5,11 +5,11 @@
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Init_SetDefaultParameter 
-// Description :  1. Set parameters to their default values if they are not specified in the Input__Parameter 
+// Function    :  Init_SetDefaultParameter
+// Description :  1. Set parameters to their default values if they are not specified in the Input__Parameter
 //                2. Reset parameters which are either unsupported or useless
 //-------------------------------------------------------------------------------------------------------
-void Init_SetDefaultParameter() 
+void Init_SetDefaultParameter()
 {
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... \n", __FUNCTION__ );
@@ -21,7 +21,7 @@ void Init_SetDefaultParameter()
 #  ifdef OPENMP
    const int OMP_Max_NThread = omp_get_max_threads();
 
-   if ( OMP_NTHREAD <= 0 )  
+   if ( OMP_NTHREAD <= 0 )
    {
       OMP_NTHREAD = OMP_Max_NThread;
 
@@ -31,13 +31,13 @@ void Init_SetDefaultParameter()
 
    else if ( OMP_NTHREAD > OMP_Max_NThread   &&  MPI_Rank == 0 )
    {
-      Aux_Message( stderr, "WARNING : OMP_NTHREAD (%d) > omp_get_max_threads (%d) !!\n", 
+      Aux_Message( stderr, "WARNING : OMP_NTHREAD (%d) > omp_get_max_threads (%d) !!\n",
                    OMP_NTHREAD, OMP_Max_NThread );
    }
 
-#  else 
+#  else
    if ( OMP_NTHREAD != 1  &&  MPI_Rank == 0 )
-      Aux_Message( stderr, "WARNING : parameter \"%s\" is reset to 1 since \"OPENMP\" is not turned on !!\n", 
+      Aux_Message( stderr, "WARNING : parameter \"%s\" is reset to 1 since \"OPENMP\" is not turned on !!\n",
                    "OMP_NTHREAD" );
 
    OMP_NTHREAD = 1;
@@ -80,7 +80,7 @@ void Init_SetDefaultParameter()
 #     error : ERROR : unsupported MODEL !!
 #     endif // MODEL
 
-      if ( MPI_Rank == 0 ) Aux_Message( stdout, "NOTE : parameter \"%s\" is set to the default value = %13.7e\n", 
+      if ( MPI_Rank == 0 ) Aux_Message( stdout, "NOTE : parameter \"%s\" is set to the default value = %13.7e\n",
                                         "DT__FLUID", DT__FLUID );
    } // if ( DT__FLUID < 0.0 )
 
@@ -88,7 +88,7 @@ void Init_SetDefaultParameter()
    {
       DT__FLUID_INIT = DT__FLUID;
 
-      if ( MPI_Rank == 0 ) Aux_Message( stdout, "NOTE : parameter \"%s\" is set to the default value = %13.7e\n", 
+      if ( MPI_Rank == 0 ) Aux_Message( stdout, "NOTE : parameter \"%s\" is set to the default value = %13.7e\n",
                                         "DT__FLUID_INIT", DT__FLUID_INIT );
    }
 
@@ -108,7 +108,7 @@ void Init_SetDefaultParameter()
 #     error : ERROR : unsupported MODEL !!
 #     endif // MODEL
 
-      if ( MPI_Rank == 0 ) Aux_Message( stdout, "NOTE : parameter \"%s\" is set to the default value = %13.7e\n", 
+      if ( MPI_Rank == 0 ) Aux_Message( stdout, "NOTE : parameter \"%s\" is set to the default value = %13.7e\n",
                                         "DT__GRAVITY", DT__GRAVITY );
    } // if ( DT__GRAVITY < 0.0 )
 #  endif
@@ -118,7 +118,7 @@ void Init_SetDefaultParameter()
    {
       DT__PHASE = 0.125;
 
-      if ( MPI_Rank == 0 ) Aux_Message( stdout, "NOTE : parameter \"%s\" is set to the default value = %13.7e\n", 
+      if ( MPI_Rank == 0 ) Aux_Message( stdout, "NOTE : parameter \"%s\" is set to the default value = %13.7e\n",
                                         "DT__PHASE", DT__PHASE );
    } // if ( DT__PHASE < 0.0 )
 #  endif
@@ -128,7 +128,7 @@ void Init_SetDefaultParameter()
    {
       DT__PARVEL = 0.50;
 
-      if ( MPI_Rank == 0 ) Aux_Message( stdout, "NOTE : parameter \"%s\" is set to the default value = %13.7e\n", 
+      if ( MPI_Rank == 0 ) Aux_Message( stdout, "NOTE : parameter \"%s\" is set to the default value = %13.7e\n",
                                         "DT__PARVEL", DT__PARVEL );
    } // if ( DT__PARVEL < 0.0 )
 
@@ -140,7 +140,7 @@ void Init_SetDefaultParameter()
       DT__PARACC = 0.00;   // disable it
 #     endif
 
-      if ( MPI_Rank == 0 ) Aux_Message( stdout, "NOTE : parameter \"%s\" is set to the default value = %13.7e\n", 
+      if ( MPI_Rank == 0 ) Aux_Message( stdout, "NOTE : parameter \"%s\" is set to the default value = %13.7e\n",
                                         "DT__PARACC", DT__PARACC );
    } // if ( DT__PARACC < 0.0 )
 #  endif
@@ -162,7 +162,7 @@ void Init_SetDefaultParameter()
    if ( MPI_Rank == 0 )  Aux_Message( stdout, "NOTE : parameter \"%s\" is set to the default value = %d\n",
                                       "GPU_NSTREAM", GPU_NSTREAM );
 
-   if ( FLU_GPU_NPGROUP <= 0 )  
+   if ( FLU_GPU_NPGROUP <= 0 )
    {
 #     ifdef OPENMP
       FLU_GPU_NPGROUP = OMP_NTHREAD*20;
@@ -175,7 +175,7 @@ void Init_SetDefaultParameter()
    }
 
 #  ifdef GRAVITY
-   if ( POT_GPU_NPGROUP <= 0 )  
+   if ( POT_GPU_NPGROUP <= 0 )
    {
 #     ifdef OPENMP
       POT_GPU_NPGROUP = OMP_NTHREAD*20;
@@ -197,7 +197,7 @@ void Init_SetDefaultParameter()
 
    for (int lv=0; lv<NLEVEL; lv++)     amr->dh[lv] = BOX_SIZE / (double)( NX0_Max*(1<<lv) );
 
-   for (int d=0; d<3; d++)    
+   for (int d=0; d<3; d++)
    {
       amr->BoxSize [d] = NX0_TOT[d]*amr->dh   [0];
       amr->BoxScale[d] = NX0_TOT[d]*amr->scale[0];
@@ -232,7 +232,7 @@ void Init_SetDefaultParameter()
 #  endif
    ELBDM_ETA = ELBDM_MASS / ELBDM_PLANCK_CONST;
 
-   if ( MPI_Rank == 0 )    
+   if ( MPI_Rank == 0 )
    {
       Aux_Message( stdout, "NOTE : ELBDM_ETA is set to %13.7e\n", ELBDM_ETA );
 
@@ -250,7 +250,7 @@ void Init_SetDefaultParameter()
    {
       ELBDM_TAYLOR3_COEFF = 1.0/6.0;
 
-      if ( MPI_Rank == 0 ) Aux_Message( stdout, "NOTE : parameter \"%s\" is set to the default value = %13.7e\n", 
+      if ( MPI_Rank == 0 ) Aux_Message( stdout, "NOTE : parameter \"%s\" is set to the default value = %13.7e\n",
                                         "ELBDM_TAYLOR3_COEFF", ELBDM_TAYLOR3_COEFF );
    }
 #  endif // #if ( MODEL == ELBDM )
@@ -348,7 +348,7 @@ void Init_SetDefaultParameter()
 
 
 // (9) maximum refinement level
-   if ( MAX_LEVEL < 0 )  
+   if ( MAX_LEVEL < 0 )
    {
       MAX_LEVEL = NLEVEL - 1;
 
@@ -497,6 +497,21 @@ void Init_SetDefaultParameter()
 #  endif
 
 
+// (18) timing options
+   if ( OPT__TIMING_BARRIER < 0 )
+   {
+#     ifdef TIMING
+      if ( OPT__TIMING_BALANCE  ||  OPT__TIMING_MPI )
+         OPT__TIMING_BARRIER = 1;
+      else
+#     endif
+         OPT__TIMING_BARRIER = 0;
+
+      if ( MPI_Rank == 0 )    Aux_Message( stdout, "NOTE : parameter \"%s\" is set to the default value = %d\n",
+                                           "OPT__TIMING_BARRIER", OPT__TIMING_BARRIER );
+   }
+
+
 
 // reset parameters and options which are either unsupported or useless
 // ------------------------------------------------------------------------------------------------------
@@ -513,11 +528,11 @@ void Init_SetDefaultParameter()
 
 // (1-2) disable "OPT__OVERLAP_MPI" if "OVERLAP_MPI" is NOT turned on in the Makefile
 #  ifndef OVERLAP_MPI
-   if ( OPT__OVERLAP_MPI ) 
+   if ( OPT__OVERLAP_MPI )
    {
       OPT__OVERLAP_MPI = false;
 
-      if ( MPI_Rank == 0 )    
+      if ( MPI_Rank == 0 )
          Aux_Message( stderr, "WARNING : option \"%s\" is disabled since \"%s\" is off in the Makefile !!\n",
                       "OPT__OVERLAP_MPI", "OVERLAP_MPI" );
    }
@@ -528,7 +543,7 @@ void Init_SetDefaultParameter()
    {
       OPT__CK_FLUX_ALLOCATE = false;
 
-      if ( MPI_Rank == 0 )    
+      if ( MPI_Rank == 0 )
          Aux_Message( stderr, "WARNING : option \"%s\" is disabled since no flux is required !!\n",
                       "OPT__CK_FLUX_ALLOCATE" );
    }
@@ -537,7 +552,7 @@ void Init_SetDefaultParameter()
 // (2) for the shared time-step integration
 #  ifndef INDIVIDUAL_TIMESTEP
 // (2-1) disable "OPT__INT_TIME"
-   if ( OPT__INT_TIME )   
+   if ( OPT__INT_TIME )
    {
       OPT__INT_TIME = false;
 
@@ -576,11 +591,11 @@ void Init_SetDefaultParameter()
    }
 
 // (4-2) turn off "OPT__OVERLAP_MPI"
-   if ( OPT__OVERLAP_MPI ) 
+   if ( OPT__OVERLAP_MPI )
    {
       OPT__OVERLAP_MPI = false;
 
-      if ( MPI_Rank == 0 )    
+      if ( MPI_Rank == 0 )
          Aux_Message( stderr, "WARNING : option \"%s\" is disabled in the SERIAL mode !!\n",
                       "OPT__OVERLAP_MPI" );
    }
@@ -594,18 +609,18 @@ void Init_SetDefaultParameter()
    {
       OPT__PATCH_COUNT = 1;
 
-      if ( MPI_Rank == 0 )    
+      if ( MPI_Rank == 0 )
          Aux_Message( stderr, "WARNING : parameter \"%s\" is reset to 1 for the LOAD_BALANCE simulation !!\n",
                       "OPT__PATCH_COUNT" );
    }
 
 #  else
 // (5-2) turn off "OPT__OVERLAP_MPI" if LOAD_BALANCE is not enabled
-   if ( OPT__OVERLAP_MPI ) 
+   if ( OPT__OVERLAP_MPI )
    {
       OPT__OVERLAP_MPI = false;
 
-      if ( MPI_Rank == 0 )    
+      if ( MPI_Rank == 0 )
          Aux_Message( stderr, "WARNING : option \"%s\" is disabled since LOAD_BALANCE is NOT turned on !!\n",
                       "OPT__OVERLAP_MPI" );
    }
@@ -618,7 +633,7 @@ void Init_SetDefaultParameter()
    {
       OPT__VERBOSE = true;
 
-      if ( MPI_Rank == 0 )    
+      if ( MPI_Rank == 0 )
          Aux_Message( stderr, "WARNING : parameter \"%s\" is turned on automatically in the debug mode !!\n",
                       "OPT__VERBOSE" );
    }
@@ -628,11 +643,11 @@ void Init_SetDefaultParameter()
 // (7) for OpenMP
 #  ifndef OPENMP
 // (7-1) turn off "OPT__OVERLAP_MPI" if OPENMP is not enabled
-   if ( OPT__OVERLAP_MPI ) 
+   if ( OPT__OVERLAP_MPI )
    {
       OPT__OVERLAP_MPI = false;
 
-      if ( MPI_Rank == 0 )    
+      if ( MPI_Rank == 0 )
          Aux_Message( stderr, "WARNING : option \"%s\" is disabled since OPENMP is NOT turned on !!\n",
                       "OPT__OVERLAP_MPI" );
    }
@@ -648,7 +663,7 @@ void Init_SetDefaultParameter()
    {
       OPT__OVERLAP_MPI = false;
 
-      if ( MPI_Rank == 0 )    
+      if ( MPI_Rank == 0 )
          Aux_Message( stderr, "WARNING : option \"%s\" is disabled if the level of MPI thread support == %s !!\n",
                       "OPT__OVERLAP_MPI", "MPI_THREAD_SINGLE" );
    }
@@ -658,20 +673,20 @@ void Init_SetDefaultParameter()
 // (9) for different modes
 #  if ( MODEL != HYDRO  &&  MODEL != MHD  &&  MODEL != ELBDM )
 // (9-1) operations related to FLUX are useful in HYDRO/MHD/ELBDM only
-   if ( OPT__FIXUP_FLUX ) 
+   if ( OPT__FIXUP_FLUX )
    {
       OPT__FIXUP_FLUX = false;
 
-      if ( MPI_Rank == 0 )    
+      if ( MPI_Rank == 0 )
          Aux_Message( stderr, "WARNING : option \"%s\" is only supported in HYDRO/MHD/ELBDM and hence is disabled !!\n",
                       "OPT__FIXUP_FLUX" );
    }
 
-   if ( OPT__CK_FLUX_ALLOCATE ) 
+   if ( OPT__CK_FLUX_ALLOCATE )
    {
       OPT__CK_FLUX_ALLOCATE = false;
 
-      if ( MPI_Rank == 0 )    
+      if ( MPI_Rank == 0 )
          Aux_Message( stderr, "WARNING : option \"%s\" is only supported in HYDRO/MHD and hence is disabled !!\n",
                       "OPT__CK_FLUX_ALLOCATE" );
    }
@@ -684,8 +699,8 @@ void Init_SetDefaultParameter()
    {
       OPT__FLAG_RHO = false;
 
-      if ( MPI_Rank == 0 )    
-         Aux_Message( stderr, "WARNING : option \"%s\" is disabled since the variable DENS is not defined !!\n", 
+      if ( MPI_Rank == 0 )
+         Aux_Message( stderr, "WARNING : option \"%s\" is disabled since the variable DENS is not defined !!\n",
                       "OPT__FLAG_RHO" );
    }
 
@@ -693,8 +708,8 @@ void Init_SetDefaultParameter()
    {
       OPT__FLAG_RHO_GRADIENT = false;
 
-      if ( MPI_Rank == 0 )    
-         Aux_Message( stderr, "WARNING : option \"%s\" is disabled since the variable DENS is not defined !!\n", 
+      if ( MPI_Rank == 0 )
+         Aux_Message( stderr, "WARNING : option \"%s\" is disabled since the variable DENS is not defined !!\n",
                       "OPT__FLAG_RHO_GRADIENT" );
    }
 
@@ -702,8 +717,8 @@ void Init_SetDefaultParameter()
    {
       OPT__CK_REFINE = false;
 
-      if ( MPI_Rank == 0 )    
-         Aux_Message( stderr, "WARNING : option \"%s\" is disabled since the variable DENS is not defined !!\n", 
+      if ( MPI_Rank == 0 )
+         Aux_Message( stderr, "WARNING : option \"%s\" is disabled since the variable DENS is not defined !!\n",
                       "OPT__CK_REFINE" );
    }
 #  endif // #ifndef DENS
@@ -715,7 +730,7 @@ void Init_SetDefaultParameter()
    {
       OPT__CK_CONSERVATION = false;
 
-      if ( MPI_Rank == 0 )    
+      if ( MPI_Rank == 0 )
          Aux_Message( stderr, "WARNING : option \"%s\" is not supported in this MODEL and hence is disabled !!\n",
                       "OPT__CK_CONSERVATION" );
    }
@@ -725,11 +740,11 @@ void Init_SetDefaultParameter()
 // (9-4) set OPT__LR_LIMITER and OPT__WAF_LIMITER to NONE if they are useless (in HYDRO)
 #  if ( MODEL == HYDRO )
 #  if ( FLU_SCHEME != MHM  &&  FLU_SCHEME != MHM_RP  &&  FLU_SCHEME != CTU )
-   if ( OPT__LR_LIMITER != LR_LIMITER_NONE )    
+   if ( OPT__LR_LIMITER != LR_LIMITER_NONE )
    {
       OPT__LR_LIMITER = LR_LIMITER_NONE;
 
-      if ( MPI_Rank == 0 )    
+      if ( MPI_Rank == 0 )
       {
          Aux_Message( stderr, "WARNING : \"%s\" is useless in the adopted hydro scheme ", "OPT__LR_LIMITER" );
          Aux_Message( stderr, "and has been set to NONE !!\n" );
@@ -738,11 +753,11 @@ void Init_SetDefaultParameter()
 #  endif
 
 #  if ( FLU_SCHEME != WAF )
-   if ( OPT__WAF_LIMITER != WAF_LIMITER_NONE )    
+   if ( OPT__WAF_LIMITER != WAF_LIMITER_NONE )
    {
       OPT__WAF_LIMITER = WAF_LIMITER_NONE;
 
-      if ( MPI_Rank == 0 )    
+      if ( MPI_Rank == 0 )
       {
          Aux_Message( stderr, "WARNING : \"%s\" is useless in the adopted hydro scheme ", "OPT__WAF_LIMITER" );
          Aux_Message( stderr, "and has been set to NONE !!\n" );
@@ -753,20 +768,20 @@ void Init_SetDefaultParameter()
 
 // (9-5) operations related to FLUX are useful in ELBDM only if CONSERVE_MASS is on
 #  if ( MODEL == ELBDM  &&  !defined CONSERVE_MASS )
-   if ( OPT__FIXUP_FLUX ) 
+   if ( OPT__FIXUP_FLUX )
    {
       OPT__FIXUP_FLUX = false;
 
-      if ( MPI_Rank == 0 )    
+      if ( MPI_Rank == 0 )
          Aux_Message( stderr, "WARNING : option \"%s\" is only supported if CONSERVE_MASS is on and hence is disabled !!\n",
                       "OPT__FIXUP_FLUX" );
    }
 
-   if ( OPT__CK_FLUX_ALLOCATE ) 
+   if ( OPT__CK_FLUX_ALLOCATE )
    {
       OPT__CK_FLUX_ALLOCATE = false;
 
-      if ( MPI_Rank == 0 )    
+      if ( MPI_Rank == 0 )
          Aux_Message( stderr, "WARNING : option \"%s\" is only supported if CONSERVE_MASS is on and hence is disabled !!\n",
                       "OPT__CK_FLUX_ALLOCATE" );
    }
@@ -774,12 +789,12 @@ void Init_SetDefaultParameter()
 
 
 // (10) currently OPT__OUTPUT_BASEPS is not supported if the self-gravity is disabled
-#  ifndef GRAVITY 
+#  ifndef GRAVITY
    if ( OPT__OUTPUT_BASEPS )
    {
       OPT__OUTPUT_BASEPS = false;
 
-      if ( MPI_Rank == 0 )    
+      if ( MPI_Rank == 0 )
          Aux_Message( stderr, "WARNING : option \"%s\" is not supported when GRAVITY is off and hence is disabled !!\n",
                       "OPT__OUTPUT_BASEPS" );
    }
@@ -792,7 +807,7 @@ void Init_SetDefaultParameter()
    {
       OPT__RECORD_PERFORMANCE = false;
 
-      if ( MPI_Rank == 0 )    
+      if ( MPI_Rank == 0 )
          Aux_Message( stderr, "WARNING : option \"%s\" is not supported when TIMING is off and hence is disabled !!\n",
                       "OPT__RECORD_PERFORMANCE" );
    }
@@ -805,19 +820,28 @@ void Init_SetDefaultParameter()
    {
       for (int d=0; d<3; d++)    MPI_NRank_X[d] = -1;
 
-      if ( MPI_Rank == 0 )    
+      if ( MPI_Rank == 0 )
          Aux_Message( stdout, "NOTE : parameter \"%s\" is useless during restart for LOAD_BALANCE\n", "MPI_NRANK_X" );
    }
 #  endif
 
 
-// (13) OPT__TIMING_BALANCE and OPT__TIMING_MPI are useless if TIMING is off
+// (13) timing options
 #  ifndef TIMING
+   if ( OPT__TIMING_BARRIER != 0 )
+   {
+      OPT__TIMING_BARRIER = 0;
+
+      if ( MPI_Rank == 0 )
+         Aux_Message( stderr, "WARNING : option \"%s\" is not supported when TIMING is off and hence is disabled !!\n",
+                      "OPT__TIMING_BARRIER" );
+   }
+
    if ( OPT__TIMING_BALANCE )
    {
       OPT__TIMING_BALANCE = false;
 
-      if ( MPI_Rank == 0 )    
+      if ( MPI_Rank == 0 )
          Aux_Message( stderr, "WARNING : option \"%s\" is not supported when TIMING is off and hence is disabled !!\n",
                       "OPT__TIMING_BALANCE" );
    }
@@ -826,18 +850,18 @@ void Init_SetDefaultParameter()
    {
       OPT__TIMING_MPI = false;
 
-      if ( MPI_Rank == 0 )    
+      if ( MPI_Rank == 0 )
          Aux_Message( stderr, "WARNING : option \"%s\" is not supported when TIMING is off and hence is disabled !!\n",
                       "OPT__TIMING_MPI" );
    }
-#  endif
+#  endif // #ifndef
 
 #  ifndef LOAD_BALANCE
    if ( OPT__TIMING_MPI )
    {
       OPT__TIMING_MPI = false;
 
-      if ( MPI_Rank == 0 )    
+      if ( MPI_Rank == 0 )
          Aux_Message( stderr, "WARNING : option \"%s\" is not supported when LOAD_BALANCE is off and hence is disabled !!\n",
                       "OPT__TIMING_MPI" );
    }
@@ -850,7 +874,7 @@ void Init_SetDefaultParameter()
    {
       OPT__UM_START_DOWNGRADE = true;
 
-      if ( MPI_Rank == 0 )    
+      if ( MPI_Rank == 0 )
       {
          Aux_Message( stderr, "WARNING : option \"%s\" must be turned on for the isolated BC. of gravity !!\n",
                       "OPT__UM_START_DOWNGRADE" );
@@ -866,7 +890,7 @@ void Init_SetDefaultParameter()
    {
       OPT__OUTPUT_TOTAL = OUTPUT_FORMAT_CBINARY;
 
-      if ( MPI_Rank == 0 )    
+      if ( MPI_Rank == 0 )
          Aux_Message( stderr, "WARNING : option \"%s\" is reset to 2 (\"%s\") since \"%s\" is off !!\n",
                       "OPT__OUTPUT_TOTAL", "OUTPUT_FORMAT_CBINARY", "SUPPORT_HDF5" );
    }
@@ -879,7 +903,7 @@ void Init_SetDefaultParameter()
    {
       OPT__CK_PARTICLE = true;
 
-      if ( MPI_Rank == 0 )    
+      if ( MPI_Rank == 0 )
          Aux_Message( stderr, "WARNING : parameter \"%s\" is turned on automatically in the debug mode !!\n",
                       "OPT__CK_PARTICLE" );
    }
@@ -892,7 +916,7 @@ void Init_SetDefaultParameter()
    {
       amr->Par->RemoveCell = -1.0;
 
-      if ( MPI_Rank == 0 )    
+      if ( MPI_Rank == 0 )
       {
          Aux_Message( stderr, "WARNING : \"%s\" is useless in the periodic BC ", "PAR_REMOVE_CELL" );
          Aux_Message( stderr, "and has been reset to %14.7e !!\n", amr->Par->RemoveCell );
@@ -907,7 +931,7 @@ void Init_SetDefaultParameter()
    {
       OPT__CORR_UNPHY        = false;
 
-      if ( MPI_Rank == 0 )    
+      if ( MPI_Rank == 0 )
          Aux_Message( stderr, "WARNING : option \"%s\" is not supported for this model and hence is disabled !!\n",
                       "OPT__CORR_UNPHY" );
    }
