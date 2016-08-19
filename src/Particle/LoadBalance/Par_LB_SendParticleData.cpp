@@ -233,7 +233,7 @@ void Par_LB_SendParticleData( const int NParVar, int *SendBuf_NPatchEachRank, in
          const double SendMB = (double)NSendParTotal*NParVar*sizeof(real)*1.0e-6;
          const double RecvMB = (double)NRecvParTotal*NParVar*sizeof(real)*1.0e-6;
 
-         fprintf( File, "%19s %4d %4s %8s %8s %8.3f %8.3f %8.3f %10.3f %10.3f\n",
+         fprintf( File, "%19s %4d %4s %10s %10s %10.5f %8.3f %8.3f %10.3f %10.3f\n",
                   Timer_Comment, NParVar, "X", "X", "X", dtime, SendMB, RecvMB, SendMB/dtime, RecvMB/dtime );
 
          fclose( File );
