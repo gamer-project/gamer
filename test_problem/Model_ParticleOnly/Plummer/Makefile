@@ -294,7 +294,7 @@ CUDA_FILE   +=
 CC_FILE     += Par_Init_Function.cpp  Par_Output_Particle.cpp  Par_FindHomePatch_Base.cpp  Par_PassParticle2Son.cpp \
                Par_Aux_Check_Particle.cpp  Par_PassParticle2Father.cpp  Par_CollectParticle2OneLevel.cpp \
                Par_MassAssignment.cpp  Par_UpdateParticle.cpp  Par_GetTimeStep_VelAcc.cpp \
-               Par_PassParticle2Sibling.cpp  Par_CountParticleInDescendant.cpp  Par_GetEnergy.cpp \
+               Par_PassParticle2Sibling.cpp  Par_CountParticleInDescendant.cpp  Par_Aux_GetConservedQuantity.cpp \
                Par_Aux_InitCheck.cpp  Par_Aux_ParticleCount.cpp  Par_PassParticle2Son_AllPatch.cpp \
                Par_Synchronize.cpp  Par_PredictPos.cpp
 

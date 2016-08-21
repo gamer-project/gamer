@@ -10,10 +10,11 @@ extern double ExtPot_AuxArray[EXT_POT_NAUX_MAX];
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Par_GetEnergy
-// Description :  Calculate particles kinematic and potential energy
+// Function    :  Par_Aux_GetConservedQuantity
+// Description :  Calculate conserved quantities for particles
+//                --> Mass, momentum, kinematic energy and potential energy
 //
-// Note        :  1. Use "call by reference" to return Ek and Ep
+// Note        :  1. Use "call by reference" to return results
 //                2. Return Ep=0.0 if GRAVITY is off
 //                3. External potential is included, but external acceleration is NOT included
 //                4. Particles may NOT be full synchronized when calculating their energies
@@ -27,27 +28,49 @@ extern double ExtPot_AuxArray[EXT_POT_NAUX_MAX];
 //                   --> Different number of OpenMP threads can also results in different results again
 //                       due to round-off errors
 //
-// Parameter   :  Ek :  Total kinematic energy to be returned
-//                Ep :  Total potential energy to be returned
+// Parameter   :  Mass_Total     : Total particle mass to be returned
+//                MomX/Y/Z_Total : Total momentum to be returned
+//                Ek_Total       : Total kinematic energy to be returned
+//                Ep_Total       : Total potential energy to be returned
 //
-// Return      :  Ek, Ep
+// Return      :  Mass_Total, MomX/Y/Z_Total, Ek_Total, Ep_Total
 //-------------------------------------------------------------------------------------------------------
-void Par_GetEnergy( double &Ek, double &Ep )
+void Par_Aux_GetConservedQuantity( double &Mass_Total, double &MomX_Total, double &MomY_Total, double &MomZ_Total,
+                                   double &Ek_Total, double &Ep_Total )
 {
 
-// 1. kinematic energy
-   double Ek_local = 0.0;
+// 1. mass, momentum, and kinematic energy
+   double Mass_ThisRank=0.0, MomX_ThisRank=0.0, MomY_ThisRank=0.0, MomZ_ThisRank=0.0, Ek_ThisRank=0.0;
+   double Send[5], Recv[5];
 
-// use static schedule to give the same reduction result everytime
-#  pragma omp parallel for schedule( static ) reduction( +:Ek_local )
+// use static schedule to give the same reduction results everytime
+#  pragma omp parallel for schedule( static ) reduction( +:Mass_ThisRank, MomX_ThisRank, MomY_ThisRank, MomZ_ThisRank, Ek_ThisRank )
    for (long p=0; p<amr->Par->NPar_AcPlusInac; p++)
    {
 //    skip inactive and massless particles
       if ( amr->Par->Mass[p] > 0.0 )
-      Ek_local += 0.5*amr->Par->Mass[p]*( SQR(amr->Par->VelX[p]) + SQR(amr->Par->VelY[p]) + SQR(amr->Par->VelZ[p]) );
+      {
+         Mass_ThisRank += amr->Par->Mass[p];
+         MomX_ThisRank += amr->Par->Mass[p]*amr->Par->VelX[p];
+         MomY_ThisRank += amr->Par->Mass[p]*amr->Par->VelY[p];
+         MomZ_ThisRank += amr->Par->Mass[p]*amr->Par->VelZ[p];
+         Ek_ThisRank   += 0.5*amr->Par->Mass[p]*( SQR(amr->Par->VelX[p]) + SQR(amr->Par->VelY[p]) + SQR(amr->Par->VelZ[p]) );
+      }
    }
 
-   MPI_Reduce( &Ek_local, &Ek, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD );
+   Send[0] = Mass_ThisRank;
+   Send[1] = MomX_ThisRank;
+   Send[2] = MomY_ThisRank;
+   Send[3] = MomZ_ThisRank;
+   Send[4] = Ek_ThisRank;
+
+   MPI_Reduce( Send, Recv, 5, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD );
+
+   Mass_Total = Recv[0];
+   MomX_Total = Recv[1];
+   MomY_Total = Recv[2];
+   MomZ_Total = Recv[3];
+   Ek_Total   = Recv[4];
 
 
 // 2. potential energy
@@ -63,7 +86,7 @@ void Par_GetEnergy( double &Ek, double &Ep )
    const real *Pos[3] = { amr->Par->PosX, amr->Par->PosY, amr->Par->PosZ };
    const real *Mass   = amr->Par->Mass;
 
-   double Ep_local = 0.0;
+   double Ep_ThisRank = 0.0;
    double PrepPotTime, dh, _dh;
    int    PotSg;
 
@@ -119,7 +142,7 @@ void Par_GetEnergy( double &Ek, double &Ep )
 
 
 //    use static schedule to give the same reduction result everytime
-#     pragma omp for schedule( static ) reduction( +:Ep_local )
+#     pragma omp for schedule( static ) reduction( +:Ep_ThisRank )
       for (int PID0=0; PID0<amr->NPatchComma[lv][1]; PID0+=8)
       {
 //       2-1. find the patch groups with particles
@@ -229,7 +252,7 @@ void Par_GetEnergy( double &Ek, double &Ep )
                      } // for (int d=0; d<3; d++)
 
 //                   get potential energy
-                     Ep_local += 0.5*Mass[ParID]*Pot3D[P][ idx[2] ][ idx[1] ][ idx[0] ];
+                     Ep_ThisRank += 0.5*Mass[ParID]*Pot3D[P][ idx[2] ][ idx[1] ][ idx[0] ];
                   } // for (int p=0; p<amr->patch[0][lv][PID]->NPar; p++)
                } // PAR_INTERP_NGP
                break;
@@ -289,8 +312,8 @@ void Par_GetEnergy( double &Ek, double &Ep )
                      for (int k=0; k<2; k++)
                      for (int j=0; j<2; j++)
                      for (int i=0; i<2; i++)
-                     Ep_local += 0.5*Mass[ParID]*Pot3D[P][ idxLR[k][2] ][ idxLR[j][1] ][ idxLR[i][0] ]
-                                                *Frac[i][0]*Frac[j][1]*Frac[k][2];
+                     Ep_ThisRank += 0.5*Mass[ParID]*Pot3D[P][ idxLR[k][2] ][ idxLR[j][1] ][ idxLR[i][0] ]
+                                       *Frac[i][0]*Frac[j][1]*Frac[k][2];
                   } // for (int p=0; p<amr->patch[0][lv][PID]->NPar; p++)
                } // PAR_INTERP_CIC
                break;
@@ -353,8 +376,8 @@ void Par_GetEnergy( double &Ek, double &Ep )
                      for (int k=0; k<3; k++)
                      for (int j=0; j<3; j++)
                      for (int i=0; i<3; i++)
-                     Ep_local += 0.5*Mass[ParID]*Pot3D[P][ idxLCR[k][2] ][ idxLCR[j][1] ][ idxLCR[i][0] ]
-                                                *Frac[i][0]*Frac[j][1]*Frac[k][2];
+                     Ep_ThisRank += 0.5*Mass[ParID]*Pot3D[P][ idxLCR[k][2] ][ idxLCR[j][1] ][ idxLCR[i][0] ]
+                                       *Frac[i][0]*Frac[j][1]*Frac[k][2];
                   } // for (int p=0; p<amr->patch[0][lv][PID]->NPar; p++)
                } // PAR_INTERP_TSC
                break;
@@ -372,14 +395,14 @@ void Par_GetEnergy( double &Ek, double &Ep )
 
 
 // 2.6. gather from all ranks
-   MPI_Reduce( &Ep_local, &Ep, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD );
+   MPI_Reduce( &Ep_ThisRank, &Ep_Total, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD );
 
 #  else // #ifdef GRAVITY
 
-   Ep = 0.0;
+   Ep_Total = 0.0;
 #  endif // #ifdef GRAVITY ... else ...
 
-} // FUNCTION : Par_GetEnergy
+} // FUNCTION : Par_Aux_GetConservedQuantity
 
 
 

@@ -436,7 +436,7 @@ void Par_GetTimeStep_VelAcc( double dt[2], double dTime[2], int MinDtLv[2], real
 void Par_PassParticle2Sibling( const int lv, const bool TimingSendPar );
 bool Par_WithinActiveRegion( const real x, const real y, const real z );
 int  Par_CountParticleInDescendant( const int FaLv, const int FaPID );
-void Par_GetEnergy( double &Ek, double &Ep );
+void Par_Aux_GetConservedQuantity( double &Mass, double &MomX, double &MomY, double &MomZ, double &Ek, double &Ep );
 void Par_Aux_InitCheck();
 void Par_Aux_ParticleCount();
 void Par_CollectParticle2OneLevel( const int FaLv, const bool PredictPos, const double TargetTime,

@@ -8,7 +8,7 @@
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  MPI_ExchangeData
-// Description :  Exchange the real-patch data stored in the SendBuffer and RecvBuffer bewteen neighbor ranks
+// Description :  Exchange the real-patch data stored in the SendBuffer and RecvBuffer between neighbor ranks
 //
 // Parameter   :  TargetRank : MPI rank to send and receive data
 //                SendSize   : Number of data to be sent

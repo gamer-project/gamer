@@ -134,7 +134,7 @@ int            OPT__PARTICLE_COUNT, OPT__FLAG_NPAR_PATCH, FlagTable_NParPatch[NL
 #endif
 
 
-// 3. CPU (host) arrays for transferring data bewteen CPU and GPU
+// 3. CPU (host) arrays for transferring data between CPU and GPU
 // =======================================================================================================
 // (3-1) fluid solver
 real (*h_Flu_Array_F_In [2])[FLU_NIN ][  FLU_NXT   *FLU_NXT   *FLU_NXT   ] = { NULL, NULL };

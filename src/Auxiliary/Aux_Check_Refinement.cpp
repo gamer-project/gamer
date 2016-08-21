@@ -22,7 +22,7 @@ void Aux_Check_Refinement( const int lv, const char *comment )
 
 // check
 #  ifndef DENS
-   Aux_Message( stderr, "Warning : function \"%s\" is supported only if the variable \"DENS\" is defined !!\n",
+   Aux_Message( stderr, "WARNING : function \"%s\" is supported only if the variable \"DENS\" is defined !!\n",
                 __FUNCTION__ );
    OPT__CK_REFINE = false;
    return;

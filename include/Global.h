@@ -151,7 +151,7 @@ extern int        OPT__PARTICLE_COUNT, OPT__FLAG_NPAR_PATCH, FlagTable_NParPatch
 
 
 
-// 3. CPU (host) arrays for transferring data bewteen CPU and GPU
+// 3. CPU (host) arrays for transferring data between CPU and GPU
 // ============================================================================================================
 extern real       (*h_Flu_Array_F_In [2])[FLU_NIN ][  FLU_NXT   *FLU_NXT   *FLU_NXT   ];
 extern real       (*h_Flu_Array_F_Out[2])[FLU_NOUT][8*PATCH_SIZE*PATCH_SIZE*PATCH_SIZE];

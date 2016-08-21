@@ -280,7 +280,7 @@ II. Perform Simulation
          root-level cells in the x direction.
 
          Also note that in GAMER the refinement ratio between levels (the ratio
-         of the grid resolutions bewteen adjacent levels) is limited to 2.
+         of the grid resolutions between adjacent levels) is limited to 2.
 
       NX0_TOT[1] : 
          The total number of root-level grids in the y direction.
