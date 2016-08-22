@@ -93,7 +93,7 @@ void Aux_Error( const char *File, const int Line, const char *Func, const char *
 //
 // Method      :  Particle_t        : Constructor
 //               ~Particle_t        : Destructor
-//                InitVar           : Initialize arrays and some variables
+//                InitRepo          : Initialize particle repository
 //                AddOneParticle    : Add one new particle into the particle list
 //                RemoveOneParticle : Remove one particle from the particle list
 //-------------------------------------------------------------------------------------------------------
@@ -179,6 +179,7 @@ struct Particle_t
       ImproveAcc          = true;
       PredictPos          = true;
       RemoveCell          = -999.9;
+      GhostSize           = -1;
 
       for (int lv=0; lv<NLEVEL; lv++)  NPar_Lv[lv] = 0;
 
@@ -277,21 +278,23 @@ struct Particle_t
 
 
    //===================================================================================
-   // Constructor :  InitVar
-   // Description :  Initialize the particle attribute arrays and some other variables
+   // Constructor :  InitRepo
+   // Description :  Initialize particle repository
+   //                --> All variables related to the number of particles
    //
    // Note        :  1. NPar_AcPlusInac must be set properly (>=0) in advance
    //                2. Initialize both "NPar_Active" and "ParListSize" as NPar_AcPlusInac
-   //                3. Set "GhostSize" ("Interp" must be set in advance)
+   //                   --> Assuming no inactive particles (i.e., NPar_Inactive = 0)
+   //                3. For LOAD_BALANCE, some lists recording the information for exchanging
+   //                   particles between different ranks are also allocated here
    //
    // Parameter   :  NRank : Total number of MPI ranks
    //===================================================================================
-   void InitVar( const int NRank )
+   void InitRepo( const int NRank )
    {
 
 //    check
-      if ( NPar_AcPlusInac < 0 )          Aux_Error( ERROR_INFO, "NPar_AcPlusInac (%ld) < 0 !!\n", NPar_AcPlusInac );
-      if ( Interp == PAR_INTERP_NONE )    Aux_Error( ERROR_INFO, "Interp == NONE !!\n" );
+      if ( NPar_AcPlusInac < 0 )    Aux_Error( ERROR_INFO, "NPar_AcPlusInac (%ld) < 0 !!\n", NPar_AcPlusInac );
 
 //    initialize NPar_Active, NPar_Inactive, ParListSize, and InactiveParListSize
       NPar_Active         = NPar_AcPlusInac;             // assuming all particles are active initially
@@ -299,17 +302,8 @@ struct Particle_t
       ParListSize         = NPar_AcPlusInac;             // set ParListSize = NPar_AcPlusInac at the beginning
       InactiveParListSize = MAX( 1, ParListSize/100 );   // set arbitrarily (but must > 0)
 
-//    set the number of ghost zones for the interpolation scheme
-      switch ( Interp )
-      {
-         case ( PAR_INTERP_NGP ): GhostSize = 0;   break;
-         case ( PAR_INTERP_CIC ): GhostSize = 1;   break;
-         case ( PAR_INTERP_TSC ): GhostSize = 1;   break;
-         default: Aux_Error( ERROR_INFO, "unsupported particle interpolation scheme !!\n" );
-      }
-
 //    allocate arrays (use malloc so that realloc can be used later to resize the array)
-//    --> free memory first since other functions (e.g., LB_Init_LoadBalance) will call InitVar again
+//    --> free memory first since other functions (e.g., LB_Init_LoadBalance) will call InitRepo again
       for (int v=0; v<PAR_NVAR; v++)
       {
          if ( ParVar[v] != NULL )   free( ParVar[v] );
@@ -361,6 +355,7 @@ struct Particle_t
       } // for (int lv=0; lv<NLEVEL; lv++)
 #     endif // #ifdef LOAD_BALANCE
 
+//    set pointers
       Mass = ParVar[PAR_MASS];
       PosX = ParVar[PAR_POSX];
       PosY = ParVar[PAR_POSY];
@@ -375,7 +370,7 @@ struct Particle_t
       AccZ = ParVar[PAR_ACCZ];
 #     endif
 
-   } // METHOD : InitVar
+   } // METHOD : InitRepo
 
 
 

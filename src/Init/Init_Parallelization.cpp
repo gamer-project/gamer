@@ -294,7 +294,7 @@ void Init_Parallelization()
 
 // 6. number of particles for each rank (only during the initialization)
 #  ifdef PARTICLE
-   if ( OPT__INIT != INIT_RESTART )
+   if ( amr->Par->Init != PAR_INIT_BY_RESTART )
    {
       if ( amr->Par->NPar_Active_AllRank < 0 )
          Aux_Error( ERROR_INFO, "NPar_Active_AllRank = %ld < 0 !!\n", amr->Par->NPar_Active_AllRank );

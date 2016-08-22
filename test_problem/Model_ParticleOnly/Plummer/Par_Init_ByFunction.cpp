@@ -20,8 +20,8 @@ static void RanVec_FixRadius( const double r, double RanVec[] );
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Par_Init_Function
-// Description :  Initialize the particle position and velocity 
+// Function    :  Par_Init_ByFunction
+// Description :  Initialize the particle position and velocity
 //
 // Note        :  1. Invoked by "Init_GAMER"
 //                2. Assuming all particles are active initially
@@ -33,7 +33,7 @@ static void RanVec_FixRadius( const double r, double RanVec[] );
 //
 // Return      :  amr->Par->Mass, amr->Par->PosX/Y/Z, amr->Par->VelX/Y/Z
 //-------------------------------------------------------------------------------------------------------
-void Par_Init_Function()
+void Par_Init_ByFunction()
 {
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ...\n", __FUNCTION__ );
@@ -69,7 +69,7 @@ void Par_Init_Function()
 
 
 //    determine the total enclosed mass within the maximum radius
-      TotM = MassProf_Plummer( Plummer_MaxR );   
+      TotM = MassProf_Plummer( Plummer_MaxR );
       ParM = TotM / amr->Par->NPar_Active_AllRank;
 
       if ( Plummer_Collision )   ParM *= 2.0;
@@ -168,7 +168,7 @@ void Par_Init_Function()
 
    int NSend[MPI_NRank], SendDisp[MPI_NRank], NPar_MyRank=(int)amr->Par->NPar_AcPlusInac;
 
-   MPI_Gather( &NPar_MyRank, 1, MPI_INT, NSend, 1, MPI_INT, 0, MPI_COMM_WORLD ); 
+   MPI_Gather( &NPar_MyRank, 1, MPI_INT, NSend, 1, MPI_INT, 0, MPI_COMM_WORLD );
 
    if ( MPI_Rank == 0 )
    {
@@ -216,7 +216,7 @@ void Par_Init_Function()
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", __FUNCTION__ );
 
-} // FUNCTION : Par_Init_Function
+} // FUNCTION : Par_Init_ByFunction
 
 
 
@@ -243,7 +243,7 @@ double MassProf_Plummer( const double r )
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  RanVec_FixRadius
-// Description :  Compute a random 3D vector with a fixed radius 
+// Description :  Compute a random 3D vector with a fixed radius
 //
 // Note        :  Uniformly random sample in theta and phi does NOT give a uniformly random sample in 3D space
 //                --> Uniformly random sample in a 3D sphere and then normalize all vectors to the given radius
@@ -251,7 +251,7 @@ double MassProf_Plummer( const double r )
 // Parameter   :  r        : Input radius
 //                RanVec   : Array to store the random 3D vector
 //
-// Return      :  RanVec 
+// Return      :  RanVec
 //-------------------------------------------------------------------------------------------------------
 void RanVec_FixRadius( const double r, double RanVec[] )
 {

@@ -433,7 +433,7 @@ void Init_SetDefaultParameter()
       amr->Par->Interp = PAR_INTERP_TSC;
 
       if ( MPI_Rank == 0 )  Aux_Message( stdout, "NOTE : parameter \"%s\" is set to \"%s\" by default\n",
-                                         "PAR_NTERP", "PAR_INTERP_TSC"  );
+                                         "PAR_INTERP", "PAR_INTERP_TSC"  );
    }
 
    if ( amr->Par->Integ == PAR_INTEG_DEFAULT )
@@ -457,6 +457,21 @@ void Init_SetDefaultParameter()
 
       if ( MPI_Rank == 0 )  Aux_Message( stdout, "NOTE : parameter \"%s\" is set to the default value = %13.7e\n",
                                          "PAR_REMOVE_CELL", amr->Par->RemoveCell );
+   }
+
+// set the number of ghost zones for the interpolation scheme
+   if ( amr->Par->GhostSize < 0 )
+   {
+      switch ( amr->Par->Interp )
+      {
+         case ( PAR_INTERP_NGP ): amr->Par->GhostSize = 0;  break;
+         case ( PAR_INTERP_CIC ): amr->Par->GhostSize = 1;  break;
+         case ( PAR_INTERP_TSC ): amr->Par->GhostSize = 1;  break;
+         default: Aux_Error( ERROR_INFO, "unsupported particle interpolation scheme !!\n" );
+      }
+
+      if ( MPI_Rank == 0 )  Aux_Message( stdout, "NOTE : parameter \"%s\" is set to the default value = %d\n",
+                                         "amr->Par->GhostSize", amr->Par->GhostSize );
    }
 #  endif // #ifdef PARTICLE
 
@@ -929,11 +944,24 @@ void Init_SetDefaultParameter()
 #  if ( MODEL != HYDRO  &&  MODEL != MHD )
    if ( OPT__CORR_UNPHY )
    {
-      OPT__CORR_UNPHY        = false;
+      OPT__CORR_UNPHY = false;
 
       if ( MPI_Rank == 0 )
          Aux_Message( stderr, "WARNING : option \"%s\" is not supported for this model and hence is disabled !!\n",
                       "OPT__CORR_UNPHY" );
+   }
+#  endif
+
+
+// (19) set particle initialization mode to PAR_INIT_BY_RESTART for restart
+#  ifdef PARTICLE
+   if ( OPT__INIT == INIT_RESTART  &&  amr->Par->Init != PAR_INIT_BY_RESTART )
+   {
+      amr->Par->Init = PAR_INIT_BY_RESTART;
+
+      if ( MPI_Rank == 0 )
+         Aux_Message( stderr, "WARNING : \"%s\" is reset set to \"%s\" for restart !!\n",
+                      "PAR_INIT", "PAR_INIT_BY_RESTART" );
    }
 #  endif
 

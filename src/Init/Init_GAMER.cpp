@@ -19,7 +19,7 @@ void Init_GAMER( int *argc, char ***argv )
    amr = new AMR_t;
 
 
-// initialize the particle structure 
+// initialize the particle structure
 #  ifdef PARTICLE
    amr->Par = new Particle_t();
 #  endif
@@ -57,12 +57,12 @@ void Init_GAMER( int *argc, char ***argv )
 #  ifdef GRAVITY
    NEWTON_G = double( 3.0*OMEGA_M0/8.0/M_PI );
 
-   if ( MPI_Rank == 0 )   
+   if ( MPI_Rank == 0 )
       Aux_Message( stdout, "NOTE : gravitational constant is reset to %13.7e in the comological simulations\n",
                    NEWTON_G );
 #  endif
 #  endif // #ifdef COMOVING
-   
+
 
 // initialize parameters for the parallelization (rectangular domain decomposition)
    Init_Parallelization();
@@ -145,21 +145,25 @@ void Init_GAMER( int *argc, char ***argv )
 #  ifdef PARTICLE
    switch ( amr->Par->Init )
    {
-      case PAR_INIT_BY_FUNCTION:    Par_Init_Function();    break;
+      case PAR_INIT_BY_FUNCTION:    Par_Init_ByFunction();  break;
 
-      case PAR_INIT_BY_RESTART:
+//    nothing to do here for the restart mode
+      case PAR_INIT_BY_RESTART:  break;
 
-      case PAR_INIT_BY_FILE:
+      case PAR_INIT_BY_FILE:        Par_Init_ByFile();   break;
 
-      default : Aux_Error( ERROR_INFO, "unsupported particle initialization (%s = %d) !!\n", 
+      default : Aux_Error( ERROR_INFO, "unsupported particle initialization (%s = %d) !!\n",
                            "PAR_INIT", (int)amr->Par->Init );
    }
 
-   Par_Aux_InitCheck();
+   if ( amr->Par->Init != PAR_INIT_BY_RESTART )
+   {
+      Par_Aux_InitCheck();
 
-#  ifndef SERIAL
-   if ( amr->Par->Init != PAR_INIT_BY_RESTART )    Par_LB_RedistributeByRectangular();
-#  endif
+#     ifndef SERIAL
+      Par_LB_Init_RedistributeByRectangular();
+#     endif
+   }
 #  endif // #ifdef PARTICLE
 
 
@@ -180,7 +184,7 @@ void Init_GAMER( int *argc, char ***argv )
    for (int lv=0; lv<NLEVEL; lv++)     Mis_GetTotalPatchNumber( lv );
 
 
-// improve load balance    
+// improve load balance
 #  ifdef LOAD_BALANCE
    LB_Init_LoadBalance( OPT__INIT == INIT_RESTART );
 
@@ -209,9 +213,9 @@ void Init_GAMER( int *argc, char ***argv )
 
 
 //    evaluate the gravitational potential
-      if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ...\n", "Calculating gravitational potential" ); 
+      if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ...\n", "Calculating gravitational potential" );
 
-      for (int lv=0; lv<NLEVEL; lv++)     
+      for (int lv=0; lv<NLEVEL; lv++)
       {
          if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Lv %2d ... ", lv );
 
@@ -219,20 +223,20 @@ void Init_GAMER( int *argc, char ***argv )
 
          Gra_AdvanceDt( lv, Time[lv], NULL_REAL, NULL_REAL, NULL_INT, amr->PotSg[lv], true, false, false, false );
 
-         if ( lv > 0 )  
+         if ( lv > 0 )
          Buf_GetBufferData( lv, NULL_INT, amr->PotSg[lv], POT_FOR_POISSON, _POTE, Pot_ParaBuf, USELB_YES );
 
          if ( MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );
       } // for (int lv=0; lv<NLEVEL; lv++)
 
-      if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", "Calculating gravitational potential" ); 
+      if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", "Calculating gravitational potential" );
    } // if ( OPT__GRAVITY_TYPE == GRAVITY_SELF  ||  OPT__GRAVITY_TYPE == GRAVITY_BOTH )
 #  endif // #ifdef GARVITY
 
 
 // initialize particle acceleration
 #  if ( defined PARTICLE  &&  defined STORE_PAR_ACC )
-   if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ...\n", "Calculating particle acceleration" ); 
+   if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ...\n", "Calculating particle acceleration" );
 
    const bool StoreAcc_Yes    = true;
    const bool UseStoredAcc_No = false;
@@ -240,13 +244,13 @@ void Init_GAMER( int *argc, char ***argv )
    for (int lv=0; lv<NLEVEL; lv++)
    Par_UpdateParticle( lv, amr->PotSgTime[lv][ amr->PotSg[lv] ], NULL_REAL, PAR_UPSTEP_ACC_ONLY, StoreAcc_Yes, UseStoredAcc_No );
 
-   if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", "Calculating particle acceleration" ); 
+   if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", "Calculating particle acceleration" );
 #  endif
 
 
 // initialize the array "MinDtInfo_Fluid" since the kernel "CUFLU_GetMaxCFL" will NOT work during initialization
    real MinDtVar_AllLv_Fluid[NLEVEL][NCOMP];
-   if ( OPT__ADAPTIVE_DT )     
+   if ( OPT__ADAPTIVE_DT )
    {
 #     if   ( MODEL == HYDRO )
       Hydro_GetMaxCFL( MinDtInfo_Fluid, MinDtVar_AllLv_Fluid );
@@ -264,7 +268,7 @@ void Init_GAMER( int *argc, char ***argv )
 
 // initialize the array "MinDtInfo_Gravity" since the kernel "XXX" will NOT work during initialization
 #  ifdef GRAVITY
-   if ( OPT__ADAPTIVE_DT )     
+   if ( OPT__ADAPTIVE_DT )
    {
 #     if   ( MODEL == HYDRO )
       Hydro_GetMaxAcc( MinDtInfo_Gravity );
@@ -286,7 +290,7 @@ void Init_GAMER( int *argc, char ***argv )
 #  if ( MODEL == ELBDM )
    real MinDtVar_AllLv_Phase[NLEVEL][3];
 
-   if ( OPT__ADAPTIVE_DT )     
+   if ( OPT__ADAPTIVE_DT )
       ELBDM_GetMaxPhaseDerivative( MinDtInfo_Phase, MinDtVar_AllLv_Phase );
 #  endif
 

@@ -825,7 +825,7 @@ void LB_RedistributeRealPatch( const int lv, real **ParVar_Old, real **Passive_O
 //
 // Note        :  1. This function will get the total number of particles AFTER data redistribution and
 //                   then allocate the new particle attribute arrays
-//                2. This function will also reset particle parameters by calling amr->Par->InitVar.
+//                2. This function will also reallocate particle repository by calling amr->Par->InitRepo.
 //                   However, we reset NPar_AcPlusInac to zero since we will update it level by level
 //                   when calling LB_RedistributeRealPatch later
 //                3. One must call LB_SetCutPoint for all levels in advance
@@ -839,7 +839,7 @@ void LB_RedistributeParticle_Init( real **ParVar_Old, real **Passive_Old )
 {
 
 // backup the old particle attribute arrays
-// remember to reset ParVar and Passive to NULL so that amr->Par->InitVar will NOT delete these arrays
+// remember to reset ParVar and Passive to NULL so that amr->Par->InitRepo will NOT delete these arrays
    for (int v=0; v<PAR_NVAR; v++)
    {
       ParVar_Old      [v] = amr->Par->ParVar[v];
@@ -875,7 +875,7 @@ void LB_RedistributeParticle_Init( real **ParVar_Old, real **Passive_Old )
 
 // reset particle variables (do not reset NPar_Lv since we will need it for debug in LB_RedistributeRealPatch)
    amr->Par->NPar_AcPlusInac = Recv_NPar_Sum;
-   amr->Par->InitVar( MPI_NRank );
+   amr->Par->InitRepo( MPI_NRank );
 
 // reset the total number of particles to be zero
 // --> so particle attribute arrays (i.e., ParVar and Passive) are pre-allocated, but it contain no active particle yet

@@ -419,7 +419,8 @@ void CUAPI_MemFree_PoissonGravity();
 
 // Particle
 #ifdef PARTICLE
-void Par_Init_Function();
+void Par_Init_ByFunction();
+void Par_Init_ByFile();
 void Par_Output_Particle( const char *comment );
 void Par_FindHomePatch_Base( const int *BaseP );
 void Par_PassParticle2Son( const int FaLv, const int FaPID );
@@ -449,7 +450,7 @@ void Prepare_PatchData_FreeParticleDensityArray( const int lv );
 void Par_PredictPos( const long NPar, const long *ParList, real *ParPosX, real *ParPosY, real *ParPosZ,
                      const double TargetTime );
 #ifdef LOAD_BALANCE
-void Par_LB_RedistributeByRectangular();
+void Par_LB_Init_RedistributeByRectangular();
 void Par_LB_CollectParticle2OneLevel( const int FaLv, const bool PredictPos, const double TargetTime,
                                       const bool SibBufPatch, const bool FaSibBufPatch, const bool JustCountNPar,
                                       const bool TimingSendPar );

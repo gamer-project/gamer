@@ -7,12 +7,11 @@
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Par_LB_RedistributeByRectangular
+// Function    :  Par_LB_Init_RedistributeByRectangular
 // Description :  Redistribute particles assuming the rectangular domain decomposition
 //
 // Note        :  1. Usefully only during the initialization when calling "Init_GAMER"
-//                2. Some particles may already be marked as inactive by "Par_Aux_InitCheck"
-//                   --> These particles will NOT be sent to the new rank
+//                2. Inactive particles will NOT be redistributed
 //                3. Redistribute the Time, Mass, Pos, Vel, and all passive variables of particles
 //                   --> Acc is not redistributed since it has not been initialized
 //
@@ -20,7 +19,7 @@
 //
 // Return      :  amr->Par->Mass,PosX/Y/Z,VelX/Y/Z,Passive
 //-------------------------------------------------------------------------------------------------------
-void Par_LB_RedistributeByRectangular()
+void Par_LB_Init_RedistributeByRectangular()
 {
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ...\n", __FUNCTION__ );
@@ -228,7 +227,7 @@ void Par_LB_RedistributeByRectangular()
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", __FUNCTION__ );
 
-} // FUNCTION : Par_LB_RedistributeByRectangular
+} // FUNCTION : Par_LB_Init_RedistributeByRectangular
 
 
 

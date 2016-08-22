@@ -38,10 +38,10 @@ real Plummer_FreeT;        // free-fall time at Plummer_R0
 // Note        :  1. Please copy this file to "GAMER/src/Init/Init_TestProb.cpp"
 //                2. Test problem parameters can be set in the input file "Input__TestProb"
 //
-// Parameter   :  None 
+// Parameter   :  None
 //-------------------------------------------------------------------------------------------------------
 void Init_TestProb()
-{  
+{
 
    const char *TestProb = "Plummer model";
 
@@ -127,7 +127,7 @@ void Init_TestProb()
       OPT__OUTPUT_TEST_ERROR = false;
 
       if ( MPI_Rank == 0 )
-         Aux_Message( stdout, "NOTE : parameter %s is reset to %d in the %s test !!\n", 
+         Aux_Message( stdout, "NOTE : parameter %s is reset to %d in the %s test !!\n",
                       "OPT__OUTPUT_TEST_ERROR", OPT__OUTPUT_TEST_ERROR, TestProb );
    }
 
@@ -155,9 +155,9 @@ void Init_TestProb()
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Par_TestProbSol_Plummer
-// Description :  Initialize the background density field as zero for the Plummer model test  
+// Description :  Initialize the background density field as zero for the Plummer model test
 //
-// Note        :  1. Currently particle test must work with the ELBDM model 
+// Note        :  1. Currently particle test must work with the ELBDM model
 //                2. Invoked by "ELBDM_Init_StartOver_AssignData"
 //
 // Parameter   :  fluid : Fluid field to be initialized
@@ -179,8 +179,8 @@ void Par_TestProbSol_Plummer( real *fluid, const real x, const real y, const rea
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  LoadTestProbParameter 
-// Description :  Load parameters for the test problem 
+// Function    :  LoadTestProbParameter
+// Description :  Load parameters for the test problem
 //
 // Note        :  This function is invoked by "Init_TestProb"
 //
