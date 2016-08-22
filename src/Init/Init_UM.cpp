@@ -1,12 +1,12 @@
 #include "Copyright.h"
 #include "GAMER.h"
 
-static void UM_Downgrade( const real *Input, real *Output, const int NX, const int NY, const int NZ, 
+static void UM_Downgrade( const real *Input, real *Output, const int NX, const int NY, const int NZ,
                           const int NVar );
 static void UM_AssignData( const int lv, real *UM_Data, const int NVar );
 static void UM_CreateLevel( real *UM_Data, const int lv, int **FlagMap, const int Buffer, const int NVar );
 static void UM_RecordFlagMap( const int lv, int *FlagMap, const int ip, const int jp, const int kp );
-static void UM_FindAncestor( const int Son_lv, const int Son_ip, const int Son_jp, const int Son_kp, 
+static void UM_FindAncestor( const int Son_lv, const int Son_ip, const int Son_jp, const int Son_kp,
                              int **FlagMap );
 static void UM_Flag( const int lv, const int *FlagMap );
 
@@ -15,9 +15,9 @@ static void UM_Flag( const int lv, const int *FlagMap );
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Init_UM
-// Description :  Set up the initial condition from an input uniform-mesh array 
+// Description :  Set up the initial condition from an input uniform-mesh array
 //
-// Note        :  a. Create levels from 0 to OPT__UM_START_LEVEL 
+// Note        :  a. Create levels from 0 to OPT__UM_START_LEVEL
 //                   --> no levels above OPT__UM_START_LEVEL will be created
 //                   --> ALL patches at levels 0 to OPT__UM_START_LEVEL will be created. In other words,
 //                       the simulation domain will be FULLY REFINED to level OPT__UM_START_LEVEL.
@@ -32,15 +32,15 @@ static void UM_Flag( const int lv, const int *FlagMap );
 void Init_UM()
 {
 
-   if ( MPI_Rank == 0 )    Aux_Message( stdout, "Init_UM ... \n" ); 
+   if ( MPI_Rank == 0 )    Aux_Message( stdout, "Init_UM ... \n" );
 
 
    const char  FileName[]     = "UM_START";
    const int   Buffer         = FLAG_BUFFER_SIZE;
-   const int   UM_lv          = OPT__UM_START_LEVEL; 
-   const int   UM_NVar        = OPT__UM_START_NVAR; 
-   const int   UM_Size_Tot[3] = {  NX0_TOT[0]*(1<<UM_lv),         // size of the input data 
-                                   NX0_TOT[1]*(1<<UM_lv), 
+   const int   UM_lv          = OPT__UM_START_LEVEL;
+   const int   UM_NVar        = OPT__UM_START_NVAR;
+   const int   UM_Size_Tot[3] = {  NX0_TOT[0]*(1<<UM_lv),         // size of the input data
+                                   NX0_TOT[1]*(1<<UM_lv),
                                    NX0_TOT[2]*(1<<UM_lv) };
    const int   UM_Size[3]     = {  UM_Size_Tot[0]/MPI_NRank_X[0], // size of the input data loaded by each rank
                                    UM_Size_Tot[1]/MPI_NRank_X[1],
@@ -70,16 +70,16 @@ void Init_UM()
    const long ExpectSize = long(UM_NVar)*UM_Size_Tot[0]*UM_Size_Tot[1]*UM_Size_Tot[2]*sizeof(real);
    const long FileSize   = ftell( FileTemp );
    if ( FileSize != ExpectSize )
-      Aux_Error( ERROR_INFO, "the size of the file <%s> = %ld != Expect = %ld !!\n", 
+      Aux_Error( ERROR_INFO, "size of the file <%s> = %ld != expect = %ld !!\n",
                  FileName, FileSize, ExpectSize );
-   
+
    fclose( FileTemp );
 
    MPI_Barrier( MPI_COMM_WORLD );
 
 
 
-// set the memory offset for each rank
+// set the file access offset for this rank
 // ===========================================================================================================
    const long offset0 = (long)UM_NVar * sizeof(real) * ( (long)MPI_Rank_X[2]*UM_Size[2]*UM_Size_Tot[1]*UM_Size_Tot[0]
                                                              + MPI_Rank_X[1]*UM_Size[1]*UM_Size_Tot[0]
@@ -136,7 +136,7 @@ void Init_UM()
                                 (NX0[2]/PATCH_SIZE)*(1<<lv) + 4  };
       const int NPatch = NPatch1D[0]*NPatch1D[1]*NPatch1D[2];
 
-      FlagMap[lv] = new int [NPatch]; 
+      FlagMap[lv] = new int [NPatch];
 
       for (int P=0; P<NPatch; P++)  FlagMap[lv][P] = -1;
    }
@@ -264,7 +264,7 @@ void Init_UM()
    } // if ( OPT__INIT == INIT_UM  &&  OPT__UM_START_REFINE )
 
 
-   if ( MPI_Rank == 0 )    Aux_Message( stdout, "Init_UM ... done\n" ); 
+   if ( MPI_Rank == 0 )    Aux_Message( stdout, "Init_UM ... done\n" );
 
 } // FUNCTION : Init_UM
 
@@ -290,7 +290,7 @@ void UM_CreateLevel( real *UM_Data, const int lv, int **FlagMap, const int Buffe
                                 (NX0[2]/PATCH_SIZE)*(1<<(lv  )) + 4  };
    const int Fa_NPatch1D[3] = { (NX0[0]/PATCH_SIZE)*(1<<(lv-1)) + 4,
                                 (NX0[1]/PATCH_SIZE)*(1<<(lv-1)) + 4,
-                                (NX0[2]/PATCH_SIZE)*(1<<(lv-1)) + 4  }; 
+                                (NX0[2]/PATCH_SIZE)*(1<<(lv-1)) + 4  };
 
    const int NX             = PATCH_SIZE * ( NPatch1D[0]-4 );
    const int NY             = PATCH_SIZE * ( NPatch1D[1]-4 );
@@ -298,11 +298,11 @@ void UM_CreateLevel( real *UM_Data, const int lv, int **FlagMap, const int Buffe
 
    for (int kp=2; kp<NPatch1D[2]-2; kp++)         // kp : (kp)th patch in the z direction
    for (int jp=2; jp<NPatch1D[1]-2; jp++)
-   for (int ip=2; ip<NPatch1D[0]-2; ip++)         
+   for (int ip=2; ip<NPatch1D[0]-2; ip++)
    {
 //    const int RhoID0  = NVar * ( (kp-2)*PATCH_SIZE*NY*NX + (jp-2)*PATCH_SIZE*NX + (ip-2)*PATCH_SIZE );
       bool mark         = false;
-         
+
       for (int k=0; k<PATCH_SIZE; k++)   {  if (mark) break;
       for (int j=0; j<PATCH_SIZE; j++)   {  if (mark) break;
       for (int i=0; i<PATCH_SIZE; i++)   {  if (mark) break;
@@ -313,9 +313,9 @@ void UM_CreateLevel( real *UM_Data, const int lv, int **FlagMap, const int Buffe
          if ( true )    // always flag all patches at level <= OPT__UM_START_LEVEL
          {
 //          get the right index and corner of the patch 0 in the local patch group (8 patches = 1 patch group)
-            const int ip2           = ip - ip%2; 
-            const int jp2           = jp - jp%2; 
-            const int kp2           = kp - kp%2; 
+            const int ip2           = ip - ip%2;
+            const int jp2           = jp - jp%2;
+            const int kp2           = kp - kp%2;
 
             const int Fa_Corner[3]  = { ip2*PATCH_SIZE/2, jp2*PATCH_SIZE/2, kp2*PATCH_SIZE/2 };
 
@@ -336,13 +336,13 @@ void UM_CreateLevel( real *UM_Data, const int lv, int **FlagMap, const int Buffe
             const int kp_end   = kp2 + (  Fa_FlagPos[2]+Buffer >= Fa_Corner[2]+PATCH_SIZE  ?  3:1  );
 
 
-//          create patches including the buffer zone 
+//          create patches including the buffer zone
             for ( int kp3=kp_start; kp3<kp_end; kp3+=2 )
             for ( int jp3=jp_start; jp3<jp_end; jp3+=2 )
             for ( int ip3=ip_start; ip3<ip_end; ip3+=2 )
             {
                const int Fa_ip = 1 + ip3/2;
-               const int Fa_jp = 1 + jp3/2; 
+               const int Fa_jp = 1 + jp3/2;
                const int Fa_kp = 1 + kp3/2;
 
                const int Fa_FlagID = Fa_kp*Fa_NPatch1D[1]*Fa_NPatch1D[0] + Fa_jp*Fa_NPatch1D[0] + Fa_ip;
@@ -370,7 +370,7 @@ void UM_CreateLevel( real *UM_Data, const int lv, int **FlagMap, const int Buffe
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  UM_FindAncestor
-// Description :  For a given Son at level "Son_lv" with origin equal to "Son_ip, Son_jp, Son_kp", 
+// Description :  For a given Son at level "Son_lv" with origin equal to "Son_ip, Son_jp, Son_kp",
 //                find all its ancestors according to the proper-nesting condition
 //
 // Parameter   :  Son_lv   : Tefinement level of the son patch
@@ -385,7 +385,7 @@ void UM_FindAncestor( const int Son_lv, const int Son_ip, const int Son_jp, cons
    const int Fa_lv               = Son_lv - 1;
    const int GrandPa_NPatch1D[3] = { (NX0[0]/PATCH_SIZE)*(1<<(Fa_lv-1)) + 4,
                                      (NX0[1]/PATCH_SIZE)*(1<<(Fa_lv-1)) + 4,
-                                     (NX0[2]/PATCH_SIZE)*(1<<(Fa_lv-1)) + 4  }; 
+                                     (NX0[2]/PATCH_SIZE)*(1<<(Fa_lv-1)) + 4  };
 
    const int Fa_ip               = 1 + Son_ip/2;
    const int Fa_jp               = 1 + Son_jp/2;
@@ -395,7 +395,7 @@ void UM_FindAncestor( const int Son_lv, const int Son_ip, const int Son_jp, cons
    const int Fa_jp2              = Fa_jp - Fa_jp%2;
    const int Fa_kp2              = Fa_kp - Fa_kp%2;
 
-   const int dip                 = 2*( -1 + 2*(Fa_ip%2) );  // the interval of ip of the sibling patch group 
+   const int dip                 = 2*( -1 + 2*(Fa_ip%2) );  // the interval of ip of the sibling patch group
    const int djp                 = 2*( -1 + 2*(Fa_jp%2) );  // (even -> -2 ; odd -> +2)
    const int dkp                 = 2*( -1 + 2*(Fa_kp%2) );
 
@@ -404,16 +404,16 @@ void UM_FindAncestor( const int Son_lv, const int Son_ip, const int Son_jp, cons
    if ( Fa_lv == 0 )    return;
 
 
-// allcoate/find eight patch groups (each with eight patches) at level Fa_lv to surround the targeted son patch 
+// allcoate/find eight patch groups (each with eight patches) at level Fa_lv to surround the targeted son patch
    for (int Fa_kp3=Fa_kp2, kc=0; kc<2; Fa_kp3+=dkp, kc++)
    for (int Fa_jp3=Fa_jp2, jc=0; jc<2; Fa_jp3+=djp, jc++)
    for (int Fa_ip3=Fa_ip2, ic=0; ic<2; Fa_ip3+=dip, ic++)
    {
       const int GrandPa_ip = 1 + Fa_ip3/2;
-      const int GrandPa_jp = 1 + Fa_jp3/2; 
+      const int GrandPa_jp = 1 + Fa_jp3/2;
       const int GrandPa_kp = 1 + Fa_kp3/2;
 
-      const int GrandPa_FlagID =   GrandPa_kp*GrandPa_NPatch1D[1]*GrandPa_NPatch1D[0] 
+      const int GrandPa_FlagID =   GrandPa_kp*GrandPa_NPatch1D[1]*GrandPa_NPatch1D[0]
                                  + GrandPa_jp*GrandPa_NPatch1D[0] + GrandPa_ip;
 
 
@@ -433,9 +433,9 @@ void UM_FindAncestor( const int Son_lv, const int Son_ip, const int Son_jp, cons
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  UM_Downgrade
-// Description :  Downgrade the data of Input array by a factor of two and store in the Output array   
+// Description :  Downgrade the data of Input array by a factor of two and store in the Output array
 //
-// Parameter   :  Input  : Input array 
+// Parameter   :  Input  : Input array
 //                Output : Output array
 //                NX     : Size of the Output array in the x direction
 //                NY     : Size of the Output array in the y direction
@@ -455,16 +455,16 @@ void UM_Downgrade( const real *Input, real *Output, const int NX, const int NY, 
    for (int v=0; v<NVar; v++) {
 
       const long OutID   =    (long)NVar * ( (long)k*NY*NX+ j*NX+ i ) + v;
-      const long InID[8] = {  (long)NVar * ( (long)(kk+0)*NY2*NX2 + (jj+0)*NX2 + (ii+0) ) + v, 
-                              (long)NVar * ( (long)(kk+0)*NY2*NX2 + (jj+0)*NX2 + (ii+1) ) + v, 
-                              (long)NVar * ( (long)(kk+0)*NY2*NX2 + (jj+1)*NX2 + (ii+0) ) + v, 
+      const long InID[8] = {  (long)NVar * ( (long)(kk+0)*NY2*NX2 + (jj+0)*NX2 + (ii+0) ) + v,
+                              (long)NVar * ( (long)(kk+0)*NY2*NX2 + (jj+0)*NX2 + (ii+1) ) + v,
+                              (long)NVar * ( (long)(kk+0)*NY2*NX2 + (jj+1)*NX2 + (ii+0) ) + v,
                               (long)NVar * ( (long)(kk+1)*NY2*NX2 + (jj+0)*NX2 + (ii+0) ) + v,
-                              (long)NVar * ( (long)(kk+0)*NY2*NX2 + (jj+1)*NX2 + (ii+1) ) + v, 
+                              (long)NVar * ( (long)(kk+0)*NY2*NX2 + (jj+1)*NX2 + (ii+1) ) + v,
                               (long)NVar * ( (long)(kk+1)*NY2*NX2 + (jj+1)*NX2 + (ii+0) ) + v,
-                              (long)NVar * ( (long)(kk+1)*NY2*NX2 + (jj+0)*NX2 + (ii+1) ) + v, 
+                              (long)NVar * ( (long)(kk+1)*NY2*NX2 + (jj+0)*NX2 + (ii+1) ) + v,
                               (long)NVar * ( (long)(kk+1)*NY2*NX2 + (jj+1)*NX2 + (ii+1) ) + v  };
 
-      Output[OutID] = 0.125*(   Input[InID[0]] + Input[InID[1]] + Input[InID[2]] + Input[InID[3]] 
+      Output[OutID] = 0.125*(   Input[InID[0]] + Input[InID[1]] + Input[InID[2]] + Input[InID[3]]
                               + Input[InID[4]] + Input[InID[5]] + Input[InID[6]] + Input[InID[7]] );
    }}}}
 
@@ -474,9 +474,9 @@ void UM_Downgrade( const real *Input, real *Output, const int NX, const int NY, 
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  UM_RecordFlagMap
-// Description :  Record the postion of patches being flagged at level "lv" 
+// Description :  Record the postion of patches being flagged at level "lv"
 //
-// Note        :  +1 : Flagged 
+// Note        :  +1 : Flagged
 //                -1 : Unflagged
 //
 // Parameter   :  lv       : Targeted refinement level to be flagged
@@ -501,15 +501,15 @@ void UM_RecordFlagMap( const int lv, int *FlagMap, const int ip, const int jp, c
 //-------------------------------------------------------------------------------------------------------
 // Function    :  UM_Flag
 // Description :  Flag patches at level "lv" according to the FlagMap[lv]
-// 
+//
 // Parameter   :  lv       : Refinement level to be flagged
 //                FlagMap  : Map recording the refinement flag of each patch
 //-------------------------------------------------------------------------------------------------------
 void UM_Flag( const int lv, const int *FlagMap )
 {
 
-   const int scale0      = amr->scale[ 0];         
-   const int scale       = amr->scale[lv];         
+   const int scale0      = amr->scale[ 0];
+   const int scale       = amr->scale[lv];
    const int NPatch1D[3] = { (NX0[0]/PATCH_SIZE)*(1<<lv) + 4,
                              (NX0[1]/PATCH_SIZE)*(1<<lv) + 4,
                              (NX0[2]/PATCH_SIZE)*(1<<lv) + 4  };
@@ -536,10 +536,10 @@ void UM_Flag( const int lv, const int *FlagMap )
 // Description :  Use the input uniform-mesh array to assign data to all patches at level "lv"
 //
 // Note        :  If "NVar == NCOMP", we just copy the values recorded in UM_Data to all patches.
-//                Otherwise, the model-dependent function "XXX_Init_UM_AssignData" must be provided to 
+//                Otherwise, the model-dependent function "XXX_Init_UM_AssignData" must be provided to
 //                specify the way to assign data.
 //
-// Parameter   :  lv       : Targeted refinement level to assign data 
+// Parameter   :  lv       : Targeted refinement level to assign data
 //                UM_Data  : Input uniform-mesh array
 //                NVar     : Number of variables stored in UM_Data
 //-------------------------------------------------------------------------------------------------------
@@ -562,13 +562,13 @@ void UM_AssignData( const int lv, real *UM_Data, const int NVar )
          Corner = amr->patch[0][lv][PID]->corner;
 
          for (int k=0; k<PATCH_SIZE; k++)    { kk = ( Corner[2] - MPI_Rank_X[2]*NX0[2]*scale0 ) / scale + k;
-         for (int j=0; j<PATCH_SIZE; j++)    { jj = ( Corner[1] - MPI_Rank_X[1]*NX0[1]*scale0 ) / scale + j; 
+         for (int j=0; j<PATCH_SIZE; j++)    { jj = ( Corner[1] - MPI_Rank_X[1]*NX0[1]*scale0 ) / scale + j;
          for (int i=0; i<PATCH_SIZE; i++)    { ii = ( Corner[0] - MPI_Rank_X[0]*NX0[0]*scale0 ) / scale + i;
 
             Idx = (long)NVar*( (long)kk*NX[1]*NX[0] + jj*NX[0]+ ii );
 
 //          load all variables
-            for (int v=0; v<NCOMP; v++)    
+            for (int v=0; v<NCOMP; v++)
                amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[v][k][j][i] = UM_Data[ Idx + v ];
          }}}
       }

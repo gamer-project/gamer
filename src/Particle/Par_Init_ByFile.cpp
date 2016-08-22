@@ -18,6 +18,15 @@
 //                4. Particles loaded here are only temporarily stored in this rank
 //                   --> They will be redistributed when calling "Par_LB_Init_RedistributeByRectangular
 //                       and LB_Init_LoadBalance"
+//                5. Currently the target file name is fixed to "PAR_START"
+//                6. File format: plain C binary in the format [Number of particles][Particle attributes]
+//                   --> [Particle 0][Attribute 0], [Particle 0][Attribute 1], ...
+//                   --> Note that it's different from the internal data format in the particle repository,
+//                       which is [Particle attributes][Number of particles]
+//                   --> Currently it only loads particle mass, position x/y/z, and velocity x/y/z
+//                       (and exactly in this order)
+//                7. For LOAD_BALANCE, the number of particles in each rank must be set in advance
+//                   --> Currently it's set by "Init_Parallelization"
 //
 // Parameter   :  None
 //
@@ -29,14 +38,80 @@ void Par_Init_ByFile()
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ...\n", __FUNCTION__ );
 
 
-// verify the file size
+   const char FileName[] = "PAR_START";
+   const int  NVar       = 7;             // mass, pos*3, vel*3
 
 
-// synchronize all particles to the physical time at the base level
-// for (long p=0; p<amr->Par->NPar_AcPlusInac; p++)   amr->Par->Time[p] = Time[0];
+// check
+   if ( !Aux_CheckFileExist(FileName) )
+      Aux_Error( ERROR_INFO, "file \"%s\" does not exist for PAR_INIT == PAR_INIT_BY_FILE !!\n", FileName );
+
+   FILE *FileTemp = fopen( FileName, "rb" );
+
+   fseek( FileTemp, 0, SEEK_END );
+
+   const long ExpectSize = long(NVar)*amr->Par->NPar_Active_AllRank*sizeof(real);
+   const long FileSize   = ftell( FileTemp );
+   if ( FileSize != ExpectSize )
+      Aux_Error( ERROR_INFO, "size of the file <%s> = %ld != expect = %ld !!\n",
+                 FileName, FileSize, ExpectSize );
+
+   fclose( FileTemp );
+
+   MPI_Barrier( MPI_COMM_WORLD );
 
 
-// set other particle attributes
+// set the file access offset for this rank
+   long NPar_EachRank[MPI_NRank], NPar_Check=0, FileOffset=0;
+
+   MPI_Allgather( &amr->Par->NPar_AcPlusInac, 1, MPI_LONG, NPar_EachRank, 1, MPI_LONG, MPI_COMM_WORLD );
+
+// check if the total number of particles is correct
+   for (int r=0; r<MPI_NRank; r++)  NPar_Check += NPar_EachRank[r];
+   if ( NPar_Check != amr->Par->NPar_Active_AllRank )
+      Aux_Error( ERROR_INFO, "total number of particles found (%ld) != expect (%ld) !!\n",
+                 NPar_Check, amr->Par->NPar_Active_AllRank );
+
+   for (int r=1; r<=MPI_Rank; r++)  FileOffset = FileOffset + long(NVar)*NPar_EachRank[r-1]*sizeof(real);
+
+
+// load data
+   if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Loading data ... " );
+
+   real (*ParData_ThisRank)[NVar] = new real [amr->Par->NPar_AcPlusInac][NVar];
+
+// note that fread may fail for large files if sizeof(size_t) == 4 instead of 8
+   FILE *File = fopen( FileName, "rb" );
+
+   fseek( File, FileOffset, SEEK_SET );
+   fread( ParData_ThisRank, sizeof(real), long(NVar)*amr->Par->NPar_AcPlusInac, File );
+
+   fclose( File );
+
+   if ( MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );
+
+
+// store data into the particle repository
+   if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Storing data into particle repository ... " );
+
+   for (long p=0; p<amr->Par->NPar_AcPlusInac; p++)
+   {
+//    we have assumed that particle data in the file are stored in the order [ID][Mass/PosX/Y/Z/VelX/Y/Z]
+      amr->Par->Mass[p] = ParData_ThisRank[p][0];
+      amr->Par->PosX[p] = ParData_ThisRank[p][1];
+      amr->Par->PosY[p] = ParData_ThisRank[p][2];
+      amr->Par->PosZ[p] = ParData_ThisRank[p][3];
+      amr->Par->VelX[p] = ParData_ThisRank[p][4];
+      amr->Par->VelY[p] = ParData_ThisRank[p][5];
+      amr->Par->VelZ[p] = ParData_ThisRank[p][6];
+
+//    synchronize all particles to the physical time at the base level
+      amr->Par->Time[p] = Time[0];
+   }
+
+   delete [] ParData_ThisRank;
+
+   if ( MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );
 
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", __FUNCTION__ );

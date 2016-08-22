@@ -18,6 +18,8 @@
 //                4. Particles set here are only temporarily stored in this rank
 //                   --> They will be redistributed when calling "Par_LB_Init_RedistributeByRectangular
 //                       and LB_Init_LoadBalance"
+//                5. For LOAD_BALANCE, the number of particles in each rank must be set in advance
+//                   --> Currently it's set by "Init_Parallelization"
 //
 // Parameter   :  None
 //

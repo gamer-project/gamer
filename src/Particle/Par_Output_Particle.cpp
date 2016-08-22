@@ -25,14 +25,6 @@ void Par_Output_Particle( const char *FileName )
       Aux_Message( stderr, "WARNING : file \"%s\" already exists and will be overwritten !!\n", FileName );
 
 
-// set the offset of particle ID for MPI
-   int NPar_AcPlusInac_AllRank[MPI_NRank], ParID_Offset=0, NPar_AcPlusInac_MyRank=(int)amr->Par->NPar_AcPlusInac;
-
-   MPI_Allgather( &NPar_AcPlusInac_MyRank, 1, MPI_INT, NPar_AcPlusInac_AllRank, 1, MPI_INT, MPI_COMM_WORLD ); 
-
-   for (int r=1; r<=MPI_Rank; r++)  ParID_Offset = ParID_Offset + NPar_AcPlusInac_AllRank[r-1];
-
-
 // header
    if ( MPI_Rank == 0 )
    {
@@ -64,8 +56,8 @@ void Par_Output_Particle( const char *FileName )
 //          skip inactive particles
             if ( amr->Par->Mass[p] < 0.0 )   continue;
 
-            for (int v=0; v<PAR_NVAR;     v++)     fprintf(  File, "  %21.14e", amr->Par->ParVar [v][p] );
-            for (int v=0; v<PAR_NPASSIVE; v++)     fprintf(  File, "  %21.14e", amr->Par->Passive[v][p] );
+            for (int v=0; v<PAR_NVAR;     v++)     fprintf( File, "  %21.14e", amr->Par->ParVar [v][p] );
+            for (int v=0; v<PAR_NPASSIVE; v++)     fprintf( File, "  %21.14e", amr->Par->Passive[v][p] );
 
             fprintf( File, "\n" );
          }
