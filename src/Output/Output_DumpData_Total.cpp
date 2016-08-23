@@ -63,8 +63,8 @@ void Output_DumpData_Total( const char *FileName )
 
 // get the number of partices in each rank and the corresponding global particle index offset
 #  ifdef PARTICLE
-   const int NParVar  = 7;          // particle mass, position x/y/z, and velocity x/y/z
-   long GParID_Offset = 0;          // GParID = global particle index (==> unique for each particle)
+   const int NParVar  = 7 + PAR_NPASSIVE;    // particle mass, position x/y/z, velocity x/y/z, and passive variables
+   long GParID_Offset = 0;                   // GParID = global particle index (==> unique for each particle)
    long NPar_EachRank[MPI_NRank];
 
    MPI_Allgather( &amr->Par->NPar_Active, 1, MPI_LONG, NPar_EachRank, 1, MPI_LONG, MPI_COMM_WORLD );
@@ -786,13 +786,21 @@ void Output_DumpData_Total( const char *FileName )
 
 
 // output particle data (one attribute at a time to avoid creating holes in the file)
-   const long  ParDataSize1v    = amr->Par->NPar_Active_AllRank*sizeof(real);
-   const real *ParData[NParVar] = { amr->Par->Mass,
-                                    amr->Par->PosX, amr->Par->PosY, amr->Par->PosZ,
-                                    amr->Par->VelX, amr->Par->VelY, amr->Par->VelZ };
+   const long ParDataSize1v = amr->Par->NPar_Active_AllRank*sizeof(real);
 
-   long NParInBuf, ParID, FileOffset_ThisVar;
-   int  NParThisPatch;
+   real *ParData[NParVar];
+   long  NParInBuf, ParID, FileOffset_ThisVar;
+   int   NParThisPatch;
+
+   ParData[0] = amr->Par->Mass;
+   ParData[1] = amr->Par->PosX;
+   ParData[2] = amr->Par->PosY;
+   ParData[3] = amr->Par->PosZ;
+   ParData[4] = amr->Par->VelX;
+   ParData[5] = amr->Par->VelY;
+   ParData[6] = amr->Par->VelZ;
+
+   for (int v=0; v<PAR_NPASSIVE; v++)  ParData[7+v] = amr->Par->Passive[v];
 
    for (int v=0; v<NParVar; v++)
    for (int TargetMPIRank=0; TargetMPIRank<MPI_NRank; TargetMPIRank++)
