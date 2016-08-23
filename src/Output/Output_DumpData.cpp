@@ -9,7 +9,7 @@ static void Write_DumpRecord();
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Output_DumpData
 // Description :  Trigger the output functions "Output_DumpData_Total, Output_DumpData_Part, Output_TestProbErr, 
-//                Output_BasePowerSpectrum, Par_Output_Particle"
+//                Output_BasePowerSpectrum, Par_Output_TextFile"
 //
 // Parameter   :  Stage :  0 : start
 //                         1 : middle
@@ -212,7 +212,7 @@ void Output_DumpData( const int Stage )
 #     endif
 
 #     ifdef PARTICLE
-      if ( OPT__OUTPUT_PAR_TEXT )   Par_Output_Particle( FileName_Particle );
+      if ( OPT__OUTPUT_PAR_TEXT )   Par_Output_TextFile( FileName_Particle );
 #     endif
 
       Write_DumpRecord();

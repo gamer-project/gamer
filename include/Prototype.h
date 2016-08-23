@@ -421,7 +421,7 @@ void CUAPI_MemFree_PoissonGravity();
 #ifdef PARTICLE
 void Par_Init_ByFunction();
 void Par_Init_ByFile();
-void Par_Output_Particle( const char *comment );
+void Par_Output_TextFile( const char *comment );
 void Par_FindHomePatch_Base( const int *BaseP );
 void Par_PassParticle2Son( const int FaLv, const int FaPID );
 void Par_PassParticle2Son_AllPatch( const int FaLv, const bool TimingSendPar );

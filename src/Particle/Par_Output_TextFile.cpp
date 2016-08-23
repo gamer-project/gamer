@@ -7,14 +7,14 @@
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Par_Output_Particle
+// Function    :  Par_Output_TextFile
 // Description :  Output the particle position and velocity
 //
 // Parameter   :  FileName : Output file name
 //
 // Return      :  None
 //-------------------------------------------------------------------------------------------------------
-void Par_Output_Particle( const char *FileName )
+void Par_Output_TextFile( const char *FileName )
 {
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s (DumpID = %d) ...\n", __FUNCTION__, DumpID );
@@ -71,7 +71,7 @@ void Par_Output_Particle( const char *FileName )
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s (DumpID = %d) ... done\n", __FUNCTION__, DumpID );
 
-} // FUNCTION : Par_Output_Particle
+} // FUNCTION : Par_Output_TextFile
 
 
 
