@@ -147,10 +147,9 @@ void Init_GAMER( int *argc, char ***argv )
    {
       case PAR_INIT_BY_FUNCTION:    Par_Init_ByFunction();  break;
 
-//    nothing to do here for the restart mode
-      case PAR_INIT_BY_RESTART:  break;
+      case PAR_INIT_BY_RESTART:                             break;   // nothing to do here for the restart mode
 
-      case PAR_INIT_BY_FILE:        Par_Init_ByFile();   break;
+      case PAR_INIT_BY_FILE:        Par_Init_ByFile();      break;
 
       default : Aux_Error( ERROR_INFO, "unsupported particle initialization (%s = %d) !!\n",
                            "PAR_INIT", (int)amr->Par->Init );

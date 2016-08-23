@@ -39,7 +39,7 @@ void Par_Init_ByFile()
 
 
    const char FileName[] = "PAR_START";
-   const int  NVar       = 7;             // mass, pos*3, vel*3
+   const int  NParVar    = 7;             // mass, pos*3, vel*3
 
 
 // check
@@ -50,7 +50,7 @@ void Par_Init_ByFile()
 
    fseek( FileTemp, 0, SEEK_END );
 
-   const long ExpectSize = long(NVar)*amr->Par->NPar_Active_AllRank*sizeof(real);
+   const long ExpectSize = long(NParVar)*amr->Par->NPar_Active_AllRank*sizeof(real);
    const long FileSize   = ftell( FileTemp );
    if ( FileSize != ExpectSize )
       Aux_Error( ERROR_INFO, "size of the file <%s> = %ld != expect = %ld !!\n",
@@ -61,7 +61,7 @@ void Par_Init_ByFile()
    MPI_Barrier( MPI_COMM_WORLD );
 
 
-// set the file access offset for this rank
+// set the file offset for this rank
    long NPar_EachRank[MPI_NRank], NPar_Check=0, FileOffset=0;
 
    MPI_Allgather( &amr->Par->NPar_AcPlusInac, 1, MPI_LONG, NPar_EachRank, 1, MPI_LONG, MPI_COMM_WORLD );
@@ -72,19 +72,19 @@ void Par_Init_ByFile()
       Aux_Error( ERROR_INFO, "total number of particles found (%ld) != expect (%ld) !!\n",
                  NPar_Check, amr->Par->NPar_Active_AllRank );
 
-   for (int r=1; r<=MPI_Rank; r++)  FileOffset = FileOffset + long(NVar)*NPar_EachRank[r-1]*sizeof(real);
+   for (int r=0; r<MPI_Rank; r++)   FileOffset = FileOffset + long(NParVar)*NPar_EachRank[r]*sizeof(real);
 
 
 // load data
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Loading data ... " );
 
-   real (*ParData_ThisRank)[NVar] = new real [amr->Par->NPar_AcPlusInac][NVar];
+   real (*ParData_ThisRank)[NParVar] = new real [amr->Par->NPar_AcPlusInac][NParVar];
 
 // note that fread may fail for large files if sizeof(size_t) == 4 instead of 8
    FILE *File = fopen( FileName, "rb" );
 
    fseek( File, FileOffset, SEEK_SET );
-   fread( ParData_ThisRank, sizeof(real), long(NVar)*amr->Par->NPar_AcPlusInac, File );
+   fread( ParData_ThisRank, sizeof(real), long(NParVar)*amr->Par->NPar_AcPlusInac, File );
 
    fclose( File );
 

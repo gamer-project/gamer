@@ -79,7 +79,7 @@ void Init_UM()
 
 
 
-// set the file access offset for this rank
+// set the file offset for this rank
 // ===========================================================================================================
    const long offset0 = (long)UM_NVar * sizeof(real) * ( (long)MPI_Rank_X[2]*UM_Size[2]*UM_Size_Tot[1]*UM_Size_Tot[0]
                                                              + MPI_Rank_X[1]*UM_Size[1]*UM_Size_Tot[0]

@@ -23,7 +23,7 @@ Procedure for outputting new variables:
 // Parameter   :  FileName : Name of the output file
 //-------------------------------------------------------------------------------------------------------
 void Output_DumpData_Total( const char *FileName )
-{  
+{
 
 // output data in the HDF5 format
 #  ifdef SUPPORT_HDF5
@@ -52,8 +52,8 @@ void Output_DumpData_Total( const char *FileName )
    int NDataPatch_Local[NLEVEL] = { 0 };
    int NDataPatch_Total[NLEVEL];
 
-   for (int lv=0; lv<NLEVEL; lv++)    
-   for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++) 
+   for (int lv=0; lv<NLEVEL; lv++)
+   for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
    {
       if ( amr->patch[0][lv][PID]->son == -1 )  NDataPatch_Local[lv] ++;
    }
@@ -61,12 +61,27 @@ void Output_DumpData_Total( const char *FileName )
    MPI_Reduce( NDataPatch_Local, NDataPatch_Total, NLEVEL, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD );
 
 
-   FILE *File;
+// get the number of partices in each rank and the corresponding global particle index offset
+#  ifdef PARTICLE
+   const int NParVar  = 7;          // particle mass, position x/y/z, and velocity x/y/z
+   long GParID_Offset = 0;          // GParID = global particle index (==> unique for each particle)
+   long NPar_EachRank[MPI_NRank];
+
+   MPI_Allgather( &amr->Par->NPar_Active, 1, MPI_LONG, NPar_EachRank, 1, MPI_LONG, MPI_COMM_WORLD );
+
+   for (int r=0; r<MPI_Rank; r++)   GParID_Offset = GParID_Offset + NPar_EachRank[r];
+#  endif
+
+
+   FILE *File = NULL;
+   long ExpectFileSize;
+#  ifdef PARTICLE
+   long FileOffset_Particle;
+#  endif
 
    if ( MPI_Rank == 0 )
    {
       File = fopen( FileName, "wb" );
-
 
 //    check the size of different data types
 //    =================================================================================================
@@ -113,9 +128,36 @@ void Output_DumpData_Total( const char *FileName )
       delete [] OutputBuf;
 
 
+//    calculate the total file size
+//    =================================================================================================
+#     ifdef GRAVITY
+      const int NGridVar      = ( OPT__OUTPUT_POT ) ? NCOMP+1 : NCOMP;
+#     else
+      const int NGridVar      = NCOMP;
+#     endif
+      const int PatchDataSize = CUBE(PS1)*NGridVar*sizeof(real);
+
+      ExpectFileSize = HeaderSize_Total;
+
+      for (int lv=0; lv<NLEVEL; lv++)
+      {
+         ExpectFileSize += (long)NPatchTotal[lv]*4*sizeof(int);      // 4 = corner(3) + son(1)
+         ExpectFileSize += (long)NDataPatch_Total[lv]*PatchDataSize;
+      }
+
+#     ifdef PARTICLE
+      for (int lv=0; lv<NLEVEL; lv++)
+         ExpectFileSize += (long)NDataPatch_Total[lv]*2*sizeof(long);   // 2 = NPar + starting particle index (leaf patches only)
+
+      FileOffset_Particle = ExpectFileSize;  // file offset at the beginning of particle data
+
+      ExpectFileSize += (long)NParVar*amr->Par->NPar_Active_AllRank*sizeof(real);
+#     endif
+
+
 //    a. output the information of data format
 //    =================================================================================================
-      const long FormatVersion = 2001;
+      const long FormatVersion = 2100;
       const long CheckCode     = 123456789;
 
       fseek( File, HeaderOffset_Format, SEEK_SET );
@@ -132,6 +174,9 @@ void Output_DumpData_Total( const char *FileName )
       fwrite( &size_long,                 sizeof(int),                     1,             File );
       fwrite( &size_real,                 sizeof(int),                     1,             File );
       fwrite( &size_double,               sizeof(int),                     1,             File );
+#     ifdef PARTICLE
+      fwrite( &FileOffset_Particle,       sizeof(long),                    1,             File );
+#     endif
 
 
 //    b. output the simulation options and parameters defined in the Makefile
@@ -372,14 +417,14 @@ void Output_DumpData_Total( const char *FileName )
       const int    flu_ghost_size        = FLU_GHOST_SIZE;
 
 #     ifdef GRAVITY
-      const int    pot_ghost_size        = POT_GHOST_SIZE; 
+      const int    pot_ghost_size        = POT_GHOST_SIZE;
       const int    gra_ghost_size        = GRA_GHOST_SIZE;
 #     else
       const int    pot_ghost_size        = NULL_INT;
       const int    gra_ghost_size        = NULL_INT;
 #     endif
 
-#     if ( defined MIN_PRES  ||  defined MIN_PRES_DENS ) 
+#     if ( defined MIN_PRES  ||  defined MIN_PRES_DENS )
       const bool   enforce_positive      = true;
 #     else
       const bool   enforce_positive      = false;
@@ -479,7 +524,7 @@ void Output_DumpData_Total( const char *FileName )
       fseek( File, HeaderOffset_Parameter, SEEK_SET );
 
       const int    mpi_nrank               = MPI_NRank;
-      const int    mpi_nrank_x[3]          = { MPI_NRank_X[0], MPI_NRank_X[1], MPI_NRank_X[2] };    
+      const int    mpi_nrank_x[3]          = { MPI_NRank_X[0], MPI_NRank_X[1], MPI_NRank_X[2] };
       const int    opt__output_total       = (int)OPT__OUTPUT_TOTAL;
       const int    opt__output_part        = (int)OPT__OUTPUT_PART;
       const int    opt__output_mode        = (int)OPT__OUTPUT_MODE;
@@ -650,8 +695,13 @@ void Output_DumpData_Total( const char *FileName )
    } // if ( MPI_Rank == 0 )
 
 
-// f. output the simulation data
+// f. output the simulation grid data
 // =================================================================================================
+   int  Cr_and_Son[4];
+#  ifdef PARTICLE
+   long NPar_and_GParID[2], GParID=GParID_Offset;
+#  endif
+
    for (int lv=0; lv<NLEVEL; lv++)
    {
       for (int TargetMPIRank=0; TargetMPIRank<MPI_NRank; TargetMPIRank++)
@@ -662,25 +712,42 @@ void Output_DumpData_Total( const char *FileName )
 
             for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
             {
-//             f1. output the patch information 
+//             f1. output the patch information
 //             (the father <-> son information will be re-constructed during the restart)
-               fwrite(  amr->patch[0][lv][PID]->corner, sizeof(int), 3, File );
-               fwrite( &amr->patch[0][lv][PID]->son,    sizeof(int), 1, File );
+               Cr_and_Son[0] = amr->patch[0][lv][PID]->corner[0];
+               Cr_and_Son[1] = amr->patch[0][lv][PID]->corner[1];
+               Cr_and_Son[2] = amr->patch[0][lv][PID]->corner[2];
+               Cr_and_Son[3] = amr->patch[0][lv][PID]->son;
+
+               fwrite( Cr_and_Son, sizeof(int), 4, File );
+
+#              ifdef PARTICLE
+//             output particle information for leaf patches only
+               if ( amr->patch[0][lv][PID]->son == -1 )
+               {
+                  NPar_and_GParID[0] = amr->patch[0][lv][PID]->NPar;
+                  NPar_and_GParID[1] = GParID;
+
+                  fwrite( NPar_and_GParID, sizeof(long), 2, File );
+
+                  GParID += amr->patch[0][lv][PID]->NPar;
+               }
+#              endif
 
 
 //             f2. output the patch data only if it has no son
                if ( amr->patch[0][lv][PID]->son == -1 )
                {
 //                f2-1. output the fluid variables
-                  fwrite( amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid, sizeof(real), 
+                  fwrite( amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid, sizeof(real),
                           PATCH_SIZE*PATCH_SIZE*PATCH_SIZE*NCOMP, File );
 
 #                 ifdef GRAVITY
 //                f2-2. output the gravitational potential
                   if ( OPT__OUTPUT_POT )
-                  fwrite( amr->patch[ amr->PotSg[lv] ][lv][PID]->pot,   sizeof(real), 
+                  fwrite( amr->patch[ amr->PotSg[lv] ][lv][PID]->pot,   sizeof(real),
                           PATCH_SIZE*PATCH_SIZE*PATCH_SIZE,       File );
-#                 endif 
+#                 endif
                } // if ( amr->patch[0][lv][PID]->son == -1 )
             } // for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
 
@@ -692,6 +759,109 @@ void Output_DumpData_Total( const char *FileName )
 
       } // for (int TargetMPIRank=0; TargetMPIRank<MPI_NRank; TargetMPIRank++)
    } // for (int lv=0; lv<NLEVEL; lv++)
+
+
+// g. output particles
+// =================================================================================================
+#  ifdef PARTICLE
+// check if all active particles are captured
+   if ( GParID != GParID_Offset + amr->Par->NPar_Active )
+      Aux_Error( ERROR_INFO, "final GParID (%ld) != expect (%ld) !!\n",
+                 GParID, GParID_Offset + amr->Par->NPar_Active );
+
+
+// allocate I/O buffer (just for better I/O performance)
+   const long ParBufSize = 10000000;   // number of particles dumped at a time
+
+   real *ParBuf = new real [ParBufSize];
+
+
+// set the file offset of particle data for each rank
+   MPI_Bcast( &FileOffset_Particle, 1, MPI_LONG, 0, MPI_COMM_WORLD );
+
+
+// output particle data (one attribute at a time to avoid creating holes in the file)
+   const long  ParDataSize1v    = amr->Par->NPar_Active_AllRank*sizeof(real);
+   const real *ParData[NParVar] = { amr->Par->Mass,
+                                    amr->Par->PosX, amr->Par->PosY, amr->Par->PosZ,
+                                    amr->Par->VelX, amr->Par->VelY, amr->Par->VelZ };
+
+   long NParInBuf, ParID, FileOffset_ThisVar;
+   int  NParThisPatch;
+
+   for (int v=0; v<NParVar; v++)
+   for (int TargetMPIRank=0; TargetMPIRank<MPI_NRank; TargetMPIRank++)
+   {
+      if ( MPI_Rank == TargetMPIRank )
+      {
+         File = fopen( FileName, "ab" );
+
+//       set file position indicator to the end of the current file and check whether it's consistent with expectation
+         FileOffset_ThisVar = FileOffset_Particle + ParDataSize1v*v + GParID_Offset*sizeof(real);
+         NParInBuf          = 0;
+
+         fseek( File, 0, SEEK_END );
+
+         if ( ftell(File) != FileOffset_ThisVar )
+            Aux_Error( ERROR_INFO, "size of the file <%s> = %ld != expect = %ld !!\n",
+                       FileName, ftell(File), FileOffset_ThisVar );
+
+         for (int lv=0; lv<NLEVEL; lv++)
+         for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
+         {
+            NParThisPatch = amr->patch[0][lv][PID]->NPar;
+
+//          check if the particle I/O buffer is exceeded (possible only if the number of particles in this patch > ParBufSize)
+            if ( NParInBuf + NParThisPatch > ParBufSize )
+            {
+               Aux_Message( stderr, "ERROR : NParInBuf (%ld) + NParThisPatch (%d) = %ld > ParBufSize (%ld) ...\n",
+                            NParInBuf, NParThisPatch, NParInBuf+NParThisPatch, ParBufSize );
+               Aux_Message( stderr, "        ==> Please increase ParBufSize in the file \"%s\" !!\n", __FILE__ );
+               MPI_Exit();
+            }
+
+//          store particle data into the I/O buffer
+            for (int p=0; p<NParThisPatch; p++)
+            {
+               ParID = amr->patch[0][lv][PID]->ParList[p];
+
+               ParBuf[ NParInBuf ++ ] = ParData[v][ParID];
+            }
+
+//          store particle data from I/O buffer to disk
+            if ( PID+1 == amr->NPatchComma[lv][1]  ||  NParInBuf + amr->patch[0][lv][PID+1]->NPar > ParBufSize )
+            {
+               fwrite( ParBuf, sizeof(real), NParInBuf, File );
+
+               NParInBuf = 0;
+            }
+         } // for PID, lv
+
+         fclose( File );
+      } // if ( MPI_Rank == TargetMPIRank )
+
+      MPI_Barrier( MPI_COMM_WORLD );
+   } // for (int TargetMPIRank=0; TargetMPIRank<MPI_NRank; TargetMPIRank++), for (int v=0; v<NParVar; v++)
+
+   delete [] ParBuf;
+#  endif // #ifdef PARTICLE
+
+
+// check the file size
+   if ( MPI_Rank == 0 )
+   {
+      FILE *FileCheck = fopen( FileName, "rb" );
+      long  FileSize;
+
+      fseek( FileCheck, 0, SEEK_END );
+      FileSize = ftell( FileCheck );
+
+      if ( FileSize != ExpectFileSize )
+         Aux_Error( ERROR_INFO, "size of the file <%s> = %ld != expect = %ld !!\n",
+                    FileName, FileSize, ExpectFileSize );
+
+      fclose( FileCheck );
+   }
 
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s (DumpID = %d) ... done\n", __FUNCTION__, DumpID );

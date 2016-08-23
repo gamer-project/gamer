@@ -268,17 +268,17 @@ void Init_Restart()
    for (int lv=0; lv<NLv_Restart; lv++)
    {
       DataSize[lv]  = 0;
-      DataSize[lv] += NPatchTotal[lv]*4*sizeof(int);        // 4 = corner(3) + son(1)
-      DataSize[lv] += NDataPatch_Total[lv]*PatchDataSize;
+      DataSize[lv] += (long)NPatchTotal[lv]*4*sizeof(int);        // 4 = corner(3) + son(1)
+      DataSize[lv] += (long)NDataPatch_Total[lv]*PatchDataSize;
 
-      ExpectSize   += DataSize[lv];
+      ExpectSize   += (long)DataSize[lv];
    }
 
    fseek( File, 0, SEEK_END );
    InputSize = ftell( File );
 
    if ( InputSize != ExpectSize  &&  MPI_Rank == 0 )
-      Aux_Error( ERROR_INFO, "the size of the file <%s> is incorrect --> input = %ld <-> expect = %ld !!\n",
+      Aux_Error( ERROR_INFO, "size of the file <%s> is incorrect --> input = %ld <-> expect = %ld !!\n",
                  FileName, InputSize, ExpectSize );
 
    fclose( File );
@@ -290,7 +290,9 @@ void Init_Restart()
 
 // d. load the simulation data
 // =================================================================================================
-   int LoadCorner[3], LoadSon;
+   int  LoadTemp[4];
+   int *LoadCorner = LoadTemp;
+   int *LoadSon    = LoadTemp + 3;
 
 // d0. set the load-balance cut points
 #  ifdef LOAD_BALANCE
@@ -314,14 +316,14 @@ void Init_Restart()
 
          for (int LoadPID=0; LoadPID<NPatchTotal[lv]; LoadPID++)
          {
-            fread(  LoadCorner, sizeof(int), 3, File );
-            fread( &LoadSon,    sizeof(int), 1, File );
+//          load the corner and son of this patch
+            fread( LoadTemp, sizeof(int), 4, File );
 
             for (int d=0; d<3; d++)    LoadCorner[d] *= rescale;
 
             LBIdx_AllRank[LoadPID] = LB_Corner2Index( lv, LoadCorner, CHECK_ON );
 
-            if ( LoadSon == -1 )    fseek( File, PatchDataSize, SEEK_CUR );
+            if ( *LoadSon == -1 )   fseek( File, PatchDataSize, SEEK_CUR );
          }
       } // if ( MPI_Rank == 0 )
 
@@ -366,9 +368,8 @@ void Init_Restart()
 
             for (int LoadPID=0; LoadPID<NPatchTotal[lv]; LoadPID++)
             {
-//             d2. load the patch information
-               fread(  LoadCorner, sizeof(int), 3, File );
-               fread( &LoadSon,    sizeof(int), 1, File );
+//             d2. load the corner and son of this patch
+               fread( LoadTemp, sizeof(int), 4, File );
 
                for (int d=0; d<3; d++)    LoadCorner[d] *= rescale;
 
@@ -382,11 +383,10 @@ void Init_Restart()
                      LoadCorner[2] >= TargetRange_Min[2]  &&  LoadCorner[2] < TargetRange_Max[2]     )
 #              endif
                {
-
                   amr->pnew( lv, LoadCorner[0], LoadCorner[1], LoadCorner[2], -1, true, true );
 
 //                d3. load the physical data if it is a leaf patch
-                  if ( LoadSon == -1 )
+                  if ( *LoadSon == -1 )
                   {
                      PID = amr->num[lv] - 1;
 
@@ -401,7 +401,7 @@ void Init_Restart()
                } // within the targeted range
 
                else // for the case that the patch is NOT within the targeted range
-                  if ( LoadSon == -1 )    fseek( File, PatchDataSize, SEEK_CUR );
+                  if ( *LoadSon == -1 )   fseek( File, PatchDataSize, SEEK_CUR );
 
             } // for (int LoadPID=0; LoadPID<NPatchTotal[lv]; LoadPID++)
 
