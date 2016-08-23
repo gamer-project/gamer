@@ -588,7 +588,7 @@ void Init_Load_Parameter()
    getline( &input_line, &len, File );
 #  ifdef PARTICLE
    sscanf( input_line, "%d%s",   &temp_int,                 string );
-   OPT__OUTPUT_PARTICLE = (bool)temp_int;
+   OPT__OUTPUT_PAR_TEXT = (bool)temp_int;
 #  endif
 
    getline( &input_line, &len, File );

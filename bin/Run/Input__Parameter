@@ -124,7 +124,7 @@
 1           OPT__OUTPUT_TOTAL       # output the total binary data : (0, 1, 2) -> (off, HDF5, C-binary)
 0           OPT__OUTPUT_PART        # output a single line or slice (0~7) -> (off, xy, yz, xz, x, y, z, diag)
 0           OPT__OUTPUT_TEST_ERROR  # output the test problem errors --> edit "Output_TestProbErr"
-0           OPT__OUTPUT_PARTICLE    # output the particle text file ##PARTICLE ONLY##
+0           OPT__OUTPUT_PAR_TEXT    # output the particle text file ##PARTICLE ONLY##
 0           OPT__OUTPUT_BASEPS      # output the base-level power spectrum
 0           OPT__OUTPUT_BASE        # only output the base-level data for the option "OPT__OUTPUT_PART"
 0           OPT__OUTPUT_POT         # output the potential field

@@ -1327,7 +1327,7 @@ void Check_InputPara( const char *FileName )
    LoadField( "Opt__Output_Part",        &RS.Opt__Output_Part,        SID, TID, NonFatal, &RT.Opt__Output_Part,         1, NonFatal );
    LoadField( "Opt__Output_TestError",   &RS.Opt__Output_TestError,   SID, TID, NonFatal, &RT.Opt__Output_TestError,    1, NonFatal );
 #  ifdef PARTICLE
-   LoadField( "Opt__Output_Particle",    &RS.Opt__Output_Particle,    SID, TID, NonFatal, &RT.Opt__Output_Particle,     1, NonFatal );
+   LoadField( "Opt__Output_ParText",     &RS.Opt__Output_ParText,     SID, TID, NonFatal, &RT.Opt__Output_ParText,      1, NonFatal );
 #  endif
    LoadField( "Opt__Output_BasePS",      &RS.Opt__Output_BasePS,      SID, TID, NonFatal, &RT.Opt__Output_BasePS,       1, NonFatal );
    if ( OPT__OUTPUT_PART )
@@ -1336,7 +1336,7 @@ void Check_InputPara( const char *FileName )
    LoadField( "Opt__Output_Pot",         &RS.Opt__Output_Pot,         SID, TID, NonFatal, &RT.Opt__Output_Pot,          1, NonFatal );
 #  endif
 #  ifdef PARTICLE
-   if ( OPT__OUTPUT_TOTAL || OPT__OUTPUT_PART || OPT__OUTPUT_TEST_ERROR || OPT__OUTPUT_BASEPS || OPT__OUTPUT_PARTICLE ) {
+   if ( OPT__OUTPUT_TOTAL || OPT__OUTPUT_PART || OPT__OUTPUT_TEST_ERROR || OPT__OUTPUT_BASEPS || OPT__OUTPUT_PAR_TEXT ) {
 #  else
    if ( OPT__OUTPUT_TOTAL || OPT__OUTPUT_PART || OPT__OUTPUT_TEST_ERROR || OPT__OUTPUT_BASEPS ) {
 #  endif

@@ -1486,7 +1486,7 @@ void FillIn_InputPara( InputPara_t &InputPara )
    InputPara.Opt__Output_Part        = OPT__OUTPUT_PART;
    InputPara.Opt__Output_TestError   = OPT__OUTPUT_TEST_ERROR;
 #  ifdef PARTICLE
-   InputPara.Opt__Output_Particle    = OPT__OUTPUT_PARTICLE;
+   InputPara.Opt__Output_ParText    = OPT__OUTPUT_PAR_TEXT;
 #  endif
    InputPara.Opt__Output_BasePS      = OPT__OUTPUT_BASEPS;
    InputPara.Opt__Output_Base        = OPT__OUTPUT_BASE;
@@ -2028,7 +2028,7 @@ void GetCompound_InputPara( hid_t &H5_TypeID )
    H5Tinsert( H5_TypeID, "Opt__Output_Part",        HOFFSET(InputPara_t,Opt__Output_Part       ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "Opt__Output_TestError",   HOFFSET(InputPara_t,Opt__Output_TestError  ), H5T_NATIVE_INT     );
 #  ifdef PARTICLE
-   H5Tinsert( H5_TypeID, "Opt__Output_Particle",    HOFFSET(InputPara_t,Opt__Output_Particle   ), H5T_NATIVE_INT     );
+   H5Tinsert( H5_TypeID, "Opt__Output_ParText",     HOFFSET(InputPara_t,Opt__Output_ParText    ), H5T_NATIVE_INT     );
 #  endif
    H5Tinsert( H5_TypeID, "Opt__Output_BasePS",      HOFFSET(InputPara_t,Opt__Output_BasePS     ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "Opt__Output_Base",        HOFFSET(InputPara_t,Opt__Output_Base       ), H5T_NATIVE_INT     );

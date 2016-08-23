@@ -434,7 +434,7 @@ struct InputPara_t
    int    Opt__Output_Part;
    int    Opt__Output_TestError; 
 #  ifdef PARTICLE
-   int    Opt__Output_Particle;
+   int    Opt__Output_ParText;
 #  endif
    int    Opt__Output_BasePS; 
    int    Opt__Output_Base;

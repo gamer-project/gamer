@@ -25,7 +25,7 @@ void Output_DumpData( const int Stage )
 
 // nothing to do if all output options are off
 #  ifdef PARTICLE
-   if ( !OPT__OUTPUT_TOTAL && !OPT__OUTPUT_PART && !OPT__OUTPUT_TEST_ERROR && !OPT__OUTPUT_BASEPS && !OPT__OUTPUT_PARTICLE )
+   if ( !OPT__OUTPUT_TOTAL && !OPT__OUTPUT_PART && !OPT__OUTPUT_TEST_ERROR && !OPT__OUTPUT_BASEPS && !OPT__OUTPUT_PAR_TEXT )
 #  else
    if ( !OPT__OUTPUT_TOTAL && !OPT__OUTPUT_PART && !OPT__OUTPUT_TEST_ERROR && !OPT__OUTPUT_BASEPS )
 #  endif
@@ -154,7 +154,7 @@ void Output_DumpData( const int Stage )
       sprintf( FileName_PS, "PowerSpec_%d%d%d%d%d%d", ID[0], ID[1], ID[2], ID[3], ID[4], ID[5] );
 
 #  ifdef PARTICLE
-   if ( OPT__OUTPUT_PARTICLE )
+   if ( OPT__OUTPUT_PAR_TEXT )
       sprintf( FileName_Particle, "Particle_%d%d%d%d%d%d", ID[0], ID[1], ID[2], ID[3], ID[4], ID[5] );
 #  endif
 
@@ -212,7 +212,7 @@ void Output_DumpData( const int Stage )
 #     endif
 
 #     ifdef PARTICLE
-      if ( OPT__OUTPUT_PARTICLE )   Par_Output_Particle( FileName_Particle );
+      if ( OPT__OUTPUT_PAR_TEXT )   Par_Output_Particle( FileName_Particle );
 #     endif
 
       Write_DumpRecord();

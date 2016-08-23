@@ -130,7 +130,7 @@ void Init_GAMER( int *argc, char ***argv )
 //###NOTE: unit has not been converted into internal unit
    if ( OPT__OUTPUT_MODE == OUTPUT_USE_TABLE )
 #  ifdef PARTICLE
-   if ( OPT__OUTPUT_TOTAL || OPT__OUTPUT_PART || OPT__OUTPUT_TEST_ERROR || OPT__OUTPUT_BASEPS || OPT__OUTPUT_PARTICLE )
+   if ( OPT__OUTPUT_TOTAL || OPT__OUTPUT_PART || OPT__OUTPUT_TEST_ERROR || OPT__OUTPUT_BASEPS || OPT__OUTPUT_PAR_TEXT )
 #  else
    if ( OPT__OUTPUT_TOTAL || OPT__OUTPUT_PART || OPT__OUTPUT_TEST_ERROR || OPT__OUTPUT_BASEPS )
 #  endif

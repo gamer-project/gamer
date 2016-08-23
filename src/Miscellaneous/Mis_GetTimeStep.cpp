@@ -100,7 +100,7 @@ void Mis_GetTimeStep()
 // DumpByTime : true --> dump data according to the physical time
 #  ifdef PARTICLE
    const bool DumpData   = ( OPT__OUTPUT_TOTAL || OPT__OUTPUT_PART || OPT__OUTPUT_TEST_ERROR || OPT__OUTPUT_BASEPS || 
-                             OPT__OUTPUT_PARTICLE );
+                             OPT__OUTPUT_PAR_TEXT );
 #  else
    const bool DumpData   = ( OPT__OUTPUT_TOTAL || OPT__OUTPUT_PART || OPT__OUTPUT_TEST_ERROR || OPT__OUTPUT_BASEPS );
 #  endif

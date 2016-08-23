@@ -788,7 +788,7 @@ void Aux_TakeNote()
       fprintf( Note, "OPT__OUTPUT_PART          %d\n",      OPT__OUTPUT_PART        );
       fprintf( Note, "OPT__OUTPUT_TEST_ERROR    %d\n",      OPT__OUTPUT_TEST_ERROR  );
 #     ifdef PARTICLE
-      fprintf( Note, "OPT__OUTPUT_PARTICLE      %d\n",      OPT__OUTPUT_PARTICLE    );
+      fprintf( Note, "OPT__OUTPUT_PAR_TEXT      %d\n",      OPT__OUTPUT_PAR_TEXT    );
 #     endif
       fprintf( Note, "OPT__OUTPUT_BASEPS        %d\n",      OPT__OUTPUT_BASEPS      );
       fprintf( Note, "OPT__OUTPUT_BASE          %d\n",      OPT__OUTPUT_BASE        );

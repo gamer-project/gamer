@@ -258,7 +258,7 @@ void Aux_Check_Parameter()
 
    if ( !OPT__OUTPUT_TOTAL  &&  !OPT__OUTPUT_PART  &&  !OPT__OUTPUT_TEST_ERROR  &&  !OPT__OUTPUT_BASEPS )
 #  ifdef PARTICLE
-   if ( !OPT__OUTPUT_PARTICLE )
+   if ( !OPT__OUTPUT_PAR_TEXT )
 #  endif
       Aux_Message( stderr, "WARNING : all output options are turned off --> no data will be output !!\n" );
 

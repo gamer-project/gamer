@@ -1354,7 +1354,7 @@ void Load_Parameter_After_1200( FILE *File, const int FormatVersion, int &NLv_Re
       if ( OPT__OUTPUT_PART )
       CompareVar( "OPT__OUTPUT_BASE",        opt__output_base,             OPT__OUTPUT_BASE,          NonFatal );
 #     ifdef PARTICLE
-      if ( OPT__OUTPUT_TOTAL || OPT__OUTPUT_PART || OPT__OUTPUT_TEST_ERROR || OPT__OUTPUT_BASEPS || OPT__OUTPUT_PARTICLE ) {
+      if ( OPT__OUTPUT_TOTAL || OPT__OUTPUT_PART || OPT__OUTPUT_TEST_ERROR || OPT__OUTPUT_BASEPS || OPT__OUTPUT_PAR_TEXT ) {
 #     else
       if ( OPT__OUTPUT_TOTAL || OPT__OUTPUT_PART || OPT__OUTPUT_TEST_ERROR || OPT__OUTPUT_BASEPS ) {
 #     endif
