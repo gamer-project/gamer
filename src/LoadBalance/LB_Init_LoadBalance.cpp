@@ -878,7 +878,7 @@ void LB_RedistributeParticle_Init( real **ParVar_Old, real **Passive_Old )
    amr->Par->InitRepo( MPI_NRank );
 
 // reset the total number of particles to be zero
-// --> so particle attribute arrays (i.e., ParVar and Passive) are pre-allocated, but it contain no active particle yet
+// --> so particle repository is pre-allocated, but it contains no active particle yet
 // --> we will add active particles in LB_RedistributeRealPatch
    amr->Par->NPar_AcPlusInac = 0;
    amr->Par->NPar_Active     = 0;

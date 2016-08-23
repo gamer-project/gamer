@@ -83,6 +83,10 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
                         const bool GetTotDens )
 {
 
+// nothing to do if there is no target patch group
+   if ( NPG == 0 )   return;
+
+
 // check
 #  ifdef GAMER_DEBUG
 

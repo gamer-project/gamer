@@ -29,8 +29,8 @@ void CompareVar( const char *VarName, const double RestartVar, const double Runt
 //                   --> You can just make a symbolic link named RESTART to the file you want to use as the
 //                       initial condition
 //
-//                2. "OPT__RESTART_HEADER == RESTART_HEADER_CHECK"   
-//                   --> Check if the parameters loaded from the RESTART file are consistent with the 
+//                2. "OPT__RESTART_HEADER == RESTART_HEADER_CHECK"
+//                   --> Check if the parameters loaded from the RESTART file are consistent with the
 //                       parameters loaded from the Input__Parameter file
 //
 //                   "OPT__RESTART_HEADER == RESTART_HEADER_SKIP"
@@ -58,7 +58,7 @@ void Init_Restart()
 #  endif
 
 
-   if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ...\n", __FUNCTION__ ); 
+   if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ...\n", __FUNCTION__ );
 
 
 // check if the restart file exists
@@ -131,12 +131,17 @@ void Init_Restart()
 
 
 // verify the input data format version
-   if ( MPI_Rank == 0 ) 
+   if ( MPI_Rank == 0 )
    {
       Aux_Message( stdout, "   The format version of the RESTART file = %ld\n", FormatVersion );
 
       if ( FormatVersion < 2000 )
          Aux_Error( ERROR_INFO, "unsupported data format version (only support version >= 2000) !!\n" );
+
+#     ifdef PARTICLE
+      if ( FormatVersion < 2100 )
+         Aux_Error( ERROR_INFO, "unsupported data format version for particles (only support version >= 2100) !!\n" );
+#     endif
    }
    MPI_Barrier( MPI_COMM_WORLD );
 
@@ -150,23 +155,23 @@ void Init_Restart()
    fread( &size_real_restart,   sizeof(int), 1, File );
    fread( &size_double_restart, sizeof(int), 1, File );
 
-   if ( size_bool_restart != size_bool )  
+   if ( size_bool_restart != size_bool )
       Aux_Error( ERROR_INFO, "sizeof(bool) is inconsistent : RESTART file = %d, runtime = %d !!\n",
                  size_bool_restart, size_bool );
 
-   if ( size_int_restart != size_int )  
+   if ( size_int_restart != size_int )
       Aux_Error( ERROR_INFO, "sizeof(int) is inconsistent : RESTART file = %d, runtime = %d !!\n",
                  size_int_restart, size_int );
 
-   if ( size_long_restart != size_long )  
+   if ( size_long_restart != size_long )
       Aux_Error( ERROR_INFO, "sizeof(long) is inconsistent : RESTART file = %d, runtime = %d !!\n",
                  size_long_restart, size_long );
 
-   if ( size_real_restart != size_real )  
+   if ( size_real_restart != size_real )
       Aux_Error( ERROR_INFO, "sizeof(real) is inconsistent : RESTART file = %d, runtime = %d !!\n",
                  size_real_restart, size_real );
 
-   if ( size_double_restart != size_double )  
+   if ( size_double_restart != size_double )
       Aux_Error( ERROR_INFO, "sizeof(double) is inconsistent : RESTART file = %d, runtime = %d !!\n",
                  size_double_restart, size_double );
 
@@ -177,19 +182,19 @@ void Init_Restart()
    bool LoadPot     = false;
 
    if ( OPT__RESTART_HEADER != RESTART_HEADER_SKIP )
-      Load_Parameter_After_2000( File, FormatVersion, NLv_Restart, LoadPot, 
+      Load_Parameter_After_2000( File, FormatVersion, NLv_Restart, LoadPot,
                                  HeaderOffset_Makefile, HeaderOffset_Constant, HeaderOffset_Parameter );
 
    else
    {
-      if ( MPI_Rank == 0 )    
+      if ( MPI_Rank == 0 )
          Aux_Message( stderr, "WARNING : skipping header information is dangerous and is not recommended !!\n" );
    }
 
 
 // set the rescale factor for different NLEVEL
    const int rescale = 1 << ( NLEVEL - NLv_Restart );
-   if ( MPI_Rank == 0  &&  rescale != 1 )    
+   if ( MPI_Rank == 0  &&  rescale != 1 )
       Aux_Message( stderr, "WARNING : the rescale factor is set to %d\n", rescale );
 
 
@@ -211,18 +216,29 @@ void Init_Restart()
 
 
 // load information necessary for restart
-   int NDataPatch_Total[NLv_Restart];
+   int  NDataPatch_Total[NLv_Restart];
+#  ifdef PARTICLE
+   long FileOffset_Particle;
+#  endif
 
-   fread( &DumpID,          sizeof(int),              1, File );
-   fread( Time,             sizeof(double), NLv_Restart, File );
-   fread( &Step,            sizeof(long),             1, File );
-   fread( NPatchTotal,      sizeof(int),    NLv_Restart, File );
-   fread( NDataPatch_Total, sizeof(int),    NLv_Restart, File );
-   fread( AdvanceCounter,   sizeof(long),   NLv_Restart, File );
+   fread( &DumpID,                        sizeof(int),              1, File );
+   fread( Time,                           sizeof(double), NLv_Restart, File );
+   fread( &Step,                          sizeof(long),             1, File );
+   fread( NPatchTotal,                    sizeof(int),    NLv_Restart, File );
+   fread( NDataPatch_Total,               sizeof(int),    NLv_Restart, File );
+   fread( AdvanceCounter,                 sizeof(long),   NLv_Restart, File );
+
 #  ifdef GRAVITY
-   fread( &AveDensity_Init, sizeof(double),           1, File );
+   fread( &AveDensity_Init,               sizeof(double),           1, File );
 #  else
    fseek( File, sizeof(double), SEEK_CUR );
+#  endif
+
+#  ifdef PARTICLE
+   fread( &amr->Par->NPar_Active_AllRank, sizeof(long),             1, File );
+   fread( &FileOffset_Particle,           sizeof(long),             1, File );
+#  else
+   fseek( File, 2*sizeof(long), SEEK_CUR );
 #  endif
 
 
@@ -270,9 +286,18 @@ void Init_Restart()
       DataSize[lv]  = 0;
       DataSize[lv] += (long)NPatchTotal[lv]*4*sizeof(int);        // 4 = corner(3) + son(1)
       DataSize[lv] += (long)NDataPatch_Total[lv]*PatchDataSize;
+#     ifdef PARTICLE
+      DataSize[lv] += (long)NDataPatch_Total[lv]*2*sizeof(long);  // 2 = NPar + starting particle index (leaf patches only)
+#     endif
 
       ExpectSize   += (long)DataSize[lv];
    }
+
+#  ifdef PARTICLE
+   const int NParVar = 7 + PAR_NPASSIVE;  // particle mass, position x/y/z, velocity x/y/z, and passive variables
+
+   ExpectSize += (long)NParVar*amr->Par->NPar_Active_AllRank*sizeof(real);
+#  endif
 
    fseek( File, 0, SEEK_END );
    InputSize = ftell( File );
@@ -288,11 +313,19 @@ void Init_Restart()
 
 
 
-// d. load the simulation data
+// d. load the simulation grid data
 // =================================================================================================
-   int  LoadTemp[4];
-   int *LoadCorner = LoadTemp;
-   int *LoadSon    = LoadTemp + 3;
+   int   Load_Cr_and_Son[4];
+   int  *LoadCorner  = Load_Cr_and_Son;
+   int  *LoadSon     = Load_Cr_and_Son + 3;
+#  ifdef PARTICLE
+   long  Load_NPar_and_GParID[2];
+   long *Load_NPar   = Load_NPar_and_GParID;
+   long *Load_GParID = Load_NPar_and_GParID + 1;
+
+   int   MaxNParInOnePatch   = 0;
+   amr->Par->NPar_AcPlusInac = 0;
+#  endif
 
 // d0. set the load-balance cut points
 #  ifdef LOAD_BALANCE
@@ -317,13 +350,21 @@ void Init_Restart()
          for (int LoadPID=0; LoadPID<NPatchTotal[lv]; LoadPID++)
          {
 //          load the corner and son of this patch
-            fread( LoadTemp, sizeof(int), 4, File );
+            fread( Load_Cr_and_Son, sizeof(int), 4, File );
 
             for (int d=0; d<3; d++)    LoadCorner[d] *= rescale;
 
             LBIdx_AllRank[LoadPID] = LB_Corner2Index( lv, LoadCorner, CHECK_ON );
 
-            if ( *LoadSon == -1 )   fseek( File, PatchDataSize, SEEK_CUR );
+            if ( *LoadSon == -1 )
+            {
+//             for particles, skip NPar and GParID as well
+#              ifdef PARTICLE
+               fseek( File, PatchDataSize+2*sizeof(long), SEEK_CUR );
+#              else
+               fseek( File, PatchDataSize,                SEEK_CUR );
+#              endif
+            }
          }
       } // if ( MPI_Rank == 0 )
 
@@ -349,7 +390,8 @@ void Init_Restart()
    {
       for (int TargetMPIRank=0; TargetMPIRank<MPI_NRank; TargetMPIRank++)
       {
-         if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Loading data at level %2d, MPI_Rank %3d ... ", lv, TargetMPIRank );
+         if ( MPI_Rank == 0 )
+            Aux_Message( stdout, "   Loading grid data at level %2d, MPI_Rank %3d ... ", lv, TargetMPIRank );
 
          if ( MPI_Rank == TargetMPIRank )
          {
@@ -369,7 +411,7 @@ void Init_Restart()
             for (int LoadPID=0; LoadPID<NPatchTotal[lv]; LoadPID++)
             {
 //             d2. load the corner and son of this patch
-               fread( LoadTemp, sizeof(int), 4, File );
+               fread( Load_Cr_and_Son, sizeof(int), 4, File );
 
                for (int d=0; d<3; d++)    LoadCorner[d] *= rescale;
 
@@ -390,19 +432,39 @@ void Init_Restart()
                   {
                      PID = amr->num[lv] - 1;
 
+//                   d3-0. load the particle information (for leaf patches only)
+#                    ifdef PARTICLE
+                     fread( Load_NPar_and_GParID, sizeof(long), 2, File );
+
+//                   note that we temporarily store GParID in the LB_Idx of Sg=1
+//                   (since it's the only variable declared as long and it's useless anyway for Sg=1)
+                     amr->patch[0][lv][PID]->NPar   = *Load_NPar;
+                     amr->patch[1][lv][PID]->LB_Idx = *Load_GParID;
+
+                     amr->Par->NPar_AcPlusInac += *Load_NPar;
+                     MaxNParInOnePatch          = MAX( MaxNParInOnePatch, *Load_NPar );
+#                    endif
+
 //                   d3-1. load the fluid variables
                      fread( amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid, sizeof(real), CUBE(PS1)*NCOMP, File );
 
-#                    ifdef GRAVITY
 //                   d3-2. abandon the gravitational potential
+#                    ifdef GRAVITY
                      if ( LoadPot )    fseek( File, CUBE(PS1)*sizeof(real), SEEK_CUR );
 #                    endif
-                  }
+                  } // if ( *LoadSon == -1 )
                } // within the targeted range
 
-               else // for the case that the patch is NOT within the targeted range
-                  if ( *LoadSon == -1 )   fseek( File, PatchDataSize, SEEK_CUR );
-
+//             for the case that the patch is NOT within the targeted range
+               else if ( *LoadSon == -1 )
+               {
+//                for particles, skip NPar and GParID as well
+#                 ifdef PARTICLE
+                  fseek( File, PatchDataSize+2*sizeof(long), SEEK_CUR );
+#                 else
+                  fseek( File, PatchDataSize, SEEK_CUR );
+#                 endif
+               }
             } // for (int LoadPID=0; LoadPID<NPatchTotal[lv]; LoadPID++)
 
             fclose( File );
@@ -418,7 +480,7 @@ void Init_Restart()
             amr->LB->IdxList_Real         [lv] = new long [ amr->NPatchComma[lv][1] ];
             amr->LB->IdxList_Real_IdxTable[lv] = new int  [ amr->NPatchComma[lv][1] ];
 
-            for (int RPID=0; RPID<amr->NPatchComma[lv][1]; RPID++)   
+            for (int RPID=0; RPID<amr->NPatchComma[lv][1]; RPID++)
                amr->LB->IdxList_Real[lv][RPID] = amr->patch[0][lv][RPID]->LB_Idx;
 
             Mis_Heapsort( amr->NPatchComma[lv][1], amr->LB->IdxList_Real[lv], amr->LB->IdxList_Real_IdxTable[lv] );
@@ -432,26 +494,143 @@ void Init_Restart()
 
          if ( MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );
 
-      } // for (int TargetMPIRank=0; TargetMPIRank<NGPU; TargetMPIRank++)
+      } // for (int TargetMPIRank=0; TargetMPIRank<MPI_NRank; TargetMPIRank++)
    } // for (int lv=0; lv<NLv_Restart; lv++)
+
+
+// e. load particles
+// =================================================================================================
+#  ifdef PARTICLE
+   const long ParDataSize1v = amr->Par->NPar_Active_AllRank*sizeof(real);
+
+   long  *NewParList = new long [MaxNParInOnePatch];
+   real **ParBuf     = NULL;
+
+   real NewParVar[PAR_NVAR], NewParPassive[PAR_NPASSIVE];
+   long GParID, NParThisRank_Check;
+   int  NParThisPatch;
+
+   Aux_AllocateArray2D( ParBuf, NParVar, MaxNParInOnePatch );
+
+
+// all particles are assumed to be synchronized with the base level
+   NewParVar[PAR_TIME] = Time[0];
+
+
+// allocate particle repository
+   amr->Par->InitRepo( MPI_NRank );
+
+
+// reset the total number of particles to be zero
+// --> so particle repository is pre-allocated, but it contains no active particle yet
+   NParThisRank_Check        = amr->Par->NPar_AcPlusInac;   // for check only
+   amr->Par->NPar_AcPlusInac = 0;
+   amr->Par->NPar_Active     = 0;
+
+
+// begin to load data
+#  ifdef DEBUG_PARTICLE
+   const real *ParPos[3] = { amr->Par->PosX, amr->Par->PosY, amr->Par->PosZ };
+#  endif
+
+   for (int TargetMPIRank=0; TargetMPIRank<MPI_NRank; TargetMPIRank++)
+   {
+      if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Loading particle data, MPI_Rank %3d ... ", TargetMPIRank );
+
+      if ( MPI_Rank == TargetMPIRank )
+      {
+         File = fopen( FileName, "rb" );
+
+         for (int lv=0; lv<NLEVEL; lv++)
+         for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
+         {
+//          note that we temporarily store GParID in the LBIdx of Sg=1
+            NParThisPatch = amr->patch[0][lv][PID]->NPar;
+            GParID        = amr->patch[1][lv][PID]->LB_Idx;
+
+            if ( NParThisPatch > 0 )
+            {
+//             reset NPar=0 since we will call patch->AddParticle to update it again
+               amr->patch[0][lv][PID]->NPar = 0;
+
+//             load one particle attribute at a time
+               for (int v=0; v<NParVar; v++)
+               {
+                  fseek( File, FileOffset_Particle + v*ParDataSize1v + GParID*sizeof(real), SEEK_SET );
+
+                  fread( ParBuf[v], sizeof(real), NParThisPatch, File );
+               }
+
+//             store particles to the particle repository (one particle at a time)
+               for (int p=0; p<NParThisPatch; p++ )
+               {
+//                particle acceleration will be recalculated in "Init_GAMER"
+                  NewParVar[PAR_MASS] = ParBuf[0][p];
+                  NewParVar[PAR_POSX] = ParBuf[1][p];
+                  NewParVar[PAR_POSY] = ParBuf[2][p];
+                  NewParVar[PAR_POSZ] = ParBuf[3][p];
+                  NewParVar[PAR_VELX] = ParBuf[4][p];
+                  NewParVar[PAR_VELY] = ParBuf[5][p];
+                  NewParVar[PAR_VELZ] = ParBuf[6][p];
+
+                  for (int v=0; v<PAR_NPASSIVE; v++)  NewParPassive[v] = ParBuf[7+v][p];
+
+                  NewParList[p] = amr->Par->AddOneParticle( NewParVar, NewParPassive );
+
+#                 ifdef DEBUG_PARTICLE
+                  if ( NewParList[p] >= NParThisRank_Check )
+                     Aux_Error( ERROR_INFO, "New particle ID (%ld) >= maximum allowed value (%ld) !!\n",
+                                NewParList[p], NParThisRank_Check );
+#                 endif
+               } // for (int p=0; p<NParThisPatch )
+
+//             link particles to this patch
+#              ifdef DEBUG_PARTICLE
+               char Comment[100];
+               sprintf( Comment, "%s, PID %d, NPar %d", __FUNCTION__, PID, NParThisPatch );
+               amr->patch[0][lv][PID]->AddParticle( NParThisPatch, NewParList, &amr->Par->NPar_Lv[lv],
+                                                    ParPos, amr->Par->NPar_AcPlusInac, Comment );
+#              else
+               amr->patch[0][lv][PID]->AddParticle( NParThisPatch, NewParList, &amr->Par->NPar_Lv[lv] );
+#              endif
+            } // if ( amr->patch[0][lv][PID]->NPar > 0 )
+         } // for PID, lv
+
+         fclose( File );
+
+         if ( amr->Par->NPar_AcPlusInac != NParThisRank_Check )
+            Aux_Error( ERROR_INFO, "total number of particles in the repository (%ld) != expect (%ld) !!\n",
+                       amr->Par->NPar_AcPlusInac, NParThisRank_Check );
+      } // if ( MPI_Rank == TargetMPIRank )
+
+      MPI_Barrier( MPI_COMM_WORLD );
+
+      if ( MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );
+   } // for (int TargetMPIRank=0; TargetMPIRank<MPI_NRank; TargetMPIRank++)
+
+
+// free memory
+   delete [] NewParList;
+   Aux_DeallocateArray2D( ParBuf );
+#  endif // #ifdef PARTICLE
 
 
 #  ifndef LOAD_BALANCE
 // the following operations are useful only when LOAD_BALANCE is NOT enabled
 // ===================================================================================================================
-// e. complete all levels 
+// f. complete all levels
    for (int lv=0; lv<NLEVEL; lv++)
    {
 //    construct the relation "father <-> son" for the in-core computing
-      if ( lv > 0 )     FindFather( lv, 1 ); 
+      if ( lv > 0 )     FindFather( lv, 1 );
 
-//    allocate the buffer patches 
+//    allocate the buffer patches
       Buf_AllocateBufferPatch( amr, lv );
 
 //    set up the BaseP List
       if ( lv == 0 )    Init_RecordBasePatch();
 
-//    set up the BounP_IDMap 
+//    set up the BounP_IDMap
       Buf_RecordBoundaryPatch( lv );
 
 //    construct the sibling relation
@@ -465,12 +644,12 @@ void Init_Restart()
    } // for (int lv=0; lv<NLEVEL; lv++)
 
 
-// f. fill up the data for top-level buffer patches
+// g. fill up the data for top-level buffer patches
    Buf_GetBufferData( NLEVEL-1, amr->FluSg[NLEVEL-1], NULL_INT, DATA_GENERAL, _FLU, Flu_ParaBuf, USELB_NO );
 
 
-// g. fill up the data for patches that are not leaf patches
-   for (int lv=NLEVEL-2; lv>=0; lv--)     
+// h. fill up the data for patches that are not leaf patches
+   for (int lv=NLEVEL-2; lv>=0; lv--)
    {
 //    data restriction: lv+1 --> lv
       Flu_Restrict( lv, amr->FluSg[lv+1], amr->FluSg[lv], NULL_INT, NULL_INT, _FLU );
@@ -483,7 +662,7 @@ void Init_Restart()
 #  endif // #ifndef LOAD_BALANCE
 
 
-   if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", __FUNCTION__ ); 
+   if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", __FUNCTION__ );
 
 } // FUNCTION : Init_Restart
 
@@ -493,9 +672,9 @@ void Init_Restart()
 // Function    :  Load_Parameter_After_2000
 // Description :  Load all simulation parameters from the RESTART file with format version >= 2000
 //
-// Note        :  All floating-point variables are declared as double after version 2000 
+// Note        :  All floating-point variables are declared as double after version 2000
 //
-// Parameter   :  File           : RESTART file pointer 
+// Parameter   :  File           : RESTART file pointer
 //                FormatVersion  : Format version of the RESTART file
 //                NLv_Restart    : NLEVEL recorded in the RESTART file
 //                LoadPot        : Whether or not the RESTART file stores the potential data
@@ -557,7 +736,7 @@ void Load_Parameter_After_2000( FILE *File, const int FormatVersion, int &NLv_Re
 // =================================================================================================
    bool   enforce_positive, char_reconstruction, hll_no_ref_state, hll_include_all_waves, waf_dissipate;
    bool   use_psolver_10to14;
-   int    ncomp, patch_size, flu_ghost_size, pot_ghost_size, gra_ghost_size, check_intermediate; 
+   int    ncomp, patch_size, flu_ghost_size, pot_ghost_size, gra_ghost_size, check_intermediate;
    int    flu_block_size_x, flu_block_size_y, pot_block_size_x, pot_block_size_z, gra_block_size_z;
    double min_value, max_error;
 
@@ -588,15 +767,15 @@ void Load_Parameter_After_2000( FILE *File, const int FormatVersion, int &NLv_Re
 // =================================================================================================
    bool   opt__adaptive_dt, opt__dt_user, opt__flag_rho, opt__flag_rho_gradient, opt__flag_pres_gradient;
    bool   opt__flag_engy_density, opt__flag_user, opt__fixup_flux, opt__fixup_restrict, opt__overlap_mpi;
-   bool   opt__gra_p5_gradient, opt__int_time, opt__output_test_error, opt__output_base, opt__output_pot; 
+   bool   opt__gra_p5_gradient, opt__int_time, opt__output_test_error, opt__output_base, opt__output_pot;
    bool   opt__output_baseps, opt__timing_balance, opt__int_phase, opt__corr_unphy;
    int    nx0_tot[3], mpi_nrank, mpi_nrank_x[3], omp_nthread, regrid_count;
-   int    flag_buffer_size, max_level, opt__lr_limiter, opt__waf_limiter, flu_gpu_npgroup, gpu_nstream; 
+   int    flag_buffer_size, max_level, opt__lr_limiter, opt__waf_limiter, flu_gpu_npgroup, gpu_nstream;
    int    sor_max_iter, sor_min_iter, mg_max_iter, mg_npre_smooth, mg_npost_smooth, pot_gpu_npgroup;
    int    opt__flu_int_scheme, opt__pot_int_scheme, opt__rho_int_scheme;
    int    opt__gra_int_scheme, opt__ref_flu_int_scheme, opt__ref_pot_int_scheme;
    int    opt__output_total, opt__output_part, opt__output_mode, output_step, opt__corr_unphy_scheme;
-   long   end_step; 
+   long   end_step;
    double lb_wli_max, gamma, minmod_coeff, ep_coeff, elbdm_mass, elbdm_planck_const, newton_g, sor_omega;
    double mg_tolerated_error, output_part_x, output_part_y, output_part_z;
    double box_size, end_t, omega_m0, dt__fluid, dt__gravity, dt__phase, dt__max_delta_a, output_dt;
@@ -692,7 +871,7 @@ void Load_Parameter_After_2000( FILE *File, const int FormatVersion, int &NLv_Re
 
 // d. check parameters (before loading any size-dependent parameters)
 // =================================================================================================
-   if ( MPI_Rank == 0 )    
+   if ( MPI_Rank == 0 )
    {
       Aux_Message( stdout, "   Checking loaded parameters ...\n" );
 
@@ -708,10 +887,10 @@ void Load_Parameter_After_2000( FILE *File, const int FormatVersion, int &NLv_Re
       CompareVar( "MODEL", model, MODEL, Fatal );
 
 #     ifdef GRAVITY
-      if ( !gravity )   
+      if ( !gravity )
          Aux_Error( ERROR_INFO, "%s : RESTART file (%s) != runtime (%s) !!\n", "GRAVITY", "OFF", "ON" );
 #     else
-      if (  gravity )   
+      if (  gravity )
          Aux_Error( ERROR_INFO, "%s : RESTART file (%s) != runtime (%s) !!\n", "GRAVITY", "ON", "OFF" );
 #     endif
 
@@ -747,21 +926,21 @@ void Load_Parameter_After_2000( FILE *File, const int FormatVersion, int &NLv_Re
       CompareVar( "NPASSIVE", npassive, NPASSIVE, Fatal );
 #     else
       if ( npassive != NULL_INT )
-         Aux_Message( stderr, "WARNING : %s : RESTART file (%d) != runtime (%s) !!\n", 
+         Aux_Message( stderr, "WARNING : %s : RESTART file (%d) != runtime (%s) !!\n",
                       "NPASSIVE", npassive, "OFF" );
 #     endif
 
 
 
-//    warnings 
+//    warnings
 //    ------------------
 #     ifdef INDIVIDUAL_TIMESTEP
       if ( !individual_timestep )
-         Aux_Message( stderr, "WARNING : %s : RESTART file (%s) != runtime (%s) !!\n", 
+         Aux_Message( stderr, "WARNING : %s : RESTART file (%s) != runtime (%s) !!\n",
                       "INDIVIDUAL_TIMESTEP", "OFF", "ON" );
 #     else
       if (  individual_timestep )
-         Aux_Message( stderr, "WARNING : %s : RESTART file (%s) != runtime (%s) !!\n", 
+         Aux_Message( stderr, "WARNING : %s : RESTART file (%s) != runtime (%s) !!\n",
                       "INDIVIDUAL_TIMESTEP", "ON", "OFF" );
 #     endif
 
@@ -775,21 +954,21 @@ void Load_Parameter_After_2000( FILE *File, const int FormatVersion, int &NLv_Re
 
 #     ifdef GAMER_OPTIMIZATION
       if ( !gamer_optimization )
-         Aux_Message( stderr, "WARNING : %s : RESTART file (%s) != runtime (%s) !!\n", 
+         Aux_Message( stderr, "WARNING : %s : RESTART file (%s) != runtime (%s) !!\n",
                       "GAMER_OPTIMIZATION", "OFF", "ON" );
 #     else
       if (  gamer_optimization )
-         Aux_Message( stderr, "WARNING : %s : RESTART file (%s) != runtime (%s) !!\n", 
+         Aux_Message( stderr, "WARNING : %s : RESTART file (%s) != runtime (%s) !!\n",
                       "GAMER_OPTIMIZATION", "ON", "OFF" );
 #     endif
 
 #     ifdef GAMER_DEBUG
       if ( !gamer_debug )
-         Aux_Message( stderr, "WARNING : %s : RESTART file (%s) != runtime (%s) !!\n", 
+         Aux_Message( stderr, "WARNING : %s : RESTART file (%s) != runtime (%s) !!\n",
                       "GAMER_DEBUG", "OFF", "ON" );
 #     else
       if (  gamer_debug )
-         Aux_Message( stderr, "WARNING : %s : RESTART file (%s) != runtime (%s) !!\n", 
+         Aux_Message( stderr, "WARNING : %s : RESTART file (%s) != runtime (%s) !!\n",
                       "GAMER_DEBUG", "ON", "OFF" );
 #     endif
 
@@ -803,11 +982,11 @@ void Load_Parameter_After_2000( FILE *File, const int FormatVersion, int &NLv_Re
 
 #     ifdef TIMING_SOLVER
       if ( !timing_solver )
-         Aux_Message( stderr, "WARNING : %s : RESTART file (%s) != runtime (%s) !!\n", 
+         Aux_Message( stderr, "WARNING : %s : RESTART file (%s) != runtime (%s) !!\n",
                       "TIMING_SOLVER", "OFF", "ON");
 #     else
       if (  timing_solver )
-         Aux_Message( stderr, "WARNING : %s : RESTART file (%s) != runtime (%s) !!\n", 
+         Aux_Message( stderr, "WARNING : %s : RESTART file (%s) != runtime (%s) !!\n",
                       "TIMING_SOLVER", "ON", "OFF");
 #     endif
 
@@ -829,11 +1008,11 @@ void Load_Parameter_After_2000( FILE *File, const int FormatVersion, int &NLv_Re
 
 #     ifdef OVERLAP_MPI
       if ( !overlap_mpi )
-         Aux_Message( stderr, "WARNING : %s : RESTART file (%s) != runtime (%s) !!\n", 
+         Aux_Message( stderr, "WARNING : %s : RESTART file (%s) != runtime (%s) !!\n",
                       "OVERLAP_MPI", "OFF", "ON" );
 #     else
       if (  overlap_mpi )
-         Aux_Message( stderr, "WARNING : %s : RESTART file (%s) != runtime (%s) !!\n", 
+         Aux_Message( stderr, "WARNING : %s : RESTART file (%s) != runtime (%s) !!\n",
                       "OVERLAP_MPI", "ON", "OFF" );
 #     endif
 
@@ -853,7 +1032,7 @@ void Load_Parameter_After_2000( FILE *File, const int FormatVersion, int &NLv_Re
       CompareVar( "LOAD_BALANCE", load_balance, LOAD_BALANCE, NonFatal );
 #     else
       if ( load_balance )
-         Aux_Message( stderr, "WARNING : %s : RESTART file (%d) != runtime (%s) !!\n", 
+         Aux_Message( stderr, "WARNING : %s : RESTART file (%d) != runtime (%s) !!\n",
                       "LOAD_BALANCE", load_balance, "OFF" );
 #     endif
 
@@ -922,11 +1101,11 @@ void Load_Parameter_After_2000( FILE *File, const int FormatVersion, int &NLv_Re
 #     if ( POT_SCHEME == SOR )
 #     ifdef USE_PSOLVER_10TO14
       if ( !use_psolver_10to14 )
-         Aux_Message( stderr, "WARNING : %s : RESTART file (%s) != runtime (%s) !!\n", 
+         Aux_Message( stderr, "WARNING : %s : RESTART file (%s) != runtime (%s) !!\n",
                       "USE_PSOLVER_10TO14", "OFF", "ON" );
 #     else
       if (  use_psolver_10to14 )
-         Aux_Message( stderr, "WARNING : %s : RESTART file (%s) != runtime (%s) !!\n", 
+         Aux_Message( stderr, "WARNING : %s : RESTART file (%s) != runtime (%s) !!\n",
                       "USE_PSOLVER_10TO14", "ON", "OFF" );
 #     endif
 #     endif // if ( POT_SCHEME == SOR )
@@ -976,58 +1155,58 @@ void Load_Parameter_After_2000( FILE *File, const int FormatVersion, int &NLv_Re
       CompareVar( "MAX_ERROR",               max_error,      (double)MAX_ERROR,                 NonFatal );
 #     endif
 
-#     if ( defined MIN_PRES  ||  defined MIN_PRES_DENS ) 
+#     if ( defined MIN_PRES  ||  defined MIN_PRES_DENS )
       if ( !enforce_positive )
-         Aux_Message( stderr, "WARNING : %s : RESTART file (%s) != runtime (%s) !!\n", 
+         Aux_Message( stderr, "WARNING : %s : RESTART file (%s) != runtime (%s) !!\n",
                       "MIN_PRES/MIN_PRES_DENS", "OFF", "ON" );
 #     else
       if (  enforce_positive )
-         Aux_Message( stderr, "WARNING : %s : RESTART file (%s) != runtime (%s) !!\n", 
+         Aux_Message( stderr, "WARNING : %s : RESTART file (%s) != runtime (%s) !!\n",
                       "MIN_PRES/MIN_PRES_DENS", "ON", "OFF" );
 #     endif
 
 #     ifdef CHAR_RECONSTRUCTION
       if ( !char_reconstruction )
-         Aux_Message( stderr, "WARNING : %s : RESTART file (%s) != runtime (%s) !!\n", 
+         Aux_Message( stderr, "WARNING : %s : RESTART file (%s) != runtime (%s) !!\n",
                       "CHAR_RECONSTRUCTION", "OFF", "ON" );
 #     else
       if (  char_reconstruction )
-         Aux_Message( stderr, "WARNING : %s : RESTART file (%s) != runtime (%s) !!\n", 
+         Aux_Message( stderr, "WARNING : %s : RESTART file (%s) != runtime (%s) !!\n",
                       "CHAR_RECONSTRUCTION", "ON", "OFF" );
 #     endif
 
 #     ifdef HLL_NO_REF_STATE
       if ( !hll_no_ref_state )
-         Aux_Message( stderr, "WARNING : %s : RESTART file (%s) != runtime (%s) !!\n", 
+         Aux_Message( stderr, "WARNING : %s : RESTART file (%s) != runtime (%s) !!\n",
                       "HLL_NO_REF_STATE", "OFF", "ON" );
 #     else
       if (  hll_no_ref_state )
-         Aux_Message( stderr, "WARNING : %s : RESTART file (%s) != runtime (%s) !!\n", 
+         Aux_Message( stderr, "WARNING : %s : RESTART file (%s) != runtime (%s) !!\n",
                       "HLL_NO_REF_STATE", "ON", "OFF" );
 #     endif
 
 #     ifdef HLL_INCLUDE_ALL_WAVES
       if ( !hll_include_all_waves )
-         Aux_Message( stderr, "WARNING : %s : RESTART file (%s) != runtime (%s) !!\n", 
+         Aux_Message( stderr, "WARNING : %s : RESTART file (%s) != runtime (%s) !!\n",
                       "HLL_INCLUDE_ALL_WAVES", "OFF", "ON" );
 #     else
       if (  hll_include_all_waves )
-         Aux_Message( stderr, "WARNING : %s : RESTART file (%s) != runtime (%s) !!\n", 
+         Aux_Message( stderr, "WARNING : %s : RESTART file (%s) != runtime (%s) !!\n",
                       "HLL_INCLUDE_ALL_WAVES", "ON", "OFF" );
 #     endif
 
 #     ifdef WAF_DISSIPATE
       if ( !waf_dissipate )
-         Aux_Message( stderr, "WARNING : %s : RESTART file (%s) != runtime (%s) !!\n", 
+         Aux_Message( stderr, "WARNING : %s : RESTART file (%s) != runtime (%s) !!\n",
                       "WAF_DISSIPATE", "OFF", "ON" );
 #     else
       if (  waf_dissipate )
-         Aux_Message( stderr, "WARNING : %s : RESTART file (%s) != runtime (%s) !!\n", 
+         Aux_Message( stderr, "WARNING : %s : RESTART file (%s) != runtime (%s) !!\n",
                       "WAF_DISSIPATE", "ON", "OFF" );
 #     endif
 
 
-//    check in MHD 
+//    check in MHD
 //    ----------------
 #     elif ( MODEL == MHD )
 #     warning : WAIT MHD !!!
@@ -1083,7 +1262,7 @@ void Load_Parameter_After_2000( FILE *File, const int FormatVersion, int &NLv_Re
       CompareVar( "NX2_TOT[2]",              nx0_tot[2],                   NX0_TOT[2],                   Fatal );
 
 
-//    warnings 
+//    warnings
 //    ------------------
       CompareVar( "MPI_NRank",               mpi_nrank,                    MPI_NRank,                 NonFatal );
       CompareVar( "MPI_NRank_X[0]",          mpi_nrank_x[0],               MPI_NRank_X[0],            NonFatal );
@@ -1199,12 +1378,12 @@ void Load_Parameter_After_2000( FILE *File, const int FormatVersion, int &NLv_Re
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  CompareVar 
-// Description :  Compare the input variables 
+// Function    :  CompareVar
+// Description :  Compare the input variables
 //
 // Note        :  This function is overloaded to work with different data types
 //
-// Parameter   :  VarName     : Name of the targeted variable 
+// Parameter   :  VarName     : Name of the targeted variable
 //                RestartVar  : Variable loaded from the RESTART file
 //                RuntimeVar  : Variable loaded from the Input__Parameter
 //                Fatal       : Whether or not the difference between RestartVar and RuntimeVar is fatal
@@ -1217,10 +1396,10 @@ void CompareVar( const char *VarName, const bool RestartVar, const bool RuntimeV
    if ( RestartVar != RuntimeVar )
    {
       if ( Fatal )
-         Aux_Error( ERROR_INFO, "%s : RESTART file (%d) != runtime (%d) !!\n", 
+         Aux_Error( ERROR_INFO, "%s : RESTART file (%d) != runtime (%d) !!\n",
                     VarName, RestartVar, RuntimeVar );
       else
-         Aux_Message( stderr, "WARNING : %s : RESTART file (%d) != runtime (%d) !!\n", 
+         Aux_Message( stderr, "WARNING : %s : RESTART file (%d) != runtime (%d) !!\n",
                       VarName, RestartVar, RuntimeVar );
    }
 
@@ -1237,10 +1416,10 @@ void CompareVar( const char *VarName, const int RestartVar, const int RuntimeVar
    if ( RestartVar != RuntimeVar )
    {
       if ( Fatal )
-         Aux_Error( ERROR_INFO, "%s : RESTART file (%d) != runtime (%d) !!\n", 
+         Aux_Error( ERROR_INFO, "%s : RESTART file (%d) != runtime (%d) !!\n",
                     VarName, RestartVar, RuntimeVar );
       else
-         Aux_Message( stderr, "WARNING : %s : RESTART file (%d) != runtime (%d) !!\n", 
+         Aux_Message( stderr, "WARNING : %s : RESTART file (%d) != runtime (%d) !!\n",
                       VarName, RestartVar, RuntimeVar );
    }
 
@@ -1257,10 +1436,10 @@ void CompareVar( const char *VarName, const long RestartVar, const long RuntimeV
    if ( RestartVar != RuntimeVar )
    {
       if ( Fatal )
-         Aux_Error( ERROR_INFO, "%s : RESTART file (%ld) != runtime (%ld) !!\n", 
+         Aux_Error( ERROR_INFO, "%s : RESTART file (%ld) != runtime (%ld) !!\n",
                     VarName, RestartVar, RuntimeVar );
       else
-         Aux_Message( stderr, "WARNING : %s : RESTART file (%ld) != runtime (%ld) !!\n", 
+         Aux_Message( stderr, "WARNING : %s : RESTART file (%ld) != runtime (%ld) !!\n",
                       VarName, RestartVar, RuntimeVar );
    }
 
@@ -1277,10 +1456,10 @@ void CompareVar( const char *VarName, const float RestartVar, const float Runtim
    if ( RestartVar != RuntimeVar )
    {
       if ( Fatal )
-         Aux_Error( ERROR_INFO, "%s : RESTART file (%20.14e) != runtime (%20.14e) !!\n", 
+         Aux_Error( ERROR_INFO, "%s : RESTART file (%20.14e) != runtime (%20.14e) !!\n",
                     VarName, RestartVar, RuntimeVar );
       else
-         Aux_Message( stderr, "WARNING : %s : RESTART file (%20.14e) != runtime (%20.14e) !!\n", 
+         Aux_Message( stderr, "WARNING : %s : RESTART file (%20.14e) != runtime (%20.14e) !!\n",
                       VarName, RestartVar, RuntimeVar );
    }
 
@@ -1297,10 +1476,10 @@ void CompareVar( const char *VarName, const double RestartVar, const double Runt
    if ( RestartVar != RuntimeVar )
    {
       if ( Fatal )
-         Aux_Error( ERROR_INFO, "%s : RESTART file (%20.14e) != runtime (%20.14e) !!\n", 
+         Aux_Error( ERROR_INFO, "%s : RESTART file (%20.14e) != runtime (%20.14e) !!\n",
                     VarName, RestartVar, RuntimeVar );
       else
-         Aux_Message( stderr, "WARNING : %s : RESTART file (%20.14e) != runtime (%20.14e) !!\n", 
+         Aux_Message( stderr, "WARNING : %s : RESTART file (%20.14e) != runtime (%20.14e) !!\n",
                       VarName, RestartVar, RuntimeVar );
    }
 

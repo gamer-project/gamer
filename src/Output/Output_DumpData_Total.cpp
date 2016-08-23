@@ -174,9 +174,6 @@ void Output_DumpData_Total( const char *FileName )
       fwrite( &size_long,                 sizeof(int),                     1,             File );
       fwrite( &size_real,                 sizeof(int),                     1,             File );
       fwrite( &size_double,               sizeof(int),                     1,             File );
-#     ifdef PARTICLE
-      fwrite( &FileOffset_Particle,       sizeof(long),                    1,             File );
-#     endif
 
 
 //    b. output the simulation options and parameters defined in the Makefile
@@ -670,7 +667,13 @@ void Output_DumpData_Total( const char *FileName )
       fseek( File, HeaderOffset_SimuInfo, SEEK_SET );
 
 #     ifndef GRAVITY
-      const double AveDensity_Init = NULL_REAL;
+      const double AveDensity_Init     = NULL_REAL;
+#     endif
+#     ifdef PARTICLE
+      const long   NParAllRank         = amr->Par->NPar_Active_AllRank;
+#     else
+      const long   NParAllRank         = NULL_INT;
+      const long   FileOffset_Particle = NULL_INT;
 #     endif
 
       fwrite( &CheckCode,                 sizeof(long),                    1,             File );
@@ -681,6 +684,8 @@ void Output_DumpData_Total( const char *FileName )
       fwrite( NDataPatch_Total,           sizeof(int),                NLEVEL,             File );
       fwrite( AdvanceCounter,             sizeof(long),               NLEVEL,             File );
       fwrite( &AveDensity_Init,           sizeof(double),                  1,             File );
+      fwrite( &NParAllRank,               sizeof(long),                    1,             File );
+      fwrite( &FileOffset_Particle,       sizeof(long),                    1,             File );
 
 
 //    move the file position indicator to the end of the header ==> prepare to output patch data

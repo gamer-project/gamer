@@ -26,6 +26,12 @@ void Poi_Prepare_Pot( const int lv, const double PrepTime, real h_Pot_Array_P_In
                       const int NPG, const int *PID0_List )
 {
 
+// nothing to do if there is no target patch group
+// --> note that this check is necessary for levels without any patch, where Time may be ill-defined and thus
+//     the following check code "if ( TimeMin < 0.0 )" will fail
+   if ( NPG == 0 )   return;
+
+
 // check
 #  ifdef GAMER_DEBUG
    if ( lv == 0 )    Aux_Error( ERROR_INFO, "incorrect parameter %s = %d !!\n", "lv", lv );
@@ -192,7 +198,6 @@ void Poi_Prepare_Pot( const int lv, const double PrepTime, real h_Pot_Array_P_In
 
             }}}
          }
-
       } // for (int TID=0; TID<NPG; TID++)
 
 
