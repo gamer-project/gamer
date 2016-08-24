@@ -33,7 +33,7 @@ void Aux_AllocateArray2D( T** &Array, const int J, const int I )
 
    for (int j=1; j<J; j++)    Array[j] = Array[j-1] + I;
 
-} // FUNCTION Aux_AllocateArray2D
+} // FUNCTION : Aux_AllocateArray2D
 
 
 
@@ -72,7 +72,7 @@ void Aux_AllocateArray3D( T*** &Array, const int K, const int J, const int I )
    for (int k=0; k<K; k++)
    for (int j=1; j<J; j++)   Array[k][j] = Array[k  ][0] + j*I;
 
-} // FUNCTION Aux_AllocateArray3D
+} // FUNCTION : Aux_AllocateArray3D
 
 
 
@@ -98,7 +98,7 @@ void Aux_DeallocateArray2D( T** &Array )
 
    Array = NULL;
 
-} // FUNCTION Aux_AllocateArray2D
+} // FUNCTION : Aux_DeallocateArray2D
 
 
 
@@ -125,7 +125,7 @@ void Aux_DeallocateArray3D( T*** &Array )
 
    Array = NULL;
 
-} // FUNCTION Aux_AllocateArray3D
+} // FUNCTION : Aux_DeallocateArray3D
 
 
 

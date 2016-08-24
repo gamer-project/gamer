@@ -195,7 +195,7 @@ void Init_Restart()
 // set the rescale factor for different NLEVEL
    const int rescale = 1 << ( NLEVEL - NLv_Restart );
    if ( MPI_Rank == 0  &&  rescale != 1 )
-      Aux_Message( stderr, "WARNING : the rescale factor is set to %d\n", rescale );
+      Aux_Message( stderr, "WARNING : rescale factor is set to %d\n", rescale );
 
 
 
@@ -286,15 +286,21 @@ void Init_Restart()
       DataSize[lv]  = 0;
       DataSize[lv] += (long)NPatchTotal[lv]*4*sizeof(int);        // 4 = corner(3) + son(1)
       DataSize[lv] += (long)NDataPatch_Total[lv]*PatchDataSize;
-#     ifdef PARTICLE
-      DataSize[lv] += (long)NDataPatch_Total[lv]*2*sizeof(long);  // 2 = NPar + starting particle index (leaf patches only)
-#     endif
 
       ExpectSize   += (long)DataSize[lv];
    }
 
 #  ifdef PARTICLE
    const int NParVar = 7 + PAR_NPASSIVE;  // particle mass, position x/y/z, velocity x/y/z, and passive variables
+
+   for (int lv=0; lv<NLv_Restart; lv++)
+   {
+//    2 = NPar + starting particle index stored in each leaf patch
+      const long ParInfoSize = (long)NDataPatch_Total[lv]*2*sizeof(long);
+
+      DataSize[lv] += ParInfoSize;
+      ExpectSize   += ParInfoSize;
+   }
 
    ExpectSize += (long)NParVar*amr->Par->NPar_Active_AllRank*sizeof(real);
 #  endif
