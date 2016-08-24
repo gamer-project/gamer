@@ -132,13 +132,7 @@ void Init_TestProb()
    }
 
    if ( OPT__INIT == INIT_STARTOVER  &&  amr->Par->Init != PAR_INIT_BY_FUNCTION )
-   {
-      amr->Par->Init = PAR_INIT_BY_FUNCTION;
-
-      if ( MPI_Rank == 0 )
-         Aux_Message( stdout, "NOTE : parameter %s is reset to %d in the %s test !!\n",
-                      "amr->Par->Init", amr->Par->Init, TestProb );
-   }
+      Aux_Error( ERROR_INFO, "please set PAR_INIT = PAR_INIT_BY_FUNCTION !!\n" );
 
    if ( OPT__EXTERNAL_POT )
    {

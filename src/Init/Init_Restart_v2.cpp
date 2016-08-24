@@ -738,6 +738,7 @@ void Load_Parameter_After_2000( FILE *File, const int FormatVersion, int &NLv_Re
    bool   use_psolver_10to14;
    int    ncomp, patch_size, flu_ghost_size, pot_ghost_size, gra_ghost_size, check_intermediate;
    int    flu_block_size_x, flu_block_size_y, pot_block_size_x, pot_block_size_z, gra_block_size_z;
+   int    par_nvar, par_npassive;
    double min_value, max_error;
 
    fseek( File, HeaderOffset_Constant, SEEK_SET );
@@ -761,6 +762,8 @@ void Load_Parameter_After_2000( FILE *File, const int FormatVersion, int &NLv_Re
    fread( &pot_block_size_x,           sizeof(int),                     1,             File );
    fread( &pot_block_size_z,           sizeof(int),                     1,             File );
    fread( &gra_block_size_z,           sizeof(int),                     1,             File );
+   fread( &par_nvar,                   sizeof(int),                     1,             File );
+   fread( &par_npassive,               sizeof(int),                     1,             File );
 
 
 // c. load the simulation parameters recorded in the file "Input__Parameter"
@@ -1248,6 +1251,26 @@ void Load_Parameter_After_2000( FILE *File, const int FormatVersion, int &NLv_Re
 #     else
 #     error : ERROR : unsupported MODEL !!
 #     endif // MODEL
+
+
+//    check in PARTICLE
+//    ------------------
+#     ifdef PARTICLE
+      if ( PAR_NVAR != par_nvar )
+      {
+#        ifdef STORE_PAR_ACC
+         if ( PAR_NVAR != par_nvar + 3 )
+            Aux_Error( ERROR_INFO, "%s : RESTART file (%d) != runtime (%d) !!\n", "PAR_NVAR", par_nvar, PAR_NVAR );
+#        else
+         if ( PAR_NVAR != par_nvar - 3 )
+            Aux_Error( ERROR_INFO, "%s : RESTART file (%d) != runtime (%d) !!\n", "PAR_NVAR", par_nvar, PAR_NVAR );
+#        endif
+         else
+            Aux_Message( stderr, "WARNING : %s : RESTART file (%d) != runtime (%d) !!\n", "PAR_NVAR", par_nvar, PAR_NVAR );
+      }
+
+      CompareVar( "PAR_NPASSIVE",            par_npassive,           PAR_NPASSIVE,                 Fatal );
+#     endif
 
 
 

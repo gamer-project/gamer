@@ -490,6 +490,14 @@ void Output_DumpData_Total( const char *FileName )
       const int   gra_block_size_z       = NULL_INT;
 #     endif
 
+#     ifdef PARTICLE
+      const int    par_nvar              = PAR_NVAR;
+      const int    par_npassive          = PAR_NPASSIVE;
+#     else
+      const int    par_nvar              = NULL_INT;
+      const int    par_npassive          = NULL_INT;
+#     endif
+
       fwrite( &ncomp,                     sizeof(int),                     1,             File );
       fwrite( &patch_size,                sizeof(int),                     1,             File );
       fwrite( &min_value,                 sizeof(double),                  1,             File );
@@ -509,6 +517,8 @@ void Output_DumpData_Total( const char *FileName )
       fwrite( &pot_block_size_x,          sizeof(int),                     1,             File );
       fwrite( &pot_block_size_z,          sizeof(int),                     1,             File );
       fwrite( &gra_block_size_z,          sizeof(int),                     1,             File );
+      fwrite( &par_nvar,                  sizeof(int),                     1,             File );
+      fwrite( &par_npassive,              sizeof(int),                     1,             File );
 
 
 //    d. output the simulation parameters recorded in the file "Input__Parameter"

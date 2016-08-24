@@ -1163,14 +1163,17 @@ void Aux_Check_Parameter()
 #     error : ERROR : PARTICLE must work with either SERIAL or LOAD_BALANCE !!
 #  endif
 
-   if ( OPT__INIT != INIT_RESTART ) {
-   if ( amr->Par->NPar_Active_AllRank < 0 )
-      Aux_Error( ERROR_INFO, "Total number of particles in all MPI ranks = %ld < 0 !!\n",
-                 amr->Par->NPar_Active_AllRank );
+   if ( OPT__INIT != INIT_RESTART )
+   {
+      if ( amr->Par->Init == PAR_INIT_BY_RESTART )    Aux_Error( ERROR_INFO, "PAR_INIT == RESTART but OPT__INIT != RESTART !!\n" );
 
-   if ( amr->Par->NPar_AcPlusInac < 0  ||  amr->Par->NPar_AcPlusInac > amr->Par->NPar_Active_AllRank )
-      Aux_Error( ERROR_INFO, "Incorrect total number of particles in MPI rank %d = %ld !!\n",
-                 MPI_Rank, amr->Par->NPar_AcPlusInac );
+      if ( amr->Par->NPar_Active_AllRank < 0 )
+         Aux_Error( ERROR_INFO, "Total number of particles in all MPI ranks = %ld < 0 !!\n",
+                    amr->Par->NPar_Active_AllRank );
+
+      if ( amr->Par->NPar_AcPlusInac < 0  ||  amr->Par->NPar_AcPlusInac > amr->Par->NPar_Active_AllRank )
+         Aux_Error( ERROR_INFO, "Incorrect total number of particles in MPI rank %d = %ld !!\n",
+                    MPI_Rank, amr->Par->NPar_AcPlusInac );
    }
 
    if ( amr->Par->Init < 1  ||  amr->Par->Init > 3 )
