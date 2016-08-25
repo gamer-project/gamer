@@ -959,6 +959,7 @@ void Check_Makefile( const char *FileName )
 
 #  ifdef PARTICLE
    LoadField( "StoreParAcc",        &RS.StoreParAcc,        SID, TID, NonFatal, &RT.StoreParAcc,         1, NonFatal );
+   LoadField( "Par_NPassive",       &RS.Par_NPassive,       SID, TID, NonFatal, &RT.Par_NPassive,        1,    Fatal );
 #  endif
 
 
@@ -1054,7 +1055,6 @@ void Check_SymConst( const char *FileName )
 
 #  ifdef PARTICLE
    LoadField( "Par_NVar",             &RS.Par_NVar,             SID, TID, NonFatal, &RT.Par_NVar,              1,    Fatal );
-   LoadField( "Par_NPassive",         &RS.Par_NPassive,         SID, TID, NonFatal, &RT.Par_NPassive,          1,    Fatal );
    LoadField( "RhoExt_GhostSize",     &RS.RhoExt_GhostSize,     SID, TID, NonFatal, &RT.RhoExt_GhostSize,      1, NonFatal );
    LoadField( "Debug_Particle",       &RS.Debug_Particle,       SID, TID, NonFatal, &RT.Debug_Particle,        1, NonFatal );
    LoadField( "ParList_GrowthFactor", &RS.ParList_GrowthFactor, SID, TID, NonFatal, &RT.ParList_GrowthFactor,  1, NonFatal );

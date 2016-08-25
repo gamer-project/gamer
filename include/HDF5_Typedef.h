@@ -130,6 +130,7 @@ struct Makefile_t
 
 #  ifdef PARTICLE
    int StoreParAcc;
+   int Par_NPassive;
 #  endif
 
 }; // struct Makefile_t
@@ -193,7 +194,6 @@ struct SymConst_t
 
 #  ifdef PARTICLE
    int    Par_NVar;
-   int    Par_NPassive;
    int    RhoExt_GhostSize;
 
    int    Debug_Particle;

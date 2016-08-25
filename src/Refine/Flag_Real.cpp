@@ -41,7 +41,6 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
                                            { { 6,  2,  7}, { 0, 999,  1}, { 8,  3,  9} },
                                            { {22, 12, 23}, {15,   5, 17}, {24, 13, 25} }  };
    const bool IntPhase_No             = false;                 // for invoking "Prepare_PatchData"
-   const bool GetTotDens_No           = false;                 // for invoking "Prepare_PatchData"
    const int  NPG                     = 1;                     // for invoking "Prepare_PatchData"
    const int  Lohner_NGhost           = 2;                     // number of ghost cells for the Lohner error estimator
    const int  Lohner_NCell            = PS1 + 2*Lohner_NGhost; // size of the variable array for Lohner
@@ -153,7 +152,7 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
 //       prepare the ghost-zone data for Lohner
          if ( Lohner_NVar > 0 )
             Prepare_PatchData( lv, Time[lv], Lohner_Var, Lohner_NGhost, NPG, &PID0, Lohner_TVar,
-                               Lohner_IntScheme, UNIT_PATCH, NSIDE_26, IntPhase_No, OPT__BC_FLU, OPT__BC_POT, GetTotDens_No );
+                               Lohner_IntScheme, UNIT_PATCH, NSIDE_26, IntPhase_No, OPT__BC_FLU, OPT__BC_POT );
 
 
 //       loop over all local patches within the same patch group

@@ -23,10 +23,9 @@ void Poi_Prepare_Rho( const int lv, const double PrepTime, real h_Rho_Array_P[][
 {
 
    const bool IntPhase_No = false;
-   const bool GetTotDens  = true;
 
-   Prepare_PatchData( lv, PrepTime, &h_Rho_Array_P[0][0][0][0], RHO_GHOST_SIZE, NPG, PID0_List, _DENS,
-                      OPT__RHO_INT_SCHEME, UNIT_PATCH, NSIDE_26, IntPhase_No, OPT__BC_FLU, BC_POT_NONE, GetTotDens );
+   Prepare_PatchData( lv, PrepTime, &h_Rho_Array_P[0][0][0][0], RHO_GHOST_SIZE, NPG, PID0_List, _TOTAL_DENS,
+                      OPT__RHO_INT_SCHEME, UNIT_PATCH, NSIDE_26, IntPhase_No, OPT__BC_FLU, BC_POT_NONE );
 
 // subtract the background density to be consistent with the periodic (and/or comoving) base-level FFT solver
 #  ifdef GAMER_DEBUG

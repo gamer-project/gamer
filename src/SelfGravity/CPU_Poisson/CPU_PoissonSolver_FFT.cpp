@@ -88,7 +88,6 @@ void Patch2Slab( real *RhoK, real *SendBuf_Rho, real *RecvBuf_Rho, long *SendBuf
    const IntScheme_t IntScheme   = INT_NONE;
    const NSide_t     NSide_None  = NSIDE_00;
    const bool        IntPhase_No = false;
-   const bool        GetTotDens  = true;
    const int         GhostSize   = 0;
    const int         NPG         = 1;
 
@@ -97,8 +96,8 @@ void Patch2Slab( real *RhoK, real *SendBuf_Rho, real *RecvBuf_Rho, long *SendBuf
    for (int PID0=0; PID0<amr->NPatchComma[0][1]; PID0+=8)
    {
 //    even with NSIDE_00 and GhostSize=0, we still need OPT__BC_FLU to determine whether periodic BC is adopted
-      Prepare_PatchData( 0, PrepTime, Dens[0][0][0], GhostSize, NPG, &PID0, _DENS,
-                         IntScheme, UNIT_PATCH, NSide_None, IntPhase_No, OPT__BC_FLU, PotBC_None, GetTotDens );
+      Prepare_PatchData( 0, PrepTime, Dens[0][0][0], GhostSize, NPG, &PID0, _TOTAL_DENS,
+                         IntScheme, UNIT_PATCH, NSide_None, IntPhase_No, OPT__BC_FLU, PotBC_None );
 
       for (int PID=PID0, LocalID=0; PID<PID0+8; PID++, LocalID++)
       {

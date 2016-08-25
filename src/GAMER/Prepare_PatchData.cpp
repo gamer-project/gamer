@@ -29,14 +29,15 @@ static int Table_02( const int lv, const int PID, const int Side );
 //                4. Use "patch group" as the preparation unit
 //                   --> The data of all patches within the same patch group will be prepared
 //                5. It is assumed that both _FLU and _PASSIVE are stored in the same Sg
-//                6. Data preparation order: FLU -> PASSIVE -> DERIVED --> POTE --> GRA_RHO
+//                6. Data are prepared and stored in the order:
+//                   _FLU (where _DENS may be replaced by _TOTAL_DENS) -> _PASSIVE -> _DERIVED --> _POTE --> _PAR_DENS
 //                   ** DERIVED must be prepared immediately after FLU and PASSIVE so that both FLU, PASSIVE, and DERIVED
 //                      can be prepared at the same time for the non-periodic BC. **
-//                7. If GetTotDens == true and PARTICLE is on, the rho_ext arrays of patches at Lv=lv will be allocated
+//                7. For _PAR_DENS and _TOTAL_DENS (for PARTICLE only), the rho_ext arrays of patches at Lv=lv will be allocated
 //                   to store the partice mass density
 //                   --> amr->patch[0][lv][PID]->rho_ext
 //                   --> These arrays must be deallocated manually by calling Prepare_PatchData_FreeParticleDensityArray
-//                       (currently it's called by Gra_AdvanceDt)
+//                       (currently it's called by Gra_AdvanceDt and Main)
 //                8. Patches stored in PID0_List must be real patches (cannot NOT be buffer patches)
 //
 // Parameter   :  lv             : Target refinement level
@@ -73,14 +74,11 @@ static int Table_02( const int lv, const int PID, const int Side );
 //                                      --> TVar must contain _REAL and _IMAG
 //                FluBC          : Fluid boundary condition
 //                PotBC          : Gravity boundary condition
-//                GetTotDens     : true --> get total density (fluid, particles, ...)
-//                                      --> Tvar must contain _DENS
 //-------------------------------------------------------------------------------------------------------
 void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array,
-                        const int GhostSize, const int NPG, const int *PID0_List, const int TVar,
+                        const int GhostSize, const int NPG, const int *PID0_List, int TVar,
                         const IntScheme_t IntScheme, const PrepUnit_t PrepUnit, const NSide_t NSide,
-                        const bool IntPhase, const OptFluBC_t FluBC[], const OptPotBC_t PotBC,
-                        const bool GetTotDens )
+                        const bool IntPhase, const OptFluBC_t FluBC[], const OptPotBC_t PotBC )
 {
 
 // nothing to do if there is no target patch group
@@ -92,7 +90,11 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
 
    int AllVar = ( _FLU | _PASSIVE | _DERIVED );
 #  ifdef GRAVITY
-   AllVar |=  _POTE;
+   AllVar |= _POTE;
+#  endif
+#  ifdef PARTICLE
+   AllVar |= _PAR_DENS;
+   AllVar |= _TOTAL_DENS;
 #  endif
    if ( TVar & ~AllVar )   Aux_Error( ERROR_INFO, "unsupported parameter %s = %d !!\n", "TVar", TVar );
 
@@ -120,9 +122,6 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
 #     endif
    }
 
-   if (  GetTotDens  &&  !(TVar & _DENS)  )
-      Aux_Error( ERROR_INFO, "GetTotDens must work with _DENS !!\n" );
-
 #  ifndef INDIVIDUAL_TIMESTEP
    if ( OPT__INT_TIME )    Aux_Error( ERROR_INFO, "OPT__INT_TIME only works when INDIVIDUAL_TIMESTEP is on !!\n" );
 #  endif
@@ -133,9 +132,19 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
 
 #  ifdef PARTICLE
 // because we only collect particles from nearby 26 sibling patches
-   if ( GetTotDens  &&  GhostSize > PS1 - amr->Par->GhostSize )
-      Aux_Error( ERROR_INFO, "GhostSize (%d) > maximum allowed (%d) for GetTotDens with particles!!\n",
+   if ( ( TVar&_PAR_DENS || TVar&_TOTAL_DENS )  &&  GhostSize > PS1 - amr->Par->GhostSize )
+      Aux_Error( ERROR_INFO, "GhostSize (%d) > maximum allowed (%d) when preparing mass density with particles!!\n",
                  GhostSize, PS1 - amr->Par->GhostSize );
+
+// _DENS, _PAR_DENS, and _TOTAL_DENS do not work together since the results are stored to the same array
+   if (  ( TVar&_DENS && TVar&_PAR_DENS )  ||  ( TVar&_DENS && TVar&_TOTAL_DENS )  )
+      Aux_Error( ERROR_INFO, "_DENS, _PAR_DENS, and _TOTAL_DENS cannot work together !!\n" );
+
+// for PAR_ONLY, we have _TOTAL_DENS == _PAR_DENS
+#  if ( MODEL != PAR_ONLY )
+   if ( TVar&_TOTAL_DENS && TVar&_PAR_DENS )
+      Aux_Error( ERROR_INFO, "_DENS, _PAR_DENS, and _TOTAL_DENS cannot work together !!\n" );
+#  endif
 #  endif
 
 // target patches must be real patches
@@ -176,6 +185,22 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
    const bool PrepPot = ( TVar & _POTE ) ? true : false;
 #  endif
 
+#  ifdef PARTICLE
+// note that these two options cannot be turned on at the same time
+// --> and we set PrepTotalDens == true ONLY when there are density fields other than particles
+// --> for PAR_ONLY mode, we always set PrepTotalDens == false to avoid confusion
+#  if ( MODEL == PAR_ONLY )
+   const bool PrepParOnlyDens = ( TVar & _PAR_DENS  ||  TVar & _TOTAL_DENS ) ? true : false;
+   const bool PrepTotalDens   = false;
+#  else
+   const bool PrepParOnlyDens = ( TVar & _PAR_DENS   ) ? true : false;
+   const bool PrepTotalDens   = ( TVar & _TOTAL_DENS ) ? true : false;
+#  endif
+
+// turn on _DENS automatically for preparing total density
+   if ( PrepTotalDens )    TVar |= _DENS;
+#  endif // #ifdef PARTICLE
+
 
 // TFluVarIdxList : List recording the targeted fluid (and passive) variable indices ( = [0 ... NCOMP+NPASSIVE-1] )
    int NTSib[26], *TSib[26], NVar_Flu, NVar_Der, NVar_Tot, TFluVarIdxList[NCOMP+NPASSIVE];
@@ -214,7 +239,12 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
    NVar_Tot = NVar_Flu + NVar_Der;
 
 #  ifdef GRAVITY
-   if ( PrepPot )    NVar_Tot ++;
+   if ( PrepPot )          NVar_Tot ++;
+#  endif
+
+// do not increase NVar_Tot for PrepTotalDens since _DENS is already turned on automatically for that
+#  ifdef PARTICLE
+   if ( PrepParOnlyDens )  NVar_Tot ++;
 #  endif
 
    if ( NVar_Tot == 0 )
@@ -401,7 +431,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
                                    NX0_TOT[1]*(1<<lv),
                                    NX0_TOT[2]*(1<<lv) };
 
-   if ( GetTotDens )
+   if ( PrepParOnlyDens || PrepTotalDens )
    {
       int NearBy_PID_List[NNearByPatchMax];
       int NPar, NNearByPatch;
@@ -483,7 +513,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
       for (int t=0; t<ParMass_NPatch; t++)
          amr->patch[0][lv][ ParMass_PID_List[t] ]->rho_ext = new real [RhoExtSize][RhoExtSize][RhoExtSize];
 
-   } // if ( GetTotDens )
+   } //if ( PrepParOnlyDens || PrepTotalDens )
 #  endif // #ifdef PARTICLE
 
 
@@ -508,7 +538,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
 
 //    assign particle mass on grids
 #     ifdef PARTICLE
-      if ( GetTotDens )
+      if ( PrepParOnlyDens || PrepTotalDens )
       {
 //       thread-private variables
          long  *ParList = NULL;
@@ -590,7 +620,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
                                 EdgeL, dh, (amr->Par->PredictPos && !UseInputMassPos), PrepTime, InitZero_Yes,
                                 Periodic_No, NULL, UnitDens_No, CheckFarAway_No, UseInputMassPos, InputMassPos );
          } // for (int t=0; t<ParMass_NPatch; t++)
-      } // if ( GetTotDens )
+      } // if ( PrepParOnlyDens || PrepTotalDens )
 #     endif // #ifdef PARTICLE
 
 
@@ -1087,23 +1117,29 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
          } // for (int Side=0; Side<NSide; Side++)
 
 
-//       c. deposit particle mass for the "GetTotDens" mode
+//       c. deposit particle mass onto grids
 // ------------------------------------------------------------------------------------------------------------
 #        ifdef PARTICLE
-         if ( GetTotDens )
+         if ( PrepParOnlyDens || PrepTotalDens )
          {
 //          (c1) determine the array index for DENS
             real *ArrayDens = NULL;
             int   DensIdx   = -1;
 
-            for (int v=0; v<NVar_Flu; v++)
+            if ( PrepTotalDens )
             {
-               if ( TFluVarIdxList[v] == DENS )
+               for (int v=0; v<NVar_Flu; v++)
                {
-                  DensIdx = v;
-                  break;
+                  if ( TFluVarIdxList[v] == DENS )
+                  {
+                     DensIdx = v;
+                     break;
+                  }
                }
             }
+
+            else
+               DensIdx = NVar_Tot - 1;    // store particle-only density in the last element
 
 #           ifdef DEBUG_PARTICLE
             if ( DensIdx == -1 )    Aux_Error( ERROR_INFO, "DensIdx == -1 !!\n" );
@@ -1111,10 +1147,8 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
 
             ArrayDens = Array + DensIdx*PGSize3D;
 
-//          initialize the density array as zero if there are no other density fields
-#           if ( MODEL == PAR_ONLY )
-            for (int t=0; t<PGSize3D; t++)   ArrayDens[t] = (real)0.0;
-#           endif
+//          initialize density array as zero if there are no other density fields
+            if ( PrepParOnlyDens )  for (int t=0; t<PGSize3D; t++)   ArrayDens[t] = (real)0.0;
 
 
 //          (c2) deposit particle mass in the central eight patches
@@ -1280,7 +1314,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
                                       UnitDens_No, CheckFarAway_Yes, UseInputMassPos, InputMassPos );
                } // else if ( SibPID0 == -1 )
             } // for (int Side=0; Side<26; Side++) if ( amr->Par->GhostSize > 0  ||  GhostSize > 0 )
-         } // if ( GetTotDens )
+         } // if ( PrepParOnlyDens || PrepTotalDens )
 #        endif // #ifdef PARTICLE
 
 
@@ -1336,7 +1370,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
    for (int s=0; s<26; s++)   delete [] TSib[s];
 
 #  ifdef PARTICLE
-   if ( GetTotDens )    delete [] ParMass_PID_List;
+   if ( PrepParOnlyDens || PrepTotalDens )   delete [] ParMass_PID_List;
 #  endif
 
 } // FUNCTION : Prepare_PatchData

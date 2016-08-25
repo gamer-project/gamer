@@ -122,7 +122,6 @@ void Hydro_GetMaxAcc( real MaxAcc[] )
 
    const OptFluBC_t *FluBC_None = NULL;
    const bool   IntPhase_No     = false;
-   const bool   GetTotDens_No   = false;
    const real   Const_8         = (real)8.0;
    const int    NPG             = 1;                     // number of patch groups
    const int    NP              = NPG*8;                 // number of patches
@@ -170,7 +169,7 @@ void Hydro_GetMaxAcc( real MaxAcc[] )
 //          prepare the potential data with ghost zones (if self-gravity is on)
             if ( OPT__GRAVITY_TYPE == GRAVITY_SELF  ||  OPT__GRAVITY_TYPE == GRAVITY_BOTH )
             Prepare_PatchData( lv, Time[lv], &Pot_Array[0][0][0][0], GRA_GHOST_SIZE, NPG, &PID0, _POTE,
-                               OPT__GRA_INT_SCHEME, UNIT_PATCH, NSIDE_06, IntPhase_No, FluBC_None, OPT__BC_POT, GetTotDens_No );
+                               OPT__GRA_INT_SCHEME, UNIT_PATCH, NSIDE_06, IntPhase_No, FluBC_None, OPT__BC_POT );
 
 //          loop over eight patches within the same patch group
             for (int ID=0; ID<NP; ID++)

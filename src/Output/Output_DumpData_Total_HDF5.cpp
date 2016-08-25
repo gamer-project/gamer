@@ -1134,6 +1134,7 @@ void FillIn_Makefile( Makefile_t &Makefile )
 #  else
    Makefile.StoreParAcc        = 0;
 #  endif
+   Makefile.Par_NPassive       = PAR_NPASSIVE;
 #  endif
 
 } // FUNCTION : FillIn_Makefile
@@ -1207,7 +1208,6 @@ void FillIn_SymConst( SymConst_t &SymConst )
 
 #  ifdef PARTICLE
    SymConst.Par_NVar             = PAR_NVAR;
-   SymConst.Par_NPassive         = PAR_NPASSIVE;
    SymConst.RhoExt_GhostSize     = RHOEXT_GHOST_SIZE;
 
 #  ifdef DEBUG_PARTICLE
@@ -1711,6 +1711,7 @@ void GetCompound_Makefile( hid_t &H5_TypeID )
 
 #  ifdef PARTICLE
    H5Tinsert( H5_TypeID, "StoreParAcc",        HOFFSET(Makefile_t,StoreParAcc       ), H5T_NATIVE_INT );
+   H5Tinsert( H5_TypeID, "Par_NPassive",       HOFFSET(Makefile_t,Par_NPassive      ), H5T_NATIVE_INT );
 #  endif
 
 } // FUNCTION : GetCompound_Makefile
@@ -1772,7 +1773,6 @@ void GetCompound_SymConst( hid_t &H5_TypeID )
 
 #  ifdef PARTICLE
    H5Tinsert( H5_TypeID, "Par_NVar",             HOFFSET(SymConst_t,Par_NVar            ), H5T_NATIVE_INT    );
-   H5Tinsert( H5_TypeID, "Par_NPassive",         HOFFSET(SymConst_t,Par_NPassive        ), H5T_NATIVE_INT    );
    H5Tinsert( H5_TypeID, "RhoExt_GhostSize",     HOFFSET(SymConst_t,RhoExt_GhostSize    ), H5T_NATIVE_INT    );
    H5Tinsert( H5_TypeID, "Debug_Particle",       HOFFSET(SymConst_t,Debug_Particle      ), H5T_NATIVE_INT    );
    H5Tinsert( H5_TypeID, "ParList_GrowthFactor", HOFFSET(SymConst_t,ParList_GrowthFactor), H5T_NATIVE_DOUBLE );

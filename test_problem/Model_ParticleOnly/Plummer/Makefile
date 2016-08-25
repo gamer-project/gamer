@@ -80,6 +80,9 @@ endif # MODEL
 # store particle acceleration
 SIMU_OPTION += -DSTORE_PAR_ACC
 
+# number of passive particle attributes
+SIMU_OPTION += -DPAR_NPASSIVE=0
+
 
 # (f) optimization and compilation options
 # ------------------------------------------------------------------------------------
@@ -93,7 +96,7 @@ SIMU_OPTION += -DSTORE_PAR_ACC
 SIMU_OPTION += -DGAMER_OPTIMIZATION
 
 # debug mode
-#SIMU_OPTION += -DGAMER_DEBUG
+SIMU_OPTION += -DGAMER_DEBUG
 
 # measure the elapsing wall-clock time of different parts of the program
 SIMU_OPTION += -DTIMING
@@ -108,10 +111,10 @@ SIMU_OPTION += -DINTEL
 #SIMU_OPTION += -DFLOAT8
 
 # serial mode (in which no MPI libraries are required)
-SIMU_OPTION += -DSERIAL
+#SIMU_OPTION += -DSERIAL
 
 # load-balance parallelization (one must not turn on the option "SERIAL") (HILBERT)
-#SIMU_OPTION += -DLOAD_BALANCE=HILBERT
+SIMU_OPTION += -DLOAD_BALANCE=HILBERT
 
 # overlap MPI communication with computation (experimental, only supported in LOAD_BALANCE)
 #SIMU_OPTION += -DOVERLAP_MPI

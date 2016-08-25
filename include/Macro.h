@@ -81,6 +81,9 @@
 #  define FLU_NOUT   ( NCOMP-0 )
 #  define NFLUX              1
 
+#elif ( MODEL == PAR_ONLY )
+#  define NCOMP              0
+
 #else
 #  error : ERROR : unsupported MODEL (please edit NCOMP, FLU_NIN, and FLU_NOUT in the new MODEL) !!
 #endif // MODEL
@@ -201,6 +204,17 @@
 
 #  define _DERIVED            0
 
+
+
+#elif ( MODEL == PAR_ONLY )
+#  define _FLU                0
+#  define _PASSIVE            0
+#  define _DERIVED            0
+
+#  ifdef GRAVITY
+#  define _POTE            ( 1 << 0 )
+#  endif
+
 #else
 #  error : ERROR : unsupported MODEL !!
 #endif // MODEL
@@ -214,8 +228,6 @@
 #  else
 #  define PAR_NVAR      (  8 + 0 )
 #  endif
-#  define PAR_NPASSIVE     0
-//#  define PAR_NPASSIVE     NPASSIVE
 
 // variable indices in the array "ParVar" [0 ... PAR_NVAR-1]
 #  define  PAR_MASS        0
@@ -230,7 +242,28 @@
 #  define  PAR_ACCY        9
 #  define  PAR_ACCZ       10
 
-#endif // #ifdef PARTICLE
+// symbolic constants used as function parameters (e.g., Prepare_PatchData)
+#  if ( MODEL == PAR_ONLY )
+// note that _POTE == ( 1 << 0 )
+#  define _PAR_DENS        ( 1 << 1 )
+#  define _TOTAL_DENS      ( _PAR_DENS )
+
+#  else
+
+// note that _PRES == ( 1 << (NCOMP+NPASSIVE+5) )
+#  define _PAR_DENS        ( 1 << (NCOMP+NPASSIVE+6) )
+#  define _TOTAL_DENS      ( 1 << (NCOMP+NPASSIVE+7) )
+
+#  endif // if ( MODEL == PAR_ONLY ) ... else ...
+
+#else // #ifdef PARTICLE
+
+// set _TOTAL_DENS == _DENS if PARTICLE is off
+#  define _TOTAL_DENS      ( _DENS )
+
+#endif // #ifdef PARTICLE ... else ...
+
+
 
 
 

@@ -32,7 +32,6 @@ void Poi_StorePotWithGhostZone( const int lv, const int PotSg, const bool AllPat
 
    const OptFluBC_t *FluBC_None = NULL;
    const bool IntPhase_No       = false;
-   const bool GetTotDens_No     = false;
 
    const double PrepPotTime = amr->PotSgTime[lv][PotSg];
    const int    PotGhost    = GRA_GHOST_SIZE;
@@ -51,7 +50,7 @@ void Poi_StorePotWithGhostZone( const int lv, const int PotSg, const bool AllPat
          if ( AllPatch  ||  amr->patch[PotSg][lv][PID0]->pot_ext[0][0][0] == POT_EXT_NEED_INIT )
          {
             Prepare_PatchData( lv, PrepPotTime, Pot, PotGhost, 1, &PID0, _POTE, OPT__REF_POT_INT_SCHEME,
-                               UNIT_PATCH, NSIDE_26, IntPhase_No, FluBC_None, OPT__BC_POT, GetTotDens_No );
+                               UNIT_PATCH, NSIDE_26, IntPhase_No, FluBC_None, OPT__BC_POT );
 
             for (int PID=PID0, P=0; PID<PID0+8; PID++, P++)
                memcpy( amr->patch[PotSg][lv][PID]->pot_ext, Pot+P*PotSizeCube, PotSizeCube*sizeof(real) );

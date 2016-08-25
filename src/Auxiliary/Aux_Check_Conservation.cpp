@@ -67,7 +67,6 @@ void Aux_Check_Conservation( const char *comment )
 
    const IntScheme_t IntScheme = INT_CQUAR;
    const bool   IntPhase_No    = false;
-   const bool   GetTotDens_No  = false;
    const int    NGhost         = 1;          // number of ghost zones for calculating the gradient of wave function
    const int    Size_Flu       = PS1 + 2*NGhost;
    const int    NPG            = 1;
@@ -114,7 +113,7 @@ void Aux_Check_Conservation( const char *comment )
       {
 #        if ( MODEL == ELBDM)
          Prepare_PatchData( lv, Time[lv], Flu_ELBDM[0][0][0][0], NGhost, NPG, &PID0, _REAL|_IMAG,
-                            IntScheme, UNIT_PATCH, NSIDE_06, IntPhase_No, OPT__BC_FLU, BC_POT_NONE, GetTotDens_No );
+                            IntScheme, UNIT_PATCH, NSIDE_06, IntPhase_No, OPT__BC_FLU, BC_POT_NONE );
 #        endif
 
          for (int PID=PID0; PID<PID0+8; PID++)

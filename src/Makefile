@@ -80,6 +80,9 @@ endif # MODEL
 # store particle acceleration
 SIMU_OPTION += -DSTORE_PAR_ACC
 
+# number of passive particle attributes
+SIMU_OPTION += -DPAR_NPASSIVE=0
+
 
 # (f) optimization and compilation options
 # ------------------------------------------------------------------------------------

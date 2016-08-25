@@ -38,18 +38,17 @@ void Flu_Prepare( const int lv, const double PrepTime, real h_Flu_Array_F_In[], 
 
    const OptFluBC_t *FluBC_None = NULL;
    const bool IntPhase_No       = false;
-   const bool GetTotDens_No     = false;
 
 
 // prepare the fluid array
 #  if ( MODEL == ELBDM )
    Prepare_PatchData( lv, PrepTime, h_Flu_Array_F_In,  FLU_GHOST_SIZE, NPG, PID0_List, 
                       _REAL | _IMAG, OPT__FLU_INT_SCHEME, UNIT_PATCHGROUP, NSIDE_26, OPT__INT_PHASE, 
-                      OPT__BC_FLU, BC_POT_NONE, GetTotDens_No );
+                      OPT__BC_FLU, BC_POT_NONE );
 #  else
    Prepare_PatchData( lv, PrepTime, h_Flu_Array_F_In,  FLU_GHOST_SIZE, NPG, PID0_List, 
                       _FLU,          OPT__FLU_INT_SCHEME, UNIT_PATCHGROUP, NSIDE_26, IntPhase_No,
-                      OPT__BC_FLU, BC_POT_NONE, GetTotDens_No );
+                      OPT__BC_FLU, BC_POT_NONE );
 #  endif
 
 #  ifdef UNSPLIT_GRAVITY
@@ -57,7 +56,7 @@ void Flu_Prepare( const int lv, const double PrepTime, real h_Flu_Array_F_In[], 
    if ( OPT__GRAVITY_TYPE == GRAVITY_SELF  ||  OPT__GRAVITY_TYPE == GRAVITY_BOTH )
    Prepare_PatchData( lv, PrepTime, h_Pot_Array_USG_F, USG_GHOST_SIZE, NPG, PID0_List, 
                       _POTE,         OPT__GRA_INT_SCHEME, UNIT_PATCHGROUP, NSIDE_26, IntPhase_No,
-                      FluBC_None,  OPT__BC_POT, GetTotDens_No );
+                      FluBC_None,  OPT__BC_POT );
 
 // prepare the corner array
    if ( OPT__GRAVITY_TYPE == GRAVITY_EXTERNAL  ||  OPT__GRAVITY_TYPE == GRAVITY_BOTH  ||  OPT__EXTERNAL_POT )

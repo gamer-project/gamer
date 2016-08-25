@@ -78,7 +78,6 @@ void Par_Aux_GetConservedQuantity( double &Mass_Total, double &MomX_Total, doubl
    const ParInterp_t IntScheme  = amr->Par->Interp;
    const OptFluBC_t *FluBC_None = NULL;
    const bool IntPhase_No       = false;
-   const bool GetTotDens_No     = false;
 
    const int  PotGhost          = amr->Par->GhostSize;
    const int  PotSize           = PS1 + 2*PotGhost;
@@ -187,7 +186,7 @@ void Par_Aux_GetConservedQuantity( double &Mass_Total, double &MomX_Total, doubl
 #           endif
                Prepare_PatchData( lv, PrepPotTime, Pot, PotGhost, 1, &PID0, _POTE,
                                   OPT__GRA_INT_SCHEME, UNIT_PATCH, (PotGhost==0)?NSIDE_00:NSIDE_26, IntPhase_No, FluBC_None,
-                                  OPT__BC_POT, GetTotDens_No );
+                                  OPT__BC_POT );
          } // if ( OPT__GRAVITY_TYPE == GRAVITY_SELF  ||  OPT__GRAVITY_TYPE == GRAVITY_BOTH )
 
 
