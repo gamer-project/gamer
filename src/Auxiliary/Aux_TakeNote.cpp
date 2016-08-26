@@ -795,6 +795,9 @@ void Aux_TakeNote()
 #     ifdef GRAVITY
       fprintf( Note, "OPT__OUTPUT_POT           %d\n",      OPT__OUTPUT_POT         );
 #     endif
+#     ifdef PARTICLE
+      fprintf( Note, "OPT__OUTPUT_PAR_DENS      %d\n",      OPT__OUTPUT_PAR_DENS    );
+#     endif
       fprintf( Note, "OPT__OUTPUT_MODE          %d\n",      OPT__OUTPUT_MODE        );
       fprintf( Note, "OUTPUT_STEP               %d\n",      OUTPUT_STEP             );
       fprintf( Note, "OUTPUT_DT                 %20.14e\n", OUTPUT_DT               );

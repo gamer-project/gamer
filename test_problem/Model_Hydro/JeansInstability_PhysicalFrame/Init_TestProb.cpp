@@ -4,10 +4,10 @@
 
 
 
-extern void (*Init_Function_Ptr)( real fluid[], const real x, const real y, const real z, const double Time );
+extern void (*Init_Function_Ptr)( real fluid[], const double x, const double y, const double z, const double Time );
 extern void (*Output_TestProbErr_Ptr)( const bool BaseOnly );
 
-static void HYDRO_TestProbSol_JeansInstability_Physical( real fluid[], const real x, const real y, const real z, 
+static void HYDRO_TestProbSol_JeansInstability_Physical( real fluid[], const double x, const double y, const double z, 
                                                          const double Time );
 static void HYDRO_OutputError_JeansInstability_Physical( const bool BaseOnly );
 static void WriteFile( FILE *File[], const int lv, const int PID, const int i, const int j, const int k,
@@ -156,13 +156,13 @@ void Init_TestProb()
 //
 // Return      :  fluid
 //-------------------------------------------------------------------------------------------------------
-void HYDRO_TestProbSol_JeansInstability_Physical( real fluid[], const real x, const real y, const real z, const double Time )
+void HYDRO_TestProbSol_JeansInstability_Physical( real fluid[], const double x, const double y, const double z, const double Time )
 {
 
-   const real r         = 1.0/sqrt(3.0)*( x + y + z ) - Jeans_v0*Time;
-   const real _Gamma_m1 = 1.0/(GAMMA-1.0);
+   const double r         = 1.0/sqrt(3.0)*( x + y + z ) - Jeans_v0*Time;
+   const double _Gamma_m1 = 1.0/(GAMMA-1.0);
 
-   real v1, P0, P1, Phase;
+   double v1, P0, P1, Phase;
 
    v1 = Jeans_Omega*Jeans_RhoAmp/Jeans_WaveK;
    P0 = SQR(Jeans_Cs)/GAMMA;

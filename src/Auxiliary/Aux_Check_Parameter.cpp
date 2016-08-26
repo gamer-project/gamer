@@ -1223,6 +1223,10 @@ void Aux_Check_Parameter()
    if ( OPT__PARTICLE_COUNT < 0  ||  OPT__PARTICLE_COUNT > 2 )
       Aux_Error( ERROR_INFO, "incorrect option \"OPT__PARTICLE_COUNT = %d\" [0/1/2] !!\n", OPT__PARTICLE_COUNT );
 
+   if ( OPT__OUTPUT_PAR_DENS != PAR_OUTPUT_DENS_NONE  &&  OPT__OUTPUT_PAR_DENS != PAR_OUTPUT_DENS_PAR_ONLY  &&
+        OPT__OUTPUT_PAR_DENS != PAR_OUTPUT_DENS_TOTAL )
+      Aux_Error( ERROR_INFO, "incorrect option \"OPT__OUTPUT_PAR_DENS = %d\" [0/1/2] !!\n", OPT__OUTPUT_PAR_DENS );
+
 
 // warning
 // ------------------------------

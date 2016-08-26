@@ -13,7 +13,7 @@
 // ########################
 // ## Symbolic Constants ##
 // ########################
-   
+
 // option == NONE --> the option is turned off
 #define NONE      0
 
@@ -122,7 +122,7 @@
 
 
 // symbolic constants used as function parameters (e.g., Prepare_PatchData)
-#  define _DENS            ( 1 << (DENS) ) 
+#  define _DENS            ( 1 << (DENS) )
 #  define _MOMX            ( 1 << (MOMX) )
 #  define _MOMY            ( 1 << (MOMY) )
 #  define _MOMZ            ( 1 << (MOMZ) )
@@ -130,11 +130,11 @@
 #  define _FLU             ( _DENS | _MOMX | _MOMY | _MOMZ | _ENGY )
 
 #if ( NPASSIVE > 0 )
-#  define _METAL           ( 1 << (NCOMP+METAL ) ) 
+#  define _METAL           ( 1 << (NCOMP+METAL ) )
 #  define _OXYGEN          ( 1 << (NCOMP+OXYGEN) )
 #  define _FE              ( 1 << (NCOMP+FE    ) )
 #  define _PASSIVE         ( _METAL | _OXYGEN | _FE )
-#else 
+#else
 #  define _PASSIVE            0
 #endif // #if ( NPASSIVE > 0 )
 
@@ -144,7 +144,7 @@
 
 
 // symbolic constants of flux used as function parameters (e.g., Buf_GetBufferData)
-#  define _FLUX_DENS       ( 1 << (FLUX_DENS) ) 
+#  define _FLUX_DENS       ( 1 << (FLUX_DENS) )
 #  define _FLUX_MOMX       ( 1 << (FLUX_MOMX) )
 #  define _FLUX_MOMY       ( 1 << (FLUX_MOMY) )
 #  define _FLUX_MOMZ       ( 1 << (FLUX_MOMZ) )
@@ -152,11 +152,11 @@
 #  define _FLUX            ( _FLUX_DENS | _FLUX_MOMX | _FLUX_MOMY | _FLUX_MOMZ | _FLUX_ENGY )
 
 #if ( NPASSIVE > 0 )
-#  define _FLUX_METAL      ( 1 << (NFLUX+FLUX_METAL ) ) 
+#  define _FLUX_METAL      ( 1 << (NFLUX+FLUX_METAL ) )
 #  define _FLUX_OXYGEN     ( 1 << (NFLUX+FLUX_OXYGEN) )
 #  define _FLUX_FE         ( 1 << (NFLUX+FLUX_FE    ) )
 #  define _FLUX_PASSIVE    ( _FLUX_METAL | _FLUX_OXYGEN | _FLUX_FE )
-#else 
+#else
 #  define _FLUX_PASSIVE       0
 #endif // #if ( NPASSIVE > 0 )
 
@@ -184,7 +184,7 @@
 
 
 // symbolic constants used as function parameters (e.g., Prepare_PatchData)
-#  define _DENS            ( 1 << (DENS) ) 
+#  define _DENS            ( 1 << (DENS) )
 #  define _REAL            ( 1 << (REAL) )
 #  define _IMAG            ( 1 << (IMAG) )
 #  define _FLU             ( _DENS | _REAL | _IMAG )
@@ -197,7 +197,7 @@
 
 
 // symbolic constants of flux used as function parameters (e.g., Buf_GetBufferData)
-#  define _FLUX_DENS       ( 1 << (FLUX_DENS) ) 
+#  define _FLUX_DENS       ( 1 << (FLUX_DENS) )
 #  define _FLUX            ( _FLUX_DENS )
 
 #  define _FLUX_PASSIVE       0
@@ -496,11 +496,11 @@
 #endif
 
 #ifndef NULL_REAL
-#  define NULL_REAL        __FLT_MAX__ 
+#  define NULL_REAL        __FLT_MAX__
 #endif
 
 #ifndef NULL_BOOL
-#  define NULL_BOOL        false 
+#  define NULL_BOOL        false
 #endif
 
 

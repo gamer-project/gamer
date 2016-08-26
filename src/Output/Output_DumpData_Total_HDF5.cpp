@@ -905,7 +905,6 @@ void FillIn_KeyInfo( KeyInfo_t &KeyInfo )
    KeyInfo.DumpID        = DumpID;
    KeyInfo.Step          = Step;
 #  ifdef GRAVITY
-   KeyInfo.OutputPot     = (OPT__OUTPUT_POT) ? 1 : 0;
    KeyInfo.AveDens_Init  = AveDensity_Init;
    KeyInfo.Gravity       = 1;
 #  else
@@ -1493,6 +1492,9 @@ void FillIn_InputPara( InputPara_t &InputPara )
 #  ifdef GRAVITY
    InputPara.Opt__Output_Pot         = OPT__OUTPUT_POT;
 #  endif
+#  ifdef PARTICLE
+   InputPara.Opt__Output_ParDens     = OPT__OUTPUT_PAR_DENS;
+#  endif
    InputPara.Opt__Output_Mode        = OPT__OUTPUT_MODE;
    InputPara.Opt__Output_Step        = OUTPUT_STEP;
    InputPara.Opt__Output_Dt          = OUTPUT_DT;
@@ -1605,9 +1607,6 @@ void GetCompound_KeyInfo( hid_t &H5_TypeID )
    H5Tinsert( H5_TypeID, "NLevel",             HOFFSET(KeyInfo_t,NLevel         ),    H5T_NATIVE_INT          );
    H5Tinsert( H5_TypeID, "PatchSize",          HOFFSET(KeyInfo_t,PatchSize      ),    H5T_NATIVE_INT          );
    H5Tinsert( H5_TypeID, "DumpID",             HOFFSET(KeyInfo_t,DumpID         ),    H5T_NATIVE_INT          );
-#  ifdef GRAVITY
-   H5Tinsert( H5_TypeID, "OutputPot",          HOFFSET(KeyInfo_t,OutputPot      ),    H5T_NATIVE_INT          );
-#  endif
    H5Tinsert( H5_TypeID, "NX0",                HOFFSET(KeyInfo_t,NX0            ),    H5_TypeID_Arr_3Int      );
    H5Tinsert( H5_TypeID, "BoxScale",           HOFFSET(KeyInfo_t,BoxScale       ),    H5_TypeID_Arr_3Int      );
    H5Tinsert( H5_TypeID, "NPatch",             HOFFSET(KeyInfo_t,NPatch         ),    H5_TypeID_Arr_NLvInt    );
@@ -2034,6 +2033,9 @@ void GetCompound_InputPara( hid_t &H5_TypeID )
    H5Tinsert( H5_TypeID, "Opt__Output_Base",        HOFFSET(InputPara_t,Opt__Output_Base       ), H5T_NATIVE_INT     );
 #  ifdef GRAVITY
    H5Tinsert( H5_TypeID, "Opt__Output_Pot",         HOFFSET(InputPara_t,Opt__Output_Pot        ), H5T_NATIVE_INT     );
+#  endif
+#  ifdef PARTICLE
+   H5Tinsert( H5_TypeID, "Opt__Output_ParDens",     HOFFSET(InputPara_t,Opt__Output_ParDens    ), H5T_NATIVE_INT     );
 #  endif
    H5Tinsert( H5_TypeID, "Opt__Output_Mode",        HOFFSET(InputPara_t,Opt__Output_Mode       ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "Opt__Output_Step",        HOFFSET(InputPara_t,Opt__Output_Step       ), H5T_NATIVE_INT     );

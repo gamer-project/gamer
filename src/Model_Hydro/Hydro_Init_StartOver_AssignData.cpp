@@ -23,17 +23,17 @@ void (*Init_Function_Ptr)( real fluid[], const double x, const double y, const d
 void Init_Function_User( real fluid[], const double x, const double y, const double z, const double Time )
 {
 
-   const real Gamma2  = real( 1.0/GAMMA/(GAMMA-1.0) );
+   const double Gamma2  = 1.0/GAMMA/(GAMMA-1.0);
    const double C1[3] = { 0.5*amr->BoxSize[0]+100.0, 
                           0.5*amr->BoxSize[1]+200.0, 
                           0.5*amr->BoxSize[2]+300.0 };
    const double C2[3] = { 20.0, 40.0, 10.0 };
 
-   const real Cs      =   1.0;
-   const real Height1 = 100.0;
-   const real Height2 = 400.0;
-   const real Width1  = 640.0;
-   const real Width2  = 512.0;
+   const double Cs      =   1.0;
+   const double Height1 = 100.0;
+   const double Height2 = 400.0;
+   const double Width1  = 640.0;
+   const double Width2  = 512.0;
 
 
    fluid[DENS] = 1.0 + Height1*exp(  -( SQR(x-C1[0])+ SQR(y-C1[1]) + SQR(z-C1[2]) ) / SQR(Width1)  );

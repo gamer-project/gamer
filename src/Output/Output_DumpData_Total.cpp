@@ -130,13 +130,16 @@ void Output_DumpData_Total( const char *FileName )
 
 //    calculate the total file size
 //    =================================================================================================
-#     ifdef GRAVITY
-      const int NGridVar      = ( OPT__OUTPUT_POT ) ? NCOMP+1 : NCOMP;
-#     else
-      const int NGridVar      = NCOMP;
-#     endif
-      const int PatchDataSize = CUBE(PS1)*NGridVar*sizeof(real);
+      int PatchDataSize, NGridVar=NCOMP;
 
+#     ifdef GRAVITY
+      if ( OPT__OUTPUT_POT )                                NGridVar ++;
+#     endif
+#     ifdef PARTICLE
+      if ( OPT__OUTPUT_PAR_DENS != PAR_OUTPUT_DENS_NONE )   NGridVar ++;
+#     endif
+
+      PatchDataSize  = CUBE(PS1)*NGridVar*sizeof(real);
       ExpectFileSize = HeaderSize_Total;
 
       for (int lv=0; lv<NLEVEL; lv++)
@@ -552,7 +555,7 @@ void Output_DumpData_Total( const char *FileName )
       const double DT__GRAVITY             = NULL_REAL;
       const double NEWTON_G                = NULL_REAL;
       const int    POT_GPU_NPGROUP         = NULL_INT;
-      const bool   OPT__OUTPUT_POT         = NULL_BOOL;
+      const bool   OPT__OUTPUT_POT         = false;
       const bool   OPT__GRA_P5_GRADIENT    = NULL_BOOL;
       const double SOR_OMEGA               = NULL_REAL;
       const int    SOR_MAX_ITER            = NULL_INT;
@@ -596,6 +599,12 @@ void Output_DumpData_Total( const char *FileName )
       const bool   OPT__INT_PHASE          = NULL_BOOL;
       const double ELBDM_MASS              = NULL_REAL;
       const double ELBDM_PLANCK_CONST      = NULL_REAL;
+#     endif
+
+#     ifdef PARTICLE
+      const int    opt__output_par_dens    = (int)OPT__OUTPUT_PAR_DENS;
+#     else
+      const int    opt__output_par_dens    = 0;
 #     endif
 
       fwrite( &BOX_SIZE,                  sizeof(double),                  1,             File );
@@ -666,6 +675,7 @@ void Output_DumpData_Total( const char *FileName )
       fwrite( &OPT__OUTPUT_BASEPS,        sizeof(bool),                    1,             File );
       fwrite( &OPT__CORR_UNPHY,           sizeof(bool),                    1,             File );
       fwrite( &opt__corr_unphy_scheme,    sizeof(int),                     1,             File );
+      fwrite( &opt__output_par_dens,      sizeof(int),                     1,             File );
 
 
 //    e. output the simulation information
@@ -717,8 +727,30 @@ void Output_DumpData_Total( const char *FileName )
    long NPar_and_GParID[2], GParID=GParID_Offset;
 #  endif
 
+#  ifdef PARTICLE
+   const bool TimingSendPar_No = false;
+   const bool PredictParPos_No = false;   // particles synchronization is controlled by PAR_SYNC_DUMP in Output_DumpData
+   const bool JustCountNPar_No = false;
+#  ifdef LOAD_BALANCE
+   const bool SibBufPatch      = true;
+   const bool FaSibBufPatch    = true;
+#  else
+   const bool SibBufPatch      = NULL_BOOL;
+   const bool FaSibBufPatch    = NULL_BOOL;
+#  endif
+   real (*ParDensArray)[ CUBE(PS1) ] = ( OPT__OUTPUT_PAR_DENS == PAR_OUTPUT_DENS_NONE ) ? NULL : new real [8][ CUBE(PS1) ];
+#  endif // #ifdef PARTICLE
+
+
    for (int lv=0; lv<NLEVEL; lv++)
    {
+//    f-1. collect particles from higher levels for outputting particle density
+#     ifdef PARTICLE
+      if ( OPT__OUTPUT_PAR_DENS != PAR_OUTPUT_DENS_NONE )
+         Par_CollectParticle2OneLevel( lv, PredictParPos_No, NULL_REAL, SibBufPatch, FaSibBufPatch, JustCountNPar_No,
+                                       TimingSendPar_No );
+#     endif
+
       for (int TargetMPIRank=0; TargetMPIRank<MPI_NRank; TargetMPIRank++)
       {
          if ( MPI_Rank == TargetMPIRank )
@@ -727,8 +759,26 @@ void Output_DumpData_Total( const char *FileName )
 
             for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
             {
-//             f1. output the patch information
-//             (the father <-> son information will be re-constructed during the restart)
+//             f0. prepare the particle density data on grids (only if there are leaf patches in this patch group)
+#              ifdef PARTICLE
+               if ( OPT__OUTPUT_PAR_DENS != PAR_OUTPUT_DENS_NONE  &&  PID%8 == 0 )
+               {
+                  for (int PID_CheckSon=PID; PID_CheckSon<PID+8; PID_CheckSon++)
+                  {
+                     if ( amr->patch[0][lv][PID_CheckSon]->son == -1 )
+                     {
+                        Prepare_PatchData( lv, Time[lv], ParDensArray[0], 0, 1, &PID,
+                                           ( OPT__OUTPUT_PAR_DENS == PAR_OUTPUT_DENS_PAR_ONLY ) ? _PAR_DENS : _TOTAL_DENS,
+                                           OPT__RHO_INT_SCHEME, UNIT_PATCH, NSIDE_00, false, NULL, BC_POT_NONE );
+                        break;
+                     }
+                  }
+               }
+#              endif
+
+
+//             f1. output patch information
+//             (father <-> son information will be re-constructed during the restart)
                Cr_and_Son[0] = amr->patch[0][lv][PID]->corner[0];
                Cr_and_Son[1] = amr->patch[0][lv][PID]->corner[1];
                Cr_and_Son[2] = amr->patch[0][lv][PID]->corner[2];
@@ -750,18 +800,22 @@ void Output_DumpData_Total( const char *FileName )
 #              endif
 
 
-//             f2. output the patch data only if it has no son
+//             f2. output patch data only if it has no son
                if ( amr->patch[0][lv][PID]->son == -1 )
                {
-//                f2-1. output the fluid variables
-                  fwrite( amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid, sizeof(real),
-                          PATCH_SIZE*PATCH_SIZE*PATCH_SIZE*NCOMP, File );
+//                f2-1. output fluid variables
+                  fwrite( amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid, sizeof(real), CUBE(PS1)*NCOMP, File );
 
+//                f2-2. output gravitational potential
 #                 ifdef GRAVITY
-//                f2-2. output the gravitational potential
                   if ( OPT__OUTPUT_POT )
-                  fwrite( amr->patch[ amr->PotSg[lv] ][lv][PID]->pot,   sizeof(real),
-                          PATCH_SIZE*PATCH_SIZE*PATCH_SIZE,       File );
+                  fwrite( amr->patch[ amr->PotSg[lv] ][lv][PID]->pot,   sizeof(real), CUBE(PS1),       File );
+#                 endif
+
+//                f2-3. output particle density depostied onto grids
+#                 ifdef PARTICLE
+                  if ( OPT__OUTPUT_PAR_DENS != PAR_OUTPUT_DENS_NONE )
+                  fwrite( ParDensArray[ PID%8 ],                        sizeof(real), CUBE(PS1),       File );
 #                 endif
                } // if ( amr->patch[0][lv][PID]->son == -1 )
             } // for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
@@ -773,7 +827,21 @@ void Output_DumpData_Total( const char *FileName )
          MPI_Barrier( MPI_COMM_WORLD );
 
       } // for (int TargetMPIRank=0; TargetMPIRank<MPI_NRank; TargetMPIRank++)
+
+//    free memory used for outputting particle density
+#     ifdef PARTICLE
+      if ( OPT__OUTPUT_PAR_DENS != PAR_OUTPUT_DENS_NONE )
+      {
+         Prepare_PatchData_FreeParticleDensityArray( lv );
+
+         Par_CollectParticle2OneLevel_FreeMemory( lv, SibBufPatch, FaSibBufPatch );
+      }
+#     endif
    } // for (int lv=0; lv<NLEVEL; lv++)
+
+#  ifdef PARTICLE
+   if ( ParDensArray != NULL )   delete [] ParDensArray;
+#  endif
 
 
 // g. output particles

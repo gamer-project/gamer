@@ -4,11 +4,11 @@
 
 
 
-extern void (*Init_Function_Ptr)( real fluid[], const real x, const real y, const real z, const double Time );
+extern void (*Init_Function_Ptr)( real fluid[], const double x, const double y, const double z, const double Time );
 extern void (*Output_TestProbErr_Ptr)( const bool BaseOnly );
 
 static void LoadTestProbParameter();
-static void Hydro_TestProbSol_BlastWave( real fluid[], const real x, const real y, const real z, const double Time );
+static void Hydro_TestProbSol_BlastWave( real fluid[], const double x, const double y, const double z, const double Time );
 
 
 // global variables in the HYDRO blast wave test
@@ -141,11 +141,11 @@ void Init_TestProb()
 //
 // Return      :  fluid
 //-------------------------------------------------------------------------------------------------------
-void Hydro_TestProbSol_BlastWave( real *fluid, const real x, const real y, const real z, const double Time )
+void Hydro_TestProbSol_BlastWave( real *fluid, const double x, const double y, const double z, const double Time )
 {
 
-   const real Blast_Engy_Exp_Density = Blast_Engy_Exp/(4.0*M_PI/3.0*Blast_Radius*Blast_Radius*Blast_Radius);
-   const real r = SQRT( SQR(x-Blast_Center[0]) + SQR(y-Blast_Center[1]) + SQR(z-Blast_Center[2]) );
+   const double Blast_Engy_Exp_Density = Blast_Engy_Exp/(4.0*M_PI/3.0*Blast_Radius*Blast_Radius*Blast_Radius);
+   const double r = SQRT( SQR(x-Blast_Center[0]) + SQR(y-Blast_Center[1]) + SQR(z-Blast_Center[2]) );
 
    fluid[DENS] = Blast_Dens_Bg;
    fluid[MOMX] = 0.0;

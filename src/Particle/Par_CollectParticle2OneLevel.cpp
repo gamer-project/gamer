@@ -36,7 +36,8 @@ static void CollectParticle( const int FaLv, const int FaPID, int &NPar_SoFar, l
 //                5. When using OpenMP, one must ensure that different threads do NOT invoke this function
 //                   for the same patch at the same time !!!
 //                   --> Because this function will modify "NPar_Copy & ParList_Copy" for the target patch
-//                6. Invoked by Gra_AdvanceDt, Flag_Real, and Main when GAMER_DEBUG is on
+//                6. Invoked by Gra_AdvanceDt, Flag_Real, Output_DumpData_Total, Output_DumpData_Total_HDF,
+//                   and Main when GAMER_DEBUG is on
 //                7. When turning on SibBufPatch in LOAD_BALANCE, this function (which will call
 //                   Par_LB_CollectParticle2OneLevel) will also collect particles for sibling-buffer patchesat FaLv
 //                   --> Moreover, if FaSibBufPatch is also on, it will also collect particles for

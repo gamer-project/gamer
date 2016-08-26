@@ -4,10 +4,10 @@
 
 
 
-extern void (*Init_Function_Ptr)( real fluid[], const real x, const real y, const real z, const double Time );
+extern void (*Init_Function_Ptr)( real fluid[], const double x, const double y, const double z, const double Time );
 extern void (*Output_TestProbErr_Ptr)( const bool BaseOnly );
 
-       void HYDRO_TestProbSol_PlummerStatic( real fluid[], const real x, const real y, const real z, const double Time );
+       void HYDRO_TestProbSol_PlummerStatic( real fluid[], const double x, const double y, const double z, const double Time );
 static void LoadTestProbParameter();
 
 
@@ -125,18 +125,18 @@ void Init_TestProb()
 //
 // Return      :  fluid
 //-------------------------------------------------------------------------------------------------------
-void HYDRO_TestProbSol_PlummerStatic( real fluid[], const real x, const real y, const real z, const double Time )
+void HYDRO_TestProbSol_PlummerStatic( real fluid[], const double x, const double y, const double z, const double Time )
 {
 
-   const real Cen[3]    = { 0.5*amr->BoxSize[0],
+   const double Cen[3]    = { 0.5*amr->BoxSize[0],
                             0.5*amr->BoxSize[1],
                             0.5*amr->BoxSize[2] };
-   const real r         = SQRT( SQR(x-Cen[0]) + SQR(y-Cen[1]) + SQR(z-Cen[2]) );
-   const real a         = r / Plummer_r0;
-   const real a2        = a*a;
-   const real _Gamma_m1 = 1.0/(GAMMA-1.0);
+   const double r         = sqrt( SQR(x-Cen[0]) + SQR(y-Cen[1]) + SQR(z-Cen[2]) );
+   const double a         = r / Plummer_r0;
+   const double a2        = a*a;
+   const double _Gamma_m1 = 1.0/(GAMMA-1.0);
 
-   fluid[DENS] = Plummer_rho0 * POW( (real)1.0 + a2, (real)-2.5 );
+   fluid[DENS] = Plummer_rho0 * pow( 1.0 + a2, -2.5 );
    fluid[MOMX] = 0.0;
    fluid[MOMY] = 0.0;
    fluid[MOMZ] = 0.0;

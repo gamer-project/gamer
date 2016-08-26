@@ -39,9 +39,6 @@ struct KeyInfo_t
    int    NLevel;
    int    PatchSize;
    int    DumpID;
-#  ifdef GRAVITY
-   int    OutputPot;
-#  endif
    int    NX0     [3];
    int    BoxScale[3];
    int    NPatch   [NLEVEL];
@@ -305,7 +302,7 @@ struct InputPara_t
 #  if ( MODEL == ELBDM )
    double Dt__Phase;
 #  endif
-#  ifdef PARTICLE 
+#  ifdef PARTICLE
    double Dt__ParVel;
    double Dt__ParVelMax;
    double Dt__ParAcc;
@@ -316,21 +313,21 @@ struct InputPara_t
    int    Opt__AdaptiveDt;
    int    Opt__RecordDt;
    int    Opt__DtUser;
-   
+
 // domain refinement
    int    RegridCount;
    int    FlagBufferSize;
    int    MaxLevel;
    int    Opt__Flag_Rho;
    int    Opt__Flag_RhoGradient;
-#  if ( MODEL == HYDRO ) 
+#  if ( MODEL == HYDRO )
    int    Opt__Flag_PresGradient;
 #  endif
-#  if ( MODEL == ELBDM ) 
+#  if ( MODEL == ELBDM )
    int    Opt__Flag_EngyDensity;
 #  endif
    int    Opt__Flag_LohnerDens;
-#  if ( MODEL == HYDRO ) 
+#  if ( MODEL == HYDRO )
    int    Opt__Flag_LohnerEngy;
    int    Opt__Flag_LohnerPres;
 #  endif
@@ -353,7 +350,7 @@ struct InputPara_t
 
 // fluid solvers in HYDRO
 #  if ( MODEL == HYDRO )
-   double Gamma;   
+   double Gamma;
    double MinMod_Coeff;
    double EP_Coeff;
    int    Opt__LR_Limiter;
@@ -373,7 +370,7 @@ struct InputPara_t
 #  endif
 
 // fluid solvers in both HYDRO/MHD/ELBDM
-   int    Flu_GPU_NPGroup;    
+   int    Flu_GPU_NPGroup;
    int    GPU_NStream;
    int    Opt__FixUp_Flux;
    int    Opt__FixUp_Restrict;
@@ -395,14 +392,14 @@ struct InputPara_t
    double MG_ToleratedError;
 #  endif
    int    Pot_GPU_NPGroup;
-   int    Opt__GraP5Gradient;   
+   int    Opt__GraP5Gradient;
    int    Opt__GravityType;
    int    Opt__ExternalPot;
 #  endif
 
 // initialization
    int    Opt__Init;
-   int    Opt__RestartHeader;   
+   int    Opt__RestartHeader;
    int    Opt__UM_Start_Level;
    int    Opt__UM_Start_NVar;
    int    Opt__UM_Start_Downgrade;
@@ -413,13 +410,13 @@ struct InputPara_t
    int    Init_Subsampling_NCell;
 
 // interpolation schemes
-   int    Opt__Int_Time;   
-#  if ( MODEL == ELBDM ) 
+   int    Opt__Int_Time;
+#  if ( MODEL == ELBDM )
    int    Opt__Int_Phase;
 #  endif
    int    Opt__Flu_IntScheme;
 #  ifdef GRAVITY
-   int    Opt__Pot_IntScheme;   
+   int    Opt__Pot_IntScheme;
    int    Opt__Rho_IntScheme;
    int    Opt__Gra_IntScheme;
 #  endif
@@ -432,16 +429,19 @@ struct InputPara_t
 // data dump
    int    Opt__Output_Total;
    int    Opt__Output_Part;
-   int    Opt__Output_TestError; 
+   int    Opt__Output_TestError;
 #  ifdef PARTICLE
    int    Opt__Output_ParText;
 #  endif
-   int    Opt__Output_BasePS; 
+   int    Opt__Output_BasePS;
    int    Opt__Output_Base;
 #  ifdef GRAVITY
    int    Opt__Output_Pot;
 #  endif
-   int    Opt__Output_Mode; 
+#  ifdef PARTICLE
+   int    Opt__Output_ParDens;
+#  endif
+   int    Opt__Output_Mode;
    int    Opt__Output_Step;
    double Opt__Output_Dt;
    double Output_PartX;
@@ -453,7 +453,7 @@ struct InputPara_t
    int    Opt__Verbose;
    int    Opt__TimingBarrier;
    int    Opt__TimingBalance;
-   int    Opt__TimingMPI;   
+   int    Opt__TimingMPI;
    int    Opt__RecordMemory;
    int    Opt__RecordPerformance;
    int    Opt__ManualControl;
@@ -476,8 +476,8 @@ struct InputPara_t
 #  endif
 
 // flag tables
-   double FlagTable_Rho         [NLEVEL-1]; 
-   double FlagTable_RhoGradient [NLEVEL-1]; 
+   double FlagTable_Rho         [NLEVEL-1];
+   double FlagTable_RhoGradient [NLEVEL-1];
    double FlagTable_Lohner      [NLEVEL-1][3];
    double FlagTable_User        [NLEVEL-1];
 #  if   ( MODEL == HYDRO )
@@ -486,91 +486,16 @@ struct InputPara_t
    double FlagTable_EngyDensity [NLEVEL-1][2];
 #  endif
 #  ifdef PARTICLE
-   int    FlagTable_NParPatch   [NLEVEL-1]; 
+   int    FlagTable_NParPatch   [NLEVEL-1];
    int    FlagTable_NParCell    [NLEVEL-1];
 #  endif
-   
+
 }; // struct InputPara_t
 
 
 
-/*
 //-------------------------------------------------------------------------------------------------------
-// Structure   :  PatchInfo_t 
-// Description :  Data structure for outputting the patch information
-//
-// Note        :  1. Father, Son and Sibling store the "global identification (GID)" instead of the "local
-//                   patch identification (PID)"
-//                   --> Patches at the same level at all MPI ranks will have different GID but can have
-//                       the same PID
-//                2. LB_Idx will be stored in all parallelization modes (SERIAL, NO_LOAD_BALANCE, LOAD_BALANCE)
-//-------------------------------------------------------------------------------------------------------
-struct PatchInfo_t
-{
-
-   int    Lv;
-   int    GID;
-   int    Father;
-   int    Son;
-   int    Sibling[26];
-   int    Corner[3];
-
-   ulong  PaddedCr1D;
-   long   LBIdx;
-
-   double EdgeL[3];
-   double EdgeR[3];
-
-#  ifdef PARTICLE
-// add variables related to particles
-#  endif
-
-}; // struct PatchInfo_t
-
-
-
-//-------------------------------------------------------------------------------------------------------
-// Structure   :  PatchData_t 
-// Description :  Data structure for outputting the patch data
-//
-// Note        :  1. "Pote" array MUST be the LAST member
-//-------------------------------------------------------------------------------------------------------
-struct PatchData_t 
-{
-
-#  if   ( MODEL == HYDRO )
-   real Dens[PS1][PS1][PS1];
-   real MomX[PS1][PS1][PS1];
-   real MomY[PS1][PS1][PS1];
-   real MomZ[PS1][PS1][PS1];
-   real Engy[PS1][PS1][PS1];
-
-#  elif ( MODEL == MHD )
-#  warning : WAIT MHD !!!
-
-#  elif ( MODEL == ELBDM )
-   real Dens[PS1][PS1][PS1];
-   real Real[PS1][PS1][PS1];
-   real Imag[PS1][PS1][PS1];
-
-#  else
-#  error : unsupported MODEL !!
-#  endif // MODEL
-
-// add passive variables
-
-// Pote MUST be the LAST member of the PatchData_t structure (since it's output only if OPT__OUTPUT_POT == true)
-#  ifdef GRAVITY
-   real Pote[PS1][PS1][PS1];
-#  endif
-
-}; // struct PatchData_t
-*/
-
-
-
-//-------------------------------------------------------------------------------------------------------
-// Function    :  SyncHDF5File 
+// Function    :  SyncHDF5File
 // Description :  Force NFS to synchronize (dump data to the disk before return)
 //
 // Note        :  1. Synchronization is accomplished by first opening the target file with the "appending" mode
@@ -585,7 +510,7 @@ inline void SyncHDF5File( const char *FileName )
    FILE *File      = fopen( FileName, "ab" );
    int CloseStatus = fclose( File );
 
-   if ( CloseStatus != 0 ) 
+   if ( CloseStatus != 0 )
       Aux_Message( stderr, "WARNING : failed to close the file \"%s\" for synchronization !!\n", FileName );
 
 } // FUNCTION : SyncHDF5File

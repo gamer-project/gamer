@@ -4,11 +4,11 @@
 
 
 
-extern void (*Init_Function_Ptr)( real fluid[], const real x, const real y, const real z, const double Time );
+extern void (*Init_Function_Ptr)( real fluid[], const double x, const double y, const double z, const double Time );
 extern void (*Output_TestProbErr_Ptr)( const bool BaseOnly );
 
 static void LoadTestProbParameter();
-static void Hydro_TestProbSol_SphericalCollapse( real fluid[], const real x, const real y, const real z, const double Time );
+static void Hydro_TestProbSol_SphericalCollapse( real fluid[], const double x, const double y, const double z, const double Time );
 
 
 // global variables in the HYDRO spherical collapse test
@@ -141,10 +141,10 @@ void Init_TestProb()
 //
 // Return      :  fluid
 //-------------------------------------------------------------------------------------------------------
-void Hydro_TestProbSol_SphericalCollapse( real *fluid, const real x, const real y, const real z, const double Time )
+void Hydro_TestProbSol_SphericalCollapse( real *fluid, const double x, const double y, const double z, const double Time )
 {
 
-   const real r = SQRT( SQR(x-SCollapse_Center[0]) + SQR(y-SCollapse_Center[1]) + SQR(z-SCollapse_Center[2]) );
+   const double r = sqrt( SQR(x-SCollapse_Center[0]) + SQR(y-SCollapse_Center[1]) + SQR(z-SCollapse_Center[2]) );
 
    fluid[DENS] = SCollapse_Dens_Bg;
    fluid[MOMX] = 0.0;

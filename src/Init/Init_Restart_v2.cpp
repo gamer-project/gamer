@@ -9,7 +9,7 @@
 #endif
 
 void Init_Restart_v1( const char FileName[] );
-void Load_Parameter_After_2000( FILE *File, const int FormatVersion, int &NLv_Restart, bool &LoadPot,
+void Load_Parameter_After_2000( FILE *File, const int FormatVersion, int &NLv_Restart, bool &LoadPot, bool &LoadParDens,
                                 const long HeaderOffset_Makefile, const long HeaderOffset_Constant,
                                 const long HeaderOffset_Parameter );
 void CompareVar( const char *VarName, const bool   RestartVar, const bool   RuntimeVar, const bool Fatal );
@@ -180,9 +180,10 @@ void Init_Restart()
 // =================================================================================================
    int  NLv_Restart = NLEVEL;
    bool LoadPot     = false;
+   bool LoadParDens = false;
 
    if ( OPT__RESTART_HEADER != RESTART_HEADER_SKIP )
-      Load_Parameter_After_2000( File, FormatVersion, NLv_Restart, LoadPot,
+      Load_Parameter_After_2000( File, FormatVersion, NLv_Restart, LoadPot, LoadParDens,
                                  HeaderOffset_Makefile, HeaderOffset_Constant, HeaderOffset_Parameter );
 
    else
@@ -267,18 +268,19 @@ void Init_Restart()
 
 
 // verify the size of the RESTART file
-   long ExpectSize, InputSize, PatchDataSize, DataSize[NLv_Restart];
-   int  NVar;     // number of variables ( NCOMP or NCOMP+1 -> potential )
-
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "      Verifying the size of the RESTART file ...\n" );
 
+   long ExpectSize, InputSize, PatchDataSize, DataSize[NLv_Restart];
+   int  NGridVar = NCOMP;     // number of grid variables
+
 #  ifdef GRAVITY
-   NVar = ( LoadPot ) ? NCOMP+1 : NCOMP;
-#  else
-   NVar = NCOMP;
+   if ( LoadPot )       NGridVar ++;
+#  endif
+#  ifdef PARTICLE
+   if ( LoadParDens )   NGridVar ++;
 #  endif
 
-   PatchDataSize = CUBE(PS1)*NVar*sizeof(real);
+   PatchDataSize = CUBE(PS1)*NGridVar*sizeof(real);
    ExpectSize    = HeaderSize_Total;
 
    for (int lv=0; lv<NLv_Restart; lv++)
@@ -454,9 +456,12 @@ void Init_Restart()
 //                   d3-1. load the fluid variables
                      fread( amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid, sizeof(real), CUBE(PS1)*NCOMP, File );
 
-//                   d3-2. abandon the gravitational potential
+//                   d3-2. abandon the gravitational potential and particle density data
 #                    ifdef GRAVITY
-                     if ( LoadPot )    fseek( File, CUBE(PS1)*sizeof(real), SEEK_CUR );
+                     if ( LoadPot )       fseek( File, CUBE(PS1)*sizeof(real), SEEK_CUR );
+#                    endif
+#                    ifdef PARTICLE
+                     if ( LoadParDens )   fseek( File, CUBE(PS1)*sizeof(real), SEEK_CUR );
 #                    endif
                   } // if ( *LoadSon == -1 )
                } // within the targeted range
@@ -684,11 +689,12 @@ void Init_Restart()
 //                FormatVersion  : Format version of the RESTART file
 //                NLv_Restart    : NLEVEL recorded in the RESTART file
 //                LoadPot        : Whether or not the RESTART file stores the potential data
+//                LoadParDens    : Whether or not the RESTART file stores the particle (or total) density data
 //                HeaderOffset_X : Offsets of different headers
 //
-// Return      :  NLv_Restart, LoadPot (END_T and END_STEP may also be set to the original values)
+// Return      :  NLv_Restart, LoadPot, LoadParDens (END_T and END_STEP may also be set to the original values)
 //-------------------------------------------------------------------------------------------------------
-void Load_Parameter_After_2000( FILE *File, const int FormatVersion, int &NLv_Restart, bool &LoadPot,
+void Load_Parameter_After_2000( FILE *File, const int FormatVersion, int &NLv_Restart, bool &LoadPot, bool &LoadParDens,
                                 const long HeaderOffset_Makefile, const long HeaderOffset_Constant,
                                 const long HeaderOffset_Parameter )
 {
@@ -778,7 +784,7 @@ void Load_Parameter_After_2000( FILE *File, const int FormatVersion, int &NLv_Re
    bool   opt__flag_engy_density, opt__flag_user, opt__fixup_flux, opt__fixup_restrict, opt__overlap_mpi;
    bool   opt__gra_p5_gradient, opt__int_time, opt__output_test_error, opt__output_base, opt__output_pot;
    bool   opt__output_baseps, opt__timing_balance, opt__int_phase, opt__corr_unphy;
-   int    nx0_tot[3], mpi_nrank, mpi_nrank_x[3], omp_nthread, regrid_count;
+   int    nx0_tot[3], mpi_nrank, mpi_nrank_x[3], omp_nthread, regrid_count, opt__output_par_dens;
    int    flag_buffer_size, max_level, opt__lr_limiter, opt__waf_limiter, flu_gpu_npgroup, gpu_nstream;
    int    sor_max_iter, sor_min_iter, mg_max_iter, mg_npre_smooth, mg_npost_smooth, pot_gpu_npgroup;
    int    opt__flu_int_scheme, opt__pot_int_scheme, opt__rho_int_scheme;
@@ -859,6 +865,7 @@ void Load_Parameter_After_2000( FILE *File, const int FormatVersion, int &NLv_Re
    fread( &opt__output_baseps,         sizeof(bool),                    1,             File );
    fread( &opt__corr_unphy,            sizeof(bool),                    1,             File );
    fread( &opt__corr_unphy_scheme,     sizeof(int),                     1,             File );
+   fread( &opt__output_par_dens,       sizeof(int),                     1,             File );
 
 
 // set some default parameters
@@ -1392,6 +1399,10 @@ void Load_Parameter_After_2000( FILE *File, const int FormatVersion, int &NLv_Re
 #     error : ERROR : unsupported MODEL !!
 #     endif
 
+#     ifdef PARTICLE
+      CompareVar( "OPT__OUTPUT_PAR_DENS",    opt__output_par_dens,    (int)OPT__OUTPUT_PAR_DENS,      NonFatal );
+#     endif
+
 
       Aux_Message( stdout, "   Checking loaded parameters ... done\n" );
 
@@ -1399,7 +1410,16 @@ void Load_Parameter_After_2000( FILE *File, const int FormatVersion, int &NLv_Re
 
 
 // set the returned variables
+#  ifdef GRAVITY
    LoadPot     = opt__output_pot;
+#  else
+   LoadPot     = false;
+#  endif
+#  ifdef PARTICLE
+   LoadParDens = ( opt__output_par_dens != (int)PAR_OUTPUT_DENS_NONE );
+#  else
+   LoadParDens = false;
+#  endif
    NLv_Restart = nlevel;
 
 } // FUNCTION : Load_Parameter_After_2000

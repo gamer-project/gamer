@@ -4,11 +4,11 @@
 
 
 
-extern void (*Init_Function_Ptr)( real fluid[], const real x, const real y, const real z, const double Time );
+extern void (*Init_Function_Ptr)( real fluid[], const double x, const double y, const double z, const double Time );
 extern void (*Output_TestProbErr_Ptr)( const bool BaseOnly );
 
 static void LoadTestProbParameter();
-static void Hydro_TestProbSol_Riemann( real fluid[], const real x, const real y, const real z, const double Time );
+static void Hydro_TestProbSol_Riemann( real fluid[], const double x, const double y, const double z, const double Time );
 
 
 // global variables in the HYDRO Riemann problem test
@@ -199,11 +199,11 @@ void Init_TestProb()
 //
 // Return      :  fluid
 //-------------------------------------------------------------------------------------------------------
-void Hydro_TestProbSol_Riemann( real fluid[], const real x, const real y, const real z, const double Time )
+void Hydro_TestProbSol_Riemann( real fluid[], const double x, const double y, const double z, const double Time )
 {
 
-   const real _Gamma_m1 = 1.0/(GAMMA-1.0);
-   real r, BoxCen;
+   const double _Gamma_m1 = 1.0/(GAMMA-1.0);
+   double r, BoxCen;
    int  TVar[NCOMP];
 
    switch ( Riemann_XYZ )

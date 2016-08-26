@@ -1,7 +1,7 @@
 #include "Copyright.h"
 #include "GAMER.h"
 
-static void Preparation_Step( const Solver_t TSolver, const int lv, const double TimeNew, const double TimeOld, const int NPG, 
+static void Preparation_Step( const Solver_t TSolver, const int lv, const double TimeNew, const double TimeOld, const int NPG,
                               const int *PID0_List, const int ArrayID );
 static void Solver( const Solver_t TSolver, const int lv, const double TimeNew, const double TimeOld,
                     const int NPG, const int ArrayID, const double dt, const double Poi_Coeff );
@@ -27,12 +27,12 @@ extern Timer_t *Timer_Poi_PrePot_F[NLEVEL];
 //
 // Note        :  a. Use the input parameter "TSolver" to control the targeted solver
 //                b. Each solver involves three steps
-//                   --> 1. preparation step : prepare the input data 
+//                   --> 1. preparation step : prepare the input data
 //                       2. execution   step : invoke the solvers --> advance solutions or evaluate potentials
 //                       3. closing     step : store the updated data
-//                c. Currently the fluid solver can only store the updated data in the different sandglass from 
+//                c. Currently the fluid solver can only store the updated data in the different sandglass from
 //                   the input data
-//                d. For LOAD_BALANCE, one can turn on the option "LB_INPUT__OVERLAP_MPI" to enable the 
+//                d. For LOAD_BALANCE, one can turn on the option "LB_INPUT__OVERLAP_MPI" to enable the
 //                   overlapping between MPI communication and CPU/GPU computation
 //
 // Parameter   :  TSolver        : Targeted solver
@@ -40,7 +40,7 @@ extern Timer_t *Timer_Poi_PrePot_F[NLEVEL];
 //                                     POISSON_SOLVER             : Poisson solver
 //                                     GRAVITY_SOLVER             : Gravity solver
 //                                     POISSON_AND_GRAVITY_SOLVER : Poisson + Gravity solvers
-//                lv             : Targeted refinement level 
+//                lv             : Targeted refinement level
 //                TimeNew        : Targeted physical time to reach
 //                TimeOld        : Physical time before update
 //                                 --> For Fluid and Gravity solver, this function updates physical time from TimeOld to TimeNew
@@ -56,14 +56,14 @@ extern Timer_t *Timer_Poi_PrePot_F[NLEVEL];
 //                                 (useful only if "OverlapMPI == true")
 //-------------------------------------------------------------------------------------------------------
 void InvokeSolver( const Solver_t TSolver, const int lv, const double TimeNew, const double TimeOld, const double dt,
-                   const double Poi_Coeff, const int SaveSg_Flu, const int SaveSg_Pot, 
+                   const double Poi_Coeff, const int SaveSg_Flu, const int SaveSg_Pot,
                    const bool OverlapMPI, const bool Overlap_Sync )
 {
 
 // check
 // currently the fluid solver can only store the updated data in the different sandglass from the input data
    if ( TSolver == FLUID_SOLVER  &&  SaveSg_Flu == amr->FluSg[lv] )
-      Aux_Error( ERROR_INFO, "SaveSg_Flu (%d) == amr->FluSg (%d) in the fluid solver at level %d !!\n", 
+      Aux_Error( ERROR_INFO, "SaveSg_Flu (%d) == amr->FluSg (%d) in the fluid solver at level %d !!\n",
                  SaveSg_Flu, amr->FluSg[lv], lv );
 
 #  ifndef GRAVITY
@@ -93,42 +93,42 @@ void InvokeSolver( const Solver_t TSolver, const int lv, const double TimeNew, c
    int *PID0_List    = NULL;  // list recording the patch indicies with LocalID==0 to be udpated
    bool AllocateList = false; // whether to allocate PID0_List or not
    int  ArrayID      = 0;     // array index to load and store data ( 0 or 1 )
-   int  NPG[2];               // number of patch groups to be updated at a time 
-   int  NTotal;               // total number of patch groups to be updated 
+   int  NPG[2];               // number of patch groups to be updated at a time
+   int  NTotal;               // total number of patch groups to be updated
    int  Disp;                 // index displacement in PID0_List
- 
+
    if ( OverlapMPI )
    {
 #     ifdef LOAD_BALANCE
-      if ( TSolver == FLUID_SOLVER )  
+      if ( TSolver == FLUID_SOLVER )
       {
          if ( Overlap_Sync )
          {
             NTotal    = amr->LB->OverlapMPI_FluSyncN   [lv];
-            PID0_List = amr->LB->OverlapMPI_FluSyncPID0[lv]; 
+            PID0_List = amr->LB->OverlapMPI_FluSyncPID0[lv];
          }
          else
          {
             NTotal    = amr->LB->OverlapMPI_FluAsyncN   [lv];
-            PID0_List = amr->LB->OverlapMPI_FluAsyncPID0[lv]; 
+            PID0_List = amr->LB->OverlapMPI_FluAsyncPID0[lv];
          }
       }
 
 #     ifdef GRAVITY
-      else              
+      else
       {
          if ( Overlap_Sync )
          {
             NTotal    = amr->LB->OverlapMPI_PotSyncN   [lv];
-            PID0_List = amr->LB->OverlapMPI_PotSyncPID0[lv]; 
+            PID0_List = amr->LB->OverlapMPI_PotSyncPID0[lv];
          }
          else
          {
             NTotal    = amr->LB->OverlapMPI_PotAsyncN   [lv];
-            PID0_List = amr->LB->OverlapMPI_PotAsyncPID0[lv]; 
+            PID0_List = amr->LB->OverlapMPI_PotAsyncPID0[lv];
          }
       }
-#     endif 
+#     endif
 
 #     else // #ifdef LOAD_BALANCE ... else ...
       Aux_Error( ERROR_INFO, "MPI overlapping is NOT supported if LOAD_BALANCE is off !!\n" );
@@ -168,7 +168,7 @@ void InvokeSolver( const Solver_t TSolver, const int lv, const double TimeNew, c
 
 
 //-------------------------------------------------------------------------------------------------------------
-      TIMING_SYNC(   Preparation_Step( TSolver, lv, TimeNew, TimeOld, NPG[ArrayID], PID0_List+Disp, ArrayID ),  
+      TIMING_SYNC(   Preparation_Step( TSolver, lv, TimeNew, TimeOld, NPG[ArrayID], PID0_List+Disp, ArrayID ),
                      Timer_Pre[lv][TSolver]  );
 //-------------------------------------------------------------------------------------------------------------
 
@@ -181,14 +181,14 @@ void InvokeSolver( const Solver_t TSolver, const int lv, const double TimeNew, c
 
 
 //-------------------------------------------------------------------------------------------------------------
-      TIMING_SYNC(   Solver( TSolver, lv, TimeNew, TimeOld, NPG[ArrayID], ArrayID, dt, Poi_Coeff ), 
+      TIMING_SYNC(   Solver( TSolver, lv, TimeNew, TimeOld, NPG[ArrayID], ArrayID, dt, Poi_Coeff ),
                      Timer_Sol[lv][TSolver]  );
 //-------------------------------------------------------------------------------------------------------------
 
 
 //-------------------------------------------------------------------------------------------------------------
       TIMING_SYNC(   Closing_Step( TSolver, lv, SaveSg_Flu, SaveSg_Pot, NPG[1-ArrayID], PID0_List+Disp-NPG_Max, 1-ArrayID, dt ),
-                     Timer_Clo[lv][TSolver]  ); 
+                     Timer_Clo[lv][TSolver]  );
 //-------------------------------------------------------------------------------------------------------------
 
    } // for (int Disp=NPG_Max; Disp<NTotal; Disp+=NPG_Max)
@@ -203,9 +203,9 @@ void InvokeSolver( const Solver_t TSolver, const int lv, const double TimeNew, c
 
 //-------------------------------------------------------------------------------------------------------------
    TIMING_SYNC(   Closing_Step( TSolver, lv, SaveSg_Flu, SaveSg_Pot, NPG[ArrayID], PID0_List+Disp-NPG_Max, ArrayID, dt ),
-                  Timer_Clo[lv][TSolver]  ); 
+                  Timer_Clo[lv][TSolver]  );
 //-------------------------------------------------------------------------------------------------------------
-     
+
 
    if ( AllocateList )  delete [] PID0_List;
 
@@ -215,16 +215,16 @@ void InvokeSolver( const Solver_t TSolver, const int lv, const double TimeNew, c
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Preparation_Step
-// Description :  Prepare the input data for CPU/GPU solvers 
+// Description :  Prepare the input data for CPU/GPU solvers
 //
-// Note        :  Use the input parameter "TSolver" to control the targeted solver 
+// Note        :  Use the input parameter "TSolver" to control the targeted solver
 //
 // Parameter   :  TSolver     : Targeted solver
 //                              --> FLUID_SOLVER               : Fluid / ELBDM solver
 //                                  POISSON_SOLVER             : Poisson solver
 //                                  GRAVITY_SOLVER             : Gravity solver
 //                                  POISSON_AND_GRAVITY_SOLVER : Poisson + Gravity solvers
-//                lv          : Targeted refinement level 
+//                lv          : Targeted refinement level
 //                TimeNew     : Targeted physical time to reach
 //                TimeOld     : Physical time before update
 //                              --> For Fluid   solver, it prepares data at TimeOld
@@ -235,7 +235,7 @@ void InvokeSolver( const Solver_t TSolver, const int lv, const double TimeNew, c
 //                PID0_List   : List recording the patch indicies with LocalID==0 to be udpated
 //                ArrayID     : Array index to load and store data ( 0 or 1 )
 //-------------------------------------------------------------------------------------------------------
-void Preparation_Step( const Solver_t TSolver, const int lv, const double TimeNew, const double TimeOld, const int NPG, 
+void Preparation_Step( const Solver_t TSolver, const int lv, const double TimeNew, const double TimeOld, const int NPG,
                        const int *PID0_List, const int ArrayID )
 {
 
@@ -246,21 +246,21 @@ void Preparation_Step( const Solver_t TSolver, const int lv, const double TimeNe
 
    switch ( TSolver )
    {
-      case FLUID_SOLVER :  
+      case FLUID_SOLVER :
          Flu_Prepare( lv, TimeOld, h_Flu_Array_F_In[ArrayID][0][0], h_Pot_Array_USG_F[ArrayID][0][0][0],
                       h_Corner_Array_F[ArrayID], NPG, PID0_List );
          break;
 
 #     ifdef GRAVITY
-      case POISSON_SOLVER :  
-         TIMING_SYNC(   Poi_Prepare_Rho( lv, TimeNew, h_Rho_Array_P   [ArrayID], NPG, PID0_List ), 
+      case POISSON_SOLVER :
+         TIMING_SYNC(   Poi_Prepare_Rho( lv, TimeNew, h_Rho_Array_P   [ArrayID], NPG, PID0_List ),
                         Timer_Poi_PreRho[lv]   );
 
          TIMING_SYNC(   Poi_Prepare_Pot( lv, TimeNew, h_Pot_Array_P_In[ArrayID], NPG, PID0_List ),
                         Timer_Poi_PrePot_C[lv]   );
          break;
 
-      case GRAVITY_SOLVER :  
+      case GRAVITY_SOLVER :
          TIMING_SYNC(   Gra_Prepare_Flu( lv,          h_Flu_Array_G   [ArrayID], NPG, PID0_List ),
                         Timer_Poi_PreFlu[lv]   );
 
@@ -280,8 +280,8 @@ void Preparation_Step( const Solver_t TSolver, const int lv, const double TimeNe
 #        endif
          break;
 
-      case POISSON_AND_GRAVITY_SOLVER :  
-         TIMING_SYNC(   Poi_Prepare_Rho( lv, TimeNew, h_Rho_Array_P   [ArrayID], NPG, PID0_List ), 
+      case POISSON_AND_GRAVITY_SOLVER :
+         TIMING_SYNC(   Poi_Prepare_Rho( lv, TimeNew, h_Rho_Array_P   [ArrayID], NPG, PID0_List ),
                         Timer_Poi_PreRho[lv]   );
 
          TIMING_SYNC(   Poi_Prepare_Pot( lv, TimeNew, h_Pot_Array_P_In[ArrayID], NPG, PID0_List ),
@@ -316,14 +316,14 @@ void Preparation_Step( const Solver_t TSolver, const int lv, const double TimeNe
 // Function    :  Solver
 // Description :  Invoke the CPU/GPU solvers
 //
-// Note        :  Use the input parameter "TSolver" to control the targeted solver 
+// Note        :  Use the input parameter "TSolver" to control the targeted solver
 //
 // Parameter   :  TSolver     : Targeted solver
 //                              --> FLUID_SOLVER               : Fluid / ELBDM solver
 //                                  POISSON_SOLVER             : Poisson solver
 //                                  GRAVITY_SOLVER             : Gravity solver
 //                                  POISSON_AND_GRAVITY_SOLVER : Poisson + Gravity solvers
-//                lv          : Targeted refinement level 
+//                lv          : Targeted refinement level
 //                TimeNew     : Targeted physical time to reach (only useful for adding external potential)
 //                TimeOld     : Physical time before update     (only useful for adding external potential with UNSPLIT_GRAVITY)
 //                NPG         : Number of patch groups to be upcated at a time
@@ -383,92 +383,92 @@ void Solver( const Solver_t TSolver, const int lv, const double TimeNew, const d
 
    switch ( TSolver )
    {
-      case FLUID_SOLVER :  
+      case FLUID_SOLVER :
 
 #        ifdef GPU
-         CUAPI_Asyn_FluidSolver( h_Flu_Array_F_In[ArrayID], h_Flu_Array_F_Out[ArrayID], h_Flux_Array[ArrayID], 
+         CUAPI_Asyn_FluidSolver( h_Flu_Array_F_In[ArrayID], h_Flu_Array_F_Out[ArrayID], h_Flux_Array[ArrayID],
                                  h_Corner_Array_F[ArrayID], h_MinDtInfo_Fluid_Array[ArrayID], h_Pot_Array_USG_F[ArrayID],
-                                 NPG, dt, dh, GAMMA, OPT__FIXUP_FLUX, Flu_XYZ, 
-                                 OPT__LR_LIMITER, MINMOD_COEFF, EP_COEFF, OPT__WAF_LIMITER, ELBDM_ETA, 
+                                 NPG, dt, dh, GAMMA, OPT__FIXUP_FLUX, Flu_XYZ,
+                                 OPT__LR_LIMITER, MINMOD_COEFF, EP_COEFF, OPT__WAF_LIMITER, ELBDM_ETA,
                                  ELBDM_TAYLOR3_COEFF, ELBDM_TAYLOR3_AUTO, OPT__ADAPTIVE_DT, TimeOld, OPT__GRAVITY_TYPE,
                                  GPU_NSTREAM );
 #        else
-         CPU_FluidSolver       ( h_Flu_Array_F_In[ArrayID], h_Flu_Array_F_Out[ArrayID], h_Flux_Array[ArrayID], 
+         CPU_FluidSolver       ( h_Flu_Array_F_In[ArrayID], h_Flu_Array_F_Out[ArrayID], h_Flux_Array[ArrayID],
                                  h_Corner_Array_F[ArrayID], h_MinDtInfo_Fluid_Array[ArrayID], h_Pot_Array_USG_F[ArrayID],
-                                 NPG, dt, dh, GAMMA, OPT__FIXUP_FLUX, Flu_XYZ, 
-                                 OPT__LR_LIMITER, MINMOD_COEFF, EP_COEFF, OPT__WAF_LIMITER, ELBDM_ETA, 
+                                 NPG, dt, dh, GAMMA, OPT__FIXUP_FLUX, Flu_XYZ,
+                                 OPT__LR_LIMITER, MINMOD_COEFF, EP_COEFF, OPT__WAF_LIMITER, ELBDM_ETA,
                                  ELBDM_TAYLOR3_COEFF, ELBDM_TAYLOR3_AUTO, OPT__ADAPTIVE_DT, TimeOld, OPT__GRAVITY_TYPE );
 #        endif
          break;
 
 
 #     ifdef GRAVITY
-      case POISSON_SOLVER :  
+      case POISSON_SOLVER :
 
-#        ifdef GPU     
-         CUAPI_Asyn_PoissonGravitySolver( h_Rho_Array_P[ArrayID], h_Pot_Array_P_In[ArrayID], 
+#        ifdef GPU
+         CUAPI_Asyn_PoissonGravitySolver( h_Rho_Array_P[ArrayID], h_Pot_Array_P_In[ArrayID],
                                           h_Pot_Array_P_Out[ArrayID], NULL, NULL,
                                           NULL, NULL,
-                                          NPG, dt, dh, SOR_MIN_ITER, SOR_MAX_ITER, 
-                                          SOR_OMEGA, MG_MAX_ITER, MG_NPRE_SMOOTH, MG_NPOST_SMOOTH, 
-                                          MG_TOLERATED_ERROR, Poi_Coeff, OPT__POT_INT_SCHEME, 
+                                          NPG, dt, dh, SOR_MIN_ITER, SOR_MAX_ITER,
+                                          SOR_OMEGA, MG_MAX_ITER, MG_NPRE_SMOOTH, MG_NPOST_SMOOTH,
+                                          MG_TOLERATED_ERROR, Poi_Coeff, OPT__POT_INT_SCHEME,
                                           NULL_BOOL, ELBDM_ETA, NULL_REAL, POISSON_ON, GRAVITY_OFF, GPU_NSTREAM,
                                           GRAVITY_NONE, NULL_REAL, NULL_REAL, NULL_BOOL );
 #        else
-         CPU_PoissonGravitySolver       ( h_Rho_Array_P[ArrayID], h_Pot_Array_P_In[ArrayID], 
+         CPU_PoissonGravitySolver       ( h_Rho_Array_P[ArrayID], h_Pot_Array_P_In[ArrayID],
                                           h_Pot_Array_P_Out[ArrayID], NULL, NULL,
                                           NULL, NULL,
-                                          NPG, dt, dh, SOR_MIN_ITER, SOR_MAX_ITER, 
-                                          SOR_OMEGA, MG_MAX_ITER, MG_NPRE_SMOOTH, MG_NPOST_SMOOTH, 
-                                          MG_TOLERATED_ERROR, Poi_Coeff, OPT__POT_INT_SCHEME, 
+                                          NPG, dt, dh, SOR_MIN_ITER, SOR_MAX_ITER,
+                                          SOR_OMEGA, MG_MAX_ITER, MG_NPRE_SMOOTH, MG_NPOST_SMOOTH,
+                                          MG_TOLERATED_ERROR, Poi_Coeff, OPT__POT_INT_SCHEME,
                                           NULL_BOOL, ELBDM_ETA, NULL_REAL, POISSON_ON, GRAVITY_OFF,
                                           GRAVITY_NONE, NULL_REAL, NULL_REAL, NULL_BOOL );
 #        endif
          break;
 
 
-      case GRAVITY_SOLVER :  
-              
-#        ifdef GPU     
-         CUAPI_Asyn_PoissonGravitySolver( NULL, NULL, 
+      case GRAVITY_SOLVER :
+
+#        ifdef GPU
+         CUAPI_Asyn_PoissonGravitySolver( NULL, NULL,
                                           h_Pot_Array_P_Out[ArrayID], h_Flu_Array_G[ArrayID], h_Corner_Array_G[ArrayID],
                                           h_Pot_Array_USG_G[ArrayID], h_Flu_Array_USG_G[ArrayID],
-                                          NPG, dt, dh, NULL_INT, NULL_INT, 
-                                          NULL_REAL, NULL_INT, NULL_INT, NULL_INT, 
-                                          NULL_REAL, NULL_REAL, (IntScheme_t)NULL_INT, 
+                                          NPG, dt, dh, NULL_INT, NULL_INT,
+                                          NULL_REAL, NULL_INT, NULL_INT, NULL_INT,
+                                          NULL_REAL, NULL_REAL, (IntScheme_t)NULL_INT,
                                           OPT__GRA_P5_GRADIENT, ELBDM_ETA, ELBDM_LAMBDA, POISSON_OFF, GRAVITY_ON, GPU_NSTREAM,
                                           OPT__GRAVITY_TYPE, TimeNew, TimeOld, OPT__EXTERNAL_POT );
 #        else
-         CPU_PoissonGravitySolver       ( NULL, NULL, 
+         CPU_PoissonGravitySolver       ( NULL, NULL,
                                           h_Pot_Array_P_Out[ArrayID], h_Flu_Array_G[ArrayID], h_Corner_Array_G[ArrayID],
                                           h_Pot_Array_USG_G[ArrayID], h_Flu_Array_USG_G[ArrayID],
-                                          NPG, dt, dh, NULL_INT, NULL_INT, 
-                                          NULL_REAL, NULL_INT, NULL_INT, NULL_INT, 
-                                          NULL_REAL, NULL_REAL, (IntScheme_t)NULL_INT, 
-                                          OPT__GRA_P5_GRADIENT, ELBDM_ETA, ELBDM_LAMBDA, POISSON_OFF, GRAVITY_ON, 
+                                          NPG, dt, dh, NULL_INT, NULL_INT,
+                                          NULL_REAL, NULL_INT, NULL_INT, NULL_INT,
+                                          NULL_REAL, NULL_REAL, (IntScheme_t)NULL_INT,
+                                          OPT__GRA_P5_GRADIENT, ELBDM_ETA, ELBDM_LAMBDA, POISSON_OFF, GRAVITY_ON,
                                           OPT__GRAVITY_TYPE, TimeNew, TimeOld, OPT__EXTERNAL_POT );
 #        endif
          break;
 
 
-      case POISSON_AND_GRAVITY_SOLVER :  
+      case POISSON_AND_GRAVITY_SOLVER :
 
-#        ifdef GPU     
-         CUAPI_Asyn_PoissonGravitySolver( h_Rho_Array_P[ArrayID], h_Pot_Array_P_In[ArrayID], 
+#        ifdef GPU
+         CUAPI_Asyn_PoissonGravitySolver( h_Rho_Array_P[ArrayID], h_Pot_Array_P_In[ArrayID],
                                           h_Pot_Array_P_Out[ArrayID], h_Flu_Array_G[ArrayID], h_Corner_Array_G[ArrayID],
                                           h_Pot_Array_USG_G[ArrayID], h_Flu_Array_USG_G[ArrayID],
-                                          NPG, dt, dh, SOR_MIN_ITER, SOR_MAX_ITER, 
-                                          SOR_OMEGA, MG_MAX_ITER, MG_NPRE_SMOOTH, MG_NPOST_SMOOTH, 
-                                          MG_TOLERATED_ERROR, Poi_Coeff, OPT__POT_INT_SCHEME, 
+                                          NPG, dt, dh, SOR_MIN_ITER, SOR_MAX_ITER,
+                                          SOR_OMEGA, MG_MAX_ITER, MG_NPRE_SMOOTH, MG_NPOST_SMOOTH,
+                                          MG_TOLERATED_ERROR, Poi_Coeff, OPT__POT_INT_SCHEME,
                                           OPT__GRA_P5_GRADIENT, ELBDM_ETA, ELBDM_LAMBDA, POISSON_ON, GRAVITY_ON, GPU_NSTREAM,
                                           OPT__GRAVITY_TYPE, TimeNew, TimeOld, OPT__EXTERNAL_POT );
 #        else
-         CPU_PoissonGravitySolver       ( h_Rho_Array_P[ArrayID], h_Pot_Array_P_In[ArrayID], 
+         CPU_PoissonGravitySolver       ( h_Rho_Array_P[ArrayID], h_Pot_Array_P_In[ArrayID],
                                           h_Pot_Array_P_Out[ArrayID], h_Flu_Array_G[ArrayID], h_Corner_Array_G[ArrayID],
                                           h_Pot_Array_USG_G[ArrayID], h_Flu_Array_USG_G[ArrayID],
-                                          NPG, dt, dh, SOR_MIN_ITER, SOR_MAX_ITER, 
-                                          SOR_OMEGA, MG_MAX_ITER, MG_NPRE_SMOOTH, MG_NPOST_SMOOTH, 
-                                          MG_TOLERATED_ERROR, Poi_Coeff, OPT__POT_INT_SCHEME, 
+                                          NPG, dt, dh, SOR_MIN_ITER, SOR_MAX_ITER,
+                                          SOR_OMEGA, MG_MAX_ITER, MG_NPRE_SMOOTH, MG_NPOST_SMOOTH,
+                                          MG_TOLERATED_ERROR, Poi_Coeff, OPT__POT_INT_SCHEME,
                                           OPT__GRA_P5_GRADIENT, ELBDM_ETA, ELBDM_LAMBDA, POISSON_ON, GRAVITY_ON,
                                           OPT__GRAVITY_TYPE, TimeNew, TimeOld, OPT__EXTERNAL_POT );
 #        endif
@@ -488,16 +488,16 @@ void Solver( const Solver_t TSolver, const int lv, const double TimeNew, const d
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Closing_Step
-// Description :  Store the updated solutions back to the patch pointers 
+// Description :  Store the updated solutions back to the patch pointers
 //
-// Note        :  Use the input parameter "TSolver" to control the targeted solver 
+// Note        :  Use the input parameter "TSolver" to control the targeted solver
 //
 // Parameter   :  TSolver     : Targeted solver
 //                              --> FLUID_SOLVER               : Fluid / ELBDM solver
 //                                  POISSON_SOLVER             : Poisson solver
 //                                  GRAVITY_SOLVER             : Gravity solver
 //                                  POISSON_AND_GRAVITY_SOLVER : Poisson + Gravity solvers
-//                lv          : Targeted refinement level 
+//                lv          : Targeted refinement level
 //                SaveSg_Flu  : Sandglass to store the updated fluid data (for both the fluid and gravity solvers)
 //                SaveSg_Pot  : Sandglass to store the updated potential data (for the Poisson solver)
 //                NPG         : Number of patch groups to be evaluated at a time
@@ -505,29 +505,29 @@ void Solver( const Solver_t TSolver, const int lv, const double TimeNew, const d
 //                ArrayID     : Array index to load and store data ( 0 or 1 )
 //                dt          : Time interval to advance solution (for OPT__CORR_UNPHY in Flu_Close)
 //-------------------------------------------------------------------------------------------------------
-void Closing_Step( const Solver_t TSolver, const int lv, const int SaveSg_Flu, const int SaveSg_Pot, const int NPG, 
+void Closing_Step( const Solver_t TSolver, const int lv, const int SaveSg_Flu, const int SaveSg_Pot, const int NPG,
                    const int *PID0_List, const int ArrayID, const double dt )
 {
 
    switch ( TSolver )
    {
-      case FLUID_SOLVER :   
-         Flu_Close( lv, SaveSg_Flu, h_Flux_Array[ArrayID], h_Flu_Array_F_Out[ArrayID], 
+      case FLUID_SOLVER :
+         Flu_Close( lv, SaveSg_Flu, h_Flux_Array[ArrayID], h_Flu_Array_F_Out[ArrayID],
                     h_MinDtInfo_Fluid_Array[ArrayID], NPG, PID0_List, OPT__ADAPTIVE_DT,
                     h_Flu_Array_F_In[ArrayID], dt );
          break;
 
 #     ifdef GRAVITY
-      case POISSON_SOLVER : 
-         Poi_Close( lv, SaveSg_Pot, h_Pot_Array_P_Out[ArrayID], NPG, PID0_List ); 
+      case POISSON_SOLVER :
+         Poi_Close( lv, SaveSg_Pot, h_Pot_Array_P_Out[ArrayID], NPG, PID0_List );
          break;
 
-      case GRAVITY_SOLVER :  
+      case GRAVITY_SOLVER :
          Gra_Close( lv, SaveSg_Flu, h_Flu_Array_G    [ArrayID], NPG, PID0_List );
          break;
 
-      case POISSON_AND_GRAVITY_SOLVER :  
-         Poi_Close( lv, SaveSg_Pot, h_Pot_Array_P_Out[ArrayID], NPG, PID0_List ); 
+      case POISSON_AND_GRAVITY_SOLVER :
+         Poi_Close( lv, SaveSg_Pot, h_Pot_Array_P_Out[ArrayID], NPG, PID0_List );
          Gra_Close( lv, SaveSg_Flu, h_Flu_Array_G    [ArrayID], NPG, PID0_List );
          break;
 #     endif

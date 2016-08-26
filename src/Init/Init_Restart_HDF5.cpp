@@ -27,8 +27,8 @@ static void ResetParameter( const char *FileName, double *EndT, long *EndStep );
 // Function    :  Init_Restart_HDF5
 // Description :  Reload a previous HDF5 output as the initial condition
 //
-// Note        :  1. "OPT__RESTART_HEADER == RESTART_HEADER_CHECK"   
-//                   --> Check if the parameters loaded from the RESTART file are consistent with the 
+// Note        :  1. "OPT__RESTART_HEADER == RESTART_HEADER_CHECK"
+//                   --> Check if the parameters loaded from the RESTART file are consistent with the
 //                       parameters loaded from the Input__Parameter file
 //
 //                   "OPT__RESTART_HEADER == RESTART_HEADER_SKIP"
@@ -43,7 +43,7 @@ static void ResetParameter( const char *FileName, double *EndT, long *EndStep );
 void Init_Restart_HDF5( const char *FileName )
 {
 
-   if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ...\n", __FUNCTION__ ); 
+   if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ...\n", __FUNCTION__ );
 
 
 // check
@@ -71,7 +71,7 @@ void Init_Restart_HDF5( const char *FileName )
 #  else
    const int  Float8    = 0;
 #  endif
-#  ifdef GRAVITY  
+#  ifdef GRAVITY
    const int  Gravity   = 1;
 #  else
    const int  Gravity   = 0;
@@ -134,7 +134,7 @@ void Init_Restart_HDF5( const char *FileName )
 
 // runtime NLEVEL must be >= loaded NLEVEL
    if      ( KeyInfo.NLevel > NLEVEL )
-      Aux_Error( ERROR_INFO, "%s : RESTART file (%d) > runtime (%d) !!\n", 
+      Aux_Error( ERROR_INFO, "%s : RESTART file (%d) > runtime (%d) !!\n",
                  "NLEVEL", KeyInfo.NLevel, NLEVEL );
    else
    {
@@ -147,9 +147,6 @@ void Init_Restart_HDF5( const char *FileName )
    MPI_Barrier( MPI_COMM_WORLD );
 
    LoadField( "DumpID",             &KeyInfo.DumpID,             H5_SetID_KeyInfo, H5_TypeID_KeyInfo, Fatal,  NullPtr,       -1, NonFatal );
-#  ifdef GRAVITY
-   LoadField( "OutputPot",          &KeyInfo.OutputPot,          H5_SetID_KeyInfo, H5_TypeID_KeyInfo, Fatal,  NullPtr,       -1, NonFatal );
-#  endif
    LoadField( "NX0",                 KeyInfo.NX0,                H5_SetID_KeyInfo, H5_TypeID_KeyInfo, Fatal,  NX0_TOT,        3,    Fatal );
    LoadField( "BoxScale",            KeyInfo.BoxScale,           H5_SetID_KeyInfo, H5_TypeID_KeyInfo, Fatal,  NullPtr,       -1, NonFatal );
    LoadField( "NPatch",              KeyInfo.NPatch,             H5_SetID_KeyInfo, H5_TypeID_KeyInfo, Fatal,  NullPtr,       -1, NonFatal );
@@ -290,7 +287,7 @@ void Init_Restart_HDF5( const char *FileName )
 
    for (int lv=0; lv<NLEVEL; lv++)
    {
-      if ( lv < KeyInfo.NLevel )   
+      if ( lv < KeyInfo.NLevel )
       {
          LBIdxList_EachLv         [lv] = LBIdxList_AllLv + GID_LvStart[lv];
          LBIdxList_EachLv_IdxTable[lv] = new int [ NPatchTotal[lv] ];
@@ -473,7 +470,7 @@ void Init_Restart_HDF5( const char *FileName )
             {
 #              ifdef DEBUG_HDF5
                if ( t < 0  ||  t >= NPatchTotal[lv]  ||  t%8 != 0 )
-                 Aux_Error( ERROR_INFO, "incorrect load index (%d) !!\n", t ); 
+                 Aux_Error( ERROR_INFO, "incorrect load index (%d) !!\n", t );
 #              endif
 
 //             make sure that we load patch from LocalID == 0
@@ -522,7 +519,7 @@ void Init_Restart_HDF5( const char *FileName )
 //       loop over the corners of all root-level patches (rescale in advance if KeyInfo.NLevel != NLEVEL)
          const int TenPercent = MAX( NPatchTotal[0]/10, 1 );
 
-         for (int GID=0; GID<NPatchTotal[0]; GID++)     
+         for (int GID=0; GID<NPatchTotal[0]; GID++)
          {
             if ( GID % TenPercent == 0 )
             Aux_Message( stdout, "      Rank %2d: %5.1lf%% completed ...\n",
@@ -531,7 +528,7 @@ void Init_Restart_HDF5( const char *FileName )
 //          load the info and data of the entire patch family recursively if the root patch is within the target range
             if (  CrList_AllLv[GID][0] >= TRange_Min[0]  &&  CrList_AllLv[GID][0] < TRange_Max[0]  &&
                   CrList_AllLv[GID][1] >= TRange_Min[1]  &&  CrList_AllLv[GID][1] < TRange_Max[1]  &&
-                  CrList_AllLv[GID][2] >= TRange_Min[2]  &&  CrList_AllLv[GID][2] < TRange_Max[2]     )    
+                  CrList_AllLv[GID][2] >= TRange_Min[2]  &&  CrList_AllLv[GID][2] < TRange_Max[2]     )
                LoadOnePatch( H5_FileID, 0, GID, Recursive_Yes, SonList_AllLv, CrList_AllLv,
                              H5_SetID_Field, H5_SpaceID_Field, H5_MemID_Field );
          } // for (int GID=0; GID<NPatchTotal[0]; GID++)
@@ -564,7 +561,7 @@ void Init_Restart_HDF5( const char *FileName )
       amr->LB->IdxList_Real         [lv] = new long [ amr->NPatchComma[lv][1] ];
       amr->LB->IdxList_Real_IdxTable[lv] = new int  [ amr->NPatchComma[lv][1] ];
 
-      for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)   
+      for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
          amr->LB->IdxList_Real[lv][PID] = amr->patch[0][lv][PID]->LB_Idx;
 
       Mis_Heapsort( amr->NPatchComma[lv][1], amr->LB->IdxList_Real[lv], amr->LB->IdxList_Real_IdxTable[lv] );
@@ -610,15 +607,15 @@ void Init_Restart_HDF5( const char *FileName )
    for (int lv=0; lv<NLEVEL; lv++)
    {
 //    construct the relation "father <-> son"
-      if ( lv > 0 )     FindFather( lv, 1 ); 
+      if ( lv > 0 )     FindFather( lv, 1 );
 
-//    allocate the buffer patches 
+//    allocate the buffer patches
       Buf_AllocateBufferPatch( amr, lv );
 
 //    set up the BaseP List
       if ( lv == 0 )    Init_RecordBasePatch();
 
-//    set up the BounP_IDMap 
+//    set up the BounP_IDMap
       Buf_RecordBoundaryPatch( lv );
 
 //    construct the sibling relation
@@ -637,7 +634,7 @@ void Init_Restart_HDF5( const char *FileName )
 #  endif // #ifndef LOAD_BALANCE
 
 
-   if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", __FUNCTION__ ); 
+   if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", __FUNCTION__ );
 
 } // FUNCTION : Init_Restart_HDF5
 
@@ -653,10 +650,10 @@ void Init_Restart_HDF5( const char *FileName )
 //                   manually by calling "free()"
 //                4. It can also compare the loaded variables (FieldPtr) with the reference value (ComprPtr)
 //                   (perform comparison only if "NCompr > 0")
-//                   --> Please make sure that "FieldPtr" and "ComprPtr" point to the same type since we 
+//                   --> Please make sure that "FieldPtr" and "ComprPtr" point to the same type since we
 //                       use the type of "ComprPtr" to typecast "FieldPtr"
 //
-// Parameter   :  FieldName         : Name of the target field 
+// Parameter   :  FieldName         : Name of the target field
 //                FieldPtr          : Pointer to store the retrieved data
 //                H5_SetID_Target   : HDF5 dataset  ID of the target compound variable
 //                H5_TypeID_Target  : HDF5 datatype ID of the target compound variable
@@ -667,7 +664,7 @@ void Init_Restart_HDF5( const char *FileName )
 //                NCompr            : Number of elements to be compared
 //                Fatal_Compr       : Whether or not the comparison result is fatal
 //                                    --> true  : terminate the program     if "FieldPtr[X] != ComprPtr[X]"
-//                                        false : display a warning message if "FieldPtr[X] != ComprPtr[X]" 
+//                                        false : display a warning message if "FieldPtr[X] != ComprPtr[X]"
 //
 // Return      :  Success/fail <-> 0/-1
 //-------------------------------------------------------------------------------------------------------
@@ -736,7 +733,7 @@ herr_t LoadField( const char *FieldName, void *FieldPtr, const hid_t H5_SetID_Ta
          {
             if ( Fatal_Compr )
             {
-               Aux_Error( ERROR_INFO, "\"%s%s\" : RESTART file (%ld) != runtime (%ld) !!\n", 
+               Aux_Error( ERROR_INFO, "\"%s%s\" : RESTART file (%ld) != runtime (%ld) !!\n",
                           FieldName, ArrayIdx, (long)((T*)FieldPtr)[t], (long)ComprPtr[t] );
                return -2;
             }
@@ -744,7 +741,7 @@ herr_t LoadField( const char *FieldName, void *FieldPtr, const hid_t H5_SetID_Ta
             else
             {
                if ( MPI_Rank == 0 )
-               Aux_Message( stderr, "WARNING : \"%s%s\" : RESTART file (%ld) != runtime (%ld) !!\n", 
+               Aux_Message( stderr, "WARNING : \"%s%s\" : RESTART file (%ld) != runtime (%ld) !!\n",
                             FieldName, ArrayIdx, (long)((T*)FieldPtr)[t], (long)ComprPtr[t] );
                Check_Pass = false;
             }
@@ -754,7 +751,7 @@ herr_t LoadField( const char *FieldName, void *FieldPtr, const hid_t H5_SetID_Ta
          {
             if ( Fatal_Compr )
             {
-               Aux_Error( ERROR_INFO, "\"%s%s\" : RESTART file (%20.14e) != runtime (%20.14e) !!\n", 
+               Aux_Error( ERROR_INFO, "\"%s%s\" : RESTART file (%20.14e) != runtime (%20.14e) !!\n",
                           FieldName, ArrayIdx,  ((T*)FieldPtr)[t], ComprPtr[t] );
                return -2;
             }
@@ -762,7 +759,7 @@ herr_t LoadField( const char *FieldName, void *FieldPtr, const hid_t H5_SetID_Ta
             else
             {
                if ( MPI_Rank == 0 )
-               Aux_Message( stderr, "WARNING : \"%s%s\" : RESTART file (%20.14e) != runtime (%20.14e) !!\n", 
+               Aux_Message( stderr, "WARNING : \"%s%s\" : RESTART file (%20.14e) != runtime (%20.14e) !!\n",
                             FieldName, ArrayIdx, ((T*)FieldPtr)[t], ComprPtr[t] );
                Check_Pass = false;
             }
@@ -1197,7 +1194,7 @@ void Check_InputPara( const char *FileName )
 #  if ( MODEL == ELBDM )
    LoadField( "Dt__Phase",               &RS.Dt__Phase,               SID, TID, NonFatal, &RT.Dt__Phase,                1, NonFatal );
 #  endif
-#  ifdef PARTICLE 
+#  ifdef PARTICLE
    LoadField( "Dt__ParVel",              &RS.Dt__ParVel,              SID, TID, NonFatal, &RT.Dt__ParVel,               1, NonFatal );
    LoadField( "Dt__ParVelMax",           &RS.Dt__ParVelMax,           SID, TID, NonFatal, &RT.Dt__ParVelMax,            1, NonFatal );
    LoadField( "Dt__ParAcc",              &RS.Dt__ParAcc,              SID, TID, NonFatal, &RT.Dt__ParAcc,               1, NonFatal );
@@ -1208,7 +1205,7 @@ void Check_InputPara( const char *FileName )
    LoadField( "Opt__AdaptiveDt",         &RS.Opt__AdaptiveDt,         SID, TID, NonFatal, &RT.Opt__AdaptiveDt,          1, NonFatal );
    LoadField( "Opt__RecordDt",           &RS.Opt__RecordDt,           SID, TID, NonFatal, &RT.Opt__RecordDt,            1, NonFatal );
    LoadField( "Opt__DtUser",             &RS.Opt__DtUser,             SID, TID, NonFatal, &RT.Opt__DtUser,              1, NonFatal );
-   
+
 
 // domain refinement
    LoadField( "RegridCount",             &RS.RegridCount,             SID, TID, NonFatal, &RT.RegridCount,              1, NonFatal );
@@ -1216,14 +1213,14 @@ void Check_InputPara( const char *FileName )
    LoadField( "MaxLevel",                &RS.MaxLevel,                SID, TID, NonFatal, &RT.MaxLevel,                 1, NonFatal );
    LoadField( "Opt__Flag_Rho",           &RS.Opt__Flag_Rho,           SID, TID, NonFatal, &RT.Opt__Flag_Rho,            1, NonFatal );
    LoadField( "Opt__Flag_RhoGradient",   &RS.Opt__Flag_RhoGradient,   SID, TID, NonFatal, &RT.Opt__Flag_RhoGradient,    1, NonFatal );
-#  if ( MODEL == HYDRO ) 
+#  if ( MODEL == HYDRO )
    LoadField( "Opt__Flag_PresGradient",  &RS.Opt__Flag_PresGradient,  SID, TID, NonFatal, &RT.Opt__Flag_PresGradient,   1, NonFatal );
 #  endif
-#  if ( MODEL == ELBDM ) 
+#  if ( MODEL == ELBDM )
    LoadField( "Opt__Flag_EngyDensity",   &RS.Opt__Flag_EngyDensity,   SID, TID, NonFatal, &RT.Opt__Flag_EngyDensity,    1, NonFatal );
 #  endif
    LoadField( "Opt__Flag_LohnerDens",    &RS.Opt__Flag_LohnerDens,    SID, TID, NonFatal, &RT.Opt__Flag_LohnerDens,     1, NonFatal );
-#  if ( MODEL == HYDRO ) 
+#  if ( MODEL == HYDRO )
    LoadField( "Opt__Flag_LohnerEngy",    &RS.Opt__Flag_LohnerEngy,    SID, TID, NonFatal, &RT.Opt__Flag_LohnerEngy,     1, NonFatal );
    LoadField( "Opt__Flag_LohnerPres",    &RS.Opt__Flag_LohnerPres,    SID, TID, NonFatal, &RT.Opt__Flag_LohnerPres,     1, NonFatal );
 #  endif
@@ -1307,7 +1304,7 @@ void Check_InputPara( const char *FileName )
 
 // interpolation schemes
    LoadField( "Opt__Int_Time",           &RS.Opt__Int_Time,           SID, TID, NonFatal, &RT.Opt__Int_Time,            1, NonFatal );
-#  if ( MODEL == ELBDM ) 
+#  if ( MODEL == ELBDM )
    LoadField( "Opt__Int_Phase",          &RS.Opt__Int_Phase,          SID, TID, NonFatal, &RT.Opt__Int_Phase,           1, NonFatal );
 #  endif
    LoadField( "Opt__Flu_IntScheme",      &RS.Opt__Flu_IntScheme,      SID, TID, NonFatal, &RT.Opt__Flu_IntScheme,       1, NonFatal );
@@ -1334,6 +1331,9 @@ void Check_InputPara( const char *FileName )
    LoadField( "Opt__Output_Base",        &RS.Opt__Output_Base,        SID, TID, NonFatal, &RT.Opt__Output_Base,         1, NonFatal );
 #  ifdef GRAVITY
    LoadField( "Opt__Output_Pot",         &RS.Opt__Output_Pot,         SID, TID, NonFatal, &RT.Opt__Output_Pot,          1, NonFatal );
+#  endif
+#  ifdef PARTICLE
+   LoadField( "Opt__Output_ParDens",     &RS.Opt__Output_ParDens,     SID, TID, NonFatal, &RT.Opt__Output_ParDens,      1, NonFatal );
 #  endif
 #  ifdef PARTICLE
    if ( OPT__OUTPUT_TOTAL || OPT__OUTPUT_PART || OPT__OUTPUT_TEST_ERROR || OPT__OUTPUT_BASEPS || OPT__OUTPUT_PAR_TEXT ) {
@@ -1412,7 +1412,7 @@ void Check_InputPara( const char *FileName )
 
    if ( OPT__FLAG_RHO )
    LoadField( "FlagTable_Rho",            RS.FlagTable_Rho,           SID, TID, NonFatal,  RT.FlagTable_Rho,           N1, NonFatal );
-   
+
    if ( OPT__FLAG_RHO_GRADIENT )
    LoadField( "FlagTable_RhoGradient",    RS.FlagTable_RhoGradient,   SID, TID, NonFatal,  RT.FlagTable_RhoGradient,   N1, NonFatal );
 
@@ -1423,7 +1423,7 @@ void Check_InputPara( const char *FileName )
    for (int t=0; t<3; t++)
    {
       if ( RS.FlagTable_Lohner[lv][t] != RT.FlagTable_Lohner[lv][t] )
-         Aux_Message( stderr, "WARNING : \"%s[%d][%d]\" : RESTART file (%20.14e) != runtime (%20.14e) !!\n", 
+         Aux_Message( stderr, "WARNING : \"%s[%d][%d]\" : RESTART file (%20.14e) != runtime (%20.14e) !!\n",
                        "FlagTable_Lohner", lv, t, RS.FlagTable_Lohner[lv][t],  RT.FlagTable_Lohner[lv][t] );
    }}
 
@@ -1442,7 +1442,7 @@ void Check_InputPara( const char *FileName )
    for (int t=0; t<2; t++)
    {
       if ( RS.FlagTable_EngyDensity[lv][t] != RT.FlagTable_EngyDensity[lv][t] )
-         Aux_Message( stderr, "WARNING : \"%s[%d][%d]\" : RESTART file (%20.14e) != runtime (%20.14e) !!\n", 
+         Aux_Message( stderr, "WARNING : \"%s[%d][%d]\" : RESTART file (%20.14e) != runtime (%20.14e) !!\n",
                        "FlagTable_EngyDensity", lv, t, RS.FlagTable_EngyDensity[lv][t],  RT.FlagTable_EngyDensity[lv][t] );
    }}
 #  endif
@@ -1473,7 +1473,7 @@ void Check_InputPara( const char *FileName )
 //                2. This function must be called by ALL ranks
 //
 // Parameter   :  FileName : Restart file name
-//                EndT     : Runtime parameter "END_T" 
+//                EndT     : Runtime parameter "END_T"
 //                EndStep  : Runtime parameter "END_STEP"
 //-------------------------------------------------------------------------------------------------------
 void ResetParameter( const char *FileName, double *EndT, long *EndStep )

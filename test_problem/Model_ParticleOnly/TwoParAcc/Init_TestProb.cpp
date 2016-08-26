@@ -4,11 +4,11 @@
 
 
 
-extern void (*Init_Function_Ptr)( real fluid[], const real x, const real y, const real z, const double Time );
+extern void (*Init_Function_Ptr)( real fluid[], const double x, const double y, const double z, const double Time );
 extern void (*Output_TestProbErr_Ptr)( const bool BaseOnly );
 
 static void LoadTestProbParameter();
-static void Par_TestProbSol_TwoParAcc( real fluid[], const real x, const real y, const real z, const double Time );
+static void Par_TestProbSol_TwoParAcc( real fluid[], const double x, const double y, const double z, const double Time );
 static void Output_TwoParAcc( FILE *FileOut, const int Count );
 
 
@@ -317,7 +317,7 @@ void Init_TestProb()
 //
 // Return      :  fluid
 //-------------------------------------------------------------------------------------------------------
-void Par_TestProbSol_TwoParAcc( real *fluid, const real x, const real y, const real z, const double Time )
+void Par_TestProbSol_TwoParAcc( real *fluid, const double x, const double y, const double z, const double Time )
 {
 
 // set wave function as zero everywhere
