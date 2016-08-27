@@ -10,13 +10,13 @@
 -1.0        END_T                   # end physical time of simulation (<0:default -> must be defined in Init_TestProb/RESTART)
 -1          END_STEP                # end step of simulation (<0:default -> must be defined in Init_TestProb)
 
-3           OPT__BC_FLU_XM          # fluid boundary condition at -x face : (0,1,2,3) -> (periodic, outflow, reflecting, user)
-3           OPT__BC_FLU_XP          # fluid boundary condition at +x face : (0,1,2,3) -> (periodic, outflow, reflecting, user)
-3           OPT__BC_FLU_YM          # fluid boundary condition at -y face : (0,1,2,3) -> (periodic, outflow, reflecting, user)
-3           OPT__BC_FLU_YP          # fluid boundary condition at +y face : (0,1,2,3) -> (periodic, outflow, reflecting, user)
-3           OPT__BC_FLU_ZM          # fluid boundary condition at -z face : (0,1,2,3) -> (periodic, outflow, reflecting, user)
-3           OPT__BC_FLU_ZP          # fluid boundary condition at +z face : (0,1,2,3) -> (periodic, outflow, reflecting, user)
-1           OPT__BC_POT             # gravity boundary condition : (0,1) -> (periodic, isolated)
+4           OPT__BC_FLU_XM          # fluid boundary condition at -x face : (0,1,2,3) -> (periodic, outflow, reflecting, user)
+4           OPT__BC_FLU_XP          # fluid boundary condition at +x face : (0,1,2,3) -> (periodic, outflow, reflecting, user)
+4           OPT__BC_FLU_YM          # fluid boundary condition at -y face : (0,1,2,3) -> (periodic, outflow, reflecting, user)
+4           OPT__BC_FLU_YP          # fluid boundary condition at +y face : (0,1,2,3) -> (periodic, outflow, reflecting, user)
+4           OPT__BC_FLU_ZM          # fluid boundary condition at -z face : (0,1,2,3) -> (periodic, outflow, reflecting, user)
+4           OPT__BC_FLU_ZP          # fluid boundary condition at +z face : (0,1,2,3) -> (periodic, outflow, reflecting, user)
+2           OPT__BC_POT             # gravity boundary condition : (0,1) -> (periodic, isolated)
 -1.0        GFUNC_COEFF0            # Green's function coefficient at the origin for the isolated BC (<0:default [NoPar/Par:0.0/4.X])
 
 20000       PAR_NPAR                # number of particles

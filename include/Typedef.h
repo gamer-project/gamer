@@ -62,11 +62,11 @@ enum NSide_t    { NSIDE_00=0, NSIDE_06=6, NSIDE_26=26 };
 
 
 // use the load-balance alternative function in "Buf_GetBufferData" and "Flag_Real"
-enum UseLBFunc_t { USELB_NO=1, USELB_YES=2 };
+enum UseLBFunc_t { USELB_NO=0, USELB_YES=1 };
 
 
 // enable check or not
-enum Check_t { CHECK_ON=1, CHECK_OFF=2 };
+enum Check_t { CHECK_OFF=0, CHECK_ON=1 };
 
 
 // targeted solver in "InvokeSolvers"
@@ -87,14 +87,14 @@ enum GetBufMode_t { DATA_GENERAL=1, DATA_AFTER_FIXUP=2, DATA_AFTER_REFINE=3, DAT
 
 
 // options of the fluid boundary condition
-enum OptFluBC_t { BC_FLU_NONE=-1, BC_FLU_PERIODIC=0, BC_FLU_OUTFLOW=1, BC_FLU_REFLECTING=2, BC_FLU_USER=3 };
+enum OptFluBC_t { BC_FLU_NONE=0, BC_FLU_PERIODIC=1, BC_FLU_OUTFLOW=2, BC_FLU_REFLECTING=3, BC_FLU_USER=4 };
 
 
 // options of the gravity boundary condition
 #ifdef GRAVITY
-enum OptPotBC_t { BC_POT_NONE=-1, BC_POT_PERIODIC=0, BC_POT_ISOLATED=1 };
+enum OptPotBC_t { BC_POT_NONE=0, BC_POT_PERIODIC=1, BC_POT_ISOLATED=2 };
 #else
-enum OptPotBC_t { BC_POT_NONE=-1 };
+enum OptPotBC_t { BC_POT_NONE=0 };
 #endif
 
 
