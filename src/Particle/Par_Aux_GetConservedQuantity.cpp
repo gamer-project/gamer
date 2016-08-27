@@ -75,12 +75,11 @@ void Par_Aux_GetConservedQuantity( double &Mass_Total, double &MomX_Total, doubl
 
 // 2. potential energy
 #  ifdef GRAVITY
-   const ParInterp_t IntScheme  = amr->Par->Interp;
-   const OptFluBC_t *FluBC_None = NULL;
-   const bool IntPhase_No       = false;
+   const ParInterp_t IntScheme = amr->Par->Interp;
+   const bool IntPhase_No      = false;
 
-   const int  PotGhost          = amr->Par->GhostSize;
-   const int  PotSize           = PS1 + 2*PotGhost;
+   const int  PotGhost         = amr->Par->GhostSize;
+   const int  PotSize          = PS1 + 2*PotGhost;
 
    const real *Pos[3] = { amr->Par->PosX, amr->Par->PosY, amr->Par->PosZ };
    const real *Mass   = amr->Par->Mass;
@@ -185,8 +184,8 @@ void Par_Aux_GetConservedQuantity( double &Mass_Total, double &MomX_Total, doubl
             else
 #           endif
                Prepare_PatchData( lv, PrepPotTime, Pot, PotGhost, 1, &PID0, _POTE,
-                                  OPT__GRA_INT_SCHEME, UNIT_PATCH, (PotGhost==0)?NSIDE_00:NSIDE_26, IntPhase_No, FluBC_None,
-                                  OPT__BC_POT );
+                                  OPT__GRA_INT_SCHEME, UNIT_PATCH, (PotGhost==0)?NSIDE_00:NSIDE_26, IntPhase_No,
+                                  OPT__BC_FLU, OPT__BC_POT );
          } // if ( OPT__GRAVITY_TYPE == GRAVITY_SELF  ||  OPT__GRAVITY_TYPE == GRAVITY_BOTH )
 
 

@@ -73,6 +73,9 @@ static int Table_02( const int lv, const int PID, const int Side );
 //                IntPhase       : true --> Perform interpolation on rho/phase instead of real/imag parts in ELBDM
 //                                      --> TVar must contain _REAL and _IMAG
 //                FluBC          : Fluid boundary condition
+//                                 --> This variable is used to determine whether periodic BC is adopted even in the cases
+//                                     where we are NOT preparing any fluid variable (i.e., _POTE | _PAR_DENS)
+//                                     --> Therefore it must be provided correctly at any instance
 //                PotBC          : Gravity boundary condition
 //-------------------------------------------------------------------------------------------------------
 void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array,
@@ -108,17 +111,17 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
 #     endif
    }
 
-   if (  GhostSize > 0  &&  ( TVar & ( _FLU | _PASSIVE | _DERIVED ) )  )
+   for (int f=0; f<6; f++)
    {
-      for (int f=0; f<6; f++)
+      if ( FluBC[f] == NULL )    Aux_Error( ERROR_INFO, "FluBC[%d] == NULL !!\n", f );
+
       if ( FluBC[f] != BC_FLU_PERIODIC    &&  FluBC[f] != BC_FLU_OUTFLOW  &&
            FluBC[f] != BC_FLU_REFLECTING  &&  FluBC[f] != BC_FLU_USER        )
          Aux_Error( ERROR_INFO, "unsupported parameter %s[%d] = %d !!\n", "FluBC", f, FluBC[f] );
 
 #     if ( MODEL != HYDRO )
-      for (int f=0; f<6; f++)
       if ( FluBC[f] == BC_FLU_OUTFLOW  ||  FluBC[f] == BC_FLU_REFLECTING )
-         Aux_Error( ERROR_INFO, "outflow and reflecting boundary conditions (OPT__BC_FLU=1/2) only work with HYDRO !!\n" );
+         Aux_Error( ERROR_INFO, "outflow and reflecting boundary conditions (OPT__BC_FLU=2/3) only work with HYDRO !!\n" );
 #     endif
    }
 

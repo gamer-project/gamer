@@ -22,11 +22,10 @@ void Gra_Prepare_Pot( const int lv, const double PrepTime, real h_Pot_Array_P_Ou
                       const int NPG, const int *PID0_List )
 {
 
-   const OptFluBC_t *FluBC_None = NULL;
-   const bool IntPhase_No       = false;
+   const bool IntPhase_No = false;
 
    Prepare_PatchData( lv, PrepTime, &h_Pot_Array_P_Out[0][0][0][0], GRA_GHOST_SIZE, NPG, PID0_List, _POTE,
-                      OPT__GRA_INT_SCHEME, UNIT_PATCH, NSIDE_06, IntPhase_No, FluBC_None, OPT__BC_POT );
+                      OPT__GRA_INT_SCHEME, UNIT_PATCH, NSIDE_06, IntPhase_No, OPT__BC_FLU, OPT__BC_POT );
 
 } // FUNCTION : Gra_Prepare_Pot
 

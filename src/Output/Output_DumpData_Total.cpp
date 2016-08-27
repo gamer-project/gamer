@@ -769,7 +769,7 @@ void Output_DumpData_Total( const char *FileName )
                      {
                         Prepare_PatchData( lv, Time[lv], ParDensArray[0], 0, 1, &PID,
                                            ( OPT__OUTPUT_PAR_DENS == PAR_OUTPUT_DENS_PAR_ONLY ) ? _PAR_DENS : _TOTAL_DENS,
-                                           OPT__RHO_INT_SCHEME, UNIT_PATCH, NSIDE_00, false, NULL, BC_POT_NONE );
+                                           OPT__RHO_INT_SCHEME, UNIT_PATCH, NSIDE_00, false, OPT__BC_FLU, BC_POT_NONE );
                         break;
                      }
                   }

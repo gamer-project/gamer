@@ -36,8 +36,7 @@ void Flu_Prepare( const int lv, const double PrepTime, real h_Flu_Array_F_In[], 
 #  endif
 
 
-   const OptFluBC_t *FluBC_None = NULL;
-   const bool IntPhase_No       = false;
+   const bool IntPhase_No = false;
 
 
 // prepare the fluid array
@@ -56,7 +55,7 @@ void Flu_Prepare( const int lv, const double PrepTime, real h_Flu_Array_F_In[], 
    if ( OPT__GRAVITY_TYPE == GRAVITY_SELF  ||  OPT__GRAVITY_TYPE == GRAVITY_BOTH )
    Prepare_PatchData( lv, PrepTime, h_Pot_Array_USG_F, USG_GHOST_SIZE, NPG, PID0_List, 
                       _POTE,         OPT__GRA_INT_SCHEME, UNIT_PATCHGROUP, NSIDE_26, IntPhase_No,
-                      FluBC_None,  OPT__BC_POT );
+                      OPT__BC_FLU, OPT__BC_POT );
 
 // prepare the corner array
    if ( OPT__GRAVITY_TYPE == GRAVITY_EXTERNAL  ||  OPT__GRAVITY_TYPE == GRAVITY_BOTH  ||  OPT__EXTERNAL_POT )

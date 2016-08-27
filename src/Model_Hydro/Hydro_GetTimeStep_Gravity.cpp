@@ -120,15 +120,14 @@ void Hydro_GetTimeStep_Gravity( double &dt, double &dTime, int &MinDtLv, real &M
 void Hydro_GetMaxAcc( real MaxAcc[] )
 {
 
-   const OptFluBC_t *FluBC_None = NULL;
-   const bool   IntPhase_No     = false;
-   const real   Const_8         = (real)8.0;
-   const int    NPG             = 1;                     // number of patch groups
-   const int    NP              = NPG*8;                 // number of patches
+   const bool   IntPhase_No = false;
+   const real   Const_8     = (real)8.0;
+   const int    NPG         = 1;                     // number of patch groups
+   const int    NP          = NPG*8;                 // number of patches
 #  ifdef OPENMP
-   const int    NT              = OMP_NTHREAD;           // number of OpenMP threads
+   const int    NT          = OMP_NTHREAD;           // number of OpenMP threads
 #  else
-   const int    NT              = 1;
+   const int    NT          = 1;
 #  endif
 
    real   (*Pot_Array)[GRA_NXT][GRA_NXT][GRA_NXT] = NULL;
@@ -169,7 +168,7 @@ void Hydro_GetMaxAcc( real MaxAcc[] )
 //          prepare the potential data with ghost zones (if self-gravity is on)
             if ( OPT__GRAVITY_TYPE == GRAVITY_SELF  ||  OPT__GRAVITY_TYPE == GRAVITY_BOTH )
             Prepare_PatchData( lv, Time[lv], &Pot_Array[0][0][0][0], GRA_GHOST_SIZE, NPG, &PID0, _POTE,
-                               OPT__GRA_INT_SCHEME, UNIT_PATCH, NSIDE_06, IntPhase_No, FluBC_None, OPT__BC_POT );
+                               OPT__GRA_INT_SCHEME, UNIT_PATCH, NSIDE_06, IntPhase_No, OPT__BC_FLU, OPT__BC_POT );
 
 //          loop over eight patches within the same patch group
             for (int ID=0; ID<NP; ID++)

@@ -30,19 +30,18 @@ void Gra_Prepare_USG( const int lv, const double PrepTime,
                       real h_Flu_Array_USG_G[][GRA_NIN-1][PS1][PS1][PS1], const int NPG, const int *PID0_List )
 {
 
-   const OptFluBC_t *FluBC_None = NULL;
-   const bool IntPhase_No       = false;
-   const bool GetTotDens_Yes    = true;
+   const bool IntPhase_No    = false;
+   const bool GetTotDens_Yes = true;
 
 // prepare potential
    if ( OPT__GRAVITY_TYPE == GRAVITY_SELF  ||  OPT__GRAVITY_TYPE == GRAVITY_BOTH )
    {
       if ( lv == 0 )
       Prepare_PatchData( lv, PrepTime, &h_Pot_Array_USG_G[0][0][0][0], USG_GHOST_SIZE, NPG, PID0_List, _POTE,
-                         OPT__GRA_INT_SCHEME, UNIT_PATCH, NSIDE_06, IntPhase_No, FluBC_None,  OPT__BC_POT );
+                         OPT__GRA_INT_SCHEME, UNIT_PATCH, NSIDE_06, IntPhase_No, OPT__BC_FLU, OPT__BC_POT );
       else
       Prepare_PatchData( lv, PrepTime, &h_Pot_Array_USG_G[0][0][0][0], USG_GHOST_SIZE, NPG, PID0_List, _POTE,
-                         OPT__GRA_INT_SCHEME, UNIT_PATCH, NSIDE_06, IntPhase_No, FluBC_None,  OPT__BC_POT );
+                         OPT__GRA_INT_SCHEME, UNIT_PATCH, NSIDE_06, IntPhase_No, OPT__BC_FLU, OPT__BC_POT );
    }
 
 // prepare density + momentum

@@ -208,12 +208,12 @@ void Aux_Check_Parameter()
    for (int f=0; f<6; f++)
    if ( OPT__BC_FLU[f] != BC_FLU_PERIODIC    &&  OPT__BC_FLU[f] != BC_FLU_OUTFLOW  &&
         OPT__BC_FLU[f] != BC_FLU_REFLECTING  &&  OPT__BC_FLU[f] != BC_FLU_USER        )
-      Aux_Error( ERROR_INFO, "unsupported option \"OPT__BC_FLU[%d] = %d\" [0/1/2/3] !!\n", f, OPT__BC_FLU[f] );
+      Aux_Error( ERROR_INFO, "unsupported option \"OPT__BC_FLU[%d] = %d\" [1/2/3/4] !!\n", f, OPT__BC_FLU[f] );
 
 #  if ( MODEL != HYDRO )
    for (int f=0; f<6; f++)
    if ( OPT__BC_FLU[f] == BC_FLU_OUTFLOW  ||  OPT__BC_FLU[f] == BC_FLU_REFLECTING )
-      Aux_Error( ERROR_INFO, "outflow and reflecting boundary conditions (OPT__BC_FLU=1/2) only work with HYDRO !!\n" );
+      Aux_Error( ERROR_INFO, "outflow and reflecting boundary conditions (OPT__BC_FLU=2/3) only work with HYDRO !!\n" );
 #  endif
 
    if (  ( OPT__BC_FLU[0] == BC_FLU_PERIODIC || OPT__BC_FLU[1] == BC_FLU_PERIODIC || OPT__BC_FLU[2] == BC_FLU_PERIODIC ||
@@ -855,8 +855,8 @@ void Aux_Check_Parameter()
                  "OPT__REF_FLU_INT_SCHEME", OPT__REF_FLU_INT_SCHEME );
 
    for (int f=0; f<6; f++)
-   if ( OPT__BC_FLU[f] == BC_FLU_REFLECTING )
-      Aux_Error( ERROR_INFO, "unsupported option \"OPT__BC_FLU[%d] = %d\" [0/1/3] !!\n", f, OPT__BC_FLU[f] );
+   if ( OPT__BC_FLU[f] == BC_FLU_REFLECTING  ||  OPT__BC_FLU[f] == BC_FLU_OUTFLOW )
+      Aux_Error( ERROR_INFO, "unsupported option \"OPT__BC_FLU[%d] = %d\" [1/4] !!\n", f, OPT__BC_FLU[f] );
 
 
 // warnings
@@ -1021,7 +1021,7 @@ void Aux_Check_Parameter()
       Aux_Error( ERROR_INFO, "periodic BC must be applied to both fluid and self-gravity solvers at the same time !!\n" );
 
    if ( OPT__BC_POT != BC_POT_PERIODIC  &&  OPT__BC_POT != BC_POT_ISOLATED )
-      Aux_Error( ERROR_INFO, "unsupported option \"OPT__BC_POT = %d\" [0/1] !!\n", OPT__BC_POT );
+      Aux_Error( ERROR_INFO, "unsupported option \"OPT__BC_POT = %d\" [1/2] !!\n", OPT__BC_POT );
 
    if ( OPT__GRAVITY_TYPE != GRAVITY_SELF  &&  OPT__GRAVITY_TYPE != GRAVITY_EXTERNAL  &&  OPT__GRAVITY_TYPE != GRAVITY_BOTH )
       Aux_Error( ERROR_INFO, "unsupported option \"%s = %d\" [1/2/3] !!\n", "OPT__GRAVITY_TYPE", OPT__GRAVITY_TYPE );
