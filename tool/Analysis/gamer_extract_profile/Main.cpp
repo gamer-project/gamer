@@ -20,6 +20,7 @@ double      MaxRadius         = WRONG;    // the maximum radius of the sphere
 double      UseMaxRhoPos_R    = WRONG;    // maximum radius used by UseMaxRhoPos
 bool        Periodic          = false;    // periodic B.C. (not the case by default)
 bool        OutputPot         = false;    // output potential as well
+int         OutputParDens     = 0;        // output particle density on grids (0/1/2: off/particle density/total density)
 bool        InputScale        = false;    // true --> input cell scales instead of coordinates
 bool        UseTree           = false;    // true --> use the tree file to improve the I/O performance
 bool        NeedGhost         = false;    // treu --> ghost zones are required (--> need to construct the octree structure)
@@ -37,7 +38,7 @@ double      ShellWidth;                   // the width of each shell (or minimum
 bool        Mode_ShellAve     = false;    // true --> evaluate the shell average
 int         NShell            = WRONG;    // number of shells
 int         UseMaxRhoPos      = 8;        // number of highest-density cells for setting the sphere center (<=0 -> disable)
-int         NIn               = NCOMP;    // total number of input variables (will be set to NCOMP+1 if pot data are found)
+int         NIn               = NULL_INT; // total number of input grid variables
 int         NOut              = NULL_INT; // total number of output variables
 bool        OutputCenter      = false;    // output the center coords
 double      INT_MONO_COEFF    = 2.0;
@@ -83,13 +84,13 @@ void GetMaxRho()
    double xx, yy, zz;
 
 #  if   ( MODEL == HYDRO )
-   real Dens, VelX, VelY, VelZ, Engy, Pres, Pot;
+   real Dens, VelX, VelY, VelZ, Engy, Pres, Pot, ParDens;
 
 #  elif ( MODEL == MHD )
 #  warning : WAIT MHD !!!
 
 #  elif ( MODEL == ELBDM )
-   real Dens, Real, Imag, Pot;
+   real Dens, Real, Imag, Pot, ParDens;
 
 #  else
 #  error : ERROR : unsupported MODEL !!
@@ -109,7 +110,9 @@ void GetMaxRho()
 #  if   ( MODEL == HYDRO )
    fprintf( File, "%10s %10s %10s %2s %12s %12s %12s %12s %12s %12s",
             "x", "y", "z", "Lv", "Dens", "VelX", "VelY", "VelZ", "Engy", "Pres" );
-   if ( OutputPot )  fprintf( File, " %12s", "Pot" );
+   if      ( OutputPot          )   fprintf( File, " %12s", "Pot" );
+   if      ( OutputParDens == 1 )   fprintf( File, " %12s", "ParDens" );
+   else if ( OutputParDens == 2 )   fprintf( File, " %12s", "TotalDens" );
    fprintf( File, "\n" );
 
 #  elif ( MODEL == MHD )
@@ -118,7 +121,9 @@ void GetMaxRho()
 #  elif ( MODEL == ELBDM )
    fprintf( File, "%10s %10s %10s %2s %12s %12s %12s",
             "x", "y", "z", "Lv", "Dens", "Real", "Imag" );
-   if ( OutputPot )  fprintf( File, " %12s", "Pot" );
+   if      ( OutputPot          )   fprintf( File, " %12s", "Pot" );
+   if      ( OutputParDens == 1 )   fprintf( File, " %12s", "ParDens" );
+   else if ( OutputParDens == 2 )   fprintf( File, " %12s", "TotalDens" );
    fprintf( File, "\n" );
 
 #  else
@@ -154,34 +159,52 @@ void GetMaxRho()
             if ( Radius < MaxRadius  &&  amr.patch[lv][PID]->fluid[DENS][k][j][i] >= RhoThres )
             {
 #              if   ( MODEL == HYDRO )
-               Dens = amr.patch[lv][PID]->fluid[DENS][k][j][i];
-               VelX = amr.patch[lv][PID]->fluid[MOMX][k][j][i] / Dens;
-               VelY = amr.patch[lv][PID]->fluid[MOMY][k][j][i] / Dens;
-               VelZ = amr.patch[lv][PID]->fluid[MOMZ][k][j][i] / Dens;
-               Engy = amr.patch[lv][PID]->fluid[ENGY][k][j][i];
+               Dens    = amr.patch[lv][PID]->fluid[DENS][k][j][i];
+               VelX    = amr.patch[lv][PID]->fluid[MOMX][k][j][i] / Dens;
+               VelY    = amr.patch[lv][PID]->fluid[MOMY][k][j][i] / Dens;
+               VelZ    = amr.patch[lv][PID]->fluid[MOMZ][k][j][i] / Dens;
+               Engy    = amr.patch[lv][PID]->fluid[ENGY][k][j][i];
+
                if ( OutputPot )
-               Pot  = amr.patch[lv][PID]->pot        [k][j][i];
+               Pot     = amr.patch[lv][PID]->pot        [k][j][i];
+
+               if ( OutputParDens )
+               ParDens = amr.patch[lv][PID]->par_dens   [k][j][i];
 
                Pres = (GAMMA-1.0) * ( Engy - 0.5*Dens*(VelX*VelX + VelY*VelY + VelZ*VelZ) );
 
+
                fprintf( File, "%10.4e %10.4e %10.4e %2d %12.5e %12.5e %12.5e %12.5e %12.5e %12.5e",
                         xx*dh_min, yy*dh_min, zz*dh_min, lv, Dens, VelX, VelY, VelZ, Engy, Pres );
-               if ( OutputPot ) fprintf( File, " %12.5e", Pot );
+
+               if ( OutputPot     )    fprintf( File, " %12.5e", Pot );
+               if ( OutputParDens )    fprintf( File, " %12.5e", ParDens );
+
+
                fprintf( File, "\n" );
 
 #              elif ( MODEL == MHD )
 #              warning : WAIT MHD !!!
 
 #              elif ( MODEL == ELBDM )
-               Dens = amr.patch[lv][PID]->fluid[DENS][k][j][i];
-               Real = amr.patch[lv][PID]->fluid[REAL][k][j][i];
-               Imag = amr.patch[lv][PID]->fluid[IMAG][k][j][i];
+               Dens    = amr.patch[lv][PID]->fluid[DENS][k][j][i];
+               Real    = amr.patch[lv][PID]->fluid[REAL][k][j][i];
+               Imag    = amr.patch[lv][PID]->fluid[IMAG][k][j][i];
+
                if ( OutputPot )
-               Pot  = amr.patch[lv][PID]->pot        [k][j][i];
+               Pot     = amr.patch[lv][PID]->pot        [k][j][i];
+
+               if ( OutputParDens )
+               ParDens = amr.patch[lv][PID]->par_dens   [k][j][i];
+
 
                fprintf( File, "%10.4e %10.4e %10.4e %2d %12.5e %12.5e %12.5e",
                         xx*dh_min, yy*dh_min, zz*dh_min, lv, Dens, Real, Imag );
-               if ( OutputPot ) fprintf( File, " %12.5e", Pot );
+
+               if ( OutputPot     )    fprintf( File, " %12.5e", Pot );
+               if ( OutputParDens )    fprintf( File, " %12.5e", ParDens );
+
+
                fprintf( File, "\n" );
 
 #              else
@@ -215,7 +238,7 @@ void GetRMS()
 
 #  if   ( MODEL == HYDRO )
    const int NGhost = 0;
-   real rho, vx, vy, vz, vr, vt, egy, pres, Pot;
+   real rho, vx, vy, vz, vr, vt, egy, pres, Pot, ParDens;
 
 #  elif ( MODEL == MHD )
 #  warning : WAIT MHD !!!
@@ -225,7 +248,7 @@ void GetRMS()
    const real _Eta   = 1.0/ELBDM_ETA;
    const real _2Eta  = 0.5*_Eta;
    const real _2Eta2 = _Eta*_2Eta;
-   real Dens, Real, Imag, Pot, _Dens;
+   real Dens, Real, Imag, Pot, _Dens, ParDens;
    real Ek_Lap, Ek_Gra, GradR[3], GradI[3], LapR, LapI, _2dh, _dh2;
    real v[3], w[3], vr, vr_abs, vt_abs, wr, wr_abs, wt_abs, GradD[3];
 
@@ -239,15 +262,22 @@ void GetRMS()
 
    const int ArraySize = PATCH_SIZE + 2*NGhost;
    const int NPG       = 1;
-   const int TVar      = (OutputPot) ? (_FLU|_POTE) : _FLU;
    const NSide_t NSide = NSIDE_26;
 
-   int  ShellID, Var, i, j, k, im, jm, km, ip, jp, kp;
+   int    ShellID, Var, i, j, k, im, jm, km, ip, jp, kp, TVar, POTE, PAR_DENS, NextIdx;
    double Radius, scale, dv;
    double x, x1, x2, y, y1, y2, z, z1, z2;   // (x,y,z) : relative coordinates to the vector "Center"
 
    real *Field1D = new real [NPG*8*NIn*ArraySize*ArraySize*ArraySize];
    real (*Field)[NIn][ArraySize][ArraySize][ArraySize] = ( real(*)[NIn][ArraySize][ArraySize][ArraySize] )Field1D;
+
+
+// determine the target variables
+   TVar    = _FLU;
+   NextIdx = NCOMP;
+
+   if ( OutputPot     )    {  TVar |= _POTE;       POTE     = NextIdx ++;  } 
+   if ( OutputParDens )    {  TVar |= _PAR_DENS;   PAR_DENS = NextIdx ++;  }
 
 
    for (int lv=0; lv<NLEVEL; lv++)
@@ -312,13 +342,17 @@ void GetRMS()
 
 #                 if   ( MODEL == HYDRO )
 //                evaluate the values on the shell
-                  rho  = Field[p][DENS][k][j][i];
-                  vx   = Field[p][MOMX][k][j][i] / rho;
-                  vy   = Field[p][MOMY][k][j][i] / rho;
-                  vz   = Field[p][MOMZ][k][j][i] / rho;
-                  egy  = Field[p][ENGY][k][j][i];
+                  rho     = Field[p][DENS    ][k][j][i];
+                  vx      = Field[p][MOMX    ][k][j][i] / rho;
+                  vy      = Field[p][MOMY    ][k][j][i] / rho;
+                  vz      = Field[p][MOMZ    ][k][j][i] / rho;
+                  egy     = Field[p][ENGY    ][k][j][i];
+
                   if ( OutputPot )
-                  Pot  = Field[0][POTE][k][j][i];
+                  Pot     = Field[p][POTE    ][k][j][i];
+
+                  if ( OutputParDens )
+                  ParDens = Field[p][PAR_DENS][k][j][i];
 
                   pres = (GAMMA-1.0) * ( egy - 0.5*rho*(vx*vx + vy*vy + vz*vz) );
                   vr   = ( x*vx + y*vy + z*vz ) / Radius;
@@ -327,23 +361,31 @@ void GetRMS()
 
 //                evalute the square of deviation on the shell
                   Var = 0;
-                  RMS[ShellID][Var] += dv*pow( double(rho )-Average[ShellID][Var], 2.0 );    Var++;
-                  RMS[ShellID][Var] += dv*pow( double(vr  )-Average[ShellID][Var], 2.0 );    Var++;
-                  RMS[ShellID][Var] += dv*pow( double(vt  )-Average[ShellID][Var], 2.0 );    Var++;
-                  RMS[ShellID][Var] += dv*pow( double(egy )-Average[ShellID][Var], 2.0 );    Var++;
-                  RMS[ShellID][Var] += dv*pow( double(pres)-Average[ShellID][Var], 2.0 );    Var++;
+                  RMS[ShellID][Var] += dv*pow( double(rho    )-Average[ShellID][Var], 2.0 );    Var++;
+                  RMS[ShellID][Var] += dv*pow( double(vr     )-Average[ShellID][Var], 2.0 );    Var++;
+                  RMS[ShellID][Var] += dv*pow( double(vt     )-Average[ShellID][Var], 2.0 );    Var++;
+                  RMS[ShellID][Var] += dv*pow( double(egy    )-Average[ShellID][Var], 2.0 );    Var++;
+                  RMS[ShellID][Var] += dv*pow( double(pres   )-Average[ShellID][Var], 2.0 );    Var++;
+
                   if ( OutputPot ) {
-                  RMS[ShellID][Var] += dv*pow( double(Pot )-Average[ShellID][Var], 2.0 );    Var++; }
+                  RMS[ShellID][Var] += dv*pow( double(Pot    )-Average[ShellID][Var], 2.0 );    Var++; }
+
+                  if ( OutputParDens ) {
+                  RMS[ShellID][Var] += dv*pow( double(ParDens)-Average[ShellID][Var], 2.0 );    Var++; }
 
 #                 elif ( MODEL == MHD )
 #                 warning : WAIT MHD !!!
 
 #                 elif ( MODEL == ELBDM )
-                  Dens = Field[p][DENS][k][j][i];
-                  Real = Field[p][REAL][k][j][i];
-                  Imag = Field[p][IMAG][k][j][i];
+                  Dens    = Field[p][DENS    ][k][j][i];
+                  Real    = Field[p][REAL    ][k][j][i];
+                  Imag    = Field[p][IMAG    ][k][j][i];
+
                   if ( OutputPot )
-                  Pot  = Field[p][POTE][k][j][i];
+                  Pot     = Field[p][POTE    ][k][j][i];
+
+                  if ( OutputParDens )
+                  ParDens = Field[p][PAR_DENS][k][j][i];
 
                   if ( ELBDM_GetVir )
                   {
@@ -390,20 +432,25 @@ void GetRMS()
 
 //                evalute the square of deviation on the shell
                   Var = 0;
-                  RMS[ShellID][Var] += dv*pow( double(Dens  )-Average[ShellID][Var], 2.0 );  Var++;
-                  RMS[ShellID][Var] += dv*pow( double(Real  )-Average[ShellID][Var], 2.0 );  Var++;
-                  RMS[ShellID][Var] += dv*pow( double(Imag  )-Average[ShellID][Var], 2.0 );  Var++;
+                  RMS[ShellID][Var] += dv*pow( double(Dens   )-Average[ShellID][Var], 2.0 );  Var++;
+                  RMS[ShellID][Var] += dv*pow( double(Real   )-Average[ShellID][Var], 2.0 );  Var++;
+                  RMS[ShellID][Var] += dv*pow( double(Imag   )-Average[ShellID][Var], 2.0 );  Var++;
+
                   if ( OutputPot   ) {
-                  RMS[ShellID][Var] += dv*pow( double(Pot   )-Average[ShellID][Var], 2.0 );  Var++; }
+                  RMS[ShellID][Var] += dv*pow( double(Pot    )-Average[ShellID][Var], 2.0 );  Var++; }
+
+                  if ( OutputParDens ) {
+                  RMS[ShellID][Var] += dv*pow( double(ParDens)-Average[ShellID][Var], 2.0 );  Var++; }
+
                   if ( ELBDM_GetVir ) {
-                  RMS[ShellID][Var] += dv*pow( double(Ek_Lap)-Average[ShellID][Var], 2.0 );  Var++;
-                  RMS[ShellID][Var] += dv*pow( double(Ek_Gra)-Average[ShellID][Var], 2.0 );  Var++;
-                  RMS[ShellID][Var] += dv*pow( double(vr    )-Average[ShellID][Var], 2.0 );  Var++;
-                  RMS[ShellID][Var] += dv*pow( double(vr_abs)-Average[ShellID][Var], 2.0 );  Var++;
-                  RMS[ShellID][Var] += dv*pow( double(vt_abs)-Average[ShellID][Var], 2.0 );  Var++;
-                  RMS[ShellID][Var] += dv*pow( double(wr    )-Average[ShellID][Var], 2.0 );  Var++;
-                  RMS[ShellID][Var] += dv*pow( double(wr_abs)-Average[ShellID][Var], 2.0 );  Var++;
-                  RMS[ShellID][Var] += dv*pow( double(wt_abs)-Average[ShellID][Var], 2.0 );  Var++; }
+                  RMS[ShellID][Var] += dv*pow( double(Ek_Lap )-Average[ShellID][Var], 2.0 );  Var++;
+                  RMS[ShellID][Var] += dv*pow( double(Ek_Gra )-Average[ShellID][Var], 2.0 );  Var++;
+                  RMS[ShellID][Var] += dv*pow( double(vr     )-Average[ShellID][Var], 2.0 );  Var++;
+                  RMS[ShellID][Var] += dv*pow( double(vr_abs )-Average[ShellID][Var], 2.0 );  Var++;
+                  RMS[ShellID][Var] += dv*pow( double(vt_abs )-Average[ShellID][Var], 2.0 );  Var++;
+                  RMS[ShellID][Var] += dv*pow( double(wr     )-Average[ShellID][Var], 2.0 );  Var++;
+                  RMS[ShellID][Var] += dv*pow( double(wr_abs )-Average[ShellID][Var], 2.0 );  Var++;
+                  RMS[ShellID][Var] += dv*pow( double(wt_abs )-Average[ShellID][Var], 2.0 );  Var++; }
 
 #                 else
 #                 error : ERROR : unsupported MODEL !!
@@ -441,7 +488,7 @@ void ShellAverage()
 
 #  if   ( MODEL == HYDRO )
    const int NGhost = 0;
-   real px, py, pz, pr, pt, vr, vt, pres, rho, egy, Pot;
+   real px, py, pz, pr, pt, vr, vt, pres, rho, egy, Pot, ParDens;
 
 #  elif ( MODEL == MHD )
 #  warning : WAIT MHD !!!
@@ -452,7 +499,7 @@ void ShellAverage()
    const real _2Eta  = 0.5*_Eta;
    const real _2Eta2 = _Eta*_2Eta;
    const real _Eta2  = _Eta*_Eta;
-   real Dens, Real, Imag, Pot, _Dens;
+   real Dens, Real, Imag, Pot, _Dens, ParDens;
    real Ek_Lap, Ek_Gra, GradR[3], GradI[3], LapR, LapI, _2dh, _dh2, dv_Eta;
    real v[3], w[3], vr, vr1, vr2, vt1, vt2, wr, wr1, wr2, wt1, wt2, GradD[3], dR_dr, dI_dr;
 
@@ -466,15 +513,22 @@ void ShellAverage()
 
    const int ArraySize = PATCH_SIZE + 2*NGhost;
    const int NPG       = 1;
-   const int TVar      = (OutputPot) ? (_FLU|_POTE) : _FLU;
    const NSide_t NSide = NSIDE_26;
 
-   int    ShellID, Var, i, j, k, im, jm, km, ip, jp, kp;
+   int    ShellID, Var, i, j, k, im, jm, km, ip, jp, kp, TVar, POTE, PAR_DENS, NextIdx;
    double Radius, scale, dv;
    double x, x1, x2, y, y1, y2, z, z1, z2;   // (x,y,z) : relative coordinates to the vector "Center"
 
    real *Field1D = new real [NPG*8*NIn*ArraySize*ArraySize*ArraySize];
    real (*Field)[NIn][ArraySize][ArraySize][ArraySize] = ( real(*)[NIn][ArraySize][ArraySize][ArraySize] )Field1D;
+
+
+// determine the target variables
+   TVar    = _FLU;
+   NextIdx = NCOMP;
+
+   if ( OutputPot     )    {  TVar |= _POTE;       POTE     = NextIdx ++;  } 
+   if ( OutputParDens )    {  TVar |= _PAR_DENS;   PAR_DENS = NextIdx ++;  }
 
 
    for (int lv=0; lv<NLEVEL; lv++)
@@ -540,13 +594,17 @@ void ShellAverage()
 
 #                 if   ( MODEL == HYDRO )
 //                evaluate the values on the shell
-                  rho  = Field[p][DENS][k][j][i];
-                  px   = Field[p][MOMX][k][j][i];
-                  py   = Field[p][MOMY][k][j][i];
-                  pz   = Field[p][MOMZ][k][j][i];
-                  egy  = Field[p][ENGY][k][j][i];
+                  rho     = Field[p][DENS    ][k][j][i];
+                  px      = Field[p][MOMX    ][k][j][i];
+                  py      = Field[p][MOMY    ][k][j][i];
+                  pz      = Field[p][MOMZ    ][k][j][i];
+                  egy     = Field[p][ENGY    ][k][j][i];
+
                   if ( OutputPot )
-                  Pot  = Field[p][POTE][k][j][i];
+                  Pot     = Field[p][POTE    ][k][j][i];
+
+                  if ( OutputParDens )
+                  ParDens = Field[p][PAR_DENS][k][j][i];
 
                   pr   = ( x*px + y*py + z*pz ) / Radius;
                   pt   = sqrt( fabs(px*px + py*py + pz*pz - pr*pr) );
@@ -557,44 +615,61 @@ void ShellAverage()
 
 //                sum up values at the same shell
                   Var = 0;
-                  Average[ShellID][Var++] += (double)(dv*rho );
-                  Average[ShellID][Var++] += (double)(dv*pr  );
-                  Average[ShellID][Var++] += (double)(dv*pt  );
-                  Average[ShellID][Var++] += (double)(dv*egy );
-                  Average[ShellID][Var++] += (double)(dv*pres);
+                  Average[ShellID][Var++] += (double)(dv*rho     );
+                  Average[ShellID][Var++] += (double)(dv*pr      );
+                  Average[ShellID][Var++] += (double)(dv*pt      );
+                  Average[ShellID][Var++] += (double)(dv*egy     );
+                  Average[ShellID][Var++] += (double)(dv*pres    );
+
                   if ( OutputPot )
-                  Average[ShellID][Var++] += (double)(dv*Pot );
+                  Average[ShellID][Var++] += (double)(dv*Pot     );
+
+                  if ( OutputParDens )
+                  Average[ShellID][Var++] += (double)(dv*ParDens );
 
 
 //                store the maximum and minimum values
                   Var = 0;
-                  if ( rho  > Max[ShellID][Var] )  Max[ShellID][Var] = rho;   Var++;
-                  if ( vr   > Max[ShellID][Var] )  Max[ShellID][Var] = vr;    Var++;
-                  if ( vt   > Max[ShellID][Var] )  Max[ShellID][Var] = vt;    Var++;
-                  if ( egy  > Max[ShellID][Var] )  Max[ShellID][Var] = egy;   Var++;
-                  if ( pres > Max[ShellID][Var] )  Max[ShellID][Var] = pres;  Var++;
+                  if ( rho     > Max[ShellID][Var] )  Max[ShellID][Var] = rho;       Var++;
+                  if ( vr      > Max[ShellID][Var] )  Max[ShellID][Var] = vr;        Var++;
+                  if ( vt      > Max[ShellID][Var] )  Max[ShellID][Var] = vt;        Var++;
+                  if ( egy     > Max[ShellID][Var] )  Max[ShellID][Var] = egy;       Var++;
+                  if ( pres    > Max[ShellID][Var] )  Max[ShellID][Var] = pres;      Var++;
+
                   if ( OutputPot ) {
-                  if ( Pot  > Max[ShellID][Var] )  Max[ShellID][Var] = Pot;   Var++; }
+                  if ( Pot     > Max[ShellID][Var] )  Max[ShellID][Var] = Pot;       Var++; }
+
+                  if ( OutputParDens ) {
+                  if ( ParDens > Max[ShellID][Var] )  Max[ShellID][Var] = ParDens;   Var++; }
+
 
                   Var = 0;
-                  if ( rho  < Min[ShellID][Var] )  Min[ShellID][Var] = rho;   Var++;
-                  if ( vr   < Min[ShellID][Var] )  Min[ShellID][Var] = vr;    Var++;
-                  if ( vt   < Min[ShellID][Var] )  Min[ShellID][Var] = vt;    Var++;
-                  if ( egy  < Min[ShellID][Var] )  Min[ShellID][Var] = egy;   Var++;
-                  if ( pres < Min[ShellID][Var] )  Min[ShellID][Var] = pres;  Var++;
+                  if ( rho     < Min[ShellID][Var] )  Min[ShellID][Var] = rho;      Var++;
+                  if ( vr      < Min[ShellID][Var] )  Min[ShellID][Var] = vr;       Var++;
+                  if ( vt      < Min[ShellID][Var] )  Min[ShellID][Var] = vt;       Var++;
+                  if ( egy     < Min[ShellID][Var] )  Min[ShellID][Var] = egy;      Var++;
+                  if ( pres    < Min[ShellID][Var] )  Min[ShellID][Var] = pres;     Var++;
+
                   if ( OutputPot ) {
-                  if ( Pot  < Min[ShellID][Var] )  Min[ShellID][Var] = Pot;   Var++; }
+                  if ( Pot     < Min[ShellID][Var] )  Min[ShellID][Var] = Pot;      Var++; }
+
+                  if ( OutputParDens ) {
+                  if ( ParDens < Min[ShellID][Var] )  Min[ShellID][Var] = ParDens;  Var++; }
 
 #                 elif ( MODEL == MHD )
 #                 warning : WAIT MHD !!!
 
 #                 elif ( MODEL == ELBDM )
 //                evaluate the values on the shell
-                  Dens = Field[p][DENS][k][j][i];
-                  Real = Field[p][REAL][k][j][i];
-                  Imag = Field[p][IMAG][k][j][i];
+                  Dens    = Field[p][DENS    ][k][j][i];
+                  Real    = Field[p][REAL    ][k][j][i];
+                  Imag    = Field[p][IMAG    ][k][j][i];
+
                   if ( OutputPot )
-                  Pot  = Field[p][POTE][k][j][i];
+                  Pot     = Field[p][POTE    ][k][j][i];
+
+                  if ( OutputParDens )
+                  ParDens = Field[p][PAR_DENS][k][j][i];
 
                   if ( ELBDM_GetVir )
                   {
@@ -648,8 +723,13 @@ void ShellAverage()
                   Average[ShellID][Var++] += (double)(dv*Dens     );
                   Average[ShellID][Var++] += (double)(dv*Real     );
                   Average[ShellID][Var++] += (double)(dv*Imag     );
+
                   if ( OutputPot )
                   Average[ShellID][Var++] += (double)(dv*Pot      );
+
+                  if ( OutputParDens )
+                  Average[ShellID][Var++] += (double)(dv*ParDens  );
+
                   if ( ELBDM_GetVir ) {
                   Average[ShellID][Var++] += (double)(dv*Ek_Lap   );
                   Average[ShellID][Var++] += (double)(dv*Ek_Gra   );
@@ -674,36 +754,46 @@ void ShellAverage()
 
 //                store the maximum and minimum values
                   Var = 0;
-                  if ( Dens   > Max[ShellID][Var] )   Max[ShellID][Var] = Dens;     Var++;
-                  if ( Real   > Max[ShellID][Var] )   Max[ShellID][Var] = Real;     Var++;
-                  if ( Imag   > Max[ShellID][Var] )   Max[ShellID][Var] = Imag;     Var++;
+                  if ( Dens    > Max[ShellID][Var] )  Max[ShellID][Var] = Dens;     Var++;
+                  if ( Real    > Max[ShellID][Var] )  Max[ShellID][Var] = Real;     Var++;
+                  if ( Imag    > Max[ShellID][Var] )  Max[ShellID][Var] = Imag;     Var++;
+
                   if ( OutputPot   ) {
-                  if ( Pot    > Max[ShellID][Var] )   Max[ShellID][Var] = Pot;      Var++; }
+                  if ( Pot     > Max[ShellID][Var] )  Max[ShellID][Var] = Pot;      Var++; }
+
+                  if ( OutputParDens ) {
+                  if ( ParDens > Max[ShellID][Var] )  Max[ShellID][Var] = ParDens;  Var++; }
+
                   if ( ELBDM_GetVir ) {
-                  if ( Ek_Lap > Max[ShellID][Var] )   Max[ShellID][Var] = Ek_Lap;   Var++;
-                  if ( Ek_Gra > Max[ShellID][Var] )   Max[ShellID][Var] = Ek_Gra;   Var++;
-                  if ( vr     > Max[ShellID][Var] )   Max[ShellID][Var] = vr;       Var++;
-                  if ( vr1    > Max[ShellID][Var] )   Max[ShellID][Var] = vr1;      Var++;
-                  if ( vt1    > Max[ShellID][Var] )   Max[ShellID][Var] = vt1;      Var++;
-                  if ( wr     > Max[ShellID][Var] )   Max[ShellID][Var] = wr;       Var++;
-                  if ( wr1    > Max[ShellID][Var] )   Max[ShellID][Var] = wr1;      Var++;
-                  if ( wt1    > Max[ShellID][Var] )   Max[ShellID][Var] = wt1;      Var++; }
+                  if ( Ek_Lap  > Max[ShellID][Var] )  Max[ShellID][Var] = Ek_Lap;   Var++;
+                  if ( Ek_Gra  > Max[ShellID][Var] )  Max[ShellID][Var] = Ek_Gra;   Var++;
+                  if ( vr      > Max[ShellID][Var] )  Max[ShellID][Var] = vr;       Var++;
+                  if ( vr1     > Max[ShellID][Var] )  Max[ShellID][Var] = vr1;      Var++;
+                  if ( vt1     > Max[ShellID][Var] )  Max[ShellID][Var] = vt1;      Var++;
+                  if ( wr      > Max[ShellID][Var] )  Max[ShellID][Var] = wr;       Var++;
+                  if ( wr1     > Max[ShellID][Var] )  Max[ShellID][Var] = wr1;      Var++;
+                  if ( wt1     > Max[ShellID][Var] )  Max[ShellID][Var] = wt1;      Var++; }
 
                   Var = 0;
-                  if ( Dens   < Min[ShellID][Var] )   Min[ShellID][Var] = Dens;     Var++;
-                  if ( Real   < Min[ShellID][Var] )   Min[ShellID][Var] = Real;     Var++;
-                  if ( Imag   < Min[ShellID][Var] )   Min[ShellID][Var] = Imag;     Var++;
-                  if ( OutputPot   ) {
-                  if ( Pot    < Min[ShellID][Var] )   Min[ShellID][Var] = Pot;      Var++; }
+                  if ( Dens    < Min[ShellID][Var] )  Min[ShellID][Var] = Dens;     Var++;
+                  if ( Real    < Min[ShellID][Var] )  Min[ShellID][Var] = Real;     Var++;
+                  if ( Imag    < Min[ShellID][Var] )  Min[ShellID][Var] = Imag;     Var++;
+
+                  if ( OutputPot     ) {
+                  if ( Pot     < Min[ShellID][Var] )  Min[ShellID][Var] = Pot;      Var++; }
+
+                  if ( OutputParDens ) {
+                  if ( ParDens < Min[ShellID][Var] )  Min[ShellID][Var] = ParDens;  Var++; }
+
                   if ( ELBDM_GetVir ) {
-                  if ( Ek_Lap < Min[ShellID][Var] )   Min[ShellID][Var] = Ek_Lap;   Var++;
-                  if ( Ek_Gra < Min[ShellID][Var] )   Min[ShellID][Var] = Ek_Gra;   Var++;
-                  if ( vr     < Min[ShellID][Var] )   Min[ShellID][Var] = vr;       Var++;
-                  if ( vr1    < Min[ShellID][Var] )   Min[ShellID][Var] = vr1;      Var++;
-                  if ( vt1    < Min[ShellID][Var] )   Min[ShellID][Var] = vt1;      Var++;
-                  if ( wr     < Min[ShellID][Var] )   Min[ShellID][Var] = wr;       Var++;
-                  if ( wr1    < Min[ShellID][Var] )   Min[ShellID][Var] = wr1;      Var++;
-                  if ( wt1    < Min[ShellID][Var] )   Min[ShellID][Var] = wt1;      Var++; }
+                  if ( Ek_Lap  < Min[ShellID][Var] )  Min[ShellID][Var] = Ek_Lap;   Var++;
+                  if ( Ek_Gra  < Min[ShellID][Var] )  Min[ShellID][Var] = Ek_Gra;   Var++;
+                  if ( vr      < Min[ShellID][Var] )  Min[ShellID][Var] = vr;       Var++;
+                  if ( vr1     < Min[ShellID][Var] )  Min[ShellID][Var] = vr1;      Var++;
+                  if ( vt1     < Min[ShellID][Var] )  Min[ShellID][Var] = vt1;      Var++;
+                  if ( wr      < Min[ShellID][Var] )  Min[ShellID][Var] = wr;       Var++;
+                  if ( wr1     < Min[ShellID][Var] )  Min[ShellID][Var] = wr1;      Var++;
+                  if ( wt1     < Min[ShellID][Var] )  Min[ShellID][Var] = wt1;      Var++; }
 
 #                 else
 #                 error : ERROR : unsupported MODEL !!
@@ -754,7 +844,7 @@ void ShellAverage()
 #  elif ( MODEL == ELBDM )
    if ( ELBDM_GetVir )
    {
-      const int Idx_v = NCOMP + ( (OutputPot)?3:2 );
+      const int Idx_v = NCOMP + 2 + ( (OutputPot)?1:0 ) + ( (OutputParDens)?1:0 );
       for (int n=0; n<NShell; n++)
       {
 //       <v> = <Rho*v>/<Rho>, <|v|> = sqrt( <Rho*v^2>/<Rho> )
@@ -1048,7 +1138,9 @@ void Output_ShellAve()
 #  if   ( MODEL == HYDRO )
    char FileName[NOutMax][50] = { "AveRho", "AveV_R", "AveV_T", "AveEgy", "AvePre" };
 
-   if ( OutputPot )     sprintf( FileName[Var++], "%s", "AvePot" );
+   if      ( OutputPot )            sprintf( FileName[Var++], "%s", "AvePot"     );
+   if      ( OutputParDens == 1 )   sprintf( FileName[Var++], "%s", "AveParDens" );
+   else if ( OutputParDens == 2 )   sprintf( FileName[Var++], "%s", "AveTotDens" );
 
 #  elif ( MODEL == MHD )
 #  warning : WAIT MHD !!!
@@ -1056,7 +1148,9 @@ void Output_ShellAve()
 #  elif ( MODEL == ELBDM )
    char FileName[NOutMax][50] = { "AveDens", "AveReal", "AveImag" };
 
-   if ( OutputPot )     sprintf( FileName[Var++], "%s", "AvePote" );
+   if      ( OutputPot )            sprintf( FileName[Var++], "%s", "AvePote" );
+   if      ( OutputParDens == 1 )   sprintf( FileName[Var++], "%s", "AveParDens" );
+   else if ( OutputParDens == 2 )   sprintf( FileName[Var++], "%s", "AveTotDens" );
    if ( ELBDM_GetVir )
    {
                         sprintf( FileName[Var++], "%s", "AveEk-L"  );
@@ -1078,12 +1172,13 @@ void Output_ShellAve()
 
 
 // output data
+   const int    PAR_DENS    = ( OutputParDens ) ? ( (OutputPot)?NCOMP+1:NCOMP ) : -1;
    const double dh_min      = amr.dh[NLEVEL-1];
    const double LogBinCoeff = pow( (double)LogBin, -0.5 );  // coefficient to calculate the average radius of each log bin
    double AccMass           = 0.0;                          // accumulated mass
    double AccVolume         = 0.0;                          // accumulated volume
-   bool   OutputMass        = false;
-   bool   OutputAvePot      = false;
+   bool   OutputAccMass     = false;                        // output accumulative mass
+   bool   OutputAvePot      = false;                        // output spherically symmetric gravitational potential
 #  if ( MODEL == ELBDM )
    double ELBDM_AccEk       = 0.0;                          // accumulated Ek
    double ELBDM_AccEk_NoCM  = 0.0;                          // accumulated Ek with CM Ek subtracted
@@ -1093,6 +1188,7 @@ void Output_ShellAve()
    double *ELBDM_Ek_G       = NULL;
 #  endif
    double r, dr;
+
 
 
 // get the correct volume (scale -> dh)
@@ -1113,22 +1209,23 @@ void Output_ShellAve()
    {
 //    determine whether or not to output the accumulated quantities
 #     ifdef DENS
-      if ( v == 0 )
+      if ( v == DENS  ||  v == PAR_DENS )
       {
-         OutputMass   = true;
-         OutputAvePot = GetAvePot;
-         AccMass      = 0.0;
-         AccVolume    = 0.0;
+         OutputAccMass = true;
+         OutputAvePot  = GetAvePot;
+         AccMass       = 0.0;
+         AccVolume     = 0.0;
       }
       else
       {
-         OutputMass   = false;
-         OutputAvePot = false;
+         OutputAccMass = false;
+         OutputAvePot  = false;
       }
 #     endif
 
 #     if ( MODEL == ELBDM )
-      if (   (  v == ( NCOMP+((OutputPot)?1:0) )  )  ||  (  v == ( NCOMP+((OutputPot)?1:0)+1 )  )   )
+      if (   (  v == ( NCOMP+((OutputPot)?1:0)+((OutputParDens)?1:0)   )  )  ||
+             (  v == ( NCOMP+((OutputPot)?1:0)+((OutputParDens)?1:0)+1 )  )    )
       {
          ELBDM_OutputAccEk = true;
          ELBDM_AccEk       = 0.0;
@@ -1151,8 +1248,8 @@ void Output_ShellAve()
 
       fprintf( File, "#%19s  %10s  %13s  %13s  %13s  %13s", "Radius", "NCount", "Ave", "RMS", "Max", "Min" );
 
-      if ( OutputMass )
-      fprintf( File, "  %13s  %13s", "Mass", "AveDens" );
+      if ( OutputAccMass )
+      fprintf( File, "  %13s  %13s", "AccMass", "AveDens" );
 
 #     if ( MODEL == ELBDM )
       if ( ELBDM_OutputAccEk )
@@ -1179,9 +1276,9 @@ void Output_ShellAve()
                   r, NCount[n], Average[n][v], RMS[n][v], Max[n][v], Min[n][v] );
 
 //       get the accumulated mass
-         if ( OutputMass )
+         if ( OutputAccMass )
          {
-            AccMass   += Average[n][0]*Volume[n];
+            AccMass   += Average[n][v]*Volume[n];
             AccVolume += Volume[n];
 
             fprintf( File, "  %13.6e  %13.6e", AccMass, AccMass/AccVolume );
@@ -1204,8 +1301,8 @@ void Output_ShellAve()
             fprintf( File, "  %13.6e  %13.6e", ELBDM_AccEk, ELBDM_AccEk_NoCM );
 
 //          record Ek for analyzing the virial condition
-            if      (  v == ( NCOMP+((OutputPot)?1:0) )  )    ELBDM_Ek_L[n] = ELBDM_AccEk_NoCM;
-            else if (  v == ( NCOMP+((OutputPot)?2:1) )  )    ELBDM_Ek_G[n] = ELBDM_AccEk_NoCM;
+            if      (  v == ( NCOMP+((OutputPot)?1:0)+((OutputParDens)?1:0)   )  )  ELBDM_Ek_L[n] = ELBDM_AccEk_NoCM;
+            else if (  v == ( NCOMP+((OutputPot)?1:0)+((OutputParDens)?1:0)+1 )  )  ELBDM_Ek_G[n] = ELBDM_AccEk_NoCM;
             else
                Aux_Error( ERROR_INFO, "incorrect target component (%d) !!\n", v );
          } // if ( ELBDM_OutputAccEk )
@@ -1224,8 +1321,8 @@ void Output_ShellAve()
 
                GetR( m, rr, drr );
 
-               if ( rr < r )  AvePot += Average[m][0]*drr*rr*rr/r;
-               else           AvePot += Average[m][0]*drr*rr;
+               if ( rr < r )  AvePot += Average[m][v]*drr*rr*rr/r;
+               else           AvePot += Average[m][v]*drr*rr;
             } // for (int m=0; m<NShell; m++)
 
             AvePot *= -4.0*M_PI*NewtonG;
@@ -1245,8 +1342,8 @@ void Output_ShellAve()
 #  if ( MODEL == ELBDM )
    if ( ELBDM_GetVir )
    {
-      const int  Idx_vr_abs = NCOMP + ( (OutputPot)?4:3 );
-      const int  Idx_wr_abs = NCOMP + ( (OutputPot)?7:6 );
+      const int Idx_vr_abs = NCOMP + ( (OutputPot)?4:3 ) + ( (OutputParDens)?1:0 );
+      const int Idx_wr_abs = NCOMP + ( (OutputPot)?7:6 ) + ( (OutputParDens)?1:0 );
 
       double Ep, AvePot, mr, mdr, tr, tdr;
 
@@ -1317,7 +1414,7 @@ void Output_ShellAve()
       fclose( File_VirSurf );
 
    } // if ( ELBDM_GetVir )
-#  endif
+#  endif // #if ( MODEL == ELBDM )
 
 
 // output the center coords.
@@ -1851,6 +1948,7 @@ void TakeNote( int argc, char **argv )
    printf( "ShellWidth     = %14.7e\n",   ShellWidth*dh_min         );
    printf( "RhoThres       = %14.7e\n",   RhoThres                  );
    printf( "OutputPot      =  %s\n",      (OutputPot)?"YES":"NO"    );
+   printf( "OutputParDens  =  %d\n",      OutputParDens             );
    printf( "OutputCenter   =  %s\n",      (OutputCenter)?"YES":"NO" );
    printf( "NeedGhost      =  %s\n",      (NeedGhost)?"YES":"NO"    );
    printf( "UseTree        =  %s\n",      (UseTree)?"YES":"NO"      );

@@ -35,9 +35,9 @@ static int Table_01( const int SibID, const int Side, const char dim, const int 
 //                TVar           : Targeted variables to be prepared
 //                                 --> Supported variables in different models:
 //                                     HYDRO : _DENS, _MOMX, _MOMY, _MOMZ, _ENGY, _FLU, _VELX, _VELY, _VELZ, _PRES,
-//                                             [, _POTE] [, _DENS_GRA] [, _PASSIVE]
+//                                             [, _POTE] [, _PAR_DENS] [, _PASSIVE]
 //                                     MHD   : 
-//                                     ELBDM : _DENS, _REAL, _IMAG [, _POTE] [, _DENS_GRA]
+//                                     ELBDM : _DENS, _REAL, _IMAG [, _POTE] [, _PAR_DENS]
 //                NVar_Tot       : Total number of variables to be prepared
 //                NVar_Flu       : Number of fluid variables to be prepared
 //                TFluVarIdxList : List recording the target fluid and passive variable indices ( = [0 ... NCOMP+NPASSIVE-1] )
@@ -59,7 +59,8 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData[], const in
 #  endif // #ifdef GAMER_DEBUG
 
 
-   const bool PrepPot = ( TVar & _POTE ) ? true : false;
+   const bool PrepPot     = ( TVar & _POTE     ) ? true : false;
+   const bool PrepParDens = ( TVar & _PAR_DENS ) ? true : false;
 
 // set up parameters for the adopted interpolation scheme
    int NSide, CGhost, CSize[3], FSize[3], CSize3D, FSize3D;
@@ -145,6 +146,23 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData[], const in
 
          CData_Ptr += CSize3D;
       }
+
+
+//    a3. particle density data
+      if ( PrepParDens )
+      {
+         for (int k=0; k<Loop1[2]; k++)   {  k1 = k + Disp1[2];   k2 = k + Disp2[2];
+         for (int j=0; j<Loop1[1]; j++)   {  j1 = j + Disp1[1];   j2 = j + Disp2[1];
+                                             Idx = IDX321( Disp2[0], j2, k2, CSize[0], CSize[1] );
+         for (i1=Disp1[0]; i1<Disp1[0]+Loop1[0]; i1++)   {
+
+            CData_Ptr[Idx] = amr.patch[lv][PID]->par_dens[k1][j1][i1];
+
+            Idx ++;
+         }}}
+
+         CData_Ptr += CSize3D;
+      }
    } // if ( amr.patch[lv][PID]->fluid != NULL )
 
 
@@ -202,6 +220,23 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData[], const in
                for (i2=Disp4[0]; i2<Disp4[0]+Loop2[0]; i2++)   {
 
                   CData_Ptr[Idx] = amr.patch[lv][SibPID]->pot[k2][j2][i2];
+
+                  Idx ++;
+               }}}
+
+               CData_Ptr += CSize3D;
+            }
+
+
+//          b1-3. particle density data
+            if ( PrepParDens )
+            {
+               for (int k=0; k<Loop2[2]; k++)   {  k1 = k + Disp3[2];   k2 = k + Disp4[2];
+               for (int j=0; j<Loop2[1]; j++)   {  j1 = j + Disp3[1];   j2 = j + Disp4[1];
+                                                   Idx = IDX321( Disp3[0], j1, k1, CSize[0], CSize[1] );
+               for (i2=Disp4[0]; i2<Disp4[0]+Loop2[0]; i2++)   {
+
+                  CData_Ptr[Idx] = amr.patch[lv][SibPID]->par_dens[k2][j2][i2];
 
                   Idx ++;
                }}}
@@ -378,6 +413,14 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData[], const in
 
 // c4. interpolation on potential
    if ( PrepPot )
+   {
+      Interpolate( CData+CSize3D*NVar_SoFar, CSize, CStart, CRange, IntData+FSize3D*NVar_SoFar, FSize, FStart, 1, 
+                   IntScheme, PhaseUnwrapping_No, EnsureMonotonicity_No );
+      NVar_SoFar ++;
+   }
+
+// c5. interpolation on particle density
+   if ( PrepParDens )
    {
       Interpolate( CData+CSize3D*NVar_SoFar, CSize, CStart, CRange, IntData+FSize3D*NVar_SoFar, FSize, FStart, 1, 
                    IntScheme, PhaseUnwrapping_No, EnsureMonotonicity_No );

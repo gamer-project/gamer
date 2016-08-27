@@ -32,9 +32,9 @@ static int Table_02( const int lv, const int PID, const int Side );
 //                TVar           : Targeted variables to be prepared
 //                                 --> Supported variables in different models:
 //                                     HYDRO : _DENS, _MOMX, _MOMY, _MOMZ, _ENGY, _FLU, _VELX, _VELY, _VELZ, _PRES,
-//                                             [, _POTE] [, _DENS_GRA] [, _PASSIVE]
+//                                             [, _POTE] [, _PAR_DENS] [, _PASSIVE]
 //                                     MHD   : 
-//                                     ELBDM : _DENS, _REAL, _IMAG [, _POTE] [, _DENS_GRA]
+//                                     ELBDM : _DENS, _REAL, _IMAG [, _POTE] [, _PAR_DENS]
 //                IntScheme      : Interpolation scheme
 //                                 --> currently supported schemes include
 //                                     INT_MINMOD1D : MinMod-1D
@@ -57,7 +57,7 @@ void Prepare_PatchData( const int lv, real *h_Input_Array, const int GhostSize, 
 // check
 #  ifdef GAMER_DEBUG
 
-   if ( TVar & ~(_FLU|_POTE) )   Aux_Error( ERROR_INFO, "unsupported parameter %s = %d !!\n", "TVar", TVar );
+   if ( TVar & ~(_FLU|_POTE|_PAR_DENS) )  Aux_Error( ERROR_INFO, "unsupported parameter %s = %d !!\n", "TVar", TVar );
 
    if ( IntPhase )
    {
@@ -71,9 +71,10 @@ void Prepare_PatchData( const int lv, real *h_Input_Array, const int GhostSize, 
 #  endif // #ifdef GAMER_DEBUG
 
 
-   const int  PGSize1D = 2*( PATCH_SIZE + GhostSize );    // size of a single patch group including the ghost zone
-   const int  PGSize3D = PGSize1D*PGSize1D*PGSize1D;
-   const bool PrepPot  = ( TVar & _POTE ) ? true : false;
+   const int  PGSize1D    = 2*( PATCH_SIZE + GhostSize );    // size of a single patch group including the ghost zone
+   const int  PGSize3D    = PGSize1D*PGSize1D*PGSize1D;
+   const bool PrepPot     = ( TVar & _POTE     ) ? true : false;
+   const bool PrepParDens = ( TVar & _PAR_DENS ) ? true : false;
 
 // TFluVarIdxList : List recording the targeted fluid (and passive) variable indices ( = [0 ... NCOMP-1] )
    int  NTSib[26], *TSib[26], NVar_Flu, NVar_Tot, TFluVarIdxList[NCOMP];
@@ -88,7 +89,8 @@ void Prepare_PatchData( const int lv, real *h_Input_Array, const int GhostSize, 
 
    NVar_Tot = NVar_Flu;
 
-   if ( PrepPot )    NVar_Tot ++; 
+   if ( PrepPot )       NVar_Tot ++; 
+   if ( PrepParDens )   NVar_Tot ++; 
 
 
    if ( NVar_Tot == 0 )    
@@ -175,7 +177,23 @@ void Prepare_PatchData( const int lv, real *h_Input_Array, const int GhostSize, 
                }}}
 
                Array_Ptr += PGSize3D;
-            } // if ( PrepPot )
+            }
+
+
+//          a3. particle density data
+            if ( PrepParDens )
+            {
+               for (int k=0; k<PATCH_SIZE; k++)    {  K    = k + Disp_k;
+               for (int j=0; j<PATCH_SIZE; j++)    {  J    = j + Disp_j;
+                                                      Idx1 = IDX321( Disp_i, J, K, PGSize1D, PGSize1D );
+               for (int i=0; i<PATCH_SIZE; i++)    {
+               
+                  Array_Ptr[ Idx1 ++ ] = amr.patch[lv][PID]->par_dens[k][j][i];
+               
+               }}}
+
+               Array_Ptr += PGSize3D;
+            }
          } // for (int LocalID=0; LocalID<8; LocalID++ )
 
 
@@ -239,6 +257,22 @@ void Prepare_PatchData( const int lv, real *h_Input_Array, const int GhostSize, 
                      for (I2=Disp_i2; I2<Disp_i2+Loop_i; I2++) {
 
                         Array_Ptr[ Idx1 ++ ] = amr.patch[lv][SibPID]->pot[K2][J2][I2];
+
+                     }}}
+
+                     Array_Ptr += PGSize3D;
+                  }
+
+
+//                (b1-2) particle density data
+                  if ( PrepParDens )
+                  {
+                     for (int k=0; k<Loop_k; k++)  {  K = k + Disp_k;   K2 = k + Disp_k2;
+                     for (int j=0; j<Loop_j; j++)  {  J = j + Disp_j;   J2 = j + Disp_j2;
+                                                      Idx1 = IDX321( Disp_i, J, K, PGSize1D, PGSize1D );
+                     for (I2=Disp_i2; I2<Disp_i2+Loop_i; I2++) {
+
+                        Array_Ptr[ Idx1 ++ ] = amr.patch[lv][SibPID]->par_dens[K2][J2][I2];
 
                      }}}
 

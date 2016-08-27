@@ -7,7 +7,7 @@ extern AMR_t       amr;
 extern char       *FileName_In;
 extern tree_t     *tree;
 extern int        *BaseP;
-extern int         NShell, NIn, NOut, NX0_TOT[3], DumpID;
+extern int         NShell, NIn, NOut, NX0_TOT[3], DumpID, OutputParDens;
 extern long        Step;
 extern bool        OutputPot, Periodic, InputScale;
 extern double      ShellWidth, GetNShell, LogBin, Center[3], Center_Map[3], MaxRadius, UseMaxRhoPos_R, GAMMA, INT_MONO_COEFF;

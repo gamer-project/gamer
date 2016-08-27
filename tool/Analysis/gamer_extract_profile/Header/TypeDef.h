@@ -34,7 +34,7 @@ typedef float  real;
 
 
 #ifndef NULL_REAL
-#  define NULL_REAL        __FLT_MAX__ 
+#  define NULL_REAL        __FLT_MAX__
 #endif
 
 
@@ -69,9 +69,8 @@ typedef float  real;
 #  define MOMY             2
 #  define MOMZ             3
 #  define ENGY             4
-#  define POTE             5
 
-#  define _DENS            ( 1 << (DENS) ) 
+#  define _DENS            ( 1 << (DENS) )
 #  define _MOMX            ( 1 << (MOMX) )
 #  define _MOMY            ( 1 << (MOMY) )
 #  define _MOMZ            ( 1 << (MOMZ) )
@@ -87,9 +86,8 @@ typedef float  real;
 #  define DENS             0
 #  define REAL             1
 #  define IMAG             2
-#  define POTE             3
 
-#  define _DENS            ( 1 << (DENS) ) 
+#  define _DENS            ( 1 << (DENS) )
 #  define _REAL            ( 1 << (REAL) )
 #  define _IMAG            ( 1 << (IMAG) )
 #  define _FLU             ( _DENS | _REAL | _IMAG )
@@ -98,7 +96,8 @@ typedef float  real;
 #  error : ERROR : unsupported MODEL !!
 #endif // MODEL
 
-#  define _POTE            ( 1 << NCOMP )
+#  define _POTE            ( 1 << NCOMP   )
+#  define _PAR_DENS        ( 1 << NCOMP+1 )
 
 
 // 3D to 1D array indices transformation
@@ -165,14 +164,15 @@ void Aux_Error( const char *File, const int Line, const char *Func, const char *
 
 
 //-------------------------------------------------------------------------------------------------------
-// Structure   :  patch_t 
-// Description :  data structure of a single patch 
+// Structure   :  patch_t
+// Description :  data structure of a single patch
 //
-// Data Member :  fluid       : fluid variables (mass density, momentum density x, y ,z, energy density) 
+// Data Member :  fluid       : fluid variables (mass density, momentum density x, y ,z, energy density)
 //                pot         : potential
+//                par_dens    : particle (or total) density on grids
 //                corner[3]   : physical coordinates of the patch corner
 //
-// Method      :  patch_t     : constructor 
+// Method      :  patch_t     : constructor
 //                ~patch_t    : destructor
 //-------------------------------------------------------------------------------------------------------
 struct patch_t
@@ -180,8 +180,9 @@ struct patch_t
 
 // data members
 // ===================================================================================
-   real (*fluid)[PATCH_SIZE][PATCH_SIZE][PATCH_SIZE];
-   real (*pot  )[PATCH_SIZE][PATCH_SIZE];
+   real (*fluid   )[PATCH_SIZE][PATCH_SIZE][PATCH_SIZE];
+   real (*pot     )[PATCH_SIZE][PATCH_SIZE];
+   real (*par_dens)[PATCH_SIZE][PATCH_SIZE];
 
    int  corner[3];
    int  sibling[26];
@@ -191,65 +192,74 @@ struct patch_t
 
 
    //===================================================================================
-   // Constructor :  patch_t 
+   // Constructor :  patch_t
    // Description :  constructor of the structure "patch_t"
    //
    // Note        :  initialize data members
    //
    // Parameter   :  x,y,z : physical coordinates of the patch corner
-   //                FaPID : patch ID of the father patch    
-   //                Data  : true --> allocate physical data (fluid + pot)
+   //                FaPID : patch ID of the father patch
+   //                Data  : true --> allocate physical data (fluid + pot + par_dens)
    //===================================================================================
    patch_t( const int x, const int y, const int z, const int FaPID, const bool Data )
    {
-      corner[0] = x; 
+      corner[0] = x;
       corner[1] = y;
       corner[2] = z;
       father    = FaPID;
       son       = -1;
-      
+
       for (int s=0; s<26; s++ )     sibling[s] = -1;     // -1 <--> NO sibling
 
-      fluid = NULL;
-      pot   = NULL;
+      fluid    = NULL;
+      pot      = NULL;
+      par_dens = NULL;
 
       if ( Data )
       {
-         fluid = new real [NCOMP][PATCH_SIZE][PATCH_SIZE][PATCH_SIZE];
-         pot   = new real [PATCH_SIZE][PATCH_SIZE][PATCH_SIZE];
+         fluid    = new real [NCOMP][PATCH_SIZE][PATCH_SIZE][PATCH_SIZE];
+         pot      = new real [PATCH_SIZE][PATCH_SIZE][PATCH_SIZE];
+         par_dens = new real [PATCH_SIZE][PATCH_SIZE][PATCH_SIZE];
 
-         fluid[0][0][0][0] = -1; 
-         pot  [0][0][0]    = -1;
+         fluid   [0][0][0][0] = -1;
+         pot     [0][0][0]    = -1;
+         par_dens[0][0][0]    = -1;
       }
    }
 
 
 
    //===================================================================================
-   // Destructor  :  ~patch_t 
+   // Destructor  :  ~patch_t
    // Description :  destructor of the structure "patch_t"
    //
    // Note        :  deallocate flux and data arrays
    //===================================================================================
    ~patch_t()
    {
-      if ( fluid != NULL )    
+      if ( fluid != NULL )
       {
          delete [] fluid;
          fluid = NULL;
       }
 
-      if ( pot != NULL )    
+      if ( pot != NULL )
       {
          delete [] pot;
-         pot   = NULL;
+         pot = NULL;
+      }
+
+      if ( par_dens != NULL )
+      {
+         delete [] par_dens;
+         par_dens = NULL;
       }
    }
 
 
 
    //===================================================================================
-   // Method      :  dnew 
+   // Method      :  dnew
    // Description :  Allocate the data array
    //
    // Note        :  An error message will be displayed if array has already been allocated
@@ -262,16 +272,21 @@ struct patch_t
 
       if ( pot != NULL )
          Aux_Error( ERROR_INFO, "allocate an existing pot array !!\n" );
+
+      if ( par_dens != NULL )
+         Aux_Error( ERROR_INFO, "allocate an existing par_dens array !!\n" );
 #     endif
 
-      fluid = new real [NCOMP][PATCH_SIZE][PATCH_SIZE][PATCH_SIZE];
-      pot   = new real [PATCH_SIZE][PATCH_SIZE][PATCH_SIZE];
+      fluid    = new real [NCOMP][PATCH_SIZE][PATCH_SIZE][PATCH_SIZE];
+      pot      = new real [PATCH_SIZE][PATCH_SIZE][PATCH_SIZE];
+      par_dens = new real [PATCH_SIZE][PATCH_SIZE][PATCH_SIZE];
 
-      fluid[0][0][0][0] = -1; 
-      pot  [0][0][0]    = -1;
+      fluid   [0][0][0][0] = -1;
+      pot     [0][0][0]    = -1;
+      par_dens[0][0][0]    = -1;
    } // METHOD : dnew
 
-   
+
 }; // struct patch_t
 
 
@@ -284,7 +299,7 @@ struct patch_t
 //
 // Data Member :  patch    : pointer of each patch
 //                num      : number of patches (real patch + buffer patch) at each level
-//                scale    : grid size at each level (normalize to the grid size at the finest level 
+//                scale    : grid size at each level (normalize to the grid size at the finest level
 //                dh       : Grid size at each level
 //                BoxSize  : Simulation box size
 //                BoxScale : Simulation box scale
@@ -299,12 +314,12 @@ struct AMR_t
 // ===================================================================================
    patch_t *patch[NLEVEL][MAX_PATCH];
 
-   int    num  [NLEVEL];          
-   int    scale[NLEVEL];        
+   int    num  [NLEVEL];
+   int    scale[NLEVEL];
    double dh   [NLEVEL];
    double BoxSize [3];
    int    BoxScale[3];
-   
+
 
 
    //===================================================================================
@@ -330,12 +345,12 @@ struct AMR_t
 
    //===================================================================================
    // Method      :  pnew
-   // Description :  allocate a single patch 
+   // Description :  allocate a single patch
    //
    // Parameter   :  lv    : the targeted refinement level
    //                x,y,z : physical coordinates of the patch corner
    //                FaPID : the patch ID of the parent patch at level "lv-1"
-   //                Data  : true --> allocate physical data (fluid + pot)
+   //                Data  : true --> allocate physical data (fluid + pot + par_dens)
    //===================================================================================
    void pnew( const int lv, const int x, const int y, const int z, const int FaPID, const bool Data )
    {
@@ -360,7 +375,7 @@ struct AMR_t
 
    //===================================================================================
    // Method      :  pdelete
-   // Description :  deallocate a single patch 
+   // Description :  deallocate a single patch
    //
    // Parameter   :  lv  : the targeted refinement level
    //                PID : the patch ID to be removed

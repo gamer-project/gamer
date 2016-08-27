@@ -27,7 +27,7 @@ int  TABLE_03( const int SibID, const int Count );
 int  TABLE_04( const int SibID );
 void SiblingSearch( const int lv );
 void SiblingSearch_Base();
-void Flu_Restrict( const int lv, const bool GetAvePot );
+void Flu_Restrict( const int lv, const bool GetAvePot, const bool GetAveParDens );
 void Aux_Error( const char *File, const int Line, const char *Func, const char *Format, ... );
 void Aux_Message( FILE *Type, const char *Format, ... );
 bool Aux_CheckFileExist( const char *FileName );
