@@ -115,17 +115,18 @@ enum IntScheme_t { INT_DEFAULT=-1, INT_MINMOD3D=1, INT_MINMOD1D=2, INT_VANLEER=3
 
 
 //-------------------------------------------------------------------------------------------------------
-// Structure   :  patch_t 
-// Description :  data structure of a single patch 
+// Structure   :  patch_t
+// Description :  data structure of a single patch
 //
-// Data Member :  fluid       : fluid variables (mass density, momentum density x, y ,z, energy density) 
+// Data Member :  fluid       : fluid variables (mass density, momentum density x, y ,z, energy density)
 //                pot         : potential
+//                par_dens    : particle density on grids
 //                corner[3]   : physical coordinates of the patch corner
 //                sibling[26] : patch IDs of the 26 sibling patches
 //                father      : patch ID of the father patch
 //                son         : patch ID of the child patch
 //
-// Method      :  patch_t     : constructor 
+// Method      :  patch_t     : constructor
 //                ~patch_t    : destructor
 //-------------------------------------------------------------------------------------------------------
 struct patch_t
@@ -133,8 +134,9 @@ struct patch_t
 
 // data members
 // ===================================================================================
-   real (*fluid)[PATCH_SIZE][PATCH_SIZE][PATCH_SIZE];
-   real (*pot  )[PATCH_SIZE][PATCH_SIZE];
+   real (*fluid   )[PATCH_SIZE][PATCH_SIZE][PATCH_SIZE];
+   real (*pot     )[PATCH_SIZE][PATCH_SIZE];
+   real (*par_dens)[PATCH_SIZE][PATCH_SIZE];
 
    int  corner[3];
    int  sibling[26];
@@ -144,57 +146,65 @@ struct patch_t
 
 
    //===================================================================================
-   // Constructor :  patch_t 
+   // Constructor :  patch_t
    // Description :  constructor of the structure "patch_t"
    //
    // Note        :  initialize data members
    //
    // Parameter   :  x,y,z : physical coordinates of the patch corner
-   //                FaPID : patch ID of the father patch    
-   //                Data  : true --> allocate physical data (fluid + pot)
+   //                FaPID : patch ID of the father patch
+   //                Data  : true --> allocate physical data (fluid + pot + par_dens)
    //===================================================================================
    patch_t( const int x, const int y, const int z, const int FaPID, const bool Data )
    {
-      corner[0] = x; 
+      corner[0] = x;
       corner[1] = y;
       corner[2] = z;
       father    = FaPID;
       son       = -1;
-      
+
       for (int s=0; s<26; s++ )     sibling[s] = -1;     // -1 <--> NO sibling
 
-      fluid = NULL;
-      pot   = NULL;
+      fluid    = NULL;
+      pot      = NULL;
+      par_dens = NULL;
 
       if ( Data )
       {
-         fluid = new real [NCOMP][PATCH_SIZE][PATCH_SIZE][PATCH_SIZE];
-         pot   = new real [PATCH_SIZE][PATCH_SIZE][PATCH_SIZE];
+         fluid    = new real [NCOMP][PATCH_SIZE][PATCH_SIZE][PATCH_SIZE];
+         pot      = new real [PATCH_SIZE][PATCH_SIZE][PATCH_SIZE];
+         par_dens = new real [PATCH_SIZE][PATCH_SIZE][PATCH_SIZE];
 
-         fluid[0][0][0][0] = -1; 
+         fluid[0][0][0][0] = -1;
       }
    }
 
 
 
    //===================================================================================
-   // Destructor  :  ~patch_t 
+   // Destructor  :  ~patch_t
    // Description :  destructor of the structure "patch_t"
    //
    // Note        :  deallocate flux and data arrays
    //===================================================================================
    ~patch_t()
    {
-      if ( fluid != NULL )    
+      if ( fluid != NULL )
       {
          delete [] fluid;
          fluid = NULL;
       }
 
-      if ( pot != NULL )    
+      if ( pot != NULL )
       {
          delete [] pot;
-         pot   = NULL;
+         pot = NULL;
+      }
+
+      if ( par_dens != NULL )
+      {
+         delete [] par_dens;
+         par_dens = NULL;
       }
    }
 
@@ -211,7 +221,7 @@ struct patch_t
 //
 // Data Member :  patch    : Pointer of each patch
 //                num      : Number of patches (real patch + buffer patch) at each level
-//                scale    : Grid size at each level (normalize to the grid size at the finest level 
+//                scale    : Grid size at each level (normalize to the grid size at the finest level
 //                dh       : Grid size at each level
 //                BoxSize  : Simulation box size
 //                BoxScale : Simulation box scale
@@ -226,12 +236,12 @@ struct AMR_t
 // ===================================================================================
    patch_t *patch[NLEVEL][MAX_PATCH];
 
-   int    num  [NLEVEL];          
-   int    scale[NLEVEL];        
+   int    num  [NLEVEL];
+   int    scale[NLEVEL];
    double dh   [NLEVEL];
    double BoxSize [3];
    int    BoxScale[3];
-   
+
 
 
    //===================================================================================
@@ -263,16 +273,16 @@ struct AMR_t
 
    //===================================================================================
    // Method      :  pnew
-   // Description :  allocate a single patch 
+   // Description :  allocate a single patch
    //
-   // Note        :  a. each patch contains two patch pointers --> SANDGLASS (Sg) = 0 / 1 
+   // Note        :  a. each patch contains two patch pointers --> SANDGLASS (Sg) = 0 / 1
    //                b. Sg = 0 : store both data and relation (father,son.sibling,corner,flag,flux)
-   //                   Sg = 1 : store only data 
+   //                   Sg = 1 : store only data
    //
    // Parameter   :  lv    : the targeted refinement level
    //                x,y,z : physical coordinates of the patch corner
    //                FaPID : the patch ID of the parent patch at level "lv-1"
-   //                Data  : true --> allocate physical data (fluid + pot)
+   //                Data  : true --> allocate physical data (fluid + pot + par_dens)
    //===================================================================================
    void pnew( const int lv, const int x, const int y, const int z, const int FaPID, const bool Data )
    {
@@ -284,7 +294,7 @@ struct AMR_t
 
       if ( patch[lv][num[lv]] != NULL )
       {
-         fprintf( stderr, "ERROR : \"allocate an existing patch !!\" : Lv %d, PID %d, FaPID %d\n", 
+         fprintf( stderr, "ERROR : \"allocate an existing patch !!\" : Lv %d, PID %d, FaPID %d\n",
                   lv, num[lv], FaPID );
          exit(-1);
       }
@@ -304,7 +314,7 @@ struct AMR_t
 
    //===================================================================================
    // Method      :  pdelete
-   // Description :  deallocate a single patch 
+   // Description :  deallocate a single patch
    //
    // Note        :  a. this function should NOT be applied to the base-level patches
    //                b. this function will also deallocate the flux arrays of the targeted patch
@@ -323,7 +333,7 @@ struct AMR_t
 
       if ( patch[lv][PID]->son != -1 )
       {
-         fprintf( stderr, "ERROR : \"delete a patch with son !!\" : Lv %d, PID %d, SonPID %d\n", 
+         fprintf( stderr, "ERROR : \"delete a patch with son !!\" : Lv %d, PID %d, SonPID %d\n",
                   lv, PID, patch[lv][PID]->son );
          exit(-1);
       }
@@ -356,7 +366,7 @@ struct AMR_t
 //                BounP_IDList   : the IDs of boundary patches in 26 sibling directions
 //                BounP_PosList  : the positions of boundary patches recorded in "BounP_IDList"
 //
-// Method      :  
+// Method      :
 //-------------------------------------------------------------------------------------------------------
 struct ParaVar_t
 {
@@ -375,7 +385,7 @@ struct ParaVar_t
 
 
    //===================================================================================
-   // Constructor :  ParaVar_t 
+   // Constructor :  ParaVar_t
    // Description :  constructor of the structure "ParaVar_t"
    //
    // Note        :  initialize all pointers as NULL and all counters as 0

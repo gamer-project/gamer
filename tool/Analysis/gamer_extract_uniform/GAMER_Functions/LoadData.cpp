@@ -10,13 +10,13 @@ static void Load_Parameter_Before_2000( FILE *File, const int FormatVersion, boo
 static void Load_Parameter_After_2000( FILE *File, const int FormatVersion, bool &LoadPot, int *NX0_Tot,
                                        double &BoxSize, double &Gamma, double &ELBDM_Eta,
                                        const long HeaderOffset_Makefile, const long HeaderOffset_Constant,
-                                       const long HeaderOffset_Parameter );
+                                       const long HeaderOffset_Parameter, bool &LoadPar, int &LoadParDens, int &NParVarOut );
 static void CompareVar( const char *VarName, const bool   RestartVar, const bool   RuntimeVar, const bool Fatal );
 static void CompareVar( const char *VarName, const int    RestartVar, const int    RuntimeVar, const bool Fatal );
 static void CompareVar( const char *VarName, const long   RestartVar, const long   RuntimeVar, const bool Fatal );
 static void CompareVar( const char *VarName, const real   RestartVar, const real   RuntimeVar, const bool Fatal );
 static void CompareVar( const char *VarName, const double RestartVar, const double RuntimeVar, const bool Fatal );
-static void LoadOnePatch( FILE *File, const int lv, const int LoadPID, const bool LoadPot );
+static void LoadOnePatch( FILE *File, const int lv, const int LoadPID, const bool LoadPot, const bool LoadParDens );
 
 #ifdef SUPPORT_HDF5
 void LoadData_HDF5();
@@ -29,7 +29,7 @@ void LoadData_HDF5();
 // Function    :  LoadData
 // Description :  Load an output data of GAMER
 //
-// Parameter   :  None 
+// Parameter   :  None
 //-------------------------------------------------------------------------------------------------------
 void LoadData()
 {
@@ -143,35 +143,35 @@ void LoadData()
    fread( &size_real_restart,   sizeof(int), 1, File );
    fread( &size_double_restart, sizeof(int), 1, File );
 
-   if ( size_bool_restart != size_bool )  
+   if ( size_bool_restart != size_bool )
    {
       fprintf( stderr, "ERROR : sizeof(bool) is inconsistent : RESTART file = %d, runtime = %d !!\n",
                size_bool_restart, size_bool );
       MPI_Exit();
    }
 
-   if ( size_int_restart != size_int )  
+   if ( size_int_restart != size_int )
    {
       fprintf( stderr, "ERROR : sizeof(int) is inconsistent : RESTART file = %d, runtime = %d !!\n",
                size_int_restart, size_int );
       MPI_Exit();
    }
 
-   if ( size_long_restart != size_long )  
+   if ( size_long_restart != size_long )
    {
       fprintf( stderr, "ERROR : sizeof(long) is inconsistent : RESTART file = %d, runtime = %d !!\n",
                size_long_restart, size_long );
       MPI_Exit();
    }
 
-   if ( size_real_restart != size_real )  
+   if ( size_real_restart != size_real )
    {
       fprintf( stderr, "ERROR : sizeof(real) is inconsistent : RESTART file = %d, runtime = %d !!\n",
                size_real_restart, size_real );
       MPI_Exit();
    }
 
-   if ( size_double_restart != size_double )  
+   if ( size_double_restart != size_double )
    {
       fprintf( stderr, "ERROR : sizeof(double) is inconsistent : RESTART file = %d, runtime = %d !!\n",
                size_double_restart, size_double );
@@ -182,7 +182,8 @@ void LoadData()
 
 // b. load all simulation parameters
 // =================================================================================================
-   bool   DataOrder_xyzv;
+   bool   DataOrder_xyzv, OutputPar;
+   int    NParVarOut;
    double BoxSize;
 #  if ( MODEL != ELBDM )
    double ELBDM_ETA;
@@ -192,12 +193,16 @@ void LoadData()
    {
       Load_Parameter_Before_2000( File, FormatVersion, DataOrder_xyzv, OutputPot, NX0_TOT, BoxSize, GAMMA, ELBDM_ETA,
                                   HeaderOffset_Makefile, HeaderOffset_Constant, HeaderOffset_Parameter );
+      OutputPar     = false;
+      OutputParDens = 0;
+      NParVarOut    = -1;
    }
 
    else
    {
       Load_Parameter_After_2000( File, FormatVersion, OutputPot, NX0_TOT, BoxSize, GAMMA, ELBDM_ETA,
-                                 HeaderOffset_Makefile, HeaderOffset_Constant, HeaderOffset_Parameter );
+                                 HeaderOffset_Makefile, HeaderOffset_Constant, HeaderOffset_Parameter,
+                                 OutputPar, OutputParDens, NParVarOut );
       DataOrder_xyzv = false;
    }
 
@@ -205,8 +210,6 @@ void LoadData()
 
 // c. load the simulation information
 // =================================================================================================
-   int NPatchTotal[NLEVEL], NDataPatch_Total[NLEVEL];
-
 // verify the check code
    long checkcode;
 
@@ -218,19 +221,35 @@ void LoadData()
       Aux_Error( ERROR_INFO, "incorrect check code in the RESTART file (input %ld <-> expeect %ld) !!\n",
                  checkcode, CheckCode );
 
+
+// load information necessary for restart
+   long AdvanceCounter[NLEVEL], NPar;
+   int  NPatchTotal[NLEVEL], NDataPatch_Total[NLEVEL];
+
    fread( &DumpID,          sizeof(int),         1, File );
    fread( Time,             sizeof(double), NLEVEL, File );
    fread( &Step,            sizeof(long),        1, File );
    fread( NPatchTotal,      sizeof(int),    NLEVEL, File );
    fread( NDataPatch_Total, sizeof(int),    NLEVEL, File );
+   fread( AdvanceCounter,   sizeof(long),   NLEVEL, File );
+   fseek( File, sizeof(double), SEEK_CUR );
+
+   if ( OutputPar )
+   fread( &NPar,            sizeof(long),        1, File );
 
 
 // verify the size of the RESTART file
-   long DataSize[NLEVEL], ExpectSize, InputSize, PatchDataSize;
-
    if ( MyRank == 0 )   Aux_Message( stdout, "   Verifying the file size ...\n" );
 
-   if ( OutputPot )  
+   long DataSize[NLEVEL], ExpectSize, InputSize, PatchDataSize;
+
+   if ( OutputPot )
+   {
+      NLoad ++;
+      NOut  ++;
+   }
+
+   if ( OutputParDens )
    {
       NLoad ++;
       NOut  ++;
@@ -248,6 +267,20 @@ void LoadData()
       ExpectSize   += DataSize[lv];
    }
 
+   if ( OutputPar )
+   {
+      for (int lv=0; lv<NLEVEL; lv++)
+      {
+//       2 = NPar + starting particle index stored in each leaf patch
+         const long ParInfoSize = (long)NDataPatch_Total[lv]*2*sizeof(long);
+
+         DataSize[lv] += ParInfoSize;
+         ExpectSize   += ParInfoSize;
+      }
+
+      ExpectSize += (long)NParVarOut*NPar*sizeof(real);
+   }
+
    fseek( File, 0, SEEK_END );
    InputSize = ftell( File );
 
@@ -260,14 +293,14 @@ void LoadData()
    if ( MyRank == 0 )   Aux_Message( stdout, "   Verifying the file size ... passed\n" );
 
 
-// set up the simulation box   
+// set up the simulation box
    int NX0_Max;
    NX0_Max = ( NX0_TOT[0] > NX0_TOT[1] ) ? NX0_TOT[0] : NX0_TOT[1];
    NX0_Max = ( NX0_TOT[2] > NX0_Max    ) ? NX0_TOT[2] : NX0_Max;
 
    for (int lv=0; lv<NLEVEL; lv++)     amr.dh[lv] = BoxSize / (double)( NX0_Max*(1<<lv) );
 
-   for (int d=0; d<3; d++)    
+   for (int d=0; d<3; d++)
    {
       amr.BoxSize [d] = NX0_TOT[d]*amr.dh   [0];
       amr.BoxScale[d] = NX0_TOT[d]*amr.scale[0];
@@ -307,12 +340,12 @@ void LoadData()
 // e. load the simulation data
 // =================================================================================================
    long Offset = HeaderSize_Total;
-   int LoadCorner[3], LoadSon, PID;
+   int  LoadCorner[3], LoadSon, PID;
    bool GotYou;
 
 // array for re-ordering the fluid data from "xyzv" to "vxyz"
    real (*InvData_Flu)[PATCH_SIZE][PATCH_SIZE][NCOMP] = NULL;
-   if ( DataOrder_xyzv )   
+   if ( DataOrder_xyzv )
    {
       if ( UseTree )    Aux_Error( ERROR_INFO, "UseTree option does not support DataOrder_xyzv !!\n" );
 
@@ -333,25 +366,25 @@ void LoadData()
 //          loop over all root-level patches
             const int TenPercent = MAX( NPatchTotal[0]/10, 1 );
 
-            for (int LoadPID=0; LoadPID<NPatchTotal[0]; LoadPID++)     
+            for (int LoadPID=0; LoadPID<NPatchTotal[0]; LoadPID++)
             {
                if ( LoadPID%TenPercent == 0 )
                Aux_Message( stdout, "      %5.1f%% completed ...\n", 100.0*(double)LoadPID/NPatchTotal[0] );
-               
+
                for (int d=0; d<3; d++)    LoadCorner[d]= tree->block[0][LoadPID].corner[d];
 
 //             shift the corner scale (usually used when the target region lies outside the simulation box)
                if ( Shift2Center )
                {
-                  for (int d=0; d<3; d++) 
+                  for (int d=0; d<3; d++)
                      LoadCorner[d] = ( LoadCorner[d] + ShiftScale[d] + amr.BoxScale[d] ) % amr.BoxScale[d];
                }
 
 //             verify that the loaded patch is within the target range of MyRank
                if (  LoadCorner[0] >= TargetRange_Min[0]  &&  LoadCorner[0] < TargetRange_Max[0]  &&
                      LoadCorner[1] >= TargetRange_Min[1]  &&  LoadCorner[1] < TargetRange_Max[1]  &&
-                     LoadCorner[2] >= TargetRange_Min[2]  &&  LoadCorner[2] < TargetRange_Max[2]     )    
-                  LoadOnePatch( File, 0, LoadPID, OutputPot );
+                     LoadCorner[2] >= TargetRange_Min[2]  &&  LoadCorner[2] < TargetRange_Max[2]     )
+                  LoadOnePatch( File, 0, LoadPID, OutputPot, OutputParDens );
             }
 
             fclose( File );
@@ -375,7 +408,7 @@ void LoadData()
          {
             if ( NLoadBlock[lv] != tree->nblock[lv] )
                Aux_Error( ERROR_INFO, "Lv %2d: NLoadBlock (%d) != tree->nblock (%d) !!\n",
-                          lv, NLoadBlock[lv], tree->nblock[lv] ); 
+                          lv, NLoadBlock[lv], tree->nblock[lv] );
          }
 #        endif
 
@@ -390,19 +423,17 @@ void LoadData()
       {
          if ( MyRank == 0 )
          {
-            fprintf( stdout, "   Loading data: level %2d, MyRank %3d ... ", lv, TargetRank ); 
+            fprintf( stdout, "   Loading data: level %2d, MyRank %3d ... ", lv, TargetRank );
             fflush( stdout );
          }
 
          if ( MyRank == TargetRank )
          {
-
             File = fopen( FileName_In, "rb" );
             fseek( File, Offset, SEEK_SET );
 
             for (int LoadPID=0; LoadPID<NPatchTotal[lv]; LoadPID++)
             {
-
 //             e1. load the patch information
                fread(  LoadCorner, sizeof(int), 3, File );
                fread( &LoadSon,    sizeof(int), 1, File );
@@ -411,7 +442,7 @@ void LoadData()
 //             shift the corner scale (usually used when the target region lies outside the simulation box)
                if ( Shift2Center )
                {
-                  for (int d=0; d<3; d++) 
+                  for (int d=0; d<3; d++)
                      LoadCorner[d] = ( LoadCorner[d] + ShiftScale[d] + amr.BoxScale[d] ) % amr.BoxScale[d];
                }
 
@@ -419,7 +450,7 @@ void LoadData()
 //             verify that the loaded patch is within the target range of MyRank
                if (  LoadCorner[0] >= TargetRange_Min[0]  &&  LoadCorner[0] < TargetRange_Max[0]  &&
                      LoadCorner[1] >= TargetRange_Min[1]  &&  LoadCorner[1] < TargetRange_Max[1]  &&
-                     LoadCorner[2] >= TargetRange_Min[2]  &&  LoadCorner[2] < TargetRange_Max[2]     ) 
+                     LoadCorner[2] >= TargetRange_Min[2]  &&  LoadCorner[2] < TargetRange_Max[2]     )
                {
 
 //                verify that the loaded patch is within the candidate box
@@ -434,6 +465,9 @@ void LoadData()
                      {
                         PID = amr.num[lv] - 1;
 
+//                      e2-0. skip particle information
+                        if ( OutputPar )  fseek( File, 2*sizeof(long), SEEK_CUR );
+
 //                      e2-1. load the fluid variables
                         if ( DataOrder_xyzv )
                         {
@@ -442,28 +476,29 @@ void LoadData()
                            for (int v=0; v<NCOMP; v++)
                            for (int k=0; k<PATCH_SIZE; k++)
                            for (int j=0; j<PATCH_SIZE; j++)
-                           for (int i=0; i<PATCH_SIZE; i++)    
+                           for (int i=0; i<PATCH_SIZE; i++)
                               amr.patch[lv][PID]->fluid[v][k][j][i] = InvData_Flu[k][j][i][v];
                         }
 
                         else
-                           fread( amr.patch[lv][PID]->fluid, sizeof(real), 
+                           fread( amr.patch[lv][PID]->fluid,    sizeof(real),
                                   PATCH_SIZE*PATCH_SIZE*PATCH_SIZE*NCOMP, File );
 
 //                      e2-2. load the gravitational potential
                         if ( OutputPot )
-                           fread( amr.patch[lv][PID]->pot, sizeof(real), PATCH_SIZE*PATCH_SIZE*PATCH_SIZE, File );
+                           fread( amr.patch[lv][PID]->pot,      sizeof(real), PATCH_SIZE*PATCH_SIZE*PATCH_SIZE, File );
+
+//                      e2-3. load the particle density on grids
+                        if ( OutputParDens )
+                           fread( amr.patch[lv][PID]->par_dens, sizeof(real), PATCH_SIZE*PATCH_SIZE*PATCH_SIZE, File );
                      } // if ( GotYou )
 
                      else
-                        fseek( File, PatchDataSize, SEEK_CUR );
+                        fseek( File, PatchDataSize + ( (OutputPar)?2*sizeof(long):0 ), SEEK_CUR );
                   } // if ( LoadSon == -1 )
                } // LoadCorner within target range of MyRank
 
-               else
-               {
-                  if ( LoadSon == -1 )    fseek( File, PatchDataSize, SEEK_CUR );
-               }
+               else if ( LoadSon == -1 )  fseek( File, PatchDataSize + ( (OutputPar)?2*sizeof(long):0 ), SEEK_CUR );
 
             } // for (int LoadPID=0; LoadPID<NPatchTotal[lv]; LoadPID++)
 
@@ -477,7 +512,7 @@ void LoadData()
 
          if ( MyRank == 0 )
          {
-            fprintf( stdout, "done\n" ); 
+            fprintf( stdout, "done\n" );
             fflush( stdout );
          }
 
@@ -489,24 +524,24 @@ void LoadData()
 
 
 // record the number of the real patches
-   for (int lv=0; lv<NLEVEL; lv++)     
+   for (int lv=0; lv<NLEVEL; lv++)
    for (int m=1; m<28; m++)               NPatchComma[lv][m] = amr.num[lv];
 
 
-// complete all levels 
+// complete all levels
 //=====================================================================================
    for (int lv=0; lv<NLEVEL; lv++)
    {
 //    construct the relation : father <-> son
-      if ( lv > 0 )     FindFather( lv ); 
+      if ( lv > 0 )     FindFather( lv );
 
-//    allocate the buffer patches 
+//    allocate the buffer patches
       Buf_AllocateBufferPatch( lv );
 
 //    set up the BaseP List
       if ( lv == 0 )    Init_RecordBasePatch();
 
-//    set up the BounP_IDMap 
+//    set up the BounP_IDMap
       Buf_RecordBoundaryPatch( lv );
 
 //    construct the sibling relation
@@ -518,16 +553,19 @@ void LoadData()
 
 
 // fill up the data for patches that are not leaf patches
-   for (int lv=NLEVEL-2; lv>=0; lv--)     Flu_Restrict( lv, OutputPot );
+   for (int lv=NLEVEL-2; lv>=0; lv--)     Flu_Restrict( lv, OutputPot, OutputParDens );
 
 
 // fill up the data in the buffer patches
-   for (int lv=0; lv<NLEVEL; lv++)        
+   for (int lv=0; lv<NLEVEL; lv++)
    {
       Buf_GetBufferData( lv, 1, BufSize );
 
       if ( OutputPot )
       Buf_GetBufferData( lv, 2, BufSize );
+
+      if ( OutputParDens )
+      Buf_GetBufferData( lv, 4, BufSize );
    }
 
 
@@ -543,7 +581,7 @@ void LoadData()
 //
 // Note        :  "OPT__RESTART_HEADER == RESTART_HEADER_INHERIC" can be used in this function
 //
-// Parameter   :  File           : RESTART file pointer 
+// Parameter   :  File           : RESTART file pointer
 //                FormatVersion  : Format version of the RESTART file
 //                DataOrder_xyzv : Order of data stored in the RESTART file (true/false --> xyzv/vxyz)
 //                LoadPot        : Whether or not the RESTART file stores the potential data
@@ -601,7 +639,7 @@ void Load_Parameter_Before_2000( FILE *File, const int FormatVersion, bool &Data
 // =================================================================================================
    bool enforce_positive, char_reconstruction, hll_no_ref_state, hll_include_all_waves, waf_dissipate;
    bool use_psolver_10to14;
-   int  ncomp, patch_size, flu_ghost_size, pot_ghost_size, gra_ghost_size, check_intermediate; 
+   int  ncomp, patch_size, flu_ghost_size, pot_ghost_size, gra_ghost_size, check_intermediate;
    int  flu_block_size_x, flu_block_size_y, pot_block_size_x, pot_block_size_z, gra_block_size_z;
    real min_value, max_error;
 
@@ -632,15 +670,15 @@ void Load_Parameter_Before_2000( FILE *File, const int FormatVersion, bool &Data
 // =================================================================================================
    bool   opt__adaptive_dt, opt__dt_user, opt__flag_rho, opt__flag_rho_gradient, opt__flag_pres_gradient;
    bool   opt__flag_engy_density, opt__flag_user, opt__fixup_flux, opt__fixup_restrict, opt__overlap_mpi;
-   bool   opt__gra_p5_gradient, opt__int_time, opt__output_error, opt__output_base, opt__output_pot; 
+   bool   opt__gra_p5_gradient, opt__int_time, opt__output_error, opt__output_base, opt__output_pot;
    bool   opt__timing_barrier, opt__int_phase;
    int    nx0_tot[3], gamer_nrank, gamer_nrank_x[3], omp_nthread, ooc_nrank, ooc_nrank_x[3], regrid_count;
-   int    flag_buffer_size, max_level, opt__lr_limiter, opt__waf_limiter, flu_gpu_npgroup, gpu_nstream; 
+   int    flag_buffer_size, max_level, opt__lr_limiter, opt__waf_limiter, flu_gpu_npgroup, gpu_nstream;
    int    sor_max_iter, sor_min_iter, mg_max_iter, mg_npre_smooth, mg_npost_smooth, pot_gpu_npgroup;
    int    opt__flu_int_scheme, opt__pot_int_scheme, opt__rho_int_scheme;
    int    opt__gra_int_scheme, opt__ref_flu_int_scheme, opt__ref_pot_int_scheme;
    int    opt__output_total, opt__output_part, opt__output_mode, output_step;
-   long   end_step; 
+   long   end_step;
    real   lb_wli_max, gamma, minmod_coeff, ep_coeff, elbdm_mass, planck_const, newton_g, sor_omega;
    real   mg_tolerated_error, output_part_x, output_part_y, output_part_z;
    double box_size, end_t, omega_m0, dt__fluid, dt__gravity, dt__phase, dt__max_delta_a, output_dt;
@@ -755,7 +793,7 @@ void Load_Parameter_Before_2000( FILE *File, const int FormatVersion, bool &Data
    LoadPot        = opt__output_pot;
    BoxSize        = box_size;
    Gamma          = gamma;
-   for (int d=0; d<3; d++)    
+   for (int d=0; d<3; d++)
    NX0_Tot[d]     = nx0_tot[d];
    ELBDM_Eta      = elbdm_mass / planck_const;
 
@@ -767,9 +805,9 @@ void Load_Parameter_Before_2000( FILE *File, const int FormatVersion, bool &Data
 // Function    :  Load_Parameter_After_2000
 // Description :  Load all simulation parameters from the RESTART file with format version >= 2000
 //
-// Note        :  All floating-point variables are declared as double after version 2000 
+// Note        :  All floating-point variables are declared as double after version 2000
 //
-// Parameter   :  File           : RESTART file pointer 
+// Parameter   :  File           : RESTART file pointer
 //                FormatVersion  : Format version of the RESTART file
 //                LoadPot        : Whether or not the RESTART file stores the potential data
 //                NX0_Tot        : Total number of base-level cells along each direction
@@ -777,13 +815,16 @@ void Load_Parameter_Before_2000( FILE *File, const int FormatVersion, bool &Data
 //                Gamma          : ratio of specific heat
 //                ELBDM_Eta      : mass/planck_const in ELBDM
 //                HeaderOffset_X : Offsets of different headers
+//                LoadPar        : Whether or not the RESTART file stores the particle data
+//                LoadParDens    : Whether or not the RESTART file stores the particle density on grids
+//                NParVarOut     : Number of particles attributes stored (for checking the file size only)
 //
-// Return      :  DataOrder_xyzv, LoadPot, NX0_Tot, BoxSize, Gamma, ELBDM_Eta
+// Return      :  DataOrder_xyzv, LoadPot, NX0_Tot, BoxSize, Gamma, ELBDM_Eta, LoadPar, LoadParDens, NParVarOut
 //-------------------------------------------------------------------------------------------------------
 void Load_Parameter_After_2000( FILE *File, const int FormatVersion, bool &LoadPot, int *NX0_Tot,
                                 double &BoxSize, double &Gamma, double &ELBDM_Eta,
                                 const long HeaderOffset_Makefile, const long HeaderOffset_Constant,
-                                const long HeaderOffset_Parameter )
+                                const long HeaderOffset_Parameter, bool &LoadPar, int &LoadParDens, int &NParVarOut )
 {
 
    if ( MyRank == 0 )   Aux_Message( stdout, "   Loading simulation parameters ...\n" );
@@ -822,7 +863,12 @@ void Load_Parameter_After_2000( FILE *File, const int FormatVersion, bool &LoadP
    fread( &max_patch,                  sizeof(int),                     1,             File );
    fread( &store_pot_ghost,            sizeof(bool),                    1,             File );
    fread( &unsplit_gravity,            sizeof(bool),                    1,             File );
+
+   if ( FormatVersion >= 2100 )
    fread( &particle,                   sizeof(bool),                    1,             File );
+   else
+   particle = false;
+
    fread( &npassive,                   sizeof(int),                     1,             File );
    fread( &conserve_mass,              sizeof(bool),                    1,             File );
    fread( &laplacian_4th,              sizeof(bool),                    1,             File );
@@ -835,8 +881,9 @@ void Load_Parameter_After_2000( FILE *File, const int FormatVersion, bool &LoadP
 // =================================================================================================
    bool   enforce_positive, char_reconstruction, hll_no_ref_state, hll_include_all_waves, waf_dissipate;
    bool   use_psolver_10to14;
-   int    ncomp, patch_size, flu_ghost_size, pot_ghost_size, gra_ghost_size, check_intermediate; 
+   int    ncomp, patch_size, flu_ghost_size, pot_ghost_size, gra_ghost_size, check_intermediate;
    int    flu_block_size_x, flu_block_size_y, pot_block_size_x, pot_block_size_z, gra_block_size_z;
+   int    par_nvar, par_npassive;
    double min_value, max_error;
 
    fseek( File, HeaderOffset_Constant, SEEK_SET );
@@ -861,20 +908,24 @@ void Load_Parameter_After_2000( FILE *File, const int FormatVersion, bool &LoadP
    fread( &pot_block_size_z,           sizeof(int),                     1,             File );
    fread( &gra_block_size_z,           sizeof(int),                     1,             File );
 
+   if ( particle ) {
+   fread( &par_nvar,                   sizeof(int),                     1,             File );
+   fread( &par_npassive,               sizeof(int),                     1,             File ); }
+
 
 // c. load the simulation parameters recorded in the file "Input__Parameter"
 // =================================================================================================
    bool   opt__adaptive_dt, opt__dt_user, opt__flag_rho, opt__flag_rho_gradient, opt__flag_pres_gradient;
    bool   opt__flag_engy_density, opt__flag_user, opt__fixup_flux, opt__fixup_restrict, opt__overlap_mpi;
-   bool   opt__gra_p5_gradient, opt__int_time, opt__output_test_error, opt__output_base, opt__output_pot; 
-   bool   opt__output_baseps, opt__timing_balance, opt__int_phase;
-   int    nx0_tot[3], mpi_nrank, mpi_nrank_x[3], omp_nthread, regrid_count;
-   int    flag_buffer_size, max_level, opt__lr_limiter, opt__waf_limiter, flu_gpu_npgroup, gpu_nstream; 
+   bool   opt__gra_p5_gradient, opt__int_time, opt__output_test_error, opt__output_base, opt__output_pot;
+   bool   opt__output_baseps, opt__timing_balance, opt__int_phase, opt__corr_unphy;
+   int    nx0_tot[3], mpi_nrank, mpi_nrank_x[3], omp_nthread, regrid_count, opt__output_par_dens;
+   int    flag_buffer_size, max_level, opt__lr_limiter, opt__waf_limiter, flu_gpu_npgroup, gpu_nstream;
    int    sor_max_iter, sor_min_iter, mg_max_iter, mg_npre_smooth, mg_npost_smooth, pot_gpu_npgroup;
    int    opt__flu_int_scheme, opt__pot_int_scheme, opt__rho_int_scheme;
    int    opt__gra_int_scheme, opt__ref_flu_int_scheme, opt__ref_pot_int_scheme;
-   int    opt__output_total, opt__output_part, opt__output_mode, output_step;
-   long   end_step; 
+   int    opt__output_total, opt__output_part, opt__output_mode, output_step, opt__corr_unphy_scheme;
+   long   end_step;
    double lb_wli_max, gamma, minmod_coeff, ep_coeff, elbdm_mass, elbdm_planck_const, newton_g, sor_omega;
    double mg_tolerated_error, output_part_x, output_part_y, output_part_z;
    double box_size, end_t, omega_m0, dt__fluid, dt__gravity, dt__phase, dt__max_delta_a, output_dt;
@@ -947,6 +998,13 @@ void Load_Parameter_After_2000( FILE *File, const int FormatVersion, bool &LoadP
    fread( &output_part_z,              sizeof(double),                  1,             File );
    fread( &opt__timing_balance,        sizeof(bool),                    1,             File );
    fread( &opt__output_baseps,         sizeof(bool),                    1,             File );
+   fread( &opt__corr_unphy,            sizeof(bool),                    1,             File );
+   fread( &opt__corr_unphy_scheme,     sizeof(int),                     1,             File );
+
+   if ( particle )
+   fread( &opt__output_par_dens,       sizeof(int),                     1,             File );
+   else
+   opt__output_par_dens = 0;
 
    if ( MyRank == 0 )   Aux_Message( stdout, "   Loading simulation parameters ... done\n" );
 
@@ -982,23 +1040,26 @@ void Load_Parameter_After_2000( FILE *File, const int FormatVersion, bool &LoadP
 
 
 // set the returned variables
-   LoadPot    = opt__output_pot;
-   BoxSize    = box_size;
-   Gamma      = gamma;
-   ELBDM_Eta  = elbdm_mass / elbdm_planck_const;
-   for (int d=0; d<3; d++)    
-   NX0_Tot[d] = nx0_tot[d];
+   LoadPot     = opt__output_pot;
+   LoadPar     = particle;
+   LoadParDens = opt__output_par_dens;
+   NParVarOut  = ( LoadPar ) ? 7+par_npassive : -1;   // mass, position x/y/z, velocity x/y/z, and passive variables
+   BoxSize     = box_size;
+   Gamma       = gamma;
+   ELBDM_Eta   = elbdm_mass / elbdm_planck_const;
+   for (int d=0; d<3; d++)
+   NX0_Tot[d]  = nx0_tot[d];
 
 } // FUNCTION : Load_Parameter_After_2000
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  CompareVar 
-// Description :  Compare the input variables 
+// Function    :  CompareVar
+// Description :  Compare the input variables
 //
 // Note        :  This function is overloaded to work with different data types
 //
-// Parameter   :  VarName     : Name of the targeted variable 
+// Parameter   :  VarName     : Name of the targeted variable
 //                RestartVar  : Variable loaded from the RESTART file
 //                RuntimeVar  : Variable loaded from the Input__Parameter
 //                Fatal       : Whether or not the difference between RestartVar and RuntimeVar is fatal
@@ -1012,12 +1073,12 @@ void CompareVar( const char *VarName, const bool RestartVar, const bool RuntimeV
    {
       if ( Fatal )
       {
-         fprintf( stderr, "ERROR : %s : RESTART file (%d) != runtime (%d) !!\n", 
+         fprintf( stderr, "ERROR : %s : RESTART file (%d) != runtime (%d) !!\n",
                   VarName, RestartVar, RuntimeVar );
          MPI_Exit();
       }
       else
-         fprintf( stderr, "WARNING : %s : RESTART file (%d) != runtime (%d) !!\n", 
+         fprintf( stderr, "WARNING : %s : RESTART file (%d) != runtime (%d) !!\n",
                   VarName, RestartVar, RuntimeVar );
    }
 
@@ -1035,12 +1096,12 @@ void CompareVar( const char *VarName, const int RestartVar, const int RuntimeVar
    {
       if ( Fatal )
       {
-         fprintf( stderr, "ERROR : %s : RESTART file (%d) != runtime (%d) !!\n", 
+         fprintf( stderr, "ERROR : %s : RESTART file (%d) != runtime (%d) !!\n",
                   VarName, RestartVar, RuntimeVar );
          MPI_Exit();
       }
       else
-         fprintf( stderr, "WARNING : %s : RESTART file (%d) != runtime (%d) !!\n", 
+         fprintf( stderr, "WARNING : %s : RESTART file (%d) != runtime (%d) !!\n",
                   VarName, RestartVar, RuntimeVar );
    }
 
@@ -1058,12 +1119,12 @@ void CompareVar( const char *VarName, const long RestartVar, const long RuntimeV
    {
       if ( Fatal )
       {
-         fprintf( stderr, "ERROR : %s : RESTART file (%ld) != runtime (%ld) !!\n", 
+         fprintf( stderr, "ERROR : %s : RESTART file (%ld) != runtime (%ld) !!\n",
                   VarName, RestartVar, RuntimeVar );
          MPI_Exit();
       }
       else
-         fprintf( stderr, "WARNING : %s : RESTART file (%ld) != runtime (%ld) !!\n", 
+         fprintf( stderr, "WARNING : %s : RESTART file (%ld) != runtime (%ld) !!\n",
                   VarName, RestartVar, RuntimeVar );
    }
 
@@ -1081,12 +1142,12 @@ void CompareVar( const char *VarName, const float RestartVar, const float Runtim
    {
       if ( Fatal )
       {
-         fprintf( stderr, "ERROR : %s : RESTART file (%20.14e) != runtime (%20.14e) !!\n", 
+         fprintf( stderr, "ERROR : %s : RESTART file (%20.14e) != runtime (%20.14e) !!\n",
                   VarName, RestartVar, RuntimeVar );
          MPI_Exit();
       }
       else
-         fprintf( stderr, "WARNING : %s : RESTART file (%20.14e) != runtime (%20.14e) !!\n", 
+         fprintf( stderr, "WARNING : %s : RESTART file (%20.14e) != runtime (%20.14e) !!\n",
                   VarName, RestartVar, RuntimeVar );
    }
 
@@ -1104,12 +1165,12 @@ void CompareVar( const char *VarName, const double RestartVar, const double Runt
    {
       if ( Fatal )
       {
-         fprintf( stderr, "ERROR : %s : RESTART file (%20.14e) != runtime (%20.14e) !!\n", 
+         fprintf( stderr, "ERROR : %s : RESTART file (%20.14e) != runtime (%20.14e) !!\n",
                   VarName, RestartVar, RuntimeVar );
          MPI_Exit();
       }
       else
-         fprintf( stderr, "WARNING : %s : RESTART file (%20.14e) != runtime (%20.14e) !!\n", 
+         fprintf( stderr, "WARNING : %s : RESTART file (%20.14e) != runtime (%20.14e) !!\n",
                   VarName, RestartVar, RuntimeVar );
    }
 
@@ -1125,16 +1186,17 @@ void CompareVar( const char *VarName, const double RestartVar, const double Runt
 //                2. Only leaf patches will store data. If the target patch is not a leaf patch, this function
 //                   will be invoked recursively to find the leaf amr.
 //
-// Parameter   :  File        : GAMER data file 
+// Parameter   :  File        : GAMER data file
 //                lv          : Target level
-//                LoadPID    : Target patch index to load data
+//                LoadPID     : Target patch index to load data
 //                LoadPot     : True --> load the gravitational potential
+//                LoadParDens : True --> load the particle density on grids
 //-------------------------------------------------------------------------------------------------------
-void LoadOnePatch( FILE *File, const int lv, const int LoadPID, const bool LoadPot )
+void LoadOnePatch( FILE *File, const int lv, const int LoadPID, const bool LoadPot, const bool LoadParDens )
 {
 
    const int LoadSonPID0 = tree->block[lv][LoadPID].son;
-   int Cr[3], PID;
+   int  Cr[3], PID;
    bool GotYou;
 
 // load corner
@@ -1159,16 +1221,21 @@ void LoadOnePatch( FILE *File, const int lv, const int LoadPID, const bool LoadP
 
 //    load data
       fseek( File, tree->block[lv][LoadPID].data_pos, SEEK_SET );
-      fread( amr.patch[lv][PID]->fluid, sizeof(real), NCOMP*BLOCK_SIZE*BLOCK_SIZE*BLOCK_SIZE, File );
+
+      fread( amr.patch[lv][PID]->fluid,    sizeof(real), NCOMP*BLOCK_SIZE*BLOCK_SIZE*BLOCK_SIZE, File );
+
       if ( LoadPot )
-      fread( amr.patch[lv][PID]->pot,   sizeof(real),       BLOCK_SIZE*BLOCK_SIZE*BLOCK_SIZE, File );
+      fread( amr.patch[lv][PID]->pot,      sizeof(real),       BLOCK_SIZE*BLOCK_SIZE*BLOCK_SIZE, File );
+
+      if ( LoadParDens )
+      fread( amr.patch[lv][PID]->par_dens, sizeof(real),       BLOCK_SIZE*BLOCK_SIZE*BLOCK_SIZE, File );
    } // if ( GotYou  &&  LoadSonPID0 == -1 )
 
 // enter the next level
    if ( LoadSonPID0 != -1 )
    {
       for (int LoadSonPID=LoadSonPID0; LoadSonPID<LoadSonPID0+8; LoadSonPID++)
-         LoadOnePatch( File, lv+1, LoadSonPID, LoadPot );
+         LoadOnePatch( File, lv+1, LoadSonPID, LoadPot, LoadParDens );
    }
 
 } // FUNCTION : LoadOnePatch

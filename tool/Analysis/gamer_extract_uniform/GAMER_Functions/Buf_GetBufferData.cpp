@@ -5,12 +5,13 @@
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Buf_GetBufferData
-// Description :  Fill up the data of the buffer patches 
+// Description :  Fill up the data of the buffer patches
 //
-// Parameter   :  lv          :  The targeted refinement level to get data  
+// Parameter   :  lv          :  The targeted refinement level to get data
 //                Package     :  1 -> rho + momentum + energy
-//                               2 -> potential 
-//                               3 -> density
+//                               2 -> potential
+//                               3 -> density [USELESS HERE]
+//                               4 -> particle (or total) density
 //                ParaBuffer  :  the width of data te be sent in the buffer patches
 //-------------------------------------------------------------------------------------------------------
 void Buf_GetBufferData( const int lv, const int Package, const int ParaBuffer )
@@ -26,7 +27,7 @@ void Buf_GetBufferData( const int lv, const int Package, const int ParaBuffer )
 // set the number of variables to be sent in a single cell
    switch ( Package )
    {
-      case 1: 
+      case 1:
          NSpecies = NCOMP;
          break;
 
@@ -34,7 +35,11 @@ void Buf_GetBufferData( const int lv, const int Package, const int ParaBuffer )
          NSpecies = 1;
          break;
 
-      default: 
+      case 4:
+         NSpecies = 1;
+         break;
+
+      default:
          fprintf( stderr, "ERROR : \"incorrect parameter %s = %d\" !!\n", "Package", Package );
          fprintf( stderr, "        file <%s>, line <%d>, function <%s>\n", __FILE__, __LINE__,  __FUNCTION__  );
          MPI_Exit();
@@ -43,7 +48,7 @@ void Buf_GetBufferData( const int lv, const int Package, const int ParaBuffer )
 
    for (int s=0; s<26; s+=2)
    {
-      for (int d=0; d<3; d++) 
+      for (int d=0; d<3; d++)
          LoopWidth[d] = TABLE_01( TargetSib[s], 'x'+d, ParaBuffer, PATCH_SIZE, ParaBuffer );
 
 //    prepare the SendBuffer and RecvBuffer
@@ -73,7 +78,7 @@ void Buf_GetBufferData( const int lv, const int Package, const int ParaBuffer )
                for (int j=0; j<LoopWidth[1]; j++)                    {  jj  = j + Disp[t][1];
                for (int i=0; i<LoopWidth[0]; i++)                    {  ii  = i + Disp[t][0];
 
-                  ID = NSpecies * ( P*LoopWidth[0]*LoopWidth[1]*LoopWidth[2] + k*LoopWidth[0]*LoopWidth[1] + 
+                  ID = NSpecies * ( P*LoopWidth[0]*LoopWidth[1]*LoopWidth[2] + k*LoopWidth[0]*LoopWidth[1] +
                                     j*LoopWidth[0] + i );
 
                      SendBuffer[t][ID+v] = amr.patch[lv][PID]->fluid[v][kk][jj][ii];
@@ -87,7 +92,7 @@ void Buf_GetBufferData( const int lv, const int Package, const int ParaBuffer )
                for (int j=0; j<LoopWidth[1]; j++)                    {  jj  = j + Disp[t][1];
                for (int i=0; i<LoopWidth[0]; i++)                    {  ii  = i + Disp[t][0];
 
-                  ID = NSpecies * ( P*LoopWidth[0]*LoopWidth[1]*LoopWidth[2] + k*LoopWidth[0]*LoopWidth[1] + 
+                  ID = NSpecies * ( P*LoopWidth[0]*LoopWidth[1]*LoopWidth[2] + k*LoopWidth[0]*LoopWidth[1] +
                                     j*LoopWidth[0] + i );
 
                   SendBuffer[t][ID] = amr.patch[lv][PID]->pot[kk][jj][ii];
@@ -102,7 +107,7 @@ void Buf_GetBufferData( const int lv, const int Package, const int ParaBuffer )
                for (int j=0; j<LoopWidth[1]; j++)                    {  jj  = j + Disp[t][1];
                for (int i=0; i<LoopWidth[0]; i++)                    {  ii  = i + Disp[t][0];
 
-                  ID = NSpecies * ( P*LoopWidth[0]*LoopWidth[1]*LoopWidth[2] + k*LoopWidth[0]*LoopWidth[1] + 
+                  ID = NSpecies * ( P*LoopWidth[0]*LoopWidth[1]*LoopWidth[2] + k*LoopWidth[0]*LoopWidth[1] +
                                     j*LoopWidth[0] + i );
 
                   SendBuffer[t][ID] = amr.patch[lv][PID]->fluid[kk][jj][ii][0];
@@ -110,9 +115,24 @@ void Buf_GetBufferData( const int lv, const int Package, const int ParaBuffer )
                }}}}
                break;
 */
+
+            case 4:
+               for (int P=0; P<ParaVar.SendP_NList[lv][sib]; P++)    {  PID = ParaVar.SendP_IDList[lv][sib][P];
+               for (int k=0; k<LoopWidth[2]; k++)                    {  kk  = k + Disp[t][2];
+               for (int j=0; j<LoopWidth[1]; j++)                    {  jj  = j + Disp[t][1];
+               for (int i=0; i<LoopWidth[0]; i++)                    {  ii  = i + Disp[t][0];
+
+                  ID = NSpecies * ( P*LoopWidth[0]*LoopWidth[1]*LoopWidth[2] + k*LoopWidth[0]*LoopWidth[1] +
+                                    j*LoopWidth[0] + i );
+
+                  SendBuffer[t][ID] = amr.patch[lv][PID]->par_dens[kk][jj][ii];
+
+               }}}}
+               break;
+
          } // switch ( Package )
       } // for (int t=0; t<2; t++)
-         
+
 
 //    transfer the buffer data between different ranks
       MPI_ExchangeInfo( TargetRank, SendSize, RecvSize, SendBuffer, RecvBuffer );
@@ -132,7 +152,7 @@ void Buf_GetBufferData( const int lv, const int Package, const int ParaBuffer )
                for (int j=0; j<LoopWidth[1]; j++)                    {  jj  = j + Disp[!t][1];
                for (int i=0; i<LoopWidth[0]; i++)                    {  ii  = i + Disp[!t][0];
 
-                  ID = NSpecies * ( P*LoopWidth[0]*LoopWidth[1]*LoopWidth[2] + k*LoopWidth[0]*LoopWidth[1] + 
+                  ID = NSpecies * ( P*LoopWidth[0]*LoopWidth[1]*LoopWidth[2] + k*LoopWidth[0]*LoopWidth[1] +
                                     j*LoopWidth[0] + i );
 
                      amr.patch[lv][PID]->fluid[v][kk][jj][ii] = RecvBuffer[t][ID+v];
@@ -146,7 +166,7 @@ void Buf_GetBufferData( const int lv, const int Package, const int ParaBuffer )
                for (int j=0; j<LoopWidth[1]; j++)                    {  jj  = j + Disp[!t][1];
                for (int i=0; i<LoopWidth[0]; i++)                    {  ii  = i + Disp[!t][0];
 
-                  ID = NSpecies * ( P*LoopWidth[0]*LoopWidth[1]*LoopWidth[2] + k*LoopWidth[0]*LoopWidth[1] + 
+                  ID = NSpecies * ( P*LoopWidth[0]*LoopWidth[1]*LoopWidth[2] + k*LoopWidth[0]*LoopWidth[1] +
                                     j*LoopWidth[0] + i );
 
                   amr.patch[lv][PID]->pot[kk][jj][ii] = RecvBuffer[t][ID];
@@ -154,14 +174,14 @@ void Buf_GetBufferData( const int lv, const int Package, const int ParaBuffer )
                }}}}
                break;
 
-/*               
+/*
             case 3:
                for (int P=0; P<ParaVar.RecvP_NList[lv][sib]; P++)    {  PID = ParaVar.RecvP_IDList[lv][sib][P];
                for (int k=0; k<LoopWidth[2]; k++)                    {  kk  = k + Disp[!t][2];
                for (int j=0; j<LoopWidth[1]; j++)                    {  jj  = j + Disp[!t][1];
                for (int i=0; i<LoopWidth[0]; i++)                    {  ii  = i + Disp[!t][0];
 
-                  ID = NSpecies * ( P*LoopWidth[0]*LoopWidth[1]*LoopWidth[2] + k*LoopWidth[0]*LoopWidth[1] + 
+                  ID = NSpecies * ( P*LoopWidth[0]*LoopWidth[1]*LoopWidth[2] + k*LoopWidth[0]*LoopWidth[1] +
                                     j*LoopWidth[0] + i );
 
                   amr.patch[lv][PID]->fluid[kk][jj][ii][0] = RecvBuffer[t][ID];
@@ -169,6 +189,21 @@ void Buf_GetBufferData( const int lv, const int Package, const int ParaBuffer )
                }}}}
                break;
 */
+
+            case 4:
+               for (int P=0; P<ParaVar.RecvP_NList[lv][sib]; P++)    {  PID = ParaVar.RecvP_IDList[lv][sib][P];
+               for (int k=0; k<LoopWidth[2]; k++)                    {  kk  = k + Disp[!t][2];
+               for (int j=0; j<LoopWidth[1]; j++)                    {  jj  = j + Disp[!t][1];
+               for (int i=0; i<LoopWidth[0]; i++)                    {  ii  = i + Disp[!t][0];
+
+                  ID = NSpecies * ( P*LoopWidth[0]*LoopWidth[1]*LoopWidth[2] + k*LoopWidth[0]*LoopWidth[1] +
+                                    j*LoopWidth[0] + i );
+
+                  amr.patch[lv][PID]->par_dens[kk][jj][ii] = RecvBuffer[t][ID];
+
+               }}}}
+               break;
+
          } // switch ( Package )
 
          delete [] SendBuffer[t];

@@ -51,7 +51,7 @@ void Buf_SortBoundaryPatch( const int NPatch, int *IDList, int *PosList );
 void FindFather( const int lv );
 void SiblingSearch( const int lv );
 void SiblingSearch_Base();
-void Flu_Restrict( const int lv, const bool GetAvePot );
+void Flu_Restrict( const int lv, const bool GetAvePot, const bool GetAveParDens );
 int  TABLE_01( const int SibIndex, const char dim, const int w0, const int w1, const int w2 );
 int  TABLE_02( const int LocalID, const char dim, const int w0, const int w1 );
 int  TABLE_03( const int SibID, const int Count );

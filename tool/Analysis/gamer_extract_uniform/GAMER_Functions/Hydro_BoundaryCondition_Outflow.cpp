@@ -24,6 +24,7 @@ static void BC_Outflow_zp( real *Array, const int NVar_Flu, const int GhostSize,
 //                boundary values
 //                --> The same strategy is applied to ELBDM as well just to provide the ghost-zone data for interpolation
 //                    (even though it is actually NOT outflow BC. in ELBDM)
+//                --> In addition, it will be applied to both potential and particle density as well
 // 
 // Parameter   :  Array          : Array to store the prepared data of one patch group (including the ghost-zone data)
 //                BC_Face        : Boundary face (0~5) --> (-x,+x,-y,+y,-z,+z)

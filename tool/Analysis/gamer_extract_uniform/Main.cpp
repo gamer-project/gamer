@@ -6,8 +6,9 @@ char       *FileName_Tree     = NULL;                      // name of the tree f
 char       *Suffix            = NULL;                      // suffix attached to the output file name
 bool        OutputBinary      = false;                     // true --> output data in binary form
 bool        OutputPot         = false;                     // true --> output gravitational potential
+int         OutputParDens     = 0;                         // (0/1/2) --> off/output particle density/output total density
 bool        OutputPres        = false;                     // true --> output pressure
-bool        OutputTemp        = false;                     // true --> output temperature 
+bool        OutputTemp        = false;                     // true --> output temperature
 bool        OutputDivVel      = false;                     // true --> output divergence( velocity )
 bool        OutputCurlVel     = false;                     // true --> output curl( velocity ) = vorticity
 bool        OutputELBDM_Vel   = false;                     // true --> output velocity field in ELBDM
@@ -64,7 +65,7 @@ bool      ELBDM_IntPhase = true;
 void ReadOption( int argc, char **argv )
 {
 
-   if ( MyRank == 0 )   Aux_Message( stdout, "%s ...\n", __FUNCTION__ ); 
+   if ( MyRank == 0 )   Aux_Message( stdout, "%s ...\n", __FUNCTION__ );
 
 
    double Temp_Start[3] = { WRONG, WRONG, WRONG };
@@ -111,23 +112,23 @@ void ReadOption( int argc, char **argv )
 #        endif
          case 'I': IntScheme       = (IntScheme_t)atoi(optarg);
                    break;
-         case 'm': Int_MonoCoeff   = atof(optarg); 
+         case 'm': Int_MonoCoeff   = atof(optarg);
                    break;
          case 't': OMP_NThread     = atoi(optarg);
                    break;
-         case 'b': OutputBinary    = true; 
+         case 'b': OutputBinary    = true;
                    break;
-         case 'P': OutputPres      = true; 
+         case 'P': OutputPres      = true;
                    break;
          case 'U': OutputTemp      = true;
                    break;
-         case 'd': OutputDivVel    = true; 
+         case 'd': OutputDivVel    = true;
                    break;
-         case 'v': OutputCurlVel   = true; 
+         case 'v': OutputCurlVel   = true;
                    break;
-         case 's': InputScale      = true; 
+         case 's': InputScale      = true;
                    break;
-         case 'c': Shift2Center    = true; 
+         case 'c': Shift2Center    = true;
                    break;
          case 'T': UseTree         = true;
                    break;
@@ -136,55 +137,55 @@ void ReadOption( int argc, char **argv )
          case 'u': Convert2Temp    = atof(optarg);
                    break;
 #        if ( MODEL == ELBDM )
-         case 'V': OutputELBDM_Vel = true; 
+         case 'V': OutputELBDM_Vel = true;
                    break;
          case 'w': ELBDM_IntPhase  = false;
                    break;
 #        endif
-         case 'h': 
-         case '?': cerr << endl << "usage: " << argv[0] 
-                        << " [-h (for help)] [-i input fileName] [-o suffix to the output file [none]]" 
-                        << endl << "                      "
-                        << " [-n output option (1~7 : X-slice, Y-slice, Z-slice, X-proj, Y-proj, Z-proj, 3D)" 
-                        << endl << "                      "
+         case 'h':
+         case '?': cerr << endl << "usage: " << argv[0]
+                        << " [-h (for help)] [-i input fileName] [-o suffix to the output file [none]]"
+                        << endl << "                             "
+                        << " [-n output option (1~7 : X-slice, Y-slice, Z-slice, X-proj, Y-proj, Z-proj, 3D)"
+                        << endl << "                             "
                         << " [-x/y/z starting coordinate in x/y/z [0]] [-X/Y/Z target size in x/y/z [BoxSize]]"
-                        << endl << "                      "
+                        << endl << "                             "
 #                       ifndef SERIAL
                         << " [-p/q/r # of ranks in the x/y/z directions [1,1,1]]"
-                        << endl << "                      "
+                        << endl << "                             "
 #                       endif
 #                       if   ( MODEL == HYDRO  ||  MODEL == MHD )
                         << " [-d (output div(vel)) [off]] [-v (output curl(vel)) [off]] [-P (output pressure) [off]]"
-                        << endl << "                      "
+                        << endl << "                             "
                         << " [-U (output temperature) [off]] "
-                        << endl << "                      "
+                        << endl << "                             "
                         << " [-u coefficient for converting \"pressure over density\" to temperature"
-                        << endl << "                      "
+                        << endl << "                             "
                         << "     = velocity_code_unit^2*hydrogen_mass*mean_atomic_weight/Boltzmann_constant]"
-                        << endl << "                      "
+                        << endl << "                             "
                         << " [-B external boundary condition (0/1: periodic/outflow) [0]]"
 #                       elif ( MODEL == ELBDM )
                         << " [-V (output ELBDM vel) [off]] [-w (do not interpolate on phase) [interpolate on phase]]"
 #                       endif
-                        << endl << "                      "
+                        << endl << "                             "
                         << " [-k (convert peculiar velocity from comoving to physical coords in km/s) [false]]"
-                        << endl << "                      "
+                        << endl << "                             "
                         << " [-b (output binary file) [off]] [-l targeted level [0]]"
-                        << endl << "                      "
+                        << endl << "                             "
                         << " [-s [input cell scales instead of physical coordinates to specify the range] [off]]"
-                        << endl << "                      "
+                        << endl << "                             "
                         << " [-t number of OpenMP threads [omp_get_max_threads]]"
-                        << endl << "                      "
+                        << endl << "                             "
                         << " [-c shift the target region to the box center assuming periodicity [off]]"
-                        << endl << "                      "
+                        << endl << "                             "
 #                       if ( MODEL == ELBDM )
                         << " [-I interpolation scheme (1,2,3,4,5,6,7->MinMod-3D,MinMod-1D,vanLeer,CQuad,Quad,CQuar,Quar) [6]]"
 #                       else
                         << " [-I interpolation scheme (1,2,3,4,5,6,7->MinMod-3D,MinMod-1D,vanLeer,CQuad,Quad,CQuar,Quar) [4]]"
 #                       endif
-                        << endl << "                      "
+                        << endl << "                             "
                         << " [-m coefficient for monotonic interpolation (1->4) [2.0])"
-                        << endl << "                      "
+                        << endl << "                             "
                         << " [-T (load the tree file) [off]] [-e tree file]"
                         << endl << endl;
                    exit( 1 );
@@ -226,7 +227,7 @@ void ReadOption( int argc, char **argv )
       if ( MyRank == 0 )
       fprintf( stderr, "WARNING : option -v (OutputCurlVel) is useless in this MODEL (%d) !!\n", MODEL );
    }
-   
+
    if ( ExtBC != 0 )
    {
       ExtBC = 0;
@@ -304,7 +305,7 @@ void ReadOption( int argc, char **argv )
 #  ifdef OPENMP
    const int OMP_Max_NThread = omp_get_max_threads();
 
-   if ( OMP_NThread <= 0 )  
+   if ( OMP_NThread <= 0 )
    {
       OMP_NThread = OMP_Max_NThread;
 
@@ -318,7 +319,7 @@ void ReadOption( int argc, char **argv )
    omp_set_num_threads( OMP_NThread );
    omp_set_nested( false );
 
-#  else 
+#  else
    OMP_NThread = 1;
 #  endif // #ifdef OPENMP ... else ...
 
@@ -400,11 +401,11 @@ void ReadOption( int argc, char **argv )
    }
 
    if ( Int_MonoCoeff < 1.0  ||  Int_MonoCoeff > 4.0 )
-      Aux_Error( ERROR_INFO, "Int_MonoCoeff (%14.7e) is not within the correct range (1<=Int_MonoCoeff<=4) !!\n", 
+      Aux_Error( ERROR_INFO, "Int_MonoCoeff (%14.7e) is not within the correct range (1<=Int_MonoCoeff<=4) !!\n",
                  Int_MonoCoeff );
 
-   if ( IntScheme != INT_MINMOD3D  &&  IntScheme != INT_MINMOD1D  &&  
-        IntScheme != INT_VANLEER   &&  IntScheme != INT_CQUAD     &&  
+   if ( IntScheme != INT_MINMOD3D  &&  IntScheme != INT_MINMOD1D  &&
+        IntScheme != INT_VANLEER   &&  IntScheme != INT_CQUAD     &&
         IntScheme != INT_QUAD      &&  IntScheme != INT_CQUAR     &&
         IntScheme != INT_QUAR )
       Aux_Error( ERROR_INFO, "unsupported interpolation scheme (%d) !!\n", IntScheme );
@@ -424,7 +425,7 @@ void ReadOption( int argc, char **argv )
 #  endif
 
 
-   if ( MyRank == 0 )   Aux_Message( stdout, "%s ... done\n", __FUNCTION__ ); 
+   if ( MyRank == 0 )   Aux_Message( stdout, "%s ... done\n", __FUNCTION__ );
 
 } // FUNCTION : ReadOption
 
@@ -432,7 +433,7 @@ void ReadOption( int argc, char **argv )
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  TakeNote
-// Description :  Output the simulation parameters 
+// Description :  Output the simulation parameters
 //
 // Parameter   :  argc, argv  : command-line arguments
 //-------------------------------------------------------------------------------------------------------
@@ -501,6 +502,7 @@ void TakeNote( int argc, char *argv[] )
    cout << "NLoad             = " << NLoad                                << endl;
    cout << "NOut              = " << NOut                                 << endl;
    cout << "OutputPot         = " << ( (OutputPot      ) ? "YES" : "NO" ) << endl;
+   cout << "OutputParDens     = " << OutputParDens                        << endl;
    cout << "OutputPres        = " << ( (OutputPres     ) ? "YES" : "NO" ) << endl;
    cout << "OutputTemp        = " << ( (OutputTemp     ) ? "YES" : "NO" ) << endl;
    cout << "OutputDivVel      = " << ( (OutputDivVel   ) ? "YES" : "NO" ) << endl;
@@ -570,7 +572,7 @@ void TakeNote( int argc, char *argv[] )
          if ( Out_Start[d]+PhyCoord_Size[d] <= 0.0            )   Out_Start[d] += amr.BoxSize[d];
          if ( Out_Start[d]+PhyCoord_Size[d] >  amr.BoxSize[d] )   Out_Start[d] -= amr.BoxSize[d];
       }
-   } 
+   }
 
    cout << endl << "Summary :" << endl;
    cout << "------------------------------------------------------------------------------------------------------"   << endl;
@@ -589,7 +591,7 @@ void TakeNote( int argc, char *argv[] )
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Output
-// Description :  Output data 
+// Description :  Output data
 //-------------------------------------------------------------------------------------------------------
 void Output()
 {
@@ -605,7 +607,7 @@ void Output()
    char FileName_Out[200], FileName_Out_Binary[NOut][200];
    char Info[100];
 
-   sprintf( Info, "_x%.3f-%.3f_y%.3f-%.3f_z%.3f-%.3f_lv%d", 
+   sprintf( Info, "_x%.3f-%.3f_y%.3f-%.3f_z%.3f-%.3f_lv%d",
             PhyCoord_Start[0], PhyCoord_Start[0]+PhyCoord_Size[0],
             PhyCoord_Start[1], PhyCoord_Start[1]+PhyCoord_Size[1],
             PhyCoord_Start[2], PhyCoord_Start[2]+PhyCoord_Size[2],
@@ -648,17 +650,20 @@ void Output()
 #     error : ERROR : unsupported MODEL !!
 #     endif // MODEL
 
-      if ( OutputPot     )    sprintf( comp[NextIdx++], "_Binary_Pot"   );
-      if ( OutputPres    )    sprintf( comp[NextIdx++], "_Binary_Pres"  );
-      if ( OutputTemp    )    sprintf( comp[NextIdx++], "_Binary_Temp"  );
-      if ( OutputDivVel  )    sprintf( comp[NextIdx++], "_Binary_DivV"  );
-      if ( OutputCurlVel )    
+      if ( OutputPot )           sprintf( comp[NextIdx++], "_Binary_Pot"     );
+      if ( OutputParDens == 1 )  sprintf( comp[NextIdx++], "_Binary_ParDens" );
+      else
+      if ( OutputParDens == 2 )  sprintf( comp[NextIdx++], "_Binary_TotDens" );
+      if ( OutputPres )          sprintf( comp[NextIdx++], "_Binary_Pres"    );
+      if ( OutputTemp )          sprintf( comp[NextIdx++], "_Binary_Temp"    );
+      if ( OutputDivVel )        sprintf( comp[NextIdx++], "_Binary_DivV"    );
+      if ( OutputCurlVel )
       {
          sprintf( comp[NextIdx++], "_Binary_CurlVx" );
          sprintf( comp[NextIdx++], "_Binary_CurlVy" );
          sprintf( comp[NextIdx++], "_Binary_CurlVz" );
       }
-      if ( OutputELBDM_Vel )    
+      if ( OutputELBDM_Vel )
       {
          sprintf( comp[NextIdx++], "_Binary_VelX" );
          sprintf( comp[NextIdx++], "_Binary_VelY" );
@@ -673,7 +678,7 @@ void Output()
    }
 
 
-   if ( Suffix != NULL )   
+   if ( Suffix != NULL )
    {
       if ( OutputBinary )
          for (int v=0; v<NOut; v++)   strcat( FileName_Out_Binary[v], Suffix );
@@ -703,7 +708,7 @@ void Output()
 
    else // text files
    {
-      if ( MyRank == 0  &&  NULL != fopen(FileName_Out,"r") )  
+      if ( MyRank == 0  &&  NULL != fopen(FileName_Out,"r") )
       {
          fprintf( stderr, "Warning : the file \"%s\" already exists and will be overwritten !!\n", FileName_Out );
 
@@ -725,16 +730,16 @@ void Output()
    {
 //    for the output-slice operation, the useless rank will NOT output any data because one of the Idx_MySize[x]
 //    will be equal to zero
-      if (   MyRank == TargetRank  &&  (      OutputXYZ  < 4  
+      if (   MyRank == TargetRank  &&  (      OutputXYZ  < 4
                                          ||   OutputXYZ == 7
                                          || ( OutputXYZ == 4 && MyRank_X[0] == 0 )
-                                         || ( OutputXYZ == 5 && MyRank_X[1] == 0 ) 
+                                         || ( OutputXYZ == 5 && MyRank_X[1] == 0 )
                                          || ( OutputXYZ == 6 && MyRank_X[2] == 0 )  )   )
       {
 //       output the binary file (different components will be outputted to different files)
          if ( OutputBinary )
          {
-            for (int v=0; v<NOut; v++)    
+            for (int v=0; v<NOut; v++)
             {
                FILE *File = fopen( FileName_Out_Binary[v], "ab" );
 
@@ -749,27 +754,33 @@ void Output()
          {
             FILE *File = fopen( FileName_Out, "a" );
 
-            if ( TargetRank == 0 )  
+            if ( TargetRank == 0 )
             {
 #              if   ( MODEL == HYDRO )
                fprintf( File, "#%9s %10s %10s %20s %20s %20s %13s %13s %13s %13s %13s",
                         "i", "j", "k", "x", "y", "z", "Density", "Momentum.x", "Momentum.y", "Momentum.z", "Energy" );
 
-               if ( OutputPot       )  fprintf( File, " %13s", "Potential" );
-               if ( OutputPres      )  fprintf( File, " %13s", "Pressure" );
-               if ( OutputTemp      )  fprintf( File, " %13s", "Temperature" );
-               if ( OutputDivVel    )  fprintf( File, " %13s", "Div(vel)" );
-               if ( OutputCurlVel   )  fprintf( File, " %13s %13s %13s", "Curl(vel).x", "Curl(vel).y", "Curl(vel).z" );
+               if ( OutputPot )           fprintf( File, " %13s", "Potential" );
+               if ( OutputParDens == 1 )  fprintf( File, " %13s", "ParticleDens" );
+               else
+               if ( OutputParDens == 2 )  fprintf( File, " %13s", "TotalDens" );
+               if ( OutputPres )          fprintf( File, " %13s", "Pressure" );
+               if ( OutputTemp )          fprintf( File, " %13s", "Temperature" );
+               if ( OutputDivVel )        fprintf( File, " %13s", "Div(vel)" );
+               if ( OutputCurlVel )       fprintf( File, " %13s %13s %13s", "Curl(vel).x", "Curl(vel).y", "Curl(vel).z" );
 #              elif ( MODEL == MHD )
 #              warning : WAIT MHD !!!
 
 #              elif ( MODEL == ELBDM )
-               fprintf( File, "#%9s %10s %10s %20s %20s %20s %13s %13s %13s", 
-                        "i", "j", "k", "x", "y", "z", 
+               fprintf( File, "#%9s %10s %10s %20s %20s %20s %13s %13s %13s",
+                        "i", "j", "k", "x", "y", "z",
                         "Density", "Real", "Imag" );
 
-               if ( OutputPot       )  fprintf( File, " %13s", "Potential" );
-               if ( OutputELBDM_Vel )  fprintf( File, " %13s %13s %13s", "Vx", "Vy", "Vz" );
+               if ( OutputPot )           fprintf( File, " %13s", "Potential" );
+               if ( OutputParDens == 1 )  fprintf( File, " %13s", "ParticleDens" );
+               else
+               if ( OutputParDens == 2 )  fprintf( File, " %13s", "TotalDens" );
+               if ( OutputELBDM_Vel )     fprintf( File, " %13s %13s %13s", "Vx", "Vy", "Vz" );
 
 #              else
 #              error : ERROR : unsupported MODEL !!
@@ -783,7 +794,7 @@ void Output()
             for (int j=0; j<Idx_MySize[1]; j++)  {  jj = ( j + Idx_MyStart[1] )*scale;    y = (jj+scale_2)*dh_min;
             for (int i=0; i<Idx_MySize[0]; i++)  {  ii = ( i + Idx_MyStart[0] )*scale;    x = (ii+scale_2)*dh_min;
 
-               NextIdx = NCOMP; 
+               NextIdx = NCOMP;
                ID      = ( (long)k*Idx_MySize[1] + j )*Idx_MySize[0] + i;
 
                for (int v=0; v<NOut; v++)    u[v] = OutputArray[ ID + (long)v*Size1v ];
@@ -792,21 +803,23 @@ void Output()
                fprintf( File, "%10d %10d %10d %20.14e %20.14e %20.14e %13.6e %13.6e %13.6e %13.6e %13.6e",
                         ii, jj, kk, x, y, z, u[DENS], u[MOMX], u[MOMY], u[MOMZ], u[ENGY] );
 
-               if ( OutputPot       )  fprintf( File, " %13.6e", u[NextIdx++] );
-               if ( OutputPres      )  fprintf( File, " %13.6e", u[NextIdx++] );
-               if ( OutputTemp      )  fprintf( File, " %13.6e", u[NextIdx++] );
-               if ( OutputDivVel    )  fprintf( File, " %13.6e", u[NextIdx++] );
-               if ( OutputCurlVel   )  fprintf( File, " %13.6e %13.6e %13.6e", u[NextIdx++], u[NextIdx++], u[NextIdx++] );
+               if ( OutputPot )        fprintf( File, " %13.6e", u[NextIdx++] );
+               if ( OutputParDens )    fprintf( File, " %13.6e", u[NextIdx++] );
+               if ( OutputPres )       fprintf( File, " %13.6e", u[NextIdx++] );
+               if ( OutputTemp )       fprintf( File, " %13.6e", u[NextIdx++] );
+               if ( OutputDivVel )     fprintf( File, " %13.6e", u[NextIdx++] );
+               if ( OutputCurlVel )    fprintf( File, " %13.6e %13.6e %13.6e", u[NextIdx++], u[NextIdx++], u[NextIdx++] );
 
 #              elif ( MODEL == MHD )
 #              warning : WAIT MHD !!!
 
 #              elif ( MODEL == ELBDM )
-               fprintf( File, "%10d %10d %10d %20.14e %20.14e %20.14e %13.6e %13.6e %13.6e", 
+               fprintf( File, "%10d %10d %10d %20.14e %20.14e %20.14e %13.6e %13.6e %13.6e",
                         ii, jj, kk, x, y, z,
                         u[DENS], u[REAL], u[IMAG] );
 
-               if ( OutputPot       )  fprintf( File, " %13.6e", u[NextIdx++] );
+               if ( OutputPot )        fprintf( File, " %13.6e", u[NextIdx++] );
+               if ( OutputParDens )    fprintf( File, " %13.6e", u[NextIdx++] );
                if ( OutputELBDM_Vel )  fprintf( File, " %13.6e %13.6e %13.6e", u[NextIdx++], u[NextIdx++], u[NextIdx++] );
 
 #              else
@@ -835,7 +848,7 @@ void Output()
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  CheckParameter
-// Description :  Verify the input parameters 
+// Description :  Verify the input parameters
 //-------------------------------------------------------------------------------------------------------
 void CheckParameter()
 {
@@ -856,7 +869,7 @@ void CheckParameter()
    NRank = 1;
 #  else
    MPI_Comm_size( MPI_COMM_WORLD, &NRank );
-   if ( NRank != NGPU ) 
+   if ( NRank != NGPU )
    {
       fprintf( stderr, "ERROR : number of ranks (%d) != number of GPUs (%d) !!\n", NRank, NGPU );
       MPI_Exit();
@@ -867,7 +880,7 @@ void CheckParameter()
    {
       if ( PhyCoord_Size[d] < amr.dh[NLEVEL-1] )
       {
-         fprintf( stderr, "ERROR : incorrect PhyCoord_Size[%d] (%14.7e) --> must be >= finest cell (%14.7e)!!\n", 
+         fprintf( stderr, "ERROR : incorrect PhyCoord_Size[%d] (%14.7e) --> must be >= finest cell (%14.7e)!!\n",
                   d, PhyCoord_Size[d], amr.dh[NLEVEL-1] );
          MPI_Exit();
       }
@@ -886,7 +899,7 @@ void CheckParameter()
 
       if ( PhyCoord_Start[d] < 0.0  ||  PhyCoord_Start[d] >= amr.BoxSize[d] )
       {
-         fprintf( stderr, "ERROR : incorrect PhyCoord_Start[%d] (%14.7e) --> out of range !!\n", 
+         fprintf( stderr, "ERROR : incorrect PhyCoord_Start[%d] (%14.7e) --> out of range !!\n",
                   d, PhyCoord_Start[d] );
          MPI_Exit();
       }
@@ -912,14 +925,14 @@ void CheckParameter()
 
       if ( Scale_Start[d]+Scale_Size[d] > amr.BoxScale[d] )
       {
-         fprintf( stderr, "ERROR : incorrect Scale_Start[%d]+Scale_Size[%d] (%d) --> out of range !!\n", 
+         fprintf( stderr, "ERROR : incorrect Scale_Start[%d]+Scale_Size[%d] (%d) --> out of range !!\n",
                   d, d, Scale_Start[d]+Scale_Size[d] );
          MPI_Exit();
       }
 
       if ( Idx_Start[d]+Idx_Size[d] > NX0_TOT[d]*(1<<TargetLevel) )
       {
-         fprintf( stderr, "ERROR : incorrect Idx_Start[%d]+Idx_Size[%d] (%d) --> out of range !!\n", 
+         fprintf( stderr, "ERROR : incorrect Idx_Start[%d]+Idx_Size[%d] (%d) --> out of range !!\n",
                   d, d, Idx_Start[d]+Idx_Size[d] );
          MPI_Exit();
       }
@@ -941,10 +954,10 @@ void CheckParameter()
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  WithinCandidateBox
-// Description :  Check whether or not the input patch is within the candidate box 
+// Description :  Check whether or not the input patch is within the candidate box
 //
-// Parameter   :  Corner   : Pointer to the three corner coordinates  
-//                Size     : Size of the targeted patch 
+// Parameter   :  Corner   : Pointer to the three corner coordinates
+//                Size     : Size of the targeted patch
 //                Buf      : Buffer size attached to each side of the candidate box
 //-------------------------------------------------------------------------------------------------------
 bool WithinCandidateBox( const int *Corner, const int Size, const int Buf )
@@ -982,7 +995,7 @@ bool WithinCandidateBox( const int *Corner, const int Size, const int Buf )
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  GetCandidateBox
-// Description :  Evaluate the range of the candidate box (considering the periodic boundary condition) 
+// Description :  Evaluate the range of the candidate box (considering the periodic boundary condition)
 //-------------------------------------------------------------------------------------------------------
 void GetCandidateBox()
 {
@@ -992,7 +1005,7 @@ void GetCandidateBox()
 
    const int scale = amr.scale[TargetLevel];
 
-   for (int d=0; d<3; d++)    
+   for (int d=0; d<3; d++)
    for (int s=0; s<3; s++)
    {
       CanMin[d][s] = (Idx_Start[d]            )*scale + amr.BoxScale[d]*(s-1);
@@ -1028,19 +1041,19 @@ void Init_TargetDomain()
 // sibling mpi ranks
    if ( ExtBC == 0 )    // periodic BC.
    {
-      SibRank[ 0] = ( MyRank_X[2]             )          *NGPU_X[0]*NGPU_X[1] + 
-                    ( MyRank_X[1]             )          *NGPU_X[0]           + 
+      SibRank[ 0] = ( MyRank_X[2]             )          *NGPU_X[0]*NGPU_X[1] +
+                    ( MyRank_X[1]             )          *NGPU_X[0]           +
                     ( MyRank_X[0]+NGPU_X[0]-1 )%NGPU_X[0];
 
-      SibRank[ 1] = ( MyRank_X[2]             )          *NGPU_X[0]*NGPU_X[1] + 
-                    ( MyRank_X[1]             )          *NGPU_X[0]           + 
+      SibRank[ 1] = ( MyRank_X[2]             )          *NGPU_X[0]*NGPU_X[1] +
+                    ( MyRank_X[1]             )          *NGPU_X[0]           +
                     ( MyRank_X[0]          +1 )%NGPU_X[0];
 
-      SibRank[ 2] = ( MyRank_X[2]             )          *NGPU_X[0]*NGPU_X[1] + 
-                    ( MyRank_X[1]+NGPU_X[1]-1 )%NGPU_X[1]*NGPU_X[0]           + 
+      SibRank[ 2] = ( MyRank_X[2]             )          *NGPU_X[0]*NGPU_X[1] +
+                    ( MyRank_X[1]+NGPU_X[1]-1 )%NGPU_X[1]*NGPU_X[0]           +
                     ( MyRank_X[0]             );
 
-      SibRank[ 3] = ( MyRank_X[2]             )          *NGPU_X[0]*NGPU_X[1] + 
+      SibRank[ 3] = ( MyRank_X[2]             )          *NGPU_X[0]*NGPU_X[1] +
                     ( MyRank_X[1]          +1 )%NGPU_X[1]*NGPU_X[0]           +
                     ( MyRank_X[0]             );
 
@@ -1052,84 +1065,84 @@ void Init_TargetDomain()
                     ( MyRank_X[1]             )          *NGPU_X[0]           +
                     ( MyRank_X[0]             );
 
-      SibRank[ 6] = ( MyRank_X[2]             )          *NGPU_X[0]*NGPU_X[1] + 
-                    ( MyRank_X[1]+NGPU_X[1]-1 )%NGPU_X[1]*NGPU_X[0]           + 
+      SibRank[ 6] = ( MyRank_X[2]             )          *NGPU_X[0]*NGPU_X[1] +
+                    ( MyRank_X[1]+NGPU_X[1]-1 )%NGPU_X[1]*NGPU_X[0]           +
                     ( MyRank_X[0]+NGPU_X[0]-1 )%NGPU_X[0];
 
-      SibRank[ 7] = ( MyRank_X[2]             )          *NGPU_X[0]*NGPU_X[1] + 
-                    ( MyRank_X[1]+NGPU_X[1]-1 )%NGPU_X[1]*NGPU_X[0]           + 
+      SibRank[ 7] = ( MyRank_X[2]             )          *NGPU_X[0]*NGPU_X[1] +
+                    ( MyRank_X[1]+NGPU_X[1]-1 )%NGPU_X[1]*NGPU_X[0]           +
                     ( MyRank_X[0]          +1 )%NGPU_X[0];
 
-      SibRank[ 8] = ( MyRank_X[2]             )          *NGPU_X[0]*NGPU_X[1] + 
-                    ( MyRank_X[1]          +1 )%NGPU_X[1]*NGPU_X[0]           + 
+      SibRank[ 8] = ( MyRank_X[2]             )          *NGPU_X[0]*NGPU_X[1] +
+                    ( MyRank_X[1]          +1 )%NGPU_X[1]*NGPU_X[0]           +
                     ( MyRank_X[0]+NGPU_X[0]-1 )%NGPU_X[0];
 
-      SibRank[ 9] = ( MyRank_X[2]             )          *NGPU_X[0]*NGPU_X[1] + 
-                    ( MyRank_X[1]          +1 )%NGPU_X[1]*NGPU_X[0]           + 
+      SibRank[ 9] = ( MyRank_X[2]             )          *NGPU_X[0]*NGPU_X[1] +
+                    ( MyRank_X[1]          +1 )%NGPU_X[1]*NGPU_X[0]           +
                     ( MyRank_X[0]          +1 )%NGPU_X[0];
-      
-      SibRank[10] = ( MyRank_X[2]+NGPU_X[2]-1 )%NGPU_X[2]*NGPU_X[0]*NGPU_X[1] + 
+
+      SibRank[10] = ( MyRank_X[2]+NGPU_X[2]-1 )%NGPU_X[2]*NGPU_X[0]*NGPU_X[1] +
                     ( MyRank_X[1]+NGPU_X[1]-1 )%NGPU_X[1]*NGPU_X[0]           +
                     ( MyRank_X[0]             );
 
-      SibRank[11] = ( MyRank_X[2]+NGPU_X[2]-1 )%NGPU_X[2]*NGPU_X[0]*NGPU_X[1] + 
-                    ( MyRank_X[1]          +1 )%NGPU_X[1]*NGPU_X[0]           + 
+      SibRank[11] = ( MyRank_X[2]+NGPU_X[2]-1 )%NGPU_X[2]*NGPU_X[0]*NGPU_X[1] +
+                    ( MyRank_X[1]          +1 )%NGPU_X[1]*NGPU_X[0]           +
                     ( MyRank_X[0]             );
 
-      SibRank[12] = ( MyRank_X[2]          +1 )%NGPU_X[2]*NGPU_X[0]*NGPU_X[1] + 
+      SibRank[12] = ( MyRank_X[2]          +1 )%NGPU_X[2]*NGPU_X[0]*NGPU_X[1] +
                     ( MyRank_X[1]+NGPU_X[1]-1 )%NGPU_X[1]*NGPU_X[0]           +
-                    ( MyRank_X[0]             );             
+                    ( MyRank_X[0]             );
 
-      SibRank[13] = ( MyRank_X[2]          +1 )%NGPU_X[2]*NGPU_X[0]*NGPU_X[1] + 
+      SibRank[13] = ( MyRank_X[2]          +1 )%NGPU_X[2]*NGPU_X[0]*NGPU_X[1] +
                     ( MyRank_X[1]          +1 )%NGPU_X[1]*NGPU_X[0]           +
                     ( MyRank_X[0]             );
 
       SibRank[14] = ( MyRank_X[2]+NGPU_X[2]-1 )%NGPU_X[2]*NGPU_X[0]*NGPU_X[1] +
-                    ( MyRank_X[1]             )          *NGPU_X[0]           + 
+                    ( MyRank_X[1]             )          *NGPU_X[0]           +
                     ( MyRank_X[0]+NGPU_X[0]-1 )%NGPU_X[0];
 
-      SibRank[15] = ( MyRank_X[2]          +1 )%NGPU_X[2]*NGPU_X[0]*NGPU_X[1] + 
-                    ( MyRank_X[1]             )*NGPU_X[0]                     + 
+      SibRank[15] = ( MyRank_X[2]          +1 )%NGPU_X[2]*NGPU_X[0]*NGPU_X[1] +
+                    ( MyRank_X[1]             )*NGPU_X[0]                     +
                     ( MyRank_X[0]+NGPU_X[0]-1 )%NGPU_X[0];
-      
-      SibRank[16] = ( MyRank_X[2]+NGPU_X[2]-1 )%NGPU_X[2]*NGPU_X[0]*NGPU_X[1] + 
-                    ( MyRank_X[1]             )          *NGPU_X[0]           + 
+
+      SibRank[16] = ( MyRank_X[2]+NGPU_X[2]-1 )%NGPU_X[2]*NGPU_X[0]*NGPU_X[1] +
+                    ( MyRank_X[1]             )          *NGPU_X[0]           +
                     ( MyRank_X[0]          +1 )%NGPU_X[0];
-      
+
       SibRank[17] = ( MyRank_X[2]          +1 )%NGPU_X[2]*NGPU_X[0]*NGPU_X[1] +
-                    ( MyRank_X[1]             )          *NGPU_X[0]           + 
+                    ( MyRank_X[1]             )          *NGPU_X[0]           +
                     ( MyRank_X[0]          +1 )%NGPU_X[0];
-      
-      SibRank[18] = ( MyRank_X[2]+NGPU_X[2]-1 )%NGPU_X[2]*NGPU_X[0]*NGPU_X[1] + 
-                    ( MyRank_X[1]+NGPU_X[1]-1 )%NGPU_X[1]*NGPU_X[0]           + 
+
+      SibRank[18] = ( MyRank_X[2]+NGPU_X[2]-1 )%NGPU_X[2]*NGPU_X[0]*NGPU_X[1] +
+                    ( MyRank_X[1]+NGPU_X[1]-1 )%NGPU_X[1]*NGPU_X[0]           +
                     ( MyRank_X[0]+NGPU_X[0]-1 )%NGPU_X[0];
-      
-      SibRank[19] = ( MyRank_X[2]+NGPU_X[2]-1 )%NGPU_X[2]*NGPU_X[0]*NGPU_X[1] + 
-                    ( MyRank_X[1]+NGPU_X[1]-1 )%NGPU_X[1]*NGPU_X[0]           + 
+
+      SibRank[19] = ( MyRank_X[2]+NGPU_X[2]-1 )%NGPU_X[2]*NGPU_X[0]*NGPU_X[1] +
+                    ( MyRank_X[1]+NGPU_X[1]-1 )%NGPU_X[1]*NGPU_X[0]           +
                     ( MyRank_X[0]          +1 )%NGPU_X[0];
-      
-      SibRank[20] = ( MyRank_X[2]+NGPU_X[2]-1 )%NGPU_X[2]*NGPU_X[0]*NGPU_X[1] + 
-                    ( MyRank_X[1]          +1 )%NGPU_X[1]*NGPU_X[0]           + 
+
+      SibRank[20] = ( MyRank_X[2]+NGPU_X[2]-1 )%NGPU_X[2]*NGPU_X[0]*NGPU_X[1] +
+                    ( MyRank_X[1]          +1 )%NGPU_X[1]*NGPU_X[0]           +
                     ( MyRank_X[0]+NGPU_X[0]-1 )%NGPU_X[0];
-      
-      SibRank[21] = ( MyRank_X[2]+NGPU_X[2]-1 )%NGPU_X[2]*NGPU_X[0]*NGPU_X[1] + 
-                    ( MyRank_X[1]          +1 )%NGPU_X[1]*NGPU_X[0]           + 
+
+      SibRank[21] = ( MyRank_X[2]+NGPU_X[2]-1 )%NGPU_X[2]*NGPU_X[0]*NGPU_X[1] +
+                    ( MyRank_X[1]          +1 )%NGPU_X[1]*NGPU_X[0]           +
                     ( MyRank_X[0]          +1 )%NGPU_X[0];
-      
-      SibRank[22] = ( MyRank_X[2]          +1 )%NGPU_X[2]*NGPU_X[0]*NGPU_X[1] + 
-                    ( MyRank_X[1]+NGPU_X[1]-1 )%NGPU_X[1]*NGPU_X[0]           + 
+
+      SibRank[22] = ( MyRank_X[2]          +1 )%NGPU_X[2]*NGPU_X[0]*NGPU_X[1] +
+                    ( MyRank_X[1]+NGPU_X[1]-1 )%NGPU_X[1]*NGPU_X[0]           +
                     ( MyRank_X[0]+NGPU_X[0]-1 )%NGPU_X[0];
-      
+
       SibRank[23] = ( MyRank_X[2]          +1 )%NGPU_X[2]*NGPU_X[0]*NGPU_X[1] +
-                    ( MyRank_X[1]+NGPU_X[1]-1 )%NGPU_X[1]*NGPU_X[0]           + 
+                    ( MyRank_X[1]+NGPU_X[1]-1 )%NGPU_X[1]*NGPU_X[0]           +
                     ( MyRank_X[0]          +1 )%NGPU_X[0];
-      
-      SibRank[24] = ( MyRank_X[2]          +1 )%NGPU_X[2]*NGPU_X[0]*NGPU_X[1] + 
-                    ( MyRank_X[1]          +1 )%NGPU_X[1]*NGPU_X[0]           + 
+
+      SibRank[24] = ( MyRank_X[2]          +1 )%NGPU_X[2]*NGPU_X[0]*NGPU_X[1] +
+                    ( MyRank_X[1]          +1 )%NGPU_X[1]*NGPU_X[0]           +
                     ( MyRank_X[0]+NGPU_X[0]-1 )%NGPU_X[0];
-      
-      SibRank[25] = ( MyRank_X[2]          +1 )%NGPU_X[2]*NGPU_X[0]*NGPU_X[1] + 
-                    ( MyRank_X[1]          +1 )%NGPU_X[1]*NGPU_X[0]           + 
+
+      SibRank[25] = ( MyRank_X[2]          +1 )%NGPU_X[2]*NGPU_X[0]*NGPU_X[1] +
+                    ( MyRank_X[1]          +1 )%NGPU_X[1]*NGPU_X[0]           +
                     ( MyRank_X[0]          +1 )%NGPU_X[0];
    } // if ( ExtBC == 0 )
 
@@ -1176,7 +1189,7 @@ void Init_TargetDomain()
          for (int d=0; d<3; d++)    Disp[d] = TABLE_01( s, 'x'+d, -1, 0, +1 );
 
          ID1        = ( (Buf+MyRank_X[2]+Disp[2])*Size[1] + (Buf+MyRank_X[1]+Disp[1]) )*Size[0] + (Buf+MyRank_X[0]+Disp[0]);
-         SibRank[s] = RankMap[ID1]; 
+         SibRank[s] = RankMap[ID1];
       }
 
       delete [] RankMap;
@@ -1232,11 +1245,11 @@ void Init_TargetDomain()
          {
             PhyCoord_Start[d] = amr.BoxSize[d]*( (double)Scale_Start[d]/(double)amr.BoxScale[d] );
 
-            if ( MyRank == 0 )   
+            if ( MyRank == 0 )
             {
                Aux_Message( stderr, "WARNING : starting Scale/PhyCoord[%d] (%d/%13.7e) lies outside the simulation box\n",
                             d, Scale_Start0, PhyCoord_Start0 );
-               Aux_Message( stderr, "          --> reset starting Scale/PhyCoord to (%d/%13.7e)\n", 
+               Aux_Message( stderr, "          --> reset starting Scale/PhyCoord to (%d/%13.7e)\n",
                             Scale_Start[d], PhyCoord_Start[d] );
             }
          }
@@ -1250,12 +1263,12 @@ void Init_TargetDomain()
          {
             Shift2Center = true;
 
-            if ( MyRank == 0 )   
+            if ( MyRank == 0 )
             {
                Aux_Message( stderr, "WARNING : target region along [%d] lies outside the simulation box !!\n", d );
-               Aux_Message( stderr, "          Scale   : %13d + %13d = %13d > %13d\n", 
+               Aux_Message( stderr, "          Scale   : %13d + %13d = %13d > %13d\n",
                             Scale_Start[d], Scale_Size[d], Scale_Start[d]+Scale_Size[d], amr.BoxScale[d] );
-               Aux_Message( stderr, "          PhyCoord: %13.7e + %13.7e = %13.7e > %13.7e\n", 
+               Aux_Message( stderr, "          PhyCoord: %13.7e + %13.7e = %13.7e > %13.7e\n",
                             PhyCoord_Start[d], PhyCoord_Size[d], PhyCoord_Start[d]+PhyCoord_Size[d], amr.BoxSize[d] );
                Aux_Message( stderr, "          --> Shift2Center is turned ON automatically\n" );
             }
@@ -1271,7 +1284,7 @@ void Init_TargetDomain()
    {
       const int ShiftUnit = PS2*amr.scale[0]; // ShiftScale must be a multiple of the base-level patch group
 
-      for (int d=0; d<3; d++)    
+      for (int d=0; d<3; d++)
       {
          ShiftScale[d] = ShiftUnit*(  (int)round( (0.5*amr.BoxScale[d]-Scale_Start[d]-0.5*Scale_Size[d])/ShiftUnit )  );
 
@@ -1288,7 +1301,7 @@ void Init_TargetDomain()
 
          if ( PhyCoord_Start[d] < 0.0  ||  PhyCoord_Start[d] >= amr.BoxSize[d] )
          {
-            fprintf( stderr, "ERROR : incorrect PhyCoord_Start[%d] (%14.7e) --> out of range !!\n", 
+            fprintf( stderr, "ERROR : incorrect PhyCoord_Start[%d] (%14.7e) --> out of range !!\n",
                      d, PhyCoord_Start[d] );
             MPI_Exit();
          }
@@ -1308,7 +1321,7 @@ void Init_TargetDomain()
 
          if ( Scale_Start[d]+Scale_Size[d] > amr.BoxScale[d] )
          {
-            fprintf( stderr, "ERROR : incorrect Scale_Start[%d]+Scale_Size[%d] (%d) --> out of range !!\n", 
+            fprintf( stderr, "ERROR : incorrect Scale_Start[%d]+Scale_Size[%d] (%d) --> out of range !!\n",
                      d, d, Scale_Start[d]+Scale_Size[d] );
             MPI_Exit();
          }
@@ -1317,7 +1330,7 @@ void Init_TargetDomain()
 
 
 // set the targeted array indices and ranges
-   for (int d=0; d<3; d++)    
+   for (int d=0; d<3; d++)
    {
       Idx_Start[d] = Scale_Start[d]   /amr.scale[TargetLevel];
       Idx_Size [d] = (Scale_Size[d]-1)/amr.scale[TargetLevel] + 1;
@@ -1366,7 +1379,7 @@ void Init_TargetDomain()
             MPI_Exit();
          }
 
-         if ( Idx_MySize[d] < 0  ||  Idx_MySize[d] > NX0[d]*(1<<TargetLevel) ) 
+         if ( Idx_MySize[d] < 0  ||  Idx_MySize[d] > NX0[d]*(1<<TargetLevel) )
          {
             fprintf( stderr, "ERROR : incorrect Idx_MySize[%d] (%d) --> out of range !!\n", d, Idx_MySize[d] );
             MPI_Exit();
@@ -1374,7 +1387,7 @@ void Init_TargetDomain()
 
          if ( Idx_MyStart[d]+Idx_MySize[d] > Idx_Start[d]+Idx_Size[d] )
          {
-            fprintf( stderr, "ERROR : incorrect Idx_MyStart[%d]+Idx_MySize[%d] (%d) --> out of range (%d) !!\n", 
+            fprintf( stderr, "ERROR : incorrect Idx_MyStart[%d]+Idx_MySize[%d] (%d) --> out of range (%d) !!\n",
                      d, d, Idx_MyStart[d]+Idx_MySize[d], Idx_Start[d]+Idx_Size[d] );
             MPI_Exit();
          }
@@ -1385,7 +1398,7 @@ void Init_TargetDomain()
       {
          Idx_MyStart[d] = 0;
          Idx_MySize [d] = ( OutputXYZ == d+4 ) ? 1 : 0;  // set Idx_MySize[X] = 1 for the function "SumOverRanks"
-      } 
+      }
    } // for (int d=0; d<3; d++)
 
 
@@ -1398,7 +1411,7 @@ void Init_TargetDomain()
 #ifndef SERIAL
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Init_MPI
-// Description :  Initialize MPI and parameters for parallelization 
+// Description :  Initialize MPI and parameters for parallelization
 //-------------------------------------------------------------------------------------------------------
 void Init_MPI( int *argc, char ***argv )
 {
@@ -1424,12 +1437,12 @@ void Init_MPI( int *argc, char ***argv )
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  PreparePatch
-// Description :  Prepare the central and buffer data of a single patch 
+// Description :  Prepare the central and buffer data of a single patch
 //
 // Note        :  If any of the sibling patch of PID does NOT exist, it will interpolate on the CData to fill up
 //                the buffer data in FData
 //
-// Parameter   :  lv       : Refinement level of the targeted patch 
+// Parameter   :  lv       : Refinement level of the targeted patch
 //                PID      : Patch index of the targeted patch
 //                Buffer   : Size of buffer (ghost zone)
 //                FData    : Array to store the prepared data ( width = PATCH_SIZE + 2*Buffer )
@@ -1447,7 +1460,16 @@ void PreparePatch( const int lv, const int PID, const int Buffer, real FData[], 
    const int  Size3[3] = { Size, Size, Size };
 
    int  i0, j0, k0, ii0, jj0, kk0, i_loop, j_loop, k_loop, ID, CStart[3], CRange[3], FStart[3];
-   int  SibPID, LocalID, BC_Sibling, BC_Idx_Start[3], BC_Idx_End[3];
+   int  SibPID, LocalID, BC_Sibling, BC_Idx_Start[3], BC_Idx_End[3], PotIdx, ParDensIdx, NextIdx;
+
+
+// determine the array indices for outputting potential and particle densities
+   NextIdx    = NCOMP;
+   PotIdx     = -1;
+   ParDensIdx = -1;
+
+   if ( OutputPot     )    PotIdx     = NextIdx ++;
+   if ( OutputParDens )    ParDensIdx = NextIdx ++;
 
 
 // determine which variable needs to be monotonic
@@ -1456,24 +1478,24 @@ void PreparePatch( const int lv, const int PID, const int Buffer, real FData[], 
    const bool EnsureMonotonicity_Yes = true;
    const bool EnsureMonotonicity_No  = false;
 
-   bool Monotonicity[NLoad]; 
+   bool Monotonicity[NLoad];
 
    for (int v=0; v<NLoad; v++)
    {
 #     if ( MODEL == HYDRO )
-      if ( v == DENS  ||  v == ENGY )  Monotonicity[v] = EnsureMonotonicity_Yes;
-      else                             Monotonicity[v] = EnsureMonotonicity_No;
+      if ( v == DENS  ||  v == ENGY  ||  v == ParDensIdx )  Monotonicity[v] = EnsureMonotonicity_Yes;
+      else                                                  Monotonicity[v] = EnsureMonotonicity_No;
 
 #     elif ( MODEL == MHD )
 #     warning : WAIT MHD !!!
 
 #     elif ( MODEL == ELBDM )
-      if ( v == DENS )                 Monotonicity[v] = EnsureMonotonicity_Yes;
-      else                             Monotonicity[v] = EnsureMonotonicity_No;
+      if ( v == DENS  ||  v == ParDensIdx )                 Monotonicity[v] = EnsureMonotonicity_Yes;
+      else                                                  Monotonicity[v] = EnsureMonotonicity_No;
 
 #     else
-                                       Monotonicity[v] = EnsureMonotonicity_No;
-#     warning : WARNING : DO YOU WANT TO ENSURE THE POSITIVITY OF INTERPOLATION ??          
+                                                            Monotonicity[v] = EnsureMonotonicity_No;
+#     warning : WARNING : DO YOU WANT TO ENSURE THE POSITIVITY OF INTERPOLATION ??
 #     endif // MODEL
    }
 
@@ -1489,13 +1511,16 @@ void PreparePatch( const int lv, const int PID, const int Buffer, real FData[], 
 // prepare the central data
 #  ifdef GAMER_DEBUG
    if ( amr.patch[lv][PID]->fluid == NULL )
-      Aux_Error( ERROR_INFO, "lv %d, PID %d, the fluid array is NOT allocated !!\n", lv, PID );
+      Aux_Error( ERROR_INFO, "lv %d, PID %d, fluid array is NOT allocated !!\n", lv, PID );
 
    if ( OutputPot  &&  amr.patch[lv][PID]->pot == NULL )
-      Aux_Error( ERROR_INFO, "lv %d, PID %d, the potential array is NOT allocated !!\n", lv, PID );
+      Aux_Error( ERROR_INFO, "lv %d, PID %d, potential array is NOT allocated !!\n", lv, PID );
+
+   if ( OutputParDens  &&  amr.patch[lv][PID]->par_dens == NULL )
+      Aux_Error( ERROR_INFO, "lv %d, PID %d, particle density array is NOT allocated !!\n", lv, PID );
 #  endif
 
-   for (int v=0; v<NCOMP; v++)         
+   for (int v=0; v<NCOMP; v++)
    for (int k=0, kk=Buffer; k<PATCH_SIZE; k++, kk++)
    for (int j=0, jj=Buffer; j<PATCH_SIZE; j++, jj++)
    for (int i=0, ii=Buffer; i<PATCH_SIZE; i++, ii++)
@@ -1509,11 +1534,20 @@ void PreparePatch( const int lv, const int PID, const int Buffer, real FData[], 
    for (int j=0, jj=Buffer; j<PATCH_SIZE; j++, jj++)
    for (int i=0, ii=Buffer; i<PATCH_SIZE; i++, ii++)
    {
-      ID        = (long)NCOMP*dvv + kk*dkk + jj*djj + ii; 
+      ID        = (long)PotIdx*dvv + kk*dkk + jj*djj + ii;
       FData[ID] = amr.patch[lv][PID]->pot[k][j][i];
    }
-   
-   
+
+   if ( OutputParDens )
+   for (int k=0, kk=Buffer; k<PATCH_SIZE; k++, kk++)
+   for (int j=0, jj=Buffer; j<PATCH_SIZE; j++, jj++)
+   for (int i=0, ii=Buffer; i<PATCH_SIZE; i++, ii++)
+   {
+      ID        = (long)ParDensIdx*dvv + kk*dkk + jj*djj + ii;
+      FData[ID] = amr.patch[lv][PID]->par_dens[k][j][i];
+   }
+
+
 // prepare the buffer data
    for (int sib=0; sib<26; sib++)
    {
@@ -1524,10 +1558,13 @@ void PreparePatch( const int lv, const int PID, const int Buffer, real FData[], 
       {
 #        ifdef GAMER_DEBUG
          if ( amr.patch[lv][SibPID]->fluid == NULL )
-            Aux_Error( ERROR_INFO, "lv %d, SibPID %d, the fluid array is NOT allocated !!\n", lv, SibPID );
+            Aux_Error( ERROR_INFO, "lv %d, SibPID %d, fluid array is NOT allocated !!\n", lv, SibPID );
 
          if ( OutputPot  &&  amr.patch[lv][SibPID]->pot == NULL )
-            Aux_Error( ERROR_INFO, "lv %d, SibPID %d, the potential array is NOT allocated !!\n", lv, SibPID );
+            Aux_Error( ERROR_INFO, "lv %d, SibPID %d, potential array is NOT allocated !!\n", lv, SibPID );
+
+         if ( OutputParDens &&  amr.patch[lv][SibPID]->par_dens == NULL )
+            Aux_Error( ERROR_INFO, "lv %d, SibPID %d, particle density array is NOT allocated !!\n", lv, SibPID );
 #        endif
 
          i0     = TABLE_01( sib, 'x', PATCH_SIZE-Buffer, 0, 0 );
@@ -1539,7 +1576,7 @@ void PreparePatch( const int lv, const int PID, const int Buffer, real FData[], 
          i_loop = TABLE_01( sib, 'x', Buffer, PATCH_SIZE, Buffer );
          j_loop = TABLE_01( sib, 'y', Buffer, PATCH_SIZE, Buffer );
          k_loop = TABLE_01( sib, 'z', Buffer, PATCH_SIZE, Buffer );
-   
+
          for (int v=0; v<NCOMP; v++)
          for (int k=k0, kk=kk0; k<k0+k_loop; k++, kk++)
          for (int j=j0, jj=jj0; j<j0+j_loop; j++, jj++)
@@ -1554,8 +1591,17 @@ void PreparePatch( const int lv, const int PID, const int Buffer, real FData[], 
          for (int j=j0, jj=jj0; j<j0+j_loop; j++, jj++)
          for (int i=i0, ii=ii0; i<i0+i_loop; i++, ii++)
          {
-            ID        = (long)NCOMP*dvv + kk*dkk + jj*djj + ii;
+            ID        = (long)PotIdx*dvv + kk*dkk + jj*djj + ii;
             FData[ID] = amr.patch[lv][SibPID]->pot[k][j][i];
+         }
+
+         if ( OutputParDens )
+         for (int k=k0, kk=kk0; k<k0+k_loop; k++, kk++)
+         for (int j=j0, jj=jj0; j<j0+j_loop; j++, jj++)
+         for (int i=i0, ii=ii0; i<i0+i_loop; i++, ii++)
+         {
+            ID        = (long)ParDensIdx*dvv + kk*dkk + jj*djj + ii;
+            FData[ID] = amr.patch[lv][SibPID]->par_dens[k][j][i];
          }
       } // if ( SibPID >= 0 )
 
@@ -1573,7 +1619,7 @@ void PreparePatch( const int lv, const int PID, const int Buffer, real FData[], 
 
          LocalID = PID%8;
 
-         for (int d=0; d<3; d++)    
+         for (int d=0; d<3; d++)
          {
             CStart[d] = TABLE_01( sib, 'x'+d, Buffer/2, Buffer, Buffer+PS1/2 ) + TABLE_02( LocalID, 'x'+d, 0, PS1/2 );
             CRange[d] = TABLE_01( sib, 'x'+d, Buffer/2, PS1/2, Buffer/2 );
@@ -1599,8 +1645,8 @@ void PreparePatch( const int lv, const int PID, const int Buffer, real FData[], 
                GotPhaseAlready = true;
             }
 
-//          interpolate density 
-            Interpolate( CData_Dens,  Size3, CStart, CRange, FData_Dens, Size3, FStart, 1, IntScheme, 
+//          interpolate density
+            Interpolate( CData_Dens,  Size3, CStart, CRange, FData_Dens, Size3, FStart, 1, IntScheme,
                          PhaseUnwrapping_No, EnsureMonotonicity_Yes, Int_MonoCoeff );
 
 //          interpolate phase (store in the REAL component)
@@ -1614,7 +1660,7 @@ void PreparePatch( const int lv, const int PID, const int Buffer, real FData[], 
             for (int j=FStart[1]; j<FStart[1]+2*CRange[1]; j++)
             for (int i=FStart[0]; i<FStart[0]+2*CRange[0]; i++)
             {
-               ID  = (long)k*dkk + j*djj + i; 
+               ID  = (long)k*dkk + j*djj + i;
 
                Phase = FData_Real[ID];
                Rho   = FData_Dens[ID];
@@ -1637,10 +1683,16 @@ void PreparePatch( const int lv, const int PID, const int Buffer, real FData[], 
             } // i,j,k
 
 
-//          interpolate potential;
+//          interpolate potential
             if ( OutputPot )
-            Interpolate( CData+NCOMP*CUBE(Size), Size3, CStart, CRange, FData+NCOMP*CUBE(Size), Size3, FStart, 1,
+            Interpolate( CData+PotIdx*CUBE(Size), Size3, CStart, CRange, FData+PotIdx*CUBE(Size), Size3, FStart, 1,
                          IntScheme, PhaseUnwrapping_No, EnsureMonotonicity_No, Int_MonoCoeff );
+
+
+//          interpolate particle density
+            if ( OutputParDens  )
+            Interpolate( CData+ParDensIdx*CUBE(Size), Size3, CStart, CRange, FData+ParDensIdx*CUBE(Size), Size3, FStart, 1,
+                         IntScheme, PhaseUnwrapping_No, EnsureMonotonicity_Yes, Int_MonoCoeff );
 
          } // if ( ELBDM_IntPhase )
 
@@ -1668,12 +1720,12 @@ void PreparePatch( const int lv, const int PID, const int Buffer, real FData[], 
 
          switch ( ExtBC )
          {
-            case 1:    
-               Hydro_BoundaryCondition_Outflow( FData, BC_Face[BC_Sibling], NCOMP, Buffer,
+            case 1:
+               Hydro_BoundaryCondition_Outflow( FData, BC_Face[BC_Sibling], NLoad, Buffer,
                                                 Size, Size, Size, BC_Idx_Start, BC_Idx_End );
             break;
 
-            default: 
+            default:
                Aux_Error( ERROR_INFO, "unsupported ExtBC (%d) !!\n", ExtBC );
 
          } // switch ( FluBC[ BC_Face[BC_Sibling] ] )
@@ -1701,11 +1753,11 @@ void PreparePatch( const int lv, const int PID, const int Buffer, real FData[], 
 //
 // Note        :  Projection is also performed in this function
 //
-// Parameter   :  lv       : Refinement level of the input patch 
+// Parameter   :  lv       : Refinement level of the input patch
 //                PID      : Pathc index of the input patch
 //                FData    : Array storing the data to be outputted
 //                Buffer   : Size of buffer
-//                Out      : Array to store the results 
+//                Out      : Array to store the results
 //-------------------------------------------------------------------------------------------------------
 void StoreData( const int lv, const int PID, real FData[], const int Buffer, real *Out )
 {
@@ -1713,8 +1765,8 @@ void StoreData( const int lv, const int PID, real FData[], const int Buffer, rea
    const long Size1v    = Idx_MySize[0]*Idx_MySize[1]*Idx_MySize[2];  // total array size of one component
    const int  PatchSize = PATCH_SIZE*( 1<<(TargetLevel-lv) );
    const int  FSize     = PatchSize + 2*Buffer;
-   const int  Corner[3] = { amr.patch[lv][PID]->corner[0]/amr.scale[TargetLevel], 
-                            amr.patch[lv][PID]->corner[1]/amr.scale[TargetLevel], 
+   const int  Corner[3] = { amr.patch[lv][PID]->corner[0]/amr.scale[TargetLevel],
+                            amr.patch[lv][PID]->corner[1]/amr.scale[TargetLevel],
                             amr.patch[lv][PID]->corner[2]/amr.scale[TargetLevel]  };
 
    int    ijk_min[3], ijk_max[3], NSum_local, ProjDir, ii, jj, kk, Stride[3]={0,0,0};
@@ -1728,7 +1780,7 @@ void StoreData( const int lv, const int PID, real FData[], const int Buffer, rea
       if ( Corner[d] < Idx_Start[d]+Idx_Size[d]  &&  Corner[d]+PatchSize > Idx_Start[d] )
       {
          ijk_min[d] = ( Idx_Start[d] > Corner[d] ) ? Idx_Start[d]-Corner[d]+Buffer : Buffer;
-         ijk_max[d] = ( Idx_Start[d]+Idx_Size[d] >= Corner[d]+PatchSize ) ? 
+         ijk_max[d] = ( Idx_Start[d]+Idx_Size[d] >= Corner[d]+PatchSize ) ?
             Buffer+PatchSize-1 : Buffer+PatchSize-1-(Corner[d]+PatchSize-Idx_Start[d]-Idx_Size[d]);
       }
 
@@ -1740,15 +1792,15 @@ void StoreData( const int lv, const int PID, real FData[], const int Buffer, rea
 // projection
    if ( OutputXYZ == 4  ||  OutputXYZ == 5  ||  OutputXYZ == 6 )
    {
-      ProjDir          = OutputXYZ - 4; 
-      NSum_local       = ijk_max[ProjDir] - ijk_min[ProjDir] + 1; 
-      ijk_max[ProjDir] = ijk_min[ProjDir];   
+      ProjDir          = OutputXYZ - 4;
+      NSum_local       = ijk_max[ProjDir] - ijk_min[ProjDir] + 1;
+      ijk_max[ProjDir] = ijk_min[ProjDir];
       NAve             = (double)Idx_Size[ProjDir];
       Jump             = 1;
 
       for (int t=0; t<ProjDir; t++)    Jump *= FSize;
 
-      for (int v=0; v<NOut; v++)      
+      for (int v=0; v<NOut; v++)
       for (int k=ijk_min[2]; k<=ijk_max[2]; k++)
       for (int j=ijk_min[1]; j<=ijk_max[1]; j++)
       for (int i=ijk_min[0]; i<=ijk_max[0]; i++)
@@ -1779,7 +1831,7 @@ void StoreData( const int lv, const int PID, real FData[], const int Buffer, rea
                            break;
    }
 
-   for (int v=0; v<NOut; v++)                   {  
+   for (int v=0; v<NOut; v++)                   {
    for (int k=ijk_min[2]; k<=ijk_max[2]; k++)   {  kk  = k - Buffer + Corner[2] - Idx_MyStart[2];
    for (int j=ijk_min[1]; j<=ijk_max[1]; j++)   {  jj  = j - Buffer + Corner[1] - Idx_MyStart[1];
    for (int i=ijk_min[0]; i<=ijk_max[0]; i++)   {  ii  = i - Buffer + Corner[0] - Idx_MyStart[0];
@@ -1883,18 +1935,18 @@ void GetTemp( real FData[], const int FSize, const int Buffer, const int NextIdx
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  GetCurlVel 
+// Function    :  GetCurlVel
 // Description :  Evaluate the curl( velocity ) == vorticity
 //
 // Parameter   :  FData    : Array to store the output data
-//                FSize    : Width of the FData array 
+//                FSize    : Width of the FData array
 //                Buffer   : Size of buffer
 //                NextIdx  : Index to store the evaluated results
 //                dh       : Cell size
 //                Com2Phy  : Convert peculiar velocity from comoving to physical coords. (in km/s)
 //                           --> by multiplying 100/ScaleA
 //-------------------------------------------------------------------------------------------------------
-void GetCurlVel( real FData[], const int FSize, const int Buffer, const int NextIdx, const real dh, 
+void GetCurlVel( real FData[], const int FSize, const int Buffer, const int NextIdx, const real dh,
                  const bool Com2Phy )
 {
 
@@ -1958,11 +2010,11 @@ void GetCurlVel( real FData[], const int FSize, const int Buffer, const int Next
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  GetDivVel 
+// Function    :  GetDivVel
 // Description :  Evaluate the divergence( velocity )
 //
 // Parameter   :  FData    : Array to store the output data
-//                FSize    : Width of the FData array 
+//                FSize    : Width of the FData array
 //                Buffer   : Size of buffer
 //                NextIdx  : Index to store the evaluated results
 //                dh       : Cell size
@@ -2028,7 +2080,7 @@ void GetDivVel( real FData[], const int FSize, const int Buffer, const int NextI
 // Description :  Evaluate the velocity field in ELBDM
 //
 // Parameter   :  FData    : Array to store the output data
-//                FSize    : Width of the FData array 
+//                FSize    : Width of the FData array
 //                Buffer   : Size of buffer
 //                NextIdx  : Index to store the evaluated results
 //                dh       : Cell size
@@ -2086,7 +2138,7 @@ void GetELBDM_Vel( real FData[], const int FSize, const int Buffer, const int Ne
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Refine2TargetLevel
-// Description :  Refine to the level "TargetLevel" patch by patch 
+// Description :  Refine to the level "TargetLevel" patch by patch
 //-------------------------------------------------------------------------------------------------------
 void Refine2TargetLevel()
 {
@@ -2114,7 +2166,7 @@ void Refine2TargetLevel()
    {
       OutputArray_OMP = new real* [OMP_NThread];
 
-      for (int t=0; t<OMP_NThread; t++)   
+      for (int t=0; t<OMP_NThread; t++)
       {
          OutputArray_OMP[t] = new real [OutSize];
 
@@ -2122,6 +2174,17 @@ void Refine2TargetLevel()
       }
    }
 #  endif // #ifdef OPENMP
+
+
+// determine the array indices for outputting potential and particle densities
+   int PotIdx, ParDensIdx;
+
+   NextIdx    = NCOMP;
+   PotIdx     = -1;
+   ParDensIdx = -1;
+
+   if ( OutputPot     )    PotIdx     = NextIdx ++;
+   if ( OutputParDens )    ParDensIdx = NextIdx ++;
 
 
 // determine the priority of different boundary faces (z>y>x) to set the corner cells properly for the non-periodic B.C.
@@ -2146,24 +2209,24 @@ void Refine2TargetLevel()
    const bool EnsureMonotonicity_Yes = true;
    const bool EnsureMonotonicity_No  = false;
 
-   bool Monotonicity[NLoad]; 
+   bool Monotonicity[NLoad];
 
    for (int v=0; v<NLoad; v++)
    {
 #     if ( MODEL == HYDRO )
-      if ( v == DENS  ||  v == ENGY )  Monotonicity[v] = EnsureMonotonicity_Yes;
-      else                             Monotonicity[v] = EnsureMonotonicity_No;
+      if ( v == DENS  ||  v == ENGY  ||  v == ParDensIdx )  Monotonicity[v] = EnsureMonotonicity_Yes;
+      else                                                  Monotonicity[v] = EnsureMonotonicity_No;
 
 #     elif ( MODEL == MHD )
 #     warning : WAIT MHD !!!
 
 #     elif ( MODEL == ELBDM )
-      if ( v == DENS )                 Monotonicity[v] = EnsureMonotonicity_Yes;
-      else                             Monotonicity[v] = EnsureMonotonicity_No;
+      if ( v == DENS  ||  v == ParDensIdx )                 Monotonicity[v] = EnsureMonotonicity_Yes;
+      else                                                  Monotonicity[v] = EnsureMonotonicity_No;
 
 #     else
-                                       Monotonicity[v] = EnsureMonotonicity_No;
-#     warning : WARNING : DO YOU WANT TO ENSURE THE POSITIVITY OF INTERPOLATION ??          
+                                                            Monotonicity[v] = EnsureMonotonicity_No;
+#     warning : WARNING : DO YOU WANT TO ENSURE THE POSITIVITY OF INTERPOLATION ??
 #     endif // MODEL
    }
 
@@ -2171,7 +2234,7 @@ void Refine2TargetLevel()
 // loop over all levels
    for (int lv=0; lv<=TargetLevel; lv++)
    {
-      if ( MyRank == 0 )   cout << "  Level = " << lv << " ... " << flush; 
+      if ( MyRank == 0 )   cout << "  Level = " << lv << " ... " << flush;
 
 #     pragma omp parallel private( FaPID, FSize, CSize, NextIdx, CData, FData, CSize3, CRange, FSize3, TID )
       {
@@ -2183,7 +2246,7 @@ void Refine2TargetLevel()
          for (int PID=0; PID<NPatchComma[lv][1]; PID++)
          {
 //          find the target patches
-            if (  ( amr.patch[lv][PID]->son == -1 || lv == TargetLevel )  &&  
+            if (  ( amr.patch[lv][PID]->son == -1 || lv == TargetLevel )  &&
                   WithinCandidateBox( amr.patch[lv][PID]->corner, PATCH_SIZE*amr.scale[lv], 0 )  )
             {
 //             allocate memory
@@ -2200,7 +2263,7 @@ void Refine2TargetLevel()
                   FaPID = amr.patch[lv][PID]->father;
 
                   PreparePatch( lv-1, FaPID, Buffer, CData, NULL, BC_Face );
-               } 
+               }
 
 
 //             prepare the fine-grid data (level = lv)
@@ -2208,7 +2271,7 @@ void Refine2TargetLevel()
 
 
 //             perform interpolation to reach the TagetLevel resolution
-               for (int FineLv=lv+1; FineLv<=TargetLevel; FineLv++)         
+               for (int FineLv=lv+1; FineLv<=TargetLevel; FineLv++)
                {
 //                reset and reallocate CData and FData pointers
                   delete [] CData;
@@ -2238,8 +2301,8 @@ void Refine2TargetLevel()
 //                   get the wrapped phase (store in the REAL component)
                      for (long t=0; t<CUBE(CSize); t++)  CData_Real[t] = ATAN2( CData_Imag[t], CData_Real[t] );
 
-//                   interpolate density 
-                     Interpolate( CData_Dens, CSize3, CStart, CRange, FData_Dens, FSize3, FStart, 1, IntScheme, 
+//                   interpolate density
+                     Interpolate( CData_Dens, CSize3, CStart, CRange, FData_Dens, FSize3, FStart, 1, IntScheme,
                                   PhaseUnwrapping_No, EnsureMonotonicity_Yes, Int_MonoCoeff );
 
 //                   interpolate phase
@@ -2271,10 +2334,15 @@ void Refine2TargetLevel()
                         FData_Imag[t] = Amp*SIN( Phase );
                      } // for (int t=0; t<CUBE(FSize); t++)
 
-//                   interpolate potential;
+//                   interpolate potential
                      if ( OutputPot )
-                     Interpolate( CData+NCOMP*CUBE(CSize), CSize3, CStart, CRange, FData+NCOMP*CUBE(FSize), FSize3, FStart, 1,
-                                  IntScheme, PhaseUnwrapping_No, EnsureMonotonicity_No, Int_MonoCoeff );
+                     Interpolate( CData+PotIdx*CUBE(CSize), CSize3, CStart, CRange, FData+PotIdx*CUBE(FSize),
+                                  FSize3, FStart, 1, IntScheme, PhaseUnwrapping_No, EnsureMonotonicity_No, Int_MonoCoeff );
+
+//                   interpolate potential
+                     if ( OutputParDens )
+                     Interpolate( CData+ParDensIdx*CUBE(CSize), CSize3, CStart, CRange, FData+ParDensIdx*CUBE(FSize),
+                                  FSize3, FStart, 1, IntScheme, PhaseUnwrapping_No, EnsureMonotonicity_Yes, Int_MonoCoeff );
 
                   } // if ( ELBDM_IntPhase )
 
@@ -2286,7 +2354,7 @@ void Refine2TargetLevel()
                                      IntScheme, PhaseUnwrapping_No, Monotonicity[v], Int_MonoCoeff );
                   }
                } // for (int FineLv=lv+1; FineLv<=TargetLevel; FineLv++)
-  
+
 
                NextIdx = NLoad;
 
@@ -2387,7 +2455,7 @@ void Refine2TargetLevel()
 // Function    :  AllocateOutputArray
 // Description :  Allocate memory for the array "OutputArray"
 //-------------------------------------------------------------------------------------------------------
-void AllocateOutputArray() 
+void AllocateOutputArray()
 {
 
    const long Size = (long)NOut*Idx_MySize[0]*Idx_MySize[1]*Idx_MySize[2];
@@ -2403,7 +2471,7 @@ void AllocateOutputArray()
 
 #ifndef SERIAL
 //-------------------------------------------------------------------------------------------------------
-// Function    :  SumOverRanks 
+// Function    :  SumOverRanks
 // Description :  When doing projection, this function will collect the projection results from different ranks
 //-------------------------------------------------------------------------------------------------------
 void SumOverRanks()
@@ -2672,7 +2740,7 @@ void LoadTree()
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  main
-// Description :  
+// Description :
 //-------------------------------------------------------------------------------------------------------
 int main( int argc, char ** argv )
 {
@@ -2689,7 +2757,7 @@ int main( int argc, char ** argv )
 
    AllocateOutputArray();
 
-   Refine2TargetLevel(); 
+   Refine2TargetLevel();
 
 #  ifndef SERIAL
    if ( OutputXYZ == 4  ||  OutputXYZ == 5  ||  OutputXYZ == 6 )     SumOverRanks();
