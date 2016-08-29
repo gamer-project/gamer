@@ -446,8 +446,8 @@ void Init_Restart_HDF5( const char *FileName )
          if ( H5_FileID < 0 )
             Aux_Error( ERROR_INFO, "failed to open the restart HDF5 file \"%s\" !!\n", FileName );
 
-         H5_GroupID_Data = H5Gopen( H5_FileID, "Data", H5P_DEFAULT );
-         if ( H5_GroupID_Data < 0 )    Aux_Error( ERROR_INFO, "failed to open the group \"%s\" !!\n", "Data" );
+         H5_GroupID_Data = H5Gopen( H5_FileID, "GridData", H5P_DEFAULT );
+         if ( H5_GroupID_Data < 0 )    Aux_Error( ERROR_INFO, "failed to open the group \"%s\" !!\n", "GridData" );
 
          for (int v=0; v<NCOMP; v++)
          {

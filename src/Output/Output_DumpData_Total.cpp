@@ -69,7 +69,7 @@ void Output_DumpData_Total( const char *FileName )
 
    MPI_Allgather( &amr->Par->NPar_Active, 1, MPI_LONG, NPar_EachRank, 1, MPI_LONG, MPI_COMM_WORLD );
 
-   for (int r=0; r<MPI_Rank; r++)   GParID_Offset = GParID_Offset + NPar_EachRank[r];
+   for (int r=0; r<MPI_Rank; r++)   GParID_Offset += NPar_EachRank[r];
 #  endif
 
 
@@ -822,21 +822,21 @@ void Output_DumpData_Total( const char *FileName )
 
             fclose( File );
 
+
+//          f3. free memory used for outputting particle density
+#           ifdef PARTICLE
+            if ( OPT__OUTPUT_PAR_DENS != PAR_OUTPUT_DENS_NONE )
+            {
+               Prepare_PatchData_FreeParticleDensityArray( lv );
+
+               Par_CollectParticle2OneLevel_FreeMemory( lv, SibBufPatch, FaSibBufPatch );
+            }
+#           endif
          } // if ( MPI_Rank == TargetMPIRank )
 
          MPI_Barrier( MPI_COMM_WORLD );
 
       } // for (int TargetMPIRank=0; TargetMPIRank<MPI_NRank; TargetMPIRank++)
-
-//    free memory used for outputting particle density
-#     ifdef PARTICLE
-      if ( OPT__OUTPUT_PAR_DENS != PAR_OUTPUT_DENS_NONE )
-      {
-         Prepare_PatchData_FreeParticleDensityArray( lv );
-
-         Par_CollectParticle2OneLevel_FreeMemory( lv, SibBufPatch, FaSibBufPatch );
-      }
-#     endif
    } // for (int lv=0; lv<NLEVEL; lv++)
 
 #  ifdef PARTICLE
