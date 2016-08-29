@@ -909,7 +909,7 @@ void Output_DumpData_Total_HDF5( const char *FileName )
    ParBuf1v1Lv = new real [MaxNPar1Lv];
 
 // 6-1-3. get the starting global particle index (i.e., GParID_Offset[NLEVEL]) for particles at each level in this rank
-   MPI_Allgather( &amr->Par->NPar_Lv, NLEVEL, MPI_LONG, NParLv_EachRank, NLEVEL, MPI_LONG, MPI_COMM_WORLD );
+   MPI_Allgather( amr->Par->NPar_Lv, NLEVEL, MPI_LONG, NParLv_EachRank[0], NLEVEL, MPI_LONG, MPI_COMM_WORLD );
 
    for (int lv=0; lv<NLEVEL; lv++)
    {

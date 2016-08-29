@@ -14,7 +14,9 @@ static herr_t LoadField( const char *FieldName, void *FieldPtr, const hid_t H5_S
                          const hid_t H5_TypeID_Target, const bool Fatal_Nonexist,
                          const T *ComprPtr, const int NCompr, const bool Fatal_Compr );
 static void LoadOnePatch( const hid_t H5_FileID, const int lv, const int GID, const bool Recursive, const int *SonList,
-                          const int (*CrList)[3], const hid_t *H5_SetID, const hid_t H5_SpaceID, const hid_t H5_MemID );
+                          const int (*CrList)[3], const hid_t *H5_SetID_Field, const hid_t H5_SpaceID_Field, const hid_t H5_MemID_Field,
+                          const int *NParList, real **ParBuf, long *NewParList, const hid_t *H5_SetID_ParData,
+                          const hid_t H5_SpaceID_ParData, const long *GParID_Offset, const long NParThisRank );
 static void Check_Makefile ( const char *FileName );
 static void Check_SymConst ( const char *FileName );
 static void Check_InputPara( const char *FileName );
@@ -55,6 +57,10 @@ void Init_Restart_HDF5( const char *FileName )
       if ( !H5Fis_hdf5(FileName) )
          Aux_Error( ERROR_INFO, "restart HDF5 file \"%s\" is not in the HDF5 format !!\n", FileName );
    }
+
+#  if ( defined PARTICLE  &&  !defined SERIAL  &&  !defined LOAD_BALANCE )
+#     error : ERROR : PARTICLE must work with either SERIAL or LOAD_BALANCE !!
+#  endif
 
    MPI_Barrier( MPI_COMM_WORLD );
 
@@ -386,11 +392,107 @@ void Init_Restart_HDF5( const char *FileName )
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Loading son table ... done\n" );
 #  endif // #ifdef LOAD_BALANCE ... else ...
 
+
+// 2-4. number of particles in each patch
+#  ifdef PARTICLE
+   if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Loading particle counts ...\n" );
+
+   hid_t H5_SetID_NPar;
+
+// allocate memory
+   int *NParList_AllLv = new int [ NPatchAllLv ];
+
+// load data
+   H5_SetID_NPar = H5Dopen( H5_FileID, "Tree/NPar", H5P_DEFAULT );
+   if ( H5_SetID_NPar < 0 )   Aux_Error( ERROR_INFO, "failed to open the dataset \"%s\" !!\n", "Tree/NPar" );
+   H5_Status = H5Dread( H5_SetID_NPar, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT, NParList_AllLv );
+   H5_Status = H5Dclose( H5_SetID_NPar );
+
+   if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Loading particle counts ... done\n" );
+#  endif // #ifdef PARTICLE
+
+
    H5_Status = H5Fclose( H5_FileID );
 
 
-// 3. load and allocate patches (one rank at a time)
-   if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Loading patches ...\n" );
+// 2-5. initialize particle variables
+#  ifdef PARTICLE
+   if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Initializing particle repository ...\n" );
+
+// 2-5-1. get the total number of paticles in this rank
+   long NParThisRank;
+
+#  ifdef LOAD_BALANCE
+   NParThisRank = 0;
+
+   for (int lv=0; lv<KeyInfo.NLevel; lv++)
+   for (int t=LoadIdx_Start[lv]; t<LoadIdx_Stop[lv]; t++)
+   {
+#     ifdef DEBUG_HDF5
+      if ( t < 0  ||  t >= NPatchTotal[lv] )
+         Aux_Error( ERROR_INFO, "incorrect load index (%d) !!\n", t );
+#     endif
+
+      NParThisRank += NParList_AllLv[ LBIdxList_EachLv_IdxTable[lv][t] + GID_LvStart[lv] ];
+   }
+
+#  ifdef DEBUG_HDF5
+   long NParAllRank;
+   MPI_Reduce( &NParThisRank, &NParAllRank, 1, MPI_LONG, MPI_SUM, 0, MPI_COMM_WORLD );
+   if ( MPI_Rank == 0  &&  NParAllRank != amr->Par->NPar_Active_AllRank )
+      Aux_Error( ERROR_INFO, "total number of particles (%ld) != expect (%ld) !!\n",
+                 NParAllRank, amr->Par->NPar_Active_AllRank );
+#  endif
+
+#  else // #ifdef LOAD_BALANCE
+
+   NParThisRank = amr->Par->NPar_Active_AllRank;
+#  endif // #ifdef LOAD_BALANCE ... else ...
+
+
+// 2-5-2. initialize particle repository
+   amr->Par->InitRepo( NParThisRank, MPI_NRank );
+
+// reset the total number of particles to be zero
+// --> so particle repository is pre-allocated, but it contains no active particle yet
+// --> particles will be added later by calling Par->AddOneParticle
+   amr->Par->NPar_AcPlusInac = 0;
+   amr->Par->NPar_Active     = 0;
+
+
+// 2-5-3. calculate the starting global particle indices (i.e., GParID_Offset) for all patches
+   long *GParID_Offset = new long [ NPatchAllLv ];
+
+   GParID_Offset[0] = 0;
+   for (int t=1; t<NPatchAllLv; t++)   GParID_Offset[t] = GParID_Offset[t-1] + NParList_AllLv[t-1];
+
+#  ifdef DEBUG_HDF5
+   if ( GParID_Offset[ NPatchAllLv-1 ] + NParList_AllLv[ NPatchAllLv-1 ] != amr->Par->NPar_Active_AllRank )
+      Aux_Error( ERROR_INFO, "total number of particles (%ld) != expect (%ld) !!\n",
+                 GParID_Offset[ NPatchAllLv-1 ] + NParList_AllLv[ NPatchAllLv-1 ], amr->Par->NPar_Active_AllRank );
+#  endif
+
+
+// 2-5-4. get the maximum number of particles in one patch and allocate an I/O buffer accordingly
+   const int NParVar = 7 + PAR_NPASSIVE;  // particle mass, position x/y/z, velocity x/y/z, and passive variables
+
+   long MaxNParInOnePatch = 0;
+   long *NewParList       = NULL;
+   real **ParBuf          = NULL;
+
+   for (int t=0; t<NPatchAllLv; t++)   MaxNParInOnePatch = MAX( MaxNParInOnePatch, NParList_AllLv[t] );
+
+   NewParList = new long [MaxNParInOnePatch];
+
+   Aux_AllocateArray2D( ParBuf, NParVar, MaxNParInOnePatch );
+
+   if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Initializing particle repository ... done\n" );
+#  endif // #ifdef PARTICLE
+
+
+
+// 3. load and allocate patches (load particles as well if PARTICLE is on)
+   if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Loading patches and particles ...\n" );
 
 #  ifdef LOAD_BALANCE
    const bool Recursive_No  = false;
@@ -399,13 +501,31 @@ void Init_Restart_HDF5( const char *FileName )
    int  TRange_Min[3], TRange_Max[3];
 #  endif
 
-   char FieldName[NCOMP][100];
+   char (*FieldName)[100] = new char [NCOMP][100];
 
    hsize_t H5_SetDims_Field[4], H5_MemDims_Field[4];
-   hid_t   H5_SetID_Field[NCOMP], H5_MemID_Field, H5_SpaceID_Field, H5_GroupID_Data;
+   hid_t   H5_SetID_Field[NCOMP], H5_MemID_Field, H5_SpaceID_Field, H5_GroupID_GridData;
+
+#  ifdef PARTICLE
+   char (*ParVarName)[100] = new char [NParVar][100];
+
+   hsize_t  H5_SetDims_ParData[1];
+   hid_t    H5_SetID_ParData[NParVar], H5_SpaceID_ParData, H5_GroupID_Particle;
+
+#  else
+
+// define useless variables when PARTICLE is off
+   int   *NParList_AllLv     = NULL;
+   real **ParBuf             = NULL;
+   long  *NewParList         = NULL;
+   long  *GParID_Offset      = NULL;
+   hid_t *H5_SetID_ParData   = NULL;
+   hid_t  H5_SpaceID_ParData = NULL_INT;
+   long   NParThisRank       = NULL_INT;
+#  endif // #ifdef PARTICLE ... else ...
 
 
-// 3-1. set the field names
+// 3-1. set the names of all grid variables and particle attributes
 #  if   ( MODEL == HYDRO )
    sprintf( FieldName[DENS], "Dens" );
    sprintf( FieldName[MOMX], "MomX" );
@@ -421,6 +541,22 @@ void Init_Restart_HDF5( const char *FileName )
 #  else
 #  error : ERROR : unsupported MODEL !!
 #  endif
+
+#  ifdef PARTICLE
+   sprintf( ParVarName[0], "Mass" );
+   sprintf( ParVarName[1], "PosX" );
+   sprintf( ParVarName[2], "PosY" );
+   sprintf( ParVarName[3], "PosZ" );
+   sprintf( ParVarName[4], "VelX" );
+   sprintf( ParVarName[5], "VelY" );
+   sprintf( ParVarName[6], "VelZ" );
+
+   for (int v=0; v<PAR_NPASSIVE; v++)  sprintf( ParVarName[7+v], "Passive%d%d", v/10, v%10 );
+
+#  ifdef DEBUG_HDF5
+   if ( PAR_NPASSIVE >= 100 )    Aux_Error( ERROR_INFO, "PAR_NPASSIVE = %d >= 100 !!\n", PAR_NPASSIVE );
+#  endif
+#  endif // #ifdef PARTICLE
 
 
 // 3-2. initialize relevant HDF5 objects
@@ -440,6 +576,12 @@ void Init_Restart_HDF5( const char *FileName )
    H5_MemID_Field = H5Screate_simple( 4, H5_MemDims_Field, NULL );
    if ( H5_MemID_Field < 0 )  Aux_Error( ERROR_INFO, "failed to create the space \"%s\" !!\n", "H5_MemDims_Field" );
 
+#  ifdef PARTICLE
+   H5_SetDims_ParData[0] = amr->Par->NPar_Active_AllRank;
+   H5_SpaceID_ParData    = H5Screate_simple( 1, H5_SetDims_ParData, NULL );
+   if ( H5_SpaceID_ParData < 0 )    Aux_Error( ERROR_INFO, "failed to create the space \"%s\" !!\n", "H5_SpaceID_ParData" );
+#  endif
+
 
 // load data in one rank at a time
    for (int TRank=0; TRank<MPI_NRank; TRank++)
@@ -451,14 +593,25 @@ void Init_Restart_HDF5( const char *FileName )
          if ( H5_FileID < 0 )
             Aux_Error( ERROR_INFO, "failed to open the restart HDF5 file \"%s\" !!\n", FileName );
 
-         H5_GroupID_Data = H5Gopen( H5_FileID, "GridData", H5P_DEFAULT );
-         if ( H5_GroupID_Data < 0 )    Aux_Error( ERROR_INFO, "failed to open the group \"%s\" !!\n", "GridData" );
+         H5_GroupID_GridData = H5Gopen( H5_FileID, "GridData", H5P_DEFAULT );
+         if ( H5_GroupID_GridData < 0 )   Aux_Error( ERROR_INFO, "failed to open the group \"%s\" !!\n", "GridData" );
 
          for (int v=0; v<NCOMP; v++)
          {
-            H5_SetID_Field[v] = H5Dopen( H5_GroupID_Data, FieldName[v], H5P_DEFAULT );
+            H5_SetID_Field[v] = H5Dopen( H5_GroupID_GridData, FieldName[v], H5P_DEFAULT );
             if ( H5_SetID_Field[v] < 0 )  Aux_Error( ERROR_INFO, "failed to open the dataset \"%s\" !!\n", FieldName[v] );
          }
+
+#        ifdef PARTICLE
+         H5_GroupID_Particle = H5Gopen( H5_FileID, "Particle", H5P_DEFAULT );
+         if ( H5_GroupID_Particle < 0 )   Aux_Error( ERROR_INFO, "failed to open the group \"%s\" !!\n", "Particle" );
+
+         for (int v=0; v<NParVar; v++)
+         {
+            H5_SetID_ParData[v] = H5Dopen( H5_GroupID_Particle, ParVarName[v], H5P_DEFAULT );
+            if ( H5_SetID_ParData[v] < 0 )   Aux_Error( ERROR_INFO, "failed to open the dataset \"%s\" !!\n", ParVarName[v] );
+         }
+#        endif
 
 
 //       3-4. begin to load data
@@ -483,7 +636,9 @@ void Init_Restart_HDF5( const char *FileName )
 
                for (int GID=GID0; GID<GID0+8; GID++)
                   LoadOnePatch( H5_FileID, lv, GID, Recursive_No, NULL, CrList_AllLv,
-                                H5_SetID_Field, H5_SpaceID_Field, H5_MemID_Field );
+                                H5_SetID_Field, H5_SpaceID_Field, H5_MemID_Field,
+                                NParList_AllLv, ParBuf, NewParList, H5_SetID_ParData, H5_SpaceID_ParData,
+                                GParID_Offset, NParThisRank );
             }
 
 //          check if LocalID matches corner
@@ -535,14 +690,22 @@ void Init_Restart_HDF5( const char *FileName )
                   CrList_AllLv[GID][1] >= TRange_Min[1]  &&  CrList_AllLv[GID][1] < TRange_Max[1]  &&
                   CrList_AllLv[GID][2] >= TRange_Min[2]  &&  CrList_AllLv[GID][2] < TRange_Max[2]     )
                LoadOnePatch( H5_FileID, 0, GID, Recursive_Yes, SonList_AllLv, CrList_AllLv,
-                             H5_SetID_Field, H5_SpaceID_Field, H5_MemID_Field );
+                             H5_SetID_Field, H5_SpaceID_Field, H5_MemID_Field,
+                             NParList_AllLv, ParBuf, NewParList, H5_SetID_ParData, H5_SpaceID_ParData,
+                             GParID_Offset, NParThisRank );
          } // for (int GID=0; GID<NPatchTotal[0]; GID++)
 
 #        endif // #ifdef LOAD_BALANCE ... else ...
 
-         for (int v=0; v<NCOMP; v++)
-         H5_Status = H5Dclose( H5_SetID_Field[v] );
-         H5_Status = H5Gclose( H5_GroupID_Data );
+//       free resource
+         for (int v=0; v<NCOMP; v++)   H5_Status = H5Dclose( H5_SetID_Field[v] );
+         H5_Status = H5Gclose( H5_GroupID_GridData );
+
+#        ifdef PARTICLE
+         for (int v=0; v<NParVar; v++) H5_Status = H5Dclose( H5_SetID_ParData[v] );
+         H5_Status = H5Gclose( H5_GroupID_Particle );
+#        endif
+
          H5_Status = H5Fclose( H5_FileID );
       } // if ( MyRank == TargetRank )
 
@@ -552,6 +715,9 @@ void Init_Restart_HDF5( const char *FileName )
 // free HDF5 objects
    H5_Status = H5Sclose( H5_SpaceID_Field );
    H5_Status = H5Sclose( H5_MemID_Field );
+#  ifdef PARTICLE
+   H5_Status = H5Sclose( H5_SpaceID_ParData );
+#  endif
 
 
 // 3-5. record the number of real patches (and LB_IdxList_Real)
@@ -574,7 +740,7 @@ void Init_Restart_HDF5( const char *FileName )
    }
 
 
-// 3-6. verify that all patches are loaded
+// 3-6. verify that all patches and particles are loaded
 #  ifdef DEBUG_HDF5
    int NLoadPatch[KeyInfo.NLevel];
    MPI_Reduce( amr->num, NLoadPatch, KeyInfo.NLevel, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD );
@@ -586,9 +752,15 @@ void Init_Restart_HDF5( const char *FileName )
          Aux_Error( ERROR_INFO, "Lv %d: total number of loaded patches (%d) != expectation (%d) !!\n",
                        lv, NLoadPatch[lv], NPatchTotal[lv] );
    }
-#  endif
 
-   if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Loading patches ... done\n" );
+#  ifdef PARTICLE
+   if ( amr->Par->NPar_AcPlusInac != NParThisRank )
+      Aux_Error( ERROR_INFO, "total number of particles in the repository (%ld) != expect (%ld) !!\n",
+                 amr->Par->NPar_AcPlusInac, NParThisRank );
+#  endif
+#  endif // #ifdfe DEBUG_HDF5
+
+   if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Loading patches and particles ... done\n" );
 
 
 
@@ -596,6 +768,7 @@ void Init_Restart_HDF5( const char *FileName )
    free ( KeyInfo.CodeVersion );
    free ( KeyInfo.DumpWallTime );
 
+   if ( FieldName != NULL )   delete [] FieldName;
    if ( CrList_AllLv != NULL )   delete [] CrList_AllLv;
 #  ifdef LOAD_BALANCE
    if ( LBIdxList_AllLv != NULL )   delete [] LBIdxList_AllLv;
@@ -603,6 +776,13 @@ void Init_Restart_HDF5( const char *FileName )
       if ( LBIdxList_EachLv_IdxTable[lv] != NULL )   delete [] LBIdxList_EachLv_IdxTable[lv];
 #  else
    if ( SonList_AllLv != NULL )  delete [] SonList_AllLv;
+#  endif
+#  ifdef PARTICLE
+   if ( ParVarName     != NULL )    delete [] ParVarName;
+   if ( NParList_AllLv != NULL )    delete [] NParList_AllLv;
+   if ( GParID_Offset  != NULL )    delete [] GParID_Offset;
+   if ( NewParList     != NULL )    delete [] NewParList;
+   Aux_DeallocateArray2D( ParBuf );
 #  endif
 
 
@@ -789,24 +969,40 @@ herr_t LoadField( const char *FieldName, void *FieldPtr, const hid_t H5_SetID_Ta
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  LoadOnePatch
-// Description :  Allocate and load all fields for one patch
+// Description :  Allocate and load all fields (and particles if PARTICLE is on) for one patch
 //
 // Note        :  1. Both leaf and non-leaf patches will store data in the HDF5 output
+//                   --> But only leaf patches have particles associated with them
 //                2. If "Recursive == true", this function will be invoked recursively to find all children
 //                   (and children's children, ...) patches
 //
-// Parameter   :  H5_FileID   : HDF5 file ID of the restart file
-//                lv          : Target level
-//                GID         : Target GID
-//                Recursive   : Find all children (and childrens' children, ...) recuresively
-//                SonList     : List of son indices
-//                CrList      : List of patch corners
-//                H5_SetID    : HDF5 dataset ID for NCOMP fields
-//                H5_SpaceID  : HDF5 dataset dataspace ID
-//                H5_MemID    : HDF5 memory dataspace ID
+// Parameter   :  H5_FileID         : HDF5 file ID of the restart file
+//                lv                : Target level
+//                GID               : Target GID
+//                Recursive         : Find all children (and childrens' children, ...) recuresively
+//                SonList           : List of son indices
+//                                    --> Set only when LOAD_BALANCE is not defined
+//                CrList            : List of patch corners
+//                H5_SetID_Field    : HDF5 dataset ID for grid data
+//                H5_SpaceID_Field  : HDF5 dataset dataspace ID for grid data
+//                H5_MemID_Field    : HDF5 memory dataspace ID for grid data
+//                NParList          : List of particle counts
+//                ParBuf            : I/O buffer for loading particle data from the disk
+//                                    --> It must be preallocated with a size equal to the maximum number of
+//                                        particles in one patch times the number of particles attributes
+//                                        stored in the disk
+//                NewParList        : Array to store the new particle indices
+//                                    --> It must be preallocated with a size equal to the maximum number of
+//                                        particles in one patch
+//                H5_SetID_ParData  : HDF5 dataset ID for particle data
+//                H5_SpaceID_ParData: HDF5 dataset dataspace ID for particle data
+//                GParID_Offset     : Starting global particle indices for all patches
+//                NParThisRank      : Total number of particles in this rank (for check only)
 //-------------------------------------------------------------------------------------------------------
 void LoadOnePatch( const hid_t H5_FileID, const int lv, const int GID, const bool Recursive, const int *SonList,
-                   const int (*CrList)[3], const hid_t *H5_SetID, const hid_t H5_SpaceID, const hid_t H5_MemID )
+                   const int (*CrList)[3], const hid_t *H5_SetID_Field, const hid_t H5_SpaceID_Field, const hid_t H5_MemID_Field,
+                   const int *NParList, real **ParBuf, long *NewParList, const hid_t *H5_SetID_ParData,
+                   const hid_t H5_SpaceID_ParData, const long *GParID_Offset, const long NParThisRank )
 {
 
    const bool WithData_Yes = true;
@@ -821,7 +1017,7 @@ void LoadOnePatch( const hid_t H5_FileID, const int lv, const int GID, const boo
    PID = amr->num[lv] - 1;
 
 
-// determine the subset of the dataspace
+// determine the subset of dataspace for grid data
    H5_Offset_Field[0] = GID;
    H5_Offset_Field[1] = 0;
    H5_Offset_Field[2] = 0;
@@ -832,18 +1028,98 @@ void LoadOnePatch( const hid_t H5_FileID, const int lv, const int GID, const boo
    H5_Count_Field [2] = PATCH_SIZE;
    H5_Count_Field [3] = PATCH_SIZE;
 
-   H5_Status = H5Sselect_hyperslab( H5_SpaceID, H5S_SELECT_SET, H5_Offset_Field, NULL, H5_Count_Field, NULL );
-   if ( H5_Status < 0 )   Aux_Error( ERROR_INFO, "failed to create a hyperslab !!\n" );
+   H5_Status = H5Sselect_hyperslab( H5_SpaceID_Field, H5S_SELECT_SET, H5_Offset_Field, NULL, H5_Count_Field, NULL );
+   if ( H5_Status < 0 )   Aux_Error( ERROR_INFO, "failed to create a hyperslab for the grid data !!\n" );
 
 
-// load the field data (potential data, if presented, are ignored and will be recalculated)
+// load field data from disk (potential data, if presented, are ignored and will be recalculated)
    for (int v=0; v<NCOMP; v++)
    {
-      H5_Status = H5Dread( H5_SetID[v], H5T_GAMER_REAL, H5_MemID, H5_SpaceID, H5P_DEFAULT,
+      H5_Status = H5Dread( H5_SetID_Field[v], H5T_GAMER_REAL, H5_MemID_Field, H5_SpaceID_Field, H5P_DEFAULT,
                            amr->patch[0][lv][PID]->fluid[v] );
       if ( H5_Status < 0 )
          Aux_Error( ERROR_INFO, "failed to load a field variable (lv %d, GID %d, v %d) !!\n", lv, GID, v );
    }
+
+
+// load particle data
+#  ifdef PARTICLE
+   const int NParVar       = 7 + PAR_NPASSIVE;  // particle mass, position x/y/z, velocity x/y/z, and passive variables
+   const int NParThisPatch = NParList[GID];
+
+   hsize_t H5_Offset_ParData[1], H5_Count_ParData[1], H5_MemDims_ParData[1];
+   hid_t   H5_MemID_ParData;
+   real    NewParVar[PAR_NVAR], NewParPassive[PAR_NPASSIVE];
+
+   if ( NParThisPatch > 0 )
+   {
+//    check: only leaf patches can have particles (but note that SonList is NOT set for LOAD_BALANCE)
+#     ifndef LOAD_BALANCE
+      if ( SonList[GID] != -1 )
+         Aux_Error( ERROR_INFO, "particles in a non-leaf patch (lv %d, PID %d, GID %d, SonPID %d, NPar %d) !!\n",
+                    lv, PID, GID, SonList[GID], NParThisPatch );
+#     endif
+
+//    determine the memory space and the subset of dataspace for particle data
+      H5_Offset_ParData [0] = GParID_Offset[GID];
+      H5_Count_ParData  [0] = NParThisPatch;
+      H5_MemDims_ParData[0] = NParThisPatch;
+
+      H5_Status = H5Sselect_hyperslab( H5_SpaceID_ParData, H5S_SELECT_SET, H5_Offset_ParData, NULL, H5_Count_ParData, NULL );
+      if ( H5_Status < 0 )   Aux_Error( ERROR_INFO, "failed to create a hyperslab for the particle data !!\n" );
+
+      H5_MemID_ParData = H5Screate_simple( 1, H5_MemDims_ParData, NULL );
+      if ( H5_MemID_ParData < 0 )   Aux_Error( ERROR_INFO, "failed to create the space \"%s\" !!\n", "H5_MemDims_ParData" );
+
+//    load particle data from disk
+      for (int v=0; v<NParVar; v++)
+      {
+         H5_Status = H5Dread( H5_SetID_ParData[v], H5T_GAMER_REAL, H5_MemID_ParData, H5_SpaceID_ParData, H5P_DEFAULT,
+                              ParBuf[v] );
+         if ( H5_Status < 0 )
+            Aux_Error( ERROR_INFO, "failed to load a particle attribute (lv %d, GID %d, v %d) !!\n", lv, GID, v );
+      }
+
+//    store particles to the particle repository (one particle at a time)
+      NewParVar[PAR_TIME] = Time[0];   // all particles are assumed to be synchronized with the base level
+
+      for (int p=0; p<NParThisPatch; p++)
+      {
+//       particle acceleration will be recalculated in "Init_GAMER"
+         NewParVar[PAR_MASS] = ParBuf[0][p];
+         NewParVar[PAR_POSX] = ParBuf[1][p];
+         NewParVar[PAR_POSY] = ParBuf[2][p];
+         NewParVar[PAR_POSZ] = ParBuf[3][p];
+         NewParVar[PAR_VELX] = ParBuf[4][p];
+         NewParVar[PAR_VELY] = ParBuf[5][p];
+         NewParVar[PAR_VELZ] = ParBuf[6][p];
+
+         for (int v=0; v<PAR_NPASSIVE; v++)  NewParPassive[v] = ParBuf[7+v][p];
+
+         NewParList[p] = amr->Par->AddOneParticle( NewParVar, NewParPassive );
+
+//       check
+         if ( NewParList[p] >= NParThisRank )
+            Aux_Error( ERROR_INFO, "New particle ID (%ld) >= maximum allowed value (%ld) !!\n",
+                       NewParList[p], NParThisRank );
+      } // for (int p=0; p<NParThisPatch )
+
+//    link particles to this patch
+#     ifdef DEBUG_HDF5
+      const real *ParPos[3] = { amr->Par->PosX, amr->Par->PosY, amr->Par->PosZ };
+      char Comment[100];
+      sprintf( Comment, "%s, lv %d, PID %d, GID %d, NPar %d", __FUNCTION__, lv, PID, GID, NParThisPatch );
+      amr->patch[0][lv][PID]->AddParticle( NParThisPatch, NewParList, &amr->Par->NPar_Lv[lv],
+                                           ParPos, amr->Par->NPar_AcPlusInac, Comment );
+#     else
+      amr->patch[0][lv][PID]->AddParticle( NParThisPatch, NewParList, &amr->Par->NPar_Lv[lv] );
+#     endif
+
+//    free resource
+      H5_Status = H5Sclose( H5_MemID_ParData );
+
+   } // if ( NParList[GID] > 0 )
+#  endif // #ifdef PARTICLE
 
 
 // enter the next level
@@ -857,7 +1133,9 @@ void LoadOnePatch( const hid_t H5_FileID, const int lv, const int GID, const boo
       {
          for (int SonGID=SonGID0; SonGID<SonGID0+8; SonGID++)
             LoadOnePatch( H5_FileID, lv+1, SonGID, Recursive, SonList, CrList,
-                          H5_SetID, H5_SpaceID, H5_MemID );
+                          H5_SetID_Field, H5_SpaceID_Field, H5_MemID_Field,
+                          NParList, ParBuf, NewParList, H5_SetID_ParData, H5_SpaceID_ParData,
+                          GParID_Offset, NParThisRank );
       }
    }
 
@@ -1058,6 +1336,14 @@ void Check_SymConst( const char *FileName )
 #  ifdef PARTICLE
 // Par_NVar check is set to NonFatal since particle acceleration may or may not be included (depending on STORE_PAR_ACC)
    LoadField( "Par_NVar",             &RS.Par_NVar,             SID, TID, NonFatal, &RT.Par_NVar,              1, NonFatal );
+#  ifdef STORE_PAR_ACC
+   if ( RT.Par_NVar != RS.Par_NVar  &&  RT.Par_NVar != RS.Par_NVar + 3 )
+      Aux_Error( ERROR_INFO, "%s : RESTART file (%d) != runtime (%d) !!\n", "PAR_NVAR", RS.Par_NVar, RT.Par_NVar );
+#  else
+   if ( RT.Par_NVar != RS.Par_NVar  &&  RT.Par_NVar != RS.Par_NVar - 3 )
+      Aux_Error( ERROR_INFO, "%s : RESTART file (%d) != runtime (%d) !!\n", "PAR_NVAR", RS.Par_NVar, RT.Par_NVar );
+#  endif
+
    LoadField( "RhoExt_GhostSize",     &RS.RhoExt_GhostSize,     SID, TID, NonFatal, &RT.RhoExt_GhostSize,      1, NonFatal );
    LoadField( "Debug_Particle",       &RS.Debug_Particle,       SID, TID, NonFatal, &RT.Debug_Particle,        1, NonFatal );
    LoadField( "ParList_GrowthFactor", &RS.ParList_GrowthFactor, SID, TID, NonFatal, &RT.ParList_GrowthFactor,  1, NonFatal );
