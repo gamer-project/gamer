@@ -282,24 +282,25 @@ struct Particle_t
    // Description :  Initialize particle repository
    //                --> All variables related to the number of particles
    //
-   // Note        :  1. NPar_AcPlusInac must be set properly (>=0) in advance
-   //                2. Initialize both "NPar_Active" and "ParListSize" as NPar_AcPlusInac
+   // Note        :  1. Initialize both "NPar_AcPlusInac, NPar_Active and ParListSize" as NPar_Input
    //                   --> Assuming no inactive particles (i.e., NPar_Inactive = 0)
-   //                3. For LOAD_BALANCE, some lists recording the information for exchanging
+   //                2. For LOAD_BALANCE, some lists recording the information for exchanging
    //                   particles between different ranks are also allocated here
    //
-   // Parameter   :  NRank : Total number of MPI ranks
+   // Parameter   :  NPar_Input  : Total number of active particles
+   //                NRank       : Total number of MPI ranks
    //===================================================================================
-   void InitRepo( const int NRank )
+   void InitRepo( const long NPar_Input, const int NRank )
    {
 
 //    check
-      if ( NPar_AcPlusInac < 0 )    Aux_Error( ERROR_INFO, "NPar_AcPlusInac (%ld) < 0 !!\n", NPar_AcPlusInac );
+      if ( NPar_Input < 0 )   Aux_Error( ERROR_INFO, "NPar_Input (%ld) < 0 !!\n", NPar_Input );
 
-//    initialize NPar_Active, NPar_Inactive, ParListSize, and InactiveParListSize
-      NPar_Active         = NPar_AcPlusInac;             // assuming all particles are active initially
+//    initialize variables related to the number of particles
+      NPar_AcPlusInac     = NPar_Input;
+      NPar_Active         = NPar_Input;                  // assuming all particles are active initially
       NPar_Inactive       = 0;
-      ParListSize         = NPar_AcPlusInac;             // set ParListSize = NPar_AcPlusInac at the beginning
+      ParListSize         = NPar_Input;                  // set ParListSize = NPar_AcPlusInac at the beginning
       InactiveParListSize = MAX( 1, ParListSize/100 );   // set arbitrarily (but must > 0)
 
 //    allocate arrays (use malloc so that realloc can be used later to resize the array)

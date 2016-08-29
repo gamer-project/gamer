@@ -854,8 +854,8 @@ void LB_RedistributeParticle_Init( real **ParVar_Old, real **Passive_Old )
 
 
 // get the total number of particles at each rank after data redistribution
-   int  TRank, Send_NPar[MPI_NRank], Recv_NPar[MPI_NRank], Recv_NPar_Sum;
-   long LB_Idx;
+   int  TRank, Send_NPar[MPI_NRank], Recv_NPar[MPI_NRank];
+   long LB_Idx, Recv_NPar_Sum;
 
    for (int r=0; r<MPI_NRank; r++)  Send_NPar[r] = 0;
    Recv_NPar_Sum = 0;
@@ -874,8 +874,7 @@ void LB_RedistributeParticle_Init( real **ParVar_Old, real **Passive_Old )
 
 
 // reset particle variables (do not reset NPar_Lv since we will need it for debug in LB_RedistributeRealPatch)
-   amr->Par->NPar_AcPlusInac = Recv_NPar_Sum;
-   amr->Par->InitRepo( MPI_NRank );
+   amr->Par->InitRepo( Recv_NPar_Sum, MPI_NRank );
 
 // reset the total number of particles to be zero
 // --> so particle repository is pre-allocated, but it contains no active particle yet

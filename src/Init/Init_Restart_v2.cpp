@@ -331,8 +331,8 @@ void Init_Restart()
    long *Load_NPar   = Load_NPar_and_GParID;
    long *Load_GParID = Load_NPar_and_GParID + 1;
 
-   int   MaxNParInOnePatch   = 0;
-   amr->Par->NPar_AcPlusInac = 0;
+   int   MaxNParInOnePatch = 0;
+   long  NParThisRank      = 0;
 #  endif
 
 // d0. set the load-balance cut points
@@ -449,8 +449,8 @@ void Init_Restart()
                      amr->patch[0][lv][PID]->NPar   = *Load_NPar;
                      amr->patch[1][lv][PID]->LB_Idx = *Load_GParID;
 
-                     amr->Par->NPar_AcPlusInac += *Load_NPar;
-                     MaxNParInOnePatch          = MAX( MaxNParInOnePatch, *Load_NPar );
+                     NParThisRank     += *Load_NPar;
+                     MaxNParInOnePatch = MAX( MaxNParInOnePatch, *Load_NPar );
 #                    endif
 
 //                   d3-1. load the fluid variables
@@ -518,7 +518,7 @@ void Init_Restart()
    real **ParBuf     = NULL;
 
    real NewParVar[PAR_NVAR], NewParPassive[PAR_NPASSIVE];
-   long GParID, NParThisRank_Check;
+   long GParID;
    int  NParThisPatch;
 
    Aux_AllocateArray2D( ParBuf, NParVar, MaxNParInOnePatch );
@@ -529,12 +529,11 @@ void Init_Restart()
 
 
 // allocate particle repository
-   amr->Par->InitRepo( MPI_NRank );
+   amr->Par->InitRepo( NParThisRank, MPI_NRank );
 
 
 // reset the total number of particles to be zero
 // --> so particle repository is pre-allocated, but it contains no active particle yet
-   NParThisRank_Check        = amr->Par->NPar_AcPlusInac;   // for check only
    amr->Par->NPar_AcPlusInac = 0;
    amr->Par->NPar_Active     = 0;
 
@@ -589,9 +588,9 @@ void Init_Restart()
                   NewParList[p] = amr->Par->AddOneParticle( NewParVar, NewParPassive );
 
 #                 ifdef DEBUG_PARTICLE
-                  if ( NewParList[p] >= NParThisRank_Check )
+                  if ( NewParList[p] >= NParThisRank )
                      Aux_Error( ERROR_INFO, "New particle ID (%ld) >= maximum allowed value (%ld) !!\n",
-                                NewParList[p], NParThisRank_Check );
+                                NewParList[p], NParThisRank );
 #                 endif
                } // for (int p=0; p<NParThisPatch )
 
@@ -609,9 +608,9 @@ void Init_Restart()
 
          fclose( File );
 
-         if ( amr->Par->NPar_AcPlusInac != NParThisRank_Check )
+         if ( amr->Par->NPar_AcPlusInac != NParThisRank )
             Aux_Error( ERROR_INFO, "total number of particles in the repository (%ld) != expect (%ld) !!\n",
-                       amr->Par->NPar_AcPlusInac, NParThisRank_Check );
+                       amr->Par->NPar_AcPlusInac, NParThisRank );
       } // if ( MPI_Rank == TargetMPIRank )
 
       MPI_Barrier( MPI_COMM_WORLD );

@@ -46,7 +46,7 @@ void Init_MemAllocate()
 
 // d. allocate particle repository (for restart, it will be allocated after loading the checkpoint file)
 #  ifdef PARTICLE
-   if ( amr->Par->Init != PAR_INIT_BY_RESTART )    amr->Par->InitRepo( MPI_NRank );
+   if ( amr->Par->Init != PAR_INIT_BY_RESTART )    amr->Par->InitRepo( amr->Par->NPar_AcPlusInac, MPI_NRank );
 #  endif
 
 

@@ -34,9 +34,9 @@ static void ResetParameter( const char *FileName, double *EndT, long *EndStep );
 //                   "OPT__RESTART_HEADER == RESTART_HEADER_SKIP"
 //                   --> Skip the header information in the RESTART file
 //
-//                2. This function will be invokde by "Init_Restart" automatically if the restart file
+//                2. This function will be invoked by "Init_Restart" automatically if the restart file
 //                   is determined to a HDF5 file
-//                3. Only work for format version >= 2100
+//                3. Only work for format version >= 2100 (PARTICLE only works for version >= 2200)
 //
 // Parameter   :  FileName : Target file name
 //-------------------------------------------------------------------------------------------------------
@@ -121,6 +121,11 @@ void Init_Restart_HDF5( const char *FileName )
 
       if ( KeyInfo.FormatVersion < 2100 )
          Aux_Error( ERROR_INFO, "unsupported data format version (only support version >= 2100) !!\n" );
+
+#     ifdef PARTICLE
+      if ( KeyInfo.FormatVersion < 2200 )
+         Aux_Error( ERROR_INFO, "unsupported data format version for PARTICLE (only support version >= 2200) !!\n" );
+#     endif
    }
 
    MPI_Barrier( MPI_COMM_WORLD );
@@ -1051,7 +1056,8 @@ void Check_SymConst( const char *FileName )
 #  endif // #ifdef GRAVITY
 
 #  ifdef PARTICLE
-   LoadField( "Par_NVar",             &RS.Par_NVar,             SID, TID, NonFatal, &RT.Par_NVar,              1,    Fatal );
+// Par_NVar check is set to NonFatal since particle acceleration may or may not be included (depending on STORE_PAR_ACC)
+   LoadField( "Par_NVar",             &RS.Par_NVar,             SID, TID, NonFatal, &RT.Par_NVar,              1, NonFatal );
    LoadField( "RhoExt_GhostSize",     &RS.RhoExt_GhostSize,     SID, TID, NonFatal, &RT.RhoExt_GhostSize,      1, NonFatal );
    LoadField( "Debug_Particle",       &RS.Debug_Particle,       SID, TID, NonFatal, &RT.Debug_Particle,        1, NonFatal );
    LoadField( "ParList_GrowthFactor", &RS.ParList_GrowthFactor, SID, TID, NonFatal, &RT.ParList_GrowthFactor,  1, NonFatal );
