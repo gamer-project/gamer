@@ -40,7 +40,7 @@ Data structure:
      |                      | -> ...
      |                      | -> ...
      |
-     | -> Particle group -> | -> Mass dset
+     | -> Particle group -> | -> ParMass dset
                             | -> ...
                             | -> ...
 ======================================================================================================*/
@@ -923,15 +923,15 @@ void Output_DumpData_Total_HDF5( const char *FileName )
    }
 
 // 6-1-4. set the name of each particle attribute
-   sprintf( ParVarName[0], "Mass" );
-   sprintf( ParVarName[1], "PosX" );
-   sprintf( ParVarName[2], "PosY" );
-   sprintf( ParVarName[3], "PosZ" );
-   sprintf( ParVarName[4], "VelX" );
-   sprintf( ParVarName[5], "VelY" );
-   sprintf( ParVarName[6], "VelZ" );
+   sprintf( ParVarName[0], "ParMass" );
+   sprintf( ParVarName[1], "ParPosX" );
+   sprintf( ParVarName[2], "ParPosY" );
+   sprintf( ParVarName[3], "ParPosZ" );
+   sprintf( ParVarName[4], "ParVelX" );
+   sprintf( ParVarName[5], "ParVelY" );
+   sprintf( ParVarName[6], "ParVelZ" );
 
-   for (int v=0; v<PAR_NPASSIVE; v++)  sprintf( ParVarName[7+v], "Passive%d%d", v/10, v%10 );
+   for (int v=0; v<PAR_NPASSIVE; v++)  sprintf( ParVarName[7+v], "ParPassive%d%d", v/10, v%10 );
 
 #  ifdef DEBUG_PARTICLE
    if ( PAR_NPASSIVE >= 100 )    Aux_Error( ERROR_INFO, "PAR_NPASSIVE = %d >= 100 !!\n", PAR_NPASSIVE );
