@@ -11,24 +11,25 @@
 #define MPI_Bcast( Buf, Count, Type, Root, MPI_COMM ) {}
 #define MPI_Finalize() {}
 
+// make sure to use a unique variable name for the loop counter (i.e., ssss below)
 #define MPI_Allreduce( SBuf, RBuf, Count, Type, Op, MPI_COMM ) \
-        {   for (int t=0; t<(Count); t++)    (RBuf)[t] = (SBuf)[t];  }
+        {   for (int ssss=0; ssss<(Count); ssss++)    (RBuf)[ssss] = (SBuf)[ssss];  }
 #define MPI_Reduce( SBuf, RBuf, Count, Type, Op, Root, MPI_COMM ) \
-        {   for (int t=0; t<(Count); t++)    (RBuf)[t] = (SBuf)[t];  }
+        {   for (int ssss=0; ssss<(Count); ssss++)    (RBuf)[ssss] = (SBuf)[ssss];  }
 #define MPI_Gather( SBuf, SCount, SType, RBuf, RCount, RType, Root, MPI_COMM ) \
-        {   for (int t=0; t<(SCount); t++)   (RBuf)[t] = (SBuf)[t];  }
+        {   for (int ssss=0; ssss<(SCount); ssss++)   (RBuf)[ssss] = (SBuf)[ssss];  }
 #define MPI_Gatherv( SBuf, SCount, SType, RBuf, RCount, RDisp, RType, Root, MPI_COMM ) \
-        {   for (int t=0; t<(SCount); t++)   (RBuf)[t] = (SBuf)[t];  }
+        {   for (int ssss=0; ssss<(SCount); ssss++)   (RBuf)[ssss] = (SBuf)[ssss];  }
 #define MPI_Alltoall( SBuf, SCount, SType, RBuf, RCount, RType, MPI_COMM ) \
-        {   for (int t=0; t<(SCount); t++)   (RBuf)[t] = (SBuf)[t];  }
+        {   for (int ssss=0; ssss<(SCount); ssss++)   (RBuf)[ssss] = (SBuf)[ssss];  }
 #define MPI_Alltoallv( SBuf, SCount, SDisp, SType, RBuf, RCount, RDisp, RType, MPI_COMM ) \
-        {   for (int t=0; t<((SCount)[0]); t++)    (RBuf)[t] = (SBuf)[t];  }
+        {   for (int ssss=0; ssss<((SCount)[0]); ssss++)    (RBuf)[ssss] = (SBuf)[ssss];  }
 #define MPI_Allgather( SBuf, SCount, SType, RBuf, RCount, RType, MPI_COMM ) \
-        {   for (int t=0; t<(SCount); t++)   (RBuf)[t] = (SBuf)[t];  }
+        {   for (int ssss=0; ssss<(SCount); ssss++)   (RBuf)[ssss] = (SBuf)[ssss];  }
 #define MPI_Allgatherv( SBuf, SCount, SType, RBuf, RCount, RDisp, RType, MPI_COMM ) \
-        {   for (int t=0; t<(SCount); t++)   (RBuf)[t] = (SBuf)[t];  }
+        {   for (int ssss=0; ssss<(SCount); ssss++)   (RBuf)[ssss] = (SBuf)[ssss];  }
 #define MPI_Scatterv( SBuf, SCount, SDisp, SType, RBuf, RCount, RType, Root, MPI_COMM ) \
-        {   for (int t=0; t<((SCount)[0]); t++)    (RBuf)[t] = (SBuf)[t];  }
+        {   for (int ssss=0; ssss<((SCount)[0]); ssss++)    (RBuf)[ssss] = (SBuf)[ssss];  }
 
 
 #define Buf_AllocateBufferPatch( Tpatch, lv ) {}
