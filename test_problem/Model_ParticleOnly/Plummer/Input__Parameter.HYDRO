@@ -10,12 +10,12 @@
 -1.0        END_T                   # end physical time of simulation (<0:default -> must be defined in Init_TestProb/RESTART)
 -1          END_STEP                # end step of simulation (<0:default -> must be defined in Init_TestProb)
 
-4           OPT__BC_FLU_XM          # fluid boundary condition at -x face : (1,2,3,4) -> (periodic, outflow, reflecting, user)
-4           OPT__BC_FLU_XP          # fluid boundary condition at +x face : (1,2,3,4) -> (periodic, outflow, reflecting, user)
-4           OPT__BC_FLU_YM          # fluid boundary condition at -y face : (1,2,3,4) -> (periodic, outflow, reflecting, user)
-4           OPT__BC_FLU_YP          # fluid boundary condition at +y face : (1,2,3,4) -> (periodic, outflow, reflecting, user)
-4           OPT__BC_FLU_ZM          # fluid boundary condition at -z face : (1,2,3,4) -> (periodic, outflow, reflecting, user)
-4           OPT__BC_FLU_ZP          # fluid boundary condition at +z face : (1,2,3,4) -> (periodic, outflow, reflecting, user)
+2           OPT__BC_FLU_XM          # fluid boundary condition at -x face : (1,2,3,4) -> (periodic, outflow, reflecting, user)
+2           OPT__BC_FLU_XP          # fluid boundary condition at +x face : (1,2,3,4) -> (periodic, outflow, reflecting, user)
+2           OPT__BC_FLU_YM          # fluid boundary condition at -y face : (1,2,3,4) -> (periodic, outflow, reflecting, user)
+2           OPT__BC_FLU_YP          # fluid boundary condition at +y face : (1,2,3,4) -> (periodic, outflow, reflecting, user)
+2           OPT__BC_FLU_ZM          # fluid boundary condition at -z face : (1,2,3,4) -> (periodic, outflow, reflecting, user)
+2           OPT__BC_FLU_ZP          # fluid boundary condition at +z face : (1,2,3,4) -> (periodic, outflow, reflecting, user)
 2           OPT__BC_POT             # gravity boundary condition : (1,2) -> (periodic, isolated)
 -1.0        GFUNC_COEFF0            # Green's function coefficient at the origin for the isolated BC (<0:default [NoPar/Par:0.0/4.X])
 
@@ -31,9 +31,9 @@
 0.01        A_INIT                  # initial scale factor ##COMOVING ONLY##
 0.3         OMEGA_M0                # omega matter at the present time ##COMOVING ONLY##
 
-1.0e10      DT__FLUID               # time-step: fluid solver coefficient (<0:default)
-1.0e10      DT__FLUID_INIT          # time-step: fluid solver coefficient at the first step (<0:default=DT__FLUID)
-1.0e10      DT__GRAVITY             # time-step: gravity solver coefficient (<0:default)
+-1.0        DT__FLUID               # time-step: fluid solver coefficient (<0:default)
+-1.0        DT__FLUID_INIT          # time-step: fluid solver coefficient at the first step (<0:default=DT__FLUID)
+-1.0        DT__GRAVITY             # time-step: gravity solver coefficient (<0:default)
 0.0         DT__PHASE               # time-step: phase rotation coefficient (<0:default; 0:off) ##ELBDM ONLY##
 -1.0        DT__PARVEL              # time-step: particle velocity (<0:default) ##PARTICLE ONLY##
 -1.0        DT__PARVEL_MAX          # time-step: maximum allowed dt from particle velocity (<0:off) ##PARTICLE ONLY##
@@ -121,14 +121,14 @@
 -1          OPT__REF_POT_INT_SCHEME # creating new potential during the grid refinement
 -1.0        INT_MONO_COEFF          # coefficient for the interpolation monotonicity (1<=coeff<=4, <0:default [2.0])
 
-0           OPT__OUTPUT_TOTAL       # output the total binary data : (0, 1, 2) -> (off, HDF5, C-binary)
+1           OPT__OUTPUT_TOTAL       # output the total binary data : (0, 1, 2) -> (off, HDF5, C-binary)
 0           OPT__OUTPUT_PART        # output a single line or slice (0~7) -> (off, xy, yz, xz, x, y, z, diag)
 0           OPT__OUTPUT_TEST_ERROR  # output the test problem errors --> edit "Output_TestProbErr"
 1           OPT__OUTPUT_PAR_TEXT    # output the particle text file ##PARTICLE ONLY##
 0           OPT__OUTPUT_BASEPS      # output the base-level power spectrum
 0           OPT__OUTPUT_BASE        # only output the base-level data for the option "OPT__OUTPUT_PART"
 0           OPT__OUTPUT_POT         # output gravitational potential ##for OPT__OUTPUT_TOTAL only##
-0           OPT__OUTPUT_PAR_DENS    # (0, 1, 2) -> (off, dump particle/total mass density) ##for OPT__OUTPUT_TOTAL and PARTICLE ONLY##
+1           OPT__OUTPUT_PAR_DENS    # (0, 1, 2) -> (off, dump particle/total mass density) ##for OPT__OUTPUT_TOTAL and PARTICLE ONLY##
 2           OPT__OUTPUT_MODE        # (1, 2, 3) -> (const step, const dt, dump table)
 5           OUTPUT_STEP             # output data every OUTPUT_STEP step
 1.0e0       OUTPUT_DT               # output data every OUTPUT_DT time interval

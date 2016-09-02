@@ -12,3 +12,4 @@
 0.0         Plummer_BulkVelX     #bulk velocity in x
 0.0         Plummer_BulkVelY     #bulk velocity in y
 0.0         Plummer_BulkVelZ     #bulk velocity in z
+0.5         Plummer_GasMFrac     #gas mass fraction ##HYDRO ONLY##

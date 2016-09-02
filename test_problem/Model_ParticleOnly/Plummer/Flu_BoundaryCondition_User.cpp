@@ -21,9 +21,11 @@ static void BC_User( const double Time, const double x, const double y, const do
 void BC_User( const double Time, const double x, const double y, const double z, real *BVal )
 {
 
+#  if ( MODEL == ELBDM )
    BVal[REAL] = (real)0.0;
    BVal[IMAG] = (real)0.0;
    BVal[DENS] = (real)0.0;
+#  endif
 
 } // FUNCTION : BC_User
 

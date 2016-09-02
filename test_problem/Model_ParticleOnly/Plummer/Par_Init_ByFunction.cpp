@@ -12,6 +12,9 @@ extern bool Plummer_Collision;
 extern real Plummer_Collision_D;
 extern real Plummer_Center[3];
 extern real Plummer_BulkVel[3];
+#if ( MODEL == HYDRO )
+extern real Plummer_GasMFrac;
+#endif
 
 double MassProf_Plummer( const double r );
 static void RanVec_FixRadius( const double r, double RanVec[] );
@@ -73,6 +76,11 @@ void Par_Init_ByFunction()
       ParM = TotM / amr->Par->NPar_Active_AllRank;
 
       if ( Plummer_Collision )   ParM *= 2.0;
+
+//    rescale particle mass to account for the gas contribution
+#     if ( MODEL == HYDRO )
+      ParM *= 1.0 - Plummer_GasMFrac;
+#     endif
 
 
 //    construct the mass profile table

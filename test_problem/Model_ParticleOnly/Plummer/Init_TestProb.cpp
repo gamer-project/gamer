@@ -24,6 +24,9 @@ bool Plummer_Collision;    // true/false --> test Plummer collision/single Plumm
 real Plummer_Collision_D;  // distance between two Plummer clouds for the Plummer collision test
 real Plummer_Center[3];    // central coordinates
 real Plummer_BulkVel[3];   // bulk velocity
+#if ( MODEL == HYDRO )
+real Plummer_GasMFrac;     // gas mass fraction (for HYDRO only)
+#endif
 
 real Plummer_FreeT;        // free-fall time at Plummer_R0
 // =======================================================================================
@@ -46,8 +49,8 @@ void Init_TestProb()
    const char *TestProb = "Plummer model";
 
 // check
-# if ( MODEL != ELBDM )
-# error : ERROR : "MODEL != ELBDM" in the Plummer model test !!
+# if ( MODEL != ELBDM  &&  MODEL != HYDRO )
+# error : ERROR : only support ELBDM and HYDRO models !!
 # endif
 
 # ifndef PARTICLE
@@ -96,6 +99,9 @@ void Init_TestProb()
       Aux_Message( stdout, "       initial distance between two clouds          = %13.7e\n",  Plummer_Collision_D );
       for (int d=0; d<3; d++)
       Aux_Message( stdout, "       bulk velocity [%d]                            = %14.7e\n", d, Plummer_BulkVel[d] );
+#     if ( MODEL == HYDRO )
+      Aux_Message( stdout, "       gas mass fraction                            = %13.7e\n", Plummer_GasMFrac );
+#     endif
       Aux_Message( stdout, "=============================================================================\n" );
       Aux_Message( stdout, "\n" );
    }
@@ -151,8 +157,10 @@ void Init_TestProb()
 // Function    :  Par_TestProbSol_Plummer
 // Description :  Initialize the background density field as zero for the Plummer model test
 //
-// Note        :  1. Currently particle test must work with the ELBDM model
-//                2. Invoked by "ELBDM_Init_StartOver_AssignData"
+// Note        :  1. This test supports two modes:
+//                   (1) MODEL == ELBDM: grid density is set to zero. So essentially there are particles only
+//                   (2) MODEL == HYDRO: gas and particles share the same density profile, and the mass ratio is
+//                                       determined by the input parameter "Plummer_GasMFrac"
 //
 // Parameter   :  fluid : Fluid field to be initialized
 //                x/y/z : Target physical coordinates
@@ -163,10 +171,60 @@ void Init_TestProb()
 void Par_TestProbSol_Plummer( real *fluid, const double x, const double y, const double z, const double Time )
 {
 
+#  if   ( MODEL == HYDRO )
+// gas share the same density profile as particles (except for different total masses)
+   const double TotM    = 4.0/3.0*M_PI*CUBE(Plummer_R0)*Plummer_Rho0;
+   const double GasRho0 = Plummer_Rho0*Plummer_GasMFrac;
+   const double PresBg  = 0.0;   // background pressure
+   double r2, a2;
+
+   if ( Plummer_Collision )
+   {
+      const double Coll_Offset = 0.5*Plummer_Collision_D/sqrt(3.0);
+      double Center[3];
+
+      fluid[DENS] = 0.0;
+      fluid[ENGY] = 0.0;
+
+      for (int t=-1; t<=1; t+=2)
+      {
+         for (int d=0; d<3; d++)    Center[d] = Plummer_Center[d] + Coll_Offset*(double)t;
+
+         r2 = SQR(x-Center[0])+ SQR(y-Center[1]) + SQR(z-Center[2]);
+         a2 = r2 / SQR(Plummer_R0);
+
+         fluid[DENS] += GasRho0 * pow( 1.0 + a2, -2.5 );
+         fluid[ENGY] += (  NEWTON_G*TotM*GasRho0 / ( 6.0*Plummer_R0*CUBE(1.0 + a2) ) + PresBg  ) / ( GAMMA - 1.0 );
+      }
+
+      fluid[MOMX]  = fluid[DENS]*Plummer_BulkVel[0];
+      fluid[MOMY]  = fluid[DENS]*Plummer_BulkVel[1];
+      fluid[MOMZ]  = fluid[DENS]*Plummer_BulkVel[2];
+      fluid[ENGY] += 0.5*( SQR(fluid[MOMX]) + SQR(fluid[MOMY]) + SQR(fluid[MOMZ]) ) / fluid[DENS];
+   }
+
+   else
+   {
+      r2 = SQR(x-Plummer_Center[0])+ SQR(y-Plummer_Center[1]) + SQR(z-Plummer_Center[2]);
+      a2 = r2 / SQR(Plummer_R0);
+
+      fluid[DENS] = GasRho0 * pow( 1.0 + a2, -2.5 );
+      fluid[MOMX] = fluid[DENS]*Plummer_BulkVel[0];
+      fluid[MOMY] = fluid[DENS]*Plummer_BulkVel[1];
+      fluid[MOMZ] = fluid[DENS]*Plummer_BulkVel[2];
+      fluid[ENGY] = (  NEWTON_G*TotM*GasRho0 / ( 6.0*Plummer_R0*CUBE(1.0 + a2) ) + PresBg  ) / ( GAMMA - 1.0 )
+                    + 0.5*( SQR(fluid[MOMX]) + SQR(fluid[MOMY]) + SQR(fluid[MOMZ]) ) / fluid[DENS];
+   } // if ( Plummer_Collision ) ... else ...
+
+#  elif ( MODEL == ELBDM )
 // set wave function as zero everywhere
    fluid[REAL] = 0.0;
    fluid[IMAG] = 0.0;
    fluid[DENS] = 0.0;
+
+#  else
+#  error : unsupported MODEL !!
+#  endif
 
 } // FUNCTION : Par_TestProbSol_Plummer
 
@@ -251,7 +309,12 @@ void LoadTestProbParameter()
    getline( &input_line, &len, File );
    sscanf( input_line, "%lf%s",  &Plummer_BulkVel[2],     string );
 
-#  else
+   getline( &input_line, &len, File );
+#  if ( MODEL == HYDRO )
+   sscanf( input_line, "%lf%s",  &Plummer_GasMFrac,       string );
+#  endif
+
+#  else // #ifdef FLOAT8
 
    getline( &input_line, &len, File );
    sscanf( input_line, "%f%s",   &Plummer_Collision_D,    string );
@@ -273,7 +336,13 @@ void LoadTestProbParameter()
 
    getline( &input_line, &len, File );
    sscanf( input_line, "%f%s",   &Plummer_BulkVel[2],     string );
+
+   getline( &input_line, &len, File );
+#  if ( MODEL == HYDRO )
+   sscanf( input_line, "%f%s",  &Plummer_GasMFrac,        string );
 #  endif
+
+#  endif // #ifdef FLOAT8 ... else ...
 
    fclose( File );
    if ( input_line != NULL )     free( input_line );
@@ -337,6 +406,10 @@ void LoadTestProbParameter()
    if ( Plummer_Rho0  < 0.0 )    Aux_Error( ERROR_INFO, "Plummer_Rho0 (%14.7e) < 0.0 !!\n",    Plummer_Rho0 );
    if ( Plummer_R0    < 0.0 )    Aux_Error( ERROR_INFO, "Plummer_R0 (%14.7e) < 0.0 !!\n",      Plummer_R0   );
    if ( Plummer_NBinR <= 1  )    Aux_Error( ERROR_INFO, "Plummer_NBinR (%d) <= 1 !!\n",        Plummer_NBinR );
+#  if ( MODEL == HYDRO )
+   if ( Plummer_GasMFrac <= 0.0  ||  Plummer_GasMFrac > 1.0 )
+      Aux_Error( ERROR_INFO, "Plummer_GasMFrac (%14.7e) is not within the correct range [0.0 < x <= 1.0] !!\n", Plummer_GasMFrac );
+#  endif
 
 } // FUNCTION : LoadTestProbParameter
 

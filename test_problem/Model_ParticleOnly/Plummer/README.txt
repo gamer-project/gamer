@@ -19,3 +19,8 @@ Note:
 1. Test the evolution of the Plummer model
 
 2. The gnuplot script 'plot.gpt' can be used to compare different results
+
+3. This test supports two modes
+   (1) MODEL == ELBDM: grid density is set to zero. So essentially there are particles only
+   (2) MODEL == HYDRO: gas and particles share the same density profile, and the mass ratio is
+                       determined by the input parameter "Plummer_GasMFrac"
