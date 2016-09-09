@@ -38,6 +38,7 @@ double      ShellWidth;                   // the width of each shell (or minimum
 bool        Mode_ShellAve     = false;    // true --> evaluate the shell average
 int         NShell            = WRONG;    // number of shells
 int         UseMaxRhoPos      = 8;        // number of highest-density cells for setting the sphere center (<=0 -> disable)
+bool        UseMaxRhoPos_Par  = false;    // if OutputParDens is on, use particle (or total) density for UseMaxRhoPos
 int         NIn               = NULL_INT; // total number of input grid variables
 int         NOut              = NULL_INT; // total number of output variables
 bool        OutputCenter      = false;    // output the center coords
@@ -276,7 +277,7 @@ void GetRMS()
    TVar    = _FLU;
    NextIdx = NCOMP;
 
-   if ( OutputPot     )    {  TVar |= _POTE;       POTE     = NextIdx ++;  } 
+   if ( OutputPot     )    {  TVar |= _POTE;       POTE     = NextIdx ++;  }
    if ( OutputParDens )    {  TVar |= _PAR_DENS;   PAR_DENS = NextIdx ++;  }
 
 
@@ -527,7 +528,7 @@ void ShellAverage()
    TVar    = _FLU;
    NextIdx = NCOMP;
 
-   if ( OutputPot     )    {  TVar |= _POTE;       POTE     = NextIdx ++;  } 
+   if ( OutputPot     )    {  TVar |= _POTE;       POTE     = NextIdx ++;  }
    if ( OutputParDens )    {  TVar |= _PAR_DENS;   PAR_DENS = NextIdx ++;  }
 
 
@@ -878,61 +879,63 @@ void ReadOption( int argc, char **argv )
 
    int c;
 
-   while ( (c = getopt(argc, argv, "hpsSMPVTcgi:o:n:x:y:z:r:t:m:a:L:R:u:I:e:G:")) != -1 )
+   while ( (c = getopt(argc, argv, "hpsSMPVTDcgi:o:n:x:y:z:r:t:m:a:L:R:u:I:e:G:")) != -1 )
    {
       switch ( c )
       {
-         case 'i': FileName_In    = optarg;
+         case 'i': FileName_In      = optarg;
                    break;
-         case 'e': FileName_Tree  = optarg;
+         case 'e': FileName_Tree    = optarg;
                    break;
-         case 'o': Suffix         = optarg;
+         case 'o': Suffix           = optarg;
                    break;
-         case 'n': NShell         = atoi(optarg);
+         case 'n': NShell           = atoi(optarg);
                    break;
-         case 'x': Center[0]      = atof(optarg);
+         case 'x': Center[0]        = atof(optarg);
                    break;
-         case 'y': Center[1]      = atof(optarg);
+         case 'y': Center[1]        = atof(optarg);
                    break;
-         case 'z': Center[2]      = atof(optarg);
+         case 'z': Center[2]        = atof(optarg);
                    break;
-         case 'r': MaxRadius      = atof(optarg);
+         case 'r': MaxRadius        = atof(optarg);
                    break;
-         case 'R': UseMaxRhoPos_R = atof(optarg);
+         case 'R': UseMaxRhoPos_R   = atof(optarg);
                    break;
-         case 'p': Periodic       = true;
+         case 'p': Periodic         = true;
                    break;
-         case 'm': UseMaxRhoPos   = atoi(optarg);
+         case 'm': UseMaxRhoPos     = atoi(optarg);
                    break;
-         case 'S': Mode_ShellAve  = true;
+         case 'D': UseMaxRhoPos_Par = true;
                    break;
-         case 'M': Mode_MaxRho    = true;
+         case 'S': Mode_ShellAve    = true;
                    break;
-         case 't': RhoThres       = atof(optarg);
+         case 'M': Mode_MaxRho      = true;
                    break;
-         case 's': InputScale     = true;
+         case 't': RhoThres         = atof(optarg);
                    break;
-         case 'L': LogBin         = atof(optarg);
+         case 's': InputScale       = true;
                    break;
-         case 'a': GetNShell      = atof(optarg);
+         case 'L': LogBin           = atof(optarg);
                    break;
-         case 'I': IntScheme      = (IntScheme_t)atoi(optarg);
+         case 'a': GetNShell        = atof(optarg);
                    break;
-         case 'T': UseTree        = true;
+         case 'I': IntScheme        = (IntScheme_t)atoi(optarg);
+                   break;
+         case 'T': UseTree          = true;
                    break;
 #        if ( MODEL == ELBDM )
-         case 'P': ELBDM_IntPhase = false;
+         case 'P': ELBDM_IntPhase   = false;
                    break;
-         case 'V': ELBDM_GetVir   = true;
+         case 'V': ELBDM_GetVir     = true;
                    break;
 #        endif
-         case 'u': INT_MONO_COEFF = atof(optarg);
+         case 'u': INT_MONO_COEFF   = atof(optarg);
                    break;
-         case 'c': OutputCenter   = true;
+         case 'c': OutputCenter     = true;
                    break;
-         case 'g': GetAvePot      = true;
+         case 'g': GetAvePot        = true;
                    break;
-         case 'G': NewtonG        = atof(optarg);
+         case 'G': NewtonG          = atof(optarg);
                    break;
          case 'h':
          case '?': cerr << endl << "usage: " << argv[0]
@@ -943,6 +946,8 @@ void ReadOption( int argc, char **argv )
                         << " [-r sphere radius [0.5*BoxSize]] [-p periodic B.C. [off]]"
                         << endl << "                             "
                         << " [-m # of highest-density cells for determining the sphere center (<=0: off) [8]]"
+                        << endl << "                             "
+                        << " [-D use particle (or total) density instead of just grid density to determine the center [off]]"
                         << endl << "                             "
                         << " [-R maximum radius for determining the sphere center (<=0: default) [sphere radius set by -r]]"
                         << endl << "                             "
@@ -1046,6 +1051,9 @@ void ReadOption( int argc, char **argv )
    if ( GetAvePot )
       Aux_Error( ERROR_INFO, "DENS field is NOT defined for the option \"GetAvePot\" !!\n" );
 #  endif
+
+   if ( UseMaxRhoPos_Par  &&  UseMaxRhoPos <= 0 )
+         Aux_Error( ERROR_INFO, "UseMaxRhoPos_Par (-D) is useless when UseMaxRhoPos (-m) <= 0 !!\n" );
 
 } // FUNCTION : ReadOption
 
@@ -1663,14 +1671,17 @@ void SetMaxRhoPos( const int AveN )
       exit( 1 );
    }
 
+   if ( UseMaxRhoPos_Par  &&  OutputParDens == 0 )
+         Aux_Error( ERROR_INFO, "UseMaxRhoPos_Par (-D) is useless when no particle (or total) density is stored on grids !!\n" );
+
 
    const double dh_min = amr.dh[NLEVEL-1];
-   real  MinRho        = __FLT_MIN__;
+   real  MinRho        = -1.0;
    int   MinRho_ID     = 0;
 
    real   MaxRho[AveN], Rho;
    double scale, x, y, z, dx1, dx2, dx, dy1, dy2, dy, dz1, dz2, dz, Radius, MaxRho_Pos[AveN][3];
-   real   PeakOutside_MaxRho = __FLT_MIN__, PeakOutside_Pos[3], PeakOutside_R;
+   real   PeakOutside_MaxRho = -1.0, PeakOutside_Pos[3], PeakOutside_R;
    bool   PeakOutside_First  = true;
    int    PeakOutside_Lv;
    int    MaxRho_Lv[AveN];
@@ -1702,7 +1713,9 @@ void SetMaxRhoPos( const int AveN )
                                              dx2 = x - Center_Map[0];
                                              dx  = ( fabs(dx1) <= fabs(dx2) ) ? dx1 : dx2;
 
-            Rho    = amr.patch[lv][PID]->fluid[DENS][k][j][i];
+            if ( UseMaxRhoPos_Par )    Rho = amr.patch[lv][PID]->par_dens   [k][j][i];
+            else                       Rho = amr.patch[lv][PID]->fluid[DENS][k][j][i];
+
             Radius = sqrt( dx*dx + dy*dy + dz*dz );
 
             if ( Rho > MinRho  &&  Radius <= UseMaxRhoPos_R )
@@ -1754,7 +1767,9 @@ void SetMaxRhoPos( const int AveN )
                                              dx2 = x - Center_Map[0];
                                              dx  = ( fabs(dx1) <= fabs(dx2) ) ? dx1 : dx2;
 
-            Rho    = amr.patch[lv][PID]->fluid[DENS][k][j][i];
+            if ( UseMaxRhoPos_Par )    Rho = amr.patch[lv][PID]->par_dens   [k][j][i];
+            else                       Rho = amr.patch[lv][PID]->fluid[DENS][k][j][i];
+
             Radius = sqrt( dx*dx + dy*dy + dz*dz );
 
             if ( Rho > MinRho  &&  Radius > UseMaxRhoPos_R )
@@ -1820,6 +1835,11 @@ void SetMaxRhoPos( const int AveN )
          for (int dim=0; dim<3; dim++)    MaxRho_Pos[m+1][dim] = TempPos        [dim];
       }
    }
+
+
+// check if we do find some cells with non-zero densities
+   if ( MaxRho[0] <= 0.0 )
+      Aux_Error( ERROR_INFO, "Maximum density found = %14.7e <= 0.0 !!\n", MaxRho[0] );
 
 
 // set the new sphere center as the center of mass of AveN highest-density cells
@@ -1896,80 +1916,81 @@ void TakeNote( int argc, char **argv )
    fprintf( stdout, "\n\n" );
 
 #  if   ( MODEL == HYDRO )
-   printf( "MODEL          = %14s\n",     "HYDRO"                   );
+   printf( "MODEL            = %14s\n",     "HYDRO"                   );
 #  elif ( MODEL == MHD )
-   printf( "MODEL          = %14s\n",     "MHD"                     );
+   printf( "MODEL            = %14s\n",     "MHD"                     );
 #  elif ( MODEL == ELBDM )
-   printf( "MODEL          = %14s\n",     "ELBDM"                   );
+   printf( "MODEL            = %14s\n",     "ELBDM"                   );
 #  else
 #  error : ERROR : unsupported MODEL !!
 #  endif // MODEL
 
 #  ifdef FLOAT8
-   printf( "FLOAT8         = %14s\n",     "ON"                      );
+   printf( "FLOAT8           = %14s\n",     "ON"                      );
 #  else
-   printf( "FLOAT8         = %14s\n",     "OFF"                     );
+   printf( "FLOAT8           = %14s\n",     "OFF"                     );
 #  endif
 
 #  ifdef GAMER_DEBUG
-   printf( "GAMER_DEBUG    = %14s\n",     "ON"                      );
+   printf( "GAMER_DEBUG      = %14s\n",     "ON"                      );
 #  else
-   printf( "GAMER_DEBUG    = %14s\n",     "OFF"                     );
+   printf( "GAMER_DEBUG      = %14s\n",     "OFF"                     );
 #  endif
 
 #  ifdef SUPPORT_HDF5
-   printf( "SUPPORT_HDF5   = %14s\n",     "ON"                      );
+   printf( "SUPPORT_HDF5     = %14s\n",     "ON"                      );
 #  else
-   printf( "SUPPORT_HDF5   = %14s\n",     "OFF"                     );
+   printf( "SUPPORT_HDF5     = %14s\n",     "OFF"                     );
 #  endif
 
-   printf( "DumpID         = %14d\n",     DumpID                    );
-   printf( "Time           = %14.7e\n",   Time[0]                   );
-   printf( "Step           = %14ld\n",    Step                      );
-   printf( "NX0_TOT[0]     = %14d\n",     NX0_TOT[0]                );
-   printf( "NX0_TOT[1]     = %14d\n",     NX0_TOT[1]                );
-   printf( "NX0_TOT[2]     = %14d\n",     NX0_TOT[2]                );
-   printf( "NIn            = %14d\n",     NIn                       );
-   printf( "NOut           = %14d\n",     NOut                      );
-   printf( "Center_x       = %14.7e\n",   Center[0]*dh_min          );
-   printf( "Center_y       = %14.7e\n",   Center[1]*dh_min          );
-   printf( "Center_z       = %14.7e\n",   Center[2]*dh_min          );
-   printf( "MappedCenter_x = %14.7e\n",   Center_Map[0]*dh_min      );
-   printf( "MappedCenter_y = %14.7e\n",   Center_Map[1]*dh_min      );
-   printf( "MappedCenter_z = %14.7e\n",   Center_Map[2]*dh_min      );
-   printf( "Radius         = %14.7e\n",   MaxRadius*dh_min          );
-   printf( "UseMaxRhoPos   = %14d\n",     UseMaxRhoPos              );
-   printf( "UseMaxRhoPos_R = %14.7e\n",   UseMaxRhoPos_R*dh_min     );
-   printf( "Periodic       = %14d\n",     Periodic                  );
-   printf( "InputScale     = %14d\n",     InputScale                );
-   printf( "LogBin         = %14.7e\n",   LogBin                    );
-   printf( "GetNShell      = %14.7e\n",   GetNShell                 );
-   printf( "NShell         = %14d\n",     NShell                    );
-   printf( "ShellWidth     = %14.7e\n",   ShellWidth*dh_min         );
-   printf( "RhoThres       = %14.7e\n",   RhoThres                  );
-   printf( "OutputPot      =  %s\n",      (OutputPot)?"YES":"NO"    );
-   printf( "OutputParDens  =  %d\n",      OutputParDens             );
-   printf( "OutputCenter   =  %s\n",      (OutputCenter)?"YES":"NO" );
-   printf( "NeedGhost      =  %s\n",      (NeedGhost)?"YES":"NO"    );
-   printf( "UseTree        =  %s\n",      (UseTree)?"YES":"NO"      );
-   printf( "FileName_Tree  =  %s\n",      FileName_Tree             );
-   printf( "IntScheme      =  %s\n",      ( IntScheme == INT_MINMOD3D ) ? "MINMOD3D" :
-                                          ( IntScheme == INT_MINMOD1D ) ? "MINMOD1D" :
-                                          ( IntScheme == INT_VANLEER  ) ? "VANLEER"  :
-                                          ( IntScheme == INT_CQUAD    ) ? "CQUAD"    :
-                                          ( IntScheme == INT_QUAD     ) ? "QUAD"     :
-                                          ( IntScheme == INT_CQUAR    ) ? "CQUAR"    :
-                                          ( IntScheme == INT_QUAR     ) ? "QUAR"     :
-                                          "UNKNOWN" );
+   printf( "DumpID           = %14d\n",     DumpID                    );
+   printf( "Time             = %14.7e\n",   Time[0]                   );
+   printf( "Step             = %14ld\n",    Step                      );
+   printf( "NX0_TOT[0]       = %14d\n",     NX0_TOT[0]                );
+   printf( "NX0_TOT[1]       = %14d\n",     NX0_TOT[1]                );
+   printf( "NX0_TOT[2]       = %14d\n",     NX0_TOT[2]                );
+   printf( "NIn              = %14d\n",     NIn                       );
+   printf( "NOut             = %14d\n",     NOut                      );
+   printf( "Center_x         = %14.7e\n",   Center[0]*dh_min          );
+   printf( "Center_y         = %14.7e\n",   Center[1]*dh_min          );
+   printf( "Center_z         = %14.7e\n",   Center[2]*dh_min          );
+   printf( "MappedCenter_x   = %14.7e\n",   Center_Map[0]*dh_min      );
+   printf( "MappedCenter_y   = %14.7e\n",   Center_Map[1]*dh_min      );
+   printf( "MappedCenter_z   = %14.7e\n",   Center_Map[2]*dh_min      );
+   printf( "Radius           = %14.7e\n",   MaxRadius*dh_min          );
+   printf( "UseMaxRhoPos     = %14d\n",     UseMaxRhoPos              );
+   printf( "UseMaxRhoPos_R   = %14.7e\n",   UseMaxRhoPos_R*dh_min     );
+   printf( "UseMaxRhoPos_Par = %14d\n",     UseMaxRhoPos_Par          );
+   printf( "Periodic         = %14d\n",     Periodic                  );
+   printf( "InputScale       = %14d\n",     InputScale                );
+   printf( "LogBin           = %14.7e\n",   LogBin                    );
+   printf( "GetNShell        = %14.7e\n",   GetNShell                 );
+   printf( "NShell           = %14d\n",     NShell                    );
+   printf( "ShellWidth       = %14.7e\n",   ShellWidth*dh_min         );
+   printf( "RhoThres         = %14.7e\n",   RhoThres                  );
+   printf( "OutputPot        =  %s\n",      (OutputPot)?"YES":"NO"    );
+   printf( "OutputParDens    =  %d\n",      OutputParDens             );
+   printf( "OutputCenter     =  %s\n",      (OutputCenter)?"YES":"NO" );
+   printf( "NeedGhost        =  %s\n",      (NeedGhost)?"YES":"NO"    );
+   printf( "UseTree          =  %s\n",      (UseTree)?"YES":"NO"      );
+   printf( "FileName_Tree    =  %s\n",      FileName_Tree             );
+   printf( "IntScheme        =  %s\n",      ( IntScheme == INT_MINMOD3D ) ? "MINMOD3D" :
+                                            ( IntScheme == INT_MINMOD1D ) ? "MINMOD1D" :
+                                            ( IntScheme == INT_VANLEER  ) ? "VANLEER"  :
+                                            ( IntScheme == INT_CQUAD    ) ? "CQUAD"    :
+                                            ( IntScheme == INT_QUAD     ) ? "QUAD"     :
+                                            ( IntScheme == INT_CQUAR    ) ? "CQUAR"    :
+                                            ( IntScheme == INT_QUAR     ) ? "QUAR"     :
+                                            "UNKNOWN" );
 #  if ( MODEL == ELBDM )
-   printf( "ELBDM_IntPhase =  %s\n",      (ELBDM_IntPhase)?"YES":"NO" );
-   printf( "ELBDM_GetVir   =  %s\n",      (ELBDM_GetVir  )?"YES":"NO" );
-   printf( "ELBDM_ETA      = %14.7e\n",   ELBDM_ETA );
+   printf( "ELBDM_IntPhase   =  %s\n",      (ELBDM_IntPhase)?"YES":"NO" );
+   printf( "ELBDM_GetVir     =  %s\n",      (ELBDM_GetVir  )?"YES":"NO" );
+   printf( "ELBDM_ETA        = %14.7e\n",   ELBDM_ETA );
 #  endif
-   printf( "INT_MONO_COEFF = %14.7e\n",   INT_MONO_COEFF );
-   printf( "GetAvePot      =  %s\n",      (GetAvePot)?"YES":"NO"      );
+   printf( "INT_MONO_COEFF   = %14.7e\n",   INT_MONO_COEFF );
+   printf( "GetAvePot        =  %s\n",      (GetAvePot)?"YES":"NO"      );
    if ( GetAvePot )
-   printf( "NewtonG        = %14.7e\n",   NewtonG                     );
+   printf( "NewtonG          = %14.7e\n",   NewtonG                     );
    printf( "======================================================================================\n"   );
 
 
