@@ -967,16 +967,6 @@ void Load_Parameter_After_2000( FILE *File, const int FormatVersion, int &NLv_Re
          Aux_Message( stderr, "WARNING : %s : RESTART file (%s) != runtime (%s) !!\n", "GPU", "ON", "OFF" );
 #     endif
 
-#     ifdef GAMER_OPTIMIZATION
-      if ( !gamer_optimization )
-         Aux_Message( stderr, "WARNING : %s : RESTART file (%s) != runtime (%s) !!\n",
-                      "GAMER_OPTIMIZATION", "OFF", "ON" );
-#     else
-      if (  gamer_optimization )
-         Aux_Message( stderr, "WARNING : %s : RESTART file (%s) != runtime (%s) !!\n",
-                      "GAMER_OPTIMIZATION", "ON", "OFF" );
-#     endif
-
 #     ifdef GAMER_DEBUG
       if ( !gamer_debug )
          Aux_Message( stderr, "WARNING : %s : RESTART file (%s) != runtime (%s) !!\n",

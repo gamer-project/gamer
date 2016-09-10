@@ -80,7 +80,6 @@ struct Makefile_t
    int Particle;
 
    int UseGPU;
-   int GAMER_Optimization;
    int GAMER_Debug;
    int Timing;
    int TimingSolver;

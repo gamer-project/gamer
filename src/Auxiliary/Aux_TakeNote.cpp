@@ -202,12 +202,6 @@ void Aux_TakeNote()
       fprintf( Note, "GPU                       OFF\n" );
 #     endif
    
-#     ifdef GAMER_OPTIMIZATION
-      fprintf( Note, "GAMER_OPTIMIZATION        ON\n" );
-#     else
-      fprintf( Note, "GAMER_OPTIMIZATION        OFF\n" );
-#     endif
-   
 #     ifdef GAMER_DEBUG
       fprintf( Note, "GAMER_DEBUG               ON\n" );
 #     else

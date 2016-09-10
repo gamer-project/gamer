@@ -92,9 +92,6 @@ SIMU_OPTION += -DGPU
 # GPU architecture: FERMI/KEPLER
 SIMU_OPTION += -DGPU_ARCH=KEPLER
 
-# optimization mode
-SIMU_OPTION += -DGAMER_OPTIMIZATION
-
 # debug mode
 #SIMU_OPTION += -DGAMER_DEBUG
 

@@ -160,7 +160,7 @@ void Output_DumpData_Total( const char *FileName )
 
 //    a. output the information of data format
 //    =================================================================================================
-      const long FormatVersion = 2100;
+      const long FormatVersion = 2101;
       const long CheckCode     = 123456789;
 
       fseek( File, HeaderOffset_Format, SEEK_SET );
@@ -241,11 +241,8 @@ void Output_DumpData_Total( const char *FileName )
       const bool gpu                 = false;
 #     endif
 
-#     ifdef GAMER_OPTIMIZATION
-      const bool gamer_optimization  = true;
-#     else
-      const bool gamer_optimization  = false;
-#     endif
+//    gamer_optimization is not used anymore after output version >= 2101
+      const bool gamer_optimization  = NULL_BOOL;
 
 #     ifdef GAMER_DEBUG
       const bool gamer_debug         = true;

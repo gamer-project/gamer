@@ -1192,7 +1192,6 @@ void Check_Makefile( const char *FileName )
    LoadField( "Particle",           &RS.Particle,           SID, TID, NonFatal, &RT.Particle,            1,    Fatal );
 
    LoadField( "UseGPU",             &RS.UseGPU,             SID, TID, NonFatal, &RT.UseGPU,              1, NonFatal );
-   LoadField( "GAMER_Optimization", &RS.GAMER_Optimization, SID, TID, NonFatal, &RT.GAMER_Optimization,  1, NonFatal );
    LoadField( "GAMER_Debug",        &RS.GAMER_Debug,        SID, TID, NonFatal, &RT.GAMER_Debug,         1, NonFatal );
    LoadField( "Timing",             &RS.Timing,             SID, TID, NonFatal, &RT.Timing,              1, NonFatal );
    LoadField( "TimingSolver",       &RS.TimingSolver,       SID, TID, NonFatal, &RT.TimingSolver,        1, NonFatal );

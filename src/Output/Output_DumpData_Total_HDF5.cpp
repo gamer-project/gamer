@@ -74,7 +74,7 @@ Procedure for outputting new variables:
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2200)
+// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2201)
 // Description :  Output all simulation data in the HDF5 format, which can be used as a restart file
 //                or loaded by YT
 //
@@ -1211,7 +1211,7 @@ void FillIn_KeyInfo( KeyInfo_t &KeyInfo )
 
    const time_t CalTime  = time( NULL );   // calendar time
 
-   KeyInfo.FormatVersion = 2200;
+   KeyInfo.FormatVersion = 2201;
    KeyInfo.Model         = MODEL;
    KeyInfo.NLevel        = NLEVEL;
    KeyInfo.PatchSize     = PATCH_SIZE;
@@ -1305,12 +1305,6 @@ void FillIn_Makefile( Makefile_t &Makefile )
    Makefile.UseGPU             = 1;
 #  else
    Makefile.UseGPU             = 0;
-#  endif
-
-#  ifdef GAMER_OPTIMIZATION
-   Makefile.GAMER_Optimization = 1;
-#  else
-   Makefile.GAMER_Optimization = 0;
 #  endif
 
 #  ifdef GAMER_DEBUG
@@ -1976,7 +1970,6 @@ void GetCompound_Makefile( hid_t &H5_TypeID )
    H5Tinsert( H5_TypeID, "Particle",           HOFFSET(Makefile_t,Particle          ), H5T_NATIVE_INT );
 
    H5Tinsert( H5_TypeID, "UseGPU",             HOFFSET(Makefile_t,UseGPU            ), H5T_NATIVE_INT );
-   H5Tinsert( H5_TypeID, "GAMER_Optimization", HOFFSET(Makefile_t,GAMER_Optimization), H5T_NATIVE_INT );
    H5Tinsert( H5_TypeID, "GAMER_Debug",        HOFFSET(Makefile_t,GAMER_Debug       ), H5T_NATIVE_INT );
    H5Tinsert( H5_TypeID, "Timing",             HOFFSET(Makefile_t,Timing            ), H5T_NATIVE_INT );
    H5Tinsert( H5_TypeID, "TimingSolver",       HOFFSET(Makefile_t,TimingSolver      ), H5T_NATIVE_INT );
