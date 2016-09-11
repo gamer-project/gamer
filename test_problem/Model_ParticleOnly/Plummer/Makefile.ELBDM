@@ -125,9 +125,6 @@ SIMU_OPTION += -DOPENMP
 # support HDF5 format
 SIMU_OPTION += -DSUPPORT_HDF5
 
-# allocate memory pool to reduce memory fragmentation
-SIMU_OPTION += -DMEMORY_POOL
-
 
 
 # simulation parameters

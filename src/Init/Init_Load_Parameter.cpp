@@ -299,6 +299,14 @@ void Init_Load_Parameter()
 #  endif
 
    getline( &input_line, &len, File );
+   sscanf( input_line, "%d%s",   &temp_int,                 string );
+   OPT__REUSE_MEMORY = (bool)temp_int;
+
+   getline( &input_line, &len, File );
+   sscanf( input_line, "%d%s",   &temp_int,                 string );
+   OPT__MEMORY_POOL = (bool)temp_int;
+
+   getline( &input_line, &len, File );
 
 
 // load balance

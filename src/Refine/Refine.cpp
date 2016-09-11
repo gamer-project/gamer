@@ -10,11 +10,11 @@ void ELBDM_GetPhase_DebugOnly( real *CData, const int CSize );
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Refine
-// Description :  Construct patches at level "lv+1" according to the flagging result at level "lv" 
+// Description :  Construct patches at level "lv+1" according to the flagging result at level "lv"
 //
 // Note        :  1. This function will also construct buffer patches at level "lv+1" by calling the function
 //                   "Refine_Buffer"
-//                2. Data of all sibling-buffer patches must be prepared in advance for creating new 
+//                2. Data of all sibling-buffer patches must be prepared in advance for creating new
 //                   fine-grid patches by spatial interpolation
 //                3. If LOAD_BALANCE is turned on, this function will invoke "LB_Refine" and then return
 //
@@ -39,7 +39,7 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
 // check
    if ( lv == NLEVEL-1 )
    {
-      Aux_Message( stderr, "WARNING : function <%s> should NOT be applied to the finest level !!\n", 
+      Aux_Message( stderr, "WARNING : function <%s> should NOT be applied to the finest level !!\n",
                    __FUNCTION__ );
       return;
    }
@@ -73,7 +73,7 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
    Int_Table( OPT__REF_FLU_INT_SCHEME, NSide_Flu, CGhost_Flu );
 
    const int CSize_Flu     = PATCH_SIZE + 2*CGhost_Flu;
-   const int CStart_Flu[3] = { CGhost_Flu, CGhost_Flu, CGhost_Flu }; 
+   const int CStart_Flu[3] = { CGhost_Flu, CGhost_Flu, CGhost_Flu };
    const int CSize_Flu3[3] = { CSize_Flu, CSize_Flu, CSize_Flu };
 
    real Flu_CData[NCOMP][CSize_Flu][CSize_Flu][CSize_Flu];  // coarse-grid fluid array for interpolation
@@ -84,7 +84,7 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
    Int_Table( OPT__REF_POT_INT_SCHEME, NSide_Pot, CGhost_Pot );
 
    const int CSize_Pot     = PATCH_SIZE + 2*CGhost_Pot;
-   const int CStart_Pot[3] = { CGhost_Pot, CGhost_Pot, CGhost_Pot }; 
+   const int CStart_Pot[3] = { CGhost_Pot, CGhost_Pot, CGhost_Pot };
 
    real Pot_CData[CSize_Pot][CSize_Pot][CSize_Pot];         // coarse-grid potential array for interpolation
    real Pot_FData[FSize][FSize][FSize];         // fine-grid potential array storing the interpolation result
@@ -135,11 +135,11 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
          {
             const int BufSonPID = amr->NPatchComma[lv+1][1] + n;
 
-            BufGrandTable[n] = amr->patch[0][lv+1][BufSonPID]->son; 
+            BufGrandTable[n] = amr->patch[0][lv+1][BufSonPID]->son;
          }
 
 //       record the index of BufGrandTable array for father patches with son
-         const int BufFaID = amr->patch[0][lv+1][ amr->NPatchComma[lv+1][1] + m ]->father 
+         const int BufFaID = amr->patch[0][lv+1][ amr->NPatchComma[lv+1][1] + m ]->father
                              - amr->NPatchComma[lv][1];
 
          BufSonTable[BufFaID] = m;
@@ -154,12 +154,12 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
    for (int PID=amr->NPatchComma[lv+1][1]; PID<amr->NPatchComma[lv+1][27]; PID++)
    {
       amr->patch[0][lv+1][PID]->son = -1;
-      amr->pdelete( lv+1, PID );
+      amr->pdelete( lv+1, PID, OPT__REUSE_MEMORY );
    }
 
 //#  pragma omp parallel for
    for (int PID=amr->NPatchComma[lv][1]; PID<amr->NPatchComma[lv][27]; PID++)
-      amr->patch[0][lv][PID]->son = -1; 
+      amr->patch[0][lv][PID]->son = -1;
 
 
 
@@ -244,7 +244,7 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
                Disp2[0] = TABLE_01( sib, 'x', PATCH_SIZE-CGhost_Flu, 0, 0 );
                Disp2[1] = TABLE_01( sib, 'y', PATCH_SIZE-CGhost_Flu, 0, 0 );
                Disp2[2] = TABLE_01( sib, 'z', PATCH_SIZE-CGhost_Flu, 0, 0 );
-           
+
                for (int v=0; v<NCOMP; v++)   {
                for (int k=0; k<Loop[2]; k++) {  K = k + Disp1[2];    K2 = k + Disp2[2];
                for (int j=0; j<Loop[1]; j++) {  J = j + Disp1[1];    J2 = j + Disp2[1];
@@ -270,14 +270,14 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
                switch ( OPT__BC_FLU[ BC_Face[BC_Sibling] ] )
                {
 #                 if ( MODEL == HYDRO  ||  MODEL == MHD )
-                  case BC_FLU_OUTFLOW:    
+                  case BC_FLU_OUTFLOW:
                      Hydro_BoundaryCondition_Outflow   ( Flu_CData[0][0][0], BC_Face[BC_Sibling], NCOMP, CGhost_Flu,
                                                          CSize_Flu, CSize_Flu, CSize_Flu, BC_Idx_Start, BC_Idx_End );
                   break;
 
                   case BC_FLU_REFLECTING:
                      Hydro_BoundaryCondition_Reflecting( Flu_CData[0][0][0], BC_Face[BC_Sibling], NCOMP, CGhost_Flu,
-                                                         CSize_Flu, CSize_Flu, CSize_Flu, BC_Idx_Start, BC_Idx_End, 
+                                                         CSize_Flu, CSize_Flu, CSize_Flu, BC_Idx_Start, BC_Idx_End,
                                                          FluVarIdxList, NDer, DerVarList );
                   break;
 #                 if ( MODEL == MHD )
@@ -287,11 +287,11 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
 
                   case BC_FLU_USER:
                      Flu_BoundaryCondition_User        ( Flu_CData[0][0][0],                      NCOMP,
-                                                         CSize_Flu, CSize_Flu, CSize_Flu, BC_Idx_Start, BC_Idx_End, 
+                                                         CSize_Flu, CSize_Flu, CSize_Flu, BC_Idx_Start, BC_Idx_End,
                                                          FluVarIdxList, Time[lv], amr->dh[lv], xyz, _FLU );
                   break;
 
-                  default: 
+                  default:
                      Aux_Error( ERROR_INFO, "unsupported fluid B.C. (%d) !!\n", OPT__BC_FLU[ BC_Face[BC_Sibling] ] );
 
                } // switch ( OPT__BC_FLU[ BC_Face[BC_Sibling] ] )
@@ -330,7 +330,7 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
             Disp2[0] = TABLE_01( sib, 'x', PATCH_SIZE-CGhost_Pot, 0, 0 );
             Disp2[1] = TABLE_01( sib, 'y', PATCH_SIZE-CGhost_Pot, 0, 0 );
             Disp2[2] = TABLE_01( sib, 'z', PATCH_SIZE-CGhost_Pot, 0, 0 );
-           
+
             for (int k=0; k<Loop[2]; k++) {  K = k + Disp1[2];    K2 = k + Disp2[2];
             for (int j=0; j<Loop[1]; j++) {  J = j + Disp1[1];    J2 = j + Disp2[1];
             for (int i=0; i<Loop[0]; i++) {  I = i + Disp1[0];    I2 = i + Disp2[0];
@@ -356,7 +356,7 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
          {
 #           if ( MODEL == HYDRO )
 #           if ( NPASSIVE > 0 )
-            if ( v == DENS  ||  v == ENGY  ||  v >= NCOMP )  
+            if ( v == DENS  ||  v == ENGY  ||  v >= NCOMP )
 #           else
             if ( v == DENS  ||  v == ENGY )
 #           endif
@@ -371,7 +371,7 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
             else                             Monotonicity[v] = EnsureMonotonicity_No;
 
 #           else
-#           warning : WARNING : DO YOU WANT TO ENSURE THE POSITIVITY OF INTERPOLATION ??          
+#           warning : WARNING : DO YOU WANT TO ENSURE THE POSITIVITY OF INTERPOLATION ??
 #           endif // MODEL
          }
 
@@ -389,9 +389,9 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
                Flu_CData[REAL][k][j][i] = ATAN2( Flu_CData[IMAG][k][j][i], Flu_CData[REAL][k][j][i] );
 #           endif
 
-//          interpolate density 
+//          interpolate density
             Interpolate( &Flu_CData[DENS][0][0][0], CSize_Flu3, CStart_Flu, CRange, &Flu_FData[DENS][0][0][0],
-                         FSize3, FStart, 1, OPT__REF_FLU_INT_SCHEME, PhaseUnwrapping_No, 
+                         FSize3, FStart, 1, OPT__REF_FLU_INT_SCHEME, PhaseUnwrapping_No,
                          EnsureMonotonicity_Yes );
 
 //          interpolate phase
@@ -403,8 +403,8 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
          else // if ( OPT__INT_PHASE )
          {
             for (int v=0; v<NCOMP; v++)
-            Interpolate( &Flu_CData[v][0][0][0], CSize_Flu3, CStart_Flu, CRange, &Flu_FData[v][0][0][0], 
-                         FSize3, FStart, 1, OPT__REF_FLU_INT_SCHEME, PhaseUnwrapping_No, 
+            Interpolate( &Flu_CData[v][0][0][0], CSize_Flu3, CStart_Flu, CRange, &Flu_FData[v][0][0][0],
+                         FSize3, FStart, 1, OPT__REF_FLU_INT_SCHEME, PhaseUnwrapping_No,
                          Monotonicity[v] );
          }
 
@@ -441,11 +441,11 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
 #        else // #if ( MODEL == ELBDM )
 
          for (int v=0; v<NCOMP; v++)
-         Interpolate( &Flu_CData[v][0][0][0], CSize_Flu3, CStart_Flu, CRange, &Flu_FData[v][0][0][0], 
-                      FSize3, FStart, 1, OPT__REF_FLU_INT_SCHEME, PhaseUnwrapping_No, 
+         Interpolate( &Flu_CData[v][0][0][0], CSize_Flu3, CStart_Flu, CRange, &Flu_FData[v][0][0][0],
+                      FSize3, FStart, 1, OPT__REF_FLU_INT_SCHEME, PhaseUnwrapping_No,
                       Monotonicity[v] );
 
-#        endif // #if ( MODEL == ELBDM ) ... else 
+#        endif // #if ( MODEL == ELBDM ) ... else
 
 
 #        ifdef GRAVITY
@@ -464,10 +464,10 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
          for (int LocalID=0; LocalID<8; LocalID++)
          {
             SonPID = amr->num[lv+1] - 8 + LocalID;
-            Disp1[0] = TABLE_02( LocalID, 'x', 0, PATCH_SIZE ); 
-            Disp1[1] = TABLE_02( LocalID, 'y', 0, PATCH_SIZE ); 
-            Disp1[2] = TABLE_02( LocalID, 'z', 0, PATCH_SIZE ); 
-               
+            Disp1[0] = TABLE_02( LocalID, 'x', 0, PATCH_SIZE );
+            Disp1[1] = TABLE_02( LocalID, 'y', 0, PATCH_SIZE );
+            Disp1[2] = TABLE_02( LocalID, 'z', 0, PATCH_SIZE );
+
 //          fluid data
             for (int v=0; v<NCOMP; v++)         {
             for (int k=0; k<PATCH_SIZE; k++)    {  K = k + Disp1[2];
@@ -544,7 +544,7 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
          const int NewPID0 = SonPID0;
          const int OldPID0 = amr->num[lv+1] - 8;
 
-         for (int SonPID=SonPID0; SonPID<SonPID0+8; SonPID++)     amr->pdelete( lv+1, SonPID );
+         for (int SonPID=SonPID0; SonPID<SonPID0+8; SonPID++)     amr->pdelete( lv+1, SonPID, OPT__REUSE_MEMORY );
 
 
 //       (c2.2) construct relation : father -> son
@@ -552,7 +552,7 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
 
 
 //       (c2.3) relink the child patch pointers so that no patch indices are skipped
-         if ( NewPID0 != OldPID0 )  
+         if ( NewPID0 != OldPID0 )
          {
             int NewPID, OldPID, GrandPID0, FaPID;
 
@@ -561,13 +561,16 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
                NewPID = NewPID0 + t;
                OldPID = OldPID0 + t;
 
-//             relink pointers
-               amr->patch[0][lv+1][NewPID] = amr->patch[0][lv+1][OldPID];
-               amr->patch[1][lv+1][NewPID] = amr->patch[1][lv+1][OldPID];
+//             swap pointers between the old and new PID
+//             --> works no matter OPT__REUSE_MEMORY is on or off
+//             --> note that when OPT__REUSE_MEMORY is on, we don't want to set pointers of OldPID as NULL
+               for (int Sg=0; Sg<2; Sg++)
+               {
+                  patch_t *patch_ptr_tmp       = amr->patch[Sg][lv+1][NewPID];
+                  amr->patch[Sg][lv+1][NewPID] = amr->patch[Sg][lv+1][OldPID];
+                  amr->patch[Sg][lv+1][OldPID] = patch_ptr_tmp;
 
-///            set redundant patch pointers as NULL
-               amr->patch[0][lv+1][OldPID] = NULL; 
-               amr->patch[1][lv+1][OldPID] = NULL; 
+               }
 
 //             re-construct relation : grandson -> son
                GrandPID0 = amr->patch[0][lv+1][NewPID]->son;
@@ -597,7 +600,7 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
    Refine_Buffer( lv, BufSonTable, BufGrandTable );
 
 
-// deallocate tables 
+// deallocate tables
    if ( lv < NLEVEL-2 )
    {
       delete [] BufGrandTable;
@@ -631,7 +634,7 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
    Buf_RecordExchangeDataPatchID( lv+1 );
 
 
-// get the total number of patches at lv+1   
+// get the total number of patches at lv+1
    Mis_GetTotalPatchNumber( lv+1 );
 
 } // FUNCTION : Refine
@@ -641,16 +644,16 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
 #if ( MODEL == ELBDM  &&  defined GAMER_DEBUG )
 //-------------------------------------------------------------------------------------------------------
 // Function    :  ELBDM_GetPhase_DebugOnly
-// Description :  Alternative function to calculate phase in the debug mode so that the functions "Refine" and 
+// Description :  Alternative function to calculate phase in the debug mode so that the functions "Refine" and
 //                "LB_Refine_AllocateNewPatch" will give EXACTLY THE SAME RESULTS (even the round-off errors
 //                are the same)
 //
-// Note        :  It is found that it is necessary to use this alternative function to calculate phase 
+// Note        :  It is found that it is necessary to use this alternative function to calculate phase
 //                in order to make runs with "SERIAL", "NO LOAD_BALANCE", and "LOAD_BALANCE" have exactly
 //                the same results
 //
 // Parameter   :  CData : Coarse-grid array
-//                CSize : Size of CData in each direction 
+//                CSize : Size of CData in each direction
 //-------------------------------------------------------------------------------------------------------
 void ELBDM_GetPhase_DebugOnly( real *CData, const int CSize )
 {
@@ -663,5 +666,5 @@ void ELBDM_GetPhase_DebugOnly( real *CData, const int CSize )
 
    for (int t=0; t<CSize_1v; t++)   CData_Real[t] = ATAN2( CData_Imag[t], CData_Real[t] );
 
-} // FUNCTION : 
+} // FUNCTION :
 #endif // #if ( MODEL == ELBDM  &&  defined GAMER_DEBUG )

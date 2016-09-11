@@ -140,7 +140,7 @@ void LB_Refine_AllocateNewPatch( const int FaLv, int NNew_Home, int *NewPID_Home
 
 //       deallocate patches
          amr->patch[0][SonLv][SonPID]->son = -1;
-         amr->pdelete( SonLv, SonPID );
+         amr->pdelete( SonLv, SonPID, OPT__REUSE_MEMORY );
 
       } // for (int SonPID=SonNReal; SonPID<amr->NPatchComma[SonLv][3]; SonPID++)
 
@@ -872,7 +872,7 @@ void DeallocateSonPatch( const int FaLv, const int FaPID, const int NNew_Real0, 
          if ( SibPID >= 0 )   amr->patch[0][SonLv][SibPID]->sibling[ MirSib[s] ] = -1;
       }
 
-      amr->pdelete( SonLv, SonPID );
+      amr->pdelete( SonLv, SonPID, OPT__REUSE_MEMORY );
    }
 
 // record NPatchComma   
@@ -889,13 +889,15 @@ void DeallocateSonPatch( const int FaLv, const int FaPID, const int NNew_Real0, 
          NewPID = NewPID0 + LocalID;
          OldPID = OldPID0 + LocalID;
 
+//       swap pointers between the old and new PID
+//       --> works no matter OPT__REUSE_MEMORY is on or off
+//       --> note that when OPT__REUSE_MEMORY is on, we don't want to set pointers of OldPID as NULL
          for (int Sg=0; Sg<2; Sg++)
          {
-//          relink pointers
+            patch_t *patch_ptr_tmp        = amr->patch[Sg][SonLv][NewPID];
             amr->patch[Sg][SonLv][NewPID] = amr->patch[Sg][SonLv][OldPID];
+            amr->patch[Sg][SonLv][OldPID] = patch_ptr_tmp;
 
-//          set redundant patch pointers as NULL
-            amr->patch[Sg][SonLv][OldPID] = NULL; 
          }
 
 //       reconstruct relation : grandson -> son

@@ -278,12 +278,6 @@ void Aux_TakeNote()
       fprintf( Note, "SUPPORT_HDF5              OFF\n" );
 #     endif
 
-#     ifdef MEMORY_POOL
-      fprintf( Note, "MEMORY_POOL               ON\n" );
-#     else
-      fprintf( Note, "MEMORY_POOL               OFF\n" );
-#     endif
-
       fprintf( Note, "***********************************************************************************\n" );
       fprintf( Note, "\n\n");
 
@@ -576,6 +570,8 @@ void Aux_TakeNote()
 #     ifdef PARTICLE
       fprintf( Note, "OPT__PARTICLE_COUNT       %d\n",      OPT__PARTICLE_COUNT     );
 #     endif
+      fprintf( Note, "OPT__REUSE_MEMORY         %d\n",      OPT__REUSE_MEMORY       );
+      fprintf( Note, "OPT__MEMORY_POOL          %d\n",      OPT__MEMORY_POOL        );
       fprintf( Note, "***********************************************************************************\n" );
       fprintf( Note, "\n\n");
 

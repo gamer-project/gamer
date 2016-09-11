@@ -92,7 +92,6 @@ struct Makefile_t
    int GPU_Arch;
    int Laohu;
    int SupportHDF5;
-   int MemoryPool;
 
    int NLevel;
    int MaxPatch;
@@ -342,6 +341,8 @@ struct InputPara_t
 #  ifdef PARTICLE
    int    Opt__ParticleCount;
 #  endif
+   int    Opt__ReuseMemory;
+   int    Opt__MemoryPool;
 
 // load balance
 #  ifdef LOAD_BALANCE

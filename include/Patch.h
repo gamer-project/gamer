@@ -68,6 +68,13 @@ long  LB_Corner2Index( const int lv, const int Corner[], const Check_t Check );
 //                                  --> All patches (i.e., both real and buffer patches) with sons will have SonPID != -1
 //
 //                flag            : Refinement flag (true/false)
+//                Active          : Used by OPT__REUSE_MEMORY to indicate whether this patch is active or inactive
+//                                  --> active:    patch has been allocated and activated   (included in   num[lv])
+//                                      inactive:  patch has been allocated but deactivated (excluded from num[lv])
+//                                  --> Note that active/inactive have nothing to do with the allocation of field arrays (e.g., fluid)
+//                                      --> For both active and inactive patches, field arrays may be allocated or == NULL
+//                                  --> However, currently the rho_ext, flux, flux_passive, and flux_debug arrays are guaranteed
+//                                      to be NULL for inactive patches
 //                EdgeL/R         : Left and right edge of the patch
 //                                  --> Note that we always apply periodicity to EdgeL/R. So for an external patch its
 //                                      recorded "EdgeL/R" will still lie inside the simulation domain and will be
@@ -121,6 +128,7 @@ long  LB_Corner2Index( const int lv, const int Corner[], const Check_t Check );
 //
 // Method      :  patch_t         : Constructor
 //               ~patch_t         : Destructor
+//                Activate        : Activate patch
 //                fnew            : Allocate one flux array
 //                fdelete         : Deallocate one flux array
 //                hnew            : Allocate hydrodynamic array
@@ -164,6 +172,7 @@ struct patch_t
    int    father;
    int    son;
    bool   flag;
+   bool   Active;
    double EdgeL[3];
    double EdgeR[3];
 
@@ -192,7 +201,7 @@ struct patch_t
    // Constructor :  patch_t
    // Description :  Constructor of the structure "patch_t"
    //
-   // Note        :  Initialize the data members
+   // Note        :  Initialize data members
    //
    // Parameter   :  x,y,z    : Scale indices of the patch corner
    //                FaPID    : Patch ID of the father patch
@@ -208,11 +217,53 @@ struct patch_t
             const int lv, const int BoxScale[], const double dh_min )
    {
 
+//    always initialize field pointers (e.g., fluid, pot, ...) as NULL if they are not allocated here
+      const bool InitPtrAsNull_Yes = true;
+      Activate( x, y, z, FaPID, FluData, PotData, lv, BoxScale, dh_min, InitPtrAsNull_Yes );
+
+   } // METHOD : patch_t
+
+
+
+   //===================================================================================
+   // Constructor :  Activate
+   // Description :  Initialize data members
+   //
+   // Note        :  Called by the patch constructor "patch_t" and amr->pnew when OPT__REUSE_MEMORY is adopted
+   //
+   // Parameter   :  x,y,z          : Scale indices of the patch corner
+   //                FaPID          : Patch ID of the father patch
+   //                FluData        : true --> Allocate hydrodynamic array(s) "fluid" (and "passive")
+   //                                          "rho_ext" will NOT be allocated here even if PARTICLE is on
+   //                PotData        : true --> Allocate potential array "pot" (has no effect if "GRAVITY" is turned off)
+   //                                          "pot_ext" will be allocated as well if STORE_POT_GHOST is on
+   //                lv             : Refinement level of the newly created patch
+   //                BoxScale       : Simulation box scale
+   //                dh_min         : Cell size at the maximum level
+   //                InitPtrAsNull  : Whether or not to initialize field arrays (i.e., fluid, passive, pot, pot_ext) as NULL
+   //                                 --> It is used mainly for OPT__REUSE_MEMORY, where we don't want to set these pointers as
+   //                                     NULL if the patch has been allocated but marked as inactive
+   //                                     --> Since the field arrays may be allocated already and we want to reuse them
+   //                                 --> But note that we must initialize these pointers as NULL when allocating (not activating)
+   //                                     patches and before calling hnew and gnew
+   //                                     --> otherwise these pointers become ill-defined, which will make hdelete and gdelete crash
+   //                                 --> Does NOT apply to rho_ext, flux, flux_passive, and flux_debug, which are always
+   //                                     initialized as NULL here
+   //                                 --> Does not apply to any particle variable
+   //===================================================================================
+   void Activate( const int x, const int y, const int z, const int FaPID, const bool FluData, const bool PotData,
+                  const int lv, const int BoxScale[], const double dh_min, const bool InitPtrAsNull )
+   {
+
       corner[0] = x;
       corner[1] = y;
       corner[2] = z;
       father    = FaPID;
       son       = -1;
+      flag      = false;
+      Active    = true;
+
+      for (int s=0; s<26; s++ )  sibling[s] = -1;     // -1 <--> NO sibling
 
       const int Padded              = 1<<NLEVEL;
       const int BoxNScale_Padded[3] = { BoxScale[0]/PATCH_SIZE + 2*Padded,
@@ -233,23 +284,6 @@ struct patch_t
       PaddedCr1D = Mis_Idx3D2Idx1D( BoxNScale_Padded, Cr_Padded );
       LB_Idx     = LB_Corner2Index( lv, corner, CHECK_OFF );   // this number always assumes periodicity
 
-      for (int s=0; s<26; s++ )  sibling[s] = -1;     // -1 <--> NO sibling
-
-      flag    = false;
-      fluid   = NULL;
-#     if ( NPASSIVE > 0 )
-      passive = NULL;
-#     endif
-#     ifdef GRAVITY
-      pot     = NULL;
-#     ifdef STORE_POT_GHOST
-      pot_ext = NULL;
-#     endif
-#     endif // GRAVITY
-#     ifdef PARTICLE
-      rho_ext = NULL;
-#     endif
-
 //    set the patch edge
       const int PScale = PS1*( 1<<(TOP_LEVEL-lv) );
       for (int d=0; d<3; d++)
@@ -267,6 +301,28 @@ struct patch_t
          EdgeR[d] = (double)( corner[d] + PScale )*dh_min;
          */
       }
+
+//    must initialize these pointers as NULL when allocating (not activating) patches and before calling hnew and gnew
+//    --> otherwise these pointers become ill-defined, which will make hdelete and gdelete crash
+      if ( InitPtrAsNull )
+      {
+         fluid   = NULL;
+#        if ( NPASSIVE > 0 )
+         passive = NULL;
+#        endif
+#        ifdef GRAVITY
+         pot     = NULL;
+#        ifdef STORE_POT_GHOST
+         pot_ext = NULL;
+#        endif
+#        endif // #ifdef GRAVITY
+      }
+
+//    InitPtrAsNull does not effect rho_ext since this array is only used by Prepare_PatchData
+//    --> but maybe we should include it as well!
+#     ifdef PARTICLE
+      rho_ext = NULL;
+#     endif
 
       for (int s=0; s<6; s++)
       {
@@ -304,7 +360,7 @@ struct patch_t
       }
 #     endif
 
-   } // METHOD : patch_t
+   } // METHOD : Activate
 
 
 
@@ -324,23 +380,23 @@ struct patch_t
 #     endif
 
 //    check: all particle-related variables/arrays should be deallocated already
-#     ifdef PARTICLE
-      if ( rho_ext != NULL )              Aux_Error( ERROR_INFO, "WARNING : rho_ext != NULL !!\n" );
-      if ( ParList != NULL )              Aux_Error( ERROR_INFO, "WARNING : ParList != NULL !!\n" );
+#     if ( defined PARTICLE  &&  defined DEBUG_PARTICLE )
+      if ( rho_ext != NULL )              Aux_Error( ERROR_INFO, "rho_ext != NULL !!\n" );
+      if ( ParList != NULL )              Aux_Error( ERROR_INFO, "ParList != NULL !!\n" );
 #     ifdef LOAD_BALANCE
       for (int v=0; v<4; v++)
-      if ( ParMassPos_Copy[v] != NULL )   Aux_Error( ERROR_INFO, "WARNING : ParMassPos_Copy[%d] != NULL !!\n", v );
+      if ( ParMassPos_Copy[v] != NULL )   Aux_Error( ERROR_INFO, "ParMassPos_Copy[%d] != NULL !!\n", v );
 #     else
-      if ( ParList_Copy != NULL )         Aux_Error( ERROR_INFO, "WARNING : ParList_Copy != NULL !!\n" );
+      if ( ParList_Copy != NULL )         Aux_Error( ERROR_INFO, "ParList_Copy != NULL !!\n" );
 #     endif
       for (int s=0; s<26; s++)
-      if ( ParList_Escp[s] != NULL )      Aux_Error( ERROR_INFO, "WARNING : ParList_Escp[%d] != NULL !!\n", s );
+      if ( ParList_Escp[s] != NULL )      Aux_Error( ERROR_INFO, "ParList_Escp[%d] != NULL !!\n", s );
 
       if ( NPar != 0 )                    Aux_Error( ERROR_INFO, "NPar = %d != 0 !!\n", NPar );
       if ( NPar_Copy != -1 )              Aux_Error( ERROR_INFO, "NPar_Copy = %d != -1 !!\n", NPar_Copy );
       for (int s=0; s<26; s++)
       if ( NPar_Escp[s] != -1 )           Aux_Error( ERROR_INFO, "NPar_Escp[%d] = %d != -1 !!\n", s, NPar_Escp[s] );
-#     endif // #ifdef PARTICLE
+#     endif // #if ( defined PARTICLE  &&  defined DEBUG_PARTICLE )
 
    } // METHOD : ~patch_t
 

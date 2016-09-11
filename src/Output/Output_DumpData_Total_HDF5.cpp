@@ -1379,12 +1379,6 @@ void FillIn_Makefile( Makefile_t &Makefile )
    Makefile.SupportHDF5        = 0;
 #  endif
 
-#  ifdef MEMORY_POOL
-   Makefile.MemoryPool         = 1;
-#  else
-   Makefile.MemoryPool         = 0;
-#  endif
-
    Makefile.NLevel             = NLEVEL;
    Makefile.MaxPatch           = MAX_PATCH;
 
@@ -1709,6 +1703,8 @@ void FillIn_InputPara( InputPara_t &InputPara )
 #  ifdef PARTICLE
    InputPara.Opt__ParticleCount      = OPT__PARTICLE_COUNT;
 #  endif
+   InputPara.Opt__ReuseMemory        = OPT__REUSE_MEMORY;
+   InputPara.Opt__MemoryPool         = OPT__MEMORY_POOL;
 
 // load balance
 #  ifdef LOAD_BALANCE
@@ -1988,7 +1984,6 @@ void GetCompound_Makefile( hid_t &H5_TypeID )
    H5Tinsert( H5_TypeID, "GPU_Arch",           HOFFSET(Makefile_t,GPU_Arch          ), H5T_NATIVE_INT );
    H5Tinsert( H5_TypeID, "Laohu",              HOFFSET(Makefile_t,Laohu             ), H5T_NATIVE_INT );
    H5Tinsert( H5_TypeID, "SupportHDF5",        HOFFSET(Makefile_t,SupportHDF5       ), H5T_NATIVE_INT );
-   H5Tinsert( H5_TypeID, "MemoryPool",         HOFFSET(Makefile_t,MemoryPool        ), H5T_NATIVE_INT );
 
    H5Tinsert( H5_TypeID, "NLevel",             HOFFSET(Makefile_t,NLevel            ), H5T_NATIVE_INT );
    H5Tinsert( H5_TypeID, "MaxPatch",           HOFFSET(Makefile_t,MaxPatch          ), H5T_NATIVE_INT );
@@ -2251,6 +2246,8 @@ void GetCompound_InputPara( hid_t &H5_TypeID )
 #  ifdef PARTICLE
    H5Tinsert( H5_TypeID, "Opt__ParticleCount",      HOFFSET(InputPara_t,Opt__ParticleCount     ), H5T_NATIVE_INT     );
 #  endif
+   H5Tinsert( H5_TypeID, "Opt__ReuseMemory",        HOFFSET(InputPara_t,Opt__ReuseMemory       ), H5T_NATIVE_INT     );
+   H5Tinsert( H5_TypeID, "Opt__MemoryPool",         HOFFSET(InputPara_t,Opt__MemoryPool        ), H5T_NATIVE_INT     );
 
 // load balance
 #  ifdef LOAD_BALANCE

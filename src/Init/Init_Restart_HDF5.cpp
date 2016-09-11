@@ -1204,7 +1204,6 @@ void Check_Makefile( const char *FileName )
    LoadField( "GPU_Arch",           &RS.GPU_Arch,           SID, TID, NonFatal, &RT.GPU_Arch,            1, NonFatal );
    LoadField( "Laohu",              &RS.Laohu,              SID, TID, NonFatal, &RT.Laohu,               1, NonFatal );
    LoadField( "SupportHDF5",        &RS.SupportHDF5,        SID, TID, NonFatal, &RT.SupportHDF5,         1, NonFatal );
-   LoadField( "MemoryPool",         &RS.MemoryPool,         SID, TID, NonFatal, &RT.MemoryPool,          1, NonFatal );
 
    LoadField( "NLevel",             &RS.NLevel,             SID, TID, NonFatal, &RT.NLevel,              1, NonFatal );
    LoadField( "MaxPatch",           &RS.MaxPatch,           SID, TID, NonFatal, &RT.MaxPatch,            1, NonFatal );
@@ -1527,6 +1526,8 @@ void Check_InputPara( const char *FileName )
 #  ifdef PARTICLE
    LoadField( "Opt__ParticleCount",      &RS.Opt__ParticleCount,      SID, TID, NonFatal, &RT.Opt__ParticleCount,       1, NonFatal );
 #  endif
+   LoadField( "Opt__ReuseMemory",        &RS.Opt__ReuseMemory,        SID, TID, NonFatal, &RT.Opt__ReuseMemory,         1, NonFatal );
+   LoadField( "Opt__MemoryPool",         &RS.Opt__MemoryPool,         SID, TID, NonFatal, &RT.Opt__MemoryPool,          1, NonFatal );
 
 // load balance
 #  ifdef LOAD_BALANCE

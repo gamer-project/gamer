@@ -158,7 +158,8 @@ struct AMR_t
    ~AMR_t()
    {
 
-      for (int lv=0; lv<NLEVEL; lv++)  Lvdelete( lv );
+      const bool ReusePatchMemory_No = false;
+      for (int lv=0; lv<NLEVEL; lv++)  Lvdelete( lv, ReusePatchMemory_No );
 
 #     ifdef PARTICLE
       if ( Par != NULL )
@@ -192,8 +193,8 @@ struct AMR_t
    // Method      :  pnew
    // Description :  allocate a single patch
    //
-   // Note        :  a. Each patch contains two patch pointers --> SANDGLASS (Sg) = 0 / 1
-   //                b. Sg = 0 : Store both data and relation (father,son.sibling,corner,flag,flux)
+   // Note        :  1. Each patch contains two patch pointers --> SANDGLASS (Sg) = 0 / 1
+   //                2. Sg = 0 : Store both data and relation (father,son.sibling,corner,flag,flux)
    //                   Sg = 1 : Store only data
    //
    // Parameter   :  lv       : Targeted refinement level
@@ -206,17 +207,44 @@ struct AMR_t
               const bool PotData )
    {
 
-      if ( num[lv]+1 > MAX_PATCH )
+      const int NewPID = num[lv];
+
+      if ( NewPID > MAX_PATCH-1 )
          Aux_Error( ERROR_INFO, "exceed MAX_PATCH (%d) => please reset it in the Makefile !!\n", MAX_PATCH );
 
-#     ifdef GAMER_DEBUG
-      if ( patch[0][lv][num[lv]] != NULL  ||  patch[1][lv][num[lv]] != NULL )
-         Aux_Error( ERROR_INFO, "allocate an existing patch (Lv %d, PID %d, FaPID %d) !!\n",
-                    lv, num[lv], FaPID );
-#     endif
+//    allocate new patches if there are no inactive patches
+      if ( patch[0][lv][NewPID] == NULL )
+      {
+#        ifdef GAMER_DEBUG
+//       assuming Sg=0/1 are always allocated and deallocated together
+         if ( patch[1][lv][NewPID] != NULL )
+            Aux_Error( ERROR_INFO, "conflicting patch allocation (Lv %d, PID %d, FaPID %d) !!\n", lv, NewPID, FaPID );
+#        endif
 
-      patch[0][lv][ num[lv] ] = new patch_t( x, y, z, FaPID, FluData, PotData, lv, BoxScale, dh[TOP_LEVEL] );
-      patch[1][lv][ num[lv] ] = new patch_t( 0, 0, 0,    -1, FluData, PotData, lv, BoxScale, dh[TOP_LEVEL] );
+         patch[0][lv][NewPID] = new patch_t( x, y, z, FaPID, FluData, PotData, lv, BoxScale, dh[TOP_LEVEL] );
+         patch[1][lv][NewPID] = new patch_t( 0, 0, 0,    -1, FluData, PotData, lv, BoxScale, dh[TOP_LEVEL] );
+      }
+
+//    reactivate inactive patches
+      else
+      {
+#        ifdef GAMER_DEBUG
+//       assuming Sg=0/1 are always allocated and deallocated together
+         if ( patch[1][lv][NewPID] == NULL )
+            Aux_Error( ERROR_INFO, "conflicting patch allocation (Lv %d, PID %d, FaPID %d) !!\n", lv, NewPID, FaPID );
+
+         for (int Sg=0; Sg<2; Sg++)
+            if ( patch[Sg][lv][NewPID]->Active )
+               Aux_Error( ERROR_INFO, "this patch has been activated already (Lv %d, PID %d, FaPID %d, Sg %d) !!\n",
+                          lv, NewPID, FaPID, Sg );
+#        endif
+
+//       do NOT initialize field pointers as NULL since they may be allocated already
+         const bool InitPtrAsNull_No = false;
+
+         patch[0][lv][NewPID]->Activate( x, y, z, FaPID, FluData, PotData, lv, BoxScale, dh[TOP_LEVEL], InitPtrAsNull_No );
+         patch[1][lv][NewPID]->Activate( 0, 0, 0,    -1, FluData, PotData, lv, BoxScale, dh[TOP_LEVEL], InitPtrAsNull_No );
+      } // if ( patch[0][lv][NewPID] == NULL ) ... else ...
 
       num[lv] ++;
 
@@ -228,17 +256,19 @@ struct AMR_t
    // Method      :  pdelete
    // Description :  Deallocate a single patch
    //
-   // Note        :  a. This function should NOT be applied to the base-level patches (unless
+   // Note        :  1. This function should NOT be applied to the base-level patches (unless
    //                   the option "LOAD_BALANCE" is turned on, in which the base-level patches need
    //                   to be redistributed)
-   //                b. This function will also deallocate the flux arrays of the targeted patch
-   //                c. Delete a patch with son is forbidden
-   //                d. Delete a patch with home particles is forbidden
+   //                2. This function will also deallocate the flux arrays of the targeted patch
+   //                3. Delete a patch with son is forbidden
+   //                4. Delete a patch with home particles is forbidden
    //
-   // Parameter   :  lv  : The targeted refinement level
-   //                PID : The patch ID to be removed
+   // Parameter   :  lv          : Targeted refinement level
+   //                PID         : Patch ID to be removed
+   //                ReuseMemory : true  --> mark patch as inactive, but do not deallocate memory (for OPT__REUSE_MEMORY)
+   //                              false --> deallocate patch
    //===================================================================================
-   void pdelete( const int lv, const int PID )
+   void pdelete( const int lv, const int PID, const bool ReuseMemory )
    {
 
 #     ifdef GAMER_DEBUG
@@ -255,11 +285,33 @@ struct AMR_t
 #     endif
 #     endif // #ifdef GAMER_DEBUG
 
-      delete patch[0][lv][PID];
-      delete patch[1][lv][PID];
+      if ( ReuseMemory )
+      {
+#        ifdef GAMER_DEBUG
+         for (int Sg=0; Sg<2; Sg++)
+            if ( !patch[Sg][lv][PID]->Active )
+               Aux_Error( ERROR_INFO, "this patch has been deactivated already (Lv %d, PID %d, Sg %d) !!\n", lv, PID, Sg );
+#        endif
 
-      patch[0][lv][PID] = NULL;
-      patch[1][lv][PID] = NULL;
+         patch[0][lv][PID]->Active = false;
+         patch[1][lv][PID]->Active = false;
+
+//       always deallocate flux arrays because
+//       (1) we use them to determine which patches require the flux fix-up operation (see Flu_FixUp.cpp)
+//       (2) flux arrays do not consume much memory (at most 6/32, where 6 = 6 faces and 32 = patch group size*two sg)
+//       (3) different patches may require flux arrays along different directions, and thus allocating memory pool for flux arrays
+//           can be inefficient and less useful
+         patch[0][lv][PID]->fdelete();
+      }
+
+      else
+      {
+         delete patch[0][lv][PID];
+         delete patch[1][lv][PID];
+
+         patch[0][lv][PID] = NULL;
+         patch[1][lv][PID] = NULL;
+      } // if ( ReuseMemory ) ... else ...
 
       num[lv] --;
 
@@ -277,13 +329,15 @@ struct AMR_t
    // Description :  Deallocate all patches in the targeted level and initialize all
    //                parameters as the default values
    //
-   // Note        :  a. This function will delete a patch even if it has sons (and particles)
-   //                b. This function will scan over amr->num[lv] patches
-   //                c. The variables "scale, FluSg, PotSg, and dh" will NOT be modified
+   // Note        :  1. This function will delete a patch even if it has sons (and particles)
+   //                2. This function will scan over amr->num[lv] patches
+   //                3. The variables "scale, FluSg, PotSg, and dh" will NOT be modified
    //
-   // Parameter   :  lv : Targeted refinement level
+   // Parameter   :  lv                : Targeted refinement level
+   //                ReusePatchMemory  : true  --> mark patch as inactive, but do not deallocate memory (for OPT__REUSE_MEMORY)
+   //                                    false --> deallocate patch
    //===================================================================================
-   void Lvdelete( const int lv )
+   void Lvdelete( const int lv, const bool ReusePatchMemory )
    {
 
 #     ifdef GAMER_DEBUG
@@ -298,7 +352,7 @@ struct AMR_t
 //       reset son=-1 to skip the check in pdelete
          patch[0][lv][PID]->son = -1;
 
-         pdelete( lv, PID );
+         pdelete( lv, PID, ReusePatchMemory );
       }
 
       for (int m=0; m<28; m++)   NPatchComma[lv][m] = 0;

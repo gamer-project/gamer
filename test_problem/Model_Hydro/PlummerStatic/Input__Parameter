@@ -60,6 +60,8 @@
 0           OPT__FLAG_NPAR_CELL     # flag: # of particles per cell  (Input__Flag_NParCell)
 1           OPT__PATCH_COUNT        # count the number of patches   at each level (0=off, 1=every step, 2=every sub-step)
 1           OPT__PARTICLE_COUNT     # count the number of particles at each level (0=off, 1=every step, 2=every sub-step) ##PARTICLE ONLY##
+1           OPT__REUSE_MEMORY       # reuse the memory of patches being deleted for new patches to reduce memory fragmentation
+0           OPT__MEMORY_POOL        # preallocate patches to reduce memory fragmentation (Input__MemoryPool) ##must turn on OPT__REUSE_MEMORY##
 
 0.1         LB_INPUT__WLI_MAX       # threshold for redistributing patches at all levels ##LOAD_BALANCE ONLY##
 
