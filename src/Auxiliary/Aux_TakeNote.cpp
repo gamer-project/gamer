@@ -10,36 +10,36 @@
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Aux_TakeNote
-// Description :  Record simulation parameters and the content in the file "Input__NoteScript" to the 
+// Description :  Record simulation parameters and the content in the file "Input__NoteScript" to the
 //                note file "Record__Note"
 //-------------------------------------------------------------------------------------------------------
 void Aux_TakeNote()
 {
 
-   if ( MPI_Rank == 0 )    Aux_Message( stdout, "Aux_TakeNote ... \n" ); 
+   if ( MPI_Rank == 0 )    Aux_Message( stdout, "Aux_TakeNote ... \n" );
 
 
    const char FileName[] = "Record__Note";
    FILE *Note;
 
-   if ( MPI_Rank == 0 )    
+   if ( MPI_Rank == 0 )
    {
       if ( Aux_CheckFileExist(FileName) )
          Aux_Message( stderr, "WARNING : file \"%s\" already exists !!\n", FileName );
-   
+
 //    copy the content in the file "Input__NoteScript"
       Note = fopen( FileName, "a" );
       fprintf( Note, "\n\n\nSimulation Note\n" );
       fprintf( Note, "***********************************************************************************\n" );
       fclose( Note );
-   
+
       system( "cat ./Input__NoteScript >> Record__Note" );
-   
+
       Note = fopen( FileName, "a" );
       fprintf( Note, "***********************************************************************************\n" );
       fprintf( Note, "\n\n");
-   
-   
+
+
 //    record the simulation options in the Makefile (numerical schemes)
       fprintf( Note, "Makefile Options (numerical schemes)\n" );
       fprintf( Note, "***********************************************************************************\n" );
@@ -86,13 +86,13 @@ void Aux_TakeNote()
       fprintf( Note, "UNSPLIT_GRAVITY           OFF\n" );
 #     endif
 #     endif // #ifdef GRAVITY
-   
+
 #     ifdef INDIVIDUAL_TIMESTEP
       fprintf( Note, "INDIVIDUAL_TIMESTEP       ON\n" );
 #     else
       fprintf( Note, "INDIVIDUAL_TIMESTEP       OFF\n" );
 #     endif
-   
+
 #     ifdef COMOVING
       fprintf( Note, "COMOVING                  ON\n" );
 #     else
@@ -126,9 +126,9 @@ void Aux_TakeNote()
 
 #     if   ( LR_SCHEME == PLM )
       fprintf( Note, "LR_SCHEME                 PLM\n" );
-#     elif ( LR_SCHEME == PPM )            
+#     elif ( LR_SCHEME == PPM )
       fprintf( Note, "LR_SCHEME                 PPM\n" );
-#     elif ( LR_SCHEME == NONE )            
+#     elif ( LR_SCHEME == NONE )
       fprintf( Note, "LR_SCHEME                 NONE\n" );
 #     else
       fprintf( Note, "LR_SCHEME                 UNKNOWN\n" );
@@ -136,13 +136,13 @@ void Aux_TakeNote()
 
 #     if   ( RSOLVER == EXACT )
       fprintf( Note, "RSOLVER                   EXACT\n" );
-#     elif ( RSOLVER == ROE )            
+#     elif ( RSOLVER == ROE )
       fprintf( Note, "RSOLVER                   ROE\n" );
-#     elif ( RSOLVER == HLLE )            
+#     elif ( RSOLVER == HLLE )
       fprintf( Note, "RSOLVER                   HLLE\n" );
-#     elif ( RSOLVER == HLLC )            
+#     elif ( RSOLVER == HLLC )
       fprintf( Note, "RSOLVER                   HLLC\n" );
-#     elif ( RSOLVER == NONE )            
+#     elif ( RSOLVER == NONE )
       fprintf( Note, "RSOLVER                   NONE\n" );
 #     else
       fprintf( Note, "RSOLVER                   UNKNOWN\n" );
@@ -150,7 +150,7 @@ void Aux_TakeNote()
 
       fprintf( Note, "NPASSIVE                  %d\n", NPASSIVE );
 
-//    c. options in MHD 
+//    c. options in MHD
 #     elif ( MODEL == MHD )
 #     warning : WAIT MHD !!!
 
@@ -201,7 +201,7 @@ void Aux_TakeNote()
 #     else
       fprintf( Note, "GPU                       OFF\n" );
 #     endif
-   
+
 #     ifdef GAMER_DEBUG
       fprintf( Note, "GAMER_DEBUG               ON\n" );
 #     else
@@ -213,13 +213,13 @@ void Aux_TakeNote()
 #     else
       fprintf( Note, "TIMING                    OFF\n" );
 #     endif
-   
+
 #     ifdef TIMING_SOLVER
       fprintf( Note, "TIMING_SOLVER             ON\n" );
 #     else
       fprintf( Note, "TIMING_SOLVER             OFF\n" );
 #     endif
-   
+
 #     ifdef INTEL
       fprintf( Note, "Compiler                  Intel\n" );
 #     else
@@ -231,13 +231,13 @@ void Aux_TakeNote()
 #     else
       fprintf( Note, "FLOAT8                    OFF\n" );
 #     endif
-   
+
 #     ifdef SERIAL
       fprintf( Note, "SERIAL                    ON\n" );
 #     else
       fprintf( Note, "SERIAL                    OFF\n" );
 #     endif
-   
+
 #     if   ( LOAD_BALANCE == HILBERT )
       fprintf( Note, "LOAD_BALANCE              HILBERT\n" );
 #     elif ( LOAD_BALANCE == NONE )
@@ -251,7 +251,7 @@ void Aux_TakeNote()
 #     else
       fprintf( Note, "OVERLAP_MPI               OFF\n" );
 #     endif
-   
+
 #     ifdef OPENMP
       fprintf( Note, "OPENMP                    ON\n" );
 #     else
@@ -277,10 +277,16 @@ void Aux_TakeNote()
 #     else
       fprintf( Note, "SUPPORT_HDF5              OFF\n" );
 #     endif
-   
+
+#     ifdef MEMORY_POOL
+      fprintf( Note, "MEMORY_POOL               ON\n" );
+#     else
+      fprintf( Note, "MEMORY_POOL               OFF\n" );
+#     endif
+
       fprintf( Note, "***********************************************************************************\n" );
       fprintf( Note, "\n\n");
-   
+
 
 //    record the simulation options in CUFLU.h and CUPOT.h
       fprintf( Note, "Other Options (in CUFLU.h and CUPOT.h)\n" );
@@ -370,7 +376,7 @@ void Aux_TakeNote()
       fprintf( Note, "***********************************************************************************\n" );
       fprintf( Note, "\n\n");
 
-   
+
 //    record the symbolic constants
       fprintf( Note, "Symbolic Constants\n" );
       fprintf( Note, "***********************************************************************************\n" );
@@ -429,8 +435,8 @@ void Aux_TakeNote()
 #     endif
       fprintf( Note, "***********************************************************************************\n" );
       fprintf( Note, "\n\n");
-   
-   
+
+
 //    record the parameters of simulation scale
       fprintf( Note, "Parameters of Simulation Scale\n" );
       fprintf( Note, "***********************************************************************************\n" );
@@ -470,8 +476,8 @@ void Aux_TakeNote()
 #     endif
       fprintf( Note, "***********************************************************************************\n" );
       fprintf( Note, "\n\n");
-   
-   
+
+
 //    record the parameters of particle
 #     ifdef PARTICLE
       fprintf( Note, "Parameters of Particle\n" );
@@ -504,8 +510,8 @@ void Aux_TakeNote()
       fprintf( Note, "***********************************************************************************\n" );
       fprintf( Note, "\n\n");
 #     endif
-   
-   
+
+
 //    record the parameters of time-step determination
       fprintf( Note, "Parameters of Time-step Determination\n" );
       fprintf( Note, "***********************************************************************************\n" );
@@ -530,8 +536,8 @@ void Aux_TakeNote()
       fprintf( Note, "OPT__DT_USER              %d\n",      OPT__DT_USER            );
       fprintf( Note, "***********************************************************************************\n" );
       fprintf( Note, "\n\n");
-   
-   
+
+
 //    record the parameters of domain refinement
       fprintf( Note, "Parameters of Domain Refinement\n" );
       fprintf( Note, "***********************************************************************************\n" );
@@ -572,8 +578,8 @@ void Aux_TakeNote()
 #     endif
       fprintf( Note, "***********************************************************************************\n" );
       fprintf( Note, "\n\n");
-   
-   
+
+
 //    record the parameters of parallelization
 #     ifndef SERIAL
       fprintf( Note, "Parameters of Parallelization\n" );
@@ -667,8 +673,8 @@ void Aux_TakeNote()
 #     endif
       fprintf( Note, "***********************************************************************************\n" );
       fprintf( Note, "\n\n");
-   
-   
+
+
 //    record the parameters of Poisson and Gravity solvers
 #     ifdef GRAVITY
       fprintf( Note, "Parameters of Poisson and Gravity Solvers\n" );
@@ -692,8 +698,8 @@ void Aux_TakeNote()
       fprintf( Note, "***********************************************************************************\n" );
       fprintf( Note, "\n\n");
 #     endif // #ifdef GRAVITY
-   
-   
+
+
 //    record the parameters of initialization
       fprintf( Note, "Parameters of Initialization\n" );
       fprintf( Note, "***********************************************************************************\n" );
@@ -709,8 +715,8 @@ void Aux_TakeNote()
       fprintf( Note, "INIT_SUBSAMPLING_NCELL    %d\n",      INIT_SUBSAMPLING_NCELL  );
       fprintf( Note, "***********************************************************************************\n" );
       fprintf( Note, "\n\n");
-   
-   
+
+
 //    record the parameters of interpolation schemes
       fprintf( Note, "Parameters of Interpolation Schemes\n" );
       fprintf( Note, "***********************************************************************************\n" );
@@ -773,8 +779,8 @@ void Aux_TakeNote()
       fprintf( Note, "INT_MONO_COEFF            %13.7e\n",  INT_MONO_COEFF          );
       fprintf( Note, "***********************************************************************************\n" );
       fprintf( Note, "\n\n");
-   
-   
+
+
 //    record the parameters of data dump
       fprintf( Note, "Parameters of Data Dump\n" );
       fprintf( Note, "***********************************************************************************\n" );
@@ -816,8 +822,8 @@ void Aux_TakeNote()
       fprintf( Note, "OPT__RECORD_USER          %d\n",      OPT__RECORD_USER        );
       fprintf( Note, "***********************************************************************************\n" );
       fprintf( Note, "\n\n");
-   
-   
+
+
 //    record the parameters of simulation checks
       fprintf( Note, "Parameters of Simulation Checks\n" );
       fprintf( Note, "***********************************************************************************\n" );
@@ -839,8 +845,8 @@ void Aux_TakeNote()
 #     endif
       fprintf( Note, "***********************************************************************************\n" );
       fprintf( Note, "\n\n");
-   
-   
+
+
 //    record the parameters of OpenMP
 #     ifdef OPENMP
       int omp_nthread, omp_chunk_size, omp_nested;
@@ -867,7 +873,7 @@ void Aux_TakeNote()
 
 
 //    record the flag criterion (density/density gradient/pressure gradient/user-defined)
-      if ( OPT__FLAG_RHO )   
+      if ( OPT__FLAG_RHO )
       {
          fprintf( Note, "Flag Criterion (Density)\n" );
          fprintf( Note, "***********************************************************************************\n" );
@@ -877,7 +883,7 @@ void Aux_TakeNote()
          fprintf( Note, "\n\n");
       }
 
-      if ( OPT__FLAG_RHO_GRADIENT )   
+      if ( OPT__FLAG_RHO_GRADIENT )
       {
          fprintf( Note, "Flag Criterion (Density Gradient)\n" );
          fprintf( Note, "***********************************************************************************\n" );
@@ -888,7 +894,7 @@ void Aux_TakeNote()
       }
 
 #     if   ( MODEL == HYDRO )
-      if ( OPT__FLAG_PRES_GRADIENT )   
+      if ( OPT__FLAG_PRES_GRADIENT )
       {
          fprintf( Note, "Flag Criterion (Pressure Gradient in HYDRO)\n" );
          fprintf( Note, "***********************************************************************************\n" );
@@ -907,7 +913,7 @@ void Aux_TakeNote()
          fprintf( Note, "Flag Criterion (Energy Density in ELBDM)\n" );
          fprintf( Note, "***********************************************************************************\n" );
          fprintf( Note, "  Level     Angle_over_2*PI              Soften\n" );
-         for (int lv=0; lv<MAX_LEVEL; lv++)   
+         for (int lv=0; lv<MAX_LEVEL; lv++)
             fprintf( Note, "%7d%20.7e%20.7e\n", lv, FlagTable_EngyDensity[lv][0], FlagTable_EngyDensity[lv][1] );
          fprintf( Note, "***********************************************************************************\n" );
          fprintf( Note, "\n\n");
@@ -923,14 +929,14 @@ void Aux_TakeNote()
          fprintf( Note, "Flag Criterion (Lohner Error Estimator)\n" );
          fprintf( Note, "***********************************************************************************\n" );
          fprintf( Note, "  Level           Threshold              Filter              Soften\n" );
-         for (int lv=0; lv<MAX_LEVEL; lv++)   
+         for (int lv=0; lv<MAX_LEVEL; lv++)
             fprintf( Note, "%7d%20.7e%20.7e%20.7e\n", lv, FlagTable_Lohner[lv][0], FlagTable_Lohner[lv][1],
                      FlagTable_Lohner[lv][2] );
          fprintf( Note, "***********************************************************************************\n" );
          fprintf( Note, "\n\n");
       }
 
-      if ( OPT__FLAG_USER )   
+      if ( OPT__FLAG_USER )
       {
          fprintf( Note, "Flag Criterion (User-defined)\n" );
          fprintf( Note, "***********************************************************************************\n" );
@@ -961,13 +967,13 @@ void Aux_TakeNote()
          fprintf( Note, "\n\n");
       }
 #     endif
-   
-   
+
+
 //    record the grid size in different refinement level
       fprintf( Note, "Cell Size and Scale (scale = number of cells at the finest level)\n" );
       fprintf( Note, "***********************************************************************************\n" );
       fprintf( Note, "%7s%*c%26s%*c%16s\n", "Level", 10, ' ', "Cell Size", 10, ' ', "Cell Scale" );
-      for (int lv=0; lv<NLEVEL; lv++)  
+      for (int lv=0; lv<NLEVEL; lv++)
       fprintf( Note, "%7d%*c%26.20lf%*c%16d\n", lv, 10, ' ', amr->dh[lv], 10, ' ', amr->scale[lv] );
       fprintf( Note, "***********************************************************************************\n" );
       fprintf( Note, "\n\n");
@@ -979,8 +985,8 @@ void Aux_TakeNote()
       fprintf( Note, "%s %s\n", __DATE__, __TIME__ );
       fprintf( Note, "***********************************************************************************\n" );
       fprintf( Note, "\n\n");
-   
-   
+
+
       fclose( Note );
    } // if ( MPI_Rank == 0 )
 
@@ -998,7 +1004,7 @@ void Aux_TakeNote()
        fprintf( Note, "***********************************************************************************\n" );
        fclose( Note );
    }
-   
+
    for (int YourTurn=0; YourTurn<MPI_NRank; YourTurn++)
    {
       if ( MPI_Rank == YourTurn )
@@ -1026,6 +1032,6 @@ void Aux_TakeNote()
 #  endif // #ifndef GPU
 
 
-   if ( MPI_Rank == 0 )    Aux_Message( stdout, "Aux_TakeNote ... done\n" ); 
+   if ( MPI_Rank == 0 )    Aux_Message( stdout, "Aux_TakeNote ... done\n" );
 
 } // FUNCTION : Aux_TakeNote

@@ -323,37 +323,23 @@ struct patch_t
       gdelete();
 #     endif
 
+//    check: all particle-related variables/arrays should be deallocated already
 #     ifdef PARTICLE
-
-#     ifdef DEBUG_PARTICLE
-      if ( rho_ext != NULL )              Aux_Message( stderr, "WARNING : rho_ext != NULL !!\n" );
-      if ( ParList != NULL )              Aux_Message( stderr, "WARNING : ParList != NULL !!\n" );
+      if ( rho_ext != NULL )              Aux_Error( ERROR_INFO, "WARNING : rho_ext != NULL !!\n" );
+      if ( ParList != NULL )              Aux_Error( ERROR_INFO, "WARNING : ParList != NULL !!\n" );
 #     ifdef LOAD_BALANCE
       for (int v=0; v<4; v++)
-      if ( ParMassPos_Copy[v] != NULL )   Aux_Message( stderr, "WARNING : ParMassPos_Copy[%d] != NULL !!\n", v );
+      if ( ParMassPos_Copy[v] != NULL )   Aux_Error( ERROR_INFO, "WARNING : ParMassPos_Copy[%d] != NULL !!\n", v );
 #     else
-      if ( ParList_Copy != NULL )         Aux_Message( stderr, "WARNING : ParList_Copy != NULL !!\n" );
+      if ( ParList_Copy != NULL )         Aux_Error( ERROR_INFO, "WARNING : ParList_Copy != NULL !!\n" );
 #     endif
       for (int s=0; s<26; s++)
-      if ( ParList_Escp[s] != NULL )      Aux_Message( stderr, "WARNING : ParList_Escp[%d] != NULL !!\n", s );
+      if ( ParList_Escp[s] != NULL )      Aux_Error( ERROR_INFO, "WARNING : ParList_Escp[%d] != NULL !!\n", s );
 
-      if ( NPar != 0 )                    Aux_Message( stderr, "NPar = %d != 0 !!\n", NPar );
-      if ( NPar_Copy != -1 )              Aux_Message( stderr, "NPar_Copy = %d != -1 !!\n", NPar_Copy );
+      if ( NPar != 0 )                    Aux_Error( ERROR_INFO, "NPar = %d != 0 !!\n", NPar );
+      if ( NPar_Copy != -1 )              Aux_Error( ERROR_INFO, "NPar_Copy = %d != -1 !!\n", NPar_Copy );
       for (int s=0; s<26; s++)
-      if ( NPar_Escp[s] != -1 )           Aux_Message( stderr, "NPar_Escp[%d] = %d != -1 !!\n", s, NPar_Escp[s] );
-#     endif // #ifdef DEBUG_PARTICLE
-
-      if ( rho_ext != NULL )              delete [] rho_ext;
-      if ( ParList != NULL )              free( ParList );
-#     ifdef LOAD_BALANCE
-      for (int v=0; v<4; v++)
-      if ( ParMassPos_Copy[v] != NULL )   delete [] ParMassPos_Copy[v];
-#     else
-      if ( ParList_Copy != NULL )         delete [] ParList_Copy;
-#     endif
-      for (int s=0; s<26; s++)
-      if ( ParList_Escp[s] != NULL )      free( ParList_Escp[s] );
-
+      if ( NPar_Escp[s] != -1 )           Aux_Error( ERROR_INFO, "NPar_Escp[%d] = %d != -1 !!\n", s, NPar_Escp[s] );
 #     endif // #ifdef PARTICLE
 
    } // METHOD : ~patch_t
@@ -437,17 +423,16 @@ struct patch_t
 
    //===================================================================================
    // Method      :  hnew
-   // Description :  Allocate hydrodynamic array
+   // Description :  Allocate fluid array
    //
-   // Note        :  An error message will be displayed if array has already been allocated
+   // Note        :  Do nothing if fluid array has been allocated
    //===================================================================================
    void hnew()
    {
 
-#     ifdef GAMER_DEBUG
-      if ( fluid != NULL )
-         Aux_Error( ERROR_INFO, "allocate an existing fluid array !!\n" );
+      if ( fluid != NULL )    return;
 
+#     ifdef GAMER_DEBUG
 #     if ( NPASSIVE > 0 )
       if ( passive != NULL )
          Aux_Error( ERROR_INFO, "allocate an existing passive array !!\n" );
@@ -467,7 +452,7 @@ struct patch_t
 
    //===================================================================================
    // Method      :  hdelete
-   // Description :  Deallocate hydrodynamic array
+   // Description :  Deallocate fluid array
    //===================================================================================
    void hdelete()
    {
@@ -499,15 +484,14 @@ struct patch_t
    // Method      :  gnew
    // Description :  Allocate potential array
    //
-   // Note        :  An error message will be displayed if array has already been allocated
+   // Note        :  Do nothing if potential array has been allocated
    //===================================================================================
    void gnew()
    {
 
-#     ifdef GAMER_DEBUG
-      if ( pot != NULL )
-         Aux_Error( ERROR_INFO, "allocate an existing pot array !!\n" );
+      if ( pot != NULL )   return;
 
+#     ifdef GAMER_DEBUG
 #     ifdef STORE_POT_GHOST
       if ( pot_ext != NULL )
          Aux_Error( ERROR_INFO, "allocate an existing pot_ext array !!\n" );

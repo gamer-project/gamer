@@ -163,12 +163,10 @@ void LB_RecordExchangeDataPatchID( const int Lv, const bool AfterRefine )
                }
 
 //             allocate memory for the buffer patches that will receive data
-               if ( amr->patch[0][Lv][SibPID]->fluid == NULL )
-                  for (int Sg=0; Sg<2; Sg++)    amr->patch[Sg][Lv][SibPID]->hnew();
+               for (int Sg=0; Sg<2; Sg++)    amr->patch[Sg][Lv][SibPID]->hnew();
 
 #              ifdef GRAVITY // so that the XXX_H lists can also be applied to the potential data
-               if ( amr->patch[0][Lv][SibPID]->pot   == NULL )
-                  for (int Sg=0; Sg<2; Sg++)    amr->patch[Sg][Lv][SibPID]->gnew();
+               for (int Sg=0; Sg<2; Sg++)    amr->patch[Sg][Lv][SibPID]->gnew();
 #              endif
 
 
@@ -248,12 +246,10 @@ void LB_RecordExchangeDataPatchID( const int Lv, const bool AfterRefine )
                   }
 
 //                allocate memory for the buffer patches that will receive data
-                  if ( amr->patch[0][Lv][TPID]->fluid == NULL )
-                     for (int Sg=0; Sg<2; Sg++)    amr->patch[Sg][Lv][TPID]->hnew();
+                  for (int Sg=0; Sg<2; Sg++)    amr->patch[Sg][Lv][TPID]->hnew();
 
 #                 ifdef GRAVITY // so that the XXX_H lists can also be applied to the potential data
-                  if ( amr->patch[0][Lv][TPID]->pot   == NULL )
-                     for (int Sg=0; Sg<2; Sg++)    amr->patch[Sg][Lv][TPID]->gnew();
+                  for (int Sg=0; Sg<2; Sg++)    amr->patch[Sg][Lv][TPID]->gnew();
 #                 endif
 
                } // if ( TPID >= NReal )
@@ -302,8 +298,7 @@ void LB_RecordExchangeDataPatchID( const int Lv, const bool AfterRefine )
             }
 
 //          allocate memory for the buffer patches that will receive data
-            if ( amr->patch[0][Lv][TPID]->pot == NULL )
-               for (int Sg=0; Sg<2; Sg++)    amr->patch[Sg][Lv][TPID]->gnew();
+            for (int Sg=0; Sg<2; Sg++)    amr->patch[Sg][Lv][TPID]->gnew();
 
          } // if ( TPID >= NReal )
       } // for (int f=0; f<NFaBuff; f++)

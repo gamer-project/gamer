@@ -242,21 +242,16 @@ struct AMR_t
    {
 
 #     ifdef GAMER_DEBUG
-#     ifndef LOAD_BALANCE
-      if ( lv == 0 )
-         Aux_Error( ERROR_INFO, "delete a base-level patch !!\n" );
-#     endif
-
       if ( patch[0][lv][PID] == NULL  ||  patch[1][lv][PID] == NULL )
          Aux_Error( ERROR_INFO, "delete a non-existing patch (Lv %d, PID %d) !!\n", lv, PID );
 
       if ( patch[0][lv][PID]->son != -1 )
          Aux_Error( ERROR_INFO, "delete a patch with son (Lv %d, PID %d, SonPID %d) !!\n",
-                                 lv, PID, patch[0][lv][PID]->son );
+                    lv, PID, patch[0][lv][PID]->son );
 #     ifdef PARTICLE
       if ( patch[0][lv][PID]->NPar != 0 )
          Aux_Error( ERROR_INFO, "delete a patch with home particles (Lv %d, PID %d, NPar %d) !!\n",
-                                 lv, PID, patch[0][lv][PID]->NPar );
+                    lv, PID, patch[0][lv][PID]->NPar );
 #     endif
 #     endif // #ifdef GAMER_DEBUG
 
@@ -282,7 +277,7 @@ struct AMR_t
    // Description :  Deallocate all patches in the targeted level and initialize all
    //                parameters as the default values
    //
-   // Note        :  a. This function will delete a patch even if it has sons
+   // Note        :  a. This function will delete a patch even if it has sons (and particles)
    //                b. This function will scan over amr->num[lv] patches
    //                c. The variables "scale, FluSg, PotSg, and dh" will NOT be modified
    //
@@ -296,19 +291,15 @@ struct AMR_t
          Aux_Error( ERROR_INFO, "incorrect parameter %s = %d\" !!\n", "lv", lv );
 #     endif
 
-      for (int Sg=0; Sg<2; Sg++)
-      for (int PID=0; PID<num[lv]; PID++)
+//    store the total number of patches to be deleted since pdelete will modify num
+      const int NPatch2Delete = num[lv];
+      for (int PID=0; PID<NPatch2Delete; PID++)
       {
-#        ifdef GAMER_DEBUG
-         if ( patch[Sg][lv][PID] == NULL )
-            Aux_Error( ERROR_INFO, "amr->patch[%d][%d][%d] does not exist (==NULL) !!\n", Sg, lv, PID );
-#        endif
+//       reset son=-1 to skip the check in pdelete
+         patch[0][lv][PID]->son = -1;
 
-         delete patch[Sg][lv][PID];
-         patch[Sg][lv][PID] = NULL;
+         pdelete( lv, PID );
       }
-
-      num[lv] = 0;
 
       for (int m=0; m<28; m++)   NPatchComma[lv][m] = 0;
 

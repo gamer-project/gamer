@@ -74,7 +74,7 @@ Procedure for outputting new variables:
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2201)
+// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2202)
 // Description :  Output all simulation data in the HDF5 format, which can be used as a restart file
 //                or loaded by YT
 //
@@ -1211,7 +1211,7 @@ void FillIn_KeyInfo( KeyInfo_t &KeyInfo )
 
    const time_t CalTime  = time( NULL );   // calendar time
 
-   KeyInfo.FormatVersion = 2201;
+   KeyInfo.FormatVersion = 2202;
    KeyInfo.Model         = MODEL;
    KeyInfo.NLevel        = NLEVEL;
    KeyInfo.PatchSize     = PATCH_SIZE;
@@ -1377,6 +1377,12 @@ void FillIn_Makefile( Makefile_t &Makefile )
    Makefile.SupportHDF5        = 1;
 #  else
    Makefile.SupportHDF5        = 0;
+#  endif
+
+#  ifdef MEMORY_POOL
+   Makefile.MemoryPool         = 1;
+#  else
+   Makefile.MemoryPool         = 0;
 #  endif
 
    Makefile.NLevel             = NLEVEL;
@@ -1982,6 +1988,7 @@ void GetCompound_Makefile( hid_t &H5_TypeID )
    H5Tinsert( H5_TypeID, "GPU_Arch",           HOFFSET(Makefile_t,GPU_Arch          ), H5T_NATIVE_INT );
    H5Tinsert( H5_TypeID, "Laohu",              HOFFSET(Makefile_t,Laohu             ), H5T_NATIVE_INT );
    H5Tinsert( H5_TypeID, "SupportHDF5",        HOFFSET(Makefile_t,SupportHDF5       ), H5T_NATIVE_INT );
+   H5Tinsert( H5_TypeID, "MemoryPool",         HOFFSET(Makefile_t,MemoryPool        ), H5T_NATIVE_INT );
 
    H5Tinsert( H5_TypeID, "NLevel",             HOFFSET(Makefile_t,NLevel            ), H5T_NATIVE_INT );
    H5Tinsert( H5_TypeID, "MaxPatch",           HOFFSET(Makefile_t,MaxPatch          ), H5T_NATIVE_INT );

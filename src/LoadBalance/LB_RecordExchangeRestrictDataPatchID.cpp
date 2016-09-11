@@ -93,12 +93,10 @@ void LB_RecordExchangeRestrictDataPatchID( const int FaLv )
          LB_SendR_LBIdx [TRank][ LB_SendR_NList[TRank] ] = FaLBIdx;
 
 //       allocate fluid and pot arrays
-         if ( amr->patch[0][FaLv][FaPID]->fluid == NULL )
-            for (int Sg=0; Sg<2; Sg++)    amr->patch[Sg][FaLv][FaPID]->hnew();
+         for (int Sg=0; Sg<2; Sg++)    amr->patch[Sg][FaLv][FaPID]->hnew();
 
 #        ifdef GRAVITY // so that the XXX_R lists can also be applied to the potential data
-         if ( amr->patch[0][FaLv][FaPID]->pot   == NULL )
-            for (int Sg=0; Sg<2; Sg++)    amr->patch[Sg][FaLv][FaPID]->gnew();
+         for (int Sg=0; Sg<2; Sg++)    amr->patch[Sg][FaLv][FaPID]->gnew();
 #        endif
 
          LB_SendR_NList[TRank] ++;

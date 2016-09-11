@@ -92,6 +92,7 @@ struct Makefile_t
    int GPU_Arch;
    int Laohu;
    int SupportHDF5;
+   int MemoryPool;
 
    int NLevel;
    int MaxPatch;
