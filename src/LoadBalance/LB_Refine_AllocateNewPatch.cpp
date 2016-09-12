@@ -113,6 +113,7 @@ void LB_Refine_AllocateNewPatch( const int FaLv, int NNew_Home, int *NewPID_Home
       for (int SonPID=SonNReal; SonPID<amr->NPatchComma[SonLv][3]; SonPID++)
       {
 //       backup fluid and pot arrays
+//       --> don't backup pot_ext since it's actually useless for buffer patches
 #        ifdef GRAVITY
          if ( amr->patch[0][SonLv][SonPID]->fluid != NULL  ||  amr->patch[0][SonLv][SonPID]->pot != NULL )
 #        else
@@ -475,6 +476,8 @@ void LB_Refine_AllocateNewPatch( const int FaLv, int NNew_Home, int *NewPID_Home
 #        ifdef GRAVITY
          if ( pot_ptr != NULL )
          {
+//          don't worry about pot_ext since it's actually useless for buffer patches
+//          --> after the following operation, some buffer patches may have pot != NULL but pot_ext == NULL (for FSg_Pot)
             amr->patch[FSg_Pot ][SonLv][MPID]->pot     = pot_ptr;
             amr->patch[FSg_Pot2][SonLv][MPID]->gnew();
          }

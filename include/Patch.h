@@ -27,7 +27,7 @@ long  LB_Corner2Index( const int lv, const int Corner[], const Check_t Check );
 //                passive         : Passively advected variables (e.g., metal density)
 //                pot             : Potential
 //                pot_ext         : Potential with GRA_GHOST_SIZE ghost cells on each side
-//                                  --> Allocated only if STORE_POT_EXT is on
+//                                  --> Allocated only if STORE_POT_GHOST is on
 //                                  --> Ghost-zone potential are obtained from the Poisson solver directly
 //                                      (not from exchanging potential between sibling patches)
 //                                  --> Currently it is used for Par->ImproveAcc only
@@ -486,7 +486,17 @@ struct patch_t
    void hnew()
    {
 
-      if ( fluid != NULL )    return;
+      if ( fluid != NULL )
+      {
+#        ifdef GAMER_DEBUG
+#        if ( NPASSIVE > 0 )
+         if ( passive == NULL )
+            Aux_Error( ERROR_INFO, "passive has NOT been allocated !!\n" );
+#        endif
+#        endif // GAMER_DEBUG
+
+         return;
+      }
 
 #     ifdef GAMER_DEBUG
 #     if ( NPASSIVE > 0 )
@@ -545,7 +555,20 @@ struct patch_t
    void gnew()
    {
 
-      if ( pot != NULL )   return;
+      if ( pot != NULL )
+      {
+#        ifdef STORE_POT_GHOST
+#        ifdef GAMER_DEBUG
+         if ( pot_ext == NULL )
+            Aux_Error( ERROR_INFO, "pot_ext has NOT been allocated !!\n" );
+#        endif
+
+//       we must reinitialize pot_ext to indicate that this array has NOT been properly set
+         pot_ext[0][0][0] = POT_EXT_NEED_INIT;
+#        endif // #ifdef STORE_POT_GHOST
+
+         return;
+      }
 
 #     ifdef GAMER_DEBUG
 #     ifdef STORE_POT_GHOST
