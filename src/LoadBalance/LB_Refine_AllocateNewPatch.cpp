@@ -92,6 +92,9 @@ void LB_Refine_AllocateNewPatch( const int FaLv, int NNew_Home, int *NewPID_Home
 
 
 // 2. remove all buffer patches at SonLv and backup the fluid and pot arrays
+//    --> backup these buffer data so as to minimize the MPI time after grid refinement
+//        --> only need to exchange the buffer data that do not exist in the old MPI lists
+//        --> used by DATA_AFTER_REFINE and POT_AFTER_REFINE in LB_GetBufferData
 // ==========================================================================================
    const int MirSib[26] = { 1,0,3,2,5,4,9,8,7,6,13,12,11,10,17,16,15,14,25,24,23,22,21,20,19,18 };
    const int FSg_Flu    = amr->FluSg[SonLv];
@@ -101,88 +104,117 @@ void LB_Refine_AllocateNewPatch( const int FaLv, int NNew_Home, int *NewPID_Home
    const int FSg_Pot2   = 1 - FSg_Pot;
 #  endif
 
-   int SibPID, NBufBk=0;   // BufBk : backup the data of buffer patches
-
-   ulong *PCr1D_BufBk                  = new ulong [SonNBuff];
-   int   *PCr1D_BufBk_IdxTable         = new int   [SonNBuff];
-   int   *PID_BufBk                    = NULL;     // for OPT__REUSE_MEMORY == true
-   real (**fluid_BufBk)[PS1][PS1][PS1] = NULL;     // for OPT__REUSE_MEMORY == false
+   int NBufBk=0, NBufBk_Dup;  // BufBk : backup the data of buffer patches
+                              // must set NBufBk=0 here --> otherwise it may not be initialized if SonNBuff == 0
+   ulong *PCr1D_BufBk                = new ulong [SonNBuff];
+   int   *PCr1D_BufBk_IdxTable       = new int   [SonNBuff];
+   int   *PID_BufBk                  = NULL;
+   real (**flu_BufBk)[PS1][PS1][PS1] = ( OPT__REUSE_MEMORY ) ? NULL : new ( real (*[SonNBuff])[PS1][PS1][PS1] );
 #  ifdef GRAVITY
-   real (**pot_BufBk)  [PS1][PS1]      = NULL;     // for OPT__REUSE_MEMORY == false
+   real (**pot_BufBk)[PS1][PS1]      = ( OPT__REUSE_MEMORY ) ? NULL : new ( real (*[SonNBuff])[PS1][PS1] );
 #  endif
-
-   if ( OPT__REUSE_MEMORY )   PID_BufBk = new int [SonNBuff];
-
-   else
-   {
-      fluid_BufBk = new ( real (*[SonNBuff])[PS1][PS1][PS1] );
-#     ifdef GRAVITY
-      pot_BufBk   = new ( real (*[SonNBuff])[PS1][PS1] );
-#     endif
-   }
 
    if ( SonNBuff != 0 )
    {
-      for (int SonPID=SonNReal; SonPID<amr->NPatchComma[SonLv][3]; SonPID++)
+//    2-1. record the PID of buffer patches that will actually receive data
+//    2-1-1. allocate PID_BufBk with the maximum possible number
+      NBufBk_Dup = 0;
+      for (int r=0; r<MPI_NRank; r++)
       {
+         NBufBk_Dup += amr->LB->RecvH_NList[SonLv][r];
 #        ifdef GRAVITY
-         if ( amr->patch[0][SonLv][SonPID]->fluid != NULL  ||  amr->patch[0][SonLv][SonPID]->pot != NULL )
-#        else
-         if ( amr->patch[0][SonLv][SonPID]->fluid != NULL )
+         NBufBk_Dup += amr->LB->RecvG_NList[SonLv][r];
 #        endif
+      }
+
+      PID_BufBk = new int [NBufBk_Dup];
+
+//    2-1-2. record PID
+      NBufBk_Dup = 0;
+      for (int r=0; r<MPI_NRank; r++)
+      {
+//       fluid
+         for (int t=0; t<amr->LB->RecvH_NList[SonLv][r]; t++)  PID_BufBk[ NBufBk_Dup ++ ] = amr->LB->RecvH_IDList[SonLv][r][t];
+
+//       potential
+#        ifdef GRAVITY
+         for (int t=0; t<amr->LB->RecvG_NList[SonLv][r]; t++)  PID_BufBk[ NBufBk_Dup ++ ] = amr->LB->RecvG_IDList[SonLv][r][t];
+#        endif
+      }
+
+//    2-1-3. sort the PID list and remove duplicates
+      Mis_Heapsort( NBufBk_Dup, PID_BufBk, NULL );
+
+      NBufBk = ( NBufBk_Dup > 0 ) ? 1 : 0;
+
+      for (int t=1; t<NBufBk_Dup; t++)
+         if ( PID_BufBk[t] != PID_BufBk[t-1] )  PID_BufBk[ NBufBk ++ ] = PID_BufBk[t];
+
+
+//    2-2. backup fluid and pot data
+      for (int t=0; t<NBufBk; t++)
+      {
+//       note that this patch may have only fluid, only pot, or both
+         const int SonPID = PID_BufBk[t];
+
+//       2-2-1. if OPT__REUSE_MEMORY is used, backup fluid and pot arrays by swapping the pointers of Sg=0/1 so that
+//              these temporarily stored buffer patch data won't be overwritten by newly allocated real patches
+//              --> also note that we need to be careful about any routine that may swap patch pointers between
+//                  different PIDs (e.g., DeallocateSonPatch)
+//                  --> must swap the fluid array with FSg_Flu2 and pot array with FSg_Pot2 back (otherwise the fluid
+//                      and pot pointers will point to wrong arrays after swapping patch pointers)
+//              --> ugly trick ...
+         if ( OPT__REUSE_MEMORY )
          {
-//          backup buffer patch IDs if OPT__REUSE_MEMORY is used
-            if ( OPT__REUSE_MEMORY )
-            {
-               PID_BufBk[NBufBk] = SonPID;
-
-//             ugly trick: we need to swap the pointers of Sg=0/1 so that these temporarily stored buffer patch data
-//             won't be overwritten by newly allocated real patches
-               Aux_SwapPointer( (void**)&amr->patch[FSg_Flu ][SonLv][SonPID]->fluid,
-                                (void**)&amr->patch[FSg_Flu2][SonLv][SonPID]->fluid );
-#              ifdef GRAVITY
-               Aux_SwapPointer( (void**)&amr->patch[FSg_Pot ][SonLv][SonPID]->pot,
-                                (void**)&amr->patch[FSg_Pot2][SonLv][SonPID]->pot );
-#              endif
-            }
-
-//          backup fluid and pot arrays if OPT__REUSE_MEMORY is not used
-//          --> don't need to backup pot_ext since it's actually useless for buffer patches
-            else
-            {
-               fluid_BufBk[NBufBk] = amr->patch[FSg_Flu][SonLv][SonPID]->fluid;
-               amr->patch[FSg_Flu][SonLv][SonPID]->fluid = NULL;
-
-#              ifdef GRAVITY
-               pot_BufBk  [NBufBk] = amr->patch[FSg_Pot][SonLv][SonPID]->pot;
-               amr->patch[FSg_Pot][SonLv][SonPID]->pot   = NULL;
-#              endif
-            }
-
-            PCr1D_BufBk[NBufBk] = amr->patch[0][SonLv][SonPID]->PaddedCr1D;
-            NBufBk ++;
+            Aux_SwapPointer( (void**)&amr->patch[FSg_Flu ][SonLv][SonPID]->fluid,
+                             (void**)&amr->patch[FSg_Flu2][SonLv][SonPID]->fluid );
+#           ifdef GRAVITY
+            Aux_SwapPointer( (void**)&amr->patch[FSg_Pot ][SonLv][SonPID]->pot,
+                             (void**)&amr->patch[FSg_Pot2][SonLv][SonPID]->pot );
+#           endif
          }
 
-//       reset sibling indices to -1
+//       2-2-2. if OPT__REUSE_MEMORY is not used, backup fluid and pot arrays in temporary pointers
+//              --> don't need to backup pot_ext since it's actually useless for buffer patches
+         else
+         {
+            flu_BufBk[t] = amr->patch[FSg_Flu][SonLv][SonPID]->fluid;
+            amr->patch[FSg_Flu][SonLv][SonPID]->fluid = NULL;
+
+#           ifdef GRAVITY
+            pot_BufBk[t] = amr->patch[FSg_Pot][SonLv][SonPID]->pot;
+            amr->patch[FSg_Pot][SonLv][SonPID]->pot   = NULL;
+#           endif
+         }
+
+//       2-2-3. store the padded 1D coordinate
+         PCr1D_BufBk[t] = amr->patch[0][SonLv][SonPID]->PaddedCr1D;
+      } // for (int t=0; t<NBufBk; t++)
+
+//    2-2-4. sort PCr1D_BufBk
+      Mis_Heapsort( NBufBk, PCr1D_BufBk, PCr1D_BufBk_IdxTable );
+
+
+//    2-3. deallocate all buffer patches
+      for (int SonPID=SonNReal; SonPID<amr->NPatchComma[SonLv][3]; SonPID++)
+      {
+//       2-3-1. reset sibling indices to -1
          for (int s=0; s<26; s++)
          {
-            SibPID = amr->patch[0][SonLv][SonPID]->sibling[s];
+            const int SibPID = amr->patch[0][SonLv][SonPID]->sibling[s];
+
             if ( SibPID >= 0 )   amr->patch[0][SonLv][SibPID]->sibling[ MirSib[s] ] = -1;
          }
 
-//       deallocate patches
+//       2-3-2. free memory (or just deactivate these patches if OPT__REUSE_MEMORY is on)
          amr->patch[0][SonLv][SonPID]->son = -1;
          amr->pdelete( SonLv, SonPID, OPT__REUSE_MEMORY );
+      }
 
-      } // for (int SonPID=SonNReal; SonPID<amr->NPatchComma[SonLv][3]; SonPID++)
-
-//    sort PCr1D_BufBk
-      Mis_Heapsort( NBufBk, PCr1D_BufBk, PCr1D_BufBk_IdxTable );
-
-//    reset NPatchComma
+//    2-3-3. reset NPatchComma
       for (int m=2; m<28; m++)   amr->NPatchComma[SonLv][m] = SonNReal;
 
-//    reset calculate PaddedCr1DList
+//    2-3-4. recalculate PaddedCr1DList
       amr->LB->PaddedCr1DList         [SonLv] = (ulong*)realloc( amr->LB->PaddedCr1DList         [SonLv],
                                                                  SonNReal*sizeof(ulong) );
       amr->LB->PaddedCr1DList_IdxTable[SonLv] = (int*  )realloc( amr->LB->PaddedCr1DList_IdxTable[SonLv],
@@ -521,9 +553,9 @@ void LB_Refine_AllocateNewPatch( const int FaLv, int NNew_Home, int *NewPID_Home
 
          else
          {
-            fluid_ptr = fluid_BufBk[ PCr1D_BufBk_IdxTable[t] ];
+            fluid_ptr = flu_BufBk[ PCr1D_BufBk_IdxTable[t] ];
 #           ifdef GRAVITY
-            pot_ptr   = pot_BufBk  [ PCr1D_BufBk_IdxTable[t] ];
+            pot_ptr   = pot_BufBk[ PCr1D_BufBk_IdxTable[t] ];
 #           endif
 
             if ( fluid_ptr != NULL )
@@ -555,9 +587,9 @@ void LB_Refine_AllocateNewPatch( const int FaLv, int NNew_Home, int *NewPID_Home
 
       else if ( ! OPT__REUSE_MEMORY )
       {
-         delete [] fluid_BufBk[ PCr1D_BufBk_IdxTable[t] ];
+         delete [] flu_BufBk[ PCr1D_BufBk_IdxTable[t] ];
 #        ifdef GRAVITY
-         delete [] pot_BufBk  [ PCr1D_BufBk_IdxTable[t] ];
+         delete [] pot_BufBk[ PCr1D_BufBk_IdxTable[t] ];
 #        endif
       } // if ( Match_BufBk[t] != -1 ) ... else if ...
    } // for (int t=0; t<NBufBk; t++)
@@ -577,7 +609,7 @@ void LB_Refine_AllocateNewPatch( const int FaLv, int NNew_Home, int *NewPID_Home
    delete [] PCr1D_BufBk;
    delete [] PCr1D_BufBk_IdxTable;
    delete [] PID_BufBk;
-   delete [] fluid_BufBk;
+   delete [] flu_BufBk;
 #  ifdef GRAVITY
    delete [] pot_BufBk;
 #  endif
@@ -961,11 +993,28 @@ void DeallocateSonPatch( const int FaLv, const int FaPID, const int NNew_Real0, 
          NewPID = NewPID0 + LocalID;
          OldPID = OldPID0 + LocalID;
 
-//       swap pointers between the old and new PID
+//       swap patch pointers between the old and new PID
 //       --> works no matter OPT__REUSE_MEMORY is on or off
 //       --> note that when OPT__REUSE_MEMORY is on, we don't want to set pointers of OldPID as NULL
          for (int Sg=0; Sg<2; Sg++)
             Aux_SwapPointer( (void**)&amr->patch[Sg][SonLv][OldPID], (void**)&amr->patch[Sg][SonLv][NewPID] );
+
+//       swap the fluid array with 1-FluSg and pot array with 1-PotSg back since we use them to temporarily store
+//       the buffer patch data if OPT__REUSE_MEMORY is used
+//       --> see the description in LB_Refine_AllocateNewPatch
+//       --> ugly trick ...
+         if ( OPT__REUSE_MEMORY )
+         {
+            const int FSg_Flu2 = 1 - amr->FluSg[SonLv];
+            Aux_SwapPointer( (void**)&amr->patch[FSg_Flu2][SonLv][OldPID]->fluid,
+                             (void**)&amr->patch[FSg_Flu2][SonLv][NewPID]->fluid );
+
+#           ifdef GRAVITY
+            const int FSg_Pot2 = 1 - amr->PotSg[SonLv];
+            Aux_SwapPointer( (void**)&amr->patch[FSg_Pot2][SonLv][OldPID]->pot,
+                             (void**)&amr->patch[FSg_Pot2][SonLv][NewPID]->pot );
+#           endif
+         }
 
 //       reconstruct relation : grandson -> son
          OldGraPID0 = amr->patch[0][SonLv][NewPID]->son;
