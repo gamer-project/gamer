@@ -13,7 +13,7 @@ void LB_Refine_AllocateBufferPatch_Sibling( const int SonLv );
 static int AllocateSonPatch( const int FaLv, const int *Cr, const int PScale, const int FaPID, real *CData,
                              const int CGhost_Flu, const int NSide_Flu, const int CGhost_Pot, const int NSide_Pot,
                              const int BC_Face[], const int FluVarIdxList[] );
-static void DeallocateSonPatch( const int FaLv, const int FaPID, const int NNew_Real0, int NewSonPID0_Real[], 
+static void DeallocateSonPatch( const int FaLv, const int FaPID, const int NNew_Real0, int NewSonPID0_Real[],
                                 int SwitchIdx, int &RefineS2F_Send_NPatchTotal, int *&RefineS2F_Send_PIDList );
 
 
@@ -52,8 +52,8 @@ static void DeallocateSonPatch( const int FaLv, const int FaPID, const int NNew_
 //                RefineS2F_Send_NPatchTotal : Total number of patches for exchanging particles from sons to fathers
 //                RefineS2F_Send_PIDList     : Patch indices for exchanging particles from sons to fathers
 //-------------------------------------------------------------------------------------------------------
-void LB_Refine_AllocateNewPatch( const int FaLv, int NNew_Home, int *NewPID_Home, int NNew_Away, 
-                                 ulong *NewCr1D_Away, real *NewCData_Away, int NDel_Home, int *DelPID_Home, 
+void LB_Refine_AllocateNewPatch( const int FaLv, int NNew_Home, int *NewPID_Home, int NNew_Away,
+                                 ulong *NewCr1D_Away, real *NewCData_Away, int NDel_Home, int *DelPID_Home,
                                  int NDel_Away, ulong *DelCr1D_Away,
                                  int &RefineS2F_Send_NPatchTotal, int *&RefineS2F_Send_PIDList )
 {
@@ -78,11 +78,11 @@ void LB_Refine_AllocateNewPatch( const int FaLv, int NNew_Home, int *NewPID_Home
    Mis_Matching_int( FaNPatch, amr->LB->PaddedCr1DList[FaLv], NNew_Away, NewCr1D_Away, Match_New );
    Mis_Matching_int( FaNPatch, amr->LB->PaddedCr1DList[FaLv], NDel_Away, DelCr1D_Away, Match_Del );
 
-   for (int t=0; t<NDel_Away; t++)  
+   for (int t=0; t<NDel_Away; t++)
    {
 #     ifdef GAMER_DEBUG
       if ( Match_Del[t] == -1 )
-         Aux_Error( ERROR_INFO, "FaLv %d, away patch with Cr1D %lu found no matching !!\n", 
+         Aux_Error( ERROR_INFO, "FaLv %d, away patch with Cr1D %lu found no matching !!\n",
                     FaLv, DelCr1D_Away[t] );
 #     endif
 
@@ -95,38 +95,69 @@ void LB_Refine_AllocateNewPatch( const int FaLv, int NNew_Home, int *NewPID_Home
 // ==========================================================================================
    const int MirSib[26] = { 1,0,3,2,5,4,9,8,7,6,13,12,11,10,17,16,15,14,25,24,23,22,21,20,19,18 };
    const int FSg_Flu    = amr->FluSg[SonLv];
+   const int FSg_Flu2   = 1 - FSg_Flu;
 #  ifdef GRAVITY
    const int FSg_Pot    = amr->PotSg[SonLv];
+   const int FSg_Pot2   = 1 - FSg_Pot;
 #  endif
 
    int SibPID, NBufBk=0;   // BufBk : backup the data of buffer patches
 
    ulong *PCr1D_BufBk                  = new ulong [SonNBuff];
    int   *PCr1D_BufBk_IdxTable         = new int   [SonNBuff];
-   real (**fluid_BufBk)[PS1][PS1][PS1] = new ( real (*[SonNBuff])[PS1][PS1][PS1] );
+   int   *PID_BufBk                    = NULL;     // for OPT__REUSE_MEMORY == true
+   real (**fluid_BufBk)[PS1][PS1][PS1] = NULL;     // for OPT__REUSE_MEMORY == false
 #  ifdef GRAVITY
-   real (**pot_BufBk)  [PS1][PS1]      = new ( real (*[SonNBuff])[PS1][PS1] );
+   real (**pot_BufBk)  [PS1][PS1]      = NULL;     // for OPT__REUSE_MEMORY == false
 #  endif
+
+   if ( OPT__REUSE_MEMORY )   PID_BufBk = new int [SonNBuff];
+
+   else
+   {
+      fluid_BufBk = new ( real (*[SonNBuff])[PS1][PS1][PS1] );
+#     ifdef GRAVITY
+      pot_BufBk   = new ( real (*[SonNBuff])[PS1][PS1] );
+#     endif
+   }
 
    if ( SonNBuff != 0 )
    {
       for (int SonPID=SonNReal; SonPID<amr->NPatchComma[SonLv][3]; SonPID++)
       {
-//       backup fluid and pot arrays
-//       --> don't backup pot_ext since it's actually useless for buffer patches
 #        ifdef GRAVITY
          if ( amr->patch[0][SonLv][SonPID]->fluid != NULL  ||  amr->patch[0][SonLv][SonPID]->pot != NULL )
 #        else
          if ( amr->patch[0][SonLv][SonPID]->fluid != NULL )
 #        endif
          {
-            fluid_BufBk[NBufBk] = amr->patch[FSg_Flu][SonLv][SonPID]->fluid;
-            amr->patch[FSg_Flu][SonLv][SonPID]->fluid = NULL;
+//          backup buffer patch IDs if OPT__REUSE_MEMORY is used
+            if ( OPT__REUSE_MEMORY )
+            {
+               PID_BufBk[NBufBk] = SonPID;
 
-#           ifdef GRAVITY
-            pot_BufBk  [NBufBk] = amr->patch[FSg_Pot][SonLv][SonPID]->pot;
-            amr->patch[FSg_Pot][SonLv][SonPID]->pot   = NULL;
-#           endif
+//             ugly trick: we need to swap the pointers of Sg=0/1 so that these temporarily stored buffer patch data
+//             won't be overwritten by newly allocated real patches
+               Aux_SwapPointer( (void**)&amr->patch[FSg_Flu ][SonLv][SonPID]->fluid,
+                                (void**)&amr->patch[FSg_Flu2][SonLv][SonPID]->fluid );
+#              ifdef GRAVITY
+               Aux_SwapPointer( (void**)&amr->patch[FSg_Pot ][SonLv][SonPID]->pot,
+                                (void**)&amr->patch[FSg_Pot2][SonLv][SonPID]->pot );
+#              endif
+            }
+
+//          backup fluid and pot arrays if OPT__REUSE_MEMORY is not used
+//          --> don't need to backup pot_ext since it's actually useless for buffer patches
+            else
+            {
+               fluid_BufBk[NBufBk] = amr->patch[FSg_Flu][SonLv][SonPID]->fluid;
+               amr->patch[FSg_Flu][SonLv][SonPID]->fluid = NULL;
+
+#              ifdef GRAVITY
+               pot_BufBk  [NBufBk] = amr->patch[FSg_Pot][SonLv][SonPID]->pot;
+               amr->patch[FSg_Pot][SonLv][SonPID]->pot   = NULL;
+#              endif
+            }
 
             PCr1D_BufBk[NBufBk] = amr->patch[0][SonLv][SonPID]->PaddedCr1D;
             NBufBk ++;
@@ -152,9 +183,9 @@ void LB_Refine_AllocateNewPatch( const int FaLv, int NNew_Home, int *NewPID_Home
       for (int m=2; m<28; m++)   amr->NPatchComma[SonLv][m] = SonNReal;
 
 //    reset calculate PaddedCr1DList
-      amr->LB->PaddedCr1DList         [SonLv] = (ulong*)realloc( amr->LB->PaddedCr1DList         [SonLv], 
+      amr->LB->PaddedCr1DList         [SonLv] = (ulong*)realloc( amr->LB->PaddedCr1DList         [SonLv],
                                                                  SonNReal*sizeof(ulong) );
-      amr->LB->PaddedCr1DList_IdxTable[SonLv] = (int*  )realloc( amr->LB->PaddedCr1DList_IdxTable[SonLv], 
+      amr->LB->PaddedCr1DList_IdxTable[SonLv] = (int*  )realloc( amr->LB->PaddedCr1DList_IdxTable[SonLv],
                                                                  SonNReal*sizeof(int ) );
 
       for (int SonPID=0; SonPID<SonNReal; SonPID++)
@@ -243,12 +274,12 @@ void LB_Refine_AllocateNewPatch( const int FaLv, int NNew_Home, int *NewPID_Home
          for (int d=0; d<3; d++)    Cr3D[d] = ( Cr3D[d] - Padded )*PATCH_SIZE;
 
 #        ifdef GRAVITY
-         NewSonPID0_Away[t] = AllocateSonPatch( FaLv, Cr3D, PScale, FaPID, 
+         NewSonPID0_Away[t] = AllocateSonPatch( FaLv, Cr3D, PScale, FaPID,
                                                 NewCData_Away+NewCr1D_Away_IdxTable[t]*CSize_Tot,
                                                 CGhost_Flu, NSide_Flu, CGhost_Pot, NSide_Pot,
                                                 NULL, NULL );
 #        else
-         NewSonPID0_Away[t] = AllocateSonPatch( FaLv, Cr3D, PScale, FaPID, 
+         NewSonPID0_Away[t] = AllocateSonPatch( FaLv, Cr3D, PScale, FaPID,
                                                 NewCData_Away+NewCr1D_Away_IdxTable[t]*CSize_Tot,
                                                 CGhost_Flu, NSide_Flu, NULL_INT, NULL_INT,
                                                 NULL, NULL );
@@ -271,12 +302,12 @@ void LB_Refine_AllocateNewPatch( const int FaLv, int NNew_Home, int *NewPID_Home
          Cr3D_Ptr = amr->patch[0][FaLv][FaPID]->corner;
 
 #        ifdef GRAVITY
-         NewSonPID0_Away[t] = AllocateSonPatch( FaLv, Cr3D_Ptr, PScale, FaPID, 
+         NewSonPID0_Away[t] = AllocateSonPatch( FaLv, Cr3D_Ptr, PScale, FaPID,
                                                 NewCData_Away+NewCr1D_Away_IdxTable[t]*CSize_Tot,
                                                 CGhost_Flu, NSide_Flu, CGhost_Pot, NSide_Pot,
                                                 NULL, NULL );
 #        else
-         NewSonPID0_Away[t] = AllocateSonPatch( FaLv, Cr3D_Ptr, PScale, FaPID, 
+         NewSonPID0_Away[t] = AllocateSonPatch( FaLv, Cr3D_Ptr, PScale, FaPID,
                                                 NewCData_Away+NewCr1D_Away_IdxTable[t]*CSize_Tot,
                                                 CGhost_Flu, NSide_Flu, NULL_INT, NULL_INT,
                                                 NULL, NULL );
@@ -308,7 +339,7 @@ void LB_Refine_AllocateNewPatch( const int FaLv, int NNew_Home, int *NewPID_Home
 
       DeallocateSonPatch( FaLv, FaPID, NNew_Real0, NewSonPID0_Real, SwitchIdx--,
                           RefineS2F_Send_NPatchTotal, RefineS2F_Send_PIDList );
-   } 
+   }
 
 // 5.2 away patches
    for (int t=0; t<NDel_Away; t++)
@@ -344,12 +375,12 @@ void LB_Refine_AllocateNewPatch( const int FaLv, int NNew_Home, int *NewPID_Home
    amr->LB->IdxList_Real         [SonLv] = new long [SonNReal_New];
    amr->LB->IdxList_Real_IdxTable[SonLv] = new int  [SonNReal_New];
 
-   for (int SonPID=0; SonPID<SonNReal_New; SonPID++)   
+   for (int SonPID=0; SonPID<SonNReal_New; SonPID++)
       amr->LB->IdxList_Real[SonLv][SonPID] = amr->patch[0][SonLv][SonPID]->LB_Idx;
 
    Mis_Heapsort( SonNReal_New, amr->LB->IdxList_Real[SonLv], amr->LB->IdxList_Real_IdxTable[SonLv] );
 
-   
+
 // 6.4 check : no duplicate patches at FaLv and SonLv
 #  ifdef GAMER_DEBUG
    for (int lv=FaLv; lv<=SonLv; lv++)
@@ -410,7 +441,7 @@ void LB_Refine_AllocateNewPatch( const int FaLv, int NNew_Home, int *NewPID_Home
    for (SonPID0=amr->NPatchComma[SonLv][1], Count=0; SonPID0<amr->NPatchComma[SonLv][3]; SonPID0+=8, Count++)
       NewSonPID0_Buf[Count] = SonPID0;
 
-   for (int t=0, m=0; t<NNew_All0; t++, m+=8)  
+   for (int t=0, m=0; t<NNew_All0; t++, m+=8)
    {
       SonPID0 = NewSonPID0_All[t];
 
@@ -432,12 +463,9 @@ void LB_Refine_AllocateNewPatch( const int FaLv, int NNew_Home, int *NewPID_Home
 
 // 10. restore the fluid and pot arrays in the buffer patches
 // ==========================================================================================
-   const int FSg_Flu2 = 1 - FSg_Flu;
    real (*fluid_ptr)[PATCH_SIZE][PATCH_SIZE][PATCH_SIZE] = NULL;
-
 #  ifdef GRAVITY
-   const int FSg_Pot2 = 1 - FSg_Pot;
-   real (*pot_ptr)[PATCH_SIZE][PATCH_SIZE] = NULL;
+   real (*pot_ptr)[PATCH_SIZE][PATCH_SIZE]               = NULL;
 #  endif
 
    int *Match_BufBk = new int [NBufBk];
@@ -449,11 +477,6 @@ void LB_Refine_AllocateNewPatch( const int FaLv, int NNew_Home, int *NewPID_Home
 // 10.2 reset array pointers
    for (int t=0; t<NBufBk; t++)
    {
-      fluid_ptr = fluid_BufBk[ PCr1D_BufBk_IdxTable[t] ];
-#     ifdef GRAVITY
-      pot_ptr   = pot_BufBk  [ PCr1D_BufBk_IdxTable[t] ];
-#     endif
-
       if ( Match_BufBk[t] != -1 )
       {
          MPID = amr->LB->PaddedCr1DList_IdxTable[SonLv][ Match_BufBk[t] ];
@@ -464,34 +487,79 @@ void LB_Refine_AllocateNewPatch( const int FaLv, int NNew_Home, int *NewPID_Home
                        MPID, t, Match_BufBk[t], amr->NPatchComma[SonLv][1] );
 #        endif
 
-         if ( fluid_ptr != NULL )
+         if ( OPT__REUSE_MEMORY )
          {
-            amr->patch[FSg_Flu ][SonLv][MPID]->fluid   = fluid_ptr;
+            const int OldBufPID = PID_BufBk[ PCr1D_BufBk_IdxTable[t] ];
+
+//          note that (1) we must swap poniters even if MPID == OldBufPID (because they have different Sg)
+//                    (2) we store the previous buffer data in FSg_Flu2 and FSg_Pot2 instead of FSg_Flu and FSg_Pot
+//                    (3) it's OK to leave FSg_Flu2 and FSg_Pot2 of MPID unmodified after swapping pointers (which can thus be NULL)
+//                        since they will be allocated in LB_RecordExchangeDataPatchID if necessary
+            Aux_SwapPointer( (void**)&amr->patch[FSg_Flu ][SonLv][     MPID]->fluid,
+                             (void**)&amr->patch[FSg_Flu2][SonLv][OldBufPID]->fluid );
+
+//          reset the passive variable pointer
 #           if ( NPASSIVE > 0 )
-            amr->patch[FSg_Flu ][SonLv][MPID]->passive = fluid_ptr + NCOMP;
+            amr->patch[FSg_Flu][SonLv][MPID]->passive = amr->patch[FSg_Flu][SonLv][MPID]->fluid + NCOMP;
 #           endif
-            amr->patch[FSg_Flu2][SonLv][MPID]->hnew();
-         }
 
-#        ifdef GRAVITY
-         if ( pot_ptr != NULL )
+#           ifdef GRAVITY
+            Aux_SwapPointer( (void**)&amr->patch[FSg_Pot ][SonLv][     MPID]->pot,
+                             (void**)&amr->patch[FSg_Pot2][SonLv][OldBufPID]->pot );
+#           endif
+
+//          we must reallocate memory for OldBufPID if it becomes a new real patch (which always have data array allocated)
+//          --> for buffer patches their data arrays are not allocated by default so we don't have to do anything here
+            if ( OldBufPID < amr->NPatchComma[SonLv][1] )
+            {
+               amr->patch[FSg_Flu2][SonLv][OldBufPID]->hnew();
+#              ifdef GRAVITY
+               amr->patch[FSg_Pot2][SonLv][OldBufPID]->gnew();
+#              endif
+            }
+         } // if ( OPT__REUSE_MEMORY )
+
+         else
          {
-//          don't worry about pot_ext since it's actually useless for buffer patches
-//          --> after the following operation, some buffer patches may have pot != NULL but pot_ext == NULL (for FSg_Pot)
-            amr->patch[FSg_Pot ][SonLv][MPID]->pot     = pot_ptr;
-            amr->patch[FSg_Pot2][SonLv][MPID]->gnew();
-         }
-#        endif // #ifdef GARVITY
+            fluid_ptr = fluid_BufBk[ PCr1D_BufBk_IdxTable[t] ];
+#           ifdef GRAVITY
+            pot_ptr   = pot_BufBk  [ PCr1D_BufBk_IdxTable[t] ];
+#           endif
 
+            if ( fluid_ptr != NULL )
+            {
+               amr->patch[FSg_Flu][SonLv][MPID]->fluid   = fluid_ptr;
+
+//             reset the passive variable pointer
+#              if ( NPASSIVE > 0 )
+               amr->patch[FSg_Flu][SonLv][MPID]->passive = fluid_ptr + NCOMP;
+#              endif
+
+//             note that it's OK to leave FSg_Flu2 unmodified (which can thus be NULL) since it will be allocated in
+//             LB_RecordExchangeDataPatchID if necessary
+            }
+
+#           ifdef GRAVITY
+            if ( pot_ptr != NULL )
+            {
+//             don't worry about pot_ext since it's actually useless for buffer patches
+//             --> after the following operation, some buffer patches may have pot != NULL but pot_ext == NULL (for FSg_Pot)
+               amr->patch[FSg_Pot][SonLv][MPID]->pot = pot_ptr;
+
+//             note that it's OK to leave FSg_Pot2 unmodified (which can thus be NULL) since it will be allocated in
+//             LB_RecordExchangeDataPatchID if necessary
+            }
+#           endif // #ifdef GARVITY
+         } // if ( OPT__REUSE_MEMORY ) ... else ...
       } // if ( Match_BufBk[t] != -1 )
 
-      else
+      else if ( ! OPT__REUSE_MEMORY )
       {
-         if ( fluid_ptr != NULL )   delete [] fluid_ptr;
+         delete [] fluid_BufBk[ PCr1D_BufBk_IdxTable[t] ];
 #        ifdef GRAVITY
-         if ( pot_ptr   != NULL )   delete [] pot_ptr;
+         delete [] pot_BufBk  [ PCr1D_BufBk_IdxTable[t] ];
 #        endif
-      } // if ( Match_BufBk[t] != -1 ) ... else ...
+      } // if ( Match_BufBk[t] != -1 ) ... else if ...
    } // for (int t=0; t<NBufBk; t++)
 
 
@@ -508,6 +576,7 @@ void LB_Refine_AllocateNewPatch( const int FaLv, int NNew_Home, int *NewPID_Home
    if ( NewFaBufPID0 != NULL )   delete [] NewFaBufPID0;
    delete [] PCr1D_BufBk;
    delete [] PCr1D_BufBk_IdxTable;
+   delete [] PID_BufBk;
    delete [] fluid_BufBk;
 #  ifdef GRAVITY
    delete [] pot_BufBk;
@@ -518,10 +587,10 @@ void LB_Refine_AllocateNewPatch( const int FaLv, int NNew_Home, int *NewPID_Home
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  AllocateSonPatch  
+// Function    :  AllocateSonPatch
 // Description :  Allocate eight son patches at FaLv+1
 //
-// Note        :  Just to avoid duplicate code segment 
+// Note        :  Just to avoid duplicate code segment
 //
 // Parameter   :  FaLv           : Targeted refinement level to be refined
 //                Cr             : Corner coordinates of the son patch with LocalID == 0
@@ -532,7 +601,7 @@ void LB_Refine_AllocateNewPatch( const int FaLv, int NNew_Home, int *NewPID_Home
 //                BC_Face        : Corresponding boundary faces (0~5) along 26 sibling directions ->for non-periodic B.C. only
 //                FluVarIdxList  : List of target fluid variable indices                          ->for non-periodic B.C. only
 //
-// Return      :  SonPID with LocalID == 0 
+// Return      :  SonPID with LocalID == 0
 //-------------------------------------------------------------------------------------------------------
 int AllocateSonPatch( const int FaLv, const int *Cr, const int PScale, const int FaPID, real *CData,
                       const int CGhost_Flu, const int NSide_Flu, const int CGhost_Pot, const int NSide_Pot,
@@ -577,7 +646,7 @@ int AllocateSonPatch( const int FaLv, const int *Cr, const int PScale, const int
    const int CSg_Flu       = amr->FluSg[ FaLv];
    const int FSg_Flu       = amr->FluSg[SonLv];
    const int CSize_Flu     = PS1 + 2*CGhost_Flu;
-   const int CStart_Flu[3] = { CGhost_Flu, CGhost_Flu, CGhost_Flu }; 
+   const int CStart_Flu[3] = { CGhost_Flu, CGhost_Flu, CGhost_Flu };
    real (*FData_Flu)[FSize][FSize][FSize] = new real [NCOMP][FSize][FSize][FSize];
 
 // potential
@@ -585,7 +654,7 @@ int AllocateSonPatch( const int FaLv, const int *Cr, const int PScale, const int
    const int CSg_Pot       = amr->PotSg[ FaLv];
    const int FSg_Pot       = amr->PotSg[SonLv];
    const int CSize_Pot     = PS1 + 2*CGhost_Pot;
-   const int CStart_Pot[3] = { CGhost_Pot, CGhost_Pot, CGhost_Pot }; 
+   const int CStart_Pot[3] = { CGhost_Pot, CGhost_Pot, CGhost_Pot };
    real (*FData_Pot)[FSize][FSize] = new real [FSize][FSize][FSize];
 
    const int CSize_Tot = NCOMP*CSize_Flu*CSize_Flu*CSize_Flu + CSize_Pot*CSize_Pot*CSize_Pot;
@@ -607,7 +676,7 @@ int AllocateSonPatch( const int FaLv, const int *Cr, const int PScale, const int
       CData    = new real [CSize_Tot];
 
 #     ifdef GRAVITY
-      PrepareCData( FaLv, FaPID, CData, CSg_Flu, CGhost_Flu, NSide_Flu, CSg_Pot, CGhost_Pot, NSide_Pot, 
+      PrepareCData( FaLv, FaPID, CData, CSg_Flu, CGhost_Flu, NSide_Flu, CSg_Pot, CGhost_Pot, NSide_Pot,
                     BC_Face, FluVarIdxList );
 #     else
       PrepareCData( FaLv, FaPID, CData, CSg_Flu, CGhost_Flu, NSide_Flu, NULL_INT, NULL_INT, NULL_INT,
@@ -638,7 +707,7 @@ int AllocateSonPatch( const int FaLv, const int *Cr, const int PScale, const int
    {
 #     if ( MODEL == HYDRO )
 #     if ( NPASSIVE > 0 )
-      if ( v == DENS  ||  v == ENGY  ||  v >= NCOMP )  
+      if ( v == DENS  ||  v == ENGY  ||  v >= NCOMP )
 #     else
       if ( v == DENS  ||  v == ENGY )
 #     endif
@@ -653,7 +722,7 @@ int AllocateSonPatch( const int FaLv, const int *Cr, const int PScale, const int
       else                             Monotonicity[v] = EnsureMonotonicity_No;
 
 #     else
-#     warning : WARNING : DO YOU WANT TO ENSURE THE POSITIVITY OF INTERPOLATION ??          
+#     warning : WARNING : DO YOU WANT TO ENSURE THE POSITIVITY OF INTERPOLATION ??
 #     endif // MODEL
    }
 
@@ -664,19 +733,19 @@ int AllocateSonPatch( const int FaLv, const int *Cr, const int PScale, const int
 //    get the wrapped phase (store in the REAL component)
       for (int t=0; t<CSize_Flu1v; t++)   CData_Real[t] = ATAN2( CData_Imag[t], CData_Real[t] );
 
-//    interpolate density 
-      Interpolate( CData_Dens, CSize_Flu_Temp, CStart_Flu, CRange, &FData_Flu[DENS][0][0][0], 
+//    interpolate density
+      Interpolate( CData_Dens, CSize_Flu_Temp, CStart_Flu, CRange, &FData_Flu[DENS][0][0][0],
                    FSize_Temp, FStart, 1, OPT__REF_FLU_INT_SCHEME, PhaseUnwrapping_No, EnsureMonotonicity_Yes );
 
 //    interpolate phase
-      Interpolate( CData_Real, CSize_Flu_Temp, CStart_Flu, CRange, &FData_Flu[REAL][0][0][0], 
+      Interpolate( CData_Real, CSize_Flu_Temp, CStart_Flu, CRange, &FData_Flu[REAL][0][0][0],
                    FSize_Temp, FStart, 1, OPT__REF_FLU_INT_SCHEME, PhaseUnwrapping_Yes, EnsureMonotonicity_No );
-   }      
+   }
 
    else // if ( OPT__INT_PHASE )
    {
       for (int v=0; v<NCOMP; v++)
-      Interpolate( CData_Flu+v*CSize_Flu1v, CSize_Flu_Temp, CStart_Flu, CRange, &FData_Flu[v][0][0][0], 
+      Interpolate( CData_Flu+v*CSize_Flu1v, CSize_Flu_Temp, CStart_Flu, CRange, &FData_Flu[v][0][0][0],
                    FSize_Temp, FStart, 1, OPT__REF_FLU_INT_SCHEME, PhaseUnwrapping_No, Monotonicity[v] );
    }
 
@@ -713,10 +782,10 @@ int AllocateSonPatch( const int FaLv, const int *Cr, const int PScale, const int
 #  else // #if ( MODEL == ELBDM )
 
    for (int v=0; v<NCOMP; v++)
-   Interpolate( CData_Flu+v*CSize_Flu1v, CSize_Flu_Temp, CStart_Flu, CRange, &FData_Flu[v][0][0][0], 
+   Interpolate( CData_Flu+v*CSize_Flu1v, CSize_Flu_Temp, CStart_Flu, CRange, &FData_Flu[v][0][0][0],
                 FSize_Temp, FStart, 1, OPT__REF_FLU_INT_SCHEME, PhaseUnwrapping_No, Monotonicity[v] );
 
-#  endif // #if ( MODEL == ELBDM ) ... else 
+#  endif // #if ( MODEL == ELBDM ) ... else
 
 #  ifdef GRAVITY
    const int CSize_Pot_Temp[3] = { CSize_Pot, CSize_Pot, CSize_Pot };
@@ -733,10 +802,10 @@ int AllocateSonPatch( const int FaLv, const int *Cr, const int PScale, const int
    for (int LocalID=0; LocalID<8; LocalID++)
    {
       SonPID = SonPID0 + LocalID;
-      Disp_i = TABLE_02( LocalID, 'x', 0, PATCH_SIZE ); 
-      Disp_j = TABLE_02( LocalID, 'y', 0, PATCH_SIZE ); 
-      Disp_k = TABLE_02( LocalID, 'z', 0, PATCH_SIZE ); 
-         
+      Disp_i = TABLE_02( LocalID, 'x', 0, PATCH_SIZE );
+      Disp_j = TABLE_02( LocalID, 'y', 0, PATCH_SIZE );
+      Disp_k = TABLE_02( LocalID, 'z', 0, PATCH_SIZE );
+
 //    fluid data
       for (int v=0; v<NCOMP; v++)         {
       for (int k=0; k<PATCH_SIZE; k++)    {  K = k + Disp_k;
@@ -809,16 +878,16 @@ int AllocateSonPatch( const int FaLv, const int *Cr, const int PScale, const int
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  DeallocateSonPatch  
+// Function    :  DeallocateSonPatch
 // Description :  Deallocate eight son patches at FaLv+1
 //
-// Note        :  1. Just to avoid duplicate code segment 
+// Note        :  1. Just to avoid duplicate code segment
 //                2. List "NewSonPID0_Real" will be reset
 //
 // Parameter   :  FaLv              : Targeted refinement level to be refined
 //                FaPID             : Father patch index to remove sons
 //                NNew_Real0        : Number of newly-allocated real patches with LocalID==0
-//                NewSonPID0_Real   : List recording the indices of all newly-allocated real patches 
+//                NewSonPID0_Real   : List recording the indices of all newly-allocated real patches
 //                                    with LocalID==0
 //                SwitchIdx         : Element in NewSonPID0_Real to be reset
 //
@@ -826,7 +895,7 @@ int AllocateSonPatch( const int FaLv, const int *Cr, const int PScale, const int
 //                RefineS2F_Send_NPatchTotal : Total number of patches for exchanging particles from sons to fathers
 //                RefineS2F_Send_PIDList     : Patch indices for exchanging particles from sons to fathers
 //-------------------------------------------------------------------------------------------------------
-void DeallocateSonPatch( const int FaLv, const int FaPID, const int NNew_Real0, int NewSonPID0_Real[], 
+void DeallocateSonPatch( const int FaLv, const int FaPID, const int NNew_Real0, int NewSonPID0_Real[],
                          int SwitchIdx, int &RefineS2F_Send_NPatchTotal, int *&RefineS2F_Send_PIDList )
 {
 
@@ -843,7 +912,7 @@ void DeallocateSonPatch( const int FaLv, const int FaPID, const int NNew_Real0, 
 // check : son patch must exist and be real patches
 #  ifdef GAMER_DEBUG
    if ( SonPID0 < 0  ||  SonPID0 >= amr->NPatchComma[SonLv][1] )
-      Aux_Error( ERROR_INFO, "FaLv %d, FaPID %d, SonNReal %d, incorrect SonPID0 = %d !!\n", 
+      Aux_Error( ERROR_INFO, "FaLv %d, FaPID %d, SonNReal %d, incorrect SonPID0 = %d !!\n",
                  FaLv, FaPID, amr->NPatchComma[SonLv][1], SonPID0 );
 #  endif
 
@@ -869,7 +938,7 @@ void DeallocateSonPatch( const int FaLv, const int FaPID, const int NNew_Real0, 
 // deallocate the unflagged child patches and reset sibling indices to -1
    for (int SonPID=SonPID0; SonPID<SonPID0+8; SonPID++)
    {
-      for (int s=0; s<26; s++)   
+      for (int s=0; s<26; s++)
       {
          SibPID = amr->patch[0][SonLv][SonPID]->sibling[s];
          if ( SibPID >= 0 )   amr->patch[0][SonLv][SibPID]->sibling[ MirSib[s] ] = -1;
@@ -878,14 +947,14 @@ void DeallocateSonPatch( const int FaLv, const int FaPID, const int NNew_Real0, 
       amr->pdelete( SonLv, SonPID, OPT__REUSE_MEMORY );
    }
 
-// record NPatchComma   
+// record NPatchComma
    amr->NPatchComma[SonLv][1] -= 8;
 
 // construct relation : father -> son
    amr->patch[0][FaLv][FaPID]->son = -1;
 
 // relink the child patch pointers so that no patch indices are skipped
-   if ( NewPID0 != OldPID0 )  
+   if ( NewPID0 != OldPID0 )
    {
       for (int LocalID=0; LocalID<8; LocalID++)
       {
@@ -896,12 +965,7 @@ void DeallocateSonPatch( const int FaLv, const int FaPID, const int NNew_Real0, 
 //       --> works no matter OPT__REUSE_MEMORY is on or off
 //       --> note that when OPT__REUSE_MEMORY is on, we don't want to set pointers of OldPID as NULL
          for (int Sg=0; Sg<2; Sg++)
-         {
-            patch_t *patch_ptr_tmp        = amr->patch[Sg][SonLv][NewPID];
-            amr->patch[Sg][SonLv][NewPID] = amr->patch[Sg][SonLv][OldPID];
-            amr->patch[Sg][SonLv][OldPID] = patch_ptr_tmp;
-
-         }
+            Aux_SwapPointer( (void**)&amr->patch[Sg][SonLv][OldPID], (void**)&amr->patch[Sg][SonLv][NewPID] );
 
 //       reconstruct relation : grandson -> son
          OldGraPID0 = amr->patch[0][SonLv][NewPID]->son;
@@ -916,19 +980,19 @@ void DeallocateSonPatch( const int FaLv, const int FaPID, const int NNew_Real0, 
             for (int OldGraPID=OldGraPID0; OldGraPID<OldGraPID0+8; OldGraPID++)
                amr->patch[0][GraLv][OldGraPID]->father = NewPID;
          }
-         
+
 //       reconstruct relation : sibling
          for (int s=0; s<26; s++)
          {
             SibPID = amr->patch[0][SonLv][NewPID]->sibling[s];
             if ( SibPID >= 0 )   amr->patch[0][SonLv][SibPID]->sibling[ MirSib[s] ] = NewPID;
-         }  
+         }
       } // for (int LocalID=0; LocalID<8; LocalID++)
 
 //    reconstruct relation : father -> son
       OldFaPID = amr->patch[0][SonLv][NewPID0]->father;
 #     ifdef GAMER_DEBUG
-      if ( OldFaPID == -1 )   
+      if ( OldFaPID == -1 )
          Aux_Error( ERROR_INFO, "SonLv %d, NewPID0 %d -> father == -1 !!\n", SonLv, NewPID0 );
 #     endif
       amr->patch[0][FaLv][OldFaPID]->son = NewPID0;
@@ -940,14 +1004,14 @@ void DeallocateSonPatch( const int FaLv, const int FaPID, const int NNew_Real0, 
          {
 #           ifdef GAMER_DEBUG
             if ( NewSonPID0_Real[SwitchIdx] != OldPID0 )
-               Aux_Error( ERROR_INFO, "SonLv %d, NewSonPID0_Real[%d] (%d) != OldPID0 (%d) !!\n", 
+               Aux_Error( ERROR_INFO, "SonLv %d, NewSonPID0_Real[%d] (%d) != OldPID0 (%d) !!\n",
                           SonLv, SwitchIdx, NewSonPID0_Real[SwitchIdx], OldPID0 );
 #           endif
 
             NewSonPID0_Real[SwitchIdx] = NewPID0;
 
 //          put the largest element on "NewSonPID0_Real[NNew_Real0-1]"
-            if ( SwitchIdx-1 < 0 )  
+            if ( SwitchIdx-1 < 0 )
             {
                MaxSonPID0 = -__INT_MAX__;
                MaxIdx     = -__INT_MAX__;

@@ -34,6 +34,7 @@ void Aux_AccumulatedTiming( const double TotalT, double InitT, double OtherT );
 void Aux_RecordPerformance( const double ElapsedTime );
 void Aux_RecordCorrUnphy();
 void Aux_RecordUser( );
+void Aux_SwapPointer( void **Ptr1, void **Ptr2 );
 template <typename T> void Aux_AllocateArray2D( T** &Array, const int J, const int I );
 template <typename T> void Aux_AllocateArray3D( T*** &Array, const int K, const int J, const int I );
 template <typename T> void Aux_DeallocateArray2D( T** &Array );

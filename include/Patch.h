@@ -31,6 +31,7 @@ long  LB_Corner2Index( const int lv, const int Corner[], const Check_t Check );
 //                                  --> Ghost-zone potential are obtained from the Poisson solver directly
 //                                      (not from exchanging potential between sibling patches)
 //                                  --> Currently it is used for Par->ImproveAcc only
+//                                  --> Currently it's useless for buffer patches
 //                rho_ext         : Density with RHOEXT_GHOST_SIZE (typically 2) ghost cells on each side
 //                                  --> Only allocated temporarily in the function Prepare_PatchData for storing
 //                                      particle mass density
@@ -486,31 +487,20 @@ struct patch_t
    void hnew()
    {
 
-      if ( fluid != NULL )
+#     if ( defined GAMER_DEBUG  &&  NPASSIVE > 0 )
+      if (  ( fluid == NULL && passive != NULL )  ||  ( fluid != NULL && passive == NULL )  )
+         Aux_Error( ERROR_INFO, "conflicting memory allocations for fluid and passive !!\n" );
+#     endif
+
+      if ( fluid == NULL )
       {
-#        ifdef GAMER_DEBUG
+         fluid = new real [NCOMP+NPASSIVE][PATCH_SIZE][PATCH_SIZE][PATCH_SIZE];
+         fluid[0][0][0][0] = -1;    // arbitrarily initialized
+
 #        if ( NPASSIVE > 0 )
-         if ( passive == NULL )
-            Aux_Error( ERROR_INFO, "passive has NOT been allocated !!\n" );
+         passive = fluid + NCOMP;
 #        endif
-#        endif // GAMER_DEBUG
-
-         return;
       }
-
-#     ifdef GAMER_DEBUG
-#     if ( NPASSIVE > 0 )
-      if ( passive != NULL )
-         Aux_Error( ERROR_INFO, "allocate an existing passive array !!\n" );
-#     endif
-#     endif // GAMER_DEBUG
-
-      fluid = new real [NCOMP+NPASSIVE][PATCH_SIZE][PATCH_SIZE][PATCH_SIZE];
-      fluid[0][0][0][0] = -1;
-
-#     if ( NPASSIVE > 0 )
-      passive = fluid + NCOMP;
-#     endif
 
    } // METHOD : hnew
 
@@ -554,35 +544,15 @@ struct patch_t
    //===================================================================================
    void gnew()
    {
+      
+      if ( pot == NULL )      pot     = new real [PATCH_SIZE][PATCH_SIZE][PATCH_SIZE];
 
-      if ( pot != NULL )
-      {
-#        ifdef STORE_POT_GHOST
-#        ifdef GAMER_DEBUG
-         if ( pot_ext == NULL )
-            Aux_Error( ERROR_INFO, "pot_ext has NOT been allocated !!\n" );
-#        endif
-
-//       we must reinitialize pot_ext to indicate that this array has NOT been properly set
-         pot_ext[0][0][0] = POT_EXT_NEED_INIT;
-#        endif // #ifdef STORE_POT_GHOST
-
-         return;
-      }
-
-#     ifdef GAMER_DEBUG
 #     ifdef STORE_POT_GHOST
-      if ( pot_ext != NULL )
-         Aux_Error( ERROR_INFO, "allocate an existing pot_ext array !!\n" );
-#     endif
-#     endif
+      if ( pot_ext == NULL )  pot_ext = new real [GRA_NXT][GRA_NXT][GRA_NXT];
 
-      pot     = new real [PATCH_SIZE][PATCH_SIZE][PATCH_SIZE];
-#     ifdef STORE_POT_GHOST
-      pot_ext = new real [GRA_NXT][GRA_NXT][GRA_NXT];
-
-      pot_ext[0][0][0] = POT_EXT_NEED_INIT;  // indicating that this array has NOT been properly set
-                                             // (used by Poi_StorePotWithGhostZone)
+//    always initialize pot_ext (even if pot_ext != NULL when calling this this function) to indicate that this array
+//    has NOT been properly set --> used by Poi_StorePotWithGhostZone
+      pot_ext[0][0][0] = POT_EXT_NEED_INIT;
 #     endif
 
    } // METHOD : gnew

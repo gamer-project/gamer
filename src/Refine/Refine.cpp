@@ -565,12 +565,7 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
 //             --> works no matter OPT__REUSE_MEMORY is on or off
 //             --> note that when OPT__REUSE_MEMORY is on, we don't want to set pointers of OldPID as NULL
                for (int Sg=0; Sg<2; Sg++)
-               {
-                  patch_t *patch_ptr_tmp       = amr->patch[Sg][lv+1][NewPID];
-                  amr->patch[Sg][lv+1][NewPID] = amr->patch[Sg][lv+1][OldPID];
-                  amr->patch[Sg][lv+1][OldPID] = patch_ptr_tmp;
-
-               }
+                  Aux_SwapPointer( (void**)&amr->patch[Sg][lv+1][OldPID], (void**)&amr->patch[Sg][lv+1][NewPID] );
 
 //             re-construct relation : grandson -> son
                GrandPID0 = amr->patch[0][lv+1][NewPID]->son;

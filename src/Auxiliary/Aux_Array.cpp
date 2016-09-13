@@ -5,15 +5,15 @@
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Aux_AllocateArray2D 
-// Description :  Allocate a continuous 2D array with size [J][I] 
+// Function    :  Aux_AllocateArray2D
+// Description :  Allocate a continuous 2D array with size [J][I]
 //
-// Note        :  1. Overloaded with different types 
+// Note        :  1. Overloaded with different types
 //                2. Call-by-reference
 //                3. Free memory by Aux_DeallocateArray2D
 //                4. Explicit template instantiation is put in the end of this file
 //
-// Parameter   :  Array : Pointer to be allocated 
+// Parameter   :  Array : Pointer to be allocated
 //                J/I   : Array dimensions
 //-------------------------------------------------------------------------------------------------------
 template <typename T>
@@ -38,15 +38,15 @@ void Aux_AllocateArray2D( T** &Array, const int J, const int I )
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Aux_AllocateArray3D 
-// Description :  Allocate a continuous 3D array with size [K][J][I] 
+// Function    :  Aux_AllocateArray3D
+// Description :  Allocate a continuous 3D array with size [K][J][I]
 //
-// Note        :  1. Overloaded with different types 
+// Note        :  1. Overloaded with different types
 //                2. Call-by-reference
 //                3. Free memory by Aux_DeallocateArray3D
 //                4. Explicit template instantiation is put in the end of this file
 //
-// Parameter   :  Array : Pointer to be allocated 
+// Parameter   :  Array : Pointer to be allocated
 //                K/J/I : Array dimensions
 //-------------------------------------------------------------------------------------------------------
 template <typename T>
@@ -77,10 +77,10 @@ void Aux_AllocateArray3D( T*** &Array, const int K, const int J, const int I )
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Aux_DeallocateArray2D 
-// Description :  Free an array previously allocated by Aux_AllocateArray2D 
+// Function    :  Aux_DeallocateArray2D
+// Description :  Free an array previously allocated by Aux_AllocateArray2D
 //
-// Note        :  1. Overloaded with different types 
+// Note        :  1. Overloaded with different types
 //                2. Call-by-reference
 //                3. Pointer is reset to NULL
 //                4. Explicit template instantiation is put in the end of this file
@@ -103,10 +103,10 @@ void Aux_DeallocateArray2D( T** &Array )
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Aux_DeallocateArray3D 
-// Description :  Free an array previously allocated by Aux_AllocateArray3D 
+// Function    :  Aux_DeallocateArray3D
+// Description :  Free an array previously allocated by Aux_AllocateArray3D
 //
-// Note        :  1. Overloaded with different types 
+// Note        :  1. Overloaded with different types
 //                2. Call-by-reference
 //                3. Pointer is reset to NULL
 //                4. Explicit template instantiation is put in the end of this file
