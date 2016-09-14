@@ -116,6 +116,7 @@ void Init_GAMER( int *argc, char ***argv );
 void Init_Load_DumpTable();
 void Init_Load_FlagCriteria();
 void Init_Load_Parameter();
+void Init_MemoryPool();
 void Init_SetDefaultParameter();
 void Init_MemAllocate();
 void Init_MemAllocate_Fluid( const int Flu_NPatchGroup );

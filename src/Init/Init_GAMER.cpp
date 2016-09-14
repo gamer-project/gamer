@@ -52,7 +52,6 @@ void Init_GAMER( int *argc, char ***argv )
    }
 
 
-
 // reset the gravitational constant
 #  ifdef GRAVITY
    NEWTON_G = double( 3.0*OMEGA_M0/8.0/M_PI );
@@ -135,6 +134,10 @@ void Init_GAMER( int *argc, char ***argv )
    if ( OPT__OUTPUT_TOTAL || OPT__OUTPUT_PART || OPT__OUTPUT_TEST_ERROR || OPT__OUTPUT_BASEPS )
 #  endif
    Init_Load_DumpTable();
+
+
+// initialize memory pool
+   if ( OPT__MEMORY_POOL )    Init_MemoryPool();
 
 
 // allocate memory for several global arrays
