@@ -7,6 +7,10 @@
 static void CollectParticle( const int FaLv, const int FaPID, int &NPar_SoFar, long *ParList );
 #endif
 
+// flag (declared in Prepare_PatchData.cpp) for checking whether Par_CollectParticle2OneLevel is properly called before
+// preparing either _PAR_DENS or _TOTAL_DENS data in Prepare_PatchData
+extern bool Particle_Collected;
+
 
 
 
@@ -66,6 +70,11 @@ void Par_CollectParticle2OneLevel( const int FaLv, const bool PredictPos, const 
                                    const bool SibBufPatch, const bool FaSibBufPatch, const bool JustCountNPar,
                                    const bool TimingSendPar )
 {
+
+// set this flag to true to indicate that this function has been called
+// --> must be set before invoking the load-balance alternative routine "Par_LB_CollectParticle2OneLevel"
+   Particle_Collected = true;
+
 
 // call the parallel version instead
 #  ifdef LOAD_BALANCE
@@ -176,6 +185,11 @@ void Par_CollectParticle2OneLevel( const int FaLv, const bool PredictPos, const 
 //-------------------------------------------------------------------------------------------------------
 void Par_CollectParticle2OneLevel_FreeMemory( const int FaLv, const bool SibBufPatch, const bool FaSibBufPatch )
 {
+
+// set this flag to false to indicate that Par_CollectParticle2OneLevel has NOT been called
+// --> must be set before invoking the load-balance alternative routine "Par_LB_CollectParticle2OneLevel_FreeMemory"
+   Particle_Collected = false;
+
 
 #  ifdef LOAD_BALANCE
 

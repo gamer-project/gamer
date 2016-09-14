@@ -10,6 +10,13 @@ static void SetTargetSibling( int NTSib[], int *TSib[] );
 static int Table_01( const int SibID, const char dim, const int Count, const int GhostSize );
 static int Table_02( const int lv, const int PID, const int Side );
 
+// flags for checking whether (1) Prepare_PatchData_InitParticleDensityArray and (2) Par_CollectParticle2OneLevel
+// are properly called before preparing either _PAR_DENS or _TOTAL_DENS
+#ifdef PARTICLE
+bool Particle_Collected       = false;
+bool ParDensArray_Initialized = false;
+#endif
+
 
 
 
@@ -42,6 +49,9 @@ static int Table_02( const int lv, const int PID, const int Side );
 //                   --> Before calling this function, one must call
 //                       (1) Par_CollectParticle2OneLevel --> to collect particles from higher levels and from other MPI ranks
 //                       (2) Prepare_PatchData_InitParticleDensityArray --> to initialize all rho_ext arrays
+//                   --> After calling this function, one must call the following two functions to free memory
+//                       (1) Par_CollectParticle2OneLevel_FreeMemory
+//                       (2) Prepare_PatchData_FreeParticleDensityArray
 //                8. Patches stored in PID0_List must be real patches (cannot NOT be buffer patches)
 //
 // Parameter   :  lv             : Target refinement level
@@ -138,10 +148,19 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
       Aux_Message( stderr, "WARNING : inconsistent NSide (%d) and GhostSize (%d) !!\n", NSide, GhostSize );
 
 #  ifdef PARTICLE
-// because we only collect particles from nearby 26 sibling patches
-   if ( ( TVar&_PAR_DENS || TVar&_TOTAL_DENS )  &&  GhostSize > PS1 - amr->Par->GhostSize )
-      Aux_Error( ERROR_INFO, "GhostSize (%d) > maximum allowed (%d) when preparing mass density with particles!!\n",
-                 GhostSize, PS1 - amr->Par->GhostSize );
+   if (  TVar & _PAR_DENS  ||  TVar & _TOTAL_DENS )
+   {
+//    because we only collect particles from nearby 26 sibling patches
+      if ( GhostSize > PS1 - amr->Par->GhostSize )
+         Aux_Error( ERROR_INFO, "GhostSize (%d) > maximum allowed (%d) when preparing mass density with particles!!\n",
+                    GhostSize, PS1 - amr->Par->GhostSize );
+
+      if ( ! Particle_Collected )
+         Aux_Error( ERROR_INFO, "please call \"Par_CollectParticle2OneLevel\" in advance !!\n" );
+
+      if ( ! ParDensArray_Initialized )
+         Aux_Error( ERROR_INFO, "please call \"Prepare_PatchData_InitParticleDensityArray\" in advance !!\n" );
+   }
 
 // _DENS, _PAR_DENS, and _TOTAL_DENS do not work together since the results are stored to the same array
    if (  ( TVar&_DENS && TVar&_PAR_DENS )  ||  ( TVar&_DENS && TVar&_TOTAL_DENS )  )
@@ -2103,6 +2122,9 @@ void Prepare_PatchData_InitParticleDensityArray( const int lv )
          amr->patch[0][lv][PID]->rho_ext[0][0][0] = RHO_EXT_NEED_INIT;
    }
 
+// set flag to true to indicate that this function has been called
+   ParDensArray_Initialized = true;
+
 } // FUNCTION : Prepare_PatchData_InitParticleDensityArray
 
 
@@ -2114,18 +2136,15 @@ void Prepare_PatchData_InitParticleDensityArray( const int lv )
 //
 // Note        :  1. Currently this function is called by "Gra_AdvanceDt, Main, and Output_DumpData_Total"
 //                2. Apply to buffer patches as well
-//                3. Do nothing if OPT__REUSE_MEMORY is on
+//                3. Do not free memory if OPT__REUSE_MEMORY is on
 //
 // Parameter   :  lv : Target refinement level
 //-------------------------------------------------------------------------------------------------------
 void Prepare_PatchData_FreeParticleDensityArray( const int lv )
 {
 
-// do not free memory if OPT__REUSE_MEMORY is on
-   if ( OPT__REUSE_MEMORY )   return;
-
-
-// apply to buffer patches as well
+// free memory for all patches (both real and buffer) if OPT__REUSE_MEMORY is off
+   if ( ! OPT__REUSE_MEMORY )
    for (int PID=0; PID<amr->NPatchComma[lv][27]; PID++)
    {
       if ( amr->patch[0][lv][PID]->rho_ext != NULL )
@@ -2135,6 +2154,9 @@ void Prepare_PatchData_FreeParticleDensityArray( const int lv )
          amr->patch[0][lv][PID]->rho_ext = NULL;
       }
    }
+
+// set flag to false to indicate that Prepare_PatchData_InitParticleDensityArray has not been called
+   ParDensArray_Initialized = false;
 
 } // FUNCTION : Prepare_PatchData_FreeParticleDensityArray
 #endif // #ifdef PARTICLE
