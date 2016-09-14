@@ -74,7 +74,7 @@ long  LB_Corner2Index( const int lv, const int Corner[], const Check_t Check );
 //                                      inactive:  patch has been allocated but deactivated (excluded from num[lv])
 //                                  --> Note that active/inactive have nothing to do with the allocation of field arrays (e.g., fluid)
 //                                      --> For both active and inactive patches, field arrays may be allocated or == NULL
-//                                  --> However, currently the rho_ext, flux, flux_passive, and flux_debug arrays are guaranteed
+//                                  --> However, currently the flux arrays (i.e., flux, flux_passive, and flux_debug) are guaranteed
 //                                      to be NULL for inactive patches
 //                EdgeL/R         : Left and right edge of the patch
 //                                  --> Note that we always apply periodicity to EdgeL/R. So for an external patch its
@@ -136,6 +136,8 @@ long  LB_Corner2Index( const int lv, const int Corner[], const Check_t Check );
 //                hdelete         : Deallocate hydrodynamic array
 //                gnew            : Allocate potential array
 //                gdelete         : Deallocate potential array
+//                dnew            : Allocate rho_ext array
+//                ddelete         : Deallocate rho_ext array
 //                AddParticle     : Add particles to the particle list
 //                RemoveParticle  : Remove particles from the particle list
 //-------------------------------------------------------------------------------------------------------
@@ -241,16 +243,16 @@ struct patch_t
    //                lv             : Refinement level of the newly created patch
    //                BoxScale       : Simulation box scale
    //                dh_min         : Cell size at the maximum level
-   //                InitPtrAsNull  : Whether or not to initialize field arrays (i.e., fluid, passive, pot, pot_ext) as NULL
+   //                InitPtrAsNull  : Whether or not to initialize field arrays (i.e., fluid, passive, pot, pot_ext, rho_ext) as NULL
    //                                 --> It is used mainly for OPT__REUSE_MEMORY, where we don't want to set these pointers as
    //                                     NULL if the patch has been allocated but marked as inactive
    //                                     --> Since the field arrays may be allocated already and we want to reuse them
    //                                 --> But note that we must initialize these pointers as NULL when allocating (not activating)
    //                                     patches and before calling hnew and gnew
    //                                     --> otherwise these pointers become ill-defined, which will make hdelete and gdelete crash
-   //                                 --> Does NOT apply to rho_ext, flux, flux_passive, and flux_debug, which are always
+   //                                 --> Does NOT apply to flux arrays (i.e., flux, flux_passive, and flux_debug) which are always
    //                                     initialized as NULL here
-   //                                 --> Does not apply to any particle variable
+   //                                 --> Does not apply to any particle variable (except rho_ext)
    //===================================================================================
    void Activate( const int x, const int y, const int z, const int FaPID, const bool FluData, const bool PotData,
                   const int lv, const int BoxScale[], const double dh_min, const bool InitPtrAsNull )
@@ -311,19 +313,18 @@ struct patch_t
 #        if ( NPASSIVE > 0 )
          passive = NULL;
 #        endif
+
 #        ifdef GRAVITY
          pot     = NULL;
 #        ifdef STORE_POT_GHOST
          pot_ext = NULL;
 #        endif
 #        endif // #ifdef GRAVITY
-      }
 
-//    InitPtrAsNull does not effect rho_ext since this array is only used by Prepare_PatchData
-//    --> but maybe we should include it as well!
-#     ifdef PARTICLE
-      rho_ext = NULL;
-#     endif
+#        ifdef PARTICLE
+         rho_ext = NULL;
+#        endif
+      }
 
       for (int s=0; s<6; s++)
       {
@@ -380,9 +381,11 @@ struct patch_t
       gdelete();
 #     endif
 
-//    check: all particle-related variables/arrays should be deallocated already
-#     if ( defined PARTICLE  &&  defined DEBUG_PARTICLE )
-      if ( rho_ext != NULL )              Aux_Error( ERROR_INFO, "rho_ext != NULL !!\n" );
+#     ifdef PARTICLE
+      ddelete();
+
+//    check: all particle-related variables/arrays should be deallocated already (except rho_ext when OPT__REUSE_MEMORY is on)
+#     ifdef DEBUG_PARTICLE
       if ( ParList != NULL )              Aux_Error( ERROR_INFO, "ParList != NULL !!\n" );
 #     ifdef LOAD_BALANCE
       for (int v=0; v<4; v++)
@@ -397,7 +400,8 @@ struct patch_t
       if ( NPar_Copy != -1 )              Aux_Error( ERROR_INFO, "NPar_Copy = %d != -1 !!\n", NPar_Copy );
       for (int s=0; s<26; s++)
       if ( NPar_Escp[s] != -1 )           Aux_Error( ERROR_INFO, "NPar_Escp[%d] = %d != -1 !!\n", s, NPar_Escp[s] );
-#     endif // #if ( defined PARTICLE  &&  defined DEBUG_PARTICLE )
+#     endif // #ifdef DEBUG_PARTICLE
+#     endif // #ifdef PARTICLE
 
    } // METHOD : ~patch_t
 
@@ -544,7 +548,7 @@ struct patch_t
    //===================================================================================
    void gnew()
    {
-      
+
       if ( pot == NULL )      pot     = new real [PATCH_SIZE][PATCH_SIZE][PATCH_SIZE];
 
 #     ifdef STORE_POT_GHOST
@@ -586,6 +590,42 @@ struct patch_t
 
 
 #  ifdef PARTICLE
+   //===================================================================================
+   // Method      :  dnew
+   // Description :  Allocate rho_ext array
+   //
+   // Note        :  Do nothing if rho_ext array has been allocated
+   //===================================================================================
+   void dnew()
+   {
+
+      if ( rho_ext == NULL )  rho_ext = new real [RHOEXT_NXT][RHOEXT_NXT][RHOEXT_NXT];
+
+//    always initialize rho_ext (even if rho_ext != NULL when calling this this function) to indicate that this array
+//    has NOT been properly set --> used by Prepare_PatchData
+      rho_ext[0][0][0] = RHO_EXT_NEED_INIT;
+
+   } // METHOD : dnew
+
+
+
+   //===================================================================================
+   // Method      :  ddelete
+   // Description :  Deallocate rho_ext array
+   //===================================================================================
+   void ddelete()
+   {
+
+      if ( rho_ext != NULL )
+      {
+         delete [] rho_ext;
+         rho_ext = NULL;
+      }
+
+   } // METHOD : ddelete
+
+
+
    //===================================================================================
    // Method      :  AddParticle
    // Description :  Add new particles into the particle list

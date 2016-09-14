@@ -750,11 +750,15 @@ void Output_DumpData_Total_HDF5( const char *FileName )
 // output one level at a time so that data at the same level are consecutive on disk (even for multiple ranks)
    for (int lv=0; lv<NLEVEL; lv++)
    {
-//    5-3-0. collect particles from higher levels for outputting particle density
+//    5-3-0. initialize the particle density array (rho_ext) and collect particles from higher levels for outputting particle density
 #     ifdef PARTICLE
       if ( OPT__OUTPUT_PAR_DENS != PAR_OUTPUT_DENS_NONE )
+      {
+         Prepare_PatchData_InitParticleDensityArray( lv );
+
          Par_CollectParticle2OneLevel( lv, PredictParPos_No, NULL_REAL, SibBufPatch, FaSibBufPatch, JustCountNPar_No,
                                        TimingSendPar_No );
+      }
 #     endif
 
       for (int TRank=0; TRank<MPI_NRank; TRank++)

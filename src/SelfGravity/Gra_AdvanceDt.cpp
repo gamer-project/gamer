@@ -70,7 +70,7 @@ void Gra_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, co
 #  endif
 
 
-// collect particles to the target level
+// initialize the particle density array (rho_ext) and collect particles to the target level
 #  ifdef PARTICLE
    const bool TimingSendPar_Yes = true;
    const bool JustCountNPar_No  = false;
@@ -83,9 +83,15 @@ void Gra_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, co
    const bool SibBufPatch       = NULL_BOOL;
    const bool FaSibBufPatch     = NULL_BOOL;
 #  endif
-   if ( Poisson )    TIMING_FUNC(   Par_CollectParticle2OneLevel( lv, PredictPos, TimeNew, SibBufPatch, FaSibBufPatch,
-                                                                  JustCountNPar_No, TimingSendPar_Yes ),
-                                    Timer_Par_Collect[lv],   false   );
+   if ( Poisson )
+   {
+      TIMING_FUNC(   Prepare_PatchData_InitParticleDensityArray( lv ),
+                     Timer_Par_Collect[lv],   false   );
+
+      TIMING_FUNC(   Par_CollectParticle2OneLevel( lv, PredictPos, TimeNew, SibBufPatch, FaSibBufPatch,
+                                                   JustCountNPar_No, TimingSendPar_Yes ),
+                     Timer_Par_Collect[lv],   false   );
+   }
 #  endif
 
 

@@ -471,6 +471,12 @@
 #endif
 
 
+// marker indicating that the array "rho_ext" has NOT been properly set
+#ifdef PARTICLE
+#  define RHO_EXT_NEED_INIT      __FLT_MAX__
+#endif
+
+
 // markers for inactive particles
 #ifdef PARTICLE
 #  define PAR_INACTIVE_OUTSIDE   ( -1.0 )

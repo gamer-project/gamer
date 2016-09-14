@@ -37,7 +37,11 @@ static int Table_02( const int lv, const int PID, const int Side );
 //                   to store the partice mass density
 //                   --> amr->patch[0][lv][PID]->rho_ext
 //                   --> These arrays must be deallocated manually by calling Prepare_PatchData_FreeParticleDensityArray
-//                       (currently it's called by Gra_AdvanceDt and Main)
+//                       --> If OPT__REUSE_MEMORY is on, Prepare_PatchData_FreeParticleDensityArray will NOT free memory
+//                           for rho_ext. Instead, rho_ext will be free'd together with other data arrays (e.g., fluid, pot)
+//                   --> Before calling this function, one must call
+//                       (1) Par_CollectParticle2OneLevel --> to collect particles from higher levels and from other MPI ranks
+//                       (2) Prepare_PatchData_InitParticleDensityArray --> to initialize all rho_ext arrays
 //                8. Patches stored in PID0_List must be real patches (cannot NOT be buffer patches)
 //
 // Parameter   :  lv             : Target refinement level
@@ -415,8 +419,6 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
 #  ifdef PARTICLE
    const int NNearByPatchMax   = 64;   // maximum number of neaby patches of a patch group (including 8 local patches)
    const int ParMass_NPatchMax = NPG*NNearByPatchMax;
-   const int RhoExtGhost       = RHOEXT_GHOST_SIZE;   // number of ghost zones for the rho_ext array (typically 2)
-   const int RhoExtSize        = PS1 + 2*RhoExtGhost;
 
    int *ParMass_PID_List   = NULL;
    int  ParMass_NPatch_Dup = 0;        // number of patches (including duplicates) for the particle mass assignment
@@ -487,7 +489,8 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
 #           endif
 
 //          record PID (exclude patches with no particles or with particles deposited onto rho_ext already)
-            if ( amr->patch[0][lv][PID]->rho_ext == NULL  &&  NPar > 0 )
+            if (  ( amr->patch[0][lv][PID]->rho_ext == NULL ||
+                    amr->patch[0][lv][PID]->rho_ext[0][0][0] == RHO_EXT_NEED_INIT )  &&  NPar > 0  )
             {
 #              ifdef DEBUG_PARTICLE
                if ( ParMass_NPatch_Dup >= ParMass_NPatchMax )
@@ -514,7 +517,11 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
 //    allocate temporary density arrays for all target patches
 //    (do not parallelize it with OpenMP since it would actually deteriorate performance)
       for (int t=0; t<ParMass_NPatch; t++)
-         amr->patch[0][lv][ ParMass_PID_List[t] ]->rho_ext = new real [RhoExtSize][RhoExtSize][RhoExtSize];
+      {
+         const int TPID = ParMass_PID_List[t];
+
+         if ( amr->patch[0][lv][TPID]->rho_ext == NULL )    amr->patch[0][lv][TPID]->dnew();
+      }
 
    } //if ( PrepParOnlyDens || PrepTotalDens )
 #  endif // #ifdef PARTICLE
@@ -556,8 +563,9 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
             PID = ParMass_PID_List[t];
 
 #           ifdef DEBUG_PARTICLE
-            if ( amr->patch[0][lv][PID]->rho_ext == NULL )
-               Aux_Error( ERROR_INFO, "lv %d, PID %d, rho_ext == NULL !!\n", lv, PID );
+            if ( amr->patch[0][lv][PID]->rho_ext == NULL  ||
+                 amr->patch[0][lv][PID]->rho_ext[0][0][0] != RHO_EXT_NEED_INIT )
+               Aux_Error( ERROR_INFO, "lv %d, PID %d, rho_ext == NULL (or has been calculated already) !!\n", lv, PID );
 #           endif
 
 //          determine the number of particles and the particle list
@@ -611,7 +619,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
 #           endif // #ifdef DEBUG_PARTICLE
 
 //          set the left edge of the rho_ext array
-            for (int d=0; d<3; d++)    EdgeL[d] = amr->patch[0][lv][PID]->EdgeL[d] - RhoExtGhost*dh;
+            for (int d=0; d<3; d++)    EdgeL[d] = amr->patch[0][lv][PID]->EdgeL[d] - RHOEXT_GHOST_SIZE*dh;
 
 //          deposit particle mass on grids (**from particles to their home patch**)
 //          --> don't have to worry about the periodicity (even for external buffer patches) here since
@@ -619,7 +627,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
 //              (2) amr->patch[0][lv][PID]->EdgeL/R already assumes periodicity for external buffer patches
 //              --> Periodic_No, CheckFarAway_No
 //          --> remember to initialize rho_ext as zero (by InitZero_Yes)
-            Par_MassAssignment( ParList, NPar, amr->Par->Interp, amr->patch[0][lv][PID]->rho_ext[0][0], RhoExtSize,
+            Par_MassAssignment( ParList, NPar, amr->Par->Interp, amr->patch[0][lv][PID]->rho_ext[0][0], RHOEXT_NXT,
                                 EdgeL, dh, (amr->Par->PredictPos && !UseInputMassPos), PrepTime, InitZero_Yes,
                                 Periodic_No, NULL, UnitDens_No, CheckFarAway_No, UseInputMassPos, InputMassPos );
          } // for (int t=0; t<ParMass_NPatch; t++)
@@ -1160,20 +1168,21 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
                const int PID = PID0 + LocalID;
 
 //             skip patches without particles
-               if ( amr->patch[0][lv][PID]->rho_ext == NULL )  continue;
+               if ( amr->patch[0][lv][PID]->rho_ext == NULL  ||
+                    amr->patch[0][lv][PID]->rho_ext[0][0][0] == RHO_EXT_NEED_INIT )    continue;
 
 //             calculate the offset between rho_nxt and ArrayDens
-               const int Disp_i = TABLE_02( LocalID, 'x', GhostSize-RhoExtGhost, GhostSize+PATCH_SIZE-RhoExtGhost );
-               const int Disp_j = TABLE_02( LocalID, 'y', GhostSize-RhoExtGhost, GhostSize+PATCH_SIZE-RhoExtGhost );
-               const int Disp_k = TABLE_02( LocalID, 'z', GhostSize-RhoExtGhost, GhostSize+PATCH_SIZE-RhoExtGhost );
+               const int Disp_i = TABLE_02( LocalID, 'x', GhostSize-RHOEXT_GHOST_SIZE, GhostSize+PATCH_SIZE-RHOEXT_GHOST_SIZE );
+               const int Disp_j = TABLE_02( LocalID, 'y', GhostSize-RHOEXT_GHOST_SIZE, GhostSize+PATCH_SIZE-RHOEXT_GHOST_SIZE );
+               const int Disp_k = TABLE_02( LocalID, 'z', GhostSize-RHOEXT_GHOST_SIZE, GhostSize+PATCH_SIZE-RHOEXT_GHOST_SIZE );
 
-//             take care of the case with GhostSize < RhoExtGhost
+//             take care of the case with GhostSize < RHOEXT_GHOST_SIZE
                const int is = ( Disp_i >= 0 ) ? 0 : -Disp_i;
                const int js = ( Disp_j >= 0 ) ? 0 : -Disp_j;
                const int ks = ( Disp_k >= 0 ) ? 0 : -Disp_k;
-               const int ie = ( RhoExtSize+Disp_i <= PGSize1D ) ? RhoExtSize-1 : PGSize1D-Disp_i-1;
-               const int je = ( RhoExtSize+Disp_j <= PGSize1D ) ? RhoExtSize-1 : PGSize1D-Disp_j-1;
-               const int ke = ( RhoExtSize+Disp_k <= PGSize1D ) ? RhoExtSize-1 : PGSize1D-Disp_k-1;
+               const int ie = ( RHOEXT_NXT+Disp_i <= PGSize1D ) ? RHOEXT_NXT-1 : PGSize1D-Disp_i-1;
+               const int je = ( RHOEXT_NXT+Disp_j <= PGSize1D ) ? RHOEXT_NXT-1 : PGSize1D-Disp_j-1;
+               const int ke = ( RHOEXT_NXT+Disp_k <= PGSize1D ) ? RHOEXT_NXT-1 : PGSize1D-Disp_k-1;
 
 //             add particle density to the total density array
                for (int k=ks; k<=ke; k++)  {  K    = k + Disp_k;
@@ -1195,13 +1204,13 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
 //             (c3-1) if the targeted sibling patch exists --> loop over nearby patches at the same level
                if ( SibPID0 >= 0 )
                {
-//                LG = LargeGhost : for the case with GhostSize >= RhoExtSize
-                  const int is_LG = TABLE_01( Side, 'x', RhoExtSize-GhostSize-RhoExtGhost, 0, 0 );
-                  const int js_LG = TABLE_01( Side, 'y', RhoExtSize-GhostSize-RhoExtGhost, 0, 0 );
-                  const int ks_LG = TABLE_01( Side, 'z', RhoExtSize-GhostSize-RhoExtGhost, 0, 0 );
-                  const int ie_LG = TABLE_01( Side, 'x', RhoExtSize-1, RhoExtSize-1, GhostSize+RhoExtGhost-1 );
-                  const int je_LG = TABLE_01( Side, 'y', RhoExtSize-1, RhoExtSize-1, GhostSize+RhoExtGhost-1 );
-                  const int ke_LG = TABLE_01( Side, 'z', RhoExtSize-1, RhoExtSize-1, GhostSize+RhoExtGhost-1 );
+//                LG = LargeGhost : for the case with GhostSize >= RHOEXT_NXT
+                  const int is_LG = TABLE_01( Side, 'x', RHOEXT_NXT-GhostSize-RHOEXT_GHOST_SIZE, 0, 0 );
+                  const int js_LG = TABLE_01( Side, 'y', RHOEXT_NXT-GhostSize-RHOEXT_GHOST_SIZE, 0, 0 );
+                  const int ks_LG = TABLE_01( Side, 'z', RHOEXT_NXT-GhostSize-RHOEXT_GHOST_SIZE, 0, 0 );
+                  const int ie_LG = TABLE_01( Side, 'x', RHOEXT_NXT-1, RHOEXT_NXT-1, GhostSize+RHOEXT_GHOST_SIZE-1 );
+                  const int je_LG = TABLE_01( Side, 'y', RHOEXT_NXT-1, RHOEXT_NXT-1, GhostSize+RHOEXT_GHOST_SIZE-1 );
+                  const int ke_LG = TABLE_01( Side, 'z', RHOEXT_NXT-1, RHOEXT_NXT-1, GhostSize+RHOEXT_GHOST_SIZE-1 );
 
 //###OPTIMIZATION: simplify TABLE_03 and TABLE_04
                   for (int Count=0; Count<TABLE_04( Side ); Count++)
@@ -1209,14 +1218,15 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
                      const int SibPID = TABLE_03( Side, Count ) + SibPID0;
 
 //                   skip patches without particles
-                     if ( amr->patch[0][lv][SibPID]->rho_ext == NULL )  continue;
+                     if ( amr->patch[0][lv][SibPID]->rho_ext == NULL  ||
+                          amr->patch[0][lv][SibPID]->rho_ext[0][0][0] == RHO_EXT_NEED_INIT )    continue;
 
 //                   calculate the offset between rho_nxt and ArrayDens
-                     const int Disp_i = Table_01( Side, 'x', Count, GhostSize-RhoExtGhost ) - is_LG;
-                     const int Disp_j = Table_01( Side, 'y', Count, GhostSize-RhoExtGhost ) - js_LG;
-                     const int Disp_k = Table_01( Side, 'z', Count, GhostSize-RhoExtGhost ) - ks_LG;
+                     const int Disp_i = Table_01( Side, 'x', Count, GhostSize-RHOEXT_GHOST_SIZE ) - is_LG;
+                     const int Disp_j = Table_01( Side, 'y', Count, GhostSize-RHOEXT_GHOST_SIZE ) - js_LG;
+                     const int Disp_k = Table_01( Side, 'z', Count, GhostSize-RHOEXT_GHOST_SIZE ) - ks_LG;
 
-//                   take care of the case with GhostSize < RhoExtGhost
+//                   take care of the case with GhostSize < RHOEXT_GHOST_SIZE
                      const int is = ( is_LG+Disp_i >= 0 ) ? is_LG : -Disp_i;
                      const int js = ( js_LG+Disp_j >= 0 ) ? js_LG : -Disp_j;
                      const int ks = ( ks_LG+Disp_k >= 0 ) ? ks_LG : -Disp_k;
@@ -2072,18 +2082,48 @@ void SetTargetSibling( int NTSib[], int *TSib[] )
 
 #ifdef PARTICLE
 //-------------------------------------------------------------------------------------------------------
+// Function    :  Prepare_PatchData_InitParticleDensityArray
+// Description :  Initialize the rho_ext arrays by setting rho_ext[0][0][0] == RHO_EXT_NEED_INIT
+//
+// Note        :  1. Currently this function is called by "Gra_AdvanceDt, Main, and Output_DumpData_Total"
+//                2. Apply to all (real and buffer) patches with rho_ext allocated already
+//                3. Do nothing if rho_ext == NULL. In this case, rho_ext will be allocated and initialized
+//                   as rho_ext[0][0][0] == RHO_EXT_NEED_INIT when calling Prepare_PatchData
+//                4. rho_ext array is always stored in Sg==0
+//
+// Parameter   :  lv : Target refinement level
+//-------------------------------------------------------------------------------------------------------
+void Prepare_PatchData_InitParticleDensityArray( const int lv )
+{
+
+// apply to buffer patches as well
+   for (int PID=0; PID<amr->NPatchComma[lv][27]; PID++)
+   {
+      if ( amr->patch[0][lv][PID]->rho_ext != NULL )
+         amr->patch[0][lv][PID]->rho_ext[0][0][0] = RHO_EXT_NEED_INIT;
+   }
+
+} // FUNCTION : Prepare_PatchData_InitParticleDensityArray
+
+
+
+//-------------------------------------------------------------------------------------------------------
 // Function    :  Prepare_PatchData_FreeParticleDensityArray
 // Description :  Free the rho_ext arrays, which are allocated in Prepare_PatchData temporarily
 //                for storing the partice mass density
 //
-// Note        :  1. Currently this function is called by Gra_AdvanceDt after solving the gravitatinal
-//                   potential
+// Note        :  1. Currently this function is called by "Gra_AdvanceDt, Main, and Output_DumpData_Total"
 //                2. Apply to buffer patches as well
+//                3. Do nothing if OPT__REUSE_MEMORY is on
 //
 // Parameter   :  lv : Target refinement level
 //-------------------------------------------------------------------------------------------------------
 void Prepare_PatchData_FreeParticleDensityArray( const int lv )
 {
+
+// do not free memory if OPT__REUSE_MEMORY is on
+   if ( OPT__REUSE_MEMORY )   return;
+
 
 // apply to buffer patches as well
    for (int PID=0; PID<amr->NPatchComma[lv][27]; PID++)

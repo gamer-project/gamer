@@ -741,11 +741,15 @@ void Output_DumpData_Total( const char *FileName )
 
    for (int lv=0; lv<NLEVEL; lv++)
    {
-//    f-1. collect particles from higher levels for outputting particle density
+//    f-1. initialize the particle density array (rho_ext) and collect particles from higher levels for outputting particle density
 #     ifdef PARTICLE
       if ( OPT__OUTPUT_PAR_DENS != PAR_OUTPUT_DENS_NONE )
+      {
+         Prepare_PatchData_InitParticleDensityArray( lv );
+
          Par_CollectParticle2OneLevel( lv, PredictParPos_No, NULL_REAL, SibBufPatch, FaSibBufPatch, JustCountNPar_No,
                                        TimingSendPar_No );
+      }
 #     endif
 
       for (int TargetMPIRank=0; TargetMPIRank<MPI_NRank; TargetMPIRank++)

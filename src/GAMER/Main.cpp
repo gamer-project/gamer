@@ -388,7 +388,7 @@ int main( int argc, char *argv[] )
          const double Poi_Coeff = 4.0*M_PI*NEWTON_G;
 #        endif
 
-//       collect particles to the target level
+//       initialize the particle density array (rho_ext) and collect particles to the target level
 #        ifdef PARTICLE
          const bool TimingSendPar_No = false;
          const bool JustCountNPar_No = false;
@@ -401,6 +401,9 @@ int main( int argc, char *argv[] )
          const bool SibBufPatch      = NULL_BOOL;
          const bool FaSibBufPatch    = NULL_BOOL;
 #        endif
+
+         Prepare_PatchData_InitParticleDensityArray( lv );
+
          Par_CollectParticle2OneLevel( lv, PredictPos, Time[lv], SibBufPatch, FaSibBufPatch, JustCountNPar_No,
                                        TimingSendPar_No );
 #        endif
