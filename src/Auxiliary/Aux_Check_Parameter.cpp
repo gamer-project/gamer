@@ -236,6 +236,9 @@ void Aux_Check_Parameter()
    if ( OPT__PATCH_COUNT < 0  ||  OPT__PATCH_COUNT > 2 )
       Aux_Error( ERROR_INFO, "incorrect option \"OPT__PATCH_COUNT = %d\" [0/1/2] !!\n", OPT__PATCH_COUNT );
 
+   if ( OPT__REUSE_MEMORY < 0  ||  OPT__REUSE_MEMORY > 2 )
+      Aux_Error( ERROR_INFO, "incorrect option \"OPT__REUSE_MEMORY = %d\" [0/1/2] !!\n", OPT__REUSE_MEMORY );
+
    if ( OPT__MEMORY_POOL  &&  !OPT__REUSE_MEMORY )
       Aux_Error( ERROR_INFO, "please turn on OPT__REUSE_MEMORY for OPT__MEMORY_POOL !!\n" );
 

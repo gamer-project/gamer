@@ -566,7 +566,9 @@ void LB_RedistributeRealPatch( const int lv, real **ParVar_Old, real **Passive_O
 // 4. delete old patches and allocate the MPI recv buffers
 // ==========================================================================================
 // free memory first to reduce the memory consumption
-   amr->Lvdelete( lv, OPT__REUSE_MEMORY );   // NPatchComma is also reset to 0 here
+// --> for OPT__REUSE_MEMORY == 2 (aggressive mode), we only mark patches as inactive but do not deallocate memory
+// --> NPatchComma is also reset to 0 here
+   amr->Lvdelete( lv, OPT__REUSE_MEMORY==2 );
 
 // allocate recv buffers AFTER deleting old patches
    long *RecvBuf_LBIdx   = new long [ NRecv_Total_Patch ];

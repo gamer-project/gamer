@@ -299,8 +299,7 @@ void Init_Load_Parameter()
 #  endif
 
    getline( &input_line, &len, File );
-   sscanf( input_line, "%d%s",   &temp_int,                 string );
-   OPT__REUSE_MEMORY = (bool)temp_int;
+   sscanf( input_line, "%d%s",   &OPT__REUSE_MEMORY,        string );
 
    getline( &input_line, &len, File );
    sscanf( input_line, "%d%s",   &temp_int,                 string );
