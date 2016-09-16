@@ -12,6 +12,11 @@
 //                2. Call-by-reference
 //                3. Free memory by Aux_DeallocateArray2D
 //                4. Explicit template instantiation is put in the end of this file
+//                5. One must be careful about using the Array pointer returned from this function,
+//                   which is set to NULL if either I or J is 0
+//                   --> Some functions do NOT accept a NULL pointer even when I or J is zero
+//                   --> For example, fread( Array, Size, NMember, File ) is illegal if Array==NULL
+//                       even if NMember==0
 //
 // Parameter   :  Array : Pointer to be allocated
 //                J/I   : Array dimensions
@@ -45,6 +50,11 @@ void Aux_AllocateArray2D( T** &Array, const int J, const int I )
 //                2. Call-by-reference
 //                3. Free memory by Aux_DeallocateArray3D
 //                4. Explicit template instantiation is put in the end of this file
+//                5. One must be careful about using the Array pointer returned from this function,
+//                   which is set to NULL if either I or J is 0
+//                   --> Some functions do NOT accept a NULL pointer even when I or J is zero
+//                   --> For example, fread( Array, Size, NMember, File ) is illegal if Array==NULL
+//                       even if NMember==0
 //
 // Parameter   :  Array : Pointer to be allocated
 //                K/J/I : Array dimensions
@@ -91,6 +101,7 @@ template <typename T>
 void Aux_DeallocateArray2D( T** &Array )
 {
 
+// do NOT call delete if Array is NULL
    if ( Array == NULL )    return;
 
    delete [] Array[0];
@@ -117,6 +128,7 @@ template <typename T>
 void Aux_DeallocateArray3D( T*** &Array )
 {
 
+// do NOT call delete if Array is NULL
    if ( Array == NULL )    return;
 
    delete [] Array[0][0];

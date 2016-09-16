@@ -484,6 +484,8 @@ void Init_Restart_HDF5( const char *FileName )
 
    NewParList = new long [MaxNParInOnePatch];
 
+// be careful about using ParBuf returned from Aux_AllocateArray2D, which is set to NULL if MaxNParInOnePatch == 0
+// --> for example, do NOT use ParBuf in fread( ParBuf, Size, NMember, File ) even if NMember == 0
    Aux_AllocateArray2D( ParBuf, NParVar, MaxNParInOnePatch );
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Initializing particle repository ... done\n" );
@@ -991,6 +993,10 @@ herr_t LoadField( const char *FieldName, void *FieldPtr, const hid_t H5_SetID_Ta
 //                                    --> It must be preallocated with a size equal to the maximum number of
 //                                        particles in one patch times the number of particles attributes
 //                                        stored in the disk
+//                                    --> Be careful about using ParBuf, which is set to NULL if it has no elements
+//                                        (because of the current implementation of Aux_AllocateArray2D)
+//                                        --> For example, do NOT use ParBuf in fread( ParBuf, Size, NMember, File )
+//                                            even if NMember == 0
 //                NewParList        : Array to store the new particle indices
 //                                    --> It must be preallocated with a size equal to the maximum number of
 //                                        particles in one patch
@@ -1074,6 +1080,7 @@ void LoadOnePatch( const hid_t H5_FileID, const int lv, const int GID, const boo
 //    load particle data from disk
       for (int v=0; v<NParVar; v++)
       {
+//       using ParBuf[v] here is safe since it's NOT called when NParThisPatch == 0
          H5_Status = H5Dread( H5_SetID_ParData[v], H5T_GAMER_REAL, H5_MemID_ParData, H5_SpaceID_ParData, H5P_DEFAULT,
                               ParBuf[v] );
          if ( H5_Status < 0 )

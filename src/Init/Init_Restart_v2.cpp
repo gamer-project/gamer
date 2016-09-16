@@ -521,6 +521,8 @@ void Init_Restart()
    long GParID;
    int  NParThisPatch;
 
+// be careful about using ParBuf returned from Aux_AllocateArray2D, which is set to NULL if MaxNParInOnePatch == 0
+// --> for example, do NOT use ParBuf in fread( ParBuf, Size, NMember, File ) even if NMember == 0
    Aux_AllocateArray2D( ParBuf, NParVar, MaxNParInOnePatch );
 
 
@@ -568,6 +570,7 @@ void Init_Restart()
                {
                   fseek( File, FileOffset_Particle + v*ParDataSize1v + GParID*sizeof(real), SEEK_SET );
 
+//                using ParBuf[v] here is safe since it's NOT called when NParThisPatch == 0
                   fread( ParBuf[v], sizeof(real), NParThisPatch, File );
                }
 
