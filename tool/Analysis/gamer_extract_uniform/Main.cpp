@@ -84,10 +84,8 @@ void ReadOption( int argc, char **argv )
                    break;
          case 'l': TargetLevel     = atoi(optarg);
                    break;
-#        if ( MODEL == HYDRO  ||  MODEL == MHD )
          case 'B': ExtBC           = atoi(optarg);
                    break;
-#        endif
          case 'n': OutputXYZ       = atoi(optarg);
                    break;
          case 'x': Temp_Start[0]   = atof(optarg);
@@ -149,12 +147,12 @@ void ReadOption( int argc, char **argv )
                         << " [-n output option (1~7 : X-slice, Y-slice, Z-slice, X-proj, Y-proj, Z-proj, 3D)"
                         << endl << "                             "
                         << " [-x/y/z starting coordinate in x/y/z [0]] [-X/Y/Z target size in x/y/z [BoxSize]]"
-                        << endl << "                             "
 #                       ifndef SERIAL
-                        << " [-p/q/r # of ranks in the x/y/z directions [1,1,1]]"
                         << endl << "                             "
+                        << " [-p/q/r # of ranks in the x/y/z directions [1,1,1]]"
 #                       endif
 #                       if   ( MODEL == HYDRO  ||  MODEL == MHD )
+                        << endl << "                             "
                         << " [-d (output div(vel)) [off]] [-v (output curl(vel)) [off]] [-P (output pressure) [off]]"
                         << endl << "                             "
                         << " [-U (output temperature) [off]] "
@@ -162,11 +160,12 @@ void ReadOption( int argc, char **argv )
                         << " [-u coefficient for converting \"pressure over density\" to temperature"
                         << endl << "                             "
                         << "     = velocity_code_unit^2*hydrogen_mass*mean_atomic_weight/Boltzmann_constant]"
-                        << endl << "                             "
-                        << " [-B external boundary condition (0/1: periodic/outflow) [0]]"
 #                       elif ( MODEL == ELBDM )
+                        << endl << "                             "
                         << " [-V (output ELBDM vel) [off]] [-w (do not interpolate on phase) [interpolate on phase]]"
 #                       endif
+                        << endl << "                             "
+                        << " [-B external boundary condition (0/1: periodic/outflow) [0]]"
                         << endl << "                             "
                         << " [-k (convert peculiar velocity from comoving to physical coords in km/s) [false]]"
                         << endl << "                             "
@@ -226,14 +225,6 @@ void ReadOption( int argc, char **argv )
 
       if ( MyRank == 0 )
       fprintf( stderr, "WARNING : option -v (OutputCurlVel) is useless in this MODEL (%d) !!\n", MODEL );
-   }
-
-   if ( ExtBC != 0 )
-   {
-      ExtBC = 0;
-
-      if ( MyRank == 0 )
-      fprintf( stderr, "WARNING : only periodic BC is supported in this MODEL (%d) !!\n", MODEL );
    }
 #  endif // #if ( MODEL != HYDRO  &&  MODEL != MHD )
 
@@ -1294,7 +1285,7 @@ void Init_TargetDomain()
 //       check
          if ( Scale_Size[d] > amr.BoxScale[d]-ShiftUnit  &&  MyRank == 0 )
          {
-            Aux_Message( stderr, "WARNING : Scale_Size[%d] (%13.7e) > Box.Scale[%d]-ShiftUnit (%13.7e)\n",
+            Aux_Message( stderr, "WARNING : Scale_Size[%d] (%d) > Box.Scale[%d]-ShiftUnit (%d)\n",
                          d, Scale_Size[d], d, amr.BoxScale[d]-ShiftUnit );
             Aux_Message( stderr, "          --> It may fail unless the target region properly aligns with grids\n" );
          }

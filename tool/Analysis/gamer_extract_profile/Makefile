@@ -10,22 +10,22 @@ EXECUTABLE := GAMER_ExtractProfile
 # siimulation options
 #######################################################################################################
 # model: HYDRO/MHD/ELBDM
-SIMU_OPTION += -DMODEL=ELBDM
+SIMU_OPTION += -DMODEL=HYDRO
 
 # double precision
 #SIMU_OPTION += -DFLOAT8
 
-# debug mode 
+# debug mode
 #SIMU_OPTION += -DGAMER_DEBUG
 
 # support HDF5 format
-#SIMU_OPTION += -DSUPPORT_HDF5
+SIMU_OPTION += -DSUPPORT_HDF5
 
 
 
 # siimulation parameters
 #######################################################################################################
-NLEVEL      := 6        # level : 0 ~ NLEVEL-1 
+NLEVEL      := 6        # level : 0 ~ NLEVEL-1
 MAX_PATCH   := 2000000  # the maximum number of patches in each level
 
 NLEVEL      := $(strip $(NLEVEL))
@@ -63,7 +63,7 @@ CC    := icpc
 CFLAG := -O3 -w1 -xSSE4.2 -fp-model precise
 #CFLAG := -O3 -w1 -mp1
 
-#CC    := g++ 
+#CC    := g++
 #CFLAG := -O3 -Wall
 
 #LIB   := -limf

@@ -17,9 +17,6 @@ using namespace std;
 #include "Tree.h"
 #include "Global.h"
 #include "Prototype.h"
-#ifdef SUPPORT_HDF5
-#include "HDF5_Typedef.h"
-#endif
 
 
 

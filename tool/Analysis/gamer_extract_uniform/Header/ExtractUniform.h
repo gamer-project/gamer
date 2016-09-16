@@ -20,10 +20,6 @@ using namespace std;
 #include "Global.h"
 #include "Prototype.h"
 
-#ifdef SUPPORT_HDF5
-#  include "HDF5_Typedef.h"
-#endif
-
 #ifdef SERIAL
 #  include "Serial.h"
 #endif

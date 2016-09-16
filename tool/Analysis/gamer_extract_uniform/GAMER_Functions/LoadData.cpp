@@ -19,7 +19,7 @@ static void CompareVar( const char *VarName, const double RestartVar, const doub
 static void LoadOnePatch( FILE *File, const int lv, const int LoadPID, const bool LoadPot, const bool LoadParDens );
 
 #ifdef SUPPORT_HDF5
-void LoadData_HDF5();
+void LoadData_HDF5( const char *FileName );
 #endif
 
 
@@ -38,7 +38,7 @@ void LoadData()
 #  ifdef SUPPORT_HDF5
    if (  Aux_CheckFileExist(FileName_In)  &&  H5Fis_hdf5(FileName_In)  )
    {
-      LoadData_HDF5();
+      LoadData_HDF5( FileName_In );
       return;
    }
 #  endif
@@ -1232,6 +1232,8 @@ void LoadOnePatch( FILE *File, const int lv, const int LoadPID, const bool LoadP
    } // if ( GotYou  &&  LoadSonPID0 == -1 )
 
 // enter the next level
+// --> even if this patch lies outside the target domain
+// --> in other words, we always allocate ALL patches (but some of them may not have data arrays allocated)
    if ( LoadSonPID0 != -1 )
    {
       for (int LoadSonPID=LoadSonPID0; LoadSonPID<LoadSonPID0+8; LoadSonPID++)

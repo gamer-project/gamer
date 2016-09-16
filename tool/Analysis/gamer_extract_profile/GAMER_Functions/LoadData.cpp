@@ -25,7 +25,7 @@ bool CheckWithinTargetRegion( const bool Periodic, const int CrL[3], const int C
                               const int CanMax_z1, const int CanMin_z1, const int CanMax_x2, const int CanMin_x2,
                               const int CanMax_y2, const int CanMin_y2, const int CanMax_z2, const int CanMin_z2 );
 #ifdef SUPPORT_HDF5
-void LoadData_HDF5();
+void LoadData_HDF5( const char *FileName );
 #endif
 
 
@@ -34,6 +34,13 @@ void LoadData_HDF5();
 //-------------------------------------------------------------------------------------------------------
 // Function    :  LoadData
 // Description :  Load data from the input file
+//
+// Note        :  1. Unlike LoadData_HDF5, this function only loads and allocates leaf patches inside the target domain
+//                   if NeedGhost is off
+//                2. AMR data structure always assumes periodicity (even if Periodic == false)
+//                   --> Non-periodicity is taken into account by the variables "Center and  Center_Map"
+//                       --> Periodic     BC: Center_Map == Center mapped by periodicity
+//                           Non-periodic BC: Center_Map == Center
 //-------------------------------------------------------------------------------------------------------
 void LoadData()
 {
@@ -42,7 +49,7 @@ void LoadData()
 #  ifdef SUPPORT_HDF5
    if (  Aux_CheckFileExist(FileName_In)  &&  H5Fis_hdf5(FileName_In)  )
    {
-      LoadData_HDF5();
+      LoadData_HDF5( FileName_In );
       return;
    }
 #  endif
