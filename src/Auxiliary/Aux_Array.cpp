@@ -14,9 +14,9 @@
 //                4. Explicit template instantiation is put in the end of this file
 //                5. One must be careful about using the Array pointer returned from this function,
 //                   which is set to NULL if either I or J is 0
-//                   --> Some functions do NOT accept a NULL pointer even when I or J is zero
-//                   --> For example, fread( Array, Size, NMember, File ) is illegal if Array==NULL
-//                       even if NMember==0
+//                   --> Some functions may NOT accept a NULL pointer even when I or J is zero
+//                   --> Moreover, Array[0...J-1] will become ill-defined when I == 0
+//                       --> So accessing Array[0] will be illegal when I == 0 even though J > 0
 //
 // Parameter   :  Array : Pointer to be allocated
 //                J/I   : Array dimensions
@@ -52,9 +52,9 @@ void Aux_AllocateArray2D( T** &Array, const int J, const int I )
 //                4. Explicit template instantiation is put in the end of this file
 //                5. One must be careful about using the Array pointer returned from this function,
 //                   which is set to NULL if either I or J is 0
-//                   --> Some functions do NOT accept a NULL pointer even when I or J is zero
-//                   --> For example, fread( Array, Size, NMember, File ) is illegal if Array==NULL
-//                       even if NMember==0
+//                   --> Some functions may NOT accept a NULL pointer even when I or J is zero
+//                   --> Moreover, Array[0...J-1] will become ill-defined when I == 0
+//                       --> So accessing Array[0] will be illegal when I == 0 even though J > 0
 //
 // Parameter   :  Array : Pointer to be allocated
 //                K/J/I : Array dimensions

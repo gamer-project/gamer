@@ -522,7 +522,7 @@ void Init_Restart()
    int  NParThisPatch;
 
 // be careful about using ParBuf returned from Aux_AllocateArray2D, which is set to NULL if MaxNParInOnePatch == 0
-// --> for example, do NOT use ParBuf in fread( ParBuf, Size, NMember, File ) even if NMember == 0
+// --> for example, accessing ParBuf[0...NParVar-1] will be illegal when MaxNParInOnePatch == 0
    Aux_AllocateArray2D( ParBuf, NParVar, MaxNParInOnePatch );
 
 
