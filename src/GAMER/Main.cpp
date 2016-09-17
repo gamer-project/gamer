@@ -438,7 +438,7 @@ int main( int argc, char *argv[] )
 
          if ( OPT__VERBOSE  &&  MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );
 
-      } // for (int lv=0; lv<=MAX_LEVEL; lv++)
+      } // for (int lv=0; lv<=MAX_LEVEL; lv++) if ( OPT__GRAVITY_TYPE == GRAVITY_SELF  ||  OPT__GRAVITY_TYPE == GRAVITY_BOTH )
 #     endif // #ifdef GRAVITY
 
 #     if ( defined PARTICLE  &&  defined STORE_PAR_ACC )

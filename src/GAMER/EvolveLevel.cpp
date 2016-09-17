@@ -243,8 +243,12 @@ void EvolveLevel( const int lv, const double dTime )
                            Timer_GetBuf[lv][2],   true   );
          } // if ( OPT__OVERLAP_MPI ) ... else ...
 
-         amr->PotSg    [lv]             = SaveSg_Pot;
-         amr->PotSgTime[lv][SaveSg_Pot] = TimeNew;
+//       note that the current implementation of external potential does NOT use PotSg/PotSgTime
+         if ( SelfGravity )
+         {
+            amr->PotSg    [lv]             = SaveSg_Pot;
+            amr->PotSgTime[lv][SaveSg_Pot] = TimeNew;
+         }
 
       } // if ( lv == 0 ) ... else ...
 
@@ -391,6 +395,8 @@ void EvolveLevel( const int lv, const double dTime )
          Time          [lv+1]                     = Time[lv];
          amr->FluSgTime[lv+1][ amr->FluSg[lv+1] ] = Time[lv];
 #        ifdef GRAVITY
+//       note that the current implementation of external potential does NOT use PotSg/PotSgTime
+         if ( SelfGravity )
          amr->PotSgTime[lv+1][ amr->PotSg[lv+1] ] = Time[lv];
 #        endif
 
@@ -418,6 +424,7 @@ void EvolveLevel( const int lv, const double dTime )
 
 //       must call Poi_StorePotWithGhostZone AFTER collecting potential for buffer patches
 #        ifdef STORE_POT_GHOST
+         if ( SelfGravity )
          TIMING_FUNC(   Poi_StorePotWithGhostZone( lv+1, amr->PotSg[lv+1], false ),   Timer_Refine[lv],   false   );
 #        endif
 
