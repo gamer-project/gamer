@@ -110,13 +110,16 @@ void Init_Load_Parameter()
    sscanf( input_line, "%ld%s",  &amr->Par->NPar_Active_AllRank, string );
 
    getline( &input_line, &len, File );
-   sscanf( input_line, "%d%s",   &amr->Par->Init,           string );
+   sscanf( input_line, "%d%s",   &temp_int,                 string );
+   amr->Par->Init = (ParInit_t)temp_int;
 
    getline( &input_line, &len, File );
-   sscanf( input_line, "%d%s",   &amr->Par->Interp,         string );
+   sscanf( input_line, "%d%s",   &temp_int,                 string );
+   amr->Par->Interp = (ParInterp_t)temp_int;
 
    getline( &input_line, &len, File );
-   sscanf( input_line, "%d%s",   &amr->Par->Integ,          string );
+   sscanf( input_line, "%d%s",   &temp_int,                 string );
+   amr->Par->Integ = (ParInteg_t)temp_int;
 
    getline( &input_line, &len, File );
    sscanf( input_line, "%d%s",   &temp_int,                 string );

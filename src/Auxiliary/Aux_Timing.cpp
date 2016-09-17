@@ -657,7 +657,7 @@ void Timing__EvolveLevel( const char FileName[], const double Time_LB_Main[][3] 
 
 
 // 2. summary
-   if ( MPI_Rank == 0 )
+   if ( MPI_Rank == 0 ) {
    if ( OPT__TIMING_BALANCE )
    {
 //    _P : percentage; _IM : imbalance
@@ -871,7 +871,7 @@ void Timing__EvolveLevel( const char FileName[], const double Time_LB_Main[][3] 
       MPI_Par_Acc [0] += MPI_Par;
       Sum_Acc     [0] += Sum        [0][0];
 
-   } // if ( OPT__TIMING_BALANCE ) ... else ...
+   }} // if ( OPT__TIMING_BALANCE ) ... else ... if ( MPI_Rank == 0 )
 
 
    if ( MPI_Rank == 0 )    fclose( File );

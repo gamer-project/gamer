@@ -39,6 +39,9 @@ void Output_DumpData( const int Stage )
    {
       switch ( OPT__OUTPUT_MODE )
       {
+         case OUTPUT_CONST_STEP :
+         break;   // do nothing
+
          case OUTPUT_CONST_DT :
          {
             if ( OPT__INIT != INIT_RESTART )    DumpTime = Time[0];

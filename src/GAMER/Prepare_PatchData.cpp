@@ -127,7 +127,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
 
    for (int f=0; f<6; f++)
    {
-      if ( FluBC[f] == NULL )    Aux_Error( ERROR_INFO, "FluBC[%d] == NULL !!\n", f );
+      if ( FluBC == NULL )    Aux_Error( ERROR_INFO, "FluBC == NULL !!\n" );
 
       if ( FluBC[f] != BC_FLU_PERIODIC    &&  FluBC[f] != BC_FLU_OUTFLOW  &&
            FluBC[f] != BC_FLU_REFLECTING  &&  FluBC[f] != BC_FLU_USER        )

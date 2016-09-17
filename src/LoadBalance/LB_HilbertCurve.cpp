@@ -207,7 +207,7 @@ void LB_Hilbert_i2c( ulong index, ulong coord[], const uint nBits )
 
 
 // check
-   for (int d=0; d<nDims; d++)
+   for (uint d=0; d<nDims; d++)
       if ( coord[d] >= (1U<<nBits) )
          Aux_Error( ERROR_INFO, "coord[%d] = %lu >= 2^%u = %u !!\n", d, coord[d], nBits, (1U<<nBits) );
 
@@ -236,7 +236,7 @@ ulong LB_Hilbert_c2i( ulong const coord[], const uint nBits )
 
 
 // check
-   for (int d=0; d<nDims; d++)
+   for (uint d=0; d<nDims; d++)
       if ( coord[d] >= (1U<<nBits) )
          Aux_Error( ERROR_INFO, "coord[%d] = %lu >= 2^%u = %u !!\n", d, coord[d], nBits, (1U<<nBits) );
 

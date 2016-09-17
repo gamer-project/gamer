@@ -109,9 +109,20 @@ void LB_Refine_AllocateNewPatch( const int FaLv, int NNew_Home, int *NewPID_Home
    ulong *PCr1D_BufBk                = new ulong [SonNBuff];
    int   *PCr1D_BufBk_IdxTable       = new int   [SonNBuff];
    int   *PID_BufBk                  = NULL;
+
+// to avoid GNU warnings "non-constant array new length must be specified without parentheses around the type-id [-Wvla]"
+// --> see http://stackoverflow.com/questions/4523497/typedef-fixed-length-array
+   /*
    real (**flu_BufBk)[PS1][PS1][PS1] = ( OPT__REUSE_MEMORY ) ? NULL : new ( real (*[SonNBuff])[PS1][PS1][PS1] );
 #  ifdef GRAVITY
    real (**pot_BufBk)[PS1][PS1]      = ( OPT__REUSE_MEMORY ) ? NULL : new ( real (*[SonNBuff])[PS1][PS1] );
+#  endif
+   */
+   typedef real flu_type[PS1][PS1][PS1];
+   real (**flu_BufBk)[PS1][PS1][PS1] = ( OPT__REUSE_MEMORY ) ? NULL : new flu_type *[SonNBuff];
+#  ifdef GRAVITY
+   typedef real pot_type[PS1][PS1];
+   real (**pot_BufBk)[PS1][PS1]      = ( OPT__REUSE_MEMORY ) ? NULL : new pot_type *[SonNBuff];
 #  endif
 
    if ( SonNBuff != 0 )

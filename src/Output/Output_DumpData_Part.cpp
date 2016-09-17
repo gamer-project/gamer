@@ -90,6 +90,9 @@ void Output_DumpData_Part( const OptOutputPart_t Part, const bool BaseOnly, cons
       case OUTPUT_X  :                    Check_y = true;   Check_z = true;   break;
       case OUTPUT_Y  :  Check_x = true;                     Check_z = true;   break;
       case OUTPUT_Z  :  Check_x = true;   Check_y = true;                     break;
+
+      case OUTPUT_DIAG :
+      case OUTPUT_PART_NONE : break; // do nothing
    }
 
 

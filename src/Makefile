@@ -536,6 +536,7 @@ CXXWARN_FLAG := -w1
 else
 CXXWARN_FLAG := -Wextra -Wall -Wswitch -Wformat -Wchar-subscripts -Wparentheses -Wmultichar \
                 -Wtrigraphs -Wpointer-arith -Wcast-align -Wreturn-type -Wno-unused-function
+CXXWARN_FLAG += -Wno-unused-variable -Wno-unused-parameter -Wno-maybe-uninitialized -Wno-unused-but-set-variable
 endif
 
 ifeq "$(findstring OPENMP, $(SIMU_OPTION))" ""

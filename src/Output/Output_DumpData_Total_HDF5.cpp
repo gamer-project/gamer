@@ -1257,7 +1257,7 @@ void FillIn_KeyInfo( KeyInfo_t &KeyInfo )
       KeyInfo.AdvanceCounter[lv] = AdvanceCounter[lv];
    }
 
-   KeyInfo.CodeVersion  = "GAMER.1.0.beta5.4.0.t94-22";
+   KeyInfo.CodeVersion  = (char*)"GAMER.1.0.beta5.4.0.t94-22";
    KeyInfo.DumpWallTime = ctime( &CalTime );
    KeyInfo.DumpWallTime[ strlen(KeyInfo.DumpWallTime)-1 ] = '\0';  // remove the last character '\n'
 
