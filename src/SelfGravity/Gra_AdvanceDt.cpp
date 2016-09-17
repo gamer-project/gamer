@@ -3,11 +3,11 @@
 
 #ifdef GRAVITY
 
-
-
+#ifdef TIMING
 extern Timer_t *Timer_Gra_Advance[NLEVEL];
 extern Timer_t *Timer_GetBuf     [NLEVEL][8];
 extern Timer_t *Timer_Par_Collect[NLEVEL];
+#endif
 
 
 
@@ -168,12 +168,16 @@ void Gra_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, co
    {
 //    don't use the TIMING_FUNC macro since we don't want to call MPI_Barrier here even when OPT__TIMING_BARRIER is on
 //    --> otherwise OPT__TIMING_BALANCE will fail because all ranks are synchronized before and after Gra_AdvanceDt
+#     ifdef TIMING
       Timer_Par_Collect[lv]->Start();
+#     endif
 
       Par_CollectParticle2OneLevel_FreeMemory( lv, SibBufPatch, FaSibBufPatch );
       Prepare_PatchData_FreeParticleDensityArray( lv );
 
+#     ifdef TIMING
       Timer_Par_Collect[lv]->Stop( true );
+#     endif
    }
 #  endif
 

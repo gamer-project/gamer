@@ -21,9 +21,23 @@ static void BC_User( const double Time, const double x, const double y, const do
 void BC_User( const double Time, const double x, const double y, const double z, real *BVal )
 {
 
-   BVal[REAL] = (real)0.0;
-   BVal[IMAG] = (real)0.0;
-   BVal[DENS] = (real)0.0;
+#  if ( MODEL == HYDRO )
+// set density to negligibly small
+   BVal[DENS] = 1.0e-20;
+   BVal[MOMX] = 0.0;
+   BVal[MOMY] = 0.0;
+   BVal[MOMZ] = 0.0;
+   BVal[ENGY] = 1.0e-20;
+
+#  elif ( MODEL == ELBDM )
+// set wave function as zero everywhere
+   BVal[REAL] = 0.0;
+   BVal[IMAG] = 0.0;
+   BVal[DENS] = 0.0;
+
+#  else
+#  error : ERROR : unsupported model !!
+#  endif
 
 } // FUNCTION : BC_User
 

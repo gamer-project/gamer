@@ -37,10 +37,6 @@ void Init_TestProb()
    const char *TestProb = "Two particles orbit";
 
 // check
-# if ( MODEL != ELBDM )
-# error : ERROR : "MODEL != ELBDM" in the two particles orbit test !!
-# endif
-
 # ifndef PARTICLE
 # error : ERROR : "PARTICLE is NOT defined" in the two particles orbit test !!
 # endif
@@ -52,6 +48,22 @@ void Init_TestProb()
 # ifdef COMOVING
 # error : ERROR : "COMOVING must be OFF" in the two particles orbit test !!
 # endif
+
+   if ( OPT__BC_POT != BC_POT_ISOLATED )
+      Aux_Error( ERROR_INFO, "pleaset set parameter %s to %d in the %s test !!\n",
+                 "BC_POT_ISOLATED", BC_POT_ISOLATED, TestProb );
+
+   if ( amr->Par->NPar_Active_AllRank != 2 )
+      Aux_Error( ERROR_INFO, "please set parameter %s to %d in the %s test !!\n",
+                 "amr->Par->NPar_Active_AllRank", amr->Par->NPar_Active_AllRank, TestProb );
+
+   if ( amr->Par->Init != PAR_INIT_BY_FUNCTION )
+      Aux_Error( ERROR_INFO, "please set parameter %s to %d in the %s test !!\n",
+                 "amr->Par->Init", amr->Par->Init, TestProb );
+
+   if ( OPT__INIT != INIT_STARTOVER )
+      Aux_Error( ERROR_INFO, "please set parameter %s to %d in the %s test !!\n",
+                 "OPT__INIT", OPT__INIT, TestProb );
 
 
 // set the initialization and output functions
@@ -104,42 +116,6 @@ void Init_TestProb()
          Aux_Message( stdout, "NOTE : parameter %s is set to %13.7e in the %s test !!\n", "END_T", END_T, TestProb );
    }
 
-   if ( OPT__BC_POT != BC_POT_ISOLATED )
-   {
-      OPT__BC_POT = BC_POT_ISOLATED;
-
-      if ( MPI_Rank == 0 )
-         Aux_Message( stdout, "NOTE : parameter %s is reset to %d in the %s test !!\n",
-                      "BC_POT_ISOLATED", BC_POT_ISOLATED, TestProb );
-   }
-
-   if ( amr->Par->NPar != 2 )
-   {
-      amr->Par->NPar = 2;
-
-      if ( MPI_Rank == 0 )
-         Aux_Message( stdout, "NOTE : parameter %s is reset to %d in the %s test !!\n",
-                      "amr->Par->NPar", amr->Par->NPar, TestProb );
-   }
-
-   if ( amr->Par->Init != PAR_INIT_BY_FUNCTION )
-   {
-      amr->Par->Init = PAR_INIT_BY_FUNCTION;
-
-      if ( MPI_Rank == 0 )
-         Aux_Message( stdout, "NOTE : parameter %s is reset to %d in the %s test !!\n",
-                      "amr->Par->Init", amr->Par->Init, TestProb );
-   }
-
-   if ( OPT__INIT != INIT_STARTOVER )
-   {
-      OPT__INIT = INIT_STARTOVER;
-
-      if ( MPI_Rank == 0 )
-         Aux_Message( stdout, "NOTE : parameter %s is reset to %d in the %s test !!\n",
-                      "OPT__INIT", OPT__INIT, TestProb );
-   }
-
 } // FUNCTION : Init_TestProb
 
 
@@ -148,8 +124,10 @@ void Init_TestProb()
 // Function    :  Par_TestProbSol_TwoParOrbit
 // Description :  Initialize the background density field as zero for the two particles orbit test  
 //
-// Note        :  1. Currently particle test must work with the ELBDM model 
-//                2. Invoked by "ELBDM_Init_StartOver_AssignData"
+// Note        :  1. This test works for both ELBDM and HYDRO models
+//                   ELBDM : test external potential
+//                   HYDRO : test external acceleration
+//                2. Invoked by "ELBDM/Hydro_Init_StartOver_AssignData"
 //
 // Parameter   :  fluid : Fluid field to be initialized
 //                x/y/z : Target physical coordinates
@@ -160,10 +138,23 @@ void Init_TestProb()
 void Par_TestProbSol_TwoParOrbit( real *fluid, const double x, const double y, const double z, const double Time )
 {
 
+#  if ( MODEL == HYDRO )
+// set density to negligibly small
+   fluid[DENS] = 1.0e-20;
+   fluid[MOMX] = 0.0;
+   fluid[MOMY] = 0.0;
+   fluid[MOMZ] = 0.0;
+   fluid[ENGY] = 1.0e-22;
+
+#  elif ( MODEL == ELBDM )
 // set wave function as zero everywhere
    fluid[REAL] = 0.0;
    fluid[IMAG] = 0.0;
    fluid[DENS] = 0.0;
+
+#  else
+#  error : ERROR : unsupported model !!
+#  endif
 
 } // FUNCTION : Par_TestProbSol_TwoParOrbit
 

@@ -11,7 +11,7 @@ extern real TwoParOrbit_R;
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Par_Init_Function
+// Function    :  Par_Init_ByFunction
 // Description :  Initialize the particle position and velocity 
 //
 // Note        :  Invoked by "Init_GAMER"
@@ -20,14 +20,14 @@ extern real TwoParOrbit_R;
 //
 // Return      :  amr->Par->PosX/Y/Z, amr->Par->VelX/Y/Z
 //-------------------------------------------------------------------------------------------------------
-void Par_Init_Function()
+void Par_Init_ByFunction()
 {
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ...\n", __FUNCTION__ );
 
 
 // synchronize all particles to the physical time at the base level
-   for (long p=0; p<amr->Par->NPar; p++)  amr->Par->Time[p] = Time[0];
+   for (long p=0; p<amr->Par->NPar_Active_AllRank; p++)  amr->Par->Time[p] = Time[0];
 
 
    real *Mass   =   amr->Par->Mass;
@@ -38,7 +38,7 @@ void Par_Init_Function()
                          0.5*amr->BoxSize[1],
                          0.5*amr->BoxSize[2] };
 
-   for (int p=0; p<amr->Par->NPar; p++)
+   for (int p=0; p<amr->Par->NPar_Active_AllRank; p++)
    {
 //    set particle mass to extremely small values when using external potential so that self-gravity can be ignored
       Mass  [p] = ( OPT__EXTERNAL_POT ) ? TwoParOrbit_M*1.0e-20 : TwoParOrbit_M;
@@ -55,7 +55,7 @@ void Par_Init_Function()
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", __FUNCTION__ );
 
-} // FUNCTION : Par_Init_Function
+} // FUNCTION : Par_Init_ByFunction
 
 
 

@@ -286,18 +286,11 @@ void Aux_Check_Parameter()
       Aux_Message( stderr, "          everything is set correctly in both Input__Parameter and Makefile !!\n" );
    }
 
-   bool Flag = ( OPT__FLAG_RHO_GRADIENT  ||  OPT__FLAG_USER );
-#  if ( MODEL == HYDRO )
-   Flag |= OPT__FLAG_PRES_GRADIENT;
-#  endif
-#  if ( MODEL == ELBDM )
-   Flag |= OPT__FLAG_ENGY_DENSITY;
-#  endif
-   if ( OPT__CK_REFINE  &&  Flag )
+   if ( OPT__CK_REFINE )
       Aux_Message( stderr, "WARNING : currently the check \"%s\" only works with \"%s\" !!\n",
                    "OPT__CK_REFINE", "OPT__FLAG_RHO == 1" );
 
-   Flag = ( OPT__FLAG_RHO  ||  OPT__FLAG_RHO_GRADIENT  ||  OPT__FLAG_LOHNER_DENS  ||  OPT__FLAG_USER );
+   bool Flag = ( OPT__FLAG_RHO  ||  OPT__FLAG_RHO_GRADIENT  ||  OPT__FLAG_LOHNER_DENS  ||  OPT__FLAG_USER );
 #  if ( MODEL == HYDRO )
    Flag |= OPT__FLAG_PRES_GRADIENT;
    Flag |= OPT__FLAG_LOHNER_ENGY;
@@ -305,6 +298,10 @@ void Aux_Check_Parameter()
 #  endif
 #  if ( MODEL == ELBDM )
    Flag |= OPT__FLAG_ENGY_DENSITY;
+#  endif
+#  ifdef PARTICLE
+   Flag |= OPT__FLAG_NPAR_PATCH;
+   Flag |= OPT__FLAG_NPAR_CELL;
 #  endif
 
    if ( !Flag )
@@ -606,9 +603,16 @@ void Aux_Check_Parameter()
    if ( OPT__CK_NEGATIVE < 0  ||  OPT__CK_NEGATIVE > 3 )
       Aux_Error( ERROR_INFO, "unsupported parameter \"%s = %d\" !!\n", "OPT__CK_NEGATIVE", OPT__CK_NEGATIVE );
 
-   if ( OPT__CORR_UNPHY  &&  ( OPT__CORR_UNPHY_SCHEME != RSOLVER_ROE && OPT__CORR_UNPHY_SCHEME != RSOLVER_HLLC &&
-                               OPT__CORR_UNPHY_SCHEME != RSOLVER_HLLE )  )
-      Aux_Error( ERROR_INFO, "unsupported parameter \"%s = %d\" !!\n", "OPT__CORR_UNPHY_SCHEME", OPT__CORR_UNPHY_SCHEME );
+   if ( OPT__CORR_UNPHY )
+   {
+      if ( OPT__CORR_UNPHY_SCHEME != RSOLVER_ROE  &&  OPT__CORR_UNPHY_SCHEME != RSOLVER_HLLC  &&
+           OPT__CORR_UNPHY_SCHEME != RSOLVER_HLLE )
+         Aux_Error( ERROR_INFO, "unsupported parameter \"%s = %d\" !!\n", "OPT__CORR_UNPHY_SCHEME", OPT__CORR_UNPHY_SCHEME );
+
+#     if ( FLU_SCHEME == RTVD  ||  FLU_SCHEME == WAF )
+         Aux_Error( ERROR_INFO, "RTVD and WAF fluid schemes do not support the option \"OPT__CORR_UNPHY\" !!\n" );
+#     endif
+   }
 
 
 // warnings
