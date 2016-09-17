@@ -14,11 +14,11 @@ dh2=0.5*dh1
 set log x
 set xlabel 'r'
 set ylabel 'F_{num} / F_{ana}'
-plot 'Record__TwoParAcc' u ($8/dh1):21 w p notit
+plot 'Record__TwoParAcc' u ($8/dh0):21 w p notit
 
 # for test 3
 #set xlabel 'r'
 #set ylabel 'F_{num}'
-#plot 'Record__TwoParAcc' u ($8/dh1):18 w p notit
+#plot 'Record__TwoParAcc' u ($8/dh0):18 w p notit
 
 pause -1

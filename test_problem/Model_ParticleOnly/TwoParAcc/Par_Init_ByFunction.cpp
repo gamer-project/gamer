@@ -12,7 +12,7 @@ extern int  TwoParAcc_LogSample;
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Par_Init_Function
+// Function    :  Par_Init_ByFunction
 // Description :  Initialize the particle position and velocity 
 //
 // Note        :  Invoked by "Init_GAMER"
@@ -21,10 +21,10 @@ extern int  TwoParAcc_LogSample;
 //
 // Return      :  amr->Par->PosX/Y/Z, amr->Par->VelX/Y/Z
 //-------------------------------------------------------------------------------------------------------
-void Par_Init_Function()
+void Par_Init_ByFunction()
 {
 
-   for (long p=0; p<amr->Par->NPar; p++)  amr->Par->Time[p] = Time[0];
+   for (long p=0; p<amr->Par->NPar_Active_AllRank; p++)  amr->Par->Time[p] = Time[0];
 
 
    real *Mass   =   amr->Par->Mass;
@@ -51,8 +51,9 @@ void Par_Init_Function()
 
 
 // velocity must be initialized as zero since we use the updated velocity array to store the acceleration
-   for (int p=0; p<amr->Par->NPar; p++)
-   for (int d=0; d<3; d++)                Vel[d][p] = 0.0;
+   for (int p=0; p<amr->Par->NPar_Active_AllRank; p++)
+   for (int d=0; d<3; d++)
+      Vel[d][p] = 0.0;
 
 
 // set the particle position
@@ -103,7 +104,7 @@ void Par_Init_Function()
    } // switch ( TwoParAcc_Mode )
 // ============================================================================================================
 
-} // FUNCTION : Par_Init_Function
+} // FUNCTION : Par_Init_ByFunction
 
 
 

@@ -32,10 +32,10 @@ int  TwoParAcc_LogSample;     // true/false --> evenly sample in log/linear scal
 // Note        :  1. Please copy this file to "GAMER/src/Init/Init_TestProb.cpp"
 //                2. Test problem parameters can be set in the input file "Input__TestProb"
 //
-// Parameter   :  None 
+// Parameter   :  None
 //-------------------------------------------------------------------------------------------------------
 void Init_TestProb()
-{  
+{
 
    const char *TestProb = "Two particles force";
 
@@ -45,7 +45,11 @@ void Init_TestProb()
 # endif
 
 # ifndef PARTICLE
-# error : ERROR : "PARTICLE is NOT defined" in the two particles force test !!
+# error : ERROR : "PARTICLE must be ON" in the two particles force test !!
+# endif
+
+# ifndef STORE_PAR_ACC
+# error : ERROR : "STORE_PAR_ACC must be ON" in the two particles force test !!
 # endif
 
 # ifndef GRAVITY
@@ -63,6 +67,26 @@ void Init_TestProb()
 # ifdef TIMING
 # error : ERROR : "TIMING must be OFF" in the two particles force test !!
 # endif
+
+   if ( OPT__BC_POT != BC_POT_ISOLATED )
+      Aux_Error( ERROR_INFO, "pleaset set parameter %s to %d in the %s test !!\n",
+                 "BC_POT_ISOLATED", BC_POT_ISOLATED, TestProb );
+
+   if ( amr->Par->NPar_Active_AllRank != 2 )
+      Aux_Error( ERROR_INFO, "please set parameter %s to %d in the %s test !!\n",
+                 "amr->Par->NPar_Active_AllRank", amr->Par->NPar_Active_AllRank, TestProb );
+
+   if ( amr->Par->Init != PAR_INIT_BY_FUNCTION )
+      Aux_Error( ERROR_INFO, "please set parameter %s to %d in the %s test !!\n",
+                 "amr->Par->Init", amr->Par->Init, TestProb );
+
+   if ( OPT__INIT != INIT_STARTOVER )
+      Aux_Error( ERROR_INFO, "please set parameter %s to %d in the %s test !!\n",
+                 "OPT__INIT", OPT__INIT, TestProb );
+
+   if ( OPT__EXTERNAL_POT )
+      Aux_Error( ERROR_INFO, "please disable the parameter %s in the %s test !!\n",
+                 "OPT__EXTERNAL_POT", TestProb );
 
 
 // set the initialization and output functions
@@ -92,44 +116,6 @@ void Init_TestProb()
                                                                                              "Yes":"No"      );
       Aux_Message( stdout, "=============================================================================\n" );
       Aux_Message( stdout, "\n" );
-   }
-
-
-// set some default parameters
-   if ( amr->Par->NPar != 2 )
-   {
-      amr->Par->NPar = 2;
-
-      if ( MPI_Rank == 0 )
-         Aux_Message( stdout, "NOTE : parameter %s is reset to %d in the %s test !!\n",
-                      "amr->Par->NPar", amr->Par->NPar, TestProb );
-   }
-
-   if ( amr->Par->Init != PAR_INIT_BY_FUNCTION )
-   {
-      amr->Par->Init = PAR_INIT_BY_FUNCTION;
-
-      if ( MPI_Rank == 0 )
-         Aux_Message( stdout, "NOTE : parameter %s is reset to %d in the %s test !!\n",
-                      "amr->Par->Init", amr->Par->Init, TestProb );
-   }
-
-   if ( OPT__EXTERNAL_POT )
-   {
-      OPT__EXTERNAL_POT = false;
-
-      if ( MPI_Rank == 0 )
-         Aux_Message( stdout, "NOTE : option %s is not supported for the %s test and has been disabled !!\n",
-                      "OPT__EXTERNAL_POT", TestProb );
-   }
-
-   if ( OPT__INIT != INIT_STARTOVER )
-   {
-      OPT__INIT = INIT_STARTOVER;
-
-      if ( MPI_Rank == 0 )
-         Aux_Message( stdout, "NOTE : parameter %s is reset to %d in the %s test !!\n",
-                      "OPT__INIT", OPT__INIT, TestProb );
    }
 
 
@@ -225,7 +211,7 @@ void Init_TestProb()
       if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Test %10d ...\n", t );
 
 //    initialize particles
-      Par_Init_Function();
+      Par_Init_ByFunction();
 
       Par_FindHomePatch_Base( BaseP );
 
@@ -267,11 +253,12 @@ void Init_TestProb()
       Aux_Check();
 
 
-//    calculate the gravitational acceleration (set dt=1 and v(0)=0 so that v(dt)=v(0)+a(0)dt=a(0))
-//    (for KDK, we set dt=2.0 for the correction step, which will update vel by 0.5*dt=1.0 and will not update position)
+      const bool StoreAcc_Yes    = true;
+      const bool UseStoredAcc_No = false;
+
       for (int lv=0; lv<=MAX_LEVEL; lv++)
-         Par_UpdateParticle( lv, 0.0, 0.0, (amr->Par->Integ==PAR_INTEG_EULER)?1.0:2.0,
-                                           (amr->Par->Integ==PAR_INTEG_EULER)?PAR_UPSTEP_PRED:PAR_UPSTEP_CORR );
+         Par_UpdateParticle( lv, amr->PotSgTime[lv][ amr->PotSg[lv] ], NULL_REAL, PAR_UPSTEP_ACC_ONLY,
+                             StoreAcc_Yes, UseStoredAcc_No );
 
 
 //    output the results
@@ -282,13 +269,13 @@ void Init_TestProb()
       for (int PID=0; PID<amr->NPatchComma[0][1]; PID++)
       {
          if ( amr->patch[0][0][PID]->NPar != 0 )
-            amr->patch[0][0][PID]->RemoveParticle( NULL_INT, NULL, true );
+            amr->patch[0][0][PID]->RemoveParticle( NULL_INT, NULL, &amr->Par->NPar_Lv[0], true );
       }
 
       for (int PID0=0; PID0<amr->NPatchComma[1][1]; PID0+=8)
          amr->patch[0][0][ amr->patch[0][1][PID0]->father ]->son = -1;
 
-      for (int lv=1; lv<NLEVEL; lv++)  amr->Lvdelete( lv );
+      for (int lv=1; lv<NLEVEL; lv++)  amr->Lvdelete( lv, OPT__REUSE_MEMORY==2 );
 
    } // for (int t=0; t<TwoParAcc_NTest; t++)
 
@@ -306,9 +293,9 @@ void Init_TestProb()
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Par_TestProbSol_TwoParAcc
-// Description :  Initialize the background density field as zero for the two particles force test  
+// Description :  Initialize the background density field as zero for the two particles force test
 //
-// Note        :  1. Currently particle test must work with the ELBDM model 
+// Note        :  1. Currently particle test must work with the ELBDM model
 //                2. Invoked by "ELBDM_Init_StartOver_AssignData"
 //
 // Parameter   :  fluid : Fluid field to be initialized
@@ -330,8 +317,8 @@ void Par_TestProbSol_TwoParAcc( real *fluid, const double x, const double y, con
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  LoadTestProbParameter 
-// Description :  Load parameters for the test problem 
+// Function    :  LoadTestProbParameter
+// Description :  Load parameters for the test problem
 //
 // Note        :  This function is invoked by "Init_TestProb"
 //
@@ -391,11 +378,11 @@ void LoadTestProbParameter()
    {
       switch( TwoParAcc_Mode )
       {
-         case 1 : TwoParAcc_NTest = 800;   break;
-         case 2 : TwoParAcc_NTest = 300;   break;
-         case 3 : TwoParAcc_NTest = 800;   break;
+         case 1 : TwoParAcc_NTest = 200;   break;
+         case 2 : TwoParAcc_NTest = 100;   break;
+         case 3 : TwoParAcc_NTest = 200;   break;
          Aux_Error( ERROR_INFO, "unsupported TwoParAcc_Mode (%d) !!\n", TwoParAcc_Mode );
-      } 
+      }
 
       if ( MPI_Rank == 0 )  Aux_Message( stdout, "NOTE : parameter \"%s\" is set to the default value = %d\n",
                                          "TwoParAcc_NTest", TwoParAcc_NTest );
@@ -412,7 +399,7 @@ void LoadTestProbParameter()
    if ( TwoParAcc_MaxR <= 0.0 )
    {
 //    since the outmost base patches are not allowed to be refined for the isolated gravity solver,
-//    we set MaxR = 0.5*L-3*PatchSize to avoid putting the second particle on that region  
+//    we set MaxR = 0.5*L-3*PatchSize to avoid putting the second particle on that region
 //    TwoParAcc_MaxR = 0.5*amr->BoxSize[0] - 3.0*PS1*amr->dh[0];
 
 //    1.5 base level patch
@@ -430,7 +417,7 @@ void LoadTestProbParameter()
          case 2 : TwoParAcc_LogSample = 1;   break;
          case 3 : TwoParAcc_LogSample = 0;   break;
          Aux_Error( ERROR_INFO, "unsupported TwoParAcc_Mode (%d) !!\n", TwoParAcc_Mode );
-      } 
+      }
 
       if ( MPI_Rank == 0 )  Aux_Message( stdout, "NOTE : parameter \"%s\" is set to the default value = %d\n",
                                          "TwoParAcc_LogSample", TwoParAcc_LogSample );
@@ -463,7 +450,7 @@ void Output_TwoParAcc( FILE *FileOut, const int Count )
 
    real *Mass   =   amr->Par->Mass;
    real *Pos[3] = { amr->Par->PosX, amr->Par->PosY, amr->Par->PosZ };
-   real *Vel[3] = { amr->Par->VelX, amr->Par->VelY, amr->Par->VelZ };
+   real *Acc[3] = { amr->Par->AccX, amr->Par->AccY, amr->Par->AccZ };
 
    real dr[3], r, Acc_Num0[3], Acc_Num1[3], Acc_Ana[3], Acc_Num_Abs0, Acc_Num_Abs1;
    real Acc_Ana_Abs, Acc_Ratio0, Acc_Ratio1;
@@ -478,11 +465,10 @@ void Output_TwoParAcc( FILE *FileOut, const int Count )
 
    Acc_Ana_Abs = SQRT( SQR(Acc_Ana[0]) + SQR(Acc_Ana[1]) + SQR(Acc_Ana[2]) );
 
-// assuming the particles velocity are equal to their accelerations
    for (int d=0; d<3; d++)
    {
-      Acc_Num0[d] = Vel[d][0];
-      Acc_Num1[d] = Vel[d][1];
+      Acc_Num0[d] = Acc[d][0];
+      Acc_Num1[d] = Acc[d][1];
    }
 
    Acc_Num_Abs0 = SQRT( SQR(Acc_Num0[0]) + SQR(Acc_Num0[1]) + SQR(Acc_Num0[2]) );
@@ -495,7 +481,7 @@ void Output_TwoParAcc( FILE *FileOut, const int Count )
    fprintf( FileOut, "%10d %14.7e %14.7e %14.7e %14.7e %14.7e %14.7e %14.7e %14.7e %14.7e %14.7e",
             Count, Pos[0][0], Pos[1][0], Pos[2][0], Pos[0][1], Pos[1][1], Pos[2][1], r,
             Acc_Num0[0], Acc_Num1[0], Acc_Ana[0] );
-         
+
    fprintf( FileOut, " %14.7e %14.7e %14.7e %14.7e %14.7e %14.7e %14.7e %14.7e %14.7e %14.7e %14.7e\n",
             Acc_Num0[1], Acc_Num1[1], Acc_Ana[1], Acc_Num0[2], Acc_Num1[2], Acc_Ana[2],
             Acc_Num_Abs0, Acc_Num_Abs1, Acc_Ana_Abs, Acc_Ratio0, Acc_Ratio1 );
