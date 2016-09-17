@@ -55,6 +55,10 @@ void Init_TestProb()
 # error : ERROR : "PARTICLE is NOT defined" in the N particles force test !!
 # endif
 
+# ifndef STORE_PAR_ACC
+# error : ERROR : "STORE_PAR_ACC must be ON" in the two particles force test !!
+# endif
+
 # ifndef GRAVITY
 # error : ERROR : "GRAVITY must be ON" in the N particles force test !!
 # endif
@@ -70,6 +74,26 @@ void Init_TestProb()
 # ifdef TIMING
 # error : ERROR : "TIMING must be OFF" in the N particles force test !!
 # endif
+
+   if ( OPT__BC_POT != BC_POT_ISOLATED )
+      Aux_Error( ERROR_INFO, "pleaset set parameter %s to %d in the %s test !!\n",
+                 "BC_POT_ISOLATED", BC_POT_ISOLATED, TestProb );
+
+   if ( amr->Par->Init != PAR_INIT_BY_FUNCTION )
+      Aux_Error( ERROR_INFO, "please set parameter %s to %d in the %s test !!\n",
+                 "amr->Par->Init", amr->Par->Init, TestProb );
+
+   if ( OPT__INIT != INIT_STARTOVER )
+      Aux_Error( ERROR_INFO, "please set parameter %s to %d in the %s test !!\n",
+                 "OPT__INIT", OPT__INIT, TestProb );
+
+   if ( OPT__EXTERNAL_POT )
+      Aux_Error( ERROR_INFO, "please disable the parameter %s in the %s test !!\n",
+                 "OPT__EXTERNAL_POT", TestProb );
+
+   if ( !OPT__OUTPUT_TEST_ERROR )
+      Aux_Error( ERROR_INFO, "please turn on the option %s in the %s test !!\n",
+                 "OPT__OUTPUT_TEST_ERROR", OPT__OUTPUT_TEST_ERROR, TestProb );
 
 
 // set the initialization and output functions
@@ -124,42 +148,6 @@ void Init_TestProb()
 
       if ( MPI_Rank == 0 )
          Aux_Message( stdout, "NOTE : parameter %s is set to %13.7e in the %s test !!\n", "END_T", END_T, TestProb );
-   }
-
-   if ( !OPT__OUTPUT_TEST_ERROR )
-   {
-      OPT__OUTPUT_TEST_ERROR = true;
-
-      if ( MPI_Rank == 0 )
-         Aux_Message( stdout, "NOTE : parameter %s is reset to %d in the %s test !!\n", 
-                      "OPT__OUTPUT_TEST_ERROR", OPT__OUTPUT_TEST_ERROR, TestProb );
-   }
-
-   if ( amr->Par->Init != PAR_INIT_BY_FUNCTION )
-   {
-      amr->Par->Init = PAR_INIT_BY_FUNCTION;
-
-      if ( MPI_Rank == 0 )
-         Aux_Message( stdout, "NOTE : parameter %s is reset to %d in the %s test !!\n",
-                      "amr->Par->Init", amr->Par->Init, TestProb );
-   }
-
-   if ( OPT__EXTERNAL_POT )
-   {
-      OPT__EXTERNAL_POT = false;
-
-      if ( MPI_Rank == 0 )
-         Aux_Message( stdout, "NOTE : option %s is not supported for the %s test and has been disabled !!\n",
-                      "OPT__EXTERNAL_POT", TestProb );
-   }
-
-   if ( OPT__INIT != INIT_STARTOVER )
-   {
-      OPT__INIT = INIT_STARTOVER;
-
-      if ( MPI_Rank == 0 )
-         Aux_Message( stdout, "NOTE : parameter %s is reset to %d in the %s test !!\n",
-                      "OPT__INIT", OPT__INIT, TestProb );
    }
 
 } // FUNCTION : Init_TestProb
@@ -342,13 +330,15 @@ void Par_OutputError_NParAcc( const bool Useless )
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ...\n", __FUNCTION__ );
 
 
-// calculate the gravitational acceleration (set dt=1 and v(0)=0 so that v(dt)=v(0)+a(0)dt=a(0))
-// (for KDK, we set dt=2.0 for the correction step, which will update vel by 0.5*dt=1.0 and will not update position)
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Calculating particle acceleration with AMR ...\n" );
 
+
+   const bool StoreAcc_Yes    = true;
+   const bool UseStoredAcc_No = false;
+
    for (int lv=0; lv<=MAX_LEVEL; lv++)
-         Par_UpdateParticle( lv, 0.0, 0.0, (amr->Par->Integ==PAR_INTEG_EULER)?1.0:2.0,
-                                           (amr->Par->Integ==PAR_INTEG_EULER)?PAR_UPSTEP_PRED:PAR_UPSTEP_CORR );
+      Par_UpdateParticle( lv, amr->PotSgTime[lv][ amr->PotSg[lv] ], NULL_REAL, PAR_UPSTEP_ACC_ONLY,
+                          StoreAcc_Yes, UseStoredAcc_No );
 
 
 // calculate the analytical (direct N-body) force
@@ -360,21 +350,21 @@ void Par_OutputError_NParAcc( const bool Useless )
 
    real *Mass           =   amr->Par->Mass;
    real *Pos[3]         = { amr->Par->PosX, amr->Par->PosY, amr->Par->PosZ };
-   real *Acc[3]         = { amr->Par->VelX, amr->Par->VelY, amr->Par->VelZ };
+   real *Acc[3]         = { amr->Par->AccX, amr->Par->AccY, amr->Par->AccZ };
    double *AccAna[3]    = { NULL, NULL, NULL };
    double dr[3], r, _r, r2, r3, Fac, AccNumR, AccNumT, AccNumA, AccAnaR, AccAnaT, AccAnaA, AccProR;
 
-   for (int d=0; d<3; d++)    AccAna[d] = new double [amr->Par->NPar];
+   for (int d=0; d<3; d++)    AccAna[d] = new double [amr->Par->NPar_Active_AllRank];
    
    for (int d=0; d<3; d++)
-   for (int p=0; p<amr->Par->NPar; p++)   AccAna[d][p] = 0.0;
+   for (int p=0; p<amr->Par->NPar_Active_AllRank; p++)   AccAna[d][p] = 0.0;
 
    if ( NParAcc_ComprDirN )
    {
       if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Calculating direct N-body acceleration...\n" );
 
-      for (int p1=0; p1<amr->Par->NPar; p1++)
-      for (int p2=p1+1; p2<amr->Par->NPar; p2++)
+      for (int p1=0;    p1<amr->Par->NPar_Active_AllRank; p1++)
+      for (int p2=p1+1; p2<amr->Par->NPar_Active_AllRank; p2++)
       {
          for (int d=0; d<3; d++)    dr[d] = Pos[d][p2] - Pos[d][p1];
 
@@ -433,7 +423,7 @@ void Par_OutputError_NParAcc( const bool Useless )
             "[10]AccNumR", "[11]AccAnaR", "[12]AccProR", "[13]AccNumT", "[14]AccAnaT", "[15]AccNumA", "[16]AccAnaA" );
    fprintf( File, "\n" );
 
-   for (long p=0; p<amr->Par->NPar; p++)
+   for (long p=0; p<amr->Par->NPar_Active_AllRank; p++)
    {
       for (int d=0; d<3; d++)    dr[d] = Pos[d][p] - Cen[d];
 
@@ -457,7 +447,7 @@ void Par_OutputError_NParAcc( const bool Useless )
                AccNumR, AccAnaR, AccProR, AccNumT, AccAnaT, AccNumA, AccAnaA );
 
       fprintf( File, "\n" );
-   } // for (long p=0; p<amr->Par->NPar; p++)
+   } // for (long p=0; p<amr->Par->NPar_Active_AllRank; p++)
 
 
    fclose( File );

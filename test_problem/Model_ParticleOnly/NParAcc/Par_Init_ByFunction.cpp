@@ -19,8 +19,8 @@ static void RanVec_FixRadius( const double r, double RanVec[] );
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Par_Init_Function
-// Description :  Initialize the particle position and velocity 
+// Function    :  Par_Init_ByFunction
+// Description :  Initialize the particle position and velocity
 //
 // Note        :  Invoked by "Init_GAMER"
 //
@@ -28,13 +28,13 @@ static void RanVec_FixRadius( const double r, double RanVec[] );
 //
 // Return      :  amr->Par->Mass, amr->Par->PosX/Y/Z, amr->Par->VelX/Y/Z
 //-------------------------------------------------------------------------------------------------------
-void Par_Init_Function()
+void Par_Init_ByFunction()
 {
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ...\n", __FUNCTION__ );
 
 
-   for (long p=0; p<amr->Par->NPar; p++)  amr->Par->Time[p] = Time[0];
+   for (long p=0; p<amr->Par->NPar_Active_AllRank; p++)  amr->Par->Time[p] = Time[0];
 
 
    real *Mass   =   amr->Par->Mass;
@@ -58,7 +58,7 @@ void Par_Init_Function()
 
 
 // set the mass profile of the target model
-   switch ( NParAcc_Mode ) 
+   switch ( NParAcc_Mode )
    {
       case 1:  MassProf = MassProf_Plummer;   break;
       case 2:  MassProf = MassProf_Burkert;   break;
@@ -69,8 +69,8 @@ void Par_Init_Function()
 
 
 // determine the total enclosed mass within the maximum radius
-   TotM = MassProf( NParAcc_MaxR );   
-   ParM = TotM / amr->Par->NPar;
+   TotM = MassProf( NParAcc_MaxR );
+   ParM = TotM / amr->Par->NPar_Active_AllRank;
 
 
 // construct the mass profile table
@@ -87,7 +87,7 @@ void Par_Init_Function()
 
 
 // set particle attributes
-   for (int p=0; p<amr->Par->NPar; p++)
+   for (int p=0; p<amr->Par->NPar_Active_AllRank; p++)
    {
 //    mass
       Mass[p] = ParM;
@@ -117,7 +117,7 @@ void Par_Init_Function()
 
 //    velocity must be initialized as zero since we use the updated velocity array to store the acceleration
       for (int d=0; d<3; d++)    Vel[d][p] = 0.0;
-   } // for (int p=0; p<amr->Par->NPar; p++)
+   } // for (int p=0; p<amr->Par->NPar_Active_AllRank; p++)
 
    Aux_Message( stdout, "   Total enclosed mass = %13.7e\n", TotM );
    Aux_Message( stdout, "   Particle mass       = %13.7e\n", ParM );
@@ -128,11 +128,11 @@ void Par_Init_Function()
    delete [] Table_MassProf_r;
    delete [] Table_MassProf_M;
 // ============================================================================================================
- 
+
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", __FUNCTION__ );
 
-} // FUNCTION : Par_Init_Function
+} // FUNCTION : Par_Init_ByFunction
 
 
 
@@ -201,7 +201,7 @@ double MassProf_NFW( const double r )
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  RanVec_FixRadius
-// Description :  Compute a random 3D vector with a fixed radius 
+// Description :  Compute a random 3D vector with a fixed radius
 //
 // Note        :  Uniformly random sample in theta and phi does NOT give a uniformly random sample in 3D space
 //                --> Uniformly random sample in a 3D sphere and then normalize all vectors to the given radius
@@ -209,7 +209,7 @@ double MassProf_NFW( const double r )
 // Parameter   :  r        : Input radius
 //                RanVec   : Array to store the random 3D vector
 //
-// Return      :  RanVec 
+// Return      :  RanVec
 //-------------------------------------------------------------------------------------------------------
 void RanVec_FixRadius( const double r, double RanVec[] )
 {
