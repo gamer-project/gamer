@@ -181,6 +181,11 @@ struct SymConst_t
 #  if   ( POT_SCHEME == SOR )
    int    Pot_BlockSize_z;
    int    UsePSolver_10to14;
+   int    SOR_RhoShared;
+   int    SOR_CPotShared;
+   int    SOR_UseShuffle;
+   int    SOR_UsePadding;
+   int    SOR_ModReduction;
 #  elif ( POT_SCHEME == MG  )
    int    Pot_BlockSize_x;
 #  endif

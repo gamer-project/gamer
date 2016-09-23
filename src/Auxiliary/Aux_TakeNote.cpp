@@ -358,10 +358,38 @@ void Aux_TakeNote()
 
 #     if ( defined GRAVITY  &&  POT_SCHEME == SOR )
 #     ifdef USE_PSOLVER_10TO14
-      fprintf( Note, "USE_PSOLVER_10TO14        ON\n"  );
+      fprintf( Note, "USE_PSOLVER_10TO14        ON\n" );
 #     else
       fprintf( Note, "USE_PSOLVER_10TO14        OFF\n" );
 #     endif
+
+#     ifdef USE_PSOLVER_10TO14
+#     ifdef SOR_RHO_SHARED
+      fprintf( Note, "SOR_RHO_SHARED            ON\n" );
+#     else
+      fprintf( Note, "SOR_RHO_SHARED            OFF\n" );
+#     endif
+
+#     ifdef SOR_CPOT_SHARED
+      fprintf( Note, "SOR_CPOT_SHARED           ON\n" );
+#     else
+      fprintf( Note, "SOR_CPOT_SHARED           OFF\n" );
+#     endif
+
+#     ifdef SOR_USE_SHUFFLE
+      fprintf( Note, "SOR_USE_SHUFFLE           ON\n" );
+#     else
+      fprintf( Note, "SOR_USE_SHUFFLE           OFF\n" );
+#     endif
+
+#     ifdef SOR_USE_PADDING
+      fprintf( Note, "SOR_USE_PADDING           ON\n" );
+#     else
+      fprintf( Note, "SOR_USE_PADDING           OFF\n" );
+#     endif
+
+      fprintf( Note, "SOR_MOD_REDUCTION         %d\n",      SOR_MOD_REDUCTION       );
+#     endif // #ifdef USE_PSOLVER_10TO14
 
       fprintf( Note, "EXT_POT_NAUX_MAX          %d\n",      EXT_POT_NAUX_MAX        );
       fprintf( Note, "EXT_ACC_NAUX_MAX          %d\n",      EXT_ACC_NAUX_MAX        );

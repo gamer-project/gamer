@@ -74,7 +74,7 @@ Procedure for outputting new variables:
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2202)
+// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2203)
 // Description :  Output all simulation data in the HDF5 format, which can be used as a restart file
 //                or loaded by YT
 //
@@ -1215,7 +1215,7 @@ void FillIn_KeyInfo( KeyInfo_t &KeyInfo )
 
    const time_t CalTime  = time( NULL );   // calendar time
 
-   KeyInfo.FormatVersion = 2202;
+   KeyInfo.FormatVersion = 2203;
    KeyInfo.Model         = MODEL;
    KeyInfo.NLevel        = NLEVEL;
    KeyInfo.PatchSize     = PATCH_SIZE;
@@ -1510,9 +1510,31 @@ void FillIn_SymConst( SymConst_t &SymConst )
 #  else
    SymConst.UsePSolver_10to14    = 0;
 #  endif
+#  ifdef SOR_RHO_SHARED
+   SymConst.SOR_RhoShared        = 1;
+#  else
+   SymConst.SOR_RhoShared        = 0;
+#  endif
+#  ifdef SOR_CPOT_SHARED
+   SymConst.SOR_CPotShared       = 1;
+#  else
+   SymConst.SOR_CPotShared       = 0;
+#  endif
+#  ifdef SOR_USE_SHUFFLE
+   SymConst.SOR_UseShuffle       = 1;
+#  else
+   SymConst.SOR_UseShuffle       = 0;
+#  endif
+#  ifdef SOR_USE_PADDING
+   SymConst.SOR_UsePadding       = 1;
+#  else
+   SymConst.SOR_UsePadding       = 0;
+#  endif
+   SymConst.SOR_ModReduction     = SOR_MOD_REDUCTION;
+
 #  elif ( POT_SCHEME == MG  )
    SymConst.Pot_BlockSize_x      = POT_BLOCK_SIZE_X;
-#  endif
+#  endif // POT_SCHEME
 #  endif // #ifdef GRAVITY
 
 
@@ -2077,6 +2099,11 @@ void GetCompound_SymConst( hid_t &H5_TypeID )
 #  if   ( POT_SCHEME == SOR )
    H5Tinsert( H5_TypeID, "Pot_BlockSize_z",      HOFFSET(SymConst_t,Pot_BlockSize_z     ), H5T_NATIVE_INT    );
    H5Tinsert( H5_TypeID, "UsePSolver_10to14",    HOFFSET(SymConst_t,UsePSolver_10to14   ), H5T_NATIVE_INT    );
+   H5Tinsert( H5_TypeID, "SOR_RhoShared",        HOFFSET(SymConst_t,SOR_RhoShared       ), H5T_NATIVE_INT    );
+   H5Tinsert( H5_TypeID, "SOR_CPotShared",       HOFFSET(SymConst_t,SOR_CPotShared      ), H5T_NATIVE_INT    );
+   H5Tinsert( H5_TypeID, "SOR_UseShuffle",       HOFFSET(SymConst_t,SOR_UseShuffle      ), H5T_NATIVE_INT    );
+   H5Tinsert( H5_TypeID, "SOR_UsePadding",       HOFFSET(SymConst_t,SOR_UsePadding      ), H5T_NATIVE_INT    );
+   H5Tinsert( H5_TypeID, "SOR_ModReduction",     HOFFSET(SymConst_t,SOR_ModReduction    ), H5T_NATIVE_INT    );
 #  elif ( POT_SCHEME == MG  )
    H5Tinsert( H5_TypeID, "Pot_BlockSize_x",      HOFFSET(SymConst_t,Pot_BlockSize_x     ), H5T_NATIVE_INT    );
 #  endif

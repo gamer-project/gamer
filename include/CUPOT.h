@@ -115,7 +115,7 @@
 // --> does NOT work for FLOAT8 due to the lack of shared memory
 // --> does NOT work with FERMI GPUs because SOR_USE_PADDING requires POT_BLOCK_SIZE_Z == 8 but FERMI does NOT support that
 #  if (  ( GPU_ARCH == KEPLER || GPU_ARCH == MAXWELL || GPU_ARCH == PASCAL )  &&  !defined FLOAT8  )
-#     define SOR_USE_PADDING
+//#     define SOR_USE_PADDING
 #  endif
 #  endif // #if ( POT_GHOST_SIZE == 5 )
 
@@ -123,7 +123,7 @@
 #  define SOR_MOD_REDUCTION 2
 
 // load coarse-grid potential into shared memory for higher performance
-#  if ( !defined FLOAT8  &&  !defined SOR_USE_PADDING )
+#  if ( !defined FLOAT8  &&  !defined SOR_USE_PADDING  &&  GPU_ARCH != KEPLER )
 #     define SOR_CPOT_SHARED
 #  endif
 
