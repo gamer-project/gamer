@@ -87,13 +87,13 @@ SIMU_OPTION += -DPAR_NPASSIVE=0
 # (f) optimization and compilation options
 # ------------------------------------------------------------------------------------
 # GPU acceleration
-#SIMU_OPTION += -DGPU
+SIMU_OPTION += -DGPU
 
-# GPU architecture: FERMI/KEPLER
-#SIMU_OPTION += -DGPU_ARCH=KEPLER
+# GPU architecture: FERMI/KEPLER/MAXWELL/PASCAL
+SIMU_OPTION += -DGPU_ARCH=KEPLER
 
 # debug mode
-SIMU_OPTION += -DGAMER_DEBUG
+#SIMU_OPTION += -DGAMER_DEBUG
 
 # measure the elapsing wall-clock time of different parts of the program
 SIMU_OPTION += -DTIMING
@@ -566,10 +566,14 @@ endif
 # common flags
 NVCCFLAG_COM := -Xcompiler $(COMMONFLAG) -O3 -Xptxas -v #-Xopencc -OPT:Olimit=0
 
-ifeq      "$(findstring GPU_ARCH=FERMI, $(SIMU_OPTION))" "GPU_ARCH=FERMI"
+ifeq      "$(findstring GPU_ARCH=FERMI,   $(SIMU_OPTION))" "GPU_ARCH=FERMI"
    NVCCFLAG_COM += -gencode arch=compute_20,code=\"compute_20,sm_20\"
-else ifeq "$(findstring GPU_ARCH=KEPLER, $(SIMU_OPTION))" "GPU_ARCH=KEPLER"
+else ifeq "$(findstring GPU_ARCH=KEPLER,  $(SIMU_OPTION))" "GPU_ARCH=KEPLER"
    NVCCFLAG_COM += -gencode arch=compute_35,code=\"compute_35,sm_35\"
+else ifeq "$(findstring GPU_ARCH=MAXWELL, $(SIMU_OPTION))" "GPU_ARCH=MAXWELL"
+   NVCCFLAG_COM += -gencode arch=compute_52,code=\"compute_52,sm_52\"
+else ifeq "$(findstring GPU_ARCH=PASCAL,  $(SIMU_OPTION))" "GPU_ARCH=PASCAL"
+   NVCCFLAG_COM += -gencode arch=compute_61,code=\"compute_61,sm_61\"
 else ifeq "$(findstring GPU, $(SIMU_OPTION))" "GPU"
    $(error unknown GPU_ARCH !!)
 endif

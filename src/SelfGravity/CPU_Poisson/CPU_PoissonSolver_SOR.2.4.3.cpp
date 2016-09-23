@@ -6,7 +6,7 @@
 
 
 
-#define POT_NXT_INT  ( (POT_NXT-2)*2    )    // size of the array "Pot_Array_Int" 
+#define POT_NXT_INT  ( (POT_NXT-2)*2    )    // size of the array "Pot_Array_Int"
 #define POT_USELESS  ( POT_GHOST_SIZE%2 )    // # of useless cells in each side of the array "Pot_Array_Int"
 
 
@@ -16,9 +16,10 @@
 // Function    :  CPU_PoissonSolver_SOR
 // Description :  Use CPU to solve the Poisson equation by the SOR scheme
 //
-// Note        :  Reference : Numerical Recipes, Chapter 20.5
-
-// Parameter   :  Rho_Array      : Array to store the input density 
+// Note        :  1. Reference : Numerical Recipes, Chapter 20.5
+//                2. Typically, the number of iterations required to reach round-off errors is 20 ~ 25 (single precision)
+//
+// Parameter   :  Rho_Array      : Array to store the input density
 //                Pot_Array_In   : Array to store the input "coarse-grid" potential for interpolation
 //                Pot_Array_Out  : Array to store the output potential
 //                NPatchGroup    : Number of patch groups evaluated at a time
@@ -29,13 +30,13 @@
 //                Poi_Coeff      : Coefficient in front of the RHS in the Poisson eq.
 //                IntScheme      : Interpolation scheme for potential
 //                                 --> currently supported schemes include
-//                                     INT_CQUAD : conservative quadratic interpolation 
-//                                     INT_QUAD  : quadratic interpolation 
+//                                     INT_CQUAD : conservative quadratic interpolation
+//                                     INT_QUAD  : quadratic interpolation
 //-------------------------------------------------------------------------------------------------------
-void CPU_PoissonSolver_SOR( const real Rho_Array    [][RHO_NXT][RHO_NXT][RHO_NXT], 
-                            const real Pot_Array_In [][POT_NXT][POT_NXT][POT_NXT], 
-                                  real Pot_Array_Out[][GRA_NXT][GRA_NXT][GRA_NXT], 
-                            const int NPatchGroup, const real dh, const int Min_Iter, const int Max_Iter, 
+void CPU_PoissonSolver_SOR( const real Rho_Array    [][RHO_NXT][RHO_NXT][RHO_NXT],
+                            const real Pot_Array_In [][POT_NXT][POT_NXT][POT_NXT],
+                                  real Pot_Array_Out[][GRA_NXT][GRA_NXT][GRA_NXT],
+                            const int NPatchGroup, const real dh, const int Min_Iter, const int Max_Iter,
                             const real Omega, const real Poi_Coeff, const IntScheme_t IntScheme )
 {
 
@@ -116,44 +117,44 @@ void CPU_PoissonSolver_SOR( const real Rho_Array    [][RHO_NXT][RHO_NXT][RHO_NXT
                   C2_Slope[12] = Const_512 * ( Pot_Array_In[P][kp][jp][ip] - Pot_Array_In[P][kp][jp][im] );
 
 
-                  Pot_Array_Int[K ][J ][I ] = - C2_Slope[ 0] - C2_Slope[ 1] - C2_Slope[ 2] - C2_Slope[ 3] 
-                                              - C2_Slope[ 4] - C2_Slope[ 5] + C2_Slope[ 6] + C2_Slope[ 7] 
-                                              + C2_Slope[ 8] - C2_Slope[ 9] + C2_Slope[10] + C2_Slope[11] 
+                  Pot_Array_Int[K ][J ][I ] = - C2_Slope[ 0] - C2_Slope[ 1] - C2_Slope[ 2] - C2_Slope[ 3]
+                                              - C2_Slope[ 4] - C2_Slope[ 5] + C2_Slope[ 6] + C2_Slope[ 7]
+                                              + C2_Slope[ 8] - C2_Slope[ 9] + C2_Slope[10] + C2_Slope[11]
                                               - C2_Slope[12] + Pot_Array_In[P][k][j][i];
 
-                  Pot_Array_Int[K ][J ][Ip] = + C2_Slope[ 0] - C2_Slope[ 1] - C2_Slope[ 2] + C2_Slope[ 3] 
-                                              - C2_Slope[ 4] + C2_Slope[ 5] - C2_Slope[ 6] - C2_Slope[ 7] 
-                                              + C2_Slope[ 8] + C2_Slope[ 9] - C2_Slope[10] - C2_Slope[11] 
+                  Pot_Array_Int[K ][J ][Ip] = + C2_Slope[ 0] - C2_Slope[ 1] - C2_Slope[ 2] + C2_Slope[ 3]
+                                              - C2_Slope[ 4] + C2_Slope[ 5] - C2_Slope[ 6] - C2_Slope[ 7]
+                                              + C2_Slope[ 8] + C2_Slope[ 9] - C2_Slope[10] - C2_Slope[11]
                                               + C2_Slope[12] + Pot_Array_In[P][k][j][i];
 
-                  Pot_Array_Int[K ][Jp][I ] = - C2_Slope[ 0] + C2_Slope[ 1] - C2_Slope[ 2] - C2_Slope[ 3] 
-                                              + C2_Slope[ 4] + C2_Slope[ 5] - C2_Slope[ 6] + C2_Slope[ 7] 
-                                              - C2_Slope[ 8] + C2_Slope[ 9] - C2_Slope[10] - C2_Slope[11] 
+                  Pot_Array_Int[K ][Jp][I ] = - C2_Slope[ 0] + C2_Slope[ 1] - C2_Slope[ 2] - C2_Slope[ 3]
+                                              + C2_Slope[ 4] + C2_Slope[ 5] - C2_Slope[ 6] + C2_Slope[ 7]
+                                              - C2_Slope[ 8] + C2_Slope[ 9] - C2_Slope[10] - C2_Slope[11]
                                               + C2_Slope[12] + Pot_Array_In[P][k][j][i];
 
-                  Pot_Array_Int[K ][Jp][Ip] = + C2_Slope[ 0] + C2_Slope[ 1] - C2_Slope[ 2] + C2_Slope[ 3] 
-                                              + C2_Slope[ 4] - C2_Slope[ 5] + C2_Slope[ 6] - C2_Slope[ 7] 
-                                              - C2_Slope[ 8] - C2_Slope[ 9] + C2_Slope[10] + C2_Slope[11] 
+                  Pot_Array_Int[K ][Jp][Ip] = + C2_Slope[ 0] + C2_Slope[ 1] - C2_Slope[ 2] + C2_Slope[ 3]
+                                              + C2_Slope[ 4] - C2_Slope[ 5] + C2_Slope[ 6] - C2_Slope[ 7]
+                                              - C2_Slope[ 8] - C2_Slope[ 9] + C2_Slope[10] + C2_Slope[11]
                                               - C2_Slope[12] + Pot_Array_In[P][k][j][i];
 
-                  Pot_Array_Int[Kp][J ][I ] = - C2_Slope[ 0] - C2_Slope[ 1] + C2_Slope[ 2] + C2_Slope[ 3] 
-                                              + C2_Slope[ 4] - C2_Slope[ 5] + C2_Slope[ 6] - C2_Slope[ 7] 
-                                              - C2_Slope[ 8] + C2_Slope[ 9] - C2_Slope[10] - C2_Slope[11] 
+                  Pot_Array_Int[Kp][J ][I ] = - C2_Slope[ 0] - C2_Slope[ 1] + C2_Slope[ 2] + C2_Slope[ 3]
+                                              + C2_Slope[ 4] - C2_Slope[ 5] + C2_Slope[ 6] - C2_Slope[ 7]
+                                              - C2_Slope[ 8] + C2_Slope[ 9] - C2_Slope[10] - C2_Slope[11]
                                               + C2_Slope[12] + Pot_Array_In[P][k][j][i];
 
-                  Pot_Array_Int[Kp][J ][Ip] = + C2_Slope[ 0] - C2_Slope[ 1] + C2_Slope[ 2] - C2_Slope[ 3] 
-                                              + C2_Slope[ 4] + C2_Slope[ 5] - C2_Slope[ 6] + C2_Slope[ 7] 
-                                              - C2_Slope[ 8] - C2_Slope[ 9] + C2_Slope[10] + C2_Slope[11] 
+                  Pot_Array_Int[Kp][J ][Ip] = + C2_Slope[ 0] - C2_Slope[ 1] + C2_Slope[ 2] - C2_Slope[ 3]
+                                              + C2_Slope[ 4] + C2_Slope[ 5] - C2_Slope[ 6] + C2_Slope[ 7]
+                                              - C2_Slope[ 8] - C2_Slope[ 9] + C2_Slope[10] + C2_Slope[11]
                                               - C2_Slope[12] + Pot_Array_In[P][k][j][i];
 
-                  Pot_Array_Int[Kp][Jp][I ] = - C2_Slope[ 0] + C2_Slope[ 1] + C2_Slope[ 2] + C2_Slope[ 3] 
-                                              - C2_Slope[ 4] + C2_Slope[ 5] - C2_Slope[ 6] - C2_Slope[ 7] 
-                                              + C2_Slope[ 8] - C2_Slope[ 9] + C2_Slope[10] + C2_Slope[11] 
+                  Pot_Array_Int[Kp][Jp][I ] = - C2_Slope[ 0] + C2_Slope[ 1] + C2_Slope[ 2] + C2_Slope[ 3]
+                                              - C2_Slope[ 4] + C2_Slope[ 5] - C2_Slope[ 6] - C2_Slope[ 7]
+                                              + C2_Slope[ 8] - C2_Slope[ 9] + C2_Slope[10] + C2_Slope[11]
                                               - C2_Slope[12] + Pot_Array_In[P][k][j][i];
 
-                  Pot_Array_Int[Kp][Jp][Ip] = + C2_Slope[ 0] + C2_Slope[ 1] + C2_Slope[ 2] - C2_Slope[ 3] 
-                                              - C2_Slope[ 4] - C2_Slope[ 5] + C2_Slope[ 6] + C2_Slope[ 7] 
-                                              + C2_Slope[ 8] + C2_Slope[ 9] - C2_Slope[10] - C2_Slope[11] 
+                  Pot_Array_Int[Kp][Jp][Ip] = + C2_Slope[ 0] + C2_Slope[ 1] + C2_Slope[ 2] - C2_Slope[ 3]
+                                              - C2_Slope[ 4] - C2_Slope[ 5] + C2_Slope[ 6] + C2_Slope[ 7]
+                                              + C2_Slope[ 8] + C2_Slope[ 9] - C2_Slope[10] - C2_Slope[11]
                                               + C2_Slope[12] + Pot_Array_In[P][k][j][i];
                }}} // i, j, k
             }
@@ -210,23 +211,23 @@ void CPU_PoissonSolver_SOR( const real Rho_Array    [][RHO_NXT][RHO_NXT][RHO_NXT
             {
                i_start_k = i_start_pass;
 
-               for (int k=1+POT_USELESS; k<POT_NXT_INT-1-POT_USELESS; k++) 
-               {  
+               for (int k=1+POT_USELESS; k<POT_NXT_INT-1-POT_USELESS; k++)
+               {
                   i_start = i_start_k;
                   kp      = k+1;
                   km      = k-1;
                   kk      = k-1-POT_USELESS;
 
-                  for (int j=1+POT_USELESS; j<POT_NXT_INT-1-POT_USELESS; j++) 
-                  { 
-                     jp = j+1; 
-                     jm = j-1; 
+                  for (int j=1+POT_USELESS; j<POT_NXT_INT-1-POT_USELESS; j++)
+                  {
+                     jp = j+1;
+                     jm = j-1;
                      jj = j-1-POT_USELESS;
 
-                     for (int i=i_start; i<POT_NXT_INT-1-POT_USELESS; i+=2) 
-                     { 
-                        ip = i+1; 
-                        im = i-1; 
+                     for (int i=i_start; i<POT_NXT_INT-1-POT_USELESS; i+=2)
+                     {
+                        ip = i+1;
+                        im = i-1;
                         ii = i-1-POT_USELESS;
 
 //                      evaluate the residual of potential
@@ -247,21 +248,21 @@ void CPU_PoissonSolver_SOR( const real Rho_Array    [][RHO_NXT][RHO_NXT][RHO_NXT
 
                   } // j
 
-                  i_start_k = 3 - i_start_k + 2*POT_USELESS; 
+                  i_start_k = 3 - i_start_k + 2*POT_USELESS;
 
-               } // k 
+               } // k
 
                i_start_pass = 3 - i_start_pass + 2*POT_USELESS;
 
             } // for (int pass=0; pass<2; pass++)
 
 
-//          terminate the SOR iteration if the total residual begins to grow  
+//          terminate the SOR iteration if the total residual begins to grow
 //          we set the minimum number of iterations because usually the total residual will grow at the first step
             if (  Iter+1 >= Min_Iter  &&  Residual_Total > Residual_Total_Old )
             {
                Iter++;
-               break; 
+               break;
             }
 
             Residual_Total_Old = Residual_Total;
@@ -269,9 +270,9 @@ void CPU_PoissonSolver_SOR( const real Rho_Array    [][RHO_NXT][RHO_NXT][RHO_NXT
          } // for (int Iter=0; Iter<Max_Iter; Iter++)
 
 
-         if ( Iter == Max_Iter )    
-            Aux_Message( stderr, "WARNING : Rank = %2d, Patch %6d exceeds Max_Iter in the SOR iteration !!\n", 
-                         MPI_Rank, P );      
+         if ( Iter == Max_Iter )
+            Aux_Message( stderr, "WARNING : Rank = %2d, Patch %6d exceeds Max_Iter in the SOR iteration !!\n",
+                         MPI_Rank, P );
 
 
 //       c. copy data : Pot_Array_Int --> Pot_Array_Out

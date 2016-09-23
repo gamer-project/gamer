@@ -46,8 +46,9 @@ void CUAPI_DiagnoseDevice()
    else if ( DeviceProp.major == 2  &&  DeviceProp.minor == 1 )  NCorePerMP =  48;
    else if ( DeviceProp.major == 3 )                             NCorePerMP = 192;
    else if ( DeviceProp.major == 5 )                             NCorePerMP = 128;
+   else if ( DeviceProp.major == 6 )                             NCorePerMP =  64;
    else
-      fprintf( stderr, "WARNING : unable to determine then umber of cores per multiprocessor for version %d.%d ...\n",
+      fprintf( stderr, "WARNING : unable to determine the number of cores per multiprocessor for version %d.%d ...\n",
                DeviceProp.major, DeviceProp.minor );
 
 

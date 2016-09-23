@@ -1,1 +1,1 @@
-CUPOT_PoissonSolver_SOR_10to14cube.2.6.0.cu
+CUPOT_PoissonSolver_SOR_10to14cube.2.7.0.cu

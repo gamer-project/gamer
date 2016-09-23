@@ -8,7 +8,8 @@
 // *********************************************************************
 
 
-// include "Typedef" here since the header "GAMER.h" is NOT included in GPU solvers
+// include "Macro" and "Typedef" here since the header "GAMER.h" is NOT included in GPU solvers
+#include "Macro.h"
 #include "Typedef.h"
 
 
