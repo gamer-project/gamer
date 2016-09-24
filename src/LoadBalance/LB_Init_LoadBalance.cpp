@@ -121,8 +121,11 @@ void LB_Init_LoadBalance( const bool DuringRestart )
       LB_RecordExchangeDataPatchID( lv, false );
 
 //    3.2 list for exchanging restricted hydro data
+//        --> note that even when OPT__FIXUP_RESTRICT is off we still need to do data restriction during restart
+//            (strickly speaking, only when loading C binary output since HDF5 data store non-leaf patch data as well)
+//        --> also note that in GAMER_DEBUG mode we always do data restriction every global step
 #     ifndef GAMER_DEBUG
-      if ( OPT__FIXUP_RESTRICT )
+      if ( OPT__FIXUP_RESTRICT  ||  DuringRestart )
 #     endif
       LB_RecordExchangeRestrictDataPatchID( lv );
 
