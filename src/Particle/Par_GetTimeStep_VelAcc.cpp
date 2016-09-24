@@ -156,7 +156,7 @@ void Par_GetTimeStep_VelAcc( double dt[2], double dTime[2], int MinDtLv[2], real
 
 
 // verify the minimum time-step
-   if ( dt_min[0] == __FLT_MAX__  &&  amr->Par->NPar_Active_AllRank > 0 )
+   if ( dt_min[0] == __FLT_MAX__  &&  amr->Par->NPar_Active_AllRank > 0  &&  MPI_Rank == 0 )
    {
       Aux_Message( stderr, "WARNING : time-step estimation by particle velocity is incorrect (dt_min = %13.7e) !!\n", dt_min[0] );
       Aux_Message( stderr, "          --> Likely all particles have zero velocity\n" );
