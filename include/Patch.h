@@ -33,8 +33,11 @@ long  LB_Corner2Index( const int lv, const int Corner[], const Check_t Check );
 //                                  --> Currently it is used for Par->ImproveAcc only
 //                                  --> Currently it's useless for buffer patches
 //                rho_ext         : Density with RHOEXT_GHOST_SIZE (typically 2) ghost cells on each side
-//                                  --> Only allocated temporarily in the function Prepare_PatchData for storing
+//                                  --> Only allocated **temporarily** in the function Prepare_PatchData for storing
 //                                      particle mass density
+//                                      --> Also note that this array does NOT necessary store the correct particle mass density
+//                                          (especially for cells adjacent to the C-C and C-F boundaries) and thus should
+//                                          NOT be used outside Prepare_PatchData)
 //                                  --> Note that even with NGP mass assignment which requires no ghost zone we
 //                                      still allocate rho_ext as (PS1+RHOEXT_GHOST_SIZE)^3
 //                flux[6]         : Fluid flux (for the flux-correction operation)

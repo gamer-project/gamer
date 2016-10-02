@@ -46,6 +46,9 @@ bool ParDensArray_Initialized = false;
 //                   --> These arrays must be deallocated manually by calling Prepare_PatchData_FreeParticleDensityArray
 //                       --> If OPT__REUSE_MEMORY is on, Prepare_PatchData_FreeParticleDensityArray will NOT free memory
 //                           for rho_ext. Instead, rho_ext will be free'd together with other data arrays (e.g., fluid, pot)
+//                   --> Note that this array does NOT necessary store the correct particle mass density
+//                       (especially for cells adjacent to the C-C and C-F boundaries) and thus should NOT be used outside
+//                       Prepare_PatchData)
 //                   --> Before calling this function, one must call
 //                       (1) Par_CollectParticle2OneLevel --> to collect particles from higher levels and from other MPI ranks
 //                       (2) Prepare_PatchData_InitParticleDensityArray --> to initialize all rho_ext arrays

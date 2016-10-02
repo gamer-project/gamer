@@ -13,8 +13,14 @@
 
 cd $PBS_O_WORKDIR
 
-# for openmpi-1.6.0
-#mpirun -np 32 -npernode 2 ./Dizzy 1>>stdout 2>>stderr
+## for automatically restarting simulation from the last data dump
+##RESTART_LINE=$(sed -n '/\ OPT__INIT\ /=' Input__Parameter)
+##sed -i "${RESTART_LINE}s/1\ /2\ /" Input__Parameter
+##RESTART_FILE=$(ls Data* |tail -n 1)
+##ln -s $RESTART_FILE RESTART
 
-# for openmpi-1.4.3-qlc
+## for openmpi-1.6.0
+##mpirun -np 32 -npernode 2 ./Dizzy 1>>stdout 2>>stderr
+
+## for openmpi-1.4.3-qlc
 mpirun -np 32 -npernode 2 -hostfile $PBS_NODEFILE -bind-to-socket ./Dizzy 1>>stdout 2>>stderr
