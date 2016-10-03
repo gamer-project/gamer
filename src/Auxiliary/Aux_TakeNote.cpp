@@ -492,7 +492,7 @@ void Aux_TakeNote()
       fprintf( Note, "\n### All units marked with (*) assume h = %13.7e ###\n\n", HUBBLE0 );
 
       const double Current_Matter_Density = OMEGA_M0*3*SQR( 100.0*HUBBLE0*Const_km/Const_Mpc/Const_s )/( 8.0*M_PI*Const_NewtonG );
-      fprintf( Note, "\nrho_bg = current matter density = %20.14e Msun/kpc^3 (*)\n\n",
+      fprintf( Note, "rho_bg = current matter density = %20.14e Msun/kpc^3 (*)\n\n",
                Current_Matter_Density/(Const_Msun/CUBE(Const_kpc)) );
 
       fprintf( Note, "UNIT_L                    %20.14e Mpc/h\n",        UNIT_L/(Const_Mpc/HUBBLE0)    );

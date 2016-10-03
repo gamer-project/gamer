@@ -518,6 +518,28 @@ void Init_SetDefaultParameter()
    }
 
 
+// (19) physical time
+   for (int lv=0; lv<NLEVEL; lv++)
+   {
+#     ifdef COMOVING
+      Time     [lv] = A_INIT;          // will be overwritten during restart
+#     else
+      Time     [lv] = 0.0;             // will be overwritten during restart
+#     endif
+      Time_Prev[lv] = -__FLT_MAX__;    // initialized as arbitrary "negative" number to indicate that it has not been set yet
+
+      amr->FluSgTime[lv][   amr->FluSg[lv] ] = Time[lv];
+#     ifdef GRAVITY
+      amr->PotSgTime[lv][   amr->PotSg[lv] ] = Time[lv];
+#     endif
+
+      amr->FluSgTime[lv][ 1-amr->FluSg[lv] ] = Time_Prev[lv];
+#     ifdef GRAVITY
+      amr->PotSgTime[lv][ 1-amr->PotSg[lv] ] = Time_Prev[lv];
+#     endif
+   }
+
+
 
 // reset parameters and options which are either unsupported or useless
 // ------------------------------------------------------------------------------------------------------

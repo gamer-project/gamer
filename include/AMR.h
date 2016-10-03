@@ -114,11 +114,13 @@ struct AMR_t
          PotSg[lv] = FluSg[lv];
 #        endif
 
-         FluSgTime[lv][   FluSg[lv] ] = 0.0;          // must be initialized as zero
-         FluSgTime[lv][ 1-FluSg[lv] ] = -__FLT_MAX__; // initialized as negative for debug
+//       initialized as arbitrary "negative" number to indicate that they have not been set yet
+//       --> these will be reset by Initt_SetDefaultParameter and Init_Restart_*
+         FluSgTime[lv][   FluSg[lv] ] = -__FLT_MAX__;
+         FluSgTime[lv][ 1-FluSg[lv] ] = -__FLT_MAX__;
 #        ifdef GRAVITY
-         PotSgTime[lv][   PotSg[lv] ] = 0.0;          // must be initialized as zero
-         PotSgTime[lv][ 1-PotSg[lv] ] = -__FLT_MAX__; // initialized as negative for debug
+         PotSgTime[lv][   PotSg[lv] ] = -__FLT_MAX__;
+         PotSgTime[lv][ 1-PotSg[lv] ] = -__FLT_MAX__;
 #        endif
       }
 

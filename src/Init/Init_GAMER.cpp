@@ -43,20 +43,6 @@ void Init_GAMER( int *argc, char ***argv )
 #  endif
 
 
-#  ifdef COMOVING
-// initialize the scale factor for the cosmological simulation (it will be overwritten during restart)
-   for (int lv=0; lv<NLEVEL; lv++)
-   {
-      Time[lv] = A_INIT;
-
-      amr->FluSgTime[lv][ amr->FluSg[lv] ] = Time[lv];
-#     ifdef GRAVITY
-      amr->PotSgTime[lv][ amr->PotSg[lv] ] = Time[lv];
-#     endif
-   }
-#  endif // #ifdef COMOVING
-
-
 // initialize parameters for the parallelization (rectangular domain decomposition)
    Init_Parallelization();
 
@@ -91,18 +77,6 @@ void Init_GAMER( int *argc, char ***argv )
 
    CUAPI_Set_Default_GPU_Parameter( GPU_NSTREAM, FLU_GPU_NPGROUP, POT_GPU_NPGROUP );
 #  endif
-
-
-// initialize the array recording the previous physical time as an arbitrary "negative" number
-   for (int lv=0; lv<NLEVEL; lv++)
-   {
-      Time_Prev[lv] = -__FLT_MAX__;
-
-      amr->FluSgTime[lv][ 1-amr->FluSg[lv] ] = Time_Prev[lv];
-#     ifdef GRAVITY
-      amr->PotSgTime[lv][ 1-amr->PotSg[lv] ] = Time_Prev[lv];
-#     endif
-   }
 
 
 // verify the input parameters
