@@ -483,6 +483,44 @@ void Aux_TakeNote()
       fprintf( Note, "\n\n");
 
 
+//    record the parameters of code units
+      fprintf( Note, "Parameters of Code Units\n" );
+      fprintf( Note, "***********************************************************************************\n" );
+      fprintf( Note, "OPT__UNIT                 %d\n",                   OPT__UNIT      );
+      if ( OPT__UNIT ) {
+#     ifdef COMOVING
+      fprintf( Note, "\n### All units marked with (*) assume h = %13.7e ###\n\n", HUBBLE0 );
+
+      const double Current_Matter_Density = OMEGA_M0*3*SQR( 100.0*HUBBLE0*Const_km/Const_Mpc/Const_s )/( 8.0*M_PI*Const_NewtonG );
+      fprintf( Note, "\nrho_bg = current matter density = %20.14e Msun/kpc^3 (*)\n\n",
+               Current_Matter_Density/(Const_Msun/CUBE(Const_kpc)) );
+
+      fprintf( Note, "UNIT_L                    %20.14e Mpc/h\n",        UNIT_L/(Const_Mpc/HUBBLE0)    );
+      fprintf( Note, "                        = %20.14e cm       (*)\n", UNIT_L                        );
+      fprintf( Note, "UNIT_M                    %20.14e Msun/h\n",       UNIT_M/(Const_Msun/HUBBLE0)   );
+      fprintf( Note, "                        = %20.14e g        (*)\n", UNIT_M                        );
+      fprintf( Note, "UNIT_T                    %20.14e Gyr      (*)\n", UNIT_T/Const_Gyr              );
+      fprintf( Note, "                        = %20.14e s        (*)\n", UNIT_T                        );
+      fprintf( Note, "UNIT_V                    %20.14e km/s\n",         UNIT_V/(Const_km/Const_s)     );
+      fprintf( Note, "                        = %20.14e cm/s\n",         UNIT_V                        );
+      fprintf( Note, "UNIT_D                    %20.14e rho_bg   (*)\n", UNIT_D/Current_Matter_Density );
+      fprintf( Note, "                        = %20.14e g/cm^3   (*)\n", UNIT_D                        );
+      fprintf( Note, "UNIT_E (energy density)   %20.14e g/cm/s^2 (*)\n", UNIT_E                        ); }
+
+#     else
+
+      fprintf( Note, "UNIT_L                    %20.14e cm\n",           UNIT_L         );
+      fprintf( Note, "UNIT_M                    %20.14e g\n",            UNIT_M         );
+      fprintf( Note, "UNIT_T                    %20.14e s\n",            UNIT_T         );
+      fprintf( Note, "UNIT_V                    %20.14e cm/s\n",         UNIT_V         );
+      fprintf( Note, "UNIT_D                    %20.14e g/cm^3\n",       UNIT_D         );
+      fprintf( Note, "UNIT_E (energy density)   %20.14e g/cm/s^2\n",     UNIT_E         ); }
+#     endif // #ifdef COMOVING ... else ...
+
+      fprintf( Note, "***********************************************************************************\n" );
+      fprintf( Note, "\n\n");
+
+
 //    record the parameters of boundary condition
       fprintf( Note, "Parameters of Boundary Condition\n" );
       fprintf( Note, "***********************************************************************************\n" );
@@ -529,6 +567,7 @@ void Aux_TakeNote()
       fprintf( Note, "***********************************************************************************\n" );
       fprintf( Note, "A_INIT                    %13.7e\n",  A_INIT                  );
       fprintf( Note, "OMEGA_M0                  %13.7e\n",  OMEGA_M0                );
+      fprintf( Note, "HUBBLE0 (h)               %13.7e\n",  HUBBLE0                 );
       fprintf( Note, "***********************************************************************************\n" );
       fprintf( Note, "\n\n");
 #     endif
@@ -650,11 +689,26 @@ void Aux_TakeNote()
 #     warning : WAIT MHD !!!
 
 #     elif ( MODEL == ELBDM )
+      if ( OPT__UNIT ) {
+//    since the mass unit in cosmological simulation has the 1/h dependence, the actual ELBDM_MASS adopted in the
+//    cosmological simulation also depends on 1/h
+//    --> however, Planck constant also depends on 1/h^2 --> ELBDM_ETA depends on h
+//    --> since Planck constant is a real constant which cannot be changed, it's more appropriate to express
+//        ELBDM particle mass as ev/c^2*h (not ev/c^2/h), just like the length unit Mpc/h
+//    --> for a given simulation result, we can always reinterpret h to give different box size and ELBDM particle mass
+//    --> for example, the simulations results with h=1, m=1.0e-22 eV can be reinterpreted as h=0.5, m=5.0e-23 eV
+//    --> also note that this data reinterpretation is purely based on redefining basic units and is different from the
+//        scaling symmetry in ELBDM
 #     ifdef COMOVING
-      fprintf( Note, "ELBDM_MASS                %13.7e %s\n",  ELBDM_MASS, "h*ev/c^2" );
+      fprintf( Note, "ELBDM_MASS                %13.7e %s\n",  ELBDM_MASS*UNIT_M/(HUBBLE0*Const_eV/SQR(Const_c)), "h*ev/c^2" );
+      fprintf( Note, "                        = %13.7e %s (assuming h = %13.7e)\n",
+                                                               ELBDM_MASS*UNIT_M/(Const_eV/SQR(Const_c)), "ev/c^2", HUBBLE0 );
 #     else
-      fprintf( Note, "ELBDM_MASS                %13.7e\n",     ELBDM_MASS             );
+      fprintf( Note, "ELBDM_MASS                %13.7e %s\n",  ELBDM_MASS*UNIT_M/(Const_eV/SQR(Const_c)), "ev/c^2" );
 #     endif
+      }
+      else
+      fprintf( Note, "ELBDM_MASS                %13.7e\n",     ELBDM_MASS             );
       fprintf( Note, "ELBDM_PLANCK_CONST        %13.7e\n",     ELBDM_PLANCK_CONST     );
       fprintf( Note, "ELBDM_ETA                 %13.7e\n",     ELBDM_ETA              );
 #     ifdef QUARTIC_SELF_INTERACTION

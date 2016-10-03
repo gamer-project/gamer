@@ -467,6 +467,9 @@ void Aux_Check_Parameter()
    if ( OMEGA_M0 < 0.0  ||  OMEGA_M0 > 1.0 )
       Aux_Error( ERROR_INFO, "incorrect OMEGA_M0 (0.0 <= OMEGA_M0 <= 1.0) !!\n" );
 
+   if ( HUBBLE0 <= 0.0 )
+      Aux_Error( ERROR_INFO, "HUBBLE0 = %14.7e <= 0.0 !!\n", HUBBLE0 );
+
    if ( A_INIT > 1.0  ||  A_INIT < 0.0 )
       Aux_Error( ERROR_INFO, "incorrect A_INIT (0.0 <= A_INIT <= 1.0) !!\n" );
 

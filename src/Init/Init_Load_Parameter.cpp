@@ -11,7 +11,7 @@
 void Init_Load_Parameter() 
 {
 
-   if ( MPI_Rank == 0 )    Aux_Message( stdout, "Init_Load_Parameter ... \n" );
+   if ( MPI_Rank == 0 )    Aux_Message( stdout, "Init_Load_Parameter ...\n" );
 
 
    const char FileName[] = "Input__Parameter";
@@ -59,6 +59,29 @@ void Init_Load_Parameter()
 
    getline( &input_line, &len, File );
    sscanf( input_line, "%ld%s",  &END_STEP,                 string );
+
+   getline( &input_line, &len, File );
+
+
+// units
+   getline( &input_line, &len, File );
+   sscanf( input_line, "%d%s",   &temp_int,                 string );
+   OPT__UNIT = (bool)temp_int;
+
+   getline( &input_line, &len, File );
+   sscanf( input_line, "%lf%s",  &UNIT_L,                   string );
+
+   getline( &input_line, &len, File );
+   sscanf( input_line, "%lf%s",  &UNIT_M,                   string );
+
+   getline( &input_line, &len, File );
+   sscanf( input_line, "%lf%s",  &UNIT_T,                   string );
+
+   getline( &input_line, &len, File );
+   sscanf( input_line, "%lf%s",  &UNIT_V,                   string );
+
+   getline( &input_line, &len, File );
+   sscanf( input_line, "%lf%s",  &UNIT_D,                   string );
 
    getline( &input_line, &len, File );
 
@@ -158,7 +181,11 @@ void Init_Load_Parameter()
    getline( &input_line, &len, File );
    sscanf( input_line, "%lf%s",  &OMEGA_M0,                 string );
 
+   getline( &input_line, &len, File );
+   sscanf( input_line, "%lf%s",  &HUBBLE0,                  string );
+
 #  else
+   getline( &input_line, &len, File );
    getline( &input_line, &len, File );
    getline( &input_line, &len, File );
 #  endif

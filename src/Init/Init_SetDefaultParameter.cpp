@@ -221,15 +221,6 @@ void Init_SetDefaultParameter()
 
 // (7) ELBDM parameters
 #  if ( MODEL == ELBDM )
-#  ifdef COMOVING
-// overwrite the number of PLACNK_CONST in the cosmological simulations
-   ELBDM_PLANCK_CONST = 1.9171522742e-26;    // hbar / ( 100*ev*km*Mpc/c^2/s ), where c is the speed of light
-// ELBDM_PLANCK_CONST = 1.0/5.21607e25;
-
-   if ( MPI_Rank == 0 )
-      Aux_Message( stdout, "NOTE : Planck constant is reset to %13.7e in the comological simulations\n",
-                   ELBDM_PLANCK_CONST );
-#  endif
    ELBDM_ETA = ELBDM_MASS / ELBDM_PLANCK_CONST;
 
    if ( MPI_Rank == 0 )

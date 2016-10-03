@@ -29,6 +29,10 @@ void Init_GAMER( int *argc, char ***argv )
    Init_Load_Parameter();
 
 
+// set code units
+   Init_Unit();
+
+
 // set default parameters
    Init_SetDefaultParameter();
 
@@ -50,16 +54,6 @@ void Init_GAMER( int *argc, char ***argv )
       amr->PotSgTime[lv][ amr->PotSg[lv] ] = Time[lv];
 #     endif
    }
-
-
-// reset the gravitational constant
-#  ifdef GRAVITY
-   NEWTON_G = double( 3.0*OMEGA_M0/8.0/M_PI );
-
-   if ( MPI_Rank == 0 )
-      Aux_Message( stdout, "NOTE : gravitational constant is reset to %13.7e in the comological simulations\n",
-                   NEWTON_G );
-#  endif
 #  endif // #ifdef COMOVING
 
 

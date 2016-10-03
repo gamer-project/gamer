@@ -124,6 +124,7 @@ void Init_Parallelization();
 void Init_RecordBasePatch();
 void Init_Refine( const int lv );
 void Init_Restart();
+void Init_Unit();
 #ifdef SUPPORT_HDF5
 void Init_Restart_HDF5( const char *FileName );
 #endif

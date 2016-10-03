@@ -10,6 +10,13 @@
 1.0         END_T                   # end physical time of simulation (<0:default -> must be defined in Init_TestProb/RESTART)
 15          END_STEP                # end step of simulation (<0:default -> must be defined in Init_TestProb)
 
+0           OPT__UNIT               # specify code units in CGS --> must set 3 and only 3 basic units below ##USELESS FOR COMOVING##
+1.0         UNIT_L                  # length unit        (<=0: set to UNIT_V*UNIT_T or (UNIT_M/UNIT_D)^(1/3))
+1.0         UNIT_M                  # mass unit          (<=0: set to UNIT_D*UNIT_L^3)
+1.0         UNIT_T                  # time unit          (<=0: set to UNIT_L/UNIT_V)
+1.0         UNIT_V                  # velocity unit      (<=0: set to UNIT_L/UNIT_T)
+1.0         UNIT_D                  # mass density unit  (<=0: set to UNIT_M/UNIT_L^3)
+
 1           OPT__BC_FLU_XM          # fluid boundary condition at -x face : (1,2,3,4) -> (periodic, outflow, reflecting, user)
 1           OPT__BC_FLU_XP          # fluid boundary condition at +x face : (1,2,3,4) -> (periodic, outflow, reflecting, user)
 1           OPT__BC_FLU_YM          # fluid boundary condition at -y face : (1,2,3,4) -> (periodic, outflow, reflecting, user)
@@ -30,6 +37,7 @@
 
 0.01        A_INIT                  # initial scale factor ##COMOVING ONLY##
 0.3         OMEGA_M0                # omega matter at the present time ##COMOVING ONLY##
+0.70        HUBBLE0                 # dimensionless Hubble parameter (currently only for converting ELBDM_MASS to code units)
 
 -1.0        DT__FLUID               # time-step: fluid solver coefficient (<0:default)
 -1.0        DT__FLUID_INIT          # time-step: fluid solver coefficient at the first step (<0:default=DT__FLUID)
@@ -74,8 +82,8 @@
 2           OPT__WAF_LIMITER        # flux limiter in WAF (0/1/2/3/4) = (none/SuperBee/vanLeer/vanAlbada/MinBee)
 -1          OPT__CORR_UNPHY_SCHEME  # Riemann solver adopted by "OPT__CORR_UNPHY" (-1/1/2/3 -> default/Roe/HLLC/HLLE [Roe])
 
-1.0         ELBDM_MASS              # particle mass in ev/c^2 in ELBDM (h*ev/c^2 in COMOVING -> input particle_mass_in_ev / h)
-1.0         ELBDM_PLANCK_CONST      # Planck constant in ELBDM (ref: 6.582e-16 ev*sec) ##USELESS IN COMOVING##
+1.0         ELBDM_MASS              # particle mass in ev/c^2 in ELBDM (input unit is fixed even when OPT__UNIT or COMOVING is on)
+1.0         ELBDM_PLANCK_CONST      # Planck constant in ELBDM (will be overwritten if OPT__UNIT or COMOVING is on)
 1.0         ELBDM_LAMBDA            # quartic self-interaction coefficient ##USELESS if QUARTIC_SELF_INTERACTION is off##
 -1.0        ELBDM_TAYLOR3_COEFF     # 3rd Taylor expansion coefficient (<0:default [1.0/6.0]) ##USELESS if XXX_AUTO is on##
 1           ELBDM_TAYLOR3_AUTO      # Optimize ELBDM_TAYLOR3_COEFF automatically to minimize the damping at kmax
@@ -88,7 +96,7 @@
 0           OPT__RESET_FLUID        # reset fluid variables after each update --> edit "Flu_ResetByUser"
 1           OPT__CORR_UNPHY         # correct unphysical fluid solver results (for HYDRO only; for other models --> edit "Flu_Close")
 
-1.0e-5      NEWTON_G                # gravitational constant (<=0:default -> must be defined in Init_TestProb) ##USELESS IN COMOVING##
+1.0e-5      NEWTON_G                # gravitational constant (will be overwritten if OPT__UNIT or COMOVING is on)
 -1.0        SOR_OMEGA               # over-relaxation parameter for SOR (<0:default)
 -1          SOR_MAX_ITER            # maximum number of iterations for SOR (<0:default [60])
 -1          SOR_MIN_ITER            # minimum number of iterations for SOR (<0:default [10])
