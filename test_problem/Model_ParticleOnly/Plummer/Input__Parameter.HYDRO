@@ -10,6 +10,13 @@
 -1.0        END_T                   # end physical time of simulation (<0:default -> must be defined in Init_TestProb/RESTART)
 -1          END_STEP                # end step of simulation (<0:default -> must be defined in Init_TestProb)
 
+0           OPT__UNIT               # specify code units in CGS --> must set 3 and only 3 basic units below ##USELESS FOR COMOVING##
+1.0         UNIT_L                  # length unit        (<=0: set to UNIT_V*UNIT_T or (UNIT_M/UNIT_D)^(1/3))
+1.0         UNIT_M                  # mass unit          (<=0: set to UNIT_D*UNIT_L^3)
+1.0         UNIT_T                  # time unit          (<=0: set to UNIT_L/UNIT_V)
+1.0         UNIT_V                  # velocity unit      (<=0: set to UNIT_L/UNIT_T)
+1.0         UNIT_D                  # mass density unit  (<=0: set to UNIT_M/UNIT_L^3)
+
 2           OPT__BC_FLU_XM          # fluid boundary condition at -x face : (1,2,3,4) -> (periodic, outflow, reflecting, user)
 2           OPT__BC_FLU_XP          # fluid boundary condition at +x face : (1,2,3,4) -> (periodic, outflow, reflecting, user)
 2           OPT__BC_FLU_YM          # fluid boundary condition at -y face : (1,2,3,4) -> (periodic, outflow, reflecting, user)
@@ -30,6 +37,7 @@
 
 0.01        A_INIT                  # initial scale factor ##COMOVING ONLY##
 0.3         OMEGA_M0                # omega matter at the present time ##COMOVING ONLY##
+0.70        HUBBLE0                 # dimensionless Hubble parameter (currently only for converting ELBDM_MASS to code units)
 
 -1.0        DT__FLUID               # time-step: fluid solver coefficient (<0:default)
 -1.0        DT__FLUID_INIT          # time-step: fluid solver coefficient at the first step (<0:default=DT__FLUID)

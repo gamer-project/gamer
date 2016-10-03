@@ -4,9 +4,9 @@
 cp Init_* End_*                        ../../../src/Init/
 cp Flu_*                               ../../../src/Fluid/
 cp Par_*                               ../../../src/Particle/
-cp plot*.gpt                           ../../../bin/Run/
-cp Input__Flag_NParPatch               ../../../bin/Run/
-cp Input__TestProb                     ../../../bin/Run/
+cp plot*.gpt                           ../../../bin/run/
+cp Input__Flag_NParPatch               ../../../bin/run/
+cp Input__TestProb                     ../../../bin/run/
 
 cp Makefile.ELBDM                      ../../../src/Makefile
-cp Input__Parameter.ELBDM              ../../../bin/Run/Input__Parameter
+cp Input__Parameter.ELBDM              ../../../bin/run/Input__Parameter

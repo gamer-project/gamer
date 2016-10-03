@@ -23,7 +23,7 @@ SIMU_OPTION += -DPOT_SCHEME=SOR
 
 # store GRA_GHOST_SIZE ghost-zone potential for each patch on each side (in patch->pot_ext)
 # --> currently only for improving accuracy for particles around the patch boundaries (by Par->ImproveAcc)
-#SIMU_OPTION += -DSTORE_POT_GHOST
+SIMU_OPTION += -DSTORE_POT_GHOST
 
 # use unsplitting method to couple gravity to the target model (e.g., hydro, MHD, ELBDM)
 # --> must be off if GRAVITY is off
@@ -36,7 +36,7 @@ SIMU_OPTION += -DINDIVIDUAL_TIMESTEP
 #SIMU_OPTION += -DCOMOVING
 
 # particles (must work with GRAVITY; set MODEL=PAR_ONLY for particle-only simulations)
-#SIMU_OPTION += -DPARTICLE
+SIMU_OPTION += -DPARTICLE
 
 
 # (b) hydro options
@@ -87,10 +87,10 @@ SIMU_OPTION += -DPAR_NPASSIVE=0
 # (f) optimization and compilation options
 # ------------------------------------------------------------------------------------
 # GPU acceleration
-#SIMU_OPTION += -DGPU
+SIMU_OPTION += -DGPU
 
 # GPU architecture: FERMI/KEPLER/MAXWELL/PASCAL
-#SIMU_OPTION += -DGPU_ARCH=KEPLER
+SIMU_OPTION += -DGPU_ARCH=KEPLER
 
 # debug mode
 #SIMU_OPTION += -DGAMER_DEBUG
