@@ -1463,6 +1463,15 @@ void Check_InputPara( const char *FileName )
    LoadField( "EndT",                    &RS.EndT,                    SID, TID, NonFatal, &RT.EndT,                     1, NonFatal );
    LoadField( "EndStep",                 &RS.EndStep,                 SID, TID, NonFatal, &RT.EndStep,                  1, NonFatal );
 
+// code units
+   LoadField( "Opt__Unit",               &RS.Opt__Unit,               SID, TID, NonFatal, &RT.Opt__Unit,                1, NonFatal );
+   LoadField( "Unit_L",                  &RS.Unit_L,                  SID, TID, NonFatal, &RT.Unit_L,                   1, NonFatal );
+   LoadField( "Unit_M",                  &RS.Unit_M,                  SID, TID, NonFatal, &RT.Unit_M,                   1, NonFatal );
+   LoadField( "Unit_T",                  &RS.Unit_T,                  SID, TID, NonFatal, &RT.Unit_T,                   1, NonFatal );
+   LoadField( "Unit_V",                  &RS.Unit_V,                  SID, TID, NonFatal, &RT.Unit_V,                   1, NonFatal );
+   LoadField( "Unit_D",                  &RS.Unit_D,                  SID, TID, NonFatal, &RT.Unit_D,                   1, NonFatal );
+   LoadField( "Unit_E",                  &RS.Unit_E,                  SID, TID, NonFatal, &RT.Unit_E,                   1, NonFatal );
+
 // boundary condition
    LoadField( "Opt__BC_Flu",              RS.Opt__BC_Flu,             SID, TID, NonFatal,  RT.Opt__BC_Flu,              6, NonFatal );
 #  ifdef GRAVITY
@@ -1486,6 +1495,7 @@ void Check_InputPara( const char *FileName )
 #  ifdef COMOVING
    LoadField( "A_Init",                  &RS.A_Init,                  SID, TID, NonFatal, &RT.A_Init,                   1, NonFatal );
    LoadField( "OmegaM0",                 &RS.OmegaM0,                 SID, TID, NonFatal, &RT.OmegaM0,                  1, NonFatal );
+   LoadField( "Hubble0",                 &RS.Hubble0,                 SID, TID, NonFatal, &RT.Hubble0,                  1, NonFatal );
 #  endif
 
 // time-step determination

@@ -785,7 +785,7 @@ void Load_Parameter_After_2000( FILE *File, const int FormatVersion, int &NLv_Re
    bool   opt__adaptive_dt, opt__dt_user, opt__flag_rho, opt__flag_rho_gradient, opt__flag_pres_gradient;
    bool   opt__flag_engy_density, opt__flag_user, opt__fixup_flux, opt__fixup_restrict, opt__overlap_mpi;
    bool   opt__gra_p5_gradient, opt__int_time, opt__output_test_error, opt__output_base, opt__output_pot;
-   bool   opt__output_baseps, opt__timing_balance, opt__int_phase, opt__corr_unphy;
+   bool   opt__output_baseps, opt__timing_balance, opt__int_phase, opt__corr_unphy, opt__unit;
    int    nx0_tot[3], mpi_nrank, mpi_nrank_x[3], omp_nthread, regrid_count, opt__output_par_dens;
    int    flag_buffer_size, max_level, opt__lr_limiter, opt__waf_limiter, flu_gpu_npgroup, gpu_nstream;
    int    sor_max_iter, sor_min_iter, mg_max_iter, mg_npre_smooth, mg_npost_smooth, pot_gpu_npgroup;
@@ -795,7 +795,8 @@ void Load_Parameter_After_2000( FILE *File, const int FormatVersion, int &NLv_Re
    long   end_step;
    double lb_wli_max, gamma, minmod_coeff, ep_coeff, elbdm_mass, elbdm_planck_const, newton_g, sor_omega;
    double mg_tolerated_error, output_part_x, output_part_y, output_part_z;
-   double box_size, end_t, omega_m0, dt__fluid, dt__gravity, dt__phase, dt__max_delta_a, output_dt;
+   double box_size, end_t, omega_m0, dt__fluid, dt__gravity, dt__phase, dt__max_delta_a, output_dt, hubble0;
+   double unit_l, unit_m, unit_t, unit_v, unit_d, unit_e;
 
    fseek( File, HeaderOffset_Parameter, SEEK_SET );
 
@@ -868,6 +869,14 @@ void Load_Parameter_After_2000( FILE *File, const int FormatVersion, int &NLv_Re
    fread( &opt__corr_unphy,            sizeof(bool),                    1,             File );
    fread( &opt__corr_unphy_scheme,     sizeof(int),                     1,             File );
    fread( &opt__output_par_dens,       sizeof(int),                     1,             File );
+   fread( &hubble0,                    sizeof(double),                  1,             File );
+   fread( &opt__unit,                  sizeof(bool),                    1,             File );
+   fread( &unit_l,                     sizeof(double),                  1,             File );
+   fread( &unit_m,                     sizeof(double),                  1,             File );
+   fread( &unit_t,                     sizeof(double),                  1,             File );
+   fread( &unit_v,                     sizeof(double),                  1,             File );
+   fread( &unit_d,                     sizeof(double),                  1,             File );
+   fread( &unit_e,                     sizeof(double),                  1,             File );
 
 
 // set some default parameters
@@ -1340,6 +1349,10 @@ void Load_Parameter_After_2000( FILE *File, const int FormatVersion, int &NLv_Re
 #     ifdef COMOVING
       CompareVar( "OMEGA_M0",                omega_m0,                     OMEGA_M0,                  NonFatal );
       CompareVar( "DT__MAX_DELTA_A",         dt__max_delta_a,              DT__MAX_DELTA_A,           NonFatal );
+      if ( FormatVersion >= 2110 )
+      CompareVar( "HUBBLE0",                 hubble0,                      HUBBLE0,                   NonFatal );
+      else if ( MPI_Rank == 0 )
+      Aux_Message( stderr, "WARNING : restart file does not have the parameter \"%s\" !!\n", "HUBBLE0" );
 #     endif
 
 #     ifdef LOAD_BALANCE
@@ -1395,6 +1408,16 @@ void Load_Parameter_After_2000( FILE *File, const int FormatVersion, int &NLv_Re
       CompareVar( "OPT__OUTPUT_PAR_DENS",    opt__output_par_dens,    (int)OPT__OUTPUT_PAR_DENS,      NonFatal );
 #     endif
 
+      if ( FormatVersion >= 2110 ) {
+      CompareVar( "OPT__UNIT",               opt__unit,                    OPT__UNIT,                 NonFatal );
+      CompareVar( "UNIT_L",                  unit_l,                       UNIT_L,                    NonFatal );
+      CompareVar( "UNIT_M",                  unit_m,                       UNIT_M,                    NonFatal );
+      CompareVar( "UNIT_T",                  unit_t,                       UNIT_T,                    NonFatal );
+      CompareVar( "UNIT_V",                  unit_v,                       UNIT_V,                    NonFatal );
+      CompareVar( "UNIT_D",                  unit_d,                       UNIT_D,                    NonFatal );
+      CompareVar( "UNIT_E",                  unit_e,                       UNIT_E,                    NonFatal ); }
+      else if ( MPI_Rank == 0 )
+      Aux_Message( stderr, "WARNING : restart file does not have any information about the code units !!\n" );
 
       Aux_Message( stdout, "   Checking loaded parameters ... done\n" );
 

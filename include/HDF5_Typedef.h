@@ -21,12 +21,16 @@ datatypes in the HDF5 format
 
 
 
+
 //-------------------------------------------------------------------------------------------------------
 // Structure   :  KeyInfo_t
 // Description :  Data structure for outputting the key simulation information
 //
 // Note        :  1. Some variables have different names from their internal names in the code
 //                   --> Make the output file more readable
+//                2. In general, this data structure stores simulation information that cannot be determined
+//                   from the input parameter files (i.e., Input__* files)
+//                   --> Therefore, this data structure is crucial for the restart process
 //-------------------------------------------------------------------------------------------------------
 struct KeyInfo_t
 {
@@ -272,6 +276,15 @@ struct InputPara_t
    double EndT;
    long   EndStep;
 
+// code units
+   int    Opt__Unit;
+   double Unit_L;
+   double Unit_M;
+   double Unit_T;
+   double Unit_V;
+   double Unit_D;
+   double Unit_E;
+
 // boundary condition
    int    Opt__BC_Flu[6];
 #  ifdef GRAVITY
@@ -295,6 +308,7 @@ struct InputPara_t
 #  ifdef COMOVING
    double A_Init;
    double OmegaM0;
+   double Hubble0;
 #  endif
 
 // time-step determination

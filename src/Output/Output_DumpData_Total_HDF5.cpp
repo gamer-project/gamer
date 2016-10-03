@@ -74,7 +74,7 @@ Procedure for outputting new variables:
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2203)
+// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2210)
 // Description :  Output all simulation data in the HDF5 format, which can be used as a restart file
 //                or loaded by YT
 //
@@ -113,6 +113,8 @@ Procedure for outputting new variables:
 //                            particles in the same patch is not specified
 //
 // Parameter   :  FileName : Name of the output file
+//
+// Revision    :  2210 : 2016/10/03 --> output HUBBLE0, OPT__UNIT, UNIT_L/M/T/V/D/E
 //-------------------------------------------------------------------------------------------------------
 void Output_DumpData_Total_HDF5( const char *FileName )
 {
@@ -1215,7 +1217,7 @@ void FillIn_KeyInfo( KeyInfo_t &KeyInfo )
 
    const time_t CalTime  = time( NULL );   // calendar time
 
-   KeyInfo.FormatVersion = 2203;
+   KeyInfo.FormatVersion = 2210;
    KeyInfo.Model         = MODEL;
    KeyInfo.NLevel        = NLEVEL;
    KeyInfo.PatchSize     = PATCH_SIZE;
@@ -1654,6 +1656,15 @@ void FillIn_InputPara( InputPara_t &InputPara )
    InputPara.EndT                    = END_T;
    InputPara.EndStep                 = END_STEP;
 
+// code units
+   InputPara.Opt__Unit               = OPT__UNIT;
+   InputPara.Unit_L                  = UNIT_L;
+   InputPara.Unit_M                  = UNIT_M;
+   InputPara.Unit_T                  = UNIT_T;
+   InputPara.Unit_V                  = UNIT_V;
+   InputPara.Unit_D                  = UNIT_D;
+   InputPara.Unit_E                  = UNIT_E;
+
 // boundary condition
    for (int t=0; t<6; t++)
    InputPara.Opt__BC_Flu[t]          = OPT__BC_FLU[t];
@@ -1678,6 +1689,7 @@ void FillIn_InputPara( InputPara_t &InputPara )
 #  ifdef COMOVING
    InputPara.A_Init                  = A_INIT;
    InputPara.OmegaM0                 = OMEGA_M0;
+   InputPara.Hubble0                 = HUBBLE0;
 #  endif
 
 // time-step determination
@@ -2202,6 +2214,15 @@ void GetCompound_InputPara( hid_t &H5_TypeID )
    H5Tinsert( H5_TypeID, "EndT",                    HOFFSET(InputPara_t,EndT                   ), H5T_NATIVE_DOUBLE  );
    H5Tinsert( H5_TypeID, "EndStep",                 HOFFSET(InputPara_t,EndStep                ), H5T_NATIVE_LONG    );
 
+// code units
+   H5Tinsert( H5_TypeID, "Opt__Unit",               HOFFSET(InputPara_t,Opt__Unit              ), H5T_NATIVE_INT     );
+   H5Tinsert( H5_TypeID, "Unit_L",                  HOFFSET(InputPara_t,Unit_L                 ), H5T_NATIVE_DOUBLE  );
+   H5Tinsert( H5_TypeID, "Unit_M",                  HOFFSET(InputPara_t,Unit_M                 ), H5T_NATIVE_DOUBLE  );
+   H5Tinsert( H5_TypeID, "Unit_T",                  HOFFSET(InputPara_t,Unit_T                 ), H5T_NATIVE_DOUBLE  );
+   H5Tinsert( H5_TypeID, "Unit_V",                  HOFFSET(InputPara_t,Unit_V                 ), H5T_NATIVE_DOUBLE  );
+   H5Tinsert( H5_TypeID, "Unit_D",                  HOFFSET(InputPara_t,Unit_D                 ), H5T_NATIVE_DOUBLE  );
+   H5Tinsert( H5_TypeID, "Unit_E",                  HOFFSET(InputPara_t,Unit_E                 ), H5T_NATIVE_DOUBLE  );
+
 // boundary condition
    H5Tinsert( H5_TypeID, "Opt__BC_Flu",             HOFFSET(InputPara_t,Opt__BC_Flu            ), H5_TypeID_Arr_6Int );
 #  ifdef GRAVITY
@@ -2225,6 +2246,7 @@ void GetCompound_InputPara( hid_t &H5_TypeID )
 #  ifdef COMOVING
    H5Tinsert( H5_TypeID, "A_Init",                  HOFFSET(InputPara_t,A_Init                 ), H5T_NATIVE_DOUBLE  );
    H5Tinsert( H5_TypeID, "OmegaM0",                 HOFFSET(InputPara_t,OmegaM0                ), H5T_NATIVE_DOUBLE  );
+   H5Tinsert( H5_TypeID, "Hubble0",                 HOFFSET(InputPara_t,Hubble0                ), H5T_NATIVE_DOUBLE  );
 #  endif
 
 // time-step determination

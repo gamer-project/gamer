@@ -17,10 +17,15 @@ Procedure for outputting new variables:
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Output_DumpData_Total
+// Function    :  Output_DumpData_Total (FormatVersion = 2110)
 // Description :  Output all simulation data in the binary form, which can be used as a restart file
 //
+// Note        :  1. This output format is deprecated and is mainly used for debugging only
+//                   --> Use HDF5 format instead (OPT__OUTPUT_TOTAL = 1)
+//
 // Parameter   :  FileName : Name of the output file
+//
+// Revision    :  2110 : 2016/10/03 --> output HUBBLE0, OPT__UNIT, UNIT_L/M/T/V/D/E
 //-------------------------------------------------------------------------------------------------------
 void Output_DumpData_Total( const char *FileName )
 {
@@ -160,7 +165,7 @@ void Output_DumpData_Total( const char *FileName )
 
 //    a. output the information of data format
 //    =================================================================================================
-      const long FormatVersion = 2101;
+      const long FormatVersion = 2110;
       const long CheckCode     = 123456789;
 
       fseek( File, HeaderOffset_Format, SEEK_SET );
@@ -540,6 +545,7 @@ void Output_DumpData_Total( const char *FileName )
 
 #     ifndef COMOVING
       const double OMEGA_M0                = NULL_REAL;
+      const double HUBBLE0                 = NULL_REAL;
       const double DT__MAX_DELTA_A         = NULL_REAL;
 #     endif
 
@@ -673,6 +679,14 @@ void Output_DumpData_Total( const char *FileName )
       fwrite( &OPT__CORR_UNPHY,           sizeof(bool),                    1,             File );
       fwrite( &opt__corr_unphy_scheme,    sizeof(int),                     1,             File );
       fwrite( &opt__output_par_dens,      sizeof(int),                     1,             File );
+      fwrite( &HUBBLE0,                   sizeof(double),                  1,             File );
+      fwrite( &OPT__UNIT,                 sizeof(bool),                    1,             File );
+      fwrite( &UNIT_L,                    sizeof(double),                  1,             File );
+      fwrite( &UNIT_M,                    sizeof(double),                  1,             File );
+      fwrite( &UNIT_T,                    sizeof(double),                  1,             File );
+      fwrite( &UNIT_V,                    sizeof(double),                  1,             File );
+      fwrite( &UNIT_D,                    sizeof(double),                  1,             File );
+      fwrite( &UNIT_E,                    sizeof(double),                  1,             File );
 
 
 //    e. output the simulation information
