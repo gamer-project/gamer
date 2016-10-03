@@ -69,7 +69,7 @@ OptLohnerForm_t   OPT__FLAG_LOHNER_FORM;
 // (2-1) fluid solver in different models
 #if   ( MODEL == HYDRO )
 double         FlagTable_PresGradient[NLEVEL-1];
-double         GAMMA, MINMOD_COEFF, EP_COEFF;
+double         GAMMA, MINMOD_COEFF, EP_COEFF, MOLECULAR_WEIGHT;
 LR_Limiter_t   OPT__LR_LIMITER;
 WAF_Limiter_t  OPT__WAF_LIMITER;
 OptRSolver_t   OPT__CORR_UNPHY_SCHEME;

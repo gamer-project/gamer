@@ -74,6 +74,7 @@
 0.1         LB_INPUT__WLI_MAX       # threshold for redistributing patches at all levels ##LOAD_BALANCE ONLY##
 
 1.666666667 GAMMA                   # ratio of specific heats (adiabatic index)
+0.6         MOLECULAR_WEIGHT        # mean molecular weight (currently it's only for calculating temperature in post-processing)
 2.00        MINMOD_COEFF            # coefficient of the generalized MinMod limiter [1.0~2.0]
 1.25        EP_COEFF                # coefficient of the extrema-preserving limiter
 4           OPT__LR_LIMITER         # slope limiter for the data reconstruction in MHM/MHM_RP/CTU schemes

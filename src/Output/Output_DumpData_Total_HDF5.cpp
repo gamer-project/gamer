@@ -114,7 +114,7 @@ Procedure for outputting new variables:
 //
 // Parameter   :  FileName : Name of the output file
 //
-// Revision    :  2210 : 2016/10/03 --> output HUBBLE0, OPT__UNIT, UNIT_L/M/T/V/D/E
+// Revision    :  2210 : 2016/10/03 --> output HUBBLE0, OPT__UNIT, UNIT_L/M/T/V/D/E, MOLECULAR_WEIGHT
 //-------------------------------------------------------------------------------------------------------
 void Output_DumpData_Total_HDF5( const char *FileName )
 {
@@ -1752,6 +1752,7 @@ void FillIn_InputPara( InputPara_t &InputPara )
 // fluid solvers in HYDRO
 #  if ( MODEL == HYDRO )
    InputPara.Gamma                   = GAMMA;
+   InputPara.MolecularWeight         = MOLECULAR_WEIGHT;
    InputPara.MinMod_Coeff            = MINMOD_COEFF;
    InputPara.EP_Coeff                = EP_COEFF;
    InputPara.Opt__LR_Limiter         = OPT__LR_LIMITER;
@@ -2310,6 +2311,7 @@ void GetCompound_InputPara( hid_t &H5_TypeID )
 // fluid solvers in HYDRO
 #  if ( MODEL == HYDRO )
    H5Tinsert( H5_TypeID, "Gamma",                   HOFFSET(InputPara_t,Gamma                  ), H5T_NATIVE_DOUBLE  );
+   H5Tinsert( H5_TypeID, "MolecularWeight",         HOFFSET(InputPara_t,MolecularWeight        ), H5T_NATIVE_DOUBLE  );
    H5Tinsert( H5_TypeID, "MinMod_Coeff",            HOFFSET(InputPara_t,MinMod_Coeff           ), H5T_NATIVE_DOUBLE  );
    H5Tinsert( H5_TypeID, "EP_Coeff",                HOFFSET(InputPara_t,EP_Coeff               ), H5T_NATIVE_DOUBLE  );
    H5Tinsert( H5_TypeID, "Opt__LR_Limiter",         HOFFSET(InputPara_t,Opt__LR_Limiter        ), H5T_NATIVE_INT     );

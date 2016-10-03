@@ -356,6 +356,9 @@ void Init_Load_Parameter()
    sscanf( input_line, "%lf%s",  &GAMMA,                    string );
 
    getline( &input_line, &len, File );
+   sscanf( input_line, "%lf%s",  &MOLECULAR_WEIGHT,         string );
+
+   getline( &input_line, &len, File );
    sscanf( input_line, "%lf%s",  &MINMOD_COEFF,             string );
 
    getline( &input_line, &len, File );
@@ -380,6 +383,7 @@ void Init_Load_Parameter()
 #  warning : WAIT MHD !!!
 
 #  else
+   getline( &input_line, &len, File );
    getline( &input_line, &len, File );
    getline( &input_line, &len, File );
    getline( &input_line, &len, File );

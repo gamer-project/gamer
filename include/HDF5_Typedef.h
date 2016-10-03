@@ -371,6 +371,7 @@ struct InputPara_t
 // fluid solvers in HYDRO
 #  if ( MODEL == HYDRO )
    double Gamma;
+   double MolecularWeight;
    double MinMod_Coeff;
    double EP_Coeff;
    int    Opt__LR_Limiter;

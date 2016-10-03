@@ -25,7 +25,7 @@ Procedure for outputting new variables:
 //
 // Parameter   :  FileName : Name of the output file
 //
-// Revision    :  2110 : 2016/10/03 --> output HUBBLE0, OPT__UNIT, UNIT_L/M/T/V/D/E
+// Revision    :  2110 : 2016/10/03 --> output HUBBLE0, OPT__UNIT, UNIT_L/M/T/V/D/E, MOLECULAR_WEIGHT
 //-------------------------------------------------------------------------------------------------------
 void Output_DumpData_Total( const char *FileName )
 {
@@ -589,6 +589,7 @@ void Output_DumpData_Total( const char *FileName )
 #     endif
       const bool   OPT__FLAG_PRES_GRADIENT = NULL_BOOL;
       const double GAMMA                   = NULL_REAL;
+      const double MOLECULAR_WEIGHT        = NULL_REAL;
       const double MINMOD_COEFF            = NULL_REAL;
       const double EP_COEFF                = NULL_REAL;
       const int    opt__lr_limiter         = NULL_INT;
@@ -687,6 +688,7 @@ void Output_DumpData_Total( const char *FileName )
       fwrite( &UNIT_V,                    sizeof(double),                  1,             File );
       fwrite( &UNIT_D,                    sizeof(double),                  1,             File );
       fwrite( &UNIT_E,                    sizeof(double),                  1,             File );
+      fwrite( &MOLECULAR_WEIGHT,          sizeof(double),                  1,             File );
 
 
 //    e. output the simulation information

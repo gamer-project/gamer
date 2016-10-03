@@ -617,6 +617,12 @@ void Aux_Check_Parameter()
 #     endif
    }
 
+   if ( GAMMA <= 0.0 )
+      Aux_Error( ERROR_INFO, "GAMMA = %14.7e <= 0.0 !!\n", GAMMA );
+
+   if ( MOLECULAR_WEIGHT <= 0.0 )
+      Aux_Error( ERROR_INFO, "MOLECULAR_WEIGHT = %14.7e <= 0.0 !!\n", MOLECULAR_WEIGHT );
+
 
 // warnings
 // ------------------------------

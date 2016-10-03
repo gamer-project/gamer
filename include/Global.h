@@ -76,7 +76,7 @@ extern OptLohnerForm_t   OPT__FLAG_LOHNER_FORM;
 // (2-1) fluid solver in different models
 #if   ( MODEL == HYDRO )
 extern double     FlagTable_PresGradient[NLEVEL-1];   // refinement criterion of pressure gradient
-extern double     GAMMA, MINMOD_COEFF, EP_COEFF;
+extern double     GAMMA, MINMOD_COEFF, EP_COEFF, MOLECULAR_WEIGHT;
 extern LR_Limiter_t  OPT__LR_LIMITER;
 extern WAF_Limiter_t OPT__WAF_LIMITER;
 extern OptRSolver_t  OPT__CORR_UNPHY_SCHEME;

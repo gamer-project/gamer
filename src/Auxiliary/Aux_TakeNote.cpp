@@ -665,6 +665,7 @@ void Aux_TakeNote()
       fprintf( Note, "***********************************************************************************\n" );
 #     if   ( MODEL == HYDRO )
       fprintf( Note, "GAMMA                     %13.7e\n",  GAMMA                   );
+      fprintf( Note, "MOLECULAR_WEIGHT          %13.7e\n",  MOLECULAR_WEIGHT        );
       fprintf( Note, "MINMOD_COEFF              %13.7e\n",  MINMOD_COEFF            );
       fprintf( Note, "EP_COEFF                  %13.7e\n",  EP_COEFF                );
       fprintf( Note, "OPT__LR_LIMITER           %s\n",      ( OPT__LR_LIMITER == VANLEER           ) ? "VANLEER"    :

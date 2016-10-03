@@ -794,7 +794,7 @@ void Load_Parameter_After_2000( FILE *File, const int FormatVersion, int &NLv_Re
    int    opt__output_total, opt__output_part, opt__output_mode, output_step, opt__corr_unphy_scheme;
    long   end_step;
    double lb_wli_max, gamma, minmod_coeff, ep_coeff, elbdm_mass, elbdm_planck_const, newton_g, sor_omega;
-   double mg_tolerated_error, output_part_x, output_part_y, output_part_z;
+   double mg_tolerated_error, output_part_x, output_part_y, output_part_z, molecular_weight;
    double box_size, end_t, omega_m0, dt__fluid, dt__gravity, dt__phase, dt__max_delta_a, output_dt, hubble0;
    double unit_l, unit_m, unit_t, unit_v, unit_d, unit_e;
 
@@ -877,6 +877,7 @@ void Load_Parameter_After_2000( FILE *File, const int FormatVersion, int &NLv_Re
    fread( &unit_v,                     sizeof(double),                  1,             File );
    fread( &unit_d,                     sizeof(double),                  1,             File );
    fread( &unit_e,                     sizeof(double),                  1,             File );
+   fread( &molecular_weight,           sizeof(double),                  1,             File );
 
 
 // set some default parameters
@@ -1384,6 +1385,10 @@ void Load_Parameter_After_2000( FILE *File, const int FormatVersion, int &NLv_Re
 #     if   ( MODEL == HYDRO )
       CompareVar( "OPT__FLAG_PRES_GRADIENT", opt__flag_pres_gradient,      OPT__FLAG_PRES_GRADIENT,   NonFatal );
       CompareVar( "GAMMA",                   gamma,                        GAMMA,                     NonFatal );
+      if ( FormatVersion >= 2110 )
+      CompareVar( "MOLECULAR_WEIGHT",        molecular_weight,             MOLECULAR_WEIGHT,          NonFatal );
+      else
+      Aux_Message( stderr, "WARNING : restart file does not have the parameter \"%s\" !!\n", "MOLECULAR_WEIGHT" );
       CompareVar( "MINMOD_COEFF",            minmod_coeff,                 MINMOD_COEFF,              NonFatal );
       CompareVar( "EP_COEFF",                ep_coeff,                     EP_COEFF,                  NonFatal );
       CompareVar( "OPT__LR_LIMITER",         opt__lr_limiter,         (int)OPT__LR_LIMITER,           NonFatal );
