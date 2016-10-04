@@ -6,11 +6,13 @@
 static void Load_Parameter_Before_2000( FILE *File, const int FormatVersion, bool &DataOrder_xyzv,
                                         bool &LoadPot, int *NX0_Tot, double &BoxSize, double &Gamma, double &ELBDM_Eta,
                                         const long HeaderOffset_Makefile, const long HeaderOffset_Constant,
-                                        const long HeaderOffset_Parameter );
+                                        const long HeaderOffset_Parameter, bool &Comoving );
 static void Load_Parameter_After_2000( FILE *File, const int FormatVersion, bool &LoadPot, int *NX0_Tot,
                                        double &BoxSize, double &Gamma, double &ELBDM_Eta,
                                        const long HeaderOffset_Makefile, const long HeaderOffset_Constant,
-                                       const long HeaderOffset_Parameter, bool &LoadPar, int &LoadParDens, int &NParVarOut );
+                                       const long HeaderOffset_Parameter, bool &LoadPar, int &LoadParDens, int &NParVarOut,
+                                       double &H0, bool &WithUnit, double &Unit_L, double &Unit_M, double &Unit_T, double &Unit_V,
+                                       double &Unit_D, double &Unit_E, double &Mu, bool &Comoving );
 static void CompareVar( const char *VarName, const bool   RestartVar, const bool   RuntimeVar, const bool Fatal );
 static void CompareVar( const char *VarName, const int    RestartVar, const int    RuntimeVar, const bool Fatal );
 static void CompareVar( const char *VarName, const long   RestartVar, const long   RuntimeVar, const bool Fatal );
@@ -192,17 +194,21 @@ void LoadData()
    if ( FormatVersion < 2000 )
    {
       Load_Parameter_Before_2000( File, FormatVersion, DataOrder_xyzv, OutputPot, NX0_TOT, BoxSize, GAMMA, ELBDM_ETA,
-                                  HeaderOffset_Makefile, HeaderOffset_Constant, HeaderOffset_Parameter );
+                                  HeaderOffset_Makefile, HeaderOffset_Constant, HeaderOffset_Parameter, Comoving );
       OutputPar     = false;
       OutputParDens = 0;
       NParVarOut    = -1;
+
+      WithUnit      = false;
+      H0 = Unit_L = Unit_M = Unit_T = Unit_V = Unit_D = Unit_E = MU = WRONG;
    }
 
    else
    {
       Load_Parameter_After_2000( File, FormatVersion, OutputPot, NX0_TOT, BoxSize, GAMMA, ELBDM_ETA,
                                  HeaderOffset_Makefile, HeaderOffset_Constant, HeaderOffset_Parameter,
-                                 OutputPar, OutputParDens, NParVarOut );
+                                 OutputPar, OutputParDens, NParVarOut,
+                                 H0, WithUnit, Unit_L, Unit_M, Unit_T, Unit_V, Unit_D, Unit_E, MU, Comoving );
       DataOrder_xyzv = false;
    }
 
@@ -319,6 +325,12 @@ void LoadData()
 
 // allocate memory for the array "BaseP"
    Init_MemAllocate();
+
+// set the conversion factor for calculating temperature
+// --> recalculate it only when Convert2Temp < 0.0 so that it does NOT overwrite the value of -u
+#  if ( MODEL == HYDRO  ||  MODEL == MHD )
+   if ( OutputTemp  &&  Convert2Temp < 0.0 )    Init_Convert2Temp();
+#  endif
 
 // verify the input parameters
    if ( MyRank == 0 )   CheckParameter();
@@ -590,13 +602,14 @@ void LoadData()
 //                Gamma          : ratio of specific heat
 //                ELBDM_Eta      : Particle mass / Planck constant in ELBDM
 //                HeaderOffset_X : Offsets of different headers
+//                Comoving       : true --> cosmological simulations in comoving coords.
 //
-// Return      :  DataOrder_xyzv, LoadPot, NX0_Tot, BoxSize, Gamma, ELBDM_Eta
+// Return      :  DataOrder_xyzv, LoadPot, NX0_Tot, BoxSize, Gamma, ELBDM_Eta, Comoving
 //-------------------------------------------------------------------------------------------------------
 void Load_Parameter_Before_2000( FILE *File, const int FormatVersion, bool &DataOrder_xyzv,
                                  bool &LoadPot, int *NX0_Tot, double &BoxSize, double &Gamma, double &ELBDM_Eta,
                                  const long HeaderOffset_Makefile, const long HeaderOffset_Constant,
-                                 const long HeaderOffset_Parameter )
+                                 const long HeaderOffset_Parameter, bool &Comoving )
 {
 
    if ( MyRank == 0 )   Aux_Message( stdout, "   Loading simulation parameters ...\n" );
@@ -796,6 +809,7 @@ void Load_Parameter_Before_2000( FILE *File, const int FormatVersion, bool &Data
    for (int d=0; d<3; d++)
    NX0_Tot[d]     = nx0_tot[d];
    ELBDM_Eta      = elbdm_mass / planck_const;
+   Comoving       = comoving;
 
 } // FUNCTION : Load_Parameter_Before_2000
 
@@ -818,13 +832,21 @@ void Load_Parameter_Before_2000( FILE *File, const int FormatVersion, bool &Data
 //                LoadPar        : Whether or not the RESTART file stores the particle data
 //                LoadParDens    : Whether or not the RESTART file stores the particle density on grids
 //                NParVarOut     : Number of particles attributes stored (for checking the file size only)
+//                H0             : Dimensionless Hubble parameter
+//                WithUnit       : true --> restart file stores the code units
+//                Unit_*         : Code units
+//                Mu             : Mean molecular weight
+//                Comoving       : true --> cosmological simulations in comoving coords.
 //
-// Return      :  DataOrder_xyzv, LoadPot, NX0_Tot, BoxSize, Gamma, ELBDM_Eta, LoadPar, LoadParDens, NParVarOut
+// Return      :  DataOrder_xyzv, LoadPot, NX0_Tot, BoxSize, Gamma, ELBDM_Eta, LoadPar, LoadParDens, NParVarOut,
+//                H0, WithUnit, Unit_*, Mu, Comoving
 //-------------------------------------------------------------------------------------------------------
 void Load_Parameter_After_2000( FILE *File, const int FormatVersion, bool &LoadPot, int *NX0_Tot,
                                 double &BoxSize, double &Gamma, double &ELBDM_Eta,
                                 const long HeaderOffset_Makefile, const long HeaderOffset_Constant,
-                                const long HeaderOffset_Parameter, bool &LoadPar, int &LoadParDens, int &NParVarOut )
+                                const long HeaderOffset_Parameter, bool &LoadPar, int &LoadParDens, int &NParVarOut,
+                                double &H0, bool &WithUnit, double &Unit_L, double &Unit_M, double &Unit_T, double &Unit_V,
+                                double &Unit_D, double &Unit_E, double &Mu, bool &Comoving )
 {
 
    if ( MyRank == 0 )   Aux_Message( stdout, "   Loading simulation parameters ...\n" );
@@ -863,18 +885,16 @@ void Load_Parameter_After_2000( FILE *File, const int FormatVersion, bool &LoadP
    fread( &max_patch,                  sizeof(int),                     1,             File );
    fread( &store_pot_ghost,            sizeof(bool),                    1,             File );
    fread( &unsplit_gravity,            sizeof(bool),                    1,             File );
-
-   if ( FormatVersion >= 2100 )
    fread( &particle,                   sizeof(bool),                    1,             File );
-   else
-   particle = false;
-
    fread( &npassive,                   sizeof(int),                     1,             File );
    fread( &conserve_mass,              sizeof(bool),                    1,             File );
    fread( &laplacian_4th,              sizeof(bool),                    1,             File );
    fread( &self_interaction,           sizeof(bool),                    1,             File );
    fread( &laohu,                      sizeof(bool),                    1,             File );
    fread( &support_hdf5,               sizeof(bool),                    1,             File );
+
+// reset parameters
+   if ( FormatVersion < 2100 )   particle = false;
 
 
 // b. load the symbolic constants defined in "Macro.h, CUPOT.h, and CUFLU.h"
@@ -907,10 +927,15 @@ void Load_Parameter_After_2000( FILE *File, const int FormatVersion, bool &LoadP
    fread( &pot_block_size_x,           sizeof(int),                     1,             File );
    fread( &pot_block_size_z,           sizeof(int),                     1,             File );
    fread( &gra_block_size_z,           sizeof(int),                     1,             File );
-
-   if ( particle ) {
    fread( &par_nvar,                   sizeof(int),                     1,             File );
-   fread( &par_npassive,               sizeof(int),                     1,             File ); }
+   fread( &par_npassive,               sizeof(int),                     1,             File );
+
+// reset parameters
+   if ( !particle )
+   {
+      par_nvar     = WRONG;
+      par_npassive = WRONG;
+   }
 
 
 // c. load the simulation parameters recorded in the file "Input__Parameter"
@@ -918,7 +943,7 @@ void Load_Parameter_After_2000( FILE *File, const int FormatVersion, bool &LoadP
    bool   opt__adaptive_dt, opt__dt_user, opt__flag_rho, opt__flag_rho_gradient, opt__flag_pres_gradient;
    bool   opt__flag_engy_density, opt__flag_user, opt__fixup_flux, opt__fixup_restrict, opt__overlap_mpi;
    bool   opt__gra_p5_gradient, opt__int_time, opt__output_test_error, opt__output_base, opt__output_pot;
-   bool   opt__output_baseps, opt__timing_balance, opt__int_phase, opt__corr_unphy;
+   bool   opt__output_baseps, opt__timing_balance, opt__int_phase, opt__corr_unphy, opt__unit;
    int    nx0_tot[3], mpi_nrank, mpi_nrank_x[3], omp_nthread, regrid_count, opt__output_par_dens;
    int    flag_buffer_size, max_level, opt__lr_limiter, opt__waf_limiter, flu_gpu_npgroup, gpu_nstream;
    int    sor_max_iter, sor_min_iter, mg_max_iter, mg_npre_smooth, mg_npost_smooth, pot_gpu_npgroup;
@@ -927,8 +952,9 @@ void Load_Parameter_After_2000( FILE *File, const int FormatVersion, bool &LoadP
    int    opt__output_total, opt__output_part, opt__output_mode, output_step, opt__corr_unphy_scheme;
    long   end_step;
    double lb_wli_max, gamma, minmod_coeff, ep_coeff, elbdm_mass, elbdm_planck_const, newton_g, sor_omega;
-   double mg_tolerated_error, output_part_x, output_part_y, output_part_z;
-   double box_size, end_t, omega_m0, dt__fluid, dt__gravity, dt__phase, dt__max_delta_a, output_dt;
+   double mg_tolerated_error, output_part_x, output_part_y, output_part_z, molecular_weight;
+   double box_size, end_t, omega_m0, dt__fluid, dt__gravity, dt__phase, dt__max_delta_a, output_dt, hubble0;
+   double unit_l, unit_m, unit_t, unit_v, unit_d, unit_e;
 
    fseek( File, HeaderOffset_Parameter, SEEK_SET );
 
@@ -1000,11 +1026,25 @@ void Load_Parameter_After_2000( FILE *File, const int FormatVersion, bool &LoadP
    fread( &opt__output_baseps,         sizeof(bool),                    1,             File );
    fread( &opt__corr_unphy,            sizeof(bool),                    1,             File );
    fread( &opt__corr_unphy_scheme,     sizeof(int),                     1,             File );
-
-   if ( particle )
    fread( &opt__output_par_dens,       sizeof(int),                     1,             File );
-   else
-   opt__output_par_dens = 0;
+   fread( &hubble0,                    sizeof(double),                  1,             File );
+   fread( &opt__unit,                  sizeof(bool),                    1,             File );
+   fread( &unit_l,                     sizeof(double),                  1,             File );
+   fread( &unit_m,                     sizeof(double),                  1,             File );
+   fread( &unit_t,                     sizeof(double),                  1,             File );
+   fread( &unit_v,                     sizeof(double),                  1,             File );
+   fread( &unit_d,                     sizeof(double),                  1,             File );
+   fread( &unit_e,                     sizeof(double),                  1,             File );
+   fread( &molecular_weight,           sizeof(double),                  1,             File );
+
+// reset parameters
+   if ( !particle )  opt__output_par_dens = 0;
+
+   if ( FormatVersion < 2110 )
+   {
+      hubble0 = unit_l = unit_m = unit_t = unit_v = unit_d = unit_e = molecular_weight = WRONG;
+      opt__unit = false;
+   }
 
    if ( MyRank == 0 )   Aux_Message( stdout, "   Loading simulation parameters ... done\n" );
 
@@ -1049,6 +1089,16 @@ void Load_Parameter_After_2000( FILE *File, const int FormatVersion, bool &LoadP
    ELBDM_Eta   = elbdm_mass / elbdm_planck_const;
    for (int d=0; d<3; d++)
    NX0_Tot[d]  = nx0_tot[d];
+   H0          = hubble0;
+   WithUnit    = opt__unit;
+   Unit_L      = unit_l;
+   Unit_M      = unit_m;
+   Unit_T      = unit_t;
+   Unit_V      = unit_v;
+   Unit_D      = unit_d;
+   Unit_E      = unit_e;
+   Mu          = molecular_weight;
+   Comoving    = comoving;
 
 } // FUNCTION : Load_Parameter_After_2000
 

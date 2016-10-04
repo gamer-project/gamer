@@ -43,12 +43,14 @@ int         CanMin[3][3], CanMax[3][3];                    // range of the candi
 
 AMR_t     amr;
 ParaVar_t ParaVar;
-double    GAMMA;
+double    GAMMA, MU, H0;
 int       NX0_TOT[3], NX0[3], MyRank, MyRank_X[3], SibRank[26], NGPU, DumpID;
-int       *BaseP, *BounP_IDMap[NLEVEL][26], SendP_NList[NLEVEL][26], *SendP_IDList[NLEVEL][26];
+int      *BaseP, *BounP_IDMap[NLEVEL][26], SendP_NList[NLEVEL][26], *SendP_IDList[NLEVEL][26];
 int       RecvP_NList[NLEVEL][26], *RecvP_IDList[NLEVEL][26], NPatchComma[NLEVEL][28];
 double    Time[NLEVEL];
 long      Step;
+bool      WithUnit, Comoving;
+double    Unit_L, Unit_M, Unit_T, Unit_V, Unit_D, Unit_E;
 
 #if ( MODEL == ELBDM )
 double    ELBDM_ETA;
@@ -404,12 +406,6 @@ void ReadOption( int argc, char **argv )
    if ( BufSize <= 0  ||  BufSize > PS1  ||  BufSize%2 != 0 )
       Aux_Error( ERROR_INFO, "unsupported buffer size (%d) --> must be a positive even number <= %d !!\n", BufSize, PS1 );
 
-#  if ( MODEL == HYDRO  ||  MODEL == MHD )
-   if ( OutputTemp  &&  Convert2Temp < 0.0 )
-      Aux_Error( ERROR_INFO, "Convert2Temp (%14.7e) < 0.0 for calculating temperature (use -u) !!\n",
-                 Convert2Temp );
-#  endif
-
 #  if ( MODEL == ELBDM )
    if ( ELBDM_IntPhase  &&  IntScheme == INT_MINMOD1D )
       Aux_Error( ERROR_INFO, "MinMod1D does not support interpolation on phase !!\n" );
@@ -546,12 +542,26 @@ void TakeNote( int argc, char *argv[] )
                                        ( IntScheme == INT_QUAR     ) ? "QUAR"     :
                                        "UNKNOWN" );
    printf( "Int_MonoCoeff     = %13.7e\n", Int_MonoCoeff              );
-   printf( "UseTree           = %s\n",    (UseTree)?"YES":"NO"        );
-   printf( "FileName_Tree     = %s\n",    FileName_Tree               );
-#  if ( MODEL == ELBDM )
+   printf( "UseTree           = %s\n",     (UseTree)?"YES":"NO"       );
+   printf( "FileName_Tree     = %s\n",     FileName_Tree              );
+   printf( "Comoving          = %d\n",     Comoving                   );
+   if ( Comoving )
+   printf( "H0                = %13.7e\n", H0                         );
+#  if   ( MODEL == HYDRO )
+   printf( "GAMMA             = %13.7e\n", GAMMA                      );
+   printf( "MU                = %13.7e\n", MU                         );
+#  elif ( MODEL == ELBDM )
    printf( "ELBDM_ETA         = %13.7e\n", ELBDM_ETA );
    printf( "ELBDM_IntPhase    = %s\n",    (ELBDM_IntPhase)?"YES":"NO" );
 #  endif
+   printf( "WithUnit          = %d\n",             WithUnit           );
+   if ( WithUnit ) {
+   printf( "Unit_L            = %13.7e cm\n",       Unit_L            );
+   printf( "Unit_M            = %13.7e g\n",        Unit_M            );
+   printf( "Unit_T            = %13.7e s\n",        Unit_T            );
+   printf( "Unit_V            = %13.7e cm/s\n",     Unit_V            );
+   printf( "Unit_D            = %13.7e g/cm^3\n",   Unit_D            );
+   printf( "Unit_E            = %13.7e g/cm/s^2\n", Unit_E            ); }
 
    double Out_Start[3];
    for (int d=0; d<3; d++)
@@ -935,6 +945,20 @@ void CheckParameter()
                  "a multiple of TWO" );
       MPI_Exit();
    }
+
+   if ( !Comoving  &&  ConvertCom2PhyV )
+   {
+      ConvertCom2PhyV = false;
+
+      if ( MyRank == 0 )
+      fprintf( stderr, "WARNING : option -k (ConvertCom2PhyV) is useless for non-cosmological simulations !!\n" );
+   }
+
+#  if ( MODEL == HYDRO  ||  MODEL == MHD )
+   if ( OutputTemp  &&  Convert2Temp < 0.0 )
+      Aux_Error( ERROR_INFO, "Convert2Temp (%14.7e) < 0.0 for calculating temperature (use -u) !!\n",
+                 Convert2Temp );
+#  endif
 
 
    if ( MyRank == 0 )   cout << "   CheckParameter ... done" << endl;
@@ -1396,6 +1420,34 @@ void Init_TargetDomain()
    if ( MyRank == 0 )   cout << "   Init_TargetDomain ... done" << endl;
 
 } // FUNCTION : Init_TargetDomain
+
+
+
+//-------------------------------------------------------------------------------------------------------
+// Function    :  Init_Convert2Temp
+// Description :  Set the conversion factor for calculating temperature
+//
+// Note        :  Must work with data providing both units and molecular weight (MU)
+//-------------------------------------------------------------------------------------------------------
+void Init_Convert2Temp()
+{
+
+   const double kB  = 1.38064852e-16;     // Boltzmann constant in erg/K
+   const double amu = 1.660539040e-24;    // atomic mass unit in g
+
+   if ( WithUnit  &&  MU > 0.0 )
+   {
+      if ( Unit_V <= 0.0 )
+         Aux_Error( ERROR_INFO, "Unit_V = %14.7e <= 0.0 !!\n", Unit_V );
+
+      Convert2Temp = Unit_V*Unit_V*amu*MU/kB;
+   }
+
+   else
+      Aux_Error( ERROR_INFO, "cannot determine the conversion factor for calculating temperature (WithUnit %d, MU %14.7e) !!\n",
+                 WithUnit, MU );
+
+} // FUCNTION : Init_Convert2Temp
 
 
 

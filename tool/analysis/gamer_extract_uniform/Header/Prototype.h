@@ -17,6 +17,7 @@ void Output();
 void SumOverRanks();
 #endif
 void Init_TargetDomain();
+void Init_Convert2Temp();
 void GetCandidateBox();
 bool WithinCandidateBox( const int *Corner, const int Size, const int Buf );
 void LoadTree();

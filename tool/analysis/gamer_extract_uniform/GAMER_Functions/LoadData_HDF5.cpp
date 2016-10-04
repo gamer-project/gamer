@@ -76,6 +76,7 @@ void LoadData_HDF5( const char *FileName )
 #  endif
 
    hid_t  H5_FileID, H5_SetID_KeyInfo, H5_TypeID_KeyInfo, H5_SetID_InputPara, H5_TypeID_InputPara;
+   hid_t  H5_SetID_Makefile, H5_TypeID_Makefile;
    hid_t  H5_SetID_Cr, H5_SetID_Son;
    herr_t H5_Status;
 
@@ -86,7 +87,7 @@ void LoadData_HDF5( const char *FileName )
       Aux_Error( ERROR_INFO, "failed to open the restart HDF5 file \"%s\" !!\n", FileName );
 
 
-// 1-2. load the dataset and datatype of KeyInfo and InputPara
+// 1-2. load the dataset and datatype of KeyInfo, InputPara, and Makefile
    H5_SetID_KeyInfo  = H5Dopen( H5_FileID, "Info/KeyInfo", H5P_DEFAULT );
    if ( H5_SetID_KeyInfo < 0 )
       Aux_Error( ERROR_INFO, "failed to open the dataset \"%s\" !!\n", "Info/KeyInfo" );
@@ -103,8 +104,16 @@ void LoadData_HDF5( const char *FileName )
    if ( H5_TypeID_InputPara < 0 )
       Aux_Error( ERROR_INFO, "failed to open the datatype of \"%s\" !!\n", "Info/InputPara" );
 
+   H5_SetID_Makefile  = H5Dopen( H5_FileID, "Info/Makefile", H5P_DEFAULT );
+   if ( H5_SetID_Makefile < 0 )
+      Aux_Error( ERROR_INFO, "failed to open the dataset \"%s\" !!\n", "Info/Makefile" );
 
-// 1-3. load all target fields in KeyInfo and InputPara one-by-one (by all ranks)
+   H5_TypeID_Makefile = H5Dget_type( H5_SetID_Makefile );
+   if ( H5_TypeID_Makefile < 0 )
+      Aux_Error( ERROR_INFO, "failed to open the datatype of \"%s\" !!\n", "Info/Makefile" );
+
+
+// 1-3. load all target fields one-by-one (by all ranks)
    LoadField( "FormatVersion",  &FormatVersion,  H5_SetID_KeyInfo, H5_TypeID_KeyInfo, Fatal,  NullPtr,       -1, NonFatal );
 
 // format version for HDF5 output
@@ -118,32 +127,58 @@ void LoadData_HDF5( const char *FileName )
 
    MPI_Barrier( MPI_COMM_WORLD );
 
-   LoadField( "Model",               &Model_RS,          H5_SetID_KeyInfo,   H5_TypeID_KeyInfo,   Fatal, &Model_RT,      1,    Fatal );
-   LoadField( "Float8",              &Float8_RS,         H5_SetID_KeyInfo,   H5_TypeID_KeyInfo,   Fatal, &Float8_RT,     1,    Fatal );
-   LoadField( "NLevel",              &NLevel_RS,         H5_SetID_KeyInfo,   H5_TypeID_KeyInfo,   Fatal, &NLevel_RT,     1,    Fatal );
-   LoadField( "PatchSize",           &PatchSize_RS,      H5_SetID_KeyInfo,   H5_TypeID_KeyInfo,   Fatal, &PatchSize_RT,  1,    Fatal );
+// initialize variables that may not exist
+   int Comoving_int, WithUnit_int;  // boolean variables are stored as integers in the HDF5 output
+   WithUnit_int = 0;
+   H0 = Unit_L = Unit_M = Unit_T = Unit_V = Unit_D = Unit_E = MU = WRONG;
 
-   LoadField( "Gravity",             &Gravity,           H5_SetID_KeyInfo,   H5_TypeID_KeyInfo,   Fatal,  NullPtr,      -1, NonFatal );
-   LoadField( "Particle",            &Particle,          H5_SetID_KeyInfo,   H5_TypeID_KeyInfo,   Fatal,  NullPtr,      -1, NonFatal );
-   LoadField( "DumpID",              &DumpID,            H5_SetID_KeyInfo,   H5_TypeID_KeyInfo,   Fatal,  NullPtr,      -1, NonFatal );
-   LoadField( "NX0",                  NX0_TOT,           H5_SetID_KeyInfo,   H5_TypeID_KeyInfo,   Fatal,  NullPtr,      -1, NonFatal );
-   LoadField( "NPatch",               NPatchTotal,       H5_SetID_KeyInfo,   H5_TypeID_KeyInfo,   Fatal,  NullPtr,      -1, NonFatal );
-   LoadField( "Step",                &Step,              H5_SetID_KeyInfo,   H5_TypeID_KeyInfo,   Fatal,  NullPtr,      -1, NonFatal );
-   LoadField( "Time",                 Time,              H5_SetID_KeyInfo,   H5_TypeID_KeyInfo,   Fatal,  NullPtr,      -1, NonFatal );
-   LoadField( "CellSize",             amr.dh,            H5_SetID_KeyInfo,   H5_TypeID_KeyInfo,   Fatal,  NullPtr,      -1, NonFatal );
-   LoadField( "BoxScale",             amr.BoxScale,      H5_SetID_KeyInfo,   H5_TypeID_KeyInfo,   Fatal,  NullPtr,      -1, NonFatal );
-   LoadField( "BoxSize",              amr.BoxSize,       H5_SetID_KeyInfo,   H5_TypeID_KeyInfo,   Fatal,  NullPtr,      -1, NonFatal );
+   LoadField( "Model",               &Model_RS,          H5_SetID_KeyInfo,   H5_TypeID_KeyInfo,      Fatal, &Model_RT,      1,    Fatal );
+   LoadField( "Float8",              &Float8_RS,         H5_SetID_KeyInfo,   H5_TypeID_KeyInfo,      Fatal, &Float8_RT,     1,    Fatal );
+   LoadField( "NLevel",              &NLevel_RS,         H5_SetID_KeyInfo,   H5_TypeID_KeyInfo,      Fatal, &NLevel_RT,     1,    Fatal );
+   LoadField( "PatchSize",           &PatchSize_RS,      H5_SetID_KeyInfo,   H5_TypeID_KeyInfo,      Fatal, &PatchSize_RT,  1,    Fatal );
 
-   LoadField( "Opt__BC_Flu",          ExtBC_RS,          H5_SetID_InputPara, H5_TypeID_InputPara, Fatal,  NullPtr,      -1, NonFatal );
+   LoadField( "Gravity",             &Gravity,           H5_SetID_KeyInfo,   H5_TypeID_KeyInfo,      Fatal,  NullPtr,      -1, NonFatal );
+   LoadField( "Particle",            &Particle,          H5_SetID_KeyInfo,   H5_TypeID_KeyInfo,      Fatal,  NullPtr,      -1, NonFatal );
+   LoadField( "DumpID",              &DumpID,            H5_SetID_KeyInfo,   H5_TypeID_KeyInfo,      Fatal,  NullPtr,      -1, NonFatal );
+   LoadField( "NX0",                  NX0_TOT,           H5_SetID_KeyInfo,   H5_TypeID_KeyInfo,      Fatal,  NullPtr,      -1, NonFatal );
+   LoadField( "NPatch",               NPatchTotal,       H5_SetID_KeyInfo,   H5_TypeID_KeyInfo,      Fatal,  NullPtr,      -1, NonFatal );
+   LoadField( "Step",                &Step,              H5_SetID_KeyInfo,   H5_TypeID_KeyInfo,      Fatal,  NullPtr,      -1, NonFatal );
+   LoadField( "Time",                 Time,              H5_SetID_KeyInfo,   H5_TypeID_KeyInfo,      Fatal,  NullPtr,      -1, NonFatal );
+   LoadField( "CellSize",             amr.dh,            H5_SetID_KeyInfo,   H5_TypeID_KeyInfo,      Fatal,  NullPtr,      -1, NonFatal );
+   LoadField( "BoxScale",             amr.BoxScale,      H5_SetID_KeyInfo,   H5_TypeID_KeyInfo,      Fatal,  NullPtr,      -1, NonFatal );
+   LoadField( "BoxSize",              amr.BoxSize,       H5_SetID_KeyInfo,   H5_TypeID_KeyInfo,      Fatal,  NullPtr,      -1, NonFatal );
+
+   LoadField( "Comoving",            &Comoving_int,      H5_SetID_Makefile,  H5_TypeID_Makefile,     Fatal,  NullPtr,      -1, NonFatal );
+   Comoving = (bool)Comoving_int;
+
+   if ( Comoving ) {
+   LoadField( "Hubble0",             &H0,                H5_SetID_InputPara, H5_TypeID_InputPara, NonFatal,  NullPtr,      -1, NonFatal ); }
+
+   LoadField( "Opt__Unit",           &WithUnit_int,      H5_SetID_InputPara, H5_TypeID_InputPara, NonFatal,  NullPtr,      -1, NonFatal );
+   WithUnit = (bool)WithUnit_int;
+
+   if ( WithUnit ) {
+   LoadField( "Unit_L",              &Unit_L,            H5_SetID_InputPara, H5_TypeID_InputPara,    Fatal,  NullPtr,      -1, NonFatal );
+   LoadField( "Unit_M",              &Unit_M,            H5_SetID_InputPara, H5_TypeID_InputPara,    Fatal,  NullPtr,      -1, NonFatal );
+   LoadField( "Unit_T",              &Unit_T,            H5_SetID_InputPara, H5_TypeID_InputPara,    Fatal,  NullPtr,      -1, NonFatal );
+   LoadField( "Unit_V",              &Unit_V,            H5_SetID_InputPara, H5_TypeID_InputPara,    Fatal,  NullPtr,      -1, NonFatal );
+   LoadField( "Unit_D",              &Unit_D,            H5_SetID_InputPara, H5_TypeID_InputPara,    Fatal,  NullPtr,      -1, NonFatal );
+   LoadField( "Unit_E",              &Unit_E,            H5_SetID_InputPara, H5_TypeID_InputPara,    Fatal,  NullPtr,      -1, NonFatal ); }
+
+   LoadField( "Opt__BC_Flu",          ExtBC_RS,          H5_SetID_InputPara, H5_TypeID_InputPara,    Fatal,  NullPtr,      -1, NonFatal );
+
    if ( Gravity ) {
-   LoadField( "Opt__Output_Pot",     &LoadPot,           H5_SetID_InputPara, H5_TypeID_InputPara, Fatal,  NullPtr,      -1, NonFatal ); }
+   LoadField( "Opt__Output_Pot",     &LoadPot,           H5_SetID_InputPara, H5_TypeID_InputPara,    Fatal,  NullPtr,      -1, NonFatal ); }
+
    if ( Particle ) {
-   LoadField( "Opt__Output_ParDens", &OutputParDens,     H5_SetID_InputPara, H5_TypeID_InputPara, Fatal,  NullPtr,      -1, NonFatal ); }
+   LoadField( "Opt__Output_ParDens", &OutputParDens,     H5_SetID_InputPara, H5_TypeID_InputPara,    Fatal,  NullPtr,      -1, NonFatal ); }
+
 #  if   ( MODEL == HYDRO )
-   LoadField( "Gamma",               &GAMMA,             H5_SetID_InputPara, H5_TypeID_InputPara, Fatal,  NullPtr,      -1, NonFatal );
+   LoadField( "Gamma",               &GAMMA,             H5_SetID_InputPara, H5_TypeID_InputPara,    Fatal,  NullPtr,      -1, NonFatal );
+   LoadField( "MolecularWeight",     &MU,                H5_SetID_InputPara, H5_TypeID_InputPara, NonFatal,  NullPtr,      -1, NonFatal );
 #  elif ( MODEL == ELBDM )
-   LoadField( "ELBDM_Mass",          &ELBDM_Mass,        H5_SetID_InputPara, H5_TypeID_InputPara, Fatal,  NullPtr,      -1, NonFatal );
-   LoadField( "ELBDM_PlanckConst",   &ELBDM_PlanckConst, H5_SetID_InputPara, H5_TypeID_InputPara, Fatal,  NullPtr,      -1, NonFatal );
+   LoadField( "ELBDM_Mass",          &ELBDM_Mass,        H5_SetID_InputPara, H5_TypeID_InputPara,    Fatal,  NullPtr,      -1, NonFatal );
+   LoadField( "ELBDM_PlanckConst",   &ELBDM_PlanckConst, H5_SetID_InputPara, H5_TypeID_InputPara,    Fatal,  NullPtr,      -1, NonFatal );
 
    ELBDM_ETA = ELBDM_Mass / ELBDM_PlanckConst;
 #  endif
@@ -194,6 +229,8 @@ void LoadData_HDF5( const char *FileName )
    H5_Status = H5Dclose( H5_SetID_KeyInfo );
    H5_Status = H5Tclose( H5_TypeID_InputPara );
    H5_Status = H5Dclose( H5_SetID_InputPara );
+   H5_Status = H5Tclose( H5_TypeID_Makefile );
+   H5_Status = H5Dclose( H5_SetID_Makefile );
    H5_Status = H5Fclose( H5_FileID );
 
 
@@ -209,6 +246,12 @@ void LoadData_HDF5( const char *FileName )
 
 // allocate memory for the array "BaseP"
    Init_MemAllocate();
+
+// set the conversion factor for calculating temperature
+// --> recalculate it only when Convert2Temp < 0.0 so that it does NOT overwrite the value of -u
+#  if ( MODEL == HYDRO  ||  MODEL == MHD )
+   if ( OutputTemp  &&  Convert2Temp < 0.0 )    Init_Convert2Temp();
+#  endif
 
 // verify the input parameters
    if ( MyRank == 0 )   CheckParameter();

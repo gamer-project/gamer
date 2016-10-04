@@ -108,7 +108,7 @@ enum IntScheme_t { INT_DEFAULT=-1, INT_MINMOD3D=1, INT_MINMOD1D=2, INT_VANLEER=3
 #endif
 
 
-// initial value for some variables
+// initial value for some variables (must be negative)
 #define WRONG              -9999999
 
 
