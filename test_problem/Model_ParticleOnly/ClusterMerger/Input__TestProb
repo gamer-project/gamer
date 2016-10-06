@@ -1,0 +1,12 @@
+# parameters for the cluster merger test
+123         ClusterMerger_RanSeed           # random seed for setting particle position and velocity
+6.0e14      ClusterMerger_Mvir              # total: virial mass in Msun
+1.8         ClusterMerger_Rvir              # total: virial radius (and also the cut-off radius) in Mpc
+10.0        ClusterMerger_DM_C              # dark matter: NFW concentration parameter
+-1.0        ClusterMerger_DM_Rzero          # dark matter: radius at which the velocity dispersion is set to zero (<=0: default)
+0.216       ClusterMerger_Gas_Rcore         # gas: core radius in the beta model in Mpc
+-1.0        ClusterMerger_Gas_TvirM14       # gas: temperature at the virial radius for a 1e14 Msun cluster (in keV) (<=0: default)
+-1.0        ClusterMerger_Gas_MTScaling     # gas: M-T scaling index for temperature normalization --> Tvir ~ Mvir^MT_Scaling (<=0: default)
+0.14        ClusterMerger_Gas_MFrac         # gas: mass fraction
+-1          ClusterMerger_NBin_MassProf     # number of radial bins for the mass profile table (<=1: default)
+0           ClusterMerger_Coll              # (true/false) --> test (cluster merger / single cluster)
