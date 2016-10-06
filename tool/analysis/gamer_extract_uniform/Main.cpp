@@ -50,7 +50,7 @@ int       RecvP_NList[NLEVEL][26], *RecvP_IDList[NLEVEL][26], NPatchComma[NLEVEL
 double    Time[NLEVEL];
 long      Step;
 bool      WithUnit, Comoving;
-double    Unit_L, Unit_M, Unit_T, Unit_V, Unit_D, Unit_E;
+double    Unit_L, Unit_M, Unit_T, Unit_V, Unit_D, Unit_E, Unit_P;
 
 #if ( MODEL == ELBDM )
 double    ELBDM_ETA;
@@ -556,12 +556,13 @@ void TakeNote( int argc, char *argv[] )
 #  endif
    printf( "WithUnit          = %d\n",             WithUnit           );
    if ( WithUnit ) {
-   printf( "Unit_L            = %13.7e cm\n",       Unit_L            );
-   printf( "Unit_M            = %13.7e g\n",        Unit_M            );
-   printf( "Unit_T            = %13.7e s\n",        Unit_T            );
-   printf( "Unit_V            = %13.7e cm/s\n",     Unit_V            );
-   printf( "Unit_D            = %13.7e g/cm^3\n",   Unit_D            );
-   printf( "Unit_E            = %13.7e g/cm/s^2\n", Unit_E            ); }
+   printf( "Unit_L            = %13.7e cm\n",         Unit_L          );
+   printf( "Unit_M            = %13.7e g\n",          Unit_M          );
+   printf( "Unit_T            = %13.7e s\n",          Unit_T          );
+   printf( "Unit_V            = %13.7e cm/s\n",       Unit_V          );
+   printf( "Unit_D            = %13.7e g/cm^3\n",     Unit_D          );
+   printf( "Unit_E            = %13.7e g*cm^2/s^2\n", Unit_E          );
+   printf( "Unit_P            = %13.7e g/cm/s^2\n",   Unit_P          ); }
 
    double Out_Start[3];
    for (int d=0; d<3; d++)

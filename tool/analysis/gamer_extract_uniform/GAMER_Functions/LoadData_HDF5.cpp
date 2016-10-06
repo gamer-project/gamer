@@ -130,7 +130,7 @@ void LoadData_HDF5( const char *FileName )
 // initialize variables that may not exist
    int Comoving_int, WithUnit_int;  // boolean variables are stored as integers in the HDF5 output
    WithUnit_int = 0;
-   H0 = Unit_L = Unit_M = Unit_T = Unit_V = Unit_D = Unit_E = MU = WRONG;
+   H0 = Unit_L = Unit_M = Unit_T = Unit_V = Unit_D = Unit_E = Unit_P = MU = WRONG;
 
    LoadField( "Model",               &Model_RS,          H5_SetID_KeyInfo,   H5_TypeID_KeyInfo,      Fatal, &Model_RT,      1,    Fatal );
    LoadField( "Float8",              &Float8_RS,         H5_SetID_KeyInfo,   H5_TypeID_KeyInfo,      Fatal, &Float8_RT,     1,    Fatal );
@@ -163,7 +163,8 @@ void LoadData_HDF5( const char *FileName )
    LoadField( "Unit_T",              &Unit_T,            H5_SetID_InputPara, H5_TypeID_InputPara,    Fatal,  NullPtr,      -1, NonFatal );
    LoadField( "Unit_V",              &Unit_V,            H5_SetID_InputPara, H5_TypeID_InputPara,    Fatal,  NullPtr,      -1, NonFatal );
    LoadField( "Unit_D",              &Unit_D,            H5_SetID_InputPara, H5_TypeID_InputPara,    Fatal,  NullPtr,      -1, NonFatal );
-   LoadField( "Unit_E",              &Unit_E,            H5_SetID_InputPara, H5_TypeID_InputPara,    Fatal,  NullPtr,      -1, NonFatal ); }
+   LoadField( "Unit_E",              &Unit_E,            H5_SetID_InputPara, H5_TypeID_InputPara,    Fatal,  NullPtr,      -1, NonFatal );
+   LoadField( "Unit_P",              &Unit_P,            H5_SetID_InputPara, H5_TypeID_InputPara,    Fatal,  NullPtr,      -1, NonFatal ); }
 
    LoadField( "Opt__BC_Flu",          ExtBC_RS,          H5_SetID_InputPara, H5_TypeID_InputPara,    Fatal,  NullPtr,      -1, NonFatal );
 

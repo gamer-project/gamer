@@ -14,7 +14,7 @@ extern int        TargetX[3], X[3], NLoad, NOut, ShiftScale[3], ExtBC;
 extern double     Time[NLEVEL];
 extern long int   Step;
 extern bool       WithUnit, Comoving;
-extern double     Unit_L, Unit_M, Unit_T, Unit_V, Unit_D, Unit_E, Convert2Temp;
+extern double     Unit_L, Unit_M, Unit_T, Unit_V, Unit_D, Unit_E, Unit_P, Convert2Temp;
 extern bool       OutputPot, Shift2Center, OutputTemp;
 extern int        BufSize, OutputParDens;
 extern tree_t    *tree;

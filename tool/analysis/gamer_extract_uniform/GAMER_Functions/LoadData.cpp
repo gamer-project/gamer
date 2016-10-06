@@ -12,7 +12,7 @@ static void Load_Parameter_After_2000( FILE *File, const int FormatVersion, bool
                                        const long HeaderOffset_Makefile, const long HeaderOffset_Constant,
                                        const long HeaderOffset_Parameter, bool &LoadPar, int &LoadParDens, int &NParVarOut,
                                        double &H0, bool &WithUnit, double &Unit_L, double &Unit_M, double &Unit_T, double &Unit_V,
-                                       double &Unit_D, double &Unit_E, double &Mu, bool &Comoving );
+                                       double &Unit_D, double &Unit_E, double &Unit_P, double &Mu, bool &Comoving );
 static void CompareVar( const char *VarName, const bool   RestartVar, const bool   RuntimeVar, const bool Fatal );
 static void CompareVar( const char *VarName, const int    RestartVar, const int    RuntimeVar, const bool Fatal );
 static void CompareVar( const char *VarName, const long   RestartVar, const long   RuntimeVar, const bool Fatal );
@@ -200,7 +200,7 @@ void LoadData()
       NParVarOut    = -1;
 
       WithUnit      = false;
-      H0 = Unit_L = Unit_M = Unit_T = Unit_V = Unit_D = Unit_E = MU = WRONG;
+      H0 = Unit_L = Unit_M = Unit_T = Unit_V = Unit_D = Unit_E = Unit_P = MU = WRONG;
    }
 
    else
@@ -208,7 +208,7 @@ void LoadData()
       Load_Parameter_After_2000( File, FormatVersion, OutputPot, NX0_TOT, BoxSize, GAMMA, ELBDM_ETA,
                                  HeaderOffset_Makefile, HeaderOffset_Constant, HeaderOffset_Parameter,
                                  OutputPar, OutputParDens, NParVarOut,
-                                 H0, WithUnit, Unit_L, Unit_M, Unit_T, Unit_V, Unit_D, Unit_E, MU, Comoving );
+                                 H0, WithUnit, Unit_L, Unit_M, Unit_T, Unit_V, Unit_D, Unit_E, Unit_P, MU, Comoving );
       DataOrder_xyzv = false;
    }
 
@@ -846,7 +846,7 @@ void Load_Parameter_After_2000( FILE *File, const int FormatVersion, bool &LoadP
                                 const long HeaderOffset_Makefile, const long HeaderOffset_Constant,
                                 const long HeaderOffset_Parameter, bool &LoadPar, int &LoadParDens, int &NParVarOut,
                                 double &H0, bool &WithUnit, double &Unit_L, double &Unit_M, double &Unit_T, double &Unit_V,
-                                double &Unit_D, double &Unit_E, double &Mu, bool &Comoving )
+                                double &Unit_D, double &Unit_E, double &Unit_P, double &Mu, bool &Comoving )
 {
 
    if ( MyRank == 0 )   Aux_Message( stdout, "   Loading simulation parameters ...\n" );
@@ -954,7 +954,7 @@ void Load_Parameter_After_2000( FILE *File, const int FormatVersion, bool &LoadP
    double lb_wli_max, gamma, minmod_coeff, ep_coeff, elbdm_mass, elbdm_planck_const, newton_g, sor_omega;
    double mg_tolerated_error, output_part_x, output_part_y, output_part_z, molecular_weight;
    double box_size, end_t, omega_m0, dt__fluid, dt__gravity, dt__phase, dt__max_delta_a, output_dt, hubble0;
-   double unit_l, unit_m, unit_t, unit_v, unit_d, unit_e;
+   double unit_l, unit_m, unit_t, unit_v, unit_d, unit_e, unit_p;
 
    fseek( File, HeaderOffset_Parameter, SEEK_SET );
 
@@ -1035,14 +1035,15 @@ void Load_Parameter_After_2000( FILE *File, const int FormatVersion, bool &LoadP
    fread( &unit_v,                     sizeof(double),                  1,             File );
    fread( &unit_d,                     sizeof(double),                  1,             File );
    fread( &unit_e,                     sizeof(double),                  1,             File );
+   fread( &unit_p,                     sizeof(double),                  1,             File );
    fread( &molecular_weight,           sizeof(double),                  1,             File );
 
 // reset parameters
    if ( !particle )  opt__output_par_dens = 0;
 
-   if ( FormatVersion < 2110 )
+   if ( FormatVersion < 2111 )
    {
-      hubble0 = unit_l = unit_m = unit_t = unit_v = unit_d = unit_e = molecular_weight = WRONG;
+      hubble0 = unit_l = unit_m = unit_t = unit_v = unit_d = unit_e = unit_p = molecular_weight = WRONG;
       opt__unit = false;
    }
 
@@ -1097,6 +1098,7 @@ void Load_Parameter_After_2000( FILE *File, const int FormatVersion, bool &LoadP
    Unit_V      = unit_v;
    Unit_D      = unit_d;
    Unit_E      = unit_e;
+   Unit_P      = unit_p;
    Mu          = molecular_weight;
    Comoving    = comoving;
 
