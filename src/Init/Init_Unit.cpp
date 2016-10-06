@@ -42,9 +42,10 @@ void Init_Unit()
    UNIT_L    = Const_Mpc/HUBBLE0;
    UNIT_T    = Const_s*Const_Mpc/(100.0*HUBBLE0*Const_km);
    UNIT_D    = 3.0*OMEGA_M0*SQR( 100.0*HUBBLE0*Const_km/(Const_s*Const_Mpc) )/( 8.0*M_PI*Const_NewtonG );
-   UNIT_V    = -1.0;    // UNIT_V/M/E will be calculated automatically below
+   UNIT_V    = -1.0;    // UNIT_V/M/E/P will be calculated automatically below
    UNIT_M    = -1.0;
    UNIT_E    = -1.0;
+   UNIT_P    = -1.0;
 
    if ( MPI_Rank == 0 )
    {
@@ -143,13 +144,26 @@ void Init_Unit()
             Aux_Error( ERROR_INFO, "cannot determine the density unit !!\n" );
       }
 
-//    (6) energy density unit (which cannot be set by users)
+//    (6) energy unit (which cannot be set by users)
+      if ( true )
+      {
+         if ( UNIT_M > 0.0  &&  UNIT_V > 0.0 )
+         {
+            UNIT_E = UNIT_M*SQR(UNIT_V);
+            if ( MPI_Rank == 0 )    Aux_Message( stdout, "NOTE : UNIT_E is set to %13.7e\n", UNIT_E );
+         }
+
+         else
+            Aux_Error( ERROR_INFO, "cannot determine the energy unit !!\n" );
+      }
+
+//    (7) energy density unit (which cannot be set by users)
       if ( true )
       {
          if ( UNIT_D > 0.0  &&  UNIT_V > 0.0 )
          {
-            UNIT_E = UNIT_D*SQR(UNIT_V);
-            if ( MPI_Rank == 0 )    Aux_Message( stdout, "NOTE : UNIT_E is set to %13.7e\n", UNIT_E );
+            UNIT_P = UNIT_D*SQR(UNIT_V);
+            if ( MPI_Rank == 0 )    Aux_Message( stdout, "NOTE : UNIT_P is set to %13.7e\n", UNIT_P );
          }
 
          else
@@ -182,7 +196,7 @@ void Init_Unit()
 // set all code units to unity if OPT__UNIT == false (just in case any of UNIT_* is misused)
    else
    {
-      UNIT_L = UNIT_M = UNIT_T = UNIT_V = UNIT_D = UNIT_E = 1.0;
+      UNIT_L = UNIT_M = UNIT_T = UNIT_V = UNIT_D = UNIT_E = UNIT_P = 1.0;
 
 //    check if physical constants are properly set by users
 #     ifdef GRAVITY

@@ -495,26 +495,28 @@ void Aux_TakeNote()
       fprintf( Note, "rho_bg = current matter density = %20.14e Msun/kpc^3 (*)\n\n",
                Current_Matter_Density/(Const_Msun/CUBE(Const_kpc)) );
 
-      fprintf( Note, "UNIT_L                    %20.14e Mpc/h\n",        UNIT_L/(Const_Mpc/HUBBLE0)    );
-      fprintf( Note, "                        = %20.14e cm       (*)\n", UNIT_L                        );
-      fprintf( Note, "UNIT_M                    %20.14e Msun/h\n",       UNIT_M/(Const_Msun/HUBBLE0)   );
-      fprintf( Note, "                        = %20.14e g        (*)\n", UNIT_M                        );
-      fprintf( Note, "UNIT_T                    %20.14e Gyr      (*)\n", UNIT_T/Const_Gyr              );
-      fprintf( Note, "                        = %20.14e s        (*)\n", UNIT_T                        );
-      fprintf( Note, "UNIT_V                    %20.14e km/s\n",         UNIT_V/(Const_km/Const_s)     );
-      fprintf( Note, "                        = %20.14e cm/s\n",         UNIT_V                        );
-      fprintf( Note, "UNIT_D                    %20.14e rho_bg   (*)\n", UNIT_D/Current_Matter_Density );
-      fprintf( Note, "                        = %20.14e g/cm^3   (*)\n", UNIT_D                        );
-      fprintf( Note, "UNIT_E (energy density)   %20.14e g/cm/s^2 (*)\n", UNIT_E                        ); }
+      fprintf( Note, "UNIT_L (length)           %20.14e Mpc/h\n",          UNIT_L/(Const_Mpc/HUBBLE0)    );
+      fprintf( Note, "                        = %20.14e cm         (*)\n", UNIT_L                        );
+      fprintf( Note, "UNIT_M (mass)             %20.14e Msun/h\n",         UNIT_M/(Const_Msun/HUBBLE0)   );
+      fprintf( Note, "                        = %20.14e g          (*)\n", UNIT_M                        );
+      fprintf( Note, "UNIT_T (time)             %20.14e Gyr        (*)\n", UNIT_T/Const_Gyr              );
+      fprintf( Note, "                        = %20.14e s          (*)\n", UNIT_T                        );
+      fprintf( Note, "UNIT_V (velocity)         %20.14e km/s\n",           UNIT_V/(Const_km/Const_s)     );
+      fprintf( Note, "                        = %20.14e cm/s\n",           UNIT_V                        );
+      fprintf( Note, "UNIT_D (mass density)     %20.14e rho_bg     (*)\n", UNIT_D/Current_Matter_Density );
+      fprintf( Note, "                        = %20.14e g/cm^3     (*)\n", UNIT_D                        );
+      fprintf( Note, "UNIT_E (energy)           %20.14e g*cm^2/s^2 (*)\n", UNIT_E                        );
+      fprintf( Note, "UNIT_P (energy density)   %20.14e g/cm/s^2   (*)\n", UNIT_P                        ); }
 
 #     else
 
-      fprintf( Note, "UNIT_L                    %20.14e cm\n",           UNIT_L         );
-      fprintf( Note, "UNIT_M                    %20.14e g\n",            UNIT_M         );
-      fprintf( Note, "UNIT_T                    %20.14e s\n",            UNIT_T         );
-      fprintf( Note, "UNIT_V                    %20.14e cm/s\n",         UNIT_V         );
-      fprintf( Note, "UNIT_D                    %20.14e g/cm^3\n",       UNIT_D         );
-      fprintf( Note, "UNIT_E (energy density)   %20.14e g/cm/s^2\n",     UNIT_E         ); }
+      fprintf( Note, "UNIT_L                    %20.14e cm\n",             UNIT_L         );
+      fprintf( Note, "UNIT_M                    %20.14e g\n",              UNIT_M         );
+      fprintf( Note, "UNIT_T                    %20.14e s\n",              UNIT_T         );
+      fprintf( Note, "UNIT_V                    %20.14e cm/s\n",           UNIT_V         );
+      fprintf( Note, "UNIT_D                    %20.14e g/cm^3\n",         UNIT_D         );
+      fprintf( Note, "UNIT_E (energy)           %20.14e g*cm^2/s^2\n",     UNIT_E         );
+      fprintf( Note, "UNIT_P (energy density)   %20.14e g/cm/s^2\n",       UNIT_P         ); }
 #     endif // #ifdef COMOVING ... else ...
 
       fprintf( Note, "***********************************************************************************\n" );

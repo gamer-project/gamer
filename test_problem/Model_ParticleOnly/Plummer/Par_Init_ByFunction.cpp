@@ -137,7 +137,7 @@ void Par_Init_ByFunction()
 //       determine the maximum velocity (the escaping velocity)
          Vmax = Vmax_Fac*pow( SQR(Plummer_R0) + SQR(RanR), -0.25 );
 
-//       randomly determine the velocity amplitude (ref: Aarseth, S. et al. 1974, A&A, 37, 183)
+//       randomly determine the velocity amplitude (ref: Aarseth, S. et al. 1974, A&A, 37, 183: Eq. [A4,A5])
          do
          {
             RanV    = ( (double)rand()/RAND_MAX );          // 0.0 ... 1.0

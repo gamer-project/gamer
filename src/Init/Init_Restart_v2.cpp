@@ -796,7 +796,7 @@ void Load_Parameter_After_2000( FILE *File, const int FormatVersion, int &NLv_Re
    double lb_wli_max, gamma, minmod_coeff, ep_coeff, elbdm_mass, elbdm_planck_const, newton_g, sor_omega;
    double mg_tolerated_error, output_part_x, output_part_y, output_part_z, molecular_weight;
    double box_size, end_t, omega_m0, dt__fluid, dt__gravity, dt__phase, dt__max_delta_a, output_dt, hubble0;
-   double unit_l, unit_m, unit_t, unit_v, unit_d, unit_e;
+   double unit_l, unit_m, unit_t, unit_v, unit_d, unit_e, unit_p;
 
    fseek( File, HeaderOffset_Parameter, SEEK_SET );
 
@@ -877,6 +877,7 @@ void Load_Parameter_After_2000( FILE *File, const int FormatVersion, int &NLv_Re
    fread( &unit_v,                     sizeof(double),                  1,             File );
    fread( &unit_d,                     sizeof(double),                  1,             File );
    fread( &unit_e,                     sizeof(double),                  1,             File );
+   fread( &unit_p,                     sizeof(double),                  1,             File );
    fread( &molecular_weight,           sizeof(double),                  1,             File );
 
 
@@ -1350,7 +1351,7 @@ void Load_Parameter_After_2000( FILE *File, const int FormatVersion, int &NLv_Re
 #     ifdef COMOVING
       CompareVar( "OMEGA_M0",                omega_m0,                     OMEGA_M0,                  NonFatal );
       CompareVar( "DT__MAX_DELTA_A",         dt__max_delta_a,              DT__MAX_DELTA_A,           NonFatal );
-      if ( FormatVersion >= 2110 )
+      if ( FormatVersion >= 2111 )
       CompareVar( "HUBBLE0",                 hubble0,                      HUBBLE0,                   NonFatal );
       else if ( MPI_Rank == 0 )
       Aux_Message( stderr, "WARNING : restart file does not have the parameter \"%s\" !!\n", "HUBBLE0" );
@@ -1385,7 +1386,7 @@ void Load_Parameter_After_2000( FILE *File, const int FormatVersion, int &NLv_Re
 #     if   ( MODEL == HYDRO )
       CompareVar( "OPT__FLAG_PRES_GRADIENT", opt__flag_pres_gradient,      OPT__FLAG_PRES_GRADIENT,   NonFatal );
       CompareVar( "GAMMA",                   gamma,                        GAMMA,                     NonFatal );
-      if ( FormatVersion >= 2110 )
+      if ( FormatVersion >= 2111 )
       CompareVar( "MOLECULAR_WEIGHT",        molecular_weight,             MOLECULAR_WEIGHT,          NonFatal );
       else
       Aux_Message( stderr, "WARNING : restart file does not have the parameter \"%s\" !!\n", "MOLECULAR_WEIGHT" );
@@ -1413,14 +1414,15 @@ void Load_Parameter_After_2000( FILE *File, const int FormatVersion, int &NLv_Re
       CompareVar( "OPT__OUTPUT_PAR_DENS",    opt__output_par_dens,    (int)OPT__OUTPUT_PAR_DENS,      NonFatal );
 #     endif
 
-      if ( FormatVersion >= 2110 ) {
+      if ( FormatVersion >= 2111 ) {
       CompareVar( "OPT__UNIT",               opt__unit,                    OPT__UNIT,                 NonFatal );
       CompareVar( "UNIT_L",                  unit_l,                       UNIT_L,                    NonFatal );
       CompareVar( "UNIT_M",                  unit_m,                       UNIT_M,                    NonFatal );
       CompareVar( "UNIT_T",                  unit_t,                       UNIT_T,                    NonFatal );
       CompareVar( "UNIT_V",                  unit_v,                       UNIT_V,                    NonFatal );
       CompareVar( "UNIT_D",                  unit_d,                       UNIT_D,                    NonFatal );
-      CompareVar( "UNIT_E",                  unit_e,                       UNIT_E,                    NonFatal ); }
+      CompareVar( "UNIT_E",                  unit_e,                       UNIT_E,                    NonFatal );
+      CompareVar( "UNIT_P",                  unit_p,                       UNIT_P,                    NonFatal ); }
       else if ( MPI_Rank == 0 )
       Aux_Message( stderr, "WARNING : restart file does not have any information about the code units !!\n" );
 

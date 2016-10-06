@@ -17,7 +17,7 @@ Procedure for outputting new variables:
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Output_DumpData_Total (FormatVersion = 2110)
+// Function    :  Output_DumpData_Total (FormatVersion = 2111)
 // Description :  Output all simulation data in the binary form, which can be used as a restart file
 //
 // Note        :  1. This output format is deprecated and is mainly used for debugging only
@@ -165,7 +165,7 @@ void Output_DumpData_Total( const char *FileName )
 
 //    a. output the information of data format
 //    =================================================================================================
-      const long FormatVersion = 2110;
+      const long FormatVersion = 2111;
       const long CheckCode     = 123456789;
 
       fseek( File, HeaderOffset_Format, SEEK_SET );
@@ -688,6 +688,7 @@ void Output_DumpData_Total( const char *FileName )
       fwrite( &UNIT_V,                    sizeof(double),                  1,             File );
       fwrite( &UNIT_D,                    sizeof(double),                  1,             File );
       fwrite( &UNIT_E,                    sizeof(double),                  1,             File );
+      fwrite( &UNIT_P,                    sizeof(double),                  1,             File );
       fwrite( &MOLECULAR_WEIGHT,          sizeof(double),                  1,             File );
 
 
