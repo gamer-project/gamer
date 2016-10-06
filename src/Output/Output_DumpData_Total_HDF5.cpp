@@ -1385,6 +1385,12 @@ void FillIn_Makefile( Makefile_t &Makefile )
    Makefile.SupportHDF5        = 0;
 #  endif
 
+#  ifdef SUPPORT_GSL
+   Makefile.SupportGSL         = 1;
+#  else
+   Makefile.SupportGSL         = 0;
+#  endif
+
    Makefile.NLevel             = NLEVEL;
    Makefile.MaxPatch           = MAX_PATCH;
 
@@ -2024,6 +2030,7 @@ void GetCompound_Makefile( hid_t &H5_TypeID )
    H5Tinsert( H5_TypeID, "GPU_Arch",           HOFFSET(Makefile_t,GPU_Arch          ), H5T_NATIVE_INT );
    H5Tinsert( H5_TypeID, "Laohu",              HOFFSET(Makefile_t,Laohu             ), H5T_NATIVE_INT );
    H5Tinsert( H5_TypeID, "SupportHDF5",        HOFFSET(Makefile_t,SupportHDF5       ), H5T_NATIVE_INT );
+   H5Tinsert( H5_TypeID, "SupportGSL",         HOFFSET(Makefile_t,SupportGSL        ), H5T_NATIVE_INT );
 
    H5Tinsert( H5_TypeID, "NLevel",             HOFFSET(Makefile_t,NLevel            ), H5T_NATIVE_INT );
    H5Tinsert( H5_TypeID, "MaxPatch",           HOFFSET(Makefile_t,MaxPatch          ), H5T_NATIVE_INT );

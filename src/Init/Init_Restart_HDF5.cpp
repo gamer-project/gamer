@@ -1211,6 +1211,7 @@ void Check_Makefile( const char *FileName )
    LoadField( "GPU_Arch",           &RS.GPU_Arch,           SID, TID, NonFatal, &RT.GPU_Arch,            1, NonFatal );
    LoadField( "Laohu",              &RS.Laohu,              SID, TID, NonFatal, &RT.Laohu,               1, NonFatal );
    LoadField( "SupportHDF5",        &RS.SupportHDF5,        SID, TID, NonFatal, &RT.SupportHDF5,         1, NonFatal );
+   LoadField( "SupportGSL",         &RS.SupportGSL,         SID, TID, NonFatal, &RT.SupportGSL,          1, NonFatal );
 
    LoadField( "NLevel",             &RS.NLevel,             SID, TID, NonFatal, &RT.NLevel,              1, NonFatal );
    LoadField( "MaxPatch",           &RS.MaxPatch,           SID, TID, NonFatal, &RT.MaxPatch,            1, NonFatal );

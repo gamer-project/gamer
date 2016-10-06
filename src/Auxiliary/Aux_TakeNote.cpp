@@ -278,6 +278,12 @@ void Aux_TakeNote()
       fprintf( Note, "SUPPORT_HDF5              OFF\n" );
 #     endif
 
+#     ifdef SUPPORT_GSL
+      fprintf( Note, "SUPPORT_GSL               ON\n" );
+#     else
+      fprintf( Note, "SUPPORT_GSL               OFF\n" );
+#     endif
+
       fprintf( Note, "***********************************************************************************\n" );
       fprintf( Note, "\n\n");
 

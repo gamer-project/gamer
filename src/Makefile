@@ -131,6 +131,9 @@ SIMU_OPTION += -DOPENMP
 # support HDF5 format
 SIMU_OPTION += -DSUPPORT_HDF5
 
+# support GNU scientific library
+SIMU_OPTION += -DSUPPORT_GSL
+
 
 
 # source files
@@ -365,6 +368,7 @@ CUDA_TOOLKIT_PATH := /usr/local/cuda/7.0
 FFTW_PATH         := /projects/ncsa/grav/softwares/fftw/2.1.5
 MPI_PATH          := /usr/local/mpi/openmpi-1.8.4-intel-15.0
 HDF5_PATH         := /projects/ncsa/grav/softwares/miniconda2
+GSL_PATH          := /usr/local/gsl/gsl-1.16
 
 # hulk (openmpi-intel-qlc)
 #CUDA_TOOLKIT_PATH := /opt/gpu/cuda/4.2
@@ -503,6 +507,10 @@ ifeq "$(findstring SUPPORT_HDF5, $(SIMU_OPTION))" "SUPPORT_HDF5"
 LIB += -L$(HDF5_PATH)/lib -lhdf5
 endif
 
+ifeq "$(findstring SUPPORT_GSL, $(SIMU_OPTION))" "SUPPORT_GSL"
+LIB += -L$(GSL_PATH)/lib -lgsl -lgslcblas
+endif
+
 
 # headers
 # -------------------------------------------------------------------------------
@@ -518,6 +526,10 @@ endif
 
 ifeq "$(findstring SUPPORT_HDF5, $(SIMU_OPTION))" "SUPPORT_HDF5"
 INCLUDE += -I$(HDF5_PATH)/include
+endif
+
+ifeq "$(findstring SUPPORT_GSL, $(SIMU_OPTION))" "SUPPORT_GSL"
+INCLUDE += -I$(GSL_PATH)/include
 endif
 
 

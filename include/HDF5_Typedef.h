@@ -82,6 +82,8 @@ struct Makefile_t
    int IndividualDt;
    int Comoving;
    int Particle;
+   int NLevel;
+   int MaxPatch;
 
    int UseGPU;
    int GAMER_Debug;
@@ -96,9 +98,7 @@ struct Makefile_t
    int GPU_Arch;
    int Laohu;
    int SupportHDF5;
-
-   int NLevel;
-   int MaxPatch;
+   int SupportGSL;
 
 #  ifdef GRAVITY
    int PotScheme;
