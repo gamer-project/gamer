@@ -38,6 +38,12 @@ SIMU_OPTION += -DINDIVIDUAL_TIMESTEP
 # particles (must work with GRAVITY; set MODEL=PAR_ONLY for particle-only simulations)
 SIMU_OPTION += -DPARTICLE
 
+# maximum number of AMR levels including the base level (level id = 0 ... NLEVEL-1)
+SIMU_OPTION += -DNLEVEL=10
+
+# maximum number of patches at each AMR level
+SIMU_OPTION += -DMAX_PATCH=1000000
+
 
 # (b) hydro options
 # ------------------------------------------------------------------------------------
@@ -124,19 +130,6 @@ SIMU_OPTION += -DOPENMP
 
 # support HDF5 format
 SIMU_OPTION += -DSUPPORT_HDF5
-
-
-
-# simulation parameters
-#######################################################################################################
-
-NLEVEL    := 10       # maximum number of grid levels (including the base level)
-MAX_PATCH := 1000000  # maximum number of patches at each level
-
-NLEVEL    := $(strip $(NLEVEL))
-MAX_PATCH := $(strip $(MAX_PATCH))
-
-SIMU_PARA := -DNLEVEL=$(NLEVEL)  -DMAX_PATCH=$(MAX_PATCH)
 
 
 
@@ -530,7 +523,7 @@ endif
 
 # CXX flags
 # -------------------------------------------------------------------------------
-COMMONFLAG := $(INCLUDE) $(SIMU_OPTION) $(SIMU_PARA)
+COMMONFLAG := $(INCLUDE) $(SIMU_OPTION)
 
 ifeq "$(findstring INTEL, $(SIMU_OPTION))" "INTEL"
 CXXWARN_FLAG := -w1
