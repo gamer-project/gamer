@@ -190,7 +190,7 @@ void Par_TestProbSol_Plummer( real *fluid, const double x, const double y, const
       {
          for (int d=0; d<3; d++)    Center[d] = Plummer_Center[d] + Coll_Offset*(double)t;
 
-         r2 = SQR(x-Center[0])+ SQR(y-Center[1]) + SQR(z-Center[2]);
+         r2 = SQR(x-Center[0]) + SQR(y-Center[1]) + SQR(z-Center[2]);
          a2 = r2 / SQR(Plummer_R0);
 
          fluid[DENS] += GasRho0 * pow( 1.0 + a2, -2.5 );
@@ -205,7 +205,7 @@ void Par_TestProbSol_Plummer( real *fluid, const double x, const double y, const
 
    else
    {
-      r2 = SQR(x-Plummer_Center[0])+ SQR(y-Plummer_Center[1]) + SQR(z-Plummer_Center[2]);
+      r2 = SQR(x-Plummer_Center[0]) + SQR(y-Plummer_Center[1]) + SQR(z-Plummer_Center[2]);
       a2 = r2 / SQR(Plummer_R0);
 
       fluid[DENS] = GasRho0 * pow( 1.0 + a2, -2.5 );

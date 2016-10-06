@@ -10,7 +10,11 @@ extern void (*Output_TestProbErr_Ptr)( const bool BaseOnly );
 static void LoadTestProbParameter();
 static void Par_TestProbSol_ClusterMerger( real fluid[], const double x, const double y, const double z, const double Time );
 
-//extern double MassProf_ClusterMerger( const double r );
+double MassProf_Total( const double r );
+double MassProf_DM( const double r );
+double MassProf_Gas( const double r );
+double DensProf_DM( const double r );
+double DensProf_Gas( const double r );
 
 
 // global variables in the Cluster Merger test
@@ -22,7 +26,8 @@ double ClusterMerger_DM_C;             // dark matter: NFW concentration paramet
 double ClusterMerger_DM_Rzero;         // dark matter: radius at which the dark matter velocity dispersion is set to zero
 double ClusterMerger_Gas_Rcore;        // gas: core radius in the beta model
 double ClusterMerger_Gas_TvirM14;      // gas: temperature at the virial radius for a 1e14 Msun cluster
-double ClusterMerger_Gas_MTScaling;    // gas: M-T scaling index for temperature normalization --> Tvir ~ Mvir^MT_Scaling
+double ClusterMerger_Gas_MTScaling;    // gas: M-T scaling index for temperature normalization
+                                       // --> Tvir ~ Mvir^MT_Scaling, where Mvir is the **total** cluster mass
 double ClusterMerger_Gas_MFrac;        // gas: mass fraction
 int    ClusterMerger_NBin_MassProf;    // number of radial bins for the mass profile table
 bool   ClusterMerger_Coll;             // (true/false) --> test (cluster merger / single cluster)
@@ -33,11 +38,12 @@ double ClusterMerger_Coll_ImpactPara;  // impact parameter
 double ClusterMerger_Coll_BulkVel[3];  // bulk velocity
 */
 
+double ClusterMerger_DM_M;             // dark matter: total dark matter mass
+double ClusterMerger_DM_Rs;            // dark matter: NFW scale factor
+double ClusterMerger_DM_Rho0;          // dark matter: NFW density parameter
+double ClusterMerger_Gas_M;            // gas: total gas mass
+double ClusterMerger_Gas_Rho0;         // gas: density parameter in the isothermal beta model
 double ClusterMerger_Gas_Tvir;         // gas: temperature at the virial radius for the target cluster mass
-/*
-double ClusterMerger_Rho0;                   // peak density
-double ClusterMerger_R0;                     // scale radius
-*/
 // =======================================================================================
 
 
@@ -100,6 +106,17 @@ void Init_TestProb()
    ClusterMerger_Gas_Tvir = ClusterMerger_Gas_TvirM14
                             *pow(  ( ClusterMerger_Mvir / (1.0e14*Const_Msun/UNIT_M) ), ClusterMerger_Gas_MTScaling  );
 
+// (2) NFW
+   const double C = ClusterMerger_DM_C;
+   ClusterMerger_DM_M      = ClusterMerger_Mvir * ( 1.0 - ClusterMerger_Gas_MFrac );
+   ClusterMerger_DM_Rs     = ClusterMerger_Rvir / C;
+   ClusterMerger_DM_Rho0   = ClusterMerger_DM_M / (  4.0*M_PI*CUBE(ClusterMerger_DM_Rs)*( -C/(1.0+C) + log(1.0+C) )  );
+
+// (3) isothermal beta model
+   const double x = ClusterMerger_Rvir / ClusterMerger_Gas_Rcore;
+   ClusterMerger_Gas_M     = ClusterMerger_Mvir * ClusterMerger_Gas_MFrac;
+   ClusterMerger_Gas_Rho0  = ClusterMerger_Gas_M / (  4.0*M_PI*CUBE(ClusterMerger_Gas_Rcore)*( asinh(x) - x/sqrt(1.0+x*x) )  );
+
 
 // record the test problem parameters
    if ( MPI_Rank == 0 )
@@ -107,19 +124,24 @@ void Init_TestProb()
       Aux_Message( stdout, "\n" );
       Aux_Message( stdout, "%s test :\n", TestProb );
       Aux_Message( stdout, "=============================================================================\n" );
-      Aux_Message( stdout, " Note: random seed for initializing particles             = %d\n",          ClusterMerger_RanSeed );
-      Aux_Message( stdout, "       [total]       virial mass                          = %13.7e Msun\n", ClusterMerger_Mvir*UNIT_M/Const_Msun );
-      Aux_Message( stdout, "       [total]       virial radius                        = %13.7e Mpc\n",  ClusterMerger_Rvir*UNIT_L/Const_Mpc );
-      Aux_Message( stdout, "       [dark matter] concentration parameter              = %13.7e\n",      ClusterMerger_DM_C );
-      Aux_Message( stdout, "       [dark matter] radius with zero velocity dispersion = %13.7e Mpc\n",  ClusterMerger_DM_Rzero*UNIT_L/Const_Mpc );
-      Aux_Message( stdout, "       [gas]         core radius in beta model            = %13.7e Mpc\n",  ClusterMerger_Gas_Rcore*UNIT_L/Const_Mpc );
-      Aux_Message( stdout, "       [gas]         temperature normalization at Rvir    = %13.7e keV\n",  ClusterMerger_Gas_Tvir*UNIT_E/Const_keV );
-      Aux_Message( stdout, "                                                          = %13.7e K\n",    ClusterMerger_Gas_Tvir*UNIT_E/Const_kB );
-      Aux_Message( stdout, "       [gas]         M-T scaling index                    = %13.7e\n",      ClusterMerger_Gas_MTScaling );
-      Aux_Message( stdout, "       [gas]         mass fraction                        = %13.7e\n",      ClusterMerger_Gas_MFrac );
-      Aux_Message( stdout, "       number of bins for interpolating mass profile      = %d\n",          ClusterMerger_NBin_MassProf );
-      Aux_Message( stdout, "       test mode                                          = %s\n",          (ClusterMerger_Coll)?
-                                                                                                        "cluster merger":"single cluster" );
+      Aux_Message( stdout, "   random seed for initializing particles             = %d\n",            ClusterMerger_RanSeed );
+      Aux_Message( stdout, "   [total]       virial mass                          = %13.7e Msun\n",   ClusterMerger_Mvir*UNIT_M/Const_Msun );
+      Aux_Message( stdout, "   [total]       virial radius (Rvir)                 = %13.7e Mpc\n",    ClusterMerger_Rvir*UNIT_L/Const_Mpc );
+      Aux_Message( stdout, "   [dark matter] enclosed mass within Rvir            = %13.7e Msun\n",   ClusterMerger_DM_M*UNIT_M/Const_Msun );
+      Aux_Message( stdout, "   [dark matter] NFW concentration parameter          = %13.7e\n",        ClusterMerger_DM_C );
+      Aux_Message( stdout, "   [dark matter] NFW scale radius                     = %13.7e Mpc\n",    ClusterMerger_DM_Rs*UNIT_L/Const_Mpc );
+      Aux_Message( stdout, "   [dark matter] NFW density parameter                = %13.7e g/cm^3\n", ClusterMerger_DM_Rho0*UNIT_D );
+      Aux_Message( stdout, "   [dark matter] radius with zero velocity dispersion = %13.7e Mpc\n",    ClusterMerger_DM_Rzero*UNIT_L/Const_Mpc );
+      Aux_Message( stdout, "   [gas]         enclosed mass within Rvir            = %13.7e Msun\n",   ClusterMerger_Gas_M*UNIT_M/Const_Msun );
+      Aux_Message( stdout, "   [gas]         core radius in beta model            = %13.7e Mpc\n",    ClusterMerger_Gas_Rcore*UNIT_L/Const_Mpc );
+      Aux_Message( stdout, "   [gas]         density parameter in beta model      = %13.7e g/cm^3\n", ClusterMerger_Gas_Rho0*UNIT_D );
+      Aux_Message( stdout, "   [gas]         temperature normalization at Rvir    = %13.7e keV\n",    ClusterMerger_Gas_Tvir*UNIT_E/Const_keV );
+      Aux_Message( stdout, "                                                      = %13.7e K\n",      ClusterMerger_Gas_Tvir*UNIT_E/Const_kB );
+      Aux_Message( stdout, "   [gas]         M-T scaling index                    = %13.7e\n",        ClusterMerger_Gas_MTScaling );
+      Aux_Message( stdout, "   [gas]         mass fraction                        = %13.7e\n",        ClusterMerger_Gas_MFrac );
+      Aux_Message( stdout, "   number of bins for interpolating mass profile      = %d\n",            ClusterMerger_NBin_MassProf );
+      Aux_Message( stdout, "   test mode                                          = %s\n",            (ClusterMerger_Coll)?
+                                                                                                          "cluster merger":"single cluster" );
       /*
       if ( ClusterMerger_Coll )
       Aux_Message( stdout, "       initial distance between two clouds          = %13.7e\n",  ClusterMerger_Coll_D );
@@ -183,17 +205,17 @@ void Init_TestProb()
 void Par_TestProbSol_ClusterMerger( real *fluid, const double x, const double y, const double z, const double Time )
 {
 
-   /*
-#  if   ( MODEL == HYDRO )
-// gas share the same density profile as particles (except for different total masses)
-   const double TotM    = 4.0/3.0*M_PI*CUBE(Plummer_R0)*Plummer_Rho0;
-   const double GasRho0 = Plummer_Rho0*Plummer_GasMFrac;
-   const double PresBg  = 0.0;   // background pressure
-   double r2, a2;
+   const double BoxCenter[3] = { 0.5*amr->BoxSize[0], 0.5*amr->BoxSize[1], 0.5*amr->BoxSize[2] };
+   const double PresBg       = 1.0;    // background pressure
 
-   if ( Plummer_Coll )
+   double r;
+
+   if ( ClusterMerger_Coll )
    {
-      const double Coll_Offset = 0.5*Plummer_Coll_D/sqrt(3.0);
+      Aux_Error( ERROR_INFO, "NOT SUPPORETD YET !!\n" );
+
+      /*
+      const double Coll_Offset = 0.5*ClusterMerger_Coll_D/sqrt(3.0);
       double Center[3];
 
       fluid[DENS] = 0.0;
@@ -201,46 +223,35 @@ void Par_TestProbSol_ClusterMerger( real *fluid, const double x, const double y,
 
       for (int t=-1; t<=1; t+=2)
       {
-         for (int d=0; d<3; d++)    Center[d] = Plummer_Center[d] + Coll_Offset*(double)t;
+         for (int d=0; d<3; d++)    Center[d] = ClusterMerger_Center[d] + Coll_Offset*(double)t;
 
          r2 = SQR(x-Center[0])+ SQR(y-Center[1]) + SQR(z-Center[2]);
-         a2 = r2 / SQR(Plummer_R0);
+         a2 = r2 / SQR(ClusterMerger_R0);
 
          fluid[DENS] += GasRho0 * pow( 1.0 + a2, -2.5 );
-         fluid[ENGY] += (  NEWTON_G*TotM*GasRho0 / ( 6.0*Plummer_R0*CUBE(1.0 + a2) ) + PresBg  ) / ( GAMMA - 1.0 );
+         fluid[ENGY] += (  NEWTON_G*TotM*GasRho0 / ( 6.0*ClusterMerger_R0*CUBE(1.0 + a2) ) + PresBg  ) / ( GAMMA - 1.0 );
       }
 
-      fluid[MOMX]  = fluid[DENS]*Plummer_BulkVel[0];
-      fluid[MOMY]  = fluid[DENS]*Plummer_BulkVel[1];
-      fluid[MOMZ]  = fluid[DENS]*Plummer_BulkVel[2];
+      fluid[MOMX]  = fluid[DENS]*ClusterMerger_BulkVel[0];
+      fluid[MOMY]  = fluid[DENS]*ClusterMerger_BulkVel[1];
+      fluid[MOMZ]  = fluid[DENS]*ClusterMerger_BulkVel[2];
       fluid[ENGY] += 0.5*( SQR(fluid[MOMX]) + SQR(fluid[MOMY]) + SQR(fluid[MOMZ]) ) / fluid[DENS];
+      */
    }
 
    else
    {
-      r2 = SQR(x-Plummer_Center[0])+ SQR(y-Plummer_Center[1]) + SQR(z-Plummer_Center[2]);
-      a2 = r2 / SQR(Plummer_R0);
+      r = sqrt( SQR(x-BoxCenter[0]) + SQR(y-BoxCenter[1]) + SQR(z-BoxCenter[2]) );
 
-      fluid[DENS] = GasRho0 * pow( 1.0 + a2, -2.5 );
-      fluid[MOMX] = fluid[DENS]*Plummer_BulkVel[0];
-      fluid[MOMY] = fluid[DENS]*Plummer_BulkVel[1];
-      fluid[MOMZ] = fluid[DENS]*Plummer_BulkVel[2];
-      fluid[ENGY] = (  NEWTON_G*TotM*GasRho0 / ( 6.0*Plummer_R0*CUBE(1.0 + a2) ) + PresBg  ) / ( GAMMA - 1.0 )
+      fluid[DENS] = DensProf_Gas( r );
+      fluid[MOMX] = 0.0;
+      fluid[MOMY] = 0.0;
+      fluid[MOMZ] = 0.0;
+      fluid[ENGY] = ( PresBg ) / ( GAMMA - 1.0 )
                     + 0.5*( SQR(fluid[MOMX]) + SQR(fluid[MOMY]) + SQR(fluid[MOMZ]) ) / fluid[DENS];
-   } // if ( Plummer_Coll ) ... else ...
+   } // if ( ClusterMerger_Coll ) ... else ...
 
-#  elif ( MODEL == ELBDM )
-// set wave function as zero everywhere
-   fluid[REAL] = 0.0;
-   fluid[IMAG] = 0.0;
-   fluid[DENS] = 0.0;
-
-#  else
-#  error : unsupported MODEL !!
-#  endif
-   */
-
-} // FUNCTION : Par_TestProbSol_Plummer
+} // FUNCTION : Par_TestProbSol_ClusterMerger
 
 
 
@@ -348,7 +359,7 @@ void LoadTestProbParameter()
    if ( ClusterMerger_RanSeed < 0 )
       Aux_Error( ERROR_INFO, "ClusterMerger_RanSeed (%d) < 0 !!\n", ClusterMerger_RanSeed );
 
-   if ( ClusterMerger_Mvir <= 0.0 ) 
+   if ( ClusterMerger_Mvir <= 0.0 )
       Aux_Error( ERROR_INFO, "ClusterMerger_Mvir (%14.7e) <= 0.0 !!\n", ClusterMerger_Mvir );
 
    if ( ClusterMerger_Rvir <= 0.0 )
@@ -379,6 +390,116 @@ void LoadTestProbParameter()
       Aux_Error( ERROR_INFO, "ClusterMerger_NBin_MassProf (%d) <= 1 !!\n", ClusterMerger_NBin_MassProf );
 
 } // FUNCTION : LoadTestProbParameter
+
+
+
+//-------------------------------------------------------------------------------------------------------
+// Function    :  MassProf_Total
+// Description :  Total mass profile (dark matter + gas)
+//
+// Note        :  Calculate the enclosed mass for a given radius
+//
+// Parameter   :  r  : Input radius
+//
+// Return      :  Total enclosed mass
+//-------------------------------------------------------------------------------------------------------
+double MassProf_Total( const double r )
+{
+
+   return MassProf_DM( r ) + MassProf_Gas( r );
+
+} // FUNCTION : MassProf_Total
+
+
+
+//-------------------------------------------------------------------------------------------------------
+// Function    :  MassProf_DM
+// Description :  Mass profile of the NFW model for dark matter
+//
+// Note        :  Calculate the enclosed mass for a given radius
+//
+// Parameter   :  r  : Input radius
+//
+// Return      :  Dark matter enclosed mass
+//-------------------------------------------------------------------------------------------------------
+double MassProf_DM( const double r )
+{
+
+   static double Norm = 4.0*M_PI*CUBE(ClusterMerger_DM_Rs)*ClusterMerger_DM_Rho0;
+
+   const double x = r / ClusterMerger_DM_Rs;
+
+   return Norm*( -x/(1.0+x) + log(1.0+x) );
+
+} // FUNCTION : MassProf_DM
+
+
+
+//-------------------------------------------------------------------------------------------------------
+// Function    :  MassProf_Gas
+// Description :  Mass profile of the isothermal beta model for gas
+//
+// Note        :  1. Calculate the enclosed mass for a given radius
+//                2. Currently only work with beta = 1.0
+//
+// Parameter   :  r  : Input radius
+//
+// Return      :  Gas enclosed mass
+//-------------------------------------------------------------------------------------------------------
+double MassProf_Gas( const double r )
+{
+
+   static double Norm = 4.0*M_PI*CUBE(ClusterMerger_Gas_Rcore)*ClusterMerger_Gas_Rho0;
+
+   const double x = r / ClusterMerger_Gas_Rcore;
+
+   return Norm*( asinh(x) - x/sqrt(1.0+x*x) );
+
+} // FUNCTION : MassProf_Gas
+
+
+
+//-------------------------------------------------------------------------------------------------------
+// Function    :  DensProf_DM
+// Description :  Density profile of the NFW model for dark matter
+//
+// Note        :  Calculate the mass density for a given radius
+//
+// Parameter   :  r  : Input radius
+//
+// Return      :  Dark matter mass density
+//-------------------------------------------------------------------------------------------------------
+double DensProf_DM( const double r )
+{
+
+   const double x = r / ClusterMerger_DM_Rs;
+
+   return ClusterMerger_DM_Rho0 / ( x*SQR(1.0+x) );
+
+} // FUNCTION : DensProf_DM
+
+
+
+//-------------------------------------------------------------------------------------------------------
+// Function    :  DensProf_Gas
+// Description :  Density profile of the isothermal beta model for gas
+//
+// Note        :  1. Calculate the mass density for a given radius
+//                2. Currently only work with beta = 1.0
+//
+// Parameter   :  r  : Input radius
+//
+// Return      :  Gas mass density
+//-------------------------------------------------------------------------------------------------------
+double DensProf_Gas( const double r )
+{
+
+   const double x    = r / ClusterMerger_Gas_Rcore;
+   const double beta = 1.0;
+
+   return ClusterMerger_Gas_Rho0 * pow( 1.0+x*x, -1.5*beta );
+
+} // FUNCTION : DensProf_Gas
 
 
 
