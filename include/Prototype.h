@@ -148,6 +148,7 @@ void Interpolate( real CData [], const int CSize[3], const int CStart[3], const 
 template <typename T> void  Mis_Idx1D2Idx3D( const int Size[], const T Idx1D, int Idx3D[] );
 template <typename T> int   Mis_BinarySearch( const T Array[], int Min, int Max, const T Key );
 template <typename T> int   Mis_BinarySearch_Real( const T Array[], int Min, int Max, const T Key );
+template <typename T> T     Mis_InterpolateFromTable( const int N, const T Table_x[], const T Table_y[], const T x );
 template <typename T> ulong Mis_Idx3D2Idx1D( const int Size[], const int Idx3D[] );
 template <typename T> void  Mis_Heapsort( const int N, T Array[], int IdxTable[] );
 template <typename T> int   Mis_Matching_char( const int N, const T Array[], const int M, const T Key[], char Match[] );

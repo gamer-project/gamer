@@ -16,7 +16,7 @@
 //                   if Key <  Array[Min] (minimum value) --> return Min-1
 //                   if Key >= Array[Max] (maximum value) --> return Max
 //                4. We must have "Max > Min" in the input parameters
-//                5. Overloaded with different types 
+//                5. Overloaded with different types
 //                6. Explicit template instantiation is put in the end of this file
 //
 // Parameter   :  Array : Sorted look-up array (in ascending numerical order)
@@ -56,7 +56,7 @@ int Mis_BinarySearch_Real( const T Array[], int Min, int Max, const T Key )
 
 // check whether the found array index is correct
 #  ifdef GAMER_DEBUG
-   if ( Idx < Min  ||  Idx >= Max )    
+   if ( Idx < Min  ||  Idx >= Max )
       Aux_Error( ERROR_INFO, "incorrect output index (Idx %d, Min %d, Max%d) !!\n", Idx, Min, Max );
 
    if (  Array[Idx] > Key  ||  Array[Idx+1] <= Key )
@@ -72,5 +72,5 @@ int Mis_BinarySearch_Real( const T Array[], int Min, int Max, const T Key )
 
 
 // explicit template instantiation
-template int Mis_BinarySearch_Real <float>  ( const float  Array[], int Min, int Max, const  float Key );
+template int Mis_BinarySearch_Real <float>  ( const float  Array[], int Min, int Max, const float  Key );
 template int Mis_BinarySearch_Real <double> ( const double Array[], int Min, int Max, const double Key );
