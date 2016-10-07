@@ -11,4 +11,5 @@
 -1          ClusterMerger_NBin_PresProf     # # of bins for the table of gas pressure profile                    (<=1: default)
 -1          ClusterMerger_NBin_MassProf     # # of bins for the table of dark matter mass profile                (<=1: default)
 -1          ClusterMerger_NBin_SigmaProf    # # of bins for the table of dark matter velocity dispersion profile (<=1: default)
+-1.0        ClusterMerger_IntRmin           # minimum radius in Mpc for the interpolation tables of Pres/Mass/Sigma (<=0: default)
 0           ClusterMerger_Coll              # (true/false) --> test (cluster merger / single cluster)

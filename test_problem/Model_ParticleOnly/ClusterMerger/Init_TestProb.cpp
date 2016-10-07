@@ -38,6 +38,7 @@ double ClusterMerger_Gas_MFrac;        // gas: mass fraction
 int    ClusterMerger_NBin_PresProf;    // number of radial bins for the table of gas pressure profile
 int    ClusterMerger_NBin_MassProf;    // number of radial bins for the table of dark matter mass profile
 int    ClusterMerger_NBin_SigmaProf;   // number of radial bins for the table of dark matter velocity dispersion profile
+double ClusterMerger_IntRmin;          // minimum radius in the interpolation table
 bool   ClusterMerger_Coll;             // (true/false) --> test (cluster merger / single cluster)
 
 /*
@@ -127,6 +128,7 @@ void Init_TestProb()
    ClusterMerger_DM_Rzero    *= Const_Mpc  / UNIT_L;
    ClusterMerger_Gas_Rcore   *= Const_Mpc  / UNIT_L;
    ClusterMerger_Gas_TvirM14 *= Const_keV  / UNIT_E;
+   ClusterMerger_IntRmin     *= Const_Mpc  / UNIT_L;
 
 
 // set the test problem parameters
@@ -185,6 +187,7 @@ void Init_TestProb()
       Aux_Message( stdout, "   # of bins in the gas pressure profile              = %d\n",            ClusterMerger_NBin_PresProf );
       Aux_Message( stdout, "   # of bins in the dark matter mass profile          = %d\n",            ClusterMerger_NBin_MassProf );
       Aux_Message( stdout, "   # of bins in the dark matter sigma profile         = %d\n",            ClusterMerger_NBin_SigmaProf );
+      Aux_Message( stdout, "   minimum radius in the interpolation table          = %13.7e Mpc\n",    ClusterMerger_IntRmin*UNIT_L/Const_Mpc );
       Aux_Message( stdout, "   test mode                                          = %s\n",            (ClusterMerger_Coll)?
                                                                                                       "cluster merger":"single cluster" );
       /*
@@ -369,6 +372,9 @@ void LoadTestProbParameter()
    sscanf( input_line, "%d%s",   &ClusterMerger_NBin_SigmaProf, string );
 
    getline( &input_line, &len, File );
+   sscanf( input_line, "%lf%s",  &ClusterMerger_IntRmin,        string );
+
+   getline( &input_line, &len, File );
    sscanf( input_line, "%d%s",   &temp_int,                     string );
    ClusterMerger_Coll = (bool)temp_int;
 
@@ -425,6 +431,14 @@ void LoadTestProbParameter()
                                          "ClusterMerger_NBin_SigmaProf", ClusterMerger_NBin_SigmaProf );
    }
 
+   if ( ClusterMerger_IntRmin <= 0.0 )
+   {
+      ClusterMerger_IntRmin = 1.0e-5;     // in Mpc
+
+      if ( MPI_Rank == 0 )  Aux_Message( stdout, "NOTE : parameter \"%s\" is set to the default value = %13.7e Mpc\n",
+                                         "ClusterMerger_IntRmin", ClusterMerger_IntRmin );
+   }
+
 
 // check
    if ( ClusterMerger_RanSeed < 0 )
@@ -465,6 +479,9 @@ void LoadTestProbParameter()
 
    if ( ClusterMerger_NBin_SigmaProf <= 1   )
       Aux_Error( ERROR_INFO, "ClusterMerger_NBin_SigmaProf (%d) <= 1 !!\n", ClusterMerger_NBin_SigmaProf );
+
+   if ( ClusterMerger_IntRmin <= 0.0 )
+      Aux_Error( ERROR_INFO, "ClusterMerger_IntRmin (%14.7e) <= 0.0 !!\n", ClusterMerger_IntRmin );
 
 } // FUNCTION : LoadTestProbParameter
 
@@ -620,7 +637,7 @@ void SetTable_Gas_PresProf( const int NBin, double *r, double *Pres )
 // set up radius
 // --> r_min should be much smaller than dh_min in case that cell center and cluster center are very close
 //     (possible for the cluster merger case where cluster centers can be arbitrarily close to a cell center)
-   const double r_min = 1.0e-2*amr->dh[TOP_LEVEL];
+   const double r_min = ClusterMerger_IntRmin;
    const double r_max = ClusterMerger_Rvir;
    const double dr    = pow( r_max/r_min, 1.0/(NBin-1.0) );
 
