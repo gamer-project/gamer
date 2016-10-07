@@ -38,6 +38,12 @@ SIMU_OPTION += -DINDIVIDUAL_TIMESTEP
 # particles (must work with GRAVITY; set MODEL=PAR_ONLY for particle-only simulations)
 SIMU_OPTION += -DPARTICLE
 
+# maximum number of AMR levels including the base level (level id = 0 ... NLEVEL-1)
+SIMU_OPTION += -DNLEVEL=10
+
+# maximum number of patches at each AMR level
+SIMU_OPTION += -DMAX_PATCH=1000000
+
 
 # (b) hydro options
 # ------------------------------------------------------------------------------------
@@ -125,18 +131,8 @@ SIMU_OPTION += -DOPENMP
 # support HDF5 format
 SIMU_OPTION += -DSUPPORT_HDF5
 
-
-
-# simulation parameters
-#######################################################################################################
-
-NLEVEL    := 10       # maximum number of grid levels (including the base level)
-MAX_PATCH := 1000000  # maximum number of patches at each level
-
-NLEVEL    := $(strip $(NLEVEL))
-MAX_PATCH := $(strip $(MAX_PATCH))
-
-SIMU_PARA := -DNLEVEL=$(NLEVEL)  -DMAX_PATCH=$(MAX_PATCH)
+# support GNU scientific library
+SIMU_OPTION += -DSUPPORT_GSL
 
 
 
@@ -372,6 +368,7 @@ CUDA_TOOLKIT_PATH := /usr/local/cuda/7.0
 FFTW_PATH         := /projects/ncsa/grav/softwares/fftw/2.1.5
 MPI_PATH          := /usr/local/mpi/openmpi-1.8.4-intel-15.0
 HDF5_PATH         := /projects/ncsa/grav/softwares/miniconda2
+GSL_PATH          := /usr/local/gsl/gsl-1.16
 
 # hulk (openmpi-intel-qlc)
 #CUDA_TOOLKIT_PATH := /opt/gpu/cuda/4.2
@@ -510,6 +507,10 @@ ifeq "$(findstring SUPPORT_HDF5, $(SIMU_OPTION))" "SUPPORT_HDF5"
 LIB += -L$(HDF5_PATH)/lib -lhdf5
 endif
 
+ifeq "$(findstring SUPPORT_GSL, $(SIMU_OPTION))" "SUPPORT_GSL"
+LIB += -L$(GSL_PATH)/lib -lgsl -lgslcblas
+endif
+
 
 # headers
 # -------------------------------------------------------------------------------
@@ -527,10 +528,14 @@ ifeq "$(findstring SUPPORT_HDF5, $(SIMU_OPTION))" "SUPPORT_HDF5"
 INCLUDE += -I$(HDF5_PATH)/include
 endif
 
+ifeq "$(findstring SUPPORT_GSL, $(SIMU_OPTION))" "SUPPORT_GSL"
+INCLUDE += -I$(GSL_PATH)/include
+endif
+
 
 # CXX flags
 # -------------------------------------------------------------------------------
-COMMONFLAG := $(INCLUDE) $(SIMU_OPTION) $(SIMU_PARA)
+COMMONFLAG := $(INCLUDE) $(SIMU_OPTION)
 
 ifeq "$(findstring INTEL, $(SIMU_OPTION))" "INTEL"
 CXXWARN_FLAG := -w1

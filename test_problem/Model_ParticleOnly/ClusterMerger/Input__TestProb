@@ -8,5 +8,7 @@
 -1.0        ClusterMerger_Gas_TvirM14       # gas: temperature at the virial radius for a 1e14 Msun cluster (in keV) (<=0: default)
 -1.0        ClusterMerger_Gas_MTScaling     # gas: M-T scaling index for temperature normalization --> Tvir ~ Mvir^MT_Scaling (<=0: default)
 0.14        ClusterMerger_Gas_MFrac         # gas: mass fraction
--1          ClusterMerger_NBin_MassProf     # number of radial bins for the mass profile table (<=1: default)
+-1          ClusterMerger_NBin_PresProf     # # of bins for the table of gas pressure profile                    (<=1: default)
+-1          ClusterMerger_NBin_MassProf     # # of bins for the table of dark matter mass profile                (<=1: default)
+-1          ClusterMerger_NBin_SigmaProf    # # of bins for the table of dark matter velocity dispersion profile (<=1: default)
 0           ClusterMerger_Coll              # (true/false) --> test (cluster merger / single cluster)

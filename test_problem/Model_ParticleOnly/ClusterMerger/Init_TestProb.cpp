@@ -1,6 +1,9 @@
 #include "GAMER.h"
+#ifdef SUPPORT_GSL
+#include <gsl/gsl_integration.h>
+#endif
 
-#ifdef PARTICLE
+#if ( MODEL == HYDRO  &&  defined PARTICLE )
 
 
 
@@ -9,6 +12,9 @@ extern void (*Output_TestProbErr_Ptr)( const bool BaseOnly );
 
 static void LoadTestProbParameter();
 static void Par_TestProbSol_ClusterMerger( real fluid[], const double x, const double y, const double z, const double Time );
+
+static void SetTable_Gas_PresProf( const int NBin, double *r, double *Pres );
+static double GSL_IntFunc_Gas_PresProf( double r, void *IntPara );
 
 double MassProf_Total( const double r );
 double MassProf_DM( const double r );
@@ -29,7 +35,9 @@ double ClusterMerger_Gas_TvirM14;      // gas: temperature at the virial radius 
 double ClusterMerger_Gas_MTScaling;    // gas: M-T scaling index for temperature normalization
                                        // --> Tvir ~ Mvir^MT_Scaling, where Mvir is the **total** cluster mass
 double ClusterMerger_Gas_MFrac;        // gas: mass fraction
-int    ClusterMerger_NBin_MassProf;    // number of radial bins for the mass profile table
+int    ClusterMerger_NBin_PresProf;    // number of radial bins for the table of gas pressure profile
+int    ClusterMerger_NBin_MassProf;    // number of radial bins for the table of dark matter mass profile
+int    ClusterMerger_NBin_SigmaProf;   // number of radial bins for the table of dark matter velocity dispersion profile
 bool   ClusterMerger_Coll;             // (true/false) --> test (cluster merger / single cluster)
 
 /*
@@ -44,7 +52,23 @@ double ClusterMerger_DM_Rho0;          // dark matter: NFW density parameter
 double ClusterMerger_Gas_M;            // gas: total gas mass
 double ClusterMerger_Gas_Rho0;         // gas: density parameter in the isothermal beta model
 double ClusterMerger_Gas_Tvir;         // gas: temperature at the virial radius for the target cluster mass
+
+double *ClusterMerger_Gas_PresProf   = NULL;    // table of gas pressure for interpolation
+double *ClusterMerger_DM_MassProf    = NULL;    // table of dark matter mass profile for interpolation
+double *ClusterMerger_DM_SigmaProf   = NULL;    // table of dark matter velocity dispersion profile for interpolation
+
+double *ClusterMerger_Gas_PresProf_R = NULL;    // radii of ClusterMerger_Gas_PresProf table
+double *ClusterMerger_DM_MassProf_R  = NULL;    // radii of ClusterMerger_DM_MassProf table
+double *ClusterMerger_DM_SigmaProf_R = NULL;    // radii of ClusterMerger_DM_SigmaProf table
 // =======================================================================================
+
+// GSL parameters
+#ifdef SUPPORT_GSL
+const int    GSL_IntRule  = GSL_INTEG_GAUSS41;     // Gauss-Kronrod integration rules (options: 15,21,31,41,51,61)
+const size_t GSL_WorkSize = 1000000;               // work size used by GSL
+
+gsl_integration_workspace *GSL_WorkSpace = NULL;
+#endif
 
 
 
@@ -64,21 +88,25 @@ void Init_TestProb()
    const char *TestProb = "cluster merger";
 
 // check
-# if ( MODEL != HYDRO )
-# error : ERROR : only support the HYDRO model !!
-# endif
+#  if ( MODEL != HYDRO )
+#  error : ERROR : only support the HYDRO model !!
+#  endif
 
-# ifndef PARTICLE
-# error : ERROR : "PARTICLE must be ON" in the cluster merger test !!
-# endif
+#  ifndef PARTICLE
+#  error : ERROR : "PARTICLE must be ON" in the cluster merger test !!
+#  endif
 
-# ifndef GRAVITY
-# error : ERROR : "GRAVITY must be ON" in the cluster merger test !!
-# endif
+#  ifndef GRAVITY
+#  error : ERROR : "GRAVITY must be ON" in the cluster merger test !!
+#  endif
 
-# ifdef COMOVING
-# error : ERROR : "COMOVING must be OFF" in the cluster merger test !!
-# endif
+#  ifdef COMOVING
+#  error : ERROR : "COMOVING must be OFF" in the cluster merger test !!
+#  endif
+
+#  ifndef SUPPORT_GSL
+#  error : ERROR : "SUPPORT_GSL must be ON" in the cluster merger test !!
+#  endif
 
    if ( !OPT__UNIT )
       Aux_Error( ERROR_INFO, "please turn on \"OPT__UNIT\" and set units properly for this test problem !!\n" );
@@ -118,6 +146,21 @@ void Init_TestProb()
    ClusterMerger_Gas_Rho0  = ClusterMerger_Gas_M / (  4.0*M_PI*CUBE(ClusterMerger_Gas_Rcore)*( asinh(x) - x/sqrt(1.0+x*x) )  );
 
 
+// initialize GSL
+   GSL_WorkSpace = gsl_integration_workspace_alloc( GSL_WorkSize );
+
+
+// set up interpolation tables
+// (1) gas pressure
+   SetTable_Gas_PresProf( ClusterMerger_NBin_PresProf, ClusterMerger_Gas_PresProf_R, ClusterMerger_Gas_PresProf );
+
+// (2) dark matter mass profile
+// SetTable_DM_MassProf();
+
+// (3) dark matter velocity dispersion
+// SetTable_DM_SigmaProf();
+
+
 // record the test problem parameters
    if ( MPI_Rank == 0 )
    {
@@ -139,9 +182,11 @@ void Init_TestProb()
       Aux_Message( stdout, "                                                      = %13.7e K\n",      ClusterMerger_Gas_Tvir*UNIT_E/Const_kB );
       Aux_Message( stdout, "   [gas]         M-T scaling index                    = %13.7e\n",        ClusterMerger_Gas_MTScaling );
       Aux_Message( stdout, "   [gas]         mass fraction                        = %13.7e\n",        ClusterMerger_Gas_MFrac );
-      Aux_Message( stdout, "   number of bins for interpolating mass profile      = %d\n",            ClusterMerger_NBin_MassProf );
+      Aux_Message( stdout, "   # of bins in the gas pressure profile              = %d\n",            ClusterMerger_NBin_PresProf );
+      Aux_Message( stdout, "   # of bins in the dark matter mass profile          = %d\n",            ClusterMerger_NBin_MassProf );
+      Aux_Message( stdout, "   # of bins in the dark matter sigma profile         = %d\n",            ClusterMerger_NBin_SigmaProf );
       Aux_Message( stdout, "   test mode                                          = %s\n",            (ClusterMerger_Coll)?
-                                                                                                          "cluster merger":"single cluster" );
+                                                                                                      "cluster merger":"single cluster" );
       /*
       if ( ClusterMerger_Coll )
       Aux_Message( stdout, "       initial distance between two clouds          = %13.7e\n",  ClusterMerger_Coll_D );
@@ -184,6 +229,10 @@ void Init_TestProb()
 
    if ( OPT__INIT == INIT_STARTOVER  &&  amr->Par->Init != PAR_INIT_BY_FUNCTION )
       Aux_Error( ERROR_INFO, "please set PAR_INIT = PAR_INIT_BY_FUNCTION !!\n" );
+
+
+// free GSL resource
+   gsl_integration_workspace_free( GSL_WorkSpace );
 
 } // FUNCTION : Init_TestProb
 
@@ -284,37 +333,43 @@ void LoadTestProbParameter()
    getline( &input_line, &len, File );
 
    getline( &input_line, &len, File );
-   sscanf( input_line, "%d%s",   &ClusterMerger_RanSeed,       string );
+   sscanf( input_line, "%d%s",   &ClusterMerger_RanSeed,        string );
 
    getline( &input_line, &len, File );
-   sscanf( input_line, "%lf%s",  &ClusterMerger_Mvir,          string );
+   sscanf( input_line, "%lf%s",  &ClusterMerger_Mvir,           string );
 
    getline( &input_line, &len, File );
-   sscanf( input_line, "%lf%s",  &ClusterMerger_Rvir,          string );
+   sscanf( input_line, "%lf%s",  &ClusterMerger_Rvir,           string );
 
    getline( &input_line, &len, File );
-   sscanf( input_line, "%lf%s",  &ClusterMerger_DM_C,          string );
+   sscanf( input_line, "%lf%s",  &ClusterMerger_DM_C,           string );
 
    getline( &input_line, &len, File );
-   sscanf( input_line, "%lf%s",  &ClusterMerger_DM_Rzero,      string );
+   sscanf( input_line, "%lf%s",  &ClusterMerger_DM_Rzero,       string );
 
    getline( &input_line, &len, File );
-   sscanf( input_line, "%lf%s",  &ClusterMerger_Gas_Rcore,     string );
+   sscanf( input_line, "%lf%s",  &ClusterMerger_Gas_Rcore,      string );
 
    getline( &input_line, &len, File );
-   sscanf( input_line, "%lf%s",  &ClusterMerger_Gas_TvirM14,   string );
+   sscanf( input_line, "%lf%s",  &ClusterMerger_Gas_TvirM14,    string );
 
    getline( &input_line, &len, File );
-   sscanf( input_line, "%lf%s",  &ClusterMerger_Gas_MTScaling, string );
+   sscanf( input_line, "%lf%s",  &ClusterMerger_Gas_MTScaling,  string );
 
    getline( &input_line, &len, File );
-   sscanf( input_line, "%lf%s",  &ClusterMerger_Gas_MFrac,     string );
+   sscanf( input_line, "%lf%s",  &ClusterMerger_Gas_MFrac,      string );
 
    getline( &input_line, &len, File );
-   sscanf( input_line, "%d%s",   &ClusterMerger_NBin_MassProf, string );
+   sscanf( input_line, "%d%s",   &ClusterMerger_NBin_PresProf,  string );
 
    getline( &input_line, &len, File );
-   sscanf( input_line, "%d%s",   &temp_int,                    string );
+   sscanf( input_line, "%d%s",   &ClusterMerger_NBin_MassProf,  string );
+
+   getline( &input_line, &len, File );
+   sscanf( input_line, "%d%s",   &ClusterMerger_NBin_SigmaProf, string );
+
+   getline( &input_line, &len, File );
+   sscanf( input_line, "%d%s",   &temp_int,                     string );
    ClusterMerger_Coll = (bool)temp_int;
 
    fclose( File );
@@ -346,12 +401,28 @@ void LoadTestProbParameter()
                                          "ClusterMerger_Gas_MTScaling", ClusterMerger_Gas_MTScaling );
    }
 
+   if ( ClusterMerger_NBin_PresProf <= 1 )
+   {
+      ClusterMerger_NBin_PresProf = 10000;
+
+      if ( MPI_Rank == 0 )  Aux_Message( stdout, "NOTE : parameter \"%s\" is set to the default value = %d\n",
+                                         "ClusterMerger_NBin_PresProf", ClusterMerger_NBin_PresProf );
+   }
+
    if ( ClusterMerger_NBin_MassProf <= 1 )
    {
       ClusterMerger_NBin_MassProf = 10000;
 
       if ( MPI_Rank == 0 )  Aux_Message( stdout, "NOTE : parameter \"%s\" is set to the default value = %d\n",
                                          "ClusterMerger_NBin_MassProf", ClusterMerger_NBin_MassProf );
+   }
+
+   if ( ClusterMerger_NBin_SigmaProf <= 1 )
+   {
+      ClusterMerger_NBin_SigmaProf = 10000;
+
+      if ( MPI_Rank == 0 )  Aux_Message( stdout, "NOTE : parameter \"%s\" is set to the default value = %d\n",
+                                         "ClusterMerger_NBin_SigmaProf", ClusterMerger_NBin_SigmaProf );
    }
 
 
@@ -386,8 +457,14 @@ void LoadTestProbParameter()
       Aux_Error( ERROR_INFO, "ClusterMerger_Gas_MFrac (%14.7e) is not within the correct range [0.0 < x <= 1.0] !!\n",
                  ClusterMerger_Gas_MFrac );
 
+   if ( ClusterMerger_NBin_PresProf <= 1   )
+      Aux_Error( ERROR_INFO, "ClusterMerger_NBin_PresProf (%d) <= 1 !!\n", ClusterMerger_NBin_PresProf );
+
    if ( ClusterMerger_NBin_MassProf <= 1   )
       Aux_Error( ERROR_INFO, "ClusterMerger_NBin_MassProf (%d) <= 1 !!\n", ClusterMerger_NBin_MassProf );
+
+   if ( ClusterMerger_NBin_SigmaProf <= 1   )
+      Aux_Error( ERROR_INFO, "ClusterMerger_NBin_SigmaProf (%d) <= 1 !!\n", ClusterMerger_NBin_SigmaProf );
 
 } // FUNCTION : LoadTestProbParameter
 
@@ -503,4 +580,92 @@ double DensProf_Gas( const double r )
 
 
 
-#endif // #ifdef PARTICLE
+//-------------------------------------------------------------------------------------------------------
+// Function    :  SetTable_Gas_PresProf
+// Description :  Calculate the interpolation table of gas pressure profile
+//
+// Note        :  1. Calculate pressure from hydrostatic equilibrium
+//                   --> grad( P(r) ) = -rho(r)*grad( phi(r) ) = -G*rho(r)*M_tot(r)/r^2
+//                   --> P(r1) = P(r2) + G*Integrate( rho(r)*M_tot(r)/r^2, [r, r1, r2] )
+//                   --> note that rho is gas density and M_tot is **total** mass profile
+//                2. P(Rvir) is fixed by T(Rvir)/rho(Rvir), where T(Rvir) is ClusterMerger_Gas_Tvir
+//                3. Evenly sample in log space
+//                   --> Table_R[     0] = 1.0e-2*dh[TOP_LEVEL]
+//                       Table_R[NBin-1] = Rvir
+//                4. One must free memory for the r and Pres arrays manually
+//
+// Parameter   :  NBin  : Number of radial bins in the table
+//                r     : Radius at each bin
+//                Pres  : Gas pressure at each bin
+//
+// Return      :  r, Pres
+//-------------------------------------------------------------------------------------------------------
+void SetTable_Gas_PresProf( const int NBin, double *r, double *Pres )
+{
+
+// allocate memory
+   r    = new double [NBin];
+   Pres = new double [NBin];
+
+
+// set up GSL
+   const double GSL_MaxAbsErr = 0.0;      // maximum allowed absolute error (0 --> disable)
+   const double GSL_MaxRelErr = 1.0e-6;   // maximum allowed relative error (0 --> disable)
+   gsl_function GSL_Func;
+
+   GSL_Func.function = &GSL_IntFunc_Gas_PresProf;
+   GSL_Func.params   = NULL;
+
+
+// set up radius
+// --> r_min should be much smaller than dh_min in case that cell center and cluster center are very close
+//     (possible for the cluster merger case where cluster centers can be arbitrarily close to a cell center)
+   const double r_min = 1.0e-2*amr->dh[TOP_LEVEL];
+   const double r_max = ClusterMerger_Rvir;
+   const double dr    = pow( r_max/r_min, 1.0/(NBin-1.0) );
+
+   for (int b=0; b<NBin; b++)    r[b] = r_min*pow( dr, (double)b );
+
+
+// calculate pressure at Rvir
+   Pres[NBin-1] = DensProf_Gas( r_max ) * ClusterMerger_Gas_Tvir / ( Const_amu/UNIT_M*MOLECULAR_WEIGHT );
+
+
+// calculate pressure at r < Rvir
+   double GSL_Result, GSL_AbsErr;
+
+   for (int b=NBin-2; b>=0; b--)
+   {
+      gsl_integration_qag( &GSL_Func, r[b], r[b+1], GSL_MaxAbsErr, GSL_MaxRelErr, GSL_WorkSize, GSL_IntRule, GSL_WorkSpace,
+                           &GSL_Result, &GSL_AbsErr );
+
+//    gravitational constant is not included in the GSL integrand for better performance
+      Pres[b] = Pres[b+1] + NEWTON_G*GSL_Result;
+   }
+
+} // FUNCTION : SetTable_Gas_PresProf
+
+
+
+//-------------------------------------------------------------------------------------------------------
+// Function    :  GSL_IntFunc_Gas_PresProf
+// Description :  GSL integrand for calculating the gas pressure profile
+//
+// Note        :  1. Return rho_gas(r)*M_total(r)/r^2
+//                2. Gavitational constant is not included in this integrand and must be multiplied later
+//
+// Parameter   :  r        : Radius
+//                IntPara  : Integration parameters
+//
+// Return      :  See note above
+//-------------------------------------------------------------------------------------------------------
+double GSL_IntFunc_Gas_PresProf( double r, void *IntPara )
+{
+
+   return DensProf_Gas( r ) * MassProf_Total( r ) / SQR(r);
+
+} // FUNCTION : GSL_IntFunc_Gas_PresProf
+
+
+
+#endif // #if ( MODEL == HYDRO  &&  defined PARTICLE )
