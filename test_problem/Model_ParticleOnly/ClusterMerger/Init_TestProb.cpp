@@ -153,6 +153,14 @@ void Init_TestProb()
 
 
 // set up interpolation tables
+// (0) allocate memory
+   ClusterMerger_Gas_PresProf   = new double [ ClusterMerger_NBin_PresProf  ];
+   ClusterMerger_Gas_PresProf_R = new double [ ClusterMerger_NBin_PresProf  ];
+   ClusterMerger_DM_MassProf    = new double [ ClusterMerger_NBin_MassProf  ];
+   ClusterMerger_DM_MassProf_R  = new double [ ClusterMerger_NBin_MassProf  ];
+   ClusterMerger_DM_SigmaProf   = new double [ ClusterMerger_NBin_SigmaProf ];
+   ClusterMerger_DM_SigmaProf_R = new double [ ClusterMerger_NBin_SigmaProf ];
+
 // (1) gas pressure
    SetTable_Gas_PresProf( ClusterMerger_NBin_PresProf, ClusterMerger_Gas_PresProf_R, ClusterMerger_Gas_PresProf );
 
@@ -258,9 +266,8 @@ void Par_TestProbSol_ClusterMerger( real *fluid, const double x, const double y,
 {
 
    const double BoxCenter[3] = { 0.5*amr->BoxSize[0], 0.5*amr->BoxSize[1], 0.5*amr->BoxSize[2] };
-   const double PresBg       = 1.0;    // background pressure
-
-   double r;
+   const double DensBg       = 1.0e-2*DensProf_Gas( ClusterMerger_Rvir );                             // background density
+   const double PresBg       = 1.0e-0*ClusterMerger_Gas_PresProf[ ClusterMerger_NBin_PresProf - 1 ];  // background pressure
 
    if ( ClusterMerger_Coll )
    {
@@ -293,14 +300,36 @@ void Par_TestProbSol_ClusterMerger( real *fluid, const double x, const double y,
 
    else
    {
+      double r, Dens, Pres;
+
       r = sqrt( SQR(x-BoxCenter[0]) + SQR(y-BoxCenter[1]) + SQR(z-BoxCenter[2]) );
 
-      fluid[DENS] = DensProf_Gas( r );
+      if ( r >= ClusterMerger_Rvir )
+      {
+         Dens = DensBg;
+         Pres = PresBg;
+      }
+
+      else if ( r < ClusterMerger_IntRmin )
+         Aux_Error( ERROR_INFO, "r (%20.14e) < minimum radius in the interpolation table (%20.14e) !!\n",
+                    r, ClusterMerger_IntRmin );
+
+      else
+      {
+         Dens = DensProf_Gas( r );
+         Pres = Mis_InterpolateFromTable( ClusterMerger_NBin_PresProf, ClusterMerger_Gas_PresProf_R,
+                                          ClusterMerger_Gas_PresProf, r );
+
+         if ( Pres == NULL_REAL )   Aux_Error( ERROR_INFO, "interpolation on pressure failed !!\n" );
+      }
+
+      fluid[DENS] = Dens;
       fluid[MOMX] = 0.0;
       fluid[MOMY] = 0.0;
       fluid[MOMZ] = 0.0;
-      fluid[ENGY] = ( PresBg ) / ( GAMMA - 1.0 )
+      fluid[ENGY] = Pres / ( GAMMA - 1.0 )
                     + 0.5*( SQR(fluid[MOMX]) + SQR(fluid[MOMY]) + SQR(fluid[MOMZ]) ) / fluid[DENS];
+
    } // if ( ClusterMerger_Coll ) ... else ...
 
 } // FUNCTION : Par_TestProbSol_ClusterMerger
@@ -609,7 +638,7 @@ double DensProf_Gas( const double r )
 //                3. Evenly sample in log space
 //                   --> Table_R[     0] = 1.0e-2*dh[TOP_LEVEL]
 //                       Table_R[NBin-1] = Rvir
-//                4. One must free memory for the r and Pres arrays manually
+//                4. r and Pres arrays must be preallocated with the size NBin
 //
 // Parameter   :  NBin  : Number of radial bins in the table
 //                r     : Radius at each bin
@@ -620,9 +649,9 @@ double DensProf_Gas( const double r )
 void SetTable_Gas_PresProf( const int NBin, double *r, double *Pres )
 {
 
-// allocate memory
-   r    = new double [NBin];
-   Pres = new double [NBin];
+// check
+   if ( r    == NULL )  Aux_Error( ERROR_INFO, "r == NULL !!\n" );
+   if ( Pres == NULL )  Aux_Error( ERROR_INFO, "Pres == NULL !!\n" );
 
 
 // set up GSL

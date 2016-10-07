@@ -1,4 +1,4 @@
-3.0         BOX_SIZE                # size of the simulation box (Mpc/h in COMOVING)
+5.0         BOX_SIZE                # size of the simulation box (Mpc/h in COMOVING)
 64          NX0_TOT[0]              # number of base-level grids in the x direction
 64          NX0_TOT[1]              # number of base-level grids in the y direction
 64          NX0_TOT[2]              # number of base-level grids in the z direction
@@ -26,7 +26,7 @@
 2           OPT__BC_POT             # gravity boundary condition : (1,2) -> (periodic, isolated)
 -1.0        GFUNC_COEFF0            # Green's function coefficient at the origin for the isolated BC (<0:default [NoPar/Par:0.0/4.X])
 
-20000       PAR_NPAR                # number of particles
+100000      PAR_NPAR                # number of particles
 1           PAR_INIT                # initialization option for particles: (1, 2, 3) -> (FUNCTION, RESTART, FILE)
 -1          PAR_INTERP              # particle interpolation scheme: (-1, 1, 2, 3) -> (default, NGP, CIC, TSC) [3]
 -1          PAR_INTEG               # particle integration scheme: (-1, 1, 2) -> (default, Euler, KDK) [2]
