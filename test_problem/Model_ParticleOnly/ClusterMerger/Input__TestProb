@@ -1,16 +1,17 @@
 # parameters for the cluster merger test
 123         ClusterMerger_RanSeed           # random seed for setting particle position and velocity
 6.0e14      ClusterMerger_Mvir              # total: virial mass in Msun
-1.8         ClusterMerger_Rvir              # total: virial radius in Mpc --> M(r<Rvir) = Mvir by definition
+1.8         ClusterMerger_Rvir              # total: virial radius in Mpc => M(r<Rvir) = Mvir by definition
 3.5         ClusterMerger_Rcut              # total: cut-off radius in Mpc
 10.0        ClusterMerger_DM_C              # dark matter: NFW concentration parameter
--1.0        ClusterMerger_DM_Rzero          # dark matter: radius at which the velocity dispersion = 0 (<=0: default=1e4*Rcut)
+-1.0        ClusterMerger_DM_Rzero          # dark matter: radius with velocity dispersion / gas pressure = 0 (<=0: default=1e4*Rcut)
 0.216       ClusterMerger_Gas_Rcore         # gas: core radius in the beta model in Mpc
+0           ClusterMerger_Gas_NormTvir      # gas: (0/1) => normalize gas temperature at Rvir by (pressure=0 at Rzero / TvirM14)
 -1.0        ClusterMerger_Gas_TvirM14       # gas: temperature in keV at virial radius for a 1e14 Msun cluster (<=0: default=2.5)
--1.0        ClusterMerger_Gas_MTScaling     # gas: M-T relation -> Tvir ~ Mvir^MT_Scaling (<=0: default=2.0/3.0)
+-1.0        ClusterMerger_Gas_MTScaling     # gas: M-T relation => Tvir ~ Mvir^MT_Scaling (<=0: default=2.0/3.0)
 0.14        ClusterMerger_Gas_MFrac         # gas: mass fraction
 -1          ClusterMerger_NBin_PresProf     # # of bins for the table of gas pressure profile                    (<=1: default=1e4)
 -1          ClusterMerger_NBin_MassProf     # # of bins for the table of dark matter mass profile                (<=1: default=1e4)
 -1          ClusterMerger_NBin_SigmaProf    # # of bins for the table of dark matter velocity dispersion profile (<=1: default=1e4)
 -1.0        ClusterMerger_IntRmin           # minimum radius in Mpc in the Pres/Mass/Sigma table (<=0: default=1.0e-5 Mpc)
-0           ClusterMerger_Coll              # (true/false) --> test (cluster merger / single cluster)
+0           ClusterMerger_Coll              # (0/1) => test (single cluster / merging clusters)

@@ -35,6 +35,7 @@ double ClusterMerger_Rcut;             // total: cut-off radius for both gas and
 double ClusterMerger_DM_C;             // dark matter: NFW concentration parameter
 double ClusterMerger_DM_Rzero;         // dark matter: radius at which the dark matter velocity dispersion is set to zero
 double ClusterMerger_Gas_Rcore;        // gas: core radius in the beta model
+bool   ClusterMerger_Gas_NormTvir;     // gas: (true/false) => normalize temperature at Rvir by using (TvirM14/pressure=0 at Rzero)
 double ClusterMerger_Gas_TvirM14;      // gas: temperature at the virial radius for a 1e14 Msun cluster
 double ClusterMerger_Gas_MTScaling;    // gas: M-T scaling index for temperature normalization
                                        // --> Tvir ~ Mvir^MT_Scaling, where Mvir is the **total** cluster mass
@@ -194,9 +195,11 @@ void Init_TestProb()
       Aux_Message( stdout, "   [gas]         enclosed mass within Rvir            = %13.7e Msun\n",   ClusterMerger_Gas_M*UNIT_M/Const_Msun );
       Aux_Message( stdout, "   [gas]         core radius in beta model            = %13.7e Mpc\n",    ClusterMerger_Gas_Rcore*UNIT_L/Const_Mpc );
       Aux_Message( stdout, "   [gas]         density parameter in beta model      = %13.7e g/cm^3\n", ClusterMerger_Gas_Rho0*UNIT_D );
+      Aux_Message( stdout, "   [gas]         temperature normalization            = %d\n",            ClusterMerger_Gas_NormTvir );
+      if ( ClusterMerger_Gas_NormTvir ) {
       Aux_Message( stdout, "   [gas]         temperature normalization at Rvir    = %13.7e keV\n",    ClusterMerger_Gas_Tvir*UNIT_E/Const_keV );
       Aux_Message( stdout, "                                                      = %13.7e K\n",      ClusterMerger_Gas_Tvir*UNIT_E/Const_kB );
-      Aux_Message( stdout, "   [gas]         M-T scaling index                    = %13.7e\n",        ClusterMerger_Gas_MTScaling );
+      Aux_Message( stdout, "   [gas]         M-T scaling index                    = %13.7e\n",        ClusterMerger_Gas_MTScaling ); }
       Aux_Message( stdout, "   [gas]         mass fraction                        = %13.7e\n",        ClusterMerger_Gas_MFrac );
       Aux_Message( stdout, "   # of bins in the gas pressure profile              = %d\n",            ClusterMerger_NBin_PresProf );
       Aux_Message( stdout, "   # of bins in the dark matter mass profile          = %d\n",            ClusterMerger_NBin_MassProf );
@@ -390,6 +393,10 @@ void LoadTestProbParameter()
 
    getline( &input_line, &len, File );
    sscanf( input_line, "%lf%s",  &ClusterMerger_Gas_Rcore,      string );
+
+   getline( &input_line, &len, File );
+   sscanf( input_line, "%d%s",   &temp_int,                     string );
+   ClusterMerger_Gas_NormTvir = (bool)temp_int;
 
    getline( &input_line, &len, File );
    sscanf( input_line, "%lf%s",  &ClusterMerger_Gas_TvirM14,    string );
@@ -686,20 +693,38 @@ void SetTable_Gas_PresProf( const int NBin, double *r, double *Pres )
    for (int b=0; b<NBin; b++)    r[b] = r_min*pow( dr, (double)b );
 
 
-// calculate pressure at Rcut
-   Pres[NBin-1] = DensProf_Gas( r_max ) * ClusterMerger_Gas_Tvir / ( Const_amu/UNIT_M*MOLECULAR_WEIGHT );
+// calculate pressure at Rcut by having P(Rzero) = 0
+   double GSL_Result, GSL_AbsErr;
+   gsl_integration_qag( &GSL_Func, r[NBin-1], ClusterMerger_DM_Rzero, GSL_MaxAbsErr, GSL_MaxRelErr, GSL_WorkSize,
+                        GSL_IntRule, GSL_WorkSpace, &GSL_Result, &GSL_AbsErr );
+
+// gravitational constant is not included in the GSL integrand for better performance
+   Pres[NBin-1] = NEWTON_G*GSL_Result;
 
 
 // calculate pressure at r < Rcut
-   double GSL_Result, GSL_AbsErr;
-
    for (int b=NBin-2; b>=0; b--)
    {
-      gsl_integration_qag( &GSL_Func, r[b], r[b+1], GSL_MaxAbsErr, GSL_MaxRelErr, GSL_WorkSize, GSL_IntRule, GSL_WorkSpace,
-                           &GSL_Result, &GSL_AbsErr );
+      gsl_integration_qag( &GSL_Func, r[b], r[b+1], GSL_MaxAbsErr, GSL_MaxRelErr, GSL_WorkSize,
+                           GSL_IntRule, GSL_WorkSpace, &GSL_Result, &GSL_AbsErr );
 
-//    gravitational constant is not included in the GSL integrand for better performance
       Pres[b] = Pres[b+1] + NEWTON_G*GSL_Result;
+   }
+
+
+// renormalize pressure so that T(Rvir) == ClusterMerger_Gas_Tvir
+// --> not recommended ...
+   if ( ClusterMerger_Gas_NormTvir )
+   {
+      const double PresNorm = DensProf_Gas( ClusterMerger_Rvir ) * ClusterMerger_Gas_Tvir / ( Const_amu/UNIT_M*MOLECULAR_WEIGHT );
+      const int    Idx      = Mis_BinarySearch_Real( r, 0, NBin-1, ClusterMerger_Rvir );
+
+      if ( Idx < 0 )    Aux_Error( ERROR_INFO, "cannot determine the array index with r ~ Rvir !!\n" );
+
+//    don't bother applying interpolation since it doesn't need to be very precise here
+      const double PresDiff = PresNorm - Pres[Idx];
+
+      for (int b=0; b<NBin; b++)    Pres[b] += PresDiff;
    }
 
 } // FUNCTION : SetTable_Gas_PresProf

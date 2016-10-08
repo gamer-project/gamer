@@ -258,12 +258,18 @@ void Aux_TakeNote()
       fprintf( Note, "OPENMP                    OFF\n" );
 #     endif
 
+#     ifdef GPU
 #     if   ( GPU_ARCH == FERMI )
       fprintf( Note, "GPU_ARCH                  FERMI\n" );
 #     elif ( GPU_ARCH == KEPLER )
       fprintf( Note, "GPU_ARCH                  KEPLER\n" );
+#     elif ( GPU_ARCH == MAXWELL )
+      fprintf( Note, "GPU_ARCH                  MAXWELL\n" );
+#     elif ( GPU_ARCH == PASCAL )
+      fprintf( Note, "GPU_ARCH                  PASCAL\n" );
 #     else
       fprintf( Note, "GPU_ARCH                  UNKNOWN\n" );
+#     endif
 #     endif
 
 #     ifdef LAOHU
@@ -362,7 +368,7 @@ void Aux_TakeNote()
       fprintf( Note, "POSITIVE_DENS_IN_FIXUP    OFF\n" );
 #     endif
 
-#     if ( defined GRAVITY  &&  POT_SCHEME == SOR )
+#     if ( defined GRAVITY  &&  POT_SCHEME == SOR  &&  defined GPU )
 #     ifdef USE_PSOLVER_10TO14
       fprintf( Note, "USE_PSOLVER_10TO14        ON\n" );
 #     else
@@ -396,10 +402,12 @@ void Aux_TakeNote()
 
       fprintf( Note, "SOR_MOD_REDUCTION         %d\n",      SOR_MOD_REDUCTION       );
 #     endif // #ifdef USE_PSOLVER_10TO14
+#     endif // #if ( defined GRAVITY  &&  POT_SCHEME == SOR  &&  defined GPU )
 
+#     ifdef GRAVITY
       fprintf( Note, "EXT_POT_NAUX_MAX          %d\n",      EXT_POT_NAUX_MAX        );
       fprintf( Note, "EXT_ACC_NAUX_MAX          %d\n",      EXT_ACC_NAUX_MAX        );
-#     endif // #ifdef GRAVITY
+#     endif
 
       fprintf( Note, "***********************************************************************************\n" );
       fprintf( Note, "\n\n");
