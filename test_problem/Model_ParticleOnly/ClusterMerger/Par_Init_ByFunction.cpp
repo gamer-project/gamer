@@ -3,23 +3,18 @@
 
 #ifdef PARTICLE
 
-/*
-extern int  Plummer_RSeed;
-extern real Plummer_MaxR;
-extern real Plummer_Rho0;
-extern real Plummer_R0;
-extern int  Plummer_NBinR;
-extern bool Plummer_Collision;
-extern real Plummer_Collision_D;
-extern real Plummer_Center[3];
-extern real Plummer_BulkVel[3];
-#if ( MODEL == HYDRO )
-extern real Plummer_GasMFrac;
-#endif
 
-double MassProf_Plummer( const double r );
+double MassProf_DM( const double r );
 static void RanVec_FixRadius( const double r, double RanVec[] );
-*/
+
+extern int     ClusterMerger_RanSeed;
+extern double  ClusterMerger_Rcut;
+extern int     ClusterMerger_NBin_MassProf;
+
+extern double *ClusterMerger_DM_MassProf;
+extern double *ClusterMerger_DM_SigmaProf;
+extern double *ClusterMerger_DM_MassProf_R;
+extern double *ClusterMerger_DM_SigmaProf_R;
 
 
 
@@ -36,7 +31,7 @@ static void RanVec_FixRadius( const double r, double RanVec[] );
 //
 // Parameter   :  None
 //
-// Return      :  amr->Par->Mass, amr->Par->PosX/Y/Z, amr->Par->VelX/Y/Z
+// Return      :  amr->Par->Mass/Pos(X/Y/Z)/Vel(X/Y/Z)/Time
 //-------------------------------------------------------------------------------------------------------
 void Par_Init_ByFunction()
 {
@@ -44,99 +39,75 @@ void Par_Init_ByFunction()
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ...\n", __FUNCTION__ );
 
 
-   /*
    real *Mass_AllRank   = NULL;
    real *Pos_AllRank[3] = { NULL, NULL, NULL };
    real *Vel_AllRank[3] = { NULL, NULL, NULL };
 
-// only the master rank will construct the initial condition
+// currently only the master rank will construct the initial condition
+// --> for bit-wise reproducibility between serial and parallel runs
+// --> consider using SPRNG if the performance becomes unacceptably slow
    if ( MPI_Rank == 0 )
    {
-      const double TotM_Inf    = 4.0/3.0*M_PI*CUBE(Plummer_R0)*Plummer_Rho0;
-      const double Vmax_Fac    = sqrt( 2.0*NEWTON_G*TotM_Inf );
-      const double Coll_Offset = 0.5*Plummer_Collision_D/sqrt(3.0);
+      const double BoxCenter[3] = { 0.5*amr->BoxSize[0], 0.5*amr->BoxSize[1], 0.5*amr->BoxSize[2] };
+      double TotM, ParM, RanM, RanR, RanVec[3];
 
-      double *Table_MassProf_r = NULL;
-      double *Table_MassProf_M = NULL;
-      double  TotM, ParM, dr, RanM, RanR, rL, rR, ML, MR, EstM, ErrM, ErrM_Max, RanVec[3];
-      double  Vmax, RanV, RanProb, Prob;
-      int     IdxL, IdxR;
-
-      Mass_AllRank = new real [amr->Par->NPar_Active_AllRank];
-      for (int d=0; d<3; d++)
-      {
-         Pos_AllRank[d] = new real [amr->Par->NPar_Active_AllRank];
-         Vel_AllRank[d] = new real [amr->Par->NPar_Active_AllRank];
-      }
+      Mass_AllRank   = new real [amr->Par->NPar_Active_AllRank];
+      for (int d=0; d<3; d++) {
+      Pos_AllRank[d] = new real [amr->Par->NPar_Active_AllRank];
+      Vel_AllRank[d] = new real [amr->Par->NPar_Active_AllRank]; }
 
 
 //    set the random seed
-      srand( Plummer_RSeed );
+      srand( ClusterMerger_RanSeed );
 
 
-//    determine the total enclosed mass within the maximum radius
-      TotM = MassProf_Plummer( Plummer_MaxR );
+//    set particle mass (note that it's set by total dark matter mass within **Rcut** instead of **Rvir** 
+      TotM = MassProf_DM( ClusterMerger_Rcut );
       ParM = TotM / amr->Par->NPar_Active_AllRank;
 
-      if ( Plummer_Collision )   ParM *= 2.0;
+      Aux_Message( stdout, "NOTE : total dark matter mass within the cut-off radius = %13.7e Msun\n",      TotM*UNIT_M/Const_Msun );
+      Aux_Message( stdout, "       --> dark matter particle mass is set to          = %13.7e Msun\n",      ParM*UNIT_M/Const_Msun );
+      Aux_Message( stdout, "                                                        = %13.7e code unit\n", ParM );
 
-//    rescale particle mass to account for the gas contribution
-#     if ( MODEL == HYDRO )
-      ParM *= 1.0 - Plummer_GasMFrac;
-#     endif
-
-
-//    construct the mass profile table
-      Table_MassProf_r = new double [Plummer_NBinR];
-      Table_MassProf_M = new double [Plummer_NBinR];
-
-      dr = Plummer_MaxR / (Plummer_NBinR-1);
-
-      for (int b=0; b<Plummer_NBinR; b++)
-      {
-         Table_MassProf_r[b] = dr*b;
-         Table_MassProf_M[b] = MassProf_Plummer( Table_MassProf_r[b] );
-      }
 
 
 //    set particle attributes
-      for (int p=0; p<amr->Par->NPar_Active_AllRank; p++)
+      for (long p=0; p<amr->Par->NPar_Active_AllRank; p++)
       {
 //       mass
          Mass_AllRank[p] = ParM;
 
 
-//       position (sample from the cumulative mass profile and perform linear interpolation)
+//       position (sample from the cumulative mass profile)
          RanM = ( (double)rand()/RAND_MAX )*TotM;
-         IdxL = Mis_BinarySearch_Real( Table_MassProf_M, 0, Plummer_NBinR-1, RanM );
-         IdxR = IdxL + 1;
-         rL   = Table_MassProf_r[IdxL];
-         rR   = Table_MassProf_r[IdxR];
-         ML   = Table_MassProf_M[IdxL];
-         MR   = Table_MassProf_M[IdxR];
+         RanR = Mis_InterpolateFromTable( ClusterMerger_NBin_MassProf, ClusterMerger_DM_MassProf,
+                                          ClusterMerger_DM_MassProf_R, RanM );
+         if ( RanR == NULL_REAL )
+         {
+            if ( RanM < ClusterMerger_DM_MassProf[0] )
+            {
+               Aux_Message( stderr, "WARNING : random mass sample (%20.14e) < minimum mass in the interpolation table (%20.14e) !!\n",
+                            RanM, ClusterMerger_DM_MassProf[0] );
+               Aux_Message( stderr, "          --> Particle radial distance is default to %20.14e\n",
+                            0.5*ClusterMerger_DM_MassProf_R[0] );
+               Aux_Message( stderr, "          --> You might want to set ClusterMerger_IntRmin smaller\n" );
 
-//       linear interpolation
-         RanR = rL + (rR-rL)/(MR-ML)*(RanM-ML);
+               RanR = 0.5*ClusterMerger_DM_MassProf_R[0];
+            }
 
-//       record the maximum error
-         EstM     = MassProf_Plummer( RanR );
-         ErrM     = fabs( (EstM-RanM)/RanM );
-         ErrM_Max = fmax( ErrM, ErrM_Max );
+            else
+               Aux_Error( ERROR_INFO, "random mass sample (%20.14e) >= maximum mass in the interpolation table (%20.14e) !!\n",
+                          RanM, ClusterMerger_DM_MassProf[ ClusterMerger_NBin_MassProf - 1 ] );
+         }
+
 
 //       randomly set the position vector with a given radius
          RanVec_FixRadius( RanR, RanVec );
-         for (int d=0; d<3; d++)    Pos_AllRank[d][p] = RanVec[d] + Plummer_Center[d];
-
-//       set position offset for the Plummer collision test
-         if ( Plummer_Collision )
-         for (int d=0; d<3; d++)    Pos_AllRank[d][p] += Coll_Offset*( (p<amr->Par->NPar_Active_AllRank/2)?-1.0:+1.0 );
-
-//       check periodicity
-         if ( OPT__BC_POT == BC_POT_PERIODIC )
-         for (int d=0; d<3; d++)    Pos_AllRank[d][p] = FMOD( Pos_AllRank[d][p]+(real)amr->BoxSize[d], (real)amr->BoxSize[d] );
+         for (int d=0; d<3; d++)    Pos_AllRank[d][p] = RanVec[d] + BoxCenter[d];
 
 
 //       velocity
+         /*
 //       determine the maximum velocity (the escaping velocity)
          Vmax = Vmax_Fac*pow( SQR(Plummer_R0) + SQR(RanR), -0.25 );
 
@@ -152,19 +123,9 @@ void Par_Init_ByFunction()
 //       randomly set the velocity vector with the given amplitude (RanV*Vmax)
          RanVec_FixRadius( RanV*Vmax, RanVec );
          for (int d=0; d<3; d++)    Vel_AllRank[d][p] = RanVec[d] + Plummer_BulkVel[d];
+         */
 
       } // for (int p=0; p<amr->Par->NPar_Active_AllRank; p++)
-
-      Aux_Message( stdout, "   Total enclosed mass within MaxR  = %13.7e\n",  TotM );
-      Aux_Message( stdout, "   Total enclosed mass to inifinity = %13.7e\n",  TotM_Inf );
-      Aux_Message( stdout, "   Enclosed ratio                   = %6.2f%%\n", 100.0*TotM/TotM_Inf );
-      Aux_Message( stdout, "   Particle mass                    = %13.7e\n",  ParM );
-      Aux_Message( stdout, "   Maximum mass error               = %13.7e\n",  ErrM_Max );
-
-
-//    free memory
-      delete [] Table_MassProf_r;
-      delete [] Table_MassProf_M;
    } // if ( MPI_Rank == 0 )
 
 
@@ -223,35 +184,11 @@ void Par_Init_ByFunction()
          delete [] Vel_AllRank[d];
       }
    }
-   */
 
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", __FUNCTION__ );
 
 } // FUNCTION : Par_Init_ByFunction
-
-
-
-/*
-//-------------------------------------------------------------------------------------------------------
-// Function    :  MassProf_Plummer
-// Description :  Mass profile of the Plummer model
-//
-// Note        :  Calculate the enclosed mass for a given radius
-//
-// Parameter   :  r  : Input radius
-//
-// Return      :  Enclosed mass
-//-------------------------------------------------------------------------------------------------------
-double MassProf_Plummer( const double r )
-{
-
-   const double x = r / Plummer_R0;
-
-   return 4.0/3.0*M_PI*Plummer_Rho0*CUBE(r)*pow( 1.0+x*x, -1.5 );
-
-} // FUNCTION : MassProf_Plummer
-*/
 
 
 
