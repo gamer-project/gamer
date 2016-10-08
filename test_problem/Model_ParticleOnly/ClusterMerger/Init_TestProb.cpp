@@ -27,7 +27,11 @@ double DensProf_Gas( const double r );
 // =======================================================================================
 int    ClusterMerger_RanSeed;          // random seed for setting particle position and velocity
 double ClusterMerger_Mvir;             // total: virial mass
-double ClusterMerger_Rvir;             // total: virial radius (and also the cut-off radius)
+double ClusterMerger_Rvir;             // total: virial radius for both gas and dark matter (i.e., total mass within Rvir = Mvir)
+double ClusterMerger_Rcut;             // total: cut-off radius for both gas and dark matter
+                                       // --> outside Rcut, gas density and pressure are set to the values at Rcut and dark matter
+                                       //     density is set to zero (i.e., no dark matter particles locate outside Rcut)
+                                       // --> note that Rcut is different from Rvir, where the latter is the radius enclosing Mvir
 double ClusterMerger_DM_C;             // dark matter: NFW concentration parameter
 double ClusterMerger_DM_Rzero;         // dark matter: radius at which the dark matter velocity dispersion is set to zero
 double ClusterMerger_Gas_Rcore;        // gas: core radius in the beta model
@@ -125,6 +129,7 @@ void Init_TestProb()
 // convert parameters to code units
    ClusterMerger_Mvir        *= Const_Msun / UNIT_M;
    ClusterMerger_Rvir        *= Const_Mpc  / UNIT_L;
+   ClusterMerger_Rcut        *= Const_Mpc  / UNIT_L;
    ClusterMerger_DM_Rzero    *= Const_Mpc  / UNIT_L;
    ClusterMerger_Gas_Rcore   *= Const_Mpc  / UNIT_L;
    ClusterMerger_Gas_TvirM14 *= Const_keV  / UNIT_E;
@@ -153,7 +158,7 @@ void Init_TestProb()
 
 
 // set up interpolation tables
-// (0) allocate memory
+// (1) allocate memory
    ClusterMerger_Gas_PresProf   = new double [ ClusterMerger_NBin_PresProf  ];
    ClusterMerger_Gas_PresProf_R = new double [ ClusterMerger_NBin_PresProf  ];
    ClusterMerger_DM_MassProf    = new double [ ClusterMerger_NBin_MassProf  ];
@@ -161,13 +166,13 @@ void Init_TestProb()
    ClusterMerger_DM_SigmaProf   = new double [ ClusterMerger_NBin_SigmaProf ];
    ClusterMerger_DM_SigmaProf_R = new double [ ClusterMerger_NBin_SigmaProf ];
 
-// (1) gas pressure
+// (2) gas pressure
    SetTable_Gas_PresProf( ClusterMerger_NBin_PresProf, ClusterMerger_Gas_PresProf_R, ClusterMerger_Gas_PresProf );
 
-// (2) dark matter mass profile
+// (3) dark matter mass profile
 // SetTable_DM_MassProf();
 
-// (3) dark matter velocity dispersion
+// (4) dark matter velocity dispersion
 // SetTable_DM_SigmaProf();
 
 
@@ -180,6 +185,7 @@ void Init_TestProb()
       Aux_Message( stdout, "   random seed for initializing particles             = %d\n",            ClusterMerger_RanSeed );
       Aux_Message( stdout, "   [total]       virial mass                          = %13.7e Msun\n",   ClusterMerger_Mvir*UNIT_M/Const_Msun );
       Aux_Message( stdout, "   [total]       virial radius (Rvir)                 = %13.7e Mpc\n",    ClusterMerger_Rvir*UNIT_L/Const_Mpc );
+      Aux_Message( stdout, "   [total]       cut-off radius                       = %13.7e Mpc\n",    ClusterMerger_Rcut*UNIT_L/Const_Mpc );
       Aux_Message( stdout, "   [dark matter] enclosed mass within Rvir            = %13.7e Msun\n",   ClusterMerger_DM_M*UNIT_M/Const_Msun );
       Aux_Message( stdout, "   [dark matter] NFW concentration parameter          = %13.7e\n",        ClusterMerger_DM_C );
       Aux_Message( stdout, "   [dark matter] NFW scale radius                     = %13.7e Mpc\n",    ClusterMerger_DM_Rs*UNIT_L/Const_Mpc );
@@ -266,8 +272,8 @@ void Par_TestProbSol_ClusterMerger( real *fluid, const double x, const double y,
 {
 
    const double BoxCenter[3] = { 0.5*amr->BoxSize[0], 0.5*amr->BoxSize[1], 0.5*amr->BoxSize[2] };
-   const double DensBg       = 1.0e-2*DensProf_Gas( ClusterMerger_Rvir );                             // background density
-   const double PresBg       = 1.0e-0*ClusterMerger_Gas_PresProf[ ClusterMerger_NBin_PresProf - 1 ];  // background pressure
+   const double DensBg       = 1.0*DensProf_Gas( ClusterMerger_Rcut );                             // background density
+   const double PresBg       = 1.0*ClusterMerger_Gas_PresProf[ ClusterMerger_NBin_PresProf - 1 ];  // background pressure
 
    if ( ClusterMerger_Coll )
    {
@@ -304,7 +310,7 @@ void Par_TestProbSol_ClusterMerger( real *fluid, const double x, const double y,
 
       r = sqrt( SQR(x-BoxCenter[0]) + SQR(y-BoxCenter[1]) + SQR(z-BoxCenter[2]) );
 
-      if ( r >= ClusterMerger_Rvir )
+      if ( r >= ClusterMerger_Rcut )
       {
          Dens = DensBg;
          Pres = PresBg;
@@ -374,6 +380,9 @@ void LoadTestProbParameter()
    sscanf( input_line, "%lf%s",  &ClusterMerger_Rvir,           string );
 
    getline( &input_line, &len, File );
+   sscanf( input_line, "%lf%s",  &ClusterMerger_Rcut,           string );
+
+   getline( &input_line, &len, File );
    sscanf( input_line, "%lf%s",  &ClusterMerger_DM_C,           string );
 
    getline( &input_line, &len, File );
@@ -414,7 +423,7 @@ void LoadTestProbParameter()
 // set the default parameters
    if ( ClusterMerger_DM_Rzero <= 0.0 )
    {
-      ClusterMerger_DM_Rzero = 1.0e4*ClusterMerger_Rvir;
+      ClusterMerger_DM_Rzero = 1.0e4*ClusterMerger_Rcut;
 
       if ( MPI_Rank == 0 )  Aux_Message( stdout, "NOTE : parameter \"%s\" is set to the default value = %13.7e\n",
                                          "ClusterMerger_DM_Rzero", ClusterMerger_DM_Rzero );
@@ -476,19 +485,23 @@ void LoadTestProbParameter()
    if ( ClusterMerger_Mvir <= 0.0 )
       Aux_Error( ERROR_INFO, "ClusterMerger_Mvir (%14.7e) <= 0.0 !!\n", ClusterMerger_Mvir );
 
-   if ( ClusterMerger_Rvir <= 0.0 )
-      Aux_Error( ERROR_INFO, "ClusterMerger_Rvir (%14.7e) <= 0.0 !!\n", ClusterMerger_Rvir );
+   if ( ClusterMerger_Rvir <= 0.0  ||  ClusterMerger_Rvir > ClusterMerger_Rcut )
+      Aux_Error( ERROR_INFO, "incorrect ClusterMerger_Rvir = %13.7e (ClusterMerger_Rcut = %13.7e) !!\n",
+                 ClusterMerger_Rvir, ClusterMerger_Rcut );
+
+   if ( ClusterMerger_Rcut <= 0.0 )
+      Aux_Error( ERROR_INFO, "ClusterMerger_Rcut (%14.7e) <= 0.0 !!\n", ClusterMerger_Rcut );
 
    if ( ClusterMerger_DM_C <= 0.0 )
       Aux_Error( ERROR_INFO, "ClusterMerger_DM_C (%14.7e) <= 0.0 !!\n", ClusterMerger_DM_C );
 
-   if ( ClusterMerger_DM_Rzero < ClusterMerger_Rvir )
-      Aux_Error( ERROR_INFO, "ClusterMerger_DM_Rzero (%14.7e) < ClusterMerger_Rvir (%14.7e) !!\n",
-                 ClusterMerger_DM_Rzero, ClusterMerger_Rvir );
+   if ( ClusterMerger_DM_Rzero < ClusterMerger_Rcut )
+      Aux_Error( ERROR_INFO, "ClusterMerger_DM_Rzero (%13.7e) < ClusterMerger_Rcut (%13.7e) !!\n",
+                 ClusterMerger_DM_Rzero, ClusterMerger_Rcut );
 
-   if ( ClusterMerger_Gas_Rcore >= ClusterMerger_Rvir )
-      Aux_Error( ERROR_INFO, "ClusterMerger_Gas_Rcore (%14.7e) >= ClusterMerger_Rvir (%14.7e) !!\n",
-                 ClusterMerger_Gas_Rcore, ClusterMerger_Rvir );
+   if ( ClusterMerger_Gas_Rcore <= 0.0  ||  ClusterMerger_Gas_Rcore > ClusterMerger_Rcut )
+      Aux_Error( ERROR_INFO, "incorrect ClusterMerger_Gas_Rcore = %13.7e (ClusterMerger_Rcut = %13.7e) !!\n",
+                 ClusterMerger_Gas_Rcore, ClusterMerger_Rcut );
 
    if ( ClusterMerger_Gas_TvirM14 <= 0.0 )
       Aux_Error( ERROR_INFO, "ClusterMerger_Gas_TvirM14 (%14.7e) <= 0.0 !!\n", ClusterMerger_Gas_TvirM14 );
@@ -497,7 +510,7 @@ void LoadTestProbParameter()
       Aux_Error( ERROR_INFO, "ClusterMerger_Gas_MTScaling (%14.7e) <= 0.0 !!\n", ClusterMerger_Gas_MTScaling );
 
    if ( ClusterMerger_Gas_MFrac <= 0.0  ||  ClusterMerger_Gas_MFrac > 1.0 )
-      Aux_Error( ERROR_INFO, "ClusterMerger_Gas_MFrac (%14.7e) is not within the correct range [0.0 < x <= 1.0] !!\n",
+      Aux_Error( ERROR_INFO, "ClusterMerger_Gas_MFrac (%13.7e) is not within the correct range [0.0 < x <= 1.0] !!\n",
                  ClusterMerger_Gas_MFrac );
 
    if ( ClusterMerger_NBin_PresProf <= 1   )
@@ -636,8 +649,8 @@ double DensProf_Gas( const double r )
 //                   --> note that rho is gas density and M_tot is **total** mass profile
 //                2. P(Rvir) is fixed by T(Rvir)/rho(Rvir), where T(Rvir) is ClusterMerger_Gas_Tvir
 //                3. Evenly sample in log space
-//                   --> Table_R[     0] = 1.0e-2*dh[TOP_LEVEL]
-//                       Table_R[NBin-1] = Rvir
+//                   --> Table_R[     0] = IntRmin
+//                       Table_R[NBin-1] = Rcut
 //                4. r and Pres arrays must be preallocated with the size NBin
 //
 // Parameter   :  NBin  : Number of radial bins in the table
@@ -667,17 +680,17 @@ void SetTable_Gas_PresProf( const int NBin, double *r, double *Pres )
 // --> r_min should be much smaller than dh_min in case that cell center and cluster center are very close
 //     (possible for the cluster merger case where cluster centers can be arbitrarily close to a cell center)
    const double r_min = ClusterMerger_IntRmin;
-   const double r_max = ClusterMerger_Rvir;
+   const double r_max = ClusterMerger_Rcut;
    const double dr    = pow( r_max/r_min, 1.0/(NBin-1.0) );
 
    for (int b=0; b<NBin; b++)    r[b] = r_min*pow( dr, (double)b );
 
 
-// calculate pressure at Rvir
+// calculate pressure at Rcut
    Pres[NBin-1] = DensProf_Gas( r_max ) * ClusterMerger_Gas_Tvir / ( Const_amu/UNIT_M*MOLECULAR_WEIGHT );
 
 
-// calculate pressure at r < Rvir
+// calculate pressure at r < Rcut
    double GSL_Result, GSL_AbsErr;
 
    for (int b=NBin-2; b>=0; b--)
