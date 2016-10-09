@@ -1,5 +1,11 @@
 #include "Copyright.h"
 #include "GAMER.h"
+#ifdef SUPPORT_GSL
+#include <gsl/gsl_rng.h>
+#include <gsl/gsl_randist.h>
+#else
+#error : ERROR : please turn on SUPPORT_GSL for the cluster merger test problem !!
+#endif
 
 #ifdef PARTICLE
 
@@ -10,6 +16,7 @@ static void RanVec_FixRadius( const double r, double RanVec[] );
 extern int     ClusterMerger_RanSeed;
 extern double  ClusterMerger_Rcut;
 extern int     ClusterMerger_NBin_MassProf;
+extern int     ClusterMerger_NBin_SigmaProf;
 
 extern double *ClusterMerger_DM_MassProf;
 extern double *ClusterMerger_DM_SigmaProf;
@@ -49,7 +56,7 @@ void Par_Init_ByFunction()
    if ( MPI_Rank == 0 )
    {
       const double BoxCenter[3] = { 0.5*amr->BoxSize[0], 0.5*amr->BoxSize[1], 0.5*amr->BoxSize[2] };
-      double TotM, ParM, RanM, RanR, RanVec[3];
+      double TotM, ParM, RanM, RanR, RanVec[3], Sigma;
 
       Mass_AllRank   = new real [amr->Par->NPar_Active_AllRank];
       for (int d=0; d<3; d++) {
@@ -61,7 +68,12 @@ void Par_Init_ByFunction()
       srand( ClusterMerger_RanSeed );
 
 
-//    set particle mass (note that it's set by total dark matter mass within **Rcut** instead of **Rvir** 
+//    initialize GSL random number generator
+      gsl_rng *GSL_RNG = gsl_rng_alloc( gsl_rng_mt19937 );
+      gsl_rng_set( GSL_RNG, ClusterMerger_RanSeed );
+
+
+//    set particle mass (note that it's set by total dark matter mass within **Rcut** instead of **Rvir**
       TotM = MassProf_DM( ClusterMerger_Rcut );
       ParM = TotM / amr->Par->NPar_Active_AllRank;
 
@@ -70,15 +82,14 @@ void Par_Init_ByFunction()
       Aux_Message( stdout, "                                                        = %13.7e code unit\n", ParM );
 
 
-
 //    set particle attributes
       for (long p=0; p<amr->Par->NPar_Active_AllRank; p++)
       {
-//       mass
+//       (1) mass
          Mass_AllRank[p] = ParM;
 
 
-//       position (sample from the cumulative mass profile)
+//       (2) position (sample from the cumulative mass profile)
          RanM = ( (double)rand()/RAND_MAX )*TotM;
          RanR = Mis_InterpolateFromTable( ClusterMerger_NBin_MassProf, ClusterMerger_DM_MassProf,
                                           ClusterMerger_DM_MassProf_R, RanM );
@@ -89,10 +100,10 @@ void Par_Init_ByFunction()
                Aux_Message( stderr, "WARNING : random mass sample (%20.14e) < minimum mass in the interpolation table (%20.14e) !!\n",
                             RanM, ClusterMerger_DM_MassProf[0] );
                Aux_Message( stderr, "          --> Particle radial distance is default to %20.14e\n",
-                            0.5*ClusterMerger_DM_MassProf_R[0] );
+                            ClusterMerger_DM_MassProf_R[0] );
                Aux_Message( stderr, "          --> You might want to set ClusterMerger_IntRmin smaller\n" );
 
-               RanR = 0.5*ClusterMerger_DM_MassProf_R[0];
+               RanR = ClusterMerger_DM_MassProf_R[0];
             }
 
             else
@@ -100,32 +111,27 @@ void Par_Init_ByFunction()
                           RanM, ClusterMerger_DM_MassProf[ ClusterMerger_NBin_MassProf - 1 ] );
          }
 
-
 //       randomly set the position vector with a given radius
          RanVec_FixRadius( RanR, RanVec );
          for (int d=0; d<3; d++)    Pos_AllRank[d][p] = RanVec[d] + BoxCenter[d];
 
 
-//       velocity
-         /*
-//       determine the maximum velocity (the escaping velocity)
-         Vmax = Vmax_Fac*pow( SQR(Plummer_R0) + SQR(RanR), -0.25 );
+//       (3) velocity
+//       interpolate velocity dispersion at the particle position
+         Sigma = Mis_InterpolateFromTable( ClusterMerger_NBin_SigmaProf, ClusterMerger_DM_SigmaProf_R,
+                                           ClusterMerger_DM_SigmaProf, RanR );
 
-//       randomly determine the velocity amplitude (ref: Aarseth, S. et al. 1974, A&A, 37, 183: Eq. [A4,A5])
-         do
-         {
-            RanV    = ( (double)rand()/RAND_MAX );          // 0.0 ... 1.0
-            RanProb = ( (double)rand()/RAND_MAX )*0.1;      // 0.0 ... 0.1
-            Prob    = SQR(RanV)*pow( 1.0-SQR(RanV), 3.5 );  // < 0.1
-         }
-         while ( RanProb > Prob );
+//       RanR must already lie within the interpolation table since it is returned from the table of mass profile
+         if ( Sigma == NULL_REAL )
+            Aux_Error( ERROR_INFO, "cannot determine velocity dispersion (target radius = %20.14e) !!\n", RanR );
 
-//       randomly set the velocity vector with the given amplitude (RanV*Vmax)
-         RanVec_FixRadius( RanV*Vmax, RanVec );
-         for (int d=0; d<3; d++)    Vel_AllRank[d][p] = RanVec[d] + Plummer_BulkVel[d];
-         */
+//       assume velocity distribution is isotropic and Gaussian with a standard deviation of Sigma
+         for (int d=0; d<3; d++)    Vel_AllRank[d][p] = gsl_ran_gaussian( GSL_RNG, Sigma );
 
       } // for (int p=0; p<amr->Par->NPar_Active_AllRank; p++)
+
+//    free GSL resource
+      gsl_rng_free( GSL_RNG );
    } // if ( MPI_Rank == 0 )
 
 

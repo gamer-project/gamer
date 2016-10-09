@@ -1,6 +1,8 @@
 #include "GAMER.h"
 #ifdef SUPPORT_GSL
 #include <gsl/gsl_integration.h>
+#else
+#error : ERROR : please turn on SUPPORT_GSL for the cluster merger test problem !!
 #endif
 
 #if ( MODEL == HYDRO  &&  defined PARTICLE )
