@@ -14,8 +14,11 @@ static void LoadTestProbParameter();
 static void Par_TestProbSol_ClusterMerger( real fluid[], const double x, const double y, const double z, const double Time );
 
 static void SetTable_Gas_PresProf( const int NBin, double *r, double *Pres );
-static void SetTable_DM_MassProf( const int NBin, double *r, double *Mass );
+static void SetTable_DM_MassProf ( const int NBin, double *r, double *Mass );
+static void SetTable_DM_SigmaProf( const int NBin, double *r, double *Sigma );
+
 static double GSL_IntFunc_Gas_PresProf( double r, void *IntPara );
+static double GSL_IntFunc_DM_SigmaProf( double r, void *IntPara );
 
 static double MassProf_Total( const double r );
        double MassProf_DM( const double r );
@@ -180,7 +183,7 @@ void Init_TestProb()
    SetTable_DM_MassProf( ClusterMerger_NBin_MassProf, ClusterMerger_DM_MassProf_R, ClusterMerger_DM_MassProf );
 
 // (4) dark matter velocity dispersion
-// SetTable_DM_SigmaProf();
+   SetTable_DM_SigmaProf( ClusterMerger_NBin_SigmaProf, ClusterMerger_DM_SigmaProf_R, ClusterMerger_DM_SigmaProf );
 
 
 // record the test problem parameters
@@ -692,8 +695,10 @@ double DensProf_Gas( const double r )
 // Note        :  1. Calculate pressure from hydrostatic equilibrium
 //                   --> grad( P(r) ) = -rho(r)*grad( phi(r) ) = -G*rho(r)*M_tot(r)/r^2
 //                   --> P(r1) = P(r2) + G*Integrate( rho(r)*M_tot(r)/r^2, [r, r1, r2] )
-//                   --> note that rho is gas density and M_tot is **total** mass profile
-//                2. P(Rvir) is fixed by T(Rvir)/rho(Rvir), where T(Rvir) is ClusterMerger_Gas_Tvir
+//                   --> Note that rho is gas density and M_tot is **total** mass profile
+//                2. P(Rvir) is fixed by T(Rvir)/rho(Rvir), where T(Rvir) is ClusterMerger_Gas_Tvir,
+//                   if ClusterMerger_Gas_NormTvir is on
+//                   --> Otherwise it's normalized to P(Rzero) = 0
 //                3. Evenly sample in log space
 //                   --> Table_R[     0] = IntRmin
 //                       Table_R[NBin-1] = Rcut
@@ -829,6 +834,101 @@ void SetTable_DM_MassProf( const int NBin, double *r, double *Mass )
    for (int b=0; b<NBin; b++)    Mass[b] = MassProf_DM( r[b] );
 
 } // FUNCTION : SetTable_DM_MassProf
+
+
+
+//-------------------------------------------------------------------------------------------------------
+// Function    :  SetTable_DM_SigmaProf
+// Description :  Calculate the interpolation table of dark matter velocity dispersion profile
+//
+// Note        :  1. Calculate velocity dispersion from Jeans equation
+//                   --> grad( rho(r)*sigma(r)^2 ) = -rho(r)*grad( phi(r) ) = -G*rho(r)*M_tot(r)/r^2
+//                   --> rho(r1)*sigma(r1)^2 = rho(r2)*sigma(r2)^2 + G*Integrate( rho(r)*M_tot(r)/r^2, [r, r1, r2] )
+//                   --> Note that rho is dark matter density and M_tot is **total** mass profile
+//                   --> It's essentially the same as calculating gas pressure
+//                       --> Just replace pressure_gas(r) by rho_dm(r)*sigma(r)^2
+//                2. Normalized to rho(Rzero)*sigma(Rzero)^2 = 0
+//                3. Evenly sample in log space
+//                   --> Table_R[     0] = IntRmin
+//                       Table_R[NBin-1] = Rcut
+//                4. r and Sigma arrays must be preallocated with the size NBin
+//
+// Parameter   :  NBin  : Number of radial bins in the table
+//                r     : Radius at each bin
+//                Sigma : Dark matter velocity dispersion at each bin
+//
+// Return      :  r, Sigma
+//-------------------------------------------------------------------------------------------------------
+void SetTable_DM_SigmaProf( const int NBin, double *r, double *Sigma )
+{
+
+// check
+   if ( r     == NULL )    Aux_Error( ERROR_INFO, "r == NULL !!\n" );
+   if ( Sigma == NULL )    Aux_Error( ERROR_INFO, "Sigma == NULL !!\n" );
+
+
+// set up GSL
+   const double GSL_MaxAbsErr = 0.0;      // maximum allowed absolute error (0 --> disable)
+   const double GSL_MaxRelErr = 1.0e-6;   // maximum allowed relative error (0 --> disable)
+   gsl_function GSL_Func;
+
+   GSL_Func.function = &GSL_IntFunc_DM_SigmaProf;
+   GSL_Func.params   = NULL;
+
+
+// set up radius
+// --> r_min should be much smaller than dh_min since the particle position can be arbitrarily close to the cluster center
+   const double r_min = ClusterMerger_IntRmin;
+   const double r_max = ClusterMerger_Rcut;
+   const double dr    = pow( r_max/r_min, 1.0/(NBin-1.0) );
+
+   for (int b=0; b<NBin; b++)    r[b] = r_min*pow( dr, (double)b );
+
+
+// calculate rho*sigma^2 at Rcut by having rho(Rzero)*sigma(Rzero)^2 = 0
+   double GSL_Result, GSL_AbsErr;
+   gsl_integration_qag( &GSL_Func, r[NBin-1], ClusterMerger_DM_Rzero, GSL_MaxAbsErr, GSL_MaxRelErr, GSL_WorkSize,
+                        GSL_IntRule, GSL_WorkSpace, &GSL_Result, &GSL_AbsErr );
+
+// gravitational constant is not included in the GSL integrand for better performance
+   Sigma[NBin-1] = NEWTON_G*GSL_Result;
+
+
+// calculate rho*sigma^2 at r < Rcut
+   for (int b=NBin-2; b>=0; b--)
+   {
+      gsl_integration_qag( &GSL_Func, r[b], r[b+1], GSL_MaxAbsErr, GSL_MaxRelErr, GSL_WorkSize,
+                           GSL_IntRule, GSL_WorkSpace, &GSL_Result, &GSL_AbsErr );
+
+      Sigma[b] = Sigma[b+1] + NEWTON_G*GSL_Result;
+   }
+
+
+// convert rho*sigma^2 to sigma
+   for (int b=0; b<NBin; b++)    Sigma[b] = sqrt(  Sigma[b] / DensProf_DM( r[b] )  );
+
+} // FUNCTION : SetTable_DM_SigmaProf
+
+
+
+//-------------------------------------------------------------------------------------------------------
+// Function    :  GSL_IntFunc_DM_SigmaProf
+// Description :  GSL integrand for calculating the dark matter velocity dispersion profile
+//
+// Note        :  1. Return rho_dm(r)*M_total(r)/r^2
+//                2. Gavitational constant is not included in this integrand and must be multiplied later
+//
+// Parameter   :  r        : Radius
+//                IntPara  : Integration parameters
+//
+// Return      :  See note above
+//-------------------------------------------------------------------------------------------------------
+double GSL_IntFunc_DM_SigmaProf( double r, void *IntPara )
+{
+
+   return DensProf_DM( r ) * MassProf_Total( r ) / SQR(r);
+
+} // FUNCTION : GSL_IntFunc_DM_SigmaProf
 
 
 
