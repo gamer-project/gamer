@@ -8,13 +8,15 @@ reset
 
 # target files
 # -----------------------------------------------------------
-FILE_IN_PREFIX  = 'InputFile'
+FILE_IN_PREFIX_GAS = 'AveRho'
+FILE_IN_PREFIX_DM  = 'AveParDens'
+
 FILE_IN_SUFFIX  = ''
-FILE_OUT_PREFIX = 'Fig__XXX'
-START_ID        = 9
-END_ID          = 9
+FILE_OUT_PREFIX = 'Fig__DensityProfile'
+START_ID        = 0
+END_ID          = 53
 DELTA_ID        = 1
-PAUSE           = 0.5   # <= 0.0 --> mouse
+PAUSE           = 0.40  # <= 0.0 --> mouse
 
 
 # terminal
@@ -27,26 +29,16 @@ PAUSE           = 0.5   # <= 0.0 --> mouse
 # plot style
 # -----------------------------------------------------------
  set log xy
- set key reverse Left spacing 2 right
-#set key reverse Left spacing 1 at first 1.5e2, 1e8
- set xlabel "r (kpc)"
- set ylabel "Density"
+ set key reverse Left spacing 1.5 left bottom
+ set xlabel "r [Mpc]"
+ set ylabel "Mass density [cosmic density]"
  set format x "10^{%T}"
  set format y "10^{%T}"
  set pointsize 1.0
  set size square
- set xrange [3.0e-2:1e2]
- set yrange [2e0:2e8]
+ set xrange [1.0e-2:1.0e1]
+ set yrange [5e-3:1e7]
 
-
-# constants
-# -----------------------------------------------------------
-REF_SOLITON      = './SolitonRefSolution'
-SOLITON_DENS_MAX = 2.36390677531253
-H0               = 0.7
-NEWTON_G         = 3.3840321e-02
-ETA              = 6.0506411e+03
-MPC2KPC_H0       = 1.0e3/H0
 
 
 # set the output file extension automatically
@@ -68,39 +60,49 @@ do for [ID=START_ID:END_ID:DELTA_ID] {
    ID2     = (ID%100)/10
    ID3     = (ID%1000)/100
    ID4     = ID/1000
-   FILE_IN = sprintf( '%s_00%d%d%d%d%s', FILE_IN_PREFIX, ID4, ID3, ID2, ID1, FILE_IN_SUFFIX )
+
+   FILE_IN_DM  = sprintf( '%s_00%d%d%d%d%s', FILE_IN_PREFIX_DM,  ID4, ID3, ID2, ID1, FILE_IN_SUFFIX )
+   FILE_IN_GAS = sprintf( '%s_00%d%d%d%d%s', FILE_IN_PREFIX_GAS, ID4, ID3, ID2, ID1, FILE_IN_SUFFIX )
 
    if ( GPVAL_TERM ne 'x11' ) { set output sprintf( '%s_00%d%d%d%d.%s', FILE_OUT_PREFIX, ID4, ID3, ID2, ID1, FILE_OUT_EXT ) }
+
+
+#  units and physical constants in CGS
+   UNIT_L = 3.08567758149000e+24
+   UNIT_T = 3.08567758149000e+17
+   UNIT_D = 6.76821209430561e-27
+
+   kpc    = 3.08567758149e21
+   Mpc    = 3.08567758149e24
+   Gyr    = 3.15569252e16
+   Msun   = 1.9885e33
+   RhoBg  = 38.0*Msun/kpc**3.0
 
 
 #  load the physical time
    DUMP_TABLE   = './Record__Dump'
    NHEADER      = 1
    LOAD_TIME    = sprintf( "awk '{if(NR==%d+%d) {print $2}}' %s", NHEADER, ID+1, DUMP_TABLE  )
-   TIME         = system( LOAD_TIME )*1.0    # *1.0 --> convert string to number
-   COEFF        = 4.0*pi*NEWTON_G*TIME*ETA*ETA
+   TIME         = system( LOAD_TIME )*UNIT_T/Gyr
 
 
 #  set title
-   set title sprintf( 'DataID %d%d%d%d (t = %5.2f)', ID4, ID3, ID2, ID1, TIME )
-   print sprintf( '   Plotting DataID %d%d%d%d (t = %5.2f) ...', ID4, ID3, ID2, ID1, TIME )
+   set title sprintf( 'Data %d%d%d%d (t = %5.2f Gyr)', ID4, ID3, ID2, ID1, TIME )
+   print sprintf( '   Plotting DataID %d%d%d%d (t = %5.2f Gyr) ...', ID4, ID3, ID2, ID1, TIME )
 
 
 #  plot
    first = 0
 
-   plot FILE_IN u ($1*MPC2KPC_H0*TIME):3 w lp pt 6 lc 1 title 'Simulation' \
-       ,sprintf( "<paste %s %s", REF_SOLITON, FILE_IN) \
-        u (first=($0==1)?$5:first, $1*(SOLITON_DENS_MAX/first/COEFF)**0.25*MPC2KPC_H0*TIME):($2*first/SOLITON_DENS_MAX) \
-        w l lc -1 title 'Soliton fit' \
-       ,1.0e7*x**-3 lt 2 title 'r^{-3}' \
-       ,8.0e5*x**-2 lt 3 title 'r^{-2}' \
-       ,1.1e5*x**-1 lt 4 title 'r^{-1}'
+   plot FILE_IN_DM          u ($1*UNIT_L/Mpc):($3*UNIT_D/RhoBg) w lp pt 6 lc 7 lw 1.5 ps 1.5 dt 1 tit 'Dark matter' \
+       ,'AveParDens_000000' u ($1*UNIT_L/Mpc):($3*UNIT_D/RhoBg) w l       lc 8 lw 1.5        dt 1 tit 'Dark matter - initial' \
+       ,FILE_IN_GAS         u ($1*UNIT_L/Mpc):($3*UNIT_D/RhoBg) w lp pt 6 lc 6 lw 1.5 ps 1.5 dt 1 tit 'Gas' \
+       ,'AveRho_000000'     u ($1*UNIT_L/Mpc):($3*UNIT_D/RhoBg) w l       lc 8 lw 1.5        dt 2 tit 'Gas - initial'
 
 
    if ( GPVAL_TERM eq 'x11' ) { if ( PAUSE <= 0.0 ) { pause mouse }   else { pause PAUSE } };
 
-} #do for [ID=START_ID:END_ID:DELTA_ID] 
+} #do for [ID=START_ID:END_ID:DELTA_ID]
 
 
 print "Done";

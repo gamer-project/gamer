@@ -4,7 +4,8 @@
 cp Init_* End_*                        ../../../src/Init/
 cp Par_*                               ../../../src/Particle/
 cp plot*.gpt                           ../../../bin/run/
-cp Input__*                            ../../../bin/run/
 cp Makefile                            ../../../src/Makefile
+cp Input__Flag_NParPatch               ../../../bin/run/
 
-#cp CUFLU.h                             ../../../include/
+cp Input__Parameter.Single             ../../../bin/run/Input__Parameter
+cp Input__TestProb.Single              ../../../bin/run/Input__TestProb

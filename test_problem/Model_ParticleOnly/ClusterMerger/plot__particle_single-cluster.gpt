@@ -16,14 +16,12 @@ reset
 # -----------------------------------------------------------
 FILE_IN_PREFIX  = 'Particle'
 FILE_IN_SUFFIX  = ''
-FILE_OUT_PREFIX = 'Fig__XXX'
+FILE_OUT_PREFIX = 'Fig__Particle'
 START_ID        = 0
-END_ID          = 25
+END_ID          = 53
 DELTA_ID        = 1
-BINARY          = 1     # (0/1) = ASCII/BINARY
-PAUSE           = -1.0  # <= 0.0 --> mouse
-VIEW            = 0     # (0/1/2/3) = 3D/xy/yz/xz
-FLOAT8          = 1     # (0/1) -> (single/double precision)
+PAUSE           = 0.10  # <= 0.0 --> mouse
+VIEW            = 1     # (0/1/2/3) = 3D/xy/yz/xz
 
 
 # terminal
@@ -40,18 +38,20 @@ FLOAT8          = 1     # (0/1) -> (single/double precision)
 #set format y "10^{%T}"
  set pointsize 0.6
 #set xyplane at 0.0
- set xrange [-20.0:+20.0]
- set yrange [-20.0:+20.0]
- set zrange [-20.0:+20.0]
+ set xrange [0.0:15.0]
+ set yrange [0.0:15.0]
+ set zrange [0.0:15.0]
 
- if ( VIEW == 0 ) { set view equal xyz; set xlabel "x"; set ylabel "y"; set zlabel "z"; }
- if ( VIEW == 1 ) { set size ratio -1 ; set xlabel "x"; set ylabel "y"; }
- if ( VIEW == 2 ) { set size ratio -1 ; set xlabel "y"; set ylabel "z"; }
- if ( VIEW == 3 ) { set size ratio -1 ; set xlabel "x"; set ylabel "z"; }
+ if ( VIEW == 0 ) { set view equal xyz; set xlabel "x [code unit]"; set ylabel "y [code unit]"; set zlabel "z [code unit]"; }
+ if ( VIEW == 1 ) { set size ratio -1 ; set xlabel "x [code unit]"; set ylabel "y [code unit]"; }
+ if ( VIEW == 2 ) { set size ratio -1 ; set xlabel "y [code unit]"; set ylabel "z [code unit]"; }
+ if ( VIEW == 3 ) { set size ratio -1 ; set xlabel "x [code unit]"; set ylabel "z [code unit]"; }
 
 
-# constants
+#units and physical constants in CGS
 # -----------------------------------------------------------
+UNIT_T = 3.08567758149000e+17
+Gyr    = 3.15569252e16
 
 
 # set the output file extension automatically
@@ -81,43 +81,28 @@ do for [ID=START_ID:END_ID:DELTA_ID] {
    RECORD__DUMP = './Record__Dump'
    NHEADER      = 1
    LOAD_TIME    = sprintf( "awk '{if(NR==%d+%d) {print $2}}' %s", NHEADER, ID+1, RECORD__DUMP )
-   TIME         = system( LOAD_TIME )*1.0    # *1.0 --> convert string to number
+   TIME         = system( LOAD_TIME )*UNIT_T/Gyr
 
 
 #  set title
-   set title sprintf( 'DataID %d%d%d%d (t = %5.2f)', ID4, ID3, ID2, ID1, TIME )
-   print sprintf( '   Plotting DataID %d%d%d%d (t = %5.2f) ...', ID4, ID3, ID2, ID1, TIME )
+   set title sprintf( 'DataID %d%d%d%d (t = %5.2f Gyr)', ID4, ID3, ID2, ID1, TIME )
+   print sprintf( '   Plotting DataID %d%d%d%d (t = %5.2f Gyr) ...', ID4, ID3, ID2, ID1, TIME )
 
 
-#  plot
-   if ( BINARY ) {
-      if ( FLOAT8 == 1 ) {
-         if ( VIEW == 0 ) { splot FILE_IN binary format="%7double" u 2:3:4 w p pt 5 notitle }
-         if ( VIEW == 1 ) {  plot FILE_IN binary format="%7double" u 2:3   w p pt 5 notitle }
-         if ( VIEW == 2 ) {  plot FILE_IN binary format="%7double" u 3:4   w p pt 5 notitle }
-         if ( VIEW == 3 ) {  plot FILE_IN binary format="%7double" u 2:4   w p pt 5 notitle }
-      }
-      else {
-         if ( VIEW == 0 ) { splot FILE_IN binary format="%7float"  u 2:3:4 w p pt 5 notitle }
-         if ( VIEW == 1 ) {  plot FILE_IN binary format="%7float"  u 2:3   w p pt 5 notitle }
-         if ( VIEW == 2 ) {  plot FILE_IN binary format="%7float"  u 3:4   w p pt 5 notitle }
-         if ( VIEW == 3 ) {  plot FILE_IN binary format="%7float"  u 2:4   w p pt 5 notitle }
-      }
-   }
-   else {
-      if ( VIEW == 0 ) { splot FILE_IN u 2:3:4 w p pt 5 notitle }
-      if ( VIEW == 1 ) {  plot FILE_IN u 2:3   w p pt 5 notitle }
-      if ( VIEW == 2 ) {  plot FILE_IN u 3:4   w p pt 5 notitle }
-      if ( VIEW == 3 ) {  plot FILE_IN u 2:4   w p pt 5 notitle }
-   }
+   if ( VIEW == 0 ) { splot FILE_IN u 3:4:5 w p pt 5 notitle }
+   if ( VIEW == 1 ) {  plot FILE_IN u 3:4   w p pt 5 notitle, FILE_IN u 3:4 every ::   0::   0 w p pt 7 ps 1 lc 4 notit, \
+                                                              FILE_IN u 3:4 every ::1000::1000 w p pt 7 ps 1 lc 5 notit, \
+                                                              FILE_IN u 3:4 every ::2000::2000 w p pt 7 ps 1 lc 3 notit, \
+                                                              FILE_IN u 3:4 every ::3000::3000 w p pt 7 ps 1 lc 7 notit, \
+                                                              FILE_IN u 3:4 every ::4000::4000 w p pt 7 ps 1 lc 8 notit }
+   if ( VIEW == 2 ) {  plot FILE_IN u 4:5   w p pt 5 notitle }
+   if ( VIEW == 3 ) {  plot FILE_IN u 3:5   w p pt 5 notitle }
 
 
    if ( GPVAL_TERM eq 'x11' ) { if ( PAUSE <= 0.0 ) { pause mouse }   else { pause PAUSE } };
 
-} #do for [ID=START_ID:END_ID:DELTA_ID] 
+} #do for [ID=START_ID:END_ID:DELTA_ID]
 
 
 print "Done";
 if ( GPVAL_TERM eq 'x11' ) { pause -1 };
-
-

@@ -29,7 +29,7 @@ CORNER_Y       = 0.0          # corner coordinate y
 # terminal
 # -----------------------------------------------------------
  set term x11 enhanced
-#set term png enhanced crop size 1280,800
+#set term png enhanced crop size 1280,800 font ",16"
 #set term postscript eps enhanced color 'Helvetica' 16
 
 

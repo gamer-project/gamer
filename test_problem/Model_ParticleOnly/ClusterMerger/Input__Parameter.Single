@@ -41,7 +41,7 @@
 
 -1.0        DT__FLUID               # time-step: fluid solver coefficient (<0:default)
 -1.0        DT__FLUID_INIT          # time-step: fluid solver coefficient at the first step (<0:default=DT__FLUID)
--1.0        DT__GRAVITY             # time-step: gravity solver coefficient (<0:default)
+0.2         DT__GRAVITY             # time-step: gravity solver coefficient (<0:default)
 0.0         DT__PHASE               # time-step: phase rotation coefficient (<0:default; 0:off) ##ELBDM ONLY##
 -1.0        DT__PARVEL              # time-step: particle velocity (<0:default) ##PARTICLE ONLY##
 -1.0        DT__PARVEL_MAX          # time-step: maximum allowed dt from particle velocity (<0:off) ##PARTICLE ONLY##
@@ -142,7 +142,7 @@
 1           OPT__OUTPUT_PAR_DENS    # (0, 1, 2) -> (off, dump particle/total mass density) ##for OPT__OUTPUT_TOTAL and PARTICLE ONLY##
 2           OPT__OUTPUT_MODE        # (1, 2, 3) -> (const step, const dt, dump table)
 5           OUTPUT_STEP             # output data every OUTPUT_STEP step
-1.0e-2      OUTPUT_DT               # output data every OUTPUT_DT time interval
+2.0e-2      OUTPUT_DT               # output data every OUTPUT_DT time interval
 0.0         OUTPUT_PART_X           # x coordinate for the option OPT__OUTPUT_PART
 0.0         OUTPUT_PART_Y           # y coordinate for the option OPT__OUTPUT_PART
 0.0         OUTPUT_PART_Z           # z coordinate for the option OPT__OUTPUT_PART
