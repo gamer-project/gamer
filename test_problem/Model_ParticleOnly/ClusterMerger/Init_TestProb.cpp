@@ -450,6 +450,14 @@ void LoadTestProbParameter()
 
 
 // set the default parameters
+   if ( ClusterMerger_Rcut <= 0.0 )
+   {
+      for (int d=0; d<3; d++)    ClusterMerger_Rcut = fmax( ClusterMerger_Rcut, 0.5*amr->BoxSize[d]*sqrt(3.0) );
+
+      if ( MPI_Rank == 0 )  Aux_Message( stdout, "NOTE : parameter \"%s\" is set to the default value = %13.7e\n",
+                                         "ClusterMerger_Rcut", ClusterMerger_Rcut );
+   }
+
    if ( ClusterMerger_DM_Rzero <= 0.0 )
    {
       ClusterMerger_DM_Rzero = 1.0e4*ClusterMerger_Rcut;

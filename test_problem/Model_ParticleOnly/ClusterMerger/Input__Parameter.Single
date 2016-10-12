@@ -17,12 +17,12 @@
 1.0e7            UNIT_V             # velocity unit      (<=0: set to UNIT_L/UNIT_T)
 -1.0             UNIT_D             # mass density unit  (<=0: set to UNIT_M/UNIT_L^3)
 
-2           OPT__BC_FLU_XM          # fluid boundary condition at -x face : (1,2,3,4) -> (periodic, outflow, reflecting, user)
-2           OPT__BC_FLU_XP          # fluid boundary condition at +x face : (1,2,3,4) -> (periodic, outflow, reflecting, user)
-2           OPT__BC_FLU_YM          # fluid boundary condition at -y face : (1,2,3,4) -> (periodic, outflow, reflecting, user)
-2           OPT__BC_FLU_YP          # fluid boundary condition at +y face : (1,2,3,4) -> (periodic, outflow, reflecting, user)
-2           OPT__BC_FLU_ZM          # fluid boundary condition at -z face : (1,2,3,4) -> (periodic, outflow, reflecting, user)
-2           OPT__BC_FLU_ZP          # fluid boundary condition at +z face : (1,2,3,4) -> (periodic, outflow, reflecting, user)
+3           OPT__BC_FLU_XM          # fluid boundary condition at -x face : (1,2,3,4) -> (periodic, outflow, reflecting, user)
+3           OPT__BC_FLU_XP          # fluid boundary condition at +x face : (1,2,3,4) -> (periodic, outflow, reflecting, user)
+3           OPT__BC_FLU_YM          # fluid boundary condition at -y face : (1,2,3,4) -> (periodic, outflow, reflecting, user)
+3           OPT__BC_FLU_YP          # fluid boundary condition at +y face : (1,2,3,4) -> (periodic, outflow, reflecting, user)
+3           OPT__BC_FLU_ZM          # fluid boundary condition at -z face : (1,2,3,4) -> (periodic, outflow, reflecting, user)
+3           OPT__BC_FLU_ZP          # fluid boundary condition at +z face : (1,2,3,4) -> (periodic, outflow, reflecting, user)
 2           OPT__BC_POT             # gravity boundary condition : (1,2) -> (periodic, isolated)
 -1.0        GFUNC_COEFF0            # Green's function coefficient at the origin for the isolated BC (<0:default [NoPar/Par:0.0/4.X])
 

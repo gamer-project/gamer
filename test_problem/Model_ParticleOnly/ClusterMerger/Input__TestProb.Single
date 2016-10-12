@@ -2,7 +2,7 @@
 123         ClusterMerger_RanSeed           # random seed for setting particle position and velocity
 6.0e14      ClusterMerger_Mvir              # total: virial mass in Msun
 1.8         ClusterMerger_Rvir              # total: virial radius in Mpc => M(r<Rvir) = Mvir by definition
-4.5         ClusterMerger_Rcut              # total: cut-off radius in Mpc
+-1.0        ClusterMerger_Rcut              # total: cut-off radius in Mpc (<=0.0: default=no cut-ff)
 10.0        ClusterMerger_DM_C              # dark matter: NFW concentration parameter
 -1.0        ClusterMerger_DM_Rzero          # dark matter: radius with velocity dispersion / gas pressure = 0 (<=0: default=1e4*Rcut)
 0.216       ClusterMerger_Gas_Rcore         # gas: core radius in the beta model in Mpc

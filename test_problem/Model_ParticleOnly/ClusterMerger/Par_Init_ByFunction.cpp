@@ -56,7 +56,7 @@ void Par_Init_ByFunction()
    if ( MPI_Rank == 0 )
    {
       const double BoxCenter[3] = { 0.5*amr->BoxSize[0], 0.5*amr->BoxSize[1], 0.5*amr->BoxSize[2] };
-      double TotM, ParM, RanM, RanR, RanVec[3], Sigma;
+      double TotM, ParM, RanM, RanR, RanVec[3], Sigma, RcutInBox;
 
       Mass_AllRank   = new real [amr->Par->NPar_Active_AllRank];
       for (int d=0; d<3; d++) {
@@ -73,8 +73,18 @@ void Par_Init_ByFunction()
       gsl_rng_set( GSL_RNG, ClusterMerger_RanSeed );
 
 
-//    set particle mass (note that it's set by total dark matter mass within **Rcut** instead of **Rvir**
-      TotM = MassProf_DM( ClusterMerger_Rcut );
+//    reset the dark matter cut-off radius to be within the simulation box since we do not allow particles to lie outside the
+//    simulation box at the beginning
+//    --> but we may want the cut-off radius for gas to be larger than the box (i.e., no cut-off for gas)
+      RcutInBox = ClusterMerger_Rcut;
+      for (int d=0; d<3; d++)    RcutInBox = fmin( RcutInBox, 0.5*amr->BoxSize[d] );
+
+      if ( RcutInBox != ClusterMerger_Rcut )
+         Aux_Message( stderr, "WARNING : dark matter cut-off radius is reset to %13.7e !!\n", RcutInBox );
+
+
+//    set particle mass (note that it's set by total dark matter mass within **Rcut** instead of **Rvir**)
+      TotM = MassProf_DM( RcutInBox );
       ParM = TotM / amr->Par->NPar_Active_AllRank;
 
       Aux_Message( stdout, "NOTE : total dark matter mass within the cut-off radius = %13.7e Msun\n",      TotM*UNIT_M/Const_Msun );
