@@ -7,9 +7,10 @@
 
 
 
-#define POT_NXT_F    ( PATCH_SIZE+2*POT_GHOST_SIZE        )
-#define POT_NTHREAD  ( RHO_NXT*RHO_NXT*POT_BLOCK_SIZE_Z/2 )
-#define POT_USELESS  ( POT_GHOST_SIZE%2                   )
+#define POT_NXT_F    ( PATCH_SIZE+2*POT_GHOST_SIZE           )
+#define POT_PAD      ( WARP_SIZE/2 - (POT_NXT_F*2%WARP_SIZE) )
+#define POT_NTHREAD  ( RHO_NXT*RHO_NXT*POT_BLOCK_SIZE_Z/2    )
+#define POT_USELESS  ( POT_GHOST_SIZE%2                      )
 
 
 /************************************************************
@@ -43,6 +44,38 @@
 //                5. Chester Cheng has implemented the SOR_USE_SHUFFLE and SOR_USE_PADDING optimizations, which
 //                   greatly improve performance for the case POT_GHOST_SIZE == 5
 //                6. Typically, the number of iterations required to reach round-off errors is 20 ~ 25 (single precision)
+//
+// Padding     :  Below shows how bank conflict is eliminated by padding.
+//
+//                Example constants :
+//                      POT_NXT_F = 18                       // The number of floating point elements per row
+//                      POT_PAD   = 16 - (18 * 2 % 32) = 12  // number of floating point elements that needs to be added
+//                                                           // within thread groups
+//
+//                We now show how shared memory (s_FPot array) is accessed by a warp in residual evaluation.
+//
+//                Before Padding:
+//                Thread number   |  Accessed shared memory bank
+//                      00 ~ 07   |    | 01 |    | 03 |    | 05 |    | 07 |    | 09 |    | 11 |    | 13 |    | 15 |    |    |
+//                      08 ~ 15   |    |    | 02 |    | 04 |    | 06 |    | 08 |    | 10 |    | 12 |    | 14 |    | 16 |    |
+//                      16 ~ 23   |    | 05 |    | 07 |    | 09 |    | 11 |    | 13 |    | 15 |    | 17 |    | 19 |    |    |
+//                      24 ~ 31   |    |    | 06 |    | 08 |    | 10 |    | 12 |    | 14 |    | 16 |    | 18 |    | 20 |    |
+//
+//                After Padding:
+//                Thread number   |  Accessed shared memory bank
+//                      00 ~ 07   |    | 01 |    | 03 |    | 05 |    | 07 |    | 09 |    | 11 |    | 13 |    | 15 |    |    |
+//                      08 ~ 15   |    |    | 02 |    | 04 |    | 06 |    | 08 |    | 10 |    | 12 |    | 14 |    | 16 |    |
+//                                ----------------- PAD 12 FLOATING POINTS HERE !!!!! ---------------------------------------
+//                      16 ~ 23   |    | 17 |    | 19 |    | 21 |    | 23 |    | 25 |    | 27 |    | 29 |    | 31 |    |    |
+//                      24 ~ 31   |    |    | 18 |    | 20 |    | 22 |    | 24 |    | 26 |    | 28 |    | 30 |    | 00 |    |
+//
+//
+//                Additional Notes for Padding:
+//                      1. When threads 08 ~ 15 access the elements below them (+y direction), we have to skip the padded
+//                         elements. Same for when threads 16~23 access the elements above them (-y direction).
+//                      2. For every warp we need to pad #PAD_POT floating point elements. Each xy plane has 4 warps working
+//                         on it, so for each xy plane we need to pad #4*PAD_POT floating point elements.
+//
 //
 // Parameter   :  g_Rho_Array       : Global memory array to store the input density
 //                g_Pot_Array_In    : Global memory array storing the input "coarse-grid" potential for
@@ -81,12 +114,12 @@ __global__ void CUPOT_PoissonSolver_SOR_10to14cube( const real g_Rho_Array    []
    const uint RhoID0    = __umul24( tid_z, RHO_NXT*RHO_NXT ) + __umul24( tid_y, RHO_NXT )+ ( tid_x << 1 );
    const uint dRhoID    = __umul24( bdim_z, RHO_NXT*RHO_NXT );
 #  ifdef SOR_USE_PADDING
-   const uint dPotID    = __umul24( bdim_z, POT_NXT_F*POT_NXT_F + 12*4 );
+   const uint dPotID    = __umul24( bdim_z, POT_NXT_F*POT_NXT_F + POT_PAD*4 );
    const uint warpID    = ID % warpSize;
-   const uint pad_dy_0  = ( warpID >=  8 && warpID <= 15 ) ? dy + 12 : dy;    // padding
-   const uint pad_dy_1  = ( warpID >= 16 && warpID <= 23 ) ? dy + 12 : dy;    // padding
-   const uint pad_dz    = dz + 12*4;                                          // padding
-   const uint pad_pot   = ( tid_y < 2 ) ? 0 : 12*((tid_y-2)/4 + 1);
+   const uint pad_dy_0  = ( warpID >=  8 && warpID <= 15 ) ? dy + POT_PAD : dy;    //
+   const uint pad_dy_1  = ( warpID >= 16 && warpID <= 23 ) ? dy + POT_PAD : dy;    // please refer to the Padding notes above!
+   const uint pad_dz    = dz + POT_PAD*4;                                          //
+   const uint pad_pot   = ( tid_y < 2 ) ? 0 : POT_PAD*((tid_y-2)/4 + 1);
 #  else
    const uint dPotID    = __umul24( bdim_z, POT_NXT_F*POT_NXT_F );
    const uint pad_dy_0  = dy;
@@ -112,7 +145,7 @@ __global__ void CUPOT_PoissonSolver_SOR_10to14cube( const real g_Rho_Array    []
 #  endif
 
 #  ifdef SOR_USE_PADDING
-   __shared__ real s_FPot[ POT_NXT_F*POT_NXT_F*POT_NXT_F + 12*4*POT_NXT_F ];
+   __shared__ real s_FPot[ POT_NXT_F*POT_NXT_F*POT_NXT_F + POT_PAD*4*POT_NXT_F ];
 #  else
    __shared__ real s_FPot[ POT_NXT_F*POT_NXT_F*POT_NXT_F ];
 #  endif
@@ -172,8 +205,8 @@ __global__ void CUPOT_PoissonSolver_SOR_10to14cube( const real g_Rho_Array    []
       const int FIDy = ( (CIDy-1)<<1 ) - POT_USELESS;
       int       FIDz = ( (CIDz-1)<<1 ) - POT_USELESS;
 #     ifdef SOR_USE_PADDING
-      const int Fpad = ( FIDy < 3 ) ? 0 : 12*((FIDy-3)/4 + 1);    // padding logic
-      const int Fdz  = POT_NXT_F*POT_NXT_F + 12*4;                // added padding
+      const int Fpad = ( FIDy < 3 ) ? 0 : POT_PAD*((FIDy-3)/4 + 1);    // padding logic
+      const int Fdz  = POT_NXT_F*POT_NXT_F + POT_PAD*4;                // added padding
 #     else
       const int Fpad = 0;
       const int Fdz  = POT_NXT_F*POT_NXT_F;
@@ -283,7 +316,7 @@ __global__ void CUPOT_PoissonSolver_SOR_10to14cube( const real g_Rho_Array    []
 
 
 //       save data to the shared-memory array.
-//       Currently this part is highly diverge. However, since the interpolation takes much less time than the
+//       Currently this part is highly diverged. However, since the interpolation takes much less time than the
 //       SOR iteration does, we have not yet tried to optimize this part
          if ( FIDz >= 0 )
          {
@@ -449,15 +482,16 @@ __global__ void CUPOT_PoissonSolver_SOR_10to14cube( const real g_Rho_Array    []
 // -----------------------------------------------------------------------------------------------------------
    t = ID;
 
-#  ifdef SOR_USE_PADDING
-   const uint dy_global  = t % (GRA_NXT*GRA_NXT)/GRA_NXT;
-   const uint pad_global = ( dy_global < 3 ) ? 12 : 12 + 12*((dy_global-3)/4 + 1);
-#  else
-   const uint pad_global = 0;
-#  endif
-
    do
    {
+#     ifdef SOR_USE_PADDING
+#     define GHOST_DIFF ( POT_GHOST_SIZE - GRA_GHOST_SIZE - 1 )
+      uint dy_global  = t % (GRA_NXT*GRA_NXT) / GRA_NXT;
+      uint pad_global = ((dy_global + GHOST_DIFF) < 2) ? 0 : POT_PAD*((dy_global + GHOST_DIFF-2)/4 + 1);
+#     else
+      uint pad_global = 0;
+#     endif
+
       s_index =   __umul24(  t/(GRA_NXT*GRA_NXT)         + POT_GHOST_SIZE - GRA_GHOST_SIZE,  pad_dz  )
                 + __umul24(  t%(GRA_NXT*GRA_NXT)/GRA_NXT + POT_GHOST_SIZE - GRA_GHOST_SIZE,  dy  )
                 +            t%(GRA_NXT        )         + POT_GHOST_SIZE - GRA_GHOST_SIZE

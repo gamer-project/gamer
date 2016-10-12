@@ -114,8 +114,8 @@
 // use padding to reduce shared memory bank conflict (optimized for POT_GHOST_SIZE == 5 only)
 // --> does NOT work for FLOAT8 due to the lack of shared memory
 // --> does NOT work with FERMI GPUs because SOR_USE_PADDING requires POT_BLOCK_SIZE_Z == 8 but FERMI does NOT support that
-#  if (  ( GPU_ARCH == KEPLER || GPU_ARCH == MAXWELL || GPU_ARCH == PASCAL )  &&  !defined FLOAT8  )
-//#     define SOR_USE_PADDING
+#  ifndef FLOAT8
+#     define SOR_USE_PADDING
 #  endif
 #  endif // #if ( POT_GHOST_SIZE == 5 )
 
@@ -159,6 +159,19 @@
 // maximum size of the arrays ExtPot_AuxArray and ExtAcc_AuxArray
 #define EXT_POT_NAUX_MAX            10
 #define EXT_ACC_NAUX_MAX            10
+
+
+// define warp size constant (right now it's dependent on GPU architecture)
+// --> might have to use compute capability number to determine warp size in the future
+// --> please refer to https://en.wikipedia.org/wiki/CUDA#Version_features_and_specifications
+//     for information on warp size
+#ifdef __CUDACC__
+#if ( GPU_ARCH == FERMI  ||  GPU_ARCH == KEPLER  ||  GPU_ARCH == MAXWELL  ||  GPU_ARCH == PASCAL )
+#  define WARP_SIZE 32
+#else
+#  error : UNKNOWN GPU_ARCH !!
+#endif
+#endif // #ifdef __CUDACC__
 
 
 

@@ -217,8 +217,8 @@ void CUAPI_SetDevice( const int Mode )
       if ( DeviceProp.warpSize != 32 )
          Aux_Error( ERROR_INFO, "warp size (%d) != 32 !!\n", DeviceProp.warpSize );
 
-      if ( POT_BLOCK_SIZE_Z != 8 )
-         Aux_Error( ERROR_INFO, "POT_BLOCK_SIZE_Z (%d) != 8 !!\n", POT_BLOCK_SIZE_Z );
+      if ( POT_GHOST_SIZE != 5 )
+         Aux_Error( ERROR_INFO, "POT_GHOST_SIZE (%d) != 5 !!\n", POT_GHOST_SIZE );
 #     endif
 #  endif // if ( POT_SCHEME == SOR )
 
