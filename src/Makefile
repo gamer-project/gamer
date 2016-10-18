@@ -116,9 +116,6 @@ SIMU_OPTION += -DINTEL
 # serial mode (in which no MPI libraries are required)
 #SIMU_OPTION += -DSERIAL
 
-# fixes compilation issues on Intel MPI
-SIMU_OPTION +=  -DMPICH_IGNORE_CXX_SEEK
-
 # load-balance parallelization (one must not turn on the option "SERIAL") (HILBERT)
 SIMU_OPTION += -DLOAD_BALANCE=HILBERT
 
@@ -569,6 +566,10 @@ ifeq "$(findstring GAMER_DEBUG, $(SIMU_OPTION))" "GAMER_DEBUG"
    endif
 endif
 
+# fixes compilation issues on Intel MPI
+ifeq "$(findstring SERIAL, $(SIMU_OPTION))" ""
+	CXXFLAG += -DMPICH_IGNORE_CXX_SEEK
+endif
 
 # NVCC flags
 # -------------------------------------------------------------------------------
