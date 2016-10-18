@@ -566,6 +566,10 @@ ifeq "$(findstring GAMER_DEBUG, $(SIMU_OPTION))" "GAMER_DEBUG"
    endif
 endif
 
+# fixes compilation issues on Intel MPI
+ifeq "$(findstring SERIAL, $(SIMU_OPTION))" ""
+   CXXFLAG += -DMPICH_IGNORE_CXX_SEEK
+endif
 
 # NVCC flags
 # -------------------------------------------------------------------------------
