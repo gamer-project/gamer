@@ -7,6 +7,10 @@
 #  define NDEBUG
 #endif
 
+#ifndef SERIAL
+#  include <mpi.h>
+#endif
+
 #include <iostream>
 #include <cstring>
 #include <cstdlib>
@@ -15,10 +19,6 @@
 #include <malloc.h>
 #include <stdio.h>
 #include <unistd.h>
-
-#ifndef SERIAL
-#  include <mpi.h>
-#endif
 
 #ifdef OPENMP
 #  include <omp.h>
