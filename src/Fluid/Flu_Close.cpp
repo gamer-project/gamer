@@ -415,23 +415,36 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
 //          check if the newly updated values are still unphysical
             if ( Unphysical(Update) )
             {
+               const real Gamma_m1        = GAMMA - (real)1.0;
+               const real PositivePres_No = false;
+               real In[NCOMP], Out[NCOMP];
+
+               for (int v=0; v<NCOMP; v++)
+               {
+                  In [v] = h_Flu_Array_F_In [TID][v][idx_in ];
+                  Out[v] = h_Flu_Array_F_Out[TID][v][idx_out];
+               }
+
                Aux_Message( stderr, "ERROR : first-order correction failed at Rank %d, lv %d, Time %20.14e, Step %ld, Counter %ld ...\n",
                             MPI_Rank, lv, Time[lv], Step, AdvanceCounter[lv] );
                Aux_Message( stderr, "   PID0 = %5d, (i,j,k) = (%2d,%2d,%2d)\n", PID0_List[TID], i_out, j_out, k_out );
-               Aux_Message( stderr, "   input        = (%14.7e, %14.7e, %14.7e, %14.7e, %14.7e) !!\n",
+               Aux_Message( stderr, "   input        = (%14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e) !!\n",
                             h_Flu_Array_F_In [TID][DENS][idx_in],
                             h_Flu_Array_F_In [TID][MOMX][idx_in],
                             h_Flu_Array_F_In [TID][MOMY][idx_in],
                             h_Flu_Array_F_In [TID][MOMZ][idx_in],
-                            h_Flu_Array_F_In [TID][ENGY][idx_in] );
-               Aux_Message( stderr, "   ouptut (old) = (%14.7e, %14.7e, %14.7e, %14.7e, %14.7e) !!\n",
+                            h_Flu_Array_F_In [TID][ENGY][idx_in],
+                            Hydro_GetPressure( In, Gamma_m1, PositivePres_No ) );
+               Aux_Message( stderr, "   ouptut (old) = (%14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e) !!\n",
                             h_Flu_Array_F_Out[TID][DENS][idx_out],
                             h_Flu_Array_F_Out[TID][MOMX][idx_out],
                             h_Flu_Array_F_Out[TID][MOMY][idx_out],
                             h_Flu_Array_F_Out[TID][MOMZ][idx_out],
-                            h_Flu_Array_F_Out[TID][ENGY][idx_out] );
-               Aux_Message( stderr, "   output (new) = (%14.7e, %14.7e, %14.7e, %14.7e, %14.7e) !!\n",
-                           Update[DENS], Update[MOMX], Update[MOMY], Update[MOMZ], Update[ENGY] );
+                            h_Flu_Array_F_Out[TID][ENGY][idx_out],
+                            Hydro_GetPressure( Out, Gamma_m1, PositivePres_No ) );
+               Aux_Message( stderr, "   output (new) = (%14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e) !!\n",
+                            Update[DENS], Update[MOMX], Update[MOMY], Update[MOMZ], Update[ENGY],
+                            Hydro_GetPressure( Update, Gamma_m1, PositivePres_No ) );
 
 //             output all patches in this patch group
 #              ifdef GRAVITY
