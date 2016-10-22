@@ -3,4 +3,4 @@ rm -f Record__Note Record__Timing Record__TimeStep Record__PatchCount Record__Du
       Diag* BaseXYslice* BaseYZslice* BaseXZslice* BaseXline* BaseYline* BaseZline* BaseDiag* ELBDM_JI_* \
       lsf.stdout lsf.stderr PowerSpec_* Particle_* nohup.out Record__Performance ELBDM_PWAVE* Record__TimingMPI_* \
       Record__TwoParAcc Record__NParAcc HYDRO_JI_* Record__ParticleCount Record__User Record__BHAccretionRate Patch_* \
-      Record__NCorrUnphy
+      Record__NCorrUnphy FailedPatchGroup*

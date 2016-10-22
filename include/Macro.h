@@ -511,6 +511,11 @@
 #endif
 
 
+// GAMER status
+#define GAMER_SUCCESS      1
+#define GAMER_FAILED       0
+
+
 // macro for the function "Aux_Error"
 #define ERROR_INFO         __FILE__, __LINE__, __FUNCTION__
 
