@@ -743,12 +743,14 @@ int AllocateSonPatch( const int FaLv, const int *Cr, const int PScale, const int
    real *const CData_Imag             = CData_Flu + IMAG*CSize_Flu1v;
 #  endif
 
-// 3.2.1 determine the variables which must be positive
+// 3.2.1 determine which variables require **monotonic** interpolation
    bool Monotonicity[NCOMP];
 
    for (int v=0; v<NCOMP; v++)
    {
 #     if ( MODEL == HYDRO )
+//    we now apply monotonic interpolation to ALL fluid variables (which helps alleviate the issue of negative density/pressure)
+      /*
 #     if ( NPASSIVE > 0 )
       if ( v == DENS  ||  v == ENGY  ||  v >= NCOMP )
 #     else
@@ -756,6 +758,8 @@ int AllocateSonPatch( const int FaLv, const int *Cr, const int PScale, const int
 #     endif
                                        Monotonicity[v] = EnsureMonotonicity_Yes;
       else                             Monotonicity[v] = EnsureMonotonicity_No;
+      */
+                                       Monotonicity[v] = EnsureMonotonicity_Yes;
 
 #     elif ( MODEL == MHD )
 #     warning : WAIT MHD !!!

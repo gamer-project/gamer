@@ -349,12 +349,14 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
          const bool EnsureMonotonicity_Yes = true;
          const bool EnsureMonotonicity_No  = false;
 
-//       (c1.3.3.1) determine the variables which must be positive
+//       (c1.3.3.1) determine which variables require **monotonic** interpolation
          bool Monotonicity[NCOMP];
 
          for (int v=0; v<NCOMP; v++)
          {
 #           if ( MODEL == HYDRO )
+//          we now apply monotonic interpolation to ALL fluid variables (which helps alleviate the issue of negative density/pressure)
+            /*
 #           if ( NPASSIVE > 0 )
             if ( v == DENS  ||  v == ENGY  ||  v >= NCOMP )
 #           else
@@ -362,6 +364,8 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
 #           endif
                                              Monotonicity[v] = EnsureMonotonicity_Yes;
             else                             Monotonicity[v] = EnsureMonotonicity_No;
+            */
+                                             Monotonicity[v] = EnsureMonotonicity_Yes;
 
 #           elif ( MODEL == MHD )
 #           warning : WAIT MHD !!!
