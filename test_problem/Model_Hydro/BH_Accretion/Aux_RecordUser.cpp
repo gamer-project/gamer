@@ -3,12 +3,6 @@
 
 extern double Myr;
 extern double Msun;
-extern double UnitI_Leng;
-extern double UnitI_Dens;
-extern double UnitI_Velo;
-extern double UnitI_Mass;
-extern double UnitI_Engy;
-extern double UnitI_Time;
 
 extern double BH_SinkMass;
 extern double BH_SinkMomX;
@@ -80,15 +74,15 @@ void Aux_RecordUser( )
       MPI_Reduce( &BH_SinkEk,      &Ek_Sum,      1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD );
       MPI_Reduce( &BH_SinkEt,      &Et_Sum,      1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD );
 
-      Mass_Sum    *= UnitI_Mass/Msun;
-      MomX_Sum    *= UnitI_Mass*UnitI_Leng/UnitI_Time;
-      MomY_Sum    *= UnitI_Mass*UnitI_Leng/UnitI_Time;
-      MomZ_Sum    *= UnitI_Mass*UnitI_Leng/UnitI_Time;
-      MomXAbs_Sum *= UnitI_Mass*UnitI_Leng/UnitI_Time;
-      MomYAbs_Sum *= UnitI_Mass*UnitI_Leng/UnitI_Time;
-      MomZAbs_Sum *= UnitI_Mass*UnitI_Leng/UnitI_Time;
-      Ek_Sum      *= UnitI_Engy;
-      Et_Sum      *= UnitI_Engy;
+      Mass_Sum    *= UNIT_M/Msun;
+      MomX_Sum    *= UNIT_M*UNIT_L/UNIT_T;
+      MomY_Sum    *= UNIT_M*UNIT_L/UNIT_T;
+      MomZ_Sum    *= UNIT_M*UNIT_L/UNIT_T;
+      MomXAbs_Sum *= UNIT_M*UNIT_L/UNIT_T;
+      MomYAbs_Sum *= UNIT_M*UNIT_L/UNIT_T;
+      MomZAbs_Sum *= UNIT_M*UNIT_L/UNIT_T;
+      Ek_Sum      *= UNIT_E;
+      Et_Sum      *= UNIT_E;
 
       if ( MPI_Rank == 0 )
       {
@@ -96,11 +90,11 @@ void Aux_RecordUser( )
 
          dTime  = Time[0] - Time0;
          Time0  = Time[0];
-         dTime *= UnitI_Time/yr;
+         dTime *= UNIT_T/yr;
 
          FILE *File_User = fopen( FileName, "a" );
          fprintf( File_User, "%10ld%16.7e%20.7e%20.7e%20.7e%20.7e%20.7e%20.7e%20.7e%20.7e%20.7e%20.7e%20.7e\n",
-                  Step, Time[0]*UnitI_Time/yr, Mass_Sum, dTime, Mass_Sum/dTime,
+                  Step, Time[0]*UNIT_T/yr, Mass_Sum, dTime, Mass_Sum/dTime,
                   MomX_Sum, MomY_Sum, MomZ_Sum, MomXAbs_Sum, MomYAbs_Sum, MomZAbs_Sum, Ek_Sum, Et_Sum );
          fclose( File_User );
       }

@@ -6,7 +6,7 @@
 Procedure to run the test problem:
 -------------------------------------------------------------------------------
 1. Execute the script "Copy.sh" to copy files to their corresponding
-   directories 
+   directories
 
 2. Compile GAMER by typing "make" in the directory "GAMER/src"
    ("make clean" first if the program has been compiled previously)
@@ -22,17 +22,16 @@ Note:
        [Dens] = g/cm^3
        [Mass] = Msun
        [Temp] = keV
-        
+
    (2) Internal (for all other input files and internal usage):
        [L   ] = kpc
        [v   ] = 1e3 km/s
        [Dens] = 5.0e-25 g/cm^3
-       
+
        -->
        [Time] = [L]/[v] ~ 0.978 Myr ~ 1.0 Myr
        [Mass] = [Dens]*[L]^3 ~ 7.4e6 Msun
 
 2. Gravity dt is disabled --> set DT__GRAVITY to arbitrarily large
 
-3. MIN_PRES is set to 1.e-10f in CUFLU.h 
-   --> You may need to recompile the entire program 
+3. MIN_PRES is set to 1.e-16 in CUFLU.h

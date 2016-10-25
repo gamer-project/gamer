@@ -13,12 +13,12 @@ extern double BH_Soften_R;
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Init_ExternalAcc 
+// Function    :  Init_ExternalAcc
 // Description :  Initialize the external potential routines "CUPOT_ExternalAcc.cu / CPU_ExternalAcc.cpp"
 //
-// Note        :  Fill in the array "ExtAcc_AuxArray" here 
+// Note        :  Fill in the array "ExtAcc_AuxArray" here
 //
-// Parameter   :  None 
+// Parameter   :  None
 //-------------------------------------------------------------------------------------------------------
 void Init_ExternalAcc()
 {

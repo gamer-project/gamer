@@ -47,7 +47,7 @@ void Flu_FixUp( const int lv, const double dt )
 //    check
 #     ifdef GAMER_DEBUG
 
-      if ( !amr->WithFlux )    
+      if ( !amr->WithFlux )
          Aux_Error( ERROR_INFO, "amr->WithFlux is off -> no flux array is allocated for OPT__FIXUP_FLUX !!\n" );
 
 #     if ( MODEL == ELBDM )

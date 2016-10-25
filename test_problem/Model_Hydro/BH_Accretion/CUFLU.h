@@ -8,7 +8,8 @@
 // *********************************************************************
 
 
-// include "Typedef" here since the header "GAMER.h" is NOT included in GPU solvers
+// include "Macro" and "Typedef" here since the header "GAMER.h" is NOT included in GPU solvers
+#include "Macro.h"
 #include "Typedef.h"
 
 
@@ -36,12 +37,12 @@
 struct FluVar { real Rho, Px, Py, Pz, Egy; };
 
 
-// size of different arrays 
+// size of different arrays
 #if ( FLU_SCHEME == MHM  ||  FLU_SCHEME == MHM_RP  ||  FLU_SCHEME == CTU )
 
 #  define N_FC_VAR        ( PS2 + 2      )
 #  define N_SLOPE_PPM     ( N_FC_VAR + 2 )
-   
+
 #  if   ( FLU_SCHEME == MHM )
 
 #     define N_FL_FLUX    ( PS2 + 1      )
@@ -57,7 +58,7 @@ struct FluVar { real Rho, Px, Py, Pz, Egy; };
 #  elif ( FLU_SCHEME == CTU )
 
 #     define N_FL_FLUX    ( N_FC_VAR     )
-#     define N_HF_FLUX    ( N_FC_VAR     ) 
+#     define N_HF_FLUX    ( N_FC_VAR     )
 #     define N_FC_FLUX    ( N_FC_VAR     )
 
 #  endif
@@ -111,8 +112,8 @@ struct FluVar { real Rho, Px, Py, Pz, Egy; };
 // Verify that the density and pressure in the intermediate states of Roe's Riemann solver are positive.
 // If either the density of pressure is negative, we switch to other Riemann solvers (EXACT/HLLE/HLLC)
 #if (  ( FLU_SCHEME == MHM || FLU_SCHEME == MHM_RP || FLU_SCHEME == CTU )  &&  RSOLVER == ROE  )
-//#  define CHECK_INTERMEDIATE    HLLC
-#  define CHECK_INTERMEDIATE    HLLE
+#  define CHECK_INTERMEDIATE    HLLC
+//#  define CHECK_INTERMEDIATE    HLLE
 #endif
 
 
@@ -122,7 +123,7 @@ struct FluVar { real Rho, Px, Py, Pz, Egy; };
 #  define HLL_NO_REF_STATE
 
 // include waves both from left and right directions during the data reconstruction, as suggested in ATHENA
-#  ifdef HLL_NO_REF_STATE 
+#  ifdef HLL_NO_REF_STATE
 #     define HLL_INCLUDE_ALL_WAVES
 #  endif
 

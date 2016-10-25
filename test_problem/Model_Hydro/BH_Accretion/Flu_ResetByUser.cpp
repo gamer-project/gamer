@@ -19,7 +19,7 @@ extern int    BH_SinkNCell;
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Flu_ResetByUser 
+// Function    :  Flu_ResetByUser
 // Description :  Reset the fluid array
 //
 // Note        :  1. Work for the option "OPT__RESET_FLUID == true"
@@ -28,7 +28,7 @@ extern int    BH_SinkNCell;
 //                   --> Init_UM does NOT call this function
 //                4. Currently does not work with "OPT__OVERLAP_MPI"
 //
-// Parameter   :  lv    :  Target refinement level 
+// Parameter   :  lv    :  Target refinement level
 //                FluSg :  Target fluid sandglass
 //                TTime :  Target physical time
 //-------------------------------------------------------------------------------------------------------
@@ -95,6 +95,6 @@ void Flu_ResetByUser( const int lv, const int FluSg, const double TTime )
       }}}
    } // for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
 
-   if ( lv == MAX_LEVEL )     BH_SinkNCell = SinkNCell; 
+   if ( lv == MAX_LEVEL )     BH_SinkNCell = SinkNCell;
 
 } // FUNCTION : Flu_ResetByUser
