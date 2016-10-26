@@ -112,8 +112,8 @@ struct FluVar { real Rho, Px, Py, Pz, Egy; };
 // Verify that the density and pressure in the intermediate states of Roe's Riemann solver are positive.
 // If either the density of pressure is negative, we switch to other Riemann solvers (EXACT/HLLE/HLLC)
 #if (  ( FLU_SCHEME == MHM || FLU_SCHEME == MHM_RP || FLU_SCHEME == CTU )  &&  RSOLVER == ROE  )
-#  define CHECK_INTERMEDIATE    HLLC
-//#  define CHECK_INTERMEDIATE    HLLE
+//#  define CHECK_INTERMEDIATE    HLLC
+#  define CHECK_INTERMEDIATE    HLLE
 #endif
 
 

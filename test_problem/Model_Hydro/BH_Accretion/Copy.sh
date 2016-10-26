@@ -11,6 +11,8 @@ cp Aux_RecordUser.cpp                  ../../../src/Auxiliary/
 cp CUFLU.h                             ../../../include/
 cp Makefile                            ../../../src/
 cp Input__*                            ../../../bin/run/
+cp Table_*                             ../../../bin/run/
+cp plot_profile.gpt                    ../../../bin/run/
 
 # make sure that CUPOT_ExternalAcc.1.1.0.cu will be recompiled
 touch ../../../src/Model_Hydro/GPU_HydroGravity/CUPOT_HydroGravitySolver.cu

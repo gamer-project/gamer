@@ -2,13 +2,13 @@
 128         NX0_TOT[0]              # number of base-level grids in the x direction
 128         NX0_TOT[1]              # number of base-level grids in the y direction
 128         NX0_TOT[2]              # number of base-level grids in the z direction
-16          MPI_NRANK               # total number of MPI ranks (= MPI_NRANK_X[0]*MPI_NRANK_X[1]*MPI_NRANK_X[2])
+2           MPI_NRANK               # total number of MPI ranks (= MPI_NRANK_X[0]*MPI_NRANK_X[1]*MPI_NRANK_X[2])
 2           MPI_NRANK_X[0]          # number of MPI ranks in the x direction
-2           MPI_NRANK_X[1]          # number of MPI ranks in the y direction
-4           MPI_NRANK_X[2]          # number of MPI ranks in the z direction
-3           OMP_NTHREAD             # number of OpenMP threads (<=0:default [omp_get_max_threads])
+1           MPI_NRANK_X[1]          # number of MPI ranks in the y direction
+1           MPI_NRANK_X[2]          # number of MPI ranks in the z direction
+10          OMP_NTHREAD             # number of OpenMP threads (<=0:default [omp_get_max_threads])
 -1.0        END_T                   # end physical time of simulation (<0:default -> must be defined in Init_TestProb/RESTART)
--1          END_STEP                # end step of simulation (<0:default -> must be defined in Init_TestProb)
+5           END_STEP                # end step of simulation (<0:default -> must be defined in Init_TestProb)
 
 1           OPT__UNIT               # specify code units in CGS --> must set 3 and only 3 basic units below ##USELESS FOR COMOVING##
 3.08567758149e21 UNIT_L             # length unit        (<=0: set to UNIT_V*UNIT_T or (UNIT_M/UNIT_D)^(1/3))
@@ -53,7 +53,7 @@
 
 999999999   REGRID_COUNT            # refine every REGRID_COUNT sub-step (<0:default [4])
 0           FLAG_BUFFER_SIZE        # number of buffer cells for the flag operation (<0:default [8])
-9           MAX_LEVEL               # maximum refinement level (0 ... NLEVEL-1) (<0:default [NLEVEL-1])
+11          MAX_LEVEL               # maximum refinement level (0 ... NLEVEL-1) (<0:default [NLEVEL-1])
 0           OPT__FLAG_RHO           # flag: density (Input__Flag_Rho)
 0           OPT__FLAG_RHO_GRADIENT  # flag: density gradient (Input__Flag_RhoGradient)
 0           OPT__FLAG_PRES_GRADIENT # flag: pressure gradient (Input__Flag_PresGradient) ##HYDRO ONLY##
@@ -73,7 +73,7 @@
 
 9999.999    LB_INPUT__WLI_MAX       # threshold for redistributing patches at all levels ##LOAD_BALANCE ONLY##
 
-1.66666     GAMMA                   # ratio of specific heats (adiabatic index)
+1.200       GAMMA                   # ratio of specific heats (adiabatic index)
 0.62        MOLECULAR_WEIGHT        # mean molecular weight (currently it's only for calculating temperature in post-processing)
 2.00        MINMOD_COEFF            # coefficient of the generalized MinMod limiter [1.0~2.0]
 1.25        EP_COEFF                # coefficient of the extrema-preserving limiter
@@ -89,8 +89,8 @@
 -1.0        ELBDM_TAYLOR3_COEFF     # 3rd Taylor expansion coefficient (<0:default [1.0/6.0]) ##USELESS if XXX_AUTO is on##
 1           ELBDM_TAYLOR3_AUTO      # Optimize ELBDM_TAYLOR3_COEFF automatically to minimize the damping at kmax
 
--1          FLU_GPU_NPGROUP         # number of patch groups sent into GPU for fluid solver (<0:default)
--1          GPU_NSTREAM             # number of streams for the asynchronous memory copy in GPU (<0:default)
+8           FLU_GPU_NPGROUP         # number of patch groups sent into GPU for fluid solver (<0:default)
+1           GPU_NSTREAM             # number of streams for the asynchronous memory copy in GPU (<0:default)
 1           OPT__FIXUP_FLUX         # perform the flux fix-up to correct the coarse-grid data ##HYDRO and ELBDM ONLY##
 1           OPT__FIXUP_RESTRICT     # perform the restrict operation to correct the coarse-grid data
 0           OPT__OVERLAP_MPI        # overlap MPI time with CPU/GPU computation (currently for LOAD_BALANCE only)
@@ -140,9 +140,9 @@
 0           OPT__OUTPUT_BASE        # only output the base-level data for the option "OPT__OUTPUT_PART"
 0           OPT__OUTPUT_POT         # output gravitational potential ##for OPT__OUTPUT_TOTAL only##
 0           OPT__OUTPUT_PAR_DENS    # (0, 1, 2) -> (off, dump particle/total mass density) ##for OPT__OUTPUT_TOTAL and PARTICLE ONLY##
-2           OPT__OUTPUT_MODE        # (1, 2, 3) -> (const step, const dt, dump table)
-10          OUTPUT_STEP             # output data every OUTPUT_STEP step
-0.052544    OUTPUT_DT               # output data every OUTPUT_DT time interval
+1           OPT__OUTPUT_MODE        # (1, 2, 3) -> (const step, const dt, dump table)
+1           OUTPUT_STEP             # output data every OUTPUT_STEP step
+5.0e-2      OUTPUT_DT               # output data every OUTPUT_DT time interval
 3.75        OUTPUT_PART_X           # x coordinate for the option OPT__OUTPUT_PART
 3.75        OUTPUT_PART_Y           # y coordinate for the option OPT__OUTPUT_PART
 3.75        OUTPUT_PART_Z           # z coordinate for the option OPT__OUTPUT_PART
