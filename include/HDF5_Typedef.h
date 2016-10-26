@@ -217,7 +217,6 @@ struct SymConst_t
    int    HLL_NoRefState;
    int    HLL_IncludeAllWaves;
    int    WAF_Dissipate;
-   int    PositiveDensInFixUp;
 
 #  ifdef N_FC_VAR
    int    N_FC_Var;

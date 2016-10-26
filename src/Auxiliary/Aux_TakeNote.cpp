@@ -362,12 +362,6 @@ void Aux_TakeNote()
 #     error : ERROR : unsupported MODEL !!
 #     endif // MODEL
 
-#     ifdef POSITIVE_DENS_IN_FIXUP
-      fprintf( Note, "POSITIVE_DENS_IN_FIXUP    ON\n" );
-#     else
-      fprintf( Note, "POSITIVE_DENS_IN_FIXUP    OFF\n" );
-#     endif
-
 #     if ( defined GRAVITY  &&  POT_SCHEME == SOR  &&  defined GPU )
 #     ifdef USE_PSOLVER_10TO14
       fprintf( Note, "USE_PSOLVER_10TO14        ON\n" );
@@ -751,6 +745,12 @@ void Aux_TakeNote()
       fprintf( Note, "OPT__OVERLAP_MPI          %d\n",      OPT__OVERLAP_MPI        );
       fprintf( Note, "OPT__RESET_FLUID          %d\n",      OPT__RESET_FLUID        );
       fprintf( Note, "OPT__CORR_UNPHY           %d\n",      OPT__CORR_UNPHY         );
+#     if ( MODEL == HYDRO  ||  MODEL == MHD  ||  MODEL == ELBDM )
+      fprintf( Note, "MinDens                   %13.7e\n",  MinDens                 );
+#     endif
+#     if ( MODEL == HYDRO  ||  MODEL == MHD )
+      fprintf( Note, "MinPres                   %13.7e\n",  MinPres                 );
+#     endif
       fprintf( Note, "WITH_COARSE_FINE_FLUX     %d\n",      amr->WithFlux           );
 #     ifndef SERIAL
       int MPI_Thread_Status;

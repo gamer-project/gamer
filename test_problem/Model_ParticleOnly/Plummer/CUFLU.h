@@ -173,9 +173,6 @@ struct FluVar { real Rho, Px, Py, Pz, Egy; };
 #  endif
 */
 
-// enforce positive density during the flux fix-up
-#define POSITIVE_DENS_IN_FIXUP
-
 #endif // #if ( MODEL == HYDRO  ||  MODEL == ELBDM )
 
 

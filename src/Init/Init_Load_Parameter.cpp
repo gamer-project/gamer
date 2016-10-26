@@ -8,7 +8,7 @@
 // Function    :  Init_Load_Parameter
 // Description :  Load the initial values of simulation parameters from the file "Input__Parameter"
 //-------------------------------------------------------------------------------------------------------
-void Init_Load_Parameter() 
+void Init_Load_Parameter()
 {
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "Init_Load_Parameter ...\n" );
@@ -21,6 +21,7 @@ void Init_Load_Parameter()
    FILE *File = fopen( FileName, "r" );
 
    int    temp_int;
+   double temp_double;
    char  *input_line = NULL;
    char   string[100];
    size_t len = 0;
@@ -47,7 +48,7 @@ void Init_Load_Parameter()
 
    getline( &input_line, &len, File );
    sscanf( input_line, "%d%s",   &MPI_NRank_X[1],           string );
-   
+
    getline( &input_line, &len, File );
    sscanf( input_line, "%d%s",   &MPI_NRank_X[2],           string );
 
@@ -204,24 +205,24 @@ void Init_Load_Parameter()
 #  ifdef GRAVITY
    sscanf( input_line, "%lf%s",  &DT__GRAVITY,              string );
 #  endif
-   
+
    getline( &input_line, &len, File );
 #  if ( MODEL == ELBDM )
    sscanf( input_line, "%lf%s",  &DT__PHASE,                string );
 #  endif
 
    getline( &input_line, &len, File );
-#  ifdef PARTICLE 
+#  ifdef PARTICLE
    sscanf( input_line, "%lf%s",  &DT__PARVEL,               string );
 #  endif
 
    getline( &input_line, &len, File );
-#  ifdef PARTICLE 
+#  ifdef PARTICLE
    sscanf( input_line, "%lf%s",  &DT__PARVEL_MAX,           string );
 #  endif
 
    getline( &input_line, &len, File );
-#  ifdef PARTICLE 
+#  ifdef PARTICLE
    sscanf( input_line, "%lf%s",  &DT__PARACC,               string );
 #  endif
 
@@ -264,7 +265,7 @@ void Init_Load_Parameter()
    OPT__FLAG_RHO_GRADIENT = (bool)temp_int;
 
    getline( &input_line, &len, File );
-#  if   ( MODEL == HYDRO ) 
+#  if   ( MODEL == HYDRO )
    sscanf( input_line, "%d%s",   &temp_int,                 string );
    OPT__FLAG_PRES_GRADIENT = (bool)temp_int;
 #  elif ( MODEL == MHD )
@@ -272,7 +273,7 @@ void Init_Load_Parameter()
 #  endif
 
    getline( &input_line, &len, File );
-#  if ( MODEL == ELBDM ) 
+#  if ( MODEL == ELBDM )
    sscanf( input_line, "%d%s",   &temp_int,                 string );
    OPT__FLAG_ENGY_DENSITY = (bool)temp_int;
 #  endif
@@ -282,7 +283,7 @@ void Init_Load_Parameter()
    OPT__FLAG_LOHNER_DENS = (bool)temp_int;
 
    getline( &input_line, &len, File );
-#  if   ( MODEL == HYDRO ) 
+#  if   ( MODEL == HYDRO )
    sscanf( input_line, "%d%s",   &temp_int,                 string );
    OPT__FLAG_LOHNER_ENGY = (bool)temp_int;
 #  elif ( MODEL == MHD )
@@ -290,7 +291,7 @@ void Init_Load_Parameter()
 #  endif
 
    getline( &input_line, &len, File );
-#  if   ( MODEL == HYDRO ) 
+#  if   ( MODEL == HYDRO )
    sscanf( input_line, "%d%s",   &temp_int,                 string );
    OPT__FLAG_LOHNER_PRES = (bool)temp_int;
 #  elif ( MODEL == MHD )
@@ -456,6 +457,18 @@ void Init_Load_Parameter()
    OPT__CORR_UNPHY = (bool)temp_int;
 
    getline( &input_line, &len, File );
+#  if ( MODEL == HYDRO  ||  MODEL == MHD  ||  MODEL == ELBDM )
+   sscanf( input_line, "%lf%s",  &temp_double,              string );
+   MinDens = (real)temp_double;
+#  endif
+
+   getline( &input_line, &len, File );
+#  if ( MODEL == HYDRO  ||  MODEL == MHD )
+   sscanf( input_line, "%lf%s",  &temp_double,              string );
+   MinPres = (real)temp_double;
+#  endif
+
+   getline( &input_line, &len, File );
 
 
 // self-gravity
@@ -567,7 +580,7 @@ void Init_Load_Parameter()
    OPT__INT_TIME = (bool)temp_int;
 
    getline( &input_line, &len, File );
-#  if ( MODEL == ELBDM ) 
+#  if ( MODEL == ELBDM )
    sscanf( input_line, "%d%s",   &temp_int,                 string );
    OPT__INT_PHASE = (bool)temp_int;
 #  endif

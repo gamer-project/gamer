@@ -2,10 +2,6 @@
 #include "GAMER.h"
 #include "CUFLU.h"
 
-#if ( defined MIN_PRES_DENS  ||  defined MIN_PRES )
-extern real CPU_PositivePres_In_Engy( const real ConVar[], const real Gamma_m1, const real _Gamma_m1 );
-#endif
-
 
 
 
@@ -26,18 +22,14 @@ void Flu_FixUp( const int lv, const double dt )
    const real Const = dt / amr->dh[lv];
    const int  FluSg = amr->FluSg[lv];
 
-   real CorrVal; // corrected value
+   real CorrVal[NFLUX];   // values after applying the flux correction
    real (*FluxPtr)[PATCH_SIZE][PATCH_SIZE] = NULL;
 
-#  if ( MODEL == ELBDM  &&  defined CONSERVE_MASS )
+#  if   ( MODEL == HYDRO  ||  MODEL == MHD )
+   const real Gamma_m1        = GAMMA - (real)1.0;
+   const bool PositivePres_No = false;
+#  elif ( MODEL == ELBDM  &&  defined CONSERVE_MASS )
    real Re, Im, Rho_Wrong, Rho_Corr, Rescale;
-#  endif
-
-#  if ( defined MIN_PRES_DENS  ||  defined MIN_PRES )
-   const real  Gamma_m1 = GAMMA - (real)1.0;
-   const real _Gamma_m1 = (real)1.0 / Gamma_m1;
-
-   real Fluid[NCOMP];
 #  endif
 
 
@@ -73,8 +65,8 @@ void Flu_FixUp( const int lv, const double dt )
 
 #     if ( MODEL == ELBDM  &&  defined CONSERVE_MASS )
 #     pragma omp parallel for private( CorrVal, FluxPtr, Re, Im, Rho_Wrong, Rho_Corr, Rescale ) schedule( runtime )
-#     elif ( defined MIN_PRES_DENS  ||  defined MIN_PRES )
-#     pragma omp parallel for private( CorrVal, FluxPtr, Fluid ) schedule( runtime )
+#     else
+#     pragma omp parallel for private( CorrVal, FluxPtr ) schedule( runtime )
 #     endif
       for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
       {
@@ -98,15 +90,23 @@ void Flu_FixUp( const int lv, const double dt )
 //       a2. correct fluid variables by the difference between coarse-grid and fine-grid fluxes
          if ( NULL != (FluxPtr = amr->patch[0][lv][PID]->flux[0]) )
          {
-            for (int v=0; v<NFLUX; v++)
             for (int k=0; k<PATCH_SIZE; k++)
             for (int j=0; j<PATCH_SIZE; j++)
             {
-               CorrVal = amr->patch[FluSg][lv][PID]->fluid[v][k][j][           0] - FluxPtr[v][k][j] * Const;
-#              ifdef POSITIVE_DENS_IN_FIXUP
-               if ( v != DENS  ||  CorrVal > (real)0.0 )
+               for (int v=0; v<NFLUX; v++)
+                  CorrVal[v] = amr->patch[FluSg][lv][PID]->fluid[v][k][j][           0] - FluxPtr[v][k][j] * Const;
+
+//             do not apply flux correction if any field lies below the minimum allowed value
+#              if   ( MODEL == HYDRO  ||  MODEL == MHD )
+               if ( CorrVal[DENS] < MinDens  ||  Hydro_GetPressure(CorrVal, Gamma_m1, PositivePres_No) < MinPres )
+#              elif ( MODEL == ELBDM )
+               if ( CorrVal[DENS] < MinDens )
 #              endif
-               amr->patch[FluSg][lv][PID]->fluid[v][k][j][           0] = CorrVal;
+                  continue;
+
+//             apply flux correction
+               for (int v=0; v<NFLUX; v++)
+                  amr->patch[FluSg][lv][PID]->fluid[v][k][j][           0] = CorrVal[v];
 
 //             rescale the real and imaginary parts to be consistent with the corrected amplitude
 #              if ( MODEL == ELBDM  &&  defined CONSERVE_MASS )
@@ -127,31 +127,28 @@ void Flu_FixUp( const int lv, const double dt )
                amr->patch[FluSg][lv][PID]->fluid[REAL][k][j][0] *= Rescale;
                amr->patch[FluSg][lv][PID]->fluid[IMAG][k][j][0] *= Rescale;
 #              endif
-            }
-
-//          ensure the positive pressure
-#           if ( defined MIN_PRES_DENS  ||  defined MIN_PRES )
-            for (int k=0; k<PATCH_SIZE; k++)
-            for (int j=0; j<PATCH_SIZE; j++)
-            {
-               for (int v=0; v<NCOMP; v++)   Fluid[v] = amr->patch[FluSg][lv][PID]->fluid[v][k][j][           0];
-
-               amr->patch[FluSg][lv][PID]->fluid[ENGY][k][j][           0] = CPU_PositivePres_In_Engy( Fluid, Gamma_m1, _Gamma_m1 );
-            }
-#           endif
+            } // j, k
          } // if ( flux[0] != NULL )
 
          if ( NULL != (FluxPtr = amr->patch[0][lv][PID]->flux[1]) )
          {
-            for (int v=0; v<NFLUX; v++)
             for (int k=0; k<PATCH_SIZE; k++)
             for (int j=0; j<PATCH_SIZE; j++)
             {
-               CorrVal = amr->patch[FluSg][lv][PID]->fluid[v][k][j][PATCH_SIZE-1] + FluxPtr[v][k][j] * Const;
-#              ifdef POSITIVE_DENS_IN_FIXUP
-               if ( v != DENS  ||  CorrVal > (real)0.0 )
+               for (int v=0; v<NFLUX; v++)
+                  CorrVal[v] = amr->patch[FluSg][lv][PID]->fluid[v][k][j][PATCH_SIZE-1] + FluxPtr[v][k][j] * Const;
+
+//             do not apply flux correction if any field lies below the minimum allowed value
+#              if   ( MODEL == HYDRO  ||  MODEL == MHD )
+               if ( CorrVal[DENS] < MinDens  ||  Hydro_GetPressure(CorrVal, Gamma_m1, PositivePres_No) < MinPres )
+#              elif ( MODEL == ELBDM )
+               if ( CorrVal[DENS] < MinDens )
 #              endif
-               amr->patch[FluSg][lv][PID]->fluid[v][k][j][PATCH_SIZE-1] = CorrVal;
+                  continue;
+
+//             apply flux correction
+               for (int v=0; v<NFLUX; v++)
+                  amr->patch[FluSg][lv][PID]->fluid[v][k][j][PATCH_SIZE-1] = CorrVal[v];
 
 //             rescale the real and imaginary parts to be consistent with the corrected amplitude
 #              if ( MODEL == ELBDM  &&  defined CONSERVE_MASS )
@@ -172,31 +169,28 @@ void Flu_FixUp( const int lv, const double dt )
                amr->patch[FluSg][lv][PID]->fluid[REAL][k][j][PATCH_SIZE-1] *= Rescale;
                amr->patch[FluSg][lv][PID]->fluid[IMAG][k][j][PATCH_SIZE-1] *= Rescale;
 #              endif
-            }
-
-//          ensure the positive pressure
-#           if ( defined MIN_PRES_DENS  ||  defined MIN_PRES )
-            for (int k=0; k<PATCH_SIZE; k++)
-            for (int j=0; j<PATCH_SIZE; j++)
-            {
-               for (int v=0; v<NCOMP; v++)   Fluid[v] = amr->patch[FluSg][lv][PID]->fluid[v][k][j][PATCH_SIZE-1];
-
-               amr->patch[FluSg][lv][PID]->fluid[ENGY][k][j][PATCH_SIZE-1] = CPU_PositivePres_In_Engy( Fluid, Gamma_m1, _Gamma_m1 );
-            }
-#           endif
+            } // j, k
          } // if ( flux[1] != NULL )
 
          if ( NULL != (FluxPtr = amr->patch[0][lv][PID]->flux[2]) )
          {
-            for (int v=0; v<NFLUX; v++)
             for (int k=0; k<PATCH_SIZE; k++)
             for (int i=0; i<PATCH_SIZE; i++)
             {
-               CorrVal = amr->patch[FluSg][lv][PID]->fluid[v][k][           0][i] - FluxPtr[v][k][i] * Const;
-#              ifdef POSITIVE_DENS_IN_FIXUP
-               if ( v != DENS  ||  CorrVal > (real)0.0 )
+               for (int v=0; v<NFLUX; v++)
+                  CorrVal[v] = amr->patch[FluSg][lv][PID]->fluid[v][k][           0][i] - FluxPtr[v][k][i] * Const;
+
+//             do not apply flux correction if any field lies below the minimum allowed value
+#              if   ( MODEL == HYDRO  ||  MODEL == MHD )
+               if ( CorrVal[DENS] < MinDens  ||  Hydro_GetPressure(CorrVal, Gamma_m1, PositivePres_No) < MinPres )
+#              elif ( MODEL == ELBDM )
+               if ( CorrVal[DENS] < MinDens )
 #              endif
-               amr->patch[FluSg][lv][PID]->fluid[v][k][           0][i] = CorrVal;
+                  continue;
+
+//             apply flux correction
+               for (int v=0; v<NFLUX; v++)
+                  amr->patch[FluSg][lv][PID]->fluid[v][k][           0][i] = CorrVal[v];
 
 //             rescale the real and imaginary parts to be consistent with the corrected amplitude
 #              if ( MODEL == ELBDM  &&  defined CONSERVE_MASS )
@@ -217,31 +211,28 @@ void Flu_FixUp( const int lv, const double dt )
                amr->patch[FluSg][lv][PID]->fluid[REAL][k][0][i] *= Rescale;
                amr->patch[FluSg][lv][PID]->fluid[IMAG][k][0][i] *= Rescale;
 #              endif
-            }
-
-//          ensure the positive pressure
-#           if ( defined MIN_PRES_DENS  ||  defined MIN_PRES )
-            for (int k=0; k<PATCH_SIZE; k++)
-            for (int i=0; i<PATCH_SIZE; i++)
-            {
-               for (int v=0; v<NCOMP; v++)   Fluid[v] = amr->patch[FluSg][lv][PID]->fluid[v][k][           0][i];
-
-               amr->patch[FluSg][lv][PID]->fluid[ENGY][k][           0][i] = CPU_PositivePres_In_Engy( Fluid, Gamma_m1, _Gamma_m1 );
-            }
-#           endif
+            } // i, k
          } // if ( flux[2] != NULL )
 
          if ( NULL != (FluxPtr = amr->patch[0][lv][PID]->flux[3]) )
          {
-            for (int v=0; v<NFLUX; v++)
             for (int k=0; k<PATCH_SIZE; k++)
             for (int i=0; i<PATCH_SIZE; i++)
             {
-               CorrVal = amr->patch[FluSg][lv][PID]->fluid[v][k][PATCH_SIZE-1][i] + FluxPtr[v][k][i] * Const;
-#              ifdef POSITIVE_DENS_IN_FIXUP
-               if ( v != DENS  ||  CorrVal > (real)0.0 )
+               for (int v=0; v<NFLUX; v++)
+                  CorrVal[v] = amr->patch[FluSg][lv][PID]->fluid[v][k][PATCH_SIZE-1][i] + FluxPtr[v][k][i] * Const;
+
+//             do not apply flux correction if any field lies below the minimum allowed value
+#              if   ( MODEL == HYDRO  ||  MODEL == MHD )
+               if ( CorrVal[DENS] < MinDens  ||  Hydro_GetPressure(CorrVal, Gamma_m1, PositivePres_No) < MinPres )
+#              elif ( MODEL == ELBDM )
+               if ( CorrVal[DENS] < MinDens )
 #              endif
-               amr->patch[FluSg][lv][PID]->fluid[v][k][PATCH_SIZE-1][i] = CorrVal;
+                  continue;
+
+//             apply flux correction
+               for (int v=0; v<NFLUX; v++)
+                  amr->patch[FluSg][lv][PID]->fluid[v][k][PATCH_SIZE-1][i] = CorrVal[v];
 
 //             rescale the real and imaginary parts to be consistent with the corrected amplitude
 #              if ( MODEL == ELBDM  &&  defined CONSERVE_MASS )
@@ -262,31 +253,28 @@ void Flu_FixUp( const int lv, const double dt )
                amr->patch[FluSg][lv][PID]->fluid[REAL][k][PATCH_SIZE-1][i] *= Rescale;
                amr->patch[FluSg][lv][PID]->fluid[IMAG][k][PATCH_SIZE-1][i] *= Rescale;
 #              endif
-            }
-
-//          ensure the positive pressure
-#           if ( defined MIN_PRES_DENS  ||  defined MIN_PRES )
-            for (int k=0; k<PATCH_SIZE; k++)
-            for (int i=0; i<PATCH_SIZE; i++)
-            {
-               for (int v=0; v<NCOMP; v++)   Fluid[v] = amr->patch[FluSg][lv][PID]->fluid[v][k][PATCH_SIZE-1][i];
-
-               amr->patch[FluSg][lv][PID]->fluid[ENGY][k][PATCH_SIZE-1][i] = CPU_PositivePres_In_Engy( Fluid, Gamma_m1, _Gamma_m1 );
-            }
-#           endif
+            } // i, k
          } // if ( flux[3] != NULL )
 
          if ( NULL != (FluxPtr = amr->patch[0][lv][PID]->flux[4]) )
          {
-            for (int v=0; v<NFLUX; v++)
             for (int j=0; j<PATCH_SIZE; j++)
             for (int i=0; i<PATCH_SIZE; i++)
             {
-               CorrVal = amr->patch[FluSg][lv][PID]->fluid[v][           0][j][i] - FluxPtr[v][j][i] * Const;
-#              ifdef POSITIVE_DENS_IN_FIXUP
-               if ( v != DENS  ||  CorrVal > (real)0.0 )
+               for (int v=0; v<NFLUX; v++)
+                  CorrVal[v] = amr->patch[FluSg][lv][PID]->fluid[v][           0][j][i] - FluxPtr[v][j][i] * Const;
+
+//             do not apply flux correction if any field lies below the minimum allowed value
+#              if   ( MODEL == HYDRO  ||  MODEL == MHD )
+               if ( CorrVal[DENS] < MinDens  ||  Hydro_GetPressure(CorrVal, Gamma_m1, PositivePres_No) < MinPres )
+#              elif ( MODEL == ELBDM )
+               if ( CorrVal[DENS] < MinDens )
 #              endif
-               amr->patch[FluSg][lv][PID]->fluid[v][           0][j][i] = CorrVal;
+                  continue;
+
+//             apply flux correction
+               for (int v=0; v<NFLUX; v++)
+                  amr->patch[FluSg][lv][PID]->fluid[v][           0][j][i] = CorrVal[v];
 
 //             rescale the real and imaginary parts to be consistent with the corrected amplitude
 #              if ( MODEL == ELBDM  &&  defined CONSERVE_MASS )
@@ -307,31 +295,28 @@ void Flu_FixUp( const int lv, const double dt )
                amr->patch[FluSg][lv][PID]->fluid[REAL][0][j][i] *= Rescale;
                amr->patch[FluSg][lv][PID]->fluid[IMAG][0][j][i] *= Rescale;
 #              endif
-            }
-
-//          ensure the positive pressure
-#           if ( defined MIN_PRES_DENS  ||  defined MIN_PRES )
-            for (int j=0; j<PATCH_SIZE; j++)
-            for (int i=0; i<PATCH_SIZE; i++)
-            {
-               for (int v=0; v<NCOMP; v++)   Fluid[v] = amr->patch[FluSg][lv][PID]->fluid[v][           0][j][i];
-
-               amr->patch[FluSg][lv][PID]->fluid[ENGY][           0][j][i] = CPU_PositivePres_In_Engy( Fluid, Gamma_m1, _Gamma_m1 );
-            }
-#           endif
+            } // i, j
          } // if ( flux[4] != NULL )
 
          if ( NULL != (FluxPtr = amr->patch[0][lv][PID]->flux[5]) )
          {
-            for (int v=0; v<NFLUX; v++)
             for (int j=0; j<PATCH_SIZE; j++)
             for (int i=0; i<PATCH_SIZE; i++)
             {
-               CorrVal = amr->patch[FluSg][lv][PID]->fluid[v][PATCH_SIZE-1][j][i] + FluxPtr[v][j][i] * Const;
-#              ifdef POSITIVE_DENS_IN_FIXUP
-               if ( v != DENS  ||  CorrVal > (real)0.0 )
+               for (int v=0; v<NFLUX; v++)
+                  CorrVal[v] = amr->patch[FluSg][lv][PID]->fluid[v][PATCH_SIZE-1][j][i] + FluxPtr[v][j][i] * Const;
+
+//             do not apply flux correction if any field lies below the minimum allowed value
+#              if   ( MODEL == HYDRO  ||  MODEL == MHD )
+               if ( CorrVal[DENS] < MinDens  ||  Hydro_GetPressure(CorrVal, Gamma_m1, PositivePres_No) < MinPres )
+#              elif ( MODEL == ELBDM )
+               if ( CorrVal[DENS] < MinDens )
 #              endif
-               amr->patch[FluSg][lv][PID]->fluid[v][PATCH_SIZE-1][j][i] = CorrVal;
+                  continue;
+
+//             apply flux correction
+               for (int v=0; v<NFLUX; v++)
+                  amr->patch[FluSg][lv][PID]->fluid[v][PATCH_SIZE-1][j][i] = CorrVal[v];
 
 //             rescale the real and imaginary parts to be consistent with the corrected amplitude
 #              if ( MODEL == ELBDM  &&  defined CONSERVE_MASS )
@@ -352,18 +337,7 @@ void Flu_FixUp( const int lv, const double dt )
                amr->patch[FluSg][lv][PID]->fluid[REAL][PATCH_SIZE-1][j][i] *= Rescale;
                amr->patch[FluSg][lv][PID]->fluid[IMAG][PATCH_SIZE-1][j][i] *= Rescale;
 #              endif
-            }
-
-//          ensure the positive pressure
-#           if ( defined MIN_PRES_DENS  ||  defined MIN_PRES )
-            for (int j=0; j<PATCH_SIZE; j++)
-            for (int i=0; i<PATCH_SIZE; i++)
-            {
-               for (int v=0; v<NCOMP; v++)   Fluid[v] = amr->patch[FluSg][lv][PID]->fluid[v][PATCH_SIZE-1][j][i];
-
-               amr->patch[FluSg][lv][PID]->fluid[ENGY][PATCH_SIZE-1][j][i] = CPU_PositivePres_In_Engy( Fluid, Gamma_m1, _Gamma_m1 );
-            }
-#           endif
+            } // i, j
          } // if ( flux[5] != NULL )
 
       } // for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)

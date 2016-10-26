@@ -1594,11 +1594,6 @@ void FillIn_SymConst( SymConst_t &SymConst )
 #  else
    SymConst.WAF_Dissipate        = 0;
 #  endif
-#  ifdef POSITIVE_DENS_IN_FIXUP
-   SymConst.PositiveDensInFixUp  = 1;
-#  else
-   SymConst.PositiveDensInFixUp  = 0;
-#  endif
 
 #  ifdef N_FC_VAR
    SymConst.N_FC_Var             = N_FC_VAR;
@@ -2147,7 +2142,6 @@ void GetCompound_SymConst( hid_t &H5_TypeID )
    H5Tinsert( H5_TypeID, "HLL_NoRefState",       HOFFSET(SymConst_t,HLL_NoRefState      ), H5T_NATIVE_INT    );
    H5Tinsert( H5_TypeID, "HLL_IncludeAllWaves",  HOFFSET(SymConst_t,HLL_IncludeAllWaves ), H5T_NATIVE_INT    );
    H5Tinsert( H5_TypeID, "WAF_Dissipate",        HOFFSET(SymConst_t,WAF_Dissipate       ), H5T_NATIVE_INT    );
-   H5Tinsert( H5_TypeID, "PositiveDensInFixUp",  HOFFSET(SymConst_t,PositiveDensInFixUp ), H5T_NATIVE_INT    );
 #  ifdef N_FC_VAR
    H5Tinsert( H5_TypeID, "N_FC_Var",             HOFFSET(SymConst_t,N_FC_Var            ), H5T_NATIVE_INT    );
 #  endif

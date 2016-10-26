@@ -27,16 +27,16 @@ void Flu_ResetByUser_Func( real fluid[], const double x, const double y, const d
    const real r       = SQRT( dr[0]*dr[0] + dr[1]*dr[1] + dr[2]*dr[2] );
 
    const real TRad    = 0.3;
-   const real MinDens = 1.0e-15;
-   const real MinPres = 1.0e-15;
+   const real MaxDens = 1.0e15;
+   const real MaxPres = 1.0e15;
 
    if ( r <= TRad )
    {
-      fluid[DENS] = MinDens;
+      fluid[DENS] = MaxDens;
       fluid[MOMX] = 0.0;
       fluid[MOMY] = 0.0;
       fluid[MOMZ] = 0.0;
-      fluid[ENGY] = MinPres / ( GAMMA-(real)1.0 );
+      fluid[ENGY] = MaxPres / ( GAMMA-(real)1.0 );
    }
    */
 

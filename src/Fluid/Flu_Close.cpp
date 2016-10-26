@@ -422,7 +422,7 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
             {
 //             output debug information
                const int  PID_Failed      = PID0_List[TID] + LocalID[k_out/PS1][j_out/PS1][i_out/PS1];
-               const real PositivePres_No = false;
+               const bool PositivePres_No = false;
                real In[NCOMP], Out[NCOMP], tmp[NCOMP];
 
                char FileName[100];

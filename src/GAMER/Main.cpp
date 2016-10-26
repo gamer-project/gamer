@@ -75,8 +75,10 @@ WAF_Limiter_t  OPT__WAF_LIMITER;
 OptRSolver_t   OPT__CORR_UNPHY_SCHEME;
 bool           OPT__FLAG_PRES_GRADIENT, OPT__FLAG_LOHNER_ENGY, OPT__FLAG_LOHNER_PRES;
 int            OPT__CK_NEGATIVE;
+real           MinDens, MinPres;
 
 #elif ( MODEL == MHD )
+real           MinDens, MinPres;
 #warning : WAIT MHD !!!
 
 #elif ( MODEL == ELBDM )
@@ -89,6 +91,7 @@ double         ELBDM_MASS, ELBDM_PLANCK_CONST, ELBDM_ETA;
 double         ELBDM_LAMBDA;
 #endif
 real           MinDtInfo_Phase[NLEVEL];
+real           MinDens;
 
 #else
 #error : unsupported MODEL !!
