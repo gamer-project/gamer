@@ -271,13 +271,14 @@ void CorrectFlux( const int lv, const real h_Flux_Array[][9][NFLUX][4*PATCH_SIZE
 // Function    :  Unphysical
 // Description :  Check whether the input variables are unphysical
 //
-// Note        :  1. One can put arbitriry criterion here. Cell violating the conditions will be recalculated
+// Note        :  1. One can put arbitrary criteria here. Cells violating the conditions will be recalculated
 //                   in "CorrectUnphysical"
 //                2. Currently it is used for MODEL==HYDRO/MHD to check whether the input density and pressure
 //                   (or energy density) is smaller than the given thresholds
 //                   --> It also checks if any variable is -inf, +inf, or nan
 //
-// Parameter   :  Input              : Input fluid variable array with size FLU_NOUT
+// Parameter   :  Fluid              : Input fluid variable array with size FLU_NOUT
+//                Gamma_m1           : Gamma - 1
 //                CheckMinEngyOrPres : (0/1) ==> check (energy/pressure)
 //
 // Return      :  true/false <==> input Fluid array is unphysical/physical
@@ -315,13 +316,13 @@ bool Unphysical( const real Fluid[], const real Gamma_m1, const int CheckMinEngy
 //
 // Note        :  1. Define unphysical values in the function "Unphysical"
 //                2. Currently it is used for MODEL==HYDRO/MHD to check if density or pressure is smaller than
-//                   the minimum allowed values (i.e., MIN_DENS and MIN_PRES)
+//                   the minimum allowed values (i.e., MinDensTEMP and MinPresTEMP)
 //                   --> It also checks if any variable is -inf, +inf, and nan
-//                   --> But one can define arbitrary criterion in "Unphysical" to trigger the correction
+//                   --> But one can define arbitrary criteria in "Unphysical" to trigger the correction
 //                3. Procedure:
 //                   if ( found_unphysical )
 //                   {
-//                      if ( OPT__CORR_UNPHY ) try to first correct it using 1st-order fluxes
+//                      if ( OPT__CORR_UNPHY ) try to correct unphysical variables using 1st-order fluxes
 //                      else                   do nothing
 //
 //                      apply minimum density and pressure
@@ -441,15 +442,15 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
 
 
 //          ensure positive density and pressure
-            Update[DENS] = FMAX( Update[DENS], MIN_DENS );
+            Update[DENS] = FMAX( Update[DENS], MinDensTEMP );
             Update[ENGY] = CPU_CheckMinPresInEngy( Update[DENS], Update[MOMX], Update[MOMY], Update[MOMZ], Update[ENGY],
-                                                   Gamma_m1, _Gamma_m1, MIN_PRES );
+                                                   Gamma_m1, _Gamma_m1, MinPresTEMP );
 
 
 //          check if the newly updated values are still unphysical
 //          --> note that here we check **energy** instead of pressure since even after calling CPU_CheckMinPresInEngy()
-//              we can still have pressure < MIN_PRES due to round-off errors (when pressure << kinematic energy)
-//          --> it will not crash the code since we always apply MIN_PRES when calculating pressure
+//              we can still have pressure < MinPresTEMP due to round-off errors (when pressure << kinematic energy)
+//          --> it will not crash the code since we always apply MinPresTEMP when calculating pressure
             if ( Unphysical(Update, Gamma_m1, CheckMinEngy) )
             {
 //             output debug information

@@ -52,6 +52,7 @@ void CPU_FullStepUpdate( const real Input[][ FLU_NXT*FLU_NXT*FLU_NXT ], real Out
 
 //    we no longer check negative density and pressure here
 //    --> these checks have been moved to Flu_Close()->CorrectUnphysical()
+//    --> because we want to apply 1st-order-flux correction BEFORE setting a minimum density and pressure
       /*
 //    ensure positive density and pressure
       Output[0][ID2] = FMAX( Output[0][ID2], MinDens );
@@ -59,11 +60,15 @@ void CPU_FullStepUpdate( const real Input[][ FLU_NXT*FLU_NXT*FLU_NXT ], real Out
                                                Gamma_m1, _Gamma_m1, MinPres );
       */
 
-//    check the negative density
+//    check the negative density and energy
 #     ifdef CHECK_NEGATIVE_IN_FLUID
       if ( CPU_CheckNegative(Output[0][ID2]) )
          Aux_Message( stderr, "ERROR : negative density (%14.7e) at file <%s>, line <%d>, function <%s>\n",
                       Output[0][ID2], __FILE__, __LINE__, __FUNCTION__ );
+
+      if ( CPU_CheckNegative(Output[4][ID2]) )
+         Aux_Message( stderr, "ERROR : negative energy (%14.7e) at file <%s>, line <%d>, function <%s>\n",
+                      Output[4][ID2], __FILE__, __LINE__, __FUNCTION__ );
 #     endif
 
    } // i,j,k

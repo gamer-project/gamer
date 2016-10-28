@@ -59,14 +59,10 @@ void CPU_RiemannSolver_Roe( const int XYZ, real Flux_Out[], const real L_In[], c
 
 // 2. evaluate the average values
    const real Gamma_m1 = Gamma - (real)1.0;
+   const real  TempRho = (real)0.5*( L[0] + R[0] );
+   const real _TempRho = (real)1.0/TempRho;
    real _RhoL, _RhoR, HL, HR, u, v, w, V2, H, Cs, RhoL_sqrt, RhoR_sqrt, _RhoL_sqrt, _RhoR_sqrt, _RhoLR_sqrt_sum;
-   real GammaP_Rho;
-
-#  if ( defined MIN_PRES_DENS  ||  defined MIN_PRES )
-   const real  TempRho  = (real)0.5*( L[0] + R[0] );
-   const real _TempRho  = (real)1.0/TempRho;
-   real TempPres;
-#  endif
+   real GammaP_Rho, TempPres;
 
    _RhoL = (real)1.0 / L[0];
    _RhoR = (real)1.0 / R[0];

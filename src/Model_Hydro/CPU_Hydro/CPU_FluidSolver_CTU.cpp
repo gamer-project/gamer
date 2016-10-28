@@ -158,7 +158,6 @@ void CPU_FluidSolver_CTU( const real Flu_Array_In[][5][ FLU_NXT*FLU_NXT*FLU_NXT 
 
       } // for (int P=0; P<NPatchGroup; P++)
 
-
       delete [] FC_Var;
       delete [] FC_Flux;
       delete [] PriVar;

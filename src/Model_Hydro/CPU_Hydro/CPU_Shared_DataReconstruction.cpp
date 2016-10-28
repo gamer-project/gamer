@@ -12,7 +12,7 @@ extern real CPU_CheckMinPres( const real InPres, const real MinPres );
 static void Get_EigenSystem( const real CC_Var[], real EigenVal[][5], real LEigenVec[][5], real REigenVec[][5],
                              const real Gamma );
 static void LimitSlope( const real L2[], const real L1[], const real C0[], const real R1[], const real R2[],
-                        const LR_Limiter_t LR_Limiter, const real MinMod_Coeff, const real EP_Coeff, 
+                        const LR_Limiter_t LR_Limiter, const real MinMod_Coeff, const real EP_Coeff,
                         const real Gamma, const int XYZ, real Slope_Limiter[] );
 #ifdef CHAR_RECONSTRUCTION
 static void Pri2Char( real Var[], const real Gamma, const real Rho, const real Pres, const int XYZ );
@@ -31,7 +31,7 @@ static void Char2Pri( real Var[], const real Gamma, const real Rho, const real P
 //                2. The input and output data should be primitive variables
 //                3. The PLM and PPM data reconstruction functions share the same function name
 //                4. The face-centered variables will be advaned by half time-step for the CTU scheme
-//                5. The data reconstruction can be applied to characteristic variables by 
+//                5. The data reconstruction can be applied to characteristic variables by
 //                   defining "CHAR_RECONSTRUCTION"
 //                6. This function is shared by MHM, MHM_RP, and CTU schemes
 //
@@ -39,9 +39,9 @@ static void Char2Pri( real Var[], const real Gamma, const real Rho, const real P
 //                FC_Var         : Array to store the output face-centered primitive variables
 //                NIn            : Size of the input array "PriVar" in one direction
 //                NGhost         : Size of the ghost zone
-//                                  --> "NIn-2*NGhost" cells will be computed along each direction 
+//                                  --> "NIn-2*NGhost" cells will be computed along each direction
 //                                  --> The size of the output array "FC_Var" is assumed to be "(NIn-2*NGhost)^3"
-//                                  --> The reconstructed data at cell (i,j,k) will be stored in the 
+//                                  --> The reconstructed data at cell (i,j,k) will be stored in the
 //                                      array "FC_Var" with the index "(i-NGhost,j-NGhost,k-NGhost)
 //                Gamma          : Ratio of specific heats
 //                LR_Limiter     : Slope limiter for the data reconstruction in the MHM/MHM_RP/CTU schemes
@@ -54,7 +54,7 @@ static void Char2Pri( real Var[], const real Gamma, const real Rho, const real P
 //                MinDens/Pres   : Minimum allowed density and pressure
 //------------------------------------------------------------------------------------------------------
 void CPU_DataReconstruction( const real PriVar[][5], real FC_Var[][6][5], const int NIn, const int NGhost,
-                             const real Gamma, const LR_Limiter_t LR_Limiter, const real MinMod_Coeff, 
+                             const real Gamma, const LR_Limiter_t LR_Limiter, const real MinMod_Coeff,
                              const real EP_Coeff, const real dt, const real dh, const real MinDens, const real MinPres )
 {
 
@@ -66,9 +66,9 @@ void CPU_DataReconstruction( const real PriVar[][5], real FC_Var[][6][5], const 
 
 // variables for the CTU scheme
 #  if ( FLU_SCHEME == CTU )
-   const real dt_dh2 = (real)0.5*dt/dh; 
+   const real dt_dh2 = (real)0.5*dt/dh;
 
-   real EigenVal[3][5], Correct_L[5], Correct_R[5], dFC[5]; 
+   real EigenVal[3][5], Correct_L[5], Correct_R[5], dFC[5];
    real Coeff_L, Coeff_R;
 
 // initialize the constant components of the matrices of the left and right eigenvectors
@@ -86,9 +86,9 @@ void CPU_DataReconstruction( const real PriVar[][5], real FC_Var[][6][5], const 
 #  endif // #if ( FLU_SCHEME ==  CTU )
 
 
-   for (int k1=NGhost, k2=0;  k1<NGhost+NOut;  k1++, k2++)    
-   for (int j1=NGhost, j2=0;  j1<NGhost+NOut;  j1++, j2++)    
-   for (int i1=NGhost, i2=0;  i1<NGhost+NOut;  i1++, i2++)    
+   for (int k1=NGhost, k2=0;  k1<NGhost+NOut;  k1++, k2++)
+   for (int j1=NGhost, j2=0;  j1<NGhost+NOut;  j1++, j2++)
+   for (int i1=NGhost, i2=0;  i1<NGhost+NOut;  i1++, i2++)
    {
       ID1 = (k1*NIn  + j1)*NIn  + i1;
       ID2 = (k2*NOut + j2)*NOut + i2;
@@ -131,7 +131,7 @@ void CPU_DataReconstruction( const real PriVar[][5], real FC_Var[][6][5], const 
          {
             FC_Var[ID2][dL][v] = PriVar[ID1][v] - (real)0.5*Slope_Limiter[v];
             FC_Var[ID2][dR][v] = PriVar[ID1][v] + (real)0.5*Slope_Limiter[v];
-         } 
+         }
 
 
 //       (2-3) ensure the face-centered variables lie between neighboring cell-centered values
@@ -163,7 +163,7 @@ void CPU_DataReconstruction( const real PriVar[][5], real FC_Var[][6][5], const 
          }
 
 
-//       (2-4) advance the face-centered variables by half time-step for the CTU integrator 
+//       (2-4) advance the face-centered variables by half time-step for the CTU integrator
 #        if ( FLU_SCHEME == CTU )
 
 //       (2-4-1) evaluate the slope
@@ -172,11 +172,11 @@ void CPU_DataReconstruction( const real PriVar[][5], real FC_Var[][6][5], const 
 
 //       (2-4-2) re-order variables for the y/z directions
          CPU_Rotate3D( dFC, d, true );
-         
 
-//       =====================================================================================         
+
+//       =====================================================================================
 //       a. for the HLL solvers (HLLE/HLLC)
-//       =====================================================================================         
+//       =====================================================================================
 #        if (  ( RSOLVER == HLLE  ||  RSOLVER == HLLC )  &&  defined HLL_NO_REF_STATE  )
 
 //       (2-4-a1) evaluate the corrections to the left and right face-centered variables
@@ -231,19 +231,19 @@ void CPU_DataReconstruction( const real PriVar[][5], real FC_Var[][6][5], const 
 #        endif // ifdef HLL_INCLUDE_ALL_WAVES ... else ...
 
 
-//       =====================================================================================         
-//       b. for the Roe's and exact solvers 
-//       =====================================================================================         
+//       =====================================================================================
+//       b. for the Roe's and exact solvers
+//       =====================================================================================
 #        else // ( RSOLVER == ROE/EXACT || ifndef HLL_NO_REF_STATE )
 
 //       (2-4-b1) evaluate the reference states
          Coeff_L = -dt_dh2*FMIN( EigenVal[d][0], (real)0.0 );
          Coeff_R = -dt_dh2*FMAX( EigenVal[d][4], (real)0.0 );
 
-         for (int v=0; v<5; v++)    
+         for (int v=0; v<5; v++)
          {
-            Correct_L[v] = Coeff_L*dFC[v]; 
-            Correct_R[v] = Coeff_R*dFC[v]; 
+            Correct_L[v] = Coeff_L*dFC[v];
+            Correct_R[v] = Coeff_R*dFC[v];
          }
 
 
@@ -312,7 +312,7 @@ void CPU_DataReconstruction( const real PriVar[][5], real FC_Var[][6][5], const 
 //                3. The PLM and PPM data reconstruction functions share the same function name
 //                4. The face-centered variables will be advaned by half time-step for the CTU scheme
 //                5. Currently the extrema-preserving limiter is not supported in PPM
-//                6. The data reconstruction can be applied to characteristic variables by 
+//                6. The data reconstruction can be applied to characteristic variables by
 //                   defining "CHAR_RECONSTRUCTION"
 //                7. This function is shared by MHM, MHM_RP, and CTU schemes
 //
@@ -320,9 +320,9 @@ void CPU_DataReconstruction( const real PriVar[][5], real FC_Var[][6][5], const 
 //                FC_Var         : Array to store the output face-centered primitive variables
 //                NIn            : Size of the input array "PriVar" in one direction
 //                NGhost         : Size of the ghost zone
-//                                  --> "NIn-2*NGhost" cells will be computed along each direction 
+//                                  --> "NIn-2*NGhost" cells will be computed along each direction
 //                                  --> The size of the output array "FC_Var" is assumed to be "(NIn-2*NGhost)^3"
-//                                  --> The reconstructed data at cell (i,j,k) will be stored in the 
+//                                  --> The reconstructed data at cell (i,j,k) will be stored in the
 //                                      array "FC_Var" with the index "(i-NGhost,j-NGhost,k-NGhost)
 //                Gamma          : Ratio of specific heats
 //                LR_Limiter     : Slope limiter for the data reconstruction in the MHM/MHM_RP/CTU schemes
@@ -335,7 +335,7 @@ void CPU_DataReconstruction( const real PriVar[][5], real FC_Var[][6][5], const 
 //                MinDens/Pres   : Minimum allowed density and pressure
 //------------------------------------------------------------------------------------------------------
 void CPU_DataReconstruction( const real PriVar[][5], real FC_Var[][6][5], const int NIn, const int NGhost,
-                             const real Gamma, const LR_Limiter_t LR_Limiter, const real MinMod_Coeff, 
+                             const real Gamma, const LR_Limiter_t LR_Limiter, const real MinMod_Coeff,
                              const real EP_Coeff, const real dt, const real dh, const real MinDens, const real MinPres )
 {
 
@@ -359,7 +359,7 @@ void CPU_DataReconstruction( const real PriVar[][5], real FC_Var[][6][5], const 
 
 // variables for the CTU scheme
 #  if ( FLU_SCHEME == CTU )
-   const real dt_dh2 = (real)0.5*dt/dh; 
+   const real dt_dh2 = (real)0.5*dt/dh;
 
 // include waves both from left and right directions during the data reconstruction, as suggested in ATHENA
 #  if (  ( RSOLVER == HLLE  ||  RSOLVER == HLLC )  &&  defined HLL_NO_REF_STATE  )
@@ -370,7 +370,7 @@ void CPU_DataReconstruction( const real PriVar[][5], real FC_Var[][6][5], const 
 #  endif
 #  endif // if (  ( RSOLVER == HLLE  ||  RSOLVER == HLLC )  &&  defined HLL_NO_REF_STATE  )
 
-   real EigenVal[3][5], Correct_L[5], Correct_R[5]; 
+   real EigenVal[3][5], Correct_L[5], Correct_R[5];
    real Coeff_A, Coeff_B, Coeff_C, Coeff_D, Coeff_L, Coeff_R;
 
 // initialize the constant components of the matrices of the left and right eigenvectors
@@ -465,7 +465,7 @@ void CPU_DataReconstruction( const real PriVar[][5], real FC_Var[][6][5], const 
             dCC_L = Slope_PPM[ID3_L][d][v];
             dCC_R = Slope_PPM[ID3_R][d][v];
             dCC_C = Slope_PPM[ID3  ][d][v];
-            
+
             FC_L  = (real)0.5*( CC_C + CC_L ) - (real)1.0/(real)6.0*( dCC_C - dCC_L );
             FC_R  = (real)0.5*( CC_C + CC_R ) - (real)1.0/(real)6.0*( dCC_R - dCC_C );
 
@@ -479,7 +479,7 @@ void CPU_DataReconstruction( const real PriVar[][5], real FC_Var[][6][5], const 
                FC_L = CC_C;
                FC_R = CC_C;
             }
-            else if ( dFC[v]*dFC6[v] > +dFC[v]*dFC[v] )   
+            else if ( dFC[v]*dFC6[v] > +dFC[v]*dFC[v] )
                FC_L = (real)3.0*CC_C - (real)2.0*FC_R;
             else if ( dFC[v]*dFC6[v] < -dFC[v]*dFC[v] )
                FC_R = (real)3.0*CC_C - (real)2.0*FC_L;
@@ -503,7 +503,7 @@ void CPU_DataReconstruction( const real PriVar[][5], real FC_Var[][6][5], const 
          } // for (int v=0; v<5; v++)
 
 
-//       (2-4) advance the face-centered variables by half time-step for the CTU integrator 
+//       (2-4) advance the face-centered variables by half time-step for the CTU integrator
 #        if ( FLU_SCHEME == CTU )
 
 //       (2-4-1) compute the PPM coefficient
@@ -516,11 +516,11 @@ void CPU_DataReconstruction( const real PriVar[][5], real FC_Var[][6][5], const 
 //       (2-4-2) re-order variables for the y/z directions
          CPU_Rotate3D( dFC,  d, true );
          CPU_Rotate3D( dFC6, d, true );
-         
 
-//       =====================================================================================         
+
+//       =====================================================================================
 //       a. for the HLL solvers (HLLE/HLLC)
-//       =====================================================================================         
+//       =====================================================================================
 #        if (  ( RSOLVER == HLLE  ||  RSOLVER == HLLC )  &&  defined HLL_NO_REF_STATE  )
 
 //       (2-4-a1) evaluate the corrections to the left and right face-centered variables
@@ -540,7 +540,7 @@ void CPU_DataReconstruction( const real PriVar[][5], real FC_Var[][6][5], const 
                Coeff_C = -dt_dh2*EigenVal[d][Mode];
                Coeff_D = real(-4.0/3.0)*SQR(Coeff_C);
 
-               for (int v=0; v<5; v++)    Coeff_L += LEigenVec[Mode][v]*(  Coeff_C*( dFC[v] + dFC6[v] ) + 
+               for (int v=0; v<5; v++)    Coeff_L += LEigenVec[Mode][v]*(  Coeff_C*( dFC[v] + dFC6[v] ) +
                                                                            Coeff_D*( dFC6[v]          )   );
 
                for (int v=0; v<5; v++)    Correct_L[v] += Coeff_L*REigenVec[Mode][v];
@@ -551,7 +551,7 @@ void CPU_DataReconstruction( const real PriVar[][5], real FC_Var[][6][5], const 
                Coeff_A = -dt_dh2*EigenVal[d][Mode];
                Coeff_B = real(-4.0/3.0)*SQR(Coeff_A);
 
-               for (int v=0; v<5; v++)    Coeff_R += LEigenVec[Mode][v]*(  Coeff_A*( dFC[v] - dFC6[v] ) + 
+               for (int v=0; v<5; v++)    Coeff_R += LEigenVec[Mode][v]*(  Coeff_A*( dFC[v] - dFC6[v] ) +
                                                                            Coeff_B*( dFC6[v]          )   );
 
                for (int v=0; v<5; v++)    Correct_R[v] += Coeff_R*REigenVec[Mode][v];
@@ -559,16 +559,16 @@ void CPU_DataReconstruction( const real PriVar[][5], real FC_Var[][6][5], const 
          } // for (int Mode=0; Mode<5; Mode++)
 
 
-//       =====================================================================================         
-//       b. for the Roe's and exact solvers 
-//       =====================================================================================         
+//       =====================================================================================
+//       b. for the Roe's and exact solvers
+//       =====================================================================================
 #        else // ( RSOLVER == ROE/EXACT && ifndef HLL_NO_REF_STATE )
 
 //       (2-4-b1) evaluate the reference states
-         Coeff_L = -dt_dh2*FMIN( EigenVal[d][0], (real)0.0 );          
+         Coeff_L = -dt_dh2*FMIN( EigenVal[d][0], (real)0.0 );
          Coeff_R = -dt_dh2*FMAX( EigenVal[d][4], (real)0.0 );
 
-         for (int v=0; v<5; v++)    
+         for (int v=0; v<5; v++)
          {
             Correct_L[v] = Coeff_L*(  dFC[v] + ( (real)1.0 - real(4.0/3.0)*Coeff_L )*dFC6[v]  );
             Correct_R[v] = Coeff_R*(  dFC[v] - ( (real)1.0 + real(4.0/3.0)*Coeff_R )*dFC6[v]  );
@@ -589,7 +589,7 @@ void CPU_DataReconstruction( const real PriVar[][5], real FC_Var[][6][5], const 
                                                         EigenVal[d][Mode]*EigenVal[d][Mode]   ); */
                Coeff_D = real(4.0/3.0)*dt_dh2*Coeff_C*( EigenVal[d][0] + EigenVal[d][Mode] );
 
-               for (int v=0; v<5; v++)    Coeff_L += LEigenVec[Mode][v]*(  Coeff_C*( dFC[v] + dFC6[v] ) + 
+               for (int v=0; v<5; v++)    Coeff_L += LEigenVec[Mode][v]*(  Coeff_C*( dFC[v] + dFC6[v] ) +
                                                                            Coeff_D*( dFC6[v]          )   );
 
                for (int v=0; v<5; v++)    Correct_L[v] += Coeff_L*REigenVec[Mode][v];
@@ -603,7 +603,7 @@ void CPU_DataReconstruction( const real PriVar[][5], real FC_Var[][6][5], const 
                                                         EigenVal[d][Mode]*EigenVal[d][Mode]   ); */
                Coeff_B = real(4.0/3.0)*dt_dh2*Coeff_A*( EigenVal[d][4] + EigenVal[d][Mode] );
 
-               for (int v=0; v<5; v++)    Coeff_R += LEigenVec[Mode][v]*(  Coeff_A*( dFC[v] - dFC6[v] ) + 
+               for (int v=0; v<5; v++)    Coeff_R += LEigenVec[Mode][v]*(  Coeff_A*( dFC[v] - dFC6[v] ) +
                                                                            Coeff_B*( dFC6[v]          )   );
 
                for (int v=0; v<5; v++)    Correct_R[v] += Coeff_R*REigenVec[Mode][v];
@@ -644,24 +644,24 @@ void CPU_DataReconstruction( const real PriVar[][5], real FC_Var[][6][5], const 
 
 #ifdef CHAR_RECONSTRUCTION
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Pri2Char 
-// Description :  Convert the primitive variables to the characteristic variables 
+// Function    :  Pri2Char
+// Description :  Convert the primitive variables to the characteristic variables
 //
-// Parameter   :  InOut : Array storing both the input primitive variables and output characteristic variables 
+// Parameter   :  InOut : Array storing both the input primitive variables and output characteristic variables
 //                Gamma : Ratio of specific heats
 //                Rho   : Density
 //                Pres  : Pressure
-//                XYZ   : Targeted spatial direction : (0/1/2) --> (x/y/z) 
+//                XYZ   : Targeted spatial direction : (0/1/2) --> (x/y/z)
 //-------------------------------------------------------------------------------------------------------
 void Pri2Char( real InOut[], const real Gamma, const real Rho, const real Pres, const int XYZ )
 {
 
 #  ifdef CHECK_NEGATIVE_IN_FLUID
    if ( CPU_CheckNegative(Pres) )
-      Aux_Message( stderr, "ERROR : negative pressure (%14.7e) at file <%s>, line <%d>, function <%s>\n", 
+      Aux_Message( stderr, "ERROR : negative pressure (%14.7e) at file <%s>, line <%d>, function <%s>\n",
                    Pres, __FILE__, __LINE__, __FUNCTION__ );
    if ( CPU_CheckNegative(Rho) )
-      Aux_Message( stderr, "ERROR : negative density (%14.7e) at file <%s>, line <%d>, function <%s>\n", 
+      Aux_Message( stderr, "ERROR : negative density (%14.7e) at file <%s>, line <%d>, function <%s>\n",
                    Rho,  __FILE__, __LINE__, __FUNCTION__ );
 #  endif
 
@@ -684,24 +684,24 @@ void Pri2Char( real InOut[], const real Gamma, const real Rho, const real Pres, 
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Char2Pri 
-// Description :  Convert the characteristic variables to the primitive variables 
+// Function    :  Char2Pri
+// Description :  Convert the characteristic variables to the primitive variables
 //
 // Parameter   :  InOut : Array storing both the input characteristic variables and output primitive variables
 //                Gamma : Ratio of specific heats
 //                Rho   : Density
 //                Pres  : Pressure
-//                XYZ   : Targeted spatial direction : (0/1/2) --> (x/y/z) 
+//                XYZ   : Targeted spatial direction : (0/1/2) --> (x/y/z)
 //-------------------------------------------------------------------------------------------------------
 void Char2Pri( real InOut[], const real Gamma, const real Rho, const real Pres, const int XYZ )
 {
 
 #  ifdef CHECK_NEGATIVE_IN_FLUID
    if ( CPU_CheckNegative(Pres) )
-      Aux_Message( stderr, "ERROR : negative pressure (%14.7e) at file <%s>, line <%d>, function <%s>\n", 
+      Aux_Message( stderr, "ERROR : negative pressure (%14.7e) at file <%s>, line <%d>, function <%s>\n",
                    Pres, __FILE__, __LINE__, __FUNCTION__ );
    if ( CPU_CheckNegative(Rho) )
-      Aux_Message( stderr, "ERROR : negative density (%14.7e) at file <%s>, line <%d>, function <%s>\n", 
+      Aux_Message( stderr, "ERROR : negative density (%14.7e) at file <%s>, line <%d>, function <%s>\n",
                    Rho,  __FILE__, __LINE__, __FUNCTION__ );
 #  endif
 
@@ -728,9 +728,9 @@ void Char2Pri( real InOut[], const real Gamma, const real Rho, const real Pres, 
 #if ( FLU_SCHEME == CTU )
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Get_EigenSystem
-// Description :  Evaluate the eigenvalues and left/right eigenvectors 
+// Description :  Evaluate the eigenvalues and left/right eigenvectors
 //
-// Note        :  1. The input data should be primitive variables 
+// Note        :  1. The input data should be primitive variables
 //                2. The constant components of eigenvectors should be initialized in advance
 //                3. Work for the CTU scheme
 //
@@ -746,10 +746,10 @@ void Get_EigenSystem( const real CC_Var[], real EigenVal[][5], real LEigenVec[][
 
 #  ifdef CHECK_NEGATIVE_IN_FLUID
    if ( CPU_CheckNegative(CC_Var[4]) )
-      Aux_Message( stderr, "ERROR : negative pressure (%14.7e) at file <%s>, line <%d>, function <%s>\n", 
+      Aux_Message( stderr, "ERROR : negative pressure (%14.7e) at file <%s>, line <%d>, function <%s>\n",
                    CC_Var[4], __FILE__, __LINE__, __FUNCTION__ );
    if ( CPU_CheckNegative(CC_Var[0]) )
-      Aux_Message( stderr, "ERROR : negative density (%14.7e) at file <%s>, line <%d>, function <%s>\n", 
+      Aux_Message( stderr, "ERROR : negative density (%14.7e) at file <%s>, line <%d>, function <%s>\n",
                    CC_Var[0], __FILE__, __LINE__, __FUNCTION__ );
 #  endif
 
@@ -808,8 +808,8 @@ void Get_EigenSystem( const real CC_Var[], real EigenVal[][5], real LEigenVec[][
 // Function    :  LimitSlope
 // Description :  Evaluate the monotonic slope by applying slope limiters
 //
-// Note        :  1. The input data should be primitive variables  
-//                2. The L2 and R2 elements are useful only for the extrema-preserving limiter 
+// Note        :  1. The input data should be primitive variables
+//                2. The L2 and R2 elements are useful only for the extrema-preserving limiter
 //
 // Parameter   :  L2             : Element x-2
 //                L1             : Element x-1
@@ -823,14 +823,13 @@ void Get_EigenSystem( const real CC_Var[], real EigenVal[][5], real LEigenVec[][
 //                EP_Coeff       : Coefficient of the extrema-preserving limiter
 //                Gamma          : Ratio of specific heats
 //                                 --> Useful only if the option "CHAR_RECONSTRUCTION" is turned on
-//                XYZ            : Targeted spatial direction : (0/1/2) --> (x/y/z) 
+//                XYZ            : Targeted spatial direction : (0/1/2) --> (x/y/z)
 //                                 --> Useful only if the option "CHAR_RECONSTRUCTION" is turned on
 //                Slope_Limiter  : Array to store the output monotonic slope
 //-------------------------------------------------------------------------------------------------------
 void LimitSlope( const real L2[], const real L1[], const real C0[], const real R1[], const real R2[],
-                 const LR_Limiter_t LR_Limiter, const real MinMod_Coeff, const real EP_Coeff, 
+                 const LR_Limiter_t LR_Limiter, const real MinMod_Coeff, const real EP_Coeff,
                  const real Gamma, const int XYZ, real Slope_Limiter[] )
-                 
 {
 
 // check
@@ -861,16 +860,16 @@ void LimitSlope( const real L2[], const real L1[], const real C0[], const real R
    {
       for (int v=0; v<5; v++)
       {
-         if ( Slope_L[v]*Slope_R[v] > (real)0.0 )  
+         if ( Slope_L[v]*Slope_R[v] > (real)0.0 )
             Slope_A[v] = (real)2.0*Slope_L[v]*Slope_R[v]/( Slope_L[v] + Slope_R[v] );
-         else                                
+         else
             Slope_A[v] = (real)0.0;
       }
    }
 
    if ( LR_Limiter == EXTPRE )
    {
-      for (int v=0; v<5; v++)          
+      for (int v=0; v<5; v++)
       {
          Slope_LL[v] = L1[v] - L2[v];
          Slope_RR[v] = R2[v] - R1[v];
@@ -946,21 +945,21 @@ void LimitSlope( const real L2[], const real L1[], const real C0[], const real R
             D2_Sign    = SIGN( D2_C );
             Slope_Sign = SIGN( Slope_C[v] );
 
-            D2_Limiter = FMIN(  FABS(D2_C), FMIN( FMAX(D2_Sign*D2_L, (real)0.0), 
+            D2_Limiter = FMIN(  FABS(D2_C), FMIN( FMAX(D2_Sign*D2_L, (real)0.0),
                                                   FMAX(D2_Sign*D2_R, (real)0.0) )  );
 
-            if ( D2_Sign*Slope_Sign < (real)0.0 )  
+            if ( D2_Sign*Slope_Sign < (real)0.0 )
                Slope_Limiter[v] = FMIN( (real)1.5*EP_Coeff*D2_Limiter, MinMod_Coeff*FABS(Slope_L[v]) );
             else
                Slope_Limiter[v] = FMIN( (real)1.5*EP_Coeff*D2_Limiter, MinMod_Coeff*FABS(Slope_R[v]) );
 
-            Slope_Limiter[v] = Slope_Sign * FMIN( FABS(Slope_C[v]), Slope_Limiter[v] ); 
+            Slope_Limiter[v] = Slope_Sign * FMIN( FABS(Slope_C[v]), Slope_Limiter[v] );
          }
          else
             Slope_Limiter[v] = (real)0.0;
 
       } // if ( Slope_LR > (real)0.0 && ( LR_Limiter != EXTPRE || Slope_LL[v]*Slope_RR[v] > (real)0.0 ) ) .else.
-   } // for (int v=0; v<5; v++) 
+   } // for (int v=0; v<5; v++)
 
 
 // characteristic variables --> primitive variables

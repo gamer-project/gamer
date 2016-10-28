@@ -50,14 +50,11 @@ void CPU_RiemannSolver_HLLE( const int XYZ, real Flux_Out[], const real L_In[], 
 
 // 2. evaluate the Roe's average values
    const real Gamma_m1 = Gamma - (real)1.0;
-   real _RhoL, _RhoR, P_L, P_R, H_L, H_R, u, v, w, V2, H, Cs;
-   real RhoL_sqrt, RhoR_sqrt, _RhoL_sqrt, _RhoR_sqrt, _RhoLR_sqrt_sum, GammaP_Rho;
+   const real  TempRho = (real)0.5*( L[0] + R[0] );
+   const real _TempRho = (real)1.0/TempRho;
 
-#  if ( defined MIN_PRES_DENS  ||  defined MIN_PRES )
-   const real  TempRho  = (real)0.5*( L[0] + R[0] );
-   const real _TempRho  = (real)1.0/TempRho;
-   real TempPres;
-#  endif
+   real _RhoL, _RhoR, P_L, P_R, H_L, H_R, u, v, w, V2, H, Cs;
+   real RhoL_sqrt, RhoR_sqrt, _RhoL_sqrt, _RhoR_sqrt, _RhoLR_sqrt_sum, GammaP_Rho, TempPres;
 
    _RhoL = (real)1.0 / L[0];
    _RhoR = (real)1.0 / R[0];
@@ -93,6 +90,7 @@ void CPU_RiemannSolver_HLLE( const int XYZ, real Flux_Out[], const real L_In[], 
    TempPres   = GammaP_Rho*TempRho/Gamma;
    TempPres   = CPU_CheckMinPres( TempPres, MinPres );
    GammaP_Rho = Gamma*TempPres*_TempRho;
+
 #  ifdef CHECK_NEGATIVE_IN_FLUID
    if ( CPU_CheckNegative(GammaP_Rho) )
       Aux_Message( stderr, "ERROR : negative GammaP_Rho (%14.7e) at file <%s>, line <%d>, function <%s>\n",

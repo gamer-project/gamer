@@ -21,7 +21,7 @@ static void Solve_Flux( real flux[5], const real lL_star[5], const real lR_star[
                         const real L_2[5], const real L_1[5], const real R_1[5], const real R_2[5],
                         const real Gamma, const real ratio, const WAF_Limiter_t WAF_Limiter );
 static void set_flux( real flux[5], const real val[5], const real Gamma );
-static void Change_variable( real pval[5], const real cval[5], const real Gamma );
+static void Change_variable( real pval[5], const real cval[5], const real Gamma, const real MinPres );
 static void TransposeXY( real u[][ FLU_NXT*FLU_NXT*FLU_NXT ] );
 static void TransposeXZ( real u[][ FLU_NXT*FLU_NXT*FLU_NXT ] );
 static void TransposeFluxXY( real fc[PS2*PS2][3][5] );
@@ -38,7 +38,7 @@ extern void CPU_RiemannSolver_Exact( const int XYZ, real eival_out[], real L_sta
                                      real Flux_Out[], const real L_In[], const real R_In[], const real Gamma );
 #elif ( RSOLVER == ROE )
 static void Solve_StarRoe( real eival[5], real L_star[5], real R_star[5], const real L[5], const real R[5],
-                           const real Gamma );
+                           const real Gamma, const real MinPres );
 #endif
 
 
@@ -230,11 +230,13 @@ void CPU_AdvanceX( real u[][ FLU_NXT*FLU_NXT*FLU_NXT ], real fc[PS2*PS2][3][5], 
                    const real MinDens, const real MinPres )
 {
 
-   const real ratio  = dt/dx;          // dt over dx
-   const int j_start = j_gap;
-   const int k_start = k_gap;
-   const int j_end   = FLU_NXT-j_gap;
-   const int k_end   = FLU_NXT-k_gap;
+   const real  Gamma_m1 = Gamma - (real)1.0;    // for evaluating pressure
+   const real _Gamma_m1 = (real)1.0 / Gamma_m1;
+   const real ratio     = dt/dx;                // dt over dx
+   const int j_start    = j_gap;
+   const int k_start    = k_gap;
+   const int j_end      = FLU_NXT-j_gap;
+   const int k_end      = FLU_NXT-k_gap;
 
 // set local variables
    real ux  [FLU_NXT][5];              // one column of u in x direction
@@ -244,11 +246,6 @@ void CPU_AdvanceX( real u[][ FLU_NXT*FLU_NXT*FLU_NXT ], real fc[PS2*PS2][3][5], 
    real eval[PS2+3][5];
 
    int ii, ID;
-
-#  if ( defined MIN_PRES_DENS  ||  defined MIN_PRES )
-   const real  Gamma_m1 = Gamma - (real)1.0;     // for evaluating pressure
-   const real _Gamma_m1 = (real)1.0 / Gamma_m1;
-#  endif
 
 
    for (int k=k_start; k<k_end; k++)
@@ -268,13 +265,13 @@ void CPU_AdvanceX( real u[][ FLU_NXT*FLU_NXT*FLU_NXT ], real fc[PS2*PS2][3][5], 
       {
          real c_L[5], c_R[5];
 
-         Change_variable( c_L, ux[i]  , Gamma );
-         Change_variable( c_R, ux[i+1], Gamma );
+         Change_variable( c_L, ux[i]  , Gamma, MinPres );
+         Change_variable( c_R, ux[i+1], Gamma, MinPres );
 
 #        if   ( RSOLVER == EXACT )
          CPU_RiemannSolver_Exact( 0, eval[i], L_st[i], R_st[i], NULL, c_L, c_R, Gamma );
 #        elif ( RSOLVER == ROE )
-         Solve_StarRoe( eval[i], L_st[i], R_st[i], c_L, c_R, Gamma );
+         Solve_StarRoe( eval[i], L_st[i], R_st[i], c_L, c_R, Gamma, MinPres );
 #        else
 #        error : ERROR : unsupported Riemann solver (EXACT/ROE) !!
 #        endif
@@ -285,10 +282,10 @@ void CPU_AdvanceX( real u[][ FLU_NXT*FLU_NXT*FLU_NXT ], real fc[PS2*PS2][3][5], 
       {
          real c_L2[5], c_L1[5], c_R1[5], c_R2[5];
 
-         Change_variable( c_L2, ux[i-2], Gamma );
-         Change_variable( c_L1, ux[i-1], Gamma );
-         Change_variable( c_R1, ux[i]  , Gamma );
-         Change_variable( c_R2, ux[i+1], Gamma );
+         Change_variable( c_L2, ux[i-2], Gamma, MinPres );
+         Change_variable( c_L1, ux[i-1], Gamma, MinPres );
+         Change_variable( c_R1, ux[i]  , Gamma, MinPres );
+         Change_variable( c_R2, ux[i+1], Gamma, MinPres );
 
          int ii    = i - FLU_GHOST_SIZE;
          int ii_p1 = ii + 1;
@@ -585,11 +582,12 @@ real set_limit( const real r, const real c, const WAF_Limiter_t WAF_Limiter )
 // Function    : Change_variable
 // Description : Change conservative variables to primitive variables
 //
-// Parameter   : pval   : Primitive variables
-//               cval   : Conservative variables
-//               Gamma  : Ratio of specific heats
+// Parameter   : pval    : Primitive variables
+//               cval    : Conservative variables
+//               Gamma   : Ratio of specific heats
+//               MinPres : Minimum allowed pressure
 //------------------------------------------------------------------------------------------------------
-void Change_variable( real pval[5], const real cval[5], const real Gamma )
+void Change_variable( real pval[5], const real cval[5], const real Gamma, const real MinPres )
 {
 
    const real Gamma_m1 = Gamma - (real)1.0;
@@ -865,15 +863,16 @@ void set_flux( real flux[5], const real val[5], const real Gamma )
 // Function    :  Solve_StarRoe
 // Description :  Solve the star region and speed of waves by Roe's method
 //
-// Parameter   :  eival  : Speed of waves
-//                L_star : Primitive variables in the left star region
-//                R_star : Primitive variables in the right star region
-//                L      : Primitive variables in the left rrgion
-//                R      : Primitive variables in the right rrgion
-//                Gamma  : Ratio of specific heats
+// Parameter   :  eival   : Speed of waves
+//                L_star  : Primitive variables in the left star region
+//                R_star  : Primitive variables in the right star region
+//                L       : Primitive variables in the left rrgion
+//                R       : Primitive variables in the right rrgion
+//                Gamma   : Ratio of specific heats
+//                MinPres : Minimum allowed pressure
 //-------------------------------------------------------------------------------------------------------
 void Solve_StarRoe( real eival[5], real L_star[5], real R_star[5], const real L[5], const real R[5],
-                    const real Gamma)
+                    const real Gamma, const real MinPres )
 {
 
    const real Gamma_m1 = Gamma - (real)1.0; // for evaluating pressure and sound speed
@@ -881,9 +880,7 @@ void Solve_StarRoe( real eival[5], real L_star[5], real R_star[5], const real L[
    real u_bar, v_bar, w_bar, h_bar, a_bar, a_bar_inv; // Roe's average of vx, vy, vz, enthapy, sound speed,
                                                       // one over a_bar
    real coef[5]; //Roe's coefficients
-#  if ( defined MIN_PRES_DENS  ||  defined MIN_PRES )
    real TempPres, TempRho, _TempRho;
-#  endif
 
 // solve Roe's average
    {

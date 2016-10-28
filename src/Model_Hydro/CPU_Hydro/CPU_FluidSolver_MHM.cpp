@@ -211,7 +211,7 @@ void CPU_FluidSolver_MHM( const real Flu_Array_In[][5][ FLU_NXT*FLU_NXT*FLU_NXT 
 
 
 //       (1.b-4) evaluate the half-step solutions
-         CPU_HancockPredict( FC_Var, dt, dh, Gamma, Flu_Array_In[P] );
+         CPU_HancockPredict( FC_Var, dt, dh, Gamma, Flu_Array_In[P], MinDens, MinPres );
 
 #        endif // #if ( FLU_SCHEME == MHM_RP ) ... else ...
 
@@ -236,7 +236,6 @@ void CPU_FluidSolver_MHM( const real Flu_Array_In[][5][ FLU_NXT*FLU_NXT*FLU_NXT 
 
       } // for (int P=0; P<NPatchGroup; P++)
 
-
       delete [] FC_Var;
       delete [] FC_Flux;
       delete [] PriVar;
@@ -255,11 +254,11 @@ void CPU_FluidSolver_MHM( const real Flu_Array_In[][5][ FLU_NXT*FLU_NXT*FLU_NXT 
 // Note        :  1. Work for the MUSCL-Hancock method + Riemann-prediction (MHM_RP)
 //                2. Currently support the exact, Roe, HLLE, and HLLC solvers
 //
-// Parameter   :  Flu_Array_In   : Array storing the input conserved variables
-//                Half_Flux      : Array to store the output face-centered fluxes
-//                                 --> The size is assumed to be N_HF_FLUX^3
-//                Gamma          : Ratio of specific heats
-//                MinPres        : Minimum allowed pressure
+// Parameter   :  Flu_Array_In : Array storing the input conserved variables
+//                Half_Flux    : Array to store the output face-centered fluxes
+//                               --> The size is assumed to be N_HF_FLUX^3
+//                Gamma        : Ratio of specific heats
+//                MinPres      : Minimum allowed pressure
 //-------------------------------------------------------------------------------------------------------
 void CPU_RiemannPredict_Flux( const real Flu_Array_In[][ FLU_NXT*FLU_NXT*FLU_NXT ], real Half_Flux[][3][5],
                               const real Gamma, const real MinPres )
@@ -314,7 +313,6 @@ void CPU_RiemannPredict_Flux( const real Flu_Array_In[][ FLU_NXT*FLU_NXT*FLU_NXT
 #        else
 #        error : ERROR : unsupported Riemann solver (EXACT/ROE) !!
 #        endif
-
       }
    } // for (int d=0; d<3; d++)
 
@@ -328,15 +326,15 @@ void CPU_RiemannPredict_Flux( const real Flu_Array_In[][ FLU_NXT*FLU_NXT*FLU_NXT
 //
 // Note        :  Work for the MUSCL-Hancock method + Riemann-prediction (MHM_RP)
 //
-// Parameter   :  Flu_Array_In   : Array storing the input conserved variables
-//                Half_Flux      : Array storing the input face-centered fluxes
-//                                 --> The size is assumed to be N_HF_FLUX^3
-//                Half_Var       : Array to store the output conserved variables
-//                                 --> The size is assumed to be N_HF_VAR^3
-//                dt             : Time interval to advance solution
-//                dh             : Grid size
-//                Gamma          : Ratio of specific heats
-//                MinDens/Pres   : Minimum allowed density and pressure
+// Parameter   :  Flu_Array_In : Array storing the input conserved variables
+//                Half_Flux    : Array storing the input face-centered fluxes
+//                               --> The size is assumed to be N_HF_FLUX^3
+//                Half_Var     : Array to store the output conserved variables
+//                               --> The size is assumed to be N_HF_VAR^3
+//                dt           : Time interval to advance solution
+//                dh           : Grid size
+//                Gamma        : Ratio of specific heats
+//                MinDens/Pres : Minimum allowed density and pressure
 //-------------------------------------------------------------------------------------------------------
 void CPU_RiemannPredict( const real Flu_Array_In[][ FLU_NXT*FLU_NXT*FLU_NXT ], const real Half_Flux[][3][5],
                          real Half_Var[][5], const real dt, const real dh, const real Gamma,
@@ -392,22 +390,19 @@ void CPU_RiemannPredict( const real Flu_Array_In[][ FLU_NXT*FLU_NXT*FLU_NXT ], c
 //                dh           : Grid size
 //                Gamma        : Ratio of specific heats
 //                C_Var        : Array storing conservative variables
-//                               --> For the "MIN_PRES && MIN_PRES_DENS" operation
 //                MinDens/Pres : Minimum allowed density and pressure
 //-------------------------------------------------------------------------------------------------------
 void CPU_HancockPredict( real FC_Var[][6][5], const real dt, const real dh, const real Gamma,
                          const real C_Var[][ FLU_NXT*FLU_NXT*FLU_NXT ], const real MinDens, const real MinPres )
 {
 
-   const real dt_dh2  = (real)0.5*dt/dh;
-   const int   NGhost = FLU_GHOST_SIZE - 1;
-   real Flux[6][5], dFlux[5];
-   int ID1, ID2;
-
-#  if ( defined MIN_PRES_DENS  ||  defined MIN_PRES )
    const real  Gamma_m1 = Gamma - (real)1.0;
    const real _Gamma_m1 = (real)1.0 / Gamma_m1;
-#  endif
+   const real dt_dh2    = (real)0.5*dt/dh;
+   const int  NGhost    = FLU_GHOST_SIZE - 1;
+
+   real Flux[6][5], dFlux[5];
+   int ID1, ID2;
 
 
    for (int k1=0, k2=NGhost;  k1<N_FC_VAR;  k1++, k2++)
@@ -426,10 +421,10 @@ void CPU_HancockPredict( real FC_Var[][6][5], const real dt, const real dh, cons
          for (int f=0; f<6; f++)    FC_Var[ID1][f][v] -= dFlux[v];
       }
 
-//    check the negative density
+//    check the negative density and energy
       for (int f=0; f<6; f++)
       {
-         if ( FC_Var[ID1][f][0] <= (real)0.0 )
+         if ( FC_Var[ID1][f][0] <= (real)0.0  ||  FC_Var[ID1][f][4] <= (real)0.0 )
          {
 //          set to the values before update
             for (int v=0; v<5; v++)
@@ -449,7 +444,6 @@ void CPU_HancockPredict( real FC_Var[][6][5], const real dt, const real dh, cons
          FC_Var[ID1][f][4] = CPU_CheckMinPresInEngy( FC_Var[ID1][f][0], FC_Var[ID1][f][1], FC_Var[ID1][f][2],
                                                      FC_Var[ID1][f][3], FC_Var[ID1][f][4], Gamma_m1, _Gamma_m1, MinPres );
       }
-
    } // i,j,k
 
 } // FUNCTION : CPU_HancockPredict
