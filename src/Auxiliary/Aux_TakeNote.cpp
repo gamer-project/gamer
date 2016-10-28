@@ -299,18 +299,6 @@ void Aux_TakeNote()
       fprintf( Note, "***********************************************************************************\n" );
 
 #     if   ( MODEL == HYDRO )
-#     ifdef MIN_PRES_DENS
-      fprintf( Note, "MIN_PRES_DENS             ON (%13.7e)\n", MIN_PRES_DENS );
-#     else
-      fprintf( Note, "MIN_PRES_DENS             OFF\n" );
-#     endif
-
-#     ifdef MIN_PRES
-      fprintf( Note, "MIN_PRES                  ON (%13.7e)\n", MIN_PRES );
-#     else
-      fprintf( Note, "MIN_PRES                  OFF\n" );
-#     endif
-
 #     ifdef CHECK_NEGATIVE_IN_FLUID
       fprintf( Note, "CHECK_NEGATIVE_IN_FLUID   ON\n" );
 #     else
@@ -746,10 +734,10 @@ void Aux_TakeNote()
       fprintf( Note, "OPT__RESET_FLUID          %d\n",      OPT__RESET_FLUID        );
       fprintf( Note, "OPT__CORR_UNPHY           %d\n",      OPT__CORR_UNPHY         );
 #     if ( MODEL == HYDRO  ||  MODEL == MHD  ||  MODEL == ELBDM )
-      fprintf( Note, "MinDens                   %13.7e\n",  MinDens                 );
+      fprintf( Note, "MinDens                   %13.7e\n",  MinDensTEMP             );
 #     endif
 #     if ( MODEL == HYDRO  ||  MODEL == MHD )
-      fprintf( Note, "MinPres                   %13.7e\n",  MinPres                 );
+      fprintf( Note, "MinPres                   %13.7e\n",  MinPresTEMP             );
 #     endif
       fprintf( Note, "WITH_COARSE_FINE_FLUX     %d\n",      amr->WithFlux           );
 #     ifndef SERIAL

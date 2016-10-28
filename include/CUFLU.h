@@ -66,37 +66,11 @@ struct FluVar { real Rho, Px, Py, Pz, Egy; };
 #endif // #if ( FLU_SCHEME == MHM  ||  FLU_SCHEME == MHM_RP  ||  FLU_SCHEME == CTU )
 
 
-// enforce pressure over rho (== const*temperature) to be positive
-/*
-#  ifdef FLOAT8
-#        define MIN_PRES_DENS    1.e-15
-#  else
-#     ifdef COMOVING
-#        define MIN_PRES_DENS    1.e-10f
-#     else
-#        define MIN_PRES_DENS    1.e-06f
-#     endif
-#  endif
-*/
-
-// enforce pressure to be positive
-#  ifdef FLOAT8
-#        define MIN_PRES         1.e-15
-#  else
-#     ifdef COMOVING
-#        define MIN_PRES         1.e-10f
-#     else
-#        define MIN_PRES         1.e-06f
-#     endif
-#  endif
-
-
 // check the non-physical negative values (e.g., negative density) inside the fluid solver
 #ifdef GAMER_DEBUG
 #  define CHECK_NEGATIVE_IN_FLUID
-#endif
-//#  define CHECK_NEGATIVE_IN_FLUID
 //#  include "stdio.h"
+#endif
 
 
 // perform spatial data reconstruction in characteristic variables (default: primitive variables)
@@ -159,19 +133,6 @@ struct FluVar { real Rho, Px, Py, Pz, Egy; };
 #  error : ERROR : unsupported MODEL !!
 #endif // MODEL
 
-
-// enforce density to be positive
-#if ( MODEL == HYDRO  ||  MODEL == ELBDM )
-
-// MIN_DENS has not been implemented yet
-/*
-#  ifdef FLOAT8
-#     define MIN_DENS    1.e-15
-#  else
-#     define MIN_DENS    1.e-06f
-#  endif
-*/
-#endif // #if ( MODEL == HYDRO  ||  MODEL == ELBDM )
 
 
 // ###############################################################################################

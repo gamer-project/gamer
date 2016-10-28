@@ -8,40 +8,37 @@
 
 #define to1D(z,y,x) ( z*FLU_NXT*FLU_NXT + y*FLU_NXT + x )
 
-#if ( defined MIN_PRES_DENS  ||  defined MIN_PRES )
-extern real CPU_PositivePres( const real Pres_In, const real Dens, const real _Dens );
-extern real CPU_PositivePres_In_Engy( const real ConVar[], const real Gamma_m1, const real _Gamma_m1 );
-#endif
+extern real CPU_CheckMinPres( const real InPres, const real MinPres );
 
-static real set_limit( const real r, const real c, const WAF_Limiter_t WAF_Limiter );  
-static void CPU_AdvanceX( real u[][ FLU_NXT*FLU_NXT*FLU_NXT ], real fc[PS2*PS2][3][5], const real dt, 
-                          const real dx, const real Gamma, const int j_gap, const int k_gap, 
-                          const WAF_Limiter_t WAF_Limiter );  
-static void Store_flux( real L_f[5][PS2*PS2], real C_f[5][PS2*PS2], real R_f[5][PS2*PS2], 
+static real set_limit( const real r, const real c, const WAF_Limiter_t WAF_Limiter );
+static void CPU_AdvanceX( real u[][ FLU_NXT*FLU_NXT*FLU_NXT ], real fc[PS2*PS2][3][5], const real dt,
+                          const real dx, const real Gamma, const int j_gap, const int k_gap,
+                          const WAF_Limiter_t WAF_Limiter, const real MinDens, const real MinPres );
+static void Store_flux( real L_f[5][PS2*PS2], real C_f[5][PS2*PS2], real R_f[5][PS2*PS2],
                         const real fc[PS2*PS2][3][5] );
-static void Solve_Flux( real flux[5], const real lL_star[5], const real lR_star[5], const real cL_star[5], 
+static void Solve_Flux( real flux[5], const real lL_star[5], const real lR_star[5], const real cL_star[5],
                         const real cR_star[5], const real rL_star[5], const real rR_star[5], const real eival[5],
-                        const real L_2[5], const real L_1[5], const real R_1[5], const real R_2[5], 
-                        const real Gamma, const real ratio, const WAF_Limiter_t WAF_Limiter );  
-static void set_flux( real flux[5], const real val[5], const real Gamma );  
-static void Change_variable( real pval[5], const real cval[5], const real Gamma );  
-static void TransposeXY( real u[][ FLU_NXT*FLU_NXT*FLU_NXT ] );   
-static void TransposeXZ( real u[][ FLU_NXT*FLU_NXT*FLU_NXT ] );   
+                        const real L_2[5], const real L_1[5], const real R_1[5], const real R_2[5],
+                        const real Gamma, const real ratio, const WAF_Limiter_t WAF_Limiter );
+static void set_flux( real flux[5], const real val[5], const real Gamma );
+static void Change_variable( real pval[5], const real cval[5], const real Gamma );
+static void TransposeXY( real u[][ FLU_NXT*FLU_NXT*FLU_NXT ] );
+static void TransposeXZ( real u[][ FLU_NXT*FLU_NXT*FLU_NXT ] );
 static void TransposeFluxXY( real fc[PS2*PS2][3][5] );
 static void TransposeFluxXZ( real fc[PS2*PS2][3][5] );
 #ifdef WAF_DISSIPATE
 static void Dis_Stru( real flux[5], const real L[5], const real R[5], const real L_star[5], const real R_star[5],
-                      const real limit[5], const real theta[5], const real Gamma );  
+                      const real limit[5], const real theta[5], const real Gamma );
 #else
-static void Undis_Stru( real flux[5], const real L[5], const real R[5], const real L_star[5], 
-                        const real R_star[5], const real limit[5], const real theta[5], const real Gamma );  
+static void Undis_Stru( real flux[5], const real L[5], const real R[5], const real L_star[5],
+                        const real R_star[5], const real limit[5], const real theta[5], const real Gamma );
 #endif
 #if   ( RSOLVER == EXACT )
-extern void CPU_RiemannSolver_Exact( const int XYZ, real eival_out[], real L_star_out[], real R_star_out[], 
-                                     real Flux_Out[], const real L_In[], const real R_In[], const real Gamma ); 
+extern void CPU_RiemannSolver_Exact( const int XYZ, real eival_out[], real L_star_out[], real R_star_out[],
+                                     real Flux_Out[], const real L_In[], const real R_In[], const real Gamma );
 #elif ( RSOLVER == ROE )
-static void Solve_StarRoe( real eival[5], real L_star[5], real R_star[5], const real L[5], const real R[5], 
-                           const real Gamma );    
+static void Solve_StarRoe( real eival[5], real L_star[5], real R_star[5], const real L[5], const real R[5],
+                           const real Gamma );
 #endif
 
 
@@ -71,14 +68,16 @@ static void Solve_StarRoe( real eival[5], real L_star[5], real R_star[5], const 
 //                                    1 : van-Leer
 //                                    2 : van-Albada
 //                                    3 : minbee
+//                MinDens/Pres   : Minimum allowed density and pressure
 //-------------------------------------------------------------------------------------------------------
-void CPU_FluidSolver_WAF( real Flu_Array_In [][5][ FLU_NXT*FLU_NXT*FLU_NXT ], 
-                          real Flu_Array_Out[][5][ PS2*PS2*PS2 ], 
-                          real Flux_Array[][9][5][ PS2*PS2 ], 
+void CPU_FluidSolver_WAF( real Flu_Array_In [][5][ FLU_NXT*FLU_NXT*FLU_NXT ],
+                          real Flu_Array_Out[][5][ PS2*PS2*PS2 ],
+                          real Flux_Array[][9][5][ PS2*PS2 ],
                           const double Corner_Array[][3],
                           const real Pot_Array_USG[][USG_NXT_F][USG_NXT_F][USG_NXT_F],
                           const int NPatchGroup, const real dt, const real dh, const real Gamma,
-                          const bool StoreFlux, const bool XYZ, const WAF_Limiter_t WAF_Limiter )
+                          const bool StoreFlux, const bool XYZ, const WAF_Limiter_t WAF_Limiter,
+                          const real MinDens, const real MinPres )
 {
 
 #  pragma omp parallel
@@ -92,39 +91,39 @@ void CPU_FluidSolver_WAF( real Flu_Array_In [][5][ FLU_NXT*FLU_NXT*FLU_NXT ],
          for (int P=0; P<NPatchGroup; P++)
          {
 //          solve the x direction
-            CPU_AdvanceX( Flu_Array_In[P], FC, dt, dh, Gamma,              0,              0, WAF_Limiter ); 
-      
+            CPU_AdvanceX( Flu_Array_In[P], FC, dt, dh, Gamma,              0,              0, WAF_Limiter, MinDens, MinPres );
+
 //          store the intercell flux in x direction
             if ( StoreFlux )
-            Store_flux( Flux_Array[P][0], Flux_Array[P][1], Flux_Array[P][2], FC ); 
+            Store_flux( Flux_Array[P][0], Flux_Array[P][1], Flux_Array[P][2], FC );
 
 //          x-y-z --> y-x-z for conservative variables
-            TransposeXY ( Flu_Array_In[P] ); 
-      
-//          solve the y direction
-            CPU_AdvanceX( Flu_Array_In[P], FC, dt, dh, Gamma, FLU_GHOST_SIZE,              0, WAF_Limiter );
+            TransposeXY ( Flu_Array_In[P] );
 
-//          y-x-z --> x-y-z for flux         
+//          solve the y direction
+            CPU_AdvanceX( Flu_Array_In[P], FC, dt, dh, Gamma, FLU_GHOST_SIZE,              0, WAF_Limiter, MinDens, MinPres );
+
+//          y-x-z --> x-y-z for flux
             TransposeFluxXY( FC );
-      
+
 //          store the intercell flux in y direction
             if ( StoreFlux )
             Store_flux( Flux_Array[P][3], Flux_Array[P][4], Flux_Array[P][5], FC );
 
-//          y-x-z --> z-x-y for conservative variables      
+//          y-x-z --> z-x-y for conservative variables
             TransposeXZ ( Flu_Array_In[P] );
-      
-//          solve the z direction
-            CPU_AdvanceX( Flu_Array_In[P], FC, dt, dh, Gamma, FLU_GHOST_SIZE, FLU_GHOST_SIZE, WAF_Limiter );
 
-//          z-x-y --> x-y-z for flux         
+//          solve the z direction
+            CPU_AdvanceX( Flu_Array_In[P], FC, dt, dh, Gamma, FLU_GHOST_SIZE, FLU_GHOST_SIZE, WAF_Limiter, MinDens, MinPres );
+
+//          z-x-y --> x-y-z for flux
             TransposeFluxXZ( FC );
             TransposeFluxXY( FC );
- 
-//          store intercell flux of z direction         
+
+//          store intercell flux of z direction
             if ( StoreFlux )
             Store_flux( Flux_Array[P][6], Flux_Array[P][7], Flux_Array[P][8], FC );
-      
+
 //          z-x-y --> x-y-z for conservative variables
             TransposeXZ ( Flu_Array_In[P] );
             TransposeXY ( Flu_Array_In[P] );
@@ -138,41 +137,41 @@ void CPU_FluidSolver_WAF( real Flu_Array_In [][5][ FLU_NXT*FLU_NXT*FLU_NXT ],
 #        pragma omp for
          for (int P=0; P<NPatchGroup; P++)
          {
-//          x-y-z --> z-x-y for conservative variables         
+//          x-y-z --> z-x-y for conservative variables
             TransposeXY ( Flu_Array_In[P] );
             TransposeXZ ( Flu_Array_In[P] );
 
-//          solve the z direction         
-            CPU_AdvanceX( Flu_Array_In[P], FC, dt, dh, Gamma,              0,              0, WAF_Limiter );
+//          solve the z direction
+            CPU_AdvanceX( Flu_Array_In[P], FC, dt, dh, Gamma,              0,              0, WAF_Limiter, MinDens, MinPres );
 
-//          z-x-y --> x-y-z for flux         
+//          z-x-y --> x-y-z for flux
             TransposeFluxXZ( FC );
             TransposeFluxXY( FC );
 
-//          store the intercell flux of z direction         
+//          store the intercell flux of z direction
             if ( StoreFlux )
             Store_flux( Flux_Array[P][6], Flux_Array[P][7], Flux_Array[P][8], FC );
 
-//          z-x-y --> y-x-z for conservative variables         
+//          z-x-y --> y-x-z for conservative variables
             TransposeXZ ( Flu_Array_In[P] );
 
-//          solve the y direction         
-            CPU_AdvanceX( Flu_Array_In[P], FC, dt, dh, Gamma,              0, FLU_GHOST_SIZE, WAF_Limiter );
+//          solve the y direction
+            CPU_AdvanceX( Flu_Array_In[P], FC, dt, dh, Gamma,              0, FLU_GHOST_SIZE, WAF_Limiter, MinDens, MinPres );
 
-//          y-x-z --> x-y-z for flux         
+//          y-x-z --> x-y-z for flux
             TransposeFluxXY( FC );
 
-//          store the intercell flux of y direction         
+//          store the intercell flux of y direction
             if ( StoreFlux )
             Store_flux( Flux_Array[P][3], Flux_Array[P][4], Flux_Array[P][5], FC );
 
-//          y-x-z --> x-y-z for conservative variables         
+//          y-x-z --> x-y-z for conservative variables
             TransposeXY ( Flu_Array_In[P] );
 
-//          solve the x direction         
-            CPU_AdvanceX( Flu_Array_In[P], FC, dt, dh, Gamma, FLU_GHOST_SIZE, FLU_GHOST_SIZE, WAF_Limiter );
+//          solve the x direction
+            CPU_AdvanceX( Flu_Array_In[P], FC, dt, dh, Gamma, FLU_GHOST_SIZE, FLU_GHOST_SIZE, WAF_Limiter, MinDens, MinPres );
 
-//          store the intercell flux of x direction         
+//          store the intercell flux of x direction
             if ( StoreFlux )
             Store_flux( Flux_Array[P][0], Flux_Array[P][1], Flux_Array[P][2], FC );
 
@@ -201,7 +200,7 @@ void CPU_FluidSolver_WAF( real Flu_Array_In [][5][ FLU_NXT*FLU_NXT*FLU_NXT ],
       delete [] FC;
 
    } // OpenMP parallel region
- 
+
 } // FUNCTION : CPU_FluidSolver_WAF
 
 
@@ -212,24 +211,26 @@ void CPU_FluidSolver_WAF( real Flu_Array_In [][5][ FLU_NXT*FLU_NXT*FLU_NXT ],
 //
 // Note        :  Based on the WAF scheme
 //
-// Parameter   :  u           : Input fluid array
-//                fc          : Intercell flux
-//                dt          : Time interval to advance solution
-//                dx          : Grid size
-//                Gamma       : Ratio of specific heats
-//                j_gap       : Number of cells that can be skipped on each side in the y direction
-//                k_gap       : Number of cells that can be skipped on each side in the z direction
-//                WAF_Limiter : Selection of te limit function
+// Parameter   :  u            : Input fluid array
+//                fc           : Intercell flux
+//                dt           : Time interval to advance solution
+//                dx           : Grid size
+//                Gamma        : Ratio of specific heats
+//                j_gap        : Number of cells that can be skipped on each side in the y direction
+//                k_gap        : Number of cells that can be skipped on each side in the z direction
+//                WAF_Limiter  : Selection of te limit function
 //                               0 : superbee
 //                               1 : van-Leer
 //                               2 : van-Albada
 //                               3 : minbee
+//                MinDens/Pres : Minimum allowed density and pressure
 //-------------------------------------------------------------------------------------------------------
-void CPU_AdvanceX( real u[][ FLU_NXT*FLU_NXT*FLU_NXT ], real fc[PS2*PS2][3][5], const real dt, const real dx, 
-                   const real Gamma, const int j_gap, const int k_gap, const WAF_Limiter_t WAF_Limiter )
+void CPU_AdvanceX( real u[][ FLU_NXT*FLU_NXT*FLU_NXT ], real fc[PS2*PS2][3][5], const real dt, const real dx,
+                   const real Gamma, const int j_gap, const int k_gap, const WAF_Limiter_t WAF_Limiter,
+                   const real MinDens, const real MinPres )
 {
 
-   const real ratio  = dt/dx;          // dt over dx 
+   const real ratio  = dt/dx;          // dt over dx
    const int j_start = j_gap;
    const int k_start = k_gap;
    const int j_end   = FLU_NXT-j_gap;
@@ -242,26 +243,26 @@ void CPU_AdvanceX( real u[][ FLU_NXT*FLU_NXT*FLU_NXT ], real fc[PS2*PS2][3][5], 
    real R_st[PS2+3][5];
    real eval[PS2+3][5];
 
-   int ii, ID; 
+   int ii, ID;
 
 #  if ( defined MIN_PRES_DENS  ||  defined MIN_PRES )
    const real  Gamma_m1 = Gamma - (real)1.0;     // for evaluating pressure
    const real _Gamma_m1 = (real)1.0 / Gamma_m1;
 #  endif
-    
+
 
    for (int k=k_start; k<k_end; k++)
    for (int j=j_start; j<j_end; j++)
    {
-       
-//    copy one column of data from u to ux  
-      for (int i=0; i<FLU_NXT; i++)     
+
+//    copy one column of data from u to ux
+      for (int i=0; i<FLU_NXT; i++)
       {
          ID = to1D(k,j,i);
 
          for (int v=0; v<5; v++)    ux[i][v] = u[v][ID];
       }
-   
+
 //    solve Riemann problem
       for (int i=0; i<PS2+3; i++)
       {
@@ -270,7 +271,7 @@ void CPU_AdvanceX( real u[][ FLU_NXT*FLU_NXT*FLU_NXT ], real fc[PS2*PS2][3][5], 
          Change_variable( c_L, ux[i]  , Gamma );
          Change_variable( c_R, ux[i+1], Gamma );
 
-#        if   ( RSOLVER == EXACT )        
+#        if   ( RSOLVER == EXACT )
          CPU_RiemannSolver_Exact( 0, eval[i], L_st[i], R_st[i], NULL, c_L, c_R, Gamma );
 #        elif ( RSOLVER == ROE )
          Solve_StarRoe( eval[i], L_st[i], R_st[i], c_L, c_R, Gamma );
@@ -278,9 +279,9 @@ void CPU_AdvanceX( real u[][ FLU_NXT*FLU_NXT*FLU_NXT ], real fc[PS2*PS2][3][5], 
 #        error : ERROR : unsupported Riemann solver (EXACT/ROE) !!
 #        endif
       }
-      
+
 //    solve intecell flux
-      for (int i=FLU_GHOST_SIZE; i<FLU_GHOST_SIZE+PS2+1; i++)  
+      for (int i=FLU_GHOST_SIZE; i<FLU_GHOST_SIZE+PS2+1; i++)
       {
          real c_L2[5], c_L1[5], c_R1[5], c_R2[5];
 
@@ -299,18 +300,18 @@ void CPU_AdvanceX( real u[][ FLU_NXT*FLU_NXT*FLU_NXT ], real fc[PS2*PS2][3][5], 
          {
             case FLU_GHOST_SIZE : // the left intercell flux
             {
-               if (  j >= FLU_GHOST_SIZE  &&  j < FLU_GHOST_SIZE+PS2  &&  k >= FLU_GHOST_SIZE  &&  
+               if (  j >= FLU_GHOST_SIZE  &&  j < FLU_GHOST_SIZE+PS2  &&  k >= FLU_GHOST_SIZE  &&
                      k < FLU_GHOST_SIZE+PS2 )
                {
                   int ID1 = ( k - FLU_GHOST_SIZE )*PS2 + ( j - FLU_GHOST_SIZE );
                   for (int v=0; v<5; v++)    fc[ID1][0][v] = flux[ i - FLU_GHOST_SIZE ][v];
                }
                break;
-            }   
+            }
 
             case FLU_GHOST_SIZE + PS2/2 : // the center intercell flux
             {
-               if (  j >= FLU_GHOST_SIZE  &&  j < FLU_GHOST_SIZE+PS2  &&  k >= FLU_GHOST_SIZE  &&  
+               if (  j >= FLU_GHOST_SIZE  &&  j < FLU_GHOST_SIZE+PS2  &&  k >= FLU_GHOST_SIZE  &&
                      k < FLU_GHOST_SIZE+PS2  )
                {
                   int ID1 = ( k - FLU_GHOST_SIZE )*PS2 + ( j - FLU_GHOST_SIZE );
@@ -321,7 +322,7 @@ void CPU_AdvanceX( real u[][ FLU_NXT*FLU_NXT*FLU_NXT ], real fc[PS2*PS2][3][5], 
 
             case FLU_GHOST_SIZE + PS2 : //the right intercell flux
             {
-               if (  j >= FLU_GHOST_SIZE  &&  j < FLU_GHOST_SIZE+PS2  &&  k >= FLU_GHOST_SIZE  &&  
+               if (  j >= FLU_GHOST_SIZE  &&  j < FLU_GHOST_SIZE+PS2  &&  k >= FLU_GHOST_SIZE  &&
                      k < FLU_GHOST_SIZE+PS2  )
                {
                   int ID1 = ( k - FLU_GHOST_SIZE )*PS2 + ( j - FLU_GHOST_SIZE );
@@ -330,21 +331,20 @@ void CPU_AdvanceX( real u[][ FLU_NXT*FLU_NXT*FLU_NXT ], real fc[PS2*PS2][3][5], 
                break;
             }
 
-            default : /* nothing to do */ 
+            default : /* nothing to do */
                break;
-         }   
+         }
       }
 
 //    update the conservative variables
-      for (int i=FLU_GHOST_SIZE; i<FLU_GHOST_SIZE+PS2; i++)  
+      for (int i=FLU_GHOST_SIZE; i<FLU_GHOST_SIZE+PS2; i++)
       {
          ii = i - FLU_GHOST_SIZE;
          for (int v=0; v<5; v++)    ux[i][v] += ratio*( flux[ii][v] - flux[ii+1][v] );
 
-//       enforce the pressure to be positive
-#        if ( defined MIN_PRES_DENS  ||  defined MIN_PRES )
-         ux[i][4] = CPU_PositivePres_In_Engy( ux[i], Gamma_m1, _Gamma_m1 );
-#        endif
+//       enforce positive density and pressure
+         ux[i][0] = FMAX( ux[i][0], MinDens );
+         ux[i][4] = CPU_CheckMinPresInEngy( ux[i][0], ux[i][1], ux[i][2], ux[i][3], ux[i][4], Gamma_m1, _Gamma_m1, MinPres );
 
 //       check the negative density
 #        ifdef CHECK_NEGATIVE_IN_FLUID
@@ -356,7 +356,7 @@ void CPU_AdvanceX( real u[][ FLU_NXT*FLU_NXT*FLU_NXT ], real fc[PS2*PS2][3][5], 
       } // for (int i=FLU_GHOST_SIZE; i<FLU_GHOST_SIZE+PS2; i++)
 
 //    paste to the original space
-      for (int i=FLU_GHOST_SIZE; i<FLU_GHOST_SIZE+PS2; i++)  
+      for (int i=FLU_GHOST_SIZE; i<FLU_GHOST_SIZE+PS2; i++)
       {
          ID = to1D(k,j,i);
          for (int v=0; v<5; v++)    u[v][ID] = ux[i][v];
@@ -386,10 +386,10 @@ void Store_flux( real L_f[5][PS2*PS2], real C_f[5][PS2*PS2], real R_f[5][PS2*PS2
    for (int n=0; n<PS2; n++)
    {
       ID1 = m*PS2 + n;
-      
+
       L_f[v][ID1] = fc[ID1][0][v];
       C_f[v][ID1] = fc[ID1][1][v];
-      R_f[v][ID1] = fc[ID1][2][v]; 
+      R_f[v][ID1] = fc[ID1][2][v];
    }
 
 } // FUNCTION : Store_flux
@@ -420,9 +420,9 @@ void Store_flux( real L_f[5][PS2*PS2], real C_f[5][PS2*PS2], real R_f[5][PS2*PS2
 //                               2 : van-Albada
 //                               3 : minbee
 //-------------------------------------------------------------------------------------------------------
-static void Solve_Flux( real flux[5], const real lL_star[5], const real lR_star[5], const real cL_star[5], 
+static void Solve_Flux( real flux[5], const real lL_star[5], const real lR_star[5], const real cL_star[5],
                         const real cR_star[5], const real rL_star[5], const real rR_star[5], const real eival[5],
-                        const real L_2[5], const real L_1[5], const real R_1[5], const real R_2[5], 
+                        const real L_2[5], const real L_1[5], const real R_1[5], const real R_2[5],
                         const real Gamma, const real ratio, const WAF_Limiter_t WAF_Limiter )
 {
 
@@ -430,11 +430,11 @@ static void Solve_Flux( real flux[5], const real lL_star[5], const real lR_star[
    real limit[5];            //limit functions
    real mean [3][5];
    real delta[3][5];
-  
-   delta[0][0] = lL_star[0] -     L_2[0];        
-   delta[0][1] = lR_star[0] - lL_star[0];   
-   delta[0][2] = lR_star[2] - lL_star[2];        
-   delta[0][3] = lR_star[3] - lL_star[3];        
+
+   delta[0][0] = lL_star[0] -     L_2[0];
+   delta[0][1] = lR_star[0] - lL_star[0];
+   delta[0][2] = lR_star[2] - lL_star[2];
+   delta[0][3] = lR_star[3] - lL_star[3];
    delta[0][4] =     L_1[0] - lR_star[0];
    mean[0][0] = (real)0.5*( FABS( lL_star[0] ) + FABS(     L_2[0] ) );
    mean[0][1] = (real)0.5*( FABS( lR_star[0] ) + FABS( lL_star[0] ) );
@@ -475,7 +475,7 @@ static void Solve_Flux( real flux[5], const real lL_star[5], const real lR_star[
             if (  mean[0][i] == (real)0.0  ||  mean[1][i] == (real)0.0  )  limit[i] = (real)1.0;
             else
             {
-               if (  ( delta[0][i]*delta[1][i] ) / ( mean[0][i]*mean[1][i] ) < MAX_ERROR*MAX_ERROR  ) 
+               if (  ( delta[0][i]*delta[1][i] ) / ( mean[0][i]*mean[1][i] ) < MAX_ERROR*MAX_ERROR  )
                   limit[i] = (real)1.0;
                else
                {
@@ -490,7 +490,7 @@ static void Solve_Flux( real flux[5], const real lL_star[5], const real lR_star[
             if (  mean[2][i] == (real)0.0  ||  mean[1][i] == (real)0.0  )     limit[i] = (real)1.0;
             else
             {
-               if (  ( delta[2][i]*delta[1][i] ) / ( mean[2][i]*mean[1][i] ) < MAX_ERROR*MAX_ERROR ) 
+               if (  ( delta[2][i]*delta[1][i] ) / ( mean[2][i]*mean[1][i] ) < MAX_ERROR*MAX_ERROR )
                   limit[i] = (real)1.0;
                else
                {
@@ -508,16 +508,16 @@ static void Solve_Flux( real flux[5], const real lL_star[5], const real lR_star[
    {
       if (  FABS( eival[i] ) < MAX_ERROR  )  theta[i] =  (real)0.0;
       else if ( eival[i] > (real)0.0 )       theta[i] =  (real)1.0;
-      else                                   theta[i] = -(real)1.0; 
+      else                                   theta[i] = -(real)1.0;
    }
 
-   
+
 // solve the intercell flux
 #  ifdef WAF_DISSIPATE
-   Dis_Stru(   flux, L_1, R_1, cL_star, cR_star, limit, theta, Gamma );   
-#  else   
-   Undis_Stru( flux, L_1, R_1, cL_star, cR_star, limit, theta, Gamma );   
-#  endif 
+   Dis_Stru(   flux, L_1, R_1, cL_star, cR_star, limit, theta, Gamma );
+#  else
+   Undis_Stru( flux, L_1, R_1, cL_star, cR_star, limit, theta, Gamma );
+#  endif
 
 } // FUNCTION : Solve_Flux
 
@@ -540,7 +540,7 @@ real set_limit( const real r, const real c, const WAF_Limiter_t WAF_Limiter )
 
    real limit;
 
-// choose the limit function 
+// choose the limit function
    switch ( WAF_Limiter )
    {
       case WAF_SUPERBEE :
@@ -550,7 +550,7 @@ real set_limit( const real r, const real c, const WAF_Limiter_t WAF_Limiter )
          else if ( r <= (real)2.0 )                   limit = (real)1.0 - r*( (real)1.0 - FABS(c) );
          else                                         limit = (real)2.0*FABS(c) - (real)1.0;
          break;
-      }  
+      }
 
       case WAF_VANLEER :
       {
@@ -558,7 +558,7 @@ real set_limit( const real r, const real c, const WAF_Limiter_t WAF_Limiter )
          break;
       }
 
-      case WAF_ALBADA :  
+      case WAF_ALBADA :
       {
          limit = (real)1.0 - r*( (real)1.0 + r )*((real)1.0 - FABS(c) )/ ( (real)1.0 + r*r );
          break;
@@ -571,9 +571,9 @@ real set_limit( const real r, const real c, const WAF_Limiter_t WAF_Limiter )
          break;
       }
 
-      default: 
+      default:
          Aux_Error( ERROR_INFO, "incorrect parameter %s = %d !!\n", "WAF_Limiter", WAF_Limiter );
-   }  
+   }
 
    return limit;
 
@@ -592,18 +592,16 @@ real set_limit( const real r, const real c, const WAF_Limiter_t WAF_Limiter )
 void Change_variable( real pval[5], const real cval[5], const real Gamma )
 {
 
-   const real Gamma_m1 = Gamma - (real)1.0; 
+   const real Gamma_m1 = Gamma - (real)1.0;
 
    pval[0] = cval[0];
    pval[1] = cval[1] / cval[0];
-   pval[2] = cval[2] / cval[0];  
+   pval[2] = cval[2] / cval[0];
    pval[3] = cval[3] / cval[0];
    pval[4] = Gamma_m1*( cval[4] - (real)0.5*( cval[1]*cval[1] + cval[2]*cval[2] + cval[3]*cval[3] ) / cval[0] );
 
-// ensure the positive pressure
-#  if ( defined MIN_PRES_DENS  ||  defined MIN_PRES )
-   pval[4] = CPU_PositivePres( pval[4], pval[0], (real)1.0/pval[0] );
-#  endif
+// ensure a positive pressure
+   pval[4] = CPU_CheckMinPres( pval[4], MinPres );
 
 } // FUNCTION : Change_variable
 
@@ -613,7 +611,7 @@ void Change_variable( real pval[5], const real cval[5], const real Gamma )
 //------------------------------------------------------------------------------------------------------
 // Function    : Dis_Stru
 // Description : Set the intercell flux by dissipative wave structure
-// 
+//
 // Parameter   : flux   : Intercel flux
 //               L      : Primitive variables in the left region
 //               R      : Primitive variables in the right region
@@ -767,7 +765,7 @@ void Dis_Stru( real flux[5], const real L[5], const real R[5], const real L_star
 // set the intercell flux
    for (int i=0; i<5; i++)
    {
-       flux[i] = (real)0.5*( iflux[0][i] + iflux[5][i] ) - 
+       flux[i] = (real)0.5*( iflux[0][i] + iflux[5][i] ) -
                  (real)0.5*(  theta[0]*lim[0]*( iflux[1][i] - iflux[0][i] ) +
                               theta[1]*lim[1]*( iflux[2][i] - iflux[1][i] ) +
                               theta[2]*lim[2]*( iflux[3][i] - iflux[2][i] ) +
@@ -801,33 +799,33 @@ void Undis_Stru( real flux[5], const real L[5], const real R[5], const real L_st
    real iflux[4][5];
 
 // flux function evaluated at the given stat
-   set_flux( iflux[0], L,      Gamma ); 
-   set_flux( iflux[1], L_star, Gamma ); 
+   set_flux( iflux[0], L,      Gamma );
+   set_flux( iflux[1], L_star, Gamma );
    set_flux( iflux[2], R_star, Gamma );
-   set_flux( iflux[3], R,      Gamma ); 
+   set_flux( iflux[3], R,      Gamma );
 
 // set the intercell flux
-   flux[0] =    (real)0.5*( iflux[0][0] + iflux[3][0] ) 
+   flux[0] =    (real)0.5*( iflux[0][0] + iflux[3][0] )
               - (real)0.5*(  theta[0]*limit[0]*( iflux[1][0] - iflux[0][0] ) +
                              theta[1]*limit[1]*( iflux[2][0] - iflux[1][0] ) +
                              theta[4]*limit[4]*( iflux[3][0] - iflux[2][0] )   );
 
-   flux[1] =    (real)0.5*( iflux[0][1] + iflux[3][1] ) 
+   flux[1] =    (real)0.5*( iflux[0][1] + iflux[3][1] )
               - (real)0.5*( theta[0]*limit[0]*( iflux[1][1] - iflux[0][1] ) +
                             theta[1]*limit[1]*( iflux[2][1] - iflux[1][1] ) +
                             theta[4]*limit[4]*( iflux[3][1] - iflux[2][1] )   );
 
-   flux[4] =    (real)0.5*( iflux[0][4] + iflux[3][4] ) 
+   flux[4] =    (real)0.5*( iflux[0][4] + iflux[3][4] )
               - (real)0.5*( theta[0]*limit[0]*( iflux[1][4] - iflux[0][4] ) +
                             theta[1]*limit[1]*( iflux[2][4] - iflux[1][4] ) +
                             theta[4]*limit[4]*( iflux[3][4] - iflux[2][4] )   );
 
-   flux[2] =    (real)0.5*( iflux[0][2] + iflux[3][2] ) 
+   flux[2] =    (real)0.5*( iflux[0][2] + iflux[3][2] )
               - (real)0.5*( theta[0]*limit[0]*( iflux[1][2] - iflux[0][2] ) +
                             theta[2]*limit[2]*( iflux[2][2] - iflux[1][2] ) +
                             theta[4]*limit[4]*( iflux[3][2] - iflux[2][2] )   );
 
-   flux[3] =    (real)0.5*( iflux[0][3] + iflux[3][3] ) 
+   flux[3] =    (real)0.5*( iflux[0][3] + iflux[3][3] )
               - (real)0.5*( theta[0]*limit[0]*( iflux[1][3] - iflux[0][3] ) +
                             theta[3]*limit[3]*( iflux[2][3] - iflux[1][3] ) +
                             theta[4]*limit[4]*( iflux[3][3] - iflux[2][3] )   );
@@ -840,9 +838,9 @@ void Undis_Stru( real flux[5], const real L[5], const real R[5], const real L_st
 //-------------------------------------------------------------------------------------------------------
 // Function    : set_flux
 // Description : Set the flux function evaluated at the given stat
-// 
+//
 // Parameter   : flux   : Flux function
-//               val    : Primitive variables 
+//               val    : Primitive variables
 //               Gamma  : Ratio of specific heats
 //-------------------------------------------------------------------------------------------------------
 void set_flux( real flux[5], const real val[5], const real Gamma )
@@ -855,8 +853,8 @@ void set_flux( real flux[5], const real val[5], const real Gamma )
    flux[1] = val[0]*val[1]*val[1] + val[4];
    flux[2] = val[0]*val[1]*val[2];
    flux[3] = val[0]*val[1]*val[3];
-   flux[4] = val[1]*( (real)0.5*val[0]*( val[1]*val[1] + val[2]*val[2] + val[3]*val[3] ) 
-                      + val[4]/Gamma_m1 + val[4] ); 
+   flux[4] = val[1]*( (real)0.5*val[0]*( val[1]*val[1] + val[2]*val[2] + val[3]*val[3] )
+                      + val[4]/Gamma_m1 + val[4] );
 
 } // FUNCTION : set_flux
 
@@ -872,7 +870,7 @@ void set_flux( real flux[5], const real val[5], const real Gamma )
 //                R_star : Primitive variables in the right star region
 //                L      : Primitive variables in the left rrgion
 //                R      : Primitive variables in the right rrgion
-//                Gamma  : Ratio of specific heats 
+//                Gamma  : Ratio of specific heats
 //-------------------------------------------------------------------------------------------------------
 void Solve_StarRoe( real eival[5], real L_star[5], real R_star[5], const real L[5], const real R[5],
                     const real Gamma)
@@ -880,7 +878,7 @@ void Solve_StarRoe( real eival[5], real L_star[5], real R_star[5], const real L[
 
    const real Gamma_m1 = Gamma - (real)1.0; // for evaluating pressure and sound speed
 
-   real u_bar, v_bar, w_bar, h_bar, a_bar, a_bar_inv; // Roe's average of vx, vy, vz, enthapy, sound speed, 
+   real u_bar, v_bar, w_bar, h_bar, a_bar, a_bar_inv; // Roe's average of vx, vy, vz, enthapy, sound speed,
                                                       // one over a_bar
    real coef[5]; //Roe's coefficients
 #  if ( defined MIN_PRES_DENS  ||  defined MIN_PRES )
@@ -891,10 +889,10 @@ void Solve_StarRoe( real eival[5], real L_star[5], real R_star[5], const real L[
    {
 #     ifdef CHECK_NEGATIVE_IN_FLUID
       if ( CPU_CheckNegative(L[0]) )
-         Aux_Message( stderr, "ERROR : negative density (%14.7e) at file <%s>, line <%d>, function <%s>\n", 
+         Aux_Message( stderr, "ERROR : negative density (%14.7e) at file <%s>, line <%d>, function <%s>\n",
                       L[0], __FILE__, __LINE__, __FUNCTION__ );
       if ( CPU_CheckNegative(R[0]) )
-         Aux_Message( stderr, "ERROR : negative density (%14.7e) at file <%s>, line <%d>, function <%s>\n", 
+         Aux_Message( stderr, "ERROR : negative density (%14.7e) at file <%s>, line <%d>, function <%s>\n",
                       R[0], __FILE__, __LINE__, __FUNCTION__ );
 #     endif
 
@@ -912,13 +910,11 @@ void Solve_StarRoe( real eival[5], real L_star[5], real R_star[5], const real L[
       real GammaP_Rho = Gamma_m1*(  h_bar - (real)0.5*( u_bar*u_bar + v_bar*v_bar + w_bar*w_bar )  );
 
 //    enforce the pressure to be positive
-#     if ( defined MIN_PRES_DENS  ||  defined MIN_PRES )
       TempRho    = (real)0.5*( L[0] + R[0] );
       _TempRho   = (real)1.0/TempRho;
       TempPres   = GammaP_Rho*TempRho/Gamma;
-      TempPres   = CPU_PositivePres( TempPres, TempRho, _TempRho );
+      TempPres   = CPU_CheckMinPres( TempPres, MinPres );
       GammaP_Rho = Gamma*TempPres*_TempRho;
-#     endif
 
 #     ifdef CHECK_NEGATIVE_IN_FLUID
       if ( CPU_CheckNegative(GammaP_Rho) )
@@ -932,8 +928,8 @@ void Solve_StarRoe( real eival[5], real L_star[5], real R_star[5], const real L[
 
 
 // solve Roe's coefficients
-   {  
-//    the difference of conservative variables  
+   {
+//    the difference of conservative variables
       real du_1 = R[0] - L[0];
       real du_2 = R[0]*R[1] - L[0]*L[1];
       real du_3 = R[0]*R[2] - L[0]*L[2];
@@ -943,7 +939,7 @@ void Solve_StarRoe( real eival[5], real L_star[5], real R_star[5], const real L[
 
       coef[2] = du_3 - v_bar*du_1;
       coef[3] = du_4 - w_bar*du_1;
-      coef[1] = Gamma_m1*a_bar_inv*a_bar_inv*(  du_1*( h_bar - u_bar*u_bar ) + u_bar*du_2 - du_5 
+      coef[1] = Gamma_m1*a_bar_inv*a_bar_inv*(  du_1*( h_bar - u_bar*u_bar ) + u_bar*du_2 - du_5
                                               + coef[2]*v_bar + coef[3]*w_bar  );
       coef[0] = (real)0.5*a_bar_inv*(  du_1*( u_bar + a_bar ) - du_2 - a_bar*coef[1]  );
       coef[4] = du_1 - ( coef[0] + coef[1] );
@@ -965,11 +961,9 @@ void Solve_StarRoe( real eival[5], real L_star[5], real R_star[5], const real L[
       real E_R = (real)0.5*R[0]*( R[1]*R[1] + R[2]*R[2] + R[3]*R[3] );
       real e_L_star = (real)0.5*L_star[0]*( L_star[1]*L_star[1] + L_star[2]*L_star[2] + L_star[3]*L_star[3] );
       real e_R_star = (real)0.5*R_star[0]*( R_star[1]*R_star[1] + R_star[2]*R_star[2] + R_star[3]*R_star[3] );
-      L_star[4] = (real)0.5*Gamma_m1*(  ( E_L - e_L_star + L[4]/Gamma_m1 + coef[0]*(h_bar - u_bar*a_bar) ) + 
+      L_star[4] = (real)0.5*Gamma_m1*(  ( E_L - e_L_star + L[4]/Gamma_m1 + coef[0]*(h_bar - u_bar*a_bar) ) +
                                         ( E_R - e_R_star + R[4]/Gamma_m1 - coef[4]*(h_bar + u_bar*a_bar) )   );
-#     if ( defined MIN_PRES_DENS  ||  defined MIN_PRES )
-      L_star[4] = CPU_PositivePres( L_star[4], L_star[0], (real)1.0/L_star[0] );
-#     endif
+      L_star[4] = CPU_CheckMinPres( L_star[4], MinPres );
       R_star[4] = L_star[4];
    }
 
@@ -983,29 +977,29 @@ void Solve_StarRoe( real eival[5], real L_star[5], real R_star[5], const real L[
 
 #     ifdef CHECK_NEGATIVE_IN_FLUID
       if ( CPU_CheckNegative(L[4]) )
-         Aux_Message( stderr, "ERROR : negative pressure (%14.7e) at file <%s>, line <%d>, function <%s>\n", 
+         Aux_Message( stderr, "ERROR : negative pressure (%14.7e) at file <%s>, line <%d>, function <%s>\n",
                       L[4],      __FILE__, __LINE__, __FUNCTION__ );
       if ( CPU_CheckNegative(L[0]) )
-         Aux_Message( stderr, "ERROR : negative density (%14.7e) at file <%s>, line <%d>, function <%s>\n", 
+         Aux_Message( stderr, "ERROR : negative density (%14.7e) at file <%s>, line <%d>, function <%s>\n",
                       L[0],      __FILE__, __LINE__, __FUNCTION__ );
       if ( CPU_CheckNegative(L_star[4]) )
-         Aux_Message( stderr, "ERROR : negative pressure (%14.7e) at file <%s>, line <%d>, function <%s>\n", 
+         Aux_Message( stderr, "ERROR : negative pressure (%14.7e) at file <%s>, line <%d>, function <%s>\n",
                       L_star[4], __FILE__, __LINE__, __FUNCTION__ );
       if ( CPU_CheckNegative(L_star[0]) )
-         Aux_Message( stderr, "ERROR : negative density(%14.7e) at file <%s>, line <%d>, function <%s>\n", 
+         Aux_Message( stderr, "ERROR : negative density(%14.7e) at file <%s>, line <%d>, function <%s>\n",
                       L_star[0], __FILE__, __LINE__, __FUNCTION__ );
 
       if ( CPU_CheckNegative(R[4]) )
-         Aux_Message( stderr, "ERROR : negative pressure (%14.7e) at file <%s>, line <%d>, function <%s>\n", 
+         Aux_Message( stderr, "ERROR : negative pressure (%14.7e) at file <%s>, line <%d>, function <%s>\n",
                       R[4],      __FILE__, __LINE__, __FUNCTION__ );
       if ( CPU_CheckNegative(R[0]) )
-         Aux_Message( stderr, "ERROR : negative density (%14.7e) at file <%s>, line <%d>, function <%s>\n", 
+         Aux_Message( stderr, "ERROR : negative density (%14.7e) at file <%s>, line <%d>, function <%s>\n",
                       R[0],      __FILE__, __LINE__, __FUNCTION__ );
       if ( CPU_CheckNegative(R_star[4]) )
-         Aux_Message( stderr, "ERROR : negative pressure (%14.7e) at file <%s>, line <%d>, function <%s>\n", 
+         Aux_Message( stderr, "ERROR : negative pressure (%14.7e) at file <%s>, line <%d>, function <%s>\n",
                       R_star[4], __FILE__, __LINE__, __FUNCTION__ );
       if ( CPU_CheckNegative(R_star[0]) )
-         Aux_Message( stderr, "ERROR : negative density(%14.7e) at file <%s>, line <%d>, function <%s>\n", 
+         Aux_Message( stderr, "ERROR : negative density(%14.7e) at file <%s>, line <%d>, function <%s>\n",
                       R_star[0], __FILE__, __LINE__, __FUNCTION__ );
 #     endif
 
@@ -1079,19 +1073,19 @@ void TransposeXZ( real u[][ FLU_NXT*FLU_NXT*FLU_NXT ] )
       {
          ID1 = to1D(k,j,i);
          ID2 = to1D(i,j,k);
-         
+
          u_temp[0] = u[0][ID1];
          u_temp[1] = u[3][ID1];
          u_temp[2] = u[2][ID1];
          u_temp[3] = u[1][ID1];
          u_temp[4] = u[4][ID1];
-         
+
          u[0][ID1] = u[0][ID2];
          u[1][ID1] = u[3][ID2];
          u[2][ID1] = u[2][ID2];
          u[3][ID1] = u[1][ID2];
          u[4][ID1] = u[4][ID2];
-         
+
          u[0][ID2] = u_temp[0];
          u[1][ID2] = u_temp[1];
          u[2][ID2] = u_temp[2];

@@ -8,13 +8,10 @@
 
 #define to1D(z,y,x) ( z*FLU_NXT*FLU_NXT + y*FLU_NXT + x )
 
-#if ( defined MIN_PRES_DENS  ||  defined MIN_PRES )
-extern real CPU_PositivePres( const real Pres_In, const real Dens, const real _Dens );
-extern real CPU_PositivePres_In_Engy( const real ConVar[], const real Gamma_m1, const real _Gamma_m1 );
-#endif
+extern real CPU_CheckMinPres( const real InPres, const real MinPres );
 
 static void CPU_AdvanceX( real u[][ FLU_NXT*FLU_NXT*FLU_NXT ], const real dt, const real dx, const real Gamma,
-                          const bool StoreFlux, const int j_gap, const int k_gap );
+                          const bool StoreFlux, const int j_gap, const int k_gap, const real MinDens, const real MinPres );
 static void TransposeXY( real u[][ FLU_NXT*FLU_NXT*FLU_NXT ] );
 static void TransposeXZ( real u[][ FLU_NXT*FLU_NXT*FLU_NXT ] );
 
@@ -40,14 +37,15 @@ static void TransposeXZ( real u[][ FLU_NXT*FLU_NXT*FLU_NXT ] );
 //                StoreFlux      : true --> store the coarse-fine fluxes
 //                XYZ            : true  : x->y->z ( forward sweep)
 //                                 false : z->y->x (backward sweep)
+//                MinDens/Pres   : Minimum allowed density and pressure
 //-------------------------------------------------------------------------------------------------------
-void CPU_FluidSolver_RTVD( real Flu_Array_In [][5][ FLU_NXT*FLU_NXT*FLU_NXT ], 
-                           real Flu_Array_Out[][5][ PS2*PS2*PS2 ], 
-                           real Flux_Array[][9][5][ PS2*PS2 ], 
+void CPU_FluidSolver_RTVD( real Flu_Array_In [][5][ FLU_NXT*FLU_NXT*FLU_NXT ],
+                           real Flu_Array_Out[][5][ PS2*PS2*PS2 ],
+                           real Flux_Array[][9][5][ PS2*PS2 ],
                            const double Corner_Array[][3],
                            const real Pot_Array_USG[][USG_NXT_F][USG_NXT_F][USG_NXT_F],
-                           const int NPatchGroup, const real dt, const real dh, const real Gamma, 
-                           const bool StoreFlux, const bool XYZ )
+                           const int NPatchGroup, const real dt, const real dh, const real Gamma,
+                           const bool StoreFlux, const bool XYZ, const real MinDens, const real MinPres )
 {
 
    if ( XYZ )
@@ -55,16 +53,16 @@ void CPU_FluidSolver_RTVD( real Flu_Array_In [][5][ FLU_NXT*FLU_NXT*FLU_NXT ],
 #     pragma omp parallel for schedule( runtime )
       for (int P=0; P<NPatchGroup; P++)
       {
-         CPU_AdvanceX( Flu_Array_In[P], dt, dh, Gamma, StoreFlux,              0,              0 );
-   
+         CPU_AdvanceX( Flu_Array_In[P], dt, dh, Gamma, StoreFlux,              0,              0, MinDens, MinPres );
+
          TransposeXY ( Flu_Array_In[P] );
-   
-         CPU_AdvanceX( Flu_Array_In[P], dt, dh, Gamma, StoreFlux, FLU_GHOST_SIZE,              0 );
-   
+
+         CPU_AdvanceX( Flu_Array_In[P], dt, dh, Gamma, StoreFlux, FLU_GHOST_SIZE,              0, MinDens, MinPres );
+
          TransposeXZ ( Flu_Array_In[P] );
-   
-         CPU_AdvanceX( Flu_Array_In[P], dt, dh, Gamma, StoreFlux, FLU_GHOST_SIZE, FLU_GHOST_SIZE );
-   
+
+         CPU_AdvanceX( Flu_Array_In[P], dt, dh, Gamma, StoreFlux, FLU_GHOST_SIZE, FLU_GHOST_SIZE, MinDens, MinPres );
+
          TransposeXZ ( Flu_Array_In[P] );
          TransposeXY ( Flu_Array_In[P] );
       }
@@ -78,15 +76,15 @@ void CPU_FluidSolver_RTVD( real Flu_Array_In [][5][ FLU_NXT*FLU_NXT*FLU_NXT ],
          TransposeXY ( Flu_Array_In[P] );
          TransposeXZ ( Flu_Array_In[P] );
 
-         CPU_AdvanceX( Flu_Array_In[P], dt, dh, Gamma, StoreFlux,              0,              0 );
+         CPU_AdvanceX( Flu_Array_In[P], dt, dh, Gamma, StoreFlux,              0,              0, MinDens, MinPres );
 
          TransposeXZ ( Flu_Array_In[P] );
 
-         CPU_AdvanceX( Flu_Array_In[P], dt, dh, Gamma, StoreFlux,              0, FLU_GHOST_SIZE );
+         CPU_AdvanceX( Flu_Array_In[P], dt, dh, Gamma, StoreFlux,              0, FLU_GHOST_SIZE, MinDens, MinPres );
 
          TransposeXY ( Flu_Array_In[P] );
 
-         CPU_AdvanceX( Flu_Array_In[P], dt, dh, Gamma, StoreFlux, FLU_GHOST_SIZE, FLU_GHOST_SIZE );
+         CPU_AdvanceX( Flu_Array_In[P], dt, dh, Gamma, StoreFlux, FLU_GHOST_SIZE, FLU_GHOST_SIZE, MinDens, MinPres );
       }
    }
 
@@ -163,26 +161,28 @@ void CPU_FluidSolver_RTVD( real Flu_Array_In [][5][ FLU_NXT*FLU_NXT*FLU_NXT ],
 //
 // Note        :  Based on the TVD scheme
 //
-// Parameter   :  u           : Input fluid array
-//                dt          : Time interval to advance solution
-//                dx          : Grid size
-//                Gamma       : Ratio of specific heats
-//                StoreFlux   : true --> store the coarse-fine fluxes
-//                j_gap       : Number of cells that can be skipped on each side in the y direction
-//                k_gap       : Number of cells that can be skipped on each side in the z direction
+// Parameter   :  u            : Input fluid array
+//                dt           : Time interval to advance solution
+//                dx           : Grid size
+//                Gamma        : Ratio of specific heats
+//                StoreFlux    : true --> store the coarse-fine fluxes
+//                j_gap        : Number of cells that can be skipped on each side in the y direction
+//                k_gap        : Number of cells that can be skipped on each side in the z direction
+//                MinDens/Pres : Minimum allowed density and pressure
 //-------------------------------------------------------------------------------------------------------
 void CPU_AdvanceX( real u[][ FLU_NXT*FLU_NXT*FLU_NXT ], const real dt, const real dx, const real Gamma,
-                   const bool StoreFlux, const int j_gap, const int k_gap )
+                   const bool StoreFlux, const int j_gap, const int k_gap, const real MinDens, const real MinPres )
 {
 
-   const real Gamma_m1 = Gamma - (real)1.0;     // for evaluating pressure
-   const real _dx      = (real)1.0/dx;          // one over dx 
-   const real dt_half  = (real)0.5*dt;          // for evaluating u_half 
+   const real  Gamma_m1 = Gamma - (real)1.0;    // for evaluating pressure
+   const real _Gamma_m1 = (real)1.0 / Gamma_m1;
+   const real _dx       = (real)1.0/dx;         // one over dx
+   const real dt_half   = (real)0.5*dt;         // for evaluating u_half
 
-   const int j_start   = j_gap;
-   const int k_start   = k_gap;
-   const int j_end     = FLU_NXT-j_gap;
-   const int k_end     = FLU_NXT-k_gap;
+   const int j_start    = j_gap;
+   const int k_start    = k_gap;
+   const int j_end      = FLU_NXT-j_gap;
+   const int k_end      = FLU_NXT-k_gap;
 
 // set local variables
    real ux     [5][FLU_NXT];              // one column of u in x direction
@@ -194,15 +194,10 @@ void CPU_AdvanceX( real u[][ FLU_NXT*FLU_NXT*FLU_NXT ], const real dt, const rea
    real c;                                // freezing speed ( == abs(vx) + sound speed )
    real _rho, vx, p;                      // one over rho, velocity in x direction, pressure
 
-   int ip, im;   
+   int ip, im;
    real Temp;
 
-#  if ( defined MIN_PRES_DENS  ||  defined MIN_PRES )
-   const real _Gamma_m1 = (real)1.0 / Gamma_m1;
-   real u_tmp[5];
-#  endif
 
-    
    for (int k=k_start; k<k_end; k++)
    for (int j=j_start; j<j_end; j++)
    {
@@ -219,27 +214,25 @@ void CPU_AdvanceX( real u[][ FLU_NXT*FLU_NXT*FLU_NXT ], const real dt, const rea
       {
          _rho = (real)1.0 / ux[0][i];
          vx   = _rho * ux[1][i];
-         p    = Gamma_m1 * ( ux[4][i] - (real)0.5*_rho*( ux[1][i]*ux[1][i] + ux[2][i]*ux[2][i] + 
+         p    = Gamma_m1 * ( ux[4][i] - (real)0.5*_rho*( ux[1][i]*ux[1][i] + ux[2][i]*ux[2][i] +
                                                          ux[3][i]*ux[3][i] ) );
-#        if ( defined MIN_PRES_DENS  ||  defined MIN_PRES )
-         p    = CPU_PositivePres( p, ux[0][i], _rho );
-#        endif
+         p    = CPU_CheckMinPres( p, MinPres );
 #        ifdef CHECK_NEGATIVE_IN_FLUID
          if ( CPU_CheckNegative(p) )
             Aux_Message( stderr, "ERROR : negative pressure (%14.7e) at file <%s>, line <%d>, function <%s>\n",
                          p, __FILE__, __LINE__, __FUNCTION__ );
          if ( CPU_CheckNegative(ux[0][i]) )
-            Aux_Message( stderr, "ERROR : negative density (%14.7e) at file <%s>, line <%d>, function <%s>\n", 
+            Aux_Message( stderr, "ERROR : negative density (%14.7e) at file <%s>, line <%d>, function <%s>\n",
                          ux[0][i], __FILE__, __LINE__, __FUNCTION__ );
 #        endif
          c    = FABS( vx ) + SQRT( Gamma*p*_rho );
-         
+
          cw[0][i] = ux[1][i];
          cw[1][i] = ux[1][i] * vx + p;
          cw[2][i] = ux[2][i] * vx;
          cw[3][i] = ux[3][i] * vx;
          cw[4][i] = ( ux[4][i] + p ) * vx;
-         
+
          cu[0][i] = c*ux[0][i];
          cu[1][i] = c*ux[1][i];
          cu[2][i] = c*ux[2][i];
@@ -266,32 +259,28 @@ void CPU_AdvanceX( real u[][ FLU_NXT*FLU_NXT*FLU_NXT ], const real dt, const rea
       }
 
 
-//    (a4). enforce the pressure to be positive
-#     if ( defined MIN_PRES_DENS  ||  defined MIN_PRES )
-      for (int i=1; i<FLU_NXT-1; i++)  
+//    (a4). enforce positive density and pressure
+      for (int i=1; i<FLU_NXT-1; i++)
       {
-         for (int v=0; v<5; v++)    u_tmp[v] = u_half[v][i];
-
-         u_half[4][i] = CPU_PositivePres_In_Engy( u_tmp, Gamma_m1, _Gamma_m1 );
+         u_half[0][i] = FMAX( u_half[0][i], MinDens );
+         u_half[4][i] = CPU_CheckMinPresInEngy( u_half[0][i], u_half[1][i], u_half[2][i], u_half[3][i], u_half[4][i],
+                                                Gamma_m1, _Gamma_m1 );
       }
-#     endif
 
 
 
 //    b. Evaluate the full-step values of fluid variables
 //-----------------------------------------------------------------------------
 
-//    (b1). reset variables defined in the center of cell at the intermidate state     
+//    (b1). reset variables defined in the center of cell at the intermidate state
       for (int i=1; i<FLU_NXT-1; i++)
       {
          _rho = (real)1.0 / u_half[0][i];
          vx   = _rho * u_half[1][i];
-         p    = Gamma_m1 * (  u_half[4][i] - (real)0.5*_rho*(  u_half[1][i]*u_half[1][i] + 
+         p    = Gamma_m1 * (  u_half[4][i] - (real)0.5*_rho*(  u_half[1][i]*u_half[1][i] +
                                                                u_half[2][i]*u_half[2][i] +
                                                                u_half[3][i]*u_half[3][i] )  );
-#        if ( defined MIN_PRES_DENS  ||  defined MIN_PRES )
-         p    = CPU_PositivePres( p, u_half[0][i], _rho );
-#        endif
+         p    = CPU_CheckMinPres( p, MinPres );
 #        ifdef CHECK_NEGATIVE_IN_FLUID
          if ( CPU_CheckNegative(p) )
             Aux_Message( stderr, "ERROR : negative pressure (%14.7e) at file <%s>, line <%d>, function <%s>\n", p,
@@ -301,13 +290,13 @@ void CPU_AdvanceX( real u[][ FLU_NXT*FLU_NXT*FLU_NXT ], const real dt, const rea
                         __FILE__, __LINE__, __FUNCTION__ );
 #        endif
          c    = FABS( vx ) + SQRT( Gamma*p*_rho );
-         
+
          cw[0][i] = u_half[1][i];
          cw[1][i] = u_half[1][i] * vx + p;
          cw[2][i] = u_half[2][i] * vx;
          cw[3][i] = u_half[3][i] * vx;
          cw[4][i] = ( u_half[4][i] + p ) * vx;
-         
+
          cu[0][i] = c*u_half[0][i];
          cu[1][i] = c*u_half[1][i];
          cu[2][i] = c*u_half[2][i];
@@ -326,16 +315,16 @@ void CPU_AdvanceX( real u[][ FLU_NXT*FLU_NXT*FLU_NXT ], const real dt, const rea
       for (int i=2; i<FLU_NXT-3; i++)
       {
          im = i-1; ip = i+1;
-         
+
          flux[v][i] = RLflux[v][i];
-         
+
          Temp = ( RLflux[v][ip]-RLflux[v][i] ) * ( RLflux[v][i]-RLflux[v][im] );
-         
+
          if ( Temp > (real)0.0 )    flux[v][i] += Temp / ( RLflux[v][ip]-RLflux[v][im] );
       }
 
 
-//    (b3). set the left-moving flux defined in the left-hand surface by the TVD scheme, get the total flux 
+//    (b3). set the left-moving flux defined in the left-hand surface by the TVD scheme, get the total flux
       for (int v=0; v<5; v++)
       for (int i=1; i<FLU_NXT-2; i++)
       {
@@ -346,13 +335,13 @@ void CPU_AdvanceX( real u[][ FLU_NXT*FLU_NXT*FLU_NXT ], const real dt, const rea
       for (int v=0; v<5; v++)
       for (int i=2; i<FLU_NXT-3; i++)
       {
-         im = i-1; 
+         im = i-1;
          ip = i+1;
-         
+
          flux[v][i] -= RLflux[v][i];
-         
+
          Temp = ( RLflux[v][im]-RLflux[v][i] ) * ( RLflux[v][i]-RLflux[v][ip] );
-         
+
          if ( Temp > (real)0.0 )    flux[v][i] -= Temp / ( RLflux[v][im]-RLflux[v][ip] );
       }
 
@@ -366,15 +355,12 @@ void CPU_AdvanceX( real u[][ FLU_NXT*FLU_NXT*FLU_NXT ], const real dt, const rea
       }
 
 
-//    (b5). enforce the pressure to be positive
-#     if ( defined MIN_PRES_DENS  ||  defined MIN_PRES )
+//    (b5). enforce positive density and pressure
       for (int i=3; i<FLU_NXT-3; i++)
       {
-         for (int v=0; v<5; v++)    u_tmp[v] = ux[v][i];
-
-         ux[4][i] = CPU_PositivePres_In_Engy( u_tmp, Gamma_m1, _Gamma_m1 );
+         ux[0][i] = FMAX( ux[0][i], MinDens );
+         ux[4][i] = CPU_CheckMinPresInEngy( ux[0][i], ux[1][i], ux[2][i], ux[3][i], ux[4][i], Gamma_m1, _Gamma_m1, MinPres );
       }
-#     endif
 
 
 //    (b6). check the negative density
@@ -468,19 +454,19 @@ void TransposeXZ( real u[][ FLU_NXT*FLU_NXT*FLU_NXT ] )
       {
          ID1 = to1D(k,j,i);
          ID2 = to1D(i,j,k);
-         
+
          u_temp[0] = u[0][ID1];
          u_temp[1] = u[3][ID1];
          u_temp[2] = u[2][ID1];
          u_temp[3] = u[1][ID1];
          u_temp[4] = u[4][ID1];
-         
+
          u[0][ID1] = u[0][ID2];
          u[1][ID1] = u[3][ID2];
          u[2][ID1] = u[2][ID2];
          u[3][ID1] = u[1][ID2];
          u[4][ID1] = u[4][ID2];
-         
+
          u[0][ID2] = u_temp[0];
          u[1][ID2] = u_temp[1];
          u[2][ID2] = u_temp[2];

@@ -7,25 +7,22 @@
 
 
 extern void CPU_DataReconstruction( const real PriVar[][5], real FC_Var[][6][5], const int NIn, const int NGhost,
-                                    const real Gamma, const LR_Limiter_t LR_Limiter, const real MinMod_Coeff, 
-                                    const real EP_Coeff, const real dt, const real dh );
-extern void CPU_Con2Pri( const real In[], real Out[], const real  Gamma_m1 );
+                                    const real Gamma, const LR_Limiter_t LR_Limiter, const real MinMod_Coeff,
+                                    const real EP_Coeff, const real dt, const real dh, const real MinDens, const real MinPres );
+extern void CPU_Con2Pri( const real In[], real Out[], const real  Gamma_m1, const real MinPres );
 extern void CPU_Pri2Con( const real In[], real Out[], const real _Gamma_m1 );
 extern void CPU_ComputeFlux( const real FC_Var[][6][5], real FC_Flux[][3][5], const int NFlux, const int Gap,
                              const real Gamma, const bool CorrHalfVel, const real Pot_USG[], const double Corner[],
                              const real dt, const real dh, const double Time, const OptGravityType_t GravityType,
-                             const double ExtAcc_AuxArray[] );
-extern void CPU_FullStepUpdate( const real Input[][ FLU_NXT*FLU_NXT*FLU_NXT ], real Output[][ PS2*PS2*PS2 ], 
-                                const real Flux[][3][5], const real dt, const real dh, 
+                             const double ExtAcc_AuxArray[], const real MinPres );
+extern void CPU_FullStepUpdate( const real Input[][ FLU_NXT*FLU_NXT*FLU_NXT ], real Output[][ PS2*PS2*PS2 ],
+                                const real Flux[][3][5], const real dt, const real dh,
                                 const real Gamma );
 extern void CPU_StoreFlux( real Flux_Array[][5][ PS2*PS2 ], const real FC_Flux[][3][5] );
-#if ( defined MIN_PRES_DENS  ||  defined MIN_PRES )
-extern real CPU_PositivePres( const real Pres_In, const real Dens, const real _Dens );
-extern real CPU_PositivePres_In_Engy( const real ConVar[], const real Gamma_m1, const real _Gamma_m1 );
-#endif
+extern real CPU_CheckMinPres( const real InPres, const real MinPres );
 
-static void TGradient_Correction( real FC_Var[][6][5], const real FC_Flux[][3][5], const real dt, const real dh, 
-                                  const real Gamma_m1, const real _Gamma_m1 );
+static void TGradient_Correction( real FC_Var[][6][5], const real FC_Flux[][3][5], const real dt, const real dh,
+                                  const real Gamma_m1, const real _Gamma_m1, const real MinDens, const real MinPres );
 
 
 
@@ -36,34 +33,35 @@ static void TGradient_Correction( real FC_Var[][6][5], const real FC_Flux[][3][5
 //
 // Note        :  Ref : Stone et al., ApJS, 178, 137 (2008)
 //
-// Parameter   :  Flu_Array_In   : Array storing the input fluid variables
-//                Flu_Array_Out  : Array to store the output fluid variables
-//                Flux_Array     : Array to store the output fluxes
-//                Corner_Array   : Array storing the physical corner coordinates of each patch group (for UNSPLIT_GRAVITY)
-//                Pot_Array_USG  : Array storing the input potential for UNSPLIT_GRAVITY
-//                NPatchGroup    : Number of patch groups to be evaluated
-//                dt             : Time interval to advance solution
-//                dh             : Grid size
-//                Gamma          : Ratio of specific heats
-//                StoreFlux      : true --> store the coarse-fine fluxes
-//                LR_Limiter     : Slope limiter for the data reconstruction in the MHM/MHM_RP/CTU schemes
-//                                 (0/1/2/3/4) = (vanLeer/generalized MinMod/vanAlbada/
-//                                                vanLeer + generalized MinMod/extrema-preserving) limiter
-//                MinMod_Coeff   : Coefficient of the generalized MinMod limiter
-//                EP_Coeff       : Coefficient of the extrema-preserving limiter
-//                Time           : Current physical time                                     (for UNSPLIT_GRAVITY only)
-//                GravityType    : Types of gravity --> self-gravity, external gravity, both (for UNSPLIT_GRAVITY only)
-//                ExtAcc_AuxArray: Auxiliary array for adding external acceleration          (for UNSPLIT_GRAVITY only)
+// Parameter   :  Flu_Array_In    : Array storing the input fluid variables
+//                Flu_Array_Out   : Array to store the output fluid variables
+//                Flux_Array      : Array to store the output fluxes
+//                Corner_Array    : Array storing the physical corner coordinates of each patch group (for UNSPLIT_GRAVITY)
+//                Pot_Array_USG   : Array storing the input potential for UNSPLIT_GRAVITY
+//                NPatchGroup     : Number of patch groups to be evaluated
+//                dt              : Time interval to advance solution
+//                dh              : Grid size
+//                Gamma           : Ratio of specific heats
+//                StoreFlux       : true --> store the coarse-fine fluxes
+//                LR_Limiter      : Slope limiter for the data reconstruction in the MHM/MHM_RP/CTU schemes
+//                                  (0/1/2/3/4) = (vanLeer/generalized MinMod/vanAlbada/
+//                                                 vanLeer + generalized MinMod/extrema-preserving) limiter
+//                MinMod_Coeff    : Coefficient of the generalized MinMod limiter
+//                EP_Coeff        : Coefficient of the extrema-preserving limiter
+//                Time            : Current physical time                                     (for UNSPLIT_GRAVITY only)
+//                GravityType     : Types of gravity --> self-gravity, external gravity, both (for UNSPLIT_GRAVITY only)
+//                ExtAcc_AuxArray : Auxiliary array for adding external acceleration          (for UNSPLIT_GRAVITY only)
+//                MinDens/Pres    : Minimum allowed density and pressure
 //-------------------------------------------------------------------------------------------------------
-void CPU_FluidSolver_CTU( const real Flu_Array_In[][5][ FLU_NXT*FLU_NXT*FLU_NXT ], 
-                          real Flu_Array_Out[][5][ PS2*PS2*PS2 ], 
-                          real Flux_Array[][9][5][ PS2*PS2 ], 
+void CPU_FluidSolver_CTU( const real Flu_Array_In[][5][ FLU_NXT*FLU_NXT*FLU_NXT ],
+                          real Flu_Array_Out[][5][ PS2*PS2*PS2 ],
+                          real Flux_Array[][9][5][ PS2*PS2 ],
                           const double Corner_Array[][3],
                           const real Pot_Array_USG[][USG_NXT_F][USG_NXT_F][USG_NXT_F],
-                          const int NPatchGroup, const real dt, const real dh, const real Gamma, 
-                          const bool StoreFlux, const LR_Limiter_t LR_Limiter, const real MinMod_Coeff, 
+                          const int NPatchGroup, const real dt, const real dh, const real Gamma,
+                          const bool StoreFlux, const LR_Limiter_t LR_Limiter, const real MinMod_Coeff,
                           const real EP_Coeff, const double Time, const OptGravityType_t GravityType,
-                          const double ExtAcc_AuxArray[] )
+                          const double ExtAcc_AuxArray[], const real MinDens, const real MinPres )
 {
 
 // check
@@ -106,13 +104,13 @@ void CPU_FluidSolver_CTU( const real Flu_Array_In[][5][ FLU_NXT*FLU_NXT*FLU_NXT 
 
             for (int v=0; v<5; v++)    Input[v] = Flu_Array_In[P][v][ID1];
 
-            CPU_Con2Pri( Input, PriVar[ID1], Gamma_m1 );
+            CPU_Con2Pri( Input, PriVar[ID1], Gamma_m1, MinPres );
          }
 
 
 //       2. evaluate the face-centered values at the half time-step
-         CPU_DataReconstruction( PriVar, FC_Var, FLU_NXT, FLU_GHOST_SIZE-1, Gamma, LR_Limiter, 
-                                 MinMod_Coeff, EP_Coeff, dt, dh );
+         CPU_DataReconstruction( PriVar, FC_Var, FLU_NXT, FLU_GHOST_SIZE-1, Gamma, LR_Limiter,
+                                 MinMod_Coeff, EP_Coeff, dt, dh, MinDens, MinPres );
 
 
 //       3. primitive face-centered variables --> conserved face-centered variables
@@ -133,20 +131,20 @@ void CPU_FluidSolver_CTU( const real Flu_Array_In[][5][ FLU_NXT*FLU_NXT*FLU_NXT 
 
 //       4. evaluate the face-centered half-step fluxes by solving the Riemann problem
          CPU_ComputeFlux( FC_Var, FC_Flux, N_HF_FLUX, 0, Gamma, CorrHalfVel_No, NULL, NULL,
-                          NULL_REAL, NULL_REAL, NULL_REAL, GRAVITY_NONE, NULL );
+                          NULL_REAL, NULL_REAL, NULL_REAL, GRAVITY_NONE, NULL, MinPres );
 
 
 //       5. correct the face-centered variables by the transverse flux gradients
-         TGradient_Correction( FC_Var, FC_Flux, dt, dh, Gamma_m1, _Gamma_m1 );
+         TGradient_Correction( FC_Var, FC_Flux, dt, dh, Gamma_m1, _Gamma_m1, MinDens, MinPres );
 
 
 //       6. evaluate the face-centered full-step fluxes by solving the Riemann problem with the corrected data
 #        ifdef UNSPLIT_GRAVITY
          CPU_ComputeFlux( FC_Var, FC_Flux, N_FL_FLUX, 1, Gamma, CorrHalfVel_Yes, Pot_Array_USG[P][0][0], Corner_Array[P],
-                          dt, dh, Time, GravityType, ExtAcc_AuxArray );
+                          dt, dh, Time, GravityType, ExtAcc_AuxArray, MinPres );
 #        else
          CPU_ComputeFlux( FC_Var, FC_Flux, N_FL_FLUX, 1, Gamma, CorrHalfVel_No,  NULL, NULL,
-                          NULL_REAL, NULL_REAL, NULL_REAL, GRAVITY_NONE, NULL );
+                          NULL_REAL, NULL_REAL, NULL_REAL, GRAVITY_NONE, NULL, MinPres );
 #        endif
 
 
@@ -173,25 +171,26 @@ void CPU_FluidSolver_CTU( const real Flu_Array_In[][5][ FLU_NXT*FLU_NXT*FLU_NXT 
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  TGradient_Correction
-// Description :  1. Correct the face-centered variables by the transverse flux gradients 
+// Description :  1. Correct the face-centered variables by the transverse flux gradients
 //                2. This function assumes that "N_FC_VAR == N_FC_FLUX == NGrid"
 //
-// Parameter   :  FC_Var      : Array to store the input and output face-centered conserved variables
-//                              --> Size is assumed to be N_FC_VAR
-//                FC_Flux     : Array storing the input face-centered fluxes
-//                              --> Size is assumed to be N_FC_FLUX
-//                dt          : Time interval to advance solution
-//                dh          : Grid size
-//                Gamma_m1    : Gamma - 1
-//                _Gamma_m1   : 1/(Gamma - 1)
+// Parameter   :  FC_Var       : Array to store the input and output face-centered conserved variables
+//                               --> Size is assumed to be N_FC_VAR
+//                FC_Flux      : Array storing the input face-centered fluxes
+//                               --> Size is assumed to be N_FC_FLUX
+//                dt           : Time interval to advance solution
+//                dh           : Grid size
+//                Gamma_m1     : Gamma - 1
+//                _Gamma_m1    : 1/(Gamma - 1)
+//                MinDens/Pres : Minimum allowed density and pressure
 //-------------------------------------------------------------------------------------------------------
-void TGradient_Correction( real FC_Var[][6][5], const real FC_Flux[][3][5], const real dt, const real dh, 
-                           const real Gamma_m1, const real _Gamma_m1 )
+void TGradient_Correction( real FC_Var[][6][5], const real FC_Flux[][3][5], const real dt, const real dh,
+                           const real Gamma_m1, const real _Gamma_m1, const real MinDens, const real MinPres )
 {
 
    const int  NGrid  = N_FC_VAR;    // size of the arrays FC_Var and FC_Flux in each direction
    const int  dID[3] = { 1, NGrid, NGrid*NGrid };
-   const real dt_dh2 = (real)0.5*dt/dh; 
+   const real dt_dh2 = (real)0.5*dt/dh;
 
    real Correct, TGrad1, TGrad2;
    int dL, dR, ID, ID_L1, ID_L2, ID_R, TDir1, TDir2, Gap[3]={0};
@@ -221,21 +220,24 @@ void TGradient_Correction( real FC_Var[][6][5], const real FC_Flux[][3][5], cons
          ID_L1 = ID_R - dID[TDir1];
          ID_L2 = ID_R - dID[TDir2];
 
-         for (int v=0; v<5; v++)    
+         for (int v=0; v<5; v++)
          {
             TGrad1  = FC_Flux[ID_R][TDir1][v] - FC_Flux[ID_L1][TDir1][v];
             TGrad2  = FC_Flux[ID_R][TDir2][v] - FC_Flux[ID_L2][TDir2][v];
-            Correct = -dt_dh2*( TGrad1 + TGrad2 ); 
+            Correct = -dt_dh2*( TGrad1 + TGrad2 );
 
             FC_Var[ID][dL][v] += Correct;
             FC_Var[ID][dR][v] += Correct;
          }
 
-//       ensure the positive pressure
-#        if ( defined MIN_PRES_DENS  ||  defined MIN_PRES )
-         FC_Var[ID][dL][4] = CPU_PositivePres_In_Engy( FC_Var[ID][dL], Gamma_m1, _Gamma_m1 );
-         FC_Var[ID][dR][4] = CPU_PositivePres_In_Engy( FC_Var[ID][dR], Gamma_m1, _Gamma_m1 );
-#        endif
+//       ensure positive density and pressure
+         FC_Var[ID][dL][0] = FMAX( FC_Var[ID][dL][0], MinDens );
+         FC_Var[ID][dR][0] = FMAX( FC_Var[ID][dR][0], MinDens );
+
+         FC_Var[ID][dL][4] = CPU_CheckMinPresInEngy( FC_Var[ID][dL][0], FC_Var[ID][dL][1], FC_Var[ID][dL][2],
+                                                     FC_Var[ID][dL][3], FC_Var[ID][dL][4], Gamma_m1, _Gamma_m1, MinPres );
+         FC_Var[ID][dR][4] = CPU_CheckMinPresInEngy( FC_Var[ID][dR][0], FC_Var[ID][dR][1], FC_Var[ID][dR][2],
+                                                     FC_Var[ID][dR][3], FC_Var[ID][dR][4], Gamma_m1, _Gamma_m1, MinPres );
 
       } // i,j,k
    } // for (int d=0; d<3; d++)

@@ -7,11 +7,8 @@
 
 
 extern void CPU_Rotate3D( real InOut[], const int XYZ, const bool Forward );
-extern void CPU_Con2Flux( const int XYZ, real Flux[], const real Input[], const real Gamma );
-#if ( defined MIN_PRES_DENS  ||  defined MIN_PRES )
-extern real CPU_PositivePres( const real Pres_In, const real Dens, const real _Dens );
-extern real CPU_PositivePres_In_Engy( const real ConVar[], const real Gamma_m1, const real _Gamma_m1 );
-#endif
+extern void CPU_Con2Flux( const int XYZ, real Flux[], const real Input[], const real Gamma_m1, const real MinPres );
+extern real CPU_CheckMinPres( const real InPres, const real MinPres );
 
 
 
@@ -21,27 +18,28 @@ extern real CPU_PositivePres_In_Engy( const real ConVar[], const real Gamma_m1, 
 // Description :  Approximate Riemann solver of Harten, Lax, and van Leer.
 //                The wave speed is estimated by the same formula in HLLE solver
 //
-// Note        :  1. The input data should be conserved variables 
+// Note        :  1. The input data should be conserved variables
 //                2. Ref : a. Riemann Solvers and Numerical Methods for Fluid Dynamics - A Practical Introduction
-//                             ~ by Eleuterio F. Toro 
+//                             ~ by Eleuterio F. Toro
 //                         b. Batten, P., Clarke, N., Lambert, C., & Causon, D. M. 1997, SIAM J. Sci. Comput.,
 //                            18, 1553
 //                3. This function is shared by MHM, MHM_RP, and CTU schemes
 //
-// Parameter   :  XYZ      : Targeted spatial direction : (0/1/2) --> (x/y/z)  
+// Parameter   :  XYZ      : Targeted spatial direction : (0/1/2) --> (x/y/z)
 //                Flux_Out : Array to store the output flux
 //                L_In     : Input left  state (conserved variables)
 //                R_In     : Input right state (conserved variables)
 //                Gamma    : Ratio of specific heats
+//                MinPres  : Minimum allowed pressure
 //-------------------------------------------------------------------------------------------------------
-void CPU_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In[], const real R_In[], 
-                             const real Gamma )
+void CPU_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In[], const real R_In[],
+                             const real Gamma, const real MinPres )
 {
 
 // 1. reorder the input variables for different spatial directions
    real L[5], R[5];
 
-   for (int v=0; v<5; v++)    
+   for (int v=0; v<5; v++)
    {
       L[v] = L_In[v];
       R[v] = R_In[v];
@@ -53,7 +51,7 @@ void CPU_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In[], 
 
 // 2. evaluate the Roe's average values
    const real Gamma_m1 = Gamma - (real)1.0;
-   real _RhoL, _RhoR, P_L, P_R, H_L, H_R, u, v, w, V2, H, Cs; 
+   real _RhoL, _RhoR, P_L, P_R, H_L, H_R, u, v, w, V2, H, Cs;
    real RhoL_sqrt, RhoR_sqrt, _RhoL_sqrt, _RhoR_sqrt, _RhoLR_sqrt_sum, GammaP_Rho;
 
 #  if ( defined MIN_PRES_DENS  ||  defined MIN_PRES )
@@ -61,17 +59,15 @@ void CPU_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In[], 
    const real _TempRho  = (real)1.0/TempRho;
    real TempPres;
 #  endif
-   
+
    _RhoL = (real)1.0 / L[0];
    _RhoR = (real)1.0 / R[0];
    P_L   = Gamma_m1*(  L[4] - (real)0.5*( L[1]*L[1] + L[2]*L[2] + L[3]*L[3] )*_RhoL  );
    P_R   = Gamma_m1*(  R[4] - (real)0.5*( R[1]*R[1] + R[2]*R[2] + R[3]*R[3] )*_RhoR  );
-#  if ( defined MIN_PRES_DENS  ||  defined MIN_PRES )
-   P_L   = CPU_PositivePres( P_L, L[0], _RhoL );
-   P_R   = CPU_PositivePres( P_R, R[0], _RhoR );
-#  endif
-   H_L   = ( L[4] + P_L )*_RhoL;  
-   H_R   = ( R[4] + P_R )*_RhoR;  
+   P_L   = CPU_CheckMinPres( P_L, MinPres );
+   P_R   = CPU_CheckMinPres( P_R, MinPres );
+   H_L   = ( L[4] + P_L )*_RhoL;
+   H_R   = ( R[4] + P_R )*_RhoR;
 
 #  ifdef CHECK_NEGATIVE_IN_FLUID
    if ( CPU_CheckNegative(L[0]) )
@@ -86,7 +82,7 @@ void CPU_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In[], 
    RhoR_sqrt       = SQRT( R[0] );
    _RhoL_sqrt      = (real)1.0 / RhoL_sqrt;
    _RhoR_sqrt      = (real)1.0 / RhoR_sqrt;
-   _RhoLR_sqrt_sum = (real)1.0 / (RhoL_sqrt + RhoR_sqrt); 
+   _RhoLR_sqrt_sum = (real)1.0 / (RhoL_sqrt + RhoR_sqrt);
 
    u  = _RhoLR_sqrt_sum*( _RhoL_sqrt*L[1] + _RhoR_sqrt*R[1] );
    v  = _RhoLR_sqrt_sum*( _RhoL_sqrt*L[2] + _RhoR_sqrt*R[2] );
@@ -95,14 +91,12 @@ void CPU_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In[], 
    H  = _RhoLR_sqrt_sum*(  RhoL_sqrt*H_L  +  RhoR_sqrt*H_R  );
 
    GammaP_Rho = Gamma_m1*( H - (real)0.5*V2 );
-#  if ( defined MIN_PRES_DENS  ||  defined MIN_PRES )
    TempPres   = GammaP_Rho*TempRho/Gamma;
-   TempPres   = CPU_PositivePres( TempPres, TempRho, _TempRho );
+   TempPres   = CPU_CheckMinPres( TempPres, MinPres );
    GammaP_Rho = Gamma*TempPres*_TempRho;
-#  endif
 #  ifdef CHECK_NEGATIVE_IN_FLUID
    if ( CPU_CheckNegative(GammaP_Rho) )
-      Aux_Message( stderr, "ERROR : negative GammaP_Rho (%14.7e) at file <%s>, line <%d>, function <%s>\n", 
+      Aux_Message( stderr, "ERROR : negative GammaP_Rho (%14.7e) at file <%s>, line <%d>, function <%s>\n",
                    GammaP_Rho, __FILE__, __LINE__, __FUNCTION__ );
 #  endif
 
@@ -151,9 +145,7 @@ void CPU_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In[], 
 
    V_S = temp3*( P_L - P_R + temp1_L*u_L - temp1_R*u_R );
    P_S = temp3*( temp1_L*temp2_R - temp1_R*temp2_L );
-#  if ( defined MIN_PRES_DENS  ||  defined MIN_PRES )
-   P_S = CPU_PositivePres( P_S, TempRho, _TempRho );
-#  endif
+   P_S = CPU_CheckMinPres( P_S, MinPres );
 
 
 // 5. evaluate the weightings of the left(right) fluxes and contact wave
@@ -161,7 +153,7 @@ void CPU_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In[], 
 
    if ( V_S >= (real)0.0 )
    {
-      CPU_Con2Flux( 0, Flux_LR, L, Gamma );
+      CPU_Con2Flux( 0, Flux_LR, L, Gamma_m1, MinPres );
 
       for (int v=0; v<5; v++)    Flux_LR[v] -= MaxV_L*L[v];    // fluxes along the maximum wave speed
 
@@ -172,7 +164,7 @@ void CPU_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In[], 
 
    else // V_S < 0.0
    {
-      CPU_Con2Flux( 0, Flux_LR, R, Gamma );
+      CPU_Con2Flux( 0, Flux_LR, R, Gamma_m1, MinPres );
 
       for (int v=0; v<5; v++)    Flux_LR[v] -= MaxV_R*R[v];    // fluxes along the maximum wave speed
 

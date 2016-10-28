@@ -35,7 +35,7 @@ bool Mis_CompareRealValue( const T Input1, const T Input2, const char *comment, 
    {
       if ( Verbose )
       {
-         Aux_Message( stderr, "WARNING : \"%s\" : <%s> FAILED at rank %d !!\n", 
+         Aux_Message( stderr, "WARNING : \"%s\" : <%s> FAILED at rank %d !!\n",
                       comment, __FUNCTION__, MPI_Rank );
          Aux_Message( stderr, "          Input1 = %20.14e vs. Input2 = %20.14e --> RelErr = %20.14e !!\n",
                       Input1, Input2, RelErr );
@@ -52,7 +52,5 @@ bool Mis_CompareRealValue( const T Input1, const T Input2, const char *comment, 
 
 
 // explicit template instantiation
-template bool Mis_CompareRealValue <float > ( const float  Input1, const float  Input2,
-                                                   const char *comment, const bool Verbose );
-template bool Mis_CompareRealValue <double> ( const double Input1, const double Input2,
-                                                   const char *comment, const bool Verbose );
+template bool Mis_CompareRealValue <float > ( const float  Input1, const float  Input2, const char *comment, const bool Verbose );
+template bool Mis_CompareRealValue <double> ( const double Input1, const double Input2, const char *comment, const bool Verbose );

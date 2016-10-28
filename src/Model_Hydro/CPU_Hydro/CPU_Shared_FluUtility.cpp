@@ -2,14 +2,12 @@
 #include "GAMER.h"
 #include "CUFLU.h"
 
-/*
-#if (  !defined GPU  &&  MODEL == HYDRO  &&  \
-       ( FLU_SCHEME == WAF || FLU_SCHEME == MHM || FLU_SCHEME == MHM_RP || FLU_SCHEME == CTU )  )
-*/
+// some functions in this file need to be defined even when using GPU
+#if ( MODEL == HYDRO )
 
-#if ( defined MIN_PRES_DENS  ||  defined MIN_PRES )
-real CPU_PositivePres( const real Pres_In, const real Dens, const real _Dens );
-#endif
+real CPU_CheckMinPres( const real InPres, const real MinPres );
+real CPU_GetPressure( const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy,
+                      const real Gamma_m1, const bool CheckMinPres, const real MinPres );
 
 
 
@@ -18,7 +16,7 @@ real CPU_PositivePres( const real Pres_In, const real Dens, const real _Dens );
 // Function    :  CPU_Rotate3D
 // Description :  Rotate the input 5-element fluid variables properly to simplify the 3D calculation
 //
-// Note        :  x : (0,1,2,3,4) <--> (0,1,2,3,4)   
+// Note        :  x : (0,1,2,3,4) <--> (0,1,2,3,4)
 //                y : (0,1,2,3,4) <--> (0,2,3,1,4)
 //                z : (0,1,2,3,4) <--> (0,3,1,2,4)
 //
@@ -28,7 +26,7 @@ real CPU_PositivePres( const real Pres_In, const real Dens, const real _Dens );
 //-------------------------------------------------------------------------------------------------------
 void CPU_Rotate3D( real InOut[], const int XYZ, const bool Forward )
 {
-   
+
    if ( XYZ == 0 )   return;
 
 
@@ -58,40 +56,43 @@ void CPU_Rotate3D( real InOut[], const int XYZ, const bool Forward )
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  CPU_Con2Pri 
-// Description :  Convert the conserved variables to the primitive variables 
+// Function    :  CPU_Con2Pri
+// Description :  Convert the conserved variables to the primitive variables
+//
+// Note        :  1. This function always check if the pressure to be returned is greater than the
+//                   given minimum threshold
 //
 // Parameter   :  In       : Array storing the input conserved variables
 //                Out      : Array to store the output primitive variables
 //                Gamma_m1 : Gamma - 1
+//                MinPres  : Minimum allowed pressure
 //-------------------------------------------------------------------------------------------------------
-void CPU_Con2Pri( const real In[], real Out[], const real Gamma_m1 )
+void CPU_Con2Pri( const real In[], real Out[], const real Gamma_m1, const real MinPres )
 {
 
-   const real _Rho = (real)1.0 / In[0];
-   
+   const bool CheckMinPres_Yes = true;
+   const real _Rho             = (real)1.0 / In[0];
+
    Out[0] = In[0];
    Out[1] = In[1]*_Rho;
    Out[2] = In[2]*_Rho;
    Out[3] = In[3]*_Rho;
-   Out[4] = (  In[4] - (real)0.5*Out[0]*( Out[1]*Out[1] + Out[2]*Out[2] + Out[3]*Out[3] )  )*Gamma_m1;
-
-// ensure the positive pressure
-#  if ( defined MIN_PRES_DENS  ||  defined MIN_PRES )
-   Out[4] = CPU_PositivePres( Out[4], Out[0], _Rho );
-#  endif
+   Out[4] = CPU_GetPressure( In[0], In[1], In[2], In[3], In[4], Gamma_m1, CheckMinPres_Yes, MinPres );
 
 } // FUNCTION : CPU_Con2Pri
 
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  CPU_Pri2Con 
-// Description :  Convert the primitive variables to the conserved variables 
+// Function    :  CPU_Pri2Con
+// Description :  Convert the primitive variables to the conserved variables
+//
+// Note        :  1. This function does NOT check if the input pressure is greater than the
+//                   given minimum threshold
 //
 // Parameter   :  In       : Array storing the input primitive variables
 //                Out      : Array to store the output conserved variables
-//                Gamma_m1 : 1 / (Gamma - 1)
+//               _Gamma_m1 : 1 / (Gamma - 1)
 //-------------------------------------------------------------------------------------------------------
 void CPU_Pri2Con( const real In[], real Out[], const real _Gamma_m1 )
 {
@@ -110,24 +111,25 @@ void CPU_Pri2Con( const real In[], real Out[], const real _Gamma_m1 )
 // Function    :  CPU_Con2Flux
 // Description :  Evaluate the hydrodynamic fluxes by the input conserved variables
 //
-// Parameter   :  XYZ   : Targeted spatial direction : (0/1/2) --> (x/y/z) 
-//                Flux  : Array to store the output fluxes
-//                Input : Array storing the input conserved variables
-//                Gamma : Ratio of specific heats
+// Parameter   :  XYZ      : Targeted spatial direction : (0/1/2) --> (x/y/z)
+//                Flux     : Array to store the output fluxes
+//                Input    : Array storing the input conserved variables
+//                Gamma_m1 : Gamma - 1
+//                MinPres  : Minimum allowed pressure
 //-------------------------------------------------------------------------------------------------------
-void CPU_Con2Flux( const int XYZ, real Flux[], const real Input[], const real Gamma )
+void CPU_Con2Flux( const int XYZ, real Flux[], const real Input[], const real Gamma_m1, const real MinPres )
 {
 
+   const bool CheckMinPres_Yes = true;
    real Var[5];
-   real Pres, _Rho, Vx;
+   real Pres, Vx;
 
    for (int v=0; v<5; v++)    Var[v] = Input[v];
 
    CPU_Rotate3D( Var, XYZ, true );
 
-   _Rho = (real)1.0 / Var[0];
-   Pres = (Gamma-(real)1.0) * (  Var[4] - (real)0.5*( Var[1]*Var[1] + Var[2]*Var[2] + Var[3]*Var[3] )*_Rho  );
-   Vx   = _Rho*Var[1];
+   Pres = CPU_GetPressure( Input[0], Input[1], Input[2], Input[3], Input[4], Gamma_m1, CheckMinPres_Yes, MinPres );
+   Vx   = Var[1] / Var[0];
 
    Flux[0] = Var[1];
    Flux[1] = Vx*Var[1] + Pres;
@@ -141,78 +143,85 @@ void CPU_Con2Flux( const int XYZ, real Flux[], const real Input[], const real Ga
 
 
 
-#if ( defined MIN_PRES_DENS  ||  defined MIN_PRES )
 //-------------------------------------------------------------------------------------------------------
-// Function    :  CPU_PositivePres
-// Description :  Ensure the positive pressure
+// Function    :  CPU_CheckMinPres
+// Description :  Check if the input pressure is great than the minimum allowed threshold 
 //
-// Note        :  Please set either MIN_PRES_DENS or MIN_PRES in the header CUFLU.h 
+// Note        :  1. This function is used to correct unphysical (usually negative) pressure caused by
+//                   numerical errors
+//                   --> Usually happen in regions with high mach numbers
+//                   --> Currently it simply sets a minimum allowed value for pressure
+//                       --> Please set MIN_PRES in the runtime parameter file "Input__Parameter"
+//                2. We should also support a minimum **temperature** instead of **pressure**
+//                   --> NOT supported yet
 //
-// Parameter   :  Pres_In  : Input pressure to be corrected
-//                Dens     : Density used by MIN_PRES_DENS 
-//                _Dens    : 1.0/Dens
+// Parameter   :  InPres  : Input pressure to be corrected
+//                MinPres : Minimum allowed pressure
 //
-// Return      :  Minimum pressure
+// Return      :  max( InPres, MinPres )
 //-------------------------------------------------------------------------------------------------------
-real CPU_PositivePres( const real Pres_In, const real Dens, const real _Dens )
+real CPU_CheckMinPres( const real InPres, const real MinPres )
 {
 
-   real Pres = Pres_In;
+   return FMAX( InPres, MinPres );
 
-#  ifdef MIN_PRES_DENS
-   if ( Pres*_Dens < MIN_PRES_DENS )   Pres = Dens*MIN_PRES_DENS;
-#  elif defined MIN_PRES
-   if ( Pres       < MIN_PRES      )   Pres = MIN_PRES;
-#  else
-#  error : ERROR : neither MIN_PRES_DENS nor MIN_PRES are defined !!
-#  endif
-
-   return Pres;
-
-} // FUNCTION : CPU_PositivePres
+} // FUNCTION : CPU_CheckMinPres
 
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  CPU_PositivePres_In_Engy
-// Description :  Ensure the positive pressure in the input total energy
+// Function    :  CPU_CheckMinPresInEngy
+// Description :  Ensure that the pressure in the input total energy is greater than the given threshold
 //
-// Note        :  Please set either MIN_PRES_DENS or MIN_PRES in the header CUFLU.h 
+// Note        :  1. This function is used to correct unphysical (usually negative) pressure caused by
+//                   numerical errors
+//                   --> Usually happen in regions with high mach numbers
+//                   --> Currently it simply sets a minimum allowed value for pressure
+//                       --> Please set MIN_PRES in the runtime parameter file "Input__Parameter"
+//                3. One must input conserved variables instead of primitive variables
 //
-// Parameter   :  ConVar      : Conserved variable to be corrected
-//                Gamma_m1    : Gamma - 1
-//                _Gamma_m1   : 1/(Gamma - 1)
+// Parameter   :  Dens     : Mass density
+//                MomX/Y/Z : Momentum density
+//                Engy     : Energy density
+//                Gamma_m1 : Gamma - 1
+//               _Gamma_m1 : 1/(Gamma - 1)
+//                MinPres  : Minimum allowed pressure
 //
-// Return      :  Total energy with the minimum pressure
+// Return      :  Total energy with pressure greater than the given threshold
 //-------------------------------------------------------------------------------------------------------
-real CPU_PositivePres_In_Engy( const real ConVar[], const real Gamma_m1, const real _Gamma_m1 )
+real CPU_CheckMinPresInEngy( const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy,
+                             const real Gamma_m1, const real _Gamma_m1, const real MinPres )
 {
 
-   real TempPres, Ek, _Dens, Engy;
+   real InPres, OutPres, Ek, _Dens, OutEngy;
 
-   _Dens    = (real)1.0 / ConVar[0];
-   Ek       = (real)0.5*( SQR(ConVar[1]) + SQR(ConVar[2]) + SQR(ConVar[3]) ) * _Dens;
-   TempPres = Gamma_m1*( ConVar[4] - Ek );
-   TempPres = CPU_PositivePres( TempPres, ConVar[0], _Dens );
-   Engy     = Ek + _Gamma_m1*TempPres;
+// we didn't use CPU_GetPressure() here to void calculating kinematic energy (Ek) twice
+   _Dens   = (real)1.0 / Dens;
+   Ek      = (real)0.5*( SQR(MomX) + SQR(MomY) + SQR(MomZ) ) * _Dens;
+   InPres  = Gamma_m1*( Engy - Ek );
 
-   return Engy;
+   OutPres = CPU_CheckMinPres( InPres, MinPres );
 
-} // FUNCTION : CPU_PositivePres_In_Engy
-#endif // #if ( defined MIN_PRES_DENS  ||  defined MIN_PRES )
+// do not modify energy (even the round-off errors) if the input pressure passes the check of CPU_CheckMinPres()
+   if ( InPres == OutPres )   OutEngy = Engy;
+   else                       OutEngy = Ek + _Gamma_m1*OutPres;
+
+   return OutEngy;
+
+} // FUNCTION : CPU_CheckMinPresInEngy
 
 
 
 #ifdef CHECK_NEGATIVE_IN_FLUID
 //-------------------------------------------------------------------------------------------------------
 // Function    :  CPU_CheckNegative
-// Description :  Check whether the input value is <= 0.0 (also check whether it's Inf or NAN) 
+// Description :  Check whether the input value is <= 0.0 (also check whether it's Inf or NAN)
 //
 // Note        :  Can be used to check whether the values of density and pressure are unphysical
 //
 // Parameter   :  Input : Input value
 //
-// Return      :  true  --> Input <= 0.0  ||  >= __FLT_MAX__  ||  != itself (Nan) 
+// Return      :  true  --> Input <= 0.0  ||  >= __FLT_MAX__  ||  != itself (Nan)
 //                false --> otherwise
 //-------------------------------------------------------------------------------------------------------
 bool CPU_CheckNegative( const real Input )
@@ -222,8 +231,46 @@ bool CPU_CheckNegative( const real Input )
    else                                                                       return false;
 
 } // FUNCTION : CPU_CheckNegative
-#endif
+#endif // #ifdef CHECK_NEGATIVE_IN_FLUID
 
 
 
-//#endif // #if ( !defined GPU  &&  MODEL == HYDRO  &&  (FLU_SCHEME == WAF || MHM || MHM_RP || CTU) )
+//-------------------------------------------------------------------------------------------------------
+// Function    :  CPU_GetPressure
+// Description :  Evaluate the fluid pressure
+//
+// Note        :  1. Currently only work with the adiabatic EOS
+//                2. Invoked by the functions "Hydro_GetTimeStep_Fluid", "Prepare_PatchData", "InterpolateGhostZone",
+//                   "Hydro_Aux_Check_Negative" ...
+//                3. One must input conserved variables instead of primitive variables
+//
+// Parameter   :  Dens         : Mass density
+//                MomX/Y/Z     : Momentum density
+//                Engy         : Energy density
+//                Gamma_m1     : Gamma - 1, where Gamma is the adiabatic index
+//                CheckMinPres : Return CPU_CheckMinPres()
+//                               --> In some cases we actually want to check if pressure becomes unphysical,
+//                                   for which we don't want to enable this option
+//                                   --> For example: Flu_FixUp(), Flu_Close(), Hydro_Aux_Check_Negative()
+//                MinPres      : Minimum allowed pressure
+//
+// Return      :  Pressure
+//-------------------------------------------------------------------------------------------------------
+real CPU_GetPressure( const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy,
+                      const real Gamma_m1, const bool CheckMinPres, const real MinPres )
+{
+
+   real _Dens, Pres;
+
+  _Dens = (real)1.0 / Dens;
+   Pres = Gamma_m1*(  Engy - (real)0.5*_Dens*( SQR(MomX) + SQR(MomY) + SQR(MomZ) )  );
+
+   if ( CheckMinPres )   Pres = CPU_CheckMinPres( Pres, MinPres );
+
+   return Pres;
+
+} // FUNCTION : CPU_GetPressure
+
+
+
+#endif // #if ( MODEL == HYDRO )

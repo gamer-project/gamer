@@ -96,8 +96,8 @@
 0           OPT__OVERLAP_MPI        # overlap MPI time with CPU/GPU computation (currently for LOAD_BALANCE only)
 0           OPT__RESET_FLUID        # reset fluid variables after each update --> edit "Flu_ResetByUser"
 1           OPT__CORR_UNPHY         # correct unphysical fluid solver results (for HYDRO only; for other models --> edit "Flu_Close")
-0.0         MIN_DENS                # minimum density  ##HYDRO, MHD, and ELBDM ONLY##
-0.0         MIN_PRES                # minimum pressure ##HYDRO and MHD ONLY##
+0.0         MIN_DENS                # minimum density  (must >= 0.0) ##HYDRO, MHD, and ELBDM ONLY##
+0.0         MIN_PRES                # minimum pressure (must >= 0.0) ##HYDRO and MHD ONLY##
 
 1.0e-5      NEWTON_G                # gravitational constant (will be overwritten if OPT__UNIT or COMOVING is on)
 -1.0        SOR_OMEGA               # over-relaxation parameter for SOR (<0:default)

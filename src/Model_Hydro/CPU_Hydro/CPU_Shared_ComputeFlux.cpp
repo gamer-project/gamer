@@ -7,18 +7,18 @@
 
 
 #if   ( RSOLVER == EXACT )
-extern void CPU_Con2Pri( const real In[], real Out[], const real  Gamma_m1 );
-extern void CPU_RiemannSolver_Exact( const int XYZ, real eival_out[], real L_star_out[], real R_star_out[], 
-                                     real Flux_Out[], const real L_In[], const real R_In[], const real Gamma ); 
+extern void CPU_Con2Pri( const real In[], real Out[], const real Gamma_m1, const real MinPres );
+extern void CPU_RiemannSolver_Exact( const int XYZ, real eival_out[], real L_star_out[], real R_star_out[],
+                                     real Flux_Out[], const real L_In[], const real R_In[], const real Gamma );
 #elif ( RSOLVER == ROE )
-extern void CPU_RiemannSolver_Roe( const int XYZ, real Flux_Out[], const real L_In[], const real R_In[], 
-                                   const real Gamma );
+extern void CPU_RiemannSolver_Roe( const int XYZ, real Flux_Out[], const real L_In[], const real R_In[],
+                                   const real Gamma, const real MinPres );
 #elif ( RSOLVER == HLLE )
-extern void CPU_RiemannSolver_HLLE( const int XYZ, real Flux_Out[], const real L_In[], const real R_In[], 
-                                    const real Gamma );
+extern void CPU_RiemannSolver_HLLE( const int XYZ, real Flux_Out[], const real L_In[], const real R_In[],
+                                    const real Gamma, const real MinPres );
 #elif ( RSOLVER == HLLC )
-extern void CPU_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In[], const real R_In[], 
-                                    const real Gamma );
+extern void CPU_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In[], const real R_In[],
+                                    const real Gamma, const real MinPres );
 #endif
 
 
@@ -26,36 +26,37 @@ extern void CPU_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  CPU_ComputeFlux
-// Description :  Compute the face-centered fluxes by Riemann solver 
+// Description :  Compute the face-centered fluxes by Riemann solver
 //
 // Note        :  1. Currently support the exact, HLLC, HLLE, and Roe solvers
 //                2. The size of the input array "FC_Var" is assumed to be N_FC_VAR^3
-//                   --> "N_FC_VAR-1" fluxes will be computed along each direction 
+//                   --> "N_FC_VAR-1" fluxes will be computed along each direction
 //
-// Parameter   :  FC_Var         : Array storing the input face-centered conserved variables
-//                FC_Flux        : Array to store the output face-centered flux
-//                NFlux          : Size of the array FC_Flux in each direction (must be >= N_FC_VAR-1)
-//                                 --> The (i,j,k) flux will be stored in the array FC_Flux with 
-//                                     the index "(k*NFlux+j)*NFlux+i"
-//                                 --> The (i,j,k) FC_Flux_x/y/z are defined at the +x/+y/+z surfaces of the 
-//                                     cell (i,j,k)
-//                Gap            : Number of grids to be skipped in the transverse direction
-//                                 --> "(N_FC_VAR-2*Gap)^2" fluxes will be computed on each surface
-//                Gamma          : Ratio of specific heats
-//                CorrHalfVel    : true --> correcting the half-step velocity by gravity (for UNSPLIT_GRAVITY only)
-//                Pot_USG        : Array storing the input potential for CorrHalfVel     (for UNSPLIT_GRAVITY only)
-//                                 --> must have the same size as FC_Var ( (PS2+2)^3 )
-//                Corner         : Array storing the physical corner coordinates of each patch group (for UNSPLIT_GRAVITY)
-//                dt             : Time interval to advance the full-step solution       (for UNSPLIT_GRAVITY only)
-//                dh             : Grid size                                             (for UNSPLIT_GRAVITY only)
-//                Time           : Current physical time                                 (for UNSPLIT_GRAVITY only)
-//                GravityType    : Types of gravity --> self-gravity, external gravity, both (for UNSPLIT_GRAVITY only)
-//                ExtAcc_AuxArray: Auxiliary array for adding external acceleration          (for UNSPLIT_GRAVITY only)
+// Parameter   :  FC_Var          : Array storing the input face-centered conserved variables
+//                FC_Flux         : Array to store the output face-centered flux
+//                NFlux           : Size of the array FC_Flux in each direction (must be >= N_FC_VAR-1)
+//                                  --> The (i,j,k) flux will be stored in the array FC_Flux with
+//                                      the index "(k*NFlux+j)*NFlux+i"
+//                                  --> The (i,j,k) FC_Flux_x/y/z are defined at the +x/+y/+z surfaces of the
+//                                      cell (i,j,k)
+//                Gap             : Number of grids to be skipped in the transverse direction
+//                                  --> "(N_FC_VAR-2*Gap)^2" fluxes will be computed on each surface
+//                Gamma           : Ratio of specific heats
+//                CorrHalfVel     : true --> correcting the half-step velocity by gravity (for UNSPLIT_GRAVITY only)
+//                Pot_USG         : Array storing the input potential for CorrHalfVel     (for UNSPLIT_GRAVITY only)
+//                                  --> must have the same size as FC_Var ( (PS2+2)^3 )
+//                Corner          : Array storing the physical corner coordinates of each patch group (for UNSPLIT_GRAVITY)
+//                dt              : Time interval to advance the full-step solution       (for UNSPLIT_GRAVITY only)
+//                dh              : Grid size                                             (for UNSPLIT_GRAVITY only)
+//                Time            : Current physical time                                 (for UNSPLIT_GRAVITY only)
+//                GravityType     : Types of gravity --> self-gravity, external gravity, both (for UNSPLIT_GRAVITY only)
+//                ExtAcc_AuxArray : Auxiliary array for adding external acceleration          (for UNSPLIT_GRAVITY only)
+//                MinPres         : Minimum allowed pressure
 //-------------------------------------------------------------------------------------------------------
 void CPU_ComputeFlux( const real FC_Var[][6][5], real FC_Flux[][3][5], const int NFlux, const int Gap,
                       const real Gamma, const bool CorrHalfVel, const real Pot_USG[], const double Corner[],
                       const real dt, const real dh, const double Time, const OptGravityType_t GravityType,
-                      const double ExtAcc_AuxArray[] )
+                      const double ExtAcc_AuxArray[], const real MinPres )
 {
 
 // check
@@ -110,7 +111,7 @@ void CPU_ComputeFlux( const real FC_Var[][6][5], real FC_Flux[][3][5], const int
    {
       dL = 2*d;
       dR = dL+1;
-      
+
 #     ifdef UNSPLIT_GRAVITY
       if ( CorrHalfVel )
       {
@@ -122,13 +123,13 @@ void CPU_ComputeFlux( const real FC_Var[][6][5], real FC_Flux[][3][5], const int
 
       switch ( d )
       {
-         case 0 : start2[0] = 0;                start2[1] = Gap;              start2[2] = Gap;  
+         case 0 : start2[0] = 0;                start2[1] = Gap;              start2[2] = Gap;
                   end1  [0] = N_FC_VAR-1;       end1  [1] = N_FC_VAR-2*Gap;   end1  [2] = N_FC_VAR-2*Gap;   break;
 
-         case 1 : start2[0] = Gap;              start2[1] = 0;                start2[2] = Gap;  
+         case 1 : start2[0] = Gap;              start2[1] = 0;                start2[2] = Gap;
                   end1  [0] = N_FC_VAR-2*Gap;   end1  [1] = N_FC_VAR-1;       end1  [2] = N_FC_VAR-2*Gap;   break;
 
-         case 2 : start2[0] = Gap;              start2[1] = Gap;              start2[2] = 0;  
+         case 2 : start2[0] = Gap;              start2[1] = Gap;              start2[2] = 0;
                   end1  [0] = N_FC_VAR-2*Gap;   end1  [1] = N_FC_VAR-2*Gap;   end1  [2] = N_FC_VAR-1;       break;
       }
 
@@ -198,16 +199,16 @@ void CPU_ComputeFlux( const real FC_Var[][6][5], real FC_Flux[][3][5], const int
 
 
 #        if   ( RSOLVER == EXACT )
-         CPU_Con2Pri( ConVar_L, PriVar_L, Gamma_m1 );
-         CPU_Con2Pri( ConVar_R, PriVar_R, Gamma_m1 );
+         CPU_Con2Pri( ConVar_L, PriVar_L, Gamma_m1, MinPres );
+         CPU_Con2Pri( ConVar_R, PriVar_R, Gamma_m1, MinPres );
 
          CPU_RiemannSolver_Exact( d, NULL, NULL, NULL, FC_Flux[ID1][d], PriVar_L, PriVar_R, Gamma );
 #        elif ( RSOLVER == ROE )
-         CPU_RiemannSolver_Roe ( d, FC_Flux[ID1][d], ConVar_L, ConVar_R, Gamma );
+         CPU_RiemannSolver_Roe ( d, FC_Flux[ID1][d], ConVar_L, ConVar_R, Gamma, MinPres );
 #        elif ( RSOLVER == HLLE )
-         CPU_RiemannSolver_HLLE( d, FC_Flux[ID1][d], ConVar_L, ConVar_R, Gamma );
+         CPU_RiemannSolver_HLLE( d, FC_Flux[ID1][d], ConVar_L, ConVar_R, Gamma, MinPres );
 #        elif ( RSOLVER == HLLC )
-         CPU_RiemannSolver_HLLC( d, FC_Flux[ID1][d], ConVar_L, ConVar_R, Gamma );
+         CPU_RiemannSolver_HLLC( d, FC_Flux[ID1][d], ConVar_L, ConVar_R, Gamma, MinPres );
 #        else
 #        error : ERROR : unsupported Riemann solver (EXACT/ROE) !!
 #        endif

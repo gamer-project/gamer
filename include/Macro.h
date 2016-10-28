@@ -2,6 +2,10 @@
 #define __MACRO_H__
 
 
+// will be removed soon
+#define MIN_PRES 0.0
+#define MIN_DENS 0.0
+
 
 // ****************************************************************************
 // ** This header defines the symbolic constants and macros used in GAMER.   **

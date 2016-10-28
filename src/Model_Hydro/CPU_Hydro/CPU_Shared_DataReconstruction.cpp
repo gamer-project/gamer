@@ -7,10 +7,7 @@
 
 
 extern void CPU_Rotate3D( real InOut[], const int XYZ, const bool Forward );
-#if ( defined MIN_PRES_DENS  ||  defined MIN_PRES )
-extern real CPU_PositivePres( const real Pres_In, const real Dens, const real _Dens );
-extern real CPU_PositivePres_In_Engy( const real ConVar[], const real Gamma_m1, const real _Gamma_m1 );
-#endif
+extern real CPU_CheckMinPres( const real InPres, const real MinPres );
 
 static void Get_EigenSystem( const real CC_Var[], real EigenVal[][5], real LEigenVec[][5], real REigenVec[][5],
                              const real Gamma );
@@ -54,10 +51,11 @@ static void Char2Pri( real Var[], const real Gamma, const real Rho, const real P
 //                EP_Coeff       : Coefficient of the extrema-preserving limiter
 //                dt             : Time interval to advance solution (for the CTU scheme)
 //                dh             : Grid size (for the CTU scheme)
+//                MinDens/Pres   : Minimum allowed density and pressure
 //------------------------------------------------------------------------------------------------------
 void CPU_DataReconstruction( const real PriVar[][5], real FC_Var[][6][5], const int NIn, const int NGhost,
                              const real Gamma, const LR_Limiter_t LR_Limiter, const real MinMod_Coeff, 
-                             const real EP_Coeff, const real dt, const real dh )
+                             const real EP_Coeff, const real dt, const real dh, const real MinDens, const real MinPres )
 {
 
    const int dr1[3] = { 1, NIn, NIn*NIn };
@@ -155,13 +153,14 @@ void CPU_DataReconstruction( const real PriVar[][5], real FC_Var[][6][5], const 
             }
          }
 
-#        if ( defined MIN_PRES_DENS  ||  defined MIN_PRES )
-         else // for the extrema-preserving limiter --> ensure the positive pressure
+         else // for the extrema-preserving limiter --> ensure positive density and pressure
          {
-            FC_Var[ID2][dL][4] = CPU_PositivePres( FC_Var[ID2][dL][4], FC_Var[ID2][dL][0], (real)1.0/FC_Var[ID2][dL][0] );
-            FC_Var[ID2][dR][4] = CPU_PositivePres( FC_Var[ID2][dR][4], FC_Var[ID2][dR][0], (real)1.0/FC_Var[ID2][dR][0] );
+            FC_Var[ID2][dL][0] = FMAX( FC_Var[ID2][dL][0], MinDens );
+            FC_Var[ID2][dR][0] = FMAX( FC_Var[ID2][dR][0], MinDens );
+
+            FC_Var[ID2][dL][4] = CPU_CheckMinPres( FC_Var[ID2][dL][4], MinPres );
+            FC_Var[ID2][dR][4] = CPU_CheckMinPres( FC_Var[ID2][dR][4], MinPres );
          }
-#        endif
 
 
 //       (2-4) advance the face-centered variables by half time-step for the CTU integrator 
@@ -286,11 +285,12 @@ void CPU_DataReconstruction( const real PriVar[][5], real FC_Var[][6][5], const 
             FC_Var[ID2][dR][v] += Correct_R[v];
          }
 
-//       ensure the positive pressure
-#        if ( defined MIN_PRES_DENS  ||  defined MIN_PRES )
-         FC_Var[ID2][dL][4] = CPU_PositivePres( FC_Var[ID2][dL][4], FC_Var[ID2][dL][0], (real)1.0/FC_Var[ID2][dL][0] );
-         FC_Var[ID2][dR][4] = CPU_PositivePres( FC_Var[ID2][dR][4], FC_Var[ID2][dR][0], (real)1.0/FC_Var[ID2][dR][0] );
-#        endif
+//       ensure positive density and pressure
+         FC_Var[ID2][dL][0] = FMAX( FC_Var[ID2][dL][0], MinDens );
+         FC_Var[ID2][dR][0] = FMAX( FC_Var[ID2][dR][0], MinDens );
+
+         FC_Var[ID2][dL][4] = CPU_CheckMinPres( FC_Var[ID2][dL][4], MinPres );
+         FC_Var[ID2][dR][4] = CPU_CheckMinPres( FC_Var[ID2][dR][4], MinPres );
 
 #        endif // #if ( FLU_SCHEME == CTU )
 
@@ -332,10 +332,11 @@ void CPU_DataReconstruction( const real PriVar[][5], real FC_Var[][6][5], const 
 //                EP_Coeff       : Coefficient of the extrema-preserving limiter (useless in PPM)
 //                dt             : Time interval to advance solution (for the CTU scheme)
 //                dh             : Grid size (for the CTU scheme)
+//                MinDens/Pres   : Minimum allowed density and pressure
 //------------------------------------------------------------------------------------------------------
 void CPU_DataReconstruction( const real PriVar[][5], real FC_Var[][6][5], const int NIn, const int NGhost,
                              const real Gamma, const LR_Limiter_t LR_Limiter, const real MinMod_Coeff, 
-                             const real EP_Coeff, const real dt, const real dh )
+                             const real EP_Coeff, const real dt, const real dh, const real MinDens, const real MinPres )
 {
 
 // check
@@ -622,11 +623,12 @@ void CPU_DataReconstruction( const real PriVar[][5], real FC_Var[][6][5], const 
             FC_Var[ID2][dR][v] += Correct_R[v];
          }
 
-//       ensure the positive pressure
-#        if ( defined MIN_PRES_DENS  ||  defined MIN_PRES )
-         FC_Var[ID2][dL][4] = CPU_PositivePres( FC_Var[ID2][dL][4], FC_Var[ID2][dL][0], (real)1.0/FC_Var[ID2][dL][0] );
-         FC_Var[ID2][dR][4] = CPU_PositivePres( FC_Var[ID2][dR][4], FC_Var[ID2][dR][0], (real)1.0/FC_Var[ID2][dR][0] );
-#        endif
+//       ensure positive density and pressure
+         FC_Var[ID2][dL][0] = FMAX( FC_Var[ID2][dL][0], MinDens );
+         FC_Var[ID2][dR][0] = FMAX( FC_Var[ID2][dR][0], MinDens );
+
+         FC_Var[ID2][dL][4] = CPU_CheckMinPres( FC_Var[ID2][dL][4], MinPres );
+         FC_Var[ID2][dR][4] = CPU_CheckMinPres( FC_Var[ID2][dR][4], MinPres );
 
 #        endif // #if ( FLU_SCHEME == CTU )
 

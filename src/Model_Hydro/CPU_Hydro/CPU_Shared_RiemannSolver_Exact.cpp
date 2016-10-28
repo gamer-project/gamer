@@ -20,12 +20,12 @@ static void Set_Flux( real flux[], const real val[], const real Gamma );
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  CPU_RiemmanSolver_Exact
-// Description :  Exact Riemann solver 
+// Description :  Exact Riemann solver
 //
 // Note        :  1. The input data should be primitive variables
 //                2. This function is shared by WAF, MHM, MHM_RP, and CTU schemes
 //
-// Parameter   :  XYZ         : Targeted spatial direction : (0/1/2) --> (x/y/z) 
+// Parameter   :  XYZ         : Targeted spatial direction : (0/1/2) --> (x/y/z)
 //                eival_out   : Output array to store the speed of waves
 //                L_star_out  : Output array to store the primitive variables in the left star region
 //                R_star_out  : Output array to store the primitive variables in the right star region
@@ -34,7 +34,7 @@ static void Set_Flux( real flux[], const real val[], const real Gamma );
 //                R_In        : Input primitive variables in the right region
 //                Gamma       : Ratio of specific heats
 //------------------------------------------------------------------------------------------------------
-void CPU_RiemannSolver_Exact( const int XYZ, real eival_out[], real L_star_out[], real R_star_out[], 
+void CPU_RiemannSolver_Exact( const int XYZ, real eival_out[], real L_star_out[], real R_star_out[],
                               real Flux_Out[], const real L_In[], const real R_In[], const real Gamma )
 {
 
@@ -47,7 +47,7 @@ void CPU_RiemannSolver_Exact( const int XYZ, real eival_out[], real L_star_out[]
 
 
 // reorder the input variables for different spatial directions
-   for (int v=0; v<5; v++)    
+   for (int v=0; v<5; v++)
    {
       L[v] = L_In[v];
       R[v] = R_In[v];
@@ -116,7 +116,7 @@ void CPU_RiemannSolver_Exact( const int XYZ, real eival_out[], real L_star_out[]
                  bound[0] = bound[1];
                  bound[1] = bound[0]*(real)2.0;
               }
-           }  
+           }
            while ( Continue );
         }
       }
@@ -167,16 +167,16 @@ void CPU_RiemannSolver_Exact( const int XYZ, real eival_out[], real L_star_out[]
 
 #     ifdef CHECK_NEGATIVE_IN_FLUID
       if ( CPU_CheckNegative(L[4]) )
-         Aux_Message( stderr, "ERROR : negative pressure (%14.7e) at file <%s>, line <%d>, function <%s>\n", 
+         Aux_Message( stderr, "ERROR : negative pressure (%14.7e) at file <%s>, line <%d>, function <%s>\n",
                       L[4],      __FILE__, __LINE__, __FUNCTION__ );
       if ( CPU_CheckNegative(L[0]) )
-         Aux_Message( stderr, "ERROR : negative density (%14.7e) at file <%s>, line <%d>, function <%s>\n", 
+         Aux_Message( stderr, "ERROR : negative density (%14.7e) at file <%s>, line <%d>, function <%s>\n",
                       L[0],      __FILE__, __LINE__, __FUNCTION__ );
       if ( CPU_CheckNegative(L_star[4]) )
-         Aux_Message( stderr, "ERROR : negative pressure (%14.7e) at file <%s>, line <%d>, function <%s>\n", 
+         Aux_Message( stderr, "ERROR : negative pressure (%14.7e) at file <%s>, line <%d>, function <%s>\n",
                       L_star[4], __FILE__, __LINE__, __FUNCTION__ );
       if ( CPU_CheckNegative(L_star[0]) )
-         Aux_Message( stderr, "ERROR : negative density(%14.7e) at file <%s>, line <%d>, function <%s>\n", 
+         Aux_Message( stderr, "ERROR : negative density(%14.7e) at file <%s>, line <%d>, function <%s>\n",
                       L_star[0], __FILE__, __LINE__, __FUNCTION__ );
 #     endif
 
@@ -204,16 +204,16 @@ void CPU_RiemannSolver_Exact( const int XYZ, real eival_out[], real L_star_out[]
 
 #     ifdef CHECK_NEGATIVE_IN_FLUID
       if ( CPU_CheckNegative(R[4]) )
-         Aux_Message( stderr, "ERROR : negative pressure (%14.7e) at file <%s>, line <%d>, function <%s>\n", 
+         Aux_Message( stderr, "ERROR : negative pressure (%14.7e) at file <%s>, line <%d>, function <%s>\n",
                       R[4],      __FILE__, __LINE__, __FUNCTION__ );
       if ( CPU_CheckNegative(R[0]) )
-         Aux_Message( stderr, "ERROR : negative density (%14.7e) at file <%s>, line <%d>, function <%s>\n", 
+         Aux_Message( stderr, "ERROR : negative density (%14.7e) at file <%s>, line <%d>, function <%s>\n",
                       R[0],      __FILE__, __LINE__, __FUNCTION__ );
       if ( CPU_CheckNegative(R_star[4]) )
-         Aux_Message( stderr, "ERROR : negative pressure (%14.7e) at file <%s>, line <%d>, function <%s>\n", 
+         Aux_Message( stderr, "ERROR : negative pressure (%14.7e) at file <%s>, line <%d>, function <%s>\n",
                       R_star[4], __FILE__, __LINE__, __FUNCTION__ );
       if ( CPU_CheckNegative(R_star[0]) )
-         Aux_Message( stderr, "ERROR : negative density(%14.7e) at file <%s>, line <%d>, function <%s>\n", 
+         Aux_Message( stderr, "ERROR : negative density(%14.7e) at file <%s>, line <%d>, function <%s>\n",
                       R_star[0], __FILE__, __LINE__, __FUNCTION__ );
 #     endif
 
@@ -235,20 +235,20 @@ void CPU_RiemannSolver_Exact( const int XYZ, real eival_out[], real L_star_out[]
 
 #  ifdef CHECK_NEGATIVE_IN_FLUID
    if ( CPU_CheckNegative( R[4]) )
-      Aux_Message( stderr, "ERROR : negative pressure (%14.7e) at file <%s>, line <%d>, function <%s>\n", 
+      Aux_Message( stderr, "ERROR : negative pressure (%14.7e) at file <%s>, line <%d>, function <%s>\n",
                    R[4], __FILE__, __LINE__, __FUNCTION__ );
    if ( CPU_CheckNegative(R[0]) )
-      Aux_Message( stderr, "ERROR : negative density (%14.7e) at file <%s>, line <%d>, function <%s>\n", 
+      Aux_Message( stderr, "ERROR : negative density (%14.7e) at file <%s>, line <%d>, function <%s>\n",
                    R[0], __FILE__, __LINE__, __FUNCTION__ );
    if ( CPU_CheckNegative(L[4]) )
-      Aux_Message( stderr, "ERROR : negative pressure (%14.7e) at file <%s>, line <%d>, function <%s>\n", 
+      Aux_Message( stderr, "ERROR : negative pressure (%14.7e) at file <%s>, line <%d>, function <%s>\n",
                    L[4], __FILE__, __LINE__, __FUNCTION__ );
    if ( CPU_CheckNegative(L[0]) )
-      Aux_Message( stderr, "ERROR : negative density (%14.7e) at file <%s>, line <%d>, function <%s>\n", 
+      Aux_Message( stderr, "ERROR : negative density (%14.7e) at file <%s>, line <%d>, function <%s>\n",
                    L[0], __FILE__, __LINE__, __FUNCTION__ );
 #  endif
 
-   if ( L[4] < L_star[4] ) // left shock 
+   if ( L[4] < L_star[4] ) // left shock
    {
       Temp = (real)0.5/Gamma*( Gamma_p1*L_star[4]/L[4] + Gamma_m1 );
 #     ifdef CHECK_NEGATIVE_IN_FLUID
@@ -258,7 +258,7 @@ void CPU_RiemannSolver_Exact( const int XYZ, real eival_out[], real L_star_out[]
 #     endif
       eival[0] = L[1] - SQRT( Gamma*L[4]/L[0] )*SQRT( Temp );
    }
-   else                    // left rarefaction                   
+   else                    // left rarefaction
       eival[0] = L[1] - SQRT ( Gamma*L[4]/L[0] );
 
    if ( R[4] < R_star[4] ) // right shock
@@ -271,7 +271,7 @@ void CPU_RiemannSolver_Exact( const int XYZ, real eival_out[], real L_star_out[]
 #     endif
       eival[4] = R[1] + SQRT( Gamma*R[4]/R[0] )*SQRT( Temp );
    }
-   else                    // right rarefaction                  
+   else                    // right rarefaction
       eival[4] = R[1] + SQRT ( Gamma*R[4]/R[0] );
 
 
@@ -280,9 +280,9 @@ void CPU_RiemannSolver_Exact( const int XYZ, real eival_out[], real L_star_out[]
 
    if (  FABS( eival[1] ) < MAX_ERROR  ) // contact wave is zero
    {
-      Flux_Out[0] = (real)0.0; 
-      Flux_Out[1] = L_star[4]; 
-      Flux_Out[2] = (real)0.0; 
+      Flux_Out[0] = (real)0.0;
+      Flux_Out[1] = L_star[4];
+      Flux_Out[2] = (real)0.0;
       Flux_Out[3] = (real)0.0;
       Flux_Out[4] = (real)0.0;
    }
@@ -353,10 +353,10 @@ real Solve_f( const real rho, const real p, const real p_star, const real Gamma 
    {
 #     ifdef CHECK_NEGATIVE_IN_FLUID
       if ( CPU_CheckNegative(p) )
-         Aux_Message( stderr, "ERROR : negative pressure (%14.7e) at file <%s>, line <%d>, function <%s>\n", 
+         Aux_Message( stderr, "ERROR : negative pressure (%14.7e) at file <%s>, line <%d>, function <%s>\n",
                       p, __FILE__, __LINE__, __FUNCTION__ );
       if ( CPU_CheckNegative(rho) )
-         Aux_Message( stderr, "ERROR : negative density (%14.7e) at file <%s>, line <%d>, function <%s>\n", 
+         Aux_Message( stderr, "ERROR : negative density (%14.7e) at file <%s>, line <%d>, function <%s>\n",
                       rho, __FILE__, __LINE__, __FUNCTION__ );
 #     endif
 
@@ -390,11 +390,11 @@ void Set_Flux( real flux[], const real val[], const real Gamma )
   flux[1] = val[0]*val[1]*val[1] + val[4];
   flux[2] = val[0]*val[1]*val[2];
   flux[3] = val[0]*val[1]*val[3];
-  flux[4] = val[1]*(  (real)0.5*val[0]*( val[1]*val[1] + val[2]*val[2] + val[3]*val[3] ) 
+  flux[4] = val[1]*(  (real)0.5*val[0]*( val[1]*val[1] + val[2]*val[2] + val[3]*val[3] )
                      + val[4]/Gamma_m1 + val[4]  );
 
 } // FUNCTION : Set_Flux
-#endif // #if ( FLU_SCHEME == MHM  ||  FLU_SCHEME == MHM_RP  ||  FLU_SCHEME == CTU ) 
+#endif // #if ( FLU_SCHEME == MHM  ||  FLU_SCHEME == MHM_RP  ||  FLU_SCHEME == CTU )
 
 
 

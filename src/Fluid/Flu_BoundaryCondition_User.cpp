@@ -12,7 +12,7 @@ static void BC_User( const double Time, const double x, const double y, const do
 //
 // Note        :  1. Work for the function "Flu_BoundaryCondition_User"
 //                2. Always return NCOMP variables
-// 
+//
 // Parameter   :  Time  : Current physical time
 //                x,y,z : Physical coordinates
 //                BVal  : Array to store the boundary values
@@ -26,8 +26,8 @@ void BC_User( const double Time, const double x, const double y, const double z,
 // ##########################################################################################################
 // Example 1 : set to time-independent values for HYDRO
    /*
-   const double C[3] = { 0.5*amr->BoxSize[0], 
-                         0.5*amr->BoxSize[1], 
+   const double C[3] = { 0.5*amr->BoxSize[0],
+                         0.5*amr->BoxSize[1],
                          0.5*amr->BoxSize[2] };
    const real Height = 100.0;
    const real Width  =  64.0;
@@ -56,10 +56,10 @@ void BC_User( const double Time, const double x, const double y, const double z,
 // Description :  Fill up the ghost-zone values by the user-specified function "BC_User"
 //
 // Note        :  Work for the functions "Prepare_PatchData, InterpolateGhostZone, Refine, LB_Refine_AllocateNewPatch"
-// 
+//
 // Parameter   :  Array          : Array to store the prepared data of one patch group (including the ghost-zone data)
 //                NVar_Flu       : Number of fluid variables to be prepared (derived variables are NOT included)
-//                ArraySizeX/Y/Z : Size of Array including the ghost zones on each side 
+//                ArraySizeX/Y/Z : Size of Array including the ghost zones on each side
 //                Idx_Start      : Minimum array indices
 //                Idx_End        : Maximum array indices
 //                TFluVarIdxList : List recording the target fluid variable indices ( = [0 ... NCOMP-1] )
@@ -70,8 +70,8 @@ void BC_User( const double Time, const double x, const double y, const double z,
 //
 // Return      :  Array
 //-------------------------------------------------------------------------------------------------------
-void Flu_BoundaryCondition_User( real *Array, const int NVar_Flu, const int ArraySizeX, const int ArraySizeY, 
-                                 const int ArraySizeZ, const int Idx_Start[], const int Idx_End[], 
+void Flu_BoundaryCondition_User( real *Array, const int NVar_Flu, const int ArraySizeX, const int ArraySizeY,
+                                 const int ArraySizeZ, const int Idx_Start[], const int Idx_End[],
                                  const int TFluVarIdxList[], const double Time, const double dh, const double *Corner,
                                  const int TVar )
 {
@@ -81,16 +81,12 @@ void Flu_BoundaryCondition_User( real *Array, const int NVar_Flu, const int Arra
    const double z0 = Corner[2] + (double)Idx_Start[2]*dh;
 
 #  if   ( MODEL == HYDRO )
-#  if ( defined MIN_PRES_DENS  ||  defined MIN_PRES )
-   const bool PositivePres = true;
-#  else
-   const bool PositivePres = false;
-#  endif
-   const real Gamma_m1     = GAMMA - (real)1.0;
-   const bool PrepVx       = ( TVar & _VELX ) ? true : false;
-   const bool PrepVy       = ( TVar & _VELY ) ? true : false;
-   const bool PrepVz       = ( TVar & _VELZ ) ? true : false;
-   const bool PrepPres     = ( TVar & _PRES ) ? true : false;
+   const bool CheckMinPres_Yes = true;
+   const real Gamma_m1         = GAMMA - (real)1.0;
+   const bool PrepVx           = ( TVar & _VELX ) ? true : false;
+   const bool PrepVy           = ( TVar & _VELY ) ? true : false;
+   const bool PrepVz           = ( TVar & _VELZ ) ? true : false;
+   const bool PrepPres         = ( TVar & _PRES ) ? true : false;
 
 #  elif ( MODEL == MHD   )
 #  warning : WAIT MHD !!
@@ -127,7 +123,8 @@ void Flu_BoundaryCondition_User( real *Array, const int NVar_Flu, const int Arra
       if ( PrepVx   )   Array3D[ v2 ++ ][k][j][i] = BVal[MOMX] / BVal[DENS];
       if ( PrepVy   )   Array3D[ v2 ++ ][k][j][i] = BVal[MOMY] / BVal[DENS];
       if ( PrepVz   )   Array3D[ v2 ++ ][k][j][i] = BVal[MOMZ] / BVal[DENS];
-      if ( PrepPres )   Array3D[ v2 ++ ][k][j][i] = Hydro_GetPressure( BVal, Gamma_m1, PositivePres );
+      if ( PrepPres )   Array3D[ v2 ++ ][k][j][i] = CPU_GetPressure( BVal[DENS], BVal[MOMX], BVal[MOMY], BVal[MOMZ], BVal[ENGY],
+                                                                     Gamma_m1, CheckMinPres_Yes, MIN_PRES );
 
 #     elif ( MODEL == MHD   )
 #     warning : WAIT MHD !!

@@ -61,16 +61,12 @@ void Flu_BoundaryCondition_User( real *Array, const int NVar_Flu, const int Arra
    const double z0 = Corner[2] + (double)Idx_Start[2]*dh;
 
 #  if   ( MODEL == HYDRO )
-#  if ( defined MIN_PRES_DENS  ||  defined MIN_PRES )
-   const bool PositivePres = true;
-#  else
-   const bool PositivePres = false;
-#  endif
-   const real Gamma_m1     = GAMMA - (real)1.0;
-   const bool PrepVx       = ( TVar & _VELX ) ? true : false;
-   const bool PrepVy       = ( TVar & _VELY ) ? true : false;
-   const bool PrepVz       = ( TVar & _VELZ ) ? true : false;
-   const bool PrepPres     = ( TVar & _PRES ) ? true : false;
+   const bool CheckMinPres_Yes = true;
+   const real Gamma_m1         = GAMMA - (real)1.0;
+   const bool PrepVx           = ( TVar & _VELX ) ? true : false;
+   const bool PrepVy           = ( TVar & _VELY ) ? true : false;
+   const bool PrepVz           = ( TVar & _VELZ ) ? true : false;
+   const bool PrepPres         = ( TVar & _PRES ) ? true : false;
 
 #  elif ( MODEL == MHD   )
 #  warning : WAIT MHD !!
@@ -107,7 +103,8 @@ void Flu_BoundaryCondition_User( real *Array, const int NVar_Flu, const int Arra
       if ( PrepVx   )   Array3D[ v2 ++ ][k][j][i] = BVal[MOMX] / BVal[DENS];
       if ( PrepVy   )   Array3D[ v2 ++ ][k][j][i] = BVal[MOMY] / BVal[DENS];
       if ( PrepVz   )   Array3D[ v2 ++ ][k][j][i] = BVal[MOMZ] / BVal[DENS];
-      if ( PrepPres )   Array3D[ v2 ++ ][k][j][i] = Hydro_GetPressure( BVal, Gamma_m1, PositivePres );
+      if ( PrepPres )   Array3D[ v2 ++ ][k][j][i] = CPU_GetPressure( BVal[DENS], BVal[MOMX], BVal[MOMY], BVal[MOMZ], BVal[ENGY],
+                                                                     Gamma_m1, CheckMinPres_Yes, MIN_PRES );
 
 #     elif ( MODEL == MHD   )
 #     warning : WAIT MHD !!

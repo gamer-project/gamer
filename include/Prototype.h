@@ -71,7 +71,11 @@ void CPU_FluidSolver( real h_Flu_Array_In [][FLU_NIN ][ FLU_NXT*FLU_NXT*FLU_NXT 
                       const bool XYZ, const LR_Limiter_t LR_Limiter, const real MinMod_Coeff, const real EP_Coeff,
                       const WAF_Limiter_t WAF_Limiter, const real ELBDM_Eta, real ELBDM_Taylor3_Coeff,
                       const bool ELBDM_Taylor3_Auto, const bool GetMinDtInfo,
-                      const double Time, const OptGravityType_t GravityType );
+                      const double Time, const OptGravityType_t GravityType, const real MinDens, const real MinPres );
+real CPU_GetPressure( const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy,
+                      const real Gamma_m1, const bool CheckMinPres, const real MinPres );
+real CPU_CheckMinPresInEngy( const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy,
+                             const real Gamma_m1, const real _Gamma_m1, const real MinPres );
 void Flu_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, const double dt, const int SaveSg,
                     const bool OverlapMPI, const bool Overlap_Sync );
 void Flu_AllocateFluxArray( const int lv );
@@ -351,7 +355,6 @@ void Hydro_BoundaryCondition_Reflecting( real *Array, const int BC_Face, const i
                                          const int ArraySizeX, const int ArraySizeY, const int ArraySizeZ,
                                          const int Idx_Start[], const int Idx_End[], const int TFluVarIdxList[],
                                          const int NVar_Der, const int TDerVarList[] );
-real Hydro_GetPressure( const real Fluid[], const real Gamma_m1, const bool PositivePres );
 
 
 // MHD model

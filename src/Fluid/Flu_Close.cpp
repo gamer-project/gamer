@@ -6,21 +6,18 @@ static void StoreFlux( const int lv, const real Flux_Array[][9][NFLUX][4*PATCH_S
                        const int NPG, const int *PID0_List );
 static void CorrectFlux( const int lv, const real Flux_Array[][9][NFLUX][4*PATCH_SIZE*PATCH_SIZE],
                          const int NPG, const int *PID0_List );
-static bool Unphysical( const real Fluid[] );
+static bool Unphysical( const real Fluid[], const real Gamma_m1, const int CheckMinEngyOrPres );
 static void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
                                const real h_Flu_Array_F_In[][FLU_NIN][FLU_NXT*FLU_NXT*FLU_NXT],
                                real h_Flu_Array_F_Out[][FLU_NOUT][8*PATCH_SIZE*PATCH_SIZE*PATCH_SIZE], const real dt );
 static int  Table_01( const int lv, const int PID, const int SibID );
 
 extern void CPU_RiemannSolver_Roe ( const int XYZ, real Flux_Out[], const real L_In[], const real R_In[],
-                                    const real Gamma );
+                                    const real Gamma, const real MinPres );
 extern void CPU_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In[], const real R_In[],
-                                    const real Gamma );
+                                    const real Gamma, const real MinPres );
 extern void CPU_RiemannSolver_HLLE( const int XYZ, real Flux_Out[], const real L_In[], const real R_In[],
-                                    const real Gamma );
-#if ( defined MIN_PRES_DENS  ||  defined MIN_PRES )
-extern real CPU_PositivePres_In_Engy( const real ConVar[], const real Gamma_m1, const real _Gamma_m1 );
-#endif
+                                    const real Gamma, const real MinPres );
 
 
 
@@ -59,8 +56,8 @@ void Flu_Close( const int lv, const int SaveSg, const real h_Flux_Array[][9][NFL
    if ( OPT__FIXUP_FLUX  &&  lv != 0 )    CorrectFlux( lv, h_Flux_Array, NPG, PID0_List );
 
 
-// correct the unphysical results in h_Flu_Array_F_Out (e.g., negative density in HYDRO/MHD)
-   if ( OPT__CORR_UNPHY )     CorrectUnphysical( lv, NPG, PID0_List, h_Flu_Array_F_In, h_Flu_Array_F_Out, dt );
+// try to correct the unphysical results in h_Flu_Array_F_Out (e.g., negative density in HYDRO/MHD)
+   CorrectUnphysical( lv, NPG, PID0_List, h_Flu_Array_F_In, h_Flu_Array_F_Out, dt );
 
 
 // copy the updated data from the array "h_Flu_Array_F_Out" to each patch pointer
@@ -275,21 +272,29 @@ void CorrectFlux( const int lv, const real h_Flux_Array[][9][NFLUX][4*PATCH_SIZE
 // Description :  Check whether the input variables are unphysical
 //
 // Note        :  1. One can put arbitriry criterion here. Cell violating the conditions will be recalculated
-//                   by "CorrectUnphysical"
-//                2. Currently it is used for MODEL==HYDRO/MHD to check whether the input density is negative
-//                   (and if any variable is -inf, +inf, and nan)
+//                   in "CorrectUnphysical"
+//                2. Currently it is used for MODEL==HYDRO/MHD to check whether the input density and pressure
+//                   (or energy density) is smaller than the given thresholds
+//                   --> It also checks if any variable is -inf, +inf, or nan
 //
-// Parameter   :  Input :  Input fluid variable array with size FLU_NOUT
+// Parameter   :  Input              : Input fluid variable array with size FLU_NOUT
+//                CheckMinEngyOrPres : (0/1) ==> check (energy/pressure)
 //
 // Return      :  true/false <==> input Fluid array is unphysical/physical
 //-------------------------------------------------------------------------------------------------------
-bool Unphysical( const real Fluid[] )
+bool Unphysical( const real Fluid[], const real Gamma_m1, const int CheckMinEngyOrPres )
 {
 
+   const bool CheckMinPres_No = false;
+   const int  CheckMinEngy    = 0;
+
 #  if ( MODEL == HYDRO || MODEL == MHD )
-   if ( !isfinite(Fluid[DENS]) || !isfinite(Fluid[MOMX]) || !isfinite(Fluid[MOMY]) ||
-        !isfinite(Fluid[MOMZ]) || !isfinite(Fluid[ENGY]) ||
-        Fluid[DENS]<=(real)0.0 || Fluid[ENGY]<=(real)0.0 )
+   if ( !isfinite(Fluid[DENS])  ||  !isfinite(Fluid[MOMX])  ||  !isfinite(Fluid[MOMY])  ||
+        !isfinite(Fluid[MOMZ])  ||  !isfinite(Fluid[ENGY])  ||  Fluid[DENS] < MinDensTEMP  ||
+        (  ( CheckMinEngyOrPres == CheckMinEngy && Fluid[ENGY] < MinPresTEMP ) ||
+           CPU_GetPressure(Fluid[DENS], Fluid[MOMX], Fluid[MOMY], Fluid[MOMZ], Fluid[ENGY], Gamma_m1, CheckMinPres_No, NULL_REAL)
+           < MinPresTEMP )
+      )
       return true;
    else
       return false;
@@ -308,10 +313,22 @@ bool Unphysical( const real Fluid[] )
 // Description :  Check if any cell in the output array of Fluid solver contains unphysical retult
 //                --> For example, negative density
 //
-// Note        :  1. Define unphysical values in the  function "Unphysical"
-//                2. Currently it is used for MODEL==HYDRO/MHD to check whether the input density is negative
-//                   (and if any variable is -inf, +inf, and nan)
-//                3. But in principle one can define arbitrary criterion to trigger the correction
+// Note        :  1. Define unphysical values in the function "Unphysical"
+//                2. Currently it is used for MODEL==HYDRO/MHD to check if density or pressure is smaller than
+//                   the minimum allowed values (i.e., MIN_DENS and MIN_PRES)
+//                   --> It also checks if any variable is -inf, +inf, and nan
+//                   --> But one can define arbitrary criterion in "Unphysical" to trigger the correction
+//                3. Procedure:
+//                   if ( found_unphysical )
+//                   {
+//                      if ( OPT__CORR_UNPHY ) try to first correct it using 1st-order fluxes
+//                      else                   do nothing
+//
+//                      apply minimum density and pressure
+//
+//                      if ( still_found_unphysical )    print debug messages and abort
+//                      else                             store corrected results to the output array
+//                   }
 //
 // Parameter   :  lv                : Targeted refinement level
 //                NPG               : Number of patch groups to be evaluated
@@ -326,13 +343,13 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
 {
 
 #  if ( MODEL == HYDRO || MODEL == MHD )
-   const real dh        = (real)amr->dh[lv];
-   const real dt_dh     = dt/dh;
-   const int  didx[3]   = { 1, FLU_NXT, FLU_NXT*FLU_NXT };
-   const real Gamma_m1  = GAMMA - (real)1.0;
-#  if ( defined MIN_PRES_DENS  ||  defined MIN_PRES )
-   const real _Gamma_m1 = (real)1.0 / Gamma_m1;
-#  endif
+   const real dh           = (real)amr->dh[lv];
+   const real dt_dh        = dt/dh;
+   const int  didx[3]      = { 1, FLU_NXT, FLU_NXT*FLU_NXT };
+   const real Gamma_m1     = GAMMA - (real)1.0;
+   const real _Gamma_m1    = (real)1.0 / Gamma_m1;
+   const int  CheckMinEngy = 0;
+   const int  CheckMinPres = 1;
 
    const int LocalID[2][2][2] = { 0, 1, 2, 4, 3, 6, 5, 7 };
 
@@ -355,74 +372,89 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
 //       check if the updated values are unphysical
          for (int v=0; v<NCOMP; v++)   Out[v] = h_Flu_Array_F_Out[TID][v][idx_out];
 
-         if ( Unphysical(Out) )
+         if ( Unphysical(Out, Gamma_m1, CheckMinPres) )
          {
-            idx_in = ( (k_out+FLU_GHOST_SIZE)*FLU_NXT + (j_out+FLU_GHOST_SIZE) )*FLU_NXT + (i_out+FLU_GHOST_SIZE);
-
-//          collect nearby input coserved variables
-            for (int v=0; v<NCOMP; v++)
+//          try to correct unphysical results using 1st-order fluxes (which should be more diffusive)
+            if ( OPT__CORR_UNPHY )
             {
-//             here we have assumed that the fluid solver does NOT modify the input fluid array
-//             --> not applicable to RTVD and WAF
-               VarC[v] = h_Flu_Array_F_In[TID][v][idx_in];
+               idx_in = ( (k_out+FLU_GHOST_SIZE)*FLU_NXT + (j_out+FLU_GHOST_SIZE) )*FLU_NXT + (i_out+FLU_GHOST_SIZE);
 
-               for (int d=0; d<3; d++)
+//             collect nearby input coserved variables
+               for (int v=0; v<NCOMP; v++)
                {
-                  VarL[d][v] = h_Flu_Array_F_In[TID][v][ idx_in - didx[d] ];
-                  VarR[d][v] = h_Flu_Array_F_In[TID][v][ idx_in + didx[d] ];
+//                here we have assumed that the fluid solver does NOT modify the input fluid array
+//                --> not applicable to RTVD and WAF
+                  VarC[v] = h_Flu_Array_F_In[TID][v][idx_in];
+
+                  for (int d=0; d<3; d++)
+                  {
+                     VarL[d][v] = h_Flu_Array_F_In[TID][v][ idx_in - didx[d] ];
+                     VarR[d][v] = h_Flu_Array_F_In[TID][v][ idx_in + didx[d] ];
+                  }
                }
-            }
 
-//          invoke Riemann solver to calculate the fluxes
-//          (note that the recalculated flux does NOT include gravity even for UNSPLIT_GRAVITY --> reduce to 1st-order accuracy)
-            switch ( OPT__CORR_UNPHY_SCHEME )
+//             invoke Riemann solver to calculate the fluxes
+//             (note that the recalculated flux does NOT include gravity even for UNSPLIT_GRAVITY --> reduce to 1st-order accuracy)
+               switch ( OPT__CORR_UNPHY_SCHEME )
+               {
+                  case RSOLVER_ROE:
+                     for (int d=0; d<3; d++)
+                     {
+                        CPU_RiemannSolver_Roe( d, FluxL[d], VarL[d], VarC,    GAMMA, MinPresTEMP );
+                        CPU_RiemannSolver_Roe( d, FluxR[d], VarC,    VarR[d], GAMMA, MinPresTEMP );
+                     }
+                     break;
+
+                  case RSOLVER_HLLC:
+                     for (int d=0; d<3; d++)
+                     {
+                        CPU_RiemannSolver_HLLC( d, FluxL[d], VarL[d], VarC,    GAMMA, MinPresTEMP );
+                        CPU_RiemannSolver_HLLC( d, FluxR[d], VarC,    VarR[d], GAMMA, MinPresTEMP );
+                     }
+                     break;
+
+                  case RSOLVER_HLLE:
+                     for (int d=0; d<3; d++)
+                     {
+                        CPU_RiemannSolver_HLLE( d, FluxL[d], VarL[d], VarC,    GAMMA, MinPresTEMP );
+                        CPU_RiemannSolver_HLLE( d, FluxR[d], VarC,    VarR[d], GAMMA, MinPresTEMP );
+                     }
+                     break;
+
+                  default:
+                     Aux_Error( ERROR_INFO, "unnsupported Riemann solver (%d) !!\n", OPT__CORR_UNPHY_SCHEME );
+               }
+
+//             recalculate the first-order solution for a full time-step
+               for (int d=0; d<3; d++)
+               for (int v=0; v<NCOMP; v++)   dF[d][v] = FluxR[d][v] - FluxL[d][v];
+
+               for (int v=0; v<NCOMP; v++)
+                  Update[v] = h_Flu_Array_F_In[TID][v][idx_in] - dt_dh*( dF[0][v] + dF[1][v] + dF[2][v] );
+            } // if ( OPT__CORR_UNPHY )
+
+            else
             {
-               case RSOLVER_ROE:
-                  for (int d=0; d<3; d++)
-                  {
-                     CPU_RiemannSolver_Roe( d, FluxL[d], VarL[d], VarC,    GAMMA );
-                     CPU_RiemannSolver_Roe( d, FluxR[d], VarC,    VarR[d], GAMMA );
-                  }
-                  break;
+//             if OPT__CORR_UNPHY is off, just copy data to Update for checking negative density and pressure in the next step
+               for (int v=0; v<NCOMP; v++)   Update[v] = Out[v];
+            } // if ( OPT__CORR_UNPHY ) ... else ...
 
-               case RSOLVER_HLLC:
-                  for (int d=0; d<3; d++)
-                  {
-                     CPU_RiemannSolver_HLLC( d, FluxL[d], VarL[d], VarC,    GAMMA );
-                     CPU_RiemannSolver_HLLC( d, FluxR[d], VarC,    VarR[d], GAMMA );
-                  }
-                  break;
 
-               case RSOLVER_HLLE:
-                  for (int d=0; d<3; d++)
-                  {
-                     CPU_RiemannSolver_HLLE( d, FluxL[d], VarL[d], VarC,    GAMMA );
-                     CPU_RiemannSolver_HLLE( d, FluxR[d], VarC,    VarR[d], GAMMA );
-                  }
-                  break;
+//          ensure positive density and pressure
+            Update[DENS] = FMAX( Update[DENS], MIN_DENS );
+            Update[ENGY] = CPU_CheckMinPresInEngy( Update[DENS], Update[MOMX], Update[MOMY], Update[MOMZ], Update[ENGY],
+                                                   Gamma_m1, _Gamma_m1, MIN_PRES );
 
-               default:
-                  Aux_Error( ERROR_INFO, "unnsupported Riemann solver (%d) !!\n", OPT__CORR_UNPHY_SCHEME );
-            }
-
-//          recalculate the first-order solution for a full time-step
-            for (int d=0; d<3; d++)
-            for (int v=0; v<NCOMP; v++)   dF[d][v] = FluxR[d][v] - FluxL[d][v];
-
-            for (int v=0; v<NCOMP; v++)
-               Update[v] = h_Flu_Array_F_In[TID][v][idx_in] - dt_dh*( dF[0][v] + dF[1][v] + dF[2][v] );
-
-//          ensure the positive pressure
-#           if ( defined MIN_PRES_DENS  ||  defined MIN_PRES )
-            Update[ENGY] = CPU_PositivePres_In_Engy( Update, Gamma_m1, _Gamma_m1 );
-#           endif
 
 //          check if the newly updated values are still unphysical
-            if ( Unphysical(Update) )
+//          --> note that here we check **energy** instead of pressure since even after calling CPU_CheckMinPresInEngy()
+//              we can still have pressure < MIN_PRES due to round-off errors (when pressure << kinematic energy)
+//          --> it will not crash the code since we always apply MIN_PRES when calculating pressure
+            if ( Unphysical(Update, Gamma_m1, CheckMinEngy) )
             {
 //             output debug information
                const int  PID_Failed      = PID0_List[TID] + LocalID[k_out/PS1][j_out/PS1][i_out/PS1];
-               const bool PositivePres_No = false;
+               const bool CheckMinPres_No = false;
                real In[NCOMP], Out[NCOMP], tmp[NCOMP];
 
                char FileName[100];
@@ -443,22 +475,17 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
                fprintf( File, "(i,j,k) in the input fluid array = (%2d,%2d,%2d)\n", i_out, j_out, k_out );
                fprintf( File, "\n" );
                fprintf( File, "input        = (%14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e)\n",
-                        h_Flu_Array_F_In [TID][DENS][idx_in],
-                        h_Flu_Array_F_In [TID][MOMX][idx_in],
-                        h_Flu_Array_F_In [TID][MOMY][idx_in],
-                        h_Flu_Array_F_In [TID][MOMZ][idx_in],
-                        h_Flu_Array_F_In [TID][ENGY][idx_in],
-                        Hydro_GetPressure( In, Gamma_m1, PositivePres_No ) );
+                        In[DENS], In[MOMX], In[MOMY], In[MOMZ], In[ENGY],
+                        CPU_GetPressure(In[DENS], In[MOMX], In[MOMY], In[MOMZ], In[ENGY],
+                                        Gamma_m1, CheckMinPres_No, NULL_REAL) );
                fprintf( File, "ouptut (old) = (%14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e)\n",
-                        h_Flu_Array_F_Out[TID][DENS][idx_out],
-                        h_Flu_Array_F_Out[TID][MOMX][idx_out],
-                        h_Flu_Array_F_Out[TID][MOMY][idx_out],
-                        h_Flu_Array_F_Out[TID][MOMZ][idx_out],
-                        h_Flu_Array_F_Out[TID][ENGY][idx_out],
-                        Hydro_GetPressure( Out, Gamma_m1, PositivePres_No ) );
+                        Out[DENS], Out[MOMX], Out[MOMY], Out[MOMZ], Out[ENGY],
+                        CPU_GetPressure(Out[DENS], Out[MOMX], Out[MOMY], Out[MOMZ], Out[ENGY],
+                                        Gamma_m1, CheckMinPres_No, NULL_REAL) );
                fprintf( File, "output (new) = (%14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e)\n",
                         Update[DENS], Update[MOMX], Update[MOMY], Update[MOMZ], Update[ENGY],
-                        Hydro_GetPressure( Update, Gamma_m1, PositivePres_No ) );
+                        CPU_GetPressure(Update[DENS], Update[MOMX], Update[MOMY], Update[MOMZ], Update[ENGY],
+                                        Gamma_m1, CheckMinPres_No, NULL_REAL) );
 
 //             output all data in the input fluid array (including ghost zones)
                fprintf( File, "\n===============================================================================================\n" );
@@ -477,7 +504,8 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
                      fprintf( File, " %13.6e", tmp[v] );
                   }
 
-                  fprintf( File, " %13.6e\n", Hydro_GetPressure(tmp, Gamma_m1, PositivePres_No) );
+                  fprintf( File, " %13.6e\n", CPU_GetPressure(tmp[0], tmp[1], tmp[2], tmp[3], tmp[4],
+                                                              Gamma_m1, CheckMinPres_No, NULL_REAL) );
                }
 
                fclose( File );

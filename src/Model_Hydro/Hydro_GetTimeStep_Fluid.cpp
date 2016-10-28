@@ -7,10 +7,6 @@
 
 #if ( MODEL == HYDRO )
 
-#if ( defined MIN_PRES_DENS  ||  defined MIN_PRES )
-extern real CPU_PositivePres( const real Pres_In, const real Dens, const real _Dens );
-#endif
-
 
 
 
@@ -21,9 +17,9 @@ extern real CPU_PositivePres( const real Pres_In, const real Dens, const real _D
 // Note        :  1. Physical coordinates : dTime == dt
 //                   Comoving coordinates : dTime == dt*(Hubble parameter)*(scale factor)^3 == delta(scale factor)
 //                2. time-step is estimated by the stability criterion from the von Neumann stability analysis
-// 
+//
 // Parameter   :  dt       : Time interval to advance solution
-//                dTime    : Time interval to update physical time 
+//                dTime    : Time interval to update physical time
 //                MinDtLv  : Refinement level determining the smallest time-step
 //                MinDtVar : Array to store the variables with the maximum speed (minimum time-step) at each level
 //                dt_dTime : dt/dTime (== 1.0 if COMOVING is off)
@@ -35,7 +31,7 @@ void Hydro_GetTimeStep_Fluid( double &dt, double &dTime, int &MinDtLv, real MinD
 
    real  *MaxCFL   = MinDtInfo_Fluid;  // "MinDtInfo_Fluid" is a global variable
    double dt_local = __FLT_MAX__;      // initialize it as an extremely large number
-   double dt_min, dt_tmp; 
+   double dt_min, dt_tmp;
    real   MinDtVar_AllLv[NLEVEL][NCOMP];
 
 
@@ -55,8 +51,8 @@ void Hydro_GetTimeStep_Fluid( double &dt, double &dTime, int &MinDtLv, real MinD
 
       if ( dt_tmp <= 0.0 )
          Aux_Error( ERROR_INFO, "dt_tmp = %14.7e <= 0 (Rank %d, Lv %d) !!\n", dt_tmp, MPI_Rank, lv );
-      
-      if ( dt_tmp < dt_local )    
+
+      if ( dt_tmp < dt_local )
       {
          dt_local = dt_tmp;
          MinDtLv  = lv;
@@ -81,7 +77,7 @@ void Hydro_GetTimeStep_Fluid( double &dt, double &dTime, int &MinDtLv, real MinD
    double *dt_AllRank                = new double [MPI_NRank];
    int    *MinDtLv_AllRank           = new int    [MPI_NRank];
    real   (*MinDtVar_AllRank)[NCOMP] = new real   [MPI_NRank][NCOMP];
-   
+
    MPI_Gather( &dt_local, 1,     MPI_DOUBLE, dt_AllRank,       1,     MPI_DOUBLE, 0, MPI_COMM_WORLD );
    MPI_Gather( &MinDtLv,  1,     MPI_INT,    MinDtLv_AllRank,  1,     MPI_INT,    0, MPI_COMM_WORLD );
 #  ifdef FLOAT8
@@ -108,7 +104,7 @@ void Hydro_GetTimeStep_Fluid( double &dt, double &dTime, int &MinDtLv, real MinD
    delete [] dt_AllRank;
    delete [] MinDtVar_AllRank;
    delete [] MinDtLv_AllRank;
-#  endif // #ifndef SERIAL 
+#  endif // #ifndef SERIAL
 
 
    dt    = ( Step == 0 ) ? DT__FLUID_INIT*dt_min : DT__FLUID*dt_min;
@@ -123,20 +119,15 @@ void Hydro_GetTimeStep_Fluid( double &dt, double &dTime, int &MinDtLv, real MinD
 // Description :  Evaluate the maximum (fluid velocity + sound speed) for the time-step estimation
 //
 // Note        :  This function is also invoked in "Init_GAMER"
-// 
+//
 // Parameter   :  MaxCFL         : Array to store the maximum speed at each level
 //                MinDtVar_AllLv : Array to store the variables with the maximum speed at each level
 //-------------------------------------------------------------------------------------------------------
 void Hydro_GetMaxCFL( real MaxCFL[], real MinDtVar_AllLv[][NCOMP] )
 {
 
-   const real Gamma_m1 = GAMMA - (real)1.0;
-
-#  if ( defined MIN_PRES_DENS  ||  defined MIN_PRES )
-   const bool PositivePres = true;
-#  else
-   const bool PositivePres = false;
-#  endif
+   const bool CheckMinPres_Yes = true;
+   const real Gamma_m1         = GAMMA - (real)1.0;
 
 #  ifdef OPENMP
    const int NT = OMP_NTHREAD;   // number of OpenMP threads
@@ -182,7 +173,8 @@ void Hydro_GetMaxCFL( real MaxCFL[], real MinDtVar_AllLv[][NCOMP] )
                   Vx   = FABS( Fluid[MOMX] )*_Rho;
                   Vy   = FABS( Fluid[MOMY] )*_Rho;
                   Vz   = FABS( Fluid[MOMZ] )*_Rho;
-                  Pres = Hydro_GetPressure( Fluid, Gamma_m1, PositivePres );
+                  Pres = CPU_GetPressure( Fluid[DENS], Fluid[MOMX], Fluid[MOMY], Fluid[MOMZ], Fluid[ENGY],
+                                          Gamma_m1, CheckMinPres_Yes, MIN_PRES );
                   Cs   = SQRT( GAMMA*Pres*_Rho );
 
 #                 if   ( FLU_SCHEME == RTVD  ||  FLU_SCHEME == CTU  ||  FLU_SCHEME == WAF )
@@ -216,10 +208,10 @@ void Hydro_GetMaxCFL( real MaxCFL[], real MinDtVar_AllLv[][NCOMP] )
                      Aux_Message( stderr, "        Vx %14.7e, Vy %14.7e, Vz %14.7e, Engy %14.7e Pres %14.7e\n",
                                   Vx, Vy, Vz, Fluid[ENGY], Pres );
                      Aux_Message( stderr, "        Rank %d, Lv %d, PID  %d, Coordinates (%20.14e,%20.14e,%20.14e)\n",
-                                  MPI_Rank, lv, PID, amr->patch[0][lv][PID]->EdgeL[0] + (i+0.5)*amr->dh[lv],  
-                                                     amr->patch[0][lv][PID]->EdgeL[1] + (j+0.5)*amr->dh[lv], 
+                                  MPI_Rank, lv, PID, amr->patch[0][lv][PID]->EdgeL[0] + (i+0.5)*amr->dh[lv],
+                                                     amr->patch[0][lv][PID]->EdgeL[1] + (j+0.5)*amr->dh[lv],
                                                      amr->patch[0][lv][PID]->EdgeL[2] + (k+0.5)*amr->dh[lv]  );
-                     Aux_Message( stderr, "        file <%s>, line <%d>, function <%s>\n", __FILE__, __LINE__,  
+                     Aux_Message( stderr, "        file <%s>, line <%d>, function <%s>\n", __FILE__, __LINE__,
                                                                                            __FUNCTION__  );
                      Aux_Message( stderr, "        **********************************************************\n");
                      Aux_Message( stderr, "        ** Usually this error is caused by the negative density **\n");
@@ -230,7 +222,7 @@ void Hydro_GetMaxCFL( real MaxCFL[], real MinDtVar_AllLv[][NCOMP] )
                      Aux_Message( stderr, "        **********************************************************\n");
                      MPI_Exit();
                   }
-   
+
                } // i,j,k
 //          } // if ( amr->patch[0][lv][PID]->son == -1 )
             } // if ( true )
@@ -241,7 +233,7 @@ void Hydro_GetMaxCFL( real MaxCFL[], real MinDtVar_AllLv[][NCOMP] )
 //    compare the maximum CFL evaluated by different OMP threads
       for (int t=0; t<NT; t++)
       {
-         if ( MaxCFL_OMP[t] > MaxCFL[lv] )   
+         if ( MaxCFL_OMP[t] > MaxCFL[lv] )
          {
             MaxCFL[lv] = MaxCFL_OMP[t];
 

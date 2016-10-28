@@ -5,16 +5,12 @@
 #if (  !defined GPU  &&  MODEL == HYDRO  &&  \
        ( FLU_SCHEME == MHM || FLU_SCHEME == MHM_RP || FLU_SCHEME == CTU )  )
 
-#if ( defined MIN_PRES_DENS  ||  defined MIN_PRES )
-extern real CPU_PositivePres_In_Engy( const real ConVar[], const real Gamma_m1, const real _Gamma_m1 );
-#endif
-
 
 
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  CPU_FullStepUpdate
-// Description :  Evaluate the full-step solution 
+// Description :  Evaluate the full-step solution
 //
 // Parameter   :  Input    : Array storing the input initial data
 //                Output   : Array to store the ouptut updated data
@@ -24,27 +20,24 @@ extern real CPU_PositivePres_In_Engy( const real ConVar[], const real Gamma_m1, 
 //                dh       : Grid size
 //                Gamma    : Ratio of specific heats
 //-------------------------------------------------------------------------------------------------------
-void CPU_FullStepUpdate( const real Input[][ FLU_NXT*FLU_NXT*FLU_NXT ], real Output[][ PS2*PS2*PS2 ], 
-                         const real Flux[][3][5], const real dt, const real dh, 
+void CPU_FullStepUpdate( const real Input[][ FLU_NXT*FLU_NXT*FLU_NXT ], real Output[][ PS2*PS2*PS2 ],
+                         const real Flux[][3][5], const real dt, const real dh,
                          const real Gamma )
 {
 
-   const int  dID1[3] = { 1, N_FL_FLUX, N_FL_FLUX*N_FL_FLUX }; 
+   const int  dID1[3] = { 1, N_FL_FLUX, N_FL_FLUX*N_FL_FLUX };
    const real dt_dh   = dt/dh;
 
    int ID1, ID2, ID3;
    real dF[3][5];
 
-#  if ( defined MIN_PRES_DENS  ||  defined MIN_PRES )
    const real  Gamma_m1 = Gamma - (real)1.0;
    const real _Gamma_m1 = (real)1.0 / Gamma_m1;
-   real Temp[5];
-#  endif
 
 
-   for (int k1=0, k2=FLU_GHOST_SIZE;  k1<PS2;  k1++, k2++)  
-   for (int j1=0, j2=FLU_GHOST_SIZE;  j1<PS2;  j1++, j2++)  
-   for (int i1=0, i2=FLU_GHOST_SIZE;  i1<PS2;  i1++, i2++)  
+   for (int k1=0, k2=FLU_GHOST_SIZE;  k1<PS2;  k1++, k2++)
+   for (int j1=0, j2=FLU_GHOST_SIZE;  j1<PS2;  j1++, j2++)
+   for (int i1=0, i2=FLU_GHOST_SIZE;  i1<PS2;  i1++, i2++)
    {
 
       ID1 = (k1*N_FL_FLUX + j1)*N_FL_FLUX + i1;
@@ -57,11 +50,14 @@ void CPU_FullStepUpdate( const real Input[][ FLU_NXT*FLU_NXT*FLU_NXT ], real Out
       for (int v=0; v<5; v++)
          Output[v][ID2] = Input[v][ID3] - dt_dh*( dF[0][v] + dF[1][v] + dF[2][v] );
 
-//    ensure the positive pressure
-#     if ( defined MIN_PRES_DENS  ||  defined MIN_PRES )
-      for (int v=0; v<5; v++)    Temp[v] = Output[v][ID2];
-      Output[4][ID2] = CPU_PositivePres_In_Engy( Temp, Gamma_m1, _Gamma_m1 );
-#     endif
+//    we no longer check negative density and pressure here
+//    --> these checks have been moved to Flu_Close()->CorrectUnphysical()
+      /*
+//    ensure positive density and pressure
+      Output[0][ID2] = FMAX( Output[0][ID2], MinDens );
+      Output[4][ID2] = CPU_CheckMinPresInEngy( Output[0][ID2], Output[1][ID2], Output[2][ID2], Output[3][ID2], Output[4][ID2],
+                                               Gamma_m1, _Gamma_m1, MinPres );
+      */
 
 //    check the negative density
 #     ifdef CHECK_NEGATIVE_IN_FLUID
@@ -78,7 +74,7 @@ void CPU_FullStepUpdate( const real Input[][ FLU_NXT*FLU_NXT*FLU_NXT ], real Out
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  CPU_StoreFlux
-// Description :  Store the inter-patch fluxes for the AMR fix-up operation 
+// Description :  Store the inter-patch fluxes for the AMR fix-up operation
 //
 // Parameter   :  Output   : Array to store the inter-patch fluxes
 //                FC_Flux  : Array storing the face-centered fluxes
@@ -116,4 +112,5 @@ void CPU_StoreFlux( real Flux_Array[][5][ PS2*PS2 ], const real FC_Flux[][3][5] 
 
 
 
-#endif // #if ( FLU_SCHEME == MHM  ||  FLU_SCHEME == MHM_RP  ||  FLU_SCHEME == CTU ) 
+#endif // #if ( FLU_SCHEME == MHM  ||  FLU_SCHEME == MHM_RP  ||  FLU_SCHEME == CTU )
+

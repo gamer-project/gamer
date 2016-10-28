@@ -190,16 +190,12 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
    const int    GhostSize_Padded = GhostSize + (GhostSize&1);
 
 #  if   ( MODEL == HYDRO )
-#  if ( defined MIN_PRES_DENS  ||  defined MIN_PRES )
-   const bool PositivePres = true;
-#  else
-   const bool PositivePres = false;
-#  endif
-   const real Gamma_m1     = GAMMA - (real)1.0;
-   const bool PrepVx       = ( TVar & _VELX ) ? true : false;
-   const bool PrepVy       = ( TVar & _VELY ) ? true : false;
-   const bool PrepVz       = ( TVar & _VELZ ) ? true : false;
-   const bool PrepPres     = ( TVar & _PRES ) ? true : false;
+   const bool CheckMinPres_Yes = true;
+   const real Gamma_m1         = GAMMA - (real)1.0;
+   const bool PrepVx           = ( TVar & _VELX ) ? true : false;
+   const bool PrepVy           = ( TVar & _VELY ) ? true : false;
+   const bool PrepVz           = ( TVar & _VELZ ) ? true : false;
+   const bool PrepPres         = ( TVar & _PRES ) ? true : false;
 
 #  elif ( MODEL == MHD   )
 #  warning : WAIT MHD !!
@@ -782,14 +778,17 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
 
                   for (int v=0; v<NCOMP; v++)   Fluid[v] = amr->patch[FluSg][lv][PID]->fluid[v][k][j][i];
 
-                  Array_Ptr[Idx1] = Hydro_GetPressure( Fluid, Gamma_m1, PositivePres );
+                  Array_Ptr[Idx1] = CPU_GetPressure( Fluid[DENS], Fluid[MOMX], Fluid[MOMY], Fluid[MOMZ], Fluid[ENGY],
+                                                     Gamma_m1, CheckMinPres_Yes, MIN_PRES );
 
                   if ( FluIntTime ) // temporal interpolation
                   {
                      for (int v=0; v<NCOMP; v++)   Fluid[v] = amr->patch[FluSg_IntT][lv][PID]->fluid[v][k][j][i];
 
                      Array_Ptr[Idx1] =   FluWeighting     *Array_Ptr[Idx1]
-                                       + FluWeighting_IntT*Hydro_GetPressure( Fluid, Gamma_m1, PositivePres );
+                                       + FluWeighting_IntT*CPU_GetPressure( Fluid[DENS], Fluid[MOMX], Fluid[MOMY],
+                                                                            Fluid[MOMZ], Fluid[ENGY],
+                                                                            Gamma_m1, CheckMinPres_Yes, MIN_PRES );
                   }
 
                   Idx1 ++;
@@ -955,14 +954,17 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
 
                         for (int v=0; v<NCOMP; v++)   Fluid[v] = amr->patch[FluSg][lv][SibPID]->fluid[v][K2][J2][I2];
 
-                        Array_Ptr[Idx1] = Hydro_GetPressure( Fluid, Gamma_m1, PositivePres );
+                        Array_Ptr[Idx1] = CPU_GetPressure( Fluid[DENS], Fluid[MOMX], Fluid[MOMY], Fluid[MOMZ], Fluid[ENGY],
+                                                           Gamma_m1, CheckMinPres_Yes, MIN_PRES );
 
                         if ( FluIntTime ) // temporal interpolation
                         {
                            for (int v=0; v<NCOMP; v++)   Fluid[v] = amr->patch[FluSg_IntT][lv][SibPID]->fluid[v][K2][J2][I2];
 
                            Array_Ptr[Idx1] =   FluWeighting     *Array_Ptr[Idx1]
-                                             + FluWeighting_IntT*Hydro_GetPressure( Fluid, Gamma_m1, PositivePres );
+                                             + FluWeighting_IntT*CPU_GetPressure( Fluid[DENS], Fluid[MOMX], Fluid[MOMY],
+                                                                                  Fluid[MOMZ], Fluid[ENGY],
+                                                                                  Gamma_m1, CheckMinPres_Yes, MIN_PRES );
                            Idx1 ++;
                         }
                      }}}

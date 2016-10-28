@@ -24,8 +24,8 @@ void Hydro_Aux_Check_Negative( const int lv, const int Mode, const char *comment
    if ( Mode < 1  ||  Mode > 3 )    Aux_Error( ERROR_INFO, "incorrect parameter %s = %d !!\n", "Mode", Mode );
 
 
-   const real Gamma_m1       = GAMMA - (real)1.0;
-   const bool NoPositivePres = false;
+   const real Gamma_m1        = GAMMA - (real)1.0;
+   const bool CheckMinPres_No = false;
 
    int  Pass = true;
    real Rho, Pres, Fluid[NCOMP];
@@ -42,7 +42,8 @@ void Hydro_Aux_Check_Negative( const int lv, const int Mode, const char *comment
             for (int v=0; v<NCOMP; v++)   Fluid[v] = amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[v][k][j][i];
 
             Rho  = Fluid[DENS];
-            Pres = Hydro_GetPressure( Fluid, Gamma_m1, NoPositivePres );
+            Pres = CPU_GetPressure( Fluid[DENS], Fluid[MOMX], Fluid[MOMY], Fluid[MOMZ], Fluid[ENGY],
+                                    Gamma_m1, CheckMinPres_No, MIN_PRES );
          
             if ( Mode == 1  ||  Mode == 3 )
             {

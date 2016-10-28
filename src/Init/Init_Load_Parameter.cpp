@@ -459,13 +459,13 @@ void Init_Load_Parameter()
    getline( &input_line, &len, File );
 #  if ( MODEL == HYDRO  ||  MODEL == MHD  ||  MODEL == ELBDM )
    sscanf( input_line, "%lf%s",  &temp_double,              string );
-   MinDens = (real)temp_double;
+   MinDensTEMP = (real)temp_double;
 #  endif
 
    getline( &input_line, &len, File );
 #  if ( MODEL == HYDRO  ||  MODEL == MHD )
    sscanf( input_line, "%lf%s",  &temp_double,              string );
-   MinPres = (real)temp_double;
+   MinPresTEMP = (real)temp_double;
 #  endif
 
    getline( &input_line, &len, File );
