@@ -11,12 +11,12 @@
 // Description :  Check if there is any cell with negative density or pressure
 //
 // Parameter   :  lv       : Targeted refinement level
-//                Mode     : 1 : Check negative density 
-//                           2 : Check negative pressure 
+//                Mode     : 1 : Check negative density
+//                           2 : Check negative pressure
 //                           3 : Both
 //                comment  : You can put the location where this function is invoked in this string
 //-------------------------------------------------------------------------------------------------------
-void Hydro_Aux_Check_Negative( const int lv, const int Mode, const char *comment ) 
+void Hydro_Aux_Check_Negative( const int lv, const int Mode, const char *comment )
 {
 
 // check
@@ -43,46 +43,46 @@ void Hydro_Aux_Check_Negative( const int lv, const int Mode, const char *comment
 
             Rho  = Fluid[DENS];
             Pres = CPU_GetPressure( Fluid[DENS], Fluid[MOMX], Fluid[MOMY], Fluid[MOMZ], Fluid[ENGY],
-                                    Gamma_m1, CheckMinPres_No, MIN_PRES );
-         
+                                    Gamma_m1, CheckMinPres_No, NULL_REAL );
+
             if ( Mode == 1  ||  Mode == 3 )
             {
-               if ( Rho <= 0.0 ) 
+               if ( Rho <= 0.0 )
                {
                   if ( Pass )
                   {
                      Aux_Message( stderr, "\"%s\" : <%s> FAILED at level %2d, Time = %13.7e, Step = %ld !!\n",
                                   comment, __FUNCTION__, lv, Time[lv], Step );
-                     Aux_Message( stderr, "%4s\t%7s\t\t%19s\t%10s\t%14s\t%14s\n", 
+                     Aux_Message( stderr, "%4s\t%7s\t\t%19s\t%10s\t%14s\t%14s\n",
                                   "Rank", "PID", "Patch Corner", "Grid ID", "Density", "Pressure" );
 
                      Pass = false;
                   }
 
                   Aux_Message( stderr, "%4d\t%7d\t\t(%10d,%10d,%10d)\t(%2d,%2d,%2d)\t%14.7e\t%14.7e\n",
-                               MPI_Rank, PID, amr->patch[0][lv][PID]->corner[0], 
-                                              amr->patch[0][lv][PID]->corner[1], 
+                               MPI_Rank, PID, amr->patch[0][lv][PID]->corner[0],
+                                              amr->patch[0][lv][PID]->corner[1],
                                               amr->patch[0][lv][PID]->corner[2], i, j, k, Rho, Pres );
                }
             } // if ( Mode == 1  ||  Mode == 3 )
 
             if ( Mode == 2  ||  Mode == 3 )
             {
-               if ( Pres <= 0.0 ) 
+               if ( Pres <= 0.0 )
                {
                   if ( Pass )
                   {
                      Aux_Message( stderr, "\"%s\" : <%s> FAILED at level %2d, Time = %13.7e, Step = %ld !!\n",
                                   comment, __FUNCTION__, lv, Time[lv], Step );
-                     Aux_Message( stderr, "%4s\t%7s\t\t%19s\t%10s\t%14s\t%14s\n", 
+                     Aux_Message( stderr, "%4s\t%7s\t\t%19s\t%10s\t%14s\t%14s\n",
                                   "Rank", "PID", "Patch Corner", "Grid ID", "Density", "Pressure" );
 
                      Pass = false;
                   }
 
                   Aux_Message( stderr, "%4d\t%7d\t\t(%10d,%10d,%10d)\t(%2d,%2d,%2d)\t%14.7e\t%14.7e\n",
-                               MPI_Rank, PID, amr->patch[0][lv][PID]->corner[0], 
-                                              amr->patch[0][lv][PID]->corner[1], 
+                               MPI_Rank, PID, amr->patch[0][lv][PID]->corner[0],
+                                              amr->patch[0][lv][PID]->corner[1],
                                               amr->patch[0][lv][PID]->corner[2], i, j, k, Rho, Pres );
                }
             } // if ( Mode == 2  ||  Mode == 3 )
@@ -99,8 +99,8 @@ void Hydro_Aux_Check_Negative( const int lv, const int Mode, const char *comment
 
    if ( Pass )
    {
-      if ( MPI_Rank == 0 )    
-         Aux_Message( stdout, "\"%s\" : <%s> PASSED at level %2d, Time = %13.7e, Step = %ld\n", 
+      if ( MPI_Rank == 0 )
+         Aux_Message( stdout, "\"%s\" : <%s> PASSED at level %2d, Time = %13.7e, Step = %ld\n",
                       comment, __FUNCTION__, lv, Time[lv], Step );
    }
 

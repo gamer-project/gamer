@@ -1581,10 +1581,10 @@ void Check_InputPara( const char *FileName )
    LoadField( "Opt__OverlapMPI",         &RS.Opt__OverlapMPI,         SID, TID, NonFatal, &RT.Opt__OverlapMPI,          1, NonFatal );
    LoadField( "Opt__ResetFluid",         &RS.Opt__ResetFluid,         SID, TID, NonFatal, &RT.Opt__ResetFluid,          1, NonFatal );
    LoadField( "Opt__CorrUnphy",          &RS.Opt__CorrUnphy,          SID, TID, NonFatal, &RT.Opt__CorrUnphy,           1, NonFatal );
-#  if (  MODEL == HYDRO  ||  MODEL == MHD  ||  ( MODEL == ELBDM && defined CONSERVE_MASS )  )
+#  if ( MODEL == HYDRO  ||  MODEL == MHD  ||  MODEL == ELBDM )
    LoadField( "MinDens",                 &RS.MinDens,                 SID, TID, NonFatal, &RT.MinDens,                  1, NonFatal );
 #  endif
-#  if (  MODEL == HYDRO  ||  MODEL == MHD  )
+#  if ( MODEL == HYDRO  ||  MODEL == MHD )
    LoadField( "MinPres",                 &RS.MinPres,                 SID, TID, NonFatal, &RT.MinPres,                  1, NonFatal );
 #  endif
 

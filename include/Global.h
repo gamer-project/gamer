@@ -91,13 +91,10 @@ extern double     MIN_DENS, MIN_PRES;
 #elif ( MODEL == ELBDM )
 extern double     DT__PHASE, FlagTable_EngyDensity[NLEVEL-1][2];
 extern bool       OPT__FLAG_ENGY_DENSITY, OPT__INT_PHASE, ELBDM_TAYLOR3_AUTO;
-extern double     ELBDM_TAYLOR3_COEFF, ELBDM_MASS, ELBDM_PLANCK_CONST, ELBDM_ETA;
+extern double     ELBDM_TAYLOR3_COEFF, ELBDM_MASS, ELBDM_PLANCK_CONST, ELBDM_ETA, MIN_DENS;
 extern real       MinDtInfo_Phase[NLEVEL];            // maximum time derivative of phase at each level
 #ifdef QUARTIC_SELF_INTERACTION
 extern double     ELBDM_LAMBDA;
-#endif
-#ifdef CONSERVE_MASS
-extern double     MIN_DENS;
 #endif
 
 #else

@@ -86,13 +86,10 @@ double         DT__PHASE, FlagTable_EngyDensity[NLEVEL-1][2];
 bool           OPT__FLAG_ENGY_DENSITY, OPT__INT_PHASE;
 bool           ELBDM_TAYLOR3_AUTO;
 double         ELBDM_TAYLOR3_COEFF;
-double         ELBDM_MASS, ELBDM_PLANCK_CONST, ELBDM_ETA;
+double         ELBDM_MASS, ELBDM_PLANCK_CONST, ELBDM_ETA, MIN_DENS;
 real           MinDtInfo_Phase[NLEVEL];
 #ifdef QUARTIC_SELF_INTERACTION
 double         ELBDM_LAMBDA;
-#endif
-#ifdef CONSERVE_MASS
-double         MIN_DENS;
 #endif
 
 #else

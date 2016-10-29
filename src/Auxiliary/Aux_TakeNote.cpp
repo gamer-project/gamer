@@ -733,7 +733,7 @@ void Aux_TakeNote()
       fprintf( Note, "OPT__OVERLAP_MPI          %d\n",      OPT__OVERLAP_MPI        );
       fprintf( Note, "OPT__RESET_FLUID          %d\n",      OPT__RESET_FLUID        );
       fprintf( Note, "OPT__CORR_UNPHY           %d\n",      OPT__CORR_UNPHY         );
-#     if (  MODEL == HYDRO  ||  MODEL == MHD  ||  ( MODEL == ELBDM && defined CONSERVE_MASS )  )
+#     if ( MODEL == HYDRO  ||  MODEL == MHD  ||  MODEL == ELBDM )
       fprintf( Note, "MIN_DENS                  %13.7e\n",  MIN_DENS                );
 #     endif
 #     if ( MODEL == HYDRO  ||  MODEL == MHD )

@@ -12,4 +12,3 @@ cp Input__Parameter.ExtAcc             ../../../bin/run/Input__Parameter
 cp Flu_ResetByUser.cpp                 ../../../src/Fluid/
 cp Init_ExternalAcc.cpp                ../../../src/SelfGravity/
 cp CUPOT_ExternalAcc.1.1.0.cu          ../../../src/SelfGravity/GPU_Gravity/
-cp CUFLU.h                             ../../../include/

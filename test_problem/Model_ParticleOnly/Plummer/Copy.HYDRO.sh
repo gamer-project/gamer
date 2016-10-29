@@ -10,4 +10,3 @@ cp Input__TestProb                     ../../../bin/run/
 
 cp Makefile.HYDRO                      ../../../src/Makefile
 cp Input__Parameter.HYDRO              ../../../bin/run/Input__Parameter
-cp CUFLU.h                             ../../../include/

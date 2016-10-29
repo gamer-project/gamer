@@ -875,7 +875,6 @@ void Aux_Check_Parameter()
    if ( OPT__BC_FLU[f] == BC_FLU_REFLECTING  ||  OPT__BC_FLU[f] == BC_FLU_OUTFLOW )
       Aux_Error( ERROR_INFO, "unsupported option \"OPT__BC_FLU[%d] = %d\" [1/4] !!\n", f, OPT__BC_FLU[f] );
 
-#  ifdef CONSERVE_MASS
    if      ( MIN_DENS < 0.0 )
       Aux_Error( ERROR_INFO, "MIN_DENS = %14.7e < 0.0 !!\n", MIN_DENS );
 
@@ -884,7 +883,6 @@ void Aux_Check_Parameter()
 
    else
       Aux_Message( stderr, "WARNING : MIN_DENS (%13.7e) is on --> please ensure that this value is reasonable !!\n", MIN_DENS );
-#  endif
 
 
 // warnings

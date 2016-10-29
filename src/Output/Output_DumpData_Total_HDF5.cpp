@@ -1773,10 +1773,10 @@ void FillIn_InputPara( InputPara_t &InputPara )
    InputPara.Opt__OverlapMPI         = OPT__OVERLAP_MPI;
    InputPara.Opt__ResetFluid         = OPT__RESET_FLUID;
    InputPara.Opt__CorrUnphy          = OPT__CORR_UNPHY;
-#  if (  MODEL == HYDRO  ||  MODEL == MHD  ||  ( MODEL == ELBDM && defined CONSERVE_MASS )  )
+#  if ( MODEL == HYDRO  ||  MODEL == MHD  ||  MODEL == ELBDM )
    InputPara.MinDens                 = MIN_DENS;
 #  endif
-#  if (  MODEL == HYDRO  ||  MODEL == MHD  )
+#  if ( MODEL == HYDRO  ||  MODEL == MHD )
    InputPara.MinPres                 = MIN_PRES;
 #  endif
 
@@ -2333,10 +2333,10 @@ void GetCompound_InputPara( hid_t &H5_TypeID )
    H5Tinsert( H5_TypeID, "Opt__OverlapMPI",         HOFFSET(InputPara_t,Opt__OverlapMPI        ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "Opt__ResetFluid",         HOFFSET(InputPara_t,Opt__ResetFluid        ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "Opt__CorrUnphy",          HOFFSET(InputPara_t,Opt__CorrUnphy         ), H5T_NATIVE_INT     );
-#  if (  MODEL == HYDRO  ||  MODEL == MHD  ||  ( MODEL == ELBDM && defined CONSERVE_MASS )  )
+#  if ( MODEL == HYDRO  ||  MODEL == MHD  ||  MODEL == ELBDM )
    H5Tinsert( H5_TypeID, "MinDens",                 HOFFSET(InputPara_t,MinDens                ), H5T_NATIVE_DOUBLE  );
 #  endif
-#  if (  MODEL == HYDRO  ||  MODEL == MHD  )
+#  if ( MODEL == HYDRO  ||  MODEL == MHD )
    H5Tinsert( H5_TypeID, "MinPres",                 HOFFSET(InputPara_t,MinPres                ), H5T_NATIVE_DOUBLE  );
 #  endif
 

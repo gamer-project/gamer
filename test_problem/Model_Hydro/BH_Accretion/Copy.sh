@@ -8,7 +8,6 @@ cp Flu_*                               ../../../src/Fluid/
 cp Flag_UserCriteria.cpp               ../../../src/Refine/
 cp End_*                               ../../../src/Init/
 cp Aux_RecordUser.cpp                  ../../../src/Auxiliary/
-cp CUFLU.h                             ../../../include/
 cp Makefile                            ../../../src/
 cp Input__*                            ../../../bin/run/
 cp Table_*                             ../../../bin/run/

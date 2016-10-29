@@ -128,7 +128,7 @@ void CPU_Con2Flux( const int XYZ, real Flux[], const real Input[], const real Ga
 
    CPU_Rotate3D( Var, XYZ, true );
 
-   Pres = CPU_GetPressure( Input[0], Input[1], Input[2], Input[3], Input[4], Gamma_m1, CheckMinPres_Yes, MinPres );
+   Pres = CPU_GetPressure( Var[0], Var[1], Var[2], Var[3], Var[4], Gamma_m1, CheckMinPres_Yes, MinPres );
    Vx   = Var[1] / Var[0];
 
    Flux[0] = Var[1];
@@ -145,7 +145,7 @@ void CPU_Con2Flux( const int XYZ, real Flux[], const real Input[], const real Ga
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  CPU_CheckMinPres
-// Description :  Check if the input pressure is great than the minimum allowed threshold 
+// Description :  Check if the input pressure is great than the minimum allowed threshold
 //
 // Note        :  1. This function is used to correct unphysical (usually negative) pressure caused by
 //                   numerical errors

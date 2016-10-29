@@ -69,7 +69,10 @@ struct FluVar { real Rho, Px, Py, Pz, Egy; };
 // check the non-physical negative values (e.g., negative density) inside the fluid solver
 #ifdef GAMER_DEBUG
 #  define CHECK_NEGATIVE_IN_FLUID
-//#  include "stdio.h"
+#endif
+
+#ifdef CHECK_NEGATIVE_IN_FLUID
+#  include "stdio.h"
 #endif
 
 
@@ -82,7 +85,7 @@ struct FluVar { real Rho, Px, Py, Pz, Egy; };
 
 
 // verify that the density and pressure in the intermediate states of Roe's Riemann solver are positive.
-// --> if either the density of pressure is negative, we switch to other Riemann solvers (EXACT/HLLE/HLLC)
+// --> if either is negative, we switch to other Riemann solvers (EXACT/HLLE/HLLC)
 #if (  ( FLU_SCHEME == MHM || FLU_SCHEME == MHM_RP || FLU_SCHEME == CTU )  &&  RSOLVER == ROE  )
 //#  define CHECK_INTERMEDIATE    HLLC
 #  define CHECK_INTERMEDIATE    HLLE

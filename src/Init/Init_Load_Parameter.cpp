@@ -456,7 +456,7 @@ void Init_Load_Parameter()
    OPT__CORR_UNPHY = (bool)temp_int;
 
    getline( &input_line, &len, File );
-#  if (  MODEL == HYDRO  ||  MODEL == MHD  ||  ( MODEL == ELBDM && defined CONSERVE_MASS )  )
+#  if ( MODEL == HYDRO  ||  MODEL == MHD  ||  MODEL == ELBDM )
    sscanf( input_line, "%lf%s",  &MIN_DENS,                 string );
 #  endif
 

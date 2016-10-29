@@ -364,10 +364,10 @@ void Solver( const Solver_t TSolver, const int lv, const double TimeNew, const d
    const bool   Flu_XYZ                 = 1 - ( AdvanceCounter[lv]%2 );    // forward/backward sweep
 #  endif
 
-#  if (  MODEL != HYDRO  &&  MODEL != MHD  &&  ( MODEL != ELBDM || !defined CONSERVE_MASS )  )
+#  if ( MODEL != HYDRO  &&  MODEL != MHD  &&  MODEL != ELBDM )
    const real   MIN_DENS                = NULL_REAL;
 #  endif
-#  if (  MODEL != HYDRO  &&  MODEL != MHD  )
+#  if ( MODEL != HYDRO  &&  MODEL != MHD )
    const real   MIN_PRES                = NULL_REAL;
 #  endif
 

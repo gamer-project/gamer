@@ -390,10 +390,10 @@ struct InputPara_t
    int    Opt__OverlapMPI;
    int    Opt__ResetFluid;
    int    Opt__CorrUnphy;
-#  if (  MODEL == HYDRO  ||  MODEL == MHD  ||  ( MODEL == ELBDM && defined CONSERVE_MASS )  )
+#  if ( MODEL == HYDRO  ||  MODEL == MHD  ||  MODEL == ELBDM )
    double MinDens;
 #  endif
-#  if (  MODEL == HYDRO  ||  MODEL == MHD  )
+#  if ( MODEL == HYDRO  ||  MODEL == MHD )
    double MinPres;
 #  endif
 

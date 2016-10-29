@@ -1,9 +1,6 @@
 #include "Copyright.h"
 #include "Macro.h"
 #include "CUPOT.h"
-#ifdef GAMER_DEBUG
-#include <stdio.h>
-#endif
 
 #if ( defined GRAVITY  &&  defined GPU  &&  POT_SCHEME == MG )
 

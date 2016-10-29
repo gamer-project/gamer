@@ -6,10 +6,12 @@ static void StoreFlux( const int lv, const real Flux_Array[][9][NFLUX][4*PATCH_S
                        const int NPG, const int *PID0_List );
 static void CorrectFlux( const int lv, const real Flux_Array[][9][NFLUX][4*PATCH_SIZE*PATCH_SIZE],
                          const int NPG, const int *PID0_List );
+#if ( MODEL == HYDRO  ||  MODEL == MHD )
 static bool Unphysical( const real Fluid[], const real Gamma_m1, const int CheckMinEngyOrPres );
 static void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
                                const real h_Flu_Array_F_In[][FLU_NIN][FLU_NXT*FLU_NXT*FLU_NXT],
                                real h_Flu_Array_F_Out[][FLU_NOUT][8*PATCH_SIZE*PATCH_SIZE*PATCH_SIZE], const real dt );
+#endif
 static int  Table_01( const int lv, const int PID, const int SibID );
 
 extern void CPU_RiemannSolver_Roe ( const int XYZ, real Flux_Out[], const real L_In[], const real R_In[],
@@ -56,8 +58,10 @@ void Flu_Close( const int lv, const int SaveSg, const real h_Flux_Array[][9][NFL
    if ( OPT__FIXUP_FLUX  &&  lv != 0 )    CorrectFlux( lv, h_Flux_Array, NPG, PID0_List );
 
 
-// try to correct the unphysical results in h_Flu_Array_F_Out (e.g., negative density in HYDRO/MHD)
+// try to correct the unphysical results in h_Flu_Array_F_Out (e.g., negative density)
+#  if ( MODEL == HYDRO  ||  MODEL == MHD )
    CorrectUnphysical( lv, NPG, PID0_List, h_Flu_Array_F_In, h_Flu_Array_F_Out, dt );
+#  endif
 
 
 // copy the updated data from the array "h_Flu_Array_F_Out" to each patch pointer
@@ -267,6 +271,7 @@ void CorrectFlux( const int lv, const real h_Flux_Array[][9][NFLUX][4*PATCH_SIZE
 
 
 
+#if ( MODEL == HYDRO  ||  MODEL == MHD )
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Unphysical
 // Description :  Check whether the input variables are unphysical
@@ -289,7 +294,6 @@ bool Unphysical( const real Fluid[], const real Gamma_m1, const int CheckMinEngy
    const bool CheckMinPres_No = false;
    const int  CheckMinEngy    = 0;
 
-#  if ( MODEL == HYDRO || MODEL == MHD )
    if ( !isfinite(Fluid[DENS])  ||  !isfinite(Fluid[MOMX])  ||  !isfinite(Fluid[MOMY])  ||
         !isfinite(Fluid[MOMZ])  ||  !isfinite(Fluid[ENGY])  ||  Fluid[DENS] < MIN_DENS  ||
         (  ( CheckMinEngyOrPres == CheckMinEngy && Fluid[ENGY] < MIN_PRES ) ||
@@ -299,11 +303,6 @@ bool Unphysical( const real Fluid[], const real Gamma_m1, const int CheckMinEngy
       return true;
    else
       return false;
-
-#  else
-
-   return false;
-#  endif
 
 } // FUNCTION : Unphysical
 
@@ -315,7 +314,7 @@ bool Unphysical( const real Fluid[], const real Gamma_m1, const int CheckMinEngy
 //                --> For example, negative density
 //
 // Note        :  1. Define unphysical values in the function "Unphysical"
-//                2. Currently it is used for MODEL==HYDRO/MHD to check if density or pressure is smaller than
+//                2. Currently it is only used for MODEL==HYDRO/MHD to check if density or pressure is smaller than
 //                   the minimum allowed values (i.e., MIN_DENS and MIN_PRES)
 //                   --> It also checks if any variable is -inf, +inf, and nan
 //                   --> But one can define arbitrary criteria in "Unphysical" to trigger the correction
@@ -343,7 +342,6 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
                         real h_Flu_Array_F_Out[][FLU_NOUT][8*PATCH_SIZE*PATCH_SIZE*PATCH_SIZE], const real dt )
 {
 
-#  if ( MODEL == HYDRO || MODEL == MHD )
    const real dh           = (real)amr->dh[lv];
    const real dt_dh        = dt/dh;
    const int  didx[3]      = { 1, FLU_NXT, FLU_NXT*FLU_NXT };
@@ -450,13 +448,13 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
 //          check if the newly updated values are still unphysical
 //          --> note that here we check **energy** instead of pressure since even after calling CPU_CheckMinPresInEngy()
 //              we can still have pressure < MIN_PRES due to round-off errors (when pressure << kinematic energy)
-//          --> it will not crash the code since we always apply MIN_PRES when calculating pressure
+//              --> it will not crash the code since we always apply MIN_PRES when calculating pressure
             if ( Unphysical(Update, Gamma_m1, CheckMinEngy) )
             {
 //             output debug information
                const int  PID_Failed      = PID0_List[TID] + LocalID[k_out/PS1][j_out/PS1][i_out/PS1];
                const bool CheckMinPres_No = false;
-               real In[NCOMP], Out[NCOMP], tmp[NCOMP];
+               real In[NCOMP], tmp[NCOMP];
 
                char FileName[100];
                sprintf( FileName, "FailedPatchGroup_r%03d_lv%02d_PID0-%05d", MPI_Rank, lv, PID0_List[TID] );
@@ -464,11 +462,7 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
 //             use "a" instead of "w" since there may be more than one failed cell in a given patch group
                FILE *File = fopen( FileName, "a" );
 
-               for (int v=0; v<NCOMP; v++)
-               {
-                  In [v] = h_Flu_Array_F_In [TID][v][idx_in ];
-                  Out[v] = h_Flu_Array_F_Out[TID][v][idx_out];
-               }
+               for (int v=0; v<NCOMP; v++)   In[v] = h_Flu_Array_F_In[TID][v][idx_in];
 
 //             output information about the failed cell
                fprintf( File, "PID                              = %5d\n", PID_Failed );
@@ -525,7 +519,7 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
 
             else
             {
-//             store the update solution
+//             store the corrected solution
                for (int v=0; v<NCOMP; v++)   h_Flu_Array_F_Out[TID][v][idx_out] = Update[v];
 
 //             record the number of corrected cells
@@ -541,9 +535,9 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
                  MPI_Rank, lv, Time[lv], Step, AdvanceCounter[lv] );
 
    NCorrUnphy[lv] += NCorrThisTime;
-#  endif // HYDRO/MHD
 
 } // FUNCTION : CorrectUnphysical
+#endif // #if ( MODEL == HYDRO  ||  MODEL == MHD )
 
 
 

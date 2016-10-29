@@ -6,11 +6,11 @@
 
 
 
-#define POT_NXT_F    ( PATCH_SIZE+2*POT_GHOST_SIZE        )  
+#define POT_NXT_F    ( PATCH_SIZE+2*POT_GHOST_SIZE        )
 #define POT_NTHREAD  ( RHO_NXT*RHO_NXT*POT_BLOCK_SIZE_Z/2 )
 #define POT_USELESS  ( POT_GHOST_SIZE%2                   )
 #define POT_USELESS2 ( POT_USELESS^(GRA_GHOST_SIZE&1)     )
-#define POT_NXT_INT  ( (POT_NXT-2)*2                      )    
+#define POT_NXT_INT  ( (POT_NXT-2)*2                      )
 #define ip           ( PotCen + Disp15                    )
 #define im           ( PotCen + Disp14                    )
 #define jp           ( PotCen + POT_NXT_F/2               )
@@ -32,8 +32,8 @@
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  CUPOT_PoissonSolver_SOR_16to18cube 
-// Description :  GPU Poisson solver using the SOR scheme 
+// Function    :  CUPOT_PoissonSolver_SOR_16to18cube
+// Description :  GPU Poisson solver using the SOR scheme
 //
 // Note        :  a. Work for POT_GHOST_SIZE = 4, 5 <--> POT_NXT_F = 16, 18
 //                b. Prefix "g" for pointers pointing to the "Global" memory space
@@ -42,8 +42,8 @@
 //                   --> unroll loops manually ...
 //                d. Reference : Numerical Recipes, Chapter 20.5
 //
-// Parameter   :  g_Rho_Array       : Global memory array to store the input density 
-//                g_Pot_Array_In    : Global memory array storing the input "coarse-grid" potential for 
+// Parameter   :  g_Rho_Array       : Global memory array to store the input density
+//                g_Pot_Array_In    : Global memory array storing the input "coarse-grid" potential for
 //                                    interpolation
 //                g_Pot_Array_Out   : Global memory array to store the output potential
 //                Min_Iter          : Minimum # of iterations for SOR
@@ -52,19 +52,19 @@
 //                Const             : (Coefficient in front of the RHS in the Poisson eq.) / dh^2
 //                IntScheme         : Interpolation scheme for potential
 //                                    --> currently supported schemes include
-//                                        INT_CQUAD : conservative quadratic interpolation 
-//                                        INT_QUAD  : quadratic interpolation 
+//                                        INT_CQUAD : conservative quadratic interpolation
+//                                        INT_QUAD  : quadratic interpolation
 //---------------------------------------------------------------------------------------------------
-__global__ void CUPOT_PoissonSolver_SOR_16to18cube( const real g_Rho_Array    [][ RHO_NXT*RHO_NXT*RHO_NXT ], 
-                                                    const real g_Pot_Array_In [][ POT_NXT*POT_NXT*POT_NXT ], 
+__global__ void CUPOT_PoissonSolver_SOR_16to18cube( const real g_Rho_Array    [][ RHO_NXT*RHO_NXT*RHO_NXT ],
+                                                    const real g_Pot_Array_In [][ POT_NXT*POT_NXT*POT_NXT ],
                                                           real g_Pot_Array_Out[][ GRA_NXT*GRA_NXT*GRA_NXT ],
-                                                    const int Min_Iter, const int Max_Iter, const real Omega_6, 
+                                                    const int Min_Iter, const int Max_Iter, const real Omega_6,
                                                     const real Const, const IntScheme_t IntScheme )
 {
 
    const uint bx      = blockIdx.x;
-   const uint tx      = threadIdx.x; 
-   const uint ty      = threadIdx.y; 
+   const uint tx      = threadIdx.x;
+   const uint ty      = threadIdx.y;
    const uint ID0     = ty*blockDim.x + tx;                    // the 1-D index of thread
    const uint Disp1   = ty&1;                                  // ty = (odd,even) <--> Disp1  = ( 1, 0)
    const uint Disp2   = Disp1^1;                               // ty = (odd,even) <--> Disp2  = ( 0, 1)
@@ -75,7 +75,7 @@ __global__ void CUPOT_PoissonSolver_SOR_16to18cube( const real g_Rho_Array    []
    const uint dz      = POT_NXT_F*POT_NXT_F/2;
    const uint RhoCen0 = ty*RHO_NXT + (tx<<1);                  // the index of rho
    const uint PotCen0 = dz + __umul24(1+ty, POT_NXT_F/2) + tx; // the index of the left potential
-   const uint FloorPow2 = 1<<(31-__clz(POT_NTHREAD) );         // FloorPow2: largest power-of-two value not 
+   const uint FloorPow2 = 1<<(31-__clz(POT_NTHREAD) );         // FloorPow2: largest power-of-two value not
    const uint Remain    = POT_NTHREAD - FloorPow2;             //            greater than POT_NTHREAD
 
    real BPot_xy1, BPot_xy2, BPot_yz1, BPot_yz2, BPot_xz1, BPot_xz2;     // boundary potential stored in registers
@@ -93,7 +93,7 @@ __global__ void CUPOT_PoissonSolver_SOR_16to18cube( const real g_Rho_Array    []
    __shared__ real s_CPot1 [POT_NXT    *POT_NXT    ];
    __shared__ real s_CPot2 [POT_NXT    *POT_NXT    ];
    __shared__ real s_CPot3 [POT_NXT    *POT_NXT    ];
-   __shared__ real s_IntPot[POT_NXT_INT*POT_NXT_INT]; 
+   __shared__ real s_IntPot[POT_NXT_INT*POT_NXT_INT];
    __shared__ real s_Residual_Total[POT_NTHREAD];
 
    real *s_CPot_z1, *s_CPot_z2, *s_CPot_z3, *s_Temp;
@@ -121,7 +121,7 @@ __global__ void CUPOT_PoissonSolver_SOR_16to18cube( const real g_Rho_Array    []
    real Slope_08, Slope_09, Slope_10, Slope_11, Slope_12;
 
 
-// first we load three slices of the coarse-grid potential into the shared memory 
+// first we load three slices of the coarse-grid potential into the shared memory
    s_CPot_z1 = s_CPot1;
    s_CPot_z2 = s_CPot2;
    s_CPot_z3 = s_CPot3;
@@ -148,7 +148,7 @@ __global__ void CUPOT_PoissonSolver_SOR_16to18cube( const real g_Rho_Array    []
    __syncthreads();
 
 
-// (a1). interpolation : the lowest z plane 
+// (a1). interpolation : the lowest z plane
 // ===========================================================================
    if ( ID0 < (POT_NXT-2)*(POT_NXT-2) )
    {
@@ -202,38 +202,38 @@ __global__ void CUPOT_PoissonSolver_SOR_16to18cube( const real g_Rho_Array    []
 
 #if ( POT_GHOST_SIZE == 4 )   // lower plane
 
-            s_IntPot[FID        ] = - Slope_00 - Slope_01 - Slope_02 - Slope_03 - Slope_04 - Slope_05 + Slope_06 
-                                    + Slope_07 + Slope_08 - Slope_09 + Slope_10 + Slope_11 - Slope_12 
+            s_IntPot[FID        ] = - Slope_00 - Slope_01 - Slope_02 - Slope_03 - Slope_04 - Slope_05 + Slope_06
+                                    + Slope_07 + Slope_08 - Slope_09 + Slope_10 + Slope_11 - Slope_12
                                     + s_CPot_z2[CID];
 
-            s_IntPot[FID+Fdx    ] = + Slope_00 - Slope_01 - Slope_02 + Slope_03 - Slope_04 + Slope_05 - Slope_06 
-                                    - Slope_07 + Slope_08 + Slope_09 - Slope_10 - Slope_11 + Slope_12 
+            s_IntPot[FID+Fdx    ] = + Slope_00 - Slope_01 - Slope_02 + Slope_03 - Slope_04 + Slope_05 - Slope_06
+                                    - Slope_07 + Slope_08 + Slope_09 - Slope_10 - Slope_11 + Slope_12
                                     + s_CPot_z2[CID];
 
-            s_IntPot[FID    +Fdy] = - Slope_00 + Slope_01 - Slope_02 - Slope_03 + Slope_04 + Slope_05 - Slope_06 
-                                    + Slope_07 - Slope_08 + Slope_09 - Slope_10 - Slope_11 + Slope_12 
+            s_IntPot[FID    +Fdy] = - Slope_00 + Slope_01 - Slope_02 - Slope_03 + Slope_04 + Slope_05 - Slope_06
+                                    + Slope_07 - Slope_08 + Slope_09 - Slope_10 - Slope_11 + Slope_12
                                     + s_CPot_z2[CID];
 
             s_IntPot[FID+Fdx+Fdy] = + Slope_00 + Slope_01 - Slope_02 + Slope_03 + Slope_04 - Slope_05 + Slope_06
-                                    - Slope_07 - Slope_08 - Slope_09 + Slope_10 + Slope_11 - Slope_12 
+                                    - Slope_07 - Slope_08 - Slope_09 + Slope_10 + Slope_11 - Slope_12
                                     + s_CPot_z2[CID];
 
 #else                         // upper plane
 
-            s_IntPot[FID        ] = - Slope_00 - Slope_01 + Slope_02 + Slope_03 + Slope_04 - Slope_05 + Slope_06 
-                                    - Slope_07 - Slope_08 + Slope_09 - Slope_10 - Slope_11 + Slope_12 
+            s_IntPot[FID        ] = - Slope_00 - Slope_01 + Slope_02 + Slope_03 + Slope_04 - Slope_05 + Slope_06
+                                    - Slope_07 - Slope_08 + Slope_09 - Slope_10 - Slope_11 + Slope_12
                                     + s_CPot_z2[CID];
 
-            s_IntPot[FID+Fdx    ] = + Slope_00 - Slope_01 + Slope_02 - Slope_03 + Slope_04 + Slope_05 - Slope_06 
-                                    + Slope_07 - Slope_08 - Slope_09 + Slope_10 + Slope_11 - Slope_12 
+            s_IntPot[FID+Fdx    ] = + Slope_00 - Slope_01 + Slope_02 - Slope_03 + Slope_04 + Slope_05 - Slope_06
+                                    + Slope_07 - Slope_08 - Slope_09 + Slope_10 + Slope_11 - Slope_12
                                     + s_CPot_z2[CID];
 
-            s_IntPot[FID    +Fdy] = - Slope_00 + Slope_01 + Slope_02 + Slope_03 - Slope_04 + Slope_05 - Slope_06 
-                                    - Slope_07 + Slope_08 - Slope_09 + Slope_10 + Slope_11 - Slope_12 
+            s_IntPot[FID    +Fdy] = - Slope_00 + Slope_01 + Slope_02 + Slope_03 - Slope_04 + Slope_05 - Slope_06
+                                    - Slope_07 + Slope_08 - Slope_09 + Slope_10 + Slope_11 - Slope_12
                                     + s_CPot_z2[CID];
 
-            s_IntPot[FID+Fdx+Fdy] = + Slope_00 + Slope_01 + Slope_02 - Slope_03 - Slope_04 - Slope_05 + Slope_06 
-                                    + Slope_07 + Slope_08 + Slope_09 - Slope_10 - Slope_11 + Slope_12 
+            s_IntPot[FID+Fdx+Fdy] = + Slope_00 + Slope_01 + Slope_02 - Slope_03 - Slope_04 - Slope_05 + Slope_06
+                                    + Slope_07 + Slope_08 + Slope_09 - Slope_10 - Slope_11 + Slope_12
                                     + s_CPot_z2[CID];
 
 #endif
@@ -247,7 +247,7 @@ __global__ void CUPOT_PoissonSolver_SOR_16to18cube( const real g_Rho_Array    []
             s_IntPot[FID+Fdx    ] = (real)0.0;
             s_IntPot[FID    +Fdy] = (real)0.0;
             s_IntPot[FID+Fdx+Fdy] = (real)0.0;
-         
+
             for (int dj=-1; dj<=1; dj++)  {  Idy = dj+1;    jj = __mul24( dj, Cdy );
             for (int di=-1; di<=1; di++)  {  Idx = di+1;    ii = __mul24( di, Cdx );
 
@@ -305,7 +305,7 @@ __global__ void CUPOT_PoissonSolver_SOR_16to18cube( const real g_Rho_Array    []
    __syncthreads();
 
 
-// for POT_USELESS == 0, no z plane is useless --> one more z plane (upper plane) to store 
+// for POT_USELESS == 0, no z plane is useless --> one more z plane (upper plane) to store
 #if ( POT_GHOST_SIZE == 4 )
 
    if ( ID0 < (POT_NXT-2)*(POT_NXT-2) )
@@ -326,20 +326,20 @@ __global__ void CUPOT_PoissonSolver_SOR_16to18cube( const real g_Rho_Array    []
 
          case INT_CQUAD :
          {
-            s_IntPot[FID        ] = - Slope_00 - Slope_01 + Slope_02 + Slope_03 + Slope_04 - Slope_05 + Slope_06 
-                                    - Slope_07 - Slope_08 + Slope_09 - Slope_10 - Slope_11 + Slope_12 
+            s_IntPot[FID        ] = - Slope_00 - Slope_01 + Slope_02 + Slope_03 + Slope_04 - Slope_05 + Slope_06
+                                    - Slope_07 - Slope_08 + Slope_09 - Slope_10 - Slope_11 + Slope_12
                                     + s_CPot_z2[CID];
 
-            s_IntPot[FID+Fdx    ] = + Slope_00 - Slope_01 + Slope_02 - Slope_03 + Slope_04 + Slope_05 - Slope_06 
-                                    + Slope_07 - Slope_08 - Slope_09 + Slope_10 + Slope_11 - Slope_12 
+            s_IntPot[FID+Fdx    ] = + Slope_00 - Slope_01 + Slope_02 - Slope_03 + Slope_04 + Slope_05 - Slope_06
+                                    + Slope_07 - Slope_08 - Slope_09 + Slope_10 + Slope_11 - Slope_12
                                     + s_CPot_z2[CID];
 
-            s_IntPot[FID    +Fdy] = - Slope_00 + Slope_01 + Slope_02 + Slope_03 - Slope_04 + Slope_05 - Slope_06 
-                                    - Slope_07 + Slope_08 - Slope_09 + Slope_10 + Slope_11 - Slope_12 
+            s_IntPot[FID    +Fdy] = - Slope_00 + Slope_01 + Slope_02 + Slope_03 - Slope_04 + Slope_05 - Slope_06
+                                    - Slope_07 + Slope_08 - Slope_09 + Slope_10 + Slope_11 - Slope_12
                                     + s_CPot_z2[CID];
 
-            s_IntPot[FID+Fdx+Fdy] = + Slope_00 + Slope_01 + Slope_02 - Slope_03 - Slope_04 - Slope_05 + Slope_06 
-                                    + Slope_07 + Slope_08 + Slope_09 - Slope_10 - Slope_11 + Slope_12 
+            s_IntPot[FID+Fdx+Fdy] = + Slope_00 + Slope_01 + Slope_02 - Slope_03 - Slope_04 - Slope_05 + Slope_06
+                                    + Slope_07 + Slope_08 + Slope_09 - Slope_10 - Slope_11 + Slope_12
                                     + s_CPot_z2[CID];
          }
          break; // INT_CQUAD
@@ -351,10 +351,10 @@ __global__ void CUPOT_PoissonSolver_SOR_16to18cube( const real g_Rho_Array    []
             s_IntPot[FID+Fdx    ] = (real)0.0;
             s_IntPot[FID    +Fdy] = (real)0.0;
             s_IntPot[FID+Fdx+Fdy] = (real)0.0;
-         
+
             for (int dj=-1; dj<=1; dj++)  {  Idy = dj+1;    jj = __mul24( dj, Cdy );
             for (int di=-1; di<=1; di++)  {  Idx = di+1;    ii = __mul24( di, Cdx );
-         
+
                s_IntPot[FID        ] += s_CPot_z1[CID+jj+ii] * Mp[0] * Mm[Idy] * Mm[Idx];
                s_IntPot[FID        ] += s_CPot_z2[CID+jj+ii] * Mp[1] * Mm[Idy] * Mm[Idx];
                s_IntPot[FID        ] += s_CPot_z3[CID+jj+ii] * Mp[2] * Mm[Idy] * Mm[Idx];
@@ -367,7 +367,7 @@ __global__ void CUPOT_PoissonSolver_SOR_16to18cube( const real g_Rho_Array    []
                s_IntPot[FID+Fdx+Fdy] += s_CPot_z1[CID+jj+ii] * Mp[0] * Mp[Idy] * Mp[Idx];
                s_IntPot[FID+Fdx+Fdy] += s_CPot_z2[CID+jj+ii] * Mp[1] * Mp[Idy] * Mp[Idx];
                s_IntPot[FID+Fdx+Fdy] += s_CPot_z3[CID+jj+ii] * Mp[2] * Mp[Idy] * Mp[Idx];
-         
+
             }} // for di,dj
          }
          break; // INT_QUAD
@@ -396,12 +396,12 @@ __global__ void CUPOT_PoissonSolver_SOR_16to18cube( const real g_Rho_Array    []
 
 //    shared memory: -yz plane
       ID1         = __umul24( 1+(ID3<<1), POT_NXT_INT );
-      ID2         = POT_NXT_F*POT_NXT_F/2 + __umul24( 1+(ID3<<1), POT_NXT_F/2 ); 
+      ID2         = POT_NXT_F*POT_NXT_F/2 + __umul24( 1+(ID3<<1), POT_NXT_F/2 );
       s_FPot[ID2] = s_IntPot[ID1];
 
 //    shared memory: +yz plane
       ID1         = __umul24( 2+(ID3<<1), POT_NXT_INT ) + POT_NXT_INT-1;
-      ID2         = POT_NXT_F*POT_NXT_F/2 + __umul24( 2+(ID3<<1), POT_NXT_F/2 ) + POT_NXT_F/2-1; 
+      ID2         = POT_NXT_F*POT_NXT_F/2 + __umul24( 2+(ID3<<1), POT_NXT_F/2 ) + POT_NXT_F/2-1;
       s_FPot[ID2] = s_IntPot[ID1];
 
 //    shared memory: -xz plane
@@ -443,9 +443,9 @@ __global__ void CUPOT_PoissonSolver_SOR_16to18cube( const real g_Rho_Array    []
    for (uint Cz=0; Cz<=POT_NXT-5; Cz++)
    {
       s_Temp    = s_CPot_z1;
-      s_CPot_z1 = s_CPot_z2; 
-      s_CPot_z2 = s_CPot_z3; 
-      s_CPot_z3 = s_Temp; 
+      s_CPot_z1 = s_CPot_z2;
+      s_CPot_z2 = s_CPot_z3;
+      s_CPot_z3 = s_Temp;
 
 
 //    load one slice of the coarse-grid potential into the shared memory
@@ -471,28 +471,28 @@ __global__ void CUPOT_PoissonSolver_SOR_16to18cube( const real g_Rho_Array    []
             }
             break; // INT_CENTRAL
             */
-         
-         
+
+
             case INT_CQUAD :
             {
                Slope_00 = Const_8   * ( s_CPot_z2[CID+Cdx    ] - s_CPot_z2[CID-Cdx    ] );
                Slope_01 = Const_8   * ( s_CPot_z2[CID+Cdy    ] - s_CPot_z2[CID-Cdy    ] );
                Slope_02 = Const_8   * ( s_CPot_z3[CID        ] - s_CPot_z1[CID        ] );
-         
+
                Slope_03 = Const_64  * ( s_CPot_z1[CID+Cdx    ] - s_CPot_z1[CID-Cdx    ] );
                Slope_04 = Const_64  * ( s_CPot_z1[CID    +Cdy] - s_CPot_z1[CID    -Cdy] );
                Slope_05 = Const_64  * ( s_CPot_z2[CID+Cdx-Cdy] - s_CPot_z2[CID-Cdx-Cdy] );
                Slope_06 = Const_64  * ( s_CPot_z2[CID+Cdx+Cdy] - s_CPot_z2[CID-Cdx+Cdy] );
                Slope_07 = Const_64  * ( s_CPot_z3[CID+Cdx    ] - s_CPot_z3[CID-Cdx    ] );
                Slope_08 = Const_64  * ( s_CPot_z3[CID    +Cdy] - s_CPot_z3[CID    -Cdy] );
-         
+
                Slope_09 = Const_512 * ( s_CPot_z1[CID+Cdx-Cdy] - s_CPot_z1[CID-Cdx-Cdy] );
                Slope_10 = Const_512 * ( s_CPot_z1[CID+Cdx+Cdy] - s_CPot_z1[CID-Cdx+Cdy] );
                Slope_11 = Const_512 * ( s_CPot_z3[CID+Cdx-Cdy] - s_CPot_z3[CID-Cdx-Cdy] );
                Slope_12 = Const_512 * ( s_CPot_z3[CID+Cdx+Cdy] - s_CPot_z3[CID-Cdx+Cdy] );
             }
             break; // INT_CQUAD
-         
+
          } // switch ( IntScheme )
       } // if ( ID0 < (POT_NXT-2)*(POT_NXT-2) )
 
@@ -504,7 +504,7 @@ __global__ void CUPOT_PoissonSolver_SOR_16to18cube( const real g_Rho_Array    []
 
 
 //    since the amount of shared memory is exhausted, we can only save one z plane at a time
-      for (int UpDown=0; UpDown<2; UpDown++) 
+      for (int UpDown=0; UpDown<2; UpDown++)
       {
          const real Sign = (real)-1.0 + (real)2.0*(real)UpDown;
 
@@ -527,22 +527,22 @@ __global__ void CUPOT_PoissonSolver_SOR_16to18cube( const real g_Rho_Array    []
                case INT_CQUAD :
                {
                   s_IntPot[FID        ] = - Slope_00 - Slope_01 - Slope_05 + Slope_06
-                                          - Sign*( - Slope_02 - Slope_03 - Slope_04 + Slope_07 + Slope_08 
+                                          - Sign*( - Slope_02 - Slope_03 - Slope_04 + Slope_07 + Slope_08
                                           - Slope_09 + Slope_10 + Slope_11 - Slope_12 )
                                           + s_CPot_z2[CID];
-               
+
                   s_IntPot[FID+Fdx    ] = + Slope_00 - Slope_01 + Slope_05 - Slope_06
-                                          - Sign*( - Slope_02 + Slope_03 - Slope_04 - Slope_07 + Slope_08 
+                                          - Sign*( - Slope_02 + Slope_03 - Slope_04 - Slope_07 + Slope_08
                                           + Slope_09 - Slope_10 - Slope_11 + Slope_12 )
                                           + s_CPot_z2[CID];
-               
+
                   s_IntPot[FID    +Fdy] = - Slope_00 + Slope_01 + Slope_05 - Slope_06
-                                          - Sign*( - Slope_02 - Slope_03 + Slope_04 + Slope_07 - Slope_08 
+                                          - Sign*( - Slope_02 - Slope_03 + Slope_04 + Slope_07 - Slope_08
                                           + Slope_09 - Slope_10 - Slope_11 + Slope_12 )
                                           + s_CPot_z2[CID];
-               
+
                   s_IntPot[FID+Fdx+Fdy] = + Slope_00 + Slope_01 - Slope_05 + Slope_06
-                                          - Sign*( - Slope_02 + Slope_03 + Slope_04 - Slope_07 - Slope_08 
+                                          - Sign*( - Slope_02 + Slope_03 + Slope_04 - Slope_07 - Slope_08
                                           - Slope_09 + Slope_10 + Slope_11 - Slope_12 )
                                           + s_CPot_z2[CID];
                }
@@ -560,7 +560,7 @@ __global__ void CUPOT_PoissonSolver_SOR_16to18cube( const real g_Rho_Array    []
                   {
                      for (int dj=-1; dj<=1; dj++)  {  Idy = dj+1;    jj = __mul24( dj, Cdy );
                      for (int di=-1; di<=1; di++)  {  Idx = di+1;    ii = __mul24( di, Cdx );
-                  
+
                         s_IntPot[FID        ] += s_CPot_z1[CID+jj+ii] * Mm[0] * Mm[Idy] * Mm[Idx];
                         s_IntPot[FID        ] += s_CPot_z2[CID+jj+ii] * Mm[1] * Mm[Idy] * Mm[Idx];
                         s_IntPot[FID        ] += s_CPot_z3[CID+jj+ii] * Mm[2] * Mm[Idy] * Mm[Idx];
@@ -573,7 +573,7 @@ __global__ void CUPOT_PoissonSolver_SOR_16to18cube( const real g_Rho_Array    []
                         s_IntPot[FID+Fdx+Fdy] += s_CPot_z1[CID+jj+ii] * Mm[0] * Mp[Idy] * Mp[Idx];
                         s_IntPot[FID+Fdx+Fdy] += s_CPot_z2[CID+jj+ii] * Mm[1] * Mp[Idy] * Mp[Idx];
                         s_IntPot[FID+Fdx+Fdy] += s_CPot_z3[CID+jj+ii] * Mm[2] * Mp[Idy] * Mp[Idx];
-                  
+
                      }} // for di,dj
                   } // if ( UpDown == 0 )
 
@@ -581,7 +581,7 @@ __global__ void CUPOT_PoissonSolver_SOR_16to18cube( const real g_Rho_Array    []
                   {
                      for (int dj=-1; dj<=1; dj++)  {  Idy = dj+1;    jj = __mul24( dj, Cdy );
                      for (int di=-1; di<=1; di++)  {  Idx = di+1;    ii = __mul24( di, Cdx );
-                  
+
                         s_IntPot[FID        ] += s_CPot_z1[CID+jj+ii] * Mp[0] * Mm[Idy] * Mm[Idx];
                         s_IntPot[FID        ] += s_CPot_z2[CID+jj+ii] * Mp[1] * Mm[Idy] * Mm[Idx];
                         s_IntPot[FID        ] += s_CPot_z3[CID+jj+ii] * Mp[2] * Mm[Idy] * Mm[Idx];
@@ -594,7 +594,7 @@ __global__ void CUPOT_PoissonSolver_SOR_16to18cube( const real g_Rho_Array    []
                         s_IntPot[FID+Fdx+Fdy] += s_CPot_z1[CID+jj+ii] * Mp[0] * Mp[Idy] * Mp[Idx];
                         s_IntPot[FID+Fdx+Fdy] += s_CPot_z2[CID+jj+ii] * Mp[1] * Mp[Idy] * Mp[Idx];
                         s_IntPot[FID+Fdx+Fdy] += s_CPot_z3[CID+jj+ii] * Mp[2] * Mp[Idy] * Mp[Idx];
-                  
+
                      }} // for di,dj
                   } // if ( UpDown == 0 ) ... else ...
                }
@@ -608,7 +608,7 @@ __global__ void CUPOT_PoissonSolver_SOR_16to18cube( const real g_Rho_Array    []
 
 //       store the internal potential into shared memory
          ID1         = __umul24( 1+POT_USELESS+ty, POT_NXT_INT ) + 1+POT_USELESS+(tx<<1)+(Disp16^1);
-         ID2         = __umul24( 2-POT_USELESS+UpDown+Cz*2, POT_NXT_F*POT_NXT_F/2 ) 
+         ID2         = __umul24( 2-POT_USELESS+UpDown+Cz*2, POT_NXT_F*POT_NXT_F/2 )
                        + __umul24( 1+ty, POT_NXT_F/2) + tx+(Disp16^1);
          s_FPot[ID2] = s_IntPot[ID1];
 
@@ -622,25 +622,25 @@ __global__ void CUPOT_PoissonSolver_SOR_16to18cube( const real g_Rho_Array    []
          {
             switch ( Cz )
             {
-               case 0:  RPot1  = s_IntPot[ID1];  break; 
-               case 1:  RPot3  = s_IntPot[ID1];  break; 
-               case 2:  RPot5  = s_IntPot[ID1];  break; 
-               case 3:  RPot7  = s_IntPot[ID1];  break; 
-               case 4:  RPot9  = s_IntPot[ID1];  break; 
-               case 5:  RPot11 = s_IntPot[ID1];  break; 
+               case 0:  RPot1  = s_IntPot[ID1];  break;
+               case 1:  RPot3  = s_IntPot[ID1];  break;
+               case 2:  RPot5  = s_IntPot[ID1];  break;
+               case 3:  RPot7  = s_IntPot[ID1];  break;
+               case 4:  RPot9  = s_IntPot[ID1];  break;
+               case 5:  RPot11 = s_IntPot[ID1];  break;
             }
          }
-         
+
          else
          {
             switch ( Cz )
             {
-               case 0:  RPot2  = s_IntPot[ID1];  break; 
-               case 1:  RPot4  = s_IntPot[ID1];  break; 
-               case 2:  RPot6  = s_IntPot[ID1];  break; 
-               case 3:  RPot8  = s_IntPot[ID1];  break; 
-               case 4:  RPot10 = s_IntPot[ID1];  break; 
-               case 5:  RPot12 = s_IntPot[ID1];  break; 
+               case 0:  RPot2  = s_IntPot[ID1];  break;
+               case 1:  RPot4  = s_IntPot[ID1];  break;
+               case 2:  RPot6  = s_IntPot[ID1];  break;
+               case 3:  RPot8  = s_IntPot[ID1];  break;
+               case 4:  RPot10 = s_IntPot[ID1];  break;
+               case 5:  RPot12 = s_IntPot[ID1];  break;
             }
          }
 
@@ -650,29 +650,29 @@ __global__ void CUPOT_PoissonSolver_SOR_16to18cube( const real g_Rho_Array    []
          {
             switch ( Cz )
             {
-               case 0:  RPot0  = s_IntPot[ID1];  break; 
-               case 1:  RPot2  = s_IntPot[ID1];  break; 
-               case 2:  RPot4  = s_IntPot[ID1];  break; 
-               case 3:  RPot6  = s_IntPot[ID1];  break; 
-               case 4:  RPot8  = s_IntPot[ID1];  break; 
-               case 5:  RPot10 = s_IntPot[ID1];  break; 
-               case 6:  RPot12 = s_IntPot[ID1];  break; 
-               case 7:  RPot14 = s_IntPot[ID1];  break; 
+               case 0:  RPot0  = s_IntPot[ID1];  break;
+               case 1:  RPot2  = s_IntPot[ID1];  break;
+               case 2:  RPot4  = s_IntPot[ID1];  break;
+               case 3:  RPot6  = s_IntPot[ID1];  break;
+               case 4:  RPot8  = s_IntPot[ID1];  break;
+               case 5:  RPot10 = s_IntPot[ID1];  break;
+               case 6:  RPot12 = s_IntPot[ID1];  break;
+               case 7:  RPot14 = s_IntPot[ID1];  break;
             }
          }
-         
+
          else
          {
             switch ( Cz )
             {
-               case 0:  RPot1  = s_IntPot[ID1];  break; 
-               case 1:  RPot3  = s_IntPot[ID1];  break; 
-               case 2:  RPot5  = s_IntPot[ID1];  break; 
-               case 3:  RPot7  = s_IntPot[ID1];  break; 
-               case 4:  RPot9  = s_IntPot[ID1];  break; 
-               case 5:  RPot11 = s_IntPot[ID1];  break; 
-               case 6:  RPot13 = s_IntPot[ID1];  break; 
-               case 7:  RPot15 = s_IntPot[ID1];  break; 
+               case 0:  RPot1  = s_IntPot[ID1];  break;
+               case 1:  RPot3  = s_IntPot[ID1];  break;
+               case 2:  RPot5  = s_IntPot[ID1];  break;
+               case 3:  RPot7  = s_IntPot[ID1];  break;
+               case 4:  RPot9  = s_IntPot[ID1];  break;
+               case 5:  RPot11 = s_IntPot[ID1];  break;
+               case 6:  RPot13 = s_IntPot[ID1];  break;
+               case 7:  RPot15 = s_IntPot[ID1];  break;
             }
          }
 
@@ -686,39 +686,39 @@ __global__ void CUPOT_PoissonSolver_SOR_16to18cube( const real g_Rho_Array    []
 
 //          shared memory: -yz plane
             ID1         = __umul24( 2-UpDown+2*POT_USELESS*UpDown+(ID3<<1), POT_NXT_INT ) + POT_USELESS;
-            ID2         = __umul24( 2-POT_USELESS+UpDown+Cz*2, POT_NXT_F*POT_NXT_F/2 ) 
-                          + __umul24( 2-UpDown+2*POT_USELESS*UpDown-POT_USELESS+(ID3<<1), POT_NXT_F/2 ); 
+            ID2         = __umul24( 2-POT_USELESS+UpDown+Cz*2, POT_NXT_F*POT_NXT_F/2 )
+                          + __umul24( 2-UpDown+2*POT_USELESS*UpDown-POT_USELESS+(ID3<<1), POT_NXT_F/2 );
             s_FPot[ID2] = s_IntPot[ID1];
 
 //          shared memory: +yz plane
-            ID1         = __umul24( 1+UpDown-2*POT_USELESS*UpDown+2*POT_USELESS+(ID3<<1), POT_NXT_INT ) 
+            ID1         = __umul24( 1+UpDown-2*POT_USELESS*UpDown+2*POT_USELESS+(ID3<<1), POT_NXT_INT )
                           + POT_NXT_INT-1-POT_USELESS;
-            ID2         = __umul24( 2-POT_USELESS+UpDown+Cz*2, POT_NXT_F*POT_NXT_F/2 ) 
-                          + __umul24( 1+UpDown-2*POT_USELESS*UpDown+POT_USELESS+(ID3<<1), POT_NXT_F/2 ) 
-                          + POT_NXT_F/2-1; 
+            ID2         = __umul24( 2-POT_USELESS+UpDown+Cz*2, POT_NXT_F*POT_NXT_F/2 )
+                          + __umul24( 1+UpDown-2*POT_USELESS*UpDown+POT_USELESS+(ID3<<1), POT_NXT_F/2 )
+                          + POT_NXT_F/2-1;
             s_FPot[ID2] = s_IntPot[ID1];
 
 //          shared memory: -xz plane
             ID1         = POT_USELESS*POT_NXT_INT + 2-UpDown+2*POT_USELESS*UpDown+(ID3<<1);
-            ID2         = __umul24( 2-POT_USELESS+UpDown+Cz*2, POT_NXT_F*POT_NXT_F/2 ) 
+            ID2         = __umul24( 2-POT_USELESS+UpDown+Cz*2, POT_NXT_F*POT_NXT_F/2 )
                           + 1-UpDown-POT_USELESS+2*POT_USELESS*UpDown+ID3;
             s_FPot[ID2] = s_IntPot[ID1];
 
 //          shared memory: +xz plane
-            ID1         = (POT_NXT_INT-1-POT_USELESS)*POT_NXT_INT  
+            ID1         = (POT_NXT_INT-1-POT_USELESS)*POT_NXT_INT
                            + 1+UpDown-2*POT_USELESS*UpDown+2*POT_USELESS+(ID3<<1);
-            ID2         = __umul24( 2-POT_USELESS+UpDown+Cz*2, POT_NXT_F*POT_NXT_F/2 ) 
+            ID2         = __umul24( 2-POT_USELESS+UpDown+Cz*2, POT_NXT_F*POT_NXT_F/2 )
                           + (POT_NXT_F-1)*POT_NXT_F/2 + UpDown-2*POT_USELESS*UpDown+POT_USELESS+ID3;
             s_FPot[ID2] = s_IntPot[ID1];
 
 
 //          registers: -yz plane
-            ID1         = __umul24( 1+UpDown-2*POT_USELESS*UpDown+2*POT_USELESS+(ID3<<1), POT_NXT_INT ) 
+            ID1         = __umul24( 1+UpDown-2*POT_USELESS*UpDown+2*POT_USELESS+(ID3<<1), POT_NXT_INT )
                           + POT_USELESS;
             BPot_yz1    = s_IntPot[ID1];
 
 //          registers: +yz plane
-            ID1         = __umul24( 2-UpDown+2*POT_USELESS*UpDown+(ID3<<1), POT_NXT_INT ) 
+            ID1         = __umul24( 2-UpDown+2*POT_USELESS*UpDown+(ID3<<1), POT_NXT_INT )
                           + POT_NXT_INT-1-POT_USELESS;
             BPot_yz2    = s_IntPot[ID1];
 
@@ -741,14 +741,14 @@ __global__ void CUPOT_PoissonSolver_SOR_16to18cube( const real g_Rho_Array    []
    } // for (uint Cz=0; Cz<=POT_NXT-5; Cz++)
 
 
-// (a3). interpolation : the highest z plane 
+// (a3). interpolation : the highest z plane
 // ===========================================================================
 
 // load one slice of the coarse-grid potential into shared memory
    s_Temp    = s_CPot_z1;
-   s_CPot_z1 = s_CPot_z2; 
-   s_CPot_z2 = s_CPot_z3; 
-   s_CPot_z3 = s_Temp; 
+   s_CPot_z1 = s_CPot_z2;
+   s_CPot_z2 = s_CPot_z3;
+   s_CPot_z3 = s_Temp;
 
    for (uint t=ID0; t<POT_NXT*POT_NXT; t+=POT_NTHREAD)
    {
@@ -795,14 +795,14 @@ __global__ void CUPOT_PoissonSolver_SOR_16to18cube( const real g_Rho_Array    []
             Slope_00 = Const_8   * ( s_CPot_z2[CID+Cdx    ] - s_CPot_z2[CID-Cdx    ] );
             Slope_01 = Const_8   * ( s_CPot_z2[CID+Cdy    ] - s_CPot_z2[CID-Cdy    ] );
             Slope_02 = Const_8   * ( s_CPot_z3[CID        ] - s_CPot_z1[CID        ] );
-         
+
             Slope_03 = Const_64  * ( s_CPot_z1[CID+Cdx    ] - s_CPot_z1[CID-Cdx    ] );
             Slope_04 = Const_64  * ( s_CPot_z1[CID    +Cdy] - s_CPot_z1[CID    -Cdy] );
             Slope_05 = Const_64  * ( s_CPot_z2[CID+Cdx-Cdy] - s_CPot_z2[CID-Cdx-Cdy] );
             Slope_06 = Const_64  * ( s_CPot_z2[CID+Cdx+Cdy] - s_CPot_z2[CID-Cdx+Cdy] );
             Slope_07 = Const_64  * ( s_CPot_z3[CID+Cdx    ] - s_CPot_z3[CID-Cdx    ] );
             Slope_08 = Const_64  * ( s_CPot_z3[CID    +Cdy] - s_CPot_z3[CID    -Cdy] );
-         
+
             Slope_09 = Const_512 * ( s_CPot_z1[CID+Cdx-Cdy] - s_CPot_z1[CID-Cdx-Cdy] );
             Slope_10 = Const_512 * ( s_CPot_z1[CID+Cdx+Cdy] - s_CPot_z1[CID-Cdx+Cdy] );
             Slope_11 = Const_512 * ( s_CPot_z3[CID+Cdx-Cdy] - s_CPot_z3[CID-Cdx-Cdy] );
@@ -811,38 +811,38 @@ __global__ void CUPOT_PoissonSolver_SOR_16to18cube( const real g_Rho_Array    []
 
 #if ( POT_GHOST_SIZE == 4 )   // upper plane
 
-            s_IntPot[FID        ] = - Slope_00 - Slope_01 + Slope_02 + Slope_03 + Slope_04 - Slope_05 + Slope_06 
-                                    - Slope_07 - Slope_08 + Slope_09 - Slope_10 - Slope_11 + Slope_12 
+            s_IntPot[FID        ] = - Slope_00 - Slope_01 + Slope_02 + Slope_03 + Slope_04 - Slope_05 + Slope_06
+                                    - Slope_07 - Slope_08 + Slope_09 - Slope_10 - Slope_11 + Slope_12
                                     + s_CPot_z2[CID];
 
-            s_IntPot[FID+Fdx    ] = + Slope_00 - Slope_01 + Slope_02 - Slope_03 + Slope_04 + Slope_05 - Slope_06 
-                                    + Slope_07 - Slope_08 - Slope_09 + Slope_10 + Slope_11 - Slope_12 
+            s_IntPot[FID+Fdx    ] = + Slope_00 - Slope_01 + Slope_02 - Slope_03 + Slope_04 + Slope_05 - Slope_06
+                                    + Slope_07 - Slope_08 - Slope_09 + Slope_10 + Slope_11 - Slope_12
                                     + s_CPot_z2[CID];
 
-            s_IntPot[FID    +Fdy] = - Slope_00 + Slope_01 + Slope_02 + Slope_03 - Slope_04 + Slope_05 - Slope_06 
-                                    - Slope_07 + Slope_08 - Slope_09 + Slope_10 + Slope_11 - Slope_12 
+            s_IntPot[FID    +Fdy] = - Slope_00 + Slope_01 + Slope_02 + Slope_03 - Slope_04 + Slope_05 - Slope_06
+                                    - Slope_07 + Slope_08 - Slope_09 + Slope_10 + Slope_11 - Slope_12
                                     + s_CPot_z2[CID];
 
-            s_IntPot[FID+Fdx+Fdy] = + Slope_00 + Slope_01 + Slope_02 - Slope_03 - Slope_04 - Slope_05 + Slope_06 
-                                    + Slope_07 + Slope_08 + Slope_09 - Slope_10 - Slope_11 + Slope_12 
+            s_IntPot[FID+Fdx+Fdy] = + Slope_00 + Slope_01 + Slope_02 - Slope_03 - Slope_04 - Slope_05 + Slope_06
+                                    + Slope_07 + Slope_08 + Slope_09 - Slope_10 - Slope_11 + Slope_12
                                     + s_CPot_z2[CID];
 
 #else                         // lower plane
 
-            s_IntPot[FID        ] = - Slope_00 - Slope_01 - Slope_02 - Slope_03 - Slope_04 - Slope_05 + Slope_06 
-                                    + Slope_07 + Slope_08 - Slope_09 + Slope_10 + Slope_11 - Slope_12 
+            s_IntPot[FID        ] = - Slope_00 - Slope_01 - Slope_02 - Slope_03 - Slope_04 - Slope_05 + Slope_06
+                                    + Slope_07 + Slope_08 - Slope_09 + Slope_10 + Slope_11 - Slope_12
                                     + s_CPot_z2[CID];
 
-            s_IntPot[FID+Fdx    ] = + Slope_00 - Slope_01 - Slope_02 + Slope_03 - Slope_04 + Slope_05 - Slope_06 
-                                    - Slope_07 + Slope_08 + Slope_09 - Slope_10 - Slope_11 + Slope_12 
+            s_IntPot[FID+Fdx    ] = + Slope_00 - Slope_01 - Slope_02 + Slope_03 - Slope_04 + Slope_05 - Slope_06
+                                    - Slope_07 + Slope_08 + Slope_09 - Slope_10 - Slope_11 + Slope_12
                                     + s_CPot_z2[CID];
 
-            s_IntPot[FID    +Fdy] = - Slope_00 + Slope_01 - Slope_02 - Slope_03 + Slope_04 + Slope_05 - Slope_06 
-                                    + Slope_07 - Slope_08 + Slope_09 - Slope_10 - Slope_11 + Slope_12 
+            s_IntPot[FID    +Fdy] = - Slope_00 + Slope_01 - Slope_02 - Slope_03 + Slope_04 + Slope_05 - Slope_06
+                                    + Slope_07 - Slope_08 + Slope_09 - Slope_10 - Slope_11 + Slope_12
                                     + s_CPot_z2[CID];
 
             s_IntPot[FID+Fdx+Fdy] = + Slope_00 + Slope_01 - Slope_02 + Slope_03 + Slope_04 - Slope_05 + Slope_06
-                                    - Slope_07 - Slope_08 - Slope_09 + Slope_10 + Slope_11 - Slope_12 
+                                    - Slope_07 - Slope_08 - Slope_09 + Slope_10 + Slope_11 - Slope_12
                                     + s_CPot_z2[CID];
 
 #endif
@@ -856,7 +856,7 @@ __global__ void CUPOT_PoissonSolver_SOR_16to18cube( const real g_Rho_Array    []
             s_IntPot[FID+Fdx    ] = (real)0.0;
             s_IntPot[FID    +Fdy] = (real)0.0;
             s_IntPot[FID+Fdx+Fdy] = (real)0.0;
-         
+
             for (int dj=-1; dj<=1; dj++)  {  Idy = dj+1;    jj = __mul24( dj, Cdy );
             for (int di=-1; di<=1; di++)  {  Idx = di+1;    ii = __mul24( di, Cdx );
 
@@ -914,7 +914,7 @@ __global__ void CUPOT_PoissonSolver_SOR_16to18cube( const real g_Rho_Array    []
    __syncthreads();
 
 
-// for POT_USELESS == 0, no z plane is useless --> one more z plane (lower plane) to store 
+// for POT_USELESS == 0, no z plane is useless --> one more z plane (lower plane) to store
 #if ( POT_GHOST_SIZE == 4 )
 
    if ( ID0 < (POT_NXT-2)*(POT_NXT-2) )
@@ -935,20 +935,20 @@ __global__ void CUPOT_PoissonSolver_SOR_16to18cube( const real g_Rho_Array    []
 
          case INT_CQUAD :
          {
-            s_IntPot[FID        ] = - Slope_00 - Slope_01 - Slope_02 - Slope_03 - Slope_04 - Slope_05 + Slope_06 
-                                    + Slope_07 + Slope_08 - Slope_09 + Slope_10 + Slope_11 - Slope_12 
+            s_IntPot[FID        ] = - Slope_00 - Slope_01 - Slope_02 - Slope_03 - Slope_04 - Slope_05 + Slope_06
+                                    + Slope_07 + Slope_08 - Slope_09 + Slope_10 + Slope_11 - Slope_12
                                     + s_CPot_z2[CID];
-         
-            s_IntPot[FID+Fdx    ] = + Slope_00 - Slope_01 - Slope_02 + Slope_03 - Slope_04 + Slope_05 - Slope_06 
-                                    - Slope_07 + Slope_08 + Slope_09 - Slope_10 - Slope_11 + Slope_12 
+
+            s_IntPot[FID+Fdx    ] = + Slope_00 - Slope_01 - Slope_02 + Slope_03 - Slope_04 + Slope_05 - Slope_06
+                                    - Slope_07 + Slope_08 + Slope_09 - Slope_10 - Slope_11 + Slope_12
                                     + s_CPot_z2[CID];
-         
-            s_IntPot[FID    +Fdy] = - Slope_00 + Slope_01 - Slope_02 - Slope_03 + Slope_04 + Slope_05 - Slope_06 
-                                    + Slope_07 - Slope_08 + Slope_09 - Slope_10 - Slope_11 + Slope_12 
+
+            s_IntPot[FID    +Fdy] = - Slope_00 + Slope_01 - Slope_02 - Slope_03 + Slope_04 + Slope_05 - Slope_06
+                                    + Slope_07 - Slope_08 + Slope_09 - Slope_10 - Slope_11 + Slope_12
                                     + s_CPot_z2[CID];
-         
+
             s_IntPot[FID+Fdx+Fdy] = + Slope_00 + Slope_01 - Slope_02 + Slope_03 + Slope_04 - Slope_05 + Slope_06
-                                    - Slope_07 - Slope_08 - Slope_09 + Slope_10 + Slope_11 - Slope_12 
+                                    - Slope_07 - Slope_08 - Slope_09 + Slope_10 + Slope_11 - Slope_12
                                     + s_CPot_z2[CID];
          }
          break; // INT_CQUAD
@@ -960,10 +960,10 @@ __global__ void CUPOT_PoissonSolver_SOR_16to18cube( const real g_Rho_Array    []
             s_IntPot[FID+Fdx    ] = (real)0.0;
             s_IntPot[FID    +Fdy] = (real)0.0;
             s_IntPot[FID+Fdx+Fdy] = (real)0.0;
-         
+
             for (int dj=-1; dj<=1; dj++)  {  Idy = dj+1;    jj = __mul24( dj, Cdy );
             for (int di=-1; di<=1; di++)  {  Idx = di+1;    ii = __mul24( di, Cdx );
-         
+
                s_IntPot[FID        ] += s_CPot_z1[CID+jj+ii] * Mm[0] * Mm[Idy] * Mm[Idx];
                s_IntPot[FID        ] += s_CPot_z2[CID+jj+ii] * Mm[1] * Mm[Idy] * Mm[Idx];
                s_IntPot[FID        ] += s_CPot_z3[CID+jj+ii] * Mm[2] * Mm[Idy] * Mm[Idx];
@@ -976,7 +976,7 @@ __global__ void CUPOT_PoissonSolver_SOR_16to18cube( const real g_Rho_Array    []
                s_IntPot[FID+Fdx+Fdy] += s_CPot_z1[CID+jj+ii] * Mm[0] * Mp[Idy] * Mp[Idx];
                s_IntPot[FID+Fdx+Fdy] += s_CPot_z2[CID+jj+ii] * Mm[1] * Mp[Idy] * Mp[Idx];
                s_IntPot[FID+Fdx+Fdy] += s_CPot_z3[CID+jj+ii] * Mm[2] * Mp[Idy] * Mp[Idx];
-         
+
             }} // for di,dj
          }
          break; // INT_QUAD
@@ -1004,12 +1004,12 @@ __global__ void CUPOT_PoissonSolver_SOR_16to18cube( const real g_Rho_Array    []
 
 //    shared memory: -yz plane
       ID1         = __umul24( 2+(ID3<<1), POT_NXT_INT );
-      ID2         = (POT_NXT_F-2)*POT_NXT_F*POT_NXT_F/2 + __umul24( 2+(ID3<<1), POT_NXT_F/2 ); 
+      ID2         = (POT_NXT_F-2)*POT_NXT_F*POT_NXT_F/2 + __umul24( 2+(ID3<<1), POT_NXT_F/2 );
       s_FPot[ID2] = s_IntPot[ID1];
 
 //    shared memory: +yz plane
       ID1         = __umul24( 1+(ID3<<1), POT_NXT_INT ) + POT_NXT_INT-1;
-      ID2         = (POT_NXT_F-2)*POT_NXT_F*POT_NXT_F/2 + __umul24( 1+(ID3<<1), POT_NXT_F/2 ) + POT_NXT_F/2-1; 
+      ID2         = (POT_NXT_F-2)*POT_NXT_F*POT_NXT_F/2 + __umul24( 1+(ID3<<1), POT_NXT_F/2 ) + POT_NXT_F/2-1;
       s_FPot[ID2] = s_IntPot[ID1];
 
 //    shared memory: -xz plane
@@ -1075,14 +1075,14 @@ __global__ void CUPOT_PoissonSolver_SOR_16to18cube( const real g_Rho_Array    []
 
 //       z = 0 plane
 // =======================================
-//       evaluate residual 
+//       evaluate residual
          Residual = ( s_FPot[kp] + s_FPot[km] + s_FPot[jp] + s_FPot[jm] + s_FPot[ip] + s_FPot[im]
                       - (real)6.0*RPot0 - Const*g_Rho_Array[bx][RhoCen] );
 
 //       update potential
          RPot0 += Omega_6*Residual;
 
-//       save the absolute value of residual of each grid into a shared array for evaluating the sum 
+//       save the absolute value of residual of each grid into a shared array for evaluating the sum
          s_Residual_Total[ID0] += FABS( Residual );
 
          PotCen += dz + Disp6;
@@ -1093,14 +1093,14 @@ __global__ void CUPOT_PoissonSolver_SOR_16to18cube( const real g_Rho_Array    []
 
 //       z = 1 plane
 // =======================================
-//       evaluate residual 
+//       evaluate residual
          Residual = ( s_FPot[kp] + s_FPot[km] + s_FPot[jp] + s_FPot[jm] + s_FPot[ip] + s_FPot[im]
                       - (real)6.0*RPot1 - Const*g_Rho_Array[bx][RhoCen] );
 
 //       update potential
          RPot1 += Omega_6*Residual;
 
-//       save the absolute value of residual of each grid into a shared array for evaluating the sum 
+//       save the absolute value of residual of each grid into a shared array for evaluating the sum
          s_Residual_Total[ID0] += FABS( Residual );
 
          PotCen += dz - Disp6;
@@ -1111,14 +1111,14 @@ __global__ void CUPOT_PoissonSolver_SOR_16to18cube( const real g_Rho_Array    []
 
 //       z = 2 plane
 // =======================================
-//       evaluate residual 
+//       evaluate residual
          Residual = ( s_FPot[kp] + s_FPot[km] + s_FPot[jp] + s_FPot[jm] + s_FPot[ip] + s_FPot[im]
                       - (real)6.0*RPot2 - Const*g_Rho_Array[bx][RhoCen] );
 
 //       update potential
          RPot2 += Omega_6*Residual;
 
-//       save the absolute value of residual of each grid into a shared array for evaluating the sum 
+//       save the absolute value of residual of each grid into a shared array for evaluating the sum
          s_Residual_Total[ID0] += FABS( Residual );
 
          PotCen += dz + Disp6;
@@ -1129,14 +1129,14 @@ __global__ void CUPOT_PoissonSolver_SOR_16to18cube( const real g_Rho_Array    []
 
 //       z = 3 plane
 // =======================================
-//       evaluate residual 
+//       evaluate residual
          Residual = ( s_FPot[kp] + s_FPot[km] + s_FPot[jp] + s_FPot[jm] + s_FPot[ip] + s_FPot[im]
                       - (real)6.0*RPot3 - Const*g_Rho_Array[bx][RhoCen] );
 
 //       update potential
          RPot3 += Omega_6*Residual;
 
-//       save the absolute value of residual of each grid into a shared array for evaluating the sum 
+//       save the absolute value of residual of each grid into a shared array for evaluating the sum
          s_Residual_Total[ID0] += FABS( Residual );
 
          PotCen += dz - Disp6;
@@ -1147,14 +1147,14 @@ __global__ void CUPOT_PoissonSolver_SOR_16to18cube( const real g_Rho_Array    []
 
 //       z = 4 plane
 // =======================================
-//       evaluate residual 
+//       evaluate residual
          Residual = ( s_FPot[kp] + s_FPot[km] + s_FPot[jp] + s_FPot[jm] + s_FPot[ip] + s_FPot[im]
                       - (real)6.0*RPot4 - Const*g_Rho_Array[bx][RhoCen] );
 
 //       update potential
          RPot4 += Omega_6*Residual;
 
-//       save the absolute value of residual of each grid into a shared array for evaluating the sum 
+//       save the absolute value of residual of each grid into a shared array for evaluating the sum
          s_Residual_Total[ID0] += FABS( Residual );
 
          PotCen += dz + Disp6;
@@ -1165,14 +1165,14 @@ __global__ void CUPOT_PoissonSolver_SOR_16to18cube( const real g_Rho_Array    []
 
 //       z = 5 plane
 // =======================================
-//       evaluate residual 
+//       evaluate residual
          Residual = ( s_FPot[kp] + s_FPot[km] + s_FPot[jp] + s_FPot[jm] + s_FPot[ip] + s_FPot[im]
                       - (real)6.0*RPot5 - Const*g_Rho_Array[bx][RhoCen] );
 
 //       update potential
          RPot5 += Omega_6*Residual;
 
-//       save the absolute value of residual of each grid into a shared array for evaluating the sum 
+//       save the absolute value of residual of each grid into a shared array for evaluating the sum
          s_Residual_Total[ID0] += FABS( Residual );
 
          PotCen += dz - Disp6;
@@ -1183,14 +1183,14 @@ __global__ void CUPOT_PoissonSolver_SOR_16to18cube( const real g_Rho_Array    []
 
 //       z = 6 plane
 // =======================================
-//       evaluate residual 
+//       evaluate residual
          Residual = ( s_FPot[kp] + s_FPot[km] + s_FPot[jp] + s_FPot[jm] + s_FPot[ip] + s_FPot[im]
                       - (real)6.0*RPot6 - Const*g_Rho_Array[bx][RhoCen] );
 
 //       update potential
          RPot6 += Omega_6*Residual;
 
-//       save the absolute value of residual of each grid into a shared array for evaluating the sum 
+//       save the absolute value of residual of each grid into a shared array for evaluating the sum
          s_Residual_Total[ID0] += FABS( Residual );
 
          PotCen += dz + Disp6;
@@ -1201,16 +1201,16 @@ __global__ void CUPOT_PoissonSolver_SOR_16to18cube( const real g_Rho_Array    []
 
 //       z = 7 plane
 // =======================================
-//       evaluate residual 
+//       evaluate residual
          Residual = ( s_FPot[kp] + s_FPot[km] + s_FPot[jp] + s_FPot[jm] + s_FPot[ip] + s_FPot[im]
                       - (real)6.0*RPot7 - Const*g_Rho_Array[bx][RhoCen] );
 
 //       update potential
          RPot7 += Omega_6*Residual;
 
-//       save the absolute value of residual of each grid into a shared array for evaluating the sum 
+//       save the absolute value of residual of each grid into a shared array for evaluating the sum
          s_Residual_Total[ID0] += FABS( Residual );
-         
+
          PotCen += dz - Disp6;
          RhoCen += RHO_NXT*RHO_NXT - Disp6;
          Disp14  = Disp8;
@@ -1219,16 +1219,16 @@ __global__ void CUPOT_PoissonSolver_SOR_16to18cube( const real g_Rho_Array    []
 
 //       z = 8 plane
 // =======================================
-//       evaluate residual 
+//       evaluate residual
          Residual = ( s_FPot[kp] + s_FPot[km] + s_FPot[jp] + s_FPot[jm] + s_FPot[ip] + s_FPot[im]
                       - (real)6.0*RPot8 - Const*g_Rho_Array[bx][RhoCen] );
 
 //       update potential
          RPot8 += Omega_6*Residual;
 
-//       save the absolute value of residual of each grid into a shared array for evaluating the sum 
+//       save the absolute value of residual of each grid into a shared array for evaluating the sum
          s_Residual_Total[ID0] += FABS( Residual );
-         
+
          PotCen += dz + Disp6;
          RhoCen += RHO_NXT*RHO_NXT + Disp6;
          Disp14  = Disp10;
@@ -1237,14 +1237,14 @@ __global__ void CUPOT_PoissonSolver_SOR_16to18cube( const real g_Rho_Array    []
 
 //       z = 9 plane
 // =======================================
-//       evaluate residual 
+//       evaluate residual
          Residual = ( s_FPot[kp] + s_FPot[km] + s_FPot[jp] + s_FPot[jm] + s_FPot[ip] + s_FPot[im]
                       - (real)6.0*RPot9 - Const*g_Rho_Array[bx][RhoCen] );
 
 //       update potential
          RPot9 += Omega_6*Residual;
 
-//       save the absolute value of residual of each grid into a shared array for evaluating the sum 
+//       save the absolute value of residual of each grid into a shared array for evaluating the sum
          s_Residual_Total[ID0] += FABS( Residual );
 
          PotCen += dz - Disp6;
@@ -1255,14 +1255,14 @@ __global__ void CUPOT_PoissonSolver_SOR_16to18cube( const real g_Rho_Array    []
 
 //       z = 10 plane
 // =======================================
-//       evaluate residual 
+//       evaluate residual
          Residual = ( s_FPot[kp] + s_FPot[km] + s_FPot[jp] + s_FPot[jm] + s_FPot[ip] + s_FPot[im]
                       - (real)6.0*RPot10 - Const*g_Rho_Array[bx][RhoCen] );
 
 //       update potential
          RPot10 += Omega_6*Residual;
 
-//       save the absolute value of residual of each grid into a shared array for evaluating the sum 
+//       save the absolute value of residual of each grid into a shared array for evaluating the sum
          s_Residual_Total[ID0] += FABS( Residual );
 
          PotCen += dz + Disp6;
@@ -1273,14 +1273,14 @@ __global__ void CUPOT_PoissonSolver_SOR_16to18cube( const real g_Rho_Array    []
 
 //       z = 11 plane
 // =======================================
-//       evaluate residual 
+//       evaluate residual
          Residual = ( s_FPot[kp] + s_FPot[km] + s_FPot[jp] + s_FPot[jm] + s_FPot[ip] + s_FPot[im]
                       - (real)6.0*RPot11 - Const*g_Rho_Array[bx][RhoCen] );
 
 //       update potential
          RPot11 += Omega_6*Residual;
 
-//       save the absolute value of residual of each grid into a shared array for evaluating the sum 
+//       save the absolute value of residual of each grid into a shared array for evaluating the sum
          s_Residual_Total[ID0] += FABS( Residual );
 
          PotCen += dz - Disp6;
@@ -1291,14 +1291,14 @@ __global__ void CUPOT_PoissonSolver_SOR_16to18cube( const real g_Rho_Array    []
 
 //       z = 12 plane
 // =======================================
-//       evaluate residual 
+//       evaluate residual
          Residual = ( s_FPot[kp] + s_FPot[km] + s_FPot[jp] + s_FPot[jm] + s_FPot[ip] + s_FPot[im]
                       - (real)6.0*RPot12 - Const*g_Rho_Array[bx][RhoCen] );
 
 //       update potential
          RPot12 += Omega_6*Residual;
 
-//       save the absolute value of residual of each grid into a shared array for evaluating the sum 
+//       save the absolute value of residual of each grid into a shared array for evaluating the sum
          s_Residual_Total[ID0] += FABS( Residual );
 
          PotCen += dz + Disp6;
@@ -1309,14 +1309,14 @@ __global__ void CUPOT_PoissonSolver_SOR_16to18cube( const real g_Rho_Array    []
 
 //       z = 13 plane
 // =======================================
-//       evaluate residual 
+//       evaluate residual
          Residual = ( s_FPot[kp] + s_FPot[km] + s_FPot[jp] + s_FPot[jm] + s_FPot[ip] + s_FPot[im]
                       - (real)6.0*RPot13 - Const*g_Rho_Array[bx][RhoCen] );
 
 //       update potential
          RPot13 += Omega_6*Residual;
 
-//       save the absolute value of residual of each grid into a shared array for evaluating the sum 
+//       save the absolute value of residual of each grid into a shared array for evaluating the sum
          s_Residual_Total[ID0] += FABS( Residual );
 
 #if ( POT_GHOST_SIZE == 5 )
@@ -1329,16 +1329,16 @@ __global__ void CUPOT_PoissonSolver_SOR_16to18cube( const real g_Rho_Array    []
 
 //       z = 14 plane
 // =======================================
-//       evaluate residual 
+//       evaluate residual
          Residual = ( s_FPot[kp] + s_FPot[km] + s_FPot[jp] + s_FPot[jm] + s_FPot[ip] + s_FPot[im]
                       - (real)6.0*RPot14 - Const*g_Rho_Array[bx][RhoCen] );
 
 //       update potential
          RPot14 += Omega_6*Residual;
 
-//       save the absolute value of residual of each grid into a shared array for evaluating the sum 
+//       save the absolute value of residual of each grid into a shared array for evaluating the sum
          s_Residual_Total[ID0] += FABS( Residual );
-        
+
          PotCen += dz + Disp6;
          RhoCen += RHO_NXT*RHO_NXT + Disp6;
          Disp14  = Disp10;
@@ -1347,14 +1347,14 @@ __global__ void CUPOT_PoissonSolver_SOR_16to18cube( const real g_Rho_Array    []
 
 //       z = 15 plane
 // =======================================
-//       evaluate residual 
+//       evaluate residual
          Residual = ( s_FPot[kp] + s_FPot[km] + s_FPot[jp] + s_FPot[jm] + s_FPot[ip] + s_FPot[im]
                       - (real)6.0*RPot15 - Const*g_Rho_Array[bx][RhoCen] );
 
 //       update potential
          RPot15 += Omega_6*Residual;
 
-//       save the absolute value of residual of each grid into a shared array for evaluating the sum 
+//       save the absolute value of residual of each grid into a shared array for evaluating the sum
          s_Residual_Total[ID0] += FABS( Residual );
 
 #endif // #if ( POT_GHOST_SIZE == 5 )
@@ -1367,7 +1367,7 @@ __global__ void CUPOT_PoissonSolver_SOR_16to18cube( const real g_Rho_Array    []
 //       (b2). exchange the potential stored in the shared memory and registers
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-//       (b2-1). exchange the boundary potential 
+//       (b2-1). exchange the boundary potential
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 //       -xy plane
@@ -1396,7 +1396,7 @@ __global__ void CUPOT_PoissonSolver_SOR_16to18cube( const real g_Rho_Array    []
 
 //       +yz plane
 // =======================================
-         RecvID         = __umul24(1+ty, POT_NXT_F*POT_NXT_F/2) + __umul24(1+(tx<<1)+Disp5, POT_NXT_F/2) 
+         RecvID         = __umul24(1+ty, POT_NXT_F*POT_NXT_F/2) + __umul24(1+(tx<<1)+Disp5, POT_NXT_F/2)
                           + (POT_NXT_F/2)-1;
          Temp2          = BPot_yz2;
          BPot_yz2       = s_FPot[RecvID];
@@ -1429,8 +1429,8 @@ __global__ void CUPOT_PoissonSolver_SOR_16to18cube( const real g_Rho_Array    []
 
 //       z = 0 plane
 // =======================================
-         SendID         = PotCen0 +  0*dz + Disp4;  
-         RecvID         = PotCen0 +  0*dz + Disp5; 
+         SendID         = PotCen0 +  0*dz + Disp4;
+         RecvID         = PotCen0 +  0*dz + Disp5;
          Temp           = RPot0;
          RPot0          = s_FPot[RecvID];
          SYNCTHREADS();
@@ -1438,8 +1438,8 @@ __global__ void CUPOT_PoissonSolver_SOR_16to18cube( const real g_Rho_Array    []
 
 //       z = 1 plane
 // =======================================
-         SendID         = PotCen0 +  1*dz + Disp5;  
-         RecvID         = PotCen0 +  1*dz + Disp4; 
+         SendID         = PotCen0 +  1*dz + Disp5;
+         RecvID         = PotCen0 +  1*dz + Disp4;
          Temp           = RPot1;
          RPot1          = s_FPot[RecvID];
          SYNCTHREADS();
@@ -1447,8 +1447,8 @@ __global__ void CUPOT_PoissonSolver_SOR_16to18cube( const real g_Rho_Array    []
 
 //       z = 2 plane
 // =======================================
-         SendID         = PotCen0 +  2*dz + Disp4;  
-         RecvID         = PotCen0 +  2*dz + Disp5; 
+         SendID         = PotCen0 +  2*dz + Disp4;
+         RecvID         = PotCen0 +  2*dz + Disp5;
          Temp           = RPot2;
          RPot2          = s_FPot[RecvID];
          SYNCTHREADS();
@@ -1456,8 +1456,8 @@ __global__ void CUPOT_PoissonSolver_SOR_16to18cube( const real g_Rho_Array    []
 
 //       z = 3 plane
 // =======================================
-         SendID         = PotCen0 +  3*dz + Disp5;  
-         RecvID         = PotCen0 +  3*dz + Disp4; 
+         SendID         = PotCen0 +  3*dz + Disp5;
+         RecvID         = PotCen0 +  3*dz + Disp4;
          Temp           = RPot3;
          RPot3          = s_FPot[RecvID];
          SYNCTHREADS();
@@ -1465,8 +1465,8 @@ __global__ void CUPOT_PoissonSolver_SOR_16to18cube( const real g_Rho_Array    []
 
 //       z = 4 plane
 // =======================================
-         SendID         = PotCen0 +  4*dz + Disp4;  
-         RecvID         = PotCen0 +  4*dz + Disp5; 
+         SendID         = PotCen0 +  4*dz + Disp4;
+         RecvID         = PotCen0 +  4*dz + Disp5;
          Temp           = RPot4;
          RPot4          = s_FPot[RecvID];
          SYNCTHREADS();
@@ -1474,8 +1474,8 @@ __global__ void CUPOT_PoissonSolver_SOR_16to18cube( const real g_Rho_Array    []
 
 //       z = 5 plane
 // =======================================
-         SendID         = PotCen0 +  5*dz + Disp5;  
-         RecvID         = PotCen0 +  5*dz + Disp4; 
+         SendID         = PotCen0 +  5*dz + Disp5;
+         RecvID         = PotCen0 +  5*dz + Disp4;
          Temp           = RPot5;
          RPot5          = s_FPot[RecvID];
          SYNCTHREADS();
@@ -1483,8 +1483,8 @@ __global__ void CUPOT_PoissonSolver_SOR_16to18cube( const real g_Rho_Array    []
 
 //       z = 6 plane
 // =======================================
-         SendID         = PotCen0 +  6*dz + Disp4;  
-         RecvID         = PotCen0 +  6*dz + Disp5; 
+         SendID         = PotCen0 +  6*dz + Disp4;
+         RecvID         = PotCen0 +  6*dz + Disp5;
          Temp           = RPot6;
          RPot6          = s_FPot[RecvID];
          SYNCTHREADS();
@@ -1492,8 +1492,8 @@ __global__ void CUPOT_PoissonSolver_SOR_16to18cube( const real g_Rho_Array    []
 
 //       z = 7 plane
 // =======================================
-         SendID         = PotCen0 +  7*dz + Disp5;  
-         RecvID         = PotCen0 +  7*dz + Disp4; 
+         SendID         = PotCen0 +  7*dz + Disp5;
+         RecvID         = PotCen0 +  7*dz + Disp4;
          Temp           = RPot7;
          RPot7          = s_FPot[RecvID];
          SYNCTHREADS();
@@ -1501,8 +1501,8 @@ __global__ void CUPOT_PoissonSolver_SOR_16to18cube( const real g_Rho_Array    []
 
 //       z = 8 plane
 // =======================================
-         SendID         = PotCen0 +  8*dz + Disp4;  
-         RecvID         = PotCen0 +  8*dz + Disp5; 
+         SendID         = PotCen0 +  8*dz + Disp4;
+         RecvID         = PotCen0 +  8*dz + Disp5;
          Temp           = RPot8;
          RPot8          = s_FPot[RecvID];
          SYNCTHREADS();
@@ -1510,8 +1510,8 @@ __global__ void CUPOT_PoissonSolver_SOR_16to18cube( const real g_Rho_Array    []
 
 //       z = 9 plane
 // =======================================
-         SendID         = PotCen0 +  9*dz + Disp5;  
-         RecvID         = PotCen0 +  9*dz + Disp4; 
+         SendID         = PotCen0 +  9*dz + Disp5;
+         RecvID         = PotCen0 +  9*dz + Disp4;
          Temp           = RPot9;
          RPot9          = s_FPot[RecvID];
          SYNCTHREADS();
@@ -1519,8 +1519,8 @@ __global__ void CUPOT_PoissonSolver_SOR_16to18cube( const real g_Rho_Array    []
 
 //       z = 10 plane
 // =======================================
-         SendID         = PotCen0 + 10*dz + Disp4;  
-         RecvID         = PotCen0 + 10*dz + Disp5; 
+         SendID         = PotCen0 + 10*dz + Disp4;
+         RecvID         = PotCen0 + 10*dz + Disp5;
          Temp           = RPot10;
          RPot10         = s_FPot[RecvID];
          SYNCTHREADS();
@@ -1528,8 +1528,8 @@ __global__ void CUPOT_PoissonSolver_SOR_16to18cube( const real g_Rho_Array    []
 
 //       z = 11 plane
 // =======================================
-         SendID         = PotCen0 + 11*dz + Disp5;  
-         RecvID         = PotCen0 + 11*dz + Disp4; 
+         SendID         = PotCen0 + 11*dz + Disp5;
+         RecvID         = PotCen0 + 11*dz + Disp4;
          Temp           = RPot11;
          RPot11         = s_FPot[RecvID];
          SYNCTHREADS();
@@ -1537,8 +1537,8 @@ __global__ void CUPOT_PoissonSolver_SOR_16to18cube( const real g_Rho_Array    []
 
 //       z = 12 plane
 // =======================================
-         SendID         = PotCen0 + 12*dz + Disp4;  
-         RecvID         = PotCen0 + 12*dz + Disp5; 
+         SendID         = PotCen0 + 12*dz + Disp4;
+         RecvID         = PotCen0 + 12*dz + Disp5;
          Temp           = RPot12;
          RPot12         = s_FPot[RecvID];
          SYNCTHREADS();
@@ -1546,8 +1546,8 @@ __global__ void CUPOT_PoissonSolver_SOR_16to18cube( const real g_Rho_Array    []
 
 //       z = 13 plane
 // =======================================
-         SendID         = PotCen0 + 13*dz + Disp5;  
-         RecvID         = PotCen0 + 13*dz + Disp4; 
+         SendID         = PotCen0 + 13*dz + Disp5;
+         RecvID         = PotCen0 + 13*dz + Disp4;
          Temp           = RPot13;
          RPot13         = s_FPot[RecvID];
          SYNCTHREADS();
@@ -1558,8 +1558,8 @@ __global__ void CUPOT_PoissonSolver_SOR_16to18cube( const real g_Rho_Array    []
 
 //       z = 14 plane
 // =======================================
-         SendID         = PotCen0 + 14*dz + Disp4;  
-         RecvID         = PotCen0 + 14*dz + Disp5; 
+         SendID         = PotCen0 + 14*dz + Disp4;
+         RecvID         = PotCen0 + 14*dz + Disp5;
          Temp           = RPot14;
          RPot14         = s_FPot[RecvID];
          SYNCTHREADS();
@@ -1567,21 +1567,21 @@ __global__ void CUPOT_PoissonSolver_SOR_16to18cube( const real g_Rho_Array    []
 
 //       z = 15 plane
 // =======================================
-         SendID         = PotCen0 + 15*dz + Disp5;  
-         RecvID         = PotCen0 + 15*dz + Disp4; 
+         SendID         = PotCen0 + 15*dz + Disp5;
+         RecvID         = PotCen0 + 15*dz + Disp4;
          Temp           = RPot15;
          RPot15         = s_FPot[RecvID];
          SYNCTHREADS();
          s_FPot[SendID] = Temp;
 
-#endif 
+#endif
 
          __syncthreads();
 
 
 
-//       (b2-3). copy the +-yz-plane boundary potential stored in the temparory registers 
-//               back to shared memory 
+//       (b2-3). copy the +-yz-plane boundary potential stored in the temparory registers
+//               back to shared memory
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 //       -yz plane
@@ -1591,7 +1591,7 @@ __global__ void CUPOT_PoissonSolver_SOR_16to18cube( const real g_Rho_Array    []
 
 //       +yz plane
 // =======================================
-         SendID         = __umul24(1+ty, POT_NXT_F*POT_NXT_F/2) + __umul24(1+(tx<<1)+Disp4, POT_NXT_F/2) 
+         SendID         = __umul24(1+ty, POT_NXT_F*POT_NXT_F/2) + __umul24(1+(tx<<1)+Disp4, POT_NXT_F/2)
                           + (POT_NXT_F/2)-1;
          s_FPot[SendID] = Temp2;
 
@@ -1602,7 +1602,7 @@ __global__ void CUPOT_PoissonSolver_SOR_16to18cube( const real g_Rho_Array    []
 
 //       (b2-4). reset parameters for pass == 1 (the odd step)
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-         PotCen   = PotCen0 + Disp2;        
+         PotCen   = PotCen0 + Disp2;
          RhoCen   = RhoCen0 + Disp2;
          Disp4    = Disp2;
          Disp5    = Disp1;
@@ -1626,23 +1626,23 @@ __global__ void CUPOT_PoissonSolver_SOR_16to18cube( const real g_Rho_Array    []
 #     error : ERROR : POT_NTHREAD must < 1024 !!
 #     endif
 
-#     if ( POT_NTHREAD >= 512 ) 
+#     if ( POT_NTHREAD >= 512 )
       if ( ID0 < 256 )  s_Residual_Total[ID0] += s_Residual_Total[ ID0 + 256 ];  __syncthreads();
 #     endif
 
-#     if ( POT_NTHREAD >= 256 ) 
+#     if ( POT_NTHREAD >= 256 )
       if ( ID0 < 128 )  s_Residual_Total[ID0] += s_Residual_Total[ ID0 + 128 ];  __syncthreads();
 #     endif
 
-#     if ( POT_NTHREAD >= 128 ) 
+#     if ( POT_NTHREAD >= 128 )
       if ( ID0 <  64 )  s_Residual_Total[ID0] += s_Residual_Total[ ID0 +  64 ];  __syncthreads();
 #     endif
 
 //    adopting warp-synchronous mechanism
-      if ( ID0 < 32 ) 
-      {  
+      if ( ID0 < 32 )
+      {
 //       declare volatile pointer to ensure that the operations are not reordered
-         volatile real *s_Sum = s_Residual_Total;   
+         volatile real *s_Sum = s_Residual_Total;
 
          s_Sum[ID0] += s_Sum[ID0+32];  // here we have assumed that POT_NTHREAD >= 64
          s_Sum[ID0] += s_Sum[ID0+16];
@@ -1670,7 +1670,7 @@ __global__ void CUPOT_PoissonSolver_SOR_16to18cube( const real g_Rho_Array    []
 // ---------------------------------------------------------------------------------------------------------
 
 // (c1). internal potential stored in shared memory   -->   global memory  (store one z-slice at a time)
-   const uint y = ( ID0 % (GRA_NXT*GRA_NXT/2) ) / (GRA_NXT/2); 
+   const uint y = ( ID0 % (GRA_NXT*GRA_NXT/2) ) / (GRA_NXT/2);
    const uint x = ( ID0 % (GRA_NXT/2) );
 
    if ( ID0 < GRA_NXT*GRA_NXT/2 )
@@ -1680,15 +1680,15 @@ __global__ void CUPOT_PoissonSolver_SOR_16to18cube( const real g_Rho_Array    []
          Disp4 = (y+z)&1;
          ID1   = __umul24( z, GRA_NXT*GRA_NXT ) + __umul24( y, GRA_NXT )
                  + 2*x+Disp4-2*(POT_USELESS2&Disp4)+POT_USELESS2;
-         ID2   =   __umul24( z+POT_GHOST_SIZE-GRA_GHOST_SIZE, POT_NXT_F*POT_NXT_F/2 ) 
-                 + __umul24( y+POT_GHOST_SIZE-GRA_GHOST_SIZE, POT_NXT_F/2 )  
+         ID2   =   __umul24( z+POT_GHOST_SIZE-GRA_GHOST_SIZE, POT_NXT_F*POT_NXT_F/2 )
+                 + __umul24( y+POT_GHOST_SIZE-GRA_GHOST_SIZE, POT_NXT_F/2 )
                  + x+(POT_GHOST_SIZE-GRA_GHOST_SIZE)/2+POT_USELESS2-(POT_USELESS2&Disp4);
 
          g_Pot_Array_Out[bx][ID1] = s_FPot[ID2];
       }
    }
    __syncthreads();
-   
+
 
 // (c2). internal potential stored in the registers   -->   global memory
 #if ( POT_GHOST_SIZE == 4 )
@@ -1726,8 +1726,8 @@ __global__ void CUPOT_PoissonSolver_SOR_16to18cube( const real g_Rho_Array    []
          ID1   = __umul24( z, GRA_NXT*GRA_NXT ) + __umul24( y, GRA_NXT )
 //               + 2*x+(Disp4^(GRA_GHOST_SIZE/2));
                  + 2*x + (  Disp4 ^ ( 1-(GRA_GHOST_SIZE&1) )  );
-         ID2   =   __umul24( z+POT_GHOST_SIZE-GRA_GHOST_SIZE, POT_NXT_F*POT_NXT_F/2 ) 
-                 + __umul24( y+POT_GHOST_SIZE-GRA_GHOST_SIZE, POT_NXT_F/2 )  
+         ID2   =   __umul24( z+POT_GHOST_SIZE-GRA_GHOST_SIZE, POT_NXT_F*POT_NXT_F/2 )
+                 + __umul24( y+POT_GHOST_SIZE-GRA_GHOST_SIZE, POT_NXT_F/2 )
 //               + x+1-(Disp4&(GRA_GHOST_SIZE/2));
                  + x + 2 -(GRA_GHOST_SIZE+1)/2 - ( Disp4 & (1-GRA_GHOST_SIZE&1) );
 
@@ -1771,8 +1771,8 @@ __global__ void CUPOT_PoissonSolver_SOR_16to18cube( const real g_Rho_Array    []
          ID1   = __umul24( z, GRA_NXT*GRA_NXT ) + __umul24( y, GRA_NXT )
 //               + 2*x+( (Disp4^1) ^ (GRA_GHOST_SIZE/2) );
                  + 2*x + (  (Disp4^1) ^ ( 1-(GRA_GHOST_SIZE&1) )  );
-         ID2   =   __umul24( z+POT_GHOST_SIZE-GRA_GHOST_SIZE, POT_NXT_F*POT_NXT_F/2 ) 
-                 + __umul24( y+POT_GHOST_SIZE-GRA_GHOST_SIZE, POT_NXT_F/2 )  
+         ID2   =   __umul24( z+POT_GHOST_SIZE-GRA_GHOST_SIZE, POT_NXT_F*POT_NXT_F/2 )
+                 + __umul24( y+POT_GHOST_SIZE-GRA_GHOST_SIZE, POT_NXT_F/2 )
 //               + x+1+( (Disp4^1) & (GRA_GHOST_SIZE&1) );
                  + x + 2 - (GRA_GHOST_SIZE+1)/2 + ( (Disp4^1) & (GRA_GHOST_SIZE&1) );
 

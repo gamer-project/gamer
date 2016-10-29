@@ -1,7 +1,6 @@
 #include "Copyright.h"
 #include "Macro.h"
 #include "CUPOT.h"
-//#include "stdio.h"
 
 #if ( defined GRAVITY  &&  defined GPU  &&  POT_SCHEME == SOR  &&  defined USE_PSOLVER_10TO14 )
 
