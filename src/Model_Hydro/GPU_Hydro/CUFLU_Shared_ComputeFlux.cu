@@ -21,74 +21,75 @@
 #endif
 
 
-static __device__ void CUFLU_ComputeFlux( const real g_FC_Var_xL[][5][ N_FC_VAR*N_FC_VAR*N_FC_VAR ], 
-                                          const real g_FC_Var_xR[][5][ N_FC_VAR*N_FC_VAR*N_FC_VAR ], 
-                                          const real g_FC_Var_yL[][5][ N_FC_VAR*N_FC_VAR*N_FC_VAR ], 
+static __device__ void CUFLU_ComputeFlux( const real g_FC_Var_xL[][5][ N_FC_VAR*N_FC_VAR*N_FC_VAR ],
+                                          const real g_FC_Var_xR[][5][ N_FC_VAR*N_FC_VAR*N_FC_VAR ],
+                                          const real g_FC_Var_yL[][5][ N_FC_VAR*N_FC_VAR*N_FC_VAR ],
                                           const real g_FC_Var_yR[][5][ N_FC_VAR*N_FC_VAR*N_FC_VAR ],
-                                          const real g_FC_Var_zL[][5][ N_FC_VAR*N_FC_VAR*N_FC_VAR ], 
+                                          const real g_FC_Var_zL[][5][ N_FC_VAR*N_FC_VAR*N_FC_VAR ],
                                           const real g_FC_Var_zR[][5][ N_FC_VAR*N_FC_VAR*N_FC_VAR ],
                                           real g_FC_Flux_x[][5][ N_FC_FLUX*N_FC_FLUX*N_FC_FLUX ],
                                           real g_FC_Flux_y[][5][ N_FC_FLUX*N_FC_FLUX*N_FC_FLUX ],
                                           real g_FC_Flux_z[][5][ N_FC_FLUX*N_FC_FLUX*N_FC_FLUX ],
                                           real g_Flux[][9][5][ PS2*PS2 ], const bool DumpFlux,
-                                          const uint Gap, const real Gamma );
+                                          const uint Gap, const real Gamma, const real MinPres );
 
 
 
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  CUFLU_ComputeFlux
-// Description :  Compute the face-centered fluxes by Riemann solver 
+// Description :  Compute the face-centered fluxes by Riemann solver
 //
 // Note        :  1. Currently support the exact, Roe, HLLE, and HLLC solvers
 //                2. Prefix "g" for pointers pointing to the "Global" memory space
 //                   Prefix "s" for pointers pointing to the "Shared" memory space
 //                3. The function is asynchronous
 //                   --> "__syncthreads" must be called before using the output data
-//                4. The sizes of the array g_FC_Var_x/y/z are assumed to be "N_FC_VAR" 
-//                   --> "N_FC_VAR-1" fluxes will be computed along each normal direction 
-//                5. The sizes of the arrays g_FC_Flux_XX in each direction are assumed to be "N_FL_FLUX" 
-//                   --> The (i,j,k) flux will be stored in the array g_FC_Flux_XX with 
+//                4. The sizes of the array g_FC_Var_x/y/z are assumed to be "N_FC_VAR"
+//                   --> "N_FC_VAR-1" fluxes will be computed along each normal direction
+//                5. The sizes of the arrays g_FC_Flux_XX in each direction are assumed to be "N_FL_FLUX"
+//                   --> The (i,j,k) flux will be stored in the array g_FC_Flux_XX with
 //                       the index "(k*N_FL_FLUX+j)*N_FL_FLUX+i"
 //                   --> The (i,j,k) FC_Flux_x is defined at the +x surfaces of the cell (i,     j-Gap, k-Gap)
 //                       The (i,j,k) FC_Flux_y is defined at the +y surfaces of the cell (i-Gap, j,     k-Gap)
 //                       The (i,j,k) FC_Flux_z is defined at the +z surfaces of the cell (i-Gap, j-Gap, k    )
 //                6. This function is shared by MHM, MHM_RP, and CTU schemes
 //                7. For the performance consideration, this function will also be responsible for store the
-//                   inter-patch fluxes 
+//                   inter-patch fluxes
 //                   --> Option "DumpFlux"
 //                8. The "__forceinline__" qualifier is added for higher performance
 //
-// Parameter   :  g_FC_Var_xL : Global memory array storing the face-centered variables on the -x surface
-//                g_FC_Var_xR : Global memory array storing the face-centered variables on the +x surface
-//                g_FC_Var_yL : Global memory array storing the face-centered variables on the -y surface
-//                g_FC_Var_yR : Global memory array storing the face-centered variables on the +y surface
-//                g_FC_Var_zL : Global memory array storing the face-centered variables on the -z surface
-//                g_FC_Var_zR : Global memory array storing the face-centered variables on the +z surface
-//                g_FC_Flux_x : Global memory array to store the face-centered fluxes in the x direction
-//                g_FC_Flux_y : Global memory array to store the face-centered fluxes in the y direction
-//                g_FC_Flux_z : Global memory array to store the face-centered fluxes in the z direction
-//                g_Flux      : Global memory array to store the output fluxes
-//                DumpFlux    : true --> store the inter-patch fluxes to "g_Flux" for the AMR correction
-//                Gap         : Number of grids to be skipped in the transverse direction
-//                              --> "(N_FC_VAR-2*Gap)^2" fluxes will be computed in each surface
-//                Gamma       : Ratio of specific heats
-//                CorrHalfVel : true --> correcting the half-step velocity by gravity (for UNSPLIT_GRAVITY only)
-//                g_Pot_USG   : Global memory array storing the input potential for CorrHalfVel (for UNSPLIT_GRAVITY only)
-//                              --> must have the same size as FC_Var ( (PS2+2)^3 )
-//                g_Corner    : Global memory array storing the physical corner coordinates of each patch group (for UNSPLIT_GRAVITY)
-//                dt          : Time interval to advance the full-step solution (for UNSPLIT_GRAVITY only)
-//                _dh         : 1 / Grid size                                   (for UNSPLIT_GRAVITY only)
-//                Time        : Current physical time                           (for UNSPLIT_GRAVITY only)
-//                GravityType : Types of gravity --> self-gravity, external gravity, both (for UNSPLIT_GRAVITY only)
+// Parameter   :  g_FC_Var_xL     : Global memory array storing the face-centered variables on the -x surface
+//                g_FC_Var_xR     : Global memory array storing the face-centered variables on the +x surface
+//                g_FC_Var_yL     : Global memory array storing the face-centered variables on the -y surface
+//                g_FC_Var_yR     : Global memory array storing the face-centered variables on the +y surface
+//                g_FC_Var_zL     : Global memory array storing the face-centered variables on the -z surface
+//                g_FC_Var_zR     : Global memory array storing the face-centered variables on the +z surface
+//                g_FC_Flux_x     : Global memory array to store the face-centered fluxes in the x direction
+//                g_FC_Flux_y     : Global memory array to store the face-centered fluxes in the y direction
+//                g_FC_Flux_z     : Global memory array to store the face-centered fluxes in the z direction
+//                g_Flux          : Global memory array to store the output fluxes
+//                DumpFlux        : true --> store the inter-patch fluxes to "g_Flux" for the AMR correction
+//                Gap             : Number of grids to be skipped in the transverse direction
+//                                  --> "(N_FC_VAR-2*Gap)^2" fluxes will be computed in each surface
+//                Gamma           : Ratio of specific heats
+//                CorrHalfVel     : true --> correcting the half-step velocity by gravity (for UNSPLIT_GRAVITY only)
+//                g_Pot_USG       : Global memory array storing the input potential for CorrHalfVel (for UNSPLIT_GRAVITY only)
+//                                  --> must have the same size as FC_Var ( (PS2+2)^3 )
+//                g_Corner        : Global memory array storing the physical corner coordinates of each patch group (for UNSPLIT_GRAVITY)
+//                dt              : Time interval to advance the full-step solution (for UNSPLIT_GRAVITY only)
+//                _dh             : 1 / Grid size                                   (for UNSPLIT_GRAVITY only)
+//                Time            : Current physical time                           (for UNSPLIT_GRAVITY only)
+//                GravityType     : Types of gravity --> self-gravity, external gravity, both (for UNSPLIT_GRAVITY only)
 //                ExtAcc_AuxArray : Auxiliary array for adding external acceleration (for UNSPLIT_GRAVITY only)
+//                MinPres         : Minimum allowed pressure
 //-------------------------------------------------------------------------------------------------------
 __forceinline__
-__device__ void CUFLU_ComputeFlux( const real g_FC_Var_xL[][5][ N_FC_VAR*N_FC_VAR*N_FC_VAR ], 
-                                   const real g_FC_Var_xR[][5][ N_FC_VAR*N_FC_VAR*N_FC_VAR ], 
-                                   const real g_FC_Var_yL[][5][ N_FC_VAR*N_FC_VAR*N_FC_VAR ], 
+__device__ void CUFLU_ComputeFlux( const real g_FC_Var_xL[][5][ N_FC_VAR*N_FC_VAR*N_FC_VAR ],
+                                   const real g_FC_Var_xR[][5][ N_FC_VAR*N_FC_VAR*N_FC_VAR ],
+                                   const real g_FC_Var_yL[][5][ N_FC_VAR*N_FC_VAR*N_FC_VAR ],
                                    const real g_FC_Var_yR[][5][ N_FC_VAR*N_FC_VAR*N_FC_VAR ],
-                                   const real g_FC_Var_zL[][5][ N_FC_VAR*N_FC_VAR*N_FC_VAR ], 
+                                   const real g_FC_Var_zL[][5][ N_FC_VAR*N_FC_VAR*N_FC_VAR ],
                                    const real g_FC_Var_zR[][5][ N_FC_VAR*N_FC_VAR*N_FC_VAR ],
                                    real g_FC_Flux_x[][5][ N_FC_FLUX*N_FC_FLUX*N_FC_FLUX ],
                                    real g_FC_Flux_y[][5][ N_FC_FLUX*N_FC_FLUX*N_FC_FLUX ],
@@ -97,7 +98,7 @@ __device__ void CUFLU_ComputeFlux( const real g_FC_Var_xL[][5][ N_FC_VAR*N_FC_VA
                                    const uint Gap, const real Gamma, const bool CorrHalfVel,
                                    const real g_Pot_USG[][ USG_NXT_F*USG_NXT_F*USG_NXT_F ],
                                    const double g_Corner[][3], const real dt, const real _dh, const double Time,
-                                   const OptGravityType_t GravityType, const double ExtAcc_AuxArray[] )
+                                   const OptGravityType_t GravityType, const double ExtAcc_AuxArray[], const real MinPres )
 {
 
 // check
@@ -245,8 +246,8 @@ __device__ void CUFLU_ComputeFlux( const real g_FC_Var_xL[][5][ N_FC_VAR*N_FC_VA
       /* exact solver */
       #define RiemannSolver( Dir, VarL, VarR )                                                           \
       {                                                                                                  \
-         VarL = CUFLU_Con2Pri( VarL, Gamma_m1 );                                                         \
-         VarR = CUFLU_Con2Pri( VarR, Gamma_m1 );                                                         \
+         VarL = CUFLU_Con2Pri( VarL, Gamma_m1, MinPres );                                                \
+         VarR = CUFLU_Con2Pri( VarR, Gamma_m1, MinPres );                                                \
                                                                                                          \
          FC_Flux = CUFLU_RiemannSolver_Exact( Dir, *Useless, *Useless, *Useless, VarL, VarR, Gamma );    \
       } // RiemannSolver
@@ -256,7 +257,7 @@ __device__ void CUFLU_ComputeFlux( const real g_FC_Var_xL[][5][ N_FC_VAR*N_FC_VA
       /* Roe solver */
       #define RiemannSolver( Dir, VarL, VarR )                                                           \
       {                                                                                                  \
-         FC_Flux = CUFLU_RiemannSolver_Roe( Dir, VarL, VarR, Gamma );                                    \
+         FC_Flux = CUFLU_RiemannSolver_Roe( Dir, VarL, VarR, Gamma, MinPres );                           \
       } // RiemannSolver
 
 #  elif ( RSOLVER == HLLE )
@@ -264,7 +265,7 @@ __device__ void CUFLU_ComputeFlux( const real g_FC_Var_xL[][5][ N_FC_VAR*N_FC_VA
       /* HLLE solver */
       #define RiemannSolver( Dir, VarL, VarR )                                                           \
       {                                                                                                  \
-         FC_Flux = CUFLU_RiemannSolver_HLLE( Dir, VarL, VarR, Gamma );                                   \
+         FC_Flux = CUFLU_RiemannSolver_HLLE( Dir, VarL, VarR, Gamma, MinPres );                          \
       } // RiemannSolver
 
 #  elif ( RSOLVER == HLLC )
@@ -272,7 +273,7 @@ __device__ void CUFLU_ComputeFlux( const real g_FC_Var_xL[][5][ N_FC_VAR*N_FC_VA
       /* HLLC solver */
       #define RiemannSolver( Dir, VarL, VarR )                                                           \
       {                                                                                                  \
-         FC_Flux = CUFLU_RiemannSolver_HLLC( Dir, VarL, VarR, Gamma );                                   \
+         FC_Flux = CUFLU_RiemannSolver_HLLC( Dir, VarL, VarR, Gamma, MinPres );                          \
       } // RiemannSolver
 
 #  else

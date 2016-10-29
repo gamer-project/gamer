@@ -343,11 +343,15 @@ void CPU_AdvanceX( real u[][ FLU_NXT*FLU_NXT*FLU_NXT ], real fc[PS2*PS2][3][5], 
          ux[i][0] = FMAX( ux[i][0], MinDens );
          ux[i][4] = CPU_CheckMinPresInEngy( ux[i][0], ux[i][1], ux[i][2], ux[i][3], ux[i][4], Gamma_m1, _Gamma_m1, MinPres );
 
-//       check the negative density
+//       check negative density and energy
 #        ifdef CHECK_NEGATIVE_IN_FLUID
          if ( CPU_CheckNegative(ux[i][0]) )
             Aux_Message( stderr, "ERROR : negative density (%14.7e) at file <%s>, line <%d>, function <%s>\n",
                          ux[i][0], __FILE__, __LINE__, __FUNCTION__ );
+
+         if ( CPU_CheckNegative(ux[i][4]) )
+            Aux_Message( stderr, "ERROR : negative energy (%14.7e) at file <%s>, line <%d>, function <%s>\n",
+                         ux[i][4], __FILE__, __LINE__, __FUNCTION__ );
 #        endif
 
       } // for (int i=FLU_GHOST_SIZE; i<FLU_GHOST_SIZE+PS2; i++)

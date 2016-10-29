@@ -252,11 +252,13 @@ void CPU_RiemannSolver_Exact( const int XYZ, real eival_out[], real L_star_out[]
    if ( L[4] < L_star[4] ) // left shock
    {
       Temp = (real)0.5/Gamma*( Gamma_p1*L_star[4]/L[4] + Gamma_m1 );
+
 #     ifdef CHECK_NEGATIVE_IN_FLUID
       if ( CPU_CheckNegative(Temp) )
          Aux_Message( stderr, "ERROR : negative value (%14.7e) at file <%s>, line <%d>, function <%s>\n",
                       Temp, __FILE__, __LINE__, __FUNCTION__ );
 #     endif
+
       eival[0] = L[1] - SQRT( Gamma*L[4]/L[0] )*SQRT( Temp );
    }
    else                    // left rarefaction
@@ -265,11 +267,13 @@ void CPU_RiemannSolver_Exact( const int XYZ, real eival_out[], real L_star_out[]
    if ( R[4] < R_star[4] ) // right shock
    {
       Temp = (real)0.5/Gamma*( Gamma_p1*R_star[4]/R[4] + Gamma_m1 );
+
 #     ifdef CHECK_NEGATIVE_IN_FLUID
       if ( CPU_CheckNegative(Temp) )
          Aux_Message( stderr, "ERROR : negative value (%14.7e) at file <%s>, line <%d>, function <%s>\n",
                       Temp, __FILE__, __LINE__, __FUNCTION__ );
 #     endif
+
       eival[4] = R[1] + SQRT( Gamma*R[4]/R[0] )*SQRT( Temp );
    }
    else                    // right rarefaction
@@ -356,6 +360,7 @@ real Solve_f( const real rho, const real p, const real p_star, const real Gamma 
       if ( CPU_CheckNegative(p) )
          Aux_Message( stderr, "ERROR : negative pressure (%14.7e) at file <%s>, line <%d>, function <%s>\n",
                       p, __FILE__, __LINE__, __FUNCTION__ );
+
       if ( CPU_CheckNegative(rho) )
          Aux_Message( stderr, "ERROR : negative density (%14.7e) at file <%s>, line <%d>, function <%s>\n",
                       rho, __FILE__, __LINE__, __FUNCTION__ );

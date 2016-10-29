@@ -7,7 +7,7 @@
 #include "CUFLU.h"
 #include "CUFLU_Shared_FluUtility.cu"
 
-static __device__ FluVar CUFLU_RiemannSolver_HLLE( const int XYZ, const FluVar L_In, const FluVar R_In, 
+static __device__ FluVar CUFLU_RiemannSolver_HLLE( const int XYZ, const FluVar L_In, const FluVar R_In,
                                                    const real Gamma );
 
 
@@ -18,59 +18,56 @@ static __device__ FluVar CUFLU_RiemannSolver_HLLE( const int XYZ, const FluVar L
 // Description :  Approximate Riemann solver of Harten, Lax, and van Leer.
 //                Estimate the wave speed by Einfeldt et al. (1991).
 //
-// Note        :  1. The input data should be conserved variables 
+// Note        :  1. The input data should be conserved variables
 //                2. Ref : a. Riemann Solvers and Numerical Methods for Fluid Dynamics - A Practical Introduction
-//                             ~ by Eleuterio F. Toro 
+//                             ~ by Eleuterio F. Toro
 //                         b. Einfeldt, B., et al. J. 1991, J. Comput. Phys., 92, 273
 //                3. This function is shared by MHM, MHM_RP, and CTU schemes
-//                4. The "__noinline__" qualifier is added in Fermi GPUs when "CHECK_INTERMEDIATE == HLLE" 
-//                   is adopted for higher performance 
+//                4. The "__noinline__" qualifier is added in Fermi GPUs when "CHECK_INTERMEDIATE == HLLE"
+//                   is adopted for higher performance
 //
-// Parameter   :  XYZ   : Targeted spatial direction : (0/1/2) --> (x/y/z)  
-//                L_In  : Input left  state (conserved variables)
-//                R_In  : Input right state (conserved variables)
-//                Gamma : Ratio of specific heats
+// Parameter   :  XYZ     : Targeted spatial direction : (0/1/2) --> (x/y/z)
+//                L_In    : Input left  state (conserved variables)
+//                R_In    : Input right state (conserved variables)
+//                Gamma   : Ratio of specific heats
+//                MinPres : Minimum allowed pressure
 //-------------------------------------------------------------------------------------------------------
 #if ( __CUDA_ARCH__ >= 200  &&  RSOLVER != HLLE ) // for CHECK_INTERMEDIATE == HLLE
-__noinline__ 
+__noinline__
 #endif
-__device__ FluVar CUFLU_RiemannSolver_HLLE( const int XYZ, const FluVar L_In, const FluVar R_In, 
-                                            const real Gamma )
+__device__ FluVar CUFLU_RiemannSolver_HLLE( const int XYZ, const FluVar L_In, const FluVar R_In,
+                                            const real Gamma, const real MinPres )
 {
 
 // 1. reorder the input variables for different spatial directions
-   FluVar L = CUFLU_Rotate3D( L_In, XYZ, true );  
+   FluVar L = CUFLU_Rotate3D( L_In, XYZ, true );
    FluVar R = CUFLU_Rotate3D( R_In, XYZ, true );
 
 
 // 2. evaluate the Roe's average values
    const real Gamma_m1 = Gamma - (real)1.0;
-   real _RhoL, _RhoR, P_L, P_R, H_L, H_R, u, v, w, V2, H, Cs; 
-   real RhoL_sqrt, RhoR_sqrt, _RhoL_sqrt, _RhoR_sqrt, _RhoLR_sqrt_sum, GammaP_Rho;
+   const real  TempRho = (real)0.5*( L.Rho + R.Rho );
+   const real _TempRho = (real)1.0/TempRho;
 
-#  if ( defined MIN_PRES_DENS  ||  defined MIN_PRES )
-   const real  TempRho  = (real)0.5*( L.Rho + R.Rho );
-   const real _TempRho  = (real)1.0/TempRho;
-   real TempPres;
-#  endif
-   
+   real _RhoL, _RhoR, P_L, P_R, H_L, H_R, u, v, w, V2, H, Cs;
+   real RhoL_sqrt, RhoR_sqrt, _RhoL_sqrt, _RhoR_sqrt, _RhoLR_sqrt_sum, GammaP_Rho, TempPres;
+
    _RhoL = (real)1.0 / L.Rho;
    _RhoR = (real)1.0 / R.Rho;
    P_L   = Gamma_m1*(  L.Egy - (real)0.5*( L.Px*L.Px + L.Py*L.Py + L.Pz*L.Pz )*_RhoL  );
    P_R   = Gamma_m1*(  R.Egy - (real)0.5*( R.Px*R.Px + R.Py*R.Py + R.Pz*R.Pz )*_RhoR  );
-#  if ( defined MIN_PRES_DENS  ||  defined MIN_PRES )
-   P_L   = CUFLU_PositivePres( P_L, L.Rho, _RhoL );
-   P_R   = CUFLU_PositivePres( P_R, R.Rho, _RhoR );
-#  endif
-   H_L   = ( L.Egy + P_L )*_RhoL;  
-   H_R   = ( R.Egy + P_R )*_RhoR;  
+   P_L   = CUFLU_CheckMinPres( P_L, MinPres );
+   P_R   = CUFLU_CheckMinPres( P_R, MinPres );
+   H_L   = ( L.Egy + P_L )*_RhoL;
+   H_R   = ( R.Egy + P_R )*_RhoR;
 
 #  ifdef CHECK_NEGATIVE_IN_FLUID
    if ( CUFLU_CheckNegative(L.Rho) )
-      printf( "ERROR : negative density (%14.7e) at file <%s>, line <%d>, function <%s>\n", 
+      printf( "ERROR : negative density (%14.7e) at file <%s>, line <%d>, function <%s>\n",
               L.Rho, __FILE__, __LINE__, __FUNCTION__ );
+
    if ( CUFLU_CheckNegative(R.Rho) )
-      printf( "ERROR : negative density (%14.7e) at file <%s>, line <%d>, function <%s>\n", 
+      printf( "ERROR : negative density (%14.7e) at file <%s>, line <%d>, function <%s>\n",
               R.Rho, __FILE__, __LINE__, __FUNCTION__ );
 #  endif
 
@@ -78,7 +75,7 @@ __device__ FluVar CUFLU_RiemannSolver_HLLE( const int XYZ, const FluVar L_In, co
    RhoR_sqrt       = SQRT( R.Rho );
    _RhoL_sqrt      = (real)1.0 / RhoL_sqrt;
    _RhoR_sqrt      = (real)1.0 / RhoR_sqrt;
-   _RhoLR_sqrt_sum = (real)1.0 / (RhoL_sqrt + RhoR_sqrt); 
+   _RhoLR_sqrt_sum = (real)1.0 / (RhoL_sqrt + RhoR_sqrt);
 
    u  = _RhoLR_sqrt_sum*( _RhoL_sqrt*L.Px + _RhoR_sqrt*R.Px );
    v  = _RhoLR_sqrt_sum*( _RhoL_sqrt*L.Py + _RhoR_sqrt*R.Py );
@@ -87,14 +84,13 @@ __device__ FluVar CUFLU_RiemannSolver_HLLE( const int XYZ, const FluVar L_In, co
    H  = _RhoLR_sqrt_sum*(  RhoL_sqrt*H_L  +  RhoR_sqrt*H_R  );
 
    GammaP_Rho = Gamma_m1*( H - (real)0.5*V2 );
-#  if ( defined MIN_PRES_DENS  ||  defined MIN_PRES )
    TempPres   = GammaP_Rho*TempRho/Gamma;
-   TempPres   = CUFLU_PositivePres( TempPres, TempRho, _TempRho );
+   TempPres   = CUFLU_CheckMinPres( TempPres, MinPres );
    GammaP_Rho = Gamma*TempPres*_TempRho;
-#  endif
+
 #  ifdef CHECK_NEGATIVE_IN_FLUID
    if ( CUFLU_CheckNegative(GammaP_Rho) )
-      printf( "ERROR : negative GammaP_Rho (%14.7e) at file <%s>, line <%d>, function <%s>\n", 
+      printf( "ERROR : negative GammaP_Rho (%14.7e) at file <%s>, line <%d>, function <%s>\n",
               GammaP_Rho, __FILE__, __LINE__, __FUNCTION__ );
 #  endif
 
@@ -116,10 +112,11 @@ __device__ FluVar CUFLU_RiemannSolver_HLLE( const int XYZ, const FluVar L_In, co
 
 #  ifdef CHECK_NEGATIVE_IN_FLUID
    if ( CUFLU_CheckNegative(P_L) )
-      printf( "ERROR : negative pressure (%14.7e) at file <%s>, line <%d>, function <%s>\n", 
+      printf( "ERROR : negative pressure (%14.7e) at file <%s>, line <%d>, function <%s>\n",
               P_L, __FILE__, __LINE__, __FUNCTION__ );
+
    if ( CUFLU_CheckNegative(P_R) )
-      printf( "ERROR : negative pressure (%14.7e) at file <%s>, line <%d>, function <%s>\n", 
+      printf( "ERROR : negative pressure (%14.7e) at file <%s>, line <%d>, function <%s>\n",
               P_R, __FILE__, __LINE__, __FUNCTION__ );
 #  endif
 
@@ -132,8 +129,8 @@ __device__ FluVar CUFLU_RiemannSolver_HLLE( const int XYZ, const FluVar L_In, co
 
 
 // 4. evaluate the left and right fluxes along the maximum wave speeds
-   FluVar Flux_L = CUFLU_Con2Flux( L, Gamma_m1, 0 );
-   FluVar Flux_R = CUFLU_Con2Flux( R, Gamma_m1, 0 );
+   FluVar Flux_L = CUFLU_Con2Flux( L, Gamma_m1, 0, MinPres );
+   FluVar Flux_R = CUFLU_Con2Flux( R, Gamma_m1, 0, MinPres );
 
    Flux_L.Rho -= MaxV_L*L.Rho;
    Flux_L.Px  -= MaxV_L*L.Px;

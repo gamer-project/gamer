@@ -21,17 +21,18 @@
 #endif
 
 #if ( FLU_SCHEME == MHM_RP )
-static __device__ void CUFLU_RiemannPredict_Flux( const real g_Fluid_In   [][5][ FLU_NXT*FLU_NXT*FLU_NXT ], 
+static __device__ void CUFLU_RiemannPredict_Flux( const real g_Fluid_In   [][5][ FLU_NXT*FLU_NXT*FLU_NXT ],
                                                         real g_Half_Flux_x[][5][ N_FC_FLUX*N_FC_FLUX*N_FC_FLUX ],
                                                         real g_Half_Flux_y[][5][ N_FC_FLUX*N_FC_FLUX*N_FC_FLUX ],
                                                         real g_Half_Flux_z[][5][ N_FC_FLUX*N_FC_FLUX*N_FC_FLUX ],
-                                                  const real Gamma );
-static __device__ void CUFLU_RiemannPredict( const real g_Fluid_In   [][5][ FLU_NXT*FLU_NXT*FLU_NXT ], 
+                                                  const real Gamma, const real MinPres );
+static __device__ void CUFLU_RiemannPredict( const real g_Fluid_In   [][5][ FLU_NXT*FLU_NXT*FLU_NXT ],
                                              const real g_Half_Flux_x[][5][ N_FC_FLUX*N_FC_FLUX*N_FC_FLUX ],
                                              const real g_Half_Flux_y[][5][ N_FC_FLUX*N_FC_FLUX*N_FC_FLUX ],
                                              const real g_Half_Flux_z[][5][ N_FC_FLUX*N_FC_FLUX*N_FC_FLUX ],
                                                    real g_Half_Var   [][5][ FLU_NXT*FLU_NXT*FLU_NXT ],
-                                             const real dt, const real _dh, const real Gamma );
+                                             const real dt, const real _dh, const real Gamma,
+                                             const real MinDens, const real MinPres );
 #endif
 
 #ifdef UNSPLIT_GRAVITY
@@ -66,7 +67,7 @@ int CUFLU_FluidSolver_SetConstMem( double ExtAcc_AuxArray_h[] )
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  CUFLU_FluidSolver_MHM
-// Description :  GPU fluid solver based on the MUSCL-Hancock scheme 
+// Description :  GPU fluid solver based on the MUSCL-Hancock scheme
 //
 // Note        :  1. Prefix "g" for pointers pointing to the "Global" memory space
 //                   Prefix "s" for pointers pointing to the "Shared" memory space
@@ -74,62 +75,64 @@ int CUFLU_FluidSolver_SetConstMem( double ExtAcc_AuxArray_h[] )
 //                3. Two half-step prediction schemes are supported, including "MHM" and "MHM_RP"
 //                   MHM    : use interpolated face-centered values to calculate the half-step fluxes
 //                   MHM_RP : use Riemann solver to calculate the half-step fluxes
-//                4. Ref : 
-//                   MHM    : "Riemann Solvers and Numerical Methods for Fluid Dynamics 
+//                4. Ref :
+//                   MHM    : "Riemann Solvers and Numerical Methods for Fluid Dynamics
 //                              - A Practical Introduction ~ by Eleuterio F. Toro"
 //                   MHM_RP : Stone & Gardiner, NewA, 14, 139 (2009)
 //
-// Parameter   :  g_Fluid_In     : Global memory array storing the input fluid variables
-//                g_Fluid_Out    : Global memory array to store the output fluid variables
-//                g_Flux         : Global memory array to store the output fluxes
-//                g_Corner       : Global memory array storing the physical corner coordinates of each patch group (USELESS CURRENTLY)
-//                g_Pot_USG      : Global memory array storing the input potential for UNSPLIT_GRAVITY (NOT SUPPORTED in RTVD)
-//                g_PriVar       : Global memory array to store the primitive variables
-//                g_Slope_PPM_x  : Global memory array to store the x-slope for the PPM reconstruction
-//                g_Slope_PPM_y  : Global memory array to store the y-slope for the PPM reconstruction
-//                g_Slope_PPM_z  : Global memory array to store the z-slope for the PPM reconstruction
-//                g_FC_Var_xL    : Global memory array to store the half-step variables on the -x surface
-//                g_FC_Var_xR    : Global memory array to store the half-step variables on the +x surface
-//                g_FC_Var_yL    : Global memory array to store the half-step variables on the -y surface
-//                g_FC_Var_yR    : Global memory array to store the half-step variables on the +y surface
-//                g_FC_Var_zL    : Global memory array to store the half-step variables on the -z surface
-//                g_FC_Var_zR    : Global memory array to store the half-step variables on the +z surface
-//                g_FC_Flux_x    : Global memory array to store the face-centered fluxes in the x direction
-//                g_FC_Flux_y    : Global memory array to store the face-centered fluxes in the y direction
-//                g_FC_Flux_z    : Global memory array to store the face-centered fluxes in the z direction
-//                dt             : Time interval to advance solution
-//                _dh            : 1 / grid size
-//                Gamma          : Ratio of specific heats
-//                StoreFlux      : true --> store the coarse-fine fluxes
-//                LR_Limiter     : Slope limiter for the data reconstruction in the MHM/MHM_RP/CTU schemes
-//                                 (0/1/2/3/4) = (vanLeer/generalized MinMod/vanAlbada/
-//                                                vanLeer + generalized MinMod/extrema-preserving) limiter
-//                MinMod_Coeff   : Coefficient of the generalized MinMod limiter
-//                EP_Coeff       : Coefficient of the extrema-preserving limiter
-//                Time           : Current physical time                                     (for UNSPLIT_GRAVITY only)
-//                GravityType    : Types of gravity --> self-gravity, external gravity, both (for UNSPLIT_GRAVITY only)
+// Parameter   :  g_Fluid_In    : Global memory array storing the input fluid variables
+//                g_Fluid_Out   : Global memory array to store the output fluid variables
+//                g_Flux        : Global memory array to store the output fluxes
+//                g_Corner      : Global memory array storing the physical corner coordinates of each patch group (USELESS CURRENTLY)
+//                g_Pot_USG     : Global memory array storing the input potential for UNSPLIT_GRAVITY (NOT SUPPORTED in RTVD)
+//                g_PriVar      : Global memory array to store the primitive variables
+//                g_Slope_PPM_x : Global memory array to store the x-slope for the PPM reconstruction
+//                g_Slope_PPM_y : Global memory array to store the y-slope for the PPM reconstruction
+//                g_Slope_PPM_z : Global memory array to store the z-slope for the PPM reconstruction
+//                g_FC_Var_xL   : Global memory array to store the half-step variables on the -x surface
+//                g_FC_Var_xR   : Global memory array to store the half-step variables on the +x surface
+//                g_FC_Var_yL   : Global memory array to store the half-step variables on the -y surface
+//                g_FC_Var_yR   : Global memory array to store the half-step variables on the +y surface
+//                g_FC_Var_zL   : Global memory array to store the half-step variables on the -z surface
+//                g_FC_Var_zR   : Global memory array to store the half-step variables on the +z surface
+//                g_FC_Flux_x   : Global memory array to store the face-centered fluxes in the x direction
+//                g_FC_Flux_y   : Global memory array to store the face-centered fluxes in the y direction
+//                g_FC_Flux_z   : Global memory array to store the face-centered fluxes in the z direction
+//                dt            : Time interval to advance solution
+//                _dh           : 1 / grid size
+//                Gamma         : Ratio of specific heats
+//                StoreFlux     : true --> store the coarse-fine fluxes
+//                LR_Limiter    : Slope limiter for the data reconstruction in the MHM/MHM_RP/CTU schemes
+//                                (0/1/2/3/4) = (vanLeer/generalized MinMod/vanAlbada/
+//                                               vanLeer + generalized MinMod/extrema-preserving) limiter
+//                MinMod_Coeff  : Coefficient of the generalized MinMod limiter
+//                EP_Coeff      : Coefficient of the extrema-preserving limiter
+//                Time          : Current physical time                                     (for UNSPLIT_GRAVITY only)
+//                GravityType   : Types of gravity --> self-gravity, external gravity, both (for UNSPLIT_GRAVITY only)
+//                MinDens/Pres  : Minimum allowed density and pressure
 //-------------------------------------------------------------------------------------------------------
-__global__ void CUFLU_FluidSolver_MHM( const real g_Fluid_In[][5][ FLU_NXT*FLU_NXT*FLU_NXT ], 
+__global__ void CUFLU_FluidSolver_MHM( const real g_Fluid_In[][5][ FLU_NXT*FLU_NXT*FLU_NXT ],
                                        real g_Fluid_Out  [][5][ PS2*PS2*PS2 ],
-                                       real g_Flux    [][9][5][ PS2*PS2 ], 
+                                       real g_Flux    [][9][5][ PS2*PS2 ],
                                        const double g_Corner[][3],
                                        const real g_Pot_USG[] [ USG_NXT_F*USG_NXT_F*USG_NXT_F ],
                                        real g_PriVar     [][5][ FLU_NXT*FLU_NXT*FLU_NXT ],
                                        real g_Slope_PPM_x[][5][ N_SLOPE_PPM*N_SLOPE_PPM*N_SLOPE_PPM],
                                        real g_Slope_PPM_y[][5][ N_SLOPE_PPM*N_SLOPE_PPM*N_SLOPE_PPM],
                                        real g_Slope_PPM_z[][5][ N_SLOPE_PPM*N_SLOPE_PPM*N_SLOPE_PPM],
-                                       real g_FC_Var_xL  [][5][ N_FC_VAR*N_FC_VAR*N_FC_VAR ], 
-                                       real g_FC_Var_xR  [][5][ N_FC_VAR*N_FC_VAR*N_FC_VAR ], 
-                                       real g_FC_Var_yL  [][5][ N_FC_VAR*N_FC_VAR*N_FC_VAR ], 
+                                       real g_FC_Var_xL  [][5][ N_FC_VAR*N_FC_VAR*N_FC_VAR ],
+                                       real g_FC_Var_xR  [][5][ N_FC_VAR*N_FC_VAR*N_FC_VAR ],
+                                       real g_FC_Var_yL  [][5][ N_FC_VAR*N_FC_VAR*N_FC_VAR ],
                                        real g_FC_Var_yR  [][5][ N_FC_VAR*N_FC_VAR*N_FC_VAR ],
-                                       real g_FC_Var_zL  [][5][ N_FC_VAR*N_FC_VAR*N_FC_VAR ], 
+                                       real g_FC_Var_zL  [][5][ N_FC_VAR*N_FC_VAR*N_FC_VAR ],
                                        real g_FC_Var_zR  [][5][ N_FC_VAR*N_FC_VAR*N_FC_VAR ],
                                        real g_FC_Flux_x  [][5][ N_FC_FLUX*N_FC_FLUX*N_FC_FLUX ],
                                        real g_FC_Flux_y  [][5][ N_FC_FLUX*N_FC_FLUX*N_FC_FLUX ],
                                        real g_FC_Flux_z  [][5][ N_FC_FLUX*N_FC_FLUX*N_FC_FLUX ],
                                        const real dt, const real _dh, const real Gamma, const bool StoreFlux,
-                                       const LR_Limiter_t LR_Limiter, const real MinMod_Coeff, 
-                                       const real EP_Coeff, const double Time, const OptGravityType_t GravityType )
+                                       const LR_Limiter_t LR_Limiter, const real MinMod_Coeff,
+                                       const real EP_Coeff, const double Time, const OptGravityType_t GravityType,
+                                       const real MinDens, const real MinPres )
 {
 
 #  ifdef UNSPLIT_GRAVITY
@@ -151,34 +154,35 @@ __global__ void CUFLU_FluidSolver_MHM( const real g_Fluid_In[][5][ FLU_NXT*FLU_N
 
 
 // (1.a-1) evaluate the face-centered half-step fluxes with the piecewise constant data reconstruction
-   CUFLU_RiemannPredict_Flux( g_Fluid_In, g_Half_Flux_x, g_Half_Flux_y, g_Half_Flux_z, Gamma );
+   CUFLU_RiemannPredict_Flux( g_Fluid_In, g_Half_Flux_x, g_Half_Flux_y, g_Half_Flux_z, Gamma, MinPres );
    __syncthreads();
 
 
 // (1.a-2) evaluate the half-step cell-centered solution
-   CUFLU_RiemannPredict( g_Fluid_In, g_Half_Flux_x, g_Half_Flux_y, g_Half_Flux_z, g_Half_Var, dt, _dh, Gamma );
+   CUFLU_RiemannPredict( g_Fluid_In, g_Half_Flux_x, g_Half_Flux_y, g_Half_Flux_z, g_Half_Var,
+                         dt, _dh, Gamma, MinDens, MinPres );
    __syncthreads();
 
 
 // (1.a-3) evaluate the half-step face-centered solution by data reconstruction
-   CUFLU_DataReconstruction( g_Half_Var, g_Slope_PPM_x, g_Slope_PPM_y, g_Slope_PPM_z, g_FC_Var_xL, g_FC_Var_xR, 
-                             g_FC_Var_yL, g_FC_Var_yR, g_FC_Var_zL, g_FC_Var_zR, N_HF_VAR, FLU_GHOST_SIZE-2, 
-                             Gamma, LR_Limiter, MinMod_Coeff, EP_Coeff, dt, _dh );
+   CUFLU_DataReconstruction( g_Half_Var, g_Slope_PPM_x, g_Slope_PPM_y, g_Slope_PPM_z, g_FC_Var_xL, g_FC_Var_xR,
+                             g_FC_Var_yL, g_FC_Var_yR, g_FC_Var_zL, g_FC_Var_zR, N_HF_VAR, FLU_GHOST_SIZE-2,
+                             Gamma, LR_Limiter, MinMod_Coeff, EP_Coeff, dt, _dh, MinDens, MinPres );
    __syncthreads();
 
 
-#  elif ( FLU_SCHEME == MHM ) // b. use interpolated face-centered values to calculate the half-step fluxes 
+#  elif ( FLU_SCHEME == MHM ) // b. use interpolated face-centered values to calculate the half-step fluxes
 
 
 // (1.b-1) conserved variables --> primitive variables
-   CUFLU_Con2Pri_AllGrids( g_Fluid_In, g_PriVar, Gamma );
+   CUFLU_Con2Pri_AllGrids( g_Fluid_In, g_PriVar, Gamma, MinPres );
    __syncthreads();
 
 
 // (1.b-2) evaluate the half-step face-centered solution by data reconstruction
-   CUFLU_DataReconstruction( g_PriVar, g_Slope_PPM_x, g_Slope_PPM_y, g_Slope_PPM_z, g_FC_Var_xL, g_FC_Var_xR, 
-                             g_FC_Var_yL, g_FC_Var_yR, g_FC_Var_zL, g_FC_Var_zR, FLU_NXT, FLU_GHOST_SIZE-1, 
-                             Gamma, LR_Limiter, MinMod_Coeff, EP_Coeff, dt, _dh );
+   CUFLU_DataReconstruction( g_PriVar, g_Slope_PPM_x, g_Slope_PPM_y, g_Slope_PPM_z, g_FC_Var_xL, g_FC_Var_xR,
+                             g_FC_Var_yL, g_FC_Var_yR, g_FC_Var_zL, g_FC_Var_zR, FLU_NXT, FLU_GHOST_SIZE-1,
+                             Gamma, LR_Limiter, MinMod_Coeff, EP_Coeff, dt, _dh, MinDens, MinPres );
    __syncthreads();
 
 
@@ -187,13 +191,13 @@ __global__ void CUFLU_FluidSolver_MHM( const real g_Fluid_In[][5][ FLU_NXT*FLU_N
 
 // 2. evaluate the face-centered full-step fluxes by solving the Riemann problem
 #  ifdef UNSPLIT_GRAVITY
-   CUFLU_ComputeFlux( g_FC_Var_xL, g_FC_Var_xR, g_FC_Var_yL, g_FC_Var_yR, g_FC_Var_zL, g_FC_Var_zR, 
+   CUFLU_ComputeFlux( g_FC_Var_xL, g_FC_Var_xR, g_FC_Var_yL, g_FC_Var_yR, g_FC_Var_zL, g_FC_Var_zR,
                       g_FC_Flux_x, g_FC_Flux_y, g_FC_Flux_z, g_Flux, StoreFlux, 1, Gamma,
-                      CorrHalfVel_Yes, g_Pot_USG, g_Corner, dt, _dh, Time, GravityType, ExtAcc_AuxArray_d_Flu );
+                      CorrHalfVel_Yes, g_Pot_USG, g_Corner, dt, _dh, Time, GravityType, ExtAcc_AuxArray_d_Flu, MinPres );
 #  else
-   CUFLU_ComputeFlux( g_FC_Var_xL, g_FC_Var_xR, g_FC_Var_yL, g_FC_Var_yR, g_FC_Var_zL, g_FC_Var_zR, 
+   CUFLU_ComputeFlux( g_FC_Var_xL, g_FC_Var_xR, g_FC_Var_yL, g_FC_Var_yR, g_FC_Var_zL, g_FC_Var_zR,
                       g_FC_Flux_x, g_FC_Flux_y, g_FC_Flux_z, g_Flux, StoreFlux, 1, Gamma,
-                      CorrHalfVel_No, NULL, NULL, NULL_REAL, NULL_REAL, NULL_REAL, GRAVITY_NONE, NULL );
+                      CorrHalfVel_No, NULL, NULL, NULL_REAL, NULL_REAL, NULL_REAL, GRAVITY_NONE, NULL, MinPres );
 #  endif
    __syncthreads();
 
@@ -208,7 +212,7 @@ __global__ void CUFLU_FluidSolver_MHM( const real g_Fluid_In[][5][ FLU_NXT*FLU_N
 #if ( FLU_SCHEME == MHM_RP )
 //-------------------------------------------------------------------------------------------------------
 // Function    :  CUFLU_RiemannPredict_Flux
-// Description :  Evaluate the half-step face-centered fluxes by Riemann solver 
+// Description :  Evaluate the half-step face-centered fluxes by Riemann solver
 //
 // Note        :  1. Work for the MUSCL-Hancock method + Riemann-prediction (MHM_RP)
 //                2. Currently support the exact, Roe, HLLE, and HLLC solvers
@@ -220,17 +224,18 @@ __global__ void CUFLU_FluidSolver_MHM( const real g_Fluid_In[][5][ FLU_NXT*FLU_N
 //                   --> The fluxes at the left surface of the cell (i+1,j+1,k+1) in "g_Fluid_In" will
 //                       be stored at "(k*N_HF_FLUX+j)*N_HF_FLUX+i" in g_Half_Flux_x/y/z
 //
-// Parameter   :  g_Fluid_In     : Global memory array storing the input fluid variables
-//                g_Half_Flux_x  : Global memory array to store the face-centered fluxes in the x direction
-//                g_Half_Flux_y  : Global memory array to store the face-centered fluxes in the y direction
-//                g_Half_Flux_z  : Global memory array to store the face-centered fluxes in the z direction
-//                Gamma          : Ratio of specific heats
+// Parameter   :  g_Fluid_In    : Global memory array storing the input fluid variables
+//                g_Half_Flux_x : Global memory array to store the face-centered fluxes in the x direction
+//                g_Half_Flux_y : Global memory array to store the face-centered fluxes in the y direction
+//                g_Half_Flux_z : Global memory array to store the face-centered fluxes in the z direction
+//                Gamma         : Ratio of specific heats
+//                MinPres       : Minimum allowed pressure
 //-------------------------------------------------------------------------------------------------------
-__device__ void CUFLU_RiemannPredict_Flux( const real g_Fluid_In   [][5][ FLU_NXT*FLU_NXT*FLU_NXT ], 
+__device__ void CUFLU_RiemannPredict_Flux( const real g_Fluid_In   [][5][ FLU_NXT*FLU_NXT*FLU_NXT ],
                                                  real g_Half_Flux_x[][5][ N_FC_FLUX*N_FC_FLUX*N_FC_FLUX ],
                                                  real g_Half_Flux_y[][5][ N_FC_FLUX*N_FC_FLUX*N_FC_FLUX ],
                                                  real g_Half_Flux_z[][5][ N_FC_FLUX*N_FC_FLUX*N_FC_FLUX ],
-                                           const real Gamma )
+                                           const real Gamma, const real MinPres )
 {
 
    const uint  bx       = blockIdx.x;
@@ -274,8 +279,8 @@ __device__ void CUFLU_RiemannPredict_Flux( const real g_Fluid_In   [][5][ FLU_NX
       /* exact solver */
       #define RiemannSolver( Dir, VarL, VarR )                                                           \
       {                                                                                                  \
-         VarL = CUFLU_Con2Pri( VarL, Gamma_m1 );                                                         \
-         VarR = CUFLU_Con2Pri( VarR, Gamma_m1 );                                                         \
+         VarL = CUFLU_Con2Pri( VarL, Gamma_m1, MinPres );                                                \
+         VarR = CUFLU_Con2Pri( VarR, Gamma_m1, MinPres );                                                \
                                                                                                          \
          FC_Flux = CUFLU_RiemannSolver_Exact( Dir, *Useless, *Useless, *Useless, VarL, VarR, Gamma );    \
       } // RiemannSolver
@@ -285,7 +290,7 @@ __device__ void CUFLU_RiemannPredict_Flux( const real g_Fluid_In   [][5][ FLU_NX
       /* Roe solver */
       #define RiemannSolver( Dir, VarL, VarR )                                                           \
       {                                                                                                  \
-         FC_Flux = CUFLU_RiemannSolver_Roe( Dir, VarL, VarR, Gamma );                                    \
+         FC_Flux = CUFLU_RiemannSolver_Roe( Dir, VarL, VarR, Gamma, MinPres );                           \
       } // RiemannSolver
 
 #  elif ( RSOLVER == HLLE )
@@ -293,7 +298,7 @@ __device__ void CUFLU_RiemannPredict_Flux( const real g_Fluid_In   [][5][ FLU_NX
       /* HLLE solver */
       #define RiemannSolver( Dir, VarL, VarR )                                                           \
       {                                                                                                  \
-         FC_Flux = CUFLU_RiemannSolver_HLLE( Dir, VarL, VarR, Gamma );                                   \
+         FC_Flux = CUFLU_RiemannSolver_HLLE( Dir, VarL, VarR, Gamma, MinPres );                          \
       } // RiemannSolver
 
 #  elif ( RSOLVER == HLLC )
@@ -301,7 +306,7 @@ __device__ void CUFLU_RiemannPredict_Flux( const real g_Fluid_In   [][5][ FLU_NX
       /* HLLC solver */
       #define RiemannSolver( Dir, VarL, VarR )                                                           \
       {                                                                                                  \
-         FC_Flux = CUFLU_RiemannSolver_HLLC( Dir, VarL, VarR, Gamma );                                   \
+         FC_Flux = CUFLU_RiemannSolver_HLLC( Dir, VarL, VarR, Gamma, MinPres );                          \
       } // RiemannSolver
 
 #  else
@@ -358,25 +363,27 @@ __device__ void CUFLU_RiemannPredict_Flux( const real g_Fluid_In   [][5][ FLU_NX
 //                3. For the performance consideration, the output data will be primitive variables
 //                4. Prefix "g" for pointers pointing to the "Global" memory space
 //                   Prefix "s" for pointers pointing to the "Shared" memory space
-//                5. The function is asynchronous 
+//                5. The function is asynchronous
 //                   --> "__syncthreads" must be called before using the output data
 //                6. The size of the g_Half_Var array are assumed to be "N_HF_VAR"
 //
-// Parameter   :  g_Fluid_In     : Global memory array storing the input fluid variables
-//                g_Half_Flux_x  : Global memory array storing the face-centered fluxes in the x direction
-//                g_Half_Flux_y  : Global memory array storing the face-centered fluxes in the y direction
-//                g_Half_Flux_z  : Global memory array storing the face-centered fluxes in the z direction
-//                g_Half_Var     : Global memory array to store the half-step solution
-//                dt             : Time interval to advance solution
-//                _dh            : 1 / grid size
-//                Gamma          : Ratio of specific heats
+// Parameter   :  g_Fluid_In    : Global memory array storing the input fluid variables
+//                g_Half_Flux_x : Global memory array storing the face-centered fluxes in the x direction
+//                g_Half_Flux_y : Global memory array storing the face-centered fluxes in the y direction
+//                g_Half_Flux_z : Global memory array storing the face-centered fluxes in the z direction
+//                g_Half_Var    : Global memory array to store the half-step solution
+//                dt            : Time interval to advance solution
+//                _dh           : 1 / grid size
+//                Gamma         : Ratio of specific heats
+//                MinDens/Pres  : Minimum allowed density and pressure
 //-------------------------------------------------------------------------------------------------------
-__device__ void CUFLU_RiemannPredict( const real g_Fluid_In   [][5][ FLU_NXT*FLU_NXT*FLU_NXT ], 
+__device__ void CUFLU_RiemannPredict( const real g_Fluid_In   [][5][ FLU_NXT*FLU_NXT*FLU_NXT ],
                                       const real g_Half_Flux_x[][5][ N_FC_FLUX*N_FC_FLUX*N_FC_FLUX ],
                                       const real g_Half_Flux_y[][5][ N_FC_FLUX*N_FC_FLUX*N_FC_FLUX ],
                                       const real g_Half_Flux_z[][5][ N_FC_FLUX*N_FC_FLUX*N_FC_FLUX ],
                                             real g_Half_Var   [][5][ FLU_NXT*FLU_NXT*FLU_NXT ],
-                                      const real dt, const real _dh, const real Gamma )
+                                      const real dt, const real _dh, const real Gamma,
+                                      const real MinDens, const real MinPres )
 {
 
    const uint  bx       = blockIdx.x;
@@ -385,16 +392,13 @@ __device__ void CUFLU_RiemannPredict( const real g_Fluid_In   [][5][ FLU_NXT*FLU
    const uint  dID_Out  = blockDim.x;
    const uint3 dID_Flux = make_uint3( 1, N_HF_FLUX, N_HF_FLUX*N_HF_FLUX );
    const real  Gamma_m1 = Gamma - (real)1.0;
+   const real _Gamma_m1 = (real)1.0 / Gamma_m1;
 
    uint   ID_Out = tx;
    uint   ID_In, ID_Flux;
    uint3  ID3d;
    FluVar Var;
    real   FluxDiff;
-
-#  if ( defined MIN_PRES_DENS  ||  defined MIN_PRES )
-   const real _Gamma_m1 = (real)1.0 / Gamma_m1;
-#  endif
 
 
 // loop over all cells
@@ -431,14 +435,13 @@ __device__ void CUFLU_RiemannPredict( const real g_Fluid_In   [][5][ FLU_NXT*FLU
 #     undef Update
 
 
-//    enforce the pressure to be positive
-#     if ( defined MIN_PRES_DENS  ||  defined MIN_PRES )
-      Var.Egy = CUFLU_PositivePres_In_Engy( Var, Gamma_m1, _Gamma_m1 );
-#     endif
+//    enforce positive density and pressure
+      Var.Rho = FMAX( Var.Rho, MinDens );
+      Var.Egy = CUFLU_CheckMinPresInEngy( Var, Gamma_m1, _Gamma_m1, MinPres );
 
 
 //    conserved variables --> primitive variables
-      Var = CUFLU_Con2Pri( Var, Gamma_m1 );
+      Var = CUFLU_Con2Pri( Var, Gamma_m1, MinPres );
 
 
 //    save the updated data back to the output global array

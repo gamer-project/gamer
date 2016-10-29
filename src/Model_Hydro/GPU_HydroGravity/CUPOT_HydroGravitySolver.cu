@@ -244,6 +244,8 @@ __global__ void CUPOT_HydroGravitySolver(       real g_Flu_Array_New[][NCOMP][ P
                                                       px_new*Acc_new[0] + py_new*Acc_new[1] + pz_new*Acc_new[2] );
 
 //    ensure the positive pressure (restore to the original internal energy if it becomes negative)
+//    --> note that the resulting pressure may be positive but **smaller than MinPresTEMP**
+//    --> but we probably don't really care because MinPresTEMP is just used to make code stable
       Ek = _rho2*( SQR(px_new) + SQR(py_new) + SQR(pz_new) );
       if ( g_Flu_Array_New[bx][ENGY][g_idx] - Ek <= (real)0.0 )   g_Flu_Array_New[bx][ENGY][g_idx] = Eint + Ek;
 

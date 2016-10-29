@@ -7,11 +7,11 @@
 #include "CUFLU.h"
 #include "CUFLU_Shared_FluUtility.cu"
 
-static __device__ FluVar CUFLU_RiemannSolver_Exact( const int XYZ, FluVar &eival_out, FluVar &L_star_out, 
-                                                    FluVar &R_star_out, const FluVar L_In, const FluVar R_In, 
+static __device__ FluVar CUFLU_RiemannSolver_Exact( const int XYZ, FluVar &eival_out, FluVar &L_star_out,
+                                                    FluVar &R_star_out, const FluVar L_In, const FluVar R_In,
                                                     const real Gamma );
-static __device__ real Solve_f( const real _rho, const real p, const real p_star, const real Gamma, 
-                                const real Gamma_m1, const real Gamma_p1, const real _Gamma, 
+static __device__ real Solve_f( const real _rho, const real p, const real p_star, const real Gamma,
+                                const real Gamma_m1, const real Gamma_p1, const real _Gamma,
                                 const real _Gamma_m1, const real _Gamma_p1 );
 #if ( FLU_SCHEME == MHM  ||  FLU_SCHEME == MHM_RP  ||  FLU_SCHEME == CTU )
 static __device__ void Set_Flux( FluVar &flux, const FluVar val, const real _Gamma_m1 );
@@ -22,14 +22,14 @@ static __device__ void Set_Flux( FluVar &flux, const FluVar val, const real _Gam
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  CUFLU_RiemmanSolver_Exact
-// Description :  Exact Riemann solver 
+// Description :  Exact Riemann solver
 //
 // Note        :  1. The input data should be primitive variables
 //                2. This function is shared by WAF, MHM, MHM_RP, and CTU schemes
-//                3. The "__noinline__" qualifier is added in Fermi GPUs for higher performance and 
-//                   faster compilation (not work in WAF scheme !?)
+//                3. The "__noinline__" qualifier is added in Fermi GPUs for higher performance and
+//                   faster compilation (not work in WAF scheme!?)
 //
-// Parameter   :  XYZ         : Targeted spatial direction : (0/1/2) --> (x/y/z) 
+// Parameter   :  XYZ         : Targeted spatial direction : (0/1/2) --> (x/y/z)
 //                eival_out   : Output array to store the speed of waves
 //                L_star_out  : Output array to store the primitive variables in the left star region
 //                R_star_out  : Output array to store the primitive variables in the right star region
@@ -38,15 +38,15 @@ static __device__ void Set_Flux( FluVar &flux, const FluVar val, const real _Gam
 //                Gamma       : Ratio of specific heats
 //------------------------------------------------------------------------------------------------------
 #if ( __CUDA_ARCH__ >= 200  &&  FLU_SCHEME != WAF )
-__noinline__ 
+__noinline__
 #endif
-__device__ FluVar CUFLU_RiemannSolver_Exact( const int XYZ, FluVar &eival_out, FluVar &L_star_out, 
-                                             FluVar &R_star_out, const FluVar L_In, 
+__device__ FluVar CUFLU_RiemannSolver_Exact( const int XYZ, FluVar &eival_out, FluVar &L_star_out,
+                                             FluVar &R_star_out, const FluVar L_In,
                                              const FluVar R_In, const real Gamma )
 {
 
 // reorder the input variables for different spatial directions
-   FluVar L = CUFLU_Rotate3D( L_In, XYZ, true );  
+   FluVar L = CUFLU_Rotate3D( L_In, XYZ, true );
    FluVar R = CUFLU_Rotate3D( R_In, XYZ, true );
 
    const real  Gamma_p1 = Gamma + (real)1.0;
@@ -55,8 +55,8 @@ __device__ FluVar CUFLU_RiemannSolver_Exact( const int XYZ, FluVar &eival_out, F
    const real _Gamma_p1 = (real)1.0/Gamma_p1;
    const real _Gamma_m1 = (real)1.0/Gamma_m1;
    const real c         = Gamma_m1*_Gamma_p1;
-   const real _RhoL     = (real)1.0/L.Rho;      
-   const real _RhoR     = (real)1.0/R.Rho;      
+   const real _RhoL     = (real)1.0/L.Rho;
+   const real _RhoR     = (real)1.0/R.Rho;
 
    FluVar eival, L_star, R_star;
    real Temp;
@@ -72,7 +72,7 @@ __device__ FluVar CUFLU_RiemannSolver_Exact( const int XYZ, FluVar &eival_out, F
 // solution of pressure
    {
       const real du = R.Px - L.Px;
-    
+
       real f;
       real f_L;
       real f_R;
@@ -173,16 +173,16 @@ __device__ FluVar CUFLU_RiemannSolver_Exact( const int XYZ, FluVar &eival_out, F
 
 #     ifdef CHECK_NEGATIVE_IN_FLUID
       if ( CUFLU_CheckNegative(L.Egy) )
-         printf( "ERROR : negative pressure (%14.7e) at file <%s>, line <%d>, function <%s>\n", 
+         printf( "ERROR : negative pressure (%14.7e) at file <%s>, line <%d>, function <%s>\n",
                  L.Egy,      __FILE__, __LINE__, __FUNCTION__ );
       if ( CUFLU_CheckNegative(L.Rho) )
-         printf( "ERROR : negative density (%14.7e) at file <%s>, line <%d>, function <%s>\n", 
+         printf( "ERROR : negative density (%14.7e) at file <%s>, line <%d>, function <%s>\n",
                  L.Rho,      __FILE__, __LINE__, __FUNCTION__ );
       if ( CUFLU_CheckNegative(L_star.Egy) )
-         printf( "ERROR : negative pressure (%14.7e) at file <%s>, line <%d>, function <%s>\n", 
+         printf( "ERROR : negative pressure (%14.7e) at file <%s>, line <%d>, function <%s>\n",
                  L_star.Egy, __FILE__, __LINE__, __FUNCTION__ );
       if ( CUFLU_CheckNegative(L_star.Rho) )
-         printf( "ERROR : negative density(%14.7e) at file <%s>, line <%d>, function <%s>\n", 
+         printf( "ERROR : negative density(%14.7e) at file <%s>, line <%d>, function <%s>\n",
                  L_star.Rho, __FILE__, __LINE__, __FUNCTION__ );
 #     endif
 
@@ -211,16 +211,16 @@ __device__ FluVar CUFLU_RiemannSolver_Exact( const int XYZ, FluVar &eival_out, F
 
 #     ifdef CHECK_NEGATIVE_IN_FLUID
       if ( CUFLU_CheckNegative(R.Egy) )
-      printf( "ERROR : negative pressure (%14.7e) at file <%s>, line <%d>, function <%s>\n", 
+      printf( "ERROR : negative pressure (%14.7e) at file <%s>, line <%d>, function <%s>\n",
               R.Egy,      __FILE__, __LINE__, __FUNCTION__ );
       if ( CUFLU_CheckNegative(R.Rho) )
-         printf( "ERROR : negative density (%14.7e) at file <%s>, line <%d>, function <%s>\n", 
+         printf( "ERROR : negative density (%14.7e) at file <%s>, line <%d>, function <%s>\n",
                  R.Rho,      __FILE__, __LINE__, __FUNCTION__ );
       if ( CUFLU_CheckNegative(R_star.Egy) )
-         printf( "ERROR : negative pressure (%14.7e) at file <%s>, line <%d>, function <%s>\n", 
+         printf( "ERROR : negative pressure (%14.7e) at file <%s>, line <%d>, function <%s>\n",
                  R_star.Egy, __FILE__, __LINE__, __FUNCTION__ );
       if ( CUFLU_CheckNegative(R_star.Rho) )
-         printf( "ERROR : negative density(%14.7e) at file <%s>, line <%d>, function <%s>\n", 
+         printf( "ERROR : negative density(%14.7e) at file <%s>, line <%d>, function <%s>\n",
                  R_star.Rho, __FILE__, __LINE__, __FUNCTION__ );
 #     endif
 
@@ -242,43 +242,47 @@ __device__ FluVar CUFLU_RiemannSolver_Exact( const int XYZ, FluVar &eival_out, F
 
 #  ifdef CHECK_NEGATIVE_IN_FLUID
    if ( CUFLU_CheckNegative(L.Egy) )
-      printf( "ERROR : negative pressure (%14.7e) at file <%s>, line <%d>, function <%s>\n", 
+      printf( "ERROR : negative pressure (%14.7e) at file <%s>, line <%d>, function <%s>\n",
               L.Egy,      __FILE__, __LINE__, __FUNCTION__ );
    if ( CUFLU_CheckNegative(L.Rho) )
-      printf( "ERROR : negative density (%14.7e) at file <%s>, line <%d>, function <%s>\n", 
+      printf( "ERROR : negative density (%14.7e) at file <%s>, line <%d>, function <%s>\n",
               L.Rho,      __FILE__, __LINE__, __FUNCTION__ );
    if ( CUFLU_CheckNegative(R.Egy) )
-      printf( "ERROR : negative pressure (%14.7e) at file <%s>, line <%d>, function <%s>\n", 
+      printf( "ERROR : negative pressure (%14.7e) at file <%s>, line <%d>, function <%s>\n",
               R.Egy,      __FILE__, __LINE__, __FUNCTION__ );
    if ( CUFLU_CheckNegative(R.Rho) )
-      printf( "ERROR : negative density (%14.7e) at file <%s>, line <%d>, function <%s>\n", 
+      printf( "ERROR : negative density (%14.7e) at file <%s>, line <%d>, function <%s>\n",
               R.Rho,      __FILE__, __LINE__, __FUNCTION__ );
 #  endif
 
-   if ( L.Egy < L_star.Egy )  
+   if ( L.Egy < L_star.Egy )
    {
       Temp = (real)0.5*_Gamma*( Gamma_p1*L_star.Egy/L.Egy + Gamma_m1 );
+
 #     ifdef CHECK_NEGATIVE_IN_FLUID
       if ( CUFLU_CheckNegative(Temp) )
-         printf( "ERROR : negative value (%14.7e) at file <%s>, line <%d>, function <%s>\n", 
+         printf( "ERROR : negative value (%14.7e) at file <%s>, line <%d>, function <%s>\n",
                  Temp, __FILE__, __LINE__, __FUNCTION__ );
 #     endif
+
       eival.Rho = L.Px - SQRT( Gamma*L.Egy/L.Rho )*SQRT( Temp );        // left shock
    }
-   else                      
+   else
       eival.Rho = L.Px - SQRT( Gamma*L.Egy/L.Rho );                     // left rarefaction
 
-   if ( R.Egy < R_star.Egy )  
+   if ( R.Egy < R_star.Egy )
    {
       Temp = (real)0.5*_Gamma*( Gamma_p1*R_star.Egy/R.Egy + Gamma_m1 );
+
 #     ifdef CHECK_NEGATIVE_IN_FLUID
       if ( CUFLU_CheckNegative(Temp) )
-         printf( "ERROR : negative value (%14.7e) at file <%s>, line <%d>, function <%s>\n", 
+         printf( "ERROR : negative value (%14.7e) at file <%s>, line <%d>, function <%s>\n",
                  Temp, __FILE__, __LINE__, __FUNCTION__ );
 #     endif
+
       eival.Egy = R.Px + SQRT( Gamma*R.Egy/R.Rho )*SQRT( Temp );        // right shock
    }
-   else                      
+   else
       eival.Egy = R.Px + SQRT( Gamma*R.Egy/R.Rho );                     // right rarefaction
 
 
@@ -287,14 +291,14 @@ __device__ FluVar CUFLU_RiemannSolver_Exact( const int XYZ, FluVar &eival_out, F
 
    FluVar Flux_Out;
 
-   if (  FABS( eival.Px ) < MAX_ERROR  ) // contact wave is zero 
+   if (  FABS( eival.Px ) < MAX_ERROR  ) // contact wave is zero
    {
       Flux_Out.Rho = (real)0.0;
       Flux_Out.Px  = L_star.Egy;
       Flux_Out.Py  = (real)0.0;
       Flux_Out.Pz  = (real)0.0;
       Flux_Out.Egy = (real)0.0;
-   } 
+   }
 
    else
    {
@@ -374,7 +378,7 @@ __device__ real Solve_f( const real _rho, const real p, const real p_star, const
 
 #     ifdef CHECK_NEGATIVE_IN_FLUID
       if ( CUFLU_CheckNegative(Temp) )
-         printf( "ERROR : negative value (%14.7e) at file <%s>, line <%d>, function <%s>\n", 
+         printf( "ERROR : negative value (%14.7e) at file <%s>, line <%d>, function <%s>\n",
                  Temp, __FILE__, __LINE__, __FUNCTION__ );
 #     endif
 
@@ -385,12 +389,14 @@ __device__ real Solve_f( const real _rho, const real p, const real p_star, const
    {
 #     ifdef CHECK_NEGATIVE_IN_FLUID
       if ( CUFLU_CheckNegative(p) )
-         printf( "ERROR : negative pressure (%14.7e) at file <%s>, line <%d>, function <%s>\n", 
+         printf( "ERROR : negative pressure (%14.7e) at file <%s>, line <%d>, function <%s>\n",
                  p, __FILE__, __LINE__, __FUNCTION__ );
+
       if ( CUFLU_CheckNegative((real)1.0/_rho) )
-         printf( "ERROR : negative density (%14.7e) at file <%s>, line <%d>, function <%s>\n", 
+         printf( "ERROR : negative density (%14.7e) at file <%s>, line <%d>, function <%s>\n",
                  (real)1.0/_rho, __FILE__, __LINE__, __FUNCTION__ );
 #     endif
+
       real a = SQRT( Gamma*p*_rho );
       real c = p_star/p;
       f = (real)2.0*a*(  POW( c, (real)0.5*Gamma_m1*_Gamma ) - (real)1.0  ) * _Gamma_m1;
@@ -419,7 +425,7 @@ __device__ void Set_Flux( FluVar &flux, const FluVar val, const real _Gamma_m1 )
   flux.Px  = val.Rho*val.Px*val.Px + val.Egy;
   flux.Py  = val.Rho*val.Px*val.Py;
   flux.Pz  = val.Rho*val.Px*val.Pz;
-  flux.Egy = val.Px*(  (real)0.5*val.Rho*( val.Px*val.Px + val.Py*val.Py + val.Pz*val.Pz ) 
+  flux.Egy = val.Px*(  (real)0.5*val.Rho*( val.Px*val.Px + val.Py*val.Py + val.Pz*val.Pz )
                       + val.Egy*_Gamma_m1 + val.Egy  );
 
 } // FUNCTION : Set_Flux

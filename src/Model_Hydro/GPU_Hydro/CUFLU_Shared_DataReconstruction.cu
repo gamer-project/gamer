@@ -8,8 +8,8 @@
 #include "CUFLU.h"
 #include "CUFLU_Shared_FluUtility.cu"
 
-static __device__ FluVar LimitSlope( const FluVar L2, const FluVar L1, const FluVar C0, const FluVar R1, 
-                                     const FluVar R2, const LR_Limiter_t LR_Limiter, const real MinMod_Coeff, 
+static __device__ FluVar LimitSlope( const FluVar L2, const FluVar L1, const FluVar C0, const FluVar R1,
+                                     const FluVar R2, const LR_Limiter_t LR_Limiter, const real MinMod_Coeff,
                                      const real EP_Coeff, const real Gamma, const int XYZ );
 static __device__ void CUFLU_DataReconstruction( const real g_PriVar[][5][ FLU_NXT*FLU_NXT*FLU_NXT ],
                                                  real g_Slope_PPM_x[][5][ N_SLOPE_PPM*N_SLOPE_PPM*N_SLOPE_PPM ],
@@ -21,14 +21,14 @@ static __device__ void CUFLU_DataReconstruction( const real g_PriVar[][5][ FLU_N
                                                  real g_FC_Var_yR[][5][ N_FC_VAR*N_FC_VAR*N_FC_VAR ],
                                                  real g_FC_Var_zL[][5][ N_FC_VAR*N_FC_VAR*N_FC_VAR ],
                                                  real g_FC_Var_zR[][5][ N_FC_VAR*N_FC_VAR*N_FC_VAR ],
-                                                 const int NIn, const int NGhost, const real Gamma, 
-                                                 const LR_Limiter_t LR_Limiter, const real MinMod_Coeff, 
-                                                 const real EP_Coeff, 
-                                                 const real dt, const real _dh );
+                                                 const int NIn, const int NGhost, const real Gamma,
+                                                 const LR_Limiter_t LR_Limiter, const real MinMod_Coeff,
+                                                 const real EP_Coeff, const real dt, const real _dh,
+                                                 const real MinDens, const real MinPres );
 #ifdef CHAR_RECONSTRUCTION
-static __device__ FluVar Pri2Char( FluVar InOut, const real Gamma, const real Rho, const real Pres, 
+static __device__ FluVar Pri2Char( FluVar InOut, const real Gamma, const real Rho, const real Pres,
                                    const int XYZ );
-static __device__ FluVar Char2Pri( FluVar InOut, const real Gamma, const real Rho, const real Pres, 
+static __device__ FluVar Char2Pri( FluVar InOut, const real Gamma, const real Rho, const real Pres,
                                    const int XYZ );
 #endif
 #if ( FLU_SCHEME == MHM )
@@ -38,15 +38,16 @@ static __device__ void HancockPredict( real g_FC_Var_xL[][5][ N_FC_VAR*N_FC_VAR*
                                        real g_FC_Var_yR[][5][ N_FC_VAR*N_FC_VAR*N_FC_VAR ],
                                        real g_FC_Var_zL[][5][ N_FC_VAR*N_FC_VAR*N_FC_VAR ],
                                        real g_FC_Var_zR[][5][ N_FC_VAR*N_FC_VAR*N_FC_VAR ],
-                                       FluVar FC_Var_xL, FluVar FC_Var_xR, 
+                                       FluVar FC_Var_xL, FluVar FC_Var_xR,
                                        FluVar FC_Var_yL, FluVar FC_Var_yR,
-                                       FluVar FC_Var_zL, FluVar FC_Var_zR, 
-                                       const real dt, const real _dh, const real Gamma, 
-                                       const uint ID_Out, const FluVar P_In );
+                                       FluVar FC_Var_zL, FluVar FC_Var_zR,
+                                       const real dt, const real _dh, const real Gamma,
+                                       const uint ID_Out, const FluVar P_In,
+                                       const real MinDens, const real MinPres );
 #endif
 #if ( FLU_SCHEME == CTU )
 static __device__ void Get_EigenSystem( const FluVar CC_Var, FluVar &EVal_x, FluVar &EVal_y, FluVar &EVal_z,
-                                        FluVar &LEVec1, FluVar &LEVec2, FluVar &LEVec3, FluVar &LEVec4, 
+                                        FluVar &LEVec1, FluVar &LEVec2, FluVar &LEVec3, FluVar &LEVec4,
                                         FluVar &LEVec5, FluVar &REVec1, FluVar &REVec2, FluVar &REVec3,
                                         FluVar &REVec4, FluVar &REVec5, const real Gamma );
 #endif
@@ -60,14 +61,14 @@ static __device__ void Get_EigenSystem( const FluVar CC_Var, FluVar &EVal_x, Flu
 // Description :  Reconstruct the face-centered variables by the piecewise-linear method (PLM)
 //
 // Note        :  1. Use the parameter "LR_Limiter" to choose different slope limiters
-//                2. The input data should be primitive variables 
+//                2. The input data should be primitive variables
 //                3. For the performance consideration, the output data will be conserved variables
-//                4. The face-centered variables will be advaned by half time-step for the MHM and 
+//                4. The face-centered variables will be advaned by half time-step for the MHM and
 //                   CTU schemes
-//                5. The function is asynchronous 
+//                5. The function is asynchronous
 //                   --> "__syncthreads" must be called before using the output data
 //                6. The PLM and PPM data reconstruction functions share the same function name
-//                7. The data reconstruction can be applied to characteristic variables by 
+//                7. The data reconstruction can be applied to characteristic variables by
 //                   defining "CHAR_RECONSTRUCTION"
 //                8. This function is shared by MHM, MHM_RP, and CTU schemes
 //
@@ -81,13 +82,13 @@ static __device__ void Get_EigenSystem( const FluVar CC_Var, FluVar &EVal_x, Flu
 //                g_FC_Var_yR       : Global memory array to store the face-centered variables on the +y surface
 //                g_FC_Var_zL       : Global memory array to store the face-centered variables on the -z surface
 //                g_FC_Var_zR       : Global memory array to store the face-centered variables on the +z surface
-//                NIn               : Size of the input array "PriVar" in one direction 
+//                NIn               : Size of the input array "PriVar" in one direction
 //                                    (can be smaller than FLU_NXT)
 //                NGhost            : Size of the ghost zone
-//                                    --> "NIn-2*NGhost" cells will be computed along each direction 
-//                                    --> The size of the output array "g_FC_Var" is assumed to be 
+//                                    --> "NIn-2*NGhost" cells will be computed along each direction
+//                                    --> The size of the output array "g_FC_Var" is assumed to be
 //                                        "(NIn-2*NGhost)^3"
-//                                    --> The reconstructed data at cell (i,j,k) will be stored in the 
+//                                    --> The reconstructed data at cell (i,j,k) will be stored in the
 //                                        array "g_FC_Var" with the index "(i-NGhost,j-NGhost,k-NGhost)
 //                Gamma             : Ratio of specific heats
 //                LR_Limiter        : Slope limiter for the data reconstruction in the MHM/MHM_RP/CTU schemes
@@ -97,6 +98,7 @@ static __device__ void Get_EigenSystem( const FluVar CC_Var, FluVar &EVal_x, Flu
 //                EP_Coeff          : Coefficient of the extrema-preserving limiter
 //                dt                : Time interval to advance solution (useful only for CTU and MHM schemes)
 //                _dh               : 1 / grid size (useful only for CTU and MHM schemes)
+//                MinDens/Pres      : Minimum allowed density and pressure
 //-------------------------------------------------------------------------------------------------------
 __device__ void CUFLU_DataReconstruction( const real g_PriVar[][5][ FLU_NXT*FLU_NXT*FLU_NXT ],
                                           real g_Slope_PPM_x[][5][ N_SLOPE_PPM*N_SLOPE_PPM*N_SLOPE_PPM ],
@@ -108,10 +110,10 @@ __device__ void CUFLU_DataReconstruction( const real g_PriVar[][5][ FLU_NXT*FLU_
                                           real g_FC_Var_yR[][5][ N_FC_VAR*N_FC_VAR*N_FC_VAR ],
                                           real g_FC_Var_zL[][5][ N_FC_VAR*N_FC_VAR*N_FC_VAR ],
                                           real g_FC_Var_zR[][5][ N_FC_VAR*N_FC_VAR*N_FC_VAR ],
-                                          const int NIn, const int NGhost, const real Gamma, 
-                                          const LR_Limiter_t LR_Limiter, const real MinMod_Coeff, 
-                                          const real EP_Coeff, 
-                                          const real dt, const real _dh )
+                                          const int NIn, const int NGhost, const real Gamma,
+                                          const LR_Limiter_t LR_Limiter, const real MinMod_Coeff,
+                                          const real EP_Coeff, const real dt, const real _dh,
+                                          const real MinDens, const real MinPres )
 {
 
    const uint  bx       = blockIdx.x;
@@ -122,21 +124,21 @@ __device__ void CUFLU_DataReconstruction( const real g_PriVar[][5][ FLU_NXT*FLU_
    const uint3 dr1      = make_uint3( 1, NIn, NIn*NIn );
    const real _Gamma_m1 = (real)1.0 / ( Gamma - (real)1.0 );
 
-   uint   ID2 = tx; 
+   uint   ID2 = tx;
    uint   ID1, ID1_L, ID1_R;
    uint3  ID1_3d;
    real   Min, Max;
-   FluVar Slope_Limiter; 
+   FluVar Slope_Limiter;
    FluVar CC_L, CC_C, CC_R;                           // cell-centered 5-element variables
    FluVar FC_xL, FC_xR, FC_yL, FC_yR, FC_zL, FC_zR;   // face-centered 5-element variables
 
 // variables for the extrema-preserving limiter
    uint   ID1_L2, ID1_R2;
-   FluVar CC_L2, CC_R2;             
+   FluVar CC_L2, CC_R2;
 
 // variables for the CTU scheme
 #  if ( FLU_SCHEME == CTU )
-   const real dt_dh2 = (real)0.5*dt*_dh; 
+   const real dt_dh2 = (real)0.5*dt*_dh;
 
    FluVar EVal_x, EVal_y, EVal_z, Correct_L, Correct_R, dFC;
    real   Coeff_L, Coeff_R;
@@ -171,7 +173,7 @@ __device__ void CUFLU_DataReconstruction( const real g_PriVar[][5][ FLU_NXT*FLU_
       CC_C.Egy = g_PriVar[bx][4][ID1];
 
 
-//    1. evaluate the eigenvalues and eigenvectors for the CTU integrator            
+//    1. evaluate the eigenvalues and eigenvectors for the CTU integrator
 #     if ( FLU_SCHEME == CTU )
       Get_EigenSystem( CC_C, EVal_x, EVal_y, EVal_z, LEVec1, LEVec2, LEVec3, LEVec4, LEVec5,
                        REVec1, REVec2, REVec3, REVec4, REVec5, Gamma );
@@ -198,12 +200,6 @@ __device__ void CUFLU_DataReconstruction( const real g_PriVar[][5][ FLU_NXT*FLU_
          FC_R.comp = ( FC_R.comp < Max       ) ? FC_R.comp : Max;                                     \
          FC_L.comp = (real)2.0*CC_C.comp - FC_R.comp;                                                 \
       } // Monotonic_PLM
-
-#     if ( defined MIN_PRES_DENS  ||  defined MIN_PRES )
-#        define PositivePres_PLM( FC )    FC.Egy = CUFLU_PositivePres( FC.Egy, FC.Rho, (real)1.0/FC.Rho )
-#     else
-#        define PositivePres_PLM( FC )    /* nothing to do */ 
-#     endif
 
 #     define GetFCVar_PLM( XYZ, Dir, FC_L, FC_R )                                                     \
       {                                                                                               \
@@ -265,10 +261,13 @@ __device__ void CUFLU_DataReconstruction( const real g_PriVar[][5][ FLU_NXT*FLU_
             Monotonic_PLM( Egy, FC_L, FC_R, CC_L, CC_C, CC_R );                                       \
          }                                                                                            \
                                                                                                       \
-         else /* for the extrema-preserving limiter */                                                \
+         else /* for the extrema-preserving limiter --> ensure positive density and pressure */       \
          {                                                                                            \
-            PositivePres_PLM( FC_L );                                                                 \
-            PositivePres_PLM( FC_R );                                                                 \
+            FC_L.Rho = FMAX( FC_L.Rho, MinDens );                                                     \
+            FC_R.Rho = FMAX( FC_R.Rho, MinDens );                                                     \
+                                                                                                      \
+            FC_L.Egy = CUFLU_CheckMinPres( FC_L.Egy, MinPres );                                       \
+            FC_R.Egy = CUFLU_CheckMinPres( FC_R.Egy, MinPres );                                       \
          }                                                                                            \
                                                                                                       \
       } // GetFCVar_PLM
@@ -279,16 +278,15 @@ __device__ void CUFLU_DataReconstruction( const real g_PriVar[][5][ FLU_NXT*FLU_
 
 #     undef Interpolate_PLM
 #     undef Monotonic_PLM
-#     undef PositivePres_PLM
 #     undef GetFCVar_PLM
 
 
 //    6. advance the face-centered variables by half time-step for the CTU integrator
 #     if ( FLU_SCHEME == CTU )
 
-//    =====================================================================================         
+//    =====================================================================================
 //    a. for the HLL solvers (HLLE/HLLC)
-//    =====================================================================================         
+//    =====================================================================================
 #     if (  ( RSOLVER == HLLE  ||  RSOLVER == HLLC )  &&  defined HLL_NO_REF_STATE  )
 
 #     define GetRefState_PLM( EVal )                                                                  \
@@ -307,8 +305,8 @@ __device__ void CUFLU_DataReconstruction( const real g_PriVar[][5][ FLU_NXT*FLU_
       } // GetRefState_PLM
 
 
-//    include waves both from left and right directions during the data reconstruction, as suggested in ATHENA 
-#     ifdef HLL_INCLUDE_ALL_WAVES      
+//    include waves both from left and right directions during the data reconstruction, as suggested in ATHENA
+#     ifdef HLL_INCLUDE_ALL_WAVES
 
 #     define Corr_L_PLM( comp, EVal, LEVec, REVec )                                                   \
       {                                                                                               \
@@ -385,9 +383,9 @@ __device__ void CUFLU_DataReconstruction( const real g_PriVar[][5][ FLU_NXT*FLU_
 #     endif // ifdef HLL_INCLUDE_ALL_WAVES ... else ...
 
 
-//    =====================================================================================         
-//    b. for the Roe's and exact solvers 
-//    =====================================================================================         
+//    =====================================================================================
+//    b. for the Roe's and exact solvers
+//    =====================================================================================
 #     else // ( RSOLVER == ROE/EXACT && ifndef HLL_NO_REF_STATE )
 
 #     define GetRefState_PLM( EVal )                                                                  \
@@ -508,15 +506,20 @@ __device__ void CUFLU_DataReconstruction( const real g_PriVar[][5][ FLU_NXT*FLU_
       CTU_Predict_PLM( 1, FC_yL, FC_yR, EVal_y );
       CTU_Predict_PLM( 2, FC_zL, FC_zR, EVal_z );
 
-//    (6-5) ensure the positive pressure
-#     if ( defined MIN_PRES_DENS  ||  defined MIN_PRES )
-      FC_xL.Egy = CUFLU_PositivePres( FC_xL.Egy, FC_xL.Rho, (real)1.0/FC_xL.Rho );
-      FC_xR.Egy = CUFLU_PositivePres( FC_xR.Egy, FC_xR.Rho, (real)1.0/FC_xR.Rho );
-      FC_yL.Egy = CUFLU_PositivePres( FC_yL.Egy, FC_yL.Rho, (real)1.0/FC_yL.Rho );
-      FC_yR.Egy = CUFLU_PositivePres( FC_yR.Egy, FC_yR.Rho, (real)1.0/FC_yR.Rho );
-      FC_zL.Egy = CUFLU_PositivePres( FC_zL.Egy, FC_zL.Rho, (real)1.0/FC_zL.Rho );
-      FC_zR.Egy = CUFLU_PositivePres( FC_zR.Egy, FC_zR.Rho, (real)1.0/FC_zR.Rho );
-#     endif
+//    (6-5) ensure positive density and pressure
+      FC_xL.Rho = FMAX( FC_xL.Rho, MinDens );
+      FC_xR.Rho = FMAX( FC_xR.Rho, MinDens );
+      FC_yL.Rho = FMAX( FC_yL.Rho, MinDens );
+      FC_yR.Rho = FMAX( FC_yR.Rho, MinDens );
+      FC_zL.Rho = FMAX( FC_zL.Rho, MinDens );
+      FC_zR.Rho = FMAX( FC_zR.Rho, MinDens );
+
+      FC_xL.Egy = CUFLU_CheckMinPres( FC_xL.Egy, MinPres );
+      FC_xR.Egy = CUFLU_CheckMinPres( FC_xR.Egy, MinPres );
+      FC_yL.Egy = CUFLU_CheckMinPres( FC_yL.Egy, MinPres );
+      FC_yR.Egy = CUFLU_CheckMinPres( FC_yR.Egy, MinPres );
+      FC_zL.Egy = CUFLU_CheckMinPres( FC_zL.Egy, MinPres );
+      FC_zR.Egy = CUFLU_CheckMinPres( FC_zR.Egy, MinPres );
 
 #     undef GetRefState_PLM
 #     undef Corr_L_PLM
@@ -526,7 +529,7 @@ __device__ void CUFLU_DataReconstruction( const real g_PriVar[][5][ FLU_NXT*FLU_
 #     endif // #if ( FLU_SCHEME == CTU )
 
 
-//    7. primitive variables --> conserved variables 
+//    7. primitive variables --> conserved variables
       FC_xL = CUFLU_Pri2Con( FC_xL, _Gamma_m1 );
       FC_xR = CUFLU_Pri2Con( FC_xR, _Gamma_m1 );
       FC_yL = CUFLU_Pri2Con( FC_yL, _Gamma_m1 );
@@ -538,7 +541,7 @@ __device__ void CUFLU_DataReconstruction( const real g_PriVar[][5][ FLU_NXT*FLU_
 #     if ( FLU_SCHEME == MHM )
 //    8. advance the face-centered variables by half time-step for the MHM integrator
       HancockPredict( g_FC_Var_xL, g_FC_Var_xR, g_FC_Var_yL, g_FC_Var_yR, g_FC_Var_zL, g_FC_Var_zR,
-                      FC_xL, FC_xR, FC_yL, FC_yR, FC_zL, FC_zR, dt, _dh, Gamma, ID2, CC_C );
+                      FC_xL, FC_xR, FC_yL, FC_yR, FC_zL, FC_zR, dt, _dh, Gamma, ID2, CC_C, MinDens, MinPres );
 
 #     else  // for MHM_RP and CTU
 
@@ -550,7 +553,7 @@ __device__ void CUFLU_DataReconstruction( const real g_PriVar[][5][ FLU_NXT*FLU_
          g_array[bx][2][ID2] = FC.Py;     \
          g_array[bx][3][ID2] = FC.Pz;     \
          g_array[bx][4][ID2] = FC.Egy;    \
-      } // Store  
+      } // Store
 
       Store( g_FC_Var_xL, FC_xL );
       Store( g_FC_Var_xR, FC_xR );
@@ -578,14 +581,14 @@ __device__ void CUFLU_DataReconstruction( const real g_PriVar[][5][ FLU_NXT*FLU_
 // Description :  Reconstruct the face-centered variables by the piecewise-parabolic method (PPM)
 //
 // Note        :  1. Use the parameter "LR_Limiter" to choose different slope limiters
-//                2. The input data should be primitive variables 
+//                2. The input data should be primitive variables
 //                3. For the performance consideration, the output data will be conserved variables
 //                4. The face-centered variables will be advaned by half time-step for MHM and CTU schemes
 //                5. The PPM reconstruction does NOT support the extrema-preserving limiter
-//                6. The function is asynchronous 
+//                6. The function is asynchronous
 //                   --> "__syncthreads" must be called before using the output data
 //                7. The PLM and PPM data reconstruction functions share the same function name
-//                8. The data reconstruction can be applied to characteristic variables by 
+//                8. The data reconstruction can be applied to characteristic variables by
 //                   defining "CHAR_RECONSTRUCTION"
 //                9. This function is shared by MHM, MHM_RP, and CTU schemes
 //
@@ -599,13 +602,13 @@ __device__ void CUFLU_DataReconstruction( const real g_PriVar[][5][ FLU_NXT*FLU_
 //                g_FC_Var_yR       : Global memory array to store the face-centered variables on the +y surface
 //                g_FC_Var_zL       : Global memory array to store the face-centered variables on the -z surface
 //                g_FC_Var_zR       : Global memory array to store the face-centered variables on the +z surface
-//                NIn               : Size of the input array "PriVar" in one direction 
+//                NIn               : Size of the input array "PriVar" in one direction
 //                                    (can be smaller than FLU_NXT)
 //                NGhost            : Size of the ghost zone
-//                                    --> "NIn-2*NGhost" cells will be computed along each direction 
-//                                    --> The size of the output array "g_FC_Var" is assumed to be 
+//                                    --> "NIn-2*NGhost" cells will be computed along each direction
+//                                    --> The size of the output array "g_FC_Var" is assumed to be
 //                                        "(NIn-2*NGhost)^3"
-//                                    --> The reconstructed data at cell (i,j,k) will be stored in the 
+//                                    --> The reconstructed data at cell (i,j,k) will be stored in the
 //                                        array "g_FC_Var" with the index "(i-NGhost,j-NGhost,k-NGhost)
 //                Gamma             : Ratio of specific heats
 //                LR_Limiter        : Slope limiter for the data reconstruction in the MHM/MHM_RP/CTU schemes
@@ -615,6 +618,7 @@ __device__ void CUFLU_DataReconstruction( const real g_PriVar[][5][ FLU_NXT*FLU_
 //                EP_Coeff          : Coefficient of the extrema-preserving limiter
 //                dt                : Time interval to advance solution (useful only for CTU and MHM schemes)
 //                _dh               : 1 / grid size (useful only for CTU and MHM schemes)
+//                MinDens/Pres      : Minimum allowed density and pressure
 //-------------------------------------------------------------------------------------------------------
 __device__ void CUFLU_DataReconstruction( const real g_PriVar[][5][ FLU_NXT*FLU_NXT*FLU_NXT ],
                                           real g_Slope_PPM_x[][5][ N_SLOPE_PPM*N_SLOPE_PPM*N_SLOPE_PPM ],
@@ -626,10 +630,10 @@ __device__ void CUFLU_DataReconstruction( const real g_PriVar[][5][ FLU_NXT*FLU_
                                           real g_FC_Var_yR[][5][ N_FC_VAR*N_FC_VAR*N_FC_VAR ],
                                           real g_FC_Var_zL[][5][ N_FC_VAR*N_FC_VAR*N_FC_VAR ],
                                           real g_FC_Var_zR[][5][ N_FC_VAR*N_FC_VAR*N_FC_VAR ],
-                                          const int NIn, const int NGhost, const real Gamma, 
-                                          const LR_Limiter_t LR_Limiter, const real MinMod_Coeff, 
-                                          const real EP_Coeff, 
-                                          const real dt, const real _dh )
+                                          const int NIn, const int NGhost, const real Gamma,
+                                          const LR_Limiter_t LR_Limiter, const real MinMod_Coeff,
+                                          const real EP_Coeff, const real dt, const real _dh,
+                                          const real MinDens, const real MinPres )
 {
 
    const uint  bx       = blockIdx.x;
@@ -637,16 +641,16 @@ __device__ void CUFLU_DataReconstruction( const real g_PriVar[][5][ FLU_NXT*FLU_
    const uint  dID2     = blockDim.x;
    const uint  NOut     = NIn - 2*NGhost;
    const uint  NOut2    = __umul24( NOut, NOut );
-   const uint  NSlope   = NOut + 2;        
+   const uint  NSlope   = NOut + 2;
    const uint  NSlope2  = __umul24( NSlope, NSlope );
    const uint3 dr1      = make_uint3( 1, NIn, NIn*NIn );
    const uint3 dr3      = make_uint3( 1, NSlope, NSlope2 );
    const real _Gamma_m1 = (real)1.0 / ( Gamma - (real)1.0 );
 
-   uint   ID2 = tx; 
+   uint   ID2 = tx;
    uint   ID1, ID3, ID1_L, ID1_R, ID3_L, ID3_R;
    uint3  ID1_3d, ID3_3d;
-   FluVar Slope_Limiter, dFC, dFC6; 
+   FluVar Slope_Limiter, dFC, dFC6;
    FluVar CC_L, CC_C, CC_R;                              // cell-centered 5-element variables
    FluVar FC_xL, FC_xR, FC_yL, FC_yR, FC_zL, FC_zR;      // face-centered 5-element variables
    real   CC1_L, CC1_R;                                  // cell-centered 1-element variables
@@ -655,7 +659,7 @@ __device__ void CUFLU_DataReconstruction( const real g_PriVar[][5][ FLU_NXT*FLU_
 
 // variables for the CTU scheme
 #  if ( FLU_SCHEME == CTU )
-   const real dt_dh2 = (real)0.5*dt*_dh; 
+   const real dt_dh2 = (real)0.5*dt*_dh;
 
 // include waves both from left and right directions during the data reconstruction, as suggested in ATHENA
 #  if (  ( RSOLVER == HLLE  ||  RSOLVER == HLLC )  &&  defined HLL_NO_REF_STATE  )
@@ -741,7 +745,7 @@ __device__ void CUFLU_DataReconstruction( const real g_PriVar[][5][ FLU_NXT*FLU_
    } // while ( ID2 < NSlope*NSlope*NSlope )
 
    __syncthreads();
-   
+
 
 
 // 2. evaluate the face-centered values
@@ -767,7 +771,7 @@ __device__ void CUFLU_DataReconstruction( const real g_PriVar[][5][ FLU_NXT*FLU_
       CC_C.Egy = g_PriVar[bx][4][ID1];
 
 
-//    (2-1) evaluate the eigenvalues and eigenvectors for the CTU integrator            
+//    (2-1) evaluate the eigenvalues and eigenvectors for the CTU integrator
 #     if ( FLU_SCHEME == CTU )
       Get_EigenSystem( CC_C, EVal_x, EVal_y, EVal_z, LEVec1, LEVec2, LEVec3, LEVec4, LEVec5,
                        REVec1, REVec2, REVec3, REVec4, REVec5, Gamma );
@@ -843,12 +847,12 @@ __device__ void CUFLU_DataReconstruction( const real g_PriVar[][5][ FLU_NXT*FLU_
 #     undef GetFCVar_PPM
 
 
-//    (2-3) advance the face-centered variables by half time-step for the CTU integrator 
+//    (2-3) advance the face-centered variables by half time-step for the CTU integrator
 #     if ( FLU_SCHEME == CTU )
 
-//    =====================================================================================         
+//    =====================================================================================
 //    a. for the HLL solvers (HLLE/HLLC)
-//    =====================================================================================         
+//    =====================================================================================
 #     if (  ( RSOLVER == HLLE  ||  RSOLVER == HLLC )  &&  defined HLL_NO_REF_STATE  )
 
 #     define GetRefState_PPM( EVal )                                                                  \
@@ -917,9 +921,9 @@ __device__ void CUFLU_DataReconstruction( const real g_PriVar[][5][ FLU_NXT*FLU_
       } // Corr_R_PPM
 
 
-//    =====================================================================================         
-//    b. for the Roe's and exact solvers 
-//    =====================================================================================         
+//    =====================================================================================
+//    b. for the Roe's and exact solvers
+//    =====================================================================================
 #     else // ( RSOLVER == ROE/EXACT && ifndef HLL_NO_REF_STATE )
 
 #     define GetRefState_PPM( EVal )                                                                  \
@@ -1055,15 +1059,20 @@ __device__ void CUFLU_DataReconstruction( const real g_PriVar[][5][ FLU_NXT*FLU_
       CTU_Predict_PPM( 1, FC_yL, FC_yR, EVal_y );
       CTU_Predict_PPM( 2, FC_zL, FC_zR, EVal_z );
 
-//    (2-3-5) ensure the positive pressure
-#     if ( defined MIN_PRES_DENS  ||  defined MIN_PRES )
-      FC_xL.Egy = CUFLU_PositivePres( FC_xL.Egy, FC_xL.Rho, (real)1.0/FC_xL.Rho );
-      FC_xR.Egy = CUFLU_PositivePres( FC_xR.Egy, FC_xR.Rho, (real)1.0/FC_xR.Rho );
-      FC_yL.Egy = CUFLU_PositivePres( FC_yL.Egy, FC_yL.Rho, (real)1.0/FC_yL.Rho );
-      FC_yR.Egy = CUFLU_PositivePres( FC_yR.Egy, FC_yR.Rho, (real)1.0/FC_yR.Rho );
-      FC_zL.Egy = CUFLU_PositivePres( FC_zL.Egy, FC_zL.Rho, (real)1.0/FC_zL.Rho );
-      FC_zR.Egy = CUFLU_PositivePres( FC_zR.Egy, FC_zR.Rho, (real)1.0/FC_zR.Rho );
-#     endif
+//    (2-3-5) ensure positive density and pressure
+      FC_xL.Rho = FMAX( FC_xL.Rho, MinDens );
+      FC_xR.Rho = FMAX( FC_xR.Rho, MinDens );
+      FC_yL.Rho = FMAX( FC_yL.Rho, MinDens );
+      FC_yR.Rho = FMAX( FC_yR.Rho, MinDens );
+      FC_zL.Rho = FMAX( FC_zL.Rho, MinDens );
+      FC_zR.Rho = FMAX( FC_zR.Rho, MinDens );
+
+      FC_xL.Egy = CUFLU_CheckMinPres( FC_xL.Egy, MinPres );
+      FC_xR.Egy = CUFLU_CheckMinPres( FC_xR.Egy, MinPres );
+      FC_yL.Egy = CUFLU_CheckMinPres( FC_yL.Egy, MinPres );
+      FC_yR.Egy = CUFLU_CheckMinPres( FC_yR.Egy, MinPres );
+      FC_zL.Egy = CUFLU_CheckMinPres( FC_zL.Egy, MinPres );
+      FC_zR.Egy = CUFLU_CheckMinPres( FC_zR.Egy, MinPres );
 
 #     undef GetRefState_PPM
 #     undef Corr_L_PPM
@@ -1073,7 +1082,7 @@ __device__ void CUFLU_DataReconstruction( const real g_PriVar[][5][ FLU_NXT*FLU_
 #     endif // #if ( FLU_SCHEME == CTU )
 
 
-//    (2-4) primitive variables --> conserved variables            
+//    (2-4) primitive variables --> conserved variables
       FC_xL = CUFLU_Pri2Con( FC_xL, _Gamma_m1 );
       FC_xR = CUFLU_Pri2Con( FC_xR, _Gamma_m1 );
       FC_yL = CUFLU_Pri2Con( FC_yL, _Gamma_m1 );
@@ -1085,7 +1094,7 @@ __device__ void CUFLU_DataReconstruction( const real g_PriVar[][5][ FLU_NXT*FLU_
 #     if ( FLU_SCHEME == MHM )
 //    (2-5) advance the face-centered variables by half time-step for the MHM scheme
       HancockPredict( g_FC_Var_xL, g_FC_Var_xR, g_FC_Var_yL, g_FC_Var_yR, g_FC_Var_zL, g_FC_Var_zR,
-                      FC_xL, FC_xR, FC_yL, FC_yR, FC_zL, FC_zR, dt, _dh, Gamma, ID2, CC_C );
+                      FC_xL, FC_xR, FC_yL, FC_yR, FC_zL, FC_zR, dt, _dh, Gamma, ID2, CC_C, MinDens, MinPres );
 
 #     else  // for MHM_RP and CTU
 
@@ -1097,7 +1106,7 @@ __device__ void CUFLU_DataReconstruction( const real g_PriVar[][5][ FLU_NXT*FLU_
          g_array[bx][2][ID2] = FC.Py;     \
          g_array[bx][3][ID2] = FC.Pz;     \
          g_array[bx][4][ID2] = FC.Egy;    \
-      } // Store  
+      } // Store
 
       Store( g_FC_Var_xL, FC_xL );
       Store( g_FC_Var_xR, FC_xR );
@@ -1121,24 +1130,25 @@ __device__ void CUFLU_DataReconstruction( const real g_PriVar[][5][ FLU_NXT*FLU_
 
 #ifdef CHAR_RECONSTRUCTION
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Pri2Char 
-// Description :  Convert the primitive variables to the characteristic variables 
+// Function    :  Pri2Char
+// Description :  Convert the primitive variables to the characteristic variables
 //
-// Parameter   :  InOut : Array storing both the input primitive variables and output characteristic variables 
+// Parameter   :  InOut : Array storing both the input primitive variables and output characteristic variables
 //                Gamma : Ratio of specific heats
 //                Rho   : Density
 //                Pres  : Pressure
-//                XYZ   : Targeted spatial direction : (0/1/2) --> (x/y/z) 
+//                XYZ   : Targeted spatial direction : (0/1/2) --> (x/y/z)
 //-------------------------------------------------------------------------------------------------------
 __device__ FluVar Pri2Char( FluVar InOut, const real Gamma, const real Rho, const real Pres, const int XYZ )
 {
 
 #  ifdef CHECK_NEGATIVE_IN_FLUID
    if ( CUFLU_CheckNegative(Pres) )
-      printf( "ERROR : negative pressure (%14.7e) at file <%s>, line <%d>, function <%s>\n", 
+      printf( "ERROR : negative pressure (%14.7e) at file <%s>, line <%d>, function <%s>\n",
               Pres, __FILE__, __LINE__, __FUNCTION__ );
+
    if ( CUFLU_CheckNegative(Rho) )
-      printf( "ERROR : negative density (%14.7e) at file <%s>, line <%d>, function <%s>\n", 
+      printf( "ERROR : negative density (%14.7e) at file <%s>, line <%d>, function <%s>\n",
               Rho,  __FILE__, __LINE__, __FUNCTION__ );
 #  endif
 
@@ -1160,24 +1170,25 @@ __device__ FluVar Pri2Char( FluVar InOut, const real Gamma, const real Rho, cons
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Char2Pri 
-// Description :  Convert the characteristic variables to the primitive variables 
+// Function    :  Char2Pri
+// Description :  Convert the characteristic variables to the primitive variables
 //
 // Parameter   :  InOut : Array storing both the input characteristic variables and output primitive variables
 //                Gamma : Ratio of specific heats
 //                Rho   : Density
 //                Pres  : Pressure
-//                XYZ   : Targeted spatial direction : (0/1/2) --> (x/y/z) 
+//                XYZ   : Targeted spatial direction : (0/1/2) --> (x/y/z)
 //-------------------------------------------------------------------------------------------------------
 __device__ FluVar Char2Pri( FluVar InOut, const real Gamma, const real Rho, const real Pres, const int XYZ )
 {
 
 #  ifdef CHECK_NEGATIVE_IN_FLUID
    if ( CUFLU_CheckNegative(Pres) )
-      printf( "ERROR : negative pressure (%14.7e) at file <%s>, line <%d>, function <%s>\n", 
+      printf( "ERROR : negative pressure (%14.7e) at file <%s>, line <%d>, function <%s>\n",
               Pres, __FILE__, __LINE__, __FUNCTION__ );
+
    if ( CUFLU_CheckNegative(Rho) )
-      printf( "ERROR : negative density (%14.7e) at file <%s>, line <%d>, function <%s>\n", 
+      printf( "ERROR : negative density (%14.7e) at file <%s>, line <%d>, function <%s>\n",
               Rho,  __FILE__, __LINE__, __FUNCTION__ );
 #  endif
 
@@ -1205,7 +1216,7 @@ __device__ FluVar Char2Pri( FluVar InOut, const real Gamma, const real Rho, cons
 // Function    :  LimitSlope
 // Description :  Evaluate the monotonic slope by applying slope limiters
 //
-// Note        :  1. The input data should be primitive variables  
+// Note        :  1. The input data should be primitive variables
 //                2. The parameters "L2, R2, EP_Coeff" are useful only for the extrema-preserving limiter
 //
 // Parameter   :  L2             : Element x-2
@@ -1220,7 +1231,7 @@ __device__ FluVar Char2Pri( FluVar InOut, const real Gamma, const real Rho, cons
 //                EP_Coeff       : Coefficient of the extrema-preserving limiter
 //                Gamma          : Ratio of specific heats
 //                                 --> Useful only if the option "CHAR_RECONSTRUCTION" is turned on
-//                XYZ            : Targeted spatial direction : (0/1/2) --> (x/y/z) 
+//                XYZ            : Targeted spatial direction : (0/1/2) --> (x/y/z)
 //                                 --> Useful only if the option "CHAR_RECONSTRUCTION" is turned on
 //-------------------------------------------------------------------------------------------------------
 __device__ FluVar LimitSlope( const FluVar L2, const FluVar L1, const FluVar C0, const FluVar R1, const FluVar R2,
@@ -1238,7 +1249,7 @@ __device__ FluVar LimitSlope( const FluVar L2, const FluVar L1, const FluVar C0,
       Slope_L.comp = C0.comp - L1.comp;                                                                  \
       Slope_R.comp = R1.comp - C0.comp;                                                                  \
       Slope_C.comp = (real)0.5*( Slope_L.comp + Slope_R.comp );                                          \
-   } // GetSlope 
+   } // GetSlope
 
 #  define GetSlope_vL_GMinMod( comp )                                                                    \
    {                                                                                                     \
@@ -1248,13 +1259,13 @@ __device__ FluVar LimitSlope( const FluVar L2, const FluVar L1, const FluVar C0,
          Slope_A.comp = Slope_LR / Slope_C.comp;                                                         \
       else                                                                                               \
          Slope_A.comp = (real)0.0;                                                                       \
-   } // GetSlope_vL_GMinMod                                                                              
-                                                                                                         
+   } // GetSlope_vL_GMinMod
+
 #  define GetSlope_ExtPre( comp, v )                                                                     \
    {                                                                                                     \
       Slope_L2.comp = L1.comp - L2.comp;                                                                 \
       Slope_R2.comp = R2.comp - R1.comp;                                                                 \
-   } // GetSlope_ExtPre                                                                                                     
+   } // GetSlope_ExtPre
    GetSlope( Rho );
    GetSlope( Px  );
    GetSlope( Py  );
@@ -1433,24 +1444,25 @@ __device__ FluVar LimitSlope( const FluVar L2, const FluVar L1, const FluVar C0,
 // Note        :  1. Work for the MHM scheme
 //                2. Do NOT require data in the neighboring cells
 //
-// Parameter   :  g_FC_Var_xL : Face-centered global variables on the -x surface
-//                g_FC_Var_xR : Face-centered global variables on the +x surface
-//                g_FC_Var_yL : Face-centered global variables on the -y surface
-//                g_FC_Var_yR : Face-centered global variables on the +y surface
-//                g_FC_Var_zL : Face-centered global variables on the -z surface
-//                g_FC_Var_zR : Face-centered global variables on the +z surface
-//                FC_Var_xL   : Face-centered variables on the -x surface
-//                FC_Var_xR   : Face-centered variables on the +x surface
-//                FC_Var_yL   : Face-centered variables on the -y surface
-//                FC_Var_yR   : Face-centered variables on the +y surface
-//                FC_Var_zL   : Face-centered variables on the -z surface
-//                FC_Var_zR   : Face-centered variables on the +z surface
-//                dt          : Time interval to advance solution
-//                _dh         : 1 / grid size
-//                Gamma       : Ratio of specific heats
-//                ID_Out      : Array index to store the output data
-//                P_In        : Input primitive variables (data before update)
-//                              --> For the "MIN_PRES or MIN_PRES_DENS" operations
+// Parameter   :  g_FC_Var_xL  : Face-centered global variables on the -x surface
+//                g_FC_Var_xR  : Face-centered global variables on the +x surface
+//                g_FC_Var_yL  : Face-centered global variables on the -y surface
+//                g_FC_Var_yR  : Face-centered global variables on the +y surface
+//                g_FC_Var_zL  : Face-centered global variables on the -z surface
+//                g_FC_Var_zR  : Face-centered global variables on the +z surface
+//                FC_Var_xL    : Face-centered variables on the -x surface
+//                FC_Var_xR    : Face-centered variables on the +x surface
+//                FC_Var_yL    : Face-centered variables on the -y surface
+//                FC_Var_yR    : Face-centered variables on the +y surface
+//                FC_Var_zL    : Face-centered variables on the -z surface
+//                FC_Var_zR    : Face-centered variables on the +z surface
+//                dt           : Time interval to advance solution
+//                _dh          : 1 / grid size
+//                Gamma        : Ratio of specific heats
+//                ID_Out       : Array index to store the output data
+//                P_In         : Input primitive variables (data before update)
+//                               --> For checking negative density and pressure
+//                MinDens/Pres : Minimum allowed density and pressure
 //-------------------------------------------------------------------------------------------------------
 __device__ void HancockPredict( real g_FC_Var_xL[][5][ N_FC_VAR*N_FC_VAR*N_FC_VAR ],
                                 real g_FC_Var_xR[][5][ N_FC_VAR*N_FC_VAR*N_FC_VAR ],
@@ -1458,13 +1470,13 @@ __device__ void HancockPredict( real g_FC_Var_xL[][5][ N_FC_VAR*N_FC_VAR*N_FC_VA
                                 real g_FC_Var_yR[][5][ N_FC_VAR*N_FC_VAR*N_FC_VAR ],
                                 real g_FC_Var_zL[][5][ N_FC_VAR*N_FC_VAR*N_FC_VAR ],
                                 real g_FC_Var_zR[][5][ N_FC_VAR*N_FC_VAR*N_FC_VAR ],
-                                FluVar FC_Var_xL, FluVar FC_Var_xR, 
+                                FluVar FC_Var_xL, FluVar FC_Var_xR,
                                 FluVar FC_Var_yL, FluVar FC_Var_yR,
-                                FluVar FC_Var_zL, FluVar FC_Var_zR, 
+                                FluVar FC_Var_zL, FluVar FC_Var_zR,
                                 const real dt, const real _dh, const real Gamma, const uint ID_Out,
-                                const FluVar P_In )
+                                const FluVar P_In, const real MinDens, const real MinPres )
 {
-  
+
    const uint   bx       = blockIdx.x;
    const real   Gamma_m1 = Gamma - (real)1.0;
    const real  _Gamma_m1 = (real)1.0 / Gamma_m1;
@@ -1476,12 +1488,12 @@ __device__ void HancockPredict( real g_FC_Var_xL[][5][ N_FC_VAR*N_FC_VAR*N_FC_VA
 
 
 // 1. evaluate the fluxes
-   FC_Flux_xL = CUFLU_Con2Flux( FC_Var_xL, Gamma_m1, 0 );
-   FC_Flux_xR = CUFLU_Con2Flux( FC_Var_xR, Gamma_m1, 0 );
-   FC_Flux_yL = CUFLU_Con2Flux( FC_Var_yL, Gamma_m1, 1 );
-   FC_Flux_yR = CUFLU_Con2Flux( FC_Var_yR, Gamma_m1, 1 );
-   FC_Flux_zL = CUFLU_Con2Flux( FC_Var_zL, Gamma_m1, 2 );
-   FC_Flux_zR = CUFLU_Con2Flux( FC_Var_zR, Gamma_m1, 2 );
+   FC_Flux_xL = CUFLU_Con2Flux( FC_Var_xL, Gamma_m1, 0, MinPres );
+   FC_Flux_xR = CUFLU_Con2Flux( FC_Var_xR, Gamma_m1, 0, MinPres );
+   FC_Flux_yL = CUFLU_Con2Flux( FC_Var_yL, Gamma_m1, 1, MinPres );
+   FC_Flux_yR = CUFLU_Con2Flux( FC_Var_yR, Gamma_m1, 1, MinPres );
+   FC_Flux_zL = CUFLU_Con2Flux( FC_Var_zL, Gamma_m1, 2, MinPres );
+   FC_Flux_zR = CUFLU_Con2Flux( FC_Var_zR, Gamma_m1, 2, MinPres );
 
 
 // 2. get the half-step solution
@@ -1508,10 +1520,12 @@ __device__ void HancockPredict( real g_FC_Var_xL[][5][ N_FC_VAR*N_FC_VAR*N_FC_VA
 #  undef HalfStepUpdate
 
 
-// 3. enforce the positive density and pressure 
-// check the negative density
+// 3. enforce the positive density and pressure
+// check negative density and energy
    if ( FC_Var_xL.Rho <= (real)0.0  ||  FC_Var_xR.Rho <= (real)0.0  ||  FC_Var_yL.Rho <= (real)0.0  ||
-        FC_Var_yR.Rho <= (real)0.0  ||  FC_Var_zL.Rho <= (real)0.0  ||  FC_Var_zR.Rho <= (real)0.0     )
+        FC_Var_yR.Rho <= (real)0.0  ||  FC_Var_zL.Rho <= (real)0.0  ||  FC_Var_zR.Rho <= (real)0.0  ||
+        FC_Var_xL.Egy <= (real)0.0  ||  FC_Var_xR.Egy <= (real)0.0  ||  FC_Var_yL.Egy <= (real)0.0  ||
+        FC_Var_yR.Egy <= (real)0.0  ||  FC_Var_zL.Egy <= (real)0.0  ||  FC_Var_zR.Egy <= (real)0.0   )
    {
       FC_Var_xL.Rho = FC_Var_xR.Rho = FC_Var_yL.Rho = FC_Var_yR.Rho = FC_Var_zL.Rho = FC_Var_zR.Rho = C_In.Rho;
       FC_Var_xL.Px  = FC_Var_xR.Px  = FC_Var_yL.Px  = FC_Var_yR.Px  = FC_Var_zL.Px  = FC_Var_zR.Px  = C_In.Px;
@@ -1520,15 +1534,20 @@ __device__ void HancockPredict( real g_FC_Var_xL[][5][ N_FC_VAR*N_FC_VAR*N_FC_VA
       FC_Var_xL.Egy = FC_Var_xR.Egy = FC_Var_yL.Egy = FC_Var_yR.Egy = FC_Var_zL.Egy = FC_Var_zR.Egy = C_In.Egy;
    }
 
-// check the negative pressure
-#  if ( defined MIN_PRES_DENS  ||  defined MIN_PRES )
-   FC_Var_xL.Egy = CUFLU_PositivePres_In_Engy( FC_Var_xL, Gamma_m1, _Gamma_m1 );
-   FC_Var_xR.Egy = CUFLU_PositivePres_In_Engy( FC_Var_xR, Gamma_m1, _Gamma_m1 );
-   FC_Var_yL.Egy = CUFLU_PositivePres_In_Engy( FC_Var_yL, Gamma_m1, _Gamma_m1 );
-   FC_Var_yR.Egy = CUFLU_PositivePres_In_Engy( FC_Var_yR, Gamma_m1, _Gamma_m1 );
-   FC_Var_zL.Egy = CUFLU_PositivePres_In_Engy( FC_Var_zL, Gamma_m1, _Gamma_m1 );
-   FC_Var_zR.Egy = CUFLU_PositivePres_In_Engy( FC_Var_zR, Gamma_m1, _Gamma_m1 );
-#  endif
+// ensure positive density and pressure
+   FC_Var_xL.Rho = FMAX( FC_Var_xL.Rho, MinDens );
+   FC_Var_xR.Rho = FMAX( FC_Var_xR.Rho, MinDens );
+   FC_Var_yL.Rho = FMAX( FC_Var_yL.Rho, MinDens );
+   FC_Var_yR.Rho = FMAX( FC_Var_yR.Rho, MinDens );
+   FC_Var_zL.Rho = FMAX( FC_Var_zL.Rho, MinDens );
+   FC_Var_zR.Rho = FMAX( FC_Var_zR.Rho, MinDens );
+
+   FC_Var_xL.Egy = CUFLU_CheckMinPresInEngy( FC_Var_xL, Gamma_m1, _Gamma_m1, MinPres );
+   FC_Var_xR.Egy = CUFLU_CheckMinPresInEngy( FC_Var_xR, Gamma_m1, _Gamma_m1, MinPres );
+   FC_Var_yL.Egy = CUFLU_CheckMinPresInEngy( FC_Var_yL, Gamma_m1, _Gamma_m1, MinPres );
+   FC_Var_yR.Egy = CUFLU_CheckMinPresInEngy( FC_Var_yR, Gamma_m1, _Gamma_m1, MinPres );
+   FC_Var_zL.Egy = CUFLU_CheckMinPresInEngy( FC_Var_zL, Gamma_m1, _Gamma_m1, MinPres );
+   FC_Var_zR.Egy = CUFLU_CheckMinPresInEngy( FC_Var_zR, Gamma_m1, _Gamma_m1, MinPres );
 
 
 // 4. store the half-step face-centered variables to the global memory
@@ -1539,7 +1558,7 @@ __device__ void HancockPredict( real g_FC_Var_xL[][5][ N_FC_VAR*N_FC_VAR*N_FC_VA
       g_array[bx][2][ID_Out] = FC_Var.Py;    \
       g_array[bx][3][ID_Out] = FC_Var.Pz;    \
       g_array[bx][4][ID_Out] = FC_Var.Egy;   \
-   } // Store  
+   } // Store
 
    Store( g_FC_Var_xL, FC_Var_xL );
    Store( g_FC_Var_xR, FC_Var_xR );
@@ -1549,7 +1568,7 @@ __device__ void HancockPredict( real g_FC_Var_xL[][5][ N_FC_VAR*N_FC_VAR*N_FC_VA
    Store( g_FC_Var_zR, FC_Var_zR );
 
 #  undef Store
-  
+
 } // FUNCTION : HancockPredict
 #endif // #if ( FLU_SCHEME == MHM )
 
@@ -1558,9 +1577,9 @@ __device__ void HancockPredict( real g_FC_Var_xL[][5][ N_FC_VAR*N_FC_VAR*N_FC_VA
 #if ( FLU_SCHEME == CTU )
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Get_EigenSystem
-// Description :  Evaluate the eigenvalues and left/right eigenvectors 
+// Description :  Evaluate the eigenvalues and left/right eigenvectors
 //
-// Note        :  1. The input data should be primitive variables 
+// Note        :  1. The input data should be primitive variables
 //                2. The constant components of eigenvectors should be initialized in advance
 //                3. Work for the CTU scheme
 //
@@ -1570,18 +1589,19 @@ __device__ void HancockPredict( real g_FC_Var_xL[][5][ N_FC_VAR*N_FC_VAR*N_FC_VA
 //                REVec    : Array to store the output right eigenvectors
 //                Gamma    : Ratio of specific heats
 //-------------------------------------------------------------------------------------------------------
-__device__ void Get_EigenSystem( const FluVar CC_Var, FluVar &EVal_x, FluVar &EVal_y, FluVar &EVal_z, 
-                                 FluVar &LEVec1, FluVar &LEVec2, FluVar &LEVec3, FluVar &LEVec4, 
-                                 FluVar &LEVec5, FluVar &REVec1, FluVar &REVec2, FluVar &REVec3, 
+__device__ void Get_EigenSystem( const FluVar CC_Var, FluVar &EVal_x, FluVar &EVal_y, FluVar &EVal_z,
+                                 FluVar &LEVec1, FluVar &LEVec2, FluVar &LEVec3, FluVar &LEVec4,
+                                 FluVar &LEVec5, FluVar &REVec1, FluVar &REVec2, FluVar &REVec3,
                                  FluVar &REVec4, FluVar &REVec5, const real Gamma )
 {
 
 #  ifdef CHECK_NEGATIVE_IN_FLUID
    if ( CUFLU_CheckNegative(CC_Var.Egy) )
-      printf( "ERROR : negative pressure (%14.7e) at file <%s>, line <%d>, function <%s>\n", 
+      printf( "ERROR : negative pressure (%14.7e) at file <%s>, line <%d>, function <%s>\n",
               CC_Var.Egy, __FILE__, __LINE__, __FUNCTION__ );
+
    if ( CUFLU_CheckNegative(CC_Var.Rho) )
-      printf( "ERROR : negative density (%14.7e) at file <%s>, line <%d>, function <%s>\n", 
+      printf( "ERROR : negative density (%14.7e) at file <%s>, line <%d>, function <%s>\n",
               CC_Var.Rho, __FILE__, __LINE__, __FUNCTION__ );
 #  endif
 

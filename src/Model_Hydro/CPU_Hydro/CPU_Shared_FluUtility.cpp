@@ -193,20 +193,17 @@ real CPU_CheckMinPresInEngy( const real Dens, const real MomX, const real MomY, 
                              const real Gamma_m1, const real _Gamma_m1, const real MinPres )
 {
 
-   real InPres, OutPres, Ek, _Dens, OutEngy;
+   real InPres, OutPres, Ek, _Dens;
 
 // we didn't use CPU_GetPressure() here to void calculating kinematic energy (Ek) twice
    _Dens   = (real)1.0 / Dens;
    Ek      = (real)0.5*( SQR(MomX) + SQR(MomY) + SQR(MomZ) ) * _Dens;
    InPres  = Gamma_m1*( Engy - Ek );
-
    OutPres = CPU_CheckMinPres( InPres, MinPres );
 
 // do not modify energy (even the round-off errors) if the input pressure passes the check of CPU_CheckMinPres()
-   if ( InPres == OutPres )   OutEngy = Engy;
-   else                       OutEngy = Ek + _Gamma_m1*OutPres;
-
-   return OutEngy;
+   if ( InPres == OutPres )   return Engy;
+   else                       return Ek + _Gamma_m1*OutPres;
 
 } // FUNCTION : CPU_CheckMinPresInEngy
 

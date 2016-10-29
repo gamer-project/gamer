@@ -392,7 +392,7 @@ void Solver( const Solver_t TSolver, const int lv, const double TimeNew, const d
                                  NPG, dt, dh, GAMMA, OPT__FIXUP_FLUX, Flu_XYZ,
                                  OPT__LR_LIMITER, MINMOD_COEFF, EP_COEFF, OPT__WAF_LIMITER, ELBDM_ETA,
                                  ELBDM_TAYLOR3_COEFF, ELBDM_TAYLOR3_AUTO, OPT__ADAPTIVE_DT, TimeOld, OPT__GRAVITY_TYPE,
-                                 GPU_NSTREAM );
+                                 GPU_NSTREAM, MinDensTEMP, MinPresTEMP );
 #        else
          CPU_FluidSolver       ( h_Flu_Array_F_In[ArrayID], h_Flu_Array_F_Out[ArrayID], h_Flux_Array[ArrayID],
                                  h_Corner_Array_F[ArrayID], h_MinDtInfo_Fluid_Array[ArrayID], h_Pot_Array_USG_F[ArrayID],

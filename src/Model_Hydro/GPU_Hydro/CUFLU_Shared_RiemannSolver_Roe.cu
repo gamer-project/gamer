@@ -14,7 +14,7 @@
 #include "CUFLU_Shared_RiemannSolver_HLLC.cu"
 #endif
 
-static __device__ FluVar CUFLU_RiemannSolver_Roe( const int XYZ, const FluVar L_In, const FluVar R_In, 
+static __device__ FluVar CUFLU_RiemannSolver_Roe( const int XYZ, const FluVar L_In, const FluVar R_In,
                                                   const real Gamma );
 
 
@@ -24,37 +24,34 @@ static __device__ FluVar CUFLU_RiemannSolver_Roe( const int XYZ, const FluVar L_
 // Function    :  CUFLU_RiemannSolver_Roe
 // Description :  Approximate Riemann solver of Roe
 //
-// Note        :  1. The input data should be conserved variables 
+// Note        :  1. The input data should be conserved variables
 //                2. Ref : "Riemann Solvers and Numerical Methods for Fluid Dynamics - A Practical Introduction
 //                         ~ by Eleuterio F. Toro"
 //                3. This function is shared by MHM, MHM_RP, and CTU schemes
 //                4. The "__forceinline__" qualifier is added for higher performance
 //
-// Parameter   :  XYZ   : Targeted spatial direction : (0/1/2) --> (x/y/z)
-//                L_In  : Input left  state (conserved variables)
-//                R_In  : Input right state (conserved variables)
-//                Gamma : Gamma
+// Parameter   :  XYZ     : Targeted spatial direction : (0/1/2) --> (x/y/z)
+//                L_In    : Input left  state (conserved variables)
+//                R_In    : Input right state (conserved variables)
+//                Gamma   : Gamma
+//                MinPres : Minimum allowed pressure
 //-------------------------------------------------------------------------------------------------------
 __forceinline__
-__device__ FluVar CUFLU_RiemannSolver_Roe( const int XYZ, const FluVar L_In, const FluVar R_In, 
-                                           const real Gamma )
+__device__ FluVar CUFLU_RiemannSolver_Roe( const int XYZ, const FluVar L_In, const FluVar R_In,
+                                           const real Gamma, const real MinPres )
 {
 
 // 1. reorder the input variables for different spatial directions
-   FluVar L = CUFLU_Rotate3D( L_In, XYZ, true );  
+   FluVar L = CUFLU_Rotate3D( L_In, XYZ, true );
    FluVar R = CUFLU_Rotate3D( R_In, XYZ, true );
 
 
 // 2. evaluate the average values
    const real Gamma_m1 = Gamma - (real)1.0;
+   const real  TempRho = (real)0.5*( L.Rho + R.Rho );
+   const real _TempRho = (real)1.0/TempRho;
    real _RhoL, _RhoR, HL, HR, u, v, w, V2, H, Cs, RhoL_sqrt, RhoR_sqrt, _RhoL_sqrt, _RhoR_sqrt, _RhoLR_sqrt_sum;
-   real GammaP_Rho;
-
-#  if ( defined MIN_PRES_DENS  ||  defined MIN_PRES )
-   const real  TempRho  = (real)0.5*( L.Rho + R.Rho );
-   const real _TempRho  = (real)1.0/TempRho;
-   real TempPres;
-#  endif
+   real GammaP_Rho, TempPres;
 
    _RhoL = (real)1.0 / L.Rho;
    _RhoR = (real)1.0 / R.Rho;
@@ -63,10 +60,11 @@ __device__ FluVar CUFLU_RiemannSolver_Roe( const int XYZ, const FluVar L_In, con
 
 #  ifdef CHECK_NEGATIVE_IN_FLUID
    if ( CUFLU_CheckNegative(L.Rho) )
-      printf( "ERROR : negative density (%14.7e) at file <%s>, line <%d>, function <%s>\n", 
+      printf( "ERROR : negative density (%14.7e) at file <%s>, line <%d>, function <%s>\n",
               L.Rho, __FILE__, __LINE__, __FUNCTION__ );
+
    if ( CUFLU_CheckNegative(R.Rho) )
-      printf( "ERROR : negative density (%14.7e) at file <%s>, line <%d>, function <%s>\n", 
+      printf( "ERROR : negative density (%14.7e) at file <%s>, line <%d>, function <%s>\n",
               R.Rho, __FILE__, __LINE__, __FUNCTION__ );
 #  endif
 
@@ -83,14 +81,13 @@ __device__ FluVar CUFLU_RiemannSolver_Roe( const int XYZ, const FluVar L_In, con
    H  = _RhoLR_sqrt_sum*(  RhoL_sqrt*HL   +  RhoR_sqrt*HR   );
 
    GammaP_Rho = Gamma_m1*( H - (real)0.5*V2 );
-#  if ( defined MIN_PRES_DENS  ||  defined MIN_PRES )
    TempPres   = GammaP_Rho*TempRho/Gamma;
-   TempPres   = CUFLU_PositivePres( TempPres, TempRho, _TempRho );
+   TempPres   = CUFLU_CheckMinPres( TempPres, MinPres );
    GammaP_Rho = Gamma*TempPres*_TempRho;
-#  endif
+
 #  ifdef CHECK_NEGATIVE_IN_FLUID
    if ( CUFLU_CheckNegative(GammaP_Rho) )
-      printf( "ERROR : negative GammaP_Rho (%14.7e) at file <%s>, line <%d>, function <%s>\n", 
+      printf( "ERROR : negative GammaP_Rho (%14.7e) at file <%s>, line <%d>, function <%s>\n",
               GammaP_Rho, __FILE__, __LINE__, __FUNCTION__ );
 #  endif
 
@@ -116,8 +113,8 @@ __device__ FluVar CUFLU_RiemannSolver_Roe( const int XYZ, const FluVar L_In, con
 
 
 // 4. evalute the left and right fluxes
-   const FluVar Flux_L = CUFLU_Con2Flux( L, Gamma_m1, 0 );
-   const FluVar Flux_R = CUFLU_Con2Flux( R, Gamma_m1, 0 );
+   const FluVar Flux_L = CUFLU_Con2Flux( L, Gamma_m1, 0, MinPres );
+   const FluVar Flux_R = CUFLU_Con2Flux( R, Gamma_m1, 0, MinPres );
 
 
 // 5. return the upwind fluxes if flow is supersonic
@@ -181,8 +178,8 @@ __device__ FluVar CUFLU_RiemannSolver_Roe( const int XYZ, const FluVar L_In, con
 
 #     define Recalculate_Flux( L, R, Flux_Out )                                                    \
       {                                                                                            \
-         L = CUFLU_Con2Pri( L, Gamma_m1 );                                                         \
-         R = CUFLU_Con2Pri( R, Gamma_m1 );                                                         \
+         L = CUFLU_Con2Pri( L, Gamma_m1, MinPres );                                                \
+         R = CUFLU_Con2Pri( R, Gamma_m1, MinPres );                                                \
                                                                                                    \
          Flux_Out = CUFLU_RiemannSolver_Exact( 0, *Useless, *Useless, *Useless, L, R, Gamma );     \
       } // Recalculate_Flux
@@ -191,15 +188,15 @@ __device__ FluVar CUFLU_RiemannSolver_Roe( const int XYZ, const FluVar L_In, con
 
 #     define Recalculate_Flux( L, R, Flux_Out )                                                    \
       {                                                                                            \
-         Flux_Out = CUFLU_RiemannSolver_HLLE( 0, L, R, Gamma );                                    \
-      } // Recalculate_Flux                                                                        
+         Flux_Out = CUFLU_RiemannSolver_HLLE( 0, L, R, Gamma, MinPres );                           \
+      } // Recalculate_Flux
 
 #  elif ( CHECK_INTERMEDIATE == HLLC )    // recalculate fluxes by HLLC solver
 
 #     define Recalculate_Flux( L, R, Flux_Out )                                                    \
       {                                                                                            \
-         Flux_Out = CUFLU_RiemannSolver_HLLC( 0, L, R, Gamma );                                    \
-      } // Recalculate_Flux                                                                        
+         Flux_Out = CUFLU_RiemannSolver_HLLC( 0, L, R, Gamma, MinPres );                           \
+      } // Recalculate_Flux
 
 #  else
 

@@ -11,16 +11,17 @@
 #include "CUFLU_Shared_ComputeFlux.cu"
 #include "CUFLU_Shared_FullStepUpdate.cu"
 
-static __device__ void CUFLU_TGradient_Correction( real g_FC_Var_xL[][5][ N_FC_VAR*N_FC_VAR*N_FC_VAR ], 
-                                                   real g_FC_Var_xR[][5][ N_FC_VAR*N_FC_VAR*N_FC_VAR ], 
-                                                   real g_FC_Var_yL[][5][ N_FC_VAR*N_FC_VAR*N_FC_VAR ], 
+static __device__ void CUFLU_TGradient_Correction( real g_FC_Var_xL[][5][ N_FC_VAR*N_FC_VAR*N_FC_VAR ],
+                                                   real g_FC_Var_xR[][5][ N_FC_VAR*N_FC_VAR*N_FC_VAR ],
+                                                   real g_FC_Var_yL[][5][ N_FC_VAR*N_FC_VAR*N_FC_VAR ],
                                                    real g_FC_Var_yR[][5][ N_FC_VAR*N_FC_VAR*N_FC_VAR ],
-                                                   real g_FC_Var_zL[][5][ N_FC_VAR*N_FC_VAR*N_FC_VAR ], 
+                                                   real g_FC_Var_zL[][5][ N_FC_VAR*N_FC_VAR*N_FC_VAR ],
                                                    real g_FC_Var_zR[][5][ N_FC_VAR*N_FC_VAR*N_FC_VAR ],
                                                    const real g_FC_Flux_x[][5][ N_FC_FLUX*N_FC_FLUX*N_FC_FLUX ],
                                                    const real g_FC_Flux_y[][5][ N_FC_FLUX*N_FC_FLUX*N_FC_FLUX ],
                                                    const real g_FC_Flux_z[][5][ N_FC_FLUX*N_FC_FLUX*N_FC_FLUX ],
-                                                   const real dt, const real _dh, const real Gamma );
+                                                   const real dt, const real _dh, const real Gamma,
+                                                   const real MinDens, const real MinPres );
 
 
 
@@ -64,57 +65,59 @@ int CUFLU_FluidSolver_SetConstMem( double ExtAcc_AuxArray_h[] )
 //                3. Each patch group requires about 2.9*10^7 flops with CTU + PPM + Roe solver
 //                   --> 206 GFLOPS is achieved in one C2050 GPU
 //
-// Parameter   :  g_Fluid_In     : Global memory array storing the input fluid variables
-//                g_Fluid_Out    : Global memory array to store the output fluid variables
-//                g_Flux         : Global memory array to store the output fluxes
-//                g_Corner       : Global memory array storing the physical corner coordinates of each patch group (USELESS CURRENTLY)
-//                g_Pot_USG      : Global memory array storing the input potential for UNSPLIT_GRAVITY (NOT SUPPORTED in RTVD)
-//                g_PriVar       : Global memory array to store the primitive variables
-//                g_Slope_PPM_x  : Global memory array to store the x-slope for the PPM reconstruction
-//                g_Slope_PPM_y  : Global memory array to store the y-slope for the PPM reconstruction
-//                g_Slope_PPM_z  : Global memory array to store the z-slope for the PPM reconstruction
-//                g_FC_Var_xL    : Global memory array to store the half-step variables on the -x surface
-//                g_FC_Var_xR    : Global memory array to store the half-step variables on the +x surface
-//                g_FC_Var_yL    : Global memory array to store the half-step variables on the -y surface
-//                g_FC_Var_yR    : Global memory array to store the half-step variables on the +y surface
-//                g_FC_Var_zL    : Global memory array to store the half-step variables on the -z surface
-//                g_FC_Var_zR    : Global memory array to store the half-step variables on the +z surface
-//                g_FC_Flux_x    : Global memory array to store the face-centered fluxes in the x direction
-//                g_FC_Flux_y    : Global memory array to store the face-centered fluxes in the y direction
-//                g_FC_Flux_z    : Global memory array to store the face-centered fluxes in the z direction
-//                dt             : Time interval to advance solution
-//                _dh            : 1 / grid size
-//                Gamma          : Ratio of specific heats
-//                StoreFlux      : true --> store the coarse-fine fluxes
-//                LR_Limiter     : Slope limiter for the data reconstruction in the MHM/MHM_RP/CTU schemes
-//                                 (0/1/2/3/4) = (vanLeer/generalized MinMod/vanAlbada/
-//                                                vanLeer + generalized MinMod/extrema-preserving) limiter
-//                MinMod_Coeff   : Coefficient of the generalized MinMod limiter
-//                EP_Coeff       : Coefficient of the extrema-preserving limiter
-//                Time           : Current physical time                                     (for UNSPLIT_GRAVITY only)
-//                GravityType    : Types of gravity --> self-gravity, external gravity, both (for UNSPLIT_GRAVITY only)
+// Parameter   :  g_Fluid_In    : Global memory array storing the input fluid variables
+//                g_Fluid_Out   : Global memory array to store the output fluid variables
+//                g_Flux        : Global memory array to store the output fluxes
+//                g_Corner      : Global memory array storing the physical corner coordinates of each patch group (USELESS CURRENTLY)
+//                g_Pot_USG     : Global memory array storing the input potential for UNSPLIT_GRAVITY (NOT SUPPORTED in RTVD)
+//                g_PriVar      : Global memory array to store the primitive variables
+//                g_Slope_PPM_x : Global memory array to store the x-slope for the PPM reconstruction
+//                g_Slope_PPM_y : Global memory array to store the y-slope for the PPM reconstruction
+//                g_Slope_PPM_z : Global memory array to store the z-slope for the PPM reconstruction
+//                g_FC_Var_xL   : Global memory array to store the half-step variables on the -x surface
+//                g_FC_Var_xR   : Global memory array to store the half-step variables on the +x surface
+//                g_FC_Var_yL   : Global memory array to store the half-step variables on the -y surface
+//                g_FC_Var_yR   : Global memory array to store the half-step variables on the +y surface
+//                g_FC_Var_zL   : Global memory array to store the half-step variables on the -z surface
+//                g_FC_Var_zR   : Global memory array to store the half-step variables on the +z surface
+//                g_FC_Flux_x   : Global memory array to store the face-centered fluxes in the x direction
+//                g_FC_Flux_y   : Global memory array to store the face-centered fluxes in the y direction
+//                g_FC_Flux_z   : Global memory array to store the face-centered fluxes in the z direction
+//                dt            : Time interval to advance solution
+//                _dh           : 1 / grid size
+//                Gamma         : Ratio of specific heats
+//                StoreFlux     : true --> store the coarse-fine fluxes
+//                LR_Limiter    : Slope limiter for the data reconstruction in the MHM/MHM_RP/CTU schemes
+//                                (0/1/2/3/4) = (vanLeer/generalized MinMod/vanAlbada/
+//                                               vanLeer + generalized MinMod/extrema-preserving) limiter
+//                MinMod_Coeff  : Coefficient of the generalized MinMod limiter
+//                EP_Coeff      : Coefficient of the extrema-preserving limiter
+//                Time          : Current physical time                                     (for UNSPLIT_GRAVITY only)
+//                GravityType   : Types of gravity --> self-gravity, external gravity, both (for UNSPLIT_GRAVITY only)
+//                MinDens/Pres  : Minimum allowed density and pressure
 //-------------------------------------------------------------------------------------------------------
-__global__ void CUFLU_FluidSolver_CTU( const real g_Fluid_In[][5][ FLU_NXT*FLU_NXT*FLU_NXT ], 
+__global__ void CUFLU_FluidSolver_CTU( const real g_Fluid_In[][5][ FLU_NXT*FLU_NXT*FLU_NXT ],
                                        real g_Fluid_Out  [][5][ PS2*PS2*PS2 ],
-                                       real g_Flux    [][9][5][ PS2*PS2 ], 
+                                       real g_Flux    [][9][5][ PS2*PS2 ],
                                        const double g_Corner[][3],
                                        const real g_Pot_USG[] [ USG_NXT_F*USG_NXT_F*USG_NXT_F ],
                                        real g_PriVar     [][5][ FLU_NXT*FLU_NXT*FLU_NXT ],
                                        real g_Slope_PPM_x[][5][ N_SLOPE_PPM*N_SLOPE_PPM*N_SLOPE_PPM],
                                        real g_Slope_PPM_y[][5][ N_SLOPE_PPM*N_SLOPE_PPM*N_SLOPE_PPM],
                                        real g_Slope_PPM_z[][5][ N_SLOPE_PPM*N_SLOPE_PPM*N_SLOPE_PPM],
-                                       real g_FC_Var_xL  [][5][ N_FC_VAR*N_FC_VAR*N_FC_VAR ], 
-                                       real g_FC_Var_xR  [][5][ N_FC_VAR*N_FC_VAR*N_FC_VAR ], 
-                                       real g_FC_Var_yL  [][5][ N_FC_VAR*N_FC_VAR*N_FC_VAR ], 
+                                       real g_FC_Var_xL  [][5][ N_FC_VAR*N_FC_VAR*N_FC_VAR ],
+                                       real g_FC_Var_xR  [][5][ N_FC_VAR*N_FC_VAR*N_FC_VAR ],
+                                       real g_FC_Var_yL  [][5][ N_FC_VAR*N_FC_VAR*N_FC_VAR ],
                                        real g_FC_Var_yR  [][5][ N_FC_VAR*N_FC_VAR*N_FC_VAR ],
-                                       real g_FC_Var_zL  [][5][ N_FC_VAR*N_FC_VAR*N_FC_VAR ], 
+                                       real g_FC_Var_zL  [][5][ N_FC_VAR*N_FC_VAR*N_FC_VAR ],
                                        real g_FC_Var_zR  [][5][ N_FC_VAR*N_FC_VAR*N_FC_VAR ],
                                        real g_FC_Flux_x  [][5][ N_FC_FLUX*N_FC_FLUX*N_FC_FLUX ],
                                        real g_FC_Flux_y  [][5][ N_FC_FLUX*N_FC_FLUX*N_FC_FLUX ],
                                        real g_FC_Flux_z  [][5][ N_FC_FLUX*N_FC_FLUX*N_FC_FLUX ],
                                        const real dt, const real _dh, const real Gamma, const bool StoreFlux,
-                                       const LR_Limiter_t LR_Limiter, const real MinMod_Coeff, 
-                                       const real EP_Coeff, const double Time, const OptGravityType_t GravityType )
+                                       const LR_Limiter_t LR_Limiter, const real MinMod_Coeff,
+                                       const real EP_Coeff, const double Time, const OptGravityType_t GravityType,
+                                       const real MinDens, const real MinPres )
 {
 
 #  ifdef UNSPLIT_GRAVITY
@@ -123,39 +126,39 @@ __global__ void CUFLU_FluidSolver_CTU( const real g_Fluid_In[][5][ FLU_NXT*FLU_N
    const bool CorrHalfVel_No  = false;
 
 // 1. conserved variables --> primitive variables
-   CUFLU_Con2Pri_AllGrids( g_Fluid_In, g_PriVar, Gamma );
+   CUFLU_Con2Pri_AllGrids( g_Fluid_In, g_PriVar, Gamma, MinPres );
    __syncthreads();
 
 
 // 2. evaluate the half-step face-centered solution
-   CUFLU_DataReconstruction( g_PriVar, g_Slope_PPM_x, g_Slope_PPM_y, g_Slope_PPM_z, g_FC_Var_xL, g_FC_Var_xR, 
-                             g_FC_Var_yL, g_FC_Var_yR, g_FC_Var_zL, g_FC_Var_zR, FLU_NXT, FLU_GHOST_SIZE-1, 
-                             Gamma, LR_Limiter, MinMod_Coeff, EP_Coeff, dt, _dh );
+   CUFLU_DataReconstruction( g_PriVar, g_Slope_PPM_x, g_Slope_PPM_y, g_Slope_PPM_z, g_FC_Var_xL, g_FC_Var_xR,
+                             g_FC_Var_yL, g_FC_Var_yR, g_FC_Var_zL, g_FC_Var_zR, FLU_NXT, FLU_GHOST_SIZE-1,
+                             Gamma, LR_Limiter, MinMod_Coeff, EP_Coeff, dt, _dh, MinDens, MinPres );
    __syncthreads();
 
 
 // 3. evaluate the face-centered half-step fluxes by solving the Riemann problem
-   CUFLU_ComputeFlux( g_FC_Var_xL, g_FC_Var_xR, g_FC_Var_yL, g_FC_Var_yR, g_FC_Var_zL, g_FC_Var_zR, 
+   CUFLU_ComputeFlux( g_FC_Var_xL, g_FC_Var_xR, g_FC_Var_yL, g_FC_Var_yR, g_FC_Var_zL, g_FC_Var_zR,
                       g_FC_Flux_x, g_FC_Flux_y, g_FC_Flux_z, NULL, false, 0, Gamma,
-                      CorrHalfVel_No, NULL, NULL, NULL_REAL, NULL_REAL, NULL_REAL, GRAVITY_NONE, NULL );
+                      CorrHalfVel_No, NULL, NULL, NULL_REAL, NULL_REAL, NULL_REAL, GRAVITY_NONE, NULL, MinPres );
    __syncthreads();
 
 
 // 4. correct the face-centered variables by the transverse flux gradients
-   CUFLU_TGradient_Correction( g_FC_Var_xL, g_FC_Var_xR, g_FC_Var_yL, g_FC_Var_yR, g_FC_Var_zL, g_FC_Var_zR, 
-                               g_FC_Flux_x, g_FC_Flux_y, g_FC_Flux_z, dt, _dh, Gamma );
+   CUFLU_TGradient_Correction( g_FC_Var_xL, g_FC_Var_xR, g_FC_Var_yL, g_FC_Var_yR, g_FC_Var_zL, g_FC_Var_zR,
+                               g_FC_Flux_x, g_FC_Flux_y, g_FC_Flux_z, dt, _dh, Gamma, MinDens, MinPres );
    __syncthreads();
 
 
 // 5. evaluate the face-centered full-step fluxes by solving the Riemann problem with the corrected data
 #  ifdef UNSPLIT_GRAVITY
-   CUFLU_ComputeFlux( g_FC_Var_xL, g_FC_Var_xR, g_FC_Var_yL, g_FC_Var_yR, g_FC_Var_zL, g_FC_Var_zR, 
+   CUFLU_ComputeFlux( g_FC_Var_xL, g_FC_Var_xR, g_FC_Var_yL, g_FC_Var_yR, g_FC_Var_zL, g_FC_Var_zR,
                       g_FC_Flux_x, g_FC_Flux_y, g_FC_Flux_z, g_Flux, StoreFlux, 1, Gamma,
-                      CorrHalfVel_Yes, g_Pot_USG, g_Corner, dt, _dh, Time, GravityType, ExtAcc_AuxArray_d_Flu );
+                      CorrHalfVel_Yes, g_Pot_USG, g_Corner, dt, _dh, Time, GravityType, ExtAcc_AuxArray_d_Flu, MinPres );
 #  else
-   CUFLU_ComputeFlux( g_FC_Var_xL, g_FC_Var_xR, g_FC_Var_yL, g_FC_Var_yR, g_FC_Var_zL, g_FC_Var_zR, 
+   CUFLU_ComputeFlux( g_FC_Var_xL, g_FC_Var_xR, g_FC_Var_yL, g_FC_Var_yR, g_FC_Var_zL, g_FC_Var_zR,
                       g_FC_Flux_x, g_FC_Flux_y, g_FC_Flux_z, g_Flux, StoreFlux, 1, Gamma,
-                      CorrHalfVel_No, NULL, NULL, NULL_REAL, NULL_REAL, NULL_REAL, GRAVITY_NONE, NULL );
+                      CorrHalfVel_No, NULL, NULL, NULL_REAL, NULL_REAL, NULL_REAL, GRAVITY_NONE, NULL, MinPres );
 #  endif
 
    __syncthreads();
@@ -170,7 +173,7 @@ __global__ void CUFLU_FluidSolver_CTU( const real g_Fluid_In[][5][ FLU_NXT*FLU_N
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  CUFLU_TGradient_Correction
-// Description :  Correct the face-centered variables by the transverse flux gradients 
+// Description :  Correct the face-centered variables by the transverse flux gradients
 //
 // Note        :  1. Prefix "g" for pointers pointing to the "Global" memory space
 //                   Prefix "s" for pointers pointing to the "Shared" memory space
@@ -179,29 +182,31 @@ __global__ void CUFLU_FluidSolver_CTU( const real g_Fluid_In[][5][ FLU_NXT*FLU_N
 //                3. The sizes of the arrays g_FC_Var_x/y/z and g_FC_Flux_XX in each direction are assumed
 //                   to be "N_FC_VAR" (which is always PS2+2 in the currennt cases)
 //
-// Parameter   :  g_FC_Var_xL : Global memory array to store the input and output -x face-centered conserved variables 
-//                g_FC_Var_xR : Global memory array to store the input and output +x face-centered conserved variables 
-//                g_FC_Var_yL : Global memory array to store the input and output -y face-centered conserved variables 
-//                g_FC_Var_yR : Global memory array to store the input and output +y face-centered conserved variables 
-//                g_FC_Var_zL : Global memory array to store the input and output -z face-centered conserved variables 
-//                g_FC_Var_zR : Global memory array to store the input and output +z face-centered conserved variables 
-//                g_FC_Flux_x : Global memory array storing the face-centered fluxes in the x direction
-//                g_FC_Flux_y : Global memory array storing the face-centered fluxes in the y direction
-//                g_FC_Flux_z : Global memory array storing the face-centered fluxes in the z direction
-//                dt          : Time interval to advance solution
-//                _dh         : 1 / grid size
-//                Gamma       : Ratio of specific heats
+// Parameter   :  g_FC_Var_xL  : Global memory array to store the input and output -x face-centered conserved variables
+//                g_FC_Var_xR  : Global memory array to store the input and output +x face-centered conserved variables
+//                g_FC_Var_yL  : Global memory array to store the input and output -y face-centered conserved variables
+//                g_FC_Var_yR  : Global memory array to store the input and output +y face-centered conserved variables
+//                g_FC_Var_zL  : Global memory array to store the input and output -z face-centered conserved variables
+//                g_FC_Var_zR  : Global memory array to store the input and output +z face-centered conserved variables
+//                g_FC_Flux_x  : Global memory array storing the face-centered fluxes in the x direction
+//                g_FC_Flux_y  : Global memory array storing the face-centered fluxes in the y direction
+//                g_FC_Flux_z  : Global memory array storing the face-centered fluxes in the z direction
+//                dt           : Time interval to advance solution
+//                _dh          : 1 / grid size
+//                Gamma        : Ratio of specific heats
+//                MinDens/Pres : Minimum allowed density and pressure
 //-------------------------------------------------------------------------------------------------------
-__device__ void CUFLU_TGradient_Correction( real g_FC_Var_xL[][5][ N_FC_VAR*N_FC_VAR*N_FC_VAR ], 
-                                            real g_FC_Var_xR[][5][ N_FC_VAR*N_FC_VAR*N_FC_VAR ], 
-                                            real g_FC_Var_yL[][5][ N_FC_VAR*N_FC_VAR*N_FC_VAR ], 
+__device__ void CUFLU_TGradient_Correction( real g_FC_Var_xL[][5][ N_FC_VAR*N_FC_VAR*N_FC_VAR ],
+                                            real g_FC_Var_xR[][5][ N_FC_VAR*N_FC_VAR*N_FC_VAR ],
+                                            real g_FC_Var_yL[][5][ N_FC_VAR*N_FC_VAR*N_FC_VAR ],
                                             real g_FC_Var_yR[][5][ N_FC_VAR*N_FC_VAR*N_FC_VAR ],
-                                            real g_FC_Var_zL[][5][ N_FC_VAR*N_FC_VAR*N_FC_VAR ], 
+                                            real g_FC_Var_zL[][5][ N_FC_VAR*N_FC_VAR*N_FC_VAR ],
                                             real g_FC_Var_zR[][5][ N_FC_VAR*N_FC_VAR*N_FC_VAR ],
                                             const real g_FC_Flux_x[][5][ N_FC_FLUX*N_FC_FLUX*N_FC_FLUX ],
                                             const real g_FC_Flux_y[][5][ N_FC_FLUX*N_FC_FLUX*N_FC_FLUX ],
                                             const real g_FC_Flux_z[][5][ N_FC_FLUX*N_FC_FLUX*N_FC_FLUX ],
-                                            const real dt, const real _dh, const real Gamma )
+                                            const real dt, const real _dh, const real Gamma,
+                                            const real MinDens, const real MinPres )
 {
 
    const uint  bx         = blockIdx.x;
@@ -209,20 +214,17 @@ __device__ void CUFLU_TGradient_Correction( real g_FC_Var_xL[][5][ N_FC_VAR*N_FC
    const uint  dID_FC_Var = blockDim.x;
    const uint3 dID_In     = make_uint3( 1, N_FC_VAR, N_FC_VAR*N_FC_VAR );
    const real  dt_dh2     = (real)0.5*dt*_dh;
-
-   uint  ID_In_xL, ID_In_yL, ID_In_zL, ID_In_R, ID_FC_Var;
-   uint3 ID3d;
-   real  FC_Var_xL, FC_Var_xR, FC_Var_yL, FC_Var_yR, FC_Var_zL, FC_Var_zR;
-   real  FC_Flux_xL, FC_Flux_xR, FC_Flux_yL, FC_Flux_yR, FC_Flux_zL, FC_Flux_zR;
-   real  TGrad1, TGrad2, Corr;
-   bool  Inner_x, Inner_y, Inner_z;
-   bool  Inner_xy, Inner_yz, Inner_xz;
-
-#  if ( defined MIN_PRES_DENS  ||  defined MIN_PRES )
    const real  Gamma_m1   = Gamma - (real)1.0;
    const real _Gamma_m1   = (real)1.0/Gamma_m1;
+
+   uint   ID_In_xL, ID_In_yL, ID_In_zL, ID_In_R, ID_FC_Var;
+   uint3  ID3d;
+   real   FC_Var_xL, FC_Var_xR, FC_Var_yL, FC_Var_yR, FC_Var_zL, FC_Var_zR;
+   real   FC_Flux_xL, FC_Flux_xR, FC_Flux_yL, FC_Flux_yR, FC_Flux_zL, FC_Flux_zR;
+   real   TGrad1, TGrad2, Corr;
+   bool   Inner_x, Inner_y, Inner_z;
+   bool   Inner_xy, Inner_yz, Inner_xz;
    FluVar ConVar;
-#  endif
 
 
 #  define Load( Input, Output, ID, v )    (  Output = Input[bx][v][ID]  )
@@ -336,8 +338,8 @@ __device__ void CUFLU_TGradient_Correction( real g_FC_Var_xL[][5][ N_FC_VAR*N_FC
       Correct_1v( 4 );
 
 
-//    ensure the positive pressure
-#     if ( defined MIN_PRES_DENS  ||  defined MIN_PRES )
+//    ensure positive density and pressure
+//    --> make sure that CUFLU_CheckMinPresInEngy() is applied to the **corrected** density
       if ( Inner_yz )
       {
          ConVar.Rho = g_FC_Var_xL[bx][0][ID_FC_Var];
@@ -346,7 +348,9 @@ __device__ void CUFLU_TGradient_Correction( real g_FC_Var_xL[][5][ N_FC_VAR*N_FC
          ConVar.Pz  = g_FC_Var_xL[bx][3][ID_FC_Var];
          ConVar.Egy = g_FC_Var_xL[bx][4][ID_FC_Var];
 
-         g_FC_Var_xL[bx][4][ID_FC_Var] = CUFLU_PositivePres_In_Engy( ConVar, Gamma_m1, _Gamma_m1 );
+         ConVar.Rho                    = FMAX( ConVar.Rho, MinDens );
+         g_FC_Var_xL[bx][0][ID_FC_Var] = ConVar.Rho;
+         g_FC_Var_xL[bx][4][ID_FC_Var] = CUFLU_CheckMinPresInEngy( ConVar, Gamma_m1, _Gamma_m1, MinPres );
 
 
          ConVar.Rho = g_FC_Var_xR[bx][0][ID_FC_Var];
@@ -355,7 +359,9 @@ __device__ void CUFLU_TGradient_Correction( real g_FC_Var_xL[][5][ N_FC_VAR*N_FC
          ConVar.Pz  = g_FC_Var_xR[bx][3][ID_FC_Var];
          ConVar.Egy = g_FC_Var_xR[bx][4][ID_FC_Var];
 
-         g_FC_Var_xR[bx][4][ID_FC_Var] = CUFLU_PositivePres_In_Engy( ConVar, Gamma_m1, _Gamma_m1 );
+         ConVar.Rho                    = FMAX( ConVar.Rho, MinDens );
+         g_FC_Var_xR[bx][0][ID_FC_Var] = ConVar.Rho;
+         g_FC_Var_xR[bx][4][ID_FC_Var] = CUFLU_CheckMinPresInEngy( ConVar, Gamma_m1, _Gamma_m1, MinPres );
       }
 
       if ( Inner_xz )
@@ -366,7 +372,9 @@ __device__ void CUFLU_TGradient_Correction( real g_FC_Var_xL[][5][ N_FC_VAR*N_FC
          ConVar.Pz  = g_FC_Var_yL[bx][3][ID_FC_Var];
          ConVar.Egy = g_FC_Var_yL[bx][4][ID_FC_Var];
 
-         g_FC_Var_yL[bx][4][ID_FC_Var] = CUFLU_PositivePres_In_Engy( ConVar, Gamma_m1, _Gamma_m1 );
+         ConVar.Rho                    = FMAX( ConVar.Rho, MinDens );
+         g_FC_Var_yL[bx][0][ID_FC_Var] = ConVar.Rho;
+         g_FC_Var_yL[bx][4][ID_FC_Var] = CUFLU_CheckMinPresInEngy( ConVar, Gamma_m1, _Gamma_m1, MinPres );
 
 
          ConVar.Rho = g_FC_Var_yR[bx][0][ID_FC_Var];
@@ -375,7 +383,9 @@ __device__ void CUFLU_TGradient_Correction( real g_FC_Var_xL[][5][ N_FC_VAR*N_FC
          ConVar.Pz  = g_FC_Var_yR[bx][3][ID_FC_Var];
          ConVar.Egy = g_FC_Var_yR[bx][4][ID_FC_Var];
 
-         g_FC_Var_yR[bx][4][ID_FC_Var] = CUFLU_PositivePres_In_Engy( ConVar, Gamma_m1, _Gamma_m1 );
+         ConVar.Rho                    = FMAX( ConVar.Rho, MinDens );
+         g_FC_Var_yR[bx][0][ID_FC_Var] = ConVar.Rho;
+         g_FC_Var_yR[bx][4][ID_FC_Var] = CUFLU_CheckMinPresInEngy( ConVar, Gamma_m1, _Gamma_m1, MinPres );
       }
 
       if ( Inner_xy )
@@ -386,7 +396,9 @@ __device__ void CUFLU_TGradient_Correction( real g_FC_Var_xL[][5][ N_FC_VAR*N_FC
          ConVar.Pz  = g_FC_Var_zL[bx][3][ID_FC_Var];
          ConVar.Egy = g_FC_Var_zL[bx][4][ID_FC_Var];
 
-         g_FC_Var_zL[bx][4][ID_FC_Var] = CUFLU_PositivePres_In_Engy( ConVar, Gamma_m1, _Gamma_m1 );
+         ConVar.Rho                    = FMAX( ConVar.Rho, MinDens );
+         g_FC_Var_zL[bx][0][ID_FC_Var] = ConVar.Rho;
+         g_FC_Var_zL[bx][4][ID_FC_Var] = CUFLU_CheckMinPresInEngy( ConVar, Gamma_m1, _Gamma_m1, MinPres );
 
 
          ConVar.Rho = g_FC_Var_zR[bx][0][ID_FC_Var];
@@ -395,10 +407,10 @@ __device__ void CUFLU_TGradient_Correction( real g_FC_Var_xL[][5][ N_FC_VAR*N_FC
          ConVar.Pz  = g_FC_Var_zR[bx][3][ID_FC_Var];
          ConVar.Egy = g_FC_Var_zR[bx][4][ID_FC_Var];
 
-         g_FC_Var_zR[bx][4][ID_FC_Var] = CUFLU_PositivePres_In_Engy( ConVar, Gamma_m1, _Gamma_m1 );
+         ConVar.Rho                    = FMAX( ConVar.Rho, MinDens );
+         g_FC_Var_zR[bx][0][ID_FC_Var] = ConVar.Rho;
+         g_FC_Var_zR[bx][4][ID_FC_Var] = CUFLU_CheckMinPresInEngy( ConVar, Gamma_m1, _Gamma_m1, MinPres );
       }
-#     endif // #if ( defined MIN_PRES_DENS  ||  defined MIN_PRES )
-
 
       ID_FC_Var += dID_FC_Var;
 

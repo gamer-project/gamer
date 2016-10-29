@@ -14,29 +14,30 @@
 #include "CUFLU_Shared_RiemannSolver_Exact.cu"
 #elif ( RSOLVER == ROE )
 static __device__ void Solve_StarRoe( real eival[5], real L_star[5], real R_star[5], const real L[5],
-                                      const real R[5], const real Gamma );
+                                      const real R[5], const real Gamma, const real MinPres );
 #endif
 #ifdef WAF_DISSIPATE
-static __device__ void Dis_Stru( real flux[5], const real L[5], const real R[5], const real L_star[5], 
-                                 const real R_star[5], const real limit[5], const real theta[5], 
+static __device__ void Dis_Stru( real flux[5], const real L[5], const real R[5], const real L_star[5],
+                                 const real R_star[5], const real limit[5], const real theta[5],
                                  const real Gamma );
 #else
-static __device__ void Undis_Stru( real flux[5], const real L[5], const real R[5], const real L_star[5], 
-                                   const real R_star[5], const real limit[5], const real theta[5], 
+static __device__ void Undis_Stru( real flux[5], const real L[5], const real R[5], const real L_star[5],
+                                   const real R_star[5], const real limit[5], const real theta[5],
                                    const real Gamma );
 #endif
 static __device__ void CUFLU_Advance( real g_Fluid_In [][5][ FLU_NXT*FLU_NXT*FLU_NXT ],
                                       real g_Fluid_Out[][5][ PS2*PS2*PS2 ],
                                       real g_Flux[][9][5][ PS2*PS2 ],
                                       const real dt, const real _dh, const real Gamma, const bool StoreFlux,
-                                      const int j_gap, const int k_gap, real s_u[][FLU_NXT][5], 
+                                      const int j_gap, const int k_gap, real s_u[][FLU_NXT][5],
                                       real s_flux[][PS2+1][5], real s_Lstar[][PS2+3][5], real s_Rstar[][PS2+3][5],
-                                      const bool FinalOut, const int XYZ, const WAF_Limiter_t WAF_Limiter );
+                                      const bool FinalOut, const int XYZ, const WAF_Limiter_t WAF_Limiter,
+                                      const real MinDens, const real MinPres );
 static __device__ void Solve_Flux( real flux[5], const real lL_star[5], const real lR_star[5],
-                                   const real cL_star[5], const real cR_star[5], const real rL_star[5], 
-                                   const real rR_star[5], const real eival[5] ,const real L_2[5], 
+                                   const real cL_star[5], const real cR_star[5], const real rL_star[5],
+                                   const real rR_star[5], const real eival[5] ,const real L_2[5],
                                    const real L_1[5], const real R_1[5],const real R_2[5],
-                                   const real Gamma, const real ratio, const WAF_Limiter_t WAF_Limiter );   
+                                   const real Gamma, const real ratio, const WAF_Limiter_t WAF_Limiter );
 static __device__ void set_flux( real flux[5], const real val[5], const real Gamma );
 static __device__ real set_limit( const real r, const real c, const WAF_Limiter_t WAF_Limiter );
 
@@ -45,36 +46,38 @@ static __device__ real set_limit( const real r, const real c, const WAF_Limiter_
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  CUFLU_FluidSolver_WAF
-// Description :  GPU fluid solver based on the Weighted-Average-Flux (WAF) scheme 
+// Description :  GPU fluid solver based on the Weighted-Average-Flux (WAF) scheme
 //
 // Note        :  a. Prefix "g" for pointers pointing to the "Global" memory space
 //                   Prefix "s" for pointers pointing to the "Shared" memory space
 //                b. The three-dimensional evolution is achieved by using the dimensional-split method
 //
-// Parameter   :  g_Fluid_In  : Global memory array to store the input fluid variables
-//                g_Fluid_Out : Global memory array to store the output fluid variables
-//                g_Flux      : Global memory array to store the output flux
-//                g_Corner    : Global memory array storing the physical corner coordinates of each patch group (USELESS CURRENTLY)
-//                g_Pot_USG   : Global memory array storing the input potential for UNSPLIT_GRAVITY (NOT SUPPORTED in RTVD)
-//                dt          : Time interval to advance solution
-//                _dh         : 1 / grid size
-//                Gamma       : Ratio of specific heats
-//                StoreFlux   : true --> store the coarse-fine fluxes
-//                XYZ         : true  : x->y->z ( forward sweep)
-//                              false : z->y->x (backward sweep)
-//                WAF_Limiter : Selection of the limit function
+// Parameter   :  g_Fluid_In   : Global memory array to store the input fluid variables
+//                g_Fluid_Out  : Global memory array to store the output fluid variables
+//                g_Flux       : Global memory array to store the output flux
+//                g_Corner     : Global memory array storing the physical corner coordinates of each patch group (USELESS CURRENTLY)
+//                g_Pot_USG    : Global memory array storing the input potential for UNSPLIT_GRAVITY (NOT SUPPORTED in RTVD)
+//                dt           : Time interval to advance solution
+//                _dh          : 1 / grid size
+//                Gamma        : Ratio of specific heats
+//                StoreFlux    : true --> store the coarse-fine fluxes
+//                XYZ          : true  : x->y->z ( forward sweep)
+//                               false : z->y->x (backward sweep)
+//                WAF_Limiter  : Selection of the limit function
 //                                 0 : superbee
 //                                 1 : van-Leer
 //                                 2 : van-Albada
 //                                 3 : minbee
+//                MinDens/Pres : Minimum allowed density and pressure
 //-------------------------------------------------------------------------------------------------------
-__global__ void CUFLU_FluidSolver_WAF( real g_Fluid_In [][5][ FLU_NXT*FLU_NXT*FLU_NXT ], 
+__global__ void CUFLU_FluidSolver_WAF( real g_Fluid_In [][5][ FLU_NXT*FLU_NXT*FLU_NXT ],
                                        real g_Fluid_Out[][5][ PS2*PS2*PS2 ],
-                                       real g_Flux[][9][5][ PS2*PS2 ], 
+                                       real g_Flux[][9][5][ PS2*PS2 ],
                                        const double g_Corner[][3],
                                        const real g_Pot_USG[][ USG_NXT_F*USG_NXT_F*USG_NXT_F ],
                                        const real dt, const real _dh, const real Gamma, const bool StoreFlux,
-                                       const bool XYZ, const WAF_Limiter_t WAF_Limiter )
+                                       const bool XYZ, const WAF_Limiter_t WAF_Limiter,
+                                       const real MinDens, const real MinPres )
 {
 
    __shared__ real s_u     [FLU_BLOCK_SIZE_Y][FLU_NXT][5];
@@ -84,26 +87,26 @@ __global__ void CUFLU_FluidSolver_WAF( real g_Fluid_In [][5][ FLU_NXT*FLU_NXT*FL
 
    if ( XYZ )
    {
-      CUFLU_Advance( g_Fluid_In, g_Fluid_Out, g_Flux, dt, _dh, Gamma, StoreFlux,              0,              0, 
-                     s_u, s_flux, s_L_st, s_R_st, false, 0, WAF_Limiter );
+      CUFLU_Advance( g_Fluid_In, g_Fluid_Out, g_Flux, dt, _dh, Gamma, StoreFlux,              0,              0,
+                     s_u, s_flux, s_L_st, s_R_st, false, 0, WAF_Limiter, MinDens, MinPres );
 
-      CUFLU_Advance( g_Fluid_In, g_Fluid_Out, g_Flux, dt, _dh, Gamma, StoreFlux, FLU_GHOST_SIZE,              0, 
-                     s_u, s_flux, s_L_st, s_R_st, false, 3, WAF_Limiter );
+      CUFLU_Advance( g_Fluid_In, g_Fluid_Out, g_Flux, dt, _dh, Gamma, StoreFlux, FLU_GHOST_SIZE,              0,
+                     s_u, s_flux, s_L_st, s_R_st, false, 3, WAF_Limiter, MinDens, MinPres );
 
-      CUFLU_Advance( g_Fluid_In, g_Fluid_Out, g_Flux, dt, _dh, Gamma, StoreFlux, FLU_GHOST_SIZE, FLU_GHOST_SIZE, 
-                     s_u, s_flux, s_L_st, s_R_st,  true, 6, WAF_Limiter );
+      CUFLU_Advance( g_Fluid_In, g_Fluid_Out, g_Flux, dt, _dh, Gamma, StoreFlux, FLU_GHOST_SIZE, FLU_GHOST_SIZE,
+                     s_u, s_flux, s_L_st, s_R_st,  true, 6, WAF_Limiter, MinDens, MinPres );
    }
 
    else
    {
-      CUFLU_Advance( g_Fluid_In, g_Fluid_Out, g_Flux, dt, _dh, Gamma, StoreFlux,              0,              0, 
-                     s_u, s_flux, s_L_st, s_R_st,false, 6, WAF_Limiter );
+      CUFLU_Advance( g_Fluid_In, g_Fluid_Out, g_Flux, dt, _dh, Gamma, StoreFlux,              0,              0,
+                     s_u, s_flux, s_L_st, s_R_st, false, 6, WAF_Limiter, MinDens, MinPres );
 
-      CUFLU_Advance( g_Fluid_In, g_Fluid_Out, g_Flux, dt, _dh, Gamma, StoreFlux,              0, FLU_GHOST_SIZE, 
-                     s_u, s_flux, s_L_st, s_R_st, false, 3, WAF_Limiter );
+      CUFLU_Advance( g_Fluid_In, g_Fluid_Out, g_Flux, dt, _dh, Gamma, StoreFlux,              0, FLU_GHOST_SIZE,
+                     s_u, s_flux, s_L_st, s_R_st, false, 3, WAF_Limiter, MinDens, MinPres );
 
-      CUFLU_Advance( g_Fluid_In, g_Fluid_Out, g_Flux, dt, _dh, Gamma, StoreFlux, FLU_GHOST_SIZE, FLU_GHOST_SIZE, 
-                     s_u, s_flux, s_L_st, s_R_st,  true, 0, WAF_Limiter );
+      CUFLU_Advance( g_Fluid_In, g_Fluid_Out, g_Flux, dt, _dh, Gamma, StoreFlux, FLU_GHOST_SIZE, FLU_GHOST_SIZE,
+                     s_u, s_flux, s_L_st, s_R_st,  true, 0, WAF_Limiter, MinDens, MinPres );
    }
 
 } // FUNCTION : CUFLU_FluidSolver_WAF
@@ -118,64 +121,62 @@ __global__ void CUFLU_FluidSolver_WAF( real g_Fluid_In [][5][ FLU_NXT*FLU_NXT*FL
 //                   Prefix "s" for pointers pointing to the "Shared" memory space
 //                b. The direction of the one dimensional sweep is determined by the input parameter "XYZ"
 //
-// Parameter   :  g_Fluid_In  : Global memory array to store the input fluid variables
-//                g_Fluid_Out : Global memory array to store the output fluid variables
-//                g_Flux      : Global memory array to store the output flux
-//                dt          : Time interval to advance solution
-//                _dh         : 1 / grid size
-//                Gamma       : ratio of specific heats
-//                StoreFlux   : true --> store the coarse-fine fluxes
-//                j_gap       : Number of useless grids in each side in the j direction (j may not be equal to y)
-//                k_gap       : Number of useless grids in each side in the k direction (k mya not be equal to z)
-//                s_u         : Shared memory array storing the fluid variables used to compute the intercell flux
-//                s_flux      : Shared memory array storing the final flux used to update the fluid variables
-//                s_Lstar     : Shared memory array storing the left region in the solution of Riemann problem
-//                s_Rstar     : Shared memory array storing the right region in the solution of Riemann problem
-//                FinalOut    : true  : output data
-//                              false : don't output data
-//                XYZ         : 0 : Update the solution in the x direction
-//                              3 : Update the solution in the y direction
-//                              6 : Update the solution in the z direction
-//                              --> This parameter is also used to determine the place to store the output flux
-//                WAF_Limiter : Selection of the limit function
-//                                0   : superbee
-//                                1   : van-Leer
-//                                2   : van-Albada
-//                                3   : minbee
+// Parameter   :  g_Fluid_In   : Global memory array to store the input fluid variables
+//                g_Fluid_Out  : Global memory array to store the output fluid variables
+//                g_Flux       : Global memory array to store the output flux
+//                dt           : Time interval to advance solution
+//                _dh          : 1 / grid size
+//                Gamma        : ratio of specific heats
+//                StoreFlux    : true --> store the coarse-fine fluxes
+//                j_gap        : Number of useless grids in each side in the j direction (j may not be equal to y)
+//                k_gap        : Number of useless grids in each side in the k direction (k mya not be equal to z)
+//                s_u          : Shared memory array storing the fluid variables used to compute the intercell flux
+//                s_flux       : Shared memory array storing the final flux used to update the fluid variables
+//                s_Lstar      : Shared memory array storing the left region in the solution of Riemann problem
+//                s_Rstar      : Shared memory array storing the right region in the solution of Riemann problem
+//                FinalOut     : true  : output data
+//                               false : don't output data
+//                XYZ          : 0 : Update the solution in the x direction
+//                               3 : Update the solution in the y direction
+//                               6 : Update the solution in the z direction
+//                               --> This parameter is also used to determine the place to store the output flux
+//                WAF_Limiter  : Selection of the limit function
+//                                0 : superbee
+//                                1 : van-Leer
+//                                2 : van-Albada
+//                                3 : minbee
+//                MinDens/Pres : Minimum allowed density and pressure
 //-------------------------------------------------------------------------------------------------------
 __device__ void CUFLU_Advance( real g_Fluid_In [][5][ FLU_NXT*FLU_NXT*FLU_NXT ],
                                real g_Fluid_Out[][5][ PS2*PS2*PS2 ],
                                real g_Flux[][9][5][ PS2*PS2 ],
                                const real dt, const real _dh, const real Gamma, const bool StoreFlux,
-                               const int j_gap, const int k_gap, real s_u[][FLU_NXT][5], real s_flux[][PS2+1][5], 
-                               real s_Lstar[][PS2+3][5], real s_Rstar[][PS2+3][5], const bool FinalOut, 
-                               const int XYZ, const WAF_Limiter_t WAF_Limiter )
+                               const int j_gap, const int k_gap, real s_u[][FLU_NXT][5], real s_flux[][PS2+1][5],
+                               real s_Lstar[][PS2+3][5], real s_Rstar[][PS2+3][5], const bool FinalOut,
+                               const int XYZ, const WAF_Limiter_t WAF_Limiter, const real MinDens, const real MinPres )
 {
 
-   const uint bx       = blockIdx.x;
-   const uint tx       = threadIdx.x;
-   const uint ty       = threadIdx.y;
-   const uint dj       = blockDim.y;
-   const uint size_j   = FLU_NXT - (j_gap<<1);
-   const uint size_k   = FLU_NXT - (k_gap<<1);
-   const uint NColumn  = __umul24( size_j, size_k );
-   const uint i        = tx;                    // (i,j) the element in shared memory under evaluation
-         uint j        = j_gap + ty%size_j;
-         uint k        = k_gap + ty/size_j;
-         uint Column0  = 0;                     // the total number of columns that have been updated
-   const uint j_end    = FLU_NXT - j_gap;
-   const uint k_end    = FLU_NXT - k_gap;
-   const real ratio    = dt*_dh;                // dt over dx
-   const real Gamma_m1 = Gamma - (real)1.0;
-         bool RuleOut  = false;
-
-   real Fluid[5], eval[5];
-   int ID1, ID2, ID3, ii, delta_k, Comp[5];
-
-#  if ( defined MIN_PRES_DENS  ||  defined MIN_PRES )
+   const uint bx        = blockIdx.x;
+   const uint tx        = threadIdx.x;
+   const uint ty        = threadIdx.y;
+   const uint dj        = blockDim.y;
+   const uint size_j    = FLU_NXT - (j_gap<<1);
+   const uint size_k    = FLU_NXT - (k_gap<<1);
+   const uint NColumn   = __umul24( size_j, size_k );
+   const uint i         = tx;                   // (i,j) the element in shared memory under evaluation
+         uint j         = j_gap + ty%size_j;
+         uint k         = k_gap + ty/size_j;
+         uint Column0   = 0;                    // the total number of columns that have been updated
+   const uint j_end     = FLU_NXT - j_gap;
+   const uint k_end     = FLU_NXT - k_gap;
+   const real ratio     = dt*_dh;               // dt over dx
+   const real Gamma_m1  = Gamma - (real)1.0;
    const real _Gamma_m1 = (real)1.0 / Gamma_m1;
+         bool RuleOut   = false;
+
+   real   Fluid[5], eval[5];
+   int    ID1, ID2, ID3, ii, delta_k, Comp[5];
    FluVar ConVar;
-#  endif
 
 
 // set the order of component for update in different directions
@@ -196,7 +197,7 @@ __device__ void CUFLU_Advance( real g_Fluid_In [][5][ FLU_NXT*FLU_NXT*FLU_NXT ],
          case 0:  ID1 = to1D1( k, j, i );    break;
          case 3:  ID1 = to1D1( k, i, j );    break;
          case 6:  ID1 = to1D1( i, k, j );    break;
-      }  
+      }
 
 
 //    load data into per-thread registers
@@ -208,11 +209,9 @@ __device__ void CUFLU_Advance( real g_Fluid_In [][5][ FLU_NXT*FLU_NXT*FLU_NXT ],
       s_u[ty][i][1] = Fluid[1] / Fluid[0];
       s_u[ty][i][2] = Fluid[2] / Fluid[0];
       s_u[ty][i][3] = Fluid[3] / Fluid[0];
-      s_u[ty][i][4] = Gamma_m1*( Fluid[4] - (real)0.5*( Fluid[1]*Fluid[1] + Fluid[2]*Fluid[2] + 
+      s_u[ty][i][4] = Gamma_m1*( Fluid[4] - (real)0.5*( Fluid[1]*Fluid[1] + Fluid[2]*Fluid[2] +
                                                         Fluid[3]*Fluid[3] ) / Fluid[0] );
-#     if ( defined MIN_PRES_DENS  ||  defined MIN_PRES )
-      s_u[ty][i][4] = CUFLU_PositivePres( s_u[ty][i][4], Fluid[0], (real)1.0/Fluid[0] );
-#     endif
+      s_u[ty][i][4] = CUFLU_CheckMinPres( s_u[ty][i][4], MinPres );
 
       __syncthreads();
 
@@ -224,13 +223,13 @@ __device__ void CUFLU_Advance( real g_Fluid_In [][5][ FLU_NXT*FLU_NXT*FLU_NXT ],
 
 #        if ( RSOLVER == EXACT )
          FluVar eival_st, L_star_st, R_star_st, L_st, R_st;
-         
+
          L_st.Rho = s_u[ty][ii][0];
          L_st.Px  = s_u[ty][ii][1];
          L_st.Py  = s_u[ty][ii][2];
          L_st.Pz  = s_u[ty][ii][3];
          L_st.Egy = s_u[ty][ii][4];
- 
+
          R_st.Rho = s_u[ty][ i][0];
          R_st.Px  = s_u[ty][ i][1];
          R_st.Py  = s_u[ty][ i][2];
@@ -255,10 +254,10 @@ __device__ void CUFLU_Advance( real g_Fluid_In [][5][ FLU_NXT*FLU_NXT*FLU_NXT ],
          s_Rstar[ty][ii][1] = R_star_st.Px;
          s_Rstar[ty][ii][2] = R_star_st.Py;
          s_Rstar[ty][ii][3] = R_star_st.Pz;
-         s_Rstar[ty][ii][4] = R_star_st.Egy;   
+         s_Rstar[ty][ii][4] = R_star_st.Egy;
 
 #        elif ( RSOLVER == ROE )
-         Solve_StarRoe( eval, s_Lstar[ty][ii], s_Rstar[ty][ii], s_u[ty][ii], s_u[ty][i], Gamma );
+         Solve_StarRoe( eval, s_Lstar[ty][ii], s_Rstar[ty][ii], s_u[ty][ii], s_u[ty][i], Gamma, MinPres );
 #        else
 #        error : ERROR : unsupported Riemann solver (EXACT/ROE) !!
 #        endif
@@ -266,7 +265,7 @@ __device__ void CUFLU_Advance( real g_Fluid_In [][5][ FLU_NXT*FLU_NXT*FLU_NXT ],
 
       __syncthreads();
 
-     
+
 //    solve the intercell flux
       if ( i >= FLU_GHOST_SIZE  &&  i <= FLU_GHOST_SIZE+PS2  )
       {
@@ -283,28 +282,32 @@ __device__ void CUFLU_Advance( real g_Fluid_In [][5][ FLU_NXT*FLU_NXT*FLU_NXT ],
 
 
 //    update the conservative variables
-      if ( i >= FLU_GHOST_SIZE  &&  i < FLU_GHOST_SIZE+PS2  &&  RuleOut == false ) 
+      if ( i >= FLU_GHOST_SIZE  &&  i < FLU_GHOST_SIZE+PS2  &&  RuleOut == false )
       {
          ii = i - FLU_GHOST_SIZE;
          for (int v=0; v<5; v++)    Fluid[v] += ratio*( s_flux[ty][ii][v] - s_flux[ty][ii+1][v] );
 
-//       enforce the pressure to be positive
-#        if ( defined MIN_PRES_DENS  ||  defined MIN_PRES )
+//       enforce positive density and pressure
          ConVar.Rho = Fluid[0];
          ConVar.Px  = Fluid[1];
          ConVar.Py  = Fluid[2];
          ConVar.Pz  = Fluid[3];
          ConVar.Egy = Fluid[4];
 
-         Fluid[4]   = CUFLU_PositivePres_In_Engy( ConVar, Gamma_m1, _Gamma_m1 );
-#        endif
+         ConVar.Rho = FMAX( ConVar.Rho, MinDens );
+         Fluid[0]   = ConVar.Rho;
+         Fluid[4]   = CUFLU_CheckMinPresInEngy( ConVar, Gamma_m1, _Gamma_m1, MinPres );
 
 
-//       check the negative density
+//       check negative density and energy
 #        ifdef CHECK_NEGATIVE_IN_FLUID
          if ( CUFLU_CheckNegative(Fluid[0]) )
             printf( "ERROR : negative density (%14.7e) at file <%s>, line <%d>, function <%s>\n",
                     Fluid[0], __FILE__, __LINE__, __FUNCTION__ );
+
+         if ( CUFLU_CheckNegative(Fluid[4]) )
+            printf( "ERROR : negative energy (%14.7e) at file <%s>, line <%d>, function <%s>\n",
+                    Fluid[4], __FILE__, __LINE__, __FUNCTION__ );
 #        endif
 
 
@@ -317,20 +320,20 @@ __device__ void CUFLU_Advance( real g_Fluid_In [][5][ FLU_NXT*FLU_NXT*FLU_NXT ],
                case 3:  ID2 = to1D2( k, i, j );    break;
                case 6:  ID2 = to1D2( i, k, j );    break;
             }
-                                           
+
             for (int v=0; v<5; v++)    g_Fluid_Out[bx][ Comp[v] ][ID2] = Fluid[v];
          }
 
-         else 
+         else
             for (int v=0; v<5; v++)    g_Fluid_In [bx][ Comp[v] ][ID1] = Fluid[v];
       }
-                     
-            
+
+
 //    paste the s_flux into g_Flux
       if ( StoreFlux )
       if ( k >= FLU_GHOST_SIZE  &&  k < FLU_NXT-FLU_GHOST_SIZE )
       if ( j >= FLU_GHOST_SIZE  &&  j < FLU_NXT-FLU_GHOST_SIZE )
-      if ( i == 0 )  
+      if ( i == 0 )
       {
          ID3 = __umul24( k-FLU_GHOST_SIZE, PS2 ) + (j-FLU_GHOST_SIZE);
 
@@ -355,7 +358,7 @@ __device__ void CUFLU_Advance( real g_Fluid_In [][5][ FLU_NXT*FLU_NXT*FLU_NXT ],
 
       Column0 += dj;
 
-//    if the index k exceeds the maximum allowed value --> reset (j,k) to harmless values and wait for other 
+//    if the index k exceeds the maximum allowed value --> reset (j,k) to harmless values and wait for other
 //    threads (all threads must exist the while loop "at the same time", otherwise __syncthreads will fail !!)
       if ( k >= k_end )
       {
@@ -397,9 +400,9 @@ __device__ void CUFLU_Advance( real g_Fluid_In [][5][ FLU_NXT*FLU_NXT*FLU_NXT ],
 //                                 3 : minbee
 //-------------------------------------------------------------------------------------------------------
 __device__ void Solve_Flux( real flux[5], const real lL_star[5], const real lR_star[5],
-                            const real cL_star[5], const real cR_star[5], const real rL_star[5], 
-                            const real rR_star[5], const real eival[5], const real L_2[5], const real L_1[5], 
-                            const real R_1[5],const real R_2[5], const real Gamma, const real ratio, 
+                            const real cL_star[5], const real cR_star[5], const real rL_star[5],
+                            const real rR_star[5], const real eival[5], const real L_2[5], const real L_1[5],
+                            const real R_1[5],const real R_2[5], const real Gamma, const real ratio,
                             const WAF_Limiter_t WAF_Limiter )
 {
 
@@ -408,10 +411,10 @@ __device__ void Solve_Flux( real flux[5], const real lL_star[5], const real lR_s
    real mean [3][5];
    real delta[3][5];
 
-   delta[0][0] = lL_star[0] -     L_2[0];        
-   delta[0][1] = lR_star[0] - lL_star[0];   
-   delta[0][2] = lR_star[2] - lL_star[2];        
-   delta[0][3] = lR_star[3] - lL_star[3];        
+   delta[0][0] = lL_star[0] -     L_2[0];
+   delta[0][1] = lR_star[0] - lL_star[0];
+   delta[0][2] = lR_star[2] - lL_star[2];
+   delta[0][3] = lR_star[3] - lL_star[3];
    delta[0][4] =     L_1[0] - lR_star[0];
    mean[0][0] = (real)0.5*( FABS( lL_star[0] ) + FABS(     L_2[0] ) );
    mean[0][1] = (real)0.5*( FABS( lR_star[0] ) + FABS( lL_star[0] ) );
@@ -453,7 +456,7 @@ __device__ void Solve_Flux( real flux[5], const real lL_star[5], const real lR_s
             if (  mean[0][i] == (real)0.0  ||  mean[1][i] == (real)0.0  )     limit[i] = (real)1.0;
             else
             {
-               if (  ( delta[0][i]*delta[1][i] ) / ( mean[0][i]*mean[1][i] ) < MAX_ERROR*MAX_ERROR  ) 
+               if (  ( delta[0][i]*delta[1][i] ) / ( mean[0][i]*mean[1][i] ) < MAX_ERROR*MAX_ERROR  )
                   limit[i] = (real)1.0;
                else
                {
@@ -468,7 +471,7 @@ __device__ void Solve_Flux( real flux[5], const real lL_star[5], const real lR_s
             if ( mean[2][i] == (real)0.0  ||  mean[1][i] == (real)0.0  )      limit[i] = (real)1.0;
             else
             {
-               if (  ( delta[2][i]*delta[1][i] ) / ( mean[2][i]*mean[1][i] ) < MAX_ERROR*MAX_ERROR  ) 
+               if (  ( delta[2][i]*delta[1][i] ) / ( mean[2][i]*mean[1][i] ) < MAX_ERROR*MAX_ERROR  )
                   limit[i] = (real)1.0;
                else
                {
@@ -517,7 +520,7 @@ __device__ real set_limit( const real r, const real c, const WAF_Limiter_t WAF_L
 
    real limit;
 
-// choose the limit function 
+// choose the limit function
    switch ( WAF_Limiter )
    {
       case WAF_SUPERBEE :
@@ -548,7 +551,7 @@ __device__ real set_limit( const real r, const real c, const WAF_Limiter_t WAF_L
          break;
       }
 
-      default: 
+      default:
          break;
    }
 
@@ -562,7 +565,7 @@ __device__ real set_limit( const real r, const real c, const WAF_Limiter_t WAF_L
 //------------------------------------------------------------------------------------------------------
 // Function    :  Dis_Stru
 // Description :  Set the intercell flux by dissipative wave structure
-// 
+//
 // Parameter   :  flux     : Intercel flux
 //                L        : Primitive variables in the left region
 //                R        : Primitive variables in the right region
@@ -572,7 +575,7 @@ __device__ real set_limit( const real r, const real c, const WAF_Limiter_t WAF_L
 //                theta    : Sign of wave speed
 //                Gamma    : Ratio of specific heats
 //-------------------------------------------------------------------------------------------------------
-__device__ void Dis_Stru( real flux[5], const real L[5], const real R[5], const real L_star[5], 
+__device__ void Dis_Stru( real flux[5], const real L[5], const real R[5], const real L_star[5],
                           const real R_star[5], const real limit[5], const real theta[5], const real Gamma )
 {
 
@@ -716,7 +719,7 @@ __device__ void Dis_Stru( real flux[5], const real L[5], const real R[5], const 
 // set the intercell flux
    for (int i=0; i<5; i++)
     {
-       flux[i] =   (real)0.5*( iflux[0][i] + iflux[5][i] ) 
+       flux[i] =   (real)0.5*( iflux[0][i] + iflux[5][i] )
                  - (real)0.5*(  theta[0]*lim[0]*( iflux[1][i] - iflux[0][i] ) +
                                 theta[1]*lim[1]*( iflux[2][i] - iflux[1][i] ) +
                                 theta[2]*lim[2]*( iflux[3][i] - iflux[2][i] ) +
@@ -743,7 +746,7 @@ __device__ void Dis_Stru( real flux[5], const real L[5], const real R[5], const 
 //                theta    : Sign of wave speed
 //                Gamma    : Ratio of specific heats
 //-------------------------------------------------------------------------------------------------------
-__device__ void Undis_Stru( real flux[5], const real L[5], const real R[5], const real L_star[5], 
+__device__ void Undis_Stru( real flux[5], const real L[5], const real R[5], const real L_star[5],
                             const real R_star[5], const real limit[5], const real theta[5], const real Gamma )
 {
 
@@ -757,27 +760,27 @@ __device__ void Undis_Stru( real flux[5], const real L[5], const real R[5], cons
 
 
 // set the intercell flux
-   flux[0] =   (real)0.5*( iflux[0][0] + iflux[3][0] ) 
+   flux[0] =   (real)0.5*( iflux[0][0] + iflux[3][0] )
              - (real)0.5*(  theta[0]*limit[0]*( iflux[1][0] - iflux[0][0] ) +
                             theta[1]*limit[1]*( iflux[2][0] - iflux[1][0] ) +
                             theta[4]*limit[4]*( iflux[3][0] - iflux[2][0] )   );
 
-   flux[1] =   (real)0.5*( iflux[0][1] + iflux[3][1] ) 
+   flux[1] =   (real)0.5*( iflux[0][1] + iflux[3][1] )
              - (real)0.5*(  theta[0]*limit[0]*( iflux[1][1] - iflux[0][1] ) +
                             theta[1]*limit[1]*( iflux[2][1] - iflux[1][1] ) +
                             theta[4]*limit[4]*( iflux[3][1] - iflux[2][1] )   );
 
-   flux[4] =   (real)0.5*( iflux[0][4] + iflux[3][4] ) 
+   flux[4] =   (real)0.5*( iflux[0][4] + iflux[3][4] )
              - (real)0.5*(  theta[0]*limit[0]*( iflux[1][4] - iflux[0][4] ) +
                             theta[1]*limit[1]*( iflux[2][4] - iflux[1][4] ) +
                             theta[4]*limit[4]*( iflux[3][4] - iflux[2][4] )   );
 
-   flux[2] =   (real)0.5*( iflux[0][2] + iflux[3][2] ) 
+   flux[2] =   (real)0.5*( iflux[0][2] + iflux[3][2] )
              - (real)0.5*(  theta[0]*limit[0]*( iflux[1][2] - iflux[0][2] ) +
                             theta[2]*limit[2]*( iflux[2][2] - iflux[1][2] ) +
                             theta[4]*limit[4]*( iflux[3][2] - iflux[2][2] )   );
 
-   flux[3] =   (real)0.5*( iflux[0][3] + iflux[3][3] ) 
+   flux[3] =   (real)0.5*( iflux[0][3] + iflux[3][3] )
              - (real)0.5*(  theta[0]*limit[0]*( iflux[1][3] - iflux[0][3] ) +
                             theta[3]*limit[3]*( iflux[2][3] - iflux[1][3] ) +
                             theta[4]*limit[4]*( iflux[3][3] - iflux[2][3] )   );
@@ -790,9 +793,9 @@ __device__ void Undis_Stru( real flux[5], const real L[5], const real R[5], cons
 //-------------------------------------------------------------------------------------------------------
 // Function    :  set_flux
 // Description :  Set the flux function evaluated at the given stat
-// 
+//
 // Parameter   :  flux  : Flux function
-//                val   : Primitive variables 
+//                val   : Primitive variables
 //                Gamma : Ratio of specific heats
 //-------------------------------------------------------------------------------------------------------
 __device__ void set_flux( real flux[5], const real val[5], const real Gamma )
@@ -805,7 +808,7 @@ __device__ void set_flux( real flux[5], const real val[5], const real Gamma )
    flux[1] = val[0]*val[1]*val[1] + val[4];
    flux[2] = val[0]*val[1]*val[2];
    flux[3] = val[0]*val[1]*val[3];
-   flux[4] = val[1]*(  (real)0.5*val[0]*( val[1]*val[1] + val[2]*val[2] + val[3]*val[3] ) 
+   flux[4] = val[1]*(  (real)0.5*val[0]*( val[1]*val[1] + val[2]*val[2] + val[3]*val[3] )
                       + val[4]/Gamma_m1 + val[4]  );
 
 } // FUNCTION : set_flux
@@ -817,15 +820,16 @@ __device__ void set_flux( real flux[5], const real val[5], const real Gamma )
 // Function    :  Solve_StarRoe
 // Description :  Solve the star region and speed of waves by Roe's method
 //
-// Parameter   :  eival    : Speed of waves
-//                L_star   : Primitive variables in the left star region
-//                R_star   : Primitive variables in the right star region
-//                L        : Primitive variables in the left rrgion
-//                R        : Primitive variables in the right rrgion
-//                Gamma    : Ratio of specific heats 
+// Parameter   :  eival   : Speed of waves
+//                L_star  : Primitive variables in the left star region
+//                R_star  : Primitive variables in the right star region
+//                L       : Primitive variables in the left rrgion
+//                R       : Primitive variables in the right rrgion
+//                Gamma   : Ratio of specific heats
+//                MinPres : Minimum allowed pressure
 //-------------------------------------------------------------------------------------------------------
 __device__ void Solve_StarRoe( real eival[5], real L_star[5], real R_star[5], const real L[5], const real R[5],
-                               const real Gamma )
+                               const real Gamma, const real MinPres )
 {
 
    const real Gamma_m1 = Gamma - (real)1.0; // for evaluating pressure and sound speed
@@ -833,18 +837,16 @@ __device__ void Solve_StarRoe( real eival[5], real L_star[5], real R_star[5], co
    real u_bar, v_bar, w_bar, h_bar, a_bar, a_bar_inv;   // Roe's average of vx, vy, vz, enthapy, sound speed, and
                                                         // one over a_bar
    real coef[5];                                        // Roe's coefficients
-#  if ( defined MIN_PRES_DENS  ||  defined MIN_PRES )
    real TempPres, TempRho, _TempRho;
-#  endif
 
 // solve Roe's average
    {
 #     ifdef CHECK_NEGATIVE_IN_FLUID
       if ( CUFLU_CheckNegative(L[0]) )
-         printf( "ERROR : negative density (%14.7e) at file <%s>, line <%d>, function <%s>\n", 
+         printf( "ERROR : negative density (%14.7e) at file <%s>, line <%d>, function <%s>\n",
                  L[0], __FILE__, __LINE__, __FUNCTION__ );
       if ( CUFLU_CheckNegative(R[0]) )
-         printf( "ERROR : negative density (%14.7e) at file <%s>, line <%d>, function <%s>\n", 
+         printf( "ERROR : negative density (%14.7e) at file <%s>, line <%d>, function <%s>\n",
                  R[0], __FILE__, __LINE__, __FUNCTION__ );
 #     endif
 
@@ -861,13 +863,12 @@ __device__ void Solve_StarRoe( real eival[5], real L_star[5], real R_star[5], co
 
       real GammaP_Rho = Gamma_m1*(  h_bar - (real)0.5*( u_bar*u_bar + v_bar*v_bar + w_bar*w_bar )  );
 
-#     if ( defined MIN_PRES_DENS  ||  defined MIN_PRES )
       TempRho    = (real)0.5*( L[0] + R[0] );
       _TempRho   = (real)1.0/TempRho;
       TempPres   = GammaP_Rho*TempRho/Gamma;
-      TempPres   = CUFLU_PositivePres( TempPres, TempRho, _TempRho );
+      TempPres   = CUFLU_CheckMinPres( TempPres, MinPres );
       GammaP_Rho = Gamma*TempPres*_TempRho;
-#     endif
+
 #     ifdef CHECK_NEGATIVE_IN_FLUID
       if ( CUFLU_CheckNegative(GammaP_Rho) )
          printf( "ERROR : negative GammaP_Rho (%14.7e) at file <%s>, line <%d>, function <%s>\n",
@@ -881,7 +882,7 @@ __device__ void Solve_StarRoe( real eival[5], real L_star[5], real R_star[5], co
 
 // solve Roe's coefficients
    {
-//    the difference of conservative variables  
+//    the difference of conservative variables
       real du_1 = R[0] - L[0];
       real du_2 = R[0]*R[1] - L[0]*L[1];
       real du_3 = R[0]*R[2] - L[0]*L[2];
@@ -891,7 +892,7 @@ __device__ void Solve_StarRoe( real eival[5], real L_star[5], real R_star[5], co
 
       coef[2] = du_3 - v_bar*du_1;
       coef[3] = du_4 - w_bar*du_1;
-      coef[1] = Gamma_m1*a_bar_inv*a_bar_inv*(  du_1*( h_bar - u_bar*u_bar ) + u_bar*du_2 - du_5 
+      coef[1] = Gamma_m1*a_bar_inv*a_bar_inv*(  du_1*( h_bar - u_bar*u_bar ) + u_bar*du_2 - du_5
                                                + coef[2]*v_bar + coef[3]*w_bar  );
       coef[0] = (real)0.5*a_bar_inv*( du_1*( u_bar + a_bar ) - du_2 - a_bar*coef[1] );
       coef[4] = du_1 - ( coef[0] + coef[1] );
@@ -902,7 +903,7 @@ __device__ void Solve_StarRoe( real eival[5], real L_star[5], real R_star[5], co
    {
       L_star[0] = L[0] + coef[0];
       R_star[0] = R[0] - coef[4];
-      L_star[1] = (real)0.5*(   (  L[0]*L[1] + coef[0]*( u_bar - a_bar )  ) / L_star[0] 
+      L_star[1] = (real)0.5*(   (  L[0]*L[1] + coef[0]*( u_bar - a_bar )  ) / L_star[0]
                               + (  R[0]*R[1] - coef[4]*( u_bar + a_bar )  ) / R_star[0]   );
       R_star[1] = L_star[1];
       L_star[2] = L[2];
@@ -915,9 +916,7 @@ __device__ void Solve_StarRoe( real eival[5], real L_star[5], real R_star[5], co
       real e_R_star = (real)0.5*R_star[0]*( R_star[1]*R_star[1] + R_star[2]*R_star[2] + R_star[3]*R_star[3] );
       L_star[4] = (real)0.5*Gamma_m1*(  E_L - e_L_star + L[4]/Gamma_m1 + coef[0]*( h_bar - u_bar*a_bar )
                                       + E_R - e_R_star + R[4]/Gamma_m1 - coef[4]*( h_bar + u_bar*a_bar )  );
-#     if ( defined MIN_PRES_DENS  ||  defined MIN_PRES )
-      L_star[4] = CUFLU_PositivePres( L_star[4], L_star[0], (real)1.0/L_star[0] );
-#     endif
+      L_star[4] = CUFLU_CheckMinPres( L_star[4], MinPres );
       R_star[4] = L_star[4];
    }
 
@@ -930,29 +929,29 @@ __device__ void Solve_StarRoe( real eival[5], real L_star[5], real R_star[5], co
 
 #     ifdef CHECK_NEGATIVE_IN_FLUID
       if ( CUFLU_CheckNegative(L[4]) )
-         printf( "ERROR : negative pressure (%14.7e) at file <%s>, line <%d>, function <%s>\n", 
+         printf( "ERROR : negative pressure (%14.7e) at file <%s>, line <%d>, function <%s>\n",
                  L[4],      __FILE__, __LINE__, __FUNCTION__ );
       if ( CUFLU_CheckNegative(L[0]) )
-         printf( "ERROR : negative density (%14.7e) at file <%s>, line <%d>, function <%s>\n", 
+         printf( "ERROR : negative density (%14.7e) at file <%s>, line <%d>, function <%s>\n",
                  L[0],      __FILE__, __LINE__, __FUNCTION__ );
       if ( CUFLU_CheckNegative(L_star[4]) )
-         printf( "ERROR : negative pressure (%14.7e) at file <%s>, line <%d>, function <%s>\n", 
+         printf( "ERROR : negative pressure (%14.7e) at file <%s>, line <%d>, function <%s>\n",
                  L_star[4], __FILE__, __LINE__, __FUNCTION__ );
       if ( CUFLU_CheckNegative(L_star[0]) )
-         printf( "ERROR : negative density(%14.7e) at file <%s>, line <%d>, function <%s>\n", 
+         printf( "ERROR : negative density(%14.7e) at file <%s>, line <%d>, function <%s>\n",
                  L_star[0], __FILE__, __LINE__, __FUNCTION__ );
 
       if ( CUFLU_CheckNegative(R[4]) )
-         printf( "ERROR : negative pressure (%14.7e) at file <%s>, line <%d>, function <%s>\n", 
+         printf( "ERROR : negative pressure (%14.7e) at file <%s>, line <%d>, function <%s>\n",
                  R[4],      __FILE__, __LINE__, __FUNCTION__ );
       if ( CUFLU_CheckNegative(R[0]) )
-         printf( "ERROR : negative density (%14.7e) at file <%s>, line <%d>, function <%s>\n", 
+         printf( "ERROR : negative density (%14.7e) at file <%s>, line <%d>, function <%s>\n",
                  R[0],      __FILE__, __LINE__, __FUNCTION__ );
       if ( CUFLU_CheckNegative(R_star[4]) )
-         printf( "ERROR : negative pressure (%14.7e) at file <%s>, line <%d>, function <%s>\n", 
+         printf( "ERROR : negative pressure (%14.7e) at file <%s>, line <%d>, function <%s>\n",
                  R_star[4], __FILE__, __LINE__, __FUNCTION__ );
       if ( CUFLU_CheckNegative(R_star[0]) )
-         printf( "ERROR : negative density(%14.7e) at file <%s>, line <%d>, function <%s>\n", 
+         printf( "ERROR : negative density(%14.7e) at file <%s>, line <%d>, function <%s>\n",
                  R_star[0], __FILE__, __LINE__, __FUNCTION__ );
 #     endif
 

@@ -660,6 +660,7 @@ void Pri2Char( real InOut[], const real Gamma, const real Rho, const real Pres, 
    if ( CPU_CheckNegative(Pres) )
       Aux_Message( stderr, "ERROR : negative pressure (%14.7e) at file <%s>, line <%d>, function <%s>\n",
                    Pres, __FILE__, __LINE__, __FUNCTION__ );
+
    if ( CPU_CheckNegative(Rho) )
       Aux_Message( stderr, "ERROR : negative density (%14.7e) at file <%s>, line <%d>, function <%s>\n",
                    Rho,  __FILE__, __LINE__, __FUNCTION__ );
@@ -700,6 +701,7 @@ void Char2Pri( real InOut[], const real Gamma, const real Rho, const real Pres, 
    if ( CPU_CheckNegative(Pres) )
       Aux_Message( stderr, "ERROR : negative pressure (%14.7e) at file <%s>, line <%d>, function <%s>\n",
                    Pres, __FILE__, __LINE__, __FUNCTION__ );
+
    if ( CPU_CheckNegative(Rho) )
       Aux_Message( stderr, "ERROR : negative density (%14.7e) at file <%s>, line <%d>, function <%s>\n",
                    Rho,  __FILE__, __LINE__, __FUNCTION__ );
@@ -748,6 +750,7 @@ void Get_EigenSystem( const real CC_Var[], real EigenVal[][5], real LEigenVec[][
    if ( CPU_CheckNegative(CC_Var[4]) )
       Aux_Message( stderr, "ERROR : negative pressure (%14.7e) at file <%s>, line <%d>, function <%s>\n",
                    CC_Var[4], __FILE__, __LINE__, __FUNCTION__ );
+
    if ( CPU_CheckNegative(CC_Var[0]) )
       Aux_Message( stderr, "ERROR : negative density (%14.7e) at file <%s>, line <%d>, function <%s>\n",
                    CC_Var[0], __FILE__, __LINE__, __FUNCTION__ );

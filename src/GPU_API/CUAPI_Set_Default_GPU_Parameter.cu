@@ -24,7 +24,7 @@ __global__ void CUFLU_FluidSolver_RTVD( real g_Fluid_In [][5][ FLU_NXT*FLU_NXT*F
                                         const double g_Corner[][3],
                                         const real g_Pot_USG[][ USG_NXT_F*USG_NXT_F*USG_NXT_F ],
                                         const real dt, const real _dh, const real Gamma, const bool StoreFlux,
-                                        const bool XYZ );
+                                        const bool XYZ, const real MinDens, const real MinPres );
 #elif ( FLU_SCHEME == WAF )
 __global__ void CUFLU_FluidSolver_WAF( real g_Fluid_In [][5][ FLU_NXT*FLU_NXT*FLU_NXT ],
                                        real g_Fluid_Out[][5][ PS2*PS2*PS2 ],
@@ -32,7 +32,8 @@ __global__ void CUFLU_FluidSolver_WAF( real g_Fluid_In [][5][ FLU_NXT*FLU_NXT*FL
                                        const double g_Corner[][3],
                                        const real g_Pot_USG[][ USG_NXT_F*USG_NXT_F*USG_NXT_F ],
                                        const real dt, const real _dh, const real Gamma, const bool StoreFlux,
-                                       const bool XYZ, const WAF_Limiter_t WAF_Limiter );
+                                       const bool XYZ, const WAF_Limiter_t WAF_Limiter,
+                                       const real MinDens, const real MinPres );
 #elif ( FLU_SCHEME == MHM  ||  FLU_SCHEME == MHM_RP )
 __global__ void CUFLU_FluidSolver_MHM( const real g_Fluid_In[][5][ FLU_NXT*FLU_NXT*FLU_NXT ],
                                        real g_Fluid_Out  [][5][ PS2*PS2*PS2 ],
@@ -54,7 +55,8 @@ __global__ void CUFLU_FluidSolver_MHM( const real g_Fluid_In[][5][ FLU_NXT*FLU_N
                                        real g_FC_Flux_z  [][5][ N_FC_FLUX*N_FC_FLUX*N_FC_FLUX ],
                                        const real dt, const real _dh, const real Gamma, const bool StoreFlux,
                                        const LR_Limiter_t LR_Limiter, const real MinMod_Coeff,
-                                       const real EP_Coeff, const double Time, const OptGravityType_t GravityType );
+                                       const real EP_Coeff, const double Time, const OptGravityType_t GravityType,
+                                       const real MinDens, const real MinPres );
 #ifdef UNSPLIT_GRAVITY
 int CUFLU_FluidSolver_SetConstMem( double ExtAcc_AuxArray_h[] );
 #endif
@@ -79,12 +81,13 @@ __global__ void CUFLU_FluidSolver_CTU( const real g_Fluid_In[][5][ FLU_NXT*FLU_N
                                        real g_FC_Flux_z  [][5][ N_FC_FLUX*N_FC_FLUX*N_FC_FLUX ],
                                        const real dt, const real _dh, const real Gamma, const bool StoreFlux,
                                        const LR_Limiter_t LR_Limiter, const real MinMod_Coeff,
-                                       const real EP_Coeff, const double Time, const OptGravityType_t GravityType );
+                                       const real EP_Coeff, const double Time, const OptGravityType_t GravityType,
+                                       const real MinDens, const real MinPres );
 #ifdef UNSPLIT_GRAVITY
 int CUFLU_FluidSolver_SetConstMem( double ExtAcc_AuxArray_h[] );
 #endif
 #endif
-//__global__ void CUFLU_GetMaxCFL( real g_Fluid[][5][ PS2*PS2*PS2 ], real g_MaxCFL[], const real Gamma );
+//__global__ void CUFLU_GetMaxCFL( real g_Fluid[][5][ PS2*PS2*PS2 ], real g_MaxCFL[], const real Gamma, const real MinPres );
 
 #elif ( MODEL == MHD )
 #warning :: WAIT MHD !!!

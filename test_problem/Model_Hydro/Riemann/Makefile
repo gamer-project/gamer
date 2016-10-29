@@ -183,7 +183,7 @@ vpath %.cpp    GAMER  Init  Refine  Fluid  Interpolation  Tables  Output  Miscel
 # hydrodynamic source files (included only if "MODEL=HYDRO")
 # ------------------------------------------------------------------------------------
 ifeq "$(findstring MODEL=HYDRO, $(SIMU_OPTION))" "MODEL=HYDRO"
-CUDA_FILE   += CUFLU_GetMaxV.cu  CUFLU_FluidSolver_RTVD.cu  CUFLU_FluidSolver_WAF.cu  CUFLU_FluidSolver_MHM.cu \
+CUDA_FILE   += CUFLU_GetMaxCFL.cu  CUFLU_FluidSolver_RTVD.cu  CUFLU_FluidSolver_WAF.cu  CUFLU_FluidSolver_MHM.cu \
                CUFLU_FluidSolver_CTU.cu
 
 CC_FILE     += CPU_FluidSolver_RTVD.cpp  CPU_FluidSolver_WAF.cpp  CPU_FluidSolver_MHM.cpp \

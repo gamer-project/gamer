@@ -217,14 +217,17 @@ void CPU_AdvanceX( real u[][ FLU_NXT*FLU_NXT*FLU_NXT ], const real dt, const rea
          p    = Gamma_m1 * ( ux[4][i] - (real)0.5*_rho*( ux[1][i]*ux[1][i] + ux[2][i]*ux[2][i] +
                                                          ux[3][i]*ux[3][i] ) );
          p    = CPU_CheckMinPres( p, MinPres );
+
 #        ifdef CHECK_NEGATIVE_IN_FLUID
          if ( CPU_CheckNegative(p) )
             Aux_Message( stderr, "ERROR : negative pressure (%14.7e) at file <%s>, line <%d>, function <%s>\n",
                          p, __FILE__, __LINE__, __FUNCTION__ );
+
          if ( CPU_CheckNegative(ux[0][i]) )
             Aux_Message( stderr, "ERROR : negative density (%14.7e) at file <%s>, line <%d>, function <%s>\n",
                          ux[0][i], __FILE__, __LINE__, __FUNCTION__ );
 #        endif
+
          c    = FABS( vx ) + SQRT( Gamma*p*_rho );
 
          cw[0][i] = ux[1][i];
@@ -281,14 +284,17 @@ void CPU_AdvanceX( real u[][ FLU_NXT*FLU_NXT*FLU_NXT ], const real dt, const rea
                                                                u_half[2][i]*u_half[2][i] +
                                                                u_half[3][i]*u_half[3][i] )  );
          p    = CPU_CheckMinPres( p, MinPres );
+
 #        ifdef CHECK_NEGATIVE_IN_FLUID
          if ( CPU_CheckNegative(p) )
-            Aux_Message( stderr, "ERROR : negative pressure (%14.7e) at file <%s>, line <%d>, function <%s>\n", p,
-                        __FILE__, __LINE__, __FUNCTION__ );
+            Aux_Message( stderr, "ERROR : negative pressure (%14.7e) at file <%s>, line <%d>, function <%s>\n",
+                         p, __FILE__, __LINE__, __FUNCTION__ );
+
          if ( CPU_CheckNegative(u_half[0][i]) )
-            Aux_Message( stderr, "ERROR : negative density (%14.7e) at file <%s>, line <%d>, function <%s>\n", u_half[0][i],
-                        __FILE__, __LINE__, __FUNCTION__ );
+            Aux_Message( stderr, "ERROR : negative density (%14.7e) at file <%s>, line <%d>, function <%s>\n",
+                         u_half[0][i], __FILE__, __LINE__, __FUNCTION__ );
 #        endif
+
          c    = FABS( vx ) + SQRT( Gamma*p*_rho );
 
          cw[0][i] = u_half[1][i];
@@ -363,13 +369,17 @@ void CPU_AdvanceX( real u[][ FLU_NXT*FLU_NXT*FLU_NXT ], const real dt, const rea
       }
 
 
-//    (b6). check the negative density
+//    (b6). check negative density and energy
 #     ifdef CHECK_NEGATIVE_IN_FLUID
       for (int i=3; i<FLU_NXT-3; i++)
       {
          if ( CPU_CheckNegative(ux[0][i]) )
             Aux_Message( stderr, "ERROR : negative density (%14.7e) at file <%s>, line <%d>, function <%s>\n",
                          ux[0][i], __FILE__, __LINE__, __FUNCTION__ );
+
+         if ( CPU_CheckNegative(ux[4][i]) )
+            Aux_Message( stderr, "ERROR : negative energy (%14.7e) at file <%s>, line <%d>, function <%s>\n",
+                         ux[4][i], __FILE__, __LINE__, __FUNCTION__ );
       }
 #     endif
 

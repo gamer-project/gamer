@@ -14,7 +14,7 @@
 //                Pot_Array_New  : Array storing the input potential (at the current step)
 //                                 --> _New: to be distinguishable from Pot_Array_USG, which is defined at the previous step
 //                Corner_Array   : Array storing the physical corner coordinates of each patch
-//                Pot_Array_USG  : Array storing the prepared potential          for UNSPLIT_GRAVITY (at the previous step) 
+//                Pot_Array_USG  : Array storing the prepared potential          for UNSPLIT_GRAVITY (at the previous step)
 //                Flu_Array_USG  : Array storing the prepared density + momentum for UNSPLIT_GRAVITY (at the previous step)
 //                NPatchGroup    : Number of patch groups to be evaluated
 //                dt             : Time interval to advance solution
@@ -27,15 +27,15 @@
 //
 // Return      :  Flu_Array_New
 //-----------------------------------------------------------------------------------------
-void CPU_HydroGravitySolver(       real Flu_Array_New[][NCOMP][PS1][PS1][PS1], 
+void CPU_HydroGravitySolver(       real Flu_Array_New[][NCOMP][PS1][PS1][PS1],
                              const real Pot_Array_New[][GRA_NXT][GRA_NXT][GRA_NXT],
                              const double Corner_Array[][3],
-                             const real Pot_Array_USG[][USG_NXT_G][USG_NXT_G][USG_NXT_G], 
+                             const real Pot_Array_USG[][USG_NXT_G][USG_NXT_G][USG_NXT_G],
                              const real Flu_Array_USG[][GRA_NIN-1][PS1][PS1][PS1],
                              const int NPatchGroup, const real dt, const real dh, const bool P5_Gradient,
                              const OptGravityType_t GravityType, const double ExtAcc_AuxArray[],
                              const double TimeNew, const double TimeOld )
-{ 
+{
 
 // check
 #  ifdef GAMER_DEBUG
@@ -176,6 +176,8 @@ void CPU_HydroGravitySolver(       real Flu_Array_New[][NCOMP][PS1][PS1][PS1],
                                                            PxNew*AccNew[0] + PyNew*AccNew[1] + PzNew*AccNew[2] );
 
 //       ensure the positive pressure (restore to the original internal energy if it becomes negative)
+//       --> note that the resulting pressure may be positive but **smaller than MinPresTEMP**
+//       --> but we probably don't really care because MinPresTEMP is just used to make code stable
          Ek = _Rho2*( SQR(PxNew) + SQR(PyNew) + SQR(PzNew) );
          if ( Flu_Array_New[P][ENGY][kk][jj][ii] - Ek <= (real)0.0 )    Flu_Array_New[P][ENGY][kk][jj][ii] = Eint + Ek;
 

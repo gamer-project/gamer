@@ -25,14 +25,15 @@ void CPU_FullStepUpdate( const real Input[][ FLU_NXT*FLU_NXT*FLU_NXT ], real Out
                          const real Gamma )
 {
 
-   const int  dID1[3] = { 1, N_FL_FLUX, N_FL_FLUX*N_FL_FLUX };
-   const real dt_dh   = dt/dh;
-
-   int ID1, ID2, ID3;
-   real dF[3][5];
-
+   /*
    const real  Gamma_m1 = Gamma - (real)1.0;
    const real _Gamma_m1 = (real)1.0 / Gamma_m1;
+   */
+   const int  dID1[3]   = { 1, N_FL_FLUX, N_FL_FLUX*N_FL_FLUX };
+   const real dt_dh     = dt/dh;
+
+   int  ID1, ID2, ID3;
+   real dF[3][5];
 
 
    for (int k1=0, k2=FLU_GHOST_SIZE;  k1<PS2;  k1++, k2++)
@@ -63,11 +64,11 @@ void CPU_FullStepUpdate( const real Input[][ FLU_NXT*FLU_NXT*FLU_NXT ], real Out
 //    check the negative density and energy
 #     ifdef CHECK_NEGATIVE_IN_FLUID
       if ( CPU_CheckNegative(Output[0][ID2]) )
-         Aux_Message( stderr, "ERROR : negative density (%14.7e) at file <%s>, line <%d>, function <%s>\n",
+         Aux_Message( stderr, "WARNING : negative density (%14.7e) at file <%s>, line <%d>, function <%s>\n",
                       Output[0][ID2], __FILE__, __LINE__, __FUNCTION__ );
 
       if ( CPU_CheckNegative(Output[4][ID2]) )
-         Aux_Message( stderr, "ERROR : negative energy (%14.7e) at file <%s>, line <%d>, function <%s>\n",
+         Aux_Message( stderr, "WARNING : negative energy (%14.7e) at file <%s>, line <%d>, function <%s>\n",
                       Output[4][ID2], __FILE__, __LINE__, __FUNCTION__ );
 #     endif
 

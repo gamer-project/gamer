@@ -379,7 +379,7 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData[], const in
          for (int v=0; v<NCOMP; v++)   Fluid[v] = amr->patch[FluSg][lv][PID]->fluid[v][k1][j1][i1];
 
          CData_Ptr[Idx] = CPU_GetPressure( Fluid[DENS], Fluid[MOMX], Fluid[MOMY], Fluid[MOMZ], Fluid[ENGY],
-                                           Gamma_m1, CheckMinPres_Yes, MIN_PRES );
+                                           Gamma_m1, CheckMinPres_Yes, MinPresTEMP );
 
          if ( FluIntTime ) // temporal interpolation
          {
@@ -387,7 +387,7 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData[], const in
 
             CData_Ptr[Idx] = FluWeighting     *CData_Ptr[Idx]
                            + FluWeighting_IntT*CPU_GetPressure( Fluid[DENS], Fluid[MOMX], Fluid[MOMY], Fluid[MOMZ], Fluid[ENGY],
-                                                                Gamma_m1, CheckMinPres_Yes, MIN_PRES );
+                                                                Gamma_m1, CheckMinPres_Yes, MinPresTEMP );
          }
 
          Idx ++;
@@ -549,7 +549,7 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData[], const in
                for (int v=0; v<NCOMP; v++)   Fluid[v] = amr->patch[FluSg][lv][SibPID]->fluid[v][k2][j2][i2];
 
                CData_Ptr[Idx] = CPU_GetPressure( Fluid[DENS], Fluid[MOMX], Fluid[MOMY], Fluid[MOMZ], Fluid[ENGY],
-                                                 Gamma_m1, CheckMinPres_Yes, MIN_PRES );
+                                                 Gamma_m1, CheckMinPres_Yes, MinPresTEMP );
 
                if ( FluIntTime ) // temporal interpolation
                {
@@ -557,7 +557,7 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData[], const in
 
                   CData_Ptr[Idx] =  FluWeighting     *CData_Ptr[Idx]
                                   + FluWeighting_IntT*CPU_GetPressure( Fluid[DENS], Fluid[MOMX], Fluid[MOMY], Fluid[MOMZ], Fluid[ENGY],
-                                                                       Gamma_m1, CheckMinPres_Yes, MIN_PRES );
+                                                                       Gamma_m1, CheckMinPres_Yes, MinPresTEMP );
                }
 
                Idx ++;

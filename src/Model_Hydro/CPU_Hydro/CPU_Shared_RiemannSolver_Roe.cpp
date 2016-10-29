@@ -73,6 +73,7 @@ void CPU_RiemannSolver_Roe( const int XYZ, real Flux_Out[], const real L_In[], c
    if ( CPU_CheckNegative(L[0]) )
       Aux_Message( stderr, "ERROR : negative density (%14.7e) at file <%s>, line <%d>, function <%s>\n",
                    L[0], __FILE__, __LINE__, __FUNCTION__ );
+
    if ( CPU_CheckNegative(R[0]) )
       Aux_Message( stderr, "ERROR : negative density (%14.7e) at file <%s>, line <%d>, function <%s>\n",
                    R[0], __FILE__, __LINE__, __FUNCTION__ );

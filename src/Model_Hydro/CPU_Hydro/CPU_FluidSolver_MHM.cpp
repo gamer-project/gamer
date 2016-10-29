@@ -389,7 +389,8 @@ void CPU_RiemannPredict( const real Flu_Array_In[][ FLU_NXT*FLU_NXT*FLU_NXT ], c
 //                dt           : Time interval to advance solution
 //                dh           : Grid size
 //                Gamma        : Ratio of specific heats
-//                C_Var        : Array storing conservative variables
+//                C_Var        : Array storing the conservative variables
+//                               --> For checking negative density and pressure
 //                MinDens/Pres : Minimum allowed density and pressure
 //-------------------------------------------------------------------------------------------------------
 void CPU_HancockPredict( real FC_Var[][6][5], const real dt, const real dh, const real Gamma,

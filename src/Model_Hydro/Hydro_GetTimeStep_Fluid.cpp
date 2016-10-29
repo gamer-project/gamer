@@ -174,7 +174,7 @@ void Hydro_GetMaxCFL( real MaxCFL[], real MinDtVar_AllLv[][NCOMP] )
                   Vy   = FABS( Fluid[MOMY] )*_Rho;
                   Vz   = FABS( Fluid[MOMZ] )*_Rho;
                   Pres = CPU_GetPressure( Fluid[DENS], Fluid[MOMX], Fluid[MOMY], Fluid[MOMZ], Fluid[ENGY],
-                                          Gamma_m1, CheckMinPres_Yes, MIN_PRES );
+                                          Gamma_m1, CheckMinPres_Yes, MinPresTEMP );
                   Cs   = SQRT( GAMMA*Pres*_Rho );
 
 #                 if   ( FLU_SCHEME == RTVD  ||  FLU_SCHEME == CTU  ||  FLU_SCHEME == WAF )
@@ -216,8 +216,8 @@ void Hydro_GetMaxCFL( real MaxCFL[], real MinDtVar_AllLv[][NCOMP] )
                      Aux_Message( stderr, "        **********************************************************\n");
                      Aux_Message( stderr, "        ** Usually this error is caused by the negative density **\n");
                      Aux_Message( stderr, "        ** or pressure evaluated in the fluid solver            **\n");
-                     Aux_Message( stderr, "        ** --> You might want to set MIN_PRES or MIN_PRES_DENS  **\n");
-                     Aux_Message( stderr, "        **     in the header GAMER/include/CUFLU.h properly     **\n");
+                     Aux_Message( stderr, "        ** --> You might want to set MIN_DENS and MIN_PRES      **\n");
+                     Aux_Message( stderr, "        **     in the input file \"Input__Parameter\" properly  **\n");
                      Aux_Message( stderr, "        **     or choose a smaller time-step                    **\n");
                      Aux_Message( stderr, "        **********************************************************\n");
                      MPI_Exit();
