@@ -354,15 +354,21 @@ void Solver( const Solver_t TSolver, const int lv, const double TimeNew, const d
 #  endif
 
 #  if ( MODEL != HYDRO )
+   const LR_Limiter_t  OPT__LR_LIMITER  = LR_LIMITER_NONE;
+   const WAF_Limiter_t OPT__WAF_LIMITER = WAF_LIMITER_NONE;
    const bool   Flu_XYZ                 = true;
    const double GAMMA                   = NULL_REAL;
    const double MINMOD_COEFF            = NULL_REAL;
    const double EP_COEFF                = NULL_REAL;
-   const real   MinPresTEMP             = NULL_REAL;
-   const LR_Limiter_t  OPT__LR_LIMITER  = LR_LIMITER_NONE;
-   const WAF_Limiter_t OPT__WAF_LIMITER = WAF_LIMITER_NONE;
 #  else
    const bool   Flu_XYZ                 = 1 - ( AdvanceCounter[lv]%2 );    // forward/backward sweep
+#  endif
+
+#  if (  MODEL != HYDRO  &&  MODEL != MHD  &&  ( MODEL != ELBDM || !defined CONSERVE_MASS )  )
+   const real   MIN_DENS                = NULL_REAL;
+#  endif
+#  if (  MODEL != HYDRO  &&  MODEL != MHD  )
+   const real   MIN_PRES                = NULL_REAL;
 #  endif
 
 #  ifndef QUARTIC_SELF_INTERACTION
@@ -392,14 +398,14 @@ void Solver( const Solver_t TSolver, const int lv, const double TimeNew, const d
                                  NPG, dt, dh, GAMMA, OPT__FIXUP_FLUX, Flu_XYZ,
                                  OPT__LR_LIMITER, MINMOD_COEFF, EP_COEFF, OPT__WAF_LIMITER, ELBDM_ETA,
                                  ELBDM_TAYLOR3_COEFF, ELBDM_TAYLOR3_AUTO, OPT__ADAPTIVE_DT, TimeOld, OPT__GRAVITY_TYPE,
-                                 GPU_NSTREAM, MinDensTEMP, MinPresTEMP );
+                                 GPU_NSTREAM, MIN_DENS, MIN_PRES );
 #        else
          CPU_FluidSolver       ( h_Flu_Array_F_In[ArrayID], h_Flu_Array_F_Out[ArrayID], h_Flux_Array[ArrayID],
                                  h_Corner_Array_F[ArrayID], h_MinDtInfo_Fluid_Array[ArrayID], h_Pot_Array_USG_F[ArrayID],
                                  NPG, dt, dh, GAMMA, OPT__FIXUP_FLUX, Flu_XYZ,
                                  OPT__LR_LIMITER, MINMOD_COEFF, EP_COEFF, OPT__WAF_LIMITER, ELBDM_ETA,
                                  ELBDM_TAYLOR3_COEFF, ELBDM_TAYLOR3_AUTO, OPT__ADAPTIVE_DT, TimeOld, OPT__GRAVITY_TYPE,
-                                 MinDensTEMP, MinPresTEMP );
+                                 MIN_DENS, MIN_PRES );
 #        endif
          break;
 

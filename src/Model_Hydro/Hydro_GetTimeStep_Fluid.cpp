@@ -174,7 +174,7 @@ void Hydro_GetMaxCFL( real MaxCFL[], real MinDtVar_AllLv[][NCOMP] )
                   Vy   = FABS( Fluid[MOMY] )*_Rho;
                   Vz   = FABS( Fluid[MOMZ] )*_Rho;
                   Pres = CPU_GetPressure( Fluid[DENS], Fluid[MOMX], Fluid[MOMY], Fluid[MOMZ], Fluid[ENGY],
-                                          Gamma_m1, CheckMinPres_Yes, MinPresTEMP );
+                                          Gamma_m1, CheckMinPres_Yes, MIN_PRES );
                   Cs   = SQRT( GAMMA*Pres*_Rho );
 
 #                 if   ( FLU_SCHEME == RTVD  ||  FLU_SCHEME == CTU  ||  FLU_SCHEME == WAF )

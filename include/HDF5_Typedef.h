@@ -226,14 +226,6 @@ struct SymConst_t
    int    N_Slope_PPM;
 #  endif
 
-#  ifdef MIN_PRES_DENS
-   double Min_Pres_Dens;
-#  endif
-
-#  ifdef MIN_PRES
-   double Min_Pres;
-#  endif
-
 #  ifdef MAX_ERROR
    double MaxError;
 #  endif
@@ -398,6 +390,12 @@ struct InputPara_t
    int    Opt__OverlapMPI;
    int    Opt__ResetFluid;
    int    Opt__CorrUnphy;
+#  if (  MODEL == HYDRO  ||  MODEL == MHD  ||  ( MODEL == ELBDM && defined CONSERVE_MASS )  )
+   double MinDens;
+#  endif
+#  if (  MODEL == HYDRO  ||  MODEL == MHD  )
+   double MinPres;
+#  endif
 
 // self-gravity
 #  ifdef GRAVITY

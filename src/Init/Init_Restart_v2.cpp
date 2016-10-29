@@ -753,13 +753,13 @@ void Load_Parameter_After_2000( FILE *File, const int FormatVersion, int &NLv_Re
    int    ncomp, patch_size, flu_ghost_size, pot_ghost_size, gra_ghost_size, check_intermediate;
    int    flu_block_size_x, flu_block_size_y, pot_block_size_x, pot_block_size_z, gra_block_size_z;
    int    par_nvar, par_npassive;
-   double min_value, max_error;
+   double min_pres, max_error;
 
    fseek( File, HeaderOffset_Constant, SEEK_SET );
 
    fread( &ncomp,                      sizeof(int),                     1,             File );
    fread( &patch_size,                 sizeof(int),                     1,             File );
-   fread( &min_value,                  sizeof(double),                  1,             File );
+   fread( &min_pres,                   sizeof(double),                  1,             File );
    fread( &flu_ghost_size,             sizeof(int),                     1,             File );
    fread( &pot_ghost_size,             sizeof(int),                     1,             File );
    fread( &gra_ghost_size,             sizeof(int),                     1,             File );
@@ -1090,10 +1090,8 @@ void Load_Parameter_After_2000( FILE *File, const int FormatVersion, int &NLv_Re
       CompareVar( "FLU_GHOST_SIZE",          flu_ghost_size,         FLU_GHOST_SIZE,            NonFatal );
       CompareVar( "FLU_BLOCK_SIZE_X",        flu_block_size_x,       FLU_BLOCK_SIZE_X,          NonFatal );
       CompareVar( "FLU_BLOCK_SIZE_Y",        flu_block_size_y,       FLU_BLOCK_SIZE_Y,          NonFatal );
-#     ifdef MIN_PRES_DENS
-      CompareVar( "MIN_PRES_DENS",           min_value,      (double)MIN_PRES_DENS,             NonFatal );
-#     elif defined MIN_PRES
-      CompareVar( "MIN_PRES",                min_value,      (double)MIN_PRES,                  NonFatal );
+#     if ( MODEL == HYDRO  ||  MODEL == MHD )
+      CompareVar( "MIN_PRES",                min_pres,               MIN_PRES,                  NonFatal );
 #     endif
 
 
@@ -1174,15 +1172,9 @@ void Load_Parameter_After_2000( FILE *File, const int FormatVersion, int &NLv_Re
       CompareVar( "MAX_ERROR",               max_error,      (double)MAX_ERROR,                 NonFatal );
 #     endif
 
-#     if ( defined MIN_PRES  ||  defined MIN_PRES_DENS )
       if ( !enforce_positive )
          Aux_Message( stderr, "WARNING : %s : RESTART file (%s) != runtime (%s) !!\n",
-                      "MIN_PRES/MIN_PRES_DENS", "OFF", "ON" );
-#     else
-      if (  enforce_positive )
-         Aux_Message( stderr, "WARNING : %s : RESTART file (%s) != runtime (%s) !!\n",
-                      "MIN_PRES/MIN_PRES_DENS", "ON", "OFF" );
-#     endif
+                      "MIN_DENS/MIN_PRES", "OFF", "ON" );
 
 #     ifdef CHAR_RECONSTRUCTION
       if ( !char_reconstruction )

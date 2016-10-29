@@ -98,11 +98,11 @@ void Flu_FixUp( const int lv, const double dt )
 
 //             do not apply flux correction if any field lies below the minimum allowed value
 #              if   ( MODEL == HYDRO  ||  MODEL == MHD )
-               if ( CorrVal[DENS] < MinDensTEMP  ||
+               if ( CorrVal[DENS] < MIN_DENS  ||
                     CPU_GetPressure(CorrVal[DENS], CorrVal[MOMX], CorrVal[MOMY], CorrVal[MOMZ], CorrVal[ENGY],
-                                    Gamma_m1, CheckMinPres_No, NULL_REAL) < MinPresTEMP )
-#              elif ( MODEL == ELBDM )
-               if ( CorrVal[DENS] < MinDensTEMP )
+                                    Gamma_m1, CheckMinPres_No, NULL_REAL) < MIN_PRES )
+#              elif ( MODEL == ELBDM  &&  defined CONSERVE_MASS )
+               if ( CorrVal[DENS] < MIN_DENS )
 #              endif
                   continue;
 
@@ -142,11 +142,11 @@ void Flu_FixUp( const int lv, const double dt )
 
 //             do not apply flux correction if any field lies below the minimum allowed value
 #              if   ( MODEL == HYDRO  ||  MODEL == MHD )
-               if ( CorrVal[DENS] < MinDensTEMP  ||
+               if ( CorrVal[DENS] < MIN_DENS  ||
                     CPU_GetPressure(CorrVal[DENS], CorrVal[MOMX], CorrVal[MOMY], CorrVal[MOMZ], CorrVal[ENGY],
-                                    Gamma_m1, CheckMinPres_No, NULL_REAL) < MinPresTEMP )
-#              elif ( MODEL == ELBDM )
-               if ( CorrVal[DENS] < MinDensTEMP )
+                                    Gamma_m1, CheckMinPres_No, NULL_REAL) < MIN_PRES )
+#              elif ( MODEL == ELBDM  &&  defined CONSERVE_MASS )
+               if ( CorrVal[DENS] < MIN_DENS )
 #              endif
                   continue;
 
@@ -186,11 +186,11 @@ void Flu_FixUp( const int lv, const double dt )
 
 //             do not apply flux correction if any field lies below the minimum allowed value
 #              if   ( MODEL == HYDRO  ||  MODEL == MHD )
-               if ( CorrVal[DENS] < MinDensTEMP  ||
+               if ( CorrVal[DENS] < MIN_DENS  ||
                     CPU_GetPressure(CorrVal[DENS], CorrVal[MOMX], CorrVal[MOMY], CorrVal[MOMZ], CorrVal[ENGY],
-                                    Gamma_m1, CheckMinPres_No, NULL_REAL) < MinPresTEMP )
-#              elif ( MODEL == ELBDM )
-               if ( CorrVal[DENS] < MinDensTEMP )
+                                    Gamma_m1, CheckMinPres_No, NULL_REAL) < MIN_PRES )
+#              elif ( MODEL == ELBDM  &&  defined CONSERVE_MASS )
+               if ( CorrVal[DENS] < MIN_DENS )
 #              endif
                   continue;
 
@@ -230,11 +230,11 @@ void Flu_FixUp( const int lv, const double dt )
 
 //             do not apply flux correction if any field lies below the minimum allowed value
 #              if   ( MODEL == HYDRO  ||  MODEL == MHD )
-               if ( CorrVal[DENS] < MinDensTEMP  ||
+               if ( CorrVal[DENS] < MIN_DENS  ||
                     CPU_GetPressure(CorrVal[DENS], CorrVal[MOMX], CorrVal[MOMY], CorrVal[MOMZ], CorrVal[ENGY],
-                                    Gamma_m1, CheckMinPres_No, NULL_REAL) < MinPresTEMP )
-#              elif ( MODEL == ELBDM )
-               if ( CorrVal[DENS] < MinDensTEMP )
+                                    Gamma_m1, CheckMinPres_No, NULL_REAL) < MIN_PRES )
+#              elif ( MODEL == ELBDM  &&  defined CONSERVE_MASS )
+               if ( CorrVal[DENS] < MIN_DENS )
 #              endif
                   continue;
 
@@ -274,11 +274,11 @@ void Flu_FixUp( const int lv, const double dt )
 
 //             do not apply flux correction if any field lies below the minimum allowed value
 #              if   ( MODEL == HYDRO  ||  MODEL == MHD )
-               if ( CorrVal[DENS] < MinDensTEMP  ||
+               if ( CorrVal[DENS] < MIN_DENS  ||
                     CPU_GetPressure(CorrVal[DENS], CorrVal[MOMX], CorrVal[MOMY], CorrVal[MOMZ], CorrVal[ENGY],
-                                    Gamma_m1, CheckMinPres_No, NULL_REAL) < MinPresTEMP )
-#              elif ( MODEL == ELBDM )
-               if ( CorrVal[DENS] < MinDensTEMP )
+                                    Gamma_m1, CheckMinPres_No, NULL_REAL) < MIN_PRES )
+#              elif ( MODEL == ELBDM  &&  defined CONSERVE_MASS )
+               if ( CorrVal[DENS] < MIN_DENS )
 #              endif
                   continue;
 
@@ -318,11 +318,11 @@ void Flu_FixUp( const int lv, const double dt )
 
 //             do not apply flux correction if any field lies below the minimum allowed value
 #              if   ( MODEL == HYDRO  ||  MODEL == MHD )
-               if ( CorrVal[DENS] < MinDensTEMP  ||
+               if ( CorrVal[DENS] < MIN_DENS  ||
                     CPU_GetPressure(CorrVal[DENS], CorrVal[MOMX], CorrVal[MOMY], CorrVal[MOMZ], CorrVal[ENGY],
-                                    Gamma_m1, CheckMinPres_No, NULL_REAL) < MinPresTEMP )
-#              elif ( MODEL == ELBDM )
-               if ( CorrVal[DENS] < MinDensTEMP )
+                                    Gamma_m1, CheckMinPres_No, NULL_REAL) < MIN_PRES )
+#              elif ( MODEL == ELBDM  &&  defined CONSERVE_MASS )
+               if ( CorrVal[DENS] < MIN_DENS )
 #              endif
                   continue;
 

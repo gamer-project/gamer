@@ -82,21 +82,23 @@ extern WAF_Limiter_t OPT__WAF_LIMITER;
 extern OptRSolver_t  OPT__CORR_UNPHY_SCHEME;
 extern bool       OPT__FLAG_PRES_GRADIENT, OPT__FLAG_LOHNER_ENGY, OPT__FLAG_LOHNER_PRES;
 extern int        OPT__CK_NEGATIVE;
-extern real       MinDensTEMP, MinPresTEMP;
+extern double     MIN_DENS, MIN_PRES;
 
 #elif ( MODEL == MHD )
-extern real       MinDensTEMP, MinPresTEMP;
+extern double     MIN_DENS, MIN_PRES;
 #warning WAIT MHD !!!
 
 #elif ( MODEL == ELBDM )
 extern double     DT__PHASE, FlagTable_EngyDensity[NLEVEL-1][2];
 extern bool       OPT__FLAG_ENGY_DENSITY, OPT__INT_PHASE, ELBDM_TAYLOR3_AUTO;
 extern double     ELBDM_TAYLOR3_COEFF, ELBDM_MASS, ELBDM_PLANCK_CONST, ELBDM_ETA;
+extern real       MinDtInfo_Phase[NLEVEL];            // maximum time derivative of phase at each level
 #ifdef QUARTIC_SELF_INTERACTION
 extern double     ELBDM_LAMBDA;
 #endif
-extern real       MinDtInfo_Phase[NLEVEL];            // maximum time derivative of phase at each level
-extern real       MinDensTEMP;
+#ifdef CONSERVE_MASS
+extern double     MIN_DENS;
+#endif
 
 #else
 #  error : ERROR : unsupported MODEL !!

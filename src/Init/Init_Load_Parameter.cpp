@@ -21,7 +21,6 @@ void Init_Load_Parameter()
    FILE *File = fopen( FileName, "r" );
 
    int    temp_int;
-   double temp_double;
    char  *input_line = NULL;
    char   string[100];
    size_t len = 0;
@@ -457,15 +456,13 @@ void Init_Load_Parameter()
    OPT__CORR_UNPHY = (bool)temp_int;
 
    getline( &input_line, &len, File );
-#  if ( MODEL == HYDRO  ||  MODEL == MHD  ||  MODEL == ELBDM )
-   sscanf( input_line, "%lf%s",  &temp_double,              string );
-   MinDensTEMP = (real)temp_double;
+#  if (  MODEL == HYDRO  ||  MODEL == MHD  ||  ( MODEL == ELBDM && defined CONSERVE_MASS )  )
+   sscanf( input_line, "%lf%s",  &MIN_DENS,                 string );
 #  endif
 
    getline( &input_line, &len, File );
 #  if ( MODEL == HYDRO  ||  MODEL == MHD )
-   sscanf( input_line, "%lf%s",  &temp_double,              string );
-   MinPresTEMP = (real)temp_double;
+   sscanf( input_line, "%lf%s",  &MIN_PRES,                 string );
 #  endif
 
    getline( &input_line, &len, File );

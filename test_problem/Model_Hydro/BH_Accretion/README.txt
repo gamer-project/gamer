@@ -34,4 +34,4 @@ Note:
 
 2. Gravity dt is disabled --> set DT__GRAVITY to arbitrarily large
 
-3. MIN_PRES is set to 1.e-16 in CUFLU.h
+3. MIN_PRES is set to 1.0e-16

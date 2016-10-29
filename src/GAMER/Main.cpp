@@ -75,10 +75,10 @@ WAF_Limiter_t  OPT__WAF_LIMITER;
 OptRSolver_t   OPT__CORR_UNPHY_SCHEME;
 bool           OPT__FLAG_PRES_GRADIENT, OPT__FLAG_LOHNER_ENGY, OPT__FLAG_LOHNER_PRES;
 int            OPT__CK_NEGATIVE;
-real           MinDensTEMP, MinPresTEMP;
+double         MIN_DENS, MIN_PRES;
 
 #elif ( MODEL == MHD )
-real           MinDensTEMP, MinPresTEMP;
+double         MIN_DENS, MIN_PRES;
 #warning : WAIT MHD !!!
 
 #elif ( MODEL == ELBDM )
@@ -87,11 +87,13 @@ bool           OPT__FLAG_ENGY_DENSITY, OPT__INT_PHASE;
 bool           ELBDM_TAYLOR3_AUTO;
 double         ELBDM_TAYLOR3_COEFF;
 double         ELBDM_MASS, ELBDM_PLANCK_CONST, ELBDM_ETA;
+real           MinDtInfo_Phase[NLEVEL];
 #ifdef QUARTIC_SELF_INTERACTION
 double         ELBDM_LAMBDA;
 #endif
-real           MinDtInfo_Phase[NLEVEL];
-real           MinDensTEMP;
+#ifdef CONSERVE_MASS
+double         MIN_DENS;
+#endif
 
 #else
 #error : unsupported MODEL !!

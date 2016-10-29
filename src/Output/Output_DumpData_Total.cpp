@@ -409,12 +409,10 @@ void Output_DumpData_Total( const char *FileName )
 
       const int    ncomp                 = NCOMP;
       const int    patch_size            = PATCH_SIZE;
-#     ifdef MIN_PRES_DENS
-      const double min_value             = MIN_PRES_DENS;
-#     elif defined MIN_PRES
-      const double min_value             = MIN_PRES;
+#     if ( MODEL == HYDRO  ||  MODEL == MHD )
+      const double min_pres              = MIN_PRES;
 #     else
-      const double min_value             = NULL_REAL;
+      const double min_pres              = NULL_REAL;
 #     endif
       const int    flu_ghost_size        = FLU_GHOST_SIZE;
 
@@ -426,11 +424,7 @@ void Output_DumpData_Total( const char *FileName )
       const int    gra_ghost_size        = NULL_INT;
 #     endif
 
-#     if ( defined MIN_PRES  ||  defined MIN_PRES_DENS )
       const bool   enforce_positive      = true;
-#     else
-      const bool   enforce_positive      = false;
-#     endif
 
 #     ifdef CHAR_RECONSTRUCTION
       const bool   char_reconstruction   = true;
@@ -505,7 +499,7 @@ void Output_DumpData_Total( const char *FileName )
 
       fwrite( &ncomp,                     sizeof(int),                     1,             File );
       fwrite( &patch_size,                sizeof(int),                     1,             File );
-      fwrite( &min_value,                 sizeof(double),                  1,             File );
+      fwrite( &min_pres,                  sizeof(double),                  1,             File );
       fwrite( &flu_ghost_size,            sizeof(int),                     1,             File );
       fwrite( &pot_ghost_size,            sizeof(int),                     1,             File );
       fwrite( &gra_ghost_size,            sizeof(int),                     1,             File );

@@ -1377,12 +1377,6 @@ void Check_SymConst( const char *FileName )
 #  ifdef N_SLOPE_PPM
    LoadField( "N_Slope_PPM",          &RS.N_Slope_PPM,          SID, TID, NonFatal, &RT.N_Slope_PPM,           1, NonFatal );
 #  endif
-#  ifdef MIN_PRES_DENS
-   LoadField( "Min_Pres_Dens",        &RS.Min_Pres_Dens,        SID, TID, NonFatal, &RT.Min_Pres_Dens,         1, NonFatal );
-#  endif
-#  ifdef MIN_PRES
-   LoadField( "Min_Pres",             &RS.Min_Pres,             SID, TID, NonFatal, &RT.Min_Pres,              1, NonFatal );
-#  endif
 #  ifdef MAX_ERROR
    LoadField( "MaxError",             &RS.MaxError,             SID, TID, NonFatal, &RT.MaxError,              1, NonFatal );
 #  endif
@@ -1587,6 +1581,12 @@ void Check_InputPara( const char *FileName )
    LoadField( "Opt__OverlapMPI",         &RS.Opt__OverlapMPI,         SID, TID, NonFatal, &RT.Opt__OverlapMPI,          1, NonFatal );
    LoadField( "Opt__ResetFluid",         &RS.Opt__ResetFluid,         SID, TID, NonFatal, &RT.Opt__ResetFluid,          1, NonFatal );
    LoadField( "Opt__CorrUnphy",          &RS.Opt__CorrUnphy,          SID, TID, NonFatal, &RT.Opt__CorrUnphy,           1, NonFatal );
+#  if (  MODEL == HYDRO  ||  MODEL == MHD  ||  ( MODEL == ELBDM && defined CONSERVE_MASS )  )
+   LoadField( "MinDens",                 &RS.MinDens,                 SID, TID, NonFatal, &RT.MinDens,                  1, NonFatal );
+#  endif
+#  if (  MODEL == HYDRO  ||  MODEL == MHD  )
+   LoadField( "MinPres",                 &RS.MinPres,                 SID, TID, NonFatal, &RT.MinPres,                  1, NonFatal );
+#  endif
 
 // self-gravity
 #  ifdef GRAVITY

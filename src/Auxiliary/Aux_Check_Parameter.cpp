@@ -593,10 +593,6 @@ void Aux_Check_Parameter()
 #     error : ERROR : unsupported option in CHECK_INTERMEDIATE (EXACT/HLLE/HLLC) !!
 #  endif
 
-#  if ( defined MIN_PRES_DENS  &&  defined MIN_PRES )
-#    error : ERROR : MIN_PRES_DENS and MIN_PRES in the file "CUFLU.h" cannot be turned on at the same time !!
-#  endif
-
 #  if ( NPASSIVE < 0 )
    for (int f=0; f<6; f++)
    if ( OPT__BC_FLU[f] != BC_FLU_PERIODIC )
@@ -623,6 +619,24 @@ void Aux_Check_Parameter()
    if ( MOLECULAR_WEIGHT <= 0.0 )
       Aux_Error( ERROR_INFO, "MOLECULAR_WEIGHT = %14.7e <= 0.0 !!\n", MOLECULAR_WEIGHT );
 
+   if      ( MIN_DENS < 0.0 )
+      Aux_Error( ERROR_INFO, "MIN_DENS = %14.7e < 0.0 !!\n", MIN_DENS );
+
+   else if ( MIN_DENS == 0.0 )
+      Aux_Message( stderr, "WARNING : MIN_DENS == 0.0 could be dangerous and is mainly for debugging only !!\n" );
+
+   else
+      Aux_Message( stderr, "WARNING : MIN_DENS (%13.7e) is on --> please ensure that this value is reasonable !!\n", MIN_DENS );
+
+   if      ( MIN_PRES < 0.0 )
+      Aux_Error( ERROR_INFO, "MIN_PRES = %14.7e < 0.0 !!\n", MIN_PRES );
+
+   if      ( MIN_PRES == 0.0 )
+      Aux_Message( stderr, "WARNING : MIN_PRES == 0.0 could be dangerous and is mainly for debugging only !!\n" );
+
+   else
+      Aux_Message( stderr, "WARNING : MIN_PRES (%13.7e) is on --> please ensure that this value is reasonable !!\n", MIN_PRES );
+
 
 // warnings
 // ------------------------------
@@ -648,22 +662,6 @@ void Aux_Check_Parameter()
 #     warning : WARNING : option "CHAR_RECONSTRUCTION" is less robust and can cause negative density/pressure !!
       Aux_Message( stderr, "WARNING : option \"CHAR_RECONSTRUCTION\" is less robust and can cause negative " );
       Aux_Message( stderr,           "density/pressure !!\n" );
-#  endif
-
-#  if ( !defined MIN_PRES  &&  !defined MIN_PRES_DENS )
-#     warning : WARNING : options "MIN_PRES and MIN_PRES_DENS" are both turned off --> negative pressure may happen !!
-      Aux_Message( stderr, "WARNING : option \"MIN_PRES and MIN_PRES_DENS\" are both turned off --> negative " );
-      Aux_Message( stderr,           "pressure may happen !!\n" );
-#  endif
-
-#  ifdef MIN_PRES
-   Aux_Message( stderr, "WARNING : MIN_PRES (%14.7e) is on --> please make sure that this value is reasonable !!\n",
-                MIN_PRES );
-#  endif
-
-#  ifdef MIN_PRES_DENS
-   Aux_Message( stderr, "WARNING : MIN_PRES_DENS (%14.7e) is on --> please make sure that this value is reasonable !!\n",
-                MIN_PRES_DENS );
 #  endif
 
    if ( !OPT__FIXUP_FLUX )
@@ -876,6 +874,17 @@ void Aux_Check_Parameter()
    for (int f=0; f<6; f++)
    if ( OPT__BC_FLU[f] == BC_FLU_REFLECTING  ||  OPT__BC_FLU[f] == BC_FLU_OUTFLOW )
       Aux_Error( ERROR_INFO, "unsupported option \"OPT__BC_FLU[%d] = %d\" [1/4] !!\n", f, OPT__BC_FLU[f] );
+
+#  ifdef CONSERVE_MASS
+   if      ( MIN_DENS < 0.0 )
+      Aux_Error( ERROR_INFO, "MIN_DENS = %14.7e < 0.0 !!\n", MIN_DENS );
+
+   else if ( MIN_DENS == 0.0 )
+      Aux_Message( stderr, "WARNING : MIN_DENS == 0.0 could be dangerous and is mainly for debugging only !!\n" );
+
+   else
+      Aux_Message( stderr, "WARNING : MIN_DENS (%13.7e) is on --> please ensure that this value is reasonable !!\n", MIN_DENS );
+#  endif
 
 
 // warnings

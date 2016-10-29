@@ -291,10 +291,10 @@ bool Unphysical( const real Fluid[], const real Gamma_m1, const int CheckMinEngy
 
 #  if ( MODEL == HYDRO || MODEL == MHD )
    if ( !isfinite(Fluid[DENS])  ||  !isfinite(Fluid[MOMX])  ||  !isfinite(Fluid[MOMY])  ||
-        !isfinite(Fluid[MOMZ])  ||  !isfinite(Fluid[ENGY])  ||  Fluid[DENS] < MinDensTEMP  ||
-        (  ( CheckMinEngyOrPres == CheckMinEngy && Fluid[ENGY] < MinPresTEMP ) ||
+        !isfinite(Fluid[MOMZ])  ||  !isfinite(Fluid[ENGY])  ||  Fluid[DENS] < MIN_DENS  ||
+        (  ( CheckMinEngyOrPres == CheckMinEngy && Fluid[ENGY] < MIN_PRES ) ||
            CPU_GetPressure(Fluid[DENS], Fluid[MOMX], Fluid[MOMY], Fluid[MOMZ], Fluid[ENGY], Gamma_m1, CheckMinPres_No, NULL_REAL)
-           < MinPresTEMP )
+           < MIN_PRES )
       )
       return true;
    else
@@ -316,7 +316,7 @@ bool Unphysical( const real Fluid[], const real Gamma_m1, const int CheckMinEngy
 //
 // Note        :  1. Define unphysical values in the function "Unphysical"
 //                2. Currently it is used for MODEL==HYDRO/MHD to check if density or pressure is smaller than
-//                   the minimum allowed values (i.e., MinDensTEMP and MinPresTEMP)
+//                   the minimum allowed values (i.e., MIN_DENS and MIN_PRES)
 //                   --> It also checks if any variable is -inf, +inf, and nan
 //                   --> But one can define arbitrary criteria in "Unphysical" to trigger the correction
 //                3. Procedure:
@@ -401,24 +401,24 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
                   case RSOLVER_ROE:
                      for (int d=0; d<3; d++)
                      {
-                        CPU_RiemannSolver_Roe( d, FluxL[d], VarL[d], VarC,    GAMMA, MinPresTEMP );
-                        CPU_RiemannSolver_Roe( d, FluxR[d], VarC,    VarR[d], GAMMA, MinPresTEMP );
+                        CPU_RiemannSolver_Roe( d, FluxL[d], VarL[d], VarC,    GAMMA, MIN_PRES );
+                        CPU_RiemannSolver_Roe( d, FluxR[d], VarC,    VarR[d], GAMMA, MIN_PRES );
                      }
                      break;
 
                   case RSOLVER_HLLC:
                      for (int d=0; d<3; d++)
                      {
-                        CPU_RiemannSolver_HLLC( d, FluxL[d], VarL[d], VarC,    GAMMA, MinPresTEMP );
-                        CPU_RiemannSolver_HLLC( d, FluxR[d], VarC,    VarR[d], GAMMA, MinPresTEMP );
+                        CPU_RiemannSolver_HLLC( d, FluxL[d], VarL[d], VarC,    GAMMA, MIN_PRES );
+                        CPU_RiemannSolver_HLLC( d, FluxR[d], VarC,    VarR[d], GAMMA, MIN_PRES );
                      }
                      break;
 
                   case RSOLVER_HLLE:
                      for (int d=0; d<3; d++)
                      {
-                        CPU_RiemannSolver_HLLE( d, FluxL[d], VarL[d], VarC,    GAMMA, MinPresTEMP );
-                        CPU_RiemannSolver_HLLE( d, FluxR[d], VarC,    VarR[d], GAMMA, MinPresTEMP );
+                        CPU_RiemannSolver_HLLE( d, FluxL[d], VarL[d], VarC,    GAMMA, MIN_PRES );
+                        CPU_RiemannSolver_HLLE( d, FluxR[d], VarC,    VarR[d], GAMMA, MIN_PRES );
                      }
                      break;
 
@@ -442,15 +442,15 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
 
 
 //          ensure positive density and pressure
-            Update[DENS] = FMAX( Update[DENS], MinDensTEMP );
+            Update[DENS] = FMAX( Update[DENS], MIN_DENS );
             Update[ENGY] = CPU_CheckMinPresInEngy( Update[DENS], Update[MOMX], Update[MOMY], Update[MOMZ], Update[ENGY],
-                                                   Gamma_m1, _Gamma_m1, MinPresTEMP );
+                                                   Gamma_m1, _Gamma_m1, MIN_PRES );
 
 
 //          check if the newly updated values are still unphysical
 //          --> note that here we check **energy** instead of pressure since even after calling CPU_CheckMinPresInEngy()
-//              we can still have pressure < MinPresTEMP due to round-off errors (when pressure << kinematic energy)
-//          --> it will not crash the code since we always apply MinPresTEMP when calculating pressure
+//              we can still have pressure < MIN_PRES due to round-off errors (when pressure << kinematic energy)
+//          --> it will not crash the code since we always apply MIN_PRES when calculating pressure
             if ( Unphysical(Update, Gamma_m1, CheckMinEngy) )
             {
 //             output debug information

@@ -151,7 +151,7 @@ void CPU_Con2Flux( const int XYZ, real Flux[], const real Input[], const real Ga
 //                   numerical errors
 //                   --> Usually happen in regions with high mach numbers
 //                   --> Currently it simply sets a minimum allowed value for pressure
-//                       --> Please set MinPresTEMP in the runtime parameter file "Input__Parameter"
+//                       --> Please set MIN_PRES in the runtime parameter file "Input__Parameter"
 //                2. We should also support a minimum **temperature** instead of **pressure**
 //                   --> NOT supported yet
 //
@@ -177,7 +177,7 @@ real CPU_CheckMinPres( const real InPres, const real MinPres )
 //                   numerical errors
 //                   --> Usually happen in regions with high mach numbers
 //                   --> Currently it simply sets a minimum allowed value for pressure
-//                       --> Please set MinPresTEMP in the runtime parameter file "Input__Parameter"
+//                       --> Please set MIN_PRES in the runtime parameter file "Input__Parameter"
 //                3. One must input conserved variables instead of primitive variables
 //
 // Parameter   :  Dens     : Mass density

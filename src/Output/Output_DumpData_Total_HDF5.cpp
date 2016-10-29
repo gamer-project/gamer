@@ -74,7 +74,7 @@ Procedure for outputting new variables:
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2211)
+// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2212)
 // Description :  Output all simulation data in the HDF5 format, which can be used as a restart file
 //                or loaded by YT
 //
@@ -1217,7 +1217,7 @@ void FillIn_KeyInfo( KeyInfo_t &KeyInfo )
 
    const time_t CalTime  = time( NULL );   // calendar time
 
-   KeyInfo.FormatVersion = 2211;
+   KeyInfo.FormatVersion = 2212;
    KeyInfo.Model         = MODEL;
    KeyInfo.NLevel        = NLEVEL;
    KeyInfo.PatchSize     = PATCH_SIZE;
@@ -1603,14 +1603,6 @@ void FillIn_SymConst( SymConst_t &SymConst )
    SymConst.N_Slope_PPM          = N_SLOPE_PPM;
 #  endif
 
-#  ifdef MIN_PRES_DENS
-   SymConst.Min_Pres_Dens        = MIN_PRES_DENS;
-#  endif
-
-#  ifdef MIN_PRES
-   SymConst.Min_Pres             = MIN_PRES;
-#  endif
-
 #  ifdef MAX_ERROR
    SymConst.MaxError             = MAX_ERROR;
 #  endif
@@ -1781,6 +1773,12 @@ void FillIn_InputPara( InputPara_t &InputPara )
    InputPara.Opt__OverlapMPI         = OPT__OVERLAP_MPI;
    InputPara.Opt__ResetFluid         = OPT__RESET_FLUID;
    InputPara.Opt__CorrUnphy          = OPT__CORR_UNPHY;
+#  if (  MODEL == HYDRO  ||  MODEL == MHD  ||  ( MODEL == ELBDM && defined CONSERVE_MASS )  )
+   InputPara.MinDens                 = MIN_DENS;
+#  endif
+#  if (  MODEL == HYDRO  ||  MODEL == MHD  )
+   InputPara.MinPres                 = MIN_PRES;
+#  endif
 
 // self-gravity
 #  ifdef GRAVITY
@@ -2148,12 +2146,6 @@ void GetCompound_SymConst( hid_t &H5_TypeID )
 #  ifdef N_SLOPE_PPM
    H5Tinsert( H5_TypeID, "N_Slope_PPM",          HOFFSET(SymConst_t,N_Slope_PPM         ), H5T_NATIVE_INT    );
 #  endif
-#  ifdef MIN_PRES_DENS
-   H5Tinsert( H5_TypeID, "Min_Pres_Dens",        HOFFSET(SymConst_t,Min_Pres_Dens       ), H5T_NATIVE_DOUBLE );
-#  endif
-#  ifdef MIN_PRES
-   H5Tinsert( H5_TypeID, "Min_Pres",             HOFFSET(SymConst_t,Min_Pres            ), H5T_NATIVE_DOUBLE );
-#  endif
 #  ifdef MAX_ERROR
    H5Tinsert( H5_TypeID, "MaxError",             HOFFSET(SymConst_t,MaxError            ), H5T_NATIVE_DOUBLE );
 #  endif
@@ -2341,6 +2333,12 @@ void GetCompound_InputPara( hid_t &H5_TypeID )
    H5Tinsert( H5_TypeID, "Opt__OverlapMPI",         HOFFSET(InputPara_t,Opt__OverlapMPI        ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "Opt__ResetFluid",         HOFFSET(InputPara_t,Opt__ResetFluid        ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "Opt__CorrUnphy",          HOFFSET(InputPara_t,Opt__CorrUnphy         ), H5T_NATIVE_INT     );
+#  if (  MODEL == HYDRO  ||  MODEL == MHD  ||  ( MODEL == ELBDM && defined CONSERVE_MASS )  )
+   H5Tinsert( H5_TypeID, "MinDens",                 HOFFSET(InputPara_t,MinDens                ), H5T_NATIVE_DOUBLE  );
+#  endif
+#  if (  MODEL == HYDRO  ||  MODEL == MHD  )
+   H5Tinsert( H5_TypeID, "MinPres",                 HOFFSET(InputPara_t,MinPres                ), H5T_NATIVE_DOUBLE  );
+#  endif
 
 // self-gravity
 #  ifdef GRAVITY

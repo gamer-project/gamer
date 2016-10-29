@@ -176,8 +176,8 @@ void CPU_HydroGravitySolver(       real Flu_Array_New[][NCOMP][PS1][PS1][PS1],
                                                            PxNew*AccNew[0] + PyNew*AccNew[1] + PzNew*AccNew[2] );
 
 //       ensure the positive pressure (restore to the original internal energy if it becomes negative)
-//       --> note that the resulting pressure may be positive but **smaller than MinPresTEMP**
-//       --> but we probably don't really care because MinPresTEMP is just used to make code stable
+//       --> note that the resulting pressure may be positive but **smaller than MIN_PRES**
+//       --> but we probably don't really care because MIN_PRES is just used to make code stable
          Ek = _Rho2*( SQR(PxNew) + SQR(PyNew) + SQR(PzNew) );
          if ( Flu_Array_New[P][ENGY][kk][jj][ii] - Ek <= (real)0.0 )    Flu_Array_New[P][ENGY][kk][jj][ii] = Eint + Ek;
 

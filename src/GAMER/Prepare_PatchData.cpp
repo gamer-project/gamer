@@ -779,7 +779,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
                   for (int v=0; v<NCOMP; v++)   Fluid[v] = amr->patch[FluSg][lv][PID]->fluid[v][k][j][i];
 
                   Array_Ptr[Idx1] = CPU_GetPressure( Fluid[DENS], Fluid[MOMX], Fluid[MOMY], Fluid[MOMZ], Fluid[ENGY],
-                                                     Gamma_m1, CheckMinPres_Yes, MinPresTEMP );
+                                                     Gamma_m1, CheckMinPres_Yes, MIN_PRES );
 
                   if ( FluIntTime ) // temporal interpolation
                   {
@@ -788,7 +788,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
                      Array_Ptr[Idx1] =   FluWeighting     *Array_Ptr[Idx1]
                                        + FluWeighting_IntT*CPU_GetPressure( Fluid[DENS], Fluid[MOMX], Fluid[MOMY],
                                                                             Fluid[MOMZ], Fluid[ENGY],
-                                                                            Gamma_m1, CheckMinPres_Yes, MinPresTEMP );
+                                                                            Gamma_m1, CheckMinPres_Yes, MIN_PRES );
                   }
 
                   Idx1 ++;
@@ -955,7 +955,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
                         for (int v=0; v<NCOMP; v++)   Fluid[v] = amr->patch[FluSg][lv][SibPID]->fluid[v][K2][J2][I2];
 
                         Array_Ptr[Idx1] = CPU_GetPressure( Fluid[DENS], Fluid[MOMX], Fluid[MOMY], Fluid[MOMZ], Fluid[ENGY],
-                                                           Gamma_m1, CheckMinPres_Yes, MinPresTEMP );
+                                                           Gamma_m1, CheckMinPres_Yes, MIN_PRES );
 
                         if ( FluIntTime ) // temporal interpolation
                         {
@@ -964,7 +964,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
                            Array_Ptr[Idx1] =   FluWeighting     *Array_Ptr[Idx1]
                                              + FluWeighting_IntT*CPU_GetPressure( Fluid[DENS], Fluid[MOMX], Fluid[MOMY],
                                                                                   Fluid[MOMZ], Fluid[ENGY],
-                                                                                  Gamma_m1, CheckMinPres_Yes, MinPresTEMP );
+                                                                                  Gamma_m1, CheckMinPres_Yes, MIN_PRES );
                            Idx1 ++;
                         }
                      }}}

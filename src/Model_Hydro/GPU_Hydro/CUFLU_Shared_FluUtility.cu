@@ -209,7 +209,7 @@ __device__ void CUFLU_Con2Pri_AllGrids( const real g_Fluid_In[][5][ FLU_NXT*FLU_
 //                   numerical errors
 //                   --> Usually happen in regions with high mach numbers
 //                   --> Currently it simply sets a minimum allowed value for pressure
-//                       --> Please set MinPresTEMP in the runtime parameter file "Input__Parameter"
+//                       --> Please set MIN_PRES in the runtime parameter file "Input__Parameter"
 //                2. We should also support a minimum **temperature** instead of **pressure**
 //                   --> NOT supported yet
 //
@@ -235,7 +235,7 @@ __device__ real CUFLU_CheckMinPres( const real InPres, const real MinPres )
 //                   numerical errors
 //                   --> Usually happen in regions with high mach numbers
 //                   --> Currently it simply sets a minimum allowed value for pressure
-//                       --> Please set MinPresTEMP in the runtime parameter file "Input__Parameter"
+//                       --> Please set MIN_PRES in the runtime parameter file "Input__Parameter"
 //                3. One must input conserved variables instead of primitive variables
 //
 // Parameter   :  ConVar   : Conserved variable to be corrected

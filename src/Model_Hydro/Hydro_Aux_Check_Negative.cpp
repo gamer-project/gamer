@@ -43,7 +43,7 @@ void Hydro_Aux_Check_Negative( const int lv, const int Mode, const char *comment
 
             Rho  = Fluid[DENS];
             Pres = CPU_GetPressure( Fluid[DENS], Fluid[MOMX], Fluid[MOMY], Fluid[MOMZ], Fluid[ENGY],
-                                    Gamma_m1, CheckMinPres_No, MinPresTEMP );
+                                    Gamma_m1, CheckMinPres_No, MIN_PRES );
          
             if ( Mode == 1  ||  Mode == 3 )
             {
