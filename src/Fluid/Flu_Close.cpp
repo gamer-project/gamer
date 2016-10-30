@@ -291,15 +291,20 @@ void CorrectFlux( const int lv, const real h_Flux_Array[][9][NFLUX][4*PATCH_SIZE
 bool Unphysical( const real Fluid[], const real Gamma_m1, const int CheckMinEngyOrPres )
 {
 
-   const bool CheckMinPres_No = false;
-   const int  CheckMinEngy    = 0;
+   const bool CorrPres_No  = false;
+   const int  CheckMinEngy = 0;
+   const int  CheckMinPres = 1;
 
-   if ( !isfinite(Fluid[DENS])  ||  !isfinite(Fluid[MOMX])  ||  !isfinite(Fluid[MOMY])  ||
-        !isfinite(Fluid[MOMZ])  ||  !isfinite(Fluid[ENGY])  ||  Fluid[DENS] < MIN_DENS  ||
-        (  ( CheckMinEngyOrPres == CheckMinEngy && Fluid[ENGY] < MIN_PRES ) ||
-           CPU_GetPressure(Fluid[DENS], Fluid[MOMX], Fluid[MOMY], Fluid[MOMZ], Fluid[ENGY], Gamma_m1, CheckMinPres_No, NULL_REAL)
-           < MIN_PRES )
-      )
+// note that MIN_DENS and MIN_PRES are declared as double
+// --> must convert them to **real** before the comparison
+// --> otherwise LHS in the comparison will be converted from real to double, which is inconsistent with the assignment
+//     (e.g., "Update[DENS] = FMAX( Update[DENS], (real)MIN_DENS" )
+   if (  !isfinite(Fluid[DENS])  ||  !isfinite(Fluid[MOMX])  ||  !isfinite(Fluid[MOMY])  ||
+         !isfinite(Fluid[MOMZ])  ||  !isfinite(Fluid[ENGY])  ||
+         Fluid[DENS] < (real)MIN_DENS  ||
+         ( CheckMinEngyOrPres == CheckMinEngy && Fluid[ENGY] < (real)MIN_PRES )  ||
+         ( CheckMinEngyOrPres == CheckMinPres && CPU_GetPressure(Fluid[DENS], Fluid[MOMX], Fluid[MOMY], Fluid[MOMZ], Fluid[ENGY],
+                                                                 Gamma_m1, CorrPres_No, NULL_REAL) < (real)MIN_PRES )  )
       return true;
    else
       return false;
@@ -440,14 +445,16 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
 
 
 //          ensure positive density and pressure
-            Update[DENS] = FMAX( Update[DENS], MIN_DENS );
+//          --> note that MIN_DENS is declared as double and must be converted to **real** before the comparison
+//              --> to be consistent with the check in Unphysical()
+            Update[DENS] = FMAX( Update[DENS], (real)MIN_DENS );
             Update[ENGY] = CPU_CheckMinPresInEngy( Update[DENS], Update[MOMX], Update[MOMY], Update[MOMZ], Update[ENGY],
                                                    Gamma_m1, _Gamma_m1, MIN_PRES );
 
 
 //          check if the newly updated values are still unphysical
 //          --> note that here we check **energy** instead of pressure since even after calling CPU_CheckMinPresInEngy()
-//              we can still have pressure < MIN_PRES due to round-off errors (when pressure << kinematic energy)
+//              we can still have pressure < MIN_PRES due to round-off errors (especially when pressure << kinematic energy)
 //              --> it will not crash the code since we always apply MIN_PRES when calculating pressure
             if ( Unphysical(Update, Gamma_m1, CheckMinEngy) )
             {

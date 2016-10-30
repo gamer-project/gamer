@@ -621,20 +621,16 @@ void Aux_Check_Parameter()
 
    if      ( MIN_DENS < 0.0 )
       Aux_Error( ERROR_INFO, "MIN_DENS = %14.7e < 0.0 !!\n", MIN_DENS );
-
-   else if ( MIN_DENS == 0.0 )
+   else if ( MIN_DENS == 0.0  &&  MPI_Rank == 0 )
       Aux_Message( stderr, "WARNING : MIN_DENS == 0.0 could be dangerous and is mainly for debugging only !!\n" );
-
-   else
+   else if ( MPI_Rank == 0 )
       Aux_Message( stderr, "WARNING : MIN_DENS (%13.7e) is on --> please ensure that this value is reasonable !!\n", MIN_DENS );
 
    if      ( MIN_PRES < 0.0 )
       Aux_Error( ERROR_INFO, "MIN_PRES = %14.7e < 0.0 !!\n", MIN_PRES );
-
-   if      ( MIN_PRES == 0.0 )
+   else if ( MIN_PRES == 0.0  &&  MPI_Rank == 0 )
       Aux_Message( stderr, "WARNING : MIN_PRES == 0.0 could be dangerous and is mainly for debugging only !!\n" );
-
-   else
+   else if ( MPI_Rank == 0 )
       Aux_Message( stderr, "WARNING : MIN_PRES (%13.7e) is on --> please ensure that this value is reasonable !!\n", MIN_PRES );
 
 
@@ -877,11 +873,9 @@ void Aux_Check_Parameter()
 
    if      ( MIN_DENS < 0.0 )
       Aux_Error( ERROR_INFO, "MIN_DENS = %14.7e < 0.0 !!\n", MIN_DENS );
-
-   else if ( MIN_DENS == 0.0 )
+   else if ( MIN_DENS == 0.0  &&  MPI_Rank == 0 )
       Aux_Message( stderr, "WARNING : MIN_DENS == 0.0 could be dangerous and is mainly for debugging only !!\n" );
-
-   else
+   else if ( MPI_Rank == 0 )
       Aux_Message( stderr, "WARNING : MIN_DENS (%13.7e) is on --> please ensure that this value is reasonable !!\n", MIN_DENS );
 
 

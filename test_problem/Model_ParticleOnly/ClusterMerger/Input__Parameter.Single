@@ -95,7 +95,7 @@
 1           OPT__FIXUP_RESTRICT     # perform the restrict operation to correct the coarse-grid data
 0           OPT__OVERLAP_MPI        # overlap MPI time with CPU/GPU computation (currently for LOAD_BALANCE only)
 0           OPT__RESET_FLUID        # reset fluid variables after each update --> edit "Flu_ResetByUser"
-0           OPT__CORR_UNPHY         # correct unphysical fluid solver results (for HYDRO only; for other models --> edit "Flu_Close")
+1           OPT__CORR_UNPHY         # correct unphysical fluid solver results (for HYDRO only; for other models --> edit "Flu_Close")
 0.0         MIN_DENS                # minimum density  ##HYDRO, MHD, and ELBDM ONLY##
 0.0         MIN_PRES                # minimum pressure ##HYDRO and MHD ONLY##
 
