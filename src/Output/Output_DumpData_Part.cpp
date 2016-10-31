@@ -230,7 +230,8 @@ void WriteFile( FILE *File, const int lv, const int PID, const int i, const int 
 
 // output pressure in HYDRO
 #  if   ( MODEL == HYDRO )
-   fprintf( File, " %13.6e", ( u[ENGY] - 0.5*( u[MOMX]*u[MOMX] + u[MOMY]*u[MOMY] + u[MOMZ]*u[MOMZ] )/u[DENS] )*(GAMMA-1.0) );
+   const bool CheckMinPres_Yes = true;
+   fprintf( File, " %13.6e", CPU_GetPressure(u[DENS], u[MOMX], u[MOMY], u[MOMZ], u[ENGY], GAMMA-1.0, CheckMinPres_Yes, MIN_PRES) );
 #  elif ( MODEL == MHD )
 #  warning : WAIT MHD !!!
 #  endif // MODEL

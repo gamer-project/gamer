@@ -9,8 +9,8 @@ void (*Init_Function_Ptr)( real fluid[], const double x, const double y, const d
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Init_Function_User 
-// Description :  Function to initialize the fluid field 
+// Function    :  Init_Function_User
+// Description :  Function to initialize the fluid field
 //
 // Note        :  Invoked by "Hydro_Init_StartOver_AssignData"
 //
@@ -24,8 +24,8 @@ void Init_Function_User( real fluid[], const double x, const double y, const dou
 {
 
    const double Gamma2  = 1.0/GAMMA/(GAMMA-1.0);
-   const double C1[3] = { 0.5*amr->BoxSize[0]+100.0, 
-                          0.5*amr->BoxSize[1]+200.0, 
+   const double C1[3] = { 0.5*amr->BoxSize[0]+100.0,
+                          0.5*amr->BoxSize[1]+200.0,
                           0.5*amr->BoxSize[2]+300.0 };
    const double C2[3] = { 20.0, 40.0, 10.0 };
 
@@ -34,7 +34,6 @@ void Init_Function_User( real fluid[], const double x, const double y, const dou
    const double Height2 = 400.0;
    const double Width1  = 640.0;
    const double Width2  = 512.0;
-
 
    fluid[DENS] = 1.0 + Height1*exp(  -( SQR(x-C1[0])+ SQR(y-C1[1]) + SQR(z-C1[2]) ) / SQR(Width1)  );
    fluid[DENS] +=      Height2*exp(  -( SQR(x-C2[0])+ SQR(y-C2[1]) + SQR(z-C2[2]) ) / SQR(Width2)  );
@@ -61,10 +60,12 @@ void Init_Function_User( real fluid[], const double x, const double y, const dou
 void Hydro_Init_StartOver_AssignData( const int lv )
 {
 
-   const int    NSub   = INIT_SUBSAMPLING_NCELL;
-   const double dh     = amr->dh[lv];
-   const double dh_sub = dh / NSub;
-   const double _NSub3 = 1.0/(NSub*NSub*NSub);
+   const int    NSub     = INIT_SUBSAMPLING_NCELL;
+   const double dh       = amr->dh[lv];
+   const double dh_sub   = dh / NSub;
+   const double _NSub3   = 1.0/(NSub*NSub*NSub);
+   const real   Gamma_m1 = GAMMA - (real)1.0;
+   const real  _Gamma_m1 = (real)1.0 / Gamma_m1;
 
    real   fluid[NCOMP], fluid_sub[NCOMP];
    double x, y, z, x0, y0, z0;
@@ -90,7 +91,14 @@ void Hydro_Init_StartOver_AssignData( const int lv )
 
          }}}
 
-         for (int v=0; v<NCOMP; v++)   amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[v][k][j][i] = fluid[v]*_NSub3;
+         for (int v=0; v<NCOMP; v++)   fluid[v] *= _NSub3;
+
+//       check minimum density and pressure
+         fluid[DENS] = FMAX( fluid[DENS], (real)MIN_DENS );
+         fluid[ENGY] = CPU_CheckMinPresInEngy( fluid[DENS], fluid[MOMX], fluid[MOMY], fluid[MOMZ], fluid[ENGY],
+                                               Gamma_m1, _Gamma_m1, MIN_PRES );
+
+         for (int v=0; v<NCOMP; v++)   amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[v][k][j][i] = fluid[v];
 
       }}}
    } // if ( NSub > 1 )
@@ -104,6 +112,11 @@ void Hydro_Init_StartOver_AssignData( const int lv )
       for (int i=0; i<PS1; i++)  {  x = amr->patch[0][lv][PID]->EdgeL[0] + (i+0.5)*dh;
 
          Init_Function_Ptr( fluid, x, y, z, Time[lv] );
+
+//       check minimum density and pressure
+         fluid[DENS] = FMAX( fluid[DENS], (real)MIN_DENS );
+         fluid[ENGY] = CPU_CheckMinPresInEngy( fluid[DENS], fluid[MOMX], fluid[MOMY], fluid[MOMZ], fluid[ENGY],
+                                               Gamma_m1, _Gamma_m1, MIN_PRES );
 
          for (int v=0; v<NCOMP; v++)   amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[v][k][j][i] = fluid[v];
 
