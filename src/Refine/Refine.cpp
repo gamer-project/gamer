@@ -425,15 +425,10 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
                Rho   = Flu_FData[DENS][k][j][i];
 
 //             be careful about the negative density introduced from the round-off errors
-               if ( Rho < (real)0.0 )
+               if ( Rho < (real)MIN_DENS )
                {
-                  if (  FABS( Rho ) < TINY_VALUE  )
-                  {
-                     Flu_FData[DENS][k][j][i] = (real)0.0;
-                     Rho                      = (real)0.0;
-                  }
-                  else
-                     Aux_Error( ERROR_INFO, "negative density (%14.7e) is obtained in %s !!\n", Rho, __FUNCTION__ );
+                  Flu_FData[DENS][k][j][i] = (real)MIN_DENS;
+                  Rho                      = (real)MIN_DENS;
                }
 
                Amp                      = SQRT( Rho );

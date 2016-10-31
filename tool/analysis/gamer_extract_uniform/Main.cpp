@@ -1712,13 +1712,8 @@ void PreparePatch( const int lv, const int PID, const int Buffer, real FData[], 
 //             be careful about the negative density introduced from the round-off errors
                if ( Rho < (real)0.0 )
                {
-                  if (  FABS( Rho ) < TINY_VALUE  )
-                  {
-                     FData_Dens[ID] = (real)0.0;
-                     Rho            = (real)0.0;
-                  }
-                  else
-                     Aux_Error( ERROR_INFO, "negative density (%14.7e) is obtained in %s !!\n", Rho, __FUNCTION__ );
+                  FData_Dens[ID] = (real)0.0;
+                  Rho            = (real)0.0;
                }
 
                Amp            = SQRT( Rho );
@@ -2364,13 +2359,8 @@ void Refine2TargetLevel()
 //                      be careful about the negative density introduced from the round-off errors
                         if ( Rho < (real)0.0 )
                         {
-                           if (  FABS( Rho ) < TINY_VALUE  )
-                           {
-                              FData_Dens[t] = (real)0.0;
-                              Rho           = (real)0.0;
-                           }
-                           else
-                              Aux_Error( ERROR_INFO, "negative density (%14.7e) is obtained in %s !!\n", Rho, __FUNCTION__ );
+                           FData_Dens[t] = (real)0.0;
+                           Rho           = (real)0.0;
                         }
 
                         Amp           = SQRT( Rho );

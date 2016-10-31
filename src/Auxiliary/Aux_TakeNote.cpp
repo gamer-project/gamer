@@ -446,7 +446,6 @@ void Aux_TakeNote()
       fprintf( Note, "#define GRA_BLOCK_SIZE_Z  %d\n",      GRA_BLOCK_SIZE_Z        );
 #     endif // #ifdef GRAVITY
 #     endif // #ifdef GPU
-      fprintf( Note, "#define TINY_VALUE        %13.7e\n",  TINY_VALUE              );
 #     ifdef PARTICLE
       fprintf( Note, "#define PAR_NVAR          %d\n",      PAR_NVAR                );
       fprintf( Note, "#define PAR_NPASSIVE      %d\n",      PAR_NPASSIVE            );

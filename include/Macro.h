@@ -485,14 +485,6 @@
 #endif
 
 
-// tiny constant for miscellaneous usages
-#ifdef FLOAT8
-#  define TINY_VALUE       1.e-13
-#else
-#  define TINY_VALUE       1.e-05
-#endif
-
-
 // NULL values
 #ifndef NULL
 #  define NULL             0

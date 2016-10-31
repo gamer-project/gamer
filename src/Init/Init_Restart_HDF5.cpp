@@ -1314,7 +1314,6 @@ void Check_SymConst( const char *FileName )
 #  ifdef LOAD_BALANCE
    LoadField( "SonOffsetLB",          &RS.SonOffsetLB,          SID, TID, NonFatal, &RT.SonOffsetLB,           1, NonFatal );
 #  endif
-   LoadField( "TinyValue",            &RS.TinyValue,            SID, TID, NonFatal, &RT.TinyValue,             1, NonFatal );
 
 #  ifdef GRAVITY
    LoadField( "Gra_NIn",              &RS.Gra_NIn,              SID, TID, NonFatal, &RT.Gra_NIn,               1, NonFatal );

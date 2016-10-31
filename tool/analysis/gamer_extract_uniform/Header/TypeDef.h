@@ -100,14 +100,6 @@ enum IntScheme_t { INT_DEFAULT=-1, INT_MINMOD3D=1, INT_MINMOD1D=2, INT_VANLEER=3
 #define MIN( a, b )     (  ( (a) < (b) ) ? (a) : (b)  )
 
 
-// tiny constant for miscellaneous usages
-#ifdef FLOAT8
-#  define TINY_VALUE       1.e-13
-#else
-#  define TINY_VALUE       1.e-05
-#endif
-
-
 // initial value for some variables (must be negative)
 #define WRONG              -9999999
 

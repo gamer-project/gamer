@@ -795,15 +795,10 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData[], const in
          Rho   = FData_Dens[t];
 
 //       be careful about the negative density introduced from the round-off errors
-         if ( Rho < (real)0.0 )
+         if ( Rho < (real)MIN_DENS )
          {
-            if (  FABS( Rho ) < TINY_VALUE  )
-            {
-               FData_Dens[t] = (real)0.0;
-               Rho           = (real)0.0;
-            }
-            else
-               Aux_Error( ERROR_INFO, "negative density (%14.7e) is obtained in %s !!\n", Rho, __FUNCTION__ );
+            FData_Dens[t] = (real)MIN_DENS;
+            Rho           = (real)MIN_DENS;
          }
 
          Amp           = SQRT( Rho );

@@ -48,14 +48,6 @@ typedef float  real;
 #endif
 
 
-// tiny constant for miscellaneous usages
-#ifdef FLOAT8
-#  define TINY_VALUE       1.e-13
-#else
-#  define TINY_VALUE       1.e-05
-#endif
-
-
 // patch size (number of cells of a single patch in the x/y/z directions)
 #define PATCH_SIZE         8
 #define PS1                PATCH_SIZE

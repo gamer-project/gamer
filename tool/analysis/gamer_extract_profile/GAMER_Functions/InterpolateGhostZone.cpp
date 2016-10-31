@@ -377,19 +377,9 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData[], const in
          Rho   = FData_Dens[t];
 
 //       be careful about the negative density introduced from the round-off errors
+//       --> also note that some data are not loaded in GAMER_ExtractProfile (these data are actually useless)
          if ( Rho < (real)0.0 )
          {
-//          this check may fail since some data are not loaded in GAMER_ExtractProfile (there data are actually useless)
-            /*
-            if (  FABS( Rho ) < TINY_VALUE  )
-            {
-               FData_Dens[t] = (real)0.0;
-               Rho           = (real)0.0;
-            }
-            else
-               Aux_Error( ERROR_INFO, "negative density (%14.7e) is obtained in %s !!\n", Rho, __FUNCTION__ );
-               */
-
             FData_Dens[t] = (real)0.0;
             Rho           = (real)0.0;
          }

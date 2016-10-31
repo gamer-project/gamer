@@ -1488,7 +1488,6 @@ void FillIn_SymConst( SymConst_t &SymConst )
 #  ifdef LOAD_BALANCE
    SymConst.SonOffsetLB          = SON_OFFSET_LB;
 #  endif
-   SymConst.TinyValue            = TINY_VALUE;
 
 
 // model-dependent variables
@@ -2092,7 +2091,6 @@ void GetCompound_SymConst( hid_t &H5_TypeID )
 #  ifdef LOAD_BALANCE
    H5Tinsert( H5_TypeID, "SonOffsetLB",          HOFFSET(SymConst_t,SonOffsetLB         ), H5T_NATIVE_INT    );
 #  endif
-   H5Tinsert( H5_TypeID, "TinyValue",            HOFFSET(SymConst_t,TinyValue           ), H5T_NATIVE_DOUBLE );
 
 #  ifdef GRAVITY
    H5Tinsert( H5_TypeID, "Gra_NIn",              HOFFSET(SymConst_t,Gra_NIn             ), H5T_NATIVE_INT    );

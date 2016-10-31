@@ -44,12 +44,12 @@ void Par_Init_ByFunction()
 // exmaple : randomly initialize
    /*
    const uint RSeed     = 2;                                         // random seed
-   const real MassMin   = TINY_VALUE;                                // minimum value of particle mass
+   const real MassMin   = 1.0e-2;                                    // minimum value of particle mass
    const real MassMax   = 1.0;                                       // maximum value of particle mass
    const real PosMin[3] = { 0.0, 0.0, 0.0 };                         // minimum value of particle position
-   const real PosMax[3] = { amr->BoxSize[0]*(1.0-TINY_VALUE),        // maximum value of particle position
-                            amr->BoxSize[1]*(1.0-TINY_VALUE),
-                            amr->BoxSize[2]*(1.0-TINY_VALUE) };
+   const real PosMax[3] = { amr->BoxSize[0]*(1.0-1.0e-5),            // maximum value of particle position
+                            amr->BoxSize[1]*(1.0-1.0e-5),
+                            amr->BoxSize[2]*(1.0-1.0e-5) };
    const real VelMin[3] = { -1.0, -1.0, -1.0 };                      // minimum value of particle velocity
    const real VelMax[3] = { +1.0, +1.0, +1.0 };                      // maximum value of particle velocity
 

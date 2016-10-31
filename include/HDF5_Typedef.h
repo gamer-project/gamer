@@ -160,8 +160,6 @@ struct SymConst_t
    int    SonOffsetLB;
 #  endif
 
-   double TinyValue;
-
 
 #  ifdef GRAVITY
    int    Gra_NIn;
