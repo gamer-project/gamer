@@ -511,7 +511,7 @@ void Solver( const Solver_t TSolver, const int lv, const double TimeNew, const d
 //                NPG         : Number of patch groups to be evaluated at a time
 //                PID0_List   : List recording the patch indicies with LocalID==0 to be udpated
 //                ArrayID     : Array index to load and store data ( 0 or 1 )
-//                dt          : Time interval to advance solution (for OPT__CORR_UNPHY in Flu_Close)
+//                dt          : Time interval to advance solution (for OPT__1ST_FLUX_CORR in Flu_Close())
 //-------------------------------------------------------------------------------------------------------
 void Closing_Step( const Solver_t TSolver, const int lv, const int SaveSg_Flu, const int SaveSg_Pot, const int NPG,
                    const int *PID0_List, const int ArrayID, const double dt )

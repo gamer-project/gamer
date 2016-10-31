@@ -785,13 +785,13 @@ void Load_Parameter_After_2000( FILE *File, const int FormatVersion, int &NLv_Re
    bool   opt__adaptive_dt, opt__dt_user, opt__flag_rho, opt__flag_rho_gradient, opt__flag_pres_gradient;
    bool   opt__flag_engy_density, opt__flag_user, opt__fixup_flux, opt__fixup_restrict, opt__overlap_mpi;
    bool   opt__gra_p5_gradient, opt__int_time, opt__output_test_error, opt__output_base, opt__output_pot;
-   bool   opt__output_baseps, opt__timing_balance, opt__int_phase, opt__corr_unphy, opt__unit;
+   bool   opt__output_baseps, opt__timing_balance, opt__int_phase, opt__1st_flux_corr, opt__unit;
    int    nx0_tot[3], mpi_nrank, mpi_nrank_x[3], omp_nthread, regrid_count, opt__output_par_dens;
    int    flag_buffer_size, max_level, opt__lr_limiter, opt__waf_limiter, flu_gpu_npgroup, gpu_nstream;
    int    sor_max_iter, sor_min_iter, mg_max_iter, mg_npre_smooth, mg_npost_smooth, pot_gpu_npgroup;
    int    opt__flu_int_scheme, opt__pot_int_scheme, opt__rho_int_scheme;
    int    opt__gra_int_scheme, opt__ref_flu_int_scheme, opt__ref_pot_int_scheme;
-   int    opt__output_total, opt__output_part, opt__output_mode, output_step, opt__corr_unphy_scheme;
+   int    opt__output_total, opt__output_part, opt__output_mode, output_step, opt__1st_flux_corr_scheme;
    long   end_step;
    double lb_wli_max, gamma, minmod_coeff, ep_coeff, elbdm_mass, elbdm_planck_const, newton_g, sor_omega;
    double mg_tolerated_error, output_part_x, output_part_y, output_part_z, molecular_weight;
@@ -866,8 +866,8 @@ void Load_Parameter_After_2000( FILE *File, const int FormatVersion, int &NLv_Re
    fread( &output_part_z,              sizeof(double),                  1,             File );
    fread( &opt__timing_balance,        sizeof(bool),                    1,             File );
    fread( &opt__output_baseps,         sizeof(bool),                    1,             File );
-   fread( &opt__corr_unphy,            sizeof(bool),                    1,             File );
-   fread( &opt__corr_unphy_scheme,     sizeof(int),                     1,             File );
+   fread( &opt__1st_flux_corr,         sizeof(bool),                    1,             File );
+   fread( &opt__1st_flux_corr_scheme,  sizeof(int),                     1,             File );
    fread( &opt__output_par_dens,       sizeof(int),                     1,             File );
    fread( &hubble0,                    sizeof(double),                  1,             File );
    fread( &opt__unit,                  sizeof(bool),                    1,             File );
@@ -1315,7 +1315,6 @@ void Load_Parameter_After_2000( FILE *File, const int FormatVersion, int &NLv_Re
       CompareVar( "GPU_NSTREAM",             gpu_nstream,                  GPU_NSTREAM,               NonFatal );
       CompareVar( "OPT__FIXUP_FLUX",         opt__fixup_flux,              OPT__FIXUP_FLUX,           NonFatal );
       CompareVar( "OPT__FIXUP_RESTRICT",     opt__fixup_restrict,          OPT__FIXUP_RESTRICT,       NonFatal );
-      CompareVar( "OPT__CORR_UNPHY",         opt__corr_unphy,              OPT__CORR_UNPHY,           NonFatal );
       CompareVar( "OPT__OVERLAP_MPI",        opt__overlap_mpi,             OPT__OVERLAP_MPI,          NonFatal );
       CompareVar( "OPT__INT_TIME",           opt__int_time,                OPT__INT_TIME,             NonFatal );
       CompareVar( "OPT__FLU_INT_SCHEME",     opt__flu_int_scheme,     (int)OPT__FLU_INT_SCHEME,       NonFatal );
@@ -1386,7 +1385,8 @@ void Load_Parameter_After_2000( FILE *File, const int FormatVersion, int &NLv_Re
       CompareVar( "EP_COEFF",                ep_coeff,                     EP_COEFF,                  NonFatal );
       CompareVar( "OPT__LR_LIMITER",         opt__lr_limiter,         (int)OPT__LR_LIMITER,           NonFatal );
       CompareVar( "OPT__WAF_LIMITER",        opt__waf_limiter,        (int)OPT__WAF_LIMITER,          NonFatal );
-      CompareVar( "OPT__CORR_UNPHY_SCHEME",  opt__corr_unphy_scheme,  (int)OPT__CORR_UNPHY_SCHEME,    NonFatal );
+      CompareVar( "OPT__1ST_FLUX_CORR",      opt__1st_flux_corr,           OPT__1ST_FLUX_CORR,        NonFatal );
+      CompareVar( "OPT__1ST_FLUX_CORR_SCHEME", opt__1st_flux_corr_scheme, (int)OPT__1ST_FLUX_CORR_SCHEME, NonFatal );
 
 #     elif ( MODEL == MHD )
 #     warning : WAIT MHD !!!

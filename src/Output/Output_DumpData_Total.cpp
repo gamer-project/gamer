@@ -17,7 +17,7 @@ Procedure for outputting new variables:
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Output_DumpData_Total (FormatVersion = 2111)
+// Function    :  Output_DumpData_Total (FormatVersion = 2112)
 // Description :  Output all simulation data in the binary form, which can be used as a restart file
 //
 // Note        :  1. This output format is deprecated and is mainly used for debugging only
@@ -165,7 +165,7 @@ void Output_DumpData_Total( const char *FileName )
 
 //    a. output the information of data format
 //    =================================================================================================
-      const long FormatVersion = 2111;
+      const long FormatVersion = 2112;
       const long CheckCode     = 123456789;
 
       fseek( File, HeaderOffset_Format, SEEK_SET );
@@ -576,7 +576,7 @@ void Output_DumpData_Total( const char *FileName )
 #     if ( MODEL == HYDRO )
       const int    opt__lr_limiter         = (int)OPT__LR_LIMITER;
       const int    opt__waf_limiter        = (int)OPT__WAF_LIMITER;
-      const int    opt__corr_unphy_scheme  = (int)OPT__CORR_UNPHY_SCHEME;
+      const int    opt__1st_flux_corr_scheme = (int)OPT__1ST_FLUX_CORR_SCHEME;
 #     else
 #     if ( MODEL == MHD )
 #     warning : WAIT MHD !!!
@@ -588,7 +588,8 @@ void Output_DumpData_Total( const char *FileName )
       const double EP_COEFF                = NULL_REAL;
       const int    opt__lr_limiter         = NULL_INT;
       const int    opt__waf_limiter        = NULL_INT;
-      const int    opt__corr_unphy_scheme  = NULL_INT;
+      const bool   OPT__1ST_FLUX_CORR      = NULL_BOOL;
+      const int    opt__1st_flux_corr_scheme = NULL_INT;
 #     endif
 
 #     if ( MODEL != ELBDM )
@@ -671,8 +672,8 @@ void Output_DumpData_Total( const char *FileName )
       fwrite( &OUTPUT_PART_Z,             sizeof(double),                  1,             File );
       fwrite( &OPT__TIMING_BALANCE,       sizeof(bool),                    1,             File );
       fwrite( &OPT__OUTPUT_BASEPS,        sizeof(bool),                    1,             File );
-      fwrite( &OPT__CORR_UNPHY,           sizeof(bool),                    1,             File );
-      fwrite( &opt__corr_unphy_scheme,    sizeof(int),                     1,             File );
+      fwrite( &OPT__1ST_FLUX_CORR,        sizeof(bool),                    1,             File );
+      fwrite( &opt__1st_flux_corr_scheme, sizeof(int),                     1,             File );
       fwrite( &opt__output_par_dens,      sizeof(int),                     1,             File );
       fwrite( &HUBBLE0,                   sizeof(double),                  1,             File );
       fwrite( &OPT__UNIT,                 sizeof(bool),                    1,             File );

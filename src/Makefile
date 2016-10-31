@@ -13,7 +13,7 @@ EXECUTABLE := Dizzy
 # (a) common options (applied to all models)
 # -------------------------------------------------------------------------------
 # model: HYDRO/MHD/ELBDM/PAR_ONLY (PAR_ONLY must work with PARTICLE)
-SIMU_OPTION += -DMODEL=ELBDM
+SIMU_OPTION += -DMODEL=HYDRO
 
 # self-gravity
 SIMU_OPTION += -DGRAVITY

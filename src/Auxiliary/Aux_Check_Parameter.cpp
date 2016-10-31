@@ -602,14 +602,14 @@ void Aux_Check_Parameter()
    if ( OPT__CK_NEGATIVE < 0  ||  OPT__CK_NEGATIVE > 3 )
       Aux_Error( ERROR_INFO, "unsupported parameter \"%s = %d\" !!\n", "OPT__CK_NEGATIVE", OPT__CK_NEGATIVE );
 
-   if ( OPT__CORR_UNPHY )
+   if ( OPT__1ST_FLUX_CORR )
    {
-      if ( OPT__CORR_UNPHY_SCHEME != RSOLVER_ROE  &&  OPT__CORR_UNPHY_SCHEME != RSOLVER_HLLC  &&
-           OPT__CORR_UNPHY_SCHEME != RSOLVER_HLLE )
-         Aux_Error( ERROR_INFO, "unsupported parameter \"%s = %d\" !!\n", "OPT__CORR_UNPHY_SCHEME", OPT__CORR_UNPHY_SCHEME );
+      if ( OPT__1ST_FLUX_CORR_SCHEME != RSOLVER_ROE  &&  OPT__1ST_FLUX_CORR_SCHEME != RSOLVER_HLLC  &&
+           OPT__1ST_FLUX_CORR_SCHEME != RSOLVER_HLLE )
+         Aux_Error( ERROR_INFO, "unsupported parameter \"%s = %d\" !!\n", "OPT__1ST_FLUX_CORR_SCHEME", OPT__1ST_FLUX_CORR_SCHEME );
 
 #     if ( FLU_SCHEME == RTVD  ||  FLU_SCHEME == WAF )
-         Aux_Error( ERROR_INFO, "RTVD and WAF fluid schemes do not support the option \"OPT__CORR_UNPHY\" !!\n" );
+         Aux_Error( ERROR_INFO, "RTVD and WAF fluid schemes do not support the option \"OPT__1ST_FLUX_CORR\" !!\n" );
 #     endif
    }
 

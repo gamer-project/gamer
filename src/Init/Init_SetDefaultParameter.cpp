@@ -489,17 +489,23 @@ void Init_SetDefaultParameter()
 #  endif
 
 
-// (17) Riemann solver for OPT__CORR_UNPHY
+// (17) Riemann solver for OPT__1ST_FLUX_CORR
 #  if ( MODEL == HYDRO  ||  MODEL == MHD )
-   if ( OPT__CORR_UNPHY  &&  OPT__CORR_UNPHY_SCHEME == RSOLVER_DEFAULT )
+   if ( OPT__1ST_FLUX_CORR  &&  OPT__1ST_FLUX_CORR_SCHEME == RSOLVER_DEFAULT )
    {
-      OPT__CORR_UNPHY_SCHEME = RSOLVER_ROE;
+      OPT__1ST_FLUX_CORR_SCHEME = RSOLVER_ROE;
 
       if ( MPI_Rank == 0 )  Aux_Message( stdout, "NOTE : parameter \"%s\" is set to the default value = %d\n",
-                                         "OPT__CORR_UNPHY_SCHEME", OPT__CORR_UNPHY_SCHEME );
+                                         "OPT__1ST_FLUX_CORR_SCHEME", OPT__1ST_FLUX_CORR_SCHEME );
    }
 
-   if ( !OPT__CORR_UNPHY )    OPT__CORR_UNPHY_SCHEME = RSOLVER_NONE;
+   else if ( !OPT__1ST_FLUX_CORR  &&  OPT__1ST_FLUX_CORR_SCHEME != RSOLVER_NONE )
+   {
+      OPT__1ST_FLUX_CORR_SCHEME = RSOLVER_NONE;
+
+      if ( MPI_Rank == 0 )  Aux_Message( stdout, "NOTE : parameter \"%s\" is set to %d since OPT__1ST_FLUX_CORR is off\n",
+                                         "OPT__1ST_FLUX_CORR_SCHEME", OPT__1ST_FLUX_CORR_SCHEME );
+   }
 #  endif
 
 
@@ -953,20 +959,7 @@ void Init_SetDefaultParameter()
 #  endif // #ifdef PARTICLE
 
 
-// (18) OPT__CORR_UNPHY is supported only for HYDRO and MHD
-#  if ( MODEL != HYDRO  &&  MODEL != MHD )
-   if ( OPT__CORR_UNPHY )
-   {
-      OPT__CORR_UNPHY = false;
-
-      if ( MPI_Rank == 0 )
-         Aux_Message( stderr, "WARNING : option \"%s\" is not supported for this model and hence is disabled !!\n",
-                      "OPT__CORR_UNPHY" );
-   }
-#  endif
-
-
-// (19) set particle initialization mode to PAR_INIT_BY_RESTART for restart
+// (18) set particle initialization mode to PAR_INIT_BY_RESTART for restart
 #  ifdef PARTICLE
    if ( OPT__INIT == INIT_RESTART  &&  amr->Par->Init != PAR_INIT_BY_RESTART )
    {

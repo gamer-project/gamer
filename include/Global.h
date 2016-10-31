@@ -19,7 +19,7 @@ extern AMR_t     *amr;                                // AMR tree structure
 extern double     Time[NLEVEL];                       // "present"  physical time at each level
 extern double     Time_Prev[NLEVEL];                  // "previous" physical time at each level
 extern long       AdvanceCounter[NLEVEL];             // number of sub-steps that each level has been evolved
-extern long       NCorrUnphy[NLEVEL];                 // number of corrections to unphysical cells (for OPT__CORR_UNPHY)
+extern long       NCorrUnphy[NLEVEL];                 // number of cells corrected by either OPT__1ST_FLUX_CORR or MIN_DENS/PRES
 extern long       Step;                               // number of main steps
 extern double     dTime_Base;                         // time interval to update physical time at the base level
 
@@ -58,7 +58,7 @@ extern bool       OPT__INT_TIME, OPT__OUTPUT_TEST_ERROR, OPT__OUTPUT_BASE, OPT__
 extern bool       OPT__OUTPUT_BASEPS, OPT__CK_REFINE, OPT__CK_PROPER_NESTING, OPT__CK_FINITE, OPT__RECORD_PERFORMANCE;
 extern bool       OPT__CK_RESTRICT, OPT__CK_PATCH_ALLOCATE, OPT__FIXUP_FLUX, OPT__CK_FLUX_ALLOCATE;
 extern bool       OPT__UM_START_DOWNGRADE, OPT__UM_START_REFINE, OPT__UM_FACTOR_5OVER3, OPT__TIMING_MPI;
-extern bool       OPT__CK_CONSERVATION, OPT__RESET_FLUID, OPT__RECORD_USER, OPT__CORR_UNPHY;
+extern bool       OPT__CK_CONSERVATION, OPT__RESET_FLUID, OPT__RECORD_USER;
 
 extern OptInit_t         OPT__INIT;
 extern OptRestartH_t     OPT__RESTART_HEADER;
@@ -75,26 +75,26 @@ extern OptLohnerForm_t   OPT__FLAG_LOHNER_FORM;
 // ============================================================================================================
 // (2-1) fluid solver in different models
 #if   ( MODEL == HYDRO )
-extern double     FlagTable_PresGradient[NLEVEL-1];   // refinement criterion of pressure gradient
-extern double     GAMMA, MINMOD_COEFF, EP_COEFF, MOLECULAR_WEIGHT;
+extern double        FlagTable_PresGradient[NLEVEL-1];   // refinement criterion of pressure gradient
+extern double        GAMMA, MINMOD_COEFF, EP_COEFF, MOLECULAR_WEIGHT;
 extern LR_Limiter_t  OPT__LR_LIMITER;
 extern WAF_Limiter_t OPT__WAF_LIMITER;
-extern OptRSolver_t  OPT__CORR_UNPHY_SCHEME;
-extern bool       OPT__FLAG_PRES_GRADIENT, OPT__FLAG_LOHNER_ENGY, OPT__FLAG_LOHNER_PRES;
-extern int        OPT__CK_NEGATIVE;
-extern double     MIN_DENS, MIN_PRES;
+extern OptRSolver_t  OPT__1ST_FLUX_CORR_SCHEME;
+extern bool          OPT__FLAG_PRES_GRADIENT, OPT__FLAG_LOHNER_ENGY, OPT__FLAG_LOHNER_PRES, OPT__1ST_FLUX_CORR;
+extern int           OPT__CK_NEGATIVE;
+extern double        MIN_DENS, MIN_PRES;
 
 #elif ( MODEL == MHD )
-extern double     MIN_DENS, MIN_PRES;
+extern double        MIN_DENS, MIN_PRES;
 #warning WAIT MHD !!!
 
 #elif ( MODEL == ELBDM )
-extern double     DT__PHASE, FlagTable_EngyDensity[NLEVEL-1][2];
-extern bool       OPT__FLAG_ENGY_DENSITY, OPT__INT_PHASE, ELBDM_TAYLOR3_AUTO;
-extern double     ELBDM_TAYLOR3_COEFF, ELBDM_MASS, ELBDM_PLANCK_CONST, ELBDM_ETA, MIN_DENS;
-extern real       MinDtInfo_Phase[NLEVEL];            // maximum time derivative of phase at each level
+extern double        DT__PHASE, FlagTable_EngyDensity[NLEVEL-1][2];
+extern bool          OPT__FLAG_ENGY_DENSITY, OPT__INT_PHASE, ELBDM_TAYLOR3_AUTO;
+extern double        ELBDM_TAYLOR3_COEFF, ELBDM_MASS, ELBDM_PLANCK_CONST, ELBDM_ETA, MIN_DENS;
+extern real          MinDtInfo_Phase[NLEVEL];            // maximum time derivative of phase at each level
 #ifdef QUARTIC_SELF_INTERACTION
-extern double     ELBDM_LAMBDA;
+extern double        ELBDM_LAMBDA;
 #endif
 
 #else

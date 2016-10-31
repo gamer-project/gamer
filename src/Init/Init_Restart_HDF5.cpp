@@ -1559,7 +1559,8 @@ void Check_InputPara( const char *FileName )
    LoadField( "EP_Coeff",                &RS.EP_Coeff,                SID, TID, NonFatal, &RT.EP_Coeff,                 1, NonFatal );
    LoadField( "Opt__LR_Limiter",         &RS.Opt__LR_Limiter,         SID, TID, NonFatal, &RT.Opt__LR_Limiter,          1, NonFatal );
    LoadField( "Opt__WAF_Limiter",        &RS.Opt__WAF_Limiter,        SID, TID, NonFatal, &RT.Opt__WAF_Limiter,         1, NonFatal );
-   LoadField( "Opt__CorrUnphyScheme",    &RS.Opt__CorrUnphyScheme,    SID, TID, NonFatal, &RT.Opt__CorrUnphyScheme,     1, NonFatal );
+   LoadField( "Opt__1stFluxCorr",        &RS.Opt__1stFluxCorr,        SID, TID, NonFatal, &RT.Opt__1stFluxCorr,         1, NonFatal );
+   LoadField( "Opt__1stFluxCorrScheme",  &RS.Opt__1stFluxCorrScheme,  SID, TID, NonFatal, &RT.Opt__1stFluxCorrScheme,   1, NonFatal );
 #  endif
 
 // ELBDM solvers
@@ -1580,7 +1581,6 @@ void Check_InputPara( const char *FileName )
    LoadField( "Opt__FixUp_Restrict",     &RS.Opt__FixUp_Restrict,     SID, TID, NonFatal, &RT.Opt__FixUp_Restrict,      1, NonFatal );
    LoadField( "Opt__OverlapMPI",         &RS.Opt__OverlapMPI,         SID, TID, NonFatal, &RT.Opt__OverlapMPI,          1, NonFatal );
    LoadField( "Opt__ResetFluid",         &RS.Opt__ResetFluid,         SID, TID, NonFatal, &RT.Opt__ResetFluid,          1, NonFatal );
-   LoadField( "Opt__CorrUnphy",          &RS.Opt__CorrUnphy,          SID, TID, NonFatal, &RT.Opt__CorrUnphy,           1, NonFatal );
 #  if ( MODEL == HYDRO  ||  MODEL == MHD  ||  MODEL == ELBDM )
    LoadField( "MinDens",                 &RS.MinDens,                 SID, TID, NonFatal, &RT.MinDens,                  1, NonFatal );
 #  endif

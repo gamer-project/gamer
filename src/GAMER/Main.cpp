@@ -54,7 +54,7 @@ bool              OPT__INT_TIME, OPT__OUTPUT_TEST_ERROR, OPT__OUTPUT_BASE, OPT__
 bool              OPT__OUTPUT_BASEPS, OPT__CK_REFINE, OPT__CK_PROPER_NESTING, OPT__CK_FINITE, OPT__RECORD_PERFORMANCE;
 bool              OPT__CK_RESTRICT, OPT__CK_PATCH_ALLOCATE, OPT__FIXUP_FLUX, OPT__CK_FLUX_ALLOCATE;
 bool              OPT__UM_START_DOWNGRADE, OPT__UM_START_REFINE, OPT__UM_FACTOR_5OVER3, OPT__TIMING_MPI;
-bool              OPT__CK_CONSERVATION, OPT__RESET_FLUID, OPT__RECORD_USER, OPT__CORR_UNPHY;
+bool              OPT__CK_CONSERVATION, OPT__RESET_FLUID, OPT__RECORD_USER;
 OptInit_t         OPT__INIT;
 OptRestartH_t     OPT__RESTART_HEADER;
 OptOutputFormat_t OPT__OUTPUT_TOTAL;
@@ -72,8 +72,8 @@ double         FlagTable_PresGradient[NLEVEL-1];
 double         GAMMA, MINMOD_COEFF, EP_COEFF, MOLECULAR_WEIGHT;
 LR_Limiter_t   OPT__LR_LIMITER;
 WAF_Limiter_t  OPT__WAF_LIMITER;
-OptRSolver_t   OPT__CORR_UNPHY_SCHEME;
-bool           OPT__FLAG_PRES_GRADIENT, OPT__FLAG_LOHNER_ENGY, OPT__FLAG_LOHNER_PRES;
+OptRSolver_t   OPT__1ST_FLUX_CORR_SCHEME;
+bool           OPT__FLAG_PRES_GRADIENT, OPT__FLAG_LOHNER_ENGY, OPT__FLAG_LOHNER_PRES, OPT__1ST_FLUX_CORR;
 int            OPT__CK_NEGATIVE;
 double         MIN_DENS, MIN_PRES;
 
@@ -470,7 +470,6 @@ int main( int argc, char *argv[] )
       if ( OPT__RECORD_USER     )
       TIMING_FUNC(   Aux_RecordUser(),           Timer_Main[4],   false   );
 
-      if ( OPT__CORR_UNPHY )
       TIMING_FUNC(   Aux_RecordCorrUnphy(),      Timer_Main[4],   false   );
 
 #     ifdef PARTICLE

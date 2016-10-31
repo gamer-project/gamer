@@ -74,7 +74,7 @@ Procedure for outputting new variables:
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2212)
+// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2213)
 // Description :  Output all simulation data in the HDF5 format, which can be used as a restart file
 //                or loaded by YT
 //
@@ -1217,7 +1217,7 @@ void FillIn_KeyInfo( KeyInfo_t &KeyInfo )
 
    const time_t CalTime  = time( NULL );   // calendar time
 
-   KeyInfo.FormatVersion = 2212;
+   KeyInfo.FormatVersion = 2213;
    KeyInfo.Model         = MODEL;
    KeyInfo.NLevel        = NLEVEL;
    KeyInfo.PatchSize     = PATCH_SIZE;
@@ -1751,7 +1751,8 @@ void FillIn_InputPara( InputPara_t &InputPara )
    InputPara.EP_Coeff                = EP_COEFF;
    InputPara.Opt__LR_Limiter         = OPT__LR_LIMITER;
    InputPara.Opt__WAF_Limiter        = OPT__WAF_LIMITER;
-   InputPara.Opt__CorrUnphyScheme    = OPT__CORR_UNPHY_SCHEME;
+   InputPara.Opt__1stFluxCorr        = OPT__1ST_FLUX_CORR;
+   InputPara.Opt__1stFluxCorrScheme  = OPT__1ST_FLUX_CORR_SCHEME;
 #  endif
 
 // ELBDM solvers
@@ -1772,7 +1773,6 @@ void FillIn_InputPara( InputPara_t &InputPara )
    InputPara.Opt__FixUp_Restrict     = OPT__FIXUP_RESTRICT;
    InputPara.Opt__OverlapMPI         = OPT__OVERLAP_MPI;
    InputPara.Opt__ResetFluid         = OPT__RESET_FLUID;
-   InputPara.Opt__CorrUnphy          = OPT__CORR_UNPHY;
 #  if ( MODEL == HYDRO  ||  MODEL == MHD  ||  MODEL == ELBDM )
    InputPara.MinDens                 = MIN_DENS;
 #  endif
@@ -2311,7 +2311,8 @@ void GetCompound_InputPara( hid_t &H5_TypeID )
    H5Tinsert( H5_TypeID, "EP_Coeff",                HOFFSET(InputPara_t,EP_Coeff               ), H5T_NATIVE_DOUBLE  );
    H5Tinsert( H5_TypeID, "Opt__LR_Limiter",         HOFFSET(InputPara_t,Opt__LR_Limiter        ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "Opt__WAF_Limiter",        HOFFSET(InputPara_t,Opt__WAF_Limiter       ), H5T_NATIVE_INT     );
-   H5Tinsert( H5_TypeID, "Opt__CorrUnphyScheme",    HOFFSET(InputPara_t,Opt__CorrUnphyScheme   ), H5T_NATIVE_INT     );
+   H5Tinsert( H5_TypeID, "Opt__1stFluxCorr",        HOFFSET(InputPara_t,Opt__1stFluxCorr       ), H5T_NATIVE_INT     );
+   H5Tinsert( H5_TypeID, "Opt__1stFluxCorrScheme",  HOFFSET(InputPara_t,Opt__1stFluxCorrScheme ), H5T_NATIVE_INT     );
 #  endif
 
 // ELBDM solvers
@@ -2332,7 +2333,6 @@ void GetCompound_InputPara( hid_t &H5_TypeID )
    H5Tinsert( H5_TypeID, "Opt__FixUp_Restrict",     HOFFSET(InputPara_t,Opt__FixUp_Restrict    ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "Opt__OverlapMPI",         HOFFSET(InputPara_t,Opt__OverlapMPI        ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "Opt__ResetFluid",         HOFFSET(InputPara_t,Opt__ResetFluid        ), H5T_NATIVE_INT     );
-   H5Tinsert( H5_TypeID, "Opt__CorrUnphy",          HOFFSET(InputPara_t,Opt__CorrUnphy         ), H5T_NATIVE_INT     );
 #  if ( MODEL == HYDRO  ||  MODEL == MHD  ||  MODEL == ELBDM )
    H5Tinsert( H5_TypeID, "MinDens",                 HOFFSET(InputPara_t,MinDens                ), H5T_NATIVE_DOUBLE  );
 #  endif

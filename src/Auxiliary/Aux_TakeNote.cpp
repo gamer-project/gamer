@@ -679,11 +679,12 @@ void Aux_TakeNote()
                                                             ( OPT__WAF_LIMITER == WAF_MINBEE       ) ? "WAF_MINBEE"  :
                                                             ( OPT__WAF_LIMITER == WAF_LIMITER_NONE ) ? "NONE"    :
                                                                                                        "UNKNOWN" );
-      fprintf( Note, "OPT__CORR_UNPHY_SCHEME    %s\n",      ( OPT__CORR_UNPHY_SCHEME == RSOLVER_ROE  ) ? "RSOLVER_ROE":
-                                                            ( OPT__CORR_UNPHY_SCHEME == RSOLVER_HLLC ) ? "RSOLVER_HLLC" :
-                                                            ( OPT__CORR_UNPHY_SCHEME == RSOLVER_HLLE ) ? "RSOLVER_HLLE" :
-                                                            ( OPT__CORR_UNPHY_SCHEME == RSOLVER_NONE ) ? "NONE"    :
-                                                                                                         "UNKNOWN" );
+      fprintf( Note, "OPT__1ST_FLUX_CORR        %d\n",      OPT__1ST_FLUX_CORR      );
+      fprintf( Note, "OPT__1ST_FLUX_CORR_SCHEME %s\n",      ( OPT__1ST_FLUX_CORR_SCHEME == RSOLVER_ROE  ) ? "RSOLVER_ROE"  :
+                                                            ( OPT__1ST_FLUX_CORR_SCHEME == RSOLVER_HLLC ) ? "RSOLVER_HLLC" :
+                                                            ( OPT__1ST_FLUX_CORR_SCHEME == RSOLVER_HLLE ) ? "RSOLVER_HLLE" :
+                                                            ( OPT__1ST_FLUX_CORR_SCHEME == RSOLVER_NONE ) ? "NONE"         :
+                                                                                                            "UNKNOWN" );
 #     elif ( MODEL == MHD )
 #     warning : WAIT MHD !!!
 
@@ -707,14 +708,14 @@ void Aux_TakeNote()
 #     endif
       }
       else
-      fprintf( Note, "ELBDM_MASS                %13.7e\n",     ELBDM_MASS             );
-      fprintf( Note, "ELBDM_PLANCK_CONST        %13.7e\n",     ELBDM_PLANCK_CONST     );
-      fprintf( Note, "ELBDM_ETA                 %13.7e\n",     ELBDM_ETA              );
+      fprintf( Note, "ELBDM_MASS                %13.7e\n",     ELBDM_MASS           );
+      fprintf( Note, "ELBDM_PLANCK_CONST        %13.7e\n",     ELBDM_PLANCK_CONST   );
+      fprintf( Note, "ELBDM_ETA                 %13.7e\n",     ELBDM_ETA            );
 #     ifdef QUARTIC_SELF_INTERACTION
-      fprintf( Note, "ELBDM_LAMBDA              %13.7e\n",     ELBDM_LAMBDA           );
+      fprintf( Note, "ELBDM_LAMBDA              %13.7e\n",     ELBDM_LAMBDA         );
 #     endif
-      fprintf( Note, "ELBDM_TAYLOR3_COEFF       %13.7e\n",     ELBDM_TAYLOR3_COEFF    );
-      fprintf( Note, "ELBDM_TAYLOR3_AUTO        %d\n",         ELBDM_TAYLOR3_AUTO     );
+      fprintf( Note, "ELBDM_TAYLOR3_COEFF       %13.7e\n",     ELBDM_TAYLOR3_COEFF  );
+      fprintf( Note, "ELBDM_TAYLOR3_AUTO        %d\n",         ELBDM_TAYLOR3_AUTO   );
 
 #     else
 #     error : ERROR : unsupported MODEL !!
@@ -732,7 +733,6 @@ void Aux_TakeNote()
       fprintf( Note, "OPT__FIXUP_RESTRICT       %d\n",      OPT__FIXUP_RESTRICT     );
       fprintf( Note, "OPT__OVERLAP_MPI          %d\n",      OPT__OVERLAP_MPI        );
       fprintf( Note, "OPT__RESET_FLUID          %d\n",      OPT__RESET_FLUID        );
-      fprintf( Note, "OPT__CORR_UNPHY           %d\n",      OPT__CORR_UNPHY         );
 #     if ( MODEL == HYDRO  ||  MODEL == MHD  ||  MODEL == ELBDM )
       fprintf( Note, "MIN_DENS                  %13.7e\n",  MIN_DENS                );
 #     endif

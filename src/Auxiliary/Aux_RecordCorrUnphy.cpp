@@ -6,10 +6,11 @@
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Aux_RecordCorrUnphy
-// Description :  Record the number of cells corrected by the option "OPT__CORR_UNPHY"
+// Description :  Record the number of cells with unphysical results and are corrected by Flu_Close()->CorrectUnphysical()
 //
-// Note        :  1. The number of corrected cells is recorded in NCorrUnphy in the file "Flu_Close.cpp"
-//                2. The total number of cell updates recorded here for individual time-step integration is
+// Note        :  1. These cells are corrected by either "OPT__1ST_FLUX_CORR" or "MIN_DENS/PRES"
+//                2. The number of corrected cells is recorded in NCorrUnphy in the file "Flu_Close.cpp"
+//                3. The total number of cell updates recorded here for individual time-step integration is
 //                    only approximate since it can change during one global time-step
 //-------------------------------------------------------------------------------------------------------
 void Aux_RecordCorrUnphy()

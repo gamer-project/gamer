@@ -368,7 +368,8 @@ struct InputPara_t
    double EP_Coeff;
    int    Opt__LR_Limiter;
    int    Opt__WAF_Limiter;
-   int    Opt__CorrUnphyScheme;
+   int    Opt__1stFluxCorr;
+   int    Opt__1stFluxCorrScheme;
 #  endif
 
 // ELBDM solvers
@@ -389,7 +390,6 @@ struct InputPara_t
    int    Opt__FixUp_Restrict;
    int    Opt__OverlapMPI;
    int    Opt__ResetFluid;
-   int    Opt__CorrUnphy;
 #  if ( MODEL == HYDRO  ||  MODEL == MHD  ||  MODEL == ELBDM )
    double MinDens;
 #  endif

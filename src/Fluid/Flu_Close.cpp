@@ -326,8 +326,8 @@ bool Unphysical( const real Fluid[], const real Gamma_m1, const int CheckMinEngy
 //                3. Procedure:
 //                   if ( found_unphysical )
 //                   {
-//                      if ( OPT__CORR_UNPHY ) try to correct unphysical variables using 1st-order fluxes
-//                      else                   do nothing
+//                      if ( OPT__1ST_FLUX_CORR ) try to correct unphysical variables using 1st-order fluxes
+//                      else                      do nothing
 //
 //                      apply minimum density and pressure
 //
@@ -379,7 +379,7 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
          if ( Unphysical(Out, Gamma_m1, CheckMinPres) )
          {
 //          try to correct unphysical results using 1st-order fluxes (which should be more diffusive)
-            if ( OPT__CORR_UNPHY )
+            if ( OPT__1ST_FLUX_CORR )
             {
                idx_in = ( (k_out+FLU_GHOST_SIZE)*FLU_NXT + (j_out+FLU_GHOST_SIZE) )*FLU_NXT + (i_out+FLU_GHOST_SIZE);
 
@@ -399,7 +399,7 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
 
 //             invoke Riemann solver to calculate the fluxes
 //             (note that the recalculated flux does NOT include gravity even for UNSPLIT_GRAVITY --> reduce to 1st-order accuracy)
-               switch ( OPT__CORR_UNPHY_SCHEME )
+               switch ( OPT__1ST_FLUX_CORR_SCHEME )
                {
                   case RSOLVER_ROE:
                      for (int d=0; d<3; d++)
@@ -426,7 +426,7 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
                      break;
 
                   default:
-                     Aux_Error( ERROR_INFO, "unnsupported Riemann solver (%d) !!\n", OPT__CORR_UNPHY_SCHEME );
+                     Aux_Error( ERROR_INFO, "unnsupported Riemann solver (%d) !!\n", OPT__1ST_FLUX_CORR_SCHEME );
                }
 
 //             recalculate the first-order solution for a full time-step
@@ -435,13 +435,13 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
 
                for (int v=0; v<NCOMP; v++)
                   Update[v] = h_Flu_Array_F_In[TID][v][idx_in] - dt_dh*( dF[0][v] + dF[1][v] + dF[2][v] );
-            } // if ( OPT__CORR_UNPHY )
+            } // if ( OPT__1ST_FLUX_CORR )
 
             else
             {
-//             if OPT__CORR_UNPHY is off, just copy data to Update for checking negative density and pressure in the next step
+//             if OPT__1ST_FLUX_CORR is off, just copy data to Update for checking negative density and pressure in the next step
                for (int v=0; v<NCOMP; v++)   Update[v] = Out[v];
-            } // if ( OPT__CORR_UNPHY ) ... else ...
+            } // if ( OPT__1ST_FLUX_CORR ) ... else ...
 
 
 //          ensure positive density and pressure
