@@ -670,6 +670,9 @@ void Aux_Check_Parameter()
       Aux_Message( stderr, "WARNING : option %s is useless since %s is off !!\n",
                    OPT__CK_FLUX_ALLOCATE, OPT__FIXUP_FLUX );
 
+   if ( OPT__INIT == INIT_UM )
+      Aux_Message( stderr, "WARNING : currently we don't check MIN_DENS/PRES for the initial data loaded from UM_START !!\n" );
+
    } // if ( MPI_Rank == 0 )
 
 
@@ -944,6 +947,10 @@ void Aux_Check_Parameter()
    if ( OPT__FIXUP_FLUX )
       Aux_Message( stderr, "WARNING : option %s is useless in ELBDM if CONSERVE_MASS is off !!\n", OPT__FIXUP_FLUX );
 #  endif
+
+   if ( OPT__INIT == INIT_UM )
+      Aux_Message( stderr, "WARNING : currently we don't check MIN_DENS for the initial data loaded from UM_START !!\n" );
+
    } // if ( MPI_Rank == 0 )
 
 #  else

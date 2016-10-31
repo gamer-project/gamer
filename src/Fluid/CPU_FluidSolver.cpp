@@ -59,7 +59,7 @@ void CPU_ELBDMSolver( real Flu_Array_In [][FLU_NIN ][ FLU_NXT*FLU_NXT*FLU_NXT ],
                       real Flu_Array_Out[][FLU_NOUT][ PS2*PS2*PS2 ],
                       real Flux_Array[][9][NFLUX][ PS2*PS2 ],
                       const int NPatchGroup, const real dt, const real dh, const real Eta, const bool StoreFlux,
-                      const real Taylor3_Coeff, const bool XYZ );
+                      const real Taylor3_Coeff, const bool XYZ, const real MinDens );
 
 #else
 #error : ERROR : unsupported MODEL !!
@@ -190,7 +190,7 @@ void CPU_FluidSolver( real h_Flu_Array_In [][FLU_NIN ][ FLU_NXT*FLU_NXT*FLU_NXT 
       if ( ELBDM_Taylor3_Auto )  ELBDM_Taylor3_Coeff = ELBDM_SetTaylor3Coeff( dt, dh, ELBDM_Eta );
 
       CPU_ELBDMSolver( h_Flu_Array_In, h_Flu_Array_Out, h_Flux_Array, NPatchGroup, dt, dh, ELBDM_Eta, StoreFlux,
-                       ELBDM_Taylor3_Coeff, XYZ );
+                       ELBDM_Taylor3_Coeff, XYZ, MinDens );
 
 #  else
 #     error : ERROR : unsupported MODEL !!

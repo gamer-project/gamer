@@ -15,7 +15,7 @@
 //                   by specifying the sound speed parameter "Cs".
 //                3. Data format in the UM_START file : [k][j][i][v]
 //
-// Parameter   :  lv       : Targeted refinement level to assign data 
+// Parameter   :  lv       : Targeted refinement level to assign data
 //                UM_Data  : Input uniform-mesh array
 //                NVar     : Number of variables stored in UM_Data
 //-------------------------------------------------------------------------------------------------------
@@ -28,7 +28,7 @@ void Hydro_Init_UM_AssignData( const int lv, real *UM_Data, const int NVar )
 
 
 #  if ( defined COMOVING  &&  defined GRAVITY )
-   const real  a_z1000    = 1.0/1001.0; 
+   const real  a_z1000    = 1.0/1001.0;
    const real  T_z1000    = 3000.0;
    const real  T          = T_z1000*pow( a_z1000/A_INIT, 2.0 );
    const real  Boltzmann  = 1.381e-29;   // (kg*km*km/s/s/K)

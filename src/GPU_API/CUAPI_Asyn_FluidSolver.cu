@@ -79,7 +79,7 @@ __global__ void CUFLU_ELBDMSolver( real g_Fluid_In [][FLU_NIN ][ FLU_NXT*FLU_NXT
                                    real g_Fluid_Out[][FLU_NOUT][ PS2*PS2*PS2 ],
                                    real g_Flux     [][9][NFLUX][ PS2*PS2 ],
                                    const real dt, const real _dh, const real Eta, const bool StoreFlux,
-                                   const real Taylor3_Coeff, const bool XYZ );
+                                   const real Taylor3_Coeff, const bool XYZ, const real MinDens );
 
 #else
 #error : ERROR : unsupported MODEL !!
@@ -418,7 +418,7 @@ void CUAPI_Asyn_FluidSolver( real h_Flu_Array_In [][FLU_NIN ][ FLU_NXT*FLU_NXT*F
                                ( d_Flu_Array_F_In  + UsedPatch[s],
                                  d_Flu_Array_F_Out + UsedPatch[s],
                                  d_Flux_Array      + UsedPatch[s],
-                                 dt, _dh, ELBDM_Eta, StoreFlux, ELBDM_Taylor3_Coeff, XYZ );
+                                 dt, _dh, ELBDM_Eta, StoreFlux, ELBDM_Taylor3_Coeff, XYZ, MinDens );
 
 #     else
 

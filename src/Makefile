@@ -13,7 +13,7 @@ EXECUTABLE := Dizzy
 # (a) common options (applied to all models)
 # -------------------------------------------------------------------------------
 # model: HYDRO/MHD/ELBDM/PAR_ONLY (PAR_ONLY must work with PARTICLE)
-SIMU_OPTION += -DMODEL=HYDRO
+SIMU_OPTION += -DMODEL=ELBDM
 
 # self-gravity
 SIMU_OPTION += -DGRAVITY
@@ -27,7 +27,7 @@ SIMU_OPTION += -DSTORE_POT_GHOST
 
 # use unsplitting method to couple gravity to the target model (e.g., hydro, MHD, ELBDM)
 # --> must be off if GRAVITY is off
-SIMU_OPTION += -DUNSPLIT_GRAVITY
+#SIMU_OPTION += -DUNSPLIT_GRAVITY
 
 # individual time-step (default: shared time-step)
 SIMU_OPTION += -DINDIVIDUAL_TIMESTEP
