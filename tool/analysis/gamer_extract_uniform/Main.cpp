@@ -1526,9 +1526,13 @@ void PreparePatch( const int lv, const int PID, const int Buffer, real FData[], 
 
    for (int v=0; v<NLoad; v++)
    {
+//    we now apply monotonic interpolation to ALL fluid variables (which helps alleviate the issue of negative density/pressure)
 #     if ( MODEL == HYDRO )
+      /*
       if ( v == DENS  ||  v == ENGY  ||  v == ParDensIdx )  Monotonicity[v] = EnsureMonotonicity_Yes;
       else                                                  Monotonicity[v] = EnsureMonotonicity_No;
+      */
+                                                            Monotonicity[v] = EnsureMonotonicity_Yes;
 
 #     elif ( MODEL == MHD )
 #     warning : WAIT MHD !!!
@@ -2252,9 +2256,13 @@ void Refine2TargetLevel()
 
    for (int v=0; v<NLoad; v++)
    {
+//    we now apply monotonic interpolation to ALL fluid variables (which helps alleviate the issue of negative density/pressure)
 #     if ( MODEL == HYDRO )
+      /*
       if ( v == DENS  ||  v == ENGY  ||  v == ParDensIdx )  Monotonicity[v] = EnsureMonotonicity_Yes;
       else                                                  Monotonicity[v] = EnsureMonotonicity_No;
+      */
+                                                            Monotonicity[v] = EnsureMonotonicity_Yes;
 
 #     elif ( MODEL == MHD )
 #     warning : WAIT MHD !!!

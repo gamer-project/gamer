@@ -809,10 +809,10 @@ int AllocateSonPatch( const int FaLv, const int *Cr, const int PScale, const int
          Rho   = FData_Flu[DENS][k][j][i];
 
 //       be careful about the negative density introduced from the round-off errors
-         if ( Rho < (real)MIN_DENS )
+         if ( Rho < (real)0.0 )
          {
-            FData_Flu[DENS][k][j][i] = (real)MIN_DENS;
-            Rho                      = (real)MIN_DENS;
+            FData_Flu[DENS][k][j][i] = (real)0.0;
+            Rho                      = (real)0.0;
          }
 
          Amp                      = SQRT( Rho );

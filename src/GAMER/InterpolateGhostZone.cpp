@@ -79,12 +79,12 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData[], const in
 
 
 #  if   ( MODEL == HYDRO )
-   const bool CheckMinPres_Yes = true;
-   const real Gamma_m1         = GAMMA - (real)1.0;
-   const bool PrepVx           = ( TVar & _VELX ) ? true : false;
-   const bool PrepVy           = ( TVar & _VELY ) ? true : false;
-   const bool PrepVz           = ( TVar & _VELZ ) ? true : false;
-   const bool PrepPres         = ( TVar & _PRES ) ? true : false;
+   const bool CheckMinPres_No = false;    // we check minimum pressure in the end of Prepare_PatchData()
+   const real Gamma_m1        = GAMMA - (real)1.0;
+   const bool PrepVx          = ( TVar & _VELX ) ? true : false;
+   const bool PrepVy          = ( TVar & _VELY ) ? true : false;
+   const bool PrepVz          = ( TVar & _VELZ ) ? true : false;
+   const bool PrepPres        = ( TVar & _PRES ) ? true : false;
 
 #  elif ( MODEL == MHD   )
 #  warning : WAIT MHD !!
@@ -379,7 +379,7 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData[], const in
          for (int v=0; v<NCOMP; v++)   Fluid[v] = amr->patch[FluSg][lv][PID]->fluid[v][k1][j1][i1];
 
          CData_Ptr[Idx] = CPU_GetPressure( Fluid[DENS], Fluid[MOMX], Fluid[MOMY], Fluid[MOMZ], Fluid[ENGY],
-                                           Gamma_m1, CheckMinPres_Yes, MIN_PRES );
+                                           Gamma_m1, CheckMinPres_No, NULL_REAL );
 
          if ( FluIntTime ) // temporal interpolation
          {
@@ -387,7 +387,7 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData[], const in
 
             CData_Ptr[Idx] = FluWeighting     *CData_Ptr[Idx]
                            + FluWeighting_IntT*CPU_GetPressure( Fluid[DENS], Fluid[MOMX], Fluid[MOMY], Fluid[MOMZ], Fluid[ENGY],
-                                                                Gamma_m1, CheckMinPres_Yes, MIN_PRES );
+                                                                Gamma_m1, CheckMinPres_No, NULL_REAL );
          }
 
          Idx ++;
@@ -549,7 +549,7 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData[], const in
                for (int v=0; v<NCOMP; v++)   Fluid[v] = amr->patch[FluSg][lv][SibPID]->fluid[v][k2][j2][i2];
 
                CData_Ptr[Idx] = CPU_GetPressure( Fluid[DENS], Fluid[MOMX], Fluid[MOMY], Fluid[MOMZ], Fluid[ENGY],
-                                                 Gamma_m1, CheckMinPres_Yes, MIN_PRES );
+                                                 Gamma_m1, CheckMinPres_No, NULL_REAL );
 
                if ( FluIntTime ) // temporal interpolation
                {
@@ -557,7 +557,7 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData[], const in
 
                   CData_Ptr[Idx] =  FluWeighting     *CData_Ptr[Idx]
                                   + FluWeighting_IntT*CPU_GetPressure( Fluid[DENS], Fluid[MOMX], Fluid[MOMY], Fluid[MOMZ], Fluid[ENGY],
-                                                                       Gamma_m1, CheckMinPres_Yes, MIN_PRES );
+                                                                       Gamma_m1, CheckMinPres_No, NULL_REAL );
                }
 
                Idx ++;
@@ -795,10 +795,11 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData[], const in
          Rho   = FData_Dens[t];
 
 //       be careful about the negative density introduced from the round-off errors
-         if ( Rho < (real)MIN_DENS )
+//       --> note that we check minimum density in the end of Prepare_PatchData()
+         if ( Rho < (real)0.0 )
          {
-            FData_Dens[t] = (real)MIN_DENS;
-            Rho           = (real)MIN_DENS;
+            FData_Dens[t] = (real)0.0;
+            Rho           = (real)0.0;
          }
 
          Amp           = SQRT( Rho );

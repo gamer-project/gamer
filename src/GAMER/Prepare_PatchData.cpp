@@ -96,6 +96,11 @@ bool ParDensArray_Initialized = false;
 //                PotBC          : Gravity boundary condition
 //                MinDens/Pres   : Minimum allowed density/pressure in the output array (<0.0 ==> off)
 //                                 --> MinDens can be applied to both _DENS and _TOTAL_DENS but cannot be applied to _PAR_DENS
+//                                 --> Note that when preparing both density and real/imaginary parts for ELBDM, we do NOT
+//                                     rescale wave functions after applying MinDens
+//                                     --> We can have real^2+imag^2 != density in the prepared data!!
+//                                     --> But currently it's not an issue since we never prepare density and wave functions
+//                                         at the same time
 //                                 --> Currently MinDens is applied in Flu_Prepare(), Flag_Real(), and Poi_Prepare_Rho()
 //                                     --> The Guideline is to apply MinDens check only when ghost zones are required
 //                                         (because density field is already stored in each patch and we don't want
@@ -103,7 +108,7 @@ bool ParDensArray_Initialized = false;
 //                                 --> Currently MinPres is applied in Flu_Prepare() and Flag_Real()
 //                                     --> The Guideline is to apply MinPres check whenever _PRES or _FLU is required
 //                                         (because pressure field is NOT stored explicitly in each patch and thus existing data
-//                                         may still have pressure < MIN_PRES due to round-off errors)
+//                                         may still have pressure < MinPres due to round-off errors)
 //-------------------------------------------------------------------------------------------------------
 void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array,
                         const int GhostSize, const int NPG, const int *PID0_List, int TVar,
@@ -117,7 +122,8 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
 
 
 // check
-#  ifdef GAMER_DEBUG
+// --> to be more cautious, we apply these checks even when GAMER_DEBUG is off
+//#  ifdef GAMER_DEBUG
 
    int AllVar = ( _FLU | _PASSIVE | _DERIVED );
 #  ifdef GRAVITY
@@ -141,6 +147,11 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
 #     endif
 #     else
          Aux_Error( ERROR_INFO, "MinDens (%13.7e) >= 0.0 can only be applied to HYDRO/MHD/ELBDM !!\n", MinDens );
+#     endif
+
+#     if ( MODEL == ELBDM )
+      if ( (TVar & _REAL)  ||  (TVar & _IMAG) )
+         Aux_Message( stderr, "WARNING : real and imaginary parts are NOT rescaled after applying the minimum density check !!\n" );
 #     endif
    }
 
@@ -220,7 +231,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
       if ( PID0_List[TID] < 0  ||  PID0_List[TID] >= amr->NPatchComma[lv][1] )
          Aux_Error( ERROR_INFO, "incorrect target PID %d (NReal = %d) !!\n", PID0_List[TID], amr->NPatchComma[lv][1] );
 
-#  endif // #ifdef GAMER_DEBUG
+//#  endif // #ifdef GAMER_DEBUG
 
 
    const double dh               = amr->dh[lv];
@@ -229,8 +240,9 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
    const int    GhostSize_Padded = GhostSize + (GhostSize&1);
 
 #  if   ( MODEL == HYDRO )
-   const bool CheckMinPres_Yes = true;
+   const bool CheckMinPres_No  = false;   // we check minimum pressure in the end of this function (step d)
    const real Gamma_m1         = GAMMA - (real)1.0;
+   const real _Gamma_m1        = (real)1.0 / Gamma_m1;
    const bool PrepVx           = ( TVar & _VELX ) ? true : false;
    const bool PrepVy           = ( TVar & _VELY ) ? true : false;
    const bool PrepVz           = ( TVar & _VELZ ) ? true : false;
@@ -273,6 +285,8 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
    SetTargetSibling( NTSib, TSib );
 
 // determine the components to be prepared
+// --> assuming that _VAR_NAME = 1<<VAR_NAME (e.g., _DENS == 1<<DENS)
+// --> it also determines the order of variables stored in h_Input_Array (which is the same as patch->fluid[])
    NVar_Flu = 0;
    for (int v=0; v<NCOMP+NPASSIVE; v++)
       if ( TVar & (1<<v) )    TFluVarIdxList[ NVar_Flu++ ] = v;
@@ -818,7 +832,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
                   for (int v=0; v<NCOMP; v++)   Fluid[v] = amr->patch[FluSg][lv][PID]->fluid[v][k][j][i];
 
                   Array_Ptr[Idx1] = CPU_GetPressure( Fluid[DENS], Fluid[MOMX], Fluid[MOMY], Fluid[MOMZ], Fluid[ENGY],
-                                                     Gamma_m1, CheckMinPres_Yes, MIN_PRES );
+                                                     Gamma_m1, CheckMinPres_No, NULL_REAL );
 
                   if ( FluIntTime ) // temporal interpolation
                   {
@@ -827,7 +841,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
                      Array_Ptr[Idx1] =   FluWeighting     *Array_Ptr[Idx1]
                                        + FluWeighting_IntT*CPU_GetPressure( Fluid[DENS], Fluid[MOMX], Fluid[MOMY],
                                                                             Fluid[MOMZ], Fluid[ENGY],
-                                                                            Gamma_m1, CheckMinPres_Yes, MIN_PRES );
+                                                                            Gamma_m1, CheckMinPres_No, NULL_REAL );
                   }
 
                   Idx1 ++;
@@ -994,7 +1008,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
                         for (int v=0; v<NCOMP; v++)   Fluid[v] = amr->patch[FluSg][lv][SibPID]->fluid[v][K2][J2][I2];
 
                         Array_Ptr[Idx1] = CPU_GetPressure( Fluid[DENS], Fluid[MOMX], Fluid[MOMY], Fluid[MOMZ], Fluid[ENGY],
-                                                           Gamma_m1, CheckMinPres_Yes, MIN_PRES );
+                                                           Gamma_m1, CheckMinPres_No, NULL_REAL );
 
                         if ( FluIntTime ) // temporal interpolation
                         {
@@ -1003,7 +1017,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
                            Array_Ptr[Idx1] =   FluWeighting     *Array_Ptr[Idx1]
                                              + FluWeighting_IntT*CPU_GetPressure( Fluid[DENS], Fluid[MOMX], Fluid[MOMY],
                                                                                   Fluid[MOMZ], Fluid[ENGY],
-                                                                                  Gamma_m1, CheckMinPres_Yes, MIN_PRES );
+                                                                                  Gamma_m1, CheckMinPres_No, NULL_REAL );
                            Idx1 ++;
                         }
                      }}}
@@ -1394,17 +1408,71 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
 #        endif // #ifdef PARTICLE
 
 
-//       d. check minimum density and presure
+//       d. check minimum density and pressure
 // ------------------------------------------------------------------------------------------------------------
+//       (d1) minimum density
+#        if ( MODEL == HYDRO  ||  MODEL == MHD  ||  MODEL == ELBDM )
          if ( MinDens >= (real)0.0 )
          {
+//          note that _DENS is turned on automatically for _TOTAL_DENS (and total density is stored in DENS)
+            if ( TVar & _DENS )
+            {
+//             assuming that the order of variables stored in h_Input_Array is the same as patch->fluid[]
+               const int DensIdx = DENS;
+               real *ArrayDens = Array + DensIdx*PGSize3D;
 
+//             apply minimum density
+//             --> note that for ELBDM it will result in dens != real^2 + imag^2
+               for (int t=0; t<PGSize3D; t++)   ArrayDens[t] = FMAX( ArrayDens[t], MinDens );
+            }
          } // if ( MinDens >= (real)0.0 )
+#        endif // #if ( MODEL == HYDRO  ||  MODEL == MHD  ||  MODEL == ELBDM )
 
+
+//       (d2) minimum pressure
+//            --> note that it should be applied AFTER checking the minimum density since modifying density will also
+//                modify pressure when calculating it from the energy field
+#        if ( MODEL == HYDRO  ||  MODEL == MHD )
          if ( MinPres >= (real)0.0 )
          {
+//          (d2-1) pressure as a derived field
+            if ( PrepPres )
+            {
+//             determine the array index for pressure
+               int PresIdx = NVar_Flu;
+               if ( PrepVx )  PresIdx ++;
+               if ( PrepVy )  PresIdx ++;
+               if ( PrepVz )  PresIdx ++;
 
+               real *ArrayPres = Array + PresIdx*PGSize3D;
+
+//             apply minimum pressure
+               for (int t=0; t<PGSize3D; t++)   ArrayPres[t] = FMAX( ArrayPres[t], MinPres );
+            }
+
+//          (d2-2) pressure in the energy field --> work only when ALL fluid fields are prepared
+            if ( (TVar & _FLU) == _FLU )
+            {
+//             assuming that the order of variables stored in h_Input_Array is the same as patch->fluid[]
+               const int DensIdx = DENS;
+               const int MomXIdx = MOMX;
+               const int MomYIdx = MOMY;
+               const int MomZIdx = MOMZ;
+               const int EngyIdx = ENGY;
+
+               real *ArrayDens = Array + DensIdx*PGSize3D;
+               real *ArrayMomX = Array + MomXIdx*PGSize3D;
+               real *ArrayMomY = Array + MomYIdx*PGSize3D;
+               real *ArrayMomZ = Array + MomZIdx*PGSize3D;
+               real *ArrayEngy = Array + EngyIdx*PGSize3D;
+
+//             apply minimum pressure to the energy field
+               for (int t=0; t<PGSize3D; t++)
+                  ArrayEngy[t] = CPU_CheckMinPresInEngy( ArrayDens[t], ArrayMomX[t], ArrayMomY[t], ArrayMomZ[t], ArrayEngy[t],
+                                                         Gamma_m1, _Gamma_m1, MinPres );
+            } // if ( (TVar & _FLU) == _FLU )
          } // if ( MinPres >= (real)0.0 )
+#        endif // #if ( MODEL == HYDRO  ||  MODEL == MHD )
 
 
 //       e. copy data from Array to h_Input_Array
