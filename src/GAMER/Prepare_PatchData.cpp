@@ -1018,8 +1018,9 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
                                              + FluWeighting_IntT*CPU_GetPressure( Fluid[DENS], Fluid[MOMX], Fluid[MOMY],
                                                                                   Fluid[MOMZ], Fluid[ENGY],
                                                                                   Gamma_m1, CheckMinPres_No, NULL_REAL );
-                           Idx1 ++;
                         }
+
+                        Idx1 ++;
                      }}}
 
                      Array_Ptr += PGSize3D;
