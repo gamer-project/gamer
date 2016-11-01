@@ -265,9 +265,6 @@
 #endif // #ifdef PARTICLE ... else ...
 
 
-
-
-
 // number of fluid ghost zones for the fluid solver
 #if   ( MODEL == HYDRO )   // hydro
 #  if   ( FLU_SCHEME == RTVD )

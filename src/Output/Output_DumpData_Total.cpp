@@ -737,6 +737,9 @@ void Output_DumpData_Total( const char *FileName )
 #  endif
 
 #  ifdef PARTICLE
+   const bool IntPhase_No      = false;
+   const real MinDens_No       = -1.0;
+   const real MinPres_No       = -1.0;
    const bool TimingSendPar_No = false;
    const bool PredictParPos_No = false;   // particles synchronization is controlled by PAR_SYNC_DUMP in Output_DumpData
    const bool JustCountNPar_No = false;
@@ -780,9 +783,11 @@ void Output_DumpData_Total( const char *FileName )
                   {
                      if ( amr->patch[0][lv][PID_CheckSon]->son == -1 )
                      {
+//                      we do not check minimum density here (just because it's unnecessary)
                         Prepare_PatchData( lv, Time[lv], ParDensArray[0], 0, 1, &PID,
                                            ( OPT__OUTPUT_PAR_DENS == PAR_OUTPUT_DENS_PAR_ONLY ) ? _PAR_DENS : _TOTAL_DENS,
-                                           OPT__RHO_INT_SCHEME, UNIT_PATCH, NSIDE_00, false, OPT__BC_FLU, BC_POT_NONE );
+                                           OPT__RHO_INT_SCHEME, UNIT_PATCH, NSIDE_00, IntPhase_No, OPT__BC_FLU, BC_POT_NONE,
+                                           MinDens_No, MinPres_No );
                         break;
                      }
                   }

@@ -74,12 +74,13 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
 
 
 // set the variables for the Lohner's error estimator
-   int Lohner_NVar=0, Lohner_TVar=0, Lohner_Stride;
+   int  Lohner_NVar=0, Lohner_TVar=0, Lohner_Stride;
+   real MinDens=-1.0, MinPres=-1.0;    // default is to turn off minimum density/pressure checks
 
 #  if   ( MODEL == HYDRO  ||  MODEL == MHD )
-   if ( OPT__FLAG_LOHNER_DENS )  {  Lohner_NVar++;    Lohner_TVar |= _DENS;   }
-   if ( OPT__FLAG_LOHNER_ENGY )  {  Lohner_NVar++;    Lohner_TVar |= _ENGY;   }
-   if ( OPT__FLAG_LOHNER_PRES )  {  Lohner_NVar++;    Lohner_TVar |= _PRES;   }
+   if ( OPT__FLAG_LOHNER_DENS )  {  Lohner_NVar++;   Lohner_TVar |= _DENS;   MinDens = MIN_DENS;  }
+   if ( OPT__FLAG_LOHNER_ENGY )  {  Lohner_NVar++;   Lohner_TVar |= _ENGY;                        }
+   if ( OPT__FLAG_LOHNER_PRES )  {  Lohner_NVar++;   Lohner_TVar |= _PRES;   MinPres = MIN_PRES;  }
 
 #  elif ( MODEL == MHD )
 #  warning : WAIT MHD !!!
@@ -152,7 +153,8 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
 //       prepare the ghost-zone data for Lohner
          if ( Lohner_NVar > 0 )
             Prepare_PatchData( lv, Time[lv], Lohner_Var, Lohner_NGhost, NPG, &PID0, Lohner_TVar,
-                               Lohner_IntScheme, UNIT_PATCH, NSIDE_26, IntPhase_No, OPT__BC_FLU, OPT__BC_POT );
+                               Lohner_IntScheme, UNIT_PATCH, NSIDE_26, IntPhase_No, OPT__BC_FLU, OPT__BC_POT,
+                               MinDens, MinPres );
 
 
 //       loop over all local patches within the same patch group

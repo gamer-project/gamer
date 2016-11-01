@@ -38,7 +38,7 @@ extern rfftwnd_mpi_plan FFTW_Plan, FFTW_Plan_Inv;
 //                PrepTime       : Physical time for preparing the density field
 //-------------------------------------------------------------------------------------------------------
 void Patch2Slab( real *RhoK, real *SendBuf_Rho, real *RecvBuf_Rho, long *SendBuf_SIdx, long *RecvBuf_SIdx,
-                 int **List_PID, int **List_k, int *List_NSend_Rho, int *List_NRecv_Rho, 
+                 int **List_PID, int **List_k, int *List_NSend_Rho, int *List_NRecv_Rho,
                  const int *List_z_start, const int local_nz, const int FFT_Size[], const int NRecvSlice,
                  const double PrepTime )
 {
@@ -46,7 +46,7 @@ void Patch2Slab( real *RhoK, real *SendBuf_Rho, real *RecvBuf_Rho, long *SendBuf
 // check
 #  ifdef GAMER_DEBUG
    if ( List_z_start[MPI_Rank+1] - List_z_start[MPI_Rank] != local_nz )
-      Aux_Error( ERROR_INFO, "local_nz (%d) != expectation (%d) !!\n", 
+      Aux_Error( ERROR_INFO, "local_nz (%d) != expectation (%d) !!\n",
                  local_nz, List_z_start[MPI_Rank+1] - List_z_start[MPI_Rank] );
 #  endif // GAMER_DEBUG
 
@@ -56,7 +56,7 @@ void Patch2Slab( real *RhoK, real *SendBuf_Rho, real *RecvBuf_Rho, long *SendBuf
 // const int MemUnit    = amr->NPatchComma[0][1]*PS1/MPI_NRank;   // set arbitrarily
    const int MemUnit    = amr->NPatchComma[0][1]*PS1;             // set arbitrarily
    const int AveNz      = FFT_Size[2]/MPI_NRank + ( (FFT_Size[2]%MPI_NRank == 0 ) ? 0 : 1 );    // average slab thickness
-   const int Scale0     = amr->scale[0];       
+   const int Scale0     = amr->scale[0];
 
    int   Cr[3];                        // corner coordinates of each patch normalized to the base-level grid size
    int   BPos_z;                       // z coordinate of each patch slice in the simulation box
@@ -72,7 +72,7 @@ void Patch2Slab( real *RhoK, real *SendBuf_Rho, real *RecvBuf_Rho, long *SendBuf
 
 
 // 1. set memory allocation unit
-   for (int r=0; r<MPI_NRank; r++)     
+   for (int r=0; r<MPI_NRank; r++)
    {
       MemSize        [r] = MemUnit;
       List_PID       [r] = (int* )malloc( MemSize[r]*sizeof(int)         );
@@ -88,6 +88,8 @@ void Patch2Slab( real *RhoK, real *SendBuf_Rho, real *RecvBuf_Rho, long *SendBuf
    const IntScheme_t IntScheme   = INT_NONE;
    const NSide_t     NSide_None  = NSIDE_00;
    const bool        IntPhase_No = false;
+   const real        MinDens_No  = -1.0;
+   const real        MinPres_No  = -1.0;
    const int         GhostSize   = 0;
    const int         NPG         = 1;
 
@@ -96,15 +98,17 @@ void Patch2Slab( real *RhoK, real *SendBuf_Rho, real *RecvBuf_Rho, long *SendBuf
    for (int PID0=0; PID0<amr->NPatchComma[0][1]; PID0+=8)
    {
 //    even with NSIDE_00 and GhostSize=0, we still need OPT__BC_FLU to determine whether periodic BC is adopted
+//    also note that we do not check minimum density here since no ghost zones are required
       Prepare_PatchData( 0, PrepTime, Dens[0][0][0], GhostSize, NPG, &PID0, _TOTAL_DENS,
-                         IntScheme, UNIT_PATCH, NSide_None, IntPhase_No, OPT__BC_FLU, PotBC_None );
+                         IntScheme, UNIT_PATCH, NSide_None, IntPhase_No, OPT__BC_FLU, PotBC_None,
+                         MinDens_No, MinPres_No );
 
       for (int PID=PID0, LocalID=0; PID<PID0+8; PID++, LocalID++)
       {
          for (int d=0; d<3; d++)    Cr[d] = amr->patch[0][0][PID]->corner[d] / Scale0;
 
-         for (int k=0; k<PS1; k++)  
-         {  
+         for (int k=0; k<PS1; k++)
+         {
             BPos_z      = Cr[2] + k;
             TRank_Guess = BPos_z / AveNz;
             TRank       = ZIndex2Rank( BPos_z, List_z_start, TRank_Guess );
@@ -116,8 +120,8 @@ void Patch2Slab( real *RhoK, real *SendBuf_Rho, real *RecvBuf_Rho, long *SendBuf
                Aux_Error( ERROR_INFO, "incorrect parameter %s = %d !!\n", "SPos_z", SPos_z );
 #           endif
 
-//          allocate enough memory          
-            if ( List_NSend_SIdx[TRank] >= MemSize[TRank] )  
+//          allocate enough memory
+            if ( List_NSend_SIdx[TRank] >= MemSize[TRank] )
             {
                MemSize     [TRank] += MemUnit;
                List_PID    [TRank]  = (int* )realloc( List_PID    [TRank], MemSize[TRank]*sizeof(int)         );
@@ -126,7 +130,7 @@ void Patch2Slab( real *RhoK, real *SendBuf_Rho, real *RecvBuf_Rho, long *SendBuf
                TempBuf_Rho [TRank]  = (real*)realloc( TempBuf_Rho [TRank], MemSize[TRank]*sizeof(real)*PSSize );
             }
 
-//          record list         
+//          record list
             List_PID    [TRank][ List_NSend_SIdx[TRank] ] = PID;
             List_k      [TRank][ List_NSend_SIdx[TRank] ] = k;
             TempBuf_SIdx[TRank][ List_NSend_SIdx[TRank] ] = SIdx;
@@ -176,10 +180,10 @@ void Patch2Slab( real *RhoK, real *SendBuf_Rho, real *RecvBuf_Rho, long *SendBuf
    Recv_Disp_SIdx[0] = 0;
    Send_Disp_Rho [0] = 0;
    Recv_Disp_Rho [0] = 0;
-   for (int r=1; r<MPI_NRank; r++)  
+   for (int r=1; r<MPI_NRank; r++)
    {
-      Send_Disp_SIdx[r] = Send_Disp_SIdx[r-1] + List_NSend_SIdx[r-1]; 
-      Recv_Disp_SIdx[r] = Recv_Disp_SIdx[r-1] + List_NRecv_SIdx[r-1]; 
+      Send_Disp_SIdx[r] = Send_Disp_SIdx[r-1] + List_NSend_SIdx[r-1];
+      Recv_Disp_SIdx[r] = Recv_Disp_SIdx[r-1] + List_NRecv_SIdx[r-1];
       Send_Disp_Rho [r] = Send_Disp_Rho [r-1] + List_NSend_Rho [r-1];
       Recv_Disp_Rho [r] = Recv_Disp_Rho [r-1] + List_NRecv_Rho [r-1];
    }
@@ -191,10 +195,10 @@ void Patch2Slab( real *RhoK, real *SendBuf_Rho, real *RecvBuf_Rho, long *SendBuf
    const int NSend_Expect = amr->NPatchComma[0][1]*CUBE(PS1);
    const int NRecv_Expect = NX0_TOT[0]*NX0_TOT[1]*NRecvSlice;
 
-   if ( NSend_Total != NSend_Expect )  Aux_Error( ERROR_INFO, "NSend_Total = %d != expected value = %d !!\n", 
+   if ( NSend_Total != NSend_Expect )  Aux_Error( ERROR_INFO, "NSend_Total = %d != expected value = %d !!\n",
                                                   NSend_Total, NSend_Expect );
 
-   if ( NRecv_Total != NRecv_Expect )  Aux_Error( ERROR_INFO, "NRecv_Total = %d != expected value = %d !!\n", 
+   if ( NRecv_Total != NRecv_Expect )  Aux_Error( ERROR_INFO, "NRecv_Total = %d != expected value = %d !!\n",
                                                   NRecv_Total, NRecv_Expect );
 #  endif
 
@@ -206,7 +210,7 @@ void Patch2Slab( real *RhoK, real *SendBuf_Rho, real *RecvBuf_Rho, long *SendBuf
       SendPtr_SIdx += List_NSend_SIdx[r];
    }
 
-// 3.4 prepare the send buffer of density   
+// 3.4 prepare the send buffer of density
    SendPtr_Rho = SendBuf_Rho;
    for (int r=0; r<MPI_NRank; r++)
    {
@@ -216,14 +220,14 @@ void Patch2Slab( real *RhoK, real *SendBuf_Rho, real *RecvBuf_Rho, long *SendBuf
 
 
 // 4. exchange data by MPI
-   MPI_Alltoallv( SendBuf_SIdx, List_NSend_SIdx, Send_Disp_SIdx, MPI_LONG, 
+   MPI_Alltoallv( SendBuf_SIdx, List_NSend_SIdx, Send_Disp_SIdx, MPI_LONG,
                   RecvBuf_SIdx, List_NRecv_SIdx, Recv_Disp_SIdx, MPI_LONG,   MPI_COMM_WORLD );
-   
-#  ifdef FLOAT8   
-   MPI_Alltoallv( SendBuf_Rho,  List_NSend_Rho,  Send_Disp_Rho,  MPI_DOUBLE, 
+
+#  ifdef FLOAT8
+   MPI_Alltoallv( SendBuf_Rho,  List_NSend_Rho,  Send_Disp_Rho,  MPI_DOUBLE,
                   RecvBuf_Rho,  List_NRecv_Rho,  Recv_Disp_Rho,  MPI_DOUBLE, MPI_COMM_WORLD );
 #  else
-   MPI_Alltoallv( SendBuf_Rho,  List_NSend_Rho,  Send_Disp_Rho,  MPI_FLOAT, 
+   MPI_Alltoallv( SendBuf_Rho,  List_NSend_Rho,  Send_Disp_Rho,  MPI_FLOAT,
                   RecvBuf_Rho,  List_NRecv_Rho,  Recv_Disp_Rho,  MPI_FLOAT,  MPI_COMM_WORLD );
 #  endif
 
@@ -245,9 +249,9 @@ void Patch2Slab( real *RhoK, real *SendBuf_Rho, real *RecvBuf_Rho, long *SendBuf
          RhoK_Ptr[dSIdx] = RecvBuf_Rho[ Counter ++ ];
       }
    }
-   
 
-// free memory   
+
+// free memory
    for (int r=0; r<MPI_NRank; r++)
    {
       free( TempBuf_SIdx[r] );
@@ -259,13 +263,13 @@ void Patch2Slab( real *RhoK, real *SendBuf_Rho, real *RecvBuf_Rho, long *SendBuf
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  ZIndex2Rank 
+// Function    :  ZIndex2Rank
 // Description :  Return the MPI rank which the input z coordinates belongs to in the FFTW slab decomposition
 //
 // Note        :  1. "List_z_start[r] <= IndexZ < List_z_start[r+1]" belongs to rank r
 //                2. List_z_start[MPI_NRank] can be set to any value >= FFT_Size[2]
 //
-// Parameter   :  IndexZ         : Input z coordinate  
+// Parameter   :  IndexZ         : Input z coordinate
 //                List_z_start   : Starting z coordinate of each rank in the FFTW slab decomposition
 //                TRank_Guess    : First guess of the targeting MPI rank
 //
@@ -301,7 +305,7 @@ int ZIndex2Rank( const int IndexZ, const int *List_z_start, const int TRank_Gues
       else
       {
          if ( IndexZ < List_z_start[TRank+1] )  return TRank;
-         else                                   TRank ++; 
+         else                                   TRank ++;
       }
    }
 
@@ -316,7 +320,7 @@ int ZIndex2Rank( const int IndexZ, const int *List_z_start, const int TRank_Gues
 // Parameter   :  RhoK        : In-place FFT array
 //                SendBuf     : Sending MPI buffer of potential
 //                RecvBuf     : Receiving MPI buffer of potential
-//                SaveSg      : Sandglass to store the updated data 
+//                SaveSg      : Sandglass to store the updated data
 //                List_SIdx   : 1D coordinate in slab
 //                List_PID    : PID of each patch slice sent to each rank
 //                List_k      : Local z coordinate of each patch slice sent to each rank
@@ -326,8 +330,8 @@ int ZIndex2Rank( const int IndexZ, const int *List_z_start, const int TRank_Gues
 //                FFT_Size    : Size of the FFT operation including the zero-padding regions
 //                NSendSlice  : Total number of z slices need to be sent to other ranks (could be zero in the isolated BC)
 //-------------------------------------------------------------------------------------------------------
-void Slab2Patch( const real *RhoK, real *SendBuf, real *RecvBuf, const int SaveSg, const long *List_SIdx, 
-                 int **List_PID, int **List_k, int *List_NSend, int *List_NRecv, const int local_nz, const int FFT_Size[], 
+void Slab2Patch( const real *RhoK, real *SendBuf, real *RecvBuf, const int SaveSg, const long *List_SIdx,
+                 int **List_PID, int **List_k, int *List_NSend, int *List_NRecv, const int local_nz, const int FFT_Size[],
                  const int NSendSlice )
 {
 
@@ -358,22 +362,22 @@ void Slab2Patch( const real *RhoK, real *SendBuf, real *RecvBuf, const int SaveS
 
    Send_Disp[0] = 0;
    Recv_Disp[0] = 0;
-   for (int r=1; r<MPI_NRank; r++)  
+   for (int r=1; r<MPI_NRank; r++)
    {
       Send_Disp[r] = Send_Disp[r-1] + List_NSend[r-1];
       Recv_Disp[r] = Recv_Disp[r-1] + List_NRecv[r-1];
    }
 
-#  ifdef FLOAT8   
-   MPI_Alltoallv( SendBuf, List_NSend, Send_Disp, MPI_DOUBLE, 
+#  ifdef FLOAT8
+   MPI_Alltoallv( SendBuf, List_NSend, Send_Disp, MPI_DOUBLE,
                   RecvBuf, List_NRecv, Recv_Disp, MPI_DOUBLE, MPI_COMM_WORLD );
 #  else
-   MPI_Alltoallv( SendBuf, List_NSend, Send_Disp, MPI_FLOAT, 
+   MPI_Alltoallv( SendBuf, List_NSend, Send_Disp, MPI_FLOAT,
                   RecvBuf, List_NRecv, Recv_Disp, MPI_FLOAT,  MPI_COMM_WORLD );
 #  endif
 
 
-// 3. store the received potential data to different patch objects   
+// 3. store the received potential data to different patch objects
    int   PID, k, NRecvSlice;
    real *RecvPtr = RecvBuf;
 
@@ -390,10 +394,10 @@ void Slab2Patch( const real *RhoK, real *SendBuf, real *RecvBuf, const int SaveS
 
          RecvPtr += PSSize;
       }
-   } 
+   }
 
 
-// free memory   
+// free memory
    for (int r=0; r<MPI_NRank; r++)
    {
       free( List_PID[r] );
@@ -412,7 +416,7 @@ void Slab2Patch( const real *RhoK, real *SendBuf, real *RecvBuf, const int SaveS
 //                equal to zero
 //
 // Parameter   :  RhoK        : Array storing the input density and output potential
-//                Poi_Coeff   : Coefficient in front of density in the Poisson equation (4*Pi*Newton_G*a)   
+//                Poi_Coeff   : Coefficient in front of density in the Poisson equation (4*Pi*Newton_G*a)
 //                j_start     : Starting j index
 //                dj          : Size of array in the j (y) direction after the forward FFT
 //                RhoK_Size   : Size of the array "RhoK"
@@ -459,7 +463,7 @@ void FFT_Periodic( real *RhoK, const real Poi_Coeff, const int j_start, const in
 
    for (int k=0; k<Nz; k++)
    {
-      for (int j=0; j<Ny; j++)   
+      for (int j=0; j<Ny; j++)
       for (int i=0; i<Nx_Padded; i++)
       {
          ID = ((long)k*Ny + j)*Nx_Padded + i;
@@ -467,8 +471,8 @@ void FFT_Periodic( real *RhoK, const real Poi_Coeff, const int j_start, const in
 #  else // parallel mode
    int j;
 
-   for (int jj=0; jj<dj; jj++)   
-   {  
+   for (int jj=0; jj<dj; jj++)
+   {
       j = j_start + jj;
 
       for (int k=0; k<Nz; k++)
@@ -478,7 +482,7 @@ void FFT_Periodic( real *RhoK, const real Poi_Coeff, const int j_start, const in
 
 #  endif // #ifdef SERIAL ... else ...
 
-      
+
 //       this form is more consistent with the "second-order discrete" Laplacian operator
          Deno = -4.0 * ( sinkx2[i] + sinky2[j] + sinkz2[k] );
 //       Deno = -( kx[i]*kx[i] + ky[j]*ky[j] + kz[k]*kz[k] );
@@ -526,7 +530,7 @@ void FFT_Periodic( real *RhoK, const real Poi_Coeff, const int j_start, const in
 //                   --> The only coefficient that hasn't been taken into account is the scale factor in the comoving frame
 //
 // Parameter   :  RhoK        : Array storing the input density and output potential
-//                Poi_Coeff   : Coefficient in front of density in the Poisson equation (4*Pi*Newton_G*a)   
+//                Poi_Coeff   : Coefficient in front of density in the Poisson equation (4*Pi*Newton_G*a)
 //                RhoK_Size   : Size of the array "RhoK"
 //-------------------------------------------------------------------------------------------------------
 void FFT_Isolated( real *RhoK, const real *gFuncK, const real Poi_Coeff, const int RhoK_Size )
@@ -578,13 +582,13 @@ void FFT_Isolated( real *RhoK, const real *gFuncK, const real Poi_Coeff, const i
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  CPU_PoissonSolver_FFT 
-// Description :  Evaluate the base-level potential by FFT 
+// Function    :  CPU_PoissonSolver_FFT
+// Description :  Evaluate the base-level potential by FFT
 //
 // Note        :  Work with both periodic and isolated BC's
 //
 // Parameter   :  Poi_Coeff   : Coefficient in front of the RHS in the Poisson eq.
-//                SaveSg      : Sandglass to store the updated data 
+//                SaveSg      : Sandglass to store the updated data
 //                PrepTime    : Physical time for preparing the density field
 //-------------------------------------------------------------------------------------------------------
 void CPU_PoissonSolver_FFT( const real Poi_Coeff, const int SaveSg, const double PrepTime )
@@ -593,7 +597,7 @@ void CPU_PoissonSolver_FFT( const real Poi_Coeff, const int SaveSg, const double
 // determine the FFT size (the zero-padding method is adopted for the isolated BC)
    int FFT_Size[3] = { NX0_TOT[0], NX0_TOT[1], NX0_TOT[2] };
 
-   if ( OPT__BC_POT == BC_POT_ISOLATED )  
+   if ( OPT__BC_POT == BC_POT_ISOLATED )
       for (int d=0; d<3; d++)    FFT_Size[d] *= 2;
 
 
@@ -616,13 +620,13 @@ void CPU_PoissonSolver_FFT( const real Poi_Coeff, const int SaveSg, const double
    int List_nz     [MPI_NRank  ];   // slab thickness of each rank in the FFTW slab decomposition
    int List_z_start[MPI_NRank+1];   // starting z coordinate of each rank in the FFTW slab decomposition
 
-   MPI_Allgather( &local_nz, 1, MPI_INT, List_nz, 1, MPI_INT, MPI_COMM_WORLD ); 
+   MPI_Allgather( &local_nz, 1, MPI_INT, List_nz, 1, MPI_INT, MPI_COMM_WORLD );
 
    List_z_start[0] = 0;
    for (int r=0; r<MPI_NRank; r++)  List_z_start[r+1] = List_z_start[r] + List_nz[r];
 
-   if ( List_z_start[MPI_NRank] != FFT_Size[2] )    
-      Aux_Error( ERROR_INFO, "List_z_start[%d] (%d) != expectation (%d) !!\n", 
+   if ( List_z_start[MPI_NRank] != FFT_Size[2] )
+      Aux_Error( ERROR_INFO, "List_z_start[%d] (%d) != expectation (%d) !!\n",
                  MPI_NRank, List_z_start[MPI_NRank], FFT_Size[2] );
 
 
@@ -643,16 +647,16 @@ void CPU_PoissonSolver_FFT( const real Poi_Coeff, const int SaveSg, const double
 
 // initialize RhoK as zeros for the isolated BC where the zero-padding method is adopted
    if ( OPT__BC_POT == BC_POT_ISOLATED )
-      for (int t=0; t<total_local_size; t++)    RhoK[t] = (real)0.0; 
+      for (int t=0; t<total_local_size; t++)    RhoK[t] = (real)0.0;
 
 
 // rearrange data from patch to slab
-   Patch2Slab( RhoK, SendBuf, RecvBuf, SendBuf_SIdx, RecvBuf_SIdx, List_PID, List_k, List_NSend, List_NRecv, List_z_start, 
+   Patch2Slab( RhoK, SendBuf, RecvBuf, SendBuf_SIdx, RecvBuf_SIdx, List_PID, List_k, List_NSend, List_NRecv, List_z_start,
                local_nz, FFT_Size, NRecvSlice, PrepTime );
 
 
 // evaluate potential by FFT
-   if      ( OPT__BC_POT == BC_POT_PERIODIC )  
+   if      ( OPT__BC_POT == BC_POT_PERIODIC )
       FFT_Periodic( RhoK, Poi_Coeff, local_y_start_after_transpose, local_ny_after_transpose, total_local_size );
 
    else if ( OPT__BC_POT == BC_POT_ISOLATED )
@@ -663,7 +667,7 @@ void CPU_PoissonSolver_FFT( const real Poi_Coeff, const int SaveSg, const double
 
 
 // rearrange data from slab back to patch
-   Slab2Patch( RhoK, RecvBuf, SendBuf, SaveSg, RecvBuf_SIdx, List_PID, List_k, List_NRecv, List_NSend, 
+   Slab2Patch( RhoK, RecvBuf, SendBuf, SaveSg, RecvBuf_SIdx, List_PID, List_k, List_NRecv, List_NSend,
                local_nz, FFT_Size, NRecvSlice );
 
 

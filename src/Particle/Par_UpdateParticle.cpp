@@ -60,6 +60,8 @@ void Par_UpdateParticle( const int lv, const double TimeNew, const double TimeOl
 
    const ParInterp_t IntScheme  = amr->Par->Interp;
    const bool   IntPhase_No     = false;
+   const real   MinDens_No      = -1.0;
+   const real   MinPres_No      = -1.0;
    const double dh              = amr->dh[lv];
    const double _dh             = 1.0/dh;
    const double PrepPotTime     = ( UpdateStep==PAR_UPSTEP_CORR || UpdateStep==PAR_UPSTEP_ACC_ONLY ) ? TimeNew : TimeOld;
@@ -252,7 +254,8 @@ void Par_UpdateParticle( const int lv, const double TimeNew, const double TimeOl
          else
 #        endif // #ifdef STORE_POT_GHOST
             Prepare_PatchData( lv, PrepPotTime, Pot, PotGhost, 1, &PID0, _POTE,
-                               OPT__GRA_INT_SCHEME, UNIT_PATCH, NSIDE_26, IntPhase_No, OPT__BC_FLU, OPT__BC_POT );
+                               OPT__GRA_INT_SCHEME, UNIT_PATCH, NSIDE_26, IntPhase_No, OPT__BC_FLU, OPT__BC_POT,
+                               MinDens_No, MinPres_No );
       } // if ( OPT__GRAVITY_TYPE == GRAVITY_SELF  ||  OPT__GRAVITY_TYPE == GRAVITY_BOTH )
 
 

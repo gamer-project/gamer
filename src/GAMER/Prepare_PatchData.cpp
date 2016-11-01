@@ -94,11 +94,22 @@ bool ParDensArray_Initialized = false;
 //                                     where we are NOT preparing any fluid variable (i.e., _POTE | _PAR_DENS)
 //                                     --> Therefore it must be provided correctly at any instance
 //                PotBC          : Gravity boundary condition
+//                MinDens/Pres   : Minimum allowed density/pressure in the output array (<0.0 ==> off)
+//                                 --> MinDens can be applied to both _DENS and _TOTAL_DENS but cannot be applied to _PAR_DENS
+//                                 --> Currently MinDens is applied in Flu_Prepare(), Flag_Real(), and Poi_Prepare_Rho()
+//                                     --> The Guideline is to apply MinDens check only when ghost zones are required
+//                                         (because density field is already stored in each patch and we don't want
+//                                         Prepare_PatchData() to MODIFY the existing data)
+//                                 --> Currently MinPres is applied in Flu_Prepare() and Flag_Real()
+//                                     --> The Guideline is to apply MinPres check whenever _PRES or _FLU is required
+//                                         (because pressure field is NOT stored explicitly in each patch and thus existing data
+//                                         may still have pressure < MIN_PRES due to round-off errors)
 //-------------------------------------------------------------------------------------------------------
 void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array,
                         const int GhostSize, const int NPG, const int *PID0_List, int TVar,
                         const IntScheme_t IntScheme, const PrepUnit_t PrepUnit, const NSide_t NSide,
-                        const bool IntPhase, const OptFluBC_t FluBC[], const OptPotBC_t PotBC )
+                        const bool IntPhase, const OptFluBC_t FluBC[], const OptPotBC_t PotBC,
+                        const real MinDens, const real MinPres )
 {
 
 // nothing to do if there is no target patch group
@@ -117,6 +128,34 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
    AllVar |= _TOTAL_DENS;
 #  endif
    if ( TVar & ~AllVar )   Aux_Error( ERROR_INFO, "unsupported parameter %s = %d !!\n", "TVar", TVar );
+
+   if ( MinDens >= (real)0.0 )
+   {
+#     if ( MODEL == HYDRO  ||  MODEL == MHD  ||  MODEL == ELBDM )
+#     ifdef PARTICLE
+      if ( !(TVar & _DENS)  &&  !(TVar & _TOTAL_DENS) )
+         Aux_Error( ERROR_INFO, "MinDens (%13.7e) >= 0.0, but neither _DENS nor _TOTAL_DENS is found !!\n", MinDens );
+#     else
+      if ( !(TVar & _DENS) )
+         Aux_Error( ERROR_INFO, "MinDens (%13.7e) >= 0.0, but _DENS is not found !!\n", MinDens );
+#     endif
+#     else
+         Aux_Error( ERROR_INFO, "MinDens (%13.7e) >= 0.0 can only be applied to HYDRO/MHD/ELBDM !!\n", MinDens );
+#     endif
+   }
+
+   if ( MinPres >= (real)0.0 )
+   {
+#     if ( MODEL == HYDRO  ||  MODEL == MHD )
+//    note that when PARTICLE is on, we should NOT allow MinPres check when TVar & _TOTAL_DENS == true because
+//    we won't have gas density prepared to calculate pressure (we only have **total** density)
+//    --> but when PARTICLE is off, we have _TOTAL_DENS == _DENS (see Macro.h), and thus MinPres check is allowed
+      if ( !(TVar & _PRES)  &&  (TVar & _FLU) != _FLU )
+         Aux_Error( ERROR_INFO, "MinPres (%13.7e) >= 0.0, but neither _PRES nor _FLU is found !!\n", MinPres );
+#     else
+         Aux_Error( ERROR_INFO, "MinPres (%13.7e) >= 0.0 can only be applied to HYDRO/MHD !!\n", MinPres );
+#     endif
+   }
 
    if ( IntPhase )
    {
@@ -165,7 +204,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
          Aux_Error( ERROR_INFO, "please call \"Prepare_PatchData_InitParticleDensityArray\" in advance !!\n" );
    }
 
-// _DENS, _PAR_DENS, and _TOTAL_DENS do not work together since the results are stored to the same array
+// _DENS, _PAR_DENS, and _TOTAL_DENS do not work together(actually we should be able to support _DENS + _PAR_DENS)
    if (  ( TVar&_DENS && TVar&_PAR_DENS )  ||  ( TVar&_DENS && TVar&_TOTAL_DENS )  )
       Aux_Error( ERROR_INFO, "_DENS, _PAR_DENS, and _TOTAL_DENS cannot work together !!\n" );
 
@@ -174,7 +213,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
    if ( TVar&_TOTAL_DENS && TVar&_PAR_DENS )
       Aux_Error( ERROR_INFO, "_DENS, _PAR_DENS, and _TOTAL_DENS cannot work together !!\n" );
 #  endif
-#  endif
+#  endif // #ifdef PARTICLE
 
 // target patches must be real patches
    for (int TID=0; TID<NPG; TID++)
@@ -1355,7 +1394,20 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
 #        endif // #ifdef PARTICLE
 
 
-//       d. copy data from Array to h_Input_Array
+//       d. check minimum density and presure
+// ------------------------------------------------------------------------------------------------------------
+         if ( MinDens >= (real)0.0 )
+         {
+
+         } // if ( MinDens >= (real)0.0 )
+
+         if ( MinPres >= (real)0.0 )
+         {
+
+         } // if ( MinPres >= (real)0.0 )
+
+
+//       e. copy data from Array to h_Input_Array
 // ------------------------------------------------------------------------------------------------------------
          if ( PrepUnit == UNIT_PATCH ) // separate the prepared patch group data into individual patches
          {

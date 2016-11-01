@@ -15,9 +15,9 @@ extern double ExtAcc_AuxArray[EXT_ACC_NAUX_MAX];
 //
 // Note        :  Physical coordinates : dTime == dt
 //                Comoving coordinates : dTime == dt*(Hubble parameter)*(scale factor)^3 == delta(scale factor)
-// 
+//
 // Parameter   :  dt       : Time interval to advance solution
-//                dTime    : Time interval to update physical time 
+//                dTime    : Time interval to update physical time
 //                MinDtLv  : Refinement level determining the smallest time-step
 //                MinDtVar : Maximum acceleration determining the minimum time-step
 //                dt_dTime : dt/dTime (== 1.0 if COMOVING is off)
@@ -48,8 +48,8 @@ void Hydro_GetTimeStep_Gravity( double &dt, double &dTime, int &MinDtLv, real &M
 
       if ( dt_tmp <= 0.0 )
          Aux_Error( ERROR_INFO, "dt_tmp = %14.7e <= 0.0 (Rank %d, Lv %d) !!\n", dt_tmp, MPI_Rank, lv );
-      
-      if ( dt_tmp < dt_local )    
+
+      if ( dt_tmp < dt_local )
       {
          dt_local = dt_tmp;
          MinDtLv  = lv;
@@ -72,7 +72,7 @@ void Hydro_GetTimeStep_Gravity( double &dt, double &dTime, int &MinDtLv, real &M
    double *dt_AllRank       = new double [MPI_NRank];
    int    *MinDtLv_AllRank  = new int    [MPI_NRank];
    real   *MinDtVar_AllRank = new real   [MPI_NRank];
-   
+
    MPI_Gather( &dt_local, 1, MPI_DOUBLE, dt_AllRank,       1, MPI_DOUBLE, 0, MPI_COMM_WORLD );
    MPI_Gather( &MinDtLv,  1, MPI_INT,    MinDtLv_AllRank,  1, MPI_INT,    0, MPI_COMM_WORLD );
 #  ifdef FLOAT8
@@ -99,7 +99,7 @@ void Hydro_GetTimeStep_Gravity( double &dt, double &dTime, int &MinDtLv, real &M
    delete [] dt_AllRank;
    delete [] MinDtLv_AllRank;
    delete [] MinDtVar_AllRank;
-#  endif // #ifndef SERIAL 
+#  endif // #ifndef SERIAL
 
 
    dt    = DT__GRAVITY * dt_min;
@@ -114,13 +114,15 @@ void Hydro_GetTimeStep_Gravity( double &dt, double &dTime, int &MinDtLv, real &M
 // Description :  Evaluate the maximum gravitational acceleration for the time-step estimation
 //
 // Note        :  This function is also invoked in "Init_GAMER"
-// 
+//
 // Parameter   :  MaxAcc   : Array to store the maximum gravitational acceleration at each level
 //-------------------------------------------------------------------------------------------------------
 void Hydro_GetMaxAcc( real MaxAcc[] )
 {
 
    const bool   IntPhase_No = false;
+   const real   MinDens_No  = -1.0;
+   const real   MinPres_No  = -1.0;
    const real   Const_8     = (real)8.0;
    const int    NPG         = 1;                     // number of patch groups
    const int    NP          = NPG*8;                 // number of patches
@@ -138,7 +140,7 @@ void Hydro_GetMaxAcc( real MaxAcc[] )
    real *MaxAcc_OMP = new real [NT];
 
 
-// loop over all levels   
+// loop over all levels
    for (int lv=0; lv<NLEVEL; lv++)
    {
       dh_half = 0.5*amr->dh[lv];
@@ -168,7 +170,8 @@ void Hydro_GetMaxAcc( real MaxAcc[] )
 //          prepare the potential data with ghost zones (if self-gravity is on)
             if ( OPT__GRAVITY_TYPE == GRAVITY_SELF  ||  OPT__GRAVITY_TYPE == GRAVITY_BOTH )
             Prepare_PatchData( lv, Time[lv], &Pot_Array[0][0][0][0], GRA_GHOST_SIZE, NPG, &PID0, _POTE,
-                               OPT__GRA_INT_SCHEME, UNIT_PATCH, NSIDE_06, IntPhase_No, OPT__BC_FLU, OPT__BC_POT );
+                               OPT__GRA_INT_SCHEME, UNIT_PATCH, NSIDE_06, IntPhase_No, OPT__BC_FLU, OPT__BC_POT,
+                               MinDens_No, MinPres_No );
 
 //          loop over eight patches within the same patch group
             for (int ID=0; ID<NP; ID++)

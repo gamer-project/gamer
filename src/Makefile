@@ -27,7 +27,7 @@ SIMU_OPTION += -DSTORE_POT_GHOST
 
 # use unsplitting method to couple gravity to the target model (e.g., hydro, MHD, ELBDM)
 # --> must be off if GRAVITY is off
-#SIMU_OPTION += -DUNSPLIT_GRAVITY
+SIMU_OPTION += -DUNSPLIT_GRAVITY
 
 # individual time-step (default: shared time-step)
 SIMU_OPTION += -DINDIVIDUAL_TIMESTEP
