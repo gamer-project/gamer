@@ -837,6 +837,47 @@ int AllocateSonPatch( const int FaLv, const int *Cr, const int PScale, const int
                 FSize_Temp, FStart,     1, OPT__REF_POT_INT_SCHEME, PhaseUnwrapping_No, EnsureMonotonicity_No );
 #  endif
 
+// 3.2.3 check minimum density and pressure
+#  if ( MODEL == HYDRO  ||  MODEL == MHD  ||  MODEL == ELBDM )
+#  if ( MODEL == HYDRO  ||  MODEL == MHD )
+   const real  Gamma_m1 = GAMMA - (real)1.0;
+   const real _Gamma_m1 = (real)1.0 / Gamma_m1;
+#  endif
+
+   for (int k=0; k<FSize; k++)
+   for (int j=0; j<FSize; j++)
+   for (int i=0; i<FSize; i++)
+   {
+//    check minimum density
+      const real DensOld = FData_Flu[DENS][k][j][i];
+
+      if ( DensOld < MIN_DENS )
+      {
+//       rescale wave function (unnecessary if OPT__INT_PHASE if off, in which case we will rescale all wave functions later)
+#        if ( MODEL == ELBDM )
+         if ( OPT__INT_PHASE )
+         {
+            const real Rescale = SQRT( (real)MIN_DENS / DensOld );
+
+            FData_Flu[REAL][k][j][i] *= Rescale;
+            FData_Flu[IMAG][k][j][i] *= Rescale;
+         }
+#        endif
+
+//       apply minimum density
+         FData_Flu[DENS][k][j][i] = MIN_DENS;
+      }
+
+//    check minimum pressure
+#     if ( MODEL == HYDRO  ||  MODEL == MHD )
+      FData_Flu[ENGY][k][j][i]
+         = CPU_CheckMinPresInEngy( FData_Flu[DENS][k][j][i], FData_Flu[MOMX][k][j][i], FData_Flu[MOMY][k][j][i],
+                                   FData_Flu[MOMZ][k][j][i], FData_Flu[ENGY][k][j][i],
+                                   Gamma_m1, _Gamma_m1, MIN_PRES );
+#     endif
+   } // i,j,k
+#  endif // #if ( MODEL == HYDRO  ||  MODEL == MHD  ||  MODEL == ELBDM )
+
 
 // 3.3 copy data from FData_XXX to patch pointers
    int SonPID, Disp_i, Disp_j, Disp_k, I, J, K;

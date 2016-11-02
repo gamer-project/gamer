@@ -27,6 +27,9 @@
 //                available C software.  While the implementation here differs considerably
 //                from his, the first two interfaces and the style of some comments are very
 //                much derived from his work.
+//
+//                License:
+//                Hilbert Curve implementation copyright 1998, Rice University
 //-------------------------------------------------------------------------------------------------------
 
 

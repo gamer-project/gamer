@@ -56,6 +56,10 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
    const int  FPotSg      = amr->PotSg[lv+1];               // sandglass of potential       at level "lv+1"
    const bool SelfGravity = ( OPT__GRAVITY_TYPE == GRAVITY_SELF  ||  OPT__GRAVITY_TYPE == GRAVITY_BOTH );
 #  endif
+#  if ( MODEL == HYDRO  ||  MODEL == MHD )
+   const real  Gamma_m1   = GAMMA - (real)1.0;
+   const real _Gamma_m1   = (real)1.0 / Gamma_m1;
+#  endif
 
    int *Cr            = NULL;    // corner coordinates
    int *BufGrandTable = NULL;    // table recording the patch IDs of grandson buffer patches
@@ -379,7 +383,7 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
 #           endif // MODEL
          }
 
-//       (c1.3.2.2) interpolation
+//       (c1.3.3.2) interpolation
 #        if ( MODEL == ELBDM )
          if ( OPT__INT_PHASE )
          {
@@ -455,6 +459,42 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
                       FSize3, FStart, 1, OPT__REF_POT_INT_SCHEME, PhaseUnwrapping_No,
                       EnsureMonotonicity_No );
 #        endif
+
+//       (c1.3.3.3) check minimum density and pressure
+#        if ( MODEL == HYDRO  ||  MODEL == MHD  ||  MODEL == ELBDM )
+         for (int k=0; k<FSize; k++)
+         for (int j=0; j<FSize; j++)
+         for (int i=0; i<FSize; i++)
+         {
+//          check minimum density
+            const real DensOld = Flu_FData[DENS][k][j][i];
+
+            if ( DensOld < MIN_DENS )
+            {
+//             rescale wave function (unnecessary if OPT__INT_PHASE if off, in which case we will rescale all wave functions later)
+#              if ( MODEL == ELBDM )
+               if ( OPT__INT_PHASE )
+               {
+                  const real Rescale = SQRT( (real)MIN_DENS / DensOld );
+
+                  Flu_FData[REAL][k][j][i] *= Rescale;
+                  Flu_FData[IMAG][k][j][i] *= Rescale;
+               }
+#              endif
+
+//             apply minimum density
+               Flu_FData[DENS][k][j][i] = MIN_DENS;
+            }
+
+//          check minimum pressure
+#           if ( MODEL == HYDRO  ||  MODEL == MHD )
+            Flu_FData[ENGY][k][j][i]
+               = CPU_CheckMinPresInEngy( Flu_FData[DENS][k][j][i], Flu_FData[MOMX][k][j][i], Flu_FData[MOMY][k][j][i],
+                                         Flu_FData[MOMZ][k][j][i], Flu_FData[ENGY][k][j][i],
+                                         Gamma_m1, _Gamma_m1, MIN_PRES );
+#           endif
+         } // i,j,k
+#        endif // #if ( MODEL == HYDRO  ||  MODEL == MHD  ||  MODEL == ELBDM )
 
 
 //       (c1.3.4) copy data from IntData to patch pointers
