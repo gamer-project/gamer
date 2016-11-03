@@ -150,7 +150,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
 #     endif
 
 #     if ( MODEL == ELBDM )
-      if ( (TVar & _REAL)  ||  (TVar & _IMAG) )
+      if (  ( (TVar & _REAL) || (TVar & _IMAG) )  &&  MPI_Rank == 0  )
          Aux_Message( stderr, "WARNING : real and imaginary parts are NOT rescaled after applying the minimum density check !!\n" );
 #     endif
    }
@@ -325,7 +325,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
    if ( PrepParOnlyDens )  NVar_Tot ++;
 #  endif
 
-   if ( NVar_Tot == 0 )
+   if ( NVar_Tot == 0  &&  MPI_Rank == 0 )
    {
       Aux_Message( stderr, "WARNING : no targeted variable is found !!\n" );
       return;
@@ -372,7 +372,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
       if ( TimeMin < 0.0 )
          Aux_Error( ERROR_INFO, "TimeMin (%21.14e) < 0.0 ==> one of the fluid arrays has not been initialized !!\n", TimeMin );
 
-      if ( PrepTime < TimeMin  ||  PrepTime-TimeMax >= 1.0e-12*TimeMax )
+      if (  ( PrepTime < TimeMin  ||  PrepTime-TimeMax >= 1.0e-12*TimeMax )  &&  MPI_Rank == 0  )
          Aux_Message( stderr, "WARNING : temporal extrapolation (lv %d, T_Prep %20.14e, T_Min %20.14e, T_Max %20.14e)\n",
                       lv, PrepTime, TimeMin, TimeMax );
 
@@ -442,7 +442,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
       if ( TimeMin < 0.0 )
          Aux_Error( ERROR_INFO, "TimeMin (%21.14e) < 0.0 ==> one of the potential arrays has not been initialized !!\n", TimeMin );
 
-      if ( PrepTime < TimeMin  ||  PrepTime-TimeMax >= 1.0e-12*TimeMax )
+      if (  ( PrepTime < TimeMin  ||  PrepTime-TimeMax >= 1.0e-12*TimeMax )  &&  MPI_Rank == 0  )
          Aux_Message( stderr, "WARNING : temporal extrapolation (lv %d, T_Prep %20.14e, T_Min %20.14e, T_Max %20.14e)\n",
                       lv, PrepTime, TimeMin, TimeMax );
 

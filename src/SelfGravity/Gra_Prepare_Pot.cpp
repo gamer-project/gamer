@@ -27,7 +27,7 @@ void Gra_Prepare_Pot( const int lv, const double PrepTime, real h_Pot_Array_P_Ou
    const real MinPres_No  = -1.0;
 
    Prepare_PatchData( lv, PrepTime, &h_Pot_Array_P_Out[0][0][0][0], GRA_GHOST_SIZE, NPG, PID0_List, _POTE,
-                      OPT__GRA_INT_SCHEME, UNIT_PATCH, NSIDE_06, IntPhase_No, OPT__BC_FLU, OPT__BC_POT,
+                      OPT__GRA_INT_SCHEME, UNIT_PATCH, (GRA_GHOST_SIZE==0)?NSIDE_00:NSIDE_06, IntPhase_No, OPT__BC_FLU, OPT__BC_POT,
                       MinDens_No, MinPres_No );
 
 } // FUNCTION : Gra_Prepare_Pot
