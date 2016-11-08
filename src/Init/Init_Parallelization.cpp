@@ -6,7 +6,7 @@
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Init_Parallelization
-// Description :  Initialize parameters for parallelization 
+// Description :  Initialize parameters for parallelization
 //
 // Note        :  This function should be invoked even in the SERIAL mode
 //-------------------------------------------------------------------------------------------------------
@@ -54,7 +54,12 @@ void Init_Parallelization()
 
 // the following operations are useless for LOAD_BALANCE during restart
 #  ifdef LOAD_BALANCE
-   if ( OPT__INIT == INIT_RESTART )    return;
+   if ( OPT__INIT == INIT_RESTART )
+   {
+      if ( MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );
+
+      return;
+   }
 #  endif
 
 
@@ -63,7 +68,7 @@ void Init_Parallelization()
    {
       if ( MPI_NRank_X[0]*MPI_NRank_X[1]*MPI_NRank_X[2] != MPI_NRank )
          Aux_Error( ERROR_INFO, "MPI_NRank_X[0]*MPI_NRank_X[1]*MPI_NRank_X[2] != MPI_NRank !!\n" );
-      
+
       for (int d=0; d<3; d++)
       if ( MPI_NRank_X[d] <= 0 )    Aux_Error( ERROR_INFO, "MPI_NRank_X[%d] = %d <= 0 !!\n", d,  MPI_NRank_X[d] );
    }
@@ -83,108 +88,108 @@ void Init_Parallelization()
 // 4.1 periodic B.C.
    if ( OPT__BC_FLU[0] == BC_FLU_PERIODIC )
    {
-      MPI_SibRank[ 0] = ( MPI_Rank_X[2]                  )               *MPI_NRank_X[0]*MPI_NRank_X[1] + 
-                        ( MPI_Rank_X[1]                  )               *MPI_NRank_X[0]                + 
+      MPI_SibRank[ 0] = ( MPI_Rank_X[2]                  )               *MPI_NRank_X[0]*MPI_NRank_X[1] +
+                        ( MPI_Rank_X[1]                  )               *MPI_NRank_X[0]                +
                         ( MPI_Rank_X[0]+MPI_NRank_X[0]-1 )%MPI_NRank_X[0];
 
-      MPI_SibRank[ 1] = ( MPI_Rank_X[2]                  )               *MPI_NRank_X[0]*MPI_NRank_X[1] + 
-                        ( MPI_Rank_X[1]                  )               *MPI_NRank_X[0]                + 
+      MPI_SibRank[ 1] = ( MPI_Rank_X[2]                  )               *MPI_NRank_X[0]*MPI_NRank_X[1] +
+                        ( MPI_Rank_X[1]                  )               *MPI_NRank_X[0]                +
                         ( MPI_Rank_X[0]               +1 )%MPI_NRank_X[0];
 
-      MPI_SibRank[ 2] = ( MPI_Rank_X[2]                  )               *MPI_NRank_X[0]*MPI_NRank_X[1] + 
-                        ( MPI_Rank_X[1]+MPI_NRank_X[1]-1 )%MPI_NRank_X[1]*MPI_NRank_X[0]                + 
+      MPI_SibRank[ 2] = ( MPI_Rank_X[2]                  )               *MPI_NRank_X[0]*MPI_NRank_X[1] +
+                        ( MPI_Rank_X[1]+MPI_NRank_X[1]-1 )%MPI_NRank_X[1]*MPI_NRank_X[0]                +
                         ( MPI_Rank_X[0]                  );
 
-      MPI_SibRank[ 3] = ( MPI_Rank_X[2]                  )               *MPI_NRank_X[0]*MPI_NRank_X[1] + 
+      MPI_SibRank[ 3] = ( MPI_Rank_X[2]                  )               *MPI_NRank_X[0]*MPI_NRank_X[1] +
                         ( MPI_Rank_X[1]               +1 )%MPI_NRank_X[1]*MPI_NRank_X[0]                +
                         ( MPI_Rank_X[0]                  );
 
-      MPI_SibRank[ 4] = ( MPI_Rank_X[2]+MPI_NRank_X[2]-1 )%MPI_NRank_X[2]*MPI_NRank_X[0]*MPI_NRank_X[1] + 
+      MPI_SibRank[ 4] = ( MPI_Rank_X[2]+MPI_NRank_X[2]-1 )%MPI_NRank_X[2]*MPI_NRank_X[0]*MPI_NRank_X[1] +
                         ( MPI_Rank_X[1]                  )               *MPI_NRank_X[0]                +
                         ( MPI_Rank_X[0]                  );
 
-      MPI_SibRank[ 5] = ( MPI_Rank_X[2]               +1 )%MPI_NRank_X[2]*MPI_NRank_X[0]*MPI_NRank_X[1] + 
-                        ( MPI_Rank_X[1]                  )               *MPI_NRank_X[0]                + 
+      MPI_SibRank[ 5] = ( MPI_Rank_X[2]               +1 )%MPI_NRank_X[2]*MPI_NRank_X[0]*MPI_NRank_X[1] +
+                        ( MPI_Rank_X[1]                  )               *MPI_NRank_X[0]                +
                         ( MPI_Rank_X[0]                  );
 
-      MPI_SibRank[ 6] = ( MPI_Rank_X[2]                  )               *MPI_NRank_X[0]*MPI_NRank_X[1] + 
-                        ( MPI_Rank_X[1]+MPI_NRank_X[1]-1 )%MPI_NRank_X[1]*MPI_NRank_X[0]                + 
+      MPI_SibRank[ 6] = ( MPI_Rank_X[2]                  )               *MPI_NRank_X[0]*MPI_NRank_X[1] +
+                        ( MPI_Rank_X[1]+MPI_NRank_X[1]-1 )%MPI_NRank_X[1]*MPI_NRank_X[0]                +
                         ( MPI_Rank_X[0]+MPI_NRank_X[0]-1 )%MPI_NRank_X[0];
 
-      MPI_SibRank[ 7] = ( MPI_Rank_X[2]                  )               *MPI_NRank_X[0]*MPI_NRank_X[1] + 
-                        ( MPI_Rank_X[1]+MPI_NRank_X[1]-1 )%MPI_NRank_X[1]*MPI_NRank_X[0]                + 
+      MPI_SibRank[ 7] = ( MPI_Rank_X[2]                  )               *MPI_NRank_X[0]*MPI_NRank_X[1] +
+                        ( MPI_Rank_X[1]+MPI_NRank_X[1]-1 )%MPI_NRank_X[1]*MPI_NRank_X[0]                +
                         ( MPI_Rank_X[0]               +1 )%MPI_NRank_X[0];
 
-      MPI_SibRank[ 8] = ( MPI_Rank_X[2]                  )               *MPI_NRank_X[0]*MPI_NRank_X[1] + 
-                        ( MPI_Rank_X[1]               +1 )%MPI_NRank_X[1]*MPI_NRank_X[0]                + 
+      MPI_SibRank[ 8] = ( MPI_Rank_X[2]                  )               *MPI_NRank_X[0]*MPI_NRank_X[1] +
+                        ( MPI_Rank_X[1]               +1 )%MPI_NRank_X[1]*MPI_NRank_X[0]                +
                         ( MPI_Rank_X[0]+MPI_NRank_X[0]-1 )%MPI_NRank_X[0];
 
-      MPI_SibRank[ 9] = ( MPI_Rank_X[2]                  )               *MPI_NRank_X[0]*MPI_NRank_X[1] + 
-                        ( MPI_Rank_X[1]               +1 )%MPI_NRank_X[1]*MPI_NRank_X[0]                + 
+      MPI_SibRank[ 9] = ( MPI_Rank_X[2]                  )               *MPI_NRank_X[0]*MPI_NRank_X[1] +
+                        ( MPI_Rank_X[1]               +1 )%MPI_NRank_X[1]*MPI_NRank_X[0]                +
                         ( MPI_Rank_X[0]               +1 )%MPI_NRank_X[0];
-      
-      MPI_SibRank[10] = ( MPI_Rank_X[2]+MPI_NRank_X[2]-1 )%MPI_NRank_X[2]*MPI_NRank_X[0]*MPI_NRank_X[1] + 
+
+      MPI_SibRank[10] = ( MPI_Rank_X[2]+MPI_NRank_X[2]-1 )%MPI_NRank_X[2]*MPI_NRank_X[0]*MPI_NRank_X[1] +
                         ( MPI_Rank_X[1]+MPI_NRank_X[1]-1 )%MPI_NRank_X[1]*MPI_NRank_X[0]                +
                         ( MPI_Rank_X[0]                  );
 
-      MPI_SibRank[11] = ( MPI_Rank_X[2]+MPI_NRank_X[2]-1 )%MPI_NRank_X[2]*MPI_NRank_X[0]*MPI_NRank_X[1] + 
-                        ( MPI_Rank_X[1]               +1 )%MPI_NRank_X[1]*MPI_NRank_X[0]                + 
+      MPI_SibRank[11] = ( MPI_Rank_X[2]+MPI_NRank_X[2]-1 )%MPI_NRank_X[2]*MPI_NRank_X[0]*MPI_NRank_X[1] +
+                        ( MPI_Rank_X[1]               +1 )%MPI_NRank_X[1]*MPI_NRank_X[0]                +
                         ( MPI_Rank_X[0]                  );
 
-      MPI_SibRank[12] = ( MPI_Rank_X[2]               +1 )%MPI_NRank_X[2]*MPI_NRank_X[0]*MPI_NRank_X[1] + 
+      MPI_SibRank[12] = ( MPI_Rank_X[2]               +1 )%MPI_NRank_X[2]*MPI_NRank_X[0]*MPI_NRank_X[1] +
                         ( MPI_Rank_X[1]+MPI_NRank_X[1]-1 )%MPI_NRank_X[1]*MPI_NRank_X[0]                +
-                        ( MPI_Rank_X[0]                  );                  
+                        ( MPI_Rank_X[0]                  );
 
-      MPI_SibRank[13] = ( MPI_Rank_X[2]               +1 )%MPI_NRank_X[2]*MPI_NRank_X[0]*MPI_NRank_X[1] + 
+      MPI_SibRank[13] = ( MPI_Rank_X[2]               +1 )%MPI_NRank_X[2]*MPI_NRank_X[0]*MPI_NRank_X[1] +
                         ( MPI_Rank_X[1]               +1 )%MPI_NRank_X[1]*MPI_NRank_X[0]                +
                         ( MPI_Rank_X[0]                  );
 
       MPI_SibRank[14] = ( MPI_Rank_X[2]+MPI_NRank_X[2]-1 )%MPI_NRank_X[2]*MPI_NRank_X[0]*MPI_NRank_X[1] +
-                        ( MPI_Rank_X[1]                  )               *MPI_NRank_X[0]                + 
+                        ( MPI_Rank_X[1]                  )               *MPI_NRank_X[0]                +
                         ( MPI_Rank_X[0]+MPI_NRank_X[0]-1 )%MPI_NRank_X[0];
 
-      MPI_SibRank[15] = ( MPI_Rank_X[2]               +1 )%MPI_NRank_X[2]*MPI_NRank_X[0]*MPI_NRank_X[1] + 
-                        ( MPI_Rank_X[1]                  )               *MPI_NRank_X[0]                + 
+      MPI_SibRank[15] = ( MPI_Rank_X[2]               +1 )%MPI_NRank_X[2]*MPI_NRank_X[0]*MPI_NRank_X[1] +
+                        ( MPI_Rank_X[1]                  )               *MPI_NRank_X[0]                +
                         ( MPI_Rank_X[0]+MPI_NRank_X[0]-1 )%MPI_NRank_X[0];
-      
-      MPI_SibRank[16] = ( MPI_Rank_X[2]+MPI_NRank_X[2]-1 )%MPI_NRank_X[2]*MPI_NRank_X[0]*MPI_NRank_X[1] + 
-                        ( MPI_Rank_X[1]                  )               *MPI_NRank_X[0]                + 
+
+      MPI_SibRank[16] = ( MPI_Rank_X[2]+MPI_NRank_X[2]-1 )%MPI_NRank_X[2]*MPI_NRank_X[0]*MPI_NRank_X[1] +
+                        ( MPI_Rank_X[1]                  )               *MPI_NRank_X[0]                +
                         ( MPI_Rank_X[0]               +1 )%MPI_NRank_X[0];
-      
+
       MPI_SibRank[17] = ( MPI_Rank_X[2]               +1 )%MPI_NRank_X[2]*MPI_NRank_X[0]*MPI_NRank_X[1] +
-                        ( MPI_Rank_X[1]                  )               *MPI_NRank_X[0]                + 
+                        ( MPI_Rank_X[1]                  )               *MPI_NRank_X[0]                +
                         ( MPI_Rank_X[0]               +1 )%MPI_NRank_X[0];
-      
-      MPI_SibRank[18] = ( MPI_Rank_X[2]+MPI_NRank_X[2]-1 )%MPI_NRank_X[2]*MPI_NRank_X[0]*MPI_NRank_X[1] + 
-                        ( MPI_Rank_X[1]+MPI_NRank_X[1]-1 )%MPI_NRank_X[1]*MPI_NRank_X[0]                + 
+
+      MPI_SibRank[18] = ( MPI_Rank_X[2]+MPI_NRank_X[2]-1 )%MPI_NRank_X[2]*MPI_NRank_X[0]*MPI_NRank_X[1] +
+                        ( MPI_Rank_X[1]+MPI_NRank_X[1]-1 )%MPI_NRank_X[1]*MPI_NRank_X[0]                +
                         ( MPI_Rank_X[0]+MPI_NRank_X[0]-1 )%MPI_NRank_X[0];
-      
-      MPI_SibRank[19] = ( MPI_Rank_X[2]+MPI_NRank_X[2]-1 )%MPI_NRank_X[2]*MPI_NRank_X[0]*MPI_NRank_X[1] + 
-                        ( MPI_Rank_X[1]+MPI_NRank_X[1]-1 )%MPI_NRank_X[1]*MPI_NRank_X[0]                + 
+
+      MPI_SibRank[19] = ( MPI_Rank_X[2]+MPI_NRank_X[2]-1 )%MPI_NRank_X[2]*MPI_NRank_X[0]*MPI_NRank_X[1] +
+                        ( MPI_Rank_X[1]+MPI_NRank_X[1]-1 )%MPI_NRank_X[1]*MPI_NRank_X[0]                +
                         ( MPI_Rank_X[0]               +1 )%MPI_NRank_X[0];
-      
-      MPI_SibRank[20] = ( MPI_Rank_X[2]+MPI_NRank_X[2]-1 )%MPI_NRank_X[2]*MPI_NRank_X[0]*MPI_NRank_X[1] + 
-                        ( MPI_Rank_X[1]               +1 )%MPI_NRank_X[1]*MPI_NRank_X[0]                + 
+
+      MPI_SibRank[20] = ( MPI_Rank_X[2]+MPI_NRank_X[2]-1 )%MPI_NRank_X[2]*MPI_NRank_X[0]*MPI_NRank_X[1] +
+                        ( MPI_Rank_X[1]               +1 )%MPI_NRank_X[1]*MPI_NRank_X[0]                +
                         ( MPI_Rank_X[0]+MPI_NRank_X[0]-1 )%MPI_NRank_X[0];
-      
-      MPI_SibRank[21] = ( MPI_Rank_X[2]+MPI_NRank_X[2]-1 )%MPI_NRank_X[2]*MPI_NRank_X[0]*MPI_NRank_X[1] + 
-                        ( MPI_Rank_X[1]               +1 )%MPI_NRank_X[1]*MPI_NRank_X[0]                + 
+
+      MPI_SibRank[21] = ( MPI_Rank_X[2]+MPI_NRank_X[2]-1 )%MPI_NRank_X[2]*MPI_NRank_X[0]*MPI_NRank_X[1] +
+                        ( MPI_Rank_X[1]               +1 )%MPI_NRank_X[1]*MPI_NRank_X[0]                +
                         ( MPI_Rank_X[0]               +1 )%MPI_NRank_X[0];
-      
-      MPI_SibRank[22] = ( MPI_Rank_X[2]               +1 )%MPI_NRank_X[2]*MPI_NRank_X[0]*MPI_NRank_X[1] + 
-                        ( MPI_Rank_X[1]+MPI_NRank_X[1]-1 )%MPI_NRank_X[1]*MPI_NRank_X[0]                + 
+
+      MPI_SibRank[22] = ( MPI_Rank_X[2]               +1 )%MPI_NRank_X[2]*MPI_NRank_X[0]*MPI_NRank_X[1] +
+                        ( MPI_Rank_X[1]+MPI_NRank_X[1]-1 )%MPI_NRank_X[1]*MPI_NRank_X[0]                +
                         ( MPI_Rank_X[0]+MPI_NRank_X[0]-1 )%MPI_NRank_X[0];
-      
+
       MPI_SibRank[23] = ( MPI_Rank_X[2]               +1 )%MPI_NRank_X[2]*MPI_NRank_X[0]*MPI_NRank_X[1] +
-                        ( MPI_Rank_X[1]+MPI_NRank_X[1]-1 )%MPI_NRank_X[1]*MPI_NRank_X[0]                + 
+                        ( MPI_Rank_X[1]+MPI_NRank_X[1]-1 )%MPI_NRank_X[1]*MPI_NRank_X[0]                +
                         ( MPI_Rank_X[0]               +1 )%MPI_NRank_X[0];
-      
-      MPI_SibRank[24] = ( MPI_Rank_X[2]               +1 )%MPI_NRank_X[2]*MPI_NRank_X[0]*MPI_NRank_X[1] + 
-                        ( MPI_Rank_X[1]               +1 )%MPI_NRank_X[1]*MPI_NRank_X[0]                + 
+
+      MPI_SibRank[24] = ( MPI_Rank_X[2]               +1 )%MPI_NRank_X[2]*MPI_NRank_X[0]*MPI_NRank_X[1] +
+                        ( MPI_Rank_X[1]               +1 )%MPI_NRank_X[1]*MPI_NRank_X[0]                +
                         ( MPI_Rank_X[0]+MPI_NRank_X[0]-1 )%MPI_NRank_X[0];
-      
-      MPI_SibRank[25] = ( MPI_Rank_X[2]               +1 )%MPI_NRank_X[2]*MPI_NRank_X[0]*MPI_NRank_X[1] + 
-                        ( MPI_Rank_X[1]               +1 )%MPI_NRank_X[1]*MPI_NRank_X[0]                + 
+
+      MPI_SibRank[25] = ( MPI_Rank_X[2]               +1 )%MPI_NRank_X[2]*MPI_NRank_X[0]*MPI_NRank_X[1] +
+                        ( MPI_Rank_X[1]               +1 )%MPI_NRank_X[1]*MPI_NRank_X[0]                +
                         ( MPI_Rank_X[0]               +1 )%MPI_NRank_X[0];
 
    } // if ( OPT__BC_FLU[0] == BC_FLU_PERIODIC )
@@ -234,7 +239,7 @@ void Init_Parallelization()
          for (int d=0; d<3; d++)    Disp[d] = TABLE_01( s, 'x'+d, -1, 0, +1 );
 
          ID1 = ( (Buf+MPI_Rank_X[2]+Disp[2])*Size[1] + (Buf+MPI_Rank_X[1]+Disp[1]) )*Size[0] + (Buf+MPI_Rank_X[0]+Disp[0]);
-         MPI_SibRank[s] = RankMap[ID1]; 
+         MPI_SibRank[s] = RankMap[ID1];
       }
 
       delete [] RankMap;
@@ -299,7 +304,7 @@ void Init_Parallelization()
       if ( amr->Par->NPar_Active_AllRank < 0 )
          Aux_Error( ERROR_INFO, "NPar_Active_AllRank = %ld < 0 !!\n", amr->Par->NPar_Active_AllRank );
 
-      const int NPar_per_Rank  = amr->Par->NPar_Active_AllRank / MPI_NRank; 
+      const int NPar_per_Rank  = amr->Par->NPar_Active_AllRank / MPI_NRank;
       const int Rank_with_more = amr->Par->NPar_Active_AllRank % MPI_NRank;
 
 //    assuming all particles are active initially (some of them may be marked as inactive when calling Par_Aux_InitCheck)

@@ -4,23 +4,24 @@ reset
 
 set log xy
 set xlabel "r [kpc]"
-set xrange [2.0e-5:1.0e1]
+set xrange [1.0e-6:1.0e1]
 set format x "10^{%T}"
 set format y "10^{%T}"
 #set size square
 set pointsize 1.0
 
- set term X11 enhanced
-#set term png enhanced
+ set term X11 enhanced size 1024,600 font ",16"
+#set term png enhanced crop size 1280,800 font ",16"
 
 
 # all target files
 FILE_BONDI = '../../Table__BondiProfile_Gamma1.200'
 FILE_SIMU  = './'
 DUMP_TABLE = '../../Record__Dump'
-ID0        = 0
-DID        = 1
-NID        = 6
+ID_START   = 0
+ID_END     = 24
+ID_DELTA   = 1
+PAUSE      = 0.50  # <= 0.0 --> mouse
 GAMMA      = 1.200     
 
 
@@ -28,35 +29,46 @@ GAMMA      = 1.200
 UnitD = 5.0e-25   # in CGS
 UnitV = 1.0e8     # in CGS
 UnitT = 0.978     # in Myr
+UnitP = UnitD*UnitV*UnitV
 
 
 
 # plot density
 set key reverse Left spacing 1.0 top right
 set ylabel "{/Symbol r} [g/cm^3]"
-set yrange [1.0e-25:1.0e-19]
+set yrange [1.0e-25:1.0e-17]
 if ( GPVAL_TERM ne 'x11' ) { set output "Fig__Bondi_Dens.png" };
 
-plot for [ID=ID0:ID0+(NID-1)*DID:DID] sprintf( '%s/AveRho_000%d%d%d', FILE_SIMU, ID/100, ID%100/10, ID%10 ) \
-     u 1:($3*UnitD) w l \
-     tit sprintf(  "%5.3f Myr", UnitT*system( sprintf("awk '{if(NR==1+%d) {print $2}}' %s", ID+1, DUMP_TABLE) )  ) \
-    ,FILE_BONDI u 2:($4*UnitD) w l lc -1 tit 'Bondi'
+do for [ID=ID_START:ID_END:ID_DELTA] {
 
-if ( GPVAL_TERM eq 'x11' ) { pause mouse };
+   set title sprintf( 'DumpID %06d', ID )
+
+   plot sprintf( '%s/AveRho_%06d', FILE_SIMU, ID ) u 1:($3*UnitD) w lp pt 6 lc 6 \
+        tit sprintf(  "%5.3f Myr", UnitT*system( sprintf("awk '{if(NR==1+%d) {print $2}}' %s", ID+1, DUMP_TABLE) )  ) \
+       ,FILE_BONDI u 2:($4*UnitD) w l lc -1 tit 'Bondi'
+   
+   if ( GPVAL_TERM eq 'x11' ) { if ( PAUSE <= 0.0 ) { pause mouse }   else { pause PAUSE } };
+}
+if ( GPVAL_TERM eq 'x11' ) { pause -1 "Hit return to continue"};
 
 
 # plot velocity
 set key reverse Left spacing 1.0 top right
 set ylabel "v [km/s]"
-set yrange [1.0e-1:5.0e4]
+set yrange [1.0e-1:5.0e5]
 if ( GPVAL_TERM ne 'x11' ) { set output "Fig__Bondi_Velo.png" };
 
-plot for [ID=ID0:ID0+(NID-1)*DID:DID] sprintf( '%s/AveV_R_000%d%d%d', FILE_SIMU, ID/100, ID%100/10, ID%10 ) \
-     u 1:(abs($3)*UnitV*1.0e-5) w l \
-     tit sprintf(  "%5.3f Myr", UnitT*system( sprintf("awk '{if(NR==1+%d) {print $2}}' %s", ID+1, DUMP_TABLE) )  ) \
-    ,FILE_BONDI u 2:($6*UnitV*1.0e-5) w l lc -1 tit 'Bondi'
+do for [ID=ID_START:ID_END:ID_DELTA] {
 
-if ( GPVAL_TERM eq 'x11' ) { pause mouse };
+   set title sprintf( 'DumpID %06d', ID )
+
+   plot sprintf( '%s/AveV_R_%06d', FILE_SIMU, ID ) u 1:(abs($3)*UnitV*1.0e-5) w lp pt 6 lc 6 \
+        tit sprintf(  "%5.3f Myr", UnitT*system( sprintf("awk '{if(NR==1+%d) {print $2}}' %s", ID+1, DUMP_TABLE) )  ) \
+       ,FILE_BONDI u 2:($6*UnitV*1.0e-5) w l lc -1 tit 'Bondi'
+
+   if ( GPVAL_TERM eq 'x11' ) { if ( PAUSE <= 0.0 ) { pause mouse }   else { pause PAUSE } };
+}
+if ( GPVAL_TERM eq 'x11' ) { pause -1 "Hit return to continue"};
 
       
 # plot Mach number
@@ -65,13 +77,18 @@ set ylabel "Mach number"
 set yrange [1.0e-3:1.0e2]
 if ( GPVAL_TERM ne 'x11' ) { set output "Fig__Bondi_Mach.png" };
 
-plot for [ID=ID0:ID0+(NID-1)*DID:DID] sprintf( '<paste %s/AveRho_000%d%d%d %s/AvePre_000%d%d%d %s/AveV_R_000%d%d%d' \
-    ,FILE_SIMU, ID/100, ID%100/10, ID%10, FILE_SIMU, ID/100, ID%100/10, ID%10, FILE_SIMU, ID/100, ID%100/10, ID%10 ) \
-     u 1:(abs($17)/(GAMMA*$11/$3)**0.5) w l \
-     tit sprintf(  "%5.3f Myr", UnitT*system( sprintf("awk '{if(NR==1+%d) {print $2}}' %s", ID+1, DUMP_TABLE) )  ) \
-    ,FILE_BONDI u 2:7 w l lc -1 tit 'Bondi'
+do for [ID=ID_START:ID_END:ID_DELTA] {
 
-if ( GPVAL_TERM eq 'x11' ) { pause mouse };
+   set title sprintf( 'DumpID %06d', ID )
+
+   plot sprintf( '<paste %s/AveRho_%06d %s/AvePre_%06d %s/AveV_R_%06d', FILE_SIMU, ID, FILE_SIMU, ID, FILE_SIMU, ID )\
+        u 1:(abs($17)/(GAMMA*$11/$3)**0.5) w lp pt 6 lc 6 \
+        tit sprintf(  "%5.3f Myr", UnitT*system( sprintf("awk '{if(NR==1+%d) {print $2}}' %s", ID+1, DUMP_TABLE) )  ) \
+       ,FILE_BONDI u 2:7 w l lc -1 tit 'Bondi'
+
+   if ( GPVAL_TERM eq 'x11' ) { if ( PAUSE <= 0.0 ) { pause mouse }   else { pause PAUSE } };
+}
+if ( GPVAL_TERM eq 'x11' ) { pause -1 "Hit return to continue"};
 
 
 # plot sound speed
@@ -80,13 +97,36 @@ set ylabel "Sound speed [km/s]"
 set yrange [2.0e2:3.0e3]
 if ( GPVAL_TERM ne 'x11' ) { set output "Fig__Bondi_Cs.png" };
 
-plot for [ID=ID0:ID0+(NID-1)*DID:DID] sprintf( '<paste %s/AveRho_000%d%d%d %s/AvePre_000%d%d%d %s/AveV_R_000%d%d%d' \
-    ,FILE_SIMU, ID/100, ID%100/10, ID%10, FILE_SIMU, ID/100, ID%100/10, ID%10, FILE_SIMU, ID/100, ID%100/10, ID%10 ) \
-     u 1:(UnitV*1.0e-5*(GAMMA*$11/$3)**0.5) w l \
-     tit sprintf(  "%5.3f Myr", UnitT*system( sprintf("awk '{if(NR==1+%d) {print $2}}' %s", ID+1, DUMP_TABLE) )  ) \
-    ,FILE_BONDI u 2:(($6*UnitV*1.0e-5)/$7) w l lc -1 tit 'Bondi'
+do for [ID=ID_START:ID_END:ID_DELTA] {
+
+   set title sprintf( 'DumpID %06d', ID )
+
+   plot sprintf( '<paste %s/AveRho_%06d %s/AvePre_%06d %s/AveV_R_%06d', FILE_SIMU, ID, FILE_SIMU, ID, FILE_SIMU, ID ) \
+        u 1:(UnitV*1.0e-5*(GAMMA*$11/$3)**0.5) w lp pt 6 lc 6 \
+        tit sprintf(  "%5.3f Myr", UnitT*system( sprintf("awk '{if(NR==1+%d) {print $2}}' %s", ID+1, DUMP_TABLE) )  ) \
+       ,FILE_BONDI u 2:(($6*UnitV*1.0e-5)/$7) w l lc -1 tit 'Bondi'
+
+   if ( GPVAL_TERM eq 'x11' ) { if ( PAUSE <= 0.0 ) { pause mouse }   else { pause PAUSE } };
+}
+if ( GPVAL_TERM eq 'x11' ) { pause -1 "Hit return to continue"};
 
 
-if ( GPVAL_TERM eq 'x11' ) { pause -1 };
+# plot pressure
+set key reverse Left spacing 1.0 top right
+set ylabel "pressure"
+set yrange [1.0e-2:1.0e8]
+if ( GPVAL_TERM ne 'x11' ) { set output "Fig__Bondi_Pres.png" };
+
+do for [ID=ID_START:ID_END:ID_DELTA] {
+
+   set title sprintf( 'DumpID %06d', ID )
+
+   plot sprintf( '%s/AvePre_%06d', FILE_SIMU, ID ) u 1:3 w lp pt 6 lc 6 \
+        tit sprintf(  "%5.3f Myr", UnitT*system( sprintf("awk '{if(NR==1+%d) {print $2}}' %s", ID+1, DUMP_TABLE) )  ) \
+       ,FILE_BONDI u 2:( ($6/$7)**2.0*$4/GAMMA ) w l lc -1 tit 'Bondi'
+
+   if ( GPVAL_TERM eq 'x11' ) { if ( PAUSE <= 0.0 ) { pause mouse }   else { pause PAUSE } };
+}
+if ( GPVAL_TERM eq 'x11' ) { pause -1 "Hit return to continue"};
 
 
