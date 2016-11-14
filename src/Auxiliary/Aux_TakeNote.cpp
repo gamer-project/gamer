@@ -548,7 +548,6 @@ void Aux_TakeNote()
       fprintf( Note, "Par->Init                 %d\n",      amr->Par->Init                );
       fprintf( Note, "Par->Interp               %d\n",      amr->Par->Interp              );
       fprintf( Note, "Par->Integ                %d\n",      amr->Par->Integ               );
-      fprintf( Note, "Par->SyncDump             %d\n",      amr->Par->SyncDump            );
       fprintf( Note, "Par->GhostSize            %d\n",      amr->Par->GhostSize           );
       fprintf( Note, "Par->ImproveAcc           %d\n",      amr->Par->ImproveAcc          );
       fprintf( Note, "Par->PredictPos           %d\n",      amr->Par->PredictPos          );
@@ -730,6 +729,7 @@ void Aux_TakeNote()
       fprintf( Note, "GPU_NSTREAM               %d\n",      GPU_NSTREAM             );
       fprintf( Note, "OPT__FIXUP_FLUX           %d\n",      OPT__FIXUP_FLUX         );
       fprintf( Note, "OPT__FIXUP_RESTRICT       %d\n",      OPT__FIXUP_RESTRICT     );
+      fprintf( Note, "OPT__CORR_AFTER_ALL_SYNC  %d\n",      OPT__CORR_AFTER_ALL_SYNC);
       fprintf( Note, "OPT__OVERLAP_MPI          %d\n",      OPT__OVERLAP_MPI        );
       fprintf( Note, "OPT__RESET_FLUID          %d\n",      OPT__RESET_FLUID        );
 #     if ( MODEL == HYDRO  ||  MODEL == MHD  ||  MODEL == ELBDM )

@@ -93,6 +93,7 @@ void Flu_BoundaryCondition_User( real *Array, const int NVar_Flu, const int Arra
                                  const int TFluVarIdxList[], const double Time, const double dh, const double *Corner,
                                  const int TVar );
 void Flu_ResetByUser( const int lv, const int FluSg, const double TTime );
+void Flu_CorrAfterAllSync();
 #ifndef SERIAL
 void Flu_AllocateFluxArray_Buffer( const int lv );
 #endif

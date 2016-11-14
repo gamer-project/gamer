@@ -146,10 +146,6 @@ void Init_Load_Parameter()
 
    getline( &input_line, &len, File );
    sscanf( input_line, "%d%s",   &temp_int,                 string );
-   amr->Par->SyncDump = (bool)temp_int;
-
-   getline( &input_line, &len, File );
-   sscanf( input_line, "%d%s",   &temp_int,                 string );
    amr->Par->ImproveAcc = (bool)temp_int;
 
    getline( &input_line, &len, File );
@@ -160,7 +156,6 @@ void Init_Load_Parameter()
    sscanf( input_line, "%lf%s",  &amr->Par->RemoveCell,     string );
 
 #  else
-   getline( &input_line, &len, File );
    getline( &input_line, &len, File );
    getline( &input_line, &len, File );
    getline( &input_line, &len, File );
@@ -447,6 +442,10 @@ void Init_Load_Parameter()
    getline( &input_line, &len, File );
    sscanf( input_line, "%d%s",   &temp_int,                 string );
    OPT__FIXUP_RESTRICT = (bool)temp_int;
+
+   getline( &input_line, &len, File );
+   sscanf( input_line, "%d%s",   &temp_int,                 string );
+   OPT__CORR_AFTER_ALL_SYNC = (bool)temp_int;
 
    getline( &input_line, &len, File );
    sscanf( input_line, "%d%s",   &temp_int,                 string );

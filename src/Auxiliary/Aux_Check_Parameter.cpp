@@ -1212,11 +1212,6 @@ void Aux_Check_Parameter()
    if ( amr->Par->Integ < 1  ||  amr->Par->Integ > 2 )
       Aux_Error( ERROR_INFO, "unsupported option \"amr->Par->Integ = %d\" [1/2] !!\n", amr->Par->Integ );
 
-#  ifndef STORE_PAR_ACC
-   if ( amr->Par->SyncDump )
-      Aux_Error( ERROR_INFO, "please turn on STORE_PAR_ACC for amr->Par->SyncDump (PAR_SYNC_DUMP) !!\n" );
-#  endif
-
 #  ifndef STORE_POT_GHOST
    if ( amr->Par->ImproveAcc )
       Aux_Error( ERROR_INFO, "please turn on STORE_POT_GHOST for amr->Par->ImproveAcc (PAR_IMPROVE_ACC) !!\n" );

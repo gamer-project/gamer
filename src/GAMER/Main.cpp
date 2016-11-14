@@ -54,7 +54,7 @@ bool              OPT__INT_TIME, OPT__OUTPUT_TEST_ERROR, OPT__OUTPUT_BASE, OPT__
 bool              OPT__OUTPUT_BASEPS, OPT__CK_REFINE, OPT__CK_PROPER_NESTING, OPT__CK_FINITE, OPT__RECORD_PERFORMANCE;
 bool              OPT__CK_RESTRICT, OPT__CK_PATCH_ALLOCATE, OPT__FIXUP_FLUX, OPT__CK_FLUX_ALLOCATE;
 bool              OPT__UM_START_DOWNGRADE, OPT__UM_START_REFINE, OPT__UM_FACTOR_5OVER3, OPT__TIMING_MPI;
-bool              OPT__CK_CONSERVATION, OPT__RESET_FLUID, OPT__RECORD_USER;
+bool              OPT__CK_CONSERVATION, OPT__RESET_FLUID, OPT__RECORD_USER, OPT__CORR_AFTER_ALL_SYNC;
 OptInit_t         OPT__INIT;
 OptRestartH_t     OPT__RESTART_HEADER;
 OptOutputFormat_t OPT__OUTPUT_TOTAL;
@@ -216,7 +216,7 @@ real (*d_Flu_Array_USG_G)[GRA_NIN-1][ PS1*PS1*PS1        ]        = NULL;
 // 5. timers
 // =======================================================================================================
 #ifdef TIMING
-Timer_t *Timer_Main[6];
+Timer_t *Timer_Main[7];
 Timer_t *Timer_MPI[3];
 Timer_t *Timer_Flu_Advance[NLEVEL];
 Timer_t *Timer_Gra_Advance[NLEVEL];
@@ -329,132 +329,12 @@ int main( int argc, char *argv[] )
 //    ---------------------------------------------------------------------------------------------------
 
 
-//    c. synchronize particles, restrict data, and re-calculate potential in the debug mode
-//       (in order to check the RESTART process)
+//    c. apply various corrections
+//       --> synchronize particles, restrict data, recalculate potential and particle acceleration, ...
 //    ---------------------------------------------------------------------------------------------------
-#     ifdef GAMER_DEBUG
-
-//    synchronize all particles
-#     if ( defined PARTICLE  &&  defined STORE_PAR_ACC )
-      if ( OPT__VERBOSE  &&  MPI_Rank == 0 )
-         Aux_Message( stdout, "   DEBUG: synchronize particles             ... " );
-
-      if (  Par_Synchronize( Time[0], PAR_SYNC_FORCE ) != 0  )
-         Aux_Error( ERROR_INFO, "particle synchronization failed !!\n" );
-
-//    particles may cross patch boundaries after synchronization
-      const bool TimingSendPar_No = false;
-
-      for (int lv=0; lv<NLEVEL; lv++)
-      {
-         Par_PassParticle2Sibling     ( lv, TimingSendPar_No );
-         Par_PassParticle2Son_AllPatch( lv, TimingSendPar_No );
-      }
-
-      if ( OPT__VERBOSE  &&  MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );
-#     endif
-
-//    restrict data
-      for (int lv=MAX_LEVEL-1; lv>=0; lv--)
-      {
-         if ( NPatchTotal[lv+1] == 0 )    continue;
-
-         if ( OPT__VERBOSE  &&  MPI_Rank == 0 )
-            Aux_Message( stdout, "   DEBUG: restrict data at Lv %2d            ... ", lv );
-
-//       to ensure the same round-off errors for the father patches with newly refined son patches in the RESTART process
-         Flu_Restrict( lv, amr->FluSg[lv+1], amr->FluSg[lv], NULL_INT, NULL_INT, _FLU );
-
-#        ifdef LOAD_BALANCE
-         LB_GetBufferData( lv, amr->FluSg[lv], NULL_INT, DATA_RESTRICT, _FLU, NULL_INT );
-#        endif
-
-         Buf_GetBufferData( lv, amr->FluSg[lv], NULL_INT, DATA_GENERAL, _FLU, Flu_ParaBuf, USELB_YES );
-
-         if ( OPT__VERBOSE  &&  MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );
-      }
-
-//    calculate gravitational potential
-#     ifdef GRAVITY
-      if ( OPT__GRAVITY_TYPE == GRAVITY_SELF  ||  OPT__GRAVITY_TYPE == GRAVITY_BOTH )
-      for (int lv=0; lv<=MAX_LEVEL; lv++)
-      {
-         if ( NPatchTotal[lv] == 0 )   break;
-
-         if ( OPT__VERBOSE  &&  MPI_Rank == 0 )
-            Aux_Message( stdout, "   DEBUG: recalculate potential at Lv %2d    ... ", lv );
-
-#        ifdef COMOVING
-         const double Poi_Coeff = 4.0*M_PI*NEWTON_G*Time[lv];
-#        else
-         const double Poi_Coeff = 4.0*M_PI*NEWTON_G;
-#        endif
-
-//       initialize the particle density array (rho_ext) and collect particles to the target level
-#        ifdef PARTICLE
-         const bool TimingSendPar_No = false;
-         const bool JustCountNPar_No = false;
-#        ifdef LOAD_BALANCE
-         const bool PredictPos       = amr->Par->PredictPos;
-         const bool SibBufPatch      = true;
-         const bool FaSibBufPatch    = true;
-#        else
-         const bool PredictPos       = false;
-         const bool SibBufPatch      = NULL_BOOL;
-         const bool FaSibBufPatch    = NULL_BOOL;
-#        endif
-
-         Prepare_PatchData_InitParticleDensityArray( lv );
-
-         Par_CollectParticle2OneLevel( lv, PredictPos, Time[lv], SibBufPatch, FaSibBufPatch, JustCountNPar_No,
-                                       TimingSendPar_No );
-#        endif
-
-         if ( lv == 0 )
-         {
-            CPU_PoissonSolver_FFT( Poi_Coeff, amr->PotSg[lv], Time[lv] );
-
-            Buf_GetBufferData( lv, NULL_INT, amr->PotSg[lv], POT_FOR_POISSON, _POTE, Pot_ParaBuf, USELB_YES );
-
-//          must call Poi_StorePotWithGhostZone AFTER collecting potential for buffer patches
-#           ifdef STORE_POT_GHOST
-            Poi_StorePotWithGhostZone( lv, amr->PotSg[lv], true );
-#           endif
-         }
-
-         else
-         {
-            Buf_GetBufferData( lv, amr->FluSg[lv], NULL_INT, DATA_GENERAL, _DENS, Rho_ParaBuf, USELB_YES );
-
-            InvokeSolver( POISSON_SOLVER, lv, Time[lv], NULL_REAL, NULL_REAL, Poi_Coeff, NULL_INT, amr->PotSg[lv], false, false );
-
-            Buf_GetBufferData( lv, NULL_INT, amr->PotSg[lv], POT_FOR_POISSON, _POTE, Pot_ParaBuf, USELB_YES );
-         }
-
-//       free memory for collecting particles from other ranks and levels, and free density arrays with ghost zones (rho_ext)
-#        ifdef PARTICLE
-         Par_CollectParticle2OneLevel_FreeMemory( lv, SibBufPatch, FaSibBufPatch );
-
-         Prepare_PatchData_FreeParticleDensityArray( lv );
-#        endif
-
-         if ( OPT__VERBOSE  &&  MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );
-
-      } // for (int lv=0; lv<=MAX_LEVEL; lv++) if ( OPT__GRAVITY_TYPE == GRAVITY_SELF  ||  OPT__GRAVITY_TYPE == GRAVITY_BOTH )
-#     endif // #ifdef GRAVITY
-
-#     if ( defined PARTICLE  &&  defined STORE_PAR_ACC )
-      if ( OPT__VERBOSE  &&  MPI_Rank == 0 )    Aux_Message( stdout, "   DEBUG: recalculate particle acceleration ... " );
-
-      const bool StoreAcc_Yes    = true;
-      const bool UseStoredAcc_No = false;
-
-      for (int lv=0; lv<NLEVEL; lv++)
-      Par_UpdateParticle( lv, amr->PotSgTime[lv][ amr->PotSg[lv] ], NULL_REAL, PAR_UPSTEP_ACC_ONLY, StoreAcc_Yes, UseStoredAcc_No );
-
-      if ( OPT__VERBOSE  &&  MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );
-#     endif
-#     endif // #ifdef GAMER_DEBUG
+      if ( OPT__CORR_AFTER_ALL_SYNC )
+      TIMING_FUNC(   Flu_CorrAfterAllSync(),     Timer_Main[6],   false   );
+//    ---------------------------------------------------------------------------------------------------
 
 
 //    d. output data and execute auxiliary functions

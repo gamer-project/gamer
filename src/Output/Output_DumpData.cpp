@@ -8,7 +8,7 @@ static void Write_DumpRecord();
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Output_DumpData
-// Description :  Trigger the output functions "Output_DumpData_Total, Output_DumpData_Part, Output_TestProbErr, 
+// Description :  Trigger the output functions "Output_DumpData_Total, Output_DumpData_Part, Output_TestProbErr,
 //                Output_BasePowerSpectrum, Par_Output_TextFile"
 //
 // Parameter   :  Stage :  0 : start
@@ -32,7 +32,7 @@ void Output_DumpData( const int Stage )
       return;
 
 
-// set the first dump time 
+// set the first dump time
    static int DumpTableID;
 
    if ( Stage == 0 )
@@ -57,9 +57,9 @@ void Output_DumpData( const int Stage )
                {
                   DumpTime = DumpTable[DumpTableID];
 
-                  if (   (  DumpTime >= Time[0]  )                                            ||  
-                         (  Time[0] != 0.0 && fabs( (Time[0]-DumpTime)/Time[0] ) < 1.0e-8  )  ||   
-                         (  Time[0] == 0.0 && fabs(  Time[0]-DumpTime          ) < 1.0e-12 )      )   break;     
+                  if (   (  DumpTime >= Time[0]  )                                            ||
+                         (  Time[0] != 0.0 && fabs( (Time[0]-DumpTime)/Time[0] ) < 1.0e-8  )  ||
+                         (  Time[0] == 0.0 && fabs(  Time[0]-DumpTime          ) < 1.0e-12 )      )   break;
                }
             }
 
@@ -69,11 +69,11 @@ void Output_DumpData( const int Stage )
                {
                   DumpTime = DumpTable[DumpTableID];
 
-                  if (   (  DumpTime >= Time[0]  )                                            &&  
-                        !(  Time[0] != 0.0 && fabs( (Time[0]-DumpTime)/Time[0] ) < 1.0e-8  )  &&   
+                  if (   (  DumpTime >= Time[0]  )                                            &&
+                        !(  Time[0] != 0.0 && fabs( (Time[0]-DumpTime)/Time[0] ) < 1.0e-8  )  &&
                         !(  Time[0] == 0.0 && fabs(  Time[0]-DumpTime          ) < 1.0e-12 )      )   break;
                }
-            } 
+            }
 
             if ( DumpTableID >= DumpTable_NDump )
                Aux_Error( ERROR_INFO, "no proper data dump time is found in the dump table !!\n" );
@@ -104,46 +104,46 @@ void Output_DumpData( const int Stage )
 
    if ( OPT__OUTPUT_TOTAL )
       sprintf( FileName_Total, "Data_%d%d%d%d%d%d", ID[0], ID[1], ID[2], ID[3], ID[4], ID[5] );
-    
+
    if ( OPT__OUTPUT_PART )
    {
       switch ( OPT__OUTPUT_PART )
       {
-         case OUTPUT_XY :    sprintf( FileName_Temp, "XYslice_z%.3f_%d%d%d%d%d%d", 
+         case OUTPUT_XY :    sprintf( FileName_Temp, "XYslice_z%.3f_%d%d%d%d%d%d",
                              OUTPUT_PART_Z, ID[0], ID[1], ID[2], ID[3], ID[4], ID[5] );
                              break;
 
-         case OUTPUT_YZ :    sprintf( FileName_Temp, "YZslice_x%.3f_%d%d%d%d%d%d", 
+         case OUTPUT_YZ :    sprintf( FileName_Temp, "YZslice_x%.3f_%d%d%d%d%d%d",
                              OUTPUT_PART_X, ID[0], ID[1], ID[2], ID[3], ID[4], ID[5] );
                              break;
 
-         case OUTPUT_XZ :    sprintf( FileName_Temp, "XZslice_y%.3f_%d%d%d%d%d%d", 
+         case OUTPUT_XZ :    sprintf( FileName_Temp, "XZslice_y%.3f_%d%d%d%d%d%d",
                              OUTPUT_PART_Y, ID[0], ID[1], ID[2], ID[3], ID[4], ID[5] );
                              break;
 
-         case OUTPUT_X  :    sprintf( FileName_Temp, "Xline_y%.3f_z%.3f_%d%d%d%d%d%d", 
+         case OUTPUT_X  :    sprintf( FileName_Temp, "Xline_y%.3f_z%.3f_%d%d%d%d%d%d",
                              OUTPUT_PART_Y, OUTPUT_PART_Z, ID[0], ID[1], ID[2], ID[3], ID[4], ID[5] );
                              break;
 
-         case OUTPUT_Y  :    sprintf( FileName_Temp, "Yline_x%.3f_z%.3f_%d%d%d%d%d%d", 
+         case OUTPUT_Y  :    sprintf( FileName_Temp, "Yline_x%.3f_z%.3f_%d%d%d%d%d%d",
                              OUTPUT_PART_X, OUTPUT_PART_Z, ID[0], ID[1], ID[2], ID[3], ID[4], ID[5] );
                              break;
 
-         case OUTPUT_Z  :    sprintf( FileName_Temp, "Zline_x%.3f_y%.3f_%d%d%d%d%d%d", 
+         case OUTPUT_Z  :    sprintf( FileName_Temp, "Zline_x%.3f_y%.3f_%d%d%d%d%d%d",
                              OUTPUT_PART_X, OUTPUT_PART_Y, ID[0], ID[1], ID[2], ID[3], ID[4], ID[5] );
                              break;
 
-         case OUTPUT_DIAG :  sprintf( FileName_Temp, "Diag_%d%d%d%d%d%d", 
+         case OUTPUT_DIAG :  sprintf( FileName_Temp, "Diag_%d%d%d%d%d%d",
                                       ID[0], ID[1], ID[2], ID[3], ID[4], ID[5] );
                              break;
 
          default :
-                             Aux_Error( ERROR_INFO, "incorrect parameter %s = %d !!\n", 
+                             Aux_Error( ERROR_INFO, "incorrect parameter %s = %d !!\n",
                                         "OPT__OUTPUT_PART", OPT__OUTPUT_PART );
 
       } // switch ( OPT__OUTPUT_PART )
 
-      if ( OPT__OUTPUT_BASE )    
+      if ( OPT__OUTPUT_BASE )
       {
          sprintf( FileName_Part, "%s", "Base" );
          strcat( FileName_Part, FileName_Temp );
@@ -168,14 +168,14 @@ void Output_DumpData( const int Stage )
 
    switch ( OPT__OUTPUT_MODE )
    {
-      case OUTPUT_CONST_STEP :   if ( Step%OUTPUT_STEP == 0 )     OutputData = true; 
+      case OUTPUT_CONST_STEP :   if ( Step%OUTPUT_STEP == 0 )     OutputData = true;
                                  break;
 
-      case OUTPUT_CONST_DT : 
-      case OUTPUT_USE_TABLE :    if (   ( Time[0] != 0.0 && fabs( (Time[0]-DumpTime)/Time[0] ) < 1.0e-8  )   
-                                     || ( Time[0] == 0.0 && fabs(  Time[0]-DumpTime          ) < 1.0e-12 )   )   
+      case OUTPUT_CONST_DT :
+      case OUTPUT_USE_TABLE :    if (   ( Time[0] != 0.0 && fabs( (Time[0]-DumpTime)/Time[0] ) < 1.0e-8  )
+                                     || ( Time[0] == 0.0 && fabs(  Time[0]-DumpTime          ) < 1.0e-12 )   )
                                     OutputData = true;
-                                 break; 
+                                 break;
 
       default :
          Aux_Error( ERROR_INFO, "incorrect parameter %s = %d !!\n", "OPT__OUTPUT_MODE", OPT__OUTPUT_MODE );
@@ -200,14 +200,8 @@ void Output_DumpData( const int Stage )
 // output data
    if ( OutputData || OutputData_RunTime )
    {
-//    synchronize all particles
-#     ifdef PARTICLE
-      int ParSyncStatus = -1;
-      if ( amr->Par->SyncDump )  ParSyncStatus = Par_Synchronize( Time[0], PAR_SYNC_TEMP );
-#     endif
-
       if ( OPT__OUTPUT_TOTAL )      Output_DumpData_Total( FileName_Total );
-      if ( OPT__OUTPUT_PART  )      Output_DumpData_Part( OPT__OUTPUT_PART, OPT__OUTPUT_BASE, OUTPUT_PART_X, 
+      if ( OPT__OUTPUT_PART  )      Output_DumpData_Part( OPT__OUTPUT_PART, OPT__OUTPUT_BASE, OUTPUT_PART_X,
                                                           OUTPUT_PART_Y, OUTPUT_PART_Z, FileName_Part );
       if ( OPT__OUTPUT_TEST_ERROR ) Output_TestProbErr( OPT__OUTPUT_BASE );
 #     ifdef GRAVITY
@@ -229,11 +223,6 @@ void Output_DumpData( const int Stage )
       }
 
       PreviousDumpStep = Step;
-
-//    restore particle attributes to the values before synchronization
-#     ifdef PARTICLE
-      if ( ParSyncStatus == 0 )  Par_Synchronize_Restore( Time[0] );
-#     endif
    } // if ( OutputData || OutputData_RunTime )
 
 } // FUNCTION : Output_DumpData

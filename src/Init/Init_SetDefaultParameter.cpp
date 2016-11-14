@@ -556,7 +556,7 @@ void Init_SetDefaultParameter()
       OPT__ADAPTIVE_DT = false;
 
       if ( MPI_Rank == 0 )
-         Aux_Message( stderr, "WARNING : option \"%s\" is disabled since it is not supported yet !!\n",
+         Aux_Message( stderr, "WARNING : parameter \"%s\" is disabled since it is not supported yet !!\n",
                       "OPT__ADAPTIVE_DT" );
    }
 
@@ -567,7 +567,7 @@ void Init_SetDefaultParameter()
       OPT__OVERLAP_MPI = false;
 
       if ( MPI_Rank == 0 )
-         Aux_Message( stderr, "WARNING : option \"%s\" is disabled since \"%s\" is off in the Makefile !!\n",
+         Aux_Message( stderr, "WARNING : parameter \"%s\" is disabled since \"%s\" is off in the Makefile !!\n",
                       "OPT__OVERLAP_MPI", "OVERLAP_MPI" );
    }
 #  endif
@@ -578,7 +578,7 @@ void Init_SetDefaultParameter()
       OPT__CK_FLUX_ALLOCATE = false;
 
       if ( MPI_Rank == 0 )
-         Aux_Message( stderr, "WARNING : option \"%s\" is disabled since no flux is required !!\n",
+         Aux_Message( stderr, "WARNING : parameter \"%s\" is disabled since no flux is required !!\n",
                       "OPT__CK_FLUX_ALLOCATE" );
    }
 
@@ -591,7 +591,7 @@ void Init_SetDefaultParameter()
       OPT__INT_TIME = false;
 
       if ( MPI_Rank == 0 )
-         Aux_Message( stderr, "WARNING : option \"%s\" is disabled in the shared time-step scheme !!\n",
+         Aux_Message( stderr, "WARNING : parameter \"%s\" is disabled in the shared time-step scheme !!\n",
                       "OPT__INT_TIME" );
    }
 #  endif
@@ -630,7 +630,7 @@ void Init_SetDefaultParameter()
       OPT__OVERLAP_MPI = false;
 
       if ( MPI_Rank == 0 )
-         Aux_Message( stderr, "WARNING : option \"%s\" is disabled in the SERIAL mode !!\n",
+         Aux_Message( stderr, "WARNING : parameter \"%s\" is disabled in the SERIAL mode !!\n",
                       "OPT__OVERLAP_MPI" );
    }
 #  endif // ifdef SERIAL
@@ -655,7 +655,7 @@ void Init_SetDefaultParameter()
       OPT__OVERLAP_MPI = false;
 
       if ( MPI_Rank == 0 )
-         Aux_Message( stderr, "WARNING : option \"%s\" is disabled since LOAD_BALANCE is NOT turned on !!\n",
+         Aux_Message( stderr, "WARNING : parameter \"%s\" is disabled since LOAD_BALANCE is NOT turned on !!\n",
                       "OPT__OVERLAP_MPI" );
    }
 #  endif // #ifdef LOAD_BALANCE
@@ -682,7 +682,7 @@ void Init_SetDefaultParameter()
       OPT__OVERLAP_MPI = false;
 
       if ( MPI_Rank == 0 )
-         Aux_Message( stderr, "WARNING : option \"%s\" is disabled since OPENMP is NOT turned on !!\n",
+         Aux_Message( stderr, "WARNING : parameter \"%s\" is disabled since OPENMP is NOT turned on !!\n",
                       "OPT__OVERLAP_MPI" );
    }
 #  endif
@@ -698,7 +698,7 @@ void Init_SetDefaultParameter()
       OPT__OVERLAP_MPI = false;
 
       if ( MPI_Rank == 0 )
-         Aux_Message( stderr, "WARNING : option \"%s\" is disabled if the level of MPI thread support == %s !!\n",
+         Aux_Message( stderr, "WARNING : parameter \"%s\" is disabled if the level of MPI thread support == %s !!\n",
                       "OPT__OVERLAP_MPI", "MPI_THREAD_SINGLE" );
    }
 #  endif
@@ -712,7 +712,7 @@ void Init_SetDefaultParameter()
       OPT__FIXUP_FLUX = false;
 
       if ( MPI_Rank == 0 )
-         Aux_Message( stderr, "WARNING : option \"%s\" is only supported in HYDRO/MHD/ELBDM and hence is disabled !!\n",
+         Aux_Message( stderr, "WARNING : parameter \"%s\" is only supported in HYDRO/MHD/ELBDM and hence is disabled !!\n",
                       "OPT__FIXUP_FLUX" );
    }
 
@@ -721,7 +721,7 @@ void Init_SetDefaultParameter()
       OPT__CK_FLUX_ALLOCATE = false;
 
       if ( MPI_Rank == 0 )
-         Aux_Message( stderr, "WARNING : option \"%s\" is only supported in HYDRO/MHD and hence is disabled !!\n",
+         Aux_Message( stderr, "WARNING : parameter \"%s\" is only supported in HYDRO/MHD and hence is disabled !!\n",
                       "OPT__CK_FLUX_ALLOCATE" );
    }
 #  endif // #if ( MODEL == HYDRO  &&  MODEL != MHD )
@@ -734,7 +734,7 @@ void Init_SetDefaultParameter()
       OPT__FLAG_RHO = false;
 
       if ( MPI_Rank == 0 )
-         Aux_Message( stderr, "WARNING : option \"%s\" is disabled since the variable DENS is not defined !!\n",
+         Aux_Message( stderr, "WARNING : parameter \"%s\" is disabled since the variable DENS is not defined !!\n",
                       "OPT__FLAG_RHO" );
    }
 
@@ -743,7 +743,7 @@ void Init_SetDefaultParameter()
       OPT__FLAG_RHO_GRADIENT = false;
 
       if ( MPI_Rank == 0 )
-         Aux_Message( stderr, "WARNING : option \"%s\" is disabled since the variable DENS is not defined !!\n",
+         Aux_Message( stderr, "WARNING : parameter \"%s\" is disabled since the variable DENS is not defined !!\n",
                       "OPT__FLAG_RHO_GRADIENT" );
    }
 
@@ -752,7 +752,7 @@ void Init_SetDefaultParameter()
       OPT__CK_REFINE = false;
 
       if ( MPI_Rank == 0 )
-         Aux_Message( stderr, "WARNING : option \"%s\" is disabled since the variable DENS is not defined !!\n",
+         Aux_Message( stderr, "WARNING : parameter \"%s\" is disabled since the variable DENS is not defined !!\n",
                       "OPT__CK_REFINE" );
    }
 #  endif // #ifndef DENS
@@ -765,7 +765,7 @@ void Init_SetDefaultParameter()
       OPT__CK_CONSERVATION = false;
 
       if ( MPI_Rank == 0 )
-         Aux_Message( stderr, "WARNING : option \"%s\" is not supported in this MODEL and hence is disabled !!\n",
+         Aux_Message( stderr, "WARNING : parameter \"%s\" is not supported in this MODEL and hence is disabled !!\n",
                       "OPT__CK_CONSERVATION" );
    }
 #  endif
@@ -780,7 +780,7 @@ void Init_SetDefaultParameter()
 
       if ( MPI_Rank == 0 )
       {
-         Aux_Message( stderr, "WARNING : \"%s\" is useless in the adopted hydro scheme ", "OPT__LR_LIMITER" );
+         Aux_Message( stderr, "WARNING : parameter \"%s\" is useless in the adopted hydro scheme ", "OPT__LR_LIMITER" );
          Aux_Message( stderr, "and has been set to NONE !!\n" );
       }
    }
@@ -793,7 +793,7 @@ void Init_SetDefaultParameter()
 
       if ( MPI_Rank == 0 )
       {
-         Aux_Message( stderr, "WARNING : \"%s\" is useless in the adopted hydro scheme ", "OPT__WAF_LIMITER" );
+         Aux_Message( stderr, "WARNING : parameter \"%s\" is useless in the adopted hydro scheme ", "OPT__WAF_LIMITER" );
          Aux_Message( stderr, "and has been set to NONE !!\n" );
       }
    }
@@ -807,7 +807,7 @@ void Init_SetDefaultParameter()
       OPT__FIXUP_FLUX = false;
 
       if ( MPI_Rank == 0 )
-         Aux_Message( stderr, "WARNING : option \"%s\" is only supported if CONSERVE_MASS is on and hence is disabled !!\n",
+         Aux_Message( stderr, "WARNING : parameter \"%s\" is only supported if CONSERVE_MASS is on and hence is disabled !!\n",
                       "OPT__FIXUP_FLUX" );
    }
 
@@ -816,7 +816,7 @@ void Init_SetDefaultParameter()
       OPT__CK_FLUX_ALLOCATE = false;
 
       if ( MPI_Rank == 0 )
-         Aux_Message( stderr, "WARNING : option \"%s\" is only supported if CONSERVE_MASS is on and hence is disabled !!\n",
+         Aux_Message( stderr, "WARNING : parameter \"%s\" is only supported if CONSERVE_MASS is on and hence is disabled !!\n",
                       "OPT__CK_FLUX_ALLOCATE" );
    }
 #  endif // if ( MODEL == ELBDM  &&  !defined CONSERVE_MASS )
@@ -829,7 +829,7 @@ void Init_SetDefaultParameter()
       OPT__OUTPUT_BASEPS = false;
 
       if ( MPI_Rank == 0 )
-         Aux_Message( stderr, "WARNING : option \"%s\" is not supported when GRAVITY is off and hence is disabled !!\n",
+         Aux_Message( stderr, "WARNING : parameter \"%s\" is not supported when GRAVITY is off and hence is disabled !!\n",
                       "OPT__OUTPUT_BASEPS" );
    }
 #  endif
@@ -842,7 +842,7 @@ void Init_SetDefaultParameter()
       OPT__RECORD_PERFORMANCE = false;
 
       if ( MPI_Rank == 0 )
-         Aux_Message( stderr, "WARNING : option \"%s\" is not supported when TIMING is off and hence is disabled !!\n",
+         Aux_Message( stderr, "WARNING : parameter \"%s\" is not supported when TIMING is off and hence is disabled !!\n",
                       "OPT__RECORD_PERFORMANCE" );
    }
 #  endif
@@ -867,7 +867,7 @@ void Init_SetDefaultParameter()
       OPT__TIMING_BARRIER = 0;
 
       if ( MPI_Rank == 0 )
-         Aux_Message( stderr, "WARNING : option \"%s\" is not supported when TIMING is off and hence is disabled !!\n",
+         Aux_Message( stderr, "WARNING : parameter \"%s\" is not supported when TIMING is off and hence is disabled !!\n",
                       "OPT__TIMING_BARRIER" );
    }
 
@@ -876,7 +876,7 @@ void Init_SetDefaultParameter()
       OPT__TIMING_BALANCE = false;
 
       if ( MPI_Rank == 0 )
-         Aux_Message( stderr, "WARNING : option \"%s\" is not supported when TIMING is off and hence is disabled !!\n",
+         Aux_Message( stderr, "WARNING : parameter \"%s\" is not supported when TIMING is off and hence is disabled !!\n",
                       "OPT__TIMING_BALANCE" );
    }
 
@@ -885,7 +885,7 @@ void Init_SetDefaultParameter()
       OPT__TIMING_MPI = false;
 
       if ( MPI_Rank == 0 )
-         Aux_Message( stderr, "WARNING : option \"%s\" is not supported when TIMING is off and hence is disabled !!\n",
+         Aux_Message( stderr, "WARNING : parameter \"%s\" is not supported when TIMING is off and hence is disabled !!\n",
                       "OPT__TIMING_MPI" );
    }
 #  endif // #ifndef
@@ -896,7 +896,7 @@ void Init_SetDefaultParameter()
       OPT__TIMING_MPI = false;
 
       if ( MPI_Rank == 0 )
-         Aux_Message( stderr, "WARNING : option \"%s\" is not supported when LOAD_BALANCE is off and hence is disabled !!\n",
+         Aux_Message( stderr, "WARNING : parameter \"%s\" is not supported when LOAD_BALANCE is off and hence is disabled !!\n",
                       "OPT__TIMING_MPI" );
    }
 #  endif
@@ -910,7 +910,7 @@ void Init_SetDefaultParameter()
 
       if ( MPI_Rank == 0 )
       {
-         Aux_Message( stderr, "WARNING : option \"%s\" must be turned on for the isolated BC. of gravity !!\n",
+         Aux_Message( stderr, "WARNING : parameter \"%s\" must be turned on for the isolated BC. of gravity !!\n",
                       "OPT__UM_START_DOWNGRADE" );
          Aux_Message( stderr, "          --> It has been switched on automatically.\n" );
       }
@@ -925,7 +925,7 @@ void Init_SetDefaultParameter()
       OPT__OUTPUT_TOTAL = OUTPUT_FORMAT_CBINARY;
 
       if ( MPI_Rank == 0 )
-         Aux_Message( stderr, "WARNING : option \"%s\" is reset to 2 (\"%s\") since \"%s\" is off !!\n",
+         Aux_Message( stderr, "WARNING : parameter \"%s\" is reset to 2 (\"%s\") since \"%s\" is off !!\n",
                       "OPT__OUTPUT_TOTAL", "OUTPUT_FORMAT_CBINARY", "SUPPORT_HDF5" );
    }
 #  endif
@@ -968,6 +968,19 @@ void Init_SetDefaultParameter()
       if ( MPI_Rank == 0 )
          Aux_Message( stderr, "WARNING : \"%s\" is reset set to \"%s\" for restart !!\n",
                       "PAR_INIT", "PAR_INIT_BY_RESTART" );
+   }
+#  endif
+
+
+// (19) always turn on "OPT__CORR_AFTER_ALL_SYNC" in the debug mode
+#  ifdef GAMER_DEBUG
+   if ( !OPT__CORR_AFTER_ALL_SYNC )
+   {
+      OPT__CORR_AFTER_ALL_SYNC = true;
+
+      if ( MPI_Rank == 0 )
+         Aux_Message( stderr, "WARNING : parameter \"%s\" is turned on automatically in the debug mode !!\n",
+                      "OPT__CORR_AFTER_ALL_SYNC" );
    }
 #  endif
 

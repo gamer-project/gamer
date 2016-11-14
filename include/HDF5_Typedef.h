@@ -287,7 +287,6 @@ struct InputPara_t
    int    Par_Init;
    int    Par_Interp;
    int    Par_Integ;
-   int    Par_SyncDump;
    int    Par_ImproveAcc;
    int    Par_PredictPos;
    double Par_RemoveCell;
@@ -386,6 +385,7 @@ struct InputPara_t
    int    GPU_NStream;
    int    Opt__FixUp_Flux;
    int    Opt__FixUp_Restrict;
+   int    Opt__CorrAfterAllSync;
    int    Opt__OverlapMPI;
    int    Opt__ResetFluid;
 #  if ( MODEL == HYDRO  ||  MODEL == MHD  ||  MODEL == ELBDM )

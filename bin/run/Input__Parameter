@@ -30,7 +30,6 @@
 1           PAR_INIT                  # initialization option for particles: (1, 2, 3) -> (FUNCTION, RESTART, FILE)
 -1          PAR_INTERP                # particle interpolation scheme: (-1, 1, 2, 3) -> (default, NGP, CIC, TSC) [3]
 -1          PAR_INTEG                 # particle integration scheme: (-1, 1, 2) -> (default, Euler, KDK) [2]
-1           PAR_SYNC_DUMP             # synchronize particles when dumping data (must turn on STORE_PAR_ACC)
 1           PAR_IMPROVE_ACC           # improve force accuracy around patch boundaries (must turn on STORE_POT_GHOST)
 1           PAR_PREDICT_POS           # predict particle position during mass assignment
 -1.0        PAR_REMOVE_CELL           # remove particles X-root-cells away from the boundary (for non-periodic BC only; <0.0:default)
@@ -94,6 +93,7 @@
 -1          GPU_NSTREAM               # number of streams for the asynchronous memory copy in GPU (<0:default)
 1           OPT__FIXUP_FLUX           # perform the flux fix-up to correct the coarse-grid data ##HYDRO and ELBDM ONLY##
 1           OPT__FIXUP_RESTRICT       # perform the restrict operation to correct the coarse-grid data
+1           OPT__CORR_AFTER_ALL_SYNC  # apply several corrections after all levels are synchronized
 0           OPT__OVERLAP_MPI          # overlap MPI time with CPU/GPU computation (currently for LOAD_BALANCE only)
 0           OPT__RESET_FLUID          # reset fluid variables after each update --> edit "Flu_ResetByUser"
 0.0         MIN_DENS                  # minimum density  (must >= 0.0) ##HYDRO, MHD, and ELBDM ONLY##

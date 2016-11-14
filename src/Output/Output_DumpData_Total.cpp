@@ -741,7 +741,7 @@ void Output_DumpData_Total( const char *FileName )
    const real MinDens_No       = -1.0;
    const real MinPres_No       = -1.0;
    const bool TimingSendPar_No = false;
-   const bool PredictParPos_No = false;   // particles synchronization is controlled by PAR_SYNC_DUMP in Output_DumpData
+   const bool PredictParPos_No = false;   // particles synchronization is done in "Flu_CorrAfterAllSync()"
    const bool JustCountNPar_No = false;
 #  ifdef LOAD_BALANCE
    const bool SibBufPatch      = true;
