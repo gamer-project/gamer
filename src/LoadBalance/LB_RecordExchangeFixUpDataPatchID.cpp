@@ -10,7 +10,7 @@
 // Function    :  LB_RecordExchangeFixUpDataPatchID
 // Description :  Construct the MPI sending and receiving data lists for exchanging hydro data after
 //                the fix-up operation
-// 
+//
 // Note        :  1. This function must be invoked AFTER the function "LB_RecordExchangeDataPatchID"
 //                2. All real and buffer patches must know whether or not they have sons
 //                3. The lists constructed by this function (SendX/RecvX) are subsets of the lists (SendH/RecvH)
@@ -38,7 +38,7 @@ void LB_RecordExchangeFixUpDataPatchID( const int Lv )
    int **LB_RecvX_IDList          = amr->LB->RecvX_IDList         [Lv];
    int **LB_RecvX_SibList         = amr->LB->RecvX_SibList        [Lv];
 
-   const int SibMask[6] = 
+   const int SibMask[6] =
    {   ~(  (1<<19) | (1<<16) | (1<<21) | (1<< 7) | (1<< 1) | (1<< 9) | (1<<23) | (1<<17) | (1<<25)  ),
        ~(  (1<<18) | (1<<14) | (1<<20) | (1<< 6) | (1<< 0) | (1<< 8) | (1<<22) | (1<<15) | (1<<24)  ),
        ~(  (1<<20) | (1<<11) | (1<<21) | (1<< 8) | (1<< 3) | (1<< 9) | (1<<24) | (1<<13) | (1<<25)  ),
@@ -72,7 +72,11 @@ void LB_RecordExchangeFixUpDataPatchID( const int Lv )
 
 // 2 data to be sent and received after the restriction fix-up operation
 // ============================================================================================================
-   if ( OPT__FIXUP_RESTRICT )
+// note that even when OPT__FIXUP_RESTRICT is off we still need to do data restriction in several places
+// (e.g., restart, and OPT__CORR_AFTER_ALL_SYNC)
+// --> for simplicity and sustainability, we always prepare the following data transfer list even when OPT__FIXUP_RESTRICT is off
+// if ( OPT__FIXUP_RESTRICT )
+   if ( true )
    {
 //    2.1 send
       for (int r=0; r<MPI_NRank; r++)
@@ -109,7 +113,7 @@ void LB_RecordExchangeFixUpDataPatchID( const int Lv )
 
          LB_RecvX_NResList[r] = LB_RecvX_NList[r];
       } // for (int r=0; r<MPI_NRank; r++)
-   } // if ( OPT__FIXUP_RESTRICT )
+   } // if ( true )
 
 
 // 3 data to be sent and received after the flux fix-up operation
@@ -212,10 +216,10 @@ void LB_RecordExchangeFixUpDataPatchID( const int Lv )
 // check the recv sibling lists
    Send_Disp[0] = 0;
    Recv_Disp[0] = 0;
-   for (int r=1; r<MPI_NRank; r++)  
+   for (int r=1; r<MPI_NRank; r++)
    {
-      Send_Disp[r] = Send_Disp[r-1] + LB_SendX_NList[r-1]; 
-      Recv_Disp[r] = Recv_Disp[r-1] + LB_RecvX_NList[r-1]; 
+      Send_Disp[r] = Send_Disp[r-1] + LB_SendX_NList[r-1];
+      Recv_Disp[r] = Recv_Disp[r-1] + LB_RecvX_NList[r-1];
    }
    NSend_Total = Send_Disp[MPI_NRank-1] + LB_SendX_NList[MPI_NRank-1];
    NRecv_Total = Recv_Disp[MPI_NRank-1] + LB_RecvX_NList[MPI_NRank-1];
@@ -228,10 +232,10 @@ void LB_RecordExchangeFixUpDataPatchID( const int Lv )
    for (int t=0; t<LB_SendX_NList[r]; t++)
       SendBuf[ Counter ++ ] = LB_SendX_SibList[r][t];
 
-   MPI_Alltoallv( SendBuf, LB_SendX_NList, Send_Disp, MPI_INT, 
+   MPI_Alltoallv( SendBuf, LB_SendX_NList, Send_Disp, MPI_INT,
                   RecvBuf, LB_RecvX_NList, Recv_Disp, MPI_INT,  MPI_COMM_WORLD );
 
-   for (int r=0; r<MPI_NRank; r++)  
+   for (int r=0; r<MPI_NRank; r++)
    {
       RecvPtr = RecvBuf + Recv_Disp[r];
 

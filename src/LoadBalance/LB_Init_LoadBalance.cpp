@@ -121,12 +121,9 @@ void LB_Init_LoadBalance( const bool DuringRestart )
       LB_RecordExchangeDataPatchID( lv, false );
 
 //    3.2 list for exchanging restricted hydro data
-//        --> note that even when OPT__FIXUP_RESTRICT is off we still need to do data restriction during restart
-//            (strickly speaking, only when loading C binary output since HDF5 data store non-leaf patch data as well)
-//        --> also note that in GAMER_DEBUG mode we always do data restriction every global step
-#     ifndef GAMER_DEBUG
-      if ( OPT__FIXUP_RESTRICT  ||  DuringRestart )
-#     endif
+//        --> note that even when OPT__FIXUP_RESTRICT is off we still need to do data restriction in several places
+//            (e.g., restart, and OPT__CORR_AFTER_ALL_SYNC)
+//        --> for simplicity and sustainability, we always invoke LB_RecordExchangeRestrictDataPatchID()
       LB_RecordExchangeRestrictDataPatchID( lv );
 
 //    3.3 list for exchanging hydro fluxes (also allocate flux arrays)
@@ -134,7 +131,8 @@ void LB_Init_LoadBalance( const bool DuringRestart )
       LB_AllocateFluxArray( lv );
 
 //    3.4 list for exchanging hydro data after the fix-up operation
-      if ( OPT__FIXUP_RESTRICT  ||  OPT__FIXUP_FLUX )
+//        --> for simplicity and sustainability, we always invoke LB_RecordExchangeFixUpDataPatchID()
+//        --> see the comments 3.2 above
       LB_RecordExchangeFixUpDataPatchID( lv );
 
 //    3.5 list for overlapping MPI time with CPU/GPU computation

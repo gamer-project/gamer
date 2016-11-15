@@ -27,7 +27,7 @@ void LB_Refine_AllocateBufferPatch_Sibling( const int SonLv )
 {
 
 // check
-   if ( SonLv == 0 )    
+   if ( SonLv == 0 )
       Aux_Error( ERROR_INFO, "this function should NOT be applied to the base level !!\n" );
 
    if ( amr->NPatchComma[SonLv][1] != amr->num[SonLv] )
@@ -36,7 +36,7 @@ void LB_Refine_AllocateBufferPatch_Sibling( const int SonLv )
 
 
 // 1. initialize the NotAllocateList (to ensure no duplicate patches at SonLv)
-// ==========================================================================================   
+// ==========================================================================================
    const int FaLv     = SonLv - 1;
    const int NFaPatch = amr->num[FaLv];
    const int PScale   = PATCH_SIZE*amr->scale[SonLv];
@@ -48,7 +48,7 @@ void LB_Refine_AllocateBufferPatch_Sibling( const int SonLv )
 
 
 // 2. allocate sibling-buffer patches for all real patches at SonLv
-// ==========================================================================================   
+// ==========================================================================================
    int  FaPID, FaSibPID, FaSibSonPID;
    int *FaCr;
 
@@ -65,7 +65,7 @@ void LB_Refine_AllocateBufferPatch_Sibling( const int SonLv )
          FaSibPID = amr->patch[0][FaLv][FaPID]->sibling[s];
 
 #        ifdef GAMER_DEBUG
-         if ( FaSibPID == -1 )   Aux_Error( ERROR_INFO, "SonLv %d, SonPID0 %d, FaPID %d, FaSibPID == -1 !!\n", 
+         if ( FaSibPID == -1 )   Aux_Error( ERROR_INFO, "SonLv %d, SonPID0 %d, FaPID %d, FaSibPID == -1 !!\n",
                                             SonLv, SonPID0, FaPID, FaSibPID );
 #        endif
 
@@ -80,8 +80,8 @@ void LB_Refine_AllocateBufferPatch_Sibling( const int SonLv )
                FaCr = amr->patch[0][FaLv][FaSibPID]->corner;
 
 //             1. data array is not allocated here
-//             2. father indices of sibling-buffer patches are always set to -1 
-//             3. we do not reset the son indices for father patches with sons not home 
+//             2. father indices of sibling-buffer patches are always set to -1
+//             3. we do not reset the son indices for father patches with sons not home
                amr->pnew( SonLv, FaCr[0],        FaCr[1],        FaCr[2],        -1, false, false );
                amr->pnew( SonLv, FaCr[0]+PScale, FaCr[1],        FaCr[2],        -1, false, false );
                amr->pnew( SonLv, FaCr[0],        FaCr[1]+PScale, FaCr[2],        -1, false, false );
@@ -111,7 +111,7 @@ void LB_Refine_AllocateBufferPatch_Sibling( const int SonLv )
 
 
 // 3. record the padded 1D corner coordinates (which can be overwritten by "LB_AllocateBufferPatch_Father")
-// ==========================================================================================   
+// ==========================================================================================
    const int NPatch = amr->num[SonLv];
 
    amr->LB->PaddedCr1DList         [SonLv] = (ulong*)realloc( amr->LB->PaddedCr1DList         [SonLv],
@@ -130,13 +130,13 @@ void LB_Refine_AllocateBufferPatch_Sibling( const int SonLv )
    {
       if ( amr->LB->PaddedCr1DList[SonLv][t] == amr->LB->PaddedCr1DList[SonLv][t-1] )
          Aux_Error( ERROR_INFO, "duplicate patches at SonLv %d, PaddedCr1D %lu, PID = %d and %d !!\n",
-                    SonLv, amr->LB->PaddedCr1DList[SonLv][t], amr->LB->PaddedCr1DList_IdxTable[SonLv][t], 
+                    SonLv, amr->LB->PaddedCr1DList[SonLv][t], amr->LB->PaddedCr1DList_IdxTable[SonLv][t],
                     amr->LB->PaddedCr1DList_IdxTable[SonLv][t-1] );
    }
 #  endif
 
 
-// free memory   
+// free memory
    delete [] NotAllocateList;
 
 } // FUNCTION : LB_Refine_AllocateBufferPatch_Sibling

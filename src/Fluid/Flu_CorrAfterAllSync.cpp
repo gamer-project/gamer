@@ -82,7 +82,7 @@ void Flu_CorrAfterAllSync()
       LB_GetBufferData( lv, amr->FluSg[lv], NULL_INT, DATA_RESTRICT, _FLU, NULL_INT );
 #     endif
 
-      Buf_GetBufferData( lv, amr->FluSg[lv], NULL_INT, DATA_GENERAL, _FLU, Flu_ParaBuf, USELB_YES );
+      Buf_GetBufferData( lv, amr->FluSg[lv], NULL_INT, DATA_AFTER_FIXUP, _FLU, Flu_ParaBuf, USELB_YES );
 
       if ( OPT__VERBOSE  &&  MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );
    }

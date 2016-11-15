@@ -5,8 +5,8 @@
 
 
 
-void LB_Refine_GetNewRealPatchList( const int FaLv, int &NNew_Home, int *&NewPID_Home, int &NNew_Away, 
-                                    ulong *&NewCr1D_Away, real *&NewCData_Away, int &NDel_Home, int *&DelPID_Home, 
+void LB_Refine_GetNewRealPatchList( const int FaLv, int &NNew_Home, int *&NewPID_Home, int &NNew_Away,
+                                    ulong *&NewCr1D_Away, real *&NewCData_Away, int &NDel_Home, int *&DelPID_Home,
                                     int &NDel_Away, ulong *&DelCr1D_Away,
                                     int &RefineF2S_Send_NPatchTotal, int *&RefineF2S_Send_PIDList,
                                     long *&RefineF2S_Send_LBIdxList );
@@ -99,13 +99,11 @@ void LB_Refine( const int FaLv )
    LB_RecordExchangeDataPatchID( SonLv, true );
 
 // 4.2 list for exchanging restricted hydro data
-#  ifndef GAMER_DEBUG
-   if ( OPT__FIXUP_RESTRICT )
-#  endif
-   {
-      LB_RecordExchangeRestrictDataPatchID(  FaLv );
-      LB_RecordExchangeRestrictDataPatchID( SonLv );
-   }
+//     --> note that even when OPT__FIXUP_RESTRICT is off we still need to do data restriction in several places
+//         (e.g., restart, and OPT__CORR_AFTER_ALL_SYNC)
+//     --> for simplicity and sustainability, we always invoke LB_RecordExchangeRestrictDataPatchID()
+   LB_RecordExchangeRestrictDataPatchID(  FaLv );
+   LB_RecordExchangeRestrictDataPatchID( SonLv );
 
 // 4.3 list for exchanging hydro fluxes (also allocate flux arrays)
    if ( amr->WithFlux )
@@ -115,11 +113,10 @@ void LB_Refine( const int FaLv )
    }
 
 // 4.4 list for exchanging hydro data after the fix-up operation
-   if ( OPT__FIXUP_RESTRICT  ||  OPT__FIXUP_FLUX )
-   {
-      LB_RecordExchangeFixUpDataPatchID(  FaLv );
-      LB_RecordExchangeFixUpDataPatchID( SonLv );
-   }
+//     --> for simplicity and sustainability, we always invoke LB_RecordExchangeFixUpDataPatchID()
+//     --> see the comments 4.2 above
+   LB_RecordExchangeFixUpDataPatchID(  FaLv );
+   LB_RecordExchangeFixUpDataPatchID( SonLv );
 
 // 4.5 list for overlapping MPI time with CPU/GPU computation
    if ( OPT__OVERLAP_MPI )

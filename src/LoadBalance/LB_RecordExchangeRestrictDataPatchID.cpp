@@ -7,16 +7,16 @@
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  LB_RecordExchangeRestrictDataPatchID_AllLv 
+// Function    :  LB_RecordExchangeRestrictDataPatchID_AllLv
 // Description :  Construct the MPI sending and receiving data lists for exchanging the restricted data
-// 
+//
 // Note        :  1. The restricted data will be stored in father patches. If any of these father patches
-//                   are NOT real patches, we need to send these restricted data back to their homes 
+//                   are NOT real patches, we need to send these restricted data back to their homes
 //                2. This function will NOT deallocate any fluid array
-//                   --> We have assumed that all fluid arrays have been deallocated by 
+//                   --> We have assumed that all fluid arrays have been deallocated by
 //                       "LB_RecordExchangeDataPatchID"
-//                   --> Otherwise some fluid arrays may be useless if they are allocated by 
-//                       LB_RecordExchangeRestrictDataPatchID previously and afterward their real 
+//                   --> Otherwise some fluid arrays may be useless if they are allocated by
+//                       LB_RecordExchangeRestrictDataPatchID previously but later on their real
 //                       son patches are deallocated
 //                       --> Actually it is the case in the current version
 //
@@ -64,7 +64,7 @@ void LB_RecordExchangeRestrictDataPatchID( const int FaLv )
 
 #     ifdef GAMER_DEBUG
       if ( FaPID < 0 )
-         Aux_Error( ERROR_INFO, "SonLv %d, SonPID0 %d has no father patch (FaPID = %d) !!\n", 
+         Aux_Error( ERROR_INFO, "SonLv %d, SonPID0 %d has no father patch (FaPID = %d) !!\n",
                     SonLv, SonPID0, FaPID );
 #     endif
 
@@ -105,7 +105,7 @@ void LB_RecordExchangeRestrictDataPatchID( const int FaLv )
    } // for (int SonPID0=0; SonPID0<SonNReal; SonPID0+=8)
 
 
-// 2. sort the send list 
+// 2. sort the send list
 // ============================================================================================================
    for (int r=0; r<MPI_NRank; r++)
    {
@@ -124,7 +124,7 @@ void LB_RecordExchangeRestrictDataPatchID( const int FaLv )
 
       for (int t=1; t<LB_SendR_NList[r]; t++)
          if ( TempIDList[t] == TempIDList[t-1] )
-            Aux_Error( ERROR_INFO, "FaLv %d, Rank %d, repeated send PID %d !!\n", 
+            Aux_Error( ERROR_INFO, "FaLv %d, Rank %d, repeated send PID %d !!\n",
                        FaLv, r, TempIDList[t] );
 
       delete [] TempIDList;
@@ -135,7 +135,7 @@ void LB_RecordExchangeRestrictDataPatchID( const int FaLv )
 // 3. broadcast the send list to all other ranks
 // ============================================================================================================
    int   Send_Disp_R[MPI_NRank], Recv_Disp_R[MPI_NRank], NSend_Total_R, NRecv_Total_R, Counter;
-   long *SendBuf_R=NULL, *RecvBuf_R=NULL; 
+   long *SendBuf_R=NULL, *RecvBuf_R=NULL;
 
 // 3.1 broadcast the number of elements sent to different ranks
    MPI_Alltoall( LB_SendR_NList, 1, MPI_INT, LB_RecvR_NList, 1, MPI_INT, MPI_COMM_WORLD );
@@ -160,7 +160,7 @@ void LB_RecordExchangeRestrictDataPatchID( const int FaLv )
       SendBuf_R[ Counter ++ ] = LB_SendR_LBIdx[r][t];
 
 // 3.3 broadcast the send list
-   MPI_Alltoallv( SendBuf_R, LB_SendR_NList, Send_Disp_R, MPI_LONG, 
+   MPI_Alltoallv( SendBuf_R, LB_SendR_NList, Send_Disp_R, MPI_LONG,
                   RecvBuf_R, LB_RecvR_NList, Recv_Disp_R, MPI_LONG, MPI_COMM_WORLD );
 
 
@@ -181,7 +181,7 @@ void LB_RecordExchangeRestrictDataPatchID( const int FaLv )
                         RecvBuf_R+Recv_Disp_R[r], Match_R );
 
 //    4.3 check: all targeted real patches must be found
-#     ifdef GAMER_DEBUG       
+#     ifdef GAMER_DEBUG
       for (int t=0; t<LB_RecvR_NList[r]; t++)
          if ( Match_R[t] == -1 )
             Aux_Error( ERROR_INFO, "FaLv %d, TRank %d, LB_Idx %ld found no matching patches !!\n",
@@ -192,7 +192,7 @@ void LB_RecordExchangeRestrictDataPatchID( const int FaLv )
       for (int t=0; t<LB_RecvR_NList[r]; t++)
          LB_RecvR_IDList[r][t] = amr->LB->IdxList_Real_IdxTable[FaLv][ Match_R[t] ];
 
-#     ifdef GAMER_DEBUG       
+#     ifdef GAMER_DEBUG
 //    4.5 check: every patch in the recv list should have son not home)
       int SonPID;
 
@@ -201,7 +201,7 @@ void LB_RecordExchangeRestrictDataPatchID( const int FaLv )
          FaPID  = LB_RecvR_IDList[r][t];
          SonPID = amr->patch[0][FaLv][FaPID]->son;
 
-         if ( SonPID >= -1 ) 
+         if ( SonPID >= -1 )
             Aux_Error( ERROR_INFO, "TRank %d, FaLv %d, FaPID %d, SonNReal %d, incorrect SonPID = %d !!\n",
                        r, FaLv, FaPID, SonNReal, SonPID );
       }
@@ -252,8 +252,8 @@ void LB_RecordExchangeRestrictDataPatchID( const int FaLv )
    } // for (int r=0; r<MPI_NRank; r++)
 
 
-// free memory   
-   for (int r=0; r<MPI_NRank; r++)  free( LB_SendR_LBIdx[r] ); 
+// free memory
+   for (int r=0; r<MPI_NRank; r++)  free( LB_SendR_LBIdx[r] );
    delete [] SendBuf_R;
    delete [] RecvBuf_R;
 
