@@ -559,18 +559,18 @@ else
 CXXFLAG  := $(CXXWARN_FLAG) $(COMMONFLAG) $(OPENMP) -O3
 endif
 
-ifeq "$(findstring GAMER_DEBUG, $(SIMU_OPTION))" "GAMER_DEBUG"
-   ifeq "$(findstring INTEL, $(SIMU_OPTION))" "INTEL"
-      CXXFLAG += -g -debug
-   else
-      CXXFLAG += -g
-   endif
+# debug flag (currently we include debugging information even when GAMER_DEBUG is off)
+ifeq "$(findstring INTEL, $(SIMU_OPTION))" "INTEL"
+   CXXFLAG += -g
+else
+   CXXFLAG += -g
 endif
 
 # fixes compilation issues on Intel MPI
 ifeq "$(findstring SERIAL, $(SIMU_OPTION))" ""
    CXXFLAG += -DMPICH_IGNORE_CXX_SEEK
 endif
+
 
 # NVCC flags
 # -------------------------------------------------------------------------------
