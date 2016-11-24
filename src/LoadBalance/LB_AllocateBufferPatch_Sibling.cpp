@@ -23,7 +23,7 @@ void LB_AllocateBufferPatch_Sibling( const int lv )
 {
 
 // for the base-level --> invoke the alternative function
-   if ( lv == 0 )    
+   if ( lv == 0 )
    {
       LB_AllocateBufferPatch_Sibling_Base();
       return;
@@ -42,22 +42,22 @@ void LB_AllocateBufferPatch_Sibling( const int lv )
                                amr->BoxScale[1]/PGScale + 2,
                                amr->BoxScale[2]/PGScale + 2 };
 
-   int  *Cr0, Cr[3], Cr_In[3], TRank; 
-   long  LB_Idx, Coord1D; 
+   int  *Cr0, Cr[3], Cr_In[3], TRank;
+   long  LB_Idx, Coord1D;
    int   MemUnit_Int[MPI_NRank], MemSize_Int[MPI_NRank], MemUnit_Ext[MPI_NRank], MemSize_Ext[MPI_NRank];
    int   MemUnit_Query[MPI_NRank], MemSize_Query[MPI_NRank];
    long *Query_Temp[MPI_NRank], *Int_LBIdx[MPI_NRank], *Ext_Coord1D[MPI_NRank], *Ext_LBIdx_Temp[MPI_NRank];
-   long *Ext_LBIdx[MPI_NRank]; 
+   long *Ext_LBIdx[MPI_NRank];
    int  *Ext_IdxTable[MPI_NRank];
    int   NQuery_Temp[MPI_NRank], NQuery[MPI_NRank], Int_NQuery_Temp[MPI_NRank], Int_NQuery[MPI_NRank];
    int   Ext_NQuery_Temp[MPI_NRank], Ext_NQuery[MPI_NRank];
    bool  External; // true --> the buffer patch lies outside the simulatio box
 
 
-// 1. prepare send   
-// ==========================================================================================   
+// 1. prepare send
+// ==========================================================================================
 // 1.1 set memory size for the function "realloc"
-   for (int r=0; r<MPI_NRank; r++)     
+   for (int r=0; r<MPI_NRank; r++)
    {
       MemUnit_Query  [r] = amr->NPatchComma[lv][1];   // set arbitrarily
       MemSize_Query  [r] = MemUnit_Query[r];
@@ -81,7 +81,7 @@ void LB_AllocateBufferPatch_Sibling( const int lv )
 
 
 //###OPTIMIZATION: optimize the treatment of external buffer patches
-// 1.2 prepare the LB_Idx query list   
+// 1.2 prepare the LB_Idx query list
    for (int PID0=0; PID0<amr->NPatchComma[lv][1]; PID0+=8)
    {
       Cr0 = amr->patch[0][lv][PID0]->corner;
@@ -106,7 +106,7 @@ void LB_AllocateBufferPatch_Sibling( const int lv )
          External = false;
          for (int d=0; d<3; d++)
          {
-            if ( Cr[d] != Cr_In[d] )   
+            if ( Cr[d] != Cr_In[d] )
             {
                External = true;
                break;
@@ -118,7 +118,7 @@ void LB_AllocateBufferPatch_Sibling( const int lv )
                 (  OPT__BC_FLU[0] != BC_FLU_PERIODIC  &&  ( !External && TRank != MPI_Rank )  )     )
          {
 //          a. query list (internal + external buffer patches)
-            if ( NQuery_Temp[TRank] >= MemSize_Query[TRank] )  
+            if ( NQuery_Temp[TRank] >= MemSize_Query[TRank] )
             {
                MemSize_Query[TRank] += MemUnit_Query[TRank];
                Query_Temp   [TRank]  = (long*)realloc( Query_Temp[TRank], MemSize_Query[TRank]*sizeof(long) );
@@ -127,18 +127,18 @@ void LB_AllocateBufferPatch_Sibling( const int lv )
             Query_Temp[TRank][ NQuery_Temp[TRank] ++ ] = LB_Idx;
 
 //          b. external buffer patch list
-            if ( External ) 
+            if ( External )
             {
-               if ( Ext_NQuery_Temp[TRank] >= MemSize_Ext[TRank] )  
+               if ( Ext_NQuery_Temp[TRank] >= MemSize_Ext[TRank] )
                {
                   MemSize_Ext   [TRank] += MemUnit_Ext[TRank];
-                  Ext_Coord1D   [TRank]  = (long*)realloc( Ext_Coord1D   [TRank], 
+                  Ext_Coord1D   [TRank]  = (long*)realloc( Ext_Coord1D   [TRank],
                                                            MemSize_Ext[TRank]*sizeof(long) );
-                  Ext_LBIdx_Temp[TRank]  = (long*)realloc( Ext_LBIdx_Temp[TRank], 
+                  Ext_LBIdx_Temp[TRank]  = (long*)realloc( Ext_LBIdx_Temp[TRank],
                                                            MemSize_Ext[TRank]*sizeof(long) );
                }
 
-               Coord1D = ( (long)(Cr[2]/PGScale+1)*NPG_Padded[1] + Cr[1]/PGScale+1 )*NPG_Padded[0] 
+               Coord1D = ( (long)(Cr[2]/PGScale+1)*NPG_Padded[1] + Cr[1]/PGScale+1 )*NPG_Padded[0]
                          + Cr[0]/PGScale+1;
                Ext_Coord1D    [TRank][ Ext_NQuery_Temp[TRank] ] = Coord1D;
                Ext_LBIdx_Temp [TRank][ Ext_NQuery_Temp[TRank] ] = LB_Idx;
@@ -148,7 +148,7 @@ void LB_AllocateBufferPatch_Sibling( const int lv )
 //          c. internal buffer patch list
             else
             {
-               if ( Int_NQuery_Temp[TRank] >= MemSize_Int[TRank] )  
+               if ( Int_NQuery_Temp[TRank] >= MemSize_Int[TRank] )
                {
                   MemSize_Int[TRank] += MemUnit_Int[TRank];
                   Int_LBIdx  [TRank]  = (long*)realloc( Int_LBIdx[TRank], MemSize_Int[TRank]*sizeof(long) );
@@ -187,7 +187,7 @@ void LB_AllocateBufferPatch_Sibling( const int lv )
 
 
 // 1.5 sort the external buffer patch list and remove duplicates (with the same 1D coord)
-// ***note that different external buffer patches can map to the same internal real patches in periodic B.C.   
+// ***note that different external buffer patches can map to the same internal real patches in periodic B.C.
    for (int r=0; r<MPI_NRank; r++)
    {
       Ext_IdxTable[r] = (int*)malloc( Ext_NQuery_Temp[r]*sizeof(int) );
@@ -198,7 +198,7 @@ void LB_AllocateBufferPatch_Sibling( const int lv )
 
       for (int t=1; t<Ext_NQuery_Temp[r]; t++)
       {
-         if ( Ext_Coord1D[r][t] != Ext_Coord1D[r][t-1] )   
+         if ( Ext_Coord1D[r][t] != Ext_Coord1D[r][t-1] )
          {
             Ext_Coord1D [r][ Ext_NQuery[r] ] = Ext_Coord1D [r][t];
             Ext_IdxTable[r][ Ext_NQuery[r] ] = Ext_IdxTable[r][t];
@@ -217,7 +217,7 @@ void LB_AllocateBufferPatch_Sibling( const int lv )
 
 
 // 2. transfer data : (SendBuf_Query --> RecvBuf_Query --> SendBuf_Reply --> RecvBuf_Reply)
-// ==========================================================================================   
+// ==========================================================================================
    int   Query_Disp[MPI_NRank], Reply_Disp[MPI_NRank], NReply[MPI_NRank], NQuery_Total, NReply_Total, Counter;
    long *SendBuf_Query, *RecvBuf_Query;
    char *SendBuf_Reply, *RecvBuf_Reply;
@@ -229,10 +229,10 @@ void LB_AllocateBufferPatch_Sibling( const int lv )
 // 2.2 prepare the query and reply arrays
    Query_Disp[0] = 0;
    Reply_Disp[0] = 0;
-   for (int r=1; r<MPI_NRank; r++)  
+   for (int r=1; r<MPI_NRank; r++)
    {
-      Query_Disp[r] = Query_Disp[r-1] + NQuery[r-1]; 
-      Reply_Disp[r] = Reply_Disp[r-1] + NReply[r-1]; 
+      Query_Disp[r] = Query_Disp[r-1] + NQuery[r-1];
+      Reply_Disp[r] = Reply_Disp[r-1] + NReply[r-1];
    }
    NQuery_Total = Query_Disp[MPI_NRank-1] + NQuery[MPI_NRank-1];
    NReply_Total = Reply_Disp[MPI_NRank-1] + NReply[MPI_NRank-1];
@@ -249,24 +249,24 @@ void LB_AllocateBufferPatch_Sibling( const int lv )
 
 
 // 2.3 send queries
-   MPI_Alltoallv( SendBuf_Query, NQuery, Query_Disp, MPI_LONG, 
+   MPI_Alltoallv( SendBuf_Query, NQuery, Query_Disp, MPI_LONG,
                   RecvBuf_Query, NReply, Reply_Disp, MPI_LONG, MPI_COMM_WORLD );
 
 
-// 2.4 prepare answers   
+// 2.4 prepare answers
    for (int r=0; r<MPI_NRank; r++)
-      Mis_Matching_char( amr->NPatchComma[lv][1], amr->LB->IdxList_Real[lv], NReply[r], 
+      Mis_Matching_char( amr->NPatchComma[lv][1], amr->LB->IdxList_Real[lv], NReply[r],
                          RecvBuf_Query+Reply_Disp[r], SendBuf_Reply+Reply_Disp[r] );
 
 
 // 2.5 send replies
-   MPI_Alltoallv( SendBuf_Reply, NReply, Reply_Disp, MPI_CHAR, 
+   MPI_Alltoallv( SendBuf_Reply, NReply, Reply_Disp, MPI_CHAR,
                   RecvBuf_Reply, NQuery, Query_Disp, MPI_CHAR, MPI_COMM_WORLD );
 
 
 
 // 3. allocate buffer patches
-// ==========================================================================================   
+// ==========================================================================================
    int  Int_Counter, Ext_Counter, Cr3D[3], Counter2=0;
    long Int_Target, Ext_Target, Cr1D;
 
@@ -281,7 +281,7 @@ void LB_AllocateBufferPatch_Sibling( const int lv )
       {
          LB_Idx = Query_Temp[r][t];
 
-//       validate LB_Idx         
+//       validate LB_Idx
 #        ifdef GAMER_DEBUG
          if ( LB_Idx != Int_Target  &&  LB_Idx != Ext_Target )
             Aux_Error( ERROR_INFO, "incorrect LB_Idx (%ld) != Int_Target (%ld) and Ext_Target (%ld) !!\n",
@@ -314,7 +314,7 @@ void LB_AllocateBufferPatch_Sibling( const int lv )
                if ( OPT__BC_FLU[0] != BC_FLU_PERIODIC )
                {
                   for (int d=0; d<3; d++)
-                  if ( Cr3D[d] < 0  ||  Cr3D[d] >= amr->BoxScale[d] )    
+                  if ( Cr3D[d] < 0  ||  Cr3D[d] >= amr->BoxScale[d] )
                      Aux_Error( ERROR_INFO, "Cr3D[%d] = %d lies outside the simulation box for the non-periodic B.C. !!\n" );
                }
 #              endif
@@ -383,7 +383,7 @@ void LB_AllocateBufferPatch_Sibling( const int lv )
 
 
 // 4. record the padded 1D corner coordinates (which can be overwritten by "LB_AllocateBufferPatch_Father")
-// ==========================================================================================   
+// ==========================================================================================
    const int NPatch = amr->NPatchComma[lv][2];
 
    amr->LB->PaddedCr1DList         [lv] = (ulong*)realloc( amr->LB->PaddedCr1DList         [lv],
@@ -402,14 +402,14 @@ void LB_AllocateBufferPatch_Sibling( const int lv )
    {
       if ( amr->LB->PaddedCr1DList[lv][t] == amr->LB->PaddedCr1DList[lv][t-1] )
          Aux_Error( ERROR_INFO, "duplicate patches at lv %d, PaddedCr1D %lu, PID = %d and %d !!\n",
-                    lv, amr->LB->PaddedCr1DList[lv][t], amr->LB->PaddedCr1DList_IdxTable[lv][t], 
+                    lv, amr->LB->PaddedCr1DList[lv][t], amr->LB->PaddedCr1DList_IdxTable[lv][t],
                     amr->LB->PaddedCr1DList_IdxTable[lv][t-1] );
    }
 #  endif
 
 
-// free memory   
-   for (int r=0; r<MPI_NRank; r++)  
+// free memory
+   for (int r=0; r<MPI_NRank; r++)
    {
       free( Query_Temp    [r] );
       free( Int_LBIdx     [r] );

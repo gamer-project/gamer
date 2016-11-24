@@ -115,8 +115,11 @@ void Par_GetTimeStep_VelAcc( double dt[2], double dTime[2], int MinDtLv[2], real
 
 
 // get the time-step in one rank
-   MinDtLv[0] = -1;  // indicating that MinDtVar cannot be obtained
-   MinDtLv[1] = -1;
+   MinDtLv [0] = -1;  // indicating that MinDtVar cannot be obtained
+   MinDtLv [1] = -1;
+   MinDtVar[0] = 0.0; // indicating that MinDtVar cannot  be obtained
+   MinDtVar[1] = 0.0;
+
 
    for (int lv=0; lv<NLEVEL; lv++)
    {

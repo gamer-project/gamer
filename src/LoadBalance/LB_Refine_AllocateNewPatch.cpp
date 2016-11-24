@@ -460,7 +460,7 @@ void LB_Refine_AllocateNewPatch( const int FaLv, int NNew_Home, int *NewPID_Home
 
 // 8. allocate buffer patches at SonLv
 // ==========================================================================================
-// 8.1 sibling-buffer patches (invoke the alternatvie version which should be faster)
+// 8.1 sibling-buffer patches (invoke the alternative version which should be faster)
    LB_Refine_AllocateBufferPatch_Sibling( SonLv );
 // LB_AllocateBufferPatch_Sibling( SonLv );
 

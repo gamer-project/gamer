@@ -606,6 +606,8 @@ void LB_RedistributeRealPatch( const int lv, real **ParVar_Old, real **Passive_O
 
 #  ifdef GRAVITY
 // 5.3 potential
+// --> debugger may report that the potential data are NOT initialized when calling LB_Init_LoadBalance() during initialization
+// --> it's fine since we calculate potential AFTER invoking LB_Init_LoadBalance() in Init_GAMER()
 #  ifdef FLOAT8
    MPI_Alltoallv( SendBuf_Pot, Send_NCount_Data1v, Send_NDisp_Data1v, MPI_DOUBLE,
                   RecvBuf_Pot, Recv_NCount_Data1v, Recv_NDisp_Data1v, MPI_DOUBLE, MPI_COMM_WORLD );

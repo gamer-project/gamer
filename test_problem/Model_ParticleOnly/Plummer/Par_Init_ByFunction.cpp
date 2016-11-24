@@ -55,7 +55,7 @@ void Par_Init_ByFunction()
 
       double *Table_MassProf_r = NULL;
       double *Table_MassProf_M = NULL;
-      double  TotM, ParM, dr, RanM, RanR, rL, rR, ML, MR, EstM, ErrM, ErrM_Max, RanVec[3];
+      double  TotM, ParM, dr, RanM, RanR, rL, rR, ML, MR, EstM, ErrM, ErrM_Max=-1.0, RanVec[3];
       double  Vmax, RanV, RanProb, Prob;
       int     IdxL, IdxR;
 
