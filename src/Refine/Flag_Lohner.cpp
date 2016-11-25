@@ -9,7 +9,7 @@
 // Description :  Check if the numerical error at the cell (i,j,k) estimated by Lohner's prescription
 //                exceeds the given threshold
 //
-// Note        :  1. Invoked by the function "Flag_Check" 
+// Note        :  1. Invoked by the function "Flag_Check"
 //                2. Adopt the modified version in FLASH4 and MPI_AMRVAC
 //                3. The Ave1D and Slope1D arrays must be prepared in advance by invoking the function "Prepare_for_Lohner"
 //                4. The sizes of the arrays Ave1D and  Slope1D must be NVar*3*(PS1+2)^3
@@ -65,11 +65,11 @@ bool Flag_Lohner( const int i, const int j, const int k, const OptLohnerForm_t F
    real Der2_xx, Der2_yy, Der2_zz;           // tensor Der2_ij = d2(Var)/didj (i/j=x,y,z)
    real Der2_xy, Der2_yz, Der2_zx;           // Der2_xy = Der2_yx, ...
 
-// off-diagonal terms are useful for LOHNER_FLASH1/2 only 
+// off-diagonal terms are useful for LOHNER_FLASH1/2 only
    real Der1_xx, Der1_yy, Der1_zz;
    real Der1_xy, Der1_xz;                    // tensor Der1_ij = d(Var)/di averaged over j (i/j=x,y,z)
    real Der1_yx, Der1_yz;                    // Der1_yx != Der1_xy
-   real Der1_zx, Der1_zy; 
+   real Der1_zx, Der1_zy;
 
    real Filter_xx, Filter_yy, Filter_zz;     // filter tensor along different directions
    real Filter_xy, Filter_yz, Filter_zx;     // Filter_xy = Filter_yx, ...
@@ -132,7 +132,7 @@ bool Flag_Lohner( const int i, const int j, const int k, const OptLohnerForm_t F
 
          Der1_zx = FABS( Slope[v][2][kk ][jj ][iip] ) + FABS( Slope[v][2][kk ][jj ][iim] );
          Der1_zy = FABS( Slope[v][2][kk ][jjp][ii ] ) + FABS( Slope[v][2][kk ][jjm][ii ] ); }
-      } 
+      }
 
       else // Stencil == 1
       {
@@ -215,27 +215,27 @@ bool Flag_Lohner( const int i, const int j, const int k, const OptLohnerForm_t F
 
 
    return false;
- 
+
 } // FUNCTION : Flag_Lohner
 
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Prepare_for_Lohner 
-// Description :  Evaluate slopes and averages along x/y/z for the Lohner error estimator 
+// Function    :  Prepare_for_Lohner
+// Description :  Evaluate slopes and averages along x/y/z for the Lohner error estimator
 //
-// Note        :  1. This function is called in "Flag_Real" before looping over all cells in the patch in order to 
+// Note        :  1. This function is called in "Flag_Real" before looping over all cells in the patch in order to
 //                   achieve higher performance
 //                2. Evaluate slope by the discrete central difference:
 //                      stencil == 2: slope_x(i,j,k) = var(i+1,j,k) - var(i-1,j,k)
 //                      stencil == 1: slope_x(i,j,k) = MAX(  ABS( var(i+1,j,k) - var(i  ,j,k) ),
-//                                                            ABS( var(i,  j,k) - var(i-1,j,k) ) )
+//                                                           ABS( var(i,  j,k) - var(i-1,j,k) ) )
 //                                     ~ half of the stencil==2 case
-//                3. The averages along different directions are evaluated as: 
+//                3. The averages along different directions are evaluated as:
 //                      stencil == 2: ave_x(i,j,k) = FABS( var(i+1,j,k) ) + FABS( var(i-1,j,k) )
-//                      stencil == 1: ave_x(i,j,k) = FABS( var(i  ,j,k) ) 
+//                      stencil == 1: ave_x(i,j,k) = FABS( var(i  ,j,k) )
 //                                     ~ half of the stencil==2 case
-//                4. Do not take into account the physical size of each cell since the Lohner error estimator 
+//                4. Do not take into account the physical size of each cell since the Lohner error estimator
 //                   is dimensionless
 //                5. The sizes of the arrays (Var1D, Ave1D, Slope1D) must be NVar*( (PS1+4)^3, 3*(PS1+2)^3, 3*(PS1+2)^3 )
 //
@@ -245,7 +245,7 @@ bool Flag_Lohner( const int i, const int j, const int k, const OptLohnerForm_t F
 //                Slope1D : Array to store the output slopes of Var for the Lohner error estimator
 //                NVar    : Number of variables stored in "Var, Ave, and Slope"
 //
-// Return      :  None 
+// Return      :  None
 //-------------------------------------------------------------------------------------------------------
 void Prepare_for_Lohner( const OptLohnerForm_t Form, const real *Var1D, real *Ave1D, real *Slope1D, const int NVar )
 {

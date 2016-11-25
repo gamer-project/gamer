@@ -1,0 +1,4 @@
+# parameters for the cluster merger test
+0                 ClusterMerger_Coll         # (true/false) --> test (cluster merger / single cluster)
+profile.txt       ClusterMerger_File_Prof    # name of the input profile table
+particle.cbin.f8  ClusterMerger_File_Par     # name of the input particle file
