@@ -37,8 +37,17 @@ void Par_Aux_InitCheck()
       for (int d=0; d<3; d++)
       {
          if ( Pos[d][ParID] < (real)0.0  ||  Pos[d][ParID] >= amr->BoxSize[d] )
+         {
+//          periodicity should be taken care of in advance
+            if ( OPT__BC_POT == BC_POT_PERIODIC )
             Aux_Error( ERROR_INFO, "Pos[%d][%ld] = %14.7e lies outside the simulation domain (0.0 ... %13.7e) !!\n",
                        d, ParID, Pos[d][ParID], amr->BoxSize[d] );
+
+//          for non-periodic BC., particles lying outside the box will be removed in the next check
+            else
+            Aux_Message( stderr, "WARNING : Pos[%d][%ld] = %14.7e lies outside the simulation domain (0.0 ... %13.7e) !!\n",
+                       d, ParID, Pos[d][ParID], amr->BoxSize[d] );
+         }
       }
    }
 
@@ -52,9 +61,8 @@ void Par_Aux_InitCheck()
          {
             amr->Par->RemoveOneParticle( ParID, PAR_INACTIVE_OUTSIDE );
 
-            if ( OPT__VERBOSE )
-               Aux_Message( stderr, "\nWARNING : removing particle %10d (Pos = [%14.7e, %14.7e, %14.7e], Time = %13.7e)\n",
-                            ParID, Pos[0][ParID], Pos[1][ParID], Pos[2][ParID], Time[0] );
+            Aux_Message( stderr, "WARNING : removing particle %10d (Pos = [%14.7e, %14.7e, %14.7e], Time = %13.7e)\n",
+                         ParID, Pos[0][ParID], Pos[1][ParID], Pos[2][ParID], Time[0] );
          }
       }
    }
