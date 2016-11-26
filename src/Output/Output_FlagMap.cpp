@@ -93,8 +93,8 @@ void Output_FlagMap( const int lv, const int xyz, const char *comment )
          Aux_Message( stderr, "WARNING : repeated ID (Rank = %d, P = %d, (ip, jp, kp) = (%d,%d,%d)) !!\n", 
                       MPI_Rank, P, ip, jp, kp );
 
-      if ( amr->patch[0][lv][P]->flag )   FlagMap[ID] = 'O';
-      else                                FlagMap[ID] = 'X';
+      if ( amr->patch[0][lv][P]->son != -1 )    FlagMap[ID] = 'O';
+      else                                      FlagMap[ID] = 'X';
    }
 
 

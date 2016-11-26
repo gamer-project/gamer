@@ -13,7 +13,7 @@
 void Init_Parallelization()
 {
 
-   if ( MPI_Rank == 0 )    Aux_Message( stdout, "Init_Parallelization ... " );
+   if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... ", __FUNCTION__ );
 
 
 // 1. number of parallel buffer cells for setting boundary conditions by either data copy or interpolation

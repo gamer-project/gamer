@@ -6,12 +6,12 @@
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Init_MemAllocate
-// Description :  Allocate memory for several global arrays 
+// Description :  Allocate memory for several global arrays
 //-------------------------------------------------------------------------------------------------------
 void Init_MemAllocate()
 {
 
-   if ( MPI_Rank == 0 )    Aux_Message( stdout, "Init_MemAllocate ... \n" );
+   if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ...\n", __FUNCTION__ );
 
 
 // a. allocate the BaseP
@@ -50,6 +50,6 @@ void Init_MemAllocate()
 #  endif
 
 
-   if ( MPI_Rank == 0 )    Aux_Message( stdout, "Init_MemAllocate ... done\n" );
+   if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", __FUNCTION__ );
 
 } // FUNCTION : Init_MemAllocate

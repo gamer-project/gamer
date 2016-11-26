@@ -28,7 +28,7 @@ double            Time_Prev            [NLEVEL];
 real              MinDtInfo_Fluid      [NLEVEL];
 double            FlagTable_Rho        [NLEVEL-1];
 double            FlagTable_RhoGradient[NLEVEL-1];
-double            FlagTable_Lohner     [NLEVEL-1][3];
+double            FlagTable_Lohner     [NLEVEL-1][4];
 double            FlagTable_User       [NLEVEL-1];
 double           *DumpTable = NULL;
 int               DumpTable_NDump;

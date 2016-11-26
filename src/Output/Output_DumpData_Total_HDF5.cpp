@@ -74,7 +74,7 @@ Procedure for outputting new variables:
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2214)
+// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2215)
 // Description :  Output all simulation data in the HDF5 format, which can be used as a restart file
 //                or loaded by YT
 //
@@ -1222,7 +1222,7 @@ void FillIn_KeyInfo( KeyInfo_t &KeyInfo )
 
    const time_t CalTime  = time( NULL );   // calendar time
 
-   KeyInfo.FormatVersion = 2214;
+   KeyInfo.FormatVersion = 2215;
    KeyInfo.Model         = MODEL;
    KeyInfo.NLevel        = NLEVEL;
    KeyInfo.PatchSize     = PATCH_SIZE;
@@ -1893,7 +1893,7 @@ void FillIn_InputPara( InputPara_t &InputPara )
       InputPara.FlagTable_Rho         [lv]    = FlagTable_Rho         [lv];
       InputPara.FlagTable_RhoGradient [lv]    = FlagTable_RhoGradient [lv];
 
-      for (int t=0; t<3; t++)
+      for (int t=0; t<4; t++)
       InputPara.FlagTable_Lohner      [lv][t] = FlagTable_Lohner      [lv][t];
 
       InputPara.FlagTable_User        [lv]    = FlagTable_User        [lv];
@@ -2188,14 +2188,14 @@ void GetCompound_InputPara( hid_t &H5_TypeID )
    const hsize_t H5_ArrDims_6Var             = 6;                    // array size of [6]
    const hsize_t H5_ArrDims_NLvM1            = NLEVEL-1;             // array size of [NLEVEL-1]
    const hsize_t H5_ArrDims_NLvM1_2[2]       = { NLEVEL-1, 2 };      // array size of [NLEVEL-1][2]
-   const hsize_t H5_ArrDims_NLvM1_3[2]       = { NLEVEL-1, 3 };      // array size of [NLEVEL-1][3]
+   const hsize_t H5_ArrDims_NLvM1_4[2]       = { NLEVEL-1, 4 };      // array size of [NLEVEL-1][4]
 
    const hid_t   H5_TypeID_Arr_3Int          = H5Tarray_create( H5T_NATIVE_INT,    1, &H5_ArrDims_3Var      );
    const hid_t   H5_TypeID_Arr_6Int          = H5Tarray_create( H5T_NATIVE_INT,    1, &H5_ArrDims_6Var      );
    const hid_t   H5_TypeID_Arr_NLvM1Int      = H5Tarray_create( H5T_NATIVE_INT,    1, &H5_ArrDims_NLvM1     );
    const hid_t   H5_TypeID_Arr_NLvM1Double   = H5Tarray_create( H5T_NATIVE_DOUBLE, 1, &H5_ArrDims_NLvM1     );
    const hid_t   H5_TypeID_Arr_NLvM1_2Double = H5Tarray_create( H5T_NATIVE_DOUBLE, 2,  H5_ArrDims_NLvM1_2   );
-   const hid_t   H5_TypeID_Arr_NLvM1_3Double = H5Tarray_create( H5T_NATIVE_DOUBLE, 2,  H5_ArrDims_NLvM1_3   );
+   const hid_t   H5_TypeID_Arr_NLvM1_4Double = H5Tarray_create( H5T_NATIVE_DOUBLE, 2,  H5_ArrDims_NLvM1_4   );
 
    herr_t  H5_Status;
 
@@ -2443,7 +2443,7 @@ void GetCompound_InputPara( hid_t &H5_TypeID )
 // flag tables
    H5Tinsert( H5_TypeID, "FlagTable_Rho",          HOFFSET(InputPara_t,FlagTable_Rho           ), H5_TypeID_Arr_NLvM1Double   );
    H5Tinsert( H5_TypeID, "FlagTable_RhoGradient",  HOFFSET(InputPara_t,FlagTable_RhoGradient   ), H5_TypeID_Arr_NLvM1Double   );
-   H5Tinsert( H5_TypeID, "FlagTable_Lohner",       HOFFSET(InputPara_t,FlagTable_Lohner        ), H5_TypeID_Arr_NLvM1_3Double );
+   H5Tinsert( H5_TypeID, "FlagTable_Lohner",       HOFFSET(InputPara_t,FlagTable_Lohner        ), H5_TypeID_Arr_NLvM1_4Double );
    H5Tinsert( H5_TypeID, "FlagTable_User",         HOFFSET(InputPara_t,FlagTable_User          ), H5_TypeID_Arr_NLvM1Double   );
 #  if   ( MODEL == HYDRO )
    H5Tinsert( H5_TypeID, "FlagTable_PresGradient", HOFFSET(InputPara_t,FlagTable_PresGradient  ), H5_TypeID_Arr_NLvM1Double   );
@@ -2461,7 +2461,7 @@ void GetCompound_InputPara( hid_t &H5_TypeID )
    H5_Status = H5Tclose( H5_TypeID_Arr_6Int          );
    H5_Status = H5Tclose( H5_TypeID_Arr_NLvM1Double   );
    H5_Status = H5Tclose( H5_TypeID_Arr_NLvM1_2Double );
-   H5_Status = H5Tclose( H5_TypeID_Arr_NLvM1_3Double );
+   H5_Status = H5Tclose( H5_TypeID_Arr_NLvM1_4Double );
 
 } // FUNCTION : GetCompound_InputPara
 

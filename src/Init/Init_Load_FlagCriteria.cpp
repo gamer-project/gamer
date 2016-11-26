@@ -8,17 +8,17 @@
 // Function    :  Init_Load_FlagCriteria
 // Description :  Load the flag criteria from several input files named "Input__Flag_XXX"
 //
-// Note        :  The loaded data will be used as the refinement thresholds at each refinement level 
+// Note        :  The loaded data will be used as the refinement thresholds at each refinement level
 //-------------------------------------------------------------------------------------------------------
 void Init_Load_FlagCriteria()
 {
-   
+
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... ", __FUNCTION__ );
 
 
 #  if ( MODEL != HYDRO  &&  MODEL != MHD )
    const bool OPT__FLAG_PRES_GRADIENT = false;
-   double *FlagTable_PresGradient     = NULL; 
+   double *FlagTable_PresGradient     = NULL;
 #  endif
 
 #  if ( MODEL != ELBDM )
@@ -41,16 +41,16 @@ void Init_Load_FlagCriteria()
 #  endif
 
    const int  NFlagMode         = 8;
-   const bool Flag[NFlagMode]   = { OPT__FLAG_RHO, OPT__FLAG_RHO_GRADIENT, OPT__FLAG_PRES_GRADIENT, 
+   const bool Flag[NFlagMode]   = { OPT__FLAG_RHO, OPT__FLAG_RHO_GRADIENT, OPT__FLAG_PRES_GRADIENT,
                                     OPT__FLAG_ENGY_DENSITY, OPT__FLAG_LOHNER, OPT__FLAG_USER,
                                     (bool)OPT__FLAG_NPAR_PATCH, OPT__FLAG_NPAR_CELL };
-   const char ModeName[][100]   = { "OPT__FLAG_RHO", "OPT__FLAG_RHO_GRADIENT", "OPT__FLAG_PRES_GRADIENT", 
+   const char ModeName[][100]   = { "OPT__FLAG_RHO", "OPT__FLAG_RHO_GRADIENT", "OPT__FLAG_PRES_GRADIENT",
                                     "OPT__FLAG_ENGY_DENSITY", "OPT__FLAG_LOHNER", "OPT__FLAG_USER",
                                     "OPT__FLAG_NPAR_PATCH", "OPT__FLAG_NPAR_CELL" };
-   const char FileName[][100]   = { "Input__Flag_Rho", "Input__Flag_RhoGradient", "Input__Flag_PresGradient", 
+   const char FileName[][100]   = { "Input__Flag_Rho", "Input__Flag_RhoGradient", "Input__Flag_PresGradient",
                                     "Input__Flag_EngyDensity", "Input__Flag_Lohner", "Input__Flag_User",
                                     "Input__Flag_NParPatch", "Input__Flag_NParCell" };
-   double *FlagTable[NFlagMode] = { FlagTable_Rho, FlagTable_RhoGradient, FlagTable_PresGradient, 
+   double *FlagTable[NFlagMode] = { FlagTable_Rho, FlagTable_RhoGradient, FlagTable_PresGradient,
                                     NULL, NULL, FlagTable_User, NULL, NULL };
 
    FILE *File;
@@ -65,7 +65,7 @@ void Init_Load_FlagCriteria()
       FlagTable_Rho         [lv]    = -1.0;
       FlagTable_RhoGradient [lv]    = -1.0;
 
-      for (int t=0; t<3; t++)
+      for (int t=0; t<4; t++)
       FlagTable_Lohner      [lv][t] = -1.0;
 
       FlagTable_User        [lv]    = -1.0;
@@ -124,9 +124,10 @@ void Init_Load_FlagCriteria()
 //          OPT__FLAG_ENGY_DENSITY and OPT__FLAG_LOHNER have two and three columns to be loaded, respectively
             if      ( FlagMode == 3 )  sscanf( input_line, "%d%lf%lf", &Trash, &FlagTable_EngyDensity[lv][0],
                                                                                &FlagTable_EngyDensity[lv][1] );
-            else if ( FlagMode == 4 )  sscanf( input_line, "%d%lf%lf%lf", &Trash, &FlagTable_Lohner[lv][0],
-                                                                                  &FlagTable_Lohner[lv][1], 
-                                                                                  &FlagTable_Lohner[lv][2] );
+            else if ( FlagMode == 4 )  sscanf( input_line, "%d%lf%lf%lf%lf", &Trash, &FlagTable_Lohner[lv][0],
+                                                                                     &FlagTable_Lohner[lv][1],
+                                                                                     &FlagTable_Lohner[lv][2],
+                                                                                     &FlagTable_Lohner[lv][3] );
 //          OPT__FLAG_NPAR_PATCH/CELL load integers
             else if ( FlagMode == 6 )  sscanf( input_line, "%d%d",  &Trash, &FlagTable_NParPatch[lv] );
             else if ( FlagMode == 7 )  sscanf( input_line, "%d%d",  &Trash, &FlagTable_NParCell [lv] );

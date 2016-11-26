@@ -84,7 +84,7 @@ void Init_TestProb()
 
 
 // load the radial profile
-   LoadProfile();
+   if ( OPT__INIT != INIT_RESTART )    LoadProfile();
 
 
 // record the test problem parameters

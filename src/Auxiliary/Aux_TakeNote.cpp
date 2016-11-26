@@ -1010,10 +1010,10 @@ void Aux_TakeNote()
       {
          fprintf( Note, "Flag Criterion (Lohner Error Estimator)\n" );
          fprintf( Note, "***********************************************************************************\n" );
-         fprintf( Note, "  Level           Threshold              Filter              Soften\n" );
+         fprintf( Note, "  Level           Threshold              Filter              Soften      MinimumDensity\n" );
          for (int lv=0; lv<MAX_LEVEL; lv++)
-            fprintf( Note, "%7d%20.7e%20.7e%20.7e\n", lv, FlagTable_Lohner[lv][0], FlagTable_Lohner[lv][1],
-                     FlagTable_Lohner[lv][2] );
+            fprintf( Note, "%7d%20.7e%20.7e%20.7e%20.7e\n", lv, FlagTable_Lohner[lv][0], FlagTable_Lohner[lv][1],
+                     FlagTable_Lohner[lv][2], FlagTable_Lohner[lv][3] );
          fprintf( Note, "***********************************************************************************\n" );
          fprintf( Note, "\n\n");
       }

@@ -121,7 +121,7 @@
 0           OPT__UM_FACTOR_5OVER3     # multiply the input density field by 5/3 to have the growing-mode amplitude correct
 1           OPT__INIT_RESTRICT        # restrict all data during initialization (0=off, 1=on)
 -2          OPT__GPUID_SELECT         # GPU ID selection mode : (-3, -2, -1, >=0) -> by (Laohu, CUDA, MPI rank, Input)
-0           INIT_SUBSAMPLING_NCELL    # perform sub-sampling during initialization (0, >0) -> (off, # of sub-sampling cells)
+2           INIT_SUBSAMPLING_NCELL    # perform sub-sampling during initialization (0, >0) -> (off, # of sub-sampling cells)
 
 1           OPT__INT_TIME             # perform "temporal interpolation" for the individual time-step scheme
 1           OPT__INT_PHASE            # interpolation on phase (only 4-7 schemes are supported) ##ELBDM ONLY##
