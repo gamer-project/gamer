@@ -14,7 +14,7 @@ FILE_IN_PREFIX_PRES = 'AvePre'
 FILE_IN_SUFFIX  = ''
 FILE_OUT_PREFIX = 'Fig__TemperatureProfile'
 START_ID        = 0
-END_ID          = 52
+END_ID          = 500
 DELTA_ID        = 1
 PAUSE           = 0.40  # <= 0.0 --> mouse
 
@@ -71,9 +71,9 @@ do for [ID=START_ID:END_ID:DELTA_ID] {
 
 #  units and physical constants in CGS
    UNIT_L = 3.08567758149000e+24
-   UNIT_T = 3.08567758149000e+17
+   UNIT_T = 3.15569252000000e+17
    UNIT_D = 6.76821209430561e-27
-   UNIT_P = 6.76821209430561e-13
+   UNIT_P = 6.47121291670164e-13
 
    kpc    = 3.08567758149e21
    Mpc    = 3.08567758149e24

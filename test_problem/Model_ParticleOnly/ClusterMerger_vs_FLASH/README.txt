@@ -1,7 +1,7 @@
 
-   *************************
-   ** Cluster merger test **
-   *************************
+   ***********************************
+   ** Cluster merger test vs. FLASH **
+   ***********************************
 
 Procedure to run the test problem:
 -------------------------------------------------------------------------------
@@ -16,3 +16,5 @@ Procedure to run the test problem:
 
 Note:
 -------------------------------------------------------------------------------
+1. Mimic the simulation set-up of FLASH provided by John ZuHone
+   --> https://arxiv.org/abs/1004.3820v2
