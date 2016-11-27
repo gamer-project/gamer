@@ -8,7 +8,7 @@
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Par_Init_ByFunction
-// Description :  Initialize particle attributes from user-specified functions
+// Description :  Initialize particle attributes from the user-specified functions
 //
 // Note        :  1. Invoked by "Init_GAMER"
 //                2. Periodicity should be taken care of in this function

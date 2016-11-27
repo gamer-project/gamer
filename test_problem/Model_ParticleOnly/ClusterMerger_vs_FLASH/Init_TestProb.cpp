@@ -9,25 +9,27 @@ extern void (*Output_TestProbErr_Ptr)( const bool BaseOnly );
 
 static void LoadTestProbParameter();
 static void Par_TestProbSol_ClusterMerger( real fluid[], const double x, const double y, const double z, const double Time );
-static void LoadProfile();
+static void LoadProfile( const char *FileName, double **Profile, int &NBin );
 static bool CheckEmptyString( const char *InputString );
 static int  CountRow( const char *FileName );
 
 
 // global variables in the Cluster Merger test
 // =======================================================================================
+char    ClusterMerger_File_Prof1[1000];            // profile table of cluster 1
+char    ClusterMerger_File_Prof2[1000];            // profile table of cluster 2
+char    ClusterMerger_File_Par1 [1000];            // particle file of cluster 1
+char    ClusterMerger_File_Par2 [1000];            // particle file of cluster 2
 bool    ClusterMerger_Coll;                        // (true/false) --> test (cluster merger / single cluster)
-char    ClusterMerger_File_Prof[1000];             // name of the input profile table
-char    ClusterMerger_File_Par [1000];             // name of the input particle file
+double  ClusterMerger_Coll_D;                      // initial distance between two clusters
+double  ClusterMerger_Coll_B;                      // impact parameter
+double  ClusterMerger_Coll_BulkVel1;               // bulk velocity of cluster 1 (on the left  side)
+double  ClusterMerger_Coll_BulkVel2;               // bulk velocity of cluster 2 (on the right side)
 
-double *ClusterMerger_Prof[3] = {NULL,NULL,NULL};  // radial profiles of various quantities [radius/gas mass density/gas pressure]
-int     ClusterMerger_NBin;                        // number of radial bins
-
-/*
-double ClusterMerger_Coll_D;           // distance between two ClusterMerger clouds for the ClusterMerger collision test
-double ClusterMerger_Coll_ImpactPara;  // impact parameter
-double ClusterMerger_Coll_BulkVel[3];  // bulk velocity
-*/
+double *ClusterMerger_Prof1[3] = {NULL,NULL,NULL}; // radial profiles [radius/gas mass density/gas pressure] of cluster 1
+double *ClusterMerger_Prof2[3] = {NULL,NULL,NULL}; // radial profiles [radius/gas mass density/gas pressure] of cluster 2
+int     ClusterMerger_NBin1;                       // number of radial bins of cluster 1
+int     ClusterMerger_NBin2;                       // number of radial bins of cluster 2
 // =======================================================================================
 
 
@@ -84,7 +86,13 @@ void Init_TestProb()
 
 
 // load the radial profile
-   if ( OPT__INIT != INIT_RESTART )    LoadProfile();
+   if ( OPT__INIT != INIT_RESTART )
+   {
+      LoadProfile( ClusterMerger_File_Prof1, ClusterMerger_Prof1, ClusterMerger_NBin1 );
+
+      if ( ClusterMerger_Coll )
+      LoadProfile( ClusterMerger_File_Prof2, ClusterMerger_Prof2, ClusterMerger_NBin2 );
+   }
 
 
 // record the test problem parameters
@@ -93,16 +101,18 @@ void Init_TestProb()
       Aux_Message( stdout, "\n" );
       Aux_Message( stdout, "%s test :\n", TestProb );
       Aux_Message( stdout, "=============================================================================\n" );
-      Aux_Message( stdout, "   test mode     = %s\n", (ClusterMerger_Coll)? "merging cluster":"single cluster" );
-      Aux_Message( stdout, "   profile file  = %s\n", ClusterMerger_File_Prof );
-      Aux_Message( stdout, "   particle file = %s\n", ClusterMerger_File_Par );
-
-      /*
+      Aux_Message( stdout, "   profile file 1   = %s\n",           ClusterMerger_File_Prof1 );
       if ( ClusterMerger_Coll )
-      Aux_Message( stdout, "       initial distance between two clouds          = %13.7e\n",  ClusterMerger_Coll_D );
-      for (int d=0; d<3; d++)
-      Aux_Message( stdout, "       bulk velocity [%d]                            = %14.7e\n", d, ClusterMerger_BulkVel[d] );
-      */
+      Aux_Message( stdout, "   profile file 2   = %s\n",           ClusterMerger_File_Prof2 );
+      Aux_Message( stdout, "   particle file 1  = %s\n",           ClusterMerger_File_Par1 );
+      if ( ClusterMerger_Coll )
+      Aux_Message( stdout, "   particle file 2  = %s\n",           ClusterMerger_File_Par2 );
+      Aux_Message( stdout, "   test mode        = %s\n",          (ClusterMerger_Coll)? "merging cluster":"single cluster" );
+      if ( ClusterMerger_Coll ) {
+      Aux_Message( stdout, "   initial distance = %+14.7e kpc\n",  ClusterMerger_Coll_D*UNIT_L/Const_kpc );
+      Aux_Message( stdout, "   impact parameter = %+14.7e kpc\n",  ClusterMerger_Coll_B*UNIT_L/Const_kpc );
+      Aux_Message( stdout, "   bulk velocity 1  = %+14.7e km/s\n", ClusterMerger_Coll_BulkVel1*UNIT_V/(Const_km/Const_s) );
+      Aux_Message( stdout, "   bulk velocity 2  = %+14.7e km/s\n", ClusterMerger_Coll_BulkVel2*UNIT_V/(Const_km/Const_s) ); }
       Aux_Message( stdout, "=============================================================================\n" );
       Aux_Message( stdout, "\n" );
    }
@@ -167,17 +177,41 @@ void Par_TestProbSol_ClusterMerger( real *fluid, const double x, const double y,
 
    if ( ClusterMerger_Coll )
    {
-      Aux_Error( ERROR_INFO, "NOT SUPPORETD YET !!\n" );
+      const double ClusterCenter1[3] = { BoxCenter[0]-0.5*ClusterMerger_Coll_D, BoxCenter[1]-0.5*ClusterMerger_Coll_B, BoxCenter[2] };
+      const double ClusterCenter2[3] = { BoxCenter[0]+0.5*ClusterMerger_Coll_D, BoxCenter[1]+0.5*ClusterMerger_Coll_B, BoxCenter[2] };
+
+      double r1, r2, Dens1, Dens2, Pres1, Pres2, Vel;
+
+//    for each cell, we sum up the density and pressure from each halos and then calculate the weighted velocity
+      r1    = sqrt( SQR(x-ClusterCenter1[0]) + SQR(y-ClusterCenter1[1]) + SQR(z-ClusterCenter1[2]) );
+      r2    = sqrt( SQR(x-ClusterCenter2[0]) + SQR(y-ClusterCenter2[1]) + SQR(z-ClusterCenter2[2]) );
+      Dens1 = Mis_InterpolateFromTable( ClusterMerger_NBin1, ClusterMerger_Prof1[0], ClusterMerger_Prof1[1], r1 );
+      Dens2 = Mis_InterpolateFromTable( ClusterMerger_NBin2, ClusterMerger_Prof2[0], ClusterMerger_Prof2[1], r2 );
+      Pres1 = Mis_InterpolateFromTable( ClusterMerger_NBin1, ClusterMerger_Prof1[0], ClusterMerger_Prof1[2], r1 );
+      Pres2 = Mis_InterpolateFromTable( ClusterMerger_NBin2, ClusterMerger_Prof2[0], ClusterMerger_Prof2[2], r2 );
+      Vel   = ( ClusterMerger_Coll_BulkVel1*Dens1 + ClusterMerger_Coll_BulkVel2*Dens2 ) / ( Dens1 + Dens2 );
+
+      if ( Dens1 == NULL_REAL  ||  Pres1 == NULL_REAL )
+         Aux_Error( ERROR_INFO, "interpolation failed at radius %13.7e for cluster 1 (probably outside the input table) !!\n", r1 );
+
+      if ( Dens2 == NULL_REAL  ||  Pres2 == NULL_REAL )
+         Aux_Error( ERROR_INFO, "interpolation failed at radius %13.7e for cluster 2 (probably outside the input table) !!\n", r2 );
+
+      fluid[DENS] = Dens1 + Dens2;
+      fluid[MOMX] = fluid[DENS]*Vel;
+      fluid[MOMY] = 0.0;
+      fluid[MOMZ] = 0.0;
+      fluid[ENGY] = ( Pres1 + Pres2 ) / ( GAMMA - 1.0 )
+                    + 0.5*( SQR(fluid[MOMX]) + SQR(fluid[MOMY]) + SQR(fluid[MOMZ]) ) / fluid[DENS];
    }
 
    else
    {
       double r, Dens, Pres;
 
-      r = sqrt( SQR(x-BoxCenter[0]) + SQR(y-BoxCenter[1]) + SQR(z-BoxCenter[2]) );
-
-      Dens = Mis_InterpolateFromTable( ClusterMerger_NBin, ClusterMerger_Prof[0], ClusterMerger_Prof[1], r );
-      Pres = Mis_InterpolateFromTable( ClusterMerger_NBin, ClusterMerger_Prof[0], ClusterMerger_Prof[2], r );
+      r    = sqrt( SQR(x-BoxCenter[0]) + SQR(y-BoxCenter[1]) + SQR(z-BoxCenter[2]) );
+      Dens = Mis_InterpolateFromTable( ClusterMerger_NBin1, ClusterMerger_Prof1[0], ClusterMerger_Prof1[1], r );
+      Pres = Mis_InterpolateFromTable( ClusterMerger_NBin1, ClusterMerger_Prof1[0], ClusterMerger_Prof1[2], r );
 
       if ( Dens == NULL_REAL  ||  Pres == NULL_REAL )
          Aux_Error( ERROR_INFO, "interpolation failed at radius %13.7e (probably outside the input table)!!\n", r );
@@ -222,17 +256,44 @@ void LoadTestProbParameter()
    getline( &input_line, &len, File );
 
    getline( &input_line, &len, File );
-   sscanf( input_line, "%d%s",   &tmp_int,                  string );
+   sscanf( input_line, "%s%s",    ClusterMerger_File_Prof1,    string );
+
+   getline( &input_line, &len, File );
+   sscanf( input_line, "%s%s",    ClusterMerger_File_Prof2,    string );
+
+   getline( &input_line, &len, File );
+   sscanf( input_line, "%s%s",    ClusterMerger_File_Par1,     string );
+
+   getline( &input_line, &len, File );
+   sscanf( input_line, "%s%s",    ClusterMerger_File_Par2,     string );
+
+   getline( &input_line, &len, File );
+   sscanf( input_line, "%d%s",   &tmp_int,                     string );
    ClusterMerger_Coll = (bool)tmp_int;
 
    getline( &input_line, &len, File );
-   sscanf( input_line, "%s%s",    ClusterMerger_File_Prof,  string );
+   sscanf( input_line, "%lf%s",  &ClusterMerger_Coll_D,        string );
 
    getline( &input_line, &len, File );
-   sscanf( input_line, "%s%s",    ClusterMerger_File_Par,   string );
+   sscanf( input_line, "%lf%s",  &ClusterMerger_Coll_B,        string );
+
+   getline( &input_line, &len, File );
+   sscanf( input_line, "%lf%s",  &ClusterMerger_Coll_BulkVel1, string );
+
+   getline( &input_line, &len, File );
+   sscanf( input_line, "%lf%s",  &ClusterMerger_Coll_BulkVel2, string );
 
 
 // check
+   if ( ClusterMerger_Coll_D < 0.0 )   Aux_Error( ERROR_INFO, "ClusterMerger_Coll_D [%14.7e] < 0.0 !!\n", ClusterMerger_Coll_D );
+   if ( ClusterMerger_Coll_B < 0.0 )   Aux_Error( ERROR_INFO, "ClusterMerger_Coll_B [%14.7e] < 0.0 !!\n", ClusterMerger_Coll_B );
+
+
+// convert to code units
+   ClusterMerger_Coll_D        *= Const_kpc          / UNIT_L;
+   ClusterMerger_Coll_B        *= Const_kpc          / UNIT_L;
+   ClusterMerger_Coll_BulkVel1 *= (Const_km/Const_s) / UNIT_V;
+   ClusterMerger_Coll_BulkVel2 *= (Const_km/Const_s) / UNIT_V;
 
 } // FUNCTION : LoadTestProbParameter
 
@@ -248,8 +309,14 @@ void LoadTestProbParameter()
 //                      density  : 2th column
 //                      pressure : 6th column
 //                3. Assumed input units: cgs
+//
+// Parameter   :  FileName : Name of the target profile table
+//                Profile  : Pointer to be allocated to store the profile data
+//                NBin     : Number of radial bins
+//
+// Return      :  Profile, NBin
 //-------------------------------------------------------------------------------------------------------
-void LoadProfile()
+void LoadProfile( const char *FileName, double **Profile, int &NBin )
 {
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ...\n", __FUNCTION__ );
@@ -260,21 +327,20 @@ void LoadProfile()
    char  *FirstChar  = NULL;
    FILE  *File       = NULL;
    double tmp;
-   int    NBin, NLoad;
+   int    NLoad;
 
 
 // check the input file
-   if (  ( File = fopen(ClusterMerger_File_Prof, "r") ) == NULL  )
-      Aux_Error( ERROR_INFO, "input file \"%s\" does not exist !!\n", ClusterMerger_File_Prof );
+   if (  ( File = fopen(FileName, "r") ) == NULL  )
+      Aux_Error( ERROR_INFO, "input file \"%s\" does not exist !!\n", FileName );
 
 
 // get the total number of mass bins
-   ClusterMerger_NBin = CountRow( ClusterMerger_File_Prof );
-   NBin               = ClusterMerger_NBin;
+   NBin = CountRow( FileName );
 
 
 // allocate data
-   for (int v=0; v<3; v++)    ClusterMerger_Prof[v] = new double [NBin];
+   for (int v=0; v<3; v++)    Profile[v] = new double [NBin];
 
 
 // loop over all rows in the input file
@@ -295,8 +361,7 @@ void LoadProfile()
             if ( NLoad >= NBin )    Aux_Error( ERROR_INFO, "NLoad (%d) >= NBin (%d) !!\n", NLoad, NBin );
 
             sscanf( Line, "%lf%lf%lf%lf%lf%lf%lf%lf",
-                    &tmp, &tmp, ClusterMerger_Prof[1]+NLoad, &tmp, &tmp, &tmp,
-                    ClusterMerger_Prof[2]+NLoad, ClusterMerger_Prof[0]+NLoad );
+                    &tmp, &tmp, Profile[1]+NLoad, &tmp, &tmp, &tmp, Profile[2]+NLoad, Profile[0]+NLoad );
 
             NLoad ++;
          }
@@ -314,9 +379,9 @@ void LoadProfile()
 // convert to code units (assuming the input units are cgs)
    for (int b=0; b<NBin; b++)
    {
-      ClusterMerger_Prof[0][b] /= UNIT_L;
-      ClusterMerger_Prof[1][b] /= UNIT_D;
-      ClusterMerger_Prof[2][b] /= UNIT_P;
+      Profile[0][b] /= UNIT_L;
+      Profile[1][b] /= UNIT_D;
+      Profile[2][b] /= UNIT_P;
    }
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", __FUNCTION__ );

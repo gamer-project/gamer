@@ -3,7 +3,8 @@
 #ifdef PARTICLE
 
 
-extern double *ClusterMerger_Prof[3];
+extern double *ClusterMerger_Prof1[3];
+extern double *ClusterMerger_Prof2[3];
 
 
 
@@ -19,7 +20,11 @@ extern double *ClusterMerger_Prof[3];
 void End_TestProb()
 {  
 
-   for (int v=0; v<3; v++)    delete [] ClusterMerger_Prof[v];
+   for (int v=0; v<3; v++)
+   {
+      delete [] ClusterMerger_Prof1[v];
+      delete [] ClusterMerger_Prof2[v];
+   }
 
 } // FUNCTION : End_TestProb
 

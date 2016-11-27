@@ -76,10 +76,10 @@
 0.59242761692650336 MOLECULAR_WEIGHT  # mean molecular weight (currently it's only for calculating temperature in post-processing)
 2.00        MINMOD_COEFF              # coefficient of the generalized MinMod limiter [1.0~2.0]
 1.25        EP_COEFF                  # coefficient of the extrema-preserving limiter
-4           OPT__LR_LIMITER           # slope limiter for the data reconstruction in MHM/MHM_RP/CTU schemes
+1           OPT__LR_LIMITER           # slope limiter for the data reconstruction in MHM/MHM_RP/CTU schemes
                                         (0/1/2/3/4/5) = (none/vanLeer/generalized MinMod/vanAlbada/
                                                          vanLeer + generalized MinMod/extrema-preserving) limiter
-2           OPT__WAF_LIMITER          # flux limiter in WAF (0/1/2/3/4) = (none/SuperBee/vanLeer/vanAlbada/MinBee)
+0           OPT__WAF_LIMITER          # flux limiter in WAF (0/1/2/3/4) = (none/SuperBee/vanLeer/vanAlbada/MinBee)
 1           OPT__1ST_FLUX_CORR        # correct unphysical results (defined by MIN_DENS/PRES) with 1st-order fluxes ##MHM/MHM_RP/CTU ONLY##
 -1          OPT__1ST_FLUX_CORR_SCHEME # Riemann solver for OPT__1ST_FLUX_CORR (-1/1/2/3 -> default/Roe/HLLC/HLLE [Roe])
 
@@ -120,7 +120,7 @@
 1           OPT__UM_START_REFINE      # refine the uniform-mesh data from OPT__UM_START_LEVEL to MAX_LEVEL
 0           OPT__UM_FACTOR_5OVER3     # multiply the input density field by 5/3 to have the growing-mode amplitude correct
 1           OPT__INIT_RESTRICT        # restrict all data during initialization (0=off, 1=on)
--2          OPT__GPUID_SELECT         # GPU ID selection mode : (-3, -2, -1, >=0) -> by (Laohu, CUDA, MPI rank, Input)
+-1          OPT__GPUID_SELECT         # GPU ID selection mode : (-3, -2, -1, >=0) -> by (Laohu, CUDA, MPI rank, Input)
 3           INIT_SUBSAMPLING_NCELL    # perform sub-sampling during initialization (0, >0) -> (off, # of sub-sampling cells)
 
 1           OPT__INT_TIME             # perform "temporal interpolation" for the individual time-step scheme
@@ -137,7 +137,7 @@
 1           OPT__OUTPUT_TOTAL         # output the total binary data : (0, 1, 2) -> (off, HDF5, C-binary)
 0           OPT__OUTPUT_PART          # output a single line or slice (0~7) -> (off, xy, yz, xz, x, y, z, diag)
 0           OPT__OUTPUT_TEST_ERROR    # output the test problem errors --> edit "Output_TestProbErr"
-1           OPT__OUTPUT_PAR_TEXT      # output the particle text file ##PARTICLE ONLY##
+0           OPT__OUTPUT_PAR_TEXT      # output the particle text file ##PARTICLE ONLY##
 0           OPT__OUTPUT_BASEPS        # output the base-level power spectrum
 0           OPT__OUTPUT_BASE          # only output the base-level data for the option "OPT__OUTPUT_PART"
 0           OPT__OUTPUT_POT           # output gravitational potential ##for OPT__OUTPUT_TOTAL only##
@@ -156,7 +156,7 @@
 0           OPT__TIMING_MPI           # record the MPI bandwidth achieved in various code sections ##LOAD_BALANCE ONLY##
 1           OPT__RECORD_MEMORY        # record memory consumption during simulations
 1           OPT__RECORD_PERFORMANCE   # record the code performance
-0           OPT__MANUAL_CONTROL       # support dump/stop dynamically by creating the file DUMP_GAMER_DUMP/STOP_GAMER_STOP
+1           OPT__MANUAL_CONTROL       # support dump/stop dynamically by creating the file DUMP_GAMER_DUMP/STOP_GAMER_STOP
 0           OPT__RECORD_USER          # record user-specified information --> edit "Aux_RecordUser"
 
 0           OPT__CK_REFINE            # check the refinement
@@ -167,5 +167,5 @@
 0           OPT__CK_PATCH_ALLOCATE    # check if all patches are properly allocated
 0           OPT__CK_FLUX_ALLOCATE     # check if all flux arrays are properly allocated ##HYDRO and ELBDM ONLY##
 0           OPT__CK_NEGATIVE          # check the negative density/pressure: (1,2,3)->(rho,pres,both) ##HYDRO ONLY##
-0.0         OPT__CK_MEMFREE           # check the free memory (0:off, >0:threshold)
+1.0         OPT__CK_MEMFREE           # check the free memory (0:off, >0:threshold)
 0           OPT__CK_PARTICLE          # check the particle allocation
