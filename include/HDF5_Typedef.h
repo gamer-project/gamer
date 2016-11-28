@@ -337,6 +337,7 @@ struct InputPara_t
 #  if ( MODEL == HYDRO )
    int    Opt__Flag_LohnerEngy;
    int    Opt__Flag_LohnerPres;
+   int    Opt__Flag_LohnerTemp;
 #  endif
    int    Opt__Flag_LohnerForm;
    int    Opt__Flag_User;

@@ -293,6 +293,14 @@ void Init_Load_Parameter()
 #  endif
 
    getline( &input_line, &len, File );
+#  if   ( MODEL == HYDRO )
+   sscanf( input_line, "%d%s",   &temp_int,                 string );
+   OPT__FLAG_LOHNER_TEMP = (bool)temp_int;
+#  elif ( MODEL == MHD )
+#  warning : WAIT MHD !!!
+#  endif
+
+   getline( &input_line, &len, File );
    sscanf( input_line, "%d%s",   &temp_int,                 string );
    OPT__FLAG_LOHNER_FORM = (OptLohnerForm_t)temp_int;
 

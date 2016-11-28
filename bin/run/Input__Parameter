@@ -60,6 +60,7 @@
 0           OPT__FLAG_LOHNER_DENS     # flag: Lohner (Input__Flag_Lohner) (HYDRO:mass density  ; ELBDM:R^2+I^2)
 0           OPT__FLAG_LOHNER_ENGY     # flag: Lohner (Input__Flag_Lohner) (HYDRO:energy density; ELBDM:useless)
 0           OPT__FLAG_LOHNER_PRES     # flag: Lohner (Input__Flag_Lohner) (HYDRO:pressure      ; ELBDM:useless)
+0           OPT__FLAG_LOHNER_TEMP     # flag: Lohner (Input__Flag_Lohner) (HYDRO:temperature   ; ELBDM:useless)
 -1          OPT__FLAG_LOHNER_FORM     # form of the Lohner error estimator (-1,0,1,2,3)->(default[1],FLASH1/2,form-invariant1/2)
 0           OPT__FLAG_USER            # flag: user-defined (Input__Flag_User) --> edit "Flag_UserCriteria"
 0           OPT__FLAG_REGION          # flag: specify the regions allowed to be refined --> edit "Flag_Region"
