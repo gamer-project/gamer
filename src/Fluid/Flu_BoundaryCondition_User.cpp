@@ -87,6 +87,7 @@ void Flu_BoundaryCondition_User( real *Array, const int NVar_Flu, const int Arra
    const bool PrepVy           = ( TVar & _VELY ) ? true : false;
    const bool PrepVz           = ( TVar & _VELZ ) ? true : false;
    const bool PrepPres         = ( TVar & _PRES ) ? true : false;
+   const bool PrepTemp         = ( TVar & _TEMP ) ? true : false;
 
 #  elif ( MODEL == MHD   )
 #  warning : WAIT MHD !!
@@ -125,6 +126,8 @@ void Flu_BoundaryCondition_User( real *Array, const int NVar_Flu, const int Arra
       if ( PrepVz   )   Array3D[ v2 ++ ][k][j][i] = BVal[MOMZ] / BVal[DENS];
       if ( PrepPres )   Array3D[ v2 ++ ][k][j][i] = CPU_GetPressure( BVal[DENS], BVal[MOMX], BVal[MOMY], BVal[MOMZ], BVal[ENGY],
                                                                      Gamma_m1, CheckMinPres_Yes, MIN_PRES );
+      if ( PrepTemp )   Array3D[ v2 ++ ][k][j][i] = CPU_GetTemperature( BVal[DENS], BVal[MOMX], BVal[MOMY], BVal[MOMZ], BVal[ENGY],
+                                                                        Gamma_m1, CheckMinPres_Yes, MIN_PRES );
 
 #     elif ( MODEL == MHD   )
 #     warning : WAIT MHD !!

@@ -5,7 +5,7 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData[], const in
                            const int GhostSize, const IntScheme_t IntScheme, const int NTSib[], int *TSib[],
                            const int TVar, const int NVar_Tot, const int NVar_Flu, const int TFluVarIdxList[],
                            const int NVar_Der, const int TDerVarList[], const bool IntPhase,
-                           const OptFluBC_t FluBC[], const OptPotBC_t PotBC, const int BC_Face[] );
+                           const OptFluBC_t FluBC[], const OptPotBC_t PotBC, const int BC_Face[], const real MinPres );
 static void SetTargetSibling( int NTSib[], int *TSib[] );
 static int Table_01( const int SibID, const char dim, const int Count, const int GhostSize );
 static int Table_02( const int lv, const int PID, const int Side );
@@ -56,6 +56,9 @@ bool ParDensArray_Initialized = false;
 //                       (1) Par_CollectParticle2OneLevel_FreeMemory
 //                       (2) Prepare_PatchData_FreeParticleDensityArray
 //                8. Patches stored in PID0_List must be real patches (cannot NOT be buffer patches)
+//                9. For simplicity, currently the mode _TEMP returns **pressure/density**, which does NOT include normalization
+//                   --> For OPT__FLAG_LOHNER_TEMP only
+//                   --> Also note that MinPres is applied to _TEMP when calculating pressure
 //
 // Parameter   :  lv             : Target refinement level
 //                PrepTime       : Target physical time to prepare data
@@ -67,7 +70,7 @@ bool ParDensArray_Initialized = false;
 //                PID0_List      : List recording the patch indicies with LocalID==0 to be prepared
 //                TVar           : Target variables to be prepared
 //                                 --> Supported variables in different models:
-//                                     HYDRO : _DENS, _MOMX, _MOMY, _MOMZ, _ENGY, _FLU, _VELX, _VELY, _VELZ, _PRES,
+//                                     HYDRO : _DENS, _MOMX, _MOMY, _MOMZ, _ENGY, _FLU, _VELX, _VELY, _VELZ, _PRES, _TEMP,
 //                                             [, _POTE] [, _PASSIVE]
 //                                     MHD   :
 //                                     ELBDM : _DENS, _REAL, _IMAG [, _POTE]
@@ -106,7 +109,7 @@ bool ParDensArray_Initialized = false;
 //                                         (because density field is already stored in each patch and we don't want
 //                                         Prepare_PatchData() to MODIFY the existing data)
 //                                 --> Currently MinPres is applied in Flu_Prepare() and Flag_Real()
-//                                     --> The Guideline is to apply MinPres check whenever _PRES or _FLU is required
+//                                     --> The Guideline is to apply MinPres check whenever _PRES, _TEMP or _FLU is required
 //                                         (because pressure field is NOT stored explicitly in each patch and thus existing data
 //                                         may still have pressure < MinPres due to round-off errors)
 //-------------------------------------------------------------------------------------------------------
@@ -161,8 +164,8 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
 //    note that when PARTICLE is on, we should NOT allow MinPres check when TVar & _TOTAL_DENS == true because
 //    we won't have gas density prepared to calculate pressure (we only have **total** density)
 //    --> but when PARTICLE is off, we have _TOTAL_DENS == _DENS (see Macro.h), and thus MinPres check is allowed
-      if ( !(TVar & _PRES)  &&  (TVar & _FLU) != _FLU )
-         Aux_Error( ERROR_INFO, "MinPres (%13.7e) >= 0.0, but neither _PRES nor _FLU is found !!\n", MinPres );
+      if ( !(TVar & _PRES)  &&  !(TVar & _TEMP)  &&  (TVar & _FLU) != _FLU )
+         Aux_Error( ERROR_INFO, "MinPres (%13.7e) >= 0.0, but cannot find _PRES, _TEMP, or _FLU !!\n", MinPres );
 #     else
          Aux_Error( ERROR_INFO, "MinPres (%13.7e) >= 0.0 can only be applied to HYDRO/MHD !!\n", MinPres );
 #     endif
@@ -247,6 +250,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
    const bool PrepVy           = ( TVar & _VELY ) ? true : false;
    const bool PrepVz           = ( TVar & _VELZ ) ? true : false;
    const bool PrepPres         = ( TVar & _PRES ) ? true : false;
+   const bool PrepTemp         = ( TVar & _TEMP ) ? true : false;
 
 #  elif ( MODEL == MHD   )
 #  warning : WAIT MHD !!
@@ -301,6 +305,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
    if ( PrepVy   )   TDerVarList[ NVar_Der ++ ] = _VELY;
    if ( PrepVz   )   TDerVarList[ NVar_Der ++ ] = _VELZ;
    if ( PrepPres )   TDerVarList[ NVar_Der ++ ] = _PRES;
+   if ( PrepTemp )   TDerVarList[ NVar_Der ++ ] = _TEMP;
 
 #  elif ( MODEL == MHD   )
 #  warning : WAIT MHD !!
@@ -850,6 +855,34 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
                Array_Ptr += PGSize3D;
             }
 
+            if ( PrepTemp )
+            {
+               for (int k=0; k<PATCH_SIZE; k++)    {  K    = k + Disp_k;
+               for (int j=0; j<PATCH_SIZE; j++)    {  J    = j + Disp_j;
+                                                      Idx1 = IDX321( Disp_i, J, K, PGSize1D, PGSize1D );
+               for (int i=0; i<PATCH_SIZE; i++)    {
+
+                  for (int v=0; v<NCOMP; v++)   Fluid[v] = amr->patch[FluSg][lv][PID]->fluid[v][k][j][i];
+
+                  Array_Ptr[Idx1] = CPU_GetTemperature( Fluid[DENS], Fluid[MOMX], Fluid[MOMY], Fluid[MOMZ], Fluid[ENGY],
+                                                        Gamma_m1, (MinPres>=0.0), MinPres );
+
+                  if ( FluIntTime ) // temporal interpolation
+                  {
+                     for (int v=0; v<NCOMP; v++)   Fluid[v] = amr->patch[FluSg_IntT][lv][PID]->fluid[v][k][j][i];
+
+                     Array_Ptr[Idx1] =   FluWeighting     *Array_Ptr[Idx1]
+                                       + FluWeighting_IntT*CPU_GetTemperature( Fluid[DENS], Fluid[MOMX], Fluid[MOMY],
+                                                                               Fluid[MOMZ], Fluid[ENGY],
+                                                                               Gamma_m1, (MinPres>=0.0), MinPres );
+                  }
+
+                  Idx1 ++;
+               }}}
+
+               Array_Ptr += PGSize3D;
+            }
+
 #           elif ( MODEL == MHD   )
 #           warning : WAIT MHD !!
 
@@ -1026,6 +1059,34 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
                      Array_Ptr += PGSize3D;
                   }
 
+                  if ( PrepTemp )
+                  {
+                     for (int k=0; k<Loop_k; k++)  {  K = k + Disp_k;   K2 = k + Disp_k2;
+                     for (int j=0; j<Loop_j; j++)  {  J = j + Disp_j;   J2 = j + Disp_j2;
+                                                      Idx1 = IDX321( Disp_i, J, K, PGSize1D, PGSize1D );
+                     for (I2=Disp_i2; I2<Disp_i2+Loop_i; I2++) {
+
+                        for (int v=0; v<NCOMP; v++)   Fluid[v] = amr->patch[FluSg][lv][SibPID]->fluid[v][K2][J2][I2];
+
+                        Array_Ptr[Idx1] = CPU_GetTemperature( Fluid[DENS], Fluid[MOMX], Fluid[MOMY], Fluid[MOMZ], Fluid[ENGY],
+                                                              Gamma_m1, (MinPres>=0.0), MinPres );
+
+                        if ( FluIntTime ) // temporal interpolation
+                        {
+                           for (int v=0; v<NCOMP; v++)   Fluid[v] = amr->patch[FluSg_IntT][lv][SibPID]->fluid[v][K2][J2][I2];
+
+                           Array_Ptr[Idx1] =   FluWeighting     *Array_Ptr[Idx1]
+                                             + FluWeighting_IntT*CPU_GetTemperature( Fluid[DENS], Fluid[MOMX], Fluid[MOMY],
+                                                                                     Fluid[MOMZ], Fluid[ENGY],
+                                                                                     Gamma_m1, (MinPres>=0.0), MinPres );
+                        }
+
+                        Idx1 ++;
+                     }}}
+
+                     Array_Ptr += PGSize3D;
+                  }
+
 #                 elif ( MODEL == MHD   )
 #                 warning : WAIT MHD !!
 
@@ -1089,7 +1150,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
 //             perform interpolation and store the results in IntData
                InterpolateGhostZone( lv-1, FaSibPID, IntData, Side, PrepTime, GhostSize, IntScheme, NTSib, TSib,
                                      TVar, NVar_Tot, NVar_Flu, TFluVarIdxList, NVar_Der, TDerVarList, IntPhase,
-                                     FluBC, PotBC, BC_Face );
+                                     FluBC, PotBC, BC_Face, MinPres );
 
 
 //             properly copy data from IntData array to Array

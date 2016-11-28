@@ -270,4 +270,35 @@ real CPU_GetPressure( const real Dens, const real MomX, const real MomY, const r
 
 
 
+//-------------------------------------------------------------------------------------------------------
+// Function    :  CPU_GetTemperature
+// Description :  Evaluate the fluid temperature
+//
+// Note        :  1. Currently only work with the adiabatic EOS
+//                2. For simplicity, currently this function only returns **pressure/density**, which does NOT include normalization
+//                   --> For OPT__FLAG_LOHNER_TEMP only
+//                   --> Also note that currently it only checks minimum pressure but not minimum density
+//
+// Parameter   :  Dens         : Mass density
+//                MomX/Y/Z     : Momentum density
+//                Engy         : Energy density
+//                Gamma_m1     : Gamma - 1, where Gamma is the adiabatic index
+//                CheckMinPres : Return CPU_CheckMinPres()
+//                               --> In some cases we actually want to check if pressure becomes unphysical,
+//                                   for which we don't want to enable this option
+//                                   --> For example: Flu_FixUp(), Flu_Close(), Hydro_Aux_Check_Negative()
+//                MinPres      : Minimum allowed pressure
+//
+// Return      :  Temperature
+//-------------------------------------------------------------------------------------------------------
+real CPU_GetTemperature( const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy,
+                         const real Gamma_m1, const bool CheckMinPres, const real MinPres )
+{
+
+   return CPU_GetPressure( Dens, MomX, MomY, MomZ, Engy, Gamma_m1, CheckMinPres, MinPres ) / Dens;
+
+} // FUNCTION : CPU_GetTemperature
+
+
+
 #endif // #if ( MODEL == HYDRO )

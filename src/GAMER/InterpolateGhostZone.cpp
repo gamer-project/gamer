@@ -21,6 +21,9 @@ static int Table_01( const int SibID, const int Side, const char dim, const int 
 //                6. Use PrepTime to determine the physical time to prepare data
 //                   --> Temporal interpolation/extrapolation will be conducted automatically if PrepTime
 //                       is NOT equal to the time of data stored previously (e.g., FluSgTime[0/1])
+//                7. For simplicity, currently the mode _TEMP returns **pressure/density**, which does NOT include normalization
+//                   --> For OPT__FLAG_LOHNER_TEMP only
+//                   --> Also note that MinPres is applied to _TEMP when calculating pressure
 //
 // Parameter   :  lv             : Target "coarse-grid" refinement level
 //                PID            : Patch ID at level "lv" used for interpolation
@@ -41,7 +44,7 @@ static int Table_01( const int SibID, const int Side, const char dim, const int 
 //                TSib           : Target sibling indices along different sibling directions
 //                TVar           : Target variables to be prepared
 //                                 --> Supported variables in different models:
-//                                     HYDRO : _DENS, _MOMX, _MOMY, _MOMZ, _ENGY, _FLU, _VELX, _VELY, _VELZ, _PRES,
+//                                     HYDRO : _DENS, _MOMX, _MOMY, _MOMZ, _ENGY, _FLU, _VELX, _VELY, _VELZ, _PRES, _TEMP,
 //                                             [, _POTE] [, _PASSIVE]
 //                                     MHD   :
 //                                     ELBDM : _DENS, _REAL, _IMAG [, _POTE]
@@ -54,12 +57,14 @@ static int Table_01( const int SibID, const int Side, const char dim, const int 
 //                FluBC          : Fluid boundary condition
 //                PotBC          : Gravity boundary condition (not used currently)
 //                BC_Face        : Priority of the B.C. along different boundary faces (z>y>x)
+//                MinPres        : Minimum allowed pressure
+//                                 --> Currently it's used for _TEMP only
 //-------------------------------------------------------------------------------------------------------
 void InterpolateGhostZone( const int lv, const int PID, real IntData[], const int SibID, const double PrepTime,
                            const int GhostSize, const IntScheme_t IntScheme, const int NTSib[], int *TSib[],
                            const int TVar, const int NVar_Tot, const int NVar_Flu, const int TFluVarIdxList[],
                            const int NVar_Der, const int TDerVarList[], const bool IntPhase,
-                           const OptFluBC_t FluBC[], const OptPotBC_t PotBC, const int BC_Face[] )
+                           const OptFluBC_t FluBC[], const OptPotBC_t PotBC, const int BC_Face[], const real MinPres )
 {
 
 // check
@@ -85,6 +90,7 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData[], const in
    const bool PrepVy          = ( TVar & _VELY ) ? true : false;
    const bool PrepVz          = ( TVar & _VELZ ) ? true : false;
    const bool PrepPres        = ( TVar & _PRES ) ? true : false;
+   const bool PrepTemp        = ( TVar & _TEMP ) ? true : false;
 
 #  elif ( MODEL == MHD   )
 #  warning : WAIT MHD !!
@@ -396,6 +402,33 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData[], const in
       CData_Ptr += CSize3D;
    }
 
+   if ( PrepTemp )
+   {
+      for (int k=0; k<Loop1[2]; k++)   {  k1 = k + Disp1[2];   k2 = k + Disp2[2];
+      for (int j=0; j<Loop1[1]; j++)   {  j1 = j + Disp1[1];   j2 = j + Disp2[1];
+                                          Idx = IDX321( Disp2[0], j2, k2, CSize[0], CSize[1] );
+      for (i1=Disp1[0]; i1<Disp1[0]+Loop1[0]; i1++)   {
+
+         for (int v=0; v<NCOMP; v++)   Fluid[v] = amr->patch[FluSg][lv][PID]->fluid[v][k1][j1][i1];
+
+         CData_Ptr[Idx] = CPU_GetTemperature( Fluid[DENS], Fluid[MOMX], Fluid[MOMY], Fluid[MOMZ], Fluid[ENGY],
+                                              Gamma_m1, (MinPres>=0.0), MinPres );
+
+         if ( FluIntTime ) // temporal interpolation
+         {
+            for (int v=0; v<NCOMP; v++)   Fluid[v] = amr->patch[FluSg_IntT][lv][PID]->fluid[v][k1][j1][i1];
+
+            CData_Ptr[Idx] = FluWeighting     *CData_Ptr[Idx]
+                           + FluWeighting_IntT*CPU_GetTemperature( Fluid[DENS], Fluid[MOMX], Fluid[MOMY], Fluid[MOMZ], Fluid[ENGY],
+                                                                   Gamma_m1, (MinPres>=0.0), MinPres );
+         }
+
+         Idx ++;
+      }}}
+
+      CData_Ptr += CSize3D;
+   }
+
 #  elif ( MODEL == MHD   )
 #  warning : WAIT MHD !!
 
@@ -565,6 +598,35 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData[], const in
 
             CData_Ptr += CSize3D;
          }
+
+         if ( PrepTemp )
+         {
+            for (int k=0; k<Loop2[2]; k++)   {  k1 = k + Disp3[2];   k2 = k + Disp4[2];
+            for (int j=0; j<Loop2[1]; j++)   {  j1 = j + Disp3[1];   j2 = j + Disp4[1];
+                                                Idx = IDX321( Disp3[0], j1, k1, CSize[0], CSize[1] );
+            for (i2=Disp4[0]; i2<Disp4[0]+Loop2[0]; i2++)   {
+
+               for (int v=0; v<NCOMP; v++)   Fluid[v] = amr->patch[FluSg][lv][SibPID]->fluid[v][k2][j2][i2];
+
+               CData_Ptr[Idx] = CPU_GetTemperature( Fluid[DENS], Fluid[MOMX], Fluid[MOMY], Fluid[MOMZ], Fluid[ENGY],
+                                                    Gamma_m1, (MinPres>=0.0), MinPres );
+
+               if ( FluIntTime ) // temporal interpolation
+               {
+                  for (int v=0; v<NCOMP; v++)   Fluid[v] = amr->patch[FluSg_IntT][lv][SibPID]->fluid[v][k2][j2][i2];
+
+                  CData_Ptr[Idx] =  FluWeighting     *CData_Ptr[Idx]
+                                  + FluWeighting_IntT*CPU_GetTemperature( Fluid[DENS], Fluid[MOMX], Fluid[MOMY],
+                                                                          Fluid[MOMZ], Fluid[ENGY],
+                                                                          Gamma_m1, (MinPres>=0.0), MinPres );
+               }
+
+               Idx ++;
+            }}}
+
+            CData_Ptr += CSize3D;
+         }
+
 #        elif ( MODEL == MHD   )
 #        warning : WAIT MHD !!
 
@@ -844,6 +906,13 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData[], const in
    }
 
    if ( PrepPres )
+   {
+      Interpolate( CData+CSize3D*NVar_SoFar, CSize, CStart, CRange, IntData+FSize3D*NVar_SoFar, FSize, FStart, 1,
+                   IntScheme, PhaseUnwrapping_No, EnsureMonotonicity_Yes );
+      NVar_SoFar ++;
+   }
+
+   if ( PrepTemp )
    {
       Interpolate( CData+CSize3D*NVar_SoFar, CSize, CStart, CRange, IntData+FSize3D*NVar_SoFar, FSize, FStart, 1,
                    IntScheme, PhaseUnwrapping_No, EnsureMonotonicity_Yes );

@@ -74,6 +74,8 @@ void CPU_FluidSolver( real h_Flu_Array_In [][FLU_NIN ][ FLU_NXT*FLU_NXT*FLU_NXT 
                       const double Time, const OptGravityType_t GravityType, const real MinDens, const real MinPres );
 real CPU_GetPressure( const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy,
                       const real Gamma_m1, const bool CheckMinPres, const real MinPres );
+real CPU_GetTemperature( const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy,
+                         const real Gamma_m1, const bool CheckMinPres, const real MinPres );
 real CPU_CheckMinPresInEngy( const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy,
                              const real Gamma_m1, const real _Gamma_m1, const real MinPres );
 void Flu_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, const double dt, const int SaveSg,

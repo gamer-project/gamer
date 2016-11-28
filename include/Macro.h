@@ -167,7 +167,8 @@
 #  define _VELY            ( 1 << (NCOMP+NPASSIVE+3) )
 #  define _VELZ            ( 1 << (NCOMP+NPASSIVE+4) )
 #  define _PRES            ( 1 << (NCOMP+NPASSIVE+5) )
-#  define _DERIVED         ( _VELX | _VELY | _VELZ | _PRES )
+#  define _TEMP            ( 1 << (NCOMP+NPASSIVE+6) )
+#  define _DERIVED         ( _VELX | _VELY | _VELZ | _PRES | _TEMP )
 
 
 #elif ( MODEL == MHD )
@@ -251,9 +252,9 @@
 
 #  else
 
-// note that _PRES == ( 1 << (NCOMP+NPASSIVE+5) )
-#  define _PAR_DENS        ( 1 << (NCOMP+NPASSIVE+6) )
-#  define _TOTAL_DENS      ( 1 << (NCOMP+NPASSIVE+7) )
+// note that _TEMP == ( 1 << (NCOMP+NPASSIVE+6) )
+#  define _PAR_DENS        ( 1 << (NCOMP+NPASSIVE+7) )
+#  define _TOTAL_DENS      ( 1 << (NCOMP+NPASSIVE+8) )
 
 #  endif // if ( MODEL == PAR_ONLY ) ... else ...
 
