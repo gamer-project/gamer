@@ -72,11 +72,6 @@ void Init_Restart_HDF5( const char *FileName )
    const bool NonFatal  = false;
    const int  Model     = MODEL;
    const int  PatchSize = PATCH_SIZE;
-#  ifdef FLOAT8
-   const int  Float8    = 1;
-#  else
-   const int  Float8    = 0;
-#  endif
 #  ifdef GRAVITY
    const int  Gravity   = 1;
 #  else
@@ -137,7 +132,6 @@ void Init_Restart_HDF5( const char *FileName )
    MPI_Barrier( MPI_COMM_WORLD );
 
    LoadField( "Model",          &KeyInfo.Model,          H5_SetID_KeyInfo, H5_TypeID_KeyInfo, Fatal, &Model,          1,    Fatal );
-   LoadField( "Float8",         &KeyInfo.Float8,         H5_SetID_KeyInfo, H5_TypeID_KeyInfo, Fatal, &Float8,         1,    Fatal );
    LoadField( "Gravity",        &KeyInfo.Gravity,        H5_SetID_KeyInfo, H5_TypeID_KeyInfo, Fatal, &Gravity,        1,    Fatal );
    LoadField( "Particle",       &KeyInfo.Particle,       H5_SetID_KeyInfo, H5_TypeID_KeyInfo, Fatal, &Particle,       1,    Fatal );
    LoadField( "NLevel",         &KeyInfo.NLevel,         H5_SetID_KeyInfo, H5_TypeID_KeyInfo, Fatal,  NullPtr,       -1, NonFatal );
@@ -1203,7 +1197,7 @@ void Check_Makefile( const char *FileName )
    LoadField( "Timing",             &RS.Timing,             SID, TID, NonFatal, &RT.Timing,              1, NonFatal );
    LoadField( "TimingSolver",       &RS.TimingSolver,       SID, TID, NonFatal, &RT.TimingSolver,        1, NonFatal );
    LoadField( "Intel",              &RS.Intel,              SID, TID, NonFatal, &RT.Intel,               1, NonFatal );
-   LoadField( "Float8",             &RS.Float8,             SID, TID, NonFatal, &RT.Float8,              1,    Fatal );
+   LoadField( "Float8",             &RS.Float8,             SID, TID, NonFatal, &RT.Float8,              1, NonFatal );
    LoadField( "Serial",             &RS.Serial,             SID, TID, NonFatal, &RT.Serial,              1, NonFatal );
    LoadField( "LoadBalance",        &RS.LoadBalance,        SID, TID, NonFatal, &RT.LoadBalance,         1, NonFatal );
    LoadField( "OverlapMPI",         &RS.OverlapMPI,         SID, TID, NonFatal, &RT.OverlapMPI,          1, NonFatal );
