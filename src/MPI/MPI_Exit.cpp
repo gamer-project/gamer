@@ -19,9 +19,9 @@ void MPI_Exit()
 
    Aux_Message( stderr, "\nProgram terminated with error ...... rank %d\n\n", MPI_Rank );
 
-   MPI_Abort( MPI_COMM_WORLD, 0 );
+   MPI_Abort( MPI_COMM_WORLD, 1 );
 
-   exit(1);
+   exit( 1 );
 
 } // FUNCTION : MPI_Exit
 

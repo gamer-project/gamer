@@ -293,7 +293,7 @@ void LB_SetCutPoint( const int lv, long *CutPoint, const bool InputLBIdxList, lo
 
       for (int r=0; r<MPI_NRank; r++)
       {
-         Aux_Message( stdout, "   Lv %2d: Rank %4d, Cut %10ld -> %10ld, NPatch %10d\n",
+         Aux_Message( stdout, "   Lv %2d: Rank %4d, Cut %15ld -> %15ld, NPatch %10d\n",
                       lv, r, CutPoint[r], CutPoint[r+1], LoadList[r] );
 
          if ( LoadList[r] > Load_Max )   Load_Max = LoadList[r];

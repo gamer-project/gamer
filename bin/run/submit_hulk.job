@@ -13,14 +13,15 @@
 
 cd $PBS_O_WORKDIR
 
-## for automatically restarting simulation from the last data dump
-##RESTART_LINE=$(sed -n '/\ OPT__INIT\ /=' Input__Parameter)
-##sed -i "${RESTART_LINE}s/1\ /2\ /" Input__Parameter
-##RESTART_FILE=$(ls Data* |tail -n 1)
-##ln -s $RESTART_FILE RESTART
+##************************************************
+##*** remember to set "OPT__GPUID_SELECT = -2" ***
+##************************************************
 
 ## for openmpi-1.6.0
 ##mpirun -np 32 -npernode 2 ./Dizzy 1>>stdout 2>>stderr
 
 ## for openmpi-1.4.3-qlc
-mpirun -np 32 -npernode 2 -hostfile $PBS_NODEFILE -bind-to-socket ./gamer 1>>stdout 2>>stderr
+mpirun -np 32 -npernode 2 -hostfile $PBS_NODEFILE -bind-to-socket ./gamer 1>>log 2>&&1
+
+## script to restart a simulation automatically if the run failed
+## sh auto_restart.sh 1>>log 2>&1
