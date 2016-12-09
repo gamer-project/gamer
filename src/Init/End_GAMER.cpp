@@ -26,8 +26,12 @@ void End_GAMER()
    End_FFTW();
 #  endif
 
+#  ifdef SUPPORT_LIBYT
+   YT_End();
+#  endif
 
-   if ( MPI_Rank == 0 )    
+
+   if ( MPI_Rank == 0 )
    {
       Aux_Message( stdout, "%s ... done\n", __FUNCTION__ );
       Aux_Message( stdout, "\n\n~ GAME OVER ~\n\n\n" );
@@ -35,6 +39,6 @@ void End_GAMER()
 
    MPI_Finalize();
 
-   exit(0);
+   exit( 0 );
 
 } // FUNCTION : End_GAMER

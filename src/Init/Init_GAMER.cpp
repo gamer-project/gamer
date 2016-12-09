@@ -43,6 +43,12 @@ void Init_GAMER( int *argc, char ***argv )
 #  endif
 
 
+// initialize yt inline analysis
+#  ifdef SUPPORT_LIBYT
+   YT_Init( *argc, *argv );
+#  endif
+
+
 // initialize parameters for the parallelization (rectangular domain decomposition)
    Init_Parallelization();
 

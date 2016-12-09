@@ -490,5 +490,13 @@ void Par_LB_MapBuffer2RealPatch( const int lv, const int  Buff_NPatchTotal, int 
 #endif // #ifdef PARTICLE
 
 
+// yt inline analysis
+#ifdef SUPPORT_LIBYT
+void YT_Init( int argc, char *argv[] );
+void YT_End();
+void YT_Inline();
+#endif // #ifdef SUPPORT_LIBYT
+
+
 
 #endif // __PROTOTYPE_H__

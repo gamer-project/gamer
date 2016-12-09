@@ -108,16 +108,16 @@ SIMU_OPTION += -DTIMING
 #SIMU_OPTION += -DTIMING_SOLVER
 
 # intel compiler (default: GNU compiler)
-SIMU_OPTION += -DINTEL
+#SIMU_OPTION += -DINTEL
 
 # double precision (not supported for the GPU + self-gravity mode in non-Fermi GPUs)
 #SIMU_OPTION += -DFLOAT8
 
 # serial mode (in which no MPI libraries are required)
-#SIMU_OPTION += -DSERIAL
+SIMU_OPTION += -DSERIAL
 
 # load-balance parallelization (one must not turn on the option "SERIAL") (HILBERT)
-SIMU_OPTION += -DLOAD_BALANCE=HILBERT
+#SIMU_OPTION += -DLOAD_BALANCE=HILBERT
 
 # overlap MPI communication with computation (experimental, only supported in LOAD_BALANCE)
 #SIMU_OPTION += -DOVERLAP_MPI
@@ -133,6 +133,9 @@ SIMU_OPTION += -DSUPPORT_HDF5
 
 # support GNU scientific library
 SIMU_OPTION += -DSUPPORT_GSL
+
+# support yt inline analysis
+SIMU_OPTION += -DSUPPORT_LIBYT
 
 
 
@@ -352,6 +355,16 @@ endif # LOAD_BALANCE
 vpath %.cpp    LoadBalance
 
 
+# yt inline analysis source files (included only if "SUPPORT_LIBYT" is turned on)
+# ------------------------------------------------------------------------------------
+ifeq "$(findstring SUPPORT_LIBYT, $(SIMU_OPTION))" "SUPPORT_LIBYT"
+CC_FILE     += YT_Init.cpp  YT_End.cpp  YT_SetParameter.cpp  YT_AddAllGrid.cpp  YT_Inline.cpp
+
+vpath %.cpp    YT
+endif # "SUPPORT_LIBYT"
+
+
+
 # rules and targets
 #######################################################################################################
 
@@ -359,16 +372,18 @@ vpath %.cpp    LoadBalance
 # -------------------------------------------------------------------------------
 # dxl (gcc, serial)
 #CUDA_TOOLKIT_PATH :=
-#FFTW_PATH         := /usr
+FFTW_PATH         := /home/hyschive/software/fftw/2.1.5
 #MPI_PATH          := /usr
-#HDF5_PATH         := /home/hyschive/software/miniconda2
+HDF5_PATH         := /home/hyschive/software/miniconda2
+GSL_PATH          := /usr/lib
+LIBYT_PATH        := /home/hyschive/project/libyt/libyt.dev/libyt
 
 # campus UIUC (intel-15.0 + openmpi-1.8.4)
-CUDA_TOOLKIT_PATH := /usr/local/cuda/7.0
-FFTW_PATH         := /projects/ncsa/grav/softwares/fftw/2.1.5
-MPI_PATH          := /usr/local/mpi/openmpi-1.8.4-intel-15.0
-HDF5_PATH         := /projects/ncsa/grav/softwares/miniconda2
-GSL_PATH          := /usr/local/gsl/gsl-1.16
+#CUDA_TOOLKIT_PATH := /usr/local/cuda/7.0
+#FFTW_PATH         := /projects/ncsa/grav/softwares/fftw/2.1.5
+#MPI_PATH          := /usr/local/mpi/openmpi-1.8.4-intel-15.0
+#HDF5_PATH         := /projects/ncsa/grav/softwares/miniconda2
+#GSL_PATH          := /usr/local/gsl/gsl-1.16
 
 # hulk (openmpi-intel-qlc)
 #CUDA_TOOLKIT_PATH := /opt/gpu/cuda/4.2
@@ -511,6 +526,10 @@ ifeq "$(findstring SUPPORT_GSL, $(SIMU_OPTION))" "SUPPORT_GSL"
 LIB += -L$(GSL_PATH)/lib -lgsl -lgslcblas
 endif
 
+ifeq "$(findstring SUPPORT_LIBYT, $(SIMU_OPTION))" "SUPPORT_LIBYT"
+LIB += -L$(LIBYT_PATH)/lib -lyt
+endif
+
 
 # headers
 # -------------------------------------------------------------------------------
@@ -530,6 +549,10 @@ endif
 
 ifeq "$(findstring SUPPORT_GSL, $(SIMU_OPTION))" "SUPPORT_GSL"
 INCLUDE += -I$(GSL_PATH)/include
+endif
+
+ifeq "$(findstring SUPPORT_LIBYT, $(SIMU_OPTION))" "SUPPORT_LIBYT"
+INCLUDE += -I$(LIBYT_PATH)/include
 endif
 
 

@@ -450,6 +450,7 @@ void Aux_TakeNote()
       fprintf( Note, "#define PAR_NVAR          %d\n",      PAR_NVAR                );
       fprintf( Note, "#define PAR_NPASSIVE      %d\n",      PAR_NPASSIVE            );
 #     endif
+      fprintf( Note, "#define MAX_STRING        %d\n",      MAX_STRING              );
       fprintf( Note, "***********************************************************************************\n" );
       fprintf( Note, "\n\n");
 
@@ -890,6 +891,17 @@ void Aux_TakeNote()
       fprintf( Note, "INIT_DUMPID               %d\n",      INIT_DUMPID             );
       fprintf( Note, "***********************************************************************************\n" );
       fprintf( Note, "\n\n");
+
+
+//    record the parameters of yt inline analysis
+#     ifdef SUPPORT_LIBYT
+      fprintf( Note, "Parameters of YT Inline Analysis\n" );
+      fprintf( Note, "***********************************************************************************\n" );
+      fprintf( Note, "YT_SCRIPT                 %s\n",      YT_SCRIPT               );
+      fprintf( Note, "YT_VERBOSE                %d\n",      YT_VERBOSE              );
+      fprintf( Note, "***********************************************************************************\n" );
+      fprintf( Note, "\n\n");
+#     endif
 
 
 //    record the parameters of miscellaneous purposes

@@ -40,6 +40,10 @@
 #  endif
 #endif
 
+#ifdef SUPPORT_LIBYT
+#  include <libyt.h>
+#endif
+
 using namespace std;
 
 #include "Macro.h"

@@ -695,6 +695,23 @@ void Init_Load_Parameter()
    getline( &input_line, &len, File );
 
 
+// yt inline analysis
+#  ifdef SUPPORT_LIBYT
+   getline( &input_line, &len, File );
+   sscanf( input_line, "%s%s",    YT_SCRIPT,                string );
+
+   getline( &input_line, &len, File );
+   sscanf( input_line, "%d%s",   &temp_int,                 string );
+   YT_VERBOSE = (yt_verbose)temp_int;
+
+#  else
+   getline( &input_line, &len, File );
+   getline( &input_line, &len, File );
+#  endif
+
+   getline( &input_line, &len, File );
+
+
 // miscellaneous
    getline( &input_line, &len, File );
    sscanf( input_line, "%d%s",   &temp_int,                 string );

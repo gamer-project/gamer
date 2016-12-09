@@ -153,6 +153,14 @@ extern ParOutputDens_t OPT__OUTPUT_PAR_DENS;
 #endif
 
 
+// (2-6) yt inline analysis
+// ============================================================================================================
+#ifdef SUPPORT_LIBYT
+extern char            YT_SCRIPT[MAX_STRING];
+extern yt_verbose      YT_VERBOSE;
+#endif
+
+
 
 // 3. CPU (host) arrays for transferring data between CPU and GPU
 // ============================================================================================================

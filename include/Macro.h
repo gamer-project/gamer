@@ -511,7 +511,11 @@
 
 
 // miscellaneous
-#  define TOP_LEVEL              ( NLEVEL - 1 )
+#define TOP_LEVEL          ( NLEVEL - 1 )
+
+
+// maximum length for strings
+#define MAX_STRING         512
 
 
 

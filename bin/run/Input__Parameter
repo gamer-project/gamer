@@ -151,6 +151,9 @@
 0.0         OUTPUT_PART_Z             # z coordinate for the option OPT__OUTPUT_PART
 -1          INIT_DUMPID               # set the first dump ID (<0:default)
 
+yt_inline   YT_SCRIPT                 # yt inline analysis script (do not include the ".py" file extension)
+3           YT_VERBOSE                # verbose level of yt (0, 1, 2, 3) -> (off, info, warning, debug)
+
 0           OPT__VERBOSE              # output the detail of simulation progress
 -1          OPT__TIMING_BARRIER       # synchronize before timing --> more accurate, but may slow down the run (<0:default)
 0           OPT__TIMING_BALANCE       # record the max/min elapsed time in various code sections for checking load balance

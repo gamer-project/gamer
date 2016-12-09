@@ -68,28 +68,28 @@ OptLohnerForm_t   OPT__FLAG_LOHNER_FORM;
 // =======================================================================================================
 // (2-1) fluid solver in different models
 #if   ( MODEL == HYDRO )
-double         FlagTable_PresGradient[NLEVEL-1];
-double         GAMMA, MINMOD_COEFF, EP_COEFF, MOLECULAR_WEIGHT;
-LR_Limiter_t   OPT__LR_LIMITER;
-WAF_Limiter_t  OPT__WAF_LIMITER;
-OptRSolver_t   OPT__1ST_FLUX_CORR_SCHEME;
-bool           OPT__FLAG_PRES_GRADIENT, OPT__FLAG_LOHNER_ENGY, OPT__FLAG_LOHNER_PRES, OPT__FLAG_LOHNER_TEMP, OPT__1ST_FLUX_CORR;
-int            OPT__CK_NEGATIVE;
-double         MIN_DENS, MIN_PRES;
+double            FlagTable_PresGradient[NLEVEL-1];
+double            GAMMA, MINMOD_COEFF, EP_COEFF, MOLECULAR_WEIGHT;
+LR_Limiter_t      OPT__LR_LIMITER;
+WAF_Limiter_t     OPT__WAF_LIMITER;
+OptRSolver_t      OPT__1ST_FLUX_CORR_SCHEME;
+bool              OPT__FLAG_PRES_GRADIENT, OPT__FLAG_LOHNER_ENGY, OPT__FLAG_LOHNER_PRES, OPT__FLAG_LOHNER_TEMP, OPT__1ST_FLUX_CORR;
+int               OPT__CK_NEGATIVE;
+double            MIN_DENS, MIN_PRES;
 
 #elif ( MODEL == MHD )
-double         MIN_DENS, MIN_PRES;
+double            MIN_DENS, MIN_PRES;
 #warning : WAIT MHD !!!
 
 #elif ( MODEL == ELBDM )
-double         DT__PHASE, FlagTable_EngyDensity[NLEVEL-1][2];
-bool           OPT__FLAG_ENGY_DENSITY, OPT__INT_PHASE;
-bool           ELBDM_TAYLOR3_AUTO;
-double         ELBDM_TAYLOR3_COEFF;
-double         ELBDM_MASS, ELBDM_PLANCK_CONST, ELBDM_ETA, MIN_DENS;
-real           MinDtInfo_Phase[NLEVEL];
+double            DT__PHASE, FlagTable_EngyDensity[NLEVEL-1][2];
+bool              OPT__FLAG_ENGY_DENSITY, OPT__INT_PHASE;
+bool              ELBDM_TAYLOR3_AUTO;
+double            ELBDM_TAYLOR3_COEFF;
+double            ELBDM_MASS, ELBDM_PLANCK_CONST, ELBDM_ETA, MIN_DENS;
+real              MinDtInfo_Phase[NLEVEL];
 #ifdef QUARTIC_SELF_INTERACTION
-double         ELBDM_LAMBDA;
+double            ELBDM_LAMBDA;
 #endif
 
 #else
@@ -98,42 +98,48 @@ double         ELBDM_LAMBDA;
 
 // (2-2) self-gravity
 #ifdef GRAVITY
-double           AveDensity_Init = -1.0;     // initialize it as <= 0 to check if it is properly set later
-real             MinDtInfo_Gravity[NLEVEL];
-int              Pot_ParaBuf, Rho_ParaBuf;
+double            AveDensity_Init = -1.0;     // initialize it as <= 0 to check if it is properly set later
+real              MinDtInfo_Gravity[NLEVEL];
+int               Pot_ParaBuf, Rho_ParaBuf;
 
-real            *GreenFuncK      = NULL;
-double           GFUNC_COEFF0;
-double           DT__GRAVITY;
-double           NEWTON_G;
-int              POT_GPU_NPGROUP;
-bool             OPT__OUTPUT_POT, OPT__GRA_P5_GRADIENT, OPT__EXTERNAL_POT;
-double           SOR_OMEGA;
-int              SOR_MAX_ITER, SOR_MIN_ITER;
-double           MG_TOLERATED_ERROR;
-int              MG_MAX_ITER, MG_NPRE_SMOOTH, MG_NPOST_SMOOTH;
-IntScheme_t      OPT__POT_INT_SCHEME, OPT__RHO_INT_SCHEME, OPT__GRA_INT_SCHEME, OPT__REF_POT_INT_SCHEME;
-OptPotBC_t       OPT__BC_POT;
-OptGravityType_t OPT__GRAVITY_TYPE;
+real             *GreenFuncK      = NULL;
+double            GFUNC_COEFF0;
+double            DT__GRAVITY;
+double            NEWTON_G;
+int               POT_GPU_NPGROUP;
+bool              OPT__OUTPUT_POT, OPT__GRA_P5_GRADIENT, OPT__EXTERNAL_POT;
+double            SOR_OMEGA;
+int               SOR_MAX_ITER, SOR_MIN_ITER;
+double            MG_TOLERATED_ERROR;
+int               MG_MAX_ITER, MG_NPRE_SMOOTH, MG_NPOST_SMOOTH;
+IntScheme_t       OPT__POT_INT_SCHEME, OPT__RHO_INT_SCHEME, OPT__GRA_INT_SCHEME, OPT__REF_POT_INT_SCHEME;
+OptPotBC_t        OPT__BC_POT;
+OptGravityType_t  OPT__GRAVITY_TYPE;
 #endif
 
 // (2-3) cosmological simulations
 #ifdef COMOVING
-double         A_INIT, OMEGA_M0, DT__MAX_DELTA_A, HUBBLE0;
+double            A_INIT, OMEGA_M0, DT__MAX_DELTA_A, HUBBLE0;
 #endif
 
 // (2-4) load balance
 #ifdef LOAD_BALANCE
-double         LB_INPUT__WLI_MAX;
+double            LB_INPUT__WLI_MAX;
 #endif
 
-// (2-5) particle
+// (2-5) particle 
 #ifdef PARTICLE
-double          DT__PARVEL, DT__PARVEL_MAX, DT__PARACC;
-real            MinDtInfo_ParVelAcc[2][NLEVEL];
-bool            OPT__OUTPUT_PAR_TEXT, OPT__CK_PARTICLE, OPT__FLAG_NPAR_CELL;
-int             OPT__PARTICLE_COUNT, OPT__FLAG_NPAR_PATCH, FlagTable_NParPatch[NLEVEL-1], FlagTable_NParCell[NLEVEL-1];
-ParOutputDens_t OPT__OUTPUT_PAR_DENS;
+double            DT__PARVEL, DT__PARVEL_MAX, DT__PARACC;
+real              MinDtInfo_ParVelAcc[2][NLEVEL];
+bool              OPT__OUTPUT_PAR_TEXT, OPT__CK_PARTICLE, OPT__FLAG_NPAR_CELL;
+int               OPT__PARTICLE_COUNT, OPT__FLAG_NPAR_PATCH, FlagTable_NParPatch[NLEVEL-1], FlagTable_NParCell[NLEVEL-1];
+ParOutputDens_t   OPT__OUTPUT_PAR_DENS;
+#endif
+
+// (2-6) yt inline analysis
+#ifdef SUPPORT_LIBYT
+char              YT_SCRIPT[MAX_STRING];
+yt_verbose        YT_VERBOSE;
 #endif
 
 
@@ -308,7 +314,7 @@ int main( int argc, char *argv[] )
 #     endif
 
 
-//    a. determine the time step
+//    1. determine the time step
 //    ---------------------------------------------------------------------------------------------------
       TIMING_FUNC(   Mis_GetTimeStep(),   Timer_Main[1],   false   );
 
@@ -321,7 +327,7 @@ int main( int argc, char *argv[] )
 //    ---------------------------------------------------------------------------------------------------
 
 
-//    b. advance all physical attributes by one step
+//    2. advance all physical attributes by one step
 //    ---------------------------------------------------------------------------------------------------
       TIMING_FUNC(   EvolveLevel( 0, dTime_Base ),   Timer_Main[2],   false   );
 
@@ -329,7 +335,7 @@ int main( int argc, char *argv[] )
 //    ---------------------------------------------------------------------------------------------------
 
 
-//    c. apply various corrections
+//    3. apply various corrections
 //       --> synchronize particles, restrict data, recalculate potential and particle acceleration, ...
 //    ---------------------------------------------------------------------------------------------------
       if ( OPT__CORR_AFTER_ALL_SYNC )
@@ -337,7 +343,7 @@ int main( int argc, char *argv[] )
 //    ---------------------------------------------------------------------------------------------------
 
 
-//    d. output data and execute auxiliary functions
+//    4. output data and execute auxiliary functions
 //    ---------------------------------------------------------------------------------------------------
       TIMING_FUNC(   Output_DumpData( 1 ),       Timer_Main[3],   false   );
 
@@ -361,7 +367,15 @@ int main( int argc, char *argv[] )
 //    ---------------------------------------------------------------------------------------------------
 
 
-//    e. check whether to manually terminate the run
+//    5. perform yt inline analysis
+//    ---------------------------------------------------------------------------------------------------
+#     ifdef SUPPORT_LIBYT
+      YT_Inline();
+#     endif
+//    ---------------------------------------------------------------------------------------------------
+
+
+//    6. check whether to manually terminate the run
 //    ---------------------------------------------------------------------------------------------------
       int Terminate = false;
 
@@ -371,7 +385,7 @@ int main( int argc, char *argv[] )
 //    ---------------------------------------------------------------------------------------------------
 
 
-//    f. check whether to redistribute all patches for LOAD_BALANCE
+//    7. check whether to redistribute all patches for LOAD_BALANCE
 //    ---------------------------------------------------------------------------------------------------
 #     ifdef LOAD_BALANCE
       const bool DuringRestart_No = false;
@@ -397,7 +411,7 @@ int main( int argc, char *argv[] )
 //    ---------------------------------------------------------------------------------------------------
 
 
-//    g. record timing
+//    8. record timing
 //    ---------------------------------------------------------------------------------------------------
 #     ifdef TIMING
       MPI_Barrier( MPI_COMM_WORLD );
