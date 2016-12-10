@@ -20,7 +20,7 @@
 void YT_SetParameter( const int NPatchAllLv )
 {
 
-   if ( MPI_Rank == 0 )    Aux_Message( stdout, "   %s ...\n", __FUNCTION__ );
+   if ( OPT__VERBOSE  &&  MPI_Rank == 0 )    Aux_Message( stdout, "%s ...\n", __FUNCTION__ );
 
 
 // 1. prepare the simulation information for libyt
@@ -65,7 +65,7 @@ void YT_SetParameter( const int NPatchAllLv )
    if ( yt_set_parameter( &param_yt ) != YT_SUCCESS )    Aux_Error( ERROR_INFO, "yt_set_parameter() failed !!\n" );
 
 
-   if ( MPI_Rank == 0 )    Aux_Message( stdout, "   %s ... done\n", __FUNCTION__ );
+   if ( OPT__VERBOSE  &&  MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", __FUNCTION__ );
 
 
 } // FUNCTION : YT_SetParameter

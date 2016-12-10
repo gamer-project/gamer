@@ -23,7 +23,7 @@
 void YT_AddAllGrid( yt_grid *Grid, const int *GID_Offset, const int NField, char **FieldLabel )
 {
 
-   if ( MPI_Rank == 0 )    Aux_Message( stdout, "   %s ...\n", __FUNCTION__ );
+   if ( OPT__VERBOSE  &&  MPI_Rank == 0 )    Aux_Message( stdout, "%s ...\n", __FUNCTION__ );
 
 
 // loop over all patches at all levels
@@ -85,7 +85,7 @@ void YT_AddAllGrid( yt_grid *Grid, const int *GID_Offset, const int NField, char
    } // for (int lv=0; lv<NLEVEL; lv++)
 
 
-   if ( MPI_Rank == 0 )    Aux_Message( stdout, "   %s ... done\n", __FUNCTION__ );
+   if ( OPT__VERBOSE  &&  MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", __FUNCTION__ );
 
 } // FUNCTION : YT_AddAllGrid
 

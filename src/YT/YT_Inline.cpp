@@ -26,7 +26,7 @@ void YT_AddAllGrid( yt_grid *Grid, const int *GID_Offset, const int NField, char
 void YT_Inline()
 {
 
-   if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ...\n", __FUNCTION__ );
+   if ( OPT__VERBOSE  &&  MPI_Rank == 0 )    Aux_Message( stdout, "%s ...\n", __FUNCTION__ );
 
 
 // 1. gather the number of patches at different MPI ranks and set the corresponding GID offset
@@ -107,7 +107,7 @@ void YT_Inline()
    delete [] Grid;
 
 
-   if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", __FUNCTION__ );
+   if ( OPT__VERBOSE  &&  MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", __FUNCTION__ );
 
 } // FUNCTION : YT_Inline
 
