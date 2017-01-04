@@ -15,6 +15,18 @@
 //                2. All real and buffer patches must know whether or not they have sons
 //                3. The lists constructed by this function (SendX/RecvX) are subsets of the lists (SendH/RecvH)
 //                   --> To reduce the amount of data to be transferred after the fix-up operation
+//                4. This function assumes that Flu_ParaBuf < PATCH_SIZE
+//                   --> Because we only check if the interfaces between real and sibling-buffer patches
+//                       coincide with coarse-fine boundaaries
+//                       --> But for Flu_ParaBuf == PATCH_SIZE, we may need to exchange data even if
+//                           the interfaces between real and sibling-buffer patches do NOT coincide with
+//                           coarse-fine boundaaries
+//                       --> For example: real_patch(lv 1, GID 0) | buffer_patch(lv 1, GID 1) | buffer_patch(lv 2, GID 2)
+//                           In this case, even though GID 0 and GID 1 are at the same level, we still need to exchange
+//                           data for GID 1 because it's right interface is a coarse-fine boundary. But it is not taken
+//                           care in the current implementation of LOAD_BALANCE
+//                       --> One quick solution is to replace DATA_AFTER_FIXUP by DATA_GENERAL when calling Buf_GetBufferData()
+//                           after Flu_FixUp() in EvolveLevel()
 //
 // Parameter   :  Lv : Targeted refinement level for recording MPI lists
 //-------------------------------------------------------------------------------------------------------
