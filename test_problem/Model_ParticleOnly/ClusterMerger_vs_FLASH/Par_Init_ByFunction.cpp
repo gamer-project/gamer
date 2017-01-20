@@ -172,7 +172,7 @@ void Par_Init_ByFunction()
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Send particles to all ranks ... " );
    double (*ParData_MyRank)[NParVar] = new double [NPar_MyRank][NParVar];
 
-   MPI_Scatterv( ParData_AllRank, NSend, SendDisp, MPI_DOUBLE, ParData_MyRank, NPar_MyRank*NParVar, MPI_DOUBLE, 0, MPI_COMM_WORLD );
+   MPI_Scatterv( ParData_AllRank[0], NSend, SendDisp, MPI_DOUBLE, ParData_MyRank[0], NPar_MyRank*NParVar, MPI_DOUBLE, 0, MPI_COMM_WORLD );
 
    delete [] ParData_AllRank;
 
