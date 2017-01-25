@@ -88,6 +88,9 @@ void Aux_Check_Parameter()
    if ( OPT__INIT != INIT_STARTOVER  &&  OPT__INIT != INIT_RESTART  &&  OPT__INIT != INIT_UM )
       Aux_Error( ERROR_INFO, "unsupported option \"OPT__INIT = %d\" [1/2/3] !!\n", OPT__INIT );
 
+   if ( OPT__INIT == INIT_RESTART  &&  RESTART_LOAD_NRANK <= 0 )
+      Aux_Error( ERROR_INFO, "incorrect parameter \"%s = %d\" [>0] !!\n", "RESTART_LOAD_NRANK", RESTART_LOAD_NRANK );
+
 #  ifdef LOAD_BALANCE
    if ( OPT__INIT != INIT_RESTART )
 #  endif

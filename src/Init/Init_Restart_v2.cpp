@@ -396,12 +396,13 @@ void Init_Restart()
 
    for (int lv=0; lv<NLv_Restart; lv++)
    {
-      for (int TargetMPIRank=0; TargetMPIRank<MPI_NRank; TargetMPIRank++)
+      for (int TRanks=0; TRanks<MPI_NRank; TRanks+=RESTART_LOAD_NRANK)
       {
          if ( MPI_Rank == 0 )
-            Aux_Message( stdout, "   Loading grid data at level %2d, MPI_Rank %3d ... ", lv, TargetMPIRank );
+            Aux_Message( stdout, "   Loading grid data at level %2d, MPI ranks %4d -- %4d ... ",
+                         lv, TRanks, MIN(TRanks+RESTART_LOAD_NRANK-1, MPI_NRank-1) );
 
-         if ( MPI_Rank == TargetMPIRank )
+         if ( MPI_Rank >= TRanks  &&  MPI_Rank < TRanks+RESTART_LOAD_NRANK )
          {
 //          d1. set the range of the targeted sub-domain
 #           ifndef LOAD_BALANCE
@@ -499,13 +500,13 @@ void Init_Restart()
 
             Offset += DataSize[lv];
 
-         } // if ( MPI_Rank == TargetMPIRank )
+         } // if ( MPI_Rank >= TRanks  &&  MPI_Rank < TRanks+RESTART_LOAD_NRANK )
 
          MPI_Barrier( MPI_COMM_WORLD );
 
          if ( MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );
 
-      } // for (int TargetMPIRank=0; TargetMPIRank<MPI_NRank; TargetMPIRank++)
+      } // for (int TRanks=0; TRanks<MPI_NRank; TRanks+=RESTART_LOAD_NRANK)
    } // for (int lv=0; lv<NLv_Restart; lv++)
 
 
@@ -545,11 +546,13 @@ void Init_Restart()
    const real *ParPos[3] = { amr->Par->PosX, amr->Par->PosY, amr->Par->PosZ };
 #  endif
 
-   for (int TargetMPIRank=0; TargetMPIRank<MPI_NRank; TargetMPIRank++)
+   for (int TRanks=0; TRanks<MPI_NRank; TRanks+=RESTART_LOAD_NRANK)
    {
-      if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Loading particle data, MPI_Rank %3d ... ", TargetMPIRank );
+      if ( MPI_Rank == 0 )
+         Aux_Message( stdout, "   Loading particle data, MPI ranks %4d -- %4d ... ",
+                      TRanks, MIN(TRanks+RESTART_LOAD_NRANK-1, MPI_NRank-1) );
 
-      if ( MPI_Rank == TargetMPIRank )
+      if ( MPI_Rank >= TRanks  &&  MPI_Rank < TRanks+RESTART_LOAD_NRANK )
       {
          File = fopen( FileName, "rb" );
 
@@ -614,12 +617,12 @@ void Init_Restart()
          if ( amr->Par->NPar_AcPlusInac != NParThisRank )
             Aux_Error( ERROR_INFO, "total number of particles in the repository (%ld) != expect (%ld) !!\n",
                        amr->Par->NPar_AcPlusInac, NParThisRank );
-      } // if ( MPI_Rank == TargetMPIRank )
+      } // if ( MPI_Rank >= TRanks  &&  MPI_Rank < TRanks+RESTART_LOAD_NRANK )
 
       MPI_Barrier( MPI_COMM_WORLD );
 
       if ( MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );
-   } // for (int TargetMPIRank=0; TargetMPIRank<MPI_NRank; TargetMPIRank++)
+   } // for (int TRanks=0; TRanks<MPI_NRank; TRanks+=RESTART_LOAD_NRANK)
 
 
 // free memory

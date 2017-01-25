@@ -579,10 +579,10 @@ void Init_Restart_HDF5( const char *FileName )
 #  endif
 
 
-// load data in one rank at a time
-   for (int TRank=0; TRank<MPI_NRank; TRank++)
+// load data with RESTART_LOAD_NRANK ranks at a time
+   for (int TRanks=0; TRanks<MPI_NRank; TRanks+=RESTART_LOAD_NRANK)
    {
-      if ( MPI_Rank == TRank )
+      if ( MPI_Rank >= TRanks  &&  MPI_Rank < TRanks+RESTART_LOAD_NRANK )
       {
 //       3-3. open the target datasets just once
          H5_FileID = H5Fopen( FileName, H5F_ACC_RDONLY, H5P_DEFAULT );
@@ -617,7 +617,9 @@ void Init_Restart_HDF5( const char *FileName )
 
          for (int lv=0; lv<KeyInfo.NLevel; lv++)
          {
-            Aux_Message( stdout, "      Loading rank %2d, lv %2d ... ", MPI_Rank, lv );
+            if ( MPI_Rank == TRanks )
+            Aux_Message( stdout, "      Loading ranks %4d -- %4d, lv %2d ... ",
+                         TRanks, MIN(TRanks+RESTART_LOAD_NRANK-1, MPI_NRank-1), lv );
 
 //          loop over all targeted LBIdx
             for (int t=LoadIdx_Start[lv]; t<LoadIdx_Stop[lv]; t+=8)
@@ -658,7 +660,7 @@ void Init_Restart_HDF5( const char *FileName )
             }
 #           endif
 
-            Aux_Message( stdout, "done\n" );
+            if ( MPI_Rank == TRanks )  Aux_Message( stdout, "done\n" );
          } // for (int lv=0; lv<KeyInfo.NLevel; lv++)
 
 
@@ -703,10 +705,10 @@ void Init_Restart_HDF5( const char *FileName )
 #        endif
 
          H5_Status = H5Fclose( H5_FileID );
-      } // if ( MyRank == TargetRank )
+      } // if ( MPI_Rank >= TRanks  &&  MPI_Rank < TRanks+RESTART_LOAD_NRANK )
 
       MPI_Barrier( MPI_COMM_WORLD );
-   } // for (int TargetRank=0; TargetRank<NGPU; TargetRank++)
+   } // for (int TRanks=0; TRanks<MPI_NRank; TRanks+=RESTART_LOAD_NRANK)
 
 // free HDF5 objects
    H5_Status = H5Sclose( H5_SpaceID_Field );
@@ -1603,6 +1605,7 @@ void Check_InputPara( const char *FileName )
 
 // initialization
    LoadField( "Opt__Init",               &RS.Opt__Init,               SID, TID, NonFatal, &RT.Opt__Init,                1, NonFatal );
+   LoadField( "RestartLoadNRank",        &RS.RestartLoadNRank,        SID, TID, NonFatal, &RT.RestartLoadNRank,         1, NonFatal );
    LoadField( "Opt__RestartHeader",      &RS.Opt__RestartHeader,      SID, TID, NonFatal, &RT.Opt__RestartHeader,       1, NonFatal );
    LoadField( "Opt__UM_Start_Level",     &RS.Opt__UM_Start_Level,     SID, TID, NonFatal, &RT.Opt__UM_Start_Level,      1, NonFatal );
    LoadField( "Opt__UM_Start_NVar",      &RS.Opt__UM_Start_NVar,      SID, TID, NonFatal, &RT.Opt__UM_Start_NVar,       1, NonFatal );

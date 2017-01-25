@@ -60,6 +60,7 @@
 0           OPT__FLAG_LOHNER_DENS     # flag: Lohner (Input__Flag_Lohner) (HYDRO:mass density  ; ELBDM:R^2+I^2)
 0           OPT__FLAG_LOHNER_ENGY     # flag: Lohner (Input__Flag_Lohner) (HYDRO:energy density; ELBDM:useless)
 0           OPT__FLAG_LOHNER_PRES     # flag: Lohner (Input__Flag_Lohner) (HYDRO:pressure      ; ELBDM:useless)
+0           OPT__FLAG_LOHNER_TEMP     # flag: Lohner (Input__Flag_Lohner) (HYDRO:temperature   ; ELBDM:useless)
 -1          OPT__FLAG_LOHNER_FORM     # form of the Lohner error estimator (-1,0,1,2,3)->(default[1],FLASH1/2,form-invariant1/2)
 0           OPT__FLAG_USER            # flag: user-defined (Input__Flag_User) --> edit "Flag_UserCriteria"
 0           OPT__FLAG_REGION          # flag: specify the regions allowed to be refined --> edit "Flag_Region"
@@ -113,6 +114,7 @@
 0           OPT__EXTERNAL_POT         # add the external potential (does not work with OPT__GRAVITY_TYPE == 2) ##ELBDM ONLY##
 
 1           OPT__INIT                 # initialization option : (1, 2, 3) -> (StartOver, RESTART, UM_START)
+1           RESTART_LOAD_NRANK        # number of MPI ranks to load the restart file simultaneously (for higher I/O bandwidth)
 1           OPT__RESTART_HEADER       # RESTART header : (0, 1) -> (skip/check the header info)
 0           OPT__UM_START_LEVEL       # refinement level of the input uniform-mesh array (must >= 0)
 1           OPT__UM_START_NVAR        # [1...NCOMP] -> number of variables per cell stored in the uniform-mesh array
@@ -149,6 +151,9 @@
 0.0         OUTPUT_PART_Y             # y coordinate for the option OPT__OUTPUT_PART
 0.0         OUTPUT_PART_Z             # z coordinate for the option OPT__OUTPUT_PART
 -1          INIT_DUMPID               # set the first dump ID (<0:default)
+
+yt_inline   YT_SCRIPT                 # yt inline analysis script (do not include the ".py" file extension)
+3           YT_VERBOSE                # verbose level of yt (0, 1, 2, 3) -> (off, info, warning, debug)
 
 0           OPT__VERBOSE              # output the detail of simulation progress
 -1          OPT__TIMING_BARRIER       # synchronize before timing --> more accurate, but may slow down the run (<0:default)

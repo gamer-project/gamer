@@ -93,10 +93,10 @@ SIMU_OPTION += -DPAR_NPASSIVE=0
 # (f) optimization and compilation options
 # ------------------------------------------------------------------------------------
 # GPU acceleration
-#SIMU_OPTION += -DGPU
+SIMU_OPTION += -DGPU
 
 # GPU architecture: FERMI/KEPLER/MAXWELL/PASCAL
-#SIMU_OPTION += -DGPU_ARCH=KEPLER
+SIMU_OPTION += -DGPU_ARCH=KEPLER
 
 # debug mode
 #SIMU_OPTION += -DGAMER_DEBUG
@@ -108,16 +108,16 @@ SIMU_OPTION += -DTIMING
 #SIMU_OPTION += -DTIMING_SOLVER
 
 # intel compiler (default: GNU compiler)
-#SIMU_OPTION += -DINTEL
+SIMU_OPTION += -DINTEL
 
 # double precision (not supported for the GPU + self-gravity mode in non-Fermi GPUs)
 #SIMU_OPTION += -DFLOAT8
 
 # serial mode (in which no MPI libraries are required)
-SIMU_OPTION += -DSERIAL
+#SIMU_OPTION += -DSERIAL
 
 # load-balance parallelization (one must not turn on the option "SERIAL") (HILBERT)
-#SIMU_OPTION += -DLOAD_BALANCE=HILBERT
+SIMU_OPTION += -DLOAD_BALANCE=HILBERT
 
 # overlap MPI communication with computation (experimental, only supported in LOAD_BALANCE)
 #SIMU_OPTION += -DOVERLAP_MPI
@@ -132,10 +132,10 @@ SIMU_OPTION += -DOPENMP
 SIMU_OPTION += -DSUPPORT_HDF5
 
 # support GNU scientific library
-SIMU_OPTION += -DSUPPORT_GSL
+#SIMU_OPTION += -DSUPPORT_GSL
 
 # support yt inline analysis
-SIMU_OPTION += -DSUPPORT_LIBYT
+#SIMU_OPTION += -DSUPPORT_LIBYT
 
 
 
@@ -372,17 +372,17 @@ endif # "SUPPORT_LIBYT"
 # -------------------------------------------------------------------------------
 # dxl (gcc, serial)
 #CUDA_TOOLKIT_PATH :=
-FFTW_PATH         := /home/hyschive/software/fftw/2.1.5
+#FFTW_PATH         := /home/hyschive/software/fftw/2.1.5
 #MPI_PATH          := /usr
-HDF5_PATH         := /home/hyschive/software/miniconda2
-GSL_PATH          := /usr/lib
-LIBYT_PATH        := /home/hyschive/project/libyt/libyt.dev/libyt
+#HDF5_PATH         := /home/hyschive/software/miniconda2
+#GSL_PATH          := /usr/lib
+#LIBYT_PATH        := /home/hyschive/project/libyt/libyt.dev/libyt
 
 # campus UIUC (intel-15.0 + openmpi-1.8.4)
-#CUDA_TOOLKIT_PATH := /usr/local/cuda/7.0
-#FFTW_PATH         := /projects/ncsa/grav/softwares/fftw/2.1.5
-#MPI_PATH          := /usr/local/mpi/openmpi-1.8.4-intel-15.0
-#HDF5_PATH         := /projects/ncsa/grav/softwares/miniconda2
+CUDA_TOOLKIT_PATH := /usr/local/cuda/7.0
+FFTW_PATH         := /projects/ncsa/grav/softwares/fftw/2.1.5
+MPI_PATH          := /usr/local/mpi/openmpi-1.8.4-intel-15.0
+HDF5_PATH         := /projects/ncsa/grav/softwares/miniconda2
 #GSL_PATH          := /usr/local/gsl/gsl-1.16
 
 # hulk (openmpi-intel-qlc)

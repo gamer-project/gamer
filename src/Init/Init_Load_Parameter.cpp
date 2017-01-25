@@ -544,6 +544,9 @@ void Init_Load_Parameter()
    OPT__INIT = (OptInit_t)temp_int;
 
    getline( &input_line, &len, File );
+   sscanf( input_line, "%d%s",   &RESTART_LOAD_NRANK,       string );
+
+   getline( &input_line, &len, File );
    sscanf( input_line, "%d%s",   &temp_int,                 string );
    OPT__RESTART_HEADER = (OptRestartH_t)temp_int;
 
