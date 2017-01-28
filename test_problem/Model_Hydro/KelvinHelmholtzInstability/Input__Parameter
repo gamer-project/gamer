@@ -51,7 +51,7 @@
 0           OPT__DT_USER              # time-step: user-defined --> edit "Mis_GetTimeStep_UserCriteria"
 
 -1          REGRID_COUNT              # refine every REGRID_COUNT sub-step (<0:default [4])
--1          FLAG_BUFFER_SIZE          # number of buffer cells for the flag operation (<0:default [8])
+4           FLAG_BUFFER_SIZE          # number of buffer cells for the flag operation (<0:default [8])
 0           MAX_LEVEL                 # maximum refinement level (0 ... NLEVEL-1) (<0:default [NLEVEL-1])
 0           OPT__FLAG_RHO             # flag: density (Input__Flag_Rho)
 0           OPT__FLAG_RHO_GRADIENT    # flag: density gradient (Input__Flag_RhoGradient)

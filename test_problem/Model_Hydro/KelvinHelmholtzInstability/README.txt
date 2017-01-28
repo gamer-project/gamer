@@ -14,5 +14,5 @@ Note:
 4. When KH_AllRankSame == true, all MPI ranks will assign the same initial condition
    --> suitable for the weak scaling test
 
-5. This test problem overwrite the original "Hydro_Init_StartOver_AssignData.cpp" file
-   to remove the OpenMP pragma since rand() is not thread-safe
+5. This test problem overwrites the original "Hydro_Init_StartOver_AssignData.cpp" file
+   to remove the OpenMP pragma since we do not create different seeds for different threads

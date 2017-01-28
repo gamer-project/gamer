@@ -9,6 +9,7 @@ extern void (*Output_TestProbErr_Ptr)( const bool BaseOnly );
 
        void HYDRO_TestProbSol_KH( real fluid[], const double x, const double y, const double z, const double Time );
 static void LoadTestProbParameter();
+static double RandomNumber( struct drand48_data *Buf, const double Min, const double Max );
 
 
 // global variables in the HYDRO Kelvin-Helmholtz instability test
@@ -23,6 +24,8 @@ double KH_Vy2;          // velocity y in the lower region
 double KH_Rho1;         // density in the upper region
 double KH_Rho2;         // density in the lower region
 bool   KH_AllRankSame;  // all MPI ranks assign the same initial condition --> suitable for the weak scaling test
+
+static struct drand48_data drand_buf;
 // =======================================================================================
 
 
@@ -71,8 +74,8 @@ void Init_TestProb()
 
 
 // set the global variables
-   if ( KH_AllRankSame )   srand( KH_RSeed );
-   else                    srand( KH_RSeed + MPI_Rank );
+   if ( KH_AllRankSame )   srand48_r( KH_RSeed,          &drand_buf );
+   else                    srand48_r( KH_RSeed+MPI_Rank, &drand_buf );
 
 
 // record the test problem parameters
@@ -138,8 +141,6 @@ void Init_TestProb()
 void HYDRO_TestProbSol_KH( real fluid[], const double x, const double y, const double z, const double Time )
 {
 
-#  define RVALUE (  ( (double)rand()/RAND_MAX )*KH_RAmp - 0.5*KH_RAmp  )
-
    const double dz_periodic = ( KH_AllRankSame ) ? amr->BoxSize[2] / MPI_NRank_X[2] : amr->BoxSize[2];
    const double z_shear     = 0.5*dz_periodic;
    const double z_periodic  = fmod( z, dz_periodic );
@@ -148,18 +149,18 @@ void HYDRO_TestProbSol_KH( real fluid[], const double x, const double y, const d
    if ( z_periodic >= z_shear )
    {
       fluid[DENS] = KH_Rho1;
-      fluid[MOMX] = KH_Rho1*( KH_Vx1 + RVALUE );
-      fluid[MOMY] = KH_Rho1*( KH_Vy1 + RVALUE );
-      fluid[MOMZ] = KH_Rho1*(    0.0 + RVALUE );
+      fluid[MOMX] = KH_Rho1*( KH_Vx1 + RandomNumber(&drand_buf,-KH_RAmp,KH_RAmp) );
+      fluid[MOMY] = KH_Rho1*( KH_Vy1 + RandomNumber(&drand_buf,-KH_RAmp,KH_RAmp) );
+      fluid[MOMZ] = KH_Rho1*(    0.0 + RandomNumber(&drand_buf,-KH_RAmp,KH_RAmp) );
    }
 
 // region 2
    else
    {
       fluid[DENS] = KH_Rho2;
-      fluid[MOMX] = KH_Rho2*( KH_Vx2 + RVALUE );
-      fluid[MOMY] = KH_Rho2*( KH_Vy2 + RVALUE );
-      fluid[MOMZ] = KH_Rho2*(    0.0 + RVALUE );
+      fluid[MOMX] = KH_Rho2*( KH_Vx2 + RandomNumber(&drand_buf,-KH_RAmp,KH_RAmp) );
+      fluid[MOMY] = KH_Rho2*( KH_Vy2 + RandomNumber(&drand_buf,-KH_RAmp,KH_RAmp) );
+      fluid[MOMZ] = KH_Rho2*(    0.0 + RandomNumber(&drand_buf,-KH_RAmp,KH_RAmp) );
    }
 
    fluid[ENGY] = KH_Pres/(GAMMA-1.0) + 0.5*( SQR(fluid[MOMX]) + SQR(fluid[MOMY]) + SQR(fluid[MOMZ]) ) / fluid[DENS];
@@ -229,6 +230,35 @@ void LoadTestProbParameter()
    if ( input_line != NULL )     free( input_line );
 
 } // FUNCTION : LoadTestProbParameter
+
+
+
+//-------------------------------------------------------------------------------------------------------
+// Function    :  RandomNumber
+// Description :  Generate a single random number
+//
+// Note        :  1. Use drand48_r() instead of rand(). The latter (i) is not thread-safe and (ii) doesn't
+//                   seem to work well with MPI even with a single thread (the generated random numbers are
+//                   found to be irreproducible with MPI + AMR)
+//                2. Must call srand48_r() in advance to set the random seed
+//
+// Parameter   :  Buf : Buffer used by drand48_r() for generating a random number
+//                Min : Lower limit of the random number
+//                Max : Upper limit of the random number
+//
+// Return      :  Random number
+//-------------------------------------------------------------------------------------------------------
+double RandomNumber( struct drand48_data *Buf, const double Min, const double Max )
+{
+
+   double RVal;
+
+   drand48_r( Buf, &RVal );
+
+// drand48_r returns [0.0, 1.0)
+   return RVal*(Max-Min) + Min;
+
+} // FUNCTION : RandomNumber
 
 
 
