@@ -1,7 +1,7 @@
 1.0         BOX_SIZE                  # size of the simulation box (Mpc/h in COMOVING)
 128         NX0_TOT[0]                # number of base-level grids in the x direction
 128         NX0_TOT[1]                # number of base-level grids in the y direction
-128         NX0_TOT[2]                # number of base-level grids in the z direction
+64          NX0_TOT[2]                # number of base-level grids in the z direction
 1           MPI_NRANK                 # total number of MPI ranks (= MPI_NRANK_X[0]*MPI_NRANK_X[1]*MPI_NRANK_X[2])
 1           MPI_NRANK_X[0]            # number of MPI ranks in the x direction
 1           MPI_NRANK_X[1]            # number of MPI ranks in the y direction
@@ -51,8 +51,8 @@
 0           OPT__DT_USER              # time-step: user-defined --> edit "Mis_GetTimeStep_UserCriteria"
 
 -1          REGRID_COUNT              # refine every REGRID_COUNT sub-step (<0:default [4])
-4           FLAG_BUFFER_SIZE          # number of buffer cells for the flag operation (<0:default [8])
-0           MAX_LEVEL                 # maximum refinement level (0 ... NLEVEL-1) (<0:default [NLEVEL-1])
+-1          FLAG_BUFFER_SIZE          # number of buffer cells for the flag operation (<0:default [8])
+3           MAX_LEVEL                 # maximum refinement level (0 ... NLEVEL-1) (<0:default [NLEVEL-1])
 0           OPT__FLAG_RHO             # flag: density (Input__Flag_Rho)
 0           OPT__FLAG_RHO_GRADIENT    # flag: density gradient (Input__Flag_RhoGradient)
 0           OPT__FLAG_PRES_GRADIENT   # flag: pressure gradient (Input__Flag_PresGradient) ##HYDRO ONLY##
@@ -63,7 +63,7 @@
 0           OPT__FLAG_LOHNER_PRES     # flag: Lohner (Input__Flag_Lohner) (HYDRO:pressure      ; ELBDM:useless)
 0           OPT__FLAG_LOHNER_TEMP     # flag: Lohner (Input__Flag_Lohner) (HYDRO:temperature   ; ELBDM:useless)
 -1          OPT__FLAG_LOHNER_FORM     # form of the Lohner error estimator (-1,0,1,2,3)->(default[1],FLASH1/2,form-invariant1/2)
-0           OPT__FLAG_USER            # flag: user-defined (Input__Flag_User) --> edit "Flag_UserCriteria"
+1           OPT__FLAG_USER            # flag: user-defined (Input__Flag_User) --> edit "Flag_UserCriteria"
 0           OPT__FLAG_REGION          # flag: specify the regions allowed to be refined --> edit "Flag_Region"
 0           OPT__FLAG_NPAR_PATCH      # flag: # of particles per patch (Input__Flag_NParPatch) (0/1/2:off/itself/siblings as well)
 0           OPT__FLAG_NPAR_CELL       # flag: # of particles per cell  (Input__Flag_NParCell)

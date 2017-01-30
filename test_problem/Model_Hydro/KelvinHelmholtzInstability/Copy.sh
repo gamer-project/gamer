@@ -7,4 +7,5 @@ cp Makefile                            ../../../src/
 cp Input__*                            ../../../bin/run/
 cp plot_*                              ../../../bin/run/
 cp Hydro_Init_StartOver_AssignData.cpp ../../../src/Model_Hydro/
+cp Flag_UserCriteria.cpp               ../../../src/Refine/
 

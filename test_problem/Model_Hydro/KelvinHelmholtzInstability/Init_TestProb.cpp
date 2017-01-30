@@ -100,7 +100,7 @@ void Init_TestProb()
 
 
 // set some default parameters
-   const double End_T_Default    = 2.0;
+   const double End_T_Default    = 1.0;
    const long   End_Step_Default = __INT_MAX__;
 
    if ( END_STEP < 0 )
