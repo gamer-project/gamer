@@ -606,6 +606,7 @@ void Aux_TakeNote()
       fprintf( Note, "OPT__FLAG_RHO_GRADIENT    %d\n",      OPT__FLAG_RHO_GRADIENT  );
 #     if   ( MODEL == HYDRO )
       fprintf( Note, "OPT__FLAG_PRES_GRADIENT   %d\n",      OPT__FLAG_PRES_GRADIENT );
+      fprintf( Note, "OPT__FLAG_VORTICITY       %d\n",      OPT__FLAG_VORTICITY     );
 #     elif ( MODEL == MHD )
 #     warning : WAIT MHD !!!
 #     endif
@@ -996,6 +997,16 @@ void Aux_TakeNote()
          fprintf( Note, "***********************************************************************************\n" );
          fprintf( Note, "  Level   Pressure Gradient\n" );
          for (int lv=0; lv<MAX_LEVEL; lv++)  fprintf( Note, "%7d%20.7e\n", lv, FlagTable_PresGradient[lv] );
+         fprintf( Note, "***********************************************************************************\n" );
+         fprintf( Note, "\n\n");
+      }
+
+      if ( OPT__FLAG_VORTICITY )
+      {
+         fprintf( Note, "Flag Criterion (Vorticity in HYDRO)\n" );
+         fprintf( Note, "***********************************************************************************\n" );
+         fprintf( Note, "  Level           Vorticity\n" );
+         for (int lv=0; lv<MAX_LEVEL; lv++)  fprintf( Note, "%7d%20.7e\n", lv, FlagTable_Vorticity[lv] );
          fprintf( Note, "***********************************************************************************\n" );
          fprintf( Note, "\n\n");
       }

@@ -10,10 +10,10 @@
 //
 // Note        :  Users can put their favorite flag criteria in this function
 //
-// Parameter   :  i,j,k       : Indices of the targeted element in the patch ptr[ amr->FluSg[lv] ][lv][PID]
-//                lv          : Refinement level of the targeted patch
-//                PID         : ID of the targeted patch
-//                Threshold   : User-provided threshold for the flag operation, which is loaded from the 
+// Parameter   :  i,j,k       : Indices of the target element in the patch ptr[ amr->FluSg[lv] ][lv][PID]
+//                lv          : Refinement level of the target patch
+//                PID         : ID of the target patch
+//                Threshold   : User-provided threshold for the flag operation, which is loaded from the
 //                              file "Input__Flag_User"
 //
 // Return      :  "true"  if the flag criteria are satisfied
@@ -27,7 +27,7 @@ bool Flag_UserCriteria( const int i, const int j, const int k, const int lv, con
    const int    scale  = amr->scale[lv];                                               // grid scale
    const double Pos[3] = { amr->patch[0][lv][PID]->EdgeL[0] + (i+0.5)*dh,              // x,y,z position
                            amr->patch[0][lv][PID]->EdgeL[1] + (j+0.5)*dh,
-                           amr->patch[0][lv][PID]->EdgeL[2] + (k+0.5)*dh  };  
+                           amr->patch[0][lv][PID]->EdgeL[2] + (k+0.5)*dh  };
 
    const real (*Rho )[PS1][PS1] = amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[DENS];  // density
    const real (*MomX)[PS1][PS1] = amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[MOMX];  // momentum x
@@ -47,14 +47,14 @@ bool Flag_UserCriteria( const int i, const int j, const int k, const int lv, con
 
    /*
 // Example 1 : flag if the velocity exceeds the given threshold
-   const real Vel = sqrt(  ( MomX[k][j][i]*MomX[k][j][i] + MomY[k][j][i]*MomY[k][j][i] + 
+   const real Vel = sqrt(  ( MomX[k][j][i]*MomX[k][j][i] + MomY[k][j][i]*MomY[k][j][i] +
                              MomZ[k][j][i]*MomZ[k][j][i] )  ) / Rho[k][j][i];
    Flag = Vel > Threshold;
    */
 
 
    /*
-// Example 2 : flag if the grid is within a sphere with the radius eqaul to the input "Threshold" and the origin 
+// Example 2 : flag if the grid is within a sphere with the radius eqaul to the input "Threshold" and the origin
 //             in the center of the simulation box
    const double Center[3] = { 0.5*amr->BoxSize[0], 0.5*amr->BoxSize[1], 0.5*amr->BoxSize[2] };
    const double dr[3]     = { Pos[0]-Center[0], Pos[1]-Center[1], Pos[2]-Center[2] };

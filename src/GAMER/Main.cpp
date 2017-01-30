@@ -68,12 +68,13 @@ OptLohnerForm_t   OPT__FLAG_LOHNER_FORM;
 // =======================================================================================================
 // (2-1) fluid solver in different models
 #if   ( MODEL == HYDRO )
-double            FlagTable_PresGradient[NLEVEL-1];
+double            FlagTable_PresGradient[NLEVEL-1], FlagTable_Vorticity[NLEVEL-1];
 double            GAMMA, MINMOD_COEFF, EP_COEFF, MOLECULAR_WEIGHT;
 LR_Limiter_t      OPT__LR_LIMITER;
 WAF_Limiter_t     OPT__WAF_LIMITER;
 OptRSolver_t      OPT__1ST_FLUX_CORR_SCHEME;
 bool              OPT__FLAG_PRES_GRADIENT, OPT__FLAG_LOHNER_ENGY, OPT__FLAG_LOHNER_PRES, OPT__FLAG_LOHNER_TEMP, OPT__1ST_FLUX_CORR;
+bool              OPT__FLAG_VORTICITY;
 int               OPT__CK_NEGATIVE;
 double            MIN_DENS, MIN_PRES;
 

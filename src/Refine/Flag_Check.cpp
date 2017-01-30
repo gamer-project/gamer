@@ -8,14 +8,14 @@ static bool Check_Gradient( const int i, const int j, const int k, const real In
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Flag_Check
-// Description :  Check if the targeted cell (i,j,k) satisfies the refinement criteria
+// Description :  Check if the target cell (i,j,k) satisfies the refinement criteria
 //
 // Note        :  Useless input arrays are set to NULL
 //                (e.g, Pot if GRAVITY is off, Pres if OPT__FLAG_PRES_GRADIENT is off)
 //
 // Parameter   :  lv             : Targeted refinement level
 //                PID            : Targeted patch ID
-//                i,j,k          : Indices of the targeted cell
+//                i,j,k          : Indices of the target cell
 //                Fluid          : Input fluid array (with NCOMP components)
 //                Pot            : Input potential array
 //                Pres           : Input pressure array
@@ -77,15 +77,24 @@ bool Flag_Check( const int lv, const int PID, const int i, const int j, const in
 
 // check pressure gradient
 // ===========================================================================================
-#  if   ( MODEL == HYDRO )
+#  if ( MODEL == HYDRO )
    if ( OPT__FLAG_PRES_GRADIENT )
    {
       Flag |= Check_Gradient( i, j, k, &Pres[0][0][0], FlagTable_PresGradient[lv] );
       if ( Flag )    return Flag;
    }
-#  elif ( MODEL == MHD )
-#  warning : WAIT MHD !!!
-#  endif // MODEL
+#  endif
+
+
+// check vorticity
+// ===========================================================================================
+#  if ( MODEL == HYDRO )
+   if ( OPT__FLAG_VORTICITY )
+   {
+      Flag |= Hydro_Flag_Vorticity( i, j, k, lv, PID, FlagTable_Vorticity[lv] );
+      if ( Flag )    return Flag;
+   }
+#  endif
 
 
 // check ELBDM energy density
@@ -136,9 +145,9 @@ bool Flag_Check( const int lv, const int PID, const int i, const int j, const in
 // Note        :  1. Size of the array "Input" should be PATCH_SIZE^3
 //                2. For cells adjacent to the patch boundary, only first-order approximation is adopted
 //                   to estimate gradient. Otherwise, second-order approximation is adopted.
-//                   --> Do NOT need to prepare the ghost-zone data for the targeted patch
+//                   --> Do NOT need to prepare the ghost-zone data for the target patch
 //
-// Parameter   :  i,j,k       : Indices of the targeted cell in the array "Input"
+// Parameter   :  i,j,k       : Indices of the target cell in the array "Input"
 //                Input       : Input array
 //                Threshold   : Threshold for the flag operation
 //
@@ -174,7 +183,7 @@ bool Check_Gradient( const int i, const int j, const int k, const real Input[], 
 
       Self     = Input[Idx];
       Gradient = _dh*( Input[Idx_p] - Input[Idx_m] );
-      Flag    |= (  fabs( Gradient/Self ) > Threshold  );
+      Flag    |= (  FABS( Gradient/Self ) > Threshold  );
 
       if ( Flag )    return Flag;
    } // for (int d=0; d<3; d++)

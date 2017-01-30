@@ -16,3 +16,5 @@ Note:
 
 5. This test problem overwrites the original "Hydro_Init_StartOver_AssignData.cpp" file
    to remove the OpenMP pragma since we do not create different seeds for different threads
+
+6. Use vorticity as the refinement criterion
