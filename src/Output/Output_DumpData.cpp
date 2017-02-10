@@ -45,7 +45,15 @@ void Output_DumpData( const int Stage )
          case OUTPUT_CONST_DT :
          {
             if ( OPT__INIT != INIT_RESTART )    DumpTime = Time[0];
-            else                                DumpTime = Time[0] + OUTPUT_DT;
+            else
+            {
+               DumpTime = ( int(Time[0]/OUTPUT_DT) + 1.0 )*OUTPUT_DT;
+
+//             be careful about round-off errors
+               if (   (  DumpTime <= Time[0]  )                                            ||
+                      (  Time[0] != 0.0 && fabs( (Time[0]-DumpTime)/Time[0] ) < 1.0e-8  )  ||
+                      (  Time[0] == 0.0 && fabs(  Time[0]-DumpTime          ) < 1.0e-12 )      )   DumpTime += OUTPUT_DT;
+            }
          }
          break;
 
