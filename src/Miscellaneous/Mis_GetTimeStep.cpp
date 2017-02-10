@@ -45,7 +45,7 @@ void Mis_GetTimeStep()
    int    MinDtLv_Fluid;
 
 #  if   ( MODEL == HYDRO )
-   real MinDtVar_Fluid[NCOMP];
+   real MinDtVar_Fluid[5]; // 5: Rho, Vx/y/z, Cs
    Hydro_GetTimeStep_Fluid( dt1, dTime1, MinDtLv_Fluid, MinDtVar_Fluid, dt_dTime );
 
 #  elif ( MODEL == MHD )

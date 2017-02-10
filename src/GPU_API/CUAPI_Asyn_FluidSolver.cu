@@ -77,7 +77,7 @@ __global__ void CUFLU_FluidSolver_CTU( const real g_Fluid_In[][5][ FLU_NXT*FLU_N
 #elif ( MODEL == ELBDM )
 __global__ void CUFLU_ELBDMSolver( real g_Fluid_In [][FLU_NIN ][ FLU_NXT*FLU_NXT*FLU_NXT ],
                                    real g_Fluid_Out[][FLU_NOUT][ PS2*PS2*PS2 ],
-                                   real g_Flux     [][9][NFLUX][ PS2*PS2 ],
+                                   real g_Flux     [][9][NFLUX_TOTAL][ PS2*PS2 ],
                                    const real dt, const real _dh, const real Eta, const bool StoreFlux,
                                    const real Taylor3_Coeff, const bool XYZ, const real MinDens );
 
@@ -89,7 +89,7 @@ __global__ void CUFLU_ELBDMSolver( real g_Fluid_In [][FLU_NIN ][ FLU_NXT*FLU_NXT
 // device pointers
 extern real (*d_Flu_Array_F_In )[FLU_NIN ][ FLU_NXT*FLU_NXT*FLU_NXT ];
 extern real (*d_Flu_Array_F_Out)[FLU_NOUT][ PS2*PS2*PS2 ];
-extern real (*d_Flux_Array)[9][NFLUX][ PS2*PS2 ];
+extern real (*d_Flux_Array)[9][NFLUX_TOTAL][ PS2*PS2 ];
 extern double (*d_Corner_Array_F)[3];
 extern real  *d_MinDtInfo_Fluid_Array;
 #if ( MODEL == HYDRO )
@@ -189,9 +189,9 @@ extern cudaStream_t *Stream;
 // Useless parameters in HYDRO : ELBDM_Eta
 // Useless parameters in ELBDM : h_Flux_Array, Gamma, LR_Limiter, MinMod_Coeff, EP_Coeff, WAF_Limite, MinPres
 //-------------------------------------------------------------------------------------------------------
-void CUAPI_Asyn_FluidSolver( real h_Flu_Array_In [][FLU_NIN ][ FLU_NXT*FLU_NXT*FLU_NXT ],
-                             real h_Flu_Array_Out[][FLU_NOUT][ PS2*PS2*PS2 ],
-                             real h_Flux_Array[][9][NFLUX   ][ PS2*PS2 ],
+void CUAPI_Asyn_FluidSolver( real h_Flu_Array_In [][FLU_NIN    ][ FLU_NXT*FLU_NXT*FLU_NXT ],
+                             real h_Flu_Array_Out[][FLU_NOUT   ][ PS2*PS2*PS2 ],
+                             real h_Flux_Array[][9][NFLUX_TOTAL][ PS2*PS2 ],
                              const double h_Corner_Array[][3],
                              real h_MinDtInfo_Array[],
                              real h_Pot_Array_USG[][USG_NXT_F][USG_NXT_F][USG_NXT_F],
@@ -291,7 +291,7 @@ void CUAPI_Asyn_FluidSolver( real h_Flu_Array_In [][FLU_NIN ][ FLU_NXT*FLU_NXT*F
    {
       Flu_MemSize_In [s] = sizeof(real  )*NPatch_per_Stream[s]*FLU_NIN *CUBE(FLU_NXT);
       Flu_MemSize_Out[s] = sizeof(real  )*NPatch_per_Stream[s]*FLU_NOUT*CUBE(PS2);
-      Flux_MemSize   [s] = sizeof(real  )*NPatch_per_Stream[s]*NFLUX*9*PS2*PS2;
+      Flux_MemSize   [s] = sizeof(real  )*NPatch_per_Stream[s]*NFLUX_TOTAL*9*PS2*PS2;
 #     ifdef UNSPLIT_GRAVITY
       USG_MemSize    [s] = sizeof(real  )*NPatch_per_Stream[s]*CUBE(USG_NXT_F);
       Corner_MemSize [s] = sizeof(double)*NPatch_per_Stream[s]*3;

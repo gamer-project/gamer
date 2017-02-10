@@ -36,7 +36,7 @@
 //                                  In addition, the flux variables (e.g., _FLUX_DENS) are also supported
 //                              Restrictions :
 //                              --> a. DATA_XXX works with all components in (_FLU | _POTE | _PASSIVE)
-//                                  b. COARSE_FINE_FLUX works with all components in (_FLUX | _FLUX_PASSIVE)
+//                                  b. COARSE_FINE_FLUX works with all components in (_FLUX_TOTAL)
 //                                  c. _POTE has no effect on the flux fix-up in DATA_AFTER_FIXUP
 //                                  d. POT_FOR_POISSON and POT_AFTER_REFINE only work with _POTE
 //                ParaBuf     : Number of ghost zones to exchange (useless in DATA_RESTRICT and COARSE_FINE_FLUX )
@@ -101,8 +101,8 @@ void Buf_GetBufferData( const int lv, const int FluSg, const int PotSg, const Ge
                  "ParaBuf", ParaBuf );
 #  endif // #ifdef GRAVITY ... else ...
 
-   if (  GetBufMode == COARSE_FINE_FLUX  &&  !( TVar & (_FLUX|_FLUX_PASSIVE) )  )
-      Aux_Error( ERROR_INFO, "no suitable targeted variable is found --> missing (_FLUX|_FLUX_PASSIVE) !!\n" );
+   if (  GetBufMode == COARSE_FINE_FLUX  &&  !( TVar & _FLUX_TOTAL )  )
+      Aux_Error( ERROR_INFO, "no suitable targeted variable is found --> missing (_FLUX_TOTAL) !!\n" );
 
    if ( GetBufMode == COARSE_FINE_FLUX  &&  !amr->WithFlux )
    {
@@ -111,13 +111,14 @@ void Buf_GetBufferData( const int lv, const int FluSg, const int PotSg, const Ge
    }
 
 
-// determine the components to be prepared (TFluVarIdx : targeted fluid variable indices ( = [0 ... NCOMP/NFLUX+NPASSIVE-1] )
-   bool ExchangeFlu    = TVar & ( _FLU | _PASSIVE );  // whether or not to exchage the fluid and passive data 
+// determine the components to be prepared (TFluVarIdx : targeted fluid variable indices ( = [0 ... NCOMP_TOTAL-1/NFLUX_TOTAL-1] )
+   bool ExchangeFlu = ( GetBufMode == COARSE_FINE_FLUX ) ?
+                      TVar & _FLUX_TOTAL : TVar & _TOTAL;   // whether or not to exchage the fluid data 
 #  ifdef GRAVITY
-   bool ExchangePot    = TVar & _POTE;                // whether or not to exchange the potential data
+   bool ExchangePot = TVar & _POTE;                         // whether or not to exchange the potential data
 #  endif
 
-   const int NMax = ( GetBufMode == COARSE_FINE_FLUX ) ? NFLUX+NPASSIVE : NCOMP+NPASSIVE;
+   const int NMax = ( GetBufMode == COARSE_FINE_FLUX ) ? NFLUX_TOTAL : NCOMP_TOTAL;
    int NVar_Flu, NVar_Tot, TFluVarIdx, TFluVarIdxList[NMax];
    NVar_Flu = 0;
    

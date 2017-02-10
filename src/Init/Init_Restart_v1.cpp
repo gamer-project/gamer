@@ -232,7 +232,7 @@ void Init_Restart_v1( const char FileName[] )
 
 // verify the size of the RESTART file
    long InfoSize, DataSize[NLv_Restart], ExpectSize, InputSize, PatchDataSize;
-   int NVar;   // number of variables ( NCOMP or NCOMP+1 -> potential )
+   int NVar;   // number of variables ( NCOMP_TOTAL or NCOMP_TOTAL+1 -> potential )
 
    if ( FormatVersion >= 1210 )
    InfoSize =     sizeof(int   )*( 1 + 2*NLv_Restart )
@@ -249,9 +249,9 @@ void Init_Restart_v1( const char FileName[] )
                 + NBuf_Info;
 
 #  ifdef GRAVITY
-   NVar = ( LoadPot ) ? NCOMP+1 : NCOMP;
+   NVar = ( LoadPot ) ? NCOMP_TOTAL+1 : NCOMP_TOTAL;
 #  else
-   NVar = NCOMP;
+   NVar = NCOMP_TOTAL;
 #  endif
 
    PatchDataSize = PATCH_SIZE*PATCH_SIZE*PATCH_SIZE*NVar*sizeof(real);
@@ -284,8 +284,8 @@ void Init_Restart_v1( const char FileName[] )
    int LoadCorner[3], LoadSon;
 
 // array for re-ordering the fluid data from "xyzv" to "vxyz"
-   real (*InvData_Flu)[PATCH_SIZE][PATCH_SIZE][NCOMP] = NULL;
-   if ( DataOrder_xyzv )   InvData_Flu = new real [PATCH_SIZE][PATCH_SIZE][PATCH_SIZE][NCOMP];
+   real (*InvData_Flu)[PATCH_SIZE][PATCH_SIZE][NCOMP_TOTAL] = NULL;
+   if ( DataOrder_xyzv )   InvData_Flu = new real [PATCH_SIZE][PATCH_SIZE][PATCH_SIZE][NCOMP_TOTAL];
 
 
 // d0. set the load-balance cut points
@@ -389,9 +389,9 @@ void Init_Restart_v1( const char FileName[] )
 //                   d3-1. load the fluid variables
                      if ( DataOrder_xyzv )
                      {
-                        fread( InvData_Flu, sizeof(real), PATCH_SIZE*PATCH_SIZE*PATCH_SIZE*NCOMP, File );
+                        fread( InvData_Flu, sizeof(real), PATCH_SIZE*PATCH_SIZE*PATCH_SIZE*NCOMP_TOTAL, File );
 
-                        for (int v=0; v<NCOMP; v++)
+                        for (int v=0; v<NCOMP_TOTAL; v++)
                         for (int k=0; k<PATCH_SIZE; k++)
                         for (int j=0; j<PATCH_SIZE; j++)
                         for (int i=0; i<PATCH_SIZE; i++)
@@ -400,7 +400,7 @@ void Init_Restart_v1( const char FileName[] )
 
                      else
                         fread( amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid, sizeof(real),
-                               PATCH_SIZE*PATCH_SIZE*PATCH_SIZE*NCOMP, File );
+                               PATCH_SIZE*PATCH_SIZE*PATCH_SIZE*NCOMP_TOTAL, File );
 
 #                    ifdef GRAVITY
 //                   d3-2. abandon the gravitational potential
@@ -547,9 +547,9 @@ void Load_Parameter_Before_1200( FILE *File, const int FormatVersion, int &NLv_R
 
 // b. load the symbolic constants defined in the Makefile
 // =================================================================================================
-   int ncomp, patch_size, max_patch, nlevel, flu_ghost_size, pot_ghost_size, gra_ghost_size;
+   int ncomp_total, patch_size, max_patch, nlevel, flu_ghost_size, pot_ghost_size, gra_ghost_size;
 
-   fread( &ncomp,                      sizeof(int),                     1,             File );
+   fread( &ncomp_total,                sizeof(int),                     1,             File );
    fread( &patch_size,                 sizeof(int),                     1,             File );
    fread( &max_patch,                  sizeof(int),                     1,             File );
    fread( &nlevel,                     sizeof(int),                     1,             File );
@@ -646,8 +646,8 @@ void Load_Parameter_Before_1200( FILE *File, const int FormatVersion, int &NLv_R
          Aux_Error( ERROR_INFO, "the loaded RESTART file is simulated using double precision !!\n" );
 #     endif
 
-      if ( ncomp != NCOMP )
-         Aux_Error( ERROR_INFO, "%s : RESTART file (%d) != runtime (%d) !!\n", "NCOMP", ncomp, NCOMP );
+      if ( ncomp_total != NCOMP_TOTAL )
+         Aux_Error( ERROR_INFO, "%s : RESTART file (%d) != runtime (%d) !!\n", "NCOMP_TOTAL", ncomp_total, NCOMP_TOTAL );
 
       if ( patch_size != PATCH_SIZE )
          Aux_Error( ERROR_INFO, "%s : RESTART file (%d) != runtime (%d) !!\n", "PATCH_SIZE", patch_size, PS1 );
@@ -869,11 +869,11 @@ void Load_Parameter_After_1200( FILE *File, const int FormatVersion, int &NLv_Re
 // =================================================================================================
    bool enforce_positive, char_reconstruction, hll_no_ref_state, hll_include_all_waves, waf_dissipate;
    bool use_psolver_10to14;
-   int  ncomp, patch_size, flu_ghost_size, pot_ghost_size, gra_ghost_size, check_intermediate;
+   int  ncomp_total, patch_size, flu_ghost_size, pot_ghost_size, gra_ghost_size, check_intermediate;
    int  flu_block_size_x, flu_block_size_y, pot_block_size_x, pot_block_size_z, gra_block_size_z;
    real min_pres, max_error;
 
-   fread( &ncomp,                      sizeof(int),                     1,             File );
+   fread( &ncomp_total,                sizeof(int),                     1,             File );
    fread( &patch_size,                 sizeof(int),                     1,             File );
    fread( &min_pres,                   sizeof(real),                    1,             File );
    fread( &flu_ghost_size,             sizeof(int),                     1,             File );
@@ -1171,7 +1171,7 @@ void Load_Parameter_After_1200( FILE *File, const int FormatVersion, int &NLv_Re
 
 //    d-2. check the symbolic constants defined in "Macro.h, CUPOT.h, and CUFLU.h"
 //    ========================================================================
-      CompareVar( "NCOMP",                   ncomp,                  NCOMP,                        Fatal );
+      CompareVar( "NCOMP_TOTAL",             ncomp_total,            NCOMP_TOTAL,                  Fatal );
       CompareVar( "PATCH_SIZE",              patch_size,             PATCH_SIZE,                   Fatal );
 
       CompareVar( "FLU_GHOST_SIZE",          flu_ghost_size,         FLU_GHOST_SIZE,            NonFatal );

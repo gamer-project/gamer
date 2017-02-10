@@ -55,9 +55,9 @@ void CPU_FluidSolver_CTU( const real Flu_Array_In[][5][ FLU_NXT*FLU_NXT*FLU_NXT 
 #warning : WAIT MHD !!!
 
 #elif ( MODEL == ELBDM )
-void CPU_ELBDMSolver( real Flu_Array_In [][FLU_NIN ][ FLU_NXT*FLU_NXT*FLU_NXT ],
-                      real Flu_Array_Out[][FLU_NOUT][ PS2*PS2*PS2 ],
-                      real Flux_Array[][9][NFLUX][ PS2*PS2 ],
+void CPU_ELBDMSolver( real Flu_Array_In [][FLU_NIN    ][ FLU_NXT*FLU_NXT*FLU_NXT ],
+                      real Flu_Array_Out[][FLU_NOUT   ][ PS2*PS2*PS2 ],
+                      real Flux_Array[][9][NFLUX_TOTAL][ PS2*PS2 ],
                       const int NPatchGroup, const real dt, const real dh, const real Eta, const bool StoreFlux,
                       const real Taylor3_Coeff, const bool XYZ, const real MinDens );
 
@@ -118,9 +118,9 @@ void CPU_ELBDMSolver( real Flu_Array_In [][FLU_NIN ][ FLU_NXT*FLU_NXT*FLU_NXT ],
 // Useless parameters in HYDRO : ELBDM_Eta, ELBDM_Taylor3_Coeff, ELBDM_Taylor3_Auto
 // Useless parameters in ELBDM : Gamma, LR_Limiter, MinMod_Coeff, EP_Coeff, WAF_Limiter, MinPres
 //-------------------------------------------------------------------------------------------------------
-void CPU_FluidSolver( real h_Flu_Array_In [][FLU_NIN ][ FLU_NXT*FLU_NXT*FLU_NXT ],
-                      real h_Flu_Array_Out[][FLU_NOUT][ PS2*PS2*PS2 ],
-                      real h_Flux_Array[][9][NFLUX   ][ PS2*PS2 ],
+void CPU_FluidSolver( real h_Flu_Array_In [][FLU_NIN    ][ FLU_NXT*FLU_NXT*FLU_NXT ],
+                      real h_Flu_Array_Out[][FLU_NOUT   ][ PS2*PS2*PS2 ],
+                      real h_Flux_Array[][9][NFLUX_TOTAL][ PS2*PS2 ],
                       const double h_Corner_Array[][3],
                       real h_MinDtInfo_Array[],
                       const real h_Pot_Array_USG[][USG_NXT_F][USG_NXT_F][USG_NXT_F],

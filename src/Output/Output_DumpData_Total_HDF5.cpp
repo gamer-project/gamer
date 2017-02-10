@@ -659,7 +659,7 @@ void Output_DumpData_Total_HDF5( const char *FileName )
    real (*FieldData)[PS1][PS1][PS1] = NULL;
 
 // 5-0. determine variable indices
-   NGridVar = NCOMP;
+   NGridVar = NCOMP_TOTAL;
 
 #  ifdef GRAVITY
    int  PotDumpIdx = -1;
@@ -1427,7 +1427,6 @@ void FillIn_Makefile( Makefile_t &Makefile )
 #  ifdef RSOLVER
    Makefile.RSolver            = RSOLVER;
 #  endif
-   Makefile.NPassive           = NPASSIVE;
 
 #  elif ( MODEL == MHD )
 #  warning : WAIT MHD !!!
@@ -1481,7 +1480,8 @@ void FillIn_SymConst( SymConst_t &SymConst )
 {
 
 // model-independent variables
-   SymConst.NComp                = NCOMP;
+   SymConst.NCompTotal           = NCOMP_TOTAL;
+   SymConst.NCompPassive         = NCOMP_PASSIVE;
    SymConst.PatchSize            = PATCH_SIZE;
    SymConst.Flu_NIn              = FLU_NIN;
    SymConst.Flu_NOut             = FLU_NOUT;
@@ -2054,7 +2054,6 @@ void GetCompound_Makefile( hid_t &H5_TypeID )
 #  ifdef RSOLVER
    H5Tinsert( H5_TypeID, "RSolver",            HOFFSET(Makefile_t,RSolver           ), H5T_NATIVE_INT );
 #  endif
-   H5Tinsert( H5_TypeID, "NPassive",           HOFFSET(Makefile_t,NPassive          ), H5T_NATIVE_INT );
 
 #  elif ( MODEL == MHD )
 #  warning : WAIT MHD !!!
@@ -2092,7 +2091,8 @@ void GetCompound_SymConst( hid_t &H5_TypeID )
 
    H5_TypeID = H5Tcreate( H5T_COMPOUND, sizeof(SymConst_t) );
 
-   H5Tinsert( H5_TypeID, "NComp",                HOFFSET(SymConst_t,NComp               ), H5T_NATIVE_INT    );
+   H5Tinsert( H5_TypeID, "NCompTotal",           HOFFSET(SymConst_t,NCompTotal          ), H5T_NATIVE_INT    );
+   H5Tinsert( H5_TypeID, "NCompPassive",         HOFFSET(SymConst_t,NCompPassive        ), H5T_NATIVE_INT    );
    H5Tinsert( H5_TypeID, "PatchSize",            HOFFSET(SymConst_t,PatchSize           ), H5T_NATIVE_INT    );
    H5Tinsert( H5_TypeID, "Flu_NIn",              HOFFSET(SymConst_t,Flu_NIn             ), H5T_NATIVE_INT    );
    H5Tinsert( H5_TypeID, "Flu_NOut",             HOFFSET(SymConst_t,Flu_NOut            ), H5T_NATIVE_INT    );

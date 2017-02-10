@@ -63,7 +63,7 @@ void Flu_ResetByUser( const int lv, const int FluSg, const double TTime )
 
    const double dh = amr->dh[lv];
 
-   real   fluid[NCOMP];
+   real   fluid[NCOMP_TOTAL];
    double x, y, z, x0, y0, z0;
 
 
@@ -78,11 +78,11 @@ void Flu_ResetByUser( const int lv, const int FluSg, const double TTime )
       for (int j=0; j<PS1; j++)  {  y = y0 + j*dh;
       for (int i=0; i<PS1; i++)  {  x = x0 + i*dh;
 
-         for (int v=0; v<NCOMP; v++)   fluid[v] = amr->patch[FluSg][lv][PID]->fluid[v][k][j][i];
+         for (int v=0; v<NCOMP_TOTAL; v++)   fluid[v] = amr->patch[FluSg][lv][PID]->fluid[v][k][j][i];
 
          Flu_ResetByUser_Func( fluid, x, y, z, TTime );
 
-         for (int v=0; v<NCOMP; v++)   amr->patch[FluSg][lv][PID]->fluid[v][k][j][i] = fluid[v];
+         for (int v=0; v<NCOMP_TOTAL; v++)   amr->patch[FluSg][lv][PID]->fluid[v][k][j][i] = fluid[v];
 
       }}}
    }

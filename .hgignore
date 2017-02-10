@@ -3,6 +3,5 @@ syntax: glob
 
 *.o
 
-./src/err
 ./bin/Run/Input__Flag*
 gamer

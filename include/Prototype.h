@@ -61,9 +61,9 @@ void Buf_SortBoundaryPatch( const int NPatch, int *IDList, int *PosList );
 
 
 // Hydrodynamics
-void CPU_FluidSolver( real h_Flu_Array_In [][FLU_NIN ][ FLU_NXT*FLU_NXT*FLU_NXT ],
-                      real h_Flu_Array_Out[][FLU_NOUT][ PS2*PS2*PS2 ],
-                      real h_Flux_Array[][9][NFLUX   ][ PS2*PS2 ],
+void CPU_FluidSolver( real h_Flu_Array_In [][FLU_NIN    ][ FLU_NXT*FLU_NXT*FLU_NXT ],
+                      real h_Flu_Array_Out[][FLU_NOUT   ][ PS2*PS2*PS2 ],
+                      real h_Flux_Array[][9][NFLUX_TOTAL][ PS2*PS2 ],
                       const double h_Corner_Array[][3],
                       real h_MinDtInfo_Array[],
                       const real h_Pot_Array_USG[][USG_NXT_F][USG_NXT_F][USG_NXT_F],
@@ -81,7 +81,7 @@ real CPU_CheckMinPresInEngy( const real Dens, const real MomX, const real MomY, 
 void Flu_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, const double dt, const int SaveSg,
                     const bool OverlapMPI, const bool Overlap_Sync );
 void Flu_AllocateFluxArray( const int lv );
-void Flu_Close( const int lv, const int SaveSg, const real h_Flux_Array[][9][NFLUX][4*PATCH_SIZE*PATCH_SIZE],
+void Flu_Close( const int lv, const int SaveSg, const real h_Flux_Array[][9][NFLUX_TOTAL][4*PATCH_SIZE*PATCH_SIZE],
                 real h_Flu_Array_F_Out[][FLU_NOUT][8*PATCH_SIZE*PATCH_SIZE*PATCH_SIZE],
                 const real h_MinDtInfo_Array[], const int NPG, const int *PID0_List, const bool GetMinDtInfo,
                 const real h_Flu_Array_F_In[][FLU_NIN][FLU_NXT*FLU_NXT*FLU_NXT], const double dt );
@@ -348,7 +348,7 @@ int  LB_Index2Rank( const int lv, const long LB_Idx, const Check_t Check );
 void Hydro_Aux_Check_Negative( const int lv, const int Mode, const char *comment );
 void Hydro_GetTimeStep_Fluid( double &dt, double &dTime, int &MinDtLv, real MinDtVar[], const double dt_dTime );
 void Hydro_GetTimeStep_Gravity( double &dt, double &dTime, int &MinDtLv, real &MinDtVar, const double dt_dTime );
-void Hydro_GetMaxCFL( real MaxCFL[], real MinDtVar_AllLv[][NCOMP] );
+void Hydro_GetMaxCFL( real MaxCFL[], real MinDtVar_AllLv[][5] );
 void Hydro_GetMaxAcc( real MaxAcc[] );
 void Hydro_Init_StartOver_AssignData( const int lv );
 void Hydro_Init_UM_AssignData( const int lv, real *UM_Data, const int NVar );
@@ -389,9 +389,9 @@ real ELBDM_SetTaylor3Coeff( const real dt, const real dh, const real Eta );
 
 // GPU API
 #ifdef GPU
-void CUAPI_Asyn_FluidSolver( real h_Flu_Array_In [][FLU_NIN ][ FLU_NXT*FLU_NXT*FLU_NXT ],
-                             real h_Flu_Array_Out[][FLU_NOUT][ PS2*PS2*PS2 ],
-                             real h_Flux_Array[][9][NFLUX   ][ PS2*PS2 ],
+void CUAPI_Asyn_FluidSolver( real h_Flu_Array_In [][FLU_NIN    ][ FLU_NXT*FLU_NXT*FLU_NXT ],
+                             real h_Flu_Array_Out[][FLU_NOUT   ][ PS2*PS2*PS2 ],
+                             real h_Flux_Array[][9][NFLUX_TOTAL][ PS2*PS2 ],
                              const double h_Corner_Array[][3],
                              real h_MinDtInfo_Array[],
                              real h_Pot_Array_USG[][USG_NXT_F][USG_NXT_F][USG_NXT_F],

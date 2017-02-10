@@ -155,8 +155,8 @@ void Aux_Check_Parameter()
       Aux_Error( ERROR_INFO, "incorrect option \"OPT__UM_START_LEVEL = %d\" [0 ... NLEVEL-1] !!\n",
                  OPT__UM_START_LEVEL );
 
-   if (  OPT__INIT == INIT_UM  &&  ( OPT__UM_START_NVAR < 1 || OPT__UM_START_NVAR > NCOMP )  )
-      Aux_Error( ERROR_INFO, "incorrect option \"OPT__UM_START_NVAR = %d\" [1 ... NCOMP] !!\n",
+   if (  OPT__INIT == INIT_UM  &&  ( OPT__UM_START_NVAR < 1 || OPT__UM_START_NVAR > NCOMP_TOTAL )  )
+      Aux_Error( ERROR_INFO, "incorrect option \"OPT__UM_START_NVAR = %d\" [1 ... NCOMP_TOTAL] !!\n",
                  OPT__UM_START_NVAR );
 
    if ( OPT__INIT == INIT_UM  &&  OPT__UM_START_NVAR != 1  &&  OPT__UM_FACTOR_5OVER3 )
@@ -569,8 +569,8 @@ void Aux_Check_Parameter()
 
 // errors
 // ------------------------------
-#  if ( NCOMP != 5 )
-#     error : ERROR : NCOMP != 5 in HYDRO !!
+#  if ( NCOMP_FLUID != 5 )
+#     error : ERROR : NCOMP_FLUID != 5 in HYDRO !!
 #  endif
 
 #  if ( FLU_SCHEME != RTVD  &&  FLU_SCHEME != MHM  &&  FLU_SCHEME != MHM_RP  &&  FLU_SCHEME != CTU  &&  \
@@ -590,19 +590,13 @@ void Aux_Check_Parameter()
 #     error : ERROR : unsupported Riemann solver (EXACT/ROE/HLLE/HLLC) !!
 #  endif
 
-#  if ( NPASSIVE < 0 )
-#     error : ERROR : incorrect number of NPASSIVE !!
+#  if ( NCOMP_PASSIVE < 0 )
+#     error : ERROR : incorrect number of NCOMP_PASSIVE !!
 #  endif
 
 #  if ( defined CHECK_INTERMEDIATE  &&  CHECK_INTERMEDIATE != EXACT  &&  CHECK_INTERMEDIATE != HLLE  &&  \
         CHECK_INTERMEDIATE != HLLC )
 #     error : ERROR : unsupported option in CHECK_INTERMEDIATE (EXACT/HLLE/HLLC) !!
-#  endif
-
-#  if ( NPASSIVE < 0 )
-   for (int f=0; f<6; f++)
-   if ( OPT__BC_FLU[f] != BC_FLU_PERIODIC )
-      Aux_Error( ERROR_INFO, "currently the passively advected scalars can only work with the periodic BC !!\n" );
 #  endif
 
    if ( OPT__CK_NEGATIVE < 0  ||  OPT__CK_NEGATIVE > 3 )
@@ -837,8 +831,8 @@ void Aux_Check_Parameter()
 
 // errors
 // ------------------------------
-#  if ( NCOMP != 3 )
-#     error : ERROR : NCOMP != 3 in ELBDM !!
+#  if ( NCOMP_FLUID != 3 )
+#     error : ERROR : NCOMP_FLUID != 3 in ELBDM !!
 #  endif
 
 #  if ( FLU_NIN != 2 )
@@ -847,6 +841,10 @@ void Aux_Check_Parameter()
 
 #  if ( FLU_NOUT != 3 )
 #     error : ERROR : FLU_NOUT != 3 in ELBDM !!
+#  endif
+
+#  if ( NCOMP_PASSIVE <= 0 )
+#     error : ERROR : NCOMP_PASSIVE <= 0 in ELBDM (currently this model does not support passive scalar) !!
 #  endif
 
 #  ifdef QUARTIC_SELF_INTERACTION

@@ -114,7 +114,6 @@ struct Makefile_t
 #  ifdef RSOLVER
    int RSolver;
 #  endif
-   int NPassive;
 
 #  elif ( MODEL == MHD )
 #  warning : WAIT MHD !!!
@@ -146,7 +145,8 @@ struct Makefile_t
 struct SymConst_t
 {
 
-   int    NComp;
+   int    NCompTotal;
+   int    NCompPassive;
    int    PatchSize;
    int    Flu_NIn;
    int    Flu_NOut;

@@ -128,7 +128,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
 // --> to be more cautious, we apply these checks even when GAMER_DEBUG is off
 //#  ifdef GAMER_DEBUG
 
-   int AllVar = ( _FLU | _PASSIVE | _DERIVED );
+   int AllVar = ( _TOTAL | _DERIVED );
 #  ifdef GRAVITY
    AllVar |= _POTE;
 #  endif
@@ -282,8 +282,8 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
 #  endif // #ifdef PARTICLE
 
 
-// TFluVarIdxList : List recording the targeted fluid (and passive) variable indices ( = [0 ... NCOMP+NPASSIVE-1] )
-   int NTSib[26], *TSib[26], NVar_Flu, NVar_Der, NVar_Tot, TFluVarIdxList[NCOMP+NPASSIVE];
+// TFluVarIdxList : List recording the targeted fluid and passive variable indices ( = [0 ... NCOMP_TOTAL-1] )
+   int NTSib[26], *TSib[26], NVar_Flu, NVar_Der, NVar_Tot, TFluVarIdxList[NCOMP_TOTAL];
 
 // set up the targeted sibling indices for the function "InterpolateGhostZone"
    SetTargetSibling( NTSib, TSib );
@@ -292,7 +292,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
 // --> assuming that _VAR_NAME = 1<<VAR_NAME (e.g., _DENS == 1<<DENS)
 // --> it also determines the order of variables stored in h_Input_Array (which is the same as patch->fluid[])
    NVar_Flu = 0;
-   for (int v=0; v<NCOMP+NPASSIVE; v++)
+   for (int v=0; v<NCOMP_TOTAL; v++)
       if ( TVar & (1<<v) )    TFluVarIdxList[ NVar_Flu++ ] = v;
 
    NVar_Der = 0;
@@ -608,9 +608,9 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
    {
 //    thread-private variables
       int    J, K, I2, J2, K2, Idx1, Idx2, PID0, TFluVarIdx, BC_Sibling, BC_Idx_Start[3], BC_Idx_End[3];
-      double xyz0[3];   // corner coordinates for the user-specified B.C.
+      double xyz0[3];            // corner coordinates for the user-specified B.C.
 #     if ( MODEL == HYDRO  ||  MODEL == MHD )
-      real Fluid[NCOMP];
+      real Fluid[NCOMP_FLUID];   // for calculating pressure and temperature only --> don't need NCOMP_TOTAL
 #     endif
 
 //    Array: array to store the prepared data of one patch group (including the ghost-zone data)
@@ -834,14 +834,14 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
                                                       Idx1 = IDX321( Disp_i, J, K, PGSize1D, PGSize1D );
                for (int i=0; i<PATCH_SIZE; i++)    {
 
-                  for (int v=0; v<NCOMP; v++)   Fluid[v] = amr->patch[FluSg][lv][PID]->fluid[v][k][j][i];
+                  for (int v=0; v<NCOMP_FLUID; v++)   Fluid[v] = amr->patch[FluSg][lv][PID]->fluid[v][k][j][i];
 
                   Array_Ptr[Idx1] = CPU_GetPressure( Fluid[DENS], Fluid[MOMX], Fluid[MOMY], Fluid[MOMZ], Fluid[ENGY],
                                                      Gamma_m1, CheckMinPres_No, NULL_REAL );
 
                   if ( FluIntTime ) // temporal interpolation
                   {
-                     for (int v=0; v<NCOMP; v++)   Fluid[v] = amr->patch[FluSg_IntT][lv][PID]->fluid[v][k][j][i];
+                     for (int v=0; v<NCOMP_FLUID; v++)   Fluid[v] = amr->patch[FluSg_IntT][lv][PID]->fluid[v][k][j][i];
 
                      Array_Ptr[Idx1] =   FluWeighting     *Array_Ptr[Idx1]
                                        + FluWeighting_IntT*CPU_GetPressure( Fluid[DENS], Fluid[MOMX], Fluid[MOMY],
@@ -862,14 +862,14 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
                                                       Idx1 = IDX321( Disp_i, J, K, PGSize1D, PGSize1D );
                for (int i=0; i<PATCH_SIZE; i++)    {
 
-                  for (int v=0; v<NCOMP; v++)   Fluid[v] = amr->patch[FluSg][lv][PID]->fluid[v][k][j][i];
+                  for (int v=0; v<NCOMP_FLUID; v++)   Fluid[v] = amr->patch[FluSg][lv][PID]->fluid[v][k][j][i];
 
                   Array_Ptr[Idx1] = CPU_GetTemperature( Fluid[DENS], Fluid[MOMX], Fluid[MOMY], Fluid[MOMZ], Fluid[ENGY],
                                                         Gamma_m1, (MinPres>=0.0), MinPres );
 
                   if ( FluIntTime ) // temporal interpolation
                   {
-                     for (int v=0; v<NCOMP; v++)   Fluid[v] = amr->patch[FluSg_IntT][lv][PID]->fluid[v][k][j][i];
+                     for (int v=0; v<NCOMP_FLUID; v++)   Fluid[v] = amr->patch[FluSg_IntT][lv][PID]->fluid[v][k][j][i];
 
                      Array_Ptr[Idx1] =   FluWeighting     *Array_Ptr[Idx1]
                                        + FluWeighting_IntT*CPU_GetTemperature( Fluid[DENS], Fluid[MOMX], Fluid[MOMY],
@@ -1038,14 +1038,14 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
                                                       Idx1 = IDX321( Disp_i, J, K, PGSize1D, PGSize1D );
                      for (I2=Disp_i2; I2<Disp_i2+Loop_i; I2++) {
 
-                        for (int v=0; v<NCOMP; v++)   Fluid[v] = amr->patch[FluSg][lv][SibPID]->fluid[v][K2][J2][I2];
+                        for (int v=0; v<NCOMP_FLUID; v++)   Fluid[v] = amr->patch[FluSg][lv][SibPID]->fluid[v][K2][J2][I2];
 
                         Array_Ptr[Idx1] = CPU_GetPressure( Fluid[DENS], Fluid[MOMX], Fluid[MOMY], Fluid[MOMZ], Fluid[ENGY],
                                                            Gamma_m1, CheckMinPres_No, NULL_REAL );
 
                         if ( FluIntTime ) // temporal interpolation
                         {
-                           for (int v=0; v<NCOMP; v++)   Fluid[v] = amr->patch[FluSg_IntT][lv][SibPID]->fluid[v][K2][J2][I2];
+                           for (int v=0; v<NCOMP_FLUID; v++)   Fluid[v] = amr->patch[FluSg_IntT][lv][SibPID]->fluid[v][K2][J2][I2];
 
                            Array_Ptr[Idx1] =   FluWeighting     *Array_Ptr[Idx1]
                                              + FluWeighting_IntT*CPU_GetPressure( Fluid[DENS], Fluid[MOMX], Fluid[MOMY],
@@ -1066,14 +1066,14 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
                                                       Idx1 = IDX321( Disp_i, J, K, PGSize1D, PGSize1D );
                      for (I2=Disp_i2; I2<Disp_i2+Loop_i; I2++) {
 
-                        for (int v=0; v<NCOMP; v++)   Fluid[v] = amr->patch[FluSg][lv][SibPID]->fluid[v][K2][J2][I2];
+                        for (int v=0; v<NCOMP_FLUID; v++)   Fluid[v] = amr->patch[FluSg][lv][SibPID]->fluid[v][K2][J2][I2];
 
                         Array_Ptr[Idx1] = CPU_GetTemperature( Fluid[DENS], Fluid[MOMX], Fluid[MOMY], Fluid[MOMZ], Fluid[ENGY],
                                                               Gamma_m1, (MinPres>=0.0), MinPres );
 
                         if ( FluIntTime ) // temporal interpolation
                         {
-                           for (int v=0; v<NCOMP; v++)   Fluid[v] = amr->patch[FluSg_IntT][lv][SibPID]->fluid[v][K2][J2][I2];
+                           for (int v=0; v<NCOMP_FLUID; v++)   Fluid[v] = amr->patch[FluSg_IntT][lv][SibPID]->fluid[v][K2][J2][I2];
 
                            Array_Ptr[Idx1] =   FluWeighting     *Array_Ptr[Idx1]
                                              + FluWeighting_IntT*CPU_GetTemperature( Fluid[DENS], Fluid[MOMX], Fluid[MOMY],
@@ -1199,7 +1199,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
                }
 
 //             (b3-1) fluid B.C.
-               if ( TVar & (_FLU|_PASSIVE|_DERIVED) )
+               if ( TVar & (_TOTAL|_DERIVED) )
                {
                   BC_Sibling = SIB_OFFSET_NONPERIODIC - SibPID0;
 

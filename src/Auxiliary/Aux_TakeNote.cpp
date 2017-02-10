@@ -148,8 +148,6 @@ void Aux_TakeNote()
       fprintf( Note, "RSOLVER                   UNKNOWN\n" );
 #     endif
 
-      fprintf( Note, "NPASSIVE                  %d\n", NPASSIVE );
-
 //    c. options in MHD
 #     elif ( MODEL == MHD )
 #     warning : WAIT MHD !!!
@@ -398,10 +396,12 @@ void Aux_TakeNote()
 //    record the symbolic constants
       fprintf( Note, "Symbolic Constants\n" );
       fprintf( Note, "***********************************************************************************\n" );
-      fprintf( Note, "#define NCOMP             %d\n",      NCOMP                   );
+      fprintf( Note, "#define NCOMP_FLUID       %d\n",      NCOMP_FLUID             );
+      fprintf( Note, "#define NCOMP_PASSIVE     %d\n",      NCOMP_PASSIVE           );
       fprintf( Note, "#define FLU_NIN           %d\n",      FLU_NIN                 );
       fprintf( Note, "#define FLU_NOUT          %d\n",      FLU_NOUT                );
-      fprintf( Note, "#define NFLUX             %d\n",      NFLUX                   );
+      fprintf( Note, "#define NFLUX_FLUID       %d\n",      NFLUX_FLUID             );
+      fprintf( Note, "#define NFLUX_PASSIVE     %d\n",      NFLUX_PASSIVE           );
 #     ifdef GRAVITY
       fprintf( Note, "#define GRA_NIN           %d\n",      GRA_NIN                 );
 #     endif

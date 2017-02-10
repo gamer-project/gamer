@@ -225,10 +225,10 @@ void Init_GAMER( int *argc, char ***argv )
 
 
 // initialize the array "MinDtInfo_Fluid" since the kernel "CUFLU_GetMaxCFL" will NOT work during initialization
-   real MinDtVar_AllLv_Fluid[NLEVEL][NCOMP];
    if ( OPT__ADAPTIVE_DT )
    {
 #     if   ( MODEL == HYDRO )
+      real MinDtVar_AllLv_Fluid[NLEVEL][5];
       Hydro_GetMaxCFL( MinDtInfo_Fluid, MinDtVar_AllLv_Fluid );
 
 #     elif ( MODEL == MHD )

@@ -497,10 +497,10 @@ void Init_Restart_HDF5( const char *FileName )
    int  TRange_Min[3], TRange_Max[3];
 #  endif
 
-   char (*FieldName)[100] = new char [NCOMP][100];
+   char (*FieldName)[100] = new char [NCOMP_TOTAL][100];
 
    hsize_t H5_SetDims_Field[4], H5_MemDims_Field[4];
-   hid_t   H5_SetID_Field[NCOMP], H5_MemID_Field, H5_SpaceID_Field, H5_GroupID_GridData;
+   hid_t   H5_SetID_Field[NCOMP_TOTAL], H5_MemID_Field, H5_SpaceID_Field, H5_GroupID_GridData;
 
 #  ifdef PARTICLE
    char (*ParVarName)[100] = new char [NParVar][100];
@@ -537,6 +537,8 @@ void Init_Restart_HDF5( const char *FileName )
 #  else
 #  error : ERROR : unsupported MODEL !!
 #  endif
+
+   for (int v=0; v<NCOMP_PASSIVE; v++)    sprintf( FieldName[NCOMP_FLUID+v], "Passive%d%d", v/10, v%10 );
 
 #  ifdef PARTICLE
    sprintf( ParVarName[0], "ParMass" );
@@ -592,7 +594,7 @@ void Init_Restart_HDF5( const char *FileName )
          H5_GroupID_GridData = H5Gopen( H5_FileID, "GridData", H5P_DEFAULT );
          if ( H5_GroupID_GridData < 0 )   Aux_Error( ERROR_INFO, "failed to open the group \"%s\" !!\n", "GridData" );
 
-         for (int v=0; v<NCOMP; v++)
+         for (int v=0; v<NCOMP_TOTAL; v++)
          {
             H5_SetID_Field[v] = H5Dopen( H5_GroupID_GridData, FieldName[v], H5P_DEFAULT );
             if ( H5_SetID_Field[v] < 0 )  Aux_Error( ERROR_INFO, "failed to open the dataset \"%s\" !!\n", FieldName[v] );
@@ -696,7 +698,7 @@ void Init_Restart_HDF5( const char *FileName )
 #        endif // #ifdef LOAD_BALANCE ... else ...
 
 //       free resource
-         for (int v=0; v<NCOMP; v++)   H5_Status = H5Dclose( H5_SetID_Field[v] );
+         for (int v=0; v<NCOMP_TOTAL; v++)   H5_Status = H5Dclose( H5_SetID_Field[v] );
          H5_Status = H5Gclose( H5_GroupID_GridData );
 
 #        ifdef PARTICLE
@@ -1035,7 +1037,7 @@ void LoadOnePatch( const hid_t H5_FileID, const int lv, const int GID, const boo
 
 
 // load field data from disk (potential data, if presented, are ignored and will be recalculated)
-   for (int v=0; v<NCOMP; v++)
+   for (int v=0; v<NCOMP_TOTAL; v++)
    {
       H5_Status = H5Dread( H5_SetID_Field[v], H5T_GAMER_REAL, H5_MemID_Field, H5_SpaceID_Field, H5P_DEFAULT,
                            amr->patch[0][lv][PID]->fluid[v] );
@@ -1226,7 +1228,6 @@ void Check_Makefile( const char *FileName )
 #  ifdef RSOLVER
    LoadField( "RSolver",            &RS.RSolver,            SID, TID, NonFatal, &RT.RSolver,             1, NonFatal );
 #  endif
-   LoadField( "NPassive",           &RS.NPassive,           SID, TID, NonFatal, &RT.NPassive,            1,    Fatal );
 
 #  elif ( MODEL == MHD )
 #  warning : WAIT MHD !!!
@@ -1298,7 +1299,8 @@ void Check_SymConst( const char *FileName )
    SymConst_t RS;    // RS = ReStart
 
 
-   LoadField( "NComp",                &RS.NComp,                SID, TID, NonFatal, &RT.NComp,                 1,    Fatal );
+   LoadField( "NCompTotal",           &RS.NCompTotal,           SID, TID, NonFatal, &RT.NCompTotal,            1,    Fatal );
+   LoadField( "NCompPassive",         &RS.NCompPassive,         SID, TID, NonFatal, &RT.NCompPassive,          1,    Fatal );
    LoadField( "PatchSize",            &RS.PatchSize,            SID, TID, NonFatal, &RT.PatchSize,             1,    Fatal );
    LoadField( "Flu_NIn",              &RS.Flu_NIn,              SID, TID, NonFatal, &RT.Flu_NIn,               1, NonFatal );
    LoadField( "Flu_NOut",             &RS.Flu_NOut,             SID, TID, NonFatal, &RT.Flu_NOut,              1, NonFatal );

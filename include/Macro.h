@@ -61,114 +61,164 @@
 #define HILBERT   1
 
 
-// number of components in each cell (FLU_NIN/NOUT : number of input/output variables in the fluid solver)
+// NCOMP_FLUID : number of active components in each cell (i.e., the "fluid" array)
+//               --> do not include passive components here, which is set by NCOMP_PASSIVE
+// NFLUX_FLUID : number of active components in the "flux" array
+//               --> do not include passive components here, which is set by NFLUX_PASSIVE
 #if   ( MODEL == HYDRO )
-#  define NCOMP              5
-#  define FLU_NIN        NCOMP
-#  define FLU_NOUT       NCOMP
-#  define NFLUX          NCOMP
+#  define NCOMP_FLUID         5
+#  define NFLUX_FLUID         NCOMP_FLUID
 
 #elif ( MODEL == MHD )
 #  warning : WAIT MHD !!!
-#  define NCOMP              8
-#  define FLU_NIN        NCOMP
-#  define FLU_NOUT       NCOMP
-#  define NFLUX          NCOMP
+#  define NCOMP_FLUID         5
+#  define NFLUX_FLUID         NCOMP_FLUID
 
-// for ELBDM, we do not need to transfer the density component into GPU here
+// for ELBDM, we only need the density flux
 #elif ( MODEL == ELBDM )
-#  define NCOMP              3
-#  define FLU_NIN    ( NCOMP-1 )
-#  define FLU_NOUT   ( NCOMP-0 )
-#  define NFLUX              1
+#  define NCOMP_FLUID         3
+#  define NFLUX_FLUID         1
 
 #elif ( MODEL == PAR_ONLY )
-#  define NCOMP              0
+#  define NCOMP_FLUID         0
+#  define NFLUX_FLUID         0
 
 #else
-#  error : ERROR : unsupported MODEL (please edit NCOMP, FLU_NIN, and FLU_NOUT in the new MODEL) !!
+#  error : ERROR : unsupported MODEL (please edit NCOMP_FLUID and NFLUX_FLUID for the new MODEL) !!
+#endif // MODEL
+
+
+// number of passively advected components in each cell
+// --> including internal energy when the dual energy formalism is adopted
+#if (  ( MODEL == HYDRO || MODEL == MHD )  &&  defined DUAL_ENERGY  )
+#  define NCOMP_PASSIVE       ( NCOMP_PASSIVE_MAKEFILE + 1 )
+#else
+#  define NCOMP_PASSIVE       ( NCOMP_PASSIVE_MAKEFILE )
+#endif
+
+// assuming all passive scalars have the corresponding fluxes
+#  define NFLUX_PASSIVE       NCOMP_PASSIVE
+
+
+// total number of variables in each cell and in the flux array including both active and passive variables
+#  define NCOMP_TOTAL         ( NCOMP_FLUID + NCOMP_PASSIVE )
+#  define NFLUX_TOTAL         ( NFLUX_FLUID + NFLUX_PASSIVE )
+
+
+// number of input/output variables in the fluid solver
+#if   ( MODEL == HYDRO )
+#  define FLU_NIN             NCOMP_TOTAL
+#  define FLU_NOUT            NCOMP_TOTAL
+
+#elif ( MODEL == MHD )
+#  warning : WAIT MHD !!!
+#  define FLU_NIN             NCOMP_TOTAL
+#  define FLU_NOUT            NCOMP_TOTAL
+
+// for ELBDM, we do not need to transfer the density component into GPU
+#elif ( MODEL == ELBDM )
+#  define FLU_NIN             ( NCOMP_TOTAL-1 )
+#  define FLU_NOUT            ( NCOMP_TOTAL-0 )
+
+#elif ( MODEL == PAR_ONLY )
+#  define FLU_NIN             0
+#  define FLU_NOUT            0
+
+#else
+#  error : ERROR : unsupported MODEL (please edit FLU_NIN and FLU_NOUT for the new MODEL) !!
 #endif // MODEL
 
 
 // main variables in different models
+// --> note that we must set "_VAR_NAME = 1<<VAR_NAME" (e.g., _DENS == 1<<DENS)
 #if   ( MODEL == HYDRO )
 
-// variable indices in the array "fluid" [0 ... NCOMP-1]
+// variable indices in the array "fluid" [0 ... NCOMP_FLUID-1]
 #  define  DENS               0
 #  define  MOMX               1
 #  define  MOMY               2
 #  define  MOMZ               3
 #  define  ENGY               4
 
-// variable indices in the array "passive" [0 ... NPASSIVE-1]
-#if ( NPASSIVE > 0 )
-#  define  METAL              0
-#  define  OXYGEN             1
-#  define  FE                 2
+// variable indices in the array "passive" [NCOMP_FLUID ... NCOMP_TOTAL-1]
+#if ( NCOMP_PASSIVE > 0 )
+/* example for NCOMP_PASSIVE == 3
+#  define  METAL              ( NCOMP_FLUID + 0 )
+#  define  OXYGEN             ( NCOMP_FLUID + 1 )
+#  define  FE                 ( NCOMP_FLUID + 2 )
+*/
+// always store internal energy for the dual energy formalism as the last passive variable
+#  ifdef DUAL_ENERGY
+#  define  EINT               ( NCOMP_TOTAL-1 )
+#  endif
 #endif
 
-// variable indices in the array "flux" [0 ... NFLUX-1]
+// variable indices in the array "flux" [0 ... NFLUX_FLUID-1]
 #  define  FLUX_DENS          0
 #  define  FLUX_MOMX          1
 #  define  FLUX_MOMY          2
 #  define  FLUX_MOMZ          3
 #  define  FLUX_ENGY          4
 
-// variable indices in the array "flux_passive" [0 ... NPASSIVE-1]
-#if ( NPASSIVE > 0 )
-#  define  FLUX_METAL         0
-#  define  FLUX_OXYGEN        1
-#  define  FLUX_FE            2
+// variable indices in the array "flux_passive" [NFLUX_FLUID ... NFLUX_TOTAL-1]
+#if ( NCOMP_PASSIVE > 0 )
+/* example for NCOMP_PASSIVE == 3
+#  define  FLUX_METAL         ( NFLUX_FLUID + 0 )
+#  define  FLUX_OXYGEN        ( NFLUX_FLUID + 1 )
+#  define  FLUX_FE            ( NFLUX_FLUID + 2 )
+*/
+// always store internal energy for the dual energy formalism as the last passive variable
+#  ifdef DUAL_ENERGY
+#  define  FLUX_EINT          ( NFLUX_TOTAL-1 )
+#  endif
 #endif
 
-
 // symbolic constants used as function parameters (e.g., Prepare_PatchData)
-#  define _DENS            ( 1 << (DENS) )
-#  define _MOMX            ( 1 << (MOMX) )
-#  define _MOMY            ( 1 << (MOMY) )
-#  define _MOMZ            ( 1 << (MOMZ) )
-#  define _ENGY            ( 1 << (ENGY) )
-#  define _FLU             ( _DENS | _MOMX | _MOMY | _MOMZ | _ENGY )
+#  define _DENS               ( 1 << DENS )
+#  define _MOMX               ( 1 << MOMX )
+#  define _MOMY               ( 1 << MOMY )
+#  define _MOMZ               ( 1 << MOMZ )
+#  define _ENGY               ( 1 << ENGY )
 
-#if ( NPASSIVE > 0 )
-#  define _METAL           ( 1 << (NCOMP+METAL ) )
-#  define _OXYGEN          ( 1 << (NCOMP+OXYGEN) )
-#  define _FE              ( 1 << (NCOMP+FE    ) )
-#  define _PASSIVE         ( _METAL | _OXYGEN | _FE )
-#else
-#  define _PASSIVE            0
-#endif // #if ( NPASSIVE > 0 )
-
-#  ifdef GRAVITY
-#  define _POTE            ( 1 << (NCOMP+NPASSIVE+0) )
+#if ( NCOMP_PASSIVE > 0 )
+/* example for NCOMP_PASSIVE == 3
+#  define _METAL              ( 1 << METAL  )
+#  define _OXYGEN             ( 1 << OXYGEN )
+#  define _FE                 ( 1 << FE     )
+*/
+// always store internal energy for the dual energy formalism as the last passive variable
+#  ifdef DUAL_ENERGY
+#  define _EINT               ( 1 << EINT )
 #  endif
-
+#endif // #if ( NCOMP_PASSIVE > 0 )
 
 // symbolic constants of flux used as function parameters (e.g., Buf_GetBufferData)
-#  define _FLUX_DENS       ( 1 << (FLUX_DENS) )
-#  define _FLUX_MOMX       ( 1 << (FLUX_MOMX) )
-#  define _FLUX_MOMY       ( 1 << (FLUX_MOMY) )
-#  define _FLUX_MOMZ       ( 1 << (FLUX_MOMZ) )
-#  define _FLUX_ENGY       ( 1 << (FLUX_ENGY) )
-#  define _FLUX            ( _FLUX_DENS | _FLUX_MOMX | _FLUX_MOMY | _FLUX_MOMZ | _FLUX_ENGY )
+#  define _FLUX_DENS          ( 1 << FLUX_DENS )
+#  define _FLUX_MOMX          ( 1 << FLUX_MOMX )
+#  define _FLUX_MOMY          ( 1 << FLUX_MOMY )
+#  define _FLUX_MOMZ          ( 1 << FLUX_MOMZ )
+#  define _FLUX_ENGY          ( 1 << FLUX_ENGY )
 
-#if ( NPASSIVE > 0 )
-#  define _FLUX_METAL      ( 1 << (NFLUX+FLUX_METAL ) )
-#  define _FLUX_OXYGEN     ( 1 << (NFLUX+FLUX_OXYGEN) )
-#  define _FLUX_FE         ( 1 << (NFLUX+FLUX_FE    ) )
-#  define _FLUX_PASSIVE    ( _FLUX_METAL | _FLUX_OXYGEN | _FLUX_FE )
-#else
-#  define _FLUX_PASSIVE       0
-#endif // #if ( NPASSIVE > 0 )
-
+#if ( NFLUX_PASSIVE > 0 )
+/* example for NFLUX_PASSIVE == 3
+#  define _FLUX_METAL         ( 1 << FLUX_METAL  )
+#  define _FLUX_OXYGEN        ( 1 << FLUX_OXYGEN )
+#  define _FLUX_FE            ( 1 << FLUX_FE     )
+*/
+// always store internal energy for the dual energy formalism as the last passive variable
+#  ifdef DUAL_ENERGY
+#  define _FLUX_EINT          ( 1 << FLUX_EINT )
+#  endif
+#endif // #if ( NFLUX_PASSIVE > 0 )
 
 // derived variables
-#  define _VELX            ( 1 << (NCOMP+NPASSIVE+2) )
-#  define _VELY            ( 1 << (NCOMP+NPASSIVE+3) )
-#  define _VELZ            ( 1 << (NCOMP+NPASSIVE+4) )
-#  define _PRES            ( 1 << (NCOMP+NPASSIVE+5) )
-#  define _TEMP            ( 1 << (NCOMP+NPASSIVE+6) )
-#  define _DERIVED         ( _VELX | _VELY | _VELZ | _PRES | _TEMP )
+// note that _POTE = ( 1 << NCOMP_TOTAL )
+#  define _VELX               ( 1 << (NCOMP_TOTAL+1) )
+#  define _VELY               ( 1 << (NCOMP_TOTAL+2) )
+#  define _VELZ               ( 1 << (NCOMP_TOTAL+3) )
+#  define _PRES               ( 1 << (NCOMP_TOTAL+4) )
+#  define _TEMP               ( 1 << (NCOMP_TOTAL+5) )
+#  define _DERIVED            ( _VELX | _VELY | _VELZ | _PRES | _TEMP )
 
 
 #elif ( MODEL == MHD )
@@ -181,87 +231,84 @@
 #  define  REAL               1
 #  define  IMAG               2
 
-// variable indices in the array "flux" [0 ... NFLUX-1]
+// variable indices in the array "flux" [0 ... NFLUX_FLUID-1]
 #  define  FLUX_DENS          0
 
-
 // symbolic constants used as function parameters (e.g., Prepare_PatchData)
-#  define _DENS            ( 1 << (DENS) )
-#  define _REAL            ( 1 << (REAL) )
-#  define _IMAG            ( 1 << (IMAG) )
-#  define _FLU             ( _DENS | _REAL | _IMAG )
-
-#  define _PASSIVE            0
-
-#  ifdef GRAVITY
-#  define _POTE            ( 1 << (NCOMP+0) )
-#  endif
-
+#  define _DENS               ( 1 << DENS )
+#  define _REAL               ( 1 << REAL )
+#  define _IMAG               ( 1 << IMAG )
 
 // symbolic constants of flux used as function parameters (e.g., Buf_GetBufferData)
-#  define _FLUX_DENS       ( 1 << (FLUX_DENS) )
-#  define _FLUX            ( _FLUX_DENS )
+#  define _FLUX_DENS          ( 1 << FLUX_DENS )
 
-#  define _FLUX_PASSIVE       0
-
+// derived variables
 #  define _DERIVED            0
-
 
 
 #elif ( MODEL == PAR_ONLY )
-#  define _FLU                0
-#  define _PASSIVE            0
 #  define _DERIVED            0
 
-#  ifdef GRAVITY
-#  define _POTE            ( 1 << 0 )
-#  endif
 
 #else
 #  error : ERROR : unsupported MODEL !!
 #endif // MODEL
 
 
+// symbolic constants used by all models
+#  define _FLUID              (  ( 1 << NCOMP_FLUID ) - 1           )
+#  define _PASSIVE            (  ( 1 << NCOMP_TOTAL ) - 1 - _FLUID  )
+#  define _TOTAL              (  ( 1 << NCOMP_TOTAL ) - 1           )
+#  ifdef GRAVITY
+#  define _POTE               (  ( 1 << NCOMP_TOTAL )               )
+#  endif
+
+#  define _FLUX_FLUID         (  ( 1 << NFLUX_FLUID ) - 1                )
+#  define _FLUX_PASSIVE       (  ( 1 << NFLUX_TOTAL ) - 1 - _FLUX_FLUID  )
+#  define _FLUX_TOTAL         (  ( 1 << NFLUX_TOTAL ) - 1                )
+
+
+// symbolic constants for particles
 #ifdef PARTICLE
 
 // number of variables stored in each particle (excluding the passive variables)
 #  ifdef STORE_PAR_ACC
-#  define PAR_NVAR      ( 11 + 0 )
+#  define PAR_NVAR            ( 11 + 0 )
 #  else
-#  define PAR_NVAR      (  8 + 0 )
+#  define PAR_NVAR            (  8 + 0 )
 #  endif
 
 // variable indices in the array "ParVar" [0 ... PAR_NVAR-1]
-#  define  PAR_MASS        0
-#  define  PAR_POSX        1
-#  define  PAR_POSY        2
-#  define  PAR_POSZ        3
-#  define  PAR_VELX        4
-#  define  PAR_VELY        5
-#  define  PAR_VELZ        6
-#  define  PAR_TIME        7
-#  define  PAR_ACCX        8
-#  define  PAR_ACCY        9
-#  define  PAR_ACCZ       10
+#  define  PAR_MASS           0
+#  define  PAR_POSX           1
+#  define  PAR_POSY           2
+#  define  PAR_POSZ           3
+#  define  PAR_VELX           4
+#  define  PAR_VELY           5
+#  define  PAR_VELZ           6
+#  define  PAR_TIME           7
+#  define  PAR_ACCX           8
+#  define  PAR_ACCY           9
+#  define  PAR_ACCZ          10
 
 // symbolic constants used as function parameters (e.g., Prepare_PatchData)
 #  if ( MODEL == PAR_ONLY )
 // note that _POTE == ( 1 << 0 )
-#  define _PAR_DENS        ( 1 << 1 )
-#  define _TOTAL_DENS      ( _PAR_DENS )
+#  define _PAR_DENS           ( 1 << 1 )
+#  define _TOTAL_DENS         ( _PAR_DENS )
 
 #  else
 
-// note that _TEMP == ( 1 << (NCOMP+NPASSIVE+6) )
-#  define _PAR_DENS        ( 1 << (NCOMP+NPASSIVE+7) )
-#  define _TOTAL_DENS      ( 1 << (NCOMP+NPASSIVE+8) )
+// note that _TEMP == ( 1 << (NCOMP_TOTAL+5) )
+#  define _PAR_DENS           ( 1 << (NCOMP_TOTAL+6) )
+#  define _TOTAL_DENS         ( 1 << (NCOMP_TOTAL+7) )
 
 #  endif // if ( MODEL == PAR_ONLY ) ... else ...
 
 #else // #ifdef PARTICLE
 
 // set _TOTAL_DENS == _DENS if PARTICLE is off
-#  define _TOTAL_DENS      ( _DENS )
+#  define _TOTAL_DENS         ( _DENS )
 
 #endif // #ifdef PARTICLE ... else ...
 
@@ -313,15 +360,15 @@
 
 // number of input and output variables in the gravity solver
 #  if   ( MODEL == HYDRO )
-#     define GRA_NIN               NCOMP
+#     define GRA_NIN             NCOMP_FLUID
 
 #  elif ( MODEL == MHD )
 #     warning : WAIT MHD !!!
-#     define GRA_NIN               NCOMP
+#     define GRA_NIN             NCOMP_FLUID
 
 // for ELBDM, we do not need to transfer the density component
 #  elif ( MODEL == ELBDM )
-#     define GRA_NIN             ( NCOMP-1 )
+#     define GRA_NIN             ( NCOMP_FLUID - 1 )
 
 #  else
 #     error Error : unsupported MODEL (please edit GRA_NIN in the new MODEL) !!
@@ -594,9 +641,6 @@
 #  undef FLU_SCHEME
 #  undef LR_SCHEME
 #  undef RSOLVER
-
-#  define NPASSIVE   0
-#  define _PASSIVE   0
 #endif
 
 #ifndef GRAVITY

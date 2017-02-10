@@ -50,7 +50,7 @@ static int Table_01( const int SibID, const int Side, const char dim, const int 
 //                                     ELBDM : _DENS, _REAL, _IMAG [, _POTE]
 //                NVar_Tot       : Total number of variables to be prepared
 //                NVar_Flu       : Number of fluid variables to be prepared
-//                TFluVarIdxList : List recording the target fluid and passive variable indices ( = [0 ... NCOMP+NPASSIVE-1] )
+//                TFluVarIdxList : List recording the target fluid and passive variable indices ( = [0 ... NCOMP_TOTAL-1] )
 //                NVar_Der       : Number of derived variables to be prepared
 //                TDerVarList    : List recording the target derived variables
 //                IntPhase       : true --> Perform interpolation on rho/phase instead of real/imag parts in ELBDM
@@ -106,7 +106,7 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData[], const in
 #  endif
 
 #  if ( MODEL == HYDRO  ||  MODEL == MHD )
-   real Fluid[NCOMP];
+   real Fluid[NCOMP_FLUID];   // for calculating pressure and temperature only --> don't need NCOMP_TOTAL
 #  endif
 
 
@@ -382,14 +382,14 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData[], const in
                                           Idx = IDX321( Disp2[0], j2, k2, CSize[0], CSize[1] );
       for (i1=Disp1[0]; i1<Disp1[0]+Loop1[0]; i1++)   {
 
-         for (int v=0; v<NCOMP; v++)   Fluid[v] = amr->patch[FluSg][lv][PID]->fluid[v][k1][j1][i1];
+         for (int v=0; v<NCOMP_FLUID; v++)   Fluid[v] = amr->patch[FluSg][lv][PID]->fluid[v][k1][j1][i1];
 
          CData_Ptr[Idx] = CPU_GetPressure( Fluid[DENS], Fluid[MOMX], Fluid[MOMY], Fluid[MOMZ], Fluid[ENGY],
                                            Gamma_m1, CheckMinPres_No, NULL_REAL );
 
          if ( FluIntTime ) // temporal interpolation
          {
-            for (int v=0; v<NCOMP; v++)   Fluid[v] = amr->patch[FluSg_IntT][lv][PID]->fluid[v][k1][j1][i1];
+            for (int v=0; v<NCOMP_FLUID; v++)   Fluid[v] = amr->patch[FluSg_IntT][lv][PID]->fluid[v][k1][j1][i1];
 
             CData_Ptr[Idx] = FluWeighting     *CData_Ptr[Idx]
                            + FluWeighting_IntT*CPU_GetPressure( Fluid[DENS], Fluid[MOMX], Fluid[MOMY], Fluid[MOMZ], Fluid[ENGY],
@@ -409,14 +409,14 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData[], const in
                                           Idx = IDX321( Disp2[0], j2, k2, CSize[0], CSize[1] );
       for (i1=Disp1[0]; i1<Disp1[0]+Loop1[0]; i1++)   {
 
-         for (int v=0; v<NCOMP; v++)   Fluid[v] = amr->patch[FluSg][lv][PID]->fluid[v][k1][j1][i1];
+         for (int v=0; v<NCOMP_FLUID; v++)   Fluid[v] = amr->patch[FluSg][lv][PID]->fluid[v][k1][j1][i1];
 
          CData_Ptr[Idx] = CPU_GetTemperature( Fluid[DENS], Fluid[MOMX], Fluid[MOMY], Fluid[MOMZ], Fluid[ENGY],
                                               Gamma_m1, (MinPres>=0.0), MinPres );
 
          if ( FluIntTime ) // temporal interpolation
          {
-            for (int v=0; v<NCOMP; v++)   Fluid[v] = amr->patch[FluSg_IntT][lv][PID]->fluid[v][k1][j1][i1];
+            for (int v=0; v<NCOMP_FLUID; v++)   Fluid[v] = amr->patch[FluSg_IntT][lv][PID]->fluid[v][k1][j1][i1];
 
             CData_Ptr[Idx] = FluWeighting     *CData_Ptr[Idx]
                            + FluWeighting_IntT*CPU_GetTemperature( Fluid[DENS], Fluid[MOMX], Fluid[MOMY], Fluid[MOMZ], Fluid[ENGY],
@@ -579,14 +579,14 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData[], const in
                                                 Idx = IDX321( Disp3[0], j1, k1, CSize[0], CSize[1] );
             for (i2=Disp4[0]; i2<Disp4[0]+Loop2[0]; i2++)   {
 
-               for (int v=0; v<NCOMP; v++)   Fluid[v] = amr->patch[FluSg][lv][SibPID]->fluid[v][k2][j2][i2];
+               for (int v=0; v<NCOMP_FLUID; v++)   Fluid[v] = amr->patch[FluSg][lv][SibPID]->fluid[v][k2][j2][i2];
 
                CData_Ptr[Idx] = CPU_GetPressure( Fluid[DENS], Fluid[MOMX], Fluid[MOMY], Fluid[MOMZ], Fluid[ENGY],
                                                  Gamma_m1, CheckMinPres_No, NULL_REAL );
 
                if ( FluIntTime ) // temporal interpolation
                {
-                  for (int v=0; v<NCOMP; v++)   Fluid[v] = amr->patch[FluSg_IntT][lv][SibPID]->fluid[v][k2][j2][i2];
+                  for (int v=0; v<NCOMP_FLUID; v++)   Fluid[v] = amr->patch[FluSg_IntT][lv][SibPID]->fluid[v][k2][j2][i2];
 
                   CData_Ptr[Idx] =  FluWeighting     *CData_Ptr[Idx]
                                   + FluWeighting_IntT*CPU_GetPressure( Fluid[DENS], Fluid[MOMX], Fluid[MOMY], Fluid[MOMZ], Fluid[ENGY],
@@ -606,14 +606,14 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData[], const in
                                                 Idx = IDX321( Disp3[0], j1, k1, CSize[0], CSize[1] );
             for (i2=Disp4[0]; i2<Disp4[0]+Loop2[0]; i2++)   {
 
-               for (int v=0; v<NCOMP; v++)   Fluid[v] = amr->patch[FluSg][lv][SibPID]->fluid[v][k2][j2][i2];
+               for (int v=0; v<NCOMP_FLUID; v++)   Fluid[v] = amr->patch[FluSg][lv][SibPID]->fluid[v][k2][j2][i2];
 
                CData_Ptr[Idx] = CPU_GetTemperature( Fluid[DENS], Fluid[MOMX], Fluid[MOMY], Fluid[MOMZ], Fluid[ENGY],
                                                     Gamma_m1, (MinPres>=0.0), MinPres );
 
                if ( FluIntTime ) // temporal interpolation
                {
-                  for (int v=0; v<NCOMP; v++)   Fluid[v] = amr->patch[FluSg_IntT][lv][SibPID]->fluid[v][k2][j2][i2];
+                  for (int v=0; v<NCOMP_FLUID; v++)   Fluid[v] = amr->patch[FluSg_IntT][lv][SibPID]->fluid[v][k2][j2][i2];
 
                   CData_Ptr[Idx] =  FluWeighting     *CData_Ptr[Idx]
                                   + FluWeighting_IntT*CPU_GetTemperature( Fluid[DENS], Fluid[MOMX], Fluid[MOMY],
@@ -755,8 +755,8 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData[], const in
 #     if ( MODEL == HYDRO )
 //    we now apply monotonic interpolation to ALL fluid variables (which helps alleviate the issue of negative density/pressure)
       /*
-#     if ( NPASSIVE > 0 )
-      if ( TFluVarIdx == DENS  ||  TFluVarIdx == ENGY  ||  TFluVarIdx >= NCOMP )
+#     if ( NCOMP_PASSIVE > 0 )
+      if ( TFluVarIdx == DENS  ||  TFluVarIdx == ENGY  ||  TFluVarIdx >= NCOMP_FLUID )
 #     else
       if ( TFluVarIdx == DENS  ||  TFluVarIdx == ENGY )
 #     endif

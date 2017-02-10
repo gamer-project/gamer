@@ -271,7 +271,7 @@ void Init_Restart()
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "      Verifying the size of the RESTART file ...\n" );
 
    long ExpectSize, InputSize, PatchDataSize, DataSize[NLv_Restart];
-   int  NGridVar = NCOMP;     // number of grid variables
+   int  NGridVar = NCOMP_TOTAL;  // number of grid variables
 
 #  ifdef GRAVITY
    if ( LoadPot )       NGridVar ++;
@@ -455,7 +455,7 @@ void Init_Restart()
 #                    endif
 
 //                   d3-1. load the fluid variables
-                     fread( amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid, sizeof(real), CUBE(PS1)*NCOMP, File );
+                     fread( amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid, sizeof(real), CUBE(PS1)*NCOMP_TOTAL, File );
 
 //                   d3-2. abandon the gravitational potential and particle density data
 #                    ifdef GRAVITY
@@ -712,7 +712,7 @@ void Load_Parameter_After_2000( FILE *File, const int FormatVersion, int &NLv_Re
    bool gravity, individual_timestep, comoving, gpu, gamer_optimization, gamer_debug, timing, timing_solver;
    bool intel, float8, serial, overlap_mpi, openmp, store_pot_ghost, unsplit_gravity, particle;
    bool conserve_mass, laplacian_4th, self_interaction, laohu, support_hdf5;
-   int  model, pot_scheme, flu_scheme, lr_scheme, rsolver, load_balance, nlevel, max_patch, npassive, gpu_arch;
+   int  model, pot_scheme, flu_scheme, lr_scheme, rsolver, load_balance, nlevel, max_patch, ncomp_passive, gpu_arch;
 
    fseek( File, HeaderOffset_Makefile, SEEK_SET );
 
@@ -741,7 +741,7 @@ void Load_Parameter_After_2000( FILE *File, const int FormatVersion, int &NLv_Re
    fread( &store_pot_ghost,            sizeof(bool),                    1,             File );
    fread( &unsplit_gravity,            sizeof(bool),                    1,             File );
    fread( &particle,                   sizeof(bool),                    1,             File );
-   fread( &npassive,                   sizeof(int),                     1,             File );
+   fread( &ncomp_passive,              sizeof(int),                     1,             File );
    fread( &conserve_mass,              sizeof(bool),                    1,             File );
    fread( &laplacian_4th,              sizeof(bool),                    1,             File );
    fread( &self_interaction,           sizeof(bool),                    1,             File );
@@ -753,14 +753,14 @@ void Load_Parameter_After_2000( FILE *File, const int FormatVersion, int &NLv_Re
 // =================================================================================================
    bool   enforce_positive, char_reconstruction, hll_no_ref_state, hll_include_all_waves, waf_dissipate;
    bool   use_psolver_10to14;
-   int    ncomp, patch_size, flu_ghost_size, pot_ghost_size, gra_ghost_size, check_intermediate;
+   int    ncomp_total, patch_size, flu_ghost_size, pot_ghost_size, gra_ghost_size, check_intermediate;
    int    flu_block_size_x, flu_block_size_y, pot_block_size_x, pot_block_size_z, gra_block_size_z;
    int    par_nvar, par_npassive;
    double min_pres, max_error;
 
    fseek( File, HeaderOffset_Constant, SEEK_SET );
 
-   fread( &ncomp,                      sizeof(int),                     1,             File );
+   fread( &ncomp_total,                sizeof(int),                     1,             File );
    fread( &patch_size,                 sizeof(int),                     1,             File );
    fread( &min_pres,                   sizeof(double),                  1,             File );
    fread( &flu_ghost_size,             sizeof(int),                     1,             File );
@@ -954,13 +954,7 @@ void Load_Parameter_After_2000( FILE *File, const int FormatVersion, int &NLv_Re
          Aux_Error( ERROR_INFO, "%s : RESTART file (%d) > runtime (%d) (please set NLEVEL larger) !!\n",
                     "NLEVEL", nlevel, NLEVEL );
 
-#     ifdef NPASSIVE
-      CompareVar( "NPASSIVE", npassive, NPASSIVE, Fatal );
-#     else
-      if ( npassive != NULL_INT )
-         Aux_Message( stderr, "WARNING : %s : RESTART file (%d) != runtime (%s) !!\n",
-                      "NPASSIVE", npassive, "OFF" );
-#     endif
+      CompareVar( "NCOMP_PASSIVE", ncomp_passive, NCOMP_PASSIVE, Fatal );
 
 
 
@@ -1087,7 +1081,7 @@ void Load_Parameter_After_2000( FILE *File, const int FormatVersion, int &NLv_Re
 
 //    d-2. check the symbolic constants defined in "Macro.h, CUPOT.h, and CUFLU.h"
 //    ========================================================================
-      CompareVar( "NCOMP",                   ncomp,                  NCOMP,                        Fatal );
+      CompareVar( "NCOMP_TOTAL",             ncomp_total,            NCOMP_TOTAL,                  Fatal );
       CompareVar( "PATCH_SIZE",              patch_size,             PATCH_SIZE,                   Fatal );
 
       CompareVar( "FLU_GHOST_SIZE",          flu_ghost_size,         FLU_GHOST_SIZE,            NonFatal );

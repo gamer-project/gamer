@@ -8,7 +8,7 @@
 
 extern real (*d_Flu_Array_F_In )[FLU_NIN ][ FLU_NXT*FLU_NXT*FLU_NXT ];
 extern real (*d_Flu_Array_F_Out)[FLU_NOUT][ PS2*PS2*PS2 ];
-extern real (*d_Flux_Array)[9][NFLUX][ PS2*PS2 ];
+extern real (*d_Flux_Array)[9][NFLUX_TOTAL][ PS2*PS2 ];
 #ifdef UNSPLIT_GRAVITY
 extern double (*d_Corner_Array_F)[3];
 #endif

@@ -135,7 +135,7 @@ void Output_DumpData_Total( const char *FileName )
 
 //    calculate the total file size
 //    =================================================================================================
-      int PatchDataSize, NGridVar=NCOMP;
+      int PatchDataSize, NGridVar=NCOMP_TOTAL;
 
 #     ifdef GRAVITY
       if ( OPT__OUTPUT_POT )                                NGridVar ++;
@@ -327,11 +327,7 @@ void Output_DumpData_Total( const char *FileName )
       const bool particle            = false;
 #     endif
 
-#     ifdef NPASSIVE
-      const int npassive             = NPASSIVE;
-#     else
-      const int npassive             = NULL_INT;
-#     endif
+      const int ncomp_passive        = NCOMP_PASSIVE;
 
 #     ifdef CONSERVE_MASS
       const bool conserve_mass       = true;
@@ -391,7 +387,7 @@ void Output_DumpData_Total( const char *FileName )
       fwrite( &store_pot_ghost,           sizeof(bool),                    1,             File );
       fwrite( &unsplit_gravity,           sizeof(bool),                    1,             File );
       fwrite( &particle,                  sizeof(bool),                    1,             File );
-      fwrite( &npassive,                  sizeof(int),                     1,             File );
+      fwrite( &ncomp_passive,             sizeof(int),                     1,             File );
       fwrite( &conserve_mass,             sizeof(bool),                    1,             File );
       fwrite( &laplacian_4th,             sizeof(bool),                    1,             File );
       fwrite( &self_interaction,          sizeof(bool),                    1,             File );
@@ -407,7 +403,7 @@ void Output_DumpData_Total( const char *FileName )
 
       fseek( File, HeaderOffset_Constant, SEEK_SET );
 
-      const int    ncomp                 = NCOMP;
+      const int    ncomp_total           = NCOMP_TOTAL;
       const int    patch_size            = PATCH_SIZE;
 #     if ( MODEL == HYDRO  ||  MODEL == MHD )
       const double min_pres              = MIN_PRES;
@@ -497,7 +493,7 @@ void Output_DumpData_Total( const char *FileName )
       const int    par_npassive          = NULL_INT;
 #     endif
 
-      fwrite( &ncomp,                     sizeof(int),                     1,             File );
+      fwrite( &ncomp_total,               sizeof(int),                     1,             File );
       fwrite( &patch_size,                sizeof(int),                     1,             File );
       fwrite( &min_pres,                  sizeof(double),                  1,             File );
       fwrite( &flu_ghost_size,            sizeof(int),                     1,             File );
@@ -822,18 +818,18 @@ void Output_DumpData_Total( const char *FileName )
                if ( amr->patch[0][lv][PID]->son == -1 )
                {
 //                f2-1. output fluid variables
-                  fwrite( amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid, sizeof(real), CUBE(PS1)*NCOMP, File );
+                  fwrite( amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid, sizeof(real), CUBE(PS1)*NCOMP_TOTAL, File );
 
 //                f2-2. output gravitational potential
 #                 ifdef GRAVITY
                   if ( OPT__OUTPUT_POT )
-                  fwrite( amr->patch[ amr->PotSg[lv] ][lv][PID]->pot,   sizeof(real), CUBE(PS1),       File );
+                  fwrite( amr->patch[ amr->PotSg[lv] ][lv][PID]->pot,   sizeof(real), CUBE(PS1),             File );
 #                 endif
 
 //                f2-3. output particle density depostied onto grids
 #                 ifdef PARTICLE
                   if ( OPT__OUTPUT_PAR_DENS != PAR_OUTPUT_DENS_NONE )
-                  fwrite( ParDensArray[ PID%8 ],                        sizeof(real), CUBE(PS1),       File );
+                  fwrite( ParDensArray[ PID%8 ],                        sizeof(real), CUBE(PS1),             File );
 #                 endif
                } // if ( amr->patch[0][lv][PID]->son == -1 )
             } // for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)

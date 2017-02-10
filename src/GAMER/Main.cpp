@@ -149,7 +149,7 @@ yt_verbose        YT_VERBOSE;
 // (3-1) fluid solver
 real (*h_Flu_Array_F_In [2])[FLU_NIN ][  FLU_NXT   *FLU_NXT   *FLU_NXT   ] = { NULL, NULL };
 real (*h_Flu_Array_F_Out[2])[FLU_NOUT][8*PATCH_SIZE*PATCH_SIZE*PATCH_SIZE] = { NULL, NULL };
-real (*h_Flux_Array[2])[9][NFLUX][4*PATCH_SIZE*PATCH_SIZE]                 = { NULL, NULL };
+real (*h_Flux_Array[2])[9][NFLUX_TOTAL][4*PATCH_SIZE*PATCH_SIZE]           = { NULL, NULL };
 double (*h_Corner_Array_F [2])[3]                                          = { NULL, NULL };
 real *h_MinDtInfo_Fluid_Array[2]                                           = { NULL, NULL };
 
@@ -176,7 +176,7 @@ real (*h_Flu_Array_USG_G[2])[GRA_NIN-1][PS1][PS1][PS1]                     = { N
 // (4-1) fluid solver
 real (*d_Flu_Array_F_In )[FLU_NIN ][ FLU_NXT*FLU_NXT*FLU_NXT ]    = NULL;
 real (*d_Flu_Array_F_Out)[FLU_NOUT][ PS2*PS2*PS2 ]                = NULL;
-real (*d_Flux_Array)[9][NFLUX][ PS2*PS2 ]                         = NULL;
+real (*d_Flux_Array)[9][NFLUX_TOTAL][ PS2*PS2 ]                   = NULL;
 double (*d_Corner_Array_F)[3]                                     = NULL;
 real  *d_MinDtInfo_Fluid_Array                                    = NULL;
 #if ( MODEL == HYDRO )

@@ -70,13 +70,13 @@ void Flu_Restrict( const int FaLv, const int SonFluSg, const int FaFluSg, const 
    const bool ResPot    = TVar & _POTE;
 #  endif
    int SonPID, FaPID, Disp_i, Disp_j, Disp_k, ii, jj, kk, I, J, K, Ip, Jp, Kp; 
-   int NVar_Flu, NVar_Tot, TFluVarIdx, TFluVarIdxList[NCOMP+NPASSIVE];
+   int NVar_Flu, NVar_Tot, TFluVarIdx, TFluVarIdxList[NCOMP_TOTAL];
 
 
-// determine the components to be restricted (TFluVarIdx : targeted fluid variable indices ( = [0 ... NCOMP+NPASSIVE-1] )
+// determine the components to be restricted (TFluVarIdx : targeted fluid variable indices ( = [0 ... NCOMP_TOTAL-1] )
    NVar_Flu = 0;
 
-   for (int v=0; v<NCOMP+NPASSIVE; v++)
+   for (int v=0; v<NCOMP_TOTAL; v++)
       if ( TVar & (1<<v) )    TFluVarIdxList[ NVar_Flu++ ] = v;
 
 // check again

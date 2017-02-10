@@ -95,7 +95,7 @@ int CUFLU_FluidSolver_SetConstMem( double ExtAcc_AuxArray_h[] );
 #elif ( MODEL == ELBDM )
 __global__ void CUFLU_ELBDMSolver( real g_Fluid_In [][FLU_NIN ][ FLU_NXT*FLU_NXT*FLU_NXT ],
                                    real g_Fluid_Out[][FLU_NOUT][ PS2*PS2*PS2 ],
-                                   real g_Flux     [][9][NFLUX][ PS2*PS2 ],
+                                   real g_Flux     [][9][NFLUX_TOTAL][ PS2*PS2 ],
                                    const real dt, const real _dh, const real Eta, const bool StoreFlux,
                                    const real Taylor3_Coeff, const bool XYZ, const real MinDens );
 
@@ -133,7 +133,7 @@ __global__ void CUPOT_PoissonSolver_MG( const real g_Rho_Array    [][ RHO_NXT*RH
 
 // Gravity solver prototypes in different models
 #if   ( MODEL == HYDRO )
-__global__ void CUPOT_HydroGravitySolver(       real g_Flu_Array_New[][NCOMP][ PATCH_SIZE*PATCH_SIZE*PATCH_SIZE ],
+__global__ void CUPOT_HydroGravitySolver(       real g_Flu_Array_New[][NCOMP_TOTAL][ PATCH_SIZE*PATCH_SIZE*PATCH_SIZE ],
                                           const real g_Pot_Array_New[][ GRA_NXT*GRA_NXT*GRA_NXT ],
                                           const double g_Corner_Array[][3],
                                           const real g_Pot_Array_USG[][ USG_NXT_G*USG_NXT_G*USG_NXT_G ],

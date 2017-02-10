@@ -57,8 +57,12 @@ SIMU_OPTION += -DLR_SCHEME=PPM
 # Riemann solver: EXACT/ROE/HLLE/HLLC ##ALL ARE USELESS IN RTVD, HLLE/HLLC ARE USELESS IN WAF##
 SIMU_OPTION += -DRSOLVER=ROE
 
-# number of passively advected scalars
-SIMU_OPTION += -DNPASSIVE=0
+# dual energy formalism
+#SIMU_OPTION += -DDUAL_ENERGY
+
+# number of passively advected scalars (excluding internal energy even when DUAL_ENERGY is on)
+# --> for simulations without any passive scalar, please set this variable to 0 and do NOT comment it out
+SIMU_OPTION += -DNCOMP_PASSIVE_MAKEFILE=0
 
 
 # (c) MHD options
