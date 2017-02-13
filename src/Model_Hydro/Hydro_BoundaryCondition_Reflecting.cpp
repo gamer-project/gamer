@@ -38,7 +38,7 @@ static void BC_Reflecting_zp( real *Array, const int NVar_Flu, const int TFluVar
 //                ArraySizeX/Y/Z : Size of Array including the ghost zones on each side 
 //                Idx_Start      : Minimum array indices
 //                Idx_End        : Maximum array indices
-//                TFluVarIdxList : List recording the target fluid variable indices ( = [0 ... NCOMP-1] )
+//                TFluVarIdxList : List recording the target fluid variable indices ( = [0 ... NCOMP_TOTAL-1] )
 //                NVar_Der       : Number of derived variables to be prepared
 //                TDerVarList    : List recording the target derived variables
 //
@@ -126,7 +126,7 @@ void Hydro_BoundaryCondition_Reflecting( real *Array, const int BC_Face, const i
 // 
 // Parameter   :  Array          : Array to store the prepared data of one patch group (including the ghost-zone data)
 //                NVar_Flu       : Number of fluid variables to be prepared (derived variables is NOT included)
-//                TFluVarIdxList : List recording the target fluid variable indices ( = [0 ... NCOMP-1] )
+//                TFluVarIdxList : List recording the target fluid variable indices ( = [0 ... NCOMP_TOTAL-1] )
 //                NVar_Der       : Number of derived variables to be prepared
 //                TDerVarList    : List recording the target derived variables
 //                GhostSize      : Number of ghost zones
@@ -216,7 +216,7 @@ void BC_Reflecting_xm( real *Array, const int NVar_Flu, const int TFluVarIdxList
 // 
 // Parameter   :  Array          : Array to store the prepared data of one patch group (including the ghost-zone data)
 //                NVar_Flu       : Number of fluid variables to be prepared (derived variables is NOT included)
-//                TFluVarIdxList : List recording the target fluid variable indices ( = [0 ... NCOMP-1] )
+//                TFluVarIdxList : List recording the target fluid variable indices ( = [0 ... NCOMP_TOTAL-1] )
 //                NVar_Der       : Number of derived variables to be prepared
 //                TDerVarList    : List recording the target derived variables
 //                GhostSize      : Number of ghost zones
@@ -306,7 +306,7 @@ void BC_Reflecting_xp( real *Array, const int NVar_Flu, const int TFluVarIdxList
 // 
 // Parameter   :  Array          : Array to store the prepared data of one patch group (including the ghost-zone data)
 //                NVar_Flu       : Number of fluid variables to be prepared (derived variables is NOT included)
-//                TFluVarIdxList : List recording the target fluid variable indices ( = [0 ... NCOMP-1] )
+//                TFluVarIdxList : List recording the target fluid variable indices ( = [0 ... NCOMP_TOTAL-1] )
 //                NVar_Der       : Number of derived variables to be prepared
 //                TDerVarList    : List recording the target derived variables
 //                GhostSize      : Number of ghost zones
@@ -396,7 +396,7 @@ void BC_Reflecting_ym( real *Array, const int NVar_Flu, const int TFluVarIdxList
 // 
 // Parameter   :  Array          : Array to store the prepared data of one patch group (including the ghost-zone data)
 //                NVar_Flu       : Number of fluid variables to be prepared (derived variables is NOT included)
-//                TFluVarIdxList : List recording the target fluid variable indices ( = [0 ... NCOMP-1] )
+//                TFluVarIdxList : List recording the target fluid variable indices ( = [0 ... NCOMP_TOTAL-1] )
 //                NVar_Der       : Number of derived variables to be prepared
 //                TDerVarList    : List recording the target derived variables
 //                GhostSize      : Number of ghost zones
@@ -486,7 +486,7 @@ void BC_Reflecting_yp( real *Array, const int NVar_Flu, const int TFluVarIdxList
 // 
 // Parameter   :  Array          : Array to store the prepared data of one patch group (including the ghost-zone data)
 //                NVar_Flu       : Number of fluid variables to be prepared (derived variables is NOT included)
-//                TFluVarIdxList : List recording the target fluid variable indices ( = [0 ... NCOMP-1] )
+//                TFluVarIdxList : List recording the target fluid variable indices ( = [0 ... NCOMP_TOTAL-1] )
 //                NVar_Der       : Number of derived variables to be prepared
 //                TDerVarList    : List recording the target derived variables
 //                GhostSize      : Number of ghost zones
@@ -576,7 +576,7 @@ void BC_Reflecting_zm( real *Array, const int NVar_Flu, const int TFluVarIdxList
 // 
 // Parameter   :  Array          : Array to store the prepared data of one patch group (including the ghost-zone data)
 //                NVar_Flu       : Number of fluid variables to be prepared (derived variables is NOT included)
-//                TFluVarIdxList : List recording the target fluid variable indices ( = [0 ... NCOMP-1] )
+//                TFluVarIdxList : List recording the target fluid variable indices ( = [0 ... NCOMP_TOTAL-1] )
 //                NVar_Der       : Number of derived variables to be prepared
 //                TDerVarList    : List recording the target derived variables
 //                GhostSize      : Number of ghost zones

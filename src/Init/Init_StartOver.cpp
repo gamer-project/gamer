@@ -57,9 +57,9 @@ void Init_StartOver()
    {
       for (int lv=TOP_LEVEL-1; lv>=0; lv--)
       {
-         Flu_Restrict( lv, amr->FluSg[lv+1], amr->FluSg[lv], NULL_INT, NULL_INT, _FLU );
+         Flu_Restrict( lv, amr->FluSg[lv+1], amr->FluSg[lv], NULL_INT, NULL_INT, _TOTAL );
 
-         Buf_GetBufferData( lv, amr->FluSg[lv], NULL_INT, DATA_GENERAL, _FLU, Flu_ParaBuf, USELB_NO );
+         Buf_GetBufferData( lv, amr->FluSg[lv], NULL_INT, DATA_GENERAL, _TOTAL, Flu_ParaBuf, USELB_NO );
       } // for (int lv=NLEVEL-2; lv>=0; lv--)
    } // if ( OPT__INIT_RESTRICT )
 

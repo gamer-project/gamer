@@ -145,12 +145,13 @@ struct Makefile_t
 struct SymConst_t
 {
 
-   int    NCompTotal;
+   int    NCompFluid;
    int    NCompPassive;
    int    PatchSize;
    int    Flu_NIn;
    int    Flu_NOut;
-   int    NFlux;
+   int    NFluxFluid;
+   int    NFluxPassive;
    int    Flu_GhostSize;
    int    Flu_Nxt;
    int    Debug_HDF5;

@@ -68,7 +68,6 @@ Procedure for outputting new variables:
 3. Edit "FillIn_XXX" to fill in the new variables
 4. Edit "Check_XXX" in "Init_Restart_HDF5.cpp" to load and compare the new variables
 5. Modify FormatVersion and CodeVersion
-6. Edit "Init_Restart_HDF5.cpp" to load and validate the new variables
 ======================================================================================================*/
 
 
@@ -1480,12 +1479,13 @@ void FillIn_SymConst( SymConst_t &SymConst )
 {
 
 // model-independent variables
-   SymConst.NCompTotal           = NCOMP_TOTAL;
+   SymConst.NCompFluid           = NCOMP_FLUID;
    SymConst.NCompPassive         = NCOMP_PASSIVE;
    SymConst.PatchSize            = PATCH_SIZE;
    SymConst.Flu_NIn              = FLU_NIN;
    SymConst.Flu_NOut             = FLU_NOUT;
-   SymConst.NFlux                = NFLUX;
+   SymConst.NFluxFluid           = NFLUX_FLUID;
+   SymConst.NFluxPassive         = NFLUX_PASSIVE;
    SymConst.Flu_GhostSize        = FLU_GHOST_SIZE;
    SymConst.Flu_Nxt              = FLU_NXT;
 #  ifdef DEBUG_HDF5
@@ -2091,12 +2091,13 @@ void GetCompound_SymConst( hid_t &H5_TypeID )
 
    H5_TypeID = H5Tcreate( H5T_COMPOUND, sizeof(SymConst_t) );
 
-   H5Tinsert( H5_TypeID, "NCompTotal",           HOFFSET(SymConst_t,NCompTotal          ), H5T_NATIVE_INT    );
+   H5Tinsert( H5_TypeID, "NCompFluid",           HOFFSET(SymConst_t,NCompFluid          ), H5T_NATIVE_INT    );
    H5Tinsert( H5_TypeID, "NCompPassive",         HOFFSET(SymConst_t,NCompPassive        ), H5T_NATIVE_INT    );
    H5Tinsert( H5_TypeID, "PatchSize",            HOFFSET(SymConst_t,PatchSize           ), H5T_NATIVE_INT    );
    H5Tinsert( H5_TypeID, "Flu_NIn",              HOFFSET(SymConst_t,Flu_NIn             ), H5T_NATIVE_INT    );
    H5Tinsert( H5_TypeID, "Flu_NOut",             HOFFSET(SymConst_t,Flu_NOut            ), H5T_NATIVE_INT    );
-   H5Tinsert( H5_TypeID, "NFlux",                HOFFSET(SymConst_t,NFlux               ), H5T_NATIVE_INT    );
+   H5Tinsert( H5_TypeID, "NFluxFluid",           HOFFSET(SymConst_t,NFluxFluid          ), H5T_NATIVE_INT    );
+   H5Tinsert( H5_TypeID, "NFluxPassive",         HOFFSET(SymConst_t,NFluxPassive        ), H5T_NATIVE_INT    );
    H5Tinsert( H5_TypeID, "Flu_GhostSize",        HOFFSET(SymConst_t,Flu_GhostSize       ), H5T_NATIVE_INT    );
    H5Tinsert( H5_TypeID, "Flu_Nxt",              HOFFSET(SymConst_t,Flu_Nxt             ), H5T_NATIVE_INT    );
    H5Tinsert( H5_TypeID, "Debug_HDF5",           HOFFSET(SymConst_t,Debug_HDF5          ), H5T_NATIVE_INT    );

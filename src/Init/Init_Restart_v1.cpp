@@ -490,10 +490,10 @@ void Init_Restart_v1( const char FileName[] )
    for (int lv=NLEVEL-2; lv>=0; lv--)
    {
 //    data restriction: lv+1 --> lv
-      Flu_Restrict( lv, amr->FluSg[lv+1], amr->FluSg[lv], NULL_INT, NULL_INT, _FLU );
+      Flu_Restrict( lv, amr->FluSg[lv+1], amr->FluSg[lv], NULL_INT, NULL_INT, _TOTAL );
 
 //    fill up the data in the buffer patches
-      Buf_GetBufferData( lv, amr->FluSg[lv], NULL_INT, DATA_GENERAL, _FLU, Flu_ParaBuf, USELB_NO );
+      Buf_GetBufferData( lv, amr->FluSg[lv], NULL_INT, DATA_GENERAL, _TOTAL, Flu_ParaBuf, USELB_NO );
    } // for (int lv=NLEVEL-2; lv>=0; lv--)
 
 // ===================================================================================================================
@@ -547,9 +547,9 @@ void Load_Parameter_Before_1200( FILE *File, const int FormatVersion, int &NLv_R
 
 // b. load the symbolic constants defined in the Makefile
 // =================================================================================================
-   int ncomp_total, patch_size, max_patch, nlevel, flu_ghost_size, pot_ghost_size, gra_ghost_size;
+   int ncomp_fluid, patch_size, max_patch, nlevel, flu_ghost_size, pot_ghost_size, gra_ghost_size;
 
-   fread( &ncomp_total,                sizeof(int),                     1,             File );
+   fread( &ncomp_fluid,                sizeof(int),                     1,             File );
    fread( &patch_size,                 sizeof(int),                     1,             File );
    fread( &max_patch,                  sizeof(int),                     1,             File );
    fread( &nlevel,                     sizeof(int),                     1,             File );
@@ -646,8 +646,8 @@ void Load_Parameter_Before_1200( FILE *File, const int FormatVersion, int &NLv_R
          Aux_Error( ERROR_INFO, "the loaded RESTART file is simulated using double precision !!\n" );
 #     endif
 
-      if ( ncomp_total != NCOMP_TOTAL )
-         Aux_Error( ERROR_INFO, "%s : RESTART file (%d) != runtime (%d) !!\n", "NCOMP_TOTAL", ncomp_total, NCOMP_TOTAL );
+      if ( ncomp_fluid != NCOMP_FLUID )
+         Aux_Error( ERROR_INFO, "%s : RESTART file (%d) != runtime (%d) !!\n", "NCOMP_FLUID", ncomp_fluid, NCOMP_FLUID );
 
       if ( patch_size != PATCH_SIZE )
          Aux_Error( ERROR_INFO, "%s : RESTART file (%d) != runtime (%d) !!\n", "PATCH_SIZE", patch_size, PS1 );
@@ -869,11 +869,11 @@ void Load_Parameter_After_1200( FILE *File, const int FormatVersion, int &NLv_Re
 // =================================================================================================
    bool enforce_positive, char_reconstruction, hll_no_ref_state, hll_include_all_waves, waf_dissipate;
    bool use_psolver_10to14;
-   int  ncomp_total, patch_size, flu_ghost_size, pot_ghost_size, gra_ghost_size, check_intermediate;
+   int  ncomp_fluid, patch_size, flu_ghost_size, pot_ghost_size, gra_ghost_size, check_intermediate;
    int  flu_block_size_x, flu_block_size_y, pot_block_size_x, pot_block_size_z, gra_block_size_z;
    real min_pres, max_error;
 
-   fread( &ncomp_total,                sizeof(int),                     1,             File );
+   fread( &ncomp_fluid,                sizeof(int),                     1,             File );
    fread( &patch_size,                 sizeof(int),                     1,             File );
    fread( &min_pres,                   sizeof(real),                    1,             File );
    fread( &flu_ghost_size,             sizeof(int),                     1,             File );
@@ -1171,7 +1171,7 @@ void Load_Parameter_After_1200( FILE *File, const int FormatVersion, int &NLv_Re
 
 //    d-2. check the symbolic constants defined in "Macro.h, CUPOT.h, and CUFLU.h"
 //    ========================================================================
-      CompareVar( "NCOMP_TOTAL",             ncomp_total,            NCOMP_TOTAL,                  Fatal );
+      CompareVar( "NCOMP_FLUID",             ncomp_fluid,            NCOMP_FLUID,                  Fatal );
       CompareVar( "PATCH_SIZE",              patch_size,             PATCH_SIZE,                   Fatal );
 
       CompareVar( "FLU_GHOST_SIZE",          flu_ghost_size,         FLU_GHOST_SIZE,            NonFatal );

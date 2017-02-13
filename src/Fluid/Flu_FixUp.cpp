@@ -387,6 +387,6 @@ void Flu_FixUp( const int lv, const double dt )
 
 
 // b. average over the data at level "lv+1" to correct the data at level "lv"
-   if ( OPT__FIXUP_RESTRICT )    Flu_Restrict( lv, amr->FluSg[lv+1], amr->FluSg[lv], NULL_INT, NULL_INT, _FLU );
+   if ( OPT__FIXUP_RESTRICT )    Flu_Restrict( lv, amr->FluSg[lv+1], amr->FluSg[lv], NULL_INT, NULL_INT, _TOTAL );
 
 } // FUNCTION : Flu_FixUp

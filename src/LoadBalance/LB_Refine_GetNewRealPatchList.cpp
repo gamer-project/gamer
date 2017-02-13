@@ -514,12 +514,12 @@ void PrepareCData( const int FaLv, const int FaPID, real *const FaData,
          {
 #           if ( MODEL == HYDRO  ||  MODEL == MHD )
             case BC_FLU_OUTFLOW:    
-               Hydro_BoundaryCondition_Outflow   ( FaData_Flu, BC_Face[BC_Sibling], NCOMP, FaGhost_Flu,
+               Hydro_BoundaryCondition_Outflow   ( FaData_Flu, BC_Face[BC_Sibling], NCOMP_TOTAL, FaGhost_Flu,
                                                    FaSize_Flu, FaSize_Flu, FaSize_Flu, BC_Idx_Start, BC_Idx_End );
             break;
 
             case BC_FLU_REFLECTING:
-               Hydro_BoundaryCondition_Reflecting( FaData_Flu, BC_Face[BC_Sibling], NCOMP, FaGhost_Flu,
+               Hydro_BoundaryCondition_Reflecting( FaData_Flu, BC_Face[BC_Sibling], NCOMP_TOTAL, FaGhost_Flu,
                                                    FaSize_Flu, FaSize_Flu, FaSize_Flu, BC_Idx_Start, BC_Idx_End, 
                                                    FluVarIdxList, NDer, DerVarList );
             break;
@@ -529,9 +529,9 @@ void PrepareCData( const int FaLv, const int FaPID, real *const FaData,
 #           endif
 
             case BC_FLU_USER:
-               Flu_BoundaryCondition_User        ( FaData_Flu,                      NCOMP,
+               Flu_BoundaryCondition_User        ( FaData_Flu,                      NCOMP_TOTAL,
                                                    FaSize_Flu, FaSize_Flu, FaSize_Flu, BC_Idx_Start, BC_Idx_End, 
-                                                   FluVarIdxList, Time[FaLv], amr->dh[FaLv], xyz, _FLU );
+                                                   FluVarIdxList, Time[FaLv], amr->dh[FaLv], xyz, _TOTAL );
             break;
 
             default: 

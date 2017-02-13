@@ -26,7 +26,7 @@ bool ParDensArray_Initialized = false;
 //
 // Note        :  1. Use the input parameter "TVar" to control the target variables
 //                   --> TVar can be any combination of the symbolic constants defined in "Macro.h"
-//                       (e.g., "TVar = _DENS", "TVar = _MOMX|ENGY", or "TVar = _FLU|_POTE")
+//                       (e.g., "TVar = _DENS", "TVar = _MOMX|ENGY", or "TVar = _TOTAL")
 //                2. If "GhostSize != 0" --> the function "InterpolateGhostZone" will be used to fill up the
 //                   ghost-zone values by spatial interpolation if the corresponding sibling patches do
 //                   NOT exist
@@ -35,9 +35,9 @@ bool ParDensArray_Initialized = false;
 //                       is NOT equal to the time of data stored previously (e.g., FluSgTime[0/1])
 //                4. Use "patch group" as the preparation unit
 //                   --> The data of all patches within the same patch group will be prepared
-//                5. It is assumed that both _FLU and _PASSIVE are stored in the same Sg
+//                5. It is assumed that both _FLUID and _PASSIVE are stored in the same Sg
 //                6. Data are prepared and stored in the order:
-//                   _FLU (where _DENS may be replaced by _TOTAL_DENS) -> _PASSIVE -> _DERIVED --> _POTE --> _PAR_DENS
+//                   _FLUID (where _DENS may be replaced by _TOTAL_DENS) -> _PASSIVE -> _DERIVED --> _POTE --> _PAR_DENS
 //                   ** DERIVED must be prepared immediately after FLU and PASSIVE so that both FLU, PASSIVE, and DERIVED
 //                      can be prepared at the same time for the non-periodic BC. **
 //                7. For _PAR_DENS and _TOTAL_DENS (for PARTICLE only), the rho_ext arrays of patches at Lv=lv will be allocated
@@ -70,10 +70,11 @@ bool ParDensArray_Initialized = false;
 //                PID0_List      : List recording the patch indicies with LocalID==0 to be prepared
 //                TVar           : Target variables to be prepared
 //                                 --> Supported variables in different models:
-//                                     HYDRO : _DENS, _MOMX, _MOMY, _MOMZ, _ENGY, _FLU, _VELX, _VELY, _VELZ, _PRES, _TEMP,
-//                                             [, _POTE] [, _PASSIVE]
+//                                     HYDRO : _DENS, _MOMX, _MOMY, _MOMZ, _ENGY, _VELX, _VELY, _VELZ, _PRES, _TEMP,
+//                                             [, _POTE]
 //                                     MHD   :
 //                                     ELBDM : _DENS, _REAL, _IMAG [, _POTE]
+//                                 --> _FLUID, _PASSIVE, _TOTAL, and _DERIVED apply to all models
 //                IntScheme      : Interpolation scheme
 //                                 --> currently supported schemes include
 //                                     INT_MINMOD1D : MinMod-1D
@@ -109,7 +110,7 @@ bool ParDensArray_Initialized = false;
 //                                         (because density field is already stored in each patch and we don't want
 //                                         Prepare_PatchData() to MODIFY the existing data)
 //                                 --> Currently MinPres is applied in Flu_Prepare() and Flag_Real()
-//                                     --> The Guideline is to apply MinPres check whenever _PRES, _TEMP or _FLU is required
+//                                     --> The Guideline is to apply MinPres check whenever _PRES, _TEMP or _FLUID is required
 //                                         (because pressure field is NOT stored explicitly in each patch and thus existing data
 //                                         may still have pressure < MinPres due to round-off errors)
 //-------------------------------------------------------------------------------------------------------
@@ -164,8 +165,8 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
 //    note that when PARTICLE is on, we should NOT allow MinPres check when TVar & _TOTAL_DENS == true because
 //    we won't have gas density prepared to calculate pressure (we only have **total** density)
 //    --> but when PARTICLE is off, we have _TOTAL_DENS == _DENS (see Macro.h), and thus MinPres check is allowed
-      if ( !(TVar & _PRES)  &&  !(TVar & _TEMP)  &&  (TVar & _FLU) != _FLU )
-         Aux_Error( ERROR_INFO, "MinPres (%13.7e) >= 0.0, but cannot find _PRES, _TEMP, or _FLU !!\n", MinPres );
+      if ( !(TVar & _PRES)  &&  !(TVar & _TEMP)  &&  (TVar & _FLUID) != _FLUID )
+         Aux_Error( ERROR_INFO, "MinPres (%13.7e) >= 0.0, but cannot find _PRES, _TEMP, or _FLUID !!\n", MinPres );
 #     else
          Aux_Error( ERROR_INFO, "MinPres (%13.7e) >= 0.0 can only be applied to HYDRO/MHD !!\n", MinPres );
 #     endif
@@ -1233,7 +1234,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
 
                   Array_Ptr += NVar_Flu*PGSize3D;
 
-               } // if ( TVar & _FLU )
+               } // if ( TVar & (_TOTAL|_DERIVED) )
 
 
 //             (b3-2) potential B.C.
@@ -1512,8 +1513,8 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
                for (int t=0; t<PGSize3D; t++)   ArrayPres[t] = FMAX( ArrayPres[t], MinPres );
             }
 
-//          (d2-2) pressure in the energy field --> work only when ALL fluid fields are prepared
-            if ( (TVar & _FLU) == _FLU )
+//          (d2-2) pressure in the energy field --> work only when ALL active fluid fields are prepared
+            if ( (TVar & _FLUID) == _FLUID )
             {
 //             assuming that the order of variables stored in h_Input_Array is the same as patch->fluid[]
                const int DensIdx = DENS;
@@ -1532,7 +1533,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
                for (int t=0; t<PGSize3D; t++)
                   ArrayEngy[t] = CPU_CheckMinPresInEngy( ArrayDens[t], ArrayMomX[t], ArrayMomY[t], ArrayMomZ[t], ArrayEngy[t],
                                                          Gamma_m1, _Gamma_m1, MinPres );
-            } // if ( (TVar & _FLU) == _FLU )
+            } // if ( (TVar & _FLUID) == _FLUID )
          } // if ( MinPres >= (real)0.0 )
 #        endif // #if ( MODEL == HYDRO  ||  MODEL == MHD )
 

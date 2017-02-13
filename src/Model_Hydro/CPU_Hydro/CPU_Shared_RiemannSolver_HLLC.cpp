@@ -103,7 +103,7 @@ void CPU_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In[], 
 
 
 // 3. estimate the maximum wave speeds
-   const real EVal[NCOMP] = { u-Cs, u, u, u, u+Cs };
+   const real EVal[NCOMP_FLUID] = { u-Cs, u, u, u, u+Cs };
    real u_L, u_R, Cs_L, Cs_R, W_L, W_R, MaxV_L, MaxV_R;
 
    u_L    = _RhoL*L[1];
@@ -121,8 +121,8 @@ void CPU_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In[], 
 
    Cs_L   = SQRT( Gamma*P_L*_RhoL );
    Cs_R   = SQRT( Gamma*P_R*_RhoR );
-   W_L    = FMIN( EVal[      0], u_L-Cs_L );
-   W_R    = FMAX( EVal[NCOMP-1], u_R+Cs_R );
+   W_L    = FMIN( EVal[            0], u_L-Cs_L );
+   W_R    = FMAX( EVal[NCOMP_FLUID-1], u_R+Cs_R );
    MaxV_L = FMIN( W_L, (real)0.0 );
    MaxV_R = FMAX( W_R, (real)0.0 );
 
@@ -136,8 +136,8 @@ void CPU_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In[], 
    temp1_L = L[0]*( u_L - W_L );
    temp1_R = R[0]*( u_R - W_R );
    */
-   temp1_L = L[0]*(  (EVal[      0]<u_L-Cs_L) ? (u_L-EVal[      0]) : (+Cs_L)  );
-   temp1_R = R[0]*(  (EVal[NCOMP-1]>u_R+Cs_R) ? (u_R-EVal[NCOMP-1]) : (-Cs_R)  );
+   temp1_L = L[0]*(  (EVal[            0]<u_L-Cs_L) ? (u_L-EVal[            0]) : (+Cs_L)  );
+   temp1_R = R[0]*(  (EVal[NCOMP_FLUID-1]>u_R+Cs_R) ? (u_R-EVal[NCOMP_FLUID-1]) : (-Cs_R)  );
 
    temp2_L = P_L + temp1_L*u_L;
    temp2_R = P_R + temp1_R*u_R;

@@ -102,7 +102,7 @@ void CPU_RiemannSolver_HLLE( const int XYZ, real Flux_Out[], const real L_In[], 
 
 
 // 3. estimate the maximum wave speeds
-   const real EVal[NCOMP] = { u-Cs, u, u, u, u+Cs };
+   const real EVal[NCOMP_FLUID] = { u-Cs, u, u, u, u+Cs };
    real u_L, u_R, Cs_L, Cs_R, MaxV_L, MaxV_R;
 
    u_L    = _RhoL*L[1];
@@ -120,8 +120,8 @@ void CPU_RiemannSolver_HLLE( const int XYZ, real Flux_Out[], const real L_In[], 
 
    Cs_L   = SQRT( Gamma*P_L*_RhoL );
    Cs_R   = SQRT( Gamma*P_R*_RhoR );
-   MaxV_L = FMIN( EVal[      0], u_L-Cs_L );
-   MaxV_R = FMAX( EVal[NCOMP-1], u_R+Cs_R );
+   MaxV_L = FMIN( EVal[            0], u_L-Cs_L );
+   MaxV_R = FMAX( EVal[NCOMP_FLUID-1], u_R+Cs_R );
    MaxV_L = FMIN( MaxV_L, (real)0.0 );
    MaxV_R = FMAX( MaxV_R, (real)0.0 );
 

@@ -124,10 +124,8 @@ void Output_Patch( const int lv, const int PID, const int FluSg, const int PotSg
 #  warning : WARNING : DO YOU WANT TO ADD the FILE HEADER HERE FOR THE NEW MODEL ??
 #  endif // MODEL
 
-#  if ( NPASSIVE > 0 )
-   for (int v=0; v<NPASSIVE; v++)
+   for (int v=0; v<NCOMP_PASSIVE; v++)
    fprintf( File, "%11s%3d", "Passive", v );
-#  endif
 
 #  ifdef GRAVITY
    fprintf( File, "%14s", "Potential" );
@@ -137,7 +135,7 @@ void Output_Patch( const int lv, const int PID, const int FluSg, const int PotSg
 
 
 // output data
-   real u[NCOMP]; 
+   real u[NCOMP_TOTAL]; 
 
    for (int k=0; k<PATCH_SIZE; k++)
    for (int j=0; j<PATCH_SIZE; j++)
@@ -149,7 +147,7 @@ void Output_Patch( const int lv, const int PID, const int FluSg, const int PotSg
       if ( FluData->fluid != NULL )
       {
 //       output all variables in the fluid array
-         for (int v=0; v<NCOMP; v++)   
+         for (int v=0; v<NCOMP_FLUID; v++)   
          {
             u[v] = FluData->fluid[v][k][j][i];
             fprintf( File, " %13.6e", u[v] );
@@ -164,16 +162,14 @@ void Output_Patch( const int lv, const int PID, const int FluSg, const int PotSg
 #        endif // MODEL
 
 //       output the passive variables
-#        if ( NPASSIVE > 0 )
-         for (int v=0; v<NPASSIVE; v++)   
-         fprintf( File, " %13.6e", FluData->passive[v][k][j][i] );
-#        endif
+         for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)   
+         fprintf( File, " %13.6e", FluData->fluid[v][k][j][i] );
       } // if ( FluData->fluid != NULL )
 
       else
       {
 //       output empty strings if the fluid array is not allocated
-         for (int v=0; v<NCOMP; v++)   fprintf( File, " %13s", "" );
+         for (int v=0; v<NCOMP_FLUID; v++)   fprintf( File, " %13s", "" );
 
 #        if   ( MODEL == HYDRO )
          fprintf( File, " %13s", "" );
@@ -181,7 +177,7 @@ void Output_Patch( const int lv, const int PID, const int FluSg, const int PotSg
 #        warning : WAIT MHD !!!
 #        endif // MODEL
 
-         for (int v=0; v<NPASSIVE; v++)   
+         for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)   
          fprintf( File, " %13s", "" );
       } // if ( FluData->fluid != NULL ) ... else ...
 

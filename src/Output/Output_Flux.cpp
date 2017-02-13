@@ -90,7 +90,7 @@ void Output_Flux( const int lv, const int PID, const int Sib, const char *commen
       {
          fprintf( File, "( %d, %d )", n, m );
 
-         for (int v=0; v<NFLUX; v++)   fprintf( File, "  %14.7e", FluxPtr[v][m][n] );
+         for (int v=0; v<NFLUX_TOTAL; v++)   fprintf( File, "  %14.7e", FluxPtr[v][m][n] );
 
          fprintf( File, "\n" );
       }

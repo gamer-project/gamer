@@ -44,10 +44,11 @@ static int Table_01( const int SibID, const int Side, const char dim, const int 
 //                TSib           : Target sibling indices along different sibling directions
 //                TVar           : Target variables to be prepared
 //                                 --> Supported variables in different models:
-//                                     HYDRO : _DENS, _MOMX, _MOMY, _MOMZ, _ENGY, _FLU, _VELX, _VELY, _VELZ, _PRES, _TEMP,
-//                                             [, _POTE] [, _PASSIVE]
+//                                     HYDRO : _DENS, _MOMX, _MOMY, _MOMZ, _ENGY, _VELX, _VELY, _VELZ, _PRES, _TEMP,
+//                                             [, _POTE]
 //                                     MHD   :
 //                                     ELBDM : _DENS, _REAL, _IMAG [, _POTE]
+//                                 --> _FLUID, _PASSIVE, _TOTAL, and _DERIVED apply to all models
 //                NVar_Tot       : Total number of variables to be prepared
 //                NVar_Flu       : Number of fluid variables to be prepared
 //                TFluVarIdxList : List recording the target fluid and passive variable indices ( = [0 ... NCOMP_TOTAL-1] )

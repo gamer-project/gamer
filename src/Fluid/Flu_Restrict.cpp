@@ -9,7 +9,7 @@
 // Description :  Replace the data at level "FaLv" by the average data at level "FaLv+1" 
 //
 // Note        :  Use the input parameter "TVar" to determine the targeted variables, which can be any
-//                subset of (_FLU | _POTE | _PASSIVE)
+//                subset of (_FLUID | _POTE | _PASSIVE)
 //
 // Parameter   :  FaLv     : Targeted refinement level at which the data are going to be replaced
 //                SonFluSg : Fluid sandglass at level "FaLv+1"
@@ -18,9 +18,10 @@
 //                FaPotSg  : Potential sandglass at level "FaLv"
 //                TVar     : Targeted variables
 //                           --> Supported variables in different models:
-//                               HYDRO : _DENS, _MOMX, _MOMY, _MOMZ, _ENGY, _FLU [, _POTE] [, _PASSIVE]
+//                               HYDRO : _DENS, _MOMX, _MOMY, _MOMZ, _ENGY,[, _POTE]
 //                               MHD   : 
-//                               ELBDM : _DENS, _REAL, _IMAG, _FLU [, _POTE]
+//                               ELBDM : _DENS, _REAL, _IMAG, [, _POTE]
+//                           --> _FLUID, _PASSIVE, and _TOTAL apply to all models
 //-------------------------------------------------------------------------------------------------------
 void Flu_Restrict( const int FaLv, const int SonFluSg, const int FaFluSg, const int SonPotSg, const int FaPotSg,
                    const int TVar )
@@ -38,10 +39,10 @@ void Flu_Restrict( const int FaLv, const int SonFluSg, const int FaFluSg, const 
       return;
    }
 
-   if (  ( TVar & (_FLU|_PASSIVE) )  &&  ( SonFluSg != 0 && SonFluSg != 1 )  )
+   if (  ( TVar & (_TOTAL) )  &&  ( SonFluSg != 0 && SonFluSg != 1 )  )
       Aux_Error( ERROR_INFO, "incorrect parameter %s = %d !!\n", "SonFluSg", SonFluSg );
 
-   if (  ( TVar & (_FLU|_PASSIVE) )  &&  ( FaFluSg != 0 && FaFluSg != 1 )  )
+   if (  ( TVar & (_TOTAL) )  &&  ( FaFluSg != 0 && FaFluSg != 1 )  )
       Aux_Error( ERROR_INFO, "incorrect parameter %s = %d !!\n", "FaFluSg", FaFluSg );
 
 #  ifdef GRAVITY
@@ -51,11 +52,11 @@ void Flu_Restrict( const int FaLv, const int SonFluSg, const int FaFluSg, const 
    if (  ( TVar & _POTE )  &&  ( FaPotSg != 0 && FaPotSg != 1 )  )
       Aux_Error( ERROR_INFO, "incorrect parameter %s = %d !!\n", "FaPotSg", FaPotSg );
 
-   if (  !( TVar & (_FLU|_POTE|_PASSIVE) )  )
-      Aux_Error( ERROR_INFO, "no suitable targeted variable is found --> missing (_FLU|_POTE|_PASSIVE) !!\n" );
+   if (  !( TVar & (_TOTAL|_POTE) )  )
+      Aux_Error( ERROR_INFO, "no suitable targeted variable is found --> missing (_TOTAL|_POTE) !!\n" );
 #  else
-   if (  !( TVar & (_FLU|_PASSIVE) )  )
-      Aux_Error( ERROR_INFO, "no suitable targeted variable is found --> missing (_FLU|_PASSIVE) !!\n" );
+   if (  !( TVar & (_TOTAL) )  )
+      Aux_Error( ERROR_INFO, "no suitable targeted variable is found --> missing (_TOTAL) !!\n" );
 #  endif
 
 // nothing to do if there are no real patches at lv+1
@@ -65,7 +66,7 @@ void Flu_Restrict( const int FaLv, const int SonFluSg, const int FaFluSg, const 
    Mis_CompareRealValue( Time[FaLv], Time[SonLv], __FUNCTION__, true );
 
 
-   const bool ResFlu    = TVar & ( _FLU | _PASSIVE );
+   const bool ResFlu    = TVar & _TOTAL;
 #  ifdef GRAVITY
    const bool ResPot    = TVar & _POTE;
 #  endif

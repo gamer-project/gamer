@@ -403,7 +403,7 @@ void Output_DumpData_Total( const char *FileName )
 
       fseek( File, HeaderOffset_Constant, SEEK_SET );
 
-      const int    ncomp_total           = NCOMP_TOTAL;
+      const int    ncomp_fluid           = NCOMP_FLUID;
       const int    patch_size            = PATCH_SIZE;
 #     if ( MODEL == HYDRO  ||  MODEL == MHD )
       const double min_pres              = MIN_PRES;
@@ -493,7 +493,7 @@ void Output_DumpData_Total( const char *FileName )
       const int    par_npassive          = NULL_INT;
 #     endif
 
-      fwrite( &ncomp_total,               sizeof(int),                     1,             File );
+      fwrite( &ncomp_fluid,               sizeof(int),                     1,             File );
       fwrite( &patch_size,                sizeof(int),                     1,             File );
       fwrite( &min_pres,                  sizeof(double),                  1,             File );
       fwrite( &flu_ghost_size,            sizeof(int),                     1,             File );

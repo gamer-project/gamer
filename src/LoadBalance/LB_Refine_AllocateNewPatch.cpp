@@ -751,11 +751,7 @@ int AllocateSonPatch( const int FaLv, const int *Cr, const int PScale, const int
 #     if ( MODEL == HYDRO )
 //    we now apply monotonic interpolation to ALL fluid variables (which helps alleviate the issue of negative density/pressure)
       /*
-#     if ( NPASSIVE > 0 )
-      if ( v == DENS  ||  v == ENGY  ||  v >= NCOMP )
-#     else
-      if ( v == DENS  ||  v == ENGY )
-#     endif
+      if ( v == DENS  ||  v == ENGY  ||  v >= NCOMP_FLUID )
                                        Monotonicity[v] = EnsureMonotonicity_Yes;
       else                             Monotonicity[v] = EnsureMonotonicity_No;
       */

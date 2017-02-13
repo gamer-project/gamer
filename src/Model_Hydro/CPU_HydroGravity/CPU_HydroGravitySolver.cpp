@@ -27,7 +27,7 @@
 //
 // Return      :  Flu_Array_New
 //-----------------------------------------------------------------------------------------
-void CPU_HydroGravitySolver(       real Flu_Array_New[][NCOMP][PS1][PS1][PS1],
+void CPU_HydroGravitySolver(       real Flu_Array_New[][NCOMP_FLUID][PS1][PS1][PS1],
                              const real Pot_Array_New[][GRA_NXT][GRA_NXT][GRA_NXT],
                              const double Corner_Array[][3],
                              const real Pot_Array_USG[][USG_NXT_G][USG_NXT_G][USG_NXT_G],

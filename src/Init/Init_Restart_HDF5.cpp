@@ -1299,12 +1299,13 @@ void Check_SymConst( const char *FileName )
    SymConst_t RS;    // RS = ReStart
 
 
-   LoadField( "NCompTotal",           &RS.NCompTotal,           SID, TID, NonFatal, &RT.NCompTotal,            1,    Fatal );
+   LoadField( "NCompFluid",           &RS.NCompFluid,           SID, TID, NonFatal, &RT.NCompFluid,            1,    Fatal );
    LoadField( "NCompPassive",         &RS.NCompPassive,         SID, TID, NonFatal, &RT.NCompPassive,          1,    Fatal );
    LoadField( "PatchSize",            &RS.PatchSize,            SID, TID, NonFatal, &RT.PatchSize,             1,    Fatal );
    LoadField( "Flu_NIn",              &RS.Flu_NIn,              SID, TID, NonFatal, &RT.Flu_NIn,               1, NonFatal );
    LoadField( "Flu_NOut",             &RS.Flu_NOut,             SID, TID, NonFatal, &RT.Flu_NOut,              1, NonFatal );
-   LoadField( "NFlux",                &RS.NFlux,                SID, TID, NonFatal, &RT.NFlux,                 1, NonFatal );
+   LoadField( "NFluxFluid",           &RS.NFluxFluid,           SID, TID, NonFatal, &RT.NFluxFluid,            1, NonFatal );
+   LoadField( "NFluxPassive",         &RS.NFluxPassive,         SID, TID, NonFatal, &RT.NFluxPassive,          1, NonFatal );
    LoadField( "Flu_GhostSize",        &RS.Flu_GhostSize,        SID, TID, NonFatal, &RT.Flu_GhostSize,         1, NonFatal );
    LoadField( "Flu_Nxt",              &RS.Flu_Nxt,              SID, TID, NonFatal, &RT.Flu_Nxt,               1, NonFatal );
    LoadField( "Debug_HDF5",           &RS.Debug_HDF5,           SID, TID, NonFatal, &RT.Debug_HDF5,            1, NonFatal );
