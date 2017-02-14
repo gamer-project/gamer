@@ -122,7 +122,7 @@ void Output_DumpData_Part( const OptOutputPart_t Part, const bool BaseOnly, cons
 #           endif // MODEL
 
             for (int v=0; v<NCOMP_PASSIVE; v++)
-            fprintf( File, "%11s%3d", "Passive", v );
+            fprintf( File, "%14s", PassiveFieldName_Grid[v] );
 
 #           ifdef GRAVITY
             if ( OPT__OUTPUT_POT ) 

@@ -142,7 +142,8 @@
 
 // variable indices in the array "passive" [NCOMP_FLUID ... NCOMP_TOTAL-1]
 #if ( NCOMP_PASSIVE > 0 )
-/* example for NCOMP_PASSIVE == 3
+// example for NCOMP_PASSIVE == 3
+/*
 #  define  METAL              ( NCOMP_FLUID + 0 )
 #  define  OXYGEN             ( NCOMP_FLUID + 1 )
 #  define  FE                 ( NCOMP_FLUID + 2 )
@@ -162,7 +163,8 @@
 
 // variable indices in the array "flux_passive" [NFLUX_FLUID ... NFLUX_TOTAL-1]
 #if ( NCOMP_PASSIVE > 0 )
-/* example for NCOMP_PASSIVE == 3
+// example for NCOMP_PASSIVE == 3
+/*
 #  define  FLUX_METAL         ( NFLUX_FLUID + 0 )
 #  define  FLUX_OXYGEN        ( NFLUX_FLUID + 1 )
 #  define  FLUX_FE            ( NFLUX_FLUID + 2 )
@@ -181,7 +183,8 @@
 #  define _ENGY               ( 1 << ENGY )
 
 #if ( NCOMP_PASSIVE > 0 )
-/* example for NCOMP_PASSIVE == 3
+// example for NCOMP_PASSIVE == 3
+/*
 #  define _METAL              ( 1 << METAL  )
 #  define _OXYGEN             ( 1 << OXYGEN )
 #  define _FE                 ( 1 << FE     )
@@ -200,7 +203,8 @@
 #  define _FLUX_ENGY          ( 1 << FLUX_ENGY )
 
 #if ( NFLUX_PASSIVE > 0 )
-/* example for NFLUX_PASSIVE == 3
+// example for NFLUX_PASSIVE == 3
+/*
 #  define _FLUX_METAL         ( 1 << FLUX_METAL  )
 #  define _FLUX_OXYGEN        ( 1 << FLUX_OXYGEN )
 #  define _FLUX_FE            ( 1 << FLUX_FE     )
@@ -290,6 +294,18 @@
 #  define  PAR_ACCX           8
 #  define  PAR_ACCY           9
 #  define  PAR_ACCZ          10
+
+// passive variable indices in the array "Passive" [0 ... PAR_NPASSIVE-1]
+// --> note that unlike the passive scalars on cells, the indices of passive particle attributes start from 0
+// --> this may be modified in the future
+#if ( PAR_NPASSIVE > 0 )
+// example for PAR_NPASSIVE == 3
+/*
+#  define  PAR_METAL          0
+#  define  PAR_OXYGEN         1
+#  define  PAR_FE             2
+*/
+#endif
 
 // symbolic constants used as function parameters (e.g., Prepare_PatchData)
 #  if ( MODEL == PAR_ONLY )
@@ -641,6 +657,7 @@
 #  undef FLU_SCHEME
 #  undef LR_SCHEME
 #  undef RSOLVER
+#  undef DUAL_ENERGY
 #endif
 
 #ifndef GRAVITY

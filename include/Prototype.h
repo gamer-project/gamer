@@ -117,6 +117,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
 void End_GAMER();
 void End_MemFree();
 void End_MemFree_Fluid();
+void End_MemFree_PassiveFieldName();
 void End_StopManually( int &Terminate_global );
 void End_TestProb();
 void Init_BaseLevel();
@@ -133,6 +134,7 @@ void Init_RecordBasePatch();
 void Init_Refine( const int lv );
 void Init_Restart();
 void Init_Unit();
+void Init_SetPassiveFieldName();
 #ifdef SUPPORT_HDF5
 void Init_Restart_HDF5( const char *FileName );
 #endif

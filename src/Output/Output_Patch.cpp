@@ -125,7 +125,7 @@ void Output_Patch( const int lv, const int PID, const int FluSg, const int PotSg
 #  endif // MODEL
 
    for (int v=0; v<NCOMP_PASSIVE; v++)
-   fprintf( File, "%11s%3d", "Passive", v );
+   fprintf( File, "%14s", PassiveFieldName_Grid[v] );
 
 #  ifdef GRAVITY
    fprintf( File, "%14s", "Potential" );
@@ -203,6 +203,8 @@ void Output_Patch( const int lv, const int PID, const int FluSg, const int PotSg
 #  ifdef STORE_PAR_ACC
    fprintf( File, "  %13s  %13s  %13s", "AccX", "AccY", "AccZ" );
 #  endif
+   for (int v=0; v<PAR_NPASSIVE; v++)
+   fprintf( File, "  %13s", PassiveFieldName_Par[v] );
    fprintf( File, "\n" );
 
    for (int p=0; p<Relation->NPar; p++)
@@ -210,14 +212,17 @@ void Output_Patch( const int lv, const int PID, const int FluSg, const int PotSg
       ParID = Relation->ParList[p];
 
       fprintf( File, "%5d  %10ld  %13.6e  %13.6e  %13.6e  %13.6e  %13.6e  %13.6e  %13.6e  %13.6e", 
-               p, ParID, amr->Par->Mass[ ParID ],
-               amr->Par->PosX[ ParID ], amr->Par->PosY[ ParID ], amr->Par->PosZ[ ParID ],
-               amr->Par->VelX[ ParID ], amr->Par->VelY[ ParID ], amr->Par->VelZ[ ParID ],
-               amr->Par->Time[ ParID ] );
+               p, ParID, amr->Par->Mass[ParID],
+               amr->Par->PosX[ParID], amr->Par->PosY[ParID], amr->Par->PosZ[ParID],
+               amr->Par->VelX[ParID], amr->Par->VelY[ParID], amr->Par->VelZ[ParID],
+               amr->Par->Time[ParID] );
 #     ifdef STORE_PAR_ACC
       fprintf( File, "  %13.6e  %13.6e  %13.6e",
-               amr->Par->AccX[ ParID ], amr->Par->AccY[ ParID ], amr->Par->AccZ[ ParID ] );
+               amr->Par->AccX[ParID], amr->Par->AccY[ParID], amr->Par->AccZ[ParID] );
 #     endif
+      for (int v=0; v<PAR_NPASSIVE; v++)
+      fprintf( File, "  %13.6e", amr->Par->Passive[v][ParID] );
+
       fprintf( File, "\n" );
    }
 #  endif // #ifdef PARTICLE

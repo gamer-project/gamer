@@ -74,7 +74,7 @@ Procedure for outputting new variables:
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2218)
+// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2220)
 // Description :  Output all simulation data in the HDF5 format, which can be used as a restart file
 //                or loaded by YT
 //
@@ -118,6 +118,7 @@ Procedure for outputting new variables:
 //                2216 : 2016/11/27 --> output OPT__FLAG_LOHNER_TEMP
 //                2217 : 2017/01/25 --> output RESTART_LOAD_NRANK, set CodeVersion to "gamer"
 //                2218 : 2017/01/28 --> output OPT__FLAG_VORTICITY and the corresponding flag table
+//                2220 : 2017/02/14 --> output passive grid and particle variables
 //-------------------------------------------------------------------------------------------------------
 void Output_DumpData_Total_HDF5( const char *FileName )
 {
@@ -690,7 +691,7 @@ void Output_DumpData_Total_HDF5( const char *FileName )
 #  error : ERROR : unsupported MODEL !!
 #  endif
 
-   for (int v=0; v<NCOMP_PASSIVE; v++)    sprintf( FieldName[NCOMP_FLUID+v], "Passive%d%d", v/10, v%10 );
+   for (int v=0; v<NCOMP_PASSIVE; v++)    sprintf( FieldName[NCOMP_FLUID+v], "%s", PassiveFieldName_Grid[v] );
 
 #  ifdef GRAVITY
    if ( OPT__OUTPUT_POT )     sprintf( FieldName[PotDumpIdx], "Pote" );
@@ -947,7 +948,7 @@ void Output_DumpData_Total_HDF5( const char *FileName )
    sprintf( ParVarName[5], "ParVelY" );
    sprintf( ParVarName[6], "ParVelZ" );
 
-   for (int v=0; v<PAR_NPASSIVE; v++)  sprintf( ParVarName[7+v], "ParPassive%d%d", v/10, v%10 );
+   for (int v=0; v<PAR_NPASSIVE; v++)  sprintf( ParVarName[7+v], "%s", PassiveFieldName_Par[v] );
 
 #  ifdef DEBUG_PARTICLE
    if ( PAR_NPASSIVE >= 100 )    Aux_Error( ERROR_INFO, "PAR_NPASSIVE = %d >= 100 !!\n", PAR_NPASSIVE );
@@ -1227,7 +1228,7 @@ void FillIn_KeyInfo( KeyInfo_t &KeyInfo )
 
    const time_t CalTime  = time( NULL );   // calendar time
 
-   KeyInfo.FormatVersion = 2218;
+   KeyInfo.FormatVersion = 2220;
    KeyInfo.Model         = MODEL;
    KeyInfo.NLevel        = NLEVEL;
    KeyInfo.PatchSize     = PATCH_SIZE;

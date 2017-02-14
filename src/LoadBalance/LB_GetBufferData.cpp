@@ -970,7 +970,7 @@ void LB_GetBufferData( const int lv, const int FluSg, const int PotSg, const Get
    if ( OPT__TIMING_MPI )
    {
       char FileName[100];
-      sprintf( FileName, "Record__TimingMPI_Rank%d%d%d", MPI_Rank/100, (MPI_Rank%100)/10, MPI_Rank%10 );
+      sprintf( FileName, "Record__TimingMPI_Rank%05d", MPI_Rank );
 
       char ModeName[100];
       switch ( GetBufMode )

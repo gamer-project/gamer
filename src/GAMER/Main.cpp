@@ -37,6 +37,8 @@ int               MPI_Rank, MPI_Rank_X[3], MPI_SibRank[26], NX0[3], NPatchTotal[
 int              *BaseP = NULL;
 int               Flu_ParaBuf;
 
+char             *PassiveFieldName_Grid[NCOMP_PASSIVE];
+
 double            BOX_SIZE, DT__FLUID, DT__FLUID_INIT, END_T, OUTPUT_DT;
 long              END_STEP;
 int               NX0_TOT[3], OUTPUT_STEP, REGRID_COUNT, FLU_GPU_NPGROUP, OMP_NTHREAD;
@@ -135,6 +137,7 @@ real              MinDtInfo_ParVelAcc[2][NLEVEL];
 bool              OPT__OUTPUT_PAR_TEXT, OPT__CK_PARTICLE, OPT__FLAG_NPAR_CELL;
 int               OPT__PARTICLE_COUNT, OPT__FLAG_NPAR_PATCH, FlagTable_NParPatch[NLEVEL-1], FlagTable_NParCell[NLEVEL-1];
 ParOutputDens_t   OPT__OUTPUT_PAR_DENS;
+char             *PassiveFieldName_Par[PAR_NPASSIVE];
 #endif
 
 // (2-6) yt inline analysis

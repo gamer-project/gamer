@@ -83,7 +83,7 @@ void YT_Inline()
 #  error : unsupported MODEL !!
 #  endif // MODEL
 
-   for (int v=0; v<NCOMP_PASSIVE; v++)    sprintf( FieldLabel[NCOMP_FLUID+v], "Passive%d%d", v/10, v%10 );
+   for (int v=0; v<NCOMP_PASSIVE; v++)    sprintf( FieldLabel[NCOMP_FLUID+v], "%s", PassiveFieldName_Grid[v] );
 
 #  ifdef GRAVITY
    sprintf( FieldLabel[NCOMP_TOTAL], "Pote" );

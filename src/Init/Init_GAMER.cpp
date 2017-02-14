@@ -118,6 +118,10 @@ void Init_GAMER( int *argc, char ***argv )
    Init_MemAllocate();
 
 
+// set names for passive variables
+   Init_SetPassiveFieldName();
+
+
 // initialize particles
 #  ifdef PARTICLE
    switch ( amr->Par->Init )
@@ -167,7 +171,7 @@ void Init_GAMER( int *argc, char ***argv )
 // fill up the data for patches that are not leaf patches (for RESTART only)
 // --> It's for bitwise consistency between load-balance and non-load-balance runs
 // --> Should be deprecated (or removed) after adding the makefile option "BITWISE_REPRODUCIBILITY",
-//     which will always apply data restriction before dumping data 
+//     which will always apply data restriction before dumping data
    if ( OPT__INIT == INIT_RESTART )
    for (int lv=NLEVEL-2; lv>=0; lv--)
    {

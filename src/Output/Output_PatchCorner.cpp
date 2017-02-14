@@ -20,8 +20,7 @@ void Output_PatchCorner( const int lv, const char *comment )
 {
 
    char FileName[100];
-   sprintf( FileName, "PatchCorner_%d%d%d%d_%d%d", MPI_Rank/1000, MPI_Rank%1000/100, MPI_Rank%100/10, MPI_Rank%10,
-                                                   lv/10, lv%10 );
+   sprintf( FileName, "PatchCorner_%05d_%02d", MPI_Rank, lv );
    if ( comment != NULL )       
    {
       strcat( FileName, "_" );

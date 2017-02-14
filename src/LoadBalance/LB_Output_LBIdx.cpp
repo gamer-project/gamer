@@ -24,7 +24,7 @@ void LB_Output_LBIdx( const int lv )
    char FileName[100];
 
 // set the filename   
-   sprintf( FileName, "LBIdxMap_Lv%d%d", lv/10, lv%10 );
+   sprintf( FileName, "LBIdxMap_Lv%02d", lv );
 
 
 // check if the targeted file already exists
