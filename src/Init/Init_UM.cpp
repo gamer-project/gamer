@@ -172,7 +172,7 @@ void Init_UM()
    UM_AssignData( 0, UM_Data[0], UM_NVar );
 
 // get the buffer data for the base level
-   Buf_GetBufferData( 0, amr->FluSg[0], NULL_INT, DATA_GENERAL, _FLU, Flu_ParaBuf, USELB_NO );
+   Buf_GetBufferData( 0, amr->FluSg[0], NULL_INT, DATA_GENERAL, _TOTAL, Flu_ParaBuf, USELB_NO );
 
 
 
@@ -199,7 +199,7 @@ void Init_UM()
 
       UM_AssignData( lv+1, UM_Data[lv+1], UM_NVar );
 
-      Buf_GetBufferData( lv+1, amr->FluSg[lv+1], NULL_INT, DATA_GENERAL, _FLU, Flu_ParaBuf, USELB_NO );
+      Buf_GetBufferData( lv+1, amr->FluSg[lv+1], NULL_INT, DATA_GENERAL, _TOTAL, Flu_ParaBuf, USELB_NO );
    }
 
 // get the total number of patches in all ranks
@@ -228,7 +228,7 @@ void Init_UM()
 
          Refine( lv, USELB_NO );
 
-         Buf_GetBufferData( lv+1, amr->FluSg[lv+1], NULL_INT, DATA_AFTER_REFINE, _FLU, Flu_ParaBuf, USELB_NO );
+         Buf_GetBufferData( lv+1, amr->FluSg[lv+1], NULL_INT, DATA_AFTER_REFINE, _TOTAL, Flu_ParaBuf, USELB_NO );
 
          if ( MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );
       } // for (int lv=OPT__UM_START_LEVEL-1; lv>=0; lv--)
@@ -255,7 +255,7 @@ void Init_UM()
 
          Refine( lv, USELB_NO );
 
-         Buf_GetBufferData( lv+1, amr->FluSg[lv+1], NULL_INT, DATA_AFTER_REFINE, _FLU, Flu_ParaBuf, USELB_NO );
+         Buf_GetBufferData( lv+1, amr->FluSg[lv+1], NULL_INT, DATA_AFTER_REFINE, _TOTAL, Flu_ParaBuf, USELB_NO );
 
          if ( MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );
       } // for (int lv=OPT__UM_START_LEVEL; lv<MAX_LEVEL; lv++)

@@ -43,6 +43,7 @@ void Flu_FixUp( const int lv, const double dt )
          Aux_Error( ERROR_INFO, "amr->WithFlux is off -> no flux array is allocated for OPT__FIXUP_FLUX !!\n" );
 
 #     if ( MODEL == ELBDM )
+
 #     ifndef CONSERVE_MASS
       Aux_Error( ERROR_INFO, "CONSERVE_MASS is not turned on in the Makefile for the option OPT__FIXUP_FLUX !!\n" );
 #     endif
@@ -58,7 +59,15 @@ void Flu_FixUp( const int lv, const double dt )
 #     if ( FLUX_DENS != 0 )
       Aux_Error( ERROR_INFO, "FLUX_DENS (%d) != 0 for the option OPT__FIXUP_FLUX !!\n", FLUX_DENS );
 #     endif
-#     endif // #if ( MODEL == ELBDM )
+
+
+//    if "NCOMP_TOTAL != NFLUX_TOTAL", one must specify how to correct cell data from the flux arrays
+//    --> specifically, how to map different flux variables to fluid active/passive variables
+//    --> for ELBDM, we have assumed that FLUX_DENS == DENS == 0 and NFLUX_TOTAL == 1
+#     elif ( NCOMP_TOTAL != NFLUX_TOTAL )
+#        error : NCOMP_TOTAL != NFLUX_TOTAL (one must specify how to map flux variables to fluid active/passive variables) !!
+
+#     endif // #if ( MODEL == ELBDM ) ... elif ...
 
 #     endif // #ifdef GAMER_DEBUG
 

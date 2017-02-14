@@ -690,6 +690,8 @@ void Output_DumpData_Total_HDF5( const char *FileName )
 #  error : ERROR : unsupported MODEL !!
 #  endif
 
+   for (int v=0; v<NCOMP_PASSIVE; v++)    sprintf( FieldName[NCOMP_FLUID+v], "Passive%d%d", v/10, v%10 );
+
 #  ifdef GRAVITY
    if ( OPT__OUTPUT_POT )     sprintf( FieldName[PotDumpIdx], "Pote" );
 #  endif

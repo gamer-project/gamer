@@ -8,7 +8,7 @@
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Poi_Prepare_Pot
-// Description :  Fill up the h_Pot_Array_P_In array with the coarse-grid (lv-1) potential for the Poisson solver 
+// Description :  Fill up the h_Pot_Array_P_In array with the coarse-grid (lv-1) potential for the Poisson solver
 //
 // Note        :  1. We don't call "Prepare_PatchData" since it always prepare data for a **patch group** but
 //                   here we may want to prepare data for a single **patch**
@@ -22,7 +22,7 @@
 //                NPG               : Number of patch groups prepared at a time
 //                PID0_List         : List recording the patch indicies with LocalID==0 to be udpated
 //-------------------------------------------------------------------------------------------------------
-void Poi_Prepare_Pot( const int lv, const double PrepTime, real h_Pot_Array_P_In[][POT_NXT][POT_NXT][POT_NXT], 
+void Poi_Prepare_Pot( const int lv, const double PrepTime, real h_Pot_Array_P_In[][POT_NXT][POT_NXT][POT_NXT],
                       const int NPG, const int *PID0_List )
 {
 
@@ -123,7 +123,7 @@ void Poi_Prepare_Pot( const int lv, const double PrepTime, real h_Pot_Array_P_In
       int N, I, J, K, I2, J2, K2, Disp_i, Disp_j, Disp_k, Disp_i2, Disp_j2, Disp_k2, Loop_i, Loop_j, Loop_k;
 
 
-//    prepare the coarse-grid potential for eight patches (one patch group) at a time 
+//    prepare the coarse-grid potential for eight patches (one patch group) at a time
 #     pragma omp for schedule( runtime )
       for (int TID=0; TID<NPG; TID++)
       {
@@ -167,7 +167,7 @@ void Poi_Prepare_Pot( const int lv, const double PrepTime, real h_Pot_Array_P_In
             Disp_i2  = TABLE_01( sib, 'x', PATCH_SIZE-CGhost, 0, 0 );
             Disp_j2  = TABLE_01( sib, 'y', PATCH_SIZE-CGhost, 0, 0 );
             Disp_k2  = TABLE_01( sib, 'z', PATCH_SIZE-CGhost, 0, 0 );
-           
+
             for (int k=0; k<Loop_k; k++)  {  K = k + Disp_k;   K2 = k + Disp_k2;
             for (int j=0; j<Loop_j; j++)  {  J = j + Disp_j;   J2 = j + Disp_j2;
             for (int i=0; i<Loop_i; i++)  {  I = i + Disp_i;   I2 = i + Disp_i2;
@@ -186,9 +186,9 @@ void Poi_Prepare_Pot( const int lv, const double PrepTime, real h_Pot_Array_P_In
          for (int LocalID=0; LocalID<8; LocalID++)
          {
             N      = 8*TID + LocalID;
-            Disp_i = TABLE_02( LocalID, 'x', 0, PATCH_SIZE/2 ); 
-            Disp_j = TABLE_02( LocalID, 'y', 0, PATCH_SIZE/2 ); 
-            Disp_k = TABLE_02( LocalID, 'z', 0, PATCH_SIZE/2 ); 
+            Disp_i = TABLE_02( LocalID, 'x', 0, PATCH_SIZE/2 );
+            Disp_j = TABLE_02( LocalID, 'y', 0, PATCH_SIZE/2 );
+            Disp_k = TABLE_02( LocalID, 'z', 0, PATCH_SIZE/2 );
 
             for (int k=0; k<POT_NXT; k++)    {  K = k + Disp_k;
             for (int j=0; j<POT_NXT; j++)    {  J = j + Disp_j;

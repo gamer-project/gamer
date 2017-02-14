@@ -13,6 +13,7 @@ static void Flu_ResetByUser_Func( real fluid[], const double x, const double y, 
 //                2. Input "fluid" array stores the original values
 //
 // Parameter   :  fluid : Fluid array storing both the input (origial) and reset values
+//                        --> Including both active and passive variables
 //                x/y/z : Target physical coordinates
 //                Time  : Target physical time
 //
@@ -32,11 +33,14 @@ void Flu_ResetByUser_Func( real fluid[], const double x, const double y, const d
 
    if ( r <= TRad )
    {
+//    set active scalars
       fluid[DENS] = MaxDens;
       fluid[MOMX] = 0.0;
       fluid[MOMY] = 0.0;
       fluid[MOMZ] = 0.0;
       fluid[ENGY] = MaxPres / ( GAMMA-(real)1.0 );
+
+//    set passive scalars
    }
    */
 

@@ -756,11 +756,7 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData[], const in
 #     if ( MODEL == HYDRO )
 //    we now apply monotonic interpolation to ALL fluid variables (which helps alleviate the issue of negative density/pressure)
       /*
-#     if ( NCOMP_PASSIVE > 0 )
       if ( TFluVarIdx == DENS  ||  TFluVarIdx == ENGY  ||  TFluVarIdx >= NCOMP_FLUID )
-#     else
-      if ( TFluVarIdx == DENS  ||  TFluVarIdx == ENGY )
-#     endif
                                                          Monotonicity[v] = EnsureMonotonicity_Yes;
       else                                               Monotonicity[v] = EnsureMonotonicity_No;
       */

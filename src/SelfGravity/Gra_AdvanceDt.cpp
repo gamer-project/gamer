@@ -132,7 +132,7 @@ void Gra_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, co
          TIMING_FUNC(   Flu_ResetByUser( lv, SaveSg_Flu, TimeNew ),
                         Timer_Gra_Advance[lv],   false   );
 
-         TIMING_FUNC(   Buf_GetBufferData( lv, SaveSg_Flu, NULL_INT, DATA_GENERAL, _FLU, Flu_ParaBuf, USELB_YES ),
+         TIMING_FUNC(   Buf_GetBufferData( lv, SaveSg_Flu, NULL_INT, DATA_GENERAL, _TOTAL, Flu_ParaBuf, USELB_YES ),
                         Timer_GetBuf[lv][2],   true   );
 
          amr->FluSg[0] = SaveSg_Flu;

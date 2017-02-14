@@ -81,7 +81,7 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
    const int CSize_Flu3[3] = { CSize_Flu, CSize_Flu, CSize_Flu };
 
    real Flu_CData[NCOMP_TOTAL][CSize_Flu][CSize_Flu][CSize_Flu];  // coarse-grid fluid array for interpolation
-   real Flu_FData[NCOMP_TOTAL][FSize][FSize][FSize];  // fine-grid fluid array storing the interpolation result
+   real Flu_FData[NCOMP_TOTAL][FSize][FSize][FSize];              // fine-grid fluid array storing the interpolation result
 
 #  ifdef GRAVITY
    int NSide_Pot, CGhost_Pot;
@@ -90,8 +90,8 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
    const int CSize_Pot     = PATCH_SIZE + 2*CGhost_Pot;
    const int CStart_Pot[3] = { CGhost_Pot, CGhost_Pot, CGhost_Pot };
 
-   real Pot_CData[CSize_Pot][CSize_Pot][CSize_Pot];         // coarse-grid potential array for interpolation
-   real Pot_FData[FSize][FSize][FSize];         // fine-grid potential array storing the interpolation result
+   real Pot_CData[CSize_Pot][CSize_Pot][CSize_Pot];   // coarse-grid potential array for interpolation
+   real Pot_FData[FSize][FSize][FSize];               // fine-grid potential array storing the interpolation result
 #  endif
 
 

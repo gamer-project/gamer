@@ -61,10 +61,10 @@ void YT_AddAllGrid( yt_grid *Grid, const int *GID_Offset, const int NField, char
 
 //       2. set pointers pointing to different field data
 //          --> "field_data" pointer array must be pre-allocated
-         for (int v=0; v<NCOMP; v++)
-         Grid[GID].field_data[v]     = amr->patch[FluSg][lv][PID]->fluid[v];
+         for (int v=0; v<NCOMP_TOTAL; v++)
+         Grid[GID].field_data[v]           = amr->patch[FluSg][lv][PID]->fluid[v];
 #        ifdef GRAVITY
-         Grid[GID].field_data[NCOMP] = amr->patch[PotSg][lv][PID]->pot;
+         Grid[GID].field_data[NCOMP_TOTAL] = amr->patch[PotSg][lv][PID]->pot;
 #        endif
 
 

@@ -18,7 +18,7 @@ extern void CPU_ComputeFlux( const real FC_Var[][6][5], real FC_Flux[][3][5], co
 extern void CPU_FullStepUpdate( const real Input[][ FLU_NXT*FLU_NXT*FLU_NXT ], real Output[][ PS2*PS2*PS2 ],
                                 const real Flux[][3][5], const real dt, const real dh,
                                 const real Gamma );
-extern void CPU_StoreFlux( real Flux_Array[][5][ PS2*PS2 ], const real FC_Flux[][3][5] );
+extern void CPU_StoreFlux( real Flux_Array[][NFLUX_TOTAL][ PS2*PS2 ], const real FC_Flux[][3][NFLUX_TOTAL] );
 extern real CPU_CheckMinPres( const real InPres, const real MinPres );
 
 static void TGradient_Correction( real FC_Var[][6][5], const real FC_Flux[][3][5], const real dt, const real dh,
@@ -53,9 +53,9 @@ static void TGradient_Correction( real FC_Var[][6][5], const real FC_Flux[][3][5
 //                ExtAcc_AuxArray : Auxiliary array for adding external acceleration          (for UNSPLIT_GRAVITY only)
 //                MinDens/Pres    : Minimum allowed density and pressure
 //-------------------------------------------------------------------------------------------------------
-void CPU_FluidSolver_CTU( const real Flu_Array_In[][5][ FLU_NXT*FLU_NXT*FLU_NXT ],
-                          real Flu_Array_Out[][5][ PS2*PS2*PS2 ],
-                          real Flux_Array[][9][5][ PS2*PS2 ],
+void CPU_FluidSolver_CTU( const real Flu_Array_In[][NCOMP_TOTAL][ FLU_NXT*FLU_NXT*FLU_NXT ],
+                          real Flu_Array_Out[][NCOMP_TOTAL][ PS2*PS2*PS2 ],
+                          real Flux_Array[][9][NFLUX_TOTAL][ PS2*PS2 ],
                           const double Corner_Array[][3],
                           const real Pot_Array_USG[][USG_NXT_F][USG_NXT_F][USG_NXT_F],
                           const int NPatchGroup, const real dt, const real dh, const real Gamma,

@@ -8,7 +8,7 @@
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Gra_Prepare_Flu
-// Description :  Fill up the input array "h_Flu_Array_G" with fluid variables for the Gravity solver  
+// Description :  Fill up the input array "h_Flu_Array_G" with fluid variables for the Gravity solver
 //
 // Parameter   :  lv             : Targeted refinement level
 //                h_Flu_Array_G  : Host array to store the prepared data
@@ -31,8 +31,16 @@ void Gra_Prepare_Flu( const int lv, real h_Flu_Array_G[][GRA_NIN][PATCH_SIZE][PA
          PID = PID0 + LocalID;
          N   = 8*TID + LocalID;
 
+#        if ( MODEL == HYDRO  ||  MODEL == MHD )
+//       all active fields (including density) are sent into the hydro/MHD gravity solver
+         for (int v=0; v<GRA_NIN; v++)
+         for (int k=0; k<PATCH_SIZE; k++)
+         for (int j=0; j<PATCH_SIZE; j++)
+         for (int i=0; i<PATCH_SIZE; i++)
+            h_Flu_Array_G[N][v][k][j][i] = amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[v][k][j][i];
+
+#        elif ( MODEL == ELBDM )
 //       density field is useless in the ELBDM gravity solver
-#        if ( MODEL == ELBDM )
          for (int v=0; v<GRA_NIN; v++)
          for (int k=0; k<PATCH_SIZE; k++)
          for (int j=0; j<PATCH_SIZE; j++)
@@ -40,14 +48,10 @@ void Gra_Prepare_Flu( const int lv, real h_Flu_Array_G[][GRA_NIN][PATCH_SIZE][PA
             h_Flu_Array_G[N][v][k][j][i] = amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[v+1][k][j][i];
 
 #        else
-         for (int v=0; v<GRA_NIN; v++)
-         for (int k=0; k<PATCH_SIZE; k++)
-         for (int j=0; j<PATCH_SIZE; j++)
-         for (int i=0; i<PATCH_SIZE; i++)
-            h_Flu_Array_G[N][v][k][j][i] = amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[v][k][j][i];
-#        endif 
-      }
-   }
+#        error : unsupported MODEL !!
+#        endif // MODEL
+      } // for (int LocalID=0; LocalID<8; LocalID++)
+   } // for (int TID=0; TID<NPG; TID++)
 
 } // FUNCTION : Gra_Prepare_Flu
 

@@ -44,6 +44,10 @@ void Aux_Check_Parameter()
 #     error : ERROR : currently UNSPLIT_GRAVITY is only supported in HYDRO !!
 #  endif
 
+#  if ( NCOMP_PASSIVE < 0 )
+#     error : ERROR : incorrect number of NCOMP_PASSIVE !!
+#  endif
+
 #  ifdef SERIAL
    int NRank = 1;
 #  else
@@ -590,10 +594,6 @@ void Aux_Check_Parameter()
 #     error : ERROR : unsupported Riemann solver (EXACT/ROE/HLLE/HLLC) !!
 #  endif
 
-#  if ( NCOMP_PASSIVE < 0 )
-#     error : ERROR : incorrect number of NCOMP_PASSIVE !!
-#  endif
-
 #  if ( defined CHECK_INTERMEDIATE  &&  CHECK_INTERMEDIATE != EXACT  &&  CHECK_INTERMEDIATE != HLLE  &&  \
         CHECK_INTERMEDIATE != HLLC )
 #     error : ERROR : unsupported option in CHECK_INTERMEDIATE (EXACT/HLLE/HLLC) !!
@@ -843,8 +843,8 @@ void Aux_Check_Parameter()
 #     error : ERROR : FLU_NOUT != 3 in ELBDM !!
 #  endif
 
-#  if ( NCOMP_PASSIVE <= 0 )
-#     error : ERROR : NCOMP_PASSIVE <= 0 in ELBDM (currently this model does not support passive scalar) !!
+#  if ( NCOMP_PASSIVE > 0 )
+#     error : ERROR : NCOMP_PASSIVE > 0 in ELBDM (currently this model does not support passive scalar) !!
 #  endif
 
 #  ifdef QUARTIC_SELF_INTERACTION

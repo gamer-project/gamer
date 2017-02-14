@@ -55,7 +55,7 @@ void YT_Inline()
 
 // 3. prepare the hierarchy information and data of all patches
 // 3-1. determine the number of fields
-   int NField = NCOMP;
+   int NField = NCOMP_TOTAL;
 #  ifdef GRAVITY
    NField ++;
 #  endif
@@ -83,8 +83,10 @@ void YT_Inline()
 #  error : unsupported MODEL !!
 #  endif // MODEL
 
+   for (int v=0; v<NCOMP_PASSIVE; v++)    sprintf( FieldLabel[NCOMP_FLUID+v], "Passive%d%d", v/10, v%10 );
+
 #  ifdef GRAVITY
-   sprintf( FieldLabel[NCOMP], "Pote" );
+   sprintf( FieldLabel[NCOMP_TOTAL], "Pote" );
 #  endif
 
 // 3-3. prepare all patches for libyt

@@ -34,7 +34,7 @@ void Init_StartOver()
 
       if ( OPT__RESET_FLUID )    Flu_ResetByUser( lv, amr->FluSg[lv], Time[lv] );
 
-      Buf_GetBufferData( lv, amr->FluSg[lv], NULL_INT, DATA_GENERAL, _FLU, Flu_ParaBuf, USELB_NO );
+      Buf_GetBufferData( lv, amr->FluSg[lv], NULL_INT, DATA_GENERAL, _TOTAL, Flu_ParaBuf, USELB_NO );
 
       if ( lv != TOP_LEVEL )   
       {

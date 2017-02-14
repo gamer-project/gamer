@@ -165,6 +165,9 @@ void Init_GAMER( int *argc, char ***argv )
    LB_Init_LoadBalance( OPT__INIT == INIT_RESTART );
 
 // fill up the data for patches that are not leaf patches (for RESTART only)
+// --> It's for bitwise consistency between load-balance and non-load-balance runs
+// --> Should be deprecated (or removed) after adding the makefile option "BITWISE_REPRODUCIBILITY",
+//     which will always apply data restriction before dumping data 
    if ( OPT__INIT == INIT_RESTART )
    for (int lv=NLEVEL-2; lv>=0; lv--)
    {

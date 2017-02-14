@@ -30,12 +30,13 @@
 //                                  COARSE_FINE_FLUX  : fluxes across the coarse-fine boundaries (HYDRO ONLY)
 //                TVar        : Targeted variables to exchange
 //                              --> Supported variables in different models:
-//                                  HYDRO : _DENS, _MOMX, _MOMY, _MOMZ, _ENGY, _FLU [, _POTE] [, _PASSIVE]
+//                                  HYDRO : _DENS, _MOMX, _MOMY, _MOMZ, _ENGY,[, _POTE]
 //                                  MHD   : 
-//                                  ELBDM : _DENS, _REAL, _IMAG, _FLU [, _POTE]
-//                                  In addition, the flux variables (e.g., _FLUX_DENS) are also supported
+//                                  ELBDM : _DENS, _REAL, _IMAG, [, _POTE]
+//                              --> _FLUID, _PASSIVE, and _TOTAL apply to all models
+//                              --> In addition, the flux variables (e.g., _FLUX_DENS) are also supported
 //                              Restrictions :
-//                              --> a. DATA_XXX works with all components in (_FLU | _POTE | _PASSIVE)
+//                              --> a. DATA_XXX works with all components in (_TOTAL | _POTE)
 //                                  b. COARSE_FINE_FLUX works with all components in (_FLUX_TOTAL)
 //                                  c. _POTE has no effect on the flux fix-up in DATA_AFTER_FIXUP
 //                                  d. POT_FOR_POISSON and POT_AFTER_REFINE only work with _POTE
@@ -66,16 +67,16 @@ void Buf_GetBufferData( const int lv, const int FluSg, const int PotSg, const Ge
    if ( GetBufMode == DATA_RESTRICT )
       Aux_Error( ERROR_INFO, "mode DATA_RESTRICT is useful only in LOAD_BALANCE !!\n" );
 
-   if (  ( TVar & (_FLU|_PASSIVE) )  &&  ( FluSg != 0 && FluSg != 1 )  &&  GetBufMode != COARSE_FINE_FLUX )
+   if (  GetBufMode != COARSE_FINE_FLUX  &&  ( TVar & _TOTAL )  &&  ( FluSg != 0 && FluSg != 1 )  )
       Aux_Error( ERROR_INFO, "incorrect parameter %s = %d !!\n", "FluSg", FluSg );
 
 #  ifdef GRAVITY
-   if (  ( TVar & _POTE )  &&  ( PotSg != 0 && PotSg != 1 )  &&  GetBufMode != COARSE_FINE_FLUX )
+   if (  GetBufMode != COARSE_FINE_FLUX  &&  ( TVar & _POTE )  &&  ( PotSg != 0 && PotSg != 1 )  )
       Aux_Error( ERROR_INFO, "incorrect parameter %s = %d !!\n", "PotSg", PotSg );
 
    if (  ( GetBufMode == DATA_GENERAL || GetBufMode == DATA_AFTER_FIXUP || GetBufMode == DATA_AFTER_REFINE )  &&
-        !( TVar & (_FLU|_POTE|_PASSIVE) )  )
-      Aux_Error( ERROR_INFO, "no suitable targeted variable is found --> missing (_FLU|_POTE|_PASSIVE) !!\n" );
+        !( TVar & (_TOTAL|_POTE) )  )
+      Aux_Error( ERROR_INFO, "no suitable targeted variable is found --> missing (_TOTAL|_POTE) !!\n" );
 
    if (  ( GetBufMode == POT_FOR_POISSON || GetBufMode == POT_AFTER_REFINE )  &&  !( TVar & _POTE )  )
       Aux_Error( ERROR_INFO, "no suitable targeted variable is found --> missing _POTE !!\n" );
@@ -92,8 +93,8 @@ void Buf_GetBufferData( const int lv, const int FluSg, const int PotSg, const Ge
    
 #  else // #ifdef GRAVITY ... else ...
    if (  ( GetBufMode == DATA_GENERAL || GetBufMode == DATA_AFTER_FIXUP || GetBufMode == DATA_AFTER_REFINE )  &&
-        !( TVar & (_FLU|_PASSIVE) )  )
-      Aux_Error( ERROR_INFO, "no suitable targeted variable is found --> missing (_FLU|_PASSIVE) !!\n" );
+        !( TVar & _TOTAL )  )
+      Aux_Error( ERROR_INFO, "no suitable targeted variable is found --> missing _TOTAL !!\n" );
 
    if (  ( GetBufMode == DATA_GENERAL || GetBufMode == DATA_AFTER_FIXUP || GetBufMode == DATA_AFTER_REFINE )  &&
          ( ParaBuf < 0 || ParaBuf > PATCH_SIZE )  )
@@ -113,21 +114,21 @@ void Buf_GetBufferData( const int lv, const int FluSg, const int PotSg, const Ge
 
 // determine the components to be prepared (TFluVarIdx : targeted fluid variable indices ( = [0 ... NCOMP_TOTAL-1/NFLUX_TOTAL-1] )
    bool ExchangeFlu = ( GetBufMode == COARSE_FINE_FLUX ) ?
-                      TVar & _FLUX_TOTAL : TVar & _TOTAL;   // whether or not to exchage the fluid data 
+                      TVar & _FLUX_TOTAL : TVar & _TOTAL;                        // whether or not to exchage the fluid data 
 #  ifdef GRAVITY
-   bool ExchangePot = TVar & _POTE;                         // whether or not to exchange the potential data
+   bool ExchangePot = (  GetBufMode != COARSE_FINE_FLUX  &&  (TVar & _POTE)  );  // whether or not to exchange the potential data
 #  endif
 
-   const int NMax = ( GetBufMode == COARSE_FINE_FLUX ) ? NFLUX_TOTAL : NCOMP_TOTAL;
-   int NVar_Flu, NVar_Tot, TFluVarIdx, TFluVarIdxList[NMax];
+   const int NFluid_Max = ( GetBufMode == COARSE_FINE_FLUX ) ? NFLUX_TOTAL : NCOMP_TOTAL;
+   int NVar_Flu, NVar_Tot, TFluVarIdx, TFluVarIdxList[NFluid_Max];
    NVar_Flu = 0;
    
-   for (int v=0; v<NMax; v++)
+   for (int v=0; v<NFluid_Max; v++)
       if ( TVar & (1<<v) )    TFluVarIdxList[ NVar_Flu++ ] = v;
 
    NVar_Tot = NVar_Flu;
 #  ifdef GRAVITY
-   if ( ExchangePot    )   NVar_Tot ++; 
+   if ( ExchangePot )   NVar_Tot ++; 
 
    if ( GetBufMode == POT_FOR_POISSON  ||  GetBufMode == POT_AFTER_REFINE )
    {

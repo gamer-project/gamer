@@ -661,7 +661,7 @@ void Init_Restart()
 
 
 // g. fill up the data for top-level buffer patches
-   Buf_GetBufferData( NLEVEL-1, amr->FluSg[NLEVEL-1], NULL_INT, DATA_GENERAL, _FLU, Flu_ParaBuf, USELB_NO );
+   Buf_GetBufferData( NLEVEL-1, amr->FluSg[NLEVEL-1], NULL_INT, DATA_GENERAL, _TOTAL, Flu_ParaBuf, USELB_NO );
 
 
 // h. fill up the data for patches that are not leaf patches

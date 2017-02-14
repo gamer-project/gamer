@@ -154,7 +154,7 @@ void Mis_GetTimeStep()
    const bool ELBDM_PhaseDt = ( DT__PHASE != 0.0 ) ? true : false;
    double dTime7, dt7;
    int    MinDtLv_Phase;
-   real   MinDtVar_Phase[3];
+   real   MinDtVar_Phase[NCOMP_FLUID];
 
    if ( ELBDM_PhaseDt )
    ELBDM_GetTimeStep_Phase( dt7, dTime7, MinDtLv_Phase, MinDtVar_Phase, dt_dTime );

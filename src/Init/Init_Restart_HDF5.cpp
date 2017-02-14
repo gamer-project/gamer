@@ -813,7 +813,7 @@ void Init_Restart_HDF5( const char *FileName )
       if ( lv > 0  &&  amr->WithFlux )    Flu_AllocateFluxArray( lv-1 );
 
 //    get data for all buffer patches
-      Buf_GetBufferData( lv, amr->FluSg[lv], NULL_INT, DATA_GENERAL, _FLU, Flu_ParaBuf, USELB_NO );
+      Buf_GetBufferData( lv, amr->FluSg[lv], NULL_INT, DATA_GENERAL, _TOTAL, Flu_ParaBuf, USELB_NO );
 
    } // for (int lv=0; lv<NLEVEL; lv++)
 #  endif // #ifndef LOAD_BALANCE

@@ -28,7 +28,7 @@ void Hydro_Aux_Check_Negative( const int lv, const int Mode, const char *comment
    const bool CheckMinPres_No = false;
 
    int  Pass = true;
-   real Rho, Pres, Fluid[NCOMP_FLUID];
+   real Rho, Pres, Fluid[NCOMP_FLUID]; // Fluid is for calculating pressure only --> don't need NCOMP_TOTAL
 
    for (int TargetRank=0; TargetRank<MPI_NRank; TargetRank++)
    {

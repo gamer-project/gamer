@@ -65,6 +65,10 @@ void Flu_Close( const int lv, const int SaveSg, const real h_Flux_Array[][9][NFL
 
 
 // copy the updated data from the array "h_Flu_Array_F_Out" to each patch pointer
+#  if ( FLU_NOUT != NCOMP_TOTAL )
+#     error : ERROR : FLU_NOUT != NCOMP_TOTAL (one must specify how to copy data from h_Flu_Array_F_Out to fluid) !!
+#  endif
+
    int I, J, K, KJI, PID0;
 
 #  pragma omp parallel for private( I, J, K, KJI, PID0 ) schedule( runtime )
@@ -462,7 +466,7 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
 //             output debug information
                const int  PID_Failed      = PID0_List[TID] + LocalID[k_out/PS1][j_out/PS1][i_out/PS1];
                const bool CheckMinPres_No = false;
-               real In[NCOMP_TOTAL], tmp[NCOMP_TOTAL];
+               real In[NCOMP_FLUID], tmp[NCOMP_FLUID];
 
                char FileName[100];
                sprintf( FileName, "FailedPatchGroup_r%03d_lv%02d_PID0-%05d", MPI_Rank, lv, PID0_List[TID] );
@@ -470,7 +474,7 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
 //             use "a" instead of "w" since there may be more than one failed cell in a given patch group
                FILE *File = fopen( FileName, "a" );
 
-               for (int v=0; v<NCOMP_TOTAL; v++)   In[v] = h_Flu_Array_F_In[TID][v][idx_in];
+               for (int v=0; v<NCOMP_FLUID; v++)   In[v] = h_Flu_Array_F_In[TID][v][idx_in];
 
 //             output information about the failed cell
                fprintf( File, "PID                              = %5d\n", PID_Failed );
@@ -501,7 +505,7 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
                {
                   fprintf( File, "(%2d,%2d,%2d)", i-FLU_GHOST_SIZE, j-FLU_GHOST_SIZE, k-FLU_GHOST_SIZE );
 
-                  for (int v=0; v<NCOMP_TOTAL; v++)
+                  for (int v=0; v<NCOMP_FLUID; v++)
                   {
                      tmp[v] = h_Flu_Array_F_In[TID][v][ ((k*FLU_NXT)+j)*FLU_NXT+i ];
                      fprintf( File, " %13.6e", tmp[v] );

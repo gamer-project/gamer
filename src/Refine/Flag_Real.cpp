@@ -210,18 +210,17 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
                if ( OPT__FLAG_PRES_GRADIENT )
                {
                   const real Gamma_m1 = GAMMA - (real)1.0;
-                  real (*FluData)[PS1][PS1][PS1] = amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid;
                   real Ek;
 
                   for (int k=0; k<PS1; k++)
                   for (int j=0; j<PS1; j++)
                   for (int i=0; i<PS1; i++)
                   {
-                     Ek = (real)0.5*( FluData[MOMX][k][j][i]*FluData[MOMX][k][j][i] +
-                                      FluData[MOMY][k][j][i]*FluData[MOMY][k][j][i] +
-                                      FluData[MOMZ][k][j][i]*FluData[MOMZ][k][j][i] ) / FluData[DENS][k][j][i];
+                     Ek = (real)0.5*( Fluid[MOMX][k][j][i]*Fluid[MOMX][k][j][i] +
+                                      Fluid[MOMY][k][j][i]*Fluid[MOMY][k][j][i] +
+                                      Fluid[MOMZ][k][j][i]*Fluid[MOMZ][k][j][i] ) / Fluid[DENS][k][j][i];
 
-                     Pres[k][j][i] = Gamma_m1 * ( FluData[ENGY][k][j][i] - Ek );
+                     Pres[k][j][i] = Gamma_m1 * ( Fluid[ENGY][k][j][i] - Ek );
                   }
                }
 

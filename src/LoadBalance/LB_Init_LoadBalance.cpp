@@ -149,10 +149,10 @@ void LB_Init_LoadBalance( const bool DuringRestart )
 // 4. get the buffer data
    for (int lv=0; lv<NLEVEL; lv++)
    {
-      Buf_GetBufferData( lv, amr->FluSg[lv], NULL_INT, DATA_GENERAL,    _FLU,  Flu_ParaBuf, USELB_YES );
+      Buf_GetBufferData( lv, amr->FluSg[lv], NULL_INT, DATA_GENERAL,    _TOTAL, Flu_ParaBuf, USELB_YES );
 
 #     ifdef GRAVITY
-      Buf_GetBufferData( lv, NULL_INT, amr->PotSg[lv], POT_FOR_POISSON, _POTE, Pot_ParaBuf, USELB_YES );
+      Buf_GetBufferData( lv, NULL_INT, amr->PotSg[lv], POT_FOR_POISSON, _POTE,  Pot_ParaBuf, USELB_YES );
 #     endif
    }
 
@@ -480,7 +480,7 @@ void LB_RedistributeRealPatch( const int lv, real **ParVar_Old, real **Passive_O
 
    real *SendPtr         = NULL;
    long *SendBuf_LBIdx   = new long [ NSend_Total_Patch ];
-   real *SendBuf_Flu     = new real [ SendDataSize1v*NCOMP ];
+   real *SendBuf_Flu     = new real [ SendDataSize1v*NCOMP_TOTAL ];
 #  ifdef GRAVITY
    real *SendBuf_Pot     = new real [ SendDataSize1v ];
 #  ifdef STORE_POT_GHOST
@@ -509,7 +509,7 @@ void LB_RedistributeRealPatch( const int lv, real **ParVar_Old, real **Passive_O
       SendBuf_LBIdx[ Send_NDisp_Patch[TRank] + Counter[TRank] ] = LB_Idx;
 
 //    2.2 fluid
-      for (int v=0; v<NCOMP; v++)
+      for (int v=0; v<NCOMP_TOTAL; v++)
       {
          SendPtr = SendBuf_Flu + v*SendDataSize1v + Send_NDisp_Data1v[TRank] + Counter[TRank]*PatchSize1v;
          memcpy( SendPtr, &amr->patch[FluSg][lv][PID]->fluid[v][0][0][0], PatchSize1v*sizeof(real) );
@@ -573,7 +573,7 @@ void LB_RedistributeRealPatch( const int lv, real **ParVar_Old, real **Passive_O
 
 // allocate recv buffers AFTER deleting old patches
    long *RecvBuf_LBIdx   = new long [ NRecv_Total_Patch ];
-   real *RecvBuf_Flu     = new real [ RecvDataSize1v*NCOMP ];
+   real *RecvBuf_Flu     = new real [ RecvDataSize1v*NCOMP_TOTAL ];
 #  ifdef GRAVITY
    real *RecvBuf_Pot     = new real [ RecvDataSize1v ];
 #  ifdef STORE_POT_GHOST
@@ -593,7 +593,7 @@ void LB_RedistributeRealPatch( const int lv, real **ParVar_Old, real **Passive_O
                   RecvBuf_LBIdx, Recv_NCount_Patch, Recv_NDisp_Patch, MPI_LONG, MPI_COMM_WORLD );
 
 // 5.2 fluid (transfer one component at a time to avoid exceeding the maximum allowed transferred size in MPI)
-   for (int v=0; v<NCOMP; v++)
+   for (int v=0; v<NCOMP_TOTAL; v++)
    {
 #     ifdef FLOAT8
       MPI_Alltoallv( SendBuf_Flu + v*SendDataSize1v, Send_NCount_Data1v, Send_NDisp_Data1v, MPI_DOUBLE,
@@ -744,7 +744,7 @@ void LB_RedistributeRealPatch( const int lv, real **ParVar_Old, real **Passive_O
          PID = PID0 + LocalID;
 
 //       fluid
-         for (int v=0; v<NCOMP; v++)
+         for (int v=0; v<NCOMP_TOTAL; v++)
          {
             RecvPtr = RecvBuf_Flu + v*RecvDataSize1v + PID*PatchSize1v;
             memcpy( &amr->patch[FluSg][lv][PID]->fluid[v][0][0][0], RecvPtr, PatchSize1v*sizeof(real) );

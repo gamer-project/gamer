@@ -135,7 +135,7 @@ void Output_Patch( const int lv, const int PID, const int FluSg, const int PotSg
 
 
 // output data
-   real u[NCOMP_TOTAL]; 
+   real u[NCOMP_FLUID]; 
 
    for (int k=0; k<PATCH_SIZE; k++)
    for (int j=0; j<PATCH_SIZE; j++)

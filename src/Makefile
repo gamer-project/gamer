@@ -25,7 +25,7 @@ SIMU_OPTION += -DPOT_SCHEME=SOR
 # --> currently only for improving accuracy for particles around the patch boundaries (by Par->ImproveAcc)
 SIMU_OPTION += -DSTORE_POT_GHOST
 
-# use unsplitting method to couple gravity to the target model (e.g., hydro, MHD, ELBDM)
+# use unsplitting method to couple gravity to the target model (e.g., HYDRO and MHD, ELBDM is not supported yet)
 # --> must be off if GRAVITY is off
 SIMU_OPTION += -DUNSPLIT_GRAVITY
 
@@ -82,6 +82,9 @@ else ifeq "$(findstring MODEL=ELBDM, $(SIMU_OPTION))" "MODEL=ELBDM"
 # include the quartic self-interaction potential (must turn on GRAVITY as well, not work with COMOVING yet)
 #SIMU_OPTION += -DQUARTIC_SELF_INTERACTION
 
+# number of passively advected scalars (not supported for ELBDM yet --> must be 0)
+SIMU_OPTION += -DNCOMP_PASSIVE_MAKEFILE=0
+
 endif # MODEL
 
 
@@ -118,10 +121,10 @@ SIMU_OPTION += -DINTEL
 #SIMU_OPTION += -DFLOAT8
 
 # serial mode (in which no MPI libraries are required)
-SIMU_OPTION += -DSERIAL
+#SIMU_OPTION += -DSERIAL
 
 # load-balance parallelization (one must not turn on the option "SERIAL") (HILBERT)
-#SIMU_OPTION += -DLOAD_BALANCE=HILBERT
+SIMU_OPTION += -DLOAD_BALANCE=HILBERT
 
 # overlap MPI communication with computation (experimental, only supported in LOAD_BALANCE)
 #SIMU_OPTION += -DOVERLAP_MPI
