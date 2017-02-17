@@ -6,22 +6,22 @@
 
 
 
-extern void CPU_DataReconstruction( const real PriVar[][5], real FC_Var[][6][5], const int NIn, const int NGhost,
+extern void CPU_DataReconstruction( const real PriVar[][NCOMP_TOTAL], real FC_Var[][6][NCOMP_TOTAL], const int NIn, const int NGhost,
                                     const real Gamma, const LR_Limiter_t LR_Limiter, const real MinMod_Coeff,
                                     const real EP_Coeff, const real dt, const real dh, const real MinDens, const real MinPres );
 extern void CPU_Con2Pri( const real In[], real Out[], const real  Gamma_m1, const real MinPres );
 extern void CPU_Pri2Con( const real In[], real Out[], const real _Gamma_m1 );
-extern void CPU_ComputeFlux( const real FC_Var[][6][5], real FC_Flux[][3][5], const int NFlux, const int Gap,
+extern void CPU_ComputeFlux( const real FC_Var[][6][NCOMP_TOTAL], real FC_Flux[][3][NCOMP_TOTAL], const int NFlux, const int Gap,
                              const real Gamma, const bool CorrHalfVel, const real Pot_USG[], const double Corner[],
                              const real dt, const real dh, const double Time, const OptGravityType_t GravityType,
                              const double ExtAcc_AuxArray[], const real MinPres );
 extern void CPU_FullStepUpdate( const real Input[][ FLU_NXT*FLU_NXT*FLU_NXT ], real Output[][ PS2*PS2*PS2 ],
-                                const real Flux[][3][5], const real dt, const real dh,
+                                const real Flux[][3][NCOMP_TOTAL], const real dt, const real dh,
                                 const real Gamma );
-extern void CPU_StoreFlux( real Flux_Array[][NFLUX_TOTAL][ PS2*PS2 ], const real FC_Flux[][3][NFLUX_TOTAL] );
+extern void CPU_StoreFlux( real Flux_Array[][NCOMP_TOTAL][ PS2*PS2 ], const real FC_Flux[][3][NCOMP_TOTAL] );
 extern real CPU_CheckMinPres( const real InPres, const real MinPres );
 
-static void TGradient_Correction( real FC_Var[][6][5], const real FC_Flux[][3][5], const real dt, const real dh,
+static void TGradient_Correction( real FC_Var[][6][NCOMP_TOTAL], const real FC_Flux[][3][NCOMP_TOTAL], const real dt, const real dh,
                                   const real Gamma_m1, const real _Gamma_m1, const real MinDens, const real MinPres );
 
 
@@ -55,7 +55,7 @@ static void TGradient_Correction( real FC_Var[][6][5], const real FC_Flux[][3][5
 //-------------------------------------------------------------------------------------------------------
 void CPU_FluidSolver_CTU( const real Flu_Array_In[][NCOMP_TOTAL][ FLU_NXT*FLU_NXT*FLU_NXT ],
                           real Flu_Array_Out[][NCOMP_TOTAL][ PS2*PS2*PS2 ],
-                          real Flux_Array[][9][NFLUX_TOTAL][ PS2*PS2 ],
+                          real Flux_Array[][9][NCOMP_TOTAL][ PS2*PS2 ],
                           const double Corner_Array[][3],
                           const real Pot_Array_USG[][USG_NXT_F][USG_NXT_F][USG_NXT_F],
                           const int NPatchGroup, const real dt, const real dh, const real Gamma,
@@ -81,13 +81,13 @@ void CPU_FluidSolver_CTU( const real Flu_Array_In[][NCOMP_TOTAL][ FLU_NXT*FLU_NX
 #     endif
       const bool CorrHalfVel_No  = false;
 
-      real Input[5];
+      real Input[NCOMP_TOTAL];
       int ID1;
 
 //    FC: Face-Centered variables/fluxes
-      real (*FC_Var )[6][5] = new real [ N_FC_VAR*N_FC_VAR*N_FC_VAR ][6][5];
-      real (*FC_Flux)[3][5] = new real [ N_FC_FLUX*N_FC_FLUX*N_FC_FLUX ][3][5];
-      real (*PriVar)[5]     = new real [ FLU_NXT*FLU_NXT*FLU_NXT ][5];
+      real (*FC_Var )[6][NCOMP_TOTAL] = new real [ N_FC_VAR*N_FC_VAR*N_FC_VAR    ][6][NCOMP_TOTAL];
+      real (*FC_Flux)[3][NCOMP_TOTAL] = new real [ N_FC_FLUX*N_FC_FLUX*N_FC_FLUX ][3][NCOMP_TOTAL];
+      real (*PriVar)    [NCOMP_TOTAL] = new real [ FLU_NXT*FLU_NXT*FLU_NXT       ]   [NCOMP_TOTAL];
 
 
 //    loop over all patch groups
@@ -102,7 +102,7 @@ void CPU_FluidSolver_CTU( const real Flu_Array_In[][NCOMP_TOTAL][ FLU_NXT*FLU_NX
          {
             ID1 = (k*FLU_NXT + j)*FLU_NXT + i;
 
-            for (int v=0; v<5; v++)    Input[v] = Flu_Array_In[P][v][ID1];
+            for (int v=0; v<NCOMP_TOTAL; v++)   Input[v] = Flu_Array_In[P][v][ID1];
 
             CPU_Con2Pri( Input, PriVar[ID1], Gamma_m1, MinPres );
          }
@@ -122,7 +122,7 @@ void CPU_FluidSolver_CTU( const real Flu_Array_In[][NCOMP_TOTAL][ FLU_NXT*FLU_NX
 
             for (int f=0; f<6; f++)
             {
-               for (int v=0; v<5; v++)    Input[v] = FC_Var[ID1][f][v];
+               for (int v=0; v<NCOMP_TOTAL; v++)   Input[v] = FC_Var[ID1][f][v];
 
                CPU_Pri2Con( Input, FC_Var[ID1][f], _Gamma_m1 );
             }
@@ -183,7 +183,7 @@ void CPU_FluidSolver_CTU( const real Flu_Array_In[][NCOMP_TOTAL][ FLU_NXT*FLU_NX
 //                _Gamma_m1    : 1/(Gamma - 1)
 //                MinDens/Pres : Minimum allowed density and pressure
 //-------------------------------------------------------------------------------------------------------
-void TGradient_Correction( real FC_Var[][6][5], const real FC_Flux[][3][5], const real dt, const real dh,
+void TGradient_Correction( real FC_Var[][6][NCOMP_TOTAL], const real FC_Flux[][3][NCOMP_TOTAL], const real dt, const real dh,
                            const real Gamma_m1, const real _Gamma_m1, const real MinDens, const real MinPres )
 {
 
@@ -219,7 +219,7 @@ void TGradient_Correction( real FC_Var[][6][5], const real FC_Flux[][3][5], cons
          ID_L1 = ID_R - dID[TDir1];
          ID_L2 = ID_R - dID[TDir2];
 
-         for (int v=0; v<5; v++)
+         for (int v=0; v<NCOMP_TOTAL; v++)
          {
             TGrad1  = FC_Flux[ID_R][TDir1][v] - FC_Flux[ID_L1][TDir1][v];
             TGrad2  = FC_Flux[ID_R][TDir2][v] - FC_Flux[ID_L2][TDir2][v];

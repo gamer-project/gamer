@@ -112,7 +112,7 @@ __device__ FluVar CUFLU_RiemannSolver_Roe( const int XYZ, const FluVar L_In, con
    EVec5.Rho = ONE;    EVec5.Px = u + Cs;   EVec5.Py = v;      EVec5.Pz = w;      EVec5.Egy = H + u*Cs;
 
 
-// 4. evalute the left and right fluxes
+// 4. evaluate the left and right fluxes
    const FluVar Flux_L = CUFLU_Con2Flux( L, Gamma_m1, 0, MinPres );
    const FluVar Flux_R = CUFLU_Con2Flux( R, Gamma_m1, 0, MinPres );
 
@@ -147,7 +147,7 @@ __device__ FluVar CUFLU_RiemannSolver_Roe( const int XYZ, const FluVar L_In, con
    }
 
 
-// 6. evalute the amplitudes along different characteristics (eigenvectors)
+// 6. evaluate the amplitudes along different characteristics (eigenvectors)
    FluVar Jump, Amp;
    real _Cs = (real)1.0/Cs;
 
@@ -247,7 +247,7 @@ __device__ FluVar CUFLU_RiemannSolver_Roe( const int XYZ, const FluVar L_In, con
 #  endif // #ifdef CHECK_INTERMEDIATE
 
 
-// 8. evalute the ROE fluxes
+// 8. evaluate the ROE fluxes
    Amp.Rho *= FABS( EVal.Rho );
    Amp.Px  *= FABS( EVal.Px  );
    Amp.Py  *= FABS( EVal.Py  );

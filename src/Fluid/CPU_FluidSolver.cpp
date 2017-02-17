@@ -13,26 +13,26 @@ extern double ExtAcc_AuxArray[EXT_ACC_NAUX_MAX];
 
 #if   ( MODEL == HYDRO )
 #if   ( FLU_SCHEME == RTVD )
-void CPU_FluidSolver_RTVD( real Flu_Array_In [][5][ FLU_NXT*FLU_NXT*FLU_NXT ],
-                           real Flu_Array_Out[][5][ PS2*PS2*PS2 ],
-                           real Flux_Array[][9][5][ PS2*PS2 ],
+void CPU_FluidSolver_RTVD( real Flu_Array_In [][NCOMP_TOTAL][ FLU_NXT*FLU_NXT*FLU_NXT ],
+                           real Flu_Array_Out[][NCOMP_TOTAL][ PS2*PS2*PS2 ],
+                           real Flux_Array[][9][NCOMP_TOTAL][ PS2*PS2 ],
                            const double Corner_Array[][3],
                            const real Pot_Array_USG[][USG_NXT_F][USG_NXT_F][USG_NXT_F],
                            const int NPatchGroup, const real dt, const real dh, const real Gamma,
                            const bool StoreFlux, const bool XYZ, const real MinDens, const real MinPres );
 #elif ( FLU_SCHEME == WAF )
-void CPU_FluidSolver_WAF( real Flu_Array_In [][5][ FLU_NXT*FLU_NXT*FLU_NXT ],
-                          real Flu_Array_Out[][5][ PS2*PS2*PS2 ],
-                          real Flux_Array[][9][5][ PS2*PS2 ],
+void CPU_FluidSolver_WAF( real Flu_Array_In [][NCOMP_TOTAL][ FLU_NXT*FLU_NXT*FLU_NXT ],
+                          real Flu_Array_Out[][NCOMP_TOTAL][ PS2*PS2*PS2 ],
+                          real Flux_Array[][9][NCOMP_TOTAL][ PS2*PS2 ],
                           const double Corner_Array[][3],
                           const real Pot_Array_USG[][USG_NXT_F][USG_NXT_F][USG_NXT_F],
                           const int NPatchGroup, const real dt, const real dh, const real Gamma,
                           const bool StoreFlux, const bool XYZ, const WAF_Limiter_t WAF_Limiter,
                           const real MinDens, const real MinPres );
 #elif ( FLU_SCHEME == MHM  ||  FLU_SCHEME == MHM_RP )
-void CPU_FluidSolver_MHM( const real Flu_Array_In[][5][ FLU_NXT*FLU_NXT*FLU_NXT ],
-                          real Flu_Array_Out     [][5][ PS2*PS2*PS2 ],
-                          real Flux_Array     [][9][5][ PS2*PS2 ],
+void CPU_FluidSolver_MHM( const real Flu_Array_In[][NCOMP_TOTAL][ FLU_NXT*FLU_NXT*FLU_NXT ],
+                          real Flu_Array_Out     [][NCOMP_TOTAL][ PS2*PS2*PS2 ],
+                          real Flux_Array     [][9][NCOMP_TOTAL][ PS2*PS2 ],
                           const double Corner_Array[][3],
                           const real Pot_Array_USG[][USG_NXT_F][USG_NXT_F][USG_NXT_F],
                           const int NPatchGroup, const real dt, const real dh, const real Gamma,
@@ -40,9 +40,9 @@ void CPU_FluidSolver_MHM( const real Flu_Array_In[][5][ FLU_NXT*FLU_NXT*FLU_NXT 
                           const real EP_Coeff, const double Time, const OptGravityType_t GravityType,
                           const double ExtAcc_AuxArray[], const real MinDens, const real MinPres );
 #elif ( FLU_SCHEME == CTU )
-void CPU_FluidSolver_CTU( const real Flu_Array_In[][5][ FLU_NXT*FLU_NXT*FLU_NXT ],
-                          real Flu_Array_Out     [][5][ PS2*PS2*PS2 ],
-                          real Flux_Array     [][9][5][ PS2*PS2 ],
+void CPU_FluidSolver_CTU( const real Flu_Array_In[][NCOMP_TOTAL][ FLU_NXT*FLU_NXT*FLU_NXT ],
+                          real Flu_Array_Out     [][NCOMP_TOTAL][ PS2*PS2*PS2 ],
+                          real Flux_Array     [][9][NCOMP_TOTAL][ PS2*PS2 ],
                           const double Corner_Array[][3],
                           const real Pot_Array_USG[][USG_NXT_F][USG_NXT_F][USG_NXT_F],
                           const int NPatchGroup, const real dt, const real dh, const real Gamma,

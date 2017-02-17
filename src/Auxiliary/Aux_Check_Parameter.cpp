@@ -577,6 +577,14 @@ void Aux_Check_Parameter()
 #     error : ERROR : NCOMP_FLUID != 5 in HYDRO !!
 #  endif
 
+#  if ( NCOMP_TOTAL != NFLUX_TOTAL )
+#     error : ERROR : NCOMP_TOTAL != NFLUX_TOTAL !!
+#  endif
+
+#  if (  NCOMP_PASSIVE != 0  &&  ( FLU_SCHEME == RTVD || FLU_SCHEME == WAF )  )
+#     error : RTVD and WAF schemes do NOT support passive scalars !!
+#  endif
+
 #  if ( FLU_SCHEME != RTVD  &&  FLU_SCHEME != MHM  &&  FLU_SCHEME != MHM_RP  &&  FLU_SCHEME != CTU  &&  \
         FLU_SCHEME != WAF )
 #     error : ERROR : unsupported hydro scheme in the makefile !!

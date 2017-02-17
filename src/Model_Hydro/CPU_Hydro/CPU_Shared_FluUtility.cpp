@@ -14,11 +14,12 @@ real CPU_GetPressure( const real Dens, const real MomX, const real MomY, const r
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  CPU_Rotate3D
-// Description :  Rotate the input 5-element fluid variables properly to simplify the 3D calculation
+// Description :  Rotate the input fluid variables properly to simplify the 3D calculation
 //
-// Note        :  x : (0,1,2,3,4) <--> (0,1,2,3,4)
-//                y : (0,1,2,3,4) <--> (0,2,3,1,4)
-//                z : (0,1,2,3,4) <--> (0,3,1,2,4)
+// Note        :  1. x : (0,1,2,3,4) <--> (0,1,2,3,4)
+//                   y : (0,1,2,3,4) <--> (0,2,3,1,4)
+//                   z : (0,1,2,3,4) <--> (0,3,1,2,4)
+//                2. Work if InOut includes/excludes passive scalars since they are not modified at all
 //
 // Parameter   :  InOut    : Array storing both the input and output data
 //                XYZ      : Targeted spatial direction : (0/1/2) --> (x/y/z)
@@ -30,15 +31,15 @@ void CPU_Rotate3D( real InOut[], const int XYZ, const bool Forward )
    if ( XYZ == 0 )   return;
 
 
-   real Temp[5];
-   for (int v=0; v<5; v++)    Temp[v] = InOut[v];
+   real Temp[3];
+   for (int v=0; v<3; v++)    Temp[v] = InOut[v+1];
 
    if ( Forward )
    {
       switch ( XYZ )
       {
-         case 1 : InOut[1] = Temp[2];  InOut[2] = Temp[3];  InOut[3] = Temp[1];     break;
-         case 2 : InOut[1] = Temp[3];  InOut[2] = Temp[1];  InOut[3] = Temp[2];     break;
+         case 1 : InOut[1] = Temp[1];  InOut[2] = Temp[2];  InOut[3] = Temp[0];     break;
+         case 2 : InOut[1] = Temp[2];  InOut[2] = Temp[0];  InOut[3] = Temp[1];     break;
       }
    }
 
@@ -46,8 +47,8 @@ void CPU_Rotate3D( real InOut[], const int XYZ, const bool Forward )
    {
       switch ( XYZ )
       {
-         case 1 : InOut[1] = Temp[3];  InOut[2] = Temp[1];  InOut[3] = Temp[2];     break;
-         case 2 : InOut[1] = Temp[2];  InOut[2] = Temp[3];  InOut[3] = Temp[1];     break;
+         case 1 : InOut[1] = Temp[2];  InOut[2] = Temp[0];  InOut[3] = Temp[1];     break;
+         case 2 : InOut[1] = Temp[1];  InOut[2] = Temp[2];  InOut[3] = Temp[0];     break;
       }
    }
 
@@ -61,6 +62,7 @@ void CPU_Rotate3D( real InOut[], const int XYZ, const bool Forward )
 //
 // Note        :  1. This function always check if the pressure to be returned is greater than the
 //                   given minimum threshold
+//                2. For passive scalars, we store their mass fraction as the primitive variables
 //
 // Parameter   :  In       : Array storing the input conserved variables
 //                Out      : Array to store the output primitive variables
@@ -79,6 +81,11 @@ void CPU_Con2Pri( const real In[], real Out[], const real Gamma_m1, const real M
    Out[3] = In[3]*_Rho;
    Out[4] = CPU_GetPressure( In[0], In[1], In[2], In[3], In[4], Gamma_m1, CheckMinPres_Yes, MinPres );
 
+// passive scalars
+#  if ( NCOMP_PASSIVE > 0 )
+   for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)  Out[v] = In[v]*_Rho;
+#  endif
+
 } // FUNCTION : CPU_Con2Pri
 
 
@@ -89,6 +96,7 @@ void CPU_Con2Pri( const real In[], real Out[], const real Gamma_m1, const real M
 //
 // Note        :  1. This function does NOT check if the input pressure is greater than the
 //                   given minimum threshold
+//                2. For passive scalars, we store their mass fraction as the primitive variables
 //
 // Parameter   :  In       : Array storing the input primitive variables
 //                Out      : Array to store the output conserved variables
@@ -102,6 +110,11 @@ void CPU_Pri2Con( const real In[], real Out[], const real _Gamma_m1 )
    Out[2] = In[0]*In[2];
    Out[3] = In[0]*In[3];
    Out[4] = In[4]*_Gamma_m1 + (real)0.5*In[0]*( In[1]*In[1] + In[2]*In[2] + In[3]*In[3] );
+
+// passive scalars
+#  if ( NCOMP_PASSIVE > 0 )
+   for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)  Out[v] = In[0]*In[v];
+#  endif
 
 } // FUNCTION : CPU_Pri2Con
 
@@ -121,10 +134,10 @@ void CPU_Con2Flux( const int XYZ, real Flux[], const real Input[], const real Ga
 {
 
    const bool CheckMinPres_Yes = true;
-   real Var[5];
+   real Var[NCOMP_FLUID];  // don't need to include passive scalars since they don't have to be rotated
    real Pres, Vx;
 
-   for (int v=0; v<5; v++)    Var[v] = Input[v];
+   for (int v=0; v<NCOMP_FLUID; v++)   Var[v] = Input[v];
 
    CPU_Rotate3D( Var, XYZ, true );
 
@@ -136,6 +149,11 @@ void CPU_Con2Flux( const int XYZ, real Flux[], const real Input[], const real Ga
    Flux[2] = Vx*Var[2];
    Flux[3] = Vx*Var[3];
    Flux[4] = Vx*( Var[4] + Pres );
+
+// passive scalars
+#  if ( NCOMP_PASSIVE > 0 )
+   for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)  Flux[v] = Input[v]*Vx;
+#  endif
 
    CPU_Rotate3D( Flux, XYZ, false );
 

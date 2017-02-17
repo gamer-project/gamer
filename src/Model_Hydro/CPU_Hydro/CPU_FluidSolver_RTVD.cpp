@@ -5,6 +5,11 @@
 #if ( !defined GPU  &&  MODEL == HYDRO  &&  FLU_SCHEME == RTVD )
 
 
+// check before compiling anything else
+#if ( NCOMP_PASSIVE != 0 )
+#  error : RTVD scheme does NOT support passive scalars !!
+#endif
+
 
 #define to1D(z,y,x) ( z*FLU_NXT*FLU_NXT + y*FLU_NXT + x )
 
@@ -39,9 +44,9 @@ static void TransposeXZ( real u[][ FLU_NXT*FLU_NXT*FLU_NXT ] );
 //                                 false : z->y->x (backward sweep)
 //                MinDens/Pres   : Minimum allowed density and pressure
 //-------------------------------------------------------------------------------------------------------
-void CPU_FluidSolver_RTVD( real Flu_Array_In [][5][ FLU_NXT*FLU_NXT*FLU_NXT ],
-                           real Flu_Array_Out[][5][ PS2*PS2*PS2 ],
-                           real Flux_Array[][9][5][ PS2*PS2 ],
+void CPU_FluidSolver_RTVD( real Flu_Array_In [][NCOMP_TOTAL][ FLU_NXT*FLU_NXT*FLU_NXT ],
+                           real Flu_Array_Out[][NCOMP_TOTAL][ PS2*PS2*PS2 ],
+                           real Flux_Array[][9][NCOMP_TOTAL][ PS2*PS2 ],
                            const double Corner_Array[][3],
                            const real Pot_Array_USG[][USG_NXT_F][USG_NXT_F][USG_NXT_F],
                            const int NPatchGroup, const real dt, const real dh, const real Gamma,

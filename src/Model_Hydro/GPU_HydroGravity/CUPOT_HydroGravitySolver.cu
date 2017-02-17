@@ -163,7 +163,7 @@ __global__ void CUPOT_HydroGravitySolver(       real g_Flu_Array_New[][GRA_NIN][
       } // if ( P5_Gradient )
 
       
-//    1. evalute the gravitational acceleration
+//    1. evaluate the gravitational acceleration
       Acc_new[0] = (real)0.0;
       Acc_new[1] = (real)0.0;
       Acc_new[2] = (real)0.0;

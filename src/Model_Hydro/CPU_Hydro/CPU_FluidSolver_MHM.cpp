@@ -6,20 +6,20 @@
 
 
 
-extern void CPU_DataReconstruction( const real PriVar[][5], real FC_Var[][6][5], const int NIn, const int NGhost,
+extern void CPU_DataReconstruction( const real PriVar[][NCOMP_TOTAL], real FC_Var[][6][NCOMP_TOTAL], const int NIn, const int NGhost,
                                     const real Gamma, const LR_Limiter_t LR_Limiter, const real MinMod_Coeff,
                                     const real EP_Coeff, const real dt, const real dh, const real MinDens, const real MinPres );
 extern void CPU_Con2Flux( const int XYZ, real Flux[], const real Input[], const real Gamma_m1, const real MinPres );
 extern void CPU_Con2Pri( const real In[], real Out[], const real  Gamma_m1, const real MinPres );
 extern void CPU_Pri2Con( const real In[], real Out[], const real _Gamma_m1 );
-extern void CPU_ComputeFlux( const real FC_Var[][6][5], real FC_Flux[][3][5], const int NFlux, const int Gap,
+extern void CPU_ComputeFlux( const real FC_Var[][6][NCOMP_TOTAL], real FC_Flux[][3][NCOMP_TOTAL], const int NFlux, const int Gap,
                              const real Gamma, const bool CorrHalfVel, const real Pot_USG[], const double Corner[],
                              const real dt, const real dh, const double Time, const OptGravityType_t GravityType,
                              const double ExtAcc_AuxArray[], const real MinPres );
 extern void CPU_FullStepUpdate( const real Input[][ FLU_NXT*FLU_NXT*FLU_NXT ], real Output[][ PS2*PS2*PS2 ],
-                                const real Flux[][3][5], const real dt, const real dh,
+                                const real Flux[][3][NCOMP_TOTAL], const real dt, const real dh,
                                 const real Gamma );
-extern void CPU_StoreFlux( real Flux_Array[][5][ PS2*PS2 ], const real FC_Flux[][3][5] );
+extern void CPU_StoreFlux( real Flux_Array[][NCOMP_TOTAL][ PS2*PS2 ], const real FC_Flux[][3][NCOMP_TOTAL] );
 #if   ( RSOLVER == EXACT )
 extern void CPU_RiemannSolver_Exact( const int XYZ, real eival_out[], real L_star_out[], real R_star_out[],
                                      real Flux_Out[], const real L_In[], const real R_In[], const real Gamma );
@@ -37,12 +37,12 @@ extern real CPU_CheckMinPres( const real InPres, const real MinPres );
 
 #if   ( FLU_SCHEME == MHM_RP )
 static void CPU_RiemannPredict( const real Flu_Array_In[][ FLU_NXT*FLU_NXT*FLU_NXT ],
-                                const real Half_Flux[][3][5], real Half_Var[][5], const real dt,
+                                const real Half_Flux[][3][NCOMP_TOTAL], real Half_Var[][NCOMP_TOTAL], const real dt,
                                 const real dh, const real Gamma, const real MinDens, const real MinPres );
 static void CPU_RiemannPredict_Flux( const real Flu_Array_In[][ FLU_NXT*FLU_NXT*FLU_NXT ],
-                                     real Half_Flux[][3][5], const real Gamma, const real MinPres );
+                                     real Half_Flux[][3][NCOMP_TOTAL], const real Gamma, const real MinPres );
 #elif ( FLU_SCHEME == MHM )
-static void CPU_HancockPredict( real FC_Var[][6][5], const real dt, const real dh, const real Gamma,
+static void CPU_HancockPredict( real FC_Var[][6][NCOMP_TOTAL], const real dt, const real dh, const real Gamma,
                                 const real C_Var[][ FLU_NXT*FLU_NXT*FLU_NXT ], const real MinDens, const real MinPres );
 #endif
 
@@ -82,9 +82,9 @@ static void CPU_HancockPredict( real FC_Var[][6][5], const real dt, const real d
 //                ExtAcc_AuxArray : Auxiliary array for adding external acceleration          (for UNSPLIT_GRAVITY only)
 //                MinDens/Pres    : Minimum allowed density and pressure
 //-------------------------------------------------------------------------------------------------------
-void CPU_FluidSolver_MHM( const real Flu_Array_In[][5][ FLU_NXT*FLU_NXT*FLU_NXT ],
-                          real Flu_Array_Out     [][5][ PS2*PS2*PS2 ],
-                          real Flux_Array     [][9][5][ PS2*PS2 ],
+void CPU_FluidSolver_MHM( const real Flu_Array_In[][NCOMP_TOTAL][ FLU_NXT*FLU_NXT*FLU_NXT ],
+                          real Flu_Array_Out     [][NCOMP_TOTAL][ PS2*PS2*PS2 ],
+                          real Flux_Array     [][9][NCOMP_TOTAL][ PS2*PS2 ],
                           const double Corner_Array[][3],
                           const real Pot_Array_USG[][USG_NXT_F][USG_NXT_F][USG_NXT_F],
                           const int NPatchGroup, const real dt, const real dh, const real Gamma,
@@ -111,17 +111,17 @@ void CPU_FluidSolver_MHM( const real Flu_Array_In[][5][ FLU_NXT*FLU_NXT*FLU_NXT 
       const bool CorrHalfVel_No  = false;
 #     endif
 
-      real Input[5];
+      real Input[NCOMP_TOTAL];
       int ID1;
 
 //    FC: Face-Centered variables/fluxes
-      real (*FC_Var )[6][5] = new real [ N_FC_VAR*N_FC_VAR*N_FC_VAR ][6][5];
-      real (*FC_Flux)[3][5] = new real [ N_FC_FLUX*N_FC_FLUX*N_FC_FLUX ][3][5];     // also used by "Half_Flux"
-      real (*PriVar)[5]     = new real [ FLU_NXT*FLU_NXT*FLU_NXT ][5];              // also used by "Half_Var"
+      real (*FC_Var )[6][NCOMP_TOTAL] = new real [ N_FC_VAR*N_FC_VAR*N_FC_VAR    ][6][NCOMP_TOTAL];
+      real (*FC_Flux)[3][NCOMP_TOTAL] = new real [ N_FC_FLUX*N_FC_FLUX*N_FC_FLUX ][3][NCOMP_TOTAL];   // also used by "Half_Flux"
+      real (*PriVar)    [NCOMP_TOTAL] = new real [ FLU_NXT*FLU_NXT*FLU_NXT       ]   [NCOMP_TOTAL];   // also used by "Half_Var"
 
 #     if ( FLU_SCHEME == MHM_RP )
-      real (*const Half_Flux)[3][5] = FC_Flux;
-      real (*const Half_Var)[5]     = PriVar;
+      real (*const Half_Flux)[3][NCOMP_TOTAL] = FC_Flux;
+      real (*const Half_Var)    [NCOMP_TOTAL] = PriVar;
 #     endif
 
 
@@ -148,7 +148,7 @@ void CPU_FluidSolver_MHM( const real Flu_Array_In[][5][ FLU_NXT*FLU_NXT*FLU_NXT 
          {
             ID1 = (k*N_HF_VAR + j)*N_HF_VAR + i;
 
-            for (int v=0; v<5; v++)    Input[v] = Half_Var[ID1][v];
+            for (int v=0; v<NCOMP_TOTAL; v++)   Input[v] = Half_Var[ID1][v];
 
             CPU_Con2Pri( Input, Half_Var[ID1], Gamma_m1, MinPres );
          }
@@ -168,7 +168,7 @@ void CPU_FluidSolver_MHM( const real Flu_Array_In[][5][ FLU_NXT*FLU_NXT*FLU_NXT 
 
             for (int f=0; f<6; f++)
             {
-               for (int v=0; v<5; v++)    Input[v] = FC_Var[ID1][f][v];
+               for (int v=0; v<NCOMP_TOTAL; v++)   Input[v] = FC_Var[ID1][f][v];
 
                CPU_Pri2Con( Input, FC_Var[ID1][f], _Gamma_m1 );
             }
@@ -183,7 +183,7 @@ void CPU_FluidSolver_MHM( const real Flu_Array_In[][5][ FLU_NXT*FLU_NXT*FLU_NXT 
          {
             ID1 = (k*FLU_NXT + j)*FLU_NXT + i;
 
-            for (int v=0; v<5; v++)    Input[v] = Flu_Array_In[P][v][ID1];
+            for (int v=0; v<NCOMP_TOTAL; v++)   Input[v] = Flu_Array_In[P][v][ID1];
 
             CPU_Con2Pri( Input, PriVar[ID1], Gamma_m1, MinPres );
          }
@@ -203,7 +203,7 @@ void CPU_FluidSolver_MHM( const real Flu_Array_In[][5][ FLU_NXT*FLU_NXT*FLU_NXT 
 
             for (int f=0; f<6; f++)
             {
-               for (int v=0; v<5; v++)    Input[v] = FC_Var[ID1][f][v];
+               for (int v=0; v<NCOMP_TOTAL; v++)   Input[v] = FC_Var[ID1][f][v];
 
                CPU_Pri2Con( Input, FC_Var[ID1][f], _Gamma_m1 );
             }
@@ -260,17 +260,17 @@ void CPU_FluidSolver_MHM( const real Flu_Array_In[][5][ FLU_NXT*FLU_NXT*FLU_NXT 
 //                Gamma        : Ratio of specific heats
 //                MinPres      : Minimum allowed pressure
 //-------------------------------------------------------------------------------------------------------
-void CPU_RiemannPredict_Flux( const real Flu_Array_In[][ FLU_NXT*FLU_NXT*FLU_NXT ], real Half_Flux[][3][5],
+void CPU_RiemannPredict_Flux( const real Flu_Array_In[][ FLU_NXT*FLU_NXT*FLU_NXT ], real Half_Flux[][3][NCOMP_TOTAL],
                               const real Gamma, const real MinPres )
 {
 
    const int dr[3] = { 1, FLU_NXT, FLU_NXT*FLU_NXT };
    int ID1, ID2, dN[3]={ 0 };
-   real ConVar_L[5], ConVar_R[5];
+   real ConVar_L[NCOMP_TOTAL], ConVar_R[NCOMP_TOTAL];
 
 #  if ( RSOLVER == EXACT )
    const real Gamma_m1 = Gamma - (real)1.0;
-   real PriVar_L[5], PriVar_R[5];
+   real PriVar_L[NCOMP_TOTAL], PriVar_R[NCOMP_TOTAL];
 #  endif
 
 
@@ -292,7 +292,7 @@ void CPU_RiemannPredict_Flux( const real Flu_Array_In[][ FLU_NXT*FLU_NXT*FLU_NXT
          ID2 = (k2*FLU_NXT   + j2)*FLU_NXT   + i2;
 
 //       get the left and right states
-         for (int v=0; v<5; v++)
+         for (int v=0; v<NCOMP_TOTAL; v++)
          {
             ConVar_L[v] = Flu_Array_In[v][ ID2       ];
             ConVar_R[v] = Flu_Array_In[v][ ID2+dr[d] ];
@@ -336,8 +336,8 @@ void CPU_RiemannPredict_Flux( const real Flu_Array_In[][ FLU_NXT*FLU_NXT*FLU_NXT
 //                Gamma        : Ratio of specific heats
 //                MinDens/Pres : Minimum allowed density and pressure
 //-------------------------------------------------------------------------------------------------------
-void CPU_RiemannPredict( const real Flu_Array_In[][ FLU_NXT*FLU_NXT*FLU_NXT ], const real Half_Flux[][3][5],
-                         real Half_Var[][5], const real dt, const real dh, const real Gamma,
+void CPU_RiemannPredict( const real Flu_Array_In[][ FLU_NXT*FLU_NXT*FLU_NXT ], const real Half_Flux[][3][NCOMP_TOTAL],
+                         real Half_Var[][NCOMP_TOTAL], const real dt, const real dh, const real Gamma,
                          const real MinDens, const real MinPres )
 {
 
@@ -346,7 +346,7 @@ void CPU_RiemannPredict( const real Flu_Array_In[][ FLU_NXT*FLU_NXT*FLU_NXT ], c
    const real  Gamma_m1 = Gamma - (real)1.0;
    const real _Gamma_m1 = (real)1.0 / Gamma_m1;
 
-   real dF[3][5];
+   real dF[3][NCOMP_TOTAL];
    int ID1, ID2, ID3;
 
 
@@ -359,9 +359,9 @@ void CPU_RiemannPredict( const real Flu_Array_In[][ FLU_NXT*FLU_NXT*FLU_NXT ], c
       ID3 = (k1*N_HF_FLUX + j1)*N_HF_FLUX + i1;
 
       for (int d=0; d<3; d++)
-      for (int v=0; v<5; v++)    dF[d][v] = Half_Flux[ ID3+dID3[d] ][d][v] - Half_Flux[ID3][d][v];
+      for (int v=0; v<NCOMP_TOTAL; v++)    dF[d][v] = Half_Flux[ ID3+dID3[d] ][d][v] - Half_Flux[ID3][d][v];
 
-      for (int v=0; v<5; v++)
+      for (int v=0; v<NCOMP_TOTAL; v++)
          Half_Var[ID1][v] = Flu_Array_In[v][ID2] - dt_dh2*( dF[0][v] + dF[1][v] + dF[2][v] );
 
 //    ensure positive density and pressure
@@ -393,7 +393,7 @@ void CPU_RiemannPredict( const real Flu_Array_In[][ FLU_NXT*FLU_NXT*FLU_NXT ], c
 //                               --> For checking negative density and pressure
 //                MinDens/Pres : Minimum allowed density and pressure
 //-------------------------------------------------------------------------------------------------------
-void CPU_HancockPredict( real FC_Var[][6][5], const real dt, const real dh, const real Gamma,
+void CPU_HancockPredict( real FC_Var[][6][NCOMP_TOTAL], const real dt, const real dh, const real Gamma,
                          const real C_Var[][ FLU_NXT*FLU_NXT*FLU_NXT ], const real MinDens, const real MinPres )
 {
 
@@ -402,7 +402,7 @@ void CPU_HancockPredict( real FC_Var[][6][5], const real dt, const real dh, cons
    const real dt_dh2    = (real)0.5*dt/dh;
    const int  NGhost    = FLU_GHOST_SIZE - 1;
 
-   real Flux[6][5], dFlux[5];
+   real Flux[6][NCOMP_TOTAL], dFlux[NCOMP_TOTAL];
    int ID1, ID2;
 
 
@@ -415,7 +415,7 @@ void CPU_HancockPredict( real FC_Var[][6][5], const real dt, const real dh, cons
 
       for (int f=0; f<6; f++)    CPU_Con2Flux( f/2, Flux[f], FC_Var[ID1][f], Gamma_m1, MinPres );
 
-      for (int v=0; v<5; v++)
+      for (int v=0; v<NCOMP_TOTAL; v++)
       {
          dFlux[v] = dt_dh2 * ( Flux[1][v] - Flux[0][v] + Flux[3][v] - Flux[2][v] + Flux[5][v] - Flux[4][v] );
 
@@ -428,7 +428,7 @@ void CPU_HancockPredict( real FC_Var[][6][5], const real dt, const real dh, cons
          if ( FC_Var[ID1][f][0] <= (real)0.0  ||  FC_Var[ID1][f][4] <= (real)0.0 )
          {
 //          set to the values before update
-            for (int v=0; v<5; v++)
+            for (int v=0; v<NCOMP_TOTAL; v++)
             {
                FC_Var[ID1][0][v] = FC_Var[ID1][1][v] = FC_Var[ID1][2][v] = FC_Var[ID1][3][v] =
                FC_Var[ID1][4][v] = FC_Var[ID1][5][v] = C_Var[v][ID2];

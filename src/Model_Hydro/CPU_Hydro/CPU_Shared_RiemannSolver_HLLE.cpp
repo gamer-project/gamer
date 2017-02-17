@@ -36,9 +36,9 @@ void CPU_RiemannSolver_HLLE( const int XYZ, real Flux_Out[], const real L_In[], 
 {
 
 // 1. reorder the input variables for different spatial directions
-   real L[5], R[5];
+   real L[NCOMP_TOTAL], R[NCOMP_TOTAL];
 
-   for (int v=0; v<5; v++)
+   for (int v=0; v<NCOMP_TOTAL; v++)
    {
       L[v] = L_In[v];
       R[v] = R_In[v];
@@ -105,8 +105,8 @@ void CPU_RiemannSolver_HLLE( const int XYZ, real Flux_Out[], const real L_In[], 
    const real EVal[NCOMP_FLUID] = { u-Cs, u, u, u, u+Cs };
    real u_L, u_R, Cs_L, Cs_R, MaxV_L, MaxV_R;
 
-   u_L    = _RhoL*L[1];
-   u_R    = _RhoR*R[1];
+   u_L = _RhoL*L[1];
+   u_R = _RhoR*R[1];
 
 #  ifdef CHECK_NEGATIVE_IN_FLUID
    if ( CPU_CheckNegative(P_L) )
@@ -127,12 +127,12 @@ void CPU_RiemannSolver_HLLE( const int XYZ, real Flux_Out[], const real L_In[], 
 
 
 // 4. evaluate the left and right fluxes along the maximum wave speeds
-   real Flux_L[5], Flux_R[5];
+   real Flux_L[NCOMP_TOTAL], Flux_R[NCOMP_TOTAL];  // use NCOMP_TOTAL for Flux_L/R since they will be passed to CPU_Con2Flux()
 
    CPU_Con2Flux( 0, Flux_L, L, Gamma_m1, MinPres );
    CPU_Con2Flux( 0, Flux_R, R, Gamma_m1, MinPres );
 
-   for (int v=0; v<5; v++)
+   for (int v=0; v<NCOMP_FLUID; v++)
    {
       Flux_L[v] -= MaxV_L*L[v];
       Flux_R[v] -= MaxV_R*R[v];
@@ -142,10 +142,20 @@ void CPU_RiemannSolver_HLLE( const int XYZ, real Flux_Out[], const real L_In[], 
 // 5. evaluate the HLLE fluxes
    const real _MaxV_R_minus_L = (real)1.0 / ( MaxV_R - MaxV_L );
 
-   for (int v=0; v<5; v++)    Flux_Out[v] = _MaxV_R_minus_L*( MaxV_R*Flux_L[v] - MaxV_L*Flux_R[v] );
+   for (int v=0; v<NCOMP_FLUID; v++)   Flux_Out[v] = _MaxV_R_minus_L*( MaxV_R*Flux_L[v] - MaxV_L*Flux_R[v] );
 
 
-// 6. restore the correct order
+// 6. evaluate the fluxes for passive scalars
+#  if ( NCOMP_PASSIVE > 0 )
+   if ( Flux_Out[FLUX_DENS] >= (real)0.0 )
+      for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)  Flux_Out[v] = Flux_Out[FLUX_DENS]*L[v]*_RhoL;
+
+   else
+      for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)  Flux_Out[v] = Flux_Out[FLUX_DENS]*R[v]*_RhoR;
+#  endif
+
+
+// 7. restore the correct order
    CPU_Rotate3D( Flux_Out, XYZ, false );
 
 } // FUNCTION : CPU_RiemannSolver_HLLE
