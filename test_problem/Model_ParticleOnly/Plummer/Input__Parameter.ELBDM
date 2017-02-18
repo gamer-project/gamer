@@ -56,6 +56,7 @@
 0           OPT__FLAG_RHO             # flag: density (Input__Flag_Rho)
 0           OPT__FLAG_RHO_GRADIENT    # flag: density gradient (Input__Flag_RhoGradient)
 0           OPT__FLAG_PRES_GRADIENT   # flag: pressure gradient (Input__Flag_PresGradient) ##HYDRO ONLY##
+0           OPT__FLAG_VORTICITY       # flag: vorticity (Input__Flag_Vorticity) ##HYDRO ONLY##
 0           OPT__FLAG_ENGY_DENSITY    # flag: energy density (Input_Flag_EngyDensity) ##ELBDM ONLY##
 0           OPT__FLAG_LOHNER_DENS     # flag: Lohner (Input__Flag_Lohner) (HYDRO:mass density  ; ELBDM:R^2+I^2)
 0           OPT__FLAG_LOHNER_ENGY     # flag: Lohner (Input__Flag_Lohner) (HYDRO:energy density; ELBDM:useless)
@@ -117,7 +118,7 @@
 1           RESTART_LOAD_NRANK        # number of MPI ranks to load the restart file simultaneously (for higher I/O bandwidth)
 1           OPT__RESTART_HEADER       # RESTART header : (0, 1) -> (skip/check the header info)
 0           OPT__UM_START_LEVEL       # refinement level of the input uniform-mesh array (must >= 0)
-1           OPT__UM_START_NVAR        # [1...NCOMP] -> number of variables per cell stored in the uniform-mesh array
+1           OPT__UM_START_NVAR        # [1...NCOMP_TOTAL] -> number of variables per cell stored in the uniform-mesh array
 1           OPT__UM_START_DOWNGRADE   # downgrade the uniform-mesh data from OPT__UM_START_LEVEL to 0 by the refinement criteria
 1           OPT__UM_START_REFINE      # refine the uniform-mesh data from OPT__UM_START_LEVEL to MAX_LEVEL
 0           OPT__UM_FACTOR_5OVER3     # multiply the input density field by 5/3 to have the growing-mode amplitude correct

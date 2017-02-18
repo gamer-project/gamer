@@ -118,7 +118,7 @@
 1           RESTART_LOAD_NRANK        # number of MPI ranks to load the restart file simultaneously (for higher I/O bandwidth)
 1           OPT__RESTART_HEADER       # RESTART header : (0, 1) -> (skip/check the header info)
 0           OPT__UM_START_LEVEL       # refinement level of the input uniform-mesh array (must >= 0)
-1           OPT__UM_START_NVAR        # [1...NCOMP] -> number of variables per cell stored in the uniform-mesh array
+1           OPT__UM_START_NVAR        # [1...NCOMP_TOTAL] -> number of variables per cell stored in the uniform-mesh array
 1           OPT__UM_START_DOWNGRADE   # downgrade the uniform-mesh data from OPT__UM_START_LEVEL to 0 by the refinement criteria
 1           OPT__UM_START_REFINE      # refine the uniform-mesh data from OPT__UM_START_LEVEL to MAX_LEVEL
 0           OPT__UM_FACTOR_5OVER3     # multiply the input density field by 5/3 to have the growing-mode amplitude correct
