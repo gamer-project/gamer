@@ -165,8 +165,8 @@ void CPU_DataReconstruction( const real PriVar[][NCOMP_TOTAL], real FC_Var[][6][
 #           if ( NCOMP_PASSIVE > 0 )
             for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)
             {
-               FC_Var[ID2][dL][v] = FMAX( FC_Var[ID2][dL][v], (real)0.0 );
-               FC_Var[ID2][dR][v] = FMAX( FC_Var[ID2][dR][v], (real)0.0 );
+               FC_Var[ID2][dL][v] = FMAX( FC_Var[ID2][dL][v], TINY_NUMBER );
+               FC_Var[ID2][dR][v] = FMAX( FC_Var[ID2][dR][v], TINY_NUMBER );
             }
 #           endif
          }
@@ -314,6 +314,12 @@ void CPU_DataReconstruction( const real PriVar[][NCOMP_TOTAL], real FC_Var[][6][
 
          FC_Var[ID2][dL][4] = CPU_CheckMinPres( FC_Var[ID2][dL][4], MinPres );
          FC_Var[ID2][dR][4] = CPU_CheckMinPres( FC_Var[ID2][dR][4], MinPres );
+
+#        if ( NCOMP_PASSIVE > 0 )
+         for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++) {
+         FC_Var[ID2][dL][v] = FMAX( FC_Var[ID2][dL][v], TINY_NUMBER );
+         FC_Var[ID2][dR][v] = FMAX( FC_Var[ID2][dR][v], TINY_NUMBER ); }
+#        endif
 
 #        endif // #if ( FLU_SCHEME == CTU )
 
@@ -666,6 +672,12 @@ void CPU_DataReconstruction( const real PriVar[][NCOMP_TOTAL], real FC_Var[][6][
 
          FC_Var[ID2][dL][4] = CPU_CheckMinPres( FC_Var[ID2][dL][4], MinPres );
          FC_Var[ID2][dR][4] = CPU_CheckMinPres( FC_Var[ID2][dR][4], MinPres );
+
+#        if ( NCOMP_PASSIVE > 0 )
+         for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++) {
+         FC_Var[ID2][dL][v] = FMAX( FC_Var[ID2][dL][v], TINY_NUMBER );
+         FC_Var[ID2][dR][v] = FMAX( FC_Var[ID2][dR][v], TINY_NUMBER ); }
+#        endif
 
 #        endif // #if ( FLU_SCHEME == CTU )
 

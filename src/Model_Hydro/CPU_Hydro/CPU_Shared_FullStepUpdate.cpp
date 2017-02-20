@@ -59,6 +59,10 @@ void CPU_FullStepUpdate( const real Input[][ FLU_NXT*FLU_NXT*FLU_NXT ], real Out
       Output[4][ID2] = CPU_CheckMinPresInEngy( Output[0][ID2], Output[1][ID2], Output[2][ID2], Output[3][ID2], Output[4][ID2],
                                                Gamma_m1, _Gamma_m1, MinPres );
       */
+#     if ( NCOMP_PASSIVE > 0 )
+      for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)
+      Output[v][ID2] = FMAX( Output[v][ID2], TINY_NUMBER );
+#     endif
 
 //    check the negative density and energy
 #     ifdef CHECK_NEGATIVE_IN_FLUID

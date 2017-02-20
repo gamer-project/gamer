@@ -368,6 +368,10 @@ void CPU_RiemannPredict( const real Flu_Array_In[][ FLU_NXT*FLU_NXT*FLU_NXT ], c
       Half_Var[ID1][0] = FMAX( Half_Var[ID1][0], MinDens );
       Half_Var[ID1][4] = CPU_CheckMinPresInEngy( Half_Var[ID1][0], Half_Var[ID1][1], Half_Var[ID1][2],
                                                  Half_Var[ID1][3], Half_Var[ID1][4], Gamma_m1, _Gamma_m1, MinPres );
+#     if ( NCOMP_PASSIVE > 0 )
+      for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)
+      Half_Var[ID1][v] = FMAX( Half_Var[ID1][v], TINY_NUMBER );
+#     endif
    } // i,j,k
 
 } // FUNCTION : CPU_RiemannPredict
@@ -444,6 +448,10 @@ void CPU_HancockPredict( real FC_Var[][6][NCOMP_TOTAL], const real dt, const rea
          FC_Var[ID1][f][0] = FMAX( FC_Var[ID1][f][0], MinDens );
          FC_Var[ID1][f][4] = CPU_CheckMinPresInEngy( FC_Var[ID1][f][0], FC_Var[ID1][f][1], FC_Var[ID1][f][2],
                                                      FC_Var[ID1][f][3], FC_Var[ID1][f][4], Gamma_m1, _Gamma_m1, MinPres );
+#        if ( NCOMP_PASSIVE > 0 )
+         for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)
+         FC_Var[ID1][f][v] = FMAX( FC_Var[ID1][f][v], TINY_NUMBER );
+#        endif
       }
    } // i,j,k
 

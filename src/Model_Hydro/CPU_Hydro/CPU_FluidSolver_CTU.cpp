@@ -238,6 +238,11 @@ void TGradient_Correction( real FC_Var[][6][NCOMP_TOTAL], const real FC_Flux[][3
          FC_Var[ID][dR][4] = CPU_CheckMinPresInEngy( FC_Var[ID][dR][0], FC_Var[ID][dR][1], FC_Var[ID][dR][2],
                                                      FC_Var[ID][dR][3], FC_Var[ID][dR][4], Gamma_m1, _Gamma_m1, MinPres );
 
+#        if ( NCOMP_PASSIVE > 0 )
+         for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++) {
+         FC_Var[ID][dL][v] = FMAX( FC_Var[ID][dL][v], TINY_NUMBER );
+         FC_Var[ID][dR][v] = FMAX( FC_Var[ID][dR][v], TINY_NUMBER ); }
+#        endif
       } // i,j,k
    } // for (int d=0; d<3; d++)
 
