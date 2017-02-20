@@ -161,6 +161,9 @@ struct SymConst_t
    int    SonOffsetLB;
 #  endif
 
+   double TinyNumber;
+   double HugeNumber;
+
 
 #  ifdef GRAVITY
    int    Gra_NIn;

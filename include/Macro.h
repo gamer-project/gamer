@@ -511,6 +511,11 @@
 #endif
 
 
+// extreme value used for various purpose (e.g., floor value for passive scalars)
+#define TINY_NUMBER        __FLT_MIN__
+#define HUGE_NUMBER        __FLT_MAX__
+
+
 // sibling index offset for the non-periodic B.C.
 #define SIB_OFFSET_NONPERIODIC   ( -100 )
 
