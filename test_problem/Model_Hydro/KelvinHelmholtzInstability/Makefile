@@ -25,7 +25,7 @@ SIMU_OPTION += -DPOT_SCHEME=SOR
 # --> currently only for improving accuracy for particles around the patch boundaries (by Par->ImproveAcc)
 #SIMU_OPTION += -DSTORE_POT_GHOST
 
-# use unsplitting method to couple gravity to the target model (e.g., hydro, MHD, ELBDM)
+# use unsplitting method to couple gravity to the target model (e.g., HYDRO and MHD, ELBDM is not supported yet)
 # --> must be off if GRAVITY is off
 #SIMU_OPTION += -DUNSPLIT_GRAVITY
 
@@ -57,8 +57,12 @@ SIMU_OPTION += -DLR_SCHEME=PPM
 # Riemann solver: EXACT/ROE/HLLE/HLLC ##ALL ARE USELESS IN RTVD, HLLE/HLLC ARE USELESS IN WAF##
 SIMU_OPTION += -DRSOLVER=ROE
 
-# number of passively advected scalars
-SIMU_OPTION += -DNPASSIVE=0
+# dual energy formalism
+#SIMU_OPTION += -DDUAL_ENERGY
+
+# number of passively advected scalars (excluding internal energy even when DUAL_ENERGY is on)
+# --> for simulations without any passive scalar, please set this variable to 0 and do NOT comment it out
+SIMU_OPTION += -DNCOMP_PASSIVE_MAKEFILE=0
 
 
 # (c) MHD options
@@ -77,6 +81,9 @@ else ifeq "$(findstring MODEL=ELBDM, $(SIMU_OPTION))" "MODEL=ELBDM"
 
 # include the quartic self-interaction potential (must turn on GRAVITY as well, not work with COMOVING yet)
 #SIMU_OPTION += -DQUARTIC_SELF_INTERACTION
+
+# number of passively advected scalars (not supported for ELBDM yet --> must be 0)
+SIMU_OPTION += -DNCOMP_PASSIVE_MAKEFILE=0
 
 endif # MODEL
 
@@ -114,10 +121,10 @@ SIMU_OPTION += -DINTEL
 #SIMU_OPTION += -DFLOAT8
 
 # serial mode (in which no MPI libraries are required)
-#SIMU_OPTION += -DSERIAL
+SIMU_OPTION += -DSERIAL
 
 # load-balance parallelization (one must not turn on the option "SERIAL") (HILBERT)
-SIMU_OPTION += -DLOAD_BALANCE=HILBERT
+#SIMU_OPTION += -DLOAD_BALANCE=HILBERT
 
 # overlap MPI communication with computation (experimental, only supported in LOAD_BALANCE)
 #SIMU_OPTION += -DOVERLAP_MPI
@@ -171,7 +178,7 @@ CC_FILE     += End_GAMER.cpp  End_MemFree.cpp  End_MemFree_Fluid.cpp  End_StopMa
                Init_MemAllocate_Fluid.cpp  Init_Parallelization.cpp  Init_RecordBasePatch.cpp  Init_Refine.cpp \
                Init_Restart_v1.cpp  Init_StartOver.cpp  Init_TestProb.cpp  Init_UM.cpp  Init_OpenMP.cpp \
                Init_Restart_HDF5.cpp  Init_SetDefaultParameter.cpp  Init_Restart_v2.cpp  Init_MemoryPool.cpp \
-               Init_Unit.cpp
+               Init_Unit.cpp  Init_SetPassiveFieldName.cpp
 
 CC_FILE     += Interpolate.cpp  Int_CQuadratic.cpp  Int_MinMod1D.cpp  Int_MinMod3D.cpp  Int_vanLeer.cpp \
                Int_Quadratic.cpp  Int_Table.cpp  Int_CQuartic.cpp  Int_Quartic.cpp
