@@ -285,6 +285,8 @@ void CorrectFlux( const int lv, const real h_Flux_Array[][9][NFLUX_TOTAL][4*PATC
 //                2. Currently it is used for MODEL==HYDRO/MHD to check whether the input density and pressure
 //                   (or energy density) is smaller than the given thresholds
 //                   --> It also checks if any variable is -inf, +inf, or nan
+//                   --> It does NOT check if passive scalars are negative
+//                       --> We already apply a floor value in CPU_Shared_FullStepUpdate()
 //
 // Parameter   :  Fluid              : Input fluid variable array with size FLU_NOUT
 //                Gamma_m1           : Gamma - 1
@@ -455,6 +457,10 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
             Update[DENS] = FMAX( Update[DENS], (real)MIN_DENS );
             Update[ENGY] = CPU_CheckMinPresInEngy( Update[DENS], Update[MOMX], Update[MOMY], Update[MOMZ], Update[ENGY],
                                                    Gamma_m1, _Gamma_m1, MIN_PRES );
+#           if ( NCOMP_PASSIVE > 0 )
+            for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)
+            Update[   v] = FMAX( Update[v], TINY_NUMBER );
+#           endif
 
 
 //          check if the newly updated values are still unphysical

@@ -371,7 +371,7 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
 #           warning : WAIT MHD !!!
 
 #           elif ( MODEL == ELBDM )
-            if ( v == DENS )                 Monotonicity[v] = EnsureMonotonicity_Yes;
+            if ( v != REAL  &&  v != IMAG )  Monotonicity[v] = EnsureMonotonicity_Yes;
             else                             Monotonicity[v] = EnsureMonotonicity_No;
 
 #           else
@@ -457,6 +457,7 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
 #        endif
 
 //       (c1.3.3.3) check minimum density and pressure
+//       --> note that it's unnecessary to check negative passive scalars thanks to the monotonic interpolation
 #        if ( MODEL == HYDRO  ||  MODEL == MHD  ||  MODEL == ELBDM )
          for (int k=0; k<FSize; k++)
          for (int j=0; j<FSize; j++)

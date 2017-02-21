@@ -100,6 +100,10 @@ void Hydro_Init_StartOver_AssignData( const int lv )
          fluid[DENS] = FMAX( fluid[DENS], (real)MIN_DENS );
          fluid[ENGY] = CPU_CheckMinPresInEngy( fluid[DENS], fluid[MOMX], fluid[MOMY], fluid[MOMZ], fluid[ENGY],
                                                Gamma_m1, _Gamma_m1, MIN_PRES );
+#        if ( NCOMP_PASSIVE > 0 )
+         for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)
+         fluid[   v] = FMAX( fluid[v], TINY_NUMBER );
+#        endif
 
          for (int v=0; v<NCOMP_TOTAL; v++)   amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[v][k][j][i] = fluid[v];
 
@@ -120,6 +124,10 @@ void Hydro_Init_StartOver_AssignData( const int lv )
          fluid[DENS] = FMAX( fluid[DENS], (real)MIN_DENS );
          fluid[ENGY] = CPU_CheckMinPresInEngy( fluid[DENS], fluid[MOMX], fluid[MOMY], fluid[MOMZ], fluid[ENGY],
                                                Gamma_m1, _Gamma_m1, MIN_PRES );
+#        if ( NCOMP_PASSIVE > 0 )
+         for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)
+         fluid[   v] = FMAX( fluid[v], TINY_NUMBER );
+#        endif
 
          for (int v=0; v<NCOMP_TOTAL; v++)   amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[v][k][j][i] = fluid[v];
 

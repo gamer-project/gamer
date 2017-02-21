@@ -115,6 +115,11 @@ void Flu_FixUp( const int lv, const double dt )
 #              endif
                   continue;
 
+//             floor passive scalars
+#              if ( NCOMP_PASSIVE > 0 )
+               for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)  CorrVal[v] = FMAX( CorrVal[v], TINY_NUMBER );
+#              endif
+
 //             apply flux correction
                for (int v=0; v<NFLUX_TOTAL; v++)
                   amr->patch[FluSg][lv][PID]->fluid[v][k][j][           0] = CorrVal[v];
@@ -158,6 +163,11 @@ void Flu_FixUp( const int lv, const double dt )
                if ( CorrVal[DENS] < MIN_DENS )
 #              endif
                   continue;
+
+//             floor passive scalars
+#              if ( NCOMP_PASSIVE > 0 )
+               for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)  CorrVal[v] = FMAX( CorrVal[v], TINY_NUMBER );
+#              endif
 
 //             apply flux correction
                for (int v=0; v<NFLUX_TOTAL; v++)
@@ -203,6 +213,11 @@ void Flu_FixUp( const int lv, const double dt )
 #              endif
                   continue;
 
+//             floor passive scalars
+#              if ( NCOMP_PASSIVE > 0 )
+               for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)  CorrVal[v] = FMAX( CorrVal[v], TINY_NUMBER );
+#              endif
+
 //             apply flux correction
                for (int v=0; v<NFLUX_TOTAL; v++)
                   amr->patch[FluSg][lv][PID]->fluid[v][k][           0][i] = CorrVal[v];
@@ -246,6 +261,11 @@ void Flu_FixUp( const int lv, const double dt )
                if ( CorrVal[DENS] < MIN_DENS )
 #              endif
                   continue;
+
+//             floor passive scalars
+#              if ( NCOMP_PASSIVE > 0 )
+               for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)  CorrVal[v] = FMAX( CorrVal[v], TINY_NUMBER );
+#              endif
 
 //             apply flux correction
                for (int v=0; v<NFLUX_TOTAL; v++)
@@ -291,6 +311,11 @@ void Flu_FixUp( const int lv, const double dt )
 #              endif
                   continue;
 
+//             floor passive scalars
+#              if ( NCOMP_PASSIVE > 0 )
+               for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)  CorrVal[v] = FMAX( CorrVal[v], TINY_NUMBER );
+#              endif
+
 //             apply flux correction
                for (int v=0; v<NFLUX_TOTAL; v++)
                   amr->patch[FluSg][lv][PID]->fluid[v][           0][j][i] = CorrVal[v];
@@ -334,6 +359,11 @@ void Flu_FixUp( const int lv, const double dt )
                if ( CorrVal[DENS] < MIN_DENS )
 #              endif
                   continue;
+
+//             floor passive scalars
+#              if ( NCOMP_PASSIVE > 0 )
+               for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)  CorrVal[v] = FMAX( CorrVal[v], TINY_NUMBER );
+#              endif
 
 //             apply flux correction
                for (int v=0; v<NFLUX_TOTAL; v++)

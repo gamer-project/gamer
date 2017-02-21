@@ -51,6 +51,7 @@ static int Table_01( const int SibID, const int Side, const char dim, const int 
 //                                 --> _FLUID, _PASSIVE, _TOTAL, and _DERIVED apply to all models
 //                NVar_Tot       : Total number of variables to be prepared
 //                NVar_Flu       : Number of fluid variables to be prepared
+//                                 --> Including passive scalars
 //                TFluVarIdxList : List recording the target fluid and passive variable indices ( = [0 ... NCOMP_TOTAL-1] )
 //                NVar_Der       : Number of derived variables to be prepared
 //                TDerVarList    : List recording the target derived variables
@@ -766,7 +767,8 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData[], const in
 #     warning : WAIT MHD !!!
 
 #     elif ( MODEL == ELBDM )
-      if ( TFluVarIdx == DENS )                          Monotonicity[v] = EnsureMonotonicity_Yes;
+//    apply monotonic interpolation to density and all passive scalars
+      if ( TFluVarIdx != REAL  &&  TFluVarIdx != IMAG )  Monotonicity[v] = EnsureMonotonicity_Yes;
       else                                               Monotonicity[v] = EnsureMonotonicity_No;
 
 #     else

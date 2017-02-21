@@ -751,7 +751,7 @@ int AllocateSonPatch( const int FaLv, const int *Cr, const int PScale, const int
 #     warning : WAIT MHD !!!
 
 #     elif ( MODEL == ELBDM )
-      if ( v == DENS )                 Monotonicity[v] = EnsureMonotonicity_Yes;
+      if ( v != REAL  &&  v != IMAG )  Monotonicity[v] = EnsureMonotonicity_Yes;
       else                             Monotonicity[v] = EnsureMonotonicity_No;
 
 #     else
@@ -824,6 +824,7 @@ int AllocateSonPatch( const int FaLv, const int *Cr, const int PScale, const int
 #  endif
 
 // 3.2.3 check minimum density and pressure
+// --> note that it's unnecessary to check negative passive scalars thanks to the monotonic interpolation
 #  if ( MODEL == HYDRO  ||  MODEL == MHD  ||  MODEL == ELBDM )
 #  if ( MODEL == HYDRO  ||  MODEL == MHD )
    const real  Gamma_m1 = GAMMA - (real)1.0;

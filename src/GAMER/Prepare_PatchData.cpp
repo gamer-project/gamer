@@ -1472,6 +1472,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
 
 
 //       d. check minimum density and pressure
+//       --> note that it's unnecessary to check negative passive scalars thanks to the monotonic interpolation
 // ------------------------------------------------------------------------------------------------------------
 //       (d1) minimum density
 #        if ( MODEL == HYDRO  ||  MODEL == MHD  ||  MODEL == ELBDM )
