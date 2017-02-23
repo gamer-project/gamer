@@ -985,6 +985,19 @@ void Init_SetDefaultParameter()
 #  endif
 
 
+// (20) turn off OPT__NORMALIZE_PASSIVE if there is no passive scalars
+#  if (  NCOMP_PASSIVE <= 0  ||  ( defined DUAL_ENERGY && NCOMP_PASSIVE == 1 )  )
+   if ( OPT__NORMALIZE_PASSIVE )
+   {
+      OPT__NORMALIZE_PASSIVE = false;
+
+      if ( MPI_Rank == 0 )
+         Aux_Message( stderr, "WARNING : parameter \"%s\" is turned off automatically since there is no passive scalar !!\n",
+                      "OPT__NORMALIZE_PASSIVE" );
+   }
+#  endif
+
+
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", __FUNCTION__ );
 
 } // FUNCTION : Init_SetDefaultParameter

@@ -400,6 +400,11 @@ void Aux_Check_Parameter()
    Aux_Message( stderr, "WARNING : STORE_POT_GHOST is useless when GRAVITY is off !!\n" );
 #  endif
 
+#  if ( NCOMP_PASSIVE > 0 )
+   if ( OPT__NORMALIZE_PASSIVE )
+      Aux_Message( stderr, "REMINDER : OPT__NORMALIZE_PASSIVE will break the strict conservation of passive scalars\n" );
+#  endif
+
    } // if ( MPI_Rank == 0 )
 
 

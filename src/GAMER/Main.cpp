@@ -32,6 +32,8 @@ double            FlagTable_Lohner     [NLEVEL-1][4];
 double            FlagTable_User       [NLEVEL-1];
 double           *DumpTable = NULL;
 int               DumpTable_NDump;
+int               PassiveNorm_NVar;
+int               PassiveNorm_VarIdx[NCOMP_PASSIVE];
 
 int               MPI_Rank, MPI_Rank_X[3], MPI_SibRank[26], NX0[3], NPatchTotal[NLEVEL];
 int              *BaseP = NULL;
@@ -56,7 +58,7 @@ bool              OPT__INT_TIME, OPT__OUTPUT_TEST_ERROR, OPT__OUTPUT_BASE, OPT__
 bool              OPT__OUTPUT_BASEPS, OPT__CK_REFINE, OPT__CK_PROPER_NESTING, OPT__CK_FINITE, OPT__RECORD_PERFORMANCE;
 bool              OPT__CK_RESTRICT, OPT__CK_PATCH_ALLOCATE, OPT__FIXUP_FLUX, OPT__CK_FLUX_ALLOCATE;
 bool              OPT__UM_START_DOWNGRADE, OPT__UM_START_REFINE, OPT__UM_FACTOR_5OVER3, OPT__TIMING_MPI;
-bool              OPT__CK_CONSERVATION, OPT__RESET_FLUID, OPT__RECORD_USER, OPT__CORR_AFTER_ALL_SYNC;
+bool              OPT__CK_CONSERVATION, OPT__RESET_FLUID, OPT__RECORD_USER, OPT__CORR_AFTER_ALL_SYNC, OPT__NORMALIZE_PASSIVE;
 OptInit_t         OPT__INIT;
 OptRestartH_t     OPT__RESTART_HEADER;
 OptOutputFormat_t OPT__OUTPUT_TOTAL;

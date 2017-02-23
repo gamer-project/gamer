@@ -74,7 +74,7 @@ Procedure for outputting new variables:
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2221)
+// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2223)
 // Description :  Output all simulation data in the HDF5 format, which can be used as a restart file
 //                or loaded by YT
 //
@@ -120,6 +120,8 @@ Procedure for outputting new variables:
 //                2218 : 2017/01/28 --> output OPT__FLAG_VORTICITY and the corresponding flag table
 //                2220 : 2017/02/14 --> output passive grid and particle variables
 //                2221 : 2017/02/20 --> output TINY_NUMBER and HUGE_NUMBER
+//                2222 : 2017/02/20 --> output OPT__NORMALIZE_PASSIVE
+//                2223 : 2017/02/22 --> output NormalizePassive_NVar and NormalizePassive_VarIdx
 //-------------------------------------------------------------------------------------------------------
 void Output_DumpData_Total_HDF5( const char *FileName )
 {
@@ -1229,7 +1231,7 @@ void FillIn_KeyInfo( KeyInfo_t &KeyInfo )
 
    const time_t CalTime  = time( NULL );   // calendar time
 
-   KeyInfo.FormatVersion = 2221;
+   KeyInfo.FormatVersion = 2223;
    KeyInfo.Model         = MODEL;
    KeyInfo.NLevel        = NLEVEL;
    KeyInfo.PatchSize     = PATCH_SIZE;
@@ -1788,6 +1790,12 @@ void FillIn_InputPara( InputPara_t &InputPara )
    InputPara.Opt__FixUp_Flux         = OPT__FIXUP_FLUX;
    InputPara.Opt__FixUp_Restrict     = OPT__FIXUP_RESTRICT;
    InputPara.Opt__CorrAfterAllSync   = OPT__CORR_AFTER_ALL_SYNC;
+   InputPara.Opt__NormalizePassive   = OPT__NORMALIZE_PASSIVE;
+
+   InputPara.NormalizePassive_NVar   = PassiveNorm_NVar;
+   for (int v=0; v<NCOMP_PASSIVE; v++)
+   InputPara.NormalizePassive_VarIdx[v] = PassiveNorm_VarIdx[v];
+
    InputPara.Opt__OverlapMPI         = OPT__OVERLAP_MPI;
    InputPara.Opt__ResetFluid         = OPT__RESET_FLUID;
 #  if ( MODEL == HYDRO  ||  MODEL == MHD  ||  MODEL == ELBDM )
@@ -2204,12 +2212,14 @@ void GetCompound_InputPara( hid_t &H5_TypeID )
 // create the array type
    const hsize_t H5_ArrDims_3Var             = 3;                    // array size of [3]
    const hsize_t H5_ArrDims_6Var             = 6;                    // array size of [6]
+   const hsize_t H5_ArrDims_NPassive         = NCOMP_PASSIVE;        // array size of [NCOMP_PASSIVE]
    const hsize_t H5_ArrDims_NLvM1            = NLEVEL-1;             // array size of [NLEVEL-1]
    const hsize_t H5_ArrDims_NLvM1_2[2]       = { NLEVEL-1, 2 };      // array size of [NLEVEL-1][2]
    const hsize_t H5_ArrDims_NLvM1_4[2]       = { NLEVEL-1, 4 };      // array size of [NLEVEL-1][4]
 
    const hid_t   H5_TypeID_Arr_3Int          = H5Tarray_create( H5T_NATIVE_INT,    1, &H5_ArrDims_3Var      );
    const hid_t   H5_TypeID_Arr_6Int          = H5Tarray_create( H5T_NATIVE_INT,    1, &H5_ArrDims_6Var      );
+   const hid_t   H5_TypeID_Arr_NPassive      = H5Tarray_create( H5T_NATIVE_INT,    1, &H5_ArrDims_NPassive  );
    const hid_t   H5_TypeID_Arr_NLvM1Int      = H5Tarray_create( H5T_NATIVE_INT,    1, &H5_ArrDims_NLvM1     );
    const hid_t   H5_TypeID_Arr_NLvM1Double   = H5Tarray_create( H5T_NATIVE_DOUBLE, 1, &H5_ArrDims_NLvM1     );
    const hid_t   H5_TypeID_Arr_NLvM1_2Double = H5Tarray_create( H5T_NATIVE_DOUBLE, 2,  H5_ArrDims_NLvM1_2   );
@@ -2354,6 +2364,9 @@ void GetCompound_InputPara( hid_t &H5_TypeID )
    H5Tinsert( H5_TypeID, "Opt__FixUp_Flux",         HOFFSET(InputPara_t,Opt__FixUp_Flux        ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "Opt__FixUp_Restrict",     HOFFSET(InputPara_t,Opt__FixUp_Restrict    ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "Opt__CorrAfterAllSync",   HOFFSET(InputPara_t,Opt__CorrAfterAllSync  ), H5T_NATIVE_INT     );
+   H5Tinsert( H5_TypeID, "Opt__NormalizePassive",   HOFFSET(InputPara_t,Opt__NormalizePassive  ), H5T_NATIVE_INT     );
+   H5Tinsert( H5_TypeID, "NormalizePassive_NVar",   HOFFSET(InputPara_t,NormalizePassive_NVar  ), H5T_NATIVE_INT     );
+   H5Tinsert( H5_TypeID, "NormalizePassive_VarIdx", HOFFSET(InputPara_t,NormalizePassive_VarIdx), H5_TypeID_Arr_NPassive );
    H5Tinsert( H5_TypeID, "Opt__OverlapMPI",         HOFFSET(InputPara_t,Opt__OverlapMPI        ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "Opt__ResetFluid",         HOFFSET(InputPara_t,Opt__ResetFluid        ), H5T_NATIVE_INT     );
 #  if ( MODEL == HYDRO  ||  MODEL == MHD  ||  MODEL == ELBDM )

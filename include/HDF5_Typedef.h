@@ -392,6 +392,9 @@ struct InputPara_t
    int    Opt__FixUp_Flux;
    int    Opt__FixUp_Restrict;
    int    Opt__CorrAfterAllSync;
+   int    Opt__NormalizePassive;
+   int    NormalizePassive_NVar;
+   int    NormalizePassive_VarIdx[NCOMP_PASSIVE];
    int    Opt__OverlapMPI;
    int    Opt__ResetFluid;
 #  if ( MODEL == HYDRO  ||  MODEL == MHD  ||  MODEL == ELBDM )

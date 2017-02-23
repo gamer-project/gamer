@@ -118,8 +118,8 @@ void Init_GAMER( int *argc, char ***argv )
    Init_MemAllocate();
 
 
-// set names for passive variables
-   Init_SetPassiveFieldName();
+// initialize settings for the passive variables
+   Init_PassiveVariable();
 
 
 // initialize particles

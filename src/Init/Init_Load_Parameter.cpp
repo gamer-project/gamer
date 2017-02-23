@@ -465,6 +465,10 @@ void Init_Load_Parameter()
 
    getline( &input_line, &len, File );
    sscanf( input_line, "%d%s",   &temp_int,                 string );
+   OPT__NORMALIZE_PASSIVE = (bool)temp_int;
+
+   getline( &input_line, &len, File );
+   sscanf( input_line, "%d%s",   &temp_int,                 string );
    OPT__OVERLAP_MPI = (bool)temp_int;
 
    getline( &input_line, &len, File );

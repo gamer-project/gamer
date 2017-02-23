@@ -735,6 +735,16 @@ void Aux_TakeNote()
       fprintf( Note, "OPT__FIXUP_FLUX           %d\n",      OPT__FIXUP_FLUX         );
       fprintf( Note, "OPT__FIXUP_RESTRICT       %d\n",      OPT__FIXUP_RESTRICT     );
       fprintf( Note, "OPT__CORR_AFTER_ALL_SYNC  %d\n",      OPT__CORR_AFTER_ALL_SYNC);
+      fprintf( Note, "OPT__NORMALIZE_PASSIVE    %d\n",      OPT__NORMALIZE_PASSIVE  );
+
+//    target passive scalars to be normalized
+      if ( OPT__NORMALIZE_PASSIVE ) {
+      fprintf( Note, "   Number of scalars      %d\n",      PassiveNorm_NVar        );
+      fprintf( Note, "   Target scalars        "                                    );
+      for (int v=0; v<PassiveNorm_NVar; v++)
+      fprintf( Note, " %s",                                 PassiveFieldName_Grid[ PassiveNorm_VarIdx[v] - NCOMP_FLUID ] );
+      fprintf( Note, "\n" ); }
+
       fprintf( Note, "OPT__OVERLAP_MPI          %d\n",      OPT__OVERLAP_MPI        );
       fprintf( Note, "OPT__RESET_FLUID          %d\n",      OPT__RESET_FLUID        );
 #     if ( MODEL == HYDRO  ||  MODEL == MHD  ||  MODEL == ELBDM )

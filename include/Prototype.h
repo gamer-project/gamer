@@ -134,7 +134,7 @@ void Init_RecordBasePatch();
 void Init_Refine( const int lv );
 void Init_Restart();
 void Init_Unit();
-void Init_SetPassiveFieldName();
+void Init_PassiveVariable();
 #ifdef SUPPORT_HDF5
 void Init_Restart_HDF5( const char *FileName );
 #endif
