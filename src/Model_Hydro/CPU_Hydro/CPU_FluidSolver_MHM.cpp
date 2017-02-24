@@ -10,12 +10,15 @@ extern void CPU_DataReconstruction( const real PriVar[][NCOMP_TOTAL], real FC_Va
                                     const real Gamma, const LR_Limiter_t LR_Limiter, const real MinMod_Coeff,
                                     const real EP_Coeff, const real dt, const real dh, const real MinDens, const real MinPres );
 extern void CPU_Con2Flux( const int XYZ, real Flux[], const real Input[], const real Gamma_m1, const real MinPres );
-extern void CPU_Con2Pri( const real In[], real Out[], const real  Gamma_m1, const real MinPres );
-extern void CPU_Pri2Con( const real In[], real Out[], const real _Gamma_m1 );
+extern void CPU_Con2Pri( const real In[], real Out[], const real Gamma_m1, const real MinPres,
+                         const bool NormPassive, const int NNorm, const int NormIdx[] );
+extern void CPU_Pri2Con( const real In[], real Out[], const real _Gamma_m1,
+                         const bool NormPassive, const int NNorm, const int NormIdx[] );
 extern void CPU_ComputeFlux( const real FC_Var[][6][NCOMP_TOTAL], real FC_Flux[][3][NCOMP_TOTAL], const int NFlux, const int Gap,
                              const real Gamma, const bool CorrHalfVel, const real Pot_USG[], const double Corner[],
                              const real dt, const real dh, const double Time, const OptGravityType_t GravityType,
-                             const double ExtAcc_AuxArray[], const real MinPres );
+                             const double ExtAcc_AuxArray[], const real MinPres,
+                             const bool NormPassive, const int NNorm, const int NormIdx[] );
 extern void CPU_FullStepUpdate( const real Input[][ FLU_NXT*FLU_NXT*FLU_NXT ], real Output[][ PS2*PS2*PS2 ],
                                 const real Flux[][3][NCOMP_TOTAL], const real dt, const real dh,
                                 const real Gamma, const bool NormPassive, const int NNorm, const int NormIdx[] );
@@ -25,7 +28,8 @@ extern void CPU_RiemannSolver_Exact( const int XYZ, real eival_out[], real L_sta
                                      real Flux_Out[], const real L_In[], const real R_In[], const real Gamma );
 #elif ( RSOLVER == ROE )
 extern void CPU_RiemannSolver_Roe( const int XYZ, real Flux_Out[], const real L_In[], const real R_In[],
-                                   const real Gamma, const real MinPres );
+                                   const real Gamma, const real MinPres,
+                                   const bool NormPassive, const int NNorm, const int NormIdx[] );
 #elif ( RSOLVER == HLLE )
 extern void CPU_RiemannSolver_HLLE( const int XYZ, real Flux_Out[], const real L_In[], const real R_In[],
                                     const real Gamma, const real MinPres );
@@ -39,8 +43,9 @@ extern real CPU_CheckMinPres( const real InPres, const real MinPres );
 static void CPU_RiemannPredict( const real Flu_Array_In[][ FLU_NXT*FLU_NXT*FLU_NXT ],
                                 const real Half_Flux[][3][NCOMP_TOTAL], real Half_Var[][NCOMP_TOTAL], const real dt,
                                 const real dh, const real Gamma, const real MinDens, const real MinPres );
-static void CPU_RiemannPredict_Flux( const real Flu_Array_In[][ FLU_NXT*FLU_NXT*FLU_NXT ],
-                                     real Half_Flux[][3][NCOMP_TOTAL], const real Gamma, const real MinPres );
+static void CPU_RiemannPredict_Flux( const real Flu_Array_In[][ FLU_NXT*FLU_NXT*FLU_NXT ], real Half_Flux[][3][NCOMP_TOTAL],
+                                     const real Gamma, const real MinPres,
+                                     const bool NormPassive, const int NNorm, const int NormIdx[] );
 #elif ( FLU_SCHEME == MHM )
 static void CPU_HancockPredict( real FC_Var[][6][NCOMP_TOTAL], const real dt, const real dh, const real Gamma,
                                 const real C_Var[][ FLU_NXT*FLU_NXT*FLU_NXT ], const real MinDens, const real MinPres );
@@ -141,7 +146,7 @@ void CPU_FluidSolver_MHM( const real Flu_Array_In[][NCOMP_TOTAL][ FLU_NXT*FLU_NX
 #        if ( FLU_SCHEME == MHM_RP ) // a. use Riemann solver to calculate the half-step fluxes
 
 //       (1.a-1) evaluate the half-step first-order fluxes by Riemann solver
-         CPU_RiemannPredict_Flux( Flu_Array_In[P], Half_Flux, Gamma, MinPres );
+         CPU_RiemannPredict_Flux( Flu_Array_In[P], Half_Flux, Gamma, MinPres, NormPassive, NNorm, NormIdx );
 
 
 //       (1.a-2) evaluate the half-step solutions
@@ -157,7 +162,7 @@ void CPU_FluidSolver_MHM( const real Flu_Array_In[][NCOMP_TOTAL][ FLU_NXT*FLU_NX
 
             for (int v=0; v<NCOMP_TOTAL; v++)   Input[v] = Half_Var[ID1][v];
 
-            CPU_Con2Pri( Input, Half_Var[ID1], Gamma_m1, MinPres );
+            CPU_Con2Pri( Input, Half_Var[ID1], Gamma_m1, MinPres, NormPassive, NNorm, NormIdx );
          }
 
 
@@ -177,7 +182,7 @@ void CPU_FluidSolver_MHM( const real Flu_Array_In[][NCOMP_TOTAL][ FLU_NXT*FLU_NX
             {
                for (int v=0; v<NCOMP_TOTAL; v++)   Input[v] = FC_Var[ID1][f][v];
 
-               CPU_Pri2Con( Input, FC_Var[ID1][f], _Gamma_m1 );
+               CPU_Pri2Con( Input, FC_Var[ID1][f], _Gamma_m1, NormPassive, NNorm, NormIdx );
             }
          }
 
@@ -192,7 +197,7 @@ void CPU_FluidSolver_MHM( const real Flu_Array_In[][NCOMP_TOTAL][ FLU_NXT*FLU_NX
 
             for (int v=0; v<NCOMP_TOTAL; v++)   Input[v] = Flu_Array_In[P][v][ID1];
 
-            CPU_Con2Pri( Input, PriVar[ID1], Gamma_m1, MinPres );
+            CPU_Con2Pri( Input, PriVar[ID1], Gamma_m1, MinPres, NormPassive, NNorm, NormIdx );
          }
 
 
@@ -212,7 +217,7 @@ void CPU_FluidSolver_MHM( const real Flu_Array_In[][NCOMP_TOTAL][ FLU_NXT*FLU_NX
             {
                for (int v=0; v<NCOMP_TOTAL; v++)   Input[v] = FC_Var[ID1][f][v];
 
-               CPU_Pri2Con( Input, FC_Var[ID1][f], _Gamma_m1 );
+               CPU_Pri2Con( Input, FC_Var[ID1][f], _Gamma_m1, NormPassive, NNorm, NormIdx );
             }
          }
 
@@ -226,10 +231,12 @@ void CPU_FluidSolver_MHM( const real Flu_Array_In[][NCOMP_TOTAL][ FLU_NXT*FLU_NX
 //       2. evaluate the full-step fluxes
 #        ifdef UNSPLIT_GRAVITY
          CPU_ComputeFlux( FC_Var, FC_Flux, N_FL_FLUX, 1, Gamma, CorrHalfVel_Yes, Pot_Array_USG[P][0][0], Corner_Array[P],
-                          dt, dh, Time, GravityType, ExtAcc_AuxArray, MinPres );
+                          dt, dh, Time, GravityType, ExtAcc_AuxArray, MinPres,
+                          NormPassive, NNorm, NormIdx );
 #        else
          CPU_ComputeFlux( FC_Var, FC_Flux, N_FL_FLUX, 1, Gamma, CorrHalfVel_No,  NULL, NULL,
-                          NULL_REAL, NULL_REAL, NULL_REAL, GRAVITY_NONE, NULL, MinPres );
+                          NULL_REAL, NULL_REAL, NULL_REAL, GRAVITY_NONE, NULL, MinPres,
+                          NormPassive, NNorm, NormIdx );
 #        endif
 
 
@@ -268,7 +275,8 @@ void CPU_FluidSolver_MHM( const real Flu_Array_In[][NCOMP_TOTAL][ FLU_NXT*FLU_NX
 //                MinPres      : Minimum allowed pressure
 //-------------------------------------------------------------------------------------------------------
 void CPU_RiemannPredict_Flux( const real Flu_Array_In[][ FLU_NXT*FLU_NXT*FLU_NXT ], real Half_Flux[][3][NCOMP_TOTAL],
-                              const real Gamma, const real MinPres )
+                              const real Gamma, const real MinPres,
+                              const bool NormPassive, const int NNorm, const int NormIdx[] )
 {
 
    const int dr[3] = { 1, FLU_NXT, FLU_NXT*FLU_NXT };
@@ -307,12 +315,12 @@ void CPU_RiemannPredict_Flux( const real Flu_Array_In[][ FLU_NXT*FLU_NXT*FLU_NXT
 
 //       invoke the Riemann solver
 #        if   ( RSOLVER == EXACT )
-         CPU_Con2Pri( ConVar_L, PriVar_L, Gamma_m1, MinPres );
-         CPU_Con2Pri( ConVar_R, PriVar_R, Gamma_m1, MinPres );
+         CPU_Con2Pri( ConVar_L, PriVar_L, Gamma_m1, MinPres, NormPassive, NNorm, NormIdx );
+         CPU_Con2Pri( ConVar_R, PriVar_R, Gamma_m1, MinPres, NormPassive, NNorm, NormIdx );
 
          CPU_RiemannSolver_Exact( d, NULL, NULL, NULL, Half_Flux[ID1][d], PriVar_L, PriVar_R, Gamma );
 #        elif ( RSOLVER == ROE )
-         CPU_RiemannSolver_Roe ( d, Half_Flux[ID1][d], ConVar_L, ConVar_R, Gamma, MinPres );
+         CPU_RiemannSolver_Roe ( d, Half_Flux[ID1][d], ConVar_L, ConVar_R, Gamma, MinPres, NormPassive, NNorm, NormIdx );
 #        elif ( RSOLVER == HLLE )
          CPU_RiemannSolver_HLLE( d, Half_Flux[ID1][d], ConVar_L, ConVar_R, Gamma, MinPres );
 #        elif ( RSOLVER == HLLC )

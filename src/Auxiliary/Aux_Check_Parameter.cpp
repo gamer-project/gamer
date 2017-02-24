@@ -402,7 +402,7 @@ void Aux_Check_Parameter()
 
 #  if ( NCOMP_PASSIVE > 0 )
    if ( OPT__NORMALIZE_PASSIVE )
-      Aux_Message( stderr, "REMINDER : OPT__NORMALIZE_PASSIVE will break the strict conservation of passive scalars\n" );
+      Aux_Message( stderr, "REMINDER : OPT__NORMALIZE_PASSIVE will break the strict conservation of individual passive scalar\n" );
 #  endif
 
    } // if ( MPI_Rank == 0 )

@@ -63,13 +63,23 @@ void CPU_Rotate3D( real InOut[], const int XYZ, const bool Forward )
 // Note        :  1. This function always check if the pressure to be returned is greater than the
 //                   given minimum threshold
 //                2. For passive scalars, we store their mass fraction as the primitive variables
+//                   when NormPassive is on
+//                   --> See the input parameters "NormPassive, NNorm, NormIdx"
+//                   --> But note that here we do NOT ensure "sum(mass fraction) == 1.0"
+//                       --> It is done by calling CPU_NormalizePassive() in CPU_Shared_FullStepUpdate()
 //
-// Parameter   :  In       : Array storing the input conserved variables
-//                Out      : Array to store the output primitive variables
-//                Gamma_m1 : Gamma - 1
-//                MinPres  : Minimum allowed pressure
+// Parameter   :  In          : Array storing the input conserved variables
+//                Out         : Array to store the output primitive variables
+//                Gamma_m1    : Gamma - 1
+//                MinPres     : Minimum allowed pressure
+//                NormPassive : true --> convert passive scalars to mass fraction
+//                NNorm       : Number of passive scalars for the option "NormPassive"
+//                              --> Should be set to the global variable "PassiveNorm_NVar"
+//                NormIdx     : Target variable indices for the option "NormPassive"
+//                              --> Should be set to the global variable "PassiveNorm_VarIdx"
 //-------------------------------------------------------------------------------------------------------
-void CPU_Con2Pri( const real In[], real Out[], const real Gamma_m1, const real MinPres )
+void CPU_Con2Pri( const real In[], real Out[], const real Gamma_m1, const real MinPres,
+                  const bool NormPassive, const int NNorm, const int NormIdx[] )
 {
 
    const bool CheckMinPres_Yes = true;
@@ -83,7 +93,12 @@ void CPU_Con2Pri( const real In[], real Out[], const real Gamma_m1, const real M
 
 // passive scalars
 #  if ( NCOMP_PASSIVE > 0 )
-   for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)  Out[v] = In[v]*_Rho;
+// copy all passive scalars
+   for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)  Out[v] = In[v];
+
+// convert the mass density of target passive scalars to mass fraction
+   if ( NormPassive )
+      for (int v=0; v<NNorm; v++)   Out[ NCOMP_FLUID + NormIdx[v] ] *= _Rho;
 #  endif
 
 } // FUNCTION : CPU_Con2Pri
@@ -97,12 +112,20 @@ void CPU_Con2Pri( const real In[], real Out[], const real Gamma_m1, const real M
 // Note        :  1. This function does NOT check if the input pressure is greater than the
 //                   given minimum threshold
 //                2. For passive scalars, we store their mass fraction as the primitive variables
+//                   when NormPassive is on
+//                   --> See the input parameters "NormPassive, NNorm, NormIdx"
 //
-// Parameter   :  In       : Array storing the input primitive variables
-//                Out      : Array to store the output conserved variables
-//               _Gamma_m1 : 1 / (Gamma - 1)
+// Parameter   :  In          : Array storing the input primitive variables
+//                Out         : Array to store the output conserved variables
+//               _Gamma_m1    : 1 / (Gamma - 1)
+//                NormPassive : true --> convert passive scalars to mass fraction
+//                NNorm       : Number of passive scalars for the option "NormPassive"
+//                              --> Should be set to the global variable "PassiveNorm_NVar"
+//                NormIdx     : Target variable indices for the option "NormPassive"
+//                              --> Should be set to the global variable "PassiveNorm_VarIdx"
 //-------------------------------------------------------------------------------------------------------
-void CPU_Pri2Con( const real In[], real Out[], const real _Gamma_m1 )
+void CPU_Pri2Con( const real In[], real Out[], const real _Gamma_m1,
+                  const bool NormPassive, const int NNorm, const int NormIdx[] )
 {
 
    Out[0] = In[0];
@@ -113,7 +136,12 @@ void CPU_Pri2Con( const real In[], real Out[], const real _Gamma_m1 )
 
 // passive scalars
 #  if ( NCOMP_PASSIVE > 0 )
-   for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)  Out[v] = In[0]*In[v];
+// copy all passive scalars
+   for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)  Out[v] = In[v];
+
+// convert the mass fraction of target passive scalars back to mass fraction
+   if ( NormPassive )
+      for (int v=0; v<NNorm; v++)   Out[ NCOMP_FLUID + NormIdx[v] ] *= In[0];
 #  endif
 
 } // FUNCTION : CPU_Pri2Con

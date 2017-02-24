@@ -9,7 +9,8 @@
 extern void CPU_Rotate3D( real InOut[], const int XYZ, const bool Forward );
 extern void CPU_Con2Flux( const int XYZ, real Flux[], const real Input[], const real Gamma_m1, const real MinPres );
 #if   ( CHECK_INTERMEDIATE == EXACT )
-extern void CPU_Con2Pri( const real In[], real Out[], const real Gamma_m1, const real MinPres );
+extern void CPU_Con2Pri( const real In[], real Out[], const real Gamma_m1, const real MinPres,
+                         const bool NormPassive, const int NNorm, const int NormIdx[] );
 extern void CPU_RiemannSolver_Exact( const int XYZ, real eival_out[], real L_star_out[], real R_star_out[],
                                      real Flux_Out[], const real L_In[], const real R_In[], const real Gamma );
 #elif ( CHECK_INTERMEDIATE == HLLE )
@@ -33,15 +34,23 @@ extern real CPU_CheckMinPres( const real InPres, const real MinPres );
 //                         ~ by Eleuterio F. Toro"
 //                3. This function is shared by MHM, MHM_RP, and CTU schemes
 //
-// Parameter   :  XYZ      : Targeted spatial direction : (0/1/2) --> (x/y/z)
-//                Flux_Out : Array to store the output flux
-//                L_In     : Input left  state (conserved variables)
-//                R_In     : Input right state (conserved variables)
-//                Gamma    : Ratio of specific heats
-//                MinPres  : Minimum allowed pressure
+// Parameter   :  XYZ         : Targeted spatial direction : (0/1/2) --> (x/y/z)
+//                Flux_Out    : Array to store the output flux
+//                L_In        : Input left  state (conserved variables)
+//                R_In        : Input right state (conserved variables)
+//                Gamma       : Ratio of specific heats
+//                MinPres     : Minimum allowed pressure
+//                NormPassive : true --> normalize passive scalars so that the sum of their mass density
+//                                       is equal to the gas mass density
+//                              --> For switching to exact Riemann solver only
+//                NNorm       : Number of passive scalars to be normalized
+//                              --> Should be set to the global variable "PassiveNorm_NVar"
+//                NormIdx     : Target variable indices to be normalized
+//                              --> Should be set to the global variable "PassiveNorm_VarIdx"
 //-------------------------------------------------------------------------------------------------------
 void CPU_RiemannSolver_Roe( const int XYZ, real Flux_Out[], const real L_In[], const real R_In[],
-                            const real Gamma, const real MinPres )
+                            const real Gamma, const real MinPres,
+                            const bool NormPassive, const int NNorm, const int NormIdx[] )
 {
 
 // 1. reorder the input variables for different spatial directions
@@ -181,8 +190,8 @@ void CPU_RiemannSolver_Roe( const int XYZ, real Flux_Out[], const real L_In[], c
 
 #           if   ( CHECK_INTERMEDIATE == EXACT )   // recalculate fluxes by exact solver
 
-            CPU_Con2Pri( L, PriVar_L, Gamma_m1, MinPres );
-            CPU_Con2Pri( R, PriVar_R, Gamma_m1, MinPres );
+            CPU_Con2Pri( L, PriVar_L, Gamma_m1, MinPres, NormPassive, NNorm, NormIdx );
+            CPU_Con2Pri( R, PriVar_R, Gamma_m1, MinPres, NormPassive, NNorm, NormIdx );
 
             CPU_RiemannSolver_Exact( 0, NULL, NULL, NULL, Flux_Out, PriVar_L, PriVar_R, Gamma );
 
