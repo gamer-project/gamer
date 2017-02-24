@@ -63,13 +63,13 @@ void Par_Aux_ParticleCount()
       fprintf( File, "Time = %13.7e,  Step = %7ld,  NPar = %10ld\n\n", Time[0], Step, NPar_Tot );
 
       fprintf( File, "%4s", "Rank" );
-      for (int lv=0; lv<NLEVEL; lv++)  fprintf( File, "%13s %-2d", "Level", lv );
+      for (int lv=0; lv<NLEVEL; lv++)  fprintf( File, "%15s %-2d", "Level", lv );
       fprintf( File, "\n" );
 
       for (int r=0; r<MPI_NRank; r++)
       {
          fprintf( File, "%4d", r );
-         for (int lv=0; lv<NLEVEL; lv++)  fprintf( File, "%7ld(%6.2lf%%)", NPar_EachRank[r][lv], Frac_EachRank[r][lv] );
+         for (int lv=0; lv<NLEVEL; lv++)  fprintf( File, "%9ld(%6.2lf%%)", NPar_EachRank[r][lv], Frac_EachRank[r][lv] );
          fprintf( File, "\n" );
       }
 

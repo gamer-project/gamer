@@ -99,7 +99,8 @@ void Init_PassiveVariable()
 
 
 // 2-2. indices of passive scalars to be normalized
-// --> note that the indices of passive scalars start from NCOMP_FLUID
+// --> note that here the indices of passive scalars start from 0 instead of NCOMP_FLUID
+// --> also be careful not to include the internal energy used by the dual-energy formalism
 
 // 2-2-1. initialize as -1 so that later on we can check whether it's set properly
    for (int v=0; v<NCOMP_PASSIVE; v++)    PassiveNorm_VarIdx[v] = -1;
@@ -107,12 +108,12 @@ void Init_PassiveVariable()
    if ( PassiveNorm_NVar > 0 )
    {
 //    2-2-a. default --> all passive scalars except for the internal energy used by the dual-energy formalism
-      for (int v=0; v<PassiveNorm_NVar; v++)    PassiveNorm_VarIdx[v] = NCOMP_FLUID + v;
+      for (int v=0; v<PassiveNorm_NVar; v++)    PassiveNorm_VarIdx[v] = v;
 
 //    2-2-b. example of user-specified variables
 /*
-      PassiveNorm_VarIdx[0] = NCOMP_FLUID + 0;
-      PassiveNorm_VarIdx[1] = NCOMP_FLUID + 2;
+      PassiveNorm_VarIdx[0] = 0;
+      PassiveNorm_VarIdx[1] = 2;
 */
    }
 
@@ -126,11 +127,11 @@ void Init_PassiveVariable()
 
    if ( OPT__NORMALIZE_PASSIVE )
    {
-      const int MinIdx = NCOMP_FLUID;
+      const int MinIdx = 0;
 #     ifdef DUAL_ENERGY
-      const int MaxIdx = NCOMP_TOTAL - 2;
+      const int MaxIdx = NCOMP_PASSIVE - 2;
 #     else
-      const int MaxIdx = NCOMP_TOTAL - 1;
+      const int MaxIdx = NCOMP_PASSIVE - 1;
 #     endif
 
       for (int v=0; v<PassiveNorm_NVar; v++)

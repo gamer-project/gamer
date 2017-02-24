@@ -742,7 +742,7 @@ void Aux_TakeNote()
       fprintf( Note, "   Number of scalars      %d\n",      PassiveNorm_NVar        );
       fprintf( Note, "   Target scalars        "                                    );
       for (int v=0; v<PassiveNorm_NVar; v++)
-      fprintf( Note, " %s",                                 PassiveFieldName_Grid[ PassiveNorm_VarIdx[v] - NCOMP_FLUID ] );
+      fprintf( Note, " %s",                                 PassiveFieldName_Grid[ PassiveNorm_VarIdx[v] ] );
       fprintf( Note, "\n" ); }
 
       fprintf( Note, "OPT__OVERLAP_MPI          %d\n",      OPT__OVERLAP_MPI        );

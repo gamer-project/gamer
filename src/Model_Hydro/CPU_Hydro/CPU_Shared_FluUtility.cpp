@@ -319,4 +319,54 @@ real CPU_GetTemperature( const real Dens, const real MomX, const real MomY, cons
 
 
 
+//-------------------------------------------------------------------------------------------------------
+// Function    :  CPU_NormalizePassive
+// Description :  Normalize the target passive scalars so that the sum of their mass density is equal to
+//                the gas mass density
+//
+// Note        :  1. Should be invoked AFTER applying the floor values to passive scalars
+//                2. Invoked by CPU_Shared_FullStepUpdate(), Prepare_PatchData(), Refine(), LB_Refine_AllocateNewPatch(),
+//                   Flu_FixUp(), XXX_Init_StartOver_AssignData(), XXX_Init_UM_AssignData(), Flu_Close()
+//
+// Parameter   :  GasDens  : Gas mass density
+//                Passive  : Passive scalar array (with the size NCOMP_PASSIVE)
+//                NNorm    : Number of passive scalars to be normalized
+//                           --> Should be set to the global variable "PassiveNorm_NVar"
+//                NormIdx  : Target variable indices to be normalized
+//                           --> Should be set to the global variable "PassiveNorm_VarIdx"
+//
+// Return      :  Passive
+//-------------------------------------------------------------------------------------------------------
+void CPU_NormalizePassive( const real GasDens, real Passive[], const int NNorm, const int NormIdx[] )
+{
+
+// validate the target variable indices
+#  ifdef GAMER_DEBUG
+   const int MinIdx = 0;
+#  ifdef DUAL_ENERGY
+   const int MaxIdx = NCOMP_PASSIVE - 2;
+#  else
+   const int MaxIdx = NCOMP_PASSIVE - 1;
+#  endif
+
+   for (int v=0; v<NNorm; v++)
+   {
+      if ( NormIdx[v] < MinIdx  ||  NormIdx[v] > MaxIdx )
+         Aux_Error( ERROR_INFO, "NormIdx[%d] = %d is not within the correct range ([%d <= idx <= %d]) !!\n",
+                    v, NormIdx[v], MinIdx, MaxIdx );
+   }
+#  endif // #ifdef GAMER_DEBUG
+
+   real Norm, PassiveDens_Sum=(real)0.0;
+
+   for (int v=0; v<NNorm; v++)   PassiveDens_Sum += Passive[ NormIdx[v] ];
+
+   Norm = GasDens / PassiveDens_Sum;
+
+   for (int v=0; v<NNorm; v++)   Passive[ NormIdx[v] ] *= Norm;
+
+} // FUNCTION : CPU_NormalizePassive
+
+
+
 #endif // #if ( MODEL == HYDRO )

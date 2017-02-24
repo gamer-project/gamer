@@ -405,7 +405,7 @@ void Solver( const Solver_t TSolver, const int lv, const double TimeNew, const d
                                  NPG, dt, dh, GAMMA, OPT__FIXUP_FLUX, Flu_XYZ,
                                  OPT__LR_LIMITER, MINMOD_COEFF, EP_COEFF, OPT__WAF_LIMITER, ELBDM_ETA,
                                  ELBDM_TAYLOR3_COEFF, ELBDM_TAYLOR3_AUTO, OPT__ADAPTIVE_DT, TimeOld, OPT__GRAVITY_TYPE,
-                                 MIN_DENS, MIN_PRES );
+                                 MIN_DENS, MIN_PRES, OPT__NORMALIZE_PASSIVE, PassiveNorm_NVar, PassiveNorm_VarIdx );
 #        endif
          break;
 

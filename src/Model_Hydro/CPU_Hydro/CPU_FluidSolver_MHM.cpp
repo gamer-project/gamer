@@ -18,7 +18,7 @@ extern void CPU_ComputeFlux( const real FC_Var[][6][NCOMP_TOTAL], real FC_Flux[]
                              const double ExtAcc_AuxArray[], const real MinPres );
 extern void CPU_FullStepUpdate( const real Input[][ FLU_NXT*FLU_NXT*FLU_NXT ], real Output[][ PS2*PS2*PS2 ],
                                 const real Flux[][3][NCOMP_TOTAL], const real dt, const real dh,
-                                const real Gamma );
+                                const real Gamma, const bool NormPassive, const int NNorm, const int NormIdx[] );
 extern void CPU_StoreFlux( real Flux_Array[][NCOMP_TOTAL][ PS2*PS2 ], const real FC_Flux[][3][NCOMP_TOTAL] );
 #if   ( RSOLVER == EXACT )
 extern void CPU_RiemannSolver_Exact( const int XYZ, real eival_out[], real L_star_out[], real R_star_out[],
@@ -81,6 +81,12 @@ static void CPU_HancockPredict( real FC_Var[][6][NCOMP_TOTAL], const real dt, co
 //                GravityType     : Types of gravity --> self-gravity, external gravity, both (for UNSPLIT_GRAVITY only)
 //                ExtAcc_AuxArray : Auxiliary array for adding external acceleration          (for UNSPLIT_GRAVITY only)
 //                MinDens/Pres    : Minimum allowed density and pressure
+//                NormPassive     : true --> normalize passive scalars so that the sum of their mass density
+//                                           is equal to the gas mass density
+//                NNorm           : Number of passive scalars to be normalized
+//                                  --> Should be set to the global variable "PassiveNorm_NVar"
+//                NormIdx         : Target variable indices to be normalized
+//                                  --> Should be set to the global variable "PassiveNorm_VarIdx"
 //-------------------------------------------------------------------------------------------------------
 void CPU_FluidSolver_MHM( const real Flu_Array_In[][NCOMP_TOTAL][ FLU_NXT*FLU_NXT*FLU_NXT ],
                           real Flu_Array_Out     [][NCOMP_TOTAL][ PS2*PS2*PS2 ],
@@ -90,7 +96,8 @@ void CPU_FluidSolver_MHM( const real Flu_Array_In[][NCOMP_TOTAL][ FLU_NXT*FLU_NX
                           const int NPatchGroup, const real dt, const real dh, const real Gamma,
                           const bool StoreFlux, const LR_Limiter_t LR_Limiter, const real MinMod_Coeff,
                           const real EP_Coeff, const double Time, const OptGravityType_t GravityType,
-                          const double ExtAcc_AuxArray[], const real MinDens, const real MinPres )
+                          const double ExtAcc_AuxArray[], const real MinDens, const real MinPres,
+                          const bool NormPassive, const int NNorm, const int NormIdx[] )
 {
 
 // check
@@ -227,7 +234,7 @@ void CPU_FluidSolver_MHM( const real Flu_Array_In[][NCOMP_TOTAL][ FLU_NXT*FLU_NX
 
 
 //       3. full-step evolution
-         CPU_FullStepUpdate( Flu_Array_In[P], Flu_Array_Out[P], FC_Flux, dt, dh, Gamma );
+         CPU_FullStepUpdate( Flu_Array_In[P], Flu_Array_Out[P], FC_Flux, dt, dh, Gamma, NormPassive, NNorm, NormIdx );
 
 
 //       4. store the inter-patch fluxes

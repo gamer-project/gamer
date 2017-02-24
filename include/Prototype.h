@@ -71,11 +71,13 @@ void CPU_FluidSolver( real h_Flu_Array_In [][FLU_NIN    ][ FLU_NXT*FLU_NXT*FLU_N
                       const bool XYZ, const LR_Limiter_t LR_Limiter, const real MinMod_Coeff, const real EP_Coeff,
                       const WAF_Limiter_t WAF_Limiter, const real ELBDM_Eta, real ELBDM_Taylor3_Coeff,
                       const bool ELBDM_Taylor3_Auto, const bool GetMinDtInfo,
-                      const double Time, const OptGravityType_t GravityType, const real MinDens, const real MinPres );
+                      const double Time, const OptGravityType_t GravityType, const real MinDens, const real MinPres,
+                      const bool NormPassive, const int NNorm, const int NormIdx[] );
 real CPU_GetPressure( const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy,
                       const real Gamma_m1, const bool CheckMinPres, const real MinPres );
 real CPU_GetTemperature( const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy,
                          const real Gamma_m1, const bool CheckMinPres, const real MinPres );
+void CPU_NormalizePassive( const real GasDens, real Passive[], const int NNorm, const int NormIdx[] );
 real CPU_CheckMinPresInEngy( const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy,
                              const real Gamma_m1, const real _Gamma_m1, const real MinPres );
 void Flu_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, const double dt, const int SaveSg,
