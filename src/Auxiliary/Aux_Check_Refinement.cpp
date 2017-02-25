@@ -14,7 +14,7 @@
 //                2. This test should always pass for the initial condition constructed by the UM_Init function
 //                3. This test only checks density and the option "OPT__FLAG_RHO" should be turned on
 //
-// Parameter   :  lv       : Targeted refinement level
+// Parameter   :  lv       : Target refinement level
 //                comment  : You can put the location where this function is invoked in this string
 //-------------------------------------------------------------------------------------------------------
 void Aux_Check_Refinement( const int lv, const char *comment )

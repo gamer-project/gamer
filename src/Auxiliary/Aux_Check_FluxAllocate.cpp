@@ -12,7 +12,7 @@
 //                   array is allocated
 //                2. Work for both periodic and non-periodic BC's
 //
-// Parameter   :  lv       : Targeted refinement level
+// Parameter   :  lv       : Target refinement level
 //                comment  : You can put the location where this function is invoked in this string
 //-------------------------------------------------------------------------------------------------------
 void Aux_Check_FluxAllocate( const int lv, const char *comment )

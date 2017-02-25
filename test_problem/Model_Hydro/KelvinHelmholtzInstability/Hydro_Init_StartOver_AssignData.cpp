@@ -37,12 +37,15 @@ void Init_Function_User( real fluid[], const double x, const double y, const dou
    const double Width1  = 640.0;
    const double Width2  = 512.0;
 
+// set active variables
    fluid[DENS] = 1.0 + Height1*exp(  -( SQR(x-C1[0])+ SQR(y-C1[1]) + SQR(z-C1[2]) ) / SQR(Width1)  );
    fluid[DENS] +=      Height2*exp(  -( SQR(x-C2[0])+ SQR(y-C2[1]) + SQR(z-C2[2]) ) / SQR(Width2)  );
    fluid[MOMX] = 1.0;
    fluid[MOMY] = 2.0;
    fluid[MOMZ] = 3.0;
    fluid[ENGY] = Cs*Cs*fluid[DENS]*Gamma2 + 0.5*( SQR(fluid[MOMX]) + SQR(fluid[MOMY]) + SQR(fluid[MOMZ]) ) / fluid[DENS];
+
+// set passive scalars
 
 } // FUNCTION : Init_Function_User
 
@@ -100,6 +103,14 @@ void Hydro_Init_StartOver_AssignData( const int lv )
          fluid[ENGY] = CPU_CheckMinPresInEngy( fluid[DENS], fluid[MOMX], fluid[MOMY], fluid[MOMZ], fluid[ENGY],
                                                Gamma_m1, _Gamma_m1, MIN_PRES );
 
+//       floor and normalize passive scalars
+#        if ( NCOMP_PASSIVE > 0 )
+         for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)  fluid[v] = FMAX( fluid[v], TINY_NUMBER );
+
+         if ( OPT__NORMALIZE_PASSIVE )
+            CPU_NormalizePassive( fluid[DENS], fluid+NCOMP_FLUID, PassiveNorm_NVar, PassiveNorm_VarIdx );
+#        endif
+
          for (int v=0; v<NCOMP_TOTAL; v++)   amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[v][k][j][i] = fluid[v];
 
       }}}
@@ -119,6 +130,14 @@ void Hydro_Init_StartOver_AssignData( const int lv )
          fluid[DENS] = FMAX( fluid[DENS], (real)MIN_DENS );
          fluid[ENGY] = CPU_CheckMinPresInEngy( fluid[DENS], fluid[MOMX], fluid[MOMY], fluid[MOMZ], fluid[ENGY],
                                                Gamma_m1, _Gamma_m1, MIN_PRES );
+
+//       floor and normalize passive scalars
+#        if ( NCOMP_PASSIVE > 0 )
+         for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)  fluid[v] = FMAX( fluid[v], TINY_NUMBER );
+
+         if ( OPT__NORMALIZE_PASSIVE )
+            CPU_NormalizePassive( fluid[DENS], fluid+NCOMP_FLUID, PassiveNorm_NVar, PassiveNorm_VarIdx );
+#        endif
 
          for (int v=0; v<NCOMP_TOTAL; v++)   amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[v][k][j][i] = fluid[v];
 

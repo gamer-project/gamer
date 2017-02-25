@@ -74,7 +74,7 @@ Procedure for outputting new variables:
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2223)
+// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2224)
 // Description :  Output all simulation data in the HDF5 format, which can be used as a restart file
 //                or loaded by YT
 //
@@ -122,6 +122,7 @@ Procedure for outputting new variables:
 //                2221 : 2017/02/20 --> output TINY_NUMBER and HUGE_NUMBER
 //                2222 : 2017/02/20 --> output OPT__NORMALIZE_PASSIVE
 //                2223 : 2017/02/22 --> output NormalizePassive_NVar and NormalizePassive_VarIdx
+//                2224 : 2017/02/25 --> output OPT__CK_NORMALIZE_PASSIVE
 //-------------------------------------------------------------------------------------------------------
 void Output_DumpData_Total_HDF5( const char *FileName )
 {
@@ -1231,7 +1232,7 @@ void FillIn_KeyInfo( KeyInfo_t &KeyInfo )
 
    const time_t CalTime  = time( NULL );   // calendar time
 
-   KeyInfo.FormatVersion = 2223;
+   KeyInfo.FormatVersion = 2224;
    KeyInfo.Model         = MODEL;
    KeyInfo.NLevel        = NLEVEL;
    KeyInfo.PatchSize     = PATCH_SIZE;
@@ -1891,6 +1892,7 @@ void FillIn_InputPara( InputPara_t &InputPara )
    InputPara.Opt__Ck_Refine          = OPT__CK_REFINE;
    InputPara.Opt__Ck_ProperNesting   = OPT__CK_PROPER_NESTING;
    InputPara.Opt__Ck_Conservation    = OPT__CK_CONSERVATION;
+   InputPara.Opt__Ck_NormPassive     = OPT__CK_NORMALIZE_PASSIVE;
    InputPara.Opt__Ck_Restrict        = OPT__CK_RESTRICT;
    InputPara.Opt__Ck_Finite          = OPT__CK_FINITE;
    InputPara.Opt__Ck_PatchAllocate   = OPT__CK_PATCH_ALLOCATE;
@@ -2462,6 +2464,7 @@ void GetCompound_InputPara( hid_t &H5_TypeID )
    H5Tinsert( H5_TypeID, "Opt__Ck_Refine",          HOFFSET(InputPara_t,Opt__Ck_Refine         ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "Opt__Ck_ProperNesting",   HOFFSET(InputPara_t,Opt__Ck_ProperNesting  ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "Opt__Ck_Conservation",    HOFFSET(InputPara_t,Opt__Ck_Conservation   ), H5T_NATIVE_INT     );
+   H5Tinsert( H5_TypeID, "Opt__Ck_NormPassive",     HOFFSET(InputPara_t,Opt__Ck_NormPassive    ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "Opt__Ck_Restrict",        HOFFSET(InputPara_t,Opt__Ck_Restrict       ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "Opt__Ck_Finite",          HOFFSET(InputPara_t,Opt__Ck_Finite         ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "Opt__Ck_PatchAllocate",   HOFFSET(InputPara_t,Opt__Ck_PatchAllocate  ), H5T_NATIVE_INT     );

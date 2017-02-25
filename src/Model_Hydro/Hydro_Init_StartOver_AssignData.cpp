@@ -12,7 +12,9 @@ void (*Init_Function_Ptr)( real fluid[], const double x, const double y, const d
 // Function    :  Init_Function_User
 // Description :  Function to initialize the fluid field
 //
-// Note        :  Invoked by "Hydro_Init_StartOver_AssignData"
+// Note        :  1. Invoked by "Hydro_Init_StartOver_AssignData"
+//                2. This function will be invoked by multiple OpenMP threads
+//                   --> Must ensure everything here is thread-safe
 //
 // Parameter   :  fluid : Fluid field to be initialized
 //                x/y/z : Target physical coordinates

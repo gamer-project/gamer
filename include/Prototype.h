@@ -11,6 +11,7 @@
 // Auxiliary
 void Aux_Check_MemFree( const double MinMemFree_Total, const char *comment );
 void Aux_Check_Conservation( const char *comment );
+void Aux_Check_NormalizePassive( const int lv, const char *comment );
 void Aux_Check();
 void Aux_Check_Finite( const int lv, const char *comment );
 void Aux_Check_FluxAllocate( const int lv, const char *comment );

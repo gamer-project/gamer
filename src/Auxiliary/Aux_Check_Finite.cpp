@@ -13,7 +13,7 @@
 //
 // Note        :  It only checks data stored in the current Sg
 //
-// Parameter   :  lv       : Targeted refinement level
+// Parameter   :  lv       : Target refinement level
 //                comment  : You can put the location where this function is invoked in this string
 //-------------------------------------------------------------------------------------------------------
 void Aux_Check_Finite( const int lv, const char *comment )
@@ -66,9 +66,8 @@ void Aux_Check_Finite( const int lv, const char *comment )
                                   j*amr->scale[lv] + amr->patch[0][lv][PID]->corner[1],
                                   k*amr->scale[lv] + amr->patch[0][lv][PID]->corner[2],
                                   v );
-                  }
-               }
-
+                  } // if ( ! isfinite(Data[v]) )
+               } // for (int v=0; v<NVar; v++)
             } // i,j,k
          } // for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
       } // if ( MPI_Rank == TargetRank )

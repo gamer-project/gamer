@@ -490,6 +490,7 @@ struct InputPara_t
    int    Opt__Ck_Refine;
    int    Opt__Ck_ProperNesting;
    int    Opt__Ck_Conservation;
+   int    Opt__Ck_NormPassive;
    int    Opt__Ck_Restrict;
    int    Opt__Ck_Finite;
    int    Opt__Ck_PatchAllocate;

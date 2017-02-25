@@ -12,7 +12,7 @@
 // Note        :  1. Restriction condition --> coarse-grid data = average of fine-grid data
 //                2. Not supported in the LOAD_BALANCE mode
 //
-// Parameter   :  lv       : Targeted refinement level
+// Parameter   :  lv       : Target refinement level
 //                comment  : You can put the location where this function is invoked in this string
 //-------------------------------------------------------------------------------------------------------
 void Aux_Check_Restrict( const int lv, const char *comment )

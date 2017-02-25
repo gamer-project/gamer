@@ -998,6 +998,19 @@ void Init_SetDefaultParameter()
 #  endif
 
 
+// (21) turn off OPT__CK_NORMALIZE_PASSIVE when OPT__NORMALIZE_PASSIVE is off
+#  if ( NCOMP_PASSIVE > 0 )
+   if ( OPT__CK_NORMALIZE_PASSIVE  &&  !OPT__NORMALIZE_PASSIVE )
+   {
+      OPT__CK_NORMALIZE_PASSIVE = false;
+
+      if ( MPI_Rank == 0 )
+         Aux_Message( stderr, "WARNING : parameter \"%s\" is turned off automatically when \"%s\" is off !!\n",
+                      "OPT__CK_NORMALIZE_PASSIVE", "OPT__NORMALIZE_PASSIVE" );
+   }
+#  endif
+
+
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", __FUNCTION__ );
 
 } // FUNCTION : Init_SetDefaultParameter

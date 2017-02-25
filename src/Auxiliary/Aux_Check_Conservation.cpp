@@ -337,7 +337,7 @@ void Aux_Check_Conservation( const char *comment )
          Aux_Message( File, "#-------------------------------------------------------------------------------------------" );
          Aux_Message( File, "--------------------------------------------------------------------------------------------\n\n" );
 
-         const int NColumnMax = 65;
+         const int NColumnMax = 80;
          Aux_Message( File, "#%12s  %10s", "[ 1]", "[ 2]" );
          for (int c=2; c<NColumnMax; c++)    Aux_Message( File, "  %10s[%2d]", "", c+1 );
          Aux_Message( File, "\n" );

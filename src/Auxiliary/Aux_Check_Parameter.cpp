@@ -691,6 +691,9 @@ void Aux_Check_Parameter()
    if ( OPT__INIT == INIT_UM )
       Aux_Message( stderr, "WARNING : currently we don't check MIN_DENS/PRES for the initial data loaded from UM_START !!\n" );
 
+   if ( OPT__1ST_FLUX_CORR )
+      Aux_Message( stderr, "REMINDER : OPT__1ST_FLUX_CORR may break the strict conservation of fluid variables\n" );
+
    } // if ( MPI_Rank == 0 )
 
 
