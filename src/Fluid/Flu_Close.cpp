@@ -460,9 +460,13 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
             Update[DENS] = FMAX( Update[DENS], (real)MIN_DENS );
             Update[ENGY] = CPU_CheckMinPresInEngy( Update[DENS], Update[MOMX], Update[MOMY], Update[MOMZ], Update[ENGY],
                                                    Gamma_m1, _Gamma_m1, MIN_PRES );
+
+//          floor and normalize passive scalars
 #           if ( NCOMP_PASSIVE > 0 )
-            for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)
-            Update[   v] = FMAX( Update[v], TINY_NUMBER );
+            for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)  Update[v] = FMAX( Update[v], TINY_NUMBER );
+
+            if ( OPT__NORMALIZE_PASSIVE )
+               CPU_NormalizePassive( Update[DENS], Update+NCOMP_FLUID, PassiveNorm_NVar, PassiveNorm_VarIdx );
 #           endif
 
 

@@ -825,7 +825,8 @@ int AllocateSonPatch( const int FaLv, const int *Cr, const int PScale, const int
 
 // 3.2.3 check minimum density and pressure
 // --> note that it's unnecessary to check negative passive scalars thanks to the monotonic interpolation
-#  if ( MODEL == HYDRO  ||  MODEL == MHD  ||  MODEL == ELBDM )
+// --> but we do renormalize passive scalars here
+#  if ( MODEL == HYDRO  ||  MODEL == MHD  ||  MODEL == ELBDM  ||  (defined DENS && NCOMP_PASSIVE>0) )
 #  if ( MODEL == HYDRO  ||  MODEL == MHD )
    const real  Gamma_m1 = GAMMA - (real)1.0;
    const real _Gamma_m1 = (real)1.0 / Gamma_m1;
@@ -861,6 +862,20 @@ int AllocateSonPatch( const int FaLv, const int *Cr, const int PScale, const int
          = CPU_CheckMinPresInEngy( FData_Flu[DENS][k][j][i], FData_Flu[MOMX][k][j][i], FData_Flu[MOMY][k][j][i],
                                    FData_Flu[MOMZ][k][j][i], FData_Flu[ENGY][k][j][i],
                                    Gamma_m1, _Gamma_m1, MIN_PRES );
+#     endif
+
+//    normalize passive scalars
+#     if ( NCOMP_PASSIVE > 0 )
+      if ( OPT__NORMALIZE_PASSIVE )
+      {
+         real Passive[NCOMP_PASSIVE];
+
+         for (int v=0; v<NCOMP_PASSIVE; v++)    Passive[v] = FData_Flu[ NCOMP_FLUID + v ][k][j][i];
+
+         CPU_NormalizePassive( FData_Flu[DENS][k][j][i], Passive, PassiveNorm_NVar, PassiveNorm_VarIdx );
+
+         for (int v=0; v<NCOMP_PASSIVE; v++)    FData_Flu[ NCOMP_FLUID + v ][k][j][i] = Passive[v];
+      }
 #     endif
    } // i,j,k
 #  endif // #if ( MODEL == HYDRO  ||  MODEL == MHD  ||  MODEL == ELBDM )

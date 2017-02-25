@@ -351,31 +351,31 @@ void Aux_Check_Parameter()
 
    if ( OPT__TIMING_BARRIER  &&  !OPT__TIMING_BALANCE )
    {
-      Aux_Message( stderr, "WARNING : option \"%s\" is on, but the time waiting for other ranks will NOT be included in individual timers ...\n",
+      Aux_Message( stderr, "REMINDER : option \"%s\" is on, but the time waiting for other ranks will NOT be included in individual timers ...\n",
                    "OPT__TIMING_BARRIER" );
-      Aux_Message( stderr, "          --> the sum of individual timer may be less than the total elapsed time due to load imbalance ...\n" );
+      Aux_Message( stderr, "           --> the sum of individual timer may be less than the total elapsed time due to load imbalance ...\n" );
    }
 
 #  ifdef TIMING
    if ( !OPT__TIMING_BARRIER )
    {
-      Aux_Message( stderr, "WARNING : option \"%s\" is off for TIMING\n", "OPT__TIMING_BARRIER" );
-      Aux_Message( stderr, "          --> Some timing results (especially MPI and particle routines) may be less accurate due to load imbalance ...\n" );
+      Aux_Message( stderr, "REMINDER : option \"%s\" is off for TIMING\n", "OPT__TIMING_BARRIER" );
+      Aux_Message( stderr, "           --> Some timing results (especially MPI and particle routines) may be less accurate due to load imbalance ...\n" );
    }
 #  endif
 
    if (  ( OPT__TIMING_BALANCE || OPT__TIMING_MPI )  &&  !OPT__TIMING_BARRIER  )
    {
-      Aux_Message( stderr, "WARNING : option \"%s\" is off for OPT__TIMING_BALANCE/OPT__TIMING_MPI\n", "OPT__TIMING_BARRIER" );
-      Aux_Message( stderr, "          --> Some timing results (especially MPI and particle routines) may be less accurate due to load imbalance ...\n" );
+      Aux_Message( stderr, "REMINDER : option \"%s\" is off for OPT__TIMING_BALANCE/OPT__TIMING_MPI\n", "OPT__TIMING_BARRIER" );
+      Aux_Message( stderr, "           --> Some timing results (especially MPI and particle routines) may be less accurate due to load imbalance ...\n" );
    }
 
 #  ifdef PARTICLE
    if ( OPT__TIMING_BALANCE )
    {
-      Aux_Message( stderr, "WARNING : option \"%s\" does NOT work well for particle routines\n", "OPT__TIMING_BARRIER" );
-      Aux_Message( stderr, "          --> Because many particle routines call MPI_Barrier implicitly\n" );
-      Aux_Message( stderr, "              (so as Gra_AdvanceDt when PARTICLE is on)\n" );
+      Aux_Message( stderr, "REMINDER : option \"%s\" does NOT work well for particle routines\n", "OPT__TIMING_BARRIER" );
+      Aux_Message( stderr, "           --> Because many particle routines call MPI_Barrier implicitly\n" );
+      Aux_Message( stderr, "               (so as Gra_AdvanceDt when PARTICLE is on)\n" );
    }
 #  endif
 
@@ -403,6 +403,11 @@ void Aux_Check_Parameter()
 #  if ( NCOMP_PASSIVE > 0 )
    if ( OPT__NORMALIZE_PASSIVE )
       Aux_Message( stderr, "REMINDER : OPT__NORMALIZE_PASSIVE will break the strict conservation of individual passive scalar\n" );
+   else
+   {
+      Aux_Message( stderr, "REMINDER : disabling OPT__NORMALIZE_PASSIVE will break the strict equality between" );
+      Aux_Message( stderr, "           sum(passive_scalar_mass_density) and gas_mass_density\n" );
+   }
 #  endif
 
    } // if ( MPI_Rank == 0 )

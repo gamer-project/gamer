@@ -458,7 +458,8 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
 
 //       (c1.3.3.3) check minimum density and pressure
 //       --> note that it's unnecessary to check negative passive scalars thanks to the monotonic interpolation
-#        if ( MODEL == HYDRO  ||  MODEL == MHD  ||  MODEL == ELBDM )
+//       --> but we do renormalize passive scalars here
+#        if ( MODEL == HYDRO  ||  MODEL == MHD  ||  MODEL == ELBDM  ||  (defined DENS && NCOMP_PASSIVE>0) )
          for (int k=0; k<FSize; k++)
          for (int j=0; j<FSize; j++)
          for (int i=0; i<FSize; i++)
@@ -489,6 +490,20 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
                = CPU_CheckMinPresInEngy( Flu_FData[DENS][k][j][i], Flu_FData[MOMX][k][j][i], Flu_FData[MOMY][k][j][i],
                                          Flu_FData[MOMZ][k][j][i], Flu_FData[ENGY][k][j][i],
                                          Gamma_m1, _Gamma_m1, MIN_PRES );
+#           endif
+
+//          normalize passive scalars
+#           if ( NCOMP_PASSIVE > 0 )
+            if ( OPT__NORMALIZE_PASSIVE )
+            {
+               real Passive[NCOMP_PASSIVE];
+
+               for (int v=0; v<NCOMP_PASSIVE; v++)    Passive[v] = Flu_FData[ NCOMP_FLUID + v ][k][j][i];
+
+               CPU_NormalizePassive( Flu_FData[DENS][k][j][i], Passive, PassiveNorm_NVar, PassiveNorm_VarIdx );
+
+               for (int v=0; v<NCOMP_PASSIVE; v++)    Flu_FData[ NCOMP_FLUID + v ][k][j][i] = Passive[v];
+            }
 #           endif
          } // i,j,k
 #        endif // #if ( MODEL == HYDRO  ||  MODEL == MHD  ||  MODEL == ELBDM )

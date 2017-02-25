@@ -115,9 +115,12 @@ void Flu_FixUp( const int lv, const double dt )
 #              endif
                   continue;
 
-//             floor passive scalars
+//             floor and normalize passive scalars
 #              if ( NCOMP_PASSIVE > 0 )
                for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)  CorrVal[v] = FMAX( CorrVal[v], TINY_NUMBER );
+
+               if ( OPT__NORMALIZE_PASSIVE )
+                  CPU_NormalizePassive( CorrVal[DENS], CorrVal+NCOMP_FLUID, PassiveNorm_NVar, PassiveNorm_VarIdx );
 #              endif
 
 //             apply flux correction
@@ -164,9 +167,12 @@ void Flu_FixUp( const int lv, const double dt )
 #              endif
                   continue;
 
-//             floor passive scalars
+//             floor and normalize passive scalars
 #              if ( NCOMP_PASSIVE > 0 )
                for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)  CorrVal[v] = FMAX( CorrVal[v], TINY_NUMBER );
+
+               if ( OPT__NORMALIZE_PASSIVE )
+                  CPU_NormalizePassive( CorrVal[DENS], CorrVal+NCOMP_FLUID, PassiveNorm_NVar, PassiveNorm_VarIdx );
 #              endif
 
 //             apply flux correction
@@ -213,9 +219,12 @@ void Flu_FixUp( const int lv, const double dt )
 #              endif
                   continue;
 
-//             floor passive scalars
+//             floor and normalize passive scalars
 #              if ( NCOMP_PASSIVE > 0 )
                for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)  CorrVal[v] = FMAX( CorrVal[v], TINY_NUMBER );
+
+               if ( OPT__NORMALIZE_PASSIVE )
+                  CPU_NormalizePassive( CorrVal[DENS], CorrVal+NCOMP_FLUID, PassiveNorm_NVar, PassiveNorm_VarIdx );
 #              endif
 
 //             apply flux correction
@@ -262,9 +271,12 @@ void Flu_FixUp( const int lv, const double dt )
 #              endif
                   continue;
 
-//             floor passive scalars
+//             floor and normalize passive scalars
 #              if ( NCOMP_PASSIVE > 0 )
                for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)  CorrVal[v] = FMAX( CorrVal[v], TINY_NUMBER );
+
+               if ( OPT__NORMALIZE_PASSIVE )
+                  CPU_NormalizePassive( CorrVal[DENS], CorrVal+NCOMP_FLUID, PassiveNorm_NVar, PassiveNorm_VarIdx );
 #              endif
 
 //             apply flux correction
@@ -311,9 +323,12 @@ void Flu_FixUp( const int lv, const double dt )
 #              endif
                   continue;
 
-//             floor passive scalars
+//             floor and normalize passive scalars
 #              if ( NCOMP_PASSIVE > 0 )
                for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)  CorrVal[v] = FMAX( CorrVal[v], TINY_NUMBER );
+
+               if ( OPT__NORMALIZE_PASSIVE )
+                  CPU_NormalizePassive( CorrVal[DENS], CorrVal+NCOMP_FLUID, PassiveNorm_NVar, PassiveNorm_VarIdx );
 #              endif
 
 //             apply flux correction
@@ -360,9 +375,12 @@ void Flu_FixUp( const int lv, const double dt )
 #              endif
                   continue;
 
-//             floor passive scalars
+//             floor and normalize passive scalars
 #              if ( NCOMP_PASSIVE > 0 )
                for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)  CorrVal[v] = FMAX( CorrVal[v], TINY_NUMBER );
+
+               if ( OPT__NORMALIZE_PASSIVE )
+                  CPU_NormalizePassive( CorrVal[DENS], CorrVal+NCOMP_FLUID, PassiveNorm_NVar, PassiveNorm_VarIdx );
 #              endif
 
 //             apply flux correction

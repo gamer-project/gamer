@@ -77,11 +77,11 @@ void CPU_FullStepUpdate( const real Input[][ FLU_NXT*FLU_NXT*FLU_NXT ], real Out
 
       if ( NormPassive )
       {
-         for (int v=0; v<NCOMP_PASSIVE; v++)    Passive[v] = Output[NCOMP_FLUID+v][ID2];
+         for (int v=0; v<NCOMP_PASSIVE; v++)    Passive[v] = Output[ NCOMP_FLUID + v ][ID2];
 
          CPU_NormalizePassive( Output[DENS][ID2], Passive, NNorm, NormIdx );
 
-         for (int v=0; v<NCOMP_PASSIVE; v++)    Output[NCOMP_FLUID+v][ID2] = Passive[v];
+         for (int v=0; v<NCOMP_PASSIVE; v++)    Output[ NCOMP_FLUID + v ][ID2] = Passive[v];
       }
 #     endif
 

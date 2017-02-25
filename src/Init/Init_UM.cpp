@@ -556,7 +556,6 @@ void UM_AssignData( const int lv, real *UM_Data, const int NVar )
       int ii, jj, kk;
       long Idx;
 
-
       for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
       {
          Corner = amr->patch[0][lv][PID]->corner;
@@ -570,8 +569,29 @@ void UM_AssignData( const int lv, real *UM_Data, const int NVar )
 //          load all variables
             for (int v=0; v<NCOMP_TOTAL; v++)
                amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[v][k][j][i] = UM_Data[ Idx + v ];
-         }}}
-      }
+
+//          floor and normalize passive scalars
+#           if ( NCOMP_PASSIVE > 0 )
+            for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)
+               amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[v][k][j][i]
+                  = FMAX( amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[v][k][j][i], TINY_NUMBER );
+
+            if ( OPT__NORMALIZE_PASSIVE )
+            {
+               real Passive[NCOMP_PASSIVE];
+
+               for (int v=0; v<NCOMP_PASSIVE; v++)
+                  Passive[v] = amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[ NCOMP_FLUID + v ][k][j][i];
+
+               CPU_NormalizePassive( amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[DENS][k][j][i],
+                                     Passive, PassiveNorm_NVar, PassiveNorm_VarIdx );
+
+               for (int v=0; v<NCOMP_PASSIVE; v++)
+                  amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[ NCOMP_FLUID + v ][k][j][i] = Passive[v];
+            }
+#           endif
+         }}} // i,j,k
+      } // for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
    } // if ( NVar == NCOMP_TOTAL )
 
    else
