@@ -219,7 +219,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
          Aux_Error( ERROR_INFO, "please call \"Prepare_PatchData_InitParticleDensityArray\" in advance !!\n" );
    }
 
-// _DENS, _PAR_DENS, and _TOTAL_DENS do not work together(actually we should be able to support _DENS + _PAR_DENS)
+// _DENS, _PAR_DENS, and _TOTAL_DENS do not work together (actually we should be able to support _DENS + _PAR_DENS)
    if (  ( TVar&_DENS && TVar&_PAR_DENS )  ||  ( TVar&_DENS && TVar&_TOTAL_DENS )  )
       Aux_Error( ERROR_INFO, "_DENS, _PAR_DENS, and _TOTAL_DENS cannot work together !!\n" );
 

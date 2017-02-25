@@ -405,7 +405,7 @@ void Aux_Check_Parameter()
       Aux_Message( stderr, "REMINDER : OPT__NORMALIZE_PASSIVE will break the strict conservation of individual passive scalar\n" );
    else
    {
-      Aux_Message( stderr, "REMINDER : disabling OPT__NORMALIZE_PASSIVE will break the strict equality between" );
+      Aux_Message( stderr, "REMINDER : disabling OPT__NORMALIZE_PASSIVE will break the strict equality between\n" );
       Aux_Message( stderr, "           sum(passive_scalar_mass_density) and gas_mass_density\n" );
    }
 #  endif

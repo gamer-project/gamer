@@ -15,6 +15,7 @@
 //                    MHD      : check mass, momentum, and energy
 //                    ELBDM    : check mass and energy
 //                    PAR_ONLY : check mass, momentum, and energy
+//                    Passive scalars
 //
 // Note        :  1. This check only works with the models HYDRO, MHD, ELBDM, and PAR_ONLY
 //                2. The values measured during the first function call will be taken as the reference values
@@ -57,17 +58,16 @@ void Aux_Check_Conservation( const char *comment )
 
 
 #  if   ( MODEL == HYDRO )
-   const int NVar = 8;        // 8: mass, momentum (x/y/z), kinematic/thermal/potential/total energies
-                              // --> note that **total energy** is put in the last element ==> [7] instead of [ENGY==4]
+   const int NVar_NoPassive    = 8;    // 8: mass, momentum (x/y/z), kinematic/thermal/potential/total energies
+                                       // --> note that **total energy** is put in the last element ==> [7] instead of [ENGY==4]
 #  elif ( MODEL == MHD )
 #  warning : WAIT MHD !!!
 
 #  elif ( MODEL == ELBDM )
-   const int NVar = 5;        // 5: mass, kinematic/gravitational/self-interaction/total energies
-
+   const int NVar_NoPassive    = 5;    // 5: mass, kinematic/gravitational/self-interaction/total energies
    const IntScheme_t IntScheme = INT_CQUAR;
    const bool   IntPhase_No    = false;
-   const int    NGhost         = 1;          // number of ghost zones for calculating the gradient of wave function
+   const int    NGhost         = 1;    // number of ghost zones for calculating the gradient of wave function
    const int    Size_Flu       = PS1 + 2*NGhost;
    const int    NPG            = 1;
    const double _2Eta2         = 0.5/SQR(ELBDM_ETA);
@@ -81,6 +81,9 @@ void Aux_Check_Conservation( const char *comment )
 #  error : ERROR : unsupported MODEL !!
 #  endif
 
+
+   const int NVar = NVar_NoPassive + NCOMP_PASSIVE + 1;  // NCOMP_PASSIVE + 1: individual passive scalars and the sum of scalars
+                                                         //                    to be normalized
 
    double dv, Fluid_ThisRank[NVar], Fluid_AllRank[NVar], Fluid_lv[NVar];   // dv : cell volume at each level
    int    FluSg;
@@ -179,29 +182,43 @@ void Aux_Check_Conservation( const char *comment )
                }
 
 //             [1] kinematic energy in ELBDM
-                const int t = PID - PID0;
+               const int t = PID - PID0;
 
-                for (int k=NGhost; k<Size_Flu-NGhost; k++)   { kp = k+1; km = k-1;
-                for (int j=NGhost; j<Size_Flu-NGhost; j++)   { jp = j+1; jm = j-1;
-                for (int i=NGhost; i<Size_Flu-NGhost; i++)   { ip = i+1; im = i-1;
+               for (int k=NGhost; k<Size_Flu-NGhost; k++)   { kp = k+1; km = k-1;
+               for (int j=NGhost; j<Size_Flu-NGhost; j++)   { jp = j+1; jm = j-1;
+               for (int i=NGhost; i<Size_Flu-NGhost; i++)   { ip = i+1; im = i-1;
 
-                   GradR[0] = _dh2*( Flu_ELBDM[t][0][k ][j ][ip] - Flu_ELBDM[t][0][k ][j ][im] );
-                   GradR[1] = _dh2*( Flu_ELBDM[t][0][k ][jp][i ] - Flu_ELBDM[t][0][k ][jm][i ] );
-                   GradR[2] = _dh2*( Flu_ELBDM[t][0][kp][j ][i ] - Flu_ELBDM[t][0][km][j ][i ] );
+                  GradR[0] = _dh2*( Flu_ELBDM[t][0][k ][j ][ip] - Flu_ELBDM[t][0][k ][j ][im] );
+                  GradR[1] = _dh2*( Flu_ELBDM[t][0][k ][jp][i ] - Flu_ELBDM[t][0][k ][jm][i ] );
+                  GradR[2] = _dh2*( Flu_ELBDM[t][0][kp][j ][i ] - Flu_ELBDM[t][0][km][j ][i ] );
 
-                   GradI[0] = _dh2*( Flu_ELBDM[t][1][k ][j ][ip] - Flu_ELBDM[t][1][k ][j ][im] );
-                   GradI[1] = _dh2*( Flu_ELBDM[t][1][k ][jp][i ] - Flu_ELBDM[t][1][k ][jm][i ] );
-                   GradI[2] = _dh2*( Flu_ELBDM[t][1][kp][j ][i ] - Flu_ELBDM[t][1][km][j ][i ] );
+                  GradI[0] = _dh2*( Flu_ELBDM[t][1][k ][j ][ip] - Flu_ELBDM[t][1][k ][j ][im] );
+                  GradI[1] = _dh2*( Flu_ELBDM[t][1][k ][jp][i ] - Flu_ELBDM[t][1][k ][jm][i ] );
+                  GradI[2] = _dh2*( Flu_ELBDM[t][1][kp][j ][i ] - Flu_ELBDM[t][1][km][j ][i ] );
 
-                   Fluid_lv[1] += _2Eta2*( SQR(GradR[0]) + SQR(GradR[1]) + SQR(GradR[2]) +
-                                           SQR(GradI[0]) + SQR(GradI[1]) + SQR(GradI[2])   );
-                }}}
+                  Fluid_lv[1] += _2Eta2*( SQR(GradR[0]) + SQR(GradR[1]) + SQR(GradR[2]) +
+                                          SQR(GradI[0]) + SQR(GradI[1]) + SQR(GradI[2])   );
+               }}}
 
 #              else
 #              error : ERROR : unsupported MODEL !!
 
 #              endif // MODEL
 
+
+//             individual passive scalars
+#              if ( NCOMP_PASSIVE > 0 )
+               for (int v=0; v<NCOMP_PASSIVE; v++)
+               {
+                  const int v1 = NVar_NoPassive + v;
+                  const int v2 = NCOMP_FLUID    + v;
+
+                  for (int k=0; k<PATCH_SIZE; k++)
+                  for (int j=0; j<PATCH_SIZE; j++)
+                  for (int i=0; i<PATCH_SIZE; i++)
+                     Fluid_lv[v1] += amr->patch[FluSg][lv][PID]->fluid[v2][k][j][i];
+               }
+#              endif
             } // if ( amr->patch[0][lv][PID]->son == -1 )
          } // for (int PID=PID0; PID<PID0+8; PID++)
       } // for (int PID0=0; PID0<amr->NPatchComma[lv][1]; PID0+=8)
@@ -213,6 +230,13 @@ void Aux_Check_Conservation( const char *comment )
       Fluid_lv[4] = Fluid_lv[1] + Fluid_lv[2] + Fluid_lv[3];
 #     else
 #     error : ERROR : unsupported MODEL !!
+#     endif
+
+//    sum of passive scalars to be normalized
+#     if ( NCOMP_PASSIVE > 0 )
+      if ( OPT__NORMALIZE_PASSIVE )
+      for (int v=0; v<PassiveNorm_NVar; v++)
+         Fluid_lv[ NVar - 1 ] += Fluid_lv[ NVar_NoPassive + PassiveNorm_VarIdx[v] ];
 #     endif
 
 //    sum over all levels
@@ -283,6 +307,11 @@ void Aux_Check_Conservation( const char *comment )
          Aux_Message( File, "# Etot_Psi     : total ELBDM energy\n" );
 #        endif
 
+#        if ( NCOMP_PASSIVE > 0 )
+         Aux_Message( File, "# PassiveXX    : each individual passive scalar\n" );
+         Aux_Message( File, "# PassNorm     : sum of all target passive scalars to be normalized\n" );
+#        endif
+
 #        ifdef PARTICLE
          Aux_Message( File, "# Mass_Par     : total PARTICLE mass\n" );
          Aux_Message( File, "# MomX/Y/Z_Par : total PARTICLE momentum\n" );
@@ -331,6 +360,13 @@ void Aux_Check_Conservation( const char *comment )
          Aux_Message( File, "  %14s  %14s  %14s", "Epot_Psi", "Epot_Psi_AErr", "Epot_Psi_RErr" );
          Aux_Message( File, "  %14s  %14s  %14s", "Esel_Psi", "Esel_Psi_AErr", "Esel_Psi_RErr" );
          Aux_Message( File, "  %14s  %14s  %14s", "Etot_Psi", "Etot_Psi_AErr", "Etot_Psi_RErr" );
+#        endif
+
+#        if ( NCOMP_PASSIVE > 0 )
+         for (int v=0; v<NCOMP_PASSIVE; v++)
+         Aux_Message( File, "  %14s  %9s_AErr  %9s_RErr", PassiveFieldName_Grid[v], PassiveFieldName_Grid[v],
+                                                          PassiveFieldName_Grid[v] );
+         Aux_Message( File, "  %14s  %14s  %14s", "PassNorm", "PassNorm_AErr", "PassNorm_RErr" );
 #        endif
 
 #        ifdef PARTICLE
