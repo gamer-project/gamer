@@ -176,7 +176,7 @@ void Par_TestProbSol_Plummer( real *fluid, const double x, const double y, const
    const double TotM    = 4.0/3.0*M_PI*CUBE(Plummer_R0)*Plummer_Rho0;
    const double GasRho0 = Plummer_Rho0*Plummer_GasMFrac;
    const double PresBg  = 0.0;   // background pressure
-   double r2, a2;
+   double r2, a2, Dens;
 
    if ( Plummer_Collision )
    {
@@ -190,11 +190,18 @@ void Par_TestProbSol_Plummer( real *fluid, const double x, const double y, const
       {
          for (int d=0; d<3; d++)    Center[d] = Plummer_Center[d] + Coll_Offset*(double)t;
 
-         r2 = SQR(x-Center[0]) + SQR(y-Center[1]) + SQR(z-Center[2]);
-         a2 = r2 / SQR(Plummer_R0);
+         r2   = SQR(x-Center[0]) + SQR(y-Center[1]) + SQR(z-Center[2]);
+         a2   = r2 / SQR(Plummer_R0);
+         Dens = GasRho0 * pow( 1.0 + a2, -2.5 );
 
-         fluid[DENS] += GasRho0 * pow( 1.0 + a2, -2.5 );
+         fluid[DENS] += Dens;
          fluid[ENGY] += (  NEWTON_G*TotM*GasRho0 / ( 6.0*Plummer_R0*CUBE(1.0 + a2) ) + PresBg  ) / ( GAMMA - 1.0 );
+
+#        if ( NCOMP_PASSIVE == 2 )
+         fluid[ (t==-1)?CLOUD0:CLOUD1 ] = Dens;
+#        else
+#        error : ERROR : please specify how to set the passive scalars here !!
+#        endif
       }
 
       fluid[MOMX]  = fluid[DENS]*Plummer_BulkVel[0];
@@ -205,15 +212,19 @@ void Par_TestProbSol_Plummer( real *fluid, const double x, const double y, const
 
    else
    {
-      r2 = SQR(x-Plummer_Center[0]) + SQR(y-Plummer_Center[1]) + SQR(z-Plummer_Center[2]);
-      a2 = r2 / SQR(Plummer_R0);
+      r2   = SQR(x-Plummer_Center[0]) + SQR(y-Plummer_Center[1]) + SQR(z-Plummer_Center[2]);
+      a2   = r2 / SQR(Plummer_R0);
+      Dens = GasRho0 * pow( 1.0 + a2, -2.5 );
 
-      fluid[DENS] = GasRho0 * pow( 1.0 + a2, -2.5 );
+      fluid[DENS] = Dens;
       fluid[MOMX] = fluid[DENS]*Plummer_BulkVel[0];
       fluid[MOMY] = fluid[DENS]*Plummer_BulkVel[1];
       fluid[MOMZ] = fluid[DENS]*Plummer_BulkVel[2];
       fluid[ENGY] = (  NEWTON_G*TotM*GasRho0 / ( 6.0*Plummer_R0*CUBE(1.0 + a2) ) + PresBg  ) / ( GAMMA - 1.0 )
                     + 0.5*( SQR(fluid[MOMX]) + SQR(fluid[MOMY]) + SQR(fluid[MOMZ]) ) / fluid[DENS];
+
+//    just set all passive scalars as zero
+      for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)  fluid[v] = 0.0;
    } // if ( Plummer_Collision ) ... else ...
 
 #  elif ( MODEL == ELBDM )
