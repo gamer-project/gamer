@@ -21,16 +21,16 @@
 #endif
 
 
-static __device__ void CUFLU_ComputeFlux( const real g_FC_Var_xL[][5][ N_FC_VAR*N_FC_VAR*N_FC_VAR ],
-                                          const real g_FC_Var_xR[][5][ N_FC_VAR*N_FC_VAR*N_FC_VAR ],
-                                          const real g_FC_Var_yL[][5][ N_FC_VAR*N_FC_VAR*N_FC_VAR ],
-                                          const real g_FC_Var_yR[][5][ N_FC_VAR*N_FC_VAR*N_FC_VAR ],
-                                          const real g_FC_Var_zL[][5][ N_FC_VAR*N_FC_VAR*N_FC_VAR ],
-                                          const real g_FC_Var_zR[][5][ N_FC_VAR*N_FC_VAR*N_FC_VAR ],
-                                          real g_FC_Flux_x[][5][ N_FC_FLUX*N_FC_FLUX*N_FC_FLUX ],
-                                          real g_FC_Flux_y[][5][ N_FC_FLUX*N_FC_FLUX*N_FC_FLUX ],
-                                          real g_FC_Flux_z[][5][ N_FC_FLUX*N_FC_FLUX*N_FC_FLUX ],
-                                          real g_Flux[][9][5][ PS2*PS2 ], const bool DumpFlux,
+static __device__ void CUFLU_ComputeFlux( const real g_FC_Var_xL[][NCOMP_TOTAL][ N_FC_VAR*N_FC_VAR*N_FC_VAR ],
+                                          const real g_FC_Var_xR[][NCOMP_TOTAL][ N_FC_VAR*N_FC_VAR*N_FC_VAR ],
+                                          const real g_FC_Var_yL[][NCOMP_TOTAL][ N_FC_VAR*N_FC_VAR*N_FC_VAR ],
+                                          const real g_FC_Var_yR[][NCOMP_TOTAL][ N_FC_VAR*N_FC_VAR*N_FC_VAR ],
+                                          const real g_FC_Var_zL[][NCOMP_TOTAL][ N_FC_VAR*N_FC_VAR*N_FC_VAR ],
+                                          const real g_FC_Var_zR[][NCOMP_TOTAL][ N_FC_VAR*N_FC_VAR*N_FC_VAR ],
+                                          real g_FC_Flux_x[][NCOMP_TOTAL][ N_FC_FLUX*N_FC_FLUX*N_FC_FLUX ],
+                                          real g_FC_Flux_y[][NCOMP_TOTAL][ N_FC_FLUX*N_FC_FLUX*N_FC_FLUX ],
+                                          real g_FC_Flux_z[][NCOMP_TOTAL][ N_FC_FLUX*N_FC_FLUX*N_FC_FLUX ],
+                                          real g_Flux[][9][NCOMP_TOTAL][ PS2*PS2 ], const bool DumpFlux,
                                           const uint Gap, const real Gamma, const real MinPres );
 
 
@@ -85,16 +85,16 @@ static __device__ void CUFLU_ComputeFlux( const real g_FC_Var_xL[][5][ N_FC_VAR*
 //                MinPres         : Minimum allowed pressure
 //-------------------------------------------------------------------------------------------------------
 __forceinline__
-__device__ void CUFLU_ComputeFlux( const real g_FC_Var_xL[][5][ N_FC_VAR*N_FC_VAR*N_FC_VAR ],
-                                   const real g_FC_Var_xR[][5][ N_FC_VAR*N_FC_VAR*N_FC_VAR ],
-                                   const real g_FC_Var_yL[][5][ N_FC_VAR*N_FC_VAR*N_FC_VAR ],
-                                   const real g_FC_Var_yR[][5][ N_FC_VAR*N_FC_VAR*N_FC_VAR ],
-                                   const real g_FC_Var_zL[][5][ N_FC_VAR*N_FC_VAR*N_FC_VAR ],
-                                   const real g_FC_Var_zR[][5][ N_FC_VAR*N_FC_VAR*N_FC_VAR ],
-                                   real g_FC_Flux_x[][5][ N_FC_FLUX*N_FC_FLUX*N_FC_FLUX ],
-                                   real g_FC_Flux_y[][5][ N_FC_FLUX*N_FC_FLUX*N_FC_FLUX ],
-                                   real g_FC_Flux_z[][5][ N_FC_FLUX*N_FC_FLUX*N_FC_FLUX ],
-                                   real g_Flux[][9][5][ PS2*PS2 ], const bool DumpFlux,
+__device__ void CUFLU_ComputeFlux( const real g_FC_Var_xL[][NCOMP_TOTAL][ N_FC_VAR*N_FC_VAR*N_FC_VAR ],
+                                   const real g_FC_Var_xR[][NCOMP_TOTAL][ N_FC_VAR*N_FC_VAR*N_FC_VAR ],
+                                   const real g_FC_Var_yL[][NCOMP_TOTAL][ N_FC_VAR*N_FC_VAR*N_FC_VAR ],
+                                   const real g_FC_Var_yR[][NCOMP_TOTAL][ N_FC_VAR*N_FC_VAR*N_FC_VAR ],
+                                   const real g_FC_Var_zL[][NCOMP_TOTAL][ N_FC_VAR*N_FC_VAR*N_FC_VAR ],
+                                   const real g_FC_Var_zR[][NCOMP_TOTAL][ N_FC_VAR*N_FC_VAR*N_FC_VAR ],
+                                   real g_FC_Flux_x[][NCOMP_TOTAL][ N_FC_FLUX*N_FC_FLUX*N_FC_FLUX ],
+                                   real g_FC_Flux_y[][NCOMP_TOTAL][ N_FC_FLUX*N_FC_FLUX*N_FC_FLUX ],
+                                   real g_FC_Flux_z[][NCOMP_TOTAL][ N_FC_FLUX*N_FC_FLUX*N_FC_FLUX ],
+                                   real g_Flux[][9][NCOMP_TOTAL][ PS2*PS2 ], const bool DumpFlux,
                                    const uint Gap, const real Gamma, const bool CorrHalfVel,
                                    const real g_Pot_USG[][ USG_NXT_F*USG_NXT_F*USG_NXT_F ],
                                    const double g_Corner[][3], const real dt, const real _dh, const double Time,

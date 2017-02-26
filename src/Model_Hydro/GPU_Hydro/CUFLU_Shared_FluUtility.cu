@@ -11,8 +11,8 @@ static __device__ FluVar CUFLU_Pri2Con( const FluVar Pri, const real _Gamma_m1 )
 static __device__ FluVar CUFLU_Con2Pri( const FluVar Con, const real Gamma_m1, const real MinPres );
 static __device__ FluVar CUFLU_Con2Flux( const FluVar Input, const real Gamma_m1, const int XYZ, const real MinPres );
 static __device__ FluVar CUFLU_Rotate3D( const FluVar In, const int XYZ, const bool Forward );
-static __device__ void CUFLU_Con2Pri_AllGrids( const real g_Fluid_In[][5][ FLU_NXT*FLU_NXT*FLU_NXT ],
-                                               real g_PriVar[][5][ FLU_NXT*FLU_NXT*FLU_NXT ], const real Gamma, const real MinPres );
+static __device__ void CUFLU_Con2Pri_AllGrids( const real g_Fluid_In[][NCOMP_TOTAL][ FLU_NXT*FLU_NXT*FLU_NXT ],
+                                               real g_PriVar[][NCOMP_TOTAL][ FLU_NXT*FLU_NXT*FLU_NXT ], const real Gamma, const real MinPres );
 static __device__ real CUFLU_CheckMinPres( const real InPres, const real MinPres );
 static __device__ real CUFLU_CheckMinPresInEngy( const FluVar ConVar, const real Gamma_m1, const real _Gamma_m1, const real MinPres );
 #ifdef CHECK_NEGATIVE_IN_FLUID
@@ -24,11 +24,12 @@ static __device__ bool CUFLU_CheckNegative( const real Input );
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  CUFLU_Rotate3D
-// Description :  Rotate the input 5-element fluid variables properly to simplify the 3D calculation
+// Description :  Rotate the input fluid variables properly to simplify the 3D calculation
 //
-// Note        :  x : (0,1,2,3,4) <--> (0,1,2,3,4)
-//                y : (0,1,2,3,4) <--> (0,2,3,1,4)
-//                z : (0,1,2,3,4) <--> (0,3,1,2,4)
+// Note        :  1. x : (0,1,2,3,4) <--> (0,1,2,3,4)
+//                   y : (0,1,2,3,4) <--> (0,2,3,1,4)
+//                   z : (0,1,2,3,4) <--> (0,3,1,2,4)
+//                2. Work if InOut includes/excludes passive scalars since they are not modified at all
 //
 // Parameter   :  In       : Input variables to be rotated
 //                XYZ      : Targeted spatial direction : (0/1/2) --> (x/y/z)
@@ -165,8 +166,8 @@ __device__ FluVar CUFLU_Con2Pri( const FluVar Con, const real Gamma_m1, const re
 //                Gamma      : Ratio of specific heats
 //                MinPres    : Minimum allowed pressure
 //-------------------------------------------------------------------------------------------------------
-__device__ void CUFLU_Con2Pri_AllGrids( const real g_Fluid_In[][5][ FLU_NXT*FLU_NXT*FLU_NXT ],
-                                        real g_PriVar[][5][ FLU_NXT*FLU_NXT*FLU_NXT ], const real Gamma, const real MinPres )
+__device__ void CUFLU_Con2Pri_AllGrids( const real g_Fluid_In[][NCOMP_TOTAL][ FLU_NXT*FLU_NXT*FLU_NXT ],
+                                        real g_PriVar[][NCOMP_TOTAL][ FLU_NXT*FLU_NXT*FLU_NXT ], const real Gamma, const real MinPres )
 {
 
    const uint bx       = blockIdx.x;

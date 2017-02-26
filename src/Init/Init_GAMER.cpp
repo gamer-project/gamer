@@ -64,7 +64,7 @@ void Init_GAMER( int *argc, char ***argv )
 
 
 // initialize the external potential and acceleration parameters
-// (must AFTER Init_TestProb but BEFORE CUAPI_Set_Default_GPU_Parameter)
+// --> must be called AFTER Init_TestProb() but BEFORE CUAPI_Set_Default_GPU_Parameter()
 #  ifdef GRAVITY
    if ( OPT__GRAVITY_TYPE == GRAVITY_EXTERNAL  ||  OPT__GRAVITY_TYPE == GRAVITY_BOTH )
       Init_ExternalAcc();
@@ -74,7 +74,13 @@ void Init_GAMER( int *argc, char ***argv )
 #  endif
 
 
+// initialize settings for the passive variables
+// --> must be called BEFORE CUAPI_Set_Default_GPU_Parameter()
+   Init_PassiveVariable();
+
+
 // set the GPU ID and several GPU parameters
+// --> must be called AFTER Init_ExternalAcc(), Init_ExternalPot(), and Init_PassiveVariable()
 #  ifdef GPU
 #  ifndef GRAVITY
    int POT_GPU_NPGROUP = NULL_INT;
@@ -116,10 +122,6 @@ void Init_GAMER( int *argc, char ***argv )
 
 // allocate memory for several global arrays
    Init_MemAllocate();
-
-
-// initialize settings for the passive variables
-   Init_PassiveVariable();
 
 
 // initialize particles

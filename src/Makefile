@@ -100,10 +100,10 @@ SIMU_OPTION += -DPAR_NPASSIVE=0
 # (f) optimization and compilation options
 # ------------------------------------------------------------------------------------
 # GPU acceleration
-#SIMU_OPTION += -DGPU
+SIMU_OPTION += -DGPU
 
 # GPU architecture: FERMI/KEPLER/MAXWELL/PASCAL
-#SIMU_OPTION += -DGPU_ARCH=KEPLER
+SIMU_OPTION += -DGPU_ARCH=KEPLER
 
 # debug mode
 #SIMU_OPTION += -DGAMER_DEBUG
@@ -121,10 +121,10 @@ SIMU_OPTION += -DINTEL
 #SIMU_OPTION += -DFLOAT8
 
 # serial mode (in which no MPI libraries are required)
-#SIMU_OPTION += -DSERIAL
+SIMU_OPTION += -DSERIAL
 
 # load-balance parallelization (one must not turn on the option "SERIAL") (HILBERT)
-SIMU_OPTION += -DLOAD_BALANCE=HILBERT
+#SIMU_OPTION += -DLOAD_BALANCE=HILBERT
 
 # overlap MPI communication with computation (experimental, only supported in LOAD_BALANCE)
 #SIMU_OPTION += -DOVERLAP_MPI

@@ -7,11 +7,11 @@
 #include "Macro.h"
 #include "CUFLU.h"
 
-static __device__ void CUFLU_FullStepUpdate( const real g_Fluid_In[][5][ FLU_NXT*FLU_NXT*FLU_NXT ],
-                                             real g_Fluid_Out[][5][ PS2*PS2*PS2 ],
-                                             const real g_FC_Flux_x[][5][ N_FC_FLUX*N_FC_FLUX*N_FC_FLUX ],
-                                             const real g_FC_Flux_y[][5][ N_FC_FLUX*N_FC_FLUX*N_FC_FLUX ],
-                                             const real g_FC_Flux_z[][5][ N_FC_FLUX*N_FC_FLUX*N_FC_FLUX ],
+static __device__ void CUFLU_FullStepUpdate( const real g_Fluid_In[][NCOMP_TOTAL][ FLU_NXT*FLU_NXT*FLU_NXT ],
+                                             real g_Fluid_Out[][NCOMP_TOTAL][ PS2*PS2*PS2 ],
+                                             const real g_FC_Flux_x[][NCOMP_TOTAL][ N_FC_FLUX*N_FC_FLUX*N_FC_FLUX ],
+                                             const real g_FC_Flux_y[][NCOMP_TOTAL][ N_FC_FLUX*N_FC_FLUX*N_FC_FLUX ],
+                                             const real g_FC_Flux_z[][NCOMP_TOTAL][ N_FC_FLUX*N_FC_FLUX*N_FC_FLUX ],
                                              const real dt, const real _dh, const real Gamma );
 
 
@@ -34,11 +34,11 @@ static __device__ void CUFLU_FullStepUpdate( const real g_Fluid_In[][5][ FLU_NXT
 //                _dh         : 1 / grid size
 //                Gamma       : Ratio of specific heats
 //-------------------------------------------------------------------------------------------------------
-__device__ void CUFLU_FullStepUpdate( const real g_Fluid_In [][5][ FLU_NXT*FLU_NXT*FLU_NXT ],
-                                            real g_Fluid_Out[][5][ PS2*PS2*PS2 ],
-                                      const real g_FC_Flux_x[][5][ N_FC_FLUX*N_FC_FLUX*N_FC_FLUX ],
-                                      const real g_FC_Flux_y[][5][ N_FC_FLUX*N_FC_FLUX*N_FC_FLUX ],
-                                      const real g_FC_Flux_z[][5][ N_FC_FLUX*N_FC_FLUX*N_FC_FLUX ],
+__device__ void CUFLU_FullStepUpdate( const real g_Fluid_In [][NCOMP_TOTAL][ FLU_NXT*FLU_NXT*FLU_NXT ],
+                                            real g_Fluid_Out[][NCOMP_TOTAL][ PS2*PS2*PS2 ],
+                                      const real g_FC_Flux_x[][NCOMP_TOTAL][ N_FC_FLUX*N_FC_FLUX*N_FC_FLUX ],
+                                      const real g_FC_Flux_y[][NCOMP_TOTAL][ N_FC_FLUX*N_FC_FLUX*N_FC_FLUX ],
+                                      const real g_FC_Flux_z[][NCOMP_TOTAL][ N_FC_FLUX*N_FC_FLUX*N_FC_FLUX ],
                                       const real dt, const real _dh, const real Gamma )
 {
 

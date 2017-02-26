@@ -70,9 +70,9 @@ static __device__ real set_limit( const real r, const real c, const WAF_Limiter_
 //                                 3 : minbee
 //                MinDens/Pres : Minimum allowed density and pressure
 //-------------------------------------------------------------------------------------------------------
-__global__ void CUFLU_FluidSolver_WAF( real g_Fluid_In [][5][ FLU_NXT*FLU_NXT*FLU_NXT ],
-                                       real g_Fluid_Out[][5][ PS2*PS2*PS2 ],
-                                       real g_Flux[][9][5][ PS2*PS2 ],
+__global__ void CUFLU_FluidSolver_WAF( real g_Fluid_In []   [NCOMP_TOTAL][ FLU_NXT*FLU_NXT*FLU_NXT ],
+                                       real g_Fluid_Out[]   [NCOMP_TOTAL][ PS2*PS2*PS2 ],
+                                       real g_Flux     [][9][NCOMP_TOTAL][ PS2*PS2 ],
                                        const double g_Corner[][3],
                                        const real g_Pot_USG[][ USG_NXT_F*USG_NXT_F*USG_NXT_F ],
                                        const real dt, const real _dh, const real Gamma, const bool StoreFlux,

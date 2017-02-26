@@ -405,7 +405,7 @@ void CUAPI_Asyn_FluidSolver( real h_Flu_Array_In [][FLU_NIN    ][ FLU_NXT*FLU_NX
                              const WAF_Limiter_t WAF_Limiter, const real ELBDM_Eta, real ELBDM_Taylor3_Coeff,
                              const bool ELBDM_Taylor3_Auto, const bool GetMinDtInfo, const double Time,
                              const OptGravityType_t GravityType, const int GPU_NStream,
-                             const real MinDens, const real MinPres );
+                             const real MinDens, const real MinPres, const bool NormPassive, const int NNorm );
 void CUAPI_DiagnoseDevice();
 void CUAPI_MemAllocate_Fluid( const int Flu_NPatchGroup, const int GPU_NStream );
 void CUAPI_MemFree_Fluid( const int GPU_NStream );

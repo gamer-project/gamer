@@ -11,15 +11,15 @@
 #include "CUFLU_Shared_ComputeFlux.cu"
 #include "CUFLU_Shared_FullStepUpdate.cu"
 
-static __device__ void CUFLU_TGradient_Correction( real g_FC_Var_xL[][5][ N_FC_VAR*N_FC_VAR*N_FC_VAR ],
-                                                   real g_FC_Var_xR[][5][ N_FC_VAR*N_FC_VAR*N_FC_VAR ],
-                                                   real g_FC_Var_yL[][5][ N_FC_VAR*N_FC_VAR*N_FC_VAR ],
-                                                   real g_FC_Var_yR[][5][ N_FC_VAR*N_FC_VAR*N_FC_VAR ],
-                                                   real g_FC_Var_zL[][5][ N_FC_VAR*N_FC_VAR*N_FC_VAR ],
-                                                   real g_FC_Var_zR[][5][ N_FC_VAR*N_FC_VAR*N_FC_VAR ],
-                                                   const real g_FC_Flux_x[][5][ N_FC_FLUX*N_FC_FLUX*N_FC_FLUX ],
-                                                   const real g_FC_Flux_y[][5][ N_FC_FLUX*N_FC_FLUX*N_FC_FLUX ],
-                                                   const real g_FC_Flux_z[][5][ N_FC_FLUX*N_FC_FLUX*N_FC_FLUX ],
+static __device__ void CUFLU_TGradient_Correction( real g_FC_Var_xL[][NCOMP_TOTAL][ N_FC_VAR*N_FC_VAR*N_FC_VAR ],
+                                                   real g_FC_Var_xR[][NCOMP_TOTAL][ N_FC_VAR*N_FC_VAR*N_FC_VAR ],
+                                                   real g_FC_Var_yL[][NCOMP_TOTAL][ N_FC_VAR*N_FC_VAR*N_FC_VAR ],
+                                                   real g_FC_Var_yR[][NCOMP_TOTAL][ N_FC_VAR*N_FC_VAR*N_FC_VAR ],
+                                                   real g_FC_Var_zL[][NCOMP_TOTAL][ N_FC_VAR*N_FC_VAR*N_FC_VAR ],
+                                                   real g_FC_Var_zR[][NCOMP_TOTAL][ N_FC_VAR*N_FC_VAR*N_FC_VAR ],
+                                                   const real g_FC_Flux_x[][NCOMP_TOTAL][ N_FC_FLUX*N_FC_FLUX*N_FC_FLUX ],
+                                                   const real g_FC_Flux_y[][NCOMP_TOTAL][ N_FC_FLUX*N_FC_FLUX*N_FC_FLUX ],
+                                                   const real g_FC_Flux_z[][NCOMP_TOTAL][ N_FC_FLUX*N_FC_FLUX*N_FC_FLUX ],
                                                    const real dt, const real _dh, const real Gamma,
                                                    const real MinDens, const real MinPres );
 
@@ -31,8 +31,8 @@ static __device__ void CUFLU_TGradient_Correction( real g_FC_Var_xL[][5][ N_FC_V
 __constant__ double ExtAcc_AuxArray_d_Flu[EXT_ACC_NAUX_MAX];
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  CUFLU_FluidSolver_SetConstMem
-// Description :  Set the constant memory used by CUFLU_FluidSolver_CTU
+// Function    :  CUFLU_FluidSolver_SetConstMem_ExtAcc
+// Description :  Set the constant memory of ExtAcc_AuxArray_d_Flu used by CUFLU_FluidSolver_CTU/MHM
 //
 // Note        :  Adopt the suggested approach for CUDA version >= 5.0
 //
@@ -40,7 +40,7 @@ __constant__ double ExtAcc_AuxArray_d_Flu[EXT_ACC_NAUX_MAX];
 //
 // Return      :  0/-1 : successful/failed
 //---------------------------------------------------------------------------------------------------
-int CUFLU_FluidSolver_SetConstMem( double ExtAcc_AuxArray_h[] )
+int CUFLU_FluidSolver_SetConstMem_ExtAcc( double ExtAcc_AuxArray_h[] )
 {
 
    if (  cudaSuccess != cudaMemcpyToSymbol( ExtAcc_AuxArray_d_Flu, ExtAcc_AuxArray_h, EXT_ACC_NAUX_MAX*sizeof(double),
@@ -50,8 +50,37 @@ int CUFLU_FluidSolver_SetConstMem( double ExtAcc_AuxArray_h[] )
    else
       return 0;
 
-} // FUNCTION : CUFLU_FluidSolver_SetConstMem
+} // FUNCTION : CUFLU_FluidSolver_SetConstMem_ExtAcc
 #endif
+
+
+
+#if ( NCOMP_PASSIVE > 0 )
+__constant__ int NormIdx_d[NCOMP_PASSIVE];
+
+//-------------------------------------------------------------------------------------------------------
+// Function    :  CUFLU_FluidSolver_SetConstMem_NormIdx
+// Description :  Set the constant memory of NormIdx_d used by CUFLU_FluidSolver_CTU/MHM
+//
+// Note        :  Adopt the suggested approach for CUDA version >= 5.0
+//
+// Parameter   :  None
+//
+// Return      :  0/-1 : successful/failed
+//---------------------------------------------------------------------------------------------------
+int CUFLU_FluidSolver_SetConstMem_NormIdx( int NormIdx_h[] )
+{
+
+   if (  cudaSuccess != cudaMemcpyToSymbol( NormIdx_d, NormIdx_h, NCOMP_PASSIVE*sizeof(int),
+                                            0, cudaMemcpyHostToDevice)  )
+      return -1;
+
+   else
+      return 0;
+
+} // FUNCTION : CUFLU_FluidSolver_SetConstMem_NormIdx
+#endif // #if ( NCOMP_PASSIVE > 0 )
+
 
 
 
@@ -95,29 +124,33 @@ int CUFLU_FluidSolver_SetConstMem( double ExtAcc_AuxArray_h[] )
 //                Time          : Current physical time                                     (for UNSPLIT_GRAVITY only)
 //                GravityType   : Types of gravity --> self-gravity, external gravity, both (for UNSPLIT_GRAVITY only)
 //                MinDens/Pres  : Minimum allowed density and pressure
+//                NormPassive   : true --> normalize passive scalars so that the sum of their mass density
+//                                         is equal to the gas mass density
+//                NNorm         : Number of passive scalars to be normalized
+//                                --> Should be set to the global variable "PassiveNorm_NVar"
 //-------------------------------------------------------------------------------------------------------
-__global__ void CUFLU_FluidSolver_CTU( const real g_Fluid_In[][5][ FLU_NXT*FLU_NXT*FLU_NXT ],
-                                       real g_Fluid_Out  [][5][ PS2*PS2*PS2 ],
-                                       real g_Flux    [][9][5][ PS2*PS2 ],
+__global__ void CUFLU_FluidSolver_CTU( const real g_Fluid_In[]   [NCOMP_TOTAL][ FLU_NXT*FLU_NXT*FLU_NXT ],
+                                       real g_Fluid_Out     []   [NCOMP_TOTAL][ PS2*PS2*PS2 ],
+                                       real g_Flux          [][9][NCOMP_TOTAL][ PS2*PS2 ],
                                        const double g_Corner[][3],
                                        const real g_Pot_USG[] [ USG_NXT_F*USG_NXT_F*USG_NXT_F ],
-                                       real g_PriVar     [][5][ FLU_NXT*FLU_NXT*FLU_NXT ],
-                                       real g_Slope_PPM_x[][5][ N_SLOPE_PPM*N_SLOPE_PPM*N_SLOPE_PPM],
-                                       real g_Slope_PPM_y[][5][ N_SLOPE_PPM*N_SLOPE_PPM*N_SLOPE_PPM],
-                                       real g_Slope_PPM_z[][5][ N_SLOPE_PPM*N_SLOPE_PPM*N_SLOPE_PPM],
-                                       real g_FC_Var_xL  [][5][ N_FC_VAR*N_FC_VAR*N_FC_VAR ],
-                                       real g_FC_Var_xR  [][5][ N_FC_VAR*N_FC_VAR*N_FC_VAR ],
-                                       real g_FC_Var_yL  [][5][ N_FC_VAR*N_FC_VAR*N_FC_VAR ],
-                                       real g_FC_Var_yR  [][5][ N_FC_VAR*N_FC_VAR*N_FC_VAR ],
-                                       real g_FC_Var_zL  [][5][ N_FC_VAR*N_FC_VAR*N_FC_VAR ],
-                                       real g_FC_Var_zR  [][5][ N_FC_VAR*N_FC_VAR*N_FC_VAR ],
-                                       real g_FC_Flux_x  [][5][ N_FC_FLUX*N_FC_FLUX*N_FC_FLUX ],
-                                       real g_FC_Flux_y  [][5][ N_FC_FLUX*N_FC_FLUX*N_FC_FLUX ],
-                                       real g_FC_Flux_z  [][5][ N_FC_FLUX*N_FC_FLUX*N_FC_FLUX ],
+                                       real g_PriVar     [][NCOMP_TOTAL][ FLU_NXT*FLU_NXT*FLU_NXT ],
+                                       real g_Slope_PPM_x[][NCOMP_TOTAL][ N_SLOPE_PPM*N_SLOPE_PPM*N_SLOPE_PPM],
+                                       real g_Slope_PPM_y[][NCOMP_TOTAL][ N_SLOPE_PPM*N_SLOPE_PPM*N_SLOPE_PPM],
+                                       real g_Slope_PPM_z[][NCOMP_TOTAL][ N_SLOPE_PPM*N_SLOPE_PPM*N_SLOPE_PPM],
+                                       real g_FC_Var_xL  [][NCOMP_TOTAL][ N_FC_VAR*N_FC_VAR*N_FC_VAR ],
+                                       real g_FC_Var_xR  [][NCOMP_TOTAL][ N_FC_VAR*N_FC_VAR*N_FC_VAR ],
+                                       real g_FC_Var_yL  [][NCOMP_TOTAL][ N_FC_VAR*N_FC_VAR*N_FC_VAR ],
+                                       real g_FC_Var_yR  [][NCOMP_TOTAL][ N_FC_VAR*N_FC_VAR*N_FC_VAR ],
+                                       real g_FC_Var_zL  [][NCOMP_TOTAL][ N_FC_VAR*N_FC_VAR*N_FC_VAR ],
+                                       real g_FC_Var_zR  [][NCOMP_TOTAL][ N_FC_VAR*N_FC_VAR*N_FC_VAR ],
+                                       real g_FC_Flux_x  [][NCOMP_TOTAL][ N_FC_FLUX*N_FC_FLUX*N_FC_FLUX ],
+                                       real g_FC_Flux_y  [][NCOMP_TOTAL][ N_FC_FLUX*N_FC_FLUX*N_FC_FLUX ],
+                                       real g_FC_Flux_z  [][NCOMP_TOTAL][ N_FC_FLUX*N_FC_FLUX*N_FC_FLUX ],
                                        const real dt, const real _dh, const real Gamma, const bool StoreFlux,
                                        const LR_Limiter_t LR_Limiter, const real MinMod_Coeff,
                                        const real EP_Coeff, const double Time, const OptGravityType_t GravityType,
-                                       const real MinDens, const real MinPres )
+                                       const real MinDens, const real MinPres, const bool NormPassive, const int NNorm )
 {
 
 #  ifdef UNSPLIT_GRAVITY
@@ -196,15 +229,15 @@ __global__ void CUFLU_FluidSolver_CTU( const real g_Fluid_In[][5][ FLU_NXT*FLU_N
 //                Gamma        : Ratio of specific heats
 //                MinDens/Pres : Minimum allowed density and pressure
 //-------------------------------------------------------------------------------------------------------
-__device__ void CUFLU_TGradient_Correction( real g_FC_Var_xL[][5][ N_FC_VAR*N_FC_VAR*N_FC_VAR ],
-                                            real g_FC_Var_xR[][5][ N_FC_VAR*N_FC_VAR*N_FC_VAR ],
-                                            real g_FC_Var_yL[][5][ N_FC_VAR*N_FC_VAR*N_FC_VAR ],
-                                            real g_FC_Var_yR[][5][ N_FC_VAR*N_FC_VAR*N_FC_VAR ],
-                                            real g_FC_Var_zL[][5][ N_FC_VAR*N_FC_VAR*N_FC_VAR ],
-                                            real g_FC_Var_zR[][5][ N_FC_VAR*N_FC_VAR*N_FC_VAR ],
-                                            const real g_FC_Flux_x[][5][ N_FC_FLUX*N_FC_FLUX*N_FC_FLUX ],
-                                            const real g_FC_Flux_y[][5][ N_FC_FLUX*N_FC_FLUX*N_FC_FLUX ],
-                                            const real g_FC_Flux_z[][5][ N_FC_FLUX*N_FC_FLUX*N_FC_FLUX ],
+__device__ void CUFLU_TGradient_Correction( real g_FC_Var_xL[][NCOMP_TOTAL][ N_FC_VAR*N_FC_VAR*N_FC_VAR ],
+                                            real g_FC_Var_xR[][NCOMP_TOTAL][ N_FC_VAR*N_FC_VAR*N_FC_VAR ],
+                                            real g_FC_Var_yL[][NCOMP_TOTAL][ N_FC_VAR*N_FC_VAR*N_FC_VAR ],
+                                            real g_FC_Var_yR[][NCOMP_TOTAL][ N_FC_VAR*N_FC_VAR*N_FC_VAR ],
+                                            real g_FC_Var_zL[][NCOMP_TOTAL][ N_FC_VAR*N_FC_VAR*N_FC_VAR ],
+                                            real g_FC_Var_zR[][NCOMP_TOTAL][ N_FC_VAR*N_FC_VAR*N_FC_VAR ],
+                                            const real g_FC_Flux_x[][NCOMP_TOTAL][ N_FC_FLUX*N_FC_FLUX*N_FC_FLUX ],
+                                            const real g_FC_Flux_y[][NCOMP_TOTAL][ N_FC_FLUX*N_FC_FLUX*N_FC_FLUX ],
+                                            const real g_FC_Flux_z[][NCOMP_TOTAL][ N_FC_FLUX*N_FC_FLUX*N_FC_FLUX ],
                                             const real dt, const real _dh, const real Gamma,
                                             const real MinDens, const real MinPres )
 {
