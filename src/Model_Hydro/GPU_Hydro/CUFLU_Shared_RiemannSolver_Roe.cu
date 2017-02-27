@@ -15,7 +15,8 @@
 #endif
 
 static __device__ FluVar CUFLU_RiemannSolver_Roe( const int XYZ, const FluVar L_In, const FluVar R_In,
-                                                  const real Gamma );
+                                                  const real Gamma, const real MinPres,
+                                                  const bool NormPassive, const int NNorm, const int NormIdx[] );
 
 
 
@@ -30,15 +31,23 @@ static __device__ FluVar CUFLU_RiemannSolver_Roe( const int XYZ, const FluVar L_
 //                3. This function is shared by MHM, MHM_RP, and CTU schemes
 //                4. The "__forceinline__" qualifier is added for higher performance
 //
-// Parameter   :  XYZ     : Targeted spatial direction : (0/1/2) --> (x/y/z)
-//                L_In    : Input left  state (conserved variables)
-//                R_In    : Input right state (conserved variables)
-//                Gamma   : Gamma
-//                MinPres : Minimum allowed pressure
+// Parameter   :  XYZ         : Targeted spatial direction : (0/1/2) --> (x/y/z)
+//                L_In        : Input left  state (conserved variables)
+//                R_In        : Input right state (conserved variables)
+//                Gamma       : Gamma
+//                MinPres     : Minimum allowed pressure
+//                NormPassive : true --> normalize passive scalars so that the sum of their mass density
+//                                       is equal to the gas mass density
+//                              --> For switching to exact Riemann solver only
+//                NNorm       : Number of passive scalars to be normalized
+//                              --> Should be set to the global variable "PassiveNorm_NVar"
+//                NormIdx     : Target variable indices to be normalized
+//                              --> Should be set to the global variable "PassiveNorm_VarIdx"
 //-------------------------------------------------------------------------------------------------------
 __forceinline__
 __device__ FluVar CUFLU_RiemannSolver_Roe( const int XYZ, const FluVar L_In, const FluVar R_In,
-                                           const real Gamma, const real MinPres )
+                                           const real Gamma, const real MinPres,
+                                           const bool NormPassive, const int NNorm, const int NormIdx[] )
 {
 
 // 1. reorder the input variables for different spatial directions
@@ -97,7 +106,7 @@ __device__ FluVar CUFLU_RiemannSolver_Roe( const int XYZ, const FluVar L_In, con
 // 3. evaluate the eigenvalues and eigenvectors
    const real ONE  = (real)1.0;
    const real ZERO = (real)0.0;
-   FluVar EVal, EVec1, EVec2, EVec3, EVec4, EVec5;
+   FluVar5 EVal, EVec1, EVec2, EVec3, EVec4, EVec5;
 
    EVal.Rho = u - Cs;
    EVal.Px  = u;
@@ -122,34 +131,22 @@ __device__ FluVar CUFLU_RiemannSolver_Roe( const int XYZ, const FluVar L_In, con
 
    if ( EVal.Rho >= (real)0.0 )
    {
-      Flux_Out.Rho = Flux_L.Rho;
-      Flux_Out.Px  = Flux_L.Px;
-      Flux_Out.Py  = Flux_L.Py;
-      Flux_Out.Pz  = Flux_L.Pz;
-      Flux_Out.Egy = Flux_L.Egy;
-
-      Flux_Out = CUFLU_Rotate3D( Flux_Out, XYZ, false );
+      Flux_Out = CUFLU_Rotate3D( Flux_L, XYZ, false );
 
       return Flux_Out;
    }
 
    if ( EVal.Egy <= (real)0.0 )
    {
-      Flux_Out.Rho = Flux_R.Rho;
-      Flux_Out.Px  = Flux_R.Px;
-      Flux_Out.Py  = Flux_R.Py;
-      Flux_Out.Pz  = Flux_R.Pz;
-      Flux_Out.Egy = Flux_R.Egy;
-
-      Flux_Out = CUFLU_Rotate3D( Flux_Out, XYZ, false );
+      Flux_Out = CUFLU_Rotate3D( Flux_R, XYZ, false );
 
       return Flux_Out;
    }
 
 
 // 6. evaluate the amplitudes along different characteristics (eigenvectors)
-   FluVar Jump, Amp;
-   real _Cs = (real)1.0/Cs;
+   const real _Cs = (real)1.0/Cs;
+   FluVar5 Jump, Amp;
 
    Jump.Rho = R.Rho - L.Rho;
    Jump.Px  = R.Px  - L.Px;
@@ -166,22 +163,17 @@ __device__ FluVar CUFLU_RiemannSolver_Roe( const int XYZ, const FluVar L_In, con
 
 // 7. verify that the density and pressure in the intermediate states are positive
 #  ifdef CHECK_INTERMEDIATE
-   FluVar I_States;
-   real I_Pres;
-
-#  if ( CHECK_INTERMEDIATE == EXACT )
-   FluVar *Useless = NULL;
-#  endif
-
+   FluVar5 I_States;
+   real    I_Pres;
 
 #  if   ( CHECK_INTERMEDIATE == EXACT )   // recalculate fluxes by exact solver
 
 #     define Recalculate_Flux( L, R, Flux_Out )                                                    \
       {                                                                                            \
-         L = CUFLU_Con2Pri( L, Gamma_m1, MinPres );                                                \
-         R = CUFLU_Con2Pri( R, Gamma_m1, MinPres );                                                \
+         L = CUFLU_Con2Pri( L, Gamma_m1, MinPres, NormPassive, NNorm, NormIdx );                   \
+         R = CUFLU_Con2Pri( R, Gamma_m1, MinPres, NormPassive, NNorm, NormIdx );                   \
                                                                                                    \
-         Flux_Out = CUFLU_RiemannSolver_Exact( 0, *Useless, *Useless, *Useless, L, R, Gamma );     \
+         Flux_Out = CUFLU_RiemannSolver_Exact( 0, NULL, NULL, NULL, L, R, Gamma );                 \
       } // Recalculate_Flux
 
 #  elif ( CHECK_INTERMEDIATE == HLLE )    // recalculate fluxes by HLLE solver
@@ -272,7 +264,18 @@ __device__ FluVar CUFLU_RiemannSolver_Roe( const int XYZ, const FluVar L_In, con
 #  undef GetFlux
 
 
-// 9. restore the correct order
+// 9. evaluate the fluxes for passive scalars
+//    --> must use L_In/R_In instead of L/R since the latter may be converted to primitive variables if "CHECK_INTERMEDIATE == EXACT"
+#  if ( NCOMP_PASSIVE > 0 )
+   if ( Flux_Out.Rho >= (real)0.0 )
+      for (int v=0; v<NCOMP_PASSIVE; v++)    Flux_Out.Passive[v] = Flux_Out.Rho*L_In.Passive[v]*_RhoL;
+
+   else
+      for (int v=0; v<NCOMP_PASSIVE; v++)    Flux_Out.Passive[v] = Flux_Out.Rho*R_In.Passive[v]*_RhoR;
+#  endif
+
+
+// 10. restore the correct order
    Flux_Out = CUFLU_Rotate3D( Flux_Out, XYZ, false );
 
    return Flux_Out;

@@ -5,6 +5,11 @@
 #if ( defined GPU  &&  MODEL == HYDRO  &&  FLU_SCHEME == RTVD )
 
 
+// check before compiling anything else
+#if ( NCOMP_PASSIVE != 0 )
+#  error : RTVD scheme does NOT support passive scalars !!
+#endif
+
 
 #include "CUFLU_Shared_FluUtility.cu"
 

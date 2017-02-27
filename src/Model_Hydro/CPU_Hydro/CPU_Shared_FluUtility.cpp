@@ -385,6 +385,7 @@ void CPU_NormalizePassive( const real GasDens, real Passive[], const int NNorm, 
    }
 #  endif // #ifdef GAMER_DEBUG
 
+
    real Norm, PassiveDens_Sum=(real)0.0;
 
    for (int v=0; v<NNorm; v++)   PassiveDens_Sum += Passive[ NormIdx[v] ];

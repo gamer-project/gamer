@@ -24,7 +24,8 @@ static __device__ void CUFLU_DataReconstruction( const real g_PriVar[][NCOMP_TOT
                                                  const int NIn, const int NGhost, const real Gamma,
                                                  const LR_Limiter_t LR_Limiter, const real MinMod_Coeff,
                                                  const real EP_Coeff, const real dt, const real _dh,
-                                                 const real MinDens, const real MinPres );
+                                                 const real MinDens, const real MinPres,
+                                                 const bool NormPassive, const int NNorm, const int NormIdx[] );
 #ifdef CHAR_RECONSTRUCTION
 static __device__ FluVar Pri2Char( FluVar InOut, const real Gamma, const real Rho, const real Pres,
                                    const int XYZ );
@@ -43,7 +44,8 @@ static __device__ void HancockPredict( real g_FC_Var_xL[][NCOMP_TOTAL][ N_FC_VAR
                                        FluVar FC_Var_zL, FluVar FC_Var_zR,
                                        const real dt, const real _dh, const real Gamma,
                                        const uint ID_Out, const FluVar P_In,
-                                       const real MinDens, const real MinPres );
+                                       const real MinDens, const real MinPres,
+                                       const bool NormPassive, const int NNorm, const int NormIdx[] );
 #endif
 #if ( FLU_SCHEME == CTU )
 static __device__ void Get_EigenSystem( const FluVar CC_Var, FluVar &EVal_x, FluVar &EVal_y, FluVar &EVal_z,
@@ -99,6 +101,11 @@ static __device__ void Get_EigenSystem( const FluVar CC_Var, FluVar &EVal_x, Flu
 //                dt                : Time interval to advance solution (useful only for CTU and MHM schemes)
 //                _dh               : 1 / grid size (useful only for CTU and MHM schemes)
 //                MinDens/Pres      : Minimum allowed density and pressure
+//                NormPassive       : true --> convert passive scalars to mass fraction
+//                NNorm             : Number of passive scalars for the option "NormPassive"
+//                                    --> Should be set to the global variable "PassiveNorm_NVar"
+//                NormIdx           : Target variable indices for the option "NormPassive"
+//                                    --> Should be set to the global variable "PassiveNorm_VarIdx"
 //-------------------------------------------------------------------------------------------------------
 __device__ void CUFLU_DataReconstruction( const real g_PriVar[][NCOMP_TOTAL][ FLU_NXT*FLU_NXT*FLU_NXT ],
                                           real g_Slope_PPM_x[][NCOMP_TOTAL][ N_SLOPE_PPM*N_SLOPE_PPM*N_SLOPE_PPM ],
@@ -113,7 +120,8 @@ __device__ void CUFLU_DataReconstruction( const real g_PriVar[][NCOMP_TOTAL][ FL
                                           const int NIn, const int NGhost, const real Gamma,
                                           const LR_Limiter_t LR_Limiter, const real MinMod_Coeff,
                                           const real EP_Coeff, const real dt, const real _dh,
-                                          const real MinDens, const real MinPres )
+                                          const real MinDens, const real MinPres,
+                                          const bool NormPassive, const int NNorm, const int NormIdx[] )
 {
 
    const uint  bx       = blockIdx.x;
@@ -530,18 +538,19 @@ __device__ void CUFLU_DataReconstruction( const real g_PriVar[][NCOMP_TOTAL][ FL
 
 
 //    7. primitive variables --> conserved variables
-      FC_xL = CUFLU_Pri2Con( FC_xL, _Gamma_m1 );
-      FC_xR = CUFLU_Pri2Con( FC_xR, _Gamma_m1 );
-      FC_yL = CUFLU_Pri2Con( FC_yL, _Gamma_m1 );
-      FC_yR = CUFLU_Pri2Con( FC_yR, _Gamma_m1 );
-      FC_zL = CUFLU_Pri2Con( FC_zL, _Gamma_m1 );
-      FC_zR = CUFLU_Pri2Con( FC_zR, _Gamma_m1 );
+      FC_xL = CUFLU_Pri2Con( FC_xL, _Gamma_m1, NormPassive, NNorm, NormIdx );
+      FC_xR = CUFLU_Pri2Con( FC_xR, _Gamma_m1, NormPassive, NNorm, NormIdx );
+      FC_yL = CUFLU_Pri2Con( FC_yL, _Gamma_m1, NormPassive, NNorm, NormIdx );
+      FC_yR = CUFLU_Pri2Con( FC_yR, _Gamma_m1, NormPassive, NNorm, NormIdx );
+      FC_zL = CUFLU_Pri2Con( FC_zL, _Gamma_m1, NormPassive, NNorm, NormIdx );
+      FC_zR = CUFLU_Pri2Con( FC_zR, _Gamma_m1, NormPassive, NNorm, NormIdx );
 
 
 #     if ( FLU_SCHEME == MHM )
 //    8. advance the face-centered variables by half time-step for the MHM integrator
       HancockPredict( g_FC_Var_xL, g_FC_Var_xR, g_FC_Var_yL, g_FC_Var_yR, g_FC_Var_zL, g_FC_Var_zR,
-                      FC_xL, FC_xR, FC_yL, FC_yR, FC_zL, FC_zR, dt, _dh, Gamma, ID2, CC_C, MinDens, MinPres );
+                      FC_xL, FC_xR, FC_yL, FC_yR, FC_zL, FC_zR, dt, _dh, Gamma, ID2, CC_C, MinDens, MinPres,
+                      NormPassive, NNorm, NormIdx );
 
 #     else  // for MHM_RP and CTU
 
@@ -619,6 +628,11 @@ __device__ void CUFLU_DataReconstruction( const real g_PriVar[][NCOMP_TOTAL][ FL
 //                dt                : Time interval to advance solution (useful only for CTU and MHM schemes)
 //                _dh               : 1 / grid size (useful only for CTU and MHM schemes)
 //                MinDens/Pres      : Minimum allowed density and pressure
+//                NormPassive       : true --> convert passive scalars to mass fraction
+//                NNorm             : Number of passive scalars for the option "NormPassive"
+//                                    --> Should be set to the global variable "PassiveNorm_NVar"
+//                NormIdx           : Target variable indices for the option "NormPassive"
+//                                    --> Should be set to the global variable "PassiveNorm_VarIdx"
 //-------------------------------------------------------------------------------------------------------
 __device__ void CUFLU_DataReconstruction( const real g_PriVar[][NCOMP_TOTAL][ FLU_NXT*FLU_NXT*FLU_NXT ],
                                           real g_Slope_PPM_x[][NCOMP_TOTAL][ N_SLOPE_PPM*N_SLOPE_PPM*N_SLOPE_PPM ],
@@ -633,7 +647,8 @@ __device__ void CUFLU_DataReconstruction( const real g_PriVar[][NCOMP_TOTAL][ FL
                                           const int NIn, const int NGhost, const real Gamma,
                                           const LR_Limiter_t LR_Limiter, const real MinMod_Coeff,
                                           const real EP_Coeff, const real dt, const real _dh,
-                                          const real MinDens, const real MinPres )
+                                          const real MinDens, const real MinPres,
+                                          const bool NormPassive, const int NNorm, const int NormIdx[] )
 {
 
    const uint  bx       = blockIdx.x;
@@ -1083,18 +1098,19 @@ __device__ void CUFLU_DataReconstruction( const real g_PriVar[][NCOMP_TOTAL][ FL
 
 
 //    (2-4) primitive variables --> conserved variables
-      FC_xL = CUFLU_Pri2Con( FC_xL, _Gamma_m1 );
-      FC_xR = CUFLU_Pri2Con( FC_xR, _Gamma_m1 );
-      FC_yL = CUFLU_Pri2Con( FC_yL, _Gamma_m1 );
-      FC_yR = CUFLU_Pri2Con( FC_yR, _Gamma_m1 );
-      FC_zL = CUFLU_Pri2Con( FC_zL, _Gamma_m1 );
-      FC_zR = CUFLU_Pri2Con( FC_zR, _Gamma_m1 );
+      FC_xL = CUFLU_Pri2Con( FC_xL, _Gamma_m1, NormPassive, NNorm, NormIdx );
+      FC_xR = CUFLU_Pri2Con( FC_xR, _Gamma_m1, NormPassive, NNorm, NormIdx );
+      FC_yL = CUFLU_Pri2Con( FC_yL, _Gamma_m1, NormPassive, NNorm, NormIdx );
+      FC_yR = CUFLU_Pri2Con( FC_yR, _Gamma_m1, NormPassive, NNorm, NormIdx );
+      FC_zL = CUFLU_Pri2Con( FC_zL, _Gamma_m1, NormPassive, NNorm, NormIdx );
+      FC_zR = CUFLU_Pri2Con( FC_zR, _Gamma_m1, NormPassive, NNorm, NormIdx );
 
 
 #     if ( FLU_SCHEME == MHM )
 //    (2-5) advance the face-centered variables by half time-step for the MHM scheme
       HancockPredict( g_FC_Var_xL, g_FC_Var_xR, g_FC_Var_yL, g_FC_Var_yR, g_FC_Var_zL, g_FC_Var_zR,
-                      FC_xL, FC_xR, FC_yL, FC_yR, FC_zL, FC_zR, dt, _dh, Gamma, ID2, CC_C, MinDens, MinPres );
+                      FC_xL, FC_xR, FC_yL, FC_yR, FC_zL, FC_zR, dt, _dh, Gamma, ID2, CC_C, MinDens, MinPres,
+                      NormPassive, NNorm, NormIdx );
 
 #     else  // for MHM_RP and CTU
 
@@ -1463,6 +1479,11 @@ __device__ FluVar LimitSlope( const FluVar L2, const FluVar L1, const FluVar C0,
 //                P_In         : Input primitive variables (data before update)
 //                               --> For checking negative density and pressure
 //                MinDens/Pres : Minimum allowed density and pressure
+//                NormPassive  : true --> convert passive scalars to mass fraction
+//                NNorm        : Number of passive scalars for the option "NormPassive"
+//                               --> Should be set to the global variable "PassiveNorm_NVar"
+//                NormIdx      : Target variable indices for the option "NormPassive"
+//                               --> Should be set to the global variable "PassiveNorm_VarIdx"
 //-------------------------------------------------------------------------------------------------------
 __device__ void HancockPredict( real g_FC_Var_xL[][NCOMP_TOTAL][ N_FC_VAR*N_FC_VAR*N_FC_VAR ],
                                 real g_FC_Var_xR[][NCOMP_TOTAL][ N_FC_VAR*N_FC_VAR*N_FC_VAR ],
@@ -1474,14 +1495,15 @@ __device__ void HancockPredict( real g_FC_Var_xL[][NCOMP_TOTAL][ N_FC_VAR*N_FC_V
                                 FluVar FC_Var_yL, FluVar FC_Var_yR,
                                 FluVar FC_Var_zL, FluVar FC_Var_zR,
                                 const real dt, const real _dh, const real Gamma, const uint ID_Out,
-                                const FluVar P_In, const real MinDens, const real MinPres )
+                                const FluVar P_In, const real MinDens, const real MinPres,
+                                const bool NormPassive, const int NNorm, const int NormIdx[] )
 {
 
    const uint   bx       = blockIdx.x;
    const real   Gamma_m1 = Gamma - (real)1.0;
    const real  _Gamma_m1 = (real)1.0 / Gamma_m1;
    const real   dt_dh2   = (real)0.5*dt*_dh;
-   const FluVar C_In     = CUFLU_Pri2Con( P_In, _Gamma_m1 );
+   const FluVar C_In     = CUFLU_Pri2Con( P_In, _Gamma_m1, NormPassive, NNorm, NormIdx );
 
    FluVar FC_Flux_xL, FC_Flux_xR, FC_Flux_yL, FC_Flux_yR, FC_Flux_zL, FC_Flux_zR;
    real   FluxDiff;

@@ -6,6 +6,9 @@
 
 #include "Macro.h"
 #include "CUFLU.h"
+#if ( NCOMP_PASSIVE > 0 )
+#include "CUFLU_Shared_FluUtility.cu"
+#endif
 
 static __device__ void CUFLU_FullStepUpdate( const real g_Fluid_In[][NCOMP_TOTAL][ FLU_NXT*FLU_NXT*FLU_NXT ],
                                              real g_Fluid_Out[][NCOMP_TOTAL][ PS2*PS2*PS2 ],
@@ -33,13 +36,20 @@ static __device__ void CUFLU_FullStepUpdate( const real g_Fluid_In[][NCOMP_TOTAL
 //                dt          : Time interval to advance solution
 //                _dh         : 1 / grid size
 //                Gamma       : Ratio of specific heats
+//                NormPassive : true --> normalize passive scalars so that the sum of their mass density
+//                                       is equal to the gas mass density
+//                NNorm       : Number of passive scalars to be normalized
+//                              --> Should be set to the global variable "PassiveNorm_NVar"
+//                NormIdx     : Target variable indices to be normalized
+//                              --> Should be set to the global variable "PassiveNorm_VarIdx"
 //-------------------------------------------------------------------------------------------------------
 __device__ void CUFLU_FullStepUpdate( const real g_Fluid_In [][NCOMP_TOTAL][ FLU_NXT*FLU_NXT*FLU_NXT ],
                                             real g_Fluid_Out[][NCOMP_TOTAL][ PS2*PS2*PS2 ],
                                       const real g_FC_Flux_x[][NCOMP_TOTAL][ N_FC_FLUX*N_FC_FLUX*N_FC_FLUX ],
                                       const real g_FC_Flux_y[][NCOMP_TOTAL][ N_FC_FLUX*N_FC_FLUX*N_FC_FLUX ],
                                       const real g_FC_Flux_z[][NCOMP_TOTAL][ N_FC_FLUX*N_FC_FLUX*N_FC_FLUX ],
-                                      const real dt, const real _dh, const real Gamma )
+                                      const real dt, const real _dh, const real Gamma,
+                                      const bool NormPassive, const int NNorm, const int NormIdx[] )
 {
 
    /*
@@ -78,6 +88,10 @@ __device__ void CUFLU_FullStepUpdate( const real g_Fluid_In [][NCOMP_TOTAL][ FLU
       ConVar.Pz  = g_Fluid_In[bx][3][ID_In];
       ConVar.Egy = g_Fluid_In[bx][4][ID_In];
 
+#     if ( NCOMP_PASSIVE > 0 )
+      for (int v=0; v<NCOMP_PASSIVE; v++)    ConVar.Passive[v] = g_Fluid_In[bx][ NCOMP_FLUID + v ][ID_In];
+#     endif
+
 #     define Update( comp, v )                                                                        \
       {                                                                                               \
          FluxDiff = dt_dh * (  g_FC_Flux_x[bx][v][ID_F+dID_F.x] - g_FC_Flux_x[bx][v][ID_F] +          \
@@ -91,6 +105,10 @@ __device__ void CUFLU_FullStepUpdate( const real g_Fluid_In [][NCOMP_TOTAL][ FLU
       Update( Py,  2 );
       Update( Pz,  3 );
       Update( Egy, 4 );
+
+#     if ( NCOMP_PASSIVE > 0 )
+      for (int v=0; v<NCOMP_PASSIVE; v++)    Update( Passive[v], v );
+#     endif
 
 #     undef Update
 
@@ -117,12 +135,25 @@ __device__ void CUFLU_FullStepUpdate( const real g_Fluid_In [][NCOMP_TOTAL][ FLU
 #     endif
 
 
+//    floor and normalize passive scalars
+#     if ( NCOMP_PASSIVE > 0 )
+      for (int v=0; v<NCOMP_PASSIVE; v++)    ConVar.Passive[v] = FMAX( ConVar.Passive[v], TINY_NUMBER );
+
+      if ( NormPassive )
+         CUFLU_NormalizePassive( ConVar.Rho, ConVar.Passive, NNorm, NormIdx );
+#     endif
+
+
 //    save the updated data back to the output global array
       g_Fluid_Out[bx][0][ID_Out] = ConVar.Rho;
       g_Fluid_Out[bx][1][ID_Out] = ConVar.Px;
       g_Fluid_Out[bx][2][ID_Out] = ConVar.Py;
       g_Fluid_Out[bx][3][ID_Out] = ConVar.Pz;
       g_Fluid_Out[bx][4][ID_Out] = ConVar.Egy;
+
+#     if ( NCOMP_PASSIVE > 0 )
+      for (int v=0; v<NCOMP_PASSIVE; v++)    g_Fluid_Out[bx][ NCOMP_FLUID + v ][ID_Out] = ConVar.Passive[v];
+#     endif
 
 
       ID_Out += dID_Out;

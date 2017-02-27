@@ -5,6 +5,11 @@
 #if ( defined GPU  &&  MODEL == HYDRO  &&  FLU_SCHEME == WAF )
 
 
+// check before compiling anything else
+#if ( NCOMP_PASSIVE != 0 )
+#  error : WAF scheme does NOT support passive scalars !!
+#endif
+
 
 #define to1D1(z,y,x) ( __umul24(z, FLU_NXT*FLU_NXT) + __umul24(y, FLU_NXT) + x )
 #define to1D2(z,y,x) ( __umul24(z-FLU_GHOST_SIZE, PS2*PS2) + __umul24(y-FLU_GHOST_SIZE, PS2) + x-FLU_GHOST_SIZE )
@@ -236,7 +241,7 @@ __device__ void CUFLU_Advance( real g_Fluid_In [][5][ FLU_NXT*FLU_NXT*FLU_NXT ],
          R_st.Pz  = s_u[ty][ i][3];
          R_st.Egy = s_u[ty][ i][4];
 
-         CUFLU_RiemannSolver_Exact( 0, eival_st, L_star_st, R_star_st, L_st, R_st, Gamma );
+         CUFLU_RiemannSolver_Exact( 0, &eival_st, &L_star_st, &R_star_st, L_st, R_st, Gamma );
 
          eval[0] = eival_st.Rho;
          eval[1] = eival_st.Px;

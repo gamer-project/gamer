@@ -7,16 +7,23 @@
 #include "Macro.h"
 #include "CUFLU.h"
 
-static __device__ FluVar CUFLU_Pri2Con( const FluVar Pri, const real _Gamma_m1 );
-static __device__ FluVar CUFLU_Con2Pri( const FluVar Con, const real Gamma_m1, const real MinPres );
+static __device__ FluVar CUFLU_Pri2Con( const FluVar Pri, const real _Gamma_m1,
+                                        const bool NormPassive, const int NNorm, const int NormIdx[] );
+static __device__ FluVar CUFLU_Con2Pri( const FluVar Con, const real Gamma_m1, const real MinPres,
+                                        const bool NormPassive, const int NNorm, const int NormIdx[] );
 static __device__ FluVar CUFLU_Con2Flux( const FluVar Input, const real Gamma_m1, const int XYZ, const real MinPres );
 static __device__ FluVar CUFLU_Rotate3D( const FluVar In, const int XYZ, const bool Forward );
 static __device__ void CUFLU_Con2Pri_AllGrids( const real g_Fluid_In[][NCOMP_TOTAL][ FLU_NXT*FLU_NXT*FLU_NXT ],
-                                               real g_PriVar[][NCOMP_TOTAL][ FLU_NXT*FLU_NXT*FLU_NXT ], const real Gamma, const real MinPres );
+                                               real g_PriVar[][NCOMP_TOTAL][ FLU_NXT*FLU_NXT*FLU_NXT ],
+                                               const real Gamma, const real MinPres,
+                                               const bool NormPassive, const int NNorm, const int NormIdx[] );
 static __device__ real CUFLU_CheckMinPres( const real InPres, const real MinPres );
 static __device__ real CUFLU_CheckMinPresInEngy( const FluVar ConVar, const real Gamma_m1, const real _Gamma_m1, const real MinPres );
 #ifdef CHECK_NEGATIVE_IN_FLUID
 static __device__ bool CUFLU_CheckNegative( const real Input );
+#endif
+#if ( NCOMP_PASSIVE > 0 )
+static __device__ void CUFLU_NormalizePassive( const real GasDens, real Passive[], const int NNorm, const int NormIdx[] );
 #endif
 
 
@@ -29,7 +36,7 @@ static __device__ bool CUFLU_CheckNegative( const real Input );
 // Note        :  1. x : (0,1,2,3,4) <--> (0,1,2,3,4)
 //                   y : (0,1,2,3,4) <--> (0,2,3,1,4)
 //                   z : (0,1,2,3,4) <--> (0,3,1,2,4)
-//                2. Work if InOut includes/excludes passive scalars since they are not modified at all
+//                2. Passive scalars are not modified at all
 //
 // Parameter   :  In       : Input variables to be rotated
 //                XYZ      : Targeted spatial direction : (0/1/2) --> (x/y/z)
@@ -60,6 +67,10 @@ __device__ FluVar CUFLU_Rotate3D( const FluVar In, const int XYZ, const bool For
          case 2 : Out.Rho=In.Rho;  Out.Px=In.Py;  Out.Py=In.Pz;  Out.Pz=In.Px;  Out.Egy=In.Egy;    break;
       }
    }
+
+#  if ( NCOMP_PASSIVE > 0 )
+   for (int v=0; v<NCOMP_PASSIVE; v++)    Out.Passive[v] = In.Passive[v];
+#  endif
 
    return Out;
 
@@ -95,6 +106,11 @@ __device__ FluVar CUFLU_Con2Flux( const FluVar Input, const real Gamma_m1, const
    TempFlux.Pz  = Vx*Var.Pz;
    TempFlux.Egy = Vx*( Var.Egy + Pres );
 
+// passive scalars
+#  if ( NCOMP_PASSIVE > 0 )
+   for (int v=0; v<NCOMP_PASSIVE; v++)    TempFlux.Passive[v] = Input.Passive[v]*Vx;
+#  endif
+
    Output = CUFLU_Rotate3D( TempFlux, XYZ, false );
 
    return Output;
@@ -107,10 +123,22 @@ __device__ FluVar CUFLU_Con2Flux( const FluVar Input, const real Gamma_m1, const
 // Function    :  CUFLU_Pri2Con
 // Description :  Primitive variables --> conserved variables
 //
+// Note        :  1. This function does NOT check if the input pressure is greater than the
+//                   given minimum threshold
+//                2. For passive scalars, we store their mass fraction as the primitive variables
+//                   when NormPassive is on
+//                   --> See the input parameters "NormPassive, NNorm, NormIdx"
+//
 // Parameter   :  Pri         : Input primitive variables
 //                _Gamma_m1   : 1.0 / (Gamma-1.0)
+//                NormPassive : true --> convert passive scalars to mass fraction
+//                NNorm       : Number of passive scalars for the option "NormPassive"
+//                              --> Should be set to the global variable "PassiveNorm_NVar"
+//                NormIdx     : Target variable indices for the option "NormPassive"
+//                              --> Should be set to the global variable "PassiveNorm_VarIdx"
 //-------------------------------------------------------------------------------------------------------
-__device__ FluVar CUFLU_Pri2Con( const FluVar Pri, const real _Gamma_m1 )
+__device__ FluVar CUFLU_Pri2Con( const FluVar Pri, const real _Gamma_m1,
+                                 const bool NormPassive, const int NNorm, const int NormIdx[] )
 {
 
    FluVar Con;
@@ -120,6 +148,16 @@ __device__ FluVar CUFLU_Pri2Con( const FluVar Pri, const real _Gamma_m1 )
    Con.Px  = Pri.Rho*Pri.Px;
    Con.Py  = Pri.Rho*Pri.Py;
    Con.Pz  = Pri.Rho*Pri.Pz;
+
+// passive scalars
+#  if ( NCOMP_PASSIVE > 0 )
+// copy all passive scalars
+   for (int v=0; v<NCOMP_PASSIVE; v++)    Con.Passive[v] = Pri.Passive[v];
+
+// convert the mass fraction of target passive scalars back to mass fraction
+   if ( NormPassive )
+      for (int v=0; v<NNorm; v++)   Con.Passive[ NormIdx[v] ] *= Pri.Rho;
+#  endif
 
    return Con;
 
@@ -133,12 +171,23 @@ __device__ FluVar CUFLU_Pri2Con( const FluVar Pri, const real _Gamma_m1 )
 //
 // Note        :  1. This function always check if the pressure to be returned is greater than the
 //                   given minimum threshold
+//                2. For passive scalars, we store their mass fraction as the primitive variables
+//                   when NormPassive is on
+//                   --> See the input parameters "NormPassive, NNorm, NormIdx"
+//                   --> But note that here we do NOT ensure "sum(mass fraction) == 1.0"
+//                       --> It is done by calling CUFLU_NormalizePassive() in CUFLU_Shared_FullStepUpdate()
 //
-// Parameter   :  Con      : Input conserved variables
-//                Gamma_m1 : Gamma - 1.0
-//                MinPres  : Minimum allowed pressure
+// Parameter   :  Con         : Input conserved variables
+//                Gamma_m1    : Gamma - 1.0
+//                MinPres     : Minimum allowed pressure
+//                NormPassive : true --> convert passive scalars to mass fraction
+//                NNorm       : Number of passive scalars for the option "NormPassive"
+//                              --> Should be set to the global variable "PassiveNorm_NVar"
+//                NormIdx     : Target variable indices for the option "NormPassive"
+//                              --> Should be set to the global variable "PassiveNorm_VarIdx"
 //-------------------------------------------------------------------------------------------------------
-__device__ FluVar CUFLU_Con2Pri( const FluVar Con, const real Gamma_m1, const real MinPres )
+__device__ FluVar CUFLU_Con2Pri( const FluVar Con, const real Gamma_m1, const real MinPres,
+                                 const bool NormPassive, const int NNorm, const int NormIdx[] )
 {
 
    const real _Rho = (real)1.0/Con.Rho;
@@ -151,6 +200,16 @@ __device__ FluVar CUFLU_Con2Pri( const FluVar Con, const real Gamma_m1, const re
    Pri.Egy = Gamma_m1*(  Con.Egy - (real)0.5*( Con.Px*Con.Px + Con.Py*Con.Py + Con.Pz*Con.Pz )*_Rho  );
    Pri.Egy = CUFLU_CheckMinPres( Pri.Egy, MinPres );
 
+// passive scalars
+#  if ( NCOMP_PASSIVE > 0 )
+// copy all passive scalars
+   for (int v=0; v<NCOMP_PASSIVE; v++)    Pri.Passive[v] = Con.Passive[v];
+
+// convert the mass density of target passive scalars to mass fraction
+   if ( NormPassive )
+      for (int v=0; v<NNorm; v++)   Pri.Passive[ NormIdx[v] ] *= _Rho;
+#  endif
+
    return Pri;
 
 } // FUNCTION : CUFLU_Con2Pri
@@ -161,13 +220,20 @@ __device__ FluVar CUFLU_Con2Pri( const FluVar Con, const real Gamma_m1, const re
 // Function    :  CUFLU_Con2Pri_AllGrids
 // Description :  Conserved variables --> primitive variables for all grids
 //
-// Parameter   :  g_Fluid_In : Global memory array storing the input fluid variables
-//                g_PriVar   : Global memory array to store the output primitive variables
-//                Gamma      : Ratio of specific heats
-//                MinPres    : Minimum allowed pressure
+// Parameter   :  g_Fluid_In  : Global memory array storing the input fluid variables
+//                g_PriVar    : Global memory array to store the output primitive variables
+//                Gamma       : Ratio of specific heats
+//                MinPres     : Minimum allowed pressure
+//                NormPassive : true --> convert passive scalars to mass fraction
+//                NNorm       : Number of passive scalars for the option "NormPassive"
+//                              --> Should be set to the global variable "PassiveNorm_NVar"
+//                NormIdx     : Target variable indices for the option "NormPassive"
+//                              --> Should be set to the global variable "PassiveNorm_VarIdx"
 //-------------------------------------------------------------------------------------------------------
 __device__ void CUFLU_Con2Pri_AllGrids( const real g_Fluid_In[][NCOMP_TOTAL][ FLU_NXT*FLU_NXT*FLU_NXT ],
-                                        real g_PriVar[][NCOMP_TOTAL][ FLU_NXT*FLU_NXT*FLU_NXT ], const real Gamma, const real MinPres )
+                                        real g_PriVar[][NCOMP_TOTAL][ FLU_NXT*FLU_NXT*FLU_NXT ],
+                                        const real Gamma, const real MinPres,
+                                        const bool NormPassive, const int NNorm, const int NormIdx[] )
 {
 
    const uint bx       = blockIdx.x;
@@ -187,7 +253,11 @@ __device__ void CUFLU_Con2Pri_AllGrids( const real g_Fluid_In[][NCOMP_TOTAL][ FL
       Var.Pz  = g_Fluid_In[bx][3][ID];
       Var.Egy = g_Fluid_In[bx][4][ID];
 
-      Var = CUFLU_Con2Pri( Var, Gamma_m1, MinPres );
+#     if ( NCOMP_PASSIVE > 0 )
+      for (int v=0; v<NCOMP_PASSIVE; v++)    Var.Passive[v] = g_Fluid_In[bx][ NCOMP_FLUID + v ][ID];
+#     endif
+
+      Var = CUFLU_Con2Pri( Var, Gamma_m1, MinPres, NormPassive, NNorm, NormIdx );
 
       g_PriVar[bx][0][ID] = Var.Rho;
       g_PriVar[bx][1][ID] = Var.Px;
@@ -195,8 +265,12 @@ __device__ void CUFLU_Con2Pri_AllGrids( const real g_Fluid_In[][NCOMP_TOTAL][ FL
       g_PriVar[bx][3][ID] = Var.Pz;
       g_PriVar[bx][4][ID] = Var.Egy;
 
+#     if ( NCOMP_PASSIVE > 0 )
+      for (int v=0; v<NCOMP_PASSIVE; v++)    g_PriVar[bx][ NCOMP_FLUID + v ][ID] = Var.Passive[v];
+#     endif
+
       ID += dID;
-   }
+   } // while ( ID < FLU_NXT*FLU_NXT*FLU_NXT )
 
 } // FUNCTION : CUFLU_Con2Pri_AllGrids
 
@@ -284,6 +358,59 @@ __device__ bool CUFLU_CheckNegative( const real Input )
 
 } // FUNCTION : CUFLU_CheckNegative
 #endif
+
+
+
+#if ( NCOMP_PASSIVE > 0 )
+//-------------------------------------------------------------------------------------------------------
+// Function    :  CUFLU_NormalizePassive
+// Description :  Normalize the target passive scalars so that the sum of their mass density is equal to
+//                the gas mass density
+//
+// Note        :  1. Should be invoked AFTER applying the floor values to passive scalars
+//                2. Invoked by CUFLU_Shared_FullStepUpdate()
+//                3. The CPU version is defined in CPU_Shared_FluUtility->CPU_NormalizePassive()
+//
+// Parameter   :  GasDens  : Gas mass density
+//                Passive  : Passive scalar array (with the size NCOMP_PASSIVE)
+//                NNorm    : Number of passive scalars to be normalized
+//                           --> Should be set to the global variable "PassiveNorm_NVar"
+//                NormIdx  : Target variable indices to be normalized
+//                           --> Should be set to the global variable "PassiveNorm_VarIdx"
+//
+// Return      :  Passive
+//-------------------------------------------------------------------------------------------------------
+__device__ void CUFLU_NormalizePassive( const real GasDens, real Passive[], const int NNorm, const int NormIdx[] )
+{
+
+// validate the target variable indices
+#  ifdef GAMER_DEBUG
+   const int MinIdx = 0;
+#  ifdef DUAL_ENERGY
+   const int MaxIdx = NCOMP_PASSIVE - 2;
+#  else
+   const int MaxIdx = NCOMP_PASSIVE - 1;
+#  endif
+
+   for (int v=0; v<NNorm; v++)
+   {
+      if ( NormIdx[v] < MinIdx  ||  NormIdx[v] > MaxIdx )
+         printf( "ERROR : NormIdx[%d] = %d is not within the correct range ([%d <= idx <= %d]) !!\n",
+                 v, NormIdx[v], MinIdx, MaxIdx );
+   }
+#  endif // #ifdef GAMER_DEBUG
+
+
+   real Norm, PassiveDens_Sum=(real)0.0;
+
+   for (int v=0; v<NNorm; v++)   PassiveDens_Sum += Passive[ NormIdx[v] ];
+
+   Norm = GasDens / PassiveDens_Sum;
+
+   for (int v=0; v<NNorm; v++)   Passive[ NormIdx[v] ] *= Norm;
+
+} // FUNCTION : CUFLU_NormalizePassive
+#endif // #if ( NCOMP_PASSIVE > 0 )
 
 
 

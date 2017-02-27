@@ -273,6 +273,13 @@ void CPU_FluidSolver_MHM( const real Flu_Array_In[][NCOMP_TOTAL][ FLU_NXT*FLU_NX
 //                               --> The size is assumed to be N_HF_FLUX^3
 //                Gamma        : Ratio of specific heats
 //                MinPres      : Minimum allowed pressure
+//                NormPassive  : true --> normalize passive scalars so that the sum of their mass density
+//                                        is equal to the gas mass density
+//                               --> For exact Riemann solver only
+//                NNorm        : Number of passive scalars to be normalized
+//                               --> Should be set to the global variable "PassiveNorm_NVar"
+//                NormIdx      : Target variable indices to be normalized
+//                               --> Should be set to the global variable "PassiveNorm_VarIdx"
 //-------------------------------------------------------------------------------------------------------
 void CPU_RiemannPredict_Flux( const real Flu_Array_In[][ FLU_NXT*FLU_NXT*FLU_NXT ], real Half_Flux[][3][NCOMP_TOTAL],
                               const real Gamma, const real MinPres,

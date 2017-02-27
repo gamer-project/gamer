@@ -159,21 +159,23 @@ __global__ void CUFLU_FluidSolver_CTU( const real g_Fluid_In[]   [NCOMP_TOTAL][ 
    const bool CorrHalfVel_No  = false;
 
 // 1. conserved variables --> primitive variables
-   CUFLU_Con2Pri_AllGrids( g_Fluid_In, g_PriVar, Gamma, MinPres );
+   CUFLU_Con2Pri_AllGrids( g_Fluid_In, g_PriVar, Gamma, MinPres, NormPassive, NNorm, NormIdx_d );
    __syncthreads();
 
 
 // 2. evaluate the half-step face-centered solution
    CUFLU_DataReconstruction( g_PriVar, g_Slope_PPM_x, g_Slope_PPM_y, g_Slope_PPM_z, g_FC_Var_xL, g_FC_Var_xR,
                              g_FC_Var_yL, g_FC_Var_yR, g_FC_Var_zL, g_FC_Var_zR, FLU_NXT, FLU_GHOST_SIZE-1,
-                             Gamma, LR_Limiter, MinMod_Coeff, EP_Coeff, dt, _dh, MinDens, MinPres );
+                             Gamma, LR_Limiter, MinMod_Coeff, EP_Coeff, dt, _dh, MinDens, MinPres,
+                             NormPassive, NNorm, NormIdx_d );
    __syncthreads();
 
 
 // 3. evaluate the face-centered half-step fluxes by solving the Riemann problem
    CUFLU_ComputeFlux( g_FC_Var_xL, g_FC_Var_xR, g_FC_Var_yL, g_FC_Var_yR, g_FC_Var_zL, g_FC_Var_zR,
                       g_FC_Flux_x, g_FC_Flux_y, g_FC_Flux_z, NULL, false, 0, Gamma,
-                      CorrHalfVel_No, NULL, NULL, NULL_REAL, NULL_REAL, NULL_REAL, GRAVITY_NONE, NULL, MinPres );
+                      CorrHalfVel_No, NULL, NULL, NULL_REAL, NULL_REAL, NULL_REAL, GRAVITY_NONE, NULL, MinPres,
+                      NormPassive, NNorm, NormIdx_d );
    __syncthreads();
 
 
@@ -187,18 +189,21 @@ __global__ void CUFLU_FluidSolver_CTU( const real g_Fluid_In[]   [NCOMP_TOTAL][ 
 #  ifdef UNSPLIT_GRAVITY
    CUFLU_ComputeFlux( g_FC_Var_xL, g_FC_Var_xR, g_FC_Var_yL, g_FC_Var_yR, g_FC_Var_zL, g_FC_Var_zR,
                       g_FC_Flux_x, g_FC_Flux_y, g_FC_Flux_z, g_Flux, StoreFlux, 1, Gamma,
-                      CorrHalfVel_Yes, g_Pot_USG, g_Corner, dt, _dh, Time, GravityType, ExtAcc_AuxArray_d_Flu, MinPres );
+                      CorrHalfVel_Yes, g_Pot_USG, g_Corner, dt, _dh, Time, GravityType, ExtAcc_AuxArray_d_Flu, MinPres,
+                      NormPassive, NNorm, NormIdx_d );
 #  else
    CUFLU_ComputeFlux( g_FC_Var_xL, g_FC_Var_xR, g_FC_Var_yL, g_FC_Var_yR, g_FC_Var_zL, g_FC_Var_zR,
                       g_FC_Flux_x, g_FC_Flux_y, g_FC_Flux_z, g_Flux, StoreFlux, 1, Gamma,
-                      CorrHalfVel_No, NULL, NULL, NULL_REAL, NULL_REAL, NULL_REAL, GRAVITY_NONE, NULL, MinPres );
+                      CorrHalfVel_No, NULL, NULL, NULL_REAL, NULL_REAL, NULL_REAL, GRAVITY_NONE, NULL, MinPres,
+                      NormPassive, NNorm, NormIdx_d );
 #  endif
 
    __syncthreads();
 
 
 // 6. evaluate the full-step solution
-   CUFLU_FullStepUpdate( g_Fluid_In, g_Fluid_Out, g_FC_Flux_x, g_FC_Flux_y, g_FC_Flux_z, dt, _dh, Gamma );
+   CUFLU_FullStepUpdate( g_Fluid_In, g_Fluid_Out, g_FC_Flux_x, g_FC_Flux_y, g_FC_Flux_z, dt, _dh, Gamma,
+                         NormPassive, NNorm, NormIdx_d );
 
 } // FUNCTION : CUFLU_FluidSolver_CTU
 
@@ -257,7 +262,6 @@ __device__ void CUFLU_TGradient_Correction( real g_FC_Var_xL[][NCOMP_TOTAL][ N_F
    real   TGrad1, TGrad2, Corr;
    bool   Inner_x, Inner_y, Inner_z;
    bool   Inner_xy, Inner_yz, Inner_xz;
-   FluVar ConVar;
 
 
 #  define Load( Input, Output, ID, v )    (  Output = Input[bx][v][ID]  )
@@ -347,6 +351,7 @@ __device__ void CUFLU_TGradient_Correction( real g_FC_Var_xL[][NCOMP_TOTAL][ N_F
 // loop over all cells
    while ( ID_FC_Var < N_FC_VAR*N_FC_VAR*N_FC_VAR )
    {
+//    calculate the array indices
       ID_In_R  = ID_FC_Var;
       ID_In_xL = ID_In_R - dID_In.x;
       ID_In_yL = ID_In_R - dID_In.y;
@@ -364,17 +369,17 @@ __device__ void CUFLU_TGradient_Correction( real g_FC_Var_xL[][NCOMP_TOTAL][ N_F
       Inner_xz = Inner_x && Inner_z;
 
 
-      Correct_1v( 0 );
-      Correct_1v( 1 );
-      Correct_1v( 2 );
-      Correct_1v( 3 );
-      Correct_1v( 4 );
+//    apply transverse flux correction
+      for (int v=0; v<NCOMP_TOTAL; v++)   Correct_1v( v );
 
 
 //    ensure positive density and pressure
 //    --> make sure that CUFLU_CheckMinPresInEngy() is applied to the **corrected** density
+//###OPTIMIZATION: check before calling Dump() to reduce global memory access
       if ( Inner_yz )
       {
+         FluVar ConVar;
+
          ConVar.Rho = g_FC_Var_xL[bx][0][ID_FC_Var];
          ConVar.Px  = g_FC_Var_xL[bx][1][ID_FC_Var];
          ConVar.Py  = g_FC_Var_xL[bx][2][ID_FC_Var];
@@ -395,10 +400,22 @@ __device__ void CUFLU_TGradient_Correction( real g_FC_Var_xL[][NCOMP_TOTAL][ N_F
          ConVar.Rho                    = FMAX( ConVar.Rho, MinDens );
          g_FC_Var_xR[bx][0][ID_FC_Var] = ConVar.Rho;
          g_FC_Var_xR[bx][4][ID_FC_Var] = CUFLU_CheckMinPresInEngy( ConVar, Gamma_m1, _Gamma_m1, MinPres );
-      }
+
+
+//       floor passive scalars
+#        if ( NCOMP_PASSIVE > 0 )
+         for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)
+         {
+            g_FC_Var_xL[bx][v][ID_FC_Var] = FMAX( g_FC_Var_xL[bx][v][ID_FC_Var], TINY_NUMBER );
+            g_FC_Var_xR[bx][v][ID_FC_Var] = FMAX( g_FC_Var_xR[bx][v][ID_FC_Var], TINY_NUMBER );
+         }
+#        endif
+      } // if ( Inner_yz )
 
       if ( Inner_xz )
       {
+         FluVar ConVar;
+
          ConVar.Rho = g_FC_Var_yL[bx][0][ID_FC_Var];
          ConVar.Px  = g_FC_Var_yL[bx][1][ID_FC_Var];
          ConVar.Py  = g_FC_Var_yL[bx][2][ID_FC_Var];
@@ -419,10 +436,22 @@ __device__ void CUFLU_TGradient_Correction( real g_FC_Var_xL[][NCOMP_TOTAL][ N_F
          ConVar.Rho                    = FMAX( ConVar.Rho, MinDens );
          g_FC_Var_yR[bx][0][ID_FC_Var] = ConVar.Rho;
          g_FC_Var_yR[bx][4][ID_FC_Var] = CUFLU_CheckMinPresInEngy( ConVar, Gamma_m1, _Gamma_m1, MinPres );
-      }
+
+
+//       floor passive scalars
+#        if ( NCOMP_PASSIVE > 0 )
+         for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)
+         {
+            g_FC_Var_yL[bx][v][ID_FC_Var] = FMAX( g_FC_Var_yL[bx][v][ID_FC_Var], TINY_NUMBER );
+            g_FC_Var_yR[bx][v][ID_FC_Var] = FMAX( g_FC_Var_yR[bx][v][ID_FC_Var], TINY_NUMBER );
+         }
+#        endif
+      } // if ( Inner_xz )
 
       if ( Inner_xy )
       {
+         FluVar ConVar;
+
          ConVar.Rho = g_FC_Var_zL[bx][0][ID_FC_Var];
          ConVar.Px  = g_FC_Var_zL[bx][1][ID_FC_Var];
          ConVar.Py  = g_FC_Var_zL[bx][2][ID_FC_Var];
@@ -443,7 +472,18 @@ __device__ void CUFLU_TGradient_Correction( real g_FC_Var_xL[][NCOMP_TOTAL][ N_F
          ConVar.Rho                    = FMAX( ConVar.Rho, MinDens );
          g_FC_Var_zR[bx][0][ID_FC_Var] = ConVar.Rho;
          g_FC_Var_zR[bx][4][ID_FC_Var] = CUFLU_CheckMinPresInEngy( ConVar, Gamma_m1, _Gamma_m1, MinPres );
-      }
+
+
+//       floor passive scalars
+#        if ( NCOMP_PASSIVE > 0 )
+         for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)
+         {
+            g_FC_Var_zL[bx][v][ID_FC_Var] = FMAX( g_FC_Var_zL[bx][v][ID_FC_Var], TINY_NUMBER );
+            g_FC_Var_zR[bx][v][ID_FC_Var] = FMAX( g_FC_Var_zR[bx][v][ID_FC_Var], TINY_NUMBER );
+         }
+#        endif
+      } // if ( Inner_xy )
+
 
       ID_FC_Var += dID_FC_Var;
 

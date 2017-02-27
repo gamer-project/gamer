@@ -40,8 +40,8 @@ static __device__ void Set_Flux( FluVar &flux, const FluVar val, const real _Gam
 #if ( __CUDA_ARCH__ >= 200  &&  FLU_SCHEME != WAF )
 __noinline__
 #endif
-__device__ FluVar CUFLU_RiemannSolver_Exact( const int XYZ, FluVar &eival_out, FluVar &L_star_out,
-                                             FluVar &R_star_out, const FluVar L_In,
+__device__ FluVar CUFLU_RiemannSolver_Exact( const int XYZ, FluVar *eival_out, FluVar *L_star_out,
+                                             FluVar *R_star_out, const FluVar L_In,
                                              const FluVar R_In, const real Gamma )
 {
 
@@ -322,27 +322,26 @@ __device__ FluVar CUFLU_RiemannSolver_Exact( const int XYZ, FluVar &eival_out, F
 
 #  elif ( FLU_SCHEME == WAF )
 
-   FluVar *Useless = NULL;
+   eival_out->Rho  = eival.Rho;
+   eival_out->Px   = eival.Px;
+   eival_out->Py   = eival.Py;
+   eival_out->Pz   = eival.Pz;
+   eival_out->Egy  = eival.Egy;
 
-   eival_out.Rho  = eival.Rho;
-   eival_out.Px   = eival.Px;
-   eival_out.Py   = eival.Py;
-   eival_out.Pz   = eival.Pz;
-   eival_out.Egy  = eival.Egy;
+   L_star_out->Rho = L_star.Rho;
+   L_star_out->Px  = L_star.Px;
+   L_star_out->Py  = L_star.Py;
+   L_star_out->Pz  = L_star.Pz;
+   L_star_out->Egy = L_star.Egy;
 
-   L_star_out.Rho = L_star.Rho;
-   L_star_out.Px  = L_star.Px;
-   L_star_out.Py  = L_star.Py;
-   L_star_out.Pz  = L_star.Pz;
-   L_star_out.Egy = L_star.Egy;
+   R_star_out->Rho = R_star.Rho;
+   R_star_out->Px  = R_star.Px;
+   R_star_out->Py  = R_star.Py;
+   R_star_out->Pz  = R_star.Pz;
+   R_star_out->Egy = R_star.Egy;
 
-   R_star_out.Rho = R_star.Rho;
-   R_star_out.Px  = R_star.Px;
-   R_star_out.Py  = R_star.Py;
-   R_star_out.Pz  = R_star.Pz;
-   R_star_out.Egy = R_star.Egy;
-
-   return *Useless;
+// return an arbitray FluVar type variable since it's useless
+   return eival;
 
 #  endif // #if ( FLU_SCHEME == MHM  ||  FLU_SCHEME == MHM_RP  ||  FLU_SCHEME == CTU ) ... else ...
 

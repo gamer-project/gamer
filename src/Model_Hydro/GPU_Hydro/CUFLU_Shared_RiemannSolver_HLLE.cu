@@ -8,7 +8,7 @@
 #include "CUFLU_Shared_FluUtility.cu"
 
 static __device__ FluVar CUFLU_RiemannSolver_HLLE( const int XYZ, const FluVar L_In, const FluVar R_In,
-                                                   const real Gamma );
+                                                   const real Gamma, const real MinPres );
 
 
 

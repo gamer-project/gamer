@@ -61,6 +61,7 @@ void CPU_FullStepUpdate( const real Input[][ FLU_NXT*FLU_NXT*FLU_NXT ], real Out
       for (int v=0; v<NCOMP_TOTAL; v++)
          Output[v][ID2] = Input[v][ID3] - dt_dh*( dF[0][v] + dF[1][v] + dF[2][v] );
 
+
 //    we no longer ensure positive density and pressure here
 //    --> these checks have been moved to Flu_Close()->CorrectUnphysical()
 //    --> because we want to apply 1st-order-flux correction BEFORE setting a minimum density and pressure
