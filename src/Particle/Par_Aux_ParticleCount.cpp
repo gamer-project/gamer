@@ -115,7 +115,7 @@ void Par_Aux_ParticleCount()
 
 //    4-3. record the load-imbalance factors
       fprintf( File, "%4s", "LIM:" );
-      for (int lv=0; lv<NLEVEL; lv++)  fprintf( File, "%7ld(%6.2f%%)", NPar_Max[lv], 100.0*NPar_Imb[lv] );
+      for (int lv=0; lv<NLEVEL; lv++)  fprintf( File, "%9ld(%6.2f%%)", NPar_Max[lv], 100.0*NPar_Imb[lv] );
       fprintf( File, "\n" );
       fprintf( File, "Weighted load-imbalance factor = %6.2f%%\n", 100.0*WLI );
 
