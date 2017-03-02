@@ -546,6 +546,17 @@ void Init_SetDefaultParameter()
    }
 
 
+// (20) particle weight for load balance
+#  if ( defined LOAD_BALANCE  &&  defined PARTICLE )
+   if ( LB_INPUT__PAR_WEIGHT < 0.0 )
+   {
+      LB_INPUT__PAR_WEIGHT = 0.0;
+
+      if ( MPI_Rank == 0 )    Aux_Message( stdout, "NOTE : parameter \"%s\" is set to the default value = %13.7e\n",
+                                           "LB_INPUT__PAR_WEIGHT", LB_INPUT__PAR_WEIGHT );
+   }
+#  endif
+
 
 // reset parameters and options which are either unsupported or useless
 // ------------------------------------------------------------------------------------------------------

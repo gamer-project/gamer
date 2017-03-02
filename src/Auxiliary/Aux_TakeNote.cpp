@@ -653,7 +653,10 @@ void Aux_TakeNote()
 #     endif
 #     ifdef LOAD_BALANCE
       fprintf( Note, "LB_WLI_MAX                %13.7e\n",  amr->LB->WLI_Max        );
+#     ifdef PARTICLE
+      fprintf( Note, "LB_PAR_WEIGHT             %13.7e\n",  amr->LB->Par_Weight     );
 #     endif
+#     endif // #ifdef LOAD_BALANCE
       fprintf( Note, "***********************************************************************************\n" );
       fprintf( Note, "\n\n");
 #     endif // #ifndef SERIAL

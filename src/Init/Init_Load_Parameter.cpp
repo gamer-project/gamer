@@ -354,7 +354,13 @@ void Init_Load_Parameter()
    getline( &input_line, &len, File );
    sscanf( input_line, "%lf%s",  &LB_INPUT__WLI_MAX,        string );
 
+   getline( &input_line, &len, File );
+#  ifdef PARTICLE
+   sscanf( input_line, "%lf%s",  &LB_INPUT__PAR_WEIGHT,     string );
+#  endif
+
 #  else // #ifdef LOAD_BALANCE ... else ...
+   getline( &input_line, &len, File );
    getline( &input_line, &len, File );
 #  endif // #ifdef LOAD_BALANCE ... else ...
 

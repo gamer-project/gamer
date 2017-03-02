@@ -40,8 +40,12 @@ void Init_MemAllocate()
 
 // c. allocate load-balance variables
 #  ifdef LOAD_BALANCE
-   amr->LB = new LB_t( MPI_NRank, LB_INPUT__WLI_MAX );
+#  ifdef PARTICLE
+   amr->LB = new LB_t( MPI_NRank, LB_INPUT__WLI_MAX, LB_INPUT__PAR_WEIGHT );
+#  else
+   amr->LB = new LB_t( MPI_NRank, LB_INPUT__WLI_MAX, NULL_REAL );
 #  endif
+#  endif // #ifdef LOAD_BALANCE
 
 
 // d. allocate particle repository (for restart, it will be allocated after loading the checkpoint file)

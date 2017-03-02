@@ -32,6 +32,8 @@
 //                WLI                     : Weighted load-imbalance factor of patches at all levels
 //                WLI_Max                 : WLI threshold for redistributing patches at all levels
 //                WLI_Weighting           : Weighting at each level for calculating WLI (currently set to 2^lv)
+//                Par_Weight              : Load-balance weighting of one particle over one cell
+//                                          --> Weighting of each patch is estimated as "PATCH_SIZE^3 + NParThisPatch*Par_Weight"
 //                CutPoint                : Cut points in the space filling curve
 //                IdxList_Real            : Sorted LB_Idx list of all real patches
 //                IdxList_Real_IdxTable   : Index table for LB_IdxList_Real
@@ -112,6 +114,9 @@ struct LB_t
    double WLI;
    double WLI_Max;
    double WLI_Weighting          [NLEVEL];
+#  ifdef PARTICLE
+   double Par_Weight;
+#  endif
    long  *CutPoint               [NLEVEL];
    long  *IdxList_Real           [NLEVEL];
    int   *IdxList_Real_IdxTable  [NLEVEL];
@@ -183,15 +188,19 @@ struct LB_t
    //                   PaddedCr1DList_IdxTable", whose sizes can not be determined during
    //                   initialization, are NOT allocated with memory
    //
-   // Parameter   :  NRank          : Number of MPI ranks
-   //                Input__WLI_Max : WLI_Max loaded from the input parameter file
+   // Parameter   :  NRank             : Number of MPI ranks
+   //                Input__WLI_Max    : WLI_Max loaded from the input parameter file
+   //                Input__Par_Weight : Par_Weight loaded from the input parameter file
    //===================================================================================
-   LB_t( const int NRank, const double Input__WLI_Max )
+   LB_t( const int NRank, const double Input__WLI_Max, const double Input__Par_Weight )
    {
 
-      MPI_NRank = NRank;
-      WLI       = NULL_REAL;
-      WLI_Max   = Input__WLI_Max;
+      MPI_NRank  = NRank;
+      WLI        = NULL_REAL;
+      WLI_Max    = Input__WLI_Max;
+#     ifdef PARTICLE
+      Par_Weight = Input__Par_Weight;
+#     endif
 
       for (int lv=0; lv<NLEVEL; lv++)
       {

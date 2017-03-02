@@ -1544,7 +1544,10 @@ void Check_InputPara( const char *FileName )
 
 // load balance
 #  ifdef LOAD_BALANCE
-   LoadField( "LB_Input__WLI_Max",       &RS.LB_Input__WLI_Max,       SID, TID, NonFatal, &RT.LB_Input__WLI_Max,        1, NonFatal );
+   LoadField( "LB_WLI_Max",              &RS.LB_WLI_Max,              SID, TID, NonFatal, &RT.LB_WLI_Max,               1, NonFatal );
+#  ifdef PARTICLE
+   LoadField( "LB_Par_Weight",           &RS.LB_Par_Weight,           SID, TID, NonFatal, &RT.LB_Par_Weight,            1, NonFatal );
+#  endif
 #  endif
 
 // fluid solvers in HYDRO

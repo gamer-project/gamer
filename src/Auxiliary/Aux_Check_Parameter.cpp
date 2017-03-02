@@ -1196,6 +1196,11 @@ void Aux_Check_Parameter()
 #     error : ERROR : PARTICLE must work with either SERIAL or LOAD_BALANCE !!
 #  endif
 
+#  ifdef LOAD_BALANCE
+   if ( LB_INPUT__PAR_WEIGHT < 0.0 )
+      Aux_Error( ERROR_INFO, "LB_INPUT__PAR_WEIGHT = %14.7e < 0 !!\n", LB_INPUT__PAR_WEIGHT );
+#  endif
+
    if ( OPT__INIT != INIT_RESTART )
    {
       if ( amr->Par->Init == PAR_INIT_BY_RESTART )    Aux_Error( ERROR_INFO, "PAR_INIT == RESTART but OPT__INIT != RESTART !!\n" );

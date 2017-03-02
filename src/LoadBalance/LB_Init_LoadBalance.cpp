@@ -26,9 +26,14 @@ static void LB_RedistributeParticle_End( real **ParVar_Old, real **Passive_Old )
 //                6. Arrays "NPatchTotal" and "NPatchComma" must be prepared in advance
 //                7. Particles will also be redistributed
 //
-// Parameter   :  DuringRestart  : true --> This function is invoked during the RESTART process
-//                                      --> In this case, no "LB_SetCutPoint" and "LB_RedistributeRealPatch" are required
-//                                          since these tasks are already done in the function "Init_Reload"
+// Parameter   :  NoRedistribute: true --> Do NOT invoke "LB_SetCutPoint" and "LB_RedistributeRealPatch" to redistribute
+//                                         all real patches
+//                                     --> Currently it is used only during the RESTART process and when LB->Par_Weight == 0.0
+//                                         since in this special case we already distribute real patches evenly when calling
+//                                         Init_Reload()
+//                                         --> Since Init_Reload() does NOT consider the load-balance weighting of particles,
+//                                             we should still set NoRedistribute == false duruing the RESTART process
+//                                             if LB->Par_Weight > 0.0
 //-------------------------------------------------------------------------------------------------------
 void LB_Init_LoadBalance( const bool DuringRestart )
 {

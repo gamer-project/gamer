@@ -356,7 +356,10 @@ struct InputPara_t
 
 // load balance
 #  ifdef LOAD_BALANCE
-   double LB_Input__WLI_Max;
+   double LB_WLI_Max;
+#  ifdef PARTICLE
+   double LB_Par_Weight;
+#  endif
 #  endif
 
 // fluid solvers in HYDRO

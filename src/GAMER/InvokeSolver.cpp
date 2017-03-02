@@ -32,7 +32,7 @@ extern Timer_t *Timer_Poi_PrePot_F[NLEVEL];
 //                       3. closing     step : store the updated data
 //                c. Currently the fluid solver can only store the updated data in the different sandglass from
 //                   the input data
-//                d. For LOAD_BALANCE, one can turn on the option "LB_INPUT__OVERLAP_MPI" to enable the
+//                d. For LOAD_BALANCE, one can turn on the option "OPT__OVERLAP_MPI" to enable the
 //                   overlapping between MPI communication and CPU/GPU computation
 //
 // Parameter   :  TSolver        : Targeted solver
