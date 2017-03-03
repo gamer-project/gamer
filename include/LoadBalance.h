@@ -31,7 +31,6 @@
 //                                          the MPI communication (gravity solver)
 //                WLI                     : Weighted load-imbalance factor of patches at all levels
 //                WLI_Max                 : WLI threshold for redistributing patches at all levels
-//                WLI_Weighting           : Weighting at each level for calculating WLI (currently set to 2^lv)
 //                Par_Weight              : Load-balance weighting of one particle over one cell
 //                                          --> Weighting of each patch is estimated as "PATCH_SIZE^3 + NParThisPatch*Par_Weight"
 //                CutPoint                : Cut points in the space filling curve
@@ -113,7 +112,6 @@ struct LB_t
 #  endif
    double WLI;
    double WLI_Max;
-   double WLI_Weighting          [NLEVEL];
 #  ifdef PARTICLE
    double Par_Weight;
 #  endif
@@ -213,11 +211,6 @@ struct LB_t
          OverlapMPI_PotSyncPID0 [lv] = NULL;
          OverlapMPI_PotAsyncN   [lv] = 0;
          OverlapMPI_PotAsyncPID0[lv] = NULL;
-#        endif
-#        ifdef INDIVIDUAL_TIMESTEP
-         WLI_Weighting          [lv] = double( 1UL << lv );    // 2^lv
-#        else
-         WLI_Weighting          [lv] = 1.0;
 #        endif
          CutPoint               [lv] = new long [MPI_NRank+1];
          IdxList_Real           [lv] = NULL;

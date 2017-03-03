@@ -54,6 +54,9 @@ void Aux_Error( const char *File, const int Line, const char *Func, const char *
 //                ParaVar     : Variables for parallelization
 //                LB          : Variables for load-balance
 //                ResPower2   : ceil(  log2( effective resolution at lv )  ) --> mainly used by LOAD_BALANCE
+//                LoadWeight  : Workload weighting at each level (currently set to 2^lv if INDIVIDUAL_TIMESTEP is on)
+//                              --> Mainly used for estimating the weighted load-imbalance factor to determine
+//                                  when to redistribute all patches (when LOAD_BALANCE is on)
 //
 // Method      :  AMR_t    : Constructor
 //               ~AMR_t    : Destructor
@@ -93,6 +96,7 @@ struct AMR_t
    double BoxSize     [3];
    int    BoxScale    [3];
    bool   WithFlux;
+   double LoadWeight  [NLEVEL];
 
 
 
@@ -121,6 +125,12 @@ struct AMR_t
 #        ifdef GRAVITY
          PotSgTime[lv][   PotSg[lv] ] = -__FLT_MAX__;
          PotSgTime[lv][ 1-PotSg[lv] ] = -__FLT_MAX__;
+#        endif
+
+#        ifdef INDIVIDUAL_TIMESTEP
+         LoadWeight[lv] = double( 1UL << lv );  // 2^lv
+#        else
+         LoadWeight[lv] = 1.0;
 #        endif
       }
 

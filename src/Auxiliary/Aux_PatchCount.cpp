@@ -89,13 +89,6 @@ void Aux_PatchCount()
       double Load_Ave[NLEVEL], Load_Imb[NLEVEL];   // Imb : Imbalance
       double WLoad_Ave=0.0, WLoad_Max=0.0, WLI;    // WLoad : weighted load
 
-#     ifdef LOAD_BALANCE
-      const double *Weighting = amr->LB->WLI_Weighting;
-#     else
-      double Weighting[NLEVEL];
-      for (int lv=0; lv<NLEVEL; lv++)  Weighting[lv] = double( 1UL << lv );   // 2^lv
-#     endif
-
 //    e1. estimate the load-imbalance factor at each level
       for (int lv=0; lv<NLEVEL; lv++)
       {
@@ -111,8 +104,8 @@ void Aux_PatchCount()
 //    e2. estimate the weighted load-imbalance factor of patches at all levels
       for (int lv=0; lv<NLEVEL; lv++)
       {
-         WLoad_Max += Weighting[lv]*Load_Max[lv];
-         WLoad_Ave += Weighting[lv]*Load_Ave[lv];
+         WLoad_Max += amr->LoadWeight[lv]*Load_Max[lv];
+         WLoad_Ave += amr->LoadWeight[lv]*Load_Ave[lv];
       }
 
       WLI = ( WLoad_Max - WLoad_Ave ) / WLoad_Ave;

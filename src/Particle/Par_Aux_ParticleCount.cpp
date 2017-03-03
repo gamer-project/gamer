@@ -85,13 +85,6 @@ void Par_Aux_ParticleCount()
       double NPar_Ave[NLEVEL], NPar_Imb[NLEVEL];   // Imb : Imbalance
       double WLoad_Ave=0.0, WLoad_Max=0.0, WLI;    // WLoad : weighted load
 
-#     ifdef LOAD_BALANCE
-      const double *Weighting = amr->LB->WLI_Weighting;
-#     else
-      double Weighting[NLEVEL];
-      for (int lv=0; lv<NLEVEL; lv++)  Weighting[lv] = double( 1UL << lv );   // 2^lv
-#     endif
-
 //    4-1. estimate the load-imbalance factor at each level
       for (int lv=0; lv<NLEVEL; lv++)
       {
@@ -107,8 +100,8 @@ void Par_Aux_ParticleCount()
 //    4-2. estimate the weighted load-imbalance factor of particles at all levels
       for (int lv=0; lv<NLEVEL; lv++)
       {
-         WLoad_Max += Weighting[lv]*NPar_Max[lv];
-         WLoad_Ave += Weighting[lv]*NPar_Ave[lv];
+         WLoad_Max += amr->LoadWeight[lv]*NPar_Max[lv];
+         WLoad_Ave += amr->LoadWeight[lv]*NPar_Ave[lv];
       }
 
       WLI = ( WLoad_Max - WLoad_Ave ) / WLoad_Ave;
