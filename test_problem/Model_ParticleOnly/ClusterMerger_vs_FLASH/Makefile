@@ -134,6 +134,9 @@ SIMU_OPTION += -DSUPPORT_HDF5
 # support GNU scientific library
 #SIMU_OPTION += -DSUPPORT_GSL
 
+# support yt inline analysis
+#SIMU_OPTION += -DSUPPORT_LIBYT
+
 
 
 # source files
@@ -347,10 +350,21 @@ CC_FILE     += LB_Init_LoadBalance.cpp  LB_AllocateBufferPatch_Sibling.cpp  LB_R
                LB_Refine.cpp  LB_Refine_GetNewRealPatchList.cpp  LB_Refine_AllocateNewPatch.cpp \
                LB_FindSonNotHome.cpp  LB_Refine_AllocateBufferPatch_Sibling.cpp \
                LB_AllocateBufferPatch_Sibling_Base.cpp  LB_RecordExchangeFixUpDataPatchID.cpp \
+               LB_EstimateWorkload_AllPatchGroup.cpp
 
 endif # LOAD_BALANCE
 
 vpath %.cpp    LoadBalance
+
+
+# yt inline analysis source files (included only if "SUPPORT_LIBYT" is turned on)
+# ------------------------------------------------------------------------------------
+ifeq "$(findstring SUPPORT_LIBYT, $(SIMU_OPTION))" "SUPPORT_LIBYT"
+CC_FILE     += YT_Init.cpp  YT_End.cpp  YT_SetParameter.cpp  YT_AddAllGrid.cpp  YT_Inline.cpp
+
+vpath %.cpp    YT
+endif # "SUPPORT_LIBYT"
+
 
 
 # rules and targets
@@ -360,16 +374,18 @@ vpath %.cpp    LoadBalance
 # -------------------------------------------------------------------------------
 # dxl (gcc, serial)
 #CUDA_TOOLKIT_PATH :=
-#FFTW_PATH         := /usr
+#FFTW_PATH         := /home/hyschive/software/fftw/2.1.5
 #MPI_PATH          := /usr
 #HDF5_PATH         := /home/hyschive/software/miniconda2
+#GSL_PATH          := /usr/lib
+#LIBYT_PATH        := /home/hyschive/project/libyt/libyt.dev/libyt
 
 # campus UIUC (intel-15.0 + openmpi-1.8.4)
 CUDA_TOOLKIT_PATH := /usr/local/cuda/7.0
 FFTW_PATH         := /projects/ncsa/grav/softwares/fftw/2.1.5
 MPI_PATH          := /usr/local/mpi/openmpi-1.8.4-intel-15.0
 HDF5_PATH         := /projects/ncsa/grav/softwares/miniconda2
-GSL_PATH          := /usr/local/gsl/gsl-1.16
+#GSL_PATH          := /usr/local/gsl/gsl-1.16
 
 # hulk (openmpi-intel-qlc)
 #CUDA_TOOLKIT_PATH := /opt/gpu/cuda/4.2
@@ -512,6 +528,10 @@ ifeq "$(findstring SUPPORT_GSL, $(SIMU_OPTION))" "SUPPORT_GSL"
 LIB += -L$(GSL_PATH)/lib -lgsl -lgslcblas
 endif
 
+ifeq "$(findstring SUPPORT_LIBYT, $(SIMU_OPTION))" "SUPPORT_LIBYT"
+LIB += -L$(LIBYT_PATH)/lib -lyt
+endif
+
 
 # headers
 # -------------------------------------------------------------------------------
@@ -531,6 +551,10 @@ endif
 
 ifeq "$(findstring SUPPORT_GSL, $(SIMU_OPTION))" "SUPPORT_GSL"
 INCLUDE += -I$(GSL_PATH)/include
+endif
+
+ifeq "$(findstring SUPPORT_LIBYT, $(SIMU_OPTION))" "SUPPORT_LIBYT"
+INCLUDE += -I$(LIBYT_PATH)/include
 endif
 
 

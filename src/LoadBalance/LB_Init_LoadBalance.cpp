@@ -285,50 +285,8 @@ void LB_SetCutPoint( const int lv, long *CutPoint, const bool InputLBIdx0AndLoad
 
 
 //    collect the load-balance weighting in each patch group
-//    (1) cells --> assuming the weighting of each patch == 1.0
-      for (int t=0; t<NPG_ThisRank; t++)  Load_ThisRank[t] = 8.0; // 8 patches per patch group
+      LB_EstimateWorkload_AllPatchGroup( lv, ParWeight, Load_ThisRank );
 
-//    (2) particles
-#     ifdef PARTICLE
-      if ( ParWeight > 0.0 )
-      {
-//       renormalize the load-balance weighting of one particle so that the weighting of one patch is 1.0
-         const double ParWeight_Norm = ParWeight / (double)CUBE(PS1);
-
-//       get the number of particles in each patch
-         const bool PredictPos_No     = false;
-         const bool SibBufPatch_No    = false;
-         const bool FaSibBufPatch_No  = false;
-         const bool JustCountNPar_Yes = true;
-         const bool TimingSendPar_No  = false;
-
-         Par_CollectParticle2OneLevel( lv, PredictPos_No, NULL_REAL, SibBufPatch_No, FaSibBufPatch_No, JustCountNPar_Yes,
-                                       TimingSendPar_No );
-
-         for (int t=0; t<NPG_ThisRank; t++)
-         for (int PID=t*8; PID<(t+1)*8; PID++)
-         {
-            int NParThisPatch;
-
-            if ( amr->patch[0][lv][PID]->son == -1 )  NParThisPatch = amr->patch[0][lv][PID]->NPar;
-            else                                      NParThisPatch = amr->patch[0][lv][PID]->NPar_Copy;
-
-#           ifdef DEBUG_PARTICLE
-            if ( NParThisPatch < 0 )
-               Aux_Error( ERROR_INFO, "NPar (%d) has not been calculated (lv %d, PID %d) !!\n",
-                          NParThisPatch, lv, PID );
-#           endif
-
-//          add the load-balance weighting of all particles in this patch
-            Load_ThisRank[t] += NParThisPatch*ParWeight_Norm;
-         } // for t ... PID ...
-
-//       free memory allocated by Par_CollectParticle2OneLevel
-         Par_CollectParticle2OneLevel_FreeMemory( lv, SibBufPatch_No, FaSibBufPatch_No );
-      } // if ( ParWeight_Norm > 0.0 )
-#     endif // #ifdef PARTICLE
-
-//    collect from all ranks
       MPI_Gatherv( Load_ThisRank, NPG_ThisRank, MPI_DOUBLE, Load_AllRank, NPG_AllRank, Recv_Disp,
                    MPI_DOUBLE, 0, MPI_COMM_WORLD );
 
