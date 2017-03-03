@@ -280,8 +280,6 @@ void Init_Restart_HDF5( const char *FileName )
 #  ifdef LOAD_BALANCE
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Loading load-balance index table ...\n" );
 
-   const bool InputLBIdxList_Yes = true;
-
    long *LBIdxList_AllLv;
    long *LBIdxList_EachLv         [NLEVEL];
    int  *LBIdxList_EachLv_IdxTable[NLEVEL];
@@ -325,9 +323,37 @@ void Init_Restart_HDF5( const char *FileName )
 
 //    Mis_Heapsort must be called before LB_SetCutPoint in order to get LBIdxList_EachLv_IdxTable
 //    (since LB_SetCutPoint will sort LBIdxList_EachLv as well)
+//    --> Actually it's not necessary anymore since we now send LBIdx0_AllRank instead of LBIdxList_EachLv into LB_SetCutPoint()
       Mis_Heapsort( NPatchTotal[lv], LBIdxList_EachLv[lv], LBIdxList_EachLv_IdxTable[lv] );
 
-      LB_SetCutPoint( lv, amr->LB->CutPoint[lv], InputLBIdxList_Yes, LBIdxList_EachLv[lv] );
+//    prepare LBIdx and load-balance weighting of each **patch group** for LB_SetCutPoint()
+      const bool InputLBIdx0AndLoad_Yes = true;
+      long   *LBIdx0_AllRank = NULL;
+      double *Load_AllRank   = NULL;
+
+      if ( MPI_Rank == 0 )
+      {
+         LBIdx0_AllRank = new long   [ NPatchTotal[lv] / 8 ];
+         Load_AllRank   = new double [ NPatchTotal[lv] / 8 ];
+
+         for (int t=0; t<NPatchTotal[lv]/8; t++)
+         {
+            LBIdx0_AllRank[t]  = LBIdxList_EachLv[lv][t*8];
+            LBIdx0_AllRank[t] -= LBIdx0_AllRank[t] % 8;     // assuming LBIdxList_EachLv is NOT sorted yet
+            Load_AllRank  [t]  = 8.0;                       // assuming all patches have the same weighting == 1.0
+         }
+      }
+
+//    do NOT consider load-balance weighting of particles since at this point we don't have that information
+      const double ParWeight_Zero = 0.0;
+      LB_SetCutPoint( lv, amr->LB->CutPoint[lv], InputLBIdx0AndLoad_Yes, LBIdx0_AllRank, Load_AllRank, ParWeight_Zero );
+
+//    free memory
+      if ( MPI_Rank == 0 )
+      {
+         delete [] LBIdx0_AllRank;
+         delete [] Load_AllRank;
+      }
 
 
 //    2-2-4. get the target LBIdx range of each rank

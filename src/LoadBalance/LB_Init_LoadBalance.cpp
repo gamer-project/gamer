@@ -26,16 +26,20 @@ static void LB_RedistributeParticle_End( real **ParVar_Old, real **Passive_Old )
 //                6. Arrays "NPatchTotal" and "NPatchComma" must be prepared in advance
 //                7. Particles will also be redistributed
 //
-// Parameter   :  NoRedistribute: true --> Do NOT invoke "LB_SetCutPoint" and "LB_RedistributeRealPatch" to redistribute
-//                                         all real patches
-//                                     --> Currently it is used only during the RESTART process and when LB->Par_Weight == 0.0
-//                                         since in this special case we already distribute real patches evenly when calling
-//                                         Init_Reload()
-//                                         --> Since Init_Reload() does NOT consider the load-balance weighting of particles,
-//                                             we should still set NoRedistribute == false duruing the RESTART process
-//                                             if LB->Par_Weight > 0.0
+// Parameter   :  Redistribute : true  --> Redistribute all real patches according to the load-balance weighting of each patch
+//                                         and initialize all load-balance related set-up
+//                               false --> Initialize all load-balance related set-up, but do NOT invoke "LB_SetCutPoint"
+//                                         and "LB_RedistributeRealPatch" to redistribute all real patches
+//                                     --> Currently it is used only during the RESTART process since we already call
+//                                         LB_SetCutPoint() and load real patches accordingly when calling Init_Reload()
+//                ParWeight    : Relative load-balance weighting of particles
+//                               --> Weighting of each patch is estimated as "PATCH_SIZE^3 + NParThisPatch*ParWeight"
+//                               --> <= 0.0 : do not consider particle weighting
+//                                            --> Currently we force ParWeight==0.0 when calling LB_Init_LoadBalance()
+//                                                for the first time in Init_GAMER() and main() since we don't have enough
+//                                                information for calculating particle weighting at that time
 //-------------------------------------------------------------------------------------------------------
-void LB_Init_LoadBalance( const bool DuringRestart )
+void LB_Init_LoadBalance( const bool Redistribute, const double ParWeight )
 {
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ...\n", __FUNCTION__ );
@@ -59,14 +63,14 @@ void LB_Init_LoadBalance( const bool DuringRestart )
 
 
 // 0. set up the load-balance cut points (must do this before calling LB_RedistributeParticle_Init)
-   const bool InputLBIdxList_No = false;
+   const bool InputLBIdxAndLoad_No = false;
 
-   if ( !DuringRestart )
+   if ( Redistribute )
    for (int lv=0; lv<NLEVEL; lv++)
    {
       if ( OPT__VERBOSE  &&  MPI_Rank == 0 )    Aux_Message( stdout, "   Calculating load-balance indices at Lv %2d ... \n", lv );
 
-      LB_SetCutPoint( lv, amr->LB->CutPoint[lv], InputLBIdxList_No, NULL );
+      LB_SetCutPoint( lv, amr->LB->CutPoint[lv], InputLBIdxAndLoad_No, NULL, NULL, ParWeight );
    }
 
 
@@ -80,7 +84,7 @@ void LB_Init_LoadBalance( const bool DuringRestart )
 #  endif
 
 #  ifdef PARTICLE
-   if ( !DuringRestart )   LB_RedistributeParticle_Init( ParVar_Old, Passive_Old );
+   if ( Redistribute )  LB_RedistributeParticle_Init( ParVar_Old, Passive_Old );
 #  endif
 
    for (int lv=0; lv<NLEVEL; lv++)
@@ -88,7 +92,7 @@ void LB_Init_LoadBalance( const bool DuringRestart )
       if ( OPT__VERBOSE  &&  MPI_Rank == 0 )    Aux_Message( stdout, "   Re-distributing patches at Lv %2d ... \n", lv );
 
 //    1.1 re-distribute real patches
-      if ( !DuringRestart )
+      if ( Redistribute )
       LB_RedistributeRealPatch( lv, ParVar_Old, Passive_Old );
 
 //    1.2 allocate sibling-buffer patches at lv
@@ -100,7 +104,7 @@ void LB_Init_LoadBalance( const bool DuringRestart )
    }
 
 #  ifdef PARTICLE
-   if ( !DuringRestart )   LB_RedistributeParticle_End( ParVar_Old, Passive_Old );
+   if ( Redistribute )  LB_RedistributeParticle_End( ParVar_Old, Passive_Old );
 #  endif
 
 
@@ -176,149 +180,294 @@ void LB_Init_LoadBalance( const bool DuringRestart )
 //                   invoking the function "Mis_GetTotalPatchNumber( lv )"
 //                2. Input array "CutPoint" will be set in this function
 //                3. Real patches with LB_Idx in the range "CutPoint[r] <= LB_Idx < CutPoint[r+1]"
-//                   will be calculated by rank "r"
+//                   will be set to rank "r"
+//                4. The input option "InputLBIdx0AndLoad" is useful during RESTART where we have very
+//                   limited information (e.g., we don't know the number of patches in each rank,
+//                   amr->NPatchComma, and any particle information yet ...)
+//                   --> See the description of "InputLBIdx0AndLoad, LBIdx0_AllRank_Input, and
+//                       Load_AllRank_Input" below
 //
-// Parameter   :  lv             : Targeted refinement level
-//                CutPoint       : Cut point array to be set
-//                InputLBIdxList : Input "LBIdx_AllRank"   --> useful during RESTART
-//                LBIdx_AllRank  : LBIdx list of all ranks --> useful during RESTART
-//                                 (only rank 0 needs to provide this list, which can be unsorted)
+// Parameter   :  lv                   : Target refinement level
+//                CutPoint             : Cut point array to be set
+//                InputLBIdx0AndLoad   : Provide both "LBIdx0_AllRank_Input" and "Load_AllRank_Input" directly
+//                                       so that they don't have to be collected from all ranks again
+//                                       --> Useful during RESTART
+//                LBIdx0_AllRank_Input : LBIdx of all patch groups in all ranks
+//                                       --> Useful only when InputLBIdx0AndLoad == true
+//                                       --> Only need the **minimum** LBIdx in each patch group
+//                                       --> Only rank 0 needs to provide this list
+//                                       --> Can be unsorted
+//                Load_AllRank_Input   : Load-balance weighting of all patch groups in all ranks
+//                                       --> Useful only when InputLBIdx0AndLoad == true
+//                                       --> Please provide the **sum** of all patches within each patch group
+//                                       --> Only rank 0 needs to provide this list
+//                                       --> Must be in the same order as LBIdx0_AllRank_Input
+//                ParWeight            : Relative load-balance weighting of particles
+//                                       --> Weighting of each patch is estimated as "PATCH_SIZE^3 + NParThisPatch*ParWeight"
+//                                       --> <= 0.0 : do not consider particle weighting
 //
 // Return      :  CutPoint
 //-------------------------------------------------------------------------------------------------------
-void LB_SetCutPoint( const int lv, long *CutPoint, const bool InputLBIdxList, long *LBIdx_AllRank )
+void LB_SetCutPoint( const int lv, long *CutPoint, const bool InputLBIdx0AndLoad, long *LBIdx0_AllRank_Input,
+                     double *Load_AllRank_Input, const double ParWeight )
 {
 
 // check
    if ( NPatchTotal[lv]%8 != 0 )
       Aux_Error( ERROR_INFO, "NPatchTotal[%d] = %d is NOT a multiple of 8 !!\n", lv, NPatchTotal[lv] );
 
-   if ( MPI_Rank == 0  &&  InputLBIdxList  &&  LBIdx_AllRank == NULL )
-      Aux_Error( ERROR_INFO, "LBIdx_AllRank == NULL when the option InputLBIdxList is on !!\n" );
+   if ( MPI_Rank == 0  &&  InputLBIdx0AndLoad  &&  ( LBIdx0_AllRank_Input == NULL || Load_AllRank_Input == NULL )  )
+      Aux_Error( ERROR_INFO, "LBIdx0_AllRank_Input/Load_AllRank_Input == NULL when InputLBIdx0AndLoad is on !!\n" );
 
 
-// 1. determine the load of each MPI rank
-   const int NPG            = NPatchTotal[lv]/8;
-   const int NPG_per_Rank   = NPG/MPI_NRank;
-   const int Rank_with_more = NPG%MPI_NRank;
-   int *LoadList = NULL;
+// 1. collect the load-balance weighting and LB_Idx of all patch groups from all ranks
+   const int NPG_Total = NPatchTotal[lv] / 8;
 
-   if ( MPI_Rank == 0 )
+   long   *LBIdx0_ThisRank = NULL;
+   long   *LBIdx0_AllRank  = NULL;
+   double *Load_ThisRank   = NULL;
+   double *Load_AllRank    = NULL;
+   int    *NPG_AllRank     = NULL;
+   int    *Recv_Disp       = NULL;
+   int    *IdxTable        = ( MPI_Rank == 0 ) ? new int [NPG_Total] : NULL;
+
+// use the input tables directly
+// --> useful during RESTART, where we have very limited information
+//     (e.g., we don't know the number of patches in each rank, amr->NPatchComma, and any particle information yet ...)
+   if ( InputLBIdx0AndLoad )
    {
-      LoadList= new int [MPI_NRank];
-
-      for (int r=0; r<MPI_NRank; r++)
+      if ( MPI_Rank == 0 )
       {
-         LoadList[r] = NPG_per_Rank*8;
-
-         if ( r < Rank_with_more )  LoadList[r] += 8;
+         LBIdx0_AllRank = LBIdx0_AllRank_Input;
+         Load_AllRank   = Load_AllRank_Input;
       }
-
-#     ifdef GAMER_DEBUG
-      int LoadSum = 0;
-      for (int r=0; r<MPI_NRank; r++)  LoadSum += LoadList[r];
-      if ( LoadSum != NPatchTotal[lv] )
-         Aux_Error( ERROR_INFO, "LoadSum (%d) != NPatchTotal (%d) at level %d !!\n",
-                    LoadSum, NPatchTotal[lv], lv );
-#     endif
-   }
-
-
-// 2. collect LB_Idx from all ranks
-   long *SendBuf_LBIdx = NULL;
-   long *RecvBuf_LBIdx = NULL;
-   int  *NPatch_each_Rank = NULL, *Recv_Disp = NULL;
-
-   if ( InputLBIdxList )
-   {
-      if ( MPI_Rank == 0 )    RecvBuf_LBIdx = LBIdx_AllRank;
    }
 
    else
    {
-      SendBuf_LBIdx = new long [ amr->NPatchComma[lv][1] ];
+//    allocate memory
+      const int NPG_ThisRank = amr->NPatchComma[lv][1] / 8;
+
+      LBIdx0_ThisRank = new long   [ NPG_ThisRank ];
+      Load_ThisRank   = new double [ NPG_ThisRank ];
 
       if ( MPI_Rank == 0 )
       {
-         RecvBuf_LBIdx    = new long [ NPatchTotal[lv] ];
-         NPatch_each_Rank = new int  [ MPI_NRank ];
-         Recv_Disp        = new int  [ MPI_NRank ];
+         LBIdx0_AllRank = new long   [ NPG_Total ];
+         Load_AllRank   = new double [ NPG_Total ];
+         NPG_AllRank    = new int    [ MPI_NRank ];
+         Recv_Disp      = new int    [ MPI_NRank ];
       }
 
-      for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)   SendBuf_LBIdx[PID] = amr->patch[0][lv][PID]->LB_Idx;
 
-      MPI_Gather( &amr->NPatchComma[lv][1], 1, MPI_INT, NPatch_each_Rank, 1, MPI_INT, 0, MPI_COMM_WORLD );
+//    collect the number of patch groups in each rank
+      MPI_Gather( &NPG_ThisRank, 1, MPI_INT, NPG_AllRank, 1, MPI_INT, 0, MPI_COMM_WORLD );
 
       if ( MPI_Rank == 0 )
       {
          Recv_Disp[0] = 0;
-         for (int r=0; r<MPI_NRank-1; r++)   Recv_Disp[r+1] = Recv_Disp[r] + NPatch_each_Rank[r];
+         for (int r=0; r<MPI_NRank-1; r++)   Recv_Disp[r+1] = Recv_Disp[r] + NPG_AllRank[r];
       }
 
-      MPI_Gatherv( SendBuf_LBIdx, amr->NPatchComma[lv][1], MPI_LONG, RecvBuf_LBIdx, NPatch_each_Rank, Recv_Disp,
+
+//    collect the minimum LBIdx in each patch group
+//    --> assuming patches within the same patch group have consecutive LBIdx
+      for (int t=0; t<NPG_ThisRank; t++)
+      {
+         const int PID0 = t*8;
+
+         LBIdx0_ThisRank[t]  = amr->patch[0][lv][PID0]->LB_Idx;
+         LBIdx0_ThisRank[t] -= LBIdx0_ThisRank[t] % 8;         // get the **minimum** LBIdx in this patch group
+      }
+
+      MPI_Gatherv( LBIdx0_ThisRank, NPG_ThisRank, MPI_LONG, LBIdx0_AllRank, NPG_AllRank, Recv_Disp,
                    MPI_LONG, 0, MPI_COMM_WORLD );
-   } // if ( InputLBIdxList ) ... else ...
+
+
+//    collect the load-balance weighting in each patch group
+//    (1) cells --> assuming the weighting of each patch == 1.0
+      for (int t=0; t<NPG_ThisRank; t++)  Load_ThisRank[t] = 8.0; // 8 patches per patch group
+
+//    (2) particles
+#     ifdef PARTICLE
+      if ( ParWeight > 0.0 )
+      {
+//       renormalize the load-balance weighting of one particle so that the weighting of one patch is 1.0
+         const double ParWeight_Norm = ParWeight / (double)CUBE(PS1);
+
+//       get the number of particles in each patch
+         const bool PredictPos_No     = false;
+         const bool SibBufPatch_No    = false;
+         const bool FaSibBufPatch_No  = false;
+         const bool JustCountNPar_Yes = true;
+         const bool TimingSendPar_No  = false;
+
+         Par_CollectParticle2OneLevel( lv, PredictPos_No, NULL_REAL, SibBufPatch_No, FaSibBufPatch_No, JustCountNPar_Yes,
+                                       TimingSendPar_No );
+
+         for (int t=0; t<NPG_ThisRank; t++)
+         for (int PID=t*8; PID<(t+1)*8; PID++)
+         {
+            int NParThisPatch;
+
+            if ( amr->patch[0][lv][PID]->son == -1 )  NParThisPatch = amr->patch[0][lv][PID]->NPar;
+            else                                      NParThisPatch = amr->patch[0][lv][PID]->NPar_Copy;
+
+#           ifdef DEBUG_PARTICLE
+            if ( NParThisPatch < 0 )
+               Aux_Error( ERROR_INFO, "NPar (%d) has not been calculated (lv %d, PID %d) !!\n",
+                          NParThisPatch, lv, PID );
+#           endif
+
+//          add the load-balance weighting of all particles in this patch
+            Load_ThisRank[t] += NParThisPatch*ParWeight_Norm;
+         } // for t ... PID ...
+
+//       free memory allocated by Par_CollectParticle2OneLevel
+         Par_CollectParticle2OneLevel_FreeMemory( lv, SibBufPatch_No, FaSibBufPatch_No );
+      } // if ( ParWeight_Norm > 0.0 )
+#     endif // #ifdef PARTICLE
+
+//    collect from all ranks
+      MPI_Gatherv( Load_ThisRank, NPG_ThisRank, MPI_DOUBLE, Load_AllRank, NPG_AllRank, Recv_Disp,
+                   MPI_DOUBLE, 0, MPI_COMM_WORLD );
+
+   } // if ( InputLBIdx0AndLoad ) ... else ...
 
 
    if ( MPI_Rank == 0 )
    {
+      double *Load_Record = ( OPT__VERBOSE ) ? new double [MPI_NRank] : NULL;
+      double  Load_Ave;
+
 //    3. sort LB_Idx
-      Mis_Heapsort( NPatchTotal[lv], RecvBuf_LBIdx, NULL );
+//    --> after sorting, we must use IdxTable to access the Load_AllRank[] array
+      Mis_Heapsort( NPG_Total, LBIdx0_AllRank, IdxTable );
 
 
 //    4. set the cut points
-      if ( NPatchTotal[lv] == 0 )
+//    4-1. take care of the case with no patches at all
+      if ( NPG_Total == 0 )
+      {
+         Load_Ave = 0.0;
+
          for (int t=0; t<MPI_NRank+1; t++)   CutPoint[t] = -1;
+
+         if ( OPT__VERBOSE )
+            for (int r=0; r<MPI_NRank; r++)  Load_Record[r] = 0.0;
+      }
 
       else
       {
-         const long LBIdx_Max = RecvBuf_LBIdx[ NPatchTotal[lv] - 1 ];
-         int Counter = 0;
+//       4-2. get the average workload for each rank
+         Load_Ave = 0.0;
+         for (int t=0; t<NPG_Total; t++)  Load_Ave += Load_AllRank[t];
+         Load_Ave /= (double)MPI_NRank;
+
+//       4-3. set the min and max cut points
+         const long LBIdx0_Min = LBIdx0_AllRank[             0 ];
+         const long LBIdx0_Max = LBIdx0_AllRank[ NPG_Total - 1 ];
+         CutPoint[        0] = LBIdx0_Min;
+         CutPoint[MPI_NRank] = LBIdx0_Max + 8;  // +8 since the maximum LBIdx in all patches is LBIdx0_Max + 7
+
+//       4-4. find the LBIdx with an accumulated workload (LoadAcc) closest to the average workload of each rank (LoadTarget)
+         int    CutIdx     = 1;                 // target array index for CutPoint[]
+                                                // --> note that CutPoint[CutIdx] is the **exclusive** upper bound of rank "CutIdx-1"
+         double LoadAcc    = 0.0;               // accumulated workload
+         double LoadTarget = CutIdx*Load_Ave;   // target accumulated workload for the rank "CutIdx-1"
+         double LoadThisPG;                     // workload of the target patch group
+
+         for (int PG=0; PG<NPG_Total; PG++)
+         {
+//          nothing to do if all cut points have been set already
+            if ( CutIdx == MPI_NRank )    break;
+
+//          remember to use IdxTable to access Load_AllRank
+            LoadThisPG = Load_AllRank[ IdxTable[PG] ];
+
+//          check if adding a new patch group will exceed the target accumulated workload
+            if ( LoadAcc+LoadThisPG >= LoadTarget )
+            {
+//             determine the cut point with an accumulated workload **closest** to the target accumulated workload
+//             (a) if adding a new patch group will exceed the target accumulated workload too much
+//                 --> exclude this patch group from the rank "CutIdx-1"
+//             note that both "LoadAcc > LoadTarget" and "LoadAcc <= LoadTaget" can happen
+               if ( fabs(LoadAcc-LoadTarget) < LoadAcc+LoadThisPG-LoadTarget )
+               {
+                  CutPoint[CutIdx] = LBIdx0_AllRank[PG];
+
+                  PG --;   // because this patch group has been **excluded** from this cut point
+               }
+
+//             (b) if adding a new patch group will NOT exceed the target accumulated workload too much
+//                 --> include this patch group in the rank "CutIdx-1"
+               else
+               {
+//                be careful about the special case "PG == NPG_Total-1"
+                  CutPoint[CutIdx] = ( PG == NPG_Total-1 ) ? CutPoint[MPI_NRank] : LBIdx0_AllRank[PG+1];
+
+                  LoadAcc += LoadThisPG;
+               }
+
+//             record the **accumulated** wordload of each rank
+               if ( OPT__VERBOSE )  Load_Record[ CutIdx - 1 ] = LoadAcc;
+
+               CutIdx ++;
+               LoadTarget = CutIdx*Load_Ave;
+            } // if ( LoadAcc+LoadThisPG >= LoadTarget )
+
+            else
+            {
+               LoadAcc += LoadThisPG;
+            } // if ( LoadAcc+LoadThisPG >= LoadTarget ) ... else ...
+
+         } // for (int PG=0; PG<NPG_Total; PG++)
+      } // if ( NPG_Total == 0 ) ... else ...
+
+
+//    5. output the cut points and workload of each MPI rank
+      if ( OPT__VERBOSE )
+      {
+//       convert the accumulated workload to the actual workload of each rank
+         Load_Record[ MPI_NRank - 1 ] = Load_Ave*MPI_NRank;
+         for (int r=MPI_NRank-1; r>=1; r--)  Load_Record[r] -= Load_Record[r-1];
+
+         double Load_Max = -1.0;
 
          for (int r=0; r<MPI_NRank; r++)
          {
-            CutPoint[r] = ( Counter < NPatchTotal[lv] ) ? RecvBuf_LBIdx[Counter] : LBIdx_Max+1;
-            Counter += LoadList[r];
+            Aux_Message( stdout, "   Lv %2d: Rank %4d, Cut %15ld -> %15ld, Load_Weighted %9.3e\n",
+                         lv, r, CutPoint[r], CutPoint[r+1], Load_Record[r] );
+
+            if ( Load_Record[r] > Load_Max )    Load_Max = Load_Record[r];
          }
 
-         CutPoint[MPI_NRank] = LBIdx_Max + 1;
+         Aux_Message( stdout, "   Load_Ave %9.3e, Load_Max %9.3e --> Load_Imbalance = %6.2f%%\n",
+                      Load_Ave, Load_Max, (NPG_Total == 0) ? 0.0 : 100.0*(Load_Max-Load_Ave)/Load_Ave );
+         Aux_Message( stdout, "   =============================================================================\n" );
+
+         delete [] Load_Record;
       }
-   }
+   } // if ( MPI_Rank == 0 )
 
 
-// 5. broadcast the cut points
+// 6. broadcast the cut points
    MPI_Bcast( CutPoint, MPI_NRank+1, MPI_LONG, 0, MPI_COMM_WORLD );
 
 
-// 6. output the cut points and load in each MPI rank
-   if ( OPT__VERBOSE  &&  MPI_Rank == 0 )
+// free memory
+   if ( MPI_Rank == 0 )    delete [] IdxTable;
+
+   if ( !InputLBIdx0AndLoad )
    {
-      const double Load_Ave = (double)NPatchTotal[lv] / MPI_NRank;
-      int Load_Max = -1;
+      delete [] LBIdx0_ThisRank;
+      delete [] Load_ThisRank;
 
-      for (int r=0; r<MPI_NRank; r++)
+      if ( MPI_Rank == 0 )
       {
-         Aux_Message( stdout, "   Lv %2d: Rank %4d, Cut %15ld -> %15ld, NPatch %10d\n",
-                      lv, r, CutPoint[r], CutPoint[r+1], LoadList[r] );
-
-         if ( LoadList[r] > Load_Max )   Load_Max = LoadList[r];
-      }
-
-      Aux_Message( stdout, "   Load_Ave %9.3e, Load_Max %8d --> Load Imbalance = %6.2f%%\n",
-                   Load_Ave, Load_Max, (Load_Max==0) ? 0.0 : 100.0*(Load_Max-Load_Ave)/Load_Ave );
-      Aux_Message( stdout, "   =============================================================================\n" );
-   }
-
-
-   if ( !InputLBIdxList )  delete [] SendBuf_LBIdx;
-   if ( MPI_Rank == 0 )
-   {
-      delete [] LoadList;
-
-      if ( !InputLBIdxList )
-      {
-         delete [] RecvBuf_LBIdx;
-         delete [] NPatch_each_Rank;
+         delete [] LBIdx0_AllRank;
+         delete [] Load_AllRank;
+         delete [] NPG_AllRank;
          delete [] Recv_Disp;
       }
    }
@@ -339,7 +488,7 @@ void LB_SetCutPoint( const int lv, long *CutPoint, const bool InputLBIdxList, lo
 //                   will be sent to rank "r"
 //                4. Particles will be redistributed along with the leaf patches as well
 //
-// Parameter   :  lv : Targeted refinement level
+// Parameter   :  lv : Target refinement level
 //-------------------------------------------------------------------------------------------------------
 void LB_RedistributeRealPatch( const int lv, real **ParVar_Old, real **Passive_Old )
 {

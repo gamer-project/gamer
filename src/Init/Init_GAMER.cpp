@@ -162,7 +162,24 @@ void Init_GAMER( int *argc, char ***argv )
 
 // improve load balance
 #  ifdef LOAD_BALANCE
-   LB_Init_LoadBalance( OPT__INIT == INIT_RESTART );
+
+// we don't have to redistribute all patches during the RESTART process since we already did that in Init_Reload()
+// --> but note that Init_Reload() does NOT consider load-balance weighting of particles
+// --> also nota that we don't have enough information to calculate the load-balance weighting of particles when
+//     calling LB_Init_LoadBalance() for the first time
+//     --> must disable particle weighting (by setting ParWeight==0.0) first
+   const double ParWeight_Zero   = 0.0;
+   const bool   Redistribute_Yes = true;
+   const bool   Redistribute_No  = false;
+
+   LB_Init_LoadBalance( (OPT__INIT==INIT_RESTART)?Redistribute_No:Redistribute_Yes, ParWeight_Zero );
+
+// redistribute patches again if we want to take into account the load-balance weighting of particles
+#  ifdef PARTICLE
+   if ( amr->LB->Par_Weight > 0.0 )
+   LB_Init_LoadBalance( Redistribute_Yes, amr->LB->Par_Weight );
+#  endif
+
 
 // fill up the data for patches that are not leaf patches (for RESTART only)
    if ( OPT__INIT == INIT_RESTART )

@@ -292,8 +292,9 @@ void Init_Restart_v1( const char FileName[] )
 #  ifdef LOAD_BALANCE
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Setting load-balance cut points ...\n" );
 
-   const bool InputLBIdxList_Yes = true;
-   long *LBIdx_AllRank = NULL;
+   const bool InputLBIdx0AndLoad_Yes = true;
+   long   *LBIdx0_AllRank = NULL;
+   double *Load_AllRank   = NULL;
 
    if ( MPI_Rank == 0 )
    {
@@ -303,28 +304,46 @@ void Init_Restart_v1( const char FileName[] )
 
    for (int lv=0; lv<NLv_Restart; lv++)
    {
-//    d0-1. construct the LBIdx_AllRank list at rank 0
+//    d0-1. construct the LBIdx0_AllRank and Load_AllRank lists at rank 0
       if ( MPI_Rank == 0 )
       {
-         LBIdx_AllRank = new long [ NPatchTotal[lv] ];
+         LBIdx0_AllRank = new long   [ NPatchTotal[lv] / 8 ];
+         Load_AllRank   = new double [ NPatchTotal[lv] / 8 ];
 
+//       LBIdx0_AllRank
          for (int LoadPID=0; LoadPID<NPatchTotal[lv]; LoadPID++)
          {
             fread(  LoadCorner, sizeof(int), 3, File );
             fread( &LoadSon,    sizeof(int), 1, File );
 
-            for (int d=0; d<3; d++)    LoadCorner[d] *= rescale;
+//          only store the minimum LBIdx in each patch group
+            if ( LoadPID%8 == 0 )
+            {
+               for (int d=0; d<3; d++)    LoadCorner[d] *= rescale;
 
-            LBIdx_AllRank[LoadPID] = LB_Corner2Index( lv, LoadCorner, CHECK_ON );
+               const int t = LoadPID / 8;
+
+               LBIdx0_AllRank[t]  = LB_Corner2Index( lv, LoadCorner, CHECK_ON );
+               LBIdx0_AllRank[t] -= LBIdx0_AllRank[t] % 8;
+            }
 
             if ( LoadSon == -1 )    fseek( File, PatchDataSize, SEEK_CUR );
-         }
+         } // for (int LoadPID=0; LoadPID<NPatchTotal[lv]; LoadPID++)
+
+//       Load_AllRank (assuming all patches have the same weighting == 1.0)
+         for (int t=0; t<NPatchTotal[lv]/8; t++)   Load_AllRank[t] = 8.0;  // 8 patches per patch group
       } // if ( MPI_Rank == 0 )
 
 //    d0-2. set the cut points
-      LB_SetCutPoint( lv, amr->LB->CutPoint[lv], InputLBIdxList_Yes, LBIdx_AllRank );
+//    --> do NOT consider load-balance weighting of particles since at this point we don't have that information
+      const double ParWeight_Zero = 0.0;
+      LB_SetCutPoint( lv, amr->LB->CutPoint[lv], InputLBIdx0AndLoad_Yes, LBIdx0_AllRank, Load_AllRank, ParWeight_Zero );
 
-      if ( MPI_Rank == 0 )    delete [] LBIdx_AllRank;
+      if ( MPI_Rank == 0 )
+      {
+         delete [] LBIdx0_AllRank;
+         delete [] Load_AllRank;
+      }
    } // for (int lv=0; lv<NLv_Restart; lv++)
 
    if ( MPI_Rank == 0 )    fclose( File );

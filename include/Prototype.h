@@ -329,8 +329,9 @@ void LB_GetBufferData( const int lv, const int FluSg, const int PotSg, const Get
 real*LB_GetBufferData_MemAllocate_Send( const int NSend );
 real*LB_GetBufferData_MemAllocate_Recv( const int NRecv );
 void LB_GrandsonCheck( const int lv );
-void LB_Init_LoadBalance( const bool DuringRestart );
-void LB_SetCutPoint( const int lv, long *CutPoint, const bool InputLBIdxList, long *LBIdx_AllRank );
+void LB_Init_LoadBalance( const bool Redistribute, const double ParWeight );
+void LB_SetCutPoint( const int lv, long *CutPoint, const bool InputLBIdx0AndLoad, long *LBIdx0_AllRank_Input,
+                     double *Load_AllRank_Input, const double ParWeight );
 void LB_Output_LBIdx( const int lv );
 void LB_RecordExchangeDataPatchID( const int Lv, const bool AfterRefine );
 void LB_RecordExchangeFixUpDataPatchID( const int Lv );
