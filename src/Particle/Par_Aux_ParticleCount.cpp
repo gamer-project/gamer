@@ -78,6 +78,9 @@ void Par_Aux_ParticleCount()
       fprintf( File, "%4s", "Sum:" );
       for (int lv=0; lv<NLEVEL; lv++)     fprintf( File, "%7ld(%6.2lf%%)", NPar_AllRank[lv], Frac_AllRank[lv] );
       fprintf( File, "\n" );
+      fprintf( File, "%4s", "Ave:" );
+      for (int lv=0; lv<NLEVEL; lv++)     fprintf( File, "%10.2f%6s", (double)NPar_AllRank[lv]/MPI_NRank, "" );
+      fprintf( File, "\n" );
 
 
 //    4. get the load and load-imbalance factor at each level
@@ -107,7 +110,7 @@ void Par_Aux_ParticleCount()
       WLI = ( WLoad_Max - WLoad_Ave ) / WLoad_Ave;
 
 //    4-3. record the load-imbalance factors
-      fprintf( File, "%4s", "LIM:" );
+      fprintf( File, "%4s", "Imb:" );
       for (int lv=0; lv<NLEVEL; lv++)  fprintf( File, "%7ld(%6.2f%%)", NPar_Max[lv], 100.0*NPar_Imb[lv] );
       fprintf( File, "\n" );
       fprintf( File, "Weighted load-imbalance factor = %6.2f%%\n", 100.0*WLI );

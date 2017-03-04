@@ -392,7 +392,7 @@ int main( int argc, char *argv[] )
 //    7. check whether to redistribute all patches for LOAD_BALANCE
 //    ---------------------------------------------------------------------------------------------------
 #     ifdef LOAD_BALANCE
-      if ( amr->LB->WLI > amr->LB->WLI_Max )
+      if ( LB_EstimateLoadImbalance() > amr->LB->WLI_Max )
       {
          if ( MPI_Rank == 0 )
          {

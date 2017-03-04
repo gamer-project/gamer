@@ -82,6 +82,9 @@ void Aux_PatchCount()
       fprintf( File, "%4s", "Sum:" );
       for (int lv=0; lv<NLEVEL; lv++)     fprintf( File, "%7d(%6.2lf%%)", NPatchTotal[lv], Coverage_Total[lv] );
       fprintf( File, "\n" );
+      fprintf( File, "%4s", "Ave:" );
+      for (int lv=0; lv<NLEVEL; lv++)     fprintf( File, "%10.2f%6s", (double)NPatchTotal[lv]/MPI_NRank, "" );
+      fprintf( File, "\n" );
 
 
 //    e. get the load and load-imbalance factor at each level
@@ -111,17 +114,10 @@ void Aux_PatchCount()
       WLI = ( WLoad_Max - WLoad_Ave ) / WLoad_Ave;
 
 //    e3. record the load-imbalance factors
-      fprintf( File, "%4s", "LIM:" );
+      fprintf( File, "%4s", "Imb:" );
       for (int lv=0; lv<NLEVEL; lv++)  fprintf( File, "%7d(%6.2f%%)", Load_Max[lv], 100.0*Load_Imb[lv] );
       fprintf( File, "\n" );
       fprintf( File, "Weighted load-imbalance factor = %6.2f%%\n", 100.0*WLI );
-
-//    e4. record WLI for LOAD_BALANCE
-#     ifdef LOAD_BALANCE
-      amr->LB->WLI = WLI;
-#     endif // #ifdef LOAD_BALANCE
-
-
       fprintf( File, "-------------------------------------------------------------------------------------" );
       fprintf( File, "----------------------------\n" );
       fprintf( File, "\n\n" );
@@ -129,12 +125,6 @@ void Aux_PatchCount()
       fclose( File );
 
    } // if ( MPI_Rank == 0 )
-
-
-// f. broadcast WLI to all ranks
-#  ifdef LOAD_BALANCE
-   MPI_Bcast( &amr->LB->WLI, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD );
-#  endif
 
 
    delete [] NPatch_Gather;
