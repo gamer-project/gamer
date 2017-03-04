@@ -656,6 +656,7 @@ void Aux_TakeNote()
 #     ifdef PARTICLE
       fprintf( Note, "LB_PAR_WEIGHT             %13.7e\n",  amr->LB->Par_Weight     );
 #     endif
+      fprintf( Note, "OPT__RECORD_LOAD_BALANCE  %d\n",      OPT__RECORD_LOAD_BALANCE);
 #     endif // #ifdef LOAD_BALANCE
       fprintf( Note, "***********************************************************************************\n" );
       fprintf( Note, "\n\n");

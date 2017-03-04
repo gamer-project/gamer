@@ -74,6 +74,7 @@
 
 0.1         LB_INPUT__WLI_MAX         # threshold for redistributing patches at all levels ##LOAD_BALANCE ONLY##
 -1.0        LB_INPUT__PAR_WEIGHT      # load-balance weighting of one particle over one cell (<0:default=0.0) ##LOAD_BALANCE and PARTICLE ONLY##
+1           OPT__RECORD_LOAD_BALANCE  # record the information of load balance
 
 1.666666667 GAMMA                     # ratio of specific heats (adiabatic index)
 0.6         MOLECULAR_WEIGHT          # mean molecular weight (currently it's only for calculating temperature in post-processing)

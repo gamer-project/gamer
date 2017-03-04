@@ -181,6 +181,10 @@ void Init_GAMER( int *argc, char ***argv )
 #  endif
 
 
+// record the initial weighted load-imbalance factor
+   if ( OPT__RECORD_LOAD_BALANCE )  LB_EstimateLoadImbalance();
+
+
 // fill up the data for patches that are not leaf patches (for RESTART only)
    if ( OPT__INIT == INIT_RESTART )
    for (int lv=NLEVEL-2; lv>=0; lv--)

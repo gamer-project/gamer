@@ -359,7 +359,12 @@ void Init_Load_Parameter()
    sscanf( input_line, "%lf%s",  &LB_INPUT__PAR_WEIGHT,     string );
 #  endif
 
+   getline( &input_line, &len, File );
+   sscanf( input_line, "%d%s",   &temp_int,                 string );
+   OPT__RECORD_LOAD_BALANCE = (bool)temp_int;
+
 #  else // #ifdef LOAD_BALANCE ... else ...
+   getline( &input_line, &len, File );
    getline( &input_line, &len, File );
    getline( &input_line, &len, File );
 #  endif // #ifdef LOAD_BALANCE ... else ...

@@ -1574,6 +1574,7 @@ void Check_InputPara( const char *FileName )
 #  ifdef PARTICLE
    LoadField( "LB_Par_Weight",           &RS.LB_Par_Weight,           SID, TID, NonFatal, &RT.LB_Par_Weight,            1, NonFatal );
 #  endif
+   LoadField( "Opt__RecordLoadBalance",  &RS.Opt__RecordLoadBalance,  SID, TID, NonFatal, &RT.Opt__RecordLoadBalance,   1, NonFatal );
 #  endif
 
 // fluid solvers in HYDRO

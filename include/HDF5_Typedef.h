@@ -360,6 +360,7 @@ struct InputPara_t
 #  ifdef PARTICLE
    double LB_Par_Weight;
 #  endif
+   int    Opt__RecordLoadBalance;
 #  endif
 
 // fluid solvers in HYDRO

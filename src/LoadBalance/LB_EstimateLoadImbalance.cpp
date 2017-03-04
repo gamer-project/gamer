@@ -97,68 +97,70 @@ double LB_EstimateLoadImbalance()
 
 
 //    4. write to the file "Record__LoadBalance"
-      const char FileName[] = "Record__LoadBalance";
-      static bool FirstTime = true;
-
-      if ( FirstTime )
+      if ( OPT__RECORD_LOAD_BALANCE )
       {
-         if ( Aux_CheckFileExist(FileName) )
-            Aux_Message( stderr, "WARNING : file \"%s\" already exists !!\n", FileName );
+         const char FileName[] = "Record__LoadBalance";
+         static bool FirstTime = true;
 
-         FirstTime = false;
-      }
+         if ( FirstTime )
+         {
+            if ( Aux_CheckFileExist(FileName) )
+               Aux_Message( stderr, "WARNING : file \"%s\" already exists !!\n", FileName );
 
-//    get the total number of patches and particles
-      long NPatchAll=0, NParAll=0;
-      for (int lv=0; lv<NLEVEL; lv++)  NPatchAll += NPatchTotal[lv];
-#     ifdef PARTICLE
-      NParAll = amr->Par->NPar_Active_AllRank;
-#     endif
+            FirstTime = false;
+         }
 
-      FILE *File = fopen( FileName, "a" );
+//       get the total number of patches and particles
+         long NPatchAll=0, NParAll=0;
+         for (int lv=0; lv<NLEVEL; lv++)  NPatchAll += NPatchTotal[lv];
+#        ifdef PARTICLE
+         NParAll = amr->Par->NPar_Active_AllRank;
+#        endif
 
-      fprintf( File, "Time %13.7e,  Step %7ld,  NPatch %12ld,  NPar %12ld\n\n",
-               Time[0], Step, NPatchAll, NParAll );
+         FILE *File = fopen( FileName, "a" );
 
-      fprintf( File, "%4s", "Rank" );
-      for (int lv=0; lv<NLEVEL; lv++)     fprintf( File, "%16s %-2d", "Level", lv );
-      fprintf( File, "\n" );
+         fprintf( File, "Time %13.7e,  Step %7ld,  NPatch %12ld,  NPar %12ld\n\n",
+                  Time[0], Step, NPatchAll, NParAll );
 
-      for (int r=0; r<MPI_NRank; r++)
-      {
-         fprintf( File, "%4d", r );
-         for (int lv=0; lv<NLEVEL; lv++)  fprintf( File, " %8.2e(%+7.2lf%%)", Load_AllRank[r][lv],
-                                                   (Load_Ave[lv]==0.0)?0.0:100.0*(Load_AllRank[r][lv]-Load_Ave[lv])/Load_Ave[lv] );
+         fprintf( File, "%4s", "Rank" );
+         for (int lv=0; lv<NLEVEL; lv++)     fprintf( File, "%16s %-2d", "Level", lv );
          fprintf( File, "\n" );
-      }
 
-      fprintf( File, "-------------------------------------------------------------------------------------" );
-      fprintf( File, "-------------------------------------------------------------------------------------\n" );
+         for (int r=0; r<MPI_NRank; r++)
+         {
+            fprintf( File, "%4d", r );
+            for (int lv=0; lv<NLEVEL; lv++)  fprintf( File, " %8.2e(%+7.2lf%%)", Load_AllRank[r][lv],
+                                                      (Load_Ave[lv]==0.0)?0.0:100.0*(Load_AllRank[r][lv]-Load_Ave[lv])/Load_Ave[lv] );
+            fprintf( File, "\n" );
+         }
 
-      fprintf( File, "%4s", "Sum:" );
-      for (int lv=0; lv<NLEVEL; lv++)     fprintf( File, " %8.2e%10s", Load_Ave[lv]*MPI_NRank, "" );
-      fprintf( File, "\n" );
+         fprintf( File, "-------------------------------------------------------------------------------------" );
+         fprintf( File, "-------------------------------------------------------------------------------------\n" );
 
-      fprintf( File, "%4s", "Ave:" );
-      for (int lv=0; lv<NLEVEL; lv++)     fprintf( File, " %8.2e%10s", Load_Ave[lv], "" );
-      fprintf( File, "\n" );
+         fprintf( File, "%4s", "Sum:" );
+         for (int lv=0; lv<NLEVEL; lv++)     fprintf( File, " %8.2e%10s", Load_Ave[lv]*MPI_NRank, "" );
+         fprintf( File, "\n" );
 
-      fprintf( File, "%4s", "Max:" );
-      for (int lv=0; lv<NLEVEL; lv++)     fprintf( File, " %8.2e%10s", Load_Max[lv], "" );
-      fprintf( File, "\n" );
+         fprintf( File, "%4s", "Ave:" );
+         for (int lv=0; lv<NLEVEL; lv++)     fprintf( File, " %8.2e%10s", Load_Ave[lv], "" );
+         fprintf( File, "\n" );
 
-      fprintf( File, "%4s", "Imb:" );
-      for (int lv=0; lv<NLEVEL; lv++)     fprintf( File, " %7.2lf%%%10s", 100.0*Load_Imb[lv], "" );
-      fprintf( File, "\n" );
+         fprintf( File, "%4s", "Max:" );
+         for (int lv=0; lv<NLEVEL; lv++)     fprintf( File, " %8.2e%10s", Load_Max[lv], "" );
+         fprintf( File, "\n" );
 
-      fprintf( File, "Weighted load-imbalance factor = %6.2f%%\n", 100.0*amr->LB->WLI );
+         fprintf( File, "%4s", "Imb:" );
+         for (int lv=0; lv<NLEVEL; lv++)     fprintf( File, " %7.2lf%%%10s", 100.0*Load_Imb[lv], "" );
+         fprintf( File, "\n" );
 
-      fprintf( File, "-------------------------------------------------------------------------------------" );
-      fprintf( File, "-------------------------------------------------------------------------------------\n" );
-      fprintf( File, "\n\n" );
+         fprintf( File, "Weighted load-imbalance factor = %6.2f%%\n", 100.0*amr->LB->WLI );
 
-      fclose( File );
+         fprintf( File, "-------------------------------------------------------------------------------------" );
+         fprintf( File, "-------------------------------------------------------------------------------------\n" );
+         fprintf( File, "\n\n" );
 
+         fclose( File );
+      } // if ( OPT__RECORD_LOAD_BALANCE )
    } // if ( MPI_Rank == 0 )
 
 

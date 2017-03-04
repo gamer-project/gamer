@@ -75,7 +75,7 @@ Procedure for outputting new variables:
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2219)
+// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2220)
 // Description :  Output all simulation data in the HDF5 format, which can be used as a restart file
 //                or loaded by YT
 //
@@ -120,6 +120,7 @@ Procedure for outputting new variables:
 //                2217 : 2017/01/25 --> output RESTART_LOAD_NRANK, set CodeVersion to "gamer"
 //                2218 : 2017/01/28 --> output OPT__FLAG_VORTICITY and the corresponding flag table
 //                2219 : 2017/03/01 --> output LB_Par_Weight, rename LB_Input__WLI_Max as LB_WLI_Max
+//                2220 : 2017/03/03 --> output Opt__RecordLoadBalance
 //-------------------------------------------------------------------------------------------------------
 void Output_DumpData_Total_HDF5( const char *FileName )
 {
@@ -1227,7 +1228,7 @@ void FillIn_KeyInfo( KeyInfo_t &KeyInfo )
 
    const time_t CalTime  = time( NULL );   // calendar time
 
-   KeyInfo.FormatVersion = 2219;
+   KeyInfo.FormatVersion = 2220;
    KeyInfo.Model         = MODEL;
    KeyInfo.NLevel        = NLEVEL;
    KeyInfo.PatchSize     = PATCH_SIZE;
@@ -1754,6 +1755,7 @@ void FillIn_InputPara( InputPara_t &InputPara )
 #  ifdef PARTICLE
    InputPara.LB_Par_Weight           = amr->LB->Par_Weight;
 #  endif
+   InputPara.Opt__RecordLoadBalance  = OPT__RECORD_LOAD_BALANCE;
 #  endif
 
 // fluid solvers in HYDRO
@@ -2320,6 +2322,7 @@ void GetCompound_InputPara( hid_t &H5_TypeID )
 #  ifdef PARTICLE
    H5Tinsert( H5_TypeID, "LB_Par_Weight",           HOFFSET(InputPara_t,LB_Par_Weight          ), H5T_NATIVE_DOUBLE  );
 #  endif
+   H5Tinsert( H5_TypeID, "Opt__RecordLoadBalance",  HOFFSET(InputPara_t,Opt__RecordLoadBalance ), H5T_NATIVE_INT     );
 #  endif
 
 // fluid solvers in HYDRO

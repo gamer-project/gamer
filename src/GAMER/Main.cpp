@@ -129,6 +129,7 @@ double            LB_INPUT__WLI_MAX;
 #ifdef PARTICLE
 double            LB_INPUT__PAR_WEIGHT;
 #endif
+bool              OPT__RECORD_LOAD_BALANCE;
 #endif
 
 // (2-5) particle 

@@ -143,6 +143,7 @@ extern double     LB_INPUT__WLI_MAX;                  // LB->WLI_Max loaded from
 #ifdef PARTICLE
 extern double     LB_INPUT__PAR_WEIGHT;               // LB->Par_Weight loaded from "Input__Parameter"
 #endif
+extern bool       OPT__RECORD_LOAD_BALANCE;
 #endif
 
 
