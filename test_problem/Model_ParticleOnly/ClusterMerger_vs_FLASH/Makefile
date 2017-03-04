@@ -42,7 +42,7 @@ SIMU_OPTION += -DPARTICLE
 SIMU_OPTION += -DNLEVEL=10
 
 # maximum number of patches at each AMR level
-SIMU_OPTION += -DMAX_PATCH=1000000
+SIMU_OPTION += -DMAX_PATCH=2000000
 
 
 # (b) hydro options
