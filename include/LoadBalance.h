@@ -343,33 +343,16 @@ struct LB_t
    //===================================================================================
    ~LB_t()
    {
+//    release memory whose size depending on the number of patches at each rank
+      reset();
 
+
+//    release memory whose size is independent of the number of patches at each rank
       for (int lv=0; lv<NLEVEL; lv++)
       {
 //       miscellaneous
-         if ( OverlapMPI_FluSyncPID0 [lv] != NULL )   delete [] OverlapMPI_FluSyncPID0 [lv];
-         if ( OverlapMPI_FluAsyncPID0[lv] != NULL )   delete [] OverlapMPI_FluAsyncPID0[lv];
-#        ifdef GRAVITY
-         if ( OverlapMPI_PotSyncPID0 [lv] != NULL )   delete [] OverlapMPI_PotSyncPID0 [lv];
-         if ( OverlapMPI_PotAsyncPID0[lv] != NULL )   delete [] OverlapMPI_PotAsyncPID0[lv];
-#        endif
-         if ( CutPoint               [lv] != NULL )   delete [] CutPoint               [lv];
-         if ( IdxList_Real           [lv] != NULL )   delete [] IdxList_Real           [lv];
-         if ( IdxList_Real_IdxTable  [lv] != NULL )   delete [] IdxList_Real_IdxTable  [lv];
-         if ( PaddedCr1DList         [lv] != NULL )   free(     PaddedCr1DList         [lv] );
-         if ( PaddedCr1DList_IdxTable[lv] != NULL )   free(     PaddedCr1DList_IdxTable[lv] );
-
-         OverlapMPI_FluSyncPID0 [lv] = NULL;
-         OverlapMPI_FluAsyncPID0[lv] = NULL;
-#        ifdef GRAVITY
-         OverlapMPI_PotSyncPID0 [lv] = NULL;
-         OverlapMPI_PotAsyncPID0[lv] = NULL;
-#        endif
-         CutPoint               [lv] = NULL;
-         IdxList_Real           [lv] = NULL;
-         IdxList_Real_IdxTable  [lv] = NULL;
-         PaddedCr1DList         [lv] = NULL;
-         PaddedCr1DList_IdxTable[lv] = NULL;
+         if ( CutPoint [lv] != NULL )  delete [] CutPoint[lv];
+         CutPoint[lv] = NULL;
 
 
 //       NList
@@ -405,89 +388,6 @@ struct LB_t
 
 
 //       IDList
-         for (int r=0; r<MPI_NRank; r++)
-         {
-            if ( r == 0 )
-            {
-            if ( SendH_IDList         [lv][r] != NULL )  delete [] SendH_IDList         [lv][r];
-            if ( SendH_SibList        [lv][r] != NULL )  delete [] SendH_SibList        [lv][r];
-            if ( SendH_SibDiffList    [lv][r] != NULL )  delete [] SendH_SibDiffList    [lv][r];
-            if ( SendH_LBIdxList      [lv][r] != NULL )  delete [] SendH_LBIdxList      [lv][r];
-            if ( RecvH_IDList_IdxTable[lv][r] != NULL )  delete [] RecvH_IDList_IdxTable[lv][r];
-            if ( RecvH_SibList        [lv][r] != NULL )  delete [] RecvH_SibList        [lv][r];
-            if ( RecvH_SibDiffList    [lv][r] != NULL )  delete [] RecvH_SibDiffList    [lv][r];
-            if ( RecvH_LBIdxList      [lv][r] != NULL )  delete [] RecvH_LBIdxList      [lv][r];
-            if ( RecvH_PCr1D          [lv][r] != NULL )  delete [] RecvH_PCr1D          [lv][r];
-            if ( RecvH_PCr1D_IdxTable [lv][r] != NULL )  delete [] RecvH_PCr1D_IdxTable [lv][r];
-            }
-            if ( RecvH_IDList         [lv][r] != NULL )  free(     RecvH_IDList         [lv][r] );
-            if ( SendX_IDList         [lv][r] != NULL )  delete [] SendX_IDList         [lv][r];
-            if ( SendX_SibList        [lv][r] != NULL )  delete [] SendX_SibList        [lv][r];
-            if ( RecvX_IDList         [lv][r] != NULL )  delete [] RecvX_IDList         [lv][r];
-            if ( RecvX_SibList        [lv][r] != NULL )  delete [] RecvX_SibList        [lv][r];
-            if ( SendR_IDList         [lv][r] != NULL )  free(     SendR_IDList         [lv][r] );
-            if ( SendR_IDList_IdxTable[lv][r] != NULL )  delete [] SendR_IDList_IdxTable[lv][r];
-            if ( RecvR_IDList         [lv][r] != NULL )  delete [] RecvR_IDList         [lv][r];
-            if ( SendF_IDList         [lv][r] != NULL )  delete [] SendF_IDList         [lv][r];
-            if ( SendF_SibList        [lv][r] != NULL )  delete [] SendF_SibList        [lv][r];
-            if ( RecvF_IDList         [lv][r] != NULL )  free(     RecvF_IDList         [lv][r] );
-            if ( RecvF_IDList_IdxTable[lv][r] != NULL )  delete [] RecvF_IDList_IdxTable[lv][r];
-            if ( RecvF_SibList        [lv][r] != NULL )  delete [] RecvF_SibList        [lv][r];
-#           ifdef GRAVITY
-            if ( r == 0 )
-            {
-            if ( SendG_IDList         [lv][r] != NULL )  delete [] SendG_IDList         [lv][r];
-            if ( SendG_SibList        [lv][r] != NULL )  delete [] SendG_SibList        [lv][r];
-            if ( SendG_SibDiffList    [lv][r] != NULL )  delete [] SendG_SibDiffList    [lv][r];
-            if ( SendG_LBIdxList      [lv][r] != NULL )  delete [] SendG_LBIdxList      [lv][r];
-            if ( RecvG_IDList_IdxTable[lv][r] != NULL )  delete [] RecvG_IDList_IdxTable[lv][r];
-            if ( RecvG_SibList        [lv][r] != NULL )  delete [] RecvG_SibList        [lv][r];
-            if ( RecvG_SibDiffList    [lv][r] != NULL )  delete [] RecvG_SibDiffList    [lv][r];
-            if ( RecvG_LBIdxList      [lv][r] != NULL )  delete [] RecvG_LBIdxList      [lv][r];
-            if ( RecvG_PCr1D          [lv][r] != NULL )  delete [] RecvG_PCr1D          [lv][r];
-            if ( RecvG_PCr1D_IdxTable [lv][r] != NULL )  delete [] RecvG_PCr1D_IdxTable [lv][r];
-            }
-            if ( RecvG_IDList         [lv][r] != NULL )  free(     RecvG_IDList         [lv][r] );
-#           endif
-
-            SendH_IDList         [lv][r] = NULL;
-            SendH_SibList        [lv][r] = NULL;
-            SendH_SibDiffList    [lv][r] = NULL;
-            SendH_LBIdxList      [lv][r] = NULL;
-            RecvH_IDList         [lv][r] = NULL;
-            RecvH_IDList_IdxTable[lv][r] = NULL;
-            RecvH_SibList        [lv][r] = NULL;
-            RecvH_SibDiffList    [lv][r] = NULL;
-            RecvH_LBIdxList      [lv][r] = NULL;
-            RecvH_PCr1D          [lv][r] = NULL;
-            RecvH_PCr1D_IdxTable [lv][r] = NULL;
-            SendX_IDList         [lv][r] = NULL;
-            SendX_SibList        [lv][r] = NULL;
-            RecvX_IDList         [lv][r] = NULL;
-            RecvX_SibList        [lv][r] = NULL;
-            SendR_IDList         [lv][r] = NULL;
-            SendR_IDList_IdxTable[lv][r] = NULL;
-            RecvR_IDList         [lv][r] = NULL;
-            SendF_IDList         [lv][r] = NULL;
-            SendF_SibList        [lv][r] = NULL;
-            RecvF_IDList         [lv][r] = NULL;
-            RecvF_IDList_IdxTable[lv][r] = NULL;
-            RecvF_SibList        [lv][r] = NULL;
-#           ifdef GRAVITY
-            SendG_IDList         [lv][r] = NULL;
-            SendG_SibList        [lv][r] = NULL;
-            SendG_SibDiffList    [lv][r] = NULL;
-            SendG_LBIdxList      [lv][r] = NULL;
-            RecvG_IDList         [lv][r] = NULL;
-            RecvG_IDList_IdxTable[lv][r] = NULL;
-            RecvG_SibList        [lv][r] = NULL;
-            RecvG_SibDiffList    [lv][r] = NULL;
-            RecvG_LBIdxList      [lv][r] = NULL;
-            RecvG_PCr1D          [lv][r] = NULL;
-            RecvG_PCr1D_IdxTable [lv][r] = NULL;
-#           endif
-         } // for (int r=0; r<MPI_NRank; r++)
-
          if ( SendH_IDList         [lv] != NULL )  delete [] SendH_IDList         [lv];
          if ( SendH_SibList        [lv] != NULL )  delete [] SendH_SibList        [lv];
          if ( SendH_SibDiffList    [lv] != NULL )  delete [] SendH_SibDiffList    [lv];
@@ -580,13 +480,6 @@ struct LB_t
       for (int lv=0; lv<NLEVEL; lv++)
       {
 //       miscellaneous
-         OverlapMPI_FluSyncPID0 [lv] = 0;
-         OverlapMPI_FluAsyncPID0[lv] = 0;
-#        ifdef GRAVITY
-         OverlapMPI_PotSyncPID0 [lv] = 0;
-         OverlapMPI_PotAsyncPID0[lv] = 0;
-#        endif
-
          if ( OverlapMPI_FluSyncPID0 [lv] != NULL )   delete [] OverlapMPI_FluSyncPID0 [lv];
          if ( OverlapMPI_FluAsyncPID0[lv] != NULL )   delete [] OverlapMPI_FluAsyncPID0[lv];
 #        ifdef GRAVITY

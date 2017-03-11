@@ -394,6 +394,9 @@ int main( int argc, char *argv[] )
 //    7. check whether to redistribute all patches for LOAD_BALANCE
 //    ---------------------------------------------------------------------------------------------------
 #     ifdef LOAD_BALANCE
+      if ( OPT__TIMING_BARRIER ) MPI_Barrier( MPI_COMM_WORLD );
+      Timer_Main[5]->Start();    // timer for load balance
+
       if ( LB_EstimateLoadImbalance() > amr->LB->WLI_Max )
       {
          if ( MPI_Rank == 0 )
@@ -406,23 +409,22 @@ int main( int argc, char *argv[] )
          const bool   Redistribute_Yes = true;
          const double ParWeight_No     = 0.0;
 
-         TIMING_FUNC(   amr->LB->reset(),                                             Timer_Main[5],   false   );
+         amr->LB->reset();
 
-         TIMING_FUNC(   LB_Init_LoadBalance( Redistribute_Yes, ParWeight_No ),        Timer_Main[5],   false   );
+         LB_Init_LoadBalance( Redistribute_Yes, ParWeight_No );
 
 #        ifdef PARTICLE
-         if ( amr->LB->Par_Weight > 0.0 )
-         TIMING_FUNC(   LB_Init_LoadBalance( Redistribute_Yes, amr->LB->Par_Weight ), Timer_Main[5],   false   );
+         if ( amr->LB->Par_Weight > 0.0 )    LB_Init_LoadBalance( Redistribute_Yes, amr->LB->Par_Weight );
 #        endif
 
-         if ( OPT__PATCH_COUNT > 0 )
-         TIMING_FUNC(   Aux_PatchCount(),                                             Timer_Main[5],   false   );
+         if ( OPT__PATCH_COUNT > 0 )         Aux_PatchCount();
 
 #        ifdef PARTICLE
-         if ( OPT__PARTICLE_COUNT > 0 )
-         TIMING_FUNC(   Par_Aux_ParticleCount(),                                      Timer_Main[5],   false   );
+         if ( OPT__PARTICLE_COUNT > 0 )      Par_Aux_ParticleCount();
 #        endif
       }
+
+      Timer_Main[5]->Stop( false );
 #     endif // #ifdef LOAD_BALANCE
 //    ---------------------------------------------------------------------------------------------------
 
