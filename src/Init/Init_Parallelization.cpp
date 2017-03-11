@@ -16,6 +16,20 @@ void Init_Parallelization()
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... ", __FUNCTION__ );
 
 
+// 0. validate the number of MPI ranks
+//    --> check here first mainly because the particle routine in this function (step 6) needs to know "MPI_Rank"
+#  ifdef SERIAL
+   int NRank = 1;
+#  else
+   int NRank;
+   MPI_Comm_size( MPI_COMM_WORLD, &NRank );
+#  endif
+
+   if ( MPI_NRank != NRank )
+      Aux_Error( ERROR_INFO, "MPI_NRank (%d) != MPI_Comm_size (%d) --> Is the runtime parameter MPI_NRANK consistent with mpirun?\n",
+                 MPI_NRank, NRank );
+
+
 // 1. number of parallel buffer cells for setting boundary conditions by either data copy or interpolation
 // 1.1 get the number of ghost zones required in different interpolations
    int NSide_Useless, NGhost_Flu, NGhost_RefFlu;
