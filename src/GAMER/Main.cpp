@@ -14,83 +14,84 @@
 
 // 1. common global variables
 // =======================================================================================================
-AMR_t            *amr = NULL;
+AMR_t               *amr = NULL;
 
-double            Time[NLEVEL]           = { 0.0 };
-long              AdvanceCounter[NLEVEL] = { 0 };
-long              NCorrUnphy[NLEVEL]     = { 0 };
-long              Step                   = 0;
-int               DumpID                 = 0;
-double            DumpTime               = 0.0;
+double               Time[NLEVEL]           = { 0.0 };
+long                 AdvanceCounter[NLEVEL] = { 0 };
+long                 NCorrUnphy[NLEVEL]     = { 0 };
+long                 Step                   = 0;
+int                  DumpID                 = 0;
+double               DumpTime               = 0.0;
 
-double            dTime_Base;
-double            Time_Prev            [NLEVEL];
-real              MinDtInfo_Fluid      [NLEVEL];
-double            FlagTable_Rho        [NLEVEL-1];
-double            FlagTable_RhoGradient[NLEVEL-1];
-double            FlagTable_Lohner     [NLEVEL-1][4];
-double            FlagTable_User       [NLEVEL-1];
-double           *DumpTable = NULL;
-int               DumpTable_NDump;
+double               dTime_Base;
+double               Time_Prev            [NLEVEL];
+real                 MinDtInfo_Fluid      [NLEVEL];
+double               FlagTable_Rho        [NLEVEL-1];
+double               FlagTable_RhoGradient[NLEVEL-1];
+double               FlagTable_Lohner     [NLEVEL-1][4];
+double               FlagTable_User       [NLEVEL-1];
+double              *DumpTable = NULL;
+int                  DumpTable_NDump;
 
-int               MPI_Rank, MPI_Rank_X[3], MPI_SibRank[26], NX0[3], NPatchTotal[NLEVEL];
-int              *BaseP = NULL;
-int               Flu_ParaBuf;
+int                  MPI_Rank, MPI_Rank_X[3], MPI_SibRank[26], NX0[3], NPatchTotal[NLEVEL];
+int                 *BaseP = NULL;
+int                  Flu_ParaBuf;
 
-double            BOX_SIZE, DT__FLUID, DT__FLUID_INIT, END_T, OUTPUT_DT;
-long              END_STEP;
-int               NX0_TOT[3], OUTPUT_STEP, REGRID_COUNT, FLU_GPU_NPGROUP, OMP_NTHREAD;
-int               MPI_NRank, MPI_NRank_X[3], GPU_NSTREAM, FLAG_BUFFER_SIZE, MAX_LEVEL;
+double               BOX_SIZE, DT__FLUID, DT__FLUID_INIT, END_T, OUTPUT_DT;
+long                 END_STEP;
+int                  NX0_TOT[3], OUTPUT_STEP, REGRID_COUNT, FLU_GPU_NPGROUP, OMP_NTHREAD;
+int                  MPI_NRank, MPI_NRank_X[3], GPU_NSTREAM, FLAG_BUFFER_SIZE, MAX_LEVEL;
 
-IntScheme_t       OPT__FLU_INT_SCHEME, OPT__REF_FLU_INT_SCHEME;
-double            OUTPUT_PART_X, OUTPUT_PART_Y, OUTPUT_PART_Z;
-double            OPT__CK_MEMFREE, INT_MONO_COEFF, UNIT_L, UNIT_M, UNIT_T, UNIT_V, UNIT_D, UNIT_E, UNIT_P;
-int               OPT__UM_START_LEVEL, OPT__UM_START_NVAR, OPT__GPUID_SELECT, OPT__PATCH_COUNT;
-int               INIT_DUMPID, INIT_SUBSAMPLING_NCELL, OPT__TIMING_BARRIER, OPT__REUSE_MEMORY, RESTART_LOAD_NRANK;
-bool              OPT__FLAG_RHO, OPT__FLAG_RHO_GRADIENT, OPT__FLAG_USER, OPT__FLAG_LOHNER_DENS, OPT__FLAG_REGION;
-bool              OPT__DT_USER, OPT__RECORD_DT, OPT__RECORD_MEMORY, OPT__ADAPTIVE_DT, OPT__MEMORY_POOL;
-bool              OPT__FIXUP_RESTRICT, OPT__INIT_RESTRICT, OPT__VERBOSE, OPT__MANUAL_CONTROL, OPT__UNIT;
-bool              OPT__INT_TIME, OPT__OUTPUT_TEST_ERROR, OPT__OUTPUT_BASE, OPT__OVERLAP_MPI, OPT__TIMING_BALANCE;
-bool              OPT__OUTPUT_BASEPS, OPT__CK_REFINE, OPT__CK_PROPER_NESTING, OPT__CK_FINITE, OPT__RECORD_PERFORMANCE;
-bool              OPT__CK_RESTRICT, OPT__CK_PATCH_ALLOCATE, OPT__FIXUP_FLUX, OPT__CK_FLUX_ALLOCATE;
-bool              OPT__UM_START_DOWNGRADE, OPT__UM_START_REFINE, OPT__UM_FACTOR_5OVER3, OPT__TIMING_MPI;
-bool              OPT__CK_CONSERVATION, OPT__RESET_FLUID, OPT__RECORD_USER, OPT__CORR_AFTER_ALL_SYNC;
-OptInit_t         OPT__INIT;
-OptRestartH_t     OPT__RESTART_HEADER;
-OptOutputFormat_t OPT__OUTPUT_TOTAL;
-OptOutputPart_t   OPT__OUTPUT_PART;
-OptOutputMode_t   OPT__OUTPUT_MODE;
-OptFluBC_t        OPT__BC_FLU[6];
-OptLohnerForm_t   OPT__FLAG_LOHNER_FORM;
+IntScheme_t          OPT__FLU_INT_SCHEME, OPT__REF_FLU_INT_SCHEME;
+double               OUTPUT_PART_X, OUTPUT_PART_Y, OUTPUT_PART_Z;
+double               OPT__CK_MEMFREE, INT_MONO_COEFF, UNIT_L, UNIT_M, UNIT_T, UNIT_V, UNIT_D, UNIT_E, UNIT_P;
+int                  OPT__UM_START_LEVEL, OPT__UM_START_NVAR, OPT__GPUID_SELECT, OPT__PATCH_COUNT;
+int                  INIT_DUMPID, INIT_SUBSAMPLING_NCELL, OPT__TIMING_BARRIER, OPT__REUSE_MEMORY, RESTART_LOAD_NRANK;
+bool                 OPT__FLAG_RHO, OPT__FLAG_RHO_GRADIENT, OPT__FLAG_USER, OPT__FLAG_LOHNER_DENS, OPT__FLAG_REGION;
+bool                 OPT__DT_USER, OPT__RECORD_DT, OPT__RECORD_MEMORY, OPT__ADAPTIVE_DT, OPT__MEMORY_POOL;
+bool                 OPT__FIXUP_RESTRICT, OPT__INIT_RESTRICT, OPT__VERBOSE, OPT__MANUAL_CONTROL, OPT__UNIT;
+bool                 OPT__INT_TIME, OPT__OUTPUT_TEST_ERROR, OPT__OUTPUT_BASE, OPT__OVERLAP_MPI, OPT__TIMING_BALANCE;
+bool                 OPT__OUTPUT_BASEPS, OPT__CK_REFINE, OPT__CK_PROPER_NESTING, OPT__CK_FINITE, OPT__RECORD_PERFORMANCE;
+bool                 OPT__CK_RESTRICT, OPT__CK_PATCH_ALLOCATE, OPT__FIXUP_FLUX, OPT__CK_FLUX_ALLOCATE;
+bool                 OPT__UM_START_DOWNGRADE, OPT__UM_START_REFINE, OPT__UM_FACTOR_5OVER3, OPT__TIMING_MPI;
+bool                 OPT__CK_CONSERVATION, OPT__RESET_FLUID, OPT__RECORD_USER;
+OptInit_t            OPT__INIT;
+OptRestartH_t        OPT__RESTART_HEADER;
+OptOutputFormat_t    OPT__OUTPUT_TOTAL;
+OptOutputPart_t      OPT__OUTPUT_PART;
+OptOutputMode_t      OPT__OUTPUT_MODE;
+OptFluBC_t           OPT__BC_FLU[6];
+OptLohnerForm_t      OPT__FLAG_LOHNER_FORM;
+OptCorrAfterSync_t   OPT__CORR_AFTER_ALL_SYNC;
 
 
 // 2. global variables for different applications
 // =======================================================================================================
 // (2-1) fluid solver in different models
 #if   ( MODEL == HYDRO )
-double            FlagTable_PresGradient[NLEVEL-1], FlagTable_Vorticity[NLEVEL-1];
-double            GAMMA, MINMOD_COEFF, EP_COEFF, MOLECULAR_WEIGHT;
-LR_Limiter_t      OPT__LR_LIMITER;
-WAF_Limiter_t     OPT__WAF_LIMITER;
-OptRSolver_t      OPT__1ST_FLUX_CORR_SCHEME;
-bool              OPT__FLAG_PRES_GRADIENT, OPT__FLAG_LOHNER_ENGY, OPT__FLAG_LOHNER_PRES, OPT__FLAG_LOHNER_TEMP, OPT__1ST_FLUX_CORR;
-bool              OPT__FLAG_VORTICITY;
-int               OPT__CK_NEGATIVE;
-double            MIN_DENS, MIN_PRES;
+double               FlagTable_PresGradient[NLEVEL-1], FlagTable_Vorticity[NLEVEL-1];
+double               GAMMA, MINMOD_COEFF, EP_COEFF, MOLECULAR_WEIGHT;
+LR_Limiter_t         OPT__LR_LIMITER;
+WAF_Limiter_t        OPT__WAF_LIMITER;
+OptRSolver_t         OPT__1ST_FLUX_CORR_SCHEME;
+bool                 OPT__FLAG_PRES_GRADIENT, OPT__FLAG_LOHNER_ENGY, OPT__FLAG_LOHNER_PRES, OPT__FLAG_LOHNER_TEMP;
+bool                 OPT__FLAG_VORTICITY, OPT__1ST_FLUX_CORR;
+int                  OPT__CK_NEGATIVE;
+double               MIN_DENS, MIN_PRES;
 
 #elif ( MODEL == MHD )
-double            MIN_DENS, MIN_PRES;
+double               MIN_DENS, MIN_PRES;
 #warning : WAIT MHD !!!
 
 #elif ( MODEL == ELBDM )
-double            DT__PHASE, FlagTable_EngyDensity[NLEVEL-1][2];
-bool              OPT__FLAG_ENGY_DENSITY, OPT__INT_PHASE;
-bool              ELBDM_TAYLOR3_AUTO;
-double            ELBDM_TAYLOR3_COEFF;
-double            ELBDM_MASS, ELBDM_PLANCK_CONST, ELBDM_ETA, MIN_DENS;
-real              MinDtInfo_Phase[NLEVEL];
+double               DT__PHASE, FlagTable_EngyDensity[NLEVEL-1][2];
+bool                 OPT__FLAG_ENGY_DENSITY, OPT__INT_PHASE;
+bool                 ELBDM_TAYLOR3_AUTO;
+double               ELBDM_TAYLOR3_COEFF;
+double               ELBDM_MASS, ELBDM_PLANCK_CONST, ELBDM_ETA, MIN_DENS;
+real                 MinDtInfo_Phase[NLEVEL];
 #ifdef QUARTIC_SELF_INTERACTION
-double            ELBDM_LAMBDA;
+double               ELBDM_LAMBDA;
 #endif
 
 #else
@@ -99,52 +100,52 @@ double            ELBDM_LAMBDA;
 
 // (2-2) self-gravity
 #ifdef GRAVITY
-double            AveDensity_Init = -1.0;     // initialize it as <= 0 to check if it is properly set later
-real              MinDtInfo_Gravity[NLEVEL];
-int               Pot_ParaBuf, Rho_ParaBuf;
+double               AveDensity_Init = -1.0;    // initialize it as <= 0 to check if it is properly set later
+real                 MinDtInfo_Gravity[NLEVEL];
+int                  Pot_ParaBuf, Rho_ParaBuf;
 
-real             *GreenFuncK      = NULL;
-double            GFUNC_COEFF0;
-double            DT__GRAVITY;
-double            NEWTON_G;
-int               POT_GPU_NPGROUP;
-bool              OPT__OUTPUT_POT, OPT__GRA_P5_GRADIENT, OPT__EXTERNAL_POT;
-double            SOR_OMEGA;
-int               SOR_MAX_ITER, SOR_MIN_ITER;
-double            MG_TOLERATED_ERROR;
-int               MG_MAX_ITER, MG_NPRE_SMOOTH, MG_NPOST_SMOOTH;
-IntScheme_t       OPT__POT_INT_SCHEME, OPT__RHO_INT_SCHEME, OPT__GRA_INT_SCHEME, OPT__REF_POT_INT_SCHEME;
-OptPotBC_t        OPT__BC_POT;
-OptGravityType_t  OPT__GRAVITY_TYPE;
+real                *GreenFuncK      = NULL;
+double               GFUNC_COEFF0;
+double               DT__GRAVITY;
+double               NEWTON_G;
+int                  POT_GPU_NPGROUP;
+bool                 OPT__OUTPUT_POT, OPT__GRA_P5_GRADIENT, OPT__EXTERNAL_POT;
+double               SOR_OMEGA;
+int                  SOR_MAX_ITER, SOR_MIN_ITER;
+double               MG_TOLERATED_ERROR;
+int                  MG_MAX_ITER, MG_NPRE_SMOOTH, MG_NPOST_SMOOTH;
+IntScheme_t          OPT__POT_INT_SCHEME, OPT__RHO_INT_SCHEME, OPT__GRA_INT_SCHEME, OPT__REF_POT_INT_SCHEME;
+OptPotBC_t           OPT__BC_POT;
+OptGravityType_t     OPT__GRAVITY_TYPE;
 #endif
 
 // (2-3) cosmological simulations
 #ifdef COMOVING
-double            A_INIT, OMEGA_M0, DT__MAX_DELTA_A, HUBBLE0;
+double               A_INIT, OMEGA_M0, DT__MAX_DELTA_A, HUBBLE0;
 #endif
 
 // (2-4) load balance
 #ifdef LOAD_BALANCE
-double            LB_INPUT__WLI_MAX;
+double               LB_INPUT__WLI_MAX;
 #ifdef PARTICLE
-double            LB_INPUT__PAR_WEIGHT;
+double               LB_INPUT__PAR_WEIGHT;
 #endif
-bool              OPT__RECORD_LOAD_BALANCE;
+bool                 OPT__RECORD_LOAD_BALANCE;
 #endif
 
-// (2-5) particle 
+// (2-5) particle
 #ifdef PARTICLE
-double            DT__PARVEL, DT__PARVEL_MAX, DT__PARACC;
-real              MinDtInfo_ParVelAcc[2][NLEVEL];
-bool              OPT__OUTPUT_PAR_TEXT, OPT__CK_PARTICLE, OPT__FLAG_NPAR_CELL;
-int               OPT__PARTICLE_COUNT, OPT__FLAG_NPAR_PATCH, FlagTable_NParPatch[NLEVEL-1], FlagTable_NParCell[NLEVEL-1];
-ParOutputDens_t   OPT__OUTPUT_PAR_DENS;
+double               DT__PARVEL, DT__PARVEL_MAX, DT__PARACC;
+real                 MinDtInfo_ParVelAcc[2][NLEVEL];
+bool                 OPT__OUTPUT_PAR_TEXT, OPT__CK_PARTICLE, OPT__FLAG_NPAR_CELL;
+int                  OPT__PARTICLE_COUNT, OPT__FLAG_NPAR_PATCH, FlagTable_NParPatch[NLEVEL-1], FlagTable_NParCell[NLEVEL-1];
+ParOutputDens_t      OPT__OUTPUT_PAR_DENS;
 #endif
 
 // (2-6) yt inline analysis
 #ifdef SUPPORT_LIBYT
-char              YT_SCRIPT[MAX_STRING];
-yt_verbose        YT_VERBOSE;
+char                 YT_SCRIPT[MAX_STRING];
+yt_verbose           YT_VERBOSE;
 #endif
 
 
@@ -343,7 +344,7 @@ int main( int argc, char *argv[] )
 //    3. apply various corrections
 //       --> synchronize particles, restrict data, recalculate potential and particle acceleration, ...
 //    ---------------------------------------------------------------------------------------------------
-      if ( OPT__CORR_AFTER_ALL_SYNC )
+      if ( OPT__CORR_AFTER_ALL_SYNC == CORR_EVERY_STEP )
       TIMING_FUNC(   Flu_CorrAfterAllSync(),     Timer_Main[6],   false   );
 //    ---------------------------------------------------------------------------------------------------
 

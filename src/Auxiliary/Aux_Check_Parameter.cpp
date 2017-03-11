@@ -246,6 +246,10 @@ void Aux_Check_Parameter()
    if ( OPT__MEMORY_POOL  &&  !OPT__REUSE_MEMORY )
       Aux_Error( ERROR_INFO, "please turn on OPT__REUSE_MEMORY for OPT__MEMORY_POOL !!\n" );
 
+   if ( OPT__CORR_AFTER_ALL_SYNC != CORR_NONE  &&  OPT__CORR_AFTER_ALL_SYNC != CORR_EVERY_STEP  &&
+        OPT__CORR_AFTER_ALL_SYNC != CORR_BEFORE_DUMP )
+      Aux_Error( ERROR_INFO, "incorrect option \"OPT__CORR_AFTER_ALL_SYNC = %d\" [0/1/2] !!\n", OPT__CORR_AFTER_ALL_SYNC );
+
 
 // general warnings
 // =======================================================================================

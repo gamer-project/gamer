@@ -30,6 +30,7 @@
 //                2. Invoked by main()
 //                3. Do nothing if there are only base-level patches
 //                4. Strictly speaking, this function belongs to both Fluid, SelfGravity, and Particle categories
+//                5. Invoked by main() and Output_DumpData()
 //
 // Parameter   :  None
 //

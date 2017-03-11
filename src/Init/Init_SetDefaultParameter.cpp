@@ -558,6 +558,21 @@ void Init_SetDefaultParameter()
 #  endif
 
 
+// (21) OPT__CORR_AFTER_ALL_SYNC
+   if ( OPT__CORR_AFTER_ALL_SYNC == CORR_DEFAULT )
+   {
+#     ifdef GAMER_DEBUG
+      OPT__CORR_AFTER_ALL_SYNC = CORR_EVERY_STEP;
+#     else
+      OPT__CORR_AFTER_ALL_SYNC = CORR_BEFORE_DUMP;
+#     endif
+
+      if ( MPI_Rank == 0 )    Aux_Message( stdout, "NOTE : parameter \"%s\" is set to the default value = %d\n",
+                                           "OPT__CORR_AFTER_ALL_SYNC", OPT__CORR_AFTER_ALL_SYNC );
+   }
+
+
+
 // reset parameters and options which are either unsupported or useless
 // ------------------------------------------------------------------------------------------------------
 // (1) general
@@ -983,15 +998,15 @@ void Init_SetDefaultParameter()
 #  endif
 
 
-// (19) always turn on "OPT__CORR_AFTER_ALL_SYNC" in the debug mode
+// (19) always set "OPT__CORR_AFTER_ALL_SYNC == CORR_EVERY_STEP" in the debug mode
 #  ifdef GAMER_DEBUG
-   if ( !OPT__CORR_AFTER_ALL_SYNC )
+   if ( OPT__CORR_AFTER_ALL_SYNC != CORR_EVERY_STEP )
    {
-      OPT__CORR_AFTER_ALL_SYNC = true;
+      OPT__CORR_AFTER_ALL_SYNC = CORR_EVERY_STEP;
 
       if ( MPI_Rank == 0 )
-         Aux_Message( stderr, "WARNING : parameter \"%s\" is turned on automatically in the debug mode !!\n",
-                      "OPT__CORR_AFTER_ALL_SYNC" );
+         Aux_Message( stderr, "WARNING : parameter \"%s\" is reset to %d in the debug mode !!\n",
+                      "OPT__CORR_AFTER_ALL_SYNC", OPT__CORR_AFTER_ALL_SYNC );
    }
 #  endif
 

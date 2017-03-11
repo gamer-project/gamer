@@ -28,6 +28,7 @@ static real (*Backup_ParVar)[7] = NULL;
 //                5. Particles may cross patch boundaries after synchronization
 //                   --> One may need to call "Par_PassParticle2Sibling" and "Par_PassParticle2Son_AllPatch" to
 //                       properly transfer particles between patches, especially for SyncOption = PAR_SYNC_FORCE
+//                6. Currently it's only invoked by Flu_CorrAfterAllSync()
 //
 // Parameter   :  SyncTime    : Target synchronization time
 //                SyncOption  : PAR_SYNC_NONE / PAR_SYNC_TEMP / PAR_SYNC_FORCE

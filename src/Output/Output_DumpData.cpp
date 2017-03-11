@@ -208,6 +208,10 @@ void Output_DumpData( const int Stage )
 // output data
    if ( OutputData || OutputData_RunTime )
    {
+//    apply various corrections (e.g., synchronize particles, restrict data, recalculate potential and particle acceleration)
+//    before dumpting data --> for bitwise reproducibility
+      if ( OPT__CORR_AFTER_ALL_SYNC == CORR_BEFORE_DUMP  &&  Stage != 0 )  Flu_CorrAfterAllSync();
+
       if ( OPT__OUTPUT_TOTAL )      Output_DumpData_Total( FileName_Total );
       if ( OPT__OUTPUT_PART  )      Output_DumpData_Part( OPT__OUTPUT_PART, OPT__OUTPUT_BASE, OUTPUT_PART_X,
                                                           OUTPUT_PART_Y, OUTPUT_PART_Z, FileName_Part );

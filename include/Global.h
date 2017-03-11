@@ -58,16 +58,17 @@ extern bool       OPT__INT_TIME, OPT__OUTPUT_TEST_ERROR, OPT__OUTPUT_BASE, OPT__
 extern bool       OPT__OUTPUT_BASEPS, OPT__CK_REFINE, OPT__CK_PROPER_NESTING, OPT__CK_FINITE, OPT__RECORD_PERFORMANCE;
 extern bool       OPT__CK_RESTRICT, OPT__CK_PATCH_ALLOCATE, OPT__FIXUP_FLUX, OPT__CK_FLUX_ALLOCATE;
 extern bool       OPT__UM_START_DOWNGRADE, OPT__UM_START_REFINE, OPT__UM_FACTOR_5OVER3, OPT__TIMING_MPI;
-extern bool       OPT__CK_CONSERVATION, OPT__RESET_FLUID, OPT__RECORD_USER, OPT__CORR_AFTER_ALL_SYNC;
+extern bool       OPT__CK_CONSERVATION, OPT__RESET_FLUID, OPT__RECORD_USER;
 
-extern OptInit_t         OPT__INIT;
-extern OptRestartH_t     OPT__RESTART_HEADER;
-extern IntScheme_t       OPT__FLU_INT_SCHEME, OPT__REF_FLU_INT_SCHEME;
-extern OptOutputFormat_t OPT__OUTPUT_TOTAL;
-extern OptOutputPart_t   OPT__OUTPUT_PART;
-extern OptOutputMode_t   OPT__OUTPUT_MODE;
-extern OptFluBC_t        OPT__BC_FLU[6];        // boundary conditions of fluid at (-x,+x,-y,+y,-z,+z) faces
-extern OptLohnerForm_t   OPT__FLAG_LOHNER_FORM;
+extern OptInit_t          OPT__INIT;
+extern OptRestartH_t      OPT__RESTART_HEADER;
+extern IntScheme_t        OPT__FLU_INT_SCHEME, OPT__REF_FLU_INT_SCHEME;
+extern OptOutputFormat_t  OPT__OUTPUT_TOTAL;
+extern OptOutputPart_t    OPT__OUTPUT_PART;
+extern OptOutputMode_t    OPT__OUTPUT_MODE;
+extern OptFluBC_t         OPT__BC_FLU[6];          // boundary conditions of fluid at (-x,+x,-y,+y,-z,+z) faces
+extern OptLohnerForm_t    OPT__FLAG_LOHNER_FORM;
+extern OptCorrAfterSync_t OPT__CORR_AFTER_ALL_SYNC;
 
 
 
