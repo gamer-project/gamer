@@ -38,9 +38,8 @@ static void LB_RedistributeParticle_End( real **ParVar_Old, real **Passive_Old )
 //                                            --> Currently we force ParWeight==0.0 when calling LB_Init_LoadBalance()
 //                                                for the first time in Init_GAMER() and main() since we don't have enough
 //                                                information for calculating particle weighting at that time
-//                Reset        : Call LB->reset() to reinitialize arrays used by the load-balance routines
 //-------------------------------------------------------------------------------------------------------
-void LB_Init_LoadBalance( const bool Redistribute, const double ParWeight, const bool Reset )
+void LB_Init_LoadBalance( const bool Redistribute, const double ParWeight )
 {
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ...\n", __FUNCTION__ );
@@ -80,7 +79,8 @@ void LB_Init_LoadBalance( const bool Redistribute, const double ParWeight, const
 //    --> must do this AFTER calling LB_SetCutPoint() since it still needs to access load-balance information
 //        (e.g., LB_EstimateWorkload_AllPatchGroup() --> Par_CollectParticle2OneLevel() --> Par_LB_CollectParticle2OneLevel()
 //         --> LB_Index2Rank(), which will access CutPoint[]. But CutPoint[] will be reset when calling amr->LB->reset())
-   if ( Reset )   amr->LB->reset();
+//    --> this function will NOT reset the CutPoint[] array
+   amr->LB->reset();
 
 
 // 3. re-distribute and allocate all patches (and particles)

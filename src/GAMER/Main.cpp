@@ -407,13 +407,12 @@ int main( int argc, char *argv[] )
          }
 
          const bool   Redistribute_Yes = true;
-         const bool   LB_Reset_Yes     = true;
 #        ifdef PARTICLE
          const double ParWeight        = amr->LB->Par_Weight;
 #        else
          const double ParWeight        = 0.0;
 #        endif
-         LB_Init_LoadBalance( Redistribute_Yes, ParWeight, LB_Reset_Yes );
+         LB_Init_LoadBalance( Redistribute_Yes, ParWeight );
 
          if ( OPT__PATCH_COUNT > 0 )         Aux_PatchCount();
 

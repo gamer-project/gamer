@@ -168,19 +168,16 @@ void Init_GAMER( int *argc, char ***argv )
 // we don't have enough information to calculate the load-balance weighting of particles when
 // calling LB_Init_LoadBalance() for the first time
 // --> must disable particle weighting (by setting ParWeight==0.0) first
-// must NOT call LB->reset() here since LB_SetCutPoint[] may already be set by Init_Restart()
    const double ParWeight_Zero   = 0.0;
    const bool   Redistribute_Yes = true;
    const bool   Redistribute_No  = false;
-   const bool   LB_Reset_Yes     = true;
-   const bool   LB_Reset_No      = false;
 
-   LB_Init_LoadBalance( (OPT__INIT==INIT_RESTART)?Redistribute_No:Redistribute_Yes, ParWeight_Zero, LB_Reset_No );
+   LB_Init_LoadBalance( (OPT__INIT==INIT_RESTART)?Redistribute_No:Redistribute_Yes, ParWeight_Zero );
 
 // redistribute patches again if we want to take into account the load-balance weighting of particles
 #  ifdef PARTICLE
    if ( amr->LB->Par_Weight > 0.0 )
-   LB_Init_LoadBalance( Redistribute_Yes, amr->LB->Par_Weight, LB_Reset_Yes );
+   LB_Init_LoadBalance( Redistribute_Yes, amr->LB->Par_Weight );
 #  endif
 
 

@@ -471,7 +471,9 @@ struct LB_t
    // Constructor :  reset
    // Description :  Reset memory for re-distributing all patches at all levels
    //
-   // Note        :  Pointers whose sizes depend on the number of MPI ranks are NOT deallocated
+   // Note        :  1. Pointers whose sizes depend on the number of MPI ranks are NOT deallocated
+   //                2. This function must NOT reset CutPoint[] since in LB_Init_LoadBalance() we need to
+   //                   call LB->reset() AFTER setting CutPoint[]
    //===================================================================================
    void reset()
    {
@@ -504,9 +506,6 @@ struct LB_t
 
          for (int r=0; r<MPI_NRank; r++)
          {
-//          miscellaneous
-            CutPoint      [lv][r] = -1;
-
 //          NList
             SendH_NList   [lv][r] = 0;
             RecvH_NList   [lv][r] = 0;
