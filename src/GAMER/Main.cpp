@@ -407,22 +407,20 @@ int main( int argc, char *argv[] )
          }
 
          const bool   Redistribute_Yes = true;
-         const double ParWeight_No     = 0.0;
-
-         amr->LB->reset();
-
-         LB_Init_LoadBalance( Redistribute_Yes, ParWeight_No );
-
+         const bool   LB_Reset_Yes     = true;
 #        ifdef PARTICLE
-         if ( amr->LB->Par_Weight > 0.0 )    LB_Init_LoadBalance( Redistribute_Yes, amr->LB->Par_Weight );
+         const double ParWeight        = amr->LB->Par_Weight;
+#        else
+         const double ParWeight        = 0.0;
 #        endif
+         LB_Init_LoadBalance( Redistribute_Yes, ParWeight, LB_Reset_Yes );
 
          if ( OPT__PATCH_COUNT > 0 )         Aux_PatchCount();
 
 #        ifdef PARTICLE
          if ( OPT__PARTICLE_COUNT > 0 )      Par_Aux_ParticleCount();
 #        endif
-      }
+      } // if ( LB_EstimateLoadImbalance() > amr->LB->WLI_Max )
 
       Timer_Main[5]->Stop( false );
 #     endif // #ifdef LOAD_BALANCE

@@ -38,8 +38,9 @@ static void LB_RedistributeParticle_End( real **ParVar_Old, real **Passive_Old )
 //                                            --> Currently we force ParWeight==0.0 when calling LB_Init_LoadBalance()
 //                                                for the first time in Init_GAMER() and main() since we don't have enough
 //                                                information for calculating particle weighting at that time
+//                Reset        : Call LB->reset() to reinitialize arrays used by the load-balance routines
 //-------------------------------------------------------------------------------------------------------
-void LB_Init_LoadBalance( const bool Redistribute, const double ParWeight )
+void LB_Init_LoadBalance( const bool Redistribute, const double ParWeight, const bool Reset )
 {
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ...\n", __FUNCTION__ );
@@ -62,7 +63,7 @@ void LB_Init_LoadBalance( const bool Redistribute, const double ParWeight )
    }
 
 
-// 0. set up the load-balance cut points (must do this before calling LB_RedistributeParticle_Init)
+// 1. set up the load-balance cut points (must do this before calling LB_RedistributeParticle_Init)
    const bool InputLBIdxAndLoad_No = false;
 
    if ( Redistribute )
@@ -74,7 +75,15 @@ void LB_Init_LoadBalance( const bool Redistribute, const double ParWeight )
    }
 
 
-// 1. re-distribute and allocate all patches (and particles)
+
+// 2. reinitialize arrays used by the load-balance routines
+//    --> must do this AFTER calling LB_SetCutPoint() since it still needs to access load-balance information
+//        (e.g., LB_EstimateWorkload_AllPatchGroup() --> Par_CollectParticle2OneLevel() --> Par_LB_CollectParticle2OneLevel()
+//         --> LB_Index2Rank(), which will access CutPoint[]. But CutPoint[] will be reset when calling amr->LB->reset())
+   if ( Reset )   amr->LB->reset();
+
+
+// 3. re-distribute and allocate all patches (and particles)
 #  ifdef PARTICLE
    real  *ParVar_Old [PAR_NVAR    ];
    real  *Passive_Old[PAR_NPASSIVE];
@@ -91,14 +100,14 @@ void LB_Init_LoadBalance( const bool Redistribute, const double ParWeight )
    {
       if ( OPT__VERBOSE  &&  MPI_Rank == 0 )    Aux_Message( stdout, "   Re-distributing patches at Lv %2d ... \n", lv );
 
-//    1.1 re-distribute real patches
+//    3.1 re-distribute real patches
       if ( Redistribute )
       LB_RedistributeRealPatch( lv, ParVar_Old, Passive_Old );
 
-//    1.2 allocate sibling-buffer patches at lv
+//    3.2 allocate sibling-buffer patches at lv
       LB_AllocateBufferPatch_Sibling( lv );
 
-//    1.3 allocate father-buffer patches at lv-1
+//    3.3 allocate father-buffer patches at lv-1
       if ( lv > 0 )
       LB_AllocateBufferPatch_Father( lv, true, NULL_INT, NULL, false, NULL, NULL );
    }
@@ -108,7 +117,7 @@ void LB_Init_LoadBalance( const bool Redistribute, const double ParWeight )
 #  endif
 
 
-// 2. contruct the patch relation
+// 4. contruct the patch relation
    for (int lv=0; lv<NLEVEL; lv++)
    {
       if ( OPT__VERBOSE  &&  MPI_Rank == 0 )    Aux_Message( stdout, "   Constructing patch relation at Lv %2d ... \n", lv );
@@ -123,39 +132,39 @@ void LB_Init_LoadBalance( const bool Redistribute, const double ParWeight )
    }
 
 
-// 3. construct the MPI send and recv data list
+// 5. construct the MPI send and recv data list
    for (int lv=0; lv<NLEVEL; lv++)
    {
-//    3.1 list for exchanging hydro and potential data
+//    5.1 list for exchanging hydro and potential data
       LB_RecordExchangeDataPatchID( lv, false );
 
-//    3.2 list for exchanging restricted hydro data
+//    5.2 list for exchanging restricted hydro data
 //        --> note that even when OPT__FIXUP_RESTRICT is off we still need to do data restriction in several places
 //            (e.g., restart, and OPT__CORR_AFTER_ALL_SYNC)
 //        --> for simplicity and sustainability, we always invoke LB_RecordExchangeRestrictDataPatchID()
       LB_RecordExchangeRestrictDataPatchID( lv );
 
-//    3.3 list for exchanging hydro fluxes (also allocate flux arrays)
+//    5.3 list for exchanging hydro fluxes (also allocate flux arrays)
       if ( amr->WithFlux )
       LB_AllocateFluxArray( lv );
 
-//    3.4 list for exchanging hydro data after the fix-up operation
+//    5.4 list for exchanging hydro data after the fix-up operation
 //        --> for simplicity and sustainability, we always invoke LB_RecordExchangeFixUpDataPatchID()
 //        --> see the comments 3.2 above
       LB_RecordExchangeFixUpDataPatchID( lv );
 
-//    3.5 list for overlapping MPI time with CPU/GPU computation
+//    5.5 list for overlapping MPI time with CPU/GPU computation
       if ( OPT__OVERLAP_MPI )
       LB_RecordOverlapMPIPatchID( lv );
 
-//    3.6 list for exchanging particles
+//    5.6 list for exchanging particles
 #     ifdef PARTICLE
       Par_LB_RecordExchangeParticlePatchID( lv );
 #     endif
    } // for (int lv=0; lv<NLEVEL; lv++)
 
 
-// 4. get the buffer data
+// 6. get the buffer data
    for (int lv=0; lv<NLEVEL; lv++)
    {
       Buf_GetBufferData( lv, amr->FluSg[lv], NULL_INT, DATA_GENERAL,    _FLU,  Flu_ParaBuf, USELB_YES );

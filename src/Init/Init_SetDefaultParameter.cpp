@@ -986,9 +986,10 @@ void Init_SetDefaultParameter()
 #  endif
 
 
-// (19) always set "OPT__CORR_AFTER_ALL_SYNC == CORR_EVERY_STEP" in the debug mode
+// (19) always enable OPT__CORR_AFTER_ALL_SYNC in the debug mode
+//      --> but currently it is allowed to have "OPT__CORR_AFTER_ALL_SYNC == CORR_BEFORE_DUMP" in the debug mode if set by users
 #  ifdef GAMER_DEBUG
-   if ( OPT__CORR_AFTER_ALL_SYNC != CORR_EVERY_STEP )
+   if ( OPT__CORR_AFTER_ALL_SYNC == CORR_NONE )
    {
       OPT__CORR_AFTER_ALL_SYNC = CORR_EVERY_STEP;
 
