@@ -662,20 +662,8 @@ void Init_SetDefaultParameter()
 #  endif // ifdef SERIAL
 
 
-// (5) for Load-balance simulation
-#  ifdef LOAD_BALANCE
-// (5-1) always turn on "OPT__PATCH_COUNT" in order to record the weighted-load-imbalance (WLI) factor
-   if ( OPT__PATCH_COUNT <= 0 )
-   {
-      OPT__PATCH_COUNT = 1;
-
-      if ( MPI_Rank == 0 )
-         Aux_Message( stderr, "WARNING : parameter \"%s\" is reset to 1 for the LOAD_BALANCE simulation !!\n",
-                      "OPT__PATCH_COUNT" );
-   }
-
-#  else
-// (5-2) turn off "OPT__OVERLAP_MPI" if LOAD_BALANCE is not enabled
+// (5) turn off "OPT__OVERLAP_MPI" if LOAD_BALANCE is off
+#  ifndef LOAD_BALANCE
    if ( OPT__OVERLAP_MPI )
    {
       OPT__OVERLAP_MPI = false;
@@ -684,7 +672,7 @@ void Init_SetDefaultParameter()
          Aux_Message( stderr, "WARNING : parameter \"%s\" is disabled since LOAD_BALANCE is NOT turned on !!\n",
                       "OPT__OVERLAP_MPI" );
    }
-#  endif // #ifdef LOAD_BALANCE
+#  endif // #ifndef LOAD_BALANCE
 
 
 // (6) always turn on "OPT__VERBOSE" in the debug mode

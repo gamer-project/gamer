@@ -415,6 +415,7 @@ int main( int argc, char *argv[] )
          TIMING_FUNC(   LB_Init_LoadBalance( Redistribute_Yes, amr->LB->Par_Weight ), Timer_Main[5],   false   );
 #        endif
 
+         if ( OPT__PATCH_COUNT > 0 )
          TIMING_FUNC(   Aux_PatchCount(),                                             Timer_Main[5],   false   );
 
 #        ifdef PARTICLE
