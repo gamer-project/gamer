@@ -38,8 +38,10 @@ static void LB_RedistributeParticle_End( real **ParVar_Old, real **Passive_Old )
 //                                            --> Currently we force ParWeight==0.0 when calling LB_Init_LoadBalance()
 //                                                for the first time in Init_GAMER() and main() since we don't have enough
 //                                                information for calculating particle weighting at that time
+//                Reset        : Call LB->reset() to reset the load-balance variables
+//                               --> Note that CutPoint[] will NOT be reset even when "Reset == true"
 //-------------------------------------------------------------------------------------------------------
-void LB_Init_LoadBalance( const bool Redistribute, const double ParWeight )
+void LB_Init_LoadBalance( const bool Redistribute, const double ParWeight, const bool Reset )
 {
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ...\n", __FUNCTION__ );
@@ -74,13 +76,12 @@ void LB_Init_LoadBalance( const bool Redistribute, const double ParWeight )
    }
 
 
-
 // 2. reinitialize arrays used by the load-balance routines
-//    --> must do this AFTER calling LB_SetCutPoint() since it still needs to access load-balance information
-//        (e.g., LB_EstimateWorkload_AllPatchGroup() --> Par_CollectParticle2OneLevel() --> Par_LB_CollectParticle2OneLevel()
-//         --> LB_Index2Rank(), which will access CutPoint[]. But CutPoint[] will be reset when calling amr->LB->reset())
-//    --> this function will NOT reset the CutPoint[] array
-   amr->LB->reset();
+//    --> must do this AFTER calling LB_SetCutPoint() since it still needs to access load-balance information when PARTICLE is on
+//        --> for example, LB_EstimateWorkload_AllPatchGroup()->Par_CollectParticle2OneLevel()->Par_LB_CollectParticle2OneLevel(),
+//            which will access amr->LB->IdxList_Real. But amr->LB->IdxList_Real will be reset when calling amr->LB->reset()
+//    --> amr->LB->reset() will NOT reset CutPoint[] (otherwise it will just overwrite the cut points set by LB_SetCutPoint())
+   if ( Reset )   amr->LB->reset();
 
 
 // 3. re-distribute and allocate all patches (and particles)
