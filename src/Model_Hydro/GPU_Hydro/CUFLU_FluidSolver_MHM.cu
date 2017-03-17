@@ -504,7 +504,7 @@ __device__ void CUFLU_RiemannPredict( const real g_Fluid_In   [][NCOMP_TOTAL][ F
       Update( Egy, 4 );
 
 #     if ( NCOMP_PASSIVE > 0 )
-      for (int v=0; v<NCOMP_PASSIVE; v++)    Update( Passive[v], v );
+      for (int v=0, vv=NCOMP_FLUID; v<NCOMP_PASSIVE; v++, vv++)   Update( Passive[v], vv );
 #     endif
 
 #     undef Update

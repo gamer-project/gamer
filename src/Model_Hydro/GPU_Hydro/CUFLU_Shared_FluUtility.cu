@@ -90,30 +90,30 @@ __device__ FluVar CUFLU_Rotate3D( const FluVar In, const int XYZ, const bool For
 __device__ FluVar CUFLU_Con2Flux( const FluVar Input, const real Gamma_m1, const int XYZ, const real MinPres )
 {
 
-   FluVar Var, TempFlux, Output;
+   FluVar Temp;
    real   Pres, _Rho, Vx;
 
-   Var = CUFLU_Rotate3D( Input, XYZ, true );
+   Temp = CUFLU_Rotate3D( Input, XYZ, true );
 
-   _Rho = (real)1.0 / Var.Rho;
-   Pres = Gamma_m1 * (  Var.Egy - (real)0.5*( Var.Px*Var.Px + Var.Py*Var.Py + Var.Pz*Var.Pz )*_Rho  );
+   _Rho = (real)1.0 / Temp.Rho;
+   Pres = Gamma_m1 * (  Temp.Egy - (real)0.5*( Temp.Px*Temp.Px + Temp.Py*Temp.Py + Temp.Pz*Temp.Pz )*_Rho  );
    Pres = CUFLU_CheckMinPres( Pres, MinPres );
-   Vx   = _Rho*Var.Px;
+   Vx   = _Rho*Temp.Px;
 
-   TempFlux.Rho = Var.Px;
-   TempFlux.Px  = Vx*Var.Px + Pres;
-   TempFlux.Py  = Vx*Var.Py;
-   TempFlux.Pz  = Vx*Var.Pz;
-   TempFlux.Egy = Vx*( Var.Egy + Pres );
+   Temp.Rho = Temp.Px;
+   Temp.Px  = Vx*Temp.Px + Pres;
+   Temp.Py  = Vx*Temp.Py;
+   Temp.Pz  = Vx*Temp.Pz;
+   Temp.Egy = Vx*( Temp.Egy + Pres );
 
 // passive scalars
 #  if ( NCOMP_PASSIVE > 0 )
-   for (int v=0; v<NCOMP_PASSIVE; v++)    TempFlux.Passive[v] = Input.Passive[v]*Vx;
+   for (int v=0; v<NCOMP_PASSIVE; v++)    Temp.Passive[v] *= Vx;
 #  endif
 
-   Output = CUFLU_Rotate3D( TempFlux, XYZ, false );
+   Temp = CUFLU_Rotate3D( Temp, XYZ, false );
 
-   return Output;
+   return Temp;
 
 } // FUNCTION : CUFLU_Con2Flux
 
@@ -154,7 +154,7 @@ __device__ FluVar CUFLU_Pri2Con( const FluVar Pri, const real _Gamma_m1,
 // copy all passive scalars
    for (int v=0; v<NCOMP_PASSIVE; v++)    Con.Passive[v] = Pri.Passive[v];
 
-// convert the mass fraction of target passive scalars back to mass fraction
+// convert the mass fraction of target passive scalars back to mass density
    if ( NormPassive )
       for (int v=0; v<NNorm; v++)   Con.Passive[ NormIdx[v] ] *= Pri.Rho;
 #  endif

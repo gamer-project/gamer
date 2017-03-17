@@ -114,13 +114,8 @@ void CPU_RiemannSolver_Roe( const int XYZ, real Flux_Out[], const real L_In[], c
    Cs = SQRT( GammaP_Rho );
 
 
-// 3. evaluate the eigenvalues and eigenvectors
-   const real EigenVec[NCOMP_FLUID][NCOMP_FLUID] = {  { (real)1.0,       u-Cs,         v,         w,       H-u*Cs },
-                                                      { (real)1.0,          u,         v,         w, (real)0.5*V2 },
-                                                      { (real)0.0,  (real)0.0, (real)1.0, (real)0.0,            v },
-                                                      { (real)0.0,  (real)0.0, (real)0.0, (real)1.0,            w },
-                                                      { (real)1.0,       u+Cs,         v,         w,       H+u*Cs }  };
-   real EigenVal[NCOMP_FLUID] = { u-Cs, u, u, u, u+Cs };
+// 3. evaluate the eigenvalues
+   const real EigenVal[NCOMP_FLUID] = { u-Cs, u, u, u, u+Cs };
 
 
 // 4. evaluate the left and right fluxes
@@ -162,7 +157,15 @@ void CPU_RiemannSolver_Roe( const int XYZ, real Flux_Out[], const real L_In[], c
    Amp[4] = Jump[0] - Amp[0] - Amp[1];
 
 
-// 7. verify that the density and pressure in the intermediate states are positive
+// 7. evaluate the eigenvectors
+   const real EigenVec[NCOMP_FLUID][NCOMP_FLUID] = {  { (real)1.0,       u-Cs,         v,         w,       H-u*Cs },
+                                                      { (real)1.0,          u,         v,         w, (real)0.5*V2 },
+                                                      { (real)0.0,  (real)0.0, (real)1.0, (real)0.0,            v },
+                                                      { (real)0.0,  (real)0.0, (real)0.0, (real)1.0,            w },
+                                                      { (real)1.0,       u+Cs,         v,         w,       H+u*Cs }  };
+
+
+// 8. verify that the density and pressure in the intermediate states are positive
 #  ifdef CHECK_INTERMEDIATE
    real I_Pres, I_States[NCOMP_FLUID];
 
@@ -218,7 +221,7 @@ void CPU_RiemannSolver_Roe( const int XYZ, real Flux_Out[], const real L_In[], c
 #  endif // #ifdef CHECK_INTERMEDIATE
 
 
-// 8. evaluate the Roe fluxes
+// 9. evaluate the Roe fluxes
    for (int v=0; v<NCOMP_FLUID; v++)   Amp[v] *= FABS( EigenVal[v] );
 
    for (int v=0; v<NCOMP_FLUID; v++)
@@ -228,7 +231,7 @@ void CPU_RiemannSolver_Roe( const int XYZ, real Flux_Out[], const real L_In[], c
                                                                       + Amp[3]*EigenVec[3][v]
                                                                       + Amp[4]*EigenVec[4][v] );
 
-// 9. evaluate the fluxes for passive scalars
+// 10. evaluate the fluxes for passive scalars
 #  if ( NCOMP_PASSIVE > 0 )
    if ( Flux_Out[FLUX_DENS] >= (real)0.0 )
       for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)  Flux_Out[v] = Flux_Out[FLUX_DENS]*L[v]*_RhoL;
@@ -238,7 +241,7 @@ void CPU_RiemannSolver_Roe( const int XYZ, real Flux_Out[], const real L_In[], c
 #  endif
 
 
-// 10. restore the correct order
+// 11. restore the correct order
    CPU_Rotate3D( Flux_Out, XYZ, false );
 
 } // FUNCTION : CPU_RiemannSolver_Roe

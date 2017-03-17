@@ -13,8 +13,11 @@
 // Function    :  CUFLU_GetMaxCFL
 // Description :  Evaluate the maximum propagation speed in each patch group
 //
-// Note        :  Prefix "g" for pointers pointing to the "Global" memory space
-//                Prefix "s" for pointers pointing to the "Shared" memory space
+// Note        :  1. Prefix "g" for pointers pointing to the "Global" memory space
+//                   Prefix "s" for pointers pointing to the "Shared" memory space
+//                2. This function is not used currently
+//                   --> The number of variables in g_Fluid (currently set to NCOMP_TOTAL) may need to be modified
+//                       accordingly to the real usage (e.g., replacing by NCOMP_FLUID)
 //
 // Parameter   :  g_Fluid  : Global memory array to store the fluid variables
 //                g_MaxCFL : Global memory array to store the maximum propagation speed in each patch group

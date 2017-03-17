@@ -139,7 +139,7 @@ void CPU_Pri2Con( const real In[], real Out[], const real _Gamma_m1,
 // copy all passive scalars
    for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)  Out[v] = In[v];
 
-// convert the mass fraction of target passive scalars back to mass fraction
+// convert the mass fraction of target passive scalars back to mass density
    if ( NormPassive )
       for (int v=0; v<NNorm; v++)   Out[ NCOMP_FLUID + NormIdx[v] ] *= In[0];
 #  endif

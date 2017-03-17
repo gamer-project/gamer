@@ -103,22 +103,14 @@ __device__ FluVar CUFLU_RiemannSolver_Roe( const int XYZ, const FluVar L_In, con
    Cs = SQRT( GammaP_Rho );
 
 
-// 3. evaluate the eigenvalues and eigenvectors
-   const real ONE  = (real)1.0;
-   const real ZERO = (real)0.0;
-   FluVar5 EVal, EVec1, EVec2, EVec3, EVec4, EVec5;
+// 3. evaluate the eigenvalues
+   FluVar5 EVal;
 
    EVal.Rho = u - Cs;
    EVal.Px  = u;
    EVal.Py  = u;
    EVal.Pz  = u;
    EVal.Egy = u + Cs;
-
-   EVec1.Rho = ONE;    EVec1.Px = u - Cs;   EVec1.Py = v;      EVec1.Pz = w;      EVec1.Egy = H - u*Cs;
-   EVec2.Rho = ONE;    EVec2.Px = u;        EVec2.Py = v;      EVec2.Pz = w;      EVec2.Egy = (real)0.5*V2;
-   EVec3.Rho = ZERO;   EVec3.Px = ZERO;     EVec3.Py = ONE;    EVec3.Pz = ZERO;   EVec3.Egy = v;
-   EVec4.Rho = ZERO;   EVec4.Px = ZERO;     EVec4.Py = ZERO;   EVec4.Pz = ONE;    EVec4.Egy = w;
-   EVec5.Rho = ONE;    EVec5.Px = u + Cs;   EVec5.Py = v;      EVec5.Pz = w;      EVec5.Egy = H + u*Cs;
 
 
 // 4. evaluate the left and right fluxes
@@ -161,7 +153,19 @@ __device__ FluVar CUFLU_RiemannSolver_Roe( const int XYZ, const FluVar L_In, con
    Amp.Egy = Jump.Rho - Amp.Rho - Amp.Px;
 
 
-// 7. verify that the density and pressure in the intermediate states are positive
+// 7. evaluate the eigenvectors
+   const real ONE  = (real)1.0;
+   const real ZERO = (real)0.0;
+   FluVar5 EVec1, EVec2, EVec3, EVec4, EVec5;
+
+   EVec1.Rho = ONE;    EVec1.Px = u - Cs;   EVec1.Py = v;      EVec1.Pz = w;      EVec1.Egy = H - u*Cs;
+   EVec2.Rho = ONE;    EVec2.Px = u;        EVec2.Py = v;      EVec2.Pz = w;      EVec2.Egy = (real)0.5*V2;
+   EVec3.Rho = ZERO;   EVec3.Px = ZERO;     EVec3.Py = ONE;    EVec3.Pz = ZERO;   EVec3.Egy = v;
+   EVec4.Rho = ZERO;   EVec4.Px = ZERO;     EVec4.Py = ZERO;   EVec4.Pz = ONE;    EVec4.Egy = w;
+   EVec5.Rho = ONE;    EVec5.Px = u + Cs;   EVec5.Py = v;      EVec5.Pz = w;      EVec5.Egy = H + u*Cs;
+
+
+// 8. verify that the density and pressure in the intermediate states are positive
 #  ifdef CHECK_INTERMEDIATE
    FluVar5 I_States;
    real    I_Pres;
@@ -239,7 +243,7 @@ __device__ FluVar CUFLU_RiemannSolver_Roe( const int XYZ, const FluVar L_In, con
 #  endif // #ifdef CHECK_INTERMEDIATE
 
 
-// 8. evaluate the ROE fluxes
+// 9. evaluate the ROE fluxes
    Amp.Rho *= FABS( EVal.Rho );
    Amp.Px  *= FABS( EVal.Px  );
    Amp.Py  *= FABS( EVal.Py  );
@@ -264,18 +268,28 @@ __device__ FluVar CUFLU_RiemannSolver_Roe( const int XYZ, const FluVar L_In, con
 #  undef GetFlux
 
 
-// 9. evaluate the fluxes for passive scalars
-//    --> must use L_In/R_In instead of L/R since the latter may be converted to primitive variables if "CHECK_INTERMEDIATE == EXACT"
+// 10. evaluate the fluxes for passive scalars
+//     --> must use L_In/R_In instead of L/R since the latter may be converted to primitive variables if "CHECK_INTERMEDIATE == EXACT"
+//         --> wrong argument becaues even if "CHECK_INTERMEDIATE == EXACT" this function will return after calling Recalculate_Flux()
+//         --> so using either L_In/R_In or L/R is fine
 #  if ( NCOMP_PASSIVE > 0 )
    if ( Flux_Out.Rho >= (real)0.0 )
-      for (int v=0; v<NCOMP_PASSIVE; v++)    Flux_Out.Passive[v] = Flux_Out.Rho*L_In.Passive[v]*_RhoL;
+   {
+      const real vx = Flux_Out.Rho*_RhoL;
+
+      for (int v=0; v<NCOMP_PASSIVE; v++)    Flux_Out.Passive[v] = L_In.Passive[v]*vx;
+   }
 
    else
-      for (int v=0; v<NCOMP_PASSIVE; v++)    Flux_Out.Passive[v] = Flux_Out.Rho*R_In.Passive[v]*_RhoR;
+   {
+      const real vx = Flux_Out.Rho*_RhoR;
+
+      for (int v=0; v<NCOMP_PASSIVE; v++)    Flux_Out.Passive[v] = R_In.Passive[v]*vx;
+   }
 #  endif
 
 
-// 10. restore the correct order
+// 11. restore the correct order
    Flux_Out = CUFLU_Rotate3D( Flux_Out, XYZ, false );
 
    return Flux_Out;
