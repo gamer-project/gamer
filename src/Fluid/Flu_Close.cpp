@@ -15,8 +15,7 @@ static void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List
 static int  Table_01( const int lv, const int PID, const int SibID );
 
 extern void CPU_RiemannSolver_Roe ( const int XYZ, real Flux_Out[], const real L_In[], const real R_In[],
-                                    const real Gamma, const real MinPres,
-                                    const bool NormPassive, const int NNorm, const int NormIdx[] );
+                                    const real Gamma, const real MinPres );
 extern void CPU_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In[], const real R_In[],
                                     const real Gamma, const real MinPres );
 extern void CPU_RiemannSolver_HLLE( const int XYZ, real Flux_Out[], const real L_In[], const real R_In[],
@@ -412,10 +411,8 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
                   case RSOLVER_ROE:
                      for (int d=0; d<3; d++)
                      {
-                        CPU_RiemannSolver_Roe( d, FluxL[d], VarL[d], VarC,    GAMMA, MIN_PRES,
-                                               OPT__NORMALIZE_PASSIVE, PassiveNorm_NVar, PassiveNorm_VarIdx );
-                        CPU_RiemannSolver_Roe( d, FluxR[d], VarC,    VarR[d], GAMMA, MIN_PRES,
-                                               OPT__NORMALIZE_PASSIVE, PassiveNorm_NVar, PassiveNorm_VarIdx );
+                        CPU_RiemannSolver_Roe( d, FluxL[d], VarL[d], VarC,    GAMMA, MIN_PRES );
+                        CPU_RiemannSolver_Roe( d, FluxR[d], VarC,    VarR[d], GAMMA, MIN_PRES );
                      }
                      break;
 

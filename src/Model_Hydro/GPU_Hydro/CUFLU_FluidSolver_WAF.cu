@@ -227,7 +227,8 @@ __device__ void CUFLU_Advance( real g_Fluid_In [][5][ FLU_NXT*FLU_NXT*FLU_NXT ],
          ii = i - 1;
 
 #        if ( RSOLVER == EXACT )
-         FluVar eival_st, L_star_st, R_star_st, L_st, R_st;
+         FluVar5 eival_st, L_star_st, R_star_st;
+         FluVar  L_st, R_st;
 
          L_st.Rho = s_u[ty][ii][0];
          L_st.Px  = s_u[ty][ii][1];

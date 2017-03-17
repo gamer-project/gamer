@@ -48,7 +48,7 @@ SIMU_OPTION += -DMAX_PATCH=1000000
 # (b) hydro options
 # ------------------------------------------------------------------------------------
 ifeq "$(findstring MODEL=HYDRO, $(SIMU_OPTION))" "MODEL=HYDRO"
-# hydrodynamic scheme: RTVD/WAF/MHM/MHM_RP/CTU
+# hydrodynamic scheme: RTVD/WAF/MHM/MHM_RP/CTU (WAF is deprecated)
 SIMU_OPTION += -DFLU_SCHEME=CTU
 
 # scheme of spatial data reconstruction: PLM/PPM (piecewise-linear/piecewise-parabolic) ##USELESS IN RTVD/WAF##

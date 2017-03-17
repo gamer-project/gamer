@@ -184,10 +184,18 @@ void CPU_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In[], 
 // 7. evaluate the fluxes for passive scalars
 #  if ( NCOMP_PASSIVE > 0 )
    if ( Flux_Out[FLUX_DENS] >= (real)0.0 )
-      for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)  Flux_Out[v] = Flux_Out[FLUX_DENS]*L[v]*_RhoL;
+   {
+      const real vx = Flux_Out[FLUX_DENS]*_RhoL;
+
+      for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)  Flux_Out[v] = L[v]*vx;
+   }
 
    else
-      for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)  Flux_Out[v] = Flux_Out[FLUX_DENS]*R[v]*_RhoR;
+   {
+      const real vx = Flux_Out[FLUX_DENS]*_RhoR;
+
+      for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)  Flux_Out[v] = R[v]*vx;
+   }
 #  endif
 
 

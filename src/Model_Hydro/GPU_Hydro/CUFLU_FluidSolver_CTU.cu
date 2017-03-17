@@ -174,8 +174,7 @@ __global__ void CUFLU_FluidSolver_CTU( const real g_Fluid_In[]   [NCOMP_TOTAL][ 
 // 3. evaluate the face-centered half-step fluxes by solving the Riemann problem
    CUFLU_ComputeFlux( g_FC_Var_xL, g_FC_Var_xR, g_FC_Var_yL, g_FC_Var_yR, g_FC_Var_zL, g_FC_Var_zR,
                       g_FC_Flux_x, g_FC_Flux_y, g_FC_Flux_z, NULL, false, 0, Gamma,
-                      CorrHalfVel_No, NULL, NULL, NULL_REAL, NULL_REAL, NULL_REAL, GRAVITY_NONE, NULL, MinPres,
-                      NormPassive, NNorm, NormIdx_d );
+                      CorrHalfVel_No, NULL, NULL, NULL_REAL, NULL_REAL, NULL_REAL, GRAVITY_NONE, NULL, MinPres );
    __syncthreads();
 
 
@@ -189,13 +188,11 @@ __global__ void CUFLU_FluidSolver_CTU( const real g_Fluid_In[]   [NCOMP_TOTAL][ 
 #  ifdef UNSPLIT_GRAVITY
    CUFLU_ComputeFlux( g_FC_Var_xL, g_FC_Var_xR, g_FC_Var_yL, g_FC_Var_yR, g_FC_Var_zL, g_FC_Var_zR,
                       g_FC_Flux_x, g_FC_Flux_y, g_FC_Flux_z, g_Flux, StoreFlux, 1, Gamma,
-                      CorrHalfVel_Yes, g_Pot_USG, g_Corner, dt, _dh, Time, GravityType, ExtAcc_AuxArray_d_Flu, MinPres,
-                      NormPassive, NNorm, NormIdx_d );
+                      CorrHalfVel_Yes, g_Pot_USG, g_Corner, dt, _dh, Time, GravityType, ExtAcc_AuxArray_d_Flu, MinPres );
 #  else
    CUFLU_ComputeFlux( g_FC_Var_xL, g_FC_Var_xR, g_FC_Var_yL, g_FC_Var_yR, g_FC_Var_zL, g_FC_Var_zR,
                       g_FC_Flux_x, g_FC_Flux_y, g_FC_Flux_z, g_Flux, StoreFlux, 1, Gamma,
-                      CorrHalfVel_No, NULL, NULL, NULL_REAL, NULL_REAL, NULL_REAL, GRAVITY_NONE, NULL, MinPres,
-                      NormPassive, NNorm, NormIdx_d );
+                      CorrHalfVel_No, NULL, NULL, NULL_REAL, NULL_REAL, NULL_REAL, GRAVITY_NONE, NULL, MinPres );
 #  endif
 
    __syncthreads();

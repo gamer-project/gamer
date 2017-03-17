@@ -7,8 +7,8 @@
 #include "CUFLU.h"
 #include "CUFLU_Shared_FluUtility.cu"
 
-static __device__ FluVar CUFLU_RiemannSolver_Exact( const int XYZ, FluVar &eival_out, FluVar &L_star_out,
-                                                    FluVar &R_star_out, const FluVar L_In, const FluVar R_In,
+static __device__ FluVar CUFLU_RiemannSolver_Exact( const int XYZ, FluVar5 &eival_out, FluVar5 &L_star_out,
+                                                    FluVar5 &R_star_out, const FluVar L_In, const FluVar R_In,
                                                     const real Gamma );
 static __device__ real Solve_f( const real _rho, const real p, const real p_star, const real Gamma,
                                 const real Gamma_m1, const real Gamma_p1, const real _Gamma,
@@ -33,15 +33,17 @@ static __device__ void Set_Flux( FluVar &flux, const FluVar val, const real _Gam
 //                eival_out   : Output array to store the speed of waves
 //                L_star_out  : Output array to store the primitive variables in the left star region
 //                R_star_out  : Output array to store the primitive variables in the right star region
-//                L_In        : Input primitive variables in the left region
-//                R_In        : Input primitive variables in the right region
+//                L_In        : Input **primitive** variables in the left region
+//                              --> But note that the input passive scalars should be mass density instead of mass fraction
+//                R_In        : Input **primitive** variables in the right region
+//                              --> But note that the input passive scalars should be mass density instead of mass fraction
 //                Gamma       : Ratio of specific heats
 //------------------------------------------------------------------------------------------------------
 #if ( __CUDA_ARCH__ >= 200  &&  FLU_SCHEME != WAF )
 __noinline__
 #endif
-__device__ FluVar CUFLU_RiemannSolver_Exact( const int XYZ, FluVar *eival_out, FluVar *L_star_out,
-                                             FluVar *R_star_out, const FluVar L_In,
+__device__ FluVar CUFLU_RiemannSolver_Exact( const int XYZ, FluVar5 *eival_out, FluVar5 *L_star_out,
+                                             FluVar5 *R_star_out, const FluVar L_In,
                                              const FluVar R_In, const real Gamma )
 {
 
@@ -58,8 +60,8 @@ __device__ FluVar CUFLU_RiemannSolver_Exact( const int XYZ, FluVar *eival_out, F
    const real _RhoL     = (real)1.0/L.Rho;
    const real _RhoR     = (real)1.0/R.Rho;
 
-   FluVar eival, L_star, R_star;
-   real Temp;
+   FluVar eival, L_star, R_star;    // don't use FluVar5 since these variables will be sent into Set_Flux()
+   real   Temp;
 
 
 // solution of the tangential velocity
@@ -84,8 +86,8 @@ __device__ FluVar CUFLU_RiemannSolver_Exact( const int XYZ, FluVar *eival_out, F
 
       for (int i=0; i<2; i++)
       {
-         f_L = Solve_f ( _RhoL, L.Egy, bound[i], Gamma, Gamma_m1, Gamma_p1, _Gamma, _Gamma_m1, _Gamma_p1 );
-         f_R = Solve_f ( _RhoR, R.Egy, bound[i], Gamma, Gamma_m1, Gamma_p1, _Gamma, _Gamma_m1, _Gamma_p1);
+         f_L = Solve_f( _RhoL, L.Egy, bound[i], Gamma, Gamma_m1, Gamma_p1, _Gamma, _Gamma_m1, _Gamma_p1 );
+         f_R = Solve_f( _RhoR, R.Egy, bound[i], Gamma, Gamma_m1, Gamma_p1, _Gamma, _Gamma_m1, _Gamma_p1 );
 
          compare[i] = f_L + f_R + du;
       }
@@ -109,7 +111,7 @@ __device__ FluVar CUFLU_RiemannSolver_Exact( const int XYZ, FluVar *eival_out, F
               for (int i=0; i<2; i++)
               {
                  f_L = Solve_f( _RhoL, L.Egy, bound[i], Gamma, Gamma_m1, Gamma_p1, _Gamma, _Gamma_m1, _Gamma_p1 );
-                 f_R = Solve_f( _RhoR, R.Egy, bound[i], Gamma, Gamma_m1, Gamma_p1, _Gamma, _Gamma_m1, _Gamma_p1);
+                 f_R = Solve_f( _RhoR, R.Egy, bound[i], Gamma, Gamma_m1, Gamma_p1, _Gamma, _Gamma_m1, _Gamma_p1 );
 
                  compare[i] = f_L + f_R + du;
               }
@@ -134,8 +136,8 @@ __device__ FluVar CUFLU_RiemannSolver_Exact( const int XYZ, FluVar *eival_out, F
          if (  ( L_star.Egy == bound[0] )  ||  ( L_star.Egy == bound[1] )  )     break;
          else
          {
-            f_L = Solve_f ( _RhoL, L.Egy, L_star.Egy, Gamma, Gamma_m1, Gamma_p1, _Gamma, _Gamma_m1, _Gamma_p1 );
-            f_R = Solve_f ( _RhoR, R.Egy, L_star.Egy, Gamma, Gamma_m1, Gamma_p1, _Gamma, _Gamma_m1, _Gamma_p1 );
+            f_L = Solve_f( _RhoL, L.Egy, L_star.Egy, Gamma, Gamma_m1, Gamma_p1, _Gamma, _Gamma_m1, _Gamma_p1 );
+            f_R = Solve_f( _RhoR, R.Egy, L_star.Egy, Gamma, Gamma_m1, Gamma_p1, _Gamma, _Gamma_m1, _Gamma_p1 );
 
             f = f_L + f_R + du;
 
@@ -152,8 +154,8 @@ __device__ FluVar CUFLU_RiemannSolver_Exact( const int XYZ, FluVar *eival_out, F
 
 // solution normal velocity
    {
-      real f_L = Solve_f ( _RhoL, L.Egy, L_star.Egy, Gamma, Gamma_m1, Gamma_p1, _Gamma, _Gamma_m1, _Gamma_p1 );
-      real f_R = Solve_f ( _RhoR, R.Egy, R_star.Egy, Gamma, Gamma_m1, Gamma_p1, _Gamma, _Gamma_m1, _Gamma_p1 );
+      real f_L = Solve_f( _RhoL, L.Egy, L_star.Egy, Gamma, Gamma_m1, Gamma_p1, _Gamma, _Gamma_m1, _Gamma_p1 );
+      real f_R = Solve_f( _RhoR, R.Egy, R_star.Egy, Gamma, Gamma_m1, Gamma_p1, _Gamma, _Gamma_m1, _Gamma_p1 );
       L_star.Px = (real)0.5*( L.Px + R.Px ) + (real)0.5*( f_R - f_L );
    }
 
@@ -315,6 +317,26 @@ __device__ FluVar CUFLU_RiemannSolver_Exact( const int XYZ, FluVar *eival_out, F
       }
    }
 
+
+// evaluate the fluxes for passive scalars
+// --> note that L_In and R_In are mass density instead of mass fraction for passive scalars
+#  if ( NCOMP_PASSIVE > 0 )
+   if ( Flux_Out.Rho >= (real)0.0 )
+   {
+      const real vx = Flux_Out.Rho / L_In.Rho;
+
+      for (int v=0; v<NCOMP_PASSIVE; v++)    Flux_Out.Passive[v] = L_In.Passive[v]*vx;
+   }
+
+   else
+   {
+      const real vx = Flux_Out.Rho / R_In.Rho;
+
+      for (int v=0; v<NCOMP_PASSIVE; v++)    Flux_Out.Passive[v] = R_In.Passive[v]*vx;
+   }
+#  endif
+
+
 // restore the correct order
    Flux_Out = CUFLU_Rotate3D( Flux_Out, XYZ, false );
 
@@ -341,7 +363,7 @@ __device__ FluVar CUFLU_RiemannSolver_Exact( const int XYZ, FluVar *eival_out, F
    R_star_out->Egy = R_star.Egy;
 
 // return an arbitray FluVar type variable since it's useless
-   return eival;
+   return L_In;
 
 #  endif // #if ( FLU_SCHEME == MHM  ||  FLU_SCHEME == MHM_RP  ||  FLU_SCHEME == CTU ) ... else ...
 

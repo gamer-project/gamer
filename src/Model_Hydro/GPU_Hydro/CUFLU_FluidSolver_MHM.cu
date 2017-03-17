@@ -25,8 +25,7 @@ static __device__ void CUFLU_RiemannPredict_Flux( const real g_Fluid_In   [][NCO
                                                         real g_Half_Flux_x[][NCOMP_TOTAL][ N_FC_FLUX*N_FC_FLUX*N_FC_FLUX ],
                                                         real g_Half_Flux_y[][NCOMP_TOTAL][ N_FC_FLUX*N_FC_FLUX*N_FC_FLUX ],
                                                         real g_Half_Flux_z[][NCOMP_TOTAL][ N_FC_FLUX*N_FC_FLUX*N_FC_FLUX ],
-                                                  const real Gamma, const real MinPres,
-                                                  const bool NormPassive, const int NNorm, const int NormIdx[] );
+                                                  const real Gamma, const real MinPres );
 static __device__ void CUFLU_RiemannPredict( const real g_Fluid_In   [][NCOMP_TOTAL][ FLU_NXT*FLU_NXT*FLU_NXT ],
                                              const real g_Half_Flux_x[][NCOMP_TOTAL][ N_FC_FLUX*N_FC_FLUX*N_FC_FLUX ],
                                              const real g_Half_Flux_y[][NCOMP_TOTAL][ N_FC_FLUX*N_FC_FLUX*N_FC_FLUX ],
@@ -188,8 +187,7 @@ __global__ void CUFLU_FluidSolver_MHM( const real g_Fluid_In[]   [NCOMP_TOTAL][ 
 
 
 // (1.a-1) evaluate the face-centered half-step fluxes with the piecewise constant data reconstruction
-   CUFLU_RiemannPredict_Flux( g_Fluid_In, g_Half_Flux_x, g_Half_Flux_y, g_Half_Flux_z, Gamma, MinPres,
-                              NormPassive, NNorm, NormIdx_d );
+   CUFLU_RiemannPredict_Flux( g_Fluid_In, g_Half_Flux_x, g_Half_Flux_y, g_Half_Flux_z, Gamma, MinPres );
    __syncthreads();
 
 
@@ -230,13 +228,11 @@ __global__ void CUFLU_FluidSolver_MHM( const real g_Fluid_In[]   [NCOMP_TOTAL][ 
 #  ifdef UNSPLIT_GRAVITY
    CUFLU_ComputeFlux( g_FC_Var_xL, g_FC_Var_xR, g_FC_Var_yL, g_FC_Var_yR, g_FC_Var_zL, g_FC_Var_zR,
                       g_FC_Flux_x, g_FC_Flux_y, g_FC_Flux_z, g_Flux, StoreFlux, 1, Gamma,
-                      CorrHalfVel_Yes, g_Pot_USG, g_Corner, dt, _dh, Time, GravityType, ExtAcc_AuxArray_d_Flu, MinPres,
-                      NormPassive, NNorm, NormIdx_d );
+                      CorrHalfVel_Yes, g_Pot_USG, g_Corner, dt, _dh, Time, GravityType, ExtAcc_AuxArray_d_Flu, MinPres );
 #  else
    CUFLU_ComputeFlux( g_FC_Var_xL, g_FC_Var_xR, g_FC_Var_yL, g_FC_Var_yR, g_FC_Var_zL, g_FC_Var_zR,
                       g_FC_Flux_x, g_FC_Flux_y, g_FC_Flux_z, g_Flux, StoreFlux, 1, Gamma,
-                      CorrHalfVel_No, NULL, NULL, NULL_REAL, NULL_REAL, NULL_REAL, GRAVITY_NONE, NULL, MinPres,
-                      NormPassive, NNorm, NormIdx_d );
+                      CorrHalfVel_No, NULL, NULL, NULL_REAL, NULL_REAL, NULL_REAL, GRAVITY_NONE, NULL, MinPres );
 #  endif
    __syncthreads();
 
@@ -270,20 +266,12 @@ __global__ void CUFLU_FluidSolver_MHM( const real g_Fluid_In[]   [NCOMP_TOTAL][ 
 //                g_Half_Flux_z : Global memory array to store the face-centered fluxes in the z direction
 //                Gamma         : Ratio of specific heats
 //                MinPres       : Minimum allowed pressure
-//                NormPassive   : true --> normalize passive scalars so that the sum of their mass density
-//                                         is equal to the gas mass density
-//                                --> For exact Riemann solver only
-//                NNorm         : Number of passive scalars to be normalized
-//                                --> Should be set to the global variable "PassiveNorm_NVar"
-//                NormIdx       : Target variable indices to be normalized
-//                                --> Should be set to the global variable "PassiveNorm_VarIdx"
 //-------------------------------------------------------------------------------------------------------
 __device__ void CUFLU_RiemannPredict_Flux( const real g_Fluid_In   [][NCOMP_TOTAL][ FLU_NXT*FLU_NXT*FLU_NXT ],
                                                  real g_Half_Flux_x[][NCOMP_TOTAL][ N_FC_FLUX*N_FC_FLUX*N_FC_FLUX ],
                                                  real g_Half_Flux_y[][NCOMP_TOTAL][ N_FC_FLUX*N_FC_FLUX*N_FC_FLUX ],
                                                  real g_Half_Flux_z[][NCOMP_TOTAL][ N_FC_FLUX*N_FC_FLUX*N_FC_FLUX ],
-                                           const real Gamma, const real MinPres,
-                                           const bool NormPassive, const int NNorm, const int NormIdx[] )
+                                           const real Gamma, const real MinPres )
 {
 
    const uint  bx       = blockIdx.x;
@@ -331,36 +319,39 @@ __device__ void CUFLU_RiemannPredict_Flux( const real g_Fluid_In   [][NCOMP_TOTA
 #  if   ( RSOLVER == EXACT )
 
       /* exact solver */
-      #define RiemannSolver( Dir, VarL, VarR )                                                              \
-      {                                                                                                     \
-         VarL = CUFLU_Con2Pri( VarL, Gamma_m1, MinPres, NormPassive, NNorm, NormIdx );                      \
-         VarR = CUFLU_Con2Pri( VarR, Gamma_m1, MinPres, NormPassive, NNorm, NormIdx );                      \
-                                                                                                            \
-         FC_Flux = CUFLU_RiemannSolver_Exact( Dir, NULL, NULL, NULL, VarL, VarR, Gamma );                   \
+      #define RiemannSolver( Dir, VarL, VarR )                                               \
+      {                                                                                      \
+         /* do NOT convert any passive variable to mass fraction for the Riemann solvers */  \
+         const bool NormPassive_No = false;                                                  \
+                                                                                             \
+         VarL = CUFLU_Con2Pri( VarL, Gamma_m1, MinPres, NormPassive_No, NULL_INT, NULL );    \
+         VarR = CUFLU_Con2Pri( VarR, Gamma_m1, MinPres, NormPassive_No, NULL_INT, NULL );    \
+                                                                                             \
+         FC_Flux = CUFLU_RiemannSolver_Exact( Dir, NULL, NULL, NULL, VarL, VarR, Gamma );    \
       } // RiemannSolver
 
 #  elif ( RSOLVER == ROE )
 
       /* Roe solver */
-      #define RiemannSolver( Dir, VarL, VarR )                                                              \
-      {                                                                                                     \
-         FC_Flux = CUFLU_RiemannSolver_Roe( Dir, VarL, VarR, Gamma, MinPres, NormPassive, NNorm, NormIdx ); \
+      #define RiemannSolver( Dir, VarL, VarR )                                               \
+      {                                                                                      \
+         FC_Flux = CUFLU_RiemannSolver_Roe( Dir, VarL, VarR, Gamma, MinPres );               \
       } // RiemannSolver
 
 #  elif ( RSOLVER == HLLE )
 
       /* HLLE solver */
-      #define RiemannSolver( Dir, VarL, VarR )                                                              \
-      {                                                                                                     \
-         FC_Flux = CUFLU_RiemannSolver_HLLE( Dir, VarL, VarR, Gamma, MinPres );                             \
+      #define RiemannSolver( Dir, VarL, VarR )                                               \
+      {                                                                                      \
+         FC_Flux = CUFLU_RiemannSolver_HLLE( Dir, VarL, VarR, Gamma, MinPres );              \
       } // RiemannSolver
 
 #  elif ( RSOLVER == HLLC )
 
       /* HLLC solver */
-      #define RiemannSolver( Dir, VarL, VarR )                                                              \
-      {                                                                                                     \
-         FC_Flux = CUFLU_RiemannSolver_HLLC( Dir, VarL, VarR, Gamma, MinPres );                             \
+      #define RiemannSolver( Dir, VarL, VarR )                                               \
+      {                                                                                      \
+         FC_Flux = CUFLU_RiemannSolver_HLLC( Dir, VarL, VarR, Gamma, MinPres );              \
       } // RiemannSolver
 
 #  else
@@ -520,7 +511,7 @@ __device__ void CUFLU_RiemannPredict( const real g_Fluid_In   [][NCOMP_TOTAL][ F
 
 
 //    conserved variables --> primitive variables
-      Var = CUFLU_Con2Pri( Var, Gamma_m1, MinPres );
+      Var = CUFLU_Con2Pri( Var, Gamma_m1, MinPres, NormPassive, NNorm, NormIdx_d );
 
 
 //    save the updated data back to the output global array

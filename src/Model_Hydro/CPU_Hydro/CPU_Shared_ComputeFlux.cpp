@@ -13,8 +13,7 @@ extern void CPU_RiemannSolver_Exact( const int XYZ, real eival_out[], real L_sta
                                      real Flux_Out[], const real L_In[], const real R_In[], const real Gamma );
 #elif ( RSOLVER == ROE )
 extern void CPU_RiemannSolver_Roe( const int XYZ, real Flux_Out[], const real L_In[], const real R_In[],
-                                   const real Gamma, const real MinPres,
-                                   const bool NormPassive, const int NNorm, const int NormIdx[] );
+                                   const real Gamma, const real MinPres );
 #elif ( RSOLVER == HLLE )
 extern void CPU_RiemannSolver_HLLE( const int XYZ, real Flux_Out[], const real L_In[], const real R_In[],
                                     const real Gamma, const real MinPres );
@@ -54,19 +53,11 @@ extern void CPU_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L
 //                GravityType     : Types of gravity --> self-gravity, external gravity, both (for UNSPLIT_GRAVITY only)
 //                ExtAcc_AuxArray : Auxiliary array for adding external acceleration          (for UNSPLIT_GRAVITY only)
 //                MinPres         : Minimum allowed pressure
-//                NormPassive     : true --> normalize passive scalars so that the sum of their mass density
-//                                           is equal to the gas mass density
-//                                  --> For exact Riemann solver only
-//                NNorm           : Number of passive scalars to be normalized
-//                                  --> Should be set to the global variable "PassiveNorm_NVar"
-//                NormIdx         : Target variable indices to be normalized
-//                                  --> Should be set to the global variable "PassiveNorm_VarIdx"
 //-------------------------------------------------------------------------------------------------------
 void CPU_ComputeFlux( const real FC_Var[][6][NCOMP_TOTAL], real FC_Flux[][3][NCOMP_TOTAL], const int NFlux, const int Gap,
                       const real Gamma, const bool CorrHalfVel, const real Pot_USG[], const double Corner[],
                       const real dt, const real dh, const double Time, const OptGravityType_t GravityType,
-                      const double ExtAcc_AuxArray[], const real MinPres,
-                      const bool NormPassive, const int NNorm, const int NormIdx[] )
+                      const double ExtAcc_AuxArray[], const real MinPres )
 {
 
 // check
@@ -209,12 +200,14 @@ void CPU_ComputeFlux( const real FC_Var[][6][NCOMP_TOTAL], real FC_Flux[][3][NCO
 
 
 #        if   ( RSOLVER == EXACT )
-         CPU_Con2Pri( ConVar_L, PriVar_L, Gamma_m1, MinPres, NormPassive, NNorm, NormIdx );
-         CPU_Con2Pri( ConVar_R, PriVar_R, Gamma_m1, MinPres, NormPassive, NNorm, NormIdx );
+         const bool NormPassive_No = false;  // do NOT convert any passive variable to mass fraction for the Riemann solvers
+
+         CPU_Con2Pri( ConVar_L, PriVar_L, Gamma_m1, MinPres, NormPassive_No, NULL_INT, NULL );
+         CPU_Con2Pri( ConVar_R, PriVar_R, Gamma_m1, MinPres, NormPassive_No, NULL_INT, NULL );
 
          CPU_RiemannSolver_Exact( d, NULL, NULL, NULL, FC_Flux[ID1][d], PriVar_L, PriVar_R, Gamma );
 #        elif ( RSOLVER == ROE )
-         CPU_RiemannSolver_Roe ( d, FC_Flux[ID1][d], ConVar_L, ConVar_R, Gamma, MinPres, NormPassive, NNorm, NormIdx );
+         CPU_RiemannSolver_Roe ( d, FC_Flux[ID1][d], ConVar_L, ConVar_R, Gamma, MinPres );
 #        elif ( RSOLVER == HLLE )
          CPU_RiemannSolver_HLLE( d, FC_Flux[ID1][d], ConVar_L, ConVar_R, Gamma, MinPres );
 #        elif ( RSOLVER == HLLC )

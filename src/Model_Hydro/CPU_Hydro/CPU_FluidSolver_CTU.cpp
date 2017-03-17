@@ -16,8 +16,7 @@ extern void CPU_Pri2Con( const real In[], real Out[], const real _Gamma_m1,
 extern void CPU_ComputeFlux( const real FC_Var[][6][NCOMP_TOTAL], real FC_Flux[][3][NCOMP_TOTAL], const int NFlux, const int Gap,
                              const real Gamma, const bool CorrHalfVel, const real Pot_USG[], const double Corner[],
                              const real dt, const real dh, const double Time, const OptGravityType_t GravityType,
-                             const double ExtAcc_AuxArray[], const real MinPres,
-                             const bool NormPassive, const int NNorm, const int NormIdx[] );
+                             const double ExtAcc_AuxArray[], const real MinPres );
 extern void CPU_FullStepUpdate( const real Input[][ FLU_NXT*FLU_NXT*FLU_NXT ], real Output[][ PS2*PS2*PS2 ],
                                 const real Flux[][3][NCOMP_TOTAL], const real dt, const real dh,
                                 const real Gamma, const bool NormPassive, const int NNorm, const int NormIdx[] );
@@ -141,8 +140,7 @@ void CPU_FluidSolver_CTU( const real Flu_Array_In[][NCOMP_TOTAL][ FLU_NXT*FLU_NX
 
 //       4. evaluate the face-centered half-step fluxes by solving the Riemann problem
          CPU_ComputeFlux( FC_Var, FC_Flux, N_HF_FLUX, 0, Gamma, CorrHalfVel_No, NULL, NULL,
-                          NULL_REAL, NULL_REAL, NULL_REAL, GRAVITY_NONE, NULL, MinPres,
-                          NormPassive, NNorm, NormIdx );
+                          NULL_REAL, NULL_REAL, NULL_REAL, GRAVITY_NONE, NULL, MinPres );
 
 
 //       5. correct the face-centered variables by the transverse flux gradients
@@ -152,12 +150,10 @@ void CPU_FluidSolver_CTU( const real Flu_Array_In[][NCOMP_TOTAL][ FLU_NXT*FLU_NX
 //       6. evaluate the face-centered full-step fluxes by solving the Riemann problem with the corrected data
 #        ifdef UNSPLIT_GRAVITY
          CPU_ComputeFlux( FC_Var, FC_Flux, N_FL_FLUX, 1, Gamma, CorrHalfVel_Yes, Pot_Array_USG[P][0][0], Corner_Array[P],
-                          dt, dh, Time, GravityType, ExtAcc_AuxArray, MinPres,
-                          NormPassive, NNorm, NormIdx );
+                          dt, dh, Time, GravityType, ExtAcc_AuxArray, MinPres );
 #        else
          CPU_ComputeFlux( FC_Var, FC_Flux, N_FL_FLUX, 1, Gamma, CorrHalfVel_No,  NULL, NULL,
-                          NULL_REAL, NULL_REAL, NULL_REAL, GRAVITY_NONE, NULL, MinPres,
-                          NormPassive, NNorm, NormIdx );
+                          NULL_REAL, NULL_REAL, NULL_REAL, GRAVITY_NONE, NULL, MinPres );
 #        endif
 
 

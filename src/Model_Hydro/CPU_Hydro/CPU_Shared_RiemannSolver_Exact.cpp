@@ -32,7 +32,9 @@ static void Set_Flux( real flux[], const real val[], const real Gamma );
 //                R_star_out  : Output array to store the primitive variables in the right star region
 //                Flux_Out    : Output array to store the average flux along t axis
 //                L_In        : Input **primitive** variables in the left region
+//                              --> But note that the input passive scalars should be mass density instead of mass fraction
 //                R_In        : Input **primitive** variables in the right region
+//                              --> But note that the input passive scalars should be mass density instead of mass fraction
 //                Gamma       : Ratio of specific heats
 //------------------------------------------------------------------------------------------------------
 void CPU_RiemannSolver_Exact( const int XYZ, real eival_out[], real L_star_out[], real R_star_out[],
@@ -309,13 +311,21 @@ void CPU_RiemannSolver_Exact( const int XYZ, real eival_out[], real L_star_out[]
 
 
 // evaluate the fluxes for passive scalars
-// --> note that L_In and R_In are primitive variables
+// --> note that L_In and R_In are mass density instead of mass fraction for passive scalars
 #  if ( NCOMP_PASSIVE > 0 )
    if ( Flux_Out[FLUX_DENS] >= (real)0.0 )
-      for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)  Flux_Out[v] = Flux_Out[FLUX_DENS]*L_In[v];
+   {
+      const real vx = Flux_Out[FLUX_DENS] / L_In[DENS];
+
+      for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)  Flux_Out[v] = L_In[v]*vx;
+   }
 
    else
-      for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)  Flux_Out[v] = Flux_Out[FLUX_DENS]*R_In[v];
+   {
+      const real vx = Flux_Out[FLUX_DENS] / R_In[DENS];
+
+      for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)  Flux_Out[v] = R_In[v]*vx;
+   }
 #  endif
 
 

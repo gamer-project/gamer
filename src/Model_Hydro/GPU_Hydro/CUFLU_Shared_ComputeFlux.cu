@@ -31,8 +31,7 @@ static __device__ void CUFLU_ComputeFlux( const real g_FC_Var_xL[][NCOMP_TOTAL][
                                           real g_FC_Flux_y[][NCOMP_TOTAL][ N_FC_FLUX*N_FC_FLUX*N_FC_FLUX ],
                                           real g_FC_Flux_z[][NCOMP_TOTAL][ N_FC_FLUX*N_FC_FLUX*N_FC_FLUX ],
                                           real g_Flux[][9][NCOMP_TOTAL][ PS2*PS2 ], const bool DumpFlux,
-                                          const uint Gap, const real Gamma, const real MinPres,
-                                          const bool NormPassive, const int NNorm, const int NormIdx[] );
+                                          const uint Gap, const real Gamma, const real MinPres );
 
 
 
@@ -84,13 +83,6 @@ static __device__ void CUFLU_ComputeFlux( const real g_FC_Var_xL[][NCOMP_TOTAL][
 //                GravityType     : Types of gravity --> self-gravity, external gravity, both (for UNSPLIT_GRAVITY only)
 //                ExtAcc_AuxArray : Auxiliary array for adding external acceleration (for UNSPLIT_GRAVITY only)
 //                MinPres         : Minimum allowed pressure
-//                NormPassive     : true --> normalize passive scalars so that the sum of their mass density
-//                                           is equal to the gas mass density
-//                                  --> For exact Riemann solver only
-//                NNorm           : Number of passive scalars to be normalized
-//                                  --> Should be set to the global variable "PassiveNorm_NVar"
-//                NormIdx         : Target variable indices to be normalized
-//                                  --> Should be set to the global variable "PassiveNorm_VarIdx"
 //-------------------------------------------------------------------------------------------------------
 __forceinline__
 __device__ void CUFLU_ComputeFlux( const real g_FC_Var_xL[][NCOMP_TOTAL][ N_FC_VAR*N_FC_VAR*N_FC_VAR ],
@@ -106,8 +98,7 @@ __device__ void CUFLU_ComputeFlux( const real g_FC_Var_xL[][NCOMP_TOTAL][ N_FC_V
                                    const uint Gap, const real Gamma, const bool CorrHalfVel,
                                    const real g_Pot_USG[][ USG_NXT_F*USG_NXT_F*USG_NXT_F ],
                                    const double g_Corner[][3], const real dt, const real _dh, const double Time,
-                                   const OptGravityType_t GravityType, const double ExtAcc_AuxArray[], const real MinPres,
-                                   const bool NormPassive, const int NNorm, const int NormIdx[] )
+                                   const OptGravityType_t GravityType, const double ExtAcc_AuxArray[], const real MinPres )
 {
 
 // check
@@ -268,36 +259,39 @@ __device__ void CUFLU_ComputeFlux( const real g_FC_Var_xL[][NCOMP_TOTAL][ N_FC_V
 #  if   ( RSOLVER == EXACT )
 
       /* exact solver */
-      #define RiemannSolver( Dir, VarL, VarR )                                                              \
-      {                                                                                                     \
-         VarL = CUFLU_Con2Pri( VarL, Gamma_m1, MinPres, NormPassive, NNorm, NormIdx );                      \
-         VarR = CUFLU_Con2Pri( VarR, Gamma_m1, MinPres, NormPassive, NNorm, NormIdx );                      \
-                                                                                                            \
-         FC_Flux = CUFLU_RiemannSolver_Exact( Dir, NULL, NULL, NULL, VarL, VarR, Gamma );                   \
+      #define RiemannSolver( Dir, VarL, VarR )                                               \
+      {                                                                                      \
+         /* do NOT convert any passive variable to mass fraction for the Riemann solvers */  \
+         const bool NormPassive_No = false;                                                  \
+                                                                                             \
+         VarL = CUFLU_Con2Pri( VarL, Gamma_m1, MinPres, NormPassive_No, NULL_INT, NULL );    \
+         VarR = CUFLU_Con2Pri( VarR, Gamma_m1, MinPres, NormPassive_No, NULL_INT, NULL );    \
+                                                                                             \
+         FC_Flux = CUFLU_RiemannSolver_Exact( Dir, NULL, NULL, NULL, VarL, VarR, Gamma );    \
       } // RiemannSolver
 
 #  elif ( RSOLVER == ROE )
 
       /* Roe solver */
-      #define RiemannSolver( Dir, VarL, VarR )                                                              \
-      {                                                                                                     \
-         FC_Flux = CUFLU_RiemannSolver_Roe( Dir, VarL, VarR, Gamma, MinPres, NormPassive, NNorm, NormIdx ); \
+      #define RiemannSolver( Dir, VarL, VarR )                                               \
+      {                                                                                      \
+         FC_Flux = CUFLU_RiemannSolver_Roe( Dir, VarL, VarR, Gamma, MinPres );               \
       } // RiemannSolver
 
 #  elif ( RSOLVER == HLLE )
 
       /* HLLE solver */
-      #define RiemannSolver( Dir, VarL, VarR )                                                              \
-      {                                                                                                     \
-         FC_Flux = CUFLU_RiemannSolver_HLLE( Dir, VarL, VarR, Gamma, MinPres );                             \
+      #define RiemannSolver( Dir, VarL, VarR )                                               \
+      {                                                                                      \
+         FC_Flux = CUFLU_RiemannSolver_HLLE( Dir, VarL, VarR, Gamma, MinPres );              \
       } // RiemannSolver
 
 #  elif ( RSOLVER == HLLC )
 
       /* HLLC solver */
-      #define RiemannSolver( Dir, VarL, VarR )                                                              \
-      {                                                                                                     \
-         FC_Flux = CUFLU_RiemannSolver_HLLC( Dir, VarL, VarR, Gamma, MinPres );                             \
+      #define RiemannSolver( Dir, VarL, VarR )                                               \
+      {                                                                                      \
+         FC_Flux = CUFLU_RiemannSolver_HLLC( Dir, VarL, VarR, Gamma, MinPres );              \
       } // RiemannSolver
 
 #  else

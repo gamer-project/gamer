@@ -15,8 +15,7 @@
 #endif
 
 static __device__ FluVar CUFLU_RiemannSolver_Roe( const int XYZ, const FluVar L_In, const FluVar R_In,
-                                                  const real Gamma, const real MinPres,
-                                                  const bool NormPassive, const int NNorm, const int NormIdx[] );
+                                                  const real Gamma, const real MinPres );
 
 
 
@@ -36,18 +35,10 @@ static __device__ FluVar CUFLU_RiemannSolver_Roe( const int XYZ, const FluVar L_
 //                R_In        : Input right state (conserved variables)
 //                Gamma       : Gamma
 //                MinPres     : Minimum allowed pressure
-//                NormPassive : true --> normalize passive scalars so that the sum of their mass density
-//                                       is equal to the gas mass density
-//                              --> For switching to exact Riemann solver only
-//                NNorm       : Number of passive scalars to be normalized
-//                              --> Should be set to the global variable "PassiveNorm_NVar"
-//                NormIdx     : Target variable indices to be normalized
-//                              --> Should be set to the global variable "PassiveNorm_VarIdx"
 //-------------------------------------------------------------------------------------------------------
 __forceinline__
 __device__ FluVar CUFLU_RiemannSolver_Roe( const int XYZ, const FluVar L_In, const FluVar R_In,
-                                           const real Gamma, const real MinPres,
-                                           const bool NormPassive, const int NNorm, const int NormIdx[] )
+                                           const real Gamma, const real MinPres )
 {
 
 // 1. reorder the input variables for different spatial directions
@@ -174,8 +165,11 @@ __device__ FluVar CUFLU_RiemannSolver_Roe( const int XYZ, const FluVar L_In, con
 
 #     define Recalculate_Flux( L, R, Flux_Out )                                                    \
       {                                                                                            \
-         L = CUFLU_Con2Pri( L, Gamma_m1, MinPres, NormPassive, NNorm, NormIdx );                   \
-         R = CUFLU_Con2Pri( R, Gamma_m1, MinPres, NormPassive, NNorm, NormIdx );                   \
+         /* do NOT convert any passive variable to mass fraction for the Riemann solvers */        \
+         const bool NormPassive_No = false;                                                        \
+                                                                                                   \
+         L = CUFLU_Con2Pri( L, Gamma_m1, MinPres, NormPassive_No, NULL_INT, NULL );                \
+         R = CUFLU_Con2Pri( R, Gamma_m1, MinPres, NormPassive_No, NULL_INT, NULL );                \
                                                                                                    \
          Flux_Out = CUFLU_RiemannSolver_Exact( 0, NULL, NULL, NULL, L, R, Gamma );                 \
       } // Recalculate_Flux
@@ -201,29 +195,29 @@ __device__ FluVar CUFLU_RiemannSolver_Roe( const int XYZ, const FluVar L_In, con
 #  endif // CHECK_INTERMEDIATE == EXACT/HLLE/HLLC
 
 
-#  define Get_I_States( comp, comp_next, EVec )                                                       \
-   {                                                                                                  \
-      I_States.Rho += Amp.comp*EVec.Rho;                                                              \
-      I_States.Px  += Amp.comp*EVec.Px;                                                               \
-      I_States.Py  += Amp.comp*EVec.Py;                                                               \
-      I_States.Pz  += Amp.comp*EVec.Pz;                                                               \
-      I_States.Egy += Amp.comp*EVec.Egy;                                                              \
-                                                                                                      \
-      /* skip the degenerate states */                                                                \
-      if ( EVal.comp_next > EVal.comp )                                                               \
-      {                                                                                               \
-         I_Pres = I_States.Egy - (real)0.5*( I_States.Px*I_States.Px + I_States.Py*I_States.Py +      \
-                                             I_States.Pz*I_States.Pz ) / I_States.Rho;                \
-                                                                                                      \
-         if ( I_States.Rho <= (real)0.0  ||  I_Pres <= (real)0.0 )                                    \
-         {                                                                                            \
-            Recalculate_Flux( L, R, Flux_Out );                                                       \
-                                                                                                      \
-            Flux_Out = CUFLU_Rotate3D( Flux_Out, XYZ, false );                                        \
-                                                                                                      \
-            return Flux_Out;                                                                          \
-         }                                                                                            \
-      }                                                                                               \
+#  define Get_I_States( comp, comp_next, EVec )                                                    \
+   {                                                                                               \
+      I_States.Rho += Amp.comp*EVec.Rho;                                                           \
+      I_States.Px  += Amp.comp*EVec.Px;                                                            \
+      I_States.Py  += Amp.comp*EVec.Py;                                                            \
+      I_States.Pz  += Amp.comp*EVec.Pz;                                                            \
+      I_States.Egy += Amp.comp*EVec.Egy;                                                           \
+                                                                                                   \
+      /* skip the degenerate states */                                                             \
+      if ( EVal.comp_next > EVal.comp )                                                            \
+      {                                                                                            \
+         I_Pres = I_States.Egy - (real)0.5*( I_States.Px*I_States.Px + I_States.Py*I_States.Py +   \
+                                             I_States.Pz*I_States.Pz ) / I_States.Rho;             \
+                                                                                                   \
+         if ( I_States.Rho <= (real)0.0  ||  I_Pres <= (real)0.0 )                                 \
+         {                                                                                         \
+            Recalculate_Flux( L, R, Flux_Out );                                                    \
+                                                                                                   \
+            Flux_Out = CUFLU_Rotate3D( Flux_Out, XYZ, false );                                     \
+                                                                                                   \
+            return Flux_Out;                                                                       \
+         }                                                                                         \
+      }                                                                                            \
    } // Get_I_States
 
    I_States.Rho = L.Rho;
@@ -269,9 +263,6 @@ __device__ FluVar CUFLU_RiemannSolver_Roe( const int XYZ, const FluVar L_In, con
 
 
 // 10. evaluate the fluxes for passive scalars
-//     --> must use L_In/R_In instead of L/R since the latter may be converted to primitive variables if "CHECK_INTERMEDIATE == EXACT"
-//         --> wrong argument becaues even if "CHECK_INTERMEDIATE == EXACT" this function will return after calling Recalculate_Flux()
-//         --> so using either L_In/R_In or L/R is fine
 #  if ( NCOMP_PASSIVE > 0 )
    if ( Flux_Out.Rho >= (real)0.0 )
    {

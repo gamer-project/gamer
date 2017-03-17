@@ -99,7 +99,7 @@ __device__ FluVar CUFLU_RiemannSolver_HLLC( const int XYZ, const FluVar L_In, co
 
 
 // 3. estimate the maximum wave speeds
-   FluVar EVal;
+   FluVar5 EVal;
    real u_L, u_R, Cs_L, Cs_R, W_L, W_R, MaxV_L, MaxV_R;
 
    EVal.Rho = u - Cs;
@@ -152,7 +152,7 @@ __device__ FluVar CUFLU_RiemannSolver_HLLC( const int XYZ, const FluVar L_In, co
 
 // 5. evaluate the weightings of the left(right) fluxes and contact wave
    FluVar Flux_LR;
-   real temp4, Coeff_S;
+   real   temp4, Coeff_S;
 
    if ( V_S >= (real)0.0 )
    {
@@ -198,7 +198,25 @@ __device__ FluVar CUFLU_RiemannSolver_HLLC( const int XYZ, const FluVar L_In, co
    Flux_LR.Egy += Coeff_S*V_S;
 
 
-// 7. restore the correct order
+// 7. evaluate the fluxes for passive scalars
+#  if ( NCOMP_PASSIVE > 0 )
+   if ( Flux_LR.Rho >= (real)0.0 )
+   {
+      const real vx = Flux_LR.Rho*_RhoL;
+
+      for (int v=0; v<NCOMP_PASSIVE; v++)    Flux_LR.Passive[v] = L_In.Passive[v]*vx;
+   }
+
+   else
+   {
+      const real vx = Flux_LR.Rho*_RhoR;
+
+      for (int v=0; v<NCOMP_PASSIVE; v++)    Flux_LR.Passive[v] = R_In.Passive[v]*vx;
+   }
+#  endif
+
+
+// 8. restore the correct order
    Flux_LR = CUFLU_Rotate3D( Flux_LR, XYZ, false );
 
    return Flux_LR;

@@ -40,17 +40,9 @@ extern real CPU_CheckMinPres( const real InPres, const real MinPres );
 //                R_In        : Input right state (conserved variables)
 //                Gamma       : Ratio of specific heats
 //                MinPres     : Minimum allowed pressure
-//                NormPassive : true --> normalize passive scalars so that the sum of their mass density
-//                                       is equal to the gas mass density
-//                              --> For switching to exact Riemann solver only
-//                NNorm       : Number of passive scalars to be normalized
-//                              --> Should be set to the global variable "PassiveNorm_NVar"
-//                NormIdx     : Target variable indices to be normalized
-//                              --> Should be set to the global variable "PassiveNorm_VarIdx"
 //-------------------------------------------------------------------------------------------------------
 void CPU_RiemannSolver_Roe( const int XYZ, real Flux_Out[], const real L_In[], const real R_In[],
-                            const real Gamma, const real MinPres,
-                            const bool NormPassive, const int NNorm, const int NormIdx[] )
+                            const real Gamma, const real MinPres )
 {
 
 // 1. reorder the input variables for different spatial directions
@@ -193,8 +185,10 @@ void CPU_RiemannSolver_Roe( const int XYZ, real Flux_Out[], const real L_In[], c
 
 #           if   ( CHECK_INTERMEDIATE == EXACT )   // recalculate fluxes by exact solver
 
-            CPU_Con2Pri( L, PriVar_L, Gamma_m1, MinPres, NormPassive, NNorm, NormIdx );
-            CPU_Con2Pri( R, PriVar_R, Gamma_m1, MinPres, NormPassive, NNorm, NormIdx );
+            const bool NormPassive_No = false;  // do NOT convert any passive variable to mass fraction for the Riemann solvers
+
+            CPU_Con2Pri( L, PriVar_L, Gamma_m1, MinPres, NormPassive_No, NULL_INT, NULL );
+            CPU_Con2Pri( R, PriVar_R, Gamma_m1, MinPres, NormPassive_No, NULL_INT, NULL );
 
             CPU_RiemannSolver_Exact( 0, NULL, NULL, NULL, Flux_Out, PriVar_L, PriVar_R, Gamma );
 
@@ -234,10 +228,18 @@ void CPU_RiemannSolver_Roe( const int XYZ, real Flux_Out[], const real L_In[], c
 // 10. evaluate the fluxes for passive scalars
 #  if ( NCOMP_PASSIVE > 0 )
    if ( Flux_Out[FLUX_DENS] >= (real)0.0 )
-      for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)  Flux_Out[v] = Flux_Out[FLUX_DENS]*L[v]*_RhoL;
+   {
+      const real vx = Flux_Out[FLUX_DENS]*_RhoL;
+
+      for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)  Flux_Out[v] = L[v]*vx;
+   }
 
    else
-      for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)  Flux_Out[v] = Flux_Out[FLUX_DENS]*R[v]*_RhoR;
+   {
+      const real vx = Flux_Out[FLUX_DENS]*_RhoR;
+
+      for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)  Flux_Out[v] = R[v]*vx;
+   }
 #  endif
 
 
