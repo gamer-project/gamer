@@ -89,7 +89,11 @@ int CUFLU_FluidSolver_SetConstMem_NormIdx( int NormIdx_h[] )
       return 0;
 
 } // FUNCTION : CUFLU_FluidSolver_SetConstMem_NormIdx
-#endif // #if ( NCOMP_PASSIVE > 0 )
+
+#else
+__constant__ int *NormIdx_d = NULL;
+
+#endif // #if ( NCOMP_PASSIVE > 0 ) ... else ...
 
 
 
