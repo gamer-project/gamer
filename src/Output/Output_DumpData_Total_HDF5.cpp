@@ -2214,18 +2214,26 @@ void GetCompound_InputPara( hid_t &H5_TypeID )
 // create the array type
    const hsize_t H5_ArrDims_3Var             = 3;                    // array size of [3]
    const hsize_t H5_ArrDims_6Var             = 6;                    // array size of [6]
+#  if ( NCOMP_PASSIVE > 0 )
    const hsize_t H5_ArrDims_NPassive         = NCOMP_PASSIVE;        // array size of [NCOMP_PASSIVE]
+#  endif
+#  if ( NLEVEL > 1 )
    const hsize_t H5_ArrDims_NLvM1            = NLEVEL-1;             // array size of [NLEVEL-1]
    const hsize_t H5_ArrDims_NLvM1_2[2]       = { NLEVEL-1, 2 };      // array size of [NLEVEL-1][2]
    const hsize_t H5_ArrDims_NLvM1_4[2]       = { NLEVEL-1, 4 };      // array size of [NLEVEL-1][4]
+#  endif
 
    const hid_t   H5_TypeID_Arr_3Int          = H5Tarray_create( H5T_NATIVE_INT,    1, &H5_ArrDims_3Var      );
    const hid_t   H5_TypeID_Arr_6Int          = H5Tarray_create( H5T_NATIVE_INT,    1, &H5_ArrDims_6Var      );
+#  if ( NCOMP_PASSIVE > 0 )
    const hid_t   H5_TypeID_Arr_NPassive      = H5Tarray_create( H5T_NATIVE_INT,    1, &H5_ArrDims_NPassive  );
+#  endif
+#  if ( NLEVEL > 1 )
    const hid_t   H5_TypeID_Arr_NLvM1Int      = H5Tarray_create( H5T_NATIVE_INT,    1, &H5_ArrDims_NLvM1     );
    const hid_t   H5_TypeID_Arr_NLvM1Double   = H5Tarray_create( H5T_NATIVE_DOUBLE, 1, &H5_ArrDims_NLvM1     );
    const hid_t   H5_TypeID_Arr_NLvM1_2Double = H5Tarray_create( H5T_NATIVE_DOUBLE, 2,  H5_ArrDims_NLvM1_2   );
    const hid_t   H5_TypeID_Arr_NLvM1_4Double = H5Tarray_create( H5T_NATIVE_DOUBLE, 2,  H5_ArrDims_NLvM1_4   );
+#  endif
 
    herr_t  H5_Status;
 
@@ -2368,7 +2376,9 @@ void GetCompound_InputPara( hid_t &H5_TypeID )
    H5Tinsert( H5_TypeID, "Opt__CorrAfterAllSync",   HOFFSET(InputPara_t,Opt__CorrAfterAllSync  ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "Opt__NormalizePassive",   HOFFSET(InputPara_t,Opt__NormalizePassive  ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "NormalizePassive_NVar",   HOFFSET(InputPara_t,NormalizePassive_NVar  ), H5T_NATIVE_INT     );
+#  if ( NCOMP_PASSIVE > 0 )
    H5Tinsert( H5_TypeID, "NormalizePassive_VarIdx", HOFFSET(InputPara_t,NormalizePassive_VarIdx), H5_TypeID_Arr_NPassive );
+#  endif
    H5Tinsert( H5_TypeID, "Opt__OverlapMPI",         HOFFSET(InputPara_t,Opt__OverlapMPI        ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "Opt__ResetFluid",         HOFFSET(InputPara_t,Opt__ResetFluid        ), H5T_NATIVE_INT     );
 #  if ( MODEL == HYDRO  ||  MODEL == MHD  ||  MODEL == ELBDM )
@@ -2478,6 +2488,7 @@ void GetCompound_InputPara( hid_t &H5_TypeID )
 #  endif
 
 // flag tables
+#  if ( NLEVEL > 1 )
    H5Tinsert( H5_TypeID, "FlagTable_Rho",          HOFFSET(InputPara_t,FlagTable_Rho           ), H5_TypeID_Arr_NLvM1Double   );
    H5Tinsert( H5_TypeID, "FlagTable_RhoGradient",  HOFFSET(InputPara_t,FlagTable_RhoGradient   ), H5_TypeID_Arr_NLvM1Double   );
    H5Tinsert( H5_TypeID, "FlagTable_Lohner",       HOFFSET(InputPara_t,FlagTable_Lohner        ), H5_TypeID_Arr_NLvM1_4Double );
@@ -2492,14 +2503,21 @@ void GetCompound_InputPara( hid_t &H5_TypeID )
    H5Tinsert( H5_TypeID, "FlagTable_NParPatch",    HOFFSET(InputPara_t,FlagTable_NParPatch     ), H5_TypeID_Arr_NLvM1Int      );
    H5Tinsert( H5_TypeID, "FlagTable_NParCell",     HOFFSET(InputPara_t,FlagTable_NParCell      ), H5_TypeID_Arr_NLvM1Int      );
 #  endif
+#  endif
 
 
 // free memory
    H5_Status = H5Tclose( H5_TypeID_Arr_3Int          );
    H5_Status = H5Tclose( H5_TypeID_Arr_6Int          );
+#  if ( NCOMP_PASSIVE > 0 )
+   H5_Status = H5Tclose( H5_TypeID_Arr_NPassive      );
+#  endif
+#  if ( NLEVEL > 1 )
+   H5_Status = H5Tclose( H5_TypeID_Arr_NLvM1Int      );
    H5_Status = H5Tclose( H5_TypeID_Arr_NLvM1Double   );
    H5_Status = H5Tclose( H5_TypeID_Arr_NLvM1_2Double );
    H5_Status = H5Tclose( H5_TypeID_Arr_NLvM1_4Double );
+#  endif
 
 } // FUNCTION : GetCompound_InputPara
 

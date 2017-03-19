@@ -851,13 +851,17 @@ void Init_Restart_HDF5( const char *FileName )
 //                                    --> true  : terminate the program     if "FieldPtr[X] != ComprPtr[X]"
 //                                        false : display a warning message if "FieldPtr[X] != ComprPtr[X]"
 //
-// Return      :  Success/fail <-> 0/-1
+// Return      :  Success/fail <-> 0/<0
 //-------------------------------------------------------------------------------------------------------
 template <typename T>
 herr_t LoadField( const char *FieldName, void *FieldPtr, const hid_t H5_SetID_Target,
                   const hid_t H5_TypeID_Target, const bool Fatal_Nonexist,
                   const T *ComprPtr, const int NCompr, const bool Fatal_Compr )
 {
+
+// nothing to do if NCompr == 0 (note that in certain circumstances some variables can have zero size)
+   if ( NCompr == 0 )   return 0;
+
 
 #  ifdef DEBUG_HDF5
    if ( NCompr > 0  &&  ComprPtr == NULL )
