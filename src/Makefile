@@ -379,11 +379,10 @@ endif # "SUPPORT_LIBYT"
 # location of libraries
 # -------------------------------------------------------------------------------
 # nano (intel 2016)
-# *** please replace "mpicxx" by "mpicxx -cxx=icpc" ***
 #CUDA_TOOLKIT_PATH := /usr/local/cuda
-#MPI_PATH          := /opt/intel/compilers_and_libraries_2016.2.181/linux/mpi/intel64
-#FFTW_PATH         :=
-#HDF5_PATH         :=
+#MPI_PATH          := /mnt/lustre/allen/hyschive/software/openmpi/2.0.2
+#FFTW_PATH         := /mnt/lustre/allen/hyschive/software/fftw/2.1.5
+#HDF5_PATH         := /mnt/lustre/allen/hyschive/software/miniconda2
 #GSL_PATH          :=
 
 # dxl (gcc, serial)

@@ -169,6 +169,7 @@ yt_inline   YT_SCRIPT                 # yt inline analysis script (do not includ
 0           OPT__CK_REFINE            # check the refinement
 0           OPT__CK_PROPER_NESTING    # check the proper-nesting condition
 0           OPT__CK_CONSERVATION      # check the conservation law
+0           OPT__CK_NORMALIZE_PASSIVE # check the normalization of passive scalars --> must turn on OPT__NORMALIZE_PASSIVE
 0           OPT__CK_RESTRICT          # check the restriction operation
 0           OPT__CK_FINITE            # check if all variables are finite
 0           OPT__CK_PATCH_ALLOCATE    # check if all patches are properly allocated

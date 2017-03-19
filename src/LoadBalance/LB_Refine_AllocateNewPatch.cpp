@@ -484,11 +484,24 @@ void LB_Refine_AllocateNewPatch( const int FaLv, int NNew_Home, int *NewPID_Home
    for (SonPID0=amr->NPatchComma[SonLv][1], Count=0; SonPID0<amr->NPatchComma[SonLv][3]; SonPID0+=8, Count++)
       NewSonPID0_Buf[Count] = SonPID0;
 
+// following code seems to trigger a bug in the Intel compiler version 2016.2.181
+// --> replace with the simplified version below
+   /*
+// original version
    for (int t=0, m=0; t<NNew_All0; t++, m+=8)
    {
       SonPID0 = NewSonPID0_All[t];
 
       for (int SonPID=SonPID0, n=m; SonPID<SonPID0+8; SonPID++, n++)    NewSonPID_All[n] = SonPID;
+   }
+   */
+
+// simplified version
+   for (int t=0; t<NNew_All0; t++)
+   {
+      SonPID0 = NewSonPID0_All[t];
+
+      for (int LocalID=0; LocalID<8; LocalID++)    NewSonPID_All[ t*8 + LocalID ] = SonPID0 + LocalID;
    }
 
 // 9.2 sibling relation

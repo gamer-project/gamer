@@ -48,7 +48,7 @@ SIMU_OPTION += -DMAX_PATCH=1000000
 # (b) hydro options
 # ------------------------------------------------------------------------------------
 ifeq "$(findstring MODEL=HYDRO, $(SIMU_OPTION))" "MODEL=HYDRO"
-# hydrodynamic scheme: RTVD/WAF/MHM/MHM_RP/CTU
+# hydrodynamic scheme: RTVD/WAF/MHM/MHM_RP/CTU (WAF is deprecated)
 SIMU_OPTION += -DFLU_SCHEME=CTU
 
 # scheme of spatial data reconstruction: PLM/PPM (piecewise-linear/piecewise-parabolic) ##USELESS IN RTVD/WAF##
@@ -166,7 +166,7 @@ CC_FILE     += Aux_Check_Parameter.cpp  Aux_Check_Conservation.cpp  Aux_Check.cp
                Aux_Check_Refinement.cpp  Aux_Check_Restrict.cpp  Aux_Error.cpp  Aux_GetCPUInfo.cpp \
                Aux_GetMemInfo.cpp  Aux_Message.cpp  Aux_PatchCount.cpp  Aux_TakeNote.cpp  Aux_Timing.cpp \
                Aux_Check_MemFree.cpp  Aux_RecordPerformance.cpp  Aux_CheckFileExist.cpp  Aux_Array.cpp \
-               Aux_RecordUser.cpp  Aux_RecordCorrUnphy.cpp  Aux_SwapPointer.cpp
+               Aux_RecordUser.cpp  Aux_RecordCorrUnphy.cpp  Aux_SwapPointer.cpp  Aux_Check_NormalizePassive.cpp
 
 CC_FILE     += CPU_FluidSolver.cpp  Flu_AdvanceDt.cpp  Flu_Prepare.cpp  Flu_Close.cpp  Flu_FixUp.cpp \
                Flu_Restrict.cpp  Flu_AllocateFluxArray.cpp  Flu_BoundaryCondition_User.cpp  Flu_ResetByUser.cpp \
@@ -378,6 +378,13 @@ endif # "SUPPORT_LIBYT"
 
 # location of libraries
 # -------------------------------------------------------------------------------
+# nano (intel 2016)
+#CUDA_TOOLKIT_PATH := /usr/local/cuda
+#MPI_PATH          := /mnt/lustre/allen/hyschive/software/openmpi/2.0.2
+#FFTW_PATH         := /mnt/lustre/allen/hyschive/software/fftw/2.1.5
+#HDF5_PATH         := /mnt/lustre/allen/hyschive/software/miniconda2
+#GSL_PATH          :=
+
 # dxl (gcc, serial)
 #CUDA_TOOLKIT_PATH :=
 #FFTW_PATH         := /home/hyschive/software/fftw/2.1.5
@@ -520,7 +527,7 @@ endif
 
 ifeq "$(findstring OPENMP, $(SIMU_OPTION))" "OPENMP"
    ifeq "$(findstring INTEL, $(SIMU_OPTION))" "INTEL"
-      OPENMP := -openmp
+      OPENMP := -fopenmp
    else
       OPENMP := -fopenmp
    endif
@@ -615,7 +622,7 @@ else ifeq "$(findstring GPU_ARCH=KEPLER,  $(SIMU_OPTION))" "GPU_ARCH=KEPLER"
 else ifeq "$(findstring GPU_ARCH=MAXWELL, $(SIMU_OPTION))" "GPU_ARCH=MAXWELL"
    NVCCFLAG_COM += -gencode arch=compute_52,code=\"compute_52,sm_52\"
 else ifeq "$(findstring GPU_ARCH=PASCAL,  $(SIMU_OPTION))" "GPU_ARCH=PASCAL"
-   NVCCFLAG_COM += -gencode arch=compute_61,code=\"compute_61,sm_61\"
+   NVCCFLAG_COM += -gencode arch=compute_60,code=\"compute_60,sm_60\"
 else ifeq "$(findstring GPU, $(SIMU_OPTION))" "GPU"
    $(error unknown GPU_ARCH !!)
 endif
@@ -638,6 +645,18 @@ else ifeq "$(findstring GPU_ARCH=KEPLER, $(SIMU_OPTION))" "GPU_ARCH=KEPLER"
      NVCCFLAG_FLU += --maxrregcount=128
    else
      NVCCFLAG_FLU += --maxrregcount=64
+   endif
+else ifeq "$(findstring GPU_ARCH=PASCAL, $(SIMU_OPTION))" "GPU_ARCH=MAXWELL"
+   ifeq "$(findstring FLOAT8, $(SIMU_OPTION))" "FLOAT8"
+#    NVCCFLAG_FLU += --maxrregcount=XX
+   else
+#    NVCCFLAG_FLU += --maxrregcount=XX
+   endif
+else ifeq "$(findstring GPU_ARCH=PASCAL, $(SIMU_OPTION))" "GPU_ARCH=PASCAL"
+   ifeq "$(findstring FLOAT8, $(SIMU_OPTION))" "FLOAT8"
+#    NVCCFLAG_FLU += --maxrregcount=XX
+   else
+#    NVCCFLAG_FLU += --maxrregcount=XX
    endif
 endif
 
