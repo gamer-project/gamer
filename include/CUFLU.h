@@ -182,6 +182,10 @@ struct FluVar5 { real Rho, Px, Py, Pz, Egy; };
 #     define FLU_BLOCK_SIZE_X   512
 #  elif ( GPU_ARCH == KEPLER )
 #     define FLU_BLOCK_SIZE_X   512
+#  elif ( GPU_ARCH == MAXWELL )
+#     define FLU_BLOCK_SIZE_X   512    // not optimized yet
+#  elif ( GPU_ARCH == PASCAL )
+#     define FLU_BLOCK_SIZE_X   512    // not optimized yet
 #  else
 #     define FLU_BLOCK_SIZE_X   NULL_INT
 #     ifdef GPU
@@ -197,6 +201,10 @@ struct FluVar5 { real Rho, Px, Py, Pz, Egy; };
 #     define FLU_BLOCK_SIZE_X   512
 #  elif ( GPU_ARCH == KEPLER )
 #     define FLU_BLOCK_SIZE_X   512
+#  elif ( GPU_ARCH == MAXWELL )
+#     define FLU_BLOCK_SIZE_X   512    // not optimized yet
+#  elif ( GPU_ARCH == PASCAL )
+#     define FLU_BLOCK_SIZE_X   512    // not optimized yet
 #  else
 #     define FLU_BLOCK_SIZE_X   NULL_INT
 #     ifdef GPU
@@ -232,9 +240,23 @@ struct FluVar5 { real Rho, Px, Py, Pz, Egy; };
 
 #  elif ( GPU_ARCH == KEPLER )
 #     ifdef FLOAT8
-#        define FLU_BLOCK_SIZE_Y    16       // haven't been checked yet
+#        define FLU_BLOCK_SIZE_Y    16    // not optimized yet
 #     else
-#        define FLU_BLOCK_SIZE_Y    32
+#        define FLU_BLOCK_SIZE_Y    32    // not optimized yet
+#     endif
+
+#  elif ( GPU_ARCH == MAXWELL )
+#     ifdef FLOAT8
+#        define FLU_BLOCK_SIZE_Y    16    // not optimized yet
+#     else
+#        define FLU_BLOCK_SIZE_Y    32    // not optimized yet
+#     endif
+
+#  elif ( GPU_ARCH == PASCAL )
+#     ifdef FLOAT8
+#        define FLU_BLOCK_SIZE_Y    16    // not optimized yet
+#     else
+#        define FLU_BLOCK_SIZE_Y    32    // not optimized yet
 #     endif
 
 #  else

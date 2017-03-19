@@ -204,9 +204,9 @@ void CUAPI_Set_Default_GPU_Parameter( int &GPU_NStream, int &Flu_GPU_NPGroup, in
 #           elif ( GPU_ARCH == KEPLER )
             GPU_NStream = 48;             // optimized for K40
 #           elif ( GPU_ARCH == MAXWELL )
-            GPU_NStream = 48;             // may have to be optimized for 980
+            GPU_NStream = 32;             // may be optimized further
 #           elif ( GPU_ARCH == PASCAL )
-            GPU_NStream = 48;             // may have to be optimized for 1080
+            GPU_NStream = 32;             // may be optimized further
 #           else
 #           error : UNKNOWN GPU_ARCH !!
 #           endif
@@ -220,9 +220,9 @@ void CUAPI_Set_Default_GPU_Parameter( int &GPU_NStream, int &Flu_GPU_NPGroup, in
 #           elif ( GPU_ARCH == KEPLER )
             GPU_NStream = 48;             // optimized for K40
 #           elif ( GPU_ARCH == MAXWELL )
-            GPU_NStream = 48;             // may have to be optimized for 980
+            GPU_NStream = 32;             // may be optimized further
 #           elif ( GPU_ARCH == PASCAL )
-            GPU_NStream = 48;             // may have to be optimized for 1080
+            GPU_NStream = 32;             // may be optimized further
 #           else
 #           error : ERROR : UNKNOWN GPU_ARCH !!
 #           endif
@@ -247,9 +247,9 @@ void CUAPI_Set_Default_GPU_Parameter( int &GPU_NStream, int &Flu_GPU_NPGroup, in
 #        elif ( GPU_ARCH == KEPLER )
          Flu_GPU_NPGroup = 32*DeviceProp.multiProcessorCount;  // optimized for K40 (for GPU_NStream=48, NPGroup=480)
 #        elif ( GPU_ARCH == MAXWELL )
-         Flu_GPU_NPGroup = 32*DeviceProp.multiProcessorCount;  // may have to be optimized for 980
+         Flu_GPU_NPGroup = 32*DeviceProp.multiProcessorCount;  // may be optimized further
 #        elif ( GPU_ARCH == PASCAL )
-         Flu_GPU_NPGroup = 32*DeviceProp.multiProcessorCount;  // may have to be optimized for 1080
+         Flu_GPU_NPGroup = 32*DeviceProp.multiProcessorCount;  // optimized for P100 (for GPU_NStream=32, NPGroup=1792)
 #        else
 #        error : UNKNOWN GPU_ARCH !!
 #        endif
@@ -263,9 +263,9 @@ void CUAPI_Set_Default_GPU_Parameter( int &GPU_NStream, int &Flu_GPU_NPGroup, in
 #        elif ( GPU_ARCH == KEPLER )
          Flu_GPU_NPGroup = 32*DeviceProp.multiProcessorCount;  // optimized for K40 (for GPU_NStream=48, NPGroup=480)
 #        elif ( GPU_ARCH == MAXWELL )
-         Flu_GPU_NPGroup = 32*DeviceProp.multiProcessorCount;  // may have to be optimized for 980
+         Flu_GPU_NPGroup = 32*DeviceProp.multiProcessorCount;  // may be optimized further
 #        elif ( GPU_ARCH == PASCAL )
-         Flu_GPU_NPGroup = 32*DeviceProp.multiProcessorCount;  // may have to be optimized for 1080
+         Flu_GPU_NPGroup = 32*DeviceProp.multiProcessorCount;  // may be optimized further
 #        else
 #        error : UNKNOWN GPU_ARCH !!
 #        endif
@@ -286,9 +286,9 @@ void CUAPI_Set_Default_GPU_Parameter( int &GPU_NStream, int &Flu_GPU_NPGroup, in
 #     elif ( GPU_ARCH == KEPLER )
       Pot_GPU_NPGroup = 32*DeviceProp.multiProcessorCount;  // optimized for K40 (for GPU_NStream=48, NPGroup=480)
 #     elif ( GPU_ARCH == MAXWELL )
-      Pot_GPU_NPGroup = 32*DeviceProp.multiProcessorCount;  // may have to be optimized for 980
+      Pot_GPU_NPGroup = 32*DeviceProp.multiProcessorCount;  // may be optimized further
 #     elif ( GPU_ARCH == PASCAL )
-      Pot_GPU_NPGroup = 32*DeviceProp.multiProcessorCount;  // may have to be optimized for 1080
+      Pot_GPU_NPGroup = 32*DeviceProp.multiProcessorCount;  // optimized for P100 (for GPU_NStream=32, NPGroup=1792)
 #     else
 #     error : UNKNOWN GPU_ARCH !!
 #     endif

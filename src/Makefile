@@ -378,6 +378,14 @@ endif # "SUPPORT_LIBYT"
 
 # location of libraries
 # -------------------------------------------------------------------------------
+# nano (intel 2016)
+# *** please replace "mpicxx" by "mpicxx -cxx=icpc" ***
+#CUDA_TOOLKIT_PATH := /usr/local/cuda
+#MPI_PATH          := /opt/intel/compilers_and_libraries_2016.2.181/linux/mpi/intel64
+#FFTW_PATH         :=
+#HDF5_PATH         :=
+#GSL_PATH          :=
+
 # dxl (gcc, serial)
 #CUDA_TOOLKIT_PATH :=
 #FFTW_PATH         := /home/hyschive/software/fftw/2.1.5
@@ -520,7 +528,7 @@ endif
 
 ifeq "$(findstring OPENMP, $(SIMU_OPTION))" "OPENMP"
    ifeq "$(findstring INTEL, $(SIMU_OPTION))" "INTEL"
-      OPENMP := -openmp
+      OPENMP := -fopenmp
    else
       OPENMP := -fopenmp
    endif
@@ -615,7 +623,7 @@ else ifeq "$(findstring GPU_ARCH=KEPLER,  $(SIMU_OPTION))" "GPU_ARCH=KEPLER"
 else ifeq "$(findstring GPU_ARCH=MAXWELL, $(SIMU_OPTION))" "GPU_ARCH=MAXWELL"
    NVCCFLAG_COM += -gencode arch=compute_52,code=\"compute_52,sm_52\"
 else ifeq "$(findstring GPU_ARCH=PASCAL,  $(SIMU_OPTION))" "GPU_ARCH=PASCAL"
-   NVCCFLAG_COM += -gencode arch=compute_61,code=\"compute_61,sm_61\"
+   NVCCFLAG_COM += -gencode arch=compute_60,code=\"compute_60,sm_60\"
 else ifeq "$(findstring GPU, $(SIMU_OPTION))" "GPU"
    $(error unknown GPU_ARCH !!)
 endif
@@ -638,6 +646,18 @@ else ifeq "$(findstring GPU_ARCH=KEPLER, $(SIMU_OPTION))" "GPU_ARCH=KEPLER"
      NVCCFLAG_FLU += --maxrregcount=128
    else
      NVCCFLAG_FLU += --maxrregcount=64
+   endif
+else ifeq "$(findstring GPU_ARCH=PASCAL, $(SIMU_OPTION))" "GPU_ARCH=MAXWELL"
+   ifeq "$(findstring FLOAT8, $(SIMU_OPTION))" "FLOAT8"
+#    NVCCFLAG_FLU += --maxrregcount=XX
+   else
+#    NVCCFLAG_FLU += --maxrregcount=XX
+   endif
+else ifeq "$(findstring GPU_ARCH=PASCAL, $(SIMU_OPTION))" "GPU_ARCH=PASCAL"
+   ifeq "$(findstring FLOAT8, $(SIMU_OPTION))" "FLOAT8"
+#    NVCCFLAG_FLU += --maxrregcount=XX
+   else
+#    NVCCFLAG_FLU += --maxrregcount=XX
    endif
 endif
 
