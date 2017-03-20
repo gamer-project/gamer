@@ -1461,12 +1461,6 @@ __device__ FluVar LimitSlope( const FluVar L2, const FluVar L1, const FluVar C0,
    GetSlope( Passive[v] );
 #  endif
 
-#  ifdef CHAR_RECONSTRUCTION
-   Slope_L = Pri2Char( Slope_L, Gamma, C0.Rho, C0.Egy, XYZ );
-   Slope_R = Pri2Char( Slope_R, Gamma, C0.Rho, C0.Egy, XYZ );
-   Slope_C = Pri2Char( Slope_C, Gamma, C0.Rho, C0.Egy, XYZ );
-#  endif
-
    if ( LR_Limiter == VL_GMINMOD )
    {
       GetSlope_vL_GMinMod( Rho );
@@ -1477,10 +1471,6 @@ __device__ FluVar LimitSlope( const FluVar L2, const FluVar L1, const FluVar C0,
 #     if ( NCOMP_PASSIVE > 0 )
       for (int v=0; v<NCOMP_PASSIVE; v++)
       GetSlope_vL_GMinMod( Passive[v] );
-#     endif
-
-#     ifdef CHAR_RECONSTRUCTION
-      Slope_A = Pri2Char( Slope_A, Gamma, C0.Rho, C0.Egy, XYZ );
 #     endif
    }
 
@@ -1500,13 +1490,27 @@ __device__ FluVar LimitSlope( const FluVar L2, const FluVar L1, const FluVar C0,
       for (int v=0; v<NCOMP_PASSIVE; v++)
       GetSlope_ExtPre( Passive[v] );
 #     endif
-
-#     ifdef CHAR_RECONSTRUCTION
-      Slope_L2 = Pri2Char( Slope_L2, Gamma, C0.Rho, C0.Egy, XYZ );
-      Slope_R2 = Pri2Char( Slope_R2, Gamma, C0.Rho, C0.Egy, XYZ );
-#     endif
    }
 #  endif // # if ( LR_SCHEME == PLM )
+
+// primitive variables --> characteristic variables
+#  ifdef CHAR_RECONSTRUCTION
+   Slope_L = Pri2Char( Slope_L, Gamma, C0.Rho, C0.Egy, XYZ );
+   Slope_R = Pri2Char( Slope_R, Gamma, C0.Rho, C0.Egy, XYZ );
+   Slope_C = Pri2Char( Slope_C, Gamma, C0.Rho, C0.Egy, XYZ );
+
+   if ( LR_Limiter == VL_GMINMOD )
+      Slope_A = Pri2Char( Slope_A, Gamma, C0.Rho, C0.Egy, XYZ );
+
+#  if ( LR_SCHEME == PLM )
+   if ( LR_Limiter == EXTPRE )
+   {
+      Slope_L2 = Pri2Char( Slope_L2, Gamma, C0.Rho, C0.Egy, XYZ );
+      Slope_R2 = Pri2Char( Slope_R2, Gamma, C0.Rho, C0.Egy, XYZ );
+   }
+#  endif
+#  endif // #ifdef CHAR_RECONSTRUCTION
+
 
 #  undef GetSlope
 #  undef GetSlope_vL_GMinMod
