@@ -24,7 +24,11 @@ void Hydro_Init_UM_AssignData( const int lv, real *UM_Data, const int NVar )
 
 // check
    if ( NVar != 1 )
-      Aux_Error( ERROR_INFO, "%s only supports OPT__UM_START_NVAR == 1 (for density) !!\n", __FUNCTION__ );
+      Aux_Error( ERROR_INFO, "%s only supports OPT__UM_START_NVAR == 1 (for total gas density) !!\n", __FUNCTION__ );
+
+#  if ( NCOMP_PASSIVE > 0 )
+   Aux_Error( ERROR_INFO, "%s does NOT support passive scalars !!\n", __FUNCTION__ );
+#  endif
 
 
 #  if ( defined COMOVING  &&  defined GRAVITY )

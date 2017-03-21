@@ -37,7 +37,7 @@ void Par_Output_TextFile( const char *FileName )
       fprintf( File, "  %21s  %21s  %21s", "AccX", "AccY", "AccZ" );
 #     endif
       for (int v=0; v<PAR_NPASSIVE; v++)
-      fprintf( File, "  %18s-%d%d", "Passive", v/10, v%10 );
+      fprintf( File, "  %21s", PassiveFieldName_Par[v] );
       fprintf( File, "\n" );
 
       fclose( File );

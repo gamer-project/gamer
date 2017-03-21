@@ -22,9 +22,9 @@ static void UM_Flag( const int lv, const int *FlagMap );
 //                   --> ALL patches at levels 0 to OPT__UM_START_LEVEL will be created. In other words,
 //                       the simulation domain will be FULLY REFINED to level OPT__UM_START_LEVEL.
 //                b. The uniform-mesh input file should be named as "UM_START"
-//                c. This function can load any number of input values per cell (from 1 to NCOMP)
+//                c. This function can load any number of input values per cell (from 1 to NCOMP_TOTAL)
 //                   --> determined by the input parameter "OPT__UM_START_NVAR"
-//                   --> if "OPT__UM_START_NVAR < NCOMP", one must specify the way to assign values to all
+//                   --> if "OPT__UM_START_NVAR < NCOMP_TOTAL", one must specify the way to assign values to all
 //                       variables in the function "UM_AssignData"
 //                d. The data format in the UM_START file should be [k][j][i][v] instead of [v][k][j][i]
 //                   --> different from the data layout adopted in GAMER versions after 1.0.beta4.0
@@ -57,7 +57,7 @@ void Init_UM()
    if ( UM_lv < 0  ||  UM_lv > NLEVEL-1 )
       Aux_Error( ERROR_INFO, "incorrect parameter %s = %d > NLEVEL-1 !!\n", "UM_lv", UM_lv );
 
-   if ( UM_NVar < 1  ||  UM_NVar > NCOMP )
+   if ( UM_NVar < 1  ||  UM_NVar > NCOMP_TOTAL )
       Aux_Error( ERROR_INFO, "incorrect parameter %s = %d !!\n", "UM_NVar", UM_NVar );
 
    if ( !Aux_CheckFileExist(FileName) )
@@ -172,7 +172,7 @@ void Init_UM()
    UM_AssignData( 0, UM_Data[0], UM_NVar );
 
 // get the buffer data for the base level
-   Buf_GetBufferData( 0, amr->FluSg[0], NULL_INT, DATA_GENERAL, _FLU, Flu_ParaBuf, USELB_NO );
+   Buf_GetBufferData( 0, amr->FluSg[0], NULL_INT, DATA_GENERAL, _TOTAL, Flu_ParaBuf, USELB_NO );
 
 
 
@@ -199,7 +199,7 @@ void Init_UM()
 
       UM_AssignData( lv+1, UM_Data[lv+1], UM_NVar );
 
-      Buf_GetBufferData( lv+1, amr->FluSg[lv+1], NULL_INT, DATA_GENERAL, _FLU, Flu_ParaBuf, USELB_NO );
+      Buf_GetBufferData( lv+1, amr->FluSg[lv+1], NULL_INT, DATA_GENERAL, _TOTAL, Flu_ParaBuf, USELB_NO );
    }
 
 // get the total number of patches in all ranks
@@ -228,7 +228,7 @@ void Init_UM()
 
          Refine( lv, USELB_NO );
 
-         Buf_GetBufferData( lv+1, amr->FluSg[lv+1], NULL_INT, DATA_AFTER_REFINE, _FLU, Flu_ParaBuf, USELB_NO );
+         Buf_GetBufferData( lv+1, amr->FluSg[lv+1], NULL_INT, DATA_AFTER_REFINE, _TOTAL, Flu_ParaBuf, USELB_NO );
 
          if ( MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );
       } // for (int lv=OPT__UM_START_LEVEL-1; lv>=0; lv--)
@@ -255,7 +255,7 @@ void Init_UM()
 
          Refine( lv, USELB_NO );
 
-         Buf_GetBufferData( lv+1, amr->FluSg[lv+1], NULL_INT, DATA_AFTER_REFINE, _FLU, Flu_ParaBuf, USELB_NO );
+         Buf_GetBufferData( lv+1, amr->FluSg[lv+1], NULL_INT, DATA_AFTER_REFINE, _TOTAL, Flu_ParaBuf, USELB_NO );
 
          if ( MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );
       } // for (int lv=OPT__UM_START_LEVEL; lv<MAX_LEVEL; lv++)
@@ -535,7 +535,7 @@ void UM_Flag( const int lv, const int *FlagMap )
 // Function    :  UM_AssignData
 // Description :  Use the input uniform-mesh array to assign data to all patches at level "lv"
 //
-// Note        :  If "NVar == NCOMP", we just copy the values recorded in UM_Data to all patches.
+// Note        :  If "NVar == NCOMP_TOTAL", we just copy the values recorded in UM_Data to all patches.
 //                Otherwise, the model-dependent function "XXX_Init_UM_AssignData" must be provided to
 //                specify the way to assign data.
 //
@@ -546,7 +546,7 @@ void UM_Flag( const int lv, const int *FlagMap )
 void UM_AssignData( const int lv, real *UM_Data, const int NVar )
 {
 
-   if ( NVar == NCOMP )
+   if ( NVar == NCOMP_TOTAL )
    {
       const int NX[3]  = { NX0[0]*(1<<lv), NX0[1]*(1<<lv), NX0[2]*(1<<lv) };
       const int scale0 = amr->scale[ 0];
@@ -555,7 +555,6 @@ void UM_AssignData( const int lv, real *UM_Data, const int NVar )
       int *Corner;
       int ii, jj, kk;
       long Idx;
-
 
       for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
       {
@@ -568,11 +567,32 @@ void UM_AssignData( const int lv, real *UM_Data, const int NVar )
             Idx = (long)NVar*( (long)kk*NX[1]*NX[0] + jj*NX[0]+ ii );
 
 //          load all variables
-            for (int v=0; v<NCOMP; v++)
+            for (int v=0; v<NCOMP_TOTAL; v++)
                amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[v][k][j][i] = UM_Data[ Idx + v ];
-         }}}
-      }
-   } // if ( NVar == NCOMP )
+
+//          floor and normalize passive scalars
+#           if ( NCOMP_PASSIVE > 0 )
+            for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)
+               amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[v][k][j][i]
+                  = FMAX( amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[v][k][j][i], TINY_NUMBER );
+
+            if ( OPT__NORMALIZE_PASSIVE )
+            {
+               real Passive[NCOMP_PASSIVE];
+
+               for (int v=0; v<NCOMP_PASSIVE; v++)
+                  Passive[v] = amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[ NCOMP_FLUID + v ][k][j][i];
+
+               CPU_NormalizePassive( amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[DENS][k][j][i],
+                                     Passive, PassiveNorm_NVar, PassiveNorm_VarIdx );
+
+               for (int v=0; v<NCOMP_PASSIVE; v++)
+                  amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[ NCOMP_FLUID + v ][k][j][i] = Passive[v];
+            }
+#           endif
+         }}} // i,j,k
+      } // for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
+   } // if ( NVar == NCOMP_TOTAL )
 
    else
    {
@@ -588,6 +608,6 @@ void UM_AssignData( const int lv, real *UM_Data, const int NVar )
 #     else
 #     error : ERROR : unsupported MODEL !!
 #     endif // MODEL
-   } // if ( NVar == NCOMP ) ... else ...
+   } // if ( NVar == NCOMP_TOTAL ) ... else ...
 
 } // FUNCTION : UM_AssignData

@@ -21,7 +21,7 @@
 // Note           This check will not detect the useless buffer patches (which do map to real patches but
 //                do not provide any useful information during simulations)
 //
-// Parameter   :  lv       : Targeted refinement level
+// Parameter   :  lv       : Target refinement level
 //                comment  : You can put the location where this function is invoked in this string
 //-------------------------------------------------------------------------------------------------------
 void Aux_Check_PatchAllocate( const int lv, const char *comment )

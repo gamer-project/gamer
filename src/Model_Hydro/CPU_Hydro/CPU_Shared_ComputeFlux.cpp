@@ -7,7 +7,8 @@
 
 
 #if   ( RSOLVER == EXACT )
-extern void CPU_Con2Pri( const real In[], real Out[], const real Gamma_m1, const real MinPres );
+extern void CPU_Con2Pri( const real In[], real Out[], const real Gamma_m1, const real MinPres,
+                         const bool NormPassive, const int NNorm, const int NormIdx[] );
 extern void CPU_RiemannSolver_Exact( const int XYZ, real eival_out[], real L_star_out[], real R_star_out[],
                                      real Flux_Out[], const real L_In[], const real R_In[], const real Gamma );
 #elif ( RSOLVER == ROE )
@@ -53,7 +54,7 @@ extern void CPU_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L
 //                ExtAcc_AuxArray : Auxiliary array for adding external acceleration          (for UNSPLIT_GRAVITY only)
 //                MinPres         : Minimum allowed pressure
 //-------------------------------------------------------------------------------------------------------
-void CPU_ComputeFlux( const real FC_Var[][6][5], real FC_Flux[][3][5], const int NFlux, const int Gap,
+void CPU_ComputeFlux( const real FC_Var[][6][NCOMP_TOTAL], real FC_Flux[][3][NCOMP_TOTAL], const int NFlux, const int Gap,
                       const real Gamma, const bool CorrHalfVel, const real Pot_USG[], const double Corner[],
                       const real dt, const real dh, const double Time, const OptGravityType_t GravityType,
                       const double ExtAcc_AuxArray[], const real MinPres )
@@ -81,12 +82,12 @@ void CPU_ComputeFlux( const real FC_Var[][6][5], real FC_Flux[][3][5], const int
 
    const int dID2[3] = { 1, N_FC_VAR, N_FC_VAR*N_FC_VAR };
 
-   real ConVar_L[5], ConVar_R[5];
+   real ConVar_L[NCOMP_TOTAL], ConVar_R[NCOMP_TOTAL];
    int  ID1, ID2, dL, dR, start2[3]={0}, end1[3]={0};
 
 #  if ( RSOLVER == EXACT )
    const real Gamma_m1 = Gamma - (real)1.0;
-   real PriVar_L[5], PriVar_R[5];
+   real PriVar_L[NCOMP_TOTAL], PriVar_R[NCOMP_TOTAL];
 #  endif
 
 #  ifdef UNSPLIT_GRAVITY
@@ -140,7 +141,7 @@ void CPU_ComputeFlux( const real FC_Var[][6][5], real FC_Flux[][3][5], const int
          ID1 = (k1*NFlux    + j1)*NFlux    + i1;
          ID2 = (k2*N_FC_VAR + j2)*N_FC_VAR + i2;
 
-         for (int v=0; v<5; v++)
+         for (int v=0; v<NCOMP_TOTAL; v++)
          {
             ConVar_L[v] = FC_Var[ ID2         ][dR][v];
             ConVar_R[v] = FC_Var[ ID2+dID2[d] ][dL][v];
@@ -199,8 +200,10 @@ void CPU_ComputeFlux( const real FC_Var[][6][5], real FC_Flux[][3][5], const int
 
 
 #        if   ( RSOLVER == EXACT )
-         CPU_Con2Pri( ConVar_L, PriVar_L, Gamma_m1, MinPres );
-         CPU_Con2Pri( ConVar_R, PriVar_R, Gamma_m1, MinPres );
+         const bool NormPassive_No = false;  // do NOT convert any passive variable to mass fraction for the Riemann solvers
+
+         CPU_Con2Pri( ConVar_L, PriVar_L, Gamma_m1, MinPres, NormPassive_No, NULL_INT, NULL );
+         CPU_Con2Pri( ConVar_R, PriVar_R, Gamma_m1, MinPres, NormPassive_No, NULL_INT, NULL );
 
          CPU_RiemannSolver_Exact( d, NULL, NULL, NULL, FC_Flux[ID1][d], PriVar_L, PriVar_R, Gamma );
 #        elif ( RSOLVER == ROE )

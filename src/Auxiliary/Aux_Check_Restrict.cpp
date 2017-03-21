@@ -12,7 +12,7 @@
 // Note        :  1. Restriction condition --> coarse-grid data = average of fine-grid data
 //                2. Not supported in the LOAD_BALANCE mode
 //
-// Parameter   :  lv       : Targeted refinement level
+// Parameter   :  lv       : Target refinement level
 //                comment  : You can put the location where this function is invoked in this string
 //-------------------------------------------------------------------------------------------------------
 void Aux_Check_Restrict( const int lv, const char *comment )
@@ -46,8 +46,8 @@ void Aux_Check_Restrict( const int lv, const char *comment )
 #  endif
    int Pass = true;
 
-   int  SonPID0, SonPID, ii0, jj0, kk0, ii, jj, kk;
-   double ResData[NCOMP][PATCH_SIZE][PATCH_SIZE][PATCH_SIZE];
+   int    SonPID0, SonPID, ii0, jj0, kk0, ii, jj, kk;
+   double ResData[NCOMP_TOTAL][PATCH_SIZE][PATCH_SIZE][PATCH_SIZE];
 
    for (int TargetRank=0; TargetRank<MPI_NRank; TargetRank++)
    {
@@ -60,10 +60,10 @@ void Aux_Check_Restrict( const int lv, const char *comment )
             if ( SonPID0 != -1 )
             {
 //             initialize the restrict-data array as zero
-               for (int v=0; v<NCOMP; v++)         
-               for (int k=0; k<PATCH_SIZE; k++)  
-               for (int j=0; j<PATCH_SIZE; j++)  
-               for (int i=0; i<PATCH_SIZE; i++)  
+               for (int v=0; v<NCOMP_TOTAL; v++)
+               for (int k=0; k<PATCH_SIZE; k++)
+               for (int j=0; j<PATCH_SIZE; j++)
+               for (int i=0; i<PATCH_SIZE; i++)
                   ResData[v][k][j][i] = 0.0;
 
 
@@ -71,14 +71,14 @@ void Aux_Check_Restrict( const int lv, const char *comment )
                for (int LocalID=0; LocalID<8; LocalID++)
                {
                   SonPID   = SonPID0 + LocalID;
-                  ii0      = TABLE_02( LocalID, 'x', 0, PATCH_SIZE/2 ); 
-                  jj0      = TABLE_02( LocalID, 'y', 0, PATCH_SIZE/2 ); 
-                  kk0      = TABLE_02( LocalID, 'z', 0, PATCH_SIZE/2 ); 
+                  ii0      = TABLE_02( LocalID, 'x', 0, PATCH_SIZE/2 );
+                  jj0      = TABLE_02( LocalID, 'y', 0, PATCH_SIZE/2 );
+                  kk0      = TABLE_02( LocalID, 'z', 0, PATCH_SIZE/2 );
 
-                  for (int v=0; v<NCOMP; v++)         {
-                  for (int k=0; k<PATCH_SIZE; k++)    {  kk = kk0 + k/2; 
+                  for (int v=0; v<NCOMP_TOTAL; v++)   {
+                  for (int k=0; k<PATCH_SIZE; k++)    {  kk = kk0 + k/2;
                   for (int j=0; j<PATCH_SIZE; j++)    {  jj = jj0 + j/2;
-                  for (int i=0; i<PATCH_SIZE; i++)    {  ii = ii0 + i/2; 
+                  for (int i=0; i<PATCH_SIZE; i++)    {  ii = ii0 + i/2;
 
                      ResData[v][kk][jj][ii] += 0.125*amr->patch[FSg][lv+1][SonPID]->fluid[v][k][j][i];
 
@@ -89,22 +89,22 @@ void Aux_Check_Restrict( const int lv, const char *comment )
 //             compare the data of the restrict-data array and the data stored in the patch pointers
                double Err, u;
 
-               for (int v=0; v<NCOMP; v++)
-               for (int k=0; k<PATCH_SIZE; k++)  
-               for (int j=0; j<PATCH_SIZE; j++)  
-               for (int i=0; i<PATCH_SIZE; i++)  
+               for (int v=0; v<NCOMP_TOTAL; v++)
+               for (int k=0; k<PATCH_SIZE; k++)
+               for (int j=0; j<PATCH_SIZE; j++)
+               for (int i=0; i<PATCH_SIZE; i++)
                {
                   u = amr->patch[CSg][lv][PID]->fluid[v][k][j][i];
 
                   Err = fabs(  ( u - ResData[v][k][j][i] ) / ResData[v][k][j][i]  );
 
-                  if ( Err > TolErr ) 
+                  if ( Err > TolErr )
                   {
                      if ( Pass )
                      {
                         Aux_Message( stderr, "\"%s\" : <%s> FAILED at level %2d, Time = %13.7e, Step = %ld !!\n",
                                      comment, __FUNCTION__, lv, Time[lv], Step );
-                        Aux_Message( stderr, "%4s\t%7s\t%19s\t%10s\t%7s\t%14s\t%14s\t%14s\n", 
+                        Aux_Message( stderr, "%4s\t%7s\t%19s\t%10s\t%7s\t%14s\t%14s\t%14s\n",
                                      "Rank", "PID", "Patch Corner", "Grid ID", "Var", "Patch Data",
                                      "Restrict Data", "Error" );
 
@@ -114,7 +114,7 @@ void Aux_Check_Restrict( const int lv, const char *comment )
                      Aux_Message( stderr,"%4d\t%7d\t(%10d,%10d,%10d)\t(%2d,%2d,%2d)\t%7d\t%14.7e\t%14.7e\t%14.7e\n",
                                   MPI_Rank, PID, amr->patch[0][lv][PID]->corner[0],
                                                  amr->patch[0][lv][PID]->corner[1],
-                                                 amr->patch[0][lv][PID]->corner[2], 
+                                                 amr->patch[0][lv][PID]->corner[2],
                                   i, j, k, v, u, ResData[v][k][j][i], Err );
 
                   } // if ( Err > TolErr )
@@ -133,8 +133,8 @@ void Aux_Check_Restrict( const int lv, const char *comment )
 
    if ( Pass )
    {
-      if ( MPI_Rank == 0 )   
-         Aux_Message( stdout, "\"%s\" : <%s> PASSED at level %2d, Time = %13.7e, Step = %ld\n", 
+      if ( MPI_Rank == 0 )
+         Aux_Message( stdout, "\"%s\" : <%s> PASSED at level %2d, Time = %13.7e, Step = %ld\n",
                       comment, __FUNCTION__, lv, Time[lv], Step );
    }
 

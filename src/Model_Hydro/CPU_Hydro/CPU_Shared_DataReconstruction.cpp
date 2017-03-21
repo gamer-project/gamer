@@ -9,8 +9,8 @@
 extern void CPU_Rotate3D( real InOut[], const int XYZ, const bool Forward );
 extern real CPU_CheckMinPres( const real InPres, const real MinPres );
 
-static void Get_EigenSystem( const real CC_Var[], real EigenVal[][5], real LEigenVec[][5], real REigenVec[][5],
-                             const real Gamma );
+static void Get_EigenSystem( const real CC_Var[], real EigenVal[][NCOMP_FLUID], real LEigenVec[][NCOMP_FLUID],
+                             real REigenVec[][NCOMP_FLUID], const real Gamma );
 static void LimitSlope( const real L2[], const real L1[], const real C0[], const real R1[], const real R2[],
                         const LR_Limiter_t LR_Limiter, const real MinMod_Coeff, const real EP_Coeff,
                         const real Gamma, const int XYZ, real Slope_Limiter[] );
@@ -53,7 +53,7 @@ static void Char2Pri( real Var[], const real Gamma, const real Rho, const real P
 //                dh             : Grid size (for the CTU scheme)
 //                MinDens/Pres   : Minimum allowed density and pressure
 //------------------------------------------------------------------------------------------------------
-void CPU_DataReconstruction( const real PriVar[][5], real FC_Var[][6][5], const int NIn, const int NGhost,
+void CPU_DataReconstruction( const real PriVar[][NCOMP_TOTAL], real FC_Var[][6][NCOMP_TOTAL], const int NIn, const int NGhost,
                              const real Gamma, const LR_Limiter_t LR_Limiter, const real MinMod_Coeff,
                              const real EP_Coeff, const real dt, const real dh, const real MinDens, const real MinPres )
 {
@@ -62,27 +62,27 @@ void CPU_DataReconstruction( const real PriVar[][5], real FC_Var[][6][5], const 
    const int NOut   = NIn - 2*NGhost;                    // number of output grids
    int  ID1, ID2, ID1_L, ID1_R, ID1_LL, ID1_RR, dL, dR;
    real Min, Max;
-   real Slope_Limiter[5] = { (real)0.0 };
+   real Slope_Limiter[NCOMP_TOTAL] = { (real)0.0 };
 
 // variables for the CTU scheme
 #  if ( FLU_SCHEME == CTU )
    const real dt_dh2 = (real)0.5*dt/dh;
 
-   real EigenVal[3][5], Correct_L[5], Correct_R[5], dFC[5];
+   real EigenVal[3][NCOMP_FLUID], Correct_L[NCOMP_TOTAL], Correct_R[NCOMP_TOTAL], dFC[NCOMP_TOTAL];
    real Coeff_L, Coeff_R;
 
 // initialize the constant components of the matrices of the left and right eigenvectors
-   real LEigenVec[5][5] = { { 0.0, NULL_REAL, 0.0, 0.0, NULL_REAL },
-                            { 1.0,       0.0, 0.0, 0.0, NULL_REAL },
-                            { 0.0,       0.0, 1.0, 0.0,       0.0 },
-                            { 0.0,       0.0, 0.0, 1.0,       0.0 },
-                            { 0.0, NULL_REAL, 0.0, 0.0, NULL_REAL } };
+   real LEigenVec[NCOMP_FLUID][NCOMP_FLUID] = { { 0.0, NULL_REAL, 0.0, 0.0, NULL_REAL },
+                                                { 1.0,       0.0, 0.0, 0.0, NULL_REAL },
+                                                { 0.0,       0.0, 1.0, 0.0,       0.0 },
+                                                { 0.0,       0.0, 0.0, 1.0,       0.0 },
+                                                { 0.0, NULL_REAL, 0.0, 0.0, NULL_REAL } };
 
-   real REigenVec[5][5] = { { 1.0, NULL_REAL, 0.0, 0.0, NULL_REAL },
-                            { 1.0,       0.0, 0.0, 0.0,       0.0 },
-                            { 0.0,       0.0, 1.0, 0.0,       0.0 },
-                            { 0.0,       0.0, 0.0, 1.0,       0.0 },
-                            { 1.0, NULL_REAL, 0.0, 0.0, NULL_REAL } };
+   real REigenVec[NCOMP_FLUID][NCOMP_FLUID] = { { 1.0, NULL_REAL, 0.0, 0.0, NULL_REAL },
+                                                { 1.0,       0.0, 0.0, 0.0,       0.0 },
+                                                { 0.0,       0.0, 1.0, 0.0,       0.0 },
+                                                { 0.0,       0.0, 0.0, 1.0,       0.0 },
+                                                { 1.0, NULL_REAL, 0.0, 0.0, NULL_REAL } };
 #  endif // #if ( FLU_SCHEME ==  CTU )
 
 
@@ -127,7 +127,7 @@ void CPU_DataReconstruction( const real PriVar[][5], real FC_Var[][6][5], const 
 
 
 //       (2-2) get the face-centered primitive variables
-         for (int v=0; v<5; v++)
+         for (int v=0; v<NCOMP_TOTAL; v++)
          {
             FC_Var[ID2][dL][v] = PriVar[ID1][v] - (real)0.5*Slope_Limiter[v];
             FC_Var[ID2][dR][v] = PriVar[ID1][v] + (real)0.5*Slope_Limiter[v];
@@ -137,7 +137,7 @@ void CPU_DataReconstruction( const real PriVar[][5], real FC_Var[][6][5], const 
 //       (2-3) ensure the face-centered variables lie between neighboring cell-centered values
          if ( LR_Limiter != EXTPRE )
          {
-            for (int v=0; v<5; v++)
+            for (int v=0; v<NCOMP_TOTAL; v++)
             {
                Min = ( PriVar[ID1][v] < PriVar[ID1_L][v] ) ? PriVar[ID1][v] : PriVar[ID1_L][v];
                Max = ( PriVar[ID1][v] > PriVar[ID1_L][v] ) ? PriVar[ID1][v] : PriVar[ID1_L][v];
@@ -160,14 +160,23 @@ void CPU_DataReconstruction( const real PriVar[][5], real FC_Var[][6][5], const 
 
             FC_Var[ID2][dL][4] = CPU_CheckMinPres( FC_Var[ID2][dL][4], MinPres );
             FC_Var[ID2][dR][4] = CPU_CheckMinPres( FC_Var[ID2][dR][4], MinPres );
+
+//          ensure positive mass fractions for passive scalars
+#           if ( NCOMP_PASSIVE > 0 )
+            for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)
+            {
+               FC_Var[ID2][dL][v] = FMAX( FC_Var[ID2][dL][v], TINY_NUMBER );
+               FC_Var[ID2][dR][v] = FMAX( FC_Var[ID2][dR][v], TINY_NUMBER );
+            }
+#           endif
          }
 
 
 //       (2-4) advance the face-centered variables by half time-step for the CTU integrator
 #        if ( FLU_SCHEME == CTU )
 
-//       (2-4-1) evaluate the slope
-         for (int v=0; v<5; v++)    dFC[v] = FC_Var[ID2][dR][v] - FC_Var[ID2][dL][v];
+//       (2-4-1) evaluate the slope (for passive scalars as well)
+         for (int v=0; v<NCOMP_TOTAL; v++)   dFC[v] = FC_Var[ID2][dR][v] - FC_Var[ID2][dL][v];
 
 
 //       (2-4-2) re-order variables for the y/z directions
@@ -181,7 +190,7 @@ void CPU_DataReconstruction( const real PriVar[][5], real FC_Var[][6][5], const 
 
 //       (2-4-a1) evaluate the corrections to the left and right face-centered variables
 
-         for (int v=0; v<5; v++)
+         for (int v=0; v<NCOMP_FLUID; v++)
          {
             Correct_L[v] = (real)0.0;
             Correct_R[v] = (real)0.0;
@@ -189,44 +198,44 @@ void CPU_DataReconstruction( const real PriVar[][5], real FC_Var[][6][5], const 
 
 #        ifdef HLL_INCLUDE_ALL_WAVES
 
-         for (int Mode=0; Mode<5; Mode++)
+         for (int Mode=0; Mode<NCOMP_FLUID; Mode++)
          {
             Coeff_L = (real)0.0;
 
-            for (int v=0; v<5; v++)    Coeff_L += LEigenVec[Mode][v]*dFC[v];
+            for (int v=0; v<NCOMP_FLUID; v++)   Coeff_L += LEigenVec[Mode][v]*dFC[v];
 
             Coeff_L *= -dt_dh2*EigenVal[d][Mode];
 
-            for (int v=0; v<5; v++)    Correct_L[v] += Coeff_L*REigenVec[Mode][v];
-         } // for (int Mode=0; Mode<5; Mode++)
+            for (int v=0; v<NCOMP_FLUID; v++)   Correct_L[v] += Coeff_L*REigenVec[Mode][v];
+         } // for (int Mode=0; Mode<NCOMP_FLUID; Mode++)
 
-         for (int v=0; v<5; v++)    Correct_R[v] = Correct_L[v];
+         for (int v=0; v<NCOMP_FLUID; v++)   Correct_R[v] = Correct_L[v];
 
 #        else // ifndef HLL_INCLUDE_ALL_WAVES
 
-         for (int Mode=0; Mode<5; Mode++)
+         for (int Mode=0; Mode<NCOMP_FLUID; Mode++)
          {
             Coeff_L = (real)0.0;
             Coeff_R = (real)0.0;
 
             if ( EigenVal[d][Mode] <= (real)0.0 )
             {
-               for (int v=0; v<5; v++)    Coeff_L += LEigenVec[Mode][v]*dFC[v];
+               for (int v=0; v<NCOMP_FLUID; v++)   Coeff_L += LEigenVec[Mode][v]*dFC[v];
 
                Coeff_L *= -dt_dh2*EigenVal[d][Mode];
 
-               for (int v=0; v<5; v++)    Correct_L[v] += Coeff_L*REigenVec[Mode][v];
+               for (int v=0; v<NCOMP_FLUID; v++)   Correct_L[v] += Coeff_L*REigenVec[Mode][v];
             }
 
             if ( EigenVal[d][Mode] >= (real)0.0 )
             {
-               for (int v=0; v<5; v++)    Coeff_R += LEigenVec[Mode][v]*dFC[v];
+               for (int v=0; v<NCOMP_FLUID; v++)   Coeff_R += LEigenVec[Mode][v]*dFC[v];
 
                Coeff_R *= -dt_dh2*EigenVal[d][Mode];
 
-               for (int v=0; v<5; v++)    Correct_R[v] += Coeff_R*REigenVec[Mode][v];
+               for (int v=0; v<NCOMP_FLUID; v++)   Correct_R[v] += Coeff_R*REigenVec[Mode][v];
             }
-         } // for (int Mode=0; Mode<5; Mode++)
+         } // for (int Mode=0; Mode<NCOMP_FLUID; Mode++)
 
 #        endif // ifdef HLL_INCLUDE_ALL_WAVES ... else ...
 
@@ -240,7 +249,7 @@ void CPU_DataReconstruction( const real PriVar[][5], real FC_Var[][6][5], const 
          Coeff_L = -dt_dh2*FMIN( EigenVal[d][0], (real)0.0 );
          Coeff_R = -dt_dh2*FMAX( EigenVal[d][4], (real)0.0 );
 
-         for (int v=0; v<5; v++)
+         for (int v=0; v<NCOMP_FLUID; v++)
          {
             Correct_L[v] = Coeff_L*dFC[v];
             Correct_R[v] = Coeff_R*dFC[v];
@@ -248,38 +257,52 @@ void CPU_DataReconstruction( const real PriVar[][5], real FC_Var[][6][5], const 
 
 
 //       (2-4-b2) evaluate the corrections to the left and right face-centered variables
-         for (int Mode=0; Mode<5; Mode++)
+         for (int Mode=0; Mode<NCOMP_FLUID; Mode++)
          {
             Coeff_L = (real)0.0;
             Coeff_R = (real)0.0;
 
             if ( EigenVal[d][Mode] <= (real)0.0 )
             {
-               for (int v=0; v<5; v++)    Coeff_L += LEigenVec[Mode][v]*dFC[v];
+               for (int v=0; v<NCOMP_FLUID; v++)   Coeff_L += LEigenVec[Mode][v]*dFC[v];
 
                Coeff_L *= dt_dh2*( EigenVal[d][0] - EigenVal[d][Mode] );
 
-               for (int v=0; v<5; v++)    Correct_L[v] += Coeff_L*REigenVec[Mode][v];
+               for (int v=0; v<NCOMP_FLUID; v++)   Correct_L[v] += Coeff_L*REigenVec[Mode][v];
             }
 
             if ( EigenVal[d][Mode] >= (real)0.0 )
             {
-               for (int v=0; v<5; v++)    Coeff_R += LEigenVec[Mode][v]*dFC[v];
+               for (int v=0; v<NCOMP_FLUID; v++)   Coeff_R += LEigenVec[Mode][v]*dFC[v];
 
                Coeff_R *= dt_dh2*( EigenVal[d][4] - EigenVal[d][Mode] );
 
-               for (int v=0; v<5; v++)    Correct_R[v] += Coeff_R*REigenVec[Mode][v];
+               for (int v=0; v<NCOMP_FLUID; v++)   Correct_R[v] += Coeff_R*REigenVec[Mode][v];
             }
-         } // for (int Mode=0; Mode<5; Mode++)
+         } // for (int Mode=0; Mode<NCOMP_FLUID; Mode++)
 
 #        endif // if (  ( RSOLVER == HLLE  ||  RSOLVER == HLLC )  &&  defined HLL_NO_REF_STATE  ) ... else ...
 
 
-//       (2-4-3) evaluate the face-centered variables at the half time-step
+//       (2-4-3) evaluate the corrections to the left and right face-centered passive scalars
+//               --> passive scalars travel with fluid velocity (i.e., entropy mode)
+#        if ( NCOMP_PASSIVE > 0 )
+         Coeff_L = -dt_dh2*FMIN( EigenVal[d][1], (real)0.0 );
+         Coeff_R = -dt_dh2*FMAX( EigenVal[d][1], (real)0.0 );
+
+         for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)
+         {
+            Correct_L[v] = Coeff_L*dFC[v];
+            Correct_R[v] = Coeff_R*dFC[v];
+         }
+#        endif
+
+
+//       (2-4-4) evaluate the face-centered variables at the half time-step
          CPU_Rotate3D( Correct_L, d, false );
          CPU_Rotate3D( Correct_R, d, false );
 
-         for (int v=0; v<5; v++)
+         for (int v=0; v<NCOMP_TOTAL; v++)
          {
             FC_Var[ID2][dL][v] += Correct_L[v];
             FC_Var[ID2][dR][v] += Correct_R[v];
@@ -291,6 +314,12 @@ void CPU_DataReconstruction( const real PriVar[][5], real FC_Var[][6][5], const 
 
          FC_Var[ID2][dL][4] = CPU_CheckMinPres( FC_Var[ID2][dL][4], MinPres );
          FC_Var[ID2][dR][4] = CPU_CheckMinPres( FC_Var[ID2][dR][4], MinPres );
+
+#        if ( NCOMP_PASSIVE > 0 )
+         for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++) {
+         FC_Var[ID2][dL][v] = FMAX( FC_Var[ID2][dL][v], TINY_NUMBER );
+         FC_Var[ID2][dR][v] = FMAX( FC_Var[ID2][dR][v], TINY_NUMBER ); }
+#        endif
 
 #        endif // #if ( FLU_SCHEME == CTU )
 
@@ -334,7 +363,7 @@ void CPU_DataReconstruction( const real PriVar[][5], real FC_Var[][6][5], const 
 //                dh             : Grid size (for the CTU scheme)
 //                MinDens/Pres   : Minimum allowed density and pressure
 //------------------------------------------------------------------------------------------------------
-void CPU_DataReconstruction( const real PriVar[][5], real FC_Var[][6][5], const int NIn, const int NGhost,
+void CPU_DataReconstruction( const real PriVar[][NCOMP_TOTAL], real FC_Var[][6][NCOMP_TOTAL], const int NIn, const int NGhost,
                              const real Gamma, const LR_Limiter_t LR_Limiter, const real MinMod_Coeff,
                              const real EP_Coeff, const real dt, const real dh, const real MinDens, const real MinPres )
 {
@@ -352,10 +381,10 @@ void CPU_DataReconstruction( const real PriVar[][5], real FC_Var[][6][5], const 
    const int dr3[3] = { 1, NSlope, NSlope*NSlope };
 
    int ID1, ID2, ID3, ID1_L, ID1_R, ID3_L, ID3_R, dL, dR;
-   real Slope_Limiter[5] = { (real)0.0 };
-   real CC_L, CC_R, CC_C, dCC_L, dCC_R, dCC_C, FC_L, FC_R, dFC[5], dFC6[5], Max, Min;
+   real Slope_Limiter[NCOMP_TOTAL] = { (real)0.0 };
+   real CC_L, CC_R, CC_C, dCC_L, dCC_R, dCC_C, FC_L, FC_R, dFC[NCOMP_TOTAL], dFC6[NCOMP_TOTAL], Max, Min;
 
-   real (*Slope_PPM)[3][5] = new real [ NSlope*NSlope*NSlope ][3][5];
+   real (*Slope_PPM)[3][NCOMP_TOTAL] = new real [ NSlope*NSlope*NSlope ][3][NCOMP_TOTAL];
 
 // variables for the CTU scheme
 #  if ( FLU_SCHEME == CTU )
@@ -370,21 +399,21 @@ void CPU_DataReconstruction( const real PriVar[][5], real FC_Var[][6][5], const 
 #  endif
 #  endif // if (  ( RSOLVER == HLLE  ||  RSOLVER == HLLC )  &&  defined HLL_NO_REF_STATE  )
 
-   real EigenVal[3][5], Correct_L[5], Correct_R[5];
+   real EigenVal[3][NCOMP_FLUID], Correct_L[NCOMP_TOTAL], Correct_R[NCOMP_TOTAL];
    real Coeff_A, Coeff_B, Coeff_C, Coeff_D, Coeff_L, Coeff_R;
 
 // initialize the constant components of the matrices of the left and right eigenvectors
-   real LEigenVec[5][5] = { { 0.0, NULL_REAL, 0.0, 0.0, NULL_REAL },
-                            { 1.0,       0.0, 0.0, 0.0, NULL_REAL },
-                            { 0.0,       0.0, 1.0, 0.0,       0.0 },
-                            { 0.0,       0.0, 0.0, 1.0,       0.0 },
-                            { 0.0, NULL_REAL, 0.0, 0.0, NULL_REAL } };
+   real LEigenVec[NCOMP_FLUID][NCOMP_FLUID] = { { 0.0, NULL_REAL, 0.0, 0.0, NULL_REAL },
+                                                { 1.0,       0.0, 0.0, 0.0, NULL_REAL },
+                                                { 0.0,       0.0, 1.0, 0.0,       0.0 },
+                                                { 0.0,       0.0, 0.0, 1.0,       0.0 },
+                                                { 0.0, NULL_REAL, 0.0, 0.0, NULL_REAL } };
 
-   real REigenVec[5][5] = { { 1.0, NULL_REAL, 0.0, 0.0, NULL_REAL },
-                            { 1.0,       0.0, 0.0, 0.0,       0.0 },
-                            { 0.0,       0.0, 1.0, 0.0,       0.0 },
-                            { 0.0,       0.0, 0.0, 1.0,       0.0 },
-                            { 1.0, NULL_REAL, 0.0, 0.0, NULL_REAL } };
+   real REigenVec[NCOMP_FLUID][NCOMP_FLUID] = { { 1.0, NULL_REAL, 0.0, 0.0, NULL_REAL },
+                                                { 1.0,       0.0, 0.0, 0.0,       0.0 },
+                                                { 0.0,       0.0, 1.0, 0.0,       0.0 },
+                                                { 0.0,       0.0, 0.0, 1.0,       0.0 },
+                                                { 1.0, NULL_REAL, 0.0, 0.0, NULL_REAL } };
 #  endif // #if ( FLU_SCHEME == CTU )
 
 
@@ -423,7 +452,7 @@ void CPU_DataReconstruction( const real PriVar[][5], real FC_Var[][6][5], const 
 
 
 //       store the slope to the array "Slope_PPM"
-         for (int v=0; v<5; v++)    Slope_PPM[ID2][d][v] = Slope_Limiter[v];
+         for (int v=0; v<NCOMP_TOTAL; v++)   Slope_PPM[ID2][d][v] = Slope_Limiter[v];
 
       } // for (int d=0; d<3; d++)
    } // k,j,i
@@ -455,7 +484,7 @@ void CPU_DataReconstruction( const real PriVar[][5], real FC_Var[][6][5], const 
          ID3_L = ID3 - dr3[d];
          ID3_R = ID3 + dr3[d];
 
-         for (int v=0; v<5; v++)
+         for (int v=0; v<NCOMP_TOTAL; v++)
          {
 //          (2-3-1) parabolic interpolation
             CC_L  = PriVar[ID1_L][v];
@@ -500,14 +529,14 @@ void CPU_DataReconstruction( const real PriVar[][5], real FC_Var[][6][5], const 
             FC_Var[ID2][dL][v] = FC_L;
             FC_Var[ID2][dR][v] = FC_R;
 
-         } // for (int v=0; v<5; v++)
+         } // for (int v=0; v<NCOMP_TOTAL; v++)
 
 
 //       (2-4) advance the face-centered variables by half time-step for the CTU integrator
 #        if ( FLU_SCHEME == CTU )
 
-//       (2-4-1) compute the PPM coefficient
-         for (int v=0; v<5; v++)
+//       (2-4-1) compute the PPM coefficient (for the passive scalars as well)
+         for (int v=0; v<NCOMP_TOTAL; v++)
          {
             dFC [v] = FC_Var[ID2][dR][v] - FC_Var[ID2][dL][v];
             dFC6[v] = (real)6.0*(  PriVar[ID1][v] - (real)0.5*( FC_Var[ID2][dL][v] + FC_Var[ID2][dR][v] )  );
@@ -524,13 +553,13 @@ void CPU_DataReconstruction( const real PriVar[][5], real FC_Var[][6][5], const 
 #        if (  ( RSOLVER == HLLE  ||  RSOLVER == HLLC )  &&  defined HLL_NO_REF_STATE  )
 
 //       (2-4-a1) evaluate the corrections to the left and right face-centered variables
-         for (int v=0; v<5; v++)
+         for (int v=0; v<NCOMP_FLUID; v++)
          {
             Correct_L[v] = (real)0.0;
             Correct_R[v] = (real)0.0;
          }
 
-         for (int Mode=0; Mode<5; Mode++)
+         for (int Mode=0; Mode<NCOMP_FLUID; Mode++)
          {
             Coeff_L = (real)0.0;
             Coeff_R = (real)0.0;
@@ -540,10 +569,10 @@ void CPU_DataReconstruction( const real PriVar[][5], real FC_Var[][6][5], const 
                Coeff_C = -dt_dh2*EigenVal[d][Mode];
                Coeff_D = real(-4.0/3.0)*SQR(Coeff_C);
 
-               for (int v=0; v<5; v++)    Coeff_L += LEigenVec[Mode][v]*(  Coeff_C*( dFC[v] + dFC6[v] ) +
-                                                                           Coeff_D*( dFC6[v]          )   );
+               for (int v=0; v<NCOMP_FLUID; v++)   Coeff_L += LEigenVec[Mode][v]*(  Coeff_C*( dFC[v] + dFC6[v] ) +
+                                                                                    Coeff_D*( dFC6[v]          )   );
 
-               for (int v=0; v<5; v++)    Correct_L[v] += Coeff_L*REigenVec[Mode][v];
+               for (int v=0; v<NCOMP_FLUID; v++)   Correct_L[v] += Coeff_L*REigenVec[Mode][v];
             }
 
             if ( HLL_Include_All_Waves  ||  EigenVal[d][Mode] >= (real)0.0 )
@@ -551,12 +580,12 @@ void CPU_DataReconstruction( const real PriVar[][5], real FC_Var[][6][5], const 
                Coeff_A = -dt_dh2*EigenVal[d][Mode];
                Coeff_B = real(-4.0/3.0)*SQR(Coeff_A);
 
-               for (int v=0; v<5; v++)    Coeff_R += LEigenVec[Mode][v]*(  Coeff_A*( dFC[v] - dFC6[v] ) +
-                                                                           Coeff_B*( dFC6[v]          )   );
+               for (int v=0; v<NCOMP_FLUID; v++)   Coeff_R += LEigenVec[Mode][v]*(  Coeff_A*( dFC[v] - dFC6[v] ) +
+                                                                                    Coeff_B*( dFC6[v]          )   );
 
-               for (int v=0; v<5; v++)    Correct_R[v] += Coeff_R*REigenVec[Mode][v];
+               for (int v=0; v<NCOMP_FLUID; v++)   Correct_R[v] += Coeff_R*REigenVec[Mode][v];
             }
-         } // for (int Mode=0; Mode<5; Mode++)
+         } // for (int Mode=0; Mode<NCOMP_FLUID; Mode++)
 
 
 //       =====================================================================================
@@ -568,7 +597,7 @@ void CPU_DataReconstruction( const real PriVar[][5], real FC_Var[][6][5], const 
          Coeff_L = -dt_dh2*FMIN( EigenVal[d][0], (real)0.0 );
          Coeff_R = -dt_dh2*FMAX( EigenVal[d][4], (real)0.0 );
 
-         for (int v=0; v<5; v++)
+         for (int v=0; v<NCOMP_FLUID; v++)
          {
             Correct_L[v] = Coeff_L*(  dFC[v] + ( (real)1.0 - real(4.0/3.0)*Coeff_L )*dFC6[v]  );
             Correct_R[v] = Coeff_R*(  dFC[v] - ( (real)1.0 + real(4.0/3.0)*Coeff_R )*dFC6[v]  );
@@ -576,7 +605,7 @@ void CPU_DataReconstruction( const real PriVar[][5], real FC_Var[][6][5], const 
 
 
 //       (2-4-b2) evaluate the corrections to the left and right face-centered variables
-         for (int Mode=0; Mode<5; Mode++)
+         for (int Mode=0; Mode<NCOMP_FLUID; Mode++)
          {
             Coeff_L = (real)0.0;
             Coeff_R = (real)0.0;
@@ -589,10 +618,10 @@ void CPU_DataReconstruction( const real PriVar[][5], real FC_Var[][6][5], const 
                                                         EigenVal[d][Mode]*EigenVal[d][Mode]   ); */
                Coeff_D = real(4.0/3.0)*dt_dh2*Coeff_C*( EigenVal[d][0] + EigenVal[d][Mode] );
 
-               for (int v=0; v<5; v++)    Coeff_L += LEigenVec[Mode][v]*(  Coeff_C*( dFC[v] + dFC6[v] ) +
-                                                                           Coeff_D*( dFC6[v]          )   );
+               for (int v=0; v<NCOMP_FLUID; v++)   Coeff_L += LEigenVec[Mode][v]*(  Coeff_C*( dFC[v] + dFC6[v] ) +
+                                                                                    Coeff_D*( dFC6[v]          )   );
 
-               for (int v=0; v<5; v++)    Correct_L[v] += Coeff_L*REigenVec[Mode][v];
+               for (int v=0; v<NCOMP_FLUID; v++)   Correct_L[v] += Coeff_L*REigenVec[Mode][v];
             }
 
             if ( EigenVal[d][Mode] >= (real)0.0 )
@@ -603,21 +632,35 @@ void CPU_DataReconstruction( const real PriVar[][5], real FC_Var[][6][5], const 
                                                         EigenVal[d][Mode]*EigenVal[d][Mode]   ); */
                Coeff_B = real(4.0/3.0)*dt_dh2*Coeff_A*( EigenVal[d][4] + EigenVal[d][Mode] );
 
-               for (int v=0; v<5; v++)    Coeff_R += LEigenVec[Mode][v]*(  Coeff_A*( dFC[v] - dFC6[v] ) +
-                                                                           Coeff_B*( dFC6[v]          )   );
+               for (int v=0; v<NCOMP_FLUID; v++)   Coeff_R += LEigenVec[Mode][v]*(  Coeff_A*( dFC[v] - dFC6[v] ) +
+                                                                                    Coeff_B*( dFC6[v]          )   );
 
-               for (int v=0; v<5; v++)    Correct_R[v] += Coeff_R*REigenVec[Mode][v];
+               for (int v=0; v<NCOMP_FLUID; v++)   Correct_R[v] += Coeff_R*REigenVec[Mode][v];
             }
-         } // for (int Mode=0; Mode<5; Mode++)
+         } // for (int Mode=0; Mode<NCOMP_FLUID; Mode++)
 
 #        endif // if (  ( RSOLVER == HLLE  ||  RSOLVER == HLLC )  &&  defined HLL_NO_REF_STATE  ) ... else ...
 
 
-//       (2-4-3) evaluate the face-centered variables at the half time-step
+//       (2-4-3) evaluate the corrections to the left and right face-centered passive scalars
+//               --> passive scalars travel with fluid velocity (i.e., entropy mode)
+#        if ( NCOMP_PASSIVE > 0 )
+         Coeff_L = -dt_dh2*FMIN( EigenVal[d][1], (real)0.0 );
+         Coeff_R = -dt_dh2*FMAX( EigenVal[d][1], (real)0.0 );
+
+         for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)
+         {
+            Correct_L[v] = Coeff_L*(  dFC[v] + ( (real)1.0 - real(4.0/3.0)*Coeff_L )*dFC6[v]  );
+            Correct_R[v] = Coeff_R*(  dFC[v] - ( (real)1.0 + real(4.0/3.0)*Coeff_R )*dFC6[v]  );
+         }
+#        endif
+
+
+//       (2-4-4) evaluate the face-centered variables at the half time-step
          CPU_Rotate3D( Correct_L, d, false );
          CPU_Rotate3D( Correct_R, d, false );
 
-         for (int v=0; v<5; v++)
+         for (int v=0; v<NCOMP_TOTAL; v++)
          {
             FC_Var[ID2][dL][v] += Correct_L[v];
             FC_Var[ID2][dR][v] += Correct_R[v];
@@ -629,6 +672,12 @@ void CPU_DataReconstruction( const real PriVar[][5], real FC_Var[][6][5], const 
 
          FC_Var[ID2][dL][4] = CPU_CheckMinPres( FC_Var[ID2][dL][4], MinPres );
          FC_Var[ID2][dR][4] = CPU_CheckMinPres( FC_Var[ID2][dR][4], MinPres );
+
+#        if ( NCOMP_PASSIVE > 0 )
+         for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++) {
+         FC_Var[ID2][dL][v] = FMAX( FC_Var[ID2][dL][v], TINY_NUMBER );
+         FC_Var[ID2][dR][v] = FMAX( FC_Var[ID2][dR][v], TINY_NUMBER ); }
+#        endif
 
 #        endif // #if ( FLU_SCHEME == CTU )
 
@@ -646,6 +695,9 @@ void CPU_DataReconstruction( const real PriVar[][5], real FC_Var[][6][5], const 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Pri2Char
 // Description :  Convert the primitive variables to the characteristic variables
+//
+// Note           1. Passive scalars require no conversion
+//                   --> Their eigenmatrices are just identity matrix
 //
 // Parameter   :  InOut : Array storing both the input primitive variables and output characteristic variables
 //                Gamma : Ratio of specific heats
@@ -668,9 +720,9 @@ void Pri2Char( real InOut[], const real Gamma, const real Rho, const real Pres, 
 
    const real _Cs2 = (real)1.0 / ( Gamma*Pres/Rho );
    const real _Cs  = SQRT( _Cs2 );
-   real Temp[5];
+   real Temp[NCOMP_FLUID];
 
-   for (int v=0; v<5; v++)    Temp[v] = InOut[v];
+   for (int v=0; v<NCOMP_FLUID; v++)   Temp[v] = InOut[v];
 
    CPU_Rotate3D( Temp, XYZ, true );
 
@@ -687,6 +739,9 @@ void Pri2Char( real InOut[], const real Gamma, const real Rho, const real Pres, 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Char2Pri
 // Description :  Convert the characteristic variables to the primitive variables
+//
+// Note           1. Passive scalars require no conversion
+//                   --> Their eigenmatrices are just identity matrix
 //
 // Parameter   :  InOut : Array storing both the input characteristic variables and output primitive variables
 //                Gamma : Ratio of specific heats
@@ -710,7 +765,7 @@ void Char2Pri( real InOut[], const real Gamma, const real Rho, const real Pres, 
    const real _Rho = (real)1.0 / Rho;
    const real Cs2  = Gamma*Pres*_Rho;
    const real Cs   = SQRT( Cs2 );
-   real Temp[5];
+   real Temp[NCOMP_FLUID];
 
    Temp[0] = InOut[0] + InOut[1] + InOut[4];
    Temp[1] = Cs*_Rho*( -InOut[0] + InOut[4] );
@@ -720,7 +775,7 @@ void Char2Pri( real InOut[], const real Gamma, const real Rho, const real Pres, 
 
    CPU_Rotate3D( Temp, XYZ, false );
 
-   for (int v=0; v<5; v++)    InOut[v] = Temp[v];
+   for (int v=0; v<NCOMP_FLUID; v++)   InOut[v] = Temp[v];
 
 } // FUNCTION : Char2Pri
 #endif
@@ -735,6 +790,8 @@ void Char2Pri( real InOut[], const real Gamma, const real Rho, const real Pres, 
 // Note        :  1. The input data should be primitive variables
 //                2. The constant components of eigenvectors should be initialized in advance
 //                3. Work for the CTU scheme
+//                4. Do not need to consider passive scalars
+//                   --> Their eigenmatrices are just identity matrix
 //
 // Parameter   :  CC_Var      : Array storing the input cell-centered primitive variables
 //                EigenVal    : Array to store the output eigenvalues (in three spatial directions)
@@ -742,8 +799,8 @@ void Char2Pri( real InOut[], const real Gamma, const real Rho, const real Pres, 
 //                REigenVec   : Array to store the output right eigenvectors
 //                Gamma       : Ratio of specific heats
 //-------------------------------------------------------------------------------------------------------
-void Get_EigenSystem( const real CC_Var[], real EigenVal[][5], real LEigenVec[][5], real REigenVec[][5],
-                      const real Gamma )
+void Get_EigenSystem( const real CC_Var[], real EigenVal[][NCOMP_FLUID], real LEigenVec[][NCOMP_FLUID],
+                      real REigenVec[][NCOMP_FLUID], const real Gamma )
 {
 
 #  ifdef CHECK_NEGATIVE_IN_FLUID
@@ -847,12 +904,13 @@ void LimitSlope( const real L2[], const real L1[], const real C0[], const real R
    const real Pres = C0[4];
 #  endif
 
-   real Slope_L[5], Slope_R[5], Slope_C[5], Slope_A[5], Slope_LL[5], Slope_RR[5], Slope_LR;
+   real Slope_L[NCOMP_TOTAL], Slope_R[NCOMP_TOTAL], Slope_C[NCOMP_TOTAL], Slope_A[NCOMP_TOTAL];
+   real Slope_LL[NCOMP_TOTAL], Slope_RR[NCOMP_TOTAL], Slope_LR;
    real D2_L, D2_R, D2_C, D2_Sign, D2_Limiter, Slope_Sign;  // variables for the extrema-preserving limiter
 
 
 // evaluate different slopes
-   for (int v=0; v<5; v++)
+   for (int v=0; v<NCOMP_TOTAL; v++)
    {
       Slope_L[v] = C0[v] - L1[v];
       Slope_R[v] = R1[v] - C0[v];
@@ -861,7 +919,7 @@ void LimitSlope( const real L2[], const real L1[], const real C0[], const real R
 
    if ( LR_Limiter == VL_GMINMOD )
    {
-      for (int v=0; v<5; v++)
+      for (int v=0; v<NCOMP_TOTAL; v++)
       {
          if ( Slope_L[v]*Slope_R[v] > (real)0.0 )
             Slope_A[v] = (real)2.0*Slope_L[v]*Slope_R[v]/( Slope_L[v] + Slope_R[v] );
@@ -872,7 +930,7 @@ void LimitSlope( const real L2[], const real L1[], const real C0[], const real R
 
    if ( LR_Limiter == EXTPRE )
    {
-      for (int v=0; v<5; v++)
+      for (int v=0; v<NCOMP_TOTAL; v++)
       {
          Slope_LL[v] = L1[v] - L2[v];
          Slope_RR[v] = R2[v] - R1[v];
@@ -898,7 +956,7 @@ void LimitSlope( const real L2[], const real L1[], const real C0[], const real R
 
 
 // apply the slope limiter
-   for (int v=0; v<5; v++)
+   for (int v=0; v<NCOMP_TOTAL; v++)
    {
       Slope_LR = Slope_L[v]*Slope_R[v];
 
@@ -962,7 +1020,7 @@ void LimitSlope( const real L2[], const real L1[], const real C0[], const real R
             Slope_Limiter[v] = (real)0.0;
 
       } // if ( Slope_LR > (real)0.0 && ( LR_Limiter != EXTPRE || Slope_LL[v]*Slope_RR[v] > (real)0.0 ) ) .else.
-   } // for (int v=0; v<5; v++)
+   } // for (int v=0; v<NCOMP_TOTAL; v++)
 
 
 // characteristic variables --> primitive variables

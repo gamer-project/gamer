@@ -14,11 +14,12 @@ real CPU_GetPressure( const real Dens, const real MomX, const real MomY, const r
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  CPU_Rotate3D
-// Description :  Rotate the input 5-element fluid variables properly to simplify the 3D calculation
+// Description :  Rotate the input fluid variables properly to simplify the 3D calculation
 //
-// Note        :  x : (0,1,2,3,4) <--> (0,1,2,3,4)
-//                y : (0,1,2,3,4) <--> (0,2,3,1,4)
-//                z : (0,1,2,3,4) <--> (0,3,1,2,4)
+// Note        :  1. x : (0,1,2,3,4) <--> (0,1,2,3,4)
+//                   y : (0,1,2,3,4) <--> (0,2,3,1,4)
+//                   z : (0,1,2,3,4) <--> (0,3,1,2,4)
+//                2. Work if InOut includes/excludes passive scalars since they are not modified at all
 //
 // Parameter   :  InOut    : Array storing both the input and output data
 //                XYZ      : Targeted spatial direction : (0/1/2) --> (x/y/z)
@@ -30,15 +31,15 @@ void CPU_Rotate3D( real InOut[], const int XYZ, const bool Forward )
    if ( XYZ == 0 )   return;
 
 
-   real Temp[5];
-   for (int v=0; v<5; v++)    Temp[v] = InOut[v];
+   real Temp[3];
+   for (int v=0; v<3; v++)    Temp[v] = InOut[v+1];
 
    if ( Forward )
    {
       switch ( XYZ )
       {
-         case 1 : InOut[1] = Temp[2];  InOut[2] = Temp[3];  InOut[3] = Temp[1];     break;
-         case 2 : InOut[1] = Temp[3];  InOut[2] = Temp[1];  InOut[3] = Temp[2];     break;
+         case 1 : InOut[1] = Temp[1];  InOut[2] = Temp[2];  InOut[3] = Temp[0];     break;
+         case 2 : InOut[1] = Temp[2];  InOut[2] = Temp[0];  InOut[3] = Temp[1];     break;
       }
    }
 
@@ -46,8 +47,8 @@ void CPU_Rotate3D( real InOut[], const int XYZ, const bool Forward )
    {
       switch ( XYZ )
       {
-         case 1 : InOut[1] = Temp[3];  InOut[2] = Temp[1];  InOut[3] = Temp[2];     break;
-         case 2 : InOut[1] = Temp[2];  InOut[2] = Temp[3];  InOut[3] = Temp[1];     break;
+         case 1 : InOut[1] = Temp[2];  InOut[2] = Temp[0];  InOut[3] = Temp[1];     break;
+         case 2 : InOut[1] = Temp[1];  InOut[2] = Temp[2];  InOut[3] = Temp[0];     break;
       }
    }
 
@@ -61,13 +62,24 @@ void CPU_Rotate3D( real InOut[], const int XYZ, const bool Forward )
 //
 // Note        :  1. This function always check if the pressure to be returned is greater than the
 //                   given minimum threshold
+//                2. For passive scalars, we store their mass fraction as the primitive variables
+//                   when NormPassive is on
+//                   --> See the input parameters "NormPassive, NNorm, NormIdx"
+//                   --> But note that here we do NOT ensure "sum(mass fraction) == 1.0"
+//                       --> It is done by calling CPU_NormalizePassive() in CPU_Shared_FullStepUpdate()
 //
-// Parameter   :  In       : Array storing the input conserved variables
-//                Out      : Array to store the output primitive variables
-//                Gamma_m1 : Gamma - 1
-//                MinPres  : Minimum allowed pressure
+// Parameter   :  In          : Array storing the input conserved variables
+//                Out         : Array to store the output primitive variables
+//                Gamma_m1    : Gamma - 1
+//                MinPres     : Minimum allowed pressure
+//                NormPassive : true --> convert passive scalars to mass fraction
+//                NNorm       : Number of passive scalars for the option "NormPassive"
+//                              --> Should be set to the global variable "PassiveNorm_NVar"
+//                NormIdx     : Target variable indices for the option "NormPassive"
+//                              --> Should be set to the global variable "PassiveNorm_VarIdx"
 //-------------------------------------------------------------------------------------------------------
-void CPU_Con2Pri( const real In[], real Out[], const real Gamma_m1, const real MinPres )
+void CPU_Con2Pri( const real In[], real Out[], const real Gamma_m1, const real MinPres,
+                  const bool NormPassive, const int NNorm, const int NormIdx[] )
 {
 
    const bool CheckMinPres_Yes = true;
@@ -79,6 +91,16 @@ void CPU_Con2Pri( const real In[], real Out[], const real Gamma_m1, const real M
    Out[3] = In[3]*_Rho;
    Out[4] = CPU_GetPressure( In[0], In[1], In[2], In[3], In[4], Gamma_m1, CheckMinPres_Yes, MinPres );
 
+// passive scalars
+#  if ( NCOMP_PASSIVE > 0 )
+// copy all passive scalars
+   for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)  Out[v] = In[v];
+
+// convert the mass density of target passive scalars to mass fraction
+   if ( NormPassive )
+      for (int v=0; v<NNorm; v++)   Out[ NCOMP_FLUID + NormIdx[v] ] *= _Rho;
+#  endif
+
 } // FUNCTION : CPU_Con2Pri
 
 
@@ -89,12 +111,21 @@ void CPU_Con2Pri( const real In[], real Out[], const real Gamma_m1, const real M
 //
 // Note        :  1. This function does NOT check if the input pressure is greater than the
 //                   given minimum threshold
+//                2. For passive scalars, we store their mass fraction as the primitive variables
+//                   when NormPassive is on
+//                   --> See the input parameters "NormPassive, NNorm, NormIdx"
 //
-// Parameter   :  In       : Array storing the input primitive variables
-//                Out      : Array to store the output conserved variables
-//               _Gamma_m1 : 1 / (Gamma - 1)
+// Parameter   :  In          : Array storing the input primitive variables
+//                Out         : Array to store the output conserved variables
+//               _Gamma_m1    : 1 / (Gamma - 1)
+//                NormPassive : true --> convert passive scalars to mass fraction
+//                NNorm       : Number of passive scalars for the option "NormPassive"
+//                              --> Should be set to the global variable "PassiveNorm_NVar"
+//                NormIdx     : Target variable indices for the option "NormPassive"
+//                              --> Should be set to the global variable "PassiveNorm_VarIdx"
 //-------------------------------------------------------------------------------------------------------
-void CPU_Pri2Con( const real In[], real Out[], const real _Gamma_m1 )
+void CPU_Pri2Con( const real In[], real Out[], const real _Gamma_m1,
+                  const bool NormPassive, const int NNorm, const int NormIdx[] )
 {
 
    Out[0] = In[0];
@@ -102,6 +133,16 @@ void CPU_Pri2Con( const real In[], real Out[], const real _Gamma_m1 )
    Out[2] = In[0]*In[2];
    Out[3] = In[0]*In[3];
    Out[4] = In[4]*_Gamma_m1 + (real)0.5*In[0]*( In[1]*In[1] + In[2]*In[2] + In[3]*In[3] );
+
+// passive scalars
+#  if ( NCOMP_PASSIVE > 0 )
+// copy all passive scalars
+   for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)  Out[v] = In[v];
+
+// convert the mass fraction of target passive scalars back to mass density
+   if ( NormPassive )
+      for (int v=0; v<NNorm; v++)   Out[ NCOMP_FLUID + NormIdx[v] ] *= In[0];
+#  endif
 
 } // FUNCTION : CPU_Pri2Con
 
@@ -121,10 +162,10 @@ void CPU_Con2Flux( const int XYZ, real Flux[], const real Input[], const real Ga
 {
 
    const bool CheckMinPres_Yes = true;
-   real Var[5];
+   real Var[NCOMP_FLUID];  // don't need to include passive scalars since they don't have to be rotated
    real Pres, Vx;
 
-   for (int v=0; v<5; v++)    Var[v] = Input[v];
+   for (int v=0; v<NCOMP_FLUID; v++)   Var[v] = Input[v];
 
    CPU_Rotate3D( Var, XYZ, true );
 
@@ -136,6 +177,11 @@ void CPU_Con2Flux( const int XYZ, real Flux[], const real Input[], const real Ga
    Flux[2] = Vx*Var[2];
    Flux[3] = Vx*Var[3];
    Flux[4] = Vx*( Var[4] + Pres );
+
+// passive scalars
+#  if ( NCOMP_PASSIVE > 0 )
+   for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)  Flux[v] = Input[v]*Vx;
+#  endif
 
    CPU_Rotate3D( Flux, XYZ, false );
 
@@ -298,6 +344,57 @@ real CPU_GetTemperature( const real Dens, const real MomX, const real MomY, cons
    return CPU_GetPressure( Dens, MomX, MomY, MomZ, Engy, Gamma_m1, CheckMinPres, MinPres ) / Dens;
 
 } // FUNCTION : CPU_GetTemperature
+
+
+
+//-------------------------------------------------------------------------------------------------------
+// Function    :  CPU_NormalizePassive
+// Description :  Normalize the target passive scalars so that the sum of their mass density is equal to
+//                the gas mass density
+//
+// Note        :  1. Should be invoked AFTER applying the floor values to passive scalars
+//                2. Invoked by CPU_Shared_FullStepUpdate(), Prepare_PatchData(), Refine(), LB_Refine_AllocateNewPatch(),
+//                   Flu_FixUp(), XXX_Init_StartOver_AssignData(), XXX_Init_UM_AssignData(), Flu_Close()
+//
+// Parameter   :  GasDens  : Gas mass density
+//                Passive  : Passive scalar array (with the size NCOMP_PASSIVE)
+//                NNorm    : Number of passive scalars to be normalized
+//                           --> Should be set to the global variable "PassiveNorm_NVar"
+//                NormIdx  : Target variable indices to be normalized
+//                           --> Should be set to the global variable "PassiveNorm_VarIdx"
+//
+// Return      :  Passive
+//-------------------------------------------------------------------------------------------------------
+void CPU_NormalizePassive( const real GasDens, real Passive[], const int NNorm, const int NormIdx[] )
+{
+
+// validate the target variable indices
+#  ifdef GAMER_DEBUG
+   const int MinIdx = 0;
+#  ifdef DUAL_ENERGY
+   const int MaxIdx = NCOMP_PASSIVE - 2;
+#  else
+   const int MaxIdx = NCOMP_PASSIVE - 1;
+#  endif
+
+   for (int v=0; v<NNorm; v++)
+   {
+      if ( NormIdx[v] < MinIdx  ||  NormIdx[v] > MaxIdx )
+         Aux_Error( ERROR_INFO, "NormIdx[%d] = %d is not within the correct range ([%d <= idx <= %d]) !!\n",
+                    v, NormIdx[v], MinIdx, MaxIdx );
+   }
+#  endif // #ifdef GAMER_DEBUG
+
+
+   real Norm, PassiveDens_Sum=(real)0.0;
+
+   for (int v=0; v<NNorm; v++)   PassiveDens_Sum += Passive[ NormIdx[v] ];
+
+   Norm = GasDens / PassiveDens_Sum;
+
+   for (int v=0; v<NNorm; v++)   Passive[ NormIdx[v] ] *= Norm;
+
+} // FUNCTION : CPU_NormalizePassive
 
 
 

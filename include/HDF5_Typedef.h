@@ -114,7 +114,6 @@ struct Makefile_t
 #  ifdef RSOLVER
    int RSolver;
 #  endif
-   int NPassive;
 
 #  elif ( MODEL == MHD )
 #  warning : WAIT MHD !!!
@@ -146,11 +145,13 @@ struct Makefile_t
 struct SymConst_t
 {
 
-   int    NComp;
+   int    NCompFluid;
+   int    NCompPassive;
    int    PatchSize;
    int    Flu_NIn;
    int    Flu_NOut;
-   int    NFlux;
+   int    NFluxFluid;
+   int    NFluxPassive;
    int    Flu_GhostSize;
    int    Flu_Nxt;
    int    Debug_HDF5;
@@ -159,6 +160,9 @@ struct SymConst_t
 #  ifdef LOAD_BALANCE
    int    SonOffsetLB;
 #  endif
+
+   double TinyNumber;
+   double HugeNumber;
 
 
 #  ifdef GRAVITY
@@ -392,6 +396,9 @@ struct InputPara_t
    int    Opt__FixUp_Flux;
    int    Opt__FixUp_Restrict;
    int    Opt__CorrAfterAllSync;
+   int    Opt__NormalizePassive;
+   int    NormalizePassive_NVar;
+   int    NormalizePassive_VarIdx[NCOMP_PASSIVE];
    int    Opt__OverlapMPI;
    int    Opt__ResetFluid;
 #  if ( MODEL == HYDRO  ||  MODEL == MHD  ||  MODEL == ELBDM )
@@ -487,6 +494,7 @@ struct InputPara_t
    int    Opt__Ck_Refine;
    int    Opt__Ck_ProperNesting;
    int    Opt__Ck_Conservation;
+   int    Opt__Ck_NormPassive;
    int    Opt__Ck_Restrict;
    int    Opt__Ck_Finite;
    int    Opt__Ck_PatchAllocate;

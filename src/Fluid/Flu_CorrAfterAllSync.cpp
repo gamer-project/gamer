@@ -77,13 +77,13 @@ void Flu_CorrAfterAllSync()
          Aux_Message( stdout, "      restrict data at Lv %2d                ... ", lv );
 
 //    we do not restrict potential since it will be recalculated anyway
-      Flu_Restrict( lv, amr->FluSg[lv+1], amr->FluSg[lv], NULL_INT, NULL_INT, _FLU );
+      Flu_Restrict( lv, amr->FluSg[lv+1], amr->FluSg[lv], NULL_INT, NULL_INT, _TOTAL );
 
 #     ifdef LOAD_BALANCE
-      LB_GetBufferData( lv, amr->FluSg[lv], NULL_INT, DATA_RESTRICT, _FLU, NULL_INT );
+      LB_GetBufferData( lv, amr->FluSg[lv], NULL_INT, DATA_RESTRICT, _TOTAL, NULL_INT );
 #     endif
 
-      Buf_GetBufferData( lv, amr->FluSg[lv], NULL_INT, DATA_AFTER_FIXUP, _FLU, Flu_ParaBuf, USELB_YES );
+      Buf_GetBufferData( lv, amr->FluSg[lv], NULL_INT, DATA_AFTER_FIXUP, _TOTAL, Flu_ParaBuf, USELB_YES );
 
       if ( OPT__VERBOSE  &&  MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );
    }

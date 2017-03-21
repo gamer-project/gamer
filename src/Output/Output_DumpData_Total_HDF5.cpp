@@ -68,14 +68,13 @@ Procedure for outputting new variables:
 3. Edit "FillIn_XXX" to fill in the new variables
 4. Edit "Check_XXX" in "Init_Restart_HDF5.cpp" to load and compare the new variables
 5. Modify FormatVersion and CodeVersion
-6. Edit "Init_Restart_HDF5.cpp" to load and validate the new variables
 ======================================================================================================*/
 
 
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2220)
+// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2226)
 // Description :  Output all simulation data in the HDF5 format, which can be used as a restart file
 //                or loaded by YT
 //
@@ -119,8 +118,13 @@ Procedure for outputting new variables:
 //                2216 : 2016/11/27 --> output OPT__FLAG_LOHNER_TEMP
 //                2217 : 2017/01/25 --> output RESTART_LOAD_NRANK, set CodeVersion to "gamer"
 //                2218 : 2017/01/28 --> output OPT__FLAG_VORTICITY and the corresponding flag table
-//                2219 : 2017/03/01 --> output LB_Par_Weight, rename LB_Input__WLI_Max as LB_WLI_Max
-//                2220 : 2017/03/03 --> output Opt__RecordLoadBalance
+//                2220 : 2017/02/14 --> output passive grid and particle variables
+//                2221 : 2017/02/20 --> output TINY_NUMBER and HUGE_NUMBER
+//                2222 : 2017/02/20 --> output OPT__NORMALIZE_PASSIVE
+//                2223 : 2017/02/22 --> output NormalizePassive_NVar and NormalizePassive_VarIdx
+//                2224 : 2017/02/25 --> output OPT__CK_NORMALIZE_PASSIVE
+//                2225 : 2017/03/01 --> output LB_Par_Weight, rename LB_Input__WLI_Max as LB_WLI_Max
+//                2226 : 2017/03/03 --> output Opt__RecordLoadBalance
 //-------------------------------------------------------------------------------------------------------
 void Output_DumpData_Total_HDF5( const char *FileName )
 {
@@ -661,7 +665,7 @@ void Output_DumpData_Total_HDF5( const char *FileName )
    real (*FieldData)[PS1][PS1][PS1] = NULL;
 
 // 5-0. determine variable indices
-   NGridVar = NCOMP;
+   NGridVar = NCOMP_TOTAL;
 
 #  ifdef GRAVITY
    int  PotDumpIdx = -1;
@@ -692,6 +696,8 @@ void Output_DumpData_Total_HDF5( const char *FileName )
 #  else
 #  error : ERROR : unsupported MODEL !!
 #  endif
+
+   for (int v=0; v<NCOMP_PASSIVE; v++)    sprintf( FieldName[NCOMP_FLUID+v], "%s", PassiveFieldName_Grid[v] );
 
 #  ifdef GRAVITY
    if ( OPT__OUTPUT_POT )     sprintf( FieldName[PotDumpIdx], "Pote" );
@@ -948,7 +954,7 @@ void Output_DumpData_Total_HDF5( const char *FileName )
    sprintf( ParVarName[5], "ParVelY" );
    sprintf( ParVarName[6], "ParVelZ" );
 
-   for (int v=0; v<PAR_NPASSIVE; v++)  sprintf( ParVarName[7+v], "ParPassive%d%d", v/10, v%10 );
+   for (int v=0; v<PAR_NPASSIVE; v++)  sprintf( ParVarName[7+v], "%s", PassiveFieldName_Par[v] );
 
 #  ifdef DEBUG_PARTICLE
    if ( PAR_NPASSIVE >= 100 )    Aux_Error( ERROR_INFO, "PAR_NPASSIVE = %d >= 100 !!\n", PAR_NPASSIVE );
@@ -1228,7 +1234,7 @@ void FillIn_KeyInfo( KeyInfo_t &KeyInfo )
 
    const time_t CalTime  = time( NULL );   // calendar time
 
-   KeyInfo.FormatVersion = 2220;
+   KeyInfo.FormatVersion = 2226;
    KeyInfo.Model         = MODEL;
    KeyInfo.NLevel        = NLEVEL;
    KeyInfo.PatchSize     = PATCH_SIZE;
@@ -1429,7 +1435,6 @@ void FillIn_Makefile( Makefile_t &Makefile )
 #  ifdef RSOLVER
    Makefile.RSolver            = RSOLVER;
 #  endif
-   Makefile.NPassive           = NPASSIVE;
 
 #  elif ( MODEL == MHD )
 #  warning : WAIT MHD !!!
@@ -1483,11 +1488,13 @@ void FillIn_SymConst( SymConst_t &SymConst )
 {
 
 // model-independent variables
-   SymConst.NComp                = NCOMP;
+   SymConst.NCompFluid           = NCOMP_FLUID;
+   SymConst.NCompPassive         = NCOMP_PASSIVE;
    SymConst.PatchSize            = PATCH_SIZE;
    SymConst.Flu_NIn              = FLU_NIN;
    SymConst.Flu_NOut             = FLU_NOUT;
-   SymConst.NFlux                = NFLUX;
+   SymConst.NFluxFluid           = NFLUX_FLUID;
+   SymConst.NFluxPassive         = NFLUX_PASSIVE;
    SymConst.Flu_GhostSize        = FLU_GHOST_SIZE;
    SymConst.Flu_Nxt              = FLU_NXT;
 #  ifdef DEBUG_HDF5
@@ -1499,6 +1506,9 @@ void FillIn_SymConst( SymConst_t &SymConst )
 #  ifdef LOAD_BALANCE
    SymConst.SonOffsetLB          = SON_OFFSET_LB;
 #  endif
+
+   SymConst.TinyNumber           = TINY_NUMBER;
+   SymConst.HugeNumber           = HUGE_NUMBER;
 
 
 // model-dependent variables
@@ -1787,6 +1797,12 @@ void FillIn_InputPara( InputPara_t &InputPara )
    InputPara.Opt__FixUp_Flux         = OPT__FIXUP_FLUX;
    InputPara.Opt__FixUp_Restrict     = OPT__FIXUP_RESTRICT;
    InputPara.Opt__CorrAfterAllSync   = OPT__CORR_AFTER_ALL_SYNC;
+   InputPara.Opt__NormalizePassive   = OPT__NORMALIZE_PASSIVE;
+
+   InputPara.NormalizePassive_NVar   = PassiveNorm_NVar;
+   for (int v=0; v<NCOMP_PASSIVE; v++)
+   InputPara.NormalizePassive_VarIdx[v] = PassiveNorm_VarIdx[v];
+
    InputPara.Opt__OverlapMPI         = OPT__OVERLAP_MPI;
    InputPara.Opt__ResetFluid         = OPT__RESET_FLUID;
 #  if ( MODEL == HYDRO  ||  MODEL == MHD  ||  MODEL == ELBDM )
@@ -1882,6 +1898,7 @@ void FillIn_InputPara( InputPara_t &InputPara )
    InputPara.Opt__Ck_Refine          = OPT__CK_REFINE;
    InputPara.Opt__Ck_ProperNesting   = OPT__CK_PROPER_NESTING;
    InputPara.Opt__Ck_Conservation    = OPT__CK_CONSERVATION;
+   InputPara.Opt__Ck_NormPassive     = OPT__CK_NORMALIZE_PASSIVE;
    InputPara.Opt__Ck_Restrict        = OPT__CK_RESTRICT;
    InputPara.Opt__Ck_Finite          = OPT__CK_FINITE;
    InputPara.Opt__Ck_PatchAllocate   = OPT__CK_PATCH_ALLOCATE;
@@ -2060,7 +2077,6 @@ void GetCompound_Makefile( hid_t &H5_TypeID )
 #  ifdef RSOLVER
    H5Tinsert( H5_TypeID, "RSolver",            HOFFSET(Makefile_t,RSolver           ), H5T_NATIVE_INT );
 #  endif
-   H5Tinsert( H5_TypeID, "NPassive",           HOFFSET(Makefile_t,NPassive          ), H5T_NATIVE_INT );
 
 #  elif ( MODEL == MHD )
 #  warning : WAIT MHD !!!
@@ -2098,11 +2114,13 @@ void GetCompound_SymConst( hid_t &H5_TypeID )
 
    H5_TypeID = H5Tcreate( H5T_COMPOUND, sizeof(SymConst_t) );
 
-   H5Tinsert( H5_TypeID, "NComp",                HOFFSET(SymConst_t,NComp               ), H5T_NATIVE_INT    );
+   H5Tinsert( H5_TypeID, "NCompFluid",           HOFFSET(SymConst_t,NCompFluid          ), H5T_NATIVE_INT    );
+   H5Tinsert( H5_TypeID, "NCompPassive",         HOFFSET(SymConst_t,NCompPassive        ), H5T_NATIVE_INT    );
    H5Tinsert( H5_TypeID, "PatchSize",            HOFFSET(SymConst_t,PatchSize           ), H5T_NATIVE_INT    );
    H5Tinsert( H5_TypeID, "Flu_NIn",              HOFFSET(SymConst_t,Flu_NIn             ), H5T_NATIVE_INT    );
    H5Tinsert( H5_TypeID, "Flu_NOut",             HOFFSET(SymConst_t,Flu_NOut            ), H5T_NATIVE_INT    );
-   H5Tinsert( H5_TypeID, "NFlux",                HOFFSET(SymConst_t,NFlux               ), H5T_NATIVE_INT    );
+   H5Tinsert( H5_TypeID, "NFluxFluid",           HOFFSET(SymConst_t,NFluxFluid          ), H5T_NATIVE_INT    );
+   H5Tinsert( H5_TypeID, "NFluxPassive",         HOFFSET(SymConst_t,NFluxPassive        ), H5T_NATIVE_INT    );
    H5Tinsert( H5_TypeID, "Flu_GhostSize",        HOFFSET(SymConst_t,Flu_GhostSize       ), H5T_NATIVE_INT    );
    H5Tinsert( H5_TypeID, "Flu_Nxt",              HOFFSET(SymConst_t,Flu_Nxt             ), H5T_NATIVE_INT    );
    H5Tinsert( H5_TypeID, "Debug_HDF5",           HOFFSET(SymConst_t,Debug_HDF5          ), H5T_NATIVE_INT    );
@@ -2110,6 +2128,8 @@ void GetCompound_SymConst( hid_t &H5_TypeID )
 #  ifdef LOAD_BALANCE
    H5Tinsert( H5_TypeID, "SonOffsetLB",          HOFFSET(SymConst_t,SonOffsetLB         ), H5T_NATIVE_INT    );
 #  endif
+   H5Tinsert( H5_TypeID, "TinyNumber",           HOFFSET(SymConst_t,TinyNumber          ), H5T_NATIVE_DOUBLE );
+   H5Tinsert( H5_TypeID, "HugeNumber",           HOFFSET(SymConst_t,HugeNumber          ), H5T_NATIVE_DOUBLE );
 
 #  ifdef GRAVITY
    H5Tinsert( H5_TypeID, "Gra_NIn",              HOFFSET(SymConst_t,Gra_NIn             ), H5T_NATIVE_INT    );
@@ -2200,16 +2220,26 @@ void GetCompound_InputPara( hid_t &H5_TypeID )
 // create the array type
    const hsize_t H5_ArrDims_3Var             = 3;                    // array size of [3]
    const hsize_t H5_ArrDims_6Var             = 6;                    // array size of [6]
+#  if ( NCOMP_PASSIVE > 0 )
+   const hsize_t H5_ArrDims_NPassive         = NCOMP_PASSIVE;        // array size of [NCOMP_PASSIVE]
+#  endif
+#  if ( NLEVEL > 1 )
    const hsize_t H5_ArrDims_NLvM1            = NLEVEL-1;             // array size of [NLEVEL-1]
    const hsize_t H5_ArrDims_NLvM1_2[2]       = { NLEVEL-1, 2 };      // array size of [NLEVEL-1][2]
    const hsize_t H5_ArrDims_NLvM1_4[2]       = { NLEVEL-1, 4 };      // array size of [NLEVEL-1][4]
+#  endif
 
    const hid_t   H5_TypeID_Arr_3Int          = H5Tarray_create( H5T_NATIVE_INT,    1, &H5_ArrDims_3Var      );
    const hid_t   H5_TypeID_Arr_6Int          = H5Tarray_create( H5T_NATIVE_INT,    1, &H5_ArrDims_6Var      );
+#  if ( NCOMP_PASSIVE > 0 )
+   const hid_t   H5_TypeID_Arr_NPassive      = H5Tarray_create( H5T_NATIVE_INT,    1, &H5_ArrDims_NPassive  );
+#  endif
+#  if ( NLEVEL > 1 )
    const hid_t   H5_TypeID_Arr_NLvM1Int      = H5Tarray_create( H5T_NATIVE_INT,    1, &H5_ArrDims_NLvM1     );
    const hid_t   H5_TypeID_Arr_NLvM1Double   = H5Tarray_create( H5T_NATIVE_DOUBLE, 1, &H5_ArrDims_NLvM1     );
    const hid_t   H5_TypeID_Arr_NLvM1_2Double = H5Tarray_create( H5T_NATIVE_DOUBLE, 2,  H5_ArrDims_NLvM1_2   );
    const hid_t   H5_TypeID_Arr_NLvM1_4Double = H5Tarray_create( H5T_NATIVE_DOUBLE, 2,  H5_ArrDims_NLvM1_4   );
+#  endif
 
    herr_t  H5_Status;
 
@@ -2354,6 +2384,11 @@ void GetCompound_InputPara( hid_t &H5_TypeID )
    H5Tinsert( H5_TypeID, "Opt__FixUp_Flux",         HOFFSET(InputPara_t,Opt__FixUp_Flux        ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "Opt__FixUp_Restrict",     HOFFSET(InputPara_t,Opt__FixUp_Restrict    ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "Opt__CorrAfterAllSync",   HOFFSET(InputPara_t,Opt__CorrAfterAllSync  ), H5T_NATIVE_INT     );
+   H5Tinsert( H5_TypeID, "Opt__NormalizePassive",   HOFFSET(InputPara_t,Opt__NormalizePassive  ), H5T_NATIVE_INT     );
+   H5Tinsert( H5_TypeID, "NormalizePassive_NVar",   HOFFSET(InputPara_t,NormalizePassive_NVar  ), H5T_NATIVE_INT     );
+#  if ( NCOMP_PASSIVE > 0 )
+   H5Tinsert( H5_TypeID, "NormalizePassive_VarIdx", HOFFSET(InputPara_t,NormalizePassive_VarIdx), H5_TypeID_Arr_NPassive );
+#  endif
    H5Tinsert( H5_TypeID, "Opt__OverlapMPI",         HOFFSET(InputPara_t,Opt__OverlapMPI        ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "Opt__ResetFluid",         HOFFSET(InputPara_t,Opt__ResetFluid        ), H5T_NATIVE_INT     );
 #  if ( MODEL == HYDRO  ||  MODEL == MHD  ||  MODEL == ELBDM )
@@ -2449,6 +2484,7 @@ void GetCompound_InputPara( hid_t &H5_TypeID )
    H5Tinsert( H5_TypeID, "Opt__Ck_Refine",          HOFFSET(InputPara_t,Opt__Ck_Refine         ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "Opt__Ck_ProperNesting",   HOFFSET(InputPara_t,Opt__Ck_ProperNesting  ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "Opt__Ck_Conservation",    HOFFSET(InputPara_t,Opt__Ck_Conservation   ), H5T_NATIVE_INT     );
+   H5Tinsert( H5_TypeID, "Opt__Ck_NormPassive",     HOFFSET(InputPara_t,Opt__Ck_NormPassive    ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "Opt__Ck_Restrict",        HOFFSET(InputPara_t,Opt__Ck_Restrict       ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "Opt__Ck_Finite",          HOFFSET(InputPara_t,Opt__Ck_Finite         ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "Opt__Ck_PatchAllocate",   HOFFSET(InputPara_t,Opt__Ck_PatchAllocate  ), H5T_NATIVE_INT     );
@@ -2462,6 +2498,7 @@ void GetCompound_InputPara( hid_t &H5_TypeID )
 #  endif
 
 // flag tables
+#  if ( NLEVEL > 1 )
    H5Tinsert( H5_TypeID, "FlagTable_Rho",          HOFFSET(InputPara_t,FlagTable_Rho           ), H5_TypeID_Arr_NLvM1Double   );
    H5Tinsert( H5_TypeID, "FlagTable_RhoGradient",  HOFFSET(InputPara_t,FlagTable_RhoGradient   ), H5_TypeID_Arr_NLvM1Double   );
    H5Tinsert( H5_TypeID, "FlagTable_Lohner",       HOFFSET(InputPara_t,FlagTable_Lohner        ), H5_TypeID_Arr_NLvM1_4Double );
@@ -2476,14 +2513,21 @@ void GetCompound_InputPara( hid_t &H5_TypeID )
    H5Tinsert( H5_TypeID, "FlagTable_NParPatch",    HOFFSET(InputPara_t,FlagTable_NParPatch     ), H5_TypeID_Arr_NLvM1Int      );
    H5Tinsert( H5_TypeID, "FlagTable_NParCell",     HOFFSET(InputPara_t,FlagTable_NParCell      ), H5_TypeID_Arr_NLvM1Int      );
 #  endif
+#  endif
 
 
 // free memory
    H5_Status = H5Tclose( H5_TypeID_Arr_3Int          );
    H5_Status = H5Tclose( H5_TypeID_Arr_6Int          );
+#  if ( NCOMP_PASSIVE > 0 )
+   H5_Status = H5Tclose( H5_TypeID_Arr_NPassive      );
+#  endif
+#  if ( NLEVEL > 1 )
+   H5_Status = H5Tclose( H5_TypeID_Arr_NLvM1Int      );
    H5_Status = H5Tclose( H5_TypeID_Arr_NLvM1Double   );
    H5_Status = H5Tclose( H5_TypeID_Arr_NLvM1_2Double );
    H5_Status = H5Tclose( H5_TypeID_Arr_NLvM1_4Double );
+#  endif
 
 } // FUNCTION : GetCompound_InputPara
 

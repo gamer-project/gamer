@@ -32,10 +32,14 @@ double               FlagTable_Lohner     [NLEVEL-1][4];
 double               FlagTable_User       [NLEVEL-1];
 double              *DumpTable = NULL;
 int                  DumpTable_NDump;
+int                  PassiveNorm_NVar;
+int                  PassiveNorm_VarIdx[NCOMP_PASSIVE];
 
 int                  MPI_Rank, MPI_Rank_X[3], MPI_SibRank[26], NX0[3], NPatchTotal[NLEVEL];
 int                 *BaseP = NULL;
 int                  Flu_ParaBuf;
+
+char                *PassiveFieldName_Grid[NCOMP_PASSIVE];
 
 double               BOX_SIZE, DT__FLUID, DT__FLUID_INIT, END_T, OUTPUT_DT;
 long                 END_STEP;
@@ -52,9 +56,9 @@ bool                 OPT__DT_USER, OPT__RECORD_DT, OPT__RECORD_MEMORY, OPT__ADAP
 bool                 OPT__FIXUP_RESTRICT, OPT__INIT_RESTRICT, OPT__VERBOSE, OPT__MANUAL_CONTROL, OPT__UNIT;
 bool                 OPT__INT_TIME, OPT__OUTPUT_TEST_ERROR, OPT__OUTPUT_BASE, OPT__OVERLAP_MPI, OPT__TIMING_BALANCE;
 bool                 OPT__OUTPUT_BASEPS, OPT__CK_REFINE, OPT__CK_PROPER_NESTING, OPT__CK_FINITE, OPT__RECORD_PERFORMANCE;
-bool                 OPT__CK_RESTRICT, OPT__CK_PATCH_ALLOCATE, OPT__FIXUP_FLUX, OPT__CK_FLUX_ALLOCATE;
+bool                 OPT__CK_RESTRICT, OPT__CK_PATCH_ALLOCATE, OPT__FIXUP_FLUX, OPT__CK_FLUX_ALLOCATE, OPT__CK_NORMALIZE_PASSIVE;
 bool                 OPT__UM_START_DOWNGRADE, OPT__UM_START_REFINE, OPT__UM_FACTOR_5OVER3, OPT__TIMING_MPI;
-bool                 OPT__CK_CONSERVATION, OPT__RESET_FLUID, OPT__RECORD_USER;
+bool                 OPT__CK_CONSERVATION, OPT__RESET_FLUID, OPT__RECORD_USER, OPT__NORMALIZE_PASSIVE;
 OptInit_t            OPT__INIT;
 OptRestartH_t        OPT__RESTART_HEADER;
 OptOutputFormat_t    OPT__OUTPUT_TOTAL;
@@ -140,6 +144,7 @@ real                 MinDtInfo_ParVelAcc[2][NLEVEL];
 bool                 OPT__OUTPUT_PAR_TEXT, OPT__CK_PARTICLE, OPT__FLAG_NPAR_CELL;
 int                  OPT__PARTICLE_COUNT, OPT__FLAG_NPAR_PATCH, FlagTable_NParPatch[NLEVEL-1], FlagTable_NParCell[NLEVEL-1];
 ParOutputDens_t      OPT__OUTPUT_PAR_DENS;
+char                *PassiveFieldName_Par[PAR_NPASSIVE];
 #endif
 
 // (2-6) yt inline analysis
@@ -154,7 +159,7 @@ yt_verbose           YT_VERBOSE;
 // (3-1) fluid solver
 real (*h_Flu_Array_F_In [2])[FLU_NIN ][  FLU_NXT   *FLU_NXT   *FLU_NXT   ] = { NULL, NULL };
 real (*h_Flu_Array_F_Out[2])[FLU_NOUT][8*PATCH_SIZE*PATCH_SIZE*PATCH_SIZE] = { NULL, NULL };
-real (*h_Flux_Array[2])[9][NFLUX][4*PATCH_SIZE*PATCH_SIZE]                 = { NULL, NULL };
+real (*h_Flux_Array[2])[9][NFLUX_TOTAL][4*PATCH_SIZE*PATCH_SIZE]           = { NULL, NULL };
 double (*h_Corner_Array_F [2])[3]                                          = { NULL, NULL };
 real *h_MinDtInfo_Fluid_Array[2]                                           = { NULL, NULL };
 
@@ -179,26 +184,26 @@ real (*h_Flu_Array_USG_G[2])[GRA_NIN-1][PS1][PS1][PS1]                     = { N
 // =======================================================================================================
 #ifdef GPU
 // (4-1) fluid solver
-real (*d_Flu_Array_F_In )[FLU_NIN ][ FLU_NXT*FLU_NXT*FLU_NXT ]    = NULL;
-real (*d_Flu_Array_F_Out)[FLU_NOUT][ PS2*PS2*PS2 ]                = NULL;
-real (*d_Flux_Array)[9][NFLUX][ PS2*PS2 ]                         = NULL;
-double (*d_Corner_Array_F)[3]                                     = NULL;
-real  *d_MinDtInfo_Fluid_Array                                    = NULL;
+real (*d_Flu_Array_F_In )[FLU_NIN ][ FLU_NXT*FLU_NXT*FLU_NXT ]             = NULL;
+real (*d_Flu_Array_F_Out)[FLU_NOUT][ PS2*PS2*PS2 ]                         = NULL;
+real (*d_Flux_Array)[9][NFLUX_TOTAL][ PS2*PS2 ]                            = NULL;
+double (*d_Corner_Array_F)[3]                                              = NULL;
+real  *d_MinDtInfo_Fluid_Array                                             = NULL;
 #if ( MODEL == HYDRO )
-#if ( FLU_SCHEME == MHM  ||  FLU_SCHEME == MHM_RP  ||  FLU_SCHEME == CTU )
-real (*d_PriVar)     [5][ FLU_NXT*FLU_NXT*FLU_NXT ]               = NULL;
-real (*d_Slope_PPM_x)[5][ N_SLOPE_PPM*N_SLOPE_PPM*N_SLOPE_PPM ]   = NULL;
-real (*d_Slope_PPM_y)[5][ N_SLOPE_PPM*N_SLOPE_PPM*N_SLOPE_PPM ]   = NULL;
-real (*d_Slope_PPM_z)[5][ N_SLOPE_PPM*N_SLOPE_PPM*N_SLOPE_PPM ]   = NULL;
-real (*d_FC_Var_xL)  [5][ N_FC_VAR*N_FC_VAR*N_FC_VAR ]            = NULL;
-real (*d_FC_Var_xR)  [5][ N_FC_VAR*N_FC_VAR*N_FC_VAR ]            = NULL;
-real (*d_FC_Var_yL)  [5][ N_FC_VAR*N_FC_VAR*N_FC_VAR ]            = NULL;
-real (*d_FC_Var_yR)  [5][ N_FC_VAR*N_FC_VAR*N_FC_VAR ]            = NULL;
-real (*d_FC_Var_zL)  [5][ N_FC_VAR*N_FC_VAR*N_FC_VAR ]            = NULL;
-real (*d_FC_Var_zR)  [5][ N_FC_VAR*N_FC_VAR*N_FC_VAR ]            = NULL;
-real (*d_FC_Flux_x)  [5][ N_FC_FLUX*N_FC_FLUX*N_FC_FLUX ]         = NULL;
-real (*d_FC_Flux_y)  [5][ N_FC_FLUX*N_FC_FLUX*N_FC_FLUX ]         = NULL;
-real (*d_FC_Flux_z)  [5][ N_FC_FLUX*N_FC_FLUX*N_FC_FLUX ]         = NULL;
+#if ( FLU_SCHEME == MHM  ||  FLU_SCHEME == MHM_RP  ||  FLU_SCHEME == CTU ) 
+real (*d_PriVar)     [NCOMP_TOTAL][ FLU_NXT*FLU_NXT*FLU_NXT ]              = NULL;
+real (*d_Slope_PPM_x)[NCOMP_TOTAL][ N_SLOPE_PPM*N_SLOPE_PPM*N_SLOPE_PPM ]  = NULL;
+real (*d_Slope_PPM_y)[NCOMP_TOTAL][ N_SLOPE_PPM*N_SLOPE_PPM*N_SLOPE_PPM ]  = NULL;
+real (*d_Slope_PPM_z)[NCOMP_TOTAL][ N_SLOPE_PPM*N_SLOPE_PPM*N_SLOPE_PPM ]  = NULL;
+real (*d_FC_Var_xL)  [NCOMP_TOTAL][ N_FC_VAR*N_FC_VAR*N_FC_VAR ]           = NULL;
+real (*d_FC_Var_xR)  [NCOMP_TOTAL][ N_FC_VAR*N_FC_VAR*N_FC_VAR ]           = NULL;
+real (*d_FC_Var_yL)  [NCOMP_TOTAL][ N_FC_VAR*N_FC_VAR*N_FC_VAR ]           = NULL;
+real (*d_FC_Var_yR)  [NCOMP_TOTAL][ N_FC_VAR*N_FC_VAR*N_FC_VAR ]           = NULL;
+real (*d_FC_Var_zL)  [NCOMP_TOTAL][ N_FC_VAR*N_FC_VAR*N_FC_VAR ]           = NULL;
+real (*d_FC_Var_zR)  [NCOMP_TOTAL][ N_FC_VAR*N_FC_VAR*N_FC_VAR ]           = NULL;
+real (*d_FC_Flux_x)  [NCOMP_TOTAL][ N_FC_FLUX*N_FC_FLUX*N_FC_FLUX ]        = NULL;
+real (*d_FC_Flux_y)  [NCOMP_TOTAL][ N_FC_FLUX*N_FC_FLUX*N_FC_FLUX ]        = NULL;
+real (*d_FC_Flux_z)  [NCOMP_TOTAL][ N_FC_FLUX*N_FC_FLUX*N_FC_FLUX ]        = NULL;
 #endif // FLU_SCHEME
 #elif ( MODEL == MHD )
 #warning : WAIT MHD !!!
@@ -206,22 +211,22 @@ real (*d_FC_Flux_z)  [5][ N_FC_FLUX*N_FC_FLUX*N_FC_FLUX ]         = NULL;
 
 #ifdef GRAVITY
 // (4-2) gravity solver
-real (*d_Rho_Array_P    )[ RHO_NXT*RHO_NXT*RHO_NXT ]              = NULL;
-real (*d_Pot_Array_P_In )[ POT_NXT*POT_NXT*POT_NXT ]              = NULL;
-real (*d_Pot_Array_P_Out)[ GRA_NXT*GRA_NXT*GRA_NXT ]              = NULL;
-real (*d_Flu_Array_G    )[GRA_NIN][ PS1*PS1*PS1 ]                 = NULL;
-double (*d_Corner_Array_G )[3]                                    = NULL;
+real (*d_Rho_Array_P    )[ RHO_NXT*RHO_NXT*RHO_NXT ]                       = NULL;
+real (*d_Pot_Array_P_In )[ POT_NXT*POT_NXT*POT_NXT ]                       = NULL;
+real (*d_Pot_Array_P_Out)[ GRA_NXT*GRA_NXT*GRA_NXT ]                       = NULL;
+real (*d_Flu_Array_G    )[GRA_NIN][ PS1*PS1*PS1 ]                          = NULL;
+double (*d_Corner_Array_G )[3]                                             = NULL;
 
 // (3-3) unsplit gravity correction
 #ifdef UNSPLIT_GRAVITY
-real (*d_Pot_Array_USG_F)[ USG_NXT_F*USG_NXT_F*USG_NXT_F ]        = NULL;
-real (*d_Pot_Array_USG_G)[ USG_NXT_G*USG_NXT_G*USG_NXT_G ]        = NULL;
-real (*d_Flu_Array_USG_G)[GRA_NIN-1][ PS1*PS1*PS1        ]        = NULL;
+real (*d_Pot_Array_USG_F)[ USG_NXT_F*USG_NXT_F*USG_NXT_F ]                 = NULL;
+real (*d_Pot_Array_USG_G)[ USG_NXT_G*USG_NXT_G*USG_NXT_G ]                 = NULL;
+real (*d_Flu_Array_USG_G)[GRA_NIN-1][ PS1*PS1*PS1        ]                 = NULL;
 #endif
 #endif
 
 // (4-3) CUDA stream (put in CUAPI_MemAllocate_Fluid.cu)
-//cudaStream_t *Stream                                              = NULL;
+//cudaStream_t *Stream                                                       = NULL;
 #endif // #ifdef GPU
 
 

@@ -9,7 +9,8 @@
 extern void CPU_Rotate3D( real InOut[], const int XYZ, const bool Forward );
 extern void CPU_Con2Flux( const int XYZ, real Flux[], const real Input[], const real Gamma_m1, const real MinPres );
 #if   ( CHECK_INTERMEDIATE == EXACT )
-extern void CPU_Con2Pri( const real In[], real Out[], const real Gamma_m1, const real MinPres );
+extern void CPU_Con2Pri( const real In[], real Out[], const real Gamma_m1, const real MinPres,
+                         const bool NormPassive, const int NNorm, const int NormIdx[] );
 extern void CPU_RiemannSolver_Exact( const int XYZ, real eival_out[], real L_star_out[], real R_star_out[],
                                      real Flux_Out[], const real L_In[], const real R_In[], const real Gamma );
 #elif ( CHECK_INTERMEDIATE == HLLE )
@@ -33,21 +34,21 @@ extern real CPU_CheckMinPres( const real InPres, const real MinPres );
 //                         ~ by Eleuterio F. Toro"
 //                3. This function is shared by MHM, MHM_RP, and CTU schemes
 //
-// Parameter   :  XYZ      : Targeted spatial direction : (0/1/2) --> (x/y/z)
-//                Flux_Out : Array to store the output flux
-//                L_In     : Input left  state (conserved variables)
-//                R_In     : Input right state (conserved variables)
-//                Gamma    : Ratio of specific heats
-//                MinPres  : Minimum allowed pressure
+// Parameter   :  XYZ         : Targeted spatial direction : (0/1/2) --> (x/y/z)
+//                Flux_Out    : Array to store the output flux
+//                L_In        : Input left  state (conserved variables)
+//                R_In        : Input right state (conserved variables)
+//                Gamma       : Ratio of specific heats
+//                MinPres     : Minimum allowed pressure
 //-------------------------------------------------------------------------------------------------------
 void CPU_RiemannSolver_Roe( const int XYZ, real Flux_Out[], const real L_In[], const real R_In[],
                             const real Gamma, const real MinPres )
 {
 
 // 1. reorder the input variables for different spatial directions
-   real L[5], R[5];
+   real L[NCOMP_TOTAL], R[NCOMP_TOTAL];
 
-   for (int v=0; v<5; v++)
+   for (int v=0; v<NCOMP_TOTAL; v++)
    {
       L[v] = L_In[v];
       R[v] = R_In[v];
@@ -105,17 +106,12 @@ void CPU_RiemannSolver_Roe( const int XYZ, real Flux_Out[], const real L_In[], c
    Cs = SQRT( GammaP_Rho );
 
 
-// 3. evaluate the eigenvalues and eigenvectors
-   const real EigenVec[5][5] = {  { (real)1.0,       u-Cs,         v,         w,       H-u*Cs },
-                                  { (real)1.0,          u,         v,         w, (real)0.5*V2 },
-                                  { (real)0.0,  (real)0.0, (real)1.0, (real)0.0,            v },
-                                  { (real)0.0,  (real)0.0, (real)0.0, (real)1.0,            w },
-                                  { (real)1.0,       u+Cs,         v,         w,       H+u*Cs }  };
-   real EigenVal[5] = { u-Cs, u, u, u, u+Cs };
+// 3. evaluate the eigenvalues
+   const real EigenVal[NCOMP_FLUID] = { u-Cs, u, u, u, u+Cs };
 
 
-// 4. evalute the left and right fluxes
-   real Flux_L[5], Flux_R[5];
+// 4. evaluate the left and right fluxes
+   real Flux_L[NCOMP_TOTAL], Flux_R[NCOMP_TOTAL];
 
    CPU_Con2Flux( 0, Flux_L, L, Gamma_m1, MinPres );
    CPU_Con2Flux( 0, Flux_R, R, Gamma_m1, MinPres );
@@ -124,7 +120,7 @@ void CPU_RiemannSolver_Roe( const int XYZ, real Flux_Out[], const real L_In[], c
 // 5. return the upwind fluxes if flow is supersonic
    if ( EigenVal[0] >= (real)0.0 )
    {
-      for (int v=0; v<5; v++)    Flux_Out[v] = Flux_L[v];
+      for (int v=0; v<NCOMP_TOTAL; v++)   Flux_Out[v] = Flux_L[v];
 
       CPU_Rotate3D( Flux_Out, XYZ, false );
 
@@ -133,7 +129,7 @@ void CPU_RiemannSolver_Roe( const int XYZ, real Flux_Out[], const real L_In[], c
 
    if ( EigenVal[4] <= (real)0.0 )
    {
-      for (int v=0; v<5; v++)    Flux_Out[v] = Flux_R[v];
+      for (int v=0; v<NCOMP_TOTAL; v++)   Flux_Out[v] = Flux_R[v];
 
       CPU_Rotate3D( Flux_Out, XYZ, false );
 
@@ -141,10 +137,10 @@ void CPU_RiemannSolver_Roe( const int XYZ, real Flux_Out[], const real L_In[], c
    }
 
 
-// 6. evalute the amplitudes along different characteristics (eigenvectors)
-   real Jump[5], Amp[5];
+// 6. evaluate the amplitudes along different characteristics (eigenvectors)
+   real Jump[NCOMP_FLUID], Amp[NCOMP_FLUID];
 
-   for (int v=0; v<5; v++)    Jump[v] = R[v] - L[v];
+   for (int v=0; v<NCOMP_FLUID; v++)   Jump[v] = R[v] - L[v];
 
    Amp[2] = Jump[2] - v*Jump[0];
    Amp[3] = Jump[3] - w*Jump[0];
@@ -153,20 +149,28 @@ void CPU_RiemannSolver_Roe( const int XYZ, real Flux_Out[], const real L_In[], c
    Amp[4] = Jump[0] - Amp[0] - Amp[1];
 
 
-// 7. verify that the density and pressure in the intermediate states are positive
+// 7. evaluate the eigenvectors
+   const real EigenVec[NCOMP_FLUID][NCOMP_FLUID] = {  { (real)1.0,       u-Cs,         v,         w,       H-u*Cs },
+                                                      { (real)1.0,          u,         v,         w, (real)0.5*V2 },
+                                                      { (real)0.0,  (real)0.0, (real)1.0, (real)0.0,            v },
+                                                      { (real)0.0,  (real)0.0, (real)0.0, (real)1.0,            w },
+                                                      { (real)1.0,       u+Cs,         v,         w,       H+u*Cs }  };
+
+
+// 8. verify that the density and pressure in the intermediate states are positive
 #  ifdef CHECK_INTERMEDIATE
-   real I_Pres, I_States[5];
+   real I_Pres, I_States[NCOMP_FLUID];
 
 #  if ( CHECK_INTERMEDIATE == EXACT )
-   real PriVar_L[5], PriVar_R[5];
+   real PriVar_L[NCOMP_TOTAL], PriVar_R[NCOMP_TOTAL];
 #  endif
 
 
-   for (int v=0; v<5; v++)    I_States[v] = L[v];
+   for (int v=0; v<NCOMP_FLUID; v++)   I_States[v] = L[v];
 
    for (int t=0; t<4; t++)
    {
-      for (int v=0; v<5; v++)    I_States[v] += Amp[t]*EigenVec[t][v];
+      for (int v=0; v<NCOMP_FLUID; v++)   I_States[v] += Amp[t]*EigenVec[t][v];
 
       if ( EigenVal[t+1] > EigenVal[t] )  // skip the degenerate states
       {
@@ -181,8 +185,10 @@ void CPU_RiemannSolver_Roe( const int XYZ, real Flux_Out[], const real L_In[], c
 
 #           if   ( CHECK_INTERMEDIATE == EXACT )   // recalculate fluxes by exact solver
 
-            CPU_Con2Pri( L, PriVar_L, Gamma_m1, MinPres );
-            CPU_Con2Pri( R, PriVar_R, Gamma_m1, MinPres );
+            const bool NormPassive_No = false;  // do NOT convert any passive variable to mass fraction for the Riemann solvers
+
+            CPU_Con2Pri( L, PriVar_L, Gamma_m1, MinPres, NormPassive_No, NULL_INT, NULL );
+            CPU_Con2Pri( R, PriVar_R, Gamma_m1, MinPres, NormPassive_No, NULL_INT, NULL );
 
             CPU_RiemannSolver_Exact( 0, NULL, NULL, NULL, Flux_Out, PriVar_L, PriVar_R, Gamma );
 
@@ -209,17 +215,35 @@ void CPU_RiemannSolver_Roe( const int XYZ, real Flux_Out[], const real L_In[], c
 #  endif // #ifdef CHECK_INTERMEDIATE
 
 
-// 8. evalute the Roe fluxes
-   for (int v=0; v<5; v++)    Amp[v] *= FABS( EigenVal[v] );
+// 9. evaluate the Roe fluxes
+   for (int v=0; v<NCOMP_FLUID; v++)   Amp[v] *= FABS( EigenVal[v] );
 
-   for (int v=0; v<5; v++)
+   for (int v=0; v<NCOMP_FLUID; v++)
       Flux_Out[v] = (real)0.5*( Flux_L[v] + Flux_R[v] ) - (real)0.5*(   Amp[0]*EigenVec[0][v]
                                                                       + Amp[1]*EigenVec[1][v]
                                                                       + Amp[2]*EigenVec[2][v]
                                                                       + Amp[3]*EigenVec[3][v]
                                                                       + Amp[4]*EigenVec[4][v] );
 
-// 9. restore the correct order
+// 10. evaluate the fluxes for passive scalars
+#  if ( NCOMP_PASSIVE > 0 )
+   if ( Flux_Out[FLUX_DENS] >= (real)0.0 )
+   {
+      const real vx = Flux_Out[FLUX_DENS]*_RhoL;
+
+      for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)  Flux_Out[v] = L[v]*vx;
+   }
+
+   else
+   {
+      const real vx = Flux_Out[FLUX_DENS]*_RhoR;
+
+      for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)  Flux_Out[v] = R[v]*vx;
+   }
+#  endif
+
+
+// 11. restore the correct order
    CPU_Rotate3D( Flux_Out, XYZ, false );
 
 } // FUNCTION : CPU_RiemannSolver_Roe

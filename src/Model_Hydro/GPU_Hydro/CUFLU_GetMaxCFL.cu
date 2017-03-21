@@ -13,15 +13,18 @@
 // Function    :  CUFLU_GetMaxCFL
 // Description :  Evaluate the maximum propagation speed in each patch group
 //
-// Note        :  Prefix "g" for pointers pointing to the "Global" memory space
-//                Prefix "s" for pointers pointing to the "Shared" memory space
+// Note        :  1. Prefix "g" for pointers pointing to the "Global" memory space
+//                   Prefix "s" for pointers pointing to the "Shared" memory space
+//                2. This function is not used currently
+//                   --> The number of variables in g_Fluid (currently set to NCOMP_TOTAL) may need to be modified
+//                       accordingly to the real usage (e.g., replacing by NCOMP_FLUID)
 //
 // Parameter   :  g_Fluid  : Global memory array to store the fluid variables
 //                g_MaxCFL : Global memory array to store the maximum propagation speed in each patch group
 //                Gamma    : Ratio of specific heats
 //                MinPres  : Minimum allowed pressure
 //-------------------------------------------------------------------------------------------------------
-__global__ void CUFLU_GetMaxCFL( real g_Fluid[][5][ PS2*PS2*PS2 ], real g_MaxCFL[], const real Gamma, const real MinPres )
+__global__ void CUFLU_GetMaxCFL( real g_Fluid[][NCOMP_TOTAL][ PS2*PS2*PS2 ], real g_MaxCFL[], const real Gamma, const real MinPres )
 {
 
    const uint bx       = blockIdx.x;
@@ -30,7 +33,7 @@ __global__ void CUFLU_GetMaxCFL( real g_Fluid[][5][ PS2*PS2*PS2 ], real g_MaxCFL
    const uint ID0      = ty*PS2 + tx;
    const real Gamma_m1 = Gamma - (real)1.0;
 
-   real u[5], Ek, Pres, Cs, MaxV, rho;
+   real u[NCOMP_FLUID], Ek, Pres, Cs, MaxV, rho;
    int ID;
 
    volatile __shared__ real s_MaxCFL_xy[PS2*PS2];

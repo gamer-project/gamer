@@ -16,7 +16,7 @@ static bool Check_Gradient( const int i, const int j, const int k, const real In
 // Parameter   :  lv             : Targeted refinement level
 //                PID            : Targeted patch ID
 //                i,j,k          : Indices of the target cell
-//                Fluid          : Input fluid array (with NCOMP components)
+//                Fluid          : Input fluid array (with NCOMP_TOTAL components)
 //                Pot            : Input potential array
 //                Pres           : Input pressure array
 //                Lohner_Ave     : Input array storing the averages for the Lohner error estimator

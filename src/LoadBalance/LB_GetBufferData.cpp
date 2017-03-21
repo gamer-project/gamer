@@ -44,13 +44,14 @@ extern Timer_t *Timer_MPI[3];
 //                                  COARSE_FINE_FLUX  : fluxes across the coarse-fine boundaries (HYDRO ONLY)
 //                TVar        : Targeted variables to exchange
 //                              --> Supported variables in different models:
-//                                  HYDRO : _DENS, _MOMX, _MOMY, _MOMZ, _ENGY, _FLU [, _POTE] [, _PASSIVE]
-//                                  MHD   :
-//                                  ELBDM : _DENS, _REAL, _IMAG, _FLU [, _POTE]
-//                                  In addition, the flux variables (e.g., _FLUX_DENS) are also supported
+//                                  HYDRO : _DENS, _MOMX, _MOMY, _MOMZ, _ENGY,[, _POTE]
+//                                  MHD   : 
+//                                  ELBDM : _DENS, _REAL, _IMAG, [, _POTE]
+//                              --> _FLUID, _PASSIVE, and _TOTAL apply to all models
+//                              --> In addition, the flux variables (e.g., _FLUX_DENS) are also supported
 //                              Restrictions :
-//                              --> a. DATA_XXX works with all components in (_FLU | _POTE | _PASSIVE)
-//                                  b. COARSE_FINE_FLUX works with all components in (_FLUX | _FLUX_PASSIVE)
+//                              --> a. DATA_XXX works with all components in (_TOTAL | _POTE)
+//                                  b. COARSE_FINE_FLUX works with all components in (_FLUX_TOTAL)
 //                                  c. _POTE has no effect on the flux fix-up in DATA_AFTER_FIXUP
 //                                  d. POT_FOR_POISSON and POT_AFTER_REFINE only work with _POTE
 //                ParaBuf     : Number of ghost zones to exchange (useless in DATA_RESTRICT and COARSE_FINE_FLUX )
@@ -63,16 +64,16 @@ void LB_GetBufferData( const int lv, const int FluSg, const int PotSg, const Get
    if ( lv < 0  ||  lv >= NLEVEL )
       Aux_Error( ERROR_INFO, "incorrect parameter %s = %d !!\n", "lv", lv );
 
-   if (  ( TVar & (_FLU|_PASSIVE) )  &&  ( FluSg != 0 && FluSg != 1 )  &&  GetBufMode != COARSE_FINE_FLUX  )
+   if (  GetBufMode != COARSE_FINE_FLUX  &&  ( TVar & _TOTAL )  &&  ( FluSg != 0 && FluSg != 1 )  )
       Aux_Error( ERROR_INFO, "incorrect parameter %s = %d !!\n", "FluSg", FluSg );
 
 #  ifdef GRAVITY
-   if (  ( TVar & _POTE )  &&  ( PotSg != 0 && PotSg != 1 )  &&  GetBufMode != COARSE_FINE_FLUX  )
+   if (  GetBufMode != COARSE_FINE_FLUX  &&  ( TVar & _POTE )  &&  ( PotSg != 0 && PotSg != 1 )  )
       Aux_Error( ERROR_INFO, "incorrect parameter %s = %d !!\n", "PotSg", PotSg );
 
    if (  ( GetBufMode == DATA_GENERAL || GetBufMode == DATA_AFTER_FIXUP || GetBufMode == DATA_AFTER_REFINE ||
-           GetBufMode == DATA_RESTRICT )  &&  !( TVar & (_FLU|_POTE|_PASSIVE) )  )
-      Aux_Error( ERROR_INFO, "no suitable targeted variable is found --> missing (_FLU|_POTE|_PASSIVE) !!\n" );
+           GetBufMode == DATA_RESTRICT )  &&  !( TVar & (_TOTAL|_POTE) )  )
+      Aux_Error( ERROR_INFO, "no suitable targeted variable is found --> missing (_TOTAL|_POTE) !!\n" );
 
    if (  ( GetBufMode == POT_FOR_POISSON || GetBufMode == POT_AFTER_REFINE )  &&  !( TVar & _POTE )  )
       Aux_Error( ERROR_INFO, "no suitable targeted variable is found --> missing _POTE !!\n" );
@@ -89,8 +90,8 @@ void LB_GetBufferData( const int lv, const int FluSg, const int PotSg, const Get
 
 #  else // #ifdef GRAVITY ... else ...
    if (  ( GetBufMode == DATA_GENERAL || GetBufMode == DATA_AFTER_FIXUP || GetBufMode == DATA_AFTER_REFINE ||
-           GetBufMode == DATA_RESTRICT )  &&  !( TVar & (_FLU|_PASSIVE) )  )
-      Aux_Error( ERROR_INFO, "no suitable targeted variable is found --> missing (_FLU|_PASSIVE) !!\n" );
+           GetBufMode == DATA_RESTRICT )  &&  !( TVar & _TOTAL )  )
+      Aux_Error( ERROR_INFO, "no suitable targeted variable is found --> missing _TOTAL !!\n" );
 
    if (  ( GetBufMode == DATA_GENERAL || GetBufMode == DATA_AFTER_FIXUP || GetBufMode == DATA_AFTER_REFINE )  &&
          ( ParaBuf < 0 || ParaBuf > PATCH_SIZE )  )
@@ -98,8 +99,8 @@ void LB_GetBufferData( const int lv, const int FluSg, const int PotSg, const Get
                  "ParaBuf", ParaBuf );
 #  endif // #ifdef GRAVITY ... else ...
 
-   if (  GetBufMode == COARSE_FINE_FLUX  &&  !( TVar & (_FLUX|_FLUX_PASSIVE) )  )
-      Aux_Error( ERROR_INFO, "no suitable targeted variable is found --> missing (_FLUX|_FLUX_PASSIVE) !!\n" );
+   if (  GetBufMode == COARSE_FINE_FLUX  &&  !( TVar & _FLUX_TOTAL )  )
+      Aux_Error( ERROR_INFO, "no suitable targeted variable is found --> missing _FLUX_TOTAL !!\n" );
 
    if ( GetBufMode == COARSE_FINE_FLUX  &&  !amr->WithFlux )
    {
@@ -108,17 +109,18 @@ void LB_GetBufferData( const int lv, const int FluSg, const int PotSg, const Get
    }
 
 
-// determine the components to be prepared (TFluVarIdx : targeted fluid variable indices ( = [0 ... NCOMP+NPASSIVE-1] )
-   bool ExchangeFlu = TVar & ( _FLU | _PASSIVE );  // whether or not to exchage the fluid data
+// determine the components to be prepared (TFluVarIdx : targeted fluid variable indices ( = [0 ... NCOMP_TOTAL-1/NFLUX_TOTAL-1] )
+   bool ExchangeFlu = ( GetBufMode == COARSE_FINE_FLUX ) ?
+                      TVar & _FLUX_TOTAL : TVar & _TOTAL;                        // whether or not to exchage the fluid data 
 #  ifdef GRAVITY
-   bool ExchangePot = TVar & _POTE;                // whether or not to exchange the potential data
+   bool ExchangePot = (  GetBufMode != COARSE_FINE_FLUX  &&  (TVar & _POTE)  );  // whether or not to exchange the potential data
 #  endif
 
-   const int NMax = ( GetBufMode == COARSE_FINE_FLUX ) ? NFLUX+NPASSIVE : NCOMP+NPASSIVE;
-   int NVar_Flu, NVar_Tot, TFluVarIdx, TFluVarIdxList[NMax];
+   const int NFluid_Max = ( GetBufMode == COARSE_FINE_FLUX ) ? NFLUX_TOTAL : NCOMP_TOTAL;
+   int NVar_Flu, NVar_Tot, TFluVarIdx, TFluVarIdxList[NFluid_Max];
    NVar_Flu = 0;
 
-   for (int v=0; v<NMax; v++)
+   for (int v=0; v<NFluid_Max; v++)
       if ( TVar & (1<<v) )    TFluVarIdxList[ NVar_Flu++ ] = v;
 
    NVar_Tot = NVar_Flu;
@@ -968,7 +970,7 @@ void LB_GetBufferData( const int lv, const int FluSg, const int PotSg, const Get
    if ( OPT__TIMING_MPI )
    {
       char FileName[100];
-      sprintf( FileName, "Record__TimingMPI_Rank%d%d%d", MPI_Rank/100, (MPI_Rank%100)/10, MPI_Rank%10 );
+      sprintf( FileName, "Record__TimingMPI_Rank%05d", MPI_Rank );
 
       char ModeName[100];
       switch ( GetBufMode )

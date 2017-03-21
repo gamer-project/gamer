@@ -64,7 +64,7 @@ void Init_GAMER( int *argc, char ***argv )
 
 
 // initialize the external potential and acceleration parameters
-// (must AFTER Init_TestProb but BEFORE CUAPI_Set_Default_GPU_Parameter)
+// --> must be called AFTER Init_TestProb() but BEFORE CUAPI_Set_Default_GPU_Parameter()
 #  ifdef GRAVITY
    if ( OPT__GRAVITY_TYPE == GRAVITY_EXTERNAL  ||  OPT__GRAVITY_TYPE == GRAVITY_BOTH )
       Init_ExternalAcc();
@@ -74,7 +74,13 @@ void Init_GAMER( int *argc, char ***argv )
 #  endif
 
 
+// initialize settings for the passive variables
+// --> must be called BEFORE CUAPI_Set_Default_GPU_Parameter()
+   Init_PassiveVariable();
+
+
 // set the GPU ID and several GPU parameters
+// --> must be called AFTER Init_ExternalAcc(), Init_ExternalPot(), and Init_PassiveVariable()
 #  ifdef GPU
 #  ifndef GRAVITY
    int POT_GPU_NPGROUP = NULL_INT;
@@ -190,14 +196,17 @@ void Init_GAMER( int *argc, char ***argv )
 
 
 // fill up the data for patches that are not leaf patches (for RESTART only)
+// --> It's for bitwise consistency between load-balance and non-load-balance runs
+// --> Should be deprecated (or removed) after adding the makefile option "BITWISE_REPRODUCIBILITY",
+//     which will always apply data restriction before dumping data
    if ( OPT__INIT == INIT_RESTART )
    for (int lv=NLEVEL-2; lv>=0; lv--)
    {
-      Flu_Restrict( lv, amr->FluSg[lv+1], amr->FluSg[lv], NULL_INT, NULL_INT, _FLU );
+      Flu_Restrict( lv, amr->FluSg[lv+1], amr->FluSg[lv], NULL_INT, NULL_INT, _TOTAL );
 
-      LB_GetBufferData( lv, amr->FluSg[lv], NULL_INT, DATA_RESTRICT, _FLU, NULL_INT );
+      LB_GetBufferData( lv, amr->FluSg[lv], NULL_INT, DATA_RESTRICT, _TOTAL, NULL_INT );
 
-      Buf_GetBufferData( lv, amr->FluSg[lv], NULL_INT, DATA_GENERAL, _FLU, Flu_ParaBuf, USELB_YES );
+      Buf_GetBufferData( lv, amr->FluSg[lv], NULL_INT, DATA_GENERAL, _TOTAL, Flu_ParaBuf, USELB_YES );
    }
 #  endif // #ifdef LOAD_BALANCE
 
@@ -250,10 +259,10 @@ void Init_GAMER( int *argc, char ***argv )
 
 
 // initialize the array "MinDtInfo_Fluid" since the kernel "CUFLU_GetMaxCFL" will NOT work during initialization
-   real MinDtVar_AllLv_Fluid[NLEVEL][NCOMP];
    if ( OPT__ADAPTIVE_DT )
    {
 #     if   ( MODEL == HYDRO )
+      real MinDtVar_AllLv_Fluid[NLEVEL][5];
       Hydro_GetMaxCFL( MinDtInfo_Fluid, MinDtVar_AllLv_Fluid );
 
 #     elif ( MODEL == MHD )

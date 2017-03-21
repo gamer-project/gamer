@@ -21,18 +21,19 @@
 #endif
 
 #if ( FLU_SCHEME == MHM_RP )
-static __device__ void CUFLU_RiemannPredict_Flux( const real g_Fluid_In   [][5][ FLU_NXT*FLU_NXT*FLU_NXT ],
-                                                        real g_Half_Flux_x[][5][ N_FC_FLUX*N_FC_FLUX*N_FC_FLUX ],
-                                                        real g_Half_Flux_y[][5][ N_FC_FLUX*N_FC_FLUX*N_FC_FLUX ],
-                                                        real g_Half_Flux_z[][5][ N_FC_FLUX*N_FC_FLUX*N_FC_FLUX ],
+static __device__ void CUFLU_RiemannPredict_Flux( const real g_Fluid_In   [][NCOMP_TOTAL][ FLU_NXT*FLU_NXT*FLU_NXT ],
+                                                        real g_Half_Flux_x[][NCOMP_TOTAL][ N_FC_FLUX*N_FC_FLUX*N_FC_FLUX ],
+                                                        real g_Half_Flux_y[][NCOMP_TOTAL][ N_FC_FLUX*N_FC_FLUX*N_FC_FLUX ],
+                                                        real g_Half_Flux_z[][NCOMP_TOTAL][ N_FC_FLUX*N_FC_FLUX*N_FC_FLUX ],
                                                   const real Gamma, const real MinPres );
-static __device__ void CUFLU_RiemannPredict( const real g_Fluid_In   [][5][ FLU_NXT*FLU_NXT*FLU_NXT ],
-                                             const real g_Half_Flux_x[][5][ N_FC_FLUX*N_FC_FLUX*N_FC_FLUX ],
-                                             const real g_Half_Flux_y[][5][ N_FC_FLUX*N_FC_FLUX*N_FC_FLUX ],
-                                             const real g_Half_Flux_z[][5][ N_FC_FLUX*N_FC_FLUX*N_FC_FLUX ],
-                                                   real g_Half_Var   [][5][ FLU_NXT*FLU_NXT*FLU_NXT ],
+static __device__ void CUFLU_RiemannPredict( const real g_Fluid_In   [][NCOMP_TOTAL][ FLU_NXT*FLU_NXT*FLU_NXT ],
+                                             const real g_Half_Flux_x[][NCOMP_TOTAL][ N_FC_FLUX*N_FC_FLUX*N_FC_FLUX ],
+                                             const real g_Half_Flux_y[][NCOMP_TOTAL][ N_FC_FLUX*N_FC_FLUX*N_FC_FLUX ],
+                                             const real g_Half_Flux_z[][NCOMP_TOTAL][ N_FC_FLUX*N_FC_FLUX*N_FC_FLUX ],
+                                                   real g_Half_Var   [][NCOMP_TOTAL][ FLU_NXT*FLU_NXT*FLU_NXT ],
                                              const real dt, const real _dh, const real Gamma,
-                                             const real MinDens, const real MinPres );
+                                             const real MinDens, const real MinPres,
+                                             const bool NormPassive, const int NNorm, const int NormIdx[] );
 #endif
 
 #ifdef UNSPLIT_GRAVITY
@@ -40,8 +41,8 @@ static __device__ void CUFLU_RiemannPredict( const real g_Fluid_In   [][5][ FLU_
 __constant__ double ExtAcc_AuxArray_d_Flu[EXT_ACC_NAUX_MAX];
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  CUFLU_FluidSolver_SetConstMem
-// Description :  Set the constant memory used by CUFLU_FluidSolver_CTU
+// Function    :  CUFLU_FluidSolver_SetConstMem_ExtAcc
+// Description :  Set the constant memory of ExtAcc_AuxArray_d_Flu used by CUFLU_FluidSolver_CTU/MHM
 //
 // Note        :  Adopt the suggested approach for CUDA version >= 5.0
 //
@@ -49,7 +50,7 @@ __constant__ double ExtAcc_AuxArray_d_Flu[EXT_ACC_NAUX_MAX];
 //
 // Return      :  0/-1 : successful/failed
 //---------------------------------------------------------------------------------------------------
-int CUFLU_FluidSolver_SetConstMem( double ExtAcc_AuxArray_h[] )
+int CUFLU_FluidSolver_SetConstMem_ExtAcc( double ExtAcc_AuxArray_h[] )
 {
 
    if (  cudaSuccess != cudaMemcpyToSymbol( ExtAcc_AuxArray_d_Flu, ExtAcc_AuxArray_h, EXT_ACC_NAUX_MAX*sizeof(double),
@@ -59,8 +60,40 @@ int CUFLU_FluidSolver_SetConstMem( double ExtAcc_AuxArray_h[] )
    else
       return 0;
 
-} // FUNCTION : CUFLU_FluidSolver_SetConstMem
-#endif
+} // FUNCTION : CUFLU_FluidSolver_SetConstMem_ExtAcc
+#endif // #ifdef UNSPLIT_GRAVITY
+
+
+
+#if ( NCOMP_PASSIVE > 0 )
+__constant__ int NormIdx_d[NCOMP_PASSIVE];
+
+//-------------------------------------------------------------------------------------------------------
+// Function    :  CUFLU_FluidSolver_SetConstMem_NormIdx
+// Description :  Set the constant memory of NormIdx_d used by CUFLU_FluidSolver_CTU/MHM
+//
+// Note        :  Adopt the suggested approach for CUDA version >= 5.0
+//
+// Parameter   :  None
+//
+// Return      :  0/-1 : successful/failed
+//---------------------------------------------------------------------------------------------------
+int CUFLU_FluidSolver_SetConstMem_NormIdx( int NormIdx_h[] )
+{
+
+   if (  cudaSuccess != cudaMemcpyToSymbol( NormIdx_d, NormIdx_h, NCOMP_PASSIVE*sizeof(int),
+                                            0, cudaMemcpyHostToDevice)  )
+      return -1;
+
+   else
+      return 0;
+
+} // FUNCTION : CUFLU_FluidSolver_SetConstMem_NormIdx
+
+#else
+__constant__ int *NormIdx_d = NULL;
+
+#endif // #if ( NCOMP_PASSIVE > 0 ) ... else ...
 
 
 
@@ -110,29 +143,33 @@ int CUFLU_FluidSolver_SetConstMem( double ExtAcc_AuxArray_h[] )
 //                Time          : Current physical time                                     (for UNSPLIT_GRAVITY only)
 //                GravityType   : Types of gravity --> self-gravity, external gravity, both (for UNSPLIT_GRAVITY only)
 //                MinDens/Pres  : Minimum allowed density and pressure
+//                NormPassive   : true --> normalize passive scalars so that the sum of their mass density
+//                                         is equal to the gas mass density
+//                NNorm         : Number of passive scalars to be normalized
+//                                --> Should be set to the global variable "PassiveNorm_NVar"
 //-------------------------------------------------------------------------------------------------------
-__global__ void CUFLU_FluidSolver_MHM( const real g_Fluid_In[][5][ FLU_NXT*FLU_NXT*FLU_NXT ],
-                                       real g_Fluid_Out  [][5][ PS2*PS2*PS2 ],
-                                       real g_Flux    [][9][5][ PS2*PS2 ],
+__global__ void CUFLU_FluidSolver_MHM( const real g_Fluid_In[]   [NCOMP_TOTAL][ FLU_NXT*FLU_NXT*FLU_NXT ],
+                                       real g_Fluid_Out     []   [NCOMP_TOTAL][ PS2*PS2*PS2 ],
+                                       real g_Flux          [][9][NCOMP_TOTAL][ PS2*PS2 ],
                                        const double g_Corner[][3],
                                        const real g_Pot_USG[] [ USG_NXT_F*USG_NXT_F*USG_NXT_F ],
-                                       real g_PriVar     [][5][ FLU_NXT*FLU_NXT*FLU_NXT ],
-                                       real g_Slope_PPM_x[][5][ N_SLOPE_PPM*N_SLOPE_PPM*N_SLOPE_PPM],
-                                       real g_Slope_PPM_y[][5][ N_SLOPE_PPM*N_SLOPE_PPM*N_SLOPE_PPM],
-                                       real g_Slope_PPM_z[][5][ N_SLOPE_PPM*N_SLOPE_PPM*N_SLOPE_PPM],
-                                       real g_FC_Var_xL  [][5][ N_FC_VAR*N_FC_VAR*N_FC_VAR ],
-                                       real g_FC_Var_xR  [][5][ N_FC_VAR*N_FC_VAR*N_FC_VAR ],
-                                       real g_FC_Var_yL  [][5][ N_FC_VAR*N_FC_VAR*N_FC_VAR ],
-                                       real g_FC_Var_yR  [][5][ N_FC_VAR*N_FC_VAR*N_FC_VAR ],
-                                       real g_FC_Var_zL  [][5][ N_FC_VAR*N_FC_VAR*N_FC_VAR ],
-                                       real g_FC_Var_zR  [][5][ N_FC_VAR*N_FC_VAR*N_FC_VAR ],
-                                       real g_FC_Flux_x  [][5][ N_FC_FLUX*N_FC_FLUX*N_FC_FLUX ],
-                                       real g_FC_Flux_y  [][5][ N_FC_FLUX*N_FC_FLUX*N_FC_FLUX ],
-                                       real g_FC_Flux_z  [][5][ N_FC_FLUX*N_FC_FLUX*N_FC_FLUX ],
+                                       real g_PriVar     [][NCOMP_TOTAL][ FLU_NXT*FLU_NXT*FLU_NXT ],
+                                       real g_Slope_PPM_x[][NCOMP_TOTAL][ N_SLOPE_PPM*N_SLOPE_PPM*N_SLOPE_PPM],
+                                       real g_Slope_PPM_y[][NCOMP_TOTAL][ N_SLOPE_PPM*N_SLOPE_PPM*N_SLOPE_PPM],
+                                       real g_Slope_PPM_z[][NCOMP_TOTAL][ N_SLOPE_PPM*N_SLOPE_PPM*N_SLOPE_PPM],
+                                       real g_FC_Var_xL  [][NCOMP_TOTAL][ N_FC_VAR*N_FC_VAR*N_FC_VAR ],
+                                       real g_FC_Var_xR  [][NCOMP_TOTAL][ N_FC_VAR*N_FC_VAR*N_FC_VAR ],
+                                       real g_FC_Var_yL  [][NCOMP_TOTAL][ N_FC_VAR*N_FC_VAR*N_FC_VAR ],
+                                       real g_FC_Var_yR  [][NCOMP_TOTAL][ N_FC_VAR*N_FC_VAR*N_FC_VAR ],
+                                       real g_FC_Var_zL  [][NCOMP_TOTAL][ N_FC_VAR*N_FC_VAR*N_FC_VAR ],
+                                       real g_FC_Var_zR  [][NCOMP_TOTAL][ N_FC_VAR*N_FC_VAR*N_FC_VAR ],
+                                       real g_FC_Flux_x  [][NCOMP_TOTAL][ N_FC_FLUX*N_FC_FLUX*N_FC_FLUX ],
+                                       real g_FC_Flux_y  [][NCOMP_TOTAL][ N_FC_FLUX*N_FC_FLUX*N_FC_FLUX ],
+                                       real g_FC_Flux_z  [][NCOMP_TOTAL][ N_FC_FLUX*N_FC_FLUX*N_FC_FLUX ],
                                        const real dt, const real _dh, const real Gamma, const bool StoreFlux,
                                        const LR_Limiter_t LR_Limiter, const real MinMod_Coeff,
                                        const real EP_Coeff, const double Time, const OptGravityType_t GravityType,
-                                       const real MinDens, const real MinPres )
+                                       const real MinDens, const real MinPres, const bool NormPassive, const int NNorm )
 {
 
 #  ifdef UNSPLIT_GRAVITY
@@ -147,10 +184,10 @@ __global__ void CUFLU_FluidSolver_MHM( const real g_Fluid_In[][5][ FLU_NXT*FLU_N
 
 
 // use pointers to avoid redundant memory consumption
-   real (*const g_Half_Var)   [5][ FLU_NXT*FLU_NXT*FLU_NXT ]       = g_PriVar;
-   real (*const g_Half_Flux_x)[5][ N_FC_FLUX*N_FC_FLUX*N_FC_FLUX ] = g_FC_Flux_x;
-   real (*const g_Half_Flux_y)[5][ N_FC_FLUX*N_FC_FLUX*N_FC_FLUX ] = g_FC_Flux_y;
-   real (*const g_Half_Flux_z)[5][ N_FC_FLUX*N_FC_FLUX*N_FC_FLUX ] = g_FC_Flux_z;
+   real (*const g_Half_Var)   [NCOMP_TOTAL][ FLU_NXT*FLU_NXT*FLU_NXT       ] = g_PriVar;
+   real (*const g_Half_Flux_x)[NCOMP_TOTAL][ N_FC_FLUX*N_FC_FLUX*N_FC_FLUX ] = g_FC_Flux_x;
+   real (*const g_Half_Flux_y)[NCOMP_TOTAL][ N_FC_FLUX*N_FC_FLUX*N_FC_FLUX ] = g_FC_Flux_y;
+   real (*const g_Half_Flux_z)[NCOMP_TOTAL][ N_FC_FLUX*N_FC_FLUX*N_FC_FLUX ] = g_FC_Flux_z;
 
 
 // (1.a-1) evaluate the face-centered half-step fluxes with the piecewise constant data reconstruction
@@ -160,14 +197,15 @@ __global__ void CUFLU_FluidSolver_MHM( const real g_Fluid_In[][5][ FLU_NXT*FLU_N
 
 // (1.a-2) evaluate the half-step cell-centered solution
    CUFLU_RiemannPredict( g_Fluid_In, g_Half_Flux_x, g_Half_Flux_y, g_Half_Flux_z, g_Half_Var,
-                         dt, _dh, Gamma, MinDens, MinPres );
+                         dt, _dh, Gamma, MinDens, MinPres, NormPassive, NNorm, NormIdx_d );
    __syncthreads();
 
 
 // (1.a-3) evaluate the half-step face-centered solution by data reconstruction
    CUFLU_DataReconstruction( g_Half_Var, g_Slope_PPM_x, g_Slope_PPM_y, g_Slope_PPM_z, g_FC_Var_xL, g_FC_Var_xR,
                              g_FC_Var_yL, g_FC_Var_yR, g_FC_Var_zL, g_FC_Var_zR, N_HF_VAR, FLU_GHOST_SIZE-2,
-                             Gamma, LR_Limiter, MinMod_Coeff, EP_Coeff, dt, _dh, MinDens, MinPres );
+                             Gamma, LR_Limiter, MinMod_Coeff, EP_Coeff, dt, _dh, MinDens, MinPres,
+                             NormPassive, NNorm, NormIdx_d );
    __syncthreads();
 
 
@@ -175,14 +213,15 @@ __global__ void CUFLU_FluidSolver_MHM( const real g_Fluid_In[][5][ FLU_NXT*FLU_N
 
 
 // (1.b-1) conserved variables --> primitive variables
-   CUFLU_Con2Pri_AllGrids( g_Fluid_In, g_PriVar, Gamma, MinPres );
+   CUFLU_Con2Pri_AllGrids( g_Fluid_In, g_PriVar, Gamma, MinPres, NormPassive, NNorm, NormIdx_d );
    __syncthreads();
 
 
 // (1.b-2) evaluate the half-step face-centered solution by data reconstruction
    CUFLU_DataReconstruction( g_PriVar, g_Slope_PPM_x, g_Slope_PPM_y, g_Slope_PPM_z, g_FC_Var_xL, g_FC_Var_xR,
                              g_FC_Var_yL, g_FC_Var_yR, g_FC_Var_zL, g_FC_Var_zR, FLU_NXT, FLU_GHOST_SIZE-1,
-                             Gamma, LR_Limiter, MinMod_Coeff, EP_Coeff, dt, _dh, MinDens, MinPres );
+                             Gamma, LR_Limiter, MinMod_Coeff, EP_Coeff, dt, _dh, MinDens, MinPres,
+                             NormPassive, NNorm, NormIdx_d );
    __syncthreads();
 
 
@@ -203,7 +242,8 @@ __global__ void CUFLU_FluidSolver_MHM( const real g_Fluid_In[][5][ FLU_NXT*FLU_N
 
 
 // 3. evaluate the full-step solution
-   CUFLU_FullStepUpdate( g_Fluid_In, g_Fluid_Out, g_FC_Flux_x, g_FC_Flux_y, g_FC_Flux_z, dt, _dh, Gamma );
+   CUFLU_FullStepUpdate( g_Fluid_In, g_Fluid_Out, g_FC_Flux_x, g_FC_Flux_y, g_FC_Flux_z, dt, _dh, Gamma,
+                         NormPassive, NNorm, NormIdx_d );
 
 } // FUNCTION : CUFLU_FluidSolver_MHM
 
@@ -231,10 +271,10 @@ __global__ void CUFLU_FluidSolver_MHM( const real g_Fluid_In[][5][ FLU_NXT*FLU_N
 //                Gamma         : Ratio of specific heats
 //                MinPres       : Minimum allowed pressure
 //-------------------------------------------------------------------------------------------------------
-__device__ void CUFLU_RiemannPredict_Flux( const real g_Fluid_In   [][5][ FLU_NXT*FLU_NXT*FLU_NXT ],
-                                                 real g_Half_Flux_x[][5][ N_FC_FLUX*N_FC_FLUX*N_FC_FLUX ],
-                                                 real g_Half_Flux_y[][5][ N_FC_FLUX*N_FC_FLUX*N_FC_FLUX ],
-                                                 real g_Half_Flux_z[][5][ N_FC_FLUX*N_FC_FLUX*N_FC_FLUX ],
+__device__ void CUFLU_RiemannPredict_Flux( const real g_Fluid_In   [][NCOMP_TOTAL][ FLU_NXT*FLU_NXT*FLU_NXT ],
+                                                 real g_Half_Flux_x[][NCOMP_TOTAL][ N_FC_FLUX*N_FC_FLUX*N_FC_FLUX ],
+                                                 real g_Half_Flux_y[][NCOMP_TOTAL][ N_FC_FLUX*N_FC_FLUX*N_FC_FLUX ],
+                                                 real g_Half_Flux_z[][NCOMP_TOTAL][ N_FC_FLUX*N_FC_FLUX*N_FC_FLUX ],
                                            const real Gamma, const real MinPres )
 {
 
@@ -242,7 +282,6 @@ __device__ void CUFLU_RiemannPredict_Flux( const real g_Fluid_In   [][5][ FLU_NX
    const uint  tx       = threadIdx.x;
    const uint  dID      = blockDim.x;
    const uint3 dID_In   = make_uint3( 1, FLU_NXT, FLU_NXT*FLU_NXT );
-
 #  if ( RSOLVER == EXACT )
    const real  Gamma_m1 = Gamma - (real)1.0;
 #  endif
@@ -251,62 +290,72 @@ __device__ void CUFLU_RiemannPredict_Flux( const real g_Fluid_In   [][5][ FLU_NX
    uint3  ID3d;
    FluVar VarL, VarR, FC_Flux;
 
-#  if ( RSOLVER == EXACT )
-   FluVar *Useless = NULL;
-#  endif
 
-
-#  define Load( Input, Output, ID )    \
-   {                                   \
-      Output.Rho = Input[bx][0][ID];   \
-      Output.Px  = Input[bx][1][ID];   \
-      Output.Py  = Input[bx][2][ID];   \
-      Output.Pz  = Input[bx][3][ID];   \
-      Output.Egy = Input[bx][4][ID];   \
+// macro to load data from the global memory
+#  define Load( Input, Output, ID )                            \
+   {                                                           \
+      Output.Rho = Input[bx][0][ID];                           \
+      Output.Px  = Input[bx][1][ID];                           \
+      Output.Py  = Input[bx][2][ID];                           \
+      Output.Pz  = Input[bx][3][ID];                           \
+      Output.Egy = Input[bx][4][ID];                           \
+                                                               \
+      for (int v=0; v<NCOMP_PASSIVE; v++)                      \
+      Output.Passive[v] = Input[bx][ NCOMP_FLUID + v ][ID];    \
    } // Load
 
-#  define Dump( Input, Output, ID )    \
-   {                                   \
-      Output[bx][0][ID] = Input.Rho;   \
-      Output[bx][1][ID] = Input.Px;    \
-      Output[bx][2][ID] = Input.Py;    \
-      Output[bx][3][ID] = Input.Pz;    \
-      Output[bx][4][ID] = Input.Egy;   \
+
+// macro to dump data to the global memory
+#  define Dump( Input, Output, ID )                            \
+   {                                                           \
+      Output[bx][0][ID] = Input.Rho;                           \
+      Output[bx][1][ID] = Input.Px;                            \
+      Output[bx][2][ID] = Input.Py;                            \
+      Output[bx][3][ID] = Input.Pz;                            \
+      Output[bx][4][ID] = Input.Egy;                           \
+                                                               \
+      for (int v=0; v<NCOMP_PASSIVE; v++)                      \
+      Output[bx][ NCOMP_FLUID + v ][ID] = Input.Passive[v];    \
    } // Dump
 
+
+// macro for different Riemann solvers
 #  if   ( RSOLVER == EXACT )
 
       /* exact solver */
-      #define RiemannSolver( Dir, VarL, VarR )                                                           \
-      {                                                                                                  \
-         VarL = CUFLU_Con2Pri( VarL, Gamma_m1, MinPres );                                                \
-         VarR = CUFLU_Con2Pri( VarR, Gamma_m1, MinPres );                                                \
-                                                                                                         \
-         FC_Flux = CUFLU_RiemannSolver_Exact( Dir, *Useless, *Useless, *Useless, VarL, VarR, Gamma );    \
+      #define RiemannSolver( Dir, VarL, VarR )                                               \
+      {                                                                                      \
+         /* do NOT convert any passive variable to mass fraction for the Riemann solvers */  \
+         const bool NormPassive_No = false;                                                  \
+                                                                                             \
+         VarL = CUFLU_Con2Pri( VarL, Gamma_m1, MinPres, NormPassive_No, NULL_INT, NULL );    \
+         VarR = CUFLU_Con2Pri( VarR, Gamma_m1, MinPres, NormPassive_No, NULL_INT, NULL );    \
+                                                                                             \
+         FC_Flux = CUFLU_RiemannSolver_Exact( Dir, NULL, NULL, NULL, VarL, VarR, Gamma );    \
       } // RiemannSolver
 
 #  elif ( RSOLVER == ROE )
 
       /* Roe solver */
-      #define RiemannSolver( Dir, VarL, VarR )                                                           \
-      {                                                                                                  \
-         FC_Flux = CUFLU_RiemannSolver_Roe( Dir, VarL, VarR, Gamma, MinPres );                           \
+      #define RiemannSolver( Dir, VarL, VarR )                                               \
+      {                                                                                      \
+         FC_Flux = CUFLU_RiemannSolver_Roe( Dir, VarL, VarR, Gamma, MinPres );               \
       } // RiemannSolver
 
 #  elif ( RSOLVER == HLLE )
 
       /* HLLE solver */
-      #define RiemannSolver( Dir, VarL, VarR )                                                           \
-      {                                                                                                  \
-         FC_Flux = CUFLU_RiemannSolver_HLLE( Dir, VarL, VarR, Gamma, MinPres );                          \
+      #define RiemannSolver( Dir, VarL, VarR )                                               \
+      {                                                                                      \
+         FC_Flux = CUFLU_RiemannSolver_HLLE( Dir, VarL, VarR, Gamma, MinPres );              \
       } // RiemannSolver
 
 #  elif ( RSOLVER == HLLC )
 
       /* HLLC solver */
-      #define RiemannSolver( Dir, VarL, VarR )                                                           \
-      {                                                                                                  \
-         FC_Flux = CUFLU_RiemannSolver_HLLC( Dir, VarL, VarR, Gamma, MinPres );                          \
+      #define RiemannSolver( Dir, VarL, VarR )                                               \
+      {                                                                                      \
+         FC_Flux = CUFLU_RiemannSolver_HLLC( Dir, VarL, VarR, Gamma, MinPres );              \
       } // RiemannSolver
 
 #  else
@@ -315,6 +364,8 @@ __device__ void CUFLU_RiemannPredict_Flux( const real g_Fluid_In   [][5][ FLU_NX
 
 #  endif
 
+
+// key macro to invoke other macros to calculate and store the fluxes
 #  define GetFlux( Dir, Nx, Ny, Gap_x, Gap_y, Gap_z, dID_In, g_Half_Flux )                                     \
    {                                                                                                           \
       ID  = tx;                                                                                                \
@@ -341,10 +392,14 @@ __device__ void CUFLU_RiemannPredict_Flux( const real g_Fluid_In   [][5][ FLU_NX
       } /* while ( ID < N_HF_FLUX*(N_HF_FLUX-1)*(N_HF_FLUX-1) ) */                                             \
    } // GetFlux
 
+
+// actual code lines to invoke various macros
    GetFlux( 0, N_HF_FLUX,   N_HF_FLUX-1, 0, 1, 1, dID_In.x, g_Half_Flux_x );
    GetFlux( 1, N_HF_FLUX-1, N_HF_FLUX,   1, 0, 1, dID_In.y, g_Half_Flux_y );
    GetFlux( 2, N_HF_FLUX-1, N_HF_FLUX-1, 1, 1, 0, dID_In.z, g_Half_Flux_z );
 
+
+// remove all macros used only in this function
 #  undef Load
 #  undef Dump
 #  undef RiemannSolver
@@ -376,14 +431,21 @@ __device__ void CUFLU_RiemannPredict_Flux( const real g_Fluid_In   [][5][ FLU_NX
 //                _dh           : 1 / grid size
 //                Gamma         : Ratio of specific heats
 //                MinDens/Pres  : Minimum allowed density and pressure
+//                NormPassive   : true --> normalize passive scalars so that the sum of their mass density
+//                                         is equal to the gas mass density
+//                NNorm         : Number of passive scalars to be normalized
+//                                --> Should be set to the global variable "PassiveNorm_NVar"
+//                NormIdx       : Target variable indices to be normalized
+//                                --> Should be set to the global variable "PassiveNorm_VarIdx"
 //-------------------------------------------------------------------------------------------------------
-__device__ void CUFLU_RiemannPredict( const real g_Fluid_In   [][5][ FLU_NXT*FLU_NXT*FLU_NXT ],
-                                      const real g_Half_Flux_x[][5][ N_FC_FLUX*N_FC_FLUX*N_FC_FLUX ],
-                                      const real g_Half_Flux_y[][5][ N_FC_FLUX*N_FC_FLUX*N_FC_FLUX ],
-                                      const real g_Half_Flux_z[][5][ N_FC_FLUX*N_FC_FLUX*N_FC_FLUX ],
-                                            real g_Half_Var   [][5][ FLU_NXT*FLU_NXT*FLU_NXT ],
+__device__ void CUFLU_RiemannPredict( const real g_Fluid_In   [][NCOMP_TOTAL][ FLU_NXT*FLU_NXT*FLU_NXT ],
+                                      const real g_Half_Flux_x[][NCOMP_TOTAL][ N_FC_FLUX*N_FC_FLUX*N_FC_FLUX ],
+                                      const real g_Half_Flux_y[][NCOMP_TOTAL][ N_FC_FLUX*N_FC_FLUX*N_FC_FLUX ],
+                                      const real g_Half_Flux_z[][NCOMP_TOTAL][ N_FC_FLUX*N_FC_FLUX*N_FC_FLUX ],
+                                            real g_Half_Var   [][NCOMP_TOTAL][ FLU_NXT*FLU_NXT*FLU_NXT ],
                                       const real dt, const real _dh, const real Gamma,
-                                      const real MinDens, const real MinPres )
+                                      const real MinDens, const real MinPres,
+                                      const bool NormPassive, const int NNorm, const int NormIdx[] )
 {
 
    const uint  bx       = blockIdx.x;
@@ -418,6 +480,10 @@ __device__ void CUFLU_RiemannPredict( const real g_Fluid_In   [][5][ FLU_NXT*FLU
       Var.Pz  = g_Fluid_In[bx][3][ID_In];
       Var.Egy = g_Fluid_In[bx][4][ID_In];
 
+#     if ( NCOMP_PASSIVE > 0 )
+      for (int v=0; v<NCOMP_PASSIVE; v++)    Var.Passive[v] = g_Fluid_In[bx][ NCOMP_FLUID + v ][ID_In];
+#     endif
+
 #     define Update( comp, v )                                                                                 \
       {                                                                                                        \
          FluxDiff = dt_dh2 * (  g_Half_Flux_x[bx][v][ID_Flux+dID_Flux.x] - g_Half_Flux_x[bx][v][ID_Flux] +     \
@@ -432,6 +498,10 @@ __device__ void CUFLU_RiemannPredict( const real g_Fluid_In   [][5][ FLU_NXT*FLU
       Update( Pz,  3 );
       Update( Egy, 4 );
 
+#     if ( NCOMP_PASSIVE > 0 )
+      for (int v=0, vv=NCOMP_FLUID; v<NCOMP_PASSIVE; v++, vv++)   Update( Passive[v], vv );
+#     endif
+
 #     undef Update
 
 
@@ -439,9 +509,13 @@ __device__ void CUFLU_RiemannPredict( const real g_Fluid_In   [][5][ FLU_NXT*FLU
       Var.Rho = FMAX( Var.Rho, MinDens );
       Var.Egy = CUFLU_CheckMinPresInEngy( Var, Gamma_m1, _Gamma_m1, MinPres );
 
+#     if ( NCOMP_PASSIVE > 0 )
+      for (int v=0; v<NCOMP_PASSIVE; v++)    Var.Passive[v] = FMAX( Var.Passive[v], TINY_NUMBER );
+#     endif
+
 
 //    conserved variables --> primitive variables
-      Var = CUFLU_Con2Pri( Var, Gamma_m1, MinPres );
+      Var = CUFLU_Con2Pri( Var, Gamma_m1, MinPres, NormPassive, NNorm, NormIdx_d );
 
 
 //    save the updated data back to the output global array
@@ -450,6 +524,10 @@ __device__ void CUFLU_RiemannPredict( const real g_Fluid_In   [][5][ FLU_NXT*FLU
       g_Half_Var[bx][2][ID_Out] = Var.Py;
       g_Half_Var[bx][3][ID_Out] = Var.Pz;
       g_Half_Var[bx][4][ID_Out] = Var.Egy;
+
+#     if ( NCOMP_PASSIVE > 0 )
+      for (int v=0; v<NCOMP_PASSIVE; v++)    g_Half_Var[bx][ NCOMP_FLUID + v ][ID_Out] = Var.Passive[v];
+#     endif
 
 
       ID_Out += dID_Out;

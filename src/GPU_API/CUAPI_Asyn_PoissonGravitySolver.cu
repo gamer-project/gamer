@@ -34,7 +34,7 @@ __global__ void CUPOT_PoissonSolver_MG( const real g_Rho_Array    [][ RHO_NXT*RH
 
 // Gravity solver prototypes
 #if   ( MODEL == HYDRO )
-__global__ void CUPOT_HydroGravitySolver(       real g_Flu_Array_New[][NCOMP][ PATCH_SIZE*PATCH_SIZE*PATCH_SIZE ],
+__global__ void CUPOT_HydroGravitySolver(       real g_Flu_Array_New[][GRA_NIN][ PATCH_SIZE*PATCH_SIZE*PATCH_SIZE ],
                                           const real g_Pot_Array_New[][ GRA_NXT*GRA_NXT*GRA_NXT ],
                                           const double g_Corner_Array[][3],
                                           const real g_Pot_Array_USG[][ USG_NXT_G*USG_NXT_G*USG_NXT_G ],

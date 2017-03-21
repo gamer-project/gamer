@@ -6,10 +6,10 @@
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Flu_Restrict
-// Description :  Replace the data at level "FaLv" by the average data at level "FaLv+1" 
+// Description :  Replace the data at level "FaLv" by the average data at level "FaLv+1"
 //
-// Note        :  Use the input parameter "TVar" to determine the targeted variables, which can be any
-//                subset of (_FLU | _POTE | _PASSIVE)
+// Note        :  Use the input parameter "TVar" to determine the target variables, which can be any
+//                subset of (_FLUID | _POTE | _PASSIVE)
 //
 // Parameter   :  FaLv     : Targeted refinement level at which the data are going to be replaced
 //                SonFluSg : Fluid sandglass at level "FaLv+1"
@@ -18,9 +18,10 @@
 //                FaPotSg  : Potential sandglass at level "FaLv"
 //                TVar     : Targeted variables
 //                           --> Supported variables in different models:
-//                               HYDRO : _DENS, _MOMX, _MOMY, _MOMZ, _ENGY, _FLU [, _POTE] [, _PASSIVE]
-//                               MHD   : 
-//                               ELBDM : _DENS, _REAL, _IMAG, _FLU [, _POTE]
+//                               HYDRO : _DENS, _MOMX, _MOMY, _MOMZ, _ENGY,[, _POTE]
+//                               MHD   :
+//                               ELBDM : _DENS, _REAL, _IMAG, [, _POTE]
+//                           --> _FLUID, _PASSIVE, and _TOTAL apply to all models
 //-------------------------------------------------------------------------------------------------------
 void Flu_Restrict( const int FaLv, const int SonFluSg, const int FaFluSg, const int SonPotSg, const int FaPotSg,
                    const int TVar )
@@ -28,20 +29,20 @@ void Flu_Restrict( const int FaLv, const int SonFluSg, const int FaFluSg, const 
 
    const int SonLv = FaLv + 1;
 
-// check   
+// check
    if ( FaLv < 0  ||  FaLv >= NLEVEL )
       Aux_Error( ERROR_INFO, "incorrect parameter %s = %d !!\n", "FaLv", FaLv );
 
    if ( FaLv == NLEVEL-1 )
    {
-      Aux_Message( stderr, "WARNING : applying \"%s\" to the maximum level is meaningless !! \n", __FUNCTION__ ); 
+      Aux_Message( stderr, "WARNING : applying \"%s\" to the maximum level is meaningless !! \n", __FUNCTION__ );
       return;
    }
 
-   if (  ( TVar & (_FLU|_PASSIVE) )  &&  ( SonFluSg != 0 && SonFluSg != 1 )  )
+   if (  ( TVar & (_TOTAL) )  &&  ( SonFluSg != 0 && SonFluSg != 1 )  )
       Aux_Error( ERROR_INFO, "incorrect parameter %s = %d !!\n", "SonFluSg", SonFluSg );
 
-   if (  ( TVar & (_FLU|_PASSIVE) )  &&  ( FaFluSg != 0 && FaFluSg != 1 )  )
+   if (  ( TVar & (_TOTAL) )  &&  ( FaFluSg != 0 && FaFluSg != 1 )  )
       Aux_Error( ERROR_INFO, "incorrect parameter %s = %d !!\n", "FaFluSg", FaFluSg );
 
 #  ifdef GRAVITY
@@ -51,11 +52,11 @@ void Flu_Restrict( const int FaLv, const int SonFluSg, const int FaFluSg, const 
    if (  ( TVar & _POTE )  &&  ( FaPotSg != 0 && FaPotSg != 1 )  )
       Aux_Error( ERROR_INFO, "incorrect parameter %s = %d !!\n", "FaPotSg", FaPotSg );
 
-   if (  !( TVar & (_FLU|_POTE|_PASSIVE) )  )
-      Aux_Error( ERROR_INFO, "no suitable targeted variable is found --> missing (_FLU|_POTE|_PASSIVE) !!\n" );
+   if (  !( TVar & (_TOTAL|_POTE) )  )
+      Aux_Error( ERROR_INFO, "no suitable target variable is found --> missing (_TOTAL|_POTE) !!\n" );
 #  else
-   if (  !( TVar & (_FLU|_PASSIVE) )  )
-      Aux_Error( ERROR_INFO, "no suitable targeted variable is found --> missing (_FLU|_PASSIVE) !!\n" );
+   if (  !( TVar & (_TOTAL) )  )
+      Aux_Error( ERROR_INFO, "no suitable target variable is found --> missing (_TOTAL) !!\n" );
 #  endif
 
 // nothing to do if there are no real patches at lv+1
@@ -65,28 +66,28 @@ void Flu_Restrict( const int FaLv, const int SonFluSg, const int FaFluSg, const 
    Mis_CompareRealValue( Time[FaLv], Time[SonLv], __FUNCTION__, true );
 
 
-   const bool ResFlu    = TVar & ( _FLU | _PASSIVE );
+   const bool ResFlu = TVar & _TOTAL;
 #  ifdef GRAVITY
-   const bool ResPot    = TVar & _POTE;
+   const bool ResPot = TVar & _POTE;
 #  endif
-   int SonPID, FaPID, Disp_i, Disp_j, Disp_k, ii, jj, kk, I, J, K, Ip, Jp, Kp; 
-   int NVar_Flu, NVar_Tot, TFluVarIdx, TFluVarIdxList[NCOMP+NPASSIVE];
+   int SonPID, FaPID, Disp_i, Disp_j, Disp_k, ii, jj, kk, I, J, K, Ip, Jp, Kp;
+   int NVar_Flu, NVar_Tot, TFluVarIdx, TFluVarIdxList[NCOMP_TOTAL];
 
 
-// determine the components to be restricted (TFluVarIdx : targeted fluid variable indices ( = [0 ... NCOMP+NPASSIVE-1] )
+// determine the components to be restricted (TFluVarIdx : target fluid variable indices ( = [0 ... NCOMP_TOTAL-1] )
    NVar_Flu = 0;
 
-   for (int v=0; v<NCOMP+NPASSIVE; v++)
+   for (int v=0; v<NCOMP_TOTAL; v++)
       if ( TVar & (1<<v) )    TFluVarIdxList[ NVar_Flu++ ] = v;
 
 // check again
    NVar_Tot = NVar_Flu;
 #  ifdef GRAVITY
-   if ( ResPot    )  NVar_Tot ++; 
+   if ( ResPot )  NVar_Tot ++;
 #  endif
    if ( NVar_Tot == 0 )
    {
-      Aux_Message( stderr, "WARNING : no targeted variable is found !!\n" );
+      Aux_Message( stderr, "WARNING : no target variable is found !!\n" );
       return;
    }
 
@@ -101,16 +102,16 @@ void Flu_Restrict( const int FaLv, const int SonFluSg, const int FaFluSg, const 
 //    check
 #     ifdef GAMER_DEBUG
       if ( FaPID < 0 )
-         Aux_Error( ERROR_INFO, "SonLv %d, SonPID0 %d has no father patch (FaPID = %d) !!\n", 
+         Aux_Error( ERROR_INFO, "SonLv %d, SonPID0 %d has no father patch (FaPID = %d) !!\n",
                     SonLv, SonPID0, FaPID );
 
       if ( ResFlu  &&  amr->patch[FaFluSg][FaLv][FaPID]->fluid == NULL )
-         Aux_Error( ERROR_INFO, "FaFluSg %d, FaLv %d, FaPID %d has no fluid array allocated !!\n", 
+         Aux_Error( ERROR_INFO, "FaFluSg %d, FaLv %d, FaPID %d has no fluid array allocated !!\n",
                     FaFluSg, FaLv, FaPID );
 
 #     ifdef GRAVITY
       if ( ResPot  &&  amr->patch[FaPotSg][FaLv][FaPID]->pot == NULL )
-         Aux_Error( ERROR_INFO, "FaPotSg %d, FaLv %d, FaPID %d has no potential array allocated !!\n", 
+         Aux_Error( ERROR_INFO, "FaPotSg %d, FaLv %d, FaPID %d has no potential array allocated !!\n",
                     FaPotSg, FaLv, FaPID );
 #     endif
 #     endif // #ifdef GAMER_DEBUG
@@ -120,19 +121,19 @@ void Flu_Restrict( const int FaLv, const int SonFluSg, const int FaFluSg, const 
       for (int LocalID=0; LocalID<8; LocalID++)
       {
          SonPID = SonPID0 + LocalID;
-         Disp_i = TABLE_02( LocalID, 'x', 0, PATCH_SIZE/2 ); 
-         Disp_j = TABLE_02( LocalID, 'y', 0, PATCH_SIZE/2 ); 
-         Disp_k = TABLE_02( LocalID, 'z', 0, PATCH_SIZE/2 ); 
+         Disp_i = TABLE_02( LocalID, 'x', 0, PATCH_SIZE/2 );
+         Disp_j = TABLE_02( LocalID, 'y', 0, PATCH_SIZE/2 );
+         Disp_k = TABLE_02( LocalID, 'z', 0, PATCH_SIZE/2 );
 
-//       check         
+//       check
 #        ifdef GAMER_DEBUG
          if ( ResFlu  &&  amr->patch[SonFluSg][SonLv][SonPID]->fluid == NULL )
-            Aux_Error( ERROR_INFO, "SonFluSg %d, SonLv %d, SonPID %d has no fluid array allocated !!\n", 
+            Aux_Error( ERROR_INFO, "SonFluSg %d, SonLv %d, SonPID %d has no fluid array allocated !!\n",
                        SonFluSg, SonLv, SonPID );
 
 #        ifdef GRAVITY
          if ( ResPot  &&  amr->patch[SonPotSg][SonLv][SonPID]->pot == NULL )
-            Aux_Error( ERROR_INFO, "SonPotSg %d, SonLv %d, SonPID %d has no potential array allocated !!\n", 
+            Aux_Error( ERROR_INFO, "SonPotSg %d, SonLv %d, SonPID %d has no potential array allocated !!\n",
                        SonPotSg, SonLv, SonPID );
 #        endif
 #        endif // #ifdef GAMER_DEBUG
@@ -141,15 +142,15 @@ void Flu_Restrict( const int FaLv, const int SonFluSg, const int FaFluSg, const 
 //       restrict the fluid data
          if ( ResFlu )
          for (int v=0; v<NVar_Flu; v++)
-         {  
-            TFluVarIdx = TFluVarIdxList[v]; 
+         {
+            TFluVarIdx = TFluVarIdxList[v];
 
             for (int k=0; k<PATCH_SIZE/2; k++)  {  K = k*2;    Kp = K+1;   kk = k + Disp_k;
             for (int j=0; j<PATCH_SIZE/2; j++)  {  J = j*2;    Jp = J+1;   jj = j + Disp_j;
             for (int i=0; i<PATCH_SIZE/2; i++)  {  I = i*2;    Ip = I+1;   ii = i + Disp_i;
 
-               amr->patch[FaFluSg][FaLv][FaPID]->fluid[TFluVarIdx][kk][jj][ii] 
-                  = 0.125 * ( amr->patch[SonFluSg][SonLv][SonPID]->fluid[TFluVarIdx][K ][J ][I ] + 
+               amr->patch[FaFluSg][FaLv][FaPID]->fluid[TFluVarIdx][kk][jj][ii]
+                  = 0.125 * ( amr->patch[SonFluSg][SonLv][SonPID]->fluid[TFluVarIdx][K ][J ][I ] +
                               amr->patch[SonFluSg][SonLv][SonPID]->fluid[TFluVarIdx][K ][J ][Ip] +
                               amr->patch[SonFluSg][SonLv][SonPID]->fluid[TFluVarIdx][K ][Jp][I ] +
                               amr->patch[SonFluSg][SonLv][SonPID]->fluid[TFluVarIdx][Kp][J ][I ] +
@@ -164,13 +165,13 @@ void Flu_Restrict( const int FaLv, const int SonFluSg, const int FaFluSg, const 
 #        ifdef GRAVITY
 //       restrict the potential data
          if ( ResPot )
-         {  
+         {
             for (int k=0; k<PATCH_SIZE/2; k++)  {  K = k*2;    Kp = K+1;   kk = k + Disp_k;
             for (int j=0; j<PATCH_SIZE/2; j++)  {  J = j*2;    Jp = J+1;   jj = j + Disp_j;
             for (int i=0; i<PATCH_SIZE/2; i++)  {  I = i*2;    Ip = I+1;   ii = i + Disp_i;
 
-               amr->patch[FaPotSg][FaLv][FaPID]->pot[kk][jj][ii] 
-                  = 0.125 * ( amr->patch[SonPotSg][SonLv][SonPID]->pot[K ][J ][I ] + 
+               amr->patch[FaPotSg][FaLv][FaPID]->pot[kk][jj][ii]
+                  = 0.125 * ( amr->patch[SonPotSg][SonLv][SonPID]->pot[K ][J ][I ] +
                               amr->patch[SonPotSg][SonLv][SonPID]->pot[K ][J ][Ip] +
                               amr->patch[SonPotSg][SonLv][SonPID]->pot[K ][Jp][I ] +
                               amr->patch[SonPotSg][SonLv][SonPID]->pot[Kp][J ][I ] +

@@ -360,7 +360,7 @@ void GetRMS()
                   vt   = sqrt( fabs(vx*vx + vy*vy + vz*vz - vr*vr) );
 
 
-//                evalute the square of deviation on the shell
+//                evaluate the square of deviation on the shell
                   Var = 0;
                   RMS[ShellID][Var] += dv*pow( double(rho    )-Average[ShellID][Var], 2.0 );    Var++;
                   RMS[ShellID][Var] += dv*pow( double(vr     )-Average[ShellID][Var], 2.0 );    Var++;
@@ -431,7 +431,7 @@ void GetRMS()
                   } // if ( ELBDM_GetVir )
 
 
-//                evalute the square of deviation on the shell
+//                evaluate the square of deviation on the shell
                   Var = 0;
                   RMS[ShellID][Var] += dv*pow( double(Dens   )-Average[ShellID][Var], 2.0 );  Var++;
                   RMS[ShellID][Var] += dv*pow( double(Real   )-Average[ShellID][Var], 2.0 );  Var++;

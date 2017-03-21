@@ -22,6 +22,7 @@
 //                dTime    : Time interval to update physical time
 //                MinDtLv  : Refinement level determining the smallest time-step
 //                MinDtVar : Array to store the variables with the maximum speed (minimum time-step) at each level
+//                           --> Rho, Vx/y/z, Cs
 //                dt_dTime : dt/dTime (== 1.0 if COMOVING is off)
 //
 // Return      :  dt, dTime, MinDtLv, MinDtVar
@@ -32,7 +33,7 @@ void Hydro_GetTimeStep_Fluid( double &dt, double &dTime, int &MinDtLv, real MinD
    real  *MaxCFL   = MinDtInfo_Fluid;  // "MinDtInfo_Fluid" is a global variable
    double dt_local = __FLT_MAX__;      // initialize it as an extremely large number
    double dt_min, dt_tmp;
-   real   MinDtVar_AllLv[NLEVEL][NCOMP];
+   real   MinDtVar_AllLv[NLEVEL][5];
 
 
 // get the maximum CFL velocity ( sound speed + fluid velocity )
@@ -57,7 +58,7 @@ void Hydro_GetTimeStep_Fluid( double &dt, double &dTime, int &MinDtLv, real MinD
          dt_local = dt_tmp;
          MinDtLv  = lv;
 
-         for (int v=0; v<NCOMP; v++)   MinDtVar[v] = MinDtVar_AllLv[lv][v];
+         for (int v=0; v<5; v++)    MinDtVar[v] = MinDtVar_AllLv[lv][v];
       }
    } // for (int lv=0; lv<NLEVEL; lv++)
 
@@ -74,16 +75,16 @@ void Hydro_GetTimeStep_Fluid( double &dt, double &dTime, int &MinDtLv, real MinD
 
 // gather the minimum time-step information from all ranks
 #  ifndef SERIAL
-   double *dt_AllRank                = new double [MPI_NRank];
-   int    *MinDtLv_AllRank           = new int    [MPI_NRank];
-   real   (*MinDtVar_AllRank)[NCOMP] = new real   [MPI_NRank][NCOMP];
+   double *dt_AllRank            = new double [MPI_NRank];
+   int    *MinDtLv_AllRank       = new int    [MPI_NRank];
+   real   (*MinDtVar_AllRank)[5] = new real   [MPI_NRank][5];
 
    MPI_Gather( &dt_local, 1,     MPI_DOUBLE, dt_AllRank,       1,     MPI_DOUBLE, 0, MPI_COMM_WORLD );
    MPI_Gather( &MinDtLv,  1,     MPI_INT,    MinDtLv_AllRank,  1,     MPI_INT,    0, MPI_COMM_WORLD );
 #  ifdef FLOAT8
-   MPI_Gather( MinDtVar,  NCOMP, MPI_DOUBLE, MinDtVar_AllRank, NCOMP, MPI_DOUBLE, 0, MPI_COMM_WORLD );
+   MPI_Gather( MinDtVar,  5, MPI_DOUBLE, MinDtVar_AllRank, 5, MPI_DOUBLE, 0, MPI_COMM_WORLD );
 #  else
-   MPI_Gather( MinDtVar,  NCOMP, MPI_FLOAT,  MinDtVar_AllRank, NCOMP, MPI_FLOAT,  0, MPI_COMM_WORLD );
+   MPI_Gather( MinDtVar,  5, MPI_FLOAT,  MinDtVar_AllRank, 5, MPI_FLOAT,  0, MPI_COMM_WORLD );
 #  endif
 
    if ( MPI_Rank == 0 )
@@ -93,7 +94,7 @@ void Hydro_GetTimeStep_Fluid( double &dt, double &dTime, int &MinDtLv, real MinD
          if ( dt_AllRank[Rank] == dt_min )
          {
             MinDtLv = MinDtLv_AllRank[Rank];
-            for (int v=0; v<NCOMP; v++)   MinDtVar[v] = MinDtVar_AllRank[Rank][v];
+            for (int v=0; v<5; v++)    MinDtVar[v] = MinDtVar_AllRank[Rank][v];
             break;
          }
 
@@ -122,8 +123,9 @@ void Hydro_GetTimeStep_Fluid( double &dt, double &dTime, int &MinDtLv, real MinD
 //
 // Parameter   :  MaxCFL         : Array to store the maximum speed at each level
 //                MinDtVar_AllLv : Array to store the variables with the maximum speed at each level
+//                                 --> Rho, Vx/y/z, Cs
 //-------------------------------------------------------------------------------------------------------
-void Hydro_GetMaxCFL( real MaxCFL[], real MinDtVar_AllLv[][NCOMP] )
+void Hydro_GetMaxCFL( real MaxCFL[], real MinDtVar_AllLv[][5] )
 {
 
    const bool CheckMinPres_Yes = true;
@@ -135,9 +137,9 @@ void Hydro_GetMaxCFL( real MaxCFL[], real MinDtVar_AllLv[][NCOMP] )
    const int NT = 1;
 #  endif
 
-   real  *MaxCFL_OMP           = new real [NT];
-   real (*MinDtVar_OMP)[NCOMP] = new real [NT][NCOMP];
-   real Fluid[NCOMP], _Rho, Vx, Vy, Vz, Pres, Cs, MaxV, MaxCFL_candidate;
+   real  *MaxCFL_OMP       = new real [NT];
+   real (*MinDtVar_OMP)[5] = new real [NT][5];
+   real Fluid[NCOMP_FLUID], _Rho, Vx, Vy, Vz, Pres, Cs, MaxV, MaxCFL_candidate;
    int  TID;   // thread ID
 
 
@@ -167,7 +169,7 @@ void Hydro_GetMaxCFL( real MaxCFL[], real MinDtVar_AllLv[][NCOMP] )
                for (int j=0; j<PATCH_SIZE; j++)
                for (int i=0; i<PATCH_SIZE; i++)
                {
-                  for (int v=0; v<NCOMP; v++)   Fluid[v] = amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[v][k][j][i];
+                  for (int v=0; v<NCOMP_FLUID; v++)   Fluid[v] = amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[v][k][j][i];
 
                  _Rho  = (real)1.0 / Fluid[DENS];
                   Vx   = FABS( Fluid[MOMX] )*_Rho;
@@ -237,7 +239,7 @@ void Hydro_GetMaxCFL( real MaxCFL[], real MinDtVar_AllLv[][NCOMP] )
          {
             MaxCFL[lv] = MaxCFL_OMP[t];
 
-            for (int v=0; v<NCOMP; v++)   MinDtVar_AllLv[lv][v] = MinDtVar_OMP[t][v];
+            for (int v=0; v<5; v++)    MinDtVar_AllLv[lv][v] = MinDtVar_OMP[t][v];
          }
       }
    } // for (int lv=0; lv<NLEVEL; lv++)

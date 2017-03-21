@@ -101,54 +101,21 @@ void Output_DumpData( const int Stage )
 #  ifdef PARTICLE
    char FileName_Particle[50];
 #  endif
-   int ID[6];
 
-   ID[0] = DumpID/100000;
-   ID[1] = DumpID%100000/10000;
-   ID[2] = DumpID%10000/1000;
-   ID[3] = DumpID%1000/100;
-   ID[4] = DumpID%100/10;
-   ID[5] = DumpID%10;
-
-   if ( OPT__OUTPUT_TOTAL )
-      sprintf( FileName_Total, "Data_%d%d%d%d%d%d", ID[0], ID[1], ID[2], ID[3], ID[4], ID[5] );
+   if ( OPT__OUTPUT_TOTAL )   sprintf( FileName_Total, "Data_%06d", DumpID );
 
    if ( OPT__OUTPUT_PART )
    {
       switch ( OPT__OUTPUT_PART )
       {
-         case OUTPUT_XY :    sprintf( FileName_Temp, "XYslice_z%.3f_%d%d%d%d%d%d",
-                             OUTPUT_PART_Z, ID[0], ID[1], ID[2], ID[3], ID[4], ID[5] );
-                             break;
-
-         case OUTPUT_YZ :    sprintf( FileName_Temp, "YZslice_x%.3f_%d%d%d%d%d%d",
-                             OUTPUT_PART_X, ID[0], ID[1], ID[2], ID[3], ID[4], ID[5] );
-                             break;
-
-         case OUTPUT_XZ :    sprintf( FileName_Temp, "XZslice_y%.3f_%d%d%d%d%d%d",
-                             OUTPUT_PART_Y, ID[0], ID[1], ID[2], ID[3], ID[4], ID[5] );
-                             break;
-
-         case OUTPUT_X  :    sprintf( FileName_Temp, "Xline_y%.3f_z%.3f_%d%d%d%d%d%d",
-                             OUTPUT_PART_Y, OUTPUT_PART_Z, ID[0], ID[1], ID[2], ID[3], ID[4], ID[5] );
-                             break;
-
-         case OUTPUT_Y  :    sprintf( FileName_Temp, "Yline_x%.3f_z%.3f_%d%d%d%d%d%d",
-                             OUTPUT_PART_X, OUTPUT_PART_Z, ID[0], ID[1], ID[2], ID[3], ID[4], ID[5] );
-                             break;
-
-         case OUTPUT_Z  :    sprintf( FileName_Temp, "Zline_x%.3f_y%.3f_%d%d%d%d%d%d",
-                             OUTPUT_PART_X, OUTPUT_PART_Y, ID[0], ID[1], ID[2], ID[3], ID[4], ID[5] );
-                             break;
-
-         case OUTPUT_DIAG :  sprintf( FileName_Temp, "Diag_%d%d%d%d%d%d",
-                                      ID[0], ID[1], ID[2], ID[3], ID[4], ID[5] );
-                             break;
-
-         default :
-                             Aux_Error( ERROR_INFO, "incorrect parameter %s = %d !!\n",
-                                        "OPT__OUTPUT_PART", OPT__OUTPUT_PART );
-
+         case OUTPUT_XY :    sprintf( FileName_Temp, "XYslice_z%.3f_%06d", OUTPUT_PART_Z, DumpID );   break;
+         case OUTPUT_YZ :    sprintf( FileName_Temp, "YZslice_x%.3f_%06d", OUTPUT_PART_X, DumpID );   break;
+         case OUTPUT_XZ :    sprintf( FileName_Temp, "XZslice_y%.3f_%06d", OUTPUT_PART_Y, DumpID );   break;
+         case OUTPUT_X  :    sprintf( FileName_Temp, "Xline_y%.3f_z%.3f_%06d", OUTPUT_PART_Y, OUTPUT_PART_Z, DumpID );  break;
+         case OUTPUT_Y  :    sprintf( FileName_Temp, "Yline_x%.3f_z%.3f_%06d", OUTPUT_PART_X, OUTPUT_PART_Z, DumpID );  break;
+         case OUTPUT_Z  :    sprintf( FileName_Temp, "Zline_x%.3f_y%.3f_%06d", OUTPUT_PART_X, OUTPUT_PART_Y, DumpID );  break;
+         case OUTPUT_DIAG :  sprintf( FileName_Temp, "Diag_%06d", DumpID );   break;
+         default :           Aux_Error( ERROR_INFO, "incorrect parameter %s = %d !!\n", "OPT__OUTPUT_PART", OPT__OUTPUT_PART );
       } // switch ( OPT__OUTPUT_PART )
 
       if ( OPT__OUTPUT_BASE )
@@ -162,11 +129,11 @@ void Output_DumpData( const int Stage )
    } // if ( OPT__OUTPUT_PART )
 
    if ( OPT__OUTPUT_BASEPS )
-      sprintf( FileName_PS, "PowerSpec_%d%d%d%d%d%d", ID[0], ID[1], ID[2], ID[3], ID[4], ID[5] );
+      sprintf( FileName_PS, "PowerSpec_%06d", DumpID );
 
 #  ifdef PARTICLE
    if ( OPT__OUTPUT_PAR_TEXT )
-      sprintf( FileName_Particle, "Particle_%d%d%d%d%d%d", ID[0], ID[1], ID[2], ID[3], ID[4], ID[5] );
+      sprintf( FileName_Particle, "Particle_%06d", DumpID );
 #  endif
 
 

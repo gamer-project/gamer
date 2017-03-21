@@ -12,17 +12,23 @@
 // Function    :  CPU_FullStepUpdate
 // Description :  Evaluate the full-step solution
 //
-// Parameter   :  Input    : Array storing the input initial data
-//                Output   : Array to store the ouptut updated data
-//                Flux     : Array storing the input face-centered flux
-//                           --> Size is assumed to be N_FL_FLUX^3
-//                dt       : Time interval to advance solution
-//                dh       : Grid size
-//                Gamma    : Ratio of specific heats
+// Parameter   :  Input       : Array storing the input initial data
+//                Output      : Array to store the ouptut updated data
+//                Flux        : Array storing the input face-centered flux
+//                              --> Size is assumed to be N_FL_FLUX^3
+//                dt          : Time interval to advance solution
+//                dh          : Grid size
+//                Gamma       : Ratio of specific heats
+//                NormPassive : true --> normalize passive scalars so that the sum of their mass density
+//                                       is equal to the gas mass density
+//                NNorm       : Number of passive scalars to be normalized
+//                              --> Should be set to the global variable "PassiveNorm_NVar"
+//                NormIdx     : Target variable indices to be normalized
+//                              --> Should be set to the global variable "PassiveNorm_VarIdx"
 //-------------------------------------------------------------------------------------------------------
 void CPU_FullStepUpdate( const real Input[][ FLU_NXT*FLU_NXT*FLU_NXT ], real Output[][ PS2*PS2*PS2 ],
-                         const real Flux[][3][5], const real dt, const real dh,
-                         const real Gamma )
+                         const real Flux[][3][NCOMP_TOTAL], const real dt, const real dh,
+                         const real Gamma, const bool NormPassive, const int NNorm, const int NormIdx[] )
 {
 
    /*
@@ -33,7 +39,11 @@ void CPU_FullStepUpdate( const real Input[][ FLU_NXT*FLU_NXT*FLU_NXT ], real Out
    const real dt_dh     = dt/dh;
 
    int  ID1, ID2, ID3;
-   real dF[3][5];
+   real dF[3][NCOMP_TOTAL];
+
+#  if ( NCOMP_PASSIVE > 0 )
+   real Passive[NCOMP_PASSIVE];
+#  endif
 
 
    for (int k1=0, k2=FLU_GHOST_SIZE;  k1<PS2;  k1++, k2++)
@@ -46,30 +56,46 @@ void CPU_FullStepUpdate( const real Input[][ FLU_NXT*FLU_NXT*FLU_NXT ], real Out
       ID3 = (k2*FLU_NXT   + j2)*FLU_NXT   + i2;
 
       for (int d=0; d<3; d++)
-      for (int v=0; v<5; v++)    dF[d][v] = Flux[ ID1+dID1[d] ][d][v] - Flux[ID1][d][v];
+      for (int v=0; v<NCOMP_TOTAL; v++)   dF[d][v] = Flux[ ID1+dID1[d] ][d][v] - Flux[ID1][d][v];
 
-      for (int v=0; v<5; v++)
+      for (int v=0; v<NCOMP_TOTAL; v++)
          Output[v][ID2] = Input[v][ID3] - dt_dh*( dF[0][v] + dF[1][v] + dF[2][v] );
 
-//    we no longer check negative density and pressure here
+
+//    we no longer ensure positive density and pressure here
 //    --> these checks have been moved to Flu_Close()->CorrectUnphysical()
 //    --> because we want to apply 1st-order-flux correction BEFORE setting a minimum density and pressure
       /*
-//    ensure positive density and pressure
       Output[0][ID2] = FMAX( Output[0][ID2], MinDens );
       Output[4][ID2] = CPU_CheckMinPresInEngy( Output[0][ID2], Output[1][ID2], Output[2][ID2], Output[3][ID2], Output[4][ID2],
                                                Gamma_m1, _Gamma_m1, MinPres );
       */
 
+
+//    floor and normalize passive scalars
+#     if ( NCOMP_PASSIVE > 0 )
+      for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)  Output[v][ID2] = FMAX( Output[v][ID2], TINY_NUMBER );
+
+      if ( NormPassive )
+      {
+         for (int v=0; v<NCOMP_PASSIVE; v++)    Passive[v] = Output[ NCOMP_FLUID + v ][ID2];
+
+         CPU_NormalizePassive( Output[DENS][ID2], Passive, NNorm, NormIdx );
+
+         for (int v=0; v<NCOMP_PASSIVE; v++)    Output[ NCOMP_FLUID + v ][ID2] = Passive[v];
+      }
+#     endif
+
+
 //    check the negative density and energy
 #     ifdef CHECK_NEGATIVE_IN_FLUID
-      if ( CPU_CheckNegative(Output[0][ID2]) )
+      if ( CPU_CheckNegative(Output[DENS][ID2]) )
          Aux_Message( stderr, "WARNING : negative density (%14.7e) at file <%s>, line <%d>, function <%s>\n",
-                      Output[0][ID2], __FILE__, __LINE__, __FUNCTION__ );
+                      Output[DENS][ID2], __FILE__, __LINE__, __FUNCTION__ );
 
-      if ( CPU_CheckNegative(Output[4][ID2]) )
+      if ( CPU_CheckNegative(Output[ENGY][ID2]) )
          Aux_Message( stderr, "WARNING : negative energy (%14.7e) at file <%s>, line <%d>, function <%s>\n",
-                      Output[4][ID2], __FILE__, __LINE__, __FUNCTION__ );
+                      Output[ENGY][ID2], __FILE__, __LINE__, __FUNCTION__ );
 #     endif
 
    } // i,j,k
@@ -86,7 +112,7 @@ void CPU_FullStepUpdate( const real Input[][ FLU_NXT*FLU_NXT*FLU_NXT ], real Out
 //                FC_Flux  : Array storing the face-centered fluxes
 //                           --> Size is assumed to be N_FL_FLUX^3
 //-------------------------------------------------------------------------------------------------------
-void CPU_StoreFlux( real Flux_Array[][5][ PS2*PS2 ], const real FC_Flux[][3][5]  )
+void CPU_StoreFlux( real Flux_Array[][NCOMP_TOTAL][ PS2*PS2 ], const real FC_Flux[][3][NCOMP_TOTAL]  )
 {
 
    int Face, ID1, ID2[9];
@@ -110,7 +136,7 @@ void CPU_StoreFlux( real Flux_Array[][5][ PS2*PS2 ], const real FC_Flux[][3][5] 
       {
          Face = t/3;
 
-         for (int v=0; v<5; v++)    Flux_Array[t][v][ID1] = FC_Flux[ ID2[t] ][Face][v];
+         for (int v=0; v<NCOMP_TOTAL; v++)   Flux_Array[t][v][ID1] = FC_Flux[ ID2[t] ][Face][v];
       }
    }
 

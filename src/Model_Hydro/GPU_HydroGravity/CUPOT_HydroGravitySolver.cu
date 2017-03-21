@@ -62,7 +62,7 @@ int CUPOT_HydroGravitySolver_SetConstMem( double ExtAcc_AuxArray_h[] )
 //                dt                : Evolution time-step (for the external gravity solver)
 //                dh                : Grid size (for the external gravity solver)
 //---------------------------------------------------------------------------------------------------
-__global__ void CUPOT_HydroGravitySolver(       real g_Flu_Array_New[][NCOMP][ PATCH_SIZE*PATCH_SIZE*PATCH_SIZE ],
+__global__ void CUPOT_HydroGravitySolver(       real g_Flu_Array_New[][GRA_NIN][ PATCH_SIZE*PATCH_SIZE*PATCH_SIZE ],
                                           const real g_Pot_Array_New[][ GRA_NXT*GRA_NXT*GRA_NXT ],
                                           const double g_Corner_Array[][3],
                                           const real g_Pot_Array_USG[][ USG_NXT_G*USG_NXT_G*USG_NXT_G ],
@@ -163,7 +163,7 @@ __global__ void CUPOT_HydroGravitySolver(       real g_Flu_Array_New[][NCOMP][ P
       } // if ( P5_Gradient )
 
       
-//    1. evalute the gravitational acceleration
+//    1. evaluate the gravitational acceleration
       Acc_new[0] = (real)0.0;
       Acc_new[1] = (real)0.0;
       Acc_new[2] = (real)0.0;

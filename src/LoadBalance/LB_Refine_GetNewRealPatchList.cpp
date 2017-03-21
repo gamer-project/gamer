@@ -244,9 +244,9 @@ void LB_Refine_GetNewRealPatchList( const int FaLv, int &NNew_Home, int *&NewPID
    Int_Table( OPT__REF_POT_INT_SCHEME, NSide_Pot, FaGhost_Pot );
 
    const int FaSize_Pot = PATCH_SIZE + 2*FaGhost_Pot;
-   const int PSize      = NCOMP*FaSize_Flu*FaSize_Flu*FaSize_Flu + FaSize_Pot*FaSize_Pot*FaSize_Pot;
+   const int PSize      = NCOMP_TOTAL*FaSize_Flu*FaSize_Flu*FaSize_Flu + FaSize_Pot*FaSize_Pot*FaSize_Pot;
 #  else
-   const int PSize      = NCOMP*FaSize_Flu*FaSize_Flu*FaSize_Flu;
+   const int PSize      = NCOMP_TOTAL*FaSize_Flu*FaSize_Flu*FaSize_Flu;
 #  endif
 
    int New_Send_Disp[MPI_NRank], New_Recv_Disp[MPI_NRank], NNew_Recv[MPI_NRank], NNew_Send_Total, NNew_Recv_Total;
@@ -307,7 +307,7 @@ void LB_Refine_GetNewRealPatchList( const int FaLv, int &NNew_Home, int *&NewPID
 // 2.3.1&2 new Cr1D/CData
 
 // determine the priority of different boundary faces (z>y>x) to set the corner cells properly for the non-periodic B.C.
-   int BC_Face[26], BC_Face_tmp[3], FluVarIdxList[NCOMP];
+   int BC_Face[26], BC_Face_tmp[3], FluVarIdxList[NCOMP_TOTAL];
 
    for (int s=0; s<26; s++)
    {
@@ -321,7 +321,7 @@ void LB_Refine_GetNewRealPatchList( const int FaLv, int &NNew_Home, int *&NewPID
       else if ( BC_Face_tmp[0] != -1 )   BC_Face[s] = BC_Face_tmp[0];
    }
 
-   for (int v=0; v<NCOMP; v++)   FluVarIdxList[v] = v;
+   for (int v=0; v<NCOMP_TOTAL; v++)   FluVarIdxList[v] = v;
 
 // prepare the coarse-grid data
    Counter = 0;
@@ -429,12 +429,12 @@ void PrepareCData( const int FaLv, const int FaPID, real *const FaData,
    real *const FaData_Flu = FaData;
 #  ifdef GRAVITY
    const int FaSize_Pot   = PATCH_SIZE + 2*FaGhost_Pot;
-   real *const FaData_Pot = FaData + NCOMP*FaSize_Flu*FaSize_Flu*FaSize_Flu;
+   real *const FaData_Pot = FaData + NCOMP_TOTAL*FaSize_Flu*FaSize_Flu*FaSize_Flu;
 #  endif
    int Idx, I, J, K;
 
 // 1.1 fluid data
-   for (int v=0; v<NCOMP; v++)         {
+   for (int v=0; v<NCOMP_TOTAL; v++)   {
    for (int k=0; k<PATCH_SIZE; k++)    {  K = k + FaGhost_Flu;
    for (int j=0; j<PATCH_SIZE; j++)    {  J = j + FaGhost_Flu;
    for (int i=0; i<PATCH_SIZE; i++)    {  I = i + FaGhost_Flu;
@@ -486,7 +486,7 @@ void PrepareCData( const int FaLv, const int FaPID, real *const FaData,
       {
          for (int d=0; d<3; d++)    Disp2[d] = TABLE_01( sib, 'x'+d, PATCH_SIZE-FaGhost_Flu, 0, 0 );
      
-         for (int v=0; v<NCOMP; v++)      {
+         for (int v=0; v<NCOMP_TOTAL; v++){
          for (int k=0; k<Loop[2]; k++)    {  K = k + Disp1[2];    K2 = k + Disp2[2];
          for (int j=0; j<Loop[1]; j++)    {  J = j + Disp1[1];    J2 = j + Disp2[1];
          for (int i=0; i<Loop[0]; i++)    {  I = i + Disp1[0];    I2 = i + Disp2[0];
@@ -514,12 +514,12 @@ void PrepareCData( const int FaLv, const int FaPID, real *const FaData,
          {
 #           if ( MODEL == HYDRO  ||  MODEL == MHD )
             case BC_FLU_OUTFLOW:    
-               Hydro_BoundaryCondition_Outflow   ( FaData_Flu, BC_Face[BC_Sibling], NCOMP, FaGhost_Flu,
+               Hydro_BoundaryCondition_Outflow   ( FaData_Flu, BC_Face[BC_Sibling], NCOMP_TOTAL, FaGhost_Flu,
                                                    FaSize_Flu, FaSize_Flu, FaSize_Flu, BC_Idx_Start, BC_Idx_End );
             break;
 
             case BC_FLU_REFLECTING:
-               Hydro_BoundaryCondition_Reflecting( FaData_Flu, BC_Face[BC_Sibling], NCOMP, FaGhost_Flu,
+               Hydro_BoundaryCondition_Reflecting( FaData_Flu, BC_Face[BC_Sibling], NCOMP_TOTAL, FaGhost_Flu,
                                                    FaSize_Flu, FaSize_Flu, FaSize_Flu, BC_Idx_Start, BC_Idx_End, 
                                                    FluVarIdxList, NDer, DerVarList );
             break;
@@ -529,9 +529,9 @@ void PrepareCData( const int FaLv, const int FaPID, real *const FaData,
 #           endif
 
             case BC_FLU_USER:
-               Flu_BoundaryCondition_User        ( FaData_Flu,                      NCOMP,
+               Flu_BoundaryCondition_User        ( FaData_Flu,                      NCOMP_TOTAL,
                                                    FaSize_Flu, FaSize_Flu, FaSize_Flu, BC_Idx_Start, BC_Idx_End, 
-                                                   FluVarIdxList, Time[FaLv], amr->dh[FaLv], xyz, _FLU );
+                                                   FluVarIdxList, Time[FaLv], amr->dh[FaLv], xyz, _TOTAL );
             break;
 
             default: 

@@ -19,6 +19,11 @@ void Aux_Check( )
 
    if ( OPT__CK_CONSERVATION )            Aux_Check_Conservation( "DIAGNOSIS" );
 
+#  if ( NCOMP_PASSIVE > 0 )
+   if ( OPT__CK_NORMALIZE_PASSIVE )
+      for (int lv=0; lv<NLEVEL; lv++)     Aux_Check_NormalizePassive( lv, "DIAGNOSIS" );
+#  endif
+
    if ( OPT__CK_RESTRICT )       
       for (int lv=0; lv<NLEVEL-1; lv++)   Aux_Check_Restrict( lv, "DIAGNOSIS" );
 

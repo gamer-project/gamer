@@ -1,7 +1,7 @@
 #!/bin/bash 
 
 # copy files to the correct directories for the target test problem
-cp Init_* End_*                        ../../../src/Init/
+cp Init_TestProb.cpp End_TestProb.cpp  ../../../src/Init/
 cp Flu_*                               ../../../src/Fluid/
 cp Par_*                               ../../../src/Particle/
 cp plot*.gpt                           ../../../bin/run/

@@ -142,12 +142,8 @@
 
 // variable indices in the array "passive" [NCOMP_FLUID ... NCOMP_TOTAL-1]
 #if ( NCOMP_PASSIVE > 0 )
-// example for NCOMP_PASSIVE == 3
-/*
-#  define  METAL              ( NCOMP_FLUID + 0 )
-#  define  OXYGEN             ( NCOMP_FLUID + 1 )
-#  define  FE                 ( NCOMP_FLUID + 2 )
-*/
+#  define  CLOUD0             ( NCOMP_FLUID + 0 )
+#  define  CLOUD1             ( NCOMP_FLUID + 1 )
 // always store internal energy for the dual energy formalism as the last passive variable
 #  ifdef DUAL_ENERGY
 #  define  EINT               ( NCOMP_TOTAL-1 )
@@ -163,12 +159,8 @@
 
 // variable indices in the array "flux_passive" [NFLUX_FLUID ... NFLUX_TOTAL-1]
 #if ( NCOMP_PASSIVE > 0 )
-// example for NCOMP_PASSIVE == 3
-/*
-#  define  FLUX_METAL         ( NFLUX_FLUID + 0 )
-#  define  FLUX_OXYGEN        ( NFLUX_FLUID + 1 )
-#  define  FLUX_FE            ( NFLUX_FLUID + 2 )
-*/
+#  define  FLUX_CLOUD0        ( NFLUX_FLUID + 0 )
+#  define  FLUX_CLOUD1        ( NFLUX_FLUID + 1 )
 // always store internal energy for the dual energy formalism as the last passive variable
 #  ifdef DUAL_ENERGY
 #  define  FLUX_EINT          ( NFLUX_TOTAL-1 )
@@ -183,12 +175,8 @@
 #  define _ENGY               ( 1 << ENGY )
 
 #if ( NCOMP_PASSIVE > 0 )
-// example for NCOMP_PASSIVE == 3
-/*
-#  define _METAL              ( 1 << METAL  )
-#  define _OXYGEN             ( 1 << OXYGEN )
-#  define _FE                 ( 1 << FE     )
-*/
+#  define _CLOUD0             ( 1 << CLOUD0 )
+#  define _CLOUD1             ( 1 << CLOUD1 )
 // always store internal energy for the dual energy formalism as the last passive variable
 #  ifdef DUAL_ENERGY
 #  define _EINT               ( 1 << EINT )
@@ -203,12 +191,8 @@
 #  define _FLUX_ENGY          ( 1 << FLUX_ENGY )
 
 #if ( NFLUX_PASSIVE > 0 )
-// example for NFLUX_PASSIVE == 3
-/*
-#  define _FLUX_METAL         ( 1 << FLUX_METAL  )
-#  define _FLUX_OXYGEN        ( 1 << FLUX_OXYGEN )
-#  define _FLUX_FE            ( 1 << FLUX_FE     )
-*/
+#  define _FLUX_CLOUD0        ( 1 << FLUX_CLOUD0 )
+#  define _FLUX_CLOUD1        ( 1 << FLUX_CLOUD1 )
 // always store internal energy for the dual energy formalism as the last passive variable
 #  ifdef DUAL_ENERGY
 #  define _FLUX_EINT          ( 1 << FLUX_EINT )

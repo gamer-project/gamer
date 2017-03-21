@@ -24,7 +24,7 @@ long  LB_Corner2Index( const int lv, const int Corner[], const Check_t Check );
 // Description :  Data structure of a single patch
 //
 // Data Member :  fluid           : Fluid variables (mass density, momentum density x, y ,z, energy density)
-//                passive         : Passively advected variables (e.g., metal density)
+//                                  --> Including passively advected variables (e.g., metal density)
 //                pot             : Potential
 //                pot_ext         : Potential with GRA_GHOST_SIZE ghost cells on each side
 //                                  --> Allocated only if STORE_POT_GHOST is on
@@ -41,7 +41,7 @@ long  LB_Corner2Index( const int lv, const int Corner[], const Check_t Check );
 //                                  --> Note that even with NGP mass assignment which requires no ghost zone we
 //                                      still allocate rho_ext as (PS1+RHOEXT_GHOST_SIZE)^3
 //                flux[6]         : Fluid flux (for the flux-correction operation)
-//                flux_passive[6] : Passive variable flux (for the flux-correction operation)
+//                                  --> Including passively advected flux (for the flux-correction operation)
 //                flux_debug[6]   : Fluid flux for the debug mode (ensuring that the round-off errors are
 //                                  exactly the same in different parallelization parameters/strategies)
 //                corner[3]       : Grid indices of the cell at patch corner
@@ -77,7 +77,7 @@ long  LB_Corner2Index( const int lv, const int Corner[], const Check_t Check );
 //                                      inactive:  patch has been allocated but deactivated (excluded from num[lv])
 //                                  --> Note that active/inactive have nothing to do with the allocation of field arrays (e.g., fluid)
 //                                      --> For both active and inactive patches, field arrays may be allocated or == NULL
-//                                  --> However, currently the flux arrays (i.e., flux, flux_passive, and flux_debug) are guaranteed
+//                                  --> However, currently the flux arrays (i.e., flux and flux_debug) are guaranteed
 //                                      to be NULL for inactive patches
 //                EdgeL/R         : Left and right edge of the patch
 //                                  --> Note that we always apply periodicity to EdgeL/R. So for an external patch its
@@ -149,10 +149,7 @@ struct patch_t
 
 // data members
 // ===================================================================================
-   real (*fluid)  [PATCH_SIZE][PATCH_SIZE][PATCH_SIZE];
-#  if ( NPASSIVE > 0 )
-   real (*passive)[PATCH_SIZE][PATCH_SIZE][PATCH_SIZE];
-#  endif
+   real (*fluid)[PATCH_SIZE][PATCH_SIZE][PATCH_SIZE];
 
 #  ifdef GRAVITY
    real (*pot)[PATCH_SIZE][PATCH_SIZE];
@@ -165,12 +162,9 @@ struct patch_t
    real (*rho_ext)[RHOEXT_NXT][RHOEXT_NXT];
 #  endif
 
-   real (*flux        [6])[PATCH_SIZE][PATCH_SIZE];
-#  if ( NPASSIVE > 0 )
-   real (*flux_passive[6])[PATCH_SIZE][PATCH_SIZE];
-#  endif
+   real (*flux      [6])[PATCH_SIZE][PATCH_SIZE];
 #  ifdef GAMER_DEBUG
-   real (*flux_debug  [6])[PATCH_SIZE][PATCH_SIZE];
+   real (*flux_debug[6])[PATCH_SIZE][PATCH_SIZE];
 #  endif
 
    int    corner[3];
@@ -211,7 +205,7 @@ struct patch_t
    //
    // Parameter   :  x,y,z    : Scale indices of the patch corner
    //                FaPID    : Patch ID of the father patch
-   //                FluData  : true --> Allocate hydrodynamic array(s) "fluid" (and "passive")
+   //                FluData  : true --> Allocate hydrodynamic array(s) "fluid"
    //                                    "rho_ext" will NOT be allocated here even if PARTICLE is on
    //                PotData  : true --> Allocate potential array "pot" (has no effect if "GRAVITY" is turned off)
    //                                    "pot_ext" will be allocated as well if STORE_POT_GHOST is on
@@ -239,21 +233,21 @@ struct patch_t
    //
    // Parameter   :  x,y,z          : Scale indices of the patch corner
    //                FaPID          : Patch ID of the father patch
-   //                FluData        : true --> Allocate hydrodynamic array(s) "fluid" (and "passive")
+   //                FluData        : true --> Allocate hydrodynamic array(s) "fluid"
    //                                          "rho_ext" will NOT be allocated here even if PARTICLE is on
    //                PotData        : true --> Allocate potential array "pot" (has no effect if "GRAVITY" is turned off)
    //                                          "pot_ext" will be allocated as well if STORE_POT_GHOST is on
    //                lv             : Refinement level of the newly created patch
    //                BoxScale       : Simulation box scale
    //                dh_min         : Cell size at the maximum level
-   //                InitPtrAsNull  : Whether or not to initialize field arrays (i.e., fluid, passive, pot, pot_ext, rho_ext) as NULL
+   //                InitPtrAsNull  : Whether or not to initialize field arrays (i.e., fluid, pot, pot_ext, rho_ext) as NULL
    //                                 --> It is used mainly for OPT__REUSE_MEMORY, where we don't want to set these pointers as
    //                                     NULL if the patch has been allocated but marked as inactive
    //                                     --> Since the field arrays may be allocated already and we want to reuse them
    //                                 --> But note that we must initialize these pointers as NULL when allocating (not activating)
    //                                     patches and before calling hnew and gnew
    //                                     --> otherwise these pointers become ill-defined, which will make hdelete and gdelete crash
-   //                                 --> Does NOT apply to flux arrays (i.e., flux, flux_passive, and flux_debug) which are always
+   //                                 --> Does NOT apply to flux arrays (i.e., flux and flux_debug) which are always
    //                                     initialized as NULL here
    //                                 --> Does not apply to any particle variable (except rho_ext)
    //===================================================================================
@@ -313,9 +307,6 @@ struct patch_t
       if ( InitPtrAsNull )
       {
          fluid   = NULL;
-#        if ( NPASSIVE > 0 )
-         passive = NULL;
-#        endif
 
 #        ifdef GRAVITY
          pot     = NULL;
@@ -331,12 +322,9 @@ struct patch_t
 
       for (int s=0; s<6; s++)
       {
-         flux        [s] = NULL;
-#        if ( NPASSIVE > 0 )
-         flux_passive[s] = NULL;
-#        endif
+         flux      [s] = NULL;
 #        ifdef GAMER_DEBUG
-         flux_debug  [s] = NULL;
+         flux_debug[s] = NULL;
 #        endif
       }
 
@@ -432,21 +420,17 @@ struct patch_t
          Aux_Error( ERROR_INFO, "allocate an existing flux_debug array (sibling = %d) !!\n", SibID );
 #     endif
 
-      flux[SibID] = new real [NFLUX+NPASSIVE][PATCH_SIZE][PATCH_SIZE];
+      flux[SibID] = new real [NFLUX_TOTAL][PATCH_SIZE][PATCH_SIZE];
 
-      for(int v=0; v<NFLUX+NPASSIVE; v++)
+      for(int v=0; v<NFLUX_TOTAL; v++)
       for(int m=0; m<PATCH_SIZE; m++)
       for(int n=0; n<PATCH_SIZE; n++)
          flux[SibID][v][m][n] = 0.0;
 
-#     if ( NPASSIVE > 0 )
-      flux_passive[SibID] = flux[SibID] + NFLUX;
-#     endif
-
 #     ifdef GAMER_DEBUG
-      flux_debug[SibID] = new real [NFLUX+NPASSIVE][PATCH_SIZE][PATCH_SIZE];
+      flux_debug[SibID] = new real [NFLUX_TOTAL][PATCH_SIZE][PATCH_SIZE];
 
-      for(int v=0; v<NFLUX+NPASSIVE; v++)
+      for(int v=0; v<NFLUX_TOTAL; v++)
       for(int m=0; m<PATCH_SIZE; m++)
       for(int n=0; n<PATCH_SIZE; n++)
          flux_debug[SibID][v][m][n] = 0.0;
@@ -470,10 +454,6 @@ struct patch_t
             delete [] flux[s];
             flux[s] = NULL;
 
-#           if ( NPASSIVE > 0 )
-            flux_passive[s] = NULL;
-#           endif
-
 #           ifdef GAMER_DEBUG
             delete [] flux_debug[s];
             flux_debug[s] = NULL;
@@ -494,19 +474,10 @@ struct patch_t
    void hnew()
    {
 
-#     if ( defined GAMER_DEBUG  &&  NPASSIVE > 0 )
-      if (  ( fluid == NULL && passive != NULL )  ||  ( fluid != NULL && passive == NULL )  )
-         Aux_Error( ERROR_INFO, "conflicting memory allocations for fluid and passive !!\n" );
-#     endif
-
       if ( fluid == NULL )
       {
-         fluid = new real [NCOMP+NPASSIVE][PATCH_SIZE][PATCH_SIZE][PATCH_SIZE];
+         fluid = new real [NCOMP_TOTAL][PATCH_SIZE][PATCH_SIZE][PATCH_SIZE];
          fluid[0][0][0][0] = -1;    // arbitrarily initialized
-
-#        if ( NPASSIVE > 0 )
-         passive = fluid + NCOMP;
-#        endif
       }
 
    } // METHOD : hnew
@@ -525,11 +496,6 @@ struct patch_t
          delete [] fluid;
          fluid = NULL;
       }
-
-#     if ( NPASSIVE > 0 )
-      passive = NULL;
-#     endif
-
 #     ifdef PARTICLE
       if ( rho_ext != NULL )
       {

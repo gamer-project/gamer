@@ -121,6 +121,9 @@ void Output_DumpData_Part( const OptOutputPart_t Part, const bool BaseOnly, cons
 #           error : ERROR : unsupported MODEL !!
 #           endif // MODEL
 
+            for (int v=0; v<NCOMP_PASSIVE; v++)
+            fprintf( File, "%14s", PassiveFieldName_Grid[v] );
+
 #           ifdef GRAVITY
             if ( OPT__OUTPUT_POT ) 
             fprintf( File, "%14s", "Potential" );
@@ -217,16 +220,16 @@ void WriteFile( FILE *File, const int lv, const int PID, const int i, const int 
 
    const double dh_min  = amr->dh[TOP_LEVEL];
    const double scale_2 = 0.5*amr->scale[lv];
-   real u[NCOMP];
+   real u[NCOMP_FLUID];
 
-   for (int v=0; v<NCOMP; v++)   u[v] = amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[v][k][j][i];
+   for (int v=0; v<NCOMP_FLUID; v++)   u[v] = amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[v][k][j][i];
 
 // output cell indices and coordinates
    fprintf( File, " %10d %10d %10d %20.14e %20.14e %20.14e", 
             ii, jj, kk, (ii+scale_2)*dh_min, (jj+scale_2)*dh_min, (kk+scale_2)*dh_min );
 
-// output all variables in the fluid array
-   for (int v=0; v<NCOMP; v++)   fprintf( File, " %13.6e", u[v] );
+// output all active variables in the fluid array
+   for (int v=0; v<NCOMP_FLUID; v++)   fprintf( File, " %13.6e", u[v] );
 
 // output pressure in HYDRO
 #  if   ( MODEL == HYDRO )
@@ -235,6 +238,9 @@ void WriteFile( FILE *File, const int lv, const int PID, const int i, const int 
 #  elif ( MODEL == MHD )
 #  warning : WAIT MHD !!!
 #  endif // MODEL
+
+// output all passive scalars
+   for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)  fprintf( File, " %13.6e", amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[v][k][j][i] );
 
 // output potential
 #  ifdef GRAVITY

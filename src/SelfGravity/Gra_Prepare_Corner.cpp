@@ -7,11 +7,11 @@
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Gra_Prepare_Corner 
-// Description :  Prepare the input array "h_Corner_Array_G" for the Gravity solver 
+// Function    :  Gra_Prepare_Corner
+// Description :  Prepare the input array "h_Corner_Array_G" for the Gravity solver
 //
 // Note        :  1. The corner coordinates are used for calculating the external gravity and/or potential
-//                2. Corner coordinates are defined as the central coordinates of the first cell located 
+//                2. Corner coordinates are defined as the central coordinates of the first cell located
 //                   at the bottom left corner
 //
 // Parameter   :  lv                : Targeted refinement level

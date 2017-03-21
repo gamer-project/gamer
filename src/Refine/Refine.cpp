@@ -80,8 +80,8 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
    const int CStart_Flu[3] = { CGhost_Flu, CGhost_Flu, CGhost_Flu };
    const int CSize_Flu3[3] = { CSize_Flu, CSize_Flu, CSize_Flu };
 
-   real Flu_CData[NCOMP][CSize_Flu][CSize_Flu][CSize_Flu];  // coarse-grid fluid array for interpolation
-   real Flu_FData[NCOMP][FSize][FSize][FSize];  // fine-grid fluid array storing the interpolation result
+   real Flu_CData[NCOMP_TOTAL][CSize_Flu][CSize_Flu][CSize_Flu];  // coarse-grid fluid array for interpolation
+   real Flu_FData[NCOMP_TOTAL][FSize][FSize][FSize];              // fine-grid fluid array storing the interpolation result
 
 #  ifdef GRAVITY
    int NSide_Pot, CGhost_Pot;
@@ -90,15 +90,15 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
    const int CSize_Pot     = PATCH_SIZE + 2*CGhost_Pot;
    const int CStart_Pot[3] = { CGhost_Pot, CGhost_Pot, CGhost_Pot };
 
-   real Pot_CData[CSize_Pot][CSize_Pot][CSize_Pot];         // coarse-grid potential array for interpolation
-   real Pot_FData[FSize][FSize][FSize];         // fine-grid potential array storing the interpolation result
+   real Pot_CData[CSize_Pot][CSize_Pot][CSize_Pot];   // coarse-grid potential array for interpolation
+   real Pot_FData[FSize][FSize][FSize];               // fine-grid potential array storing the interpolation result
 #  endif
 
 
 // determine the priority of different boundary faces (z>y>x) to set the corner cells properly for the non-periodic B.C.
    const int  NDer       = 0;
    const int *DerVarList = NULL;
-   int BC_Face[26], BC_Face_tmp[3], FluVarIdxList[NCOMP];
+   int BC_Face[26], BC_Face_tmp[3], FluVarIdxList[NCOMP_TOTAL];
 
    for (int s=0; s<26; s++)
    {
@@ -112,7 +112,7 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
       else if ( BC_Face_tmp[0] != -1 )   BC_Face[s] = BC_Face_tmp[0];
    }
 
-   for (int v=0; v<NCOMP; v++)   FluVarIdxList[v] = v;
+   for (int v=0; v<NCOMP_TOTAL; v++)   FluVarIdxList[v] = v;
 
 
 
@@ -201,7 +201,7 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
          int I, J, K;
 
 //       fluid data
-         for (int v=0; v<NCOMP; v++)         {
+         for (int v=0; v<NCOMP_TOTAL; v++)   {
          for (int k=0; k<PATCH_SIZE; k++)    {  K = k + CGhost_Flu;
          for (int j=0; j<PATCH_SIZE; j++)    {  J = j + CGhost_Flu;
          for (int i=0; i<PATCH_SIZE; i++)    {  I = i + CGhost_Flu;
@@ -249,7 +249,7 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
                Disp2[1] = TABLE_01( sib, 'y', PATCH_SIZE-CGhost_Flu, 0, 0 );
                Disp2[2] = TABLE_01( sib, 'z', PATCH_SIZE-CGhost_Flu, 0, 0 );
 
-               for (int v=0; v<NCOMP; v++)   {
+               for (int v=0; v<NCOMP_TOTAL; v++) {
                for (int k=0; k<Loop[2]; k++) {  K = k + Disp1[2];    K2 = k + Disp2[2];
                for (int j=0; j<Loop[1]; j++) {  J = j + Disp1[1];    J2 = j + Disp2[1];
                for (int i=0; i<Loop[0]; i++) {  I = i + Disp1[0];    I2 = i + Disp2[0];
@@ -275,12 +275,12 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
                {
 #                 if ( MODEL == HYDRO  ||  MODEL == MHD )
                   case BC_FLU_OUTFLOW:
-                     Hydro_BoundaryCondition_Outflow   ( Flu_CData[0][0][0], BC_Face[BC_Sibling], NCOMP, CGhost_Flu,
+                     Hydro_BoundaryCondition_Outflow   ( Flu_CData[0][0][0], BC_Face[BC_Sibling], NCOMP_TOTAL, CGhost_Flu,
                                                          CSize_Flu, CSize_Flu, CSize_Flu, BC_Idx_Start, BC_Idx_End );
                   break;
 
                   case BC_FLU_REFLECTING:
-                     Hydro_BoundaryCondition_Reflecting( Flu_CData[0][0][0], BC_Face[BC_Sibling], NCOMP, CGhost_Flu,
+                     Hydro_BoundaryCondition_Reflecting( Flu_CData[0][0][0], BC_Face[BC_Sibling], NCOMP_TOTAL, CGhost_Flu,
                                                          CSize_Flu, CSize_Flu, CSize_Flu, BC_Idx_Start, BC_Idx_End,
                                                          FluVarIdxList, NDer, DerVarList );
                   break;
@@ -290,9 +290,9 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
 #                 endif
 
                   case BC_FLU_USER:
-                     Flu_BoundaryCondition_User        ( Flu_CData[0][0][0],                      NCOMP,
+                     Flu_BoundaryCondition_User        ( Flu_CData[0][0][0],                      NCOMP_TOTAL,
                                                          CSize_Flu, CSize_Flu, CSize_Flu, BC_Idx_Start, BC_Idx_End,
-                                                         FluVarIdxList, Time[lv], amr->dh[lv], xyz, _FLU );
+                                                         FluVarIdxList, Time[lv], amr->dh[lv], xyz, _TOTAL );
                   break;
 
                   default:
@@ -354,18 +354,14 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
          const bool EnsureMonotonicity_No  = false;
 
 //       (c1.3.3.1) determine which variables require **monotonic** interpolation
-         bool Monotonicity[NCOMP];
+         bool Monotonicity[NCOMP_TOTAL];
 
-         for (int v=0; v<NCOMP; v++)
+         for (int v=0; v<NCOMP_TOTAL; v++)
          {
 #           if ( MODEL == HYDRO )
 //          we now apply monotonic interpolation to ALL fluid variables (which helps alleviate the issue of negative density/pressure)
             /*
-#           if ( NPASSIVE > 0 )
-            if ( v == DENS  ||  v == ENGY  ||  v >= NCOMP )
-#           else
-            if ( v == DENS  ||  v == ENGY )
-#           endif
+            if ( v == DENS  ||  v == ENGY  ||  v >= NCOMP_FLUID )
                                              Monotonicity[v] = EnsureMonotonicity_Yes;
             else                             Monotonicity[v] = EnsureMonotonicity_No;
             */
@@ -375,7 +371,7 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
 #           warning : WAIT MHD !!!
 
 #           elif ( MODEL == ELBDM )
-            if ( v == DENS )                 Monotonicity[v] = EnsureMonotonicity_Yes;
+            if ( v != REAL  &&  v != IMAG )  Monotonicity[v] = EnsureMonotonicity_Yes;
             else                             Monotonicity[v] = EnsureMonotonicity_No;
 
 #           else
@@ -410,7 +406,7 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
 
          else // if ( OPT__INT_PHASE )
          {
-            for (int v=0; v<NCOMP; v++)
+            for (int v=0; v<NCOMP_TOTAL; v++)
             Interpolate( &Flu_CData[v][0][0][0], CSize_Flu3, CStart_Flu, CRange, &Flu_FData[v][0][0][0],
                          FSize3, FStart, 1, OPT__REF_FLU_INT_SCHEME, PhaseUnwrapping_No,
                          Monotonicity[v] );
@@ -443,7 +439,7 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
 
 #        else // #if ( MODEL == ELBDM )
 
-         for (int v=0; v<NCOMP; v++)
+         for (int v=0; v<NCOMP_TOTAL; v++)
          Interpolate( &Flu_CData[v][0][0][0], CSize_Flu3, CStart_Flu, CRange, &Flu_FData[v][0][0][0],
                       FSize3, FStart, 1, OPT__REF_FLU_INT_SCHEME, PhaseUnwrapping_No,
                       Monotonicity[v] );
@@ -461,7 +457,9 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
 #        endif
 
 //       (c1.3.3.3) check minimum density and pressure
-#        if ( MODEL == HYDRO  ||  MODEL == MHD  ||  MODEL == ELBDM )
+//       --> note that it's unnecessary to check negative passive scalars thanks to the monotonic interpolation
+//       --> but we do renormalize passive scalars here
+#        if ( MODEL == HYDRO  ||  MODEL == MHD  ||  MODEL == ELBDM  ||  (defined DENS && NCOMP_PASSIVE>0) )
          for (int k=0; k<FSize; k++)
          for (int j=0; j<FSize; j++)
          for (int i=0; i<FSize; i++)
@@ -493,6 +491,20 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
                                          Flu_FData[MOMZ][k][j][i], Flu_FData[ENGY][k][j][i],
                                          Gamma_m1, _Gamma_m1, MIN_PRES );
 #           endif
+
+//          normalize passive scalars
+#           if ( NCOMP_PASSIVE > 0 )
+            if ( OPT__NORMALIZE_PASSIVE )
+            {
+               real Passive[NCOMP_PASSIVE];
+
+               for (int v=0; v<NCOMP_PASSIVE; v++)    Passive[v] = Flu_FData[ NCOMP_FLUID + v ][k][j][i];
+
+               CPU_NormalizePassive( Flu_FData[DENS][k][j][i], Passive, PassiveNorm_NVar, PassiveNorm_VarIdx );
+
+               for (int v=0; v<NCOMP_PASSIVE; v++)    Flu_FData[ NCOMP_FLUID + v ][k][j][i] = Passive[v];
+            }
+#           endif
          } // i,j,k
 #        endif // #if ( MODEL == HYDRO  ||  MODEL == MHD  ||  MODEL == ELBDM )
 
@@ -508,7 +520,7 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
             Disp1[2] = TABLE_02( LocalID, 'z', 0, PATCH_SIZE );
 
 //          fluid data
-            for (int v=0; v<NCOMP; v++)         {
+            for (int v=0; v<NCOMP_TOTAL; v++)   {
             for (int k=0; k<PATCH_SIZE; k++)    {  K = k + Disp1[2];
             for (int j=0; j<PATCH_SIZE; j++)    {  J = j + Disp1[1];
             for (int i=0; i<PATCH_SIZE; i++)    {  I = i + Disp1[0];

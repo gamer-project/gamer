@@ -148,8 +148,6 @@ void Aux_TakeNote()
       fprintf( Note, "RSOLVER                   UNKNOWN\n" );
 #     endif
 
-      fprintf( Note, "NPASSIVE                  %d\n", NPASSIVE );
-
 //    c. options in MHD
 #     elif ( MODEL == MHD )
 #     warning : WAIT MHD !!!
@@ -398,10 +396,12 @@ void Aux_TakeNote()
 //    record the symbolic constants
       fprintf( Note, "Symbolic Constants\n" );
       fprintf( Note, "***********************************************************************************\n" );
-      fprintf( Note, "#define NCOMP             %d\n",      NCOMP                   );
+      fprintf( Note, "#define NCOMP_FLUID       %d\n",      NCOMP_FLUID             );
+      fprintf( Note, "#define NCOMP_PASSIVE     %d\n",      NCOMP_PASSIVE           );
       fprintf( Note, "#define FLU_NIN           %d\n",      FLU_NIN                 );
       fprintf( Note, "#define FLU_NOUT          %d\n",      FLU_NOUT                );
-      fprintf( Note, "#define NFLUX             %d\n",      NFLUX                   );
+      fprintf( Note, "#define NFLUX_FLUID       %d\n",      NFLUX_FLUID             );
+      fprintf( Note, "#define NFLUX_PASSIVE     %d\n",      NFLUX_PASSIVE           );
 #     ifdef GRAVITY
       fprintf( Note, "#define GRA_NIN           %d\n",      GRA_NIN                 );
 #     endif
@@ -451,6 +451,8 @@ void Aux_TakeNote()
       fprintf( Note, "#define PAR_NPASSIVE      %d\n",      PAR_NPASSIVE            );
 #     endif
       fprintf( Note, "#define MAX_STRING        %d\n",      MAX_STRING              );
+      fprintf( Note, "#define TINY_NUMBER       %20.14e\n", TINY_NUMBER             );
+      fprintf( Note, "#define HUGE_NUMBER       %20.14e\n", HUGE_NUMBER             );
       fprintf( Note, "***********************************************************************************\n" );
       fprintf( Note, "\n\n");
 
@@ -737,6 +739,16 @@ void Aux_TakeNote()
       fprintf( Note, "OPT__FIXUP_FLUX           %d\n",      OPT__FIXUP_FLUX         );
       fprintf( Note, "OPT__FIXUP_RESTRICT       %d\n",      OPT__FIXUP_RESTRICT     );
       fprintf( Note, "OPT__CORR_AFTER_ALL_SYNC  %d\n",      OPT__CORR_AFTER_ALL_SYNC);
+      fprintf( Note, "OPT__NORMALIZE_PASSIVE    %d\n",      OPT__NORMALIZE_PASSIVE  );
+
+//    target passive scalars to be normalized
+      if ( OPT__NORMALIZE_PASSIVE ) {
+      fprintf( Note, "   Number of scalars      %d\n",      PassiveNorm_NVar        );
+      fprintf( Note, "   Target scalars        "                                    );
+      for (int v=0; v<PassiveNorm_NVar; v++)
+      fprintf( Note, " %s",                                 PassiveFieldName_Grid[ PassiveNorm_VarIdx[v] ] );
+      fprintf( Note, "\n" ); }
+
       fprintf( Note, "OPT__OVERLAP_MPI          %d\n",      OPT__OVERLAP_MPI        );
       fprintf( Note, "OPT__RESET_FLUID          %d\n",      OPT__RESET_FLUID        );
 #     if ( MODEL == HYDRO  ||  MODEL == MHD  ||  MODEL == ELBDM )
@@ -931,6 +943,7 @@ void Aux_TakeNote()
       fprintf( Note, "OPT__CK_REFINE            %d\n",      OPT__CK_REFINE          );
       fprintf( Note, "OPT__CK_PROPER_NESTING    %d\n",      OPT__CK_PROPER_NESTING  );
       fprintf( Note, "OPT__CK_CONSERVATION      %d\n",      OPT__CK_CONSERVATION    );
+      fprintf( Note, "OPT__CK_NORMALIZE_PASSIVE %d\n",      OPT__CK_NORMALIZE_PASSIVE );
       fprintf( Note, "OPT__CK_RESTRICT          %d\n",      OPT__CK_RESTRICT        );
       fprintf( Note, "OPT__CK_FINITE            %d\n",      OPT__CK_FINITE          );
       fprintf( Note, "OPT__CK_PATCH_ALLOCATE    %d\n",      OPT__CK_PATCH_ALLOCATE  );

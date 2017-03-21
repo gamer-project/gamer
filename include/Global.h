@@ -42,6 +42,10 @@ extern int       *BaseP;                              // table recording the IDs
 extern int        Flu_ParaBuf;                        // number of parallel buffers to exchange all fluid
                                                       // variables for the fluid solver and fluid refinement
 
+extern char      *PassiveFieldName_Grid[NCOMP_PASSIVE];
+extern int        PassiveNorm_NVar;
+extern int        PassiveNorm_VarIdx[NCOMP_PASSIVE];
+
 extern double     BOX_SIZE, DT__FLUID, DT__FLUID_INIT, END_T, OUTPUT_DT;
 extern long int   END_STEP;
 extern int        NX0_TOT[3], OUTPUT_STEP, REGRID_COUNT, FLU_GPU_NPGROUP, OMP_NTHREAD;
@@ -56,9 +60,9 @@ extern bool       OPT__DT_USER, OPT__RECORD_DT, OPT__RECORD_MEMORY, OPT__ADAPTIV
 extern bool       OPT__FIXUP_RESTRICT, OPT__INIT_RESTRICT, OPT__VERBOSE, OPT__MANUAL_CONTROL, OPT__UNIT;
 extern bool       OPT__INT_TIME, OPT__OUTPUT_TEST_ERROR, OPT__OUTPUT_BASE, OPT__OVERLAP_MPI, OPT__TIMING_BALANCE;
 extern bool       OPT__OUTPUT_BASEPS, OPT__CK_REFINE, OPT__CK_PROPER_NESTING, OPT__CK_FINITE, OPT__RECORD_PERFORMANCE;
-extern bool       OPT__CK_RESTRICT, OPT__CK_PATCH_ALLOCATE, OPT__FIXUP_FLUX, OPT__CK_FLUX_ALLOCATE;
+extern bool       OPT__CK_RESTRICT, OPT__CK_PATCH_ALLOCATE, OPT__FIXUP_FLUX, OPT__CK_FLUX_ALLOCATE, OPT__CK_NORMALIZE_PASSIVE;
 extern bool       OPT__UM_START_DOWNGRADE, OPT__UM_START_REFINE, OPT__UM_FACTOR_5OVER3, OPT__TIMING_MPI;
-extern bool       OPT__CK_CONSERVATION, OPT__RESET_FLUID, OPT__RECORD_USER;
+extern bool       OPT__CK_CONSERVATION, OPT__RESET_FLUID, OPT__RECORD_USER, OPT__NORMALIZE_PASSIVE;
 
 extern OptInit_t          OPT__INIT;
 extern OptRestartH_t      OPT__RESTART_HEADER;
@@ -156,6 +160,7 @@ extern real            MinDtInfo_ParVelAcc[2][NLEVEL];
 extern bool            OPT__OUTPUT_PAR_TEXT, OPT__CK_PARTICLE, OPT__FLAG_NPAR_CELL;
 extern int             OPT__PARTICLE_COUNT, OPT__FLAG_NPAR_PATCH, FlagTable_NParPatch[NLEVEL-1], FlagTable_NParCell[NLEVEL-1];
 extern ParOutputDens_t OPT__OUTPUT_PAR_DENS;
+extern char           *PassiveFieldName_Par[PAR_NPASSIVE];
 #endif
 
 
@@ -172,7 +177,7 @@ extern yt_verbose      YT_VERBOSE;
 // ============================================================================================================
 extern real       (*h_Flu_Array_F_In [2])[FLU_NIN ][  FLU_NXT   *FLU_NXT   *FLU_NXT   ];
 extern real       (*h_Flu_Array_F_Out[2])[FLU_NOUT][8*PATCH_SIZE*PATCH_SIZE*PATCH_SIZE];
-extern real       (*h_Flux_Array[2])[9][NFLUX][4*PATCH_SIZE*PATCH_SIZE];
+extern real       (*h_Flux_Array[2])[9][NFLUX_TOTAL][4*PATCH_SIZE*PATCH_SIZE];
 extern double     (*h_Corner_Array_F [2])[3];
 extern real       *h_MinDtInfo_Fluid_Array[2];
 

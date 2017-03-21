@@ -18,7 +18,7 @@ void End_MemFree()
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... ", __FUNCTION__ );
 
 
-// a. deallocate the AMR structure
+// 1. AMR structure
    if ( amr != NULL )   
    {
 //    free particle variables first to avoid warning messages when deleting patches with particles
@@ -37,7 +37,7 @@ void End_MemFree()
    }
 
 
-// b. deallocate the BaseP
+// 2. BaseP
    if ( BaseP != NULL )   
    {
       delete [] BaseP;
@@ -45,7 +45,7 @@ void End_MemFree()
    }
 
 
-// c. deallocate arrays for GPU (or CPU) solvers
+// 3. arrays for GPU (or CPU) solvers
 #  ifdef GPU
       CUAPI_MemFree_Fluid( GPU_NSTREAM );
 #  else
@@ -61,7 +61,7 @@ void End_MemFree()
 #  endif
 
 
-// d. deallocate the dump table
+// 4. dump table
    if ( DumpTable != NULL )   
    {
       delete [] DumpTable;
@@ -69,10 +69,14 @@ void End_MemFree()
    }
 
 
-// e. free the MPI buffers used by LOAD_BALANCE
+// 5. MPI buffers used by LOAD_BALANCE
    #ifdef LOAD_BALANCE
    LB_GetBufferData_MemFree();
    #endif
+
+
+// 6. string arrays for the passive variables
+   End_MemFree_PassiveFieldName();
 
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );

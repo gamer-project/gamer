@@ -6,12 +6,15 @@
 
 #include "Macro.h"
 #include "CUFLU.h"
+#if ( NCOMP_PASSIVE > 0 )
+#include "CUFLU_Shared_FluUtility.cu"
+#endif
 
-static __device__ void CUFLU_FullStepUpdate( const real g_Fluid_In[][5][ FLU_NXT*FLU_NXT*FLU_NXT ],
-                                             real g_Fluid_Out[][5][ PS2*PS2*PS2 ],
-                                             const real g_FC_Flux_x[][5][ N_FC_FLUX*N_FC_FLUX*N_FC_FLUX ],
-                                             const real g_FC_Flux_y[][5][ N_FC_FLUX*N_FC_FLUX*N_FC_FLUX ],
-                                             const real g_FC_Flux_z[][5][ N_FC_FLUX*N_FC_FLUX*N_FC_FLUX ],
+static __device__ void CUFLU_FullStepUpdate( const real g_Fluid_In[][NCOMP_TOTAL][ FLU_NXT*FLU_NXT*FLU_NXT ],
+                                             real g_Fluid_Out[][NCOMP_TOTAL][ PS2*PS2*PS2 ],
+                                             const real g_FC_Flux_x[][NCOMP_TOTAL][ N_FC_FLUX*N_FC_FLUX*N_FC_FLUX ],
+                                             const real g_FC_Flux_y[][NCOMP_TOTAL][ N_FC_FLUX*N_FC_FLUX*N_FC_FLUX ],
+                                             const real g_FC_Flux_z[][NCOMP_TOTAL][ N_FC_FLUX*N_FC_FLUX*N_FC_FLUX ],
                                              const real dt, const real _dh, const real Gamma );
 
 
@@ -33,13 +36,20 @@ static __device__ void CUFLU_FullStepUpdate( const real g_Fluid_In[][5][ FLU_NXT
 //                dt          : Time interval to advance solution
 //                _dh         : 1 / grid size
 //                Gamma       : Ratio of specific heats
+//                NormPassive : true --> normalize passive scalars so that the sum of their mass density
+//                                       is equal to the gas mass density
+//                NNorm       : Number of passive scalars to be normalized
+//                              --> Should be set to the global variable "PassiveNorm_NVar"
+//                NormIdx     : Target variable indices to be normalized
+//                              --> Should be set to the global variable "PassiveNorm_VarIdx"
 //-------------------------------------------------------------------------------------------------------
-__device__ void CUFLU_FullStepUpdate( const real g_Fluid_In [][5][ FLU_NXT*FLU_NXT*FLU_NXT ],
-                                            real g_Fluid_Out[][5][ PS2*PS2*PS2 ],
-                                      const real g_FC_Flux_x[][5][ N_FC_FLUX*N_FC_FLUX*N_FC_FLUX ],
-                                      const real g_FC_Flux_y[][5][ N_FC_FLUX*N_FC_FLUX*N_FC_FLUX ],
-                                      const real g_FC_Flux_z[][5][ N_FC_FLUX*N_FC_FLUX*N_FC_FLUX ],
-                                      const real dt, const real _dh, const real Gamma )
+__device__ void CUFLU_FullStepUpdate( const real g_Fluid_In [][NCOMP_TOTAL][ FLU_NXT*FLU_NXT*FLU_NXT ],
+                                            real g_Fluid_Out[][NCOMP_TOTAL][ PS2*PS2*PS2 ],
+                                      const real g_FC_Flux_x[][NCOMP_TOTAL][ N_FC_FLUX*N_FC_FLUX*N_FC_FLUX ],
+                                      const real g_FC_Flux_y[][NCOMP_TOTAL][ N_FC_FLUX*N_FC_FLUX*N_FC_FLUX ],
+                                      const real g_FC_Flux_z[][NCOMP_TOTAL][ N_FC_FLUX*N_FC_FLUX*N_FC_FLUX ],
+                                      const real dt, const real _dh, const real Gamma,
+                                      const bool NormPassive, const int NNorm, const int NormIdx[] )
 {
 
    /*
@@ -78,6 +88,10 @@ __device__ void CUFLU_FullStepUpdate( const real g_Fluid_In [][5][ FLU_NXT*FLU_N
       ConVar.Pz  = g_Fluid_In[bx][3][ID_In];
       ConVar.Egy = g_Fluid_In[bx][4][ID_In];
 
+#     if ( NCOMP_PASSIVE > 0 )
+      for (int v=0; v<NCOMP_PASSIVE; v++)    ConVar.Passive[v] = g_Fluid_In[bx][ NCOMP_FLUID + v ][ID_In];
+#     endif
+
 #     define Update( comp, v )                                                                        \
       {                                                                                               \
          FluxDiff = dt_dh * (  g_FC_Flux_x[bx][v][ID_F+dID_F.x] - g_FC_Flux_x[bx][v][ID_F] +          \
@@ -92,10 +106,14 @@ __device__ void CUFLU_FullStepUpdate( const real g_Fluid_In [][5][ FLU_NXT*FLU_N
       Update( Pz,  3 );
       Update( Egy, 4 );
 
+#     if ( NCOMP_PASSIVE > 0 )
+      for (int v=0, vv=NCOMP_FLUID; v<NCOMP_PASSIVE; v++, vv++)   Update( Passive[v], vv );
+#     endif
+
 #     undef Update
 
 
-//    we no longer check negative density and pressure here
+//    we no longer ensure positive density and pressure here
 //    --> these checks have been moved to Flu_Close()->CorrectUnphysical()
 //    --> because we want to apply 1st-order-flux correction BEFORE setting a minimum density and pressure
       /*
@@ -103,6 +121,27 @@ __device__ void CUFLU_FullStepUpdate( const real g_Fluid_In [][5][ FLU_NXT*FLU_N
       ConVar.Rho = FMAX( ConVar.Rho, MinDens );
       ConVar.Egy = CUFLU_CheckMinPresInEngy( ConVar, Gamma_m1, _Gamma_m1, MinPres );
       */
+
+
+//    floor and normalize passive scalars
+#     if ( NCOMP_PASSIVE > 0 )
+      for (int v=0; v<NCOMP_PASSIVE; v++)    ConVar.Passive[v] = FMAX( ConVar.Passive[v], TINY_NUMBER );
+
+      if ( NormPassive )
+         CUFLU_NormalizePassive( ConVar.Rho, ConVar.Passive, NNorm, NormIdx );
+#     endif
+
+
+//    save the updated data back to the output global array
+      g_Fluid_Out[bx][0][ID_Out] = ConVar.Rho;
+      g_Fluid_Out[bx][1][ID_Out] = ConVar.Px;
+      g_Fluid_Out[bx][2][ID_Out] = ConVar.Py;
+      g_Fluid_Out[bx][3][ID_Out] = ConVar.Pz;
+      g_Fluid_Out[bx][4][ID_Out] = ConVar.Egy;
+
+#     if ( NCOMP_PASSIVE > 0 )
+      for (int v=0; v<NCOMP_PASSIVE; v++)    g_Fluid_Out[bx][ NCOMP_FLUID + v ][ID_Out] = ConVar.Passive[v];
+#     endif
 
 
 //    check negative density and energy
@@ -115,14 +154,6 @@ __device__ void CUFLU_FullStepUpdate( const real g_Fluid_In [][5][ FLU_NXT*FLU_N
       printf( "WARNING : negative energy (%14.7e) at file <%s>, line <%d>, function <%s>\n",
               ConVar.Egy, __FILE__, __LINE__, __FUNCTION__ );
 #     endif
-
-
-//    save the updated data back to the output global array
-      g_Fluid_Out[bx][0][ID_Out] = ConVar.Rho;
-      g_Fluid_Out[bx][1][ID_Out] = ConVar.Px;
-      g_Fluid_Out[bx][2][ID_Out] = ConVar.Py;
-      g_Fluid_Out[bx][3][ID_Out] = ConVar.Pz;
-      g_Fluid_Out[bx][4][ID_Out] = ConVar.Egy;
 
 
       ID_Out += dID_Out;

@@ -13,6 +13,7 @@ static void Flu_ResetByUser_Func( real fluid[], const double x, const double y, 
 //                2. Input "fluid" array stores the original values
 //
 // Parameter   :  fluid : Fluid array storing both the input (origial) and reset values
+//                        --> Including both active and passive variables
 //                x/y/z : Target physical coordinates
 //                Time  : Target physical time
 //
@@ -32,11 +33,14 @@ void Flu_ResetByUser_Func( real fluid[], const double x, const double y, const d
 
    if ( r <= TRad )
    {
+//    set active scalars
       fluid[DENS] = MaxDens;
       fluid[MOMX] = 0.0;
       fluid[MOMY] = 0.0;
       fluid[MOMZ] = 0.0;
       fluid[ENGY] = MaxPres / ( GAMMA-(real)1.0 );
+
+//    set passive scalars
    }
    */
 
@@ -63,7 +67,7 @@ void Flu_ResetByUser( const int lv, const int FluSg, const double TTime )
 
    const double dh = amr->dh[lv];
 
-   real   fluid[NCOMP];
+   real   fluid[NCOMP_TOTAL];
    double x, y, z, x0, y0, z0;
 
 
@@ -78,11 +82,11 @@ void Flu_ResetByUser( const int lv, const int FluSg, const double TTime )
       for (int j=0; j<PS1; j++)  {  y = y0 + j*dh;
       for (int i=0; i<PS1; i++)  {  x = x0 + i*dh;
 
-         for (int v=0; v<NCOMP; v++)   fluid[v] = amr->patch[FluSg][lv][PID]->fluid[v][k][j][i];
+         for (int v=0; v<NCOMP_TOTAL; v++)   fluid[v] = amr->patch[FluSg][lv][PID]->fluid[v][k][j][i];
 
          Flu_ResetByUser_Func( fluid, x, y, z, TTime );
 
-         for (int v=0; v<NCOMP; v++)   amr->patch[FluSg][lv][PID]->fluid[v][k][j][i] = fluid[v];
+         for (int v=0; v<NCOMP_TOTAL; v++)   amr->patch[FluSg][lv][PID]->fluid[v][k][j][i] = fluid[v];
 
       }}}
    }

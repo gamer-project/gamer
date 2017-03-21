@@ -72,15 +72,15 @@
 #        endif
 #     elif ( GPU_ARCH == MAXWELL )
 #        ifdef FLOAT8
-#        define POT_BLOCK_SIZE_Z      2
+#        define POT_BLOCK_SIZE_Z      2      // not optimized yet
 #        else
-#        define POT_BLOCK_SIZE_Z      8
+#        define POT_BLOCK_SIZE_Z      8      // not optimized yet
 #        endif
 #     elif ( GPU_ARCH == PASCAL )
 #        ifdef FLOAT8
-#        define POT_BLOCK_SIZE_Z      2
+#        define POT_BLOCK_SIZE_Z      2      // not optimized yet
 #        else
-#        define POT_BLOCK_SIZE_Z      8
+#        define POT_BLOCK_SIZE_Z      4      // not optimized yet
 #        endif
 #     else
 #        define POT_BLOCK_SIZE_Z      NULL_INT

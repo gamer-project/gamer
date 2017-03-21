@@ -11,7 +11,7 @@ static void BC_User( const double Time, const double x, const double y, const do
 // Description :  User-specified boundary condition
 //
 // Note        :  1. Work for the function "Flu_BoundaryCondition_User"
-//                2. Always return NCOMP variables
+//                2. Always return NCOMP_TOTAL variables
 //
 // Parameter   :  Time  : Current physical time
 //                x,y,z : Physical coordinates
@@ -40,6 +40,9 @@ void BC_User( const double Time, const double x, const double y, const double z,
    BVal[MOMY] = 0.0;
    BVal[MOMZ] = 0.0;
    BVal[ENGY] = Cs*Cs*BVal[DENS]*Gamma2 + (real)0.5*( SQR(BVal[MOMX]) + SQR(BVal[MOMY]) + SQR(BVal[MOMZ]) ) / BVal[DENS];
+
+// remember to set passive scalars as well
+   BVal[EINT] = XXX;
    */
 
 
@@ -62,7 +65,7 @@ void BC_User( const double Time, const double x, const double y, const double z,
 //                ArraySizeX/Y/Z : Size of Array including the ghost zones on each side
 //                Idx_Start      : Minimum array indices
 //                Idx_End        : Maximum array indices
-//                TFluVarIdxList : List recording the target fluid variable indices ( = [0 ... NCOMP-1] )
+//                TFluVarIdxList : List recording the target fluid variable indices ( = [0 ... NCOMP_TOTAL-1] )
 //                Time           : Current physical time
 //                dh             : Grid size
 //                Corner         : Physcial coordinates at the center of the cell (0,0,0) --> Array[0]
@@ -105,7 +108,7 @@ void Flu_BoundaryCondition_User( real *Array, const int NVar_Flu, const int Arra
 
 // set the boundary values
    int    i, j, k, v2;
-   real   BVal[NCOMP];
+   real   BVal[NCOMP_TOTAL];
    double x, y, z;
 
    for (k=Idx_Start[2], z=z0; k<=Idx_End[2]; k++, z+=dh)

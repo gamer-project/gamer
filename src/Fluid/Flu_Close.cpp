@@ -2,9 +2,9 @@
 #include "GAMER.h"
 #include "CUFLU.h"
 
-static void StoreFlux( const int lv, const real Flux_Array[][9][NFLUX][4*PATCH_SIZE*PATCH_SIZE],
+static void StoreFlux( const int lv, const real Flux_Array[][9][NFLUX_TOTAL][4*PATCH_SIZE*PATCH_SIZE],
                        const int NPG, const int *PID0_List );
-static void CorrectFlux( const int lv, const real Flux_Array[][9][NFLUX][4*PATCH_SIZE*PATCH_SIZE],
+static void CorrectFlux( const int lv, const real Flux_Array[][9][NFLUX_TOTAL][4*PATCH_SIZE*PATCH_SIZE],
                          const int NPG, const int *PID0_List );
 #if ( MODEL == HYDRO  ||  MODEL == MHD )
 static bool Unphysical( const real Fluid[], const real Gamma_m1, const int CheckMinEngyOrPres );
@@ -44,7 +44,7 @@ extern void CPU_RiemannSolver_HLLE( const int XYZ, real Flux_Out[], const real L
 //                                             HYDRO) among all input patch group
 //                                         --> NOT supported yet
 //-------------------------------------------------------------------------------------------------------
-void Flu_Close( const int lv, const int SaveSg, const real h_Flux_Array[][9][NFLUX][4*PATCH_SIZE*PATCH_SIZE],
+void Flu_Close( const int lv, const int SaveSg, const real h_Flux_Array[][9][NFLUX_TOTAL][4*PATCH_SIZE*PATCH_SIZE],
                 real h_Flu_Array_F_Out[][FLU_NOUT][8*PATCH_SIZE*PATCH_SIZE*PATCH_SIZE],
                 const real h_MinDtInfo_Array[], const int NPG, const int *PID0_List, const bool GetMinDtInfo,
                 const real h_Flu_Array_F_In[][FLU_NIN][FLU_NXT*FLU_NXT*FLU_NXT], const double dt )
@@ -65,6 +65,10 @@ void Flu_Close( const int lv, const int SaveSg, const real h_Flux_Array[][9][NFL
 
 
 // copy the updated data from the array "h_Flu_Array_F_Out" to each patch pointer
+#  if ( FLU_NOUT != NCOMP_TOTAL )
+#     error : ERROR : FLU_NOUT != NCOMP_TOTAL (one must specify how to copy data from h_Flu_Array_F_Out to fluid) !!
+#  endif
+
    int I, J, K, KJI, PID0;
 
 #  pragma omp parallel for private( I, J, K, KJI, PID0 ) schedule( runtime )
@@ -119,7 +123,7 @@ void Flu_Close( const int lv, const int SaveSg, const real h_Flux_Array[][9][NFL
 //                NPG            : Number of patch groups to be evaluated
 //                PID0_List      : List recording the patch indicies with LocalID==0 to be udpated
 //-------------------------------------------------------------------------------------------------------
-void StoreFlux( const int lv, const real h_Flux_Array[][9][NFLUX][4*PATCH_SIZE*PATCH_SIZE],
+void StoreFlux( const int lv, const real h_Flux_Array[][9][NFLUX_TOTAL][4*PATCH_SIZE*PATCH_SIZE],
                 const int NPG, const int *PID0_List )
 {
 
@@ -173,7 +177,7 @@ void StoreFlux( const int lv, const real h_Flux_Array[][9][NFLUX][4*PATCH_SIZE*P
             }
 
 
-            for (int v=0; v<NFLUX; v++)         {
+            for (int v=0; v<NFLUX_TOTAL; v++)   {
             for (int m=0; m<PATCH_SIZE; m++)    {  mm = m + Table1;
             for (int n=0; n<PATCH_SIZE; n++)    {  nn = n + Table2;
 
@@ -199,7 +203,7 @@ void StoreFlux( const int lv, const real h_Flux_Array[][9][NFLUX][4*PATCH_SIZE*P
 //                NPG            : Number of patch groups to be evaluated
 //                PID0_List      : List recording the patch indicies with LocalID==0 to be udpated
 //-------------------------------------------------------------------------------------------------------
-void CorrectFlux( const int lv, const real h_Flux_Array[][9][NFLUX][4*PATCH_SIZE*PATCH_SIZE],
+void CorrectFlux( const int lv, const real h_Flux_Array[][9][NFLUX_TOTAL][4*PATCH_SIZE*PATCH_SIZE],
                   const int NPG, const int *PID0_List )
 {
 
@@ -215,7 +219,7 @@ void CorrectFlux( const int lv, const real h_Flux_Array[][9][NFLUX][4*PATCH_SIZE
 
       int ID, FaPID, FaSibPID, PID0;
       real (*FluxPtr)[PATCH_SIZE][PATCH_SIZE]   = NULL;
-      real (*Flux_Temp)[PATCH_SIZE][PATCH_SIZE] = new real [NFLUX][PATCH_SIZE][PATCH_SIZE];
+      real (*Flux_Temp)[PATCH_SIZE][PATCH_SIZE] = new real [NFLUX_TOTAL][PATCH_SIZE][PATCH_SIZE];
 
 
 #     pragma omp for schedule( runtime )
@@ -235,11 +239,11 @@ void CorrectFlux( const int lv, const real h_Flux_Array[][9][NFLUX][4*PATCH_SIZE
                if ( FluxPtr == NULL )  Aux_Error( ERROR_INFO, "FluxPtr == NULL (PID0 %d, s %d) !!\n", PID0, s );
 #              endif
 
-               for (int v=0; v<NFLUX; v++)
+               for (int v=0; v<NFLUX_TOTAL; v++)
                for (int m=0; m<PATCH_SIZE; m++)
                for (int n=0; n<PATCH_SIZE; n++)    Flux_Temp[v][m][n] = (real)0.0;
 
-               for (int v=0; v<NFLUX; v++)
+               for (int v=0; v<NFLUX_TOTAL; v++)
                for (int m=0; m<2*PATCH_SIZE; m++)
                for (int n=0; n<2*PATCH_SIZE; n++)
                {
@@ -248,7 +252,7 @@ void CorrectFlux( const int lv, const real h_Flux_Array[][9][NFLUX][4*PATCH_SIZE
                   Flux_Temp[v][m/2][n/2] -= h_Flux_Array[TID][ Mapping[s] ][v][ID];
                }
 
-               for (int v=0; v<NFLUX; v++)
+               for (int v=0; v<NFLUX_TOTAL; v++)
                for (int m=0; m<PATCH_SIZE; m++)
                for (int n=0; n<PATCH_SIZE; n++)
                {
@@ -281,6 +285,8 @@ void CorrectFlux( const int lv, const real h_Flux_Array[][9][NFLUX][4*PATCH_SIZE
 //                2. Currently it is used for MODEL==HYDRO/MHD to check whether the input density and pressure
 //                   (or energy density) is smaller than the given thresholds
 //                   --> It also checks if any variable is -inf, +inf, or nan
+//                   --> It does NOT check if passive scalars are negative
+//                       --> We already apply a floor value in CPU_Shared_FullStepUpdate()
 //
 // Parameter   :  Fluid              : Input fluid variable array with size FLU_NOUT
 //                Gamma_m1           : Gamma - 1
@@ -357,7 +363,8 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
 
    const int LocalID[2][2][2] = { 0, 1, 2, 4, 3, 6, 5, 7 };
 
-   real VarL[3][NCOMP], VarC[NCOMP], VarR[3][NCOMP], FluxL[3][NCOMP], FluxR[3][NCOMP], dF[3][NCOMP], Out[NCOMP], Update[NCOMP];
+   real VarL[3][NCOMP_TOTAL], VarC[NCOMP_TOTAL], VarR[3][NCOMP_TOTAL], FluxL[3][NCOMP_TOTAL], FluxR[3][NCOMP_TOTAL];
+   real dF[3][NCOMP_TOTAL], Out[NCOMP_TOTAL], Update[NCOMP_TOTAL];
    int  idx_out, idx_in;
    long NCorrThisTime=0;
    bool CorrectUnphy = GAMER_SUCCESS;  // this variable is shared by all OpenMP threads
@@ -374,7 +381,7 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
          idx_out = (k_out*PS2 + j_out)*PS2 + i_out;
 
 //       check if the updated values are unphysical
-         for (int v=0; v<NCOMP; v++)   Out[v] = h_Flu_Array_F_Out[TID][v][idx_out];
+         for (int v=0; v<NCOMP_TOTAL; v++)   Out[v] = h_Flu_Array_F_Out[TID][v][idx_out];
 
          if ( Unphysical(Out, Gamma_m1, CheckMinPres) )
          {
@@ -384,7 +391,7 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
                idx_in = ( (k_out+FLU_GHOST_SIZE)*FLU_NXT + (j_out+FLU_GHOST_SIZE) )*FLU_NXT + (i_out+FLU_GHOST_SIZE);
 
 //             collect nearby input coserved variables
-               for (int v=0; v<NCOMP; v++)
+               for (int v=0; v<NCOMP_TOTAL; v++)
                {
 //                here we have assumed that the fluid solver does NOT modify the input fluid array
 //                --> not applicable to RTVD and WAF
@@ -431,16 +438,16 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
 
 //             recalculate the first-order solution for a full time-step
                for (int d=0; d<3; d++)
-               for (int v=0; v<NCOMP; v++)   dF[d][v] = FluxR[d][v] - FluxL[d][v];
+               for (int v=0; v<NCOMP_TOTAL; v++)   dF[d][v] = FluxR[d][v] - FluxL[d][v];
 
-               for (int v=0; v<NCOMP; v++)
+               for (int v=0; v<NCOMP_TOTAL; v++)
                   Update[v] = h_Flu_Array_F_In[TID][v][idx_in] - dt_dh*( dF[0][v] + dF[1][v] + dF[2][v] );
             } // if ( OPT__1ST_FLUX_CORR )
 
             else
             {
 //             if OPT__1ST_FLUX_CORR is off, just copy data to Update for checking negative density and pressure in the next step
-               for (int v=0; v<NCOMP; v++)   Update[v] = Out[v];
+               for (int v=0; v<NCOMP_TOTAL; v++)   Update[v] = Out[v];
             } // if ( OPT__1ST_FLUX_CORR ) ... else ...
 
 
@@ -450,6 +457,14 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
             Update[DENS] = FMAX( Update[DENS], (real)MIN_DENS );
             Update[ENGY] = CPU_CheckMinPresInEngy( Update[DENS], Update[MOMX], Update[MOMY], Update[MOMZ], Update[ENGY],
                                                    Gamma_m1, _Gamma_m1, MIN_PRES );
+
+//          floor and normalize passive scalars
+#           if ( NCOMP_PASSIVE > 0 )
+            for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)  Update[v] = FMAX( Update[v], TINY_NUMBER );
+
+            if ( OPT__NORMALIZE_PASSIVE )
+               CPU_NormalizePassive( Update[DENS], Update+NCOMP_FLUID, PassiveNorm_NVar, PassiveNorm_VarIdx );
+#           endif
 
 
 //          check if the newly updated values are still unphysical
@@ -461,7 +476,7 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
 //             output debug information
                const int  PID_Failed      = PID0_List[TID] + LocalID[k_out/PS1][j_out/PS1][i_out/PS1];
                const bool CheckMinPres_No = false;
-               real In[NCOMP], tmp[NCOMP];
+               real In[NCOMP_FLUID], tmp[NCOMP_FLUID];
 
                char FileName[100];
                sprintf( FileName, "FailedPatchGroup_r%03d_lv%02d_PID0-%05d", MPI_Rank, lv, PID0_List[TID] );
@@ -469,7 +484,7 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
 //             use "a" instead of "w" since there may be more than one failed cell in a given patch group
                FILE *File = fopen( FileName, "a" );
 
-               for (int v=0; v<NCOMP; v++)   In[v] = h_Flu_Array_F_In[TID][v][idx_in];
+               for (int v=0; v<NCOMP_FLUID; v++)   In[v] = h_Flu_Array_F_In[TID][v][idx_in];
 
 //             output information about the failed cell
                fprintf( File, "PID                              = %5d\n", PID_Failed );
@@ -500,7 +515,7 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
                {
                   fprintf( File, "(%2d,%2d,%2d)", i-FLU_GHOST_SIZE, j-FLU_GHOST_SIZE, k-FLU_GHOST_SIZE );
 
-                  for (int v=0; v<NCOMP; v++)
+                  for (int v=0; v<NCOMP_FLUID; v++)
                   {
                      tmp[v] = h_Flu_Array_F_In[TID][v][ ((k*FLU_NXT)+j)*FLU_NXT+i ];
                      fprintf( File, " %13.6e", tmp[v] );
@@ -527,7 +542,7 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
             else
             {
 //             store the corrected solution
-               for (int v=0; v<NCOMP; v++)   h_Flu_Array_F_Out[TID][v][idx_out] = Update[v];
+               for (int v=0; v<NCOMP_TOTAL; v++)   h_Flu_Array_F_Out[TID][v][idx_out] = Update[v];
 
 //             record the number of corrected cells
                NCorrThisTime ++;

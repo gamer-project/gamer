@@ -11,6 +11,7 @@
 // Auxiliary
 void Aux_Check_MemFree( const double MinMemFree_Total, const char *comment );
 void Aux_Check_Conservation( const char *comment );
+void Aux_Check_NormalizePassive( const int lv, const char *comment );
 void Aux_Check();
 void Aux_Check_Finite( const int lv, const char *comment );
 void Aux_Check_FluxAllocate( const int lv, const char *comment );
@@ -61,9 +62,9 @@ void Buf_SortBoundaryPatch( const int NPatch, int *IDList, int *PosList );
 
 
 // Hydrodynamics
-void CPU_FluidSolver( real h_Flu_Array_In [][FLU_NIN ][ FLU_NXT*FLU_NXT*FLU_NXT ],
-                      real h_Flu_Array_Out[][FLU_NOUT][ PS2*PS2*PS2 ],
-                      real h_Flux_Array[][9][NFLUX   ][ PS2*PS2 ],
+void CPU_FluidSolver( real h_Flu_Array_In [][FLU_NIN    ][ FLU_NXT*FLU_NXT*FLU_NXT ],
+                      real h_Flu_Array_Out[][FLU_NOUT   ][ PS2*PS2*PS2 ],
+                      real h_Flux_Array[][9][NFLUX_TOTAL][ PS2*PS2 ],
                       const double h_Corner_Array[][3],
                       real h_MinDtInfo_Array[],
                       const real h_Pot_Array_USG[][USG_NXT_F][USG_NXT_F][USG_NXT_F],
@@ -71,17 +72,19 @@ void CPU_FluidSolver( real h_Flu_Array_In [][FLU_NIN ][ FLU_NXT*FLU_NXT*FLU_NXT 
                       const bool XYZ, const LR_Limiter_t LR_Limiter, const real MinMod_Coeff, const real EP_Coeff,
                       const WAF_Limiter_t WAF_Limiter, const real ELBDM_Eta, real ELBDM_Taylor3_Coeff,
                       const bool ELBDM_Taylor3_Auto, const bool GetMinDtInfo,
-                      const double Time, const OptGravityType_t GravityType, const real MinDens, const real MinPres );
+                      const double Time, const OptGravityType_t GravityType, const real MinDens, const real MinPres,
+                      const bool NormPassive, const int NNorm, const int NormIdx[] );
 real CPU_GetPressure( const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy,
                       const real Gamma_m1, const bool CheckMinPres, const real MinPres );
 real CPU_GetTemperature( const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy,
                          const real Gamma_m1, const bool CheckMinPres, const real MinPres );
+void CPU_NormalizePassive( const real GasDens, real Passive[], const int NNorm, const int NormIdx[] );
 real CPU_CheckMinPresInEngy( const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy,
                              const real Gamma_m1, const real _Gamma_m1, const real MinPres );
 void Flu_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, const double dt, const int SaveSg,
                     const bool OverlapMPI, const bool Overlap_Sync );
 void Flu_AllocateFluxArray( const int lv );
-void Flu_Close( const int lv, const int SaveSg, const real h_Flux_Array[][9][NFLUX][4*PATCH_SIZE*PATCH_SIZE],
+void Flu_Close( const int lv, const int SaveSg, const real h_Flux_Array[][9][NFLUX_TOTAL][4*PATCH_SIZE*PATCH_SIZE],
                 real h_Flu_Array_F_Out[][FLU_NOUT][8*PATCH_SIZE*PATCH_SIZE*PATCH_SIZE],
                 const real h_MinDtInfo_Array[], const int NPG, const int *PID0_List, const bool GetMinDtInfo,
                 const real h_Flu_Array_F_In[][FLU_NIN][FLU_NXT*FLU_NXT*FLU_NXT], const double dt );
@@ -117,6 +120,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
 void End_GAMER();
 void End_MemFree();
 void End_MemFree_Fluid();
+void End_MemFree_PassiveFieldName();
 void End_StopManually( int &Terminate_global );
 void End_TestProb();
 void Init_BaseLevel();
@@ -133,6 +137,7 @@ void Init_RecordBasePatch();
 void Init_Refine( const int lv );
 void Init_Restart();
 void Init_Unit();
+void Init_PassiveVariable();
 #ifdef SUPPORT_HDF5
 void Init_Restart_HDF5( const char *FileName );
 #endif
@@ -351,7 +356,7 @@ int  LB_Index2Rank( const int lv, const long LB_Idx, const Check_t Check );
 void Hydro_Aux_Check_Negative( const int lv, const int Mode, const char *comment );
 void Hydro_GetTimeStep_Fluid( double &dt, double &dTime, int &MinDtLv, real MinDtVar[], const double dt_dTime );
 void Hydro_GetTimeStep_Gravity( double &dt, double &dTime, int &MinDtLv, real &MinDtVar, const double dt_dTime );
-void Hydro_GetMaxCFL( real MaxCFL[], real MinDtVar_AllLv[][NCOMP] );
+void Hydro_GetMaxCFL( real MaxCFL[], real MinDtVar_AllLv[][5] );
 void Hydro_GetMaxAcc( real MaxAcc[] );
 void Hydro_Init_StartOver_AssignData( const int lv );
 void Hydro_Init_UM_AssignData( const int lv, real *UM_Data, const int NVar );
@@ -392,9 +397,9 @@ real ELBDM_SetTaylor3Coeff( const real dt, const real dh, const real Eta );
 
 // GPU API
 #ifdef GPU
-void CUAPI_Asyn_FluidSolver( real h_Flu_Array_In [][FLU_NIN ][ FLU_NXT*FLU_NXT*FLU_NXT ],
-                             real h_Flu_Array_Out[][FLU_NOUT][ PS2*PS2*PS2 ],
-                             real h_Flux_Array[][9][NFLUX   ][ PS2*PS2 ],
+void CUAPI_Asyn_FluidSolver( real h_Flu_Array_In [][FLU_NIN    ][ FLU_NXT*FLU_NXT*FLU_NXT ],
+                             real h_Flu_Array_Out[][FLU_NOUT   ][ PS2*PS2*PS2 ],
+                             real h_Flux_Array[][9][NFLUX_TOTAL][ PS2*PS2 ],
                              const double h_Corner_Array[][3],
                              real h_MinDtInfo_Array[],
                              real h_Pot_Array_USG[][USG_NXT_F][USG_NXT_F][USG_NXT_F],
@@ -403,7 +408,7 @@ void CUAPI_Asyn_FluidSolver( real h_Flu_Array_In [][FLU_NIN ][ FLU_NXT*FLU_NXT*F
                              const WAF_Limiter_t WAF_Limiter, const real ELBDM_Eta, real ELBDM_Taylor3_Coeff,
                              const bool ELBDM_Taylor3_Auto, const bool GetMinDtInfo, const double Time,
                              const OptGravityType_t GravityType, const int GPU_NStream,
-                             const real MinDens, const real MinPres );
+                             const real MinDens, const real MinPres, const bool NormPassive, const int NNorm );
 void CUAPI_DiagnoseDevice();
 void CUAPI_MemAllocate_Fluid( const int Flu_NPatchGroup, const int GPU_NStream );
 void CUAPI_MemFree_Fluid( const int GPU_NStream );

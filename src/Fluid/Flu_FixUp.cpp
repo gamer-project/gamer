@@ -22,7 +22,7 @@ void Flu_FixUp( const int lv, const double dt )
    const real Const = dt / amr->dh[lv];
    const int  FluSg = amr->FluSg[lv];
 
-   real CorrVal[NFLUX];   // values after applying the flux correction
+   real CorrVal[NFLUX_TOTAL];    // values after applying the flux correction
    real (*FluxPtr)[PATCH_SIZE][PATCH_SIZE] = NULL;
 
 #  if   ( MODEL == HYDRO  ||  MODEL == MHD )
@@ -43,12 +43,13 @@ void Flu_FixUp( const int lv, const double dt )
          Aux_Error( ERROR_INFO, "amr->WithFlux is off -> no flux array is allocated for OPT__FIXUP_FLUX !!\n" );
 
 #     if ( MODEL == ELBDM )
+
 #     ifndef CONSERVE_MASS
       Aux_Error( ERROR_INFO, "CONSERVE_MASS is not turned on in the Makefile for the option OPT__FIXUP_FLUX !!\n" );
 #     endif
 
-#     if ( NFLUX != 1 )
-      Aux_Error( ERROR_INFO, "NFLUX (%d) != 1 for the option OPT__FIXUP_FLUX !!\n", NFLUX );
+#     if ( NFLUX_TOTAL != 1 )
+      Aux_Error( ERROR_INFO, "NFLUX_TOTAL (%d) != 1 for the option OPT__FIXUP_FLUX !!\n", NFLUX_TOTAL );
 #     endif
 
 #     if ( DENS != 0 )
@@ -58,7 +59,15 @@ void Flu_FixUp( const int lv, const double dt )
 #     if ( FLUX_DENS != 0 )
       Aux_Error( ERROR_INFO, "FLUX_DENS (%d) != 0 for the option OPT__FIXUP_FLUX !!\n", FLUX_DENS );
 #     endif
-#     endif // #if ( MODEL == ELBDM )
+
+
+//    if "NCOMP_TOTAL != NFLUX_TOTAL", one must specify how to correct cell data from the flux arrays
+//    --> specifically, how to map different flux variables to fluid active/passive variables
+//    --> for ELBDM, we have assumed that FLUX_DENS == DENS == 0 and NFLUX_TOTAL == 1
+#     elif ( NCOMP_TOTAL != NFLUX_TOTAL )
+#        error : NCOMP_TOTAL != NFLUX_TOTAL (one must specify how to map flux variables to fluid active/passive variables) !!
+
+#     endif // #if ( MODEL == ELBDM ) ... elif ...
 
 #     endif // #ifdef GAMER_DEBUG
 
@@ -78,7 +87,7 @@ void Flu_FixUp( const int lv, const double dt )
 
             if ( FluxPtr != NULL )
             {
-               for (int v=0; v<NFLUX; v++)
+               for (int v=0; v<NFLUX_TOTAL; v++)
                for (int m=0; m<PS1; m++)
                for (int n=0; n<PS1; n++)
                   FluxPtr[v][m][n] += amr->patch[0][lv][PID]->flux_debug[s][v][m][n];
@@ -93,7 +102,7 @@ void Flu_FixUp( const int lv, const double dt )
             for (int k=0; k<PATCH_SIZE; k++)
             for (int j=0; j<PATCH_SIZE; j++)
             {
-               for (int v=0; v<NFLUX; v++)
+               for (int v=0; v<NFLUX_TOTAL; v++)
                   CorrVal[v] = amr->patch[FluSg][lv][PID]->fluid[v][k][j][           0] - FluxPtr[v][k][j] * Const;
 
 //             do not apply flux correction if any field lies below the minimum allowed value
@@ -106,8 +115,16 @@ void Flu_FixUp( const int lv, const double dt )
 #              endif
                   continue;
 
+//             floor and normalize passive scalars
+#              if ( NCOMP_PASSIVE > 0 )
+               for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)  CorrVal[v] = FMAX( CorrVal[v], TINY_NUMBER );
+
+               if ( OPT__NORMALIZE_PASSIVE )
+                  CPU_NormalizePassive( CorrVal[DENS], CorrVal+NCOMP_FLUID, PassiveNorm_NVar, PassiveNorm_VarIdx );
+#              endif
+
 //             apply flux correction
-               for (int v=0; v<NFLUX; v++)
+               for (int v=0; v<NFLUX_TOTAL; v++)
                   amr->patch[FluSg][lv][PID]->fluid[v][k][j][           0] = CorrVal[v];
 
 //             rescale the real and imaginary parts to be consistent with the corrected amplitude
@@ -137,7 +154,7 @@ void Flu_FixUp( const int lv, const double dt )
             for (int k=0; k<PATCH_SIZE; k++)
             for (int j=0; j<PATCH_SIZE; j++)
             {
-               for (int v=0; v<NFLUX; v++)
+               for (int v=0; v<NFLUX_TOTAL; v++)
                   CorrVal[v] = amr->patch[FluSg][lv][PID]->fluid[v][k][j][PATCH_SIZE-1] + FluxPtr[v][k][j] * Const;
 
 //             do not apply flux correction if any field lies below the minimum allowed value
@@ -150,8 +167,16 @@ void Flu_FixUp( const int lv, const double dt )
 #              endif
                   continue;
 
+//             floor and normalize passive scalars
+#              if ( NCOMP_PASSIVE > 0 )
+               for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)  CorrVal[v] = FMAX( CorrVal[v], TINY_NUMBER );
+
+               if ( OPT__NORMALIZE_PASSIVE )
+                  CPU_NormalizePassive( CorrVal[DENS], CorrVal+NCOMP_FLUID, PassiveNorm_NVar, PassiveNorm_VarIdx );
+#              endif
+
 //             apply flux correction
-               for (int v=0; v<NFLUX; v++)
+               for (int v=0; v<NFLUX_TOTAL; v++)
                   amr->patch[FluSg][lv][PID]->fluid[v][k][j][PATCH_SIZE-1] = CorrVal[v];
 
 //             rescale the real and imaginary parts to be consistent with the corrected amplitude
@@ -181,7 +206,7 @@ void Flu_FixUp( const int lv, const double dt )
             for (int k=0; k<PATCH_SIZE; k++)
             for (int i=0; i<PATCH_SIZE; i++)
             {
-               for (int v=0; v<NFLUX; v++)
+               for (int v=0; v<NFLUX_TOTAL; v++)
                   CorrVal[v] = amr->patch[FluSg][lv][PID]->fluid[v][k][           0][i] - FluxPtr[v][k][i] * Const;
 
 //             do not apply flux correction if any field lies below the minimum allowed value
@@ -194,8 +219,16 @@ void Flu_FixUp( const int lv, const double dt )
 #              endif
                   continue;
 
+//             floor and normalize passive scalars
+#              if ( NCOMP_PASSIVE > 0 )
+               for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)  CorrVal[v] = FMAX( CorrVal[v], TINY_NUMBER );
+
+               if ( OPT__NORMALIZE_PASSIVE )
+                  CPU_NormalizePassive( CorrVal[DENS], CorrVal+NCOMP_FLUID, PassiveNorm_NVar, PassiveNorm_VarIdx );
+#              endif
+
 //             apply flux correction
-               for (int v=0; v<NFLUX; v++)
+               for (int v=0; v<NFLUX_TOTAL; v++)
                   amr->patch[FluSg][lv][PID]->fluid[v][k][           0][i] = CorrVal[v];
 
 //             rescale the real and imaginary parts to be consistent with the corrected amplitude
@@ -225,7 +258,7 @@ void Flu_FixUp( const int lv, const double dt )
             for (int k=0; k<PATCH_SIZE; k++)
             for (int i=0; i<PATCH_SIZE; i++)
             {
-               for (int v=0; v<NFLUX; v++)
+               for (int v=0; v<NFLUX_TOTAL; v++)
                   CorrVal[v] = amr->patch[FluSg][lv][PID]->fluid[v][k][PATCH_SIZE-1][i] + FluxPtr[v][k][i] * Const;
 
 //             do not apply flux correction if any field lies below the minimum allowed value
@@ -238,8 +271,16 @@ void Flu_FixUp( const int lv, const double dt )
 #              endif
                   continue;
 
+//             floor and normalize passive scalars
+#              if ( NCOMP_PASSIVE > 0 )
+               for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)  CorrVal[v] = FMAX( CorrVal[v], TINY_NUMBER );
+
+               if ( OPT__NORMALIZE_PASSIVE )
+                  CPU_NormalizePassive( CorrVal[DENS], CorrVal+NCOMP_FLUID, PassiveNorm_NVar, PassiveNorm_VarIdx );
+#              endif
+
 //             apply flux correction
-               for (int v=0; v<NFLUX; v++)
+               for (int v=0; v<NFLUX_TOTAL; v++)
                   amr->patch[FluSg][lv][PID]->fluid[v][k][PATCH_SIZE-1][i] = CorrVal[v];
 
 //             rescale the real and imaginary parts to be consistent with the corrected amplitude
@@ -269,7 +310,7 @@ void Flu_FixUp( const int lv, const double dt )
             for (int j=0; j<PATCH_SIZE; j++)
             for (int i=0; i<PATCH_SIZE; i++)
             {
-               for (int v=0; v<NFLUX; v++)
+               for (int v=0; v<NFLUX_TOTAL; v++)
                   CorrVal[v] = amr->patch[FluSg][lv][PID]->fluid[v][           0][j][i] - FluxPtr[v][j][i] * Const;
 
 //             do not apply flux correction if any field lies below the minimum allowed value
@@ -282,8 +323,16 @@ void Flu_FixUp( const int lv, const double dt )
 #              endif
                   continue;
 
+//             floor and normalize passive scalars
+#              if ( NCOMP_PASSIVE > 0 )
+               for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)  CorrVal[v] = FMAX( CorrVal[v], TINY_NUMBER );
+
+               if ( OPT__NORMALIZE_PASSIVE )
+                  CPU_NormalizePassive( CorrVal[DENS], CorrVal+NCOMP_FLUID, PassiveNorm_NVar, PassiveNorm_VarIdx );
+#              endif
+
 //             apply flux correction
-               for (int v=0; v<NFLUX; v++)
+               for (int v=0; v<NFLUX_TOTAL; v++)
                   amr->patch[FluSg][lv][PID]->fluid[v][           0][j][i] = CorrVal[v];
 
 //             rescale the real and imaginary parts to be consistent with the corrected amplitude
@@ -313,7 +362,7 @@ void Flu_FixUp( const int lv, const double dt )
             for (int j=0; j<PATCH_SIZE; j++)
             for (int i=0; i<PATCH_SIZE; i++)
             {
-               for (int v=0; v<NFLUX; v++)
+               for (int v=0; v<NFLUX_TOTAL; v++)
                   CorrVal[v] = amr->patch[FluSg][lv][PID]->fluid[v][PATCH_SIZE-1][j][i] + FluxPtr[v][j][i] * Const;
 
 //             do not apply flux correction if any field lies below the minimum allowed value
@@ -326,8 +375,16 @@ void Flu_FixUp( const int lv, const double dt )
 #              endif
                   continue;
 
+//             floor and normalize passive scalars
+#              if ( NCOMP_PASSIVE > 0 )
+               for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)  CorrVal[v] = FMAX( CorrVal[v], TINY_NUMBER );
+
+               if ( OPT__NORMALIZE_PASSIVE )
+                  CPU_NormalizePassive( CorrVal[DENS], CorrVal+NCOMP_FLUID, PassiveNorm_NVar, PassiveNorm_VarIdx );
+#              endif
+
 //             apply flux correction
-               for (int v=0; v<NFLUX; v++)
+               for (int v=0; v<NFLUX_TOTAL; v++)
                   amr->patch[FluSg][lv][PID]->fluid[v][PATCH_SIZE-1][j][i] = CorrVal[v];
 
 //             rescale the real and imaginary parts to be consistent with the corrected amplitude
@@ -365,7 +422,7 @@ void Flu_FixUp( const int lv, const double dt )
             FluxPtr = amr->patch[0][lv][PID]->flux[s];
             if ( FluxPtr != NULL )
             {
-               for (int v=0; v<NFLUX; v++)
+               for (int v=0; v<NFLUX_TOTAL; v++)
                for (int m=0; m<PS1; m++)
                for (int n=0; n<PS1; n++)
                   FluxPtr[v][m][n] = 0.0;
@@ -374,7 +431,7 @@ void Flu_FixUp( const int lv, const double dt )
             FluxPtr = amr->patch[0][lv][PID]->flux_debug[s];
             if ( FluxPtr != NULL )
             {
-               for (int v=0; v<NFLUX; v++)
+               for (int v=0; v<NFLUX_TOTAL; v++)
                for (int m=0; m<PS1; m++)
                for (int n=0; n<PS1; n++)
                   FluxPtr[v][m][n] = 0.0;
@@ -387,6 +444,6 @@ void Flu_FixUp( const int lv, const double dt )
 
 
 // b. average over the data at level "lv+1" to correct the data at level "lv"
-   if ( OPT__FIXUP_RESTRICT )    Flu_Restrict( lv, amr->FluSg[lv+1], amr->FluSg[lv], NULL_INT, NULL_INT, _FLU );
+   if ( OPT__FIXUP_RESTRICT )    Flu_Restrict( lv, amr->FluSg[lv+1], amr->FluSg[lv], NULL_INT, NULL_INT, _TOTAL );
 
 } // FUNCTION : Flu_FixUp

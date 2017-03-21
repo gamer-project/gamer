@@ -14,7 +14,7 @@ cudaStream_t *Stream;
 
 extern real (*d_Flu_Array_F_In )[FLU_NIN ][ FLU_NXT*FLU_NXT*FLU_NXT ];
 extern real (*d_Flu_Array_F_Out)[FLU_NOUT][ PS2*PS2*PS2 ];
-extern real (*d_Flux_Array)[9][NFLUX][ PS2*PS2 ];
+extern real (*d_Flux_Array)[9][NFLUX_TOTAL][ PS2*PS2 ];
 #ifdef UNSPLIT_GRAVITY
 extern real (*d_Pot_Array_USG_F)[ USG_NXT_F*USG_NXT_F*USG_NXT_F ];
 extern double (*d_Corner_Array_F)[3];
@@ -24,19 +24,19 @@ extern real  *d_MinDtInfo_Fluid_Array;
 // global memory arrays in different models
 #if ( MODEL == HYDRO )
 #if ( FLU_SCHEME == MHM  ||  FLU_SCHEME == MHM_RP  ||  FLU_SCHEME == CTU )
-extern real (*d_PriVar)     [5][ FLU_NXT*FLU_NXT*FLU_NXT ];
-extern real (*d_Slope_PPM_x)[5][ N_SLOPE_PPM*N_SLOPE_PPM*N_SLOPE_PPM ];
-extern real (*d_Slope_PPM_y)[5][ N_SLOPE_PPM*N_SLOPE_PPM*N_SLOPE_PPM ];
-extern real (*d_Slope_PPM_z)[5][ N_SLOPE_PPM*N_SLOPE_PPM*N_SLOPE_PPM ];
-extern real (*d_FC_Var_xL)  [5][ N_FC_VAR*N_FC_VAR*N_FC_VAR ];
-extern real (*d_FC_Var_xR)  [5][ N_FC_VAR*N_FC_VAR*N_FC_VAR ];
-extern real (*d_FC_Var_yL)  [5][ N_FC_VAR*N_FC_VAR*N_FC_VAR ];
-extern real (*d_FC_Var_yR)  [5][ N_FC_VAR*N_FC_VAR*N_FC_VAR ];
-extern real (*d_FC_Var_zL)  [5][ N_FC_VAR*N_FC_VAR*N_FC_VAR ];
-extern real (*d_FC_Var_zR)  [5][ N_FC_VAR*N_FC_VAR*N_FC_VAR ];
-extern real (*d_FC_Flux_x)  [5][ N_FC_FLUX*N_FC_FLUX*N_FC_FLUX ];
-extern real (*d_FC_Flux_y)  [5][ N_FC_FLUX*N_FC_FLUX*N_FC_FLUX ];
-extern real (*d_FC_Flux_z)  [5][ N_FC_FLUX*N_FC_FLUX*N_FC_FLUX ];
+extern real (*d_PriVar)     [NCOMP_TOTAL][ FLU_NXT*FLU_NXT*FLU_NXT ];
+extern real (*d_Slope_PPM_x)[NCOMP_TOTAL][ N_SLOPE_PPM*N_SLOPE_PPM*N_SLOPE_PPM ];
+extern real (*d_Slope_PPM_y)[NCOMP_TOTAL][ N_SLOPE_PPM*N_SLOPE_PPM*N_SLOPE_PPM ];
+extern real (*d_Slope_PPM_z)[NCOMP_TOTAL][ N_SLOPE_PPM*N_SLOPE_PPM*N_SLOPE_PPM ];
+extern real (*d_FC_Var_xL)  [NCOMP_TOTAL][ N_FC_VAR*N_FC_VAR*N_FC_VAR ];
+extern real (*d_FC_Var_xR)  [NCOMP_TOTAL][ N_FC_VAR*N_FC_VAR*N_FC_VAR ];
+extern real (*d_FC_Var_yL)  [NCOMP_TOTAL][ N_FC_VAR*N_FC_VAR*N_FC_VAR ];
+extern real (*d_FC_Var_yR)  [NCOMP_TOTAL][ N_FC_VAR*N_FC_VAR*N_FC_VAR ];
+extern real (*d_FC_Var_zL)  [NCOMP_TOTAL][ N_FC_VAR*N_FC_VAR*N_FC_VAR ];
+extern real (*d_FC_Var_zR)  [NCOMP_TOTAL][ N_FC_VAR*N_FC_VAR*N_FC_VAR ];
+extern real (*d_FC_Flux_x)  [NCOMP_TOTAL][ N_FC_FLUX*N_FC_FLUX*N_FC_FLUX ];
+extern real (*d_FC_Flux_y)  [NCOMP_TOTAL][ N_FC_FLUX*N_FC_FLUX*N_FC_FLUX ];
+extern real (*d_FC_Flux_z)  [NCOMP_TOTAL][ N_FC_FLUX*N_FC_FLUX*N_FC_FLUX ];
 #endif // #if ( FLU_SCHEME == MHM  ||  FLU_SCHEME == MHM_RP  ||  FLU_SCHEME == CTU ) 
 
 #elif ( MODEL == MHD )
@@ -62,7 +62,7 @@ void CUAPI_MemAllocate_Fluid( const int Flu_NPatchGroup, const int GPU_NStream )
 // the size of the global memory arrays in all models
    const long Flu_MemSize_F_In        = sizeof(real  )*Flu_NPatchGroup*FLU_NIN *FLU_NXT*FLU_NXT*FLU_NXT;
    const long Flu_MemSize_F_Out       = sizeof(real  )*Flu_NPatchGroup*FLU_NOUT*PS2*PS2*PS2;
-   const long Flux_MemSize            = sizeof(real  )*Flu_NPatchGroup*9*NFLUX*PS2*PS2;
+   const long Flux_MemSize            = sizeof(real  )*Flu_NPatchGroup*9*NFLUX_TOTAL*PS2*PS2;
    const long MinDtInfo_Fluid_MemSize = sizeof(real  )*Flu_NPatchGroup;
 #  ifdef UNSPLIT_GRAVITY
    const long Pot_MemSize_USG_F       = sizeof(real  )*Flu_NPatchGroup*USG_NXT_F*USG_NXT_F*USG_NXT_F;
@@ -73,11 +73,11 @@ void CUAPI_MemAllocate_Fluid( const int Flu_NPatchGroup, const int GPU_NStream )
 #  if   ( MODEL == HYDRO )
 #  if ( FLU_SCHEME == MHM  ||  FLU_SCHEME == MHM_RP  ||  FLU_SCHEME == CTU )
    const long PriVar_MemSize    = Flu_MemSize_F_In;
-   const long FC_Var_MemSize    = sizeof(real)*Flu_NPatchGroup*NCOMP*N_FC_VAR*N_FC_VAR*N_FC_VAR;
-   const long FC_Flux_MemSize   = sizeof(real)*Flu_NPatchGroup*NCOMP*N_FC_FLUX*N_FC_FLUX*N_FC_FLUX;
+   const long FC_Var_MemSize    = sizeof(real)*Flu_NPatchGroup*NCOMP_TOTAL*N_FC_VAR*N_FC_VAR*N_FC_VAR;
+   const long FC_Flux_MemSize   = sizeof(real)*Flu_NPatchGroup*NCOMP_TOTAL*N_FC_FLUX*N_FC_FLUX*N_FC_FLUX;
 
 #  if ( LR_SCHEME == PPM )    
-   const long Slope_PPM_MemSize = sizeof(real)*Flu_NPatchGroup*NCOMP*N_SLOPE_PPM*N_SLOPE_PPM*N_SLOPE_PPM;
+   const long Slope_PPM_MemSize = sizeof(real)*Flu_NPatchGroup*NCOMP_TOTAL*N_SLOPE_PPM*N_SLOPE_PPM*N_SLOPE_PPM;
 #  endif 
 
 #  endif // #if ( FLU_SCHEME == MHM  ||  FLU_SCHEME == MHM_RP  ||  FLU_SCHEME == CTU )

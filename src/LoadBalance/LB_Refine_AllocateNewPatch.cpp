@@ -267,13 +267,13 @@ void LB_Refine_AllocateNewPatch( const int FaLv, int NNew_Home, int *NewPID_Home
    Int_Table( OPT__REF_POT_INT_SCHEME, NSide_Pot, CGhost_Pot );
 
    const int CSize_Pot = PATCH_SIZE + 2*CGhost_Pot;
-   const int CSize_Tot = NCOMP*CSize_Flu*CSize_Flu*CSize_Flu + CSize_Pot*CSize_Pot*CSize_Pot;
+   const int CSize_Tot = NCOMP_TOTAL*CSize_Flu*CSize_Flu*CSize_Flu + CSize_Pot*CSize_Pot*CSize_Pot;
 #  else
-   const int CSize_Tot = NCOMP*CSize_Flu*CSize_Flu*CSize_Flu;
+   const int CSize_Tot = NCOMP_TOTAL*CSize_Flu*CSize_Flu*CSize_Flu;
 #  endif
 
 // determine the priority of different boundary faces (z>y>x) to set the corner cells properly for the non-periodic B.C.
-   int BC_Face[26], BC_Face_tmp[3], FluVarIdxList[NCOMP];
+   int BC_Face[26], BC_Face_tmp[3], FluVarIdxList[NCOMP_TOTAL];
 
    for (int s=0; s<26; s++)
    {
@@ -287,7 +287,7 @@ void LB_Refine_AllocateNewPatch( const int FaLv, int NNew_Home, int *NewPID_Home
       else if ( BC_Face_tmp[0] != -1 )   BC_Face[s] = BC_Face_tmp[0];
    }
 
-   for (int v=0; v<NCOMP; v++)   FluVarIdxList[v] = v;
+   for (int v=0; v<NCOMP_TOTAL; v++)   FluVarIdxList[v] = v;
 
 
 // 3.1 home patches
@@ -484,11 +484,24 @@ void LB_Refine_AllocateNewPatch( const int FaLv, int NNew_Home, int *NewPID_Home
    for (SonPID0=amr->NPatchComma[SonLv][1], Count=0; SonPID0<amr->NPatchComma[SonLv][3]; SonPID0+=8, Count++)
       NewSonPID0_Buf[Count] = SonPID0;
 
+// following code seems to trigger a bug in the Intel compiler version 2016.2.181
+// --> replace with the simplified version below
+   /*
+// original version
    for (int t=0, m=0; t<NNew_All0; t++, m+=8)
    {
       SonPID0 = NewSonPID0_All[t];
 
       for (int SonPID=SonPID0, n=m; SonPID<SonPID0+8; SonPID++, n++)    NewSonPID_All[n] = SonPID;
+   }
+   */
+
+// simplified version
+   for (int t=0; t<NNew_All0; t++)
+   {
+      SonPID0 = NewSonPID0_All[t];
+
+      for (int LocalID=0; LocalID<8; LocalID++)    NewSonPID_All[ t*8 + LocalID ] = SonPID0 + LocalID;
    }
 
 // 9.2 sibling relation
@@ -541,11 +554,6 @@ void LB_Refine_AllocateNewPatch( const int FaLv, int NNew_Home, int *NewPID_Home
             Aux_SwapPointer( (void**)&amr->patch[FSg_Flu ][SonLv][     MPID]->fluid,
                              (void**)&amr->patch[FSg_Flu2][SonLv][OldBufPID]->fluid );
 
-//          reset the passive variable pointer
-#           if ( NPASSIVE > 0 )
-            amr->patch[FSg_Flu][SonLv][MPID]->passive = amr->patch[FSg_Flu][SonLv][MPID]->fluid + NCOMP;
-#           endif
-
 #           ifdef GRAVITY
             Aux_SwapPointer( (void**)&amr->patch[FSg_Pot ][SonLv][     MPID]->pot,
                              (void**)&amr->patch[FSg_Pot2][SonLv][OldBufPID]->pot );
@@ -571,12 +579,7 @@ void LB_Refine_AllocateNewPatch( const int FaLv, int NNew_Home, int *NewPID_Home
 
             if ( fluid_ptr != NULL )
             {
-               amr->patch[FSg_Flu][SonLv][MPID]->fluid   = fluid_ptr;
-
-//             reset the passive variable pointer
-#              if ( NPASSIVE > 0 )
-               amr->patch[FSg_Flu][SonLv][MPID]->passive = fluid_ptr + NCOMP;
-#              endif
+               amr->patch[FSg_Flu][SonLv][MPID]->fluid = fluid_ptr;
 
 //             note that it's OK to leave FSg_Flu2 unmodified (which can thus be NULL) since it will be allocated in
 //             LB_RecordExchangeDataPatchID if necessary
@@ -690,7 +693,7 @@ int AllocateSonPatch( const int FaLv, const int *Cr, const int PScale, const int
    const int FSg_Flu       = amr->FluSg[SonLv];
    const int CSize_Flu     = PS1 + 2*CGhost_Flu;
    const int CStart_Flu[3] = { CGhost_Flu, CGhost_Flu, CGhost_Flu };
-   real (*FData_Flu)[FSize][FSize][FSize] = new real [NCOMP][FSize][FSize][FSize];
+   real (*FData_Flu)[FSize][FSize][FSize] = new real [NCOMP_TOTAL][FSize][FSize][FSize];
 
 // potential
 #  ifdef GRAVITY
@@ -700,9 +703,9 @@ int AllocateSonPatch( const int FaLv, const int *Cr, const int PScale, const int
    const int CStart_Pot[3] = { CGhost_Pot, CGhost_Pot, CGhost_Pot };
    real (*FData_Pot)[FSize][FSize] = new real [FSize][FSize][FSize];
 
-   const int CSize_Tot = NCOMP*CSize_Flu*CSize_Flu*CSize_Flu + CSize_Pot*CSize_Pot*CSize_Pot;
+   const int CSize_Tot = NCOMP_TOTAL*CSize_Flu*CSize_Flu*CSize_Flu + CSize_Pot*CSize_Pot*CSize_Pot;
 #  else
-   const int CSize_Tot = NCOMP*CSize_Flu*CSize_Flu*CSize_Flu;
+   const int CSize_Tot = NCOMP_TOTAL*CSize_Flu*CSize_Flu*CSize_Flu;
 #  endif
 
 
@@ -744,18 +747,14 @@ int AllocateSonPatch( const int FaLv, const int *Cr, const int PScale, const int
 #  endif
 
 // 3.2.1 determine which variables require **monotonic** interpolation
-   bool Monotonicity[NCOMP];
+   bool Monotonicity[NCOMP_TOTAL];
 
-   for (int v=0; v<NCOMP; v++)
+   for (int v=0; v<NCOMP_TOTAL; v++)
    {
 #     if ( MODEL == HYDRO )
 //    we now apply monotonic interpolation to ALL fluid variables (which helps alleviate the issue of negative density/pressure)
       /*
-#     if ( NPASSIVE > 0 )
-      if ( v == DENS  ||  v == ENGY  ||  v >= NCOMP )
-#     else
-      if ( v == DENS  ||  v == ENGY )
-#     endif
+      if ( v == DENS  ||  v == ENGY  ||  v >= NCOMP_FLUID )
                                        Monotonicity[v] = EnsureMonotonicity_Yes;
       else                             Monotonicity[v] = EnsureMonotonicity_No;
       */
@@ -765,7 +764,7 @@ int AllocateSonPatch( const int FaLv, const int *Cr, const int PScale, const int
 #     warning : WAIT MHD !!!
 
 #     elif ( MODEL == ELBDM )
-      if ( v == DENS )                 Monotonicity[v] = EnsureMonotonicity_Yes;
+      if ( v != REAL  &&  v != IMAG )  Monotonicity[v] = EnsureMonotonicity_Yes;
       else                             Monotonicity[v] = EnsureMonotonicity_No;
 
 #     else
@@ -791,7 +790,7 @@ int AllocateSonPatch( const int FaLv, const int *Cr, const int PScale, const int
 
    else // if ( OPT__INT_PHASE )
    {
-      for (int v=0; v<NCOMP; v++)
+      for (int v=0; v<NCOMP_TOTAL; v++)
       Interpolate( CData_Flu+v*CSize_Flu1v, CSize_Flu_Temp, CStart_Flu, CRange, &FData_Flu[v][0][0][0],
                    FSize_Temp, FStart, 1, OPT__REF_FLU_INT_SCHEME, PhaseUnwrapping_No, Monotonicity[v] );
    }
@@ -823,7 +822,7 @@ int AllocateSonPatch( const int FaLv, const int *Cr, const int PScale, const int
 
 #  else // #if ( MODEL == ELBDM )
 
-   for (int v=0; v<NCOMP; v++)
+   for (int v=0; v<NCOMP_TOTAL; v++)
    Interpolate( CData_Flu+v*CSize_Flu1v, CSize_Flu_Temp, CStart_Flu, CRange, &FData_Flu[v][0][0][0],
                 FSize_Temp, FStart, 1, OPT__REF_FLU_INT_SCHEME, PhaseUnwrapping_No, Monotonicity[v] );
 
@@ -831,14 +830,16 @@ int AllocateSonPatch( const int FaLv, const int *Cr, const int PScale, const int
 
 #  ifdef GRAVITY
    const int CSize_Pot_Temp[3] = { CSize_Pot, CSize_Pot, CSize_Pot };
-   real *const CData_Pot = CData + NCOMP*CSize_Flu*CSize_Flu*CSize_Flu;
+   real *const CData_Pot = CData + NCOMP_TOTAL*CSize_Flu*CSize_Flu*CSize_Flu;
 
    Interpolate( CData_Pot, CSize_Pot_Temp, CStart_Pot, CRange, &FData_Pot[0][0][0],
                 FSize_Temp, FStart,     1, OPT__REF_POT_INT_SCHEME, PhaseUnwrapping_No, EnsureMonotonicity_No );
 #  endif
 
 // 3.2.3 check minimum density and pressure
-#  if ( MODEL == HYDRO  ||  MODEL == MHD  ||  MODEL == ELBDM )
+// --> note that it's unnecessary to check negative passive scalars thanks to the monotonic interpolation
+// --> but we do renormalize passive scalars here
+#  if ( MODEL == HYDRO  ||  MODEL == MHD  ||  MODEL == ELBDM  ||  (defined DENS && NCOMP_PASSIVE>0) )
 #  if ( MODEL == HYDRO  ||  MODEL == MHD )
    const real  Gamma_m1 = GAMMA - (real)1.0;
    const real _Gamma_m1 = (real)1.0 / Gamma_m1;
@@ -875,6 +876,20 @@ int AllocateSonPatch( const int FaLv, const int *Cr, const int PScale, const int
                                    FData_Flu[MOMZ][k][j][i], FData_Flu[ENGY][k][j][i],
                                    Gamma_m1, _Gamma_m1, MIN_PRES );
 #     endif
+
+//    normalize passive scalars
+#     if ( NCOMP_PASSIVE > 0 )
+      if ( OPT__NORMALIZE_PASSIVE )
+      {
+         real Passive[NCOMP_PASSIVE];
+
+         for (int v=0; v<NCOMP_PASSIVE; v++)    Passive[v] = FData_Flu[ NCOMP_FLUID + v ][k][j][i];
+
+         CPU_NormalizePassive( FData_Flu[DENS][k][j][i], Passive, PassiveNorm_NVar, PassiveNorm_VarIdx );
+
+         for (int v=0; v<NCOMP_PASSIVE; v++)    FData_Flu[ NCOMP_FLUID + v ][k][j][i] = Passive[v];
+      }
+#     endif
    } // i,j,k
 #  endif // #if ( MODEL == HYDRO  ||  MODEL == MHD  ||  MODEL == ELBDM )
 
@@ -890,7 +905,7 @@ int AllocateSonPatch( const int FaLv, const int *Cr, const int PScale, const int
       Disp_k = TABLE_02( LocalID, 'z', 0, PATCH_SIZE );
 
 //    fluid data
-      for (int v=0; v<NCOMP; v++)         {
+      for (int v=0; v<NCOMP_TOTAL; v++)   {
       for (int k=0; k<PATCH_SIZE; k++)    {  K = k + Disp_k;
       for (int j=0; j<PATCH_SIZE; j++)    {  J = j + Disp_j;
       for (int i=0; i<PATCH_SIZE; i++)    {  I = i + Disp_i;

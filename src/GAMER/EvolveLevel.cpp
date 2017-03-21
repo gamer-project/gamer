@@ -124,11 +124,11 @@ void EvolveLevel( const int lv, const double dTime )
 //             transfer data simultaneously
 #              ifdef GRAVITY
                if ( SelfGravity )
-               TIMING_FUNC(   Buf_GetBufferData( lv, SaveSg_Flu, NULL_INT, DATA_GENERAL, _DENS, Rho_ParaBuf,
+               TIMING_FUNC(   Buf_GetBufferData( lv, SaveSg_Flu, NULL_INT, DATA_GENERAL, _DENS,  Rho_ParaBuf,
                                                  USELB_YES ),
                               Timer_GetBuf[lv][0],   true   );
 #              else
-               TIMING_FUNC(   Buf_GetBufferData( lv, SaveSg_Flu, NULL_INT, DATA_GENERAL, _FLU,  Flu_ParaBuf,
+               TIMING_FUNC(   Buf_GetBufferData( lv, SaveSg_Flu, NULL_INT, DATA_GENERAL, _TOTAL, Flu_ParaBuf,
                                                  USELB_YES ),
                               Timer_GetBuf[lv][2],   true   );
 #              endif
@@ -155,11 +155,11 @@ void EvolveLevel( const int lv, const double dTime )
 
 #        ifdef GRAVITY
          if ( SelfGravity )
-         TIMING_FUNC(   Buf_GetBufferData( lv, SaveSg_Flu, NULL_INT, DATA_GENERAL, _DENS, Rho_ParaBuf,
+         TIMING_FUNC(   Buf_GetBufferData( lv, SaveSg_Flu, NULL_INT, DATA_GENERAL, _DENS,  Rho_ParaBuf,
                                            USELB_YES ),
                         Timer_GetBuf[lv][0],   true   );
 #        else
-         TIMING_FUNC(   Buf_GetBufferData( lv, SaveSg_Flu, NULL_INT, DATA_GENERAL, _FLU,  Flu_ParaBuf,
+         TIMING_FUNC(   Buf_GetBufferData( lv, SaveSg_Flu, NULL_INT, DATA_GENERAL, _TOTAL, Flu_ParaBuf,
                                            USELB_YES ),
                         Timer_GetBuf[lv][2],   true   );
 #        endif
@@ -207,7 +207,7 @@ void EvolveLevel( const int lv, const double dTime )
                                                     Pot_ParaBuf, USELB_YES ),
                                  Timer_GetBuf[lv][1],   true   );
 
-                  TIMING_FUNC(   Buf_GetBufferData( lv, SaveSg_Flu, NULL_INT, DATA_GENERAL,    _FLU,
+                  TIMING_FUNC(   Buf_GetBufferData( lv, SaveSg_Flu, NULL_INT, DATA_GENERAL,    _TOTAL,
                                                     Flu_ParaBuf, USELB_YES ),
                                  Timer_GetBuf[lv][2],   true   );
                }
@@ -234,11 +234,11 @@ void EvolveLevel( const int lv, const double dTime )
                            Timer_Gra_Advance[lv],   true   );
 
             if ( SelfGravity )
-            TIMING_FUNC(   Buf_GetBufferData( lv, NULL_INT, SaveSg_Pot, POT_FOR_POISSON, _POTE, Pot_ParaBuf,
+            TIMING_FUNC(   Buf_GetBufferData( lv, NULL_INT, SaveSg_Pot, POT_FOR_POISSON, _POTE,  Pot_ParaBuf,
                                               USELB_YES ),
                            Timer_GetBuf[lv][1],   true   );
 
-            TIMING_FUNC(   Buf_GetBufferData( lv, SaveSg_Flu, NULL_INT, DATA_GENERAL,    _FLU,  Flu_ParaBuf,
+            TIMING_FUNC(   Buf_GetBufferData( lv, SaveSg_Flu, NULL_INT, DATA_GENERAL,    _TOTAL, Flu_ParaBuf,
                                               USELB_YES ),
                            Timer_GetBuf[lv][2],   true   );
          } // if ( OPT__OVERLAP_MPI ) ... else ...
@@ -345,7 +345,7 @@ void EvolveLevel( const int lv, const double dTime )
          if ( OPT__VERBOSE  &&  MPI_Rank == 0 )    Aux_Message( stdout, "   Lv %2d: Flu_FixUp %24s... ", lv, "" );
 
          if ( OPT__FIXUP_FLUX )
-         TIMING_FUNC(   Buf_GetBufferData( lv, NULL_INT, NULL_INT, COARSE_FINE_FLUX, _FLUX|_FLUX_PASSIVE, NULL_INT,
+         TIMING_FUNC(   Buf_GetBufferData( lv, NULL_INT, NULL_INT, COARSE_FINE_FLUX, _FLUX_TOTAL, NULL_INT,
                                            USELB_YES ),
                         Timer_GetBuf[lv][6],   true   );
 
@@ -353,12 +353,12 @@ void EvolveLevel( const int lv, const double dTime )
 
 #        ifdef LOAD_BALANCE
          if ( OPT__FIXUP_RESTRICT )
-         TIMING_FUNC(   LB_GetBufferData( lv, amr->FluSg[lv], NULL_INT, DATA_RESTRICT, _FLU, NULL_INT ),
+         TIMING_FUNC(   LB_GetBufferData( lv, amr->FluSg[lv], NULL_INT, DATA_RESTRICT, _TOTAL, NULL_INT ),
                         Timer_GetBuf[lv][7],   true   );
 #        endif
 
          if ( OPT__FIXUP_FLUX  ||  OPT__FIXUP_RESTRICT )
-         TIMING_FUNC(   Buf_GetBufferData( lv, amr->FluSg[lv], NULL_INT, DATA_AFTER_FIXUP, _FLU, Flu_ParaBuf, USELB_YES  ),
+         TIMING_FUNC(   Buf_GetBufferData( lv, amr->FluSg[lv], NULL_INT, DATA_AFTER_FIXUP, _TOTAL, Flu_ParaBuf, USELB_YES  ),
                         Timer_GetBuf[lv][3],   true   );
 
          if ( OPT__VERBOSE  &&  MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );
@@ -401,7 +401,7 @@ void EvolveLevel( const int lv, const double dTime )
 #        endif
 
 #        ifdef LOAD_BALANCE
-         TIMING_FUNC(   Buf_GetBufferData( lv,   amr->FluSg[lv  ], NULL_INT, DATA_AFTER_REFINE, _FLU,  Flu_ParaBuf,
+         TIMING_FUNC(   Buf_GetBufferData( lv,   amr->FluSg[lv  ], NULL_INT, DATA_AFTER_REFINE, _TOTAL,  Flu_ParaBuf,
                                            USELB_YES ),
                         Timer_GetBuf[lv][4],    false   );
 #        ifdef GRAVITY
@@ -412,7 +412,7 @@ void EvolveLevel( const int lv, const double dTime )
 #        endif
 #        endif // #ifdef LOAD_BALANCE
 
-         TIMING_FUNC(   Buf_GetBufferData( lv+1, amr->FluSg[lv+1], NULL_INT, DATA_AFTER_REFINE, _FLU,  Flu_ParaBuf,
+         TIMING_FUNC(   Buf_GetBufferData( lv+1, amr->FluSg[lv+1], NULL_INT, DATA_AFTER_REFINE, _TOTAL,  Flu_ParaBuf,
                                            USELB_YES ),
                         Timer_GetBuf[lv][4],    true    );
 #        ifdef GRAVITY

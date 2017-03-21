@@ -8,22 +8,22 @@
 // Function    :  Output_PatchMap
 // Description :  Output the map of one component of a single patch
 //
-// Parameter   :  lv       : Targeted refinement level 
+// Parameter   :  lv       : Targeted refinement level
 //                PID      : Targeted patch index
 //                TSg      : Targeted Sandglass
-//                Comp     : Targeted component to output 
-//                           --> no   gravity : [0 ... NCOMP-1]
-//                               with gravity : [0 ... NCOMP  ] --> output potential if Comp == NCOMP 
+//                Comp     : Targeted component to output
+//                           --> no   gravity : [0 ... NCOMP_TOTAL-1]
+//                               with gravity : [0 ... NCOMP_TOTAL  ] --> output potential if Comp == NCOMP_TOTAL
 //                comment  : String to attach to the end of the file name
 //-------------------------------------------------------------------------------------------------------
-void Output_PatchMap( const int lv, const int PID, const int TSg, const int Comp, const char *comment ) 
+void Output_PatchMap( const int lv, const int PID, const int TSg, const int Comp, const char *comment )
 {
 
 // check
 #  ifdef GRAVITY
-   if ( Comp > NCOMP   ||  Comp < 0 )  Aux_Error( ERROR_INFO, "incorrect parameter %s = %d !!\n", "Comp", Comp );
+   if ( Comp > NCOMP_TOTAL   ||  Comp < 0 )  Aux_Error( ERROR_INFO, "incorrect parameter %s = %d !!\n", "Comp", Comp );
 #  else
-   if ( Comp > NCOMP-1 ||  Comp < 0 )  Aux_Error( ERROR_INFO, "incorrect parameter %s = %d !!\n", "Comp", Comp );
+   if ( Comp > NCOMP_TOTAL-1 ||  Comp < 0 )  Aux_Error( ERROR_INFO, "incorrect parameter %s = %d !!\n", "Comp", Comp );
 #  endif
 
    if ( amr->patch[0][lv][PID] == NULL )
@@ -32,14 +32,14 @@ void Output_PatchMap( const int lv, const int PID, const int TSg, const int Comp
       return;
    }
 
-   if ( Comp < NCOMP  &&  amr->patch[TSg][lv][PID]->fluid == NULL )
+   if ( Comp < NCOMP_TOTAL  &&  amr->patch[TSg][lv][PID]->fluid == NULL )
    {
       Aux_Message( stderr, "WARNING : lv %d, PID %d, Sg %d does NOT have fluid data !!\n", lv, PID, TSg );
       return;
    }
 
 #  ifdef GRAVITY
-   if ( Comp == NCOMP  &&  amr->patch[TSg][lv][PID]->pot == NULL )
+   if ( Comp == NCOMP_TOTAL  &&  amr->patch[TSg][lv][PID]->pot == NULL )
    {
       Aux_Message( stderr, "WARNING : lv %d, PID %d, Sg %d does NOT have potential data !!\n", lv, PID, TSg );
       return;
@@ -52,7 +52,7 @@ void Output_PatchMap( const int lv, const int PID, const int TSg, const int Comp
 
    char FileName[100];
    sprintf( FileName, "PatchMap_r%d_lv%d_p%d_v%d", MPI_Rank, lv, PID, Comp );
-   if ( comment != NULL )       
+   if ( comment != NULL )
    {
       strcat( FileName, "_" );
       strcat( FileName, comment );
@@ -65,29 +65,29 @@ void Output_PatchMap( const int lv, const int PID, const int TSg, const int Comp
 // output header
    FILE *File = fopen( FileName, "w" );
 
-   fprintf( File, "Rank %d  Lv %d  PID %d  Local ID %d  TSg %d  Time %13.7e  Step %ld  Counter %ld\n", 
+   fprintf( File, "Rank %d  Lv %d  PID %d  Local ID %d  TSg %d  Time %13.7e  Step %ld  Counter %ld\n",
             MPI_Rank, lv, PID, PID%8, TSg, Time[lv], Step, AdvanceCounter[lv] );
 
-   fprintf( File, "Father  %d    Son  %d    Corner  (%10d,%10d,%10d)\n\n", Relation->father, Relation->son, 
+   fprintf( File, "Father  %d    Son  %d    Corner  (%10d,%10d,%10d)\n\n", Relation->father, Relation->son,
             Relation->corner[0], Relation->corner[1], Relation->corner[2] );
 
    fprintf( File, "Sibling, Sibling->Son, and Father->Sibling Lists :\n" );
 
    int Sib, FaSib, SibSon;
-   for (int S=0; S<26; S++)   
+   for (int S=0; S<26; S++)
    {
       Sib    = Relation->sibling[S];
       FaSib  = (  lv ==  0 ) ?  -1  :  amr->patch[0][lv-1][Relation->father]->sibling[S];
-      SibSon = ( Sib == -1 ) ?  -1  :  amr->patch[0][lv][Sib]->son; 
+      SibSon = ( Sib == -1 ) ?  -1  :  amr->patch[0][lv][Sib]->son;
 
-      fprintf( File, "Sib[%2d] = %6d     Sib_Son = %6d     Fa_Sib[%2d] = %6d\n", 
+      fprintf( File, "Sib[%2d] = %6d     Sib_Son = %6d     Fa_Sib[%2d] = %6d\n",
                S, Sib, SibSon, S, FaSib );
    }
    fprintf( File, "\n" );
 
 
 // output data
-   if ( Comp < NCOMP ) // output fluid data
+   if ( Comp < NCOMP_TOTAL ) // output fluid data
    {
       for (int k=0; k<PATCH_SIZE; k++)
       {
@@ -105,7 +105,7 @@ void Output_PatchMap( const int lv, const int PID, const int TSg, const int Comp
    }
 
 #  ifdef GRAVITY
-   else // Comp == NCOMP --> output potential
+   else // Comp == NCOMP_TOTAL --> output potential
    {
       for (int k=0; k<PATCH_SIZE; k++)
       {
@@ -120,7 +120,7 @@ void Output_PatchMap( const int lv, const int PID, const int TSg, const int Comp
 
          fprintf( File, "\n\n\n" );
       }
-   } // if ( Comp < NCOMP ) ... else ...
+   } // if ( Comp < NCOMP_TOTAL ) ... else ...
 #  endif
 
 

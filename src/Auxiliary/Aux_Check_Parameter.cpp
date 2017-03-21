@@ -44,6 +44,10 @@ void Aux_Check_Parameter()
 #     error : ERROR : currently UNSPLIT_GRAVITY is only supported in HYDRO !!
 #  endif
 
+#  if ( NCOMP_PASSIVE < 0 )
+#     error : ERROR : incorrect number of NCOMP_PASSIVE !!
+#  endif
+
 #  ifdef SERIAL
    int NRank = 1;
 #  else
@@ -155,8 +159,8 @@ void Aux_Check_Parameter()
       Aux_Error( ERROR_INFO, "incorrect option \"OPT__UM_START_LEVEL = %d\" [0 ... NLEVEL-1] !!\n",
                  OPT__UM_START_LEVEL );
 
-   if (  OPT__INIT == INIT_UM  &&  ( OPT__UM_START_NVAR < 1 || OPT__UM_START_NVAR > NCOMP )  )
-      Aux_Error( ERROR_INFO, "incorrect option \"OPT__UM_START_NVAR = %d\" [1 ... NCOMP] !!\n",
+   if (  OPT__INIT == INIT_UM  &&  ( OPT__UM_START_NVAR < 1 || OPT__UM_START_NVAR > NCOMP_TOTAL )  )
+      Aux_Error( ERROR_INFO, "incorrect option \"OPT__UM_START_NVAR = %d\" [1 ... NCOMP_TOTAL] !!\n",
                  OPT__UM_START_NVAR );
 
    if ( OPT__INIT == INIT_UM  &&  OPT__UM_START_NVAR != 1  &&  OPT__UM_FACTOR_5OVER3 )
@@ -351,31 +355,31 @@ void Aux_Check_Parameter()
 
    if ( OPT__TIMING_BARRIER  &&  !OPT__TIMING_BALANCE )
    {
-      Aux_Message( stderr, "WARNING : option \"%s\" is on, but the time waiting for other ranks will NOT be included in individual timers ...\n",
+      Aux_Message( stderr, "REMINDER : option \"%s\" is on, but the time waiting for other ranks will NOT be included in individual timers ...\n",
                    "OPT__TIMING_BARRIER" );
-      Aux_Message( stderr, "          --> the sum of individual timer may be less than the total elapsed time due to load imbalance ...\n" );
+      Aux_Message( stderr, "           --> the sum of individual timer may be less than the total elapsed time due to load imbalance ...\n" );
    }
 
 #  ifdef TIMING
    if ( !OPT__TIMING_BARRIER )
    {
-      Aux_Message( stderr, "WARNING : option \"%s\" is off for TIMING\n", "OPT__TIMING_BARRIER" );
-      Aux_Message( stderr, "          --> Some timing results (especially MPI and particle routines) may be less accurate due to load imbalance ...\n" );
+      Aux_Message( stderr, "REMINDER : option \"%s\" is off for TIMING\n", "OPT__TIMING_BARRIER" );
+      Aux_Message( stderr, "           --> Some timing results (especially MPI and particle routines) may be less accurate due to load imbalance ...\n" );
    }
 #  endif
 
    if (  ( OPT__TIMING_BALANCE || OPT__TIMING_MPI )  &&  !OPT__TIMING_BARRIER  )
    {
-      Aux_Message( stderr, "WARNING : option \"%s\" is off for OPT__TIMING_BALANCE/OPT__TIMING_MPI\n", "OPT__TIMING_BARRIER" );
-      Aux_Message( stderr, "          --> Some timing results (especially MPI and particle routines) may be less accurate due to load imbalance ...\n" );
+      Aux_Message( stderr, "REMINDER : option \"%s\" is off for OPT__TIMING_BALANCE/OPT__TIMING_MPI\n", "OPT__TIMING_BARRIER" );
+      Aux_Message( stderr, "           --> Some timing results (especially MPI and particle routines) may be less accurate due to load imbalance ...\n" );
    }
 
 #  ifdef PARTICLE
    if ( OPT__TIMING_BALANCE )
    {
-      Aux_Message( stderr, "WARNING : option \"%s\" does NOT work well for particle routines\n", "OPT__TIMING_BARRIER" );
-      Aux_Message( stderr, "          --> Because many particle routines call MPI_Barrier implicitly\n" );
-      Aux_Message( stderr, "              (so as Gra_AdvanceDt when PARTICLE is on)\n" );
+      Aux_Message( stderr, "REMINDER : option \"%s\" does NOT work well for particle routines\n", "OPT__TIMING_BARRIER" );
+      Aux_Message( stderr, "           --> Because many particle routines call MPI_Barrier implicitly\n" );
+      Aux_Message( stderr, "               (so as Gra_AdvanceDt when PARTICLE is on)\n" );
    }
 #  endif
 
@@ -398,6 +402,16 @@ void Aux_Check_Parameter()
 
 #  if ( !defined GRAVITY  &&  defined STORE_POT_GHOST )
    Aux_Message( stderr, "WARNING : STORE_POT_GHOST is useless when GRAVITY is off !!\n" );
+#  endif
+
+#  if ( NCOMP_PASSIVE > 0 )
+   if ( OPT__NORMALIZE_PASSIVE )
+      Aux_Message( stderr, "REMINDER : OPT__NORMALIZE_PASSIVE will break the strict conservation of individual passive scalar\n" );
+   else
+   {
+      Aux_Message( stderr, "REMINDER : disabling OPT__NORMALIZE_PASSIVE will break the strict equality between\n" );
+      Aux_Message( stderr, "           sum(passive_scalar_mass_density) and gas_mass_density\n" );
+   }
 #  endif
 
    } // if ( MPI_Rank == 0 )
@@ -573,8 +587,16 @@ void Aux_Check_Parameter()
 
 // errors
 // ------------------------------
-#  if ( NCOMP != 5 )
-#     error : ERROR : NCOMP != 5 in HYDRO !!
+#  if ( NCOMP_FLUID != 5 )
+#     error : ERROR : NCOMP_FLUID != 5 in HYDRO !!
+#  endif
+
+#  if ( NCOMP_TOTAL != NFLUX_TOTAL )
+#     error : ERROR : NCOMP_TOTAL != NFLUX_TOTAL !!
+#  endif
+
+#  if (  NCOMP_PASSIVE != 0  &&  ( FLU_SCHEME == RTVD || FLU_SCHEME == WAF )  )
+#     error : RTVD and WAF schemes do NOT support passive scalars !!
 #  endif
 
 #  if ( FLU_SCHEME != RTVD  &&  FLU_SCHEME != MHM  &&  FLU_SCHEME != MHM_RP  &&  FLU_SCHEME != CTU  &&  \
@@ -594,19 +616,9 @@ void Aux_Check_Parameter()
 #     error : ERROR : unsupported Riemann solver (EXACT/ROE/HLLE/HLLC) !!
 #  endif
 
-#  if ( NPASSIVE < 0 )
-#     error : ERROR : incorrect number of NPASSIVE !!
-#  endif
-
 #  if ( defined CHECK_INTERMEDIATE  &&  CHECK_INTERMEDIATE != EXACT  &&  CHECK_INTERMEDIATE != HLLE  &&  \
         CHECK_INTERMEDIATE != HLLC )
 #     error : ERROR : unsupported option in CHECK_INTERMEDIATE (EXACT/HLLE/HLLC) !!
-#  endif
-
-#  if ( NPASSIVE < 0 )
-   for (int f=0; f<6; f++)
-   if ( OPT__BC_FLU[f] != BC_FLU_PERIODIC )
-      Aux_Error( ERROR_INFO, "currently the passively advected scalars can only work with the periodic BC !!\n" );
 #  endif
 
    if ( OPT__CK_NEGATIVE < 0  ||  OPT__CK_NEGATIVE > 3 )
@@ -682,6 +694,9 @@ void Aux_Check_Parameter()
 
    if ( OPT__INIT == INIT_UM )
       Aux_Message( stderr, "WARNING : currently we don't check MIN_DENS/PRES for the initial data loaded from UM_START !!\n" );
+
+   if ( OPT__1ST_FLUX_CORR )
+      Aux_Message( stderr, "REMINDER : OPT__1ST_FLUX_CORR may break the strict conservation of fluid variables\n" );
 
    } // if ( MPI_Rank == 0 )
 
@@ -841,8 +856,8 @@ void Aux_Check_Parameter()
 
 // errors
 // ------------------------------
-#  if ( NCOMP != 3 )
-#     error : ERROR : NCOMP != 3 in ELBDM !!
+#  if ( NCOMP_FLUID != 3 )
+#     error : ERROR : NCOMP_FLUID != 3 in ELBDM !!
 #  endif
 
 #  if ( FLU_NIN != 2 )
@@ -851,6 +866,10 @@ void Aux_Check_Parameter()
 
 #  if ( FLU_NOUT != 3 )
 #     error : ERROR : FLU_NOUT != 3 in ELBDM !!
+#  endif
+
+#  if ( NCOMP_PASSIVE > 0 )
+#     error : ERROR : NCOMP_PASSIVE > 0 in ELBDM (currently this model does not support passive scalar) !!
 #  endif
 
 #  ifdef QUARTIC_SELF_INTERACTION

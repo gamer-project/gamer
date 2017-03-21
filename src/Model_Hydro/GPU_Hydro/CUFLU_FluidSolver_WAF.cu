@@ -5,6 +5,11 @@
 #if ( defined GPU  &&  MODEL == HYDRO  &&  FLU_SCHEME == WAF )
 
 
+// check before compiling anything else
+#if ( NCOMP_PASSIVE != 0 )
+#  error : WAF scheme does NOT support passive scalars !!
+#endif
+
 
 #define to1D1(z,y,x) ( __umul24(z, FLU_NXT*FLU_NXT) + __umul24(y, FLU_NXT) + x )
 #define to1D2(z,y,x) ( __umul24(z-FLU_GHOST_SIZE, PS2*PS2) + __umul24(y-FLU_GHOST_SIZE, PS2) + x-FLU_GHOST_SIZE )
@@ -70,9 +75,9 @@ static __device__ real set_limit( const real r, const real c, const WAF_Limiter_
 //                                 3 : minbee
 //                MinDens/Pres : Minimum allowed density and pressure
 //-------------------------------------------------------------------------------------------------------
-__global__ void CUFLU_FluidSolver_WAF( real g_Fluid_In [][5][ FLU_NXT*FLU_NXT*FLU_NXT ],
-                                       real g_Fluid_Out[][5][ PS2*PS2*PS2 ],
-                                       real g_Flux[][9][5][ PS2*PS2 ],
+__global__ void CUFLU_FluidSolver_WAF( real g_Fluid_In []   [NCOMP_TOTAL][ FLU_NXT*FLU_NXT*FLU_NXT ],
+                                       real g_Fluid_Out[]   [NCOMP_TOTAL][ PS2*PS2*PS2 ],
+                                       real g_Flux     [][9][NCOMP_TOTAL][ PS2*PS2 ],
                                        const double g_Corner[][3],
                                        const real g_Pot_USG[][ USG_NXT_F*USG_NXT_F*USG_NXT_F ],
                                        const real dt, const real _dh, const real Gamma, const bool StoreFlux,
@@ -222,7 +227,8 @@ __device__ void CUFLU_Advance( real g_Fluid_In [][5][ FLU_NXT*FLU_NXT*FLU_NXT ],
          ii = i - 1;
 
 #        if ( RSOLVER == EXACT )
-         FluVar eival_st, L_star_st, R_star_st, L_st, R_st;
+         FluVar5 eival_st, L_star_st, R_star_st;
+         FluVar  L_st, R_st;
 
          L_st.Rho = s_u[ty][ii][0];
          L_st.Px  = s_u[ty][ii][1];
@@ -236,7 +242,7 @@ __device__ void CUFLU_Advance( real g_Fluid_In [][5][ FLU_NXT*FLU_NXT*FLU_NXT ],
          R_st.Pz  = s_u[ty][ i][3];
          R_st.Egy = s_u[ty][ i][4];
 
-         CUFLU_RiemannSolver_Exact( 0, eival_st, L_star_st, R_star_st, L_st, R_st, Gamma );
+         CUFLU_RiemannSolver_Exact( 0, &eival_st, &L_star_st, &R_star_st, L_st, R_st, Gamma );
 
          eval[0] = eival_st.Rho;
          eval[1] = eival_st.Px;

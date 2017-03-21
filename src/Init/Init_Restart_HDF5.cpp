@@ -523,10 +523,10 @@ void Init_Restart_HDF5( const char *FileName )
    int  TRange_Min[3], TRange_Max[3];
 #  endif
 
-   char (*FieldName)[100] = new char [NCOMP][100];
+   char (*FieldName)[100] = new char [NCOMP_TOTAL][100];
 
    hsize_t H5_SetDims_Field[4], H5_MemDims_Field[4];
-   hid_t   H5_SetID_Field[NCOMP], H5_MemID_Field, H5_SpaceID_Field, H5_GroupID_GridData;
+   hid_t   H5_SetID_Field[NCOMP_TOTAL], H5_MemID_Field, H5_SpaceID_Field, H5_GroupID_GridData;
 
 #  ifdef PARTICLE
    char (*ParVarName)[100] = new char [NParVar][100];
@@ -564,6 +564,8 @@ void Init_Restart_HDF5( const char *FileName )
 #  error : ERROR : unsupported MODEL !!
 #  endif
 
+   for (int v=0; v<NCOMP_PASSIVE; v++)    sprintf( FieldName[NCOMP_FLUID+v], "%s", PassiveFieldName_Grid[v] );
+
 #  ifdef PARTICLE
    sprintf( ParVarName[0], "ParMass" );
    sprintf( ParVarName[1], "ParPosX" );
@@ -573,7 +575,7 @@ void Init_Restart_HDF5( const char *FileName )
    sprintf( ParVarName[5], "ParVelY" );
    sprintf( ParVarName[6], "ParVelZ" );
 
-   for (int v=0; v<PAR_NPASSIVE; v++)  sprintf( ParVarName[7+v], "ParPassive%d%d", v/10, v%10 );
+   for (int v=0; v<PAR_NPASSIVE; v++)  sprintf( ParVarName[7+v], "%s", PassiveFieldName_Par[v] );
 
 #  ifdef DEBUG_HDF5
    if ( PAR_NPASSIVE >= 100 )    Aux_Error( ERROR_INFO, "PAR_NPASSIVE = %d >= 100 !!\n", PAR_NPASSIVE );
@@ -618,7 +620,7 @@ void Init_Restart_HDF5( const char *FileName )
          H5_GroupID_GridData = H5Gopen( H5_FileID, "GridData", H5P_DEFAULT );
          if ( H5_GroupID_GridData < 0 )   Aux_Error( ERROR_INFO, "failed to open the group \"%s\" !!\n", "GridData" );
 
-         for (int v=0; v<NCOMP; v++)
+         for (int v=0; v<NCOMP_TOTAL; v++)
          {
             H5_SetID_Field[v] = H5Dopen( H5_GroupID_GridData, FieldName[v], H5P_DEFAULT );
             if ( H5_SetID_Field[v] < 0 )  Aux_Error( ERROR_INFO, "failed to open the dataset \"%s\" !!\n", FieldName[v] );
@@ -722,7 +724,7 @@ void Init_Restart_HDF5( const char *FileName )
 #        endif // #ifdef LOAD_BALANCE ... else ...
 
 //       free resource
-         for (int v=0; v<NCOMP; v++)   H5_Status = H5Dclose( H5_SetID_Field[v] );
+         for (int v=0; v<NCOMP_TOTAL; v++)   H5_Status = H5Dclose( H5_SetID_Field[v] );
          H5_Status = H5Gclose( H5_GroupID_GridData );
 
 #        ifdef PARTICLE
@@ -837,7 +839,7 @@ void Init_Restart_HDF5( const char *FileName )
       if ( lv > 0  &&  amr->WithFlux )    Flu_AllocateFluxArray( lv-1 );
 
 //    get data for all buffer patches
-      Buf_GetBufferData( lv, amr->FluSg[lv], NULL_INT, DATA_GENERAL, _FLU, Flu_ParaBuf, USELB_NO );
+      Buf_GetBufferData( lv, amr->FluSg[lv], NULL_INT, DATA_GENERAL, _TOTAL, Flu_ParaBuf, USELB_NO );
 
    } // for (int lv=0; lv<NLEVEL; lv++)
 #  endif // #ifndef LOAD_BALANCE
@@ -875,13 +877,17 @@ void Init_Restart_HDF5( const char *FileName )
 //                                    --> true  : terminate the program     if "FieldPtr[X] != ComprPtr[X]"
 //                                        false : display a warning message if "FieldPtr[X] != ComprPtr[X]"
 //
-// Return      :  Success/fail <-> 0/-1
+// Return      :  Success/fail <-> 0/<0
 //-------------------------------------------------------------------------------------------------------
 template <typename T>
 herr_t LoadField( const char *FieldName, void *FieldPtr, const hid_t H5_SetID_Target,
                   const hid_t H5_TypeID_Target, const bool Fatal_Nonexist,
                   const T *ComprPtr, const int NCompr, const bool Fatal_Compr )
 {
+
+// nothing to do if NCompr == 0 (note that in certain circumstances some variables can have zero size)
+   if ( NCompr == 0 )   return 0;
+
 
 #  ifdef DEBUG_HDF5
    if ( NCompr > 0  &&  ComprPtr == NULL )
@@ -1061,7 +1067,7 @@ void LoadOnePatch( const hid_t H5_FileID, const int lv, const int GID, const boo
 
 
 // load field data from disk (potential data, if presented, are ignored and will be recalculated)
-   for (int v=0; v<NCOMP; v++)
+   for (int v=0; v<NCOMP_TOTAL; v++)
    {
       H5_Status = H5Dread( H5_SetID_Field[v], H5T_GAMER_REAL, H5_MemID_Field, H5_SpaceID_Field, H5P_DEFAULT,
                            amr->patch[0][lv][PID]->fluid[v] );
@@ -1134,7 +1140,7 @@ void LoadOnePatch( const hid_t H5_FileID, const int lv, const int GID, const boo
       } // for (int p=0; p<NParThisPatch )
 
 //    link particles to this patch
-#     ifdef DEBUG_HDF5
+#     ifdef DEBUG_PARTICLE
       const real *ParPos[3] = { amr->Par->PosX, amr->Par->PosY, amr->Par->PosZ };
       char Comment[100];
       sprintf( Comment, "%s, lv %d, PID %d, GID %d, NPar %d", __FUNCTION__, lv, PID, GID, NParThisPatch );
@@ -1252,7 +1258,6 @@ void Check_Makefile( const char *FileName )
 #  ifdef RSOLVER
    LoadField( "RSolver",            &RS.RSolver,            SID, TID, NonFatal, &RT.RSolver,             1, NonFatal );
 #  endif
-   LoadField( "NPassive",           &RS.NPassive,           SID, TID, NonFatal, &RT.NPassive,            1,    Fatal );
 
 #  elif ( MODEL == MHD )
 #  warning : WAIT MHD !!!
@@ -1324,11 +1329,13 @@ void Check_SymConst( const char *FileName )
    SymConst_t RS;    // RS = ReStart
 
 
-   LoadField( "NComp",                &RS.NComp,                SID, TID, NonFatal, &RT.NComp,                 1,    Fatal );
+   LoadField( "NCompFluid",           &RS.NCompFluid,           SID, TID, NonFatal, &RT.NCompFluid,            1,    Fatal );
+   LoadField( "NCompPassive",         &RS.NCompPassive,         SID, TID, NonFatal, &RT.NCompPassive,          1,    Fatal );
    LoadField( "PatchSize",            &RS.PatchSize,            SID, TID, NonFatal, &RT.PatchSize,             1,    Fatal );
    LoadField( "Flu_NIn",              &RS.Flu_NIn,              SID, TID, NonFatal, &RT.Flu_NIn,               1, NonFatal );
    LoadField( "Flu_NOut",             &RS.Flu_NOut,             SID, TID, NonFatal, &RT.Flu_NOut,              1, NonFatal );
-   LoadField( "NFlux",                &RS.NFlux,                SID, TID, NonFatal, &RT.NFlux,                 1, NonFatal );
+   LoadField( "NFluxFluid",           &RS.NFluxFluid,           SID, TID, NonFatal, &RT.NFluxFluid,            1, NonFatal );
+   LoadField( "NFluxPassive",         &RS.NFluxPassive,         SID, TID, NonFatal, &RT.NFluxPassive,          1, NonFatal );
    LoadField( "Flu_GhostSize",        &RS.Flu_GhostSize,        SID, TID, NonFatal, &RT.Flu_GhostSize,         1, NonFatal );
    LoadField( "Flu_Nxt",              &RS.Flu_Nxt,              SID, TID, NonFatal, &RT.Flu_Nxt,               1, NonFatal );
    LoadField( "Debug_HDF5",           &RS.Debug_HDF5,           SID, TID, NonFatal, &RT.Debug_HDF5,            1, NonFatal );
@@ -1336,6 +1343,8 @@ void Check_SymConst( const char *FileName )
 #  ifdef LOAD_BALANCE
    LoadField( "SonOffsetLB",          &RS.SonOffsetLB,          SID, TID, NonFatal, &RT.SonOffsetLB,           1, NonFatal );
 #  endif
+   LoadField( "TinyNumber",           &RS.TinyNumber,           SID, TID, NonFatal, &RT.TinyNumber,            1, NonFatal );
+   LoadField( "HugeNumber",           &RS.HugeNumber,           SID, TID, NonFatal, &RT.HugeNumber,            1, NonFatal );
 
 #  ifdef GRAVITY
    LoadField( "Gra_NIn",              &RS.Gra_NIn,              SID, TID, NonFatal, &RT.Gra_NIn,               1, NonFatal );
@@ -1440,6 +1449,7 @@ void Check_InputPara( const char *FileName )
    const bool    Fatal = true;
    const bool NonFatal = false;
    const int  N1       = MAX_LEVEL;
+   const int  NP       = NCOMP_PASSIVE;
    const int *NullPtr  = NULL;
 
    herr_t Status;
@@ -1606,6 +1616,9 @@ void Check_InputPara( const char *FileName )
    LoadField( "Opt__FixUp_Flux",         &RS.Opt__FixUp_Flux,         SID, TID, NonFatal, &RT.Opt__FixUp_Flux,          1, NonFatal );
    LoadField( "Opt__FixUp_Restrict",     &RS.Opt__FixUp_Restrict,     SID, TID, NonFatal, &RT.Opt__FixUp_Restrict,      1, NonFatal );
    LoadField( "Opt__CorrAfterAllSync",   &RS.Opt__CorrAfterAllSync,   SID, TID, NonFatal, &RT.Opt__CorrAfterAllSync,    1, NonFatal );
+   LoadField( "Opt__NormalizePassive",   &RS.Opt__NormalizePassive,   SID, TID, NonFatal, &RT.Opt__NormalizePassive,    1, NonFatal );
+   LoadField( "NormalizePassive_NVar",   &RS.NormalizePassive_NVar,   SID, TID, NonFatal, &RT.NormalizePassive_NVar,    1, NonFatal );
+   LoadField( "NormalizePassive_VarIdx",  RS.NormalizePassive_VarIdx, SID, TID, NonFatal,  RT.NormalizePassive_VarIdx, NP, NonFatal );
    LoadField( "Opt__OverlapMPI",         &RS.Opt__OverlapMPI,         SID, TID, NonFatal, &RT.Opt__OverlapMPI,          1, NonFatal );
    LoadField( "Opt__ResetFluid",         &RS.Opt__ResetFluid,         SID, TID, NonFatal, &RT.Opt__ResetFluid,          1, NonFatal );
 #  if ( MODEL == HYDRO  ||  MODEL == MHD  ||  MODEL == ELBDM )
@@ -1710,6 +1723,7 @@ void Check_InputPara( const char *FileName )
    LoadField( "Opt__Ck_Refine",          &RS.Opt__Ck_Refine,          SID, TID, NonFatal, &RT.Opt__Ck_Refine,           1, NonFatal );
    LoadField( "Opt__Ck_ProperNesting",   &RS.Opt__Ck_ProperNesting,   SID, TID, NonFatal, &RT.Opt__Ck_ProperNesting,    1, NonFatal );
    LoadField( "Opt__Ck_Conservation",    &RS.Opt__Ck_Conservation,    SID, TID, NonFatal, &RT.Opt__Ck_Conservation,     1, NonFatal );
+   LoadField( "Opt__Ck_NormPassive",     &RS.Opt__Ck_NormPassive,     SID, TID, NonFatal, &RT.Opt__Ck_NormPassive,      1, NonFatal );
    LoadField( "Opt__Ck_Restrict",        &RS.Opt__Ck_Restrict,        SID, TID, NonFatal, &RT.Opt__Ck_Restrict,         1, NonFatal );
    LoadField( "Opt__Ck_Finite",          &RS.Opt__Ck_Finite,          SID, TID, NonFatal, &RT.Opt__Ck_Finite,           1, NonFatal );
    LoadField( "Opt__Ck_PatchAllocate",   &RS.Opt__Ck_PatchAllocate,   SID, TID, NonFatal, &RT.Opt__Ck_PatchAllocate,    1, NonFatal );

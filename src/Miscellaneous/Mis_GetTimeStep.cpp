@@ -45,7 +45,7 @@ void Mis_GetTimeStep()
    int    MinDtLv_Fluid;
 
 #  if   ( MODEL == HYDRO )
-   real MinDtVar_Fluid[NCOMP];
+   real MinDtVar_Fluid[5]; // 5: Rho, Vx/y/z, Cs
    Hydro_GetTimeStep_Fluid( dt1, dTime1, MinDtLv_Fluid, MinDtVar_Fluid, dt_dTime );
 
 #  elif ( MODEL == MHD )
@@ -154,7 +154,7 @@ void Mis_GetTimeStep()
    const bool ELBDM_PhaseDt = ( DT__PHASE != 0.0 ) ? true : false;
    double dTime7, dt7;
    int    MinDtLv_Phase;
-   real   MinDtVar_Phase[3];
+   real   MinDtVar_Phase[NCOMP_FLUID];
 
    if ( ELBDM_PhaseDt )
    ELBDM_GetTimeStep_Phase( dt7, dTime7, MinDtLv_Phase, MinDtVar_Phase, dt_dTime );

@@ -28,7 +28,7 @@ void Hydro_Aux_Check_Negative( const int lv, const int Mode, const char *comment
    const bool CheckMinPres_No = false;
 
    int  Pass = true;
-   real Rho, Pres, Fluid[NCOMP];
+   real Rho, Pres, Fluid[NCOMP_FLUID]; // Fluid is for calculating pressure only --> don't need NCOMP_TOTAL
 
    for (int TargetRank=0; TargetRank<MPI_NRank; TargetRank++)
    {
@@ -39,7 +39,7 @@ void Hydro_Aux_Check_Negative( const int lv, const int Mode, const char *comment
          for (int j=0; j<PATCH_SIZE; j++)
          for (int i=0; i<PATCH_SIZE; i++)
          {
-            for (int v=0; v<NCOMP; v++)   Fluid[v] = amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[v][k][j][i];
+            for (int v=0; v<NCOMP_FLUID; v++)   Fluid[v] = amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[v][k][j][i];
 
             Rho  = Fluid[DENS];
             Pres = CPU_GetPressure( Fluid[DENS], Fluid[MOMX], Fluid[MOMY], Fluid[MOMZ], Fluid[ENGY],
