@@ -185,6 +185,7 @@ void Par_TestProbSol_Plummer( real *fluid, const double x, const double y, const
 
       fluid[DENS] = 0.0;
       fluid[ENGY] = 0.0;
+      for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)  fluid[v] = 0.0;
 
       for (int t=-1; t<=1; t+=2)
       {
