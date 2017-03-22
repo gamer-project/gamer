@@ -29,7 +29,7 @@ typedef float  real;
 
 // number of components in each cell and the variable indices in the array "fluid"
 #if   ( MODEL == HYDRO )
-#  define NCOMP            5
+#  define NCOMP_FLUID      5
 #  define DENS             0
 #  define MOMX             1
 #  define MOMY             2
@@ -38,10 +38,10 @@ typedef float  real;
 
 #elif ( MODEL == MHD )
 #  warning : WAIT MHD !!!
-#  define NCOMP            8
+#  define NCOMP_FLUID      8
 
 #elif ( MODEL == ELBDM )
-#  define NCOMP            3
+#  define NCOMP_FLUID      3
 #  define DENS             0
 #  define REAL             1
 #  define IMAG             2
@@ -49,6 +49,8 @@ typedef float  real;
 #else
 #  error : ERROR : unsupported MODEL !!
 #endif // MODEL
+
+#  define NCOMP_TOTAL      ( NCOMP_FLUID + NCOMP_PASSIVE )
 
 
 // sibling index offset for the non-periodic B.C.
@@ -163,7 +165,7 @@ struct patch_t
 
       if ( Data )
       {
-         fluid    = new real [NCOMP][PATCH_SIZE][PATCH_SIZE][PATCH_SIZE];
+         fluid    = new real [NCOMP_TOTAL][PATCH_SIZE][PATCH_SIZE][PATCH_SIZE];
          pot      = new real [PATCH_SIZE][PATCH_SIZE][PATCH_SIZE];
          par_dens = new real [PATCH_SIZE][PATCH_SIZE][PATCH_SIZE];
 

@@ -162,3 +162,9 @@ Version 1.2.0     12/02/2011
 
 
 
+5. Caveat: For the fields "Potential (Pot)" and "ParticleDens (ParDens)", the
+   extracted uniform-resolution results may be different when loading data
+   from the C-binary and HDF5 snapshots. It is becaues HDF5 snapshots store
+   the data of non-leaf patches as well, while C-binary snapshots only store
+   the data of leaf patches and then use the restriction operation to obtain
+   the data in the non-leaf patches.

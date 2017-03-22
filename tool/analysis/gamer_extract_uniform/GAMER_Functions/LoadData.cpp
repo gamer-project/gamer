@@ -356,12 +356,12 @@ void LoadData()
    bool GotYou;
 
 // array for re-ordering the fluid data from "xyzv" to "vxyz"
-   real (*InvData_Flu)[PATCH_SIZE][PATCH_SIZE][NCOMP] = NULL;
+   real (*InvData_Flu)[PATCH_SIZE][PATCH_SIZE][NCOMP_TOTAL] = NULL;
    if ( DataOrder_xyzv )
    {
       if ( UseTree )    Aux_Error( ERROR_INFO, "UseTree option does not support DataOrder_xyzv !!\n" );
 
-      InvData_Flu = new real [PATCH_SIZE][PATCH_SIZE][PATCH_SIZE][NCOMP];
+      InvData_Flu = new real [PATCH_SIZE][PATCH_SIZE][PATCH_SIZE][NCOMP_TOTAL];
    }
 
 
@@ -483,9 +483,9 @@ void LoadData()
 //                      e2-1. load the fluid variables
                         if ( DataOrder_xyzv )
                         {
-                           fread( InvData_Flu, sizeof(real), PATCH_SIZE*PATCH_SIZE*PATCH_SIZE*NCOMP, File );
+                           fread( InvData_Flu, sizeof(real), PATCH_SIZE*PATCH_SIZE*PATCH_SIZE*NCOMP_TOTAL, File );
 
-                           for (int v=0; v<NCOMP; v++)
+                           for (int v=0; v<NCOMP_TOTAL; v++)
                            for (int k=0; k<PATCH_SIZE; k++)
                            for (int j=0; j<PATCH_SIZE; j++)
                            for (int i=0; i<PATCH_SIZE; i++)
@@ -494,7 +494,7 @@ void LoadData()
 
                         else
                            fread( amr.patch[lv][PID]->fluid,    sizeof(real),
-                                  PATCH_SIZE*PATCH_SIZE*PATCH_SIZE*NCOMP, File );
+                                  PATCH_SIZE*PATCH_SIZE*PATCH_SIZE*NCOMP_TOTAL, File );
 
 //                      e2-2. load the gravitational potential
                         if ( OutputPot )
@@ -652,13 +652,13 @@ void Load_Parameter_Before_2000( FILE *File, const int FormatVersion, bool &Data
 // =================================================================================================
    bool enforce_positive, char_reconstruction, hll_no_ref_state, hll_include_all_waves, waf_dissipate;
    bool use_psolver_10to14;
-   int  ncomp, patch_size, flu_ghost_size, pot_ghost_size, gra_ghost_size, check_intermediate;
+   int  ncomp_fluid, patch_size, flu_ghost_size, pot_ghost_size, gra_ghost_size, check_intermediate;
    int  flu_block_size_x, flu_block_size_y, pot_block_size_x, pot_block_size_z, gra_block_size_z;
    real min_value, max_error;
 
    fseek( File, HeaderOffset_Constant, SEEK_SET );
 
-   fread( &ncomp,                      sizeof(int),                     1,             File );
+   fread( &ncomp_fluid,                sizeof(int),                     1,             File );
    fread( &patch_size,                 sizeof(int),                     1,             File );
    fread( &min_value,                  sizeof(real),                    1,             File );
    fread( &flu_ghost_size,             sizeof(int),                     1,             File );
@@ -792,7 +792,7 @@ void Load_Parameter_Before_2000( FILE *File, const int FormatVersion, bool &Data
 
    CompareVar( "MODEL",                   model,                  MODEL,                        Fatal );
    CompareVar( "NLEVEL",                  nlevel,                 NLEVEL,                       Fatal );
-   CompareVar( "NCOMP",                   ncomp,                  NCOMP,                        Fatal );
+   CompareVar( "NCOMP_FLUID",             ncomp_fluid,            NCOMP_FLUID,                  Fatal );
    CompareVar( "PATCH_SIZE",              patch_size,             PATCH_SIZE,                   Fatal );
 
    if ( MyRank == 0 )   Aux_Message( stdout, "   Checking loaded parameters ... done\n" );
@@ -857,7 +857,7 @@ void Load_Parameter_After_2000( FILE *File, const int FormatVersion, bool &LoadP
    bool gravity, individual_timestep, comoving, gpu, gamer_optimization, gamer_debug, timing, timing_solver;
    bool intel, float8, serial, overlap_mpi, openmp, store_pot_ghost, unsplit_gravity, particle;
    bool conserve_mass, laplacian_4th, self_interaction, laohu, support_hdf5;
-   int  model, pot_scheme, flu_scheme, lr_scheme, rsolver, load_balance, nlevel, max_patch, npassive, gpu_arch;
+   int  model, pot_scheme, flu_scheme, lr_scheme, rsolver, load_balance, nlevel, max_patch, ncomp_passive, gpu_arch;
 
    fseek( File, HeaderOffset_Makefile, SEEK_SET );
 
@@ -886,7 +886,7 @@ void Load_Parameter_After_2000( FILE *File, const int FormatVersion, bool &LoadP
    fread( &store_pot_ghost,            sizeof(bool),                    1,             File );
    fread( &unsplit_gravity,            sizeof(bool),                    1,             File );
    fread( &particle,                   sizeof(bool),                    1,             File );
-   fread( &npassive,                   sizeof(int),                     1,             File );
+   fread( &ncomp_passive,              sizeof(int),                     1,             File );
    fread( &conserve_mass,              sizeof(bool),                    1,             File );
    fread( &laplacian_4th,              sizeof(bool),                    1,             File );
    fread( &self_interaction,           sizeof(bool),                    1,             File );
@@ -901,14 +901,14 @@ void Load_Parameter_After_2000( FILE *File, const int FormatVersion, bool &LoadP
 // =================================================================================================
    bool   enforce_positive, char_reconstruction, hll_no_ref_state, hll_include_all_waves, waf_dissipate;
    bool   use_psolver_10to14;
-   int    ncomp, patch_size, flu_ghost_size, pot_ghost_size, gra_ghost_size, check_intermediate;
+   int    ncomp_fluid, patch_size, flu_ghost_size, pot_ghost_size, gra_ghost_size, check_intermediate;
    int    flu_block_size_x, flu_block_size_y, pot_block_size_x, pot_block_size_z, gra_block_size_z;
    int    par_nvar, par_npassive;
    double min_value, max_error;
 
    fseek( File, HeaderOffset_Constant, SEEK_SET );
 
-   fread( &ncomp,                      sizeof(int),                     1,             File );
+   fread( &ncomp_fluid,                sizeof(int),                     1,             File );
    fread( &patch_size,                 sizeof(int),                     1,             File );
    fread( &min_value,                  sizeof(double),                  1,             File );
    fread( &flu_ghost_size,             sizeof(int),                     1,             File );
@@ -1074,7 +1074,8 @@ void Load_Parameter_After_2000( FILE *File, const int FormatVersion, bool &LoadP
 
    CompareVar( "MODEL",                   model,                  MODEL,                        Fatal );
    CompareVar( "NLEVEL",                  nlevel,                 NLEVEL,                       Fatal );
-   CompareVar( "NCOMP",                   ncomp,                  NCOMP,                        Fatal );
+   CompareVar( "NCOMP_FLUID",             ncomp_fluid,            NCOMP_FLUID,                  Fatal );
+   CompareVar( "NCOMP_PASSIVE",           ncomp_passive,          NCOMP_PASSIVE,                Fatal );
    CompareVar( "PATCH_SIZE",              patch_size,             PATCH_SIZE,                   Fatal );
 
    if ( MyRank == 0 )   Aux_Message( stdout, "   Checking loaded parameters ... done\n" );
@@ -1274,13 +1275,13 @@ void LoadOnePatch( FILE *File, const int lv, const int LoadPID, const bool LoadP
 //    load data
       fseek( File, tree->block[lv][LoadPID].data_pos, SEEK_SET );
 
-      fread( amr.patch[lv][PID]->fluid,    sizeof(real), NCOMP*BLOCK_SIZE*BLOCK_SIZE*BLOCK_SIZE, File );
+      fread( amr.patch[lv][PID]->fluid,    sizeof(real), NCOMP_TOTAL*BLOCK_SIZE*BLOCK_SIZE*BLOCK_SIZE, File );
 
       if ( LoadPot )
-      fread( amr.patch[lv][PID]->pot,      sizeof(real),       BLOCK_SIZE*BLOCK_SIZE*BLOCK_SIZE, File );
+      fread( amr.patch[lv][PID]->pot,      sizeof(real),             BLOCK_SIZE*BLOCK_SIZE*BLOCK_SIZE, File );
 
       if ( LoadParDens )
-      fread( amr.patch[lv][PID]->par_dens, sizeof(real),       BLOCK_SIZE*BLOCK_SIZE*BLOCK_SIZE, File );
+      fread( amr.patch[lv][PID]->par_dens, sizeof(real),             BLOCK_SIZE*BLOCK_SIZE*BLOCK_SIZE, File );
    } // if ( GotYou  &&  LoadSonPID0 == -1 )
 
 // enter the next level

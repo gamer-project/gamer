@@ -28,7 +28,7 @@ void Buf_GetBufferData( const int lv, const int Package, const int ParaBuffer )
    switch ( Package )
    {
       case 1:
-         NSpecies = NCOMP;
+         NSpecies = NCOMP_TOTAL;
          break;
 
       case 2: //case 3:

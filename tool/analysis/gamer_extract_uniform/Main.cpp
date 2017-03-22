@@ -29,8 +29,8 @@ double      PhyCoord_Start[3] = { WRONG, WRONG, WRONG };   // starting physical 
 double      PhyCoord_Size [3] = { WRONG, WRONG, WRONG };   // targeted size in physical coordinates
 int         NGPU_X[3]         = { 1, 1, 1 };               // number of MPI ranks in each direction
 int         CanBuf            = WRONG;                     // buffer size for the candidate box
-int         NLoad             = NCOMP;                     // number of variables loaded from the input file
-int         NOut              = NCOMP;                     // number of variables to be outputted
+int         NLoad             = NCOMP_TOTAL;               // number of variables loaded from the input file
+int         NOut              = NCOMP_TOTAL;               // number of variables to be outputted
 real       *OutputArray       = NULL;                      // array storing the output data
 int         BufSize           = WRONG;                     // buffer size of the prepapred patch data
 double      Int_MonoCoeff     = 2.0;                       // coefficient for the interpolation monotonicity (1<=coeff<=4)
@@ -630,7 +630,7 @@ void Output()
 
    if ( OutputBinary )
    {
-      int  NextIdx = NCOMP;
+      int  NextIdx = NCOMP_TOTAL;
       char comp[NOut][20];
 
 #     if   ( MODEL == HYDRO )
@@ -651,6 +651,8 @@ void Output()
 #     else
 #     error : ERROR : unsupported MODEL !!
 #     endif // MODEL
+
+      for (int v=0; v<NCOMP_PASSIVE; v++)    sprintf( comp[NCOMP_FLUID+v], "_Passive%02d", v );
 
       if ( OutputPot )           sprintf( comp[NextIdx++], "_Binary_Pot"     );
       if ( OutputParDens == 1 )  sprintf( comp[NextIdx++], "_Binary_ParDens" );
@@ -762,6 +764,8 @@ void Output()
                fprintf( File, "#%9s %10s %10s %20s %20s %20s %13s %13s %13s %13s %13s",
                         "i", "j", "k", "x", "y", "z", "Density", "Momentum.x", "Momentum.y", "Momentum.z", "Energy" );
 
+               for (int v=0; v<NCOMP_PASSIVE; v++)    fprintf( File, " %11s%02d", "Passive", v );
+
                if ( OutputPot )           fprintf( File, " %13s", "Potential" );
                if ( OutputParDens == 1 )  fprintf( File, " %13s", "ParticleDens" );
                else
@@ -775,8 +779,9 @@ void Output()
 
 #              elif ( MODEL == ELBDM )
                fprintf( File, "#%9s %10s %10s %20s %20s %20s %13s %13s %13s",
-                        "i", "j", "k", "x", "y", "z",
-                        "Density", "Real", "Imag" );
+                        "i", "j", "k", "x", "y", "z", "Density", "Real", "Imag" );
+
+               for (int v=0; v<NCOMP_PASSIVE; v++)    fprintf( File, " %11s%02d", "Passive", v );
 
                if ( OutputPot )           fprintf( File, " %13s", "Potential" );
                if ( OutputParDens == 1 )  fprintf( File, " %13s", "ParticleDens" );
@@ -796,7 +801,7 @@ void Output()
             for (int j=0; j<Idx_MySize[1]; j++)  {  jj = ( j + Idx_MyStart[1] )*scale;    y = (jj+scale_2)*dh_min;
             for (int i=0; i<Idx_MySize[0]; i++)  {  ii = ( i + Idx_MyStart[0] )*scale;    x = (ii+scale_2)*dh_min;
 
-               NextIdx = NCOMP;
+               NextIdx = NCOMP_TOTAL;
                ID      = ( (long)k*Idx_MySize[1] + j )*Idx_MySize[0] + i;
 
                for (int v=0; v<NOut; v++)    u[v] = OutputArray[ ID + (long)v*Size1v ];
@@ -804,6 +809,8 @@ void Output()
 #              if   ( MODEL == HYDRO )
                fprintf( File, "%10d %10d %10d %20.14e %20.14e %20.14e %13.6e %13.6e %13.6e %13.6e %13.6e",
                         ii, jj, kk, x, y, z, u[DENS], u[MOMX], u[MOMY], u[MOMZ], u[ENGY] );
+
+               for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)  fprintf( File, " %13.6e", u[v] );
 
                if ( OutputPot )        fprintf( File, " %13.6e", u[NextIdx++] );
                if ( OutputParDens )    fprintf( File, " %13.6e", u[NextIdx++] );
@@ -819,6 +826,8 @@ void Output()
                fprintf( File, "%10d %10d %10d %20.14e %20.14e %20.14e %13.6e %13.6e %13.6e",
                         ii, jj, kk, x, y, z,
                         u[DENS], u[REAL], u[IMAG] );
+
+               for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)  fprintf( File, " %13.6e", u[v] );
 
                if ( OutputPot )        fprintf( File, " %13.6e", u[NextIdx++] );
                if ( OutputParDens )    fprintf( File, " %13.6e", u[NextIdx++] );
@@ -1508,7 +1517,7 @@ void PreparePatch( const int lv, const int PID, const int Buffer, real FData[], 
 
 
 // determine the array indices for outputting potential and particle densities
-   NextIdx    = NCOMP;
+   NextIdx    = NCOMP_TOTAL;
    PotIdx     = -1;
    ParDensIdx = -1;
 
@@ -1538,8 +1547,10 @@ void PreparePatch( const int lv, const int PID, const int Buffer, real FData[], 
 #     warning : WAIT MHD !!!
 
 #     elif ( MODEL == ELBDM )
-      if ( v == DENS  ||  v == ParDensIdx )                 Monotonicity[v] = EnsureMonotonicity_Yes;
-      else                                                  Monotonicity[v] = EnsureMonotonicity_No;
+      if ( v == DENS  ||  v == ParDensIdx  ||  ( v >= NCOMP_FLUID && v < NCOMP_TOTAL )  )
+                                                            Monotonicity[v] = EnsureMonotonicity_Yes;
+      else
+                                                            Monotonicity[v] = EnsureMonotonicity_No;
 
 #     else
                                                             Monotonicity[v] = EnsureMonotonicity_No;
@@ -1568,7 +1579,7 @@ void PreparePatch( const int lv, const int PID, const int Buffer, real FData[], 
       Aux_Error( ERROR_INFO, "lv %d, PID %d, particle density array is NOT allocated !!\n", lv, PID );
 #  endif
 
-   for (int v=0; v<NCOMP; v++)
+   for (int v=0; v<NCOMP_TOTAL; v++)
    for (int k=0, kk=Buffer; k<PATCH_SIZE; k++, kk++)
    for (int j=0, jj=Buffer; j<PATCH_SIZE; j++, jj++)
    for (int i=0, ii=Buffer; i<PATCH_SIZE; i++, ii++)
@@ -1625,7 +1636,7 @@ void PreparePatch( const int lv, const int PID, const int Buffer, real FData[], 
          j_loop = TABLE_01( sib, 'y', Buffer, PATCH_SIZE, Buffer );
          k_loop = TABLE_01( sib, 'z', Buffer, PATCH_SIZE, Buffer );
 
-         for (int v=0; v<NCOMP; v++)
+         for (int v=0; v<NCOMP_TOTAL; v++)
          for (int k=k0, kk=kk0; k<k0+k_loop; k++, kk++)
          for (int j=j0, jj=jj0; j<j0+j_loop; j++, jj++)
          for (int i=i0, ii=ii0; i<i0+i_loop; i++, ii++)
@@ -1724,6 +1735,12 @@ void PreparePatch( const int lv, const int PID, const int Buffer, real FData[], 
                FData_Real[ID] = Amp*COS( Phase );
                FData_Imag[ID] = Amp*SIN( Phase );
             } // i,j,k
+
+
+//          interpolate passive scalars
+            for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)
+            Interpolate( CData+v*CUBE(Size), Size3, CStart, CRange, FData+v*CUBE(Size), Size3, FStart, 1,
+                         IntScheme, PhaseUnwrapping_No, Monotonicity[v], Int_MonoCoeff );
 
 
 //          interpolate potential
@@ -2222,7 +2239,7 @@ void Refine2TargetLevel()
 // determine the array indices for outputting potential and particle densities
    int PotIdx, ParDensIdx;
 
-   NextIdx    = NCOMP;
+   NextIdx    = NCOMP_TOTAL;
    PotIdx     = -1;
    ParDensIdx = -1;
 
@@ -2268,8 +2285,10 @@ void Refine2TargetLevel()
 #     warning : WAIT MHD !!!
 
 #     elif ( MODEL == ELBDM )
-      if ( v == DENS  ||  v == ParDensIdx )                 Monotonicity[v] = EnsureMonotonicity_Yes;
-      else                                                  Monotonicity[v] = EnsureMonotonicity_No;
+      if ( v == DENS  ||  v == ParDensIdx  ||  ( v >= NCOMP_FLUID && v < NCOMP_TOTAL )  )
+                                                            Monotonicity[v] = EnsureMonotonicity_Yes;
+      else
+                                                            Monotonicity[v] = EnsureMonotonicity_No;
 
 #     else
                                                             Monotonicity[v] = EnsureMonotonicity_No;
@@ -2376,6 +2395,10 @@ void Refine2TargetLevel()
                         FData_Imag[t] = Amp*SIN( Phase );
                      } // for (int t=0; t<CUBE(FSize); t++)
 
+//                   interpolate passive scalars
+                     for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)
+                     Interpolate( CData+v*CUBE(CSize), CSize3, CStart, CRange, FData+v*CUBE(FSize),
+                                  FSize3, FStart, 1, IntScheme, PhaseUnwrapping_No, Monotonicity[v], Int_MonoCoeff );
 //                   interpolate potential
                      if ( OutputPot )
                      Interpolate( CData+PotIdx*CUBE(CSize), CSize3, CStart, CRange, FData+PotIdx*CUBE(FSize),
