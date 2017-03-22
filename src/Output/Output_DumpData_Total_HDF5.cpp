@@ -74,7 +74,7 @@ Procedure for outputting new variables:
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2226)
+// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2227)
 // Description :  Output all simulation data in the HDF5 format, which can be used as a restart file
 //                or loaded by YT
 //
@@ -125,6 +125,7 @@ Procedure for outputting new variables:
 //                2224 : 2017/02/25 --> output OPT__CK_NORMALIZE_PASSIVE
 //                2225 : 2017/03/01 --> output LB_Par_Weight, rename LB_Input__WLI_Max as LB_WLI_Max
 //                2226 : 2017/03/03 --> output Opt__RecordLoadBalance
+//                2227 : 2017/03/21 --> output PassiveFieldName_Grid and PassiveFieldName_Par
 //-------------------------------------------------------------------------------------------------------
 void Output_DumpData_Total_HDF5( const char *FileName )
 {
@@ -956,10 +957,6 @@ void Output_DumpData_Total_HDF5( const char *FileName )
 
    for (int v=0; v<PAR_NPASSIVE; v++)  sprintf( ParVarName[7+v], "%s", PassiveFieldName_Par[v] );
 
-#  ifdef DEBUG_PARTICLE
-   if ( PAR_NPASSIVE >= 100 )    Aux_Error( ERROR_INFO, "PAR_NPASSIVE = %d >= 100 !!\n", PAR_NPASSIVE );
-#  endif
-
 
 // 6-2. initialize the "Particle" group and the datasets of all particle attributes
    H5_SetDims_ParData[0] = amr->Par->NPar_Active_AllRank;
@@ -1234,7 +1231,7 @@ void FillIn_KeyInfo( KeyInfo_t &KeyInfo )
 
    const time_t CalTime  = time( NULL );   // calendar time
 
-   KeyInfo.FormatVersion = 2226;
+   KeyInfo.FormatVersion = 2227;
    KeyInfo.Model         = MODEL;
    KeyInfo.NLevel        = NLEVEL;
    KeyInfo.PatchSize     = PATCH_SIZE;
@@ -1696,6 +1693,8 @@ void FillIn_InputPara( InputPara_t &InputPara )
    InputPara.Par_PredictPos          = amr->Par->PredictPos;
    InputPara.Par_RemoveCell          = amr->Par->RemoveCell;
    InputPara.Par_GhostSize           = amr->Par->GhostSize;
+   for (int v=0; v<PAR_NPASSIVE; v++)
+   InputPara.PassiveFieldName_Par[v] = PassiveFieldName_Par[v];
 #  endif
 
 // cosmology
@@ -1800,8 +1799,12 @@ void FillIn_InputPara( InputPara_t &InputPara )
    InputPara.Opt__NormalizePassive   = OPT__NORMALIZE_PASSIVE;
 
    InputPara.NormalizePassive_NVar   = PassiveNorm_NVar;
+
    for (int v=0; v<NCOMP_PASSIVE; v++)
    InputPara.NormalizePassive_VarIdx[v] = PassiveNorm_VarIdx[v];
+
+   for (int v=0; v<NCOMP_PASSIVE; v++)
+   InputPara.PassiveFieldName_Grid[v]   = PassiveFieldName_Grid[v];
 
    InputPara.Opt__OverlapMPI         = OPT__OVERLAP_MPI;
    InputPara.Opt__ResetFluid         = OPT__RESET_FLUID;
@@ -1941,7 +1944,7 @@ void FillIn_InputPara( InputPara_t &InputPara )
       InputPara.FlagTable_NParPatch   [lv]    = FlagTable_NParPatch   [lv];
       InputPara.FlagTable_NParCell    [lv]    = FlagTable_NParCell    [lv];
 #     endif
-   }
+   } // for (int lv=0; lv<NLEVEL-1; lv++)
 
 } // FUNCTION : FillIn_InputPara
 
@@ -2241,7 +2244,19 @@ void GetCompound_InputPara( hid_t &H5_TypeID )
    const hid_t   H5_TypeID_Arr_NLvM1_4Double = H5Tarray_create( H5T_NATIVE_DOUBLE, 2,  H5_ArrDims_NLvM1_4   );
 #  endif
 
-   herr_t  H5_Status;
+
+// create the "variable-length string" datatype
+   hid_t  H5_TypeID_VarStr;
+   herr_t H5_Status;
+
+   H5_TypeID_VarStr = H5Tcopy( H5T_C_S1 );
+   H5_Status        = H5Tset_size( H5_TypeID_VarStr, H5T_VARIABLE );
+
+
+// get the size of a single pointer, which is used for storing the array of variable-length strings
+// --> PassiveFieldName_Grid[], PassiveFieldName_Par[]
+   const int PtrSize = sizeof( char* );
+   char Key[MAX_STRING];
 
 
 // get the compound type
@@ -2282,6 +2297,16 @@ void GetCompound_InputPara( hid_t &H5_TypeID )
    H5Tinsert( H5_TypeID, "Par_PredictPos",          HOFFSET(InputPara_t,Par_PredictPos         ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "Par_RemoveCell",          HOFFSET(InputPara_t,Par_RemoveCell         ), H5T_NATIVE_DOUBLE  );
    H5Tinsert( H5_TypeID, "Par_GhostSize",           HOFFSET(InputPara_t,Par_GhostSize          ), H5T_NATIVE_INT     );
+
+// store the names of each passive particle attributes
+   for (int v=0; v<PAR_NPASSIVE; v++)
+   {
+//    keys for each particle attributes
+      sprintf( Key, "PassiveFieldName_Par%02d", v );
+
+//    assuming the offset between successive PassiveFieldName_Par pointers is "PtrSize", which is equal to "sizeof( char* )"
+      H5Tinsert( H5_TypeID, Key, HOFFSET(InputPara_t,PassiveFieldName_Par[0]) + v*PtrSize, H5_TypeID_VarStr );
+   }
 #  endif
 
 // cosmology
@@ -2388,6 +2413,16 @@ void GetCompound_InputPara( hid_t &H5_TypeID )
    H5Tinsert( H5_TypeID, "NormalizePassive_NVar",   HOFFSET(InputPara_t,NormalizePassive_NVar  ), H5T_NATIVE_INT     );
 #  if ( NCOMP_PASSIVE > 0 )
    H5Tinsert( H5_TypeID, "NormalizePassive_VarIdx", HOFFSET(InputPara_t,NormalizePassive_VarIdx), H5_TypeID_Arr_NPassive );
+
+// store the names of each passive scalars
+   for (int v=0; v<NCOMP_PASSIVE; v++)
+   {
+//    keys for each passive scalars
+      sprintf( Key, "PassiveFieldName_Grid%02d", v );
+
+//    assuming the offset between successive PassiveFieldName_Grid pointers is "PtrSize", which is equal to "sizeof( char* )"
+      H5Tinsert( H5_TypeID, Key, HOFFSET(InputPara_t,PassiveFieldName_Grid[0]) + v*PtrSize, H5_TypeID_VarStr );
+   }
 #  endif
    H5Tinsert( H5_TypeID, "Opt__OverlapMPI",         HOFFSET(InputPara_t,Opt__OverlapMPI        ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "Opt__ResetFluid",         HOFFSET(InputPara_t,Opt__ResetFluid        ), H5T_NATIVE_INT     );
@@ -2528,6 +2563,7 @@ void GetCompound_InputPara( hid_t &H5_TypeID )
    H5_Status = H5Tclose( H5_TypeID_Arr_NLvM1_2Double );
    H5_Status = H5Tclose( H5_TypeID_Arr_NLvM1_4Double );
 #  endif
+   H5_Status = H5Tclose( H5_TypeID_VarStr );
 
 } // FUNCTION : GetCompound_InputPara
 

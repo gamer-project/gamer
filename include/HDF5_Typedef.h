@@ -295,6 +295,7 @@ struct InputPara_t
    int    Par_PredictPos;
    double Par_RemoveCell;
    int    Par_GhostSize;
+   char  *PassiveFieldName_Par[PAR_NPASSIVE];
 #  endif
 
 // cosmology
@@ -399,6 +400,7 @@ struct InputPara_t
    int    Opt__NormalizePassive;
    int    NormalizePassive_NVar;
    int    NormalizePassive_VarIdx[NCOMP_PASSIVE];
+   char  *PassiveFieldName_Grid[NCOMP_PASSIVE];
    int    Opt__OverlapMPI;
    int    Opt__ResetFluid;
 #  if ( MODEL == HYDRO  ||  MODEL == MHD  ||  MODEL == ELBDM )
