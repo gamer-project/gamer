@@ -68,19 +68,22 @@ void Init_Restart_HDF5( const char *FileName )
 // 1. load the simulation info
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Loading simulation information ...\n" );
 
-   const bool    Fatal  = true;
-   const bool NonFatal  = false;
-   const int  Model     = MODEL;
-   const int  PatchSize = PATCH_SIZE;
+   const bool    Fatal     = true;
+   const bool NonFatal     = false;
+   const int  Model        = MODEL;
+   const int  NCompFluid   = NCOMP_FLUID;
+   const int  NCompPassive = NCOMP_PASSIVE;
+   const int  PatchSize    = PATCH_SIZE;
 #  ifdef GRAVITY
-   const int  Gravity   = 1;
+   const int  Gravity      = 1;
 #  else
-   const int  Gravity   = 0;
+   const int  Gravity      = 0;
 #  endif
 #  ifdef PARTICLE
-   const int  Particle  = 1;
+   const int  Particle     = 1;
+   const int  Par_NPassive = PAR_NPASSIVE;
 #  else
-   const int  Particle  = 0;
+   const int  Particle     = 0;
 #  endif
 
    KeyInfo_t KeyInfo;
@@ -135,6 +138,8 @@ void Init_Restart_HDF5( const char *FileName )
    LoadField( "Gravity",        &KeyInfo.Gravity,        H5_SetID_KeyInfo, H5_TypeID_KeyInfo, Fatal, &Gravity,        1,    Fatal );
    LoadField( "Particle",       &KeyInfo.Particle,       H5_SetID_KeyInfo, H5_TypeID_KeyInfo, Fatal, &Particle,       1,    Fatal );
    LoadField( "NLevel",         &KeyInfo.NLevel,         H5_SetID_KeyInfo, H5_TypeID_KeyInfo, Fatal,  NullPtr,       -1, NonFatal );
+   LoadField( "NCompFluid",     &KeyInfo.NCompFluid,     H5_SetID_KeyInfo, H5_TypeID_KeyInfo, Fatal, &NCompFluid,     1,    Fatal );
+   LoadField( "NCompPassive",   &KeyInfo.NCompPassive,   H5_SetID_KeyInfo, H5_TypeID_KeyInfo, Fatal, &NCompPassive,   1,    Fatal );
    LoadField( "PatchSize",      &KeyInfo.PatchSize,      H5_SetID_KeyInfo, H5_TypeID_KeyInfo, Fatal, &PatchSize,      1,    Fatal );
 
 // runtime NLEVEL must be >= loaded NLEVEL
@@ -161,6 +166,7 @@ void Init_Restart_HDF5( const char *FileName )
    LoadField( "AdvanceCounter",      KeyInfo.AdvanceCounter,     H5_SetID_KeyInfo, H5_TypeID_KeyInfo, Fatal,  NullPtr,       -1, NonFatal );
 #  ifdef PARTICLE
    LoadField( "Par_NPar",           &KeyInfo.Par_NPar,           H5_SetID_KeyInfo, H5_TypeID_KeyInfo, Fatal,  NullPtr,       -1, NonFatal );
+   LoadField( "Par_NPassive",       &KeyInfo.Par_NPassive,       H5_SetID_KeyInfo, H5_TypeID_KeyInfo, Fatal, &Par_NPassive,   1,    Fatal );
 #  endif
 
    LoadField( "BoxSize",             KeyInfo.BoxSize,            H5_SetID_KeyInfo, H5_TypeID_KeyInfo, Fatal,  amr->BoxSize,   3,    Fatal );

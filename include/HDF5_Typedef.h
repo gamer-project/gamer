@@ -41,6 +41,8 @@ struct KeyInfo_t
    int    Gravity;
    int    Particle;
    int    NLevel;
+   int    NCompFluid;               // NCOMP_FLUID
+   int    NCompPassive;             // NCOMP_PASSIVE
    int    PatchSize;
    int    DumpID;
    int    NX0     [3];
@@ -52,6 +54,7 @@ struct KeyInfo_t
    long   AdvanceCounter[NLEVEL];
 #  ifdef PARTICLE
    long   Par_NPar;                 // amr->Par->NPar_Active_AllRank
+   int    Par_NPassive;             // PAR_NPASSIVE
 #  endif
 
    double BoxSize [3];

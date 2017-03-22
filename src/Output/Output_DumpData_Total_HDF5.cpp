@@ -74,7 +74,7 @@ Procedure for outputting new variables:
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2227)
+// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2228)
 // Description :  Output all simulation data in the HDF5 format, which can be used as a restart file
 //                or loaded by YT
 //
@@ -126,6 +126,7 @@ Procedure for outputting new variables:
 //                2225 : 2017/03/01 --> output LB_Par_Weight, rename LB_Input__WLI_Max as LB_WLI_Max
 //                2226 : 2017/03/03 --> output Opt__RecordLoadBalance
 //                2227 : 2017/03/21 --> output PassiveFieldName_Grid and PassiveFieldName_Par
+//                2228 : 2017/03/21 --> output NCOMP_FLUID, NCOMP_PASSIVE, and PAR_NPASSIVE in KeyInfo_t
 //-------------------------------------------------------------------------------------------------------
 void Output_DumpData_Total_HDF5( const char *FileName )
 {
@@ -1231,9 +1232,11 @@ void FillIn_KeyInfo( KeyInfo_t &KeyInfo )
 
    const time_t CalTime  = time( NULL );   // calendar time
 
-   KeyInfo.FormatVersion = 2227;
+   KeyInfo.FormatVersion = 2228;
    KeyInfo.Model         = MODEL;
    KeyInfo.NLevel        = NLEVEL;
+   KeyInfo.NCompFluid    = NCOMP_FLUID;
+   KeyInfo.NCompPassive  = NCOMP_PASSIVE;
    KeyInfo.PatchSize     = PATCH_SIZE;
    KeyInfo.DumpID        = DumpID;
    KeyInfo.Step          = Step;
@@ -1255,6 +1258,7 @@ void FillIn_KeyInfo( KeyInfo_t &KeyInfo )
 #  endif
 #  ifdef PARTICLE
    KeyInfo.Par_NPar      = amr->Par->NPar_Active_AllRank;
+   KeyInfo.Par_NPassive  = PAR_NPASSIVE;
 #  endif
 
    for (int d=0; d<3; d++)
@@ -1991,6 +1995,8 @@ void GetCompound_KeyInfo( hid_t &H5_TypeID )
    H5Tinsert( H5_TypeID, "Gravity",            HOFFSET(KeyInfo_t,Gravity        ),    H5T_NATIVE_INT          );
    H5Tinsert( H5_TypeID, "Particle",           HOFFSET(KeyInfo_t,Particle       ),    H5T_NATIVE_INT          );
    H5Tinsert( H5_TypeID, "NLevel",             HOFFSET(KeyInfo_t,NLevel         ),    H5T_NATIVE_INT          );
+   H5Tinsert( H5_TypeID, "NCompFluid",         HOFFSET(KeyInfo_t,NCompFluid     ),    H5T_NATIVE_INT          );
+   H5Tinsert( H5_TypeID, "NCompPassive",       HOFFSET(KeyInfo_t,NCompPassive   ),    H5T_NATIVE_INT          );
    H5Tinsert( H5_TypeID, "PatchSize",          HOFFSET(KeyInfo_t,PatchSize      ),    H5T_NATIVE_INT          );
    H5Tinsert( H5_TypeID, "DumpID",             HOFFSET(KeyInfo_t,DumpID         ),    H5T_NATIVE_INT          );
    H5Tinsert( H5_TypeID, "NX0",                HOFFSET(KeyInfo_t,NX0            ),    H5_TypeID_Arr_3Int      );
@@ -2002,6 +2008,7 @@ void GetCompound_KeyInfo( hid_t &H5_TypeID )
    H5Tinsert( H5_TypeID, "AdvanceCounter",     HOFFSET(KeyInfo_t,AdvanceCounter ),    H5_TypeID_Arr_NLvLong   );
 #  ifdef PARTICLE
    H5Tinsert( H5_TypeID, "Par_NPar",           HOFFSET(KeyInfo_t,Par_NPar),           H5T_NATIVE_LONG         );
+   H5Tinsert( H5_TypeID, "Par_NPassive",       HOFFSET(KeyInfo_t,Par_NPassive),       H5T_NATIVE_INT          );
 #  endif
 
    H5Tinsert( H5_TypeID, "BoxSize",            HOFFSET(KeyInfo_t,BoxSize        ),    H5_TypeID_Arr_3Double   );
