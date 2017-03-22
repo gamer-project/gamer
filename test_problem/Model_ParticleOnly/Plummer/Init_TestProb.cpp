@@ -198,11 +198,13 @@ void Par_TestProbSol_Plummer( real *fluid, const double x, const double y, const
          fluid[DENS] += Dens;
          fluid[ENGY] += (  NEWTON_G*TotM*GasRho0 / ( 6.0*Plummer_R0*CUBE(1.0 + a2) ) + PresBg  ) / ( GAMMA - 1.0 );
 
+#        if ( NCOMP_PASSIVE > 0 )
 #        if ( NCOMP_PASSIVE == 2 )
          fluid[ (t==-1)?CLOUD0:CLOUD1 ] = Dens;
 #        else
 #        error : ERROR : please specify how to set the passive scalars here !!
 #        endif
+#        endif // #if ( NCOMP_PASSIVE > 0 )
       }
 
       fluid[MOMX]  = fluid[DENS]*Plummer_BulkVel[0];
