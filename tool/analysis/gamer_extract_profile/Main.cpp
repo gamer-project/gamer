@@ -83,6 +83,7 @@ void GetMaxRho()
    const double dh_min = amr.dh[NLEVEL-1];
    double Radius, x, x1, x2, y, y1, y2, z, z1, z2, scale;   // (x,y,z) : relative coordinates to the vector "Center"
    double xx, yy, zz;
+   real   Pass[NCOMP_PASSIVE];
 
 #  if   ( MODEL == HYDRO )
    real Dens, VelX, VelY, VelZ, Engy, Pres, Pot, ParDens;
@@ -111,9 +112,10 @@ void GetMaxRho()
 #  if   ( MODEL == HYDRO )
    fprintf( File, "%10s %10s %10s %2s %12s %12s %12s %12s %12s %12s",
             "x", "y", "z", "Lv", "Dens", "VelX", "VelY", "VelZ", "Engy", "Pres" );
-   if      ( OutputPot          )   fprintf( File, " %12s", "Pot" );
-   if      ( OutputParDens == 1 )   fprintf( File, " %12s", "ParDens" );
-   else if ( OutputParDens == 2 )   fprintf( File, " %12s", "TotalDens" );
+   for (int v=0; v<NCOMP_PASSIVE; v++)    fprintf( File, " %10s%02d", "Passive", v );
+   if      ( OutputPot          )         fprintf( File, " %12s",     "Pot" );
+   if      ( OutputParDens == 1 )         fprintf( File, " %12s",     "ParDens" );
+   else if ( OutputParDens == 2 )         fprintf( File, " %12s",     "TotalDens" );
    fprintf( File, "\n" );
 
 #  elif ( MODEL == MHD )
@@ -122,9 +124,10 @@ void GetMaxRho()
 #  elif ( MODEL == ELBDM )
    fprintf( File, "%10s %10s %10s %2s %12s %12s %12s",
             "x", "y", "z", "Lv", "Dens", "Real", "Imag" );
-   if      ( OutputPot          )   fprintf( File, " %12s", "Pot" );
-   if      ( OutputParDens == 1 )   fprintf( File, " %12s", "ParDens" );
-   else if ( OutputParDens == 2 )   fprintf( File, " %12s", "TotalDens" );
+   for (int v=0; v<NCOMP_PASSIVE; v++)    fprintf( File, " %10s%02d", "Passive", v );
+   if      ( OutputPot          )         fprintf( File, " %12s",     "Pot" );
+   if      ( OutputParDens == 1 )         fprintf( File, " %12s",     "ParDens" );
+   else if ( OutputParDens == 2 )         fprintf( File, " %12s",     "TotalDens" );
    fprintf( File, "\n" );
 
 #  else
@@ -166,6 +169,9 @@ void GetMaxRho()
                VelZ    = amr.patch[lv][PID]->fluid[MOMZ][k][j][i] / Dens;
                Engy    = amr.patch[lv][PID]->fluid[ENGY][k][j][i];
 
+               for (int v=0; v<NCOMP_PASSIVE; v++)
+               Pass[v] = amr.patch[lv][PID]->fluid[ NCOMP_FLUID + v ][k][j][i];
+
                if ( OutputPot )
                Pot     = amr.patch[lv][PID]->pot        [k][j][i];
 
@@ -178,8 +184,9 @@ void GetMaxRho()
                fprintf( File, "%10.4e %10.4e %10.4e %2d %12.5e %12.5e %12.5e %12.5e %12.5e %12.5e",
                         xx*dh_min, yy*dh_min, zz*dh_min, lv, Dens, VelX, VelY, VelZ, Engy, Pres );
 
-               if ( OutputPot     )    fprintf( File, " %12.5e", Pot );
-               if ( OutputParDens )    fprintf( File, " %12.5e", ParDens );
+               for (int v=0; v<NCOMP_PASSIVE; v++)    fprintf( File, " %12.5e", Pass[v] );
+               if ( OutputPot     )                   fprintf( File, " %12.5e", Pot );
+               if ( OutputParDens )                   fprintf( File, " %12.5e", ParDens );
 
 
                fprintf( File, "\n" );
@@ -192,6 +199,9 @@ void GetMaxRho()
                Real    = amr.patch[lv][PID]->fluid[REAL][k][j][i];
                Imag    = amr.patch[lv][PID]->fluid[IMAG][k][j][i];
 
+               for (int v=0; v<NCOMP_PASSIVE; v++)
+               Pass[v] = amr.patch[lv][PID]->fluid[ NCOMP_FLUID + v ][k][j][i];
+
                if ( OutputPot )
                Pot     = amr.patch[lv][PID]->pot        [k][j][i];
 
@@ -202,8 +212,9 @@ void GetMaxRho()
                fprintf( File, "%10.4e %10.4e %10.4e %2d %12.5e %12.5e %12.5e",
                         xx*dh_min, yy*dh_min, zz*dh_min, lv, Dens, Real, Imag );
 
-               if ( OutputPot     )    fprintf( File, " %12.5e", Pot );
-               if ( OutputParDens )    fprintf( File, " %12.5e", ParDens );
+               for (int v=0; v<NCOMP_PASSIVE; v++)    fprintf( File, " %12.5e", Pass[v] );
+               if ( OutputPot     )                   fprintf( File, " %12.5e", Pot );
+               if ( OutputParDens )                   fprintf( File, " %12.5e", ParDens );
 
 
                fprintf( File, "\n" );
@@ -268,14 +279,15 @@ void GetRMS()
    int    ShellID, Var, i, j, k, im, jm, km, ip, jp, kp, TVar, POTE, PAR_DENS, NextIdx;
    double Radius, scale, dv;
    double x, x1, x2, y, y1, y2, z, z1, z2;   // (x,y,z) : relative coordinates to the vector "Center"
+   real   pass[NCOMP_PASSIVE];
 
    real *Field1D = new real [NPG*8*NIn*ArraySize*ArraySize*ArraySize];
    real (*Field)[NIn][ArraySize][ArraySize][ArraySize] = ( real(*)[NIn][ArraySize][ArraySize][ArraySize] )Field1D;
 
 
 // determine the target variables
-   TVar    = _FLU;
-   NextIdx = NCOMP;
+   TVar    = _TOTAL;
+   NextIdx = NCOMP_TOTAL;
 
    if ( OutputPot     )    {  TVar |= _POTE;       POTE     = NextIdx ++;  }
    if ( OutputParDens )    {  TVar |= _PAR_DENS;   PAR_DENS = NextIdx ++;  }
@@ -349,6 +361,9 @@ void GetRMS()
                   vz      = Field[p][MOMZ    ][k][j][i] / rho;
                   egy     = Field[p][ENGY    ][k][j][i];
 
+                  for (int u=0, uu=NCOMP_FLUID; u<NCOMP_PASSIVE; u++, uu++)
+                  pass[u] = Field[p][uu      ][k][j][i];
+
                   if ( OutputPot )
                   Pot     = Field[p][POTE    ][k][j][i];
 
@@ -360,13 +375,16 @@ void GetRMS()
                   vt   = sqrt( fabs(vx*vx + vy*vy + vz*vz - vr*vr) );
 
 
-//                evaluate the square of deviation on the shell
+//                evalute the square of deviation on the shell
                   Var = 0;
                   RMS[ShellID][Var] += dv*pow( double(rho    )-Average[ShellID][Var], 2.0 );    Var++;
                   RMS[ShellID][Var] += dv*pow( double(vr     )-Average[ShellID][Var], 2.0 );    Var++;
                   RMS[ShellID][Var] += dv*pow( double(vt     )-Average[ShellID][Var], 2.0 );    Var++;
                   RMS[ShellID][Var] += dv*pow( double(egy    )-Average[ShellID][Var], 2.0 );    Var++;
                   RMS[ShellID][Var] += dv*pow( double(pres   )-Average[ShellID][Var], 2.0 );    Var++;
+
+                  for (int v=0; v<NCOMP_PASSIVE; v++) {
+                  RMS[ShellID][Var] += dv*pow( double(pass[v])-Average[ShellID][Var], 2.0 );    Var++; }
 
                   if ( OutputPot ) {
                   RMS[ShellID][Var] += dv*pow( double(Pot    )-Average[ShellID][Var], 2.0 );    Var++; }
@@ -381,6 +399,9 @@ void GetRMS()
                   Dens    = Field[p][DENS    ][k][j][i];
                   Real    = Field[p][REAL    ][k][j][i];
                   Imag    = Field[p][IMAG    ][k][j][i];
+
+                  for (int u=0, uu=NCOMP_FLUID; u<NCOMP_PASSIVE; u++, uu++)
+                  pass[u] = Field[p][uu      ][k][j][i];
 
                   if ( OutputPot )
                   Pot     = Field[p][POTE    ][k][j][i];
@@ -431,11 +452,14 @@ void GetRMS()
                   } // if ( ELBDM_GetVir )
 
 
-//                evaluate the square of deviation on the shell
+//                evalute the square of deviation on the shell
                   Var = 0;
                   RMS[ShellID][Var] += dv*pow( double(Dens   )-Average[ShellID][Var], 2.0 );  Var++;
                   RMS[ShellID][Var] += dv*pow( double(Real   )-Average[ShellID][Var], 2.0 );  Var++;
                   RMS[ShellID][Var] += dv*pow( double(Imag   )-Average[ShellID][Var], 2.0 );  Var++;
+
+                  for (int v=0; v<NCOMP_PASSIVE; v++) {
+                  RMS[ShellID][Var] += dv*pow( double(pass[v])-Average[ShellID][Var], 2.0 );  Var++; }
 
                   if ( OutputPot   ) {
                   RMS[ShellID][Var] += dv*pow( double(Pot    )-Average[ShellID][Var], 2.0 );  Var++; }
@@ -519,14 +543,15 @@ void ShellAverage()
    int    ShellID, Var, i, j, k, im, jm, km, ip, jp, kp, TVar, POTE, PAR_DENS, NextIdx;
    double Radius, scale, dv;
    double x, x1, x2, y, y1, y2, z, z1, z2;   // (x,y,z) : relative coordinates to the vector "Center"
+   real   pass[NCOMP_PASSIVE];
 
    real *Field1D = new real [NPG*8*NIn*ArraySize*ArraySize*ArraySize];
    real (*Field)[NIn][ArraySize][ArraySize][ArraySize] = ( real(*)[NIn][ArraySize][ArraySize][ArraySize] )Field1D;
 
 
 // determine the target variables
-   TVar    = _FLU;
-   NextIdx = NCOMP;
+   TVar    = _TOTAL;
+   NextIdx = NCOMP_TOTAL;
 
    if ( OutputPot     )    {  TVar |= _POTE;       POTE     = NextIdx ++;  }
    if ( OutputParDens )    {  TVar |= _PAR_DENS;   PAR_DENS = NextIdx ++;  }
@@ -601,6 +626,9 @@ void ShellAverage()
                   pz      = Field[p][MOMZ    ][k][j][i];
                   egy     = Field[p][ENGY    ][k][j][i];
 
+                  for (int u=0, uu=NCOMP_FLUID; u<NCOMP_PASSIVE; u++, uu++)
+                  pass[u] = Field[p][uu      ][k][j][i];
+
                   if ( OutputPot )
                   Pot     = Field[p][POTE    ][k][j][i];
 
@@ -622,6 +650,9 @@ void ShellAverage()
                   Average[ShellID][Var++] += (double)(dv*egy     );
                   Average[ShellID][Var++] += (double)(dv*pres    );
 
+                  for (int v=0; v<NCOMP_PASSIVE; v++)
+                  Average[ShellID][Var++] += (double)(dv*pass[v] );
+
                   if ( OutputPot )
                   Average[ShellID][Var++] += (double)(dv*Pot     );
 
@@ -637,6 +668,9 @@ void ShellAverage()
                   if ( egy     > Max[ShellID][Var] )  Max[ShellID][Var] = egy;       Var++;
                   if ( pres    > Max[ShellID][Var] )  Max[ShellID][Var] = pres;      Var++;
 
+                  for (int v=0; v<NCOMP_PASSIVE; v++) {
+                  if ( pass[v] > Max[ShellID][Var] )  Max[ShellID][Var] = pass[v];   Var++; }
+
                   if ( OutputPot ) {
                   if ( Pot     > Max[ShellID][Var] )  Max[ShellID][Var] = Pot;       Var++; }
 
@@ -650,6 +684,9 @@ void ShellAverage()
                   if ( vt      < Min[ShellID][Var] )  Min[ShellID][Var] = vt;       Var++;
                   if ( egy     < Min[ShellID][Var] )  Min[ShellID][Var] = egy;      Var++;
                   if ( pres    < Min[ShellID][Var] )  Min[ShellID][Var] = pres;     Var++;
+
+                  for (int v=0; v<NCOMP_PASSIVE; v++) {
+                  if ( pass[v] < Min[ShellID][Var] )  Min[ShellID][Var] = pass[v];  Var++; }
 
                   if ( OutputPot ) {
                   if ( Pot     < Min[ShellID][Var] )  Min[ShellID][Var] = Pot;      Var++; }
@@ -665,6 +702,9 @@ void ShellAverage()
                   Dens    = Field[p][DENS    ][k][j][i];
                   Real    = Field[p][REAL    ][k][j][i];
                   Imag    = Field[p][IMAG    ][k][j][i];
+
+                  for (int u=0, uu=NCOMP_FLUID; u<NCOMP_PASSIVE; u++, uu++)
+                  pass[u] = Field[p][uu      ][k][j][i];
 
                   if ( OutputPot )
                   Pot     = Field[p][POTE    ][k][j][i];
@@ -725,6 +765,9 @@ void ShellAverage()
                   Average[ShellID][Var++] += (double)(dv*Real     );
                   Average[ShellID][Var++] += (double)(dv*Imag     );
 
+                  for (int v=0; v<NCOMP_PASSIVE; v++)
+                  Average[ShellID][Var++] += (double)(dv*pass[v] );
+
                   if ( OutputPot )
                   Average[ShellID][Var++] += (double)(dv*Pot      );
 
@@ -759,6 +802,9 @@ void ShellAverage()
                   if ( Real    > Max[ShellID][Var] )  Max[ShellID][Var] = Real;     Var++;
                   if ( Imag    > Max[ShellID][Var] )  Max[ShellID][Var] = Imag;     Var++;
 
+                  for (int v=0; v<NCOMP_PASSIVE; v++) {
+                  if ( pass[v] > Max[ShellID][Var] )  Max[ShellID][Var] = pass[v];  Var++; }
+
                   if ( OutputPot   ) {
                   if ( Pot     > Max[ShellID][Var] )  Max[ShellID][Var] = Pot;      Var++; }
 
@@ -779,6 +825,9 @@ void ShellAverage()
                   if ( Dens    < Min[ShellID][Var] )  Min[ShellID][Var] = Dens;     Var++;
                   if ( Real    < Min[ShellID][Var] )  Min[ShellID][Var] = Real;     Var++;
                   if ( Imag    < Min[ShellID][Var] )  Min[ShellID][Var] = Imag;     Var++;
+
+                  for (int v=0; v<NCOMP_PASSIVE; v++) {
+                  if ( pass[v] < Min[ShellID][Var] )  Min[ShellID][Var] = pass[v];  Var++; }
 
                   if ( OutputPot     ) {
                   if ( Pot     < Min[ShellID][Var] )  Min[ShellID][Var] = Pot;      Var++; }
@@ -845,7 +894,7 @@ void ShellAverage()
 #  elif ( MODEL == ELBDM )
    if ( ELBDM_GetVir )
    {
-      const int Idx_v = NCOMP + 2 + ( (OutputPot)?1:0 ) + ( (OutputParDens)?1:0 );
+      const int Idx_v = NCOMP_TOTAL + 2 + ( (OutputPot)?1:0 ) + ( (OutputParDens)?1:0 );
       for (int n=0; n<NShell; n++)
       {
 //       <v> = <Rho*v>/<Rho>, <|v|> = sqrt( <Rho*v^2>/<Rho> )
@@ -1140,11 +1189,13 @@ void Output_ShellAve()
 
 
 // set output file names
-   const int NOutMax = 20;
-         int Var     = NCOMP;
+   const int NOutMax = NCOMP_TOTAL + 20;  // 20 is added arbitrarily
+         int Var     = NCOMP_TOTAL;
 
 #  if   ( MODEL == HYDRO )
    char FileName[NOutMax][50] = { "AveRho", "AveV_R", "AveV_T", "AveEgy", "AvePre" };
+
+   for (int v=0; v<NCOMP_PASSIVE; v++)   sprintf( FileName[ NCOMP_FLUID + v ], "AvePassive%02d", v );
 
    if      ( OutputPot )            sprintf( FileName[Var++], "%s", "AvePot"     );
    if      ( OutputParDens == 1 )   sprintf( FileName[Var++], "%s", "AveParDens" );
@@ -1155,6 +1206,8 @@ void Output_ShellAve()
 
 #  elif ( MODEL == ELBDM )
    char FileName[NOutMax][50] = { "AveDens", "AveReal", "AveImag" };
+
+   for (int v=0; v<NCOMP_PASSIVE; v++)   sprintf( FileName[ NCOMP_FLUID + v ], "AvePassive%02d", v );
 
    if      ( OutputPot )            sprintf( FileName[Var++], "%s", "AvePote" );
    if      ( OutputParDens == 1 )   sprintf( FileName[Var++], "%s", "AveParDens" );
@@ -1180,7 +1233,7 @@ void Output_ShellAve()
 
 
 // output data
-   const int    PAR_DENS    = ( OutputParDens ) ? ( (OutputPot)?NCOMP+1:NCOMP ) : -1;
+   const int    PAR_DENS    = ( OutputParDens ) ? ( (OutputPot)?NCOMP_TOTAL+1:NCOMP_TOTAL ) : -1;
    const double dh_min      = amr.dh[NLEVEL-1];
    const double LogBinCoeff = pow( (double)LogBin, -0.5 );  // coefficient to calculate the average radius of each log bin
    double AccMass           = 0.0;                          // accumulated mass
@@ -1217,10 +1270,10 @@ void Output_ShellAve()
    {
 //    determine whether or not to output the accumulated quantities
 #     ifdef DENS
-      if ( v == DENS  ||  v == PAR_DENS )
+      if (  v == DENS  ||  v == PAR_DENS  ||  ( v >= NCOMP_FLUID && v < NCOMP_TOTAL )  )
       {
          OutputAccMass = true;
-         OutputAvePot  = GetAvePot;
+         OutputAvePot  = GetAvePot && ( v==DENS || v==PAR_DENS );    // currently we do not calculate potential for the passive scalars
          AccMass       = 0.0;
          AccVolume     = 0.0;
       }
@@ -1232,8 +1285,8 @@ void Output_ShellAve()
 #     endif
 
 #     if ( MODEL == ELBDM )
-      if (   (  v == ( NCOMP+((OutputPot)?1:0)+((OutputParDens)?1:0)   )  )  ||
-             (  v == ( NCOMP+((OutputPot)?1:0)+((OutputParDens)?1:0)+1 )  )    )
+      if (   (  v == ( NCOMP_TOTAL+((OutputPot)?1:0)+((OutputParDens)?1:0)   )  )  ||
+             (  v == ( NCOMP_TOTAL+((OutputPot)?1:0)+((OutputParDens)?1:0)+1 )  )    )
       {
          ELBDM_OutputAccEk = true;
          ELBDM_AccEk       = 0.0;
@@ -1309,8 +1362,8 @@ void Output_ShellAve()
             fprintf( File, "  %13.6e  %13.6e", ELBDM_AccEk, ELBDM_AccEk_NoCM );
 
 //          record Ek for analyzing the virial condition
-            if      (  v == ( NCOMP+((OutputPot)?1:0)+((OutputParDens)?1:0)   )  )  ELBDM_Ek_L[n] = ELBDM_AccEk_NoCM;
-            else if (  v == ( NCOMP+((OutputPot)?1:0)+((OutputParDens)?1:0)+1 )  )  ELBDM_Ek_G[n] = ELBDM_AccEk_NoCM;
+            if      (  v == ( NCOMP_TOTAL+((OutputPot)?1:0)+((OutputParDens)?1:0)   )  )  ELBDM_Ek_L[n] = ELBDM_AccEk_NoCM;
+            else if (  v == ( NCOMP_TOTAL+((OutputPot)?1:0)+((OutputParDens)?1:0)+1 )  )  ELBDM_Ek_G[n] = ELBDM_AccEk_NoCM;
             else
                Aux_Error( ERROR_INFO, "incorrect target component (%d) !!\n", v );
          } // if ( ELBDM_OutputAccEk )
@@ -1350,8 +1403,8 @@ void Output_ShellAve()
 #  if ( MODEL == ELBDM )
    if ( ELBDM_GetVir )
    {
-      const int Idx_vr_abs = NCOMP + ( (OutputPot)?4:3 ) + ( (OutputParDens)?1:0 );
-      const int Idx_wr_abs = NCOMP + ( (OutputPot)?7:6 ) + ( (OutputParDens)?1:0 );
+      const int Idx_vr_abs = NCOMP_TOTAL + ( (OutputPot)?4:3 ) + ( (OutputParDens)?1:0 );
+      const int Idx_wr_abs = NCOMP_TOTAL + ( (OutputPot)?7:6 ) + ( (OutputParDens)?1:0 );
 
       double Ep, AvePot, mr, mdr, tr, tdr;
 
@@ -1943,6 +1996,8 @@ void TakeNote( int argc, char **argv )
    printf( "SUPPORT_HDF5     = %14s\n",     "OFF"                     );
 #  endif
 
+   printf( "NCOMP_FLUID      = %14d\n",     NCOMP_FLUID               );
+   printf( "NCOMP_PASSIVE    = %14d\n",     NCOMP_PASSIVE             );
    printf( "DumpID           = %14d\n",     DumpID                    );
    printf( "Time             = %14.7e\n",   Time[0]                   );
    printf( "Step             = %14ld\n",    Step                      );

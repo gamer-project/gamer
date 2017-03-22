@@ -10,7 +10,7 @@ EXECUTABLE := GAMER_ExtractProfile
 # siimulation options
 #######################################################################################################
 # model: HYDRO/MHD/ELBDM
-SIMU_OPTION += -DMODEL=HYDRO
+SIMU_OPTION += -DMODEL=ELBDM
 
 # double precision
 #SIMU_OPTION += -DFLOAT8
@@ -25,13 +25,15 @@ SIMU_OPTION += -DSUPPORT_HDF5
 
 # siimulation parameters
 #######################################################################################################
-NLEVEL      := 6        # level : 0 ~ NLEVEL-1
-MAX_PATCH   := 2000000  # the maximum number of patches in each level
+NLEVEL        := 6         # level : 0 ~ NLEVEL-1
+NCOMP_PASSIVE := 0         # number of passive scalars
+MAX_PATCH     := 2000000   # the maximum number of patches in each level
 
-NLEVEL      := $(strip $(NLEVEL))
-MAX_PATCH   := $(strip $(MAX_PATCH))
+NLEVEL        := $(strip $(NLEVEL))
+NCOMP_PASSIVE := $(strip $(NCOMP_PASSIVE))
+MAX_PATCH     := $(strip $(MAX_PATCH))
 
-SIMU_PARA = -DNLEVEL=$(NLEVEL) -DMAX_PATCH=$(MAX_PATCH)
+SIMU_PARA = -DNLEVEL=$(NLEVEL) -DMAX_PATCH=$(MAX_PATCH) -DNCOMP_PASSIVE=$(NCOMP_PASSIVE)
 
 
 
@@ -69,8 +71,7 @@ CFLAG := -O3 -w1 -xSSE4.2 -fp-model precise
 #LIB   := -limf
 
 ifeq "$(findstring GAMER_DEBUG, $(SIMU_OPTION))" "GAMER_DEBUG"
-CFLAG += -g -debug
-#CFLAG += -g
+CFLAG += -g
 endif
 
 INCLUDE  := -I./Header

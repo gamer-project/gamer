@@ -16,7 +16,7 @@ static int Table_02( const int lv, const int PID, const int Side );
 //
 // Note        :  1. Use the input parameter "TVar" to control the target variables
 //                   --> TVar can be any combination of the symbolic constants defined in "Macro.h" 
-//                       (e.g., "TVar = _DENS", "TVar = _MOMX|ENGY", or "TVar = _FLU|_POTE")
+//                       (e.g., "TVar = _DENS", "TVar = _MOMX|ENGY", or "TVar = _FLUID|_POTE")
 //                2. If "GhostSize != 0" --> the function "InterpolateGhostZone" will be used to fill up the
 //                   ghost-zone values by spatial interpolation if the corresponding sibling patches do
 //                   NOT exist
@@ -31,7 +31,7 @@ static int Table_02( const int lv, const int PID, const int Side );
 //                PID0_List      : List recording the patch indicies with LocalID==0 to be prepared
 //                TVar           : Targeted variables to be prepared
 //                                 --> Supported variables in different models:
-//                                     HYDRO : _DENS, _MOMX, _MOMY, _MOMZ, _ENGY, _FLU, _VELX, _VELY, _VELZ, _PRES,
+//                                     HYDRO : _DENS, _MOMX, _MOMY, _MOMZ, _ENGY, _FLUID, _VELX, _VELY, _VELZ, _PRES,
 //                                             [, _POTE] [, _PAR_DENS] [, _PASSIVE]
 //                                     MHD   : 
 //                                     ELBDM : _DENS, _REAL, _IMAG [, _POTE] [, _PAR_DENS]
@@ -57,7 +57,7 @@ void Prepare_PatchData( const int lv, real *h_Input_Array, const int GhostSize, 
 // check
 #  ifdef GAMER_DEBUG
 
-   if ( TVar & ~(_FLU|_POTE|_PAR_DENS) )  Aux_Error( ERROR_INFO, "unsupported parameter %s = %d !!\n", "TVar", TVar );
+   if ( TVar & ~(_TOTAL|_POTE|_PAR_DENS) )   Aux_Error( ERROR_INFO, "unsupported parameter %s = %d !!\n", "TVar", TVar );
 
    if ( IntPhase )
    {
@@ -76,15 +76,15 @@ void Prepare_PatchData( const int lv, real *h_Input_Array, const int GhostSize, 
    const bool PrepPot     = ( TVar & _POTE     ) ? true : false;
    const bool PrepParDens = ( TVar & _PAR_DENS ) ? true : false;
 
-// TFluVarIdxList : List recording the targeted fluid (and passive) variable indices ( = [0 ... NCOMP-1] )
-   int  NTSib[26], *TSib[26], NVar_Flu, NVar_Tot, TFluVarIdxList[NCOMP];
+// TFluVarIdxList : List recording the targeted fluid and passive variable indices ( = [0 ... NCOMP_TOTAL-1] )
+   int NTSib[26], *TSib[26], NVar_Flu, NVar_Tot, TFluVarIdxList[NCOMP_TOTAL];
 
 // set up the targeted sibling indices for the function "InterpolateGhostZone"
    SetTargetSibling( NTSib, TSib );
 
 // determine the components to be prepared
    NVar_Flu = 0;
-   for (int v=0; v<NCOMP; v++)
+   for (int v=0; v<NCOMP_TOTAL; v++)
       if ( TVar & (1<<v) )    TFluVarIdxList[ NVar_Flu++ ] = v;
 
    NVar_Tot = NVar_Flu;

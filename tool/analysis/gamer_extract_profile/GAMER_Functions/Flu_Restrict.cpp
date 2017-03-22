@@ -47,7 +47,7 @@ void Flu_Restrict( const int lv, const bool GetAvePot, const bool GetAveParDens 
             if ( amr.patch[lv+1][SonPID]->fluid == NULL )   continue;
 
 
-            for (int v=0; v<NCOMP; v++)         {
+            for (int v=0; v<NCOMP_TOTAL; v++)   {
             for (int k=0; k<PATCH_SIZE/2; k++)  {  K = k*2;    Kp = K+1;   kk = k + kk0;
             for (int j=0; j<PATCH_SIZE/2; j++)  {  J = j*2;    Jp = J+1;   jj = j + jj0;
             for (int i=0; i<PATCH_SIZE/2; i++)  {  I = i*2;    Ip = I+1;   ii = i + ii0;

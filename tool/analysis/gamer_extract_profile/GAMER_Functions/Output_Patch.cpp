@@ -11,7 +11,7 @@
 //                sprintf( comment, "Step%d", AdvanceCounter[6] );
 //                Output_Patch( 6, 5560, comment );
 //
-// Parameter   :  lv       : Targeted refinement level 
+// Parameter   :  lv       : Targeted refinement level
 //                PID      : Targeted patch index
 //                FluSg    : Sandglass of the fluid data
 //                PotSg    : Sandglass of the potential data
@@ -28,7 +28,7 @@ void Output_Patch( const int lv, const int PID, const char *comment )
 
    char FileName[100];
    sprintf( FileName, "Patch_r%d_lv%d_p%d", 0, lv, PID );
-   if ( comment != NULL )       
+   if ( comment != NULL )
    {
       strcat( FileName, "_" );
       strcat( FileName, comment );
@@ -38,32 +38,32 @@ void Output_Patch( const int lv, const int PID, const char *comment )
 // output patch information
    FILE *File = fopen( FileName, "w" );
 
-   fprintf( File, "Rank %d  Lv %d  PID %d  Local ID %d  FluSg %d  PotSg %d  Time %13.7e  Step %ld\n", 
+   fprintf( File, "Rank %d  Lv %d  PID %d  Local ID %d  FluSg %d  PotSg %d  Time %13.7e  Step %ld\n",
             0, lv, PID, PID%8, 0, 0, Time[lv], Step );
 
-   fprintf( File, "Father %d  Son %d  Corner (%4d,%4d,%4d)  Size %13.7e", Relation->father, Relation->son, 
+   fprintf( File, "Father %d  Son %d  Corner (%4d,%4d,%4d)  Size %13.7e", Relation->father, Relation->son,
             Relation->corner[0], Relation->corner[1], Relation->corner[2], PATCH_SIZE*amr.dh[lv] );
    fprintf( File, "\n" );
-   fprintf( File, "EdgeL = (%20.14e, %20.14e, %20.14e)\n", Relation->corner[0]*dh_min, 
-                                                           Relation->corner[1]*dh_min, 
+   fprintf( File, "EdgeL = (%20.14e, %20.14e, %20.14e)\n", Relation->corner[0]*dh_min,
+                                                           Relation->corner[1]*dh_min,
                                                            Relation->corner[2]*dh_min );
    fprintf( File, "EdgeR = (%20.14e, %20.14e, %20.14e)\n", ( Relation->corner[0] + PATCH_SIZE*amr.scale[lv] )*dh_min,
-                                                           ( Relation->corner[1] + PATCH_SIZE*amr.scale[lv] )*dh_min, 
+                                                           ( Relation->corner[1] + PATCH_SIZE*amr.scale[lv] )*dh_min,
                                                            ( Relation->corner[2] + PATCH_SIZE*amr.scale[lv] )*dh_min );
 
 
    fprintf( File, "\nSibling, Sibling->Son, and Father->Sibling Lists :\n" );
 
    int Sib, FaSib, SibSon, Fa;
-   for (int S=0; S<26; S++)   
+   for (int S=0; S<26; S++)
    {
       Fa     = Relation->father;
       Sib    = Relation->sibling[S];
-      FaSib  = ( Fa == -1 ) ? -1 : ( amr.patch[lv-1][Fa] != NULL ) ? 
+      FaSib  = ( Fa == -1 ) ? -1 : ( amr.patch[lv-1][Fa] != NULL ) ?
                                      amr.patch[lv-1][Fa]->sibling[S] : -999;
-      SibSon = ( Sib < 0 )  ? Sib : amr.patch[lv][Sib]->son; 
+      SibSon = ( Sib < 0 )  ? Sib : amr.patch[lv][Sib]->son;
 
-      fprintf( File, "Sib[%2d] = %6d     Sib_Son = %6d     Fa_Sib[%2d] = %6d\n", 
+      fprintf( File, "Sib[%2d] = %6d     Sib_Son = %6d     Fa_Sib[%2d] = %6d\n",
                S, Sib, SibSon, S, FaSib );
    }
    fprintf( File, "\n" );
@@ -85,25 +85,28 @@ void Output_Patch( const int lv, const int PID, const char *comment )
 #  warning : WARNING : DO YOU WANT TO ADD the FILE HEADER HERE FOR THE NEW MODEL ??
 #  endif // MODEL
 
+   for (int v=0; v<NCOMP_PASSIVE; v++)
+   fprintf( File, "%12s%02d", "Passive", v );
+
    fprintf( File, "%14s", "Potential" );
 
    fprintf( File, "\n" );
 
 
 // output data
-   real u[NCOMP]; 
+   real u[NCOMP_FLUID];
 
    for (int k=0; k<PATCH_SIZE; k++)
    for (int j=0; j<PATCH_SIZE; j++)
    for (int i=0; i<PATCH_SIZE; i++)
    {
-//    output cell indices      
+//    output cell indices
       fprintf( File, "(%2d,%2d,%2d)", i, j, k );
 
       if ( FluData->fluid != NULL )
       {
 //       output all variables in the fluid array
-         for (int v=0; v<NCOMP; v++)   
+         for (int v=0; v<NCOMP_FLUID; v++)
          {
             u[v] = FluData->fluid[v][k][j][i];
             fprintf( File, " %13.6e", u[v] );
@@ -117,12 +120,15 @@ void Output_Patch( const int lv, const int PID, const char *comment )
 #        warning : WAIT MHD !!!
 #        endif // MODEL
 
+//       output the passive variables
+         for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)
+         fprintf( File, " %13.6e", FluData->fluid[v][k][j][i] );
       } // if ( FluData->fluid != NULL )
 
       else
       {
 //       output empty strings if the fluid array is not allocated
-         for (int v=0; v<NCOMP; v++)   fprintf( File, " %13s", "" );
+         for (int v=0; v<NCOMP_FLUID; v++)   fprintf( File, " %13s", "" );
 
 #        if   ( MODEL == HYDRO )
          fprintf( File, " %13s", "" );
@@ -130,6 +136,8 @@ void Output_Patch( const int lv, const int PID, const char *comment )
 #        warning : WAIT MHD !!!
 #        endif // MODEL
 
+         for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)
+         fprintf( File, " %13s", "" );
       } // if ( FluData->fluid != NULL ) ... else ...
 
 //    output potential

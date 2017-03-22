@@ -55,7 +55,7 @@ typedef float  real;
 
 // number of components in each cell and the variable indices in the array "fluid"
 #if   ( MODEL == HYDRO )
-#  define NCOMP            5
+#  define NCOMP_FLUID      5
 #  define DENS             0
 #  define MOMX             1
 #  define MOMY             2
@@ -67,14 +67,13 @@ typedef float  real;
 #  define _MOMY            ( 1 << (MOMY) )
 #  define _MOMZ            ( 1 << (MOMZ) )
 #  define _ENGY            ( 1 << (ENGY) )
-#  define _FLU             ( _DENS | _MOMX | _MOMY | _MOMZ | _ENGY )
 
 #elif ( MODEL == MHD )
 #  warning : WAIT MHD !!!
-#  define NCOMP            8
+#  define NCOMP_FLUID      8
 
 #elif ( MODEL == ELBDM )
-#  define NCOMP            3
+#  define NCOMP_FLUID      3
 #  define DENS             0
 #  define REAL             1
 #  define IMAG             2
@@ -82,14 +81,20 @@ typedef float  real;
 #  define _DENS            ( 1 << (DENS) )
 #  define _REAL            ( 1 << (REAL) )
 #  define _IMAG            ( 1 << (IMAG) )
-#  define _FLU             ( _DENS | _REAL | _IMAG )
 
 #else
 #  error : ERROR : unsupported MODEL !!
 #endif // MODEL
 
-#  define _POTE            ( 1 << NCOMP   )
-#  define _PAR_DENS        ( 1 << NCOMP+1 )
+#  define NCOMP_TOTAL      ( NCOMP_FLUID + NCOMP_PASSIVE )
+
+
+// symbolic constants used by all models
+#  define _FLUID           (  ( 1 << NCOMP_FLUID ) - 1           )
+#  define _PASSIVE         (  ( 1 << NCOMP_TOTAL ) - 1 - _FLUID  )
+#  define _TOTAL           (  ( 1 << NCOMP_TOTAL ) - 1           )
+#  define _POTE            ( 1 << NCOMP_TOTAL   )
+#  define _PAR_DENS        ( 1 << NCOMP_TOTAL+1 )
 
 
 // 3D to 1D array indices transformation
@@ -209,7 +214,7 @@ struct patch_t
 
       if ( Data )
       {
-         fluid    = new real [NCOMP][PATCH_SIZE][PATCH_SIZE][PATCH_SIZE];
+         fluid    = new real [NCOMP_TOTAL][PATCH_SIZE][PATCH_SIZE][PATCH_SIZE];
          pot      = new real [PATCH_SIZE][PATCH_SIZE][PATCH_SIZE];
          par_dens = new real [PATCH_SIZE][PATCH_SIZE][PATCH_SIZE];
 
@@ -269,7 +274,7 @@ struct patch_t
          Aux_Error( ERROR_INFO, "allocate an existing par_dens array !!\n" );
 #     endif
 
-      fluid    = new real [NCOMP][PATCH_SIZE][PATCH_SIZE][PATCH_SIZE];
+      fluid    = new real [NCOMP_TOTAL][PATCH_SIZE][PATCH_SIZE][PATCH_SIZE];
       pot      = new real [PATCH_SIZE][PATCH_SIZE][PATCH_SIZE];
       par_dens = new real [PATCH_SIZE][PATCH_SIZE][PATCH_SIZE];
 

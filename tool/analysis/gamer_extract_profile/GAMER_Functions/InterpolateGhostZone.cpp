@@ -34,13 +34,13 @@ static int Table_01( const int SibID, const int Side, const char dim, const int 
 //                TSib           : Targeted sibling indices along different sibling directions
 //                TVar           : Targeted variables to be prepared
 //                                 --> Supported variables in different models:
-//                                     HYDRO : _DENS, _MOMX, _MOMY, _MOMZ, _ENGY, _FLU, _VELX, _VELY, _VELZ, _PRES,
+//                                     HYDRO : _DENS, _MOMX, _MOMY, _MOMZ, _ENGY, _FLUID, _VELX, _VELY, _VELZ, _PRES,
 //                                             [, _POTE] [, _PAR_DENS] [, _PASSIVE]
 //                                     MHD   : 
 //                                     ELBDM : _DENS, _REAL, _IMAG [, _POTE] [, _PAR_DENS]
 //                NVar_Tot       : Total number of variables to be prepared
 //                NVar_Flu       : Number of fluid variables to be prepared
-//                TFluVarIdxList : List recording the target fluid and passive variable indices ( = [0 ... NCOMP+NPASSIVE-1] )
+//                TFluVarIdxList : List recording the target fluid and passive variable indices ( = [0 ... NCOMP_FLUID+NCOMP_PASSIVE-1] )
 //                IntPhase       : true --> Perform interpolation on rho/phase instead of real/imag parts in ELBDM
 //-------------------------------------------------------------------------------------------------------
 void InterpolateGhostZone( const int lv, const int PID, real IntData[], const int SibID, const int GhostSize, 
