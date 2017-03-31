@@ -38,7 +38,7 @@ void Init_Unit()
    if ( HUBBLE0 <= 0.0 )
       Aux_Error( ERROR_INFO, "HUBBLE0 = %14.7e <= 0.0 !!\n", HUBBLE0 );
 
-   OPT__UNIT = true;    // alwyas turn on OPT__UNIT for COMOVING
+   OPT__UNIT = true;    // always turn on OPT__UNIT for COMOVING
    UNIT_L    = Const_Mpc/HUBBLE0;
    UNIT_T    = Const_s*Const_Mpc/(100.0*HUBBLE0*Const_km);
    UNIT_D    = 3.0*OMEGA_M0*SQR( 100.0*HUBBLE0*Const_km/(Const_s*Const_Mpc) )/( 8.0*M_PI*Const_NewtonG );
