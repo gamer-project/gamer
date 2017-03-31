@@ -256,7 +256,7 @@ void LB_SetCutPoint( const int lv, long *CutPoint, const bool InputLBIdx0AndLoad
    else
    {
 //    allocate memory
-      const int NPG_ThisRank = amr->NPatchComma[lv][1] / 8;
+      int NPG_ThisRank = amr->NPatchComma[lv][1] / 8;
 
       LBIdx0_ThisRank = new long   [ NPG_ThisRank ];
       Load_ThisRank   = new double [ NPG_ThisRank ];
