@@ -1264,6 +1264,7 @@ void Check_Makefile( const char *FileName )
 #  ifdef RSOLVER
    LoadField( "RSolver",            &RS.RSolver,            SID, TID, NonFatal, &RT.RSolver,             1, NonFatal );
 #  endif
+   LoadField( "DualEnergy",         &RS.DualEnergy,         SID, TID, NonFatal, &RT.DualEnergy,          1, NonFatal );
 
 #  elif ( MODEL == MHD )
 #  warning : WAIT MHD !!!
@@ -1632,6 +1633,9 @@ void Check_InputPara( const char *FileName )
 #  endif
 #  if ( MODEL == HYDRO  ||  MODEL == MHD )
    LoadField( "MinPres",                 &RS.MinPres,                 SID, TID, NonFatal, &RT.MinPres,                  1, NonFatal );
+#  endif
+#  ifdef DUAL_ENERGY
+   LoadField( "DualEnergySwitch",        &RS.DualEnergySwitch,        SID, TID, NonFatal, &RT.DualEnergySwitch,         1, NonFatal );
 #  endif
 
 // self-gravity

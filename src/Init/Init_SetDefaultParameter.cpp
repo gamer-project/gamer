@@ -17,7 +17,7 @@ void Init_SetDefaultParameter()
 
 // set parameters to their default values
 // ------------------------------------------------------------------------------------------------------
-// (1) set the number of OpenMP threads and disable OpenMP nested parallelism by default
+// set the number of OpenMP threads and disable OpenMP nested parallelism by default
 #  ifdef OPENMP
    const int OMP_Max_NThread = omp_get_max_threads();
 
@@ -44,7 +44,7 @@ void Init_SetDefaultParameter()
 #  endif
 
 
-// (2) time-step factors
+// time-step factors
    if ( DT__FLUID < 0.0 )
    {
 #     if   ( MODEL == HYDRO )
@@ -146,7 +146,7 @@ void Init_SetDefaultParameter()
 #  endif
 
 
-// (3) SOR parameters
+// SOR parameters
 #  ifdef GRAVITY
 #  if   ( POT_SCHEME == SOR )
    Init_Set_Default_SOR_Parameter( SOR_OMEGA, SOR_MAX_ITER, SOR_MIN_ITER );
@@ -156,7 +156,7 @@ void Init_SetDefaultParameter()
 #  endif // GRAVITY
 
 
-// (4) set the GPU parameters to the default values when using CPU only (please set OMP_NTHREAD in advance)
+// set the GPU parameters to the default values when using CPU only (please set OMP_NTHREAD in advance)
 #  ifndef GPU
    GPU_NSTREAM = 1;
    if ( MPI_Rank == 0 )  Aux_Message( stdout, "NOTE : parameter \"%s\" is set to the default value = %d\n",
@@ -190,7 +190,7 @@ void Init_SetDefaultParameter()
 #  endif // #ifndef GPU
 
 
-// (5) grid size in different refinement levels and box size and scale in different directions
+// grid size in different refinement levels and box size and scale in different directions
    int NX0_Max;
    NX0_Max = ( NX0_TOT[0] > NX0_TOT[1] ) ? NX0_TOT[0] : NX0_TOT[1];
    NX0_Max = ( NX0_TOT[2] > NX0_Max    ) ? NX0_TOT[2] : NX0_Max;
@@ -204,7 +204,7 @@ void Init_SetDefaultParameter()
    }
 
 
-// (6) whether of not to allocate fluxes at the coarse-fine boundaries
+// whether of not to allocate fluxes at the coarse-fine boundaries
 #  if   ( MODEL == HYDRO )
    if ( OPT__FIXUP_FLUX )  amr->WithFlux = true;
 
@@ -247,8 +247,7 @@ void Init_SetDefaultParameter()
 #  endif // #if ( MODEL == ELBDM )
 
 
-// (8) interpolation scheme
-// (8-1) Poisson/Gravity solvers and potential refinement
+// interpolation scheme: Poisson/Gravity solvers and potential refinement
 #  ifdef GRAVITY
    if ( OPT__POT_INT_SCHEME == INT_DEFAULT )
    {
@@ -284,7 +283,7 @@ void Init_SetDefaultParameter()
    }
 #  endif // #ifdef GRAVITY
 
-// (8-2) fluid solver and fluid refinement
+// interpolation scheme: fluid solver and fluid refinement
 #  if   ( MODEL == HYDRO )
    if ( OPT__FLU_INT_SCHEME == INT_DEFAULT )
    {
@@ -328,7 +327,7 @@ void Init_SetDefaultParameter()
 #  error : ERROR : unsupported MODEL !!
 #  endif // MODEL
 
-// (8-3) monotonicity coefficient
+// interpolation scheme: monotonicity coefficient
    if ( INT_MONO_COEFF < 0.0 )
    {
       INT_MONO_COEFF = 2.0;
@@ -338,7 +337,7 @@ void Init_SetDefaultParameter()
    }
 
 
-// (9) maximum refinement level
+// maximum refinement level
    if ( MAX_LEVEL < 0 )
    {
       MAX_LEVEL = NLEVEL - 1;
@@ -348,7 +347,7 @@ void Init_SetDefaultParameter()
    }
 
 
-// (10) refinement frequency and the size of flag buffer
+// refinement frequency and the size of flag buffer
    if ( REGRID_COUNT < 0 )
    {
 #     if   ( MODEL == HYDRO )
@@ -390,12 +389,12 @@ void Init_SetDefaultParameter()
    }
 
 
-// (11) initial dump ID
+// initial dump ID
    if ( INIT_DUMPID < 0 )  DumpID = 0;
    else                    DumpID = INIT_DUMPID;
 
 
-// (12) form of the Lohner's error estimator
+// form of the Lohner's error estimator
    if ( OPT__FLAG_LOHNER_FORM == LOHNER_DEFAULT )
    {
       OPT__FLAG_LOHNER_FORM = LOHNER_FLASH2;
@@ -405,7 +404,7 @@ void Init_SetDefaultParameter()
    }
 
 
-// (13) ResPower2 in the AMR_t structure
+// ResPower2 in the AMR_t structure
    int NBits0, NX0_TOT_Max;
 
    NX0_TOT_Max = ( NX0_TOT[0] > NX0_TOT[1]  ) ? NX0_TOT[0] : NX0_TOT[1];
@@ -417,7 +416,7 @@ void Init_SetDefaultParameter()
    for (int lv=0; lv<NLEVEL; lv++)  amr->ResPower2[lv] = NBits0 + lv;
 
 
-// (14) particle options
+// particle options
 #  ifdef PARTICLE
    if ( amr->Par->Interp == PAR_INTERP_DEFAULT )
    {
@@ -467,7 +466,7 @@ void Init_SetDefaultParameter()
 #  endif // #ifdef PARTICLE
 
 
-// (15) coefficient of the Green's function at the origin (must be set after setting amr->Par->Interp )
+// coefficient of the Green's function at the origin (must be set after setting amr->Par->Interp )
 #  ifdef GRAVITY
    if ( OPT__BC_POT == BC_POT_ISOLATED  &&  GFUNC_COEFF0 < 0.0 )
    {
@@ -489,7 +488,7 @@ void Init_SetDefaultParameter()
 #  endif
 
 
-// (17) Riemann solver for OPT__1ST_FLUX_CORR
+// Riemann solver for OPT__1ST_FLUX_CORR
 #  if ( MODEL == HYDRO  ||  MODEL == MHD )
    if ( OPT__1ST_FLUX_CORR  &&  OPT__1ST_FLUX_CORR_SCHEME == RSOLVER_DEFAULT )
    {
@@ -509,7 +508,7 @@ void Init_SetDefaultParameter()
 #  endif
 
 
-// (18) timing options
+// timing options
    if ( OPT__TIMING_BARRIER < 0 )
    {
 #     ifdef TIMING
@@ -524,7 +523,7 @@ void Init_SetDefaultParameter()
    }
 
 
-// (19) physical time
+// physical time
    for (int lv=0; lv<NLEVEL; lv++)
    {
 #     ifdef COMOVING
@@ -546,7 +545,7 @@ void Init_SetDefaultParameter()
    }
 
 
-// (20) particle weight for load balance
+// particle weight for load balance
 #  if ( defined LOAD_BALANCE  &&  defined PARTICLE )
    if ( LB_INPUT__PAR_WEIGHT < 0.0 )
    {
@@ -558,7 +557,7 @@ void Init_SetDefaultParameter()
 #  endif
 
 
-// (21) OPT__CORR_AFTER_ALL_SYNC
+// OPT__CORR_AFTER_ALL_SYNC
    if ( OPT__CORR_AFTER_ALL_SYNC == CORR_DEFAULT )
    {
 #     ifdef GAMER_DEBUG
@@ -572,11 +571,23 @@ void Init_SetDefaultParameter()
    }
 
 
+// dual-energy switch
+#  ifdef DUAL_ENERGY
+   if ( DUAL_ENERGY_SWITCH < 0.0 )
+   {
+      DUAL_ENERGY_SWITCH = 1.0e-4;
+
+      if ( MPI_Rank == 0 )    Aux_Message( stdout, "NOTE : parameter \"%s\" is set to the default value = %13.7e\n",
+                                           "DUAL_ENERGY_SWITCH", DUAL_ENERGY_SWITCH );
+   }
+#  endif
+
+
 
 // reset parameters and options which are either unsupported or useless
 // ------------------------------------------------------------------------------------------------------
-// (1) general
-// (1-1) disable "OPT__ADAPTIVE_DT" (not supported yet)
+// general
+// disable "OPT__ADAPTIVE_DT" (not supported yet)
    if ( OPT__ADAPTIVE_DT )
    {
       OPT__ADAPTIVE_DT = false;
@@ -586,7 +597,7 @@ void Init_SetDefaultParameter()
                       "OPT__ADAPTIVE_DT" );
    }
 
-// (1-2) disable "OPT__OVERLAP_MPI" if "OVERLAP_MPI" is NOT turned on in the Makefile
+// disable "OPT__OVERLAP_MPI" if "OVERLAP_MPI" is NOT turned on in the Makefile
 #  ifndef OVERLAP_MPI
    if ( OPT__OVERLAP_MPI )
    {
@@ -598,7 +609,7 @@ void Init_SetDefaultParameter()
    }
 #  endif
 
-// (1-3) disable "OPT__CK_FLUX_ALLOCATE" if no flux arrays are going to be allocated
+// disable "OPT__CK_FLUX_ALLOCATE" if no flux arrays are going to be allocated
    if ( OPT__CK_FLUX_ALLOCATE  &&  !amr->WithFlux )
    {
       OPT__CK_FLUX_ALLOCATE = false;
@@ -609,9 +620,9 @@ void Init_SetDefaultParameter()
    }
 
 
-// (2) for the shared time-step integration
+// for the shared time-step integration
 #  ifndef INDIVIDUAL_TIMESTEP
-// (2-1) disable "OPT__INT_TIME"
+// disable "OPT__INT_TIME"
    if ( OPT__INT_TIME )
    {
       OPT__INT_TIME = false;
@@ -623,9 +634,9 @@ void Init_SetDefaultParameter()
 #  endif
 
 
-// (4) for serial mode
+// for serial mode
 #  ifdef SERIAL
-// (4-1) reset the MPI rank
+// reset the MPI rank
    if ( MPI_NRank != 1 )
    {
       MPI_NRank = 1;
@@ -650,7 +661,7 @@ void Init_SetDefaultParameter()
       Aux_Message( stderr, "WARNING : parameter \"%s\" is reset to 1 for the serial code !!\n", "MPI_NRank_X[2]");
    }
 
-// (4-2) turn off "OPT__OVERLAP_MPI"
+// turn off "OPT__OVERLAP_MPI"
    if ( OPT__OVERLAP_MPI )
    {
       OPT__OVERLAP_MPI = false;
@@ -662,7 +673,7 @@ void Init_SetDefaultParameter()
 #  endif // ifdef SERIAL
 
 
-// (5) turn off "OPT__OVERLAP_MPI" if LOAD_BALANCE is off
+// turn off "OPT__OVERLAP_MPI" if LOAD_BALANCE is off
 #  ifndef LOAD_BALANCE
    if ( OPT__OVERLAP_MPI )
    {
@@ -675,7 +686,7 @@ void Init_SetDefaultParameter()
 #  endif // #ifndef LOAD_BALANCE
 
 
-// (6) always turn on "OPT__VERBOSE" in the debug mode
+// always turn on "OPT__VERBOSE" in the debug mode
 #  ifdef GAMER_DEBUG
    if ( !OPT__VERBOSE )
    {
@@ -688,9 +699,9 @@ void Init_SetDefaultParameter()
 #  endif
 
 
-// (7) for OpenMP
+// for OpenMP
 #  ifndef OPENMP
-// (7-1) turn off "OPT__OVERLAP_MPI" if OPENMP is not enabled
+// turn off "OPT__OVERLAP_MPI" if OPENMP is not enabled
    if ( OPT__OVERLAP_MPI )
    {
       OPT__OVERLAP_MPI = false;
@@ -701,10 +712,9 @@ void Init_SetDefaultParameter()
    }
 #  endif
 
-
-// (8) for parallel mode
+// for parallel mode
 #  ifndef SERIAL
-// (8-1) check the level of MPI thread support
+// check the level of MPI thread support
    int MPI_Thread_Status;
    MPI_Query_thread( &MPI_Thread_Status );
    if ( OPT__OVERLAP_MPI  &&  MPI_Thread_Status == MPI_THREAD_SINGLE )
@@ -718,9 +728,9 @@ void Init_SetDefaultParameter()
 #  endif
 
 
-// (9) for different modes
+// for different modes
 #  if ( MODEL != HYDRO  &&  MODEL != MHD  &&  MODEL != ELBDM )
-// (9-1) operations related to FLUX are useful in HYDRO/MHD/ELBDM only
+// operations related to FLUX are useful in HYDRO/MHD/ELBDM only
    if ( OPT__FIXUP_FLUX )
    {
       OPT__FIXUP_FLUX = false;
@@ -740,8 +750,7 @@ void Init_SetDefaultParameter()
    }
 #  endif // #if ( MODEL == HYDRO  &&  MODEL != MHD )
 
-
-// (9-2) turn off refinement criteria and checks related to density if "DENS" is not defined
+// turn off refinement criteria and checks related to density if "DENS" is not defined
 #  ifndef DENS
    if ( OPT__FLAG_RHO )
    {
@@ -771,8 +780,7 @@ void Init_SetDefaultParameter()
    }
 #  endif // #ifndef DENS
 
-
-// (9-3) conservation check is supported only in the models HYDRO, MHD, and ELBDM
+// conservation check is supported only in the models HYDRO, MHD, and ELBDM
 #  if ( MODEL != HYDRO  &&  MODEL != MHD  &&  MODEL != ELBDM )
    if ( OPT__CK_CONSERVATION )
    {
@@ -784,8 +792,7 @@ void Init_SetDefaultParameter()
    }
 #  endif
 
-
-// (9-4) set OPT__LR_LIMITER and OPT__WAF_LIMITER to NONE if they are useless (in HYDRO)
+// set OPT__LR_LIMITER and OPT__WAF_LIMITER to NONE if they are useless (in HYDRO)
 #  if ( MODEL == HYDRO )
 #  if ( FLU_SCHEME != MHM  &&  FLU_SCHEME != MHM_RP  &&  FLU_SCHEME != CTU )
    if ( OPT__LR_LIMITER != LR_LIMITER_NONE )
@@ -814,7 +821,7 @@ void Init_SetDefaultParameter()
 #  endif
 #  endif // #if ( MODEL == HYDRO )
 
-// (9-5) operations related to FLUX are useful in ELBDM only if CONSERVE_MASS is on
+// operations related to FLUX are useful in ELBDM only if CONSERVE_MASS is on
 #  if ( MODEL == ELBDM  &&  !defined CONSERVE_MASS )
    if ( OPT__FIXUP_FLUX )
    {
@@ -836,7 +843,7 @@ void Init_SetDefaultParameter()
 #  endif // if ( MODEL == ELBDM  &&  !defined CONSERVE_MASS )
 
 
-// (10) currently OPT__OUTPUT_BASEPS is not supported if the self-gravity is disabled
+// currently OPT__OUTPUT_BASEPS is not supported if the self-gravity is disabled
 #  ifndef GRAVITY
    if ( OPT__OUTPUT_BASEPS )
    {
@@ -849,7 +856,7 @@ void Init_SetDefaultParameter()
 #  endif
 
 
-// (11) the option "OPT__RECORD_PERFORMANCE" must work with TIMING
+// the option "OPT__RECORD_PERFORMANCE" must work with TIMING
 #  ifndef TIMING
    if ( OPT__RECORD_PERFORMANCE )
    {
@@ -862,7 +869,7 @@ void Init_SetDefaultParameter()
 #  endif
 
 
-// (12) MPI_NRank_X is useless for restart if LOAD_BALANCE is on
+// MPI_NRank_X is useless for restart if LOAD_BALANCE is on
 #  ifdef LOAD_BALANCE
    if ( OPT__INIT == INIT_RESTART )
    {
@@ -874,7 +881,7 @@ void Init_SetDefaultParameter()
 #  endif
 
 
-// (13) timing options
+// timing options
 #  ifndef TIMING
    if ( OPT__TIMING_BARRIER != 0 )
    {
@@ -916,7 +923,7 @@ void Init_SetDefaultParameter()
 #  endif
 
 
-// (14) OPT__UM_START_DOWNGRADE must be turned on for the isolated Poisson solver
+// OPT__UM_START_DOWNGRADE must be turned on for the isolated Poisson solver
 #  ifdef GRAVITY
    if ( !OPT__UM_START_DOWNGRADE  &&  OPT__BC_POT == BC_POT_ISOLATED  &&  OPT__UM_START_LEVEL > 0 )
    {
@@ -932,7 +939,7 @@ void Init_SetDefaultParameter()
 #  endif
 
 
-// (15) OPT__OUTPUT_TOTAL == OUTPUT_FORMAT_HDF5 is not supported if "SUPPORT_HDF5" is not defined
+// OPT__OUTPUT_TOTAL == OUTPUT_FORMAT_HDF5 is not supported if "SUPPORT_HDF5" is not defined
 #  ifndef SUPPORT_HDF5
    if ( OPT__OUTPUT_TOTAL == OUTPUT_FORMAT_HDF5 )
    {
@@ -945,7 +952,7 @@ void Init_SetDefaultParameter()
 #  endif
 
 
-// (16) always turn on "OPT__CK_PARTICLE" in the debug mode
+// always turn on "OPT__CK_PARTICLE" in the debug mode
 #  ifdef DEBUG_PARTICLE
    if ( !OPT__CK_PARTICLE )
    {
@@ -958,7 +965,7 @@ void Init_SetDefaultParameter()
 #  endif
 
 
-// (17) RemoveCell is useless for periodic B.C.
+// RemoveCell is useless for periodic B.C.
 #  ifdef PARTICLE
    if ( OPT__BC_POT == BC_POT_PERIODIC  &&  amr->Par->RemoveCell >= 0.0 )
    {
@@ -973,7 +980,7 @@ void Init_SetDefaultParameter()
 #  endif // #ifdef PARTICLE
 
 
-// (18) set particle initialization mode to PAR_INIT_BY_RESTART for restart
+// set particle initialization mode to PAR_INIT_BY_RESTART for restart
 #  ifdef PARTICLE
    if ( OPT__INIT == INIT_RESTART  &&  amr->Par->Init != PAR_INIT_BY_RESTART )
    {
@@ -986,8 +993,8 @@ void Init_SetDefaultParameter()
 #  endif
 
 
-// (19) always enable OPT__CORR_AFTER_ALL_SYNC in the debug mode
-//      --> but currently it is allowed to have "OPT__CORR_AFTER_ALL_SYNC == CORR_BEFORE_DUMP" in the debug mode if set by users
+// always enable OPT__CORR_AFTER_ALL_SYNC in the debug mode
+// --> but currently it is allowed to have "OPT__CORR_AFTER_ALL_SYNC == CORR_BEFORE_DUMP" in the debug mode if set by users
 #  ifdef GAMER_DEBUG
    if ( OPT__CORR_AFTER_ALL_SYNC == CORR_NONE )
    {
@@ -1000,7 +1007,7 @@ void Init_SetDefaultParameter()
 #  endif
 
 
-// (20) turn off OPT__NORMALIZE_PASSIVE if there is no passive scalars
+// turn off OPT__NORMALIZE_PASSIVE if there is no passive scalars
 #  if (  NCOMP_PASSIVE <= 0  ||  ( defined DUAL_ENERGY && NCOMP_PASSIVE == 1 )  )
    if ( OPT__NORMALIZE_PASSIVE )
    {
@@ -1013,7 +1020,7 @@ void Init_SetDefaultParameter()
 #  endif
 
 
-// (21) turn off OPT__CK_NORMALIZE_PASSIVE when OPT__NORMALIZE_PASSIVE is off
+// turn off OPT__CK_NORMALIZE_PASSIVE when OPT__NORMALIZE_PASSIVE is off
 #  if ( NCOMP_PASSIVE > 0 )
    if ( OPT__CK_NORMALIZE_PASSIVE  &&  !OPT__NORMALIZE_PASSIVE )
    {

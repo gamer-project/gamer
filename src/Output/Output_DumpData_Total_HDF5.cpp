@@ -74,7 +74,7 @@ Procedure for outputting new variables:
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2228)
+// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2229)
 // Description :  Output all simulation data in the HDF5 format, which can be used as a restart file
 //                or loaded by YT
 //
@@ -127,6 +127,7 @@ Procedure for outputting new variables:
 //                2226 : 2017/03/03 --> output Opt__RecordLoadBalance
 //                2227 : 2017/03/21 --> output PassiveFieldName_Grid and PassiveFieldName_Par
 //                2228 : 2017/03/21 --> output NCOMP_FLUID, NCOMP_PASSIVE, and PAR_NPASSIVE in KeyInfo_t
+//                2229 : 2017/04/06 --> output DUAL_ENERGY and DUAL_ENERGY_SWITCH
 //-------------------------------------------------------------------------------------------------------
 void Output_DumpData_Total_HDF5( const char *FileName )
 {
@@ -1232,7 +1233,7 @@ void FillIn_KeyInfo( KeyInfo_t &KeyInfo )
 
    const time_t CalTime  = time( NULL );   // calendar time
 
-   KeyInfo.FormatVersion = 2228;
+   KeyInfo.FormatVersion = 2229;
    KeyInfo.Model         = MODEL;
    KeyInfo.NLevel        = NLEVEL;
    KeyInfo.NCompFluid    = NCOMP_FLUID;
@@ -1435,6 +1436,12 @@ void FillIn_Makefile( Makefile_t &Makefile )
 #  endif
 #  ifdef RSOLVER
    Makefile.RSolver            = RSOLVER;
+#  endif
+
+#  ifdef DUAL_ENERGY
+   Makefile.DualEnergy         = DUAL_ENERGY;
+#  else
+   Makefile.DualEnergy         = 0;
 #  endif
 
 #  elif ( MODEL == MHD )
@@ -1818,6 +1825,9 @@ void FillIn_InputPara( InputPara_t &InputPara )
 #  if ( MODEL == HYDRO  ||  MODEL == MHD )
    InputPara.MinPres                 = MIN_PRES;
 #  endif
+#  ifdef DUAL_ENERGY
+   InputPara.DualEnergySwitch        = DUAL_ENERGY_SWITCH;
+#  endif
 
 // self-gravity
 #  ifdef GRAVITY
@@ -2087,6 +2097,7 @@ void GetCompound_Makefile( hid_t &H5_TypeID )
 #  ifdef RSOLVER
    H5Tinsert( H5_TypeID, "RSolver",            HOFFSET(Makefile_t,RSolver           ), H5T_NATIVE_INT );
 #  endif
+   H5Tinsert( H5_TypeID, "DualEnergy",         HOFFSET(Makefile_t,DualEnergy        ), H5T_NATIVE_INT );
 
 #  elif ( MODEL == MHD )
 #  warning : WAIT MHD !!!
@@ -2438,6 +2449,9 @@ void GetCompound_InputPara( hid_t &H5_TypeID )
 #  endif
 #  if ( MODEL == HYDRO  ||  MODEL == MHD )
    H5Tinsert( H5_TypeID, "MinPres",                 HOFFSET(InputPara_t,MinPres                ), H5T_NATIVE_DOUBLE  );
+#  endif
+#  ifdef DUAL_ENERGY
+   H5Tinsert( H5_TypeID, "DualEnergySwitch",        HOFFSET(InputPara_t,DualEnergySwitch       ), H5T_NATIVE_DOUBLE  );
 #  endif
 
 // self-gravity

@@ -616,9 +616,14 @@ void Aux_Check_Parameter()
 #     error : ERROR : unsupported Riemann solver (EXACT/ROE/HLLE/HLLC) !!
 #  endif
 
-#  if ( defined DUAL_ENERGY  &&  DUAL_ENERGY != DE_ENTROPY )
+#  ifdef DUAL_ENERGY
+#  if ( DUAL_ENERGY != DE_ENTROPY )
 #     error : ERROR : unsupported dual-energy formalism (DE_ENTROPY only, DE_EINT is not supported yet) !!
 #  endif
+
+   if ( DUAL_ENERGY_SWITCH < 0.0  ||  DUAL_ENERGY_SWITCH > 1.0 )
+      Aux_Error( ERROR_INFO, "DUAL_ENERGY_SWITCH (%14.7e) is not within the correct range [0.0 ... 1.0] !!\n", DUAL_ENERGY_SWITCH );
+#  endif // #ifdef DUAL_ENERGY
 
 #  if ( defined CHECK_INTERMEDIATE  &&  CHECK_INTERMEDIATE != EXACT  &&  CHECK_INTERMEDIATE != HLLE  &&  \
         CHECK_INTERMEDIATE != HLLC )

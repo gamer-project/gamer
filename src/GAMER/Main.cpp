@@ -82,10 +82,16 @@ bool                 OPT__FLAG_PRES_GRADIENT, OPT__FLAG_LOHNER_ENGY, OPT__FLAG_L
 bool                 OPT__FLAG_VORTICITY, OPT__1ST_FLUX_CORR;
 int                  OPT__CK_NEGATIVE;
 double               MIN_DENS, MIN_PRES;
+#ifdef DUAL_ENERGY
+double               DUAL_ENERGY_SWITCH;
+#endif
 
 #elif ( MODEL == MHD )
-double               MIN_DENS, MIN_PRES;
 #warning : WAIT MHD !!!
+double               MIN_DENS, MIN_PRES;
+#ifdef DUAL_ENERGY
+double               DUAL_ENERGY_SWITCH;
+#endif
 
 #elif ( MODEL == ELBDM )
 double               DT__PHASE, FlagTable_EngyDensity[NLEVEL-1][2];

@@ -767,6 +767,9 @@ void Aux_TakeNote()
 #     if ( MODEL == HYDRO  ||  MODEL == MHD )
       fprintf( Note, "MIN_PRES                  %13.7e\n",  MIN_PRES                );
 #     endif
+#     ifdef DUAL_ENERGY
+      fprintf( Note, "DUAL_ENERGY_SWITCH        %13.7e\n",  DUAL_ENERGY_SWITCH      );
+#     endif
       fprintf( Note, "WITH_COARSE_FINE_FLUX     %d\n",      amr->WithFlux           );
 #     ifndef SERIAL
       int MPI_Thread_Status;

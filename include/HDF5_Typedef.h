@@ -117,6 +117,7 @@ struct Makefile_t
 #  ifdef RSOLVER
    int RSolver;
 #  endif
+   int DualEnergy;
 
 #  elif ( MODEL == MHD )
 #  warning : WAIT MHD !!!
@@ -411,6 +412,9 @@ struct InputPara_t
 #  endif
 #  if ( MODEL == HYDRO  ||  MODEL == MHD )
    double MinPres;
+#  endif
+#  ifdef DUAL_ENERGY
+   double DualEnergySwitch;
 #  endif
 
 // self-gravity

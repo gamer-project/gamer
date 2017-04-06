@@ -497,6 +497,11 @@ void Init_Load_Parameter()
 #  endif
 
    getline( &input_line, &len, File );
+#  ifdef DUAL_ENERGY
+   sscanf( input_line, "%lf%s",  &DUAL_ENERGY_SWITCH,       string );
+#  endif
+
+   getline( &input_line, &len, File );
 
 
 // self-gravity

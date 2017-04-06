@@ -103,6 +103,7 @@
 0           OPT__RESET_FLUID          # reset fluid variables after each update --> edit "Flu_ResetByUser"
 0.0         MIN_DENS                  # minimum density  (must >= 0.0) ##HYDRO, MHD, and ELBDM ONLY##
 0.0         MIN_PRES                  # minimum pressure (must >= 0.0) ##HYDRO and MHD ONLY##
+-1.0        DUAL_ENERGY_SWITCH        # use dual-energy formalism if E_int/E_kin < DUAL_ENERGY_SWITCH (<0:default [1.0e-4]) ##DUAL_ENERGY ONLY##
 
 1.0e-5      NEWTON_G                  # gravitational constant (will be overwritten if OPT__UNIT or COMOVING is on)
 -1.0        SOR_OMEGA                 # over-relaxation parameter for SOR (<0:default)
