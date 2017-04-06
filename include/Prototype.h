@@ -79,6 +79,10 @@ real CPU_GetPressure( const real Dens, const real MomX, const real MomY, const r
 real CPU_GetTemperature( const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy,
                          const real Gamma_m1, const bool CheckMinPres, const real MinPres );
 void CPU_NormalizePassive( const real GasDens, real Passive[], const int NNorm, const int NormIdx[] );
+#if ( DUAL_ENERGY == DE_ENTROPY )
+real CPU_Fluid2Entropy( const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy, const real Gamma );
+real CPU_DensPres2Entropy( const real Dens, const real Pres, const real Gamma );
+#endif
 real CPU_CheckMinPresInEngy( const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy,
                              const real Gamma_m1, const real _Gamma_m1, const real MinPres );
 void Flu_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, const double dt, const int SaveSg,

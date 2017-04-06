@@ -8,6 +8,9 @@
 real CPU_CheckMinPres( const real InPres, const real MinPres );
 real CPU_GetPressure( const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy,
                       const real Gamma_m1, const bool CheckMinPres, const real MinPres );
+#if ( DUAL_ENERGY == DE_ENTROPY )
+real CPU_DensPres2Entropy( const real Dens, const real Pres, const real Gamma );
+#endif
 
 
 
@@ -395,6 +398,76 @@ void CPU_NormalizePassive( const real GasDens, real Passive[], const int NNorm, 
    for (int v=0; v<NNorm; v++)   Passive[ NormIdx[v] ] *= Norm;
 
 } // FUNCTION : CPU_NormalizePassive
+
+
+
+#if ( DUAL_ENERGY == DE_ENTROPY )
+//-------------------------------------------------------------------------------------------------------
+// Function    :  CPU_Fluid2Entropy
+// Description :  Evaluate the gas entropy from the input fluid variables
+//                --> Here entropy is defined as "pressure / density^(Gamma-1)"
+//
+// Note        :  1. Used by the dual-energy formalism
+//                2. Invoked by the functions "Hydro_Init_StartOver_AssignData, ..."
+//                3. Currently this function does NOT apply the minimum pressure check when calling CPU_GetPressure()
+//                   --> However, note that CPU_DensPres2Entropy() does apply a floor value (TINY_VALUE) for entropy
+//
+// Parameter   :  Dens     : Mass density
+//                MomX/Y/Z : Momentum density
+//                Engy     : Energy density
+//                Gamma    : Adiabatic index
+//
+// Return      :  Entropy
+//-------------------------------------------------------------------------------------------------------
+real CPU_Fluid2Entropy( const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy, const real Gamma )
+{
+
+// Currently this function does NOT apply the minimum pressure check when calling CPU_GetPressure()
+   const bool CheckMinPres_No = false;
+   const real Gamma_m1        = Gamma - (real)1.0;
+
+   real Pres, Entropy;
+
+// calculate pressure and convert it to entropy
+   Pres    = CPU_GetPressure( Dens, MomX, MomY, MomZ, Engy, Gamma_m1, CheckMinPres_No, NULL_REAL );
+   Entropy = CPU_DensPres2Entropy( Dens, Pres, Gamma );
+
+   return Entropy;
+
+} // FUNCTION : CPU_Fluid2Entropy
+
+
+
+//-------------------------------------------------------------------------------------------------------
+// Function    :  CPU_DensPres2Entropy
+// Description :  Evaluate the gas entropy from the input density and pressure
+//                --> Here entropy is defined as "pressure / density^(Gamma-1)"
+//
+// Note        :  1. Used by the dual-energy formalism
+//                2. Invoked by the functions "CPU_Fluid2Entropy, ..."
+//                3. A floor value (TINY_VALUE) is applied to the returned value
+//
+// Parameter   :  Dens  : Mass density
+//                Pres  : Pressure
+//                Gamma : Adiabatic index
+//
+// Return      :  Entropy
+//-------------------------------------------------------------------------------------------------------
+real CPU_DensPres2Entropy( const real Dens, const real Pres, const real Gamma )
+{
+
+   real Entropy;
+
+// calculate entropy
+   Entropy = Pres*POW( Dens, (real)1.0-Gamma );
+
+// apply a floor value
+   Entropy = FMAX( Entropy, TINY_NUMBER );
+
+   return Entropy;
+
+} // FUNCTION : CPU_DensPres2Entropy
+#endif // #if ( DUAL_ENERGY == DE_ENTROPY )
 
 
 

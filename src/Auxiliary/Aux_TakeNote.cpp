@@ -148,6 +148,16 @@ void Aux_TakeNote()
       fprintf( Note, "RSOLVER                   UNKNOWN\n" );
 #     endif
 
+#     if   ( DUAL_ENERGY == DE_ENTROPY )
+      fprintf( Note, "DUAL_ENERGY               DE_ENTROPY\n" );
+#     elif ( DUAL_ENERGY == DE_EINT )
+      fprintf( Note, "DUAL_ENERGY               DE_EINT\n" );
+#     elif ( DUAL_ENERGY == NONE )
+      fprintf( Note, "DUAL_ENERGY               NONE\n" );
+#     else
+      fprintf( Note, "DUAL_ENERGY               UNKNOWN\n" );
+#     endif
+
 //    c. options in MHD
 #     elif ( MODEL == MHD )
 #     warning : WAIT MHD !!!

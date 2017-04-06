@@ -616,6 +616,10 @@ void Aux_Check_Parameter()
 #     error : ERROR : unsupported Riemann solver (EXACT/ROE/HLLE/HLLC) !!
 #  endif
 
+#  if ( defined DUAL_ENERGY  &&  DUAL_ENERGY != DE_ENTROPY )
+#     error : ERROR : unsupported dual-energy formalism (DE_ENTROPY only, DE_EINT is not supported yet) !!
+#  endif
+
 #  if ( defined CHECK_INTERMEDIATE  &&  CHECK_INTERMEDIATE != EXACT  &&  CHECK_INTERMEDIATE != HLLE  &&  \
         CHECK_INTERMEDIATE != HLLC )
 #     error : ERROR : unsupported option in CHECK_INTERMEDIATE (EXACT/HLLE/HLLC) !!

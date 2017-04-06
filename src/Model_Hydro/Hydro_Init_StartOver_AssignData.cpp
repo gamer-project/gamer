@@ -103,6 +103,13 @@ void Hydro_Init_StartOver_AssignData( const int lv )
          fluid[ENGY] = CPU_CheckMinPresInEngy( fluid[DENS], fluid[MOMX], fluid[MOMY], fluid[MOMZ], fluid[ENGY],
                                                Gamma_m1, _Gamma_m1, MIN_PRES );
 
+//       calculate the dual-energy variable (entropy or internal energy)
+#        if   ( DUAL_ENERGY == DE_ENTROPY )
+         fluid[ENTROPY] = CPU_Fluid2Entropy( fluid[DENS], fluid[MOMX], fluid[MOMY], fluid[MOMZ], fluid[ENGY], GAMMA );
+#        elif ( DUAL_ENERGY == DE_EINT )
+#        error : DE_EINT is NOT supported yet !!
+#        endif
+
 //       floor and normalize passive scalars
 #        if ( NCOMP_PASSIVE > 0 )
          for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)  fluid[v] = FMAX( fluid[v], TINY_NUMBER );
@@ -130,6 +137,13 @@ void Hydro_Init_StartOver_AssignData( const int lv )
          fluid[DENS] = FMAX( fluid[DENS], (real)MIN_DENS );
          fluid[ENGY] = CPU_CheckMinPresInEngy( fluid[DENS], fluid[MOMX], fluid[MOMY], fluid[MOMZ], fluid[ENGY],
                                                Gamma_m1, _Gamma_m1, MIN_PRES );
+
+//       calculate the dual-energy variable (entropy or internal energy)
+#        if   ( DUAL_ENERGY == DE_ENTROPY )
+         fluid[ENTROPY] = CPU_Fluid2Entropy( fluid[DENS], fluid[MOMX], fluid[MOMY], fluid[MOMZ], fluid[ENGY], GAMMA );
+#        elif ( DUAL_ENERGY == DE_EINT )
+#        error : DE_EINT is NOT supported yet !!
+#        endif
 
 //       floor and normalize passive scalars
 #        if ( NCOMP_PASSIVE > 0 )
