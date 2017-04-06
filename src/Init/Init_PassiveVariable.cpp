@@ -67,9 +67,11 @@ void Init_PassiveVariable()
 */
 
 
-// 1-3. internal energy in the dual-energy formalism
+// 1-3. entropy (or internal energy) in the dual-energy formalism
 // --> we always store it as the last passive variable
-#  ifdef DUAL_ENERGY
+#  if   ( DUAL_ENERGY == DE_ENTROPY )
+   sprintf( PassiveFieldName_Grid[NCOMP_PASSIVE-1], "Entropy" );
+#  elif ( DUAL_ENERGY == DE_EINT )
    sprintf( PassiveFieldName_Grid[NCOMP_PASSIVE-1], "Eint" );
 #  endif
 

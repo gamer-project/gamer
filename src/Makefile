@@ -57,10 +57,10 @@ SIMU_OPTION += -DLR_SCHEME=PPM
 # Riemann solver: EXACT/ROE/HLLE/HLLC ##ALL ARE USELESS IN RTVD, HLLE/HLLC ARE USELESS IN WAF##
 SIMU_OPTION += -DRSOLVER=ROE
 
-# dual energy formalism
-#SIMU_OPTION += -DDUAL_ENERGY
+# dual energy formalism: DE_ENTROPY/DE_EINT (evolve entropy or internal energy)
+#SIMU_OPTION += -DDUAL_ENERGY=DE_ENTROPY
 
-# number of passively advected scalars (excluding internal energy even when DUAL_ENERGY is on)
+# number of passively advected scalars (**excluding** entropy or internal energy even when DUAL_ENERGY is on)
 # --> for simulations without any passive scalar, please set this variable to 0 and do NOT comment it out
 SIMU_OPTION += -DNCOMP_PASSIVE_MAKEFILE=3
 
@@ -582,7 +582,7 @@ else
 CXXWARN_FLAG := -Wextra -Wall -Wswitch -Wformat -Wchar-subscripts -Wparentheses -Wmultichar \
                 -Wtrigraphs -Wpointer-arith -Wcast-align -Wreturn-type -Wno-unused-function
 CXXWARN_FLAG += -Wno-unused-variable -Wno-unused-parameter -Wno-maybe-uninitialized -Wno-unused-but-set-variable \
-                -Wno-unused-result
+                -Wno-unused-result -Wundef
 endif
 
 ifeq "$(findstring OPENMP, $(SIMU_OPTION))" ""

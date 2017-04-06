@@ -15,50 +15,55 @@
 // ########################
 
 // option == NONE --> the option is turned off
-#define NONE      0
+#define NONE         0
 
 
 // GPU architecture
-#define FERMI     1
-#define KEPLER    2
-#define MAXWELL   3
-#define PASCAL    4
+#define FERMI        1
+#define KEPLER       2
+#define MAXWELL      3
+#define PASCAL       4
 
 
 // models
-#define HYDRO     1
-#define MHD       2
-#define ELBDM     3
-#define PAR_ONLY  4
+#define HYDRO        1
+#define MHD          2
+#define ELBDM        3
+#define PAR_ONLY     4
 
 
 // hydrodynamic schemes
-#define RTVD      1
-#define WAF       2
-#define MHM       3
-#define MHM_RP    4
-#define CTU       5
+#define RTVD         1
+#define WAF          2
+#define MHM          3
+#define MHM_RP       4
+#define CTU          5
 
 
 // data reconstruction schemes
-#define PLM       1
-#define PPM       2
+#define PLM          1
+#define PPM          2
 
 
 // Riemann solvers
-#define EXACT     1
-#define ROE       2
-#define HLLE      3
-#define HLLC      4
+#define EXACT        1
+#define ROE          2
+#define HLLE         3
+#define HLLC         4
+
+
+// dual-energy variable
+#define DE_ENTROPY   1
+#define DE_EINT      2
 
 
 // Poisson solvers
-#define SOR       1
-#define MG        2
+#define SOR          1
+#define MG           2
 
 
 // load-balance parallelization
-#define HILBERT   1
+#define HILBERT      1
 
 
 // NCOMP_FLUID : number of active components in each cell (i.e., the "fluid" array)
@@ -89,7 +94,7 @@
 
 
 // number of passively advected components in each cell
-// --> including internal energy when the dual energy formalism is adopted
+// --> including entropy (or internal energy) when the dual energy formalism is adopted
 #if (  ( MODEL == HYDRO || MODEL == MHD )  &&  defined DUAL_ENERGY  )
 #  define NCOMP_PASSIVE       ( NCOMP_PASSIVE_MAKEFILE + 1 )
 #else
@@ -148,8 +153,10 @@
 #  define  OXYGEN             ( NCOMP_FLUID + 1 )
 #  define  FE                 ( NCOMP_FLUID + 2 )
 */
-// always store internal energy for the dual energy formalism as the last passive variable
-#  ifdef DUAL_ENERGY
+// always store entropy (or internal energy) for the dual energy formalism as the last passive variable
+#  if   ( DUAL_ENERGY == DE_ENTROPY )
+#  define  ENTROPY            ( NCOMP_TOTAL-1 )
+#  elif ( DUAL_ENERGY == DE_EINT )
 #  define  EINT               ( NCOMP_TOTAL-1 )
 #  endif
 #endif
@@ -169,8 +176,10 @@
 #  define  FLUX_OXYGEN        ( NFLUX_FLUID + 1 )
 #  define  FLUX_FE            ( NFLUX_FLUID + 2 )
 */
-// always store internal energy for the dual energy formalism as the last passive variable
-#  ifdef DUAL_ENERGY
+// always store entropy (or internal energy) for the dual energy formalism as the last passive variable
+#  if   ( DUAL_ENERGY == DE_ENTROPY )
+#  define  FLUX_ENTROPY       ( NFLUX_TOTAL-1 )
+#  elif ( DUAL_ENERGY == DE_EINT )
 #  define  FLUX_EINT          ( NFLUX_TOTAL-1 )
 #  endif
 #endif
@@ -189,9 +198,11 @@
 #  define _OXYGEN             ( 1 << OXYGEN )
 #  define _FE                 ( 1 << FE     )
 */
-// always store internal energy for the dual energy formalism as the last passive variable
-#  ifdef DUAL_ENERGY
-#  define _EINT               ( 1 << EINT )
+// always store entropy (or internal energy) for the dual energy formalism as the last passive variable
+#  if   ( DUAL_ENERGY == DE_ENTROPY )
+#  define _ENTROPY            ( 1 << ENTROPY )
+#  elif ( DUAL_ENERGY == DE_EINT )
+#  define _EINT               ( 1 << EINT    )
 #  endif
 #endif // #if ( NCOMP_PASSIVE > 0 )
 
@@ -209,9 +220,11 @@
 #  define _FLUX_OXYGEN        ( 1 << FLUX_OXYGEN )
 #  define _FLUX_FE            ( 1 << FLUX_FE     )
 */
-// always store internal energy for the dual energy formalism as the last passive variable
-#  ifdef DUAL_ENERGY
-#  define _FLUX_EINT          ( 1 << FLUX_EINT )
+// always store entropy (or internal energy) for the dual energy formalism as the last passive variable
+#  if   ( DUAL_ENERGY == DE_ENTROPY )
+#  define _FLUX_ENTROPY       ( 1 << FLUX_ENTROPY )
+#  elif ( DUAL_ENERGY == DE_EINT )
+#  define _FLUX_EINT          ( 1 << FLUX_EINT    )
 #  endif
 #endif // #if ( NFLUX_PASSIVE > 0 )
 
