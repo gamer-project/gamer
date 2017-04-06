@@ -105,7 +105,7 @@ void Hydro_Init_StartOver_AssignData( const int lv )
 
 //       calculate the dual-energy variable (entropy or internal energy)
 #        if   ( DUAL_ENERGY == DE_ENTROPY )
-         fluid[ENTROPY] = CPU_Fluid2Entropy( fluid[DENS], fluid[MOMX], fluid[MOMY], fluid[MOMZ], fluid[ENGY], GAMMA );
+         fluid[ENTROPY] = CPU_Fluid2Entropy( fluid[DENS], fluid[MOMX], fluid[MOMY], fluid[MOMZ], fluid[ENGY], Gamma_m1 );
 #        elif ( DUAL_ENERGY == DE_EINT )
 #        error : DE_EINT is NOT supported yet !!
 #        endif
@@ -140,7 +140,7 @@ void Hydro_Init_StartOver_AssignData( const int lv )
 
 //       calculate the dual-energy variable (entropy or internal energy)
 #        if   ( DUAL_ENERGY == DE_ENTROPY )
-         fluid[ENTROPY] = CPU_Fluid2Entropy( fluid[DENS], fluid[MOMX], fluid[MOMY], fluid[MOMZ], fluid[ENGY], GAMMA );
+         fluid[ENTROPY] = CPU_Fluid2Entropy( fluid[DENS], fluid[MOMX], fluid[MOMY], fluid[MOMZ], fluid[ENGY], Gamma_m1 );
 #        elif ( DUAL_ENERGY == DE_EINT )
 #        error : DE_EINT is NOT supported yet !!
 #        endif

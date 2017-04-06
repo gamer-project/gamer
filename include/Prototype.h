@@ -80,8 +80,9 @@ real CPU_GetTemperature( const real Dens, const real MomX, const real MomY, cons
                          const real Gamma_m1, const bool CheckMinPres, const real MinPres );
 void CPU_NormalizePassive( const real GasDens, real Passive[], const int NNorm, const int NormIdx[] );
 #if ( DUAL_ENERGY == DE_ENTROPY )
-real CPU_Fluid2Entropy( const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy, const real Gamma );
-real CPU_DensPres2Entropy( const real Dens, const real Pres, const real Gamma );
+real CPU_Fluid2Entropy( const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy, const real Gamma_m1 );
+real CPU_DensPres2Entropy( const real Dens, const real Pres, const real Gamma_m1 );
+real CPU_DensEntropy2Pres( const real Dens, const real Entropy, const real Gamma_m1, const real MinPres );
 #endif
 real CPU_CheckMinPresInEngy( const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy,
                              const real Gamma_m1, const real _Gamma_m1, const real MinPres );

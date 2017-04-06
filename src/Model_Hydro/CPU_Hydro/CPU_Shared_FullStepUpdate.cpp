@@ -19,6 +19,8 @@
 //                dt          : Time interval to advance solution
 //                dh          : Grid size
 //                Gamma       : Ratio of specific heats
+//                MinDens     : Minimum allowed density
+//                MinPres     : Minimum allowed pressure
 //                NormPassive : true --> normalize passive scalars so that the sum of their mass density
 //                                       is equal to the gas mass density
 //                NNorm       : Number of passive scalars to be normalized
@@ -28,15 +30,17 @@
 //-------------------------------------------------------------------------------------------------------
 void CPU_FullStepUpdate( const real Input[][ FLU_NXT*FLU_NXT*FLU_NXT ], real Output[][ PS2*PS2*PS2 ],
                          const real Flux[][3][NCOMP_TOTAL], const real dt, const real dh,
-                         const real Gamma, const bool NormPassive, const int NNorm, const int NormIdx[] )
+                         const real Gamma, const real MinDens, const real MinPres,
+                         const bool NormPassive, const int NNorm, const int NormIdx[] )
 {
 
-   /*
-   const real  Gamma_m1 = Gamma - (real)1.0;
-   const real _Gamma_m1 = (real)1.0 / Gamma_m1;
-   */
-   const int  dID1[3]   = { 1, N_FL_FLUX, N_FL_FLUX*N_FL_FLUX };
-   const real dt_dh     = dt/dh;
+#  ifdef DUAL_ENERGY
+   const bool CheckMinPres_Yes = true;
+   const real  Gamma_m1        = Gamma - (real)1.0;
+   const real _Gamma_m1        = (real)1.0 / Gamma_m1;
+#  endif
+   const int  dID1[3]          = { 1, N_FL_FLUX, N_FL_FLUX*N_FL_FLUX };
+   const real dt_dh            = dt/dh;
 
    int  ID1, ID2, ID3;
    real dF[3][NCOMP_TOTAL];
@@ -85,6 +89,42 @@ void CPU_FullStepUpdate( const real Input[][ FLU_NXT*FLU_NXT*FLU_NXT ], real Out
          for (int v=0; v<NCOMP_PASSIVE; v++)    Output[ NCOMP_FLUID + v ][ID2] = Passive[v];
       }
 #     endif
+
+
+//    determine whether or not to use the dual-energy variable (entropy or internal energy) to correct the total energy density
+//    --> do this after applying the floor value to the dual-energy variable
+#     ifdef DUAL_ENERGY
+      real Dens, Pres, Etot, Eint, Ekin, MomX, MomY, MomZ;
+
+      Dens = FMAX( Output[DENS][ID2], MinDens );
+      MomX = Output[MOMX][ID2];
+      MomY = Output[MOMY][ID2];
+      MomZ = Output[MOMZ][ID2];
+      Etot = Output[ENGY][ID2];
+      Pres = CPU_GetPressure( Dens, MomX, MomY, MomZ, Etot, Gamma_m1, CheckMinPres_Yes, MinPres );
+      Eint = Pres*_Gamma_m1;
+      Ekin = Etot - Eint;
+
+//    correct total energy
+//    if ( Eint/Ekin < XXX )
+      if ( true )
+      {
+#        if   ( DUAL_ENERGY == DE_ENTROPY )
+         Pres = CPU_DensEntropy2Pres( Dens, Output[ENTROPY][ID2], Gamma_m1, MinPres );
+         Eint = Pres*_Gamma_m1;
+#        elif ( DUAL_ENERGY == DE_EINT )
+#        error : DE_EINT is NOT supported yet !!
+#        endif
+
+         Output[ENGY][ID2] = Ekin + Eint;
+      }
+
+//    correct entropy
+      else
+      {
+         Output[ENTROPY][ID2] = CPU_DensPres2Entropy( Dens, Pres, Gamma_m1 );
+      } // if ( ) ... else ...
+#     endif // #ifdef DUAL_ENERGY
 
 
 //    check the negative density and energy
