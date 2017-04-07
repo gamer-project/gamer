@@ -1,0 +1,6 @@
+# parameters for the HYDRO acoustic wave test
+1.0e-6      Acoustic_RhoAmp         # amplitude of the density perturbation (assuming background density = 1.0)
+1.0         Acoustic_Cs             # sound speed
+0.0         Acoustic_v0             # background velocity
++1          Acoustic_Sign           # (+1/-1) --> (right/left-moving wave)
+0.2         Acoustic_Phase0         # initial phase shift
