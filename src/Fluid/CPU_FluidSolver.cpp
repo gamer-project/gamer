@@ -39,7 +39,7 @@ void CPU_FluidSolver_MHM( const real Flu_Array_In[][NCOMP_TOTAL][ FLU_NXT*FLU_NX
                           const bool StoreFlux, const LR_Limiter_t LR_Limiter, const real MinMod_Coeff,
                           const real EP_Coeff, const double Time, const OptGravityType_t GravityType,
                           const double ExtAcc_AuxArray[], const real MinDens, const real MinPres,
-                          const bool NormPassive, const int NNorm, const int NormIdx[] );
+                          const real DualEnergySwitch, const bool NormPassive, const int NNorm, const int NormIdx[] );
 #elif ( FLU_SCHEME == CTU )
 void CPU_FluidSolver_CTU( const real Flu_Array_In[][NCOMP_TOTAL][ FLU_NXT*FLU_NXT*FLU_NXT ],
                           real Flu_Array_Out     [][NCOMP_TOTAL][ PS2*PS2*PS2 ],
@@ -50,7 +50,7 @@ void CPU_FluidSolver_CTU( const real Flu_Array_In[][NCOMP_TOTAL][ FLU_NXT*FLU_NX
                           const bool StoreFlux, const LR_Limiter_t LR_Limiter, const real MinMod_Coeff,
                           const real EP_Coeff, const double Time, const OptGravityType_t GravityType,
                           const double ExtAcc_AuxArray[], const real MinDens, const real MinPres,
-                          const bool NormPassive, const int NNorm, const int NormIdx[] );
+                          const real DualEnergySwitch, const bool NormPassive, const int NNorm, const int NormIdx[] );
 #endif // FLU_SCHEME
 
 #elif ( MODEL == MHD )
@@ -116,6 +116,7 @@ void CPU_ELBDMSolver( real Flu_Array_In [][FLU_NIN    ][ FLU_NXT*FLU_NXT*FLU_NXT
 //                Time                 : Current physical time                                     (for UNSPLIT_GRAVITY only)
 //                GravityType          : Types of gravity --> self-gravity, external gravity, both (for UNSPLIT_GRAVITY only)
 //                MinDens/Pres         : Minimum allowed density and pressure
+//                DualEnergySwitch     : Use the dual-energy formalism if E_int/E_kin < DualEnergySwitch
 //                NormPassive          : true --> normalize passive scalars so that the sum of their mass density
 //                                                is equal to the gas mass density
 //                NNorm                : Number of passive scalars to be normalized
@@ -137,7 +138,7 @@ void CPU_FluidSolver( real h_Flu_Array_In [][FLU_NIN    ][ FLU_NXT*FLU_NXT*FLU_N
                       const WAF_Limiter_t WAF_Limiter, const real ELBDM_Eta, real ELBDM_Taylor3_Coeff,
                       const bool ELBDM_Taylor3_Auto, const bool GetMinDtInfo,
                       const double Time, const OptGravityType_t GravityType, const real MinDens, const real MinPres,
-                      const bool NormPassive, const int NNorm, const int NormIdx[] )
+                      const real DualEnergySwitch, const bool NormPassive, const int NNorm, const int NormIdx[] )
 {
 
 // check
@@ -175,13 +176,13 @@ void CPU_FluidSolver( real h_Flu_Array_In [][FLU_NIN    ][ FLU_NXT*FLU_NXT*FLU_N
 
       CPU_FluidSolver_MHM ( h_Flu_Array_In, h_Flu_Array_Out, h_Flux_Array, h_Corner_Array, h_Pot_Array_USG,
                             NPatchGroup, dt, dh, Gamma, StoreFlux, LR_Limiter, MinMod_Coeff, EP_Coeff, Time,
-                            GravityType, ExtAcc_AuxArray, MinDens, MinPres, NormPassive, NNorm, NormIdx );
+                            GravityType, ExtAcc_AuxArray, MinDens, MinPres, DualEnergySwitch, NormPassive, NNorm, NormIdx );
 
 #     elif ( FLU_SCHEME == CTU )
 
       CPU_FluidSolver_CTU ( h_Flu_Array_In, h_Flu_Array_Out, h_Flux_Array, h_Corner_Array, h_Pot_Array_USG,
                             NPatchGroup, dt, dh, Gamma, StoreFlux, LR_Limiter, MinMod_Coeff, EP_Coeff, Time,
-                            GravityType, ExtAcc_AuxArray, MinDens, MinPres, NormPassive, NNorm, NormIdx );
+                            GravityType, ExtAcc_AuxArray, MinDens, MinPres, DualEnergySwitch, NormPassive, NNorm, NormIdx );
 
 #     else
 

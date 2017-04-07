@@ -12,25 +12,26 @@
 // Function    :  CPU_FullStepUpdate
 // Description :  Evaluate the full-step solution
 //
-// Parameter   :  Input       : Array storing the input initial data
-//                Output      : Array to store the ouptut updated data
-//                Flux        : Array storing the input face-centered flux
-//                              --> Size is assumed to be N_FL_FLUX^3
-//                dt          : Time interval to advance solution
-//                dh          : Grid size
-//                Gamma       : Ratio of specific heats
-//                MinDens     : Minimum allowed density
-//                MinPres     : Minimum allowed pressure
-//                NormPassive : true --> normalize passive scalars so that the sum of their mass density
-//                                       is equal to the gas mass density
-//                NNorm       : Number of passive scalars to be normalized
-//                              --> Should be set to the global variable "PassiveNorm_NVar"
-//                NormIdx     : Target variable indices to be normalized
-//                              --> Should be set to the global variable "PassiveNorm_VarIdx"
+// Parameter   :  Input            : Array storing the input initial data
+//                Output           : Array to store the ouptut updated data
+//                Flux             : Array storing the input face-centered flux
+//                                   --> Size is assumed to be N_FL_FLUX^3
+//                dt               : Time interval to advance solution
+//                dh               : Grid size
+//                Gamma            : Ratio of specific heats
+//                MinDens          : Minimum allowed density
+//                MinPres          : Minimum allowed pressure
+//                DualEnergySwitch : Use the dual-energy formalism if E_int/E_kin < DualEnergySwitch
+//                NormPassive      : true --> normalize passive scalars so that the sum of their mass density
+//                                            is equal to the gas mass density
+//                NNorm            : Number of passive scalars to be normalized
+//                                   --> Should be set to the global variable "PassiveNorm_NVar"
+//                NormIdx          : Target variable indices to be normalized
+//                                   --> Should be set to the global variable "PassiveNorm_VarIdx"
 //-------------------------------------------------------------------------------------------------------
 void CPU_FullStepUpdate( const real Input[][ FLU_NXT*FLU_NXT*FLU_NXT ], real Output[][ PS2*PS2*PS2 ],
                          const real Flux[][3][NCOMP_TOTAL], const real dt, const real dh,
-                         const real Gamma, const real MinDens, const real MinPres,
+                         const real Gamma, const real MinDens, const real MinPres, const real DualEnergySwitch,
                          const bool NormPassive, const int NNorm, const int NormIdx[] )
 {
 
@@ -106,8 +107,7 @@ void CPU_FullStepUpdate( const real Input[][ FLU_NXT*FLU_NXT*FLU_NXT ], real Out
       Ekin = Etot - Eint;
 
 //    correct total energy
-//    if ( Eint/Ekin < XXX )
-      if ( true )
+      if ( Eint/Ekin < DualEnergySwitch )
       {
 #        if   ( DUAL_ENERGY == DE_ENTROPY )
          Pres = CPU_DensEntropy2Pres( Dens, Output[ENTROPY][ID2], Gamma_m1, MinPres );
@@ -123,7 +123,7 @@ void CPU_FullStepUpdate( const real Input[][ FLU_NXT*FLU_NXT*FLU_NXT ], real Out
       else
       {
          Output[ENTROPY][ID2] = CPU_DensPres2Entropy( Dens, Pres, Gamma_m1 );
-      } // if ( ) ... else ...
+      } // if ( Eint/Ekin < DualEnergySwitch ) ... else ...
 #     endif // #ifdef DUAL_ENERGY
 
 

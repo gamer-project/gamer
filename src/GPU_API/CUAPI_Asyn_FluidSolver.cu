@@ -185,6 +185,7 @@ extern cudaStream_t *Stream;
 //                GravityType          : Types of gravity --> self-gravity, external gravity, both (for UNSPLIT_GRAVITY only)
 //                GPU_NStream          : Number of CUDA streams for the asynchronous memory copy
 //                MinDens/Pres         : Minimum allowed density and pressure
+//                DualEnergySwitch     : Use the dual-energy formalism if E_int/E_kin < DualEnergySwitch
 //                NormPassive          : true --> normalize passive scalars so that the sum of their mass density
 //                                                is equal to the gas mass density
 //                NNorm                : Number of passive scalars to be normalized
@@ -204,7 +205,8 @@ void CUAPI_Asyn_FluidSolver( real h_Flu_Array_In [][FLU_NIN    ][ FLU_NXT*FLU_NX
                              const WAF_Limiter_t WAF_Limiter, const real ELBDM_Eta, real ELBDM_Taylor3_Coeff,
                              const bool ELBDM_Taylor3_Auto, const bool GetMinDtInfo, const double Time,
                              const OptGravityType_t GravityType, const int GPU_NStream,
-                             const real MinDens, const real MinPres, const bool NormPassive, const int NNorm )
+                             const real MinDens, const real MinPres, const real DualEnergySwitch,
+                             const bool NormPassive, const int NNorm )
 {
 
 // check

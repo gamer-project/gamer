@@ -365,11 +365,15 @@ void Solver( const Solver_t TSolver, const int lv, const double TimeNew, const d
 #  endif
 
 #  if ( MODEL != HYDRO  &&  MODEL != MHD  &&  MODEL != ELBDM )
-   const real   MIN_DENS                = NULL_REAL;
+   const double MIN_DENS                = NULL_REAL;
 #  endif
 #  if ( MODEL != HYDRO  &&  MODEL != MHD )
-   const real   MIN_PRES                = NULL_REAL;
+   const double MIN_PRES                = NULL_REAL;
 #  endif
+
+   #ifndef DUAL_ENERGY
+   const double DUAL_ENERGY_SWITCH      = NULL_REAL;
+   #endif
 
 #  ifndef QUARTIC_SELF_INTERACTION
    const double ELBDM_LAMBDA            = NULL_REAL;
@@ -398,14 +402,14 @@ void Solver( const Solver_t TSolver, const int lv, const double TimeNew, const d
                                  NPG, dt, dh, GAMMA, OPT__FIXUP_FLUX, Flu_XYZ,
                                  OPT__LR_LIMITER, MINMOD_COEFF, EP_COEFF, OPT__WAF_LIMITER, ELBDM_ETA,
                                  ELBDM_TAYLOR3_COEFF, ELBDM_TAYLOR3_AUTO, OPT__ADAPTIVE_DT, TimeOld, OPT__GRAVITY_TYPE, GPU_NSTREAM,
-                                 MIN_DENS, MIN_PRES, OPT__NORMALIZE_PASSIVE, PassiveNorm_NVar );
+                                 MIN_DENS, MIN_PRES, DUAL_ENERGY_SWITCH, OPT__NORMALIZE_PASSIVE, PassiveNorm_NVar );
 #        else
          CPU_FluidSolver       ( h_Flu_Array_F_In[ArrayID], h_Flu_Array_F_Out[ArrayID], h_Flux_Array[ArrayID],
                                  h_Corner_Array_F[ArrayID], h_MinDtInfo_Fluid_Array[ArrayID], h_Pot_Array_USG_F[ArrayID],
                                  NPG, dt, dh, GAMMA, OPT__FIXUP_FLUX, Flu_XYZ,
                                  OPT__LR_LIMITER, MINMOD_COEFF, EP_COEFF, OPT__WAF_LIMITER, ELBDM_ETA,
                                  ELBDM_TAYLOR3_COEFF, ELBDM_TAYLOR3_AUTO, OPT__ADAPTIVE_DT, TimeOld, OPT__GRAVITY_TYPE,
-                                 MIN_DENS, MIN_PRES, OPT__NORMALIZE_PASSIVE, PassiveNorm_NVar, PassiveNorm_VarIdx );
+                                 MIN_DENS, MIN_PRES, DUAL_ENERGY_SWITCH, OPT__NORMALIZE_PASSIVE, PassiveNorm_NVar, PassiveNorm_VarIdx );
 #        endif
          break;
 
