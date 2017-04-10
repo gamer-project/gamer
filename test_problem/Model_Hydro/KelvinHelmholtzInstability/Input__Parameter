@@ -1,7 +1,7 @@
 1.0         BOX_SIZE                  # size of the simulation box (Mpc/h in COMOVING)
-128         NX0_TOT[0]                # number of base-level grids in the x direction
+16          NX0_TOT[0]                # number of base-level grids in the x direction
 128         NX0_TOT[1]                # number of base-level grids in the y direction
-64          NX0_TOT[2]                # number of base-level grids in the z direction
+128         NX0_TOT[2]                # number of base-level grids in the z direction
 1           MPI_NRANK                 # total number of MPI ranks (= MPI_NRANK_X[0]*MPI_NRANK_X[1]*MPI_NRANK_X[2])
 1           MPI_NRANK_X[0]            # number of MPI ranks in the x direction
 1           MPI_NRANK_X[1]            # number of MPI ranks in the y direction
@@ -73,6 +73,8 @@
 0           OPT__MEMORY_POOL          # preallocate patches to reduce memory fragmentation (Input__MemoryPool) ##must turn on OPT__REUSE_MEMORY##
 
 0.1         LB_INPUT__WLI_MAX         # threshold for redistributing patches at all levels ##LOAD_BALANCE ONLY##
+-1.0        LB_INPUT__PAR_WEIGHT      # load-balance weighting of one particle over one cell (<0:default=0.0) ##LOAD_BALANCE and PARTICLE ONLY##
+1           OPT__RECORD_LOAD_BALANCE  # record the information of load balance
 
 1.40        GAMMA                     # ratio of specific heats (adiabatic index)
 0.6         MOLECULAR_WEIGHT          # mean molecular weight (currently it's only for calculating temperature in post-processing)
@@ -101,6 +103,7 @@
 0           OPT__RESET_FLUID          # reset fluid variables after each update --> edit "Flu_ResetByUser"
 0.0         MIN_DENS                  # minimum density  (must >= 0.0) ##HYDRO, MHD, and ELBDM ONLY##
 1.0e-5      MIN_PRES                  # minimum pressure (must >= 0.0) ##HYDRO and MHD ONLY##
+-1.0        DUAL_ENERGY_SWITCH        # use dual-energy formalism if E_int/E_kin < DUAL_ENERGY_SWITCH (<0:default [1.0e-4]) ##DUAL_ENERGY ONLY##
 
 1.0         NEWTON_G                  # gravitational constant (will be overwritten if OPT__UNIT or COMOVING is on)
 -1.0        SOR_OMEGA                 # over-relaxation parameter for SOR (<0:default)
