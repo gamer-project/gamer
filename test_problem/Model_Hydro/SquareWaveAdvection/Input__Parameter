@@ -1,7 +1,7 @@
 1.0         BOX_SIZE                  # size of the simulation box (Mpc/h in COMOVING)
 64          NX0_TOT[0]                # number of base-level grids in the x direction
-64          NX0_TOT[1]                # number of base-level grids in the y direction
-64          NX0_TOT[2]                # number of base-level grids in the z direction
+16          NX0_TOT[1]                # number of base-level grids in the y direction
+16          NX0_TOT[2]                # number of base-level grids in the z direction
 1           MPI_NRANK                 # total number of MPI ranks (= MPI_NRANK_X[0]*MPI_NRANK_X[1]*MPI_NRANK_X[2])
 1           MPI_NRANK_X[0]            # number of MPI ranks in the x direction
 1           MPI_NRANK_X[1]            # number of MPI ranks in the y direction
@@ -149,9 +149,9 @@
 0           OPT__OUTPUT_BASE          # only output the base-level data for the option "OPT__OUTPUT_PART"
 0           OPT__OUTPUT_POT           # output gravitational potential ##for OPT__OUTPUT_TOTAL only##
 0           OPT__OUTPUT_PAR_DENS      # (0, 1, 2) -> (off, dump particle/total mass density) ##for OPT__OUTPUT_TOTAL and PARTICLE ONLY##
-1           OPT__OUTPUT_MODE          # (1, 2, 3) -> (const step, const dt, dump table)
+2           OPT__OUTPUT_MODE          # (1, 2, 3) -> (const step, const dt, dump table)
 5           OUTPUT_STEP               # output data every OUTPUT_STEP step
-1.0         OUTPUT_DT                 # output data every OUTPUT_DT time interval
+1.0e-1      OUTPUT_DT                 # output data every OUTPUT_DT time interval
 0.0         OUTPUT_PART_X             # x coordinate for the option OPT__OUTPUT_PART
 0.0         OUTPUT_PART_Y             # y coordinate for the option OPT__OUTPUT_PART
 0.0         OUTPUT_PART_Z             # z coordinate for the option OPT__OUTPUT_PART

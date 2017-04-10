@@ -405,10 +405,16 @@ void Init_Load_Parameter()
    sscanf( input_line, "%d%s",   &temp_int,                 string );
    OPT__1ST_FLUX_CORR_SCHEME = (OptRSolver_t)temp_int;
 
+   getline( &input_line, &len, File );
+#  ifdef DUAL_ENERGY
+   sscanf( input_line, "%lf%s",  &DUAL_ENERGY_SWITCH,       string );
+#  endif
+
 #  elif ( MODEL == MHD )
 #  warning : WAIT MHD !!!
 
 #  else
+   getline( &input_line, &len, File );
    getline( &input_line, &len, File );
    getline( &input_line, &len, File );
    getline( &input_line, &len, File );
@@ -494,11 +500,6 @@ void Init_Load_Parameter()
    getline( &input_line, &len, File );
 #  if ( MODEL == HYDRO  ||  MODEL == MHD )
    sscanf( input_line, "%lf%s",  &MIN_PRES,                 string );
-#  endif
-
-   getline( &input_line, &len, File );
-#  ifdef DUAL_ENERGY
-   sscanf( input_line, "%lf%s",  &DUAL_ENERGY_SWITCH,       string );
 #  endif
 
    getline( &input_line, &len, File );

@@ -8,9 +8,9 @@ reset
 
 # target files
 # -----------------------------------------------------------
-FILE_IN_PREFIX  = 'HYDRO_ACOUSTIC_DENS'
+FILE_IN_PREFIX  = 'HYDRO_SQUARE_DENS'
 FILE_IN_SUFFIX  = ''
-FILE_OUT_PREFIX = 'Fig__ACOUSTIC_DENS'
+FILE_OUT_PREFIX = 'Fig__SQUARE_DENS'
 START_ID        = 0
 END_ID          = 24
 DELTA_ID        = 1
