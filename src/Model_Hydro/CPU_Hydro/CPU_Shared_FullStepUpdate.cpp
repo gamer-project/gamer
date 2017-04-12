@@ -102,9 +102,8 @@ void CPU_FullStepUpdate( const real Input[][ FLU_NXT*FLU_NXT*FLU_NXT ], real Out
       MomY = Output[MOMY][ID2];
       MomZ = Output[MOMZ][ID2];
       Etot = Output[ENGY][ID2];
-      Pres = CPU_GetPressure( Dens, MomX, MomY, MomZ, Etot, Gamma_m1, CheckMinPres_Yes, MinPres );
-      Eint = Pres*_Gamma_m1;
-      Ekin = Etot - Eint;
+      Ekin = (real)0.5*( SQR(MomX) + SQR(MomY) + SQR(MomZ) )/Dens;
+      Eint = Etot - Ekin;  // note that here Eint can even be negative due to numerical errors
 
 //    correct total energy
       if ( Eint/Ekin < DualEnergySwitch )
@@ -122,6 +121,7 @@ void CPU_FullStepUpdate( const real Input[][ FLU_NXT*FLU_NXT*FLU_NXT ], real Out
 //    correct entropy
       else
       {
+         Pres                 = Eint*Gamma_m1;
          Output[ENTROPY][ID2] = CPU_DensPres2Entropy( Dens, Pres, Gamma_m1 );
       } // if ( Eint/Ekin < DualEnergySwitch ) ... else ...
 #     endif // #ifdef DUAL_ENERGY
