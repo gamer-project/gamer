@@ -1,5 +1,7 @@
 # parameters for the HYDRO square wave advection test
-4.0      SquareAdv_RhoPeak    # peak density (assuming background density = 1.0)
-1.0      SquareAdv_Pres       # background pressure
-1.0      SquareAdv_Vel        # background velocity
--1.0     SquareAdv_Width      # width of the square wave (<=0:default [0.5*box_size])
+4.0      SquareAdv_RhoPeak       # peak density (assuming background density = 1.0)
+1.0      SquareAdv_Pres          # background pressure
+1.0      SquareAdv_Vel           # background velocity
+-1.0     SquareAdv_Width         # width of the square wave (<=0:default [0.5*box_size])
+0        SquareAdv_Smooth        # smooth out the discontinuity in the square wave (0/1:off/on)
+0.02     SquareAdv_Smooth_Eps    # width of the transition region used by SquareAdv_Smooth

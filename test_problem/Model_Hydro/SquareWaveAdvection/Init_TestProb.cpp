@@ -17,10 +17,12 @@ static void LoadTestProbParameter();
 
 // global variables in the HYDRO square wave advection test
 // =======================================================================================
-static double SquareAdv_RhoPeak;    // peak density (assuming background density = 1.0)
-static double SquareAdv_Pres;       // background pressure
-static double SquareAdv_Vel;        // background velocity
-static double SquareAdv_Width;      // width of the square wave (default = 0.5*box_size)
+static double SquareAdv_RhoPeak;       // peak density (assuming background density = 1.0)
+static double SquareAdv_Pres;          // background pressure
+static double SquareAdv_Vel;           // background velocity
+static double SquareAdv_Width;         // width of the square wave (default = 0.5*box_size)
+static bool   SquareAdv_Smooth;        // smooth out the discontinuity in the square wave
+static double SquareAdv_Smooth_Eps;    // width of the transition region used by SquareAdv_Smooth
 // =======================================================================================
 
 
@@ -77,10 +79,13 @@ void Init_TestProb()
       Aux_Message( stdout, "\n" );
       Aux_Message( stdout, "%s test :\n", TestProb );
       Aux_Message( stdout, "=============================================================================\n" );
-      Aux_Message( stdout, "NOTE : peak density        = % 14.7e\n", SquareAdv_RhoPeak );
-      Aux_Message( stdout, "       background pressure = % 14.7e\n", SquareAdv_Pres    );
-      Aux_Message( stdout, "       background velocity = % 14.7e\n", SquareAdv_Vel     );
-      Aux_Message( stdout, "       square wave width   = % 14.7e\n", SquareAdv_Width   );
+      Aux_Message( stdout, "NOTE : peak density          = % 14.7e\n", SquareAdv_RhoPeak    );
+      Aux_Message( stdout, "       background pressure   = % 14.7e\n", SquareAdv_Pres       );
+      Aux_Message( stdout, "       background velocity   = % 14.7e\n", SquareAdv_Vel        );
+      Aux_Message( stdout, "       square wave width     = % 14.7e\n", SquareAdv_Width      );
+      Aux_Message( stdout, "       smooth the transition = %d\n",      SquareAdv_Smooth     );
+      if ( SquareAdv_Smooth )
+      Aux_Message( stdout, "       transition widith     = % 14.7e\n", SquareAdv_Smooth_Eps );
       Aux_Message( stdout, "=============================================================================\n" );
       Aux_Message( stdout, "\n" );
    }
@@ -141,9 +146,19 @@ void HYDRO_TestProbSol_SquareAdv( real fluid[], const double x, const double y, 
    const double dx        = fmin(  fmin( fabs(x-Cen), fabs(x-Cen-L) ), fabs(x-Cen+L)  );
    const double _Gamma_m1 = 1.0/(GAMMA-1.0);
    const double RhoBg     = 1.0;
+   const double HalfWidth = 0.5*SquareAdv_Width;
 
-   if ( dx < 0.5*SquareAdv_Width )  fluid[DENS] = SquareAdv_RhoPeak;
-   else                             fluid[DENS] = RhoBg;
+   if ( SquareAdv_Smooth )
+   {
+      fluid[DENS] = RhoBg + 0.5*( SquareAdv_RhoPeak-RhoBg )*
+                                (  tanh( (dx+HalfWidth)/SquareAdv_Smooth_Eps ) + tanh( (-dx+HalfWidth)/SquareAdv_Smooth_Eps )  );
+   }
+
+   else
+   {
+      if ( dx < HalfWidth )   fluid[DENS] = SquareAdv_RhoPeak;
+      else                    fluid[DENS] = RhoBg;
+   }
 
    fluid[MOMX] = fluid[DENS]*SquareAdv_Vel;
    fluid[MOMY] = 0.0;
@@ -460,7 +475,7 @@ void LoadTestProbParameter()
 
    if ( File == NULL )  Aux_Error( ERROR_INFO, "the file \"%s\" does not exist !!\n", FileName );
 
-   int    temp_int;
+   int    tmp_int;
    char  *input_line = NULL;
    char   string[100];
    size_t len = 0;
@@ -468,16 +483,23 @@ void LoadTestProbParameter()
    getline( &input_line, &len, File );
 
    getline( &input_line, &len, File );
-   sscanf( input_line, "%lf%s",  &SquareAdv_RhoPeak,   string );
+   sscanf( input_line, "%lf%s",  &SquareAdv_RhoPeak,     string );
 
    getline( &input_line, &len, File );
-   sscanf( input_line, "%lf%s",  &SquareAdv_Pres,      string );
+   sscanf( input_line, "%lf%s",  &SquareAdv_Pres,        string );
 
    getline( &input_line, &len, File );
-   sscanf( input_line, "%lf%s",  &SquareAdv_Vel,       string );
+   sscanf( input_line, "%lf%s",  &SquareAdv_Vel,         string );
 
    getline( &input_line, &len, File );
-   sscanf( input_line, "%lf%s",  &SquareAdv_Width,     string );
+   sscanf( input_line, "%lf%s",  &SquareAdv_Width,       string );
+
+   getline( &input_line, &len, File );
+   sscanf( input_line, "%d%s",  &tmp_int,                string );
+   SquareAdv_Smooth = (bool)tmp_int;
+
+   getline( &input_line, &len, File );
+   sscanf( input_line, "%lf%s",  &SquareAdv_Smooth_Eps,  string );
 
    fclose( File );
    if ( input_line != NULL )     free( input_line );
@@ -492,6 +514,13 @@ void LoadTestProbParameter()
          Aux_Message( stdout, "NOTE : parameter \"%s\" is set to the default value = %13.7e\n",
                       "SquareAdv_Width", SquareAdv_Width );
    }
+
+
+// check
+   if ( SquareAdv_RhoPeak    < 0.0 )   Aux_Error( ERROR_INFO, "%s = %14.7e < 0.0 !!\n", "SquareAdv_RhoPeak",    SquareAdv_RhoPeak );
+   if ( SquareAdv_Pres       < 0.0 )   Aux_Error( ERROR_INFO, "%s = %14.7e < 0.0 !!\n", "SquareAdv_Pres",       SquareAdv_Pres );
+   if ( SquareAdv_Width      < 0.0 )   Aux_Error( ERROR_INFO, "%s = %14.7e < 0.0 !!\n", "SquareAdv_Width",      SquareAdv_Width );
+   if ( SquareAdv_Smooth_Eps < 0.0 )   Aux_Error( ERROR_INFO, "%s = %14.7e < 0.0 !!\n", "SquareAdv_Smooth_Eps", SquareAdv_Smooth_Eps );
 
 } // FUNCTION : LoadTestProbParameter
 
