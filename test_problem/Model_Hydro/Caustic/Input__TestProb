@@ -2,3 +2,4 @@
 0.15915494309     Caustic_VelPeak       # peak velocity
 1.0               Caustic_Dens          # background density
 1.0e-10           Caustic_Pres          # background pressure
+0                 Caustic_Dir           # spatial direction: (0/1) --> (x/diagonal)

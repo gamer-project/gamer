@@ -17,6 +17,7 @@ static void LoadTestProbParameter();
 static double Caustic_VelPeak;      // peak velocity
 static double Caustic_Dens;         // background density
 static double Caustic_Pres;         // background pressure
+static int    Caustic_Dir;          // spatial direction: (0/1) --> (x/diagonal)
 // =======================================================================================
 
 
@@ -76,13 +77,16 @@ void Init_TestProb()
       Aux_Message( stdout, "NOTE : peak velocity         = % 14.7e\n", Caustic_VelPeak );
       Aux_Message( stdout, "       background density    = % 14.7e\n", Caustic_Dens    );
       Aux_Message( stdout, "       background pressure   = % 14.7e\n", Caustic_Pres    );
+      Aux_Message( stdout, "       direction             = %s\n",      ( Caustic_Dir == 0 ) ? "X" :
+                                                                       ( Caustic_Dir == 1 ) ? "Diagonal" :
+                                                                                              "Unknown" );
       Aux_Message( stdout, "=============================================================================\n" );
       Aux_Message( stdout, "\n" );
    }
 
 
 // set some default parameters
-   const double End_T_Default    = 3.0;
+   const double End_T_Default    = ( Caustic_Dir == 0 ) ? 3.0 : 2.0;
    const long   End_Step_Default = __INT_MAX__;
 
    if ( END_STEP < 0 )
@@ -109,7 +113,7 @@ void Init_TestProb()
 // Function    :  HYDRO_TestProbSol_Caustic
 // Description :  Calculate the initial condition in the HYDRO caustic test
 //
-//                1. This function is invoked by "HYDRO_Init_StartOver_AssignData"
+// Note        :  1. This function is invoked by "HYDRO_Init_StartOver_AssignData"
 //
 // Parameter   :  fluid : Array to store the analytical solution to be returned
 //                x/y/z : Target physical coordinates
@@ -120,12 +124,31 @@ void Init_TestProb()
 void HYDRO_TestProbSol_Caustic( real fluid[], const double x, const double y, const double z, const double Time )
 {
 
-   const double WaveK = 2.0*M_PI/amr->BoxSize[0];
+// x direction
+   if ( Caustic_Dir == 0 )
+   {
+      const double WaveK = 2.0*M_PI/amr->BoxSize[0];
+
+      fluid[MOMX] = Caustic_Dens*Caustic_VelPeak*sin( WaveK*x );
+      fluid[MOMY] = 0.0;
+      fluid[MOMZ] = 0.0;
+   }
+
+// diagonal direction
+   else if ( Caustic_Dir == 1 )
+   {
+      const double WaveK = 2.0*M_PI/amr->BoxSize[0]*sqrt(3.0);
+      const double r     = 1.0/sqrt(3.0)*( x + y + z );
+
+      fluid[MOMX] = Caustic_Dens*Caustic_VelPeak*sin( WaveK*r ) / sqrt(3.0);
+      fluid[MOMY] = fluid[MOMX];
+      fluid[MOMZ] = fluid[MOMX];
+   }
+
+   else
+      Aux_Error( ERROR_INFO, "Caustic_Dir = %d is NOT supported [0/1] !!\n", Caustic_Dir );
 
    fluid[DENS] = Caustic_Dens;
-   fluid[MOMX] = Caustic_Dens*Caustic_VelPeak*sin( WaveK*x );
-   fluid[MOMY] = 0.0;
-   fluid[MOMZ] = 0.0;
    fluid[ENGY] = Caustic_Pres/(GAMMA-1.0) + 0.5*( SQR(fluid[MOMX]) + SQR(fluid[MOMY]) + SQR(fluid[MOMZ]) ) / fluid[DENS];
 
 } // FUNCTION : HYDRO_TestProbSol_Caustic
@@ -165,6 +188,9 @@ void LoadTestProbParameter()
    getline( &input_line, &len, File );
    sscanf( input_line, "%lf%s",  &Caustic_Pres,        string );
 
+   getline( &input_line, &len, File );
+   sscanf( input_line, "%d%s",   &Caustic_Dir,         string );
+
    fclose( File );
    if ( input_line != NULL )     free( input_line );
 
@@ -173,6 +199,12 @@ void LoadTestProbParameter()
    if ( Caustic_VelPeak < 0.0 )  Aux_Error( ERROR_INFO, "%s = %14.7e < 0.0 !!\n", "Caustic_VelPeak", Caustic_VelPeak );
    if ( Caustic_Dens    < 0.0 )  Aux_Error( ERROR_INFO, "%s = %14.7e < 0.0 !!\n", "Caustic_Dens",    Caustic_Dens );
    if ( Caustic_Pres    < 0.0 )  Aux_Error( ERROR_INFO, "%s = %14.7e < 0.0 !!\n", "Caustic_Pres",    Caustic_Pres );
+
+   if ( Caustic_Dir < 0  ||  Caustic_Dir > 1 )
+      Aux_Error( ERROR_INFO, "%s = %d is NOT supported [0/1] !!\n", "Caustic_Dir", Caustic_Dir );
+
+   if (  Caustic_Dir == 1  &&  ( amr->BoxSize[0] != amr->BoxSize[1] || amr->BoxSize[0] != amr->BoxSize[2] )  )
+         Aux_Error( ERROR_INFO, "simulation domain must be CUBIC for %s = %d !!\n", "Caustic_Dir", Caustic_Dir );
 
 } // FUNCTION : LoadTestProbParameter
 
