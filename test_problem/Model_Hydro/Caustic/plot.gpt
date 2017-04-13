@@ -1,0 +1,94 @@
+# -----------------------------------------------------------
+# GNUPLOT template 1D v1.1
+# -----------------------------------------------------------
+
+
+reset
+
+
+# target files
+# -----------------------------------------------------------
+FILE_IN_PREFIX  = 'Xline_y0.000_z0.000'
+FILE_IN_SUFFIX  = ''
+FILE_OUT_PREFIX = 'Fig__Caustic_Pres'
+START_ID        = 0
+END_ID          = 30
+DELTA_ID        = 1
+PAUSE           = -1.0  # <= 0.0 --> mouse
+
+
+# terminal
+# -----------------------------------------------------------
+ set term qt enhanced
+#set term png enhanced crop size 1280,800
+#set term postscript eps enhanced color 'Helvetica' 16
+
+
+# plot style
+# -----------------------------------------------------------
+ set log y
+ set key reverse Left spacing 2 right
+#set key reverse Left spacing 1 at first 1.5e2, 1e8
+#set xlabel "r (kpc)"
+#set ylabel "Density"
+#set format x "10^{%T}"
+ set format y "10^{%T}"
+ set pointsize 1.0
+ set size square
+#set xrange [3.0e-2:1e2]
+ set yrange [1.0e-12:1.0e-1]
+
+
+# constants
+# -----------------------------------------------------------
+
+
+# set the output file extension automatically
+# -----------------------------------------------------------
+if      ( GPVAL_TERM eq 'pngcairo'   ) FILE_OUT_EXT='png'; \
+else if ( GPVAL_TERM eq 'postscript' ) FILE_OUT_EXT='eps'; \
+else if ( GPVAL_TERM ne 'qt'         ) print 'Unkown terminal for settting the output file extension !!'; quit
+
+
+
+# loop over all files
+# -----------------------------------------------------------
+print "Start plotting ..."
+
+do for [ID=START_ID:END_ID:DELTA_ID] {
+
+#  set the input and output filenames
+   ID1     = ID%10
+   ID2     = (ID%100)/10
+   ID3     = (ID%1000)/100
+   ID4     = ID/1000
+   FILE_IN = sprintf( '%s_00%d%d%d%d%s', FILE_IN_PREFIX, ID4, ID3, ID2, ID1, FILE_IN_SUFFIX )
+
+   if ( GPVAL_TERM ne 'qt' ) { set output sprintf( '%s_00%d%d%d%d.%s', FILE_OUT_PREFIX, ID4, ID3, ID2, ID1, FILE_OUT_EXT ) }
+
+
+#  load the physical time
+   DUMP_TABLE   = './Record__Dump'
+   NHEADER      = 1
+   LOAD_TIME    = sprintf( "awk '{if(NR==%d+%d) {print $2}}' %s", NHEADER, ID+1, DUMP_TABLE  )
+   TIME         = system( LOAD_TIME )*1.0    # *1.0 --> convert string to number
+
+
+#  set title
+   set title sprintf( 'DataID %d%d%d%d (t = %5.2f)', ID4, ID3, ID2, ID1, TIME )
+   print sprintf( '   Plotting DataID %d%d%d%d (t = %5.2f) ...', ID4, ID3, ID2, ID1, TIME )
+
+
+#  plot
+   plot FILE_IN u 4:12 w l lc 6 notitle
+
+
+   if ( GPVAL_TERM eq 'qt' ) { if ( PAUSE <= 0.0 ) { pause mouse }   else { pause PAUSE } };
+
+} #do for [ID=START_ID:END_ID:DELTA_ID]
+
+
+print "Done";
+if ( GPVAL_TERM eq 'qt' ) { pause -1 };
+
+
