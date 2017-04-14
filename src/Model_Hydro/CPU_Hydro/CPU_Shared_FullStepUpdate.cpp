@@ -67,13 +67,15 @@ void CPU_FullStepUpdate( const real Input[][ FLU_NXT*FLU_NXT*FLU_NXT ], real Out
          Output[v][ID2] = Input[v][ID3] - dt_dh*( dF[0][v] + dF[1][v] + dF[2][v] );
 
 
-//    we no longer ensure positive density and pressure here
+//    we no longer ensure positive density and pressure here (unless DUAL_ENERGY is on)
 //    --> these checks have been moved to Flu_Close()->CorrectUnphysical()
 //    --> because we want to apply 1st-order-flux correction BEFORE setting a minimum density and pressure
+//    --> however, since currently DUAL_ENERGY does NOT work with OPT__1ST_FLUX_CORR, we still check negative
+//        density and pressure here when DUAL_ENERGY is on
       /*
-      Output[0][ID2] = FMAX( Output[0][ID2], MinDens );
-      Output[4][ID2] = CPU_CheckMinPresInEngy( Output[0][ID2], Output[1][ID2], Output[2][ID2], Output[3][ID2], Output[4][ID2],
-                                               Gamma_m1, _Gamma_m1, MinPres );
+      Output[DENS][ID2] = FMAX( Output[DENS][ID2], MinDens );
+      Output[ENGY][ID2] = CPU_CheckMinPresInEngy( Output[DENS][ID2], Output[MOMX][ID2], Output[MOMY][ID2], Output[MOMZ][ID2],
+                                                  Output[ENGY][ID2], Gamma_m1, _Gamma_m1, MinPres );
       */
 
 
@@ -97,7 +99,10 @@ void CPU_FullStepUpdate( const real Input[][ FLU_NXT*FLU_NXT*FLU_NXT ], real Out
 #     ifdef DUAL_ENERGY
       real Dens, Pres, Etot, Eint, Ekin, MomX, MomY, MomZ;
 
-      Dens = FMAX( Output[DENS][ID2], MinDens );
+//    apply the minimum density check
+      Output[DENS][ID2] = FMAX( Output[DENS][ID2], MinDens );
+
+      Dens = Output[DENS][ID2];
       MomX = Output[MOMX][ID2];
       MomY = Output[MOMY][ID2];
       MomZ = Output[MOMZ][ID2];
@@ -124,6 +129,17 @@ void CPU_FullStepUpdate( const real Input[][ FLU_NXT*FLU_NXT*FLU_NXT ], real Out
          Pres                 = Eint*Gamma_m1;
          Output[ENTROPY][ID2] = CPU_DensPres2Entropy( Dens, Pres, Gamma_m1 );
       } // if ( Eint/Ekin < DualEnergySwitch ) ... else ...
+
+//    apply the minimum pressure check (must include "=" since we already apply MinPres check when calling CPU_DensEntropy2Pres())
+      if ( Pres <= MinPres )
+      {
+         Pres = MinPres;
+         Eint = Pres*_Gamma_m1;
+
+//       ensure that both energy and entropy are consistent with the pressure floor
+         Output[ENGY   ][ID2] = Ekin + Eint;
+         Output[ENTROPY][ID2] = CPU_DensPres2Entropy( Dens, Pres, Gamma_m1 );
+      }
 #     endif // #ifdef DUAL_ENERGY
 
 
