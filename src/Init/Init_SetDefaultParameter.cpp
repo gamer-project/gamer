@@ -490,6 +490,17 @@ void Init_SetDefaultParameter()
 
 // Riemann solver for OPT__1ST_FLUX_CORR
 #  if ( MODEL == HYDRO  ||  MODEL == MHD )
+#  ifdef DUAL_ENERGY
+   if ( OPT__1ST_FLUX_CORR )
+   {
+      OPT__1ST_FLUX_CORR = false;
+
+      if ( MPI_Rank == 0 )
+         Aux_Message( stderr, "WARNING : parameter \"%s\" is turned off automatically since it's NOT supported for DUAL_ENERGY !!\n",
+                      "OPT__1ST_FLUX_CORR" );
+   }
+#  endif
+
    if ( OPT__1ST_FLUX_CORR  &&  OPT__1ST_FLUX_CORR_SCHEME == RSOLVER_DEFAULT )
    {
       OPT__1ST_FLUX_CORR_SCHEME = RSOLVER_ROE;
@@ -502,7 +513,7 @@ void Init_SetDefaultParameter()
    {
       OPT__1ST_FLUX_CORR_SCHEME = RSOLVER_NONE;
 
-      if ( MPI_Rank == 0 )  Aux_Message( stdout, "NOTE : parameter \"%s\" is set to %d since OPT__1ST_FLUX_CORR is off\n",
+      if ( MPI_Rank == 0 )  Aux_Message( stderr, "WARNING : parameter \"%s\" is reset to %d since OPT__1ST_FLUX_CORR is off !!\n",
                                          "OPT__1ST_FLUX_CORR_SCHEME", OPT__1ST_FLUX_CORR_SCHEME );
    }
 #  endif

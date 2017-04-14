@@ -58,7 +58,7 @@ SIMU_OPTION += -DLR_SCHEME=PPM
 SIMU_OPTION += -DRSOLVER=ROE
 
 # dual energy formalism: DE_ENTROPY/DE_EINT (evolve entropy or internal energy) ##useless in RTVD/WAF##
-SIMU_OPTION += -DDUAL_ENERGY=DE_ENTROPY
+#SIMU_OPTION += -DDUAL_ENERGY=DE_ENTROPY
 
 # number of passively advected scalars (**excluding** entropy or internal energy even when DUAL_ENERGY is on)
 # --> for simulations without any passive scalar, please set this variable to 0 and do NOT comment it out
