@@ -58,7 +58,7 @@ SIMU_OPTION += -DLR_SCHEME=PPM
 SIMU_OPTION += -DRSOLVER=ROE
 
 # dual energy formalism: DE_ENTROPY/DE_EINT (evolve entropy or internal energy, DE_EINT is not supported yet) ##useless in RTVD/WAF##
-#SIMU_OPTION += -DDUAL_ENERGY=DE_ENTROPY
+SIMU_OPTION += -DDUAL_ENERGY=DE_ENTROPY
 
 # number of passively advected scalars (**excluding** entropy or internal energy even when DUAL_ENERGY is on)
 # --> for simulations without any passive scalar, please set this variable to 0 and do NOT comment it out
@@ -212,7 +212,7 @@ CC_FILE     += CPU_FluidSolver_RTVD.cpp  CPU_FluidSolver_WAF.cpp  CPU_FluidSolve
                CPU_FluidSolver_CTU.cpp  CPU_Shared_DataReconstruction.cpp  CPU_Shared_FluUtility.cpp \
                CPU_Shared_ComputeFlux.cpp  CPU_Shared_FullStepUpdate.cpp \
                CPU_Shared_RiemannSolver_Exact.cpp  CPU_Shared_RiemannSolver_Roe.cpp \
-               CPU_Shared_RiemannSolver_HLLE.cpp  CPU_Shared_RiemannSolver_HLLC.cpp
+               CPU_Shared_RiemannSolver_HLLE.cpp  CPU_Shared_RiemannSolver_HLLC.cpp  CPU_Shared_DualEnergy.cpp
 
 CC_FILE     += Hydro_Init_StartOver_AssignData.cpp  Hydro_Aux_Check_Negative.cpp  Hydro_GetTimeStep_Fluid.cpp \
                Hydro_Init_UM_AssignData.cpp  Hydro_BoundaryCondition_Outflow.cpp  Hydro_BoundaryCondition_Reflecting.cpp \

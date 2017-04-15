@@ -212,7 +212,7 @@ CC_FILE     += CPU_FluidSolver_RTVD.cpp  CPU_FluidSolver_WAF.cpp  CPU_FluidSolve
                CPU_FluidSolver_CTU.cpp  CPU_Shared_DataReconstruction.cpp  CPU_Shared_FluUtility.cpp \
                CPU_Shared_ComputeFlux.cpp  CPU_Shared_FullStepUpdate.cpp \
                CPU_Shared_RiemannSolver_Exact.cpp  CPU_Shared_RiemannSolver_Roe.cpp \
-               CPU_Shared_RiemannSolver_HLLE.cpp  CPU_Shared_RiemannSolver_HLLC.cpp
+               CPU_Shared_RiemannSolver_HLLE.cpp  CPU_Shared_RiemannSolver_HLLC.cpp  CPU_Shared_DualEnergy.cpp
 
 CC_FILE     += Hydro_Init_StartOver_AssignData.cpp  Hydro_Aux_Check_Negative.cpp  Hydro_GetTimeStep_Fluid.cpp \
                Hydro_Init_UM_AssignData.cpp  Hydro_BoundaryCondition_Outflow.cpp  Hydro_BoundaryCondition_Reflecting.cpp \

@@ -59,7 +59,8 @@ void Flu_Close( const int lv, const int SaveSg, const real h_Flux_Array[][9][NFL
 
 
 // try to correct the unphysical results in h_Flu_Array_F_Out (e.g., negative density)
-#  if ( MODEL == HYDRO  ||  MODEL == MHD )
+// --> disable it when DUAL_ENERGY is adopted since it will check the negative density and pressure as well
+#  if (  ( MODEL == HYDRO || MODEL == MHD )  &&  !defined DUAL_ENERGY  )
    CorrectUnphysical( lv, NPG, PID0_List, h_Flu_Array_F_In, h_Flu_Array_F_Out, dt );
 #  endif
 
