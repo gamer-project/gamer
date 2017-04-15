@@ -66,11 +66,11 @@ void CPU_FullStepUpdate( const real Input[][ FLU_NXT*FLU_NXT*FLU_NXT ], real Out
          Output[v][ID2] = Input[v][ID3] - dt_dh*( dF[0][v] + dF[1][v] + dF[2][v] );
 
 
-//    we no longer ensure positive density and pressure here (unless DUAL_ENERGY is adopted)
+//    we no longer ensure positive density and pressure here
 //    --> these checks have been moved to Flu_Close()->CorrectUnphysical()
-//    --> because we want to apply 1st-order-flux correction BEFORE setting a minimum density and pressure
-//    --> however, since currently DUAL_ENERGY does NOT work with OPT__1ST_FLUX_CORR, we still check negative
-//        density and pressure here when DUAL_ENERGY is adopted
+//        because we want to apply 1st-order-flux correction BEFORE setting a minimum density and pressure
+//    --> this consideration holds even when DUAL_ENERGY is adopted (e.g., when density is negative, even when DUAL_ENERGY is on,
+//        we still want to try the 1st-order-flux correction before setting a floor value)
       /*
       Output[DENS][ID2] = FMAX( Output[DENS][ID2], MinDens );
       Output[ENGY][ID2] = CPU_CheckMinPresInEngy( Output[DENS][ID2], Output[MOMX][ID2], Output[MOMY][ID2], Output[MOMZ][ID2],
@@ -95,16 +95,17 @@ void CPU_FullStepUpdate( const real Input[][ FLU_NXT*FLU_NXT*FLU_NXT ], real Out
 
 
 //    apply the dual-energy formalism to correct the internal energy (when GRAVITY is off)
+//    --> when GRAVITY is on, we call CPU_DualEnergyFix() in the gravity solver instead since it
+//        might update the internal energy as well (especially when UNSPLIT_GRAVITY is adopted)
 #     ifdef DUAL_ENERGY
-//    apply the minimum density check
-      Output[DENS][ID2] = FMAX( Output[DENS][ID2], MinDens );
+//    we no longer apply the minimum density and pressure checks here since we want to enable 1st-order-flux correction for that
+      const real MinPres_No = -__FLT_MAX__;  // set minimum pressure to an extremely negative value
+//    Output[DENS][ID2] = FMAX( Output[DENS][ID2], MinDens );
 
-//    when GRAVITY is on, we call CPU_DualEnergyFix() in the gravity solver instead since it
-//    might update the internal energy as well (especially when UNSPLIT_GRAVITY is adopted)
 #     ifndef GRAVITY
-//    Both ENGY and ENTROPY might be modified by CPU_DualEnergyFix() --> call-by-reference
+//    both ENGY and ENTROPY might be modified by CPU_DualEnergyFix() --> call-by-reference
       CPU_DualEnergyFix( Output[DENS][ID2], Output[MOMX][ID2], Output[MOMY][ID2], Output[MOMZ][ID2], Output[ENGY][ID2], Output[ENTROPY][ID2],
-                         Gamma_m1, _Gamma_m1, MinPres, DualEnergySwitch );
+                         Gamma_m1, _Gamma_m1, MinPres_No, DualEnergySwitch );
 #     endif
 #     endif // #ifdef DUAL_ENERGY
 

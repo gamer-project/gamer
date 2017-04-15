@@ -177,6 +177,6 @@ yt_inline   YT_SCRIPT                 # yt inline analysis script (do not includ
 0           OPT__CK_FINITE            # check if all variables are finite
 0           OPT__CK_PATCH_ALLOCATE    # check if all patches are properly allocated
 0           OPT__CK_FLUX_ALLOCATE     # check if all flux arrays are properly allocated ##HYDRO and ELBDM ONLY##
-0           OPT__CK_NEGATIVE          # check the negative density/pressure: (1,2,3)->(rho,pres,both) ##HYDRO ONLY##
+0           OPT__CK_NEGATIVE          # check the negative density/pressure: (1,2,3)->(rho,pres(and entropy),both) ##HYDRO ONLY##
 1.0         OPT__CK_MEMFREE           # check the free memory (0:off, >0:threshold)
 0           OPT__CK_PARTICLE          # check the particle allocation

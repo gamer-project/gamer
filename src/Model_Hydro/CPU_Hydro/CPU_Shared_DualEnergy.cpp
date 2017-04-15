@@ -96,7 +96,7 @@ void CPU_DualEnergyFix( const real Dens, const real MomX, const real MomY, const
 // Note        :  1. Used by the dual-energy formalism
 //                2. Invoked by the functions "Hydro_Init_StartOver_AssignData, ..."
 //                3. Currently this function does NOT apply the minimum pressure check when calling CPU_GetPressure()
-//                   --> However, note that CPU_DensPres2Entropy() does apply a floor value (TINY_VALUE) for entropy
+//                   --> However, note that CPU_DensPres2Entropy() does apply a floor value (TINY_NUMBER) for entropy
 //
 // Parameter   :  Dens     : Mass density
 //                MomX/Y/Z : Momentum density
@@ -130,7 +130,7 @@ real CPU_Fluid2Entropy( const real Dens, const real MomX, const real MomY, const
 //
 // Note        :  1. Used by the dual-energy formalism
 //                2. Invoked by the functions "CPU_Fluid2Entropy, ..."
-//                3. A floor value (TINY_VALUE) is applied to the returned value
+//                3. A floor value (TINY_NUMBER) is applied to the returned value
 //
 // Parameter   :  Dens     : Mass density
 //                Pres     : Pressure
@@ -163,6 +163,8 @@ real CPU_DensPres2Entropy( const real Dens, const real Pres, const real Gamma_m1
 // Note        :  1. Used by the dual-energy formalism
 //                2. Invoked by the functions "CPU_Shared_FullStepUpdate, ..."
 //                3. A floor value "MinPres" is applied to the returned pressure
+//                   --> To disable the minimum pressure check, one could simply set MinPres to an extremely
+//                       negative value (e.g., -__FLT_MAX__)
 //
 // Parameter   :  Dens     : Mass density
 //                Entropy  : Entropy

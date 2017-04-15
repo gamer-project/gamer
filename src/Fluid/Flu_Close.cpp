@@ -59,8 +59,7 @@ void Flu_Close( const int lv, const int SaveSg, const real h_Flux_Array[][9][NFL
 
 
 // try to correct the unphysical results in h_Flu_Array_F_Out (e.g., negative density)
-// --> disable it when DUAL_ENERGY is adopted since it will check the negative density and pressure as well
-#  if (  ( MODEL == HYDRO || MODEL == MHD )  &&  !defined DUAL_ENERGY  )
+#  if ( MODEL == HYDRO  ||  MODEL == MHD )
    CorrectUnphysical( lv, NPG, PID0_List, h_Flu_Array_F_In, h_Flu_Array_F_Out, dt );
 #  endif
 
@@ -298,23 +297,51 @@ void CorrectFlux( const int lv, const real h_Flux_Array[][9][NFLUX_TOTAL][4*PATC
 bool Unphysical( const real Fluid[], const real Gamma_m1, const int CheckMinEngyOrPres )
 {
 
-   const bool CorrPres_No  = false;
    const int  CheckMinEngy = 0;
    const int  CheckMinPres = 1;
+#  if ( DUAL_ENERGY == DE_ENTROPY )
+   const real CorrPres_No  = -__FLT_MAX__;   // set minimum pressure to an extremely negative value
+#  else
+   const bool CorrPres_No  = false;
+#  endif
 
-// note that MIN_DENS and MIN_PRES are declared as double
-// --> must convert them to **real** before the comparison
+
+// if any checks below fail, return true
+// =================================================
+// note that since MIN_DENS and MIN_PRES are declared as double, they must be converted to **real** before the comparison
 // --> otherwise LHS in the comparison will be converted from real to double, which is inconsistent with the assignment
 //     (e.g., "Update[DENS] = FMAX( Update[DENS], (real)MIN_DENS" )
    if (  !isfinite(Fluid[DENS])  ||  !isfinite(Fluid[MOMX])  ||  !isfinite(Fluid[MOMY])  ||
          !isfinite(Fluid[MOMZ])  ||  !isfinite(Fluid[ENGY])  ||
-         Fluid[DENS] < (real)MIN_DENS  ||
-         ( CheckMinEngyOrPres == CheckMinEngy && Fluid[ENGY] < (real)MIN_PRES )  ||
-         ( CheckMinEngyOrPres == CheckMinPres && CPU_GetPressure(Fluid[DENS], Fluid[MOMX], Fluid[MOMY], Fluid[MOMZ], Fluid[ENGY],
-                                                                 Gamma_m1, CorrPres_No, NULL_REAL) < (real)MIN_PRES )  )
+         Fluid[DENS] < (real)MIN_DENS  )
       return true;
-   else
-      return false;
+
+   if ( CheckMinEngyOrPres == CheckMinEngy  &&  Fluid[ENGY] < (real)MIN_PRES )
+      return true;
+
+   if ( CheckMinEngyOrPres == CheckMinPres  &&
+        (
+#          if ( DUAL_ENERGY == DE_ENTROPY )
+//         when the dual-energy formalism is adopted, do NOT calculate pressure from "Etot-Ekin" since it would suffer
+//         from large round-off errors
+//         currently we use TINY_NUMBER as the floor value of entropy and hence here we use 2.0*TINY_NUMBER to validate entropy
+//         --> in general, for MIN_PRES > 0.0, we expect that unphysical entropy would lead to unphysical pressure
+//         --> however, the check "Fluid[ENTROPY] < (real)2.0*TINY_NUMBER" is necessary when MIN_PRES == 0.0
+           CPU_DensEntropy2Pres( Fluid[DENS], Fluid[ENTROPY], Gamma_m1, CorrPres_No ) < (real)MIN_PRES  ||
+           Fluid[ENTROPY] < (real)2.0*TINY_NUMBER
+
+#          else
+           CPU_GetPressure( Fluid[DENS], Fluid[MOMX], Fluid[MOMY], Fluid[MOMZ], Fluid[ENGY],
+                            Gamma_m1, CorrPres_No, NULL_REAL ) < (real)MIN_PRES
+#          endif
+        )
+      )
+      return true;
+
+
+// if all checks above pass, return false
+// =================================================
+   return false;
 
 } // FUNCTION : Unphysical
 
@@ -386,11 +413,11 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
 
          if ( Unphysical(Out, Gamma_m1, CheckMinPres) )
          {
+            idx_in = ( (k_out+FLU_GHOST_SIZE)*FLU_NXT + (j_out+FLU_GHOST_SIZE) )*FLU_NXT + (i_out+FLU_GHOST_SIZE);
+
 //          try to correct unphysical results using 1st-order fluxes (which should be more diffusive)
             if ( OPT__1ST_FLUX_CORR )
             {
-               idx_in = ( (k_out+FLU_GHOST_SIZE)*FLU_NXT + (j_out+FLU_GHOST_SIZE) )*FLU_NXT + (i_out+FLU_GHOST_SIZE);
-
 //             collect nearby input coserved variables
                for (int v=0; v<NCOMP_TOTAL; v++)
                {
@@ -468,6 +495,17 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
 #           endif
 
 
+//          apply the dual-energy formalism to correct the internal energy (when GRAVITY is off)
+//          --> when GRAVITY is on, we call CPU_DualEnergyFix() in the gravity solver instead since it
+//              might update the internal energy as well (especially when UNSPLIT_GRAVITY is adopted)
+#           if ( defined DUAL_ENERGY  &&  !defined GRAVITY )
+//          both ENGY and ENTROPY might be modified by CPU_DualEnergyFix() --> call-by-reference
+//          we apply minimum pressure check here
+            CPU_DualEnergyFix( Update[DENS], Update[MOMX], Update[MOMY], Update[MOMZ], Update[ENGY], Update[ENTROPY],
+                               Gamma_m1, _Gamma_m1, MIN_PRES, DUAL_ENERGY_SWITCH );
+#           endif
+
+
 //          check if the newly updated values are still unphysical
 //          --> note that here we check **energy** instead of pressure since even after calling CPU_CheckMinPresInEngy()
 //              we can still have pressure < MIN_PRES due to round-off errors (especially when pressure << kinematic energy)
@@ -477,7 +515,7 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
 //             output debug information
                const int  PID_Failed      = PID0_List[TID] + LocalID[k_out/PS1][j_out/PS1][i_out/PS1];
                const bool CheckMinPres_No = false;
-               real In[NCOMP_FLUID], tmp[NCOMP_FLUID];
+               real In[NCOMP_TOTAL], tmp[NCOMP_TOTAL];
 
                char FileName[100];
                sprintf( FileName, "FailedPatchGroup_r%03d_lv%02d_PID0-%05d", MPI_Rank, lv, PID0_List[TID] );
@@ -485,30 +523,46 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
 //             use "a" instead of "w" since there may be more than one failed cell in a given patch group
                FILE *File = fopen( FileName, "a" );
 
-               for (int v=0; v<NCOMP_FLUID; v++)   In[v] = h_Flu_Array_F_In[TID][v][idx_in];
+               for (int v=0; v<NCOMP_TOTAL; v++)   In[v] = h_Flu_Array_F_In[TID][v][idx_in];
 
 //             output information about the failed cell
                fprintf( File, "PID                              = %5d\n", PID_Failed );
                fprintf( File, "(i,j,k) in the patch             = (%2d,%2d,%2d)\n", i_out%PS1, j_out%PS1, k_out%PS1 );
                fprintf( File, "(i,j,k) in the input fluid array = (%2d,%2d,%2d)\n", i_out, j_out, k_out );
                fprintf( File, "\n" );
-               fprintf( File, "input        = (%14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e)\n",
+               fprintf( File, "input        = (%14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e",
                         In[DENS], In[MOMX], In[MOMY], In[MOMZ], In[ENGY],
                         CPU_GetPressure(In[DENS], In[MOMX], In[MOMY], In[MOMZ], In[ENGY],
                                         Gamma_m1, CheckMinPres_No, NULL_REAL) );
-               fprintf( File, "ouptut (old) = (%14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e)\n",
+#              if ( DUAL_ENERGY == DE_ENTROPY )
+               fprintf( File, ", %14.7e", In[ENTROPY] );
+#              endif
+               fprintf( File, ")\n" );
+               fprintf( File, "ouptut (old) = (%14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e",
                         Out[DENS], Out[MOMX], Out[MOMY], Out[MOMZ], Out[ENGY],
                         CPU_GetPressure(Out[DENS], Out[MOMX], Out[MOMY], Out[MOMZ], Out[ENGY],
                                         Gamma_m1, CheckMinPres_No, NULL_REAL) );
-               fprintf( File, "output (new) = (%14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e)\n",
+#              if ( DUAL_ENERGY == DE_ENTROPY )
+               fprintf( File, ", %14.7e", Out[ENTROPY] );
+#              endif
+               fprintf( File, ")\n" );
+               fprintf( File, "output (new) = (%14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e",
                         Update[DENS], Update[MOMX], Update[MOMY], Update[MOMZ], Update[ENGY],
                         CPU_GetPressure(Update[DENS], Update[MOMX], Update[MOMY], Update[MOMZ], Update[ENGY],
                                         Gamma_m1, CheckMinPres_No, NULL_REAL) );
+#              if ( DUAL_ENERGY == DE_ENTROPY )
+               fprintf( File, ", %14.7e", Update[ENTROPY] );
+#              endif
+               fprintf( File, ")\n" );
 
 //             output all data in the input fluid array (including ghost zones)
                fprintf( File, "\n===============================================================================================\n" );
-               fprintf( File, "(%2s,%2s,%2s)%14s%14s%14s%14s%14s%14s\n",
+               fprintf( File, "(%2s,%2s,%2s)%14s%14s%14s%14s%14s%14s",
                         "i", "j", "k", "Density", "Px", "Py", "Pz", "Energy", "Pressure" );
+#              if ( NCOMP_PASSIVE > 0 )
+               for (int v=0; v<NCOMP_PASSIVE; v++)    fprintf( File, "%14s", PassiveFieldName_Grid[v] );
+#              endif
+               fprintf( File, "\n" );
 
                for (int k=0; k<FLU_NXT; k++)
                for (int j=0; j<FLU_NXT; j++)
@@ -516,7 +570,7 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
                {
                   fprintf( File, "(%2d,%2d,%2d)", i-FLU_GHOST_SIZE, j-FLU_GHOST_SIZE, k-FLU_GHOST_SIZE );
 
-                  for (int v=0; v<NCOMP_FLUID; v++)
+                  for (int v=0; v<NCOMP_TOTAL; v++)
                   {
                      tmp[v] = h_Flu_Array_F_In[TID][v][ ((k*FLU_NXT)+j)*FLU_NXT+i ];
                      fprintf( File, " %13.6e", tmp[v] );
