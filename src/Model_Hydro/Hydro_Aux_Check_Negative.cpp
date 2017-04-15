@@ -4,6 +4,19 @@
 #if ( MODEL == HYDRO )
 
 
+// 1: check negative values
+// 2: check values close to the floor
+#define CHECK_MODE         1
+
+// check if density/pressure/entropy is smaller than CLOSE_FACTOR*floor
+#if   ( CHECK_MODE == 1 )
+#  define CLOSE_FACTOR     NULL_REAL
+#elif ( CHECK_MODE == 2 )
+#  define CLOSE_FACTOR     2.0
+#else
+#  error : ERROR : only support CHECK_MODE == 1/2 !!
+#endif
+
 
 
 //-------------------------------------------------------------------------------------------------------
@@ -34,6 +47,14 @@ void Hydro_Aux_Check_Negative( const int lv, const int Mode, const char *comment
    const real CorrPres_No = -__FLT_MAX__;    // set minimum pressure to an extremely negative value
 #  endif
 
+// set the minimum thresholds for this check
+// --> currently we use TINY_NUMBER as the floor value of entropy
+   const real DensCheck    = ( CHECK_MODE == 1 ) ? 0.0 : CLOSE_FACTOR*MIN_DENS;
+   const real PresCheck    = ( CHECK_MODE == 1 ) ? 0.0 : CLOSE_FACTOR*MIN_PRES;
+#  if ( DUAL_ENERGY == DE_ENTROPY )
+   const real EntropyCheck = ( CHECK_MODE == 1 ) ? 0.0 : CLOSE_FACTOR*TINY_NUMBER;
+#  endif
+
 
    for (int TargetRank=0; TargetRank<MPI_NRank; TargetRank++)
    {
@@ -55,7 +76,7 @@ void Hydro_Aux_Check_Negative( const int lv, const int Mode, const char *comment
 
             if ( Mode == 1  ||  Mode == 3 )
             {
-               if ( Fluid[DENS] <= (real)0.0 )
+               if ( Fluid[DENS] <= DensCheck )
                {
                   if ( Pass )
                   {
@@ -85,13 +106,13 @@ void Hydro_Aux_Check_Negative( const int lv, const int Mode, const char *comment
                }
             } // if ( Mode == 1  ||  Mode == 3 )
 
+
             if ( Mode == 2  ||  Mode == 3 )
             {
-//             currently we use TINY_NUMBER as the floor value of entropy and hence here we use 2.0*TINY_NUMBER to validate entropy
 #              if ( DUAL_ENERGY == DE_ENTROPY )
-               if ( Pres <= (real)0.0  ||  Fluid[ENTROPY] < (real)2.0*TINY_NUMBER )
+               if ( Pres <= PresCheck  ||  Fluid[ENTROPY] < EntropyCheck )
 #              else
-               if ( Pres <= (real)0.0 )
+               if ( Pres <= PresCheck )
 #              endif
                {
                   if ( Pass )
