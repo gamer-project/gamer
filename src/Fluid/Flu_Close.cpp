@@ -391,31 +391,61 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
 
    const int LocalID[2][2][2] = { 0, 1, 2, 4, 3, 6, 5, 7 };
 
+// variables shared by all OpenMP threads
+   long NCorrThisTime = 0;
+   bool CorrectUnphy  = GAMER_SUCCESS;
+
+
+// OpenMP parallel region
+#  pragma omp parallel
+   {
+
+// variables private to each OpenMP thread
    real VarL[3][NCOMP_TOTAL], VarC[NCOMP_TOTAL], VarR[3][NCOMP_TOTAL], FluxL[3][NCOMP_TOTAL], FluxR[3][NCOMP_TOTAL];
    real dF[3][NCOMP_TOTAL], Out[NCOMP_TOTAL], Update[NCOMP_TOTAL];
-   int  idx_out, idx_in;
-   long NCorrThisTime=0;
-   bool CorrectUnphy = GAMER_SUCCESS;  // this variable is shared by all OpenMP threads
 
+// variables for OPT__1ST_FLUX_CORR == FIRST_FLUX_CORR_3D1D
+   const int  Corr1D_NBuf          = 1;
+   const int  Corr1D_NCell         = 2*Corr1D_NBuf + 1;
+// [3][3] = [dimension][i/j/k indices]
+// we apply the directionally splitting correction in the order x->y->z
+   const int  Corr1D_idx_min[3][3] = { { Corr1D_NBuf,              0,              0 },
+                                       { Corr1D_NBuf,    Corr1D_NBuf,              0 },
+                                       { Corr1D_NBuf,    Corr1D_NBuf,    Corr1D_NBuf } };
+   const int  Corr1D_idx_max[3][3] = { { Corr1D_NBuf, Corr1D_NCell-1, Corr1D_NCell-1 },
+                                       { Corr1D_NBuf,    Corr1D_NBuf, Corr1D_NCell-1 },
+                                       { Corr1D_NBuf,    Corr1D_NBuf,    Corr1D_NBuf } };
+   const int  Corr1D_didx1[3]      = { NCOMP_TOTAL, Corr1D_NCell*NCOMP_TOTAL, SQR(Corr1D_NCell)*NCOMP_TOTAL };
+#  if ( DUAL_ENERGY == DE_ENPY )
+   const real CorrPres_No          = -__FLT_MAX__;  // set minimum pressure to an extremely negative value
+#  endif
 
-#  pragma omp parallel for private( VarL, VarC, VarR, FluxL, FluxR, dF, Out, Update, idx_out, idx_in ) schedule( runtime ) \
-   reduction( +:NCorrThisTime )
+   int   Corr1D_didx2[3];
+   real *Corr1D_InOut_PtrL=NULL, *Corr1D_InOut_PtrC=NULL, *Corr1D_InOut_PtrR=NULL;
+   real (*Corr1D_InOut)[Corr1D_NCell][Corr1D_NCell][NCOMP_TOTAL]
+         = ( OPT__1ST_FLUX_CORR == FIRST_FLUX_CORR_3D1D ) ? new real [Corr1D_NCell][Corr1D_NCell][Corr1D_NCell][NCOMP_TOTAL]
+                                                          : NULL;
+
+#  pragma omp for schedule( runtime ) reduction( +:NCorrThisTime )
    for (int TID=0; TID<NPG; TID++)
    {
       for (int k_out=0; k_out<PS2; k_out++)
       for (int j_out=0; j_out<PS2; j_out++)
       for (int i_out=0; i_out<PS2; i_out++)
       {
-         idx_out = (k_out*PS2 + j_out)*PS2 + i_out;
+         const int idx_out = (k_out*PS2 + j_out)*PS2 + i_out;
 
 //       check if the updated values are unphysical
          for (int v=0; v<NCOMP_TOTAL; v++)   Out[v] = h_Flu_Array_F_Out[TID][v][idx_out];
 
          if ( Unphysical(Out, Gamma_m1, CheckMinPres) )
          {
-            idx_in = ( (k_out+FLU_GHOST_SIZE)*FLU_NXT + (j_out+FLU_GHOST_SIZE) )*FLU_NXT + (i_out+FLU_GHOST_SIZE);
+            const int idx_in = ( (k_out+FLU_GHOST_SIZE)*FLU_NXT + (j_out+FLU_GHOST_SIZE) )*FLU_NXT + (i_out+FLU_GHOST_SIZE);
 
 //          try to correct unphysical results using 1st-order fluxes (which should be more diffusive)
+//          ========================================================================================
+//          (A) first apply the directionally **unsplitting** correction
+//          ========================================================================================
             if ( OPT__1ST_FLUX_CORR != FIRST_FLUX_CORR_NONE )
             {
 //             collect nearby input coserved variables
@@ -470,21 +500,105 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
 
                for (int v=0; v<NCOMP_TOTAL; v++)
                   Update[v] = h_Flu_Array_F_In[TID][v][idx_in] - dt_dh*( dF[0][v] + dF[1][v] + dF[2][v] );
+
             } // if ( OPT__1ST_FLUX_CORR != FIRST_FLUX_CORR_NONE )
 
-            else
+
+//          ========================================================================================
+//          (B) apply the directionally **splitting** correction if the unsplitting correction failed
+//          ========================================================================================
+            if ( OPT__1ST_FLUX_CORR == FIRST_FLUX_CORR_3D1D )
             {
-//             if OPT__1ST_FLUX_CORR is off, just copy data to Update for checking negative density and pressure in the next step
+//             apply the dual-energy formalism to correct the internal energy (when GRAVITY is off)
+//             --> if the corrected internal energy (pressure) passes the test, we don't need to apply the
+//                 directionally **splitting** correction
+//             --> when GRAVITY is on, we call CPU_DualEnergyFix() in the gravity solver instead since it
+//                 might update the internal energy as well (especially when UNSPLIT_GRAVITY is adopted)
+//             --> both ENGY and ENPY might be modified by CPU_DualEnergyFix() --> call-by-reference
+//             --> also note that here we do NOT apply the minimum pressure check in CPU_DualEnergyFix()
+//                 --> otherwise the floor value of pressure might disable the 1st-order-flux correction
+#              if ( defined DUAL_ENERGY  &&  !defined GRAVITY )
+               CPU_DualEnergyFix( Update[DENS], Update[MOMX], Update[MOMY], Update[MOMZ], Update[ENGY], Update[ENPY],
+                                  Gamma_m1, _Gamma_m1, CorrPres_No, DUAL_ENERGY_SWITCH );
+#              endif
+
+               if ( Unphysical(Update, Gamma_m1, CheckMinPres) )
+               {
+//                collect nearby input coserved variables
+                  for (int k=0; k<Corr1D_NCell; k++)  { Corr1D_didx2[2] = (k-Corr1D_NBuf)*didx[2];
+                  for (int j=0; j<Corr1D_NCell; j++)  { Corr1D_didx2[1] = (j-Corr1D_NBuf)*didx[1];
+                  for (int i=0; i<Corr1D_NCell; i++)  { Corr1D_didx2[0] = (i-Corr1D_NBuf)*didx[0];
+
+//                   here we have assumed that the fluid solver does NOT modify the input fluid array
+//                   --> not applicable to RTVD and WAF
+                     for (int v=0; v<NCOMP_TOTAL; v++)
+                        Corr1D_InOut[k][j][i][v] = h_Flu_Array_F_In[TID][v][ idx_in + Corr1D_didx2[0] + Corr1D_didx2[1] + Corr1D_didx2[2] ];
+                  }}}
+
+//                apply the 1st-order-flux correction along different spatial directions **successively**
+                  for (int d=0; d<3; d++)
+                  {
+                     for (int k=Corr1D_idx_min[d][2]; k<=Corr1D_idx_max[d][2]; k++)
+                     for (int j=Corr1D_idx_min[d][1]; j<=Corr1D_idx_max[d][1]; j++)
+                     for (int i=Corr1D_idx_min[d][0]; i<=Corr1D_idx_max[d][0]; i++)
+                     {
+//                      get the pointers to the left and right states for the Riemann solvers
+                        Corr1D_InOut_PtrC = Corr1D_InOut[k][j][i];
+                        Corr1D_InOut_PtrL = Corr1D_InOut_PtrC - Corr1D_didx1[d];
+                        Corr1D_InOut_PtrR = Corr1D_InOut_PtrC + Corr1D_didx1[d];
+
+//                      invoke Riemann solver to calculate the fluxes
+//                      (note that the recalculated flux does NOT include gravity even for UNSPLIT_GRAVITY --> reduce to 1st-order accuracy)
+                        switch ( OPT__1ST_FLUX_CORR_SCHEME )
+                        {
+                           case RSOLVER_ROE:
+                              CPU_RiemannSolver_Roe ( d, FluxL[0], Corr1D_InOut_PtrL, Corr1D_InOut_PtrC, GAMMA, MIN_PRES );
+                              CPU_RiemannSolver_Roe ( d, FluxR[0], Corr1D_InOut_PtrC, Corr1D_InOut_PtrR, GAMMA, MIN_PRES );
+                           break;
+
+                           case RSOLVER_HLLC:
+                              CPU_RiemannSolver_HLLC( d, FluxL[0], Corr1D_InOut_PtrL, Corr1D_InOut_PtrC, GAMMA, MIN_PRES );
+                              CPU_RiemannSolver_HLLC( d, FluxR[0], Corr1D_InOut_PtrC, Corr1D_InOut_PtrR, GAMMA, MIN_PRES );
+                           break;
+
+                           case RSOLVER_HLLE:
+                              CPU_RiemannSolver_HLLE( d, FluxL[0], Corr1D_InOut_PtrL, Corr1D_InOut_PtrC, GAMMA, MIN_PRES );
+                              CPU_RiemannSolver_HLLE( d, FluxR[0], Corr1D_InOut_PtrC, Corr1D_InOut_PtrR, GAMMA, MIN_PRES );
+                           break;
+
+                           default:
+                              Aux_Error( ERROR_INFO, "unnsupported Riemann solver (%d) !!\n", OPT__1ST_FLUX_CORR_SCHEME );
+                        }
+
+//                      recalculate the first-order solution for a full time-step
+                        for (int v=0; v<NCOMP_TOTAL; v++)
+                           Corr1D_InOut[k][j][i][v] -= dt_dh*( FluxR[0][v] - FluxL[0][v] );
+                     } // i,j,k
+                  } // for (int d=0; d<3; d++)
+
+//                store the corrected results in Update[]
+                  for (int v=0; v<NCOMP_TOTAL; v++)
+                     Update[v] = Corr1D_InOut[Corr1D_NBuf][Corr1D_NBuf][Corr1D_NBuf][v];
+
+               } // if ( Unphysical(Update, Gamma_m1, CheckMinPres) )
+            } // if ( OPT__1ST_FLUX_CORR == FIRST_FLUX_CORR_3D1D )
+
+
+//          ========================================================================================
+//          (C) if OPT__1ST_FLUX_CORR is off, just copy data to Update[] for checking negative density and pressure in the next step
+//          ========================================================================================
+            if ( OPT__1ST_FLUX_CORR == FIRST_FLUX_CORR_NONE )
+            {
                for (int v=0; v<NCOMP_TOTAL; v++)   Update[v] = Out[v];
             } // if ( OPT__1ST_FLUX_CORR ) ... else ...
 
 
-//          ensure positive density and pressure
+//          ensure positive density
 //          --> note that MIN_DENS is declared as double and must be converted to **real** before the comparison
 //              --> to be consistent with the check in Unphysical()
+//          --> do NOT check the minimum pressure here since we want to apply the dual-energy correction first
             Update[DENS] = FMAX( Update[DENS], (real)MIN_DENS );
-            Update[ENGY] = CPU_CheckMinPresInEngy( Update[DENS], Update[MOMX], Update[MOMY], Update[MOMZ], Update[ENGY],
-                                                   Gamma_m1, _Gamma_m1, MIN_PRES );
+
 
 //          floor and normalize passive scalars
 #           if ( NCOMP_PASSIVE > 0 )
@@ -495,14 +609,22 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
 #           endif
 
 
-//          apply the dual-energy formalism to correct the internal energy (when GRAVITY is off)
+//          apply the dual-energy formalism to correct the internal energy again (when GRAVITY is off)
+//          --> this might be redundant when OPT__1ST_FLUX_CORR == FIRST_FLUX_CORR_3D1D
+//              --> but it ensures the consistency between all fluid variables since we apply the floor value
+//                  of density AFTER the 1st-order-flux correction
 //          --> when GRAVITY is on, we call CPU_DualEnergyFix() in the gravity solver instead since it
 //              might update the internal energy as well (especially when UNSPLIT_GRAVITY is adopted)
+//          --> both ENGY and ENPY might be modified by CPU_DualEnergyFix() --> call-by-reference
+//          --> also note that here we apply the minimum pressure check in CPU_DualEnergyFix()
 #           if ( defined DUAL_ENERGY  &&  !defined GRAVITY )
-//          both ENGY and ENPY might be modified by CPU_DualEnergyFix() --> call-by-reference
-//          we apply minimum pressure check here
             CPU_DualEnergyFix( Update[DENS], Update[MOMX], Update[MOMY], Update[MOMZ], Update[ENGY], Update[ENPY],
                                Gamma_m1, _Gamma_m1, MIN_PRES, DUAL_ENERGY_SWITCH );
+
+//          ensure positive pressure if dual-energy formalism is not adopted
+#           else
+            Update[ENGY] = CPU_CheckMinPresInEngy( Update[DENS], Update[MOMX], Update[MOMY], Update[MOMZ], Update[ENGY],
+                                                   Gamma_m1, _Gamma_m1, MIN_PRES );
 #           endif
 
 
@@ -605,6 +727,12 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
          } // if need correction
       } // i,j,k
    } // for (int TID=0; TID<NPG; TID++)
+
+// "delete" applies to NULL as well
+   delete [] Corr1D_InOut;
+
+   } // end of OpenMP parallel region
+
 
 // terminate the program if CorrectUnphysical failed
    if ( CorrectUnphy == GAMER_FAILED )
