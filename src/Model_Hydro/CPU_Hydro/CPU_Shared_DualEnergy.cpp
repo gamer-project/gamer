@@ -19,7 +19,7 @@ real CPU_DensPres2Entropy( const real Dens, const real Pres, const real Gamma_m1
 // Note        :  1. Invoked by the functions "CPU_FullStepUpdate, ..."
 //                2. This function checks the minimum pressure since currently DUAL_ENERGY does NOT work
 //                   with OPT__1ST_FLUX_CORR
-//                3. Call-by-reference for "Etot and Entropy"
+//                3. Call-by-reference for "Etot and Enpy"
 //                4. This function always ensures that the returned fluid variables are consistent with each other
 //                   --> They must satisfy "entropy = pressure / density^(Gamma-1)", where pressure is calculated
 //                       by (Etot - Ekin)*(Gamma-1.0)
@@ -29,16 +29,16 @@ real CPU_DensPres2Entropy( const real Dens, const real Pres, const real Gamma_m1
 // Parameter   :  Dens             : Mass density
 //                MomX/Y/Z         : Momentum density
 //                Etot             : Total energy density
-//                Entropy          : Entropy
+//                Enpy             : Entropy
 //                Gamma_m1         : Adiabatic index - 1.0
 //                _Gamma_m1        : 1.0/Gamma_m1
 //                MinPres          : Minimum allowed pressure
 //                DualEnergySwitch : if ( Eint/Ekin < DualEnergySwitch ) ==> correct Eint and Etot
-//                                   else                                ==> correct Entropy
+//                                   else                                ==> correct Enpy
 //
-// Return      :  Etot, Entropy
+// Return      :  Etot, Enpy
 //-------------------------------------------------------------------------------------------------------
-void CPU_DualEnergyFix( const real Dens, const real MomX, const real MomY, const real MomZ, real &Etot, real &Entropy,
+void CPU_DualEnergyFix( const real Dens, const real MomX, const real MomY, const real MomZ, real &Etot, real &Enpy,
                         const real Gamma_m1, const real _Gamma_m1, const real MinPres, const real DualEnergySwitch )
 {
 
@@ -54,7 +54,7 @@ void CPU_DualEnergyFix( const real Dens, const real MomX, const real MomY, const
    {
 //    correct total energy
 #     if   ( DUAL_ENERGY == DE_ENPY )
-      Pres = CPU_DensEntropy2Pres( Dens, Entropy, Gamma_m1, MinPres );
+      Pres = CPU_DensEntropy2Pres( Dens, Enpy, Gamma_m1, MinPres );
       Eint = Pres*_Gamma_m1;
 #     elif ( DUAL_ENERGY == DE_EINT )
 #     error : DE_EINT is NOT supported yet !!
@@ -66,8 +66,8 @@ void CPU_DualEnergyFix( const real Dens, const real MomX, const real MomY, const
    else
    {
 //    correct entropy
-      Pres    = Eint*Gamma_m1;
-      Entropy = CPU_DensPres2Entropy( Dens, Pres, Gamma_m1 );
+      Pres = Eint*Gamma_m1;
+      Enpy = CPU_DensPres2Entropy( Dens, Pres, Gamma_m1 );
    } // if ( Eint/Ekin < DualEnergySwitch ) ... else ...
 
 
@@ -79,8 +79,8 @@ void CPU_DualEnergyFix( const real Dens, const real MomX, const real MomY, const
       Eint = Pres*_Gamma_m1;
 
 //    ensure that both energy and entropy are consistent with the pressure floor
-      Etot    = Ekin + Eint;
-      Entropy = CPU_DensPres2Entropy( Dens, Pres, Gamma_m1 );
+      Etot = Ekin + Eint;
+      Enpy = CPU_DensPres2Entropy( Dens, Pres, Gamma_m1 );
    }
 
 } // FUNCTION : CPU_DualEnergyFix
@@ -103,7 +103,7 @@ void CPU_DualEnergyFix( const real Dens, const real MomX, const real MomY, const
 //                Engy     : Energy density
 //                Gamma_m1 : Adiabatic index - 1.0
 //
-// Return      :  Entropy
+// Return      :  Enpy
 //-------------------------------------------------------------------------------------------------------
 real CPU_Fluid2Entropy( const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy, const real Gamma_m1 )
 {
@@ -111,13 +111,13 @@ real CPU_Fluid2Entropy( const real Dens, const real MomX, const real MomY, const
 // currently this function does NOT apply the minimum pressure check when calling CPU_GetPressure()
    const bool CheckMinPres_No = false;
 
-   real Pres, Entropy;
+   real Pres, Enpy;
 
 // calculate pressure and convert it to entropy
-   Pres    = CPU_GetPressure( Dens, MomX, MomY, MomZ, Engy, Gamma_m1, CheckMinPres_No, NULL_REAL );
-   Entropy = CPU_DensPres2Entropy( Dens, Pres, Gamma_m1 );
+   Pres = CPU_GetPressure( Dens, MomX, MomY, MomZ, Engy, Gamma_m1, CheckMinPres_No, NULL_REAL );
+   Enpy = CPU_DensPres2Entropy( Dens, Pres, Gamma_m1 );
 
-   return Entropy;
+   return Enpy;
 
 } // FUNCTION : CPU_Fluid2Entropy
 
@@ -136,20 +136,20 @@ real CPU_Fluid2Entropy( const real Dens, const real MomX, const real MomY, const
 //                Pres     : Pressure
 //                Gamma_m1 : Adiabatic index - 1.0
 //
-// Return      :  Entropy
+// Return      :  Enpy
 //-------------------------------------------------------------------------------------------------------
 real CPU_DensPres2Entropy( const real Dens, const real Pres, const real Gamma_m1 )
 {
 
-   real Entropy;
+   real Enpy;
 
 // calculate entropy
-   Entropy = Pres*POW( Dens, -Gamma_m1 );
+   Enpy = Pres*POW( Dens, -Gamma_m1 );
 
 // apply a floor value
-   Entropy = FMAX( Entropy, TINY_NUMBER );
+   Enpy = FMAX( Enpy, TINY_NUMBER );
 
-   return Entropy;
+   return Enpy;
 
 } // FUNCTION : CPU_DensPres2Entropy
 
@@ -167,19 +167,19 @@ real CPU_DensPres2Entropy( const real Dens, const real Pres, const real Gamma_m1
 //                       negative value (e.g., -__FLT_MAX__)
 //
 // Parameter   :  Dens     : Mass density
-//                Entropy  : Entropy
+//                Enpy     : Enpy
 //                Gamma_m1 : Adiabatic index - 1.0
 //                MinPres  : Minimum allowed pressure
 //
 // Return      :  Pres
 //-------------------------------------------------------------------------------------------------------
-real CPU_DensEntropy2Pres( const real Dens, const real Entropy, const real Gamma_m1, const real MinPres )
+real CPU_DensEntropy2Pres( const real Dens, const real Enpy, const real Gamma_m1, const real MinPres )
 {
 
    real Pres;
 
 // calculate pressure
-   Pres = Entropy*POW( Dens, Gamma_m1 );
+   Pres = Enpy*POW( Dens, Gamma_m1 );
 
 // apply a floor value
    Pres = CPU_CheckMinPres( Pres, MinPres );

@@ -49,10 +49,10 @@ void Hydro_Aux_Check_Negative( const int lv, const int Mode, const char *comment
 
 // set the minimum thresholds for this check
 // --> currently we use TINY_NUMBER as the floor value of entropy
-   const real DensCheck    = ( CHECK_MODE == 1 ) ? 0.0 : CLOSE_FACTOR*MIN_DENS;
-   const real PresCheck    = ( CHECK_MODE == 1 ) ? 0.0 : CLOSE_FACTOR*MIN_PRES;
+   const real DensCheck = ( CHECK_MODE == 1 ) ? 0.0 : CLOSE_FACTOR*MIN_DENS;
+   const real PresCheck = ( CHECK_MODE == 1 ) ? 0.0 : CLOSE_FACTOR*MIN_PRES;
 #  if ( DUAL_ENERGY == DE_ENPY )
-   const real EntropyCheck = ( CHECK_MODE == 1 ) ? 0.0 : CLOSE_FACTOR*TINY_NUMBER;
+   const real EnpyCheck = ( CHECK_MODE == 1 ) ? 0.0 : CLOSE_FACTOR*TINY_NUMBER;
 #  endif
 
 
@@ -110,7 +110,7 @@ void Hydro_Aux_Check_Negative( const int lv, const int Mode, const char *comment
             if ( Mode == 2  ||  Mode == 3 )
             {
 #              if ( DUAL_ENERGY == DE_ENPY )
-               if ( Pres <= PresCheck  ||  Fluid[ENPY] < EntropyCheck )
+               if ( Pres <= PresCheck  ||  Fluid[ENPY] < EnpyCheck )
 #              else
                if ( Pres <= PresCheck )
 #              endif
