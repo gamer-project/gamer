@@ -621,8 +621,8 @@ void Aux_Check_Parameter()
 #     error : RTVD and WAF schemes do NOT support DUAL_ENERGY !!
 #  endif
 
-#  if ( DUAL_ENERGY != DE_ENTROPY )
-#     error : ERROR : unsupported dual-energy formalism (DE_ENTROPY only, DE_EINT is not supported yet) !!
+#  if ( DUAL_ENERGY != DE_ENPY )
+#     error : ERROR : unsupported dual-energy formalism (DE_ENPY only, DE_EINT is not supported yet) !!
 #  endif
 
    if ( DUAL_ENERGY_SWITCH < 0.0 )

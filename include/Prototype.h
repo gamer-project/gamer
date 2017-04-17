@@ -83,7 +83,7 @@ void CPU_NormalizePassive( const real GasDens, real Passive[], const int NNorm, 
 #ifdef DUAL_ENERGY
 void CPU_DualEnergyFix( const real Dens, const real MomX, const real MomY, const real MomZ, real &Etot, real &Entropy,
                         const real Gamma_m1, const real _Gamma_m1, const real MinPres, const real DualEnergySwitch );
-#if ( DUAL_ENERGY == DE_ENTROPY )
+#if ( DUAL_ENERGY == DE_ENPY )
 real CPU_Fluid2Entropy( const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy, const real Gamma_m1 );
 real CPU_DensPres2Entropy( const real Dens, const real Pres, const real Gamma_m1 );
 real CPU_DensEntropy2Pres( const real Dens, const real Entropy, const real Gamma_m1, const real MinPres );

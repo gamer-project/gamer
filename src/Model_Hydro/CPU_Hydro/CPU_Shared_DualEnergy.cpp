@@ -5,7 +5,7 @@
 // some functions in this file need to be defined even when using GPU
 #if ( MODEL == HYDRO  &&  defined DUAL_ENERGY )
 
-#if ( DUAL_ENERGY == DE_ENTROPY )
+#if ( DUAL_ENERGY == DE_ENPY )
 real CPU_DensPres2Entropy( const real Dens, const real Pres, const real Gamma_m1 );
 #endif
 
@@ -53,7 +53,7 @@ void CPU_DualEnergyFix( const real Dens, const real MomX, const real MomY, const
    if ( Eint/Ekin < DualEnergySwitch )
    {
 //    correct total energy
-#     if   ( DUAL_ENERGY == DE_ENTROPY )
+#     if   ( DUAL_ENERGY == DE_ENPY )
       Pres = CPU_DensEntropy2Pres( Dens, Entropy, Gamma_m1, MinPres );
       Eint = Pres*_Gamma_m1;
 #     elif ( DUAL_ENERGY == DE_EINT )
@@ -87,7 +87,7 @@ void CPU_DualEnergyFix( const real Dens, const real MomX, const real MomY, const
 
 
 
-#if ( DUAL_ENERGY == DE_ENTROPY )
+#if ( DUAL_ENERGY == DE_ENPY )
 //-------------------------------------------------------------------------------------------------------
 // Function    :  CPU_Fluid2Entropy
 // Description :  Evaluate the gas entropy from the input fluid variables
@@ -187,7 +187,7 @@ real CPU_DensEntropy2Pres( const real Dens, const real Entropy, const real Gamma
    return Pres;
 
 } // FUNCTION : CPU_DensEntropy2Pres
-#endif // #if ( DUAL_ENERGY == DE_ENTROPY )
+#endif // #if ( DUAL_ENERGY == DE_ENPY )
 
 
 

@@ -57,8 +57,8 @@ SIMU_OPTION += -DLR_SCHEME=PPM
 # Riemann solver: EXACT/ROE/HLLE/HLLC ##all are useless in RTVD, HLLE/HLLC are useless in WAF##
 SIMU_OPTION += -DRSOLVER=ROE
 
-# dual energy formalism: DE_ENTROPY/DE_EINT (evolve entropy or internal energy) ##useless in RTVD/WAF##
-#SIMU_OPTION += -DDUAL_ENERGY=DE_ENTROPY
+# dual energy formalism: DE_ENPY/DE_EINT (evolve entropy or internal energy) ##useless in RTVD/WAF##
+#SIMU_OPTION += -DDUAL_ENERGY=DE_ENPY
 
 # number of passively advected scalars (**excluding** entropy or internal energy even when DUAL_ENERGY is on)
 # --> for simulations without any passive scalar, please set this variable to 0 and do NOT comment it out

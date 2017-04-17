@@ -53,7 +53,7 @@
 
 
 // dual-energy variable
-#define DE_ENTROPY   1
+#define DE_ENPY      1
 #define DE_EINT      2
 
 
@@ -154,8 +154,8 @@
 #  define  FE                 ( NCOMP_FLUID + 2 )
 */
 // always store entropy (or internal energy) for the dual energy formalism as the last passive variable
-#  if   ( DUAL_ENERGY == DE_ENTROPY )
-#  define  ENTROPY            ( NCOMP_TOTAL-1 )
+#  if   ( DUAL_ENERGY == DE_ENPY )
+#  define  ENPY               ( NCOMP_TOTAL-1 )
 #  elif ( DUAL_ENERGY == DE_EINT )
 #  define  EINT               ( NCOMP_TOTAL-1 )
 #  endif
@@ -177,8 +177,8 @@
 #  define  FLUX_FE            ( NFLUX_FLUID + 2 )
 */
 // always store entropy (or internal energy) for the dual energy formalism as the last passive variable
-#  if   ( DUAL_ENERGY == DE_ENTROPY )
-#  define  FLUX_ENTROPY       ( NFLUX_TOTAL-1 )
+#  if   ( DUAL_ENERGY == DE_ENPY )
+#  define  FLUX_ENPY          ( NFLUX_TOTAL-1 )
 #  elif ( DUAL_ENERGY == DE_EINT )
 #  define  FLUX_EINT          ( NFLUX_TOTAL-1 )
 #  endif
@@ -199,10 +199,10 @@
 #  define _FE                 ( 1 << FE     )
 */
 // always store entropy (or internal energy) for the dual energy formalism as the last passive variable
-#  if   ( DUAL_ENERGY == DE_ENTROPY )
-#  define _ENTROPY            ( 1 << ENTROPY )
+#  if   ( DUAL_ENERGY == DE_ENPY )
+#  define _ENPY               ( 1 << ENPY )
 #  elif ( DUAL_ENERGY == DE_EINT )
-#  define _EINT               ( 1 << EINT    )
+#  define _EINT               ( 1 << EINT )
 #  endif
 #endif // #if ( NCOMP_PASSIVE > 0 )
 
@@ -221,10 +221,10 @@
 #  define _FLUX_FE            ( 1 << FLUX_FE     )
 */
 // always store entropy (or internal energy) for the dual energy formalism as the last passive variable
-#  if   ( DUAL_ENERGY == DE_ENTROPY )
-#  define _FLUX_ENTROPY       ( 1 << FLUX_ENTROPY )
+#  if   ( DUAL_ENERGY == DE_ENPY )
+#  define _FLUX_ENPY          ( 1 << FLUX_ENPY )
 #  elif ( DUAL_ENERGY == DE_EINT )
-#  define _FLUX_EINT          ( 1 << FLUX_EINT    )
+#  define _FLUX_EINT          ( 1 << FLUX_EINT )
 #  endif
 #endif // #if ( NFLUX_PASSIVE > 0 )
 

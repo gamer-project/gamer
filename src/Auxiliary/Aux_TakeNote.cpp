@@ -148,8 +148,8 @@ void Aux_TakeNote()
       fprintf( Note, "RSOLVER                   UNKNOWN\n" );
 #     endif
 
-#     if   ( DUAL_ENERGY == DE_ENTROPY )
-      fprintf( Note, "DUAL_ENERGY               DE_ENTROPY\n" );
+#     if   ( DUAL_ENERGY == DE_ENPY )
+      fprintf( Note, "DUAL_ENERGY               DE_ENPY\n" );
 #     elif ( DUAL_ENERGY == DE_EINT )
       fprintf( Note, "DUAL_ENERGY               DE_EINT\n" );
 #     elif ( DUAL_ENERGY == NONE )

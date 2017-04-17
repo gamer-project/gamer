@@ -25,7 +25,7 @@
 //
 // Parameter   :  lv       : Targeted refinement level
 //                Mode     : 1 : Check negative density
-//                           2 : Check negative pressure (and entropy when DUAL_ENERGY == DE_ENTROPY)
+//                           2 : Check negative pressure (and entropy when DUAL_ENERGY == DE_ENPY)
 //                           3 : Both
 //                comment  : You can put the location where this function is invoked in this string
 //-------------------------------------------------------------------------------------------------------
@@ -43,7 +43,7 @@ void Hydro_Aux_Check_Negative( const int lv, const int Mode, const char *comment
    int  Pass = true;
    real Pres, Fluid[NCOMP_TOTAL];
 
-#  if ( DUAL_ENERGY == DE_ENTROPY )
+#  if ( DUAL_ENERGY == DE_ENPY )
    const real CorrPres_No = -__FLT_MAX__;    // set minimum pressure to an extremely negative value
 #  endif
 
@@ -51,7 +51,7 @@ void Hydro_Aux_Check_Negative( const int lv, const int Mode, const char *comment
 // --> currently we use TINY_NUMBER as the floor value of entropy
    const real DensCheck    = ( CHECK_MODE == 1 ) ? 0.0 : CLOSE_FACTOR*MIN_DENS;
    const real PresCheck    = ( CHECK_MODE == 1 ) ? 0.0 : CLOSE_FACTOR*MIN_PRES;
-#  if ( DUAL_ENERGY == DE_ENTROPY )
+#  if ( DUAL_ENERGY == DE_ENPY )
    const real EntropyCheck = ( CHECK_MODE == 1 ) ? 0.0 : CLOSE_FACTOR*TINY_NUMBER;
 #  endif
 
@@ -67,8 +67,8 @@ void Hydro_Aux_Check_Negative( const int lv, const int Mode, const char *comment
          {
             for (int v=0; v<NCOMP_TOTAL; v++)   Fluid[v] = amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[v][k][j][i];
 
-#           if ( DUAL_ENERGY == DE_ENTROPY )
-            Pres = CPU_DensEntropy2Pres( Fluid[DENS], Fluid[ENTROPY], Gamma_m1, CorrPres_No );
+#           if ( DUAL_ENERGY == DE_ENPY )
+            Pres = CPU_DensEntropy2Pres( Fluid[DENS], Fluid[ENPY], Gamma_m1, CorrPres_No );
 #           else
             Pres = CPU_GetPressure( Fluid[DENS], Fluid[MOMX], Fluid[MOMY], Fluid[MOMZ], Fluid[ENGY],
                                     Gamma_m1, CheckMinPres_No, NULL_REAL );
@@ -109,8 +109,8 @@ void Hydro_Aux_Check_Negative( const int lv, const int Mode, const char *comment
 
             if ( Mode == 2  ||  Mode == 3 )
             {
-#              if ( DUAL_ENERGY == DE_ENTROPY )
-               if ( Pres <= PresCheck  ||  Fluid[ENTROPY] < EntropyCheck )
+#              if ( DUAL_ENERGY == DE_ENPY )
+               if ( Pres <= PresCheck  ||  Fluid[ENPY] < EntropyCheck )
 #              else
                if ( Pres <= PresCheck )
 #              endif

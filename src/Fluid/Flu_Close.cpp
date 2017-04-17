@@ -299,7 +299,7 @@ bool Unphysical( const real Fluid[], const real Gamma_m1, const int CheckMinEngy
 
    const int  CheckMinEngy = 0;
    const int  CheckMinPres = 1;
-#  if ( DUAL_ENERGY == DE_ENTROPY )
+#  if ( DUAL_ENERGY == DE_ENPY )
    const real CorrPres_No  = -__FLT_MAX__;   // set minimum pressure to an extremely negative value
 #  else
    const bool CorrPres_No  = false;
@@ -321,14 +321,14 @@ bool Unphysical( const real Fluid[], const real Gamma_m1, const int CheckMinEngy
 
    if ( CheckMinEngyOrPres == CheckMinPres  &&
         (
-#          if ( DUAL_ENERGY == DE_ENTROPY )
+#          if ( DUAL_ENERGY == DE_ENPY )
 //         when the dual-energy formalism is adopted, do NOT calculate pressure from "Etot-Ekin" since it would suffer
 //         from large round-off errors
 //         currently we use TINY_NUMBER as the floor value of entropy and hence here we use 2.0*TINY_NUMBER to validate entropy
 //         --> in general, for MIN_PRES > 0.0, we expect that unphysical entropy would lead to unphysical pressure
-//         --> however, the check "Fluid[ENTROPY] < (real)2.0*TINY_NUMBER" is necessary when MIN_PRES == 0.0
-           CPU_DensEntropy2Pres( Fluid[DENS], Fluid[ENTROPY], Gamma_m1, CorrPres_No ) < (real)MIN_PRES  ||
-           Fluid[ENTROPY] < (real)2.0*TINY_NUMBER
+//         --> however, the check "Fluid[ENPY] < (real)2.0*TINY_NUMBER" is necessary when MIN_PRES == 0.0
+           CPU_DensEntropy2Pres( Fluid[DENS], Fluid[ENPY], Gamma_m1, CorrPres_No ) < (real)MIN_PRES  ||
+           Fluid[ENPY] < (real)2.0*TINY_NUMBER
 
 #          else
            CPU_GetPressure( Fluid[DENS], Fluid[MOMX], Fluid[MOMY], Fluid[MOMZ], Fluid[ENGY],
@@ -499,9 +499,9 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
 //          --> when GRAVITY is on, we call CPU_DualEnergyFix() in the gravity solver instead since it
 //              might update the internal energy as well (especially when UNSPLIT_GRAVITY is adopted)
 #           if ( defined DUAL_ENERGY  &&  !defined GRAVITY )
-//          both ENGY and ENTROPY might be modified by CPU_DualEnergyFix() --> call-by-reference
+//          both ENGY and ENPY might be modified by CPU_DualEnergyFix() --> call-by-reference
 //          we apply minimum pressure check here
-            CPU_DualEnergyFix( Update[DENS], Update[MOMX], Update[MOMY], Update[MOMZ], Update[ENGY], Update[ENTROPY],
+            CPU_DualEnergyFix( Update[DENS], Update[MOMX], Update[MOMY], Update[MOMZ], Update[ENGY], Update[ENPY],
                                Gamma_m1, _Gamma_m1, MIN_PRES, DUAL_ENERGY_SWITCH );
 #           endif
 
@@ -534,24 +534,24 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
                         In[DENS], In[MOMX], In[MOMY], In[MOMZ], In[ENGY],
                         CPU_GetPressure(In[DENS], In[MOMX], In[MOMY], In[MOMZ], In[ENGY],
                                         Gamma_m1, CheckMinPres_No, NULL_REAL) );
-#              if ( DUAL_ENERGY == DE_ENTROPY )
-               fprintf( File, ", %14.7e", In[ENTROPY] );
+#              if ( DUAL_ENERGY == DE_ENPY )
+               fprintf( File, ", %14.7e", In[ENPY] );
 #              endif
                fprintf( File, ")\n" );
                fprintf( File, "ouptut (old) = (%14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e",
                         Out[DENS], Out[MOMX], Out[MOMY], Out[MOMZ], Out[ENGY],
                         CPU_GetPressure(Out[DENS], Out[MOMX], Out[MOMY], Out[MOMZ], Out[ENGY],
                                         Gamma_m1, CheckMinPres_No, NULL_REAL) );
-#              if ( DUAL_ENERGY == DE_ENTROPY )
-               fprintf( File, ", %14.7e", Out[ENTROPY] );
+#              if ( DUAL_ENERGY == DE_ENPY )
+               fprintf( File, ", %14.7e", Out[ENPY] );
 #              endif
                fprintf( File, ")\n" );
                fprintf( File, "output (new) = (%14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e",
                         Update[DENS], Update[MOMX], Update[MOMY], Update[MOMZ], Update[ENGY],
                         CPU_GetPressure(Update[DENS], Update[MOMX], Update[MOMY], Update[MOMZ], Update[ENGY],
                                         Gamma_m1, CheckMinPres_No, NULL_REAL) );
-#              if ( DUAL_ENERGY == DE_ENTROPY )
-               fprintf( File, ", %14.7e", Update[ENTROPY] );
+#              if ( DUAL_ENERGY == DE_ENPY )
+               fprintf( File, ", %14.7e", Update[ENPY] );
 #              endif
                fprintf( File, ")\n" );
 

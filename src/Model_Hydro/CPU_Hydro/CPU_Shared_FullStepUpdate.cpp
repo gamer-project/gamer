@@ -103,8 +103,8 @@ void CPU_FullStepUpdate( const real Input[][ FLU_NXT*FLU_NXT*FLU_NXT ], real Out
 //    Output[DENS][ID2] = FMAX( Output[DENS][ID2], MinDens );
 
 #     ifndef GRAVITY
-//    both ENGY and ENTROPY might be modified by CPU_DualEnergyFix() --> call-by-reference
-      CPU_DualEnergyFix( Output[DENS][ID2], Output[MOMX][ID2], Output[MOMY][ID2], Output[MOMZ][ID2], Output[ENGY][ID2], Output[ENTROPY][ID2],
+//    both ENGY and ENPY might be modified by CPU_DualEnergyFix() --> call-by-reference
+      CPU_DualEnergyFix( Output[DENS][ID2], Output[MOMX][ID2], Output[MOMY][ID2], Output[MOMZ][ID2], Output[ENGY][ID2], Output[ENPY][ID2],
                          Gamma_m1, _Gamma_m1, MinPres_No, DualEnergySwitch );
 #     endif
 #     endif // #ifdef DUAL_ENERGY
