@@ -696,7 +696,10 @@ void Aux_TakeNote()
                                                             ( OPT__WAF_LIMITER == WAF_MINBEE       ) ? "WAF_MINBEE"  :
                                                             ( OPT__WAF_LIMITER == WAF_LIMITER_NONE ) ? "NONE"    :
                                                                                                        "UNKNOWN" );
-      fprintf( Note, "OPT__1ST_FLUX_CORR        %d\n",      OPT__1ST_FLUX_CORR      );
+      fprintf( Note, "OPT__1ST_FLUX_CORR        %s\n",      ( OPT__1ST_FLUX_CORR == FIRST_FLUX_CORR_3D   ) ? "3D"   :
+                                                            ( OPT__1ST_FLUX_CORR == FIRST_FLUX_CORR_3D1D ) ? "3D1D" :
+                                                            ( OPT__1ST_FLUX_CORR == FIRST_FLUX_CORR_NONE ) ? "NONE" :
+                                                                                                             "UNKNOWN" );
       fprintf( Note, "OPT__1ST_FLUX_CORR_SCHEME %s\n",      ( OPT__1ST_FLUX_CORR_SCHEME == RSOLVER_ROE  ) ? "RSOLVER_ROE"  :
                                                             ( OPT__1ST_FLUX_CORR_SCHEME == RSOLVER_HLLC ) ? "RSOLVER_HLLC" :
                                                             ( OPT__1ST_FLUX_CORR_SCHEME == RSOLVER_HLLE ) ? "RSOLVER_HLLE" :

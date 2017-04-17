@@ -526,81 +526,84 @@ void Output_DumpData_Total( const char *FileName )
 
       fseek( File, HeaderOffset_Parameter, SEEK_SET );
 
-      const int    mpi_nrank               = MPI_NRank;
-      const int    mpi_nrank_x[3]          = { MPI_NRank_X[0], MPI_NRank_X[1], MPI_NRank_X[2] };
-      const int    opt__output_total       = (int)OPT__OUTPUT_TOTAL;
-      const int    opt__output_part        = (int)OPT__OUTPUT_PART;
-      const int    opt__output_mode        = (int)OPT__OUTPUT_MODE;
-      const int    opt__flu_int_scheme     = (int)OPT__FLU_INT_SCHEME;
-      const int    opt__ref_flu_int_scheme = (int)OPT__REF_FLU_INT_SCHEME;
+      const int    mpi_nrank                 = MPI_NRank;
+      const int    mpi_nrank_x[3]            = { MPI_NRank_X[0], MPI_NRank_X[1], MPI_NRank_X[2] };
+      const int    opt__output_total         = (int)OPT__OUTPUT_TOTAL;
+      const int    opt__output_part          = (int)OPT__OUTPUT_PART;
+      const int    opt__output_mode          = (int)OPT__OUTPUT_MODE;
+      const int    opt__flu_int_scheme       = (int)OPT__FLU_INT_SCHEME;
+      const int    opt__ref_flu_int_scheme   = (int)OPT__REF_FLU_INT_SCHEME;
 
 #     ifndef COMOVING
-      const double OMEGA_M0                = NULL_REAL;
-      const double HUBBLE0                 = NULL_REAL;
-      const double DT__MAX_DELTA_A         = NULL_REAL;
+      const double OMEGA_M0                  = NULL_REAL;
+      const double HUBBLE0                   = NULL_REAL;
+      const double DT__MAX_DELTA_A           = NULL_REAL;
 #     endif
 
 #     ifdef GRAVITY
-      const int    opt__pot_int_scheme     = (int)OPT__POT_INT_SCHEME;
-      const int    opt__rho_int_scheme     = (int)OPT__RHO_INT_SCHEME;
-      const int    opt__gra_int_scheme     = (int)OPT__GRA_INT_SCHEME;
-      const int    opt__ref_pot_int_scheme = (int)OPT__REF_POT_INT_SCHEME;
+      const int    opt__pot_int_scheme       = (int)OPT__POT_INT_SCHEME;
+      const int    opt__rho_int_scheme       = (int)OPT__RHO_INT_SCHEME;
+      const int    opt__gra_int_scheme       = (int)OPT__GRA_INT_SCHEME;
+      const int    opt__ref_pot_int_scheme   = (int)OPT__REF_POT_INT_SCHEME;
 #     else
-      const double DT__GRAVITY             = NULL_REAL;
-      const double NEWTON_G                = NULL_REAL;
-      const int    POT_GPU_NPGROUP         = NULL_INT;
-      const bool   OPT__OUTPUT_POT         = false;
-      const bool   OPT__GRA_P5_GRADIENT    = NULL_BOOL;
-      const double SOR_OMEGA               = NULL_REAL;
-      const int    SOR_MAX_ITER            = NULL_INT;
-      const int    SOR_MIN_ITER            = NULL_INT;
-      const double MG_TOLERATED_ERROR      = NULL_REAL;
-      const int    MG_MAX_ITER             = NULL_INT;
-      const int    MG_NPRE_SMOOTH          = NULL_INT;
-      const int    MG_NPOST_SMOOTH         = NULL_INT;
-      const int    opt__pot_int_scheme     = NULL_INT;
-      const int    opt__rho_int_scheme     = NULL_INT;
-      const int    opt__gra_int_scheme     = NULL_INT;
-      const int    opt__ref_pot_int_scheme = NULL_INT;
+      const double DT__GRAVITY               = NULL_REAL;
+      const double NEWTON_G                  = NULL_REAL;
+      const int    POT_GPU_NPGROUP           = NULL_INT;
+      const bool   OPT__OUTPUT_POT           = false;
+      const bool   OPT__GRA_P5_GRADIENT      = NULL_BOOL;
+      const double SOR_OMEGA                 = NULL_REAL;
+      const int    SOR_MAX_ITER              = NULL_INT;
+      const int    SOR_MIN_ITER              = NULL_INT;
+      const double MG_TOLERATED_ERROR        = NULL_REAL;
+      const int    MG_MAX_ITER               = NULL_INT;
+      const int    MG_NPRE_SMOOTH            = NULL_INT;
+      const int    MG_NPOST_SMOOTH           = NULL_INT;
+      const int    opt__pot_int_scheme       = NULL_INT;
+      const int    opt__rho_int_scheme       = NULL_INT;
+      const int    opt__gra_int_scheme       = NULL_INT;
+      const int    opt__ref_pot_int_scheme   = NULL_INT;
 #     endif // #ifdef GRAVITY
 
 #     ifdef LOAD_BALANCE
-      const double lb_wli_max              = amr->LB->WLI_Max;
+      const double lb_wli_max                = amr->LB->WLI_Max;
 #     else
-      const double lb_wli_max              = NULL_REAL;
+      const double lb_wli_max                = NULL_REAL;
 #     endif
 
 #     if ( MODEL == HYDRO )
-      const int    opt__lr_limiter         = (int)OPT__LR_LIMITER;
-      const int    opt__waf_limiter        = (int)OPT__WAF_LIMITER;
+      const int    opt__lr_limiter           = (int)OPT__LR_LIMITER;
+      const int    opt__waf_limiter          = (int)OPT__WAF_LIMITER;
+
+//    convert OPT__1ST_FLUX_CORR to bool to be consistent with the old format where OPT__1ST_FLUX_CORR is bool instead of int
+      const bool   opt__1st_flux_corr        = (bool)OPT__1ST_FLUX_CORR;
       const int    opt__1st_flux_corr_scheme = (int)OPT__1ST_FLUX_CORR_SCHEME;
 #     else
 #     if ( MODEL == MHD )
 #     warning : WAIT MHD !!!
 #     endif
-      const bool   OPT__FLAG_PRES_GRADIENT = NULL_BOOL;
-      const double GAMMA                   = NULL_REAL;
-      const double MOLECULAR_WEIGHT        = NULL_REAL;
-      const double MINMOD_COEFF            = NULL_REAL;
-      const double EP_COEFF                = NULL_REAL;
-      const int    opt__lr_limiter         = NULL_INT;
-      const int    opt__waf_limiter        = NULL_INT;
-      const bool   OPT__1ST_FLUX_CORR      = NULL_BOOL;
+      const bool   OPT__FLAG_PRES_GRADIENT   = NULL_BOOL;
+      const double GAMMA                     = NULL_REAL;
+      const double MOLECULAR_WEIGHT          = NULL_REAL;
+      const double MINMOD_COEFF              = NULL_REAL;
+      const double EP_COEFF                  = NULL_REAL;
+      const int    opt__lr_limiter           = NULL_INT;
+      const int    opt__waf_limiter          = NULL_INT;
+      const bool   opt__1st_flux_corr        = NULL_BOOL;
       const int    opt__1st_flux_corr_scheme = NULL_INT;
 #     endif
 
 #     if ( MODEL != ELBDM )
-      const double DT__PHASE               = NULL_REAL;
-      const bool   OPT__FLAG_ENGY_DENSITY  = NULL_BOOL;
-      const bool   OPT__INT_PHASE          = NULL_BOOL;
-      const double ELBDM_MASS              = NULL_REAL;
-      const double ELBDM_PLANCK_CONST      = NULL_REAL;
+      const double DT__PHASE                 = NULL_REAL;
+      const bool   OPT__FLAG_ENGY_DENSITY    = NULL_BOOL;
+      const bool   OPT__INT_PHASE            = NULL_BOOL;
+      const double ELBDM_MASS                = NULL_REAL;
+      const double ELBDM_PLANCK_CONST        = NULL_REAL;
 #     endif
 
 #     ifdef PARTICLE
-      const int    opt__output_par_dens    = (int)OPT__OUTPUT_PAR_DENS;
+      const int    opt__output_par_dens      = (int)OPT__OUTPUT_PAR_DENS;
 #     else
-      const int    opt__output_par_dens    = 0;
+      const int    opt__output_par_dens      = 0;
 #     endif
 
       fwrite( &BOX_SIZE,                  sizeof(double),                  1,             File );
@@ -669,7 +672,7 @@ void Output_DumpData_Total( const char *FileName )
       fwrite( &OUTPUT_PART_Z,             sizeof(double),                  1,             File );
       fwrite( &OPT__TIMING_BALANCE,       sizeof(bool),                    1,             File );
       fwrite( &OPT__OUTPUT_BASEPS,        sizeof(bool),                    1,             File );
-      fwrite( &OPT__1ST_FLUX_CORR,        sizeof(bool),                    1,             File );
+      fwrite( &opt__1st_flux_corr,        sizeof(bool),                    1,             File );
       fwrite( &opt__1st_flux_corr_scheme, sizeof(int),                     1,             File );
       fwrite( &opt__output_par_dens,      sizeof(int),                     1,             File );
       fwrite( &HUBBLE0,                   sizeof(double),                  1,             File );

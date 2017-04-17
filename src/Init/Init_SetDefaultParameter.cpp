@@ -488,9 +488,19 @@ void Init_SetDefaultParameter()
 #  endif
 
 
-// Riemann solver for OPT__1ST_FLUX_CORR
+// 1st-order flux correction
 #  if ( MODEL == HYDRO  ||  MODEL == MHD )
-   if ( OPT__1ST_FLUX_CORR  &&  OPT__1ST_FLUX_CORR_SCHEME == RSOLVER_DEFAULT )
+// directionally unsplitting or directionally unsplitting + directionally splitting
+   if ( OPT__1ST_FLUX_CORR == FIRST_FLUX_CORR_DEFAULT )
+   {
+      OPT__1ST_FLUX_CORR = FIRST_FLUX_CORR_3D1D;
+
+      if ( MPI_Rank == 0 )  Aux_Message( stdout, "NOTE : parameter \"%s\" is set to the default value = %d\n",
+                                         "OPT__1ST_FLUX_CORR", OPT__1ST_FLUX_CORR );
+   }
+
+// Riemann solver
+   if ( OPT__1ST_FLUX_CORR != FIRST_FLUX_CORR_NONE  &&  OPT__1ST_FLUX_CORR_SCHEME == RSOLVER_DEFAULT )
    {
       OPT__1ST_FLUX_CORR_SCHEME = RSOLVER_ROE;
 
@@ -498,7 +508,7 @@ void Init_SetDefaultParameter()
                                          "OPT__1ST_FLUX_CORR_SCHEME", OPT__1ST_FLUX_CORR_SCHEME );
    }
 
-   else if ( !OPT__1ST_FLUX_CORR  &&  OPT__1ST_FLUX_CORR_SCHEME != RSOLVER_NONE )
+   else if ( OPT__1ST_FLUX_CORR == FIRST_FLUX_CORR_NONE  &&  OPT__1ST_FLUX_CORR_SCHEME != RSOLVER_NONE )
    {
       OPT__1ST_FLUX_CORR_SCHEME = RSOLVER_NONE;
 

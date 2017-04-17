@@ -17,8 +17,9 @@ real CPU_DensPres2Entropy( const real Dens, const real Pres, const real Gamma_m1
 // Description :  Correct the internal and total energies using the dual-energy formalism
 //
 // Note        :  1. Invoked by the functions "CPU_FullStepUpdate, ..."
-//                2. This function checks the minimum pressure since currently DUAL_ENERGY does NOT work
-//                   with OPT__1ST_FLUX_CORR
+//                2. A floor value "MinPres" is applied to the corrected pressure
+//                   --> To disable the minimum pressure check, one could simply set MinPres to an extremely
+//                       negative value (e.g., -__FLT_MAX__)
 //                3. Call-by-reference for "Etot and Enpy"
 //                4. This function always ensures that the returned fluid variables are consistent with each other
 //                   --> They must satisfy "entropy = pressure / density^(Gamma-1)", where pressure is calculated

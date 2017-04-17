@@ -80,33 +80,34 @@ extern OptCorrAfterSync_t OPT__CORR_AFTER_ALL_SYNC;
 // ============================================================================================================
 // (2-1) fluid solver in different models
 #if   ( MODEL == HYDRO )
-extern double        FlagTable_PresGradient[NLEVEL-1], FlagTable_Vorticity[NLEVEL-1];
-extern double        GAMMA, MINMOD_COEFF, EP_COEFF, MOLECULAR_WEIGHT;
-extern LR_Limiter_t  OPT__LR_LIMITER;
-extern WAF_Limiter_t OPT__WAF_LIMITER;
-extern OptRSolver_t  OPT__1ST_FLUX_CORR_SCHEME;
-extern bool          OPT__FLAG_PRES_GRADIENT, OPT__FLAG_LOHNER_ENGY, OPT__FLAG_LOHNER_PRES, OPT__FLAG_LOHNER_TEMP, OPT__1ST_FLUX_CORR;
-extern bool          OPT__FLAG_VORTICITY;
-extern int           OPT__CK_NEGATIVE;
-extern double        MIN_DENS, MIN_PRES;
+extern double           FlagTable_PresGradient[NLEVEL-1], FlagTable_Vorticity[NLEVEL-1];
+extern double           GAMMA, MINMOD_COEFF, EP_COEFF, MOLECULAR_WEIGHT;
+extern LR_Limiter_t     OPT__LR_LIMITER;
+extern WAF_Limiter_t    OPT__WAF_LIMITER;
+extern Opt1stFluxCorr_t OPT__1ST_FLUX_CORR;
+extern OptRSolver_t     OPT__1ST_FLUX_CORR_SCHEME;
+extern bool             OPT__FLAG_PRES_GRADIENT, OPT__FLAG_LOHNER_ENGY, OPT__FLAG_LOHNER_PRES, OPT__FLAG_LOHNER_TEMP;
+extern bool             OPT__FLAG_VORTICITY;
+extern int              OPT__CK_NEGATIVE;
+extern double           MIN_DENS, MIN_PRES;
 #ifdef DUAL_ENERGY
-extern double        DUAL_ENERGY_SWITCH;
+extern double           DUAL_ENERGY_SWITCH;
 #endif
 
 #elif ( MODEL == MHD )
 #warning WAIT MHD !!!
-extern double        MIN_DENS, MIN_PRES;
+extern double           MIN_DENS, MIN_PRES;
 #ifdef DUAL_ENERGY
-extern double        DUAL_ENERGY_SWITCH;
+extern double           DUAL_ENERGY_SWITCH;
 #endif
 
 #elif ( MODEL == ELBDM )
-extern double        DT__PHASE, FlagTable_EngyDensity[NLEVEL-1][2];
-extern bool          OPT__FLAG_ENGY_DENSITY, OPT__INT_PHASE, ELBDM_TAYLOR3_AUTO;
-extern double        ELBDM_TAYLOR3_COEFF, ELBDM_MASS, ELBDM_PLANCK_CONST, ELBDM_ETA, MIN_DENS;
-extern real          MinDtInfo_Phase[NLEVEL];            // maximum time derivative of phase at each level
+extern double           DT__PHASE, FlagTable_EngyDensity[NLEVEL-1][2];
+extern bool             OPT__FLAG_ENGY_DENSITY, OPT__INT_PHASE, ELBDM_TAYLOR3_AUTO;
+extern double           ELBDM_TAYLOR3_COEFF, ELBDM_MASS, ELBDM_PLANCK_CONST, ELBDM_ETA, MIN_DENS;
+extern real             MinDtInfo_Phase[NLEVEL];            // maximum time derivative of phase at each level
 #ifdef QUARTIC_SELF_INTERACTION
-extern double        ELBDM_LAMBDA;
+extern double           ELBDM_LAMBDA;
 #endif
 
 #else

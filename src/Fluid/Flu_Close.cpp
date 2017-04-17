@@ -416,7 +416,7 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
             idx_in = ( (k_out+FLU_GHOST_SIZE)*FLU_NXT + (j_out+FLU_GHOST_SIZE) )*FLU_NXT + (i_out+FLU_GHOST_SIZE);
 
 //          try to correct unphysical results using 1st-order fluxes (which should be more diffusive)
-            if ( OPT__1ST_FLUX_CORR )
+            if ( OPT__1ST_FLUX_CORR != FIRST_FLUX_CORR_NONE )
             {
 //             collect nearby input coserved variables
                for (int v=0; v<NCOMP_TOTAL; v++)
@@ -470,7 +470,7 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
 
                for (int v=0; v<NCOMP_TOTAL; v++)
                   Update[v] = h_Flu_Array_F_In[TID][v][idx_in] - dt_dh*( dF[0][v] + dF[1][v] + dF[2][v] );
-            } // if ( OPT__1ST_FLUX_CORR )
+            } // if ( OPT__1ST_FLUX_CORR != FIRST_FLUX_CORR_NONE )
 
             else
             {

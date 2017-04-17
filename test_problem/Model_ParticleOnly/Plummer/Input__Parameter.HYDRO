@@ -84,7 +84,7 @@
                                         (0/1/2/3/4/5) = (none/vanLeer/generalized MinMod/vanAlbada/
                                                          vanLeer + generalized MinMod/extrema-preserving) limiter
 2           OPT__WAF_LIMITER          # flux limiter in WAF (0/1/2/3/4) = (none/SuperBee/vanLeer/vanAlbada/MinBee)
-1           OPT__1ST_FLUX_CORR        # correct unphysical results (defined by MIN_DENS/PRES) with 1st-order fluxes ##MHM/MHM_RP/CTU ONLY##
+-1          OPT__1ST_FLUX_CORR        # correct unphysical results (defined by MIN_DENS/PRES) with 1st-order fluxes (-1/0/1/2 -> default/off/3D/3D+1D [2]) ##MHM/MHM_RP/CTU ONLY##
 -1          OPT__1ST_FLUX_CORR_SCHEME # Riemann solver for OPT__1ST_FLUX_CORR (-1/1/2/3 -> default/Roe/HLLC/HLLE [Roe])
 
 1.0         ELBDM_MASS                # particle mass in ev/c^2 in ELBDM (h*ev/c^2 in COMOVING -> input particle_mass_in_ev / h)

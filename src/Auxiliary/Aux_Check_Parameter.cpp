@@ -637,7 +637,11 @@ void Aux_Check_Parameter()
    if ( OPT__CK_NEGATIVE < 0  ||  OPT__CK_NEGATIVE > 3 )
       Aux_Error( ERROR_INFO, "unsupported parameter \"%s = %d\" !!\n", "OPT__CK_NEGATIVE", OPT__CK_NEGATIVE );
 
-   if ( OPT__1ST_FLUX_CORR )
+   if ( OPT__1ST_FLUX_CORR != FIRST_FLUX_CORR_NONE  &&  OPT__1ST_FLUX_CORR != FIRST_FLUX_CORR_3D  &&
+        OPT__1ST_FLUX_CORR != FIRST_FLUX_CORR_3D1D )
+      Aux_Error( ERROR_INFO, "unsupported parameter \"%s = %d [0/1/2]\" !!\n", "OPT__1ST_FLUX_CORR", OPT__1ST_FLUX_CORR );
+
+   if ( OPT__1ST_FLUX_CORR != FIRST_FLUX_CORR_NONE )
    {
       if ( OPT__1ST_FLUX_CORR_SCHEME != RSOLVER_ROE  &&  OPT__1ST_FLUX_CORR_SCHEME != RSOLVER_HLLC  &&
            OPT__1ST_FLUX_CORR_SCHEME != RSOLVER_HLLE )
@@ -708,7 +712,7 @@ void Aux_Check_Parameter()
    if ( OPT__INIT == INIT_UM )
       Aux_Message( stderr, "WARNING : currently we don't check MIN_DENS/PRES for the initial data loaded from UM_START !!\n" );
 
-   if ( OPT__1ST_FLUX_CORR )
+   if ( OPT__1ST_FLUX_CORR != FIRST_FLUX_CORR_NONE )
       Aux_Message( stderr, "REMINDER : OPT__1ST_FLUX_CORR may break the strict conservation of fluid variables\n" );
 
    } // if ( MPI_Rank == 0 )
