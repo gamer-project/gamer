@@ -92,6 +92,9 @@ extern real (*d_Flu_Array_F_Out)[FLU_NOUT][ PS2*PS2*PS2 ];
 extern real (*d_Flux_Array)[9][NFLUX_TOTAL][ PS2*PS2 ];
 extern double (*d_Corner_Array_F)[3];
 extern real  *d_MinDtInfo_Fluid_Array;
+#ifdef DUAL_ENERGY
+extern char (*d_DE_Array_F_Out)[ PS2*PS2*PS2 ];
+#endif
 #if ( MODEL == HYDRO )
 #if ( FLU_SCHEME == MHM  ||  FLU_SCHEME == MHM_RP  ||  FLU_SCHEME == CTU )
 extern real (*d_PriVar)     [NCOMP_TOTAL][ FLU_NXT*FLU_NXT*FLU_NXT ];

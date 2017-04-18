@@ -32,6 +32,14 @@ long  LB_Corner2Index( const int lv, const int Corner[], const Check_t Check );
 //                                      (not from exchanging potential between sibling patches)
 //                                  --> Currently it is used for Par->ImproveAcc only
 //                                  --> Currently it's useless for buffer patches
+//                de_status       : Assigned to (DE_UPDATED_BY_ETOT / DE_UPDATED_BY_DUAL / DE_UPDATED_BY_MIN_PRES / DE_UPDATED_BY_1ST_FLUX)
+//                                  to indicate whether each cell is updated by the total energy, dual energy variable,
+//                                  minimum allowed pressure, or 1st-order-flux correction
+//                                  --> For DE_UPDATED_BY_1ST_FLUX, we don't further distinguish between the update by total energy,
+//                                      dual-energy variable, and minimum allowed pressure
+//                                  --> DE_UPDATED_BY_XXX are defined in Macro.h
+//                                  --> It's a character array with the size PS1^3
+//                                  --> Currently it's only allocated for Sg=0
 //                rho_ext         : Density with RHOEXT_GHOST_SIZE (typically 2) ghost cells on each side
 //                                  --> Only allocated **temporarily** in the function Prepare_PatchData for storing
 //                                      particle mass density
@@ -135,12 +143,14 @@ long  LB_Corner2Index( const int lv, const int Corner[], const Check_t Check );
 //                Activate        : Activate patch
 //                fnew            : Allocate one flux array
 //                fdelete         : Deallocate one flux array
-//                hnew            : Allocate hydrodynamic array
-//                hdelete         : Deallocate hydrodynamic array
-//                gnew            : Allocate potential array
-//                gdelete         : Deallocate potential array
-//                dnew            : Allocate rho_ext array
-//                ddelete         : Deallocate rho_ext array
+//                hnew            : Allocate the hydrodynamic array
+//                hdelete         : Deallocate the hydrodynamic array
+//                gnew            : Allocate the potential array
+//                gdelete         : Deallocate the potential array
+//                snew            : Allocate the dual-energy status array
+//                sdelete         : Deallocate the dual-energy status array
+//                dnew            : Allocate the rho_ext array
+//                ddelete         : Deallocate the rho_ext array
 //                AddParticle     : Add particles to the particle list
 //                RemoveParticle  : Remove particles from the particle list
 //-------------------------------------------------------------------------------------------------------
@@ -157,6 +167,10 @@ struct patch_t
    real (*pot_ext)[GRA_NXT][GRA_NXT];
 #  endif
 #  endif // GRAVITY
+
+#  ifdef DUAL_ENERGY
+   char (*de_status)[PATCH_SIZE][PATCH_SIZE];
+#  endif
 
 #  ifdef PARTICLE
    real (*rho_ext)[RHOEXT_NXT][RHOEXT_NXT];
@@ -203,23 +217,25 @@ struct patch_t
    //
    // Note        :  Initialize data members
    //
-   // Parameter   :  x,y,z    : Scale indices of the patch corner
-   //                FaPID    : Patch ID of the father patch
-   //                FluData  : true --> Allocate hydrodynamic array(s) "fluid"
-   //                                    "rho_ext" will NOT be allocated here even if PARTICLE is on
-   //                PotData  : true --> Allocate potential array "pot" (has no effect if "GRAVITY" is turned off)
-   //                                    "pot_ext" will be allocated as well if STORE_POT_GHOST is on
-   //                lv       : Refinement level of the newly created patch
-   //                BoxScale : Simulation box scale
-   //                dh_min   : Cell size at the maximum level
+   // Parameter   :  x,y,z     : Scale indices of the patch corner
+   //                FaPID     : Patch ID of the father patch
+   //                FluData   : true --> Allocate the hydrodynamic array(s) "fluid"
+   //                                     "rho_ext" will NOT be allocated here even if PARTICLE is on
+   //                PotData   : true --> Allocate the potential array "pot" (has no effect if "GRAVITY" is turned off)
+   //                                     "pot_ext" will be allocated as well if STORE_POT_GHOST is on
+   //                DE_Status : true --> Allocate the dual-energy status array "de_status"
+   //                                 --> Useless if "DUAL_ENERGY" is turned off
+   //                lv        : Refinement level of the newly created patch
+   //                BoxScale  : Simulation box scale
+   //                dh_min    : Cell size at the maximum level
    //===================================================================================
-   patch_t( const int x, const int y, const int z, const int FaPID, const bool FluData, const bool PotData,
+   patch_t( const int x, const int y, const int z, const int FaPID, const bool FluData, const bool PotData, const bool DE_Status,
             const int lv, const int BoxScale[], const double dh_min )
    {
 
 //    always initialize field pointers (e.g., fluid, pot, ...) as NULL if they are not allocated here
       const bool InitPtrAsNull_Yes = true;
-      Activate( x, y, z, FaPID, FluData, PotData, lv, BoxScale, dh_min, InitPtrAsNull_Yes );
+      Activate( x, y, z, FaPID, FluData, PotData, DE_Status, lv, BoxScale, dh_min, InitPtrAsNull_Yes );
 
    } // METHOD : patch_t
 
@@ -233,14 +249,16 @@ struct patch_t
    //
    // Parameter   :  x,y,z          : Scale indices of the patch corner
    //                FaPID          : Patch ID of the father patch
-   //                FluData        : true --> Allocate hydrodynamic array(s) "fluid"
+   //                FluData        : true --> Allocate the hydrodynamic array(s) "fluid"
    //                                          "rho_ext" will NOT be allocated here even if PARTICLE is on
-   //                PotData        : true --> Allocate potential array "pot" (has no effect if "GRAVITY" is turned off)
+   //                PotData        : true --> Allocate the potential array "pot" (has no effect if "GRAVITY" is turned off)
    //                                          "pot_ext" will be allocated as well if STORE_POT_GHOST is on
+   //                DE_Status      : true --> Allocate the dual-energy status array "de_status"
+   //                                      --> Useless if "DUAL_ENERGY" is turned off
    //                lv             : Refinement level of the newly created patch
    //                BoxScale       : Simulation box scale
    //                dh_min         : Cell size at the maximum level
-   //                InitPtrAsNull  : Whether or not to initialize field arrays (i.e., fluid, pot, pot_ext, rho_ext) as NULL
+   //                InitPtrAsNull  : Whether or not to initialize the field arrays (i.e., fluid, pot, pot_ext, rho_ext, de_status) as NULL
    //                                 --> It is used mainly for OPT__REUSE_MEMORY, where we don't want to set these pointers as
    //                                     NULL if the patch has been allocated but marked as inactive
    //                                     --> Since the field arrays may be allocated already and we want to reuse them
@@ -251,7 +269,7 @@ struct patch_t
    //                                     initialized as NULL here
    //                                 --> Does not apply to any particle variable (except rho_ext)
    //===================================================================================
-   void Activate( const int x, const int y, const int z, const int FaPID, const bool FluData, const bool PotData,
+   void Activate( const int x, const int y, const int z, const int FaPID, const bool FluData, const bool PotData, const bool DE_Status,
                   const int lv, const int BoxScale[], const double dh_min, const bool InitPtrAsNull )
    {
 
@@ -306,17 +324,21 @@ struct patch_t
 //    --> otherwise these pointers become ill-defined, which will make hdelete and gdelete crash
       if ( InitPtrAsNull )
       {
-         fluid   = NULL;
+         fluid     = NULL;
 
 #        ifdef GRAVITY
-         pot     = NULL;
+         pot       = NULL;
 #        ifdef STORE_POT_GHOST
-         pot_ext = NULL;
+         pot_ext   = NULL;
 #        endif
 #        endif // #ifdef GRAVITY
 
+#        ifdef DUAL_ENERGY
+         de_status = NULL;
+#        endif
+
 #        ifdef PARTICLE
-         rho_ext = NULL;
+         rho_ext   = NULL;
 #        endif
       }
 
@@ -331,6 +353,9 @@ struct patch_t
       if ( FluData )    hnew();
 #     ifdef GRAVITY
       if ( PotData )    gnew();
+#     endif
+#     ifdef DUAL_ENERGY
+      if ( DE_Status )  snew();
 #     endif
 
 #     ifdef PARTICLE
@@ -370,6 +395,9 @@ struct patch_t
       hdelete();
 #     ifdef GRAVITY
       gdelete();
+#     endif
+#     ifdef DUAL_ENERGY
+      sdelete();
 #     endif
 
 #     ifdef PARTICLE
@@ -467,9 +495,9 @@ struct patch_t
 
    //===================================================================================
    // Method      :  hnew
-   // Description :  Allocate fluid array
+   // Description :  Allocate the fluid array
    //
-   // Note        :  Do nothing if fluid array has been allocated
+   // Note        :  Do nothing if the fluid array has been allocated
    //===================================================================================
    void hnew()
    {
@@ -486,7 +514,7 @@ struct patch_t
 
    //===================================================================================
    // Method      :  hdelete
-   // Description :  Deallocate fluid array
+   // Description :  Deallocate the fluid array
    //===================================================================================
    void hdelete()
    {
@@ -511,9 +539,9 @@ struct patch_t
 #  ifdef GRAVITY
    //===================================================================================
    // Method      :  gnew
-   // Description :  Allocate potential array
+   // Description :  Allocate the potential array
    //
-   // Note        :  Do nothing if potential array has been allocated
+   // Note        :  Do nothing if the potential array has been allocated
    //===================================================================================
    void gnew()
    {
@@ -534,7 +562,7 @@ struct patch_t
 
    //===================================================================================
    // Method      :  gdelete
-   // Description :  Deallocate potential array
+   // Description :  Deallocate the potential array
    //===================================================================================
    void gdelete()
    {
@@ -558,12 +586,49 @@ struct patch_t
 
 
 
+#  ifdef DUAL_ENERGY
+   //===================================================================================
+   // Method      :  snew
+   // Description :  Allocate the dual-energy status array
+   //
+   // Note        :  Do nothing if the dual-energy status array has been allocated
+   //===================================================================================
+   void snew()
+   {
+
+      if ( de_status == NULL )
+      {
+         de_status = new char [PATCH_SIZE][PATCH_SIZE][PATCH_SIZE];
+      }
+
+   } // METHOD : snew
+
+
+
+   //===================================================================================
+   // Method      :  sdelete
+   // Description :  Deallocate the dual-energy status array
+   //===================================================================================
+   void sdelete()
+   {
+
+      if ( de_status != NULL )
+      {
+         delete [] de_status;
+         de_status = NULL;
+      }
+
+   } // METHOD : sdelete
+#  endif // #ifdef DUAL_ENERGY
+
+
+
 #  ifdef PARTICLE
    //===================================================================================
    // Method      :  dnew
-   // Description :  Allocate rho_ext array
+   // Description :  Allocate the rho_ext array
    //
-   // Note        :  Do nothing if rho_ext array has been allocated
+   // Note        :  Do nothing if the rho_ext array has been allocated
    //===================================================================================
    void dnew()
    {
@@ -580,7 +645,7 @@ struct patch_t
 
    //===================================================================================
    // Method      :  ddelete
-   // Description :  Deallocate rho_ext array
+   // Description :  Deallocate the rho_ext array
    //===================================================================================
    void ddelete()
    {

@@ -64,6 +64,7 @@ void Buf_SortBoundaryPatch( const int NPatch, int *IDList, int *PosList );
 // Hydrodynamics
 void CPU_FluidSolver( real h_Flu_Array_In [][FLU_NIN    ][ FLU_NXT*FLU_NXT*FLU_NXT ],
                       real h_Flu_Array_Out[][FLU_NOUT   ][ PS2*PS2*PS2 ],
+                      char h_DE_Array_Out[][ PS2*PS2*PS2 ],
                       real h_Flux_Array[][9][NFLUX_TOTAL][ PS2*PS2 ],
                       const double h_Corner_Array[][3],
                       real h_MinDtInfo_Array[],
@@ -81,7 +82,8 @@ real CPU_GetTemperature( const real Dens, const real MomX, const real MomY, cons
 real CPU_CheckMinPres( const real InPres, const real MinPres );
 void CPU_NormalizePassive( const real GasDens, real Passive[], const int NNorm, const int NormIdx[] );
 #ifdef DUAL_ENERGY
-void CPU_DualEnergyFix( const real Dens, const real MomX, const real MomY, const real MomZ, real &Etot, real &Enpy,
+void CPU_DualEnergyFix( const real Dens, const real MomX, const real MomY, const real MomZ,
+                        real &Etot, real &Enpy, char &DE_Status,
                         const real Gamma_m1, const real _Gamma_m1, const real MinPres, const real DualEnergySwitch );
 #if ( DUAL_ENERGY == DE_ENPY )
 real CPU_Fluid2Entropy( const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy, const real Gamma_m1 );
@@ -96,6 +98,7 @@ void Flu_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, co
 void Flu_AllocateFluxArray( const int lv );
 void Flu_Close( const int lv, const int SaveSg, const real h_Flux_Array[][9][NFLUX_TOTAL][4*PATCH_SIZE*PATCH_SIZE],
                 real h_Flu_Array_F_Out[][FLU_NOUT][8*PATCH_SIZE*PATCH_SIZE*PATCH_SIZE],
+                char h_DE_Array_F_Out[][8*PATCH_SIZE*PATCH_SIZE*PATCH_SIZE],
                 const real h_MinDtInfo_Array[], const int NPG, const int *PID0_List, const bool GetMinDtInfo,
                 const real h_Flu_Array_F_In[][FLU_NIN][FLU_NXT*FLU_NXT*FLU_NXT], const double dt );
 void Flu_FixUp( const int lv, const double dt );

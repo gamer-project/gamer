@@ -52,9 +52,16 @@
 #define HLLC         4
 
 
-// dual-energy variable
+// dual-energy variables
 #define DE_ENPY      1
 #define DE_EINT      2
+
+#ifdef DUAL_ENERGY
+#define DE_UPDATED_BY_ETOT       ('0')
+#define DE_UPDATED_BY_DUAL       ('1')
+#define DE_UPDATED_BY_MIN_PRES   ('2')
+#define DE_UPDATED_BY_1ST_FLUX   ('3')
+#endif
 
 
 // Poisson solvers

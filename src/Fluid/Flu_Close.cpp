@@ -10,7 +10,8 @@ static void CorrectFlux( const int lv, const real Flux_Array[][9][NFLUX_TOTAL][4
 static bool Unphysical( const real Fluid[], const real Gamma_m1, const int CheckMinEngyOrPres );
 static void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
                                const real h_Flu_Array_F_In[][FLU_NIN][FLU_NXT*FLU_NXT*FLU_NXT],
-                               real h_Flu_Array_F_Out[][FLU_NOUT][8*PATCH_SIZE*PATCH_SIZE*PATCH_SIZE], const real dt );
+                               real h_Flu_Array_F_Out[][FLU_NOUT][8*PATCH_SIZE*PATCH_SIZE*PATCH_SIZE],
+                               char h_DE_Array_F_Out[][8*PATCH_SIZE*PATCH_SIZE*PATCH_SIZE], const real dt );
 #endif
 static int  Table_01( const int lv, const int PID, const int SibID );
 
@@ -28,7 +29,7 @@ extern void CPU_RiemannSolver_HLLE( const int XYZ, real Flux_Out[], const real L
 // Function    :  Flu_Close
 // Description :  1. Save the fluxes across the coarse-fine boundaries at level "lv"
 //                2. Correct the fluxes across the coarse-fine boundaries at level "lv-1"
-//                3. Copy the data from the "h_Flu_Array_F_Out" array to the "amr->patch" pointers
+//                3. Copy the data from the "h_Flu_Array_F_Out" and "h_DE_Array_F_Out" arrays to the "amr->patch" pointers
 //                4. Get the minimum time-step information when the option "OPT__ADAPTIVE_DT" is turned on
 //
 // Parameter   :  lv                : Targeted refinement level
@@ -38,6 +39,7 @@ extern void CPU_RiemannSolver_HLLE( const int XYZ, real Flux_Out[], const real L
 //                                    --> useful only if "GetMinDtInfo == true"
 //                                    --> NOT supported yet
 //                h_Flu_Array_F_Out : Host array storing the updated fluid data
+//                h_DE_Array_F_Out  : Host array storing the dual-energy status
 //                NPG               : Number of patch groups to be evaluated
 //                PID0_List         : List recording the patch indicies with LocalID==0 to be udpated
 //                GetMinDtInfo      : true --> Gather the minimum time-step information (the CFL condition in
@@ -46,6 +48,7 @@ extern void CPU_RiemannSolver_HLLE( const int XYZ, real Flux_Out[], const real L
 //-------------------------------------------------------------------------------------------------------
 void Flu_Close( const int lv, const int SaveSg, const real h_Flux_Array[][9][NFLUX_TOTAL][4*PATCH_SIZE*PATCH_SIZE],
                 real h_Flu_Array_F_Out[][FLU_NOUT][8*PATCH_SIZE*PATCH_SIZE*PATCH_SIZE],
+                char h_DE_Array_F_Out[][8*PATCH_SIZE*PATCH_SIZE*PATCH_SIZE],
                 const real h_MinDtInfo_Array[], const int NPG, const int *PID0_List, const bool GetMinDtInfo,
                 const real h_Flu_Array_F_In[][FLU_NIN][FLU_NXT*FLU_NXT*FLU_NXT], const double dt )
 {
@@ -60,11 +63,11 @@ void Flu_Close( const int lv, const int SaveSg, const real h_Flux_Array[][9][NFL
 
 // try to correct the unphysical results in h_Flu_Array_F_Out (e.g., negative density)
 #  if ( MODEL == HYDRO  ||  MODEL == MHD )
-   CorrectUnphysical( lv, NPG, PID0_List, h_Flu_Array_F_In, h_Flu_Array_F_Out, dt );
+   CorrectUnphysical( lv, NPG, PID0_List, h_Flu_Array_F_In, h_Flu_Array_F_Out, h_DE_Array_F_Out, dt );
 #  endif
 
 
-// copy the updated data from the array "h_Flu_Array_F_Out" to each patch pointer
+// copy the updated data from the arrays "h_Flu_Array_F_Out" and "h_DE_Array_F_Out" to each patch pointer
 #  if ( FLU_NOUT != NCOMP_TOTAL )
 #     error : ERROR : FLU_NOUT != NCOMP_TOTAL (one must specify how to copy data from h_Flu_Array_F_Out to fluid) !!
 #  endif
@@ -93,7 +96,20 @@ void Flu_Close( const int lv, const int SaveSg, const real h_Flux_Array[][9][NFL
             amr->patch[SaveSg][lv][PID]->fluid[v][k][j][i] = h_Flu_Array_F_Out[TID][v][KJI];
 
          }}}}
-      }
+
+#        ifdef DUAL_ENERGY
+         for (int k=0; k<PATCH_SIZE; k++)    {  K = Table_z + k;
+         for (int j=0; j<PATCH_SIZE; j++)    {  J = Table_y + j;
+         for (int i=0; i<PATCH_SIZE; i++)    {  I = Table_x + i;
+
+            KJI = K*4*PATCH_SIZE*PATCH_SIZE + J*2*PATCH_SIZE + I;
+
+//          de_status is always stored in Sg==0
+            amr->patch[0][lv][PID]->de_status[k][j][i] = h_DE_Array_F_Out[TID][KJI];
+
+         }}}
+#        endif
+      } // for (int LocalID=0; LocalID<8; LocalID++)
    } // for (int TID=0; TID<NPG; TID++)
 
 
@@ -372,13 +388,15 @@ bool Unphysical( const real Fluid[], const real Gamma_m1, const int CheckMinEngy
 // Parameter   :  lv                : Targeted refinement level
 //                NPG               : Number of patch groups to be evaluated
 //                PID0_List         : List recording the patch indicies with LocalID==0 to be udpated (for debug only)
-//                h_Flu_Array_F_In  : Input array
-//                h_Flu_Array_F_Out : Output array
+//                h_Flu_Array_F_In  : Input fluid array
+//                h_Flu_Array_F_Out : Output fluid array
+//                h_DE_Array_F_Out  : Output dual-energy status array
 //                dt                : Evolution time-step
 //-------------------------------------------------------------------------------------------------------
 void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
                         const real h_Flu_Array_F_In[][FLU_NIN][FLU_NXT*FLU_NXT*FLU_NXT],
-                        real h_Flu_Array_F_Out[][FLU_NOUT][8*PATCH_SIZE*PATCH_SIZE*PATCH_SIZE], const real dt )
+                        real h_Flu_Array_F_Out[][FLU_NOUT][8*PATCH_SIZE*PATCH_SIZE*PATCH_SIZE],
+                        char h_DE_Array_F_Out[][8*PATCH_SIZE*PATCH_SIZE*PATCH_SIZE], const real dt )
 {
 
    const real dh           = (real)amr->dh[lv];
@@ -514,12 +532,11 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
 //                 directionally **splitting** correction
 //             --> when GRAVITY is on, we call CPU_DualEnergyFix() in the gravity solver instead since it
 //                 might update the internal energy as well (especially when UNSPLIT_GRAVITY is adopted)
-//             --> both ENGY and ENPY might be modified by CPU_DualEnergyFix() --> call-by-reference
 //             --> also note that here we do NOT apply the minimum pressure check in CPU_DualEnergyFix()
 //                 --> otherwise the floor value of pressure might disable the 1st-order-flux correction
 #              if ( defined DUAL_ENERGY  &&  !defined GRAVITY )
                CPU_DualEnergyFix( Update[DENS], Update[MOMX], Update[MOMY], Update[MOMZ], Update[ENGY], Update[ENPY],
-                                  Gamma_m1, _Gamma_m1, CorrPres_No, DUAL_ENERGY_SWITCH );
+                                  h_DE_Array_F_Out[TID][idx_out], Gamma_m1, _Gamma_m1, CorrPres_No, DUAL_ENERGY_SWITCH );
 #              endif
 
                if ( Unphysical(Update, Gamma_m1, CheckMinPres) )
@@ -615,11 +632,10 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
 //                  of density AFTER the 1st-order-flux correction
 //          --> when GRAVITY is on, we call CPU_DualEnergyFix() in the gravity solver instead since it
 //              might update the internal energy as well (especially when UNSPLIT_GRAVITY is adopted)
-//          --> both ENGY and ENPY might be modified by CPU_DualEnergyFix() --> call-by-reference
 //          --> also note that here we apply the minimum pressure check in CPU_DualEnergyFix()
 #           if ( defined DUAL_ENERGY  &&  !defined GRAVITY )
             CPU_DualEnergyFix( Update[DENS], Update[MOMX], Update[MOMY], Update[MOMZ], Update[ENGY], Update[ENPY],
-                               Gamma_m1, _Gamma_m1, MIN_PRES, DUAL_ENERGY_SWITCH );
+                               h_DE_Array_F_Out[TID][idx_out], Gamma_m1, _Gamma_m1, MIN_PRES, DUAL_ENERGY_SWITCH );
 
 //          ensure positive pressure if dual-energy formalism is not adopted
 #           else
@@ -651,6 +667,12 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
                fprintf( File, "PID                              = %5d\n", PID_Failed );
                fprintf( File, "(i,j,k) in the patch             = (%2d,%2d,%2d)\n", i_out%PS1, j_out%PS1, k_out%PS1 );
                fprintf( File, "(i,j,k) in the input fluid array = (%2d,%2d,%2d)\n", i_out, j_out, k_out );
+#              ifdef DUAL_ENERGY
+               fprintf( File, "total energy density update      = %s\n", ( h_DE_Array_F_Out[TID][idx_out] == DE_UPDATED_BY_ETOT     ) ? "Etot" :
+                                                                         ( h_DE_Array_F_Out[TID][idx_out] == DE_UPDATED_BY_DUAL     ) ? "Dual" :
+                                                                         ( h_DE_Array_F_Out[TID][idx_out] == DE_UPDATED_BY_MIN_PRES ) ? "MinPres" :
+                                                                                                                                        "Unknown" );
+#              endif
                fprintf( File, "\n" );
                fprintf( File, "input        = (%14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e",
                         In[DENS], In[MOMX], In[MOMY], In[MOMZ], In[ENGY],
@@ -720,6 +742,12 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
             {
 //             store the corrected solution
                for (int v=0; v<NCOMP_TOTAL; v++)   h_Flu_Array_F_Out[TID][v][idx_out] = Update[v];
+
+//             overwrite h_DE_Array_F_Out in order to skip the flux fix-up for cells updated by the 1st-order-flux correction
+#              if ( defined DUAL_ENERGY  &&  !defined GRAVITY )
+               if ( h_DE_Array_F_Out[TID][idx_out] != DE_UPDATED_BY_MIN_PRES )
+                  h_DE_Array_F_Out[TID][idx_out] = DE_UPDATED_BY_1ST_FLUX;
+#              endif
 
 //             record the number of corrected cells
                NCorrThisTime ++;

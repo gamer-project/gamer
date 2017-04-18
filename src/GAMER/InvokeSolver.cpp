@@ -387,6 +387,10 @@ void Solver( const Solver_t TSolver, const int lv, const double TimeNew, const d
 #  endif
 #  endif
 
+#  ifndef DUAL_ENERGY
+   char (*h_DE_Array_F_Out[2])[8*PATCH_SIZE*PATCH_SIZE*PATCH_SIZE] = { NULL, NULL };
+#  endif
+
 #  if ( MODEL != HYDRO  &&  MODEL != ELBDM )
 #  error : ERROR : ADD THE MODEL-DEPENDENT USELESS VARIABLES FOR THE NEW MODELS HERE
 #  endif
@@ -397,14 +401,14 @@ void Solver( const Solver_t TSolver, const int lv, const double TimeNew, const d
       case FLUID_SOLVER :
 
 #        ifdef GPU
-         CUAPI_Asyn_FluidSolver( h_Flu_Array_F_In[ArrayID], h_Flu_Array_F_Out[ArrayID], h_Flux_Array[ArrayID],
+         CUAPI_Asyn_FluidSolver( h_Flu_Array_F_In[ArrayID], h_Flu_Array_F_Out[ArrayID], h_DE_Array_F_Out[ArrayID], h_Flux_Array[ArrayID],
                                  h_Corner_Array_F[ArrayID], h_MinDtInfo_Fluid_Array[ArrayID], h_Pot_Array_USG_F[ArrayID],
                                  NPG, dt, dh, GAMMA, OPT__FIXUP_FLUX, Flu_XYZ,
                                  OPT__LR_LIMITER, MINMOD_COEFF, EP_COEFF, OPT__WAF_LIMITER, ELBDM_ETA,
                                  ELBDM_TAYLOR3_COEFF, ELBDM_TAYLOR3_AUTO, OPT__ADAPTIVE_DT, TimeOld, OPT__GRAVITY_TYPE, GPU_NSTREAM,
                                  MIN_DENS, MIN_PRES, DUAL_ENERGY_SWITCH, OPT__NORMALIZE_PASSIVE, PassiveNorm_NVar );
 #        else
-         CPU_FluidSolver       ( h_Flu_Array_F_In[ArrayID], h_Flu_Array_F_Out[ArrayID], h_Flux_Array[ArrayID],
+         CPU_FluidSolver       ( h_Flu_Array_F_In[ArrayID], h_Flu_Array_F_Out[ArrayID], h_DE_Array_F_Out[ArrayID], h_Flux_Array[ArrayID],
                                  h_Corner_Array_F[ArrayID], h_MinDtInfo_Fluid_Array[ArrayID], h_Pot_Array_USG_F[ArrayID],
                                  NPG, dt, dh, GAMMA, OPT__FIXUP_FLUX, Flu_XYZ,
                                  OPT__LR_LIMITER, MINMOD_COEFF, EP_COEFF, OPT__WAF_LIMITER, ELBDM_ETA,
@@ -521,10 +525,14 @@ void Closing_Step( const Solver_t TSolver, const int lv, const int SaveSg_Flu, c
                    const int *PID0_List, const int ArrayID, const double dt )
 {
 
+#  ifndef DUAL_ENERGY
+   char (*h_DE_Array_F_Out[2])[8*PATCH_SIZE*PATCH_SIZE*PATCH_SIZE] = { NULL, NULL };
+#  endif
+
    switch ( TSolver )
    {
       case FLUID_SOLVER :
-         Flu_Close( lv, SaveSg_Flu, h_Flux_Array[ArrayID], h_Flu_Array_F_Out[ArrayID],
+         Flu_Close( lv, SaveSg_Flu, h_Flux_Array[ArrayID], h_Flu_Array_F_Out[ArrayID], h_DE_Array_F_Out[ArrayID],
                     h_MinDtInfo_Fluid_Array[ArrayID], NPG, PID0_List, OPT__ADAPTIVE_DT,
                     h_Flu_Array_F_In[ArrayID], dt );
          break;

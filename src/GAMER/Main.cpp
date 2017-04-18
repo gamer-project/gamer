@@ -167,8 +167,11 @@ yt_verbose           YT_VERBOSE;
 real (*h_Flu_Array_F_In [2])[FLU_NIN ][  FLU_NXT   *FLU_NXT   *FLU_NXT   ] = { NULL, NULL };
 real (*h_Flu_Array_F_Out[2])[FLU_NOUT][8*PATCH_SIZE*PATCH_SIZE*PATCH_SIZE] = { NULL, NULL };
 real (*h_Flux_Array[2])[9][NFLUX_TOTAL][4*PATCH_SIZE*PATCH_SIZE]           = { NULL, NULL };
-double (*h_Corner_Array_F [2])[3]                                          = { NULL, NULL };
-real *h_MinDtInfo_Fluid_Array[2]                                           = { NULL, NULL };
+double (*h_Corner_Array_F[2])[3]                                           = { NULL, NULL };
+real  *h_MinDtInfo_Fluid_Array[2]                                          = { NULL, NULL };
+#ifdef DUAL_ENERGY
+char (*h_DE_Array_F_Out[2])[8*PATCH_SIZE*PATCH_SIZE*PATCH_SIZE]            = { NULL, NULL };
+#endif
 
 #ifdef GRAVITY
 // (3-2) gravity solver
@@ -196,6 +199,9 @@ real (*d_Flu_Array_F_Out)[FLU_NOUT][ PS2*PS2*PS2 ]                         = NUL
 real (*d_Flux_Array)[9][NFLUX_TOTAL][ PS2*PS2 ]                            = NULL;
 double (*d_Corner_Array_F)[3]                                              = NULL;
 real  *d_MinDtInfo_Fluid_Array                                             = NULL;
+#ifdef DUAL_ENERGY
+char (*d_DE_Array_F_Out)[ PS2*PS2*PS2 ]                                    = NULL;
+#endif
 #if ( MODEL == HYDRO )
 #if ( FLU_SCHEME == MHM  ||  FLU_SCHEME == MHM_RP  ||  FLU_SCHEME == CTU ) 
 real (*d_PriVar)     [NCOMP_TOTAL][ FLU_NXT*FLU_NXT*FLU_NXT ]              = NULL;
@@ -224,7 +230,7 @@ real (*d_Pot_Array_P_Out)[ GRA_NXT*GRA_NXT*GRA_NXT ]                       = NUL
 real (*d_Flu_Array_G    )[GRA_NIN][ PS1*PS1*PS1 ]                          = NULL;
 double (*d_Corner_Array_G )[3]                                             = NULL;
 
-// (3-3) unsplit gravity correction
+// (4-3) unsplit gravity correction
 #ifdef UNSPLIT_GRAVITY
 real (*d_Pot_Array_USG_F)[ USG_NXT_F*USG_NXT_F*USG_NXT_F ]                 = NULL;
 real (*d_Pot_Array_USG_G)[ USG_NXT_G*USG_NXT_G*USG_NXT_G ]                 = NULL;
@@ -232,7 +238,7 @@ real (*d_Flu_Array_USG_G)[GRA_NIN-1][ PS1*PS1*PS1        ]                 = NUL
 #endif
 #endif
 
-// (4-3) CUDA stream (put in CUAPI_MemAllocate_Fluid.cu)
+// (4-4) CUDA stream (put in CUAPI_MemAllocate_Fluid.cu)
 //cudaStream_t *Stream                                                       = NULL;
 #endif // #ifdef GPU
 

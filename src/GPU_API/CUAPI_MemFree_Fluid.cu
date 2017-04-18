@@ -13,6 +13,9 @@ extern real (*d_Flux_Array)[9][NFLUX_TOTAL][ PS2*PS2 ];
 extern double (*d_Corner_Array_F)[3];
 #endif
 extern real  *d_MinDtInfo_Fluid_Array;
+#ifdef DUAL_ENERGY
+extern char (*d_DE_Array_F_Out)[ PS2*PS2*PS2 ];
+#endif
 
 // global memory arrays in different models
 #if   ( MODEL == HYDRO )
@@ -61,6 +64,9 @@ void CUAPI_MemFree_Fluid( const int GPU_NStream )
 #  ifdef UNSPLIT_GRAVITY
    if ( d_Corner_Array_F        != NULL )    CUDA_CHECK_ERROR(  cudaFree( d_Corner_Array_F        )  );
 #  endif
+#  ifdef DUAL_ENERGY
+   if ( d_DE_Array_F_Out        != NULL )    CUDA_CHECK_ERROR(  cudaFree( d_DE_Array_F_Out        )  );
+#  endif
 
    d_Flu_Array_F_In        = NULL;
    d_Flu_Array_F_Out       = NULL;
@@ -69,6 +75,9 @@ void CUAPI_MemFree_Fluid( const int GPU_NStream )
    d_Corner_Array_F        = NULL;
 #  endif
    d_MinDtInfo_Fluid_Array = NULL;
+#  ifdef DUAL_ENERGY
+   d_DE_Array_F_Out        = NULL;
+#  endif
 
 
 // free the device memory (in different models)
@@ -127,21 +136,27 @@ void CUAPI_MemFree_Fluid( const int GPU_NStream )
       if ( h_Corner_Array_F       [t] != NULL ) CUDA_CHECK_ERROR(  cudaFreeHost( h_Corner_Array_F       [t] )  );
 #     endif
       if ( h_MinDtInfo_Fluid_Array[t] != NULL ) CUDA_CHECK_ERROR(  cudaFreeHost( h_MinDtInfo_Fluid_Array[t] )  );
+#     ifdef DUAL_ENERGY
+      if ( h_DE_Array_F_Out       [t] != NULL ) CUDA_CHECK_ERROR(  cudaFreeHost( h_DE_Array_F_Out       [t] )  );
+#     endif
 
-      h_Flu_Array_F_In       [t] = NULL;  
+      h_Flu_Array_F_In       [t] = NULL;
       h_Flu_Array_F_Out      [t] = NULL;
       h_Flux_Array           [t] = NULL;
 #     ifdef UNSPLIT_GRAVITY
       h_Corner_Array_F       [t] = NULL;
 #     endif
       h_MinDtInfo_Fluid_Array[t] = NULL;
+#     ifdef DUAL_ENERGY
+      h_DE_Array_F_Out       [t] = NULL;
+#     endif
    }
 
 
 // destroy streams
    if ( Stream != NULL )
    {
-      for (int s=0; s<GPU_NStream; s++)   
+      for (int s=0; s<GPU_NStream; s++)
       {
          CUDA_CHECK_ERROR(  cudaStreamDestroy( Stream[s] )  );
       }

@@ -24,14 +24,20 @@ void End_MemFree_Fluid()
       if ( h_Corner_Array_F       [t] != NULL )    delete [] h_Corner_Array_F       [t];
 #     endif
       if ( h_MinDtInfo_Fluid_Array[t] != NULL )    delete [] h_MinDtInfo_Fluid_Array[t];
+#     ifdef DUAL_ENERGY
+      if ( h_DE_Array_F_Out       [t] != NULL )    delete [] h_DE_Array_F_Out       [t];
+#     endif
 
-      h_Flu_Array_F_In       [t] = NULL; 
+      h_Flu_Array_F_In       [t] = NULL;
       h_Flu_Array_F_Out      [t] = NULL;
       h_Flux_Array           [t] = NULL;
 #     ifdef UNSPLIT_GRAVITY
       h_Corner_Array_F       [t] = NULL;
 #     endif
       h_MinDtInfo_Fluid_Array[t] = NULL;
+#     ifdef DUAL_ENERGY
+      h_DE_Array_F_Out       [t] = NULL;
+#     endif
    }
 
 } // FUNCTION : End_MemFree_Fluid

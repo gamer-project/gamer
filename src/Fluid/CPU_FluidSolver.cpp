@@ -32,6 +32,7 @@ void CPU_FluidSolver_WAF( real Flu_Array_In [][NCOMP_TOTAL][ FLU_NXT*FLU_NXT*FLU
 #elif ( FLU_SCHEME == MHM  ||  FLU_SCHEME == MHM_RP )
 void CPU_FluidSolver_MHM( const real Flu_Array_In[][NCOMP_TOTAL][ FLU_NXT*FLU_NXT*FLU_NXT ],
                           real Flu_Array_Out     [][NCOMP_TOTAL][ PS2*PS2*PS2 ],
+                          char DE_Array_Out      [][ PS2*PS2*PS2 ],
                           real Flux_Array     [][9][NCOMP_TOTAL][ PS2*PS2 ],
                           const double Corner_Array[][3],
                           const real Pot_Array_USG[][USG_NXT_F][USG_NXT_F][USG_NXT_F],
@@ -43,6 +44,7 @@ void CPU_FluidSolver_MHM( const real Flu_Array_In[][NCOMP_TOTAL][ FLU_NXT*FLU_NX
 #elif ( FLU_SCHEME == CTU )
 void CPU_FluidSolver_CTU( const real Flu_Array_In[][NCOMP_TOTAL][ FLU_NXT*FLU_NXT*FLU_NXT ],
                           real Flu_Array_Out     [][NCOMP_TOTAL][ PS2*PS2*PS2 ],
+                          char DE_Array_Out      [][ PS2*PS2*PS2 ],
                           real Flux_Array     [][9][NCOMP_TOTAL][ PS2*PS2 ],
                           const double Corner_Array[][3],
                           const real Pot_Array_USG[][USG_NXT_F][USG_NXT_F][USG_NXT_F],
@@ -84,7 +86,8 @@ void CPU_ELBDMSolver( real Flu_Array_In [][FLU_NIN    ][ FLU_NXT*FLU_NXT*FLU_NXT
 //
 //
 // Parameter   :  h_Flu_Array_In       : Host array storing the input fluid variables
-//                h_Flu_Array_Out      : Host array to store the output variables
+//                h_Flu_Array_Out      : Host array to store the output fluid variables
+//                h_DE_Array_Out       : Host array to store the dual-energy status
 //                h_Flux_Array         : Host array to store the output fluxes (useful only if StoreFlux == true)
 //                h_Corner_Array       : Host array storing the physical corner coordinates of each patch group
 //                h_MinDtInfo_Array    : Host array to store the minimum time-step information in each patch group
@@ -129,6 +132,7 @@ void CPU_ELBDMSolver( real Flu_Array_In [][FLU_NIN    ][ FLU_NXT*FLU_NXT*FLU_NXT
 //-------------------------------------------------------------------------------------------------------
 void CPU_FluidSolver( real h_Flu_Array_In [][FLU_NIN    ][ FLU_NXT*FLU_NXT*FLU_NXT ],
                       real h_Flu_Array_Out[][FLU_NOUT   ][ PS2*PS2*PS2 ],
+                      char h_DE_Array_Out[][ PS2*PS2*PS2 ],
                       real h_Flux_Array[][9][NFLUX_TOTAL][ PS2*PS2 ],
                       const double h_Corner_Array[][3],
                       real h_MinDtInfo_Array[],
@@ -174,13 +178,13 @@ void CPU_FluidSolver( real h_Flu_Array_In [][FLU_NIN    ][ FLU_NXT*FLU_NXT*FLU_N
 
 #     elif ( FLU_SCHEME == MHM  ||  FLU_SCHEME == MHM_RP )
 
-      CPU_FluidSolver_MHM ( h_Flu_Array_In, h_Flu_Array_Out, h_Flux_Array, h_Corner_Array, h_Pot_Array_USG,
+      CPU_FluidSolver_MHM ( h_Flu_Array_In, h_Flu_Array_Out, h_DE_Array_Out, h_Flux_Array, h_Corner_Array, h_Pot_Array_USG,
                             NPatchGroup, dt, dh, Gamma, StoreFlux, LR_Limiter, MinMod_Coeff, EP_Coeff, Time,
                             GravityType, ExtAcc_AuxArray, MinDens, MinPres, DualEnergySwitch, NormPassive, NNorm, NormIdx );
 
 #     elif ( FLU_SCHEME == CTU )
 
-      CPU_FluidSolver_CTU ( h_Flu_Array_In, h_Flu_Array_Out, h_Flux_Array, h_Corner_Array, h_Pot_Array_USG,
+      CPU_FluidSolver_CTU ( h_Flu_Array_In, h_Flu_Array_Out, h_DE_Array_Out, h_Flux_Array, h_Corner_Array, h_Pot_Array_USG,
                             NPatchGroup, dt, dh, Gamma, StoreFlux, LR_Limiter, MinMod_Coeff, EP_Coeff, Time,
                             GravityType, ExtAcc_AuxArray, MinDens, MinPres, DualEnergySwitch, NormPassive, NNorm, NormIdx );
 

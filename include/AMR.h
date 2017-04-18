@@ -69,16 +69,16 @@ struct AMR_t
 
 // data members
 // ===================================================================================
-   patch_t   *patch[2][NLEVEL][MAX_PATCH];
+   patch_t    *patch[2][NLEVEL][MAX_PATCH];
 
 #  ifdef PARTICLE
-   Particle_t  *Par;
+   Particle_t *Par;
 #  endif
 
 #  ifndef SERIAL
-   ParaVar_t *ParaVar;
+   ParaVar_t  *ParaVar;
 #  ifdef LOAD_BALANCE
-   LB_t      *LB;
+   LB_t       *LB;
 #  endif
 #  endif
 
@@ -233,8 +233,8 @@ struct AMR_t
             Aux_Error( ERROR_INFO, "conflicting patch allocation (Lv %d, PID %d, FaPID %d) !!\n", lv, NewPID, FaPID );
 #        endif
 
-         patch[0][lv][NewPID] = new patch_t( x, y, z, FaPID, FluData, PotData, lv, BoxScale, dh[TOP_LEVEL] );
-         patch[1][lv][NewPID] = new patch_t( 0, 0, 0,    -1, FluData, PotData, lv, BoxScale, dh[TOP_LEVEL] );
+         patch[0][lv][NewPID] = new patch_t( x, y, z, FaPID, FluData, PotData, FluData, lv, BoxScale, dh[TOP_LEVEL] );
+         patch[1][lv][NewPID] = new patch_t( 0, 0, 0,    -1, FluData, PotData,   false, lv, BoxScale, dh[TOP_LEVEL] );
       }
 
 //    reactivate inactive patches
@@ -254,8 +254,8 @@ struct AMR_t
 //       do NOT initialize field pointers as NULL since they may be allocated already
          const bool InitPtrAsNull_No = false;
 
-         patch[0][lv][NewPID]->Activate( x, y, z, FaPID, FluData, PotData, lv, BoxScale, dh[TOP_LEVEL], InitPtrAsNull_No );
-         patch[1][lv][NewPID]->Activate( 0, 0, 0,    -1, FluData, PotData, lv, BoxScale, dh[TOP_LEVEL], InitPtrAsNull_No );
+         patch[0][lv][NewPID]->Activate( x, y, z, FaPID, FluData, PotData, FluData, lv, BoxScale, dh[TOP_LEVEL], InitPtrAsNull_No );
+         patch[1][lv][NewPID]->Activate( 0, 0, 0,    -1, FluData, PotData,   false, lv, BoxScale, dh[TOP_LEVEL], InitPtrAsNull_No );
       } // if ( patch[0][lv][NewPID] == NULL ) ... else ...
 
       num[lv] ++;

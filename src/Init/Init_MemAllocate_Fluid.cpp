@@ -29,6 +29,10 @@ void Init_MemAllocate_Fluid( const int Flu_NPatchGroup )
 
       if ( OPT__ADAPTIVE_DT )
       h_MinDtInfo_Fluid_Array[t] = new real [Flu_NPatchGroup];
+
+#     ifdef DUAL_ENERGY
+      h_DE_Array_F_Out       [t] = new char [Flu_NPatchGroup][ 8*PATCH_SIZE*PATCH_SIZE*PATCH_SIZE ];
+#     endif
    }
 
 } // FUNCTION : Init_MemAllocate_Fluid

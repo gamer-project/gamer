@@ -18,7 +18,7 @@ extern void CPU_ComputeFlux( const real FC_Var[][6][NCOMP_TOTAL], real FC_Flux[]
                              const real Gamma, const bool CorrHalfVel, const real Pot_USG[], const double Corner[],
                              const real dt, const real dh, const double Time, const OptGravityType_t GravityType,
                              const double ExtAcc_AuxArray[], const real MinPres );
-extern void CPU_FullStepUpdate( const real Input[][ FLU_NXT*FLU_NXT*FLU_NXT ], real Output[][ PS2*PS2*PS2 ],
+extern void CPU_FullStepUpdate( const real Input[][ FLU_NXT*FLU_NXT*FLU_NXT ], real Output[][ PS2*PS2*PS2 ], char DE_Status[],
                                 const real Flux[][3][NCOMP_TOTAL], const real dt, const real dh,
                                 const real Gamma, const real MinDens, const real MinPres, const real DualEnergySwitch,
                                 const bool NormPassive, const int NNorm, const int NormIdx[] );
@@ -67,6 +67,7 @@ static void CPU_HancockPredict( real FC_Var[][6][NCOMP_TOTAL], const real dt, co
 //
 // Parameter   :  Flu_Array_In    : Array storing the input fluid variables
 //                Flu_Array_Out   : Array to store the output fluid variables
+//                DE_Array_Out    : Array to store the dual-energy status
 //                Flux_Array      : Array to store the output fluxes
 //                Corner_Array    : Array storing the physical corner coordinates of each patch group (for UNSPLIT_GRAVITY)
 //                Pot_Array_USG   : Array storing the input potential for UNSPLIT_GRAVITY
@@ -93,8 +94,9 @@ static void CPU_HancockPredict( real FC_Var[][6][NCOMP_TOTAL], const real dt, co
 //                                  --> Should be set to the global variable "PassiveNorm_VarIdx"
 //-------------------------------------------------------------------------------------------------------
 void CPU_FluidSolver_MHM( const real Flu_Array_In[][NCOMP_TOTAL][ FLU_NXT*FLU_NXT*FLU_NXT ],
-                          real Flu_Array_Out     [][NCOMP_TOTAL][ PS2*PS2*PS2 ],
-                          real Flux_Array     [][9][NCOMP_TOTAL][ PS2*PS2 ],
+                          real Flu_Array_Out[][NCOMP_TOTAL][ PS2*PS2*PS2 ],
+                          char DE_Array_Out[][ PS2*PS2*PS2 ],
+                          real Flux_Array[][9][NCOMP_TOTAL][ PS2*PS2 ],
                           const double Corner_Array[][3],
                           const real Pot_Array_USG[][USG_NXT_F][USG_NXT_F][USG_NXT_F],
                           const int NPatchGroup, const real dt, const real dh, const real Gamma,
@@ -238,7 +240,8 @@ void CPU_FluidSolver_MHM( const real Flu_Array_In[][NCOMP_TOTAL][ FLU_NXT*FLU_NX
 
 
 //       3. full-step evolution
-         CPU_FullStepUpdate( Flu_Array_In[P], Flu_Array_Out[P], FC_Flux, dt, dh, Gamma, MinDens, MinPres, DualEnergySwitch,
+         CPU_FullStepUpdate( Flu_Array_In[P], Flu_Array_Out[P], DE_Array_Out[P],
+                             FC_Flux, dt, dh, Gamma, MinDens, MinPres, DualEnergySwitch,
                              NormPassive, NNorm, NormIdx );
 
 

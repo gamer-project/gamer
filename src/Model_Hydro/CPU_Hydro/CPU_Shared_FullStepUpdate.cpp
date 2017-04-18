@@ -14,6 +14,7 @@
 //
 // Parameter   :  Input            : Array storing the input initial data
 //                Output           : Array to store the ouptut updated data
+//                DE_Status        : Array to store the dual-energy status
 //                Flux             : Array storing the input face-centered flux
 //                                   --> Size is assumed to be N_FL_FLUX^3
 //                dt               : Time interval to advance solution
@@ -29,7 +30,7 @@
 //                NormIdx          : Target variable indices to be normalized
 //                                   --> Should be set to the global variable "PassiveNorm_VarIdx"
 //-------------------------------------------------------------------------------------------------------
-void CPU_FullStepUpdate( const real Input[][ FLU_NXT*FLU_NXT*FLU_NXT ], real Output[][ PS2*PS2*PS2 ],
+void CPU_FullStepUpdate( const real Input[][ FLU_NXT*FLU_NXT*FLU_NXT ], real Output[][ PS2*PS2*PS2 ], char DE_Status[],
                          const real Flux[][3][NCOMP_TOTAL], const real dt, const real dh,
                          const real Gamma, const real MinDens, const real MinPres, const real DualEnergySwitch,
                          const bool NormPassive, const int NNorm, const int NormIdx[] )
@@ -103,8 +104,8 @@ void CPU_FullStepUpdate( const real Input[][ FLU_NXT*FLU_NXT*FLU_NXT ], real Out
 //    Output[DENS][ID2] = FMAX( Output[DENS][ID2], MinDens );
 
 #     ifndef GRAVITY
-//    both ENGY and ENPY might be modified by CPU_DualEnergyFix() --> call-by-reference
-      CPU_DualEnergyFix( Output[DENS][ID2], Output[MOMX][ID2], Output[MOMY][ID2], Output[MOMZ][ID2], Output[ENGY][ID2], Output[ENPY][ID2],
+      CPU_DualEnergyFix( Output[DENS][ID2], Output[MOMX][ID2], Output[MOMY][ID2], Output[MOMZ][ID2],
+                         Output[ENGY][ID2], Output[ENPY][ID2], DE_Status[ID2],
                          Gamma_m1, _Gamma_m1, MinPres_No, DualEnergySwitch );
 #     endif
 #     endif // #ifdef DUAL_ENERGY
