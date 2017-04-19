@@ -869,13 +869,29 @@ int AllocateSonPatch( const int FaLv, const int *Cr, const int PScale, const int
          FData_Flu[DENS][k][j][i] = MIN_DENS;
       }
 
-//    check minimum pressure
 #     if ( MODEL == HYDRO  ||  MODEL == MHD )
+#     ifdef DUAL_ENERGY
+//    ensure consistency between pressure, total energy density, and the dual-energy variable
+//    --> here we ALWAYS use the dual-energy variable to correct the total energy density
+//    --> we achieve that by setting the dual-energy switch to an extremely larger number and ignore
+//        the runtime parameter DUAL_ENERGY_SWITCH here
+      const bool CheckMinPres_Yes = true;
+      const real UseEnpy2FixEngy  = HUGE_NUMBER;
+      char dummy;    // we do not record the dual-energy status here
+
+      CPU_DualEnergyFix( FData_Flu[DENS][k][j][i], FData_Flu[MOMX][k][j][i], FData_Flu[MOMY][k][j][i],
+                         FData_Flu[MOMZ][k][j][i], FData_Flu[ENGY][k][j][i], FData_Flu[ENPY][k][j][i],
+                         dummy, Gamma_m1, _Gamma_m1, CheckMinPres_Yes, MIN_PRES, UseEnpy2FixEngy );
+
+#     else
+//    check minimum pressure
       FData_Flu[ENGY][k][j][i]
          = CPU_CheckMinPresInEngy( FData_Flu[DENS][k][j][i], FData_Flu[MOMX][k][j][i], FData_Flu[MOMY][k][j][i],
                                    FData_Flu[MOMZ][k][j][i], FData_Flu[ENGY][k][j][i],
                                    Gamma_m1, _Gamma_m1, MIN_PRES );
-#     endif
+#     endif // #ifdef DUAL_ENERGY ... else ...
+#     endif // #if ( MODEL == HYDRO  ||  MODEL == MHD )
+
 
 //    normalize passive scalars
 #     if ( NCOMP_PASSIVE > 0 )
