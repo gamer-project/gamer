@@ -66,10 +66,15 @@ void Flu_Restrict( const int FaLv, const int SonFluSg, const int FaFluSg, const 
    Mis_CompareRealValue( Time[FaLv], Time[SonLv], __FUNCTION__, true );
 
 
-   const bool ResFlu = TVar & _TOTAL;
+   const bool ResFlu    = TVar & _TOTAL;
 #  ifdef GRAVITY
-   const bool ResPot = TVar & _POTE;
+   const bool ResPot    = TVar & _POTE;
 #  endif
+#  if ( MODEL == HYDRO  ||  MODEL == MHD )
+   const real  Gamma_m1 = GAMMA - (real)1.0;
+   const real _Gamma_m1 = (real)1.0 / Gamma_m1;
+#  endif
+
    int SonPID, FaPID, Disp_i, Disp_j, Disp_k, ii, jj, kk, I, J, K, Ip, Jp, Kp;
    int NVar_Flu, NVar_Tot, TFluVarIdx, TFluVarIdxList[NCOMP_TOTAL];
 
@@ -183,6 +188,44 @@ void Flu_Restrict( const int FaLv, const int SonFluSg, const int FaFluSg, const 
          }
 #        endif // #ifdef GRAVITY
       } // for (int LocalID=0; LocalID<8; LocalID++)
+
+
+//    check the minimum pressure and, when the dual-energy formalism is adopted, ensure the consistency between
+//    pressure, total energy density, and the dual-energy variable
+#     if ( MODEL == HYDRO  ||  MODEL == MHD )
+      if (  ( TVar & _TOTAL ) == _TOTAL  )
+      for (int k=0; k<PATCH_SIZE; k++)
+      for (int j=0; j<PATCH_SIZE; j++)
+      for (int i=0; i<PATCH_SIZE; i++)
+      {
+#        ifdef DUAL_ENERGY
+//       here we ALWAYS use the dual-energy variable to correct the total energy density
+//       --> we achieve that by setting the dual-energy switch to an extremely larger number and ignore
+//           the runtime parameter DUAL_ENERGY_SWITCH here
+         const bool CheckMinPres_Yes = true;
+         const real UseEnpy2FixEngy  = HUGE_NUMBER;
+         char dummy;    // we do not record the dual-energy status here
+
+         CPU_DualEnergyFix( amr->patch[FaFluSg][FaLv][FaPID]->fluid[DENS][k][j][i],
+                            amr->patch[FaFluSg][FaLv][FaPID]->fluid[MOMX][k][j][i],
+                            amr->patch[FaFluSg][FaLv][FaPID]->fluid[MOMY][k][j][i],
+                            amr->patch[FaFluSg][FaLv][FaPID]->fluid[MOMZ][k][j][i],
+                            amr->patch[FaFluSg][FaLv][FaPID]->fluid[ENGY][k][j][i],
+                            amr->patch[FaFluSg][FaLv][FaPID]->fluid[ENPY][k][j][i],
+                            dummy, Gamma_m1, _Gamma_m1, CheckMinPres_Yes, MIN_PRES, UseEnpy2FixEngy );
+
+#        else
+//       actually it might not be necessary to check the minimum pressure here
+         amr->patch[FaFluSg][FaLv][FaPID]->fluid[ENGY][k][j][i]
+            = CPU_CheckMinPresInEngy( amr->patch[FaFluSg][FaLv][FaPID]->fluid[DENS][k][j][i],
+                                      amr->patch[FaFluSg][FaLv][FaPID]->fluid[MOMX][k][j][i],
+                                      amr->patch[FaFluSg][FaLv][FaPID]->fluid[MOMY][k][j][i],
+                                      amr->patch[FaFluSg][FaLv][FaPID]->fluid[MOMZ][k][j][i],
+                                      amr->patch[FaFluSg][FaLv][FaPID]->fluid[ENGY][k][j][i],
+                                      Gamma_m1, _Gamma_m1, MIN_PRES );
+#        endif // #ifdef DUAL_ENERGY ... else ...
+      } // i,j,k
+#     endif // #if ( MODEL == HYDRO  ||  MODEL == MHD )
 
 
 //    rescale real and imaginary parts to get the correct density in ELBDM
