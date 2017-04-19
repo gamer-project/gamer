@@ -193,6 +193,7 @@ void Flu_Restrict( const int FaLv, const int SonFluSg, const int FaFluSg, const 
 //    check the minimum pressure and, when the dual-energy formalism is adopted, ensure the consistency between
 //    pressure, total energy density, and the dual-energy variable
 #     if ( MODEL == HYDRO  ||  MODEL == MHD )
+//    apply this correction only when preparing all fluid variables
       if (  ( TVar & _TOTAL ) == _TOTAL  )
       for (int k=0; k<PATCH_SIZE; k++)
       for (int j=0; j<PATCH_SIZE; j++)

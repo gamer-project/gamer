@@ -60,7 +60,6 @@ static int Table_01( const int SibID, const int Side, const char dim, const int 
 //                PotBC          : Gravity boundary condition (not used currently)
 //                BC_Face        : Priority of the B.C. along different boundary faces (z>y>x)
 //                MinPres        : Minimum allowed pressure
-//                                 --> Currently it's used for _TEMP only
 //-------------------------------------------------------------------------------------------------------
 void InterpolateGhostZone( const int lv, const int PID, real IntData[], const int SibID, const double PrepTime,
                            const int GhostSize, const IntScheme_t IntScheme, const int NTSib[], int *TSib[],
@@ -806,7 +805,6 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData[], const in
          Aux_Error( ERROR_INFO, "real and/or imag parts are not found for phase interpolation in ELBDM !!\n" );
 #     endif
 
-
 //    determine the array index to store density
       CData_Dens = CData   + ( (DensIdx==-1) ? ImagIdx : DensIdx )*CSize3D;
       CData_Real = CData   + RealIdx*CSize3D;
@@ -836,6 +834,7 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData[], const in
       Interpolate( CData_Real, CSize, CStart, CRange, FData_Real, FSize, FStart, 1, IntScheme,
                    PhaseUnwrapping_Yes, EnsureMonotonicity_No );
    } // if ( IntPhase )
+
 
 // c2. interpolation on real/imag parts in ELBDM
    else // if ( IntPhase )
@@ -871,6 +870,7 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData[], const in
 
 #  else // #if ( MODEL == ELBDM )
 
+
 // c3. interpolation on original variables for models != ELBDM
    for (int v=0; v<NVar_Flu; v++)
       Interpolate( CData+CSize3D*v, CSize, CStart, CRange, IntData+FSize3D*v, FSize, FStart, 1,
@@ -879,6 +879,7 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData[], const in
 #  endif // #if ( MODEL == ELBDM ) ... else ...
 
    NVar_SoFar = NVar_Flu;
+
 
 // c4. derived variables
 #  if   ( MODEL == HYDRO )
@@ -927,6 +928,7 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData[], const in
 #  error : unsupported MODEL !!
 #  endif // MODEL
 
+
 #  ifdef GRAVITY
 // c5. interpolation on potential
    if ( PrepPot )
@@ -937,8 +939,42 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData[], const in
    }
 #  endif
 
-
    delete [] CData;
+
+
+// d. ensure the consistency between pressure, total energy density, and the dual-energy variable
+//    when DUAL_ENERGY is on
+//    --> we don't have to check the minimum pressure here when DUAL_ENERGY is off
+//        --> it's checked in Prepare_PatchData()
+// ------------------------------------------------------------------------------------------------------------
+#  if (  ( MODEL == HYDRO || MODEL == MHD )  &&  defined DUAL_ENERGY  )
+// apply this correction only when preparing all fluid variables
+   if (  ( TVar & _TOTAL ) == _TOTAL  )
+   {
+      const real _Gamma_m1       = (real)1.0 / Gamma_m1;
+      const real UseEnpy2FixEngy = HUGE_NUMBER;
+
+//    assuming that the order of variables stored in IntData is the same as patch->fluid[]
+      real *FData_Dens = IntData + DENS*FSize3D;
+      real *FData_MomX = IntData + MOMX*FSize3D;
+      real *FData_MomY = IntData + MOMY*FSize3D;
+      real *FData_MomZ = IntData + MOMZ*FSize3D;
+      real *FData_Engy = IntData + ENGY*FSize3D;
+      real *FData_Enpy = IntData + ENPY*FSize3D;
+
+      char dummy;    // we do not record the dual-energy status here
+
+      for (int t=0; t<FSize3D; t++)
+      {
+//       here we ALWAYS use the dual-energy variable to correct the total energy density
+//       --> we achieve that by setting the dual-energy switch to an extremely larger number and ignore
+//           the runtime parameter DUAL_ENERGY_SWITCH here
+         CPU_DualEnergyFix( FData_Dens[t], FData_MomX[t], FData_MomY[t], FData_MomZ[t], FData_Engy[t], FData_Enpy[t],
+                            dummy, Gamma_m1, _Gamma_m1, (MinPres>=0.0), MinPres, UseEnpy2FixEngy );
+
+      }
+   } // if (  ( TVar & _TOTAL ) == _TOTAL  )
+#  endif // if (  ( MODEL == HYDRO || MODEL == MHD )  &&  defined DUAL_ENERGY  )
 
 } // FUNCTION : InterpolateGhostZone
 
