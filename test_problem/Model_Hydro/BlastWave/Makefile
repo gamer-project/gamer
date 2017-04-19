@@ -48,19 +48,19 @@ SIMU_OPTION += -DMAX_PATCH=1000000
 # (b) hydro options
 # ------------------------------------------------------------------------------------
 ifeq "$(findstring MODEL=HYDRO, $(SIMU_OPTION))" "MODEL=HYDRO"
-# hydrodynamic scheme: RTVD/WAF/MHM/MHM_RP/CTU
+# hydrodynamic scheme: RTVD/WAF/MHM/MHM_RP/CTU (WAF is deprecated)
 SIMU_OPTION += -DFLU_SCHEME=CTU
 
-# scheme of spatial data reconstruction: PLM/PPM (piecewise-linear/piecewise-parabolic) ##USELESS IN RTVD/WAF##
+# scheme of spatial data reconstruction: PLM/PPM (piecewise-linear/piecewise-parabolic) ##useless in RTVD/WAF##
 SIMU_OPTION += -DLR_SCHEME=PPM
 
-# Riemann solver: EXACT/ROE/HLLE/HLLC ##ALL ARE USELESS IN RTVD, HLLE/HLLC ARE USELESS IN WAF##
+# Riemann solver: EXACT/ROE/HLLE/HLLC ##all are useless in RTVD, HLLE/HLLC are useless in WAF##
 SIMU_OPTION += -DRSOLVER=ROE
 
-# dual energy formalism
-#SIMU_OPTION += -DDUAL_ENERGY
+# dual energy formalism: DE_ENPY/DE_EINT (evolve entropy or internal energy, DE_EINT is not supported yet) ##useless in RTVD/WAF##
+#SIMU_OPTION += -DDUAL_ENERGY=DE_ENPY
 
-# number of passively advected scalars (excluding internal energy even when DUAL_ENERGY is on)
+# number of passively advected scalars (**excluding** entropy or internal energy even when DUAL_ENERGY is on)
 # --> for simulations without any passive scalar, please set this variable to 0 and do NOT comment it out
 SIMU_OPTION += -DNCOMP_PASSIVE_MAKEFILE=0
 
@@ -166,7 +166,7 @@ CC_FILE     += Aux_Check_Parameter.cpp  Aux_Check_Conservation.cpp  Aux_Check.cp
                Aux_Check_Refinement.cpp  Aux_Check_Restrict.cpp  Aux_Error.cpp  Aux_GetCPUInfo.cpp \
                Aux_GetMemInfo.cpp  Aux_Message.cpp  Aux_PatchCount.cpp  Aux_TakeNote.cpp  Aux_Timing.cpp \
                Aux_Check_MemFree.cpp  Aux_RecordPerformance.cpp  Aux_CheckFileExist.cpp  Aux_Array.cpp \
-               Aux_RecordUser.cpp  Aux_RecordCorrUnphy.cpp  Aux_SwapPointer.cpp
+               Aux_RecordUser.cpp  Aux_RecordCorrUnphy.cpp  Aux_SwapPointer.cpp  Aux_Check_NormalizePassive.cpp
 
 CC_FILE     += CPU_FluidSolver.cpp  Flu_AdvanceDt.cpp  Flu_Prepare.cpp  Flu_Close.cpp  Flu_FixUp.cpp \
                Flu_Restrict.cpp  Flu_AllocateFluxArray.cpp  Flu_BoundaryCondition_User.cpp  Flu_ResetByUser.cpp \
@@ -178,7 +178,7 @@ CC_FILE     += End_GAMER.cpp  End_MemFree.cpp  End_MemFree_Fluid.cpp  End_StopMa
                Init_MemAllocate_Fluid.cpp  Init_Parallelization.cpp  Init_RecordBasePatch.cpp  Init_Refine.cpp \
                Init_Restart_v1.cpp  Init_StartOver.cpp  Init_TestProb.cpp  Init_UM.cpp  Init_OpenMP.cpp \
                Init_Restart_HDF5.cpp  Init_SetDefaultParameter.cpp  Init_Restart_v2.cpp  Init_MemoryPool.cpp \
-               Init_Unit.cpp  Init_SetPassiveFieldName.cpp
+               Init_Unit.cpp  Init_PassiveVariable.cpp
 
 CC_FILE     += Interpolate.cpp  Int_CQuadratic.cpp  Int_MinMod1D.cpp  Int_MinMod3D.cpp  Int_vanLeer.cpp \
                Int_Quadratic.cpp  Int_Table.cpp  Int_CQuartic.cpp  Int_Quartic.cpp
@@ -212,7 +212,7 @@ CC_FILE     += CPU_FluidSolver_RTVD.cpp  CPU_FluidSolver_WAF.cpp  CPU_FluidSolve
                CPU_FluidSolver_CTU.cpp  CPU_Shared_DataReconstruction.cpp  CPU_Shared_FluUtility.cpp \
                CPU_Shared_ComputeFlux.cpp  CPU_Shared_FullStepUpdate.cpp \
                CPU_Shared_RiemannSolver_Exact.cpp  CPU_Shared_RiemannSolver_Roe.cpp \
-               CPU_Shared_RiemannSolver_HLLE.cpp  CPU_Shared_RiemannSolver_HLLC.cpp
+               CPU_Shared_RiemannSolver_HLLE.cpp  CPU_Shared_RiemannSolver_HLLC.cpp  CPU_Shared_DualEnergy.cpp
 
 CC_FILE     += Hydro_Init_StartOver_AssignData.cpp  Hydro_Aux_Check_Negative.cpp  Hydro_GetTimeStep_Fluid.cpp \
                Hydro_Init_UM_AssignData.cpp  Hydro_BoundaryCondition_Outflow.cpp  Hydro_BoundaryCondition_Reflecting.cpp \
@@ -357,6 +357,7 @@ CC_FILE     += LB_Init_LoadBalance.cpp  LB_AllocateBufferPatch_Sibling.cpp  LB_R
                LB_Refine.cpp  LB_Refine_GetNewRealPatchList.cpp  LB_Refine_AllocateNewPatch.cpp \
                LB_FindSonNotHome.cpp  LB_Refine_AllocateBufferPatch_Sibling.cpp \
                LB_AllocateBufferPatch_Sibling_Base.cpp  LB_RecordExchangeFixUpDataPatchID.cpp \
+               LB_EstimateWorkload_AllPatchGroup.cpp  LB_EstimateLoadImbalance.cpp
 
 endif # LOAD_BALANCE
 
@@ -378,6 +379,13 @@ endif # "SUPPORT_LIBYT"
 
 # location of libraries
 # -------------------------------------------------------------------------------
+# nano (intel 2016)
+#CUDA_TOOLKIT_PATH := /usr/local/cuda
+#MPI_PATH          := /mnt/lustre/allen/hyschive/software/openmpi/2.0.2
+#FFTW_PATH         := /mnt/lustre/allen/hyschive/software/fftw/2.1.5
+#HDF5_PATH         := /mnt/lustre/allen/hyschive/software/miniconda2
+#GSL_PATH          :=
+
 # dxl (gcc, serial)
 #CUDA_TOOLKIT_PATH :=
 #FFTW_PATH         := /home/hyschive/software/fftw/2.1.5
@@ -520,7 +528,7 @@ endif
 
 ifeq "$(findstring OPENMP, $(SIMU_OPTION))" "OPENMP"
    ifeq "$(findstring INTEL, $(SIMU_OPTION))" "INTEL"
-      OPENMP := -openmp
+      OPENMP := -fopenmp
    else
       OPENMP := -fopenmp
    endif
@@ -574,7 +582,7 @@ else
 CXXWARN_FLAG := -Wextra -Wall -Wswitch -Wformat -Wchar-subscripts -Wparentheses -Wmultichar \
                 -Wtrigraphs -Wpointer-arith -Wcast-align -Wreturn-type -Wno-unused-function
 CXXWARN_FLAG += -Wno-unused-variable -Wno-unused-parameter -Wno-maybe-uninitialized -Wno-unused-but-set-variable \
-                -Wno-unused-result
+                -Wno-unused-result -Wundef
 endif
 
 ifeq "$(findstring OPENMP, $(SIMU_OPTION))" ""
@@ -615,7 +623,7 @@ else ifeq "$(findstring GPU_ARCH=KEPLER,  $(SIMU_OPTION))" "GPU_ARCH=KEPLER"
 else ifeq "$(findstring GPU_ARCH=MAXWELL, $(SIMU_OPTION))" "GPU_ARCH=MAXWELL"
    NVCCFLAG_COM += -gencode arch=compute_52,code=\"compute_52,sm_52\"
 else ifeq "$(findstring GPU_ARCH=PASCAL,  $(SIMU_OPTION))" "GPU_ARCH=PASCAL"
-   NVCCFLAG_COM += -gencode arch=compute_61,code=\"compute_61,sm_61\"
+   NVCCFLAG_COM += -gencode arch=compute_60,code=\"compute_60,sm_60\"
 else ifeq "$(findstring GPU, $(SIMU_OPTION))" "GPU"
    $(error unknown GPU_ARCH !!)
 endif
@@ -638,6 +646,18 @@ else ifeq "$(findstring GPU_ARCH=KEPLER, $(SIMU_OPTION))" "GPU_ARCH=KEPLER"
      NVCCFLAG_FLU += --maxrregcount=128
    else
      NVCCFLAG_FLU += --maxrregcount=64
+   endif
+else ifeq "$(findstring GPU_ARCH=PASCAL, $(SIMU_OPTION))" "GPU_ARCH=MAXWELL"
+   ifeq "$(findstring FLOAT8, $(SIMU_OPTION))" "FLOAT8"
+#    NVCCFLAG_FLU += --maxrregcount=XX
+   else
+#    NVCCFLAG_FLU += --maxrregcount=XX
+   endif
+else ifeq "$(findstring GPU_ARCH=PASCAL, $(SIMU_OPTION))" "GPU_ARCH=PASCAL"
+   ifeq "$(findstring FLOAT8, $(SIMU_OPTION))" "FLOAT8"
+#    NVCCFLAG_FLU += --maxrregcount=XX
+   else
+#    NVCCFLAG_FLU += --maxrregcount=XX
    endif
 endif
 

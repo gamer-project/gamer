@@ -73,6 +73,8 @@
 0           OPT__MEMORY_POOL          # preallocate patches to reduce memory fragmentation (Input__MemoryPool) ##must turn on OPT__REUSE_MEMORY##
 
 0.1         LB_INPUT__WLI_MAX         # threshold for redistributing patches at all levels ##LOAD_BALANCE ONLY##
+-1.0        LB_INPUT__PAR_WEIGHT      # load-balance weighting of one particle over one cell (<0:default=0.0) ##LOAD_BALANCE and PARTICLE ONLY##
+1           OPT__RECORD_LOAD_BALANCE  # record the information of load balance
 
 1.40        GAMMA                     # ratio of specific heats (adiabatic index)
 0.6         MOLECULAR_WEIGHT          # mean molecular weight (currently it's only for calculating temperature in post-processing)
@@ -84,6 +86,7 @@
 0           OPT__WAF_LIMITER          # flux limiter in WAF (0/1/2/3/4) = (none/SuperBee/vanLeer/vanAlbada/MinBee)
 -1          OPT__1ST_FLUX_CORR        # correct unphysical results (defined by MIN_DENS/PRES) with 1st-order fluxes (-1/0/1/2 -> default/off/3D/3D+1D [2]) ##MHM/MHM_RP/CTU ONLY##
 -1          OPT__1ST_FLUX_CORR_SCHEME # Riemann solver for OPT__1ST_FLUX_CORR (-1/1/2/3 -> default/Roe/HLLC/HLLE [Roe])
+-1.0        DUAL_ENERGY_SWITCH        # use dual-energy formalism if E_int/E_kin < DUAL_ENERGY_SWITCH (<0:default [1.0e-4]) ##DUAL_ENERGY ONLY##
 
 1.0         ELBDM_MASS                # particle mass in ev/c^2 in ELBDM (input unit is fixed even when OPT__UNIT or COMOVING is on)
 1.0         ELBDM_PLANCK_CONST        # Planck constant in ELBDM (will be overwritten if OPT__UNIT or COMOVING is on)
@@ -95,7 +98,8 @@
 -1          GPU_NSTREAM               # number of streams for the asynchronous memory copy in GPU (<0:default)
 1           OPT__FIXUP_FLUX           # perform the flux fix-up to correct the coarse-grid data ##HYDRO and ELBDM ONLY##
 1           OPT__FIXUP_RESTRICT       # perform the restrict operation to correct the coarse-grid data
-1           OPT__CORR_AFTER_ALL_SYNC  # apply several corrections after all levels are synchronized
+-1          OPT__CORR_AFTER_ALL_SYNC  # apply corrections after all levels are synchronized (-1/0/1/2:default/off/every step/before dump)
+1           OPT__NORMALIZE_PASSIVE    # ensure "sum(passive_scalar_density) == gas_density" --> edit "Init_PassiveVariable.cpp"
 0           OPT__OVERLAP_MPI          # overlap MPI time with CPU/GPU computation (currently for LOAD_BALANCE only)
 0           OPT__RESET_FLUID          # reset fluid variables after each update --> edit "Flu_ResetByUser"
 0.0         MIN_DENS                  # minimum density  (must >= 0.0) ##HYDRO, MHD, and ELBDM ONLY##
@@ -168,10 +172,11 @@ yt_inline   YT_SCRIPT                 # yt inline analysis script (do not includ
 0           OPT__CK_REFINE            # check the refinement
 0           OPT__CK_PROPER_NESTING    # check the proper-nesting condition
 0           OPT__CK_CONSERVATION      # check the conservation law
+0           OPT__CK_NORMALIZE_PASSIVE # check the normalization of passive scalars --> must turn on OPT__NORMALIZE_PASSIVE
 0           OPT__CK_RESTRICT          # check the restriction operation
 0           OPT__CK_FINITE            # check if all variables are finite
 0           OPT__CK_PATCH_ALLOCATE    # check if all patches are properly allocated
 0           OPT__CK_FLUX_ALLOCATE     # check if all flux arrays are properly allocated ##HYDRO and ELBDM ONLY##
-0           OPT__CK_NEGATIVE          # check the negative density/pressure: (1,2,3)->(rho,pres,both) ##HYDRO ONLY##
+0           OPT__CK_NEGATIVE          # check the negative density/pressure: (1,2,3)->(rho,pres(and entropy),both) ##HYDRO ONLY##
 1.0         OPT__CK_MEMFREE           # check the free memory (0:off, >0:threshold)
 0           OPT__CK_PARTICLE          # check the particle allocation

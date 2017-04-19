@@ -52,6 +52,18 @@
 #define HLLC      4
 
 
+// dual-energy variables
+#define DE_ENPY      1
+#define DE_EINT      2
+
+#ifdef DUAL_ENERGY
+#define DE_UPDATED_BY_ETOT       ('0')
+#define DE_UPDATED_BY_DUAL       ('1')
+#define DE_UPDATED_BY_MIN_PRES   ('2')
+#define DE_UPDATED_BY_1ST_FLUX   ('3')
+#endif
+
+
 // Poisson solvers
 #define SOR       1
 #define MG        2
@@ -89,7 +101,7 @@
 
 
 // number of passively advected components in each cell
-// --> including internal energy when the dual energy formalism is adopted
+// --> including entropy (or internal energy) when the dual energy formalism is adopted
 #if (  ( MODEL == HYDRO || MODEL == MHD )  &&  defined DUAL_ENERGY  )
 #  define NCOMP_PASSIVE       ( NCOMP_PASSIVE_MAKEFILE + 1 )
 #else
@@ -144,8 +156,10 @@
 #if ( NCOMP_PASSIVE > 0 )
 #  define  CLOUD0             ( NCOMP_FLUID + 0 )
 #  define  CLOUD1             ( NCOMP_FLUID + 1 )
-// always store internal energy for the dual energy formalism as the last passive variable
-#  ifdef DUAL_ENERGY
+// always store entropy (or internal energy) for the dual energy formalism as the last passive variable
+#  if   ( DUAL_ENERGY == DE_ENPY )
+#  define  ENPY               ( NCOMP_TOTAL-1 )
+#  elif ( DUAL_ENERGY == DE_EINT )
 #  define  EINT               ( NCOMP_TOTAL-1 )
 #  endif
 #endif
@@ -161,8 +175,10 @@
 #if ( NCOMP_PASSIVE > 0 )
 #  define  FLUX_CLOUD0        ( NFLUX_FLUID + 0 )
 #  define  FLUX_CLOUD1        ( NFLUX_FLUID + 1 )
-// always store internal energy for the dual energy formalism as the last passive variable
-#  ifdef DUAL_ENERGY
+// always store entropy (or internal energy) for the dual energy formalism as the last passive variable
+#  if   ( DUAL_ENERGY == DE_ENPY )
+#  define  FLUX_ENPY          ( NFLUX_TOTAL-1 )
+#  elif ( DUAL_ENERGY == DE_EINT )
 #  define  FLUX_EINT          ( NFLUX_TOTAL-1 )
 #  endif
 #endif
@@ -177,8 +193,10 @@
 #if ( NCOMP_PASSIVE > 0 )
 #  define _CLOUD0             ( 1 << CLOUD0 )
 #  define _CLOUD1             ( 1 << CLOUD1 )
-// always store internal energy for the dual energy formalism as the last passive variable
-#  ifdef DUAL_ENERGY
+// always store entropy (or internal energy) for the dual energy formalism as the last passive variable
+#  if   ( DUAL_ENERGY == DE_ENPY )
+#  define _ENPY               ( 1 << ENPY )
+#  elif ( DUAL_ENERGY == DE_EINT )
 #  define _EINT               ( 1 << EINT )
 #  endif
 #endif // #if ( NCOMP_PASSIVE > 0 )
@@ -193,8 +211,10 @@
 #if ( NFLUX_PASSIVE > 0 )
 #  define _FLUX_CLOUD0        ( 1 << FLUX_CLOUD0 )
 #  define _FLUX_CLOUD1        ( 1 << FLUX_CLOUD1 )
-// always store internal energy for the dual energy formalism as the last passive variable
-#  ifdef DUAL_ENERGY
+// always store entropy (or internal energy) for the dual energy formalism as the last passive variable
+#  if   ( DUAL_ENERGY == DE_ENPY )
+#  define _FLUX_ENPY          ( 1 << FLUX_ENPY )
+#  elif ( DUAL_ENERGY == DE_EINT )
 #  define _FLUX_EINT          ( 1 << FLUX_EINT )
 #  endif
 #endif // #if ( NFLUX_PASSIVE > 0 )

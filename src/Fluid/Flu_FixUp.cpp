@@ -19,11 +19,17 @@
 void Flu_FixUp( const int lv, const double dt )
 {
 
-   const real Const = dt / amr->dh[lv];
-   const int  FluSg = amr->FluSg[lv];
+   const real Const[6]   = { -dt/amr->dh[lv], +dt/amr->dh[lv],
+                             -dt/amr->dh[lv], +dt/amr->dh[lv],
+                             -dt/amr->dh[lv], +dt/amr->dh[lv] };
+   const int  FluSg      = amr->FluSg[lv];
+   const int  Offset[6]  = { 0, PS1-1, 0, (PS1-1)*PS1, 0, (PS1-1)*SQR(PS1) }; // x=0/PS1-1, y=0/PS1-1, z=0/PS1-1 faces
+   const int  didx[3][2] = { PS1, SQR(PS1), 1, SQR(PS1), 1, PS1 };
 
    real CorrVal[NFLUX_TOTAL];    // values after applying the flux correction
    real (*FluxPtr)[PATCH_SIZE][PATCH_SIZE] = NULL;
+   real *FluidPtr1D0[NCOMP_TOTAL], *FluidPtr1D[NCOMP_TOTAL];
+   int  didx_m, didx_n;
 
 #  if   ( MODEL == HYDRO  ||  MODEL == MHD )
    const real Gamma_m1        = GAMMA - (real)1.0;
@@ -73,9 +79,10 @@ void Flu_FixUp( const int lv, const double dt )
 
 
 #     if ( MODEL == ELBDM  &&  defined CONSERVE_MASS )
-#     pragma omp parallel for private( CorrVal, FluxPtr, Re, Im, Rho_Wrong, Rho_Corr, Rescale ) schedule( runtime )
+#     pragma omp parallel for private( CorrVal, FluxPtr, FluidPtr1D0, FluidPtr1D, didx_m, didx_n, \
+                                       Re, Im, Rho_Wrong, Rho_Corr, Rescale ) schedule( runtime )
 #     else
-#     pragma omp parallel for private( CorrVal, FluxPtr ) schedule( runtime )
+#     pragma omp parallel for private( CorrVal, FluxPtr, FluidPtr1D0, FluidPtr1D, didx_m, didx_n ) schedule( runtime )
 #     endif
       for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
       {
@@ -96,22 +103,34 @@ void Flu_FixUp( const int lv, const double dt )
 #        endif
 
 
-//       a2. correct fluid variables by the difference between coarse-grid and fine-grid fluxes
-         if ( NULL != (FluxPtr = amr->patch[0][lv][PID]->flux[0]) )
+//       a2. correct fluid variables by the difference between the coarse-grid and fine-grid fluxes
+//       loop over all six faces of a given patch
+         for (int s=0; s<6; s++)
          {
-            for (int k=0; k<PATCH_SIZE; k++)
-            for (int j=0; j<PATCH_SIZE; j++)
-            {
-               for (int v=0; v<NFLUX_TOTAL; v++)
-                  CorrVal[v] = amr->patch[FluSg][lv][PID]->fluid[v][k][j][           0] - FluxPtr[v][k][j] * Const;
+//          skip the faces not adjacent to the coarse-fine boundaries
+            if ( NULL == (FluxPtr = amr->patch[0][lv][PID]->flux[s]) )  continue;
+
+//          set the pointers to the target face
+            for (int v=0; v<NCOMP_TOTAL; v++)   FluidPtr1D0[v] = amr->patch[FluSg][lv][PID]->fluid[v][0][0] + Offset[s];
+
+//          set the array index strides
+            didx_m = didx[s/2][1];
+            didx_n = didx[s/2][0];
+
+//          loop over all cells on a given face
+            for (int m=0; m<PS1; m++)  {  for (int v=0; v<NCOMP_TOTAL; v++)   FluidPtr1D[v] = FluidPtr1D0[v] + m*didx_m;
+            for (int n=0; n<PS1; n++)  {
+
+//             calculate the corrected results
+               for (int v=0; v<NFLUX_TOTAL; v++)   CorrVal[v] = *FluidPtr1D[v] + FluxPtr[v][m][n]*Const[s];
 
 //             do not apply flux correction if any field lies below the minimum allowed value
 #              if   ( MODEL == HYDRO  ||  MODEL == MHD )
-               if ( CorrVal[DENS] < MIN_DENS  ||
+               if ( CorrVal[DENS] <= MIN_DENS  ||
                     CPU_GetPressure(CorrVal[DENS], CorrVal[MOMX], CorrVal[MOMY], CorrVal[MOMZ], CorrVal[ENGY],
-                                    Gamma_m1, CheckMinPres_No, NULL_REAL) < MIN_PRES )
+                                    Gamma_m1, CheckMinPres_No, NULL_REAL) <= MIN_PRES )
 #              elif ( MODEL == ELBDM  &&  defined CONSERVE_MASS )
-               if ( CorrVal[DENS] < MIN_DENS )
+               if ( CorrVal[DENS] <= MIN_DENS )
 #              endif
                   continue;
 
@@ -124,291 +143,32 @@ void Flu_FixUp( const int lv, const double dt )
 #              endif
 
 //             apply flux correction
-               for (int v=0; v<NFLUX_TOTAL; v++)
-                  amr->patch[FluSg][lv][PID]->fluid[v][k][j][           0] = CorrVal[v];
+               for (int v=0; v<NFLUX_TOTAL; v++)   *FluidPtr1D[v] = CorrVal[v];
 
 //             rescale the real and imaginary parts to be consistent with the corrected amplitude
 #              if ( MODEL == ELBDM  &&  defined CONSERVE_MASS )
-               Re        = amr->patch[FluSg][lv][PID]->fluid[REAL][k][j][0];
-               Im        = amr->patch[FluSg][lv][PID]->fluid[IMAG][k][j][0];
-               Rho_Corr  = amr->patch[FluSg][lv][PID]->fluid[DENS][k][j][0];
+               Re        = *FluidPtr1D[REAL];
+               Im        = *FluidPtr1D[IMAG];
+               Rho_Corr  = *FluidPtr1D[DENS];
                Rho_Wrong = SQR(Re) + SQR(Im);
 
 //             be careful about the negative density introduced from the round-off errors
                if ( Rho_Wrong <= (real)0.0  ||  Rho_Corr <= (real)0.0 )
                {
-                  amr->patch[FluSg][lv][PID]->fluid[DENS][k][j][0] = (real)0.0;
-                  Rescale = (real)0.0;
+                  *FluidPtr1D[DENS] = (real)0.0;
+                  Rescale           = (real)0.0;
                }
                else
                   Rescale = SQRT( Rho_Corr/Rho_Wrong );
 
-               amr->patch[FluSg][lv][PID]->fluid[REAL][k][j][0] *= Rescale;
-               amr->patch[FluSg][lv][PID]->fluid[IMAG][k][j][0] *= Rescale;
-#              endif
-            } // j, k
-         } // if ( flux[0] != NULL )
-
-         if ( NULL != (FluxPtr = amr->patch[0][lv][PID]->flux[1]) )
-         {
-            for (int k=0; k<PATCH_SIZE; k++)
-            for (int j=0; j<PATCH_SIZE; j++)
-            {
-               for (int v=0; v<NFLUX_TOTAL; v++)
-                  CorrVal[v] = amr->patch[FluSg][lv][PID]->fluid[v][k][j][PATCH_SIZE-1] + FluxPtr[v][k][j] * Const;
-
-//             do not apply flux correction if any field lies below the minimum allowed value
-#              if   ( MODEL == HYDRO  ||  MODEL == MHD )
-               if ( CorrVal[DENS] < MIN_DENS  ||
-                    CPU_GetPressure(CorrVal[DENS], CorrVal[MOMX], CorrVal[MOMY], CorrVal[MOMZ], CorrVal[ENGY],
-                                    Gamma_m1, CheckMinPres_No, NULL_REAL) < MIN_PRES )
-#              elif ( MODEL == ELBDM  &&  defined CONSERVE_MASS )
-               if ( CorrVal[DENS] < MIN_DENS )
-#              endif
-                  continue;
-
-//             floor and normalize passive scalars
-#              if ( NCOMP_PASSIVE > 0 )
-               for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)  CorrVal[v] = FMAX( CorrVal[v], TINY_NUMBER );
-
-               if ( OPT__NORMALIZE_PASSIVE )
-                  CPU_NormalizePassive( CorrVal[DENS], CorrVal+NCOMP_FLUID, PassiveNorm_NVar, PassiveNorm_VarIdx );
+               *FluidPtr1D[REAL] *= Rescale;
+               *FluidPtr1D[IMAG] *= Rescale;
 #              endif
 
-//             apply flux correction
-               for (int v=0; v<NFLUX_TOTAL; v++)
-                  amr->patch[FluSg][lv][PID]->fluid[v][k][j][PATCH_SIZE-1] = CorrVal[v];
-
-//             rescale the real and imaginary parts to be consistent with the corrected amplitude
-#              if ( MODEL == ELBDM  &&  defined CONSERVE_MASS )
-               Re        = amr->patch[FluSg][lv][PID]->fluid[REAL][k][j][PATCH_SIZE-1];
-               Im        = amr->patch[FluSg][lv][PID]->fluid[IMAG][k][j][PATCH_SIZE-1];
-               Rho_Corr  = amr->patch[FluSg][lv][PID]->fluid[DENS][k][j][PATCH_SIZE-1];
-               Rho_Wrong = SQR(Re) + SQR(Im);
-
-//             be careful about the negative density introduced from the round-off errors
-               if ( Rho_Wrong <= (real)0.0  ||  Rho_Corr <= (real)0.0 )
-               {
-                  amr->patch[FluSg][lv][PID]->fluid[DENS][k][j][PATCH_SIZE-1] = (real)0.0;
-                  Rescale = (real)0.0;
-               }
-               else
-                  Rescale = SQRT( Rho_Corr/Rho_Wrong );
-
-               amr->patch[FluSg][lv][PID]->fluid[REAL][k][j][PATCH_SIZE-1] *= Rescale;
-               amr->patch[FluSg][lv][PID]->fluid[IMAG][k][j][PATCH_SIZE-1] *= Rescale;
-#              endif
-            } // j, k
-         } // if ( flux[1] != NULL )
-
-         if ( NULL != (FluxPtr = amr->patch[0][lv][PID]->flux[2]) )
-         {
-            for (int k=0; k<PATCH_SIZE; k++)
-            for (int i=0; i<PATCH_SIZE; i++)
-            {
-               for (int v=0; v<NFLUX_TOTAL; v++)
-                  CorrVal[v] = amr->patch[FluSg][lv][PID]->fluid[v][k][           0][i] - FluxPtr[v][k][i] * Const;
-
-//             do not apply flux correction if any field lies below the minimum allowed value
-#              if   ( MODEL == HYDRO  ||  MODEL == MHD )
-               if ( CorrVal[DENS] < MIN_DENS  ||
-                    CPU_GetPressure(CorrVal[DENS], CorrVal[MOMX], CorrVal[MOMY], CorrVal[MOMZ], CorrVal[ENGY],
-                                    Gamma_m1, CheckMinPres_No, NULL_REAL) < MIN_PRES )
-#              elif ( MODEL == ELBDM  &&  defined CONSERVE_MASS )
-               if ( CorrVal[DENS] < MIN_DENS )
-#              endif
-                  continue;
-
-//             floor and normalize passive scalars
-#              if ( NCOMP_PASSIVE > 0 )
-               for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)  CorrVal[v] = FMAX( CorrVal[v], TINY_NUMBER );
-
-               if ( OPT__NORMALIZE_PASSIVE )
-                  CPU_NormalizePassive( CorrVal[DENS], CorrVal+NCOMP_FLUID, PassiveNorm_NVar, PassiveNorm_VarIdx );
-#              endif
-
-//             apply flux correction
-               for (int v=0; v<NFLUX_TOTAL; v++)
-                  amr->patch[FluSg][lv][PID]->fluid[v][k][           0][i] = CorrVal[v];
-
-//             rescale the real and imaginary parts to be consistent with the corrected amplitude
-#              if ( MODEL == ELBDM  &&  defined CONSERVE_MASS )
-               Re        = amr->patch[FluSg][lv][PID]->fluid[REAL][k][0][i];
-               Im        = amr->patch[FluSg][lv][PID]->fluid[IMAG][k][0][i];
-               Rho_Corr  = amr->patch[FluSg][lv][PID]->fluid[DENS][k][0][i];
-               Rho_Wrong = SQR(Re) + SQR(Im);
-
-//             be careful about the negative density introduced from the round-off errors
-               if ( Rho_Wrong <= (real)0.0  ||  Rho_Corr <= (real)0.0 )
-               {
-                  amr->patch[FluSg][lv][PID]->fluid[DENS][k][0][i] = (real)0.0;
-                  Rescale = (real)0.0;
-               }
-               else
-                  Rescale = SQRT( Rho_Corr/Rho_Wrong );
-
-               amr->patch[FluSg][lv][PID]->fluid[REAL][k][0][i] *= Rescale;
-               amr->patch[FluSg][lv][PID]->fluid[IMAG][k][0][i] *= Rescale;
-#              endif
-            } // i, k
-         } // if ( flux[2] != NULL )
-
-         if ( NULL != (FluxPtr = amr->patch[0][lv][PID]->flux[3]) )
-         {
-            for (int k=0; k<PATCH_SIZE; k++)
-            for (int i=0; i<PATCH_SIZE; i++)
-            {
-               for (int v=0; v<NFLUX_TOTAL; v++)
-                  CorrVal[v] = amr->patch[FluSg][lv][PID]->fluid[v][k][PATCH_SIZE-1][i] + FluxPtr[v][k][i] * Const;
-
-//             do not apply flux correction if any field lies below the minimum allowed value
-#              if   ( MODEL == HYDRO  ||  MODEL == MHD )
-               if ( CorrVal[DENS] < MIN_DENS  ||
-                    CPU_GetPressure(CorrVal[DENS], CorrVal[MOMX], CorrVal[MOMY], CorrVal[MOMZ], CorrVal[ENGY],
-                                    Gamma_m1, CheckMinPres_No, NULL_REAL) < MIN_PRES )
-#              elif ( MODEL == ELBDM  &&  defined CONSERVE_MASS )
-               if ( CorrVal[DENS] < MIN_DENS )
-#              endif
-                  continue;
-
-//             floor and normalize passive scalars
-#              if ( NCOMP_PASSIVE > 0 )
-               for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)  CorrVal[v] = FMAX( CorrVal[v], TINY_NUMBER );
-
-               if ( OPT__NORMALIZE_PASSIVE )
-                  CPU_NormalizePassive( CorrVal[DENS], CorrVal+NCOMP_FLUID, PassiveNorm_NVar, PassiveNorm_VarIdx );
-#              endif
-
-//             apply flux correction
-               for (int v=0; v<NFLUX_TOTAL; v++)
-                  amr->patch[FluSg][lv][PID]->fluid[v][k][PATCH_SIZE-1][i] = CorrVal[v];
-
-//             rescale the real and imaginary parts to be consistent with the corrected amplitude
-#              if ( MODEL == ELBDM  &&  defined CONSERVE_MASS )
-               Re        = amr->patch[FluSg][lv][PID]->fluid[REAL][k][PATCH_SIZE-1][i];
-               Im        = amr->patch[FluSg][lv][PID]->fluid[IMAG][k][PATCH_SIZE-1][i];
-               Rho_Corr  = amr->patch[FluSg][lv][PID]->fluid[DENS][k][PATCH_SIZE-1][i];
-               Rho_Wrong = SQR(Re) + SQR(Im);
-
-//             be careful about the negative density introduced from the round-off errors
-               if ( Rho_Wrong <= (real)0.0  ||  Rho_Corr <= (real)0.0 )
-               {
-                  amr->patch[FluSg][lv][PID]->fluid[DENS][k][PATCH_SIZE-1][i] = (real)0.0;
-                  Rescale = (real)0.0;
-               }
-               else
-                  Rescale = SQRT( Rho_Corr/Rho_Wrong );
-
-               amr->patch[FluSg][lv][PID]->fluid[REAL][k][PATCH_SIZE-1][i] *= Rescale;
-               amr->patch[FluSg][lv][PID]->fluid[IMAG][k][PATCH_SIZE-1][i] *= Rescale;
-#              endif
-            } // i, k
-         } // if ( flux[3] != NULL )
-
-         if ( NULL != (FluxPtr = amr->patch[0][lv][PID]->flux[4]) )
-         {
-            for (int j=0; j<PATCH_SIZE; j++)
-            for (int i=0; i<PATCH_SIZE; i++)
-            {
-               for (int v=0; v<NFLUX_TOTAL; v++)
-                  CorrVal[v] = amr->patch[FluSg][lv][PID]->fluid[v][           0][j][i] - FluxPtr[v][j][i] * Const;
-
-//             do not apply flux correction if any field lies below the minimum allowed value
-#              if   ( MODEL == HYDRO  ||  MODEL == MHD )
-               if ( CorrVal[DENS] < MIN_DENS  ||
-                    CPU_GetPressure(CorrVal[DENS], CorrVal[MOMX], CorrVal[MOMY], CorrVal[MOMZ], CorrVal[ENGY],
-                                    Gamma_m1, CheckMinPres_No, NULL_REAL) < MIN_PRES )
-#              elif ( MODEL == ELBDM  &&  defined CONSERVE_MASS )
-               if ( CorrVal[DENS] < MIN_DENS )
-#              endif
-                  continue;
-
-//             floor and normalize passive scalars
-#              if ( NCOMP_PASSIVE > 0 )
-               for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)  CorrVal[v] = FMAX( CorrVal[v], TINY_NUMBER );
-
-               if ( OPT__NORMALIZE_PASSIVE )
-                  CPU_NormalizePassive( CorrVal[DENS], CorrVal+NCOMP_FLUID, PassiveNorm_NVar, PassiveNorm_VarIdx );
-#              endif
-
-//             apply flux correction
-               for (int v=0; v<NFLUX_TOTAL; v++)
-                  amr->patch[FluSg][lv][PID]->fluid[v][           0][j][i] = CorrVal[v];
-
-//             rescale the real and imaginary parts to be consistent with the corrected amplitude
-#              if ( MODEL == ELBDM  &&  defined CONSERVE_MASS )
-               Re        = amr->patch[FluSg][lv][PID]->fluid[REAL][0][j][i];
-               Im        = amr->patch[FluSg][lv][PID]->fluid[IMAG][0][j][i];
-               Rho_Corr  = amr->patch[FluSg][lv][PID]->fluid[DENS][0][j][i];
-               Rho_Wrong = SQR(Re) + SQR(Im);
-
-//             be careful about the negative density introduced from the round-off errors
-               if ( Rho_Wrong <= (real)0.0  ||  Rho_Corr <= (real)0.0 )
-               {
-                  amr->patch[FluSg][lv][PID]->fluid[DENS][0][j][i] = (real)0.0;
-                  Rescale = (real)0.0;
-               }
-               else
-                  Rescale = SQRT( Rho_Corr/Rho_Wrong );
-
-               amr->patch[FluSg][lv][PID]->fluid[REAL][0][j][i] *= Rescale;
-               amr->patch[FluSg][lv][PID]->fluid[IMAG][0][j][i] *= Rescale;
-#              endif
-            } // i, j
-         } // if ( flux[4] != NULL )
-
-         if ( NULL != (FluxPtr = amr->patch[0][lv][PID]->flux[5]) )
-         {
-            for (int j=0; j<PATCH_SIZE; j++)
-            for (int i=0; i<PATCH_SIZE; i++)
-            {
-               for (int v=0; v<NFLUX_TOTAL; v++)
-                  CorrVal[v] = amr->patch[FluSg][lv][PID]->fluid[v][PATCH_SIZE-1][j][i] + FluxPtr[v][j][i] * Const;
-
-//             do not apply flux correction if any field lies below the minimum allowed value
-#              if   ( MODEL == HYDRO  ||  MODEL == MHD )
-               if ( CorrVal[DENS] < MIN_DENS  ||
-                    CPU_GetPressure(CorrVal[DENS], CorrVal[MOMX], CorrVal[MOMY], CorrVal[MOMZ], CorrVal[ENGY],
-                                    Gamma_m1, CheckMinPres_No, NULL_REAL) < MIN_PRES )
-#              elif ( MODEL == ELBDM  &&  defined CONSERVE_MASS )
-               if ( CorrVal[DENS] < MIN_DENS )
-#              endif
-                  continue;
-
-//             floor and normalize passive scalars
-#              if ( NCOMP_PASSIVE > 0 )
-               for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)  CorrVal[v] = FMAX( CorrVal[v], TINY_NUMBER );
-
-               if ( OPT__NORMALIZE_PASSIVE )
-                  CPU_NormalizePassive( CorrVal[DENS], CorrVal+NCOMP_FLUID, PassiveNorm_NVar, PassiveNorm_VarIdx );
-#              endif
-
-//             apply flux correction
-               for (int v=0; v<NFLUX_TOTAL; v++)
-                  amr->patch[FluSg][lv][PID]->fluid[v][PATCH_SIZE-1][j][i] = CorrVal[v];
-
-//             rescale the real and imaginary parts to be consistent with the corrected amplitude
-#              if ( MODEL == ELBDM  &&  defined CONSERVE_MASS )
-               Re        = amr->patch[FluSg][lv][PID]->fluid[REAL][PATCH_SIZE-1][j][i];
-               Im        = amr->patch[FluSg][lv][PID]->fluid[IMAG][PATCH_SIZE-1][j][i];
-               Rho_Corr  = amr->patch[FluSg][lv][PID]->fluid[DENS][PATCH_SIZE-1][j][i];
-               Rho_Wrong = SQR(Re) + SQR(Im);
-
-//             be careful about the negative density introduced from the round-off errors
-               if ( Rho_Wrong <= (real)0.0  ||  Rho_Corr <= (real)0.0 )
-               {
-                  amr->patch[FluSg][lv][PID]->fluid[DENS][PATCH_SIZE-1][j][i] = (real)0.0;
-                  Rescale = (real)0.0;
-               }
-               else
-                  Rescale = SQRT( Rho_Corr/Rho_Wrong );
-
-               amr->patch[FluSg][lv][PID]->fluid[REAL][PATCH_SIZE-1][j][i] *= Rescale;
-               amr->patch[FluSg][lv][PID]->fluid[IMAG][PATCH_SIZE-1][j][i] *= Rescale;
-#              endif
-            } // i, j
-         } // if ( flux[5] != NULL )
-
+//             update the fluid pointers
+               for (int v=0; v<NCOMP_TOTAL; v++)   FluidPtr1D[v] += didx_n;
+            }} // m, n
+         } // for (int s=0; s<6; s++)
       } // for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
 
 
