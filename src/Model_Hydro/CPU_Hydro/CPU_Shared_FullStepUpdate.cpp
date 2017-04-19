@@ -100,13 +100,13 @@ void CPU_FullStepUpdate( const real Input[][ FLU_NXT*FLU_NXT*FLU_NXT ], real Out
 //        might update the internal energy as well (especially when UNSPLIT_GRAVITY is adopted)
 #     ifdef DUAL_ENERGY
 //    we no longer apply the minimum density and pressure checks here since we want to enable 1st-order-flux correction for that
-      const real MinPres_No = -__FLT_MAX__;  // set minimum pressure to an extremely negative value
+      const bool CheckMinPres_No = false;
 //    Output[DENS][ID2] = FMAX( Output[DENS][ID2], MinDens );
 
 #     ifndef GRAVITY
       CPU_DualEnergyFix( Output[DENS][ID2], Output[MOMX][ID2], Output[MOMY][ID2], Output[MOMZ][ID2],
                          Output[ENGY][ID2], Output[ENPY][ID2], DE_Status[ID2],
-                         Gamma_m1, _Gamma_m1, MinPres_No, DualEnergySwitch );
+                         Gamma_m1, _Gamma_m1, CheckMinPres_No, NULL_REAL, DualEnergySwitch );
 #     endif
 #     endif // #ifdef DUAL_ENERGY
 

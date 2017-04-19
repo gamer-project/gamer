@@ -83,12 +83,13 @@ real CPU_CheckMinPres( const real InPres, const real MinPres );
 void CPU_NormalizePassive( const real GasDens, real Passive[], const int NNorm, const int NormIdx[] );
 #ifdef DUAL_ENERGY
 void CPU_DualEnergyFix( const real Dens, const real MomX, const real MomY, const real MomZ,
-                        real &Etot, real &Enpy, char &DE_Status,
-                        const real Gamma_m1, const real _Gamma_m1, const real MinPres, const real DualEnergySwitch );
+                        real &Etot, real &Enpy, char &DE_Status, const real Gamma_m1, const real _Gamma_m1,
+                        const bool CheckMinPres, const real MinPres, const real DualEnergySwitch );
 #if ( DUAL_ENERGY == DE_ENPY )
 real CPU_Fluid2Entropy( const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy, const real Gamma_m1 );
 real CPU_DensPres2Entropy( const real Dens, const real Pres, const real Gamma_m1 );
-real CPU_DensEntropy2Pres( const real Dens, const real Enpy, const real Gamma_m1, const real MinPres );
+real CPU_DensEntropy2Pres( const real Dens, const real Enpy, const real Gamma_m1,
+                           const bool CheckMinPres, const real MinPres );
 #endif
 #endif
 real CPU_CheckMinPresInEngy( const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy,

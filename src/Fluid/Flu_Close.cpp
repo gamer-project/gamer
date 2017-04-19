@@ -315,11 +315,7 @@ bool Unphysical( const real Fluid[], const real Gamma_m1, const int CheckMinEngy
 
    const int  CheckMinEngy = 0;
    const int  CheckMinPres = 1;
-#  if ( DUAL_ENERGY == DE_ENPY )
-   const real CorrPres_No  = -__FLT_MAX__;   // set minimum pressure to an extremely negative value
-#  else
    const bool CorrPres_No  = false;
-#  endif
 
 
 // if any checks below fail, return true
@@ -343,7 +339,7 @@ bool Unphysical( const real Fluid[], const real Gamma_m1, const int CheckMinEngy
 //         currently we use TINY_NUMBER as the floor value of entropy and hence here we use 2.0*TINY_NUMBER to validate entropy
 //         --> in general, for MIN_PRES > 0.0, we expect that unphysical entropy would lead to unphysical pressure
 //         --> however, the check "Fluid[ENPY] < (real)2.0*TINY_NUMBER" is necessary when MIN_PRES == 0.0
-           CPU_DensEntropy2Pres( Fluid[DENS], Fluid[ENPY], Gamma_m1, CorrPres_No ) < (real)MIN_PRES  ||
+           CPU_DensEntropy2Pres( Fluid[DENS], Fluid[ENPY], Gamma_m1, CorrPres_No, NULL_REAL ) < (real)MIN_PRES  ||
            Fluid[ENPY] < (real)2.0*TINY_NUMBER
 
 #          else
@@ -435,7 +431,8 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
                                        { Corr1D_NBuf,    Corr1D_NBuf,    Corr1D_NBuf } };
    const int  Corr1D_didx1[3]      = { NCOMP_TOTAL, Corr1D_NCell*NCOMP_TOTAL, SQR(Corr1D_NCell)*NCOMP_TOTAL };
 #  if ( DUAL_ENERGY == DE_ENPY )
-   const real CorrPres_No          = -__FLT_MAX__;  // set minimum pressure to an extremely negative value
+   const bool CorrPres_Yes         = true;
+   const bool CorrPres_No          = false;
 #  endif
 
    int   Corr1D_didx2[3];
@@ -536,7 +533,7 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
 //                 --> otherwise the floor value of pressure might disable the 1st-order-flux correction
 #              if ( defined DUAL_ENERGY  &&  !defined GRAVITY )
                CPU_DualEnergyFix( Update[DENS], Update[MOMX], Update[MOMY], Update[MOMZ], Update[ENGY], Update[ENPY],
-                                  h_DE_Array_F_Out[TID][idx_out], Gamma_m1, _Gamma_m1, CorrPres_No, DUAL_ENERGY_SWITCH );
+                                  h_DE_Array_F_Out[TID][idx_out], Gamma_m1, _Gamma_m1, CorrPres_No, NULL_REAL, DUAL_ENERGY_SWITCH );
 #              endif
 
                if ( Unphysical(Update, Gamma_m1, CheckMinPres) )
@@ -635,7 +632,7 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
 //          --> also note that here we apply the minimum pressure check in CPU_DualEnergyFix()
 #           if ( defined DUAL_ENERGY  &&  !defined GRAVITY )
             CPU_DualEnergyFix( Update[DENS], Update[MOMX], Update[MOMY], Update[MOMZ], Update[ENGY], Update[ENPY],
-                               h_DE_Array_F_Out[TID][idx_out], Gamma_m1, _Gamma_m1, MIN_PRES, DUAL_ENERGY_SWITCH );
+                               h_DE_Array_F_Out[TID][idx_out], Gamma_m1, _Gamma_m1, CorrPres_Yes, MIN_PRES, DUAL_ENERGY_SWITCH );
 
 //          ensure positive pressure if dual-energy formalism is not adopted
 #           else

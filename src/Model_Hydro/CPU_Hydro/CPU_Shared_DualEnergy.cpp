@@ -17,9 +17,7 @@ real CPU_DensPres2Entropy( const real Dens, const real Pres, const real Gamma_m1
 // Description :  Correct the internal and total energies using the dual-energy formalism
 //
 // Note        :  1. Invoked by the functions "CPU_FullStepUpdate, ..."
-//                2. A floor value "MinPres" is applied to the corrected pressure
-//                   --> To disable the minimum pressure check, one could simply set MinPres to an extremely
-//                       negative value (e.g., -__FLT_MAX__)
+//                2. A floor value "MinPres" is applied to the corrected pressure if CheckMinPres is on
 //                3  A floor value "TINY_NUMBER" is applied to the inputted entropy as well
 //                4. Call-by-reference for "Etot, Enpy, and DE_Status"
 //                5. This function always ensures that the returned fluid variables are consistent with each other
@@ -37,6 +35,9 @@ real CPU_DensPres2Entropy( const real Dens, const real Pres, const real Gamma_m1
 //                                   or minimum allowed pressure (MinPres)
 //                Gamma_m1         : Adiabatic index - 1.0
 //                _Gamma_m1        : 1.0/Gamma_m1
+//                CheckMinPres     : Return CPU_CheckMinPres()
+//                                   --> In some cases we actually want to check if pressure becomes unphysical,
+//                                       for which we don't want to enable this option
 //                MinPres          : Minimum allowed pressure
 //                DualEnergySwitch : if ( Eint/Ekin < DualEnergySwitch ) ==> correct Eint and Etot
 //                                   else                                ==> correct Enpy
@@ -44,9 +45,11 @@ real CPU_DensPres2Entropy( const real Dens, const real Pres, const real Gamma_m1
 // Return      :  Etot, Enpy, DE_Status
 //-------------------------------------------------------------------------------------------------------
 void CPU_DualEnergyFix( const real Dens, const real MomX, const real MomY, const real MomZ,
-                        real &Etot, real &Enpy, char &DE_Status,
-                        const real Gamma_m1, const real _Gamma_m1, const real MinPres, const real DualEnergySwitch )
+                        real &Etot, real &Enpy, char &DE_Status, const real Gamma_m1, const real _Gamma_m1,
+                        const bool CheckMinPres, const real MinPres, const real DualEnergySwitch )
 {
+
+   const bool CheckMinPres_No = false;
 
 // apply the minimum entropy check
    Enpy = FMAX( Enpy, TINY_NUMBER );
@@ -64,7 +67,8 @@ void CPU_DualEnergyFix( const real Dens, const real MomX, const real MomY, const
    {
 //    correct total energy
 #     if   ( DUAL_ENERGY == DE_ENPY )
-      Pres = CPU_DensEntropy2Pres( Dens, Enpy, Gamma_m1, MinPres );
+//    we will check the minimum pressure later
+      Pres = CPU_DensEntropy2Pres( Dens, Enpy, Gamma_m1, CheckMinPres_No, NULL_REAL );
       Eint = Pres*_Gamma_m1;
 
 #     elif ( DUAL_ENERGY == DE_EINT )
@@ -85,8 +89,7 @@ void CPU_DualEnergyFix( const real Dens, const real MomX, const real MomY, const
 
 
 // apply the minimum pressure check
-// --> must include "=" since we already apply MinPres check when calling CPU_DensEntropy2Pres() above
-   if ( Pres <= MinPres )
+   if ( CheckMinPres  &&  Pres < MinPres )
    {
       Pres = MinPres;
       Eint = Pres*_Gamma_m1;
@@ -175,19 +178,21 @@ real CPU_DensPres2Entropy( const real Dens, const real Pres, const real Gamma_m1
 //                --> Here entropy is defined as "pressure / density^(Gamma-1)"
 //
 // Note        :  1. Used by the dual-energy formalism
-//                2. Invoked by the functions "CPU_DualEnergyFix, Flu_Close, Hydro_Aux_Check_Negative"
-//                3. A floor value "MinPres" is applied to the returned pressure
-//                   --> To disable the minimum pressure check, one could simply set MinPres to an extremely
-//                       negative value (e.g., -__FLT_MAX__)
+//                2. Invoked by the functions "CPU_DualEnergyFix, Flu_Close, Hydro_Aux_Check_Negative, Flu_FixUp"
+//                3. A floor value "MinPres" is applied to the returned pressure if CheckMinPres is on
 //
-// Parameter   :  Dens     : Mass density
-//                Enpy     : Enpy
-//                Gamma_m1 : Adiabatic index - 1.0
-//                MinPres  : Minimum allowed pressure
+// Parameter   :  Dens         : Mass density
+//                Enpy         : Enpy
+//                Gamma_m1     : Adiabatic index - 1.0
+//                CheckMinPres : Return CPU_CheckMinPres()
+//                               --> In some cases we actually want to check if pressure becomes unphysical,
+//                                   for which we don't want to enable this option
+//                MinPres      : Minimum allowed pressure
 //
 // Return      :  Pres
 //-------------------------------------------------------------------------------------------------------
-real CPU_DensEntropy2Pres( const real Dens, const real Enpy, const real Gamma_m1, const real MinPres )
+real CPU_DensEntropy2Pres( const real Dens, const real Enpy, const real Gamma_m1,
+                           const bool CheckMinPres, const real MinPres )
 {
 
    real Pres;
@@ -196,7 +201,7 @@ real CPU_DensEntropy2Pres( const real Dens, const real Enpy, const real Gamma_m1
    Pres = Enpy*POW( Dens, Gamma_m1 );
 
 // apply a floor value
-   Pres = CPU_CheckMinPres( Pres, MinPres );
+   if ( CheckMinPres )   Pres = CPU_CheckMinPres( Pres, MinPres );
 
    return Pres;
 

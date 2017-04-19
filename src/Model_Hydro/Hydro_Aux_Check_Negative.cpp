@@ -43,10 +43,6 @@ void Hydro_Aux_Check_Negative( const int lv, const int Mode, const char *comment
    int  Pass = true;
    real Pres, Fluid[NCOMP_TOTAL];
 
-#  if ( DUAL_ENERGY == DE_ENPY )
-   const real CorrPres_No = -__FLT_MAX__;    // set minimum pressure to an extremely negative value
-#  endif
-
 // set the minimum thresholds for this check
 // --> currently we use TINY_NUMBER as the floor value of entropy
    const real DensCheck = ( CHECK_MODE == 1 ) ? 0.0 : CLOSE_FACTOR*MIN_DENS;
@@ -68,7 +64,7 @@ void Hydro_Aux_Check_Negative( const int lv, const int Mode, const char *comment
             for (int v=0; v<NCOMP_TOTAL; v++)   Fluid[v] = amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[v][k][j][i];
 
 #           if ( DUAL_ENERGY == DE_ENPY )
-            Pres = CPU_DensEntropy2Pres( Fluid[DENS], Fluid[ENPY], Gamma_m1, CorrPres_No );
+            Pres = CPU_DensEntropy2Pres( Fluid[DENS], Fluid[ENPY], Gamma_m1, CheckMinPres_No, NULL_REAL );
 #           else
             Pres = CPU_GetPressure( Fluid[DENS], Fluid[MOMX], Fluid[MOMY], Fluid[MOMZ], Fluid[ENGY],
                                     Gamma_m1, CheckMinPres_No, NULL_REAL );

@@ -32,11 +32,10 @@ void Flu_FixUp( const int lv, const double dt )
    int  didx_m, didx_n;
 
 #  if   ( MODEL == HYDRO  ||  MODEL == MHD )
-   const real  Gamma_m1            = GAMMA - (real)1.0;
-   const real _Gamma_m1            = (real)1.0 / Gamma_m1;
-   const bool CheckMinPres_No_bool = false;
+   const real  Gamma_m1       = GAMMA - (real)1.0;
+   const real _Gamma_m1       = (real)1.0 / Gamma_m1;
+   const bool CheckMinPres_No = false;
 #  ifdef DUAL_ENERGY
-   const real CheckMinPres_No_real = -__FLT_MAX__;
    char *DE_StatusPtr1D0, *DE_StatusPtr1D;
 #  endif
 #  endif // MODEL
@@ -158,11 +157,11 @@ void Flu_FixUp( const int lv, const double dt )
 #                 ifdef DUAL_ENERGY
                   Pres = ( *DE_StatusPtr1D == DE_UPDATED_BY_ETOT ) ?
                          CPU_GetPressure( CorrVal[DENS], CorrVal[MOMX], CorrVal[MOMY], CorrVal[MOMZ], CorrVal[ENGY],
-                                          Gamma_m1, CheckMinPres_No_bool, NULL_REAL )
-                       : CPU_DensEntropy2Pres( CorrVal[DENS], CorrVal[ENPY], Gamma_m1, CheckMinPres_No_real );
+                                          Gamma_m1, CheckMinPres_No, NULL_REAL )
+                       : CPU_DensEntropy2Pres( CorrVal[DENS], CorrVal[ENPY], Gamma_m1, CheckMinPres_No, NULL_REAL );
 #                 else
                   Pres = CPU_GetPressure( CorrVal[DENS], CorrVal[MOMX], CorrVal[MOMY], CorrVal[MOMZ], CorrVal[ENGY],
-                                          Gamma_m1, CheckMinPres_No_bool, NULL_REAL );
+                                          Gamma_m1, CheckMinPres_No, NULL_REAL );
 #                 endif
 #                 endif // MODEL
 
