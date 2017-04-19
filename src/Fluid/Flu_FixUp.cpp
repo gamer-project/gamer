@@ -38,6 +38,12 @@ void Flu_FixUp( const int lv, const double dt )
    real Re, Im, Rho_Wrong, Rho_Corr, Rescale;
 #  endif
 
+#  ifdef DUAL_ENERGY
+   const bool CheckMinPres_Yes = false;
+   const real _Gamma_m1        = (real)1.0 / Gamma_m1;
+   char *DE_StatusPtr1D0, *DE_StatusPtr1D;
+#  endif
+
 
 // a. correct the coarse-fine boundary fluxes
    if ( OPT__FIXUP_FLUX )
@@ -81,6 +87,9 @@ void Flu_FixUp( const int lv, const double dt )
 #     if ( MODEL == ELBDM  &&  defined CONSERVE_MASS )
 #     pragma omp parallel for private( CorrVal, FluxPtr, FluidPtr1D0, FluidPtr1D, didx_m, didx_n, \
                                        Re, Im, Rho_Wrong, Rho_Corr, Rescale ) schedule( runtime )
+#     elif defined DUAL_ENERGY
+#     pragma omp parallel for private( CorrVal, FluxPtr, FluidPtr1D0, FluidPtr1D, didx_m, didx_n, \
+                                       DE_StatusPtr1D0, DE_StatusPtr1D ) schedule( runtime )
 #     else
 #     pragma omp parallel for private( CorrVal, FluxPtr, FluidPtr1D0, FluidPtr1D, didx_m, didx_n ) schedule( runtime )
 #     endif
@@ -111,63 +120,133 @@ void Flu_FixUp( const int lv, const double dt )
             if ( NULL == (FluxPtr = amr->patch[0][lv][PID]->flux[s]) )  continue;
 
 //          set the pointers to the target face
-            for (int v=0; v<NCOMP_TOTAL; v++)   FluidPtr1D0[v] = amr->patch[FluSg][lv][PID]->fluid[v][0][0] + Offset[s];
+            for (int v=0; v<NCOMP_TOTAL; v++)
+            FluidPtr1D0[v]  = amr->patch[FluSg][lv][PID]->fluid [v][0][0] + Offset[s];
+#           ifdef DUAL_ENERGY
+            DE_StatusPtr1D0 = amr->patch[    0][lv][PID]->de_status[0][0] + Offset[s];
+#           endif
 
 //          set the array index strides
             didx_m = didx[s/2][1];
             didx_n = didx[s/2][0];
 
 //          loop over all cells on a given face
-            for (int m=0; m<PS1; m++)  {  for (int v=0; v<NCOMP_TOTAL; v++)   FluidPtr1D[v] = FluidPtr1D0[v] + m*didx_m;
-            for (int n=0; n<PS1; n++)  {
-
-//             calculate the corrected results
-               for (int v=0; v<NFLUX_TOTAL; v++)   CorrVal[v] = *FluidPtr1D[v] + FluxPtr[v][m][n]*Const[s];
-
-//             do not apply flux correction if any field lies below the minimum allowed value
-#              if   ( MODEL == HYDRO  ||  MODEL == MHD )
-               if ( CorrVal[DENS] <= MIN_DENS  ||
-                    CPU_GetPressure(CorrVal[DENS], CorrVal[MOMX], CorrVal[MOMY], CorrVal[MOMZ], CorrVal[ENGY],
-                                    Gamma_m1, CheckMinPres_No, NULL_REAL) <= MIN_PRES )
-#              elif ( MODEL == ELBDM  &&  defined CONSERVE_MASS )
-               if ( CorrVal[DENS] <= MIN_DENS )
-#              endif
-                  continue;
-
-//             floor and normalize passive scalars
-#              if ( NCOMP_PASSIVE > 0 )
-               for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)  CorrVal[v] = FMAX( CorrVal[v], TINY_NUMBER );
-
-               if ( OPT__NORMALIZE_PASSIVE )
-                  CPU_NormalizePassive( CorrVal[DENS], CorrVal+NCOMP_FLUID, PassiveNorm_NVar, PassiveNorm_VarIdx );
+            for (int m=0; m<PS1; m++)
+            {
+               for (int v=0; v<NCOMP_TOTAL; v++)
+               FluidPtr1D[v]  = FluidPtr1D0[v]  + m*didx_m;
+#              ifdef DUAL_ENERGY
+               DE_StatusPtr1D = DE_StatusPtr1D0 + m*didx_m;
 #              endif
 
-//             apply flux correction
-               for (int v=0; v<NFLUX_TOTAL; v++)   *FluidPtr1D[v] = CorrVal[v];
-
-//             rescale the real and imaginary parts to be consistent with the corrected amplitude
-#              if ( MODEL == ELBDM  &&  defined CONSERVE_MASS )
-               Re        = *FluidPtr1D[REAL];
-               Im        = *FluidPtr1D[IMAG];
-               Rho_Corr  = *FluidPtr1D[DENS];
-               Rho_Wrong = SQR(Re) + SQR(Im);
-
-//             be careful about the negative density introduced from the round-off errors
-               if ( Rho_Wrong <= (real)0.0  ||  Rho_Corr <= (real)0.0 )
+               for (int n=0; n<PS1; n++)
                {
-                  *FluidPtr1D[DENS] = (real)0.0;
-                  Rescale           = (real)0.0;
-               }
-               else
-                  Rescale = SQRT( Rho_Corr/Rho_Wrong );
+//                skip cells updated by neither total energy nor dual-energy variable fluxes
+//                --> these cells are updated by either the minimum pressure threshold or the 1st-order-flux correction
+//                --> since currently we do NOT store the 1st-order fluxes across the coarse-fine boundaries, we must
+//                    skip these cells to avoid inconsistent flux fix-up correction
+#                 ifdef DUAL_ENERGY
+                  if ( *DE_StatusPtr1D != DE_UPDATED_BY_ETOT  &&  *DE_StatusPtr1D != DE_UPDATED_BY_DUAL )   continue;
+#                 endif
 
-               *FluidPtr1D[REAL] *= Rescale;
-               *FluidPtr1D[IMAG] *= Rescale;
-#              endif
+//                calculate the corrected results
+                  for (int v=0; v<NFLUX_TOTAL; v++)   CorrVal[v] = *FluidPtr1D[v] + FluxPtr[v][m][n]*Const[s];
 
-//             update the fluid pointers
-               for (int v=0; v<NCOMP_TOTAL; v++)   FluidPtr1D[v] += didx_n;
-            }} // m, n
+//                do not apply the flux correction if any fields lie below the minimum allowed values
+#                 if   ( MODEL == HYDRO  ||  MODEL == MHD )
+                  if ( CorrVal[DENS] <= MIN_DENS  ||
+#                      ifdef DUAL_ENERGY
+                       ( ( *DE_StatusPtr1D == DE_UPDATED_BY_ETOT && 
+                           CPU_GetPressure(CorrVal[DENS], CorrVal[MOMX], CorrVal[MOMY], CorrVal[MOMZ], CorrVal[ENGY],
+                                         Gamma_m1, CheckMinPres_No, NULL_REAL) <= MIN_PRES )
+                         ||
+                         ( *DE_StatusPtr1D == DE_UPDATED_BY_DUAL && CorrVal[ENPY] <= (real)2.0*TINY_NUMBER )
+                       )
+#                      else
+                       CPU_GetPressure(CorrVal[DENS], CorrVal[MOMX], CorrVal[MOMY], CorrVal[MOMZ], CorrVal[ENGY],
+                                       Gamma_m1, CheckMinPres_No, NULL_REAL) <= MIN_PRES
+#                      endif
+                     )
+#                 elif ( MODEL == ELBDM  &&  defined CONSERVE_MASS )
+                  if ( CorrVal[DENS] <= MIN_DENS )
+#                 endif
+                     continue;
+
+//                floor and normalize passive scalars
+#                 if ( NCOMP_PASSIVE > 0 )
+                  for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)  CorrVal[v] = FMAX( CorrVal[v], TINY_NUMBER );
+
+                  if ( OPT__NORMALIZE_PASSIVE )
+                     CPU_NormalizePassive( CorrVal[DENS], CorrVal+NCOMP_FLUID, PassiveNorm_NVar, PassiveNorm_VarIdx );
+#                 endif
+
+//                apply flux correction
+                  for (int v=0; v<NFLUX_TOTAL; v++)   *FluidPtr1D[v] = CorrVal[v];
+
+//                ensure consistency between pressure, total energy density, and the dual-energy variable
+                  /*
+#                 ifdef DUAL_ENERGY
+                  Ekin = (real)0.5*( SQR(MomX) + SQR(MomY) + SQR(MomZ) )/Dens;
+                  Eint = Etot - Ekin;
+
+                  if ( *DE_StatusPtr1D == DE_UPDATED_BY_ETOT )
+                  {
+                     real Ek, Pres;
+
+//                   we didn't use CPU_GetPressure() here to void calculating kinematic energy (Ek) twice
+                     Ek   = (real)0.5*( SQR(CorrVal[MOMX]) + SQR(CorrVal[MOMY]) + SQR(CorrVal[MOMZ]) ) / CorrVal[DENS];
+                     Pres = Gamma_m1*( CorrVal[ENGY] - Ek );
+
+//                   apply the pressure floor here
+                     Pres = FMAX( Pres, MIN_PRES );
+
+//                   ensure consistencity between Etot and pressure 
+                     if ( Pres == MIN_PRES )
+                     CorrVal[ENGY] = Pres*_Gamma_m1 + Ek;
+
+//                   ensure consistencity between pressure and entropy
+                     CorrVal[ENPY] = CPU_DensPres2Entropy( CorrVal[DENS], Pres, Gamma_m1 );
+                  }
+
+                  else
+                  {
+                     real Ek, Pres;
+
+                     Pres = CPU_DensEntropy2Pres( CorrVal[DENS], CorrVal[ENPY], Gamma_m1, MIN_PRES );
+
+                  }
+#                 endif // #ifdef DUAL_ENERGY
+                  */
+
+//                rescale the real and imaginary parts to be consistent with the corrected amplitude
+#                 if ( MODEL == ELBDM  &&  defined CONSERVE_MASS )
+                  Re        = *FluidPtr1D[REAL];
+                  Im        = *FluidPtr1D[IMAG];
+                  Rho_Corr  = *FluidPtr1D[DENS];
+                  Rho_Wrong = SQR(Re) + SQR(Im);
+
+//                be careful about the negative density introduced from the round-off errors
+                  if ( Rho_Wrong <= (real)0.0  ||  Rho_Corr <= (real)0.0 )
+                  {
+                     *FluidPtr1D[DENS] = (real)0.0;
+                     Rescale           = (real)0.0;
+                  }
+                  else
+                     Rescale = SQRT( Rho_Corr/Rho_Wrong );
+
+                  *FluidPtr1D[REAL] *= Rescale;
+                  *FluidPtr1D[IMAG] *= Rescale;
+#                 endif
+
+//                update the fluid pointers
+                  for (int v=0; v<NCOMP_TOTAL; v++)
+                  FluidPtr1D[v]  += didx_n;
+#                 ifdef DUAL_ENERGY
+                  DE_StatusPtr1D += didx_n;
+#                 endif
+
+               } // for (int n=0; n<PS1; n++}
+            } // for (int m=0; m<PS1; m++}
          } // for (int s=0; s<6; s++)
       } // for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
 
