@@ -154,25 +154,33 @@ void Flu_FixUp( const int lv, const double dt )
 //                calculate the pressure
 #                 if ( MODEL == HYDRO  ||  MODEL == MHD )
                   real Pres;
-#                 ifdef DUAL_ENERGY
+#                 if   ( DUAL_ENERGY == DE_ENPY )
                   Pres = ( *DE_StatusPtr1D == DE_UPDATED_BY_ETOT ) ?
                          CPU_GetPressure( CorrVal[DENS], CorrVal[MOMX], CorrVal[MOMY], CorrVal[MOMZ], CorrVal[ENGY],
                                           Gamma_m1, CheckMinPres_No, NULL_REAL )
                        : CPU_DensEntropy2Pres( CorrVal[DENS], CorrVal[ENPY], Gamma_m1, CheckMinPres_No, NULL_REAL );
+
+#                 elif ( DUAL_ENERGY == DE_EINT )
+#                 error : DE_EINT is NOT supported yet !!
+
 #                 else
                   Pres = CPU_GetPressure( CorrVal[DENS], CorrVal[MOMX], CorrVal[MOMY], CorrVal[MOMZ], CorrVal[ENGY],
                                           Gamma_m1, CheckMinPres_No, NULL_REAL );
-#                 endif
+#                 endif // DUAL_ENERGY
 #                 endif // MODEL
 
 
 //                do not apply the flux correction if there are any unphysical results
 #                 if   ( MODEL == HYDRO  ||  MODEL == MHD )
                   if ( CorrVal[DENS] <= MIN_DENS  ||  Pres <= MIN_PRES
-#                      ifdef DUAL_ENERGY
+#                      if   ( DUAL_ENERGY == DE_ENPY )
                        ||  ( *DE_StatusPtr1D == DE_UPDATED_BY_DUAL && CorrVal[ENPY] <= (real)2.0*TINY_NUMBER )
+
+#                      elif ( DUAL_ENERGY == DE_EINT )
+#                      error : DE_EINT is NOT supported yet !!
 #                      endif
                      )
+
 #                 elif ( MODEL == ELBDM  &&  defined CONSERVE_MASS )
                   if ( CorrVal[DENS] <= MIN_DENS )
 #                 endif
@@ -188,23 +196,33 @@ void Flu_FixUp( const int lv, const double dt )
 #                 endif
 
 
-//                store the corrected results
-                  for (int v=0; v<NFLUX_TOTAL; v++)   *FluidPtr1D[v] = CorrVal[v];
-
-
 //                ensure consistency between pressure, total energy density, and the dual-energy variable
 //                --> no need to check the minimum pressure here since we already skip those cells
 #                 ifdef DUAL_ENERGY
                   if ( *DE_StatusPtr1D == DE_UPDATED_BY_ETOT )
+                  {
+#                    if   ( DUAL_ENERGY == DE_ENPY )
                      CorrVal[ENPY] = CPU_DensPres2Entropy( CorrVal[DENS], Pres, Gamma_m1 );
 
+#                    elif ( DUAL_ENERGY == DE_EINT )
+#                    error : DE_EINT is NOT supported yet !!
+#                    endif
+                  }
+
                   else
+                  {
                      CorrVal[ENGY] = (real)0.5*( SQR(CorrVal[MOMX]) + SQR(CorrVal[MOMY]) + SQR(CorrVal[MOMZ]) ) / CorrVal[DENS]
                                      + Pres*_Gamma_m1;
+                  }
 #                 endif
 
 
+//                store the corrected results
+                  for (int v=0; v<NFLUX_TOTAL; v++)   *FluidPtr1D[v] = CorrVal[v];
+
+
 //                rescale the real and imaginary parts to be consistent with the corrected amplitude
+//                --> must NOT use CorrVal[REAL] and CorrVal[IMAG] below since NFLUX_TOTAL == 1 for ELBDM
 #                 if ( MODEL == ELBDM  &&  defined CONSERVE_MASS )
                   real Re, Im, Rho_Corr, Rho_Wrong, Rescale;
 
