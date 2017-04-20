@@ -8,7 +8,7 @@
 // Function    :  SiblingSearch
 // Description :  Construct the sibling relation for level "lv" 
 //
-// Parameter   :  Targeted refinement level
+// Parameter   :  Target refinement level
 //-------------------------------------------------------------------------------------------------------
 void SiblingSearch( const int lv )
 {

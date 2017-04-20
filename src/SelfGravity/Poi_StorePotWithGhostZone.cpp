@@ -20,7 +20,7 @@
 //                       so as to distinguish them from other existing patches
 //                4. Currently "pot_ext" it is only used for Par->ImproveAcc
 //
-// Parameter   :  lv       : Targeted refinement level
+// Parameter   :  lv       : Target refinement level
 //                PotSg    : Target potential sandglass
 //                AllPatch : true  --> work on all patches at lv
 //                                     (used after the root-level FFT solver)

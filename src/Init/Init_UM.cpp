@@ -277,7 +277,7 @@ void Init_UM()
 // Note        :  The flag buffer zones are also included
 //
 // Parameter   :  UM_Data  : Input uniform-mesh array at level "lv"
-//                lv       : Targeted refinement level to be constructed
+//                lv       : Target refinement level to be constructed
 //                FlagMap  : Map recording the refinement flag of each patch
 //                Buffer   : Size of the flag buffer
 //                NVar     : Number of variables
@@ -404,7 +404,7 @@ void UM_FindAncestor( const int Son_lv, const int Son_ip, const int Son_jp, cons
    if ( Fa_lv == 0 )    return;
 
 
-// allcoate/find eight patch groups (each with eight patches) at level Fa_lv to surround the targeted son patch
+// allcoate/find eight patch groups (each with eight patches) at level Fa_lv to surround the target son patch
    for (int Fa_kp3=Fa_kp2, kc=0; kc<2; Fa_kp3+=dkp, kc++)
    for (int Fa_jp3=Fa_jp2, jc=0; jc<2; Fa_jp3+=djp, jc++)
    for (int Fa_ip3=Fa_ip2, ic=0; ic<2; Fa_ip3+=dip, ic++)
@@ -479,7 +479,7 @@ void UM_Downgrade( const real *Input, real *Output, const int NX, const int NY, 
 // Note        :  +1 : Flagged
 //                -1 : Unflagged
 //
-// Parameter   :  lv       : Targeted refinement level to be flagged
+// Parameter   :  lv       : Target refinement level to be flagged
 //                FlagMap  : Map recording the refinement flag of each patch
 //                ip,jp,kp : Sequence numbers of patch in each direction
 //-------------------------------------------------------------------------------------------------------
@@ -539,7 +539,7 @@ void UM_Flag( const int lv, const int *FlagMap )
 //                Otherwise, the model-dependent function "XXX_Init_UM_AssignData" must be provided to
 //                specify the way to assign data.
 //
-// Parameter   :  lv       : Targeted refinement level to assign data
+// Parameter   :  lv       : Target refinement level to assign data
 //                UM_Data  : Input uniform-mesh array
 //                NVar     : Number of variables stored in UM_Data
 //-------------------------------------------------------------------------------------------------------

@@ -12,8 +12,8 @@
 //                sprintf( comment, "Step%d", AdvanceCounter[6] );
 //                Output_Patch( 6, 5560, comment );
 //
-// Parameter   :  lv       : Targeted refinement level 
-//                PID      : Targeted patch index
+// Parameter   :  lv       : Target refinement level 
+//                PID      : Target patch index
 //                FluSg    : Sandglass of the fluid data
 //                PotSg    : Sandglass of the potential data
 //                comment  : String to attach to the end of the file name
@@ -99,7 +99,7 @@ void Output_Patch( const int lv, const int PID, const int FluSg, const int PotSg
 
 
 
-// check whether or not the targeted patch stores physical data
+// check whether or not the target patch stores physical data
    if ( FluData->fluid == NULL )
       Aux_Message( stderr, "WARNING : Lv = %d, PID = %d does NOT store fluid data !!\n", lv, PID );
 #  ifdef GRAVITY

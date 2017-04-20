@@ -283,10 +283,10 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
 #  endif // #ifdef PARTICLE
 
 
-// TFluVarIdxList : List recording the targeted fluid and passive variable indices ( = [0 ... NCOMP_TOTAL-1] )
+// TFluVarIdxList : List recording the target fluid and passive variable indices ( = [0 ... NCOMP_TOTAL-1] )
    int NTSib[26], *TSib[26], NVar_Flu, NVar_Der, NVar_Tot, TFluVarIdxList[NCOMP_TOTAL];
 
-// set up the targeted sibling indices for the function "InterpolateGhostZone"
+// set up the target sibling indices for the function "InterpolateGhostZone"
    SetTargetSibling( NTSib, TSib );
 
 // determine the components to be prepared
@@ -333,7 +333,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
 
    if ( NVar_Tot == 0  &&  MPI_Rank == 0 )
    {
-      Aux_Message( stderr, "WARNING : no targeted variable is found !!\n" );
+      Aux_Message( stderr, "WARNING : no target variable is found !!\n" );
       return;
    }
 
@@ -928,7 +928,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
 
             const int SibPID0 = Table_02( lv, PID0, Side );    // the 0th patch of the sibling patch group
 
-//          (b1) if the targeted sibling patch exists --> just copy data from the nearby patches at the same level
+//          (b1) if the target sibling patch exists --> just copy data from the nearby patches at the same level
             if ( SibPID0 >= 0 )
             {
                const int Loop_i  = TABLE_01( Side, 'x', GhostSize, PATCH_SIZE, GhostSize );
@@ -1122,7 +1122,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
             } // if ( SibPID0 >= 0 )
 
 
-//          (b2) if the targeted sibling patch does not exist --> interpolate from patches at level lv-1
+//          (b2) if the target sibling patch does not exist --> interpolate from patches at level lv-1
             else if ( SibPID0 == -1 )
             {
 //             interpolation should never be applied to the base level
@@ -1188,7 +1188,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
             } // else if ( SibPID0 == -1 )
 
 
-//          (b3) if the targeted sibling patch lies outside the simulation domain --> apply the specified B.C.
+//          (b3) if the target sibling patch lies outside the simulation domain --> apply the specified B.C.
             else if ( SibPID0 <= SIB_OFFSET_NONPERIODIC )
             {
                Array_Ptr = Array;
@@ -1341,7 +1341,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
             {
                const int SibPID0 = Table_02( lv, PID0, Side );    // the 0th patch of the sibling patch group
 
-//             (c3-1) if the targeted sibling patch exists --> loop over nearby patches at the same level
+//             (c3-1) if the target sibling patch exists --> loop over nearby patches at the same level
                if ( SibPID0 >= 0 )
                {
 //                LG = LargeGhost : for the case with GhostSize >= RHOEXT_NXT
@@ -1386,7 +1386,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
                } // if ( SibPID0 >= 0 )
 
 
-//             (c3-2) if the targeted sibling patch does not exist --> find the father sibling patch
+//             (c3-2) if the target sibling patch does not exist --> find the father sibling patch
                else if ( SibPID0 == -1 )
                {
 //                root-level patches should never have sibling ID == -1
@@ -1947,7 +1947,7 @@ int Table_02( const int lv, const int PID, const int Side )
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  SetTargetSibling
-// Description :  Set the targeted sibling directions for preparing the ghost-zone data at the coarse-grid level
+// Description :  Set the target sibling directions for preparing the ghost-zone data at the coarse-grid level
 //
 // Note        :  1. Work for the function "Prepare_PatchData"
 //                2. TSib needs to be deallocated manually
@@ -1956,7 +1956,7 @@ int Table_02( const int lv, const int PID, const int Side )
 //                   --> Therefore, this function CANNOT be applied in "LB_RecordExchangeDataPatchID", in which
 //                       case "SetTargetSibling" and "SetReceiveSibling" must be declared consistently
 //
-// Parameter   :  NTSib : Number of targeted sibling patches along different sibling directions
+// Parameter   :  NTSib : Number of target sibling patches along different sibling directions
 //                TSib  : Target sibling indices along different sibling directions
 //-------------------------------------------------------------------------------------------------------
 void SetTargetSibling( int NTSib[], int *TSib[] )

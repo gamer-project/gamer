@@ -11,12 +11,12 @@
 // Note        :  Use the input parameter "TVar" to determine the target variables, which can be any
 //                subset of (_FLUID | _POTE | _PASSIVE)
 //
-// Parameter   :  FaLv     : Targeted refinement level at which the data are going to be replaced
+// Parameter   :  FaLv     : Target refinement level at which the data are going to be replaced
 //                SonFluSg : Fluid sandglass at level "FaLv+1"
 //                FaFluSg  : Fluid sandglass at level "FaLv"
 //                SonPotSg : Potential sandglass at level "FaLv+1"
 //                FaPotSg  : Potential sandglass at level "FaLv"
-//                TVar     : Targeted variables
+//                TVar     : Target variables
 //                           --> Supported variables in different models:
 //                               HYDRO : _DENS, _MOMX, _MOMY, _MOMZ, _ENGY,[, _POTE]
 //                               MHD   :

@@ -69,7 +69,7 @@ void BC_User( const double Time, const double x, const double y, const double z,
 //                Time           : Current physical time
 //                dh             : Grid size
 //                Corner         : Physcial coordinates at the center of the cell (0,0,0) --> Array[0]
-//                TVar           : Targeted variables to be prepared --> only used for preparing the derived variables
+//                TVar           : Target variables to be prepared --> only used for preparing the derived variables
 //
 // Return      :  Array
 //-------------------------------------------------------------------------------------------------------

@@ -11,7 +11,7 @@
 // Description :  Record the information of patches for sending and receiving fluxes between neighbor ranks
 //                in the variable "amr->ParaVar"
 //
-// Parameter   :  lv : Targeted refinement level 
+// Parameter   :  lv : Target refinement level 
 //-------------------------------------------------------------------------------------------------------
 void Buf_RecordExchangeFluxPatchID( const int lv )
 {
@@ -51,7 +51,7 @@ void Buf_RecordExchangeFluxPatchID( const int lv )
       }
 
 
-//    nothing to do if there are no boundary patches at the targeted direction
+//    nothing to do if there are no boundary patches at the target direction
       if ( amr->ParaVar->BounP_NList[lv][s] == 0 )    continue;
 
 

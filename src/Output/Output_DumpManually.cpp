@@ -22,7 +22,7 @@ void Output_DumpManually( int &Dump_global )
    system( "ls > /dev/null" );
 
 
-// check the targeted file
+// check the target file
    FILE *File = fopen( FileName, "r" );
 
    if ( File != NULL )  
@@ -31,14 +31,14 @@ void Output_DumpManually( int &Dump_global )
       fclose( File );
    }
 
-// the program will dump data as long as ONE process has detected the targeted file
+// the program will dump data as long as ONE process has detected the target file
    MPI_Allreduce( &Dump_local, &Dump_global, 1, MPI_INT, MPI_BOR, MPI_COMM_WORLD );
 
    if ( MPI_Rank == 0  &&  Dump_global )  
    {
       Aux_Message( stdout, "\nThe file \"DUMP_GAMER_DUMP\" has been detected --> dump data ...\n\n" );
 
-//    remove the targeted file
+//    remove the target file
       system( "rm -f DUMP_GAMER_DUMP" );
    }
 

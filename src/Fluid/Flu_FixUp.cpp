@@ -13,7 +13,7 @@
 // Note        :  1. Also include the fluxes from neighbor ranks
 //                2. The boundary fluxes must be received in advance by invoking the function "Buf_GetBufferData"
 //
-// Parameter   :  lv : Targeted refinement level
+// Parameter   :  lv : Target refinement level
 //                dt : Time interval to advance solution
 //-------------------------------------------------------------------------------------------------------
 void Flu_FixUp( const int lv, const double dt )

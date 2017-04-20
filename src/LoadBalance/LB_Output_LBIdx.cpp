@@ -13,7 +13,7 @@
 // Note        :  Output file can be directly plotted by gnuplot
 //                For example, try "splot 'LBIdxMap_Lv00' u 2:3:4 every :::0::0 w lp"
 //
-// Parameter   :  lv : Targeted refinement level
+// Parameter   :  lv : Target refinement level
 //-------------------------------------------------------------------------------------------------------
 void LB_Output_LBIdx( const int lv )
 {
@@ -27,7 +27,7 @@ void LB_Output_LBIdx( const int lv )
    sprintf( FileName, "LBIdxMap_Lv%02d", lv );
 
 
-// check if the targeted file already exists
+// check if the target file already exists
    if ( Aux_CheckFileExist(FileName)  &&  MPI_Rank == 0 )
       Aux_Message( stderr, "WARNING : file \"%s\" already exists and will be overwritten !!\n", FileName );
 

@@ -13,7 +13,7 @@
 //
 // Note        :  The updated data will be stored in the same Sg as the current fluid data
 //
-// Parameter   :  lv             : Targeted refinement level
+// Parameter   :  lv             : Target refinement level
 //                SaveSg         : Sandglass to store the updated data
 //                h_Flu_Array_G  : Host array storing the updated fluid variables
 //                NPG            : Number of patch groups to store the updated data

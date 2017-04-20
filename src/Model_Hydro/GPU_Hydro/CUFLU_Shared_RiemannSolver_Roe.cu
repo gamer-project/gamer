@@ -30,7 +30,7 @@ static __device__ FluVar CUFLU_RiemannSolver_Roe( const int XYZ, const FluVar L_
 //                3. This function is shared by MHM, MHM_RP, and CTU schemes
 //                4. The "__forceinline__" qualifier is added for higher performance
 //
-// Parameter   :  XYZ         : Targeted spatial direction : (0/1/2) --> (x/y/z)
+// Parameter   :  XYZ         : Target spatial direction : (0/1/2) --> (x/y/z)
 //                L_In        : Input left  state (conserved variables)
 //                R_In        : Input right state (conserved variables)
 //                Gamma       : Gamma

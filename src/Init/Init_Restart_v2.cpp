@@ -423,7 +423,7 @@ void Init_Restart()
 
          if ( MPI_Rank >= TRanks  &&  MPI_Rank < TRanks+RESTART_LOAD_NRANK )
          {
-//          d1. set the range of the targeted sub-domain
+//          d1. set the range of the target sub-domain
 #           ifndef LOAD_BALANCE
             for (int d=0; d<3; d++)
             {
@@ -444,7 +444,7 @@ void Init_Restart()
                for (int d=0; d<3; d++)    LoadCorner[d] *= rescale;
 
 
-//             verify that the loaded patch is within the targeted range
+//             verify that the loaded patch is within the target range
 #              ifdef LOAD_BALANCE
                if (  MPI_Rank == LB_Index2Rank( lv, LB_Corner2Index(lv,LoadCorner,CHECK_ON), CHECK_ON )  )
 #              else
@@ -484,9 +484,9 @@ void Init_Restart()
                      if ( LoadParDens )   fseek( File, CUBE(PS1)*sizeof(real), SEEK_CUR );
 #                    endif
                   } // if ( *LoadSon == -1 )
-               } // within the targeted range
+               } // within the target range
 
-//             for the case that the patch is NOT within the targeted range
+//             for the case that the patch is NOT within the target range
                else if ( *LoadSon == -1 )
                {
 //                for particles, skip NPar and GParID as well
@@ -1464,7 +1464,7 @@ void Load_Parameter_After_2000( FILE *File, const int FormatVersion, int &NLv_Re
 //
 // Note        :  This function is overloaded to work with different data types
 //
-// Parameter   :  VarName     : Name of the targeted variable
+// Parameter   :  VarName     : Name of the target variable
 //                RestartVar  : Variable loaded from the RESTART file
 //                RuntimeVar  : Variable loaded from the Input__Parameter
 //                Fatal       : Whether or not the difference between RestartVar and RuntimeVar is fatal

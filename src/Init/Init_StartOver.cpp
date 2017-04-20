@@ -76,7 +76,7 @@ void Init_StartOver()
 //
 // Note        :  Work for the option "OPT__INIT == INIT_STARTOVER"
 //
-// Parameter   :  lv : Targeted refinement level
+// Parameter   :  lv : Target refinement level
 //-------------------------------------------------------------------------------------------------------
 void Init_StartOver_AssignData( const int lv )
 {

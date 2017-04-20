@@ -21,7 +21,7 @@
 //                   and SonLv-1 have been constructed
 //                4. This function should NOT be applied to the base level
 //
-// Parameter   :  SonLv : Targeted refinement level to allocate sibling-buffer patches
+// Parameter   :  SonLv : Target refinement level to allocate sibling-buffer patches
 //-------------------------------------------------------------------------------------------------------
 void LB_Refine_AllocateBufferPatch_Sibling( const int SonLv )
 {

@@ -209,7 +209,7 @@ struct AMR_t
    //                2. Sg = 0 : Store both data and relation (father,son.sibling,corner,flag,flux)
    //                   Sg = 1 : Store only data
    //
-   // Parameter   :  lv       : Targeted refinement level
+   // Parameter   :  lv       : Target refinement level
    //                x,y,z    : Physical coordinates of the patch corner
    //                FaPID    : Patch ID of the parent patch at level "lv-1"
    //                FluData  : true --> Allocate hydrodynamic array "fluid"
@@ -271,11 +271,11 @@ struct AMR_t
    // Note        :  1. This function should NOT be applied to the base-level patches (unless
    //                   the option "LOAD_BALANCE" is turned on, in which the base-level patches need
    //                   to be redistributed)
-   //                2. This function will also deallocate the flux arrays of the targeted patch
+   //                2. This function will also deallocate the flux arrays of the target patch
    //                3. Delete a patch with son is forbidden
    //                4. Delete a patch with home particles is forbidden
    //
-   // Parameter   :  lv          : Targeted refinement level
+   // Parameter   :  lv          : Target refinement level
    //                PID         : Patch ID to be removed
    //                ReuseMemory : true  --> mark patch as inactive, but do not deallocate memory (for OPT__REUSE_MEMORY)
    //                              false --> deallocate patch
@@ -338,14 +338,14 @@ struct AMR_t
 
    //===================================================================================
    // Method      :  Lvdelete
-   // Description :  Deallocate all patches in the targeted level and initialize all
+   // Description :  Deallocate all patches in the target level and initialize all
    //                parameters as the default values
    //
    // Note        :  1. This function will delete a patch even if it has sons (and particles)
    //                2. This function will scan over amr->num[lv] patches
    //                3. The variables "scale, FluSg, PotSg, and dh" will NOT be modified
    //
-   // Parameter   :  lv                : Targeted refinement level
+   // Parameter   :  lv                : Target refinement level
    //                ReusePatchMemory  : true  --> mark patch as inactive, but do not deallocate memory (for OPT__REUSE_MEMORY)
    //                                    false --> deallocate patch
    //===================================================================================

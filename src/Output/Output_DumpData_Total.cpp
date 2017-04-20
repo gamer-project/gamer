@@ -49,7 +49,7 @@ void Output_DumpData_Total( const char *FileName )
       if ( NPatchTotal[lv] != 0 )   Mis_CompareRealValue( Time[0], Time[lv], __FUNCTION__, true );
 
 
-// check if the targeted file already exists
+// check if the target file already exists
    if ( Aux_CheckFileExist(FileName)  &&  MPI_Rank == 0 )
       Aux_Message( stderr, "WARNING : file \"%s\" already exists and will be overwritten !!\n", FileName );
 

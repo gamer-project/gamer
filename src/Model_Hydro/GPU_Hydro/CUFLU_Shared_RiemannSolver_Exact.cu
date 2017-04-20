@@ -29,7 +29,7 @@ static __device__ void Set_Flux( FluVar &flux, const FluVar val, const real _Gam
 //                3. The "__noinline__" qualifier is added in Fermi GPUs for higher performance and
 //                   faster compilation (not work in WAF scheme!?)
 //
-// Parameter   :  XYZ         : Targeted spatial direction : (0/1/2) --> (x/y/z)
+// Parameter   :  XYZ         : Target spatial direction : (0/1/2) --> (x/y/z)
 //                eival_out   : Output array to store the speed of waves
 //                L_star_out  : Output array to store the primitive variables in the left star region
 //                R_star_out  : Output array to store the primitive variables in the right star region

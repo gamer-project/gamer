@@ -15,7 +15,7 @@
 //                2. No OpenMP directives are applied in this function since the counter 
 //                   "amr->ParaVar->BounFlag_NList"
 //
-// Parameter   :  lv : Targeted refinement level to be flagged
+// Parameter   :  lv : Target refinement level to be flagged
 //-------------------------------------------------------------------------------------------------------
 void Buf_RecordBoundaryFlag( const int lv )
 {
@@ -41,7 +41,7 @@ void Buf_RecordBoundaryFlag( const int lv )
       }
 
 
-//    nothing to do if there are no boundary patches at the targeted direction
+//    nothing to do if there are no boundary patches at the target direction
       if ( amr->ParaVar->BounP_NList[lv][s] == 0 )     continue;
 
 

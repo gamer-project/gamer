@@ -42,7 +42,7 @@ void SiblingSearch_Base()
 //
 // Note        :  For the base-level sibling relation, it uses the BaseP list to locate sibling patches
 //
-// Parameter   :  PID : Index of the targeted patch
+// Parameter   :  PID : Index of the target patch
 //-------------------------------------------------------------------------------------------------------
 void FindBaseSibling( const int PID )
 {

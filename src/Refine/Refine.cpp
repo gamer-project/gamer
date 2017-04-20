@@ -18,7 +18,7 @@ void ELBDM_GetPhase_DebugOnly( real *CData, const int CSize );
 //                   fine-grid patches by spatial interpolation
 //                3. If LOAD_BALANCE is turned on, this function will invoke "LB_Refine" and then return
 //
-// Parameter   :  lv          : Targeted refinement level to be refined
+// Parameter   :  lv          : Target refinement level to be refined
 //                UseLBFunc   : Use the load-balance alternative functions for the grid refinement
 //                              --> USELB_YES : use the load-balance alternative functions
 //                                  USELB_NO  : do not use the load-balance alternative functions
@@ -64,7 +64,7 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
    int *Cr            = NULL;    // corner coordinates
    int *BufGrandTable = NULL;    // table recording the patch IDs of grandson buffer patches
    int *BufSonTable   = NULL;    // table recording the linking index of each buffer father patch to BufGrandTable
-   patch_t *Pedigree  = NULL;    // pointer storing the relation of the targeted patch at level "lv"
+   patch_t *Pedigree  = NULL;    // pointer storing the relation of the target patch at level "lv"
 
 
 // parameters for spatial interpolation
@@ -242,7 +242,7 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
             Disp1[1] = TABLE_01( sib, 'y', 0, CGhost_Flu, CGhost_Flu+PATCH_SIZE );
             Disp1[2] = TABLE_01( sib, 'z', 0, CGhost_Flu, CGhost_Flu+PATCH_SIZE );
 
-//          (c1.3.2.1-1) if the targeted sibling patch exists --> just copy data from the nearby patches at the same level
+//          (c1.3.2.1-1) if the target sibling patch exists --> just copy data from the nearby patches at the same level
             if ( SibPID >= 0 )
             {
                Disp2[0] = TABLE_01( sib, 'x', PATCH_SIZE-CGhost_Flu, 0, 0 );

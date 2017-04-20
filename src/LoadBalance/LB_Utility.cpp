@@ -116,7 +116,7 @@ void LB_Index2Corner( const int lv, const long LB_Idx, int Corner[], const Check
 //
 // Note        :  "LB_CutPoint[lv]" must be prepared in advance 
 //
-// Return      :  success  : targeted MPI rank 
+// Return      :  success  : target MPI rank 
 //                fail     : -1
 //
 // Parameter   :  lv       : Refinement level of the input LB_Idx
@@ -135,7 +135,7 @@ int LB_Index2Rank( const int lv, const long LB_Idx, const Check_t Check )
       if ( LB_Idx >= amr->LB->CutPoint[lv][r]  &&  LB_Idx < amr->LB->CutPoint[lv][r+1] )  return r;
 
    if ( Check == CHECK_ON )
-      Aux_Error( ERROR_INFO, "no targeted rank was found for lv %d, LB_Idx %ld !!\n", 
+      Aux_Error( ERROR_INFO, "no target rank was found for lv %d, LB_Idx %ld !!\n", 
                  lv, LB_Idx );
 
    return -1;

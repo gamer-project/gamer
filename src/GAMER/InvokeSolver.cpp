@@ -25,7 +25,7 @@ extern Timer_t *Timer_Poi_PrePot_F[NLEVEL];
 // Function    :  InvokeSolver
 // Description :  Invoke the GPU (or CPU) solvers and enable the concurrent execution between CPU and GPU
 //
-// Note        :  a. Use the input parameter "TSolver" to control the targeted solver
+// Note        :  a. Use the input parameter "TSolver" to control the target solver
 //                b. Each solver involves three steps
 //                   --> 1. preparation step : prepare the input data
 //                       2. execution   step : invoke the solvers --> advance solutions or evaluate potentials
@@ -35,13 +35,13 @@ extern Timer_t *Timer_Poi_PrePot_F[NLEVEL];
 //                d. For LOAD_BALANCE, one can turn on the option "OPT__OVERLAP_MPI" to enable the
 //                   overlapping between MPI communication and CPU/GPU computation
 //
-// Parameter   :  TSolver        : Targeted solver
+// Parameter   :  TSolver        : Target solver
 //                                 --> FLUID_SOLVER               : Fluid / ELBDM solver
 //                                     POISSON_SOLVER             : Poisson solver
 //                                     GRAVITY_SOLVER             : Gravity solver
 //                                     POISSON_AND_GRAVITY_SOLVER : Poisson + Gravity solvers
-//                lv             : Targeted refinement level
-//                TimeNew        : Targeted physical time to reach
+//                lv             : Target refinement level
+//                TimeNew        : Target physical time to reach
 //                TimeOld        : Physical time before update
 //                                 --> For Fluid and Gravity solver, this function updates physical time from TimeOld to TimeNew
 //                                     For Poisson solver, this function calculates potential at **TimeNew**
@@ -217,15 +217,15 @@ void InvokeSolver( const Solver_t TSolver, const int lv, const double TimeNew, c
 // Function    :  Preparation_Step
 // Description :  Prepare the input data for CPU/GPU solvers
 //
-// Note        :  Use the input parameter "TSolver" to control the targeted solver
+// Note        :  Use the input parameter "TSolver" to control the target solver
 //
-// Parameter   :  TSolver     : Targeted solver
+// Parameter   :  TSolver     : Target solver
 //                              --> FLUID_SOLVER               : Fluid / ELBDM solver
 //                                  POISSON_SOLVER             : Poisson solver
 //                                  GRAVITY_SOLVER             : Gravity solver
 //                                  POISSON_AND_GRAVITY_SOLVER : Poisson + Gravity solvers
-//                lv          : Targeted refinement level
-//                TimeNew     : Targeted physical time to reach
+//                lv          : Target refinement level
+//                TimeNew     : Target physical time to reach
 //                TimeOld     : Physical time before update
 //                              --> For Fluid   solver, it prepares data at TimeOld
 //                              --> For Gravity solver, it prepares data at TimeNew
@@ -261,7 +261,8 @@ void Preparation_Step( const Solver_t TSolver, const int lv, const double TimeNe
          break;
 
       case GRAVITY_SOLVER :
-         TIMING_SYNC(   Gra_Prepare_Flu( lv,          h_Flu_Array_G   [ArrayID], NPG, PID0_List ),
+         TIMING_SYNC(   Gra_Prepare_Flu( lv,          h_Flu_Array_G   [ArrayID],
+                                                      h_DE_Array_G    [ArrayID], NPG, PID0_List ),
                         Timer_Poi_PreFlu[lv]   );
 
          if ( OPT__GRAVITY_TYPE == GRAVITY_SELF  ||  OPT__GRAVITY_TYPE == GRAVITY_BOTH )
@@ -287,7 +288,8 @@ void Preparation_Step( const Solver_t TSolver, const int lv, const double TimeNe
          TIMING_SYNC(   Poi_Prepare_Pot( lv, TimeNew, h_Pot_Array_P_In[ArrayID], NPG, PID0_List ),
                         Timer_Poi_PrePot_C[lv]   );
 
-         TIMING_SYNC(   Gra_Prepare_Flu( lv,          h_Flu_Array_G   [ArrayID], NPG, PID0_List ),
+         TIMING_SYNC(   Gra_Prepare_Flu( lv,          h_Flu_Array_G   [ArrayID],
+                                                      h_DE_Array_G    [ArrayID], NPG, PID0_List ),
                         Timer_Poi_PreFlu[lv]   );
 
          if ( OPT__GRAVITY_TYPE == GRAVITY_EXTERNAL  ||  OPT__GRAVITY_TYPE == GRAVITY_BOTH  ||  OPT__EXTERNAL_POT )
@@ -316,15 +318,15 @@ void Preparation_Step( const Solver_t TSolver, const int lv, const double TimeNe
 // Function    :  Solver
 // Description :  Invoke the CPU/GPU solvers
 //
-// Note        :  Use the input parameter "TSolver" to control the targeted solver
+// Note        :  Use the input parameter "TSolver" to control the target solver
 //
-// Parameter   :  TSolver     : Targeted solver
+// Parameter   :  TSolver     : Target solver
 //                              --> FLUID_SOLVER               : Fluid / ELBDM solver
 //                                  POISSON_SOLVER             : Poisson solver
 //                                  GRAVITY_SOLVER             : Gravity solver
 //                                  POISSON_AND_GRAVITY_SOLVER : Poisson + Gravity solvers
-//                lv          : Targeted refinement level
-//                TimeNew     : Targeted physical time to reach (only useful for adding external potential)
+//                lv          : Target refinement level
+//                TimeNew     : Target physical time to reach (only useful for adding external potential)
 //                TimeOld     : Physical time before update     (only useful for adding external potential with UNSPLIT_GRAVITY)
 //                NPG         : Number of patch groups to be upcated at a time
 //                ArrayID     : Array index to load and store data ( 0 or 1 )
@@ -506,14 +508,14 @@ void Solver( const Solver_t TSolver, const int lv, const double TimeNew, const d
 // Function    :  Closing_Step
 // Description :  Store the updated solutions back to the patch pointers
 //
-// Note        :  Use the input parameter "TSolver" to control the targeted solver
+// Note        :  Use the input parameter "TSolver" to control the target solver
 //
-// Parameter   :  TSolver     : Targeted solver
+// Parameter   :  TSolver     : Target solver
 //                              --> FLUID_SOLVER               : Fluid / ELBDM solver
 //                                  POISSON_SOLVER             : Poisson solver
 //                                  GRAVITY_SOLVER             : Gravity solver
 //                                  POISSON_AND_GRAVITY_SOLVER : Poisson + Gravity solvers
-//                lv          : Targeted refinement level
+//                lv          : Target refinement level
 //                SaveSg_Flu  : Sandglass to store the updated fluid data (for both the fluid and gravity solvers)
 //                SaveSg_Pot  : Sandglass to store the updated potential data (for the Poisson solver)
 //                NPG         : Number of patch groups to be evaluated at a time

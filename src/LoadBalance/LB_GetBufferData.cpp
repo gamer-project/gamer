@@ -29,11 +29,11 @@ extern Timer_t *Timer_MPI[3];
 //                   data only. For others modes, the number of variables to be exchanged depends on
 //                   the input parameter "TVar".
 //
-// Parameter   :  lv          : Targeted refinement level to exchage data
+// Parameter   :  lv          : Target refinement level to exchage data
 //                FluSg       : Sandglass of the requested fluid data (useless in POT_FOR_POISSON,
 //                              POT_AFTER_REFINEPOT, COARSE_FINE_FLUX )
 //                PotSg       : Sandglass of the requested potential data (useless in COARSE_FINE_FLUX)
-//                GetBufMode  : Targeted mode. Each mode has its own MPI lists, by which the amount of data
+//                GetBufMode  : Target mode. Each mode has its own MPI lists, by which the amount of data
 //                              to be transferred can be minimized.
 //                              --> DATA_GENERAL      : data for general-purpose (sibling and coarse-grid data)
 //                                  DATA_AFTER_REFINE : subset of DATA_GENERAL after refine
@@ -42,7 +42,7 @@ extern Timer_t *Timer_MPI[3];
 //                                  POT_FOR_POISSON   : potential for the Poisson solver
 //                                  POT_AFTER_REFINE  : potential after refine for the Poisson solver
 //                                  COARSE_FINE_FLUX  : fluxes across the coarse-fine boundaries (HYDRO ONLY)
-//                TVar        : Targeted variables to exchange
+//                TVar        : Target variables to exchange
 //                              --> Supported variables in different models:
 //                                  HYDRO : _DENS, _MOMX, _MOMY, _MOMZ, _ENGY,[, _POTE]
 //                                  MHD   : 
@@ -73,13 +73,13 @@ void LB_GetBufferData( const int lv, const int FluSg, const int PotSg, const Get
 
    if (  ( GetBufMode == DATA_GENERAL || GetBufMode == DATA_AFTER_FIXUP || GetBufMode == DATA_AFTER_REFINE ||
            GetBufMode == DATA_RESTRICT )  &&  !( TVar & (_TOTAL|_POTE) )  )
-      Aux_Error( ERROR_INFO, "no suitable targeted variable is found --> missing (_TOTAL|_POTE) !!\n" );
+      Aux_Error( ERROR_INFO, "no suitable target variable is found --> missing (_TOTAL|_POTE) !!\n" );
 
    if (  ( GetBufMode == POT_FOR_POISSON || GetBufMode == POT_AFTER_REFINE )  &&  !( TVar & _POTE )  )
-      Aux_Error( ERROR_INFO, "no suitable targeted variable is found --> missing _POTE !!\n" );
+      Aux_Error( ERROR_INFO, "no suitable target variable is found --> missing _POTE !!\n" );
 
    if (  ( GetBufMode == POT_FOR_POISSON || GetBufMode == POT_AFTER_REFINE )  &&  ( TVar & ~_POTE )  )
-      Aux_Error( ERROR_INFO, "modes \"%s\" only accept \"%s\" as the targeted variable !!\n",
+      Aux_Error( ERROR_INFO, "modes \"%s\" only accept \"%s\" as the target variable !!\n",
                  "POT_FOR_POISSON and POT_AFTER_REFINE", "_POTE" );
 
    if (  ( GetBufMode == DATA_GENERAL || GetBufMode == DATA_AFTER_FIXUP || GetBufMode == DATA_AFTER_REFINE ||
@@ -91,7 +91,7 @@ void LB_GetBufferData( const int lv, const int FluSg, const int PotSg, const Get
 #  else // #ifdef GRAVITY ... else ...
    if (  ( GetBufMode == DATA_GENERAL || GetBufMode == DATA_AFTER_FIXUP || GetBufMode == DATA_AFTER_REFINE ||
            GetBufMode == DATA_RESTRICT )  &&  !( TVar & _TOTAL )  )
-      Aux_Error( ERROR_INFO, "no suitable targeted variable is found --> missing _TOTAL !!\n" );
+      Aux_Error( ERROR_INFO, "no suitable target variable is found --> missing _TOTAL !!\n" );
 
    if (  ( GetBufMode == DATA_GENERAL || GetBufMode == DATA_AFTER_FIXUP || GetBufMode == DATA_AFTER_REFINE )  &&
          ( ParaBuf < 0 || ParaBuf > PATCH_SIZE )  )
@@ -100,7 +100,7 @@ void LB_GetBufferData( const int lv, const int FluSg, const int PotSg, const Get
 #  endif // #ifdef GRAVITY ... else ...
 
    if (  GetBufMode == COARSE_FINE_FLUX  &&  !( TVar & _FLUX_TOTAL )  )
-      Aux_Error( ERROR_INFO, "no suitable targeted variable is found --> missing _FLUX_TOTAL !!\n" );
+      Aux_Error( ERROR_INFO, "no suitable target variable is found --> missing _FLUX_TOTAL !!\n" );
 
    if ( GetBufMode == COARSE_FINE_FLUX  &&  !amr->WithFlux )
    {
@@ -109,7 +109,7 @@ void LB_GetBufferData( const int lv, const int FluSg, const int PotSg, const Get
    }
 
 
-// determine the components to be prepared (TFluVarIdx : targeted fluid variable indices ( = [0 ... NCOMP_TOTAL-1/NFLUX_TOTAL-1] )
+// determine the components to be prepared (TFluVarIdx : target fluid variable indices ( = [0 ... NCOMP_TOTAL-1/NFLUX_TOTAL-1] )
    bool ExchangeFlu = ( GetBufMode == COARSE_FINE_FLUX ) ?
                       TVar & _FLUX_TOTAL : TVar & _TOTAL;                        // whether or not to exchage the fluid data 
 #  ifdef GRAVITY
@@ -139,7 +139,7 @@ void LB_GetBufferData( const int lv, const int FluSg, const int PotSg, const Get
 // check again
    if ( NVar_Tot == 0  ||  ( GetBufMode == COARSE_FINE_FLUX && NVar_Flu == 0 )  )
    {
-      Aux_Message( stderr, "WARNING : no targeted variable is found !!\n" );
+      Aux_Message( stderr, "WARNING : no target variable is found !!\n" );
       return;
    }
 

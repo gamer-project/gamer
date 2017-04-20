@@ -18,8 +18,8 @@
 //                3. Still need "PrepTime" to determine whether temporal interpolation is required for the
 //                   **Lv=lv-1** data
 //
-// Parameter   :  lv                : Targeted refinement level
-//                PrepTime          : Targeted physical time to prepare the coarse-grid data
+// Parameter   :  lv                : Target refinement level
+//                PrepTime          : Target physical time to prepare the coarse-grid data
 //                h_Pot_Array_USG_G : Host array to store the prepared potential (size = USG_NXT_G^3)
 //                h_Flu_Array_USG_G : Host array to store the prepared density   (size =       PS1^3)
 //                NPG               : Number of patch groups prepared at a time

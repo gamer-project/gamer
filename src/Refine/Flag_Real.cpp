@@ -17,7 +17,7 @@ void Prepare_for_Lohner( const OptLohnerForm_t Form, const real *Var1D, real *Av
 //                3. To add new refinement criteria, please edit the function "Flag_Check"
 //                4. Definition of the function "Prepare_for_Lohner" is put in the file "Flag_Lohner"
 //
-// Parameter   :  lv          : Targeted refinement level to be flagged
+// Parameter   :  lv          : Target refinement level to be flagged
 //                UseLBFunc   : Use the load-balance alternative functions for the grandson check and exchanging
 //                              the buffer flags (useless if LOAD_BALANCE is off)
 //                              --> USELB_YES : use the load-balance alternative functions
@@ -322,7 +322,7 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
                                              i_start = ( i - FLAG_BUFFER_SIZE < 0    ) ? 0 : 1;
                                              i_end   = ( i + FLAG_BUFFER_SIZE >= PS1 ) ? 2 : 1;
 
-//                check if the targeted cell satisfies the refinement criteria (useless pointers are always == NULL)
+//                check if the target cell satisfies the refinement criteria (useless pointers are always == NULL)
                   if (  lv < MAX_LEVEL  &&  Flag_Check( lv, PID, i, j, k, Fluid, Pot, Pres, Lohner_Var+LocalID*Lohner_Stride,
                                                         Lohner_Ave, Lohner_Slope, Lohner_NVar, ParCount )  )
                   {
@@ -520,8 +520,8 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
 //                and hence the proper-nesting constraint cannot be applied to the real patches adajacent to the simulation
 //                boundary (sibling index <= SIB_OFFSET_NONPERIODIC)
 //
-// Parameter   :  lv      : Targeted level to be flagged
-//                PID     : Targeted patch ID at level "lv"
+// Parameter   :  lv      : Target level to be flagged
+//                PID     : Target patch ID at level "lv"
 //                LocalID : Index of son (0~7) which has its own son (grandson of patch "PID" at level "lv")
 //-------------------------------------------------------------------------------------------------------
 void Flag_Grandson( const int lv, const int PID, const int LocalID )

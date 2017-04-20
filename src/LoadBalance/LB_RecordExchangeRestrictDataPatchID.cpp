@@ -20,7 +20,7 @@
 //                       son patches are deallocated
 //                       --> Actually it is the case in the current version
 //
-// Parameter   :  FaLv  : Targeted refinement level for constructing MPI lists
+// Parameter   :  FaLv  : Target refinement level for constructing MPI lists
 //-------------------------------------------------------------------------------------------------------
 void LB_RecordExchangeRestrictDataPatchID( const int FaLv )
 {
@@ -180,7 +180,7 @@ void LB_RecordExchangeRestrictDataPatchID( const int FaLv )
       Mis_Matching_int( amr->NPatchComma[FaLv][1], amr->LB->IdxList_Real[FaLv], LB_RecvR_NList[r],
                         RecvBuf_R+Recv_Disp_R[r], Match_R );
 
-//    4.3 check: all targeted real patches must be found
+//    4.3 check: all target real patches must be found
 #     ifdef GAMER_DEBUG
       for (int t=0; t<LB_RecvR_NList[r]; t++)
          if ( Match_R[t] == -1 )

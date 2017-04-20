@@ -24,7 +24,7 @@ extern Timer_t *Timer_Par_2Son   [NLEVEL];
 // Note        :  1. Each step contains TWO sub-steps, and each of which will evolve the solution
 //                   at lv by 0.5*dTime
 //
-// Parameter   :  lv    : Targeted refinement level
+// Parameter   :  lv    : Target refinement level
 //                dTime : Time interval to update the physical time at this level
 //-------------------------------------------------------------------------------------------------------
 void EvolveLevel( const int lv, const double dTime )

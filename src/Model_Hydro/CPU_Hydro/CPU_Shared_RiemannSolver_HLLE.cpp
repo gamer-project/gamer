@@ -24,7 +24,7 @@ extern real CPU_CheckMinPres( const real InPres, const real MinPres );
 //                         b. Einfeldt, B., et al. J. 1991, J. Comput. Phys., 92, 273
 //                3. This function is shared by MHM, MHM_RP, and CTU schemes
 //
-// Parameter   :  XYZ      : Targeted spatial direction : (0/1/2) --> (x/y/z)
+// Parameter   :  XYZ      : Target spatial direction : (0/1/2) --> (x/y/z)
 //                Flux_Out : Array to store the output flux
 //                L_In     : Input left  state (conserved variables)
 //                R_In     : Input right state (conserved variables)

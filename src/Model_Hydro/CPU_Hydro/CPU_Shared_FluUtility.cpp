@@ -18,7 +18,7 @@
 //                2. Work if InOut includes/excludes passive scalars since they are not modified at all
 //
 // Parameter   :  InOut    : Array storing both the input and output data
-//                XYZ      : Targeted spatial direction : (0/1/2) --> (x/y/z)
+//                XYZ      : Target spatial direction : (0/1/2) --> (x/y/z)
 //                Forward  : (true/false) <--> (forward/backward)
 //-------------------------------------------------------------------------------------------------------
 void CPU_Rotate3D( real InOut[], const int XYZ, const bool Forward )
@@ -148,7 +148,7 @@ void CPU_Pri2Con( const real In[], real Out[], const real _Gamma_m1,
 // Function    :  CPU_Con2Flux
 // Description :  Evaluate the hydrodynamic fluxes by the input conserved variables
 //
-// Parameter   :  XYZ      : Targeted spatial direction : (0/1/2) --> (x/y/z)
+// Parameter   :  XYZ      : Target spatial direction : (0/1/2) --> (x/y/z)
 //                Flux     : Array to store the output fluxes
 //                Input    : Array storing the input conserved variables
 //                Gamma_m1 : Gamma - 1

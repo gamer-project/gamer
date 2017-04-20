@@ -40,7 +40,7 @@ static int Table_01( const int SibID, const int Side, const char dim, const int 
 //                                     INT_QUAD     : quadratic
 //                                     INT_CQUAR    : conservative quartic
 //                                     INT_QUAR     : quartic
-//                NTSib          : Number of targeted sibling patches along different sibling directions
+//                NTSib          : Number of target sibling patches along different sibling directions
 //                TSib           : Target sibling indices along different sibling directions
 //                TVar           : Target variables to be prepared
 //                                 --> Supported variables in different models:
@@ -483,7 +483,7 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData[], const in
       }
 
 
-//    b1. if the targeted sibling patch exists --> just copy data from the nearby patch at the same level
+//    b1. if the target sibling patch exists --> just copy data from the nearby patch at the same level
       if ( SibPID >= 0 )
       {
          CData_Ptr = CData;
@@ -662,13 +662,13 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData[], const in
       } // if ( SibPID >= 0 )
 
 
-//    b2. if the targeted sibling patch does not exist --> something is wrong !!
+//    b2. if the target sibling patch does not exist --> something is wrong !!
       else if ( SibPID == -1 )
          Aux_Error( ERROR_INFO, "incorrect parameter %s = %d (Rank %d, Lv %d, PID %d, Side %d) !!\n",
                     "SibPID", SibPID, MPI_Rank, lv, PID, Side );
 
 
-//    b3. if the targeted sibling patch lies outside the simulation domain --> apply the specified B.C.
+//    b3. if the target sibling patch lies outside the simulation domain --> apply the specified B.C.
       else if ( SibPID <= SIB_OFFSET_NONPERIODIC )
       {
          CData_Ptr = CData;

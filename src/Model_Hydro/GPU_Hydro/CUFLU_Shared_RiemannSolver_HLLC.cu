@@ -27,7 +27,7 @@ static __device__ FluVar CUFLU_RiemannSolver_HLLC( const int XYZ, const FluVar L
 //                4. The "__noinline__" qualifier is added in Fermi GPUs when "CHECK_INTERMEDIATE == HLLC"
 //                   is adopted for higher performance
 //
-// Parameter   :  XYZ     : Targeted spatial direction : (0/1/2) --> (x/y/z)
+// Parameter   :  XYZ     : Target spatial direction : (0/1/2) --> (x/y/z)
 //                L_In    : Input left  state (conserved variables)
 //                R_In    : Input right state (conserved variables)
 //                Gamma   : Ratio of specific heats

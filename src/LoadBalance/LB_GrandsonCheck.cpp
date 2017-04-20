@@ -16,7 +16,7 @@ void Flag_Grandson( const int lv, const int PID, const int LocalID );
 //
 // Note        :  Invoked by the function "Flag_Real" 
 //
-// Parameter   :  FaLv  : Targeted refinement level to be flagged
+// Parameter   :  FaLv : Target refinement level to be flagged
 //-------------------------------------------------------------------------------------------------------
 void LB_GrandsonCheck( const int FaLv )
 {
@@ -79,7 +79,7 @@ void LB_GrandsonCheck( const int FaLv )
 // ==========================================================================================
          else
          {
-//          determine the targeted rank and LB_Idx
+//          determine the target rank and LB_Idx
 #           if ( LOAD_BALANCE == HILBERT )
             SonLBIdx = 8*amr->patch[0][FaLv][FaPID]->LB_Idx;   // faster, but may not correspond to LocalID==0
 #           else

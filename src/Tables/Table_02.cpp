@@ -12,7 +12,7 @@
 //                of the local ID of patch within a patch group
 //
 // Parameter   :  LocalID  : Local index within the patch group (0~7)
-//                dim      : Targeted x/y/z direction
+//                dim      : Target x/y/z direction
 //                w0       : Value to be returned if LocalID belongs to the left   surface
 //                w1       : Value to be returned if LocalID belongs to the middle surface
 //                w2       : Value to be returned if LocalID belongs to the right  surface

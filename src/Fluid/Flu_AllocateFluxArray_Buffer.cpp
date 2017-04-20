@@ -11,7 +11,7 @@
 // Description :  Allocate flux arrays for the coarse-grid buffer patches (at level lv) adjacent to the 
 //                coarse-fine boundaries 
 //
-// Parameter   :  lv : Targeted coarse-grid level
+// Parameter   :  lv : Target coarse-grid level
 //-------------------------------------------------------------------------------------------------------
 void Flu_AllocateFluxArray_Buffer( const int lv )
 {

@@ -12,8 +12,8 @@
 //
 // Note        :  Invoke the function "Prepare_PatchData"
 //
-// Parameter   :  lv                : Targeted refinement level
-//                PrepTime          : Targeted physical time to prepare the coarse-grid data
+// Parameter   :  lv                : Target refinement level
+//                PrepTime          : Target physical time to prepare the coarse-grid data
 //                h_Pot_Array_P_Out : Host array to store the prepared data
 //                NPG               : Number of patch groups prepared at a time
 //                PID0_List         : List recording the patch indicies with LocalID==0 to be udpated

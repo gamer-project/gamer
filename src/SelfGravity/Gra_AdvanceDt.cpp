@@ -25,8 +25,8 @@ extern Timer_t *Timer_Par_Collect[NLEVEL];
 //                   --> It is because the lv-0 Poisson and Gravity solvers are invoked separately, and Gravity solver
 //                       needs to call Prepare_PatchData to get the updated potential
 //
-// Parameter   :  lv             : Targeted refinement level
-//                TimeNew        : Targeted physical time to reach
+// Parameter   :  lv             : Target refinement level
+//                TimeNew        : Target physical time to reach
 //                TimeOld        : Physical time before update
 //                                 --> For Gravity solver, this function updates physical time from TimeOld to TimeNew
 //                                     For Poisson solver, this function calculates potential at **TimeNew**

@@ -22,11 +22,11 @@
 //                6. This function does NOT initialize son indices as -1 for all patches at FaLv
 //                7. This function does NOT initialize father indices as -1 for all patches at SonLv
 //
-// Parameter   :  SonLv          : Targeted refinement level of sons
+// Parameter   :  SonLv          : Target refinement level of sons
 //                SearchAllSon   : Search over all son patches at SonLv
-//                NInput         : Number of targeted son patches (with LocalID==0) in "TargetSonPID0"
+//                NInput         : Number of target son patches (with LocalID==0) in "TargetSonPID0"
 //                                 (useful only if SearchAllSon == false)
-//                TargetSonPID0  : Lists recording all targeted son patches (with LocalID==0)
+//                TargetSonPID0  : Lists recording all target son patches (with LocalID==0)
 //                                 (useful only if SearchAllSon == false)
 //-------------------------------------------------------------------------------------------------------
 void LB_FindFather( const int SonLv, const bool SearchAllSon, const int NInput, int* TargetSonPID0 )
@@ -54,7 +54,7 @@ void LB_FindFather( const int SonLv, const bool SearchAllSon, const int NInput, 
    int SonPID, SonPID0, FaID, FaPID;
 
 
-// 1. nothing to do if there is no targeted real patch at SonLv   
+// 1. nothing to do if there is no target real patch at SonLv   
    if ( NTargetSon0 == 0 )    
    {
       delete [] Cr1D_Son0;
@@ -65,7 +65,7 @@ void LB_FindFather( const int SonLv, const bool SearchAllSon, const int NInput, 
    }
 
 
-// 2. construct the targeted son patch list
+// 2. construct the target son patch list
    if ( SearchAllSon )
    {
       TargetSonPID0 = new int [NTargetSon0];
@@ -88,7 +88,7 @@ void LB_FindFather( const int SonLv, const bool SearchAllSon, const int NInput, 
 #  endif
 
 
-// 3. store and sort the 1D corner coordinates for all targeted son patches with LocalID == 0
+// 3. store and sort the 1D corner coordinates for all target son patches with LocalID == 0
    for (int t=0; t<NTargetSon0; t++)
    {
       SonPID0      = TargetSonPID0[t];

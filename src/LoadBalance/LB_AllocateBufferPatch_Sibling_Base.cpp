@@ -70,7 +70,7 @@ void LB_AllocateBufferPatch_Sibling_Base()
       for (int j=-1; j<=1; j++)   {  Cr[1] = Cr0[1] + j*PGScale;
       for (int i=-1; i<=1; i++)   {  Cr[0] = Cr0[0] + i*PGScale;
 
-//       determine the rank where the targeted patches are located
+//       determine the rank where the target patches are located
          LBIdx = LB_Corner2Index( 0, Cr, CHECK_OFF );
          TRank = LB_Index2Rank( 0, LBIdx, CHECK_ON );
 

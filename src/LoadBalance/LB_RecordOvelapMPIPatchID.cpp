@@ -12,7 +12,7 @@
 // 
 // Note        :  This function must be invoked AFTER the function "LB_RecordExchangeDataPatchID"
 //
-// Parameter   :  Lv : Targeted refinement level for recording lists
+// Parameter   :  Lv : Target refinement level for recording lists
 //-------------------------------------------------------------------------------------------------------
 void LB_RecordOverlapMPIPatchID( const int Lv )
 {

@@ -10,7 +10,7 @@
 // Function    :  Buf_ResetBufferFlux
 // Description :  Reset all fluxes at the buffer patches as zero 
 // 
-// Parameter   :  lv : Targeted refinement level 
+// Parameter   :  lv : Target refinement level 
 //-------------------------------------------------------------------------------------------------------
 void Buf_ResetBufferFlux( const int lv )
 {

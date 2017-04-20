@@ -13,8 +13,8 @@
 //                b. Currently the updated data can only be stored in the different sandglass from the 
 //                   input fluid data
 //
-// Parameter   :  lv             : Targeted refinement level 
-//                TimeNew        : Targeted physical time to reach
+// Parameter   :  lv             : Target refinement level 
+//                TimeNew        : Target physical time to reach
 //                TimeOld        : Physical time before update
 //                                 --> This function updates physical time from TimeOld to TimeNew
 //                dt             : Time interval to advance solution (can be different from TimeNew-TimeOld in COMOVING)

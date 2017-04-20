@@ -17,7 +17,7 @@
 //                   will be inovked (which should be faster)
 //                4. All buffer patches should be removed in advance
 //
-// Parameter   :  lv : Targeted refinement level to allocate sibling-buffer patches
+// Parameter   :  lv : Target refinement level to allocate sibling-buffer patches
 //-------------------------------------------------------------------------------------------------------
 void LB_AllocateBufferPatch_Sibling( const int lv )
 {

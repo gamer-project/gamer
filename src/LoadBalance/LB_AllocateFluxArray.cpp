@@ -85,7 +85,7 @@ void LB_AllocateFluxArray( const int FaLv )
 //                   record the MPI recv list
                      if ( SibSonPID < -1 )   // son is not home
                      {
-//                      determine the targeted rank and LB_Idx
+//                      determine the target rank and LB_Idx
 #                       if ( LOAD_BALANCE == HILBERT )
                         SibSonLBIdx = 8*amr->patch[0][FaLv][SibPID]->LB_Idx;  // faster
 #                       else
@@ -221,7 +221,7 @@ void LB_AllocateFluxArray( const int FaLv )
       Mis_Matching_int( amr->NPatchComma[SonLv][1], amr->LB->IdxList_Real[SonLv], LB_SendF_NList[r],
                         RecvBuf_LBIdx+Recv_Disp_F[r], Match_F );
 
-//    check : all targeted patches must be found
+//    check : all target patches must be found
       #ifdef GAMER_DEBUG       
       for (int t=0; t<LB_SendF_NList[r]; t++)
          if ( Match_F[t] == -1 )

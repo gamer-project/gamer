@@ -11,8 +11,8 @@
 // Note        :  This table is particularly useful when the required values depended on the direction
 //                of the sibling patch
 //
-// Parameter   :  SibIndex : Targeted sibling direction (0~25)
-//                dim      : Targeted x/y/z direction
+// Parameter   :  SibIndex : Target sibling direction (0~25)
+//                dim      : Target x/y/z direction
 //                w0       : Value to be returned if SibIndex belongs to the left   surface
 //                w1       : Value to be returned if SibIndex belongs to the middle surface
 //                w2       : Value to be returned if SibIndex belongs to the right  surface

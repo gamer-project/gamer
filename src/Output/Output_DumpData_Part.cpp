@@ -164,12 +164,12 @@ void Output_DumpData_Part( const OptOutputPart_t Part, const bool BaseOnly, cons
 
                   else // x/y/z lines || xy/yz/xz slices
                   {
-//                   check whether the patch corner is within the targeted range
+//                   check whether the patch corner is within the target range
                      if (  !Check_x  ||  ( EdgeL[0]<=x && EdgeR[0]>x )  )
                      if (  !Check_y  ||  ( EdgeL[1]<=y && EdgeR[1]>y )  )
                      if (  !Check_z  ||  ( EdgeL[2]<=z && EdgeR[2]>z )  )
                      {
-//                      check whether the cell is within the targeted range
+//                      check whether the cell is within the target range
                         for (int k=0; k<PS1; k++)  {  kk = Corner[2] + k*scale;  zz = kk*dh_min;
                                                       if ( Check_z && ( zz>z || zz+dh<=z ) )    continue;
 
@@ -182,7 +182,7 @@ void Output_DumpData_Part( const OptOutputPart_t Part, const bool BaseOnly, cons
                            WriteFile( File, lv, PID, i, j, k, ii, jj, kk );
 
                         }}}
-                     } // if patch corner is within the targeted range
+                     } // if patch corner is within the target range
 
                   } // if ( Part == OUTPUT_DIAG ... else ... )
                } // if ( amr->patch[0][lv][PID]->son == -1 )
@@ -209,7 +209,7 @@ void Output_DumpData_Part( const OptOutputPart_t Part, const bool BaseOnly, cons
 // Description :  Output data to file
 //
 // Parameter   :  File     : File pointer 
-//                lv       : Targeted refinement level
+//                lv       : Target refinement level
 //                PID      : Patch ID
 //                i/j/k    : Cell indices within the patch
 //                ii/jj/kk : Cell scale indices in the simulation domain

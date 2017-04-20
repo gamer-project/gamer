@@ -31,7 +31,7 @@ void Par_LB_Refine_SendParticle2Son( const int FaLv, const int RefineF2S_Send_NP
 //                2. Data of all sibling-buffer patches must be prepared in advance for creating new
 //                   patches at FaLv+1 by spatial interpolation
 //
-// Parameter   :  FaLv  : Targeted refinement level to be refined
+// Parameter   :  FaLv : Target refinement level to be refined
 //-------------------------------------------------------------------------------------------------------
 void LB_Refine( const int FaLv )
 {
@@ -75,7 +75,7 @@ void LB_Refine( const int FaLv )
 
 // 2. get the unsorted lists of father patches at FaLv to allocate/deallocate son patches at FaLv+1
 // ==========================================================================================
-   int    NNew_Home, NDel_Home, NNew_Away, NDel_Away;  // Home/Away : for targeted patches at home/not at home
+   int    NNew_Home, NDel_Home, NNew_Away, NDel_Away;  // Home/Away : for target patches at home/not at home
    int   *NewPID_Home=NULL, *DelPID_Home=NULL;
    ulong *NewCr1D_Away=NULL, *DelCr1D_Away=NULL;
    real  *NewCData_Away=NULL;

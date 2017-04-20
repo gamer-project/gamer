@@ -365,7 +365,7 @@ __device__ void CUFLU_DataReconstruction( const real g_PriVar[][NCOMP_TOTAL][ FL
       } // Corr_R_PLM
 
 
-//    only include waves propagating toward the targeted cell interface during the data reconstruction
+//    only include waves propagating toward the target cell interface during the data reconstruction
 #     else // ifndef HLL_INCLUDE_ALL_WAVES
 
 #     define Corr_L_PLM( comp, EVal, LEVec, REVec )                                                   \
@@ -1315,7 +1315,7 @@ __device__ void CUFLU_DataReconstruction( const real g_PriVar[][NCOMP_TOTAL][ FL
 //                Gamma : Ratio of specific heats
 //                Rho   : Density
 //                Pres  : Pressure
-//                XYZ   : Targeted spatial direction : (0/1/2) --> (x/y/z)
+//                XYZ   : Target spatial direction : (0/1/2) --> (x/y/z)
 //-------------------------------------------------------------------------------------------------------
 __device__ FluVar Pri2Char( FluVar InOut, const real Gamma, const real Rho, const real Pres, const int XYZ )
 {
@@ -1358,7 +1358,7 @@ __device__ FluVar Pri2Char( FluVar InOut, const real Gamma, const real Rho, cons
 //                Gamma : Ratio of specific heats
 //                Rho   : Density
 //                Pres  : Pressure
-//                XYZ   : Targeted spatial direction : (0/1/2) --> (x/y/z)
+//                XYZ   : Target spatial direction : (0/1/2) --> (x/y/z)
 //-------------------------------------------------------------------------------------------------------
 __device__ FluVar Char2Pri( FluVar InOut, const real Gamma, const real Rho, const real Pres, const int XYZ )
 {
@@ -1416,7 +1416,7 @@ __device__ FluVar Char2Pri( FluVar InOut, const real Gamma, const real Rho, cons
 //                EP_Coeff       : Coefficient of the extrema-preserving limiter
 //                Gamma          : Ratio of specific heats
 //                                 --> Useful only if the option "CHAR_RECONSTRUCTION" is turned on
-//                XYZ            : Targeted spatial direction : (0/1/2) --> (x/y/z)
+//                XYZ            : Target spatial direction : (0/1/2) --> (x/y/z)
 //                                 --> Useful only if the option "CHAR_RECONSTRUCTION" is turned on
 //-------------------------------------------------------------------------------------------------------
 __device__ FluVar LimitSlope( const FluVar L2, const FluVar L1, const FluVar C0, const FluVar R1, const FluVar R2,

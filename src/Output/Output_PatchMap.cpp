@@ -8,10 +8,10 @@
 // Function    :  Output_PatchMap
 // Description :  Output the map of one component of a single patch
 //
-// Parameter   :  lv       : Targeted refinement level
-//                PID      : Targeted patch index
-//                TSg      : Targeted Sandglass
-//                Comp     : Targeted component to output
+// Parameter   :  lv       : Target refinement level
+//                PID      : Target patch index
+//                TSg      : Target Sandglass
+//                Comp     : Target component to output
 //                           --> no   gravity : [0 ... NCOMP_TOTAL-1]
 //                               with gravity : [0 ... NCOMP_TOTAL  ] --> output potential if Comp == NCOMP_TOTAL
 //                comment  : String to attach to the end of the file name

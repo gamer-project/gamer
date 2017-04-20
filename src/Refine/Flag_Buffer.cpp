@@ -15,7 +15,7 @@
 //                   in advance by calling the functions "Buf_RecordBoundaryFlag" and "MPI_ExchangeBoundaryFlag" 
 //                c. No OpenMP directives are applied in this function
 //
-// Parameter   :  lv : Targeted refinement level to be flagged
+// Parameter   :  lv : Target refinement level to be flagged
 //-------------------------------------------------------------------------------------------------------
 void Flag_Buffer( const int lv )
 {

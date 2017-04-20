@@ -30,8 +30,8 @@
 //                                              comment);
 //
 // Paremeter   :  TLv               : Level you want to output the prepared patch  
-//                TPID              : Targeted patch ID
-//                TComp             : Targeted component
+//                TPID              : Target patch ID
+//                TComp             : Target component
 //                                     --> 0 : Output the prepared density   stored in Rho_Array_P
 //                                         1 : Output the prepared potential stored in Pot_Array_P_In
 //                h_Rho_Array_P     : Input host density array for the Poisson solver 
@@ -52,7 +52,7 @@ void Output_PreparedPatch_Poisson( const int TLv, const int TPID, const int TCom
       Aux_Error( ERROR_INFO, "incorrect parameter %s = %d !!\n", "TComp", TComp );
 
 
-// nothing to do if the current level is not the targeted level
+// nothing to do if the current level is not the target level
    if ( TLv != CLv )    return;
 
 
@@ -61,7 +61,7 @@ void Output_PreparedPatch_Poisson( const int TLv, const int TPID, const int TCom
 
    for (int TID=0; TID<NPG; TID++)
    {
-//    check if the targeted patch is within the current patch group
+//    check if the target patch is within the current patch group
       if ( TPID0 != PID0_List[TID] )   continue;
 
 

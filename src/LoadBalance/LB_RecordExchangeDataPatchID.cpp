@@ -23,7 +23,7 @@ static void SetReceiveSibling( int* RSib_List[] );
 //                   <--> All other lists are sorted
 //                2. This function will NOT deallocate any fluid/pot arrays allocated previously
 //
-// Parameter   :  Lv          : Targeted refinement level for recording MPI lists
+// Parameter   :  Lv          : Target refinement level for recording MPI lists
 //                AfterRefine : Record the difference between old and new MPI lists after grid refinement
 //                              --> Minimizing the MPI time after grid refinement by only exchanging the
 //                                  buffer data that do not exist in the old MPI lists
@@ -114,10 +114,10 @@ void LB_RecordExchangeDataPatchID( const int Lv, const bool AfterRefine )
 #     endif
    } // for (int r=0; r<MPI_NRank; r++)
 
-// set up the targeted sibling indices at SonLv
+// set up the target sibling indices at SonLv
    SetTargetSibling( NTSib, TSib_List );
 
-// set up the targeted local indices at Lv
+// set up the target local indices at Lv
    SetTargetLocalID( NTLocalID, TLocalID );
 
 // set up the bit mask arrays
@@ -306,7 +306,7 @@ void LB_RecordExchangeDataPatchID( const int Lv, const bool AfterRefine )
 #  endif // #ifdef GRAVITY
 
 
-// check if there are duplicate targeted data in SibList
+// check if there are duplicate target data in SibList
 #  ifdef GAMER_DEBUG
    for (int t=0; t<NBuff; t++)
    for (int s=0; s<27; s++)
@@ -720,7 +720,7 @@ void LB_RecordExchangeDataPatchID( const int Lv, const bool AfterRefine )
       Mis_Matching_int( amr->NPatchComma[Lv][1], amr->LB->IdxList_Real[Lv], LB_SendH_NList[r],
                         LB_SendH_LBIdxList[r], Match_H );
 
-//    7.1.3 check: all targeted patches must be found
+//    7.1.3 check: all target patches must be found
       #ifdef GAMER_DEBUG
       for (int t=0; t<LB_SendH_NList[r]; t++)
          if ( Match_H[t] == -1 )
@@ -747,7 +747,7 @@ void LB_RecordExchangeDataPatchID( const int Lv, const bool AfterRefine )
       Mis_Matching_int( amr->NPatchComma[Lv][1], amr->LB->IdxList_Real[Lv], LB_SendG_NList[r],
                         LB_SendG_LBIdxList[r], Match_G );
 
-//    7.2.3 check: all targeted patches must be found
+//    7.2.3 check: all target patches must be found
       #ifdef GAMER_DEBUG
       for (int t=0; t<LB_SendG_NList[r]; t++)
          if ( Match_G[t] == -1 )
@@ -795,13 +795,13 @@ void LB_RecordExchangeDataPatchID( const int Lv, const bool AfterRefine )
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  SetTargetLocalID
-// Description :  Set the targeted local indices for preparing ghost-zone data at fine-grid level
+// Description :  Set the target local indices for preparing ghost-zone data at fine-grid level
 //
 // Note        :  1. Faster than using TABLE_03 and TABLE_04
 //                2. TLocalID needs to be deallocated manually
 //
-// Parameter   :  NTLocalID   : Number of targeted local indices along different sibling directions
-//                TLocalID    : Targeted local indices along different sibling directions
+// Parameter   :  NTLocalID   : Number of target local indices along different sibling directions
+//                TLocalID    : Target local indices along different sibling directions
 //-------------------------------------------------------------------------------------------------------
 void SetTargetLocalID( int NTLocalID[], int *TLocalID[] )
 {
@@ -893,12 +893,12 @@ void SetTargetLocalID( int NTLocalID[], int *TLocalID[] )
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  SetTargetSibPID0
-// Description :  Set the starting patch indices of the targeted sibling patches for the input patch group
+// Description :  Set the starting patch indices of the target sibling patches for the input patch group
 //
 // Note        :  This function can be used to replace "Table_02" in "Prepare_PatchData"
 //
-// Parameter   :  lv             : Targeted refinement level
-//                PID0           : Patch index with LocalID==0 in the targeted patch group
+// Parameter   :  lv             : Target refinement level
+//                PID0           : Patch index with LocalID==0 in the target patch group
 //                SibPID0_List   : Array storing the patch indices of the sibling patches along different
 //                                 directions
 //-------------------------------------------------------------------------------------------------------
@@ -943,10 +943,10 @@ void SetTargetSibPID0( const int lv, const int PID0, int SibPID0_List[] )
 // Note        :  Element 0 ~ 25 : data in 26 sibling directions
 //                Element 26     : entire patch data
 //
-// Parameter   :  SibMask_Check     : Mask for checking whether the targeted sibling direction has already
+// Parameter   :  SibMask_Check     : Mask for checking whether the target sibling direction has already
 //                                    been included
 //                SibMask_Clear     : Mask for clearing the duplicated sibling directions
-//                SibMask_Duplicate : Mask for checking if there are duplicate targeted sibling directions
+//                SibMask_Duplicate : Mask for checking if there are duplicate target sibling directions
 //-------------------------------------------------------------------------------------------------------
 void SetSiblingMask( int SibMask_Check[], int SibMask_Clear[], int SibMask_Duplicate[] )
 {
@@ -1032,7 +1032,7 @@ void SetSiblingMask( int SibMask_Check[], int SibMask_Clear[], int SibMask_Dupli
 //                2. The order of sibling indices recorded in RSib_List must be defined consistently with those
 //                   defined in "SetTargetSibling"
 //
-// Parameter   :  RSib_List   : Targeted sibling indices along different sibling directions
+// Parameter   :  RSib_List   : Target sibling indices along different sibling directions
 //-------------------------------------------------------------------------------------------------------
 void SetReceiveSibling( int* RSib_List[] )
 {
@@ -1393,14 +1393,14 @@ void SetReceiveSibling( int* RSib_List[] )
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  SetTargetSibling
-// Description :  Set the targeted sibling directions for looping over all father-sibling patches
+// Description :  Set the target sibling directions for looping over all father-sibling patches
 //
 // Note        :  1. TSib needs to be deallocated manually
 //                2. The order of sibling indices recorded in TSib must be defined consistently with those
 //                   defined in "SetReceiveSibling"
 //
-// Parameter   :  NTSib : Number of targeted sibling patches along different sibling directions
-//                TSib  : Targeted sibling indices along different sibling directions
+// Parameter   :  NTSib : Number of target sibling patches along different sibling directions
+//                TSib  : Target sibling indices along different sibling directions
 //-------------------------------------------------------------------------------------------------------
 void SetTargetSibling( int NTSib[], int* TSib[] )
 {

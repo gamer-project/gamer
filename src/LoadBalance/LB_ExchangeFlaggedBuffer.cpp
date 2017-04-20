@@ -16,7 +16,7 @@
 //                2. Flag list is sorted by the recv rank instead of the send rank
 //                   --> Sorting and matching only need to be done once
 //
-// Parameter   :  lv : Targeted refinement level
+// Parameter   :  lv : Target refinement level
 //-------------------------------------------------------------------------------------------------------
 void LB_ExchangeFlaggedBuffer( const int lv )
 {
@@ -106,7 +106,7 @@ void LB_ExchangeFlaggedBuffer( const int lv )
 // 3.3 flag
    for (int t=0; t<NRecv_Total; t++)
    {
-//    all targeted real patches must be found
+//    all target real patches must be found
 #     ifdef GAMER_DEBUG
       if ( Match[t] == -1 )
          Aux_Error( ERROR_INFO, "lv %d, LB_Idx %ld found no matching patches !!\n", lv, RecvBuf[t] );

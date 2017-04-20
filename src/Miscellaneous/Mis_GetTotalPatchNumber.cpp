@@ -10,7 +10,7 @@
 //
 // Note        :  None
 //
-// Parameter   :  lv : Targeted refinement level
+// Parameter   :  lv : Target refinement level
 //-------------------------------------------------------------------------------------------------------
 void Mis_GetTotalPatchNumber( const int lv )
 {

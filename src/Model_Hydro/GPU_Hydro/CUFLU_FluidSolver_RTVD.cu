@@ -402,7 +402,7 @@ __device__ void CUFLU_Advance( real g_Fluid_In [][5][ FLU_NXT*FLU_NXT*FLU_NXT ],
       }
 
 
-//    reset the targeted array indices
+//    reset the target array indices
       j += dj;
 
       if ( j >= j_end )

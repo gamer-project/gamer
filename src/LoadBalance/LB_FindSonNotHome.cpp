@@ -24,11 +24,11 @@
 //                       (and two buffer patches are at the same rank), the son index of the patch at FaLv will still be set
 //                        to "SON_OFFSET_LB-SonRank", where SonRank == MPI_Rank)
 //
-// Parameter   :  FaLv        : Targeted refinement level of fathers
+// Parameter   :  FaLv        : Target refinement level of fathers
 //                SearchAllFa : Whether to search over all father patches or not
-//                NInput      : Number of targeted father patches in "TargetFaPID"
+//                NInput      : Number of target father patches in "TargetFaPID"
 //                              (useful only if "SearchAllFa == false")
-//                TargetFaPID : Lists recording all targeted father patches
+//                TargetFaPID : Lists recording all target father patches
 //                              (useful only if "SearchAllFa == false")
 //-------------------------------------------------------------------------------------------------------
 void LB_FindSonNotHome( const int FaLv, const bool SearchAllFa, const int NInput, int* TargetFaPID )
@@ -53,7 +53,7 @@ void LB_FindSonNotHome( const int FaLv, const bool SearchAllFa, const int NInput
    int FaPID;
 
 
-// 0. construct the targeted father patch list
+// 0. construct the target father patch list
 // ==========================================================================================
    if ( SearchAllFa )
    {

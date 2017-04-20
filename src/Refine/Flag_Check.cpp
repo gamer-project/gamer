@@ -13,8 +13,8 @@ static bool Check_Gradient( const int i, const int j, const int k, const real In
 // Note        :  Useless input arrays are set to NULL
 //                (e.g, Pot if GRAVITY is off, Pres if OPT__FLAG_PRES_GRADIENT is off)
 //
-// Parameter   :  lv             : Targeted refinement level
-//                PID            : Targeted patch ID
+// Parameter   :  lv             : Target refinement level
+//                PID            : Target patch ID
 //                i,j,k          : Indices of the target cell
 //                Fluid          : Input fluid array (with NCOMP_TOTAL components)
 //                Pot            : Input potential array

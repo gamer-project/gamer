@@ -28,7 +28,7 @@
 //                       --> One quick solution is to replace DATA_AFTER_FIXUP by DATA_GENERAL when calling Buf_GetBufferData()
 //                           after Flu_FixUp() in EvolveLevel()
 //
-// Parameter   :  Lv : Targeted refinement level for recording MPI lists
+// Parameter   :  Lv : Target refinement level for recording MPI lists
 //-------------------------------------------------------------------------------------------------------
 void LB_RecordExchangeFixUpDataPatchID( const int Lv )
 {

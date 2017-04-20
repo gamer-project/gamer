@@ -39,7 +39,7 @@ static __device__ void CUFLU_NormalizePassive( const real GasDens, real Passive[
 //                2. Passive scalars are not modified at all
 //
 // Parameter   :  In       : Input variables to be rotated
-//                XYZ      : Targeted spatial direction : (0/1/2) --> (x/y/z)
+//                XYZ      : Target spatial direction : (0/1/2) --> (x/y/z)
 //                Forward  : (true/false) <--> (forward/backward)
 //-------------------------------------------------------------------------------------------------------
 __device__ FluVar CUFLU_Rotate3D( const FluVar In, const int XYZ, const bool Forward )
@@ -84,7 +84,7 @@ __device__ FluVar CUFLU_Rotate3D( const FluVar In, const int XYZ, const bool For
 //
 // Parameter   :  Input    : Input conserved variables
 //                Gamma_m1 : Gamma - 1
-//                XYZ      : Targeted spatial direction : (0/1/2) --> (x/y/z)
+//                XYZ      : Target spatial direction : (0/1/2) --> (x/y/z)
 //                MinPres  : Minimum allowed pressure
 //-------------------------------------------------------------------------------------------------------
 __device__ FluVar CUFLU_Con2Flux( const FluVar Input, const real Gamma_m1, const int XYZ, const real MinPres )

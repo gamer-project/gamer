@@ -46,7 +46,7 @@ extern double ExtAcc_AuxArray[EXT_ACC_NAUX_MAX];
 //                   --> StoreAcc must be on, and UseStoredAcc must be off
 //
 // Parameter   :  lv             : Target refinement level
-//                TimeNew        : Targeted physical time to reach (also used by PAR_UPSTEP_ACC_ONLY)
+//                TimeNew        : Target physical time to reach (also used by PAR_UPSTEP_ACC_ONLY)
 //                TimeOld        : Physical time before update
 //                UpdateStep     : PAR_UPSTEP_PRED/PAR_UPSTEP_CORR/PAR_UPSTEP_ACC_ONLY
 //                                 (CORR is for PAR_INTEG_KDK only, and ACC_ONLY is for STORE_PAR_ACC only)

@@ -15,7 +15,7 @@
 //                   by specifying the sound speed parameter "Cs".
 //                3. Data format in the UM_START file : [k][j][i][v]
 //
-// Parameter   :  lv       : Targeted refinement level to assign data
+// Parameter   :  lv       : Target refinement level to assign data
 //                UM_Data  : Input uniform-mesh array
 //                NVar     : Number of variables stored in UM_Data
 //-------------------------------------------------------------------------------------------------------

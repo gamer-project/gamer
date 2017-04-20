@@ -136,7 +136,7 @@ struct Timer_t
    // Method      :  GetValue
    // Description :  Get the elapsed time (in seconds) recorded in the timer "TargetID"
    //
-   // Parameter   :  TargetID : The ID of the targeted timer
+   // Parameter   :  TargetID : The ID of the target timer
    //===================================================================================
    double GetValue( const uint TargetID )
    {

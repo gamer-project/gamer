@@ -69,7 +69,7 @@ enum UseLBFunc_t { USELB_NO=0, USELB_YES=1 };
 enum Check_t { CHECK_OFF=0, CHECK_ON=1 };
 
 
-// targeted solver in "InvokeSolvers"
+// target solver in "InvokeSolvers"
 #ifdef GRAVITY
 enum Solver_t { FLUID_SOLVER=0, POISSON_SOLVER=1, GRAVITY_SOLVER=2, POISSON_AND_GRAVITY_SOLVER=3 };
 #else
@@ -77,7 +77,7 @@ enum Solver_t { FLUID_SOLVER=0 };
 #endif
 
 
-// targeted mode in "Buf_GetBufferData and LB_GetBufferData"
+// target mode in "Buf_GetBufferData and LB_GetBufferData"
 #ifdef GRAVITY
 enum GetBufMode_t { DATA_GENERAL=1, DATA_AFTER_FIXUP=2, DATA_AFTER_REFINE=3, DATA_RESTRICT=4, COARSE_FINE_FLUX=5,
                     POT_FOR_POISSON=6, POT_AFTER_REFINE=7 };

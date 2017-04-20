@@ -13,8 +13,8 @@
 // Note        :  a. Currently it only works for the functions "Init_Reload" and "Init_BaseLevel"
 //                b. For the base level, no data transfer is required
 //
-// Parameter   :  Tamr        : Targeted AMR_t pointer 
-//                lv          : Targeted refinement lv to allocate buffer patches
+// Parameter   :  Tamr : Target AMR_t pointer 
+//                lv   : Target refinement lv to allocate buffer patches
 //-------------------------------------------------------------------------------------------------------
 void Buf_AllocateBufferPatch( AMR_t *Tamr, const int lv )
 {
@@ -105,7 +105,7 @@ void Buf_AllocateBufferPatch( AMR_t *Tamr, const int lv )
       }
 
 
-//    find the targeted buffer patches to be refined
+//    find the target buffer patches to be refined
       TargetID = 0;
       
       for (int ID=0; ID<NRecv[s]; ID++)

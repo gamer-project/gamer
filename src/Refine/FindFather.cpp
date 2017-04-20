@@ -14,7 +14,7 @@
 //                   and Init_Restart_HDF5"
 //                c. Only work on the "real" patches
 //
-// Parameter   :  lv    : Targeted refinement level
+// Parameter   :  lv    : Target refinement level
 //                Mode  : 1 --> Find the father patch hierarchically from the base level               
 //                        2 --> Find the father patch by searching over all patches at level "lv-1"
 //-------------------------------------------------------------------------------------------------------

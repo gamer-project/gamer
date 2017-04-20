@@ -366,7 +366,7 @@ void Init_Restart_v1( const char FileName[] )
 
          if ( MPI_Rank == TargetMPIRank )
          {
-//          d1. set the range of the targeted sub-domain
+//          d1. set the range of the target sub-domain
 #           ifndef LOAD_BALANCE
             for (int d=0; d<3; d++)
             {
@@ -388,7 +388,7 @@ void Init_Restart_v1( const char FileName[] )
                for (int d=0; d<3; d++)    LoadCorner[d] *= rescale;
 
 
-//             verify that the loaded patch is within the targeted range
+//             verify that the loaded patch is within the target range
 #              ifdef LOAD_BALANCE
                if (  MPI_Rank == LB_Index2Rank( lv, LB_Corner2Index(lv,LoadCorner,CHECK_ON), CHECK_ON )  )
 #              else
@@ -427,9 +427,9 @@ void Init_Restart_v1( const char FileName[] )
                         fseek( File, PATCH_SIZE*PATCH_SIZE*PATCH_SIZE*sizeof(real), SEEK_CUR );
 #                    endif
                   } // if ( DataOrder_xyzv )
-               } // within the targeted range
+               } // within the target range
 
-               else // for the case that the patch is NOT within the targeted range
+               else // for the case that the patch is NOT within the target range
                   if ( LoadSon == -1 )    fseek( File, PatchDataSize, SEEK_CUR );
 
             } // for (int LoadPID=0; LoadPID<NPatchTotal[lv]; LoadPID++)

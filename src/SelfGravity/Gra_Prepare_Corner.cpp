@@ -14,7 +14,7 @@
 //                2. Corner coordinates are defined as the central coordinates of the first cell located
 //                   at the bottom left corner
 //
-// Parameter   :  lv                : Targeted refinement level
+// Parameter   :  lv                : Target refinement level
 //                h_Corner_Array_G  : Host array to store the prepared data
 //                NPG               : Number of patch groups prepared at a time
 //                PID0_List         : List recording the patch indicies with LocalID==0 to be udpated

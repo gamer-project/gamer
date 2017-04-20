@@ -10,7 +10,7 @@
 //
 // Note        :  Allocate patches at level "lv+1"
 //
-// Parameter   :  lv : Targeted level to be refined (lv --> lv+1)
+// Parameter   :  lv : Target level to be refined (lv --> lv+1)
 //-------------------------------------------------------------------------------------------------------
 void Init_Refine( const int lv )
 {

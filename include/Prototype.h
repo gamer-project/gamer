@@ -284,7 +284,7 @@ void Gra_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, co
 void Gra_Close( const int lv, const int SaveSg,
                 const real h_Flu_Array_G[][GRA_NIN][PATCH_SIZE][PATCH_SIZE][PATCH_SIZE],
                 const int NPG, const int *PID0_List );
-void Gra_Prepare_Flu( const int lv, real h_Flu_Array_G[][GRA_NIN][PATCH_SIZE][PATCH_SIZE][PATCH_SIZE],
+void Gra_Prepare_Flu( const int lv, real h_Flu_Array_G[][GRA_NIN][PS1][PS1][PS1], char h_DE_Array[][PS1][PS1][PS1],
                       const int NPG, const int *PID0_List );
 void Gra_Prepare_Pot( const int lv, const double PrepTime, real h_Pot_Array_P_Out[][GRA_NXT][GRA_NXT][GRA_NXT],
                       const int NPG, const int *PID0_List );

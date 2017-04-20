@@ -655,7 +655,7 @@ void Init_Restart_HDF5( const char *FileName )
             Aux_Message( stdout, "      Loading ranks %4d -- %4d, lv %2d ... ",
                          TRanks, MIN(TRanks+RESTART_LOAD_NRANK-1, MPI_NRank-1), lv );
 
-//          loop over all targeted LBIdx
+//          loop over all target LBIdx
             for (int t=LoadIdx_Start[lv]; t<LoadIdx_Stop[lv]; t+=8)
             {
 #              ifdef DEBUG_HDF5

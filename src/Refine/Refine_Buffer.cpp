@@ -11,7 +11,7 @@
 // Description :  Construct buffer patches at level "lv+1" according to the flagging result of buffer patches
 //                at level "lv" 
 //
-// Parameter   :  lv          : Targeted level to be refined
+// Parameter   :  lv          : Target level to be refined
 //                SonTable    : Table recording the linking index of each buffer father patch to GrandTable
 //                GrandTable  : Table recording the patch IDs of grandson buffer patches
 //-------------------------------------------------------------------------------------------------------

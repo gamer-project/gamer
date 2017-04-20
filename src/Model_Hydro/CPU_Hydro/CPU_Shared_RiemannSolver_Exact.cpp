@@ -26,7 +26,7 @@ static void Set_Flux( real flux[], const real val[], const real Gamma );
 //                2. This function is shared by WAF, MHM, MHM_RP, and CTU schemes
 //                3. Currently it does NOT check the minimum density and pressure criteria
 //
-// Parameter   :  XYZ         : Targeted spatial direction : (0/1/2) --> (x/y/z)
+// Parameter   :  XYZ         : Target spatial direction : (0/1/2) --> (x/y/z)
 //                eival_out   : Output array to store the speed of waves
 //                L_star_out  : Output array to store the primitive variables in the left star region
 //                R_star_out  : Output array to store the primitive variables in the right star region

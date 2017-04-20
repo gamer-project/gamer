@@ -13,8 +13,8 @@
 // Note        :  1. Invoke the function "Prepare_PatchData"
 //                2. Minimum density threshold (MIN_DENS) is applied
 //
-// Parameter   :  lv             : Targeted refinement level
-//                PrepTime       : Targeted physical time to prepare the coarse-grid data
+// Parameter   :  lv             : Target refinement level
+//                PrepTime       : Target physical time to prepare the coarse-grid data
 //                h_Rho_Array_P  : Host array to store the prepared data
 //                NPG            : Number of patch groups to be prepared at a time
 //                PID0_List      : List recording the patch indicies with LocalID==0 to be udpated

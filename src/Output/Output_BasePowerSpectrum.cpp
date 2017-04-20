@@ -113,7 +113,7 @@ void Output_BasePowerSpectrum( const char *FileName )
 // 6. output the power spectrum
    if ( MPI_Rank == 0 )
    {
-//    check if the targeted file already exists
+//    check if the target file already exists
       if ( Aux_CheckFileExist(FileName) )
          Aux_Message( stderr, "WARNING : file \"%s\" already exists and will be overwritten !!\n", FileName );
 

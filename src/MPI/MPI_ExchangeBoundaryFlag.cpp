@@ -10,7 +10,7 @@
 // Function    :  MPI_ExchangeBoundaryFlag
 // Description :  Get the "BuffFlag_NList" and "BuffFlag_PosList" from 26 neighbor ranks
 //
-// Parameter   :  lv : Targeted refinement level
+// Parameter   :  lv : Target refinement level
 //-------------------------------------------------------------------------------------------------------
 void MPI_ExchangeBoundaryFlag( const int lv )
 {

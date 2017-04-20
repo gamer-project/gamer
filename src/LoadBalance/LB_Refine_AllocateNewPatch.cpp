@@ -24,7 +24,7 @@ static void DeallocateSonPatch( const int FaLv, const int FaPID, const int NNew_
 // Description :  Allocate/deallocate real son patches at FaLv+1
 //
 // Note        :  1. This function is invoked by the function "LB_Refine"
-//                2. Home/Away : targeted patches at home/not at home
+//                2. Home/Away : target patches at home/not at home
 //                3. Input Cr1D and CData lists are unsorted
 //                4. After invoking this function, some father-buffer patches at FaLv may become useless
 //                   --> Currently we do not remove these patches for the consideration of better performance
@@ -37,7 +37,7 @@ static void DeallocateSonPatch( const int FaLv, const int FaPID, const int NNew_
 //                   patches at FaLv+1
 //                   --> make implementation easier
 //
-// Parameter   :  FaLv           : Targeted refinement level to be refined
+// Parameter   :  FaLv           : Target refinement level to be refined
 //                NNew_Home      : Number of home patches at FaLv to allocate son patches
 //                NewPID_Home    : Patch indices of home patches at FaLv to allocate son patches
 //                NNew_Away      : Number of away patches at FaLv to allocate son patches
@@ -638,7 +638,7 @@ void LB_Refine_AllocateNewPatch( const int FaLv, int NNew_Home, int *NewPID_Home
 //
 // Note        :  Just to avoid duplicate code segment
 //
-// Parameter   :  FaLv           : Targeted refinement level to be refined
+// Parameter   :  FaLv           : Target refinement level to be refined
 //                Cr             : Corner coordinates of the son patch with LocalID == 0
 //                PScale         : Scale of one patch at SonLv
 //                FaPID          : Father patch index (can be -1 for the away patches)
@@ -658,7 +658,7 @@ int AllocateSonPatch( const int FaLv, const int *Cr, const int PScale, const int
    const int SonPID0 = amr->num[SonLv];
    bool FaIsHome = false;
 
-// 0. check : targeted father patch has no son
+// 0. check : target father patch has no son
 #  ifdef GAMER_DEBUG
    if ( FaPID != -1  &&  amr->patch[0][FaLv][FaPID]->son != -1 )
       Aux_Error( ERROR_INFO, "FaLv %d, FaPID (%d) already has sons (SonPID = %d, duplicate SonPID = %d) !!\n",
@@ -998,7 +998,7 @@ int AllocateSonPatch( const int FaLv, const int *Cr, const int PScale, const int
 // Note        :  1. Just to avoid duplicate code segment
 //                2. List "NewSonPID0_Real" will be reset
 //
-// Parameter   :  FaLv              : Targeted refinement level to be refined
+// Parameter   :  FaLv              : Target refinement level to be refined
 //                FaPID             : Father patch index to remove sons
 //                NNew_Real0        : Number of newly-allocated real patches with LocalID==0
 //                NewSonPID0_Real   : List recording the indices of all newly-allocated real patches

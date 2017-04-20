@@ -13,7 +13,7 @@
 //                --> For gnuplot plot, one can use (1) "every :::0::0" to plot the real   patches
 //                                                  (2) "every :::1::1" to plot the buffer patches
 //
-// Parameter   :  lv       : Targeted refinement level 
+// Parameter   :  lv       : Target refinement level 
 //                comment  : String to attach to the end of the file name
 //-------------------------------------------------------------------------------------------------------
 void Output_PatchCorner( const int lv, const char *comment )

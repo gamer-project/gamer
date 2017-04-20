@@ -60,7 +60,7 @@ void Init_Function_User( real fluid[], const double x, const double y, const dou
 //                   pointer pointing to either "Init_Function_User" or the test problem specified function
 //                   (e.g., Hydro_TestProbSol_Riemann) set in "Init_TestProb"
 //
-// Parameter   :  lv : Targeted refinement level
+// Parameter   :  lv : Target refinement level
 //-------------------------------------------------------------------------------------------------------
 void Hydro_Init_StartOver_AssignData( const int lv )
 {

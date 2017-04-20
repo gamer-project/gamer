@@ -27,11 +27,11 @@
 //                                         --> **this array must be deallocated manually**
 //                                == false --> do nothing
 //
-// Parameter   :  SonLv          : Targeted refinement level of sons
+// Parameter   :  SonLv          : Target refinement level of sons
 //                SearchAllSon   : Whether to search over all real patches at SonLv or not
-//                NInput         : Number of targeted son patches (with LocalID==0) in "TargetSonPID0"
+//                NInput         : Number of target son patches (with LocalID==0) in "TargetSonPID0"
 //                                 (useful only if "SearchAllSon == false")
-//                TargetSonPID0  : Lists recording all targeted son patches (with LocalID==0)
+//                TargetSonPID0  : Lists recording all target son patches (with LocalID==0)
 //                                 (useful only if "SearchAllSon == false")
 //                RecordFaPID    : Record the indices of all newly-allocated father-buffer patches
 //                                 (with LocalID==0)
@@ -94,7 +94,7 @@ void LB_AllocateBufferPatch_Father( const int SonLv,
    ulong *FaCr1D_List = new ulong [NFaBuf_Max];
 
 
-// nothing to do if there is no targeted real patch at SonLv   
+// nothing to do if there is no target real patch at SonLv   
    if ( NTargetSon0 == 0 )    
    {
       if ( RecordFaPID )
@@ -109,7 +109,7 @@ void LB_AllocateBufferPatch_Father( const int SonLv,
    }
 
 
-// 0. construct the targeted son patch list
+// 0. construct the target son patch list
    if ( SearchAllSon )
    {
       TargetSonPID0 = new int [NTargetSon0];

@@ -21,11 +21,11 @@ void PrepareCData( const int FaLv, const int FaPID, real *const FaData,
 //                2. Coarse-grid data for creating new patches are also collected in "NewCData_Away"
 //                   --> Data of all sibling-buffer patches at FaLv must be prepared in advance in order to 
 //                       prepare the coarse-grid data for spatial interpolation
-//                3. Home/Away : targeted patches at home/not at home
+//                3. Home/Away : target patches at home/not at home
 //                4. Cr1D and CData lists are unsorted
 //                5. Use "call-by-reference" for the input parameters
 //
-// Parameter   :  FaLv           : Targeted refinement level to be refined
+// Parameter   :  FaLv           : Target refinement level to be refined
 //                NNew_Home      : Number of home patches at FaLv to allocate son patches
 //                NewPID_Home    : Patch indices of home patches at FaLv to allocate son patches
 //                NNew_Away      : Number of away patches at FaLv to allocate son patches
@@ -91,7 +91,7 @@ void LB_Refine_GetNewRealPatchList( const int FaLv, int &NNew_Home, int *&NewPID
 //    1.1 allocate list
       if ( TP->flag  &&  TP->son == -1 )
       {
-//       set the targeted rank
+//       set the target rank
 //###NOTE: faster version can only be applied to the Hilbert space-filling curve
 #        if ( LOAD_BALANCE == HILBERT )
          LBIdx = 8*TP->LB_Idx;   // faster
@@ -124,7 +124,7 @@ void LB_Refine_GetNewRealPatchList( const int FaLv, int &NNew_Home, int *&NewPID
 
 
 //       record the new lists
-         if ( TRank == MPI_Rank ) // targeted son patches are home
+         if ( TRank == MPI_Rank ) // target son patches are home
          {
 //          allocate enough memory
             if ( NNew_Home >= NewMemSize[TRank] )
@@ -136,7 +136,7 @@ void LB_Refine_GetNewRealPatchList( const int FaLv, int &NNew_Home, int *&NewPID
             NewPID_Home[ NNew_Home ++ ] = FaPID;
          }
 
-         else // TRank != MPI_Rank (targeted son patches are not home)
+         else // TRank != MPI_Rank (target son patches are not home)
          {
 //          allocate enough memory
             if ( NNew_Send[TRank] >= NewMemSize[TRank] )  
@@ -168,7 +168,7 @@ void LB_Refine_GetNewRealPatchList( const int FaLv, int &NNew_Home, int *&NewPID
 //    1.2 deallocate list
       else if ( !TP->flag  &&  TP->son != -1 )
       {
-//       set the targeted rank
+//       set the target rank
 //###NOTE: faster version can only be applied to the Hilbert space-filling curve
 #        if ( LOAD_BALANCE == HILBERT )
          LBIdx = 8*TP->LB_Idx;   // faster
@@ -179,7 +179,7 @@ void LB_Refine_GetNewRealPatchList( const int FaLv, int &NNew_Home, int *&NewPID
 
 
 //       record the delete list
-         if ( TRank == MPI_Rank ) // targeted son patches are home
+         if ( TRank == MPI_Rank ) // target son patches are home
          {
 //          allocate enough memory
             if ( NDel_Home >= DelMemSize[TRank] )
@@ -197,7 +197,7 @@ void LB_Refine_GetNewRealPatchList( const int FaLv, int &NNew_Home, int *&NewPID
 #           endif
          }
 
-         else // TRank != MPI_Rank (targeted son patches are not home)
+         else // TRank != MPI_Rank (target son patches are not home)
          {
 //          allocate enough memory
             if ( NDel_Send[TRank] >= DelMemSize[TRank] )
@@ -481,7 +481,7 @@ void PrepareCData( const int FaLv, const int FaPID, real *const FaData,
          Disp1[d] = TABLE_01( sib, 'x'+d, 0, FaGhost_Flu, FaGhost_Flu+PATCH_SIZE );
       }
 
-//    2.1.1 if the targeted sibling patch exists --> just copy data from the nearby patches at the same level
+//    2.1.1 if the target sibling patch exists --> just copy data from the nearby patches at the same level
       if ( SibPID >= 0 )
       {
          for (int d=0; d<3; d++)    Disp2[d] = TABLE_01( sib, 'x'+d, PATCH_SIZE-FaGhost_Flu, 0, 0 );

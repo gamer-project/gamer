@@ -97,7 +97,7 @@ void Init_Load_FlagCriteria()
    {
       if ( Flag[FlagMode] )
       {
-//       open the targeted file
+//       open the target file
          strcpy( TargetName, FileName[FlagMode] );
 
          if ( !Aux_CheckFileExist(TargetName) )

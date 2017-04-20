@@ -703,7 +703,7 @@ void CPU_DataReconstruction( const real PriVar[][NCOMP_TOTAL], real FC_Var[][6][
 //                Gamma : Ratio of specific heats
 //                Rho   : Density
 //                Pres  : Pressure
-//                XYZ   : Targeted spatial direction : (0/1/2) --> (x/y/z)
+//                XYZ   : Target spatial direction : (0/1/2) --> (x/y/z)
 //-------------------------------------------------------------------------------------------------------
 void Pri2Char( real InOut[], const real Gamma, const real Rho, const real Pres, const int XYZ )
 {
@@ -747,7 +747,7 @@ void Pri2Char( real InOut[], const real Gamma, const real Rho, const real Pres, 
 //                Gamma : Ratio of specific heats
 //                Rho   : Density
 //                Pres  : Pressure
-//                XYZ   : Targeted spatial direction : (0/1/2) --> (x/y/z)
+//                XYZ   : Target spatial direction : (0/1/2) --> (x/y/z)
 //-------------------------------------------------------------------------------------------------------
 void Char2Pri( real InOut[], const real Gamma, const real Rho, const real Pres, const int XYZ )
 {
@@ -883,7 +883,7 @@ void Get_EigenSystem( const real CC_Var[], real EigenVal[][NCOMP_FLUID], real LE
 //                EP_Coeff       : Coefficient of the extrema-preserving limiter
 //                Gamma          : Ratio of specific heats
 //                                 --> Useful only if the option "CHAR_RECONSTRUCTION" is turned on
-//                XYZ            : Targeted spatial direction : (0/1/2) --> (x/y/z)
+//                XYZ            : Target spatial direction : (0/1/2) --> (x/y/z)
 //                                 --> Useful only if the option "CHAR_RECONSTRUCTION" is turned on
 //                Slope_Limiter  : Array to store the output monotonic slope
 //-------------------------------------------------------------------------------------------------------

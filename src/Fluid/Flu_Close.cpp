@@ -32,7 +32,7 @@ extern void CPU_RiemannSolver_HLLE( const int XYZ, real Flux_Out[], const real L
 //                3. Copy the data from the "h_Flu_Array_F_Out" and "h_DE_Array_F_Out" arrays to the "amr->patch" pointers
 //                4. Get the minimum time-step information when the option "OPT__ADAPTIVE_DT" is turned on
 //
-// Parameter   :  lv                : Targeted refinement level
+// Parameter   :  lv                : Target refinement level
 //                SaveSg            : Sandglass to store the updated data
 //                h_Flux_Array      : Host array storing the updated flux data
 //                h_MinDtInfo_Array : Host array storing the minimum time-step information in each patch group
@@ -134,7 +134,7 @@ void Flu_Close( const int lv, const int SaveSg, const real h_Flux_Array[][9][NFL
 // Description :  Save the fluxes across the coarse-fine boundaries for patches at level "lv"
 //                (to be fixed later by the function "CorrectFlux")
 //
-// Parameter   :  lv             : Targeted refinement level
+// Parameter   :  lv             : Target refinement level
 //                h_Flux_Array   : Host array storing the updated flux data
 //                NPG            : Number of patch groups to be evaluated
 //                PID0_List      : List recording the patch indicies with LocalID==0 to be udpated
@@ -214,7 +214,7 @@ void StoreFlux( const int lv, const real h_Flux_Array[][9][NFLUX_TOTAL][4*PATCH_
 // Description :  Use the fluxes across the coarse-fine boundaries at level "lv" to correct the fluxes
 //                at level "lv-1"
 //
-// Parameter   :  lv             : Targeted refinement level
+// Parameter   :  lv             : Target refinement level
 //                h_Flux_Array   : Array storing the updated flux data
 //                NPG            : Number of patch groups to be evaluated
 //                PID0_List      : List recording the patch indicies with LocalID==0 to be udpated
@@ -381,7 +381,7 @@ bool Unphysical( const real Fluid[], const real Gamma_m1, const int CheckMinEngy
 //                      else                             store corrected results to the output array
 //                   }
 //
-// Parameter   :  lv                : Targeted refinement level
+// Parameter   :  lv                : Target refinement level
 //                NPG               : Number of patch groups to be evaluated
 //                PID0_List         : List recording the patch indicies with LocalID==0 to be udpated (for debug only)
 //                h_Flu_Array_F_In  : Input fluid array
@@ -783,9 +783,9 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
 // Function    :  Table_01
 // Description :  Return the sibling patch ID for the function "CorrectFlux"
 //
-// Parameter   :  lv    : Targeted refinement level
-//                PID   : Targeted patch index
-//                SibID : Targeted sibling index (0~5)
+// Parameter   :  lv    : Target refinement level
+//                PID   : Target patch index
+//                SibID : Target sibling index (0~5)
 //-------------------------------------------------------------------------------------------------------
 int Table_01( const int lv, const int PID, const int SibID )
 {

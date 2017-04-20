@@ -22,11 +22,11 @@ static void SetSiblingExternal( const int lv, const int NTarget0, const int *Tar
 //                                             and father-buffer patches)
 //                                == false --> Only works on PID0 recorded in TargetPID0
 //
-// Parameter   :  lv             : Targeted refinement level
+// Parameter   :  lv             : Target refinement level
 //                SearchAllPID   : Whether to search over all patches at lv or not
-//                NInput         : Number of targeted patches (with LocalID==0) in "TargetPID0"
+//                NInput         : Number of target patches (with LocalID==0) in "TargetPID0"
 //                                 (useful only if "SearchAllPID == false")
-//                TargetPID0     : Lists recording all targeted patches (with LocalID==0)
+//                TargetPID0     : Lists recording all target patches (with LocalID==0)
 //                                 (useful only if "SearchAllPID == false")
 //-------------------------------------------------------------------------------------------------------
 void LB_SiblingSearch( const int lv, const bool SearchAllPID, const int NInput, int *TargetPID0 )
@@ -61,7 +61,7 @@ void LB_SiblingSearch( const int lv, const bool SearchAllPID, const int NInput, 
    int   *SibCr1D_IdxTable = new  int  [ NSearch_Max ];
 
 
-// nothing to do if there is no targeted patches
+// nothing to do if there is no target patches
    if ( NTarget0 == 0 )    
    {
       delete [] SibCr1D_Search;
@@ -72,7 +72,7 @@ void LB_SiblingSearch( const int lv, const bool SearchAllPID, const int NInput, 
    }
 
 
-// 0. initialize all siblings as -1 and construct the targeted patch list with LocalID==0 (for SearchAllPID)
+// 0. initialize all siblings as -1 and construct the target patch list with LocalID==0 (for SearchAllPID)
    if ( SearchAllPID )
    {
       for (int PID=0; PID<NPatch; PID++)
@@ -258,7 +258,7 @@ void LB_SiblingSearch( const int lv, const bool SearchAllPID, const int NInput, 
 // Note        :  Sibling relation of patches in different patch groups are constructed by
 //                "SetSiblingInDiffPatchGroup"
 //
-// Parameter   :  lv    : Targeted refinement level
+// Parameter   :  lv    : Target refinement level
 //                PID0  : Index of the patch with LocalID==0
 //-------------------------------------------------------------------------------------------------------
 void SetSiblingInSamePatchGroup( const int lv, const int PID0 )
@@ -356,8 +356,8 @@ void SetSiblingInSamePatchGroup( const int lv, const int PID0 )
 // Note        :  Sibling relation of patches in the same patch group are constructed by
 //                "SetSiblingInSamePatchGroup"
 //
-// Parameter   :  lv       : Targeted refinement level
-//                PID0     : Index of the targeted patch with LocalID==0
+// Parameter   :  lv       : Target refinement level
+//                PID0     : Index of the target patch with LocalID==0
 //                SibPID0  : Index of the sibling patch with LocalID==0
 //                SibID    : Sibling index
 //                BothSide : Construct the relation between two nearby patches at the same time
@@ -947,9 +947,9 @@ void SetSiblingInDiffPatchGroup( const int lv, const int PID0, const int SibPID0
 //                the corresponding sibling index is set to "SIB_OFFSET_NONPERIODIC-Sibling", where Sibling
 //                represents the sibling direction of the boundary region.
 //
-// Parameter   :  lv          : Targeted refinement level
-//                NTarget0    : Number of targeted patches (with LocalID==0) in "TargetPID0"
-//                TargetPID0  : Lists recording all targeted patches (with LocalID==0)
+// Parameter   :  lv          : Target refinement level
+//                NTarget0    : Number of target patches (with LocalID==0) in "TargetPID0"
+//                TargetPID0  : Lists recording all target patches (with LocalID==0)
 //-------------------------------------------------------------------------------------------------------
 void SetSiblingExternal( const int lv, const int NTarget0, const int *TargetPID0 )
 {

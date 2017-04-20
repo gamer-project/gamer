@@ -124,7 +124,7 @@ struct ParaVar_t
    //===================================================================================
    // Constructor :  Lvdelete 
    // Description :  Deallocate memory previously allocated and reset all XXX_NList
-   //                for the targeted refinement level    
+   //                for the target refinement level    
    //===================================================================================
    void Lvdelete( const int lv )
    {

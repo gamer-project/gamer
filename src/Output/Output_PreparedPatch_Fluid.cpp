@@ -25,7 +25,7 @@
 //                                            NPG, PID0_List, lv, comment );
 //
 // Paremeter   :  TLv         : Level you want to output the prepared patch
-//                TPID        : Targeted patch ID
+//                TPID        : Target patch ID
 //                h_Flu_Array : Input fluid array for the fluid solver
 //                NPG         : Number of patch groups to be prepared at a time
 //                PID0_List   : List recording the patch indicies with LocalID==0 to be udpated
@@ -37,7 +37,7 @@ void Output_PreparedPatch_Fluid( const int TLv, const int TPID,
                                  const int NPG, const int *PID0_List, const int CLv, const char *comment )
 {
 
-// nothing to do if the current level is not the targeted level
+// nothing to do if the current level is not the target level
    if ( TLv != CLv )    return;
 
 
@@ -46,7 +46,7 @@ void Output_PreparedPatch_Fluid( const int TLv, const int TPID,
 
    for (int TID=0; TID<NPG; TID++)
    {
-//    check if the targeted patch is within the current patch group
+//    check if the target patch is within the current patch group
       if ( TPID0 != PID0_List[TID] )   continue;
 
 

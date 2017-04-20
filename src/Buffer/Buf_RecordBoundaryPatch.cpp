@@ -11,7 +11,7 @@
 // Function    :  Buf_RecordBoundaryPatch
 // Description :  Record the patches near the sub-domain boundaries in "amr->ParaVar->BounP_IDList"
 //
-// Parameter   :  lv : Targeted refinement level 
+// Parameter   :  lv : Target refinement level 
 //-------------------------------------------------------------------------------------------------------
 void Buf_RecordBoundaryPatch( const int lv )
 {
@@ -59,7 +59,7 @@ void Buf_RecordBoundaryPatch( const int lv )
       }
 
 
-//    nothing to do if there are no patches at the targeted level and direction
+//    nothing to do if there are no patches at the target level and direction
       if ( amr->ParaVar->BounP_NList[lv-1][s] == 0  ||  amr->num[lv] == 0 )   continue;
 
 

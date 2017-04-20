@@ -23,7 +23,7 @@
 // Function    :  Hydro_Aux_Check_Negative
 // Description :  Check if there is any cell with negative density or pressure
 //
-// Parameter   :  lv       : Targeted refinement level
+// Parameter   :  lv       : Target refinement level
 //                Mode     : 1 : Check negative density
 //                           2 : Check negative pressure (and entropy when DUAL_ENERGY == DE_ENPY)
 //                           3 : Both

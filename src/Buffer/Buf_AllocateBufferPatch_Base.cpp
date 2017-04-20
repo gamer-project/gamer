@@ -16,7 +16,7 @@
 //                c. No buffer patches will be allocated for patches lying outside the simulation domain if 
 //                   non-periodic B.C. is adopted
 //
-// Parameter   :  Tamr        : Targeted AMR_t pointer 
+// Parameter   :  Tamr : Target AMR_t pointer 
 //-------------------------------------------------------------------------------------------------------
 void Buf_AllocateBufferPatch_Base( AMR_t *Tamr )
 {

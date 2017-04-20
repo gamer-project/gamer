@@ -10,8 +10,8 @@
 //
 // Note        :  Invoke the function "Prepare_PatchData"
 //
-// Parameter   :  lv                   : Targeted refinement level
-//                PrepTime             : Targeted physical time to prepare the coarse-grid data
+// Parameter   :  lv                   : Target refinement level
+//                PrepTime             : Target physical time to prepare the coarse-grid data
 //                h_Flu_Array_F_In     : Host array to store the prepared fluid data
 //                h_Pot_Array_USG_F    : Host array to store the prepared potential data (for UNSPLIT_GRAVITY only)
 //                h_Corner_Array_USG_F : Host array to store the prepared corner data (for UNSPLIT_GRAVITY only)
