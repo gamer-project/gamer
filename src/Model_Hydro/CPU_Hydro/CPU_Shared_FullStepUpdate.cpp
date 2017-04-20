@@ -95,19 +95,18 @@ void CPU_FullStepUpdate( const real Input[][ FLU_NXT*FLU_NXT*FLU_NXT ], real Out
 #     endif
 
 
-//    apply the dual-energy formalism to correct the internal energy (when GRAVITY is off)
-//    --> when GRAVITY is on, we call CPU_DualEnergyFix() in the gravity solver instead since it
-//        might update the internal energy as well (especially when UNSPLIT_GRAVITY is adopted)
+//    apply the dual-energy formalism to correct the internal energy
+//    --> currently it's applied here even when GRAVITY is on
+//        --> we will invoke CPU_DualEnergyFix() in the gravity solver again when UNSPLIT_GRAVITY is adopted
+//            since it will also update the internal energy
 #     ifdef DUAL_ENERGY
 //    we no longer apply the minimum density and pressure checks here since we want to enable 1st-order-flux correction for that
       const bool CheckMinPres_No = false;
 //    Output[DENS][ID2] = FMAX( Output[DENS][ID2], MinDens );
 
-#     ifndef GRAVITY
       CPU_DualEnergyFix( Output[DENS][ID2], Output[MOMX][ID2], Output[MOMY][ID2], Output[MOMZ][ID2],
                          Output[ENGY][ID2], Output[ENPY][ID2], DE_Status[ID2],
                          Gamma_m1, _Gamma_m1, CheckMinPres_No, NULL_REAL, DualEnergySwitch );
-#     endif
 #     endif // #ifdef DUAL_ENERGY
 
 

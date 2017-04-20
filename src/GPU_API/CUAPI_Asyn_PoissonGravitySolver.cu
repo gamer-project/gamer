@@ -9,22 +9,22 @@
 // Poisson solver prototypes
 #if   ( POT_SCHEME == SOR )
 #ifdef USE_PSOLVER_10TO14
-__global__ void CUPOT_PoissonSolver_SOR_10to14cube( const real g_Rho_Array    [][ RHO_NXT*RHO_NXT*RHO_NXT ], 
-                                                    const real g_Pot_Array_In [][ POT_NXT*POT_NXT*POT_NXT ], 
+__global__ void CUPOT_PoissonSolver_SOR_10to14cube( const real g_Rho_Array    [][ RHO_NXT*RHO_NXT*RHO_NXT ],
+                                                    const real g_Pot_Array_In [][ POT_NXT*POT_NXT*POT_NXT ],
                                                           real g_Pot_Array_Out[][ GRA_NXT*GRA_NXT*GRA_NXT ],
                                                     const int Min_Iter, const int Max_Iter, const real Omega_6,
                                                     const real Const, const IntScheme_t IntScheme );
 #else
-__global__ void CUPOT_PoissonSolver_SOR_16to18cube( const real g_Rho_Array    [][ RHO_NXT*RHO_NXT*RHO_NXT ], 
-                                                    const real g_Pot_Array_In [][ POT_NXT*POT_NXT*POT_NXT ], 
+__global__ void CUPOT_PoissonSolver_SOR_16to18cube( const real g_Rho_Array    [][ RHO_NXT*RHO_NXT*RHO_NXT ],
+                                                    const real g_Pot_Array_In [][ POT_NXT*POT_NXT*POT_NXT ],
                                                           real g_Pot_Array_Out[][ GRA_NXT*GRA_NXT*GRA_NXT ],
-                                                    const int Min_Iter, const int Max_Iter, const real Omega_6, 
+                                                    const int Min_Iter, const int Max_Iter, const real Omega_6,
                                                     const real Const, const IntScheme_t IntScheme );
 #endif // #ifdef USE_PSOLVER_10TO14 ... else ...
 
 #elif ( POT_SCHEME == MG  )
-__global__ void CUPOT_PoissonSolver_MG( const real g_Rho_Array    [][ RHO_NXT*RHO_NXT*RHO_NXT ], 
-                                        const real g_Pot_Array_In [][ POT_NXT*POT_NXT*POT_NXT ], 
+__global__ void CUPOT_PoissonSolver_MG( const real g_Rho_Array    [][ RHO_NXT*RHO_NXT*RHO_NXT ],
+                                        const real g_Pot_Array_In [][ POT_NXT*POT_NXT*POT_NXT ],
                                               real g_Pot_Array_Out[][ GRA_NXT*GRA_NXT*GRA_NXT ],
                                         const real dh_Min, const int Max_Iter, const int NPre_Smooth,
                                         const int NPost_Smooth, const real Tolerated_Error, const real Poi_Coeff,
@@ -39,7 +39,7 @@ __global__ void CUPOT_HydroGravitySolver(       real g_Flu_Array_New[][GRA_NIN][
                                           const double g_Corner_Array[][3],
                                           const real g_Pot_Array_USG[][ USG_NXT_G*USG_NXT_G*USG_NXT_G ],
                                           const real g_Flu_Array_USG[][GRA_NIN-1][ PS1*PS1*PS1 ],
-                                          const real Gra_Const, const bool P5_Gradient, const OptGravityType_t GravityType, 
+                                          const real Gra_Const, const bool P5_Gradient, const OptGravityType_t GravityType,
                                           const double TimeNew, const double TimeOld, const real dt, const real dh );
 #elif ( MODEL == MHD )
 #warning : WAIT MHD !!!
@@ -79,13 +79,13 @@ extern cudaStream_t *Stream;
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  CUAPI_Asyn_PoissonGravitySolver
-// Description :  Invoke the CUPOT_PoissonSolver_XXtoXXcube and/or CUPOT_GravitySolver kernel(s) to evaluate 
+// Description :  Invoke the CUPOT_PoissonSolver_XXtoXXcube and/or CUPOT_GravitySolver kernel(s) to evaluate
 //                the gravitational potential and/or advance the fluid variables by the gravitational
 //                acceleration for a group of patches
 //
 //                ***********************************************************
 //                **                Asynchronous Function                  **
-//                **                                                       ** 
+//                **                                                       **
 //                **  will return before the execution in GPU is complete  **
 //                ***********************************************************
 //
@@ -93,14 +93,15 @@ extern cudaStream_t *Stream;
 //                b. Prefix "d" : for pointers pointing to the "Device" memory space
 //                   Prefix "h" : for pointers pointing to the "Host"   memory space
 //
-// Parameter   :  h_Rho_Array          : Host array storing the input density 
+// Parameter   :  h_Rho_Array          : Host array storing the input density
 //                h_Pot_Array_In       : Host array storing the input "coarse-grid" potential for interpolation
 //                h_Pot_Array_Out      : Host array to store the output potential
 //                h_Flu_Array          : Host array to store the fluid variables for the Gravity solver
 //                h_Corner_Array       : Host array storing the physical corner coordinates of each patch
 //                h_Pot_Array_USG      : Host array storing the prepared potential for UNSPLIT_GRAVITY
 //                h_Flu_Array_USG      : Host array storing the prepared density + momentum for UNSPLIT_GRAVITY
-//                NPatchGroup          : Number of patch groups evaluated simultaneously by GPU 
+//                h_DE_Array           : Host array storing the dual-energy status (for both input and output)
+//                NPatchGroup          : Number of patch groups evaluated simultaneously by GPU
 //                dt                   : Time interval to advance solution
 //                dh                   : Grid size
 //                SOR_Min_Iter         : Minimum # of iterations for SOR
@@ -113,8 +114,8 @@ extern cudaStream_t *Stream;
 //                Poi_Coeff            : Coefficient in front of density in the Poisson equation (4*Pi*Newton_G*a)
 //                IntScheme            : Interpolation scheme for potential
 //                                       --> currently supported schemes include
-//                                           INT_CQUAD : conservative quadratic interpolation 
-//                                           INT_QUAD  : quadratic interpolation 
+//                                           INT_CQUAD : conservative quadratic interpolation
+//                                           INT_QUAD  : quadratic interpolation
 //                P5_Gradient          : Use 5-points stencil to evaluate the potential gradient
 //                ELBDM_Eta            : Particle mass / Planck constant in ELBDM
 //                ELBDM_Lambda         : Quartic self-interaction coefficient in ELBDM
@@ -129,16 +130,17 @@ extern cudaStream_t *Stream;
 // Useless parameters in HYDRO : ELBDM_Eta, ELBDM_Lambda
 // Useless parameters in ELBDM : P5_Gradient
 //-------------------------------------------------------------------------------------------------------
-void CUAPI_Asyn_PoissonGravitySolver( const real h_Rho_Array    [][RHO_NXT][RHO_NXT][RHO_NXT], 
+void CUAPI_Asyn_PoissonGravitySolver( const real h_Rho_Array    [][RHO_NXT][RHO_NXT][RHO_NXT],
                                       const real h_Pot_Array_In [][POT_NXT][POT_NXT][POT_NXT],
                                             real h_Pot_Array_Out[][GRA_NXT][GRA_NXT][GRA_NXT],
-                                            real h_Flu_Array    [][GRA_NIN][PS1][PS1][PS1], 
+                                            real h_Flu_Array    [][GRA_NIN][PS1][PS1][PS1],
                                       const double h_Corner_Array[][3],
-                                      const real h_Pot_Array_USG[][USG_NXT_G][USG_NXT_G][USG_NXT_G], 
+                                      const real h_Pot_Array_USG[][USG_NXT_G][USG_NXT_G][USG_NXT_G],
                                       const real h_Flu_Array_USG[][GRA_NIN-1][PS1][PS1][PS1],
+                                            char h_DE_Array     [][PS1][PS1][PS1],
                                       const int NPatchGroup, const real dt, const real dh, const int SOR_Min_Iter,
                                       const int SOR_Max_Iter, const real SOR_Omega, const int MG_Max_Iter,
-                                      const int MG_NPre_Smooth, const int MG_NPost_Smooth, 
+                                      const int MG_NPre_Smooth, const int MG_NPost_Smooth,
                                       const real MG_Tolerated_Error, const real Poi_Coeff,
                                       const IntScheme_t IntScheme, const bool P5_Gradient, const real ELBDM_Eta,
                                       const real ELBDM_Lambda, const bool Poisson, const bool GraAcc, const int GPU_NStream,
@@ -184,7 +186,7 @@ void CUAPI_Asyn_PoissonGravitySolver( const real h_Rho_Array    [][RHO_NXT][RHO_
 
 // minimum number of threads for spatial interpolation
    if ( Poisson  &&  Poi_NThread < (POT_NXT-2)*(POT_NXT-2) )
-      Aux_Error( ERROR_INFO, "Poi_NThread (%d) < (POT_NXT-2)*(POT_NXT-2) (%d) !!\n", 
+      Aux_Error( ERROR_INFO, "Poi_NThread (%d) < (POT_NXT-2)*(POT_NXT-2) (%d) !!\n",
                  Poi_NThread, (POT_NXT-2)*(POT_NXT-2) );
 
 // constraint due to the reduction operation in "CUPOT_Poisson_10to14cube" and "CUPOT_PoissonSolver_MG"
@@ -201,7 +203,7 @@ void CUAPI_Asyn_PoissonGravitySolver( const real h_Rho_Array    [][RHO_NXT][RHO_
 #  endif
 
    if ( GraAcc )
-   { 
+   {
       if ( GravityType == GRAVITY_EXTERNAL  ||  GravityType == GRAVITY_BOTH  ||  ExtPot )
       {
          if ( h_Corner_Array   == NULL )     Aux_Error( ERROR_INFO, "h_Corner_Array == NULL !!\n" );
@@ -244,7 +246,7 @@ void CUAPI_Asyn_PoissonGravitySolver( const real h_Rho_Array    [][RHO_NXT][RHO_
    if ( GPU_NStream == 1 )    NPatch_per_Stream[0] = NPatch;
    else
    {
-      for (int s=0; s<GPU_NStream-1; s++)    
+      for (int s=0; s<GPU_NStream-1; s++)
       {
          NPatch_per_Stream[s] = NPatch/GPU_NStream;
          UsedPatch[s+1] = UsedPatch[s] + NPatch_per_Stream[s];
@@ -277,7 +279,7 @@ void CUAPI_Asyn_PoissonGravitySolver( const real h_Rho_Array    [][RHO_NXT][RHO_
 
       if ( Poisson )
       {
-         CUDA_CHECK_ERROR(  cudaMemcpyAsync( d_Rho_Array_P     + UsedPatch[s], h_Rho_Array     + UsedPatch[s], 
+         CUDA_CHECK_ERROR(  cudaMemcpyAsync( d_Rho_Array_P     + UsedPatch[s], h_Rho_Array     + UsedPatch[s],
                                              Rho_MemSize[s],     cudaMemcpyHostToDevice, Stream[s] )  );
 
          CUDA_CHECK_ERROR(  cudaMemcpyAsync( d_Pot_Array_P_In  + UsedPatch[s], h_Pot_Array_In  + UsedPatch[s],
@@ -290,11 +292,11 @@ void CUAPI_Asyn_PoissonGravitySolver( const real h_Rho_Array    [][RHO_NXT][RHO_
          CUDA_CHECK_ERROR(  cudaMemcpyAsync( d_Pot_Array_P_Out + UsedPatch[s], h_Pot_Array_Out + UsedPatch[s],
                                              Pot_MemSize_Out[s], cudaMemcpyHostToDevice, Stream[s] )  );
 
-         CUDA_CHECK_ERROR(  cudaMemcpyAsync( d_Flu_Array_G     + UsedPatch[s], h_Flu_Array     + UsedPatch[s], 
+         CUDA_CHECK_ERROR(  cudaMemcpyAsync( d_Flu_Array_G     + UsedPatch[s], h_Flu_Array     + UsedPatch[s],
                                              Flu_MemSize[s],     cudaMemcpyHostToDevice, Stream[s] )  );
 
          if ( GravityType == GRAVITY_EXTERNAL  ||  GravityType == GRAVITY_BOTH  ||  ExtPot )
-         CUDA_CHECK_ERROR(  cudaMemcpyAsync( d_Corner_Array_G  + UsedPatch[s], h_Corner_Array  + UsedPatch[s], 
+         CUDA_CHECK_ERROR(  cudaMemcpyAsync( d_Corner_Array_G  + UsedPatch[s], h_Corner_Array  + UsedPatch[s],
                                              Corner_MemSize[s],  cudaMemcpyHostToDevice, Stream[s] )  );
 #        ifdef UNSPLIT_GRAVITY
          if ( GravityType == GRAVITY_SELF  ||  GravityType == GRAVITY_BOTH )
@@ -308,7 +310,7 @@ void CUAPI_Asyn_PoissonGravitySolver( const real h_Rho_Array    [][RHO_NXT][RHO_
    } // for (int s=0; s<GPU_NStream; s++)
 
 
-// b. execute the kernel 
+// b. execute the kernel
 //=========================================================================================
    for (int s=0; s<GPU_NStream; s++)
    {
@@ -320,24 +322,24 @@ void CUAPI_Asyn_PoissonGravitySolver( const real h_Rho_Array    [][RHO_NXT][RHO_
 #        if ( POT_SCHEME == SOR )
 
 #        ifdef USE_PSOLVER_10TO14
-         CUPOT_PoissonSolver_SOR_10to14cube <<< NPatch_per_Stream[s], Poi_Block_Dim, 0, Stream[s] >>> 
+         CUPOT_PoissonSolver_SOR_10to14cube <<< NPatch_per_Stream[s], Poi_Block_Dim, 0, Stream[s] >>>
                                             ( d_Rho_Array_P     + UsedPatch[s],
-                                              d_Pot_Array_P_In  + UsedPatch[s], 
+                                              d_Pot_Array_P_In  + UsedPatch[s],
                                               d_Pot_Array_P_Out + UsedPatch[s],
                                               SOR_Min_Iter, SOR_Max_Iter, SOR_Omega_6, Poi_Const, IntScheme );
 #        else
-         CUPOT_PoissonSolver_SOR_16to18cube <<< NPatch_per_Stream[s], Poi_Block_Dim, 0, Stream[s] >>> 
+         CUPOT_PoissonSolver_SOR_16to18cube <<< NPatch_per_Stream[s], Poi_Block_Dim, 0, Stream[s] >>>
                                             ( d_Rho_Array_P     + UsedPatch[s],
-                                              d_Pot_Array_P_In  + UsedPatch[s], 
+                                              d_Pot_Array_P_In  + UsedPatch[s],
                                               d_Pot_Array_P_Out + UsedPatch[s],
                                               SOR_Min_Iter, SOR_Max_Iter, SOR_Omega_6, Poi_Const, IntScheme );
 #        endif // #ifdef USE_PSOLVER_10TO14 ... else ...
 
 #        elif ( POT_SCHEME == MG  )
 
-         CUPOT_PoissonSolver_MG             <<< NPatch_per_Stream[s], Poi_Block_Dim, 0, Stream[s] >>> 
+         CUPOT_PoissonSolver_MG             <<< NPatch_per_Stream[s], Poi_Block_Dim, 0, Stream[s] >>>
                                             ( d_Rho_Array_P     + UsedPatch[s],
-                                              d_Pot_Array_P_In  + UsedPatch[s], 
+                                              d_Pot_Array_P_In  + UsedPatch[s],
                                               d_Pot_Array_P_Out + UsedPatch[s],
                                               dh, MG_Max_Iter, MG_NPre_Smooth, MG_NPost_Smooth, MG_Tolerated_Error,
                                               Poi_Coeff, IntScheme );
@@ -354,9 +356,9 @@ void CUAPI_Asyn_PoissonGravitySolver( const real h_Rho_Array    [][RHO_NXT][RHO_
       if ( GraAcc )
       {
 #        if   ( MODEL == HYDRO )
-         CUPOT_HydroGravitySolver <<< NPatch_per_Stream[s], Gra_Block_Dim, 0, Stream[s] >>> 
+         CUPOT_HydroGravitySolver <<< NPatch_per_Stream[s], Gra_Block_Dim, 0, Stream[s] >>>
                                   ( d_Flu_Array_G     + UsedPatch[s],
-                                    d_Pot_Array_P_Out + UsedPatch[s], 
+                                    d_Pot_Array_P_Out + UsedPatch[s],
                                     d_Corner_Array_G  + UsedPatch[s],
                                     d_Pot_Array_USG_G + UsedPatch[s],
                                     d_Flu_Array_USG_G + UsedPatch[s],
@@ -366,9 +368,9 @@ void CUAPI_Asyn_PoissonGravitySolver( const real h_Rho_Array    [][RHO_NXT][RHO_
 #        warning : WAITH MHD !!!
 
 #        elif ( MODEL == ELBDM )
-         CUPOT_ELBDMGravitySolver <<< NPatch_per_Stream[s], Gra_Block_Dim, 0, Stream[s] >>> 
+         CUPOT_ELBDMGravitySolver <<< NPatch_per_Stream[s], Gra_Block_Dim, 0, Stream[s] >>>
                                   ( d_Flu_Array_G     + UsedPatch[s],
-                                    d_Pot_Array_P_Out + UsedPatch[s], 
+                                    d_Pot_Array_P_Out + UsedPatch[s],
                                     d_Corner_Array_G  + UsedPatch[s],
                                     ELBDM_EtaDt, dh, ELBDM_Lambda, ExtPot, TimeNew );
 
@@ -388,11 +390,11 @@ void CUAPI_Asyn_PoissonGravitySolver( const real h_Rho_Array    [][RHO_NXT][RHO_
       if ( NPatch_per_Stream[s] == 0 )    continue;
 
       if ( Poisson )
-         CUDA_CHECK_ERROR(  cudaMemcpyAsync( h_Pot_Array_Out + UsedPatch[s], d_Pot_Array_P_Out + UsedPatch[s], 
+         CUDA_CHECK_ERROR(  cudaMemcpyAsync( h_Pot_Array_Out + UsedPatch[s], d_Pot_Array_P_Out + UsedPatch[s],
                                              Pot_MemSize_Out[s], cudaMemcpyDeviceToHost, Stream[s] )  );
 
       if ( GraAcc )
-         CUDA_CHECK_ERROR(  cudaMemcpyAsync( h_Flu_Array     + UsedPatch[s], d_Flu_Array_G     + UsedPatch[s], 
+         CUDA_CHECK_ERROR(  cudaMemcpyAsync( h_Flu_Array     + UsedPatch[s], d_Flu_Array_G     + UsedPatch[s],
                                              Flu_MemSize[s],     cudaMemcpyDeviceToHost, Stream[s] )  );
    } // for (int s=0; s<GPU_NStream; s++)
 

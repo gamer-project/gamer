@@ -155,6 +155,7 @@ extern cudaStream_t *Stream;
 //
 // Parameter   :  h_Flu_Array_In       : Host array to store the input variables
 //                h_Flu_Array_Out      : Host array to store the output variables
+//                h_DE_Array_Out       : Host array to store the dual-energy status
 //                h_Flux_Array         : Host array to store the output fluxes
 //                h_Corner_Array       : Host array storing the physical corner coordinates of each patch group
 //                h_MinDtInfo_Array    : Host array to store the minimum time-step information in each patch group
@@ -199,6 +200,7 @@ extern cudaStream_t *Stream;
 //-------------------------------------------------------------------------------------------------------
 void CUAPI_Asyn_FluidSolver( real h_Flu_Array_In [][FLU_NIN    ][ FLU_NXT*FLU_NXT*FLU_NXT ],
                              real h_Flu_Array_Out[][FLU_NOUT   ][ PS2*PS2*PS2 ],
+                             char h_DE_Array_Out[][ PS2*PS2*PS2 ],
                              real h_Flux_Array[][9][NFLUX_TOTAL][ PS2*PS2 ],
                              const double h_Corner_Array[][3],
                              real h_MinDtInfo_Array[],

@@ -14,6 +14,9 @@ extern real (*d_Flu_Array_USG_G)[GRA_NIN-1][ PS1*PS1*PS1 ];
 #endif
 extern real (*d_Flu_Array_G    )[GRA_NIN  ][ PS1*PS1*PS1 ];
 extern double (*d_Corner_Array_G)[3];
+#ifdef DUAL_ENERGY
+extern char (*d_DE_Array_G     )[ PS1*PS1*PS1 ];
+#endif
 
 
 
@@ -22,11 +25,11 @@ extern double (*d_Corner_Array_G)[3];
 // Function    :  CUAPI_MemAllocate_PoissonGravity
 // Description :  Allocate device and host memory for the Poisson and Gravity solvers
 //
-// Parameter   :  Pot_NPG  : Number of patch groups evaluated simultaneously by GPU 
+// Parameter   :  Pot_NPG  : Number of patch groups evaluated simultaneously by GPU
 //-------------------------------------------------------------------------------------------------------
 void CUAPI_MemAllocate_PoissonGravity( const int Pot_NPG )
 {
-   
+
    const long Pot_NP            = 8*Pot_NPG;
    const long Rho_MemSize_P     = sizeof(real  )*Pot_NP *RHO_NXT   *RHO_NXT   *RHO_NXT;
    const long Pot_MemSize_P_In  = sizeof(real  )*Pot_NP *POT_NXT   *POT_NXT   *POT_NXT;
@@ -37,6 +40,9 @@ void CUAPI_MemAllocate_PoissonGravity( const int Pot_NPG )
 #  endif
    const long Flu_MemSize_G     = sizeof(real  )*Pot_NP *PS1       *PS1       *PS1      *(GRA_NIN  );
    const long Corner_MemSize    = sizeof(double)*Pot_NP *3;
+#  ifdef DUAL_ENERGY
+   const long DE_MemSize_G      = sizeof(char  )*Pot_NP *PS1       *PS1       *PS1;
+#  endif
 
 
 // output the total memory requirement
@@ -44,10 +50,13 @@ void CUAPI_MemAllocate_PoissonGravity( const int Pot_NPG )
 #  ifdef UNSPLIT_GRAVITY
    TotalSize += Pot_MemSize_USG_G + Flu_MemSize_USG_G;
 #  endif
+#  ifdef DUAL_ENERGY
+   TotalSize += DE_MemSize_G;
+#  endif
 
    if ( MPI_Rank == 0 )
-      Aux_Message( stdout, "NOTE : total memory requirement in GPU Poisson and gravity solver = %ld MB\n", 
-                   TotalSize/(1<<20) ); 
+      Aux_Message( stdout, "NOTE : total memory requirement in GPU Poisson and gravity solver = %ld MB\n",
+                   TotalSize/(1<<20) );
 
 
 // allocate the device memory
@@ -62,6 +71,10 @@ void CUAPI_MemAllocate_PoissonGravity( const int Pot_NPG )
 
    if ( OPT__GRAVITY_TYPE == GRAVITY_EXTERNAL  ||  OPT__GRAVITY_TYPE == GRAVITY_BOTH  ||  OPT__EXTERNAL_POT )
    CUDA_CHECK_ERROR(  cudaMalloc( (void**) &d_Corner_Array_G,  Corner_MemSize    )  );
+
+#  ifdef DUAL_ENERGY
+   CUDA_CHECK_ERROR(  cudaMalloc( (void**) &d_DE_Array_G,      DE_MemSize_G      )  );
+#  endif
 
 
 // allocate the host memory by CUDA
@@ -78,6 +91,10 @@ void CUAPI_MemAllocate_PoissonGravity( const int Pot_NPG )
 
       if ( OPT__GRAVITY_TYPE == GRAVITY_EXTERNAL  ||  OPT__GRAVITY_TYPE == GRAVITY_BOTH  ||  OPT__EXTERNAL_POT )
       CUDA_CHECK_ERROR(  cudaMallocHost( (void**) &h_Corner_Array_G [t], Corner_MemSize    )  );
+
+#     ifdef DUAL_ENERGY
+      CUDA_CHECK_ERROR(  cudaMallocHost( (void**) &h_DE_Array_G     [t], DE_MemSize_G      )  );
+#     endif
    }
 
 } // FUNCTION : CUAPI_MemAllocate_PoissonGravity

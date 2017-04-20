@@ -180,6 +180,9 @@ real (*h_Pot_Array_P_In [2])[POT_NXT][POT_NXT][POT_NXT]                    = { N
 real (*h_Pot_Array_P_Out[2])[GRA_NXT][GRA_NXT][GRA_NXT]                    = { NULL, NULL };
 real (*h_Flu_Array_G    [2])[GRA_NIN][PATCH_SIZE][PATCH_SIZE][PATCH_SIZE]  = { NULL, NULL };
 double (*h_Corner_Array_G [2])[3]                                          = { NULL, NULL };
+#ifdef DUAL_ENERGY
+char (*h_DE_Array_G    [2])[PATCH_SIZE][PATCH_SIZE][PATCH_SIZE]            = { NULL, NULL };
+#endif
 
 // (3-3) unsplit gravity correction
 #ifdef UNSPLIT_GRAVITY
@@ -229,6 +232,9 @@ real (*d_Pot_Array_P_In )[ POT_NXT*POT_NXT*POT_NXT ]                       = NUL
 real (*d_Pot_Array_P_Out)[ GRA_NXT*GRA_NXT*GRA_NXT ]                       = NULL;
 real (*d_Flu_Array_G    )[GRA_NIN][ PS1*PS1*PS1 ]                          = NULL;
 double (*d_Corner_Array_G )[3]                                             = NULL;
+#ifdef DUAL_ENERGY
+char (*d_DE_Array_G     )[ PS1*PS1*PS1 ]                                   = NULL;
+#endif
 
 // (4-3) unsplit gravity correction
 #ifdef UNSPLIT_GRAVITY

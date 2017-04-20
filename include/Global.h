@@ -197,6 +197,9 @@ extern real       (*h_Pot_Array_P_In [2])[POT_NXT][POT_NXT][POT_NXT];
 extern real       (*h_Pot_Array_P_Out[2])[GRA_NXT][GRA_NXT][GRA_NXT];
 extern real       (*h_Flu_Array_G    [2])[GRA_NIN][PATCH_SIZE][PATCH_SIZE][PATCH_SIZE];
 extern double     (*h_Corner_Array_G [2])[3];
+#ifdef DUAL_ENERGY
+extern char       (*h_DE_Array_G     [2])[PATCH_SIZE][PATCH_SIZE][PATCH_SIZE];
+#endif
 
 #ifdef UNSPLIT_GRAVITY
 extern real       (*h_Pot_Array_USG_F[2])[USG_NXT_F ][USG_NXT_F ][USG_NXT_F ];

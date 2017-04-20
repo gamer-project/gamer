@@ -10,7 +10,7 @@
 // Function    :  End_MemFree_PoissonGravity
 // Description :  Free memory previously allocated by the function "Init_MemAllocate_PoissonGravity"
 //
-// Parameter   :  None 
+// Parameter   :  None
 //-------------------------------------------------------------------------------------------------------
 void End_MemFree_PoissonGravity()
 {
@@ -27,8 +27,11 @@ void End_MemFree_PoissonGravity()
 #     endif
       if ( h_Flu_Array_G    [t] != NULL )    delete [] h_Flu_Array_G    [t];
       if ( h_Corner_Array_G [t] != NULL )    delete [] h_Corner_Array_G [t];
+#     ifdef DUAL_ENERGY
+      if ( h_DE_Array_G     [t] != NULL )    delete [] h_DE_Array_G     [t];
+#     endif
 
-      h_Rho_Array_P    [t] = NULL; 
+      h_Rho_Array_P    [t] = NULL;
       h_Pot_Array_P_In [t] = NULL;
       h_Pot_Array_P_Out[t] = NULL;
 #     ifdef UNSPLIT_GRAVITY
@@ -38,6 +41,9 @@ void End_MemFree_PoissonGravity()
 #     endif
       h_Flu_Array_G    [t] = NULL;
       h_Corner_Array_G [t] = NULL;
+#     ifdef DUAL_ENERGY
+      h_DE_Array_G     [t] = NULL;
+#     endif
    }
 
    if ( GreenFuncK != NULL )  delete [] GreenFuncK;

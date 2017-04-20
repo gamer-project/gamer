@@ -16,7 +16,7 @@ EXECUTABLE := gamer
 SIMU_OPTION += -DMODEL=HYDRO
 
 # self-gravity
-#SIMU_OPTION += -DGRAVITY
+SIMU_OPTION += -DGRAVITY
 
 # Poisson solver: SOR/MG (successive-overrelaxation/multigrid)
 SIMU_OPTION += -DPOT_SCHEME=SOR
@@ -27,7 +27,7 @@ SIMU_OPTION += -DPOT_SCHEME=SOR
 
 # use unsplitting method to couple gravity to the target model (e.g., HYDRO and MHD, ELBDM is not supported yet)
 # --> must be off if GRAVITY is off
-#SIMU_OPTION += -DUNSPLIT_GRAVITY
+SIMU_OPTION += -DUNSPLIT_GRAVITY
 
 # individual time-step (default: shared time-step)
 SIMU_OPTION += -DINDIVIDUAL_TIMESTEP
