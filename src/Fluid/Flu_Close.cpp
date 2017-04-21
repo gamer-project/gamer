@@ -669,10 +669,11 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
                fprintf( File, "(i,j,k) in the patch             = (%2d,%2d,%2d)\n", i_out%PS1, j_out%PS1, k_out%PS1 );
                fprintf( File, "(i,j,k) in the input fluid array = (%2d,%2d,%2d)\n", i_out, j_out, k_out );
 #              ifdef DUAL_ENERGY
-               fprintf( File, "total energy density update      = %s\n", ( h_DE_Array_F_Out[TID][idx_out] == DE_UPDATED_BY_ETOT     ) ? "Etot" :
-                                                                         ( h_DE_Array_F_Out[TID][idx_out] == DE_UPDATED_BY_DUAL     ) ? "Dual" :
-                                                                         ( h_DE_Array_F_Out[TID][idx_out] == DE_UPDATED_BY_MIN_PRES ) ? "MinPres" :
-                                                                                                                                        "Unknown" );
+               fprintf( File, "total energy density update      = %s\n",
+                        ( h_DE_Array_F_Out[TID][idx_out] == DE_UPDATED_BY_ETOT     ) ? "Etot" :
+                        ( h_DE_Array_F_Out[TID][idx_out] == DE_UPDATED_BY_DUAL     ) ? "Dual" :
+                        ( h_DE_Array_F_Out[TID][idx_out] == DE_UPDATED_BY_MIN_PRES ) ? "MinPres" :
+                                                                                       "Unknown" );
 #              endif
                fprintf( File, "\n" );
                fprintf( File, "input        = (%14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e",

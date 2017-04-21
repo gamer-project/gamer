@@ -137,12 +137,11 @@ void Flu_FixUp( const int lv, const double dt )
 
                for (int n=0; n<PS1; n++)
                {
-//                skip cells updated by neither the total energy fluxes nor the dual-energy variable fluxes
-//                --> these cells are updated by either the minimum pressure threshold or the 1st-order-flux correction
+//                skip cells updated by either the minimum pressure threshold or the 1st-order-flux correction
 //                --> since currently we do NOT store the 1st-order fluxes across the coarse-fine boundaries, we must
 //                    skip these cells to avoid inconsistent flux fix-up correction
 #                 ifdef DUAL_ENERGY
-                  if ( *DE_StatusPtr1D != DE_UPDATED_BY_ETOT  &&  *DE_StatusPtr1D != DE_UPDATED_BY_DUAL )   continue;
+                  if ( *DE_StatusPtr1D == DE_UPDATED_BY_MIN_PRES  ||  *DE_StatusPtr1D == DE_UPDATED_BY_1ST_FLUX )    continue;
 #                 endif
 
 
@@ -155,7 +154,7 @@ void Flu_FixUp( const int lv, const double dt )
 #                 if ( MODEL == HYDRO  ||  MODEL == MHD )
                   real Pres;
 #                 if   ( DUAL_ENERGY == DE_ENPY )
-                  Pres = ( *DE_StatusPtr1D == DE_UPDATED_BY_ETOT ) ?
+                  Pres = ( *DE_StatusPtr1D == DE_UPDATED_BY_ETOT  ||  *DE_StatusPtr1D == DE_UPDATED_BY_ETOT_GRA ) ?
                          CPU_GetPressure( CorrVal[DENS], CorrVal[MOMX], CorrVal[MOMY], CorrVal[MOMZ], CorrVal[ENGY],
                                           Gamma_m1, CheckMinPres_No, NULL_REAL )
                        : CPU_DensEntropy2Pres( CorrVal[DENS], CorrVal[ENPY], Gamma_m1, CheckMinPres_No, NULL_REAL );
@@ -199,7 +198,7 @@ void Flu_FixUp( const int lv, const double dt )
 //                ensure consistency between pressure, total energy density, and the dual-energy variable
 //                --> no need to check the minimum pressure here since we already skip those cells
 #                 ifdef DUAL_ENERGY
-                  if ( *DE_StatusPtr1D == DE_UPDATED_BY_ETOT )
+                  if ( *DE_StatusPtr1D == DE_UPDATED_BY_ETOT  ||  *DE_StatusPtr1D == DE_UPDATED_BY_ETOT_GRA )
                   {
 #                    if   ( DUAL_ENERGY == DE_ENPY )
                      CorrVal[ENPY] = CPU_DensPres2Entropy( CorrVal[DENS], Pres, Gamma_m1 );

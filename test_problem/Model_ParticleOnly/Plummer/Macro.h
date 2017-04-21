@@ -61,6 +61,7 @@
 #define DE_UPDATED_BY_DUAL       ('1')
 #define DE_UPDATED_BY_MIN_PRES   ('2')
 #define DE_UPDATED_BY_1ST_FLUX   ('3')
+#define DE_UPDATED_BY_ETOT_GRA   ('4')
 #endif
 
 
