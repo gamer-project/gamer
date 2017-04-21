@@ -126,6 +126,7 @@ extern cudaStream_t *Stream;
 //                TimeNew              : Physical time at the current  step (for the external gravity solver)
 //                TimeOld              : Physical time at the previous step (for the external gravity solver in UNSPLIT_GRAVITY)
 //                ExtPot               : Add the external potential
+//                MinEint              : Minimum allowed internal energy (== MIN_PRES / (GAMMA-1))
 //
 // Useless parameters in HYDRO : ELBDM_Eta, ELBDM_Lambda
 // Useless parameters in ELBDM : P5_Gradient
@@ -145,7 +146,7 @@ void CUAPI_Asyn_PoissonGravitySolver( const real h_Rho_Array    [][RHO_NXT][RHO_
                                       const IntScheme_t IntScheme, const bool P5_Gradient, const real ELBDM_Eta,
                                       const real ELBDM_Lambda, const bool Poisson, const bool GraAcc, const int GPU_NStream,
                                       const OptGravityType_t GravityType, const double TimeNew, const double TimeOld,
-                                      const bool ExtPot )
+                                      const bool ExtPot, const real MinEint )
 {
 
 // model-independent constants

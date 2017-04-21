@@ -268,7 +268,7 @@ void CPU_PoissonGravitySolver( const real h_Rho_Array    [][RHO_NXT][RHO_NXT][RH
                                const real Poi_Coeff, const IntScheme_t IntScheme, const bool P5_Gradient,
                                const real ELBDM_Eta, const real ELBDM_Lambda, const bool Poisson, const bool GraAcc,
                                const OptGravityType_t GravityType, const double TimeNew, const double TimeOld,
-                               const bool ExtPot );
+                               const bool ExtPot, const real MinEint );
 void CPU_PoissonSolver_FFT( const real Poi_Coeff, const int SaveSg, const double PrepTime );
 void Patch2Slab( real *RhoK, real *SendBuf_Rho, real *RecvBuf_Rho, long *SendBuf_SIdx, long *RecvBuf_SIdx,
                  int **List_PID, int **List_k, int *List_NSend_Rho, int *List_NRecv_Rho,
@@ -448,7 +448,7 @@ void CUAPI_Asyn_PoissonGravitySolver( const real h_Rho_Array    [][RHO_NXT][RHO_
                                       const IntScheme_t IntScheme, const bool P5_Gradient, const real ELBDM_Eta,
                                       const real ELBDM_Lambda, const bool Poisson, const bool GraAcc, const int GPU_NStream,
                                       const OptGravityType_t GravityType, const double TimeNew, const double TimeOld,
-                                      const bool ExtPot );
+                                      const bool ExtPot, const real MinEint );
 void CUAPI_MemAllocate_PoissonGravity( const int Pot_NPatchGroup );
 void CUAPI_MemFree_PoissonGravity();
 #endif // #ifdef GRAVITY

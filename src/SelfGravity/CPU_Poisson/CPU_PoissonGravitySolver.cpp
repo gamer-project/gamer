@@ -35,9 +35,10 @@ void CPU_HydroGravitySolver(       real Flu_Array_New[][GRA_NIN][PS1][PS1][PS1],
                              const double Corner_Array[][3],
                              const real Pot_Array_USG[][USG_NXT_G][USG_NXT_G][USG_NXT_G],
                              const real Flu_Array_USG[][GRA_NIN-1][PS1][PS1][PS1],
+                                   char DE_Array[][PS1][PS1][PS1],
                              const int NPatchGroup, const real dt, const real dh, const bool P5_Gradient,
                              const OptGravityType_t GravityType, const double ExtAcc_AuxArray[],
-                             const double TimeNew, const double TimeOld );
+                             const double TimeNew, const double TimeOld, const real MinEint );
 
 #elif ( MODEL == MHD )
 #warning : WAIT MHD !!!
@@ -93,6 +94,7 @@ void CPU_ELBDMGravitySolver(       real Flu_Array[][GRA_NIN][PATCH_SIZE][PATCH_S
 //                TimeNew              : Physical time at the current  step (for the external gravity solver)
 //                TimeOld              : Physical time at the previous step (for the external gravity solver in UNSPLIT_GRAVITY)
 //                ExtPot               : Add the external potential
+//                MinEint              : Minimum allowed internal energy (== MIN_PRES / (GAMMA-1))
 //
 // Useless parameters in HYDRO : ELBDM_Eta, ELBDM_Lambda
 // Useless parameters in ELBDM : P5_Gradient
@@ -113,7 +115,7 @@ void CPU_PoissonGravitySolver( const real h_Rho_Array    [][RHO_NXT][RHO_NXT][RH
                                const real Poi_Coeff, const IntScheme_t IntScheme, const bool P5_Gradient,
                                const real ELBDM_Eta, const real ELBDM_Lambda, const bool Poisson, const bool GraAcc,
                                const OptGravityType_t GravityType, const double TimeNew, const double TimeOld,
-                               const bool ExtPot )
+                               const bool ExtPot, const real MinEint )
 {
 
 // check
@@ -132,6 +134,11 @@ void CPU_PoissonGravitySolver( const real h_Rho_Array    [][RHO_NXT][RHO_NXT][RH
 
       if ( h_Flu_Array_USG == NULL )
       Aux_Error( ERROR_INFO, "h_Flu_Array_USG == NULL !!\n" );
+#     endif
+
+#     ifdef DUAL_ENERGY
+      if ( h_DE_Array == NULL )
+      Aux_Error( ERROR_INFO, "h_DE_Array == NULL !!\n" );
 #     endif
    }
 #  endif // #ifdef GAMER_DEBUG
@@ -164,8 +171,8 @@ void CPU_PoissonGravitySolver( const real h_Rho_Array    [][RHO_NXT][RHO_NXT][RH
    if ( GraAcc )
    {
 #     if   ( MODEL == HYDRO )
-      CPU_HydroGravitySolver( h_Flu_Array, h_Pot_Array_Out, h_Corner_Array, h_Pot_Array_USG, h_Flu_Array_USG,
-                              NPatchGroup, dt, dh, P5_Gradient, GravityType, ExtAcc_AuxArray, TimeNew, TimeOld );
+      CPU_HydroGravitySolver( h_Flu_Array, h_Pot_Array_Out, h_Corner_Array, h_Pot_Array_USG, h_Flu_Array_USG, h_DE_Array,
+                              NPatchGroup, dt, dh, P5_Gradient, GravityType, ExtAcc_AuxArray, TimeNew, TimeOld, MinEint );
 
 #     elif ( MODEL == MHD )
 #     error : WAIT MHD !!!

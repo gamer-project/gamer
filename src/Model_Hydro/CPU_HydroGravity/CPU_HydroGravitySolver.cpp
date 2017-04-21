@@ -10,31 +10,34 @@
 // Function    :  CPU_HydroGravitySolver
 // Description :  Use CPU to advance the momentum and energy density by gravitational acceleration
 //
-// Parameter   :  Flu_Array_New  : Array to store the input and output fluid variables
-//                Pot_Array_New  : Array storing the input potential (at the current step)
-//                                 --> _New: to be distinguishable from Pot_Array_USG, which is defined at the previous step
-//                Corner_Array   : Array storing the physical corner coordinates of each patch
-//                Pot_Array_USG  : Array storing the prepared potential          for UNSPLIT_GRAVITY (at the previous step)
-//                Flu_Array_USG  : Array storing the prepared density + momentum for UNSPLIT_GRAVITY (at the previous step)
-//                NPatchGroup    : Number of patch groups to be evaluated
-//                dt             : Time interval to advance solution
-//                dh             : Grid size
-//                P5_Gradient    : Use 5-points stencil to evaluate the potential gradient
-//                GravityType    : Types of gravity --> self-gravity, external gravity, both
-//                ExtAcc_AuxArray: Auxiliary array for adding external acceleration
-//                TimeNew        : Physical time at the current  step (for the external gravity solver)
-//                TimeOld        : Physical time at the previous step (for the external gravity solver in UNSPLIT_GRAVITY)
+// Parameter   :  Flu_Array_New    : Array to store the input and output fluid variables
+//                Pot_Array_New    : Array storing the input potential (at the current step)
+//                                   --> _New: to be distinguishable from Pot_Array_USG, which is defined at the previous step
+//                Corner_Array     : Array storing the physical corner coordinates of each patch
+//                Pot_Array_USG    : Array storing the prepared potential          for UNSPLIT_GRAVITY (at the previous step)
+//                Flu_Array_USG    : Array storing the prepared density + momentum for UNSPLIT_GRAVITY (at the previous step)
+//                DE_Array         : Array storing the dual-energy status (for both input and output)
+//                NPatchGroup      : Number of patch groups to be evaluated
+//                dt               : Time interval to advance solution
+//                dh               : Grid size
+//                P5_Gradient      : Use 5-points stencil to evaluate the potential gradient
+//                GravityType      : Types of gravity --> self-gravity, external gravity, both
+//                ExtAcc_AuxArray  : Auxiliary array for adding external acceleration
+//                TimeNew          : Physical time at the current  step (for the external gravity solver)
+//                TimeOld          : Physical time at the previous step (for the external gravity solver in UNSPLIT_GRAVITY)
+//                MinEint          : Minimum allowed internal energy (== MIN_PRES / (GAMMA-1))
 //
-// Return      :  Flu_Array_New
+// Return      :  Flu_Array_New, DE_Array
 //-----------------------------------------------------------------------------------------
 void CPU_HydroGravitySolver(       real Flu_Array_New[][GRA_NIN][PS1][PS1][PS1],
                              const real Pot_Array_New[][GRA_NXT][GRA_NXT][GRA_NXT],
                              const double Corner_Array[][3],
                              const real Pot_Array_USG[][USG_NXT_G][USG_NXT_G][USG_NXT_G],
                              const real Flu_Array_USG[][GRA_NIN-1][PS1][PS1][PS1],
+                                   char DE_Array[][PS1][PS1][PS1],
                              const int NPatchGroup, const real dt, const real dh, const bool P5_Gradient,
                              const OptGravityType_t GravityType, const double ExtAcc_AuxArray[],
-                             const double TimeNew, const double TimeOld )
+                             const double TimeNew, const double TimeOld, const real MinEint )
 {
 
 // check
@@ -52,7 +55,12 @@ void CPU_HydroGravitySolver(       real Flu_Array_New[][GRA_NIN][PS1][PS1][PS1],
    if ( TimeOld >= TimeNew  ||  TimeOld < 0.0 )
       Aux_Error( ERROR_INFO, "Incorrect TimeOld (%14.7e) (TimeNew = %14.7d) !!\n", TimeOld, TimeNew );
 #  endif
+
+#  ifdef DUAL_ENERGY
+   if ( DE_Array == NULL )
+      Aux_Error( ERROR_INFO, "DE_Array == NULL !!\n" );
 #  endif
+#  endif // #ifdef GAMER_DEBUG
 
 
    const int  NPatch    = NPatchGroup*8;
@@ -60,18 +68,21 @@ void CPU_HydroGravitySolver(       real Flu_Array_New[][GRA_NIN][PS1][PS1][PS1],
    const real Const_8   = (real)8.0;
 
 #  ifdef UNSPLIT_GRAVITY
-   real AccNew[3], AccOld[3], PxNew, PxOld, PyNew, PyOld, PzNew, PzOld, RhoNew, RhoOld, Eint, _Rho2, Ek;
+   real AccNew[3], AccOld[3], PxNew, PxOld, PyNew, PyOld, PzNew, PzOld, RhoNew, RhoOld;
 #  else
-   real AccNew[3], PxNew, PyNew, PzNew, RhoNew, Eint, _Rho2;
+   real AccNew[3], PxNew, PyNew, PzNew, RhoNew;
 #  endif
+   real Eint_in, Ek_out, _Rho2;
    double x, y, z;
 
 
 // loop over all patches
 #  ifdef UNSPLIT_GRAVITY
-#  pragma omp parallel for private( AccNew, AccOld, PxNew, PxOld, PyNew, PyOld, PzNew, PzOld, RhoNew, RhoOld, x, y, z, Eint, _Rho2, Ek ) schedule( runtime )
+#  pragma omp parallel for private( AccNew, AccOld, PxNew, PxOld, PyNew, PyOld, PzNew, PzOld, RhoNew, RhoOld, \
+                                    x, y, z, Eint_in, Ek_out, _Rho2 ) schedule( runtime )
 #  else
-#  pragma omp parallel for private( AccNew, PxNew, PyNew, PzNew, RhoNew, x, y, z, Eint, _Rho2 ) schedule( runtime )
+#  pragma omp parallel for private( AccNew, PxNew, PyNew, PzNew, RhoNew, \
+                                    x, y, z, Eint_in, Ek_out, _Rho2 ) schedule( runtime )
 #  endif
    for (int P=0; P<NPatch; P++)
    {
@@ -151,6 +162,7 @@ void CPU_HydroGravitySolver(       real Flu_Array_New[][GRA_NIN][PS1][PS1][PS1],
 
 //       advance fluid
 #        ifdef UNSPLIT_GRAVITY
+
          RhoNew = Flu_Array_New[P][DENS][kk][jj][ii];
          RhoOld = Flu_Array_USG[P][DENS][kk][jj][ii];
          PxNew  = Flu_Array_New[P][MOMX][kk][jj][ii];
@@ -160,9 +172,11 @@ void CPU_HydroGravitySolver(       real Flu_Array_New[][GRA_NIN][PS1][PS1][PS1],
          PzNew  = Flu_Array_New[P][MOMZ][kk][jj][ii];
          PzOld  = Flu_Array_USG[P][MOMZ][kk][jj][ii];
 
-         _Rho2  = (real)0.5/RhoNew;
-         Eint   = Flu_Array_New[P][ENGY][kk][jj][ii] - _Rho2*( SQR(PxNew) + SQR(PyNew) + SQR(PzNew) );
+//       backup the original internal energy so that we can restore it later if necessary
+         _Rho2   = (real)0.5/RhoNew;
+         Eint_in = Flu_Array_New[P][ENGY][kk][jj][ii] - _Rho2*( SQR(PxNew) + SQR(PyNew) + SQR(PzNew) );
 
+//       update the momentum density
          PxNew += (real)0.5*( RhoOld*AccOld[0] + RhoNew*AccNew[0] );
          PyNew += (real)0.5*( RhoOld*AccOld[1] + RhoNew*AccNew[1] );
          PzNew += (real)0.5*( RhoOld*AccOld[2] + RhoNew*AccNew[2] );
@@ -171,15 +185,52 @@ void CPU_HydroGravitySolver(       real Flu_Array_New[][GRA_NIN][PS1][PS1][PS1],
          Flu_Array_New[P][MOMY][kk][jj][ii] = PyNew;
          Flu_Array_New[P][MOMZ][kk][jj][ii] = PzNew;
 
-//       for the unsplitting method, we corret the total energy instead of just kinematic energy (so internal energy may change)
+//       record the updated kinematic energy density
+         Ek_out = _Rho2*( SQR(PxNew) + SQR(PyNew) + SQR(PzNew) );
+
+//       update the total energy density
+#        ifdef DUAL_ENERGY
+//       for the unsplitting method with the dual-energy formalism, we correct the **total energy density**
+//       only if the dual-energy status == DE_UPDATED_BY_ETOT
+//       --> because for (a) DE_UPDATED_BY_DUAL     --> Eint has been updated by the dual-energy variable
+//                       (b) DE_UPDATED_BY_MIN_PRES --> Eint has been set to the minimum threshold
+//                       (c) DE_UPDATED_BY_1ST_FLUX --> Eint has been updated by the 1st-order-flux correction, which is
+//                                                      essentially an operator splitting approach
+         if ( DE_Array[P][kk][jj][ii] == DE_UPDATED_BY_ETOT )
+         {
+            Flu_Array_New[P][ENGY][kk][jj][ii] += (real)0.5*( PxOld*AccOld[0] + PyOld*AccOld[1] + PzOld*AccOld[2] +
+                                                              PxNew*AccNew[0] + PyNew*AccNew[1] + PzNew*AccNew[2] );
+
+//          check the minimum internal energy
+//          (a) if the updated internal energy is greater than the threshold, set the dual-energy status == DE_UPDATED_BY_ETOT_GRA
+            if ( Flu_Array_New[P][ENGY][kk][jj][ii] - Ek_out >= MinEint )
+               DE_Array[P][kk][jj][ii] = DE_UPDATED_BY_ETOT_GRA;
+
+//          (b) otherwise restore the original internal energy and keep the dual-energy status == DE_UPDATED_BY_ETOT
+            else
+               Flu_Array_New[P][ENGY][kk][jj][ii] = Eint_in + Ek_out;
+         }
+
+//       if the dual-energy status != DE_UPDATED_BY_ETOT, we fix the internal energy
+         else
+         {
+            Flu_Array_New[P][ENGY][kk][jj][ii] = Eint_in + Ek_out;
+         }
+
+#        else // # ifdef DUAL_ENERGY
+//       for the unsplitting method without the dual-energy formalism, we always correct the total energy density
+//       instead of the kinematic energy density
+//       --> internal energy may change
+//       --> we must check the minimum internal after this update
          Flu_Array_New[P][ENGY][kk][jj][ii] += (real)0.5*( PxOld*AccOld[0] + PyOld*AccOld[1] + PzOld*AccOld[2] +
                                                            PxNew*AccNew[0] + PyNew*AccNew[1] + PzNew*AccNew[2] );
 
-//       ensure the positive pressure (restore to the original internal energy if it becomes negative)
-//       --> note that the resulting pressure may be positive but **smaller than MIN_PRES**
-//       --> but we probably don't really care because MIN_PRES is just used to make code stable
-         Ek = _Rho2*( SQR(PxNew) + SQR(PyNew) + SQR(PzNew) );
-         if ( Flu_Array_New[P][ENGY][kk][jj][ii] - Ek <= (real)0.0 )    Flu_Array_New[P][ENGY][kk][jj][ii] = Eint + Ek;
+//       check the minimum internal energy
+//       --> restore to the original internal energy if the updated value becomes smaller than the threshold
+         if ( Flu_Array_New[P][ENGY][kk][jj][ii] - Ek_out < MinEint )
+            Flu_Array_New[P][ENGY][kk][jj][ii] = Eint_in + Ek_out;
+#        endif // #ifdef DUAL_ENERGY ... else ...
+
 
 #        else  // #ifdef UNSPLIT_GRAVITY
 
@@ -188,9 +239,11 @@ void CPU_HydroGravitySolver(       real Flu_Array_New[][GRA_NIN][PS1][PS1][PS1],
          PyNew  = Flu_Array_New[P][MOMY][kk][jj][ii];
          PzNew  = Flu_Array_New[P][MOMZ][kk][jj][ii];
 
-         _Rho2  = (real)0.5/RhoNew;
-         Eint   = Flu_Array_New[P][ENGY][kk][jj][ii] - _Rho2*( SQR(PxNew) + SQR(PyNew) + SQR(PzNew) );
+//       backup the original internal energy so that we can restore it later if necessary
+         _Rho2   = (real)0.5/RhoNew;
+         Eint_in = Flu_Array_New[P][ENGY][kk][jj][ii] - _Rho2*( SQR(PxNew) + SQR(PyNew) + SQR(PzNew) );
 
+//       update the momentum density
          PxNew += RhoNew*AccNew[0];
          PyNew += RhoNew*AccNew[1];
          PzNew += RhoNew*AccNew[2];
@@ -200,7 +253,9 @@ void CPU_HydroGravitySolver(       real Flu_Array_New[][GRA_NIN][PS1][PS1][PS1],
          Flu_Array_New[P][MOMZ][kk][jj][ii] = PzNew;
 
 //       for the splitting method, we ensure that the internal energy is unchanged
-         Flu_Array_New[P][ENGY][kk][jj][ii] = Eint + _Rho2*( SQR(PxNew) + SQR(PyNew) + SQR(PzNew) );
+         Ek_out = _Rho2*( SQR(PxNew) + SQR(PyNew) + SQR(PzNew) );
+         Flu_Array_New[P][ENGY][kk][jj][ii] = Eint_in + Ek_out;
+
 #        endif // #ifdef UNSPLIT_GRAVITY ... else ...
 
       } // i,j,k
