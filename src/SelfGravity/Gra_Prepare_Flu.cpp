@@ -41,7 +41,7 @@ void Gra_Prepare_Flu( const int lv, real h_Flu_Array_G[][GRA_NIN][PS1][PS1][PS1]
          for (int i=0; i<PS1; i++)
             h_Flu_Array_G[N][v][k][j][i] = amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[v][k][j][i];
 
-//       dual-energy status
+//       dual-energy status (which is always stored in Sg=0)
 #        ifdef DUAL_ENERGY
          for (int k=0; k<PS1; k++)
          for (int j=0; j<PS1; j++)

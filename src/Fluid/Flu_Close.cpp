@@ -104,7 +104,7 @@ void Flu_Close( const int lv, const int SaveSg, const real h_Flux_Array[][9][NFL
 
             KJI = K*4*PATCH_SIZE*PATCH_SIZE + J*2*PATCH_SIZE + I;
 
-//          de_status is always stored in Sg==0
+//          de_status is always stored in Sg=0
             amr->patch[0][lv][PID]->de_status[k][j][i] = h_DE_Array_F_Out[TID][KJI];
 
          }}}

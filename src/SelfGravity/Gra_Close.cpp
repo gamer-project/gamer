@@ -16,11 +16,12 @@
 // Parameter   :  lv             : Target refinement level
 //                SaveSg         : Sandglass to store the updated data
 //                h_Flu_Array_G  : Host array storing the updated fluid variables
+//                h_DE_Array_G   : Host array storing the dual-energy status
 //                NPG            : Number of patch groups to store the updated data
 //                PID0_List      : List recording the patch indicies with LocalID==0 to be udpated
 //-------------------------------------------------------------------------------------------------------
 void Gra_Close( const int lv, const int SaveSg, const real h_Flu_Array_G[][GRA_NIN][PS1][PS1][PS1],
-                const int NPG, const int *PID0_List )
+                const char h_DE_Array_G[][PS1][PS1][PS1], const int NPG, const int *PID0_List )
 {
 
    int N, PID, PID0;
@@ -42,6 +43,14 @@ void Gra_Close( const int lv, const int SaveSg, const real h_Flu_Array_G[][GRA_N
          for (int j=0; j<PATCH_SIZE; j++)
          for (int i=0; i<PATCH_SIZE; i++)
             amr->patch[SaveSg][lv][PID]->fluid[v][k][j][i] = h_Flu_Array_G[N][v][k][j][i];
+
+//       dual-energy status (which is always stored in Sg=0)
+#        ifdef DUAL_ENERGY
+         for (int k=0; k<PATCH_SIZE; k++)
+         for (int j=0; j<PATCH_SIZE; j++)
+         for (int i=0; i<PATCH_SIZE; i++)
+            amr->patch[0][lv][PID]->de_status[k][j][i] = h_DE_Array_G[N][k][j][i];
+#        endif
 
 #        elif ( MODEL == ELBDM )
 //       density field is NOT sent in and out in the ELBDM gravity solver
