@@ -7,7 +7,7 @@
 extern void (*Init_Function_Ptr)( real fluid[], const double x, const double y, const double z, const double Time );
 extern void (*Output_TestProbErr_Ptr)( const bool BaseOnly );
 
-static void HYDRO_TestProbSol_JeansInstability_Physical( real fluid[], const double x, const double y, const double z, 
+static void HYDRO_TestProbSol_JeansInstability_Physical( real fluid[], const double x, const double y, const double z,
                                                          const double Time );
 static void HYDRO_OutputError_JeansInstability_Physical( const bool BaseOnly );
 static void WriteFile( FILE *File[], const int lv, const int PID, const int i, const int j, const int k,
@@ -24,8 +24,8 @@ static real Jeans_Omega;         // wave angular frequency
 static real Jeans_RhoAmp;        // amplitude of the density perturbation (assuming background density = 1.0)
 static real Jeans_Cs;            // sound speed
 static real Jeans_v0;            // background velocity
-static real Jeans_Sign;          // stable   : (+1/-1) --> (right/left-moving wave) 
-                                 // unstable : (+1/-1) --> (growing/decaying mode) 
+static real Jeans_Sign;          // stable   : (+1/-1) --> (right/left-moving wave)
+                                 // unstable : (+1/-1) --> (growing/decaying mode)
 static real Jeans_Phase0;        // initial phase shift
 static bool Jeans_Stable;        // true/false --> Jeans stable/unstable
 // =======================================================================================
@@ -41,10 +41,10 @@ static bool Jeans_Stable;        // true/false --> Jeans stable/unstable
 //                2. Global variables declared here will also be used in the function
 //                   "HYDRO_TestProbSol_JeansInstability"
 //
-// Parameter   :  None 
+// Parameter   :  None
 //-------------------------------------------------------------------------------------------------------
 void Init_TestProb()
-{  
+{
 
    const char *TestProb = "HYDRO physical-frame Jeans instability";
 
@@ -57,7 +57,7 @@ void Init_TestProb()
 #  error : ERROR : "GRAVITY must be ON" in the HYDRO Jeans instability test !!
 #  endif
 
-#  ifndef FLOAT8 
+#  ifndef FLOAT8
 #  error : ERROR : "FLOAT8 must be ON" in the HYDRO Jeans instability test !!
 #  endif
 
@@ -110,7 +110,7 @@ void Init_TestProb()
 
 // set some default parameters
 // End_T : (stable/unstable) --> (1 period/grow by a factor of 50)
-   const double End_T_Default    = ( Jeans_Stable) ? 2.0*M_PI/Jeans_Omega : LOG(50.0)/Jeans_Omega; 
+   const double End_T_Default    = ( Jeans_Stable) ? 2.0*M_PI/Jeans_Omega : LOG(50.0)/Jeans_Omega;
    const long   End_Step_Default = __INT_MAX__;
 
    if ( END_STEP < 0 )
@@ -134,7 +134,7 @@ void Init_TestProb()
       OPT__OUTPUT_TEST_ERROR = true;
 
       if ( MPI_Rank == 0 )
-         Aux_Message( stdout, "NOTE : parameter %s is reset to %d in the %s test !!\n", 
+         Aux_Message( stdout, "NOTE : parameter %s is reset to %d in the %s test !!\n",
                       "OPT__OUTPUT_TEST_ERROR", OPT__OUTPUT_TEST_ERROR, TestProb );
    }
 
@@ -144,14 +144,14 @@ void Init_TestProb()
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  HYDRO_TestProbSol_JeansInstability_Physical
-// Description :  Calculate the analytical solution in the HYDRO physical-frame Jeans instability test  
+// Description :  Calculate the analytical solution in the HYDRO physical-frame Jeans instability test
 //
 // Note        :  1. Wave vector is along the diagonal direction
 //                2. Background density is assumed to be ONE
-//                3. This function is invoked by "HYDRO_Init_StartOver_AssignData" and "Output_TestProbErr" 
+//                3. This function is invoked by "HYDRO_Init_StartOver_AssignData" and "Output_TestProbErr"
 //
 // Parameter   :  fluid : Array to store the analytical solution to be returned
-//                x/y/z : Target physical coordinates 
+//                x/y/z : Target physical coordinates
 //                Time  : Target physical time
 //
 // Return      :  fluid
@@ -200,7 +200,7 @@ void HYDRO_TestProbSol_JeansInstability_Physical( real fluid[], const double x, 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  HYDRO_OutputError_JeansInstability_Physical
 // Description :  Compare and output the numerical and analytical solutions in the HYDRO physical-frame
-//                Jeans instability test problem 
+//                Jeans instability test problem
 //
 // Note        :  1. Invoked by "Output_TestProbErr"
 //                2. This function has the similar form as Output_DumpData_Part, except that some code lines
@@ -209,14 +209,14 @@ void HYDRO_TestProbSol_JeansInstability_Physical( real fluid[], const double x, 
 // Parameter   :  BaseOnly :  Only output the base-level data
 //-------------------------------------------------------------------------------------------------------
 void HYDRO_OutputError_JeansInstability_Physical( const bool BaseOnly )
-{  
+{
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s (DumpID = %d) ...\n", __FUNCTION__, DumpID );
 
 
 // check the synchronization
    for (int lv=1; lv<NLEVEL; lv++)
-      if ( NPatchTotal[lv] != 0 )   Mis_Check_Synchronization( Time[0], Time[lv], __FUNCTION__, true );
+      if ( NPatchTotal[lv] != 0 )   Mis_CompareRealValue( Time[0], Time[lv], __FUNCTION__, true );
 
 
 // set the default parameters (may need to be modified for different test problems)
@@ -228,7 +228,7 @@ void HYDRO_OutputError_JeansInstability_Physical( const bool BaseOnly )
 
 
 // output file name
-   char FileName[NCOMP][200];
+   char FileName[NCOMP_FLUID][200];
    int  ID[6];
 
    ID[0] = DumpID/100000;
@@ -257,18 +257,18 @@ void HYDRO_OutputError_JeansInstability_Physical( const bool BaseOnly )
 #  error : ERROR : unsupported MODEL !!
 #  endif // MODEL
 // ===================================================================================================
-  
-  
+
+
 // check if the output files already exist
-   if ( MPI_Rank == 0 )  
+   if ( MPI_Rank == 0 )
    {
-      for (int v=0; v<NCOMP; v++)
+      for (int v=0; v<NCOMP_FLUID; v++)
       {
          FILE *File_Check = fopen( FileName[v], "r" );
 
-         if ( File_Check != NULL )  
+         if ( File_Check != NULL )
          {
-            Aux_Message( stderr, "WARNING : the file \"%s\" already exists and will be overwritten !!\n", 
+            Aux_Message( stderr, "WARNING : the file \"%s\" already exists and will be overwritten !!\n",
                          FileName[v] );
             fclose( File_Check );
 
@@ -285,15 +285,15 @@ void HYDRO_OutputError_JeansInstability_Physical( const bool BaseOnly )
    int  ii, jj, kk, scale;
    real dh, PW;
    real xx, yy, zz;        // grid physical coordinates
-   int *Corner  = NULL;    // corner grid ID 
+   int *Corner  = NULL;    // corner grid ID
    bool Check_x = false;
    bool Check_y = false;
    bool Check_z = false;
 
-   double L1_Err[NCOMP];
+   double L1_Err[NCOMP_FLUID];
    static bool FirstTime = true;
 
-   for (int v=0; v<NCOMP; v++)   L1_Err[v] = 0.0;
+   for (int v=0; v<NCOMP_FLUID; v++)   L1_Err[v] = 0.0;
 
 
    switch ( Part )
@@ -311,25 +311,25 @@ void HYDRO_OutputError_JeansInstability_Physical( const bool BaseOnly )
    {
       if ( MPI_Rank == TargetMPIRank )
       {
-         FILE *File[NCOMP];
-         for (int v=0; v<NCOMP; v++)   File[v] = fopen( FileName[v], "a" );
+         FILE *File[NCOMP_FLUID];
+         for (int v=0; v<NCOMP_FLUID; v++)   File[v] = fopen( FileName[v], "a" );
 
 //       output header
-         if ( TargetMPIRank == 0 )  
+         if ( TargetMPIRank == 0 )
          {
-            for (int v=0; v<NCOMP; v++)   
+            for (int v=0; v<NCOMP_FLUID; v++)
                fprintf( File[v], "%9s %20s %20s %20s\n", "Coord.", "Numerical", "Analytical", "Error" );
          }
 
 
 //       output data
-         for (int lv=0; lv<NLv; lv++)                             
-         {  
+         for (int lv=0; lv<NLv; lv++)
+         {
             dh    = amr->dh   [lv];
             scale = amr->scale[lv];
             PW    = PATCH_SIZE*dh;
 
-            for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)    
+            for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
             {
 //             output the patch data only if it has no son (if the option "BaseOnly" is turned off)
                if ( amr->patch[0][lv][PID]->son == -1  ||  BaseOnly )
@@ -340,7 +340,7 @@ void HYDRO_OutputError_JeansInstability_Physical( const bool BaseOnly )
                   {
                      if ( Corner[0] == Corner[1]  &&  Corner[0] == Corner[2] )
                      {
-                        for (int k=0; k<PS1; k++)  
+                        for (int k=0; k<PS1; k++)
                         {
                            kk = Corner[2] + k*scale;
 
@@ -378,7 +378,7 @@ void HYDRO_OutputError_JeansInstability_Physical( const bool BaseOnly )
 
          } // for (int lv=0; lv<NLv; lv++)
 
-         for (int v=0; v<NCOMP; v++)   fclose( File[v] );
+         for (int v=0; v<NCOMP_FLUID; v++)   fclose( File[v] );
 
       } // if ( MPI_Rank == TargetMPIRank )
 
@@ -388,12 +388,12 @@ void HYDRO_OutputError_JeansInstability_Physical( const bool BaseOnly )
 
 
 // gather the L1 error from all ranks and output the results
-   double L1_Err_Sum[NCOMP];
-   MPI_Reduce( L1_Err, L1_Err_Sum, NCOMP, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD );
+   double L1_Err_Sum[NCOMP_FLUID];
+   MPI_Reduce( L1_Err, L1_Err_Sum, NCOMP_FLUID, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD );
 
    if ( MPI_Rank == 0 )
    {
-      for (int v=0; v<NCOMP; v++)   L1_Err_Sum[v] /= amr->BoxSize[0];
+      for (int v=0; v<NCOMP_FLUID; v++)   L1_Err_Sum[v] /= amr->BoxSize[0];
 
       FILE *File_L1 = fopen( "Record__L1Err", "a" );
 
@@ -401,14 +401,14 @@ void HYDRO_OutputError_JeansInstability_Physical( const bool BaseOnly )
       if ( FirstTime )
       {
 #        if   ( MODEL == HYDRO )
-         fprintf( File_L1, "%5s %13s %19s %19s %19s %19s %19s\n", 
+         fprintf( File_L1, "%5s %13s %19s %19s %19s %19s %19s\n",
                   "NGrid", "Time", "Error(DENS)", "Error(MOMX)", "Error(MOMY)", "Error(MOMZ)", "Error(PRES)" );
 
 #        elif ( MODEL == MHD )
 #        warning : WAIT MHD !!!
 
 #        elif ( MODEL == ELBDM )
-         fprintf( File_L1, "%5s %13s %19s %19s %19s\n", 
+         fprintf( File_L1, "%5s %13s %19s %19s %19s\n",
                   "NGrid", "Time", "Error(DENS)", "Error(REAL)", "Error(IMAG)" );
 
 #        else
@@ -421,7 +421,7 @@ void HYDRO_OutputError_JeansInstability_Physical( const bool BaseOnly )
 //    output data
       fprintf( File_L1, "%5d %13.7e", NX0_TOT[0], Time[0] );
 
-      for (int v=0; v<NCOMP; v++)
+      for (int v=0; v<NCOMP_FLUID; v++)
       fprintf( File_L1, " %19.12e", L1_Err_Sum[v] );
 
       fprintf( File_L1, "\n" );
@@ -438,20 +438,20 @@ void HYDRO_OutputError_JeansInstability_Physical( const bool BaseOnly )
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  WriteFile 
+// Function    :  WriteFile
 // Description :  Output data to file
 //
-// Parameter   :  File     : File pointer 
+// Parameter   :  File     : File pointer
 //                lv       : Targeted refinement level
 //                PID      : Patch ID
 //                i/j/k    : Cell indices within the patch
 //                ii/jj/kk : Cell scale indices in the simulation domain
 //                L1_Err   : Array to record the L1 errors of all variables
-//                Part     : OUTPUT_XY   : xy plane  
+//                Part     : OUTPUT_XY   : xy plane
 //                           OUTPUT_YZ   : yz plane
 //                           OUTPUT_XZ   : xz plane
 //                           OUTPUT_X    : x  line
-//                           OUTPUT_Y    : y  line 
+//                           OUTPUT_Y    : y  line
 //                           OUTPUT_Z    : z  line
 //                           OUTPUT_DIAG : diagonal along (+1,+1,+1)
 //-------------------------------------------------------------------------------------------------------
@@ -459,14 +459,14 @@ void WriteFile( FILE *File[], const int lv, const int PID, const int i, const in
                 const int ii, const int jj, const int kk, double L1_Err[], const OptOutputPart_t Part  )
 {
 
-   real fluid[NCOMP], Anal[NCOMP], Err[NCOMP];
+   real fluid[NCOMP_FLUID], Anal[NCOMP_FLUID], Err[NCOMP_FLUID];
 
 // get the numerical solution
-   for (int v=0; v<NCOMP; v++)   fluid[v] = amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[v][k][j][i];
+   for (int v=0; v<NCOMP_FLUID; v++)   fluid[v] = amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[v][k][j][i];
 
 // convert total energy to pressure
 #  if   ( MODEL == HYDRO )
-   fluid[ENGY] = (GAMMA-1.0)*(  fluid[ENGY] - 0.5*( fluid[MOMX]*fluid[MOMX] + 
+   fluid[ENGY] = (GAMMA-1.0)*(  fluid[ENGY] - 0.5*( fluid[MOMX]*fluid[MOMX] +
                                                     fluid[MOMY]*fluid[MOMY] +
                                                     fluid[MOMZ]*fluid[MOMZ] ) / fluid[DENS]  );
 
@@ -483,10 +483,10 @@ void WriteFile( FILE *File[], const int lv, const int PID, const int i, const in
 // ===================================================================================================
    HYDRO_TestProbSol_JeansInstability_Physical( Anal, x, y, z, Time[0] );
 // ===================================================================================================
-  
+
 // convert total energy to pressure
 #  if   ( MODEL == HYDRO )
-   Anal[ENGY] = (GAMMA-1.0)*(  Anal[ENGY] - 0.5*( Anal[MOMX]*Anal[MOMX] + 
+   Anal[ENGY] = (GAMMA-1.0)*(  Anal[ENGY] - 0.5*( Anal[MOMX]*Anal[MOMX] +
                                                   Anal[MOMY]*Anal[MOMY] +
                                                   Anal[MOMZ]*Anal[MOMZ] ) / Anal[DENS]  );
 
@@ -509,7 +509,7 @@ void WriteFile( FILE *File[], const int lv, const int PID, const int i, const in
 
 
 // estimate and output errors
-   for (int v=0; v<NCOMP; v++)   
+   for (int v=0; v<NCOMP_FLUID; v++)
    {
       Err   [v]  = fabs( Anal[v] - fluid[v] );
       L1_Err[v] += Err[v]*amr->dh[lv];
@@ -522,8 +522,8 @@ void WriteFile( FILE *File[], const int lv, const int PID, const int i, const in
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  LoadTestProbParameter 
-// Description :  Load parameters for the test problem 
+// Function    :  LoadTestProbParameter
+// Description :  Load parameters for the test problem
 //
 // Note        :  This function is invoked by "Init_TestProb"
 //
@@ -586,7 +586,7 @@ void LoadTestProbParameter()
 // force Jeans_Sign to be +1.0/-1.0
    if ( Jeans_Sign >= 0.0 )   Jeans_Sign = +1.0;
    else                       Jeans_Sign = -1.0;
-   
+
 
 } // FUNCTION : LoadTestProbParameter
 
