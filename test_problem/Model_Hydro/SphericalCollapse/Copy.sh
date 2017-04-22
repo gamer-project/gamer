@@ -4,3 +4,4 @@
 cp Init_TestProb.cpp                   ../../../src/Init/
 cp Makefile                            ../../../src/
 cp Input__*                            ../../../bin/run/
+cp plot.gpt                            ../../../bin/run/

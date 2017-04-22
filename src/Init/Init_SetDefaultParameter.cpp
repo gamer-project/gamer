@@ -585,7 +585,7 @@ void Init_SetDefaultParameter()
 #  ifdef DUAL_ENERGY
    if ( DUAL_ENERGY_SWITCH < 0.0 )
    {
-      DUAL_ENERGY_SWITCH = 1.0e-4;
+      DUAL_ENERGY_SWITCH = 2.0e-2;
 
       if ( MPI_Rank == 0 )    Aux_Message( stdout, "NOTE : parameter \"%s\" is set to the default value = %13.7e\n",
                                            "DUAL_ENERGY_SWITCH", DUAL_ENERGY_SWITCH );

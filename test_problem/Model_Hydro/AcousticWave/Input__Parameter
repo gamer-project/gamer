@@ -86,7 +86,7 @@
 2           OPT__WAF_LIMITER          # flux limiter in WAF (0/1/2/3/4) = (none/SuperBee/vanLeer/vanAlbada/MinBee)
 -1          OPT__1ST_FLUX_CORR        # correct unphysical results (defined by MIN_DENS/PRES) with 1st-order fluxes (-1/0/1/2 -> default/off/3D/3D+1D [2]) ##MHM/MHM_RP/CTU ONLY##
 -1          OPT__1ST_FLUX_CORR_SCHEME # Riemann solver for OPT__1ST_FLUX_CORR (-1/1/2/3 -> default/Roe/HLLC/HLLE [Roe])
--1.0        DUAL_ENERGY_SWITCH        # use dual-energy formalism if E_int/E_kin < DUAL_ENERGY_SWITCH (<0:default [1.0e-4]) ##DUAL_ENERGY ONLY##
+-1.0        DUAL_ENERGY_SWITCH        # use dual-energy formalism if E_int/E_kin < DUAL_ENERGY_SWITCH (<0:default [2.0e-2]) ##DUAL_ENERGY ONLY##
 
 1.0         ELBDM_MASS                # particle mass in ev/c^2 in ELBDM (input unit is fixed even when OPT__UNIT or COMOVING is on)
 1.0         ELBDM_PLANCK_CONST        # Planck constant in ELBDM (will be overwritten if OPT__UNIT or COMOVING is on)
