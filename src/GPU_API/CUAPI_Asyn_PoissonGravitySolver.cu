@@ -34,18 +34,19 @@ __global__ void CUPOT_PoissonSolver_MG( const real g_Rho_Array    [][ RHO_NXT*RH
 
 // Gravity solver prototypes
 #if   ( MODEL == HYDRO )
-__global__ void CUPOT_HydroGravitySolver(       real g_Flu_Array_New[][GRA_NIN][ PATCH_SIZE*PATCH_SIZE*PATCH_SIZE ],
+__global__ void CUPOT_HydroGravitySolver(       real g_Flu_Array_New[][GRA_NIN][ PS1*PS1*PS1 ],
                                           const real g_Pot_Array_New[][ GRA_NXT*GRA_NXT*GRA_NXT ],
                                           const double g_Corner_Array[][3],
                                           const real g_Pot_Array_USG[][ USG_NXT_G*USG_NXT_G*USG_NXT_G ],
                                           const real g_Flu_Array_USG[][GRA_NIN-1][ PS1*PS1*PS1 ],
+                                                char g_DE_Array[][ PS1*PS1*PS1 ],
                                           const real Gra_Const, const bool P5_Gradient, const OptGravityType_t GravityType,
-                                          const double TimeNew, const double TimeOld, const real dt, const real dh );
+                                          const double TimeNew, const double TimeOld, const real dt, const real dh, const real MinEint );
 #elif ( MODEL == MHD )
 #warning : WAIT MHD !!!
 
 #elif ( MODEL == ELBDM )
-__global__ void CUPOT_ELBDMGravitySolver(       real g_Flu_Array[][GRA_NIN][ PATCH_SIZE*PATCH_SIZE*PATCH_SIZE ],
+__global__ void CUPOT_ELBDMGravitySolver(       real g_Flu_Array[][GRA_NIN][ PS1*PS1*PS1 ],
                                           const real g_Pot_Array[][ GRA_NXT*GRA_NXT*GRA_NXT ],
                                           const double g_Corner_Array[][3],
                                           const real EtaDt, const real dh, const real Lambda, const bool ExtPot,
@@ -62,15 +63,20 @@ extern real (*d_Pot_Array_P_In )[ POT_NXT*POT_NXT*POT_NXT ];
 extern real (*d_Pot_Array_P_Out)[ GRA_NXT*GRA_NXT*GRA_NXT ];
 extern real (*d_Flu_Array_G    )[GRA_NIN][ PS1*PS1*PS1 ];
 extern double (*d_Corner_Array_G)[3];
+#if ( MODEL == HYDRO  ||  MODEL == MHD )
 #ifdef UNSPLIT_GRAVITY
 extern real (*d_Pot_Array_USG_G)[ USG_NXT_G*USG_NXT_G*USG_NXT_G ];
 extern real (*d_Flu_Array_USG_G)[GRA_NIN-1][ PS1*PS1*PS1        ];
 #else
-#if ( MODEL == HYDRO  ||  MODEL == MHD )
 static real (*d_Pot_Array_USG_G)[ USG_NXT_G*USG_NXT_G*USG_NXT_G ] = NULL;
 static real (*d_Flu_Array_USG_G)[GRA_NIN-1][ PS1*PS1*PS1        ] = NULL;
 #endif
-#endif // #ifdef UNSPLIT_GRAVITY ... else ...
+#ifdef DUAL_ENERGY
+extern char (*d_DE_Array_G)[ PS1*PS1*PS1 ];
+#else
+static char (*d_DE_Array_G)[ PS1*PS1*PS1 ] = NULL;
+#endif
+#endif // #if ( MODEL == HYDRO  ||  MODEL == MHD )
 
 extern cudaStream_t *Stream;
 
@@ -221,6 +227,11 @@ void CUAPI_Asyn_PoissonGravitySolver( const real h_Rho_Array    [][RHO_NXT][RHO_
       if ( h_Flu_Array_USG   == NULL )       Aux_Error( ERROR_INFO, "h_Flu_Array_USG == NULL !!\n" );
       if ( d_Flu_Array_USG_G == NULL )       Aux_Error( ERROR_INFO, "d_Flu_Array_USG_G == NULL !!\n" );
 #     endif
+
+#     ifdef DUAL_ENERGY
+      if ( h_DE_Array   == NULL )            Aux_Error( ERROR_INFO, "h_DE_Array == NULL !!\n" );
+      if ( d_DE_Array_G == NULL )            Aux_Error( ERROR_INFO, "d_DE_Array_G == NULL !!\n" );
+#     endif
    }
 #  endif // #ifdef GAMER_DEBUG
 
@@ -238,6 +249,9 @@ void CUAPI_Asyn_PoissonGravitySolver( const real h_Rho_Array    [][RHO_NXT][RHO_
 #  ifdef UNSPLIT_GRAVITY
    int *Pot_USG_MemSize   = new int [GPU_NStream];
    int *Flu_USG_MemSize   = new int [GPU_NStream];
+#  endif
+#  ifdef DUAL_ENERGY
+   int *DE_MemSize        = new int [GPU_NStream];
 #  endif
 
 
@@ -260,14 +274,17 @@ void CUAPI_Asyn_PoissonGravitySolver( const real h_Rho_Array    [][RHO_NXT][RHO_
 // set the size of data to be transferred into GPU in each stream
    for (int s=0; s<GPU_NStream; s++)
    {
-      Rho_MemSize    [s] = NPatch_per_Stream[s]*CUBE(RHO_NXT   )*sizeof(real);
-      Pot_MemSize_In [s] = NPatch_per_Stream[s]*CUBE(POT_NXT   )*sizeof(real);
-      Pot_MemSize_Out[s] = NPatch_per_Stream[s]*CUBE(GRA_NXT   )*sizeof(real);
-      Flu_MemSize    [s] = NPatch_per_Stream[s]*CUBE(PATCH_SIZE)*sizeof(real)*GRA_NIN;
-      Corner_MemSize [s] = NPatch_per_Stream[s]*3               *sizeof(double);
+      Rho_MemSize    [s] = NPatch_per_Stream[s]*CUBE(RHO_NXT  )*sizeof(real);
+      Pot_MemSize_In [s] = NPatch_per_Stream[s]*CUBE(POT_NXT  )*sizeof(real);
+      Pot_MemSize_Out[s] = NPatch_per_Stream[s]*CUBE(GRA_NXT  )*sizeof(real);
+      Flu_MemSize    [s] = NPatch_per_Stream[s]*CUBE(PS1      )*sizeof(real)*GRA_NIN;
+      Corner_MemSize [s] = NPatch_per_Stream[s]*3              *sizeof(double);
 #     ifdef UNSPLIT_GRAVITY
-      Pot_USG_MemSize[s] = NPatch_per_Stream[s]*CUBE(USG_NXT_G) *sizeof(real);
-      Flu_USG_MemSize[s] = NPatch_per_Stream[s]*CUBE(PS1      ) *sizeof(real)*(GRA_NIN-1);
+      Pot_USG_MemSize[s] = NPatch_per_Stream[s]*CUBE(USG_NXT_G)*sizeof(real);
+      Flu_USG_MemSize[s] = NPatch_per_Stream[s]*CUBE(PS1      )*sizeof(real)*(GRA_NIN-1);
+#     endif
+#     ifdef DUAL_ENERGY
+      DE_MemSize     [s] = NPatch_per_Stream[s]*CUBE(PS1      )*sizeof(char);
 #     endif
    }
 
@@ -306,6 +323,11 @@ void CUAPI_Asyn_PoissonGravitySolver( const real h_Rho_Array    [][RHO_NXT][RHO_
 
          CUDA_CHECK_ERROR(  cudaMemcpyAsync( d_Flu_Array_USG_G + UsedPatch[s], h_Flu_Array_USG + UsedPatch[s],
                                              Flu_USG_MemSize[s], cudaMemcpyHostToDevice, Stream[s] )  );
+#        endif
+
+#        ifdef DUAL_ENERGY
+         CUDA_CHECK_ERROR(  cudaMemcpyAsync( d_DE_Array_G      + UsedPatch[s], h_DE_Array      + UsedPatch[s],
+                                             DE_MemSize[s],      cudaMemcpyHostToDevice, Stream[s] )  );
 #        endif
       } // if ( GraAcc )
    } // for (int s=0; s<GPU_NStream; s++)
@@ -363,8 +385,9 @@ void CUAPI_Asyn_PoissonGravitySolver( const real h_Rho_Array    [][RHO_NXT][RHO_
                                     d_Corner_Array_G  + UsedPatch[s],
                                     d_Pot_Array_USG_G + UsedPatch[s],
                                     d_Flu_Array_USG_G + UsedPatch[s],
+                                    d_DE_Array_G      + UsedPatch[s],
                                     Gra_Const, P5_Gradient, GravityType,
-                                    TimeNew, TimeOld, dt, dh );
+                                    TimeNew, TimeOld, dt, dh, MinEint );
 #        elif ( MODEL == MHD )
 #        warning : WAITH MHD !!!
 
@@ -395,8 +418,15 @@ void CUAPI_Asyn_PoissonGravitySolver( const real h_Rho_Array    [][RHO_NXT][RHO_
                                              Pot_MemSize_Out[s], cudaMemcpyDeviceToHost, Stream[s] )  );
 
       if ( GraAcc )
+      {
          CUDA_CHECK_ERROR(  cudaMemcpyAsync( h_Flu_Array     + UsedPatch[s], d_Flu_Array_G     + UsedPatch[s],
                                              Flu_MemSize[s],     cudaMemcpyDeviceToHost, Stream[s] )  );
+
+#        ifdef DUAL_ENERGY
+         CUDA_CHECK_ERROR(  cudaMemcpyAsync( h_DE_Array      + UsedPatch[s], d_DE_Array_G      + UsedPatch[s],
+                                             DE_MemSize[s],      cudaMemcpyDeviceToHost, Stream[s] )  );
+#        endif
+      }
    } // for (int s=0; s<GPU_NStream; s++)
 
 
@@ -410,6 +440,9 @@ void CUAPI_Asyn_PoissonGravitySolver( const real h_Rho_Array    [][RHO_NXT][RHO_
 #  ifdef UNSPLIT_GRAVITY
    delete [] Pot_USG_MemSize;
    delete [] Flu_USG_MemSize;
+#  endif
+#  ifdef DUAL_ENERGY
+   delete [] DE_MemSize;
 #  endif
 
 } // FUNCTION : CUAPI_Asyn_PoissonGravitySolver

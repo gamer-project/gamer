@@ -141,20 +141,21 @@ __global__ void CUPOT_PoissonSolver_MG( const real g_Rho_Array    [][ RHO_NXT*RH
 
 // Gravity solver prototypes in different models
 #if   ( MODEL == HYDRO )
-__global__ void CUPOT_HydroGravitySolver(       real g_Flu_Array_New[][GRA_NIN][ PATCH_SIZE*PATCH_SIZE*PATCH_SIZE ],
+__global__ void CUPOT_HydroGravitySolver(       real g_Flu_Array_New[][GRA_NIN][ PS1*PS1*PS1 ],
                                           const real g_Pot_Array_New[][ GRA_NXT*GRA_NXT*GRA_NXT ],
                                           const double g_Corner_Array[][3],
                                           const real g_Pot_Array_USG[][ USG_NXT_G*USG_NXT_G*USG_NXT_G ],
                                           const real g_Flu_Array_USG[][GRA_NIN-1][ PS1*PS1*PS1 ],
+                                                char g_DE_Array[][ PS1*PS1*PS1 ],
                                           const real Gra_Const, const bool P5_Gradient, const OptGravityType_t GravityType,
-                                          const double TimeNew, const double TimeOld, const real dt, const real dh );
+                                          const double TimeNew, const double TimeOld, const real dt, const real dh, const real MinEint );
 int CUPOT_HydroGravitySolver_SetConstMem( double ExtAcc_AuxArray_h[] );
 
 #elif ( MODEL == MHD )
 #warning :: WAIT MHD !!!
 
 #elif ( MODEL == ELBDM )
-__global__ void CUPOT_ELBDMGravitySolver(       real g_Flu_Array[][GRA_NIN][ PATCH_SIZE*PATCH_SIZE*PATCH_SIZE ],
+__global__ void CUPOT_ELBDMGravitySolver(       real g_Flu_Array[][GRA_NIN][ PS1*PS1*PS1 ],
                                           const real g_Pot_Array[][ GRA_NXT*GRA_NXT*GRA_NXT ],
                                           const double g_Corner_Array[][3],
                                           const real EtaDt, const real dh, const real Lambda, const bool ExtPot,

@@ -25,7 +25,7 @@ SIMU_OPTION += -DPOT_SCHEME=SOR
 # --> currently only for improving accuracy for particles around the patch boundaries (by Par->ImproveAcc)
 #SIMU_OPTION += -DSTORE_POT_GHOST
 
-# use unsplitting method to couple gravity to the target model (e.g., HYDRO and MHD, ELBDM is not supported yet)
+# use unsplitting method to couple gravity to the target model (for HYDRO and MHD only; ELBDM is not supported yet)
 # --> must be off if GRAVITY is off
 SIMU_OPTION += -DUNSPLIT_GRAVITY
 
@@ -57,7 +57,7 @@ SIMU_OPTION += -DLR_SCHEME=PPM
 # Riemann solver: EXACT/ROE/HLLE/HLLC ##all are useless in RTVD, HLLE/HLLC are useless in WAF##
 SIMU_OPTION += -DRSOLVER=ROE
 
-# dual energy formalism: DE_ENPY/DE_EINT (evolve entropy or internal energy, DE_EINT is not supported yet) ##useless in RTVD/WAF##
+# dual energy formalism: DE_ENPY/DE_EINT (evolve entropy or internal energy; DE_EINT is not supported yet) ##useless in RTVD/WAF##
 SIMU_OPTION += -DDUAL_ENERGY=DE_ENPY
 
 # number of passively advected scalars (**excluding** entropy or internal energy even when DUAL_ENERGY is on)
