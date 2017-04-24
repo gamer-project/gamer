@@ -13,8 +13,8 @@
 
 //-----------------------------------------------------------------------------------------
 // Function    :  CUPOT_ExternalAcc / CPU_ExternlAcc
-// Description :  1. Cacalculate the external acceleration from the input coordinates and time
-//                2. This function will be invoked in both the CPU and GPU codes
+// Description :  1. Calculate the external acceleration from the input coordinates and time
+//                2. This function will be invoked by both CPU and GPU codes
 //                3. "__forceinline__" is required since this device function will be invoked by more than one kernel
 //                   (e.g., CUPOT_HydroGravitySolver, CUFLU_ComputeFlux <-- which will be called by different fluid solvers)
 //

@@ -100,10 +100,10 @@ SIMU_OPTION += -DPAR_NPASSIVE=0
 # (f) optimization and compilation options
 # ------------------------------------------------------------------------------------
 # GPU acceleration
-#SIMU_OPTION += -DGPU
+SIMU_OPTION += -DGPU
 
 # GPU architecture: FERMI/KEPLER/MAXWELL/PASCAL
-#SIMU_OPTION += -DGPU_ARCH=KEPLER
+SIMU_OPTION += -DGPU_ARCH=KEPLER
 
 # debug mode
 #SIMU_OPTION += -DGAMER_DEBUG

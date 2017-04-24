@@ -113,43 +113,46 @@ __constant__ int *NormIdx_d = NULL;
 //                              - A Practical Introduction ~ by Eleuterio F. Toro"
 //                   MHM_RP : Stone & Gardiner, NewA, 14, 139 (2009)
 //
-// Parameter   :  g_Fluid_In    : Global memory array storing the input fluid variables
-//                g_Fluid_Out   : Global memory array to store the output fluid variables
-//                g_Flux        : Global memory array to store the output fluxes
-//                g_Corner      : Global memory array storing the physical corner coordinates of each patch group (USELESS CURRENTLY)
-//                g_Pot_USG     : Global memory array storing the input potential for UNSPLIT_GRAVITY (NOT SUPPORTED in RTVD)
-//                g_PriVar      : Global memory array to store the primitive variables
-//                g_Slope_PPM_x : Global memory array to store the x-slope for the PPM reconstruction
-//                g_Slope_PPM_y : Global memory array to store the y-slope for the PPM reconstruction
-//                g_Slope_PPM_z : Global memory array to store the z-slope for the PPM reconstruction
-//                g_FC_Var_xL   : Global memory array to store the half-step variables on the -x surface
-//                g_FC_Var_xR   : Global memory array to store the half-step variables on the +x surface
-//                g_FC_Var_yL   : Global memory array to store the half-step variables on the -y surface
-//                g_FC_Var_yR   : Global memory array to store the half-step variables on the +y surface
-//                g_FC_Var_zL   : Global memory array to store the half-step variables on the -z surface
-//                g_FC_Var_zR   : Global memory array to store the half-step variables on the +z surface
-//                g_FC_Flux_x   : Global memory array to store the face-centered fluxes in the x direction
-//                g_FC_Flux_y   : Global memory array to store the face-centered fluxes in the y direction
-//                g_FC_Flux_z   : Global memory array to store the face-centered fluxes in the z direction
-//                dt            : Time interval to advance solution
-//                _dh           : 1 / grid size
-//                Gamma         : Ratio of specific heats
-//                StoreFlux     : true --> store the coarse-fine fluxes
-//                LR_Limiter    : Slope limiter for the data reconstruction in the MHM/MHM_RP/CTU schemes
-//                                (0/1/2/3/4) = (vanLeer/generalized MinMod/vanAlbada/
-//                                               vanLeer + generalized MinMod/extrema-preserving) limiter
-//                MinMod_Coeff  : Coefficient of the generalized MinMod limiter
-//                EP_Coeff      : Coefficient of the extrema-preserving limiter
-//                Time          : Current physical time                                     (for UNSPLIT_GRAVITY only)
-//                GravityType   : Types of gravity --> self-gravity, external gravity, both (for UNSPLIT_GRAVITY only)
-//                MinDens/Pres  : Minimum allowed density and pressure
-//                NormPassive   : true --> normalize passive scalars so that the sum of their mass density
-//                                         is equal to the gas mass density
-//                NNorm         : Number of passive scalars to be normalized
-//                                --> Should be set to the global variable "PassiveNorm_NVar"
+// Parameter   :  g_Fluid_In       : Global memory array storing the input fluid variables
+//                g_Fluid_Out      : Global memory array to store the output fluid variables
+//                g_DE_Out         : Global memory array to store the output dual-energy status
+//                g_Flux           : Global memory array to store the output fluxes
+//                g_Corner         : Global memory array storing the physical corner coordinates of each patch group (USELESS CURRENTLY)
+//                g_Pot_USG        : Global memory array storing the input potential for UNSPLIT_GRAVITY (NOT SUPPORTED in RTVD)
+//                g_PriVar         : Global memory array to store the primitive variables
+//                g_Slope_PPM_x    : Global memory array to store the x-slope for the PPM reconstruction
+//                g_Slope_PPM_y    : Global memory array to store the y-slope for the PPM reconstruction
+//                g_Slope_PPM_z    : Global memory array to store the z-slope for the PPM reconstruction
+//                g_FC_Var_xL      : Global memory array to store the half-step variables on the -x surface
+//                g_FC_Var_xR      : Global memory array to store the half-step variables on the +x surface
+//                g_FC_Var_yL      : Global memory array to store the half-step variables on the -y surface
+//                g_FC_Var_yR      : Global memory array to store the half-step variables on the +y surface
+//                g_FC_Var_zL      : Global memory array to store the half-step variables on the -z surface
+//                g_FC_Var_zR      : Global memory array to store the half-step variables on the +z surface
+//                g_FC_Flux_x      : Global memory array to store the face-centered fluxes in the x direction
+//                g_FC_Flux_y      : Global memory array to store the face-centered fluxes in the y direction
+//                g_FC_Flux_z      : Global memory array to store the face-centered fluxes in the z direction
+//                dt               : Time interval to advance solution
+//                _dh              : 1 / grid size
+//                Gamma            : Ratio of specific heats
+//                StoreFlux        : true --> store the coarse-fine fluxes
+//                LR_Limiter       : Slope limiter for the data reconstruction in the MHM/MHM_RP/CTU schemes
+//                                   (0/1/2/3/4) = (vanLeer/generalized MinMod/vanAlbada/
+//                                                  vanLeer + generalized MinMod/extrema-preserving) limiter
+//                MinMod_Coeff     : Coefficient of the generalized MinMod limiter
+//                EP_Coeff         : Coefficient of the extrema-preserving limiter
+//                Time             : Current physical time                                     (for UNSPLIT_GRAVITY only)
+//                GravityType      : Types of gravity --> self-gravity, external gravity, both (for UNSPLIT_GRAVITY only)
+//                MinDens/Pres     : Minimum allowed density and pressure
+//                DualEnergySwitch : Use the dual-energy formalism if E_int/E_kin < DualEnergySwitch
+//                NormPassive      : true --> normalize passive scalars so that the sum of their mass density
+//                                            is equal to the gas mass density
+//                NNorm            : Number of passive scalars to be normalized
+//                                   --> Should be set to the global variable "PassiveNorm_NVar"
 //-------------------------------------------------------------------------------------------------------
 __global__ void CUFLU_FluidSolver_MHM( const real g_Fluid_In[]   [NCOMP_TOTAL][ FLU_NXT*FLU_NXT*FLU_NXT ],
                                        real g_Fluid_Out     []   [NCOMP_TOTAL][ PS2*PS2*PS2 ],
+                                       char g_DE_Out        []                [ PS2*PS2*PS2 ],
                                        real g_Flux          [][9][NCOMP_TOTAL][ PS2*PS2 ],
                                        const double g_Corner[][3],
                                        const real g_Pot_USG[] [ USG_NXT_F*USG_NXT_F*USG_NXT_F ],
@@ -169,7 +172,8 @@ __global__ void CUFLU_FluidSolver_MHM( const real g_Fluid_In[]   [NCOMP_TOTAL][ 
                                        const real dt, const real _dh, const real Gamma, const bool StoreFlux,
                                        const LR_Limiter_t LR_Limiter, const real MinMod_Coeff,
                                        const real EP_Coeff, const double Time, const OptGravityType_t GravityType,
-                                       const real MinDens, const real MinPres, const bool NormPassive, const int NNorm )
+                                       const real MinDens, const real MinPres, const real DualEnergySwitch,
+                                       const bool NormPassive, const int NNorm )
 {
 
 #  ifdef UNSPLIT_GRAVITY
@@ -242,8 +246,8 @@ __global__ void CUFLU_FluidSolver_MHM( const real g_Fluid_In[]   [NCOMP_TOTAL][ 
 
 
 // 3. evaluate the full-step solution
-   CUFLU_FullStepUpdate( g_Fluid_In, g_Fluid_Out, g_FC_Flux_x, g_FC_Flux_y, g_FC_Flux_z, dt, _dh, Gamma,
-                         NormPassive, NNorm, NormIdx_d );
+   CUFLU_FullStepUpdate( g_Fluid_In, g_Fluid_Out, g_DE_Out, g_FC_Flux_x, g_FC_Flux_y, g_FC_Flux_z,
+                         dt, _dh, Gamma, MinDens, MinPres, DualEnergySwitch, NormPassive, NNorm, NormIdx_d );
 
 } // FUNCTION : CUFLU_FluidSolver_MHM
 

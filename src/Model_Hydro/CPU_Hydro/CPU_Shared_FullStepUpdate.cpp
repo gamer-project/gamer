@@ -80,7 +80,6 @@ void CPU_FullStepUpdate( const real Input[][ FLU_NXT*FLU_NXT*FLU_NXT ], real Out
 
 
 //    floor and normalize passive scalars
-//    --> do this before applying the dual-energy correction
 #     if ( NCOMP_PASSIVE > 0 )
       for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)  Output[v][ID2] = FMAX( Output[v][ID2], TINY_NUMBER );
 
@@ -96,9 +95,10 @@ void CPU_FullStepUpdate( const real Input[][ FLU_NXT*FLU_NXT*FLU_NXT ], real Out
 
 
 //    apply the dual-energy formalism to correct the internal energy
-//    --> currently it's applied here even when GRAVITY is on
-//        --> we will invoke CPU_DualEnergyFix() in the gravity solver again when UNSPLIT_GRAVITY is adopted
-//            since it will also update the internal energy
+//    --> currently, even when UNSPLIT_GRAVITY is on (which would update the internal energy), we still invoke
+//        CPU_DualEnergyFix() here and will fix the internal energy in the gravity solver for cells updated
+//        by the dual-energy formalism (i.e., for cells with their dual-energy status marked as DE_UPDATED_BY_DUAL)
+//    --> this feature might be modified in the future
 #     ifdef DUAL_ENERGY
 //    we no longer apply the minimum density and pressure checks here since we want to enable 1st-order-flux correction for that
       const bool CheckMinPres_No = false;
