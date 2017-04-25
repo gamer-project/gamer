@@ -696,8 +696,10 @@
 #  undef UNSPLIT_GRAVITY
 #endif
 
+// currently we always set GPU_ARCH == NONE when GPU is off
 #ifndef GPU
-#  undef GPU_ARCH
+#  undef  GPU_ARCH
+#  define GPU_ARCH NONE
 #endif
 
 

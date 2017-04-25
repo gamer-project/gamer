@@ -99,7 +99,7 @@ SIMU_OPTION += -DPAR_NPASSIVE=0
 
 # (f) optimization and compilation options
 # ------------------------------------------------------------------------------------
-# GPU acceleration
+# GPU acceleration (to disable GPU, please comment out both -DGPU and -DGPU_ARCH)
 SIMU_OPTION += -DGPU
 
 # GPU architecture: FERMI/KEPLER/MAXWELL/PASCAL
@@ -121,10 +121,10 @@ SIMU_OPTION += -DINTEL
 #SIMU_OPTION += -DFLOAT8
 
 # serial mode (in which no MPI libraries are required)
-SIMU_OPTION += -DSERIAL
+#SIMU_OPTION += -DSERIAL
 
 # load-balance parallelization (one must not turn on the option "SERIAL") (HILBERT)
-#SIMU_OPTION += -DLOAD_BALANCE=HILBERT
+SIMU_OPTION += -DLOAD_BALANCE=HILBERT
 
 # overlap MPI communication with computation (experimental, only supported in LOAD_BALANCE)
 #SIMU_OPTION += -DOVERLAP_MPI
@@ -401,6 +401,13 @@ MPI_PATH          := /usr/local/mpi/openmpi-1.8.4-intel-15.0
 HDF5_PATH         := /projects/ncsa/grav/softwares/miniconda2
 #GSL_PATH          := /usr/local/gsl/gsl-1.16
 
+# campus UIUC (gcc-4.9.2 + openmpi-1.8.4)
+#CUDA_TOOLKIT_PATH := /usr/local/cuda/7.0
+#FFTW_PATH         := /projects/ncsa/grav/softwares/fftw/2.1.5-openmpi-1.8.4-gcc-4.9.2
+#MPI_PATH          := /usr/local/mpi/openmpi-1.8.4-gcc-4.9.2
+#HDF5_PATH         := /projects/ncsa/grav/softwares/miniconda2
+#GSL_PATH          := /usr/local/gsl/gsl-1.16
+
 # hulk (openmpi-intel-qlc)
 #CUDA_TOOLKIT_PATH := /opt/gpu/cuda/4.2
 #FFTW_PATH         := /opt/math/fftw/2.1.5-intel-qlc
@@ -625,7 +632,7 @@ else ifeq "$(findstring GPU_ARCH=MAXWELL, $(SIMU_OPTION))" "GPU_ARCH=MAXWELL"
 else ifeq "$(findstring GPU_ARCH=PASCAL,  $(SIMU_OPTION))" "GPU_ARCH=PASCAL"
    NVCCFLAG_COM += -gencode arch=compute_60,code=\"compute_60,sm_60\"
 else ifeq "$(findstring GPU, $(SIMU_OPTION))" "GPU"
-   $(error unknown GPU_ARCH !!)
+   $(error unknown GPU_ARCH (please set it in the Makefile) !!)
 endif
 
 ifeq "$(findstring GAMER_DEBUG, $(SIMU_OPTION))" "GAMER_DEBUG"

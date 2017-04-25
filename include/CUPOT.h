@@ -168,7 +168,7 @@
 #ifdef __CUDACC__
 #if ( GPU_ARCH == FERMI  ||  GPU_ARCH == KEPLER  ||  GPU_ARCH == MAXWELL  ||  GPU_ARCH == PASCAL )
 #  define WARP_SIZE 32
-#else
+#elif defined GPU
 #  error : UNKNOWN GPU_ARCH !!
 #endif
 #endif // #ifdef __CUDACC__
