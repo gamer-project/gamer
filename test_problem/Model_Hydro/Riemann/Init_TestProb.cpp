@@ -39,11 +39,11 @@ static int  Riemann_XYZ;         // wave propagation direction (0/1/2 --> x/y/z)
 //
 // Note        :  1. Please copy this file to "GAMER/src/Init/Init_TestProb.cpp"
 //                2. Test problem parameters cab be set in the input file "Input__TestProb"
-//             
-// Parameter   :  None 
+//
+// Parameter   :  None
 //-------------------------------------------------------------------------------------------------------
 void Init_TestProb()
-{  
+{
 
    const char *TestProb = "HYDRO Riemann problem";
 
@@ -128,7 +128,7 @@ void Init_TestProb()
       Aux_Message( stdout, "       right-state velocity             = %13.7e\n", Riemann_VelR );
       Aux_Message( stdout, "       right-state transverse velocity  = %13.7e\n", Riemann_VelR_T );
       Aux_Message( stdout, "       right-state pressure             = %13.7e\n", Riemann_PreR );
-      Aux_Message( stdout, "       propagation direction            = %s%s\n",   ( Riemann_LR > 0 ) ? "+" : "-", 
+      Aux_Message( stdout, "       propagation direction            = %s%s\n",   ( Riemann_LR > 0 ) ? "+" : "-",
                                                                                  ( Riemann_XYZ == 0 ) ? "x" :
                                                                                  ( Riemann_XYZ == 1 ) ? "y" : "z" );
       Aux_Message( stdout, "=============================================================================\n" );
@@ -155,14 +155,14 @@ void Init_TestProb()
          Aux_Message( stdout, "NOTE : parameter %s is set to %13.7e in the %s test !!\n", "END_T", END_T, TestProb );
    }
 
-   if (  ( Riemann_XYZ == 0 && OPT__OUTPUT_PART != OUTPUT_X )  || 
-         ( Riemann_XYZ == 1 && OPT__OUTPUT_PART != OUTPUT_Y )  || 
+   if (  ( Riemann_XYZ == 0 && OPT__OUTPUT_PART != OUTPUT_X )  ||
+         ( Riemann_XYZ == 1 && OPT__OUTPUT_PART != OUTPUT_Y )  ||
          ( Riemann_XYZ == 2 && OPT__OUTPUT_PART != OUTPUT_Z )    )
    {
       OPT__OUTPUT_PART = ( Riemann_XYZ == 0 ) ? OUTPUT_X : ( Riemann_XYZ == 1 ) ? OUTPUT_Y : OUTPUT_Z;
 
       if ( MPI_Rank == 0 )
-         Aux_Message( stdout, "NOTE : parameter %s is reset to %d in the %s test !!\n", 
+         Aux_Message( stdout, "NOTE : parameter %s is reset to %d in the %s test !!\n",
                       "OPT__OUTPUT_PART", OPT__OUTPUT_PART, TestProb );
    }
 
@@ -179,7 +179,7 @@ void Init_TestProb()
       OPT__OUTPUT_TEST_ERROR = true;
 
       if ( MPI_Rank == 0 )
-         Aux_Message( stdout, "NOTE : option %s is enabled for the %s test !!\n", 
+         Aux_Message( stdout, "NOTE : option %s is enabled for the %s test !!\n",
                       "OPT__OUTPUT_TEST_ERROR", TestProb );
    }
 
@@ -189,12 +189,12 @@ void Init_TestProb()
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Hydro_TestProbSol_Riemann
-// Description :  Assign the initial condition for the HYDRO Riemann problem test 
+// Description :  Assign the initial condition for the HYDRO Riemann problem test
 //
 // Note        :  This function is invoked by "Hydro_Init_StartOver_AssignData"
 //
 // Parameter   :  fluid : Array to store the initial fluid attributes to be returned
-//                x/y/z : Target physical coordinates 
+//                x/y/z : Target physical coordinates
 //                Time  : Target physical time
 //
 // Return      :  fluid
@@ -204,7 +204,7 @@ void Hydro_TestProbSol_Riemann( real fluid[], const double x, const double y, co
 
    const double _Gamma_m1 = 1.0/(GAMMA-1.0);
    double r, BoxCen;
-   int  TVar[NCOMP];
+   int  TVar[NCOMP_FLUID];
 
    switch ( Riemann_XYZ )
    {
@@ -232,7 +232,7 @@ void Hydro_TestProbSol_Riemann( real fluid[], const double x, const double y, co
       fluid[ TVar[4] ] = 0.5*( SQR(fluid[MOMX]) + SQR(fluid[MOMY]) + SQR(fluid[MOMZ]) )/fluid[DENS] + Riemann_PreR*_Gamma_m1;
    }
 
-   if ( Riemann_LR < 0 )  
+   if ( Riemann_LR < 0 )
    {
       fluid[ TVar[1] ] = -fluid[ TVar[1] ];
       fluid[ TVar[2] ] = -fluid[ TVar[2] ];
@@ -243,8 +243,8 @@ void Hydro_TestProbSol_Riemann( real fluid[], const double x, const double y, co
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  LoadTestProbParameter 
-// Description :  Load parameters for the test problem 
+// Function    :  LoadTestProbParameter
+// Description :  Load parameters for the test problem
 //
 // Note        :  This function is invoked by "Init_TestProb"
 //
