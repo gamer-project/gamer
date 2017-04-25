@@ -30,10 +30,10 @@ real Blast_Center[3];      // explosion center
 // Note        :  1. Please copy this file to "GAMER/src/Init/Init_TestProb.cpp"
 //                2. Test problem parameters can be set in the input file "Input__TestProb"
 //
-// Parameter   :  None 
+// Parameter   :  None
 //-------------------------------------------------------------------------------------------------------
 void Init_TestProb()
-{  
+{
 
    const char *TestProb = "HYDRO blast wave";
 
@@ -121,7 +121,7 @@ void Init_TestProb()
       OPT__OUTPUT_TEST_ERROR = true;
 
       if ( MPI_Rank == 0 )
-         Aux_Message( stdout, "NOTE : option %s is enabled for the %s test !!\n", 
+         Aux_Message( stdout, "NOTE : option %s is enabled for the %s test !!\n",
                       "OPT__OUTPUT_TEST_ERROR", TestProb );
    }
 
@@ -131,7 +131,7 @@ void Init_TestProb()
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Hydro_TestProbSol_BlastWave
-// Description :  Initialize the HYDRO blast wave test  
+// Description :  Initialize the HYDRO blast wave test
 //
 // Note        :  Invoked by "Hydro_Init_StartOver_AssignData"
 //
@@ -160,8 +160,8 @@ void Hydro_TestProbSol_BlastWave( real *fluid, const double x, const double y, c
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  LoadTestProbParameter 
-// Description :  Load parameters for the test problem 
+// Function    :  LoadTestProbParameter
+// Description :  Load parameters for the test problem
 //
 // Note        :  This function is invoked by "Init_TestProb"
 //
@@ -234,7 +234,7 @@ void LoadTestProbParameter()
 
 
 // set the default explosion center
-   for (int d=0; d<3; d++)    
+   for (int d=0; d<3; d++)
       if ( Blast_Center[d] < 0.0 )  Blast_Center[d] = 0.5*amr->BoxSize[d];
 
 } // FUNCTION : LoadTestProbParameter

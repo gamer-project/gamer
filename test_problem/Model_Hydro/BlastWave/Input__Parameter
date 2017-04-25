@@ -122,7 +122,7 @@
 1           RESTART_LOAD_NRANK        # number of MPI ranks to load the restart file simultaneously (for higher I/O bandwidth)
 1           OPT__RESTART_HEADER       # RESTART header : (0, 1) -> (skip/check the header info)
 0           OPT__UM_START_LEVEL       # refinement level of the input uniform-mesh array (must >= 0)
-1           OPT__UM_START_NVAR        # [1...NCOMP] -> number of variables per cell stored in the uniform-mesh array
+1           OPT__UM_START_NVAR        # [1...NCOMP_TOTAL] -> number of variables per cell stored in the uniform-mesh array
 1           OPT__UM_START_DOWNGRADE   # downgrade the uniform-mesh data from OPT__UM_START_LEVEL to 0 by the refinement criteria
 1           OPT__UM_START_REFINE      # refine the uniform-mesh data from OPT__UM_START_LEVEL to MAX_LEVEL
 0           OPT__UM_FACTOR_5OVER3     # multiply the input density field by 5/3 to have the growing-mode amplitude correct
@@ -142,7 +142,7 @@
 -1.0        INT_MONO_COEFF            # coefficient for the interpolation monotonicity (1<=coeff<=4, <0:default [2.0])
 
 1           OPT__OUTPUT_TOTAL         # output the total binary data : (0, 1, 2) -> (off, HDF5, C-binary)
-4           OPT__OUTPUT_PART          # output a single line or slice (0~7) -> (off, xy, yz, xz, x, y, z, diag)
+7           OPT__OUTPUT_PART          # output a single line or slice (0~7) -> (off, xy, yz, xz, x, y, z, diag)
 0           OPT__OUTPUT_TEST_ERROR    # output the test problem errors --> edit "Output_TestProbErr"
 0           OPT__OUTPUT_PAR_TEXT      # output the particle text file ##PARTICLE ONLY##
 0           OPT__OUTPUT_BASEPS        # output the base-level power spectrum
@@ -152,7 +152,7 @@
 2           OPT__OUTPUT_MODE          # (1, 2, 3) -> (const step, const dt, dump table)
 5           OUTPUT_STEP               # output data every OUTPUT_STEP step
 1.0e-3      OUTPUT_DT                 # output data every OUTPUT_DT time interval
-0.0         OUTPUT_PART_X             # x coordinate for the option OPT__OUTPUT_PART
+0.5         OUTPUT_PART_X             # x coordinate for the option OPT__OUTPUT_PART
 0.5         OUTPUT_PART_Y             # y coordinate for the option OPT__OUTPUT_PART
 0.5         OUTPUT_PART_Z             # z coordinate for the option OPT__OUTPUT_PART
 -1          INIT_DUMPID               # set the first dump ID (<0:default)
