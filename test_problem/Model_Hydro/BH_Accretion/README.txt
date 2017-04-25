@@ -35,3 +35,6 @@ Note:
 2. Gravity dt is disabled --> set DT__GRAVITY to arbitrarily large
 
 3. MIN_PRES is set to 1.0e-16
+
+4. Dual-energy formalism is important for evolving pressure accurately in the
+   high Mach number region (when Mach number is greater than ~10)

@@ -24,3 +24,5 @@ Note:
    density magnitude are adopted as the default refinement criteria
 2. By default, the maximum refinement level = 3
 3. By default, the refinement threshold of the Lohner error estimator = 0.80
+4. Dual-energy formalism is important for evolving pressure accurately in the
+   preshock region
