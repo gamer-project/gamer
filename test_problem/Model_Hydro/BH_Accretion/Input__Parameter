@@ -2,13 +2,13 @@
 128         NX0_TOT[0]                # number of base-level grids in the x direction
 128         NX0_TOT[1]                # number of base-level grids in the y direction
 128         NX0_TOT[2]                # number of base-level grids in the z direction
-2           MPI_NRANK                 # total number of MPI ranks (= MPI_NRANK_X[0]*MPI_NRANK_X[1]*MPI_NRANK_X[2])
+8           MPI_NRANK                 # total number of MPI ranks (= MPI_NRANK_X[0]*MPI_NRANK_X[1]*MPI_NRANK_X[2])
 2           MPI_NRANK_X[0]            # number of MPI ranks in the x direction
-1           MPI_NRANK_X[1]            # number of MPI ranks in the y direction
-1           MPI_NRANK_X[2]            # number of MPI ranks in the z direction
+2           MPI_NRANK_X[1]            # number of MPI ranks in the y direction
+2           MPI_NRANK_X[2]            # number of MPI ranks in the z direction
 10          OMP_NTHREAD               # number of OpenMP threads (<=0:default [omp_get_max_threads])
 -1.0        END_T                     # end physical time of simulation (<0:default -> must be defined in Init_TestProb/RESTART)
-5           END_STEP                  # end step of simulation (<0:default -> must be defined in Init_TestProb)
+-1          END_STEP                  # end step of simulation (<0:default -> must be defined in Init_TestProb)
 
 1           OPT__UNIT                 # specify code units in CGS --> must set 3 and only 3 basic units below ##USELESS FOR COMOVING##
 3.08567758149e21 UNIT_L               # length unit        (<=0: set to UNIT_V*UNIT_T or (UNIT_M/UNIT_D)^(1/3))
