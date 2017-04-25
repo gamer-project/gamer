@@ -10,6 +10,12 @@
 // Function    :  CPU_HydroGravitySolver
 // Description :  Use CPU to advance the momentum and energy density by gravitational acceleration
 //
+// Note        :  1. Currently this function does NOT ensure the consistency between Etot-Ekin and
+//                   the dual-energy variable (either internal energy of entropy)
+//                   --> This consistency breaks only for cells with the dual-energy status labelled
+//                       as DE_UPDATED_BY_ETOT_GRA
+//                   --> We restore this consistency in Gra_Close()
+//
 // Parameter   :  Flu_Array_New    : Array to store the input and output fluid variables
 //                Pot_Array_New    : Array storing the input potential (at the current step)
 //                                   --> _New: to be distinguishable from Pot_Array_USG, which is defined at the previous step

@@ -24,7 +24,11 @@ void Gra_Close( const int lv, const int SaveSg, const real h_Flu_Array_G[][GRA_N
                 const char h_DE_Array_G[][PS1][PS1][PS1], const int NPG, const int *PID0_List )
 {
 
+#  if ( defined DUAL_ENERGY  &&  defined UNSPLIT_GRAVITY )
+   const real Gamma_m1 = GAMMA - (real)1.0;
+#  endif
    int N, PID, PID0;
+
 
 #  pragma omp parallel for private( N, PID, PID0 ) schedule( runtime )
    for (int TID=0; TID<NPG; TID++)
@@ -44,13 +48,36 @@ void Gra_Close( const int lv, const int SaveSg, const real h_Flu_Array_G[][GRA_N
          for (int i=0; i<PATCH_SIZE; i++)
             amr->patch[SaveSg][lv][PID]->fluid[v][k][j][i] = h_Flu_Array_G[N][v][k][j][i];
 
-//       dual-energy status (which is always stored in Sg=0)
+//       for the dual-energy formalism only
 #        ifdef DUAL_ENERGY
          for (int k=0; k<PATCH_SIZE; k++)
          for (int j=0; j<PATCH_SIZE; j++)
          for (int i=0; i<PATCH_SIZE; i++)
+         {
+//          update the dual-energy status (which is always stored in Sg=0)
             amr->patch[0][lv][PID]->de_status[k][j][i] = h_DE_Array_G[N][k][j][i];
-#        endif
+
+//          correct entropy to be consistent with the updated internal energy
+//          --> only necessary for cells with the dual-energy status labelled as DE_UPDATED_BY_ETOT_GRA
+//              since for all other cases we fix the internal energy in the gravity solver
+#           ifdef UNSPLIT_GRAVITY
+            if ( h_DE_Array_G[N][k][j][i] == DE_UPDATED_BY_ETOT_GRA )
+            {
+#              if   ( DUAL_ENERGY == DE_ENPY )
+               amr->patch[SaveSg][lv][PID]->fluid[ENPY][k][j][i]
+                  = CPU_Fluid2Entropy( amr->patch[SaveSg][lv][PID]->fluid[DENS][k][j][i],
+                                       amr->patch[SaveSg][lv][PID]->fluid[MOMX][k][j][i],
+                                       amr->patch[SaveSg][lv][PID]->fluid[MOMY][k][j][i],
+                                       amr->patch[SaveSg][lv][PID]->fluid[MOMZ][k][j][i],
+                                       amr->patch[SaveSg][lv][PID]->fluid[ENGY][k][j][i],
+                                       Gamma_m1 );
+#              elif ( DUAL_ENERGY == DE_EINT )
+#              error : DE_EINT is NOT supported yet !!
+#              endif
+            }
+#           endif // #ifdef UNSPLIT_GRAVITY
+         } // i,j,k
+#        endif // #ifdef DUAL_ENERGY
 
 #        elif ( MODEL == ELBDM )
 //       density field is NOT sent in and out in the ELBDM gravity solver

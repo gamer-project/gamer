@@ -44,8 +44,13 @@ int CUPOT_HydroGravitySolver_SetConstMem( double ExtAcc_AuxArray_h[] )
 // Description :  GPU gravity solver which advances the momentum and energy density of a group of patches
 //                by gravitational acceleration (including the external gravity)
 //
-// Note        :  Prefix "g" for pointers pointing to the "Global" memory space
-//                Prefix "s" for pointers pointing to the "Shared" memory space
+// Note        :  1. Prefix "g" for pointers pointing to the "Global" memory space
+//                   Prefix "s" for pointers pointing to the "Shared" memory space
+//                2. Currently this function does NOT ensure the consistency between Etot-Ekin and
+//                   the dual-energy variable (either internal energy of entropy)
+//                   --> This consistency breaks only for cells with the dual-energy status labelled
+//                       as DE_UPDATED_BY_ETOT_GRA
+//                   --> We restore this consistency in Gra_Close()
 //
 // Parameter   :  g_Flu_Array_New : Global memory array to store the input and output fluid variables
 //                g_Pot_Array_New : Global memory array storing the input potential for evaluating the

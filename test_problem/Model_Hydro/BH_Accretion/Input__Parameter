@@ -30,7 +30,6 @@
 1           PAR_INIT                  # initialization option for particles: (1, 2, 3) -> (FUNCTION, RESTART, FILE)
 -1          PAR_INTERP                # particle interpolation scheme: (-1, 1, 2, 3) -> (default, NGP, CIC, TSC) [3]
 -1          PAR_INTEG                 # particle integration scheme: (-1, 1, 2) -> (default, Euler, KDK) [2]
-1           PAR_SYNC_DUMP             # synchronize particles when dumping data (must turn on STORE_PAR_ACC)
 1           PAR_IMPROVE_ACC           # improve force accuracy around patch boundaries (must turn on STORE_POT_GHOST)
 1           PAR_PREDICT_POS           # predict particle position during mass assignment
 -1.0        PAR_REMOVE_CELL           # remove particles X-root-cells away from the boundary (for non-periodic BC only; <0.0:default)
@@ -57,10 +56,12 @@
 0           OPT__FLAG_RHO             # flag: density (Input__Flag_Rho)
 0           OPT__FLAG_RHO_GRADIENT    # flag: density gradient (Input__Flag_RhoGradient)
 0           OPT__FLAG_PRES_GRADIENT   # flag: pressure gradient (Input__Flag_PresGradient) ##HYDRO ONLY##
+0           OPT__FLAG_VORTICITY       # flag: vorticity (Input__Flag_Vorticity) ##HYDRO ONLY##
 0           OPT__FLAG_ENGY_DENSITY    # flag: energy density (Input_Flag_EngyDensity) ##ELBDM ONLY##
 0           OPT__FLAG_LOHNER_DENS     # flag: Lohner (Input__Flag_Lohner) (HYDRO:mass density  ; ELBDM:R^2+I^2)
 0           OPT__FLAG_LOHNER_ENGY     # flag: Lohner (Input__Flag_Lohner) (HYDRO:energy density; ELBDM:useless)
 0           OPT__FLAG_LOHNER_PRES     # flag: Lohner (Input__Flag_Lohner) (HYDRO:pressure      ; ELBDM:useless)
+0           OPT__FLAG_LOHNER_TEMP     # flag: Lohner (Input__Flag_Lohner) (HYDRO:temperature   ; ELBDM:useless)
 -1          OPT__FLAG_LOHNER_FORM     # form of the Lohner error estimator (-1,0,1,2,3)->(default[1],FLASH1/2,form-invariant1/2)
 1           OPT__FLAG_USER            # flag: user-defined (Input__Flag_User) --> edit "Flag_UserCriteria"
 0           OPT__FLAG_REGION          # flag: specify the regions allowed to be refined --> edit "Flag_Region"
@@ -72,6 +73,8 @@
 0           OPT__MEMORY_POOL          # preallocate patches to reduce memory fragmentation (Input__MemoryPool) ##must turn on OPT__REUSE_MEMORY##
 
 9999.999    LB_INPUT__WLI_MAX         # threshold for redistributing patches at all levels ##LOAD_BALANCE ONLY##
+-1.0        LB_INPUT__PAR_WEIGHT      # load-balance weighting of one particle over one cell (<0:default=0.0) ##LOAD_BALANCE and PARTICLE ONLY##
+1           OPT__RECORD_LOAD_BALANCE  # record the information of load balance
 
 1.200       GAMMA                     # ratio of specific heats (adiabatic index)
 0.62        MOLECULAR_WEIGHT          # mean molecular weight (currently it's only for calculating temperature in post-processing)
@@ -83,6 +86,7 @@
 2           OPT__WAF_LIMITER          # flux limiter in WAF (0/1/2/3/4) = (none/SuperBee/vanLeer/vanAlbada/MinBee)
 -1          OPT__1ST_FLUX_CORR        # correct unphysical results (defined by MIN_DENS/PRES) with 1st-order fluxes (-1/0/1/2 -> default/off/3D/3D+1D [2]) ##MHM/MHM_RP/CTU ONLY##
 -1          OPT__1ST_FLUX_CORR_SCHEME # Riemann solver for OPT__1ST_FLUX_CORR (-1/1/2/3 -> default/Roe/HLLC/HLLE [Roe])
+-1.0        DUAL_ENERGY_SWITCH        # use dual-energy formalism if E_int/E_kin < DUAL_ENERGY_SWITCH (<0:default [2.0e-2]) ##DUAL_ENERGY ONLY##
 
 1.0         ELBDM_MASS                # particle mass in ev/c^2 in ELBDM (input unit is fixed even when OPT__UNIT or COMOVING is on)
 1.0         ELBDM_PLANCK_CONST        # Planck constant in ELBDM (will be overwritten if OPT__UNIT or COMOVING is on)
@@ -94,10 +98,12 @@
 1           GPU_NSTREAM               # number of streams for the asynchronous memory copy in GPU (<0:default)
 1           OPT__FIXUP_FLUX           # perform the flux fix-up to correct the coarse-grid data ##HYDRO and ELBDM ONLY##
 1           OPT__FIXUP_RESTRICT       # perform the restrict operation to correct the coarse-grid data
+0           OPT__CORR_AFTER_ALL_SYNC  # apply corrections after all levels are synchronized (-1/0/1/2:default/off/every step/before dump)
+1           OPT__NORMALIZE_PASSIVE    # ensure "sum(passive_scalar_density) == gas_density" --> edit "Init_PassiveVariable.cpp"
 0           OPT__OVERLAP_MPI          # overlap MPI time with CPU/GPU computation (currently for LOAD_BALANCE only)
 1           OPT__RESET_FLUID          # reset fluid variables after each update --> edit "Flu_ResetByUser"
-0.0         MIN_DENS                  # minimum density  ##HYDRO, MHD, and ELBDM ONLY##
-1.0e-16     MIN_PRES                  # minimum pressure ##HYDRO and MHD ONLY##
+0.0         MIN_DENS                  # minimum density  (must >= 0.0) ##HYDRO, MHD, and ELBDM ONLY##
+1.0e-16     MIN_PRES                  # minimum pressure (must >= 0.0) ##HYDRO and MHD ONLY##
 
 -1.0        NEWTON_G                  # gravitational constant (will be overwritten if OPT__UNIT or COMOVING is on)
 -1.0        SOR_OMEGA                 # over-relaxation parameter for SOR (<0:default)
@@ -113,14 +119,15 @@
 0           OPT__EXTERNAL_POT         # add the external potential (does not work with OPT__GRAVITY_TYPE == 2) ##ELBDM ONLY##
 
 1           OPT__INIT                 # initialization option : (1, 2, 3) -> (StartOver, RESTART, UM_START)
+1           RESTART_LOAD_NRANK        # number of MPI ranks to load the restart file simultaneously (for higher I/O bandwidth)
 1           OPT__RESTART_HEADER       # RESTART header : (0, 1) -> (skip/check the header info)
 0           OPT__UM_START_LEVEL       # refinement level of the input uniform-mesh array (must >= 0)
-1           OPT__UM_START_NVAR        # [1...NCOMP] -> number of variables per cell stored in the uniform-mesh array
+1           OPT__UM_START_NVAR        # [1...NCOMP_TOTAL] -> number of variables per cell stored in the uniform-mesh array
 1           OPT__UM_START_DOWNGRADE   # downgrade the uniform-mesh data from OPT__UM_START_LEVEL to 0 by the refinement criteria
 1           OPT__UM_START_REFINE      # refine the uniform-mesh data from OPT__UM_START_LEVEL to MAX_LEVEL
 0           OPT__UM_FACTOR_5OVER3     # multiply the input density field by 5/3 to have the growing-mode amplitude correct
 1           OPT__INIT_RESTRICT        # restrict all data during initialization (0=off, 1=on)
--2          OPT__GPUID_SELECT         # GPU ID selection mode : (-3, -2, -1, >=0) -> by (Laohu, CUDA, MPI rank, Input)
+-1          OPT__GPUID_SELECT         # GPU ID selection mode : (-3, -2, -1, >=0) -> by (Laohu, CUDA, MPI rank, Input)
 0           INIT_SUBSAMPLING_NCELL    # perform sub-sampling during initialization (0, >0) -> (off, # of sub-sampling cells)
 
 1           OPT__INT_TIME             # perform "temporal interpolation" for the individual time-step scheme
@@ -150,6 +157,9 @@
 3.75        OUTPUT_PART_Z             # z coordinate for the option OPT__OUTPUT_PART
 -1          INIT_DUMPID               # set the first dump ID (<0:default)
 
+yt_inline   YT_SCRIPT                 # yt inline analysis script (do not include the ".py" file extension)
+3           YT_VERBOSE                # verbose level of yt (0, 1, 2, 3) -> (off, info, warning, debug)
+
 0           OPT__VERBOSE              # output the detail of simulation progress
 0           OPT__TIMING_BARRIER       # synchronize before timing --> more accurate, but may slow down the run (<0:default)
 0           OPT__TIMING_BALANCE       # record the max/min elapsed time in various code sections for checking load balance
@@ -162,10 +172,11 @@
 0           OPT__CK_REFINE            # check the refinement
 0           OPT__CK_PROPER_NESTING    # check the proper-nesting condition
 1           OPT__CK_CONSERVATION      # check the conservation law
+0           OPT__CK_NORMALIZE_PASSIVE # check the normalization of passive scalars --> must turn on OPT__NORMALIZE_PASSIVE
 0           OPT__CK_RESTRICT          # check the restriction operation
 0           OPT__CK_FINITE            # check if all variables are finite
 0           OPT__CK_PATCH_ALLOCATE    # check if all patches are properly allocated
 0           OPT__CK_FLUX_ALLOCATE     # check if all flux arrays are properly allocated ##HYDRO and ELBDM ONLY##
-0           OPT__CK_NEGATIVE          # check the negative density/pressure: (1,2,3)->(rho,pres,both) ##HYDRO ONLY##
+0           OPT__CK_NEGATIVE          # check the negative density/pressure: (1,2,3)->(rho,pres(and entropy),both) ##HYDRO ONLY##
 1.0         OPT__CK_MEMFREE           # check the free memory (0:off, >0:threshold)
 0           OPT__CK_PARTICLE          # check the particle allocation

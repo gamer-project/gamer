@@ -35,10 +35,13 @@ extern int    BH_SinkNCell;
 void Flu_ResetByUser( const int lv, const int FluSg, const double TTime )
 {
 
-   const double dh = amr->dh[lv];
-   const real   dv = CUBE(dh);
+   const double dh     = amr->dh[lv];
+   const real   dv     = CUBE(dh);
+#  ifdef DUAL_ENERGY
+   const real Gamma_m1 = GAMMA - (real)1.0;
+#  endif
 
-   real   fluid[NCOMP], Ek, Et;
+   real   fluid[NCOMP_TOTAL], Ek, Et;
    double x, y, z, x0, y0, z0;
    int    SinkNCell = 0;
 
@@ -55,7 +58,7 @@ void Flu_ResetByUser( const int lv, const int FluSg, const double TTime )
       for (int j=0; j<PS1; j++)  {  y = y0 + j*dh;
       for (int i=0; i<PS1; i++)  {  x = x0 + i*dh;
 
-         for (int v=0; v<NCOMP; v++)   fluid[v] = amr->patch[FluSg][lv][PID]->fluid[v][k][j][i];
+         for (int v=0; v<NCOMP_TOTAL; v++)   fluid[v] = amr->patch[FluSg][lv][PID]->fluid[v][k][j][i];
 
 //       Flu_ResetByUser_Func( fluid, x, y, z, TTime );
 
@@ -87,10 +90,16 @@ void Flu_ResetByUser( const int lv, const int FluSg, const double TTime )
             fluid[MOMZ] = 0.0;
             fluid[ENGY] = BH_InBC_E;
 
+#           if   ( DUAL_ENERGY == DE_ENPY )
+            fluid[ENPY] = CPU_Fluid2Entropy( fluid[DENS], fluid[MOMX], fluid[MOMY], fluid[MOMZ], fluid[ENGY], Gamma_m1 );
+#           elif ( DUAL_ENERGY == DE_EINT )
+#           error : DE_EINT is NOT supported yet !!
+#           endif
+
             SinkNCell ++;
          }
 
-         for (int v=0; v<NCOMP; v++)   amr->patch[FluSg][lv][PID]->fluid[v][k][j][i] = fluid[v];
+         for (int v=0; v<NCOMP_TOTAL; v++)   amr->patch[FluSg][lv][PID]->fluid[v][k][j][i] = fluid[v];
 
       }}}
    } // for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)

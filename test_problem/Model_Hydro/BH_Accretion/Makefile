@@ -3,7 +3,7 @@
 
 # name of the executable file
 #######################################################################################################
-EXECUTABLE := Dizzy
+EXECUTABLE := gamer
 
 
 
@@ -25,7 +25,7 @@ SIMU_OPTION += -DPOT_SCHEME=SOR
 # --> currently only for improving accuracy for particles around the patch boundaries (by Par->ImproveAcc)
 #SIMU_OPTION += -DSTORE_POT_GHOST
 
-# use unsplitting method to couple gravity to the target model (e.g., hydro, MHD, ELBDM)
+# use unsplitting method to couple gravity to the target model (for HYDRO and MHD only; ELBDM is not supported yet)
 # --> must be off if GRAVITY is off
 SIMU_OPTION += -DUNSPLIT_GRAVITY
 
@@ -48,17 +48,21 @@ SIMU_OPTION += -DMAX_PATCH=1000000
 # (b) hydro options
 # ------------------------------------------------------------------------------------
 ifeq "$(findstring MODEL=HYDRO, $(SIMU_OPTION))" "MODEL=HYDRO"
-# hydrodynamic scheme: RTVD/WAF/MHM/MHM_RP/CTU
+# hydrodynamic scheme: RTVD/WAF/MHM/MHM_RP/CTU (WAF is deprecated)
 SIMU_OPTION += -DFLU_SCHEME=CTU
 
-# scheme of spatial data reconstruction: PLM/PPM (piecewise-linear/piecewise-parabolic) ##USELESS IN RTVD/WAF##
+# scheme of spatial data reconstruction: PLM/PPM (piecewise-linear/piecewise-parabolic) ##useless in RTVD/WAF##
 SIMU_OPTION += -DLR_SCHEME=PPM
 
-# Riemann solver: EXACT/ROE/HLLE/HLLC ##ALL ARE USELESS IN RTVD, HLLE/HLLC ARE USELESS IN WAF##
+# Riemann solver: EXACT/ROE/HLLE/HLLC ##all are useless in RTVD, HLLE/HLLC are useless in WAF##
 SIMU_OPTION += -DRSOLVER=ROE
 
-# number of passively advected scalars
-SIMU_OPTION += -DNPASSIVE=0
+# dual energy formalism: DE_ENPY/DE_EINT (evolve entropy or internal energy; DE_EINT is not supported yet) ##useless in RTVD/WAF##
+SIMU_OPTION += -DDUAL_ENERGY=DE_ENPY
+
+# number of passively advected scalars (**excluding** entropy or internal energy even when DUAL_ENERGY is on)
+# --> for simulations without any passive scalar, please set this variable to 0 and do NOT comment it out
+SIMU_OPTION += -DNCOMP_PASSIVE_MAKEFILE=0
 
 
 # (c) MHD options
@@ -77,6 +81,9 @@ else ifeq "$(findstring MODEL=ELBDM, $(SIMU_OPTION))" "MODEL=ELBDM"
 
 # include the quartic self-interaction potential (must turn on GRAVITY as well, not work with COMOVING yet)
 #SIMU_OPTION += -DQUARTIC_SELF_INTERACTION
+
+# number of passively advected scalars (not supported for ELBDM yet --> must be 0)
+SIMU_OPTION += -DNCOMP_PASSIVE_MAKEFILE=0
 
 endif # MODEL
 
@@ -134,6 +141,9 @@ SIMU_OPTION += -DSUPPORT_HDF5
 # support GNU scientific library
 #SIMU_OPTION += -DSUPPORT_GSL
 
+# support yt inline analysis
+#SIMU_OPTION += -DSUPPORT_LIBYT
+
 
 
 # source files
@@ -156,10 +166,11 @@ CC_FILE     += Aux_Check_Parameter.cpp  Aux_Check_Conservation.cpp  Aux_Check.cp
                Aux_Check_Refinement.cpp  Aux_Check_Restrict.cpp  Aux_Error.cpp  Aux_GetCPUInfo.cpp \
                Aux_GetMemInfo.cpp  Aux_Message.cpp  Aux_PatchCount.cpp  Aux_TakeNote.cpp  Aux_Timing.cpp \
                Aux_Check_MemFree.cpp  Aux_RecordPerformance.cpp  Aux_CheckFileExist.cpp  Aux_Array.cpp \
-               Aux_RecordUser.cpp  Aux_RecordCorrUnphy.cpp  Aux_SwapPointer.cpp
+               Aux_RecordUser.cpp  Aux_RecordCorrUnphy.cpp  Aux_SwapPointer.cpp  Aux_Check_NormalizePassive.cpp
 
 CC_FILE     += CPU_FluidSolver.cpp  Flu_AdvanceDt.cpp  Flu_Prepare.cpp  Flu_Close.cpp  Flu_FixUp.cpp \
                Flu_Restrict.cpp  Flu_AllocateFluxArray.cpp  Flu_BoundaryCondition_User.cpp  Flu_ResetByUser.cpp \
+               Flu_CorrAfterAllSync.cpp
 
 CC_FILE     += End_GAMER.cpp  End_MemFree.cpp  End_MemFree_Fluid.cpp  End_StopManually.cpp  End_TestProb.cpp \
                Init_BaseLevel.cpp  Init_GAMER.cpp  Init_Load_DumpTable.cpp \
@@ -167,7 +178,7 @@ CC_FILE     += End_GAMER.cpp  End_MemFree.cpp  End_MemFree_Fluid.cpp  End_StopMa
                Init_MemAllocate_Fluid.cpp  Init_Parallelization.cpp  Init_RecordBasePatch.cpp  Init_Refine.cpp \
                Init_Restart_v1.cpp  Init_StartOver.cpp  Init_TestProb.cpp  Init_UM.cpp  Init_OpenMP.cpp \
                Init_Restart_HDF5.cpp  Init_SetDefaultParameter.cpp  Init_Restart_v2.cpp  Init_MemoryPool.cpp \
-               Init_Unit.cpp
+               Init_Unit.cpp  Init_PassiveVariable.cpp
 
 CC_FILE     += Interpolate.cpp  Int_CQuadratic.cpp  Int_MinMod1D.cpp  Int_MinMod3D.cpp  Int_vanLeer.cpp \
                Int_Quadratic.cpp  Int_Table.cpp  Int_CQuartic.cpp  Int_Quartic.cpp
@@ -201,10 +212,11 @@ CC_FILE     += CPU_FluidSolver_RTVD.cpp  CPU_FluidSolver_WAF.cpp  CPU_FluidSolve
                CPU_FluidSolver_CTU.cpp  CPU_Shared_DataReconstruction.cpp  CPU_Shared_FluUtility.cpp \
                CPU_Shared_ComputeFlux.cpp  CPU_Shared_FullStepUpdate.cpp \
                CPU_Shared_RiemannSolver_Exact.cpp  CPU_Shared_RiemannSolver_Roe.cpp \
-               CPU_Shared_RiemannSolver_HLLE.cpp  CPU_Shared_RiemannSolver_HLLC.cpp
+               CPU_Shared_RiemannSolver_HLLE.cpp  CPU_Shared_RiemannSolver_HLLC.cpp  CPU_Shared_DualEnergy.cpp
 
 CC_FILE     += Hydro_Init_StartOver_AssignData.cpp  Hydro_Aux_Check_Negative.cpp  Hydro_GetTimeStep_Fluid.cpp \
-               Hydro_Init_UM_AssignData.cpp  Hydro_BoundaryCondition_Outflow.cpp  Hydro_BoundaryCondition_Reflecting.cpp
+               Hydro_Init_UM_AssignData.cpp  Hydro_BoundaryCondition_Outflow.cpp  Hydro_BoundaryCondition_Reflecting.cpp \
+               Hydro_Flag_Vorticity.cpp
 
 vpath %.cu     Model_Hydro/GPU_Hydro
 vpath %.cpp    Model_Hydro/CPU_Hydro  Model_Hydro
@@ -345,10 +357,21 @@ CC_FILE     += LB_Init_LoadBalance.cpp  LB_AllocateBufferPatch_Sibling.cpp  LB_R
                LB_Refine.cpp  LB_Refine_GetNewRealPatchList.cpp  LB_Refine_AllocateNewPatch.cpp \
                LB_FindSonNotHome.cpp  LB_Refine_AllocateBufferPatch_Sibling.cpp \
                LB_AllocateBufferPatch_Sibling_Base.cpp  LB_RecordExchangeFixUpDataPatchID.cpp \
+               LB_EstimateWorkload_AllPatchGroup.cpp  LB_EstimateLoadImbalance.cpp
 
 endif # LOAD_BALANCE
 
 vpath %.cpp    LoadBalance
+
+
+# yt inline analysis source files (included only if "SUPPORT_LIBYT" is turned on)
+# ------------------------------------------------------------------------------------
+ifeq "$(findstring SUPPORT_LIBYT, $(SIMU_OPTION))" "SUPPORT_LIBYT"
+CC_FILE     += YT_Init.cpp  YT_End.cpp  YT_SetParameter.cpp  YT_AddAllGrid.cpp  YT_Inline.cpp
+
+vpath %.cpp    YT
+endif # "SUPPORT_LIBYT"
+
 
 
 # rules and targets
@@ -356,18 +379,27 @@ vpath %.cpp    LoadBalance
 
 # location of libraries
 # -------------------------------------------------------------------------------
+# nano (intel 2016)
+#CUDA_TOOLKIT_PATH := /usr/local/cuda
+#MPI_PATH          := /mnt/lustre/allen/hyschive/software/openmpi/2.0.2
+#FFTW_PATH         := /mnt/lustre/allen/hyschive/software/fftw/2.1.5
+#HDF5_PATH         := /mnt/lustre/allen/hyschive/software/miniconda2
+#GSL_PATH          :=
+
 # dxl (gcc, serial)
 #CUDA_TOOLKIT_PATH :=
-#FFTW_PATH         := /usr
+#FFTW_PATH         := /home/hyschive/software/fftw/2.1.5
 #MPI_PATH          := /usr
 #HDF5_PATH         := /home/hyschive/software/miniconda2
+#GSL_PATH          := /usr/lib
+#LIBYT_PATH        := /home/hyschive/project/libyt/libyt.dev/libyt
 
 # campus UIUC (intel-15.0 + openmpi-1.8.4)
 CUDA_TOOLKIT_PATH := /usr/local/cuda/7.0
 FFTW_PATH         := /projects/ncsa/grav/softwares/fftw/2.1.5
 MPI_PATH          := /usr/local/mpi/openmpi-1.8.4-intel-15.0
 HDF5_PATH         := /projects/ncsa/grav/softwares/miniconda2
-GSL_PATH          := /usr/local/gsl/gsl-1.16
+#GSL_PATH          := /usr/local/gsl/gsl-1.16
 
 # hulk (openmpi-intel-qlc)
 #CUDA_TOOLKIT_PATH := /opt/gpu/cuda/4.2
@@ -496,7 +528,7 @@ endif
 
 ifeq "$(findstring OPENMP, $(SIMU_OPTION))" "OPENMP"
    ifeq "$(findstring INTEL, $(SIMU_OPTION))" "INTEL"
-      OPENMP := -openmp
+      OPENMP := -fopenmp
    else
       OPENMP := -fopenmp
    endif
@@ -508,6 +540,10 @@ endif
 
 ifeq "$(findstring SUPPORT_GSL, $(SIMU_OPTION))" "SUPPORT_GSL"
 LIB += -L$(GSL_PATH)/lib -lgsl -lgslcblas
+endif
+
+ifeq "$(findstring SUPPORT_LIBYT, $(SIMU_OPTION))" "SUPPORT_LIBYT"
+LIB += -L$(LIBYT_PATH)/lib -lyt
 endif
 
 
@@ -531,6 +567,10 @@ ifeq "$(findstring SUPPORT_GSL, $(SIMU_OPTION))" "SUPPORT_GSL"
 INCLUDE += -I$(GSL_PATH)/include
 endif
 
+ifeq "$(findstring SUPPORT_LIBYT, $(SIMU_OPTION))" "SUPPORT_LIBYT"
+INCLUDE += -I$(LIBYT_PATH)/include
+endif
+
 
 # CXX flags
 # -------------------------------------------------------------------------------
@@ -541,7 +581,8 @@ CXXWARN_FLAG := -w1
 else
 CXXWARN_FLAG := -Wextra -Wall -Wswitch -Wformat -Wchar-subscripts -Wparentheses -Wmultichar \
                 -Wtrigraphs -Wpointer-arith -Wcast-align -Wreturn-type -Wno-unused-function
-CXXWARN_FLAG += -Wno-unused-variable -Wno-unused-parameter -Wno-maybe-uninitialized -Wno-unused-but-set-variable
+CXXWARN_FLAG += -Wno-unused-variable -Wno-unused-parameter -Wno-maybe-uninitialized -Wno-unused-but-set-variable \
+                -Wno-unused-result -Wundef
 endif
 
 ifeq "$(findstring OPENMP, $(SIMU_OPTION))" ""
@@ -557,18 +598,18 @@ else
 CXXFLAG  := $(CXXWARN_FLAG) $(COMMONFLAG) $(OPENMP) -O3
 endif
 
-ifeq "$(findstring GAMER_DEBUG, $(SIMU_OPTION))" "GAMER_DEBUG"
-   ifeq "$(findstring INTEL, $(SIMU_OPTION))" "INTEL"
-      CXXFLAG += -g -debug
-   else
-      CXXFLAG += -g
-   endif
+# debug flag (currently we include debugging information even when GAMER_DEBUG is off)
+ifeq "$(findstring INTEL, $(SIMU_OPTION))" "INTEL"
+   CXXFLAG += -g
+else
+   CXXFLAG += -g
 endif
 
 # fixes compilation issues on Intel MPI
 ifeq "$(findstring SERIAL, $(SIMU_OPTION))" ""
    CXXFLAG += -DMPICH_IGNORE_CXX_SEEK
 endif
+
 
 # NVCC flags
 # -------------------------------------------------------------------------------
@@ -582,7 +623,7 @@ else ifeq "$(findstring GPU_ARCH=KEPLER,  $(SIMU_OPTION))" "GPU_ARCH=KEPLER"
 else ifeq "$(findstring GPU_ARCH=MAXWELL, $(SIMU_OPTION))" "GPU_ARCH=MAXWELL"
    NVCCFLAG_COM += -gencode arch=compute_52,code=\"compute_52,sm_52\"
 else ifeq "$(findstring GPU_ARCH=PASCAL,  $(SIMU_OPTION))" "GPU_ARCH=PASCAL"
-   NVCCFLAG_COM += -gencode arch=compute_61,code=\"compute_61,sm_61\"
+   NVCCFLAG_COM += -gencode arch=compute_60,code=\"compute_60,sm_60\"
 else ifeq "$(findstring GPU, $(SIMU_OPTION))" "GPU"
    $(error unknown GPU_ARCH !!)
 endif
@@ -605,6 +646,18 @@ else ifeq "$(findstring GPU_ARCH=KEPLER, $(SIMU_OPTION))" "GPU_ARCH=KEPLER"
      NVCCFLAG_FLU += --maxrregcount=128
    else
      NVCCFLAG_FLU += --maxrregcount=64
+   endif
+else ifeq "$(findstring GPU_ARCH=PASCAL, $(SIMU_OPTION))" "GPU_ARCH=MAXWELL"
+   ifeq "$(findstring FLOAT8, $(SIMU_OPTION))" "FLOAT8"
+#    NVCCFLAG_FLU += --maxrregcount=XX
+   else
+#    NVCCFLAG_FLU += --maxrregcount=XX
+   endif
+else ifeq "$(findstring GPU_ARCH=PASCAL, $(SIMU_OPTION))" "GPU_ARCH=PASCAL"
+   ifeq "$(findstring FLOAT8, $(SIMU_OPTION))" "FLOAT8"
+#    NVCCFLAG_FLU += --maxrregcount=XX
+   else
+#    NVCCFLAG_FLU += --maxrregcount=XX
    endif
 endif
 
