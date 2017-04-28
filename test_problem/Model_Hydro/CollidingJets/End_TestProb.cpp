@@ -12,6 +12,7 @@ extern double (*Jet_CenOffset)[3];
 extern double  *Jet_SrcEint;
 extern double (*Jet_Cen)[3];
 extern double  *Jet_WaveK;
+extern double  *Jet_MaxDis;
 
 
 
@@ -37,6 +38,7 @@ void End_TestProb()
    delete [] Jet_SrcEint;
    delete [] Jet_Cen;
    delete [] Jet_WaveK;
+   delete [] Jet_MaxDis;
 
 } // FUNCTION : End_TestProb
 

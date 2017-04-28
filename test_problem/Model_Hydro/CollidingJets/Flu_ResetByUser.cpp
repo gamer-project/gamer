@@ -10,6 +10,7 @@ extern double (*Jet_Vec)[3];
 extern double  *Jet_SrcEint;
 extern double (*Jet_Cen)[3];
 extern double  *Jet_WaveK;
+extern double  *Jet_MaxDis;
 
 
 
@@ -41,44 +42,39 @@ bool Flu_ResetByUser_Func( real fluid[], const double x, const double y, const d
 
    double Jet_dr, Jet_dh, S, Area;
    double Dis_c2m, Dis_c2v, Dis_v2m, Vec_c2m[3], Vec_v2m[3];
+   double TempVec[3], _Jet_VecAbs, Jet_SrcVel_xyz[3];
    real   MomSin;
-
-
-// vectors for calculating the distance between cells and the jet sources
-   double TempVec[Jet_NJet][3];
-
-   for (int n=0; n<Jet_NJet; n++)
-   for (int d=0; d<3; d++)
-      TempVec[n][d] = Jet_Cen[n][d] + Jet_Vec[n][d];
-
-
-// velocity components along different directions
-   double _Jet_VecAbs, Jet_SrcVel_xyz[Jet_NJet][3];
-
-   for (int n=0; n<Jet_NJet; n++)
-   {
-      _Jet_VecAbs = 1.0/sqrt( SQR(Jet_Vec[n][0]) + SQR(Jet_Vec[n][1]) + SQR(Jet_Vec[n][2]) );
-
-      for (int d=0; d<3; d++)    Jet_SrcVel_xyz[n][d] = Jet_SrcVel[n] * Jet_Vec[n][d] * _Jet_VecAbs;
-   }
 
 
 // loop over all cells to add the jet source
    for (int n=0; n<Jet_NJet; n++)
    {
-//    exclude cells far away from the jet source
-      if ( fabs(r[2]-Jet_Cen[n][2]) > Jet_HalfHeight[n] )   continue;
-
 //    distance: jet center to mesh
       for (int d=0; d<3; d++)    Vec_c2m[d] = r[d] - Jet_Cen[n][d];
       Dis_c2m = sqrt( SQR(Vec_c2m[0]) + SQR(Vec_c2m[1]) + SQR(Vec_c2m[2]) );
 
+
+//    exclude cells far away from the jet source
+      if ( Dis_c2m > Jet_MaxDis[n] )   continue;
+
+
+//    vectors for calculating the distance between cells and the jet sources
+      for (int d=0; d<3; d++)    TempVec[d] = Jet_Cen[n][d] + Jet_Vec[n][d];
+
+
+//    velocity components along different directions
+      _Jet_VecAbs = 1.0/sqrt( SQR(Jet_Vec[n][0]) + SQR(Jet_Vec[n][1]) + SQR(Jet_Vec[n][2]) );
+      for (int d=0; d<3; d++)    Jet_SrcVel_xyz[d] = Jet_SrcVel[n] * Jet_Vec[n][d] * _Jet_VecAbs;
+
+
 //    distance: temporary vector to mesh
-      for (int d=0; d<3; d++)    Vec_v2m[d] = r[d] - TempVec[n][d];
+      for (int d=0; d<3; d++)    Vec_v2m[d] = r[d] - TempVec[d];
       Dis_v2m = sqrt( SQR(Vec_v2m[0]) + SQR(Vec_v2m[1]) + SQR(Vec_v2m[2]) );
+
 
 //    distance: jet center to temporary vector
       Dis_c2v = sqrt( SQR(Jet_Vec[n][0]) + SQR(Jet_Vec[n][1]) + SQR(Jet_Vec[n][2]) );
+
 
 //    check whether or not the target cell is within the jet source
       S      = 0.5*( Dis_c2m + Dis_v2m + Dis_c2v );
@@ -88,21 +84,24 @@ bool Flu_ResetByUser_Func( real fluid[], const double x, const double y, const d
 
       if ( Jet_dh <= Jet_HalfHeight[n]  &&  Jet_dr <= Jet_Radius[n] )
       {
+//       reset the fluid variables within the jet source
          fluid[DENS] = Jet_SrcDens[n];
 
 //       use a sine function to make the velocity smooth within the jet from +Jet_SrcVel to -Jet_SrcVel
          MomSin      = fluid[DENS]*sin( Jet_WaveK[n]*Jet_dh );
          MomSin     *= SIGN( Vec_c2m[0]*Jet_Vec[n][0] + Vec_c2m[1]*Jet_Vec[n][1] + Vec_c2m[2]*Jet_Vec[n][2] );
-         fluid[MOMX] = MomSin*Jet_SrcVel_xyz[n][0];
-         fluid[MOMY] = MomSin*Jet_SrcVel_xyz[n][1];
-         fluid[MOMZ] = MomSin*Jet_SrcVel_xyz[n][2];
+         fluid[MOMX] = MomSin*Jet_SrcVel_xyz[0];
+         fluid[MOMY] = MomSin*Jet_SrcVel_xyz[1];
+         fluid[MOMZ] = MomSin*Jet_SrcVel_xyz[2];
 
          fluid[ENGY] = Jet_SrcEint[n] + 0.5*( SQR(fluid[MOMX])+SQR(fluid[MOMY])+SQR(fluid[MOMZ]) ) / fluid[DENS];
 
 //       return immediately since we do NOT allow different jet source to overlap
          return true;
+
       } // if (  Jet_dh <= Jet_HalfHeight[n]  &&  Jet_dr <= Jet_Radius[n] )
    } // for (int n=0; n<Jet_NJet; n++)
+
 
    return false;
 

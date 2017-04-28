@@ -28,6 +28,8 @@ double   Jet_BgEint;                   // ambient internal energy
 double  *Jet_SrcEint       = NULL;     // jet internal energy
 double (*Jet_Cen)[3]       = NULL;     // jet central coordinates
 double  *Jet_WaveK         = NULL;     // jet wavenumber used in the sin() function to have smooth bidirectional jets
+double  *Jet_MaxDis        = NULL;     // maximum distance between the cylinder-shape jet source and the jet center
+                                       // --> ( Jet_Radius^2 + Jet_HalfHeight^2 )^0.5
 // =======================================================================================
 
 
@@ -80,11 +82,11 @@ void Init_TestProb()
 
    for (int n=0; n<Jet_NJet; n++)
    {
+      Jet_WaveK  [n] = 0.5*M_PI/Jet_HalfHeight[n];
+      Jet_MaxDis [n] = sqrt( SQR(Jet_HalfHeight[n]) + SQR(Jet_Radius[n]) );
       Jet_SrcEint[n] = Jet_SrcDens[n]*Jet_SrcTemp[n]/(MOLECULAR_WEIGHT*Const_amu/UNIT_M) / ( GAMMA - (real)1.0 );
 
       for (int d=0; d<3; d++)    Jet_Cen[n][d] = 0.5*amr->BoxSize[d] + Jet_CenOffset[n][d];
-
-      Jet_WaveK[n] = 0.5*M_PI/Jet_HalfHeight[n];
    }
 
 
@@ -217,6 +219,7 @@ void LoadTestProbParameter()
    Jet_SrcEint    = new double [Jet_NJet];
    Jet_Cen        = new double [Jet_NJet][3];
    Jet_WaveK      = new double [Jet_NJet];
+   Jet_MaxDis     = new double [Jet_NJet];
 
 
 // load the input parameters of each jet
