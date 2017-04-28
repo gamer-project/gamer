@@ -22,10 +22,10 @@ extern int    BH_SinkNCell;
 // Function    :  Aux_RecordUser
 // Description :  Record user-specified information
 //
-// Note        :  1. Please turn on the option "OPT__RECORD_USER" 
+// Note        :  1. Please turn on the option "OPT__RECORD_USER"
 //                2. This function will be called both during the program initialization and after each full update
-// 
-// Parameter   :  None 
+//
+// Parameter   :  None
 //-------------------------------------------------------------------------------------------------------
 void Aux_RecordUser( )
 {
@@ -36,21 +36,14 @@ void Aux_RecordUser( )
 
    if ( FirstTime )
    {
-//    get the total number of cells within the void region
-      int SinkNCell_Sum;
-
-      MPI_Reduce( &BH_SinkNCell, &SinkNCell_Sum, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD );
-
-
 //    header
       if ( MPI_Rank == 0 )
       {
          if ( Aux_CheckFileExist(FileName) )    Aux_Message( stderr, "WARNING : file \"%s\" already exists !!\n", FileName );
 
          FILE *File_User = fopen( FileName, "a" );
-         fprintf( File_User, "#Number of void cells : %d\n", SinkNCell_Sum );
-         fprintf( File_User, "#%9s%16s%20s%20s%20s%20s%20s%20s%20s%20s%20s%20s%20s\n",
-                  "Step", "Time [yr]", "Mass [Msun]", "Time [yr]", "dM/dt [Msun/yr]",
+         fprintf( File_User, "#%9s%16s%20s%20s%20s%20s%20s%20s%20s%20s%20s%20s%20s%20s\n",
+                  "Step", "Time [yr]", "NVoidCell", "Mass [Msun]", "Time [yr]", "dM/dt [Msun/yr]",
                   "MomX [g*cm/s]", "MomY [g*cm/s]", "MomZ [g*cm/s]", "MomXAbs [g*cm/s]", "MomYAbs [g*cm/s]", "MomZAbs [g*cm/s]",
                   "Ek [erg]", "Et [erg]" );
          fclose( File_User );
@@ -62,6 +55,13 @@ void Aux_RecordUser( )
 
    else
    {
+//    get the total number of cells within the void region
+      int SinkNCell_Sum;
+
+      MPI_Reduce( &BH_SinkNCell, &SinkNCell_Sum, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD );
+
+
+//    get the total amount of sunk variables
       double Mass_Sum, MomX_Sum, MomY_Sum, MomZ_Sum, MomXAbs_Sum, MomYAbs_Sum, MomZAbs_Sum, Ek_Sum, Et_Sum;
 
       MPI_Reduce( &BH_SinkMass,    &Mass_Sum,    1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD );
@@ -93,8 +93,8 @@ void Aux_RecordUser( )
          dTime *= UNIT_T/yr;
 
          FILE *File_User = fopen( FileName, "a" );
-         fprintf( File_User, "%10ld%16.7e%20.7e%20.7e%20.7e%20.7e%20.7e%20.7e%20.7e%20.7e%20.7e%20.7e%20.7e\n",
-                  Step, Time[0]*UNIT_T/yr, Mass_Sum, dTime, Mass_Sum/dTime,
+         fprintf( File_User, "%10ld%16.7e%20d%20.7e%20.7e%20.7e%20.7e%20.7e%20.7e%20.7e%20.7e%20.7e%20.7e%20.7e\n",
+                  Step, Time[0]*UNIT_T/yr, SinkNCell_Sum, Mass_Sum, dTime, Mass_Sum/dTime,
                   MomX_Sum, MomY_Sum, MomZ_Sum, MomXAbs_Sum, MomYAbs_Sum, MomZAbs_Sum, Ek_Sum, Et_Sum );
          fclose( File_User );
       }
