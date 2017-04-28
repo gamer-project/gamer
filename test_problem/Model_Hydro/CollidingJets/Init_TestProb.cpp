@@ -15,6 +15,7 @@ static void LoadTestProbParameter();
 // =======================================================================================
 double   Jet_BgDens;                   // ambient density
 double   Jet_BgTemp;                   // ambient temperature
+double   Jet_BgVel[3];                 // ambient velocity
 int      Jet_NJet;                     // number of jets (1/2)
 double  *Jet_Radius        = NULL;     // radius of the cylinder-shape jet source
 double  *Jet_HalfHeight    = NULL;     // half height of the cylinder-shape jet source
@@ -98,6 +99,9 @@ void Init_TestProb()
       Aux_Message( stdout, "=============================================================================\n" );
       Aux_Message( stdout, "Jet_BgDens          = % 14.7e g/cm^3\n", Jet_BgDens*UNIT_D                     );
       Aux_Message( stdout, "Jet_BgTemp          = % 14.7e keV\n",    Jet_BgTemp*UNIT_E/Const_keV           );
+      Aux_Message( stdout, "Jet_BgVel[x]        = % 14.7e cm/s\n",   Jet_BgVel[0]*UNIT_V                   );
+      Aux_Message( stdout, "Jet_BgVel[y]        = % 14.7e cm/s\n",   Jet_BgVel[1]*UNIT_V                   );
+      Aux_Message( stdout, "Jet_BgVel[z]        = % 14.7e cm/s\n",   Jet_BgVel[2]*UNIT_V                   );
       Aux_Message( stdout, "Jet_NJet            = %d\n",             Jet_NJet                              );
       for (int n=0; n<Jet_NJet; n++) {
       Aux_Message( stdout, "Jet # %d\n", n );
@@ -160,9 +164,9 @@ void HYDRO_TestProbSol_Jet( real fluid[], const double x, const double y, const 
 {
 
    fluid[DENS] = Jet_BgDens;
-   fluid[MOMX] = 0.0;
-   fluid[MOMY] = 0.0;
-   fluid[MOMZ] = 0.0;
+   fluid[MOMX] = fluid[DENS]*Jet_BgVel[0];
+   fluid[MOMY] = fluid[DENS]*Jet_BgVel[1];
+   fluid[MOMZ] = fluid[DENS]*Jet_BgVel[2];
    fluid[ENGY] = Jet_BgEint + 0.5*( SQR(fluid[MOMX]) + SQR(fluid[MOMY]) + SQR(fluid[MOMZ]) ) / fluid[DENS];
 
 } // FUNCTION : HYDRO_TestProbSol_Jet
@@ -199,6 +203,15 @@ void LoadTestProbParameter()
 
    getline( &input_line, &len, File );
    sscanf( input_line, "%lf%s",  &Jet_BgTemp,            string );
+
+   getline( &input_line, &len, File );
+   sscanf( input_line, "%lf%s",  &Jet_BgVel[0],          string );
+
+   getline( &input_line, &len, File );
+   sscanf( input_line, "%lf%s",  &Jet_BgVel[1],          string );
+
+   getline( &input_line, &len, File );
+   sscanf( input_line, "%lf%s",  &Jet_BgVel[2],          string );
 
    getline( &input_line, &len, File );
    sscanf( input_line, "%d%s",   &Jet_NJet,              string );
@@ -272,6 +285,8 @@ void LoadTestProbParameter()
 // convert to code units
    Jet_BgDens           *= 1.0       / UNIT_D;
    Jet_BgTemp           *= Const_keV / UNIT_E;
+   for (int d=0; d<3; d++)
+   Jet_BgVel[d]         *= 1.0       / UNIT_V;
 
    for (int n=0; n<Jet_NJet; n++) {
 

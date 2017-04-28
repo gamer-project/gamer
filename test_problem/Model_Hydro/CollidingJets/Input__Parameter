@@ -13,8 +13,8 @@
 1           OPT__UNIT                 # specify code units in CGS --> must set 3 and only 3 basic units below ##USELESS FOR COMOVING##
 3.08567758149e21 UNIT_L               # length unit        (<=0: set to UNIT_V*UNIT_T or (UNIT_M/UNIT_D)^(1/3))
 -1.0        UNIT_M                    # mass unit          (<=0: set to UNIT_D*UNIT_L^3)
--1.0        UNIT_T                    # time unit          (<=0: set to UNIT_L/UNIT_V)
-1.0e8       UNIT_V                    # velocity unit      (<=0: set to UNIT_L/UNIT_T)
+3.15569252e13    UNIT_T               # time unit          (<=0: set to UNIT_L/UNIT_V)
+-1.0        UNIT_V                    # velocity unit      (<=0: set to UNIT_L/UNIT_T)
 5.0e-29     UNIT_D                    # mass density unit  (<=0: set to UNIT_M/UNIT_L^3)
 
 2           OPT__BC_FLU_XM            # fluid boundary condition at -x face : (1,2,3,4) -> (periodic, outflow, reflecting, user)

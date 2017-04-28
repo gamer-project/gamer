@@ -1,6 +1,9 @@
 # parameters for the HYDRO colliding jets test
 5.0e-29     Jet_BgDens           # ambient density [in cgs units]
 0.25        Jet_BgTemp           # ambient temperature [in keV]
++0.0        Jet_BgVel_x          # ambient velocity x [in cgs units]
++0.0        Jet_BgVel_y          # ambient velocity y [in cgs units]
++0.0        Jet_BgVel_z          # ambient velocity z [in cgs units]
 1           Jet_NJet             # number of jets (1/2)
 0.35        Jet_Radius     [0]   # jet 0: radius of the cylinder-shape jet source [in kpc]
 0.70        Jet_HalfHeight [0]   # jet 0: half height of the cylinder-shape jet source [in kpc]
