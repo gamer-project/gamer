@@ -16,7 +16,7 @@ for ds in ts.piter():
 
 #  set temperature unit to keV
    sz.set_unit( 'temperature', 'keV', equivalency='thermal' )
-   sz.set_zlim( 'temperature', 1.0e0 2.0e2 )
+   sz.set_zlim( 'temperature', 1.0e0, 2.0e2 )
    sz.set_cmap( 'temperature', 'afmhot' )
    sz.annotate_timestamp( time_unit='Myr', corner='upper_right' )
    sz.save( mpl_kwargs={"dpi":150} )

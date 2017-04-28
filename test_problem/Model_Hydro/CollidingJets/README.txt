@@ -1,7 +1,7 @@
 
-   ************************
-   ** HYDRO caustic test **
-   ************************
+   *******************************
+   ** HYDRO colliding jets test **
+   *******************************
 
 Procedure to run the test problem:
 -------------------------------------------------------------------------------
@@ -11,12 +11,10 @@ Procedure to run the test problem:
 2. Compile GAMER by typing "make" in the directory "GAMER/src"
    ("make clean" first if the program has been compiled previously)
 
-3. Run GAMER by executing the file "Dizzy" in the directory "GAMER/bin/Run"
+3. Run GAMER by executing the file "gamer" in the directory "GAMER/bin/run"
 
 
 Note:
 -------------------------------------------------------------------------------
-1. Ref: Ryu, D., Ostriker, J. P., Kang, H., & Cen, R. 1993, ApJ, 414, 1
-
-2. This test is good for testing the dual-energy formalism
-   --> Without it the preshock region will be over-heated
+1. Ref: Molnar, S., Schive, H-Y., et al., 2017, ApJ, 835, 57
+        https://arxiv.org/abs/1612.02341

@@ -19,6 +19,28 @@ extern int    BH_SinkNCell;
 
 
 //-------------------------------------------------------------------------------------------------------
+// Function    :  Flu_ResetByUser_Func
+// Description :  Function to reset the fluid field
+//
+// Note        :  1. Invoked by "Flu_ResetByUser"
+//                2. Input "fluid" array stores the original values
+//
+// Parameter   :  fluid : Fluid array storing both the input (origial) and reset values
+//                x/y/z : Target physical coordinates
+//                Time  : Target physical time
+//
+// Return      :  fluid
+//-------------------------------------------------------------------------------------------------------
+void Flu_ResetByUser_Func( real fluid[], const double x, const double y, const double z, const double Time )
+{
+
+// NOT USED FOR THIS TEST
+
+} // FUNCTION : Flu_ResetByUser_Func
+
+
+
+//-------------------------------------------------------------------------------------------------------
 // Function    :  Flu_ResetByUser
 // Description :  Reset the fluid array
 //

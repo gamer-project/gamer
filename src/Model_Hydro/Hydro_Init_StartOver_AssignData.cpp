@@ -92,6 +92,9 @@ void Hydro_Init_StartOver_AssignData( const int lv )
 
             Init_Function_Ptr( fluid_sub, x, y, z, Time[lv] );
 
+//          modify the initial condition if required
+            if ( OPT__RESET_FLUID )    Flu_ResetByUser_Func( fluid_sub, x, y, z, Time[lv] );
+
             for (int v=0; v<NCOMP_TOTAL; v++)   fluid[v] += fluid_sub[v];
 
          }}}
@@ -132,6 +135,9 @@ void Hydro_Init_StartOver_AssignData( const int lv )
       for (int i=0; i<PS1; i++)  {  x = amr->patch[0][lv][PID]->EdgeL[0] + (i+0.5)*dh;
 
          Init_Function_Ptr( fluid, x, y, z, Time[lv] );
+
+//       modify the initial condition if required
+         if ( OPT__RESET_FLUID )    Flu_ResetByUser_Func( fluid, x, y, z, Time[lv] );
 
 //       check minimum density and pressure
          fluid[DENS] = FMAX( fluid[DENS], (real)MIN_DENS );

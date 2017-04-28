@@ -1,7 +1,5 @@
 #include "GAMER.h"
 
-static void Flu_ResetByUser_Func( real fluid[], const double x, const double y, const double z, const double Time );
-
 extern int      Jet_NJet;
 extern double  *Jet_Radius;
 extern double  *Jet_HalfHeight;
@@ -120,7 +118,11 @@ void Flu_ResetByUser_Func( real fluid[], const double x, const double y, const d
 void Flu_ResetByUser( const int lv, const int FluSg, const double TTime )
 {
 
-   const double dh = amr->dh[lv];
+   const double dh       = amr->dh[lv];
+#  if ( MODEL == HYDRO  ||  MODEL == MHD )
+   const real   Gamma_m1 = GAMMA - (real)1.0;
+   const real  _Gamma_m1 = (real)1.0 / Gamma_m1;
+#  endif
 
    real   fluid[NCOMP_TOTAL];
    double x, y, z, x0, y0, z0;
@@ -141,9 +143,31 @@ void Flu_ResetByUser( const int lv, const int FluSg, const double TTime )
 
          Flu_ResetByUser_Func( fluid, x, y, z, TTime );
 
+#        if ( MODEL == HYDRO  ||  MODEL == MHD )
+//       check minimum density and pressure
+         fluid[DENS] = FMAX( fluid[DENS], (real)MIN_DENS );
+         fluid[ENGY] = CPU_CheckMinPresInEngy( fluid[DENS], fluid[MOMX], fluid[MOMY], fluid[MOMZ], fluid[ENGY],
+                                               Gamma_m1, _Gamma_m1, MIN_PRES );
+
+//       calculate the dual-energy variable (entropy or internal energy)
+#        if   ( DUAL_ENERGY == DE_ENPY )
+         fluid[ENPY] = CPU_Fluid2Entropy( fluid[DENS], fluid[MOMX], fluid[MOMY], fluid[MOMZ], fluid[ENGY], Gamma_m1 );
+#        elif ( DUAL_ENERGY == DE_EINT )
+#        error : DE_EINT is NOT supported yet !!
+#        endif
+
+//       floor and normalize passive scalars
+#        if ( NCOMP_PASSIVE > 0 )
+         for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)  fluid[v] = FMAX( fluid[v], TINY_NUMBER );
+
+         if ( OPT__NORMALIZE_PASSIVE )
+            CPU_NormalizePassive( fluid[DENS], fluid+NCOMP_FLUID, PassiveNorm_NVar, PassiveNorm_VarIdx );
+#        endif
+#        endif // if ( MODEL == HYDRO  ||  MODEL == MHD )
+
          for (int v=0; v<NCOMP_TOTAL; v++)   amr->patch[FluSg][lv][PID]->fluid[v][k][j][i] = fluid[v];
 
-      }}}
+      }}} // i,j,k
    }
 
 } // FUNCTION : Flu_ResetByUser
