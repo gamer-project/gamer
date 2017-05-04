@@ -79,6 +79,8 @@ real CPU_GetPressure( const real Dens, const real MomX, const real MomY, const r
                       const real Gamma_m1, const bool CheckMinPres, const real MinPres );
 real CPU_GetTemperature( const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy,
                          const real Gamma_m1, const bool CheckMinPres, const real MinPres );
+double CPU_Temperature2Pressure( const double Dens, const double Temp, const double mu, const double m_H,
+                                 const bool CheckMinPres, const double MinPres );
 real CPU_CheckMinPres( const real InPres, const real MinPres );
 void CPU_NormalizePassive( const real GasDens, real Passive[], const int NNorm, const int NormIdx[] );
 #ifdef DUAL_ENERGY

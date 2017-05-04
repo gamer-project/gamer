@@ -20,10 +20,10 @@ extern double *ClusterMerger_DM_SigmaProf_R;
 //
 // Note        :  None
 //
-// Parameter   :  None 
+// Parameter   :  None
 //-------------------------------------------------------------------------------------------------------
 void End_TestProb()
-{  
+{
 
    delete [] ClusterMerger_Gas_PresProf;
    delete [] ClusterMerger_DM_MassProf;

@@ -344,6 +344,51 @@ real CPU_GetTemperature( const real Dens, const real MomX, const real MomY, cons
 
 
 //-------------------------------------------------------------------------------------------------------
+// Function    :  CPU_Temperature2Pressure
+// Description :  Convert gas temperature to pressure
+//
+// Note        :  1. Assume the ideal gas law
+//                   --> P = \rho*K*T / ( mu*m_H )
+//                2. Assume both input and output to be code units
+//                   --> Temperature should be converted to UNIT_E in advance
+//                       --> Example: T_code_unit = T_kelvin * Const_kB / UNIT_E
+//                3. Pressure floor (MinPres) is applied when CheckMinPres == true
+//                4. Currently this function always adopts double precision since
+//                   (1) both Temp and m_H may exhibit extreme values depending on the code units, and
+//                   (2) we don't really care about the performance here since this function is usually
+//                       only used for constructing the initial condition
+//
+// Parameter   :  Dens         : Gas mass density in code units
+//                Temp         : Gas temperature in code units
+//                mu           : Mean molecular weight
+//                m_H          : Atomic hydrogen mass in code units
+//                               --> Sometimes we use the atomic mass unit (Const_amu defined in PhysicalConstant.h)
+//                                   and m_H (Const_mH defined in PhysicalConstant.h) interchangeably since the
+//                                   difference is small (m_H ~ 1.007825 amu)
+//                CheckMinPres : Return CPU_CheckMinPres()
+//                               --> In some cases we actually want to check if pressure becomes unphysical,
+//                                   for which we don't want to enable this option
+//                MinPres      : Minimum allowed pressure
+//
+// Return      :  Gas pressure
+//-------------------------------------------------------------------------------------------------------
+double CPU_Temperature2Pressure( const double Dens, const double Temp, const double mu, const double m_H,
+                                 const bool CheckMinPres, const double MinPres )
+{
+
+   double Pres;
+
+   Pres = Dens*Temp/(mu*m_H);
+
+   if ( CheckMinPres )  Pres = CPU_CheckMinPres( (real)Pres, (real)MinPres );
+
+   return Pres;
+
+} // FUNCTION : CPU_GetTemperature
+
+
+
+//-------------------------------------------------------------------------------------------------------
 // Function    :  CPU_NormalizePassive
 // Description :  Normalize the target passive scalars so that the sum of their mass density is equal to
 //                the gas mass density

@@ -1,13 +1,13 @@
 #include "GAMER.h"
 
-#ifdef PARTICLE
+extern double *AGORA_VcProf[2];
 
 
 
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  End_TestProb
-// Description :  Release memory for the N particles force test
+// Description :  Release memory for test problem
 //
 // Note        :  None
 //
@@ -16,8 +16,10 @@
 void End_TestProb()
 {
 
+   for (int v=0; v<2; v++)
+   {
+      delete [] AGORA_VcProf[v];
+      AGORA_VcProf[v] = NULL;
+   }
+
 } // FUNCTION : End_TestProb
-
-
-
-#endif // #ifdef PARTICLE
