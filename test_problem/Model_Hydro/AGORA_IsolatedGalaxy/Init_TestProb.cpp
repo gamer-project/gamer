@@ -84,6 +84,9 @@ void Init_TestProb()
    if ( OPT__BC_FLU[0] == BC_FLU_PERIODIC  ||  OPT__BC_POT == BC_POT_PERIODIC )
       Aux_Error( ERROR_INFO, "one should not adopt periodic boundary condition for this test problem !!\n" );
 
+   if ( amr->BoxSize[0] != amr->BoxSize[1]  ||  amr->BoxSize[0] != amr->BoxSize[2] )
+      Aux_Message( stderr, "WARNING : currently the user-specified flag routine \"Flag_UserCriteria()\" assumes a cubic simulation box !!\n" );
+
    if ( INIT_SUBSAMPLING_NCELL != 0  &&  MPI_Rank == 0 )
       Aux_Message( stderr, "WARNING : INIT_SUBSAMPLING_NCELL (%d) != 0 will lead to non-uniform initial disk temperature !!\n",
                     INIT_SUBSAMPLING_NCELL );

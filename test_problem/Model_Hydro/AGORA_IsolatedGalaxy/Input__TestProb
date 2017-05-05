@@ -5,5 +5,5 @@ vcirc.dat            AGORA_VcProf_Filename      # filename of the circular veloc
 4.29661e10           AGORA_DiskTotalMass        # disk total mass (gas + stars) [Msun]
 0.2                  AGORA_DiskGasMassFrac      # disk gas mass fraction (disk_gas_mass / disk_total_mass)
 1.0e4                AGORA_DiskGasTemp          # disk gas temperature [K]
-1.0e-6               AGORA_HaloGasNumDensH      # halo atomic hydrogen number density (halo_gas_mass_density / atomic_hydrogen_mass) [cm^{-3}]
+7.71910124754943e-7  AGORA_HaloGasNumDensH      # halo atomic hydrogen number density (halo_gas_mass_density / atomic_hydrogen_mass) [cm^{-3}]
 1.0e6                AGORA_HaloGasTemp          # halo gas temperature [K]
