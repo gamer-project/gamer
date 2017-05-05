@@ -96,10 +96,12 @@ extern real (*d_Flu_Array_F_Out)[FLU_NOUT][ PS2*PS2*PS2 ];
 extern real (*d_Flux_Array)[9][NFLUX_TOTAL][ PS2*PS2 ];
 extern double (*d_Corner_Array_F)[3];
 extern real  *d_MinDtInfo_Fluid_Array;
+#if ( MODEL == HYDRO  ||  MODEL == MHD )
 #ifdef DUAL_ENERGY
 extern char (*d_DE_Array_F_Out)[ PS2*PS2*PS2 ];
 #else
 static char (*d_DE_Array_F_Out)[ PS2*PS2*PS2 ] = NULL;
+#endif
 #endif
 #if ( MODEL == HYDRO )
 #if ( FLU_SCHEME == MHM  ||  FLU_SCHEME == MHM_RP  ||  FLU_SCHEME == CTU )

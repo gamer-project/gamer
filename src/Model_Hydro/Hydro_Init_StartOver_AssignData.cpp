@@ -2,8 +2,10 @@
 
 #if ( MODEL == HYDRO )
 
-static void Init_Function_User( real fluid[], const double x, const double y, const double z, const double Time );
-void (*Init_Function_Ptr)( real fluid[], const double x, const double y, const double z, const double Time ) = Init_Function_User;
+static void Init_Function_User( real fluid[], const double x, const double y, const double z, const double Time,
+                                const int lv, double AuxArray[] );
+void (*Init_Function_Ptr)( real fluid[], const double x, const double y, const double z, const double Time,
+                           const int lv, double AuxArray[] ) = Init_Function_User;
 
 
 
@@ -15,14 +17,19 @@ void (*Init_Function_Ptr)( real fluid[], const double x, const double y, const d
 // Note        :  1. Invoked by "Hydro_Init_StartOver_AssignData"
 //                2. This function will be invoked by multiple OpenMP threads
 //                   --> Must ensure everything here is thread-safe
+//                3. Even when DUAL_ENERGY is adopted, one does NOT need to set the dual-energy variable here
+//                   --> It will be set automatically in "Model_Init_StartOver_AssignData()"
 //
-// Parameter   :  fluid : Fluid field to be initialized
-//                x/y/z : Target physical coordinates
-//                Time  : Target physical time
+// Parameter   :  fluid    : Fluid field to be initialized
+//                x/y/z    : Target physical coordinates
+//                Time     : Target physical time
+//                lv       : Target refinement level
+//                AuxArray : Auxiliary array
 //
 // Return      :  fluid
 //-------------------------------------------------------------------------------------------------------
-void Init_Function_User( real fluid[], const double x, const double y, const double z, const double Time )
+void Init_Function_User( real fluid[], const double x, const double y, const double z, const double Time,
+                         const int lv, double AuxArray[] )
 {
 
    const double Gamma2  = 1.0/GAMMA/(GAMMA-1.0);
@@ -90,7 +97,7 @@ void Hydro_Init_StartOver_AssignData( const int lv )
          for (int jj=0; jj<NSub; jj++)    {  y = y0 + jj*dh_sub;
          for (int ii=0; ii<NSub; ii++)    {  x = x0 + ii*dh_sub;
 
-            Init_Function_Ptr( fluid_sub, x, y, z, Time[lv] );
+            Init_Function_Ptr( fluid_sub, x, y, z, Time[lv], lv, NULL );
 
 //          modify the initial condition if required
             if ( OPT__RESET_FLUID )    Flu_ResetByUser_Func( fluid_sub, x, y, z, Time[lv], lv, NULL );
@@ -134,7 +141,7 @@ void Hydro_Init_StartOver_AssignData( const int lv )
       for (int j=0; j<PS1; j++)  {  y = amr->patch[0][lv][PID]->EdgeL[1] + (j+0.5)*dh;
       for (int i=0; i<PS1; i++)  {  x = amr->patch[0][lv][PID]->EdgeL[0] + (i+0.5)*dh;
 
-         Init_Function_Ptr( fluid, x, y, z, Time[lv] );
+         Init_Function_Ptr( fluid, x, y, z, Time[lv], lv, NULL );
 
 //       modify the initial condition if required
          if ( OPT__RESET_FLUID )    Flu_ResetByUser_Func( fluid, x, y, z, Time[lv], lv, NULL );
