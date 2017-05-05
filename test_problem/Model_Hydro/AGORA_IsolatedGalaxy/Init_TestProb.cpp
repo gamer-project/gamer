@@ -4,14 +4,17 @@
 
 
 
-extern void (*Init_Function_Ptr)( real fluid[], const double x, const double y, const double z, const double Time );
+extern void (*Init_Function_Ptr)( real fluid[], const double x, const double y, const double z, const double Time,
+                                  const int lv, double AuxArray[] );
 extern void (*Output_TestProbErr_Ptr)( const bool BaseOnly );
 
 static void LoadTestProbParameter();
-static void HYDRO_TestProbSol_AGORA( real fluid[], const double x, const double y, const double z, const double Time );
+static void HYDRO_TestProbSol_AGORA( real fluid[], const double x, const double y, const double z, const double Time,
+                                     const int lv, double AuxArray[] );
 static void LoadVcProf( const char *Filename, double **Profile, int &NBin );
 static bool CheckEmptyString( const char *InputString );
 static int  CountRow( const char *Filename );
+static double GaussianQuadratureIntegrate( const double dx, const double dy, const double dz, const double ds );
 
 
 // global variables in the AGORA isolated galaxy test
@@ -80,6 +83,10 @@ void Init_TestProb()
 
    if ( OPT__BC_FLU[0] == BC_FLU_PERIODIC  ||  OPT__BC_POT == BC_POT_PERIODIC )
       Aux_Error( ERROR_INFO, "one should not adopt periodic boundary condition for this test problem !!\n" );
+
+   if ( INIT_SUBSAMPLING_NCELL != 0  &&  MPI_Rank == 0 )
+      Aux_Message( stderr, "WARNING : INIT_SUBSAMPLING_NCELL (%d) != 0 will lead to non-uniform initial disk temperature !!\n",
+                    INIT_SUBSAMPLING_NCELL );
 
 
 // set the initialization and output functions
@@ -168,13 +175,16 @@ void Init_TestProb()
 //
 // Note        :  1. We do NOT truncate gas disk. Instead, we ensure pressure balance between gas disk and halo.
 //
-// Parameter   :  fluid : Fluid field to be initialized
-//                x/y/z : Target physical coordinates
-//                Time  : Target physical time
+// Parameter   :  fluid    : Fluid field to be initialized
+//                x/y/z    : Target physical coordinates
+//                Time     : Target physical time
+//                lv       : Target refinement level
+//                AuxArray : Auxiliary array
 //
 // Return      :  fluid
 //-------------------------------------------------------------------------------------------------------
-void HYDRO_TestProbSol_AGORA( real *fluid, const double x, const double y, const double z, const double Time )
+void HYDRO_TestProbSol_AGORA( real *fluid, const double x, const double y, const double z, const double Time,
+                              const int lv, double AuxArray[] )
 {
 
    const bool   CheckMinPres_Yes = true;
@@ -186,7 +196,10 @@ void HYDRO_TestProbSol_AGORA( real *fluid, const double x, const double y, const
 
    double DiskGasDens, DiskGasPres, DiskGasVel;
 
-   DiskGasDens = AGORA_DiskGasDens0 * exp( -r/AGORA_DiskScaleLength ) * exp( -h/AGORA_DiskScaleHeight );
+// use the 5-point Gaussian quadrature integration to improve the accuracy of the average cell density
+// --> we don't want to use the sub-sampling for that purpose since it will break the initial uniform temperature
+// DiskGasDens = AGORA_DiskGasDens0 * exp( -r/AGORA_DiskScaleLength ) * exp( -h/AGORA_DiskScaleHeight );
+   DiskGasDens = GaussianQuadratureIntegrate( dx, dy, dz, amr->dh[lv] );
    DiskGasPres = CPU_Temperature2Pressure( DiskGasDens, AGORA_DiskGasTemp, MOLECULAR_WEIGHT, Const_mH/UNIT_M,
                                            CheckMinPres_Yes, MIN_PRES );
 
@@ -457,6 +470,52 @@ int CountRow( const char *Filename )
    return NRow;
 
 } // FUNCTION : CountRow
+
+
+
+//-------------------------------------------------------------------------------------------------------
+// Function    :  GaussianQuadratureIntegrate
+// Description :  Use the 5-point Gaussian quadrature integration to calculate the average density of a given cell
+//
+// Note        :  1. This function mimics the AGORA isolated galaxy setup implemented in Enzo
+//                2. Ref: http://mathworld.wolfram.com/Legendre-GaussQuadrature.html
+//                        https://en.wikipedia.org/wiki/Gaussian_quadrature
+//                3. 1D: Int[ f(x), {a,b} ] ~ 0.5*(b-a)*Sum_i[ weight_i*f( 0.5*(b-a)*abscissas_i + 0.5*(a+b) ) ]
+//                   3D: Int[ f(x,y,z), { {xc-0.5*dx,xc+0.5*dx}, {yc-0.5*dy,yc+0.5*dy}, {zc-0.5*dz,zc+0.5*dz} } ]
+//                       ~ dx*dy*dz/8 * Sum_i,j,k[ weight_i*weight_j*weight_k
+//                                                 *f( xc+0.5*dx*abscissas_i, yc+0.5*dy*abscissas_j, zc+0.5*dz*abscissas_k ) ]
+//
+// Parameter   :  dx/dy/dz : Central coordinates of the target cell relative to the box center
+//                ds       : Cell size
+//
+// Return      :  Average density
+//-------------------------------------------------------------------------------------------------------
+double GaussianQuadratureIntegrate( const double dx, const double dy, const double dz, const double ds )
+{
+
+   const int    NPoint            = 5;
+   const double abscissas[NPoint] = { -0.90617984593866, -0.53846931010568, +0.0,              +0.53846931010568, +0.90617984593866 };
+   const double weight   [NPoint] = { +0.23692688505619, +0.47862867049937, +0.56888888888889, +0.47862867049937, +0.23692688505619 };
+   const double ds_2              = 0.5*ds;
+
+   double dxx, dyy, dzz, r, h;
+   double Dens = 0;
+
+   for (int k=0; k<NPoint; k++)  {  dzz = dz + ds_2*abscissas[k];
+                                    h   = fabs( dzz );
+   for (int j=0; j<NPoint; j++)  {  dyy = dy + ds_2*abscissas[j];
+   for (int i=0; i<NPoint; i++)  {  dxx = dx + ds_2*abscissas[i];
+                                    r   = sqrt( SQR(dxx) + SQR(dyy) );
+
+     Dens += weight[i]*weight[j]*weight[k] * exp( -r/AGORA_DiskScaleLength ) * exp( -h/AGORA_DiskScaleHeight );
+
+   }}}
+
+   Dens *= AGORA_DiskGasDens0/8.0;
+
+   return Dens;
+
+} // FUNCTION : GaussianQuadratureIntegrate
 
 
 
