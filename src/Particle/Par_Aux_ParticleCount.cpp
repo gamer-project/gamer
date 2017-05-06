@@ -74,12 +74,12 @@ void Par_Aux_ParticleCount()
       }
 
       fprintf( File, "-------------------------------------------------------------------------------------" );
-      fprintf( File, "----------------------------\n" );
+      fprintf( File, "-------------------------------------------------------------------------------------\n" );
       fprintf( File, "%4s", "Sum:" );
-      for (int lv=0; lv<NLEVEL; lv++)     fprintf( File, "%7ld(%6.2lf%%)", NPar_AllRank[lv], Frac_AllRank[lv] );
+      for (int lv=0; lv<NLEVEL; lv++)     fprintf( File, "%9ld(%6.2lf%%)", NPar_AllRank[lv], Frac_AllRank[lv] );
       fprintf( File, "\n" );
       fprintf( File, "%4s", "Ave:" );
-      for (int lv=0; lv<NLEVEL; lv++)     fprintf( File, "%10.2f%6s", (double)NPar_AllRank[lv]/MPI_NRank, "" );
+      for (int lv=0; lv<NLEVEL; lv++)     fprintf( File, "%12.2f%6s", (double)NPar_AllRank[lv]/MPI_NRank, "" );
       fprintf( File, "\n" );
 
 
@@ -116,7 +116,7 @@ void Par_Aux_ParticleCount()
       fprintf( File, "Weighted load-imbalance factor = %6.2f%%\n", 100.0*WLI );
 
       fprintf( File, "-------------------------------------------------------------------------------------" );
-      fprintf( File, "----------------------------\n" );
+      fprintf( File, "-------------------------------------------------------------------------------------\n" );
       fprintf( File, "\n\n" );
 
       fclose( File );

@@ -12,14 +12,18 @@ static void LoadTestProbParameter();
 static void HYDRO_TestProbSol_AGORA( real fluid[], const double x, const double y, const double z, const double Time,
                                      const int lv, double AuxArray[] );
 static void LoadVcProf( const char *Filename, double **Profile, int &NBin );
-static bool CheckEmptyString( const char *InputString );
-static int  CountRow( const char *Filename );
 static double GaussianQuadratureIntegrate( const double dx, const double dy, const double dz, const double ds );
+
+bool CheckEmptyString( const char *InputString );
+int  CountRow( const char *Filename );
 
 
 // global variables in the AGORA isolated galaxy test
 // =======================================================================================
 char    AGORA_VcProf_Filename[1000];      // filename of the circular velocity radial profile
+char    AGORA_HaloPar_Filename[1000];     // filename of the halo  particles
+char    AGORA_DiskPar_Filename[1000];     // filename of the disk  particles
+char    AGORA_BulgePar_Filename[1000];    // filename of the bulge particles
 double  AGORA_DiskScaleLength;            // disk scale length
 double  AGORA_DiskScaleHeight;            // disk scale height
 double  AGORA_DiskTotalMass;              // disk total mass (gas + stars)
@@ -120,14 +124,17 @@ void Init_TestProb()
       Aux_Message( stdout, "\n" );
       Aux_Message( stdout, "%s test :\n", TestProb );
       Aux_Message( stdout, "=============================================================================\n" );
-      Aux_Message( stdout, "   VcProf_Filename = %s\n",             AGORA_VcProf_Filename                     );
-      Aux_Message( stdout, "   DiskScaleLength = %13.7e kpc\n",     AGORA_DiskScaleLength * UNIT_L/Const_kpc  );
-      Aux_Message( stdout, "   DiskScaleHeight = %13.7e kpc\n",     AGORA_DiskScaleHeight * UNIT_L/Const_kpc  );
-      Aux_Message( stdout, "   DiskTotalMass   = %13.7e Msun\n",    AGORA_DiskTotalMass   * UNIT_M/Const_Msun );
-      Aux_Message( stdout, "   DiskGasMassFrac = %13.7e\n",         AGORA_DiskGasMassFrac                     );
-      Aux_Message( stdout, "   DiskGasTemp     = %13.7e K\n",       AGORA_DiskGasTemp     * UNIT_E/Const_kB   );
-      Aux_Message( stdout, "   HaloGasNumDensH = %13.7e cm^{-3}\n", AGORA_HaloGasNumDensH / CUBE(UNIT_L)      );
-      Aux_Message( stdout, "   HaloGasTemp     = %13.7e K\n",       AGORA_HaloGasTemp     * UNIT_E/Const_kB   );
+      Aux_Message( stdout, "   VcProf_Filename   = %s\n",             AGORA_VcProf_Filename                     );
+      Aux_Message( stdout, "   HaloPar_Filename  = %s\n",             AGORA_HaloPar_Filename                    );
+      Aux_Message( stdout, "   DiskPar_Filename  = %s\n",             AGORA_DiskPar_Filename                    );
+      Aux_Message( stdout, "   BulgePar_Filename = %s\n",             AGORA_BulgePar_Filename                   );
+      Aux_Message( stdout, "   DiskScaleLength   = %13.7e kpc\n",     AGORA_DiskScaleLength * UNIT_L/Const_kpc  );
+      Aux_Message( stdout, "   DiskScaleHeight   = %13.7e kpc\n",     AGORA_DiskScaleHeight * UNIT_L/Const_kpc  );
+      Aux_Message( stdout, "   DiskTotalMass     = %13.7e Msun\n",    AGORA_DiskTotalMass   * UNIT_M/Const_Msun );
+      Aux_Message( stdout, "   DiskGasMassFrac   = %13.7e\n",         AGORA_DiskGasMassFrac                     );
+      Aux_Message( stdout, "   DiskGasTemp       = %13.7e K\n",       AGORA_DiskGasTemp     * UNIT_E/Const_kB   );
+      Aux_Message( stdout, "   HaloGasNumDensH   = %13.7e cm^{-3}\n", AGORA_HaloGasNumDensH / CUBE(UNIT_L)      );
+      Aux_Message( stdout, "   HaloGasTemp       = %13.7e K\n",       AGORA_HaloGasTemp     * UNIT_E/Const_kB   );
       Aux_Message( stdout, "=============================================================================\n" );
       Aux_Message( stdout, "\n" );
    }
@@ -266,6 +273,15 @@ void LoadTestProbParameter()
 
    getline( &input_line, &len, File );
    sscanf( input_line, "%s%s",    AGORA_VcProf_Filename,       string );
+
+   getline( &input_line, &len, File );
+   sscanf( input_line, "%s%s",    AGORA_HaloPar_Filename,      string );
+
+   getline( &input_line, &len, File );
+   sscanf( input_line, "%s%s",    AGORA_DiskPar_Filename,      string );
+
+   getline( &input_line, &len, File );
+   sscanf( input_line, "%s%s",    AGORA_BulgePar_Filename,     string );
 
    getline( &input_line, &len, File );
    sscanf( input_line, "%lf%s",  &AGORA_DiskScaleLength,       string );

@@ -6,4 +6,4 @@ cp Par_*                   ../../../src/Particle/
 cp Flag_UserCriteria.cpp   ../../../src/Refine/
 cp Makefile                ../../../src/Makefile
 cp Input__*                ../../../bin/run/
-cp vcirc.dat               ../../../bin/run/
+cp *.dat                   ../../../bin/run/
