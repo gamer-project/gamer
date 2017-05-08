@@ -316,6 +316,7 @@ void Aux_Check_Parameter()
 #  ifdef PARTICLE
    Flag |= OPT__FLAG_NPAR_PATCH;
    Flag |= OPT__FLAG_NPAR_CELL;
+   Flag |= OPT__FLAG_PAR_MASS_CELL;
 #  endif
 
    if ( !Flag )

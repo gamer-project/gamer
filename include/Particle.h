@@ -25,29 +25,29 @@ void Aux_Error( const char *File, const int Line, const char *Func, const char *
 // Structure   :  Particle_t
 // Description :  Data structure of particles
 //
-// Data Member :  ParListSize          : Size of the particle data arrays (must be >= NPar_AcPlusInac)
-//                InactiveParListSize  : Size of the inactive particle list (InactiveParList)
-//                NPar_Active_AllRank  : Total number of active particles summed up over all MPI ranks
-//                NPar_AcPlusInac      : Total number of particles (active + inactive) in this MPI rank
-//                NPar_Active          : Total number of active particles in this MPI rank
-//                                       --> Inactive particles: particles removed from simulations because of
-//                                        (1) lying outside the active region (mass == PAR_INACTIVE_OUTSIDE)
-//                                        (2) being sent to other MPI ranks   (mass == PAR_INACTIVE_MPI)
-//                NPar_Inactive        : Total number of inactive particles in this MPI rank
-//                NPar_Lv              : Total number of active particles at each level in this MPI rank
-//                Init                 : Initialization methods (1/2/3 --> call function/restart/load from file)
-//                Interp               : Mass/acceleration interpolation scheme (NGP,CIC,TSC)
-//                Integ                : Integration scheme (PAR_INTEG_EULER, PAR_INTEG_KDK)
-//                ImproveAcc           : Improve force accuracy around the patch boundaries
-//                                       (by using potential in the patch ghost zone instead of nearby patch
-//                                       or interpolation)
-//                PredictPos           : Predict particle position during mass assignment
-//                RemoveCell           : remove particles RemoveCell-base-level-cells away from the boundary
-//                                       (for non-periodic BC only)
-//                GhostSize            : Number of ghost zones required for interpolation scheme
-//                ParVar               : Pointer arrays to different particle variables (Mass, Pos, Vel, ...)
-//                Passive              : Pointer arrays to different passive variables (e.g., metalicity)
-//                InactiveParList      : List of inactive particle IDs
+// Data Member :  ParListSize             : Size of the particle data arrays (must be >= NPar_AcPlusInac)
+//                InactiveParListSize     : Size of the inactive particle list (InactiveParList)
+//                NPar_Active_AllRank     : Total number of active particles summed up over all MPI ranks
+//                NPar_AcPlusInac         : Total number of particles (active + inactive) in this MPI rank
+//                NPar_Active             : Total number of active particles in this MPI rank
+//                                          --> Inactive particles: particles removed from simulations because of
+//                                           (1) lying outside the active region (mass == PAR_INACTIVE_OUTSIDE)
+//                                           (2) being sent to other MPI ranks   (mass == PAR_INACTIVE_MPI)
+//                NPar_Inactive           : Total number of inactive particles in this MPI rank
+//                NPar_Lv                 : Total number of active particles at each level in this MPI rank
+//                Init                    : Initialization methods (1/2/3 --> call function/restart/load from file)
+//                Interp                  : Mass/acceleration interpolation scheme (NGP,CIC,TSC)
+//                Integ                   : Integration scheme (PAR_INTEG_EULER, PAR_INTEG_KDK)
+//                ImproveAcc              : Improve force accuracy around the patch boundaries
+//                                          (by using potential in the patch ghost zone instead of nearby patch
+//                                          or interpolation)
+//                PredictPos              : Predict particle position during mass assignment
+//                RemoveCell              : remove particles RemoveCell-base-level-cells away from the boundary
+//                                          (for non-periodic BC only)
+//                GhostSize               : Number of ghost zones required for interpolation scheme
+//                ParVar                  : Pointer arrays to different particle variables (Mass, Pos, Vel, ...)
+//                Passive                 : Pointer arrays to different passive variables (e.g., metalicity)
+//                InactiveParList         : List of inactive particle IDs
 //                R2B_Real_NPatchTotal    : see R2B_Buff_NPatchTotal
 //                R2B_Real_NPatchEachRank : see R2B_Buff_NPatchEachRank
 //                R2B_Real_PIDList        : see R2B_Buff_PIDList
@@ -81,14 +81,14 @@ void Aux_Error( const char *File, const int Line, const char *Func, const char *
 //                F2S_Recv_NPatchTotal    : Similar to R2B_Buff_NPatchTotal,    ...
 //                F2S_Recv_NPatchEachRank : Similar to R2B_Buff_NPatchEachRank, ...
 //                F2S_Recv_PIDList        : Similar to R2B_Buff_PIDList,        ...
-//                Mass                 : Particle mass
-//                                       Mass < 0.0 --> this particle has been removed from simulations
-//                                                  --> PAR_INACTIVE_OUTSIDE: fly outside the simulation box
-//                                                      PAR_INACTIVE_MPI:     sent to other MPI ranks
-//                Pos                  : Particle position
-//                Vel                  : Particle velocity
-//                Time                 : Particle physical time
-//                Acc                  : Particle acceleration (only when STORE_PAR_ACC is on)
+//                Mass                    : Particle mass
+//                                          Mass < 0.0 --> this particle has been removed from simulations
+//                                                     --> PAR_INACTIVE_OUTSIDE: fly outside the simulation box
+//                                                         PAR_INACTIVE_MPI:     sent to other MPI ranks
+//                Pos                     : Particle position
+//                Vel                     : Particle velocity
+//                Time                    : Particle physical time
+//                Acc                     : Particle acceleration (only when STORE_PAR_ACC is on)
 //
 // Method      :  Particle_t        : Constructor
 //               ~Particle_t        : Destructor
