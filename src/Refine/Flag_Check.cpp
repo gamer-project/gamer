@@ -26,6 +26,8 @@ static bool Check_Gradient( const int i, const int j, const int k, const real In
 //                ParCount       : Input array storing the number of particles on each cell
 //                                 (note that it has the **real** type)
 //                ParDens        : Input array storing the particle mass density on each cell
+//                JeansCoeff     : Pi*GAMMA/(SafetyFactor^2*G), where SafetyFactor = FlagTable_Jeans[lv]
+//                                 --> Flag if dh^2 > JeansCoeff*Pres/Dens^2
 //
 // Return      :  "true"  if any  of the refinement criteria is satisfied
 //                "false" if none of the refinement criteria is satisfied
@@ -33,7 +35,7 @@ static bool Check_Gradient( const int i, const int j, const int k, const real In
 bool Flag_Check( const int lv, const int PID, const int i, const int j, const int k, const real dv,
                  const real Fluid[][PS1][PS1][PS1], const real Pot[][PS1][PS1], const real Pres[][PS1][PS1],
                  const real *Lohner_Var, const real *Lohner_Ave, const real *Lohner_Slope, const int Lohner_NVar,
-                 const real ParCount[][PS1][PS1], const real ParDens[][PS1][PS1] )
+                 const real ParCount[][PS1][PS1], const real ParDens[][PS1][PS1], const real JeansCoeff )
 {
 
    bool Flag = false;
@@ -103,6 +105,23 @@ bool Flag_Check( const int lv, const int PID, const int i, const int j, const in
    if ( OPT__FLAG_VORTICITY )
    {
       Flag |= Hydro_Flag_Vorticity( i, j, k, lv, PID, FlagTable_Vorticity[lv] );
+      if ( Flag )    return Flag;
+   }
+#  endif
+
+
+// check Jeans length
+// ===========================================================================================
+#  if (  ( MODEL == HYDRO || MODEL == MHD )  &&  defined GRAVITY  )
+   if ( OPT__FLAG_JEANS )
+   {
+      const bool CheckMinPres_Yes = true;
+      const real Gamma_m1         = GAMMA - (real)1.0;
+      const real Dens             = Fluid[DENS][k][j][i];
+      const real Pres             = CPU_GetPressure( Dens, Fluid[MOMX][k][j][i], Fluid[MOMY][k][j][i], Fluid[MOMZ][k][j][i],
+                                                     Fluid[ENGY][k][j][i], Gamma_m1, CheckMinPres_Yes, MIN_PRES );
+
+      Flag |= ( SQR(amr->dh[lv]) > JeansCoeff*Pres/SQR(Dens) );
       if ( Flag )    return Flag;
    }
 #  endif

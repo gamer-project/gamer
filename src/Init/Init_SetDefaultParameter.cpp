@@ -803,7 +803,7 @@ void Init_SetDefaultParameter()
 #  endif
 
 // set OPT__LR_LIMITER and OPT__WAF_LIMITER to NONE if they are useless (in HYDRO)
-#  if ( MODEL == HYDRO )
+#  if ( MODEL == HYDRO  ||  MODEL == MHD )
 #  if ( FLU_SCHEME != MHM  &&  FLU_SCHEME != MHM_RP  &&  FLU_SCHEME != CTU )
    if ( OPT__LR_LIMITER != LR_LIMITER_NONE )
    {
@@ -829,7 +829,20 @@ void Init_SetDefaultParameter()
       }
    }
 #  endif
-#  endif // #if ( MODEL == HYDRO )
+
+#  ifndef GRAVITY
+   if ( OPT__FLAG_JEANS )
+   {
+      OPT__FLAG_JEANS = false;
+
+      if ( MPI_Rank == 0 )
+      {
+         Aux_Message( stderr, "WARNING : parameter \"%s\" is useless when GRAVITY is off and hence is disabled !!\n",
+                      "OPT__FLAG_JEANS" );
+      }
+   }
+#  endif
+#  endif // #if ( MODEL == HYDRO  ||  MODEL == MHD )
 
 // operations related to FLUX are useful in ELBDM only if CONSERVE_MASS is on
 #  if ( MODEL == ELBDM  &&  !defined CONSERVE_MASS )

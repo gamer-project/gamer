@@ -48,6 +48,11 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
    const int  Lohner_NAve             = Lohner_NCell - 2;      // size of the average array for Lohner
    const int  Lohner_NSlope           = Lohner_NAve;           // size of the slope array for Lohner
    const IntScheme_t Lohner_IntScheme = INT_MINMOD1D;          // interpolation scheme for Lohner
+#  if (  ( MODEL == HYDRO || MODEL == MHD )  &&  defined GRAVITY  )
+   const real JeansCoeff              = M_PI*GAMMA/( SQR(FlagTable_Jeans[lv])*NEWTON_G ); // flag if dh^2 > JeansCoeff*Pres/Dens^2
+#  else
+   const real JeansCoeff              = NULL_REAL;
+#  endif
 #  ifndef GRAVITY
    const OptPotBC_t OPT__BC_POT       = BC_POT_NONE;
 #  endif
@@ -339,7 +344,7 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
 
 //                check if the target cell satisfies the refinement criteria (useless pointers are always == NULL)
                   if (  lv < MAX_LEVEL  &&  Flag_Check( lv, PID, i, j, k, dv, Fluid, Pot, Pres, Lohner_Var+LocalID*Lohner_Stride,
-                                                        Lohner_Ave, Lohner_Slope, Lohner_NVar, ParCount, ParDens )  )
+                                                        Lohner_Ave, Lohner_Slope, Lohner_NVar, ParCount, ParDens, JeansCoeff )  )
                   {
 //                   flag itself
                      amr->patch[0][lv][PID]->flag = true;
