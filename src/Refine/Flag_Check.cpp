@@ -16,6 +16,7 @@ static bool Check_Gradient( const int i, const int j, const int k, const real In
 // Parameter   :  lv             : Target refinement level
 //                PID            : Target patch ID
 //                i,j,k          : Indices of the target cell
+//                dv             : Cell volume at the target level
 //                Fluid          : Input fluid array (with NCOMP_TOTAL components)
 //                Pot            : Input potential array
 //                Pres           : Input pressure array
@@ -24,14 +25,15 @@ static bool Check_Gradient( const int i, const int j, const int k, const real In
 //                Lohner_NVar    : Number of variables stored in Lohner_Ave and Lohner_Slope
 //                ParCount       : Input array storing the number of particles on each cell
 //                                 (note that it has the **real** type)
+//                ParDens        : Input array storing the particle mass density on each cell
 //
 // Return      :  "true"  if any  of the refinement criteria is satisfied
 //                "false" if none of the refinement criteria is satisfied
 //-------------------------------------------------------------------------------------------------------
-bool Flag_Check( const int lv, const int PID, const int i, const int j, const int k,
+bool Flag_Check( const int lv, const int PID, const int i, const int j, const int k, const real dv,
                  const real Fluid[][PS1][PS1][PS1], const real Pot[][PS1][PS1], const real Pres[][PS1][PS1],
                  const real *Lohner_Var, const real *Lohner_Ave, const real *Lohner_Slope, const int Lohner_NVar,
-                 const real ParCount[][PS1][PS1] )
+                 const real ParCount[][PS1][PS1], const real ParDens[][PS1][PS1] )
 {
 
    bool Flag = false;
@@ -50,6 +52,15 @@ bool Flag_Check( const int lv, const int PID, const int i, const int j, const in
    if ( OPT__FLAG_NPAR_CELL )
    {
       Flag |= ( ParCount[k][j][i] > FlagTable_NParCell[lv] );
+      if ( Flag )    return Flag;
+   }
+
+
+// check the particle mass on each cell
+// ===========================================================================================
+   if ( OPT__FLAG_PAR_MASS_CELL )
+   {
+      Flag |= ( ParDens[k][j][i]*dv > FlagTable_ParMassCell[lv] );
       if ( Flag )    return Flag;
    }
 #  endif

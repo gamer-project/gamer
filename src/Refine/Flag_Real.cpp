@@ -40,6 +40,7 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
    const int SibID_Array[3][3][3]     = {  { {18, 10, 19}, {14,   4, 16}, {20, 11, 21} },
                                            { { 6,  2,  7}, { 0, 999,  1}, { 8,  3,  9} },
                                            { {22, 12, 23}, {15,   5, 17}, {24, 13, 25} }  };
+   const real dv                      = CUBE( amr->dh[lv] );
    const bool IntPhase_No             = false;                 // for invoking "Prepare_PatchData"
    const int  NPG                     = 1;                     // for invoking "Prepare_PatchData"
    const int  Lohner_NGhost           = 2;                     // number of ghost cells for the Lohner error estimator
@@ -55,6 +56,7 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
    const bool InitZero_Yes            = true;
    const bool Periodic_No             = false;
    const bool UnitDens_Yes            = true;
+   const bool UnitDens_No             = false;
    const bool CheckFarAway_No         = false;
    const bool SibBufPatch_No          = false;
    const bool FaSibBufPatch_No        = false;
@@ -102,7 +104,7 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
 
 // collect particles to **real** patches at lv
 #  ifdef PARTICLE
-   if ( OPT__FLAG_NPAR_CELL )
+   if ( OPT__FLAG_NPAR_CELL  ||  OPT__FLAG_PAR_MASS_CELL )
       Par_CollectParticle2OneLevel( lv, PredictPos_No, NULL_REAL, SibBufPatch_No, FaSibBufPatch_No, JustCountNPar_No,
                                     TimingSendPar_No );
 
@@ -124,6 +126,7 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
       real (*Lohner_Ave)                 = NULL;   // array storing the averages of Lohner_Var for Lohner
       real (*Lohner_Slope)               = NULL;   // array storing the slopes of Lohner_Var for Lohner
       real (*ParCount)[PS1][PS1]         = NULL;   // declare as **real** to be consistent with Par_MassAssignment
+      real (*ParDens )[PS1][PS1]         = NULL;
 
       int  i_start, i_end, j_start, j_end, k_start, k_end, SibID, SibPID, PID;
       bool ProperNesting, NextPatch;
@@ -135,7 +138,8 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
 #     endif // MODEL
 
 #     ifdef PARTICLE
-      if ( OPT__FLAG_NPAR_CELL )    ParCount = new real [PS1][PS1][PS1];
+      if ( OPT__FLAG_NPAR_CELL )       ParCount = new real [PS1][PS1][PS1];
+      if ( OPT__FLAG_PAR_MASS_CELL )   ParDens  = new real [PS1][PS1][PS1];
 #     endif
 
       if ( Lohner_NVar > 0 )
@@ -235,9 +239,9 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
                                       Lohner_NVar );
 
 
-//             count the number of particles on each cell
+//             count the number of particles and/or particle mass density on each cell
 #              ifdef PARTICLE
-               if ( OPT__FLAG_NPAR_CELL )
+               if ( OPT__FLAG_NPAR_CELL  ||  OPT__FLAG_PAR_MASS_CELL )
                {
                   long  *ParList = NULL;
                   int    NParThisPatch;
@@ -300,12 +304,23 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
                   }
 #                 endif
 
-//                deposit particle mass onto grids (assuming unit density)
+//                deposit particle mass onto grids
+//                --> for OPT__FLAG_NPAR_CELL, set UnitDens_Yes
+//                --> for OPT__FLAG_PAR_MASS_CELL, set UnitDens_No and note that Par_MassAssignment() returns
+//                    **density** instead of mass
+//                    --> must multiply with the cell volume before checking the particle **mass** refinement criterion
+                  if ( OPT__FLAG_NPAR_CELL )
                   Par_MassAssignment( ParList, NParThisPatch, PAR_INTERP_NGP, ParCount[0][0], PS1,
                                       amr->patch[0][lv][PID]->EdgeL, amr->dh[lv], PredictPos_No, NULL_REAL,
                                       InitZero_Yes, Periodic_No, NULL, UnitDens_Yes, CheckFarAway_No,
                                       UseInputMassPos, InputMassPos );
-               } // if ( OPT__FLAG_NPAR_CELL )
+
+                  if ( OPT__FLAG_PAR_MASS_CELL )
+                  Par_MassAssignment( ParList, NParThisPatch, PAR_INTERP_NGP, ParDens [0][0], PS1,
+                                      amr->patch[0][lv][PID]->EdgeL, amr->dh[lv], PredictPos_No, NULL_REAL,
+                                      InitZero_Yes, Periodic_No, NULL, UnitDens_No,  CheckFarAway_No,
+                                      UseInputMassPos, InputMassPos );
+               } // if ( OPT__FLAG_NPAR_CELL  ||  OPT__FLAG_PAR_MASS_CELL )
 #              endif // #ifdef PARTICLE
 
 
@@ -323,8 +338,8 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
                                              i_end   = ( i + FLAG_BUFFER_SIZE >= PS1 ) ? 2 : 1;
 
 //                check if the target cell satisfies the refinement criteria (useless pointers are always == NULL)
-                  if (  lv < MAX_LEVEL  &&  Flag_Check( lv, PID, i, j, k, Fluid, Pot, Pres, Lohner_Var+LocalID*Lohner_Stride,
-                                                        Lohner_Ave, Lohner_Slope, Lohner_NVar, ParCount )  )
+                  if (  lv < MAX_LEVEL  &&  Flag_Check( lv, PID, i, j, k, dv, Fluid, Pot, Pres, Lohner_Var+LocalID*Lohner_Stride,
+                                                        Lohner_Ave, Lohner_Slope, Lohner_NVar, ParCount, ParDens )  )
                   {
 //                   flag itself
                      amr->patch[0][lv][PID]->flag = true;
@@ -409,6 +424,7 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
 
       if ( Pres     != NULL )    delete [] Pres;
       if ( ParCount != NULL )    delete [] ParCount;
+      if ( ParDens  != NULL )    delete [] ParDens;
 
       if ( Lohner_NVar > 0 )
       {
@@ -422,7 +438,7 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
 
 // free memory allocated by Par_CollectParticle2OneLevel
 #  ifdef PARTICLE
-   if ( OPT__FLAG_NPAR_CELL  ||  OPT__FLAG_NPAR_PATCH != 0 )
+   if ( OPT__FLAG_NPAR_CELL  ||  OPT__FLAG_PAR_MASS_CELL  ||  OPT__FLAG_NPAR_PATCH != 0 )
       Par_CollectParticle2OneLevel_FreeMemory( lv, SibBufPatch_No, FaSibBufPatch_No );
 #  endif
 
