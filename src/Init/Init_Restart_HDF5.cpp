@@ -1577,6 +1577,7 @@ void Check_InputPara( const char *FileName )
 #  ifdef PARTICLE
    LoadField( "Opt__Flag_NParPatch",     &RS.Opt__Flag_NParPatch,     SID, TID, NonFatal, &RT.Opt__Flag_NParPatch,      1, NonFatal );
    LoadField( "Opt__Flag_NParCell",      &RS.Opt__Flag_NParCell,      SID, TID, NonFatal, &RT.Opt__Flag_NParCell,       1, NonFatal );
+   LoadField( "Opt__Flag_ParMassCell",   &RS.Opt__Flag_ParMassCell,   SID, TID, NonFatal, &RT.Opt__Flag_ParMassCell,    1, NonFatal );
 #  endif
    LoadField( "Opt__PatchCount",         &RS.Opt__PatchCount,         SID, TID, NonFatal, &RT.Opt__PatchCount,          1, NonFatal );
 #  ifdef PARTICLE
@@ -1777,6 +1778,7 @@ void Check_InputPara( const char *FileName )
 #     ifdef PARTICLE
       RS.FlagTable_NParPatch   [lv]    = -1;
       RS.FlagTable_NParCell    [lv]    = -1;
+      RS.FlagTable_ParMassCell [lv]    = -1.0;
 #     endif
    }
 
@@ -1826,6 +1828,9 @@ void Check_InputPara( const char *FileName )
 
    if ( OPT__FLAG_NPAR_CELL )
    LoadField( "FlagTable_NParCell",       RS.FlagTable_NParCell,      SID, TID, NonFatal,  RT.FlagTable_NParCell,      N1, NonFatal );
+
+   if ( OPT__FLAG_PAR_MASS_CELL )
+   LoadField( "FlagTable_ParMassCell",    RS.FlagTable_ParMassCell,   SID, TID, NonFatal,  RT.FlagTable_ParMassCell,   N1, NonFatal );
 #  endif
 
 

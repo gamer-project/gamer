@@ -67,6 +67,7 @@
 0           OPT__FLAG_REGION          # flag: specify the regions allowed to be refined --> edit "Flag_Region"
 0           OPT__FLAG_NPAR_PATCH      # flag: # of particles per patch (Input__Flag_NParPatch) (0/1/2:off/itself/siblings as well)
 0           OPT__FLAG_NPAR_CELL       # flag: # of particles per cell  (Input__Flag_NParCell)
+0           OPT__FLAG_PAR_MASS_CELL   # flag: total particle mass per cell (Input__Flag_ParMassCell)
 1           OPT__PATCH_COUNT          # count the number of patches   at each level (0=off, 1=every step, 2=every sub-step)
 1           OPT__PARTICLE_COUNT       # count the number of particles at each level (0=off, 1=every step, 2=every sub-step) ##PARTICLE ONLY##
 2           OPT__REUSE_MEMORY         # reuse patch memory to reduce memory fragmentation (0/1/2:off/on/aggressive)

@@ -31,10 +31,13 @@ void Init_Load_FlagCriteria()
 
 #  ifndef PARTICLE
    const bool OPT__FLAG_NPAR_PATCH    = false;
-   int    *FlagTable_NParPatch        = NULL;
+   int *FlagTable_NParPatch           = NULL;
 
    const bool OPT__FLAG_NPAR_CELL     = false;
-   int    *FlagTable_NParCell         = NULL;
+   int *FlagTable_NParCell            = NULL;
+
+   const bool OPT__FLAG_PAR_MASS_CELL = false;
+   double *FlagTable_ParMassCell      = NULL;
 #  endif
 
 #  if   ( MODEL == HYDRO  ||  MODEL == MHD )
@@ -43,18 +46,21 @@ void Init_Load_FlagCriteria()
    const bool OPT__FLAG_LOHNER = OPT__FLAG_LOHNER_DENS;
 #  endif
 
-   const int  NFlagMode         = 9;
+   const int  NFlagMode         = 10;
    const bool Flag[NFlagMode]   = { OPT__FLAG_RHO, OPT__FLAG_RHO_GRADIENT, OPT__FLAG_PRES_GRADIENT,
                                     OPT__FLAG_ENGY_DENSITY, OPT__FLAG_LOHNER, OPT__FLAG_USER,
-                                    (bool)OPT__FLAG_NPAR_PATCH, OPT__FLAG_NPAR_CELL, OPT__FLAG_VORTICITY };
+                                    (bool)OPT__FLAG_NPAR_PATCH, OPT__FLAG_NPAR_CELL, OPT__FLAG_PAR_MASS_CELL,
+                                    OPT__FLAG_VORTICITY };
    const char ModeName[][100]   = { "OPT__FLAG_RHO", "OPT__FLAG_RHO_GRADIENT", "OPT__FLAG_PRES_GRADIENT",
                                     "OPT__FLAG_ENGY_DENSITY", "OPT__FLAG_LOHNER", "OPT__FLAG_USER",
-                                    "OPT__FLAG_NPAR_PATCH", "OPT__FLAG_NPAR_CELL", "OPT__FLAG_VORTICITY" };
+                                    "OPT__FLAG_NPAR_PATCH", "OPT__FLAG_NPAR_CELL", "OPT__FLAG_PAR_MASS_CELL",
+                                    "OPT__FLAG_VORTICITY" };
    const char FileName[][100]   = { "Input__Flag_Rho", "Input__Flag_RhoGradient", "Input__Flag_PresGradient",
                                     "Input__Flag_EngyDensity", "Input__Flag_Lohner", "Input__Flag_User",
-                                    "Input__Flag_NParPatch", "Input__Flag_NParCell", "Input__Flag_Vorticity" };
+                                    "Input__Flag_NParPatch", "Input__Flag_NParCell", "Input__Flag_ParMassCell",
+                                    "Input__Flag_Vorticity" };
    double *FlagTable[NFlagMode] = { FlagTable_Rho, FlagTable_RhoGradient, FlagTable_PresGradient,
-                                    NULL, NULL, FlagTable_User, NULL, NULL, FlagTable_Vorticity };
+                                    NULL, NULL, FlagTable_User, NULL, NULL, FlagTable_ParMassCell, FlagTable_Vorticity };
 
    FILE *File;
    char *input_line = NULL, TargetName[100];
@@ -85,8 +91,9 @@ void Init_Load_FlagCriteria()
 #     ifdef PARTICLE
       FlagTable_NParPatch   [lv]    = -1;
       FlagTable_NParCell    [lv]    = -1;
+      FlagTable_ParMassCell [lv]    = -1.0;
 #     endif
-   }
+   } // for (int lv=0; lv<NLEVEL-1; lv++)
 
 
 // nothing to do if there is no refinement level
@@ -136,7 +143,7 @@ void Init_Load_FlagCriteria()
             else if ( FlagMode == 6 )  sscanf( input_line, "%d%d",  &Trash, &FlagTable_NParPatch[lv] );
             else if ( FlagMode == 7 )  sscanf( input_line, "%d%d",  &Trash, &FlagTable_NParCell [lv] );
 
-//          others
+//          others use the default format: (integer, double)
             else                       sscanf( input_line, "%d%lf", &Trash, &FlagTable[FlagMode][lv] );
          }
 

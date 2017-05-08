@@ -74,7 +74,7 @@ Procedure for outputting new variables:
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2229)
+// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2230)
 // Description :  Output all simulation data in the HDF5 format, which can be used as a restart file
 //                or loaded by YT
 //
@@ -128,6 +128,7 @@ Procedure for outputting new variables:
 //                2227 : 2017/03/21 --> output PassiveFieldName_Grid and PassiveFieldName_Par
 //                2228 : 2017/03/21 --> output NCOMP_FLUID, NCOMP_PASSIVE, and PAR_NPASSIVE in KeyInfo_t
 //                2229 : 2017/04/06 --> output DUAL_ENERGY and DUAL_ENERGY_SWITCH
+//                2230 : 2017/05/08 --> output OPT__FLAG_PAR_MASS_CELL and FlagTable_ParMassCell
 //-------------------------------------------------------------------------------------------------------
 void Output_DumpData_Total_HDF5( const char *FileName )
 {
@@ -1761,6 +1762,7 @@ void FillIn_InputPara( InputPara_t &InputPara )
 #  ifdef PARTICLE
    InputPara.Opt__Flag_NParPatch     = OPT__FLAG_NPAR_PATCH;
    InputPara.Opt__Flag_NParCell      = OPT__FLAG_NPAR_CELL;
+   InputPara.Opt__Flag_ParMassCell   = OPT__FLAG_PAR_MASS_CELL;
 #  endif
    InputPara.Opt__PatchCount         = OPT__PATCH_COUNT;
 #  ifdef PARTICLE
@@ -1957,6 +1959,7 @@ void FillIn_InputPara( InputPara_t &InputPara )
 #     ifdef PARTICLE
       InputPara.FlagTable_NParPatch   [lv]    = FlagTable_NParPatch   [lv];
       InputPara.FlagTable_NParCell    [lv]    = FlagTable_NParCell    [lv];
+      InputPara.FlagTable_ParMassCell [lv]    = FlagTable_ParMassCell [lv];
 #     endif
    } // for (int lv=0; lv<NLEVEL-1; lv++)
 
@@ -2381,6 +2384,7 @@ void GetCompound_InputPara( hid_t &H5_TypeID )
 #  ifdef PARTICLE
    H5Tinsert( H5_TypeID, "Opt__Flag_NParPatch",     HOFFSET(InputPara_t,Opt__Flag_NParPatch    ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "Opt__Flag_NParCell",      HOFFSET(InputPara_t,Opt__Flag_NParCell     ), H5T_NATIVE_INT     );
+   H5Tinsert( H5_TypeID, "Opt__Flag_ParMassCell",   HOFFSET(InputPara_t,Opt__Flag_ParMassCell  ), H5T_NATIVE_INT     );
 #  endif
    H5Tinsert( H5_TypeID, "Opt__PatchCount",         HOFFSET(InputPara_t,Opt__PatchCount        ), H5T_NATIVE_INT     );
 #  ifdef PARTICLE
@@ -2568,6 +2572,7 @@ void GetCompound_InputPara( hid_t &H5_TypeID )
 #  ifdef PARTICLE
    H5Tinsert( H5_TypeID, "FlagTable_NParPatch",    HOFFSET(InputPara_t,FlagTable_NParPatch     ), H5_TypeID_Arr_NLvM1Int      );
    H5Tinsert( H5_TypeID, "FlagTable_NParCell",     HOFFSET(InputPara_t,FlagTable_NParCell      ), H5_TypeID_Arr_NLvM1Int      );
+   H5Tinsert( H5_TypeID, "FlagTable_ParMassCell",  HOFFSET(InputPara_t,FlagTable_ParMassCell   ), H5_TypeID_Arr_NLvM1Double   );
 #  endif
 #  endif
 

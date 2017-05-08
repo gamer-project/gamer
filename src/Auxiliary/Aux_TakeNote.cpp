@@ -643,6 +643,7 @@ void Aux_TakeNote()
 #     ifdef PARTICLE
       fprintf( Note, "OPT__FLAG_NPAR_PATCH      %d\n",      OPT__FLAG_NPAR_PATCH    );
       fprintf( Note, "OPT__FLAG_NPAR_CELL       %d\n",      OPT__FLAG_NPAR_CELL     );
+      fprintf( Note, "OPT__FLAG_PAR_MASS_CELL   %d\n",      OPT__FLAG_PAR_MASS_CELL );
 #     endif
       fprintf( Note, "OPT__PATCH_COUNT          %d\n",      OPT__PATCH_COUNT        );
 #     ifdef PARTICLE
@@ -1106,7 +1107,17 @@ void Aux_TakeNote()
          fprintf( Note, "***********************************************************************************\n" );
          fprintf( Note, "\n\n");
       }
-#     endif
+
+      if ( OPT__FLAG_PAR_MASS_CELL )
+      {
+         fprintf( Note, "Flag Criterion (Particle Mass per Cell)\n" );
+         fprintf( Note, "***********************************************************************************\n" );
+         fprintf( Note, "  Level       Particle Mass\n" );
+         for (int lv=0; lv<MAX_LEVEL; lv++)  fprintf( Note, "%7d%20.7e\n", lv, FlagTable_ParMassCell[lv] );
+         fprintf( Note, "***********************************************************************************\n" );
+         fprintf( Note, "\n\n");
+      }
+#     endif // #ifdef PARTICLE
 
 
 //    record the grid size in different refinement level
