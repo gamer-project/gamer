@@ -619,6 +619,7 @@ void Aux_TakeNote()
 #     if   ( MODEL == HYDRO )
       fprintf( Note, "OPT__FLAG_PRES_GRADIENT   %d\n",      OPT__FLAG_PRES_GRADIENT );
       fprintf( Note, "OPT__FLAG_VORTICITY       %d\n",      OPT__FLAG_VORTICITY     );
+      fprintf( Note, "OPT__FLAG_JEANS           %d\n",      OPT__FLAG_JEANS         );
 #     elif ( MODEL == MHD )
 #     warning : WAIT MHD !!!
 #     endif
@@ -1041,6 +1042,16 @@ void Aux_TakeNote()
          fprintf( Note, "***********************************************************************************\n" );
          fprintf( Note, "  Level           Vorticity\n" );
          for (int lv=0; lv<MAX_LEVEL; lv++)  fprintf( Note, "%7d%20.7e\n", lv, FlagTable_Vorticity[lv] );
+         fprintf( Note, "***********************************************************************************\n" );
+         fprintf( Note, "\n\n");
+      }
+
+      if ( OPT__FLAG_JEANS )
+      {
+         fprintf( Note, "Flag Criterion (Jeans Length over Cell Size in HYDRO)\n" );
+         fprintf( Note, "***********************************************************************************\n" );
+         fprintf( Note, "  Level       lambda_J / dh\n" );
+         for (int lv=0; lv<MAX_LEVEL; lv++)  fprintf( Note, "%7d%20.7e\n", lv, FlagTable_Jeans[lv] );
          fprintf( Note, "***********************************************************************************\n" );
          fprintf( Note, "\n\n");
       }

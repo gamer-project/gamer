@@ -74,7 +74,7 @@ Procedure for outputting new variables:
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2230)
+// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2231)
 // Description :  Output all simulation data in the HDF5 format, which can be used as a restart file
 //                or loaded by YT
 //
@@ -129,6 +129,7 @@ Procedure for outputting new variables:
 //                2228 : 2017/03/21 --> output NCOMP_FLUID, NCOMP_PASSIVE, and PAR_NPASSIVE in KeyInfo_t
 //                2229 : 2017/04/06 --> output DUAL_ENERGY and DUAL_ENERGY_SWITCH
 //                2230 : 2017/05/08 --> output OPT__FLAG_PAR_MASS_CELL and FlagTable_ParMassCell
+//                2231 : 2017/05/08 --> output OPT__FLAG_JEANS and FlagTable_Jeans
 //-------------------------------------------------------------------------------------------------------
 void Output_DumpData_Total_HDF5( const char *FileName )
 {
@@ -1234,7 +1235,7 @@ void FillIn_KeyInfo( KeyInfo_t &KeyInfo )
 
    const time_t CalTime  = time( NULL );   // calendar time
 
-   KeyInfo.FormatVersion = 2229;
+   KeyInfo.FormatVersion = 2231;
    KeyInfo.Model         = MODEL;
    KeyInfo.NLevel        = NLEVEL;
    KeyInfo.NCompFluid    = NCOMP_FLUID;
@@ -1746,6 +1747,7 @@ void FillIn_InputPara( InputPara_t &InputPara )
 #  if ( MODEL == HYDRO )
    InputPara.Opt__Flag_PresGradient  = OPT__FLAG_PRES_GRADIENT;
    InputPara.Opt__Flag_Vorticity     = OPT__FLAG_VORTICITY;
+   InputPara.Opt__Flag_Jeans         = OPT__FLAG_JEANS;
 #  endif
 #  if ( MODEL == ELBDM )
    InputPara.Opt__Flag_EngyDensity   = OPT__FLAG_ENGY_DENSITY;
@@ -1950,6 +1952,7 @@ void FillIn_InputPara( InputPara_t &InputPara )
 #     if   ( MODEL == HYDRO )
       InputPara.FlagTable_PresGradient[lv]    = FlagTable_PresGradient[lv];
       InputPara.FlagTable_Vorticity   [lv]    = FlagTable_Vorticity   [lv];
+      InputPara.FlagTable_Jeans       [lv]    = FlagTable_Jeans       [lv];
 
 #     elif ( MODEL == ELBDM )
       for (int t=0; t<2; t++)
@@ -2368,6 +2371,7 @@ void GetCompound_InputPara( hid_t &H5_TypeID )
 #  if ( MODEL == HYDRO )
    H5Tinsert( H5_TypeID, "Opt__Flag_PresGradient",  HOFFSET(InputPara_t,Opt__Flag_PresGradient ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "Opt__Flag_Vorticity",     HOFFSET(InputPara_t,Opt__Flag_Vorticity    ), H5T_NATIVE_INT     );
+   H5Tinsert( H5_TypeID, "Opt__Flag_Jeans",         HOFFSET(InputPara_t,Opt__Flag_Jeans        ), H5T_NATIVE_INT     );
 #  endif
 #  if ( MODEL == ELBDM )
    H5Tinsert( H5_TypeID, "Opt__Flag_EngyDensity",   HOFFSET(InputPara_t,Opt__Flag_EngyDensity  ), H5T_NATIVE_INT     );
@@ -2566,6 +2570,7 @@ void GetCompound_InputPara( hid_t &H5_TypeID )
 #  if   ( MODEL == HYDRO )
    H5Tinsert( H5_TypeID, "FlagTable_PresGradient", HOFFSET(InputPara_t,FlagTable_PresGradient  ), H5_TypeID_Arr_NLvM1Double   );
    H5Tinsert( H5_TypeID, "FlagTable_Vorticity",    HOFFSET(InputPara_t,FlagTable_Vorticity     ), H5_TypeID_Arr_NLvM1Double   );
+   H5Tinsert( H5_TypeID, "FlagTable_Jeans",        HOFFSET(InputPara_t,FlagTable_Jeans         ), H5_TypeID_Arr_NLvM1Double   );
 #  elif ( MODEL == ELBDM )
    H5Tinsert( H5_TypeID, "FlagTable_EngyDensity",  HOFFSET(InputPara_t,FlagTable_EngyDensity   ), H5_TypeID_Arr_NLvM1_2Double );
 #  endif
