@@ -26,7 +26,7 @@ real NParAcc_R0;           // scale radius in the assumed density profile
 int  NParAcc_NBinR;        // number of radial bins in the mass profile table
 bool NParAcc_ComprDirN;    // calculate the direct N-body acceleration for comparison
 int  NParAcc_AddSoft;      // 0/1/2: no soften / (e^2+r^2)^(3/2) / (e^5+r^5)^(5/3)
-real NParAcc_Soft;         // soften legnth 
+real NParAcc_Soft;         // soften length
 // =======================================================================================
 
 
@@ -39,10 +39,10 @@ real NParAcc_Soft;         // soften legnth
 // Note        :  1. Please copy this file to "GAMER/src/Init/Init_TestProb.cpp"
 //                2. Test problem parameters can be set in the input file "Input__TestProb"
 //
-// Parameter   :  None 
+// Parameter   :  None
 //-------------------------------------------------------------------------------------------------------
 void Init_TestProb()
-{  
+{
 
    const char *TestProb = "N particles force";
 
@@ -156,9 +156,9 @@ void Init_TestProb()
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Par_TestProbSol_NParAcc
-// Description :  Initialize the background density field as zero for the N particles force test  
+// Description :  Initialize the background density field as zero for the N particles force test
 //
-// Note        :  1. Currently particle test must work with the ELBDM model 
+// Note        :  1. Currently particle test must work with the ELBDM model
 //                2. Invoked by "ELBDM_Init_StartOver_AssignData"
 //
 // Parameter   :  fluid : Fluid field to be initialized
@@ -180,8 +180,8 @@ void Par_TestProbSol_NParAcc( real *fluid, const double x, const double y, const
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  LoadTestProbParameter 
-// Description :  Load parameters for the test problem 
+// Function    :  LoadTestProbParameter
+// Description :  Load parameters for the test problem
 //
 // Note        :  This function is invoked by "Init_TestProb"
 //
@@ -355,7 +355,7 @@ void Par_OutputError_NParAcc( const bool Useless )
    double dr[3], r, _r, r2, r3, Fac, AccNumR, AccNumT, AccNumA, AccAnaR, AccAnaT, AccAnaA, AccProR;
 
    for (int d=0; d<3; d++)    AccAna[d] = new double [amr->Par->NPar_Active_AllRank];
-   
+
    for (int d=0; d<3; d++)
    for (int p=0; p<amr->Par->NPar_Active_AllRank; p++)   AccAna[d][p] = 0.0;
 
@@ -388,7 +388,7 @@ void Par_OutputError_NParAcc( const bool Useless )
 // set the mass profile of the target model
    double (*MassProf)( const double r ) = NULL;
 
-   switch ( NParAcc_Mode ) 
+   switch ( NParAcc_Mode )
    {
       case 1:  MassProf = MassProf_Plummer;   break;
       case 2:  MassProf = MassProf_Burkert;   break;

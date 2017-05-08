@@ -7,4 +7,4 @@
 -1          NParAcc_NBinR        #number of radial bins in the mass profile table (<=1: default = 1000)
 1           NParAcc_ComprDirN    #0/1 : (not) calculate the direct N-body acceleration for comparison
 2           NParAcc_AddSoft      #0/1/2: no soften / (e^2+r^2)^(3/2) / (e^5+r^5)^(5/3)
--1          NParAcc_Soft         #soften legnth (<0.0: default = 1.40*dh[MaxLv])
+-1          NParAcc_Soft         #soften length (<0.0: default = 1.40*dh[MaxLv])

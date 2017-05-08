@@ -306,6 +306,7 @@ void Aux_Check_Parameter()
 #  if ( MODEL == HYDRO )
    Flag |= OPT__FLAG_PRES_GRADIENT;
    Flag |= OPT__FLAG_VORTICITY;
+   Flag |= OPT__FLAG_JEANS;
    Flag |= OPT__FLAG_LOHNER_ENGY;
    Flag |= OPT__FLAG_LOHNER_PRES;
    Flag |= OPT__FLAG_LOHNER_TEMP;
