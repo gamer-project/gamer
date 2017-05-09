@@ -57,6 +57,7 @@
 0           OPT__FLAG_RHO_GRADIENT    # flag: density gradient (Input__Flag_RhoGradient)
 0           OPT__FLAG_PRES_GRADIENT   # flag: pressure gradient (Input__Flag_PresGradient) ##HYDRO ONLY##
 0           OPT__FLAG_VORTICITY       # flag: vorticity (Input__Flag_Vorticity) ##HYDRO ONLY##
+0           OPT__FLAG_JEANS           # flag: Jeans length (Input__Flag_Jeans) ##HYDRO ONLY##
 0           OPT__FLAG_ENGY_DENSITY    # flag: energy density (Input_Flag_EngyDensity) ##ELBDM ONLY##
 0           OPT__FLAG_LOHNER_DENS     # flag: Lohner (Input__Flag_Lohner) (HYDRO:mass density  ; ELBDM:R^2+I^2)
 0           OPT__FLAG_LOHNER_ENGY     # flag: Lohner (Input__Flag_Lohner) (HYDRO:energy density; ELBDM:useless)
@@ -67,6 +68,7 @@
 0           OPT__FLAG_REGION          # flag: specify the regions allowed to be refined --> edit "Flag_Region"
 0           OPT__FLAG_NPAR_PATCH      # flag: # of particles per patch (Input__Flag_NParPatch) (0/1/2:off/itself/siblings as well)
 0           OPT__FLAG_NPAR_CELL       # flag: # of particles per cell  (Input__Flag_NParCell)
+0           OPT__FLAG_PAR_MASS_CELL   # flag: total particle mass per cell (Input__Flag_ParMassCell)
 1           OPT__PATCH_COUNT          # count the number of patches   at each level (0=off, 1=every step, 2=every sub-step)
 1           OPT__PARTICLE_COUNT       # count the number of particles at each level (0=off, 1=every step, 2=every sub-step) ##PARTICLE ONLY##
 2           OPT__REUSE_MEMORY         # reuse patch memory to reduce memory fragmentation (0/1/2:off/on/aggressive)
