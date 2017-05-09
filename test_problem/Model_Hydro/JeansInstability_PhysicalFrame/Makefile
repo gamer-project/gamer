@@ -25,7 +25,7 @@ SIMU_OPTION += -DPOT_SCHEME=SOR
 # --> currently only for improving accuracy for particles around the patch boundaries (by Par->ImproveAcc)
 #SIMU_OPTION += -DSTORE_POT_GHOST
 
-# use unsplitting method to couple gravity to the target model (e.g., HYDRO and MHD, ELBDM is not supported yet)
+# use unsplitting method to couple gravity to the target model (for HYDRO and MHD only; ELBDM is not supported yet)
 # --> must be off if GRAVITY is off
 SIMU_OPTION += -DUNSPLIT_GRAVITY
 
@@ -57,7 +57,7 @@ SIMU_OPTION += -DLR_SCHEME=PPM
 # Riemann solver: EXACT/ROE/HLLE/HLLC ##all are useless in RTVD, HLLE/HLLC are useless in WAF##
 SIMU_OPTION += -DRSOLVER=ROE
 
-# dual energy formalism: DE_ENPY/DE_EINT (evolve entropy or internal energy, DE_EINT is not supported yet) ##useless in RTVD/WAF##
+# dual energy formalism: DE_ENPY/DE_EINT (evolve entropy or internal energy; DE_EINT is not supported yet) ##useless in RTVD/WAF##
 #SIMU_OPTION += -DDUAL_ENERGY=DE_ENPY
 
 # number of passively advected scalars (**excluding** entropy or internal energy even when DUAL_ENERGY is on)
@@ -99,7 +99,7 @@ SIMU_OPTION += -DPAR_NPASSIVE=0
 
 # (f) optimization and compilation options
 # ------------------------------------------------------------------------------------
-# GPU acceleration
+# GPU acceleration (to disable GPU, please comment out both -DGPU and -DGPU_ARCH)
 #SIMU_OPTION += -DGPU
 
 # GPU architecture: FERMI/KEPLER/MAXWELL/PASCAL
@@ -401,6 +401,13 @@ MPI_PATH          := /usr/local/mpi/openmpi-1.8.4-intel-15.0
 HDF5_PATH         := /projects/ncsa/grav/softwares/miniconda2
 #GSL_PATH          := /usr/local/gsl/gsl-1.16
 
+# campus UIUC (gcc-4.9.2 + openmpi-1.8.4)
+#CUDA_TOOLKIT_PATH := /usr/local/cuda/7.0
+#FFTW_PATH         := /projects/ncsa/grav/softwares/fftw/2.1.5-openmpi-1.8.4-gcc-4.9.2
+#MPI_PATH          := /usr/local/mpi/openmpi-1.8.4-gcc-4.9.2
+#HDF5_PATH         := /projects/ncsa/grav/softwares/miniconda2
+#GSL_PATH          := /usr/local/gsl/gsl-1.16
+
 # hulk (openmpi-intel-qlc)
 #CUDA_TOOLKIT_PATH := /opt/gpu/cuda/4.2
 #FFTW_PATH         := /opt/math/fftw/2.1.5-intel-qlc
@@ -625,7 +632,7 @@ else ifeq "$(findstring GPU_ARCH=MAXWELL, $(SIMU_OPTION))" "GPU_ARCH=MAXWELL"
 else ifeq "$(findstring GPU_ARCH=PASCAL,  $(SIMU_OPTION))" "GPU_ARCH=PASCAL"
    NVCCFLAG_COM += -gencode arch=compute_60,code=\"compute_60,sm_60\"
 else ifeq "$(findstring GPU, $(SIMU_OPTION))" "GPU"
-   $(error unknown GPU_ARCH !!)
+   $(error unknown GPU_ARCH (please set it in the Makefile) !!)
 endif
 
 ifeq "$(findstring GAMER_DEBUG, $(SIMU_OPTION))" "GAMER_DEBUG"
