@@ -24,3 +24,6 @@ Note:
        Goldbaum et al. 2015    : https://arxiv.org/abs/1510.08458
        Goldbaum et al. 2016    : https://arxiv.org/abs/1605.00646
        yt hub                  : https://girder.hub.yt/#collection/5736481ddd9119000164acf1
+
+2. To download the low-resolution initial condition:
+   wget -O ./LOW.tar.gz https://www.dropbox.com/sh/1xzt1rysy9v3a9l/AAAMlJBQG1OQFW4cjhp11Ex6a/LOW.tar.gz?dl=1
