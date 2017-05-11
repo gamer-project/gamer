@@ -18,7 +18,7 @@ cd $PBS_O_WORKDIR
 ##*** remember to set "OPT__GPUID_SELECT = -1" ***
 ##************************************************
 
-mpirun -map-by ppr:1:socket:pe=10 ./gamer 1>>log 2>&1
+mpirun -map-by ppr:1:socket:pe=10 ./gamer 1>>stdout 2>>stderr
 
 ## script to restart a simulation automatically if the run failed
 ## sh auto_restart.sh 1>>stdout 2>>stderr

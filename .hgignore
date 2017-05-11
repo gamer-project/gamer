@@ -3,5 +3,5 @@ syntax: glob
 
 *.o
 
-./bin/Run/Input__Flag*
+./bin/*
 gamer
