@@ -16,7 +16,7 @@ Procedure to run the test problem:
 
 Note:
 -------------------------------------------------------------------------------
-1. Mimic the AGORA isolated galaxy setup
+1. Follow the AGORA isolated galaxy setup
    --> AGORA website           : https://sites.google.com/site/santacruzcomparisonproject/
        AGORA paper             : https://arxiv.org/abs/1610.03066
        AGORA initial condition : http://goo.gl/8JzbIJ

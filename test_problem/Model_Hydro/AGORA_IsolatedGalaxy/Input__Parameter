@@ -38,20 +38,20 @@
 0.3         OMEGA_M0                  # omega matter at the present time ##COMOVING ONLY##
 0.70        HUBBLE0                   # dimensionless Hubble parameter (currently only for converting ELBDM_MASS to code units)
 
--1.0        DT__FLUID                 # time-step: fluid solver coefficient (<0:default)
+0.50        DT__FLUID                 # time-step: fluid solver coefficient (<0:default)
 -1.0        DT__FLUID_INIT            # time-step: fluid solver coefficient at the first step (<0:default=DT__FLUID)
-1.0e30      DT__GRAVITY               # time-step: gravity solver coefficient (<0:default)
+0.35355     DT__GRAVITY               # time-step: gravity solver coefficient (<0:default)
 0.0         DT__PHASE                 # time-step: phase rotation coefficient (<0:default; 0:off) ##ELBDM ONLY##
--1.0        DT__PARVEL                # time-step: particle velocity (<0:default=0.5) ##PARTICLE ONLY##
+0.50        DT__PARVEL                # time-step: particle velocity (<0:default=0.5) ##PARTICLE ONLY##
 -1.0        DT__PARVEL_MAX            # time-step: maximum allowed dt from particle velocity (<0:off) ##PARTICLE ONLY##
--1.0        DT__PARACC                # time-step: particle acceleration (<0:default=0.5; 0:off) ##PARTICLE + STORE_PAR_ACC ONLY##
+0.50        DT__PARACC                # time-step: particle acceleration (<0:default=0.5; 0:off) ##PARTICLE + STORE_PAR_ACC ONLY##
 0.01        DT__MAX_DELTA_A           # time-step: maximum variation of the scale factor A ##COMOVING ONLY##
 0           OPT__ADAPTIVE_DT          # time-step: allow time-step to change in each sub-step ##NOT SUPPORTED YET##
 1           OPT__RECORD_DT            # time-step: record the information of the time-step determination
 0           OPT__DT_USER              # time-step: user-defined --> edit "Mis_GetTimeStep_UserCriteria"
 
 -1          REGRID_COUNT              # refine every REGRID_COUNT sub-step (<0:default [4])
-8           FLAG_BUFFER_SIZE          # number of buffer cells for the flag operation (<0:default [8])
+4           FLAG_BUFFER_SIZE          # number of buffer cells for the flag operation (<0:default [8])
 7           MAX_LEVEL                 # maximum refinement level (0 ... NLEVEL-1) (<0:default [NLEVEL-1])
 1           OPT__FLAG_RHO             # flag: density (Input__Flag_Rho)
 0           OPT__FLAG_RHO_GRADIENT    # flag: density gradient (Input__Flag_RhoGradient)
@@ -96,8 +96,8 @@
 -1.0        ELBDM_TAYLOR3_COEFF       # 3rd Taylor expansion coefficient (<0:default [1.0/6.0]) ##USELESS if XXX_AUTO is on##
 0           ELBDM_TAYLOR3_AUTO        # Optimize ELBDM_TAYLOR3_COEFF automatically to minimize the damping at kmax
 
--1          FLU_GPU_NPGROUP           # number of patch groups sent into GPU for fluid solver (<0:default)
--1          GPU_NSTREAM               # number of streams for the asynchronous memory copy in GPU (<0:default)
+120         FLU_GPU_NPGROUP           # number of patch groups sent into GPU for fluid solver (<0:default)
+24          GPU_NSTREAM               # number of streams for the asynchronous memory copy in GPU (<0:default)
 1           OPT__FIXUP_FLUX           # perform the flux fix-up to correct the coarse-grid data ##HYDRO and ELBDM ONLY##
 1           OPT__FIXUP_RESTRICT       # perform the restrict operation to correct the coarse-grid data
 -1          OPT__CORR_AFTER_ALL_SYNC  # apply corrections after all levels are synchronized (-1/0/1/2:default/off/every step/before dump)
@@ -115,7 +115,7 @@
 -1          MG_NPRE_SMOOTH            # number of pre-smoothing steps for multigrid (<0:default [3])
 -1          MG_NPOST_SMOOTH           # Number of post-smoothing steps for multigrid (<0:default [3])
 -1.0        MG_TOLERATED_ERROR        # maximum tolerated error for multigrid (<0:default[(s)1.e-6/(d)1.e-15])
--1          POT_GPU_NPGROUP           # number of patch groups sent into GPU for the Poisson solver (<0:default)
+120         POT_GPU_NPGROUP           # number of patch groups sent into GPU for the Poisson solver (<0:default)
 0           OPT__GRA_P5_GRADIENT      # 5-points gradient in the Gravity solver (must have GRA/USG_GHOST_SIZE >= 2)
 1           OPT__GRAVITY_TYPE         # different sources of gravity : (1,2,3)->(self-gravity,external gravity,both) ##HYDRO ONLY##
 0           OPT__EXTERNAL_POT         # add the external potential (does not work with OPT__GRAVITY_TYPE == 2) ##ELBDM ONLY##
@@ -153,7 +153,7 @@
 1           OPT__OUTPUT_PAR_DENS      # (0, 1, 2) -> (off, dump particle/total mass density) ##for OPT__OUTPUT_TOTAL and PARTICLE ONLY##
 2           OPT__OUTPUT_MODE          # (1, 2, 3) -> (const step, const dt, dump table)
 5           OUTPUT_STEP               # output data every OUTPUT_STEP step
-1.0e1       OUTPUT_DT                 # output data every OUTPUT_DT time interval
+5.0e1       OUTPUT_DT                 # output data every OUTPUT_DT time interval
 0.0         OUTPUT_PART_X             # x coordinate for the option OPT__OUTPUT_PART
 0.0         OUTPUT_PART_Y             # y coordinate for the option OPT__OUTPUT_PART
 0.0         OUTPUT_PART_Z             # z coordinate for the option OPT__OUTPUT_PART
