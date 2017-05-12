@@ -1,8 +1,8 @@
 # parameters for the AGORA isolated galaxy test
-~/project/amr_code_comparison/isolated_galaxy/initial_condition/LOW/vcirc.dat    AGORA_VcProf_Filename      # filename of the circular velocity radial profile
-~/project/amr_code_comparison/isolated_galaxy/initial_condition/LOW/halo.dat     AGORA_HaloPar_Filename     # filename of the halo  particles
-~/project/amr_code_comparison/isolated_galaxy/initial_condition/LOW/disk.dat     AGORA_DiskPar_Filename     # filename of the disk  particles
-~/project/amr_code_comparison/isolated_galaxy/initial_condition/LOW/bulge.dat    AGORA_BulgePar_Filename    # filename of the bulge particles
+/home/hyschive/project/amr_code_comparison/isolated_galaxy/initial_condition/LOW/vcirc.dat   AGORA_VcProf_Filename      # filename of the circular velocity radial profile
+/home/hyschive/project/amr_code_comparison/isolated_galaxy/initial_condition/LOW/halo.dat    AGORA_HaloPar_Filename     # filename of the halo  particles
+/home/hyschive/project/amr_code_comparison/isolated_galaxy/initial_condition/LOW/disk.dat    AGORA_DiskPar_Filename     # filename of the disk  particles
+/home/hyschive/project/amr_code_comparison/isolated_galaxy/initial_condition/LOW/bulge.dat   AGORA_BulgePar_Filename    # filename of the bulge particles
 3.42180552924182     AGORA_DiskScaleLength      # disk scale length [kpc]
 3.42180552924182e-1  AGORA_DiskScaleHeight      # disk scale height [kpc]
 4.29661e10           AGORA_DiskTotalMass        # disk total mass (gas + stars) [Msun]
