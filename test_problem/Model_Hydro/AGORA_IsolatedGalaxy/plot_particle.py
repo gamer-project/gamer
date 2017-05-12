@@ -23,7 +23,7 @@ for ds in ts.piter():
    pz.set_unit( 'particle_mass', 'Msun' )
    pz.set_zlim( 'particle_mass', 1.0e6, 1.0e8 )
    pz.set_cmap( 'particle_mass', colormap )
-   pz.annotate_timestamp( time_unit='Myr', corner='upper_right' )
+   pz.annotate_timestamp( time_unit='Myr', corner='upper_right', text_args={'color':'k'} )
    pz.save( mpl_kwargs={"dpi":dpi} )
 
 
@@ -32,5 +32,5 @@ for ds in ts.piter():
    px.set_unit( 'particle_mass', 'Msun' )
    px.set_zlim( 'particle_mass', 1.0e6, 1.0e8 )
    px.set_cmap( 'particle_mass', colormap )
-   px.annotate_timestamp( time_unit='Myr', corner='upper_right' )
+   px.annotate_timestamp( time_unit='Myr', corner='upper_right', text_args={'color':'k'} )
    px.save( mpl_kwargs={"dpi":dpi} )
