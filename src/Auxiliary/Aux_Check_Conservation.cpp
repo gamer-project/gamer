@@ -82,8 +82,8 @@ void Aux_Check_Conservation( const char *comment )
 #  endif
 
 
-   const int NVar = NVar_NoPassive + NCOMP_PASSIVE + 1;  // NCOMP_PASSIVE + 1: individual passive scalars and the sum of scalars
-                                                         //                    to be normalized
+// NCOMP_PASSIVE + 1: individual passive scalars and the sum of scalars to be normalized
+   const int NVar = NVar_NoPassive + ( (NCOMP_PASSIVE>0)?(NCOMP_PASSIVE+1):0 );
 
    double dv, Fluid_ThisRank[NVar], Fluid_AllRank[NVar], Fluid_lv[NVar];   // dv : cell volume at each level
    int    FluSg;
