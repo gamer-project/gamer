@@ -398,7 +398,7 @@ void Aux_Check_Parameter()
       Aux_Message( stderr, "REMINDER : please make sure that \"background density ~= 1.0\" for OPT__UM_FACTOR_5OVER3\n" );
    }
 
-#  if ( GRA_GHOST_SIZE == 0  &&  defined STORE_POT_GHOST )
+#  if ( defined GRAVITY  &&  GRA_GHOST_SIZE == 0  &&  defined STORE_POT_GHOST )
    Aux_Message( stderr, "WARNING : STORE_POT_GHOST is useless when GRA_GHOST_SIZE == 0 !!\n" );
 #  endif
 

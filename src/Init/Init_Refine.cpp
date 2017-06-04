@@ -20,23 +20,23 @@ void Init_Refine( const int lv )
 
    const int Width = PATCH_SIZE*amr->scale[lv+1];
    bool AllocData[8];         // allocate data or not
-   int *Cr;    
+   int *Cr;
 
-   for (int m=0; m<27; m++)   
+   for (int m=0; m<27; m++)
    {
 
-//    all real patches must store physical data 
+//    all real patches must store physical data
       if ( m == 0 )
          for (int LocalID=0; LocalID<8; LocalID++)    AllocData[LocalID] = true;
 
-//    only the outer buffer patches do NOT need to store physical data 
+//    only the outer buffer patches do NOT need to store physical data
       else
       {
          for (int LocalID=0; LocalID<8; LocalID++)
          {
             if (  TABLE_01( m-1, 'x', -1, 0, 1 ) == TABLE_02( LocalID, 'x', -1, 1 )  ||
                   TABLE_01( m-1, 'y', -1, 0, 1 ) == TABLE_02( LocalID, 'y', -1, 1 )  ||
-                  TABLE_01( m-1, 'z', -1, 0, 1 ) == TABLE_02( LocalID, 'z', -1, 1 )      )  
+                  TABLE_01( m-1, 'z', -1, 0, 1 ) == TABLE_02( LocalID, 'z', -1, 1 )      )
                AllocData[LocalID] = false;
 
             else
@@ -50,7 +50,7 @@ void Init_Refine( const int lv )
          if ( amr->patch[0][lv][PID]->flag )
          {
 
-//          construct relation : father -> child   
+//          construct relation : father -> child
             amr->patch[0][lv][PID]->son = amr->num[lv+1];
 
 
@@ -66,7 +66,7 @@ void Init_Refine( const int lv )
             amr->pnew( lv+1, Cr[0]+Width, Cr[1],       Cr[2]+Width, PID, AllocData[6], AllocData[6] );
             amr->pnew( lv+1, Cr[0]+Width, Cr[1]+Width, Cr[2]+Width, PID, AllocData[7], AllocData[7] );
 
-            
+
 //          record the number of real/buffer patches along each sibling direction
             amr->NPatchComma[lv+1][m+1] += 8;
 
