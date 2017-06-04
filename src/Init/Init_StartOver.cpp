@@ -7,13 +7,13 @@ static void Init_StartOver_AssignData( const int lv );
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Init_StartOver  
+// Function    :  Init_StartOver
 // Description :  Set up the initial condition by invoking the function "Init_StartOver_AssignData"
 //-------------------------------------------------------------------------------------------------------
 void Init_StartOver()
 {
 
-   if ( MPI_Rank == 0 )    Aux_Message( stdout, "Init_StartOver ... \n" ); 
+   if ( MPI_Rank == 0 )    Aux_Message( stdout, "Init_StartOver ... \n" );
 
 
 // construct levels 0 ~ NLEVEL-1
@@ -21,7 +21,7 @@ void Init_StartOver()
    {
       if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Constructing level %d ... ", lv );
 
-      if ( lv == 0 )    
+      if ( lv == 0 )
       {
          Init_BaseLevel();
 
@@ -34,7 +34,7 @@ void Init_StartOver()
 
       Buf_GetBufferData( lv, amr->FluSg[lv], NULL_INT, DATA_GENERAL, _TOTAL, Flu_ParaBuf, USELB_NO );
 
-      if ( lv != TOP_LEVEL )   
+      if ( lv != TOP_LEVEL )
       {
          Flag_Real( lv, USELB_NO );
 
@@ -51,7 +51,7 @@ void Init_StartOver()
 
 
 // restrict all variables to be consistent with the finite volume scheme
-   if ( OPT__INIT_RESTRICT )     
+   if ( OPT__INIT_RESTRICT )
    {
       for (int lv=TOP_LEVEL-1; lv>=0; lv--)
       {
@@ -62,7 +62,7 @@ void Init_StartOver()
    } // if ( OPT__INIT_RESTRICT )
 
 
-   if ( MPI_Rank == 0 )    Aux_Message( stdout, "Init_StartOver ... done\n" ); 
+   if ( MPI_Rank == 0 )    Aux_Message( stdout, "Init_StartOver ... done\n" );
 
 } // FUNCTION : Init_StartOver
 

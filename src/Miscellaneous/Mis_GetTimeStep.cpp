@@ -267,7 +267,7 @@ void Mis_GetTimeStep()
       fprintf( File, "Phase     : dt = %12.6e, dTime = %12.6e, lv = %2d\n", dt7, dTime7, MinDtLv_Phase );
 #     endif
 
-#     if ( PARTICLE )
+#     ifdef PARTICLE
       fprintf( File, "Particle  : dt = %12.6e, dTime = %12.6e, lv = %2d, MaxVel = %13.6e\n", 
                dt8[0], dTime8[0], MinDtLv_ParVelAcc[0], MinDtVar_ParVelAcc[0] );
 

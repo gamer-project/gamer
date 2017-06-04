@@ -6,7 +6,7 @@
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Init_BaseLevel
-// Description :  Construct the base level during initialization 
+// Description :  Construct the base level during initialization
 //-------------------------------------------------------------------------------------------------------
 void Init_BaseLevel()
 {
@@ -15,7 +15,7 @@ void Init_BaseLevel()
    const int scale0    = amr->scale[0];
    const int Width     = PATCH_SIZE*scale0;
 
-   int Cr[3];    
+   int Cr[3];
 
 
 // allocate the real base-level patches
