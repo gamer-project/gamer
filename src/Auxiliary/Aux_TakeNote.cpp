@@ -158,6 +158,12 @@ void Aux_TakeNote()
       fprintf( Note, "DUAL_ENERGY               UNKNOWN\n" );
 #     endif
 
+#     ifdef SUPPORT_GRACKLE
+      fprintf( Note, "SUPPORT_GRACKLE           ON\n" );
+#     else
+      fprintf( Note, "SUPPORT_GRACKLE           OFF\n" );
+#     endif
+
 //    c. options in MHD
 #     elif ( MODEL == MHD )
 #     warning : WAIT MHD !!!

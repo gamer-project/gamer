@@ -64,6 +64,9 @@ SIMU_OPTION += -DDUAL_ENERGY=DE_ENPY
 # --> for simulations without any passive scalar, please set this variable to 0 and do NOT comment it out
 SIMU_OPTION += -DNCOMP_PASSIVE_MAKEFILE=0
 
+# support Grackle, a chemistry and radiative cooling library (NOT supported yet)
+SIMU_OPTION += -DSUPPORT_GRACKLE
+
 
 # (c) MHD options
 # ------------------------------------------------------------------------------------
@@ -399,6 +402,7 @@ CUDA_TOOLKIT_PATH := /usr/local/cuda/7.0
 FFTW_PATH         := /projects/ncsa/grav/softwares/fftw/2.1.5
 MPI_PATH          := /usr/local/mpi/openmpi-1.8.4-intel-15.0
 HDF5_PATH         := /projects/ncsa/grav/softwares/miniconda2
+GRACKLE_PATH      := /home/hyschive/local
 #GSL_PATH          := /usr/local/gsl/gsl-1.16
 
 # campus UIUC (gcc-4.9.2 + openmpi-1.8.4)
@@ -541,6 +545,10 @@ ifeq "$(findstring OPENMP, $(SIMU_OPTION))" "OPENMP"
    endif
 endif
 
+ifeq "$(findstring SUPPORT_GRACKLE, $(SIMU_OPTION))" "SUPPORT_GRACKLE"
+LIB += -L$(GRACKLE_PATH)/lib -lgrackle
+endif
+
 ifeq "$(findstring SUPPORT_HDF5, $(SIMU_OPTION))" "SUPPORT_HDF5"
 LIB += -L$(HDF5_PATH)/lib -lhdf5
 endif
@@ -564,6 +572,10 @@ endif
 
 ifeq "$(findstring GRAVITY, $(SIMU_OPTION))" "GRAVITY"
 INCLUDE += -I$(FFTW_PATH)/include
+endif
+
+ifeq "$(findstring SUPPORT_GRACKLE, $(SIMU_OPTION))" "SUPPORT_GRACKLE"
+INCLUDE += -I$(GRACKLE_PATH)/include
 endif
 
 ifeq "$(findstring SUPPORT_HDF5, $(SIMU_OPTION))" "SUPPORT_HDF5"

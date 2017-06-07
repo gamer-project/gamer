@@ -40,6 +40,18 @@
 #  endif
 #endif
 
+#ifdef SUPPORT_GRACKLE
+#ifdef FLOAT8
+#  define CONFIG_BFLOAT_8
+#else
+#  define CONFIG_BFLOAT_4
+#endif
+
+extern "C" {
+#  include <grackle.h>
+}
+#endif // #ifdef SUPPORT_GRACKLE
+
 #ifdef SUPPORT_LIBYT
 #  include <libyt.h>
 #endif
