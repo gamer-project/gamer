@@ -417,7 +417,7 @@ void Init_Load_Parameter()
 
    getline( &input_line, &len, File );
    sscanf( input_line, "%d%s",   &temp_int,                 string );
-   OPT__1ST_FLUX_CORR_SCHEME = (OptRSolver_t)temp_int;
+   OPT__1ST_FLUX_CORR_SCHEME = (OptRSolver1st_t)temp_int;
 
    getline( &input_line, &len, File );
 #  ifdef DUAL_ENERGY

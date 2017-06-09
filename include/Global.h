@@ -85,7 +85,7 @@ extern double           GAMMA, MINMOD_COEFF, EP_COEFF, MOLECULAR_WEIGHT;
 extern LR_Limiter_t     OPT__LR_LIMITER;
 extern WAF_Limiter_t    OPT__WAF_LIMITER;
 extern Opt1stFluxCorr_t OPT__1ST_FLUX_CORR;
-extern OptRSolver_t     OPT__1ST_FLUX_CORR_SCHEME;
+extern OptRSolver1st_t  OPT__1ST_FLUX_CORR_SCHEME;
 extern bool             OPT__FLAG_PRES_GRADIENT, OPT__FLAG_LOHNER_ENGY, OPT__FLAG_LOHNER_PRES, OPT__FLAG_LOHNER_TEMP;
 extern bool             OPT__FLAG_VORTICITY, OPT__FLAG_JEANS;
 extern int              OPT__CK_NEGATIVE;
