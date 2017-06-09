@@ -9,13 +9,14 @@ bool Aux_CheckFileExist( const char *FileName );
 void Aux_Error( const char *File, const int Line, const char *Func, const char *Format, ... );
 
 #define NPARA_MAX    1000     // maximum number of parameters
+#define PARA_SET      '#'     // character to indicate that a given parameter has been set properly
 #define TYPE_INT        1     // different data types
 #define TYPE_LONG       2
 #define TYPE_UINT       3
 #define TYPE_ULONG      4
-#define TYPE_FLOAT      5
-#define TYPE_DOUBLE     6
-#define TYPE_BOOL       7
+#define TYPE_BOOL       5
+#define TYPE_FLOAT      6
+#define TYPE_DOUBLE     7
 #define TYPE_STRING     8
 
 
@@ -41,6 +42,7 @@ struct ReadPara_t
    char (*Key)[MAX_STRING];
    void **Ptr;
    int   *Type;
+   void **Default;
 
 
    //===================================================================================
@@ -52,10 +54,11 @@ struct ReadPara_t
    ReadPara_t()
    {
 
-      NPara = 0;
-      Key   = new char  [NPARA_MAX][MAX_STRING];
-      Ptr   = new void* [NPARA_MAX];
-      Type  = new int   [NPARA_MAX];
+      NPara   = 0;
+      Key     = new char  [NPARA_MAX][MAX_STRING];
+      Ptr     = new void* [NPARA_MAX];
+      Type    = new int   [NPARA_MAX];
+      Default = new void* [NPARA_MAX];
 
    } // METHOD : ReadPara_t
 
@@ -70,9 +73,15 @@ struct ReadPara_t
    ~ReadPara_t()
    {
 
+      for (int t=0; t<NPara; t++)
+      {
+         delete Default[t];
+      }
+
       delete [] Key;
       delete [] Ptr;
       delete [] Type;
+      delete [] Default;
 
    } // METHOD : ~ReadPara_t
 
@@ -84,9 +93,10 @@ struct ReadPara_t
    //
    // Note        :  1. This function stores the name, address, and data type of the new parameter
    //                2. Data type (e.g., integer, float, ...) is determined by the input pointer
+   //                3. NewPtr, NewDefault, NewMin, and NewMax must have the same data type
    //===================================================================================
    template <typename T>
-   void Add( const char NewKey[], T* NewPtr )
+   void Add( const char NewKey[], T* NewPtr, T NewDefault )
    {
 
       if ( NPara >= NPARA_MAX )  Aux_Error( ERROR_INFO, "exceed the maximum number of parameters (%d) !!\n", NPARA_MAX );
@@ -103,13 +113,17 @@ struct ReadPara_t
       else if ( typeid(T) == typeid(long  ) )   Type[NPara] = TYPE_LONG;
       else if ( typeid(T) == typeid(uint  ) )   Type[NPara] = TYPE_UINT;
       else if ( typeid(T) == typeid(ulong ) )   Type[NPara] = TYPE_ULONG;
+      else if ( typeid(T) == typeid(bool  ) )   Type[NPara] = TYPE_BOOL;
       else if ( typeid(T) == typeid(float ) )   Type[NPara] = TYPE_FLOAT;
       else if ( typeid(T) == typeid(double) )   Type[NPara] = TYPE_DOUBLE;
-      else if ( typeid(T) == typeid(bool  ) )   Type[NPara] = TYPE_BOOL;
       else if ( typeid(T) == typeid(char  ) )   Type[NPara] = TYPE_STRING;
       else
          Aux_Error( ERROR_INFO, "unsupported data type for \"%s\" (char*, float*, double*, int*, long*, unit*, ulong*, bool* only) !!\n",
                     NewKey );
+
+//    set the default values
+      Default[NPara] = new T;
+      *( (T*)Default[NPara] ) = NewDefault;
 
       NPara ++;
 
@@ -163,7 +177,7 @@ struct ReadPara_t
             if (  strcmp( Key[k], LoadKey ) == 0  )
             {
                MatchIdx  = k;
-               Key[k][0] = '%';  // reset the key to any strange format to detect duplicate parameters
+               Key[k][0] = PARA_SET;   // reset the key to any strange character to detect duplicate parameters
                break;
             }
          }
@@ -172,13 +186,13 @@ struct ReadPara_t
          {
             switch ( Type[MatchIdx] )
             {
-               case TYPE_INT    :   *( (int*   ) Ptr[MatchIdx] ) = (int   )atol( LoadValue );   break;
-               case TYPE_LONG   :   *( (long*  ) Ptr[MatchIdx] ) = (long  )atol( LoadValue );   break;
-               case TYPE_UINT   :   *( (uint*  ) Ptr[MatchIdx] ) = (uint  )atol( LoadValue );   break;
-               case TYPE_ULONG  :   *( (ulong* ) Ptr[MatchIdx] ) = (ulong )atol( LoadValue );   break;
-               case TYPE_FLOAT  :   *( (float* ) Ptr[MatchIdx] ) = (float )atof( LoadValue );   break;
-               case TYPE_DOUBLE :   *( (double*) Ptr[MatchIdx] ) = (double)atof( LoadValue );   break;
-               case TYPE_BOOL   :   *( (bool*  ) Ptr[MatchIdx] ) = (bool  )atol( LoadValue );   break;
+               case TYPE_INT    :   *( (int*   )Ptr[MatchIdx] ) = (int   )atol( LoadValue );    break;
+               case TYPE_LONG   :   *( (long*  )Ptr[MatchIdx] ) = (long  )atol( LoadValue );    break;
+               case TYPE_UINT   :   *( (uint*  )Ptr[MatchIdx] ) = (uint  )atol( LoadValue );    break;
+               case TYPE_ULONG  :   *( (ulong* )Ptr[MatchIdx] ) = (ulong )atol( LoadValue );    break;
+               case TYPE_BOOL   :   *( (bool*  )Ptr[MatchIdx] ) = (bool  )atol( LoadValue );    break;
+               case TYPE_FLOAT  :   *( (float* )Ptr[MatchIdx] ) = (float )atof( LoadValue );    break;
+               case TYPE_DOUBLE :   *( (double*)Ptr[MatchIdx] ) = (double)atof( LoadValue );    break;
                case TYPE_STRING :   strcpy( (char*)Ptr[MatchIdx], LoadValue );                  break;
 
                default: Aux_Error( ERROR_INFO, "unsupported data type (char*, float*, double*, int*, long*, unit*, ulong*, bool* only) !!\n" );
@@ -197,13 +211,61 @@ struct ReadPara_t
       delete [] Line;
 
 
-//    set default
+//    set the parameters missing in the runtime parameter file to their default values
+      SetDefault();
 
 
-//    validate the loaded parameters
+//    validate the parameters
 
 
    } // METHOD : Read
+
+
+   //===================================================================================
+   // Constructor :  SetDefault
+   // Description :  Set parameters missing in the runtime parameter file to their default values
+   //
+   // Note        :  1. Parameters already set by the runtime parameter file have Key[0] == PARA_SET
+   //                2. We do NOT set default values for strings. An error will be raised instead.
+   //===================================================================================
+   void SetDefault()
+   {
+
+      for (int t=0; t<NPara; t++)
+      {
+         if ( Key[t][0] != PARA_SET )
+         {
+            long   def_int = NULL_INT;
+            double def_flt = NULL_REAL;
+
+            switch ( Type[t] )
+            {
+               case TYPE_INT    :   def_int = *( (int*   )Ptr[t] ) = *( (int*   )Default[t] );  break;
+               case TYPE_LONG   :   def_int = *( (long*  )Ptr[t] ) = *( (long*  )Default[t] );  break;
+               case TYPE_UINT   :   def_int = *( (uint*  )Ptr[t] ) = *( (uint*  )Default[t] );  break;
+               case TYPE_ULONG  :   def_int = *( (ulong* )Ptr[t] ) = *( (ulong* )Default[t] );  break;
+               case TYPE_BOOL   :   def_int = *( (bool*  )Ptr[t] ) = *( (bool*  )Default[t] );  break;
+               case TYPE_FLOAT  :   def_flt = *( (float* )Ptr[t] ) = *( (float* )Default[t] );  break;
+               case TYPE_DOUBLE :   def_flt = *( (double*)Ptr[t] ) = *( (double*)Default[t] );  break;
+               case TYPE_STRING :   Aux_Error( ERROR_INFO, "string variable \"%s\" is not set !!\n", Key[t] ); break;
+
+               default: Aux_Error( ERROR_INFO, "no default value for this data type (float*, double*, int*, long*, unit*, ulong*, bool* only) !!\n" );
+            }
+
+            if ( MPI_Rank == 0 )
+            {
+
+               if ( def_int != NULL_INT )
+                  Aux_Message( stdout, "NOTE : parameter [%20s] is set to the default value [%21ld]\n",
+                               Key[t], def_int );
+               else
+                  Aux_Message( stdout, "NOTE : parameter [%20s] is set to the default value [%21.14e]\n",
+                               Key[t], def_flt );
+            }
+         }
+      } // for (int t=0; t<NPara; t++)
+
+   } // METHOD : SetDefault
 
 }; // struct ReadPara_t
 
@@ -211,12 +273,14 @@ struct ReadPara_t
 
 // remove symbolic constants since they are only used in this structure
 #undef NPARA_MAX
+#undef PARA_SET
 #undef TYPE_INT
 #undef TYPE_LONG
 #undef TYPE_UINT
 #undef TYPE_ULONG
 #undef TYPE_FLOAT
 #undef TYPE_DOUBLE
+#undef TYPE_BOOL
 #undef TYPE_STRING
 
 
