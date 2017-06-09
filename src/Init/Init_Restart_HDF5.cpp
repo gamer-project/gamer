@@ -1754,6 +1754,8 @@ void Check_InputPara( const char *FileName )
    const bool Opt__FlagLohner = ( OPT__FLAG_LOHNER_DENS || OPT__FLAG_LOHNER_ENGY || OPT__FLAG_LOHNER_PRES || OPT__FLAG_LOHNER_TEMP );
 #  elif ( MODEL == ELBDM )
    const bool Opt__FlagLohner = OPT__FLAG_LOHNER_DENS;
+#  else
+#  error : ERROR : unsupported MODEL !!
 #  endif
 
 // initialize as -1 (to work with NLvRestart < NLEVEL)

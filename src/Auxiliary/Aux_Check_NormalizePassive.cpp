@@ -21,6 +21,15 @@
 void Aux_Check_NormalizePassive( const int lv, const char *comment )
 {
 
+
+// check
+#  ifndef DENS
+   Aux_Message( stderr, "WARNING : function \"%s\" is supported only when DENS is defined !!\n", __FUNCTION__ );
+   OPT__CK_NORMALIZE_PASSIVE = false;
+   return;
+#  endif
+
+
 #  ifdef FLOAT8
    const double TolErr = 1.0e-13;
 #  else
@@ -42,7 +51,10 @@ void Aux_Check_NormalizePassive( const int lv, const char *comment )
             for (int j=0; j<PATCH_SIZE; j++)
             for (int i=0; i<PATCH_SIZE; i++)
             {
+//             avoid compilation error for models without DENS
+#              ifdef DENS
                GasDens = amr->patch[FluSg][lv][PID]->fluid[DENS][k][j][i];
+#              endif
                Sum     = 0;
 
                for (int v=0; v<PassiveNorm_NVar; v++)

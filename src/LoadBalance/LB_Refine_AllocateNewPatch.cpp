@@ -768,7 +768,7 @@ int AllocateSonPatch( const int FaLv, const int *Cr, const int PScale, const int
       else                             Monotonicity[v] = EnsureMonotonicity_No;
 
 #     else
-#     warning : WARNING : DO YOU WANT TO ENSURE THE POSITIVITY OF INTERPOLATION ??
+#     error : DO YOU WANT TO ENSURE THE POSITIVITY OF INTERPOLATION IN THIS NEW MODEL ??
 #     endif // MODEL
    }
 

@@ -65,7 +65,7 @@ struct ParaVar_t
 
 
    //===================================================================================
-   // Constructor :  ParaVar_t 
+   // Constructor :  ParaVar_t
    // Description :  Constructor of the structure "ParaVar_t"
    //
    // Note        :  Initialize all pointers as NULL and all counters as 0
@@ -109,10 +109,10 @@ struct ParaVar_t
 
 
    //===================================================================================
-   // Constructor :  ~ParaVar_t 
+   // Constructor :  ~ParaVar_t
    // Description :  Destructor of the structure "ParaVar_t"
    //
-   // Note        :  Deallocate memory previously allocated and reset all XXX_NList 
+   // Note        :  Deallocate memory previously allocated and reset all XXX_NList
    //===================================================================================
    ~ParaVar_t()
    {
@@ -122,9 +122,9 @@ struct ParaVar_t
 
 
    //===================================================================================
-   // Constructor :  Lvdelete 
+   // Constructor :  Lvdelete
    // Description :  Deallocate memory previously allocated and reset all XXX_NList
-   //                for the target refinement level    
+   //                for the target refinement level
    //===================================================================================
    void Lvdelete( const int lv )
    {
@@ -137,14 +137,14 @@ struct ParaVar_t
          if ( BounFlag_PosList[lv][s] != NULL )    delete [] BounFlag_PosList[lv][s];
          if ( BuffFlag_PosList[lv][s] != NULL )    delete [] BuffFlag_PosList[lv][s];
 
-         BounP_IDList    [lv][s] = NULL;  
+         BounP_IDList    [lv][s] = NULL;
          BounP_PosList   [lv][s] = NULL;
          SendP_IDList    [lv][s] = NULL;
          RecvP_IDList    [lv][s] = NULL;
          BounFlag_PosList[lv][s] = NULL;
          BuffFlag_PosList[lv][s] = NULL;
 
-         BounP_NList     [lv][s] = 0;  
+         BounP_NList     [lv][s] = 0;
          SendP_NList     [lv][s] = 0;
          RecvP_NList     [lv][s] = 0;
          BounFlag_NList  [lv][s] = 0;
@@ -158,7 +158,7 @@ struct ParaVar_t
             if ( SendF_IDList[lv][s] != NULL )     delete [] SendF_IDList[lv][s];
             if ( RecvF_IDList[lv][s] != NULL )     delete [] RecvF_IDList[lv][s];
 
-            SendF_IDList[lv][s] = NULL; 
+            SendF_IDList[lv][s] = NULL;
             RecvF_IDList[lv][s] = NULL;
 
             SendF_NList [lv][s] = 0;

@@ -375,7 +375,7 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
             else                             Monotonicity[v] = EnsureMonotonicity_No;
 
 #           else
-#           warning : WARNING : DO YOU WANT TO ENSURE THE POSITIVITY OF INTERPOLATION ??
+#           error : DO YOU WANT TO ENSURE THE POSITIVITY OF INTERPOLATION IN THIS NEW MODEL ??
 #           endif // MODEL
          }
 

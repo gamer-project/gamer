@@ -252,13 +252,15 @@ void Aux_TakeNote()
       fprintf( Note, "SERIAL                    OFF\n" );
 #     endif
 
+#     ifdef LOAD_BALANCE
 #     if   ( LOAD_BALANCE == HILBERT )
       fprintf( Note, "LOAD_BALANCE              HILBERT\n" );
-#     elif ( LOAD_BALANCE == NONE )
-      fprintf( Note, "LOAD_BALANCE              OFF\n" );
 #     else
       fprintf( Note, "LOAD_BALANCE              UNKNOWN\n" );
 #     endif
+#     else // #ifdef LOAD_BALANCE
+      fprintf( Note, "LOAD_BALANCE              OFF\n" );
+#     endif // #ifdef LOAD_BALANCE ... else ...
 
 #     ifdef OVERLAP_MPI
       fprintf( Note, "OVERLAP_MPI               ON\n" );

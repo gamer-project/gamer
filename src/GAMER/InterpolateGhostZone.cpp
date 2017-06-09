@@ -98,9 +98,10 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData[], const in
 
 #  elif ( MODEL == ELBDM )
 // no derived variables yet
+
 #  else
 #  error : unsupported MODEL !!
-#  endif
+#  endif // MODEL
 
 #  ifdef GRAVITY
    const bool PrepPot      = ( TVar & _POTE     ) ? true : false;
@@ -435,6 +436,7 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData[], const in
 
 #  elif ( MODEL == ELBDM )
 // no derived variables yet
+
 #  else
 #  error : unsupported MODEL !!
 #  endif // MODEL
@@ -633,6 +635,7 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData[], const in
 
 #        elif ( MODEL == ELBDM )
 //       no derived variables yet
+
 #        else
 #        error : unsupported MODEL !!
 #        endif // MODEL
@@ -771,7 +774,7 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData[], const in
       else                                               Monotonicity[v] = EnsureMonotonicity_No;
 
 #     else
-#     warning : WARNING : DO YOU WANT TO ENSURE THE POSITIVITY OF INTERPOLATION ??
+#     error : DO YOU WANT TO ENSURE THE POSITIVITY OF INTERPOLATION IN THIS NEW MODEL ??
 #     endif // MODEL
    }
 
@@ -924,6 +927,7 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData[], const in
 
 #  elif ( MODEL == ELBDM )
 // no derived variables yet
+
 #  else
 #  error : unsupported MODEL !!
 #  endif // MODEL
