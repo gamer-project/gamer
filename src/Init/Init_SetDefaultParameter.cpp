@@ -500,17 +500,17 @@ void Init_SetDefaultParameter()
    }
 
 // Riemann solver
-   if ( OPT__1ST_FLUX_CORR != FIRST_FLUX_CORR_NONE  &&  OPT__1ST_FLUX_CORR_SCHEME == RSOLVER_DEFAULT )
+   if ( OPT__1ST_FLUX_CORR != FIRST_FLUX_CORR_NONE  &&  OPT__1ST_FLUX_CORR_SCHEME == RSOLVER_1ST_DEFAULT )
    {
-      OPT__1ST_FLUX_CORR_SCHEME = RSOLVER_ROE;
+      OPT__1ST_FLUX_CORR_SCHEME = RSOLVER_1ST_ROE;
 
       if ( MPI_Rank == 0 )  Aux_Message( stdout, "NOTE : parameter \"%s\" is set to the default value = %d\n",
                                          "OPT__1ST_FLUX_CORR_SCHEME", OPT__1ST_FLUX_CORR_SCHEME );
    }
 
-   else if ( OPT__1ST_FLUX_CORR == FIRST_FLUX_CORR_NONE  &&  OPT__1ST_FLUX_CORR_SCHEME != RSOLVER_NONE )
+   else if ( OPT__1ST_FLUX_CORR == FIRST_FLUX_CORR_NONE  &&  OPT__1ST_FLUX_CORR_SCHEME != RSOLVER_1ST_NONE )
    {
-      OPT__1ST_FLUX_CORR_SCHEME = RSOLVER_NONE;
+      OPT__1ST_FLUX_CORR_SCHEME = RSOLVER_1ST_NONE;
 
       if ( MPI_Rank == 0 )  Aux_Message( stderr, "WARNING : parameter \"%s\" is reset to %d since OPT__1ST_FLUX_CORR is off !!\n",
                                          "OPT__1ST_FLUX_CORR_SCHEME", OPT__1ST_FLUX_CORR_SCHEME );

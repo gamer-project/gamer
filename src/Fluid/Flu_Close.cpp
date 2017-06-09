@@ -481,7 +481,7 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
 //             (note that the recalculated flux does NOT include gravity even for UNSPLIT_GRAVITY --> reduce to 1st-order accuracy)
                switch ( OPT__1ST_FLUX_CORR_SCHEME )
                {
-                  case RSOLVER_ROE:
+                  case RSOLVER_1ST_ROE:
                      for (int d=0; d<3; d++)
                      {
                         CPU_RiemannSolver_Roe( d, FluxL[d], VarL[d], VarC,    GAMMA, MIN_PRES );
@@ -489,7 +489,7 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
                      }
                      break;
 
-                  case RSOLVER_HLLC:
+                  case RSOLVER_1ST_HLLC:
                      for (int d=0; d<3; d++)
                      {
                         CPU_RiemannSolver_HLLC( d, FluxL[d], VarL[d], VarC,    GAMMA, MIN_PRES );
@@ -497,7 +497,7 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
                      }
                      break;
 
-                  case RSOLVER_HLLE:
+                  case RSOLVER_1ST_HLLE:
                      for (int d=0; d<3; d++)
                      {
                         CPU_RiemannSolver_HLLE( d, FluxL[d], VarL[d], VarC,    GAMMA, MIN_PRES );
@@ -566,17 +566,17 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
 //                      (note that the recalculated flux does NOT include gravity even for UNSPLIT_GRAVITY --> reduce to 1st-order accuracy)
                         switch ( OPT__1ST_FLUX_CORR_SCHEME )
                         {
-                           case RSOLVER_ROE:
+                           case RSOLVER_1ST_ROE:
                               CPU_RiemannSolver_Roe ( d, FluxL[0], Corr1D_InOut_PtrL, Corr1D_InOut_PtrC, GAMMA, MIN_PRES );
                               CPU_RiemannSolver_Roe ( d, FluxR[0], Corr1D_InOut_PtrC, Corr1D_InOut_PtrR, GAMMA, MIN_PRES );
                            break;
 
-                           case RSOLVER_HLLC:
+                           case RSOLVER_1ST_HLLC:
                               CPU_RiemannSolver_HLLC( d, FluxL[0], Corr1D_InOut_PtrL, Corr1D_InOut_PtrC, GAMMA, MIN_PRES );
                               CPU_RiemannSolver_HLLC( d, FluxR[0], Corr1D_InOut_PtrC, Corr1D_InOut_PtrR, GAMMA, MIN_PRES );
                            break;
 
-                           case RSOLVER_HLLE:
+                           case RSOLVER_1ST_HLLE:
                               CPU_RiemannSolver_HLLE( d, FluxL[0], Corr1D_InOut_PtrL, Corr1D_InOut_PtrC, GAMMA, MIN_PRES );
                               CPU_RiemannSolver_HLLE( d, FluxR[0], Corr1D_InOut_PtrC, Corr1D_InOut_PtrR, GAMMA, MIN_PRES );
                            break;
