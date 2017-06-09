@@ -97,6 +97,7 @@ void Flu_BoundaryCondition_User( real *Array, const int NVar_Flu, const int Arra
 
 #  elif ( MODEL == ELBDM )
 // no derived variables yet
+
 #  else
 #  error : unsupported MODEL !!
 #  endif
@@ -137,6 +138,7 @@ void Flu_BoundaryCondition_User( real *Array, const int NVar_Flu, const int Arra
 
 #     elif ( MODEL == ELBDM )
 //    no derived variables yet
+
 #     else
 #     error : unsupported MODEL !!
 #     endif

@@ -36,9 +36,14 @@ void Flu_Prepare( const int lv, const double PrepTime, real h_Flu_Array_F_In[], 
 #  endif
 
 
-   const bool IntPhase_No = false;
-   const real MinDens_No  = -1.0;
-   const real MinPres_No  = -1.0;
+   const bool   IntPhase_No = false;
+   const real   MinDens_No  = -1.0;
+   const real   MinPres_No  = -1.0;
+
+#  if ( MODEL != HYDRO  &&  MODEL != MHD )
+   const double MIN_DENS    = -1.0;    // set to an arbitrarily negative value to disable it
+   const double MIN_PRES    = -1.0;    // ...
+#  endif
 
 
 // prepare the fluid array

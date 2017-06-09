@@ -45,7 +45,8 @@ SIMU_OPTION += -DNLEVEL=10
 SIMU_OPTION += -DMAX_PATCH=1000000
 
 
-# (b) hydro options
+# (b) model-dependent options
+# (b-1) hydro options
 # ------------------------------------------------------------------------------------
 ifeq "$(findstring MODEL=HYDRO, $(SIMU_OPTION))" "MODEL=HYDRO"
 # hydrodynamic scheme: RTVD/WAF/MHM/MHM_RP/CTU (WAF is deprecated)
@@ -68,12 +69,12 @@ SIMU_OPTION += -DNCOMP_PASSIVE_MAKEFILE=0
 SIMU_OPTION += -DSUPPORT_GRACKLE
 
 
-# (c) MHD options
+# (b-2) MHD options
 # ------------------------------------------------------------------------------------
 else ifeq "$(findstring MODEL=MHD, $(SIMU_OPTION))" "MODEL=MHD"
 
 
-# (d) ELBDM options
+# (b-3) ELBDM options
 # ------------------------------------------------------------------------------------
 else ifeq "$(findstring MODEL=ELBDM, $(SIMU_OPTION))" "MODEL=ELBDM"
 # enforce the mass conservation
@@ -91,7 +92,7 @@ SIMU_OPTION += -DNCOMP_PASSIVE_MAKEFILE=0
 endif # MODEL
 
 
-# (e) PARTICLE options
+# (c) PARTICLE options
 # ------------------------------------------------------------------------------------
 # store particle acceleration
 SIMU_OPTION += -DSTORE_PAR_ACC
@@ -100,7 +101,7 @@ SIMU_OPTION += -DSTORE_PAR_ACC
 SIMU_OPTION += -DPAR_NPASSIVE=0
 
 
-# (f) optimization and compilation options
+# (d) optimization and compilation options
 # ------------------------------------------------------------------------------------
 # GPU acceleration (to disable GPU, please comment out both -DGPU and -DGPU_ARCH)
 #SIMU_OPTION += -DGPU

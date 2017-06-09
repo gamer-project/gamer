@@ -258,6 +258,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
 
 #  elif ( MODEL == ELBDM )
 // no derived variables yet
+
 #  else
 #  error : unsupported MODEL !!
 #  endif
@@ -889,6 +890,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
 
 #           elif ( MODEL == ELBDM )
 //          no derived variables yet
+
 #           else
 #           error : unsupported MODEL !!
 #           endif // MODEL
@@ -1093,6 +1095,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
 
 #                 elif ( MODEL == ELBDM )
 //                no derived variables yet
+
 #                 else
 #                 error : unsupported MODEL !!
 #                 endif // MODEL
