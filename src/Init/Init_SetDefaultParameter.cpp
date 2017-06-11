@@ -17,27 +17,10 @@ void Init_SetDefaultParameter()
 
 // set parameters to their default values
 // ------------------------------------------------------------------------------------------------------
-// set the number of OpenMP threads and disable OpenMP nested parallelism by default
-#  ifdef OPENMP
-   const int OMP_Max_NThread = omp_get_max_threads();
-
-   if ( OMP_NTHREAD <= 0 )
-   {
-      OMP_NTHREAD = OMP_Max_NThread;
-
-      if ( MPI_Rank == 0 )  Aux_Message( stdout, "NOTE : parameter \"%s\" is set to the default value = %d\n",
-                                         "OMP_NTHREAD", OMP_NTHREAD );
-   }
-
-   else if ( OMP_NTHREAD > OMP_Max_NThread   &&  MPI_Rank == 0 )
-   {
-      Aux_Message( stderr, "WARNING : OMP_NTHREAD (%d) > omp_get_max_threads (%d) !!\n",
-                   OMP_NTHREAD, OMP_Max_NThread );
-   }
-
-#  else
+// set the number of OpenMP threads
+#  ifndef OPENMP
    if ( OMP_NTHREAD != 1  &&  MPI_Rank == 0 )
-      Aux_Message( stderr, "WARNING : parameter \"%s\" is reset to 1 since \"OPENMP\" is not turned on !!\n",
+      Aux_Message( stderr, "WARNING : parameter \"%s\" is reset to 1 since \"OPENMP\" is disabled !!\n",
                    "OMP_NTHREAD" );
 
    OMP_NTHREAD = 1;
@@ -96,7 +79,7 @@ void Init_SetDefaultParameter()
    if ( DT__GRAVITY < 0.0 )
    {
 #     if   ( MODEL == HYDRO )
-      DT__GRAVITY = 0.05;
+      DT__GRAVITY = 0.50;
 
 #     elif  ( MODEL == MHD )
 #     warning : WAIT MHD !!!
@@ -113,36 +96,15 @@ void Init_SetDefaultParameter()
    } // if ( DT__GRAVITY < 0.0 )
 #  endif
 
-#  if ( MODEL == ELBDM )
-   if ( DT__PHASE < 0.0 )
+#  if ( defined PARTICLE  &&  !defined STORE_PAR_ACC )
+   if ( DT__PARACC != 0.0 )
    {
-      DT__PHASE = 0.125;
+      DT__PARACC = 0.0;    // disable it
 
-      if ( MPI_Rank == 0 ) Aux_Message( stdout, "NOTE : parameter \"%s\" is set to the default value = %13.7e\n",
-                                        "DT__PHASE", DT__PHASE );
-   } // if ( DT__PHASE < 0.0 )
-#  endif
-
-#  ifdef PARTICLE
-   if ( DT__PARVEL < 0.0 )
-   {
-      DT__PARVEL = 0.50;
-
-      if ( MPI_Rank == 0 ) Aux_Message( stdout, "NOTE : parameter \"%s\" is set to the default value = %13.7e\n",
-                                        "DT__PARVEL", DT__PARVEL );
-   } // if ( DT__PARVEL < 0.0 )
-
-   if ( DT__PARACC < 0.0 )
-   {
-#     ifdef STORE_PAR_ACC
-      DT__PARACC = 0.50;
-#     else
-      DT__PARACC = 0.00;   // disable it
-#     endif
-
-      if ( MPI_Rank == 0 ) Aux_Message( stdout, "NOTE : parameter \"%s\" is set to the default value = %13.7e\n",
-                                        "DT__PARACC", DT__PARACC );
-   } // if ( DT__PARACC < 0.0 )
+      if ( MPI_Rank == 0 )
+         Aux_Message( stderr, "WARNING : parameter \"%s\" is reset to %13.7e when \"%s\" is off !!\n",
+                      "DT__PARACC", DT__PARACC, "STORE_PAR_ACC" );
+   }
 #  endif
 
 
@@ -235,59 +197,19 @@ void Init_SetDefaultParameter()
    }
 
    if ( ELBDM_TAYLOR3_AUTO )
+   {
       ELBDM_TAYLOR3_COEFF = NULL_REAL;
 
-   else if ( ELBDM_TAYLOR3_COEFF < 0.0 )
-   {
-      ELBDM_TAYLOR3_COEFF = 1.0/6.0;
-
-      if ( MPI_Rank == 0 ) Aux_Message( stdout, "NOTE : parameter \"%s\" is set to the default value = %13.7e\n",
+      if ( MPI_Rank == 0 ) Aux_Message( stdout, "NOTE : parameter \"%s\" is set to %13.7e since ELBDM_TAYLOR3_AUTO is on\n",
                                         "ELBDM_TAYLOR3_COEFF", ELBDM_TAYLOR3_COEFF );
    }
 #  endif // #if ( MODEL == ELBDM )
 
 
-// interpolation scheme: Poisson/Gravity solvers and potential refinement
-#  ifdef GRAVITY
-   if ( OPT__POT_INT_SCHEME == INT_DEFAULT )
-   {
-      OPT__POT_INT_SCHEME = INT_QUAD;
-
-      if ( MPI_Rank == 0 )  Aux_Message( stdout, "NOTE : parameter \"%s\" is set to the default value = %d\n",
-                                         "OPT__POT_INT_SCHEME", OPT__POT_INT_SCHEME );
-   }
-
-   if ( OPT__RHO_INT_SCHEME == INT_DEFAULT )
-   {
-//    OPT__RHO_INT_SCHEME = INT_MINMOD1D;
-      OPT__RHO_INT_SCHEME = INT_CQUAD;
-
-      if ( MPI_Rank == 0 )  Aux_Message( stdout, "NOTE : parameter \"%s\" is set to the default value = %d\n",
-                                         "OPT__RHO_INT_SCHEME", OPT__RHO_INT_SCHEME );
-   }
-
-   if ( OPT__GRA_INT_SCHEME == INT_DEFAULT )
-   {
-      OPT__GRA_INT_SCHEME = INT_QUAD;
-
-      if ( MPI_Rank == 0 )  Aux_Message( stdout, "NOTE : parameter \"%s\" is set to the default value = %d\n",
-                                         "OPT__GRA_INT_SCHEME", OPT__GRA_INT_SCHEME );
-   }
-
-   if ( OPT__REF_POT_INT_SCHEME == INT_DEFAULT )
-   {
-      OPT__REF_POT_INT_SCHEME = INT_QUAD;
-
-      if ( MPI_Rank == 0 )  Aux_Message( stdout, "NOTE : parameter \"%s\" is set to the default value = %d\n",
-                                         "OPT__REF_POT_INT_SCHEME", OPT__REF_POT_INT_SCHEME );
-   }
-#  endif // #ifdef GRAVITY
-
 // interpolation scheme: fluid solver and fluid refinement
 #  if   ( MODEL == HYDRO )
    if ( OPT__FLU_INT_SCHEME == INT_DEFAULT )
    {
-//    OPT__FLU_INT_SCHEME = INT_MINMOD1D;
       OPT__FLU_INT_SCHEME = INT_CQUAD;
 
       if ( MPI_Rank == 0 )  Aux_Message( stdout, "NOTE : parameter \"%s\" is set to the default value = %d\n",
@@ -296,7 +218,6 @@ void Init_SetDefaultParameter()
 
    if ( OPT__REF_FLU_INT_SCHEME == INT_DEFAULT )
    {
-//    OPT__REF_FLU_INT_SCHEME = INT_MINMOD1D;
       OPT__REF_FLU_INT_SCHEME = INT_CQUAD;
 
       if ( MPI_Rank == 0 )  Aux_Message( stdout, "NOTE : parameter \"%s\" is set to the default value = %d\n",
@@ -337,71 +258,11 @@ void Init_SetDefaultParameter()
    }
 
 
-// maximum refinement level
-   if ( MAX_LEVEL < 0 )
-   {
-      MAX_LEVEL = NLEVEL - 1;
-
-      if ( MPI_Rank == 0 )  Aux_Message( stdout, "NOTE : parameter \"%s\" is set to the default value = %d\n",
-                                         "MAX_LEVEL", MAX_LEVEL );
-   }
-
-
-// refinement frequency and the size of flag buffer
-   if ( REGRID_COUNT < 0 )
-   {
-#     if   ( MODEL == HYDRO )
-      REGRID_COUNT = 4;
-
-#     elif ( MODEL == MHD )
-#     warning : WAIT MHD !!!
-
-#     elif ( MODEL == ELBDM )
-      REGRID_COUNT = 4;
-
-#     else
-#     error : ERROR : PLEASE SET THE DEFAULT REGRID_COUNT FOR THE NEW MODEL !!
-#     endif // MODEL
-
-      if ( MPI_Rank == 0 )  Aux_Message( stdout, "NOTE : parameter \"%s\" is set to the default value = %d\n",
-                                         "REGRID_COUNT", REGRID_COUNT );
-   }
-
-   if ( FLAG_BUFFER_SIZE < 0 )
-   {
-#     if   ( MODEL == HYDRO )
-//    FLAG_BUFFER_SIZE = PATCH_SIZE/2;
-      FLAG_BUFFER_SIZE = PATCH_SIZE;
-
-#     elif ( MODEL == MHD )
-#     warning : WAIT MHD !!!
-
-#     elif ( MODEL == ELBDM )
-//    FLAG_BUFFER_SIZE = PATCH_SIZE/2;
-      FLAG_BUFFER_SIZE = PATCH_SIZE;
-
-#     else
-#     error : ERROR : PLEASE SET THE DEFAULT FLAG_BUFFER_SIZE FOR THE NEW MODEL !!
-#     endif // MODEL
-
-      if ( MPI_Rank == 0 )  Aux_Message( stdout, "NOTE : parameter \"%s\" is set to the default value = %d\n",
-                                         "FLAG_BUFFER_SIZE", FLAG_BUFFER_SIZE );
-   }
-
 
 // initial dump ID
    if ( INIT_DUMPID < 0 )  DumpID = 0;
    else                    DumpID = INIT_DUMPID;
 
-
-// form of the Lohner's error estimator
-   if ( OPT__FLAG_LOHNER_FORM == LOHNER_DEFAULT )
-   {
-      OPT__FLAG_LOHNER_FORM = LOHNER_FLASH2;
-
-      if ( MPI_Rank == 0 )  Aux_Message( stdout, "NOTE : parameter \"%s\" is set to \"%s\" by default\n",
-                                         "OPT__FLAG_LOHNER_FORM", "LOHNER_FLASH2"  );
-   }
 
 
 // ResPower2 in the AMR_t structure
@@ -418,22 +279,6 @@ void Init_SetDefaultParameter()
 
 // particle options
 #  ifdef PARTICLE
-   if ( amr->Par->Interp == PAR_INTERP_DEFAULT )
-   {
-      amr->Par->Interp = PAR_INTERP_TSC;
-
-      if ( MPI_Rank == 0 )  Aux_Message( stdout, "NOTE : parameter \"%s\" is set to \"%s\" by default\n",
-                                         "PAR_INTERP", "PAR_INTERP_TSC"  );
-   }
-
-   if ( amr->Par->Integ == PAR_INTEG_DEFAULT )
-   {
-      amr->Par->Integ = PAR_INTEG_KDK;
-
-      if ( MPI_Rank == 0 )  Aux_Message( stdout, "NOTE : parameter \"%s\" is set to \"%s\" by default\n",
-                                         "PAR_INTEG", "PAR_INTEG_KDK"  );
-   }
-
    if ( OPT__BC_POT == BC_POT_ISOLATED  &&  amr->Par->RemoveCell < 0.0 )
    {
       switch ( amr->Par->Interp )
@@ -490,25 +335,7 @@ void Init_SetDefaultParameter()
 
 // 1st-order flux correction
 #  if ( MODEL == HYDRO  ||  MODEL == MHD )
-// directionally unsplitting or directionally unsplitting + directionally splitting
-   if ( OPT__1ST_FLUX_CORR == FIRST_FLUX_CORR_DEFAULT )
-   {
-      OPT__1ST_FLUX_CORR = FIRST_FLUX_CORR_3D1D;
-
-      if ( MPI_Rank == 0 )  Aux_Message( stdout, "NOTE : parameter \"%s\" is set to the default value = %d\n",
-                                         "OPT__1ST_FLUX_CORR", OPT__1ST_FLUX_CORR );
-   }
-
-// Riemann solver
-   if ( OPT__1ST_FLUX_CORR != FIRST_FLUX_CORR_NONE  &&  OPT__1ST_FLUX_CORR_SCHEME == RSOLVER_1ST_DEFAULT )
-   {
-      OPT__1ST_FLUX_CORR_SCHEME = RSOLVER_1ST_ROE;
-
-      if ( MPI_Rank == 0 )  Aux_Message( stdout, "NOTE : parameter \"%s\" is set to the default value = %d\n",
-                                         "OPT__1ST_FLUX_CORR_SCHEME", OPT__1ST_FLUX_CORR_SCHEME );
-   }
-
-   else if ( OPT__1ST_FLUX_CORR == FIRST_FLUX_CORR_NONE  &&  OPT__1ST_FLUX_CORR_SCHEME != RSOLVER_1ST_NONE )
+   if ( OPT__1ST_FLUX_CORR == FIRST_FLUX_CORR_NONE  &&  OPT__1ST_FLUX_CORR_SCHEME != RSOLVER_1ST_NONE )
    {
       OPT__1ST_FLUX_CORR_SCHEME = RSOLVER_1ST_NONE;
 
@@ -580,17 +407,6 @@ void Init_SetDefaultParameter()
                                            "OPT__CORR_AFTER_ALL_SYNC", OPT__CORR_AFTER_ALL_SYNC );
    }
 
-
-// dual-energy switch
-#  ifdef DUAL_ENERGY
-   if ( DUAL_ENERGY_SWITCH < 0.0 )
-   {
-      DUAL_ENERGY_SWITCH = 2.0e-2;
-
-      if ( MPI_Rank == 0 )    Aux_Message( stdout, "NOTE : parameter \"%s\" is set to the default value = %13.7e\n",
-                                           "DUAL_ENERGY_SWITCH", DUAL_ENERGY_SWITCH );
-   }
-#  endif
 
 
 

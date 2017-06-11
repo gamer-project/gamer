@@ -184,7 +184,7 @@ void Init_Unit()
       ELBDM_MASS = ELBDM_MASS*Const_eV/SQR(Const_c) / UNIT_M;
       if ( MPI_Rank == 0 )    Aux_Message( stdout, "NOTE : ELBDM_MASS is set to %13.7e internally\n", ELBDM_MASS );
 
-//    (3) Planck constant
+//    (3) reduced Planck constant
       ELBDM_PLANCK_CONST = Const_Planck / ( SQR(UNIT_L)*UNIT_M/UNIT_T );
       if ( MPI_Rank == 0 )    Aux_Message( stdout, "NOTE : ELBDM_PLANCK_CONST is set to %13.7e internally\n", ELBDM_PLANCK_CONST );
 #     endif
