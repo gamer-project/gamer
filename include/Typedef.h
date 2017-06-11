@@ -139,12 +139,12 @@ const Check_t
 typedef int Solver_t;
 const Solver_t
 #ifdef GRAVITY
-   FLUID_SOLVER               = 0,
-   POISSON_SOLVER             = 1,
-   GRAVITY_SOLVER             = 2,
-   POISSON_AND_GRAVITY_SOLVER = 3;
+   FLUID_SOLVER               = 1,
+   POISSON_SOLVER             = 2,
+   GRAVITY_SOLVER             = 3,
+   POISSON_AND_GRAVITY_SOLVER = 4;
 #else
-   FLUID_SOLVER               = 0;
+   FLUID_SOLVER               = 1;
 #endif
 
 
@@ -201,7 +201,6 @@ const ParInit_t
 
 typedef int ParInterp_t;
 const ParInterp_t
-   PAR_INTERP_DEFAULT = -1,
    PAR_INTERP_NONE    = 0,
    PAR_INTERP_NGP     = 1,
    PAR_INTERP_CIC     = 2,
@@ -209,7 +208,6 @@ const ParInterp_t
 
 typedef int ParInteg_t;
 const ParInteg_t
-   PAR_INTEG_DEFAULT = -1,
    PAR_INTEG_NONE    = 0,
    PAR_INTEG_EULER   = 1,
    PAR_INTEG_KDK     = 2;
@@ -222,7 +220,6 @@ const ParUpStep_t
 
 typedef int ParSync_t;
 const ParSync_t
-   PAR_SYNC_DEFAULT = -1,
    PAR_SYNC_NONE    = 0,
    PAR_SYNC_TEMP    = 1,
    PAR_SYNC_FORCE   = 2;
@@ -247,25 +244,22 @@ const OptGravityType_t
 // options of the form of the Lohner's error estimator
 typedef int OptLohnerForm_t;
 const OptLohnerForm_t
-   LOHNER_DEFAULT   = -1,
-   LOHNER_FLASH1    = 0,
-   LOHNER_FLASH2    = 1,
-   LOHNER_FORM_INV1 = 2,
-   LOHNER_FORM_INV2 = 3;
+   LOHNER_FLASH1    = 1,
+   LOHNER_FLASH2    = 2,
+   LOHNER_FORM_INV1 = 3,
+   LOHNER_FORM_INV2 = 4;
 
 
 // options for OPT__1ST_FLUX_CORR and OPT__1ST_FLUX_CORR_SCHEME
 #if ( MODEL == HYDRO || MODEL == MHD )
 typedef int Opt1stFluxCorr_t;
 const Opt1stFluxCorr_t
-   FIRST_FLUX_CORR_DEFAULT = -1,
    FIRST_FLUX_CORR_NONE    = 0,
    FIRST_FLUX_CORR_3D      = 1,
    FIRST_FLUX_CORR_3D1D    = 2;
 
 typedef int OptRSolver1st_t;
 const OptRSolver1st_t
-   RSOLVER_1ST_DEFAULT = -1,
    RSOLVER_1ST_NONE    = 0,
    RSOLVER_1ST_ROE     = 1,
    RSOLVER_1ST_HLLC    = 2,

@@ -67,10 +67,6 @@ void Aux_Check_Parameter()
    if ( MPI_NRank != NRank )
       Aux_Error( ERROR_INFO, "MPI_NRank (%d) != MPI_Comm_size (%d) !!\n", MPI_NRank, NRank );
 
-   if ( NX0_TOT[0] <= 0  ||  NX0_TOT[1] <= 0  ||  NX0_TOT[2] <= 0 )
-      Aux_Error( ERROR_INFO, "incorrect number of base-level grids --> NX0_TOT[0/1/2] = [%d,%d,%d] !!\n",
-                 NX0_TOT[0], NX0_TOT[1], NX0_TOT[2] );
-
    if ( NX0_TOT[0]%PS2 != 0  ||  NX0_TOT[1]%PS2 != 0  ||  NX0_TOT[2]%PS2 != 0 )
       Aux_Error( ERROR_INFO, "number of base-level patches in each direction must be \"%s\" !!\n",
                  "a multiple of TWO" );
@@ -89,52 +85,29 @@ void Aux_Check_Parameter()
       Aux_Error( ERROR_INFO, "number of base-level patches in each direction in one rank must be \"%s\" !!\n",
                  "a multiple of TWO" );
 
-   if ( OPT__INIT != INIT_STARTOVER  &&  OPT__INIT != INIT_RESTART  &&  OPT__INIT != INIT_UM )
-      Aux_Error( ERROR_INFO, "unsupported option \"OPT__INIT = %d\" [1/2/3] !!\n", OPT__INIT );
-
-   if ( OPT__INIT == INIT_RESTART  &&  RESTART_LOAD_NRANK <= 0 )
-      Aux_Error( ERROR_INFO, "incorrect parameter \"%s = %d\" [>0] !!\n", "RESTART_LOAD_NRANK", RESTART_LOAD_NRANK );
-
 #  ifdef LOAD_BALANCE
    if ( OPT__INIT != INIT_RESTART )
 #  endif
    if ( MPI_NRank_X[0]*MPI_NRank_X[1]*MPI_NRank_X[2] != MPI_NRank )
       Aux_Error( ERROR_INFO, "MPI_NRank_X[0]*MPI_NRank_X[1]*MPI_NRank_X[2] != MPI_NRank !!\n" );
 
-   if ( MAX_LEVEL < 0  ||  MAX_LEVEL > NLEVEL-1 )
-      Aux_Error( ERROR_INFO, "MAX_LEVEL (%d) is not within the accepted range [0 ... NLEVEL-1] !!\n", MAX_LEVEL );
-
-   if ( FLAG_BUFFER_SIZE > PATCH_SIZE )   Aux_Error( ERROR_INFO, "FLAG_BUFFER_SIZE > PATCH_SIZE !!\n" );
-
-   if ( REGRID_COUNT <= 0 )   Aux_Error( ERROR_INFO, "REGRID_COUNT (%d) <= 0 !!\n", REGRID_COUNT );
-
-   if ( OPT__OUTPUT_MODE != OUTPUT_CONST_STEP  &&  OPT__OUTPUT_MODE != OUTPUT_CONST_DT  &&
-        OPT__OUTPUT_MODE != OUTPUT_USE_TABLE )
-      Aux_Error( ERROR_INFO, "unsupported option \"OPT__OUTPUT_MODE = %d\" [1/2/3] !!\n", OPT__OUTPUT_MODE );
+   if ( FLAG_BUFFER_SIZE > PATCH_SIZE )
+      Aux_Error( ERROR_INFO, "FLAG_BUFFER_SIZE (%d) > PATCH_SIZE (%d) !!\n", FLAG_BUFFER_SIZE, PATCH_SIZE );
 
    if ( OPT__OUTPUT_MODE == OUTPUT_CONST_STEP  &&  OUTPUT_STEP <= 0 )
-      Aux_Error( ERROR_INFO, "OUTPUT_STEP <= 0 !!\n" );
+      Aux_Error( ERROR_INFO, "OUTPUT_STEP (%ld) <= 0 !!\n", OUTPUT_STEP );
 
-   if ( OPT__OUTPUT_MODE == OUTPUT_CONST_DT  &&  OUTPUT_DT <= 0 )
-      Aux_Error( ERROR_INFO, "OUTPUT_DT <= 0 !!\n" );
+   if ( OPT__OUTPUT_MODE == OUTPUT_CONST_DT  &&  OUTPUT_DT <= 0.0 )
+      Aux_Error( ERROR_INFO, "OUTPUT_DT (%14.7e) <= 0.0 !!\n", OUTPUT_DT );
 
    if ( OPT__RESTART_HEADER != RESTART_HEADER_CHECK  &&  OPT__RESTART_HEADER != RESTART_HEADER_SKIP )
       Aux_Error( ERROR_INFO, "unsupported option \"OPT__RESTART_HEADER = %d\" [0/1] !!\n",
                  OPT__RESTART_HEADER );
 
-   if ( OPT__OUTPUT_TOTAL != OUTPUT_TOTAL_NONE  &&  OPT__OUTPUT_TOTAL != OUTPUT_FORMAT_HDF5  &&
-        OPT__OUTPUT_TOTAL != OUTPUT_FORMAT_CBINARY )
-      Aux_Error( ERROR_INFO, "unsupported option \"OPT__OUTPUT_TOTAL = %d\" [0/1/2] !!\n", OPT__OUTPUT_TOTAL );
-
 #  ifndef SUPPORT_HDF5
    if ( OPT__OUTPUT_TOTAL == OUTPUT_FORMAT_HDF5 )
       Aux_Error( ERROR_INFO, "please turn on SUPPORT_HDF5 in the Makefile for OPT__OUTPUT_TOTAL == 1 !!\n" );
 #  endif
-
-   if ( OPT__OUTPUT_PART != OUTPUT_PART_NONE  &&  OPT__OUTPUT_PART != OUTPUT_DIAG  &&
-        OPT__OUTPUT_PART != OUTPUT_XY  &&  OPT__OUTPUT_PART != OUTPUT_YZ  &&  OPT__OUTPUT_PART != OUTPUT_XZ  &&
-        OPT__OUTPUT_PART != OUTPUT_X   &&  OPT__OUTPUT_PART != OUTPUT_Y   &&  OPT__OUTPUT_PART != OUTPUT_Z )
-      Aux_Error( ERROR_INFO, "unsupported option \"OPT__OUTPUT_PART = %d\" [0 ~ 6] !!\n", OPT__OUTPUT_PART );
 
    if (  ( OPT__OUTPUT_PART == OUTPUT_YZ  ||  OPT__OUTPUT_PART == OUTPUT_Y  ||  OPT__OUTPUT_PART == OUTPUT_Z )  &&
          ( OUTPUT_PART_X < 0.0  ||  OUTPUT_PART_X >= amr->BoxSize[0] )  )
@@ -155,14 +128,6 @@ void Aux_Check_Parameter()
    if (  OPT__OUTPUT_BASEPS  &&  ( NX0_TOT[0] != NX0_TOT[1] || NX0_TOT[0] != NX0_TOT[2] )  )
       Aux_Error( ERROR_INFO, "option \"%s\" only works with CUBIC domain !!\n", "OPT__OUTPUT_BASEPS" );
 
-   if (  OPT__INIT == INIT_UM  &&  ( OPT__UM_START_LEVEL < 0 || OPT__UM_START_LEVEL > NLEVEL-1 )  )
-      Aux_Error( ERROR_INFO, "incorrect option \"OPT__UM_START_LEVEL = %d\" [0 ... NLEVEL-1] !!\n",
-                 OPT__UM_START_LEVEL );
-
-   if (  OPT__INIT == INIT_UM  &&  ( OPT__UM_START_NVAR < 1 || OPT__UM_START_NVAR > NCOMP_TOTAL )  )
-      Aux_Error( ERROR_INFO, "incorrect option \"OPT__UM_START_NVAR = %d\" [1 ... NCOMP_TOTAL] !!\n",
-                 OPT__UM_START_NVAR );
-
    if ( OPT__INIT == INIT_UM  &&  OPT__UM_START_NVAR != 1  &&  OPT__UM_FACTOR_5OVER3 )
       Aux_Error( ERROR_INFO, "OPT__UM_FACTOR_5OVER3 only works when OPT__UM_START_NVAR == 1 !!\n" );
 
@@ -181,21 +146,14 @@ void Aux_Check_Parameter()
 #  error : ERROR : unsupported MODEL !!
 #  endif
 
-   if (  OPT__FLAG_LOHNER_FORM != LOHNER_FLASH1     &&  OPT__FLAG_LOHNER_FORM != LOHNER_FLASH2  &&
-         OPT__FLAG_LOHNER_FORM != LOHNER_FORM_INV1  &&  OPT__FLAG_LOHNER_FORM != LOHNER_FORM_INV2  )
-      Aux_Error( ERROR_INFO, "unsupported input parameter \"%s = %d\" !!\n", "OPT__FLAG_LOHNER_FORM", OPT__FLAG_LOHNER_FORM );
-
 #  ifdef GPU
-   if ( OPT__GPUID_SELECT < 0  &&  OPT__GPUID_SELECT != -1  &&  OPT__GPUID_SELECT != -2 )
-   {
-#     ifdef LAOHU
-      if ( OPT__GPUID_SELECT != -3 )
-#     endif
+#  ifdef LAOHU
+   if ( OPT__GPUID_SELECT < -3 )
+#  else
+   if ( OPT__GPUID_SELECT < -2 )
       Aux_Error( ERROR_INFO, "unsupported input parameter \"%s = %d\" !!\n", "OPT__GPUID_SELECT", OPT__GPUID_SELECT );
-   }
 #  endif
-
-   if ( INIT_SUBSAMPLING_NCELL < 0 )   Aux_Error( ERROR_INFO, "INIT_SUBSAMPLING_NCELL < 0 !!\n" );
+#  endif
 
 #  ifdef SERIAL
    if ( MPI_NRank != 1 )   Aux_Error( ERROR_INFO, "\"MPI_NRank != 1\" in the serial code !!\n" );
@@ -213,11 +171,6 @@ void Aux_Check_Parameter()
                  "OVERLAP_MPI", "OPT__OVERLAP_MPI" );
 #  endif
 
-   for (int f=0; f<6; f++)
-   if ( OPT__BC_FLU[f] != BC_FLU_PERIODIC    &&  OPT__BC_FLU[f] != BC_FLU_OUTFLOW  &&
-        OPT__BC_FLU[f] != BC_FLU_REFLECTING  &&  OPT__BC_FLU[f] != BC_FLU_USER        )
-      Aux_Error( ERROR_INFO, "unsupported option \"OPT__BC_FLU[%d] = %d\" [1/2/3/4] !!\n", f, OPT__BC_FLU[f] );
-
 #  if ( MODEL != HYDRO )
    for (int f=0; f<6; f++)
    if ( OPT__BC_FLU[f] == BC_FLU_OUTFLOW  ||  OPT__BC_FLU[f] == BC_FLU_REFLECTING )
@@ -230,9 +183,6 @@ void Aux_Check_Parameter()
            OPT__BC_FLU[3] != BC_FLU_PERIODIC || OPT__BC_FLU[4] != BC_FLU_PERIODIC || OPT__BC_FLU[5] != BC_FLU_PERIODIC   )   )
       Aux_Error( ERROR_INFO, "currently the periodic BC cannot be mixed with non-periodic BC. !!\n" );
 
-   if ( INT_MONO_COEFF < 1.0  ||  INT_MONO_COEFF > 4.0 )
-      Aux_Error( ERROR_INFO, "INT_MONO_COEFF (%14.7e) is not within the correct range [1...4] !!\n", INT_MONO_COEFF );
-
 #  ifndef TIMING
    if ( OPT__TIMING_MPI )  Aux_Error( ERROR_INFO, "OPT__TIMING_MPI only works when TIMING is on !!\n" );
 #  endif
@@ -240,12 +190,6 @@ void Aux_Check_Parameter()
 #  ifndef INDIVIDUAL_TIMESTEP
    if ( OPT__INT_TIME )    Aux_Error( ERROR_INFO, "OPT__INT_TIME only works when INDIVIDUAL_TIMESTEP is on !!\n" );
 #  endif
-
-   if ( OPT__PATCH_COUNT < 0  ||  OPT__PATCH_COUNT > 2 )
-      Aux_Error( ERROR_INFO, "incorrect option \"OPT__PATCH_COUNT = %d\" [0/1/2] !!\n", OPT__PATCH_COUNT );
-
-   if ( OPT__REUSE_MEMORY < 0  ||  OPT__REUSE_MEMORY > 2 )
-      Aux_Error( ERROR_INFO, "incorrect option \"OPT__REUSE_MEMORY = %d\" [0/1/2] !!\n", OPT__REUSE_MEMORY );
 
    if ( OPT__MEMORY_POOL  &&  !OPT__REUSE_MEMORY )
       Aux_Error( ERROR_INFO, "please turn on OPT__REUSE_MEMORY for OPT__MEMORY_POOL !!\n" );
@@ -268,6 +212,13 @@ void Aux_Check_Parameter()
       if ( OMP_NTHREAD != omp_get_num_threads() )
          Aux_Message( stderr, "WARNING : OMP_NTHREAD (%d) != omp_get_num_threads (%d) at MPI_Rank %d !!\n",
                       OMP_NTHREAD, omp_get_num_threads(), MPI_Rank );
+   }
+
+   const int OMP_Max_NThread = omp_get_max_threads();
+   if ( OMP_NTHREAD > OMP_Max_NThread )
+   {
+      Aux_Message( stderr, "WARNING : OMP_NTHREAD (%d) > omp_get_max_threads (%d) at MPI_Rank %d !!\n",
+                   OMP_NTHREAD, OMP_Max_NThread, MPI_Rank );
    }
 #  endif
 
@@ -490,15 +441,6 @@ void Aux_Check_Parameter()
 
 // errors
 // ------------------------------
-   if ( OMEGA_M0 < 0.0  ||  OMEGA_M0 > 1.0 )
-      Aux_Error( ERROR_INFO, "incorrect OMEGA_M0 (0.0 <= OMEGA_M0 <= 1.0) !!\n" );
-
-   if ( HUBBLE0 <= 0.0 )
-      Aux_Error( ERROR_INFO, "HUBBLE0 = %14.7e <= 0.0 !!\n", HUBBLE0 );
-
-   if ( A_INIT > 1.0  ||  A_INIT < 0.0 )
-      Aux_Error( ERROR_INFO, "incorrect A_INIT (0.0 <= A_INIT <= 1.0) !!\n" );
-
 #  if   ( MODEL == HYDRO )
    if ( fabs(GAMMA-5.0/3.0) > 1.e-4 )
       Aux_Error( ERROR_INFO, "GAMMA must be equal to 5.0/3.0 in cosmological simuluations !!\n" );
@@ -530,20 +472,6 @@ void Aux_Check_Parameter()
    if ( GPU_NSTREAM < 1 )  Aux_Error( ERROR_INFO, "GPU_NSTREAM < 1 !!\n" );
 
    if ( FLU_GPU_NPGROUP % GPU_NSTREAM != 0 )    Aux_Error( ERROR_INFO, "FLU_GPU_NPGROUP%%GPU_NSTREAM != 0 !!\n" );
-
-   if ( OPT__FLU_INT_SCHEME != INT_MINMOD3D  &&  OPT__FLU_INT_SCHEME != INT_MINMOD1D  &&
-        OPT__FLU_INT_SCHEME != INT_VANLEER   &&  OPT__FLU_INT_SCHEME != INT_CQUAD     &&
-        OPT__FLU_INT_SCHEME != INT_QUAD      &&  OPT__FLU_INT_SCHEME != INT_CQUAR     &&
-        OPT__FLU_INT_SCHEME != INT_QUAR )
-      Aux_Error( ERROR_INFO, "unsupported input parameter \"%s = %d\" !!\n",
-                 "OPT__FLU_INT_SCHEME", OPT__FLU_INT_SCHEME );
-
-   if ( OPT__REF_FLU_INT_SCHEME != INT_MINMOD3D  &&  OPT__REF_FLU_INT_SCHEME != INT_MINMOD1D  &&
-        OPT__REF_FLU_INT_SCHEME != INT_VANLEER   &&  OPT__REF_FLU_INT_SCHEME != INT_CQUAD     &&
-        OPT__REF_FLU_INT_SCHEME != INT_QUAD      &&  OPT__REF_FLU_INT_SCHEME != INT_CQUAR     &&
-        OPT__REF_FLU_INT_SCHEME != INT_QUAR )
-      Aux_Error( ERROR_INFO, "unsupported input parameter \"%s = %d\" !!\n",
-                 "OPT__REF_FLU_INT_SCHEME", OPT__REF_FLU_INT_SCHEME );
 
    if ( OPT__FIXUP_FLUX  &&  !amr->WithFlux )
       Aux_Error( ERROR_INFO, "%s is turned on but amr->WithFlux is off !!\n", "OPT__FIXUP_FLUX" );
@@ -626,9 +554,6 @@ void Aux_Check_Parameter()
 #  if ( DUAL_ENERGY != DE_ENPY )
 #     error : ERROR : unsupported dual-energy formalism (DE_ENPY only, DE_EINT is not supported yet) !!
 #  endif
-
-   if ( DUAL_ENERGY_SWITCH < 0.0 )
-      Aux_Error( ERROR_INFO, "DUAL_ENERGY_SWITCH = %14.7e < 0.0 !!\n", DUAL_ENERGY_SWITCH );
 #  endif // #ifdef DUAL_ENERGY
 
 #  if ( defined CHECK_INTERMEDIATE  &&  CHECK_INTERMEDIATE != EXACT  &&  CHECK_INTERMEDIATE != HLLE  &&  \
@@ -638,10 +563,6 @@ void Aux_Check_Parameter()
 
    if ( OPT__CK_NEGATIVE < 0  ||  OPT__CK_NEGATIVE > 3 )
       Aux_Error( ERROR_INFO, "unsupported parameter \"%s = %d\" !!\n", "OPT__CK_NEGATIVE", OPT__CK_NEGATIVE );
-
-   if ( OPT__1ST_FLUX_CORR != FIRST_FLUX_CORR_NONE  &&  OPT__1ST_FLUX_CORR != FIRST_FLUX_CORR_3D  &&
-        OPT__1ST_FLUX_CORR != FIRST_FLUX_CORR_3D1D )
-      Aux_Error( ERROR_INFO, "unsupported parameter \"%s = %d [0/1/2]\" !!\n", "OPT__1ST_FLUX_CORR", OPT__1ST_FLUX_CORR );
 
    if ( OPT__1ST_FLUX_CORR != FIRST_FLUX_CORR_NONE )
    {
@@ -660,16 +581,12 @@ void Aux_Check_Parameter()
    if ( MOLECULAR_WEIGHT <= 0.0 )
       Aux_Error( ERROR_INFO, "MOLECULAR_WEIGHT = %14.7e <= 0.0 !!\n", MOLECULAR_WEIGHT );
 
-   if      ( MIN_DENS < 0.0 )
-      Aux_Error( ERROR_INFO, "MIN_DENS = %14.7e < 0.0 !!\n", MIN_DENS );
-   else if ( MIN_DENS == 0.0  &&  MPI_Rank == 0 )
+   if ( MIN_DENS == 0.0  &&  MPI_Rank == 0 )
       Aux_Message( stderr, "WARNING : MIN_DENS == 0.0 could be dangerous and is mainly for debugging only !!\n" );
    else if ( MPI_Rank == 0 )
       Aux_Message( stderr, "WARNING : MIN_DENS (%13.7e) is on --> please ensure that this value is reasonable !!\n", MIN_DENS );
 
-   if      ( MIN_PRES < 0.0 )
-      Aux_Error( ERROR_INFO, "MIN_PRES = %14.7e < 0.0 !!\n", MIN_PRES );
-   else if ( MIN_PRES == 0.0  &&  MPI_Rank == 0 )
+   if ( MIN_PRES == 0.0  &&  MPI_Rank == 0 )
       Aux_Message( stderr, "WARNING : MIN_PRES == 0.0 could be dangerous and is mainly for debugging only !!\n" );
    else if ( MPI_Rank == 0 )
       Aux_Message( stderr, "WARNING : MIN_PRES (%13.7e) is on --> please ensure that this value is reasonable !!\n", MIN_PRES );
@@ -741,15 +658,6 @@ void Aux_Check_Parameter()
 // warnings
 // ------------------------------
    if ( MPI_Rank == 0 ) {
-
-   if (  ( OPT__LR_LIMITER == GMINMOD || OPT__LR_LIMITER == EXTPRE || OPT__LR_LIMITER == VL_GMINMOD )  &&
-         ( MINMOD_COEFF < 1.0 || MINMOD_COEFF > 2.0 )  )
-      Aux_Message( stderr, "WARNING : MinMod limiter coefficient (%14.7e) is not within the range [1...2] !!\n",
-                   MINMOD_COEFF );
-
-   if ( OPT__LR_LIMITER == EXTPRE  &&  EP_COEFF < 1.0 )
-      Aux_Message( stderr, "WARNING : coefficient of the extrema-preserving limiter (%14.7e) < 1.0 !!\n",
-                   EP_COEFF );
 
    } // if ( MPI_Rank == 0 )
 
@@ -914,10 +822,6 @@ void Aux_Check_Parameter()
       Aux_Error( ERROR_INFO, "unsupported interpolation scheme \"%s = %d\" when OPT__INT_PHASE is on !!\n",
                  "OPT__FLU_INT_SCHEME", OPT__FLU_INT_SCHEME );
 
-   if ( OPT__INT_PHASE  &&  OPT__FLU_INT_SCHEME == INT_MINMOD1D )
-      Aux_Error( ERROR_INFO, "unsupported interpolation scheme \"%s = %d\" when OPT__INT_PHASE is on !!\n",
-                 "OPT__REF_FLU_INT_SCHEME", OPT__REF_FLU_INT_SCHEME );
-
    for (int f=0; f<6; f++)
    if ( OPT__BC_FLU[f] == BC_FLU_REFLECTING  ||  OPT__BC_FLU[f] == BC_FLU_OUTFLOW )
       Aux_Error( ERROR_INFO, "unsupported option \"OPT__BC_FLU[%d] = %d\" [1/4] !!\n", f, OPT__BC_FLU[f] );
@@ -979,7 +883,7 @@ void Aux_Check_Parameter()
       }
    }
 
-   if ( DT__PHASE < 0.0  ||  DT__PHASE > 1.0 )
+   if ( DT__PHASE > 1.0 )
       Aux_Message( stderr, "WARNING : DT__PHASE (%13.7e) is not within the normal range [0...1] !!\n",
                    DT__PHASE );
 
@@ -1051,36 +955,20 @@ void Aux_Check_Parameter()
       Aux_Error( ERROR_INFO, "Rho_ParaBuf (%d) > PATCH_SIZE (%d) !!\n", Rho_ParaBuf, PATCH_SIZE );
 
 #  if ( POT_SCHEME == SOR )
-   if ( SOR_MIN_ITER < 3 )    Aux_Error( ERROR_INFO, "SOR_MIN_ITER < 3 !!\n" );
+   if ( SOR_OMEGA <= 0.0 )    Aux_Error( ERROR_INFO, "SOR_OMEGA (%14.7e) <= 0.0 !!\n", SOR_OMEGA );
+   if ( SOR_MAX_ITER < 0 )    Aux_Error( ERROR_INFO, "SOR_MAX_ITER (%d) < 0 !!\n", SOR_MAX_ITER );
+   if ( SOR_MIN_ITER < 3 )    Aux_Error( ERROR_INFO, "SOR_MIN_ITER (%d) < 3 !!\n", SOR_MIN_ITER );
+#  endif
+
+#  if ( POT_SCHEME == MG )
+   if ( MG_MAX_ITER < 0 )              Aux_Error( ERROR_INFO, "MG_MAX_ITER (%d) < 0 !!\n", MG_MAX_ITER );
+   if ( MG_NPRE_SMOOTH <= 0 )          Aux_Error( ERROR_INFO, "MG_NPRE_SMOOTH (%d) <= 0 !!\n", MG_NPRE_SMOOTH );
+   if ( MG_NPOST_SMOOTH <= 0 )         Aux_Error( ERROR_INFO, "MG_NPOST_SMOOTH (%d) <= 0 !!\n", MG_NPOST_SMOOTH );
+   if ( MG_TOLERATED_ERROR <= 0.0 )    Aux_Error( ERROR_INFO, "MG_TOLERATED_ERROR (%14.7e) <= 0.0 !!\n", MG_TOLERATED_ERROR );
 #  endif
 
    if ( POT_GPU_NPGROUP % GPU_NSTREAM != 0 )
       Aux_Error( ERROR_INFO, "POT_GPU_NPGROUP %% GPU_NSTREAM != 0 !!\n" );
-
-   if ( OPT__POT_INT_SCHEME != INT_CQUAD  &&  OPT__POT_INT_SCHEME != INT_QUAD )
-      Aux_Error( ERROR_INFO, "unsupported input parameter \"%s = %d\" !!\n",
-                 "OPT__POT_INT_SCHEME", OPT__POT_INT_SCHEME );
-
-   if ( OPT__RHO_INT_SCHEME != INT_MINMOD3D  &&  OPT__RHO_INT_SCHEME != INT_MINMOD1D  &&
-        OPT__RHO_INT_SCHEME != INT_VANLEER   &&  OPT__RHO_INT_SCHEME != INT_CQUAD     &&
-        OPT__RHO_INT_SCHEME != INT_QUAD      &&  OPT__RHO_INT_SCHEME != INT_CQUAR     &&
-        OPT__RHO_INT_SCHEME != INT_QUAR )
-      Aux_Error( ERROR_INFO, "unsupported input parameter \"%s = %d\" !!\n",
-                 "OPT__RHO_INT_SCHEME", OPT__RHO_INT_SCHEME );
-
-   if ( OPT__GRA_INT_SCHEME != INT_MINMOD3D  &&  OPT__GRA_INT_SCHEME != INT_MINMOD1D  &&
-        OPT__GRA_INT_SCHEME != INT_VANLEER   &&  OPT__GRA_INT_SCHEME != INT_CQUAD     &&
-        OPT__GRA_INT_SCHEME != INT_QUAD      &&  OPT__GRA_INT_SCHEME != INT_CQUAR     &&
-        OPT__GRA_INT_SCHEME != INT_QUAR )
-      Aux_Error( ERROR_INFO, "unsupported input parameter \"%s = %d\" !!\n",
-                 "OPT__GRA_INT_SCHEME", OPT__GRA_INT_SCHEME );
-
-   if ( OPT__REF_POT_INT_SCHEME != INT_MINMOD3D  &&  OPT__REF_POT_INT_SCHEME != INT_MINMOD1D  &&
-        OPT__REF_POT_INT_SCHEME != INT_VANLEER   &&  OPT__REF_POT_INT_SCHEME != INT_CQUAD     &&
-        OPT__REF_POT_INT_SCHEME != INT_QUAD      &&  OPT__REF_POT_INT_SCHEME != INT_CQUAR     &&
-        OPT__REF_POT_INT_SCHEME != INT_QUAR )
-      Aux_Error( ERROR_INFO, "unsupported input parameter \"%s = %d\" !!\n",
-                 "OPT__REF_POT_INT_SCHEME", OPT__REF_POT_INT_SCHEME );
 
 #  if ( NLEVEL > 1 )
    int Trash_RefPot, NGhost_RefPot;
@@ -1112,6 +1000,8 @@ void Aux_Check_Parameter()
 
       MPI_Exit();
    }
+
+   if ( NEWTON_G <= 0.0 )     Aux_Error( ERROR_INFO, "NEWTON_G (%14.7e) <= 0.0 !!\n", NEWTON_G );
 
 
 // warnings
@@ -1238,11 +1128,6 @@ void Aux_Check_Parameter()
 #     error : ERROR : PARTICLE must work with either SERIAL or LOAD_BALANCE !!
 #  endif
 
-#  ifdef LOAD_BALANCE
-   if ( LB_INPUT__PAR_WEIGHT < 0.0 )
-      Aux_Error( ERROR_INFO, "LB_INPUT__PAR_WEIGHT = %14.7e < 0 !!\n", LB_INPUT__PAR_WEIGHT );
-#  endif
-
    if ( OPT__INIT != INIT_RESTART )
    {
       if ( amr->Par->Init == PAR_INIT_BY_RESTART )    Aux_Error( ERROR_INFO, "PAR_INIT == RESTART but OPT__INIT != RESTART !!\n" );
@@ -1256,15 +1141,6 @@ void Aux_Check_Parameter()
                     MPI_Rank, amr->Par->NPar_AcPlusInac );
    }
 
-   if ( amr->Par->Init < 1  ||  amr->Par->Init > 3 )
-      Aux_Error( ERROR_INFO, "unsupported option \"amr->Par->Init = %d\" [1/2/3] !!\n", amr->Par->Init );
-
-   if ( amr->Par->Interp < 1  ||  amr->Par->Interp > 3 )
-      Aux_Error( ERROR_INFO, "unsupported option \"amr->Par->Interp = %d\" [1/2/3] !!\n", amr->Par->Interp );
-
-   if ( amr->Par->Integ < 1  ||  amr->Par->Integ > 2 )
-      Aux_Error( ERROR_INFO, "unsupported option \"amr->Par->Integ = %d\" [1/2] !!\n", amr->Par->Integ );
-
 #  ifndef STORE_POT_GHOST
    if ( amr->Par->ImproveAcc )
       Aux_Error( ERROR_INFO, "please turn on STORE_POT_GHOST for amr->Par->ImproveAcc (PAR_IMPROVE_ACC) !!\n" );
@@ -1273,19 +1149,10 @@ void Aux_Check_Parameter()
    if ( amr->Par->ImproveAcc  &&  amr->Par->Interp == 1 )
       Aux_Error( ERROR_INFO, "amr->Par->ImproveAcc does NOT work with amr->Par->Interp == 1 (NGP) !!\n" );
 
-   if ( DT__PARVEL < 0.0 )
-      Aux_Error( ERROR_INFO, "DT__PARVEL (%14.7e) is not within the normal range [>=0] !!\n", DT__PARVEL );
-
-#  ifdef STORE_PAR_ACC
-   if ( DT__PARACC < 0.0 )
-      Aux_Error( ERROR_INFO, "DT__PARACC (%14.7e) is not within the normal range [>=0] !!\n", DT__PARACC );
-#  else
+#  ifndef STORE_PAR_ACC
    if ( DT__PARACC != 0.0 )
       Aux_Error( ERROR_INFO, "DT__PARACC (%14.7e) is NOT supported when STORE_PAR_ACC is off !!\n", DT__PARACC );
 #  endif
-
-   if ( OPT__FLAG_NPAR_PATCH < 0  ||  OPT__FLAG_NPAR_PATCH > 2 )
-      Aux_Error( ERROR_INFO, "unsupported option \"OPT__FLAG_NPAR_PATCH = %d\" [0/1/2] !!\n", OPT__FLAG_NPAR_PATCH );
 
    if ( OPT__BC_FLU[0] == BC_FLU_PERIODIC )
    for (int d=0; d<3; d++)
@@ -1294,13 +1161,6 @@ void Aux_Check_Parameter()
          Aux_Error( ERROR_INFO, "\"%s\" does NOT work for NX0_TOT[%d] = 2*PATCH_SIZE when periodic BC is adopted !!\n",
                     "Par_MassAssignment", d );
    }
-
-   if ( OPT__PARTICLE_COUNT < 0  ||  OPT__PARTICLE_COUNT > 2 )
-      Aux_Error( ERROR_INFO, "incorrect option \"OPT__PARTICLE_COUNT = %d\" [0/1/2] !!\n", OPT__PARTICLE_COUNT );
-
-   if ( OPT__OUTPUT_PAR_DENS != PAR_OUTPUT_DENS_NONE  &&  OPT__OUTPUT_PAR_DENS != PAR_OUTPUT_DENS_PAR_ONLY  &&
-        OPT__OUTPUT_PAR_DENS != PAR_OUTPUT_DENS_TOTAL )
-      Aux_Error( ERROR_INFO, "incorrect option \"OPT__OUTPUT_PAR_DENS = %d\" [0/1/2] !!\n", OPT__OUTPUT_PAR_DENS );
 
 
 // warning

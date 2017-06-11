@@ -8,14 +8,14 @@
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Init_Set_Default_SOR_Parameter
-// Description :  Set the SOR parameters by the default values 
+// Description :  Set the SOR parameters to the default values
 //
-// Note        :  a. Work only when the corresponding input parameters are negative
-//                b. The default values are determined empirically from the cosmological simulations
+// Note        :  1. Work only when the corresponding input parameters are negative
+//                2. The default values are determined empirically from the cosmological simulations
 //
-// Parameter   :  SOR_Omega      : Over-relaxation parameter for SOR
-//                SOR_Max_Iter   : Maximum number of iterations for SOR
-//                SOR_Min_Iter   : Minimum number of iterations for SOR
+// Parameter   :  SOR_Omega    : Over-relaxation parameter for SOR
+//                SOR_Max_Iter : Maximum number of iterations for SOR
+//                SOR_Min_Iter : Minimum number of iterations for SOR
 //-------------------------------------------------------------------------------------------------------
 void Init_Set_Default_SOR_Parameter( double &SOR_Omega, int &SOR_Max_Iter, int &SOR_Min_Iter )
 {
@@ -35,7 +35,7 @@ void Init_Set_Default_SOR_Parameter( double &SOR_Omega, int &SOR_Max_Iter, int &
 #  endif
    const int    Default_MinIter  = 10;
 
-   if ( SOR_Omega < 0.0 )     
+   if ( SOR_Omega < 0.0 )
    {
       SOR_Omega = Default_Omega[POT_GHOST_SIZE-1];
 
@@ -43,17 +43,17 @@ void Init_Set_Default_SOR_Parameter( double &SOR_Omega, int &SOR_Max_Iter, int &
                                          "SOR_OMEGA",  Default_Omega[POT_GHOST_SIZE-1] );
    }
 
-   if ( SOR_Max_Iter < 0 )     
+   if ( SOR_Max_Iter < 0 )
    {
-      SOR_Max_Iter = Default_MaxIter; 
+      SOR_Max_Iter = Default_MaxIter;
 
       if ( MPI_Rank == 0 )  Aux_Message( stdout, "NOTE : parameter \"%s\" is set to the default value = %d\n",
                                          "SOR_MAX_ITER", Default_MaxIter );
    }
 
-   if ( SOR_Min_Iter < 0 )     
+   if ( SOR_Min_Iter < 0 )
    {
-      SOR_Min_Iter = Default_MinIter; 
+      SOR_Min_Iter = Default_MinIter;
 
       if ( MPI_Rank == 0 )  Aux_Message( stdout, "NOTE : parameter \"%s\" is set to the default value = %d\n",
                                          "SOR_MIN_ITER", Default_MinIter );
