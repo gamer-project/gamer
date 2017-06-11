@@ -3,5 +3,5 @@ syntax: glob
 
 *.o
 
-./bin/*
+bin/**
 gamer
