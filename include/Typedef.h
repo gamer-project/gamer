@@ -270,10 +270,10 @@ const OptRSolver1st_t
 // options for OPT__CORR_AFTER_ALL_SYNC
 typedef int OptCorrAfterSync_t;
 const OptCorrAfterSync_t
-   CORR_DEFAULT     = -1,
-   CORR_NONE        = 0,
-   CORR_EVERY_STEP  = 1,
-   CORR_BEFORE_DUMP = 2;
+   CORR_AFTER_SYNC_DEFAULT     = -1,
+   CORR_AFTER_SYNC_NONE        = 0,
+   CORR_AFTER_SYNC_EVERY_STEP  = 1,
+   CORR_AFTER_SYNC_BEFORE_DUMP = 2;
 
 
 

@@ -191,11 +191,11 @@ void Init_Load_Parameter()
 
 // fluid solver in ELBDM
 #  if ( MODEL == ELBDM )
-   ReadPara->Add( "ELBDM_MASS",                 &ELBDM_MASS,                     -1.0.             NoZero_double, NoMax_double   );
+   ReadPara->Add( "ELBDM_MASS",                 &ELBDM_MASS,                     -1.0,             NoZero_double, NoMax_double   );
 // do not check ELBDM_PLANCK_CONST since it may be reset by Init_Unit()
-   ReadPara->Add( "ELBDM_PLANCK_CONST",         &ELBDM_PLANCK_CONST,             -1.0.             NoMin_double,  NoMax_double   );
+   ReadPara->Add( "ELBDM_PLANCK_CONST",         &ELBDM_PLANCK_CONST,             -1.0,             NoMin_double,  NoMax_double   );
 #  ifdef QUARTIC_SELF_INTERACTION
-   ReadPara->Add( "ELBDM_LAMBDA",               &ELBDM_LAMBDA,                    1.0.             NoMin_double,  NoMax_double   );
+   ReadPara->Add( "ELBDM_LAMBDA",               &ELBDM_LAMBDA,                    1.0,             NoMin_double,  NoMax_double   );
 #  endif
    ReadPara->Add( "ELBDM_TAYLOR3_COEFF",        &ELBDM_TAYLOR3_COEFF,             1.0/6.0,         NoMin_double,  NoMax_double   );
    ReadPara->Add( "ELBDM_TAYLOR3_AUTO",         &ELBDM_TAYLOR3_AUTO,              true,            Useless_bool,  Useless_bool   );

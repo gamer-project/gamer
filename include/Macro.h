@@ -662,6 +662,12 @@
 #define IDX321( i, j, k, Ni, Nj )   (  ( (k)*(Nj) + (j) )*(Ni) + (i)  )
 
 
+// helper macros for printing symbolic constants in macros
+// ref: https://stackoverflow.com/questions/3419332/c-preprocessor-stringify-the-result-of-a-macro
+#  define QUOTE( str )              #str
+#  define EXPAND_AND_QUOTE( str )   QUOTE( str )
+
+
 
 // ################################
 // ## Remove useless definitions ##

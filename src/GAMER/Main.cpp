@@ -369,7 +369,7 @@ int main( int argc, char *argv[] )
 //    3. apply various corrections
 //       --> synchronize particles, restrict data, recalculate potential and particle acceleration, ...
 //    ---------------------------------------------------------------------------------------------------
-      if ( OPT__CORR_AFTER_ALL_SYNC == CORR_EVERY_STEP )
+      if ( OPT__CORR_AFTER_ALL_SYNC == CORR_AFTER_SYNC_EVERY_STEP )
       TIMING_FUNC(   Flu_CorrAfterAllSync(),     Timer_Main[6],   false   );
 //    ---------------------------------------------------------------------------------------------------
 
@@ -420,7 +420,9 @@ int main( int argc, char *argv[] )
 //    ---------------------------------------------------------------------------------------------------
 #     ifdef LOAD_BALANCE
       if ( OPT__TIMING_BARRIER ) MPI_Barrier( MPI_COMM_WORLD );
+#     ifdef TIMING
       Timer_Main[5]->Start();    // timer for load balance
+#     endif
 
       if ( LB_EstimateLoadImbalance() > amr->LB->WLI_Max )
       {
@@ -447,7 +449,9 @@ int main( int argc, char *argv[] )
 #        endif
       } // if ( LB_EstimateLoadImbalance() > amr->LB->WLI_Max )
 
+#     ifdef TIMING
       Timer_Main[5]->Stop( false );
+#     endif
 #     endif // #ifdef LOAD_BALANCE
 //    ---------------------------------------------------------------------------------------------------
 

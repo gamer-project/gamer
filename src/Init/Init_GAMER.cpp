@@ -25,7 +25,7 @@ void Init_GAMER( int *argc, char ***argv )
 #  endif
 
 
-// load parameters from the file "Input__Parameter"
+// load runtime parameters
    Init_Load_Parameter();
 
 
@@ -33,8 +33,8 @@ void Init_GAMER( int *argc, char ***argv )
    Init_Unit();
 
 
-// set default parameters
-   Init_SetDefaultParameter();
+// reset parameters --> must be called after Init_Unit()
+   Init_ResetParameter();
 
 
 // initialize OpenMP settings
