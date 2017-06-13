@@ -59,6 +59,10 @@ void Init_Load_Parameter()
    ReadPara->Add( "END_STEP",                   &END_STEP,                       -1L,              NoMin_long,    NoMax_long     );
 
 
+// test problems
+   ReadPara->Add( "TESTPROB_ID",                &TESTPROB_ID,                     0,               0,             NoMax_int      );
+
+
 // code units
    ReadPara->Add( "OPT__UNIT",                  &OPT__UNIT,                       false,           Useless_bool,  Useless_bool   );
 // do not check units since they are validated by Init_Unit()

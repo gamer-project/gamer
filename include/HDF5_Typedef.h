@@ -273,6 +273,9 @@ struct InputPara_t
    double EndT;
    long   EndStep;
 
+// test problems
+   int   TestProb_ID;
+
 // code units
    int    Opt__Unit;
    double Unit_L;

@@ -74,7 +74,7 @@ Procedure for outputting new variables:
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2231)
+// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2232)
 // Description :  Output all simulation data in the HDF5 format, which can be used as a restart file
 //                or loaded by YT
 //
@@ -130,6 +130,7 @@ Procedure for outputting new variables:
 //                2229 : 2017/04/06 --> output DUAL_ENERGY and DUAL_ENERGY_SWITCH
 //                2230 : 2017/05/08 --> output OPT__FLAG_PAR_MASS_CELL and FlagTable_ParMassCell
 //                2231 : 2017/05/08 --> output OPT__FLAG_JEANS and FlagTable_Jeans
+//                2232 : 2017/06/13 --> output TESTPROB_ID
 //-------------------------------------------------------------------------------------------------------
 void Output_DumpData_Total_HDF5( const char *FileName )
 {
@@ -1235,7 +1236,7 @@ void FillIn_KeyInfo( KeyInfo_t &KeyInfo )
 
    const time_t CalTime  = time( NULL );   // calendar time
 
-   KeyInfo.FormatVersion = 2231;
+   KeyInfo.FormatVersion = 2232;
    KeyInfo.Model         = MODEL;
    KeyInfo.NLevel        = NLEVEL;
    KeyInfo.NCompFluid    = NCOMP_FLUID;
@@ -1678,6 +1679,9 @@ void FillIn_InputPara( InputPara_t &InputPara )
    InputPara.OMP_NThread             = OMP_NTHREAD;
    InputPara.EndT                    = END_T;
    InputPara.EndStep                 = END_STEP;
+
+// test problems
+   InputPara.TestProb_ID             = TESTPROB_ID;
 
 // code units
    InputPara.Opt__Unit               = OPT__UNIT;
@@ -2294,6 +2298,9 @@ void GetCompound_InputPara( hid_t &H5_TypeID )
    H5Tinsert( H5_TypeID, "OMP_NThread",             HOFFSET(InputPara_t,OMP_NThread            ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "EndT",                    HOFFSET(InputPara_t,EndT                   ), H5T_NATIVE_DOUBLE  );
    H5Tinsert( H5_TypeID, "EndStep",                 HOFFSET(InputPara_t,EndStep                ), H5T_NATIVE_LONG    );
+
+// test problems
+   H5Tinsert( H5_TypeID, "TestProb_ID",             HOFFSET(InputPara_t,TestProb_ID            ), H5T_NATIVE_INT     );
 
 // code units
    H5Tinsert( H5_TypeID, "Opt__Unit",               HOFFSET(InputPara_t,Opt__Unit              ), H5T_NATIVE_INT     );
