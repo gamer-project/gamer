@@ -499,10 +499,18 @@ void Aux_TakeNote()
       fprintf( Note, "\n\n");
 
 
+//    record the parameters of test problems
+      fprintf( Note, "Parameters of Test Problems\n" );
+      fprintf( Note, "***********************************************************************************\n" );
+      fprintf( Note, "TESTPROB_ID               %d\n", TESTPROB_ID );
+      fprintf( Note, "***********************************************************************************\n" );
+      fprintf( Note, "\n\n");
+
+
 //    record the parameters of code units
       fprintf( Note, "Parameters of Code Units\n" );
       fprintf( Note, "***********************************************************************************\n" );
-      fprintf( Note, "OPT__UNIT                 %d\n",                   OPT__UNIT      );
+      fprintf( Note, "OPT__UNIT                 %d\n",                     OPT__UNIT                     );
       if ( OPT__UNIT ) {
 #     ifdef COMOVING
       fprintf( Note, "\n### All units marked with (*) assume h = %13.7e ###\n\n", HUBBLE0 );

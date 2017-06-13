@@ -1495,6 +1495,9 @@ void Check_InputPara( const char *FileName )
    LoadField( "EndT",                    &RS.EndT,                    SID, TID, NonFatal, &RT.EndT,                     1, NonFatal );
    LoadField( "EndStep",                 &RS.EndStep,                 SID, TID, NonFatal, &RT.EndStep,                  1, NonFatal );
 
+// test problems
+   LoadField( "TestProb_ID",             &RS.TestProb_ID,             SID, TID, NonFatal, &RT.TestProb_ID,              1, NonFatal );
+
 // code units
    LoadField( "Opt__Unit",               &RS.Opt__Unit,               SID, TID, NonFatal, &RT.Opt__Unit,                1, NonFatal );
    LoadField( "Unit_L",                  &RS.Unit_L,                  SID, TID, NonFatal, &RT.Unit_L,                   1, NonFatal );

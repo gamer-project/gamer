@@ -44,7 +44,7 @@ char                *PassiveFieldName_Grid[NCOMP_PASSIVE];
 double               BOX_SIZE, DT__FLUID, DT__FLUID_INIT, END_T, OUTPUT_DT;
 long                 END_STEP;
 int                  NX0_TOT[3], OUTPUT_STEP, REGRID_COUNT, FLU_GPU_NPGROUP, OMP_NTHREAD;
-int                  MPI_NRank, MPI_NRank_X[3], GPU_NSTREAM, FLAG_BUFFER_SIZE, MAX_LEVEL;
+int                  MPI_NRank, MPI_NRank_X[3], GPU_NSTREAM, FLAG_BUFFER_SIZE, MAX_LEVEL, TESTPROB_ID;
 
 IntScheme_t          OPT__FLU_INT_SCHEME, OPT__REF_FLU_INT_SCHEME;
 double               OUTPUT_PART_X, OUTPUT_PART_Y, OUTPUT_PART_Z;
