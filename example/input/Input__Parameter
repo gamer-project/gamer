@@ -51,7 +51,7 @@ PAR_NPAR                      0           # total number of particles (must be s
 PAR_INIT                      1           # initialization option for particles: (1=FUNCTION, 2=RESTART, 3=FILE->"PAR_START")
 PAR_INTERP                    3           # particle interpolation scheme: (1=NGP, 2=CIC, 3=TSC) [3]
 PAR_INTEG                     2           # particle integration scheme: (1=Euler, 2=KDK) [2]
-PAR_IMPROVE_ACC               1           # improve force accuracy at patch boundaries (must turn on STORE_POT_GHOST) [1]
+PAR_IMPROVE_ACC               1           # improve force accuracy at patch boundaries [1] ##STORE_POT_GHOST and PAR_INTERP=2/3 ONLY##
 PAR_PREDICT_POS               1           # predict particle position during mass assignment [1]
 PAR_REMOVE_CELL              -1.0         # remove particles X-root-cells from the boundaries (non-periodic BC only; <0=auto) [-1.0]
 
@@ -78,8 +78,8 @@ OPT__RECORD_DT                1           # record info of the dt determination 
 
 # grid refinement (examples of Input__Flag_XXX tables are put at "example/input/")
 REGRID_COUNT                  4           # refine every REGRID_COUNT sub-step [4]
-FLAG_BUFFER_SIZE              8           # number of buffer cells for the flag operation [8]
-MAX_LEVEL                     0           # maximum refinement level (0 ... NLEVEL-1) [NLEVEL-1]
+FLAG_BUFFER_SIZE              8           # number of buffer cells for the flag operation (0~PATCH_SIZE) [PATCH_SIZE]
+MAX_LEVEL                     0           # maximum refinement level (0~NLEVEL-1) [NLEVEL-1]
 OPT__FLAG_RHO                 0           # flag: density (Input__Flag_Rho) [0]
 OPT__FLAG_RHO_GRADIENT        0           # flag: density gradient (Input__Flag_RhoGradient) [0]
 OPT__FLAG_PRES_GRADIENT       0           # flag: pressure gradient (Input__Flag_PresGradient) [0] ##HYDRO ONLY##
