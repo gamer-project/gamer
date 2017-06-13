@@ -25,19 +25,19 @@ void Aux_Check_Parameter()
 #  endif
 
 #  if ( defined TIMING_SOLVER  &&  !defined TIMING )
-#     error : ERROR : option TIMING_SOLVER must work with the option TIMING !!
+#     error : ERROR : TIMING_SOLVER must work with TIMING !!
 #  endif
 
 #  if ( defined OPENMP  &&  !defined _OPENMP )
-#     error : ERROR : something is wrong in OpenMP, the macro "_OPENMP" is NOT defined !!
+#     error : ERROR : something is wrong in OpenMP; the macro "_OPENMP" is NOT defined !!
 #  endif
 
 #  if ( defined OVERLAP_MPI  &&  !defined LOAD_BALANCE )
-#     error : ERROR : option OVERLAP_MPI must work with the option LOAD_BALANCE !!
+#     error : ERROR : OVERLAP_MPI must work with LOAD_BALANCE !!
 #  endif
 
 #  if ( !defined GRAVITY  &&  defined UNSPLIT_GRAVITY )
-#     error : ERROR : please turn off UNSPLIT_GRAVITY when GRAVITY is off !!
+#     error : ERROR : UNSPLIT_GRAVITY must work with GRAVITY !!
 #  endif
 
 #  if ( defined UNSPLIT_GRAVITY  &&  MODEL != HYDRO )
@@ -54,11 +54,11 @@ void Aux_Check_Parameter()
    int NRank, MPI_Thread_Status, MPI_Init_Status;
 
    MPI_Initialized( &MPI_Init_Status );
-   if ( MPI_Init_Status == false )  Aux_Error( ERROR_INFO, "MPI_Init has not been called !!\n" );
+   if ( MPI_Init_Status == false )  Aux_Error( ERROR_INFO, "MPI_Init() has not been called !!\n" );
 
    MPI_Query_thread( &MPI_Thread_Status );
    if ( OPT__OVERLAP_MPI  &&  MPI_Thread_Status == MPI_THREAD_SINGLE )
-      Aux_Error( ERROR_INFO, "option \"%s\" is NOT supported if the level of MPI thread support == %s\n",
+      Aux_Error( ERROR_INFO, "\"%s\" is NOT supported since the level of MPI thread support == %s\n",
                  "OPT__OVERLAP_MPI", "MPI_THREAD_SINGLE" );
 
    MPI_Comm_size( MPI_COMM_WORLD, &NRank );
@@ -68,8 +68,7 @@ void Aux_Check_Parameter()
       Aux_Error( ERROR_INFO, "MPI_NRank (%d) != MPI_Comm_size (%d) !!\n", MPI_NRank, NRank );
 
    if ( NX0_TOT[0]%PS2 != 0  ||  NX0_TOT[1]%PS2 != 0  ||  NX0_TOT[2]%PS2 != 0 )
-      Aux_Error( ERROR_INFO, "number of base-level patches in each direction must be \"%s\" !!\n",
-                 "a multiple of TWO" );
+      Aux_Error( ERROR_INFO, "number of base-level patches in each direction must be \"a multiple of TWO\" !!\n" );
 
    if ( END_STEP < 0  &&  OPT__INIT != INIT_RESTART )
       Aux_Error( ERROR_INFO, "incorrect parameter \"%s = %d\" [>=0] !!\n", "END_STEP", END_STEP );
@@ -82,27 +81,21 @@ void Aux_Check_Parameter()
 #  endif
    if ( NX0_TOT[0]%(PS2*MPI_NRank_X[0]) != 0  ||  NX0_TOT[1]%(PS2*MPI_NRank_X[1]) != 0  ||
         NX0_TOT[2]%(PS2*MPI_NRank_X[2]) != 0 )
-      Aux_Error( ERROR_INFO, "number of base-level patches in each direction in one rank must be \"%s\" !!\n",
+      Aux_Error( ERROR_INFO, "number of base-level patches in each direction and in each MPI rank must be \"%s\" !!\n",
                  "a multiple of TWO" );
 
 #  ifdef LOAD_BALANCE
    if ( OPT__INIT != INIT_RESTART )
 #  endif
    if ( MPI_NRank_X[0]*MPI_NRank_X[1]*MPI_NRank_X[2] != MPI_NRank )
-      Aux_Error( ERROR_INFO, "MPI_NRank_X[0]*MPI_NRank_X[1]*MPI_NRank_X[2] != MPI_NRank !!\n" );
-
-   if ( FLAG_BUFFER_SIZE > PATCH_SIZE )
-      Aux_Error( ERROR_INFO, "FLAG_BUFFER_SIZE (%d) > PATCH_SIZE (%d) !!\n", FLAG_BUFFER_SIZE, PATCH_SIZE );
+      Aux_Error( ERROR_INFO, "MPI_NRank_X[0]*MPI_NRank_X[1]*MPI_NRank_X[2] (%d) != MPI_NRank (%d) !!\n",
+                 MPI_NRank_X[0]*MPI_NRank_X[1]*MPI_NRank_X[2], MPI_NRank );
 
    if ( OPT__OUTPUT_MODE == OUTPUT_CONST_STEP  &&  OUTPUT_STEP <= 0 )
       Aux_Error( ERROR_INFO, "OUTPUT_STEP (%ld) <= 0 !!\n", OUTPUT_STEP );
 
    if ( OPT__OUTPUT_MODE == OUTPUT_CONST_DT  &&  OUTPUT_DT <= 0.0 )
       Aux_Error( ERROR_INFO, "OUTPUT_DT (%14.7e) <= 0.0 !!\n", OUTPUT_DT );
-
-   if ( OPT__RESTART_HEADER != RESTART_HEADER_CHECK  &&  OPT__RESTART_HEADER != RESTART_HEADER_SKIP )
-      Aux_Error( ERROR_INFO, "unsupported option \"OPT__RESTART_HEADER = %d\" [0/1] !!\n",
-                 OPT__RESTART_HEADER );
 
 #  ifndef SUPPORT_HDF5
    if ( OPT__OUTPUT_TOTAL == OUTPUT_FORMAT_HDF5 )
@@ -122,18 +115,18 @@ void Aux_Check_Parameter()
       Aux_Error( ERROR_INFO, "incorrect OUTPUT_PART_Z (out of range [0<=Z<%lf]) !!\n", amr->BoxSize[2] );
 
    if (  OPT__OUTPUT_PART == OUTPUT_DIAG  &&  ( NX0_TOT[0] != NX0_TOT[1] || NX0_TOT[0] != NX0_TOT[2] )  )
-      Aux_Error( ERROR_INFO, "option \"%s\" only works with CUBIC domain !!\n",
+      Aux_Error( ERROR_INFO, "\"%s\" only works with CUBIC domain !!\n",
                  "OPT__OUTPUT_PART == 7 (OUTPUT_DIAG)" );
 
    if (  OPT__OUTPUT_BASEPS  &&  ( NX0_TOT[0] != NX0_TOT[1] || NX0_TOT[0] != NX0_TOT[2] )  )
-      Aux_Error( ERROR_INFO, "option \"%s\" only works with CUBIC domain !!\n", "OPT__OUTPUT_BASEPS" );
+      Aux_Error( ERROR_INFO, "\"%s\" only works with CUBIC domain !!\n", "OPT__OUTPUT_BASEPS" );
 
    if ( OPT__INIT == INIT_UM  &&  OPT__UM_START_NVAR != 1  &&  OPT__UM_FACTOR_5OVER3 )
       Aux_Error( ERROR_INFO, "OPT__UM_FACTOR_5OVER3 only works when OPT__UM_START_NVAR == 1 !!\n" );
 
    if ( OPT__CK_REFINE  &&  !OPT__FLAG_RHO )
       Aux_Error( ERROR_INFO, "currently the check \"%s\" must work with \"%s\" !!\n",
-                 "OPT__CK_REFINE", "OPT__FLAG_RHO == 1" );
+                 "OPT__CK_REFINE", "OPT__FLAG_RHO" );
 
 #  if   ( MODEL == HYDRO  ||  MODEL == MHD )
    if (  ( OPT__FLAG_LOHNER_DENS || OPT__FLAG_LOHNER_ENGY || OPT__FLAG_LOHNER_PRES || OPT__FLAG_LOHNER_TEMP )
@@ -167,7 +160,7 @@ void Aux_Check_Parameter()
 
 #  ifndef OVERLAP_MPI
    if ( OPT__OVERLAP_MPI )
-      Aux_Error( ERROR_INFO, "\"%s\" is NOT turned on in the Makefile for the option \"%s\" !!\n",
+      Aux_Error( ERROR_INFO, "\"%s\" is NOT enabled in the Makefile for \"%s\" !!\n",
                  "OVERLAP_MPI", "OPT__OVERLAP_MPI" );
 #  endif
 
@@ -184,11 +177,11 @@ void Aux_Check_Parameter()
       Aux_Error( ERROR_INFO, "currently the periodic BC cannot be mixed with non-periodic BC. !!\n" );
 
 #  ifndef TIMING
-   if ( OPT__TIMING_MPI )  Aux_Error( ERROR_INFO, "OPT__TIMING_MPI only works when TIMING is on !!\n" );
+   if ( OPT__TIMING_MPI )  Aux_Error( ERROR_INFO, "OPT__TIMING_MPI must work with TIMING !!\n" );
 #  endif
 
 #  ifndef INDIVIDUAL_TIMESTEP
-   if ( OPT__INT_TIME )    Aux_Error( ERROR_INFO, "OPT__INT_TIME only works when INDIVIDUAL_TIMESTEP is on !!\n" );
+   if ( OPT__INT_TIME )    Aux_Error( ERROR_INFO, "OPT__INT_TIME must work with INDIVIDUAL_TIMESTEP !!\n" );
 #  endif
 
    if ( OPT__MEMORY_POOL  &&  !OPT__REUSE_MEMORY )
@@ -202,7 +195,7 @@ void Aux_Check_Parameter()
 // general warnings
 // =======================================================================================
 #  ifdef OVERLAP_MPI
-#     warning : NOTE : make sure to link with multi-thread supported MPI and FFTW for the option "OVERLAP_MPI"
+#     warning : WARNING : make sure to link with multi-thread supported MPI and FFTW for "OVERLAP_MPI"
 #  endif
 
 #  ifdef OPENMP
@@ -236,10 +229,10 @@ void Aux_Check_Parameter()
                    "OPT__CK_REFINE" );
 
    if ( !OPT__INIT_RESTRICT )
-      Aux_Message( stderr, "WARNING : option OPT__INIT_RESTRICT is NOT turned on !!\n" );
+      Aux_Message( stderr, "WARNING : OPT__INIT_RESTRICT is disabled !!\n" );
 
 #  ifdef TIMING_SOLVER
-   Aux_Message( stderr, "WARNING : option \"TIMING_SOLVER\" will disable the concurrent execution\n" );
+   Aux_Message( stderr, "WARNING : \"TIMING_SOLVER\" will disable the concurrent execution\n" );
    Aux_Message( stderr, "          between GPU and CPU and hence will decrease the overall performance !!\n" );
 #  endif
 
@@ -279,21 +272,20 @@ void Aux_Check_Parameter()
 
    if ( OPT__OVERLAP_MPI )
    {
-      Aux_Message( stderr, "WARNING : option \"%s\" is still experimental and is not fully optimized !!\n",
+      Aux_Message( stderr, "WARNING : \"%s\" is still experimental and is not fully optimized !!\n",
                    "OPT__OVERLAP_MPI" );
 
 #     ifdef OPENMP
       omp_set_nested( true );
 
       if ( !omp_get_nested() )
-         Aux_Message( stderr, "WARNING : OpenMP nested parallelism is NOT supported for the option \"%s\" !!\n",
+         Aux_Message( stderr, "WARNING : OpenMP nested parallelism is NOT supported for \"%s\" !!\n",
                       "OPT__OVERLAP_MPI" );
 
       omp_set_nested( false );
 #     else
-      Aux_Message( stderr, "WARNING : OpenMP is NOT turned on for the option \"%s\" !!\n", "OPT__OVERLAP_MPI" );
+      Aux_Message( stderr, "WARNING : OpenMP is NOT turned on for \"%s\" !!\n", "OPT__OVERLAP_MPI" );
 #     endif
-
    } // if ( OPT__OVERLAP_MPI )
 
    if (  ( OPT__BC_FLU[0] == BC_FLU_USER || OPT__BC_FLU[1] == BC_FLU_USER || OPT__BC_FLU[2] == BC_FLU_USER ||
@@ -303,12 +295,12 @@ void Aux_Check_Parameter()
       Aux_Message( stderr, "WARNING : corner cells may not be well defined when mixing user-defined BC with others !!\n" );
 
    if ( OPT__TIMING_BARRIER )
-      Aux_Message( stderr, "WARNING : option \"%s\" may deteriorate performance (especially if %s is on) ...\n",
+      Aux_Message( stderr, "WARNING : \"%s\" may deteriorate performance (especially if %s is on) ...\n",
                    "OPT__TIMING_BARRIER", "OPT__OVERLAP_MPI" );
 
    if ( OPT__TIMING_BARRIER  &&  !OPT__TIMING_BALANCE )
    {
-      Aux_Message( stderr, "REMINDER : option \"%s\" is on, but the time waiting for other ranks will NOT be included in individual timers ...\n",
+      Aux_Message( stderr, "REMINDER : \"%s\" is on, but the time waiting for other ranks will NOT be included in individual timers ...\n",
                    "OPT__TIMING_BARRIER" );
       Aux_Message( stderr, "           --> the sum of individual timer may be less than the total elapsed time due to load imbalance ...\n" );
    }
@@ -316,21 +308,21 @@ void Aux_Check_Parameter()
 #  ifdef TIMING
    if ( !OPT__TIMING_BARRIER )
    {
-      Aux_Message( stderr, "REMINDER : option \"%s\" is off for TIMING\n", "OPT__TIMING_BARRIER" );
+      Aux_Message( stderr, "REMINDER : \"%s\" is off for TIMING\n", "OPT__TIMING_BARRIER" );
       Aux_Message( stderr, "           --> Some timing results (especially MPI and particle routines) may be less accurate due to load imbalance ...\n" );
    }
 #  endif
 
    if (  ( OPT__TIMING_BALANCE || OPT__TIMING_MPI )  &&  !OPT__TIMING_BARRIER  )
    {
-      Aux_Message( stderr, "REMINDER : option \"%s\" is off for OPT__TIMING_BALANCE/OPT__TIMING_MPI\n", "OPT__TIMING_BARRIER" );
+      Aux_Message( stderr, "REMINDER : \"%s\" is off for OPT__TIMING_BALANCE/OPT__TIMING_MPI\n", "OPT__TIMING_BARRIER" );
       Aux_Message( stderr, "           --> Some timing results (especially MPI and particle routines) may be less accurate due to load imbalance ...\n" );
    }
 
 #  ifdef PARTICLE
    if ( OPT__TIMING_BALANCE )
    {
-      Aux_Message( stderr, "REMINDER : option \"%s\" does NOT work well for particle routines\n", "OPT__TIMING_BARRIER" );
+      Aux_Message( stderr, "REMINDER : \"%s\" does NOT work well for particle routines\n", "OPT__TIMING_BARRIER" );
       Aux_Message( stderr, "           --> Because many particle routines call MPI_Barrier implicitly\n" );
       Aux_Message( stderr, "               (so as Gra_AdvanceDt when PARTICLE is on)\n" );
    }
@@ -343,7 +335,7 @@ void Aux_Check_Parameter()
 #     endif
 
 #     ifndef COMOVING
-      Aux_Message( stderr, "WARNING : COMOVING is NOT defined for the option OPT__UM_FACTOR_5OVER3 !!\n" );
+      Aux_Message( stderr, "WARNING : COMOVING is NOT defined for OPT__UM_FACTOR_5OVER3 !!\n" );
 #     endif
 
       Aux_Message( stderr, "REMINDER : please make sure that \"background density ~= 1.0\" for OPT__UM_FACTOR_5OVER3\n" );
@@ -378,7 +370,7 @@ void Aux_Check_Parameter()
 // errors
 // ------------------------------
 #  ifdef SERIAL
-#     error : ERROR : options LOAD_BALANCE and SERIAL should NOT be turned on at the same time !!
+#     error : ERROR : LOAD_BALANCE and SERIAL must NOT be enabled at the same time !!
 #  endif
 
 #  if ( LOAD_BALANCE != HILBERT )
@@ -428,7 +420,7 @@ void Aux_Check_Parameter()
 #else // #ifdef LOAD_BALANCE ... else ...
 
    if ( OPT__OVERLAP_MPI  &&  MPI_Rank == 0 )
-      Aux_Message( stderr, "WARNING : currently the option \"%s\" is useful only in LOAD_BALANCE !!\n",
+      Aux_Message( stderr, "WARNING : currently \"%s\" is useful only in LOAD_BALANCE !!\n",
                    "OPT__OVERLAP_MPI" );
 
 #endif // #ifdef LOAD_BALANCE ... else ...
@@ -442,7 +434,7 @@ void Aux_Check_Parameter()
 // errors
 // ------------------------------
 #  if   ( MODEL == HYDRO )
-   if ( fabs(GAMMA-5.0/3.0) > 1.e-4 )
+   if ( fabs(GAMMA-5.0/3.0) > 1.0e-4 )
       Aux_Error( ERROR_INFO, "GAMMA must be equal to 5.0/3.0 in cosmological simuluations !!\n" );
 #  elif ( MODEL == MHD )
 #  warning : WAIT MHD !!!
@@ -453,7 +445,7 @@ void Aux_Check_Parameter()
 // ------------------------------
 #  ifndef GRAVITY
    if ( MPI_Rank == 0 )
-      Aux_Message( stderr, "WARNING : option \"%s\" is useless if the option \"%s\" is NOT turned on !!\n",
+      Aux_Message( stderr, "WARNING : \"%s\" is useless when \"%s\" is disabled !!\n",
                    "COMOVING", "GRAVITY" );
 #  endif
 
@@ -469,12 +461,14 @@ void Aux_Check_Parameter()
    if ( Flu_ParaBuf > PATCH_SIZE )
       Aux_Error( ERROR_INFO, "Flu_ParaBuf (%d) > PATCH_SIZE (%d) !!\n", Flu_ParaBuf, PATCH_SIZE );
 
-   if ( GPU_NSTREAM < 1 )  Aux_Error( ERROR_INFO, "GPU_NSTREAM < 1 !!\n" );
+   if ( GPU_NSTREAM < 1 )  Aux_Error( ERROR_INFO, "GPU_NSTREAM (%d) < 1 !!\n", GPU_NSTREAM );
 
-   if ( FLU_GPU_NPGROUP % GPU_NSTREAM != 0 )    Aux_Error( ERROR_INFO, "FLU_GPU_NPGROUP%%GPU_NSTREAM != 0 !!\n" );
+   if ( FLU_GPU_NPGROUP % GPU_NSTREAM != 0 )
+      Aux_Error( ERROR_INFO, "FLU_GPU_NPGROUP (%d) %%GPU_NSTREAM (%d) != 0 !!\n",
+                 FLU_GPU_NPGROUP, GPU_NSTREAM );
 
    if ( OPT__FIXUP_FLUX  &&  !amr->WithFlux )
-      Aux_Error( ERROR_INFO, "%s is turned on but amr->WithFlux is off !!\n", "OPT__FIXUP_FLUX" );
+      Aux_Error( ERROR_INFO, "%s is enabled but amr->WithFlux is off !!\n", "OPT__FIXUP_FLUX" );
 
 #  if ( NLEVEL > 1 )
    int Trash_RefFlu, NGhost_RefFlu;
@@ -493,8 +487,8 @@ void Aux_Check_Parameter()
    if ( MPI_Rank == 0 ) {
 
    if ( OPT__CK_FLUX_ALLOCATE  &&  !amr->WithFlux )
-      Aux_Message( stderr, "WARNING : option \"%s\" is useless since no flux is required !!\n",
-                   OPT__CK_FLUX_ALLOCATE );
+      Aux_Message( stderr, "WARNING : \"%s\" is useless since no flux is required !!\n",
+                   "OPT__CK_FLUX_ALLOCATE" );
 
    if ( DT__FLUID < 0.0  ||  DT__FLUID > 1.0 )
       Aux_Message( stderr, "WARNING : DT__FLUID (%14.7e) is not within the normal range [0...1] !!\n",
@@ -561,9 +555,6 @@ void Aux_Check_Parameter()
 #     error : ERROR : unsupported option in CHECK_INTERMEDIATE (EXACT/HLLE/HLLC) !!
 #  endif
 
-   if ( OPT__CK_NEGATIVE < 0  ||  OPT__CK_NEGATIVE > 3 )
-      Aux_Error( ERROR_INFO, "unsupported parameter \"%s = %d\" !!\n", "OPT__CK_NEGATIVE", OPT__CK_NEGATIVE );
-
    if ( OPT__1ST_FLUX_CORR != FIRST_FLUX_CORR_NONE )
    {
       if ( OPT__1ST_FLUX_CORR_SCHEME != RSOLVER_1ST_ROE  &&  OPT__1ST_FLUX_CORR_SCHEME != RSOLVER_1ST_HLLC  &&
@@ -571,15 +562,9 @@ void Aux_Check_Parameter()
          Aux_Error( ERROR_INFO, "unsupported parameter \"%s = %d\" !!\n", "OPT__1ST_FLUX_CORR_SCHEME", OPT__1ST_FLUX_CORR_SCHEME );
 
 #     if ( FLU_SCHEME == RTVD  ||  FLU_SCHEME == WAF )
-         Aux_Error( ERROR_INFO, "RTVD and WAF fluid schemes do not support the option \"OPT__1ST_FLUX_CORR\" !!\n" );
+         Aux_Error( ERROR_INFO, "RTVD and WAF fluid schemes do not support \"OPT__1ST_FLUX_CORR\" !!\n" );
 #     endif
    }
-
-   if ( GAMMA <= 0.0 )
-      Aux_Error( ERROR_INFO, "GAMMA = %14.7e <= 0.0 !!\n", GAMMA );
-
-   if ( MOLECULAR_WEIGHT <= 0.0 )
-      Aux_Error( ERROR_INFO, "MOLECULAR_WEIGHT = %14.7e <= 0.0 !!\n", MOLECULAR_WEIGHT );
 
    if ( MIN_DENS == 0.0  &&  MPI_Rank == 0 )
       Aux_Message( stderr, "WARNING : MIN_DENS == 0.0 could be dangerous and is mainly for debugging only !!\n" );
@@ -598,12 +583,12 @@ void Aux_Check_Parameter()
 
 #  if ( FLU_SCHEME == MHM  &&  LR_SCHEME == PPM )
 #     warning : WARNING : PPM is not recommended for the MHM scheme !!
-      Aux_Message( stderr, "WARNING : PPM is not recommended for the MHM scheme !!\n" );
+      Aux_Message( stderr, "WARNING : PPM has not been well tested for the MHM scheme !!\n" );
 #  endif
 
 #  if ( FLU_SCHEME == MHM_RP  &&  LR_SCHEME == PPM )
 #     warning : WARNING : PPM is not recommended for MHM_RP scheme !!
-      Aux_Message( stderr, "WARNING : PPM is not recommended for the MHM_RP scheme !!\n" );
+      Aux_Message( stderr, "WARNING : PPM has not been well tested for the MHM_RP scheme !!\n" );
 #  endif
 
 #  if ( defined RSOLVER  &&  RSOLVER == EXACT )
@@ -613,20 +598,19 @@ void Aux_Check_Parameter()
 #  endif
 
 #  if ( defined CHAR_RECONSTRUCTION  &&  defined GRAVITY )
-#     warning : WARNING : option "CHAR_RECONSTRUCTION" is less robust and can cause negative density/pressure !!
-      Aux_Message( stderr, "WARNING : option \"CHAR_RECONSTRUCTION\" is less robust and can cause negative " );
+#     warning : WARNING : "CHAR_RECONSTRUCTION" is less robust and can cause negative density/pressure !!
+      Aux_Message( stderr, "WARNING : \"CHAR_RECONSTRUCTION\" is less robust and could cause negative " );
       Aux_Message( stderr,           "density/pressure !!\n" );
 #  endif
 
    if ( !OPT__FIXUP_FLUX )
-      Aux_Message( stderr, "WARNING : option \"%s\" is disabled in HYDRO !!\n", "OPT__FIXUP_FLUX" );
+      Aux_Message( stderr, "WARNING : \"%s\" is disabled in HYDRO !!\n", "OPT__FIXUP_FLUX" );
 
    if ( !OPT__FIXUP_RESTRICT )
-      Aux_Message( stderr, "WARNING : option \"%s\" is disabled in HYDRO !!\n", "OPT__FIXUP_RESTRICT" );
+      Aux_Message( stderr, "WARNING : \"%s\" is disabled in HYDRO !!\n", "OPT__FIXUP_RESTRICT" );
 
    if ( OPT__CK_FLUX_ALLOCATE  &&  !OPT__FIXUP_FLUX )
-      Aux_Message( stderr, "WARNING : option %s is useless since %s is off !!\n",
-                   OPT__CK_FLUX_ALLOCATE, OPT__FIXUP_FLUX );
+      Aux_Message( stderr, "WARNING : %s is useless since %s is off !!\n", "OPT__CK_FLUX_ALLOCATE", "OPT__FIXUP_FLUX" );
 
    if ( OPT__INIT == INIT_UM )
       Aux_Message( stderr, "WARNING : currently we don't check MIN_DENS/PRES for the initial data loaded from UM_START !!\n" );
@@ -796,7 +780,7 @@ void Aux_Check_Parameter()
 #  endif
 
 #  if ( NCOMP_PASSIVE > 0 )
-#     error : ERROR : NCOMP_PASSIVE > 0 in ELBDM (currently this model does not support passive scalar) !!
+#     error : ERROR : NCOMP_PASSIVE > 0 in ELBDM (currently this model does not support passive scalars) !!
 #  endif
 
 #  ifdef QUARTIC_SELF_INTERACTION
@@ -809,14 +793,11 @@ void Aux_Check_Parameter()
 #  endif
 #  endif // ifdef QUARTIC_SELF_INTERACTION
 
-   if ( ELBDM_MASS <= 0.0 )
-      Aux_Error( ERROR_INFO, "%s = %14.7e <= 0.0 !!\n", "ELBDM_MASS", ELBDM_MASS );
-
    if ( ELBDM_PLANCK_CONST <= 0.0 )
-      Aux_Error( ERROR_INFO, "%s = %14.7e <= 0.0 !!\n", "ELBDM_PLANCK_CONST", ELBDM_PLANCK_CONST );
+      Aux_Error( ERROR_INFO, "%s (%14.7e) <= 0.0 !!\n", "ELBDM_PLANCK_CONST", ELBDM_PLANCK_CONST );
 
    if ( ELBDM_ETA <= 0.0 )
-      Aux_Error( ERROR_INFO, "%s = %14.7e <= 0.0 !!\n", "ELBDM_ETA", ELBDM_ETA );
+      Aux_Error( ERROR_INFO, "%s (%14.7e) <= 0.0 !!\n", "ELBDM_ETA", ELBDM_ETA );
 
    if ( OPT__INT_PHASE  &&  OPT__FLU_INT_SCHEME == INT_MINMOD1D )
       Aux_Error( ERROR_INFO, "unsupported interpolation scheme \"%s = %d\" when OPT__INT_PHASE is on !!\n",
@@ -826,9 +807,7 @@ void Aux_Check_Parameter()
    if ( OPT__BC_FLU[f] == BC_FLU_REFLECTING  ||  OPT__BC_FLU[f] == BC_FLU_OUTFLOW )
       Aux_Error( ERROR_INFO, "unsupported option \"OPT__BC_FLU[%d] = %d\" [1/4] !!\n", f, OPT__BC_FLU[f] );
 
-   if      ( MIN_DENS < 0.0 )
-      Aux_Error( ERROR_INFO, "MIN_DENS = %14.7e < 0.0 !!\n", MIN_DENS );
-   else if ( MIN_DENS == 0.0  &&  MPI_Rank == 0 )
+   if ( MIN_DENS == 0.0  &&  MPI_Rank == 0 )
       Aux_Message( stderr, "WARNING : MIN_DENS == 0.0 could be dangerous and is mainly for debugging only !!\n" );
    else if ( MPI_Rank == 0 )
       Aux_Message( stderr, "WARNING : MIN_DENS (%13.7e) is on --> please ensure that this value is reasonable !!\n", MIN_DENS );
@@ -884,20 +863,19 @@ void Aux_Check_Parameter()
    }
 
    if ( DT__PHASE > 1.0 )
-      Aux_Message( stderr, "WARNING : DT__PHASE (%13.7e) is not within the normal range [0...1] !!\n",
-                   DT__PHASE );
+      Aux_Message( stderr, "WARNING : DT__PHASE (%13.7e) is not within the normal range [0...1] !!\n", DT__PHASE );
 
    if ( OPT__CK_FLUX_ALLOCATE  &&  !OPT__FIXUP_FLUX )
-      Aux_Message( stderr, "WARNING : option %s is useless since %s is off !!\n",
-                   OPT__CK_FLUX_ALLOCATE, OPT__FIXUP_FLUX );
+      Aux_Message( stderr, "WARNING : %s is useless since %s is off !!\n",
+                   "OPT__CK_FLUX_ALLOCATE", "OPT__FIXUP_FLUX" );
 
 #  ifdef CONSERVE_MASS
    if ( !OPT__FIXUP_FLUX )
-      Aux_Message( stderr, "WARNING : option \"%s\" is disabled in ELBDM even though CONSERVE_MASS is on !!\n",
+      Aux_Message( stderr, "WARNING : %s is disabled in ELBDM even though CONSERVE_MASS is on !!\n",
                    "OPT__FIXUP_FLUX" );
 #  else
    if ( OPT__FIXUP_FLUX )
-      Aux_Message( stderr, "WARNING : option %s is useless in ELBDM if CONSERVE_MASS is off !!\n", OPT__FIXUP_FLUX );
+      Aux_Message( stderr, "WARNING : %s is useless in ELBDM when CONSERVE_MASS is off !!\n", "OPT__FIXUP_FLUX" );
 #  endif
 
    if ( OPT__INIT == INIT_UM )
@@ -968,7 +946,8 @@ void Aux_Check_Parameter()
 #  endif
 
    if ( POT_GPU_NPGROUP % GPU_NSTREAM != 0 )
-      Aux_Error( ERROR_INFO, "POT_GPU_NPGROUP %% GPU_NSTREAM != 0 !!\n" );
+      Aux_Error( ERROR_INFO, "POT_GPU_NPGROUP (%d) %% GPU_NSTREAM (%d) != 0 !!\n",
+                 POT_GPU_NPGROUP, GPU_NSTREAM );
 
 #  if ( NLEVEL > 1 )
    int Trash_RefPot, NGhost_RefPot;
@@ -1022,11 +1001,11 @@ void Aux_Check_Parameter()
    if (  ( OPT__GRAVITY_TYPE == GRAVITY_SELF || OPT__GRAVITY_TYPE == GRAVITY_BOTH )  &&  OPT__BC_POT == BC_POT_ISOLATED  )
    {
       Aux_Message( stderr, "WARNING : currently the patches adjacent to the simulation boundary are NOT allowed to be\n" );
-      Aux_Message( stderr, "          refined if the self-gravity with the isolated BC is chosen !!\n" );
+      Aux_Message( stderr, "          refined if the self-gravity with the isolated BC is adopted !!\n" );
    }
 
    if ( OPT__EXTERNAL_POT  &&  OPT__OUTPUT_POT )
-      Aux_Message( stderr, "WARNING : currently the output potential does NOT include the external potential !!\n" );
+      Aux_Message( stderr, "WARNING : currently OPT__OUTPUT_POT does NOT include the external potential !!\n" );
 
    } // if ( MPI_Rank == 0 )
 
@@ -1043,12 +1022,12 @@ void Aux_Check_Parameter()
 #  endif
 
    if ( OPT__GRA_P5_GRADIENT  &&  GRA_GHOST_SIZE == 1 )
-      Aux_Error( ERROR_INFO, "option \"%s\" requires \"%s\" !!\n",
+      Aux_Error( ERROR_INFO, "\"%s\" requires \"%s\" !!\n",
                  "OPT__GRA_P5_GRADIENT", "GRA_GHOST_SIZE == 2" );
 
 #  ifdef UNSPLIT_GRAVITY
    if ( OPT__GRA_P5_GRADIENT &&  USG_GHOST_SIZE == 1 )
-      Aux_Error( ERROR_INFO, "option \"%s\" requires \"%s\" for UNSPLIT_GRAVITY !!\n",
+      Aux_Error( ERROR_INFO, "\"%s\" requires \"%s\" for UNSPLIT_GRAVITY !!\n",
                  "OPT__GRA_P5_GRADIENT", "USG_GHOST_SIZE == 2" );
 #  endif
 
@@ -1062,7 +1041,7 @@ void Aux_Check_Parameter()
 #  ifndef STORE_POT_GHOST
    if ( !OPT__GRA_P5_GRADIENT  &&  GRA_GHOST_SIZE == 2 )
    {
-      Aux_Message( stderr, "WARNING : \"%s\" is useless if the option \"%s\" is NOT turned on !!\n",
+      Aux_Message( stderr, "WARNING : \"%s\" is useless when \"%s\" is disabled !!\n",
                    "GRA_GHOST_SIZE == 2", "OPT__GRA_P5_GRADIENT" );
    }
 #  endif
@@ -1133,21 +1112,21 @@ void Aux_Check_Parameter()
       if ( amr->Par->Init == PAR_INIT_BY_RESTART )    Aux_Error( ERROR_INFO, "PAR_INIT == RESTART but OPT__INIT != RESTART !!\n" );
 
       if ( amr->Par->NPar_Active_AllRank < 0 )
-         Aux_Error( ERROR_INFO, "Total number of particles in all MPI ranks = %ld < 0 !!\n",
+         Aux_Error( ERROR_INFO, "total number of particles in all MPI ranks = %ld < 0 !!\n",
                     amr->Par->NPar_Active_AllRank );
 
       if ( amr->Par->NPar_AcPlusInac < 0  ||  amr->Par->NPar_AcPlusInac > amr->Par->NPar_Active_AllRank )
-         Aux_Error( ERROR_INFO, "Incorrect total number of particles in MPI rank %d = %ld !!\n",
-                    MPI_Rank, amr->Par->NPar_AcPlusInac );
+         Aux_Error( ERROR_INFO, "incorrect total number of particles (%ld) in MPI rank %d !!\n",
+                    amr->Par->NPar_AcPlusInac, MPI_Rank );
    }
 
 #  ifndef STORE_POT_GHOST
    if ( amr->Par->ImproveAcc )
-      Aux_Error( ERROR_INFO, "please turn on STORE_POT_GHOST for amr->Par->ImproveAcc (PAR_IMPROVE_ACC) !!\n" );
+      Aux_Error( ERROR_INFO, "PAR_IMPROVE_ACC must work with STORE_POT_GHOST !!\n" );
 #  endif
 
    if ( amr->Par->ImproveAcc  &&  amr->Par->Interp == 1 )
-      Aux_Error( ERROR_INFO, "amr->Par->ImproveAcc does NOT work with amr->Par->Interp == 1 (NGP) !!\n" );
+      Aux_Error( ERROR_INFO, "PAR_IMPROVE_ACC does NOT work with PAR_INTERP == 1 (NGP) !!\n" );
 
 #  ifndef STORE_PAR_ACC
    if ( DT__PARACC != 0.0 )
@@ -1159,7 +1138,7 @@ void Aux_Check_Parameter()
    {
       if ( NX0_TOT[d]/PS2 == 1 )
          Aux_Error( ERROR_INFO, "\"%s\" does NOT work for NX0_TOT[%d] = 2*PATCH_SIZE when periodic BC is adopted !!\n",
-                    "Par_MassAssignment", d );
+                    "Par_MassAssignment()", d );
    }
 
 
@@ -1168,29 +1147,28 @@ void Aux_Check_Parameter()
    if ( MPI_Rank == 0 ) {
 
    if ( DT__PARVEL > 1.0 )
-      Aux_Message( stderr, "WARNING : DT__PARVEL (%13.7e) is not within the normal range [<=1.0] !!\n", DT__PARVEL );
+      Aux_Message( stderr, "WARNING : DT__PARVEL (%13.7e) is not within the normal range [0.0~~1.0] !!\n", DT__PARVEL );
 
    if ( DT__PARACC > 1.0 )
-      Aux_Message( stderr, "WARNING : DT__PARACC (%13.7e) is not within the normal range [<=1.0] !!\n", DT__PARACC );
+      Aux_Message( stderr, "WARNING : DT__PARACC (%13.7e) is not within the normal range [0.0~1.0] !!\n", DT__PARACC );
 
    if ( OPT__OVERLAP_MPI )
       Aux_Message( stderr, "WARNING : PARTICLE does not support OPT__OVERLAP_MPI !!\n" );
 
 #  ifdef STORE_POT_GHOST
    if ( !amr->Par->ImproveAcc )
-      Aux_Message( stderr, "WARNING : STORE_POT_GHOST is useless if amr->Par->ImproveAcc is off !!\n" );
+      Aux_Message( stderr, "WARNING : STORE_POT_GHOST is useless when PAR_IMPROVE_ACC is disabled !!\n" );
 #  endif
 
    if ( OPT__GRA_P5_GRADIENT )
-      Aux_Message( stderr, "WARNING : option \"%s\" is not supported for updating particles !!\n",
-                 "OPT__GRA_P5_GRADIENT" );
+      Aux_Message( stderr, "WARNING : currently \"%s\" is not applied to particle update !!\n", "OPT__GRA_P5_GRADIENT" );
 
    } // if ( MPI_Rank == 0 )
 
 #else // #ifdef PARTICLE
 
 #  ifdef STORE_POT_GHOST
-   Aux_Message( stderr, "WARNING : currently STORE_POT_GHOST is useless if PARTICLE is off !!\n" );
+   Aux_Message( stderr, "WARNING : currently STORE_POT_GHOST is useless when PARTICLE is disabled !!\n" );
 #  endif
 
 #endif // PARTICLE
