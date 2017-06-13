@@ -3,6 +3,7 @@
 
 
 #include <typeinfo>
+#include "Macro.h"
 #include "Global.h"
 
 bool Aux_CheckFileExist( const char *FileName );
@@ -231,7 +232,7 @@ struct ReadPara_t
 
          else if ( MPI_Rank == 0 )
          {
-            Aux_Message( stderr, "WARNING : unrecognizable parameter [%-30s] at line %4d (either non-existing or duplicate) !!\n",
+            Aux_Message( stderr, "WARNING : unrecognizable parameter [%-25s] at line %4d (either non-existing or duplicate) !!\n",
                          LoadKey, LineNum );
          }
       } // while ( fgets( Line, MAX_STRING, File ) != NULL )
@@ -286,10 +287,10 @@ struct ReadPara_t
             {
 
                if ( def_int != NULL_INT )
-                  Aux_Message( stdout, "NOTE : parameter [%-30s] is set to the default value [%-+21ld]\n",
+                  Aux_Message( stdout, "NOTE : parameter [%-25s] is set to the default value [%- 21ld]\n",
                                Key[t], def_int );
                else
-                  Aux_Message( stdout, "NOTE : parameter [%-30s] is set to the default value [%-+21.14e]\n",
+                  Aux_Message( stdout, "NOTE : parameter [%-25s] is set to the default value [%- 21.14e]\n",
                                Key[t], def_flt );
             }
          }
@@ -308,10 +309,6 @@ struct ReadPara_t
    void Validate()
    {
 
-//    helper macros for different data types
-//    ref: https://stackoverflow.com/questions/3419332/c-preprocessor-stringify-the-result-of-a-macro
-#     define QUOTE( str )  #str
-#     define EXPAND_AND_QUOTE( str )   QUOTE( str )
 #     define CHECK_RANGE( type, format )                                                                                   \
       {                                                                                                                    \
          if (  GET_VOID(type,Ptr[t]) < GET_VOID(type,Min[t])  ||  GET_VOID(type,Ptr[t]) > GET_VOID(type,Max[t])  )         \
@@ -339,8 +336,6 @@ struct ReadPara_t
          }
       } // for (int t=0; t<NPara; t++)
 
-#     undef QUOTE
-#     undef EXPAND_AND_QUOTE
 #     undef CHECK_RANGE
 
    } // METHOD : Validate
@@ -350,7 +345,7 @@ struct ReadPara_t
 
 
 
-// remove symbolic constants since they are only used in this structure
+// remove symbolic constants and macros only used in this structure
 #undef NPARA_MAX
 #undef COMMENT_SYM
 #undef TYPE_INT

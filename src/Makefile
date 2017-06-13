@@ -66,7 +66,7 @@ SIMU_OPTION += -DDUAL_ENERGY=DE_ENPY
 SIMU_OPTION += -DNCOMP_PASSIVE_MAKEFILE=0
 
 # support Grackle, a chemistry and radiative cooling library (NOT supported yet)
-SIMU_OPTION += -DSUPPORT_GRACKLE
+#SIMU_OPTION += -DSUPPORT_GRACKLE
 
 
 # (b-2) MHD options
@@ -112,10 +112,10 @@ SIMU_OPTION += -DPAR_NPASSIVE=0
 # debug mode
 #SIMU_OPTION += -DGAMER_DEBUG
 
-# measure the elapsing wall-clock time of different parts of the program
+# measure the wall-clock time of GAMER
 SIMU_OPTION += -DTIMING
 
-# measure the elapsing wall-clock time of different parts of the GPU solvers (will disable CPU/GPU overlapping)
+# measure the wall-clock time of GPU solvers (will disable CPU/GPU overlapping; must turn on TIMING)
 #SIMU_OPTION += -DTIMING_SOLVER
 
 # intel compiler (default: GNU compiler)
@@ -181,7 +181,7 @@ CC_FILE     += End_GAMER.cpp  End_MemFree.cpp  End_MemFree_Fluid.cpp  End_StopMa
                Init_Load_FlagCriteria.cpp  Init_Load_Parameter.cpp  Init_MemAllocate.cpp \
                Init_MemAllocate_Fluid.cpp  Init_Parallelization.cpp  Init_RecordBasePatch.cpp  Init_Refine.cpp \
                Init_Restart_v1.cpp  Init_StartOver.cpp  Init_TestProb.cpp  Init_UM.cpp  Init_OpenMP.cpp \
-               Init_Restart_HDF5.cpp  Init_SetDefaultParameter.cpp  Init_Restart_v2.cpp  Init_MemoryPool.cpp \
+               Init_Restart_HDF5.cpp  Init_ResetParameter.cpp  Init_Restart_v2.cpp  Init_MemoryPool.cpp \
                Init_Unit.cpp  Init_PassiveVariable.cpp
 
 CC_FILE     += Interpolate.cpp  Int_CQuadratic.cpp  Int_MinMod1D.cpp  Int_MinMod3D.cpp  Int_vanLeer.cpp \
