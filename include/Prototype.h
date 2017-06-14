@@ -224,7 +224,7 @@ void Output_PatchMap( const int lv, const int PID, const int TSg, const int Comp
 void Output_PreparedPatch_Fluid( const int TLv, const int TPID,
                                  const real h_Flu_Array[][FLU_NIN][FLU_NXT*FLU_NXT*FLU_NXT],
                                  const int NPG, const int *PID0_List, const int CLv, const char *comment );
-void Output_TestProbErr( const bool BaseOnly );
+void Output_User();
 void Output_BasePowerSpectrum( const char *FileName );
 #ifndef SERIAL
 void Output_ExchangePatchMap( const int lv, const int xyz, const char *comment );

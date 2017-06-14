@@ -4,8 +4,8 @@
 
 static void Init_Function_User( real fluid[], const double x, const double y, const double z, const double Time,
                                 const int lv, double AuxArray[] );
-void (*Init_Function_Ptr)( real fluid[], const double x, const double y, const double z, const double Time,
-                           const int lv, double AuxArray[] ) = Init_Function_User;
+void (*Init_Function_User_Ptr)( real fluid[], const double x, const double y, const double z, const double Time,
+                                const int lv, double AuxArray[] ) = Init_Function_User;
 
 
 
@@ -14,9 +14,11 @@ void (*Init_Function_Ptr)( real fluid[], const double x, const double y, const d
 // Function    :  Init_Function_User
 // Description :  Function to initialize the fluid field
 //
-// Note        :  1. Invoked by "Hydro_Init_StartOver_AssignData"
-//                2. This function will be invoked by multiple OpenMP threads
-//                   --> Must ensure everything here is thread-safe
+// Note        :  1. Invoked by "Hydro_Init_StartOver_AssignData" using the function pointer "Init_Function_User_Ptr"
+//                   --> The function pointer may be reset by various test problem initializers, in which case
+//                       this funtion will become useless
+//                2. This function will be invoked by multiple OpenMP threads when OPENMP is enabled
+//                   --> Please ensure that everything here is thread-safe
 //                3. Even when DUAL_ENERGY is adopted, one does NOT need to set the dual-energy variable here
 //                   --> It will be set automatically in "Hydro_Init_StartOver_AssignData()"
 //
@@ -63,9 +65,8 @@ void Init_Function_User( real fluid[], const double x, const double y, const dou
 // Description :  Construct the initial condition in HYDRO
 //
 // Note        :  1. Work for the option "OPT__INIT == INIT_STARTOVER"
-//                2. The initialization function should be specified in "Init_Function_Ptr", which is a function
-//                   pointer pointing to either "Init_Function_User" or the test problem specified function
-//                   (e.g., Hydro_TestProbSol_Riemann) set in "Init_TestProb"
+//                2. The function pointer "Init_Function_User_Ptr" points to "Init_Function_User()" by default
+//                   but may be overwritten by various test problem initializers
 //
 // Parameter   :  lv : Target refinement level
 //-------------------------------------------------------------------------------------------------------
@@ -97,7 +98,7 @@ void Hydro_Init_StartOver_AssignData( const int lv )
          for (int jj=0; jj<NSub; jj++)    {  y = y0 + jj*dh_sub;
          for (int ii=0; ii<NSub; ii++)    {  x = x0 + ii*dh_sub;
 
-            Init_Function_Ptr( fluid_sub, x, y, z, Time[lv], lv, NULL );
+            Init_Function_User_Ptr( fluid_sub, x, y, z, Time[lv], lv, NULL );
 
 //          modify the initial condition if required
             if ( OPT__RESET_FLUID )    Flu_ResetByUser_Func( fluid_sub, x, y, z, Time[lv], lv, NULL );
@@ -141,7 +142,7 @@ void Hydro_Init_StartOver_AssignData( const int lv )
       for (int j=0; j<PS1; j++)  {  y = amr->patch[0][lv][PID]->EdgeL[1] + (j+0.5)*dh;
       for (int i=0; i<PS1; i++)  {  x = amr->patch[0][lv][PID]->EdgeL[0] + (i+0.5)*dh;
 
-         Init_Function_Ptr( fluid, x, y, z, Time[lv], lv, NULL );
+         Init_Function_User_Ptr( fluid, x, y, z, Time[lv], lv, NULL );
 
 //       modify the initial condition if required
          if ( OPT__RESET_FLUID )    Flu_ResetByUser_Func( fluid, x, y, z, Time[lv], lv, NULL );

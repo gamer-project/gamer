@@ -122,15 +122,6 @@ void SetParameter()
       PRINT_WARNING( "OPT__INIT_RESTRICT", OPT__INIT_RESTRICT, FORMAT_BOOL );
    }
 
-   if ( OPT__OUTPUT_TEST_ERROR  &&  Output_TestProbErr_Ptr == NULL ) {
-      OPT__OUTPUT_TEST_ERROR = false;
-      PRINT_WARNING( "OPT__OUTPUT_TEST_ERROR", OPT__OUTPUT_TEST_ERROR, FORMAT_BOOL );
-   }
-   else if ( !OPT__OUTPUT_TEST_ERROR  &&  Output_TestProbErr_Ptr != NULL ) {
-      OPT__OUTPUT_TEST_ERROR = true;
-      PRINT_WARNING( "OPT__OUTPUT_TEST_ERROR", OPT__OUTPUT_TEST_ERROR, FORMAT_BOOL );
-   }
-
 
 // (4) make a note
    if ( MPI_Rank == 0 )
@@ -160,6 +151,10 @@ void SetParameter()
 //
 // Note        :  1. This function will also be used to estimate the numerical errors when OPT__OUTPUT_TEST_ERROR is enabled
 //                   --> In this case, it should provide the analytical solution at the given "Time"
+//                2. This function will be invoked by multiple OpenMP threads when OPENMP is enabled
+//                   --> Please ensure that everything here is thread-safe
+//                3. Even when DUAL_ENERGY is adopted for HYDRO, one does NOT need to set the dual-energy variable here
+//                   --> It will be calculated automatically
 //
 // Parameter   :  fluid : Fluid field to be initialized
 //                x/y/z : Physical coordinates
@@ -210,8 +205,8 @@ void Init_TestProb_BlastWave()
 
 
 // set various problem-specific routines
-   Init_Function_Ptr      = SetGridIC;
-   Output_TestProbErr_Ptr = NULL;
+   Init_Function_User_Ptr = SetGridIC;
+   Output_User_Ptr        = NULL;
 
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", __FUNCTION__ );
