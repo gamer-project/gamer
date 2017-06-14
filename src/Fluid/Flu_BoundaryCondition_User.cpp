@@ -2,6 +2,7 @@
 #include "GAMER.h"
 
 static void BC_User( const double Time, const double x, const double y, const double z, real *BVal );
+void (*BC_User_Ptr)( const double Time, const double x, const double y, const double z, real *BVal ) = BC_User;
 
 
 
@@ -10,8 +11,11 @@ static void BC_User( const double Time, const double x, const double y, const do
 // Function    :  BC_User
 // Description :  User-specified boundary condition
 //
-// Note        :  1. Work for the function "Flu_BoundaryCondition_User"
+// Note        :  1. Invoked by "Flu_BoundaryCondition_User" using the function pointer "BC_User_Ptr"
+//                   --> The function pointer may be reset by various test problem initializers, in which case
+//                       this funtion will become useless
 //                2. Always return NCOMP_TOTAL variables
+//                3. Enabled by the runtime options "OPT__BC_FLU_* == 4"
 //
 // Parameter   :  Time  : Current physical time
 //                x,y,z : Physical coordinates
@@ -56,9 +60,11 @@ void BC_User( const double Time, const double x, const double y, const double z,
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Flu_BoundaryCondition_User
-// Description :  Fill up the ghost-zone values by the user-specified function "BC_User"
+// Description :  Fill up the ghost-zone values by the user-specified boundary condition
 //
-// Note        :  Work for the functions "Prepare_PatchData, InterpolateGhostZone, Refine, LB_Refine_AllocateNewPatch"
+// Note        :  1. Work for the functions "Prepare_PatchData, InterpolateGhostZone, Refine, LB_Refine_AllocateNewPatch"
+//                2. The function pointer "BC_User_Ptr" points to "BC_User()" by default but may be overwritten
+//                   by various test problem initializers
 //
 // Parameter   :  Array          : Array to store the prepared data of one patch group (including the ghost-zone data)
 //                NVar_Flu       : Number of fluid variables to be prepared (derived variables are NOT included)
@@ -78,6 +84,10 @@ void Flu_BoundaryCondition_User( real *Array, const int NVar_Flu, const int Arra
                                  const int TFluVarIdxList[], const double Time, const double dh, const double *Corner,
                                  const int TVar )
 {
+
+// check
+   if ( BC_User_Ptr == NULL )    Aux_Error( ERROR_INFO, "BC_User_Ptr == NULL !!\n" );
+
 
    const double x0 = Corner[0] + (double)Idx_Start[0]*dh;   // starting x,y,z coordinates
    const double y0 = Corner[1] + (double)Idx_Start[1]*dh;
@@ -116,7 +126,7 @@ void Flu_BoundaryCondition_User( real *Array, const int NVar_Flu, const int Arra
    for (j=Idx_Start[1], y=y0; j<=Idx_End[1]; j++, y+=dh)
    for (i=Idx_Start[0], x=x0; i<=Idx_End[0]; i++, x+=dh)
    {
-      BC_User( Time, x, y, z, BVal );
+      BC_User_Ptr( Time, x, y, z, BVal );
 
       for (int v=0; v<NVar_Flu; v++)   Array3D[v][k][j][i] = BVal[ TFluVarIdxList[v] ];
 
