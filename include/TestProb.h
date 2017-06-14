@@ -17,6 +17,7 @@ static void SetGridIC( real *fluid, const double x, const double y, const double
 extern void (*Init_Function_User_Ptr)( real fluid[], const double x, const double y, const double z, const double Time );
 extern void (*Output_User_Ptr)();
 extern bool (*Flag_User_Ptr)( const int i, const int j, const int k, const int lv, const int PID, const double Threshold );
+extern void (*Mis_GetTimeStep_User_Ptr)( double &dt, double &dTime, const double dt_dTime );
 
 
 // handy constants for loading the runtime parameters

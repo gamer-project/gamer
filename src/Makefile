@@ -188,7 +188,7 @@ CC_FILE     += Interpolate.cpp  Int_CQuadratic.cpp  Int_MinMod1D.cpp  Int_MinMod
                Int_Quadratic.cpp  Int_Table.cpp  Int_CQuartic.cpp  Int_Quartic.cpp
 
 CC_FILE     += Mis_CompareRealValue.cpp  Mis_GetTotalPatchNumber.cpp  Mis_GetTimeStep.cpp  Mis_Heapsort.cpp \
-               Mis_BinarySearch.cpp  Mis_1D3DIdx.cpp  Mis_Matching.cpp  Mis_GetTimeStep_UserCriteria.cpp \
+               Mis_BinarySearch.cpp  Mis_1D3DIdx.cpp  Mis_Matching.cpp  Mis_GetTimeStep_User.cpp \
                Mis_dTime2dt.cpp  Mis_CoordinateTransform.cpp  Mis_BinarySearch_Real.cpp  Mis_InterpolateFromTable.cpp
 
 CC_FILE     += Output_DumpData_Total.cpp  Output_DumpData.cpp  Output_DumpManually.cpp  Output_PatchMap.cpp \

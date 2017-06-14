@@ -1,6 +1,8 @@
 #include "Copyright.h"
 #include "GAMER.h"
 
+void (*Mis_GetTimeStep_User_Ptr)( double &dt, double &dTime, const double dt_dTime ) = Mis_GetTimeStep_User;
+
 
 
 
@@ -8,8 +10,10 @@
 // Function    :  Mis_GetTimeStep
 // Description :  Estimate the evolution time-step (dt) and the physical time interval (dTime)
 //
-// Note        :  Physical coordinates : dTime == dt
-//                Comoving coordinates : dTime == dt*(Hubble parameter)*(scale factor)^3 == delta(scale factor)
+// Note        :  1. Physical coordinates : dTime == dt
+//                   Comoving coordinates : dTime == dt*(Hubble parameter)*(scale factor)^3 == delta(scale factor)
+//                2. The function pointer "Mis_GetTimeStep_User_Ptr" points to "Mis_GetTimeStep_User()" by default
+//                   but may be overwritten by various test problem initializers
 //
 // Parameter   :  None
 //-------------------------------------------------------------------------------------------------------
@@ -144,7 +148,7 @@ void Mis_GetTimeStep()
    double dTime6 = NULL_REAL;
    double dt6    = NULL_REAL;
 
-   if ( OPT__DT_USER )  Mis_GetTimeStep_UserCriteria( dt6, dTime6, dt_dTime );
+   if ( OPT__DT_USER  &&  Mis_GetTimeStep_User_Ptr != NULL )   Mis_GetTimeStep_User_Ptr( dt6, dTime6, dt_dTime );
 
 
 
@@ -189,7 +193,7 @@ void Mis_GetTimeStep()
 
    dTime_Base= fmin( dTime_Base, dTime5 );
 
-   if ( OPT__DT_USER )
+   if ( OPT__DT_USER  &&  Mis_GetTimeStep_User_Ptr != NULL )
    dTime_Base= fmin( dTime_Base, dTime6 );
 
 #  if ( MODEL == ELBDM )
@@ -286,7 +290,7 @@ void Mis_GetTimeStep()
       if ( dTime_Base == dTime5 )
       fprintf( File, "End Time  : dt = %12.6e, dTime = %12.6e\n", dt5, dTime5 );
 
-      if ( OPT__DT_USER)
+      if ( OPT__DT_USER  &&  Mis_GetTimeStep_User_Ptr != NULL )
       fprintf( File, "User      : dt = %12.6e, dTime = %12.6e\n", dt6, dTime6 );
 
       fprintf( File, "Minimum   : dt = %12.6e, dTime = %12.6e\n", dt_Base, dTime_Base );
