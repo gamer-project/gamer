@@ -474,7 +474,7 @@ struct InputPara_t
 // data dump
    int    Opt__Output_Total;
    int    Opt__Output_Part;
-   int    Opt__Output_TestError;
+   int    Opt__Output_User;
 #  ifdef PARTICLE
    int    Opt__Output_ParText;
 #  endif

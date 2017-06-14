@@ -74,7 +74,7 @@ Procedure for outputting new variables:
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2232)
+// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2233)
 // Description :  Output all simulation data in the HDF5 format, which can be used as a restart file
 //                or loaded by YT
 //
@@ -131,6 +131,7 @@ Procedure for outputting new variables:
 //                2230 : 2017/05/08 --> output OPT__FLAG_PAR_MASS_CELL and FlagTable_ParMassCell
 //                2231 : 2017/05/08 --> output OPT__FLAG_JEANS and FlagTable_Jeans
 //                2232 : 2017/06/13 --> output TESTPROB_ID
+//                2233 : 2017/06/13 --> rename Opt__Output_TestError as Opt__Output_User
 //-------------------------------------------------------------------------------------------------------
 void Output_DumpData_Total_HDF5( const char *FileName )
 {
@@ -1236,7 +1237,7 @@ void FillIn_KeyInfo( KeyInfo_t &KeyInfo )
 
    const time_t CalTime  = time( NULL );   // calendar time
 
-   KeyInfo.FormatVersion = 2232;
+   KeyInfo.FormatVersion = 2233;
    KeyInfo.Model         = MODEL;
    KeyInfo.NLevel        = NLEVEL;
    KeyInfo.NCompFluid    = NCOMP_FLUID;
@@ -1889,9 +1890,9 @@ void FillIn_InputPara( InputPara_t &InputPara )
 // data dump
    InputPara.Opt__Output_Total       = OPT__OUTPUT_TOTAL;
    InputPara.Opt__Output_Part        = OPT__OUTPUT_PART;
-   InputPara.Opt__Output_TestError   = OPT__OUTPUT_TEST_ERROR;
+   InputPara.Opt__Output_User        = OPT__OUTPUT_USER;
 #  ifdef PARTICLE
-   InputPara.Opt__Output_ParText    = OPT__OUTPUT_PAR_TEXT;
+   InputPara.Opt__Output_ParText     = OPT__OUTPUT_PAR_TEXT;
 #  endif
    InputPara.Opt__Output_BasePS      = OPT__OUTPUT_BASEPS;
    InputPara.Opt__Output_Base        = OPT__OUTPUT_BASE;
@@ -2521,7 +2522,7 @@ void GetCompound_InputPara( hid_t &H5_TypeID )
 // data dump
    H5Tinsert( H5_TypeID, "Opt__Output_Total",       HOFFSET(InputPara_t,Opt__Output_Total      ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "Opt__Output_Part",        HOFFSET(InputPara_t,Opt__Output_Part       ), H5T_NATIVE_INT     );
-   H5Tinsert( H5_TypeID, "Opt__Output_TestError",   HOFFSET(InputPara_t,Opt__Output_TestError  ), H5T_NATIVE_INT     );
+   H5Tinsert( H5_TypeID, "Opt__Output_User",       HOFFSET(InputPara_t,Opt__Output_User        ), H5T_NATIVE_INT     );
 #  ifdef PARTICLE
    H5Tinsert( H5_TypeID, "Opt__Output_ParText",     HOFFSET(InputPara_t,Opt__Output_ParText    ), H5T_NATIVE_INT     );
 #  endif

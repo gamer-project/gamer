@@ -218,7 +218,7 @@ void Aux_Check_Parameter()
 
    if ( MPI_Rank == 0 ) {
 
-   if ( !OPT__OUTPUT_TOTAL  &&  !OPT__OUTPUT_PART  &&  !OPT__OUTPUT_TEST_ERROR  &&  !OPT__OUTPUT_BASEPS )
+   if ( !OPT__OUTPUT_TOTAL  &&  !OPT__OUTPUT_PART  &&  !OPT__OUTPUT_USER  &&  !OPT__OUTPUT_BASEPS )
 #  ifdef PARTICLE
    if ( !OPT__OUTPUT_PAR_TEXT )
 #  endif

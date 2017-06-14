@@ -29,9 +29,9 @@ void Output_DumpData( const int Stage )
 
 // nothing to do if all output options are off
 #  ifdef PARTICLE
-   if ( !OPT__OUTPUT_TOTAL && !OPT__OUTPUT_PART && !OPT__OUTPUT_TEST_ERROR && !OPT__OUTPUT_BASEPS && !OPT__OUTPUT_PAR_TEXT )
+   if ( !OPT__OUTPUT_TOTAL && !OPT__OUTPUT_PART && !OPT__OUTPUT_USER && !OPT__OUTPUT_BASEPS && !OPT__OUTPUT_PAR_TEXT )
 #  else
-   if ( !OPT__OUTPUT_TOTAL && !OPT__OUTPUT_PART && !OPT__OUTPUT_TEST_ERROR && !OPT__OUTPUT_BASEPS )
+   if ( !OPT__OUTPUT_TOTAL && !OPT__OUTPUT_PART && !OPT__OUTPUT_USER && !OPT__OUTPUT_BASEPS )
 #  endif
       return;
 
@@ -186,8 +186,8 @@ void Output_DumpData( const int Stage )
       if ( OPT__OUTPUT_TOTAL )            Output_DumpData_Total( FileName_Total );
       if ( OPT__OUTPUT_PART  )            Output_DumpData_Part( OPT__OUTPUT_PART, OPT__OUTPUT_BASE, OUTPUT_PART_X,
                                                                 OUTPUT_PART_Y, OUTPUT_PART_Z, FileName_Part );
-      if ( OPT__OUTPUT_TEST_ERROR  &&
-           Output_User_Ptr != NULL   )    Output_User_Ptr();
+      if ( OPT__OUTPUT_USER  &&
+           Output_User_Ptr != NULL )      Output_User_Ptr();
 #     ifdef GRAVITY
       if ( OPT__OUTPUT_BASEPS )           Output_BasePowerSpectrum( FileName_PS );
 #     endif

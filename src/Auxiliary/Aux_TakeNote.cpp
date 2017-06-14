@@ -922,7 +922,7 @@ void Aux_TakeNote()
       fprintf( Note, "***********************************************************************************\n" );
       fprintf( Note, "OPT__OUTPUT_TOTAL         %d\n",      OPT__OUTPUT_TOTAL       );
       fprintf( Note, "OPT__OUTPUT_PART          %d\n",      OPT__OUTPUT_PART        );
-      fprintf( Note, "OPT__OUTPUT_TEST_ERROR    %d\n",      OPT__OUTPUT_TEST_ERROR  );
+      fprintf( Note, "OPT__OUTPUT_USER          %d\n",      OPT__OUTPUT_USER        );
 #     ifdef PARTICLE
       fprintf( Note, "OPT__OUTPUT_PAR_TEXT      %d\n",      OPT__OUTPUT_PAR_TEXT    );
 #     endif

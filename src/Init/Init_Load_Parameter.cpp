@@ -281,7 +281,7 @@ void Init_Load_Parameter()
 // data dump
    ReadPara->Add( "OPT__OUTPUT_TOTAL",          &OPT__OUTPUT_TOTAL,               1,               0,             2              );
    ReadPara->Add( "OPT__OUTPUT_PART",           &OPT__OUTPUT_PART,                0,               0,             7              );
-   ReadPara->Add( "OPT__OUTPUT_TEST_ERROR",     &OPT__OUTPUT_TEST_ERROR,          false,           Useless_bool,  Useless_bool   );
+   ReadPara->Add( "OPT__OUTPUT_USER",           &OPT__OUTPUT_USER,                false,           Useless_bool,  Useless_bool   );
 #  ifdef PARTICLE
    ReadPara->Add( "OPT__OUTPUT_PAR_TEXT",       &OPT__OUTPUT_PAR_TEXT,            false,           Useless_bool,  Useless_bool   );
 #  endif

@@ -920,7 +920,7 @@ void Load_Parameter_After_1200( FILE *File, const int FormatVersion, int &NLv_Re
 // =================================================================================================
    bool   opt__adaptive_dt, opt__dt_user, opt__flag_rho, opt__flag_rho_gradient, opt__flag_pres_gradient;
    bool   opt__flag_engy_density, opt__flag_user, opt__fixup_flux, opt__fixup_restrict, opt__overlap_mpi;
-   bool   opt__gra_p5_gradient, opt__int_time, opt__output_test_error, opt__output_base, opt__output_pot;
+   bool   opt__gra_p5_gradient, opt__int_time, opt__output_user, opt__output_base, opt__output_pot;
    bool   opt__output_baseps, opt__timing_balance, opt__int_phase;
    int    nx0_tot[3], mpi_nrank, mpi_nrank_x[3], omp_nthread, ooc_nrank, ooc_nrank_x[3], regrid_count;
    int    flag_buffer_size, max_level, opt__lr_limiter, opt__waf_limiter, flu_gpu_npgroup, gpu_nstream;
@@ -990,7 +990,7 @@ void Load_Parameter_After_1200( FILE *File, const int FormatVersion, int &NLv_Re
    fread( &opt__ref_pot_int_scheme,    sizeof(int),                     1,             File );
    fread( &opt__output_total,          sizeof(int),                     1,             File );
    fread( &opt__output_part,           sizeof(int),                     1,             File );
-   fread( &opt__output_test_error,     sizeof(bool),                    1,             File );
+   fread( &opt__output_user,           sizeof(bool),                    1,             File );
    fread( &opt__output_base,           sizeof(bool),                    1,             File );
    fread( &opt__output_pot,            sizeof(bool),                    1,             File );
    fread( &opt__output_mode,           sizeof(int),                     1,             File );
@@ -1359,15 +1359,15 @@ void Load_Parameter_After_1200( FILE *File, const int FormatVersion, int &NLv_Re
       CompareVar( "OPT__REF_FLU_INT_SCHEME", opt__ref_flu_int_scheme, (int)OPT__REF_FLU_INT_SCHEME,   NonFatal );
       CompareVar( "OPT__OUTPUT_TOTAL",       opt__output_total,       (int)OPT__OUTPUT_TOTAL,         NonFatal );
       CompareVar( "OPT__OUTPUT_PART",        opt__output_part,        (int)OPT__OUTPUT_PART,          NonFatal );
-      CompareVar( "OPT__OUTPUT_TEST_ERROR",  opt__output_test_error,       OPT__OUTPUT_TEST_ERROR,    NonFatal );
+      CompareVar( "OPT__OUTPUT_USER",        opt__output_user,             OPT__OUTPUT_USER,          NonFatal );
       if ( FormatVersion >= 1201 )
       CompareVar( "OPT__OUTPUT_BASEPS",      opt__output_baseps,           OPT__OUTPUT_BASEPS,        NonFatal );
       if ( OPT__OUTPUT_PART )
       CompareVar( "OPT__OUTPUT_BASE",        opt__output_base,             OPT__OUTPUT_BASE,          NonFatal );
 #     ifdef PARTICLE
-      if ( OPT__OUTPUT_TOTAL || OPT__OUTPUT_PART || OPT__OUTPUT_TEST_ERROR || OPT__OUTPUT_BASEPS || OPT__OUTPUT_PAR_TEXT ) {
+      if ( OPT__OUTPUT_TOTAL || OPT__OUTPUT_PART || OPT__OUTPUT_USER || OPT__OUTPUT_BASEPS || OPT__OUTPUT_PAR_TEXT ) {
 #     else
-      if ( OPT__OUTPUT_TOTAL || OPT__OUTPUT_PART || OPT__OUTPUT_TEST_ERROR || OPT__OUTPUT_BASEPS ) {
+      if ( OPT__OUTPUT_TOTAL || OPT__OUTPUT_PART || OPT__OUTPUT_USER || OPT__OUTPUT_BASEPS ) {
 #     endif
       CompareVar( "OPT__OUTPUT_MODE",        opt__output_mode,        (int)OPT__OUTPUT_MODE,          NonFatal );
       CompareVar( "OUTPUT_STEP",             output_step,                  OUTPUT_STEP,               NonFatal );
