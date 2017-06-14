@@ -197,7 +197,7 @@ CC_FILE     += Output_DumpData_Total.cpp  Output_DumpData.cpp  Output_DumpManual
                Output_DumpData_Total_HDF5.cpp
 
 CC_FILE     += Flag_Real.cpp  Refine.cpp   SiblingSearch.cpp  SiblingSearch_Base.cpp  FindFather.cpp \
-               Flag_UserCriteria.cpp  Flag_Check.cpp  Flag_Lohner.cpp  Flag_Region.cpp
+               Flag_User.cpp  Flag_Check.cpp  Flag_Lohner.cpp  Flag_Region.cpp
 
 CC_FILE     += Table_01.cpp  Table_02.cpp  Table_03.cpp  Table_04.cpp  Table_05.cpp  Table_06.cpp \
                Table_07.cpp

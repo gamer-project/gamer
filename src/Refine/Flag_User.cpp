@@ -5,10 +5,13 @@
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Flag_UserCriteria
+// Function    :  Flag_User
 // Description :  Check if the element (i,j,k) of the input data satisfies the user-defined flag criteria
 //
-// Note        :  Users can put their favorite flag criteria in this function
+// Note        :  1. Invoked by "Flag_Check" using the function pointer "Flag_User_Ptr"
+//                   --> The function pointer may be reset by various test problem initializers, in which case
+//                       this funtion will become useless
+//                2. Enabled by the runtime option "OPT__FLAG_USER"
 //
 // Parameter   :  i,j,k       : Indices of the target element in the patch ptr[ amr->FluSg[lv] ][lv][PID]
 //                lv          : Refinement level of the target patch
@@ -19,7 +22,7 @@
 // Return      :  "true"  if the flag criteria are satisfied
 //                "false" if the flag criteria are not satisfied
 //-------------------------------------------------------------------------------------------------------
-bool Flag_UserCriteria( const int i, const int j, const int k, const int lv, const int PID, const double Threshold )
+bool Flag_User( const int i, const int j, const int k, const int lv, const int PID, const double Threshold )
 {
 
    /*
@@ -67,5 +70,5 @@ bool Flag_UserCriteria( const int i, const int j, const int k, const int lv, con
 
    return Flag;
 
-} // FUNCTION : Flag_UserCriteria
+} // FUNCTION : Flag_User
 
