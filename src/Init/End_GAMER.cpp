@@ -1,12 +1,17 @@
 #include "Copyright.h"
 #include "GAMER.h"
 
+void (*End_User_Ptr)() = End_User;
+
 
 
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  End_GAMER
-// Description :  Put everything you want to do before the end of program right here
+// Description :  Put everything you want to do before terminating the program right here
+//
+// Note        :  1. The function pointer "End_User_Ptr" points to "End_User()" by default
+//                   but may be overwritten by various test problem initializers
 //-------------------------------------------------------------------------------------------------------
 void End_GAMER()
 {
@@ -20,7 +25,7 @@ void End_GAMER()
 
    End_MemFree();
 
-   End_TestProb();
+   if ( End_User_Ptr != NULL )   End_User_Ptr();
 
 #  ifdef GRAVITY
    End_FFTW();

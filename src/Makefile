@@ -176,7 +176,7 @@ CC_FILE     += CPU_FluidSolver.cpp  Flu_AdvanceDt.cpp  Flu_Prepare.cpp  Flu_Clos
                Flu_Restrict.cpp  Flu_AllocateFluxArray.cpp  Flu_BoundaryCondition_User.cpp  Flu_ResetByUser.cpp \
                Flu_CorrAfterAllSync.cpp
 
-CC_FILE     += End_GAMER.cpp  End_MemFree.cpp  End_MemFree_Fluid.cpp  End_StopManually.cpp  End_TestProb.cpp \
+CC_FILE     += End_GAMER.cpp  End_MemFree.cpp  End_MemFree_Fluid.cpp  End_StopManually.cpp  End_User.cpp \
                Init_BaseLevel.cpp  Init_GAMER.cpp  Init_Load_DumpTable.cpp \
                Init_Load_FlagCriteria.cpp  Init_Load_Parameter.cpp  Init_MemAllocate.cpp \
                Init_MemAllocate_Fluid.cpp  Init_Parallelization.cpp  Init_RecordBasePatch.cpp  Init_Refine.cpp \

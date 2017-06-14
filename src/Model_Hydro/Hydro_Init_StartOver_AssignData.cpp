@@ -6,6 +6,8 @@ static void Init_Function_User( real fluid[], const double x, const double y, co
                                 const int lv, double AuxArray[] );
 void (*Init_Function_User_Ptr)( real fluid[], const double x, const double y, const double z, const double Time,
                                 const int lv, double AuxArray[] ) = Init_Function_User;
+extern bool (*Flu_ResetByUser_Ptr)( real fluid[], const double x, const double y, const double z, const double Time,
+                                    const int lv, double AuxArray[] );
 
 
 
@@ -67,11 +69,17 @@ void Init_Function_User( real fluid[], const double x, const double y, const dou
 // Note        :  1. Work for the option "OPT__INIT == INIT_STARTOVER"
 //                2. The function pointer "Init_Function_User_Ptr" points to "Init_Function_User()" by default
 //                   but may be overwritten by various test problem initializers
+//                3. The function pointer "Flu_ResetByUser_Ptr" points to "Flu_ResetByUser_Func()" by default
+//                   but may be overwritten by various test problem initializers
 //
 // Parameter   :  lv : Target refinement level
 //-------------------------------------------------------------------------------------------------------
 void Hydro_Init_StartOver_AssignData( const int lv )
 {
+
+// check
+   if ( OPT__RESET_FLUID  &&  Flu_ResetByUser_Ptr == NULL )    Aux_Error( ERROR_INFO, "Flu_ResetByUser_Ptr == NULL !!\n" );
+
 
    const int    NSub     = INIT_SUBSAMPLING_NCELL;
    const double dh       = amr->dh[lv];
@@ -101,7 +109,7 @@ void Hydro_Init_StartOver_AssignData( const int lv )
             Init_Function_User_Ptr( fluid_sub, x, y, z, Time[lv], lv, NULL );
 
 //          modify the initial condition if required
-            if ( OPT__RESET_FLUID )    Flu_ResetByUser_Func( fluid_sub, x, y, z, Time[lv], lv, NULL );
+            if ( OPT__RESET_FLUID )    Flu_ResetByUser_Ptr( fluid_sub, x, y, z, Time[lv], lv, NULL );
 
             for (int v=0; v<NCOMP_TOTAL; v++)   fluid[v] += fluid_sub[v];
 
@@ -145,7 +153,7 @@ void Hydro_Init_StartOver_AssignData( const int lv )
          Init_Function_User_Ptr( fluid, x, y, z, Time[lv], lv, NULL );
 
 //       modify the initial condition if required
-         if ( OPT__RESET_FLUID )    Flu_ResetByUser_Func( fluid, x, y, z, Time[lv], lv, NULL );
+         if ( OPT__RESET_FLUID )    Flu_ResetByUser_Ptr( fluid, x, y, z, Time[lv], lv, NULL );
 
 //       check minimum density and pressure
          fluid[DENS] = FMAX( fluid[DENS], (real)MIN_DENS );
