@@ -8,8 +8,8 @@
 
 
 // common function prototypes for all test problems
-extern void (*Init_Function_Ptr)( real fluid[], const double x, const double y, const double z, const double Time );
-extern void (*Output_TestProbErr_Ptr)( const bool BaseOnly );
+extern void (*Init_Function_User_Ptr)( real fluid[], const double x, const double y, const double z, const double Time );
+extern void (*Output_User_Ptr)();
 static void Validate();
 static void SetParameter();
 static void SetGridIC( real *fluid, const double x, const double y, const double z, const double Time );

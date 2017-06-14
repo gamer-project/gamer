@@ -2,18 +2,22 @@
 #include "GAMER.h"
 
 static void Write_DumpRecord();
+void (*Output_User_Ptr)() = Output_User;
 
 
 
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Output_DumpData
-// Description :  Trigger the output functions "Output_DumpData_Total, Output_DumpData_Part, Output_TestProbErr,
+// Description :  Trigger the output functions "Output_DumpData_Total, Output_DumpData_Part, Output_User,
 //                Output_BasePowerSpectrum, Par_Output_TextFile"
 //
-// Parameter   :  Stage :  0 : start
-//                         1 : middle
-//                         2 : end
+// Note        :  1. The function pointer "Output_User_Ptr" points to "Output_User()" by default
+//                   but may be overwritten by various test problem initializers
+//
+// Parameter   :  Stage : 0 : beginning of the run
+//                        1 : during the evolution
+//                        2 : end of the run
 //-------------------------------------------------------------------------------------------------------
 void Output_DumpData( const int Stage )
 {
@@ -179,16 +183,16 @@ void Output_DumpData( const int Stage )
 //    before dumpting data --> for bitwise reproducibility
       if ( OPT__CORR_AFTER_ALL_SYNC == CORR_AFTER_SYNC_BEFORE_DUMP  &&  Stage != 0 )  Flu_CorrAfterAllSync();
 
-      if ( OPT__OUTPUT_TOTAL )      Output_DumpData_Total( FileName_Total );
-      if ( OPT__OUTPUT_PART  )      Output_DumpData_Part( OPT__OUTPUT_PART, OPT__OUTPUT_BASE, OUTPUT_PART_X,
-                                                          OUTPUT_PART_Y, OUTPUT_PART_Z, FileName_Part );
-      if ( OPT__OUTPUT_TEST_ERROR ) Output_TestProbErr( OPT__OUTPUT_BASE );
+      if ( OPT__OUTPUT_TOTAL )            Output_DumpData_Total( FileName_Total );
+      if ( OPT__OUTPUT_PART  )            Output_DumpData_Part( OPT__OUTPUT_PART, OPT__OUTPUT_BASE, OUTPUT_PART_X,
+                                                                OUTPUT_PART_Y, OUTPUT_PART_Z, FileName_Part );
+      if ( OPT__OUTPUT_TEST_ERROR  &&
+           Output_User_Ptr != NULL   )    Output_User_Ptr();
 #     ifdef GRAVITY
-      if ( OPT__OUTPUT_BASEPS )     Output_BasePowerSpectrum( FileName_PS );
+      if ( OPT__OUTPUT_BASEPS )           Output_BasePowerSpectrum( FileName_PS );
 #     endif
-
 #     ifdef PARTICLE
-      if ( OPT__OUTPUT_PAR_TEXT )   Par_Output_TextFile( FileName_Particle );
+      if ( OPT__OUTPUT_PAR_TEXT )         Par_Output_TextFile( FileName_Particle );
 #     endif
 
       Write_DumpRecord();
