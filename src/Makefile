@@ -168,9 +168,9 @@ CC_FILE     := Main.cpp  EvolveLevel.cpp  InvokeSolver.cpp  Prepare_PatchData.cp
 CC_FILE     += Aux_Check_Parameter.cpp  Aux_Check_Conservation.cpp  Aux_Check.cpp  Aux_Check_Finite.cpp \
                Aux_Check_FluxAllocate.cpp  Aux_Check_PatchAllocate.cpp  Aux_Check_ProperNesting.cpp \
                Aux_Check_Refinement.cpp  Aux_Check_Restrict.cpp  Aux_Error.cpp  Aux_GetCPUInfo.cpp \
-               Aux_GetMemInfo.cpp  Aux_Message.cpp  Aux_PatchCount.cpp  Aux_TakeNote.cpp  Aux_Timing.cpp \
-               Aux_Check_MemFree.cpp  Aux_RecordPerformance.cpp  Aux_CheckFileExist.cpp  Aux_Array.cpp \
-               Aux_RecordUser.cpp  Aux_RecordCorrUnphy.cpp  Aux_SwapPointer.cpp  Aux_Check_NormalizePassive.cpp
+               Aux_GetMemInfo.cpp  Aux_Message.cpp  Aux_Record_PatchCount.cpp  Aux_TakeNote.cpp  Aux_Timing.cpp \
+               Aux_Check_MemFree.cpp  Aux_Record_Performance.cpp  Aux_CheckFileExist.cpp  Aux_Array.cpp \
+               Aux_Record_User.cpp  Aux_Record_CorrUnphy.cpp  Aux_SwapPointer.cpp  Aux_Check_NormalizePassive.cpp
 
 CC_FILE     += CPU_FluidSolver.cpp  Flu_AdvanceDt.cpp  Flu_Prepare.cpp  Flu_Close.cpp  Flu_FixUp.cpp \
                Flu_Restrict.cpp  Flu_AllocateFluxArray.cpp  Flu_BoundaryCondition_User.cpp  Flu_ResetByUser.cpp \
@@ -307,7 +307,7 @@ CC_FILE     += Par_Init_ByFunction.cpp  Par_Output_TextFile.cpp  Par_FindHomePat
                Par_Aux_Check_Particle.cpp  Par_PassParticle2Father.cpp  Par_CollectParticle2OneLevel.cpp \
                Par_MassAssignment.cpp  Par_UpdateParticle.cpp  Par_GetTimeStep_VelAcc.cpp \
                Par_PassParticle2Sibling.cpp  Par_CountParticleInDescendant.cpp  Par_Aux_GetConservedQuantity.cpp \
-               Par_Aux_InitCheck.cpp  Par_Aux_ParticleCount.cpp  Par_PassParticle2Son_AllPatch.cpp \
+               Par_Aux_InitCheck.cpp  Par_Aux_Record_ParticleCount.cpp  Par_PassParticle2Son_AllPatch.cpp \
                Par_Synchronize.cpp  Par_PredictPos.cpp  Par_Init_ByFile.cpp
 
 vpath %.cu     Particle/GPU
@@ -343,7 +343,7 @@ CC_FILE     += MPI_ExchangeBoundaryFlag.cpp  MPI_ExchangeBufferPosition.cpp  MPI
 CC_FILE     += Output_BoundaryFlagList.cpp  Output_ExchangeDataPatchList.cpp  Output_ExchangeFluxPatchList.cpp \
                Output_ExchangePatchMap.cpp
 
-CC_FILE     += Aux_RecordBoundaryPatch.cpp
+CC_FILE     += Aux_Record_BoundaryPatch.cpp
 
 vpath %.cpp    Buffer  MPI
 endif # !SERIAL

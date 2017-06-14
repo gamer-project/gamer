@@ -7,13 +7,13 @@
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Par_Aux_ParticleCount
+// Function    :  Par_Aux_Record_ParticleCount
 // Description :  Count the number of active particles at each level in each rank
 //
 // Note        :  1. OPT__PARTICLE_COUNT = 1/2 --> count the number of particles every step/sub-step
 //                2. Output filename is "Record__ParticleCount"
 //-------------------------------------------------------------------------------------------------------
-void Par_Aux_ParticleCount()
+void Par_Aux_Record_ParticleCount()
 {
 
    const char FileName[] = "Record__ParticleCount";
@@ -126,7 +126,7 @@ void Par_Aux_ParticleCount()
    delete [] NPar_EachRank;
    delete [] Frac_EachRank;
 
-} // FUNCTION : Par_Aux_ParticleCount
+} // FUNCTION : Par_Aux_Record_ParticleCount
 
 
 

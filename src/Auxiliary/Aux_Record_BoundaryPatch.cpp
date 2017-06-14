@@ -7,14 +7,14 @@
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Aux_RecordBoundaryPatch
+// Function    :  Aux_Record_BoundaryPatch
 // Description :  Record the IDs and positions of the patches near the sub-domain boundaries in the 
 //                BounP_IDList and BounP_PosList, respectively
 //
 // Note        :  This function is only an auxiliary function, and it is kept only for verifying the results
 //                of the functions "RecordBoundaryPatch_Base" and "RecordBoundaryPatch" 
 //-------------------------------------------------------------------------------------------------------
-void Aux_RecordBoundaryPatch( const int lv, int *NList, int **IDList, int **PosList )
+void Aux_Record_BoundaryPatch( const int lv, int *NList, int **IDList, int **PosList )
 {
 
    const int NP0[3] = { NX0[0]/PATCH_SIZE, NX0[1]/PATCH_SIZE, NX0[2]/PATCH_SIZE }; 
@@ -286,7 +286,7 @@ void Aux_RecordBoundaryPatch( const int lv, int *NList, int **IDList, int **PosL
 // sort
    for (int s=0; s<26; s++)   Buf_SortBoundaryPatch( NList[s], IDList[s], PosList[s] );
 
-} // FUNCTION : Aux_RecordBoundaryPatch
+} // FUNCTION : Aux_Record_BoundaryPatch
 
 
 

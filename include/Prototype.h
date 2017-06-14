@@ -25,24 +25,24 @@ bool Aux_CheckFileExist( const char *FileName );
 void Aux_GetCPUInfo( const char *FileName );
 void Aux_GetMemInfo();
 void Aux_Message( FILE *Type, const char *Format, ... );
-void Aux_PatchCount();
 void Aux_TakeNote();
-void Aux_RecordTiming();
 void Aux_CreateTimer();
 void Aux_DeleteTimer();
 void Aux_ResetTimer();
 void Aux_AccumulatedTiming( const double TotalT, double InitT, double OtherT );
-void Aux_RecordPerformance( const double ElapsedTime );
-void Aux_RecordCorrUnphy();
-void Aux_RecordUser( );
+void Aux_Record_Timing();
+void Aux_Record_PatchCount();
+void Aux_Record_Performance( const double ElapsedTime );
+void Aux_Record_CorrUnphy();
+void Aux_Record_User( );
+#ifndef SERIAL
+void Aux_Record_BoundaryPatch( const int lv, int *NList, int **IDList, int **PosList );
+#endif
 void Aux_SwapPointer( void **Ptr1, void **Ptr2 );
 template <typename T> void Aux_AllocateArray2D( T** &Array, const int J, const int I );
 template <typename T> void Aux_AllocateArray3D( T*** &Array, const int K, const int J, const int I );
 template <typename T> void Aux_DeallocateArray2D( T** &Array );
 template <typename T> void Aux_DeallocateArray3D( T*** &Array );
-#ifndef SERIAL
-void Aux_RecordBoundaryPatch( const int lv, int *NList, int **IDList, int **PosList );
-#endif
 
 
 // Buffer
@@ -480,7 +480,7 @@ bool Par_WithinActiveRegion( const real x, const real y, const real z );
 int  Par_CountParticleInDescendant( const int FaLv, const int FaPID );
 void Par_Aux_GetConservedQuantity( double &Mass, double &MomX, double &MomY, double &MomZ, double &Ek, double &Ep );
 void Par_Aux_InitCheck();
-void Par_Aux_ParticleCount();
+void Par_Aux_Record_ParticleCount();
 void Par_CollectParticle2OneLevel( const int FaLv, const bool PredictPos, const double TargetTime,
                                    const bool SibBufPatch, const bool FaSibBufPatch, const bool JustCountNPar,
                                    const bool TimingSendPar );

@@ -5,12 +5,12 @@
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Aux_PatchCount
+// Function    :  Aux_Record_PatchCount
 // Description :  Count the total number of patches at each level in each rank
 //
 // Note        :  OPT__PATCH_COUNT = 1/2 --> count the number of patches every step/sub-step
 //-------------------------------------------------------------------------------------------------------
-void Aux_PatchCount()
+void Aux_Record_PatchCount()
 {
 
    const char FileName[] = "Record__PatchCount";
@@ -130,4 +130,4 @@ void Aux_PatchCount()
    delete [] NPatch_Gather;
    delete [] Coverage_Gather;
 
-} // FUNCTION : Aux_PatchCount
+} // FUNCTION : Aux_Record_PatchCount
