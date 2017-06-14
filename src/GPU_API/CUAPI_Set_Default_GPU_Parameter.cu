@@ -199,7 +199,7 @@ void CUAPI_Set_Default_GPU_Parameter( int &GPU_NStream, int &Flu_GPU_NPGroup, in
 
 // set the default GPU parameters
 // (1) GPU_NSTREAM
-   if ( GPU_NStream < 0 )
+   if ( GPU_NStream <= 0 )
    {
       if ( DeviceProp.deviceOverlap )
       {
@@ -241,10 +241,10 @@ void CUAPI_Set_Default_GPU_Parameter( int &GPU_NStream, int &Flu_GPU_NPGroup, in
 
       if ( MPI_Rank == 0 )  Aux_Message( stdout, "NOTE : parameter \"%s\" is set to the default value = %d\n",
                                          "GPU_NSTREAM", GPU_NSTREAM );
-   } // if ( GPU_NStream < 0 )
+   } // if ( GPU_NStream <= 0 )
 
 // (2) FLU_GPU_NPGROUP
-   if ( Flu_GPU_NPGroup < 0 )
+   if ( Flu_GPU_NPGroup <= 0 )
    {
 #     if   ( MODEL == HYDRO )
 #        if   ( GPU_ARCH == FERMI )
@@ -284,7 +284,7 @@ void CUAPI_Set_Default_GPU_Parameter( int &GPU_NStream, int &Flu_GPU_NPGroup, in
 
 // (3) POT_GPU_NPGROUP
 #  ifdef GRAVITY
-   if ( Pot_GPU_NPGroup < 0 )
+   if ( Pot_GPU_NPGroup <= 0 )
    {
 #     if   ( GPU_ARCH == FERMI )
       Pot_GPU_NPGroup = 1*GPU_NStream*DeviceProp.multiProcessorCount;

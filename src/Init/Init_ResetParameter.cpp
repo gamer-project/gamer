@@ -35,14 +35,23 @@ void Init_ResetParameter()
 
 
 // number of OpenMP threads
-#  ifndef OPENMP
+#  ifdef OPENMP
+   const int OMP_Max_NThread = omp_get_max_threads();
+
+   if ( OMP_NTHREAD <= 0 )
+   {
+      OMP_NTHREAD = MAX( OMP_Max_NThread/2, 1 );
+
+      PRINT_WARNING( OMP_NTHREAD, FORMAT_INT, "" );
+   }
+#  else
    if ( OMP_NTHREAD != 1 )
    {
       OMP_NTHREAD = 1;
 
       PRINT_WARNING( OMP_NTHREAD, FORMAT_INT, "since OPENMP is disabled" );
    }
-#  endif
+#  endif // #ifdef OPENMP ... else ...
 
 
 // fluid dt
