@@ -78,6 +78,7 @@ void Hydro_Init_StartOver_AssignData( const int lv )
 {
 
 // check
+   if ( Init_Function_User_Ptr == NULL )                       Aux_Error( ERROR_INFO, "Init_Function_User_Ptr == NULL !!\n" );
    if ( OPT__RESET_FLUID  &&  Flu_ResetByUser_Ptr == NULL )    Aux_Error( ERROR_INFO, "Flu_ResetByUser_Ptr == NULL !!\n" );
 
 
