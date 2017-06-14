@@ -2,24 +2,37 @@
 #include "GAMER.h"
 
 
+// ******************************************************************
+// add the new test problem function prototypes here 
+// ******************************************************************
+void Init_TestProb_BlastWave();
+
+
 
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Init_TestProb
-// Description :  Initialize parameters for the chosen test problem
+// Description :  Initialize the target test problem
 //
-// Note        :  Most test problems supported in GAMER should contain this file in the corresponding 
-//                test problem directories 
-//                (e.g., GAMER/test_problem/Model_ELBDM/Jeans_Instability/Init_TestProb.cpp). 
-//                Please copy the file to here directly.
+// Note        :  1. Use TESTPROB_ID to choose the target test problem
+//                2. All test problem IDs are defined in "include/Typedef.h"
 //
-// Parameter   :  None 
+// Parameter   :  None
+//
+// Return      :  None
 //-------------------------------------------------------------------------------------------------------
 void Init_TestProb()
-{  
+{
 
-// ===========================================================================================
-// please replace this file by the one with the same file name in the test problem directories
-// ===========================================================================================
+// ******************************************************************
+// add the new test problem IDs here
+// ******************************************************************
+   switch ( TESTPROB_ID )
+   {
+      case TESTPROB_NONE         :                                break;
+      case TESTPROB_BLAST_WAVE   :  Init_TestProb_BlastWave();    break;
+
+      default: Aux_Error( ERROR_INFO, "unsupported TESTPROB_ID (%d) !!\n", TESTPROB_ID );
+   } // switch( TESTPROB_ID )
 
 } // FUNCTION : Init_TestProb

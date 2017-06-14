@@ -29,7 +29,14 @@ typedef unsigned int       uint;
 typedef unsigned long int  ulong;
 
 
-// options of the program initialization
+// test problem IDs
+typedef int TestProbID_t;
+const TestProbID_t
+   TESTPROB_NONE       = 0,
+   TESTPROB_BLAST_WAVE = 1;
+
+
+// program initialization options
 typedef int OptInit_t;
 const OptInit_t
    INIT_STARTOVER = 1,
@@ -37,14 +44,14 @@ const OptInit_t
    INIT_UM        = 3;
 
 
-// options of the program restart
+// program restart options
 typedef int OptRestartH_t;
 const OptRestartH_t
    RESTART_HEADER_SKIP  = 0,
    RESTART_HEADER_CHECK = 1;
 
 
-// interpolation scheme
+// interpolation schemes
 typedef int IntScheme_t;
 const IntScheme_t
    INT_DEFAULT  = -1,
@@ -79,7 +86,7 @@ const WAF_Limiter_t
    WAF_MINBEE       = 4;
 
 
-// options of the data output format
+// data output formats
 typedef int OptOutputFormat_t;
 const OptOutputFormat_t
    OUTPUT_TOTAL_NONE     = 0,
@@ -87,7 +94,7 @@ const OptOutputFormat_t
    OUTPUT_FORMAT_CBINARY = 2;
 
 
-// options of the data output criteria
+// data output criteria
 typedef int OptOutputMode_t;
 const OptOutputMode_t
    OUTPUT_CONST_STEP = 1,
@@ -95,7 +102,7 @@ const OptOutputMode_t
    OUTPUT_USE_TABLE  = 3;
 
 
-// options of the output part
+// OPT__OUTPUT_PART options
 typedef int OptOutputPart_t;
 const OptOutputPart_t
    OUTPUT_PART_NONE = 0,
@@ -168,7 +175,7 @@ const GetBufMode_t
 #endif // #ifdef GRAVITY ... else ...
 
 
-// options of the fluid boundary condition
+// fluid boundary conditions
 typedef int OptFluBC_t;
 const OptFluBC_t
    BC_FLU_NONE       = 0,
@@ -178,7 +185,7 @@ const OptFluBC_t
    BC_FLU_USER       = 4;
 
 
-// options of the gravity boundary condition
+// the gravity boundary conditions
 typedef int OptPotBC_t;
 const OptPotBC_t
 #ifdef GRAVITY
@@ -190,7 +197,7 @@ const OptPotBC_t
 #endif
 
 
-// options of particles
+// particle schemes
 #ifdef PARTICLE
 typedef int ParInit_t;
 const ParInit_t
@@ -232,7 +239,7 @@ const ParOutputDens_t
 #endif // #ifdef PARTICLE
 
 
-// options of the gravity types (this type needs to be defined for the Fluid solver even when GRAVITY is off)
+// the gravity types (this type needs to be defined for the Fluid solver even when GRAVITY is off)
 typedef int OptGravityType_t;
 const OptGravityType_t
    GRAVITY_NONE     = 0,
@@ -241,7 +248,7 @@ const OptGravityType_t
    GRAVITY_BOTH     = 3;
 
 
-// options of the form of the Lohner's error estimator
+// forms of the Lohner's error estimator
 typedef int OptLohnerForm_t;
 const OptLohnerForm_t
    LOHNER_FLASH1    = 1,
@@ -250,7 +257,7 @@ const OptLohnerForm_t
    LOHNER_FORM_INV2 = 4;
 
 
-// options for OPT__1ST_FLUX_CORR and OPT__1ST_FLUX_CORR_SCHEME
+// OPT__1ST_FLUX_CORR and OPT__1ST_FLUX_CORR_SCHEME options
 #if ( MODEL == HYDRO || MODEL == MHD )
 typedef int Opt1stFluxCorr_t;
 const Opt1stFluxCorr_t
@@ -267,7 +274,7 @@ const OptRSolver1st_t
 #endif // #if ( MODEL == HYDRO || MODEL == MHD )
 
 
-// options for OPT__CORR_AFTER_ALL_SYNC
+// OPT__CORR_AFTER_ALL_SYNC options
 typedef int OptCorrAfterSync_t;
 const OptCorrAfterSync_t
    CORR_AFTER_SYNC_DEFAULT     = -1,

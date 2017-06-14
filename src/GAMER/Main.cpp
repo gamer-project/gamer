@@ -44,7 +44,7 @@ char                *PassiveFieldName_Grid[NCOMP_PASSIVE];
 double               BOX_SIZE, DT__FLUID, DT__FLUID_INIT, END_T, OUTPUT_DT;
 long                 END_STEP;
 int                  NX0_TOT[3], OUTPUT_STEP, REGRID_COUNT, FLU_GPU_NPGROUP, OMP_NTHREAD;
-int                  MPI_NRank, MPI_NRank_X[3], GPU_NSTREAM, FLAG_BUFFER_SIZE, MAX_LEVEL, TESTPROB_ID;
+int                  MPI_NRank, MPI_NRank_X[3], GPU_NSTREAM, FLAG_BUFFER_SIZE, MAX_LEVEL;
 
 IntScheme_t          OPT__FLU_INT_SCHEME, OPT__REF_FLU_INT_SCHEME;
 double               OUTPUT_PART_X, OUTPUT_PART_Y, OUTPUT_PART_Z;
@@ -59,6 +59,7 @@ bool                 OPT__OUTPUT_BASEPS, OPT__CK_REFINE, OPT__CK_PROPER_NESTING,
 bool                 OPT__CK_RESTRICT, OPT__CK_PATCH_ALLOCATE, OPT__FIXUP_FLUX, OPT__CK_FLUX_ALLOCATE, OPT__CK_NORMALIZE_PASSIVE;
 bool                 OPT__UM_START_DOWNGRADE, OPT__UM_START_REFINE, OPT__UM_FACTOR_5OVER3, OPT__TIMING_MPI;
 bool                 OPT__CK_CONSERVATION, OPT__RESET_FLUID, OPT__RECORD_USER, OPT__NORMALIZE_PASSIVE;
+TestProbID_t         TESTPROB_ID;
 OptInit_t            OPT__INIT;
 OptRestartH_t        OPT__RESTART_HEADER;
 OptOutputFormat_t    OPT__OUTPUT_TOTAL;
@@ -207,7 +208,7 @@ real  *d_MinDtInfo_Fluid_Array                                             = NUL
 char (*d_DE_Array_F_Out)[ PS2*PS2*PS2 ]                                    = NULL;
 #endif
 #if ( MODEL == HYDRO )
-#if ( FLU_SCHEME == MHM  ||  FLU_SCHEME == MHM_RP  ||  FLU_SCHEME == CTU ) 
+#if ( FLU_SCHEME == MHM  ||  FLU_SCHEME == MHM_RP  ||  FLU_SCHEME == CTU )
 real (*d_PriVar)     [NCOMP_TOTAL][ FLU_NXT*FLU_NXT*FLU_NXT ]              = NULL;
 real (*d_Slope_PPM_x)[NCOMP_TOTAL][ N_SLOPE_PPM*N_SLOPE_PPM*N_SLOPE_PPM ]  = NULL;
 real (*d_Slope_PPM_y)[NCOMP_TOTAL][ N_SLOPE_PPM*N_SLOPE_PPM*N_SLOPE_PPM ]  = NULL;
