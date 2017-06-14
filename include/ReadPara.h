@@ -171,7 +171,7 @@ struct ReadPara_t
    {
 
       if ( !Aux_CheckFileExist(FileName) )
-         Aux_Error( ERROR_INFO, "runtime parameter table \"%s\" does not exist !!\n", FileName );
+         Aux_Error( ERROR_INFO, "runtime parameter file \"%s\" does not exist !!\n", FileName );
 
 
       char LoadKey[MAX_STRING], LoadValue[MAX_STRING];
