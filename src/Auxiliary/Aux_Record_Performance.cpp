@@ -5,7 +5,7 @@
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Aux_RecordPerformance
+// Function    :  Aux_Record_Performance
 // Description :  Record the code performance
 //
 // Note        :  1. The code performance is defined as "total number of cell updates per second"
@@ -17,7 +17,7 @@
 //
 // Parameter   :  ElapsedTime : Elapsed time of the current global step
 //-------------------------------------------------------------------------------------------------------
-void Aux_RecordPerformance( const double ElapsedTime )
+void Aux_Record_Performance( const double ElapsedTime )
 {
 
    const char FileName[] = "Record__Performance";
@@ -121,6 +121,6 @@ void Aux_RecordPerformance( const double ElapsedTime )
 
    } // if ( MPI_Rank == 0 )
 
-} // FUNCTION : Aux_RecordPerformance
+} // FUNCTION : Aux_Record_Performance
 
 

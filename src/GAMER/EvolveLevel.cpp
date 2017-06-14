@@ -434,9 +434,9 @@ void EvolveLevel( const int lv, const double dTime )
 
          if ( OPT__VERBOSE  &&  MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );
 
-         if ( OPT__PATCH_COUNT == 2 )  Aux_PatchCount();
+         if ( OPT__PATCH_COUNT == 2 )  Aux_Record_PatchCount();
 #        ifdef PARTICLE
-         if ( OPT__PARTICLE_COUNT == 2 )  Par_Aux_ParticleCount();
+         if ( OPT__PARTICLE_COUNT == 2 )  Par_Aux_Record_ParticleCount();
 #        endif
 
       } // if ( lv != TOP_LEVEL  &&  AdvanceCounter[lv] % REGRID_COUNT == 0 )

@@ -18,6 +18,7 @@ extern void (*Init_Function_User_Ptr)( real fluid[], const double x, const doubl
 extern void (*Output_User_Ptr)();
 extern bool (*Flag_User_Ptr)( const int i, const int j, const int k, const int lv, const int PID, const double Threshold );
 extern void (*Mis_GetTimeStep_User_Ptr)( double &dt, double &dTime, const double dt_dTime );
+extern void (*Aux_Record_User_Ptr)();
 
 
 // handy constants for loading the runtime parameters

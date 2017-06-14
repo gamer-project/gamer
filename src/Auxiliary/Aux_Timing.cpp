@@ -200,12 +200,12 @@ void Aux_ResetTimer()
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Aux_RecordTiming
+// Function    :  Aux_Record_Timing
 // Description :  Record the timing results (in second)
 //
 // Note        :  The option "TIMING_SOLVER" record the MAXIMUM values of all ranks
 //-------------------------------------------------------------------------------------------------------
-void Aux_RecordTiming()
+void Aux_Record_Timing()
 {
 
    const char FileName[] = "Record__Timing";
@@ -356,7 +356,7 @@ void Aux_RecordTiming()
       fclose( File );
    }
 
-} // FUNCTION : Aux_RecordTiming
+} // FUNCTION : Aux_Record_Timing
 
 
 
@@ -1106,11 +1106,11 @@ void Timing__Solver( const char FileName[] )
 // Function    :  Aux_AccumulatedTiming
 // Description :  Record the accumulated timing results (in second)
 //
-// Note        :  The timing results are accumulated in the function "Aux_RecordTiming"
+// Note        :  The timing results are accumulated in the function "Aux_Record_Timing"
 //
 // Parameter   :  TotalT   : Total simulation time
 //                InitT    : Initialization time
-//                OtherT   : Elapsed time in all other parts (Aux_RecordPerformance, Aux_RecordTiming, Aux_ResetTimer)
+//                OtherT   : Elapsed time in all other parts (Aux_Record_Performance, Aux_Record_Timing, Aux_ResetTimer)
 //-------------------------------------------------------------------------------------------------------
 void Aux_AccumulatedTiming( const double TotalT, double InitT, double OtherT )
 {

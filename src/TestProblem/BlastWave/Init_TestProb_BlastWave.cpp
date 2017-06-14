@@ -209,6 +209,7 @@ void Init_TestProb_BlastWave()
    Output_User_Ptr          = NULL;
    Flag_User_Ptr            = NULL;
    Mis_GetTimeStep_User_Ptr = NULL;
+   Aux_Record_User_Ptr      = NULL;
 
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", __FUNCTION__ );

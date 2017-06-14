@@ -281,6 +281,10 @@ Timer_t *Timer_Poi_PrePot_F[NLEVEL];
 #endif
 
 
+// this function pointer may be overwritten by various test problem initializers
+void (*Aux_Record_User_Ptr)() = Aux_Record_User;
+
+
 
 
 //-------------------------------------------------------------------------------------------------------
@@ -311,11 +315,12 @@ int main( int argc, char *argv[] )
 
    Output_DumpData( 0 );
 
-   if ( OPT__PATCH_COUNT > 0 )      Aux_PatchCount();
-   if ( OPT__RECORD_MEMORY )        Aux_GetMemInfo();
-   if ( OPT__RECORD_USER )          Aux_RecordUser();
+   if ( OPT__PATCH_COUNT > 0 )            Aux_Record_PatchCount();
+   if ( OPT__RECORD_MEMORY )              Aux_GetMemInfo();
+   if ( OPT__RECORD_USER  &&
+        Aux_Record_User_Ptr != NULL )     Aux_Record_User_Ptr();
 #  ifdef PARTICLE
-   if ( OPT__PARTICLE_COUNT > 0 )   Par_Aux_ParticleCount();
+   if ( OPT__PARTICLE_COUNT > 0 )         Par_Aux_Record_ParticleCount();
 #  endif
 
    Aux_Check();
@@ -377,25 +382,25 @@ int main( int argc, char *argv[] )
 
 //    4. output data and execute auxiliary functions
 //    ---------------------------------------------------------------------------------------------------
-      TIMING_FUNC(   Output_DumpData( 1 ),       Timer_Main[3],   false   );
+      TIMING_FUNC(   Output_DumpData( 1 ),            Timer_Main[3],   false   );
 
       if ( OPT__PATCH_COUNT == 1 )
-      TIMING_FUNC(   Aux_PatchCount(),           Timer_Main[4],   false   );
+      TIMING_FUNC(   Aux_Record_PatchCount(),         Timer_Main[4],   false   );
 
       if ( OPT__RECORD_MEMORY )
-      TIMING_FUNC(   Aux_GetMemInfo(),           Timer_Main[4],   false   );
+      TIMING_FUNC(   Aux_GetMemInfo(),                Timer_Main[4],   false   );
 
-      if ( OPT__RECORD_USER     )
-      TIMING_FUNC(   Aux_RecordUser(),           Timer_Main[4],   false   );
+      if ( OPT__RECORD_USER  &&  Aux_Record_User_Ptr != NULL )
+      TIMING_FUNC(   Aux_Record_User_Ptr(),           Timer_Main[4],   false   );
 
-      TIMING_FUNC(   Aux_RecordCorrUnphy(),      Timer_Main[4],   false   );
+      TIMING_FUNC(   Aux_Record_CorrUnphy(),          Timer_Main[4],   false   );
 
 #     ifdef PARTICLE
       if ( OPT__PARTICLE_COUNT == 1 )
-      TIMING_FUNC(   Par_Aux_ParticleCount(),    Timer_Main[4],   false   );
+      TIMING_FUNC(   Par_Aux_Record_ParticleCount(),  Timer_Main[4],   false   );
 #     endif
 
-      TIMING_FUNC(   Aux_Check(),                Timer_Main[4],   false   );
+      TIMING_FUNC(   Aux_Check(),                     Timer_Main[4],   false   );
 //    ---------------------------------------------------------------------------------------------------
 
 
@@ -443,10 +448,10 @@ int main( int argc, char *argv[] )
 #        endif
          LB_Init_LoadBalance( Redistribute_Yes, ParWeight, ResetLB_Yes );
 
-         if ( OPT__PATCH_COUNT > 0 )         Aux_PatchCount();
+         if ( OPT__PATCH_COUNT > 0 )         Aux_Record_PatchCount();
 
 #        ifdef PARTICLE
-         if ( OPT__PARTICLE_COUNT > 0 )      Par_Aux_ParticleCount();
+         if ( OPT__PARTICLE_COUNT > 0 )      Par_Aux_Record_ParticleCount();
 #        endif
       } // if ( LB_EstimateLoadImbalance() > amr->LB->WLI_Max )
 
@@ -466,9 +471,9 @@ int main( int argc, char *argv[] )
       Timer_Other.Start();
 
       if ( OPT__RECORD_PERFORMANCE )
-      Aux_RecordPerformance( Timer_Main[0]->GetValue(0) );
+      Aux_Record_Performance( Timer_Main[0]->GetValue(0) );
 
-      Aux_RecordTiming();
+      Aux_Record_Timing();
 
       Aux_ResetTimer();
 

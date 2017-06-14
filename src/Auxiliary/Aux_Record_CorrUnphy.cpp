@@ -5,7 +5,7 @@
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Aux_RecordCorrUnphy
+// Function    :  Aux_Record_CorrUnphy
 // Description :  Record the number of cells with unphysical results and are corrected by Flu_Close()->CorrectUnphysical()
 //
 // Note        :  1. These cells are corrected by either "OPT__1ST_FLUX_CORR" or "MIN_DENS/PRES"
@@ -13,7 +13,7 @@
 //                3. The total number of cell updates recorded here for individual time-step integration is
 //                    only approximate since it can change during one global time-step
 //-------------------------------------------------------------------------------------------------------
-void Aux_RecordCorrUnphy()
+void Aux_Record_CorrUnphy()
 {
 
    const char FileName[] = "Record__NCorrUnphy";
@@ -82,6 +82,6 @@ void Aux_RecordCorrUnphy()
 // reset the counter
    for (int lv=0; lv<NLEVEL; lv++)  NCorrUnphy[lv] = 0;
 
-} // FUNCTION : Aux_RecordCorrUnphy
+} // FUNCTION : Aux_Record_CorrUnphy
 
 
