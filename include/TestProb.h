@@ -3,16 +3,20 @@
 
 
 
-// common headers for all test problems
+// common headers
 #include "ReadPara.h"
 
 
-// common function prototypes for all test problems
-extern void (*Init_Function_User_Ptr)( real fluid[], const double x, const double y, const double z, const double Time );
-extern void (*Output_User_Ptr)();
+// common function prototypes
 static void Validate();
 static void SetParameter();
 static void SetGridIC( real *fluid, const double x, const double y, const double z, const double Time );
+
+
+// function pointers of various user-specified routines
+extern void (*Init_Function_User_Ptr)( real fluid[], const double x, const double y, const double z, const double Time );
+extern void (*Output_User_Ptr)();
+extern bool (*Flag_User_Ptr)( const int i, const int j, const int k, const int lv, const int PID, const double Threshold );
 
 
 // handy constants for loading the runtime parameters
