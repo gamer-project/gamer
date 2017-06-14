@@ -114,8 +114,6 @@ void Flu_BoundaryCondition_User( real *Array, const int NVar_Flu, const int Arra
                                  const int TFluVarIdxList[], const double Time, const double dh, const double *Corner,
                                  const int TVar );
 void Flu_ResetByUser( const int lv, const int FluSg, const double TTime );
-bool Flu_ResetByUser_Func( real fluid[], const double x, const double y, const double z, const double Time,
-                           const int lv, double AuxArray[] );
 void Flu_CorrAfterAllSync();
 #ifndef SERIAL
 void Flu_AllocateFluxArray_Buffer( const int lv );
@@ -140,7 +138,7 @@ void End_MemFree();
 void End_MemFree_Fluid();
 void End_MemFree_PassiveFieldName();
 void End_StopManually( int &Terminate_global );
-void End_TestProb();
+void End_User();
 void Init_BaseLevel();
 void Init_GAMER( int *argc, char ***argv );
 void Init_Load_DumpTable();

@@ -20,6 +20,9 @@ extern bool (*Flag_User_Ptr)( const int i, const int j, const int k, const int l
 extern void (*Mis_GetTimeStep_User_Ptr)( double &dt, double &dTime, const double dt_dTime );
 extern void (*Aux_Record_User_Ptr)();
 extern void (*BC_User_Ptr)( const double Time, const double x, const double y, const double z, real *BVal );
+extern bool (*Flu_ResetByUser_Ptr)( real fluid[], const double x, const double y, const double z, const double Time,
+                                    const int lv, double AuxArray[] );
+extern void (*End_User_Ptr)();
 
 
 // handy constants for loading the runtime parameters
