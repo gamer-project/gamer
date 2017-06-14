@@ -5,13 +5,15 @@
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Mis_GetTimestep_UserCriteria
-// Description :  Use user-defined criteria to estimate the evolution time-step and physical time interval
+// Function    :  Mis_GetTimeStep_User
+// Description :  User-defined criteria to estimate the evolution time-step and physical time interval
 //
 // Note        :  1. Physical coordinates : dTime == dt
 //                   Comoving coordinates : dTime == dt*(Hubble parameter)*(scale factor)^3 == delta(scale factor)
-//                2. Users can put their favorite time-step criteria in this function
-//                   --> Please turn on the option "OPT__DT_USER"
+//                2. Invoked by "Mis_GetTimeStep_Check" using the function pointer "Mis_GetTimeStep_User_Ptr"
+//                   --> The function pointer may be reset by various test problem initializers, in which case
+//                       this funtion will become useless
+//                3. Enabled by the runtime option "OPT__DT_USER"
 //
 // Parameter   :  dt       : Time interval to advance solution
 //                dTime    : Time interval to update physical time
@@ -19,10 +21,10 @@
 //
 // Return      :  dt, dTime
 //-------------------------------------------------------------------------------------------------------
-void Mis_GetTimeStep_UserCriteria( double &dt, double &dTime, const double dt_dTime )
+void Mis_GetTimeStep_User( double &dt, double &dTime, const double dt_dTime )
 {
 
-// put your favorite flag criteria here
+// put your favorite time-step criteria here
 // ##########################################################################################################
 
 // Example 1 : set upper limit for the time interval to advance solution (per sub-step)
@@ -49,5 +51,5 @@ void Mis_GetTimeStep_UserCriteria( double &dt, double &dTime, const double dt_dT
 
 // ##########################################################################################################
 
-} // FUNCTION : Mis_GetTimeStep_UserCriteria
+} // FUNCTION : Mis_GetTimeStep_User
 

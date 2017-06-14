@@ -205,9 +205,10 @@ void Init_TestProb_BlastWave()
 
 
 // set the function pointers of various problem-specific routines
-   Init_Function_User_Ptr = SetGridIC;
-   Output_User_Ptr        = NULL;
-   Flag_User_Ptr          = NULL;
+   Init_Function_User_Ptr   = SetGridIC;
+   Output_User_Ptr          = NULL;
+   Flag_User_Ptr            = NULL;
+   Mis_GetTimeStep_User_Ptr = NULL;
 
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", __FUNCTION__ );
