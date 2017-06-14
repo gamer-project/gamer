@@ -53,7 +53,8 @@ void Init_Load_Parameter()
    ReadPara->Add( "MPI_NRANK_X",                &MPI_NRank_X[0],                 -1,               NoMin_int,     NoMax_int      );
    ReadPara->Add( "MPI_NRANK_Y",                &MPI_NRank_X[1],                 -1,               NoMin_int,     NoMax_int      );
    ReadPara->Add( "MPI_NRANK_Z",                &MPI_NRank_X[2],                 -1,               NoMin_int,     NoMax_int      );
-   ReadPara->Add( "OMP_NTHREAD",                &OMP_NTHREAD,                     1,               1,             NoMax_int      );
+// do not check OMP_NTHREAD since it may be reset by Init_ResetDefaultParameter()
+   ReadPara->Add( "OMP_NTHREAD",                &OMP_NTHREAD,                    -1,               NoMin_int,     NoMax_int      );
 // do not check END_T and END_STEP since they may be reset by test problems or restart
    ReadPara->Add( "END_T",                      &END_T,                          -1.0,             NoMin_double,  NoMax_double   );
    ReadPara->Add( "END_STEP",                   &END_STEP,                       -1L,              NoMin_long,    NoMax_long     );
