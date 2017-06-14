@@ -12,9 +12,9 @@
 //                   Comoving coordinates : dTime == dt*(Hubble parameter)*(scale factor)^3 == delta(scale factor)
 //                2. Users can put their favorite time-step criteria in this function
 //                   --> Please turn on the option "OPT__DT_USER"
-// 
+//
 // Parameter   :  dt       : Time interval to advance solution
-//                dTime    : Time interval to update physical time 
+//                dTime    : Time interval to update physical time
 //                dt_dTime : dt/dTime (== 1.0 if COMOVING is off)
 //
 // Return      :  dt, dTime

@@ -661,7 +661,7 @@ void Output_DumpData_Total( const char *FileName )
       fwrite( &opt__ref_pot_int_scheme,   sizeof(int),                     1,             File );
       fwrite( &opt__output_total,         sizeof(int),                     1,             File );
       fwrite( &opt__output_part,          sizeof(int),                     1,             File );
-      fwrite( &OPT__OUTPUT_TEST_ERROR,    sizeof(bool),                    1,             File );
+      fwrite( &OPT__OUTPUT_USER,          sizeof(bool),                    1,             File );
       fwrite( &OPT__OUTPUT_BASE,          sizeof(bool),                    1,             File );
       fwrite( &OPT__OUTPUT_POT,           sizeof(bool),                    1,             File );
       fwrite( &opt__output_mode,          sizeof(int),                     1,             File );

@@ -149,7 +149,7 @@ void SetParameter()
 // Function    :  SetGridIC
 // Description :  Set the problem-specific initial condition on grids
 //
-// Note        :  1. This function will also be used to estimate the numerical errors when OPT__OUTPUT_TEST_ERROR is enabled
+// Note        :  1. This function may also be used to estimate the numerical errors when OPT__OUTPUT_USER is enabled
 //                   --> In this case, it should provide the analytical solution at the given "Time"
 //                2. This function will be invoked by multiple OpenMP threads when OPENMP is enabled
 //                   --> Please ensure that everything here is thread-safe

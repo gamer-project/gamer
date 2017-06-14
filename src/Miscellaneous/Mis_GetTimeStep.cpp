@@ -36,7 +36,7 @@ void Mis_GetTimeStep()
 #  else
    dt_dTime = 1.0;
 #  endif
-   
+
 
 
 // 1.1 CRITERION ONE : fluid solver condition
@@ -84,7 +84,7 @@ void Mis_GetTimeStep()
 
 
 
-// 1.3 CRITERION THREE : maximum allowed variation of the expansion factor 
+// 1.3 CRITERION THREE : maximum allowed variation of the expansion factor
 // =============================================================================================================
 #  ifdef COMOVING
    double dTime3, dt3;
@@ -99,10 +99,10 @@ void Mis_GetTimeStep()
 // =============================================================================================================
 // DumpByTime : true --> dump data according to the physical time
 #  ifdef PARTICLE
-   const bool DumpData   = ( OPT__OUTPUT_TOTAL || OPT__OUTPUT_PART || OPT__OUTPUT_TEST_ERROR || OPT__OUTPUT_BASEPS || 
+   const bool DumpData   = ( OPT__OUTPUT_TOTAL || OPT__OUTPUT_PART || OPT__OUTPUT_USER || OPT__OUTPUT_BASEPS ||
                              OPT__OUTPUT_PAR_TEXT );
 #  else
-   const bool DumpData   = ( OPT__OUTPUT_TOTAL || OPT__OUTPUT_PART || OPT__OUTPUT_TEST_ERROR || OPT__OUTPUT_BASEPS );
+   const bool DumpData   = ( OPT__OUTPUT_TOTAL || OPT__OUTPUT_PART || OPT__OUTPUT_USER || OPT__OUTPUT_BASEPS );
 #  endif
    const bool DumpByTime = (  DumpData  &&  ( OPT__OUTPUT_MODE == OUTPUT_CONST_DT || OPT__OUTPUT_MODE == OUTPUT_USE_TABLE )  )
                            ? true : false;
@@ -115,7 +115,7 @@ void Mis_GetTimeStep()
       dTime4 = DumpTime - Time[0];
       dt4    = dTime4 * dt_dTime;
 
-      if ( dTime4 <= 0.0 )    
+      if ( dTime4 <= 0.0 )
       {
          Aux_Message( stderr, "ERROR : dTime4 (%20.14e) <= 0.0, something is wrong !!\n", dTime4 );
          Aux_Message( stderr, "        (DumpTime %20.14e, Time %20.14e)\n", DumpTime, Time[0] );
@@ -130,7 +130,7 @@ void Mis_GetTimeStep()
    const double dTime5 = END_T - Time[0];
    const double dt5    = dTime5 * dt_dTime;
 
-   if ( dTime5 <= 0.0 )    
+   if ( dTime5 <= 0.0 )
    {
       Aux_Message( stderr, "ERROR : dTime5 (%20.14e) <= 0.0, something is wrong !!\n", dTime5 );
       Aux_Message( stderr, "        (END_T %20.14e, Time %20.14e)\n", END_T, Time[0] );
@@ -143,7 +143,7 @@ void Mis_GetTimeStep()
 // =============================================================================================================
    double dTime6 = NULL_REAL;
    double dt6    = NULL_REAL;
-   
+
    if ( OPT__DT_USER )  Mis_GetTimeStep_UserCriteria( dt6, dTime6, dt_dTime );
 
 
@@ -172,7 +172,7 @@ void Mis_GetTimeStep()
 #  endif // #ifdef PARTICLE
 
 
-// 2. get the minimum time-step from all criteria 
+// 2. get the minimum time-step from all criteria
 // =============================================================================================================
    dTime_Base= dTime1;
 
@@ -223,7 +223,7 @@ void Mis_GetTimeStep()
 
 #     if   ( MODEL == HYDRO )
       fprintf( File, "CFL Info  : Rho = %12.6e, Vx = %13.6e, Vy = %13.6e, Vz = %13.6e, Cs = %12.6e\n",
-               MinDtVar_Fluid[0], MinDtVar_Fluid[1], MinDtVar_Fluid[2], MinDtVar_Fluid[3], MinDtVar_Fluid[4] ); 
+               MinDtVar_Fluid[0], MinDtVar_Fluid[1], MinDtVar_Fluid[2], MinDtVar_Fluid[3], MinDtVar_Fluid[4] );
 #     elif ( MODEL == ELBDM )
 #     ifdef GRAVITY
       if ( ELBDM_PhaseDt )
@@ -243,11 +243,11 @@ void Mis_GetTimeStep()
 
 #     ifdef GRAVITY
 #     if   ( MODEL == HYDRO  ||  MODEL == MHD )
-      fprintf( File, "Gravity   : dt = %12.6e, dTime = %12.6e, lv = %2d, MaxAcc = %13.6e\n", 
+      fprintf( File, "Gravity   : dt = %12.6e, dTime = %12.6e, lv = %2d, MaxAcc = %13.6e\n",
                dt2, dTime2, MinDtLv_Gravity, MinDtVar_Gravity );
 
 #     elif ( MODEL == ELBDM )
-      fprintf( File, "Gravity   : dt = %12.6e, dTime = %12.6e, lv = %2d, Max(PotG) = %13.6e", 
+      fprintf( File, "Gravity   : dt = %12.6e, dTime = %12.6e, lv = %2d, Max(PotG) = %13.6e",
                dt2, dTime2, MinDtLv_Gravity, MinDtVar_Gravity[0] );
 #     ifdef QUARTIC_SELF_INTERACTION
       fprintf( File, ", Max(PotS) = %13.6e", MinDtVar_Gravity[1] );
@@ -268,11 +268,11 @@ void Mis_GetTimeStep()
 #     endif
 
 #     ifdef PARTICLE
-      fprintf( File, "Particle  : dt = %12.6e, dTime = %12.6e, lv = %2d, MaxVel = %13.6e\n", 
+      fprintf( File, "Particle  : dt = %12.6e, dTime = %12.6e, lv = %2d, MaxVel = %13.6e\n",
                dt8[0], dTime8[0], MinDtLv_ParVelAcc[0], MinDtVar_ParVelAcc[0] );
 
       if ( DT__PARACC > 0.0 )
-      fprintf( File, "            dt = %12.6e, dTime = %12.6e, lv = %2d, MaxAcc = %13.6e\n", 
+      fprintf( File, "            dt = %12.6e, dTime = %12.6e, lv = %2d, MaxAcc = %13.6e\n",
                dt8[1], dTime8[1], MinDtLv_ParVelAcc[1], MinDtVar_ParVelAcc[1] );
 #     endif
 
