@@ -377,6 +377,14 @@ vpath %.cpp    YT
 endif # "SUPPORT_LIBYT"
 
 
+# test problem source files
+# --> note that here we simply compile all .cpp files under TestProblem/*/
+# ------------------------------------------------------------------------------------
+CC_FILE     += $(notdir $(wildcard TestProblem/*/*.cpp))
+
+VPATH := $(dir $(wildcard TestProblem/*/))
+
+
 
 # rules and targets
 #######################################################################################################

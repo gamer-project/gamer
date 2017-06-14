@@ -18,7 +18,7 @@ void (*Init_Function_Ptr)( real fluid[], const double x, const double y, const d
 //                2. This function will be invoked by multiple OpenMP threads
 //                   --> Must ensure everything here is thread-safe
 //                3. Even when DUAL_ENERGY is adopted, one does NOT need to set the dual-energy variable here
-//                   --> It will be set automatically in "Model_Init_StartOver_AssignData()"
+//                   --> It will be set automatically in "Hydro_Init_StartOver_AssignData()"
 //
 // Parameter   :  fluid    : Fluid field to be initialized
 //                x/y/z    : Target physical coordinates
