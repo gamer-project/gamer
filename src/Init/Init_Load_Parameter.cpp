@@ -17,35 +17,18 @@ void Init_Load_Parameter()
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ...\n", __FUNCTION__ );
 
 
-   const char   FileName[]    = "Input__Parameter";
-   ReadPara_t  *ReadPara      = new ReadPara_t;
-
-   const char   Useless_str   = '\0';
-   const bool   Useless_bool  = false;
-   const int    NoMax_int     = (int   )+__INT_MAX__;
-   const long   NoMax_long    = (long  )+__INT_MAX__;
-   const uint   NoMax_uint    = (uint  )+__INT_MAX__;
-   const ulong  NoMax_ulong   = (ulong )+__INT_MAX__;
-   const float  NoMax_float   = (float )+__FLT_MAX__;
-   const double NoMax_double  = (double)+__FLT_MAX__;
-   const int    NoMin_int     = (int   )-__INT_MAX__;
-   const long   NoMin_long    = (long  )-__INT_MAX__;
-   const uint   NoMin_uint    = (uint  )0;
-   const ulong  NoMin_ulong   = (ulong )0;
-   const float  NoMin_float   = (float )-__FLT_MAX__;
-   const double NoMin_double  = (double)-__FLT_MAX__;
-   const float  NoZero_float  = (float )__FLT_MIN__;
-   const double NoZero_double = (double)__FLT_MIN__;
-
+   const char  FileName[] = "Input__Parameter";
+   ReadPara_t *ReadPara   = new ReadPara_t;
 
 // add parameters in the following format:
 // --> note that VARIABLE, DEFAULT, MIN, and MAX must have the same data type
+// --> some handy constants (e.g., NoMin_int, Eps_float, ...) are defined in "ReadPara.h"
 // ********************************************************************************************************************************
 // ReadPara->Add( "KEY_IN_THE_INPUT_TABLE",     &VARIABLE,                       DEFAULT,          MIN,           MAX            );
 // ********************************************************************************************************************************
 
 // simulation scale
-   ReadPara->Add( "BOX_SIZE",                   &BOX_SIZE,                       -1.0,             NoZero_double, NoMax_double   );
+   ReadPara->Add( "BOX_SIZE",                   &BOX_SIZE,                       -1.0,             Eps_double,    NoMax_double   );
    ReadPara->Add( "NX0_TOT_X",                  &NX0_TOT[0],                     -1,               PS2,           NoMax_int      );
    ReadPara->Add( "NX0_TOT_Y",                  &NX0_TOT[1],                     -1,               PS2,           NoMax_int      );
    ReadPara->Add( "NX0_TOT_Z",                  &NX0_TOT[2],                     -1,               PS2,           NoMax_int      );
@@ -105,9 +88,9 @@ void Init_Load_Parameter()
 
 // cosmology
 #  ifdef COMOVING
-   ReadPara->Add( "A_INIT",                     &A_INIT,                         -1.0,             NoZero_double, NoMax_double   );
+   ReadPara->Add( "A_INIT",                     &A_INIT,                         -1.0,             Eps_double,    NoMax_double   );
    ReadPara->Add( "OMEGA_M0",                   &OMEGA_M0,                       -1.0,             0.0,           1.0            );
-   ReadPara->Add( "HUBBLE0",                    &HUBBLE0,                        -1.0,             NoZero_double, 1.0            );
+   ReadPara->Add( "HUBBLE0",                    &HUBBLE0,                        -1.0,             Eps_double,    1.0            );
 #  endif
 
 
@@ -180,8 +163,8 @@ void Init_Load_Parameter()
 
 // fluid solvers in HYDRO and MHD
 #  if ( MODEL == HYDRO )
-   ReadPara->Add( "GAMMA",                      &GAMMA,                           5.0/3.0,         NoZero_double, NoMax_double   );
-   ReadPara->Add( "MOLECULAR_WEIGHT",           &MOLECULAR_WEIGHT,                0.6,             NoZero_double, NoMax_double   );
+   ReadPara->Add( "GAMMA",                      &GAMMA,                           5.0/3.0,         Eps_double,    NoMax_double   );
+   ReadPara->Add( "MOLECULAR_WEIGHT",           &MOLECULAR_WEIGHT,                0.6,             Eps_double,    NoMax_double   );
    ReadPara->Add( "MINMOD_COEFF",               &MINMOD_COEFF,                    2.0,             1.0,           2.0            );
    ReadPara->Add( "EP_COEFF",                   &EP_COEFF,                        1.25,            1.0,           NoMax_double   );
    ReadPara->Add( "OPT__LR_LIMITER",            &OPT__LR_LIMITER,                 VL_GMINMOD,      0,             5              );
@@ -199,7 +182,7 @@ void Init_Load_Parameter()
 
 // fluid solver in ELBDM
 #  if ( MODEL == ELBDM )
-   ReadPara->Add( "ELBDM_MASS",                 &ELBDM_MASS,                     -1.0,             NoZero_double, NoMax_double   );
+   ReadPara->Add( "ELBDM_MASS",                 &ELBDM_MASS,                     -1.0,             Eps_double,    NoMax_double   );
 // do not check ELBDM_PLANCK_CONST since it may be reset by Init_Unit()
    ReadPara->Add( "ELBDM_PLANCK_CONST",         &ELBDM_PLANCK_CONST,             -1.0,             NoMin_double,  NoMax_double   );
 #  ifdef QUARTIC_SELF_INTERACTION

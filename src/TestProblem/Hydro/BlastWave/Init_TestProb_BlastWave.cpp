@@ -79,13 +79,15 @@ void SetParameter()
    ReadPara_t *ReadPara  = new ReadPara_t;
 
 // add parameters in the following format (some handy constants are defined in TestProb.h):
+// --> note that VARIABLE, DEFAULT, MIN, and MAX must have the same data type
+// --> some handy constants (e.g., NoMin_int, Eps_float, ...) are defined in "ReadPara.h"
 // ********************************************************************************************************************************
 // ReadPara->Add( "KEY_IN_THE_FILE",   &VARIABLE_ADDRESS,      DEFAULT,       MIN,              MAX               );
 // ********************************************************************************************************************************
-   ReadPara->Add( "Blast_Dens_Bg",     &Blast_Dens_Bg,         -1.0,          NoZero_double,    NoMax_double      );
-   ReadPara->Add( "Blast_Engy_Bg",     &Blast_Engy_Bg,         -1.0,          NoZero_double,    NoMax_double      );
-   ReadPara->Add( "Blast_Engy_Exp",    &Blast_Engy_Exp,        -1.0,          NoZero_double,    NoMax_double      );
-   ReadPara->Add( "Blast_Radius",      &Blast_Radius,          -1.0,          NoZero_double,    NoMax_double      );
+   ReadPara->Add( "Blast_Dens_Bg",     &Blast_Dens_Bg,         -1.0,          Eps_double,       NoMax_double      );
+   ReadPara->Add( "Blast_Engy_Bg",     &Blast_Engy_Bg,         -1.0,          Eps_double,       NoMax_double      );
+   ReadPara->Add( "Blast_Engy_Exp",    &Blast_Engy_Exp,        -1.0,          Eps_double,       NoMax_double      );
+   ReadPara->Add( "Blast_Radius",      &Blast_Radius,          -1.0,          Eps_double,       NoMax_double      );
    ReadPara->Add( "Blast_Center_X",    &Blast_Center[0],       -1.0,          NoMin_double,     amr->BoxSize[0]   );
    ReadPara->Add( "Blast_Center_Y",    &Blast_Center[1],       -1.0,          NoMin_double,     amr->BoxSize[1]   );
    ReadPara->Add( "Blast_Center_Z",    &Blast_Center[2],       -1.0,          NoMin_double,     amr->BoxSize[2]   );

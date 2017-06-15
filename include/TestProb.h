@@ -25,25 +25,6 @@ extern bool (*Flu_ResetByUser_Ptr)( real fluid[], const double x, const double y
 extern void (*End_User_Ptr)();
 
 
-// handy constants for loading the runtime parameters
-const char   Useless_str   = '\0';
-const bool   Useless_bool  = false;
-const int    NoMax_int     = (int   )+__INT_MAX__;
-const long   NoMax_long    = (long  )+__INT_MAX__;
-const uint   NoMax_uint    = (uint  )+__INT_MAX__;
-const ulong  NoMax_ulong   = (ulong )+__INT_MAX__;
-const float  NoMax_float   = (float )+__FLT_MAX__;
-const double NoMax_double  = (double)+__FLT_MAX__;
-const int    NoMin_int     = (int   )-__INT_MAX__;
-const long   NoMin_long    = (long  )-__INT_MAX__;
-const uint   NoMin_uint    = (uint  )0;
-const ulong  NoMin_ulong   = (ulong )0;
-const float  NoMin_float   = (float )-__FLT_MAX__;
-const double NoMin_double  = (double)-__FLT_MAX__;
-const float  NoZero_float  = (float )__FLT_MIN__;
-const double NoZero_double = (double)__FLT_MIN__;
-
-
 // helper macro for printing warning messages when resetting parameters
 #  define FORMAT_INT       %- 21d
 #  define FORMAT_LONG      %- 21ld
