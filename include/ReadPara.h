@@ -23,6 +23,25 @@ void Aux_Error( const char *File, const int Line, const char *Func, const char *
 #define GET_VOID( type, var )    ( *( (type*)(var) ) )   // helper function to converth the (void*) pointer
 
 
+// handy constants for setting the allowed range of the input parameters
+const char   Useless_str  = '\0';
+const bool   Useless_bool = false;
+const int    NoMax_int    = (int   )+__INT_MAX__;
+const long   NoMax_long   = (long  )+__INT_MAX__;
+const uint   NoMax_uint   = (uint  )+__INT_MAX__;
+const ulong  NoMax_ulong  = (ulong )+__INT_MAX__;
+const float  NoMax_float  = (float )+__FLT_MAX__;
+const double NoMax_double = (double)+__FLT_MAX__;
+const int    NoMin_int    = (int   )-__INT_MAX__;
+const long   NoMin_long   = (long  )-__INT_MAX__;
+const uint   NoMin_uint   = (uint  )0;
+const ulong  NoMin_ulong  = (ulong )0;
+const float  NoMin_float  = (float )-__FLT_MAX__;
+const double NoMin_double = (double)-__FLT_MAX__;
+const float  Eps_float    = (float )+__FLT_MIN__;
+const double Eps_double   = (double)+__FLT_MIN__;
+
+
 
 
 //-------------------------------------------------------------------------------------------------------
