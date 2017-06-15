@@ -188,7 +188,9 @@ void Init_Load_Parameter()
    ReadPara->Add( "OPT__WAF_LIMITER",           &OPT__WAF_LIMITER,                WAF_VANLEER,     0,             4              );
    ReadPara->Add( "OPT__1ST_FLUX_CORR",         &OPT__1ST_FLUX_CORR,              FIRST_FLUX_CORR_3D1D, 0,        2              );
    ReadPara->Add( "OPT__1ST_FLUX_CORR_SCHEME",  &OPT__1ST_FLUX_CORR_SCHEME,       RSOLVER_1ST_ROE, 0,             3              );
+#  ifdef DUAL_ENERGY
    ReadPara->Add( "DUAL_ENERGY_SWITCH",         &DUAL_ENERGY_SWITCH,              2.0e-2,          0.0,           NoMax_double   );
+#  endif
 
 #  elif ( MODEL == MHD )
 #  warning : WAIT MHD !!!
