@@ -7,6 +7,7 @@
 // ******************************************************************
 void Init_TestProb_BlastWave();
 void Init_TestProb_AcousticWave();
+void Init_TestProb_Bondi();
 
 
 
@@ -33,6 +34,7 @@ void Init_TestProb()
       case TESTPROB_NONE :                                           break;
       case TESTPROB_BLAST_WAVE :    Init_TestProb_BlastWave();       break;
       case TESTPROB_ACOUSTIC_WAVE : Init_TestProb_AcousticWave();    break;
+      case TESTPROB_BONDI :         Init_TestProb_Bondi();           break;
 
       default: Aux_Error( ERROR_INFO, "unsupported TESTPROB_ID (%d) !!\n", TESTPROB_ID );
    } // switch( TESTPROB_ID )

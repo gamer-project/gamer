@@ -23,6 +23,10 @@ extern void (*BC_User_Ptr)( const double Time, const double x, const double y, c
 extern bool (*Flu_ResetByUser_Ptr)( real fluid[], const double x, const double y, const double z, const double Time,
                                     const int lv, double AuxArray[] );
 extern void (*End_User_Ptr)();
+#ifdef GRAVITY
+extern void (*Init_ExternalAcc_Ptr)();
+extern void (*Init_ExternalPot_Ptr)();
+#endif
 
 
 // helper macro for printing warning messages when resetting parameters

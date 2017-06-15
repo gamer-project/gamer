@@ -11,12 +11,16 @@ double ExtAcc_AuxArray[EXT_ACC_NAUX_MAX];
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Init_ExternalAcc 
-// Description :  Initialize the external potential routines "CUPOT_ExternalAcc.cu / CPU_ExternalAcc.cpp"
+// Function    :  Init_ExternalAcc
+// Description :  Set the array "ExtAcc_AuxArray" used by the external acceration routines
+//                "CUPOT_ExternalAcc.cu / CPU_ExternalAcc.cpp"
 //
-// Note        :  Fill in the array "ExtAcc_AuxArray" here 
+// Note        :  1. Invoked by "Init_GAMER" using the function pointer "Init_ExternalAcc_Ptr"
+//                   --> The function pointer may be reset by various test problem initializers, in which case
+//                       this funtion will become useless
+//                2. Enabled by the runtime option "OPT__GRAVITY_TYPE == 2/3"
 //
-// Parameter   :  None 
+// Parameter   :  None
 //-------------------------------------------------------------------------------------------------------
 void Init_ExternalAcc()
 {
@@ -24,15 +28,25 @@ void Init_ExternalAcc()
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ...\n", __FUNCTION__ );
 
 
-   /*
-   const double M  = 1.2e1;
-   const double GM = NEWTON_G*M;
-
 // ExtAcc_AuxArray has the size of EXT_ACC_NAUX_MAX defined in CUPOT.h (default = 10)
+// --> by default we set
+//     ExtAcc_AuxArray[0] = x coordinate of the external acceleration center
+//     ExtAcc_AuxArray[1] = y ...
+//     ExtAcc_AuxArray[2] = z ..
+//     ExtAcc_AuxArray[3] = gravitational_constant*point_mass
+//     ExtAcc_AuxArray[4] = soften_length (<=0.0 --> disable)
+// --> to change the this default behavior, please edit "GPU_Gravity/CUPOT_ExternalAcc.cu"
+
+   /*
+   const double M   = 1.0;
+   const double GM  = NEWTON_G*M;
+   const double Eps = 0.0;
+
    ExtAcc_AuxArray[0] = 0.5*amr->BoxSize[0];
    ExtAcc_AuxArray[1] = 0.5*amr->BoxSize[1];
    ExtAcc_AuxArray[2] = 0.5*amr->BoxSize[2];
    ExtAcc_AuxArray[3] = GM;
+   ExtAcc_AuxArray[4] = Eps;
    */
 
 

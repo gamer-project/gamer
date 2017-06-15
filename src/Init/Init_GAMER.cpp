@@ -1,6 +1,11 @@
 #include "Copyright.h"
 #include "GAMER.h"
 
+#ifdef GRAVITY
+void (*Init_ExternalAcc_Ptr)() = Init_ExternalAcc;
+void (*Init_ExternalPot_Ptr)() = Init_ExternalPot;
+#endif
+
 
 
 
@@ -65,12 +70,14 @@ void Init_GAMER( int *argc, char ***argv )
 
 // initialize the external potential and acceleration parameters
 // --> must be called AFTER Init_TestProb() but BEFORE CUAPI_Set_Default_GPU_Parameter()
+// --> these function pointers point to "Init_ExternalAcc()" and "Init_ExternalPot()" by default
+//     but may be overwritten by various test problem initializers
 #  ifdef GRAVITY
-   if ( OPT__GRAVITY_TYPE == GRAVITY_EXTERNAL  ||  OPT__GRAVITY_TYPE == GRAVITY_BOTH )
-      Init_ExternalAcc();
+   if (  ( OPT__GRAVITY_TYPE == GRAVITY_EXTERNAL || OPT__GRAVITY_TYPE == GRAVITY_BOTH )  &&  Init_ExternalAcc_Ptr != NULL  )
+      Init_ExternalAcc_Ptr();
 
-   if ( OPT__EXTERNAL_POT )
-      Init_ExternalPot();
+   if ( OPT__EXTERNAL_POT  &&  Init_ExternalPot_Ptr != NULL )
+      Init_ExternalPot_Ptr();
 #  endif
 
 
