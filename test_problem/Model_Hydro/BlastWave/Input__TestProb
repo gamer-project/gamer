@@ -1,8 +1,0 @@
-# parameters for the HYDRO blast wave test
-1.0         Blast_Dens_Bg           # background mass density
-2.5e-5      Blast_Engy_Bg           # background energy density
-1.0         Blast_Engy_Exp          # total explosion energy
-5.0e-3      Blast_Radius            # explosion radius
--1.0        Blast_Center[x]         # explosion center x (<0 -> default = box center)
--1.0        Blast_Center[y]         # explosion center y (<0 -> default = box center)
--1.0        Blast_Center[z]         # explosion center z (<0 -> default = box center)
