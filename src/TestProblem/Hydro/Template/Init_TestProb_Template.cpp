@@ -81,7 +81,7 @@ void SetParameter()
 
    delete ReadPara;
 
-// set the default explosion center
+// set the default values
 
 
 // (2) set the problem-specific derived parameters

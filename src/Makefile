@@ -122,7 +122,7 @@ SIMU_OPTION += -DTIMING
 SIMU_OPTION += -DINTEL
 
 # double precision (not supported for the GPU + self-gravity mode in non-Fermi GPUs)
-#SIMU_OPTION += -DFLOAT8
+SIMU_OPTION += -DFLOAT8
 
 # serial mode (in which no MPI libraries are required)
 SIMU_OPTION += -DSERIAL
@@ -194,7 +194,7 @@ CC_FILE     += Mis_CompareRealValue.cpp  Mis_GetTotalPatchNumber.cpp  Mis_GetTim
 CC_FILE     += Output_DumpData_Total.cpp  Output_DumpData.cpp  Output_DumpManually.cpp  Output_PatchMap.cpp \
                Output_DumpData_Part.cpp  Output_FlagMap.cpp  Output_Patch.cpp  Output_PreparedPatch_Fluid.cpp \
                Output_PatchCorner.cpp  Output_Flux.cpp  Output_User.cpp  Output_BasePowerSpectrum.cpp \
-               Output_DumpData_Total_HDF5.cpp
+               Output_DumpData_Total_HDF5.cpp  Output_L1Error.cpp
 
 CC_FILE     += Flag_Real.cpp  Refine.cpp   SiblingSearch.cpp  SiblingSearch_Base.cpp  FindFather.cpp \
                Flag_User.cpp  Flag_Check.cpp  Flag_Lohner.cpp  Flag_Region.cpp
@@ -378,11 +378,11 @@ endif # "SUPPORT_LIBYT"
 
 
 # test problem source files
-# --> note that here we simply compile all .cpp files under TestProblem/*/
+# --> note that here we simply compile all .cpp files under TestProblem/*/*/
 # ------------------------------------------------------------------------------------
-CC_FILE     += $(notdir $(wildcard TestProblem/*/*.cpp))
+CC_FILE     += $(notdir $(wildcard TestProblem/*/*/*.cpp))
 
-VPATH := $(dir $(wildcard TestProblem/*/))
+VPATH := $(dir $(wildcard TestProblem/*/*/))
 
 
 

@@ -51,6 +51,9 @@ void Output_DumpData_Part( const OptOutputPart_t Part, const bool BaseOnly, cons
          ( z < 0.0  ||  z >= amr->BoxSize[2] )  )
       Aux_Error( ERROR_INFO, "incorrect z (out of range [0<=Z<%lf]) !!\n", amr->BoxSize[2] );
 
+   if ( Part == OUTPUT_DIAG  &&  ( amr->BoxSize[0] != amr->BoxSize[1] || amr->BoxSize[0] != amr->BoxSize[2] )  )
+      Aux_Error( ERROR_INFO, "simulation domain must be cubic for \"OUTPUT_DIAG\" !!\n" );
+
 
 // check the synchronization
    for (int lv=1; lv<NLEVEL; lv++)
