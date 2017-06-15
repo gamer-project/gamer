@@ -90,8 +90,8 @@ void SetParameter()
 
 // (3) reset other general-purpose parameters
 //     --> a helper macro PRINT_WARNING is defined in TestProb.h
-   const double End_T_Default    = __FLT_MAX__;
    const long   End_Step_Default = 10;
+   const double End_T_Default    = __FLT_MAX__;
 
    if ( END_STEP < 0 ) {
       END_STEP = End_Step_Default;
@@ -188,6 +188,10 @@ void Init_TestProb_Template()
    BC_User_Ptr              = NULL;
    Flu_ResetByUser_Ptr      = NULL;
    End_User_Ptr             = NULL;
+#  ifdef GRAVITY
+   Init_ExternalAcc_Ptr     = NULL;
+   Init_ExternalPot_Ptr     = NULL;
+#  endif
 
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", __FUNCTION__ );
