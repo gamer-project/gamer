@@ -3,7 +3,7 @@
 
 
 // ******************************************************************
-// add the new test problem function prototypes here 
+// add the new test problem function prototypes here
 // ******************************************************************
 void Init_TestProb_BlastWave();
 

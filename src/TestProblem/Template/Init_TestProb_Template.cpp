@@ -1,0 +1,194 @@
+#include "GAMER.h"
+#include "TestProb.h"
+
+
+
+// problem-specific global variables
+// =======================================================================================
+static double var_double;
+static int    var_int;
+// =======================================================================================
+
+
+
+//-------------------------------------------------------------------------------------------------------
+// Function    :  Validate
+// Description :  Validate the compilation flags and runtime parameters for this test problem
+//
+// Note        :  None
+//
+// Parameter   :  None
+//
+// Return      :  None
+//-------------------------------------------------------------------------------------------------------
+void Validate()
+{
+
+   if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Validating test problem %d ...\n", TESTPROB_ID );
+
+
+// examples
+/*
+#  if ( MODEL != HYDRO )
+   Aux_Error( ERROR_INFO, "MODEL != HYDRO !!\n" );
+#  endif
+
+   if ( amr->BoxSize[0] != amr->BoxSize[1]  ||  amr->BoxSize[0] != amr->BoxSize[2] )
+      Aux_Error( ERROR_INFO, "simulation domain must be CUBIC !!\n" );
+*/
+
+
+   if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Validating test problem %d ... done\n", TESTPROB_ID );
+
+} // FUNCTION : Validate
+
+
+
+//-------------------------------------------------------------------------------------------------------
+// Function    :  SetParameter
+// Description :  Load and set the problem-specific runtime parameters
+//
+// Note        :  1. Filename is set to "Input__TestProb" by default
+//                2. Major tasks in this function:
+//                   (1) load the problem-specific runtime parameters
+//                   (2) set the problem-specific derived parameters
+//                   (3) reset other general-purpose parameters if necessary
+//                   (4) make a note of the problem-specific parameters
+//
+// Parameter   :  None
+//
+// Return      :  None
+//-------------------------------------------------------------------------------------------------------
+void SetParameter()
+{
+
+   if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Setting runtime parameters ...\n" );
+
+
+// (1) load the problem-specific runtime parameters
+   const char FileName[] = "Input__TestProb";
+   ReadPara_t *ReadPara  = new ReadPara_t;
+
+// add parameters in the following format (some handy constants are defined in TestProb.h):
+// --> note that VARIABLE, DEFAULT, MIN, and MAX must have the same data type
+// ********************************************************************************************************************************
+// ReadPara->Add( "KEY_IN_THE_FILE",   &VARIABLE,              DEFAULT,       MIN,              MAX               );
+// ********************************************************************************************************************************
+   ReadPara->Add( "var_double",        &var_double,            -1.0,          NoMin_double,     NoMax_double      );
+   ReadPara->Add( "var_int",           &var_int,               -1,            NoMin_int,        NoMax_int         );
+
+   ReadPara->Read( FileName );
+
+   delete ReadPara;
+
+// set the default explosion center
+
+
+// (2) set the problem-specific derived parameters
+
+
+// (3) reset other general-purpose parameters
+//     --> a helper macro PRINT_WARNING is defined in TestProb.h
+   const double End_T_Default    = __FLT_MAX__;
+   const long   End_Step_Default = 10;
+
+   if ( END_STEP < 0 ) {
+      END_STEP = End_Step_Default;
+      PRINT_WARNING( "END_STEP", END_STEP, FORMAT_LONG );
+   }
+
+   if ( END_T < 0.0 ) {
+      END_T = End_T_Default;
+      PRINT_WARNING( "END_T", END_T, FORMAT_REAL );
+   }
+
+
+// (4) make a note
+   if ( MPI_Rank == 0 )
+   {
+      Aux_Message( stdout, "=============================================================================\n" );
+      Aux_Message( stdout, "  test problem ID           = %d\n",     TESTPROB_ID );
+      Aux_Message( stdout, "  var_double                = %13.7e\n", var_double );
+      Aux_Message( stdout, "  var_int                   = %d\n",     var_int );
+      Aux_Message( stdout, "=============================================================================\n" );
+   }
+
+
+   if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Setting runtime parameters ... done\n" );
+
+} // FUNCTION : SetParameter
+
+
+
+//-------------------------------------------------------------------------------------------------------
+// Function    :  SetGridIC
+// Description :  Set the problem-specific initial condition on grids
+//
+// Note        :  1. This function may also be used to estimate the numerical errors when OPT__OUTPUT_USER is enabled
+//                   --> In this case, it should provide the analytical solution at the given "Time"
+//                2. This function will be invoked by multiple OpenMP threads when OPENMP is enabled
+//                   --> Please ensure that everything here is thread-safe
+//                3. Even when DUAL_ENERGY is adopted for HYDRO, one does NOT need to set the dual-energy variable here
+//                   --> It will be calculated automatically
+//
+// Parameter   :  fluid : Fluid field to be initialized
+//                x/y/z : Physical coordinates
+//                Time  : Physical time
+//
+// Return      :  fluid
+//-------------------------------------------------------------------------------------------------------
+void SetGridIC( real *fluid, const double x, const double y, const double z, const double Time )
+{
+
+// make sure that all model-dependent variables are enclosed within the corresponding symbolic constant check
+// so that the code can be compiled successfully even when these variables are not defined
+#  if ( MODEL == HYDRO )
+   fluid[DENS] = 1.0;
+   fluid[MOMX] = 0.0;
+   fluid[MOMY] = 0.0;
+   fluid[MOMZ] = 0.0;
+   fluid[ENGY] = 1.0;
+#  endif
+
+} // FUNCTION : SetGridIC
+
+
+
+//-------------------------------------------------------------------------------------------------------
+// Function    :  Init_TestProb_Template
+// Description :  Test problem initializer
+//
+// Note        :  None
+//
+// Parameter   :  None
+//
+// Return      :  None
+//-------------------------------------------------------------------------------------------------------
+void Init_TestProb_Template()
+{
+
+   if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ...\n", __FUNCTION__ );
+
+
+// validate the compilation flags and runtime parameters
+   Validate();
+
+
+// set the problem-specific runtime parameters
+   SetParameter();
+
+
+// set the function pointers of various problem-specific routines
+   Init_Function_User_Ptr   = SetGridIC;
+   Output_User_Ptr          = NULL;
+   Flag_User_Ptr            = NULL;
+   Mis_GetTimeStep_User_Ptr = NULL;
+   Aux_Record_User_Ptr      = NULL;
+   BC_User_Ptr              = NULL;
+   Flu_ResetByUser_Ptr      = NULL;
+   End_User_Ptr             = NULL;
+
+
+   if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", __FUNCTION__ );
+
+} // FUNCTION : Init_TestProb_Template

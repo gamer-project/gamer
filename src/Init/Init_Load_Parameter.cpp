@@ -39,8 +39,9 @@ void Init_Load_Parameter()
 
 
 // add parameters in the following format:
+// --> note that VARIABLE, DEFAULT, MIN, and MAX must have the same data type
 // ********************************************************************************************************************************
-// ReadPara->Add( "KEY_IN_THE_INPUT_TABLE",     &VARIABLE_ADDRESS,               DEFAULT,          MIN,           MAX            );
+// ReadPara->Add( "KEY_IN_THE_INPUT_TABLE",     &VARIABLE,                       DEFAULT,          MIN,           MAX            );
 // ********************************************************************************************************************************
 
 // simulation scale
