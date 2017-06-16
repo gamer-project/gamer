@@ -80,7 +80,7 @@ bool Flu_ResetByUser_Func( real fluid[], const double x, const double y, const d
 // Function    :  Flu_ResetByUser_API
 // Description :  API for resetting the fluid array
 //
-// Note        :  1. Work for the option "OPT__RESET_FLUID == true"
+// Note        :  1. Enabled by the runtime option "OPT__RESET_FLUID"
 //                2. Invoked by either "Flu_AdvanceDt()" or "Gra_AdvanceDt()" using the function pointer
 //                   "Flu_ResetByUser_API_Ptr"
 //                   --> The function pointer may be reset by various test problem initializers, in which case
@@ -90,7 +90,6 @@ bool Flu_ResetByUser_Func( real fluid[], const double x, const double y, const d
 //                4. Currently does not work with "OPT__OVERLAP_MPI"
 //                5. The function pointer "Flu_ResetByUser_Func_Ptr" points to "Flu_ResetByUser_Func()" by default
 //                   but may be overwritten by various test problem initializers
-//                6. Enabled by the runtime option "OPT__RESET_FLUID"
 //
 // Parameter   :  lv    : Target refinement level
 //                FluSg : Target fluid sandglass

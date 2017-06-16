@@ -23,7 +23,7 @@ SIMU_OPTION += -DPOT_SCHEME=SOR
 
 # store GRA_GHOST_SIZE ghost-zone potential for each patch on each side (in patch->pot_ext)
 # --> currently only for improving accuracy for particles around the patch boundaries (by Par->ImproveAcc)
-SIMU_OPTION += -DSTORE_POT_GHOST
+#SIMU_OPTION += -DSTORE_POT_GHOST
 
 # use unsplitting method to couple gravity to the target model (for HYDRO and MHD only; ELBDM is not supported yet)
 # --> must be off if GRAVITY is off
@@ -59,7 +59,7 @@ SIMU_OPTION += -DLR_SCHEME=PPM
 SIMU_OPTION += -DRSOLVER=ROE
 
 # dual energy formalism: DE_ENPY/DE_EINT (evolve entropy or internal energy; DE_EINT is not supported yet) ##useless in RTVD/WAF##
-#SIMU_OPTION += -DDUAL_ENERGY=DE_ENPY
+SIMU_OPTION += -DDUAL_ENERGY=DE_ENPY
 
 # number of passively advected scalars (**excluding** entropy or internal energy even when DUAL_ENERGY is on)
 # --> for simulations without any passive scalar, please set this variable to 0 and do NOT comment it out
@@ -122,7 +122,7 @@ SIMU_OPTION += -DTIMING
 SIMU_OPTION += -DINTEL
 
 # double precision (not supported for the GPU + self-gravity mode in non-Fermi GPUs)
-SIMU_OPTION += -DFLOAT8
+#SIMU_OPTION += -DFLOAT8
 
 # serial mode (in which no MPI libraries are required)
 SIMU_OPTION += -DSERIAL
