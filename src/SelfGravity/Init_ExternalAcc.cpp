@@ -39,7 +39,7 @@ void Init_ExternalAcc()
 //     ExtAcc_AuxArray[0] = x coordinate of the external acceleration center
 //     ExtAcc_AuxArray[1] = y ...
 //     ExtAcc_AuxArray[2] = z ..
-//     ExtAcc_AuxArray[3] = gravitational_constant*point_mass
+//     ExtAcc_AuxArray[3] = gravitational_constant*point_source_mass
 //     ExtAcc_AuxArray[4] = soften_length (<=0.0 --> disable)
 // --> to change the this default behavior, please edit "GPU_Gravity/CUPOT_ExternalAcc.cu"
 

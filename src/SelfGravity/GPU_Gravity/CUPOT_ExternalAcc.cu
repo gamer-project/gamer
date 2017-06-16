@@ -30,7 +30,7 @@
 //                     UserArray[0] = x coordinate of the external acceleration center
 //                     UserArray[1] = y ...
 //                     UserArray[2] = z ..
-//                     UserArray[3] = gravitational_constant*point_mass
+//                     UserArray[3] = gravitational_constant*point_source_mass
 //                     UserArray[4] = soften_length (<=0.0 --> disable)
 //                   --> but one can easily modify this file to change the default behavior
 //                5. Two different soften length implementations are supported

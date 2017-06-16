@@ -39,7 +39,7 @@ void Init_TestProb()
       case TESTPROB_HYDRO_ACOUSTIC_WAVE : Init_TestProb_Hydro_AcousticWave();    break;
       case TESTPROB_HYDRO_BONDI :         Init_TestProb_Hydro_Bondi();           break;
 
-//    case TESTPROB_ELBDM_EXTPOT :        Init_TestProb_ELBDM_ExtPot();          break;
+      case TESTPROB_ELBDM_EXTPOT :        Init_TestProb_ELBDM_ExtPot();          break;
 
       default: Aux_Error( ERROR_INFO, "unsupported TESTPROB_ID (%d) !!\n", TESTPROB_ID );
    } // switch( TESTPROB_ID )

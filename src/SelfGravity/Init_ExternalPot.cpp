@@ -39,7 +39,7 @@ void Init_ExternalPot()
 //        ExtPot_AuxArray[0] = x coordinate of the external potential center
 //        ExtPot_AuxArray[1] = y ...
 //        ExtPot_AuxArray[2] = z ...
-//        ExtPot_AuxArray[3] = gravitational_constant*point_mass
+//        ExtPot_AuxArray[3] = gravitational_constant*point_source_mass
 // --> to change the this default behavior, please edit "GPU_Poisson/CUPOT_ExternalPot.cu"
 
    /*
