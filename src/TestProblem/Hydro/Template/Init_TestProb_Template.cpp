@@ -182,14 +182,14 @@ void Init_TestProb_Template()
 // set the function pointers of various problem-specific routines
    Init_Function_User_Ptr   = SetGridIC;
    Output_User_Ptr          = NULL;       // example: Hydro/AcousticWave/Init_TestProb_AcousticWave.cpp --> OutputError()
-   Flag_User_Ptr            = NULL;
+   Flag_User_Ptr            = NULL;       // example: Hydro/Bondi/Flag_Bondi.cpp
    Mis_GetTimeStep_User_Ptr = NULL;
-   Aux_Record_User_Ptr      = NULL;
+   Aux_Record_User_Ptr      = NULL;       // example: Hydro/Bondi/Record_Bondi.cpp
    BC_User_Ptr              = NULL;
    Flu_ResetByUser_Func_Ptr = NULL;
    End_User_Ptr             = NULL;
 #  ifdef GRAVITY
-   Init_ExternalAcc_Ptr     = NULL;
+   Init_ExternalAcc_Ptr     = NULL;       // example: Hydro/Bondi/Init_ExternalAcc_Bondi.cpp
    Init_ExternalPot_Ptr     = NULL;
 #  endif
 
