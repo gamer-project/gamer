@@ -1,7 +1,10 @@
 #include "Copyright.h"
 #include "GAMER.h"
 
+// declare as static so that other functions cannot invoke it directly and must use the function pointer
 static void BC_User( const double Time, const double x, const double y, const double z, real *BVal );
+
+// this function pointer may be overwritten by various test problem initializers
 void (*BC_User_Ptr)( const double Time, const double x, const double y, const double z, real *BVal ) = BC_User;
 
 

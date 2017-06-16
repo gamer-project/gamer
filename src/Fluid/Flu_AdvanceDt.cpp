@@ -2,6 +2,10 @@
 #include "GAMER.h"
 #include <climits>
 
+#ifndef GRAVITY
+extern void (*Flu_ResetByUser_API_Ptr)( const int lv, const int FluSg, const double TTime );
+#endif
+
 
 
 
@@ -33,7 +37,7 @@ void Flu_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, co
    if ( OPT__FIXUP_FLUX )  Buf_ResetBufferFlux( lv );
 
 #  ifndef GRAVITY
-   if ( OPT__RESET_FLUID ) Flu_ResetByUser( lv, SaveSg, TimeNew );
+   if ( OPT__RESET_FLUID  &&  Flu_ResetByUser_API_Ptr != NULL )   Flu_ResetByUser_API_Ptr( lv, SaveSg, TimeNew );
 #  endif
 
 } // FUNCTION : Flu_AdvanceDt

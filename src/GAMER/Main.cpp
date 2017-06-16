@@ -281,8 +281,8 @@ Timer_t *Timer_Poi_PrePot_F[NLEVEL];
 #endif
 
 
-// this function pointer may be overwritten by various test problem initializers
-void (*Aux_Record_User_Ptr)() = Aux_Record_User;
+// function pointer for recording the user-specified info
+extern void (*Aux_Record_User_Ptr)();
 
 
 

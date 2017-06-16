@@ -9,6 +9,8 @@ extern Timer_t *Timer_GetBuf     [NLEVEL][8];
 extern Timer_t *Timer_Par_Collect[NLEVEL];
 #endif
 
+extern void (*Flu_ResetByUser_API_Ptr)( const int lv, const int FluSg, const double TTime );
+
 
 
 
@@ -128,8 +130,8 @@ void Gra_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, co
          TIMING_FUNC(   InvokeSolver( GRAVITY_SOLVER, lv, TimeNew, TimeOld, dt, NULL_REAL, SaveSg_Flu, NULL_INT, false, false ),
                         Timer_Gra_Advance[lv],   false   );
 
-         if ( OPT__RESET_FLUID )
-         TIMING_FUNC(   Flu_ResetByUser( lv, SaveSg_Flu, TimeNew ),
+         if ( OPT__RESET_FLUID  &&  Flu_ResetByUser_API_Ptr != NULL )
+         TIMING_FUNC(   Flu_ResetByUser_API_Ptr( lv, SaveSg_Flu, TimeNew ),
                         Timer_Gra_Advance[lv],   false   );
 
          TIMING_FUNC(   Buf_GetBufferData( lv, SaveSg_Flu, NULL_INT, DATA_GENERAL, _TOTAL, Flu_ParaBuf, USELB_YES ),
@@ -147,18 +149,19 @@ void Gra_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, co
    else // lv > 0
    {
       if      (  Poisson  &&  !Gravity )
-      InvokeSolver( POISSON_SOLVER,             lv, TimeNew, TimeOld, NULL_REAL, Poi_Coeff, NULL_INT,   SaveSg_Pot,
-                    OverlapMPI, Overlap_Sync );
+         InvokeSolver( POISSON_SOLVER,             lv, TimeNew, TimeOld, NULL_REAL, Poi_Coeff, NULL_INT,   SaveSg_Pot,
+                       OverlapMPI, Overlap_Sync );
 
       else if ( !Poisson  &&   Gravity )
-      InvokeSolver( GRAVITY_SOLVER,             lv, TimeNew, TimeOld, dt,        NULL_REAL, SaveSg_Flu, NULL_INT,
-                    OverlapMPI, Overlap_Sync );
+         InvokeSolver( GRAVITY_SOLVER,             lv, TimeNew, TimeOld, dt,        NULL_REAL, SaveSg_Flu, NULL_INT,
+                       OverlapMPI, Overlap_Sync );
 
       else if (  Poisson  &&   Gravity )
-      InvokeSolver( POISSON_AND_GRAVITY_SOLVER, lv, TimeNew, TimeOld, dt,        Poi_Coeff, SaveSg_Flu, SaveSg_Pot,
-                    OverlapMPI, Overlap_Sync );
+         InvokeSolver( POISSON_AND_GRAVITY_SOLVER, lv, TimeNew, TimeOld, dt,        Poi_Coeff, SaveSg_Flu, SaveSg_Pot,
+                       OverlapMPI, Overlap_Sync );
 
-      if ( Gravity  &&  OPT__RESET_FLUID )   Flu_ResetByUser( lv, SaveSg_Flu, TimeNew );
+      if ( Gravity  &&  OPT__RESET_FLUID  &&  Flu_ResetByUser_API_Ptr != NULL )
+         Flu_ResetByUser_API_Ptr( lv, SaveSg_Flu, TimeNew );
    }
 
 

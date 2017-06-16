@@ -213,7 +213,7 @@ void Init_TestProb_BlastWave()
    Mis_GetTimeStep_User_Ptr = NULL;
    Aux_Record_User_Ptr      = NULL;
    BC_User_Ptr              = NULL;
-   Flu_ResetByUser_Ptr      = NULL;
+   Flu_ResetByUser_Func_Ptr = NULL;
    End_User_Ptr             = NULL;
 
 

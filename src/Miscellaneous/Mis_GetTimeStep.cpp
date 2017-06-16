@@ -1,7 +1,7 @@
 #include "Copyright.h"
 #include "GAMER.h"
 
-void (*Mis_GetTimeStep_User_Ptr)( double &dt, double &dTime, const double dt_dTime ) = Mis_GetTimeStep_User;
+extern void (*Mis_GetTimeStep_User_Ptr)( double &dt, double &dTime, const double dt_dTime );
 
 
 

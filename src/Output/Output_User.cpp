@@ -1,6 +1,12 @@
 #include "Copyright.h"
 #include "GAMER.h"
 
+// declare as static so that other functions cannot invoke it directly and must use the function pointer
+static void Output_User();
+
+// this function pointer may be overwritten by various test problem initializers
+void (*Output_User_Ptr)() = Output_User;
+
 
 
 

@@ -186,7 +186,7 @@ void Init_TestProb_Template()
    Mis_GetTimeStep_User_Ptr = NULL;
    Aux_Record_User_Ptr      = NULL;
    BC_User_Ptr              = NULL;
-   Flu_ResetByUser_Ptr      = NULL;
+   Flu_ResetByUser_Func_Ptr = NULL;
    End_User_Ptr             = NULL;
 #  ifdef GRAVITY
    Init_ExternalAcc_Ptr     = NULL;
