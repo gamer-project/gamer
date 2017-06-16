@@ -44,6 +44,8 @@ void Validate()
 
 
 
+// replace XXX by the target model (e.g., HYDRO/ELBDM)
+#if ( MODEL == XXX )
 //-------------------------------------------------------------------------------------------------------
 // Function    :  SetParameter
 // Description :  Load and set the problem-specific runtime parameters
@@ -141,17 +143,24 @@ void SetParameter()
 void SetGridIC( real *fluid, const double x, const double y, const double z, const double Time )
 {
 
-// make sure that all model-dependent variables are enclosed within the corresponding symbolic constant check
-// so that the code can be compiled successfully even when these variables are not defined
-#  if ( MODEL == HYDRO )
+   /*
+// HYDRO example
    fluid[DENS] = 1.0;
    fluid[MOMX] = 0.0;
    fluid[MOMY] = 0.0;
    fluid[MOMZ] = 0.0;
-   fluid[ENGY] = 1.0;
-#  endif
+   fluid[ENGY] = 1.0 + 0.5*( SQR(fluid[MOMX]) + SQR(fluid[MOMY]) + SQR(fluid[MOMZ]) ) / fluid[DENS];
+   */
+
+   /*
+// ELBDM example
+   fluid[REAL] = 1.0;
+   fluid[IMAG] = 2.0;
+   fluid[DENS] = SQR(fluid[REAL]) + SQR(fluid[IMAG])
+   */
 
 } // FUNCTION : SetGridIC
+#endif // #if ( MODEL == XXX )
 
 
 
@@ -175,6 +184,8 @@ void Init_TestProb_Template()
    Validate();
 
 
+// replace XXX by the target model (e.g., HYDRO/ELBDM)
+#  if ( MODEL == XXX )
 // set the problem-specific runtime parameters
    SetParameter();
 
@@ -192,6 +203,7 @@ void Init_TestProb_Template()
    Init_ExternalAcc_Ptr     = NULL;       // example: Hydro/Bondi/Init_ExternalAcc_Bondi.cpp
    Init_ExternalPot_Ptr     = NULL;
 #  endif
+#  endif // #if ( MODEL == XXX )
 
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", __FUNCTION__ );
