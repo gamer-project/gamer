@@ -2,8 +2,8 @@
 #include "GAMER.h"
 
 #ifdef GRAVITY
-void (*Init_ExternalAcc_Ptr)() = Init_ExternalAcc;
-void (*Init_ExternalPot_Ptr)() = Init_ExternalPot;
+extern void (*Init_ExternalAcc_Ptr)();
+extern void (*Init_ExternalPot_Ptr)();
 #endif
 
 

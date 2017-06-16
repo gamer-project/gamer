@@ -34,7 +34,6 @@ void Aux_Record_Timing();
 void Aux_Record_PatchCount();
 void Aux_Record_Performance( const double ElapsedTime );
 void Aux_Record_CorrUnphy();
-void Aux_Record_User( );
 #ifndef SERIAL
 void Aux_Record_BoundaryPatch( const int lv, int *NList, int **IDList, int **PosList );
 #endif
@@ -113,7 +112,6 @@ void Flu_BoundaryCondition_User( real *Array, const int NVar_Flu, const int Arra
                                  const int ArraySizeZ, const int Idx_Start[], const int Idx_End[],
                                  const int TFluVarIdxList[], const double Time, const double dh, const double *Corner,
                                  const int TVar );
-void Flu_ResetByUser( const int lv, const int FluSg, const double TTime );
 void Flu_CorrAfterAllSync();
 #ifndef SERIAL
 void Flu_AllocateFluxArray_Buffer( const int lv );
@@ -138,7 +136,6 @@ void End_MemFree();
 void End_MemFree_Fluid();
 void End_MemFree_PassiveFieldName();
 void End_StopManually( int &Terminate_global );
-void End_User();
 void Init_BaseLevel();
 void Init_GAMER( int *argc, char ***argv );
 void Init_Load_DumpTable();
@@ -185,7 +182,6 @@ template <typename T> int   Mis_Matching_int( const int N, const T Array[], cons
 template <typename T> bool  Mis_CompareRealValue( const T Input1, const T Input2, const char *comment, const bool Verbose );
 ulong  Mis_Idx3D2Idx1D( const int Size[], const int Idx3D[] );
 void   Mis_GetTimeStep();
-void   Mis_GetTimeStep_User( double &dt, double &dTime, const double dt_dTime );
 double Mis_dTime2dt( const double Time_In, const double dTime_In );
 void   Mis_GetTotalPatchNumber( const int lv );
 double Mis_Scale2PhySize( const int Scale );
@@ -222,7 +218,6 @@ void Output_PatchMap( const int lv, const int PID, const int TSg, const int Comp
 void Output_PreparedPatch_Fluid( const int TLv, const int TPID,
                                  const real h_Flu_Array[][FLU_NIN][FLU_NXT*FLU_NXT*FLU_NXT],
                                  const int NPG, const int *PID0_List, const int CLv, const char *comment );
-void Output_User();
 void Output_BasePowerSpectrum( const char *FileName );
 void Output_L1Error( void (*AnalFunc)( real *fluid, const double x, const double y, const double z, const double Time ),
                      const char *Prefix, const OptOutputPart_t Part, const double x, const double y, const double z );
@@ -241,7 +236,6 @@ bool Flag_Check( const int lv, const int PID, const int i, const int j, const in
                  const real Fluid[][PS1][PS1][PS1], const real Pot[][PS1][PS1], const real Pres[][PS1][PS1],
                  const real *Lohner_Var, const real *Lohner_Ave, const real *Lohner_Slope, const int Lohner_NVar,
                  const real ParCount[][PS1][PS1], const real ParDens[][PS1][PS1], const real JeansCoeff );
-bool Flag_User( const int i, const int j, const int k, const int lv, const int PID, const double Threshold );
 bool Flag_Region( const int i, const int j, const int k, const int lv, const int PID );
 bool Flag_Lohner( const int i, const int j, const int k, const OptLohnerForm_t Form, const real *Var1D, const real *Ave1D,
                   const real *Slope1D, const int NVar, const double Threshold, const double Filter, const double Soften );

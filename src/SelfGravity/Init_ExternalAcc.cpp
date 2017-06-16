@@ -7,6 +7,12 @@
 #include "CUPOT.h"
 double ExtAcc_AuxArray[EXT_ACC_NAUX_MAX];
 
+// declare as static so that other functions cannot invoke it directly and must use the function pointer
+static void Init_ExternalAcc();
+
+// this function pointer may be overwritten by various test problem initializers
+void (*Init_ExternalAcc_Ptr)() = Init_ExternalAcc;
+
 
 
 

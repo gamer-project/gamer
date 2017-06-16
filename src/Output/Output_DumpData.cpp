@@ -2,7 +2,7 @@
 #include "GAMER.h"
 
 static void Write_DumpRecord();
-void (*Output_User_Ptr)() = Output_User;
+extern void (*Output_User_Ptr)();
 
 
 

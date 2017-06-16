@@ -1,9 +1,14 @@
 #include "GAMER.h"
 
+// declare as static so that other functions cannot invoke them directly and must use the function pointers
 static bool Flu_ResetByUser_Func( real fluid[], const double x, const double y, const double z, const double Time,
                                   const int lv, double AuxArray[] );
-bool (*Flu_ResetByUser_Ptr)( real fluid[], const double x, const double y, const double z, const double Time,
-                             const int lv, double AuxArray[] ) = Flu_ResetByUser_Func;
+static void Flu_ResetByUser_API( const int lv, const int FluSg, const double TTime );
+
+// these function pointers may be overwritten by various test problem initializers
+bool (*Flu_ResetByUser_Func_Ptr)( real fluid[], const double x, const double y, const double z, const double Time,
+                                  const int lv, double AuxArray[] ) = Flu_ResetByUser_Func;
+void (*Flu_ResetByUser_API_Ptr)( const int lv, const int FluSg, const double TTime ) = Flu_ResetByUser_API;
 
 
 
@@ -12,16 +17,16 @@ bool (*Flu_ResetByUser_Ptr)( real fluid[], const double x, const double y, const
 // Function    :  Flu_ResetByUser_Func
 // Description :  Function to reset the fluid field
 //
-// Note        :  1. Invoked by "Flu_ResetByUser()" and "Model_Init_StartOver_AssignData()" using the
-//                   function pointer "Flu_ResetByUser_Ptr"
+// Note        :  1. Invoked by "Flu_ResetByUser_API()" and "Model_Init_StartOver_AssignData()" using the
+//                   function pointer "Flu_ResetByUser_Func_Ptr"
 //                   --> The function pointer may be reset by various test problem initializers, in which case
 //                       this funtion will become useless
 //                2. This function will be invoked when constructing the initial condition
 //                    (by calling "Model_Init_StartOver_AssignData()") and after each update
-//                    (by calling "Flu_ResetByUser()")
+//                    (by calling "Flu_ResetByUser_API()")
 //                3. Input "fluid" array stores the original values
 //                4. Even when DUAL_ENERGY is adopted, one does NOT need to set the dual-energy variable here
-//                   --> It will be set automatically in "Flu_ResetByUser()" and "Model_Init_StartOver_AssignData()"
+//                   --> It will be set automatically in "Flu_ResetByUser_API()" and "Model_Init_StartOver_AssignData()"
 //                5. Enabled by the runtime option "OPT__RESET_FLUID"
 //
 // Parameter   :  fluid    : Fluid array storing both the input (origial) and reset values
@@ -72,26 +77,38 @@ bool Flu_ResetByUser_Func( real fluid[], const double x, const double y, const d
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Flu_ResetByUser
-// Description :  Reset the fluid array
+// Function    :  Flu_ResetByUser_API
+// Description :  API for resetting the fluid array
 //
 // Note        :  1. Work for the option "OPT__RESET_FLUID == true"
-//                2. Invoked by either "Flu_AdvanceDt()" or "Gra_AdvanceDt()"
+//                2. Invoked by either "Flu_AdvanceDt()" or "Gra_AdvanceDt()" using the function pointer
+//                   "Flu_ResetByUser_API_Ptr"
+//                   --> The function pointer may be reset by various test problem initializers, in which case
+//                       this funtion will become useless
 //                3. Currently NOT applied to the input uniform array
 //                   --> Init_UM() does NOT call this function
 //                4. Currently does not work with "OPT__OVERLAP_MPI"
-//                5. The function pointer "Flu_ResetByUser_Ptr" points to "Flu_ResetByUser_Func()" by default
+//                5. The function pointer "Flu_ResetByUser_Func_Ptr" points to "Flu_ResetByUser_Func()" by default
 //                   but may be overwritten by various test problem initializers
+//                6. Enabled by the runtime option "OPT__RESET_FLUID"
 //
 // Parameter   :  lv    : Target refinement level
 //                FluSg : Target fluid sandglass
 //                TTime : Target physical time
 //-------------------------------------------------------------------------------------------------------
-void Flu_ResetByUser( const int lv, const int FluSg, const double TTime )
+void Flu_ResetByUser_API( const int lv, const int FluSg, const double TTime )
 {
 
 // check
-   if ( Flu_ResetByUser_Ptr == NULL )  Aux_Error( ERROR_INFO, "Flu_ResetByUser_Ptr == NULL !!\n" );
+   if ( Flu_ResetByUser_Func_Ptr == NULL )
+   {
+      OPT__RESET_FLUID = false;
+
+      if ( MPI_Rank == 0 )
+         Aux_Message( stderr, "WARNING : OPT__RESET_FLUID has been disabled since Flu_ResetByUser_Func_Ptr == NULL !!\n" );
+
+      return;
+   }
 
 
    const double dh       = amr->dh[lv];
@@ -119,7 +136,7 @@ void Flu_ResetByUser( const int lv, const int FluSg, const double TTime )
          for (int v=0; v<NCOMP_TOTAL; v++)   fluid[v] = amr->patch[FluSg][lv][PID]->fluid[v][k][j][i];
 
 //       reset this cell
-         Reset = Flu_ResetByUser_Ptr( fluid, x, y, z, TTime, lv, NULL );
+         Reset = Flu_ResetByUser_Func_Ptr( fluid, x, y, z, TTime, lv, NULL );
 
 //       operations necessary only when this cell has been reset
          if ( Reset )
@@ -153,4 +170,4 @@ void Flu_ResetByUser( const int lv, const int FluSg, const double TTime )
       }}} // i,j,k
    } // for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
 
-} // FUNCTION : Flu_ResetByUser
+} // FUNCTION : Flu_ResetByUser_API

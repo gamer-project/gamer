@@ -1,6 +1,12 @@
 #include "Copyright.h"
 #include "GAMER.h"
 
+// declare as static so that other functions cannot invoke it directly and must use the function pointer
+void Mis_GetTimeStep_User( double &dt, double &dTime, const double dt_dTime );
+
+// this function pointer may be overwritten by various test problem initializers
+void (*Mis_GetTimeStep_User_Ptr)( double &dt, double &dTime, const double dt_dTime ) = Mis_GetTimeStep_User;
+
 
 
 

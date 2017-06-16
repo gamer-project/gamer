@@ -1,7 +1,7 @@
 #include "Copyright.h"
 #include "GAMER.h"
 
-void (*End_User_Ptr)() = End_User;
+extern void (*End_User_Ptr)();
 
 
 
