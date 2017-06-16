@@ -5,9 +5,11 @@
 // ******************************************************************
 // add the new test problem function prototypes here
 // ******************************************************************
-void Init_TestProb_BlastWave();
-void Init_TestProb_AcousticWave();
-void Init_TestProb_Bondi();
+void Init_TestProb_Hydro_BlastWave();
+void Init_TestProb_Hydro_AcousticWave();
+void Init_TestProb_Hydro_Bondi();
+
+void Init_TestProb_ELBDM_ExtPot();
 
 
 
@@ -31,10 +33,13 @@ void Init_TestProb()
 // ******************************************************************
    switch ( TESTPROB_ID )
    {
-      case TESTPROB_NONE :                                           break;
-      case TESTPROB_BLAST_WAVE :    Init_TestProb_BlastWave();       break;
-      case TESTPROB_ACOUSTIC_WAVE : Init_TestProb_AcousticWave();    break;
-      case TESTPROB_BONDI :         Init_TestProb_Bondi();           break;
+      case TESTPROB_NONE :                                                       break;
+
+      case TESTPROB_HYDRO_BLAST_WAVE :    Init_TestProb_Hydro_BlastWave();       break;
+      case TESTPROB_HYDRO_ACOUSTIC_WAVE : Init_TestProb_Hydro_AcousticWave();    break;
+      case TESTPROB_HYDRO_BONDI :         Init_TestProb_Hydro_Bondi();           break;
+
+//    case TESTPROB_ELBDM_EXTPOT :        Init_TestProb_ELBDM_ExtPot();          break;
 
       default: Aux_Error( ERROR_INFO, "unsupported TESTPROB_ID (%d) !!\n", TESTPROB_ID );
    } // switch( TESTPROB_ID )

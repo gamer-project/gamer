@@ -5,11 +5,13 @@
 
 // problem-specific global variables
 // =======================================================================================
-static double Blast_Dens_Bg;       // background mass density
-static double Blast_Engy_Bg;       // background energy density
-static double Blast_Engy_Exp;      // total explosion energy
-static double Blast_Radius;        // explosion radius
-static double Blast_Center[3];     // explosion center
+static double Acoustic_RhoAmp;      // amplitude of the density perturbation (assuming background density = 1.0)
+static double Acoustic_Cs;          // sound speed
+static double Acoustic_v0;          // background velocity
+static double Acoustic_Sign;        // (+1/-1) --> (right/left-moving wave)
+static double Acoustic_Phase0;      // initial phase shift
+
+static double Acoustic_WaveLength;  // wavelength
 // =======================================================================================
 
 
@@ -29,13 +31,16 @@ void Validate()
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Validating test problem %d ...\n", TESTPROB_ID );
 
-
 #  if ( MODEL != HYDRO )
    Aux_Error( ERROR_INFO, "MODEL != HYDRO !!\n" );
 #  endif
 
 #  ifdef GRAVITY
    Aux_Error( ERROR_INFO, "GRAVITY must be disabled !!\n" );
+#  endif
+
+#  ifndef FLOAT8
+   Aux_Error( ERROR_INFO, "FLOAT8 must be enabled !!\n" );
 #  endif
 
 #  ifdef COMOVING
@@ -45,6 +50,12 @@ void Validate()
 #  ifdef PARTICLE
    Aux_Error( ERROR_INFO, "PARTICLE must be disabled !!\n" );
 #  endif
+
+   if ( amr->BoxSize[0] != amr->BoxSize[1]  ||  amr->BoxSize[0] != amr->BoxSize[2] )
+      Aux_Error( ERROR_INFO, "simulation domain must be cubic !!\n" );
+
+   if ( OPT__BC_FLU[0] != BC_FLU_PERIODIC )
+      Aux_Error( ERROR_INFO, "please set \"OPT__BC_FLU_* = 1\" (i.e., periodic BC) !!\n" );
 
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Validating test problem %d ... done\n", TESTPROB_ID );
@@ -83,31 +94,30 @@ void SetParameter()
 // --> note that VARIABLE, DEFAULT, MIN, and MAX must have the same data type
 // --> some handy constants (e.g., NoMin_int, Eps_float, ...) are defined in "ReadPara.h"
 // ********************************************************************************************************************************
-// ReadPara->Add( "KEY_IN_THE_FILE",   &VARIABLE_ADDRESS,      DEFAULT,       MIN,              MAX               );
+// ReadPara->Add( "KEY_IN_THE_FILE",   &VARIABLE,              DEFAULT,       MIN,              MAX               );
 // ********************************************************************************************************************************
-   ReadPara->Add( "Blast_Dens_Bg",     &Blast_Dens_Bg,         -1.0,          Eps_double,       NoMax_double      );
-   ReadPara->Add( "Blast_Engy_Bg",     &Blast_Engy_Bg,         -1.0,          Eps_double,       NoMax_double      );
-   ReadPara->Add( "Blast_Engy_Exp",    &Blast_Engy_Exp,        -1.0,          Eps_double,       NoMax_double      );
-   ReadPara->Add( "Blast_Radius",      &Blast_Radius,          -1.0,          Eps_double,       NoMax_double      );
-   ReadPara->Add( "Blast_Center_X",    &Blast_Center[0],       -1.0,          NoMin_double,     amr->BoxSize[0]   );
-   ReadPara->Add( "Blast_Center_Y",    &Blast_Center[1],       -1.0,          NoMin_double,     amr->BoxSize[1]   );
-   ReadPara->Add( "Blast_Center_Z",    &Blast_Center[2],       -1.0,          NoMin_double,     amr->BoxSize[2]   );
+   ReadPara->Add( "Acoustic_RhoAmp",   &Acoustic_RhoAmp,       -1.0,          Eps_double,       NoMax_double      );
+   ReadPara->Add( "Acoustic_Cs",       &Acoustic_Cs,           -1.0,          Eps_double,       NoMax_double      );
+   ReadPara->Add( "Acoustic_v0",       &Acoustic_v0,            0.0,          NoMin_double,     NoMax_double      );
+   ReadPara->Add( "Acoustic_Sign",     &Acoustic_Sign,          1.0,          NoMin_double,     NoMax_double      );
+   ReadPara->Add( "Acoustic_Phase0",   &Acoustic_Phase0,        0.0,          NoMin_double,     NoMax_double      );
 
    ReadPara->Read( FileName );
 
    delete ReadPara;
 
-// set the default explosion center
-   for (int d=0; d<3; d++)
-      if ( Blast_Center[d] < 0.0 )  Blast_Center[d] = 0.5*amr->BoxSize[d];
+// force Acoustic_Sign to be +1.0/-1.0
+   if ( Acoustic_Sign >= 0.0 )   Acoustic_Sign = +1.0;
+   else                          Acoustic_Sign = -1.0;
 
 
 // (2) set the problem-specific derived parameters
+   Acoustic_WaveLength = amr->BoxSize[0] / sqrt(3.0);
 
 
 // (3) reset other general-purpose parameters
 //     --> a helper macro PRINT_WARNING is defined in TestProb.h
-   const double End_T_Default    = 3.0e-2;
+   const double End_T_Default    = Acoustic_WaveLength / Acoustic_Cs;
    const long   End_Step_Default = __INT_MAX__;
 
    if ( END_STEP < 0 ) {
@@ -120,24 +130,18 @@ void SetParameter()
       PRINT_WARNING( "END_T", END_T, FORMAT_REAL );
    }
 
-   if ( !OPT__INIT_RESTRICT ) {
-      OPT__INIT_RESTRICT = true;
-      PRINT_WARNING( "OPT__INIT_RESTRICT", OPT__INIT_RESTRICT, FORMAT_BOOL );
-   }
-
 
 // (4) make a note
    if ( MPI_Rank == 0 )
    {
       Aux_Message( stdout, "=============================================================================\n" );
-      Aux_Message( stdout, "  test problem ID           = %d\n",     TESTPROB_ID );
-      Aux_Message( stdout, "  background mass density   = %13.7e\n", Blast_Dens_Bg );
-      Aux_Message( stdout, "  background energy density = %13.7e\n", Blast_Engy_Bg);
-      Aux_Message( stdout, "  total explosion energy    = %13.7e\n", Blast_Engy_Exp );
-      Aux_Message( stdout, "  explosion energy density  = %13.7e\n", Blast_Engy_Exp/(4.0*M_PI/3.0*CUBE(Blast_Radius) ) );
-      Aux_Message( stdout, "  explosion radius          = %13.7e\n", Blast_Radius );
-      Aux_Message( stdout, "  explosion center          = (%13.7e, %13.7e, %13.7e)\n", Blast_Center[0], Blast_Center[1],
-                                                                                       Blast_Center[2] );
+      Aux_Message( stdout, "  test problem ID     = %d\n",      TESTPROB_ID );
+      Aux_Message( stdout, "  density amplitude   = % 14.7e\n", Acoustic_RhoAmp );
+      Aux_Message( stdout, "  sound speed         = % 14.7e\n", Acoustic_Cs );
+      Aux_Message( stdout, "  background velocity = % 14.7e\n", Acoustic_v0 );
+      Aux_Message( stdout, "  sign (R/L)          = % 14.7e\n", Acoustic_Sign );
+      Aux_Message( stdout, "  initial phase shift = % 14.7e\n", Acoustic_Phase0 );
+      Aux_Message( stdout, "  wavelength          = % 14.7e\n", Acoustic_WaveLength );
       Aux_Message( stdout, "=============================================================================\n" );
    }
 
@@ -168,24 +172,56 @@ void SetParameter()
 void SetGridIC( real *fluid, const double x, const double y, const double z, const double Time )
 {
 
-   const double Blast_Engy_Exp_Density = Blast_Engy_Exp/(4.0*M_PI/3.0*Blast_Radius*Blast_Radius*Blast_Radius);
-   const double r = SQRT( SQR(x-Blast_Center[0]) + SQR(y-Blast_Center[1]) + SQR(z-Blast_Center[2]) );
+   const double r         = 1.0/sqrt(3.0)*( x + y + z ) - Acoustic_v0*Time;
+   const double _Gamma_m1 = 1.0/(GAMMA-1.0);
 
-   fluid[DENS] = Blast_Dens_Bg;
-   fluid[MOMX] = 0.0;
-   fluid[MOMY] = 0.0;
-   fluid[MOMZ] = 0.0;
+   double v1, P0, P1, Phase, WaveK, WaveW;
 
-   if ( r <= Blast_Radius )   fluid[ENGY] = Blast_Engy_Exp_Density;
-   else                       fluid[ENGY] = Blast_Engy_Bg;
+   v1    = Acoustic_Sign*Acoustic_Cs*Acoustic_RhoAmp;
+   P0    = SQR(Acoustic_Cs)/GAMMA;
+   P1    = SQR(Acoustic_Cs)*Acoustic_RhoAmp;
+
+   WaveK = 2.0*M_PI/Acoustic_WaveLength;
+   WaveW = 2.0*M_PI/(Acoustic_WaveLength/Acoustic_Cs);
+   Phase = WaveK*r - Acoustic_Sign*WaveW*Time + Acoustic_Phase0;
+
+   fluid[DENS] = 1.0 + Acoustic_RhoAmp*cos(Phase);
+   fluid[MOMX] = fluid[DENS]*( v1*cos(Phase) + Acoustic_v0 ) / sqrt(3.0);
+   fluid[MOMY] = fluid[MOMX];
+   fluid[MOMZ] = fluid[MOMX];
+   fluid[ENGY] = 0.5*( SQR(fluid[MOMX]) + SQR(fluid[MOMY]) + SQR(fluid[MOMZ]) )/fluid[DENS]
+                 + ( P0 + P1*cos(Phase) )*_Gamma_m1;
 
 } // FUNCTION : SetGridIC
+
+
+
+//-------------------------------------------------------------------------------------------------------
+// Function    :  OutputError
+// Description :  Output the L1 error
+//
+// Note        :  1. Invoke Output_L1Error()
+//                2. Use SetGridIC() to provide the analytical solution at any given time
+//
+// Parameter   :  None
+//
+// Return      :  None
+//-------------------------------------------------------------------------------------------------------
+void OutputError()
+{
+
+   const char Prefix[100]     = "AcousticWave";
+   const OptOutputPart_t Part = OUTPUT_DIAG;
+
+   Output_L1Error( SetGridIC, Prefix, Part, NULL_REAL, NULL_REAL, NULL_REAL );
+
+} // FUNCTION : OutputError
 #endif // #if ( MODEL == HYDRO )
 
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Init_TestProb_BlastWave
+// Function    :  Init_TestProb_Hydro_AcousticWave
 // Description :  Test problem initializer
 //
 // Note        :  None
@@ -194,7 +230,7 @@ void SetGridIC( real *fluid, const double x, const double y, const double z, con
 //
 // Return      :  None
 //-------------------------------------------------------------------------------------------------------
-void Init_TestProb_BlastWave()
+void Init_TestProb_Hydro_AcousticWave()
 {
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ...\n", __FUNCTION__ );
@@ -211,7 +247,7 @@ void Init_TestProb_BlastWave()
 
 // set the function pointers of various problem-specific routines
    Init_Function_User_Ptr   = SetGridIC;
-   Output_User_Ptr          = NULL;
+   Output_User_Ptr          = OutputError;
    Flag_User_Ptr            = NULL;
    Mis_GetTimeStep_User_Ptr = NULL;
    Aux_Record_User_Ptr      = NULL;
@@ -223,4 +259,4 @@ void Init_TestProb_BlastWave()
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", __FUNCTION__ );
 
-} // FUNCTION : Init_TestProb_BlastWave
+} // FUNCTION : Init_TestProb_Hydro_AcousticWave
