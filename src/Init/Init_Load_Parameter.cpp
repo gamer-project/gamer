@@ -51,11 +51,11 @@ void Init_Load_Parameter()
 // code units
    ReadPara->Add( "OPT__UNIT",                  &OPT__UNIT,                       false,           Useless_bool,  Useless_bool   );
 // do not check units since they are validated by Init_Unit()
-   ReadPara->Add( "UNIT_L",                     &UNIT_L,                          1.0,             NoMin_double,  NoMax_double   );
-   ReadPara->Add( "UNIT_M",                     &UNIT_M,                          1.0,             NoMin_double,  NoMax_double   );
-   ReadPara->Add( "UNIT_T",                     &UNIT_T,                          1.0,             NoMin_double,  NoMax_double   );
-   ReadPara->Add( "UNIT_V",                     &UNIT_V,                          1.0,             NoMin_double,  NoMax_double   );
-   ReadPara->Add( "UNIT_D",                     &UNIT_D,                          1.0,             NoMin_double,  NoMax_double   );
+   ReadPara->Add( "UNIT_L",                     &UNIT_L,                         -1.0,             NoMin_double,  NoMax_double   );
+   ReadPara->Add( "UNIT_M",                     &UNIT_M,                         -1.0,             NoMin_double,  NoMax_double   );
+   ReadPara->Add( "UNIT_T",                     &UNIT_T,                         -1.0,             NoMin_double,  NoMax_double   );
+   ReadPara->Add( "UNIT_V",                     &UNIT_V,                         -1.0,             NoMin_double,  NoMax_double   );
+   ReadPara->Add( "UNIT_D",                     &UNIT_D,                         -1.0,             NoMin_double,  NoMax_double   );
 
 
 // boundary conditions
