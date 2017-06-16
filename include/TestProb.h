@@ -29,6 +29,14 @@ extern void (*Init_ExternalPot_Ptr)();
 #endif
 
 
+// common global variables
+#ifdef GRAVITY
+#include "CUPOT.h"
+extern double ExtPot_AuxArray[EXT_POT_NAUX_MAX];
+extern double ExtAcc_AuxArray[EXT_ACC_NAUX_MAX];
+#endif
+
+
 // helper macro for printing warning messages when resetting parameters
 #  define FORMAT_INT       %- 21d
 #  define FORMAT_LONG      %- 21ld

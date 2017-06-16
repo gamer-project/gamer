@@ -5,8 +5,9 @@
 
 // problem-specific global variables
 // =======================================================================================
-static double var_double;
-static int    var_int;
+static double ExtPot_Amp;        // initial wave function amplitude
+static double ExtPot_M;          // point source mass
+static double ExtPot_Cen[3];     // point source position
 // =======================================================================================
 
 
@@ -27,15 +28,24 @@ void Validate()
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Validating test problem %d ...\n", TESTPROB_ID );
 
 
-// examples
-/*
-#  if ( MODEL != HYDRO )
-   Aux_Error( ERROR_INFO, "MODEL != HYDRO !!\n" );
+#  if ( MODEL != ELBDM )
+   Aux_Error( ERROR_INFO, "MODEL != ELBDM !!\n" );
 #  endif
 
-   if ( amr->BoxSize[0] != amr->BoxSize[1]  ||  amr->BoxSize[0] != amr->BoxSize[2] )
-      Aux_Error( ERROR_INFO, "simulation domain must be CUBIC !!\n" );
-*/
+#  ifndef GRAVITY
+   Aux_Error( ERROR_INFO, "GRAVITY must be enabled !!\n" );
+#  endif
+
+#  ifdef COMOVING
+   Aux_Error( ERROR_INFO, "COMOVING must be disabled !!\n" );
+#  endif
+
+#  ifdef PARTICLE
+   Aux_Error( ERROR_INFO, "PARTICLE must be disabled !!\n" );
+#  endif
+
+   if ( !OPT__EXTERNAL_POT )
+   Aux_Error( ERROR_INFO, "OPT__EXTERNAL_POT must be enabled !!\n" );
 
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Validating test problem %d ... done\n", TESTPROB_ID );
@@ -44,8 +54,7 @@ void Validate()
 
 
 
-// replace XXX by the target model (e.g., HYDRO/ELBDM) and check other compilation flags if necessary (e.g., GRAVITY/PARTICLE)
-#if ( MODEL == XXX )
+#if ( MODEL == ELBDM  &&  defined GRAVITY )
 //-------------------------------------------------------------------------------------------------------
 // Function    :  SetParameter
 // Description :  Load and set the problem-specific runtime parameters
@@ -77,14 +86,19 @@ void SetParameter()
 // ********************************************************************************************************************************
 // ReadPara->Add( "KEY_IN_THE_FILE",   &VARIABLE,              DEFAULT,       MIN,              MAX               );
 // ********************************************************************************************************************************
-   ReadPara->Add( "var_double",        &var_double,            -1.0,          NoMin_double,     NoMax_double      );
-   ReadPara->Add( "var_int",           &var_int,               -1,            NoMin_int,        NoMax_int         );
+   ReadPara->Add( "ExtPot_Amp",        &ExtPot_Amp,            -1.0,          Eps_double,       NoMax_double      );
+   ReadPara->Add( "ExtPot_M",          &ExtPot_M,              -1.0,          Eps_double,       NoMax_double      );
+   ReadPara->Add( "ExtPot_Cen_X",      &ExtPot_Cen[0],         -1.0,          NoMin_double,     NoMax_double      );
+   ReadPara->Add( "ExtPot_Cen_Y",      &ExtPot_Cen[1],         -1.0,          NoMin_double,     NoMax_double      );
+   ReadPara->Add( "ExtPot_Cen_Z",      &ExtPot_Cen[2],         -1.0,          NoMin_double,     NoMax_double      );
 
    ReadPara->Read( FileName );
 
    delete ReadPara;
 
-// set the default values
+// set the default center
+   for (int d=0; d<3; d++)
+      if ( ExtPot_Cen[d] < 0.0 )    ExtPot_Cen[d] = 0.5*amr->BoxSize[d];
 
 
 // (2) set the problem-specific derived parameters
@@ -93,7 +107,7 @@ void SetParameter()
 // (3) reset other general-purpose parameters
 //     --> a helper macro PRINT_WARNING is defined in TestProb.h
    const long   End_Step_Default = __INT_MAX__;
-   const double End_T_Default    = __FLT_MAX__;
+   const double End_T_Default    = 1.0e-2;
 
    if ( END_STEP < 0 ) {
       END_STEP = End_Step_Default;
@@ -110,9 +124,12 @@ void SetParameter()
    if ( MPI_Rank == 0 )
    {
       Aux_Message( stdout, "=============================================================================\n" );
-      Aux_Message( stdout, "  test problem ID           = %d\n",     TESTPROB_ID );
-      Aux_Message( stdout, "  var_double                = %13.7e\n", var_double );
-      Aux_Message( stdout, "  var_int                   = %d\n",     var_int );
+      Aux_Message( stdout, "  test problem ID         = %d\n",                       TESTPROB_ID );
+      Aux_Message( stdout, "  wave function amplitude = %13.7e\n",                   ExtPot_Amp );
+      Aux_Message( stdout, "  point source mass       = %13.7e\n",                   ExtPot_M );
+      Aux_Message( stdout, "  point source position   = (%13.7e, %13.7e, %13.7e)\n", ExtPot_Cen[0],
+                                                                                     ExtPot_Cen[1],
+                                                                                     ExtPot_Cen[2] );
       Aux_Message( stdout, "=============================================================================\n" );
    }
 
@@ -131,8 +148,6 @@ void SetParameter()
 //                   --> In this case, it should provide the analytical solution at the given "Time"
 //                2. This function will be invoked by multiple OpenMP threads when OPENMP is enabled
 //                   --> Please ensure that everything here is thread-safe
-//                3. Even when DUAL_ENERGY is adopted for HYDRO, one does NOT need to set the dual-energy variable here
-//                   --> It will be calculated automatically
 //
 // Parameter   :  fluid : Fluid field to be initialized
 //                x/y/z : Physical coordinates
@@ -143,29 +158,71 @@ void SetParameter()
 void SetGridIC( real *fluid, const double x, const double y, const double z, const double Time )
 {
 
-   /*
-// HYDRO example
-   fluid[DENS] = 1.0;
-   fluid[MOMX] = 0.0;
-   fluid[MOMY] = 0.0;
-   fluid[MOMZ] = 0.0;
-   fluid[ENGY] = 1.0 + 0.5*( SQR(fluid[MOMX]) + SQR(fluid[MOMY]) + SQR(fluid[MOMZ]) ) / fluid[DENS];
-   */
+   const double r     = sqrt( SQR(x-ExtPot_Cen[0]) + SQR(y-ExtPot_Cen[1]) + SQR(z-ExtPot_Cen[2]) );
+   const double Coeff = 2.0*SQR(ELBDM_ETA)*NEWTON_G*ExtPot_M;
+   const double R     = sqrt( Coeff*r );
 
-   /*
-// ELBDM example
-   fluid[REAL] = 1.0;
-   fluid[IMAG] = 2.0;
-   fluid[DENS] = SQR(fluid[REAL]) + SQR(fluid[IMAG])
-   */
+   fluid[REAL] = ExtPot_Amp*j1( 2.0*R )/R;
+   fluid[IMAG] = 0.0;                                       // imaginary part is always zero --> no initial velocity
+   fluid[DENS] = SQR( fluid[REAL] ) + SQR( fluid[IMAG] );
 
 } // FUNCTION : SetGridIC
-#endif // #if ( MODEL == XXX )
 
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Init_TestProb_Template
+// Function    :  BC
+// Description :  Set the extenral boundary condition to the analytical solution
+//
+// Note        :  1. Linked to the function pointer "BC_User_Ptr"
+//
+// Parameter   :  Time  : Current physical time
+//                x,y,z : Physical coordinates
+//                BVal  : Array to store the boundary values
+//
+// Return      :  BVal
+//-------------------------------------------------------------------------------------------------------
+void BC( const double Time, const double x, const double y, const double z, real *BVal )
+{
+
+   SetGridIC( BVal, x, y, z, Time );
+
+} // FUNCTION : BC
+
+
+
+//-------------------------------------------------------------------------------------------------------
+// Function    :  Init_ExtPot
+// Description :  Set the array "ExtPot_AuxArray" used by the external potential routines
+//                "CUPOT_ExternalPot.cu / CPU_ExternalPot.cpp"
+//
+// Note        :  1. Linked to the function pointer "Init_ExternalPot_Ptr"
+//                2. Enabled by the runtime option "OPT__EXTERNAL_POT"
+//
+// Parameter   :  None
+//-------------------------------------------------------------------------------------------------------
+void Init_ExtPot()
+{
+
+   if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ...\n", __FUNCTION__ );
+
+
+// ExtPot_AuxArray has the size of EXT_POT_NAUX_MAX (default = 10)
+   ExtPot_AuxArray[0] = ExtPot_Cen[0];
+   ExtPot_AuxArray[1] = ExtPot_Cen[1];
+   ExtPot_AuxArray[2] = ExtPot_Cen[2];
+   ExtPot_AuxArray[3] = ExtPot_M*NEWTON_G;
+
+
+   if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", __FUNCTION__ );
+
+} // FUNCTION : Init_ExtPot
+#endif // #if ( MODEL == ELBDM  &&  defined GRAVITY )
+
+
+
+//-------------------------------------------------------------------------------------------------------
+// Function    :  Init_TestProb_ELBDM_ExtPot
 // Description :  Test problem initializer
 //
 // Note        :  None
@@ -174,7 +231,7 @@ void SetGridIC( real *fluid, const double x, const double y, const double z, con
 //
 // Return      :  None
 //-------------------------------------------------------------------------------------------------------
-void Init_TestProb_Template()
+void Init_TestProb_ELBDM_ExtPot()
 {
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ...\n", __FUNCTION__ );
@@ -184,28 +241,25 @@ void Init_TestProb_Template()
    Validate();
 
 
-// replace XXX by the target model (e.g., HYDRO/ELBDM) and check other compilation flags if necessary (e.g., GRAVITY/PARTICLE)
-#  if ( MODEL == XXX )
+#  if ( MODEL == ELBDM  &&  defined GRAVITY )
 // set the problem-specific runtime parameters
    SetParameter();
 
 
 // set the function pointers of various problem-specific routines
    Init_Function_User_Ptr   = SetGridIC;
-   Output_User_Ptr          = NULL;       // example: Hydro/AcousticWave/Init_TestProb_AcousticWave.cpp --> OutputError()
-   Flag_User_Ptr            = NULL;       // example: Hydro/Bondi/Flag_Bondi.cpp
+   Output_User_Ptr          = NULL;
+   Flag_User_Ptr            = NULL;
    Mis_GetTimeStep_User_Ptr = NULL;
-   Aux_Record_User_Ptr      = NULL;       // example: Hydro/Bondi/Record_Bondi.cpp
-   BC_User_Ptr              = NULL;       // example: ELBDM/ExtPot/Init_TestProb_ELBDM_ExtPot.cpp --> BC()
+   Aux_Record_User_Ptr      = NULL;
+   BC_User_Ptr              = BC;
    Flu_ResetByUser_Func_Ptr = NULL;
    End_User_Ptr             = NULL;
-#  ifdef GRAVITY
-   Init_ExternalAcc_Ptr     = NULL;       // example: Hydro/Bondi/Init_ExternalAcc_Bondi.cpp
-   Init_ExternalPot_Ptr     = NULL;       // example: ELBDM/ExtPot/Init_TestProb_ELBDM_ExtPot.cpp --> Init_ExtPot()
-#  endif
-#  endif // #if ( MODEL == XXX )
+   Init_ExternalAcc_Ptr     = NULL;
+   Init_ExternalPot_Ptr     = Init_ExtPot;
+#  endif // #if ( MODEL == ELBDM  &&  defined GRAVITY )
 
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", __FUNCTION__ );
 
-} // FUNCTION : Init_TestProb_Template
+} // FUNCTION : Init_TestProb_ELBDM_ExtPot
