@@ -32,10 +32,13 @@ typedef unsigned long int  ulong;
 // test problem IDs
 typedef int TestProbID_t;
 const TestProbID_t
-   TESTPROB_NONE          = 0,
-   TESTPROB_BLAST_WAVE    = 1,
-   TESTPROB_ACOUSTIC_WAVE = 2,
-   TESTPROB_BONDI         = 3;
+   TESTPROB_NONE                =    0,
+
+   TESTPROB_HYDRO_BLAST_WAVE    =    1,
+   TESTPROB_HYDRO_ACOUSTIC_WAVE =    2,
+   TESTPROB_HYDRO_BONDI         =    3,
+
+   TESTPROB_ELBDM_EXTPOT        = 1000;
 
 
 // program initialization options
