@@ -64,6 +64,7 @@ void Validate()
 
 
 
+#if ( MODEL == HYDRO )
 //-------------------------------------------------------------------------------------------------------
 // Function    :  SetParameter
 // Description :  Load and set the problem-specific runtime parameters
@@ -171,7 +172,6 @@ void SetParameter()
 void SetGridIC( real *fluid, const double x, const double y, const double z, const double Time )
 {
 
-#  if ( MODEL == HYDRO )
    const double r         = 1.0/sqrt(3.0)*( x + y + z ) - Acoustic_v0*Time;
    const double _Gamma_m1 = 1.0/(GAMMA-1.0);
 
@@ -191,7 +191,6 @@ void SetGridIC( real *fluid, const double x, const double y, const double z, con
    fluid[MOMZ] = fluid[MOMX];
    fluid[ENGY] = 0.5*( SQR(fluid[MOMX]) + SQR(fluid[MOMY]) + SQR(fluid[MOMZ]) )/fluid[DENS]
                  + ( P0 + P1*cos(Phase) )*_Gamma_m1;
-#  endif
 
 } // FUNCTION : SetGridIC
 
@@ -217,6 +216,7 @@ void OutputError()
    Output_L1Error( SetGridIC, Prefix, Part, NULL_REAL, NULL_REAL, NULL_REAL );
 
 } // FUNCTION : OutputError
+#endif // #if ( MODEL == HYDRO )
 
 
 
@@ -240,6 +240,7 @@ void Init_TestProb_AcousticWave()
    Validate();
 
 
+#  if ( MODEL == HYDRO )
 // set the problem-specific runtime parameters
    SetParameter();
 
@@ -253,6 +254,7 @@ void Init_TestProb_AcousticWave()
    BC_User_Ptr              = NULL;
    Flu_ResetByUser_Func_Ptr = NULL;
    End_User_Ptr             = NULL;
+#  endif // #if ( MODEL == HYDRO )
 
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", __FUNCTION__ );

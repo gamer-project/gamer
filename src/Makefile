@@ -13,7 +13,7 @@ EXECUTABLE := gamer
 # (a) common options (applied to all models)
 # -------------------------------------------------------------------------------
 # model: HYDRO/MHD/ELBDM/PAR_ONLY (PAR_ONLY must work with PARTICLE)
-SIMU_OPTION += -DMODEL=HYDRO
+SIMU_OPTION += -DMODEL=ELBDM
 
 # self-gravity
 SIMU_OPTION += -DGRAVITY
@@ -27,7 +27,7 @@ SIMU_OPTION += -DPOT_SCHEME=SOR
 
 # use unsplitting method to couple gravity to the target model (for HYDRO and MHD only; ELBDM is not supported yet)
 # --> must be off if GRAVITY is off
-SIMU_OPTION += -DUNSPLIT_GRAVITY
+#SIMU_OPTION += -DUNSPLIT_GRAVITY
 
 # individual time-step (default: shared time-step)
 SIMU_OPTION += -DINDIVIDUAL_TIMESTEP
@@ -78,10 +78,10 @@ else ifeq "$(findstring MODEL=MHD, $(SIMU_OPTION))" "MODEL=MHD"
 # ------------------------------------------------------------------------------------
 else ifeq "$(findstring MODEL=ELBDM, $(SIMU_OPTION))" "MODEL=ELBDM"
 # enforce the mass conservation
-#SIMU_OPTION += -DCONSERVE_MASS
+SIMU_OPTION += -DCONSERVE_MASS
 
 # 4-th order Laplacian
-#SIMU_OPTION += -DLAPLACIAN_4TH
+SIMU_OPTION += -DLAPLACIAN_4TH
 
 # include the quartic self-interaction potential (must turn on GRAVITY as well, not work with COMOVING yet)
 #SIMU_OPTION += -DQUARTIC_SELF_INTERACTION

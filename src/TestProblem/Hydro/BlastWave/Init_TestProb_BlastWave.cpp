@@ -53,6 +53,7 @@ void Validate()
 
 
 
+#if ( MODEL == HYDRO )
 //-------------------------------------------------------------------------------------------------------
 // Function    :  SetParameter
 // Description :  Load and set the problem-specific runtime parameters
@@ -179,6 +180,7 @@ void SetGridIC( real *fluid, const double x, const double y, const double z, con
    else                       fluid[ENGY] = Blast_Engy_Bg;
 
 } // FUNCTION : SetGridIC
+#endif // #if ( MODEL == HYDRO )
 
 
 
@@ -202,6 +204,7 @@ void Init_TestProb_BlastWave()
    Validate();
 
 
+#  if ( MODEL == HYDRO )
 // set the problem-specific runtime parameters
    SetParameter();
 
@@ -215,6 +218,7 @@ void Init_TestProb_BlastWave()
    BC_User_Ptr              = NULL;
    Flu_ResetByUser_Func_Ptr = NULL;
    End_User_Ptr             = NULL;
+#  endif // #if ( MODEL == HYDRO )
 
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", __FUNCTION__ );
