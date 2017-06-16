@@ -13,14 +13,21 @@
 
 //-----------------------------------------------------------------------------------------
 // Function    :  CUPOT_ExternalPot / CPU_ExternalPot
-// Description :  1. Cacalculate the external potential from the input coordinates and time
-//                2. This function will be invoked by both the CPU and GPU codes
+// Description :  Calculate the external potential at the given coordinates and time
 //
-// Parameter   :  x/y/z     : Spatial coordinates
-//                Time      : Current physical time
-//                UserArray : User-provided auxiliary array (set by "Init_ExternalPot")
+// Note        :  1. This function will be invoked by both CPU and GPU
+//                2. The auxiliary array "UserArray" is set by "Init_ExternalPot_Ptr", which
+//                   points to "Init_ExternalPot()" by default but may be overwritten by various
+//                   test problem initializers
+//                3. By default we assume
+//                     UserArray[0] = x coordinate of the external acceleration center
+//                     UserArray[1] = y ...
+//                     UserArray[2] = z ..
+//                     UserArray[3] = gravitational_constant*point_mass
+//                   --> but one can easily modify this file to change the default behavior
+//                4. Currently it does not support the soften length
 //
-// Return      :  external potential
+// Return      :  External potential
 //-----------------------------------------------------------------------------------------
 #ifdef __CUDACC__
 __device__
@@ -30,7 +37,6 @@ real   CPU_ExternalPot( const double x, const double y, const double z, const do
 #endif
 {
 
-   /*
    const double Cen[3] = { UserArray[0], UserArray[1], UserArray[2] };
    const real   GM     = (real)UserArray[3];
    const real   dx     = (real)(x - Cen[0]);
@@ -39,9 +45,6 @@ real   CPU_ExternalPot( const double x, const double y, const double z, const do
    const real   _r     = 1.0/SQRT( dx*dx + dy*dy + dz*dz );
 
    return -GM*_r;
-   */
-
-   return NULL_REAL;
 
 } // FUNCTION : CUPOT_ExternalPot // CPU_ExternalPot
 
