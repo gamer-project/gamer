@@ -9,6 +9,7 @@ void Init_TestProb_Hydro_BlastWave();
 void Init_TestProb_Hydro_AcousticWave();
 void Init_TestProb_Hydro_Bondi();
 void Init_TestProb_Hydro_ClusterMerger_vs_Flash();
+void Init_TestProb_Hydro_AGORA_IsolatedGalaxy();
 
 void Init_TestProb_ELBDM_ExtPot();
 
@@ -40,6 +41,7 @@ void Init_TestProb()
       case TESTPROB_HYDRO_ACOUSTIC_WAVE :             Init_TestProb_Hydro_AcousticWave();             break;
       case TESTPROB_HYDRO_BONDI :                     Init_TestProb_Hydro_Bondi();                    break;
       case TESTPROB_HYDRO_CLUSTER_MERGER_VS_FLASH :   Init_TestProb_Hydro_ClusterMerger_vs_Flash();   break;
+//    case TESTPROB_HYDRO_AGORA_ISOLATED_GALAXY :     Init_TestProb_Hydro_AGORA_IsolatedGalaxy();     break;
 
       case TESTPROB_ELBDM_EXTPOT :                    Init_TestProb_ELBDM_ExtPot();                   break;
 

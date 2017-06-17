@@ -7,6 +7,7 @@
 // =======================================================================================
 static double var_double;
 static int    var_int;
+static char   var_str[MAX_STRING];
 // =======================================================================================
 
 
@@ -80,6 +81,7 @@ void SetParameter()
 // ********************************************************************************************************************************
    ReadPara->Add( "var_double",        &var_double,            -1.0,          NoMin_double,     NoMax_double      );
    ReadPara->Add( "var_int",           &var_int,               -1,            NoMin_int,        NoMax_int         );
+   ReadPara->Add( "var_str",            var_str,               Useless_str,   Useless_str,      Useless_str       );
 
    ReadPara->Read( FileName );
 
@@ -114,6 +116,7 @@ void SetParameter()
       Aux_Message( stdout, "  test problem ID           = %d\n",     TESTPROB_ID );
       Aux_Message( stdout, "  var_double                = %13.7e\n", var_double );
       Aux_Message( stdout, "  var_int                   = %d\n",     var_int );
+      Aux_Message( stdout, "  var_str                   = %s\n",     var_str );
       Aux_Message( stdout, "=============================================================================\n" );
    }
 
@@ -203,6 +206,9 @@ void Init_TestProb_Template()
 #  ifdef GRAVITY
    Init_ExternalAcc_Ptr     = NULL;       // example: Hydro/Bondi/Init_ExternalAcc_Bondi.cpp
    Init_ExternalPot_Ptr     = NULL;       // example: ELBDM/ExtPot/Init_TestProb_ELBDM_ExtPot.cpp --> Init_ExtPot()
+#  endif
+#  ifdef PARTICLE
+   Par_Init_ByFunction_Ptr  = NULL;       // example: Hydro/AGORA_IsolatedGalaxy/Par_Init_ByFunction_AGORA.cpp
 #  endif
 #  endif // #if ( MODEL == XXX )
 
