@@ -12,6 +12,7 @@ static double ExtPot_Cen[3];     // point source position
 
 
 
+
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Validate
 // Description :  Validate the compilation flags and runtime parameters for this test problem

@@ -11,6 +11,7 @@ static int    var_int;
 
 
 
+
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Validate
 // Description :  Validate the compilation flags and runtime parameters for this test problem
@@ -192,13 +193,13 @@ void Init_TestProb_Template()
 
 // set the function pointers of various problem-specific routines
    Init_Function_User_Ptr   = SetGridIC;
-   Output_User_Ptr          = NULL;       // example: Hydro/AcousticWave/Init_TestProb_AcousticWave.cpp --> OutputError()
+   Output_User_Ptr          = NULL;       // example: Hydro/AcousticWave/Init_TestProb_Hydro_AcousticWave.cpp --> OutputError()
    Flag_User_Ptr            = NULL;       // example: Hydro/Bondi/Flag_Bondi.cpp
    Mis_GetTimeStep_User_Ptr = NULL;
    Aux_Record_User_Ptr      = NULL;       // example: Hydro/Bondi/Record_Bondi.cpp
    BC_User_Ptr              = NULL;       // example: ELBDM/ExtPot/Init_TestProb_ELBDM_ExtPot.cpp --> BC()
    Flu_ResetByUser_Func_Ptr = NULL;
-   End_User_Ptr             = NULL;
+   End_User_Ptr             = NULL;       // example: Hydro/ClusterMerger_vs_Flash/Init_TestProb_Hydro_ClusterMerger_vs_Flash.cpp --> End_ClusterMerger()
 #  ifdef GRAVITY
    Init_ExternalAcc_Ptr     = NULL;       // example: Hydro/Bondi/Init_ExternalAcc_Bondi.cpp
    Init_ExternalPot_Ptr     = NULL;       // example: ELBDM/ExtPot/Init_TestProb_ELBDM_ExtPot.cpp --> Init_ExtPot()

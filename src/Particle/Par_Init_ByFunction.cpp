@@ -20,9 +20,11 @@ void (*Par_Init_ByFunction_Ptr)() = Par_Init_ByFunction;
 //                   --> The function pointer may be reset by various test problem initializers, in which case
 //                       this funtion will become useless
 //                2. Periodicity should be taken care of in this function
-//                   --> No particles should lie outside the simulation box even for the periodic BC
-//                3. Particles lying outside the active region will be removed by "Par_Aux_InitCheck"
-//                   if non-periodic B.C. is adopted
+//                   --> No particles should lie outside the simulation box when the periodic BC is adopted
+//                   --> However, if the non-periodic BC is adopted, particles are allowed to lie outside the box
+//                       in this function. They will be removed automatically later when calling Par_Aux_InitCheck()
+//                       in Init_GAMER()
+//                       --> So as particles lying outside the "active" region
 //                4. Particles set here are only temporarily stored in this rank
 //                   --> They will be redistributed when calling "Par_LB_Init_RedistributeByRectangular()
 //                       and LB_Init_LoadBalance()"

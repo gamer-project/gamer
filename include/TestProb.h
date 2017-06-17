@@ -27,6 +27,9 @@ extern void (*End_User_Ptr)();
 extern void (*Init_ExternalAcc_Ptr)();
 extern void (*Init_ExternalPot_Ptr)();
 #endif
+#ifdef PARTICLE
+extern void (*Par_Init_ByFunction_Ptr)();
+#endif
 
 
 // common global variables

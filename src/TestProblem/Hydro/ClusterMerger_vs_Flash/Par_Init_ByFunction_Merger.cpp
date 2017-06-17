@@ -7,42 +7,42 @@
 typedef double real_par_in;
 //typedef float  real_par_in;
 
-extern char    ClusterMerger_File_Par1[1000];
-extern char    ClusterMerger_File_Par2[1000];
-extern bool    ClusterMerger_Coll;
-extern double  ClusterMerger_Coll_D;
-extern double  ClusterMerger_Coll_B;
-extern double  ClusterMerger_Coll_BulkVel1;
-extern double  ClusterMerger_Coll_BulkVel2;
+extern char    Merger_File_Par1[1000];
+extern char    Merger_File_Par2[1000];
+extern bool    Merger_Coll;
+extern double  Merger_Coll_D;
+extern double  Merger_Coll_B;
+extern double  Merger_Coll_BulkVel1;
+extern double  Merger_Coll_BulkVel2;
 
 
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Par_Init_ByFunction
+// Function    :  Par_Init_ByFunction_Merger
 // Description :  Initialize particle attributes for the merging cluster test
 //                --> Modified from "Par_Init_ByFile.cpp"
 //
-// Note        :  1. Invoked by "Init_GAMER"
+// Note        :  1. Invoked by "Init_GAMER" using the function pointer "Par_Init_ByFunction_Ptr"
 //                2. Particles lying outside the active region will be removed by "Par_Aux_InitCheck"
 //                   if non-periodic B.C. is adopted
-//                3. Particles loaded here are only temporarily stored in this rank
-//                   --> They will be redistributed when calling "Par_LB_Init_RedistributeByRectangular
-//                       and LB_Init_LoadBalance"
-//                4. File format: plain C binary in the format [Number of particles][Particle attributes]
+//                3. Particles set here are only temporarily stored in this rank
+//                   --> They will be redistributed when calling "Par_LB_Init_RedistributeByRectangular()
+//                       and LB_Init_LoadBalance()"
+//                4. For LOAD_BALANCE, the number of particles in each rank must be set in advance
+//                   --> Currently it's set by "Init_Parallelization()" and stored in "amr->Par->NPar_AcPlusInac"
+//                5. File format: plain C binary in the format [Number of particles][Particle attributes]
 //                   --> [Particle 0][Attribute 0], [Particle 0][Attribute 1], ...
 //                   --> Note that it's different from the internal data format in the particle repository,
 //                       which is [Particle attributes][Number of particles]
 //                   --> Currently it only loads particle mass, position x/y/z, and velocity x/y/z
 //                       (and exactly in this order)
-//                5. For LOAD_BALANCE, the total number of particles in each rank must be set in advance
-//                   --> Currently it's set by "Init_Parallelization"
 //
 // Parameter   :  None
 //
 // Return      :  amr->Par->Time,Mass,PosX/Y/Z,VelX/Y/Z
 //-------------------------------------------------------------------------------------------------------
-void Par_Init_ByFunction()
+void Par_Init_ByFunction_Merger()
 {
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ...\n", __FUNCTION__ );
@@ -51,25 +51,25 @@ void Par_Init_ByFunction()
    const long NParVar = 7;   // mass, pos*3, vel*3
 
 // check file existence
-   if ( !Aux_CheckFileExist(ClusterMerger_File_Par1) )
-      Aux_Error( ERROR_INFO, "file \"%s\" does not exist !!\n", ClusterMerger_File_Par1 );
+   if ( !Aux_CheckFileExist(Merger_File_Par1) )
+      Aux_Error( ERROR_INFO, "file \"%s\" does not exist !!\n", Merger_File_Par1 );
 
-   if ( ClusterMerger_Coll  &&  !Aux_CheckFileExist(ClusterMerger_File_Par2) )
-      Aux_Error( ERROR_INFO, "file \"%s\" does not exist !!\n", ClusterMerger_File_Par2 );
+   if ( Merger_Coll  &&  !Aux_CheckFileExist(Merger_File_Par2) )
+      Aux_Error( ERROR_INFO, "file \"%s\" does not exist !!\n", Merger_File_Par2 );
 
 
 // check file size
    FILE *File=NULL;
    long  NPar[2]={0,0}, NParAll;
 
-   File  = fopen( ClusterMerger_File_Par1, "rb" );
+   File  = fopen( Merger_File_Par1, "rb" );
    fseek( File, 0, SEEK_END );
    NPar[0] = ftell( File ) / ( NParVar*sizeof(real_par_in) );
    fclose( File );
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Number of particles in cluster 1 = %ld\n", NPar[0] );
 
-   if ( ClusterMerger_Coll ) {
-   File  = fopen( ClusterMerger_File_Par2, "rb" );
+   if ( Merger_Coll ) {
+   File  = fopen( Merger_File_Par2, "rb" );
    fseek( File, 0, SEEK_END );
    NPar[1] = ftell( File ) / ( NParVar*sizeof(real_par_in) );
    fclose( File );
@@ -88,7 +88,7 @@ void Par_Init_ByFunction()
 // prepare to load data
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Preparing to load data ... " );
 
-   const int NCluster = ( ClusterMerger_Coll ) ? 2 : 1;
+   const int NCluster = ( Merger_Coll ) ? 2 : 1;
    long NPar_ThisRank[2]={0,0}, FileOffset[2];  // [0/1] --> cluster 1/2
 
    for (int c=0; c<NCluster; c++)
@@ -125,7 +125,7 @@ void Par_Init_ByFunction()
       if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Loading cluster %d ... ", c );
 
 //    note that fread may fail for large files if sizeof(size_t) == 4 instead of 8
-      FILE *File = fopen( (c==0)?ClusterMerger_File_Par1:ClusterMerger_File_Par2, "rb" );
+      FILE *File = fopen( (c==0)?Merger_File_Par1:Merger_File_Par2, "rb" );
 
       fseek( File, FileOffset[c], SEEK_SET );
       fread( ParData_ThisRank, sizeof(real_par_in), NPar_ThisRank[c]*NParVar, File );
@@ -171,12 +171,12 @@ void Par_Init_ByFunction()
    const double BoxCenter[3] = { 0.5*amr->BoxSize[0], 0.5*amr->BoxSize[1], 0.5*amr->BoxSize[2] };
    real *Pos[3] = { amr->Par->PosX, amr->Par->PosY, amr->Par->PosZ };
 
-   if ( ClusterMerger_Coll )
+   if ( Merger_Coll )
    {
       const double ClusterCenter1[3]
-         = { BoxCenter[0]-0.5*ClusterMerger_Coll_D, BoxCenter[1]-0.5*ClusterMerger_Coll_B, BoxCenter[2] };
+         = { BoxCenter[0]-0.5*Merger_Coll_D, BoxCenter[1]-0.5*Merger_Coll_B, BoxCenter[2] };
       const double ClusterCenter2[3]
-         = { BoxCenter[0]+0.5*ClusterMerger_Coll_D, BoxCenter[1]+0.5*ClusterMerger_Coll_B, BoxCenter[2] };
+         = { BoxCenter[0]+0.5*Merger_Coll_D, BoxCenter[1]+0.5*Merger_Coll_B, BoxCenter[2] };
 
       for (long p=0; p<NPar_ThisRank[0]; p++)
       for (int d=0; d<3; d++)
@@ -196,10 +196,10 @@ void Par_Init_ByFunction()
 
 
 // add the bulk velocity (to velocity-x only)
-   if ( ClusterMerger_Coll )
+   if ( Merger_Coll )
    {
-      for (long p=0;                p<NPar_ThisRank[0];          p++)  amr->Par->VelX[p] += ClusterMerger_Coll_BulkVel1;
-      for (long p=NPar_ThisRank[0]; p<amr->Par->NPar_AcPlusInac; p++)  amr->Par->VelX[p] += ClusterMerger_Coll_BulkVel2;
+      for (long p=0;                p<NPar_ThisRank[0];          p++)  amr->Par->VelX[p] += Merger_Coll_BulkVel1;
+      for (long p=NPar_ThisRank[0]; p<amr->Par->NPar_AcPlusInac; p++)  amr->Par->VelX[p] += Merger_Coll_BulkVel2;
    }
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );
@@ -207,7 +207,7 @@ void Par_Init_ByFunction()
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", __FUNCTION__ );
 
-} // FUNCTION : Par_Init_ByFunction
+} // FUNCTION : Par_Init_ByFunction_Merger
 
 
 
