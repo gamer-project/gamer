@@ -292,7 +292,7 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
                   case BC_FLU_USER:
                      Flu_BoundaryCondition_User        ( Flu_CData[0][0][0],                      NCOMP_TOTAL,
                                                          CSize_Flu, CSize_Flu, CSize_Flu, BC_Idx_Start, BC_Idx_End,
-                                                         FluVarIdxList, Time[lv], amr->dh[lv], xyz, _TOTAL );
+                                                         FluVarIdxList, Time[lv], amr->dh[lv], xyz, _TOTAL, lv );
                   break;
 
                   default:

@@ -160,13 +160,16 @@ void SetParameter()
 //                3. Even when DUAL_ENERGY is adopted for HYDRO, one does NOT need to set the dual-energy variable here
 //                   --> It will be calculated automatically
 //
-// Parameter   :  fluid : Fluid field to be initialized
-//                x/y/z : Physical coordinates
-//                Time  : Physical time
+// Parameter   :  fluid    : Fluid field to be initialized
+//                x/y/z    : Physical coordinates
+//                Time     : Physical time
+//                lv       : Target refinement level
+//                AuxArray : Auxiliary array
 //
 // Return      :  fluid
 //-------------------------------------------------------------------------------------------------------
-void SetGridIC( real *fluid, const double x, const double y, const double z, const double Time )
+void SetGridIC( real fluid[], const double x, const double y, const double z, const double Time,
+                const int lv, double AuxArray[] )
 {
 
    const double Blast_Engy_Exp_Density = Blast_Engy_Exp/(4.0*M_PI/3.0*Blast_Radius*Blast_Radius*Blast_Radius);

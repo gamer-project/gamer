@@ -67,8 +67,10 @@ void Validate()
    if ( OPT__BC_FLU[0] == BC_FLU_PERIODIC  ||  OPT__BC_POT == BC_POT_PERIODIC )
       Aux_Error( ERROR_INFO, "do not use periodic BC for this test !!\n" );
 
+#  ifdef PARTICLE
    if ( OPT__INIT == INIT_STARTOVER  &&  amr->Par->Init != PAR_INIT_BY_FUNCTION )
       Aux_Error( ERROR_INFO, "please set PAR_INIT = 1 (by FUNCTION) !!\n" );
+#  endif
 
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Validating test problem %d ... done\n", TESTPROB_ID );
@@ -197,13 +199,16 @@ void SetParameter()
 //                3. Even when DUAL_ENERGY is adopted for HYDRO, one does NOT need to set the dual-energy variable here
 //                   --> It will be calculated automatically
 //
-// Parameter   :  fluid : Fluid field to be initialized
-//                x/y/z : Physical coordinates
-//                Time  : Physical time
+// Parameter   :  fluid    : Fluid field to be initialized
+//                x/y/z    : Physical coordinates
+//                Time     : Physical time
+//                lv       : Target refinement level
+//                AuxArray : Auxiliary array
 //
 // Return      :  fluid
 //-------------------------------------------------------------------------------------------------------
-void SetGridIC( real *fluid, const double x, const double y, const double z, const double Time )
+void SetGridIC( real fluid[], const double x, const double y, const double z, const double Time,
+                const int lv, double AuxArray[] )
 {
 
    const double BoxCenter[3] = { 0.5*amr->BoxSize[0], 0.5*amr->BoxSize[1], 0.5*amr->BoxSize[2] };

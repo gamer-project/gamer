@@ -150,13 +150,16 @@ void SetParameter()
 //                2. This function will be invoked by multiple OpenMP threads when OPENMP is enabled
 //                   --> Please ensure that everything here is thread-safe
 //
-// Parameter   :  fluid : Fluid field to be initialized
-//                x/y/z : Physical coordinates
-//                Time  : Physical time
+// Parameter   :  fluid    : Fluid field to be initialized
+//                x/y/z    : Physical coordinates
+//                Time     : Physical time
+//                lv       : Target refinement level
+//                AuxArray : Auxiliary array
 //
 // Return      :  fluid
 //-------------------------------------------------------------------------------------------------------
-void SetGridIC( real *fluid, const double x, const double y, const double z, const double Time )
+void SetGridIC( real fluid[], const double x, const double y, const double z, const double Time,
+                const int lv, double AuxArray[] )
 {
 
    const double r     = sqrt( SQR(x-ExtPot_Cen[0]) + SQR(y-ExtPot_Cen[1]) + SQR(z-ExtPot_Cen[2]) );
@@ -177,16 +180,19 @@ void SetGridIC( real *fluid, const double x, const double y, const double z, con
 //
 // Note        :  1. Linked to the function pointer "BC_User_Ptr"
 //
-// Parameter   :  Time  : Current physical time
-//                x,y,z : Physical coordinates
-//                BVal  : Array to store the boundary values
+// Parameter   :  fluid    : Fluid field to be set
+//                x/y/z    : Physical coordinates
+//                Time     : Physical time
+//                lv       : Refinement level
+//                AuxArray : Auxiliary array
 //
-// Return      :  BVal
+// Return      :  fluid
 //-------------------------------------------------------------------------------------------------------
-void BC( const double Time, const double x, const double y, const double z, real *BVal )
+void BC( real fluid[], const double x, const double y, const double z, const double Time,
+         const int lv, double AuxArray[] )
 {
 
-   SetGridIC( BVal, x, y, z, Time );
+   SetGridIC( fluid, x, y, z, Time, lv, AuxArray );
 
 } // FUNCTION : BC
 

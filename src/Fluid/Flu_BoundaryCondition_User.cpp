@@ -2,10 +2,12 @@
 #include "GAMER.h"
 
 // declare as static so that other functions cannot invoke it directly and must use the function pointer
-static void BC_User( const double Time, const double x, const double y, const double z, real *BVal );
+static void BC_User( real fluid[], const double x, const double y, const double z, const double Time,
+                     const int lv, double AuxArray[] );
 
 // this function pointer may be overwritten by various test problem initializers
-void (*BC_User_Ptr)( const double Time, const double x, const double y, const double z, real *BVal ) = BC_User;
+void (*BC_User_Ptr)( real fluid[], const double x, const double y, const double z, const double Time,
+                     const int lv, double AuxArray[] ) = BC_User;
 
 
 
@@ -20,13 +22,16 @@ void (*BC_User_Ptr)( const double Time, const double x, const double y, const do
 //                2. Always return NCOMP_TOTAL variables
 //                3. Enabled by the runtime options "OPT__BC_FLU_* == 4"
 //
-// Parameter   :  Time  : Current physical time
-//                x,y,z : Physical coordinates
-//                BVal  : Array to store the boundary values
+// Parameter   :  fluid    : Fluid field to be set
+//                x/y/z    : Physical coordinates
+//                Time     : Physical time
+//                lv       : Refinement level
+//                AuxArray : Auxiliary array
 //
-// Return      :  BVal
+// Return      :  fluid
 //-------------------------------------------------------------------------------------------------------
-void BC_User( const double Time, const double x, const double y, const double z, real *BVal )
+void BC_User( real fluid[], const double x, const double y, const double z, const double Time,
+              const int lv, double AuxArray[] )
 {
 
 // please put your B.C. here
@@ -42,14 +47,14 @@ void BC_User( const double Time, const double x, const double y, const double z,
    const real Cs     = 1.0;
    const real Rho0   = 1.0;
 
-   BVal[DENS] = Rho0 + Height*EXP(  -( SQR(x-C[0]) + SQR(y-C[1]) + SQR(z-C[2]) ) / SQR(Width)  );
-   BVal[MOMX] = 0.0;
-   BVal[MOMY] = 0.0;
-   BVal[MOMZ] = 0.0;
-   BVal[ENGY] = Cs*Cs*BVal[DENS]*Gamma2 + (real)0.5*( SQR(BVal[MOMX]) + SQR(BVal[MOMY]) + SQR(BVal[MOMZ]) ) / BVal[DENS];
+   fluid[DENS] = Rho0 + Height*EXP(  -( SQR(x-C[0]) + SQR(y-C[1]) + SQR(z-C[2]) ) / SQR(Width)  );
+   fluid[MOMX] = 0.0;
+   fluid[MOMY] = 0.0;
+   fluid[MOMZ] = 0.0;
+   fluid[ENGY] = Cs*Cs*fluid[DENS]*Gamma2 + (real)0.5*( SQR(fluid[MOMX]) + SQR(fluid[MOMY]) + SQR(fluid[MOMZ]) ) / fluid[DENS];
 
 // remember to set passive scalars as well
-   BVal[EINT] = XXX;
+   fluid[EINT] = XXX;
    */
 
 
@@ -79,13 +84,14 @@ void BC_User( const double Time, const double x, const double y, const double z,
 //                dh             : Grid size
 //                Corner         : Physcial coordinates at the center of the cell (0,0,0) --> Array[0]
 //                TVar           : Target variables to be prepared --> only used for preparing the derived variables
+//                lv             : Refinement level
 //
 // Return      :  Array
 //-------------------------------------------------------------------------------------------------------
 void Flu_BoundaryCondition_User( real *Array, const int NVar_Flu, const int ArraySizeX, const int ArraySizeY,
                                  const int ArraySizeZ, const int Idx_Start[], const int Idx_End[],
                                  const int TFluVarIdxList[], const double Time, const double dh, const double *Corner,
-                                 const int TVar )
+                                 const int TVar, const int lv )
 {
 
 // check
@@ -129,7 +135,7 @@ void Flu_BoundaryCondition_User( real *Array, const int NVar_Flu, const int Arra
    for (j=Idx_Start[1], y=y0; j<=Idx_End[1]; j++, y+=dh)
    for (i=Idx_Start[0], x=x0; i<=Idx_End[0]; i++, x+=dh)
    {
-      BC_User_Ptr( Time, x, y, z, BVal );
+      BC_User_Ptr( BVal, x, y, z, Time, lv, NULL );
 
       for (int v=0; v<NVar_Flu; v++)   Array3D[v][k][j][i] = BVal[ TFluVarIdxList[v] ];
 
