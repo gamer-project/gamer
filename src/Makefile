@@ -56,7 +56,7 @@ SIMU_OPTION += -DFLU_SCHEME=CTU
 SIMU_OPTION += -DLR_SCHEME=PPM
 
 # Riemann solver: EXACT/ROE/HLLE/HLLC ##all are useless in RTVD, HLLE/HLLC are useless in WAF##
-SIMU_OPTION += -DRSOLVER=ROE
+SIMU_OPTION += -DRSOLVER=HLLC
 
 # dual energy formalism: DE_ENPY/DE_EINT (evolve entropy or internal energy; DE_EINT is not supported yet) ##useless in RTVD/WAF##
 SIMU_OPTION += -DDUAL_ENERGY=DE_ENPY
