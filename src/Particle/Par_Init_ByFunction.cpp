@@ -3,23 +3,31 @@
 
 #ifdef PARTICLE
 
+// declare as static so that other functions cannot invoke it directly and must use the function pointer
+static void Par_Init_ByFunction();
+
+// this function pointer may be overwritten by various test problem initializers
+void (*Par_Init_ByFunction_Ptr)() = Par_Init_ByFunction;
+
 
 
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Par_Init_ByFunction
-// Description :  Initialize particle attributes from the user-specified functions
+// Description :  Initialize particle attributes by the user-specified function
 //
-// Note        :  1. Invoked by "Init_GAMER"
+// Note        :  1. Invoked by "Init_GAMER" using the function pointer "Par_Init_ByFunction_Ptr"
+//                   --> The function pointer may be reset by various test problem initializers, in which case
+//                       this funtion will become useless
 //                2. Periodicity should be taken care of in this function
 //                   --> No particles should lie outside the simulation box even for the periodic BC
 //                3. Particles lying outside the active region will be removed by "Par_Aux_InitCheck"
 //                   if non-periodic B.C. is adopted
 //                4. Particles set here are only temporarily stored in this rank
-//                   --> They will be redistributed when calling "Par_LB_Init_RedistributeByRectangular
-//                       and LB_Init_LoadBalance"
+//                   --> They will be redistributed when calling "Par_LB_Init_RedistributeByRectangular()
+//                       and LB_Init_LoadBalance()"
 //                5. For LOAD_BALANCE, the number of particles in each rank must be set in advance
-//                   --> Currently it's set by "Init_Parallelization"
+//                   --> Currently it's set by "Init_Parallelization()" and stored in "amr->Par->NPar_AcPlusInac"
 //
 // Parameter   :  None
 //
