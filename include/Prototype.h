@@ -454,7 +454,6 @@ void CUAPI_MemFree_PoissonGravity();
 
 // Particle
 #ifdef PARTICLE
-void Par_Init_ByFunction();
 void Par_Init_ByFile();
 void Par_Output_TextFile( const char *comment );
 void Par_FindHomePatch_Base( const int *BaseP );

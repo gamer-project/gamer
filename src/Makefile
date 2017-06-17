@@ -13,7 +13,7 @@ EXECUTABLE := gamer
 # (a) common options (applied to all models)
 # -------------------------------------------------------------------------------
 # model: HYDRO/MHD/ELBDM/PAR_ONLY (PAR_ONLY must work with PARTICLE)
-SIMU_OPTION += -DMODEL=ELBDM
+SIMU_OPTION += -DMODEL=HYDRO
 
 # self-gravity
 SIMU_OPTION += -DGRAVITY
@@ -23,11 +23,11 @@ SIMU_OPTION += -DPOT_SCHEME=SOR
 
 # store GRA_GHOST_SIZE ghost-zone potential for each patch on each side (in patch->pot_ext)
 # --> currently only for improving accuracy for particles around the patch boundaries (by Par->ImproveAcc)
-#SIMU_OPTION += -DSTORE_POT_GHOST
+SIMU_OPTION += -DSTORE_POT_GHOST
 
 # use unsplitting method to couple gravity to the target model (for HYDRO and MHD only; ELBDM is not supported yet)
 # --> must be off if GRAVITY is off
-#SIMU_OPTION += -DUNSPLIT_GRAVITY
+SIMU_OPTION += -DUNSPLIT_GRAVITY
 
 # individual time-step (default: shared time-step)
 SIMU_OPTION += -DINDIVIDUAL_TIMESTEP
@@ -36,7 +36,7 @@ SIMU_OPTION += -DINDIVIDUAL_TIMESTEP
 #SIMU_OPTION += -DCOMOVING
 
 # particles (must work with GRAVITY; set MODEL=PAR_ONLY for particle-only simulations)
-#SIMU_OPTION += -DPARTICLE
+SIMU_OPTION += -DPARTICLE
 
 # maximum number of AMR levels including the base level (level id = 0 ... NLEVEL-1)
 SIMU_OPTION += -DNLEVEL=10

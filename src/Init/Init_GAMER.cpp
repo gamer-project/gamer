@@ -6,6 +6,10 @@ extern void (*Init_ExternalAcc_Ptr)();
 extern void (*Init_ExternalPot_Ptr)();
 #endif
 
+#ifdef PARTICLE
+extern void (*Par_Init_ByFunction_Ptr)();
+#endif
+
 
 
 
@@ -135,14 +139,21 @@ void Init_GAMER( int *argc, char ***argv )
 #  ifdef PARTICLE
    switch ( amr->Par->Init )
    {
-      case PAR_INIT_BY_FUNCTION:    Par_Init_ByFunction();  break;
+      case PAR_INIT_BY_FUNCTION:
+         if ( Par_Init_ByFunction_Ptr == NULL )    Aux_Error( ERROR_INFO, "Par_Init_ByFunction_Ptr == NULL !!\n" );
+         Par_Init_ByFunction_Ptr();
+         break;
 
-      case PAR_INIT_BY_RESTART:                             break;   // nothing to do here for the restart mode
+      case PAR_INIT_BY_RESTART:
+         break;   // nothing to do here for the restart mode
 
-      case PAR_INIT_BY_FILE:        Par_Init_ByFile();      break;
+      case PAR_INIT_BY_FILE:
+         Par_Init_ByFile();
+         break;
 
-      default : Aux_Error( ERROR_INFO, "unsupported particle initialization (%s = %d) !!\n",
-                           "PAR_INIT", (int)amr->Par->Init );
+      default:
+         Aux_Error( ERROR_INFO, "unsupported particle initialization (%s = %d) !!\n",
+                    "PAR_INIT", (int)amr->Par->Init );
    }
 
    if ( amr->Par->Init != PAR_INIT_BY_RESTART )
