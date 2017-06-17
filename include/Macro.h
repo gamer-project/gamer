@@ -531,6 +531,14 @@
 #  define __FLT_MIN__      1.17549435e-38F
 #endif
 
+#ifndef __DBL_MAX__
+#  define __DBL_MAX__      1.79769313e+308
+#endif
+
+#ifndef __DBL_MIN__
+#  define __DBL_MIN__      2.22507386e-308
+#endif
+
 
 // extreme value used for various purpose (e.g., floor value for passive scalars)
 #define TINY_NUMBER        __FLT_MIN__
