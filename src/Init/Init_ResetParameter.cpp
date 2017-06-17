@@ -36,11 +36,9 @@ void Init_ResetParameter()
 
 // number of OpenMP threads
 #  ifdef OPENMP
-   const int OMP_Max_NThread = omp_get_max_threads();
-
    if ( OMP_NTHREAD <= 0 )
    {
-      OMP_NTHREAD = MAX( OMP_Max_NThread/2, 1 );
+      OMP_NTHREAD = omp_get_max_threads();
 
       PRINT_WARNING( OMP_NTHREAD, FORMAT_INT, "" );
    }
