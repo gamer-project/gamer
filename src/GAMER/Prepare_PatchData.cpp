@@ -1228,7 +1228,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
                      case BC_FLU_USER:
                         Flu_BoundaryCondition_User        ( Array_Ptr,                      NVar_Flu,
                                                             PGSize1D, PGSize1D, PGSize1D, BC_Idx_Start, BC_Idx_End,
-                                                            TFluVarIdxList, PrepTime, dh, xyz0, TVar );
+                                                            TFluVarIdxList, PrepTime, dh, xyz0, TVar, lv );
                      break;
 
                      default:

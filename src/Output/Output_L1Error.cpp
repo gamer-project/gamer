@@ -1,7 +1,8 @@
 #include "Copyright.h"
 #include "GAMER.h"
 
-static void WriteFile( void (*AnalFunc)( real *fluid, const double x, const double y, const double z, const double Time ),
+static void WriteFile( void (*AnalFunc)( real fluid[], const double x, const double y, const double z, const double Time,
+                                         const int lv, double AuxArray[] ),
                        FILE *File[], const int lv, const int PID, const int i, const int j, const int k,
                        double L1_Err[], const OptOutputPart_t Part );
 
@@ -17,6 +18,8 @@ static void WriteFile( void (*AnalFunc)( real *fluid, const double x, const doub
 //                3. L1 errors are recorded in "Record__L1Err"
 //
 // Parameter   :  AnalFunc : Function pointer to return the analytical solution
+//                           --> Usually set to the same function pointer for initializing grids
+//                               (e.g., SetGridIC() in various test problems)
 //                Prefix   : Prefix of the output filename
 //                Part     : OUTPUT_X    : x line
 //                           OUTPUT_Y    : y line
@@ -26,7 +29,8 @@ static void WriteFile( void (*AnalFunc)( real *fluid, const double x, const doub
 //
 // Return      :  None
 //-------------------------------------------------------------------------------------------------------
-void Output_L1Error( void (*AnalFunc)( real *fluid, const double x, const double y, const double z, const double Time ),
+void Output_L1Error( void (*AnalFunc)( real fluid[], const double x, const double y, const double z, const double Time,
+                                       const int lv, double AuxArray[] ),
                      const char *Prefix, const OptOutputPart_t Part, const double x, const double y, const double z )
 {
 
@@ -262,7 +266,8 @@ void Output_L1Error( void (*AnalFunc)( real *fluid, const double x, const double
 //
 // Return      :  L1_Err
 //-------------------------------------------------------------------------------------------------------
-void WriteFile( void (*AnalFunc)( real *fluid, const double x, const double y, const double z, const double Time ),
+void WriteFile( void (*AnalFunc)( real fluid[], const double x, const double y, const double z, const double Time,
+                                  const int lv, double AuxArray[] ),
                 FILE *File[], const int lv, const int PID, const int i, const int j, const int k,
                 double L1_Err[], const OptOutputPart_t Part )
 {
@@ -290,7 +295,7 @@ void WriteFile( void (*AnalFunc)( real *fluid, const double x, const double y, c
    const double y  = amr->patch[0][lv][PID]->EdgeL[1] + (j+0.5)*dh;
    const double z  = amr->patch[0][lv][PID]->EdgeL[2] + (k+0.5)*dh;
 
-   AnalFunc( Anal, x, y, z, Time[0] );
+   AnalFunc( Anal, x, y, z, Time[0], lv, NULL );
 
 
 // convert total energy to pressure

@@ -531,7 +531,7 @@ void PrepareCData( const int FaLv, const int FaPID, real *const FaData,
             case BC_FLU_USER:
                Flu_BoundaryCondition_User        ( FaData_Flu,                      NCOMP_TOTAL,
                                                    FaSize_Flu, FaSize_Flu, FaSize_Flu, BC_Idx_Start, BC_Idx_End, 
-                                                   FluVarIdxList, Time[FaLv], amr->dh[FaLv], xyz, _TOTAL );
+                                                   FluVarIdxList, Time[FaLv], amr->dh[FaLv], xyz, _TOTAL, FaLv );
             break;
 
             default: 

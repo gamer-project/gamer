@@ -111,7 +111,7 @@ void Flu_Restrict( const int FaLv, const int SonFluSg, const int FaFluSg, const 
 void Flu_BoundaryCondition_User( real *Array, const int NVar_Flu, const int ArraySizeX, const int ArraySizeY,
                                  const int ArraySizeZ, const int Idx_Start[], const int Idx_End[],
                                  const int TFluVarIdxList[], const double Time, const double dh, const double *Corner,
-                                 const int TVar );
+                                 const int TVar, const int lv );
 void Flu_CorrAfterAllSync();
 #ifndef SERIAL
 void Flu_AllocateFluxArray_Buffer( const int lv );
@@ -219,7 +219,8 @@ void Output_PreparedPatch_Fluid( const int TLv, const int TPID,
                                  const real h_Flu_Array[][FLU_NIN][FLU_NXT*FLU_NXT*FLU_NXT],
                                  const int NPG, const int *PID0_List, const int CLv, const char *comment );
 void Output_BasePowerSpectrum( const char *FileName );
-void Output_L1Error( void (*AnalFunc)( real *fluid, const double x, const double y, const double z, const double Time ),
+void Output_L1Error( void (*AnalFunc)( real fluid[], const double x, const double y, const double z, const double Time,
+                                       const int lv, double AuxArray[] ),
                      const char *Prefix, const OptOutputPart_t Part, const double x, const double y, const double z );
 #ifndef SERIAL
 void Output_ExchangePatchMap( const int lv, const int xyz, const char *comment );
