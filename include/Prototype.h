@@ -34,6 +34,7 @@ void Aux_Record_Timing();
 void Aux_Record_PatchCount();
 void Aux_Record_Performance( const double ElapsedTime );
 void Aux_Record_CorrUnphy();
+int  Aux_CountRow( const char *FileName );
 #ifndef SERIAL
 void Aux_Record_BoundaryPatch( const int lv, int *NList, int **IDList, int **PosList );
 #endif
@@ -42,6 +43,8 @@ template <typename T> void Aux_AllocateArray2D( T** &Array, const int J, const i
 template <typename T> void Aux_AllocateArray3D( T*** &Array, const int K, const int J, const int I );
 template <typename T> void Aux_DeallocateArray2D( T** &Array );
 template <typename T> void Aux_DeallocateArray3D( T*** &Array );
+template <typename T> int  Aux_LoadTable( T *&Data, const char *FileName, const int NCol_Target, const int TCol[],
+                                          const bool RowMajor );
 
 
 // Buffer
