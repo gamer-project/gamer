@@ -16,7 +16,7 @@ Compilation
       SIMU_OPTION += -DINTEL           # intel or gnu compiler
       SIMU_OPTION += -DGPU             # use GPU or not
       SIMU_OPTION += -DGPU_ARCH=KEPLER # GPU architecture
-       
+
       CUDA_TOOLKIT_PATH :=             # useful only if GPU is enabled
       FFTW_PATH         :=             # useful only if GRAVITY is enabled
       MPI_PATH          :=             # useful only if SERIAL is disabled
@@ -27,7 +27,7 @@ Compilation
 
       # installation path
       export FFTW_PATH=YOUR_FFTW_PATH
-              
+
       # single precision
       ./configure --enable-mpi --enable-type-prefix --prefix $FFTW_PATH --enable-float
       make
@@ -40,9 +40,19 @@ Compilation
       make install
 
 3. You may need to edit other compilation flags for the target test problem.
-   For example, please turn on GRAVITY and PARTICLE for both the
-   AGORA_IsolatedGalaxy and ClusterMerger_vs_Flash test problems.
-   --> Please refer to the README file associated with each test problem
+   Please refer to the README file associated with each test problem.
+   For example, to run the AGORA_IsolatedGalaxy and ClusterMerger_vs_Flash,
+   test problems, please turn on
+
+      GRAVITY
+      POT_SCHEME=SOR
+      STORE_POT_GHOST
+      UNSPLIT_GRAVITY
+      PARTICLE
+
+   For AGORA_IsolatedGalaxy, please also enable
+
+      DUAL_ENERGY=DE_ENPY
 
 4. Compile GAMER by
 
@@ -58,12 +68,12 @@ Run GAMER
 
       ${GAMER}/example/test_problem/
 
-1. Take the BlastWave test problem for example.
+   To run, for example, the BlastWave test problem, please
 
       cd ${GAMER}/bin/run
       cp ${GAMER}/example/test_problem/Hydro/BlastWave/* .
       ./gamer >& log
-   
+
       # to quickly visualize the density profile evolution
       gnuplot plot.gpt
 
@@ -81,7 +91,7 @@ Runtime parameters:
 #====================
 1. Input__Parameter: runtime parameters applied to all test problems
                      (e.g., BOX_SIZE, NX0_TOT[0/1/2], END_T, ... )
-2. Input__TestProb:  problem-specific runtime parameters 
+2. Input__TestProb:  problem-specific runtime parameters
 3. Input__Flag_XXX:  thresholds of various grid refinement criteria
 
 
