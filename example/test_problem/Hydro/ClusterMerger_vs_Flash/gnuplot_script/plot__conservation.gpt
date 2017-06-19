@@ -1,0 +1,34 @@
+#
+reset
+
+
+# terminal
+# -----------------------------------------------------------
+set term x11 enhanced
+#set term png enhanced crop size 1280,800 font ",16"
+#set term postscript eps enhanced color 'Helvetica' 16
+
+if ( GPVAL_TERM ne 'x11' ) { set output sprintf( 'Fig__Conservation.png' ) }
+
+
+# plot style
+# -----------------------------------------------------------
+#set key reverse Left spacing 2 right
+set xlabel "Time [Gyr]"
+set ylabel "Relative error"
+set xrange [0.0:11.0]
+#set yrange [1.0e-5:1.0e-2]
+
+
+#units and physical constants in CGS
+UNIT_T = 3.08567758149000e+17
+Gyr    = 3.15569252e16
+
+
+# plot
+plot "../Record__Conservation" u ($1*UNIT_T/Gyr):50 w l lc 6 lw 1.5 tit 'Mass conservation' \
+    ,"../Record__Conservation" u ($1*UNIT_T/Gyr):62 w l lc 7 lw 1.5 tit 'Energy conservation'
+
+if ( GPVAL_TERM eq 'x11' ) { pause -1 };
+
+
