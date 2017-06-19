@@ -392,6 +392,13 @@ VPATH := $(dir $(wildcard TestProblem/*/*/))
 
 # location of libraries
 # -------------------------------------------------------------------------------
+# hybrid (gcc)
+# CUDA_TOOLKIT_PATH := /usr/local/cuda-8.0
+# MPI_PATH          := /home/hyschive/project/software/openmpi/2.0.2
+# FFTW_PATH         := /home/hyschive/project/software/fftw/2.1.5
+# HDF5_PATH         := /home/hyschive/project/software/miniconda2
+# GSL_PATH          :=
+
 # nano (intel 2016)
 #CUDA_TOOLKIT_PATH := /usr/local/cuda
 #MPI_PATH          := /mnt/lustre/allen/hyschive/software/openmpi/2.0.2
