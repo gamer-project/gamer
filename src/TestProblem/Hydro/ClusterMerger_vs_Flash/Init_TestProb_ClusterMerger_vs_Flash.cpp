@@ -5,25 +5,24 @@
 
 // problem-specific global variables
 // =======================================================================================
-       bool    Merger_Coll;                           // (true/false) --> test (cluster merger / single cluster)
-static char    Merger_File_Prof1[1000];               // profile table of cluster 1
-static char    Merger_File_Prof2[1000];               // profile table of cluster 2
-       char    Merger_File_Par1 [1000];               // particle file of cluster 1
-       char    Merger_File_Par2 [1000];               // particle file of cluster 2
-       double  Merger_Coll_D;                         // initial distance between two clusters
-       double  Merger_Coll_B;                         // impact parameter
-       double  Merger_Coll_BulkVel1;                  // bulk velocity of cluster 1 (on the left  side)
-       double  Merger_Coll_BulkVel2;                  // bulk velocity of cluster 2 (on the right side)
+       bool    Merger_Coll;               // (true/false) --> test (cluster merger / single cluster)
+static char    Merger_File_Prof1[1000];   // profile table of cluster 1
+static char    Merger_File_Prof2[1000];   // profile table of cluster 2
+       char    Merger_File_Par1 [1000];   // particle file of cluster 1
+       char    Merger_File_Par2 [1000];   // particle file of cluster 2
+       double  Merger_Coll_D;             // initial distance between two clusters
+       double  Merger_Coll_B;             // impact parameter
+       double  Merger_Coll_BulkVel1;      // bulk velocity of cluster 1 (on the left  side)
+       double  Merger_Coll_BulkVel2;      // bulk velocity of cluster 2 (on the right side)
 
-static double *Merger_Prof1[3] = {NULL,NULL,NULL};    // radial profiles [radius/gas mass density/gas pressure] of cluster 1
-static double *Merger_Prof2[3] = {NULL,NULL,NULL};    // radial profiles [radius/gas mass density/gas pressure] of cluster 2
-static int     Merger_NBin1;                          // number of radial bins of cluster 1
-static int     Merger_NBin2;                          // number of radial bins of cluster 2
+static double *Merger_Prof1 = NULL;       // radial profiles [gas mass density/gas pressure/radius] of cluster 1
+static double *Merger_Prof2 = NULL;       // radial profiles [gas mass density/gas pressure/radius] of cluster 2
+static int     Merger_NBin1;              // number of radial bins of cluster 1
+static int     Merger_NBin2;              // number of radial bins of cluster 2
 // =======================================================================================
 
 
 // problem-specific function prototypes
-void LoadProfile_Merger( const char *FileName, double **Profile, int &NBin );
 void Par_Init_ByFunction_Merger();
 
 
@@ -138,11 +137,43 @@ void SetParameter()
 // (2) load the radial profiles
    if ( OPT__INIT != INIT_RESTART )
    {
-      LoadProfile_Merger( Merger_File_Prof1, Merger_Prof1, Merger_NBin1 );
+      const bool RowMajor_No = false;        // load data into the column-major order
+      const int  NCol        = 3;
+      const int  Col[NCol]   = {2, 6, 7};    // (density, pressure, radius )
+      double *Table_D, *Table_P, *Table_R;
 
-      if ( Merger_Coll )
-      LoadProfile_Merger( Merger_File_Prof2, Merger_Prof2, Merger_NBin2 );
-   }
+//    cluster 1
+      Merger_NBin1 = Aux_LoadTable( Merger_Prof1, Merger_File_Prof1, NCol, Col, RowMajor_No );
+
+//    convert to code units (assuming the input units are cgs)
+      Table_D = Merger_Prof1 + 0*Merger_NBin1;
+      Table_P = Merger_Prof1 + 1*Merger_NBin1;
+      Table_R = Merger_Prof1 + 2*Merger_NBin1;
+
+      for (int b=0; b<Merger_NBin1; b++)
+      {
+         Table_D[b] /= UNIT_D;
+         Table_P[b] /= UNIT_P;
+         Table_R[b] /= UNIT_L;
+      }
+
+//    cluster 2
+      if ( Merger_Coll ) {
+      Merger_NBin2 = Aux_LoadTable( Merger_Prof2, Merger_File_Prof2, NCol, Col, RowMajor_No );
+
+//    convert to code units (assuming the input units are cgs)
+      Table_D = Merger_Prof2 + 0*Merger_NBin2;
+      Table_P = Merger_Prof2 + 1*Merger_NBin2;
+      Table_R = Merger_Prof2 + 2*Merger_NBin2;
+
+      for (int b=0; b<Merger_NBin2; b++)
+      {
+         Table_D[b] /= UNIT_D;
+         Table_P[b] /= UNIT_P;
+         Table_R[b] /= UNIT_L;
+      }
+      } // if ( Merger_Coll )
+   } // if ( OPT__INIT != INIT_RESTART )
 
 
 // (3) reset other general-purpose parameters
@@ -211,7 +242,13 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
                 const int lv, double AuxArray[] )
 {
 
-   const double BoxCenter[3] = { 0.5*amr->BoxSize[0], 0.5*amr->BoxSize[1], 0.5*amr->BoxSize[2] };
+   const double  BoxCenter[3] = { 0.5*amr->BoxSize[0], 0.5*amr->BoxSize[1], 0.5*amr->BoxSize[2] };
+   const double *Table_D1     = Merger_Prof1 + 0*Merger_NBin1;    // density  table of cluster 1
+   const double *Table_P1     = Merger_Prof1 + 1*Merger_NBin1;    // pressure table of cluster 1
+   const double *Table_R1     = Merger_Prof1 + 2*Merger_NBin1;    // radius   table of cluster 1
+   const double *Table_D2     = Merger_Prof2 + 0*Merger_NBin2;    // density  table of cluster 2
+   const double *Table_P2     = Merger_Prof2 + 1*Merger_NBin2;    // pressure table of cluster 2
+   const double *Table_R2     = Merger_Prof2 + 2*Merger_NBin2;    // radius   table of cluster 2
 
    if ( Merger_Coll )
    {
@@ -223,10 +260,10 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 //    for each cell, we sum up the density and pressure from each halo and then calculate the weighted velocity
       r1    = sqrt( SQR(x-ClusterCenter1[0]) + SQR(y-ClusterCenter1[1]) + SQR(z-ClusterCenter1[2]) );
       r2    = sqrt( SQR(x-ClusterCenter2[0]) + SQR(y-ClusterCenter2[1]) + SQR(z-ClusterCenter2[2]) );
-      Dens1 = Mis_InterpolateFromTable( Merger_NBin1, Merger_Prof1[0], Merger_Prof1[1], r1 );
-      Dens2 = Mis_InterpolateFromTable( Merger_NBin2, Merger_Prof2[0], Merger_Prof2[1], r2 );
-      Pres1 = Mis_InterpolateFromTable( Merger_NBin1, Merger_Prof1[0], Merger_Prof1[2], r1 );
-      Pres2 = Mis_InterpolateFromTable( Merger_NBin2, Merger_Prof2[0], Merger_Prof2[2], r2 );
+      Dens1 = Mis_InterpolateFromTable( Merger_NBin1, Table_R1, Table_D1, r1 );
+      Dens2 = Mis_InterpolateFromTable( Merger_NBin2, Table_R2, Table_D2, r2 );
+      Pres1 = Mis_InterpolateFromTable( Merger_NBin1, Table_R1, Table_P1, r1 );
+      Pres2 = Mis_InterpolateFromTable( Merger_NBin2, Table_R2, Table_P2, r2 );
       Vel   = ( Merger_Coll_BulkVel1*Dens1 + Merger_Coll_BulkVel2*Dens2 ) / ( Dens1 + Dens2 );
 
       if ( Dens1 == NULL_REAL  ||  Pres1 == NULL_REAL )
@@ -248,8 +285,8 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
       double r, Dens, Pres;
 
       r    = sqrt( SQR(x-BoxCenter[0]) + SQR(y-BoxCenter[1]) + SQR(z-BoxCenter[2]) );
-      Dens = Mis_InterpolateFromTable( Merger_NBin1, Merger_Prof1[0], Merger_Prof1[1], r );
-      Pres = Mis_InterpolateFromTable( Merger_NBin1, Merger_Prof1[0], Merger_Prof1[2], r );
+      Dens = Mis_InterpolateFromTable( Merger_NBin1, Table_R1, Table_D1, r );
+      Pres = Mis_InterpolateFromTable( Merger_NBin1, Table_R1, Table_P1, r );
 
       if ( Dens == NULL_REAL  ||  Pres == NULL_REAL )
          Aux_Error( ERROR_INFO, "interpolation failed at radius %13.7e (probably outside the input table)!!\n", r );
@@ -276,11 +313,8 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 void End_ClusterMerger()
 {
 
-   for (int v=0; v<3; v++)
-   {
-      delete [] Merger_Prof1[v];
-      delete [] Merger_Prof2[v];
-   }
+   delete [] Merger_Prof1;
+   delete [] Merger_Prof2;
 
 } // FUNCTION : End_ClusterMerger
 #endif // #if ( MODEL == HYDRO  &&  defined PARTICLE )
