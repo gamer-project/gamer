@@ -204,7 +204,11 @@ struct FluVar5 { real Rho, Px, Py, Pz, Egy; };
 #  elif ( GPU_ARCH == MAXWELL )
 #     define FLU_BLOCK_SIZE_X   512    // not optimized yet
 #  elif ( GPU_ARCH == PASCAL )
+#     if ( RSOLVER == ROE )
 #     define FLU_BLOCK_SIZE_X   512    // not optimized yet
+#     else
+#     define FLU_BLOCK_SIZE_X   256    // somehow HLLC/HLLE solvers consume too many resources on PASCAL !?
+#     endif
 #  else
 #     define FLU_BLOCK_SIZE_X   NULL_INT
 #     ifdef GPU
