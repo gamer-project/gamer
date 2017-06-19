@@ -11,7 +11,7 @@ Download GAMER
 #====================
 Compilation
 #====================
-1. Please edit at least the following options and paths in $GAMER/src/Makefile
+1. Please edit at least the following options and paths in ${GAMER}/src/Makefile
 
       SIMU_OPTION += -DINTEL           # intel or gnu compiler
       SIMU_OPTION += -DGPU             # use GPU or not
