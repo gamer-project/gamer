@@ -658,7 +658,8 @@ else ifeq "$(findstring GPU, $(SIMU_OPTION))" "GPU"
 endif
 
 ifeq "$(findstring GAMER_DEBUG, $(SIMU_OPTION))" "GAMER_DEBUG"
-   NVCCFLAG_COM += -D_DEBUG -g -G #-deviceemu
+   NVCCFLAG_COM += -g
+#  NVCCFLAG_COM += -g -G   # -G may cause the GPU Poisson solver to fail
 endif
 
 # fluid solver flags
