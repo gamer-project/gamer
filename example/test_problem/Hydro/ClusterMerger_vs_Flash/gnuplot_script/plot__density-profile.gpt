@@ -1,0 +1,111 @@
+# -----------------------------------------------------------
+# GNUPLOT template 1D v1.1
+# -----------------------------------------------------------
+
+
+reset
+
+
+# target files
+# -----------------------------------------------------------
+FILE_IN_PREFIX_GAS = 'AveRho'
+FILE_IN_PREFIX_DM  = 'AveParDens'
+
+FILE_IN_SUFFIX  = ''
+FILE_OUT_PREFIX = 'Fig__DensityProfile'
+START_ID        = 0
+END_ID          = 52
+DELTA_ID        = 1
+PAUSE           = 0.40  # <= 0.0 --> mouse
+
+
+# terminal
+# -----------------------------------------------------------
+ set term x11 enhanced
+#set term png enhanced crop size 1280,800 font ",16"
+#set term postscript eps enhanced color 'Helvetica' 16
+
+
+# plot style
+# -----------------------------------------------------------
+ set log xy
+ set key reverse Left spacing 1.5 left bottom
+ set xlabel "r [Mpc]"
+ set ylabel "Mass density [cosmic density]"
+ set format x "10^{%T}"
+ set format y "10^{%T}"
+ set pointsize 1.0
+ set size square
+ set xrange [1.0e-2:1.0e1]
+ set yrange [5e-3:1e7]
+
+
+
+# set the output file extension automatically
+# -----------------------------------------------------------
+if      ( GPVAL_TERM eq 'pngcairo'   ) FILE_OUT_EXT='png'; \
+else if ( GPVAL_TERM eq 'postscript' ) FILE_OUT_EXT='eps'; \
+else if ( GPVAL_TERM ne 'x11'        ) print 'Unkown terminal for settting the output file extension !!'; quit
+
+
+
+# loop over all files
+# -----------------------------------------------------------
+print "Start plotting ..."
+
+do for [ID=START_ID:END_ID:DELTA_ID] {
+
+#  set the input and output filenames
+   ID1     = ID%10
+   ID2     = (ID%100)/10
+   ID3     = (ID%1000)/100
+   ID4     = ID/1000
+
+   FILE_IN_DM  = sprintf( '%s_00%d%d%d%d%s', FILE_IN_PREFIX_DM,  ID4, ID3, ID2, ID1, FILE_IN_SUFFIX )
+   FILE_IN_GAS = sprintf( '%s_00%d%d%d%d%s', FILE_IN_PREFIX_GAS, ID4, ID3, ID2, ID1, FILE_IN_SUFFIX )
+
+   if ( GPVAL_TERM ne 'x11' ) { set output sprintf( '%s_00%d%d%d%d.%s', FILE_OUT_PREFIX, ID4, ID3, ID2, ID1, FILE_OUT_EXT ) }
+
+
+#  units and physical constants in CGS
+   UNIT_L = 3.08567758149000e+24
+   UNIT_T = 3.08567758149000e+17
+   UNIT_D = 6.76821209430561e-27
+
+   kpc    = 3.08567758149e21
+   Mpc    = 3.08567758149e24
+   Gyr    = 3.15569252e16
+   Msun   = 1.9885e33
+   RhoBg  = 38.0*Msun/kpc**3.0
+
+
+#  load the physical time
+   DUMP_TABLE   = './Record__Dump'
+   NHEADER      = 1
+   LOAD_TIME    = sprintf( "awk '{if(NR==%d+%d) {print $2}}' %s", NHEADER, ID+1, DUMP_TABLE  )
+   TIME         = system( LOAD_TIME )*UNIT_T/Gyr
+
+
+#  set title
+   set title sprintf( 'Data %d%d%d%d (t = %5.2f Gyr)', ID4, ID3, ID2, ID1, TIME )
+   print sprintf( '   Plotting DataID %d%d%d%d (t = %5.2f Gyr) ...', ID4, ID3, ID2, ID1, TIME )
+
+
+#  plot
+   first = 0
+
+   plot FILE_IN_DM          u ($1*UNIT_L/Mpc):($3*UNIT_D/RhoBg) w lp pt 6 lc 7 lw 1.5 ps 1.5 dt 1 tit 'Dark matter' \
+       ,'AveParDens_000000' u ($1*UNIT_L/Mpc):($3*UNIT_D/RhoBg) w l       lc 8 lw 1.5        dt 1 tit 'Dark matter - initial' \
+       ,FILE_IN_GAS         u ($1*UNIT_L/Mpc):($3*UNIT_D/RhoBg) w lp pt 6 lc 6 lw 1.5 ps 1.5 dt 1 tit 'Gas' \
+       ,'AveRho_000000'     u ($1*UNIT_L/Mpc):($3*UNIT_D/RhoBg) w l       lc 8 lw 1.5        dt 2 tit 'Gas - initial'
+
+
+   if ( GPVAL_TERM eq 'x11' ) { if ( PAUSE <= 0.0 ) { pause mouse }   else { pause PAUSE } };
+
+} #do for [ID=START_ID:END_ID:DELTA_ID]
+
+
+print "Done";
+if ( GPVAL_TERM eq 'x11' ) { pause -1 };
+
+

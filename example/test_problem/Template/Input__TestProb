@@ -1,0 +1,4 @@
+# problem-specific runtime parameters
+var_double           1.0e0          # double precision variable
+var_int              2              # integer variable
+var_str              filename       # string variable
