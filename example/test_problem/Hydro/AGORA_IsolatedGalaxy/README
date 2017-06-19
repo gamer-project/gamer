@@ -22,7 +22,7 @@ Default setup:
 
 Note:
 ========================================
-1. Mimic the AGORA isolated galaxy simulation setup of Enzo
+1. Mimic the "AgoraGalaxy" test problem setup of Enzo
    --> Nathan Goldbaum, et al., 2015, ApJ, 814, 131 (arXiv: 1510.08458)
        Ji-hoon Kim, et al., 2016, ApJ, 833, 202 (arXiv: 1610.03066)
 2. Other references:
@@ -31,6 +31,6 @@ Note:
        Enzo setup              : https://bitbucket.org/enzo/enzo-dev/src/19f4a44e06f1c386573dc77b3608ba66b64d93bc/run/Hydro/Hydro-3D/AgoraGalaxy/?at=week-of-code
        Goldbaum et al. 2016    : https://arxiv.org/abs/1605.00646
        yt hub                  : https://girder.hub.yt/#collection/5736481ddd9119000164acf1
-3. To download the low-resolution initial condition:
-   wget -O ./LOW.tar.gz https://www.dropbox.com/sh/1xzt1rysy9v3a9l/AAAMlJBQG1OQFW4cjhp11Ex6a/LOW.tar.gz?dl=1
-4. Some yt scripts are put at "yt_script"
+3. Run the script "prepare_sim.sh" to download the low-resolution initial condition files for this test
+   --> It's the same script used in the "AgoraGalaxy" test problem of Enzo
+4. Some handy yt analysis scripts are put at "yt_script"
