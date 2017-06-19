@@ -157,23 +157,27 @@ void CUAPI_SetDevice( const int Mode )
 // (5) verify the GPU architecture
 #  if   ( GPU_ARCH == FERMI )
    if ( DeviceProp.major != 2 )
-      Aux_Error( ERROR_INFO, "GPU \"%s\" is incompatible to the Fermi architecture (major revision = %d) !!\n",
-                 DeviceProp.name, DeviceProp.major );
+      Aux_Error( ERROR_INFO, "GPU \"%s\" with the compute capability %d.%d is incompatible with the Fermi architecture !!\n"
+                             "        --> Please reset GPU_ARCH in the Makefile properly\n",
+                 DeviceProp.name, DeviceProp.major, DeviceProp.minor );
 
 #  elif ( GPU_ARCH == KEPLER )
    if ( DeviceProp.major != 3 )
-      Aux_Error( ERROR_INFO, "GPU \"%s\" is incompatible to the Kepler architecture (major revision = %d) !!\n",
-                 DeviceProp.name, DeviceProp.major );
+      Aux_Error( ERROR_INFO, "GPU \"%s\" with the compute capability %d.%d is incompatible with the Kepler architecture !!\n"
+                             "        --> Please reset GPU_ARCH in the Makefile properly\n",
+                 DeviceProp.name, DeviceProp.major, DeviceProp.minor );
 
 #  elif ( GPU_ARCH == MAXWELL )
    if ( DeviceProp.major != 5 )
-      Aux_Error( ERROR_INFO, "GPU \"%s\" is incompatible to the Maxwell architecture (major revision = %d) !!\n",
-                 DeviceProp.name, DeviceProp.major );
+      Aux_Error( ERROR_INFO, "GPU \"%s\" with the compute capability %d.%d is incompatible with the Maxwell architecture !!\n"
+                             "        --> Please reset GPU_ARCH in the Makefile properly\n",
+                 DeviceProp.name, DeviceProp.major, DeviceProp.minor );
 
 #  elif ( GPU_ARCH == PASCAL )
    if ( DeviceProp.major != 6 )
-      Aux_Error( ERROR_INFO, "GPU \"%s\" is incompatible to the Pascal architecture (major revision = %d) !!\n",
-                 DeviceProp.name, DeviceProp.major );
+      Aux_Error( ERROR_INFO, "GPU \"%s\" with the compute capability %d.%d is incompatible with the Pascal architecture !!\n"
+                             "        --> Please reset GPU_ARCH in the Makefile properly\n",
+                 DeviceProp.name, DeviceProp.major, DeviceProp.minor );
 
 #  else
 #  error : UNKNOWN GPU_ARCH !!
