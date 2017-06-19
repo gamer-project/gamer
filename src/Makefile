@@ -647,12 +647,17 @@ NVCCFLAG_COM := -Xcompiler $(COMMONFLAG) -O3 -Xptxas -v #-Xopencc -OPT:Olimit=0
 
 ifeq      "$(findstring GPU_ARCH=FERMI,   $(SIMU_OPTION))" "GPU_ARCH=FERMI"
    NVCCFLAG_COM += -gencode arch=compute_20,code=\"compute_20,sm_20\"
+#  NVCCFLAG_COM += -gencode arch=compute_20,code=\"compute_20,sm_21\"
 else ifeq "$(findstring GPU_ARCH=KEPLER,  $(SIMU_OPTION))" "GPU_ARCH=KEPLER"
+   NVCCFLAG_COM += -gencode arch=compute_30,code=\"compute_30,sm_30\"
    NVCCFLAG_COM += -gencode arch=compute_35,code=\"compute_35,sm_35\"
+   NVCCFLAG_COM += -gencode arch=compute_37,code=\"compute_37,sm_37\"
 else ifeq "$(findstring GPU_ARCH=MAXWELL, $(SIMU_OPTION))" "GPU_ARCH=MAXWELL"
+   NVCCFLAG_COM += -gencode arch=compute_50,code=\"compute_50,sm_50\"
    NVCCFLAG_COM += -gencode arch=compute_52,code=\"compute_52,sm_52\"
 else ifeq "$(findstring GPU_ARCH=PASCAL,  $(SIMU_OPTION))" "GPU_ARCH=PASCAL"
    NVCCFLAG_COM += -gencode arch=compute_60,code=\"compute_60,sm_60\"
+   NVCCFLAG_COM += -gencode arch=compute_61,code=\"compute_61,sm_61\"
 else ifeq "$(findstring GPU, $(SIMU_OPTION))" "GPU"
    $(error unknown GPU_ARCH (please set it in the Makefile) !!)
 endif
