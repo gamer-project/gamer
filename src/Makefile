@@ -392,12 +392,27 @@ VPATH := $(dir $(wildcard TestProblem/*/*/))
 
 # location of libraries
 # -------------------------------------------------------------------------------
+# campus UIUC (intel-15.0 + openmpi-1.8.4)
+CUDA_TOOLKIT_PATH := /usr/local/cuda/7.0
+FFTW_PATH         := /projects/ncsa/grav/softwares/fftw/2.1.5
+MPI_PATH          := /usr/local/mpi/openmpi-1.8.4-intel-15.0
+HDF5_PATH         := /projects/ncsa/grav/softwares/miniconda2
+GRACKLE_PATH      := /home/hyschive/local
+GSL_PATH          := /usr/local/gsl/gsl-1.16
+
+# campus UIUC (gcc-4.9.2 + openmpi-1.8.4)
+#CUDA_TOOLKIT_PATH := /usr/local/cuda/7.0
+#FFTW_PATH         := /projects/ncsa/grav/softwares/fftw/2.1.5-openmpi-1.8.4-gcc-4.9.2
+#MPI_PATH          := /usr/local/mpi/openmpi-1.8.4-gcc-4.9.2
+#HDF5_PATH         := /projects/ncsa/grav/softwares/miniconda2
+#GSL_PATH          := /usr/local/gsl/gsl-1.16
+
 # hybrid (gcc)
-# CUDA_TOOLKIT_PATH := /usr/local/cuda-8.0
-# MPI_PATH          := /home/hyschive/project/software/openmpi/2.0.2
-# FFTW_PATH         := /home/hyschive/project/software/fftw/2.1.5
-# HDF5_PATH         := /home/hyschive/project/software/miniconda2
-# GSL_PATH          :=
+#CUDA_TOOLKIT_PATH := /usr/local/cuda-8.0
+#MPI_PATH          := /home/hyschive/project/software/openmpi/2.0.2
+#FFTW_PATH         := /home/hyschive/project/software/fftw/2.1.5
+#HDF5_PATH         := /home/hyschive/project/software/miniconda2
+#GSL_PATH          :=
 
 # nano (intel 2016)
 #CUDA_TOOLKIT_PATH := /usr/local/cuda
@@ -413,21 +428,6 @@ VPATH := $(dir $(wildcard TestProblem/*/*/))
 #HDF5_PATH         := /home/hyschive/software/miniconda2
 #GSL_PATH          := /usr/lib
 #LIBYT_PATH        := /home/hyschive/project/libyt/libyt.dev/libyt
-
-# campus UIUC (intel-15.0 + openmpi-1.8.4)
-CUDA_TOOLKIT_PATH := /usr/local/cuda/7.0
-FFTW_PATH         := /projects/ncsa/grav/softwares/fftw/2.1.5
-MPI_PATH          := /usr/local/mpi/openmpi-1.8.4-intel-15.0
-HDF5_PATH         := /projects/ncsa/grav/softwares/miniconda2
-GRACKLE_PATH      := /home/hyschive/local
-GSL_PATH          := /usr/local/gsl/gsl-1.16
-
-# campus UIUC (gcc-4.9.2 + openmpi-1.8.4)
-#CUDA_TOOLKIT_PATH := /usr/local/cuda/7.0
-#FFTW_PATH         := /projects/ncsa/grav/softwares/fftw/2.1.5-openmpi-1.8.4-gcc-4.9.2
-#MPI_PATH          := /usr/local/mpi/openmpi-1.8.4-gcc-4.9.2
-#HDF5_PATH         := /projects/ncsa/grav/softwares/miniconda2
-#GSL_PATH          := /usr/local/gsl/gsl-1.16
 
 # hulk (openmpi-intel-qlc)
 #CUDA_TOOLKIT_PATH := /opt/gpu/cuda/4.2

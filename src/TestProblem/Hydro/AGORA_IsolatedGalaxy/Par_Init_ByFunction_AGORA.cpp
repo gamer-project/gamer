@@ -185,7 +185,7 @@ void Par_Init_ByFunction_AGORA()
 // shift center (assuming the center of loaded particles = [0,0,0])
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Shifting particle center ... " );
 
-   const real BoxCenter[3] = { 0.5*amr->BoxSize[0], 0.5*amr->BoxSize[1], 0.5*amr->BoxSize[2] };
+   const double BoxCenter[3] = { 0.5*amr->BoxSize[0], 0.5*amr->BoxSize[1], 0.5*amr->BoxSize[2] };
 
    for (int p=0; p<NPar_MyRank; p++)
    {
