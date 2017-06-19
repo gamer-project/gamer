@@ -31,6 +31,6 @@ Note:
        Enzo setup              : https://bitbucket.org/enzo/enzo-dev/src/19f4a44e06f1c386573dc77b3608ba66b64d93bc/run/Hydro/Hydro-3D/AgoraGalaxy/?at=week-of-code
        Goldbaum et al. 2016    : https://arxiv.org/abs/1605.00646
        yt hub                  : https://girder.hub.yt/#collection/5736481ddd9119000164acf1
-3. Run the script "prepare_sim.sh" to download the low-resolution initial condition files for this test
+3. Run the script "download_ic.sh" to download the low-resolution initial condition files for this test
    --> It's the same script used in the "AgoraGalaxy" test problem of Enzo
 4. Some handy yt analysis scripts are put at "yt_script"
