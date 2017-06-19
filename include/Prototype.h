@@ -298,8 +298,6 @@ void Gra_Prepare_USG( const int lv, const double PrepTime,
 void End_FFTW();
 void Init_FFTW();
 void Init_GreenFuncK();
-void Init_ExternalPot();
-void Init_ExternalAcc();
 void Init_MemAllocate_PoissonGravity( const int Pot_NPatchGroup );
 void Init_Set_Default_MG_Parameter( int &Max_Iter, int &NPre_Smooth, int &NPost_Smooth, double &Tolerated_Error );
 void Init_Set_Default_SOR_Parameter( double &SOR_Omega, int &SOR_Max_Iter, int &SOR_Min_Iter );
