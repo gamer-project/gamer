@@ -16,18 +16,18 @@ EXECUTABLE := gamer
 SIMU_OPTION += -DMODEL=HYDRO
 
 # self-gravity
-SIMU_OPTION += -DGRAVITY
+#SIMU_OPTION += -DGRAVITY
 
 # Poisson solver: SOR/MG (successive-overrelaxation/multigrid)
-SIMU_OPTION += -DPOT_SCHEME=SOR
+#SIMU_OPTION += -DPOT_SCHEME=SOR
 
 # store GRA_GHOST_SIZE ghost-zone potential for each patch on each side (in patch->pot_ext)
 # --> currently only for improving accuracy for particles around the patch boundaries (by Par->ImproveAcc)
-SIMU_OPTION += -DSTORE_POT_GHOST
+#SIMU_OPTION += -DSTORE_POT_GHOST
 
 # use unsplitting method to couple gravity to the target model (for HYDRO and MHD only; ELBDM is not supported yet)
 # --> must be off if GRAVITY is off
-SIMU_OPTION += -DUNSPLIT_GRAVITY
+#SIMU_OPTION += -DUNSPLIT_GRAVITY
 
 # individual time-step (default: shared time-step)
 SIMU_OPTION += -DINDIVIDUAL_TIMESTEP
@@ -36,7 +36,7 @@ SIMU_OPTION += -DINDIVIDUAL_TIMESTEP
 #SIMU_OPTION += -DCOMOVING
 
 # particles (must work with GRAVITY; set MODEL=PAR_ONLY for particle-only simulations)
-SIMU_OPTION += -DPARTICLE
+#SIMU_OPTION += -DPARTICLE
 
 # maximum number of AMR levels including the base level (level id = 0 ... NLEVEL-1)
 SIMU_OPTION += -DNLEVEL=10
@@ -56,10 +56,10 @@ SIMU_OPTION += -DFLU_SCHEME=CTU
 SIMU_OPTION += -DLR_SCHEME=PPM
 
 # Riemann solver: EXACT/ROE/HLLE/HLLC ##all are useless in RTVD, HLLE/HLLC are useless in WAF##
-SIMU_OPTION += -DRSOLVER=HLLC
+SIMU_OPTION += -DRSOLVER=ROE
 
 # dual energy formalism: DE_ENPY/DE_EINT (evolve entropy or internal energy; DE_EINT is not supported yet) ##useless in RTVD/WAF##
-SIMU_OPTION += -DDUAL_ENERGY=DE_ENPY
+#SIMU_OPTION += -DDUAL_ENERGY=DE_ENPY
 
 # number of passively advected scalars (**excluding** entropy or internal energy even when DUAL_ENERGY is on)
 # --> for simulations without any passive scalar, please set this variable to 0 and do NOT comment it out
@@ -125,10 +125,10 @@ SIMU_OPTION += -DINTEL
 #SIMU_OPTION += -DFLOAT8
 
 # serial mode (in which no MPI libraries are required)
-#SIMU_OPTION += -DSERIAL
+SIMU_OPTION += -DSERIAL
 
 # load-balance parallelization (one must not turn on the option "SERIAL") (HILBERT)
-SIMU_OPTION += -DLOAD_BALANCE=HILBERT
+#SIMU_OPTION += -DLOAD_BALANCE=HILBERT
 
 # overlap MPI communication with computation (experimental, only supported in LOAD_BALANCE)
 #SIMU_OPTION += -DOVERLAP_MPI

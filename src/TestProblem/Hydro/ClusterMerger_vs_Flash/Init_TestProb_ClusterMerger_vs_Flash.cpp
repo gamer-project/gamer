@@ -63,8 +63,10 @@ void Validate()
    if ( !OPT__UNIT )
       Aux_Error( ERROR_INFO, "OPT__UNIT must be enabled !!\n" );
 
+#  ifdef GRAVITY
    if ( OPT__BC_FLU[0] == BC_FLU_PERIODIC  ||  OPT__BC_POT == BC_POT_PERIODIC )
       Aux_Error( ERROR_INFO, "do not use periodic BC for this test !!\n" );
+#  endif
 
 #  ifdef PARTICLE
    if ( OPT__INIT == INIT_STARTOVER  &&  amr->Par->Init != PAR_INIT_BY_FUNCTION )

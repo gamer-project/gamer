@@ -78,8 +78,10 @@ void Validate()
    if ( !OPT__UNIT )
       Aux_Error( ERROR_INFO, "OPT__UNIT must be enabled !!\n" );
 
+#  ifdef GRAVITY
    if ( OPT__BC_FLU[0] == BC_FLU_PERIODIC  ||  OPT__BC_POT == BC_POT_PERIODIC )
       Aux_Error( ERROR_INFO, "do not use periodic BC for this test !!\n" );
+#  endif
 
    if ( amr->BoxSize[0] != amr->BoxSize[1]  ||  amr->BoxSize[0] != amr->BoxSize[2]  &&  MPI_Rank == 0 )
       Aux_Message( stderr, "WARNING : non-cubic box (currently the flag routine \"Flag_AGORA()\" assumes a cubic box) !!\n" );

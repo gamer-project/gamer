@@ -45,8 +45,10 @@ void Validate()
    Aux_Error( ERROR_INFO, "PARTICLE must be disabled !!\n" );
 #  endif
 
+#  ifdef GRAVITY
    if ( !OPT__EXTERNAL_POT )
    Aux_Error( ERROR_INFO, "OPT__EXTERNAL_POT must be enabled !!\n" );
+#  endif
 
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Validating test problem %d ... done\n", TESTPROB_ID );
