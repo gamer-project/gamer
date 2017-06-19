@@ -413,7 +413,7 @@ FFTW_PATH         := /projects/ncsa/grav/softwares/fftw/2.1.5
 MPI_PATH          := /usr/local/mpi/openmpi-1.8.4-intel-15.0
 HDF5_PATH         := /projects/ncsa/grav/softwares/miniconda2
 GRACKLE_PATH      := /home/hyschive/local
-#GSL_PATH          := /usr/local/gsl/gsl-1.16
+GSL_PATH          := /usr/local/gsl/gsl-1.16
 
 # campus UIUC (gcc-4.9.2 + openmpi-1.8.4)
 #CUDA_TOOLKIT_PATH := /usr/local/cuda/7.0
@@ -611,7 +611,7 @@ else
 CXXWARN_FLAG := -Wextra -Wall -Wswitch -Wformat -Wchar-subscripts -Wparentheses -Wmultichar \
                 -Wtrigraphs -Wpointer-arith -Wcast-align -Wreturn-type -Wno-unused-function
 CXXWARN_FLAG += -Wno-unused-variable -Wno-unused-parameter -Wno-maybe-uninitialized -Wno-unused-but-set-variable \
-                -Wno-unused-result -Wundef
+                -Wno-unused-result
 endif
 
 ifeq "$(findstring OPENMP, $(SIMU_OPTION))" ""

@@ -114,9 +114,9 @@ struct ReadPara_t
 
       for (int t=0; t<NPara; t++)
       {
-         delete Def[t];
-         delete Min[t];
-         delete Max[t];
+         free( Def[t] );
+         free( Min[t] );
+         free( Max[t] );
       }
 
       delete [] Key;
@@ -166,9 +166,10 @@ struct ReadPara_t
                     NewKey );
 
 //    set the default value and the allowed range of each variable
-      Def[NPara] = new T;
-      Min[NPara] = new T;
-      Max[NPara] = new T;
+//    --> use malloc() and free() since they are more appropriate for the void* pointers
+      Def[NPara] = (T*)malloc( sizeof(T) );
+      Min[NPara] = (T*)malloc( sizeof(T) );
+      Max[NPara] = (T*)malloc( sizeof(T) );
 
       GET_VOID( T, Def[NPara] ) = NewDef;
       GET_VOID( T, Min[NPara] ) = NewMin;

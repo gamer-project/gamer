@@ -83,7 +83,7 @@ void Validate()
       Aux_Error( ERROR_INFO, "do not use periodic BC for this test !!\n" );
 #  endif
 
-   if ( amr->BoxSize[0] != amr->BoxSize[1]  ||  amr->BoxSize[0] != amr->BoxSize[2]  &&  MPI_Rank == 0 )
+   if (  ( amr->BoxSize[0] != amr->BoxSize[1] || amr->BoxSize[0] != amr->BoxSize[2] )  &&  MPI_Rank == 0  )
       Aux_Message( stderr, "WARNING : non-cubic box (currently the flag routine \"Flag_AGORA()\" assumes a cubic box) !!\n" );
 
    if ( INIT_SUBSAMPLING_NCELL != 0  &&  MPI_Rank == 0 )
