@@ -4,10 +4,6 @@
 #ifdef PARTICLE
 
 
-
-extern bool CheckEmptyString_AGORA( const char *InputString );
-extern int  CountRow_AGORA( const char *Filename );
-
 extern char AGORA_HaloPar_Filename[1000];
 extern char AGORA_DiskPar_Filename[1000];
 extern char AGORA_BulgePar_Filename[1000];
@@ -41,7 +37,7 @@ void Par_Init_ByFunction_AGORA()
 
 
    const int NParVar = 7;  // mass, pos*3, vel*3
-   real (*ParData_AllRank)[NParVar] = NULL;
+   real *ParData_AllRank = NULL;
 
 // load data --> for simplicity, currently only the root rank will load data from disk
    if ( MPI_Rank == 0 )
@@ -60,9 +56,9 @@ void Par_Init_ByFunction_AGORA()
 //    check file size
       long NPar_Halo, NPar_Disk, NPar_Bulge, NPar_All;
 
-      NPar_Halo  = CountRow_AGORA( AGORA_HaloPar_Filename );
-      NPar_Disk  = CountRow_AGORA( AGORA_DiskPar_Filename );
-      NPar_Bulge = CountRow_AGORA( AGORA_BulgePar_Filename );
+      NPar_Halo  = Aux_CountRow( AGORA_HaloPar_Filename );
+      NPar_Disk  = Aux_CountRow( AGORA_DiskPar_Filename );
+      NPar_Bulge = Aux_CountRow( AGORA_BulgePar_Filename );
       NPar_All   = NPar_Halo + NPar_Disk + NPar_Bulge;
 
       Aux_Message( stdout, "   Number of halo  particles = %ld\n", NPar_Halo );
@@ -76,66 +72,33 @@ void Par_Init_ByFunction_AGORA()
 
 
 //    allocate memory to store all particles loaded from disk
-      ParData_AllRank = new real [NPar_All][NParVar];
+      ParData_AllRank = new real [NPar_All*NParVar];
 
 
-//    load data
-      const char *Filename[3] = { AGORA_HaloPar_Filename, AGORA_DiskPar_Filename, AGORA_BulgePar_Filename };
-      const int   MaxLine     = 1024;  // maximum number of characters per line
+//    load data from the three particle tables
+      const char *Filename[3]  = { AGORA_HaloPar_Filename, AGORA_DiskPar_Filename, AGORA_BulgePar_Filename };
+      const bool  RowMajor_Yes = true;                   // load data into the row-major order
+      const bool  AllocMem_No  = false;                  // do not allocate memory for ParData_AllRank
+      const int   NCol         = 7;                      // total number of columns to load
+      const int   Col[NCol]    = {0, 1, 2, 3, 4, 5, 6};  // target columns: (x, y, z, vx, vy, vz, mass)
 
-      char  *Line      = new char [MaxLine];
-      char  *FirstChar = NULL;
-      FILE  *File      = NULL;
-      long   NLoad     = 0;
+      long NPar_Loaded = 0;
 
-//    loop over all three particle tables
       for (int t=0; t<3; t++)
       {
          Aux_Message( stdout, "   Loading particles from the file \"%s\" ... ", Filename[t] );
 
-         File = fopen( Filename[t], "r" );
+//       must use a temporary pointer "tmp_ptr" for Aux_LoadTable() because of the call-by-reference approach
+         real *tmp_ptr = ParData_AllRank + NPar_Loaded*NParVar;
 
-         while ( fgets( Line, MaxLine, File ) != NULL )
-         {
-//          skip empty lines
-            if (  !CheckEmptyString_AGORA( Line )  )
-            {
-               FirstChar = Line;
-
-//             find the first non-empty character
-               while ( *FirstChar == ' '  ||  *FirstChar == '\t' )   FirstChar ++;
-
-//             skip lines starting with "#"
-               if ( *FirstChar != '#' )
-               {
-                  if ( NLoad >= NPar_All )   Aux_Error( ERROR_INFO, "NLoad (%ld) >= NPar_All (%ld) !!\n", NLoad, NPar_All );
-
-//                note that the on-disk data format is (x, y, z, vx, vy, vz, mass),
-//                while here we want to convert it to  (mass, x, y, z, vx, vy, vz)
-#                 ifdef FLOAT8
-                  sscanf( Line, "%lf%lf%lf%lf%lf%lf%lf",
-                          ParData_AllRank[NLoad]+1, ParData_AllRank[NLoad]+2, ParData_AllRank[NLoad]+3,
-                          ParData_AllRank[NLoad]+4, ParData_AllRank[NLoad]+5, ParData_AllRank[NLoad]+6,
-                          ParData_AllRank[NLoad]+0 );
-#                 else
-                  sscanf( Line, "%f%f%f%f%f%f%f",
-                          ParData_AllRank[NLoad]+1, ParData_AllRank[NLoad]+2, ParData_AllRank[NLoad]+3,
-                          ParData_AllRank[NLoad]+4, ParData_AllRank[NLoad]+5, ParData_AllRank[NLoad]+6,
-                          ParData_AllRank[NLoad]+0 );
-#                 endif
-
-                  NLoad ++;
-               }
-            } // if (  !CheckEmptyString_AGORA( Line )  )
-         } // while ( fgets( Line, MaxLine, File ) != NULL )
-
-         fclose( File );
+         NPar_Loaded += Aux_LoadTable( tmp_ptr, Filename[t], NCol, Col, RowMajor_Yes, AllocMem_No );
 
          Aux_Message( stdout, "done\n" );
+      }
 
-      } //for (int t=0; t<3; t++)
-
-      delete [] Line;
+//    check
+      if ( NPar_Loaded != NPar_All )
+         Aux_Error( ERROR_INFO, "total number of loaded particles (%ld) != expect (%ld) !!\n", NPar_Loaded, NPar_All );
 
    } // if ( MPI_Rank == 0 )
 
@@ -165,9 +128,9 @@ void Par_Init_ByFunction_AGORA()
    real (*ParData_MyRank)[NParVar] = new real [NPar_MyRank][NParVar];
 
 #  ifdef FLOAT8
-   MPI_Scatterv( ParData_AllRank[0], NSend, SendDisp, MPI_DOUBLE, ParData_MyRank[0], NPar_MyRank*NParVar, MPI_DOUBLE, 0, MPI_COMM_WORLD );
+   MPI_Scatterv( ParData_AllRank, NSend, SendDisp, MPI_DOUBLE, ParData_MyRank[0], NPar_MyRank*NParVar, MPI_DOUBLE, 0, MPI_COMM_WORLD );
 #  else
-   MPI_Scatterv( ParData_AllRank[0], NSend, SendDisp, MPI_FLOAT,  ParData_MyRank[0], NPar_MyRank*NParVar, MPI_FLOAT,  0, MPI_COMM_WORLD );
+   MPI_Scatterv( ParData_AllRank, NSend, SendDisp, MPI_FLOAT,  ParData_MyRank[0], NPar_MyRank*NParVar, MPI_FLOAT,  0, MPI_COMM_WORLD );
 #  endif
 
    delete [] ParData_AllRank;
@@ -180,13 +143,14 @@ void Par_Init_ByFunction_AGORA()
 
    for (int p=0; p<NPar_MyRank; p++)
    {
-      amr->Par->Mass[p] = ParData_MyRank[p][0];
-      amr->Par->PosX[p] = ParData_MyRank[p][1];
-      amr->Par->PosY[p] = ParData_MyRank[p][2];
-      amr->Par->PosZ[p] = ParData_MyRank[p][3];
-      amr->Par->VelX[p] = ParData_MyRank[p][4];
-      amr->Par->VelY[p] = ParData_MyRank[p][5];
-      amr->Par->VelZ[p] = ParData_MyRank[p][6];
+//    note that the on-disk data format is (x, y, z, vx, vy, vz, mass)
+      amr->Par->PosX[p] = ParData_MyRank[p][0];
+      amr->Par->PosY[p] = ParData_MyRank[p][1];
+      amr->Par->PosZ[p] = ParData_MyRank[p][2];
+      amr->Par->VelX[p] = ParData_MyRank[p][3];
+      amr->Par->VelY[p] = ParData_MyRank[p][4];
+      amr->Par->VelZ[p] = ParData_MyRank[p][5];
+      amr->Par->Mass[p] = ParData_MyRank[p][6];
 
 //    synchronize all particles to the physical time at the base level
       amr->Par->Time[p] = Time[0];
@@ -195,7 +159,6 @@ void Par_Init_ByFunction_AGORA()
    delete [] ParData_MyRank;
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );
-
 
 
 // convert to code units (assuming the loaded data have the units 1e9 Msun, kpc, and km/s)

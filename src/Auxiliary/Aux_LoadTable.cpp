@@ -14,21 +14,25 @@
 // Note        :  1. Overloaded with different types
 //                2. Put the target columns in "TCol[]", which must be sorted into ascending numerical order
 //                   in advance
-//                3. The "Data" pointer will be allocated to store the data, which must be freed manually
+//                3. Allocate memory for the pointer "Data" if AllocMem == true
+//                   --> Must be freed manually
 //                4. Delimiter characters for strtok() are defined by DELIMITER
 //
-// Parameter   :  Data        : Pointer to be allocated to store the loaded data (call-by-reference)
+// Parameter   :  Data        : Pointer to be allocated (if AllocMem == true) and to store the data
+//                              --> call-by-reference
 //                FileName    : Filename of the target table
 //                NCol_Target : Total number of target columns
 //                TCol        : Target columns (must be sorted into ascending numerical order in advance)
 //                RowMajor    : true/false --> store data into "Data" in the row-/column-major order
 //                              -->    Row-major: Data[Row][Column]
 //                                  Column-major: Data[Column][Row]
+//                AllocMem    : true/false --> allocate/do not allocate memory for the pointer "Data"
 //
 // Return      :  Total number of matched rows
 //-------------------------------------------------------------------------------------------------------
 template <typename T>
-int Aux_LoadTable( T *&Data, const char *FileName, const int NCol_Target, const int TCol[], const bool RowMajor )
+int Aux_LoadTable( T *&Data, const char *FileName, const int NCol_Target, const int TCol[], const bool RowMajor,
+                   const bool AllocMem )
 {
 
 // TCol[] must be sorted into ascending numerical order in advance
@@ -45,7 +49,7 @@ int Aux_LoadTable( T *&Data, const char *FileName, const int NCol_Target, const 
 
 
 // allocate memory
-   Data = new T [NCol_Target*NRow_Target];
+   if ( AllocMem )   Data = new T [NCol_Target*NRow_Target];
 
 
 // load data
@@ -147,8 +151,8 @@ int Aux_CountRow( const char *FileName )
 
 
 // explicit template instantiation
-template int Aux_LoadTable <float > ( float  *&, const char *, const int, const int [], const bool );
-template int Aux_LoadTable <double> ( double *&, const char *, const int, const int [], const bool );
-template int Aux_LoadTable <int   > ( int    *&, const char *, const int, const int [], const bool );
-template int Aux_LoadTable <long  > ( long   *&, const char *, const int, const int [], const bool );
+template int Aux_LoadTable <float > ( float  *&, const char *, const int, const int [], const bool, const bool );
+template int Aux_LoadTable <double> ( double *&, const char *, const int, const int [], const bool, const bool );
+template int Aux_LoadTable <int   > ( int    *&, const char *, const int, const int [], const bool, const bool );
+template int Aux_LoadTable <long  > ( long   *&, const char *, const int, const int [], const bool, const bool );
 

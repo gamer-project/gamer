@@ -137,13 +137,14 @@ void SetParameter()
 // (2) load the radial profiles
    if ( OPT__INIT != INIT_RESTART )
    {
-      const bool RowMajor_No = false;        // load data into the column-major order
-      const int  NCol        = 3;
-      const int  Col[NCol]   = {2, 6, 7};    // (density, pressure, radius )
+      const bool RowMajor_No  = false;       // load data into the column-major order
+      const bool AllocMem_Yes = true;        // allocate memory for Merger_Prof1/2
+      const int  NCol         = 3;           // total number of columns to load
+      const int  Col[NCol]    = {2, 6, 7};   // target columns: (density, pressure, radius)
       double *Table_D, *Table_P, *Table_R;
 
 //    cluster 1
-      Merger_NBin1 = Aux_LoadTable( Merger_Prof1, Merger_File_Prof1, NCol, Col, RowMajor_No );
+      Merger_NBin1 = Aux_LoadTable( Merger_Prof1, Merger_File_Prof1, NCol, Col, RowMajor_No, AllocMem_Yes );
 
 //    convert to code units (assuming the input units are cgs)
       Table_D = Merger_Prof1 + 0*Merger_NBin1;
@@ -159,7 +160,7 @@ void SetParameter()
 
 //    cluster 2
       if ( Merger_Coll ) {
-      Merger_NBin2 = Aux_LoadTable( Merger_Prof2, Merger_File_Prof2, NCol, Col, RowMajor_No );
+      Merger_NBin2 = Aux_LoadTable( Merger_Prof2, Merger_File_Prof2, NCol, Col, RowMajor_No, AllocMem_Yes );
 
 //    convert to code units (assuming the input units are cgs)
       Table_D = Merger_Prof2 + 0*Merger_NBin2;

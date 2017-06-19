@@ -20,7 +20,7 @@ static double  AGORA_HaloGasTemp;               // halo gas temperature
 static double  AGORA_DiskGasDens0;              // disk gas mass density coefficient
 static double  AGORA_HaloGasDens;               // halo gas mass density
 static double  AGORA_HaloGasPres;               // halo gas pressure
-static double *AGORA_VcProf[2] = {NULL,NULL};   // circular velocity radial profile [radius, velocity]
+static double *AGORA_VcProf = NULL;             // circular velocity radial profile [radius, velocity]
 static int     AGORA_VcProf_NBin;               // number of radial bin in AGORA_VcProf
 
 /*
@@ -33,7 +33,6 @@ static double  AGORA_MetalMassFrac;
 
 // problem-specific function prototypes
 double GaussianQuadratureIntegrate( const double dx, const double dy, const double dz, const double ds );
-void LoadVcProf_AGORA( const char *Filename, double **Profile, int &NBin );
 bool Flag_AGORA( const int i, const int j, const int k, const int lv, const int PID, const double Threshold );
 void Par_Init_ByFunction_AGORA();
 
@@ -158,7 +157,25 @@ void SetParameter()
    AGORA_HaloGasTemp     *= Const_kB   / UNIT_E;
 
 // load the circular velocity radial profile
-   if ( OPT__INIT != INIT_RESTART )    LoadVcProf_AGORA( AGORA_VcProf_Filename, AGORA_VcProf, AGORA_VcProf_NBin );
+   if ( OPT__INIT != INIT_RESTART )
+   {
+      const bool RowMajor_No = false;     // load data into the column-major order
+      const bool AllocMem_Yes = true;     // allocate memory for AGORA_VcProf
+      const int  NCol        = 2;         // total number of columns to load
+      const int  Col[NCol]   = {0, 1};    // target columns: (radius, density)
+
+      AGORA_VcProf_NBin = Aux_LoadTable( AGORA_VcProf, AGORA_VcProf_Filename, NCol, Col, RowMajor_No, AllocMem_Yes );
+
+//    convert to code units (assuming the loaded radius and velocity are in kpc and km/s, respectively)
+      double *Prof_R = AGORA_VcProf + 0*AGORA_VcProf_NBin;
+      double *Prof_V = AGORA_VcProf + 1*AGORA_VcProf_NBin;
+
+      for (int b=0; b<AGORA_VcProf_NBin; b++)
+      {
+         Prof_R[b] *= Const_kpc / UNIT_L;
+         Prof_V[b] *= Const_km  / UNIT_V;
+      }
+   }
 
 
 // (2) set the problem-specific derived parameters
@@ -253,7 +270,10 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
    if ( DiskGasPres > AGORA_HaloGasPres )
    {
 //    perform linear interpolation to get the gas circular velocity at r
-      if (  ( DiskGasVel = Mis_InterpolateFromTable(AGORA_VcProf_NBin, AGORA_VcProf[0], AGORA_VcProf[1], r) ) == NULL_REAL  )
+      const double *Prof_R = AGORA_VcProf + 0*AGORA_VcProf_NBin;
+      const double *Prof_V = AGORA_VcProf + 1*AGORA_VcProf_NBin;
+
+      if (  ( DiskGasVel = Mis_InterpolateFromTable(AGORA_VcProf_NBin, Prof_R, Prof_V, r) ) == NULL_REAL  )
          Aux_Error( ERROR_INFO, "interpolation failed at radius %13.7e !!\n", r );
 
       fluid[DENS] = DiskGasDens;
@@ -335,11 +355,8 @@ double GaussianQuadratureIntegrate( const double dx, const double dy, const doub
 void End_AGORA()
 {
 
-   for (int v=0; v<2; v++)
-   {
-      delete [] AGORA_VcProf[v];
-      AGORA_VcProf[v] = NULL;
-   }
+   delete [] AGORA_VcProf;
+   AGORA_VcProf = NULL;
 
 } // FUNCTION : End_AGORA
 #endif // #if ( MODEL == HYDRO  &&  defined PARTICLE )

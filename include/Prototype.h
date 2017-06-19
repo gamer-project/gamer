@@ -44,7 +44,7 @@ template <typename T> void Aux_AllocateArray3D( T*** &Array, const int K, const 
 template <typename T> void Aux_DeallocateArray2D( T** &Array );
 template <typename T> void Aux_DeallocateArray3D( T*** &Array );
 template <typename T> int  Aux_LoadTable( T *&Data, const char *FileName, const int NCol_Target, const int TCol[],
-                                          const bool RowMajor );
+                                          const bool RowMajor, const bool AllocMem );
 
 
 // Buffer
