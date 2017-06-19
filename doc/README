@@ -5,7 +5,7 @@ Download GAMER
 
       hg clone https://bitbucket.org/gamer_project/gamer
       cd gamer
-      export GAMER=${pwd}
+      export GAMER=$(pwd)
 
 
 #====================
