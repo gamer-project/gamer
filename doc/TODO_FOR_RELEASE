@@ -5,8 +5,11 @@
 2. [ ] Paper
 3. [ ] Revise the code development environment
    1. [ ] User guide
-   2. [ ] Bitbucket settings
-   3. [ ] hg settings
+   2. [ ] hg/bitbucket or git/github?
+      1. [ ] Bitbucket settings
+      2. [ ] hg settings
+      3. [ [ github settings
+      4. [ [ git settings
    4. [ ] License
    5. [ ] Citation file
    6. [ ] Code of conduct and basic contribution guidelines
@@ -14,7 +17,7 @@
    1. [x] More flexible runtime parameter file
    2. [ ] Test problem infrastructure
    3. [ ] Revise the Makefile
-      1. [X] Compile for all CUDA compute capabilities compatible with a
+      1. [x] Compile for all CUDA compute capabilities compatible with a
              given GPU_ARCH
       2. [ ] Put all system-dependent flags (e.g. XXX_PATH, CXXFLAG,...) to
              a separate makefile
