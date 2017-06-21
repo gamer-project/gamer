@@ -618,6 +618,11 @@ void Aux_Check_Parameter()
    if ( OPT__1ST_FLUX_CORR != FIRST_FLUX_CORR_NONE )
       Aux_Message( stderr, "REMINDER : OPT__1ST_FLUX_CORR may break the strict conservation of fluid variables\n" );
 
+#  ifdef SUPPORT_GRACKLE
+   if (  GRACKLE_ENABLE  &&  OPT__FLAG_LOHNER_TEMP )
+      Aux_Message( stderr, "WARNING : currently we do not use Grackle to calculate temperature for OPT__FLAG_LOHNER_TEMP !!\n" );
+#  endif
+
    } // if ( MPI_Rank == 0 )
 
 
