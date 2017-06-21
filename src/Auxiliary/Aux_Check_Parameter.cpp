@@ -789,7 +789,7 @@ void Aux_Check_Parameter()
 #  endif
 
 #  ifdef COMOVING
-#     error : ERROR : currently QUARTIC_SELF_INTERACTION does not work with COMOVING yet !!
+#     error : ERROR : QUARTIC_SELF_INTERACTION does not work with COMOVING yet !!
 #  endif
 #  endif // ifdef QUARTIC_SELF_INTERACTION
 

@@ -108,6 +108,16 @@ LB_INPUT__PAR_WEIGHT          0.0         # load-balance weighting of one partic
 OPT__RECORD_LOAD_BALANCE      1           # record the load-balance info [1]
 
 
+# Grackle library for chemistry and radiative cooling (SUPPORT_GRACKLE only)
+GRACKLE_ENABLE                1           # map to "use_grackle" [1]
+GRACKLE_VERBOSE               1           # ...    "grackle_verbose" [1]
+GRACKLE_COOLING               1           # ...    "with_radiative_cooling" [1]
+GRACKLE_PRIMORDIAL            0           # ...    "primordial_chemistry" (0=Cloudy, 1/2/3=6-/9-/12-species) [0]
+GRACKLE_METAL                 0           # ...    "metal_cooling" [0]
+GRACKLE_UV                    0           # ...    "UVbackground" [0]
+GRACKLE_CLOUDY_TABLE          CloudyData_noUVB.h5  # "grackle_data_file"
+
+
 # fluid solver in HYDRO (MODEL==HYDRO only)
 GAMMA                         1.666667    # ratio of specific heats (i.e., adiabatic index) [5.0/3.0]
 MOLECULAR_WEIGHT              0.6         # mean molecular weight -> currently only for post-processing [0.6]

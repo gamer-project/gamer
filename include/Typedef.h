@@ -290,5 +290,16 @@ const OptCorrAfterSync_t
    CORR_AFTER_SYNC_BEFORE_DUMP = 2;
 
 
+// Grackle primordial chemistry
+#ifdef SUPPORT_GRACKLE
+typedef int GracklePriChe_t;
+const GracklePriChe_t
+   GRACKLE_PRI_CHE_CLOUDY = 0,
+   GRACKLE_PRI_CHE_NSPE6  = 1,
+   GRACKLE_PRI_CHE_NSPE9  = 2,
+   GRACKLE_PRI_CHE_NSPE12 = 3;
+#endif
+
+
 
 #endif  // #ifndef __TYPEDEF_H__

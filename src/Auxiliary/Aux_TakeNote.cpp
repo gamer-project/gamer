@@ -105,6 +105,12 @@ void Aux_TakeNote()
       fprintf( Note, "PARTICLE                  OFF\n" );
 #     endif
 
+#     ifdef SUPPORT_GRACKLE
+      fprintf( Note, "SUPPORT_GRACKLE           ON\n" );
+#     else
+      fprintf( Note, "SUPPORT_GRACKLE           OFF\n" );
+#     endif
+
 //    b. options in HYDRO
 #     if   ( MODEL == HYDRO )
 
@@ -156,12 +162,6 @@ void Aux_TakeNote()
       fprintf( Note, "DUAL_ENERGY               NONE\n" );
 #     else
       fprintf( Note, "DUAL_ENERGY               UNKNOWN\n" );
-#     endif
-
-#     ifdef SUPPORT_GRACKLE
-      fprintf( Note, "SUPPORT_GRACKLE           ON\n" );
-#     else
-      fprintf( Note, "SUPPORT_GRACKLE           OFF\n" );
 #     endif
 
 //    c. options in MHD
@@ -691,6 +691,23 @@ void Aux_TakeNote()
       fprintf( Note, "***********************************************************************************\n" );
       fprintf( Note, "\n\n");
 #     endif // #ifndef SERIAL
+
+
+//    record the parameters of Grackle
+#     ifdef SUPPORT_GRACKLE
+      fprintf( Note, "Grackle\n" );
+      fprintf( Note, "***********************************************************************************\n" );
+      fprintf( Note, "GRACKLE_ENABLE            %d\n",      GRACKLE_ENABLE          );
+      if ( GRACKLE_ENABLE ) {
+      fprintf( Note, "GRACKLE_VERBOSE           %d\n",      GRACKLE_VERBOSE         );
+      fprintf( Note, "GRACKLE_COOLING           %d\n",      GRACKLE_COOLING         );
+      fprintf( Note, "GRACKLE_PRIMORDIAL        %d\n",      GRACKLE_PRIMORDIAL      );
+      fprintf( Note, "GRACKLE_METAL             %d\n",      GRACKLE_METAL           );
+      fprintf( Note, "GRACKLE_UV                %d\n",      GRACKLE_UV              );
+      fprintf( Note, "GRACKLE_CLOUDY_TABLE      %s\n",      GRACKLE_CLOUDY_TABLE    ); }
+      fprintf( Note, "***********************************************************************************\n" );
+      fprintf( Note, "\n\n");
+#     endif // #ifdef SUPPORT_GRACKLE
 
 
 //    record the parameters of Fluid solver in different models

@@ -523,5 +523,11 @@ void YT_Inline();
 #endif // #ifdef SUPPORT_LIBYT
 
 
+// Grackle
+#ifdef SUPPORT_GRACKLE
+void Init_Grackle();
+#endif // #ifdef SUPPORT_GRACKLE
+
+
 
 #endif // __PROTOTYPE_H__
