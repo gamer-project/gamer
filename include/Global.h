@@ -181,6 +181,19 @@ extern yt_verbose      YT_VERBOSE;
 #endif
 
 
+// (2-7) Grackle
+// ============================================================================================================
+#ifdef SUPPORT_GRACKLE
+extern bool            GRACKLE_ENABLE;
+extern bool            GRACKLE_VERBOSE;
+extern bool            GRACKLE_COOLING;
+extern GracklePriChe_t GRACKLE_PRIMORDIAL;
+extern bool            GRACKLE_METAL;
+extern bool            GRACKLE_UV;
+extern char            GRACKLE_CLOUDY_TABLE[MAX_STRING];
+#endif
+
+
 
 // 3. CPU (host) arrays for transferring data between CPU and GPU
 // ============================================================================================================

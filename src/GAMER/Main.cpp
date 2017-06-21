@@ -162,6 +162,17 @@ char                 YT_SCRIPT[MAX_STRING];
 yt_verbose           YT_VERBOSE;
 #endif
 
+// (2-7) Grackle
+#ifdef SUPPORT_GRACKLE
+bool                 GRACKLE_ENABLE;
+bool                 GRACKLE_VERBOSE;
+bool                 GRACKLE_COOLING;
+GracklePriChe_t      GRACKLE_PRIMORDIAL;
+bool                 GRACKLE_METAL;
+bool                 GRACKLE_UV;
+char                 GRACKLE_CLOUDY_TABLE[MAX_STRING];
+#endif
+
 
 // 3. CPU (host) arrays for transferring data between CPU and GPU
 // =======================================================================================================

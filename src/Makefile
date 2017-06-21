@@ -10,7 +10,7 @@ EXECUTABLE := gamer
 # simulation options
 #######################################################################################################
 
-# (a) common options (applied to all models)
+# (a) common options for all models
 # -------------------------------------------------------------------------------
 # model: HYDRO/MHD/ELBDM/PAR_ONLY (PAR_ONLY must work with PARTICLE)
 SIMU_OPTION += -DMODEL=HYDRO
@@ -44,6 +44,9 @@ SIMU_OPTION += -DNLEVEL=10
 # maximum number of patches at each AMR level
 SIMU_OPTION += -DMAX_PATCH=1000000
 
+# support Grackle, a chemistry and radiative cooling library (currently
+SIMU_OPTION += -DSUPPORT_GRACKLE
+
 
 # (b) model-dependent options
 # (b-1) hydro options
@@ -64,9 +67,6 @@ SIMU_OPTION += -DDUAL_ENERGY=DE_ENPY
 # number of passively advected scalars (**excluding** entropy or internal energy even when DUAL_ENERGY is on)
 # --> for simulations without any passive scalar, please set this variable to 0 and do NOT comment it out
 SIMU_OPTION += -DNCOMP_PASSIVE_MAKEFILE=0
-
-# support Grackle, a chemistry and radiative cooling library (NOT supported yet)
-SIMU_OPTION += -DSUPPORT_GRACKLE
 
 
 # (b-2) MHD options
@@ -101,13 +101,13 @@ SIMU_OPTION += -DSTORE_PAR_ACC
 SIMU_OPTION += -DPAR_NPASSIVE=0
 
 
-# (d) optimization and compilation options
+# (d) optimization options and other features
 # ------------------------------------------------------------------------------------
 # GPU acceleration (to disable GPU, please comment out both -DGPU and -DGPU_ARCH)
-SIMU_OPTION += -DGPU
+#SIMU_OPTION += -DGPU
 
 # GPU architecture: FERMI/KEPLER/MAXWELL/PASCAL
-SIMU_OPTION += -DGPU_ARCH=KEPLER
+#SIMU_OPTION += -DGPU_ARCH=KEPLER
 
 # debug mode
 #SIMU_OPTION += -DGAMER_DEBUG
@@ -375,7 +375,15 @@ ifeq "$(findstring SUPPORT_LIBYT, $(SIMU_OPTION))" "SUPPORT_LIBYT"
 CC_FILE     += YT_Init.cpp  YT_End.cpp  YT_SetParameter.cpp  YT_AddAllGrid.cpp  YT_Inline.cpp
 
 vpath %.cpp    YT
-endif # "SUPPORT_LIBYT"
+endif # SUPPORT_LIBYT
+
+
+# Grackle source files (included only if "SUPPORT_GRACKLE" is turned on)
+# ------------------------------------------------------------------------------------
+ifeq "$(findstring SUPPORT_GRACKLE, $(SIMU_OPTION))" "SUPPORT_GRACKLE"
+CC_FILE     += Init_Grackle.cpp
+
+endif # SUPPORT_GRACKLE
 
 
 # test problem source files

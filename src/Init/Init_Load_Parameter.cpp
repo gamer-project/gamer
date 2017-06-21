@@ -161,6 +161,18 @@ void Init_Load_Parameter()
 #  endif
 
 
+// Grackle
+#  ifdef SUPPORT_GRACKLE
+   ReadPara->Add( "GRACKLE_ENABLE",             &GRACKLE_ENABLE,                  true,            Useless_bool,  Useless_bool   );
+   ReadPara->Add( "GRACKLE_VERBOSE",            &GRACKLE_VERBOSE,                 true,            Useless_bool,  Useless_bool   );
+   ReadPara->Add( "GRACKLE_COOLING",            &GRACKLE_COOLING,                 true,            Useless_bool,  Useless_bool   );
+   ReadPara->Add( "GRACKLE_PRIMORDIAL",         &GRACKLE_PRIMORDIAL,              0,               0,             3              );
+   ReadPara->Add( "GRACKLE_METAL",              &GRACKLE_METAL,                   false,           Useless_bool,  Useless_bool   );
+   ReadPara->Add( "GRACKLE_UV",                 &GRACKLE_UV,                      false,           Useless_bool,  Useless_bool   );
+   ReadPara->Add( "GRACKLE_CLOUDY_TABLE",        GRACKLE_CLOUDY_TABLE,            Useless_str,     Useless_str,   Useless_str    );
+#  endif
+
+
 // fluid solvers in HYDRO and MHD
 #  if ( MODEL == HYDRO )
    ReadPara->Add( "GAMMA",                      &GAMMA,                           5.0/3.0,         Eps_double,    NoMax_double   );
