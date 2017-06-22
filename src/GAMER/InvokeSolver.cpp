@@ -236,6 +236,7 @@ void InvokeSolver( const Solver_t TSolver, const int lv, const double TimeNew, c
 //                                  POISSON_SOLVER             : Poisson solver
 //                                  GRAVITY_SOLVER             : Gravity solver
 //                                  POISSON_AND_GRAVITY_SOLVER : Poisson + Gravity solvers
+//                                  GRACKLE_SOLVER             : Grackle solver
 //                lv          : Target refinement level
 //                TimeNew     : Target physical time to reach
 //                TimeOld     : Physical time before update
@@ -319,6 +320,12 @@ void Preparation_Step( const Solver_t TSolver, const int lv, const double TimeNe
 #        endif
          break;
 #     endif // #ifdef GARVITY
+
+#     ifdef SUPPORT_GRACKLE
+      case GRACKLE_SOLVER :
+         Grackle_Prepare( lv, h_Che_Array[ArrayID], NPG, PID0_List );
+         break;
+#     endif
 
       default :
          Aux_Error( ERROR_INFO, "incorrect parameter %s = %d !!\n", "TSolver", TSolver );
@@ -535,8 +542,9 @@ void Solver( const Solver_t TSolver, const int lv, const double TimeNew, const d
 //                                  POISSON_SOLVER             : Poisson solver
 //                                  GRAVITY_SOLVER             : Gravity solver
 //                                  POISSON_AND_GRAVITY_SOLVER : Poisson + Gravity solvers
+//                                  GRACKLE_SOLVER             : Grackle solver
 //                lv          : Target refinement level
-//                SaveSg_Flu  : Sandglass to store the updated fluid data (for both the fluid and gravity solvers)
+//                SaveSg_Flu  : Sandglass to store the updated fluid data (for both the fluid, gravity, and Grackle solvers)
 //                SaveSg_Pot  : Sandglass to store the updated potential data (for the Poisson solver)
 //                NPG         : Number of patch groups to be evaluated at a time
 //                PID0_List   : List recording the patch indicies with LocalID==0 to be udpated
@@ -576,6 +584,12 @@ void Closing_Step( const Solver_t TSolver, const int lv, const int SaveSg_Flu, c
          Poi_Close( lv, SaveSg_Pot, h_Pot_Array_P_Out[ArrayID], NPG, PID0_List );
          Gra_Close( lv, SaveSg_Flu, h_Flu_Array_G    [ArrayID],
                                     h_DE_Array_G     [ArrayID], NPG, PID0_List );
+         break;
+#     endif
+
+#     ifdef SUPPORT_GRACKLE
+      case GRACKLE_SOLVER :
+         Grackle_Close( lv, SaveSg_Flu, h_Che_Array[ArrayID], NPG, PID0_List );
          break;
 #     endif
 

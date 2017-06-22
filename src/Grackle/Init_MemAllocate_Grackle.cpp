@@ -13,7 +13,7 @@
 // Note        :  1. Only work when using CPUs only
 //                2. Prepare CHE_NPREP variables
 //                   --> CHE_NPREP = 3 currently
-//                   --> [mass density, specific internal energy density, kinematic energy density]
+//                   --> [mass density, specific internal energy, kinematic energy density]
 //                3. Invoked by Init_MemAllocate()
 //                4. Use patches instead of patch groups as the allocation unit
 //
