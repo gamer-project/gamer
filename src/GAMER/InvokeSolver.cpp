@@ -28,32 +28,34 @@ extern Timer_t *Timer_Poi_PrePot_F[NLEVEL];
 // Note        :  a. Use the input parameter "TSolver" to control the target solver
 //                b. Each solver involves three steps
 //                   --> 1. preparation step : prepare the input data
-//                       2. execution   step : invoke the solvers --> advance solutions or evaluate potentials
+//                       2. execution   step : invoke the solvers --> advance solutions or evaluate potential
 //                       3. closing     step : store the updated data
 //                c. Currently the fluid solver can only store the updated data in the different sandglass from
 //                   the input data
 //                d. For LOAD_BALANCE, one can turn on the option "OPT__OVERLAP_MPI" to enable the
 //                   overlapping between MPI communication and CPU/GPU computation
 //
-// Parameter   :  TSolver        : Target solver
-//                                 --> FLUID_SOLVER               : Fluid / ELBDM solver
-//                                     POISSON_SOLVER             : Poisson solver
-//                                     GRAVITY_SOLVER             : Gravity solver
-//                                     POISSON_AND_GRAVITY_SOLVER : Poisson + Gravity solvers
-//                lv             : Target refinement level
-//                TimeNew        : Target physical time to reach
-//                TimeOld        : Physical time before update
-//                                 --> For Fluid and Gravity solver, this function updates physical time from TimeOld to TimeNew
-//                                     For Poisson solver, this function calculates potential at **TimeNew**
-//                dt             : Time interval to advance solution for the fluid and gravity solvers
-//                                 (can be different from TimeNew-TimeOld if COMOVING is on)
-//                Poi_Coeff      : Coefficient in front of the RHS in the Poisson eq.
-//                SaveSg_Flu     : Sandglass to store the updated fluid data (for both the fluid and gravity solvers)
-//                SaveSg_Pot     : Sandglass to store the updated potential data (for the Poisson solver)
-//                OverlapMPI     : true --> Overlap MPI time with CPU/GPU computation
-//                Overlap_Sync   : true  --> Advance the patches which cannot be overlapped with MPI communication
-//                                 false --> Advance the patches which can    be overlapped with MPI communication
-//                                 (useful only if "OverlapMPI == true")
+// Parameter   :  TSolver      : Target solver
+//                               --> FLUID_SOLVER               : Fluid / ELBDM solver
+//                                   POISSON_SOLVER             : Poisson solver
+//                                   GRAVITY_SOLVER             : Gravity solver
+//                                   POISSON_AND_GRAVITY_SOLVER : Poisson + Gravity solvers
+//                                   GRACKLE_SOLVER             : Grackle solver
+//                lv           : Target refinement level
+//                TimeNew      : Target physical time to reach
+//                TimeOld      : Physical time before update
+//                               --> For the Fluid, Gravity, and Grackle solvers, this function updates physical time from
+//                                   TimeOld to TimeNew
+//                               --> For the Poisson solver, this function calculates potential at **TimeNew**
+//                dt           : Time interval to advance solution for the fluid and gravity solvers
+//                               (can be different from TimeNew-TimeOld if COMOVING is on)
+//                Poi_Coeff    : Coefficient in front of the RHS in the Poisson eq.
+//                SaveSg_Flu   : Sandglass to store the updated fluid data (for the fluid, gravity, and Grackle solvers)
+//                SaveSg_Pot   : Sandglass to store the updated potential data (for the Poisson solver only)
+//                OverlapMPI   : true --> Overlap MPI time with CPU/GPU computation
+//                Overlap_Sync : true  --> Advance the patches which cannot be overlapped with MPI communication
+//                               false --> Advance the patches which can    be overlapped with MPI communication
+//                               (useful only if "OverlapMPI == true")
 //-------------------------------------------------------------------------------------------------------
 void InvokeSolver( const Solver_t TSolver, const int lv, const double TimeNew, const double TimeOld, const double dt,
                    const double Poi_Coeff, const int SaveSg_Flu, const int SaveSg_Pot,
@@ -66,20 +68,20 @@ void InvokeSolver( const Solver_t TSolver, const int lv, const double TimeNew, c
       Aux_Error( ERROR_INFO, "SaveSg_Flu (%d) == amr->FluSg (%d) in the fluid solver at level %d !!\n",
                  SaveSg_Flu, amr->FluSg[lv], lv );
 
-#  ifndef GRAVITY
-   if ( TSolver != FLUID_SOLVER )
-      Aux_Error( ERROR_INFO, "incorrect parameter %s = %d !!\n", "TSolver", TSolver );
-#  endif
-
    if ( TSolver == FLUID_SOLVER  &&  ( SaveSg_Flu != 0 &&  SaveSg_Flu != 1 )  )
       Aux_Error( ERROR_INFO, "incorrect SaveSg_Flu (%d) !!\n", SaveSg_Flu );
 
 #  ifdef GRAVITY
-   if (  ( TSolver == GRAVITY_SOLVER || TSolver == POISSON_AND_GRAVITY_SOLVER ) && ( SaveSg_Flu != 0 &&  SaveSg_Flu != 1 )  )
+   if (  ( TSolver == GRAVITY_SOLVER || TSolver == POISSON_AND_GRAVITY_SOLVER ) && ( SaveSg_Flu != 0 && SaveSg_Flu != 1 )  )
       Aux_Error( ERROR_INFO, "incorrect SaveSg_Flu (%d) !!\n", SaveSg_Flu );
 
-   if (  ( TSolver == POISSON_SOLVER || TSolver == POISSON_AND_GRAVITY_SOLVER ) && ( SaveSg_Pot != 0 &&  SaveSg_Pot != 1 )  )
+   if (  ( TSolver == POISSON_SOLVER || TSolver == POISSON_AND_GRAVITY_SOLVER ) && ( SaveSg_Pot != 0 && SaveSg_Pot != 1 )  )
       Aux_Error( ERROR_INFO, "incorrect SaveSg_Pot (%d) !!\n", SaveSg_Pot );
+#  endif
+
+#  ifdef SUPPORT_GRACKLE
+   if (  TSolver == GRACKLE_SOLVER  && ( SaveSg_Flu != 0 && SaveSg_Flu != 1 )  )
+      Aux_Error( ERROR_INFO, "incorrect SaveSg_Flu (%d) !!\n", SaveSg_Flu );
 #  endif
 
 
@@ -227,26 +229,28 @@ void InvokeSolver( const Solver_t TSolver, const int lv, const double TimeNew, c
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Preparation_Step
-// Description :  Prepare the input data for CPU/GPU solvers
+// Description :  Prepare the input data for the CPU/GPU solvers
 //
 // Note        :  Use the input parameter "TSolver" to control the target solver
 //
-// Parameter   :  TSolver     : Target solver
-//                              --> FLUID_SOLVER               : Fluid / ELBDM solver
-//                                  POISSON_SOLVER             : Poisson solver
-//                                  GRAVITY_SOLVER             : Gravity solver
-//                                  POISSON_AND_GRAVITY_SOLVER : Poisson + Gravity solvers
-//                                  GRACKLE_SOLVER             : Grackle solver
-//                lv          : Target refinement level
-//                TimeNew     : Target physical time to reach
-//                TimeOld     : Physical time before update
-//                              --> For Fluid   solver, it prepares data at TimeOld
-//                              --> For Gravity solver, it prepares data at TimeNew
-//                                  (TimeOld data will also prepared for UNSPLIT_GRAVITY)
-//                                  For Poisson solver, it prepares data at TimeNew
-//                NPG         : Number of patch groups to be prepared at a time
-//                PID0_List   : List recording the patch indicies with LocalID==0 to be udpated
-//                ArrayID     : Array index to load and store data ( 0 or 1 )
+// Parameter   :  TSolver   : Target solver
+//                            --> FLUID_SOLVER               : Fluid / ELBDM solver
+//                                POISSON_SOLVER             : Poisson solver
+//                                GRAVITY_SOLVER             : Gravity solver
+//                                POISSON_AND_GRAVITY_SOLVER : Poisson + Gravity solvers
+//                                GRACKLE_SOLVER             : Grackle solver
+//                lv        : Target refinement level
+//                TimeNew   : Target physical time to reach
+//                TimeOld   : Physical time before update
+//                            --> For Fluid   solver, it prepares data at TimeOld
+//                            --> For Gravity solver, it prepares data at TimeNew
+//                                (TimeOld data will also prepared for UNSPLIT_GRAVITY)
+//                                For Poisson solver, it prepares data at TimeNew
+//                            --> For Grackle solver, it prepares data at TimeNew
+//                                --> Specifically, it always prepares data at the current FluSg[lv]
+//                NPG       : Number of patch groups to be prepared at a time
+//                PID0_List : List recording the patch indicies with LocalID==0 to be udpated
+//                ArrayID   : Array index to load and store data ( 0 or 1 )
 //-------------------------------------------------------------------------------------------------------
 void Preparation_Step( const Solver_t TSolver, const int lv, const double TimeNew, const double TimeOld, const int NPG,
                        const int *PID0_List, const int ArrayID )
@@ -518,8 +522,30 @@ void Solver( const Solver_t TSolver, const int lv, const double TimeNew, const d
                                           OPT__GRAVITY_TYPE, TimeNew, TimeOld, OPT__EXTERNAL_POT, MinEint );
 #        endif
          break;
-
 #     endif // #ifdef GRAVITY
+
+
+#     ifdef SUPPORT_GRACKLE
+      case GRACKLE_SOLVER :
+
+         if ( GRACKLE_MODE == GRACKLE_MODE_GAMER ) {
+#           ifdef GPU
+            Aux_Error( ERROR_INFO, "GRACKLE_MODE_GAMER - GPU IS NOT SUPPORTED YET !!\n" );
+#           else
+            Aux_Error( ERROR_INFO, "GRACKLE_MODE_GAMER - CPU IS NOT SUPPORTED YET !!\n" );
+#           endif
+         }
+
+         else if ( GRACKLE_MODE == GRACKLE_MODE_ORI ) {
+            CPU_GrackleSolver_Original( Che_FieldData, Che_Units, NPG, dt );
+         }
+
+         else {
+            Aux_Error( ERROR_INFO, "you shouldn't be here (GRACKLE_MODE = %d) !!\n", GRACKLE_MODE );
+         }
+
+         break;
+#     endif // #ifdef SUPPORT_GRACKLE
 
 
       default :

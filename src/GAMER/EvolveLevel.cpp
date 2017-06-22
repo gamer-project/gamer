@@ -310,6 +310,24 @@ void EvolveLevel( const int lv, const double dTime )
 //    6. additional physics
 // ===============================================================================================
 
+// *********************************
+//    6-1. Grackle cooling/heating
+// *********************************
+#     ifdef SUPPORT_GRACKLE
+      if ( GRACKLE_MODE != GRACKLE_MODE_NONE )
+      {
+         const int SaveSg_Che = SaveSg_Flu;  // save in the same FluSg
+
+         if ( OPT__VERBOSE  &&  MPI_Rank == 0 )
+            Aux_Message( stdout, "   Lv %2d: Grackle_AdvanceDt, counter = %4ld ... ", lv, AdvanceCounter[lv] );
+
+         Grackle_AdvanceDt( lv, TimeNew, TimeOld, dt_SubStep, SaveSg_Che, false, false );
+
+         Buf_GetBufferData( lv, SaveSg_Che, NULL_INT, DATA_GENERAL, _ENGY, Flu_ParaBuf, USELB_YES );
+
+         if ( OPT__VERBOSE  &&  MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );
+      } // if ( GRACKLE_MODE != GRACKLE_MODE_NONE )
+#     endif // #ifdef SUPPORT_GRACKLE
 
 // ===============================================================================================
 

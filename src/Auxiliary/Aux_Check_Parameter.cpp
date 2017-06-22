@@ -1193,6 +1193,12 @@ void Aux_Check_Parameter()
 
 // warning
 // ------------------------------
+   if ( MPI_Rank == 0 ) {
+
+   if ( OPT__OVERLAP_MPI )
+      Aux_Message( stderr, "WARNING : currently SUPPORT_GRACKLE does not support \"%s\" !!\n", "OPT__OVERLAP_MPI" );
+
+   } // if ( MPI_Rank == 0 )
 
 #endif // SUPPORT_GRACKLE
 

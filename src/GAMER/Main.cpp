@@ -210,7 +210,7 @@ real (*h_Flu_Array_USG_G[2])[GRA_NIN-1][PS1][PS1][PS1]                     = { N
 #ifdef SUPPORT_GRACKLE
 real (*h_Che_Array[2])[CHE_NPREP][ CUBE(PS1) ]                             = { NULL, NULL };
 grackle_field_data *Che_FieldData                                          = NULL;
-code_units Grackle_Units;
+code_units Che_Units;
 #endif
 
 
