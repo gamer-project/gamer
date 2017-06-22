@@ -36,6 +36,11 @@ void End_GAMER()
 #  endif
 
 
+#  ifdef SUPPORT_GRACKLE
+   Grackle_End();
+#  endif
+
+
    if ( MPI_Rank == 0 )
    {
       Aux_Message( stdout, "%s ... done\n", __FUNCTION__ );

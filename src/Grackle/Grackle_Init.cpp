@@ -86,7 +86,7 @@ void Grackle_Init()
 // --> note that "my_grackle_data" will be attached to the Grackle internal pointer "grackle_data"
 //     after calling set_default_chemistry_parameters()
 // --> we must NOT deallocate "my_grackle_data" during the simulation
-// --> currently it's not deallocated by Grackle either, which probably leads to a small memory leakage
+// --> currently it's deallocated by Grackle_End()
   chemistry_data *my_grackle_data = new chemistry_data;
 
   if ( set_default_chemistry_parameters(my_grackle_data) == 0 )
