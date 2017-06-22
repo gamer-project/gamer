@@ -191,6 +191,7 @@ extern GracklePriChe_t GRACKLE_PRIMORDIAL;
 extern bool            GRACKLE_METAL;
 extern bool            GRACKLE_UV;
 extern char            GRACKLE_CLOUDY_TABLE[MAX_STRING];
+extern int             CHE_GPU_NPGROUP;
 #endif
 
 

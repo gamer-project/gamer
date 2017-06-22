@@ -83,12 +83,24 @@ void InvokeSolver( const Solver_t TSolver, const int lv, const double TimeNew, c
 #  endif
 
 
-// maximum number of patch groups to be updated at a time
-#  ifdef GRAVITY
-   const int NPG_Max = ( TSolver == FLUID_SOLVER ) ? FLU_GPU_NPGROUP : POT_GPU_NPGROUP;
-#  else
-   const int NPG_Max = FLU_GPU_NPGROUP;
-#  endif
+// set the maximum number of patch groups to be updated at a time
+   int NPG_Max;
+
+   switch ( TSolver )
+   {
+      case FLUID_SOLVER:               NPG_Max = FLU_GPU_NPGROUP;    break;
+#     ifdef GRAVITY
+      case POISSON_SOLVER:
+      case GRAVITY_SOLVER:
+      case POISSON_AND_GRAVITY_SOLVER: NPG_Max = POT_GPU_NPGROUP;    break;
+#     endif
+#     ifdef SUPPORT_GRACKLE
+      case GRACKLE_SOLVER:             NPG_Max = CHE_GPU_NPGROUP;    break;
+#     endif
+      default :
+         Aux_Error( ERROR_INFO, "incorrect parameter %s = %d !!\n", "TSolver", TSolver );
+   }
+
 
    int *PID0_List    = NULL;  // list recording the patch indicies with LocalID==0 to be udpated
    bool AllocateList = false; // whether to allocate PID0_List or not

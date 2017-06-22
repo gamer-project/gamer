@@ -126,6 +126,7 @@ GRACKLE_PRIMORDIAL            0           # ...    "primordial_chemistry" (0=Clo
 GRACKLE_METAL                 0           # ...    "metal_cooling" [0]
 GRACKLE_UV                    0           # ...    "UVbackground" [0]
 GRACKLE_CLOUDY_TABLE          CloudyData_noUVB.h5  # "grackle_data_file"
+CHE_GPU_NPGROUP              -1           # number of patch groups sent into the CPU/GPU Grackle solver (<=0=auto) [-1]
 
 
 # fluid solver in HYDRO (MODEL==HYDRO only)
@@ -152,7 +153,7 @@ ELBDM_TAYLOR3_AUTO            1           # Optimize ELBDM_TAYLOR3_COEFF automat
 
 
 # fluid solvers in all models
-FLU_GPU_NPGROUP              -1           # number of patch groups sent into the GPU fluid solver (<=0=auto) [-1]
+FLU_GPU_NPGROUP              -1           # number of patch groups sent into the CPU/GPU fluid solver (<=0=auto) [-1]
 GPU_NSTREAM                  -1           # number of CUDA streams for the asynchronous memory copy in GPU (<=0=auto) [-1]
 OPT__FIXUP_FLUX               1           # correct coarse grids by the fine-grid boundary fluxes [1] ##HYDRO and ELBDM ONLY##
 OPT__FIXUP_RESTRICT           1           # correct coarse grids by averaging the fine-grid data [1]
@@ -174,7 +175,7 @@ MG_MAX_ITER                  -1           # maximum number of iterations in mult
 MG_NPRE_SMOOTH               -1           # number of pre-smoothing steps in multigrid: (<0=auto) [-1]
 MG_NPOST_SMOOTH              -1           # number of post-smoothing steps in multigrid: (<0=auto) [-1]
 MG_TOLERATED_ERROR           -1.0         # maximum tolerated error in multigrid (<0=auto) [-1.0]
-POT_GPU_NPGROUP              -1           # number of patch groups sent into the GPU Poisson solver (<=0=auto) [-1]
+POT_GPU_NPGROUP              -1           # number of patch groups sent into the CPU/GPU Poisson solver (<=0=auto) [-1]
 OPT__GRA_P5_GRADIENT          0           # 5-points gradient in the Gravity solver (must have GRA/USG_GHOST_SIZE>=2) [0]
 OPT__GRAVITY_TYPE             1           # gravity source: (1=self-gravity, 2=external gravity, 3=both) ##2/3 for HYDRO ONLY##
 OPT__EXTERNAL_POT             0           # add the external potential (incompatible with OPT__GRAVITY_TYPE==2) [0] ##ELBDM ONLY##

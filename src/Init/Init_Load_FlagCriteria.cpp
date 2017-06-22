@@ -13,7 +13,7 @@
 void Init_Load_FlagCriteria()
 {
 
-   if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... ", __FUNCTION__ );
+   if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ...\n", __FUNCTION__ );
 
 
 #  if ( MODEL != HYDRO  &&  MODEL != MHD )
@@ -104,9 +104,7 @@ void Init_Load_FlagCriteria()
 
 
 // nothing to do if there is no refinement level
-   if ( MAX_LEVEL == 0 )   return;
-
-
+   if ( MAX_LEVEL > 0 )
    for (int FlagMode=0; FlagMode<NFlagMode; FlagMode++)
    {
       if ( Flag[FlagMode] )
@@ -163,6 +161,6 @@ void Init_Load_FlagCriteria()
    if ( input_line != NULL )     free( input_line );
 
 
-   if ( MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );
+   if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", __FUNCTION__ );
 
 } // FUNCTION : Init_Load_FlagCriteria

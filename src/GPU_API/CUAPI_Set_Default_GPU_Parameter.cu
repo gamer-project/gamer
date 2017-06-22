@@ -177,11 +177,12 @@ int CUPOT_PoissonSolver_SetConstMem();
 // Function    :  CUAPI_Set_Default_GPU_Parameter
 // Description :  Set several GPU parameters to the default values if they are not set in the input file
 //
-// Parameter   :  GPU_NStream       : Number of streams for the asynchronous memory copy in GPU
-//                Flu_GPU_NPGroup   : Number of patch groups sent into GPU simultaneously for the fluid solver
-//                Pot_GPU_NPGroup   : Number of patch groups sent into GPU simultaneously for the Poisson solver
+// Parameter   :  GPU_NStream     : Number of streams for the asynchronous memory copy in GPU
+//                Flu_GPU_NPGroup : Number of patch groups sent into GPU simultaneously for the fluid solver
+//                Pot_GPU_NPGroup : Number of patch groups sent into GPU simultaneously for the Poisson solver
+//                Che_GPU_NPGroup : Number of patch groups sent into GPU simultaneously for the Grackle solver
 //-------------------------------------------------------------------------------------------------------
-void CUAPI_Set_Default_GPU_Parameter( int &GPU_NStream, int &Flu_GPU_NPGroup, int &Pot_GPU_NPGroup )
+void CUAPI_Set_Default_GPU_Parameter( int &GPU_NStream, int &Flu_GPU_NPGroup, int &Pot_GPU_NPGroup, int &Che_GPU_NPGroup )
 {
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... \n", __FUNCTION__ );
@@ -243,7 +244,9 @@ void CUAPI_Set_Default_GPU_Parameter( int &GPU_NStream, int &Flu_GPU_NPGroup, in
                                          "GPU_NSTREAM", GPU_NSTREAM );
    } // if ( GPU_NStream <= 0 )
 
-// (2) FLU_GPU_NPGROUP
+
+// (2) XXX_GPU_NPGROUP
+// (2-1) FLU_GPU_NPGROUP
    if ( Flu_GPU_NPGroup <= 0 )
    {
 #     if   ( MODEL == HYDRO )
@@ -280,9 +283,9 @@ void CUAPI_Set_Default_GPU_Parameter( int &GPU_NStream, int &Flu_GPU_NPGroup, in
 
       if ( MPI_Rank == 0 )  Aux_Message( stdout, "NOTE : parameter \"%s\" is set to the default value = %d\n",
                                          "FLU_GPU_NPGROUP", Flu_GPU_NPGroup );
-   } // if ( Flu_GPU_NPGroup < 0 )
+   } // if ( Flu_GPU_NPGroup <= 0 )
 
-// (3) POT_GPU_NPGROUP
+// (2-2) POT_GPU_NPGROUP
 #  ifdef GRAVITY
    if ( Pot_GPU_NPGroup <= 0 )
    {
@@ -300,11 +303,33 @@ void CUAPI_Set_Default_GPU_Parameter( int &GPU_NStream, int &Flu_GPU_NPGroup, in
 
       if ( MPI_Rank == 0 )  Aux_Message( stdout, "NOTE : parameter \"%s\" is set to the default value = %d\n",
                                          "POT_GPU_NPGROUP", Pot_GPU_NPGroup );
-   } // if ( Pot_GPU_NPGroup < 0 )
+   } // if ( Pot_GPU_NPGroup <= 0 )
 #  endif
 
-// (4) cache preference
-// (4-1) fluid solver
+// (2-3) CHE_GPU_NPGROUP
+#  ifdef SUPPORT_GRACKLE
+   if ( Che_GPU_NPGroup <= 0 )
+   {
+#     if   ( GPU_ARCH == FERMI )
+      Che_GPU_NPGroup = 1*GPU_NStream*DeviceProp.multiProcessorCount;   // not optimized yet
+#     elif ( GPU_ARCH == KEPLER )
+      Che_GPU_NPGroup = 32*DeviceProp.multiProcessorCount;              // not optimized yet
+#     elif ( GPU_ARCH == MAXWELL )
+      Che_GPU_NPGroup = 32*DeviceProp.multiProcessorCount;              // not optimized yet
+#     elif ( GPU_ARCH == PASCAL )
+      Che_GPU_NPGroup = 32*DeviceProp.multiProcessorCount;              // not optimized yet
+#     else
+#     error : UNKNOWN GPU_ARCH !!
+#     endif
+
+      if ( MPI_Rank == 0 )  Aux_Message( stdout, "NOTE : parameter \"%s\" is set to the default value = %d\n",
+                                         "CHE_GPU_NPGROUP", Che_GPU_NPGroup );
+   } // if ( Che_GPU_NPGroup <= 0 )
+#  endif
+
+
+// (3) cache preference
+// (3-1) fluid solver
 #  if   ( MODEL == HYDRO )
 #  if   ( FLU_SCHEME == RTVD )
    CUDA_CHECK_ERROR(  cudaFuncSetCacheConfig( CUFLU_FluidSolver_RTVD, cudaFuncCachePreferShared )  );
@@ -333,7 +358,7 @@ void CUAPI_Set_Default_GPU_Parameter( int &GPU_NStream, int &Flu_GPU_NPGroup, in
 
 #  ifdef GRAVITY
 
-// (4-2) Poisson solver
+// (3-2) Poisson solver
 #  if   ( POT_SCHEME == SOR )
 #  ifdef USE_PSOLVER_10TO14
    CUDA_CHECK_ERROR( cudaFuncSetCacheConfig( CUPOT_PoissonSolver_SOR_10to14cube, cudaFuncCachePreferShared ) );
@@ -345,7 +370,7 @@ void CUAPI_Set_Default_GPU_Parameter( int &GPU_NStream, int &Flu_GPU_NPGroup, in
 #  endif // POT_SCHEME
 
 
-// (4-3) gravity solver
+// (3-3) gravity solver
 #  if   ( MODEL == HYDRO )
    CUDA_CHECK_ERROR( cudaFuncSetCacheConfig( CUPOT_HydroGravitySolver,           cudaFuncCachePreferShared ) );
 
@@ -362,7 +387,7 @@ void CUAPI_Set_Default_GPU_Parameter( int &GPU_NStream, int &Flu_GPU_NPGroup, in
 #  endif // GRAVITY
 
 
-// (5) set the constant variables
+// (4) set the constant variables
 #  if ( NCOMP_PASSIVE > 0 )
    if  ( OPT__NORMALIZE_PASSIVE )
    {

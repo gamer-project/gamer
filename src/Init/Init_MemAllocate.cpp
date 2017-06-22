@@ -41,7 +41,7 @@ void Init_MemAllocate()
 #     ifdef GPU
          CUAPI_MemAllocate_Grackle( CHE_GPU_NPGROUP );
 #     else
-//       Init_MemAllocate_Grackle ( CHE_GPU_NPGROUP );
+         Init_MemAllocate_Grackle ( CHE_GPU_NPGROUP );
 #     endif
 #  endif
 

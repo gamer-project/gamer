@@ -171,6 +171,19 @@ void Init_ResetParameter()
       PRINT_WARNING( POT_GPU_NPGROUP, FORMAT_INT, "since GPU is disabled" );
    }
 #  endif
+
+#  ifdef SUPPORT_GRACKLE
+   if ( CHE_GPU_NPGROUP <= 0 )
+   {
+#     ifdef OPENMP
+      CHE_GPU_NPGROUP = OMP_NTHREAD*20;
+#     else
+      CHE_GPU_NPGROUP = 1;
+#     endif
+
+      PRINT_WARNING( CHE_GPU_NPGROUP, FORMAT_INT, "since GPU is disabled" );
+   }
+#  endif
 #  endif // #ifndef GPU
 
 
