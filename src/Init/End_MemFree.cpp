@@ -66,6 +66,12 @@ void End_MemFree()
 #     else
          End_MemFree_Grackle();
 #     endif
+
+   if ( Che_FieldData != NULL )
+   {
+      delete [] Che_FieldData;
+      Che_FieldData = NULL;
+   }
 #  endif
 
 
