@@ -11,7 +11,9 @@
 // Description :  Copy the momentum and energy density stored in the h_Flu_Array_G array back into the
 //                patch pointers
 //
-// Note        :  The updated data will be stored in the same Sg as the current fluid data
+// Note        :  1. Use SaveSg to determine where to store the data
+//                   --> Currently it's set to the same Sg as the fluid data when calling
+//                       Gra_AdvanceDt() in EvolveLevel()
 //
 // Parameter   :  lv             : Target refinement level
 //                SaveSg         : Sandglass to store the updated data

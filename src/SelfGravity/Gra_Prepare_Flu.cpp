@@ -11,6 +11,8 @@
 // Description :  Fill up the input array "h_Flu_Array_G" with fluid variables for the Gravity solver
 //                --> When DUAL_ENERGY is on, this function also prepares the dual-energy status array "h_DE_Array_G"
 //
+// Note        :  1. This function always prepare the latest FluSg data
+//
 // Parameter   :  lv             : Target refinement level
 //                h_Flu_Array_G  : Host array to store the prepared data
 //                h_DE_Array_G   : Host array to store the dual-energy status

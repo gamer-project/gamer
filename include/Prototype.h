@@ -529,6 +529,9 @@ void Grackle_Init();
 void Grackle_End();
 void Init_MemAllocate_Grackle( const int Che_NPG );
 void End_MemFree_Grackle();
+void Grackle_Prepare( const int lv, real h_Che_Array[][CHE_NPREP][ CUBE(PS1) ], const int NPG, const int *PID0_List );
+void Grackle_Close( const int lv, const int SaveSg, const real h_Che_Array[][CHE_NPREP][ CUBE(PS1) ],
+                    const int NPG, const int *PID0_List );
 #endif // #ifdef SUPPORT_GRACKLE
 
 
