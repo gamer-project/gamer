@@ -28,7 +28,8 @@ void Grackle_Prepare( const int lv, real h_Che_Array[][CHE_NPREP][ CUBE(PS1) ], 
    const int  Idx_Ek    = 2;
    const real dh        = (real)amr->dh[lv];
 
-   int N, PID, PID0, Dens, Px, Py, Pz, Etot, _Dens, Ek, sEint;
+   int  N, PID, PID0;
+   real Dens, Px, Py, Pz, Etot, _Dens, Ek, sEint;
 
 #  pragma omp parallel for private( N, PID, PID0, Dens, Px, Py, Pz, Etot, _Dens, Ek, sEint ) schedule( runtime )
    for (int TID=0; TID<NPG; TID++)
