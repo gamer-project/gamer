@@ -19,7 +19,7 @@ void End_MemFree_Grackle()
 {
 
 // nothing to do if Grackle is disabled
-   if ( !GRACKLE_ENABLE )  return;
+   if ( GRACKLE_MODE == GRACKLE_MODE_NONE )  return;
 
 
    for (int t=0; t<2; t++)
