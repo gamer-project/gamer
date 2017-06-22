@@ -209,9 +209,8 @@ real (*h_Flu_Array_USG_G[2])[GRA_NIN-1][PS1][PS1][PS1]                     = { N
 // (3-4) Grackle chemistry
 #ifdef SUPPORT_GRACKLE
 real (*h_Che_Array[2])[CHE_NPREP][ CUBE(PS1) ]                             = { NULL, NULL };
-#ifndef GPU
 grackle_field_data *Che_FieldData                                          = NULL;
-#endif
+code_units Grackle_Units;
 #endif
 
 

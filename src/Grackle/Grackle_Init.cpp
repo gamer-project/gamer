@@ -60,36 +60,35 @@ void Grackle_Init()
 
 
 // units in cgs
-   code_units my_units;
-
+// --> Grackle_Units is declared as a global variable since all Grackle solvers require that as well
 #  ifdef COMOVING
-   my_units.comoving_coordinates = 1;
-   my_units.density_units        = NULL_REAL;   // not sure how to set the units in the comoving coordinates yet...
-   my_units.length_units         = NULL_REAL;   // --> see http://grackle.readthedocs.io/en/latest/Integration.html
-   my_units.time_units           = NULL_REAL;
-   my_units.velocity_units       = NULL_REAL;
-   my_units.a_units              = 1.0;
-   my_units.a_value              = Time[0];
+   Grackle_Units.comoving_coordinates = 1;
+   Grackle_Units.density_units        = NULL_REAL;    // not sure how to set the units in the comoving coordinates yet...
+   Grackle_Units.length_units         = NULL_REAL;    // --> see http://grackle.readthedocs.io/en/latest/Integration.html
+   Grackle_Units.time_units           = NULL_REAL;
+   Grackle_Units.velocity_units       = NULL_REAL;
+   Grackle_Units.a_units              = 1.0;
+   Grackle_Units.a_value              = Time[0];
 
 #  else
-   my_units.comoving_coordinates = 0;
-   my_units.density_units        = UNIT_D;
-   my_units.length_units         = UNIT_L;
-   my_units.time_units           = UNIT_T;
-   my_units.velocity_units       = UNIT_V;
-   my_units.a_units              = 1.0;
-   my_units.a_value              = 1.0;
+   Grackle_Units.comoving_coordinates = 0;
+   Grackle_Units.density_units        = UNIT_D;
+   Grackle_Units.length_units         = UNIT_L;
+   Grackle_Units.time_units           = UNIT_T;
+   Grackle_Units.velocity_units       = UNIT_V;
+   Grackle_Units.a_units              = 1.0;
+   Grackle_Units.a_value              = 1.0;
 #  endif
 
 
 // set the default chemsitry
-// --> note that "my_data" will be attached to the Grackle internal pointer "grackle_data"
+// --> note that "Grackle_Data" will be attached to the Grackle internal pointer "grackle_data"
 //     after calling set_default_chemistry_parameters()
-// --> we must NOT deallocate "my_data" during the simulation
+// --> we must NOT deallocate "Grackle_Data" during the simulation
 // --> currently it's deallocated by Grackle_End()
-  chemistry_data *my_data = new chemistry_data;
+  chemistry_data *Grackle_Data = new chemistry_data;
 
-  if ( set_default_chemistry_parameters(my_data) == 0 )
+  if ( set_default_chemistry_parameters(Grackle_Data) == 0 )
     Aux_Error( ERROR_INFO, "set_default_chemistry_parameters() failed !!\n" );
 
 
@@ -116,7 +115,7 @@ void Grackle_Init()
 
 
 // initialize the chemistry object
-   if ( initialize_chemistry_data(&my_units) == 0 )
+   if ( initialize_chemistry_data(&Grackle_Units) == 0 )
      Aux_Error( ERROR_INFO, "initialize_chemistry_data() failed !!\n" );
 
 
