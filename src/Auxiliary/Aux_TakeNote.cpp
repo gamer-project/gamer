@@ -709,7 +709,8 @@ void Aux_TakeNote()
       fprintf( Note, "GRACKLE_PRIMORDIAL        %d\n",      GRACKLE_PRIMORDIAL      );
       fprintf( Note, "GRACKLE_METAL             %d\n",      GRACKLE_METAL           );
       fprintf( Note, "GRACKLE_UV                %d\n",      GRACKLE_UV              );
-      fprintf( Note, "GRACKLE_CLOUDY_TABLE      %s\n",      GRACKLE_CLOUDY_TABLE    ); }
+      fprintf( Note, "GRACKLE_CLOUDY_TABLE      %s\n",      GRACKLE_CLOUDY_TABLE    );
+      fprintf( Note, "CHE_GPU_NPGROUP           %d\n",      CHE_GPU_NPGROUP         ); }
       fprintf( Note, "***********************************************************************************\n" );
       fprintf( Note, "\n\n");
 #     endif // #ifdef SUPPORT_GRACKLE

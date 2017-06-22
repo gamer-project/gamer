@@ -1094,6 +1094,7 @@ void Aux_Check_Parameter()
 #endif // GRAVITY
 
 
+
 // particle
 // =======================================================================================
 #ifdef PARTICLE
@@ -1177,6 +1178,23 @@ void Aux_Check_Parameter()
 #  endif
 
 #endif // PARTICLE
+
+
+
+// Grackle
+// =======================================================================================
+#ifdef SUPPORT_GRACKLE
+
+// errors
+// ------------------------------
+   if ( CHE_GPU_NPGROUP % GPU_NSTREAM != 0 )
+      Aux_Error( ERROR_INFO, "CHE_GPU_NPGROUP (%d) %% GPU_NSTREAM (%d) != 0 !!\n",
+                 CHE_GPU_NPGROUP, GPU_NSTREAM );
+
+// warning
+// ------------------------------
+
+#endif // SUPPORT_GRACKLE
 
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "Aux_Check_Parameter ... done\n" );

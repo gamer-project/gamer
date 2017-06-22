@@ -152,14 +152,16 @@ const Check_t
 // target solver in "InvokeSolvers"
 typedef int Solver_t;
 const Solver_t
+   FLUID_SOLVER               = 1
 #ifdef GRAVITY
-   FLUID_SOLVER               = 1,
-   POISSON_SOLVER             = 2,
-   GRAVITY_SOLVER             = 3,
-   POISSON_AND_GRAVITY_SOLVER = 4;
-#else
-   FLUID_SOLVER               = 1;
+  ,POISSON_SOLVER             = 2
+  ,GRAVITY_SOLVER             = 3
+  ,POISSON_AND_GRAVITY_SOLVER = 4
 #endif
+#ifdef SUPPORT_GRACKLE
+  ,GRACKLE_SOLVER             = 5
+#endif
+  ;
 
 
 // target mode in "Buf_GetBufferData and LB_GetBufferData"
