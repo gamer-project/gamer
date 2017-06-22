@@ -527,6 +527,8 @@ void YT_Inline();
 #ifdef SUPPORT_GRACKLE
 void Grackle_Init();
 void Grackle_End();
+void Init_MemAllocate_Grackle( const int Che_NPG );
+void End_MemFree_Grackle();
 #endif // #ifdef SUPPORT_GRACKLE
 
 

@@ -423,6 +423,11 @@ void Aux_TakeNote()
 #     ifdef GRAVITY
       fprintf( Note, "#define GRA_NIN           %d\n",      GRA_NIN                 );
 #     endif
+#     ifdef SUPPORT_GRACKLE
+      fprintf( Note, "#define CHE_NPREP         %d\n",      CHE_NPREP               );
+      fprintf( Note, "#define CHE_NIN           %d\n",      CHE_NIN                 );
+      fprintf( Note, "#define CHE_NOUT          %d\n",      CHE_NOUT                );
+#     endif
       fprintf( Note, "#define PATCH_SIZE        %d\n",      PATCH_SIZE              );
       fprintf( Note, "#define MAX_PATCH         %d\n",      MAX_PATCH               );
       fprintf( Note, "#define NLEVEL            %d\n",      NLEVEL                  );
