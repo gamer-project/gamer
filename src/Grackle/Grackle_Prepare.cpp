@@ -23,9 +23,10 @@
 void Grackle_Prepare( const int lv, real h_Che_Array[][CHE_NPREP][ CUBE(PS1) ], const int NPG, const int *PID0_List )
 {
 
-   const int Idx_Dens  = 0;
-   const int Idx_sEint = 1;
-   const int Idx_Ek    = 2;
+   const int  Idx_Dens  = 0;
+   const int  Idx_sEint = 1;
+   const int  Idx_Ek    = 2;
+   const real dh        = (real)amr->dh[lv];
 
    int N, PID, PID0, Dens, Px, Py, Pz, Etot, _Dens, Ek, sEint;
 
@@ -53,6 +54,13 @@ void Grackle_Prepare( const int lv, real h_Che_Array[][CHE_NPREP][ CUBE(PS1) ], 
             h_Che_Array[N][Idx_Dens ][t] = Dens;
             h_Che_Array[N][Idx_sEint][t] = sEint;
             h_Che_Array[N][Idx_Ek   ][t] = Ek;
+         }
+
+         if ( GRACKLE_MODE == GRACKLE_MODE_ORI )
+         {
+            Che_FieldData[N].density         = h_Che_Array[N][Idx_Dens ];
+            Che_FieldData[N].internal_energy = h_Che_Array[N][Idx_sEint];
+            Che_FieldData[N].grid_dx         = dh;
          }
       } // for (int LocalID=0; LocalID<8; LocalID++)
    } // for (int TID=0; TID<NPG; TID++)
