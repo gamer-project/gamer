@@ -525,7 +525,7 @@ void YT_Inline();
 
 // Grackle
 #ifdef SUPPORT_GRACKLE
-void Init_Grackle();
+void Grackle_Init();
 #endif // #ifdef SUPPORT_GRACKLE
 
 

@@ -8,7 +8,7 @@
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Init_Grackle
+// Function    :  Grackle_Init
 // Description :  Initialize the chemistry and radiative cooling library Grackle
 //
 // Note        :  1. Must be called AFTER Init_Load_Parameter(), Init_Unit(), and Init_OpenMP()
@@ -18,7 +18,7 @@
 //
 // Return      :  None
 //-------------------------------------------------------------------------------------------------------
-void Init_Grackle()
+void Grackle_Init()
 {
 
 // nothing to do if Grackle is disabled
@@ -122,7 +122,7 @@ void Init_Grackle()
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", __FUNCTION__ );
 
-} // FUNCTION : Init_Grackle
+} // FUNCTION : Grackle_Init
 
 
 
