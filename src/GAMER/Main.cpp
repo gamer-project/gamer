@@ -205,6 +205,11 @@ real (*h_Flu_Array_USG_G[2])[GRA_NIN-1][PS1][PS1][PS1]                     = { N
 #endif
 #endif
 
+// (3-4) Grackle chemistry
+#ifdef SUPPORT_GRACKLE
+real (*h_Che_Array[2])[CHE_NPREP][ CUBE(PS1) ]                             = { NULL, NULL };
+#endif
+
 
 // 4. GPU (device) global memory arrays
 // =======================================================================================================

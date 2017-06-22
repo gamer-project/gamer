@@ -19,7 +19,7 @@ void End_MemFree()
 
 
 // 1. AMR structure
-   if ( amr != NULL )   
+   if ( amr != NULL )
    {
 //    free particle variables first to avoid warning messages when deleting patches with particles
 #     ifdef PARTICLE
@@ -38,7 +38,7 @@ void End_MemFree()
 
 
 // 2. BaseP
-   if ( BaseP != NULL )   
+   if ( BaseP != NULL )
    {
       delete [] BaseP;
       BaseP = NULL;
@@ -60,9 +60,17 @@ void End_MemFree()
 #     endif
 #  endif
 
+#  ifdef SUPPORT_GRACKLE
+#     ifdef GPU
+         CUAPI_MemFree_Grackle();
+#     else
+         End_MemFree_Grackle();
+#     endif
+#  endif
+
 
 // 4. dump table
-   if ( DumpTable != NULL )   
+   if ( DumpTable != NULL )
    {
       delete [] DumpTable;
       DumpTable = NULL;
@@ -80,5 +88,5 @@ void End_MemFree()
 
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );
-   
+
 } // FUNCTION : End_MemFree

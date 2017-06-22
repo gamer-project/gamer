@@ -468,7 +468,7 @@
 
 // number of density ghost zones for storing the temporary particle mass density (in the array rho_ext)
 #  ifdef PARTICLE
-#     define RHOEXT_GHOST_SIZE  2
+#     define RHOEXT_GHOST_SIZE   2
 #  endif
 
 
@@ -476,6 +476,16 @@
 #     define RHO_GHOST_SIZE      ( POT_GHOST_SIZE-1 )
 
 #endif // #ifdef GRAVITY
+
+
+// Grackle constants
+#ifdef SUPPORT_GRACKLE
+
+#  define CHE_NPREP              3
+#  define CHE_NIN                2
+#  define CHE_NOUT               1
+
+#endif // #ifdef SUPPORT_GRACKLE
 
 
 // patch size (number of cells of a single patch in the x/y/z directions)

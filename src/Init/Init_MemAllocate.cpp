@@ -37,6 +37,14 @@ void Init_MemAllocate()
 #     endif
 #  endif
 
+#  ifdef SUPPORT_GRACKLE
+#     ifdef GPU
+         CUAPI_MemAllocate_Grackle( CHE_GPU_NPGROUP );
+#     else
+//       Init_MemAllocate_Grackle ( CHE_GPU_NPGROUP );
+#     endif
+#  endif
+
 
 // c. allocate load-balance variables
 #  ifdef LOAD_BALANCE
