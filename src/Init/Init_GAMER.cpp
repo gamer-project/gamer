@@ -60,7 +60,7 @@ void Init_GAMER( int *argc, char ***argv )
 
 // initialize Grackle
 #  ifdef SUPPORT_GRACKLE
-   Init_Grackle();
+   Grackle_Init();
 #  endif
 
 
