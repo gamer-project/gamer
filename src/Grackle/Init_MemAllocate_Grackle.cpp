@@ -23,7 +23,7 @@ void Init_MemAllocate_Grackle( const int Che_NPG )
 {
 
 // nothing to do if Grackle is disabled
-   if ( !GRACKLE_ENABLE )  return;
+   if ( GRACKLE_MODE == GRACKLE_MODE_NONE )  return;
 
 
    const int Che_NP = 8*Che_NPG;

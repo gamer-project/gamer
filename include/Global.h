@@ -184,7 +184,7 @@ extern yt_verbose      YT_VERBOSE;
 // (2-7) Grackle
 // ============================================================================================================
 #ifdef SUPPORT_GRACKLE
-extern bool            GRACKLE_ENABLE;
+extern GrackleMode_t   GRACKLE_MODE;
 extern bool            GRACKLE_VERBOSE;
 extern bool            GRACKLE_COOLING;
 extern GracklePriChe_t GRACKLE_PRIMORDIAL;
@@ -226,6 +226,7 @@ extern real       (*h_Flu_Array_USG_G[2])[GRA_NIN-1][PS1][PS1][PS1];
 
 #ifdef SUPPORT_GRACKLE
 extern real       (*h_Che_Array      [2])[CHE_NPREP][ CUBE(PS1) ];
+extern grackle_field_data (**Che_Fields[2]);
 #endif
 
 

@@ -164,7 +164,7 @@ yt_verbose           YT_VERBOSE;
 
 // (2-7) Grackle
 #ifdef SUPPORT_GRACKLE
-bool                 GRACKLE_ENABLE;
+GrackleMode_t        GRACKLE_MODE;
 bool                 GRACKLE_VERBOSE;
 bool                 GRACKLE_COOLING;
 GracklePriChe_t      GRACKLE_PRIMORDIAL;
@@ -209,6 +209,9 @@ real (*h_Flu_Array_USG_G[2])[GRA_NIN-1][PS1][PS1][PS1]                     = { N
 // (3-4) Grackle chemistry
 #ifdef SUPPORT_GRACKLE
 real (*h_Che_Array[2])[CHE_NPREP][ CUBE(PS1) ]                             = { NULL, NULL };
+#ifndef GPU
+grackle_field_data (**Che_Fields[2])                                       = { NULL, NULL };
+#endif
 #endif
 
 
