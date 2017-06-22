@@ -382,7 +382,7 @@ endif # SUPPORT_LIBYT
 # ------------------------------------------------------------------------------------
 ifeq "$(findstring SUPPORT_GRACKLE, $(SIMU_OPTION))" "SUPPORT_GRACKLE"
 CC_FILE     += Grackle_Init.cpp  Grackle_End.cpp  Init_MemAllocate_Grackle.cpp  End_MemFree_Grackle.cpp \
-               Grackle_Prepare.cpp  Grackle_Close.cpp
+               Grackle_Prepare.cpp  Grackle_Close.cpp  Grackle_Init_FieldData.cpp
 
 vpath %.cpp    Grackle
 endif # SUPPORT_GRACKLE

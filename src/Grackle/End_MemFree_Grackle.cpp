@@ -25,7 +25,6 @@ void End_MemFree_Grackle()
    for (int t=0; t<2; t++)
    {
       if ( h_Che_Array[t] != NULL )    delete [] h_Che_Array[t];
-
       h_Che_Array[t] = NULL;
    }
 
