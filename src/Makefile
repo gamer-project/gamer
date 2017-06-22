@@ -381,10 +381,12 @@ endif # SUPPORT_LIBYT
 # Grackle source files (included only if "SUPPORT_GRACKLE" is turned on)
 # ------------------------------------------------------------------------------------
 ifeq "$(findstring SUPPORT_GRACKLE, $(SIMU_OPTION))" "SUPPORT_GRACKLE"
-CC_FILE     += Grackle_Init.cpp  Grackle_End.cpp  Init_MemAllocate_Grackle.cpp  End_MemFree_Grackle.cpp \
-               Grackle_Prepare.cpp  Grackle_Close.cpp  Grackle_Init_FieldData.cpp
+CC_FILE     += CPU_GrackleSolver_Original.cpp
 
-vpath %.cpp    Grackle
+CC_FILE     += Grackle_Init.cpp  Grackle_End.cpp  Init_MemAllocate_Grackle.cpp  End_MemFree_Grackle.cpp \
+               Grackle_Prepare.cpp  Grackle_Close.cpp  Grackle_Init_FieldData.cpp  Grackle_AdvanceDt.cpp
+
+vpath %.cpp    Grackle  Grackle/CPU_Grackle
 endif # SUPPORT_GRACKLE
 
 
