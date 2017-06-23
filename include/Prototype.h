@@ -451,6 +451,10 @@ void CUAPI_Asyn_PoissonGravitySolver( const real h_Rho_Array    [][RHO_NXT][RHO_
 void CUAPI_MemAllocate_PoissonGravity( const int Pot_NPatchGroup );
 void CUAPI_MemFree_PoissonGravity();
 #endif // #ifdef GRAVITY
+#ifdef SUPPORT_GRACKLE
+void CUAPI_MemAllocate_Grackle( const int Che_NPG );
+void CUAPI_MemFree_Grackle();
+#endif
 #endif // #ifdef GPU
 
 
