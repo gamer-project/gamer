@@ -24,28 +24,31 @@ void Init_MemAllocate()
 
 // b. allocate memory for all GPU (or CPU) solvers (including the global memory in GPU)
 #  ifdef GPU
-      CUAPI_MemAllocate_Fluid( FLU_GPU_NPGROUP, GPU_NSTREAM );
+   CUAPI_MemAllocate_Fluid( FLU_GPU_NPGROUP, GPU_NSTREAM );
 #  else
-      Init_MemAllocate_Fluid ( FLU_GPU_NPGROUP );
+   Init_MemAllocate_Fluid ( FLU_GPU_NPGROUP );
 #  endif
 
 #  ifdef GRAVITY
 #     ifdef GPU
-         CUAPI_MemAllocate_PoissonGravity( POT_GPU_NPGROUP );
+      CUAPI_MemAllocate_PoissonGravity( POT_GPU_NPGROUP );
 #     else
-         Init_MemAllocate_PoissonGravity ( POT_GPU_NPGROUP );
+      Init_MemAllocate_PoissonGravity ( POT_GPU_NPGROUP );
 #     endif
 #  endif
 
 #  ifdef SUPPORT_GRACKLE
+   if ( GRACKLE_MODE != GRACKLE_MODE_NONE )
+   {
 #     ifdef GPU
-         CUAPI_MemAllocate_Grackle( CHE_GPU_NPGROUP );
+      CUAPI_MemAllocate_Grackle( CHE_GPU_NPGROUP );
 #     else
-         Init_MemAllocate_Grackle ( CHE_GPU_NPGROUP );
+      Init_MemAllocate_Grackle ( CHE_GPU_NPGROUP );
 #     endif
 
-// initialize the "grackle_field_data" objects of Grackle
-   if ( GRACKLE_MODE == GRACKLE_MODE_ORI )   Grackle_Init_FieldData( CHE_GPU_NPGROUP );
+//    initialize the "grackle_field_data" objects of Grackle
+      if ( GRACKLE_MODE == GRACKLE_MODE_ORI )   Grackle_Init_FieldData( CHE_GPU_NPGROUP );
+   }
 #  endif
 
 

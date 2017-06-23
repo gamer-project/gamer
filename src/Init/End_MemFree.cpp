@@ -47,30 +47,33 @@ void End_MemFree()
 
 // 3. arrays for GPU (or CPU) solvers
 #  ifdef GPU
-      CUAPI_MemFree_Fluid( GPU_NSTREAM );
+   CUAPI_MemFree_Fluid( GPU_NSTREAM );
 #  else
-      End_MemFree_Fluid();
+   End_MemFree_Fluid();
 #  endif
 
 #  ifdef GRAVITY
 #     ifdef GPU
-         CUAPI_MemFree_PoissonGravity();
+      CUAPI_MemFree_PoissonGravity();
 #     else
-         End_MemFree_PoissonGravity();
+      End_MemFree_PoissonGravity();
 #     endif
 #  endif
 
 #  ifdef SUPPORT_GRACKLE
+   if ( GRACKLE_MODE != GRACKLE_MODE_NONE )
+   {
 #     ifdef GPU
-         CUAPI_MemFree_Grackle();
+      CUAPI_MemFree_Grackle();
 #     else
-         End_MemFree_Grackle();
+      End_MemFree_Grackle();
 #     endif
 
-   if ( Che_FieldData != NULL )
-   {
-      delete [] Che_FieldData;
-      Che_FieldData = NULL;
+      if ( Che_FieldData != NULL )
+      {
+         delete [] Che_FieldData;
+         Che_FieldData = NULL;
+      }
    }
 #  endif
 
@@ -84,9 +87,9 @@ void End_MemFree()
 
 
 // 5. MPI buffers used by LOAD_BALANCE
-   #ifdef LOAD_BALANCE
+#  ifdef LOAD_BALANCE
    LB_GetBufferData_MemFree();
-   #endif
+#  endif
 
 
 // 6. string arrays for the passive variables

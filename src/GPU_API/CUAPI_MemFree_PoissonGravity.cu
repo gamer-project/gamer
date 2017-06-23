@@ -24,8 +24,7 @@ extern char (*d_DE_Array_G     )[ PS1*PS1*PS1 ];
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  CUAPI_MemFree_PoissonGravity
-// Description :  Free device and host memory previously allocated by the function
-//                "CUAPI_MemAllocate_PoissonGravity"
+// Description :  Free the device and host memory previously allocated by CUAPI_MemAllocate_PoissonGravity()
 //
 // Parameter   :  None
 //-------------------------------------------------------------------------------------------------------

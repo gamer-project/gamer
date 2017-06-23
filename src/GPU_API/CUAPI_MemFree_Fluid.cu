@@ -49,7 +49,7 @@ extern cudaStream_t *Stream;
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  CUAPI_MemFree_Fluid
-// Description :  Free GPU and CPU memory previously allocated by the function "CUAPI_MemAllocate_Fluid"
+// Description :  Free the GPU and CPU memory previously allocated by CUAPI_MemAllocate_Fluid()
 //
 // Parameter   :  GPU_NStream : Number of CUDA streams for the asynchronous memory copy
 //-------------------------------------------------------------------------------------------------------
