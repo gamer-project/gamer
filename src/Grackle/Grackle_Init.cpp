@@ -98,6 +98,7 @@ void Grackle_Init()
    grackle_data->primordial_chemistry   = GRACKLE_PRIMORDIAL;
    grackle_data->metal_cooling          = GRACKLE_METAL;
    grackle_data->UVbackground           = GRACKLE_UV;
+   grackle_data->cmb_temperature_floor  = GRACKLE_CMB_FLOOR;
    grackle_data->grackle_data_file      = GRACKLE_CLOUDY_TABLE;
 
 #  ifdef OPENMP
