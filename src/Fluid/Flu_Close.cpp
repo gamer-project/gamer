@@ -398,7 +398,7 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
    const real dh           = (real)amr->dh[lv];
    const real dt_dh        = dt/dh;
    const int  didx[3]      = { 1, FLU_NXT, FLU_NXT*FLU_NXT };
-   const real Gamma_m1     = GAMMA - (real)1.0;
+   const real  Gamma_m1    = GAMMA - (real)1.0;
    const real _Gamma_m1    = (real)1.0 / Gamma_m1;
    const int  CheckMinEngy = 0;
    const int  CheckMinPres = 1;

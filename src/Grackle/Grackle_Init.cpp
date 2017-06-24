@@ -99,6 +99,7 @@ void Grackle_Init()
    grackle_data->metal_cooling          = GRACKLE_METAL;
    grackle_data->UVbackground           = GRACKLE_UV;
    grackle_data->grackle_data_file      = GRACKLE_CLOUDY_TABLE;
+
 #  ifdef OPENMP
 // currently we apply the OpenMP parallelization to **multiple patches** instead of **cells inside a patch**
 // --> therefore, we should disable OpenMP for Grackle (i.e., no nested parallelization)
