@@ -130,6 +130,10 @@ void Gra_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, co
          TIMING_FUNC(   InvokeSolver( GRAVITY_SOLVER, lv, TimeNew, TimeOld, dt, NULL_REAL, SaveSg_Flu, NULL_INT, false, false ),
                         Timer_Gra_Advance[lv],   false   );
 
+//       call Flu_ResetByUser_API_Ptr() here only if GRACKLE is disabled
+#        ifdef SUPPORT_GRACKLE
+         if ( GRACKLE_MODE == GRACKLE_MODE_NONE )
+#        endif
          if ( OPT__RESET_FLUID  &&  Flu_ResetByUser_API_Ptr != NULL )
          TIMING_FUNC(   Flu_ResetByUser_API_Ptr( lv, SaveSg_Flu, TimeNew ),
                         Timer_Gra_Advance[lv],   false   );
@@ -160,6 +164,10 @@ void Gra_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, co
          InvokeSolver( POISSON_AND_GRAVITY_SOLVER, lv, TimeNew, TimeOld, dt,        Poi_Coeff, SaveSg_Flu, SaveSg_Pot,
                        OverlapMPI, Overlap_Sync );
 
+//    call Flu_ResetByUser_API_Ptr() here only if GRACKLE is disabled
+#     ifdef SUPPORT_GRACKLE
+      if ( GRACKLE_MODE == GRACKLE_MODE_NONE )
+#     endif
       if ( Gravity  &&  OPT__RESET_FLUID  &&  Flu_ResetByUser_API_Ptr != NULL )
          Flu_ResetByUser_API_Ptr( lv, SaveSg_Flu, TimeNew );
    }

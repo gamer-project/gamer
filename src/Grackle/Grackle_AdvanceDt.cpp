@@ -32,6 +32,9 @@ void Grackle_AdvanceDt( const int lv, const double TimeNew, const double TimeOld
 
    InvokeSolver( GRACKLE_SOLVER, lv, TimeNew, TimeOld, dt, NULL_REAL, SaveSg, NULL_INT, OverlapMPI, Overlap_Sync );
 
+// always call Flu_ResetByUser_API_Ptr() here
+// --> when Grackle is enabled, we do not invoke Flu_ResetByUser_API_Ptr() in either Flu_AdvanceDt or Gra_AdvanceDt
+// --> we want to invoke Flu_ResetByUser_API_Ptr() before calling Buf_GetBufferData() to reduce the MPI communication
    if ( OPT__RESET_FLUID  &&  Flu_ResetByUser_API_Ptr != NULL )   Flu_ResetByUser_API_Ptr( lv, SaveSg, TimeNew );
 
 } // FUNCTION : Grackle_AdvanceDt

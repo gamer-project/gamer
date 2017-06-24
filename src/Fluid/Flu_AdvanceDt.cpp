@@ -1,9 +1,7 @@
 #include "Copyright.h"
 #include "GAMER.h"
 
-#ifndef GRAVITY
 extern void (*Flu_ResetByUser_API_Ptr)( const int lv, const int FluSg, const double TTime );
-#endif
 
 
 
@@ -35,8 +33,13 @@ void Flu_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, co
 
    if ( OPT__FIXUP_FLUX )  Buf_ResetBufferFlux( lv );
 
-#  ifndef GRAVITY
-   if ( OPT__RESET_FLUID  &&  Flu_ResetByUser_API_Ptr != NULL )   Flu_ResetByUser_API_Ptr( lv, SaveSg, TimeNew );
+// call Flu_ResetByUser_API_Ptr() here only if both GRAVITY and GRACKLE are disabled
+#  ifdef GRAVITY
+   if ( false )
 #  endif
+#  ifdef SUPPORT_GRACKLE
+   if ( GRACKLE_MODE == GRACKLE_MODE_NONE )
+#  endif
+   if ( OPT__RESET_FLUID  &&  Flu_ResetByUser_API_Ptr != NULL )   Flu_ResetByUser_API_Ptr( lv, SaveSg, TimeNew );
 
 } // FUNCTION : Flu_AdvanceDt
