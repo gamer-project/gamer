@@ -353,10 +353,10 @@ void Preparation_Step( const Solver_t TSolver, const int lv, const double TimeNe
 //                                  POISSON_AND_GRAVITY_SOLVER : Poisson + Gravity solvers
 //                lv          : Target refinement level
 //                TimeNew     : Target physical time to reach (only useful for adding external potential)
-//                TimeOld     : Physical time before update     (only useful for adding external potential with UNSPLIT_GRAVITY)
-//                NPG         : Number of patch groups to be upcated at a time
+//                TimeOld     : Physical time before update   (only useful for adding external potential with UNSPLIT_GRAVITY)
+//                NPG         : Number of patch groups to be updated at a time
 //                ArrayID     : Array index to load and store data ( 0 or 1 )
-//                dt          : Time interval to advance solution (for the fluid and gravity solvers)
+//                dt          : Time interval to advance solution (for the fluid, gravity, and Grackle solvers)
 //                Poi_Coeff   : Coefficient in front of the RHS in the Poisson eq.
 //-------------------------------------------------------------------------------------------------------
 void Solver( const Solver_t TSolver, const int lv, const double TimeNew, const double TimeOld,

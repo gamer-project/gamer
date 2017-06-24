@@ -25,14 +25,17 @@ void Grackle_Close( const int lv, const int SaveSg, const real h_Che_Array[][CHE
                     const int NPG, const int *PID0_List )
 {
 
-   const int Idx_Dens  = 0;
-   const int Idx_sEint = 1;
-   const int Idx_Ek    = 2;
+   const int Idx_Dens   = 0;
+   const int Idx_sEint  = 1;
+   const int Idx_Ek     = 2;
+   const real  Gamma_m1 = GAMMA - (real)1.0;
+   const real _Gamma_m1 = (real)1.0 / Gamma_m1;
 
-   int N, PID, PID0;
+   int  N, PID, PID0;
+   real Dens, Pres;
 
 
-#  pragma omp parallel for private( N, PID, PID0 ) schedule( runtime )
+#  pragma omp parallel for private( N, PID, PID0, Dens, Pres ) schedule( runtime )
    for (int TID=0; TID<NPG; TID++)
    {
       PID0 = PID0_List[TID];
@@ -43,10 +46,27 @@ void Grackle_Close( const int lv, const int SaveSg, const real h_Che_Array[][CHE
          N   = 8*TID + LocalID;
 
          for (int t=0; t<CUBE(PS1); t++)
-            *( amr->patch[SaveSg][lv][PID]->fluid[ENGY][0][0] + t )
-               = h_Che_Array[N][Idx_sEint][t]*h_Che_Array[N][Idx_Dens][t] + h_Che_Array[N][Idx_Ek][t];
-      }
-   }
+         {
+//          apply the minimum pressure check
+            Dens = h_Che_Array[N][Idx_Dens ][t];
+            Pres = h_Che_Array[N][Idx_sEint][t]*Dens*Gamma_m1;
+            Pres = CPU_CheckMinPres( Pres, MIN_PRES );
+
+//          update the total energy density
+            *( amr->patch[SaveSg][lv][PID]->fluid[ENGY][0][0] + t ) = Pres*_Gamma_m1 + h_Che_Array[N][Idx_Ek][t];
+
+//          update the dual-energy variable to be consistent with the updated pressure
+#           ifdef DUAL_ENERGY
+#           if   ( DUAL_ENERGY == DE_ENPY )
+            *( amr->patch[SaveSg][lv][PID]->fluid[ENPY][0][0] + t ) = CPU_DensPres2Entropy( Dens, Pres, Gamma_m1 );
+
+#           elif ( DUAL_ENERGY == DE_EINT )
+#           error : DE_EINT is NOT supported yet !!
+#           endif
+#           endif // #ifdef DUAL_ENERGY
+         } // for (int t=0; t<CUBE(PS1); t++)
+      } // for (int LocalID=0; LocalID<8; LocalID++)
+   } // for (int TID=0; TID<NPG; TID++)
 
 } // FUNCTION : Grackle_Close
 
