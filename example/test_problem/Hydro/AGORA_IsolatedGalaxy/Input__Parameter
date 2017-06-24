@@ -110,11 +110,12 @@ OPT__RECORD_LOAD_BALANCE      1           # record the load-balance info [1]
 
 # Grackle library for chemistry and radiative cooling (SUPPORT_GRACKLE only)
 GRACKLE_MODE                  1           # (0=off, 1=original Grackle, 2=reduced CPU/GPU implementation in GAMER) [1]
-GRACKLE_VERBOSE               1           # ...    "grackle_verbose" [1]
+GRACKLE_VERBOSE               1           # map to "grackle_verbose" [1]
 GRACKLE_COOLING               1           # ...    "with_radiative_cooling" [1]
 GRACKLE_PRIMORDIAL            0           # ...    "primordial_chemistry" (0=Cloudy, 1/2/3=6-/9-/12-species) [0]
 GRACKLE_METAL                 0           # ...    "metal_cooling" [0]
 GRACKLE_UV                    0           # ...    "UVbackground" [0]
+GRACKLE_CMB_FLOOR             0           # ...    "cmb_temperature_floor" [1]
 GRACKLE_CLOUDY_TABLE          CloudyData_noUVB.h5  # "grackle_data_file"
 CHE_GPU_NPGROUP              -1           # number of patch groups sent into the CPU/GPU Grackle solver (<=0=auto) [-1]
 
