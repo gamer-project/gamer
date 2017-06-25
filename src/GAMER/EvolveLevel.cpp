@@ -4,11 +4,12 @@
 #ifdef TIMING
 extern Timer_t *Timer_Flu_Advance[NLEVEL];
 extern Timer_t *Timer_Gra_Advance[NLEVEL];
+extern Timer_t *Timer_Che_Advance[NLEVEL];
 extern Timer_t *Timer_FixUp      [NLEVEL];
 extern Timer_t *Timer_Flag       [NLEVEL];
 extern Timer_t *Timer_Refine     [NLEVEL];
 extern Timer_t *Timer_Lv         [NLEVEL];
-extern Timer_t *Timer_GetBuf     [NLEVEL][8];
+extern Timer_t *Timer_GetBuf     [NLEVEL][9];
 extern Timer_t *Timer_Par_Update [NLEVEL][3];
 extern Timer_t *Timer_Par_2Sib   [NLEVEL];
 extern Timer_t *Timer_Par_2Son   [NLEVEL];
@@ -321,7 +322,8 @@ void EvolveLevel( const int lv, const double dTime )
          if ( OPT__VERBOSE  &&  MPI_Rank == 0 )
             Aux_Message( stdout, "   Lv %2d: Grackle_AdvanceDt, counter = %4ld ... ", lv, AdvanceCounter[lv] );
 
-         Grackle_AdvanceDt( lv, TimeNew, TimeOld, dt_SubStep, SaveSg_Che, false, false );
+         TIMING_FUNC(   Grackle_AdvanceDt( lv, TimeNew, TimeOld, dt_SubStep, SaveSg_Che, false, false ),
+                        Timer_Che_Advance[lv],   true   );
 
 #        if   ( DUAL_ENERGY == DE_ENPY )
          const int VarModifiedByGrackle = ( _ENGY | _ENPY );
@@ -330,7 +332,9 @@ void EvolveLevel( const int lv, const double dTime )
 #        else
          const int VarModifiedByGrackle = ( _ENGY );
 #        endif
-         Buf_GetBufferData( lv, SaveSg_Che, NULL_INT, DATA_GENERAL, VarModifiedByGrackle, Flu_ParaBuf, USELB_YES );
+         TIMING_FUNC(   Buf_GetBufferData( lv, SaveSg_Che, NULL_INT, DATA_GENERAL, VarModifiedByGrackle, Flu_ParaBuf,
+                                           USELB_YES ),
+                        Timer_GetBuf[lv][8],   true   );
 
          if ( OPT__VERBOSE  &&  MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );
       } // if ( GRACKLE_MODE != GRACKLE_MODE_NONE )
