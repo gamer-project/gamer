@@ -74,7 +74,7 @@ Procedure for outputting new variables:
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2233)
+// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2234)
 // Description :  Output all simulation data in the HDF5 format, which can be used as a restart file
 //                or loaded by YT
 //
@@ -132,6 +132,7 @@ Procedure for outputting new variables:
 //                2231 : 2017/05/08 --> output OPT__FLAG_JEANS and FlagTable_Jeans
 //                2232 : 2017/06/13 --> output TESTPROB_ID
 //                2233 : 2017/06/13 --> rename Opt__Output_TestError as Opt__Output_User
+//                2234 : 2017/06/25 --> output Grackle variables
 //-------------------------------------------------------------------------------------------------------
 void Output_DumpData_Total_HDF5( const char *FileName )
 {
@@ -1237,7 +1238,7 @@ void FillIn_KeyInfo( KeyInfo_t &KeyInfo )
 
    const time_t CalTime  = time( NULL );   // calendar time
 
-   KeyInfo.FormatVersion = 2233;
+   KeyInfo.FormatVersion = 2234;
    KeyInfo.Model         = MODEL;
    KeyInfo.NLevel        = NLEVEL;
    KeyInfo.NCompFluid    = NCOMP_FLUID;
@@ -1412,6 +1413,12 @@ void FillIn_Makefile( Makefile_t &Makefile )
    Makefile.SupportGSL         = 1;
 #  else
    Makefile.SupportGSL         = 0;
+#  endif
+
+#  ifdef SUPPORT_GRACKLE
+   Makefile.SupportGrackle     = 1;
+#  else
+   Makefile.SupportGrackle     = 0;
 #  endif
 
    Makefile.NLevel             = NLEVEL;
@@ -1857,6 +1864,19 @@ void FillIn_InputPara( InputPara_t &InputPara )
    InputPara.Opt__ExternalPot        = OPT__EXTERNAL_POT;
 #  endif
 
+// Grackle
+#  ifdef SUPPORT_GRACKLE
+   InputPara.Grackle_Mode            = GRACKLE_MODE;
+   InputPara.Grackle_Verbose         = GRACKLE_VERBOSE;
+   InputPara.Grackle_Cooling         = GRACKLE_COOLING;
+   InputPara.Grackle_Primordial      = GRACKLE_PRIMORDIAL;
+   InputPara.Grackle_Metal           = GRACKLE_METAL;
+   InputPara.Grackle_UV              = GRACKLE_UV;
+   InputPara.Grackle_CMB_Floor       = GRACKLE_CMB_FLOOR;
+   InputPara.Grackle_CloudyTable     = GRACKLE_CLOUDY_TABLE;
+   InputPara.Che_GPU_NPGroup         = CHE_GPU_NPGROUP;
+#  endif
+
 // initialization
    InputPara.Opt__Init               = OPT__INIT;
    InputPara.RestartLoadNRank        = RESTART_LOAD_NRANK;
@@ -2090,6 +2110,7 @@ void GetCompound_Makefile( hid_t &H5_TypeID )
    H5Tinsert( H5_TypeID, "Laohu",              HOFFSET(Makefile_t,Laohu             ), H5T_NATIVE_INT );
    H5Tinsert( H5_TypeID, "SupportHDF5",        HOFFSET(Makefile_t,SupportHDF5       ), H5T_NATIVE_INT );
    H5Tinsert( H5_TypeID, "SupportGSL",         HOFFSET(Makefile_t,SupportGSL        ), H5T_NATIVE_INT );
+   H5Tinsert( H5_TypeID, "SupportGrackle",     HOFFSET(Makefile_t,SupportGrackle    ), H5T_NATIVE_INT );
 
    H5Tinsert( H5_TypeID, "NLevel",             HOFFSET(Makefile_t,NLevel            ), H5T_NATIVE_INT );
    H5Tinsert( H5_TypeID, "MaxPatch",           HOFFSET(Makefile_t,MaxPatch          ), H5T_NATIVE_INT );
@@ -2489,6 +2510,19 @@ void GetCompound_InputPara( hid_t &H5_TypeID )
    H5Tinsert( H5_TypeID, "Opt__ExternalPot",        HOFFSET(InputPara_t,Opt__ExternalPot       ), H5T_NATIVE_INT     );
 #  endif
 
+// Grackle
+#  ifdef SUPPORT_GRACKLE
+   H5Tinsert( H5_TypeID, "Grackle_Mode",            HOFFSET(InputPara_t,Grackle_Mode           ), H5T_NATIVE_INT     );
+   H5Tinsert( H5_TypeID, "Grackle_Verbose",         HOFFSET(InputPara_t,Grackle_Verbose        ), H5T_NATIVE_INT     );
+   H5Tinsert( H5_TypeID, "Grackle_Cooling",         HOFFSET(InputPara_t,Grackle_Cooling        ), H5T_NATIVE_INT     );
+   H5Tinsert( H5_TypeID, "Grackle_Primordial",      HOFFSET(InputPara_t,Grackle_Primordial     ), H5T_NATIVE_INT     );
+   H5Tinsert( H5_TypeID, "Grackle_Metal",           HOFFSET(InputPara_t,Grackle_Metal          ), H5T_NATIVE_INT     );
+   H5Tinsert( H5_TypeID, "Grackle_UV",              HOFFSET(InputPara_t,Grackle_UV             ), H5T_NATIVE_INT     );
+   H5Tinsert( H5_TypeID, "Grackle_CMB_Floor",       HOFFSET(InputPara_t,Grackle_CMB_Floor      ), H5T_NATIVE_INT     );
+   H5Tinsert( H5_TypeID, "Grackle_CloudyTable",     HOFFSET(InputPara_t,Grackle_CloudyTable    ), H5_TypeID_VarStr   );
+   H5Tinsert( H5_TypeID, "Che_GPU_NPGroup",         HOFFSET(InputPara_t,Che_GPU_NPGroup        ), H5T_NATIVE_INT     );
+#  endif
+
 // initialization
    H5Tinsert( H5_TypeID, "Opt__Init",               HOFFSET(InputPara_t,Opt__Init              ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "RestartLoadNRank",        HOFFSET(InputPara_t,RestartLoadNRank       ), H5T_NATIVE_INT     );
@@ -2522,7 +2556,7 @@ void GetCompound_InputPara( hid_t &H5_TypeID )
 // data dump
    H5Tinsert( H5_TypeID, "Opt__Output_Total",       HOFFSET(InputPara_t,Opt__Output_Total      ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "Opt__Output_Part",        HOFFSET(InputPara_t,Opt__Output_Part       ), H5T_NATIVE_INT     );
-   H5Tinsert( H5_TypeID, "Opt__Output_User",       HOFFSET(InputPara_t,Opt__Output_User        ), H5T_NATIVE_INT     );
+   H5Tinsert( H5_TypeID, "Opt__Output_User",        HOFFSET(InputPara_t,Opt__Output_User       ), H5T_NATIVE_INT     );
 #  ifdef PARTICLE
    H5Tinsert( H5_TypeID, "Opt__Output_ParText",     HOFFSET(InputPara_t,Opt__Output_ParText    ), H5T_NATIVE_INT     );
 #  endif
