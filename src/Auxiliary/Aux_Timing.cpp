@@ -28,9 +28,9 @@ extern Timer_t *Timer_Par_Collect[NLEVEL];
 extern Timer_t *Timer_Par_MPI    [NLEVEL][6];
 
 #ifdef TIMING_SOLVER
-extern Timer_t *Timer_Pre         [NLEVEL][4];
-extern Timer_t *Timer_Sol         [NLEVEL][4];
-extern Timer_t *Timer_Clo         [NLEVEL][4];
+extern Timer_t *Timer_Pre         [NLEVEL][5];
+extern Timer_t *Timer_Sol         [NLEVEL][5];
+extern Timer_t *Timer_Clo         [NLEVEL][5];
 extern Timer_t *Timer_Poi_PreRho  [NLEVEL];
 extern Timer_t *Timer_Poi_PreFlu  [NLEVEL];
 extern Timer_t *Timer_Poi_PrePot_C[NLEVEL];
@@ -95,7 +95,7 @@ void Aux_CreateTimer()
       for (int t=0; t<6; t++)    Timer_Par_MPI   [lv][t] = new Timer_t( N );
 
 #     ifdef TIMING_SOLVER
-      for (int v=0; v<4; v++)
+      for (int v=0; v<5; v++)
       {
          Timer_Pre[lv][v]    = new Timer_t( 1 );
          Timer_Sol[lv][v]    = new Timer_t( 1 );
@@ -144,7 +144,7 @@ void Aux_DeleteTimer()
       for (int t=0; t<6; t++)    delete Timer_Par_MPI   [lv][t];
 
 #     ifdef TIMING_SOLVER
-      for (int v=0; v<4; v++)
+      for (int v=0; v<5; v++)
       {
          delete Timer_Pre      [lv][v];
          delete Timer_Sol      [lv][v];
@@ -187,7 +187,7 @@ void Aux_ResetTimer()
       for (int t=0; t<6; t++)    Timer_Par_MPI   [lv][t]->Reset();
 
 #     ifdef TIMING_SOLVER
-      for (int v=0; v<4; v++)
+      for (int v=0; v<5; v++)
       {
          Timer_Pre      [lv][v]->Reset();
          Timer_Sol      [lv][v]->Reset();
@@ -1045,14 +1045,14 @@ void Timing__Solver( const char FileName[] )
 
 // get the maximum values from all ranks
    int    ID;
-   double Pre_loc[NLEVEL][4], Sol_loc[NLEVEL][4], Clo_loc[NLEVEL][4];
-   double Pre_max[NLEVEL][4], Sol_max[NLEVEL][4], Clo_max[NLEVEL][4];
+   double Pre_loc[NLEVEL][5], Sol_loc[NLEVEL][5], Clo_loc[NLEVEL][5];
+   double Pre_max[NLEVEL][5], Sol_max[NLEVEL][5], Clo_max[NLEVEL][5];
    double Poi_PreRho_loc[NLEVEL], Poi_PreFlu_loc[NLEVEL], Poi_PrePot_C_loc[NLEVEL], Poi_PrePot_F_loc[NLEVEL];
    double Poi_PreRho_max[NLEVEL], Poi_PreFlu_max[NLEVEL], Poi_PrePot_C_max[NLEVEL], Poi_PrePot_F_max[NLEVEL];
 
    for (int lv=0; lv<NLEVEL; lv++)
    {
-      for (int v=0; v<4; v++)
+      for (int v=0; v<5; v++)
       {
          Pre_loc[lv][v] = Timer_Pre[lv][v]->GetValue(0);
          Sol_loc[lv][v] = Timer_Sol[lv][v]->GetValue(0);
@@ -1065,9 +1065,9 @@ void Timing__Solver( const char FileName[] )
       Poi_PrePot_F_loc[lv] = Timer_Poi_PrePot_F[lv]->GetValue(0);
    }
 
-   MPI_Reduce( Pre_loc[0],       Pre_max[0],       NLEVEL*4, MPI_DOUBLE, MPI_MAX, 0, MPI_COMM_WORLD );
-   MPI_Reduce( Sol_loc[0],       Sol_max[0],       NLEVEL*4, MPI_DOUBLE, MPI_MAX, 0, MPI_COMM_WORLD );
-   MPI_Reduce( Clo_loc[0],       Clo_max[0],       NLEVEL*4, MPI_DOUBLE, MPI_MAX, 0, MPI_COMM_WORLD );
+   MPI_Reduce( Pre_loc[0],       Pre_max[0],       NLEVEL*5, MPI_DOUBLE, MPI_MAX, 0, MPI_COMM_WORLD );
+   MPI_Reduce( Sol_loc[0],       Sol_max[0],       NLEVEL*5, MPI_DOUBLE, MPI_MAX, 0, MPI_COMM_WORLD );
+   MPI_Reduce( Clo_loc[0],       Clo_max[0],       NLEVEL*5, MPI_DOUBLE, MPI_MAX, 0, MPI_COMM_WORLD );
 
    MPI_Reduce( Poi_PreRho_loc,   Poi_PreRho_max,   NLEVEL,   MPI_DOUBLE, MPI_MAX, 0, MPI_COMM_WORLD );
    MPI_Reduce( Poi_PreFlu_loc,   Poi_PreFlu_max,   NLEVEL,   MPI_DOUBLE, MPI_MAX, 0, MPI_COMM_WORLD );
@@ -1080,22 +1080,23 @@ void Timing__Solver( const char FileName[] )
       FILE *File = fopen( FileName, "a" );
 
       fprintf( File, "\nGPU/CPU solvers\n" );
-      fprintf( File, "----------------------------------------------------------------------------------------" );
-      fprintf( File, "-------------------------\n" );
-      fprintf( File, "%3s%10s%10s%10s%10s%10s%10s%10s%10s%10s%10s\n",
+      fprintf( File, "---------------------------------------------------------------------------------------" );
+      fprintf( File, "---------------------------------------\n" );
+      fprintf( File, "%3s%10s%10s%10s%10s%10s%10s%10s%10s%10s%10s%10s%10s%10s\n",
                "Lv", "Flu_Pre", "Flu_Sol", "Flu_Clo", "Poi_Pre", "PreRho", "PreFlu", "PrePot_C", "Pre_Pot_F",
-               "Poi_Sol", "Poi_Clo" );
+               "Poi_Sol", "Poi_Clo", "Che_Pre", "Che_Sol", "Che_Clo" );
 
       for (int lv=0; lv<NLEVEL; lv++)
       {
          if ( lv == 0 )    ID = 2;
          else              ID = 3;
 
-         fprintf( File, "%3d%10.4f%10.4f%10.4f%10.4f%10.4f%10.4f%10.4f%10.4f%10.4f%10.4f\n",
+         fprintf( File, "%3d%10.4f%10.4f%10.4f%10.4f%10.4f%10.4f%10.4f%10.4f%10.4f%10.4f%10.4f%10.4f%10.4f\n",
                   lv,
                   Pre_max[lv][ 0],                                             Sol_max[lv][ 0], Clo_max[lv][ 0],
                   Pre_max[lv][ID], Poi_PreRho_max  [lv], Poi_PreFlu_max  [lv],
-                                   Poi_PrePot_C_max[lv], Poi_PrePot_F_max[lv], Sol_max[lv][ID], Clo_max[lv][ID] );
+                                   Poi_PrePot_C_max[lv], Poi_PrePot_F_max[lv], Sol_max[lv][ID], Clo_max[lv][ID],
+                  Pre_max[lv][ 4],                                             Sol_max[lv][ 4], Clo_max[lv][ 4] );
       }
 
 //    sum over all levels
@@ -1111,13 +1112,17 @@ void Timing__Solver( const char FileName[] )
          Poi_PrePot_F_max[0]    += Poi_PrePot_F_max[lv];
          Sol_max         [0][2] += Sol_max         [lv][3];
          Clo_max         [0][2] += Clo_max         [lv][3];
+         Pre_max         [0][4] += Pre_max         [lv][4];
+         Sol_max         [0][4] += Sol_max         [lv][4];
+         Clo_max         [0][4] += Clo_max         [lv][4];
       }
 
-      fprintf( File, "%3s%10.4f%10.4f%10.4f%10.4f%10.4f%10.4f%10.4f%10.4f%10.4f%10.4f\n",
+      fprintf( File, "%3s%10.4f%10.4f%10.4f%10.4f%10.4f%10.4f%10.4f%10.4f%10.4f%10.4f%10.4f%10.4f%10.4f\n",
                "Sum",
                Pre_max[0][0],                                           Sol_max[0][0], Clo_max[0][0],
                Pre_max[0][2], Poi_PreRho_max  [0], Poi_PreFlu_max  [0],
-                              Poi_PrePot_C_max[0], Poi_PrePot_F_max[0], Sol_max[0][2], Clo_max[0][2] );
+                              Poi_PrePot_C_max[0], Poi_PrePot_F_max[0], Sol_max[0][2], Clo_max[0][2],
+               Pre_max[0][4],                                           Sol_max[0][4], Clo_max[0][4] );
       fprintf( File, "\n" );
 
       fclose( File );
