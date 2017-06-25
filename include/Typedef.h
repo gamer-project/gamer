@@ -150,16 +150,17 @@ const Check_t
 
 
 // target solver in "InvokeSolvers"
+// --> must start from 0 because of the current TIMING_SOLVER implementation
 typedef int Solver_t;
 const Solver_t
-   FLUID_SOLVER               = 1
+   FLUID_SOLVER               = 0
 #ifdef GRAVITY
-  ,POISSON_SOLVER             = 2
-  ,GRAVITY_SOLVER             = 3
-  ,POISSON_AND_GRAVITY_SOLVER = 4
+  ,POISSON_SOLVER             = 1
+  ,GRAVITY_SOLVER             = 2
+  ,POISSON_AND_GRAVITY_SOLVER = 3
 #endif
 #ifdef SUPPORT_GRACKLE
-  ,GRACKLE_SOLVER             = 5
+  ,GRACKLE_SOLVER             = 4
 #endif
   ;
 
