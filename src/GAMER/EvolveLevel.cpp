@@ -323,7 +323,14 @@ void EvolveLevel( const int lv, const double dTime )
 
          Grackle_AdvanceDt( lv, TimeNew, TimeOld, dt_SubStep, SaveSg_Che, false, false );
 
-         Buf_GetBufferData( lv, SaveSg_Che, NULL_INT, DATA_GENERAL, _ENGY, Flu_ParaBuf, USELB_YES );
+#        if   ( DUAL_ENERGY == DE_ENPY )
+         const int VarModifiedByGrackle = ( _ENGY | _ENPY );
+#        elif ( DUAL_ENERGY == DE_EINT )
+         const int VarModifiedByGrackle = ( _ENGY | _EINT );
+#        else
+         const int VarModifiedByGrackle = ( _ENGY );
+#        endif
+         Buf_GetBufferData( lv, SaveSg_Che, NULL_INT, DATA_GENERAL, VarModifiedByGrackle, Flu_ParaBuf, USELB_YES );
 
          if ( OPT__VERBOSE  &&  MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );
       } // if ( GRACKLE_MODE != GRACKLE_MODE_NONE )
