@@ -1246,6 +1246,7 @@ void Check_Makefile( const char *FileName )
    LoadField( "Laohu",              &RS.Laohu,              SID, TID, NonFatal, &RT.Laohu,               1, NonFatal );
    LoadField( "SupportHDF5",        &RS.SupportHDF5,        SID, TID, NonFatal, &RT.SupportHDF5,         1, NonFatal );
    LoadField( "SupportGSL",         &RS.SupportGSL,         SID, TID, NonFatal, &RT.SupportGSL,          1, NonFatal );
+   LoadField( "SupportGrackle",     &RS.SupportGrackle,     SID, TID, NonFatal, &RT.SupportGrackle,      1, NonFatal );
 
    LoadField( "NLevel",             &RS.NLevel,             SID, TID, NonFatal, &RT.NLevel,              1, NonFatal );
    LoadField( "MaxPatch",           &RS.MaxPatch,           SID, TID, NonFatal, &RT.MaxPatch,            1, NonFatal );
@@ -1660,6 +1661,18 @@ void Check_InputPara( const char *FileName )
    LoadField( "Opt__GraP5Gradient",      &RS.Opt__GraP5Gradient,      SID, TID, NonFatal, &RT.Opt__GraP5Gradient,       1, NonFatal );
    LoadField( "Opt__GravityType",        &RS.Opt__GravityType,        SID, TID, NonFatal, &RT.Opt__GravityType,         1, NonFatal );
    LoadField( "Opt__ExternalPot",        &RS.Opt__ExternalPot,        SID, TID, NonFatal, &RT.Opt__ExternalPot,         1, NonFatal );
+#  endif
+
+#  ifdef SUPPORT_GRACKLE
+   LoadField( "Grackle_Mode",            &RS.Grackle_Mode,            SID, TID, NonFatal, &RT.Grackle_Mode,             1, NonFatal );
+   LoadField( "Grackle_Verbose",         &RS.Grackle_Verbose,         SID, TID, NonFatal, &RT.Grackle_Verbose,          1, NonFatal );
+   LoadField( "Grackle_Cooling",         &RS.Grackle_Cooling,         SID, TID, NonFatal, &RT.Grackle_Cooling,          1, NonFatal );
+   LoadField( "Grackle_Primordial",      &RS.Grackle_Primordial,      SID, TID, NonFatal, &RT.Grackle_Primordial,       1, NonFatal );
+   LoadField( "Grackle_Metal",           &RS.Grackle_Metal,           SID, TID, NonFatal, &RT.Grackle_Metal,            1, NonFatal );
+   LoadField( "Grackle_UV",              &RS.Grackle_UV,              SID, TID, NonFatal, &RT.Grackle_UV,               1, NonFatal );
+   LoadField( "Grackle_CMB_Floor",       &RS.Grackle_CMB_Floor,       SID, TID, NonFatal, &RT.Grackle_CMB_Floor,        1, NonFatal );
+   LoadField( "Grackle_Mode",            &RS.Grackle_Mode,            SID, TID, NonFatal, &RT.Grackle_Mode,             1, NonFatal );
+   LoadField( "Che_GPU_NPGroup",         &RS.Che_GPU_NPGroup,         SID, TID, NonFatal, &RT.Che_GPU_NPGroup,          1, NonFatal );
 #  endif
 
 // initialization
