@@ -45,9 +45,9 @@ void Grackle_Init_FieldData( const int Che_NPG )
 
       for (int d=0; d<NDim; d++)
       {
-        Che_FieldData[t].grid_dimension[d]     = PS1;
-        Che_FieldData[t].grid_start    [d]     = 0;
-        Che_FieldData[t].grid_end      [d]     = PS1 - 1;
+         Che_FieldData[t].grid_dimension[d]    = PS1;
+         Che_FieldData[t].grid_start    [d]    = 0;
+         Che_FieldData[t].grid_end      [d]    = PS1 - 1;
       }
 
 //    fields set by Grackle_Prepare() during each time-step

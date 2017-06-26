@@ -117,3 +117,16 @@ Restart
 2. Choose the snapshot for restart by "ln -s Data_XXXXXX RESTART"
 3. run GAMER
 
+
+#====================
+OpenMP optimization
+#====================
+1. Thread affinity:
+   Ref: https://software.intel.com/en-us/node/522691
+   Example:
+
+      export KMP_AFFINITY=verbose,granularity=core,compact
+
+   may be faster than
+
+      export KMP_AFFINITY=verbose,granularity=core,scatter
