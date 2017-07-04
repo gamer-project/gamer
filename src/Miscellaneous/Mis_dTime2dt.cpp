@@ -9,7 +9,7 @@
 //#define EXPAND_THIRD
 
 
-// inline function which evaluating the first derivative of dt over dTime
+// inline function evaluating the first derivative of dt over dTime
 // ======================================================================
 #if ( defined RK4  &&  defined COMOVING )
 inline double RK4_FirstDerivative( const double Time_In )
@@ -23,7 +23,7 @@ inline double RK4_FirstDerivative( const double Time_In )
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Mis_dTime2dt
-// Description :  Convert the input physical time interval (dTime) to the evolution time-step (dt) 
+// Description :  Convert the input physical time interval (dTime) to the evolution time-step (dt)
 //
 // Note        :  1. Physical coordinates : dTime == dt
 //                   Comoving coordinates : dTime == dt*(Hubble parameter)*(scale factor)^3 == delta(scale factor)
@@ -32,9 +32,9 @@ inline double RK4_FirstDerivative( const double Time_In )
 //                   (2) Expand dt to the third power
 //
 // Parameter   :  Time_In  : Current physical time
-//                dTime_In : Current physical time interval 
+//                dTime_In : Current physical time interval
 //
-// Return      :  Evolution time-step (dt_Out) 
+// Return      :  Evolution time-step (dt_Out)
 //-------------------------------------------------------------------------------------------------------
 double Mis_dTime2dt( const double Time_In, const double dTime_In )
 {
@@ -61,11 +61,11 @@ double Mis_dTime2dt( const double Time_In, const double dTime_In )
    double dt_dTime1, dt_dTime2, dt_dTime3;   // first/second/third derivatives
 
    dt_dTime1 =       pow(      OMEGA_M0*pow(Time_In, 3.0) +      (1.0-OMEGA_M0)*pow(Time_In, 6.0),  -0.5  );
-   dt_dTime2 = -0.50*pow(      OMEGA_M0*pow(Time_In, 3.0) +      (1.0-OMEGA_M0)*pow(Time_In, 6.0),  -1.5  ) * 
+   dt_dTime2 = -0.50*pow(      OMEGA_M0*pow(Time_In, 3.0) +      (1.0-OMEGA_M0)*pow(Time_In, 6.0),  -1.5  ) *
                         (  3.0*OMEGA_M0*pow(Time_In, 2.0) +  6.0*(1.0-OMEGA_M0)*pow(Time_In, 5.0)         );
-   dt_dTime3 =  0.75*pow(      OMEGA_M0*pow(Time_In, 3.0) +      (1.0-OMEGA_M0)*pow(Time_In, 6.0),  -2.5  ) * 
+   dt_dTime3 =  0.75*pow(      OMEGA_M0*pow(Time_In, 3.0) +      (1.0-OMEGA_M0)*pow(Time_In, 6.0),  -2.5  ) *
                      pow(  3.0*OMEGA_M0*pow(Time_In, 2.0) +  6.0*(1.0-OMEGA_M0)*pow(Time_In, 5.0),   2.0  ) +
-               -0.50*pow(      OMEGA_M0*pow(Time_In, 3.0) +      (1.0-OMEGA_M0)*pow(Time_In, 6.0),  -1.5  ) * 
+               -0.50*pow(      OMEGA_M0*pow(Time_In, 3.0) +      (1.0-OMEGA_M0)*pow(Time_In, 6.0),  -1.5  ) *
                         (  6.0*OMEGA_M0*    Time_In       + 30.0*(1.0-OMEGA_M0)*pow(Time_In, 4.0)         );
 
 // expand dt to the 3rd power
@@ -83,7 +83,7 @@ double Mis_dTime2dt( const double Time_In, const double dTime_In )
    dt_Out = dTime_In;
 
 #  endif // #ifdef COMOVING ... else ...
-   
+
 
    return dt_Out;
 
