@@ -65,7 +65,7 @@ static __device__ void Get_EigenSystem( const FluVar CC_Var, FluVar5 &EVal_x, Fl
 // Note        :  1. Use the parameter "LR_Limiter" to choose different slope limiters
 //                2. The input data should be primitive variables
 //                3. For the performance consideration, the output data will be conserved variables
-//                4. The face-centered variables will be advaned by half time-step for the MHM and
+//                4. The face-centered variables will be advanced by half time-step for the MHM and
 //                   CTU schemes
 //                5. The function is asynchronous
 //                   --> "__syncthreads" must be called before using the output data
@@ -668,7 +668,7 @@ __device__ void CUFLU_DataReconstruction( const real g_PriVar[][NCOMP_TOTAL][ FL
 // Note        :  1. Use the parameter "LR_Limiter" to choose different slope limiters
 //                2. The input data should be primitive variables
 //                3. For the performance consideration, the output data will be conserved variables
-//                4. The face-centered variables will be advaned by half time-step for MHM and CTU schemes
+//                4. The face-centered variables will be advanced by half time-step for MHM and CTU schemes
 //                5. The PPM reconstruction does NOT support the extrema-preserving limiter
 //                6. The function is asynchronous
 //                   --> "__syncthreads" must be called before using the output data
