@@ -44,7 +44,7 @@ SIMU_OPTION += -DNLEVEL=10
 # maximum number of patches at each AMR level
 SIMU_OPTION += -DMAX_PATCH=1000000
 
-# support Grackle, a chemistry and radiative cooling library (currently
+# support Grackle, a chemistry and radiative cooling library
 SIMU_OPTION += -DSUPPORT_GRACKLE
 
 
