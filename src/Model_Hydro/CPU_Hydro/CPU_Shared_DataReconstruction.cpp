@@ -30,7 +30,7 @@ static void Char2Pri( real Var[], const real Gamma, const real Rho, const real P
 // Note        :  1. Use the parameter "LR_Limiter" to choose different slope limiters
 //                2. The input and output data should be primitive variables
 //                3. The PLM and PPM data reconstruction functions share the same function name
-//                4. The face-centered variables will be advaned by half time-step for the CTU scheme
+//                4. The face-centered variables will be advanced by half time-step for the CTU scheme
 //                5. The data reconstruction can be applied to characteristic variables by
 //                   defining "CHAR_RECONSTRUCTION"
 //                6. This function is shared by MHM, MHM_RP, and CTU schemes
@@ -339,7 +339,7 @@ void CPU_DataReconstruction( const real PriVar[][NCOMP_TOTAL], real FC_Var[][6][
 // Note        :  1. Use the parameter "LR_Limiter" to choose different slope limiters
 //                2. The input and output data should be primitive variables
 //                3. The PLM and PPM data reconstruction functions share the same function name
-//                4. The face-centered variables will be advaned by half time-step for the CTU scheme
+//                4. The face-centered variables will be advanced by half time-step for the CTU scheme
 //                5. Currently the extrema-preserving limiter is not supported in PPM
 //                6. The data reconstruction can be applied to characteristic variables by
 //                   defining "CHAR_RECONSTRUCTION"
