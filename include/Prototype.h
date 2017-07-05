@@ -106,7 +106,7 @@ void Flu_Close( const int lv, const int SaveSg, const real h_Flux_Array[][9][NFL
                 char h_DE_Array_F_Out[][8*PATCH_SIZE*PATCH_SIZE*PATCH_SIZE],
                 const real h_MinDtInfo_Array[], const int NPG, const int *PID0_List, const bool GetMinDtInfo,
                 const real h_Flu_Array_F_In[][FLU_NIN][FLU_NXT*FLU_NXT*FLU_NXT], const double dt );
-void Flu_FixUp( const int lv, const double dt );
+void Flu_FixUp( const int lv );
 void Flu_Prepare( const int lv, const double PrepTime, real h_Flu_Array_F_In[], real h_Pot_Array_USG_F[],
                   double h_Corner_Array_F[][3], const int NPG, const int *PID0_List );
 void Flu_Restrict( const int FaLv, const int SonFluSg, const int FaFluSg, const int SonPotSg, const int FaPotSg,

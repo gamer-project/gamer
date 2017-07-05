@@ -378,7 +378,7 @@ void EvolveLevel( const int lv, const double dTime )
                                            USELB_YES ),
                         Timer_GetBuf[lv][6],   true   );
 
-         TIMING_FUNC(   Flu_FixUp( lv, dt_SubStep ),   Timer_FixUp[lv],   true   );
+         TIMING_FUNC(   Flu_FixUp( lv ),   Timer_FixUp[lv],   true   );
 
 #        ifdef LOAD_BALANCE
          if ( OPT__FIXUP_RESTRICT )
