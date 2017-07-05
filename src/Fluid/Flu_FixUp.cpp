@@ -14,14 +14,13 @@
 //                2. The boundary fluxes must be received in advance by invoking the function "Buf_GetBufferData"
 //
 // Parameter   :  lv : Target refinement level
-//                dt : Time interval to advance solution
 //-------------------------------------------------------------------------------------------------------
-void Flu_FixUp( const int lv, const double dt )
+void Flu_FixUp( const int lv )
 {
 
-   const real Const[6]   = { real(-dt/amr->dh[lv]), real(+dt/amr->dh[lv]),
-                             real(-dt/amr->dh[lv]), real(+dt/amr->dh[lv]),
-                             real(-dt/amr->dh[lv]), real(+dt/amr->dh[lv]) };
+   const real Const[6]   = { real(-1.0/amr->dh[lv]), real(+1.0/amr->dh[lv]),
+                             real(-1.0/amr->dh[lv]), real(+1.0/amr->dh[lv]),
+                             real(-1.0/amr->dh[lv]), real(+1.0/amr->dh[lv]) };
    const int  FluSg      = amr->FluSg[lv];
    const int  Offset[6]  = { 0, PS1-1, 0, (PS1-1)*PS1, 0, (PS1-1)*SQR(PS1) }; // x=0/PS1-1, y=0/PS1-1, z=0/PS1-1 faces
    const int  didx[3][2] = { PS1, SQR(PS1), 1, SQR(PS1), 1, PS1 };
