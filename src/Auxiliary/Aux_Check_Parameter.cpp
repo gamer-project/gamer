@@ -180,9 +180,8 @@ void Aux_Check_Parameter()
    if ( OPT__TIMING_MPI )  Aux_Error( ERROR_INFO, "OPT__TIMING_MPI must work with TIMING !!\n" );
 #  endif
 
-#  ifndef INDIVIDUAL_TIMESTEP
-   if ( OPT__INT_TIME )    Aux_Error( ERROR_INFO, "OPT__INT_TIME must work with INDIVIDUAL_TIMESTEP !!\n" );
-#  endif
+   if ( OPT__DT_LEVEL == DT_LEVEL_SHARED  &&  OPT__INT_TIME )
+      Aux_Error( ERROR_INFO, "OPT__INT_TIME should be disabled when \"OPT__DT_LEVEL == DT_LEVEL_SHARED\" !!\n" );
 
    if ( OPT__MEMORY_POOL  &&  !OPT__REUSE_MEMORY )
       Aux_Error( ERROR_INFO, "please turn on OPT__REUSE_MEMORY for OPT__MEMORY_POOL !!\n" );

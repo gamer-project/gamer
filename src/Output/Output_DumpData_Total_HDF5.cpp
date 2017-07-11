@@ -1312,12 +1312,6 @@ void FillIn_Makefile( Makefile_t &Makefile )
    Makefile.Gravity            = 0;
 #  endif
 
-#  ifdef INDIVIDUAL_TIMESTEP
-   Makefile.IndividualDt       = 1;
-#  else
-   Makefile.IndividualDt       = 0;
-#  endif
-
 #  ifdef COMOVING
    Makefile.Comoving           = 1;
 #  else
@@ -1746,7 +1740,6 @@ void FillIn_InputPara( InputPara_t &InputPara )
 #  ifdef COMOVING
    InputPara.Dt__MaxDeltaA           = DT__MAX_DELTA_A;
 #  endif
-   InputPara.Opt__AdaptiveDt         = OPT__ADAPTIVE_DT;
    InputPara.Opt__RecordDt           = OPT__RECORD_DT;
    InputPara.Opt__DtUser             = OPT__DT_USER;
 
@@ -2092,7 +2085,6 @@ void GetCompound_Makefile( hid_t &H5_TypeID )
 
    H5Tinsert( H5_TypeID, "Model",              HOFFSET(Makefile_t,Model             ), H5T_NATIVE_INT );
    H5Tinsert( H5_TypeID, "Gravity",            HOFFSET(Makefile_t,Gravity           ), H5T_NATIVE_INT );
-   H5Tinsert( H5_TypeID, "IndividualDt",       HOFFSET(Makefile_t,IndividualDt      ), H5T_NATIVE_INT );
    H5Tinsert( H5_TypeID, "Comoving",           HOFFSET(Makefile_t,Comoving          ), H5T_NATIVE_INT );
    H5Tinsert( H5_TypeID, "Particle",           HOFFSET(Makefile_t,Particle          ), H5T_NATIVE_INT );
 
@@ -2386,7 +2378,6 @@ void GetCompound_InputPara( hid_t &H5_TypeID )
 #  ifdef COMOVING
    H5Tinsert( H5_TypeID, "Dt__MaxDeltaA",           HOFFSET(InputPara_t,Dt__MaxDeltaA          ), H5T_NATIVE_DOUBLE  );
 #  endif
-   H5Tinsert( H5_TypeID, "Opt__AdaptiveDt",         HOFFSET(InputPara_t,Opt__AdaptiveDt        ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "Opt__RecordDt",           HOFFSET(InputPara_t,Opt__RecordDt          ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "Opt__DtUser",             HOFFSET(InputPara_t,Opt__DtUser            ), H5T_NATIVE_INT     );
 

@@ -33,7 +33,7 @@ void Hydro_GetTimeStep_Gravity( double &dt, double &dTime, int &MinDtLv, real &M
 
 
 // get the maximum gravitational acceleration
-   if ( !OPT__ADAPTIVE_DT )   Hydro_GetMaxAcc( MaxAcc );
+   if ( OPT__DT_LEVEL != DT_LEVEL_FLEXIBLE )    Hydro_GetMaxAcc( MaxAcc );
 
 
 // get the time-step in one rank
@@ -41,10 +41,8 @@ void Hydro_GetTimeStep_Gravity( double &dt, double &dTime, int &MinDtLv, real &M
    {
       dt_tmp = sqrt( 2.0*amr->dh[lv]/MaxAcc[lv] );
 
-//    return 2*dt for the individual time-step since at the base level each step actually includes two sub-steps
-#     ifdef INDIVIDUAL_TIMESTEP
-      dt_tmp *= double( 1<<(lv+1) );
-#     endif
+//    return 2*dt for OPT__DT_LEVEL == DT_LEVEL_DIFF_BY_2 since at the base level each step actually includes two sub-steps
+      if ( OPT__DT_LEVEL == DT_LEVEL_DIFF_BY_2 )   dt_tmp *= double( 1<<(lv+1) );
 
       if ( dt_tmp <= 0.0 )
          Aux_Error( ERROR_INFO, "dt_tmp = %14.7e <= 0.0 (Rank %d, Lv %d) !!\n", dt_tmp, MPI_Rank, lv );

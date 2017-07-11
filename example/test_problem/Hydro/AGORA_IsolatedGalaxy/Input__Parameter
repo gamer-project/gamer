@@ -168,7 +168,6 @@ INIT_SUBSAMPLING_NCELL        0           # perform sub-sampling during initiali
 
 
 # interpolation schemes: (-1=auto, 1=MinMod-3D, 2=MinMod-1D, 3=vanLeer, 4=CQuad, 5=Quad, 6=CQuar, 7=Quar)
-OPT__INT_TIME                 1           # perform "temporal" interpolation for the individual time-step scheme [1]
 OPT__FLU_INT_SCHEME          -1           # ghost-zone fluid variables for the fluid solver [-1]
 OPT__REF_FLU_INT_SCHEME      -1           # newly allocated fluid variables during grid refinement [-1]
 OPT__POT_INT_SCHEME           5           # ghost-zone potential for the Poisson solver (only supports 4 & 5) [5]

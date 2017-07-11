@@ -11,7 +11,7 @@
 // Note        :  1. These cells are corrected by either "OPT__1ST_FLUX_CORR" or "MIN_DENS/PRES"
 //                2. The number of corrected cells is recorded in NCorrUnphy in the file "Flu_Close.cpp"
 //                3. The total number of cell updates recorded here for individual time-step integration is
-//                    only approximate since it can change during one global time-step
+//                   only approximate since it can change during one global time-step
 //-------------------------------------------------------------------------------------------------------
 void Aux_Record_CorrUnphy()
 {
@@ -62,9 +62,8 @@ void Aux_Record_CorrUnphy()
       for (int lv=0; lv<NLEVEL; lv++)
       {
          NUpdate = NPatchTotal[lv]*CUBE( PATCH_SIZE );
-#        ifdef INDIVIDUAL_TIMESTEP
+         if ( OPT__DT_LEVEL != DT_LEVEL_SHARED )
          NUpdate = NUpdate*(1<<(lv+1));
-#        endif
 
          if ( NUpdate == 0 )     Frac = 0.0;
          else                    Frac = 100.0 * NCorrAllRank[lv] / NUpdate;

@@ -109,7 +109,7 @@ void CUAPI_MemAllocate_Fluid( const int Flu_NPatchGroup, const int GPU_NStream )
    TotalSize += Corner_MemSize;
 #  endif
 
-   if ( OPT__ADAPTIVE_DT )
+   if ( OPT__DT_LEVEL == DT_LEVEL_FLEXIBLE )
    TotalSize += MinDtInfo_Fluid_MemSize;
 
 #  ifdef DUAL_ENERGY
@@ -151,7 +151,7 @@ void CUAPI_MemAllocate_Fluid( const int Flu_NPatchGroup, const int GPU_NStream )
    CUDA_CHECK_ERROR(  cudaMalloc( (void**) &d_Corner_Array_F,        Corner_MemSize          )  );
 #  endif
 
-   if ( OPT__ADAPTIVE_DT )
+   if ( OPT__DT_LEVEL == DT_LEVEL_FLEXIBLE )
    CUDA_CHECK_ERROR(  cudaMalloc( (void**) &d_MinDtInfo_Fluid_Array, MinDtInfo_Fluid_MemSize )  );
 
 #  ifdef DUAL_ENERGY
@@ -206,7 +206,7 @@ void CUAPI_MemAllocate_Fluid( const int Flu_NPatchGroup, const int GPU_NStream )
       CUDA_CHECK_ERROR(  cudaMallocHost( (void**) &h_Corner_Array_F       [t], Corner_MemSize          )  );
 #     endif
 
-      if ( OPT__ADAPTIVE_DT )
+      if ( OPT__DT_LEVEL == DT_LEVEL_FLEXIBLE )
       CUDA_CHECK_ERROR(  cudaMallocHost( (void**) &h_MinDtInfo_Fluid_Array[t], MinDtInfo_Fluid_MemSize )  );
 
 #     ifdef DUAL_ENERGY

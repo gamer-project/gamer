@@ -82,7 +82,6 @@ struct Makefile_t
 
    int Model;
    int Gravity;
-   int IndividualDt;
    int Comoving;
    int Particle;
    int NLevel;
@@ -330,7 +329,6 @@ struct InputPara_t
 #  ifdef COMOVING
    double Dt__MaxDeltaA;
 #  endif
-   int    Opt__AdaptiveDt;
    int    Opt__RecordDt;
    int    Opt__DtUser;
 

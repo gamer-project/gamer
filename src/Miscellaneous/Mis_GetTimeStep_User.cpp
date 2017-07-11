@@ -37,10 +37,8 @@ void Mis_GetTimeStep_User( double &dt, double &dTime, const double dt_dTime )
    /*
    double dt_user = 1.e-2;
 
-// return 2*dt for the individual time-step since at the base level each step actually includes two sub-steps
-#  ifdef INDIVIDUAL_TIMESTEP
-   dt_user *= 2.0;
-#  endif
+// return 2*dt for OPT__DT_LEVEL == DT_LEVEL_DIFF_BY_2 since at the base level each step actually includes two sub-steps
+   if ( OPT__DT_LEVEL == DT_LEVEL_DIFF_BY_2 )   dt_user *= 2.0;
 
    dt    = dt_user;
    dTime = dt / dt_dTime;

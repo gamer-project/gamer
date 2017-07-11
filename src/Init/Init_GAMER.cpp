@@ -285,8 +285,9 @@ void Init_GAMER( int *argc, char ***argv )
 #  endif
 
 
-// initialize the array "MinDtInfo_Fluid" since the kernel "CUFLU_GetMaxCFL" will NOT work during initialization
-   if ( OPT__ADAPTIVE_DT )
+// initialize all time-step information arrays for OPT__DT_LEVEL == DT_LEVEL_FLEXIBLE
+// --> must do it during the initialization since none of the evolution routines (i.e., Flu_AdvanceDt) have been invoked yet
+   if ( OPT__DT_LEVEL == DT_LEVEL_FLEXIBLE )
    {
 #     if   ( MODEL == HYDRO )
       real MinDtVar_AllLv_Fluid[NLEVEL][5];
@@ -303,9 +304,8 @@ void Init_GAMER( int *argc, char ***argv )
 #     endif // MODEL
    }
 
-// initialize the array "MinDtInfo_Gravity" since the kernel "XXX" will NOT work during initialization
 #  ifdef GRAVITY
-   if ( OPT__ADAPTIVE_DT )
+   if ( OPT__DT_LEVEL == DT_LEVEL_FLEXIBLE )
    {
 #     if   ( MODEL == HYDRO )
       Hydro_GetMaxAcc( MinDtInfo_Gravity );
@@ -323,11 +323,10 @@ void Init_GAMER( int *argc, char ***argv )
    }
 #  endif
 
-// initialize the array "MinDtInfo_Phase" since the kernel "XXX" will NOT work during initialization
 #  if ( MODEL == ELBDM )
    real MinDtVar_AllLv_Phase[NLEVEL][3];
 
-   if ( OPT__ADAPTIVE_DT )
+   if ( OPT__DT_LEVEL == DT_LEVEL_FLEXIBLE )
       ELBDM_GetMaxPhaseDerivative( MinDtInfo_Phase, MinDtVar_AllLv_Phase );
 #  endif
 

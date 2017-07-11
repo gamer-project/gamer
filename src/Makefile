@@ -29,9 +29,6 @@ SIMU_OPTION += -DPOT_SCHEME=SOR
 # --> must be off if GRAVITY is off
 #SIMU_OPTION += -DUNSPLIT_GRAVITY
 
-# individual time-step (default: shared time-step)
-SIMU_OPTION += -DINDIVIDUAL_TIMESTEP
-
 # comoving frame
 #SIMU_OPTION += -DCOMOVING
 
