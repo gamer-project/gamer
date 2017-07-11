@@ -107,8 +107,8 @@ void Aux_Record_PatchCount()
 //    e2. estimate the weighted load-imbalance factor of patches at all levels
       for (int lv=0; lv<NLEVEL; lv++)
       {
-         WLoad_Max += amr->LoadWeight[lv]*Load_Max[lv];
-         WLoad_Ave += amr->LoadWeight[lv]*Load_Ave[lv];
+         WLoad_Max += (double)amr->NUpdateLv[lv]*Load_Max[lv];
+         WLoad_Ave += (double)amr->NUpdateLv[lv]*Load_Ave[lv];
       }
 
       WLI = ( WLoad_Max - WLoad_Ave ) / WLoad_Ave;

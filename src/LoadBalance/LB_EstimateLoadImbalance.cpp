@@ -14,7 +14,7 @@
 //                   where Load_Max and Load_Ave are the maximum and average workload in all ranks
 //                   --> WLI =   0.0% --> perfect balance
 //                           = 100.0% --> estimated performance is only half of the maximum performance
-//                2. Weighting at different levels is set by "amr->LoadWeight"
+//                2. Weighting at each level is assumed to be equal to "amr->NUpdateLv"
 //                3. Call LB_EstimateWorkload_AllPatchGroup() to get the workload of all patch groups at a given level
 //                   --> Note that LB_EstimateWorkload_AllPatchGroup() takes into account particles in the
 //                       children patches
@@ -49,7 +49,7 @@ double LB_EstimateLoadImbalance()
       for (int t=0; t<NPG; t++)  Load_ThisRank[lv] += Load_AllPG[t];
 
 //    multiply the weighting at different levels
-      Load_ThisRank[lv] *= amr->LoadWeight[lv];
+      Load_ThisRank[lv] *= (double)amr->NUpdateLv[lv];
 
       delete [] Load_AllPG;
    }

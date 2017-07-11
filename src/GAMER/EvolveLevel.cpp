@@ -47,6 +47,11 @@ void EvolveLevel( const int lv, const double dTime )
    double dt_SubStep, TimeOld, TimeNew;
 
 
+// reset the workload weighting at each level to be recorded later
+   if ( lv == 0 ) {
+      for (int TLv=0; TLv<NLEVEL; TLv++)  amr->NUpdateLv[TLv] = 0; }
+
+
 // sub-step loop
    for (int SubStep=0; SubStep<NSubStep; SubStep++ )
    {
@@ -342,8 +347,9 @@ void EvolveLevel( const int lv, const double dTime )
       Time_Prev     [lv] = TimeOld;
       Time          [lv] = TimeNew;
       AdvanceCounter[lv] ++;
+      amr->NUpdateLv[lv] ++;
 
-      if ( AdvanceCounter[lv] >= __LONG_MAX__ ) Aux_Message( stderr, "WARNING : AdvanceCounter overflow !!\n" );
+      if ( AdvanceCounter[lv] >= __LONG_MAX__ )    Aux_Message( stderr, "WARNING : AdvanceCounter overflow !!\n" );
 
 
       if ( lv != TOP_LEVEL  &&  NPatchTotal[lv+1] != 0 )
