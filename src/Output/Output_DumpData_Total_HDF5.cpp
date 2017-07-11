@@ -74,7 +74,7 @@ Procedure for outputting new variables:
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2234)
+// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2235)
 // Description :  Output all simulation data in the HDF5 format, which can be used as a restart file
 //                or loaded by YT
 //
@@ -133,6 +133,7 @@ Procedure for outputting new variables:
 //                2232 : 2017/06/13 --> output TESTPROB_ID
 //                2233 : 2017/06/13 --> rename Opt__Output_TestError as Opt__Output_User
 //                2234 : 2017/06/25 --> output Grackle variables
+//                2235 : 2017/07/11 --> replace IndividualDt and Opt__AdaptiveDt by Opt__DtLevel
 //-------------------------------------------------------------------------------------------------------
 void Output_DumpData_Total_HDF5( const char *FileName )
 {
@@ -1238,7 +1239,7 @@ void FillIn_KeyInfo( KeyInfo_t &KeyInfo )
 
    const time_t CalTime  = time( NULL );   // calendar time
 
-   KeyInfo.FormatVersion = 2234;
+   KeyInfo.FormatVersion = 2235;
    KeyInfo.Model         = MODEL;
    KeyInfo.NLevel        = NLEVEL;
    KeyInfo.NCompFluid    = NCOMP_FLUID;
@@ -1740,8 +1741,9 @@ void FillIn_InputPara( InputPara_t &InputPara )
 #  ifdef COMOVING
    InputPara.Dt__MaxDeltaA           = DT__MAX_DELTA_A;
 #  endif
-   InputPara.Opt__RecordDt           = OPT__RECORD_DT;
    InputPara.Opt__DtUser             = OPT__DT_USER;
+   InputPara.Opt__DtLevel            = OPT__DT_LEVEL;
+   InputPara.Opt__RecordDt           = OPT__RECORD_DT;
 
 // domain refinement
    InputPara.RegridCount             = REGRID_COUNT;
@@ -2378,8 +2380,9 @@ void GetCompound_InputPara( hid_t &H5_TypeID )
 #  ifdef COMOVING
    H5Tinsert( H5_TypeID, "Dt__MaxDeltaA",           HOFFSET(InputPara_t,Dt__MaxDeltaA          ), H5T_NATIVE_DOUBLE  );
 #  endif
-   H5Tinsert( H5_TypeID, "Opt__RecordDt",           HOFFSET(InputPara_t,Opt__RecordDt          ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "Opt__DtUser",             HOFFSET(InputPara_t,Opt__DtUser            ), H5T_NATIVE_INT     );
+   H5Tinsert( H5_TypeID, "Opt__DtLevel",            HOFFSET(InputPara_t,Opt__DtLevel           ), H5T_NATIVE_INT     );
+   H5Tinsert( H5_TypeID, "Opt__RecordDt",           HOFFSET(InputPara_t,Opt__RecordDt          ), H5T_NATIVE_INT     );
 
 
 // domain refinement

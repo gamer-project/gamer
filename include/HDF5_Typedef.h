@@ -329,8 +329,9 @@ struct InputPara_t
 #  ifdef COMOVING
    double Dt__MaxDeltaA;
 #  endif
-   int    Opt__RecordDt;
    int    Opt__DtUser;
+   int    Opt__DtLevel;
+   int    Opt__RecordDt;
 
 // domain refinement
    int    RegridCount;
