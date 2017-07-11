@@ -196,9 +196,8 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
 #     endif
    }
 
-#  ifndef INDIVIDUAL_TIMESTEP
-   if ( OPT__INT_TIME )    Aux_Error( ERROR_INFO, "OPT__INT_TIME only works when INDIVIDUAL_TIMESTEP is on !!\n" );
-#  endif
+   if ( OPT__DT_LEVEL == DT_LEVEL_SHARED  &&  OPT__INT_TIME )
+      Aux_Error( ERROR_INFO, "OPT__INT_TIME should be disabled when \"OPT__DT_LEVEL == DT_LEVEL_SHARED\" !!\n" );
 
    if ( MPI_Rank == 0 )
    if (  ( NSide == NSIDE_00  &&  GhostSize != 0 )  ||  ( NSide != NSIDE_00  &&  GhostSize == 0 )  )
@@ -365,10 +364,8 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
 
    else
    {
-//    check
-#     ifdef INDIVIDUAL_TIMESTEP
-      if ( !OPT__ADAPTIVE_DT )
-#     endif
+//    check: although temporal interpolation is allowed, currently PrepTime is expected to be equal to either
+//           amr->FluSgTime[lv][0] or amr->FluSgTime[lv][1]
       Aux_Error( ERROR_INFO, "cannot determine FluSg (lv %d, PrepTime %20.14e, SgTime[0] %20.14e, SgTime[1] %20.14e !!\n",
                  lv, PrepTime, amr->FluSgTime[lv][0], amr->FluSgTime[lv][1] );
 
@@ -431,14 +428,13 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
 
    else
    {
-//    check
-#     ifdef INDIVIDUAL_TIMESTEP
+//    check: although temporal interpolation is allowed, currently PrepTime is expected to be equal to either
+//           amr->PotSgTime[lv][0] or amr->PotSgTime[lv][1]
+//           --> the only exception is when calling Par_UpdateParticle() to prepare the coarse-grid potential
+//               for correcting the velocity of particles just crossing from fine to coarse grids
 #     ifdef PARTICLE
-      if ( !OPT__ADAPTIVE_DT  &&  amr->Par->ImproveAcc )
-#     else
-      if ( !OPT__ADAPTIVE_DT )
-#     endif // PARTICLE
-#     endif // INDIVIDUAL_TIMESTEP
+      if ( amr->Par->ImproveAcc )
+#     endif
       Aux_Error( ERROR_INFO, "cannot determine PotSg (lv %d, PrepTime %20.14e, SgTime[0] %20.14e, SgTime[1] %20.14e !!\n",
                  lv, PrepTime, amr->PotSgTime[lv][0], amr->PotSgTime[lv][1] );
 

@@ -78,9 +78,8 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData[], const in
    }
 
 // temporal interpolation should be unnecessary for the shared time-step integration
-#  ifndef INDIVIDUAL_TIMESTEP
-   if ( OPT__INT_TIME )    Aux_Error( ERROR_INFO, "OPT__INT_TIME only works when INDIVIDUAL_TIMESTEP is on !!\n" );
-#  endif
+   if ( OPT__DT_LEVEL == DT_LEVEL_SHARED  &&  OPT__INT_TIME )
+      Aux_Error( ERROR_INFO, "OPT__INT_TIME should be disabled when \"OPT__DT_LEVEL == DT_LEVEL_SHARED\" !!\n" );
 #  endif // #ifdef GAMER_DEBUG
 
 
@@ -168,10 +167,9 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData[], const in
    else
    {
 //    check
-#     ifndef INDIVIDUAL_TIMESTEP
+      if ( OPT__DT_LEVEL == DT_LEVEL_SHARED )
       Aux_Error( ERROR_INFO, "cannot determine FluSg (lv %d, PrepTime %20.14e, SgTime[0] %20.14e, SgTime[1] %20.14e !!\n",
                  lv, PrepTime, amr->FluSgTime[lv][0], amr->FluSgTime[lv][1] );
-#     endif
 
 //    print warning messages if temporal extrapolation is required
       const double TimeMin = MIN( amr->FluSgTime[lv][0], amr->FluSgTime[lv][1] );
@@ -233,10 +231,9 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData[], const in
    else
    {
 //    check
-#     ifndef INDIVIDUAL_TIMESTEP
+      if ( OPT__DT_LEVEL == DT_LEVEL_SHARED )
       Aux_Error( ERROR_INFO, "cannot determine PotSg (lv %d, PrepTime %20.14e, SgTime[0] %20.14e, SgTime[1] %20.14e !!\n",
                  lv, PrepTime, amr->PotSgTime[lv][0], amr->PotSgTime[lv][1] );
-#     endif
 
 //    print warning messages if temporal extrapolation is required
       const double TimeMin = MIN( amr->PotSgTime[lv][0], amr->PotSgTime[lv][1] );

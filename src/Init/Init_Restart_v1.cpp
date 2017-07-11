@@ -918,7 +918,7 @@ void Load_Parameter_After_1200( FILE *File, const int FormatVersion, int &NLv_Re
 
 // c. load the simulation parameters recorded in the file "Input__Parameter"
 // =================================================================================================
-   bool   opt__adaptive_dt, opt__dt_user, opt__flag_rho, opt__flag_rho_gradient, opt__flag_pres_gradient;
+   bool   dummy_bool, opt__dt_user, opt__flag_rho, opt__flag_rho_gradient, opt__flag_pres_gradient;
    bool   opt__flag_engy_density, opt__flag_user, opt__fixup_flux, opt__fixup_restrict, opt__overlap_mpi;
    bool   opt__gra_p5_gradient, opt__int_time, opt__output_user, opt__output_base, opt__output_pot;
    bool   opt__output_baseps, opt__timing_balance, opt__int_phase;
@@ -947,7 +947,7 @@ void Load_Parameter_After_1200( FILE *File, const int FormatVersion, int &NLv_Re
    fread( &dt__gravity,                sizeof(double),                  1,             File );
    fread( &dt__phase,                  sizeof(double),                  1,             File );
    fread( &dt__max_delta_a,            sizeof(double),                  1,             File );
-   fread( &opt__adaptive_dt,           sizeof(bool),                    1,             File );
+   fread( &dummy_bool,                 sizeof(bool),                    1,             File );
    fread( &opt__dt_user,               sizeof(bool),                    1,             File );
    fread( &regrid_count,               sizeof(int),                     1,             File );
    fread( &flag_buffer_size,           sizeof(int),                     1,             File );
@@ -1072,15 +1072,12 @@ void Load_Parameter_After_1200( FILE *File, const int FormatVersion, int &NLv_Re
 
 //    warnings
 //    ------------------
-#     ifdef INDIVIDUAL_TIMESTEP
-      if ( !individual_timestep )
+      if ( OPT__DT_LEVEL != DT_LEVEL_SHARED  &&  !individual_timestep )
          Aux_Message( stderr, "WARNING : %s : RESTART file (%s) != runtime (%s) !!\n",
                       "INDIVIDUAL_TIMESTEP", "OFF", "ON" );
-#     else
-      if (  individual_timestep )
+      else if ( OPT__DT_LEVEL == DT_LEVEL_SHARED  &&  individual_timestep )
          Aux_Message( stderr, "WARNING : %s : RESTART file (%s) != runtime (%s) !!\n",
                       "INDIVIDUAL_TIMESTEP", "ON", "OFF" );
-#     endif
 
 #     ifdef GPU
       if ( !gpu )
@@ -1341,7 +1338,6 @@ void Load_Parameter_After_1200( FILE *File, const int FormatVersion, int &NLv_Re
       CompareVar( "END_T",                   end_t,                        END_T,                     NonFatal );
       CompareVar( "END_STEP",                end_step,                     END_STEP,                  NonFatal );
       CompareVar( "DT__FLUID",               dt__fluid,                    DT__FLUID,                 NonFatal );
-      CompareVar( "OPT__ADAPTIVE_DT",        opt__adaptive_dt,             OPT__ADAPTIVE_DT,          NonFatal );
       CompareVar( "OPT__DT_USER",            opt__dt_user,                 OPT__DT_USER,              NonFatal );
       CompareVar( "REGRID_COUNT",            regrid_count,                 REGRID_COUNT,              NonFatal );
       CompareVar( "FLAG_BUFFER_SIZE",        flag_buffer_size,             FLAG_BUFFER_SIZE,          NonFatal );

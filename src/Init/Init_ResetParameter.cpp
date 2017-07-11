@@ -410,15 +410,6 @@ void Init_ResetParameter()
    }
 
 
-// disable "OPT__ADAPTIVE_DT" (not supported yet)
-   if ( OPT__ADAPTIVE_DT )
-   {
-      OPT__ADAPTIVE_DT = false;
-
-      PRINT_WARNING( OPT__ADAPTIVE_DT, FORMAT_INT, "since it is not supported yet" );
-   }
-
-
 // turn off "OPT__OVERLAP_MPI" if (1) OVERLAP_MPI=ff, (2) SERIAL=on, (3) LOAD_BALANCE=off,
 //                                (4) OPENMP=off, (5) MPI thread support=MPI_THREAD_SINGLE
 #  ifndef OVERLAP_MPI
@@ -480,14 +471,12 @@ void Init_ResetParameter()
 
 
 // no temporal interpolation in the shared time-step integration
-#  ifndef INDIVIDUAL_TIMESTEP
-   if ( OPT__INT_TIME )
+   if ( OPT__DT_LEVEL == DT_LEVEL_SHARED  &&  OPT__INT_TIME )
    {
       OPT__INT_TIME = false;
 
-      PRINT_WARNING( OPT__INT_TIME, FORMAT_INT, "since INDIVIDUAL_TIMESTEP is disabled" );
+      PRINT_WARNING( OPT__INT_TIME, FORMAT_INT, "since OPT__DT_LEVEL == DT_LEVEL_SHARED" );
    }
-#  endif
 
 
 // reset the MPI rank in the serial mode

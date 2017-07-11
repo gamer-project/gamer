@@ -87,12 +87,6 @@ void Aux_TakeNote()
 #     endif
 #     endif // #ifdef GRAVITY
 
-#     ifdef INDIVIDUAL_TIMESTEP
-      fprintf( Note, "INDIVIDUAL_TIMESTEP       ON\n" );
-#     else
-      fprintf( Note, "INDIVIDUAL_TIMESTEP       OFF\n" );
-#     endif
-
 #     ifdef COMOVING
       fprintf( Note, "COMOVING                  ON\n" );
 #     else
@@ -622,7 +616,7 @@ void Aux_TakeNote()
 #     ifdef COMOVING
       fprintf( Note, "DT__MAX_DELTA_A           %13.7e\n",  DT__MAX_DELTA_A         );
 #     endif
-      fprintf( Note, "OPT__ADAPTIVE_DT          %d\n",      OPT__ADAPTIVE_DT        );
+      fprintf( Note, "OPT__DT_LEVEL             %d\n",      OPT__DT_LEVEL           );
       fprintf( Note, "OPT__RECORD_DT            %d\n",      OPT__RECORD_DT          );
       fprintf( Note, "OPT__DT_USER              %d\n",      OPT__DT_USER            );
       fprintf( Note, "***********************************************************************************\n" );

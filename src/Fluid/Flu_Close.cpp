@@ -30,7 +30,7 @@ extern void CPU_RiemannSolver_HLLE( const int XYZ, real Flux_Out[], const real L
 // Description :  1. Save the fluxes across the coarse-fine boundaries at level "lv"
 //                2. Correct the fluxes across the coarse-fine boundaries at level "lv-1"
 //                3. Copy the data from the "h_Flu_Array_F_Out" and "h_DE_Array_F_Out" arrays to the "amr->patch" pointers
-//                4. Get the minimum time-step information when the option "OPT__ADAPTIVE_DT" is turned on
+//                4. Get the minimum time-step information of the fluid solver
 //
 // Parameter   :  lv                : Target refinement level
 //                SaveSg            : Sandglass to store the updated data

@@ -211,11 +211,7 @@ void Output_DumpData_Total( const char *FileName )
       const int  pot_scheme          = NULL_INT;
 #     endif
 
-#     ifdef INDIVIDUAL_TIMESTEP
-      const bool individual_timestep = true;
-#     else
-      const bool individual_timestep = false;
-#     endif
+      const bool individual_timestep = ( OPT__DT_LEVEL != DT_LEVEL_SHARED );
 
 #     ifdef COMOVING
       const bool comoving            = true;
@@ -606,6 +602,8 @@ void Output_DumpData_Total( const char *FileName )
       const int    opt__output_par_dens      = 0;
 #     endif
 
+      const bool   dummy_bool                = false;
+
       fwrite( &BOX_SIZE,                  sizeof(double),                  1,             File );
       fwrite(  NX0_TOT,                   sizeof(int),                     3,             File );
       fwrite( &mpi_nrank,                 sizeof(int),                     1,             File );
@@ -618,7 +616,7 @@ void Output_DumpData_Total( const char *FileName )
       fwrite( &DT__GRAVITY,               sizeof(double),                  1,             File );
       fwrite( &DT__PHASE,                 sizeof(double),                  1,             File );
       fwrite( &DT__MAX_DELTA_A,           sizeof(double),                  1,             File );
-      fwrite( &OPT__ADAPTIVE_DT,          sizeof(bool),                    1,             File );
+      fwrite( &dummy_bool,                sizeof(bool),                    1,             File );
       fwrite( &OPT__DT_USER,              sizeof(bool),                    1,             File );
       fwrite( &REGRID_COUNT,              sizeof(int),                     1,             File );
       fwrite( &FLAG_BUFFER_SIZE,          sizeof(int),                     1,             File );

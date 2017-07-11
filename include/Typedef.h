@@ -293,6 +293,14 @@ const OptCorrAfterSync_t
    CORR_AFTER_SYNC_BEFORE_DUMP = 2;
 
 
+// OPT__DT_LEVEL options
+typedef int OptTimeStepLevel_t;
+const OptTimeStepLevel_t
+   DT_LEVEL_SHARED    = 1,
+   DT_LEVEL_DIFF_BY_2 = 2,
+   DT_LEVEL_FLEXIBLE  = 3;
+
+
 // Grackle
 #ifdef SUPPORT_GRACKLE
 // original Grackle or the reduced CPU/GPU implementation in GAMER

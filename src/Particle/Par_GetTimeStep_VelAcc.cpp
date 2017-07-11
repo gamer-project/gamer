@@ -65,7 +65,6 @@ void Par_GetTimeStep_VelAcc( double dt[2], double dTime[2], int MinDtLv[2], real
 
 
 // get the maximum particle velocity and acceleration at each level
-   if ( !OPT__ADAPTIVE_DT )
    for (int lv=0; lv<NLEVEL; lv++)
    {
       MaxVel[lv] = (real)0.0;    // don't assign negative values since we assume it to be positive-definite
@@ -123,16 +122,17 @@ void Par_GetTimeStep_VelAcc( double dt[2], double dTime[2], int MinDtLv[2], real
 
    for (int lv=0; lv<NLEVEL; lv++)
    {
-      dt_tmp[0]  =       amr->dh[lv] / MaxVel[lv];
+      dt_tmp[0] =       amr->dh[lv] / MaxVel[lv];
       if ( UseAcc )
-      dt_tmp[1]  = sqrt( amr->dh[lv] / MaxAcc[lv] );
+      dt_tmp[1] = sqrt( amr->dh[lv] / MaxAcc[lv] );
 
-//    return 2*dt for the individual time-step since at the base level each step actually includes two sub-steps
-#     ifdef INDIVIDUAL_TIMESTEP
-      dt_tmp[0] *= double( 1<<(lv+1) );
-      if ( UseAcc )
-      dt_tmp[1] *= double( 1<<(lv+1) );
-#     endif
+//    return 2*dt for OPT__DT_LEVEL == DT_LEVEL_DIFF_BY_2 since at the base level each step actually includes two sub-steps
+      if ( OPT__DT_LEVEL == DT_LEVEL_DIFF_BY_2 )
+      {
+         dt_tmp[0] *= double( 1<<(lv+1) );
+         if ( UseAcc )
+         dt_tmp[1] *= double( 1<<(lv+1) );
+      }
 
       if ( dt_tmp[0] < dt_local[0] )
       {

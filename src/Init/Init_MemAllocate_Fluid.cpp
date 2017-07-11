@@ -27,7 +27,7 @@ void Init_MemAllocate_Fluid( const int Flu_NPatchGroup )
       h_Corner_Array_F       [t] = new double [Flu_NPatchGroup][3];
 #     endif
 
-      if ( OPT__ADAPTIVE_DT )
+      if ( OPT__DT_LEVEL == DT_LEVEL_FLEXIBLE )
       h_MinDtInfo_Fluid_Array[t] = new real [Flu_NPatchGroup];
 
 #     ifdef DUAL_ENERGY

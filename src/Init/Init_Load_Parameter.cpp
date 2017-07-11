@@ -113,7 +113,7 @@ void Init_Load_Parameter()
    ReadPara->Add( "DT__MAX_DELTA_A",            &DT__MAX_DELTA_A,                 0.01,            0.0,           NoMax_double   );
 #  endif
    ReadPara->Add( "OPT__DT_USER",               &OPT__DT_USER,                    false,           Useless_bool,  Useless_bool   );
-   ReadPara->Add( "OPT__ADAPTIVE_DT",           &OPT__ADAPTIVE_DT,                false,           Useless_bool,  Useless_bool   );
+   ReadPara->Add( "OPT__DT_LEVEL",              &OPT__DT_LEVEL,                   3,               1,             3              );
    ReadPara->Add( "OPT__RECORD_DT",             &OPT__RECORD_DT,                  true,            Useless_bool,  Useless_bool   );
 
 

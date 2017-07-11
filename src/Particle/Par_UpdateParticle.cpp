@@ -98,8 +98,10 @@ void Par_UpdateParticle( const int lv, const double TimeNew, const double TimeOl
 
       else
       {
-#        ifdef INDIVIDUAL_TIMESTEP
-         if ( UpdateStep == PAR_UPSTEP_PRED )
+         if ( OPT__DT_LEVEL == DT_LEVEL_SHARED )
+         Aux_Error( ERROR_INFO, "Cannot determine PotSg for OPT__DT_LEVEL == DT_LEVEL_SHARED (lv %d, PrepTime %20.14e, SgTime[0] %20.14e, SgTime[1] %20.14e !!\n",
+                    lv, PrepPotTime, amr->PotSgTime[lv][0], amr->PotSgTime[lv][1] );
+         else if ( UpdateStep == PAR_UPSTEP_PRED )
          Aux_Error( ERROR_INFO, "Potential interpolation is unnecessary (lv %d, PrepTime %20.14e, SgTime[0] %20.14e, SgTime[1] %20.14e !!\n",
                     lv, PrepPotTime, amr->PotSgTime[lv][0], amr->PotSgTime[lv][1] );
 
@@ -107,10 +109,6 @@ void Par_UpdateParticle( const int lv, const double TimeNew, const double TimeOl
          PotWeighting0 = ( +amr->PotSgTime[lv][1] - PrepPotTime ) / ( amr->PotSgTime[lv][1] - amr->PotSgTime[lv][0] );
          PotWeighting1 = ( -amr->PotSgTime[lv][0] + PrepPotTime ) / ( amr->PotSgTime[lv][1] - amr->PotSgTime[lv][0] );
          PotSg         = -1;   // useless
-#        else
-         Aux_Error( ERROR_INFO, "Cannot determine PotSg (lv %d, PrepTime %20.14e, SgTime[0] %20.14e, SgTime[1] %20.14e !!\n",
-                    lv, PrepPotTime, amr->PotSgTime[lv][0], amr->PotSgTime[lv][1] );
-#        endif
       }
    }
 #  endif

@@ -127,11 +127,15 @@ struct AMR_t
          PotSgTime[lv][ 1-PotSg[lv] ] = -__FLT_MAX__;
 #        endif
 
+         /*
 #        ifdef INDIVIDUAL_TIMESTEP
          LoadWeight[lv] = double( 1UL << lv );  // 2^lv
 #        else
          LoadWeight[lv] = 1.0;
 #        endif
+         */
+         LoadWeight[lv] = double( 1UL << lv );  // 2^lv
+//       LoadWeight[lv] = 1.0;
       }
 
       for (int Sg=0; Sg<2; Sg++)

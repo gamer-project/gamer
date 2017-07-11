@@ -74,11 +74,7 @@ void Aux_CreateTimer()
 
    for (int lv=0; lv<NLEVEL; lv++)
    {
-#     ifdef INDIVIDUAL_TIMESTEP
-      const int N = 1<<(1+lv);
-#     else
-      const int N = 1;
-#     endif
+      const int N = ( OPT__DT_LEVEL == DT_LEVEL_DIFF_BY_2 ) ? ( 1<<(1+lv) ) : 1;
 
       Timer_Flu_Advance[lv] = new Timer_t( N );
       Timer_Gra_Advance[lv] = new Timer_t( N );
@@ -377,11 +373,7 @@ void Aux_Record_Timing()
 void Timing__EvolveLevel( const char FileName[], const double Time_LB_Main[][3] )
 {
 
-#  ifdef INDIVIDUAL_TIMESTEP
-   const int NSubStep = 2;
-#  else
-   const int NSubStep = 1;
-#  endif
+   const int NSubStep = ( OPT__DT_LEVEL == DT_LEVEL_DIFF_BY_2 ) ? 2 : 1;
 
    FILE *File = ( MPI_Rank == 0 ) ? fopen( FileName, "a" ) : NULL;
 
@@ -442,11 +434,7 @@ void Timing__EvolveLevel( const char FileName[], const double Time_LB_Main[][3] 
          ParMPI     [SubStep][lv][4] = 0.0;
          ParMPI     [SubStep][lv][5] = 0.0;
 
-#        ifdef INDIVIDUAL_TIMESTEP
-         const int N = 1<<(1+lv);
-#        else
-         const int N = 1;
-#        endif
+         const int N = ( OPT__DT_LEVEL == DT_LEVEL_DIFF_BY_2 ) ? ( 1<<(1+lv) ) : 1;
 
          for (int t=SubStep; t<N; t+=2)
          {

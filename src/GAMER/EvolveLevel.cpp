@@ -34,11 +34,7 @@ void EvolveLevel( const int lv, const double dTime )
 #  ifdef GRAVITY
    const bool   SelfGravity   = ( OPT__GRAVITY_TYPE == GRAVITY_SELF  ||  OPT__GRAVITY_TYPE == GRAVITY_BOTH );
 #  endif
-#  ifdef INDIVIDUAL_TIMESTEP
-   const int    NSubStep      = 2;
-#  else // shared time-step
-   const int    NSubStep      = 1;
-#  endif
+   const int    NSubStep      = ( OPT__DT_LEVEL == DT_LEVEL_DIFF_BY_2 ) ? 2 : 1;
    const double dTime_SubStep = dTime/NSubStep;
 #  ifdef PARTICLE
    const bool   StoreAcc_Yes      = true;
@@ -51,7 +47,7 @@ void EvolveLevel( const int lv, const double dTime )
    double dt_SubStep, TimeOld, TimeNew;
 
 
-// sub-step loop for INDIVIDUAL_TIMESTEP
+// sub-step loop
    for (int SubStep=0; SubStep<NSubStep; SubStep++ )
    {
 #     ifdef TIMING

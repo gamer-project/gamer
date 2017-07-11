@@ -1228,7 +1228,6 @@ void Check_Makefile( const char *FileName )
 
    LoadField( "Model",              &RS.Model,              SID, TID, NonFatal, &RT.Model,               1,    Fatal );
    LoadField( "Gravity",            &RS.Gravity,            SID, TID, NonFatal, &RT.Gravity,             1,    Fatal );
-   LoadField( "IndividualDt",       &RS.IndividualDt,       SID, TID, NonFatal, &RT.IndividualDt,        1, NonFatal );
    LoadField( "Comoving",           &RS.Comoving,           SID, TID, NonFatal, &RT.Comoving,            1,    Fatal );
    LoadField( "Particle",           &RS.Particle,           SID, TID, NonFatal, &RT.Particle,            1,    Fatal );
 
@@ -1551,7 +1550,6 @@ void Check_InputPara( const char *FileName )
 #  ifdef COMOVING
    LoadField( "Dt__MaxDeltaA",           &RS.Dt__MaxDeltaA,           SID, TID, NonFatal, &RT.Dt__MaxDeltaA,            1, NonFatal );
 #  endif
-   LoadField( "Opt__AdaptiveDt",         &RS.Opt__AdaptiveDt,         SID, TID, NonFatal, &RT.Opt__AdaptiveDt,          1, NonFatal );
    LoadField( "Opt__RecordDt",           &RS.Opt__RecordDt,           SID, TID, NonFatal, &RT.Opt__RecordDt,            1, NonFatal );
    LoadField( "Opt__DtUser",             &RS.Opt__DtUser,             SID, TID, NonFatal, &RT.Opt__DtUser,              1, NonFatal );
 

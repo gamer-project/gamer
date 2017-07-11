@@ -77,16 +77,10 @@ void Aux_Record_Performance( const double ElapsedTime )
       {
          NCellThisLevel = (long)NPatchTotal[lv]*CUBE( PATCH_SIZE );
          NCell         += NCellThisLevel;
-
-#        ifdef INDIVIDUAL_TIMESTEP
-         LoadThisLv = 1<<(lv+1);
-#        else
-         LoadThisLv = 1;
-#        endif
-
-         NUpdate    += NCellThisLevel     *LoadThisLv;
+         LoadThisLv     = ( OPT__DT_LEVEL == DT_LEVEL_DIFF_BY_2 ) ? ( 1<<(lv+1) ) : 1;
+         NUpdate       += NCellThisLevel     *LoadThisLv;
 #        ifdef PARTICLE
-         ParNUpdate += NPar_Lv_AllRank[lv]*LoadThisLv;
+         ParNUpdate    += NPar_Lv_AllRank[lv]*LoadThisLv;
 #        endif
       }
 

@@ -36,10 +36,9 @@ void Poi_Prepare_Pot( const int lv, const double PrepTime, real h_Pot_Array_P_In
 #  ifdef GAMER_DEBUG
    if ( lv == 0 )    Aux_Error( ERROR_INFO, "incorrect parameter %s = %d !!\n", "lv", lv );
 
-// temporal interpolation should be unnecessary for the shared time-step integration
-#  ifndef INDIVIDUAL_TIMESTEP
-   if ( OPT__INT_TIME )    Aux_Error( ERROR_INFO, "OPT__INT_TIME only works when INDIVIDUAL_TIMESTEP is on !!\n" );
-#  endif
+// temporal interpolation is unnecessary for the shared time-step integration
+   if ( OPT__DT_LEVEL == DT_LEVEL_SHARED  &&  OPT__INT_TIME )
+      Aux_Error( ERROR_INFO, "OPT__INT_TIME should be disabled when \"OPT__DT_LEVEL == DT_LEVEL_SHARED\" !!\n" );
 #  endif
 
 
@@ -76,10 +75,9 @@ void Poi_Prepare_Pot( const int lv, const double PrepTime, real h_Pot_Array_P_In
    else
    {
 //    check
-#     ifndef INDIVIDUAL_TIMESTEP
+      if ( OPT__DT_LEVEL == DT_LEVEL_SHARED )
       Aux_Error( ERROR_INFO, "cannot determine PotSg (lv %d, PrepTime %20.14e, SgTime[0] %20.14e, SgTime[1] %20.14e !!\n",
                  FaLv, PrepTime, amr->PotSgTime[FaLv][0], amr->PotSgTime[FaLv][1] );
-#     endif
 
 //    print warning messages if temporal extrapolation is required
       const double TimeMin = MIN( amr->PotSgTime[FaLv][0], amr->PotSgTime[FaLv][1] );
