@@ -103,8 +103,8 @@ void Par_Aux_Record_ParticleCount()
 //    4-2. estimate the weighted load-imbalance factor of particles at all levels
       for (int lv=0; lv<NLEVEL; lv++)
       {
-         WLoad_Max += amr->LoadWeight[lv]*NPar_Max[lv];
-         WLoad_Ave += amr->LoadWeight[lv]*NPar_Ave[lv];
+         WLoad_Max += (double)amr->NUpdateLv[lv]*NPar_Max[lv];
+         WLoad_Ave += (double)amr->NUpdateLv[lv]*NPar_Ave[lv];
       }
 
       WLI = ( WLoad_Max - WLoad_Ave ) / WLoad_Ave;

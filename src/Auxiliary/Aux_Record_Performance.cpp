@@ -11,8 +11,9 @@
 // Note        :  1. The code performance is defined as "total number of cell updates per second"
 //                   --> Note that for the individual time-step integration cells at higher levels will be updated
 //                       more frequently
-//                   --> The total number of cell updates recorded here for individual time-step integration is
-//                       only an approximate number since the grid structure can change during one global time-step
+//                   --> The total number of cell and particle updates recorded here for the individual time-step
+//                       integration is only approximate since the number of patches at each level may change
+//                       during one global time-step
 //                2. When PARTICLE is on, this routine also records the "total number of particle updates per second"
 //
 // Parameter   :  ElapsedTime : Elapsed time of the current global step
@@ -68,7 +69,7 @@ void Aux_Record_Performance( const double ElapsedTime )
 
 
 //    count the total number of cells, cell updates, and particle updates
-      long NCell=0, NUpdate=0, NCellThisLevel, LoadThisLv;
+      long NCell=0, NUpdate=0, NCellThisLevel;
 #     ifdef PARTICLE
       long ParNUpdate=0;
 #     endif
@@ -77,10 +78,9 @@ void Aux_Record_Performance( const double ElapsedTime )
       {
          NCellThisLevel = (long)NPatchTotal[lv]*CUBE( PATCH_SIZE );
          NCell         += NCellThisLevel;
-         LoadThisLv     = ( OPT__DT_LEVEL == DT_LEVEL_DIFF_BY_2 ) ? ( 1<<(lv+1) ) : 1;
-         NUpdate       += NCellThisLevel     *LoadThisLv;
+         NUpdate       += NCellThisLevel     *amr->NUpdateLv[lv];
 #        ifdef PARTICLE
-         ParNUpdate    += NPar_Lv_AllRank[lv]*LoadThisLv;
+         ParNUpdate    += NPar_Lv_AllRank[lv]*amr->NUpdateLv[lv];
 #        endif
       }
 
