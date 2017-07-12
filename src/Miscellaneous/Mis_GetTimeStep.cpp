@@ -16,8 +16,10 @@ extern void (*Mis_GetTimeStep_User_Ptr)( double &dt, double &dTime, const double
 //                   but may be overwritten by various test problem initializers
 //
 // Parameter   :  None
+//
+// Return      :  dTime_min
 //-------------------------------------------------------------------------------------------------------
-void Mis_GetTimeStep()
+double Mis_GetTimeStep()
 {
 
    const char FileName[] = "Record__TimeStep";
@@ -176,43 +178,44 @@ void Mis_GetTimeStep()
 #  endif // #ifdef PARTICLE
 
 
+
 // 2. get the minimum time-step from all criteria
 // =============================================================================================================
-   dTime_Base= dTime1;
+   double dTime_min = dTime1;
 
 #  ifdef GRAVITY
-   dTime_Base= fmin( dTime_Base, dTime2 );
+   dTime_min= fmin( dTime_min, dTime2 );
 #  endif
 
 #  ifdef COMOVING
-   dTime_Base= fmin( dTime_Base, dTime3 );
+   dTime_min= fmin( dTime_min, dTime3 );
 #  endif
 
    if ( DumpByTime )
-   dTime_Base= fmin( dTime_Base, dTime4 );
+   dTime_min= fmin( dTime_min, dTime4 );
 
-   dTime_Base= fmin( dTime_Base, dTime5 );
+   dTime_min= fmin( dTime_min, dTime5 );
 
    if ( OPT__DT_USER  &&  Mis_GetTimeStep_User_Ptr != NULL )
-   dTime_Base= fmin( dTime_Base, dTime6 );
+   dTime_min= fmin( dTime_min, dTime6 );
 
 #  if ( MODEL == ELBDM )
    if ( ELBDM_PhaseDt )
-   dTime_Base= fmin( dTime_Base, dTime7 );
+   dTime_min= fmin( dTime_min, dTime7 );
 #  endif
 
 #  ifdef PARTICLE
-   dTime_Base= fmin( dTime_Base, dTime8[0] );
+   dTime_min= fmin( dTime_min, dTime8[0] );
 
    if ( DT__PARACC > 0.0 )
-   dTime_Base= fmin( dTime_Base, dTime8[1] );
+   dTime_min= fmin( dTime_min, dTime8[1] );
 #  endif
 
 
 
 // 3. estimate the evolution time-step (dt)
 // =============================================================================================================
-   const double dt_Base = Mis_dTime2dt( Time[0], dTime_Base );
+   const double dt_min = Mis_dTime2dt( Time[0], dTime_min );
 
 
 
@@ -287,13 +290,13 @@ void Mis_GetTimeStep()
       if ( DumpByTime )
       fprintf( File, "Data Dump : dt = %12.6e, dTime = %12.6e\n", dt4, dTime4 );
 
-      if ( dTime_Base == dTime5 )
+      if ( dTime_min == dTime5 )
       fprintf( File, "End Time  : dt = %12.6e, dTime = %12.6e\n", dt5, dTime5 );
 
       if ( OPT__DT_USER  &&  Mis_GetTimeStep_User_Ptr != NULL )
       fprintf( File, "User      : dt = %12.6e, dTime = %12.6e\n", dt6, dTime6 );
 
-      fprintf( File, "Minimum   : dt = %12.6e, dTime = %12.6e\n", dt_Base, dTime_Base );
+      fprintf( File, "Minimum   : dt = %12.6e, dTime = %12.6e\n", dt_min, dTime_min );
       fprintf( File, "\n" );
 
       fclose( File );
@@ -303,7 +306,10 @@ void Mis_GetTimeStep()
 
 // 5. verify time-step
 // =============================================================================================================
-   if ( dt_Base <= 0.0  ||  dTime_Base<= 0.0  ||  !isfinite(dt_Base)  ||  !isfinite(dTime_Base) )
-      Aux_Error( ERROR_INFO, "incorrect time-step (dt = %20.14e, dTime = %20.14e) !!\n", dt_Base, dTime_Base );
+   if ( dt_min <= 0.0  ||  dTime_min<= 0.0  ||  !isfinite(dt_min)  ||  !isfinite(dTime_min) )
+      Aux_Error( ERROR_INFO, "incorrect time-step (dt = %20.14e, dTime = %20.14e) !!\n", dt_min, dTime_min );
+
+
+   return dTime_min;
 
 } // FUNCTION : Mis_GetTimeStep

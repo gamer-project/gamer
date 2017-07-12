@@ -205,7 +205,7 @@ void Init_ResetParameter()
 // --> treat OPT__DT_LEVEL == DT_LEVEL_FLEXIBLE the same as DT_LEVEL_DIFF_BY_2 here since we don't know the number of updates
 //     at each level during the initialization
    for (int lv=0; lv<NLEVEL; lv++)
-      amr->NUpdateLv[lv] = ( OPT__DT_LEVEL == DT_LEVEL_SHARED ) ? 1L : (1L<<(lv+1));
+      amr->NUpdateLv[lv] = ( OPT__DT_LEVEL == DT_LEVEL_SHARED ) ? 1L : (1L<<lv);
 
 
 // whether of not to allocate fluxes at the coarse-fine boundaries

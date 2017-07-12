@@ -36,7 +36,7 @@ void Hydro_GetTimeStep_Fluid( double &dt, double &dTime, int &MinDtLv, real MinD
    real   MinDtVar_AllLv[NLEVEL][5];
 
 
-// get the maximum CFL velocity ( sound speed + fluid velocity )
+// get the maximum CFL velocity (sound speed + fluid velocity)
    if ( OPT__DT_LEVEL != DT_LEVEL_FLEXIBLE )    Hydro_GetMaxCFL( MaxCFL, MinDtVar_AllLv );
 
 

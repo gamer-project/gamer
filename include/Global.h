@@ -21,7 +21,7 @@ extern double     Time_Prev[NLEVEL];                  // "previous" physical tim
 extern long       AdvanceCounter[NLEVEL];             // number of sub-steps that each level has been evolved
 extern long       NCorrUnphy[NLEVEL];                 // number of cells corrected by either OPT__1ST_FLUX_CORR or MIN_DENS/PRES
 extern long       Step;                               // number of main steps
-extern double     dTime_Base;                         // time interval to update physical time at the base level
+extern double     dTime_Base;                         // physical time interval at the base level
 
 extern real       MinDtInfo_Fluid[NLEVEL];            // maximum CFL speed at each level
 extern double     FlagTable_Rho        [NLEVEL-1];    // refinement criterion of density
