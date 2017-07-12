@@ -122,7 +122,7 @@ void Flu_AllocateFluxArray_Buffer( const int lv );
 
 
 // GAMER
-void EvolveLevel( const int lv, const double dTime );
+void EvolveLevel( const int lv, const double dTime_FaLv );
 void InvokeSolver( const Solver_t TSolver, const int lv, const double TimeNew, const double TimeOld, const double dt,
                    const double Poi_Coeff, const int SaveSg_Flu, const int SaveSg_Pot,
                    const bool OverlapMPI, const bool Overlap_Sync );
@@ -184,7 +184,7 @@ template <typename T> int   Mis_Matching_char( const int N, const T Array[], con
 template <typename T> int   Mis_Matching_int( const int N, const T Array[], const int M, const T Key[], int Match[] );
 template <typename T> bool  Mis_CompareRealValue( const T Input1, const T Input2, const char *comment, const bool Verbose );
 ulong  Mis_Idx3D2Idx1D( const int Size[], const int Idx3D[] );
-void   Mis_GetTimeStep();
+double Mis_GetTimeStep();
 double Mis_dTime2dt( const double Time_In, const double dTime_In );
 void   Mis_GetTotalPatchNumber( const int lv );
 double Mis_Scale2PhySize( const int Scale );

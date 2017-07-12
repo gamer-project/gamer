@@ -110,7 +110,7 @@ SIMU_OPTION += -DGPU_ARCH=MAXWELL
 #SIMU_OPTION += -DGAMER_DEBUG
 
 # measure the wall-clock time of GAMER
-SIMU_OPTION += -DTIMING
+#SIMU_OPTION += -DTIMING
 
 # measure the wall-clock time of GPU solvers (will disable CPU/GPU overlapping; must turn on TIMING)
 #SIMU_OPTION += -DTIMING_SOLVER

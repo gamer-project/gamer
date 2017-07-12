@@ -373,28 +373,15 @@ int main( int argc, char *argv[] )
 #     endif
 
 
-//    1. determine the time step
+//    1. advance all physical attributes by one global time-step
 //    ---------------------------------------------------------------------------------------------------
-      TIMING_FUNC(   Mis_GetTimeStep(),   Timer_Main[1],   false   );
-
-      if ( MPI_Rank == 0  &&  Step%1 == 0 )
-      {
-         Aux_Message( stdout, "Time : %13.7e -> %13.7e,    Step : %7ld -> %7ld,    dt = %14.7e\n",
-                      Time[0], Time[0]+dTime_Base, Step, Step+1, dTime_Base );
-      }
-
-//    ---------------------------------------------------------------------------------------------------
-
-
-//    2. advance all physical attributes by one step
-//    ---------------------------------------------------------------------------------------------------
-      TIMING_FUNC(   EvolveLevel( 0, dTime_Base ),   Timer_Main[2],   false   );
+      TIMING_FUNC(   EvolveLevel( 0, NULL_REAL ),   Timer_Main[2],   false   );
 
       Step ++;
 //    ---------------------------------------------------------------------------------------------------
 
 
-//    3. apply various corrections
+//    2. apply various corrections
 //       --> synchronize particles, restrict data, recalculate potential and particle acceleration, ...
 //    ---------------------------------------------------------------------------------------------------
       if ( OPT__CORR_AFTER_ALL_SYNC == CORR_AFTER_SYNC_EVERY_STEP )
@@ -402,7 +389,7 @@ int main( int argc, char *argv[] )
 //    ---------------------------------------------------------------------------------------------------
 
 
-//    4. output data and execute auxiliary functions
+//    3. output data and execute auxiliary functions
 //    ---------------------------------------------------------------------------------------------------
       TIMING_FUNC(   Output_DumpData( 1 ),            Timer_Main[3],   false   );
 
@@ -426,7 +413,7 @@ int main( int argc, char *argv[] )
 //    ---------------------------------------------------------------------------------------------------
 
 
-//    5. perform yt inline analysis
+//    4. perform yt inline analysis
 //    ---------------------------------------------------------------------------------------------------
 #     ifdef SUPPORT_LIBYT
       YT_Inline();
@@ -434,7 +421,7 @@ int main( int argc, char *argv[] )
 //    ---------------------------------------------------------------------------------------------------
 
 
-//    6. check whether to manually terminate the run
+//    5. check whether to manually terminate the run
 //    ---------------------------------------------------------------------------------------------------
       int Terminate = false;
 
@@ -444,7 +431,7 @@ int main( int argc, char *argv[] )
 //    ---------------------------------------------------------------------------------------------------
 
 
-//    7. check whether to redistribute all patches for LOAD_BALANCE
+//    6. check whether to redistribute all patches for LOAD_BALANCE
 //    ---------------------------------------------------------------------------------------------------
 #     ifdef LOAD_BALANCE
       if ( OPT__TIMING_BARRIER ) MPI_Barrier( MPI_COMM_WORLD );
@@ -484,7 +471,7 @@ int main( int argc, char *argv[] )
 //    ---------------------------------------------------------------------------------------------------
 
 
-//    8. record timing
+//    7. record timing
 //    ---------------------------------------------------------------------------------------------------
 #     ifdef TIMING
       MPI_Barrier( MPI_COMM_WORLD );

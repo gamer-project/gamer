@@ -20,31 +20,28 @@ extern Timer_t *Timer_Par_2Son   [NLEVEL];
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  EvolveLevel
-// Description :  Advance all physical attributes one time-step
+// Description :  Advance all physical attributes at the target level
 //
-// Note        :  1. Each step contains TWO sub-steps, and each of which will evolve the solution
-//                   at lv by 0.5*dTime
+// Note        :  1.
 //
-// Parameter   :  lv    : Target refinement level
-//                dTime : Time interval to update the physical time at this level
+// Parameter   :  lv         : Target refinement level
+//                dTime_FaLv : Physical time interval at the parent level
 //-------------------------------------------------------------------------------------------------------
-void EvolveLevel( const int lv, const double dTime )
+void EvolveLevel( const int lv, const double dTime_FaLv )
 {
 
 #  ifdef GRAVITY
-   const bool   SelfGravity   = ( OPT__GRAVITY_TYPE == GRAVITY_SELF  ||  OPT__GRAVITY_TYPE == GRAVITY_BOTH );
+   const bool SelfGravity       = ( OPT__GRAVITY_TYPE == GRAVITY_SELF  ||  OPT__GRAVITY_TYPE == GRAVITY_BOTH );
 #  endif
-   const int    NSubStep      = ( OPT__DT_LEVEL == DT_LEVEL_DIFF_BY_2 ) ? 2 : 1;
-   const double dTime_SubStep = dTime/NSubStep;
 #  ifdef PARTICLE
-   const bool   StoreAcc_Yes      = true;
-   const bool   StoreAcc_No       = false;
-   const bool   UseStoredAcc_Yes  = true;
-   const bool   UseStoredAcc_No   = false;
-   const bool   TimingSendPar_Yes = true;
+   const bool StoreAcc_Yes      = true;
+   const bool StoreAcc_No       = false;
+   const bool UseStoredAcc_Yes  = true;
+   const bool UseStoredAcc_No   = false;
+   const bool TimingSendPar_Yes = true;
 #  endif
 
-   double dt_SubStep, TimeOld, TimeNew;
+   double dTime_SoFar, dTime_SubStep, dt_SubStep, TimeOld, TimeNew;
 
 
 // reset the workload weighting at each level to be recorded later
@@ -53,7 +50,11 @@ void EvolveLevel( const int lv, const double dTime )
 
 
 // sub-step loop
-   for (int SubStep=0; SubStep<NSubStep; SubStep++ )
+   dTime_SoFar = 0.0;
+
+// note that we have ensured "Time[lv] == Time[lv-1]" to avoid the round-off errors
+   while (  ( lv == 0 && amr->NUpdateLv[lv] == 0 )  ||
+            ( lv >  0 && Time[lv] < Time[lv-1] )  )
    {
 #     ifdef TIMING
       MPI_Barrier( MPI_COMM_WORLD );
@@ -62,13 +63,44 @@ void EvolveLevel( const int lv, const double dTime )
 
 //    1. calculate the evolution time-step
 // ===============================================================================================
+      switch ( OPT__DT_LEVEL )
+      {
+         case ( DT_LEVEL_SHARED ):
+            if ( lv == 0 )    dTime_SubStep = Mis_GetTimeStep();
+            else              dTime_SubStep = dTime_FaLv;
+         break;
+
+         case ( DT_LEVEL_DIFF_BY_2 ):
+            if ( lv == 0 )    dTime_SubStep = Mis_GetTimeStep();
+            else              dTime_SubStep = 0.5*dTime_FaLv;
+         break;
+
+         case ( DT_LEVEL_FLEXIBLE ):
+                              dTime_SubStep = Mis_GetTimeStep();
+         break;
+
+         default:
+            Aux_Error( ERROR_INFO, "unsupported OPT__DT_LEVEL (%d) !!\n", OPT__DT_LEVEL );
+      }
+
       dt_SubStep = Mis_dTime2dt( Time[lv], dTime_SubStep );
       TimeOld    = Time[lv];
       TimeNew    = Time[lv] + dTime_SubStep;
 
-//    synchronize the time array (avoid round-off errors)
-      if (  lv > 0  &&  Mis_CompareRealValue( TimeNew, Time[lv-1], NULL, false )  )
+//    synchronize the time array to avoid the round-off errors
+//    --> it's better to use dTime_SoFar+dTime_SubStep instead of Time[lv]+dTime_SubStep to check the synchronization
+//        to reduce the round-off errors (in case Time[lv]>>dTime_SubStep)
+      if (  lv > 0  &&  Mis_CompareRealValue( dTime_SoFar+dTime_SubStep, dTime_FaLv, NULL, false )  )
       TimeNew    = Time[lv-1];
+
+      if ( lv == 0 )
+      {
+         dTime_Base = dTime_SubStep;
+
+         if ( MPI_Rank == 0 )
+            Aux_Message( stdout, "Time: %13.7e -> %13.7e,   Step: %7ld -> %7ld,   dt_base: %13.7e\n",
+                         Time[0], Time[0]+dTime_Base, Step, Step+1, dTime_Base );
+      }
 // ===============================================================================================
 
 
@@ -344,6 +376,7 @@ void EvolveLevel( const int lv, const double dTime )
 // ===============================================================================================
 
 
+      dTime_SoFar       += dTime_SubStep;
       Time_Prev     [lv] = TimeOld;
       Time          [lv] = TimeNew;
       AdvanceCounter[lv] ++;
@@ -488,7 +521,7 @@ void EvolveLevel( const int lv, const double dTime )
       Timer_Lv[lv]->Stop( true );
 #     endif
 
-   } // for (int SubStep=0; SubStep<NSubStep; SubStep++ )
+   } // while()
 
 } // FUNCTION : EvolveLevel
 
