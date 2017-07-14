@@ -509,6 +509,7 @@
 #  define USG_NXT_G     ( 1 )                                           // require it
 #  endif
 #else
+#  define GRA_NXT       ( 1 )                                           // still define GRA_NXT   ...
 #  define USG_NXT_F     ( 1 )                                           // still define USG_NXT_F ...
 #endif
 #ifdef PARTICLE

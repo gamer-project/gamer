@@ -69,14 +69,13 @@ void CPU_FluidSolver( real h_Flu_Array_In [][FLU_NIN    ][ FLU_NXT*FLU_NXT*FLU_N
                       char h_DE_Array_Out[][ PS2*PS2*PS2 ],
                       real h_Flux_Array[][9][NFLUX_TOTAL][ PS2*PS2 ],
                       const double h_Corner_Array[][3],
-                      real h_MinDtInfo_Array[],
                       const real h_Pot_Array_USG[][USG_NXT_F][USG_NXT_F][USG_NXT_F],
                       const int NPatchGroup, const real dt, const real dh, const real Gamma, const bool StoreFlux,
                       const bool XYZ, const LR_Limiter_t LR_Limiter, const real MinMod_Coeff, const real EP_Coeff,
                       const WAF_Limiter_t WAF_Limiter, const real ELBDM_Eta, real ELBDM_Taylor3_Coeff,
-                      const bool ELBDM_Taylor3_Auto, const bool GetMinDtInfo,
-                      const double Time, const OptGravityType_t GravityType, const real MinDens, const real MinPres,
-                      const real DualEnergySwitch, const bool NormPassive, const int NNorm, const int NormIdx[] );
+                      const bool ELBDM_Taylor3_Auto, const double Time, const OptGravityType_t GravityType,
+                      const real MinDens, const real MinPres, const real DualEnergySwitch,
+                      const bool NormPassive, const int NNorm, const int NormIdx[] );
 real CPU_GetPressure( const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy,
                       const real Gamma_m1, const bool CheckMinPres, const real MinPres );
 real CPU_GetTemperature( const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy,
@@ -104,8 +103,8 @@ void Flu_AllocateFluxArray( const int lv );
 void Flu_Close( const int lv, const int SaveSg, const real h_Flux_Array[][9][NFLUX_TOTAL][4*PATCH_SIZE*PATCH_SIZE],
                 real h_Flu_Array_F_Out[][FLU_NOUT][8*PATCH_SIZE*PATCH_SIZE*PATCH_SIZE],
                 char h_DE_Array_F_Out[][8*PATCH_SIZE*PATCH_SIZE*PATCH_SIZE],
-                const real h_MinDtInfo_Array[], const int NPG, const int *PID0_List, const bool GetMinDtInfo,
-                const real h_Flu_Array_F_In[][FLU_NIN][FLU_NXT*FLU_NXT*FLU_NXT], const double dt );
+                const int NPG, const int *PID0_List, const real h_Flu_Array_F_In[][FLU_NIN][FLU_NXT*FLU_NXT*FLU_NXT],
+                const double dt );
 void Flu_FixUp( const int lv );
 void Flu_Prepare( const int lv, const double PrepTime, real h_Flu_Array_F_In[], real h_Pot_Array_USG_F[],
                   double h_Corner_Array_F[][3], const int NPG, const int *PID0_List );
@@ -184,13 +183,20 @@ template <typename T> int   Mis_Matching_char( const int N, const T Array[], con
 template <typename T> int   Mis_Matching_int( const int N, const T Array[], const int M, const T Key[], int Match[] );
 template <typename T> bool  Mis_CompareRealValue( const T Input1, const T Input2, const char *comment, const bool Verbose );
 ulong  Mis_Idx3D2Idx1D( const int Size[], const int Idx3D[] );
-double Mis_GetTimeStep();
+double Mis_GetTimeStep( const int lv );
 double Mis_dTime2dt( const double Time_In, const double dTime_In );
 void   Mis_GetTotalPatchNumber( const int lv );
 double Mis_Scale2PhySize( const int Scale );
 double Mis_Cell2PhySize( const int NCell, const int lv );
 int    Mis_Scale2Cell( const int Scale, const int lv );
 int    Mis_Cell2Scale( const int NCell, const int lv );
+double dt_InvokeSolver( const Solver_t TSolver, const int lv );
+void   dt_Prepare_Flu( const int lv, real h_Flu_Array_T[][NCOMP_FLUID][ CUBE(PS1) ], const int NPG, const int *PID0_List );
+void   dt_Close( const real h_dt_Array_T[], const int NPG );
+void   CPU_dtSolver( const Solver_t TSolver, real dt_Array[],
+                     const real Flu_Array[][NCOMP_FLUID][ CUBE(PS1) ], const real Pot_Array[][ CUBE(GRA_NXT) ],
+                     const int NPG, const real dh, const real Safety, const real Gamma, const real MinPres,
+                     const real NewtonG );
 
 
 // MPI
@@ -368,9 +374,7 @@ int  LB_Index2Rank( const int lv, const long LB_Idx, const Check_t Check );
 // Hydro model
 #if    ( MODEL == HYDRO )
 void Hydro_Aux_Check_Negative( const int lv, const int Mode, const char *comment );
-void Hydro_GetTimeStep_Fluid( double &dt, double &dTime, int &MinDtLv, real MinDtVar[], const double dt_dTime );
 void Hydro_GetTimeStep_Gravity( double &dt, double &dTime, int &MinDtLv, real &MinDtVar, const double dt_dTime );
-void Hydro_GetMaxCFL( real MaxCFL[], real MinDtVar_AllLv[][5] );
 void Hydro_GetMaxAcc( real MaxAcc[] );
 void Hydro_Init_StartOver_AssignData( const int lv );
 void Hydro_Init_UM_AssignData( const int lv, real *UM_Data, const int NVar );
@@ -416,14 +420,12 @@ void CUAPI_Asyn_FluidSolver( real h_Flu_Array_In [][FLU_NIN    ][ FLU_NXT*FLU_NX
                              char h_DE_Array_Out[][ PS2*PS2*PS2 ],
                              real h_Flux_Array[][9][NFLUX_TOTAL][ PS2*PS2 ],
                              const double h_Corner_Array[][3],
-                             real h_MinDtInfo_Array[],
                              real h_Pot_Array_USG[][USG_NXT_F][USG_NXT_F][USG_NXT_F],
                              const int NPatchGroup, const real dt, const real dh, const real Gamma, const bool StoreFlux,
                              const bool XYZ, const LR_Limiter_t LR_Limiter, const real MinMod_Coeff, const real EP_Coeff,
                              const WAF_Limiter_t WAF_Limiter, const real ELBDM_Eta, real ELBDM_Taylor3_Coeff,
-                             const bool ELBDM_Taylor3_Auto, const bool GetMinDtInfo, const double Time,
-                             const OptGravityType_t GravityType, const int GPU_NStream,
-                             const real MinDens, const real MinPres, const real DualEnergySwitch,
+                             const bool ELBDM_Taylor3_Auto, const double Time, const OptGravityType_t GravityType,
+                             const int GPU_NStream, const real MinDens, const real MinPres, const real DualEnergySwitch,
                              const bool NormPassive, const int NNorm );
 void CUAPI_DiagnoseDevice();
 void CUAPI_MemAllocate_Fluid( const int Flu_NPatchGroup, const int GPU_NStream );

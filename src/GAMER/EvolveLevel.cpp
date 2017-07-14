@@ -22,7 +22,7 @@ extern Timer_t *Timer_Par_2Son   [NLEVEL];
 // Function    :  EvolveLevel
 // Description :  Advance all physical attributes at the target level
 //
-// Note        :  1.
+// Note        :  1. Invoked by Main()
 //
 // Parameter   :  lv         : Target refinement level
 //                dTime_FaLv : Physical time interval at the parent level
@@ -66,17 +66,29 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
       switch ( OPT__DT_LEVEL )
       {
          case ( DT_LEVEL_SHARED ):
-            if ( lv == 0 )    dTime_SubStep = Mis_GetTimeStep();
-            else              dTime_SubStep = dTime_FaLv;
+            if ( lv == 0 ) {
+               dTime_SubStep = HUGE_NUMBER;
+
+               for (int TLv=0; TLv<NLEVEL; TLv++)
+               dTime_SubStep = fmin( Mis_GetTimeStep(TLv), dTime_SubStep );
+            }
+            else
+               dTime_SubStep = dTime_FaLv;
          break;
 
          case ( DT_LEVEL_DIFF_BY_2 ):
-            if ( lv == 0 )    dTime_SubStep = Mis_GetTimeStep();
-            else              dTime_SubStep = 0.5*dTime_FaLv;
+            if ( lv == 0 ) {
+               dTime_SubStep = HUGE_NUMBER;
+
+               for (int TLv=0; TLv<NLEVEL; TLv++)
+               dTime_SubStep = fmin( Mis_GetTimeStep(TLv)*(1<<TLv), dTime_SubStep );
+            }
+            else
+               dTime_SubStep = 0.5*dTime_FaLv;
          break;
 
          case ( DT_LEVEL_FLEXIBLE ):
-                              dTime_SubStep = Mis_GetTimeStep();
+               dTime_SubStep = Mis_GetTimeStep( lv );
          break;
 
          default:

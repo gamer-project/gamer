@@ -35,23 +35,17 @@ extern void CPU_RiemannSolver_HLLE( const int XYZ, real Flux_Out[], const real L
 // Parameter   :  lv                : Target refinement level
 //                SaveSg            : Sandglass to store the updated data
 //                h_Flux_Array      : Host array storing the updated flux data
-//                h_MinDtInfo_Array : Host array storing the minimum time-step information in each patch group
-//                                    --> useful only if "GetMinDtInfo == true"
-//                                    --> NOT supported yet
 //                h_Flu_Array_F_Out : Host array storing the updated fluid data
 //                h_DE_Array_F_Out  : Host array storing the dual-energy status
 //                NPG               : Number of patch groups to be evaluated
 //                PID0_List         : List recording the patch indicies with LocalID==0 to be udpated
-//                GetMinDtInfo      : true --> Gather the minimum time-step information (the CFL condition in
-//                                             HYDRO) among all input patch group
-//                                         --> NOT supported yet
 //                dt                : Evolution time-step
 //-------------------------------------------------------------------------------------------------------
 void Flu_Close( const int lv, const int SaveSg, const real h_Flux_Array[][9][NFLUX_TOTAL][4*PATCH_SIZE*PATCH_SIZE],
                 real h_Flu_Array_F_Out[][FLU_NOUT][8*PATCH_SIZE*PATCH_SIZE*PATCH_SIZE],
                 char h_DE_Array_F_Out[][8*PATCH_SIZE*PATCH_SIZE*PATCH_SIZE],
-                const real h_MinDtInfo_Array[], const int NPG, const int *PID0_List, const bool GetMinDtInfo,
-                const real h_Flu_Array_F_In[][FLU_NIN][FLU_NXT*FLU_NXT*FLU_NXT], const double dt )
+                const int NPG, const int *PID0_List, const real h_Flu_Array_F_In[][FLU_NIN][FLU_NXT*FLU_NXT*FLU_NXT],
+                const double dt )
 {
 
 // save the flux in the coarse-fine boundary at level "lv"
@@ -112,19 +106,6 @@ void Flu_Close( const int lv, const int SaveSg, const real h_Flux_Array[][9][NFL
 #        endif
       } // for (int LocalID=0; LocalID<8; LocalID++)
    } // for (int TID=0; TID<NPG; TID++)
-
-
-// store the minimum time-step estimated by the hydrodynamical CFL condition
-   /*
-   if ( GetMinDtInfo )
-   {
-      if ( PID_Start == 0 )   MinDtInfo_Fluid[lv] = 0.0;
-
-      for (int t=0; t<NPG; t++)
-         MinDtInfo_Fluid[lv] = ( h_MinDtInfo_Array[t] > MinDtInfo_Fluid[lv] ) ? h_MinDtInfo_Fluid_Array[t] :
-                                                                                MinDtInfo_Fluid[lv];
-   }
-   */
 
 } // FUNCTION : Flu_Close
 

@@ -2,58 +2,54 @@
 #include "GAMER.h"
 
 // declare as static so that other functions cannot invoke it directly and must use the function pointer
-void Mis_GetTimeStep_User( double &dt, double &dTime, const double dt_dTime );
+double Mis_GetTimeStep_User( const double dTime_dt );
 
 // this function pointer may be overwritten by various test problem initializers
-void (*Mis_GetTimeStep_User_Ptr)( double &dt, double &dTime, const double dt_dTime ) = Mis_GetTimeStep_User;
+double (*Mis_GetTimeStep_User_Ptr)( const double dTime_dt ) = Mis_GetTimeStep_User;
 
 
 
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Mis_GetTimeStep_User
-// Description :  User-defined criteria to estimate the evolution time-step and physical time interval
+// Description :  User-defined criteria to estimate the evolution time-step
 //
-// Note        :  1. Physical coordinates : dTime == dt
-//                   Comoving coordinates : dTime == dt*(Hubble parameter)*(scale factor)^3 == delta(scale factor)
+// Note        :  1. This function should be applied to both physical and comoving coordinates and always
+//                   return the evolution time-step (dt) actually used in various solvers
+//                   --> Physical coordinates : dt = physical time interval
+//                       Comoving coordinates : dt = delta(scale_factor) / ( Hubble_parameter*scale_factor^3 )
+//                   --> We convert dt back to the physical time interval, which equals "delta(scale_factor)"
+//                       in the comoving coordinates, in Mis_GetTimeStep()
 //                2. Invoked by "Mis_GetTimeStep_Check" using the function pointer "Mis_GetTimeStep_User_Ptr"
 //                   --> The function pointer may be reset by various test problem initializers, in which case
 //                       this funtion will become useless
 //                3. Enabled by the runtime option "OPT__DT_USER"
 //
-// Parameter   :  dt       : Time interval to advance solution
-//                dTime    : Time interval to update physical time
-//                dt_dTime : dt/dTime (== 1.0 if COMOVING is off)
+// Parameter   :  dTime_dt : dTime/dt (== 1.0 if COMOVING is off)
 //
-// Return      :  dt, dTime
+// Return      :  dt
 //-------------------------------------------------------------------------------------------------------
-void Mis_GetTimeStep_User( double &dt, double &dTime, const double dt_dTime )
+double Mis_GetTimeStep_User( const double dTime_dt )
 {
 
 // put your favorite time-step criteria here
 // ##########################################################################################################
+   double dt_user = HUGE_NUMBER;
 
 // Example 1 : set upper limit for the time interval to advance solution (per sub-step)
    /*
-   double dt_user = 1.e-2;
-
-// return 2*dt for OPT__DT_LEVEL == DT_LEVEL_DIFF_BY_2 since at the base level each step actually includes two sub-steps
-   if ( OPT__DT_LEVEL == DT_LEVEL_DIFF_BY_2 )   dt_user *= 2.0;
-
-   dt    = dt_user;
-   dTime = dt / dt_dTime;
+   dt_user = 1.0e-2;
    */
 
 
 // Example 2 : set upper limit for the time interval to update the scale factor in COMOVING
    /*
-   double dTime_user = 2.e-5;
-
-   dTime = dTime_user;
-   dt    = dTime * dt_dTime;
+   double dTime_user = 1.0e-5;
+   dt_user = dTime_user / dTime_dt;
    */
-
 // ##########################################################################################################
+
+   return dt_user;
 
 } // FUNCTION : Mis_GetTimeStep_User
 
