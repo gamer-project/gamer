@@ -90,9 +90,6 @@ void CPU_ELBDMSolver( real Flu_Array_In [][FLU_NIN    ][ FLU_NXT*FLU_NXT*FLU_NXT
 //                h_DE_Array_Out       : Host array to store the dual-energy status
 //                h_Flux_Array         : Host array to store the output fluxes (useful only if StoreFlux == true)
 //                h_Corner_Array       : Host array storing the physical corner coordinates of each patch group
-//                h_MinDtInfo_Array    : Host array to store the minimum time-step information in each patch group
-//                                       --> useful only if "GetMinDtInfo == true"
-//                                       --> NOT supported yet
 //                h_Pot_Array_USG      : Host array storing the input potential for UNSPLIT_GRAVITY
 //                NPatchGroup          : Number of patch groups to be evaluated
 //                dt                   : Time interval to advance solution
@@ -113,9 +110,6 @@ void CPU_ELBDMSolver( real Flu_Array_In [][FLU_NIN    ][ FLU_NXT*FLU_NXT*FLU_NXT
 //                ELBDM_Taylor3_Coeff  : Coefficient in front of the third term in the Taylor expansion for ELBDM
 //                ELBDM_Taylor3_Auto   : true --> Determine ELBDM_Taylor3_Coeff automatically by invoking the
 //                                                function "ELBDM_SetTaylor3Coeff"
-//                GetMinDtInfo         : true --> Gather the minimum time-step information (the CFL condition in
-//                                                HYDRO) in each patch group
-//                                            --> NOT supported yet
 //                Time                 : Current physical time                                     (for UNSPLIT_GRAVITY only)
 //                GravityType          : Types of gravity --> self-gravity, external gravity, both (for UNSPLIT_GRAVITY only)
 //                MinDens/Pres         : Minimum allowed density and pressure
@@ -135,14 +129,13 @@ void CPU_FluidSolver( real h_Flu_Array_In [][FLU_NIN    ][ FLU_NXT*FLU_NXT*FLU_N
                       char h_DE_Array_Out[][ PS2*PS2*PS2 ],
                       real h_Flux_Array[][9][NFLUX_TOTAL][ PS2*PS2 ],
                       const double h_Corner_Array[][3],
-                      real h_MinDtInfo_Array[],
                       const real h_Pot_Array_USG[][USG_NXT_F][USG_NXT_F][USG_NXT_F],
                       const int NPatchGroup, const real dt, const real dh, const real Gamma, const bool StoreFlux,
                       const bool XYZ, const LR_Limiter_t LR_Limiter, const real MinMod_Coeff, const real EP_Coeff,
                       const WAF_Limiter_t WAF_Limiter, const real ELBDM_Eta, real ELBDM_Taylor3_Coeff,
-                      const bool ELBDM_Taylor3_Auto, const bool GetMinDtInfo,
-                      const double Time, const OptGravityType_t GravityType, const real MinDens, const real MinPres,
-                      const real DualEnergySwitch, const bool NormPassive, const int NNorm, const int NormIdx[] )
+                      const bool ELBDM_Taylor3_Auto, const double Time, const OptGravityType_t GravityType,
+                      const real MinDens, const real MinPres, const real DualEnergySwitch,
+                      const bool NormPassive, const int NNorm, const int NormIdx[] )
 {
 
 // check

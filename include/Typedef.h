@@ -162,6 +162,20 @@ const Solver_t
 #ifdef SUPPORT_GRACKLE
   ,GRACKLE_SOLVER             = 4
 #endif
+#if   ( MODEL == HYDRO )
+  ,DT_SOLVER_HYDRO_CFL        = 5
+#ifdef GRAVITY
+//,DT_SOLVER_HYDRO_GRAVITY    = 6
+#endif
+#elif ( MODEL == MHD )
+#  warning : WAIT MHD !!!
+#elif ( MODEL == ELBDM )
+#ifdef GRAVITY
+//,DT_SOLVER_ELBDM_GRAVITY    = 7
+#endif
+#else
+#  error : ERROR : unsupported MODEL !!
+#endif // MODEL
   ;
 
 

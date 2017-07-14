@@ -95,7 +95,6 @@ extern real (*d_Flu_Array_F_In )[FLU_NIN ][ FLU_NXT*FLU_NXT*FLU_NXT ];
 extern real (*d_Flu_Array_F_Out)[FLU_NOUT][ PS2*PS2*PS2 ];
 extern real (*d_Flux_Array)[9][NFLUX_TOTAL][ PS2*PS2 ];
 extern double (*d_Corner_Array_F)[3];
-extern real  *d_MinDtInfo_Fluid_Array;
 #if ( MODEL == HYDRO  ||  MODEL == MHD )
 #ifdef DUAL_ENERGY
 extern char (*d_DE_Array_F_Out)[ PS2*PS2*PS2 ];
@@ -166,9 +165,6 @@ extern cudaStream_t *Stream;
 //                h_DE_Array_Out       : Host array to store the dual-energy status
 //                h_Flux_Array         : Host array to store the output fluxes
 //                h_Corner_Array       : Host array storing the physical corner coordinates of each patch group
-//                h_MinDtInfo_Array    : Host array to store the minimum time-step information in each patch group
-//                                       --> useful only if "GetMinDtInfo == true"
-//                                       --> not supported yet
 //                h_Pot_Array_USG      : Host array storing the input potential for UNSPLIT_GRAVITY
 //                NPatchGroup          : Number of patch groups evaluated simultaneously by GPU
 //                dt                   : Time interval to advance solution
@@ -189,10 +185,6 @@ extern cudaStream_t *Stream;
 //                ELBDM_Taylor3_Coeff  : Coefficient in front of the third term in the Taylor expansion for ELBDM
 //                ELBDM_Taylor3_Auto   : true --> Determine ELBDM_Taylor3_Coeff automatically by invoking the
 //                                                function "ELBDM_SetTaylor3Coeff"
-//                GetMinDtInfo         : true --> Invoke the kernel "CUFLU_GetMinDtInfo_Fluid" to gather the
-//                                                minimum time-step information (the CFL condition in HYDRO )
-//                                                in each patch group
-//                                            --> NOT supported yet
 //                Time                 : Current physical time                                     (for UNSPLIT_GRAVITY only)
 //                GravityType          : Types of gravity --> self-gravity, external gravity, both (for UNSPLIT_GRAVITY only)
 //                GPU_NStream          : Number of CUDA streams for the asynchronous memory copy
@@ -211,14 +203,12 @@ void CUAPI_Asyn_FluidSolver( real h_Flu_Array_In [][FLU_NIN    ][ FLU_NXT*FLU_NX
                              char h_DE_Array_Out[][ PS2*PS2*PS2 ],
                              real h_Flux_Array[][9][NFLUX_TOTAL][ PS2*PS2 ],
                              const double h_Corner_Array[][3],
-                             real h_MinDtInfo_Array[],
                              real h_Pot_Array_USG[][USG_NXT_F][USG_NXT_F][USG_NXT_F],
                              const int NPatchGroup, const real dt, const real dh, const real Gamma, const bool StoreFlux,
                              const bool XYZ, const LR_Limiter_t LR_Limiter, const real MinMod_Coeff, const real EP_Coeff,
                              const WAF_Limiter_t WAF_Limiter, const real ELBDM_Eta, real ELBDM_Taylor3_Coeff,
-                             const bool ELBDM_Taylor3_Auto, const bool GetMinDtInfo, const double Time,
-                             const OptGravityType_t GravityType, const int GPU_NStream,
-                             const real MinDens, const real MinPres, const real DualEnergySwitch,
+                             const bool ELBDM_Taylor3_Auto, const double Time, const OptGravityType_t GravityType,
+                             const int GPU_NStream, const real MinDens, const real MinPres, const real DualEnergySwitch,
                              const bool NormPassive, const int NNorm )
 {
 
@@ -265,7 +255,6 @@ void CUAPI_Asyn_FluidSolver( real h_Flu_Array_In [][FLU_NIN    ][ FLU_NXT*FLU_NX
 
 // model-dependent operations
 #  if   ( MODEL == HYDRO )
-// const dim3 BlockDim_GetMinDtInfo( PS2, PS2, 1 );                           // for the time-step estimation
 
 #  elif ( MODEL == MHD )
 #  warning : WAIT MHD !!!
@@ -428,14 +417,6 @@ void CUAPI_Asyn_FluidSolver( real h_Flu_Array_In [][FLU_NIN    ][ FLU_NXT*FLU_NX
 
 #        endif // FLU_SCHEME
 
-         /*
-         if ( GetMinDtInfo )
-            CUFLU_GetMaxCFL <<< NPatch_per_Stream[s], BlockDim_GetMinDtInfo, 0, Stream[s] >>>
-                            ( d_Flu_Array_F_Out + UsedPatch[s],
-                              d_MinDtInfo_Array + UsedPatch[s],
-                              Gamma );
-                              */
-
 #     elif ( MODEL == MHD )
 #     warning :: WAIT MHD !!!
 
@@ -476,14 +457,6 @@ void CUAPI_Asyn_FluidSolver( real h_Flu_Array_In [][FLU_NIN    ][ FLU_NXT*FLU_NX
       CUDA_CHECK_ERROR(  cudaMemcpyAsync( h_DE_Array_Out  + UsedPatch[s], d_DE_Array_F_Out  + UsedPatch[s],
                          DE_MemSize_Out[s],  cudaMemcpyDeviceToHost, Stream[s] )  );
 #     endif
-      /*
-      if ( GetMinDtInfo )
-      {
-         CUDA_CHECK_ERROR(  cudaMemcpyAsync( h_MinDtInfo_Array       + UsedPatch[s],
-                                             d_MinDtInfo_Fluid_Array + UsedPatch[s],
-                            NPatch_per_Stream[s]*sizeof(real), cudaMemcpyDeviceToHost, Stream[s] )  );
-      }
-      */
 
 #     elif ( MODEL == MHD )
 #     warning : WAIT MHD !!!

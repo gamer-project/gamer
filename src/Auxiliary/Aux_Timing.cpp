@@ -28,9 +28,9 @@ extern Timer_t *Timer_Par_Collect[NLEVEL];
 extern Timer_t *Timer_Par_MPI    [NLEVEL][6];
 
 #ifdef TIMING_SOLVER
-extern Timer_t *Timer_Pre         [NLEVEL][5];
-extern Timer_t *Timer_Sol         [NLEVEL][5];
-extern Timer_t *Timer_Clo         [NLEVEL][5];
+extern Timer_t *Timer_Pre         [NLEVEL][8];
+extern Timer_t *Timer_Sol         [NLEVEL][8];
+extern Timer_t *Timer_Clo         [NLEVEL][8];
 extern Timer_t *Timer_Poi_PreRho  [NLEVEL];
 extern Timer_t *Timer_Poi_PreFlu  [NLEVEL];
 extern Timer_t *Timer_Poi_PrePot_C[NLEVEL];

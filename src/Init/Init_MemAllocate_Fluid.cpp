@@ -14,6 +14,8 @@
 void Init_MemAllocate_Fluid( const int Flu_NPatchGroup )
 {
 
+   const int Flu_NPatch = 8*Flu_NPatchGroup;
+
    for (int t=0; t<2; t++)
    {
       h_Flu_Array_F_In       [t] = new real [Flu_NPatchGroup][FLU_NIN ][   FLU_NXT   *FLU_NXT   *FLU_NXT    ];
@@ -27,8 +29,8 @@ void Init_MemAllocate_Fluid( const int Flu_NPatchGroup )
       h_Corner_Array_F       [t] = new double [Flu_NPatchGroup][3];
 #     endif
 
-      if ( OPT__DT_LEVEL == DT_LEVEL_FLEXIBLE )
-      h_MinDtInfo_Fluid_Array[t] = new real [Flu_NPatchGroup];
+      h_dt_Array_T           [t] = new real [Flu_NPatch];
+      h_Flu_Array_T          [t] = new real [Flu_NPatch][NCOMP_FLUID][ CUBE(PS1) ];
 
 #     ifdef DUAL_ENERGY
       h_DE_Array_F_Out       [t] = new char [Flu_NPatchGroup][ 8*PATCH_SIZE*PATCH_SIZE*PATCH_SIZE ];

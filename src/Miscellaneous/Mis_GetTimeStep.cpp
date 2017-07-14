@@ -1,7 +1,7 @@
 #include "Copyright.h"
 #include "GAMER.h"
 
-extern void (*Mis_GetTimeStep_User_Ptr)( double &dt, double &dTime, const double dt_dTime );
+extern double (*Mis_GetTimeStep_User_Ptr)( const double dTime_dt );
 
 
 
@@ -10,16 +10,20 @@ extern void (*Mis_GetTimeStep_User_Ptr)( double &dt, double &dTime, const double
 // Function    :  Mis_GetTimeStep
 // Description :  Estimate the evolution time-step (dt) and the physical time interval (dTime)
 //
-// Note        :  1. Physical coordinates : dTime == dt
-//                   Comoving coordinates : dTime == dt*(Hubble parameter)*(scale factor)^3 == delta(scale factor)
+// Note        :  1. This function should be applied to both physical and comoving coordinates and always
+//                   return the physical time interval (dTime) instead of the evolution time-step (dt)
+//                   --> Physical coordinates : dt = physical time interval
+//                       Comoving coordinates : dt = delta(scale_factor) / ( Hubble_parameter*scale_factor^3 )
+//                   --> We convert dTime, the physical time interval == "delta(scale_factor)"
+//                       in the comoving coordinates, back to dt in EvolveLevel()
 //                2. The function pointer "Mis_GetTimeStep_User_Ptr" points to "Mis_GetTimeStep_User()" by default
 //                   but may be overwritten by various test problem initializers
 //
-// Parameter   :  None
+// Parameter   :  lv : Target refinement level
 //
 // Return      :  dTime_min
 //-------------------------------------------------------------------------------------------------------
-double Mis_GetTimeStep()
+double Mis_GetTimeStep( const int lv )
 {
 
    const char FileName[] = "Record__TimeStep";
@@ -34,25 +38,28 @@ double Mis_GetTimeStep()
    }
 
 
+// -1. return immediately if the target level has no patches
+// =============================================================================================================
+   if ( NPatchTotal[lv] == 0 )   return HUGE_NUMBER;
+
+
 // 0. estimate the relation between the evolution time-step (dt) and the physical time interval (dTime)
 // =============================================================================================================
-   double dt_dTime;    // first derivative of dt over dTime
+   double dTime_dt;  // first derivative of dTime over dt
 #  ifdef COMOVING
-   dt_dTime = pow(  OMEGA_M0*pow( Time[0], 3.0 ) + (1.0-OMEGA_M0)*pow( Time[0], 6.0 ),  -0.5  );
+   dTime_dt = pow(  OMEGA_M0*pow( Time[0], 3.0 ) + (1.0-OMEGA_M0)*pow( Time[0], 6.0 ),  0.5  );
 #  else
-   dt_dTime = 1.0;
+   dTime_dt = 1.0;
 #  endif
 
 
 
 // 1.1 CRITERION ONE : fluid solver condition
 // =============================================================================================================
-   double dTime1, dt1;
-   int    MinDtLv_Fluid;
+   double dTime1;
 
 #  if   ( MODEL == HYDRO )
-   real MinDtVar_Fluid[5]; // 5: Rho, Vx/y/z, Cs
-   Hydro_GetTimeStep_Fluid( dt1, dTime1, MinDtLv_Fluid, MinDtVar_Fluid, dt_dTime );
+   dTime1 = dTime_dt * dt_InvokeSolver( DT_SOLVER_HYDRO_CFL, lv );
 
 #  elif ( MODEL == MHD )
 #  warning : WAIT MHD !!!
@@ -93,10 +100,9 @@ double Mis_GetTimeStep()
 // 1.3 CRITERION THREE : maximum allowed variation of the expansion factor
 // =============================================================================================================
 #  ifdef COMOVING
-   double dTime3, dt3;
+   double dTime3;
 
    dTime3 = DT__MAX_DELTA_A * Time[0];
-   dt3    = dTime3 * dt_dTime;
 #  endif
 
 
@@ -114,12 +120,10 @@ double Mis_GetTimeStep()
                            ? true : false;
 
    double dTime4 = NULL_REAL;
-   double dt4    = NULL_REAL;
 
    if ( DumpByTime )
    {
       dTime4 = DumpTime - Time[0];
-      dt4    = dTime4 * dt_dTime;
 
       if ( dTime4 <= 0.0 )
       {
@@ -134,7 +138,6 @@ double Mis_GetTimeStep()
 // 1.5 CRITERION FIVE : fit the program end time
 // =============================================================================================================
    const double dTime5 = END_T - Time[0];
-   const double dt5    = dTime5 * dt_dTime;
 
    if ( dTime5 <= 0.0 )
    {
@@ -148,9 +151,8 @@ double Mis_GetTimeStep()
 // 1.6 CRITERION SIX : user-defined criteria
 // =============================================================================================================
    double dTime6 = NULL_REAL;
-   double dt6    = NULL_REAL;
 
-   if ( OPT__DT_USER  &&  Mis_GetTimeStep_User_Ptr != NULL )   Mis_GetTimeStep_User_Ptr( dt6, dTime6, dt_dTime );
+   if ( OPT__DT_USER  &&  Mis_GetTimeStep_User_Ptr != NULL )   dTime6 = dTime_dt * Mis_GetTimeStep_User_Ptr( dTime_dt );
 
 
 
@@ -225,12 +227,14 @@ double Mis_GetTimeStep()
    {
       FILE *File = fopen( FileName, "a" );
 
-      fprintf( File, "Time = %12.6e, Step = %6ld -> %6ld, dt/dTime = %12.6e\n", Time[0], Step, Step+1, dt_dTime );
+      fprintf( File, "Time = %12.6e, Step = %6ld -> %6ld, dTime/dt = %12.6e\n", Time[0], Step, Step+1, dTime_dt );
       fprintf( File, "------------------------------------------------------------------\n" );
 
 #     if   ( MODEL == HYDRO )
+      /*
       fprintf( File, "CFL Info  : Rho = %12.6e, Vx = %13.6e, Vy = %13.6e, Vz = %13.6e, Cs = %12.6e\n",
                MinDtVar_Fluid[0], MinDtVar_Fluid[1], MinDtVar_Fluid[2], MinDtVar_Fluid[3], MinDtVar_Fluid[4] );
+               */
 #     elif ( MODEL == ELBDM )
 #     ifdef GRAVITY
       if ( ELBDM_PhaseDt )
@@ -246,7 +250,7 @@ double Mis_GetTimeStep()
 #     warning : WARNING : DO YOU WANT TO PUT SOMETHING HERE FOR THE NEW MODEL ??
 #     endif // MODEL
 
-      fprintf( File, "Hydro     : dt = %12.6e, dTime = %12.6e, lv = %2d\n", dt1, dTime1, MinDtLv_Fluid );
+      fprintf( File, "Hydro     : dt = %12.6e, dTime = %12.6e\n", dTime1/dTime_dt, dTime1 );
 
 #     ifdef GRAVITY
 #     if   ( MODEL == HYDRO  ||  MODEL == MHD )
@@ -284,17 +288,17 @@ double Mis_GetTimeStep()
 #     endif
 
 #     ifdef COMOVING
-      fprintf( File, "Delta A   : dt = %12.6e, dTime = %12.6e\n", dt3, dTime3 );
+      fprintf( File, "Delta A   : dt = %12.6e, dTime = %12.6e\n", dTime3/dTime_dt, dTime3 );
 #     endif
 
       if ( DumpByTime )
-      fprintf( File, "Data Dump : dt = %12.6e, dTime = %12.6e\n", dt4, dTime4 );
+      fprintf( File, "Data Dump : dt = %12.6e, dTime = %12.6e\n", dTime4/dTime_dt, dTime4 );
 
       if ( dTime_min == dTime5 )
-      fprintf( File, "End Time  : dt = %12.6e, dTime = %12.6e\n", dt5, dTime5 );
+      fprintf( File, "End Time  : dt = %12.6e, dTime = %12.6e\n", dTime5/dTime_dt, dTime5 );
 
       if ( OPT__DT_USER  &&  Mis_GetTimeStep_User_Ptr != NULL )
-      fprintf( File, "User      : dt = %12.6e, dTime = %12.6e\n", dt6, dTime6 );
+      fprintf( File, "User      : dt = %12.6e, dTime = %12.6e\n", dTime6/dTime_dt, dTime6 );
 
       fprintf( File, "Minimum   : dt = %12.6e, dTime = %12.6e\n", dt_min, dTime_min );
       fprintf( File, "\n" );
