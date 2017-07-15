@@ -227,6 +227,12 @@ void CUAPI_SetDevice( const int Mode )
 #  endif // if ( POT_SCHEME == SOR )
 
 
+// (7) warp size
+   if ( DeviceProp.warpSize != WARP_SIZE )
+      Aux_Error( ERROR_INFO, "inconsistent warp size (warpSize %d, WARP_SIZE %d) !!\n",
+                 DeviceProp.warpSize, WARP_SIZE );
+
+
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "CUAPI_SetDevice ... done\n" );
 
 } // FUNCTION : CUAPI_SetDevice

@@ -20,9 +20,23 @@
 // variables reside in constant memory
 #include "CUPOT_PoissonSolver_SetConstMem.cu"
 
-// shuffle reduction routine
+
+// parallel reduction routine
+#define RED_NTHREAD  POT_NTHREAD
+#define RED_SUM
+
 #ifdef SOR_USE_SHUFFLE
-#  include "CUPOT_ShuffleReduction.cu"
+#  include "../../GPU_Utility/CUUTI_BlockReduction_Shuffle.cu"
+#else
+#  include "../../GPU_Utility/CUUTI_BlockReduction_WarpSync.cu"
+#endif
+
+
+// checks
+#ifdef SOR_USE_PADDING
+#  if ( WARP_SIZE != 32 )
+#     error : ERROR : WARP_SIZE != 32 !!
+#  endif
 #endif
 
 
@@ -114,7 +128,7 @@ __global__ void CUPOT_PoissonSolver_SOR_10to14cube( const real g_Rho_Array    []
    const uint dRhoID    = __umul24( bdim_z, RHO_NXT*RHO_NXT );
 #  ifdef SOR_USE_PADDING
    const uint dPotID    = __umul24( bdim_z, POT_NXT_F*POT_NXT_F + POT_PAD*4 );
-   const uint warpID    = ID % warpSize;
+   const uint warpID    = ID % WARP_SIZE;
    const uint pad_dy_0  = ( warpID >=  8 && warpID <= 15 ) ? dy + POT_PAD : dy;    //
    const uint pad_dy_1  = ( warpID >= 16 && warpID <= 23 ) ? dy + POT_PAD : dy;    // please refer to the Padding notes above!
    const uint pad_dz    = dz + POT_PAD*4;                                          //
@@ -127,21 +141,12 @@ __global__ void CUPOT_PoissonSolver_SOR_10to14cube( const real g_Rho_Array    []
    const uint pad_pot   = 0;
 #  endif
    const uint PotID0    = pad_pot + __umul24( 1+tid_z, pad_dz ) + __umul24( 1+tid_y, dy ) + ( tid_x << 1 ) + 1;
-#  ifndef SOR_USE_SHUFFLE
-   const uint FloorPow2 = 1 << ( 31-__clz(POT_NTHREAD) );   // largest power-of-two value not greater than POT_NTHREAD
-   const uint Remain    = POT_NTHREAD - FloorPow2;
-#  endif
 
    uint ip, im, jp, jm, kp, km, t, s_index;
    uint PotID, RhoID, DispPotID, DispRhoID, Disp;
-   real Residual, Residual_Total_Old;
+   real Residual, Residual_Total_Old, Residual_ThreadSum;
 
-#  ifdef SOR_USE_SHUFFLE
-   real Residual_Shuffle;
-   __shared__ real s_Residual_Total[1];
-#  else
-   __shared__ real s_Residual_Total[POT_NTHREAD];
-#  endif
+   __shared__ real s_Residual_Total;
 
 #  ifdef SOR_USE_PADDING
    __shared__ real s_FPot[ POT_NXT_F*POT_NXT_F*POT_NXT_F + POT_PAD*4*POT_NXT_F ];
@@ -351,12 +356,8 @@ __global__ void CUPOT_PoissonSolver_SOR_10to14cube( const real g_Rho_Array    []
    {
 //    (c1). evaluate residual, update potential
 //    ==============================================================================
-#     ifdef SOR_USE_SHUFFLE
-      Residual_Shuffle     = (real)0.0;
-#     else
-      s_Residual_Total[ID] = (real)0.0;
-#     endif
-      Disp                 = DispEven;
+      Residual_ThreadSum = (real)0.0;
+      Disp               = DispEven;
 
       for (uint pass=0; pass<2; pass++)    // pass = (0,1) <--> (even,odd) step
       {
@@ -383,13 +384,8 @@ __global__ void CUPOT_PoissonSolver_SOR_10to14cube( const real g_Rho_Array    []
 //          update potential
             s_FPot[DispPotID] += Omega_6*Residual;
 
-//          save residual of each cell into a shared-memory array for evaluating the sum
-#           ifdef SOR_USE_SHUFFLE
-            Residual_Shuffle     += FABS( Residual );
-#           else
-            s_Residual_Total[ID] += FABS( Residual );
-#           endif
-
+//          store the sum of the residuals evaluated by the same thread in a per-thread register
+            Residual_ThreadSum += FABS( Residual );
 
             PotID += dPotID;
             RhoID += dRhoID;
@@ -404,71 +400,26 @@ __global__ void CUPOT_PoissonSolver_SOR_10to14cube( const real g_Rho_Array    []
       } // for (int pass=0; pass<2; pass++)
 
 
-//    (c2). perform the reduction operation to get the one-norm of residual
-//    ==============================================================================
       if ( Iter+1 >= Min_Iter  &&  Iter % SOR_MOD_REDUCTION == 0 )
       {
+//       (c2). perform parallel reduction to get the one-norm of residual
+//       ==============================================================================
 #        ifdef SOR_USE_SHUFFLE
-
-//       parallel reduction with shuffling
-         Residual_Shuffle = BlockReductionWithShuffle( Residual_Shuffle, ID );
+         Residual_ThreadSum = BlockReduction_Shuffle ( Residual_ThreadSum );
+#        else
+         Residual_ThreadSum = BlockReduction_WarpSync( Residual_ThreadSum );
+#        endif
 
 //       broadcast to all threads
-         if ( ID == 0 )    s_Residual_Total[0] = Residual_Shuffle;
+         if ( ID == 0 )    s_Residual_Total = Residual_ThreadSum;
          __syncthreads();
-
-
-#        else // #ifdef SOR_USE_SHUFFLE
-
-
-//       sum up the elements larger than FloorPow2 to ensure that the number of remaining elements is power-of-two
-         if ( ID < Remain )   s_Residual_Total[ID] += s_Residual_Total[ ID + FloorPow2 ];
-         __syncthreads();
-
-//       parallel reduction with shared memory
-#        if ( POT_NTHREAD >= 2048 )
-#        error : ERROR : POT_NTHREAD must < 2048 !!
-#        endif
-
-#        if ( POT_NTHREAD >= 1024 )
-         if ( ID < 512 )   s_Residual_Total[ID] += s_Residual_Total[ ID + 512 ];    __syncthreads();
-#        endif
-
-#        if ( POT_NTHREAD >= 512 )
-         if ( ID < 256 )   s_Residual_Total[ID] += s_Residual_Total[ ID + 256 ];    __syncthreads();
-#        endif
-
-#        if ( POT_NTHREAD >= 256 )
-         if ( ID < 128 )   s_Residual_Total[ID] += s_Residual_Total[ ID + 128 ];    __syncthreads();
-#        endif
-
-#        if ( POT_NTHREAD >= 128 )
-         if ( ID <  64 )   s_Residual_Total[ID] += s_Residual_Total[ ID +  64 ];    __syncthreads();
-#        endif
-
-//       adopting warp-synchronous mechanism (assuming warpSize == 32)
-         if ( ID < 32 )
-         {
-//          declare volatile pointer to ensure that the operations are not reordered
-            volatile real *s_Sum = s_Residual_Total;
-
-            s_Sum[ID] += s_Sum[ID+32];    // here we have assumed that POT_NTHREAD >= 64
-            s_Sum[ID] += s_Sum[ID+16];
-            s_Sum[ID] += s_Sum[ID+ 8];
-            s_Sum[ID] += s_Sum[ID+ 4];
-            s_Sum[ID] += s_Sum[ID+ 2];
-            s_Sum[ID] += s_Sum[ID+ 1];
-         }
-         __syncthreads();
-
-#        endif // #ifdef SOR_USE_SHUFFLE ... else ...
 
 
 //       (c3). termination criterion
 //       ==============================================================================
-         if ( s_Residual_Total[0] > Residual_Total_Old )    break;
+         if ( s_Residual_Total > Residual_Total_Old )    break;
 
-         Residual_Total_Old = s_Residual_Total[0];
+         Residual_Total_Old = s_Residual_Total;
 
       } // if ( Iter+1 >= Min_Iter  &&  Iter % SOR_MOD_REDUCTION == 0 )
 

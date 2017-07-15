@@ -75,6 +75,7 @@ double Mis_GetTimeStep( const int lv )
 
 // 1.2 CRITERION TWO : gravitation acceleration condition
 // =============================================================================================================
+   /*
 #  ifdef GRAVITY
    double dTime2, dt2;
    int    MinDtLv_Gravity;
@@ -94,6 +95,7 @@ double Mis_GetTimeStep( const int lv )
 #  error : ERROR : unsupported MODEL !!
 #  endif // MODEL
 #  endif  // #ifdef GRAVITY
+   */
 
 
 
@@ -171,6 +173,7 @@ double Mis_GetTimeStep( const int lv )
 
 // 1.8 CRITERION EIGHT : particle evolution
 // =============================================================================================================
+   /*
 #  ifdef PARTICLE
    double dTime8[2], dt8[2];
    real   MinDtVar_ParVelAcc[2];
@@ -178,6 +181,7 @@ double Mis_GetTimeStep( const int lv )
 
    Par_GetTimeStep_VelAcc( dt8, dTime8, MinDtLv_ParVelAcc, MinDtVar_ParVelAcc, dt_dTime );
 #  endif // #ifdef PARTICLE
+   */
 
 
 
@@ -185,9 +189,11 @@ double Mis_GetTimeStep( const int lv )
 // =============================================================================================================
    double dTime_min = dTime1;
 
+   /*
 #  ifdef GRAVITY
    dTime_min= fmin( dTime_min, dTime2 );
 #  endif
+   */
 
 #  ifdef COMOVING
    dTime_min= fmin( dTime_min, dTime3 );
@@ -206,12 +212,14 @@ double Mis_GetTimeStep( const int lv )
    dTime_min= fmin( dTime_min, dTime7 );
 #  endif
 
+   /*
 #  ifdef PARTICLE
    dTime_min= fmin( dTime_min, dTime8[0] );
 
    if ( DT__PARACC > 0.0 )
    dTime_min= fmin( dTime_min, dTime8[1] );
 #  endif
+   */
 
 
 
@@ -252,6 +260,7 @@ double Mis_GetTimeStep( const int lv )
 
       fprintf( File, "Hydro     : dt = %12.6e, dTime = %12.6e\n", dTime1/dTime_dt, dTime1 );
 
+      /*
 #     ifdef GRAVITY
 #     if   ( MODEL == HYDRO  ||  MODEL == MHD )
       fprintf( File, "Gravity   : dt = %12.6e, dTime = %12.6e, lv = %2d, MaxAcc = %13.6e\n",
@@ -272,12 +281,14 @@ double Mis_GetTimeStep( const int lv )
 #     error : ERROR : unsupported MODEL !!
 #     endif // MODEL
 #     endif // #ifdef GRAVITY
+      */
 
 #     if ( MODEL == ELBDM )
       if ( ELBDM_PhaseDt )
       fprintf( File, "Phase     : dt = %12.6e, dTime = %12.6e, lv = %2d\n", dt7, dTime7, MinDtLv_Phase );
 #     endif
 
+      /*
 #     ifdef PARTICLE
       fprintf( File, "Particle  : dt = %12.6e, dTime = %12.6e, lv = %2d, MaxVel = %13.6e\n",
                dt8[0], dTime8[0], MinDtLv_ParVelAcc[0], MinDtVar_ParVelAcc[0] );
@@ -286,6 +297,7 @@ double Mis_GetTimeStep( const int lv )
       fprintf( File, "            dt = %12.6e, dTime = %12.6e, lv = %2d, MaxAcc = %13.6e\n",
                dt8[1], dTime8[1], MinDtLv_ParVelAcc[1], MinDtVar_ParVelAcc[1] );
 #     endif
+      */
 
 #     ifdef COMOVING
       fprintf( File, "Delta A   : dt = %12.6e, dTime = %12.6e\n", dTime3/dTime_dt, dTime3 );

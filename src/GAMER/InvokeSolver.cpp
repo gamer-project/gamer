@@ -109,7 +109,7 @@ void InvokeSolver( const Solver_t TSolver, const int lv, const double TimeNew, c
 #     if   ( MODEL == HYDRO )
       case DT_SOLVER_HYDRO_CFL:        NPG_Max = FLU_GPU_NPGROUP;    break;
 #     ifdef GRAVITY
-      case DT_SOLVER_HYDRO_GRAVITY:    NPG_Max = POT_GPU_NPGROUP;    break;
+//    case DT_SOLVER_HYDRO_GRAVITY:    NPG_Max = POT_GPU_NPGROUP;    break;
 #     endif
 #     elif ( MODEL == MHD )
 #       warning : WAIT MHD !!!
@@ -365,9 +365,11 @@ void Preparation_Step( const Solver_t TSolver, const int lv, const double TimeNe
       break;
 
 #     ifdef GRAVITY
+      /*
       case DT_SOLVER_HYDRO_GRAVITY:
          dt_Prepare_Pot( lv, h_Pot_Array_T[ArrayID], NPG, PID0_List );
       break;
+      */
 #     endif
 
 #     elif ( MODEL == MHD )
@@ -614,7 +616,7 @@ void Solver( const Solver_t TSolver, const int lv, const double TimeNew, const d
       break;
 
 #     ifdef GRAVITY
-      case DT_SOLVER_HYDRO_GRAVITY:
+//    case DT_SOLVER_HYDRO_GRAVITY:
       break;
 #     endif
 
@@ -711,9 +713,11 @@ void Closing_Step( const Solver_t TSolver, const int lv, const int SaveSg_Flu, c
       break;
 
 #     ifdef GRAVITY
+      /*
       case DT_SOLVER_HYDRO_GRAVITY:
          dt_Close( h_dt_Array_T[ArrayID], NPG );
       break;
+      */
 #     endif
 
 #     elif ( MODEL == MHD )
