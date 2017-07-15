@@ -277,6 +277,21 @@ struct FluVar5 { real Rho, Px, Py, Pz, Egy; };
 #endif // MODEL
 
 
+// warp size (which must be the same as the CUDA predefined constant "warpSize")
+// --> please refer to https://en.wikipedia.org/wiki/CUDA#Version_features_and_specifications
+//     for information on warp size
+#ifdef __CUDACC__
+#if ( GPU_ARCH == FERMI  ||  GPU_ARCH == KEPLER  ||  GPU_ARCH == MAXWELL  ||  GPU_ARCH == PASCAL )
+// CUPOT.h will define WARP_SIZE as well
+#  ifndef WARP_SIZE
+#  define WARP_SIZE 32
+#  endif
+#elif defined GPU
+#  error : UNKNOWN GPU_ARCH !!
+#endif
+#endif // #ifdef __CUDACC__
+
+
 
 // ##########################
 // ## function prototypes  ##

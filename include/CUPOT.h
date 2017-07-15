@@ -161,13 +161,15 @@
 #define EXT_ACC_NAUX_MAX            10
 
 
-// define warp size constant (right now it's dependent on GPU architecture)
-// --> might have to use compute capability number to determine warp size in the future
+// warp size (which must be the same as the CUDA predefined constant "warpSize")
 // --> please refer to https://en.wikipedia.org/wiki/CUDA#Version_features_and_specifications
 //     for information on warp size
 #ifdef __CUDACC__
 #if ( GPU_ARCH == FERMI  ||  GPU_ARCH == KEPLER  ||  GPU_ARCH == MAXWELL  ||  GPU_ARCH == PASCAL )
+// CUFLU.h will define WARP_SIZE as well
+#  ifndef WARP_SIZE
 #  define WARP_SIZE 32
+#  endif
 #elif defined GPU
 #  error : UNKNOWN GPU_ARCH !!
 #endif
