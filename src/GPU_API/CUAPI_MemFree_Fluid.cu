@@ -12,10 +12,11 @@ extern real (*d_Flux_Array)[9][NFLUX_TOTAL][ PS2*PS2 ];
 #ifdef UNSPLIT_GRAVITY
 extern double (*d_Corner_Array_F)[3];
 #endif
-extern real  *d_MinDtInfo_Fluid_Array;
 #ifdef DUAL_ENERGY
 extern char (*d_DE_Array_F_Out)[ PS2*PS2*PS2 ];
 #endif
+extern real *d_dt_Array_T;
+extern real (*d_Flu_Array_T)[NCOMP_FLUID][ CUBE(PS1) ];
 
 // global memory arrays in different models
 #if   ( MODEL == HYDRO )
@@ -60,13 +61,14 @@ void CUAPI_MemFree_Fluid( const int GPU_NStream )
    if ( d_Flu_Array_F_In        != NULL )    CUDA_CHECK_ERROR(  cudaFree( d_Flu_Array_F_In        )  );
    if ( d_Flu_Array_F_Out       != NULL )    CUDA_CHECK_ERROR(  cudaFree( d_Flu_Array_F_Out       )  );
    if ( d_Flux_Array            != NULL )    CUDA_CHECK_ERROR(  cudaFree( d_Flux_Array            )  );
-   if ( d_MinDtInfo_Fluid_Array != NULL )    CUDA_CHECK_ERROR(  cudaFree( d_MinDtInfo_Fluid_Array )  );
 #  ifdef UNSPLIT_GRAVITY
    if ( d_Corner_Array_F        != NULL )    CUDA_CHECK_ERROR(  cudaFree( d_Corner_Array_F        )  );
 #  endif
 #  ifdef DUAL_ENERGY
    if ( d_DE_Array_F_Out        != NULL )    CUDA_CHECK_ERROR(  cudaFree( d_DE_Array_F_Out        )  );
 #  endif
+   if ( d_dt_Array_T            != NULL )    CUDA_CHECK_ERROR(  cudaFree( d_dt_Array_T            )  );
+   if ( d_Flu_Array_T           != NULL )    CUDA_CHECK_ERROR(  cudaFree( d_Flu_Array_T           )  );
 
    d_Flu_Array_F_In        = NULL;
    d_Flu_Array_F_Out       = NULL;
@@ -74,10 +76,11 @@ void CUAPI_MemFree_Fluid( const int GPU_NStream )
 #  ifdef UNSPLIT_GRAVITY
    d_Corner_Array_F        = NULL;
 #  endif
-   d_MinDtInfo_Fluid_Array = NULL;
 #  ifdef DUAL_ENERGY
    d_DE_Array_F_Out        = NULL;
 #  endif
+   d_dt_Array_T            = NULL;
+   d_Flu_Array_T           = NULL;
 
 
 // free the device memory (in different models)
@@ -129,28 +132,30 @@ void CUAPI_MemFree_Fluid( const int GPU_NStream )
 // free the host memory allocated by CUDA
    for (int t=0; t<2; t++)
    {
-      if ( h_Flu_Array_F_In       [t] != NULL ) CUDA_CHECK_ERROR(  cudaFreeHost( h_Flu_Array_F_In       [t] )  );
-      if ( h_Flu_Array_F_Out      [t] != NULL ) CUDA_CHECK_ERROR(  cudaFreeHost( h_Flu_Array_F_Out      [t] )  );
-      if ( h_Flux_Array           [t] != NULL ) CUDA_CHECK_ERROR(  cudaFreeHost( h_Flux_Array           [t] )  );
+      if ( h_Flu_Array_F_In [t] != NULL ) CUDA_CHECK_ERROR(  cudaFreeHost( h_Flu_Array_F_In [t] )  );
+      if ( h_Flu_Array_F_Out[t] != NULL ) CUDA_CHECK_ERROR(  cudaFreeHost( h_Flu_Array_F_Out[t] )  );
+      if ( h_Flux_Array     [t] != NULL ) CUDA_CHECK_ERROR(  cudaFreeHost( h_Flux_Array     [t] )  );
 #     ifdef UNSPLIT_GRAVITY
-      if ( h_Corner_Array_F       [t] != NULL ) CUDA_CHECK_ERROR(  cudaFreeHost( h_Corner_Array_F       [t] )  );
+      if ( h_Corner_Array_F [t] != NULL ) CUDA_CHECK_ERROR(  cudaFreeHost( h_Corner_Array_F [t] )  );
 #     endif
-      if ( h_MinDtInfo_Fluid_Array[t] != NULL ) CUDA_CHECK_ERROR(  cudaFreeHost( h_MinDtInfo_Fluid_Array[t] )  );
 #     ifdef DUAL_ENERGY
-      if ( h_DE_Array_F_Out       [t] != NULL ) CUDA_CHECK_ERROR(  cudaFreeHost( h_DE_Array_F_Out       [t] )  );
+      if ( h_DE_Array_F_Out [t] != NULL ) CUDA_CHECK_ERROR(  cudaFreeHost( h_DE_Array_F_Out [t] )  );
 #     endif
+      if ( h_dt_Array_T     [t] != NULL ) CUDA_CHECK_ERROR(  cudaFreeHost( h_dt_Array_T     [t] )  );
+      if ( h_Flu_Array_T    [t] != NULL ) CUDA_CHECK_ERROR(  cudaFreeHost( h_Flu_Array_T    [t] )  );
 
-      h_Flu_Array_F_In       [t] = NULL;
-      h_Flu_Array_F_Out      [t] = NULL;
-      h_Flux_Array           [t] = NULL;
+      h_Flu_Array_F_In      [t] = NULL;
+      h_Flu_Array_F_Out     [t] = NULL;
+      h_Flux_Array          [t] = NULL;
 #     ifdef UNSPLIT_GRAVITY
-      h_Corner_Array_F       [t] = NULL;
+      h_Corner_Array_F      [t] = NULL;
 #     endif
-      h_MinDtInfo_Fluid_Array[t] = NULL;
 #     ifdef DUAL_ENERGY
-      h_DE_Array_F_Out       [t] = NULL;
+      h_DE_Array_F_Out      [t] = NULL;
 #     endif
-   }
+      h_dt_Array_T          [t] = NULL;
+      h_Flu_Array_T         [t] = NULL;
+   } // for (int t=0; t<2; t++)
 
 
 // destroy streams
