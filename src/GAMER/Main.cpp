@@ -184,8 +184,6 @@ real (*h_Flu_Array_F_In [2])[FLU_NIN ][  FLU_NXT   *FLU_NXT   *FLU_NXT   ] = { N
 real (*h_Flu_Array_F_Out[2])[FLU_NOUT][8*PATCH_SIZE*PATCH_SIZE*PATCH_SIZE] = { NULL, NULL };
 real (*h_Flux_Array[2])[9][NFLUX_TOTAL][4*PATCH_SIZE*PATCH_SIZE]           = { NULL, NULL };
 double (*h_Corner_Array_F[2])[3]                                           = { NULL, NULL };
-real  *h_dt_Array_T[2]                                                     = { NULL, NULL };
-real (*h_Flu_Array_T[2])[NCOMP_FLUID][ CUBE(PS1) ]                         = { NULL, NULL };
 #ifdef DUAL_ENERGY
 char (*h_DE_Array_F_Out[2])[8*PATCH_SIZE*PATCH_SIZE*PATCH_SIZE]            = { NULL, NULL };
 #endif
@@ -216,6 +214,10 @@ grackle_field_data *Che_FieldData                                          = NUL
 code_units Che_Units;
 #endif
 
+// (3-5) dt solver
+real  *h_dt_Array_T[2]                                                     = { NULL, NULL };
+real (*h_Flu_Array_T[2])[NCOMP_FLUID][ CUBE(PS1) ]                         = { NULL, NULL };
+
 
 // 4. GPU (device) global memory arrays
 // =======================================================================================================
@@ -225,7 +227,6 @@ real (*d_Flu_Array_F_In )[FLU_NIN ][ FLU_NXT*FLU_NXT*FLU_NXT ]             = NUL
 real (*d_Flu_Array_F_Out)[FLU_NOUT][ PS2*PS2*PS2 ]                         = NULL;
 real (*d_Flux_Array)[9][NFLUX_TOTAL][ PS2*PS2 ]                            = NULL;
 double (*d_Corner_Array_F)[3]                                              = NULL;
-real  *d_MinDtInfo_Fluid_Array                                             = NULL;
 #ifdef DUAL_ENERGY
 char (*d_DE_Array_F_Out)[ PS2*PS2*PS2 ]                                    = NULL;
 #endif
@@ -268,8 +269,11 @@ real (*d_Flu_Array_USG_G)[GRA_NIN-1][ PS1*PS1*PS1        ]                 = NUL
 #endif
 #endif
 
-// (4-4) CUDA stream (put in CUAPI_MemAllocate_Fluid.cu)
-//cudaStream_t *Stream                                                       = NULL;
+// (4-4) Grackle chemistry
+
+// (4-5) dt solver
+real *d_dt_Array_T                                                         = NULL;
+real (*d_Flu_Array_T)[NCOMP_FLUID][ CUBE(PS1) ]                            = NULL;
 #endif // #ifdef GPU
 
 

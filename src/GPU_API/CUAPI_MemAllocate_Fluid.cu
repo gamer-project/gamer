@@ -19,10 +19,11 @@ extern real (*d_Flux_Array)[9][NFLUX_TOTAL][ PS2*PS2 ];
 extern real (*d_Pot_Array_USG_F)[ USG_NXT_F*USG_NXT_F*USG_NXT_F ];
 extern double (*d_Corner_Array_F)[3];
 #endif
-extern real  *d_MinDtInfo_Fluid_Array;
 #ifdef DUAL_ENERGY
 extern char (*d_DE_Array_F_Out)[ PS2*PS2*PS2 ];
 #endif
+extern real *d_dt_Array_T;
+extern real (*d_Flu_Array_T)[NCOMP_FLUID][ CUBE(PS1) ];
 
 // global memory arrays in different models
 #if ( MODEL == HYDRO )
@@ -62,18 +63,20 @@ extern real (*d_FC_Flux_z)  [NCOMP_TOTAL][ N_FC_FLUX*N_FC_FLUX*N_FC_FLUX ];
 void CUAPI_MemAllocate_Fluid( const int Flu_NPatchGroup, const int GPU_NStream )
 {
 
-// the size of the global memory arrays in all models
-   const long Flu_MemSize_F_In        = sizeof(real  )*Flu_NPatchGroup*FLU_NIN *FLU_NXT*FLU_NXT*FLU_NXT;
-   const long Flu_MemSize_F_Out       = sizeof(real  )*Flu_NPatchGroup*FLU_NOUT*PS2*PS2*PS2;
-   const long Flux_MemSize            = sizeof(real  )*Flu_NPatchGroup*9*NFLUX_TOTAL*PS2*PS2;
-   const long MinDtInfo_Fluid_MemSize = sizeof(real  )*Flu_NPatchGroup;
+// size of the global memory arrays in all models
+   const int  Flu_NPatch        = 8*Flu_NPatchGroup;
+   const long Flu_MemSize_F_In  = sizeof(real  )*Flu_NPatchGroup*FLU_NIN *FLU_NXT*FLU_NXT*FLU_NXT;
+   const long Flu_MemSize_F_Out = sizeof(real  )*Flu_NPatchGroup*FLU_NOUT*PS2*PS2*PS2;
+   const long Flux_MemSize      = sizeof(real  )*Flu_NPatchGroup*9*NFLUX_TOTAL*PS2*PS2;
 #  ifdef UNSPLIT_GRAVITY
-   const long Pot_MemSize_USG_F       = sizeof(real  )*Flu_NPatchGroup*USG_NXT_F*USG_NXT_F*USG_NXT_F;
-   const long Corner_MemSize          = sizeof(double)*Flu_NPatchGroup*3;
+   const long Pot_MemSize_USG_F = sizeof(real  )*Flu_NPatchGroup*USG_NXT_F*USG_NXT_F*USG_NXT_F;
+   const long Corner_MemSize    = sizeof(double)*Flu_NPatchGroup*3;
 #  endif
 #  ifdef DUAL_ENERGY
-   const long DE_MemSize_F_Out        = sizeof(char  )*Flu_NPatchGroup*PS2*PS2*PS2;
+   const long DE_MemSize_F_Out  = sizeof(char  )*Flu_NPatchGroup*PS2*PS2*PS2;
 #  endif
+   const long dt_MemSize_T      = sizeof(real  )*Flu_NPatch;
+   const long Flu_MemSize_T     = sizeof(real  )*Flu_NPatch*NCOMP_FLUID*CUBE(PS1);
 
 // the size of the global memory arrays in different models
 #  if   ( MODEL == HYDRO )
@@ -97,7 +100,7 @@ void CUAPI_MemAllocate_Fluid( const int Flu_NPatchGroup, const int GPU_NStream )
 
 
 // output the total memory requirement
-   long TotalSize = Flu_MemSize_F_In + Flu_MemSize_F_Out;
+   long TotalSize = Flu_MemSize_F_In + Flu_MemSize_F_Out + dt_MemSize_T + Flu_MemSize_T;
 
    if ( amr->WithFlux )
    TotalSize += Flux_MemSize;
@@ -108,9 +111,6 @@ void CUAPI_MemAllocate_Fluid( const int Flu_NPatchGroup, const int GPU_NStream )
    if ( OPT__GRAVITY_TYPE == GRAVITY_EXTERNAL  ||  OPT__GRAVITY_TYPE == GRAVITY_BOTH  ||  OPT__EXTERNAL_POT )
    TotalSize += Corner_MemSize;
 #  endif
-
-   if ( OPT__DT_LEVEL == DT_LEVEL_FLEXIBLE )
-   TotalSize += MinDtInfo_Fluid_MemSize;
 
 #  ifdef DUAL_ENERGY
    TotalSize += DE_MemSize_F_Out;
@@ -151,12 +151,12 @@ void CUAPI_MemAllocate_Fluid( const int Flu_NPatchGroup, const int GPU_NStream )
    CUDA_CHECK_ERROR(  cudaMalloc( (void**) &d_Corner_Array_F,        Corner_MemSize          )  );
 #  endif
 
-   if ( OPT__DT_LEVEL == DT_LEVEL_FLEXIBLE )
-   CUDA_CHECK_ERROR(  cudaMalloc( (void**) &d_MinDtInfo_Fluid_Array, MinDtInfo_Fluid_MemSize )  );
-
 #  ifdef DUAL_ENERGY
    CUDA_CHECK_ERROR(  cudaMalloc( (void**) &d_DE_Array_F_Out,        DE_MemSize_F_Out        )  );
 #  endif
+
+   CUDA_CHECK_ERROR(  cudaMalloc( (void**) &d_dt_Array_T,            dt_MemSize_T            )  );
+   CUDA_CHECK_ERROR(  cudaMalloc( (void**) &d_Flu_Array_T,           Flu_MemSize_T           )  );
 
 
 // allocate the device memory (in different models)
@@ -193,26 +193,26 @@ void CUAPI_MemAllocate_Fluid( const int Flu_NPatchGroup, const int GPU_NStream )
 // allocate the host memory by CUDA
    for (int t=0; t<2; t++)
    {
-      CUDA_CHECK_ERROR(  cudaMallocHost( (void**) &h_Flu_Array_F_In       [t], Flu_MemSize_F_In        )  );
-      CUDA_CHECK_ERROR(  cudaMallocHost( (void**) &h_Flu_Array_F_Out      [t], Flu_MemSize_F_Out       )  );
+      CUDA_CHECK_ERROR(  cudaMallocHost( (void**) &h_Flu_Array_F_In [t], Flu_MemSize_F_In        )  );
+      CUDA_CHECK_ERROR(  cudaMallocHost( (void**) &h_Flu_Array_F_Out[t], Flu_MemSize_F_Out       )  );
 
       if ( amr->WithFlux )
-      CUDA_CHECK_ERROR(  cudaMallocHost( (void**) &h_Flux_Array           [t], Flux_MemSize            )  );
+      CUDA_CHECK_ERROR(  cudaMallocHost( (void**) &h_Flux_Array     [t], Flux_MemSize            )  );
 
 #     ifdef UNSPLIT_GRAVITY
-      CUDA_CHECK_ERROR(  cudaMallocHost( (void**) &h_Pot_Array_USG_F      [t], Pot_MemSize_USG_F       )  );
+      CUDA_CHECK_ERROR(  cudaMallocHost( (void**) &h_Pot_Array_USG_F[t], Pot_MemSize_USG_F       )  );
 
       if ( OPT__GRAVITY_TYPE == GRAVITY_EXTERNAL  ||  OPT__GRAVITY_TYPE == GRAVITY_BOTH  ||  OPT__EXTERNAL_POT )
-      CUDA_CHECK_ERROR(  cudaMallocHost( (void**) &h_Corner_Array_F       [t], Corner_MemSize          )  );
+      CUDA_CHECK_ERROR(  cudaMallocHost( (void**) &h_Corner_Array_F [t], Corner_MemSize          )  );
 #     endif
-
-      if ( OPT__DT_LEVEL == DT_LEVEL_FLEXIBLE )
-      CUDA_CHECK_ERROR(  cudaMallocHost( (void**) &h_MinDtInfo_Fluid_Array[t], MinDtInfo_Fluid_MemSize )  );
 
 #     ifdef DUAL_ENERGY
-      CUDA_CHECK_ERROR(  cudaMallocHost( (void**) &h_DE_Array_F_Out       [t], DE_MemSize_F_Out        )  );
+      CUDA_CHECK_ERROR(  cudaMallocHost( (void**) &h_DE_Array_F_Out [t], DE_MemSize_F_Out        )  );
 #     endif
-   }
+
+      CUDA_CHECK_ERROR(  cudaMallocHost( (void**) &h_dt_Array_T     [t], dt_MemSize_T            )  );
+      CUDA_CHECK_ERROR(  cudaMallocHost( (void**) &h_Flu_Array_T    [t], Flu_MemSize_T           )  );
+   } // for (int t=0; t<2; t++)
 
 
 // create streams
