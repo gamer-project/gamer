@@ -96,7 +96,8 @@ int CUFLU_FluidSolver_SetConstMem_ExtAcc( double ExtAcc_AuxArray_h[] );
 int CUFLU_FluidSolver_SetConstMem_NormIdx( int NormIdx_h[] );
 #endif
 #endif // FLU_SCHEME
-//__global__ void CUFLU_GetMaxCFL( real g_Fluid[][NCOMP_TOTAL][ PS2*PS2*PS2 ], real g_MaxCFL[], const real Gamma, const real MinPres );
+__global__ void CUFLU_dtSolver_HydroCFL( real g_dt_Array[], const real g_Flu_Array[][NCOMP_FLUID][ CUBE(PS1) ],
+                                         const int NPG, const real dh, const real Safety, const real Gamma, const real MinPres );
 #elif ( MODEL == MHD )
 #warning : WAIT MHD !!!
 
@@ -332,18 +333,17 @@ void CUAPI_Set_Default_GPU_Parameter( int &GPU_NStream, int &Flu_GPU_NPGroup, in
 // (3-1) fluid solver
 #  if   ( MODEL == HYDRO )
 #  if   ( FLU_SCHEME == RTVD )
-   CUDA_CHECK_ERROR(  cudaFuncSetCacheConfig( CUFLU_FluidSolver_RTVD, cudaFuncCachePreferShared )  );
+   CUDA_CHECK_ERROR(  cudaFuncSetCacheConfig( CUFLU_FluidSolver_RTVD,  cudaFuncCachePreferShared )  );
 #  elif ( FLU_SCHEME == WAF )
-   CUDA_CHECK_ERROR(  cudaFuncSetCacheConfig( CUFLU_FluidSolver_WAF,  cudaFuncCachePreferShared )  );
+   CUDA_CHECK_ERROR(  cudaFuncSetCacheConfig( CUFLU_FluidSolver_WAF,   cudaFuncCachePreferShared )  );
 #  elif ( FLU_SCHEME == MHM )
-   CUDA_CHECK_ERROR(  cudaFuncSetCacheConfig( CUFLU_FluidSolver_MHM,  cudaFuncCachePreferL1     )  );
+   CUDA_CHECK_ERROR(  cudaFuncSetCacheConfig( CUFLU_FluidSolver_MHM,   cudaFuncCachePreferL1     )  );
 #  elif ( FLU_SCHEME == MHM_RP )
-   CUDA_CHECK_ERROR(  cudaFuncSetCacheConfig( CUFLU_FluidSolver_MHM,  cudaFuncCachePreferL1     )  );
+   CUDA_CHECK_ERROR(  cudaFuncSetCacheConfig( CUFLU_FluidSolver_MHM,   cudaFuncCachePreferL1     )  );
 #  elif ( FLU_SCHEME == CTU )
-   CUDA_CHECK_ERROR(  cudaFuncSetCacheConfig( CUFLU_FluidSolver_CTU,  cudaFuncCachePreferL1     )  );
+   CUDA_CHECK_ERROR(  cudaFuncSetCacheConfig( CUFLU_FluidSolver_CTU,   cudaFuncCachePreferL1     )  );
 #  endif
-
-// CUDA_CHECK_ERROR(  cudaFuncSetCacheConfig( CUFLU_GetMaxCFL,        cudaFuncCachePreferShared )  );
+   CUDA_CHECK_ERROR(  cudaFuncSetCacheConfig( CUFLU_dtSolver_HydroCFL, cudaFuncCachePreferShared )  );
 
 #  elif ( MODEL == MHD )
 #  warning :: WAIT MHD !!!

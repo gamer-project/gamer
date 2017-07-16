@@ -158,69 +158,69 @@ struct FluVar5 { real Rho, Px, Py, Pz, Egy; };
 #if ( MODEL == HYDRO )
 #if   ( FLU_SCHEME == RTVD )
 
-#     define FLU_BLOCK_SIZE_X   FLU_NXT
+#     define FLU_BLOCK_SIZE_X       FLU_NXT
 
 #  ifdef FLOAT8
-#     define FLU_BLOCK_SIZE_Y   4
+#     define FLU_BLOCK_SIZE_Y       4
 #  else
-#     define FLU_BLOCK_SIZE_Y   8
+#     define FLU_BLOCK_SIZE_Y       8
 #  endif
 
 #elif ( FLU_SCHEME == WAF )
 
-#     define FLU_BLOCK_SIZE_X   FLU_NXT
+#     define FLU_BLOCK_SIZE_X       FLU_NXT
 
 #  ifdef FLOAT8
-#     define FLU_BLOCK_SIZE_Y   4
+#     define FLU_BLOCK_SIZE_Y       4
 #  else
-#     define FLU_BLOCK_SIZE_Y   8
+#     define FLU_BLOCK_SIZE_Y       8
 #  endif
 
 #elif ( FLU_SCHEME == MHM  ||  FLU_SCHEME == MHM_RP )
 
 #  if   ( GPU_ARCH == FERMI )
-#     define FLU_BLOCK_SIZE_X   512
+#     define FLU_BLOCK_SIZE_X       512
 #  elif ( GPU_ARCH == KEPLER )
-#     define FLU_BLOCK_SIZE_X   512
+#     define FLU_BLOCK_SIZE_X       512
 #  elif ( GPU_ARCH == MAXWELL )
-#     define FLU_BLOCK_SIZE_X   512    // not optimized yet
+#     define FLU_BLOCK_SIZE_X       512      // not optimized yet
 #  elif ( GPU_ARCH == PASCAL )
-#     define FLU_BLOCK_SIZE_X   512    // not optimized yet
+#     define FLU_BLOCK_SIZE_X       512      // not optimized yet
 #  else
-#     define FLU_BLOCK_SIZE_X   NULL_INT
+#     define FLU_BLOCK_SIZE_X       NULL_INT
 #     ifdef GPU
 #     error : UNKNOWN GPU_ARCH !!
 #     endif
 #  endif
 
-#     define FLU_BLOCK_SIZE_Y   1
+#     define FLU_BLOCK_SIZE_Y       1
 
 #elif ( FLU_SCHEME == CTU )
 
 #  if   ( GPU_ARCH == FERMI )
-#     define FLU_BLOCK_SIZE_X   512
+#     define FLU_BLOCK_SIZE_X       512
 #  elif ( GPU_ARCH == KEPLER )
-#     define FLU_BLOCK_SIZE_X   512
+#     define FLU_BLOCK_SIZE_X       512
 #  elif ( GPU_ARCH == MAXWELL )
 #     if ( RSOLVER == ROE )
-#     define FLU_BLOCK_SIZE_X   512    // not optimized yet
+#     define FLU_BLOCK_SIZE_X       512      // not optimized yet
 #     else
-#     define FLU_BLOCK_SIZE_X   256    // somehow HLLC/HLLE solvers consume too many resources on MAXWELL !?
+#     define FLU_BLOCK_SIZE_X       256      // somehow HLLC/HLLE solvers consume too many resources on MAXWELL !?
 #     endif
 #  elif ( GPU_ARCH == PASCAL )
 #     if ( RSOLVER == ROE )
-#     define FLU_BLOCK_SIZE_X   512    // not optimized yet
+#     define FLU_BLOCK_SIZE_X       512      // not optimized yet
 #     else
-#     define FLU_BLOCK_SIZE_X   256    // somehow HLLC/HLLE solvers consume too many resources on PASCAL !?
+#     define FLU_BLOCK_SIZE_X       256      // somehow HLLC/HLLE solvers consume too many resources on PASCAL !?
 #     endif
 #  else
-#     define FLU_BLOCK_SIZE_X   NULL_INT
+#     define FLU_BLOCK_SIZE_X       NULL_INT
 #     ifdef GPU
 #     error : UNKNOWN GPU_ARCH !!
 #     endif
 #  endif
 
-#     define FLU_BLOCK_SIZE_Y    1
+#     define FLU_BLOCK_SIZE_Y       1
 
 #else
 #  error : ERROR : unsupported hydro scheme in the makefile !!
@@ -230,14 +230,14 @@ struct FluVar5 { real Rho, Px, Py, Pz, Egy; };
 // 2. MHD solver
 //=========================================================================================
 #elif ( MODEL == MHD )
-#     define FLU_BLOCK_SIZE_X    0
-#     define FLU_BLOCK_SIZE_Y    0
+#     define FLU_BLOCK_SIZE_X       0
+#     define FLU_BLOCK_SIZE_Y       0
 
 
 // 3. ELBDM kinematic solver
 //=========================================================================================
 #elif ( MODEL == ELBDM )
-#     define FLU_BLOCK_SIZE_X    PS2
+#     define FLU_BLOCK_SIZE_X       PS2
 
 #  if   ( GPU_ARCH == FERMI )
 #     ifdef FLOAT8
@@ -275,6 +275,17 @@ struct FluVar5 { real Rho, Px, Py, Pz, Egy; };
 #  endif
 
 #endif // MODEL
+
+
+// 4. dt solver for fluid
+//=========================================================================================
+#     define DT_FLU_BLOCK_SIZE      512
+
+// use shuffle reduction in the KEPLER and later GPUs
+#  if ( GPU_ARCH == KEPLER  ||  GPU_ARCH == MAXWELL  ||  GPU_ARCH == PASCAL )
+#     define DT_FLU_USE_SHUFFLE
+#  endif
+
 
 
 // warp size (which must be the same as the CUDA predefined constant "warpSize")

@@ -74,7 +74,6 @@ __global__ void CUFLU_FluidSolver_CTU( const real g_Fluid_In[]   [NCOMP_TOTAL][ 
                                        const real MinDens, const real MinPres, const real DualEnergySwitch,
                                        const bool NormPassive, const int NNorm );
 #endif // FLU_SCHEME
-//__global__ void CUFLU_GetMaxCFL( real g_Fluid[][NCOMP_TOTAL][ PS2*PS2*PS2 ], real g_MaxCFL[], const real Gamma, const real MinPres );
 #elif ( MODEL == MHD )
 #warning : WAIT MHD !!!
 

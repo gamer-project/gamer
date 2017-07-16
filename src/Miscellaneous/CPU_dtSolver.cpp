@@ -48,12 +48,12 @@ void CPU_dtSolver( const Solver_t TSolver, real dt_Array[],
    switch ( TSolver )
    {
 #     if   ( MODEL == HYDRO )
-      case DT_SOLVER_HYDRO_CFL:
+      case DT_FLU_SOLVER:
          CPU_dtSolver_HydroCFL( dt_Array, Flu_Array, NPG, dh, Safety, Gamma, MinPres );
       break;
 
 #     ifdef GRAVITY
-      case DT_SOLVER_HYDRO_GRAVITY:
+      case DT_GRA_SOLVER:
          CPU_dtSolver_HydroGravity( dt_Array, Pot_Array, NPG, dh, Safety, NewtonG );
       break;
 #     endif

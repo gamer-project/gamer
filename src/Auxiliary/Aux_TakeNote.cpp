@@ -396,6 +396,12 @@ void Aux_TakeNote()
 #     endif // #ifdef USE_PSOLVER_10TO14
 #     endif // #if ( defined GRAVITY  &&  POT_SCHEME == SOR  &&  defined GPU )
 
+#     ifdef DT_FLU_USE_SHUFFLE
+      fprintf( Note, "DT_FLU_USE_SHUFFLE        ON\n" );
+#     else
+      fprintf( Note, "DT_FLU_USE_SHUFFLE        OFF\n" );
+#     endif
+
 #     ifdef GRAVITY
       fprintf( Note, "EXT_POT_NAUX_MAX          %d\n",      EXT_POT_NAUX_MAX        );
       fprintf( Note, "EXT_ACC_NAUX_MAX          %d\n",      EXT_ACC_NAUX_MAX        );
@@ -462,6 +468,7 @@ void Aux_TakeNote()
 #     endif
       fprintf( Note, "#define GRA_BLOCK_SIZE_Z  %d\n",      GRA_BLOCK_SIZE_Z        );
 #     endif // #ifdef GRAVITY
+      fprintf( Note, "#define DT_FLU_BLOCK_SIZE %d\n",      DT_FLU_BLOCK_SIZE       );
 #     endif // #ifdef GPU
 #     ifdef PARTICLE
       fprintf( Note, "#define PAR_NVAR          %d\n",      PAR_NVAR                );
