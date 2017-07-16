@@ -531,7 +531,7 @@
 #endif
 
 #ifndef __ULONG_MAX__
-#  define __ULONG_MAX__    ( 18446744073709551615UL )    // 2^64-1
+#  define __ULONG_MAX__    18446744073709551615UL     // 2^64-1
 #endif
 
 #ifndef __FLT_MAX__
@@ -552,8 +552,13 @@
 
 
 // extreme value used for various purpose (e.g., floor value for passive scalars)
-#define TINY_NUMBER        __FLT_MIN__
-#define HUGE_NUMBER        __FLT_MAX__
+#ifdef FLOAT8
+#  define TINY_NUMBER      __DBL_MIN__
+#  define HUGE_NUMBER      __DBL_MAX__
+#else
+#  define TINY_NUMBER      __FLT_MIN__
+#  define HUGE_NUMBER      __FLT_MAX__
+#endif
 
 
 // sibling index offset for the non-periodic B.C.
