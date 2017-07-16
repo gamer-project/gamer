@@ -179,13 +179,29 @@ struct FluVar5 { real Rho, Px, Py, Pz, Egy; };
 #elif ( FLU_SCHEME == MHM  ||  FLU_SCHEME == MHM_RP )
 
 #  if   ( GPU_ARCH == FERMI )
+#     ifdef FLOAT8
+#     define FLU_BLOCK_SIZE_X       256
+#     else
 #     define FLU_BLOCK_SIZE_X       512
+#     endif
 #  elif ( GPU_ARCH == KEPLER )
+#     ifdef FLOAT8
+#     define FLU_BLOCK_SIZE_X       256
+#     else
 #     define FLU_BLOCK_SIZE_X       512
+#     endif
 #  elif ( GPU_ARCH == MAXWELL )
+#     ifdef FLOAT8
+#     define FLU_BLOCK_SIZE_X       256
+#     else
 #     define FLU_BLOCK_SIZE_X       512      // not optimized yet
+#     endif
 #  elif ( GPU_ARCH == PASCAL )
+#     ifdef FLOAT8
+#     define FLU_BLOCK_SIZE_X       256
+#     else
 #     define FLU_BLOCK_SIZE_X       512      // not optimized yet
+#     endif
 #  else
 #     define FLU_BLOCK_SIZE_X       NULL_INT
 #     ifdef GPU
@@ -198,20 +214,28 @@ struct FluVar5 { real Rho, Px, Py, Pz, Egy; };
 #elif ( FLU_SCHEME == CTU )
 
 #  if   ( GPU_ARCH == FERMI )
-#     define FLU_BLOCK_SIZE_X       512
-#  elif ( GPU_ARCH == KEPLER )
-#     define FLU_BLOCK_SIZE_X       512
-#  elif ( GPU_ARCH == MAXWELL )
-#     if ( RSOLVER == ROE )
-#     define FLU_BLOCK_SIZE_X       512      // not optimized yet
+#     ifdef FLOAT8
+#     define FLU_BLOCK_SIZE_X       256
 #     else
-#     define FLU_BLOCK_SIZE_X       256      // somehow HLLC/HLLE solvers consume too many resources on MAXWELL !?
+#     define FLU_BLOCK_SIZE_X       512
+#     endif
+#  elif ( GPU_ARCH == KEPLER )
+#     ifdef FLOAT8
+#     define FLU_BLOCK_SIZE_X       256
+#     else
+#     define FLU_BLOCK_SIZE_X       512
+#     endif
+#  elif ( GPU_ARCH == MAXWELL )
+#     ifdef FLOAT8
+#     define FLU_BLOCK_SIZE_X       256
+#     else
+#     define FLU_BLOCK_SIZE_X       512      // not optimized yet
 #     endif
 #  elif ( GPU_ARCH == PASCAL )
-#     if ( RSOLVER == ROE )
-#     define FLU_BLOCK_SIZE_X       512      // not optimized yet
+#     ifdef FLOAT8
+#     define FLU_BLOCK_SIZE_X       256
 #     else
-#     define FLU_BLOCK_SIZE_X       256      // somehow HLLC/HLLE solvers consume too many resources on PASCAL !?
+#     define FLU_BLOCK_SIZE_X       512      // not optimized yet
 #     endif
 #  else
 #     define FLU_BLOCK_SIZE_X       NULL_INT

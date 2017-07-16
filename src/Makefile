@@ -701,17 +701,17 @@ else ifeq "$(findstring GPU_ARCH=KEPLER, $(SIMU_OPTION))" "GPU_ARCH=KEPLER"
    else
      NVCCFLAG_FLU += --maxrregcount=64
    endif
-else ifeq "$(findstring GPU_ARCH=PASCAL, $(SIMU_OPTION))" "GPU_ARCH=MAXWELL"
+else ifeq "$(findstring GPU_ARCH=MAXWELL, $(SIMU_OPTION))" "GPU_ARCH=MAXWELL"
    ifeq "$(findstring FLOAT8, $(SIMU_OPTION))" "FLOAT8"
-#    NVCCFLAG_FLU += --maxrregcount=XX
+     NVCCFLAG_FLU += --maxrregcount=192
    else
-#    NVCCFLAG_FLU += --maxrregcount=XX
+     NVCCFLAG_FLU += --maxrregcount=128
    endif
 else ifeq "$(findstring GPU_ARCH=PASCAL, $(SIMU_OPTION))" "GPU_ARCH=PASCAL"
    ifeq "$(findstring FLOAT8, $(SIMU_OPTION))" "FLOAT8"
-#    NVCCFLAG_FLU += --maxrregcount=XX
+     NVCCFLAG_FLU += --maxrregcount=192
    else
-#    NVCCFLAG_FLU += --maxrregcount=XX
+     NVCCFLAG_FLU += --maxrregcount=128
    endif
 endif
 
