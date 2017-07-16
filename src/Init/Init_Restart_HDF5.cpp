@@ -1431,6 +1431,9 @@ void Check_SymConst( const char *FileName )
 #  error : ERROR : unsupported MODEL !!
 #  endif // MODEL
 
+   LoadField( "dt_Flu_BlockSize",     &RS.dt_Flu_BlockSize,     SID, TID, NonFatal, &RT.dt_Flu_BlockSize,      1, NonFatal );
+   LoadField( "dt_Flu_UseShuffle",    &RS.dt_Flu_UseShuffle,    SID, TID, NonFatal, &RT.dt_Flu_UseShuffle,     1, NonFatal );
+
 
 // 5. close all objects
    Status = H5Tclose( TID );

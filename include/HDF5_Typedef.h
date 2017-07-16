@@ -250,6 +250,9 @@ struct SymConst_t
 #  error : ERROR : unsupported MODEL !!
 #  endif // MODEL
 
+   int    dt_Flu_BlockSize;
+   int    dt_Flu_UseShuffle;
+
 }; // struct SymConst_t
 
 

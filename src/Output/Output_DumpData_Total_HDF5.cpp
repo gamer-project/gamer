@@ -74,7 +74,7 @@ Procedure for outputting new variables:
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2235)
+// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2236)
 // Description :  Output all simulation data in the HDF5 format, which can be used as a restart file
 //                or loaded by YT
 //
@@ -134,6 +134,7 @@ Procedure for outputting new variables:
 //                2233 : 2017/06/13 --> rename Opt__Output_TestError as Opt__Output_User
 //                2234 : 2017/06/25 --> output Grackle variables
 //                2235 : 2017/07/11 --> replace IndividualDt and Opt__AdaptiveDt by Opt__DtLevel
+//                2236 : 2017/07/16 --> output DT_FLU_BLOCK_SIZE and DT_FLU_USE_SHUFFLE
 //-------------------------------------------------------------------------------------------------------
 void Output_DumpData_Total_HDF5( const char *FileName )
 {
@@ -1239,7 +1240,7 @@ void FillIn_KeyInfo( KeyInfo_t &KeyInfo )
 
    const time_t CalTime  = time( NULL );   // calendar time
 
-   KeyInfo.FormatVersion = 2235;
+   KeyInfo.FormatVersion = 2236;
    KeyInfo.Model         = MODEL;
    KeyInfo.NLevel        = NLEVEL;
    KeyInfo.NCompFluid    = NCOMP_FLUID;
@@ -1655,6 +1656,13 @@ void FillIn_SymConst( SymConst_t &SymConst )
 #  else
 #  error : ERROR : unsupported MODEL !!
 #  endif // MODEL
+
+   SymConst.dt_Flu_BlockSize     = DT_FLU_BLOCK_SIZE;
+#  ifdef DT_FLU_USE_SHUFFLE
+   SymConst.dt_Flu_UseShuffle    = 1;
+#  else
+   SymConst.dt_Flu_UseShuffle    = 0;
+#  endif
 
 } // FUNCTION : FillIn_SymConst
 
@@ -2246,6 +2254,9 @@ void GetCompound_SymConst( hid_t &H5_TypeID )
 #  else
 #  error : ERROR : unsupported MODEL !!
 #  endif // MODEL
+
+   H5Tinsert( H5_TypeID, "dt_Flu_BlockSize",     HOFFSET(SymConst_t,dt_Flu_BlockSize    ), H5T_NATIVE_INT    );
+   H5Tinsert( H5_TypeID, "dt_Flu_UseShuffle",    HOFFSET(SymConst_t,dt_Flu_UseShuffle   ), H5T_NATIVE_INT    );
 
 } // FUNCTION : GetCompound_SymConst
 
