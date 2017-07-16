@@ -74,6 +74,7 @@ __global__ void CUFLU_FluidSolver_CTU( const real g_Fluid_In[]   [NCOMP_TOTAL][ 
                                        const real MinDens, const real MinPres, const real DualEnergySwitch,
                                        const bool NormPassive, const int NNorm );
 #endif // FLU_SCHEME
+
 #elif ( MODEL == MHD )
 #warning : WAIT MHD !!!
 

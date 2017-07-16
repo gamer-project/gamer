@@ -579,9 +579,11 @@ void Solver( const Solver_t TSolver, const int lv, const double TimeNew, const d
 #     if   ( MODEL == HYDRO )
       case DT_FLU_SOLVER:
 #        ifdef GPU
+         CUAPI_Asyn_dtSolver( TSolver, h_dt_Array_T[ArrayID], h_Flu_Array_T[ArrayID], NULL, NPG, dh,
+                              (Step==0)?DT__FLUID_INIT:DT__FLUID, GAMMA, MIN_PRES, NULL_REAL, GPU_NSTREAM );
 #        else
-         CPU_dtSolver( TSolver, h_dt_Array_T[ArrayID], h_Flu_Array_T[ArrayID], NULL, NPG, dh,
-                       (Step==0)?DT__FLUID_INIT:DT__FLUID, GAMMA, MIN_PRES, NULL_REAL );
+         CPU_dtSolver       ( TSolver, h_dt_Array_T[ArrayID], h_Flu_Array_T[ArrayID], NULL, NPG, dh,
+                              (Step==0)?DT__FLUID_INIT:DT__FLUID, GAMMA, MIN_PRES, NULL_REAL );
 #        endif
       break;
 
