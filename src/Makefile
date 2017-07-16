@@ -155,7 +155,7 @@ SIMU_OPTION += -DSUPPORT_HDF5
 # Cuda source files (compiled with nvcc)
 CUDA_FILE   := CUAPI_Asyn_FluidSolver.cu  CUAPI_DiagnoseDevice.cu  CUAPI_MemAllocate_Fluid.cu \
                CUAPI_MemFree_Fluid.cu  CUAPI_Set_Default_GPU_Parameter.cu  CUAPI_SetDevice.cu \
-               CUAPI_Synchronize.cu
+               CUAPI_Synchronize.cu  CUAPI_Asyn_dtSolver.cu
 
 
 # C/C++ source files (compiled with c++ compiler)

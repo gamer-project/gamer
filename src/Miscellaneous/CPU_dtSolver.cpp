@@ -26,22 +26,24 @@ void CPU_dtSolver_HydroCFL( real dt_Array[], const real Flu_Array[][NCOMP_FLUID]
 // Note        :  1. Invoked by InvokeSolver()
 //                2. Corresponding preparation and closing steps are defined in dt_Prepare_XXX() and dt_Close()
 //
-// Parameter   :  TSolver   : Target dt solver
-//                dt_Array  : Array to store the minimum dt in each target patch
-//                Flu_Array : Array storing the prepared fluid data of each target patch
-//                Pot_Array : Array storing the prepared potential data of each target patch
-//                NPG       : Number of target patch groups
-//                dh        : Grid size
-//                Safety    : dt safety factor
-//                Gamma     : Ratio of specific heats
-//                MinPres   : Minimum allowed pressure
-//                NewtonG   : Gravitational constant
+// Parameter   :  TSolver     : Target dt solver
+//                              --> DT_FLU_SOLVER : dt solver for fluid
+//                                  DT_GRA_SOLVER : dt solver for gravity
+//                dt_Array    : Array to store the minimum dt in each target patch
+//                Flu_Array   : Array storing the prepared fluid data of each target patch
+//                Pot_Array   : Array storing the prepared potential data of each target patch
+//                NPatchGroup : Number of patch groups evaluated simultaneously by GPU
+//                dh          : Grid size
+//                Safety      : dt safety factor
+//                Gamma       : Ratio of specific heats
+//                MinPres     : Minimum allowed pressure
+//                NewtonG     : Gravitational constant
 //
 // Return      :  dt_Array
 //-------------------------------------------------------------------------------------------------------
 void CPU_dtSolver( const Solver_t TSolver, real dt_Array[],
                    const real Flu_Array[][NCOMP_FLUID][ CUBE(PS1) ], const real Pot_Array[][ CUBE(GRA_NXT) ],
-                   const int NPG, const real dh, const real Safety, const real Gamma, const real MinPres,
+                   const int NPatchGroup, const real dh, const real Safety, const real Gamma, const real MinPres,
                    const real NewtonG )
 {
 
@@ -49,12 +51,12 @@ void CPU_dtSolver( const Solver_t TSolver, real dt_Array[],
    {
 #     if   ( MODEL == HYDRO )
       case DT_FLU_SOLVER:
-         CPU_dtSolver_HydroCFL( dt_Array, Flu_Array, NPG, dh, Safety, Gamma, MinPres );
+         CPU_dtSolver_HydroCFL( dt_Array, Flu_Array, NPatchGroup, dh, Safety, Gamma, MinPres );
       break;
 
 #     ifdef GRAVITY
       case DT_GRA_SOLVER:
-         CPU_dtSolver_HydroGravity( dt_Array, Pot_Array, NPG, dh, Safety, NewtonG );
+         CPU_dtSolver_HydroGravity( dt_Array, Pot_Array, NPatchGroup, dh, Safety, NewtonG );
       break;
 #     endif
 

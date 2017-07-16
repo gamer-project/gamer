@@ -97,7 +97,7 @@ int CUFLU_FluidSolver_SetConstMem_NormIdx( int NormIdx_h[] );
 #endif
 #endif // FLU_SCHEME
 __global__ void CUFLU_dtSolver_HydroCFL( real g_dt_Array[], const real g_Flu_Array[][NCOMP_FLUID][ CUBE(PS1) ],
-                                         const int NPG, const real dh, const real Safety, const real Gamma, const real MinPres );
+                                         const real dh, const real Safety, const real Gamma, const real MinPres );
 #elif ( MODEL == MHD )
 #warning : WAIT MHD !!!
 

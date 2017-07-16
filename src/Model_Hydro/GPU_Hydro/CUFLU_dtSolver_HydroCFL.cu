@@ -36,7 +36,6 @@
 //
 // Parameter   :  g_dt_Array  : Global memory array to store the minimum dt in each target patch
 //                g_Flu_Array : Global memory array storing the prepared fluid data of each target patch
-//                NPG         : Number of target patch groups
 //                dh          : Grid size
 //                Safety      : dt safety factor
 //                Gamma       : Ratio of specific heats
@@ -45,7 +44,7 @@
 // Return      :  g_dt_Array
 //-------------------------------------------------------------------------------------------------------
 __global__ void CUFLU_dtSolver_HydroCFL( real g_dt_Array[], const real g_Flu_Array[][NCOMP_FLUID][ CUBE(PS1) ],
-                                         const int NPG, const real dh, const real Safety, const real Gamma, const real MinPres )
+                                         const real dh, const real Safety, const real Gamma, const real MinPres )
 {
 
    const uint bx               = blockIdx.x;
