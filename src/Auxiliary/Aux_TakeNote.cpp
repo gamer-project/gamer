@@ -396,10 +396,12 @@ void Aux_TakeNote()
 #     endif // #ifdef USE_PSOLVER_10TO14
 #     endif // #if ( defined GRAVITY  &&  POT_SCHEME == SOR  &&  defined GPU )
 
+#     ifdef GPU
 #     ifdef DT_FLU_USE_SHUFFLE
       fprintf( Note, "DT_FLU_USE_SHUFFLE        ON\n" );
 #     else
       fprintf( Note, "DT_FLU_USE_SHUFFLE        OFF\n" );
+#     endif
 #     endif
 
 #     ifdef GRAVITY
