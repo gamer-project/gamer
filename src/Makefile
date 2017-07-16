@@ -16,24 +16,24 @@ EXECUTABLE := gamer
 SIMU_OPTION += -DMODEL=HYDRO
 
 # self-gravity
-SIMU_OPTION += -DGRAVITY
+#SIMU_OPTION += -DGRAVITY
 
 # Poisson solver: SOR/MG (successive-overrelaxation/multigrid)
-SIMU_OPTION += -DPOT_SCHEME=SOR
+#SIMU_OPTION += -DPOT_SCHEME=SOR
 
 # store GRA_GHOST_SIZE ghost-zone potential for each patch on each side (in patch->pot_ext)
 # --> currently only for improving accuracy for particles around the patch boundaries (by Par->ImproveAcc)
-SIMU_OPTION += -DSTORE_POT_GHOST
+#SIMU_OPTION += -DSTORE_POT_GHOST
 
 # use unsplitting method to couple gravity to the target model (for HYDRO and MHD only; ELBDM is not supported yet)
 # --> must be off if GRAVITY is off
-SIMU_OPTION += -DUNSPLIT_GRAVITY
+#SIMU_OPTION += -DUNSPLIT_GRAVITY
 
 # comoving frame
 #SIMU_OPTION += -DCOMOVING
 
 # particles (must work with GRAVITY; set MODEL=PAR_ONLY for particle-only simulations)
-SIMU_OPTION += -DPARTICLE
+#SIMU_OPTION += -DPARTICLE
 
 # maximum number of AMR levels including the base level (level id = 0 ... NLEVEL-1)
 SIMU_OPTION += -DNLEVEL=10
@@ -208,7 +208,7 @@ vpath %.cpp    GAMER  Init  Refine  Fluid  Interpolation  Tables  Output  Miscel
 # hydrodynamic source files (included only if "MODEL=HYDRO")
 # ------------------------------------------------------------------------------------
 ifeq "$(findstring MODEL=HYDRO, $(SIMU_OPTION))" "MODEL=HYDRO"
-CUDA_FILE   += CUFLU_GetMaxCFL.cu  CUFLU_FluidSolver_RTVD.cu  CUFLU_FluidSolver_WAF.cu  CUFLU_FluidSolver_MHM.cu \
+CUDA_FILE   += CUFLU_dtSolver_HydroCFL.cu  CUFLU_FluidSolver_RTVD.cu  CUFLU_FluidSolver_WAF.cu  CUFLU_FluidSolver_MHM.cu \
                CUFLU_FluidSolver_CTU.cu
 
 CC_FILE     += CPU_FluidSolver_RTVD.cpp  CPU_FluidSolver_WAF.cpp  CPU_FluidSolver_MHM.cpp  CPU_FluidSolver_CTU.cpp \

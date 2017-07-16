@@ -14,9 +14,7 @@ double dt_min_for_solver;
 //                2. The global variable "dt_min_for_solver" will be set by dt_Close()
 //
 // Parameter   :  TSolver : Target dt solver
-//                          --> DT_SOLVER_HYDRO_CFL     : HYDRO CFL
-//                              DT_SOLVER_HYDRO_GRAVITY : HYDRO gravity
-//                              DT_SOLVER_ELBDM_GRAVITY : ELBDM gravity
+//                          --> DT_FLU_SOLVER, DT_GRA_SOLVER
 //                lv      : Target refinement level
 //-------------------------------------------------------------------------------------------------------
 double dt_InvokeSolver( const Solver_t TSolver, const int lv )

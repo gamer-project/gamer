@@ -41,9 +41,8 @@ extern Timer_t *Timer_Poi_PrePot_F[NLEVEL];
 //                                   GRAVITY_SOLVER             : Gravity solver
 //                                   POISSON_AND_GRAVITY_SOLVER : Poisson + Gravity solvers
 //                                   GRACKLE_SOLVER             : Grackle solver
-//                                   DT_SOLVER_HYDRO_CFL        : dt solver for HYDRO CFL
-//                                   DT_SOLVER_HYDRO_GRAVITY    : dt solver for HYDRO gravity
-//                                   DT_SOLVER_ELBDM_GRAVITY    : dt solver for ELBDM gravity
+//                                   DT_FLU_SOLVER              : dt solver for fluid
+//                                   DT_GRA_SOLVER              : dt solver for gravity
 //                lv           : Target refinement level
 //                TimeNew      : Target physical time to reach
 //                TimeOld      : Physical time before update
@@ -106,20 +105,10 @@ void InvokeSolver( const Solver_t TSolver, const int lv, const double TimeNew, c
 #     endif
 
 //    currently we use FLU_GPU_NPGROUP and POT_GPU_NPGROUP for the dt solvers
-#     if   ( MODEL == HYDRO )
-      case DT_SOLVER_HYDRO_CFL:        NPG_Max = FLU_GPU_NPGROUP;    break;
+      case DT_FLU_SOLVER:              NPG_Max = FLU_GPU_NPGROUP;    break;
 #     ifdef GRAVITY
-//    case DT_SOLVER_HYDRO_GRAVITY:    NPG_Max = POT_GPU_NPGROUP;    break;
+      case DT_GRA_SOLVER:              NPG_Max = POT_GPU_NPGROUP;    break;
 #     endif
-#     elif ( MODEL == MHD )
-#       warning : WAIT MHD !!!
-#     elif ( MODEL == ELBDM )
-#     ifdef GRAVITY
-      case DT_SOLVER_ELBDM_GRAVITY:    NPG_Max = POT_GPU_NPGROUP;    break;
-#     endif
-#     else
-#       error : ERROR : unsupported MODEL !!
-#     endif // MODEL
 
       default :
          Aux_Error( ERROR_INFO, "incorrect parameter %s = %d !!\n", "TSolver", TSolver );
@@ -264,9 +253,8 @@ void InvokeSolver( const Solver_t TSolver, const int lv, const double TimeNew, c
 //                                GRAVITY_SOLVER             : Gravity solver
 //                                POISSON_AND_GRAVITY_SOLVER : Poisson + Gravity solvers
 //                                GRACKLE_SOLVER             : Grackle solver
-//                                DT_SOLVER_HYDRO_CFL        : dt solver for HYDRO CFL
-//                                DT_SOLVER_HYDRO_GRAVITY    : dt solver for HYDRO gravity
-//                                DT_SOLVER_ELBDM_GRAVITY    : dt solver for ELBDM gravity
+//                                DT_FLU_SOLVER              : dt solver for fluid
+//                                DT_GRA_SOLVER              : dt solver for gravity
 //                lv        : Target refinement level
 //                TimeNew   : Target physical time to reach
 //                TimeOld   : Physical time before update
@@ -359,32 +347,15 @@ void Preparation_Step( const Solver_t TSolver, const int lv, const double TimeNe
       break;
 #     endif
 
-#     if   ( MODEL == HYDRO )
-      case DT_SOLVER_HYDRO_CFL:
+      case DT_FLU_SOLVER:
          dt_Prepare_Flu( lv, h_Flu_Array_T[ArrayID], NPG, PID0_List );
       break;
 
 #     ifdef GRAVITY
-      /*
-      case DT_SOLVER_HYDRO_GRAVITY:
-         dt_Prepare_Pot( lv, h_Pot_Array_T[ArrayID], NPG, PID0_List );
-      break;
-      */
-#     endif
-
-#     elif ( MODEL == MHD )
-#        warning : WAIT MHD !!!
-
-#     elif ( MODEL == ELBDM )
-#     ifdef GRAVITY
-      case DT_SOLVER_ELBDM_GRAVITY:
-         dt_Prepare_Pot( lv, h_Pot_Array_T[ArrayID], NPG, PID0_List );
+      case DT_GRA_SOLVER:
+//       dt_Prepare_Pot( lv, h_Pot_Array_T[ArrayID], NPG, PID0_List );
       break;
 #     endif
-
-#     else
-#        error : ERROR : unsupported MODEL !!
-#     endif // MODEL
 
       default :
          Aux_Error( ERROR_INFO, "incorrect parameter %s = %d !!\n", "TSolver", TSolver );
@@ -406,9 +377,8 @@ void Preparation_Step( const Solver_t TSolver, const int lv, const double TimeNe
 //                                POISSON_SOLVER             : Poisson solver
 //                                GRAVITY_SOLVER             : Gravity solver
 //                                POISSON_AND_GRAVITY_SOLVER : Poisson + Gravity solvers
-//                                DT_SOLVER_HYDRO_CFL        : dt solver for HYDRO CFL
-//                                DT_SOLVER_HYDRO_GRAVITY    : dt solver for HYDRO gravity
-//                                DT_SOLVER_ELBDM_GRAVITY    : dt solver for ELBDM gravity
+//                                DT_FLU_SOLVER              : dt solver for fluid
+//                                DT_GRA_SOLVER              : dt solver for gravity
 //                lv        : Target refinement level
 //                TimeNew   : Target physical time to reach (only useful for adding external potential)
 //                TimeOld   : Physical time before update   (only useful for adding external potential with UNSPLIT_GRAVITY)
@@ -607,7 +577,7 @@ void Solver( const Solver_t TSolver, const int lv, const double TimeNew, const d
 
 
 #     if   ( MODEL == HYDRO )
-      case DT_SOLVER_HYDRO_CFL:
+      case DT_FLU_SOLVER:
 #        ifdef GPU
 #        else
          CPU_dtSolver( TSolver, h_dt_Array_T[ArrayID], h_Flu_Array_T[ArrayID], NULL, NPG, dh,
@@ -616,7 +586,7 @@ void Solver( const Solver_t TSolver, const int lv, const double TimeNew, const d
       break;
 
 #     ifdef GRAVITY
-//    case DT_SOLVER_HYDRO_GRAVITY:
+      case DT_GRA_SOLVER:
       break;
 #     endif
 
@@ -625,7 +595,7 @@ void Solver( const Solver_t TSolver, const int lv, const double TimeNew, const d
 
 #     elif ( MODEL == ELBDM )
 #     ifdef GRAVITY
-      case DT_SOLVER_ELBDM_GRAVITY:
+      case DT_GRA_SOLVER:
       break;
 #     endif
 
@@ -655,9 +625,8 @@ void Solver( const Solver_t TSolver, const int lv, const double TimeNew, const d
 //                                 GRAVITY_SOLVER             : Gravity solver
 //                                 POISSON_AND_GRAVITY_SOLVER : Poisson + Gravity solvers
 //                                 GRACKLE_SOLVER             : Grackle solver
-//                                 DT_SOLVER_HYDRO_CFL        : dt solver for HYDRO CFL
-//                                 DT_SOLVER_HYDRO_GRAVITY    : dt solver for HYDRO gravity
-//                                 DT_SOLVER_ELBDM_GRAVITY    : dt solver for ELBDM gravity
+//                                 DT_FLU_SOLVER              : dt solver for fluid
+//                                 DT_GRA_SOLVER              : dt solver for gravity
 //                lv         : Target refinement level
 //                SaveSg_Flu : Sandglass to store the updated fluid data (for both the fluid, gravity, and Grackle solvers)
 //                SaveSg_Pot : Sandglass to store the updated potential data (for the Poisson solver)
@@ -707,32 +676,15 @@ void Closing_Step( const Solver_t TSolver, const int lv, const int SaveSg_Flu, c
       break;
 #     endif
 
-#     if   ( MODEL == HYDRO )
-      case DT_SOLVER_HYDRO_CFL:
+      case DT_FLU_SOLVER:
          dt_Close( h_dt_Array_T[ArrayID], NPG );
       break;
 
 #     ifdef GRAVITY
-      /*
-      case DT_SOLVER_HYDRO_GRAVITY:
-         dt_Close( h_dt_Array_T[ArrayID], NPG );
-      break;
-      */
-#     endif
-
-#     elif ( MODEL == MHD )
-#        warning : WAIT MHD !!!
-
-#     elif ( MODEL == ELBDM )
-#     ifdef GRAVITY
-      case DT_SOLVER_ELBDM_GRAVITY:
+      case DT_GRA_SOLVER:
          dt_Close( h_dt_Array_T[ArrayID], NPG );
       break;
 #     endif
-
-#     else
-#        error : ERROR : unsupported MODEL !!
-#     endif // MODEL
 
       default:
          Aux_Error( ERROR_INFO, "incorrect parameter %s = %d !!\n", "TSolver", TSolver );

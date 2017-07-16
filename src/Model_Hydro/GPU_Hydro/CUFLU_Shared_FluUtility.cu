@@ -22,6 +22,8 @@ static __device__ real CUFLU_CheckMinPresInEngy( const FluVar ConVar, const real
 #ifdef CHECK_NEGATIVE_IN_FLUID
 static __device__ bool CUFLU_CheckNegative( const real Input );
 #endif
+static __device__ real CUFLU_GetPressure( const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy,
+                                          const real Gamma_m1, const bool CheckMinPres, const real MinPres );
 #if ( NCOMP_PASSIVE > 0 )
 static __device__ void CUFLU_NormalizePassive( const real GasDens, real Passive[], const int NNorm, const int NormIdx[] );
 #endif
@@ -358,6 +360,41 @@ __device__ bool CUFLU_CheckNegative( const real Input )
 
 } // FUNCTION : CUFLU_CheckNegative
 #endif
+
+
+
+//-------------------------------------------------------------------------------------------------------
+// Function    :  CUFLU_GetPressure
+// Description :  Evaluate the fluid pressure
+//
+// Note        :  1. Currently only work with the adiabatic EOS
+//                2. One must input conserved variables instead of primitive variables
+//
+// Parameter   :  Dens         : Mass density
+//                MomX/Y/Z     : Momentum density
+//                Engy         : Energy density
+//                Gamma_m1     : Gamma - 1, where Gamma is the adiabatic index
+//                CheckMinPres : Return CUFLU_CheckMinPres()
+//                               --> In some cases we actually want to check if pressure becomes unphysical,
+//                                   for which we don't want to enable this option
+//                MinPres      : Minimum allowed pressure
+//
+// Return      :  Pressure
+//-------------------------------------------------------------------------------------------------------
+__device__ real CUFLU_GetPressure( const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy,
+                                   const real Gamma_m1, const bool CheckMinPres, const real MinPres )
+{
+
+   real _Dens, Pres;
+
+  _Dens = (real)1.0 / Dens;
+   Pres = Gamma_m1*(  Engy - (real)0.5*_Dens*( SQR(MomX) + SQR(MomY) + SQR(MomZ) )  );
+
+   if ( CheckMinPres )   Pres = CUFLU_CheckMinPres( Pres, MinPres );
+
+   return Pres;
+
+} // FUNCTION : CUFLU_GetPressure
 
 
 

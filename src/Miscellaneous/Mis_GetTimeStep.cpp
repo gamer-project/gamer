@@ -59,7 +59,7 @@ double Mis_GetTimeStep( const int lv )
    double dTime1;
 
 #  if   ( MODEL == HYDRO )
-   dTime1 = dTime_dt * dt_InvokeSolver( DT_SOLVER_HYDRO_CFL, lv );
+   dTime1 = dTime_dt * dt_InvokeSolver( DT_FLU_SOLVER, lv );
 
 #  elif ( MODEL == MHD )
 #  warning : WAIT MHD !!!
