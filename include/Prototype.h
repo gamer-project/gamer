@@ -183,7 +183,7 @@ template <typename T> int   Mis_Matching_char( const int N, const T Array[], con
 template <typename T> int   Mis_Matching_int( const int N, const T Array[], const int M, const T Key[], int Match[] );
 template <typename T> bool  Mis_CompareRealValue( const T Input1, const T Input2, const char *comment, const bool Verbose );
 ulong  Mis_Idx3D2Idx1D( const int Size[], const int Idx3D[] );
-double Mis_GetTimeStep( const int lv );
+double Mis_GetTimeStep( const int lv, const double dTime_SyncFaLv );
 double Mis_dTime2dt( const double Time_In, const double dTime_In );
 void   Mis_GetTotalPatchNumber( const int lv );
 double Mis_Scale2PhySize( const int Scale );

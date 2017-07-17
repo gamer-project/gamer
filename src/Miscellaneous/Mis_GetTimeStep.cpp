@@ -19,11 +19,13 @@ extern double (*Mis_GetTimeStep_User_Ptr)( const double dTime_dt );
 //                2. The function pointer "Mis_GetTimeStep_User_Ptr" points to "Mis_GetTimeStep_User()" by default
 //                   but may be overwritten by various test problem initializers
 //
-// Parameter   :  lv : Target refinement level
+// Parameter   :  lv             : Target refinement level
+//                dTime_SyncFaLv : dt to synchronize lv and lv-1
+//                                 --> Only used for OPT__DT_LEVEL == DT_LEVEL_FLEXIBLE
 //
 // Return      :  dTime_min
 //-------------------------------------------------------------------------------------------------------
-double Mis_GetTimeStep( const int lv )
+double Mis_GetTimeStep( const int lv, const double dTime_SyncFaLv )
 {
 
    const char FileName[] = "Record__TimeStep";
@@ -47,7 +49,7 @@ double Mis_GetTimeStep( const int lv )
 // =============================================================================================================
    double dTime_dt;  // first derivative of dTime over dt
 #  ifdef COMOVING
-   dTime_dt = pow(  OMEGA_M0*pow( Time[0], 3.0 ) + (1.0-OMEGA_M0)*pow( Time[0], 6.0 ),  0.5  );
+   dTime_dt = pow(  OMEGA_M0*pow( Time[lv], 3.0 ) + (1.0-OMEGA_M0)*pow( Time[lv], 6.0 ),  0.5  );
 #  else
    dTime_dt = 1.0;
 #  endif
@@ -70,7 +72,6 @@ double Mis_GetTimeStep( const int lv )
 #  else
 #  error : ERROR : unsupported MODEL !!
 #  endif // MODEL
-
 
 
 // 1.2 CRITERION TWO : gravitation acceleration condition
@@ -98,15 +99,13 @@ double Mis_GetTimeStep( const int lv )
    */
 
 
-
 // 1.3 CRITERION THREE : maximum allowed variation of the expansion factor
 // =============================================================================================================
 #  ifdef COMOVING
    double dTime3;
 
-   dTime3 = DT__MAX_DELTA_A * Time[0];
+   dTime3 = DT__MAX_DELTA_A * Time[lv];
 #  endif
-
 
 
 // 1.4 CRITERION FOUR : fit the time of the next data dump
@@ -125,29 +124,27 @@ double Mis_GetTimeStep( const int lv )
 
    if ( DumpByTime )
    {
-      dTime4 = DumpTime - Time[0];
+      dTime4 = DumpTime - Time[lv];
 
       if ( dTime4 <= 0.0 )
       {
          Aux_Message( stderr, "ERROR : dTime4 (%20.14e) <= 0.0, something is wrong !!\n", dTime4 );
-         Aux_Message( stderr, "        (DumpTime %20.14e, Time %20.14e)\n", DumpTime, Time[0] );
+         Aux_Message( stderr, "        (DumpTime %20.14e, Time %20.14e, lv %d)\n", DumpTime, Time[lv], lv );
          MPI_Exit();
       }
    }
 
 
-
 // 1.5 CRITERION FIVE : fit the program end time
 // =============================================================================================================
-   const double dTime5 = END_T - Time[0];
+   const double dTime5 = END_T - Time[lv];
 
    if ( dTime5 <= 0.0 )
    {
       Aux_Message( stderr, "ERROR : dTime5 (%20.14e) <= 0.0, something is wrong !!\n", dTime5 );
-      Aux_Message( stderr, "        (END_T %20.14e, Time %20.14e)\n", END_T, Time[0] );
+      Aux_Message( stderr, "        (END_T %20.14e, Time %20.14e, lv %d)\n", END_T, Time[lv], lv );
       MPI_Exit();
    }
-
 
 
 // 1.6 CRITERION SIX : user-defined criteria
@@ -155,7 +152,6 @@ double Mis_GetTimeStep( const int lv )
    double dTime6 = NULL_REAL;
 
    if ( OPT__DT_USER  &&  Mis_GetTimeStep_User_Ptr != NULL )   dTime6 = dTime_dt * Mis_GetTimeStep_User_Ptr( dTime_dt );
-
 
 
 // 1.7 CRITERION SEVEN : phase rotation condition ##ELBDM ONLY##
@@ -187,45 +183,59 @@ double Mis_GetTimeStep( const int lv )
 
 // 2. get the minimum time-step from all criteria
 // =============================================================================================================
+// 2.1 loop over all dt criteria
    double dTime_min = dTime1;
 
    /*
 #  ifdef GRAVITY
-   dTime_min= fmin( dTime_min, dTime2 );
+   dTime_min = fmin( dTime_min, dTime2 );
 #  endif
    */
 
 #  ifdef COMOVING
-   dTime_min= fmin( dTime_min, dTime3 );
+   dTime_min = fmin( dTime_min, dTime3 );
 #  endif
 
    if ( DumpByTime )
-   dTime_min= fmin( dTime_min, dTime4 );
+   dTime_min = fmin( dTime_min, dTime4 );
 
-   dTime_min= fmin( dTime_min, dTime5 );
+   dTime_min = fmin( dTime_min, dTime5 );
 
    if ( OPT__DT_USER  &&  Mis_GetTimeStep_User_Ptr != NULL )
-   dTime_min= fmin( dTime_min, dTime6 );
+   dTime_min = fmin( dTime_min, dTime6 );
 
 #  if ( MODEL == ELBDM )
    if ( ELBDM_PhaseDt )
-   dTime_min= fmin( dTime_min, dTime7 );
+   dTime_min = fmin( dTime_min, dTime7 );
 #  endif
 
    /*
 #  ifdef PARTICLE
-   dTime_min= fmin( dTime_min, dTime8[0] );
+   dTime_min = fmin( dTime_min, dTime8[0] );
 
    if ( DT__PARACC > 0.0 )
-   dTime_min= fmin( dTime_min, dTime8[1] );
+   dTime_min = fmin( dTime_min, dTime8[1] );
 #  endif
    */
+
+
+// 2.2 synchronize with the parent level
+   if ( OPT__DT_LEVEL == DT_LEVEL_FLEXIBLE  &&  lv > 0 )
+   {
+      if ( dTime_SyncFaLv <= 0.0 )
+      {
+         Aux_Message( stderr, "ERROR : dTime_SyncFaLv (%20.14e) <= 0.0, something is wrong !!\n", dTime_SyncFaLv );
+         MPI_Exit();
+      }
+
+      if ( (1.0+DT__FLEXIBLE_RANGE)*dTime_min >= dTime_SyncFaLv )    dTime_min = dTime_SyncFaLv;
+   }
 
 
 
 // 3. estimate the evolution time-step (dt)
 // =============================================================================================================
-   const double dt_min = Mis_dTime2dt( Time[0], dTime_min );
+   const double dt_min = Mis_dTime2dt( Time[lv], dTime_min );
 
 
 
@@ -235,7 +245,7 @@ double Mis_GetTimeStep( const int lv )
    {
       FILE *File = fopen( FileName, "a" );
 
-      fprintf( File, "Time = %12.6e, Step = %6ld -> %6ld, dTime/dt = %12.6e\n", Time[0], Step, Step+1, dTime_dt );
+      fprintf( File, "Time = %12.6e, Step = %6ld -> %6ld, dTime/dt = %12.6e, lv %d\n", Time[lv], Step, Step+1, dTime_dt, lv );
       fprintf( File, "------------------------------------------------------------------\n" );
 
 #     if   ( MODEL == HYDRO )
@@ -311,6 +321,9 @@ double Mis_GetTimeStep( const int lv )
 
       if ( OPT__DT_USER  &&  Mis_GetTimeStep_User_Ptr != NULL )
       fprintf( File, "User      : dt = %12.6e, dTime = %12.6e\n", dTime6/dTime_dt, dTime6 );
+
+      if ( OPT__DT_LEVEL == DT_LEVEL_FLEXIBLE  &&  lv > 0 )
+      fprintf( File, "SyncFaLv  : dt = %12.6e, dTime = %12.6e\n", dTime_SyncFaLv/dTime_dt, dTime_SyncFaLv );
 
       fprintf( File, "Minimum   : dt = %12.6e, dTime = %12.6e\n", dt_min, dTime_min );
       fprintf( File, "\n" );

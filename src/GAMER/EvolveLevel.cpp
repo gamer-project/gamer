@@ -70,7 +70,7 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
                dTime_SubStep = HUGE_NUMBER;
 
                for (int TLv=0; TLv<NLEVEL; TLv++)
-               dTime_SubStep = fmin( Mis_GetTimeStep(TLv), dTime_SubStep );
+               dTime_SubStep = fmin( Mis_GetTimeStep(TLv,NULL_REAL), dTime_SubStep );
             }
             else
                dTime_SubStep = dTime_FaLv;
@@ -81,14 +81,14 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
                dTime_SubStep = HUGE_NUMBER;
 
                for (int TLv=0; TLv<NLEVEL; TLv++)
-               dTime_SubStep = fmin( Mis_GetTimeStep(TLv)*(1<<TLv), dTime_SubStep );
+               dTime_SubStep = fmin( Mis_GetTimeStep(TLv,NULL_REAL)*(1<<TLv), dTime_SubStep );
             }
             else
                dTime_SubStep = 0.5*dTime_FaLv;
          break;
 
          case ( DT_LEVEL_FLEXIBLE ):
-               dTime_SubStep = Mis_GetTimeStep( lv );
+               dTime_SubStep = Mis_GetTimeStep( lv, dTime_FaLv-dTime_SoFar );
          break;
 
          default:

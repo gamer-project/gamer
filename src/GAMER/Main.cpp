@@ -41,7 +41,7 @@ int                  Flu_ParaBuf;
 
 char                *PassiveFieldName_Grid[NCOMP_PASSIVE];
 
-double               BOX_SIZE, DT__FLUID, DT__FLUID_INIT, END_T, OUTPUT_DT;
+double               BOX_SIZE, DT__FLUID, DT__FLUID_INIT, END_T, OUTPUT_DT, DT__FLEXIBLE_RANGE;
 long                 END_STEP;
 int                  NX0_TOT[3], OUTPUT_STEP, REGRID_COUNT, FLU_GPU_NPGROUP, OMP_NTHREAD;
 int                  MPI_NRank, MPI_NRank_X[3], GPU_NSTREAM, FLAG_BUFFER_SIZE, MAX_LEVEL;

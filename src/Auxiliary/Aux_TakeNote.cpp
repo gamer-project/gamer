@@ -625,6 +625,7 @@ void Aux_TakeNote()
 #     ifdef COMOVING
       fprintf( Note, "DT__MAX_DELTA_A           %13.7e\n",  DT__MAX_DELTA_A         );
 #     endif
+      fprintf( Note, "DT__FLEXIBLE_RANGE        %13.7e\n",  DT__FLEXIBLE_RANGE      );
       fprintf( Note, "OPT__DT_USER              %d\n",      OPT__DT_USER            );
       fprintf( Note, "OPT__DT_LEVEL             %d\n",      OPT__DT_LEVEL           );
       fprintf( Note, "OPT__RECORD_DT            %d\n",      OPT__RECORD_DT          );
