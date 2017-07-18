@@ -402,7 +402,14 @@ void Aux_TakeNote()
 #     else
       fprintf( Note, "DT_FLU_USE_SHUFFLE        OFF\n" );
 #     endif
+#     ifdef GRAVITY
+#     ifdef DT_GRA_USE_SHUFFLE
+      fprintf( Note, "DT_GRA_USE_SHUFFLE        ON\n" );
+#     else
+      fprintf( Note, "DT_GRA_USE_SHUFFLE        OFF\n" );
 #     endif
+#     endif
+#     endif // #ifdef GPU
 
 #     ifdef GRAVITY
       fprintf( Note, "EXT_POT_NAUX_MAX          %d\n",      EXT_POT_NAUX_MAX        );
@@ -471,6 +478,9 @@ void Aux_TakeNote()
       fprintf( Note, "#define GRA_BLOCK_SIZE_Z  %d\n",      GRA_BLOCK_SIZE_Z        );
 #     endif // #ifdef GRAVITY
       fprintf( Note, "#define DT_FLU_BLOCK_SIZE %d\n",      DT_FLU_BLOCK_SIZE       );
+#     ifdef GRAVITY
+      fprintf( Note, "#define DT_GRA_BLOCK_SIZE %d\n",      DT_GRA_BLOCK_SIZE       );
+#     endif
 #     endif // #ifdef GPU
 #     ifdef PARTICLE
       fprintf( Note, "#define PAR_NVAR          %d\n",      PAR_NVAR                );

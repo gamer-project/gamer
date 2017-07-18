@@ -21,6 +21,7 @@ void End_MemFree_Fluid()
       if ( h_Flu_Array_F_Out[t] != NULL )    delete [] h_Flu_Array_F_Out[t];
       if ( h_Flux_Array     [t] != NULL )    delete [] h_Flux_Array     [t];
 #     ifdef UNSPLIT_GRAVITY
+      if ( h_Pot_Array_USG_F[t] != NULL )    delete [] h_Pot_Array_USG_F[t];
       if ( h_Corner_Array_F [t] != NULL )    delete [] h_Corner_Array_F [t];
 #     endif
       if ( h_dt_Array_T     [t] != NULL )    delete [] h_dt_Array_T     [t];
@@ -33,6 +34,7 @@ void End_MemFree_Fluid()
       h_Flu_Array_F_Out[t] = NULL;
       h_Flux_Array     [t] = NULL;
 #     ifdef UNSPLIT_GRAVITY
+      h_Pot_Array_USG_F[t] = NULL;
       h_Corner_Array_F [t] = NULL;
 #     endif
       h_dt_Array_T     [t] = NULL;

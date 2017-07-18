@@ -25,6 +25,9 @@ __global__ void CUFLU_dtSolver_HydroCFL( real g_dt_Array[], const real g_Flu_Arr
 // device pointers
 extern real *d_dt_Array_T;
 extern real (*d_Flu_Array_T)[NCOMP_FLUID][ CUBE(PS1) ];
+#ifdef GRAVITY
+extern real (*d_Pot_Array_T)[ CUBE(GRA_NXT) ];
+#endif
 
 extern cudaStream_t *Stream;
 

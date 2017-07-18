@@ -16,18 +16,18 @@ EXECUTABLE := gamer
 SIMU_OPTION += -DMODEL=HYDRO
 
 # self-gravity
-#SIMU_OPTION += -DGRAVITY
+SIMU_OPTION += -DGRAVITY
 
 # Poisson solver: SOR/MG (successive-overrelaxation/multigrid)
-#SIMU_OPTION += -DPOT_SCHEME=SOR
+SIMU_OPTION += -DPOT_SCHEME=SOR
 
 # store GRA_GHOST_SIZE ghost-zone potential for each patch on each side (in patch->pot_ext)
 # --> currently only for improving accuracy for particles around the patch boundaries (by Par->ImproveAcc)
-#SIMU_OPTION += -DSTORE_POT_GHOST
+SIMU_OPTION += -DSTORE_POT_GHOST
 
 # use unsplitting method to couple gravity to the target model (for HYDRO and MHD only; ELBDM is not supported yet)
 # --> must be off if GRAVITY is off
-#SIMU_OPTION += -DUNSPLIT_GRAVITY
+SIMU_OPTION += -DUNSPLIT_GRAVITY
 
 # comoving frame
 #SIMU_OPTION += -DCOMOVING
@@ -56,7 +56,7 @@ SIMU_OPTION += -DFLU_SCHEME=CTU
 SIMU_OPTION += -DLR_SCHEME=PPM
 
 # Riemann solver: EXACT/ROE/HLLE/HLLC ##all are useless in RTVD, HLLE/HLLC are useless in WAF##
-SIMU_OPTION += -DRSOLVER=ROE
+SIMU_OPTION += -DRSOLVER=HLLC
 
 # dual energy formalism: DE_ENPY/DE_EINT (evolve entropy or internal energy; DE_EINT is not supported yet) ##useless in RTVD/WAF##
 SIMU_OPTION += -DDUAL_ENERGY=DE_ENPY

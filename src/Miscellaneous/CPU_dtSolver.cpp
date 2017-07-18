@@ -56,7 +56,7 @@ void CPU_dtSolver( const Solver_t TSolver, real dt_Array[],
 
 #     ifdef GRAVITY
       case DT_GRA_SOLVER:
-         CPU_dtSolver_HydroGravity( dt_Array, Pot_Array, NPatchGroup, dh, Safety, NewtonG );
+//       CPU_dtSolver_HydroGravity( dt_Array, Pot_Array, NPatchGroup, dh, Safety, NewtonG );
       break;
 #     endif
 
