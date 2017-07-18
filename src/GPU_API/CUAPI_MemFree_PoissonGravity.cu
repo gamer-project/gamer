@@ -18,6 +18,7 @@ extern double (*d_Corner_Array_G)[3];
 #ifdef DUAL_ENERGY
 extern char (*d_DE_Array_G     )[ PS1*PS1*PS1 ];
 #endif
+extern real (*d_Pot_Array_T    )[ CUBE(GRA_NXT) ];
 
 
 
@@ -45,6 +46,7 @@ void CUAPI_MemFree_PoissonGravity()
 #  ifdef DUAL_ENERGY
    if ( d_DE_Array_G      != NULL )    CUDA_CHECK_ERROR(  cudaFree( d_DE_Array_G      )  );
 #  endif
+   if ( d_Pot_Array_T     != NULL )    CUDA_CHECK_ERROR(  cudaFree( d_Pot_Array_T     )  );
 
    d_Rho_Array_P     = NULL;
    d_Pot_Array_P_In  = NULL;
@@ -59,6 +61,7 @@ void CUAPI_MemFree_PoissonGravity()
 #  ifdef DUAL_ENERGY
    d_DE_Array_G      = NULL;
 #  endif
+   d_Pot_Array_T     = NULL;
 
 
 // free the host memory allocated by CUDA
@@ -77,6 +80,7 @@ void CUAPI_MemFree_PoissonGravity()
 #     ifdef DUAL_ENERGY
       if ( h_DE_Array_G     [t] != NULL )    CUDA_CHECK_ERROR(  cudaFreeHost( h_DE_Array_G     [t] )  );
 #     endif
+      if ( h_Pot_Array_T    [t] != NULL )    CUDA_CHECK_ERROR(  cudaFreeHost( h_Pot_Array_T    [t] )  );
 
       h_Rho_Array_P    [t] = NULL;
       h_Pot_Array_P_In [t] = NULL;
@@ -91,6 +95,7 @@ void CUAPI_MemFree_PoissonGravity()
 #     ifdef DUAL_ENERGY
       h_DE_Array_G     [t] = NULL;
 #     endif
+      h_Pot_Array_T    [t] = NULL;
    } // for (int t=0; t<2; t++)
 
 } // FUNCTION : CUAPI_MemFree_PoissonGravity

@@ -156,6 +156,15 @@
 #define GRA_BLOCK_SIZE_Z            4
 
 
+// dt solver for gravity
+#define DT_GRA_BLOCK_SIZE           512
+
+// use shuffle reduction in the KEPLER and later GPUs
+#if ( GPU_ARCH == KEPLER  ||  GPU_ARCH == MAXWELL  ||  GPU_ARCH == PASCAL )
+#   define DT_GRA_USE_SHUFFLE
+#endif
+
+
 // maximum size of the arrays ExtPot_AuxArray and ExtAcc_AuxArray
 #define EXT_POT_NAUX_MAX            10
 #define EXT_ACC_NAUX_MAX            10
