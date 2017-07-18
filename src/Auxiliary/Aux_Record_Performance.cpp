@@ -45,23 +45,19 @@ void Aux_Record_Performance( const double ElapsedTime )
 
          FILE *File_Record = fopen( FileName, "a" );
 
-#        ifdef GPU
          fprintf( File_Record, "#%13s%14s%3s%14s%14s%14s%14s%14s%14s",
-                  "Time", "Step", "", "dt", "NCell", "NUpdate", "ElapsedTime", "Perf_Overall", "Perf_per_GPU" );
+                  "Time", "Step", "", "dt", "NCell", "NUpdate_Cell", "ElapsedTime", "Perf_Overall", "Perf_PerRank" );
 #        ifdef PARTICLE
          fprintf( File_Record, "%14s%14s%17s%17s",
-                  "NParticle", "ParNUpdate", "ParPerf_Overall", "ParPerf_per_GPU" );
+                  "NParticle", "NUpdate_Par", "ParPerf_Overall", "ParPerf_PerRank" );
 #        endif
 
-#        else // #ifdef GPU
-
-         fprintf( File_Record, "#%13s%14s%3s%14s%14s%14s%14s%14s%14s",
-                  "Time", "Step", "", "dt", "NCell", "NUpdate", "ElapsedTime", "Perf_Overall", "Perf_per_CPU" );
-#        ifdef PARTICLE
-         fprintf( File_Record, "%14s%14s%17s%17s",
-                  "NParticle", "ParNUpdate", "ParPerf_Overall", "ParPerf_per_CPU" );
-#        endif
-#        endif // #ifdef GPU ... else ...
+         for (int lv=0; lv<NLEVEL; lv++)
+         {
+            char tmp[MAX_STRING];
+            sprintf( tmp, "NUpdate_Lv%d", lv );
+            fprintf( File_Record, "%14s", tmp );
+         }
 
          fprintf( File_Record, "\n" );
          fclose( File_Record );
@@ -69,48 +65,55 @@ void Aux_Record_Performance( const double ElapsedTime )
 
 
 //    count the total number of cells, cell updates, and particle updates
-      long NCell=0, NUpdate=0, NCellThisLevel;
+      long NCell=0, NUpdateCell=0, NCellThisLevel;
 #     ifdef PARTICLE
-      long ParNUpdate=0;
+      long NUpdatePar=0;
 #     endif
 
       for (int lv=0; lv<NLEVEL; lv++)
       {
          NCellThisLevel = (long)NPatchTotal[lv]*CUBE( PATCH_SIZE );
          NCell         += NCellThisLevel;
-         NUpdate       += NCellThisLevel     *amr->NUpdateLv[lv];
+         NUpdateCell   += NCellThisLevel     *amr->NUpdateLv[lv];
 #        ifdef PARTICLE
-         ParNUpdate    += NPar_Lv_AllRank[lv]*amr->NUpdateLv[lv];
+         NUpdatePar    += NPar_Lv_AllRank[lv]*amr->NUpdateLv[lv];
 #        endif
       }
 
 
 //    record performance
-      const double NUpdate_PerSec            = NUpdate/ElapsedTime;
+      const double NUpdateCell_PerSec         = NUpdateCell/ElapsedTime;
 #     ifdef GPU
-      const double NUpdate_PerSec_PerRank    = NUpdate_PerSec/MPI_NRank;
+      const double NUpdateCell_PerSec_PerRank = NUpdateCell_PerSec/MPI_NRank;
 #     else
-      const double NUpdate_PerSec_PerRank    = NUpdate_PerSec/MPI_NRank/OMP_NTHREAD;
+      const double NUpdateCell_PerSec_PerRank = NUpdateCell_PerSec/MPI_NRank/OMP_NTHREAD;
 #     endif
 
 #     ifdef PARTICLE
-      const double ParNUpdate_PerSec         = ParNUpdate/ElapsedTime;
+      const double NUpdatePar_PerSec          = NUpdatePar/ElapsedTime;
 #     ifdef GPU
-      const double ParNUpdate_PerSec_PerRank = ParNUpdate_PerSec/MPI_NRank;
+      const double NUpdatePar_PerSec_PerRank  = NUpdatePar_PerSec/MPI_NRank;
 #     else
-      const double ParNUpdate_PerSec_PerRank = ParNUpdate_PerSec/MPI_NRank/OMP_NTHREAD;
+      const double NUpdatePar_PerSec_PerRank  = NUpdatePar_PerSec/MPI_NRank/OMP_NTHREAD;
 #     endif
 #     endif
 
       FILE *File_Record = fopen( FileName, "a" );
+
       fprintf( File_Record, "%14.7e%14ld%3s%14.7e%14.2e%14.2e%14.2e%14.2e%14.2e",
-               Time[0], Step, "", dTime_Base, (double)NCell, (double)NUpdate, ElapsedTime, NUpdate_PerSec,
-               NUpdate_PerSec_PerRank );
+               Time[0], Step, "", dTime_Base, (double)NCell, (double)NUpdateCell, ElapsedTime, NUpdateCell_PerSec,
+               NUpdateCell_PerSec_PerRank );
+
 #     ifdef PARTICLE
       fprintf( File_Record, "%14.2e%14.2e%17.2e%17.2e",
-               (double)amr->Par->NPar_Active_AllRank, (double)ParNUpdate, ParNUpdate_PerSec, ParNUpdate_PerSec_PerRank );
+               (double)amr->Par->NPar_Active_AllRank, (double)NUpdatePar, NUpdatePar_PerSec, NUpdatePar_PerSec_PerRank );
 #     endif
+
+      for (int lv=0; lv<NLEVEL; lv++)
+      fprintf( File_Record, "%14ld", amr->NUpdateLv[lv] );
+
       fprintf( File_Record, "\n" );
+
       fclose( File_Record );
 
    } // if ( MPI_Rank == 0 )
