@@ -49,6 +49,7 @@ extern Timer_t *Timer_Poi_PrePot_F[NLEVEL];
 //                               --> For the Fluid, Gravity, and Grackle solvers, this function updates physical time from
 //                                   TimeOld to TimeNew
 //                               --> For the Poisson solver, this function calculates potential at **TimeNew**
+//                               --> For the dt solver, this function estimates dt at **TimeNew**
 //                dt           : Time interval to advance solution for the fluid and gravity solvers
 //                               (can be different from TimeNew-TimeOld if COMOVING is on)
 //                Poi_Coeff    : Coefficient in front of the RHS in the Poisson eq.
@@ -353,7 +354,10 @@ void Preparation_Step( const Solver_t TSolver, const int lv, const double TimeNe
 
 #     ifdef GRAVITY
       case DT_GRA_SOLVER:
-//       dt_Prepare_Pot( lv, h_Pot_Array_T[ArrayID], NPG, PID0_List );
+         dt_Prepare_Pot( lv, h_Pot_Array_T[ArrayID], NPG, PID0_List, TimeNew );
+
+         if ( OPT__GRAVITY_TYPE == GRAVITY_EXTERNAL  ||  OPT__GRAVITY_TYPE == GRAVITY_BOTH  ||  OPT__EXTERNAL_POT )
+         Gra_Prepare_Corner( lv, h_Corner_Array_G[ArrayID], NPG, PID0_List );
       break;
 #     endif
 
@@ -579,16 +583,27 @@ void Solver( const Solver_t TSolver, const int lv, const double TimeNew, const d
 #     if   ( MODEL == HYDRO )
       case DT_FLU_SOLVER:
 #        ifdef GPU
-         CUAPI_Asyn_dtSolver( TSolver, h_dt_Array_T[ArrayID], h_Flu_Array_T[ArrayID], NULL, NPG, dh,
-                              (Step==0)?DT__FLUID_INIT:DT__FLUID, GAMMA, MIN_PRES, NULL_REAL, GPU_NSTREAM );
+         CUAPI_Asyn_dtSolver( TSolver, h_dt_Array_T[ArrayID], h_Flu_Array_T[ArrayID], NULL, NULL,
+                              NPG, dh, (Step==0)?DT__FLUID_INIT:DT__FLUID, GAMMA, MIN_PRES,
+                              NULL_BOOL, GRAVITY_NONE, NULL_REAL,
+                              GPU_NSTREAM );
 #        else
-         CPU_dtSolver       ( TSolver, h_dt_Array_T[ArrayID], h_Flu_Array_T[ArrayID], NULL, NPG, dh,
-                              (Step==0)?DT__FLUID_INIT:DT__FLUID, GAMMA, MIN_PRES, NULL_REAL );
+         CPU_dtSolver       ( TSolver, h_dt_Array_T[ArrayID], h_Flu_Array_T[ArrayID], NULL, NULL,
+                              NPG, dh, (Step==0)?DT__FLUID_INIT:DT__FLUID, GAMMA, MIN_PRES,
+                              NULL_BOOL, GRAVITY_NONE, NULL_REAL );
 #        endif
       break;
 
 #     ifdef GRAVITY
       case DT_GRA_SOLVER:
+#        ifdef GPU
+         CUAPI_Asyn_dtSolver( TSolver, h_dt_Array_T[ArrayID], NULL, h_Pot_Array_T[ArrayID], h_Corner_Array_G[ArrayID],
+                              NPG, dh, DT__GRAVITY, NULL_REAL, NULL_REAL, OPT__GRA_P5_GRADIENT, OPT__GRAVITY_TYPE, TimeNew,
+                              GPU_NSTREAM );
+#        else
+         CPU_dtSolver       ( TSolver, h_dt_Array_T[ArrayID], NULL, h_Pot_Array_T[ArrayID], h_Corner_Array_G[ArrayID],
+                              NPG, dh, DT__GRAVITY, NULL_REAL, NULL_REAL, OPT__GRA_P5_GRADIENT, OPT__GRAVITY_TYPE, TimeNew );
+#        endif
       break;
 #     endif
 

@@ -48,26 +48,30 @@ extern cudaStream_t *Stream;
 //                2. Prefix "d" : for pointers pointing to the "Device" memory space
 //                   Prefix "h" : for pointers pointing to the "Host"   memory space
 //
-// Parameter   :  TSolver     : Target dt solver
-//                              --> DT_FLU_SOLVER : dt solver for fluid
-//                                  DT_GRA_SOLVER : dt solver for gravity
-//                h_dt_Array  : Host array to store the minimum dt in each target patch
-//                h_Flu_Array : Host array storing the prepared fluid     data of each target patch
-//                h_Pot_Array : Host array storing the prepared potential data of each target patch
-//                NPatchGroup : Number of patch groups evaluated simultaneously by GPU
-//                dh          : Grid size
-//                Safety      : dt safety factor
-//                Gamma       : Ratio of specific heats
-//                MinPres     : Minimum allowed pressure
-//                NewtonG     : Gravitational constant
-//                GPU_NStream : Number of CUDA streams for the asynchronous memory copy
+// Parameter   :  TSolver        : Target dt solver
+//                                 --> DT_FLU_SOLVER : dt solver for fluid
+//                                     DT_GRA_SOLVER : dt solver for gravity
+//                h_dt_Array     : Host array to store the minimum dt in each target patch
+//                h_Flu_Array    : Host array storing the prepared fluid     data of each target patch
+//                h_Pot_Array    : Host array storing the prepared potential data of each target patch
+//                h_Corner_Array : Array storing the physical corner coordinates of each patch
+//                NPatchGroup    : Number of patch groups evaluated simultaneously by GPU
+//                dh             : Grid size
+//                Safety         : dt safety factor
+//                Gamma          : Ratio of specific heats
+//                MinPres        : Minimum allowed pressure
+//                P5_Gradient    : Use 5-points stencil to evaluate the potential gradient
+//                GravityType    : Types of gravity --> self-gravity, external gravity, both
+//                Time           : Physical time for adding the external acceleration
+//                GPU_NStream    : Number of CUDA streams for the asynchronous memory copy
 //
 // Return      :  h_dt_Array
 //-------------------------------------------------------------------------------------------------------
-void CUAPI_Asyn_dtSolver( const Solver_t TSolver, real h_dt_Array[],
-                          const real h_Flu_Array[][NCOMP_FLUID][ CUBE(PS1) ], const real h_Pot_Array[][ CUBE(GRA_NXT) ],
+void CUAPI_Asyn_dtSolver( const Solver_t TSolver, real h_dt_Array[], const real h_Flu_Array[][NCOMP_FLUID][ CUBE(PS1) ],
+                          const real h_Pot_Array[][ CUBE(GRA_NXT) ], const double h_Corner_Array[][3],
                           const int NPatchGroup, const real dh, const real Safety, const real Gamma, const real MinPres,
-                          const real NewtonG, const int GPU_NStream )
+                          const bool P5_Gradient, const OptGravityType_t GravityType, const double Time,
+                          const int GPU_NStream )
 {
 
 // check
