@@ -76,28 +76,22 @@ double Mis_GetTimeStep( const int lv, const double dTime_SyncFaLv )
 
 // 1.2 CRITERION TWO : gravitational acceleration
 // =============================================================================================================
-   /*
 #  ifdef GRAVITY
-   int    MinDtLv_Gravity;
-
 #  if   ( MODEL == HYDRO )
-   real MinDtVar_Gravity;
-   Hydro_GetTimeStep_Gravity( dt2, dTime2, MinDtLv_Gravity, MinDtVar_Gravity, dt_dTime );
+   dTime[NdTime] = dTime_dt * dt_InvokeSolver( DT_GRA_SOLVER, lv );
    sprintf( dTime_Name[NdTime++], "%s", "Hydro_Acc" );
 
 #  elif ( MODEL == MHD )
 #  warning : WAIT MHD !!!
 
 #  elif ( MODEL == ELBDM )
-   real MinDtVar_Gravity[3];  // [0]: gravitational potential; [1]: lambda*rho (for self-interaction); [2] external potential
-   ELBDM_GetTimeStep_Gravity( dt2, dTime2, MinDtLv_Gravity, MinDtVar_Gravity, dt_dTime );
+// ELBDM_GetTimeStep_Gravity( dt2, dTime2, MinDtLv_Gravity, MinDtVar_Gravity, dt_dTime );
    sprintf( dTime_Name[NdTime++], "%s", "ELBDM_Pot" );
 
 #  else
 #  error : ERROR : unsupported MODEL !!
 #  endif // MODEL
-#  endif  // #ifdef GRAVITY
-   */
+#  endif // #ifdef GRAVITY
 
 
 // 1.3 CRITERION THREE : maximum allowed variation of the expansion factor
