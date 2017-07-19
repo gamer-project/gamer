@@ -86,7 +86,7 @@ __global__ void CUPOT_dtSolver_HydroGravity( real g_dt_Array[],
    const uint tz        = threadIdx.z;
    const uint ID        = __umul24( tz, PS1*PS1 ) + __umul24( ty, PS1 ) + tx;
    const uint NSlice    = DT_GRA_BLOCK_SIZE_Z;
-   const real Gra_Const = ( P5_Gradient ) ? (real)1.0/((real)12.0*dh) : (real)1.0/((real)2.0*dh);
+   const real Gra_Const = ( P5_Gradient ) ? (real)-1.0/((real)12.0*dh) : (real)-1.0/((real)2.0*dh);
 
    uint s_idx           =   __umul24( GRA_GHOST_SIZE+tz, GRA_NXT*GRA_NXT )
                           + __umul24( GRA_GHOST_SIZE+ty, GRA_NXT   ) + (GRA_GHOST_SIZE+tx);

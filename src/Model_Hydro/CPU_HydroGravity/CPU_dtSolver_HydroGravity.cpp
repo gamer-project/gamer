@@ -47,7 +47,7 @@ void CPU_dtSolver_HydroGravity( real dt_Array[],
 
 
    const int  NPatch    = NPatchGroup*8;
-   const real Gra_Const = ( P5_Gradient ) ? (real)1.0/((real)12.0*dh) : (real)1.0/((real)2.0*dh);
+   const real Gra_Const = ( P5_Gradient ) ? (real)-1.0/((real)12.0*dh) : (real)-1.0/((real)2.0*dh);
    const real Const_8   = (real)8.0;
    const int  did1[3]   = { 1, GRA_NXT, SQR(GRA_NXT) };
    const int  did2[3]   = { 2*did1[0], 2*did1[1], 2*did1[2] };
