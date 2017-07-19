@@ -252,6 +252,10 @@ struct SymConst_t
 
    int    dt_Flu_BlockSize;
    int    dt_Flu_UseShuffle;
+#  ifdef GRAVITY
+   int    dt_Gra_BlockSize_z;
+   int    dt_Gra_UseShuffle;
+#  endif
 
 }; // struct SymConst_t
 

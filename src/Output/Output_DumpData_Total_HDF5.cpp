@@ -74,7 +74,7 @@ Procedure for outputting new variables:
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2237)
+// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2238)
 // Description :  Output all simulation data in the HDF5 format, which can be used as a restart file
 //                or loaded by YT
 //
@@ -136,6 +136,7 @@ Procedure for outputting new variables:
 //                2235 : 2017/07/11 --> replace IndividualDt and Opt__AdaptiveDt by Opt__DtLevel
 //                2236 : 2017/07/16 --> output DT_FLU_BLOCK_SIZE and DT_FLU_USE_SHUFFLE
 //                2237 : 2017/07/17 --> output DT__FLEXIBLE_RANGE
+//                2238 : 2017/07/19 --> output DT_GRA_BLOCK_SIZE_Z and DT_FLU_USE_SHUFFLE
 //-------------------------------------------------------------------------------------------------------
 void Output_DumpData_Total_HDF5( const char *FileName )
 {
@@ -1241,7 +1242,7 @@ void FillIn_KeyInfo( KeyInfo_t &KeyInfo )
 
    const time_t CalTime  = time( NULL );   // calendar time
 
-   KeyInfo.FormatVersion = 2237;
+   KeyInfo.FormatVersion = 2238;
    KeyInfo.Model         = MODEL;
    KeyInfo.NLevel        = NLEVEL;
    KeyInfo.NCompFluid    = NCOMP_FLUID;
@@ -1663,6 +1664,14 @@ void FillIn_SymConst( SymConst_t &SymConst )
    SymConst.dt_Flu_UseShuffle    = 1;
 #  else
    SymConst.dt_Flu_UseShuffle    = 0;
+#  endif
+#  ifdef GRAVITY
+   SymConst.dt_Gra_BlockSize_z   = DT_GRA_BLOCK_SIZE_Z;
+#  ifdef DT_GRA_USE_SHUFFLE
+   SymConst.dt_Gra_UseShuffle    = 1;
+#  else
+   SymConst.dt_Gra_UseShuffle    = 0;
+#  endif
 #  endif
 
 } // FUNCTION : FillIn_SymConst
@@ -2259,6 +2268,10 @@ void GetCompound_SymConst( hid_t &H5_TypeID )
 
    H5Tinsert( H5_TypeID, "dt_Flu_BlockSize",     HOFFSET(SymConst_t,dt_Flu_BlockSize    ), H5T_NATIVE_INT    );
    H5Tinsert( H5_TypeID, "dt_Flu_UseShuffle",    HOFFSET(SymConst_t,dt_Flu_UseShuffle   ), H5T_NATIVE_INT    );
+#  ifdef GRAVITY
+   H5Tinsert( H5_TypeID, "dt_Gra_BlockSize_z",   HOFFSET(SymConst_t,dt_Gra_BlockSize_z  ), H5T_NATIVE_INT    );
+   H5Tinsert( H5_TypeID, "dt_Gra_UseShuffle",    HOFFSET(SymConst_t,dt_Gra_UseShuffle   ), H5T_NATIVE_INT    );
+#  endif
 
 } // FUNCTION : GetCompound_SymConst
 
