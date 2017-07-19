@@ -72,7 +72,8 @@ void Par_UpdateParticle( const int lv, const double TimeNew, const double TimeOl
    const int  PotSize           = PS1 + 2*PotGhost;
    const int  AccSize           = PS1 + 2*ParGhost;
    const real Const_8           = (real)8.0;
-   const real GraConst          = ( OPT__GRA_P5_GRADIENT ) ? -1.0/(12.0*dh) : -1.0/(2.0*dh); // but P5 is NOT supported yet
+// const real GraConst          = ( OPT__GRA_P5_GRADIENT ) ? -1.0/(12.0*dh) : -1.0/(2.0*dh); // but P5 is NOT supported yet
+   const real GraConst          = ( false                ) ? -1.0/(12.0*dh) : -1.0/(2.0*dh); // but P5 is NOT supported yet
 
    real *ParPos[3] = { amr->Par->PosX, amr->Par->PosY, amr->Par->PosZ };
    real *ParVel[3] = { amr->Par->VelX, amr->Par->VelY, amr->Par->VelZ };
