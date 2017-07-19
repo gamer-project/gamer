@@ -225,7 +225,7 @@ vpath %.cu     Model_Hydro/GPU_Hydro
 vpath %.cpp    Model_Hydro/CPU_Hydro  Model_Hydro
 
 ifeq "$(findstring GRAVITY, $(SIMU_OPTION))" "GRAVITY"
-CUDA_FILE   += CUPOT_HydroGravitySolver.cu
+CUDA_FILE   += CUPOT_HydroGravitySolver.cu  CUPOT_dtSolver_HydroGravity.cu
 
 CC_FILE     += CPU_HydroGravitySolver.cpp  CPU_dtSolver_HydroGravity.cpp
 

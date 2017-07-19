@@ -35,7 +35,7 @@ void dt_Prepare_Pot( const int lv, real h_Pot_Array_T[][ CUBE(GRA_NXT) ], const 
 
    Prepare_PatchData( lv, PrepTime, &h_Pot_Array_T[0][0], GRA_GHOST_SIZE, NPG, PID0_List, _POTE,
                       OPT__GRA_INT_SCHEME, UNIT_PATCH, (GRA_GHOST_SIZE==0)?NSIDE_00:NSIDE_06, IntPhase_No,
-                      BC_FLU_NONE, OPT__BC_POT, MinDens_No, MinPres_No );
+                      OPT__BC_FLU, OPT__BC_POT, MinDens_No, MinPres_No );
 
 } // FUNCTION : dt_Prepare_Pot
 
