@@ -1,7 +1,7 @@
 #include "Copyright.h"
 #include "GAMER.h"
 
-extern double (*Mis_GetTimeStep_User_Ptr)( const double dTime_dt );
+extern double (*Mis_GetTimeStep_User_Ptr)( const int lv, const double dTime_dt );
 
 
 
@@ -147,7 +147,7 @@ double Mis_GetTimeStep( const int lv, const double dTime_SyncFaLv )
 // =============================================================================================================
    if ( OPT__DT_USER  &&  Mis_GetTimeStep_User_Ptr != NULL )
    {
-      dTime[NdTime] = dTime_dt * Mis_GetTimeStep_User_Ptr( dTime_dt );
+      dTime[NdTime] = dTime_dt * Mis_GetTimeStep_User_Ptr( lv, dTime_dt );
       sprintf( dTime_Name[NdTime++], "%s", "User" );
    }
 
@@ -169,18 +169,16 @@ double Mis_GetTimeStep( const int lv, const double dTime_SyncFaLv )
 
 // 1.8 CRITERION EIGHT : particle evolution
 // =============================================================================================================
-   /*
 #  ifdef PARTICLE
-   real   MinDtVar_ParVelAcc[2];
-   int    MinDtLv_ParVelAcc[2];
+   Par_GetTimeStep_VelAcc( dTime[NdTime], dTime[NdTime+1], lv );
 
-   Par_GetTimeStep_VelAcc( dt8, dTime8, MinDtLv_ParVelAcc, MinDtVar_ParVelAcc, dt_dTime );
-
+   dTime[NdTime] *= dTime_dt;
    sprintf( dTime_Name[NdTime++], "%s", "Par_Vel" );
-   if ( DT__PARACC > 0.0 )
-   sprintf( dTime_Name[NdTime++], "%s", "Par_Acc" );
-#  endif // #ifdef PARTICLE
-   */
+
+   if ( DT__PARACC > 0.0 ) {
+   dTime[NdTime] *= dTime_dt;
+   sprintf( dTime_Name[NdTime++], "%s", "Par_Acc" ); }
+#  endif
 
 
 

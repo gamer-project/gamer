@@ -484,7 +484,7 @@ void Par_MassAssignment( const long *ParList, const long NPar, const ParInterp_t
                          const bool UnitDens, const bool CheckFarAway, const bool UseInputMassPos, real **InputMassPos );
 void Par_UpdateParticle( const int lv, const double TimeNew, const double TimeOld, const ParUpStep_t UpdateStep,
                          const bool StoreAcc, const bool UseStoredAcc );
-void Par_GetTimeStep_VelAcc( double dt[2], double dTime[2], int MinDtLv[2], real MinDtVar[2], const double dt_dTime );
+void Par_GetTimeStep_VelAcc( double &dt_vel, double &dt_acc, const int lv );
 void Par_PassParticle2Sibling( const int lv, const bool TimingSendPar );
 bool Par_WithinActiveRegion( const real x, const real y, const real z );
 int  Par_CountParticleInDescendant( const int FaLv, const int FaPID );

@@ -2,10 +2,10 @@
 #include "GAMER.h"
 
 // declare as static so that other functions cannot invoke it directly and must use the function pointer
-double Mis_GetTimeStep_User( const double dTime_dt );
+double Mis_GetTimeStep_User( const int lv, const double dTime_dt );
 
 // this function pointer may be overwritten by various test problem initializers
-double (*Mis_GetTimeStep_User_Ptr)( const double dTime_dt ) = Mis_GetTimeStep_User;
+double (*Mis_GetTimeStep_User_Ptr)( const int lv, const double dTime_dt ) = Mis_GetTimeStep_User;
 
 
 
@@ -25,11 +25,12 @@ double (*Mis_GetTimeStep_User_Ptr)( const double dTime_dt ) = Mis_GetTimeStep_Us
 //                       this funtion will become useless
 //                3. Enabled by the runtime option "OPT__DT_USER"
 //
-// Parameter   :  dTime_dt : dTime/dt (== 1.0 if COMOVING is off)
+// Parameter   :  lv       : Target refinement level
+//                dTime_dt : dTime/dt (== 1.0 if COMOVING is off)
 //
 // Return      :  dt
 //-------------------------------------------------------------------------------------------------------
-double Mis_GetTimeStep_User( const double dTime_dt )
+double Mis_GetTimeStep_User( const int lv, const double dTime_dt )
 {
 
 // put your favorite time-step criteria here
