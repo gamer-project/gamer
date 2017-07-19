@@ -98,6 +98,14 @@ int CUFLU_FluidSolver_SetConstMem_NormIdx( int NormIdx_h[] );
 #endif // FLU_SCHEME
 __global__ void CUFLU_dtSolver_HydroCFL( real g_dt_Array[], const real g_Flu_Array[][NCOMP_FLUID][ CUBE(PS1) ],
                                          const real dh, const real Safety, const real Gamma, const real MinPres );
+#ifdef GRAVITY
+__global__ void CUPOT_dtSolver_HydroGravity( real g_dt_Array[],
+                                             const real g_Pot_Array[][ CUBE(GRA_NXT) ],
+                                             const double g_Corner_Array[][3],
+                                             const real dh, const real Safety, const bool P5_Gradient,
+                                             const OptGravityType_t GravityType, const double ExtAcc_Time );
+int CUPOT_dtSolver_HydroGravity_SetConstMem( double ExtAcc_AuxArray_h[] );
+#endif
 #elif ( MODEL == MHD )
 #warning : WAIT MHD !!!
 
@@ -333,17 +341,20 @@ void CUAPI_Set_Default_GPU_Parameter( int &GPU_NStream, int &Flu_GPU_NPGroup, in
 // (3-1) fluid solver
 #  if   ( MODEL == HYDRO )
 #  if   ( FLU_SCHEME == RTVD )
-   CUDA_CHECK_ERROR(  cudaFuncSetCacheConfig( CUFLU_FluidSolver_RTVD,  cudaFuncCachePreferShared )  );
+   CUDA_CHECK_ERROR(  cudaFuncSetCacheConfig( CUFLU_FluidSolver_RTVD,      cudaFuncCachePreferShared )  );
 #  elif ( FLU_SCHEME == WAF )
-   CUDA_CHECK_ERROR(  cudaFuncSetCacheConfig( CUFLU_FluidSolver_WAF,   cudaFuncCachePreferShared )  );
+   CUDA_CHECK_ERROR(  cudaFuncSetCacheConfig( CUFLU_FluidSolver_WAF,       cudaFuncCachePreferShared )  );
 #  elif ( FLU_SCHEME == MHM )
-   CUDA_CHECK_ERROR(  cudaFuncSetCacheConfig( CUFLU_FluidSolver_MHM,   cudaFuncCachePreferL1     )  );
+   CUDA_CHECK_ERROR(  cudaFuncSetCacheConfig( CUFLU_FluidSolver_MHM,       cudaFuncCachePreferL1     )  );
 #  elif ( FLU_SCHEME == MHM_RP )
-   CUDA_CHECK_ERROR(  cudaFuncSetCacheConfig( CUFLU_FluidSolver_MHM,   cudaFuncCachePreferL1     )  );
+   CUDA_CHECK_ERROR(  cudaFuncSetCacheConfig( CUFLU_FluidSolver_MHM,       cudaFuncCachePreferL1     )  );
 #  elif ( FLU_SCHEME == CTU )
-   CUDA_CHECK_ERROR(  cudaFuncSetCacheConfig( CUFLU_FluidSolver_CTU,   cudaFuncCachePreferL1     )  );
+   CUDA_CHECK_ERROR(  cudaFuncSetCacheConfig( CUFLU_FluidSolver_CTU,       cudaFuncCachePreferL1     )  );
 #  endif
-   CUDA_CHECK_ERROR(  cudaFuncSetCacheConfig( CUFLU_dtSolver_HydroCFL, cudaFuncCachePreferShared )  );
+   CUDA_CHECK_ERROR(  cudaFuncSetCacheConfig( CUFLU_dtSolver_HydroCFL,     cudaFuncCachePreferShared )  );
+#  ifdef GRAVITY
+   CUDA_CHECK_ERROR(  cudaFuncSetCacheConfig( CUPOT_dtSolver_HydroGravity, cudaFuncCachePreferShared )  );
+#  endif
 
 #  elif ( MODEL == MHD )
 #  warning :: WAIT MHD !!!
@@ -407,15 +418,19 @@ void CUAPI_Set_Default_GPU_Parameter( int &GPU_NStream, int &Flu_GPU_NPGroup, in
    Aux_Error( ERROR_INFO, "CUPOT_PoissonSolver_SetConstMem failed ...\n" );
 
 #  if ( MODEL == HYDRO )
-   if (  ( OPT__GRAVITY_TYPE == GRAVITY_EXTERNAL || OPT__GRAVITY_TYPE == GRAVITY_BOTH )  &&
-         CUPOT_HydroGravitySolver_SetConstMem( ExtAcc_AuxArray ) != 0  )
-   Aux_Error( ERROR_INFO, "CUPOT_HydroGravitySolver_SetConstMem failed ...\n" );
+   if ( OPT__GRAVITY_TYPE == GRAVITY_EXTERNAL  ||  OPT__GRAVITY_TYPE == GRAVITY_BOTH )
+   {
+      if (  CUPOT_HydroGravitySolver_SetConstMem( ExtAcc_AuxArray ) != 0  )
+         Aux_Error( ERROR_INFO, "CUPOT_HydroGravitySolver_SetConstMem failed ...\n" );
 
-#  if (  defined UNSPLIT_GRAVITY  &&  ( FLU_SCHEME == MHM || FLU_SCHEME == MHM_RP || FLU_SCHEME == CTU )  )
-   if (  ( OPT__GRAVITY_TYPE == GRAVITY_EXTERNAL || OPT__GRAVITY_TYPE == GRAVITY_BOTH )  &&
-         CUFLU_FluidSolver_SetConstMem_ExtAcc( ExtAcc_AuxArray ) != 0  )
-   Aux_Error( ERROR_INFO, "CUFLU_FluidSolver_SetConstMem_ExtAcc failed ...\n" );
-#  endif
+#     if (  defined UNSPLIT_GRAVITY  &&  ( FLU_SCHEME == MHM || FLU_SCHEME == MHM_RP || FLU_SCHEME == CTU )  )
+      if (  CUFLU_FluidSolver_SetConstMem_ExtAcc( ExtAcc_AuxArray ) != 0  )
+         Aux_Error( ERROR_INFO, "CUFLU_FluidSolver_SetConstMem_ExtAcc failed ...\n" );
+#     endif
+
+      if (  CUPOT_dtSolver_HydroGravity_SetConstMem( ExtAcc_AuxArray ) != 0  )
+         Aux_Error( ERROR_INFO, "CUPOT_dtSolver_HydroGravity_SetConstMem failed ...\n" );
+   }
 #  endif // if ( MODEL == HYDRO )
 
 #  if ( MODEL == ELBDM )

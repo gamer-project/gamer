@@ -157,7 +157,7 @@
 
 
 // dt solver for gravity
-#define DT_GRA_BLOCK_SIZE           512
+#define DT_GRA_BLOCK_SIZE_Z         4
 
 // use shuffle reduction in the KEPLER and later GPUs
 #if ( GPU_ARCH == KEPLER  ||  GPU_ARCH == MAXWELL  ||  GPU_ARCH == PASCAL )

@@ -125,8 +125,8 @@ __global__ void CUPOT_HydroGravitySolver(       real g_Flu_Array_New[][GRA_NIN][
       t = ID;
       do {  s_Pot_new[t] = g_Pot_Array_New[bx][t];   t += GRA_NTHREAD; }  while ( t < CUBE(GRA_NXT) );
 
-      t = ID;
 #     ifdef UNSPLIT_GRAVITY
+      t = ID;
       do {  s_Pot_old[t] = g_Pot_Array_USG[bx][t];   t += GRA_NTHREAD; }  while ( t < CUBE(USG_NXT_G) );
 #     endif
    }

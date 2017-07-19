@@ -12,6 +12,13 @@
 #if   ( MODEL == HYDRO )
 __global__ void CUFLU_dtSolver_HydroCFL( real g_dt_Array[], const real g_Flu_Array[][NCOMP_FLUID][ CUBE(PS1) ],
                                          const real dh, const real Safety, const real Gamma, const real MinPres );
+#ifdef GRAVITY
+__global__ void CUPOT_dtSolver_HydroGravity( real g_dt_Array[],
+                                             const real g_Pot_Array[][ CUBE(GRA_NXT) ],
+                                             const double g_Corner_Array[][3],
+                                             const real dh, const real Safety, const bool P5_Gradient,
+                                             const OptGravityType_t GravityType, const double ExtAcc_Time );
+#endif
 #elif ( MODEL == MHD )
 #warning : WAIT MHD !!!
 
@@ -27,6 +34,7 @@ extern real *d_dt_Array_T;
 extern real (*d_Flu_Array_T)[NCOMP_FLUID][ CUBE(PS1) ];
 #ifdef GRAVITY
 extern real (*d_Pot_Array_T)[ CUBE(GRA_NXT) ];
+extern double (*d_Corner_Array_G)[3];
 #endif
 
 extern cudaStream_t *Stream;
@@ -62,7 +70,8 @@ extern cudaStream_t *Stream;
 //                MinPres        : Minimum allowed pressure
 //                P5_Gradient    : Use 5-points stencil to evaluate the potential gradient
 //                GravityType    : Types of gravity --> self-gravity, external gravity, both
-//                Time           : Physical time for adding the external acceleration
+//                ExtPot         : Add the external potential for ELBDM
+//                TargetTime     : Target physical time
 //                GPU_NStream    : Number of CUDA streams for the asynchronous memory copy
 //
 // Return      :  h_dt_Array
@@ -70,8 +79,8 @@ extern cudaStream_t *Stream;
 void CUAPI_Asyn_dtSolver( const Solver_t TSolver, real h_dt_Array[], const real h_Flu_Array[][NCOMP_FLUID][ CUBE(PS1) ],
                           const real h_Pot_Array[][ CUBE(GRA_NXT) ], const double h_Corner_Array[][3],
                           const int NPatchGroup, const real dh, const real Safety, const real Gamma, const real MinPres,
-                          const bool P5_Gradient, const OptGravityType_t GravityType, const double Time,
-                          const int GPU_NStream )
+                          const bool P5_Gradient, const OptGravityType_t GravityType, const bool ExtPot,
+                          const double TargetTime, const int GPU_NStream )
 {
 
 // check
@@ -89,8 +98,17 @@ void CUAPI_Asyn_dtSolver( const Solver_t TSolver, real h_dt_Array[], const real 
       Aux_Error( ERROR_INFO, "h_Flu_Array == NULL !!\n" );
 
 #  ifdef GRAVITY
-   if ( TSolver == DT_GRA_SOLVER  &&  h_Pot_Array == NULL )
-      Aux_Error( ERROR_INFO, "h_Pot_Array == NULL !!\n" );
+   if ( TSolver == DT_GRA_SOLVER )
+   {
+      if ( h_Pot_Array == NULL )
+         Aux_Error( ERROR_INFO, "h_Pot_Array == NULL !!\n" );
+
+      if ( GravityType == GRAVITY_EXTERNAL  ||  GravityType == GRAVITY_BOTH  ||  ExtPot )
+      {
+         if ( h_Corner_Array   == NULL )     Aux_Error( ERROR_INFO, "h_Corner_Array == NULL !!\n" );
+         if ( d_Corner_Array_G == NULL )     Aux_Error( ERROR_INFO, "d_Corner_Array_G == NULL !!\n" );
+      }
+   }
 #  endif
 #  endif // #ifdef GAMER_DEBUG
 
@@ -101,10 +119,18 @@ void CUAPI_Asyn_dtSolver( const Solver_t TSolver, real h_dt_Array[], const real 
 
    switch ( TSolver )
    {
-      case DT_FLU_SOLVER:  BlockDim_dtSolver.x = DT_FLU_BLOCK_SIZE;  break;
+      case DT_FLU_SOLVER:
+         BlockDim_dtSolver.x = DT_FLU_BLOCK_SIZE;
+      break;
+
 #     ifdef GRAVITY
-      case DT_GRA_SOLVER:  BlockDim_dtSolver.x = DT_GRA_BLOCK_SIZE;  break;
+      case DT_GRA_SOLVER:
+         BlockDim_dtSolver.x = PS1;
+         BlockDim_dtSolver.y = PS1;
+         BlockDim_dtSolver.z = DT_GRA_BLOCK_SIZE_Z;
+      break;
 #     endif
+
       default :
          Aux_Error( ERROR_INFO, "incorrect parameter %s = %d !!\n", "TSolver", TSolver );
    }
@@ -115,6 +141,8 @@ void CUAPI_Asyn_dtSolver( const Solver_t TSolver, real h_dt_Array[], const real 
    int *UsedPatch         = new int [GPU_NStream];
    int *Data_MemSize      = new int [GPU_NStream];
    int *dt_MemSize        = new int [GPU_NStream];
+   int *Corner_MemSize    = new int [GPU_NStream];
+
 
 // number of patches in each stream
    UsedPatch[0] = 0;
@@ -136,10 +164,17 @@ void CUAPI_Asyn_dtSolver( const Solver_t TSolver, real h_dt_Array[], const real 
    {
       switch ( TSolver )
       {
-         case DT_FLU_SOLVER:  Data_MemSize[s] = sizeof(real)*NPatch_per_Stream[s]*CUBE(PS1)*NCOMP_FLUID;    break;
+         case DT_FLU_SOLVER:
+            Data_MemSize  [s] = sizeof(real  )*NPatch_per_Stream[s]*CUBE(PS1)*NCOMP_FLUID;
+         break;
+
 #        ifdef GRAVITY
-         case DT_GRA_SOLVER:  Data_MemSize[s] = sizeof(real)*NPatch_per_Stream[s]*CUBE(GRA_NXT);            break;
+         case DT_GRA_SOLVER:
+            Data_MemSize  [s] = sizeof(real  )*NPatch_per_Stream[s]*CUBE(GRA_NXT);
+            Corner_MemSize[s] = sizeof(double)*NPatch_per_Stream[s]*3;
+         break;
 #        endif
+
          default :
             Aux_Error( ERROR_INFO, "incorrect parameter %s = %d !!\n", "TSolver", TSolver );
       }
@@ -165,6 +200,10 @@ void CUAPI_Asyn_dtSolver( const Solver_t TSolver, real h_dt_Array[], const real 
          case DT_GRA_SOLVER:
             CUDA_CHECK_ERROR(  cudaMemcpyAsync( d_Pot_Array_T + UsedPatch[s], h_Pot_Array + UsedPatch[s],
                                Data_MemSize[s], cudaMemcpyHostToDevice, Stream[s] )  );
+
+            if ( GravityType == GRAVITY_EXTERNAL  ||  GravityType == GRAVITY_BOTH  ||  ExtPot )
+            CUDA_CHECK_ERROR(  cudaMemcpyAsync( d_Corner_Array_G + UsedPatch[s], h_Corner_Array + UsedPatch[s],
+                               Corner_MemSize[s], cudaMemcpyHostToDevice, Stream[s] )  );
          break;
 #        endif
 
@@ -181,10 +220,29 @@ void CUAPI_Asyn_dtSolver( const Solver_t TSolver, real h_dt_Array[], const real 
       if ( NPatch_per_Stream[s] == 0 )    continue;
 
 #     if   ( MODEL == HYDRO )
-         CUFLU_dtSolver_HydroCFL <<< NPatch_per_Stream[s], BlockDim_dtSolver, 0, Stream[s] >>>
-                                 ( d_dt_Array_T  + UsedPatch[s],
-                                   d_Flu_Array_T + UsedPatch[s],
-                                   dh, Safety, Gamma, MinPres );
+      switch ( TSolver )
+      {
+         case DT_FLU_SOLVER:
+            CUFLU_dtSolver_HydroCFL <<< NPatch_per_Stream[s], BlockDim_dtSolver, 0, Stream[s] >>>
+                                    ( d_dt_Array_T  + UsedPatch[s],
+                                      d_Flu_Array_T + UsedPatch[s],
+                                      dh, Safety, Gamma, MinPres );
+         break;
+
+#        ifdef GRAVITY
+         case DT_GRA_SOLVER:
+            CUPOT_dtSolver_HydroGravity <<< NPatch_per_Stream[s], BlockDim_dtSolver, 0, Stream[s] >>>
+                                        ( d_dt_Array_T     + UsedPatch[s],
+                                          d_Pot_Array_T    + UsedPatch[s],
+                                          d_Corner_Array_G + UsedPatch[s],
+                                          dh, Safety, P5_Gradient, GravityType, TargetTime );
+         break;
+#        endif
+
+         default :
+            Aux_Error( ERROR_INFO, "incorrect parameter %s = %d !!\n", "TSolver", TSolver );
+      }
+
 
 #     elif ( MODEL == MHD )
 #     warning :: WAIT MHD !!!
@@ -214,6 +272,7 @@ void CUAPI_Asyn_dtSolver( const Solver_t TSolver, real h_dt_Array[], const real 
    delete [] UsedPatch;
    delete [] Data_MemSize;
    delete [] dt_MemSize;
+   delete [] Corner_MemSize;
 
 } // FUNCTION : CUAPI_Asyn_dtSolver
 

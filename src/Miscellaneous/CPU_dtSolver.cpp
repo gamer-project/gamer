@@ -42,28 +42,29 @@ void CPU_dtSolver_HydroGravity( real dt_Array[],
 // Note        :  1. Invoked by InvokeSolver()
 //                2. Corresponding preparation and closing steps are defined in dt_Prepare_XXX() and dt_Close()
 //
-// Parameter   :  TSolver         : Target dt solver
-//                                  --> DT_FLU_SOLVER : dt solver for fluid
-//                                      DT_GRA_SOLVER : dt solver for gravity
-//                dt_Array        : Array to store the minimum dt in each target patch
-//                Flu_Array       : Array storing the prepared fluid data of each target patch
-//                Pot_Array       : Array storing the prepared potential data of each target patch
-//                Corner_Array    : Array storing the physical corner coordinates of each patch
-//                NPatchGroup     : Number of patch groups evaluated simultaneously by GPU
-//                dh              : Grid size
-//                Safety          : dt safety factor
-//                Gamma           : Ratio of specific heats
-//                MinPres         : Minimum allowed pressure
-//                P5_Gradient     : Use 5-points stencil to evaluate the potential gradient
-//                GravityType     : Types of gravity --> self-gravity, external gravity, both
-//                TargetTime      : Target physical time
+// Parameter   :  TSolver      : Target dt solver
+//                               --> DT_FLU_SOLVER : dt solver for fluid
+//                                   DT_GRA_SOLVER : dt solver for gravity
+//                dt_Array     : Array to store the minimum dt in each target patch
+//                Flu_Array    : Array storing the prepared fluid data of each target patch
+//                Pot_Array    : Array storing the prepared potential data of each target patch
+//                Corner_Array : Array storing the physical corner coordinates of each patch
+//                NPatchGroup  : Number of patch groups evaluated simultaneously by GPU
+//                dh           : Grid size
+//                Safety       : dt safety factor
+//                Gamma        : Ratio of specific heats
+//                MinPres      : Minimum allowed pressure
+//                P5_Gradient  : Use 5-points stencil to evaluate the potential gradient
+//                GravityType  : Types of gravity --> self-gravity, external gravity, both
+//                ExtPot       : Add the external potential for ELBDM
+//                TargetTime   : Target physical time
 //
 // Return      :  dt_Array
 //-------------------------------------------------------------------------------------------------------
 void CPU_dtSolver( const Solver_t TSolver, real dt_Array[], const real Flu_Array[][NCOMP_FLUID][ CUBE(PS1) ],
                    const real Pot_Array[][ CUBE(GRA_NXT) ], const double Corner_Array[][3],
                    const int NPatchGroup, const real dh, const real Safety, const real Gamma, const real MinPres,
-                   const bool P5_Gradient, const OptGravityType_t GravityType, const double TargetTime )
+                   const bool P5_Gradient, const OptGravityType_t GravityType, const bool ExtPot, const double TargetTime )
 {
 
    switch ( TSolver )
