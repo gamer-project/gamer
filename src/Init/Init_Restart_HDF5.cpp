@@ -1433,6 +1433,10 @@ void Check_SymConst( const char *FileName )
 
    LoadField( "dt_Flu_BlockSize",     &RS.dt_Flu_BlockSize,     SID, TID, NonFatal, &RT.dt_Flu_BlockSize,      1, NonFatal );
    LoadField( "dt_Flu_UseShuffle",    &RS.dt_Flu_UseShuffle,    SID, TID, NonFatal, &RT.dt_Flu_UseShuffle,     1, NonFatal );
+#  ifdef GRAVITY
+   LoadField( "dt_Gra_BlockSize_z",   &RS.dt_Gra_BlockSize_z,   SID, TID, NonFatal, &RT.dt_Gra_BlockSize_z,    1, NonFatal );
+   LoadField( "dt_Gra_UseShuffle",    &RS.dt_Gra_UseShuffle,    SID, TID, NonFatal, &RT.dt_Gra_UseShuffle,     1, NonFatal );
+#  endif
 
 
 // 5. close all objects
