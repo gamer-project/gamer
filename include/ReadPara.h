@@ -227,6 +227,9 @@ struct ReadPara_t
          {
             if (  strcmp( Key[k], LoadKey ) == 0  )
             {
+               if ( Loaded[k]  &&  MPI_Rank == 0 )
+                  Aux_Message( stderr, "WARNING : duplicate      parameter [%-25s] at line %4d !!\n", LoadKey, LineNum );
+
                MatchIdx  = k;
                Loaded[k] = true;
                break;
@@ -251,10 +254,7 @@ struct ReadPara_t
          }
 
          else if ( MPI_Rank == 0 )
-         {
-            Aux_Message( stderr, "WARNING : unrecognizable parameter [%-25s] at line %4d (either non-existing or duplicate) !!\n",
-                         LoadKey, LineNum );
-         }
+            Aux_Message( stderr, "WARNING : unrecognizable parameter [%-25s] at line %4d !!\n", LoadKey, LineNum );
       } // while ( fgets( Line, MAX_STRING, File ) != NULL )
 
 
