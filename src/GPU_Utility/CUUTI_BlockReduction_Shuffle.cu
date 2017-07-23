@@ -50,7 +50,17 @@ real WarpReduction_Shuffle( real val )
 {
 
    for (int offset=WARP_SIZE/2; offset>0; offset/=2)
-      val = RED( val, __shfl_down(val,offset,WARP_SIZE) );
+   {
+//    this line somehow fails on K20X for RED_MAX (and RED_MIN likely)
+//    --> perhaps it's because when using "val = (val > __shfl_down(val,offset) ) ? val : __shfl_down(val,offset);"
+//        the second " __shfl_down(val,offset)" becomes ill-defined since "val" in other threads might be modified in advance
+//        if these threads have "(val > __shfl_down(val,offset) )"
+//    val = RED( val, __shfl_down(val,offset,WARP_SIZE) );
+
+//    use this approach instead to invoke "__shfl_down(val,offset, WARP_SIZE)" only once
+      const real tmp = __shfl_down( val, offset, WARP_SIZE );
+      val = RED( val, tmp );
+   }
 
    return val;
 
