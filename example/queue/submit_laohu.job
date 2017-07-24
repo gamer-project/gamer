@@ -8,4 +8,4 @@
 #BSUB -e lsf.stderr
 #BSUB -n 8
 
-mpirun.lsf ./Dizzy 1>stdout 2>stderr
+mpirun.lsf ./gamer 1>>log 2>&1
