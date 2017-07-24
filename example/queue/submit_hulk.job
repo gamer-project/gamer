@@ -18,10 +18,10 @@ cd $PBS_O_WORKDIR
 ##************************************************
 
 ## for openmpi-1.6.0
-##mpirun -np 32 -npernode 2 ./Dizzy 1>>stdout 2>>stderr
+##mpirun -np 32 -npernode 2 ./gamer 1>>log 2>&1
 
 ## for openmpi-1.4.3-qlc
-mpirun -np 32 -npernode 2 -hostfile $PBS_NODEFILE -bind-to-socket ./gamer 1>>stdout 2>>stderr
+mpirun -np 32 -npernode 2 -hostfile $PBS_NODEFILE -bind-to-socket ./gamer 1>>log 2>&1
 
 ## script to restart a simulation automatically if the run failed
 ## sh auto_restart.sh 1>>stdout 2>>stderr

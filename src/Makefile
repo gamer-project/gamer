@@ -42,7 +42,7 @@ SIMU_OPTION += -DNLEVEL=10
 SIMU_OPTION += -DMAX_PATCH=1000000
 
 # support Grackle, a chemistry and radiative cooling library
-#SIMU_OPTION += -DSUPPORT_GRACKLE
+SIMU_OPTION += -DSUPPORT_GRACKLE
 
 
 # (b) model-dependent options
@@ -122,10 +122,10 @@ SIMU_OPTION += -DINTEL
 #SIMU_OPTION += -DFLOAT8
 
 # serial mode (in which no MPI libraries are required)
-SIMU_OPTION += -DSERIAL
+#SIMU_OPTION += -DSERIAL
 
 # load-balance parallelization (one must not turn on the option "SERIAL") (HILBERT)
-#SIMU_OPTION += -DLOAD_BALANCE=HILBERT
+SIMU_OPTION += -DLOAD_BALANCE=HILBERT
 
 # overlap MPI communication with computation (experimental, only supported in LOAD_BALANCE)
 #SIMU_OPTION += -DOVERLAP_MPI
@@ -405,11 +405,11 @@ VPATH := $(dir $(wildcard TestProblem/*/*/))
 # location of libraries
 # -------------------------------------------------------------------------------
 # campus UIUC (intel-15.0 + openmpi-1.8.4)
-#CUDA_TOOLKIT_PATH := /usr/local/cuda/7.0
-#FFTW_PATH         := /projects/ncsa/grav/softwares/fftw/2.1.5
-#MPI_PATH          := /usr/local/mpi/openmpi-1.8.4-intel-15.0
-#HDF5_PATH         := /projects/ncsa/grav/softwares/miniconda2
-#GRACKLE_PATH      := /home/hyschive/local
+CUDA_TOOLKIT_PATH := /usr/local/cuda/7.0
+FFTW_PATH         := /projects/ncsa/grav/softwares/fftw/2.1.5
+MPI_PATH          := /usr/local/mpi/openmpi-1.8.4-intel-15.0
+HDF5_PATH         := /projects/ncsa/grav/softwares/miniconda2
+GRACKLE_PATH      := /home/hyschive/local
 #GSL_PATH          := /usr/local/gsl/gsl-1.16
 
 # campus UIUC (gcc-4.9.2 + openmpi-1.8.4)
@@ -443,11 +443,11 @@ VPATH := $(dir $(wildcard TestProblem/*/*/))
 
 # hulk (openmpi-intel-qlc)
 #CUDA_TOOLKIT_PATH := /opt/gpu/cuda/4.2
-FFTW_PATH         := /opt/math/fftw/2.1.5-intel-qlc
-MPI_PATH          := /usr/mpi/intel/openmpi-1.4.3-qlc
-HDF5_PATH         := /opt/hdf5/1.8.9
+#FFTW_PATH         := /opt/math/fftw/2.1.5-intel-qlc
+#MPI_PATH          := /usr/mpi/intel/openmpi-1.4.3-qlc
+#HDF5_PATH         := /opt/hdf5/1.8.9
 #MPI_PATH          := /opt/mpi/openmpi/1.6.0-intel
-CUDA_TOOLKIT_PATH := /usr/local/cuda-7.5
+#CUDA_TOOLKIT_PATH := /usr/local/cuda-7.5
 
 # hulk (openmpi-gcc-qlc)
 #CUDA_TOOLKIT_PATH := /opt/gpu/cuda/4.2
