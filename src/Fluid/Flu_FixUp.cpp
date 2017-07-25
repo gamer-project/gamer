@@ -10,8 +10,8 @@
 // Description :  1. Use the corrected coarse-fine boundary fluxes to fix the data at level "lv"
 //                2. Use the average data at level "lv+1" to replace the data at level "lv"
 //
-// Note        :  1. Also include the fluxes from neighbor ranks
-//                2. The boundary fluxes must be received in advance by invoking the function "Buf_GetBufferData"
+// Note        :  1. Boundary fluxes from the neighboring ranks must be received in advance by invoking
+//                   Buf_GetBufferData()
 //
 // Parameter   :  lv : Target refinement level
 //-------------------------------------------------------------------------------------------------------
@@ -24,6 +24,18 @@ void Flu_FixUp( const int lv )
    const int  FluSg      = amr->FluSg[lv];
    const int  Offset[6]  = { 0, PS1-1, 0, (PS1-1)*PS1, 0, (PS1-1)*SQR(PS1) }; // x=0/PS1-1, y=0/PS1-1, z=0/PS1-1 faces
    const int  didx[3][2] = { PS1, SQR(PS1), 1, SQR(PS1), 1, PS1 };
+
+// when enabling cooling, we want to fix the specific internal energy so that it won't be corrected by the flux fix-up operation
+// --> it doesn't make much sense to correct the total energy density, pressure, or dual-energy variable when cooling is
+//     adopted since the total energy is not conserved anymore
+// --> experiments show that fixing the specific internal energy instead of pressure works better
+//     --> fixing pressure is found to lead to extremely small dt
+//     --> fixing specific internal energy works better since it is directly proportional to the sound speed square
+#  ifdef SUPPORT_GRACKLE
+   const bool FixSEint   = ( GRACKLE_MODE != GRACKLE_MODE_NONE );
+#  else
+   const bool FixSEint   = false;
+#  endif
 
    real CorrVal[NFLUX_TOTAL];    // values after applying the flux correction
    real (*FluxPtr)[PATCH_SIZE][PATCH_SIZE] = NULL;
@@ -151,21 +163,32 @@ void Flu_FixUp( const int lv )
 
 //                calculate the pressure
 #                 if ( MODEL == HYDRO  ||  MODEL == MHD )
-                  real Pres;
+                  real ForPres[NCOMP_TOTAL], Pres;
+
+//                when FixSEint is on, use FluidPtr1D to calculate the original pressure
+                  if ( FixSEint )
+                     for (int v=0; v<NCOMP_TOTAL; v++)   ForPres[v] = *FluidPtr1D[v];
+                  else
+                     for (int v=0; v<NCOMP_TOTAL; v++)   ForPres[v] = CorrVal    [v];
+
 #                 if   ( DUAL_ENERGY == DE_ENPY )
                   Pres = ( *DE_StatusPtr1D == DE_UPDATED_BY_ETOT  ||  *DE_StatusPtr1D == DE_UPDATED_BY_ETOT_GRA ) ?
-                         CPU_GetPressure( CorrVal[DENS], CorrVal[MOMX], CorrVal[MOMY], CorrVal[MOMZ], CorrVal[ENGY],
+                         CPU_GetPressure( ForPres[DENS], ForPres[MOMX], ForPres[MOMY], ForPres[MOMZ], ForPres[ENGY],
                                           Gamma_m1, CheckMinPres_No, NULL_REAL )
-                       : CPU_DensEntropy2Pres( CorrVal[DENS], CorrVal[ENPY], Gamma_m1, CheckMinPres_No, NULL_REAL );
+                       : CPU_DensEntropy2Pres( ForPres[DENS], ForPres[ENPY], Gamma_m1, CheckMinPres_No, NULL_REAL );
 
 #                 elif ( DUAL_ENERGY == DE_EINT )
 #                 error : DE_EINT is NOT supported yet !!
 
 #                 else
-                  Pres = CPU_GetPressure( CorrVal[DENS], CorrVal[MOMX], CorrVal[MOMY], CorrVal[MOMZ], CorrVal[ENGY],
+                  Pres = CPU_GetPressure( ForPres[DENS], ForPres[MOMX], ForPres[MOMY], ForPres[MOMZ], ForPres[ENGY],
                                           Gamma_m1, CheckMinPres_No, NULL_REAL );
 #                 endif // DUAL_ENERGY
 #                 endif // MODEL
+
+
+//                correct pressure to restore the original specific internal energy
+                  if ( FixSEint )   Pres *= CorrVal[DENS] / *FluidPtr1D[DENS];
 
 
 //                do not apply the flux correction if there are any unphysical results
@@ -194,23 +217,42 @@ void Flu_FixUp( const int lv )
 #                 endif
 
 
-//                ensure consistency between pressure, total energy density, and the dual-energy variable
+//                ensure consistency between pressure, total energy density, and dual-energy variable
 //                --> no need to check the minimum pressure here since we already skip those cells
-#                 ifdef DUAL_ENERGY
-                  if ( *DE_StatusPtr1D == DE_UPDATED_BY_ETOT  ||  *DE_StatusPtr1D == DE_UPDATED_BY_ETOT_GRA )
+                  if ( FixSEint )
                   {
+//                   use the original specific internal energy to calculate the total energy density and dual-energy variable
+#                    ifdef DUAL_ENERGY
 #                    if   ( DUAL_ENERGY == DE_ENPY )
                      CorrVal[ENPY] = CPU_DensPres2Entropy( CorrVal[DENS], Pres, Gamma_m1 );
 
 #                    elif ( DUAL_ENERGY == DE_EINT )
 #                    error : DE_EINT is NOT supported yet !!
 #                    endif
-                  }
+#                    endif // #ifdef DUAL_ENERGY
 
-                  else
-                  {
                      CorrVal[ENGY] = (real)0.5*( SQR(CorrVal[MOMX]) + SQR(CorrVal[MOMY]) + SQR(CorrVal[MOMZ]) ) / CorrVal[DENS]
                                      + Pres*_Gamma_m1;
+                  }
+
+#                 ifdef DUAL_ENERGY
+                  else
+                  {
+                     if ( *DE_StatusPtr1D == DE_UPDATED_BY_ETOT  ||  *DE_StatusPtr1D == DE_UPDATED_BY_ETOT_GRA )
+                     {
+#                       if   ( DUAL_ENERGY == DE_ENPY )
+                        CorrVal[ENPY] = CPU_DensPres2Entropy( CorrVal[DENS], Pres, Gamma_m1 );
+
+#                       elif ( DUAL_ENERGY == DE_EINT )
+#                       error : DE_EINT is NOT supported yet !!
+#                       endif
+                     }
+
+                     else
+                     {
+                        CorrVal[ENGY] = (real)0.5*( SQR(CorrVal[MOMX]) + SQR(CorrVal[MOMY]) + SQR(CorrVal[MOMZ]) ) / CorrVal[DENS]
+                                        + Pres*_Gamma_m1;
+                     }
                   }
 #                 endif
 
