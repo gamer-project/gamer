@@ -3,7 +3,7 @@ import yt
 yt.enable_parallelism()
 
 idx_start   = 0
-idx_end     = 0
+idx_end     = 50
 didx        = 1
 prefix      = '../Data_'
 
@@ -60,7 +60,7 @@ for ds in ts.piter():
 
 #  temperature slice -- face-on
    sz_temp = yt.SlicePlot( ds, 'z', 'temperature', center=center_mode, width=(width_kpc,'kpc') )
-   sz_temp.set_zlim( 'temperature', 1.0e0, 1.0e6 )
+   sz_temp.set_zlim( 'temperature', 1.0e3, 5.0e3 )
    sz_temp.set_cmap( 'temperature', colormap )
    sz_temp.annotate_timestamp( time_unit='Myr', corner='upper_right' )
    sz_temp.annotate_grids( periodic=False )
@@ -69,7 +69,7 @@ for ds in ts.piter():
 
 #  temperature slice -- edge-on
    sx_temp = yt.SlicePlot( ds, 'x', 'temperature', center=center_mode, width=(width_kpc,'kpc') )
-   sx_temp.set_zlim( 'temperature', 1.0e0, 1.0e6 )
+   sx_temp.set_zlim( 'temperature', 1.0e3, 5.0e3 )
    sx_temp.set_cmap( 'temperature', colormap )
    sx_temp.annotate_timestamp( time_unit='Myr', corner='upper_right' )
    sx_temp.annotate_grids( periodic=False )
@@ -79,7 +79,7 @@ for ds in ts.piter():
 #  temperature projection -- face-on
    pz_temp = yt.ProjectionPlot( ds, 'z', 'temperature', center=center_mode, width=(width_kpc,'kpc'),
                                 method='integrate', weight_field='density_square' )
-   pz_temp.set_zlim( 'temperature', 1.0e0, 1.0e6 )
+   pz_temp.set_zlim( 'temperature', 1.0e3, 5.0e3 )
    pz_temp.set_cmap( 'temperature', colormap )
    pz_temp.annotate_timestamp( time_unit='Myr', corner='upper_right' )
    pz_temp.save( mpl_kwargs={"dpi":dpi} )
@@ -88,7 +88,7 @@ for ds in ts.piter():
 #  temperature projection -- edge-on
    px_temp = yt.ProjectionPlot( ds, 'x', 'temperature', center=center_mode, width=(width_kpc,'kpc'),
                                 method='integrate', weight_field='density_square' )
-   px_temp.set_zlim( 'temperature', 1.0e0, 1.0e6 )
+   px_temp.set_zlim( 'temperature', 1.0e3, 5.0e3 )
    px_temp.set_cmap( 'temperature', colormap )
    px_temp.annotate_timestamp( time_unit='Myr', corner='upper_right' )
    px_temp.save( mpl_kwargs={"dpi":dpi} )
@@ -113,3 +113,4 @@ for ds in ts.piter():
    sz_vabs.set_cmap( 'velocity_magnitude', colormap )
    sz_vabs.annotate_timestamp( time_unit='Myr', corner='upper_right' )
    sz_vabs.save( mpl_kwargs={"dpi":dpi} )
+
