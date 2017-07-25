@@ -74,7 +74,7 @@ Procedure for outputting new variables:
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2238)
+// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2239)
 // Description :  Output all simulation data in the HDF5 format, which can be used as a restart file
 //                or loaded by YT
 //
@@ -137,6 +137,7 @@ Procedure for outputting new variables:
 //                2236 : 2017/07/16 --> output DT_FLU_BLOCK_SIZE and DT_FLU_USE_SHUFFLE
 //                2237 : 2017/07/17 --> output DT__FLEXIBLE_RANGE
 //                2238 : 2017/07/19 --> output DT_GRA_BLOCK_SIZE_Z and DT_FLU_USE_SHUFFLE
+//                2239 : 2017/07/25 --> output JEANS_MIN_PRES, JEANS_MIN_PRES_LEVEL, JEANS_MIN_PRES_NCELL
 //-------------------------------------------------------------------------------------------------------
 void Output_DumpData_Total_HDF5( const char *FileName )
 {
@@ -1242,7 +1243,7 @@ void FillIn_KeyInfo( KeyInfo_t &KeyInfo )
 
    const time_t CalTime  = time( NULL );   // calendar time
 
-   KeyInfo.FormatVersion = 2238;
+   KeyInfo.FormatVersion = 2239;
    KeyInfo.Model         = MODEL;
    KeyInfo.NLevel        = NLEVEL;
    KeyInfo.NCompFluid    = NCOMP_FLUID;
@@ -1854,6 +1855,9 @@ void FillIn_InputPara( InputPara_t &InputPara )
 #  endif
 #  if ( MODEL == HYDRO  ||  MODEL == MHD )
    InputPara.MinPres                 = MIN_PRES;
+   InputPara.JeansMinPres            = JEANS_MIN_PRES;
+   InputPara.JeansMinPres_Level      = JEANS_MIN_PRES_LEVEL;
+   InputPara.JeansMinPres_NCell      = JEANS_MIN_PRES_NCELL;
 #  endif
 #  ifdef DUAL_ENERGY
    InputPara.DualEnergySwitch        = DUAL_ENERGY_SWITCH;
@@ -2507,6 +2511,9 @@ void GetCompound_InputPara( hid_t &H5_TypeID )
 #  endif
 #  if ( MODEL == HYDRO  ||  MODEL == MHD )
    H5Tinsert( H5_TypeID, "MinPres",                 HOFFSET(InputPara_t,MinPres                ), H5T_NATIVE_DOUBLE  );
+   H5Tinsert( H5_TypeID, "JeansMinPres",            HOFFSET(InputPara_t,JeansMinPres           ), H5T_NATIVE_INT     );
+   H5Tinsert( H5_TypeID, "JeansMinPres_Level",      HOFFSET(InputPara_t,JeansMinPres_Level     ), H5T_NATIVE_INT     );
+   H5Tinsert( H5_TypeID, "JeansMinPres_NCell",      HOFFSET(InputPara_t,JeansMinPres_NCell     ), H5T_NATIVE_INT     );
 #  endif
 #  ifdef DUAL_ENERGY
    H5Tinsert( H5_TypeID, "DualEnergySwitch",        HOFFSET(InputPara_t,DualEnergySwitch       ), H5T_NATIVE_DOUBLE  );
