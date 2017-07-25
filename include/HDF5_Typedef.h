@@ -425,6 +425,9 @@ struct InputPara_t
 #  endif
 #  if ( MODEL == HYDRO  ||  MODEL == MHD )
    double MinPres;
+   int    JeansMinPres;
+   int    JeansMinPres_Level;
+   int    JeansMinPres_NCell;
 #  endif
 #  ifdef DUAL_ENERGY
    double DualEnergySwitch;
