@@ -3,7 +3,7 @@ import yt
 yt.enable_parallelism()
 
 idx_start   = 0
-idx_end     = 0
+idx_end     = 50
 didx        = 1
 prefix      = '../Data_'
 

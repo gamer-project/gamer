@@ -148,6 +148,10 @@ OPT__CORR_AFTER_ALL_SYNC     -1           # apply various corrections after all 
 OPT__NORMALIZE_PASSIVE        1           # ensure "sum(passive_scalar_density) == gas_density" -> edit "Init_PassiveVariable.cpp" [1]
 MIN_DENS                      0.0         # minimum mass density (must >= 0.0) [0.0] ##HYDRO, MHD, and ELBDM ONLY##
 MIN_PRES                      1.0e-15     # minimum pressure     (must >= 0.0) [0.0] ##HYDRO and MHD ONLY##
+JEANS_MIN_PRES                1           # minimum pressure estimated from the Jeans length [0] ##HYDRO/MHD, SUPPORT_GRACKLE, GRAVITY ONLY##
+JEANS_MIN_PRES_LEVEL         -1           # for JEANS_MIN_PRES; ensure Jeans length is resolved by JEANS_MIN_PRES_NCELL*dh[JEANS_MIN_PRES_LEVEL]
+                                          # (<0=auto -> MAX_LEVEL) [-1]
+JEANS_MIN_PRES_NCELL          4           # for JEANS_MIN_PRES; see JEANS_MIN_PRES_LEVEL [4]
 
 
 # gravity solvers in all models
