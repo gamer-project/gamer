@@ -788,6 +788,26 @@ void Init_ResetParameter()
 #  endif
 
 
+// currently JEANS_MIN_PRES only works with SUPPORT_GRACKLE + GRAVITY
+#  if ( MODEL == HYDRO  ||  MODEL == MHD )
+#  if ( !defined SUPPORT_GRACKLE  ||  !defined GRAVITY )
+   if ( JEANS_MIN_PRES )
+   {
+      JEANS_MIN_PRES = false;
+
+      PRINT_WARNING( JEANS_MIN_PRES, FORMAT_INT, "since either SUPPORT_GRACKLE or GRAVITY is disabled" );
+   }
+#  endif
+
+   if ( JEANS_MIN_PRES  &&  JEANS_MIN_PRES_LEVEL < 0 )
+   {
+      JEANS_MIN_PRES_LEVEL = MAX_LEVEL;
+
+      PRINT_WARNING( JEANS_MIN_PRES_LEVEL, FORMAT_INT, "" );
+   }
+#  endif
+
+
 // remove symbolic constants and macros only used in this structure
 #  undef FORMAT_INT
 #  undef FORMAT_FLT

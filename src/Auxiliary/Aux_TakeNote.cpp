@@ -825,6 +825,10 @@ void Aux_TakeNote()
 #     endif
 #     if ( MODEL == HYDRO  ||  MODEL == MHD )
       fprintf( Note, "MIN_PRES                        %13.7e\n",  MIN_PRES                );
+      fprintf( Note, "JEANS_MIN_PRES                  %d\n",      JEANS_MIN_PRES          );
+      if ( JEANS_MIN_PRES ) {
+      fprintf( Note, "JEANS_MIN_PRES_LEVEL            %d\n",      JEANS_MIN_PRES_LEVEL    );
+      fprintf( Note, "JEANS_MIN_PRES_NCELL            %d\n",      JEANS_MIN_PRES_NCELL    ); }
 #     endif
 #     ifdef DUAL_ENERGY
       fprintf( Note, "DUAL_ENERGY_SWITCH              %13.7e\n",  DUAL_ENERGY_SWITCH      );
