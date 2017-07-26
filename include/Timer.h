@@ -9,31 +9,29 @@ void Aux_Error( const char *File, const int Line, const char *Func, const char *
 void Aux_Message( FILE *Type, const char *Format, ... );
 
 
+
+
 //-------------------------------------------------------------------------------------------------------
 // Structure   :  Timer_t
 // Description :  Data structure for measuring the elapsed time
 //
-// Data Member :  Status    : The status of each timer : (false / true) <--> (stop / ticking)
-//                Time      : The variable recording the elapsed time (in microseconds)
-//                WorkingID : The currently working ID of the array "Time"
-//                NTimer    : The number of timers
+// Data Member :  Status : (false / true) <--> (stop / ticking)
+//                Time   : Variable recording the elapsed time (in microseconds)
 //
-// Method      :  Timer_t   : Constructor
-//               ~Timer_t   : Destructor
-//                Start     : Start timing
-//                Stop      : Stop timing
-//                GetValue  : Get the elapsed time recorded in timer (in seconds)
-//                Reset     : Reset timer
+// Method      :  Timer_t  : Constructor
+//               ~Timer_t  : Destructor
+//                Start    : Start timing
+//                Stop     : Stop timing
+//                GetValue : Get the elapsed time recorded in timer (in seconds)
+//                Reset    : Reset timer
 //-------------------------------------------------------------------------------------------------------
 struct Timer_t
 {
 
 // data members
 // ===================================================================================
-   bool  *Status;
-   ulong *Time;
-   uint  WorkingID;
-   uint  NTimer;
+   bool  Status;
+   ulong Time;
 
 
 
@@ -41,25 +39,12 @@ struct Timer_t
    // Constructor :  Timer_t
    // Description :  Constructor of the structure "Timer_t"
    //
-   // Note        :  Allocate and initialize all data member
-   //                a. The WorkingID is initialized as "0"
-   //                b. The Status is initialized as "false"
-   //                c. The timer is initialized as "0"
-   //
-   // Parameter   :  N : The number of timers to be allocated
+   // Note        :  Initialize all data members
    //===================================================================================
-   Timer_t( const uint N )
+   Timer_t()
    {
-      NTimer    = N;
-      WorkingID = 0;
-      Time      = new ulong [NTimer];
-      Status    = new bool  [NTimer];
-
-      for (uint t=0; t<NTimer; t++)
-      {
-         Time  [t] = 0;
-         Status[t] = false;
-      }
+      Time   = 0;
+      Status = false;
    }
 
 
@@ -72,8 +57,6 @@ struct Timer_t
    //===================================================================================
    ~Timer_t()
    {
-      delete [] Time;
-      delete [] Status;
    }
 
 
@@ -81,23 +64,23 @@ struct Timer_t
    //===================================================================================
    // Method      :  Start
    // Description :  Start timing and set status as "true"
+   //
+   // Note        :  1. Timer must not already be running
+   //                2. The same timer can be started and stopped multiple times and the
+   //                   results will be accumulated
+   //                   --> Invoke Reset() to reset a timer
    //===================================================================================
    void Start()
    {
 #     ifdef GAMER_DEBUG
-      if ( WorkingID >= NTimer )
-         Aux_Error( ERROR_INFO, "timer is exhausted !!\n" );
-
-      if ( Status[WorkingID] )
-         Aux_Message( stderr, "WARNING : timer has already been started (WorkingID = %u) !!\n", WorkingID );
+      if ( Status )  Aux_Message( stderr, "WARNING : timer has already been started !!\n" );
 #     endif
 
       timeval tv;
       gettimeofday( &tv, NULL );
 
-      Time[WorkingID] = tv.tv_sec*1000000 + tv.tv_usec - Time[WorkingID];
-
-      Status[WorkingID] = true;
+      Time   = tv.tv_sec*1000000 + tv.tv_usec - Time;
+      Status = true;
    }
 
 
@@ -106,73 +89,55 @@ struct Timer_t
    // Method      :  Stop
    // Description :  Stop timing and set status as "false"
    //
-   // Note        :  Increase the WorkingID if the input parameter "Next == true"
-   //
-   // Parameter   :  Next : (true / false) --> (increase / not increase) the WorkingID
+   // Note        :  Timer must already be running
    //===================================================================================
-   void Stop( const bool Next )
+   void Stop()
    {
 #     ifdef GAMER_DEBUG
-      if ( WorkingID >= NTimer )
-         Aux_Error( ERROR_INFO, "timer is exhausted !!\n" );
-
-      if ( !Status[WorkingID] )
-         Aux_Message( stderr, "WARNING : timer has NOT been started (WorkingID = %u) !!\n", WorkingID );
+      if ( !Status )    Aux_Message( stderr, "WARNING : timer has NOT been started !!\n" );
 #     endif
 
       timeval tv;
       gettimeofday( &tv, NULL );
 
-      Time[WorkingID] = tv.tv_sec*1000000 + tv.tv_usec - Time[WorkingID];
-
-      Status[WorkingID] = false;
-
-      if ( Next )    WorkingID++;
+      Time   = tv.tv_sec*1000000 + tv.tv_usec - Time;
+      Status = false;
    }
 
 
 
    //===================================================================================
    // Method      :  GetValue
-   // Description :  Get the elapsed time (in seconds) recorded in the timer "TargetID"
+   // Description :  Get the elapsed time (in seconds) recorded in the timer
    //
-   // Parameter   :  TargetID : The ID of the target timer
+   // Note        :  Timer must not be running
    //===================================================================================
-   double GetValue( const uint TargetID )
+   double GetValue()
    {
 #     ifdef GAMER_DEBUG
-      if ( TargetID >= NTimer )
-         Aux_Error( ERROR_INFO, "timer does NOT exist (TargetID = %u, NTimer = %u) !!\n",
-                    TargetID, NTimer );
-
-      if ( Status[TargetID] )
-         Aux_Message( stderr, "WARNING : timer is still ticking (TargetID = %u) !!\n", TargetID );
+      if ( Status )  Aux_Message( stderr, "WARNING : timer is still ticking !!\n" );
 #     endif
 
-      return Time[TargetID]*1.e-6f;
+      return Time*1.0e-6;
    }
 
 
 
    //===================================================================================
    // Method      :  Reset
-   // Description :  Reset all timers and set WorkingID as "0"
+   // Description :  Reset the timer
    //
-   // Note        :  All timing information previously recorded will be lost after
-   //                invoking this function
+   // Note        :  1. The timing information previously recorded will be lost after
+   //                   invoking this function
+   //                2. Timer must not be running
    //===================================================================================
    void Reset()
    {
-      for (uint t=0; t<NTimer; t++)
-      {
-#        ifdef GAMER_DEBUG
-         if ( Status[t] )
-            Aux_Message( stderr, "WARNING : resetting a ticking timer (WorkingID = %u) !!\n", t );
-#        endif
+#     ifdef GAMER_DEBUG
+      if ( Status )  Aux_Message( stderr, "WARNING : resetting a ticking timer !!\n" );
+#     endif
 
-         Time[t]   = 0;
-         WorkingID = 0;
-      }
+      Time = 0;
    }
 
 
