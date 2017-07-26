@@ -10,13 +10,13 @@
 // Function    :  Buf_AllocateBufferPatch_Base
 // Description :  Allocate buffer patches for the base level
 //
-// Note        :  a. The "corner" recorded in the buffer patches are not correct (NOT periodic). They are  
+// Note        :  a. The "corner" recorded in the buffer patches are not correct (NOT periodic). They are
 //                   useful only for the function "Buf_RecordBasePatchID"
 //                b. Invoked by the function "Buf_AllocateBufferPatch"
-//                c. No buffer patches will be allocated for patches lying outside the simulation domain if 
+//                c. No buffer patches will be allocated for patches lying outside the simulation domain if
 //                   non-periodic B.C. is adopted
 //
-// Parameter   :  Tamr : Target AMR_t pointer 
+// Parameter   :  Tamr : Target AMR_t pointer
 //-------------------------------------------------------------------------------------------------------
 void Buf_AllocateBufferPatch_Base( AMR_t *Tamr )
 {
@@ -39,7 +39,7 @@ void Buf_AllocateBufferPatch_Base( AMR_t *Tamr )
       {
          if (  TABLE_01( s, 'x', -1, 0, 1 ) == TABLE_02( LocalID, 'x', -1, 1 )  ||
                TABLE_01( s, 'y', -1, 0, 1 ) == TABLE_02( LocalID, 'y', -1, 1 )  ||
-               TABLE_01( s, 'z', -1, 0, 1 ) == TABLE_02( LocalID, 'z', -1, 1 )      )  
+               TABLE_01( s, 'z', -1, 0, 1 ) == TABLE_02( LocalID, 'z', -1, 1 )      )
             AllocData[LocalID] = false;
 
          else
@@ -53,7 +53,7 @@ void Buf_AllocateBufferPatch_Base( AMR_t *Tamr )
          Cr0      [d] = TABLE_01( s, 'x'+d, -2*PATCH_SIZE*scale0, 0, NX0[d]*scale0 ) + MPI_Rank_X[d]*NX0[d]*scale0;
          loop_size[d] = TABLE_01( s, 'x'+d, 1, NX0[d]/PS2, 1 );
       }
-   
+
       for (int k=0; k<loop_size[2]; k++)     {  Cr[2] = Cr0[2] + k*2*Width;
       for (int j=0; j<loop_size[1]; j++)     {  Cr[1] = Cr0[1] + j*2*Width;
       for (int i=0; i<loop_size[0]; i++)     {  Cr[0] = Cr0[0] + i*2*Width;
@@ -66,7 +66,7 @@ void Buf_AllocateBufferPatch_Base( AMR_t *Tamr )
          Tamr->pnew( 0, Cr[0],       Cr[1]+Width, Cr[2]+Width, -1, AllocData[5], AllocData[5] );
          Tamr->pnew( 0, Cr[0]+Width, Cr[1],       Cr[2]+Width, -1, AllocData[6], AllocData[6] );
          Tamr->pnew( 0, Cr[0]+Width, Cr[1]+Width, Cr[2]+Width, -1, AllocData[7], AllocData[7] );
-         
+
          Tamr->NPatchComma[0][s+2] += 8;
 
       }}}

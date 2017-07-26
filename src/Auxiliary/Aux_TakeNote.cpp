@@ -638,6 +638,7 @@ void Aux_TakeNote()
       fprintf( Note, "DT__FLEXIBLE_RANGE              %13.7e\n",  DT__FLEXIBLE_RANGE      );
       fprintf( Note, "OPT__DT_USER                    %d\n",      OPT__DT_USER            );
       fprintf( Note, "OPT__DT_LEVEL                   %d\n",      OPT__DT_LEVEL           );
+      fprintf( Note, "OPT__AUTO_REDUCE_DT             %d\n",      OPT__AUTO_REDUCE_DT     );
       fprintf( Note, "OPT__RECORD_DT                  %d\n",      OPT__RECORD_DT          );
       fprintf( Note, "***********************************************************************************\n" );
       fprintf( Note, "\n\n");

@@ -13,7 +13,7 @@
 // Note        :  a. Currently it only works for the functions "Init_Reload" and "Init_BaseLevel"
 //                b. For the base level, no data transfer is required
 //
-// Parameter   :  Tamr : Target AMR_t pointer 
+// Parameter   :  Tamr : Target AMR_t pointer
 //                lv   : Target refinement lv to allocate buffer patches
 //-------------------------------------------------------------------------------------------------------
 void Buf_AllocateBufferPatch( AMR_t *Tamr, const int lv )
@@ -56,12 +56,12 @@ void Buf_AllocateBufferPatch( AMR_t *Tamr, const int lv )
 //    allocate the maximum necessary memory
       Send_PosList[s] = new int [ Tamr->ParaVar->BounP_NList[lv-1][s] ];
 
-      for (int ID=0; ID<Tamr->ParaVar->BounP_NList[lv-1][s]; ID++) 
+      for (int ID=0; ID<Tamr->ParaVar->BounP_NList[lv-1][s]; ID++)
       {
          RefinePos = Tamr->ParaVar->BounP_PosList[lv-1][s][ID];
          BounPID   = Tamr->ParaVar->BounP_IDList [lv-1][s][ID];
          SonPID    = Tamr->patch[0][lv-1][BounPID]->son;
-      
+
          if ( SonPID != -1 )
          {
 #           ifdef GAMER_DEBUG
@@ -107,7 +107,7 @@ void Buf_AllocateBufferPatch( AMR_t *Tamr, const int lv )
 
 //    find the target buffer patches to be refined
       TargetID = 0;
-      
+
       for (int ID=0; ID<NRecv[s]; ID++)
       {
          RefinePos = Recv_PosList[s][ID];
@@ -125,7 +125,7 @@ void Buf_AllocateBufferPatch( AMR_t *Tamr, const int lv )
 
          BounPID = Tamr->ParaVar->BounP_IDList[lv-1][s][TargetID];
          BuffPID = Tamr->patch[0][lv-1][BounPID]->sibling[s];
-      
+
 
 //       the BuffPID must exist and be a buffer patch since that the flagging status should be the same over all processes
 #        ifdef GAMER_DEBUG
@@ -136,9 +136,9 @@ void Buf_AllocateBufferPatch( AMR_t *Tamr, const int lv )
 
 //       create buffer patches
          Corner = Tamr->patch[0][lv-1][BuffPID]->corner;
-      
+
          Tamr->patch[0][lv-1][BuffPID]->son = Tamr->num[lv];
-      
+
          Tamr->pnew( lv, Corner[0],      Corner[1],      Corner[2],      BuffPID, AllocData[0], AllocData[0] );
          Tamr->pnew( lv, Corner[0]+Disp, Corner[1],      Corner[2],      BuffPID, AllocData[1], AllocData[1] );
          Tamr->pnew( lv, Corner[0],      Corner[1]+Disp, Corner[2],      BuffPID, AllocData[2], AllocData[2] );
@@ -147,12 +147,12 @@ void Buf_AllocateBufferPatch( AMR_t *Tamr, const int lv )
          Tamr->pnew( lv, Corner[0],      Corner[1]+Disp, Corner[2]+Disp, BuffPID, AllocData[5], AllocData[5] );
          Tamr->pnew( lv, Corner[0]+Disp, Corner[1],      Corner[2]+Disp, BuffPID, AllocData[6], AllocData[6] );
          Tamr->pnew( lv, Corner[0]+Disp, Corner[1]+Disp, Corner[2]+Disp, BuffPID, AllocData[7], AllocData[7] );
-      
+
 //       record the number of buffer patches in each sibling direction
          Tamr->NPatchComma[lv][s+2] += 8;
 
       } // for (int ID=0; ID<NRecv[s]; ID++)
-      
+
       for (int n=s+3; n<28; n++)    Tamr->NPatchComma[lv][n] = Tamr->num[lv];
 
    } // for (int s=0; s<26; s++)

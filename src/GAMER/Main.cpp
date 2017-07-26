@@ -58,7 +58,7 @@ bool                 OPT__INT_TIME, OPT__OUTPUT_USER, OPT__OUTPUT_BASE, OPT__OVE
 bool                 OPT__OUTPUT_BASEPS, OPT__CK_REFINE, OPT__CK_PROPER_NESTING, OPT__CK_FINITE, OPT__RECORD_PERFORMANCE;
 bool                 OPT__CK_RESTRICT, OPT__CK_PATCH_ALLOCATE, OPT__FIXUP_FLUX, OPT__CK_FLUX_ALLOCATE, OPT__CK_NORMALIZE_PASSIVE;
 bool                 OPT__UM_START_DOWNGRADE, OPT__UM_START_REFINE, OPT__UM_FACTOR_5OVER3, OPT__TIMING_MPI;
-bool                 OPT__CK_CONSERVATION, OPT__RESET_FLUID, OPT__RECORD_USER, OPT__NORMALIZE_PASSIVE;
+bool                 OPT__CK_CONSERVATION, OPT__RESET_FLUID, OPT__RECORD_USER, OPT__NORMALIZE_PASSIVE, OPT__AUTO_REDUCE_DT;
 TestProbID_t         TESTPROB_ID;
 OptInit_t            OPT__INIT;
 OptRestartH_t        OPT__RESTART_HEADER;
@@ -329,7 +329,7 @@ int main( int argc, char *argv[] )
 
 // initialization
 // ======================================================================================================
-   Timer_t  Timer_Total( 1 );
+   Timer_t Timer_Total;
    Timer_Total.Start();
 
 #  ifdef TIMING
@@ -508,7 +508,7 @@ int main( int argc, char *argv[] )
 
 
    MPI_Barrier( MPI_COMM_WORLD );
-   Timer_Total.Stop( false );
+   Timer_Total.Stop();
 // ======================================================================================================
 
 
@@ -521,14 +521,14 @@ int main( int argc, char *argv[] )
 
 // record the total simulation time
 #  ifdef TIMING
-   Aux_AccumulatedTiming( Timer_Total.GetValue(0), Timer_Init.GetValue(0), Timer_Other.GetValue(0) );
+   Aux_AccumulatedTiming( Timer_Total.GetValue(), Timer_Init.GetValue(), Timer_Other.GetValue() );
 #  endif
 
    if ( MPI_Rank == 0 )
    {
       FILE *Note = fopen( "Record__Note", "a" );
       fprintf( Note, "\n" );
-      fprintf( Note, "Total Processing Time : %lf s\n", Timer_Total.GetValue( 0 ) );
+      fprintf( Note, "Total Processing Time : %lf s\n", Timer_Total.GetValue() );
       fprintf( Note, "\n" );
       fclose( Note );
    }

@@ -11,7 +11,7 @@
 // Description :  Record the information of patches for sending and receiving fluxes between neighbor ranks
 //                in the variable "amr->ParaVar"
 //
-// Parameter   :  lv : Target refinement level 
+// Parameter   :  lv : Target refinement level
 //-------------------------------------------------------------------------------------------------------
 void Buf_RecordExchangeFluxPatchID( const int lv )
 {
@@ -43,7 +43,7 @@ void Buf_RecordExchangeFluxPatchID( const int lv )
          delete [] amr->ParaVar->SendF_IDList[lv][s];
          amr->ParaVar->SendF_IDList[lv][s] = NULL;
       }
-      
+
       if ( amr->ParaVar->RecvF_IDList[lv][s] != NULL )
       {
          delete [] amr->ParaVar->RecvF_IDList[lv][s];
@@ -59,7 +59,7 @@ void Buf_RecordExchangeFluxPatchID( const int lv )
       if ( MPI_SibRank[s] < 0 )  continue;
 
 
-//    allocate the maximum necessary memory 
+//    allocate the maximum necessary memory
       amr->ParaVar->SendF_IDList [lv][s] = new int [ amr->ParaVar->BounP_NList[lv][s] ];
       amr->ParaVar->RecvF_IDList [lv][s] = new int [ amr->ParaVar->BounP_NList[lv][s] ];
 
