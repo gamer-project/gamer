@@ -12,7 +12,7 @@
 //
 // Note        :  Bubble sort
 //
-// Parameter   :  NPatch   : Number of patches to be sorted 
+// Parameter   :  NPatch   : Number of patches to be sorted
 //                IDList   : Patch indices list
 //                PosList  : Patch positions list
 //-------------------------------------------------------------------------------------------------------

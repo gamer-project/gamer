@@ -7,12 +7,12 @@
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Buf_RecordBoundaryFlag 
+// Function    :  Buf_RecordBoundaryFlag
 // Description :  Record the flags of boundary patches in "amr->ParaVar->BounFlag_PosList" for the function
 //                "MPI_ExchangeBoundaryFlag"
 //
 // Note        :  1. Invoked by the function "Flag_Real"
-//                2. No OpenMP directives are applied in this function since the counter 
+//                2. No OpenMP directives are applied in this function since the counter
 //                   "amr->ParaVar->BounFlag_NList"
 //
 // Parameter   :  lv : Target refinement level to be flagged
@@ -67,7 +67,7 @@ void Buf_RecordBoundaryFlag( const int lv )
          if ( PID < 0  ||  PID >= amr->num[lv] )   Aux_Error( ERROR_INFO, "incorrect PID = %d !!", PID );
 #        endif
 
-         if ( amr->patch[0][lv][PID]->flag )      
+         if ( amr->patch[0][lv][PID]->flag )
          {
 //          record the flag of layer 0
             amr->ParaVar->BounFlag_PosList[lv][s][ amr->ParaVar->BounFlag_NList[lv][s] ] = FlagPos;
@@ -83,7 +83,7 @@ void Buf_RecordBoundaryFlag( const int lv )
 #              endif
 
 //             set BounFlag_PosList = BUFFER_IS_FLAGGED to indicate that this layer is flagged (only for layer > 0)
-               if ( SibPID >= 0  &&  amr->patch[0][lv][SibPID]->flag ) 
+               if ( SibPID >= 0  &&  amr->patch[0][lv][SibPID]->flag )
                   amr->ParaVar->BounFlag_PosList[lv][s][ amr->ParaVar->BounFlag_NList[lv][s]+n ] = BUFFER_IS_FLAGGED;
                else
                   amr->ParaVar->BounFlag_PosList[lv][s][ amr->ParaVar->BounFlag_NList[lv][s]+n ] = -1;

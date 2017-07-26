@@ -11,7 +11,7 @@
 // Function    :  Buf_RecordBoundaryPatch
 // Description :  Record the patches near the sub-domain boundaries in "amr->ParaVar->BounP_IDList"
 //
-// Parameter   :  lv : Target refinement level 
+// Parameter   :  lv : Target refinement level
 //-------------------------------------------------------------------------------------------------------
 void Buf_RecordBoundaryPatch( const int lv )
 {
@@ -45,13 +45,13 @@ void Buf_RecordBoundaryPatch( const int lv )
       amr->ParaVar->BounP_NList[lv][s] = 0;
 
 
-//    deallocate memory 
+//    deallocate memory
       if ( amr->ParaVar->BounP_IDList[lv][s] != NULL )
       {
          delete [] amr->ParaVar->BounP_IDList[lv][s];
          amr->ParaVar->BounP_IDList[lv][s] = NULL;
       }
-      
+
       if ( amr->ParaVar->BounP_PosList[lv][s] != NULL )
       {
          delete [] amr->ParaVar->BounP_PosList[lv][s];
@@ -68,13 +68,13 @@ void Buf_RecordBoundaryPatch( const int lv )
       for (int t=0; t<NSide; t++)   Table[t] = TABLE_07( s, t );
 
 
-//    allocate the maximum necessary memory 
+//    allocate the maximum necessary memory
       amr->ParaVar->BounP_IDList [lv][s] = new int [ amr->ParaVar->BounP_NList[lv-1][s]*NSide ];
       amr->ParaVar->BounP_PosList[lv][s] = new int [ amr->ParaVar->BounP_NList[lv-1][s]*NSide ];
 
 
 //    set up "ListLength and ListLength1D"
-      for (int d=0; d<3; d++)    
+      for (int d=0; d<3; d++)
       {
          ListLength[d] = TABLE_01( s, 'x'+d, 1, NX0[d]/PATCH_SIZE*(1<<lv)+4, 1 );
          Disp      [d] = TABLE_01( s, 'x'+d, 0, 2, -NX0[d]/PATCH_SIZE*(1<<lv)+2 );
@@ -117,7 +117,7 @@ void Buf_RecordBoundaryPatch( const int lv )
 
 
 //    sort the boundary patches according to their positions
-      Buf_SortBoundaryPatch( amr->ParaVar->BounP_NList[lv][s], amr->ParaVar->BounP_IDList[lv][s], 
+      Buf_SortBoundaryPatch( amr->ParaVar->BounP_NList[lv][s], amr->ParaVar->BounP_IDList[lv][s],
                              amr->ParaVar->BounP_PosList[lv][s] );
 
 

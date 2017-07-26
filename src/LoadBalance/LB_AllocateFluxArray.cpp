@@ -80,7 +80,7 @@ void LB_AllocateFluxArray( const int FaLv )
                   if ( SibSonPID != -1 )
                   {
 //                   allocate flux array
-                     amr->patch[0][FaLv][FaPID]->fnew( Sib );
+                     amr->patch[0][FaLv][FaPID]->fnew( Sib, OPT__AUTO_REDUCE_DT );
 
 //                   record the MPI recv list
                      if ( SibSonPID < -1 )   // son is not home
@@ -261,7 +261,7 @@ void LB_AllocateFluxArray( const int FaLv )
          LB_SendF_IDList[r][t] = TPID;
 
 //       allocate flux array
-         amr->patch[0][FaLv][TPID]->fnew( TSib );
+         amr->patch[0][FaLv][TPID]->fnew( TSib, OPT__AUTO_REDUCE_DT );
 
       } // for (int t=0; t<LB_SendF_NList[FaLv][r]; t++)
 

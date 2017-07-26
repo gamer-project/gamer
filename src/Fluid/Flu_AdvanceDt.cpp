@@ -1,6 +1,11 @@
 #include "Copyright.h"
 #include "GAMER.h"
 
+// defined in Flu_SwapFluxPointer.cpp
+void Flu_SwapFluxPointer( const int lv );
+void Flu_InitTempFlux( const int lv );
+
+
 extern void (*Flu_ResetByUser_API_Ptr)( const int lv, const int FluSg, const double TTime );
 
 
@@ -29,9 +34,17 @@ void Flu_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, co
                     const bool OverlapMPI, const bool Overlap_Sync )
 {
 
+// initialize the flux_tmp arrays for OPT__AUTO_REDUCE_DT
+   if ( OPT__FIXUP_FLUX  &&  OPT__AUTO_REDUCE_DT  &&  lv != 0 )   Flu_InitTempFlux( lv-1 );
+
+
+// invoke the fluid solver
    InvokeSolver( FLUID_SOLVER, lv, TimeNew, TimeOld, dt, NULL_REAL, SaveSg, NULL_INT, OverlapMPI, Overlap_Sync );
 
+
+// reset the fluxes in the buffer patches at lv as zeros so that one can accumulate the coarse-fine fluxes later when evolving lv+1
    if ( OPT__FIXUP_FLUX )  Buf_ResetBufferFlux( lv );
+
 
 // call Flu_ResetByUser_API_Ptr() here only if both GRAVITY and GRACKLE are disabled
 #  ifdef GRAVITY
@@ -41,5 +54,9 @@ void Flu_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, co
    if ( GRACKLE_MODE == GRACKLE_MODE_NONE )
 #  endif
    if ( OPT__RESET_FLUID  &&  Flu_ResetByUser_API_Ptr != NULL )   Flu_ResetByUser_API_Ptr( lv, SaveSg, TimeNew );
+
+
+// swap the flux pointers if the fluid solver works successfully
+   if ( OPT__FIXUP_FLUX  &&  OPT__AUTO_REDUCE_DT  &&  lv != 0  &&  GAMER_SUCCESS )  Flu_SwapFluxPointer( lv-1 );
 
 } // FUNCTION : Flu_AdvanceDt

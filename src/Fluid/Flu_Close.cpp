@@ -219,7 +219,8 @@ void CorrectFlux( const int lv, const real h_Flux_Array[][9][NFLUX_TOTAL][4*PATC
       const real dt_4         = (real)0.25*dt;
 
       int ID, FaPID, FaSibPID, PID0;
-      real (*FluxPtr)[PATCH_SIZE][PATCH_SIZE]   = NULL;
+      real (*FluxPtr_In )[PATCH_SIZE][PATCH_SIZE] = NULL;
+      real (*FluxPtr_Out)[PATCH_SIZE][PATCH_SIZE] = NULL;
 
 
 #     pragma omp for schedule( runtime )
@@ -231,12 +232,18 @@ void CorrectFlux( const int lv, const real h_Flux_Array[][9][NFLUX_TOTAL][4*PATC
          {
             if ( Table_01( lv, PID0, s ) == -1 )
             {
-               FaPID    = amr->patch[0][lv  ][    PID0]->father;
-               FaSibPID = amr->patch[0][lv-1][   FaPID]->sibling[s];
-               FluxPtr  = amr->patch[0][lv-1][FaSibPID]->flux[ MirrorSib[s] ];
+               FaPID       = amr->patch[0][lv  ][    PID0]->father;
+               FaSibPID    = amr->patch[0][lv-1][   FaPID]->sibling[s];
+               FluxPtr_In  = amr->patch[0][lv-1][FaSibPID]->flux[ MirrorSib[s] ];
+
+//             for OPT__AUTO_REDUCE_DT, store the updated fluxes in the temporary array "flux_tmp" since
+//             we may need to abandon these updated results if the fluid solver fails
+               FluxPtr_Out = ( OPT__AUTO_REDUCE_DT ) ? amr->patch[0][lv-1][FaSibPID]->flux_tmp[ MirrorSib[s] ] :
+                                                       amr->patch[0][lv-1][FaSibPID]->flux    [ MirrorSib[s] ];
 
 #              ifdef GAMER_DEBUG
-               if ( FluxPtr == NULL )  Aux_Error( ERROR_INFO, "FluxPtr == NULL (PID0 %d, s %d) !!\n", PID0, s );
+               if ( FluxPtr_In  == NULL )    Aux_Error( ERROR_INFO, "FluxPtr_In == NULL (PID0 %d, s %d) !!\n", PID0, s );
+               if ( FluxPtr_Out == NULL )    Aux_Error( ERROR_INFO, "FluxPtr_Out == NULL (PID0 %d, s %d) !!\n", PID0, s );
 #              endif
 
                for (int v=0; v<NFLUX_TOTAL; v++)
@@ -245,7 +252,7 @@ void CorrectFlux( const int lv, const real h_Flux_Array[][9][NFLUX_TOTAL][4*PATC
                {
                   ID = m*2*PATCH_SIZE + n;
 
-                  FluxPtr[v][m/2][n/2] -= dt_4*h_Flux_Array[TID][ Mapping[s] ][v][ID];
+                  FluxPtr_Out[v][m/2][n/2] = FluxPtr_In[v][m/2][n/2] - dt_4*h_Flux_Array[TID][ Mapping[s] ][v][ID];
                }
 
             } // if ( Table_01( lv, n, s ) == -1 )

@@ -37,7 +37,7 @@ void Flu_AllocateFluxArray( const int lv )
             for (int s=0; s<6; s++)
             {
                if (  ( SibPID = amr->patch[0][lv][PID]->sibling[s] ) >= 0  )
-                  if ( amr->patch[0][lv][SibPID]->son != -1 )  amr->patch[0][lv][PID]->fnew( s );
+                  if ( amr->patch[0][lv][SibPID]->son != -1 )  amr->patch[0][lv][PID]->fnew( s, OPT__AUTO_REDUCE_DT );
             }
          }
       }
