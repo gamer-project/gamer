@@ -34,8 +34,8 @@ void Flu_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, co
                     const bool OverlapMPI, const bool Overlap_Sync )
 {
 
-// initialize the flux_tmp arrays for OPT__AUTO_REDUCE_DT
-   if ( OPT__FIXUP_FLUX  &&  OPT__AUTO_REDUCE_DT  &&  lv != 0 )   Flu_InitTempFlux( lv-1 );
+// initialize the flux_tmp arrays for AUTO_REDUCE_DT
+   if ( OPT__FIXUP_FLUX  &&  AUTO_REDUCE_DT  &&  lv != 0 )  Flu_InitTempFlux( lv-1 );
 
 
 // invoke the fluid solver
@@ -57,6 +57,6 @@ void Flu_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, co
 
 
 // swap the flux pointers if the fluid solver works successfully
-   if ( OPT__FIXUP_FLUX  &&  OPT__AUTO_REDUCE_DT  &&  lv != 0  &&  GAMER_SUCCESS )  Flu_SwapFluxPointer( lv-1 );
+   if ( OPT__FIXUP_FLUX  &&  AUTO_REDUCE_DT  &&  lv != 0  &&  GAMER_SUCCESS )    Flu_SwapFluxPointer( lv-1 );
 
 } // FUNCTION : Flu_AdvanceDt

@@ -619,27 +619,29 @@ void Aux_TakeNote()
 //    record the parameters of time-step determination
       fprintf( Note, "Parameters of Time-step Determination\n" );
       fprintf( Note, "***********************************************************************************\n" );
-      fprintf( Note, "DT__FLUID                       %13.7e\n",  DT__FLUID               );
-      fprintf( Note, "DT__FLUID_INIT                  %13.7e\n",  DT__FLUID_INIT          );
+      fprintf( Note, "DT__FLUID                       %13.7e\n",  DT__FLUID                 );
+      fprintf( Note, "DT__FLUID_INIT                  %13.7e\n",  DT__FLUID_INIT            );
 #     ifdef GRAVITY
-      fprintf( Note, "DT__GRAVITY                     %13.7e\n",  DT__GRAVITY             );
+      fprintf( Note, "DT__GRAVITY                     %13.7e\n",  DT__GRAVITY               );
 #     endif
 #     if ( MODEL == ELBDM )
-      fprintf( Note, "DT__PHASE                       %13.7e\n",  DT__PHASE               );
+      fprintf( Note, "DT__PHASE                       %13.7e\n",  DT__PHASE                 );
 #     endif
 #     ifdef PARTICLE
-      fprintf( Note, "DT__PARVEL                      %13.7e\n",  DT__PARVEL              );
-      fprintf( Note, "DT__PARVEL_MAX                 %14.7e\n",   DT__PARVEL_MAX          );
-      fprintf( Note, "DT__PARACC                      %13.7e\n",  DT__PARACC              );
+      fprintf( Note, "DT__PARVEL                      %13.7e\n",  DT__PARVEL                );
+      fprintf( Note, "DT__PARVEL_MAX                 %14.7e\n",   DT__PARVEL_MAX            );
+      fprintf( Note, "DT__PARACC                      %13.7e\n",  DT__PARACC                );
 #     endif
 #     ifdef COMOVING
-      fprintf( Note, "DT__MAX_DELTA_A                 %13.7e\n",  DT__MAX_DELTA_A         );
+      fprintf( Note, "DT__MAX_DELTA_A                 %13.7e\n",  DT__MAX_DELTA_A           );
 #     endif
-      fprintf( Note, "DT__FLEXIBLE_RANGE              %13.7e\n",  DT__FLEXIBLE_RANGE      );
-      fprintf( Note, "OPT__DT_USER                    %d\n",      OPT__DT_USER            );
-      fprintf( Note, "OPT__DT_LEVEL                   %d\n",      OPT__DT_LEVEL           );
-      fprintf( Note, "OPT__AUTO_REDUCE_DT             %d\n",      OPT__AUTO_REDUCE_DT     );
-      fprintf( Note, "OPT__RECORD_DT                  %d\n",      OPT__RECORD_DT          );
+      fprintf( Note, "DT__FLEXIBLE_RANGE              %13.7e\n",  DT__FLEXIBLE_RANGE        );
+      fprintf( Note, "OPT__DT_USER                    %d\n",      OPT__DT_USER              );
+      fprintf( Note, "OPT__DT_LEVEL                   %d\n",      OPT__DT_LEVEL             );
+      fprintf( Note, "AUTO_REDUCE_DT                  %d\n",      AUTO_REDUCE_DT            );
+      fprintf( Note, "AUTO_REDUCE_DT_FACTOR           %13.7e\n",  AUTO_REDUCE_DT_FACTOR     );
+      fprintf( Note, "AUTO_REDUCE_DT_FACTOR_MIN       %13.7e\n",  AUTO_REDUCE_DT_FACTOR_MIN );
+      fprintf( Note, "OPT__RECORD_DT                  %d\n",      OPT__RECORD_DT            );
       fprintf( Note, "***********************************************************************************\n" );
       fprintf( Note, "\n\n");
 

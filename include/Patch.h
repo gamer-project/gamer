@@ -51,7 +51,7 @@ long  LB_Corner2Index( const int lv, const int Corner[], const Check_t Check );
 //                                      still allocate rho_ext as (PS1+RHOEXT_GHOST_SIZE)^3
 //                flux[6]         : Fluid flux (for the flux-correction operation)
 //                                  --> Including passively advected flux (for the flux-correction operation)
-//                flux_tmp[6]     : Temporary fluid flux for the option "OPT__AUTO_REDUCE_DT"
+//                flux_tmp[6]     : Temporary fluid flux for the option "AUTO_REDUCE_DT"
 //                flux_debug[6]   : Fluid flux for the debug mode (ensuring that the round-off errors are
 //                                  exactly the same in different parallelization parameters/strategies)
 //                corner[3]       : Grid indices of the cell at patch corner

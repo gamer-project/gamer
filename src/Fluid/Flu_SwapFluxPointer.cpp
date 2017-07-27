@@ -9,7 +9,7 @@
 // Description :  Swap the flux and flux_tmp pointers for all patches in the target level
 //
 // Note        :  1. Work on both real and buffer patches
-//                2. Work for the option "OPT__AUTO_REDUCE_DT", for which Flu_Close()->CorrectFlux()
+//                2. Work for the option "AUTO_REDUCE_DT", for which Flu_Close()->CorrectFlux()
 //                   will store the updated (corrected) coarse-grid fluxes in the temporary array flux_tmp[]
 //                   instead of flux[]
 //                3. Invoked by Flu_AdvanceDt()
@@ -48,7 +48,7 @@ void Flu_SwapFluxPointer( const int lv )
 // Description :  Initialize the flux_tmp array
 //
 // Note        :  1. Copy flux to flux_tmp
-//                2. Work for the option "OPT__AUTO_REDUCE_DT", for which Flu_SwapFluxPointer() will swap the
+//                2. Work for the option "AUTO_REDUCE_DT", for which Flu_SwapFluxPointer() will swap the
 //                   flux and flux_tmp pointers
 //                3. Invoked by Flu_AdvanceDt()
 //

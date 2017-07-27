@@ -808,6 +808,15 @@ void Init_ResetParameter()
 #  endif
 
 
+// AUTO_REDUCE_DT only works for DT_LEVEL_FLEXIBLE
+   if ( AUTO_REDUCE_DT  &&  OPT__DT_LEVEL != DT_LEVEL_FLEXIBLE )
+   {
+      AUTO_REDUCE_DT = false;
+
+      PRINT_WARNING( AUTO_REDUCE_DT, FORMAT_INT, "since OPT__DT_LEVEL != DT_LEVEL_FLEXIBLE" );
+   }
+
+
 // remove symbolic constants and macros only used in this structure
 #  undef FORMAT_INT
 #  undef FORMAT_FLT

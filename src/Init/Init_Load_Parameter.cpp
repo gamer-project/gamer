@@ -115,8 +115,10 @@ void Init_Load_Parameter()
    ReadPara->Add( "DT__FLEXIBLE_RANGE",         &DT__FLEXIBLE_RANGE,              0.1,             0.0,           NoMax_double   );
    ReadPara->Add( "OPT__DT_USER",               &OPT__DT_USER,                    false,           Useless_bool,  Useless_bool   );
    ReadPara->Add( "OPT__DT_LEVEL",              &OPT__DT_LEVEL,                   3,               1,             3              );
-   ReadPara->Add( "OPT__AUTO_REDUCE_DT",        &OPT__AUTO_REDUCE_DT,             true,            Useless_bool,  Useless_bool   );
    ReadPara->Add( "OPT__RECORD_DT",             &OPT__RECORD_DT,                  true,            Useless_bool,  Useless_bool   );
+   ReadPara->Add( "AUTO_REDUCE_DT",             &AUTO_REDUCE_DT,                  true,            Useless_bool,  Useless_bool   );
+   ReadPara->Add( "AUTO_REDUCE_DT_FACTOR",      &AUTO_REDUCE_DT_FACTOR,           0.8,             Eps_double,    1.0            );
+   ReadPara->Add( "AUTO_REDUCE_DT_FACTOR_MIN",  &AUTO_REDUCE_DT_FACTOR_MIN,       0.4,             0.0,           1.0            );
 
 
 // grid refinement
