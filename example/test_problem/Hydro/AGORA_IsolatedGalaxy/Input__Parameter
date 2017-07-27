@@ -77,6 +77,7 @@ DT__FLEXIBLE_RANGE            0.1         # dt criterion: allow dt to increase b
                                           #               be synchronized with the parent level (for OPT__DT_LEVEL==3 only) [0.1]
 OPT__DT_USER                  0           # dt criterion: user-defined -> edit "Mis_GetTimeStep_UserCriteria.cpp" [0]
 OPT__DT_LEVEL                 3           # dt at different AMR levels (1=shared, 2=differ by two, 3=flexible) [3]
+OPT__AUTO_REDUCE_DT           1           # reduce dt automatically when the program fails (for OPT__DT_LEVEL==3 only) [1]
 OPT__RECORD_DT                1           # record info of the dt determination [1]
 
 
