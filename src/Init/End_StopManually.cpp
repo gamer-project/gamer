@@ -15,7 +15,7 @@ void End_StopManually( int &Terminate_global )
 
    const char FileName[] = "STOP_GAMER_STOP";
 
-   int Terminate_local  = false;
+   int Terminate_local = false;
 
 
 // enforce NFS to flush the file information

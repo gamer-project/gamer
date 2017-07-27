@@ -97,7 +97,7 @@ real CPU_DensEntropy2Pres( const real Dens, const real Enpy, const real Gamma_m1
 #endif
 real CPU_CheckMinPresInEngy( const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy,
                              const real Gamma_m1, const real _Gamma_m1, const real MinPres );
-void Flu_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, const double dt, const int SaveSg,
+bool Flu_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, const double dt, const int SaveSg,
                     const bool OverlapMPI, const bool Overlap_Sync );
 void Flu_AllocateFluxArray( const int lv );
 void Flu_Close( const int lv, const int SaveSg, const real h_Flux_Array[][9][NFLUX_TOTAL][4*PATCH_SIZE*PATCH_SIZE],
@@ -183,7 +183,7 @@ template <typename T> int   Mis_Matching_char( const int N, const T Array[], con
 template <typename T> int   Mis_Matching_int( const int N, const T Array[], const int M, const T Key[], int Match[] );
 template <typename T> bool  Mis_CompareRealValue( const T Input1, const T Input2, const char *comment, const bool Verbose );
 ulong  Mis_Idx3D2Idx1D( const int Size[], const int Idx3D[] );
-double Mis_GetTimeStep( const int lv, const double dTime_SyncFaLv );
+double Mis_GetTimeStep( const int lv, const double dTime_SyncFaLv, const double AutoReduceDtCoeff );
 double Mis_dTime2dt( const double Time_In, const double dTime_In );
 void   Mis_GetTotalPatchNumber( const int lv );
 double Mis_Scale2PhySize( const int Scale );

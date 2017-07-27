@@ -20,13 +20,15 @@ extern double (*Mis_GetTimeStep_User_Ptr)( const int lv, const double dTime_dt )
 //                2. The function pointer "Mis_GetTimeStep_User_Ptr" points to "Mis_GetTimeStep_User()" by default
 //                   but may be overwritten by various test problem initializers
 //
-// Parameter   :  lv             : Target refinement level
-//                dTime_SyncFaLv : dt to synchronize lv and lv-1
-//                                 --> Only used for OPT__DT_LEVEL == DT_LEVEL_FLEXIBLE
+// Parameter   :  lv                : Target refinement level
+//                dTime_SyncFaLv    : dt to synchronize lv and lv-1
+//                                    --> Only used for OPT__DT_LEVEL == DT_LEVEL_FLEXIBLE
+//                AutoReduceDtCoeff : dt coefficient used by AUTO_REDUCE_DT
+//                                    --> The final dt will be multiplied by this factor
 //
 // Return      :  dTime_min
 //-------------------------------------------------------------------------------------------------------
-double Mis_GetTimeStep( const int lv, const double dTime_SyncFaLv )
+double Mis_GetTimeStep( const int lv, const double dTime_SyncFaLv, const double AutoReduceDtCoeff )
 {
 
    const char  FileName[] = "Record__TimeStep";
@@ -209,6 +211,10 @@ double Mis_GetTimeStep( const int lv, const double dTime_SyncFaLv )
    }
 
 
+// 2.3 reduce dt for AUTO_REDUCE_DT
+   if ( AUTO_REDUCE_DT )   dTime_min *= AutoReduceDtCoeff;
+
+
 
 // 3. record the dt info
 // =============================================================================================================
@@ -231,6 +237,9 @@ double Mis_GetTimeStep( const int lv, const double dTime_SyncFaLv )
          for (int t=0; t<NdTime; t++)
          fprintf( File, "  %13s", dTime_Name[t] );
 
+         if ( AUTO_REDUCE_DT )
+         fprintf( File, "  %13s", "AutoRedDt" );
+
          fprintf( File, "\n" );
       }
 
@@ -244,6 +253,9 @@ double Mis_GetTimeStep( const int lv, const double dTime_SyncFaLv )
 
       for (int t=0; t<NdTime; t++)
       fprintf( File, "  %13.7e", dTime[t] );
+
+      if ( AUTO_REDUCE_DT )
+      fprintf( File, "  %13.7e", AutoReduceDtCoeff );
 
       fprintf( File, "\n" );
 
