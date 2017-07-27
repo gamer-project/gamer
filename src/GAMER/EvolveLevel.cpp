@@ -116,36 +116,7 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
 // ===============================================================================================
 
 
-//    2. update particles (prediction for KDK) and exchange particles
-// ===============================================================================================
-#     ifdef PARTICLE
-      if ( OPT__VERBOSE  &&  MPI_Rank == 0 )
-         Aux_Message( stdout, "   Lv %2d: Par_UpdateParticle (predict) %5s... ", lv, "" );
-
-#     ifdef STORE_PAR_ACC
-      TIMING_FUNC(   Par_UpdateParticle( lv, TimeNew, TimeOld, PAR_UPSTEP_PRED,
-                                         (amr->Par->Integ == PAR_INTEG_EULER) ? StoreAcc_Yes    : StoreAcc_No,
-                                         (amr->Par->Integ == PAR_INTEG_EULER) ? UseStoredAcc_No : UseStoredAcc_Yes ),
-                     Timer_Par_Update[lv][0],   true   );
-#     else
-      TIMING_FUNC(   Par_UpdateParticle( lv, TimeNew, TimeOld, PAR_UPSTEP_PRED,
-                                         StoreAcc_No, UseStoredAcc_No ),
-                     Timer_Par_Update[lv][0],   true   );
-#     endif
-
-      if ( OPT__VERBOSE  &&  MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );
-
-      if ( OPT__VERBOSE  &&  MPI_Rank == 0 )
-         Aux_Message( stdout, "   Lv %2d: Par_PassParticle2Sibling %9s... ", lv, "" );
-
-      TIMING_FUNC(   Par_PassParticle2Sibling( lv, TimingSendPar_Yes ),   Timer_Par_2Sib[lv],   true   );
-
-      if ( OPT__VERBOSE  &&  MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );
-#     endif
-// ===============================================================================================
-
-
-//    3. fluid solver
+//    2. fluid solver
 // ===============================================================================================
       const int SaveSg_Flu = 1 - amr->FluSg[lv];
 
@@ -215,6 +186,35 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
       amr->FluSgTime[lv][SaveSg_Flu] = TimeNew;
 
       if ( OPT__VERBOSE  &&  MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );
+// ===============================================================================================
+
+
+//    3. update particles (prediction for KDK) and exchange particles
+// ===============================================================================================
+#     ifdef PARTICLE
+      if ( OPT__VERBOSE  &&  MPI_Rank == 0 )
+         Aux_Message( stdout, "   Lv %2d: Par_UpdateParticle (predict) %5s... ", lv, "" );
+
+#     ifdef STORE_PAR_ACC
+      TIMING_FUNC(   Par_UpdateParticle( lv, TimeNew, TimeOld, PAR_UPSTEP_PRED,
+                                         (amr->Par->Integ == PAR_INTEG_EULER) ? StoreAcc_Yes    : StoreAcc_No,
+                                         (amr->Par->Integ == PAR_INTEG_EULER) ? UseStoredAcc_No : UseStoredAcc_Yes ),
+                     Timer_Par_Update[lv][0],   true   );
+#     else
+      TIMING_FUNC(   Par_UpdateParticle( lv, TimeNew, TimeOld, PAR_UPSTEP_PRED,
+                                         StoreAcc_No, UseStoredAcc_No ),
+                     Timer_Par_Update[lv][0],   true   );
+#     endif
+
+      if ( OPT__VERBOSE  &&  MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );
+
+      if ( OPT__VERBOSE  &&  MPI_Rank == 0 )
+         Aux_Message( stdout, "   Lv %2d: Par_PassParticle2Sibling %9s... ", lv, "" );
+
+      TIMING_FUNC(   Par_PassParticle2Sibling( lv, TimingSendPar_Yes ),   Timer_Par_2Sib[lv],   true   );
+
+      if ( OPT__VERBOSE  &&  MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );
+#     endif
 // ===============================================================================================
 
 
