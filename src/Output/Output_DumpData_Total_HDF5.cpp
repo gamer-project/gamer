@@ -74,7 +74,7 @@ Procedure for outputting new variables:
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2239)
+// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2240)
 // Description :  Output all simulation data in the HDF5 format, which can be used as a restart file
 //                or loaded by YT
 //
@@ -138,6 +138,7 @@ Procedure for outputting new variables:
 //                2237 : 2017/07/17 --> output DT__FLEXIBLE_RANGE
 //                2238 : 2017/07/19 --> output DT_GRA_BLOCK_SIZE_Z and DT_FLU_USE_SHUFFLE
 //                2239 : 2017/07/25 --> output JEANS_MIN_PRES, JEANS_MIN_PRES_LEVEL, JEANS_MIN_PRES_NCELL
+//                2240 : 2017/07/26 --> output AUTO_REDUCE_DT*
 //-------------------------------------------------------------------------------------------------------
 void Output_DumpData_Total_HDF5( const char *FileName )
 {
@@ -1243,7 +1244,7 @@ void FillIn_KeyInfo( KeyInfo_t &KeyInfo )
 
    const time_t CalTime  = time( NULL );   // calendar time
 
-   KeyInfo.FormatVersion = 2239;
+   KeyInfo.FormatVersion = 2240;
    KeyInfo.Model         = MODEL;
    KeyInfo.NLevel        = NLEVEL;
    KeyInfo.NCompFluid    = NCOMP_FLUID;
@@ -1764,6 +1765,9 @@ void FillIn_InputPara( InputPara_t &InputPara )
    InputPara.Opt__DtUser             = OPT__DT_USER;
    InputPara.Opt__DtLevel            = OPT__DT_LEVEL;
    InputPara.Opt__RecordDt           = OPT__RECORD_DT;
+   InputPara.AutoReduceDt            = AUTO_REDUCE_DT;
+   InputPara.AutoReduceDtFactor      = AUTO_REDUCE_DT_FACTOR;
+   InputPara.AutoReduceDtFactorMin   = AUTO_REDUCE_DT_FACTOR_MIN;
 
 // domain refinement
    InputPara.RegridCount             = REGRID_COUNT;
@@ -2414,6 +2418,9 @@ void GetCompound_InputPara( hid_t &H5_TypeID )
    H5Tinsert( H5_TypeID, "Opt__DtUser",             HOFFSET(InputPara_t,Opt__DtUser            ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "Opt__DtLevel",            HOFFSET(InputPara_t,Opt__DtLevel           ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "Opt__RecordDt",           HOFFSET(InputPara_t,Opt__RecordDt          ), H5T_NATIVE_INT     );
+   H5Tinsert( H5_TypeID, "AutoReduceDt",            HOFFSET(InputPara_t,AutoReduceDt           ), H5T_NATIVE_INT     );
+   H5Tinsert( H5_TypeID, "AutoReduceDtFactor",      HOFFSET(InputPara_t,AutoReduceDtFactor     ), H5T_NATIVE_DOUBLE  );
+   H5Tinsert( H5_TypeID, "AutoReduceDtFactorMin",   HOFFSET(InputPara_t,AutoReduceDtFactorMin  ), H5T_NATIVE_DOUBLE  );
 
 
 // domain refinement
