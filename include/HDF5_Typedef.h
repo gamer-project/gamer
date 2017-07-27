@@ -340,6 +340,9 @@ struct InputPara_t
    int    Opt__DtUser;
    int    Opt__DtLevel;
    int    Opt__RecordDt;
+   int    AutoReduceDt;
+   double AutoReduceDtFactor;
+   double AutoReduceDtFactorMin;
 
 // domain refinement
    int    RegridCount;
