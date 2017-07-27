@@ -205,7 +205,8 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
                {
                   if ( MPI_Rank == 0 )
                   {
-                     Aux_Message( stderr, "WARNING : fluid solver failed --> rerunning with AutoReduceDtCoeff = %13.7e\n", AutoReduceDtCoeff );
+                     Aux_Message( stderr, "WARNING : fluid solver failed (Lv %2d, counter %8ld) --> ", lv, AdvanceCounter );
+                     Aux_Message( stderr, "auto-reduce dt by %13.7e\n", AutoReduceDtCoeff );
                   }
                }
 
