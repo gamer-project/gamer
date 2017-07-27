@@ -8,6 +8,11 @@ datatypes in the HDF5 format
 ===========================================================================*/
 
 #include "hdf5.h"
+#include "Macro.h"
+#include "CUFLU.h"
+#ifdef GRAVITY
+#include "CUPOT.h"
+#endif
 
 #ifdef FLOAT8
 #  define H5T_GAMER_REAL H5T_NATIVE_DOUBLE
