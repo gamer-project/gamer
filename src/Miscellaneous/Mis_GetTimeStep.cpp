@@ -220,14 +220,14 @@ double Mis_GetTimeStep( const int lv, const double dTime_SyncFaLv, const double 
 // =============================================================================================================
    if ( OPT__RECORD_DT  &&  MPI_Rank == 0 )
    {
+      if ( FirstTime  &&  Aux_CheckFileExist(FileName) )
+            Aux_Message( stderr, "WARNING : file \"%s\" already exists !!\n", FileName );
+
       FILE *File = fopen( FileName, "a" );
 
 //    header
       if ( FirstTime )
       {
-         if ( Aux_CheckFileExist(FileName) )
-            Aux_Message( stderr, "WARNING : file \"%s\" already exists !!\n", FileName );
-
          fprintf( File, "#%3s  %8s  %8s  %13s  %13s  %13s", "Lv", "Step", "Counter", "TimeOld", "TimeNew", "dTime" );
 
 #        ifdef COMOVING
