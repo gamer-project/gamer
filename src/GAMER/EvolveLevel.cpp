@@ -41,7 +41,7 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
    const bool TimingSendPar_Yes = true;
 #  endif
 
-   double dTime_SoFar, dTime_SubStep, dt_SubStep, TimeOld, TimeNew;
+   double dTime_SoFar, dTime_SubStep, dt_SubStep, TimeOld, TimeNew, AutoReduceDtCoeff;
 
 
 // reset the workload weighting at each level to be recorded later
@@ -50,7 +50,8 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
 
 
 // sub-step loop
-   dTime_SoFar = 0.0;
+   dTime_SoFar       = 0.0;
+   AutoReduceDtCoeff = 1.0;
 
 // note that we have ensured "Time[lv] == Time[lv-1]" to avoid the round-off errors
    while (  ( lv == 0 && amr->NUpdateLv[lv] == 0 )  ||
@@ -70,7 +71,7 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
                dTime_SubStep = HUGE_NUMBER;
 
                for (int TLv=0; TLv<NLEVEL; TLv++)
-               dTime_SubStep = fmin( Mis_GetTimeStep(TLv,NULL_REAL), dTime_SubStep );
+               dTime_SubStep = fmin(  Mis_GetTimeStep( TLv, NULL_REAL, AutoReduceDtCoeff ), dTime_SubStep  );
             }
             else
                dTime_SubStep = dTime_FaLv;
@@ -81,14 +82,14 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
                dTime_SubStep = HUGE_NUMBER;
 
                for (int TLv=0; TLv<NLEVEL; TLv++)
-               dTime_SubStep = fmin( Mis_GetTimeStep(TLv,NULL_REAL)*(1<<TLv), dTime_SubStep );
+               dTime_SubStep = fmin(  Mis_GetTimeStep( TLv, NULL_REAL, AutoReduceDtCoeff )*(1<<TLv), dTime_SubStep  );
             }
             else
                dTime_SubStep = 0.5*dTime_FaLv;
          break;
 
          case ( DT_LEVEL_FLEXIBLE ):
-               dTime_SubStep = Mis_GetTimeStep( lv, dTime_FaLv-dTime_SoFar );
+               dTime_SubStep = Mis_GetTimeStep( lv, dTime_FaLv-dTime_SoFar, AutoReduceDtCoeff );
          break;
 
          default:
@@ -167,8 +168,51 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
 
       else
       {
-         TIMING_FUNC(   Flu_AdvanceDt( lv, TimeNew, TimeOld, dt_SubStep, SaveSg_Flu, false, false ),
+         int FluStatus_AllRank;
+
+         TIMING_FUNC(   FluStatus_AllRank = Flu_AdvanceDt( lv, TimeNew, TimeOld, dt_SubStep, SaveSg_Flu, false, false ),
                         Timer_Flu_Advance[lv],   true   );
+
+//       do nothing if AUTO_REDUCE_DT is disabled
+         if ( AUTO_REDUCE_DT )
+         {
+            if ( FluStatus_AllRank == GAMER_SUCCESS )
+            {
+//             reset the time-step coefficient to unity
+               AutoReduceDtCoeff = 1.0;
+            }
+
+            else
+            {
+//             reduce the time-step coefficient
+               AutoReduceDtCoeff *= AUTO_REDUCE_DT_FACTOR;
+
+//             terminate the program if the time-step coefficient becomes smaller than the minimum threshold
+               if ( AutoReduceDtCoeff < AUTO_REDUCE_DT_FACTOR_MIN )
+               {
+                  if ( MPI_Rank == 0 )
+                  {
+                     Aux_Message( stderr, "\n\n===================================================================================\n" );
+                     Aux_Message( stderr, "ERROR : AutoReduceDtCoeff (%13.7e) < AUTO_REDUCE_DT_FACTOR_MIN (%13.7e) !!\n",
+                                  AutoReduceDtCoeff, AUTO_REDUCE_DT_FACTOR_MIN );
+                     Aux_Message( stderr, "        --> AUTO_REDUCE_DT failed, and the program will be terminated ......\n" );
+                     Aux_Message( stderr, "===================================================================================\n\n\n" );
+                     MPI_Exit();
+                  }
+               }
+
+               else
+               {
+                  if ( MPI_Rank == 0 )
+                  {
+                     Aux_Message( stderr, "WARNING : fluid solver failed --> rerunning with AutoReduceDtCoeff = %13.7e\n", AutoReduceDtCoeff );
+                  }
+               }
+
+//             restart the sub-step while loop with a smaller dt
+               continue;
+            }
+         } // if ( AUTO_REDUCE_DT )
 
 #        ifdef GRAVITY
          if ( SelfGravity )

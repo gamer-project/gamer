@@ -164,6 +164,17 @@ void Aux_Check_Parameter()
                  "OVERLAP_MPI", "OPT__OVERLAP_MPI" );
 #  endif
 
+   if ( AUTO_REDUCE_DT )
+   {
+      if ( OPT__OVERLAP_MPI )
+         Aux_Error( ERROR_INFO, "currently \"%s\" does not work with \"%s\" !!\n",
+                    "AUTO_REDUCE_DT", "OPT__OVERLAP_MPI" );
+
+      if ( OPT__DT_LEVEL != DT_LEVEL_FLEXIBLE )
+         Aux_Error( ERROR_INFO, "\"%s\" must work with \"%s\" !!\n",
+                    "AUTO_REDUCE_DT", "OPT__DT_LEVEL == DT_LEVEL_FLEXIBLE" );
+   }
+
 #  if ( MODEL != HYDRO )
    for (int f=0; f<6; f++)
    if ( OPT__BC_FLU[f] == BC_FLU_OUTFLOW  ||  OPT__BC_FLU[f] == BC_FLU_REFLECTING )

@@ -2,6 +2,11 @@
 #include "GAMER.h"
 #include "CUFLU.h"
 
+
+// status of the fluid solver used by AUTO_REDUCE_DT (declared in Flu_AdvanceDt.cpp)
+extern bool FluStatus_ThisRank;
+
+
 static void StoreFlux( const int lv, const real Flux_Array[][9][NFLUX_TOTAL][4*PATCH_SIZE*PATCH_SIZE],
                        const int NPG, const int *PID0_List, const real dt );
 static void CorrectFlux( const int lv, const real Flux_Array[][9][NFLUX_TOTAL][4*PATCH_SIZE*PATCH_SIZE],
@@ -621,93 +626,98 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
 //              --> it will not crash the code since we always apply MIN_PRES when calculating pressure
             if ( Unphysical(Update, Gamma_m1, CheckMinEngy) )
             {
-//             output debug information
-               const int  PID_Failed      = PID0_List[TID] + LocalID[k_out/PS1][j_out/PS1][i_out/PS1];
-               const bool CheckMinPres_No = false;
-               real In[NCOMP_TOTAL], tmp[NCOMP_TOTAL];
-
-               char FileName[100];
-               sprintf( FileName, "FailedPatchGroup_r%03d_lv%02d_PID0-%05d", MPI_Rank, lv, PID0_List[TID] );
-
-//             use "a" instead of "w" since there may be more than one failed cell in a given patch group
-               FILE *File = fopen( FileName, "a" );
-
-               for (int v=0; v<NCOMP_TOTAL; v++)   In[v] = h_Flu_Array_F_In[TID][v][idx_in];
-
-//             output information about the failed cell
-               fprintf( File, "PID                              = %5d\n", PID_Failed );
-               fprintf( File, "(i,j,k) in the patch             = (%2d,%2d,%2d)\n", i_out%PS1, j_out%PS1, k_out%PS1 );
-               fprintf( File, "(i,j,k) in the input fluid array = (%2d,%2d,%2d)\n", i_out, j_out, k_out );
-#              ifdef DUAL_ENERGY
-               fprintf( File, "total energy density update      = %s\n",
-                        ( h_DE_Array_F_Out[TID][idx_out] == DE_UPDATED_BY_ETOT     ) ? "Etot" :
-                        ( h_DE_Array_F_Out[TID][idx_out] == DE_UPDATED_BY_DUAL     ) ? "Dual" :
-                        ( h_DE_Array_F_Out[TID][idx_out] == DE_UPDATED_BY_MIN_PRES ) ? "MinPres" :
-                                                                                       "Unknown" );
-#              endif
-               fprintf( File, "\n" );
-               fprintf( File, "input        = (%14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e",
-                        In[DENS], In[MOMX], In[MOMY], In[MOMZ], In[ENGY],
-                        CPU_GetPressure(In[DENS], In[MOMX], In[MOMY], In[MOMZ], In[ENGY],
-                                        Gamma_m1, CheckMinPres_No, NULL_REAL) );
-#              if ( DUAL_ENERGY == DE_ENPY )
-               fprintf( File, ", %14.7e", In[ENPY] );
-#              endif
-               fprintf( File, ")\n" );
-               fprintf( File, "ouptut (old) = (%14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e",
-                        Out[DENS], Out[MOMX], Out[MOMY], Out[MOMZ], Out[ENGY],
-                        CPU_GetPressure(Out[DENS], Out[MOMX], Out[MOMY], Out[MOMZ], Out[ENGY],
-                                        Gamma_m1, CheckMinPres_No, NULL_REAL) );
-#              if ( DUAL_ENERGY == DE_ENPY )
-               fprintf( File, ", %14.7e", Out[ENPY] );
-#              endif
-               fprintf( File, ")\n" );
-               fprintf( File, "output (new) = (%14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e",
-                        Update[DENS], Update[MOMX], Update[MOMY], Update[MOMZ], Update[ENGY],
-                        CPU_GetPressure(Update[DENS], Update[MOMX], Update[MOMY], Update[MOMZ], Update[ENGY],
-                                        Gamma_m1, CheckMinPres_No, NULL_REAL) );
-#              if ( DUAL_ENERGY == DE_ENPY )
-               fprintf( File, ", %14.7e", Update[ENPY] );
-#              endif
-               fprintf( File, ")\n" );
-
-//             output all data in the input fluid array (including ghost zones)
-               fprintf( File, "\n===============================================================================================\n" );
-               fprintf( File, "(%2s,%2s,%2s)%14s%14s%14s%14s%14s%14s",
-                        "i", "j", "k", "Density", "Px", "Py", "Pz", "Energy", "Pressure" );
-#              if ( NCOMP_PASSIVE > 0 )
-               for (int v=0; v<NCOMP_PASSIVE; v++)    fprintf( File, "%14s", PassiveFieldName_Grid[v] );
-#              endif
-               fprintf( File, "\n" );
-
-               for (int k=0; k<FLU_NXT; k++)
-               for (int j=0; j<FLU_NXT; j++)
-               for (int i=0; i<FLU_NXT; i++)
-               {
-                  fprintf( File, "(%2d,%2d,%2d)", i-FLU_GHOST_SIZE, j-FLU_GHOST_SIZE, k-FLU_GHOST_SIZE );
-
-                  for (int v=0; v<NCOMP_TOTAL; v++)
-                  {
-                     tmp[v] = h_Flu_Array_F_In[TID][v][ ((k*FLU_NXT)+j)*FLU_NXT+i ];
-                     fprintf( File, " %13.6e", tmp[v] );
-                  }
-
-                  fprintf( File, " %13.6e\n", CPU_GetPressure(tmp[0], tmp[1], tmp[2], tmp[3], tmp[4],
-                                                              Gamma_m1, CheckMinPres_No, NULL_REAL) );
-               }
-
-               fclose( File );
-
-//             output the failed patch (mainly for recording the sibling information)
-#              ifdef GRAVITY
-               Output_Patch( lv, PID_Failed, amr->FluSg[lv], amr->PotSg[lv], "Unphy" );
-#              else
-               Output_Patch( lv, PID_Failed, amr->FluSg[lv], NULL_INT,       "Unphy" );
-#              endif
-
-//             use critical directive to avoid thread racing (may not be necessary here?)
+//             set CorrectUnphy = GAMER_FAILED if any cells fail
+//             --> use critical directive to avoid thread racing (may not be necessary here?)
 #              pragma omp critical
                CorrectUnphy = GAMER_FAILED;
+
+
+//             output the debug information (only if AUTO_REDUCE_DT is disabled)
+               if ( !AUTO_REDUCE_DT )
+               {
+                  const int  PID_Failed      = PID0_List[TID] + LocalID[k_out/PS1][j_out/PS1][i_out/PS1];
+                  const bool CheckMinPres_No = false;
+                  real In[NCOMP_TOTAL], tmp[NCOMP_TOTAL];
+
+                  char FileName[100];
+                  sprintf( FileName, "FailedPatchGroup_r%03d_lv%02d_PID0-%05d", MPI_Rank, lv, PID0_List[TID] );
+
+//                use "a" instead of "w" since there may be more than one failed cell in a given patch group
+                  FILE *File = fopen( FileName, "a" );
+
+                  for (int v=0; v<NCOMP_TOTAL; v++)   In[v] = h_Flu_Array_F_In[TID][v][idx_in];
+
+//                output information about the failed cell
+                  fprintf( File, "PID                              = %5d\n", PID_Failed );
+                  fprintf( File, "(i,j,k) in the patch             = (%2d,%2d,%2d)\n", i_out%PS1, j_out%PS1, k_out%PS1 );
+                  fprintf( File, "(i,j,k) in the input fluid array = (%2d,%2d,%2d)\n", i_out, j_out, k_out );
+#                 ifdef DUAL_ENERGY
+                  fprintf( File, "total energy density update      = %s\n",
+                           ( h_DE_Array_F_Out[TID][idx_out] == DE_UPDATED_BY_ETOT     ) ? "Etot" :
+                           ( h_DE_Array_F_Out[TID][idx_out] == DE_UPDATED_BY_DUAL     ) ? "Dual" :
+                           ( h_DE_Array_F_Out[TID][idx_out] == DE_UPDATED_BY_MIN_PRES ) ? "MinPres" :
+                                                                                          "Unknown" );
+#                 endif
+                  fprintf( File, "\n" );
+                  fprintf( File, "input        = (%14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e",
+                           In[DENS], In[MOMX], In[MOMY], In[MOMZ], In[ENGY],
+                           CPU_GetPressure(In[DENS], In[MOMX], In[MOMY], In[MOMZ], In[ENGY],
+                                           Gamma_m1, CheckMinPres_No, NULL_REAL) );
+#                 if ( DUAL_ENERGY == DE_ENPY )
+                  fprintf( File, ", %14.7e", In[ENPY] );
+#                 endif
+                  fprintf( File, ")\n" );
+                  fprintf( File, "ouptut (old) = (%14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e",
+                           Out[DENS], Out[MOMX], Out[MOMY], Out[MOMZ], Out[ENGY],
+                           CPU_GetPressure(Out[DENS], Out[MOMX], Out[MOMY], Out[MOMZ], Out[ENGY],
+                                           Gamma_m1, CheckMinPres_No, NULL_REAL) );
+#                 if ( DUAL_ENERGY == DE_ENPY )
+                  fprintf( File, ", %14.7e", Out[ENPY] );
+#                 endif
+                  fprintf( File, ")\n" );
+                  fprintf( File, "output (new) = (%14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e",
+                           Update[DENS], Update[MOMX], Update[MOMY], Update[MOMZ], Update[ENGY],
+                           CPU_GetPressure(Update[DENS], Update[MOMX], Update[MOMY], Update[MOMZ], Update[ENGY],
+                                           Gamma_m1, CheckMinPres_No, NULL_REAL) );
+#                 if ( DUAL_ENERGY == DE_ENPY )
+                  fprintf( File, ", %14.7e", Update[ENPY] );
+#                 endif
+                  fprintf( File, ")\n" );
+
+//                output all data in the input fluid array (including ghost zones)
+                  fprintf( File, "\n===============================================================================================\n" );
+                  fprintf( File, "(%2s,%2s,%2s)%14s%14s%14s%14s%14s%14s",
+                           "i", "j", "k", "Density", "Px", "Py", "Pz", "Energy", "Pressure" );
+#                 if ( NCOMP_PASSIVE > 0 )
+                  for (int v=0; v<NCOMP_PASSIVE; v++)    fprintf( File, "%14s", PassiveFieldName_Grid[v] );
+#                 endif
+                  fprintf( File, "\n" );
+
+                  for (int k=0; k<FLU_NXT; k++)
+                  for (int j=0; j<FLU_NXT; j++)
+                  for (int i=0; i<FLU_NXT; i++)
+                  {
+                     fprintf( File, "(%2d,%2d,%2d)", i-FLU_GHOST_SIZE, j-FLU_GHOST_SIZE, k-FLU_GHOST_SIZE );
+
+                     for (int v=0; v<NCOMP_TOTAL; v++)
+                     {
+                        tmp[v] = h_Flu_Array_F_In[TID][v][ ((k*FLU_NXT)+j)*FLU_NXT+i ];
+                        fprintf( File, " %13.6e", tmp[v] );
+                     }
+
+                     fprintf( File, " %13.6e\n", CPU_GetPressure(tmp[0], tmp[1], tmp[2], tmp[3], tmp[4],
+                                                                 Gamma_m1, CheckMinPres_No, NULL_REAL) );
+                  }
+
+                  fclose( File );
+
+//                output the failed patch (mainly for recording the sibling information)
+#                 ifdef GRAVITY
+                  Output_Patch( lv, PID_Failed, amr->FluSg[lv], amr->PotSg[lv], "Unphy" );
+#                 else
+                  Output_Patch( lv, PID_Failed, amr->FluSg[lv], NULL_INT,       "Unphy" );
+#                 endif
+               } // if ( !AUTO_REDUCE_DT )
             } // if ( Unphysical(Update) )
 
             else
@@ -734,12 +744,24 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
    } // end of OpenMP parallel region
 
 
-// terminate the program if CorrectUnphysical failed
+// operations when CorrectUnphysical() fails
    if ( CorrectUnphy == GAMER_FAILED )
-      Aux_Error( ERROR_INFO, "first-order correction failed at Rank %d, lv %d, Time %20.14e, Step %ld, Counter %ld ...\n",
-                 MPI_Rank, lv, Time[lv], Step, AdvanceCounter[lv] );
+   {
+//    if AUTO_REDUCE_DT is enabled, set FluStatus_ThisRank as GAMER_FAILED to rerun Flu_AdvancedDt() with a smaller dt
+      if ( AUTO_REDUCE_DT )
+         FluStatus_ThisRank = GAMER_FAILED;
 
-   NCorrUnphy[lv] += NCorrThisTime;
+//    otherwise, terminate the program
+      else
+         Aux_Error( ERROR_INFO, "first-order correction failed at Rank %d, lv %d, Time %20.14e, Step %ld, Counter %ld ...\n",
+                    MPI_Rank, lv, Time[lv], Step, AdvanceCounter[lv] );
+   }
+
+// accumulate the total number of corrected cells in one global time-step if CorrectUnphysical() works
+   else
+   {
+      NCorrUnphy[lv] += NCorrThisTime;
+   }
 
 } // FUNCTION : CorrectUnphysical
 #endif // #if ( MODEL == HYDRO  ||  MODEL == MHD )
