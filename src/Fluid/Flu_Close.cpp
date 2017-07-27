@@ -234,10 +234,10 @@ void CorrectFlux( const int lv, const real h_Flux_Array[][9][NFLUX_TOTAL][4*PATC
                FaPID    = amr->patch[0][lv  ][ PID0]->father;
                FaSibPID = amr->patch[0][lv-1][FaPID]->sibling[s];
 
-//             for OPT__AUTO_REDUCE_DT, store the updated fluxes in the temporary array "flux_tmp" since
+//             for AUTO_REDUCE_DT, store the updated fluxes in the temporary array "flux_tmp" since
 //             we may need to abandon these updated results if the fluid solver fails
-               FluxPtr = ( OPT__AUTO_REDUCE_DT ) ? amr->patch[0][lv-1][FaSibPID]->flux_tmp[ MirrorSib[s] ] :
-                                                   amr->patch[0][lv-1][FaSibPID]->flux    [ MirrorSib[s] ];
+               FluxPtr = ( AUTO_REDUCE_DT ) ? amr->patch[0][lv-1][FaSibPID]->flux_tmp[ MirrorSib[s] ] :
+                                              amr->patch[0][lv-1][FaSibPID]->flux    [ MirrorSib[s] ];
 
 #              ifdef GAMER_DEBUG
                if ( FluxPtr == NULL )  Aux_Error( ERROR_INFO, "FluxPtr == NULL (PID0 %d, s %d) !!\n", PID0, s );

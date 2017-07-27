@@ -41,7 +41,7 @@ void Flu_AllocateFluxArray_Buffer( const int lv )
 
             if ( SibPID != -1 )
             if ( amr->patch[0][lv][SibPID]->son != -1 )
-               amr->patch[0][lv][PID]->fnew( MirrorSib[s], OPT__AUTO_REDUCE_DT );
+               amr->patch[0][lv][PID]->fnew( MirrorSib[s], AUTO_REDUCE_DT );
          }
       }
    } // for (int s=0; s<6; s++)
