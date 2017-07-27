@@ -2,10 +2,6 @@
 
 #include "Copyright.h"
 #include "GAMER.h"
-#include "CUFLU.h"
-#ifdef GRAVITY
-#include "CUPOT.h"
-#endif
 #include "HDF5_Typedef.h"
 #include <ctime>
 
