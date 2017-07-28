@@ -100,7 +100,7 @@ real CPU_CheckMinPresInEngy( const real Dens, const real MomX, const real MomY, 
 bool Flu_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, const double dt, const int SaveSg,
                     const bool OverlapMPI, const bool Overlap_Sync );
 void Flu_AllocateFluxArray( const int lv );
-void Flu_Close( const int lv, const int SaveSg, const real h_Flux_Array[][9][NFLUX_TOTAL][4*PATCH_SIZE*PATCH_SIZE],
+void Flu_Close( const int lv, const int SaveSg, real h_Flux_Array[][9][NFLUX_TOTAL][4*PATCH_SIZE*PATCH_SIZE],
                 real h_Flu_Array_F_Out[][FLU_NOUT][8*PATCH_SIZE*PATCH_SIZE*PATCH_SIZE],
                 char h_DE_Array_F_Out[][8*PATCH_SIZE*PATCH_SIZE*PATCH_SIZE],
                 const int NPG, const int *PID0_List, const real h_Flu_Array_F_In[][FLU_NIN][FLU_NXT*FLU_NXT*FLU_NXT],

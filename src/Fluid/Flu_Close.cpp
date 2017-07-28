@@ -16,7 +16,9 @@ static bool Unphysical( const real Fluid[], const real Gamma_m1, const int Check
 static void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
                                const real h_Flu_Array_F_In[][FLU_NIN][FLU_NXT*FLU_NXT*FLU_NXT],
                                real h_Flu_Array_F_Out[][FLU_NOUT][8*PATCH_SIZE*PATCH_SIZE*PATCH_SIZE],
-                               char h_DE_Array_F_Out[][8*PATCH_SIZE*PATCH_SIZE*PATCH_SIZE], const real dt );
+                               char h_DE_Array_F_Out[][8*PATCH_SIZE*PATCH_SIZE*PATCH_SIZE],
+                               real h_Flux_Array[][9][NFLUX_TOTAL][4*PATCH_SIZE*PATCH_SIZE],
+                               const real dt );
 #endif
 static int  Table_01( const int lv, const int PID, const int SibID );
 
@@ -46,7 +48,7 @@ extern void CPU_RiemannSolver_HLLE( const int XYZ, real Flux_Out[], const real L
 //                PID0_List         : List recording the patch indicies with LocalID==0 to be udpated
 //                dt                : Evolution time-step
 //-------------------------------------------------------------------------------------------------------
-void Flu_Close( const int lv, const int SaveSg, const real h_Flux_Array[][9][NFLUX_TOTAL][4*PATCH_SIZE*PATCH_SIZE],
+void Flu_Close( const int lv, const int SaveSg, real h_Flux_Array[][9][NFLUX_TOTAL][4*PATCH_SIZE*PATCH_SIZE],
                 real h_Flu_Array_F_Out[][FLU_NOUT][8*PATCH_SIZE*PATCH_SIZE*PATCH_SIZE],
                 char h_DE_Array_F_Out[][8*PATCH_SIZE*PATCH_SIZE*PATCH_SIZE],
                 const int NPG, const int *PID0_List, const real h_Flu_Array_F_In[][FLU_NIN][FLU_NXT*FLU_NXT*FLU_NXT],
@@ -56,7 +58,7 @@ void Flu_Close( const int lv, const int SaveSg, const real h_Flux_Array[][9][NFL
 // try to correct the unphysical results in h_Flu_Array_F_Out (e.g., negative density)
 // --> must be done BEFORE invoking both StoreFlux() and CorrectFlux() since CorrectUnphysical() might modify the flux array
 #  if ( MODEL == HYDRO  ||  MODEL == MHD )
-   CorrectUnphysical( lv, NPG, PID0_List, h_Flu_Array_F_In, h_Flu_Array_F_Out, h_DE_Array_F_Out, dt );
+   CorrectUnphysical( lv, NPG, PID0_List, h_Flu_Array_F_In, h_Flu_Array_F_Out, h_DE_Array_F_Out, h_Flux_Array, dt );
 #  endif
 
 
@@ -363,12 +365,15 @@ bool Unphysical( const real Fluid[], const real Gamma_m1, const int CheckMinEngy
 //                h_Flu_Array_F_In  : Input fluid array
 //                h_Flu_Array_F_Out : Output fluid array
 //                h_DE_Array_F_Out  : Output dual-energy status array
+//                h_Flux_Array      : Output array storing the updated flux data
 //                dt                : Evolution time-step
 //-------------------------------------------------------------------------------------------------------
 void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
                         const real h_Flu_Array_F_In[][FLU_NIN][FLU_NXT*FLU_NXT*FLU_NXT],
                         real h_Flu_Array_F_Out[][FLU_NOUT][8*PATCH_SIZE*PATCH_SIZE*PATCH_SIZE],
-                        char h_DE_Array_F_Out[][8*PATCH_SIZE*PATCH_SIZE*PATCH_SIZE], const real dt )
+                        char h_DE_Array_F_Out[][8*PATCH_SIZE*PATCH_SIZE*PATCH_SIZE],
+                        real h_Flux_Array[][9][NFLUX_TOTAL][4*PATCH_SIZE*PATCH_SIZE],
+                        const real dt )
 {
 
    const real dh           = (real)amr->dh[lv];
@@ -393,6 +398,8 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
 // variables private to each OpenMP thread
    real VarL[3][NCOMP_TOTAL], VarC[NCOMP_TOTAL], VarR[3][NCOMP_TOTAL], FluxL[3][NCOMP_TOTAL], FluxR[3][NCOMP_TOTAL];
    real dF[3][NCOMP_TOTAL], Out[NCOMP_TOTAL], Update[NCOMP_TOTAL];
+   real FluxL_1D[NCOMP_TOTAL], FluxR_1D[NCOMP_TOTAL];
+   int  ijk_out[3];
 
 // variables for OPT__1ST_FLUX_CORR == FIRST_FLUX_CORR_3D1D
    const int  Corr1D_NBuf          = 1;
@@ -420,18 +427,18 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
 #  pragma omp for schedule( runtime ) reduction( +:NCorrThisTime )
    for (int TID=0; TID<NPG; TID++)
    {
-      for (int k_out=0; k_out<PS2; k_out++)
-      for (int j_out=0; j_out<PS2; j_out++)
-      for (int i_out=0; i_out<PS2; i_out++)
+      for (ijk_out[2]=0; ijk_out[2]<PS2; ijk_out[2]++)
+      for (ijk_out[1]=0; ijk_out[1]<PS2; ijk_out[1]++)
+      for (ijk_out[0]=0; ijk_out[0]<PS2; ijk_out[0]++)
       {
-         const int idx_out = (k_out*PS2 + j_out)*PS2 + i_out;
+         const int idx_out = (ijk_out[2]*PS2 + ijk_out[1])*PS2 + ijk_out[0];
 
 //       check if the updated values are unphysical
          for (int v=0; v<NCOMP_TOTAL; v++)   Out[v] = h_Flu_Array_F_Out[TID][v][idx_out];
 
          if ( Unphysical(Out, Gamma_m1, CheckMinPres) )
          {
-            const int idx_in = ( (k_out+FLU_GHOST_SIZE)*FLU_NXT + (j_out+FLU_GHOST_SIZE) )*FLU_NXT + (i_out+FLU_GHOST_SIZE);
+            const int idx_in = ( (ijk_out[2]+FLU_GHOST_SIZE)*FLU_NXT + (ijk_out[1]+FLU_GHOST_SIZE) )*FLU_NXT + (ijk_out[0]+FLU_GHOST_SIZE);
 
 //          try to correct unphysical results using 1st-order fluxes (which should be more diffusive)
 //          ========================================================================================
@@ -543,18 +550,18 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
                         switch ( OPT__1ST_FLUX_CORR_SCHEME )
                         {
                            case RSOLVER_1ST_ROE:
-                              CPU_RiemannSolver_Roe ( d, FluxL[d], Corr1D_InOut_PtrL, Corr1D_InOut_PtrC, GAMMA, MIN_PRES );
-                              CPU_RiemannSolver_Roe ( d, FluxR[d], Corr1D_InOut_PtrC, Corr1D_InOut_PtrR, GAMMA, MIN_PRES );
+                              CPU_RiemannSolver_Roe ( d, FluxL_1D, Corr1D_InOut_PtrL, Corr1D_InOut_PtrC, GAMMA, MIN_PRES );
+                              CPU_RiemannSolver_Roe ( d, FluxR_1D, Corr1D_InOut_PtrC, Corr1D_InOut_PtrR, GAMMA, MIN_PRES );
                            break;
 
                            case RSOLVER_1ST_HLLC:
-                              CPU_RiemannSolver_HLLC( d, FluxL[d], Corr1D_InOut_PtrL, Corr1D_InOut_PtrC, GAMMA, MIN_PRES );
-                              CPU_RiemannSolver_HLLC( d, FluxR[d], Corr1D_InOut_PtrC, Corr1D_InOut_PtrR, GAMMA, MIN_PRES );
+                              CPU_RiemannSolver_HLLC( d, FluxL_1D, Corr1D_InOut_PtrL, Corr1D_InOut_PtrC, GAMMA, MIN_PRES );
+                              CPU_RiemannSolver_HLLC( d, FluxR_1D, Corr1D_InOut_PtrC, Corr1D_InOut_PtrR, GAMMA, MIN_PRES );
                            break;
 
                            case RSOLVER_1ST_HLLE:
-                              CPU_RiemannSolver_HLLE( d, FluxL[d], Corr1D_InOut_PtrL, Corr1D_InOut_PtrC, GAMMA, MIN_PRES );
-                              CPU_RiemannSolver_HLLE( d, FluxR[d], Corr1D_InOut_PtrC, Corr1D_InOut_PtrR, GAMMA, MIN_PRES );
+                              CPU_RiemannSolver_HLLE( d, FluxL_1D, Corr1D_InOut_PtrL, Corr1D_InOut_PtrC, GAMMA, MIN_PRES );
+                              CPU_RiemannSolver_HLLE( d, FluxR_1D, Corr1D_InOut_PtrC, Corr1D_InOut_PtrR, GAMMA, MIN_PRES );
                            break;
 
                            default:
@@ -563,7 +570,17 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
 
 //                      recalculate the first-order solution for a full time-step
                         for (int v=0; v<NCOMP_TOTAL; v++)
-                           Corr1D_InOut[k][j][i][v] -= dt_dh*( FluxR[d][v] - FluxL[d][v] );
+                           Corr1D_InOut[k][j][i][v] -= dt_dh*( FluxR_1D[v] - FluxL_1D[v] );
+
+//                      store the 1st-order fluxes used for updating the central cell
+                        if ( i == Corr1D_NBuf  &&  j == Corr1D_NBuf  &&  k == Corr1D_NBuf )
+                        {
+                           for (int v=0; v<NCOMP_TOTAL; v++)
+                           {
+                              FluxL[d][v] = FluxL_1D[v];
+                              FluxR[d][v] = FluxR_1D[v];
+                           }
+                        }
                      } // i,j,k
                   } // for (int d=0; d<3; d++)
 
@@ -636,7 +653,7 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
 //             output the debug information (only if AUTO_REDUCE_DT is disabled)
                if ( !AUTO_REDUCE_DT )
                {
-                  const int  PID_Failed      = PID0_List[TID] + LocalID[k_out/PS1][j_out/PS1][i_out/PS1];
+                  const int  PID_Failed      = PID0_List[TID] + LocalID[ijk_out[2]/PS1][ijk_out[1]/PS1][ijk_out[0]/PS1];
                   const bool CheckMinPres_No = false;
                   real In[NCOMP_TOTAL], tmp[NCOMP_TOTAL];
 
@@ -650,8 +667,8 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
 
 //                output information about the failed cell
                   fprintf( File, "PID                              = %5d\n", PID_Failed );
-                  fprintf( File, "(i,j,k) in the patch             = (%2d,%2d,%2d)\n", i_out%PS1, j_out%PS1, k_out%PS1 );
-                  fprintf( File, "(i,j,k) in the input fluid array = (%2d,%2d,%2d)\n", i_out, j_out, k_out );
+                  fprintf( File, "(i,j,k) in the patch             = (%2d,%2d,%2d)\n", ijk_out[0]%PS1, ijk_out[1]%PS1, ijk_out[2]%PS1 );
+                  fprintf( File, "(i,j,k) in the input fluid array = (%2d,%2d,%2d)\n", ijk_out[0], ijk_out[1], ijk_out[2] );
 #                 ifdef DUAL_ENERGY
                   fprintf( File, "total energy density update      = %s\n",
                            ( h_DE_Array_F_Out[TID][idx_out] == DE_UPDATED_BY_ETOT     ) ? "Etot" :
@@ -725,6 +742,46 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
             {
 //             store the corrected solution
                for (int v=0; v<NCOMP_TOTAL; v++)   h_Flu_Array_F_Out[TID][v][idx_out] = Update[v];
+
+
+//             replace the original coarse-fine boundary fluxes with the 1st-order fluxes for the flux fix-up
+               if ( OPT__FIXUP_FLUX  &&  OPT__1ST_FLUX_CORR != FIRST_FLUX_CORR_NONE )
+               {
+                  const int dim_map[3][2] = { {1, 2}, {0, 2}, {0, 1} };
+
+                  int   idx_m, idx_n, idx_store, FaceIdx;
+                  bool  Store1stFlux;
+                  real *FluxPtr=NULL;
+
+                  for (int d=0; d<3; d++)
+                  {
+                     Store1stFlux = false;
+
+                     if ( ijk_out[d] == 0  ||  ijk_out[d] == PS1 )
+                     {
+                        FluxPtr      = FluxL[d];
+                        FaceIdx      = 3*d + ijk_out[d]/PS1;
+                        Store1stFlux = true;
+                     }
+
+                     else if ( ijk_out[d] == PS1-1  ||  ijk_out[d] == PS2-1 )
+                     {
+                        FluxPtr      = FluxR[d];
+                        FaceIdx      = 3*d + (ijk_out[d]+1)/PS1;
+                        Store1stFlux = true;
+                     }
+
+                     if ( Store1stFlux )
+                     {
+                        idx_m     = ijk_out[ dim_map[d][1] ];
+                        idx_n     = ijk_out[ dim_map[d][0] ];
+                        idx_store = idx_m*PS2 + idx_n;
+
+                        for (int v=0; v<NCOMP_TOTAL; v++)   h_Flux_Array[TID][FaceIdx][v][idx_store] = FluxPtr[v];
+                     }
+                  } // for (int d=0; d<3; d++)
+               } // if ( OPT__FIXUP_FLUX  &&  OPT__1ST_FLUX_CORR != FIRST_FLUX_CORR_NONE )
+
 
 //             overwrite h_DE_Array_F_Out in order to skip the flux fix-up for cells updated by the 1st-order-flux correction
 #              if ( defined DUAL_ENERGY  &&  !defined GRAVITY )
