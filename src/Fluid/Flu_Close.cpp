@@ -53,18 +53,19 @@ void Flu_Close( const int lv, const int SaveSg, const real h_Flux_Array[][9][NFL
                 const double dt )
 {
 
+// try to correct the unphysical results in h_Flu_Array_F_Out (e.g., negative density)
+// --> must be done BEFORE invoking both StoreFlux() and CorrectFlux() since CorrectUnphysical() might modify the flux array
+#  if ( MODEL == HYDRO  ||  MODEL == MHD )
+   CorrectUnphysical( lv, NPG, PID0_List, h_Flu_Array_F_In, h_Flu_Array_F_Out, h_DE_Array_F_Out, dt );
+#  endif
+
+
 // save the flux in the coarse-fine boundary at level "lv"
    if ( OPT__FIXUP_FLUX  &&  lv != TOP_LEVEL )  StoreFlux( lv, h_Flux_Array, NPG, PID0_List, dt );
 
 
 // correct the flux in the coarse-fine boundary at level "lv-1"
    if ( OPT__FIXUP_FLUX  &&  lv != 0 )    CorrectFlux( lv, h_Flux_Array, NPG, PID0_List, dt );
-
-
-// try to correct the unphysical results in h_Flu_Array_F_Out (e.g., negative density)
-#  if ( MODEL == HYDRO  ||  MODEL == MHD )
-   CorrectUnphysical( lv, NPG, PID0_List, h_Flu_Array_F_In, h_Flu_Array_F_Out, h_DE_Array_F_Out, dt );
-#  endif
 
 
 // copy the updated data from the arrays "h_Flu_Array_F_Out" and "h_DE_Array_F_Out" to each patch pointer
@@ -542,18 +543,18 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
                         switch ( OPT__1ST_FLUX_CORR_SCHEME )
                         {
                            case RSOLVER_1ST_ROE:
-                              CPU_RiemannSolver_Roe ( d, FluxL[0], Corr1D_InOut_PtrL, Corr1D_InOut_PtrC, GAMMA, MIN_PRES );
-                              CPU_RiemannSolver_Roe ( d, FluxR[0], Corr1D_InOut_PtrC, Corr1D_InOut_PtrR, GAMMA, MIN_PRES );
+                              CPU_RiemannSolver_Roe ( d, FluxL[d], Corr1D_InOut_PtrL, Corr1D_InOut_PtrC, GAMMA, MIN_PRES );
+                              CPU_RiemannSolver_Roe ( d, FluxR[d], Corr1D_InOut_PtrC, Corr1D_InOut_PtrR, GAMMA, MIN_PRES );
                            break;
 
                            case RSOLVER_1ST_HLLC:
-                              CPU_RiemannSolver_HLLC( d, FluxL[0], Corr1D_InOut_PtrL, Corr1D_InOut_PtrC, GAMMA, MIN_PRES );
-                              CPU_RiemannSolver_HLLC( d, FluxR[0], Corr1D_InOut_PtrC, Corr1D_InOut_PtrR, GAMMA, MIN_PRES );
+                              CPU_RiemannSolver_HLLC( d, FluxL[d], Corr1D_InOut_PtrL, Corr1D_InOut_PtrC, GAMMA, MIN_PRES );
+                              CPU_RiemannSolver_HLLC( d, FluxR[d], Corr1D_InOut_PtrC, Corr1D_InOut_PtrR, GAMMA, MIN_PRES );
                            break;
 
                            case RSOLVER_1ST_HLLE:
-                              CPU_RiemannSolver_HLLE( d, FluxL[0], Corr1D_InOut_PtrL, Corr1D_InOut_PtrC, GAMMA, MIN_PRES );
-                              CPU_RiemannSolver_HLLE( d, FluxR[0], Corr1D_InOut_PtrC, Corr1D_InOut_PtrR, GAMMA, MIN_PRES );
+                              CPU_RiemannSolver_HLLE( d, FluxL[d], Corr1D_InOut_PtrL, Corr1D_InOut_PtrC, GAMMA, MIN_PRES );
+                              CPU_RiemannSolver_HLLE( d, FluxR[d], Corr1D_InOut_PtrC, Corr1D_InOut_PtrR, GAMMA, MIN_PRES );
                            break;
 
                            default:
@@ -562,7 +563,7 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
 
 //                      recalculate the first-order solution for a full time-step
                         for (int v=0; v<NCOMP_TOTAL; v++)
-                           Corr1D_InOut[k][j][i][v] -= dt_dh*( FluxR[0][v] - FluxL[0][v] );
+                           Corr1D_InOut[k][j][i][v] -= dt_dh*( FluxR[d][v] - FluxL[d][v] );
                      } // i,j,k
                   } // for (int d=0; d<3; d++)
 
