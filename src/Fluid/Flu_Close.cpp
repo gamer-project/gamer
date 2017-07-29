@@ -508,12 +508,11 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
             if ( OPT__1ST_FLUX_CORR == FIRST_FLUX_CORR_3D1D )
             {
 //             apply the dual-energy formalism to correct the internal energy
-//             --> currently it's applied here even when GRAVITY is on
-//                 --> we will invoke CPU_DualEnergyFix() in the gravity solver again when UNSPLIT_GRAVITY is adopted
-//                     since it will also update the internal energy
+//             --> gravity solver may update the internal energy and dual-energy variable again when
+//                 UNSPLIT_GRAVITY is adopted
 //             --> if the corrected internal energy (pressure) passes the test, we don't need to apply the
 //                 directionally **splitting** correction
-//             --> also note that here we do NOT apply the minimum pressure check in CPU_DualEnergyFix()
+//             --> we do NOT apply the minimum pressure check in CPU_DualEnergyFix() here
 //                 --> otherwise the floor value of pressure might disable the 1st-order-flux correction
 #              ifdef DUAL_ENERGY
                CPU_DualEnergyFix( Update[DENS], Update[MOMX], Update[MOMY], Update[MOMZ], Update[ENGY], Update[ENPY],
@@ -618,15 +617,12 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
 
 
 //          apply the dual-energy formalism to correct the internal energy again
-//          --> currently it's applied here even when GRAVITY is on
-//              --> we will invoke CPU_DualEnergyFix() in the gravity solver again when UNSPLIT_GRAVITY is adopted
-//                  since it will also update the internal energy
+//          --> gravity solver may update the internal energy and dual-energy variable again when
+//              UNSPLIT_GRAVITY is adopted
 //          --> this might be redundant when OPT__1ST_FLUX_CORR == FIRST_FLUX_CORR_3D1D
 //              --> but it ensures the consistency between all fluid variables since we apply the floor value
 //                  of density AFTER the 1st-order-flux correction
-//          --> when GRAVITY is on, we call CPU_DualEnergyFix() in the gravity solver instead since it
-//              might update the internal energy as well (especially when UNSPLIT_GRAVITY is adopted)
-//          --> also note that here we apply the minimum pressure check in CPU_DualEnergyFix()
+//          --> we apply the minimum pressure check in CPU_DualEnergyFix() here
 #           ifdef DUAL_ENERGY
             CPU_DualEnergyFix( Update[DENS], Update[MOMX], Update[MOMY], Update[MOMZ], Update[ENGY], Update[ENPY],
                                h_DE_Array_F_Out[TID][idx_out], Gamma_m1, _Gamma_m1, CorrPres_Yes, MIN_PRES, DUAL_ENERGY_SWITCH );
@@ -782,15 +778,9 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
                   } // for (int d=0; d<3; d++)
                } // if ( OPT__FIXUP_FLUX  &&  OPT__1ST_FLUX_CORR != FIRST_FLUX_CORR_NONE )
 
-
-//             overwrite h_DE_Array_F_Out in order to skip the flux fix-up for cells updated by the 1st-order-flux correction
-#              if ( defined DUAL_ENERGY  &&  !defined GRAVITY )
-               if ( h_DE_Array_F_Out[TID][idx_out] != DE_UPDATED_BY_MIN_PRES )
-                  h_DE_Array_F_Out[TID][idx_out] = DE_UPDATED_BY_1ST_FLUX;
-#              endif
-
 //             record the number of corrected cells
                NCorrThisTime ++;
+
             } // if ( Unphysical(Update) ) ... else ...
          } // if need correction
       } // i,j,k

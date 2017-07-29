@@ -196,14 +196,22 @@ void CPU_HydroGravitySolver(       real Flu_Array_New[][GRA_NIN][PS1][PS1][PS1],
 
 //       update the total energy density
 #        ifdef DUAL_ENERGY
+
 //       for the unsplitting method with the dual-energy formalism, we correct the **total energy density**
-//       only if the dual-energy status == DE_UPDATED_BY_ETOT
-//       --> because for (a) DE_UPDATED_BY_DUAL     --> Eint has been updated by the dual-energy variable
-//                       (b) DE_UPDATED_BY_MIN_PRES --> Eint has been set to the minimum threshold
-//                       (c) DE_UPDATED_BY_1ST_FLUX --> Eint has been updated by the 1st-order-flux correction, which is
-//                                                      essentially an operator splitting approach
-         if ( DE_Array[P][kk][jj][ii] == DE_UPDATED_BY_ETOT )
+//       only if the dual-energy status != DE_UPDATED_BY_DUAL
+//       --> for (a) DE_UPDATED_BY_DUAL     --> Eint has been updated by the dual-energy variable
+//               (b) DE_UPDATED_BY_MIN_PRES --> Eint has been set to the minimum threshold
+//       --> currently for (b) we still update the total energy density
+
+         if ( DE_Array[P][kk][jj][ii] == DE_UPDATED_BY_DUAL )
          {
+//          fix the internal energy and the dual-energy variable
+            Flu_Array_New[P][ENGY][kk][jj][ii] = Eint_in + Ek_out;
+         }
+
+         else
+         {
+//          update the total energy, where internal energy and dual-energy variable may change as well
             Flu_Array_New[P][ENGY][kk][jj][ii] += (real)0.5*( PxOld*AccOld[0] + PyOld*AccOld[1] + PzOld*AccOld[2] +
                                                               PxNew*AccNew[0] + PyNew*AccNew[1] + PzNew*AccNew[2] );
 
@@ -212,18 +220,13 @@ void CPU_HydroGravitySolver(       real Flu_Array_New[][GRA_NIN][PS1][PS1][PS1],
             if ( Flu_Array_New[P][ENGY][kk][jj][ii] - Ek_out >= MinEint )
                DE_Array[P][kk][jj][ii] = DE_UPDATED_BY_ETOT_GRA;
 
-//          (b) otherwise restore the original internal energy and keep the dual-energy status == DE_UPDATED_BY_ETOT
+//          (b) otherwise restore the original internal energy and keep the original dual-energy status
             else
                Flu_Array_New[P][ENGY][kk][jj][ii] = Eint_in + Ek_out;
          }
 
-//       if the dual-energy status != DE_UPDATED_BY_ETOT, we fix the internal energy
-         else
-         {
-            Flu_Array_New[P][ENGY][kk][jj][ii] = Eint_in + Ek_out;
-         }
-
 #        else // # ifdef DUAL_ENERGY
+
 //       for the unsplitting method without the dual-energy formalism, we always correct the total energy density
 //       instead of the kinematic energy density
 //       --> internal energy may change
@@ -235,6 +238,7 @@ void CPU_HydroGravitySolver(       real Flu_Array_New[][GRA_NIN][PS1][PS1][PS1],
 //       --> restore to the original internal energy if the updated value becomes smaller than the threshold
          if ( Flu_Array_New[P][ENGY][kk][jj][ii] - Ek_out < MinEint )
             Flu_Array_New[P][ENGY][kk][jj][ii] = Eint_in + Ek_out;
+
 #        endif // #ifdef DUAL_ENERGY ... else ...
 
 

@@ -148,12 +148,13 @@ void Flu_FixUp( const int lv )
 
                for (int n=0; n<PS1; n++)
                {
-//                skip cells updated by either the minimum pressure threshold or the 1st-order-flux correction
-//                --> since currently we do NOT store the 1st-order fluxes across the coarse-fine boundaries, we must
-//                    skip these cells to avoid inconsistent flux fix-up correction
+//                from now on we also correct cells updated by either the minimum pressure threshold or the 1st-order-flux correction
+//                --> note that we have stored the 1st-order fluxes across the coarse-fine boundaries in Flu_Close()
+                  /*
 #                 ifdef DUAL_ENERGY
                   if ( *DE_StatusPtr1D == DE_UPDATED_BY_MIN_PRES  ||  *DE_StatusPtr1D == DE_UPDATED_BY_1ST_FLUX )    continue;
 #                 endif
+                  */
 
 
 //                calculate the corrected results
@@ -172,6 +173,9 @@ void Flu_FixUp( const int lv )
                      for (int v=0; v<NCOMP_TOTAL; v++)   ForPres[v] = CorrVal    [v];
 
 #                 if   ( DUAL_ENERGY == DE_ENPY )
+//                must determine to use CPU_GetPressure() or CPU_DensEntropy2Pres() since the fluid variables stored
+//                in CorrVal[] may not be fully consistent (as it's not corrected by CPU_DualEnergyFix())
+//                --> note that currently we adopt CPU_DensEntropy2Pres() for DE_UPDATED_BY_MIN_PRES
                   Pres = ( *DE_StatusPtr1D == DE_UPDATED_BY_ETOT  ||  *DE_StatusPtr1D == DE_UPDATED_BY_ETOT_GRA ) ?
                          CPU_GetPressure( ForPres[DENS], ForPres[MOMX], ForPres[MOMY], ForPres[MOMZ], ForPres[ENGY],
                                           Gamma_m1, CheckMinPres_No, NULL_REAL )
@@ -193,9 +197,10 @@ void Flu_FixUp( const int lv )
 
 //                do not apply the flux correction if there are any unphysical results
 #                 if   ( MODEL == HYDRO  ||  MODEL == MHD )
-                  if ( CorrVal[DENS] <= MIN_DENS  ||  Pres <= MIN_PRES
+                  if ( CorrVal[DENS] <= MIN_DENS  ||  Pres <= MIN_PRES  ||  !isfinite(Pres)
 #                      if   ( DUAL_ENERGY == DE_ENPY )
-                       ||  ( *DE_StatusPtr1D == DE_UPDATED_BY_DUAL && CorrVal[ENPY] <= (real)2.0*TINY_NUMBER )
+                       ||  ( (*DE_StatusPtr1D == DE_UPDATED_BY_DUAL || *DE_StatusPtr1D == DE_UPDATED_BY_MIN_PRES)
+                              && CorrVal[ENPY] <= (real)2.0*TINY_NUMBER )
 
 #                      elif ( DUAL_ENERGY == DE_EINT )
 #                      error : DE_EINT is NOT supported yet !!
@@ -217,44 +222,20 @@ void Flu_FixUp( const int lv )
 #                 endif
 
 
-//                ensure consistency between pressure, total energy density, and dual-energy variable
-//                --> no need to check the minimum pressure here since we already skip those cells
-                  if ( FixSEint )
-                  {
-//                   use the original specific internal energy to calculate the total energy density and dual-energy variable
-#                    ifdef DUAL_ENERGY
-#                    if   ( DUAL_ENERGY == DE_ENPY )
-                     CorrVal[ENPY] = CPU_DensPres2Entropy( CorrVal[DENS], Pres, Gamma_m1 );
-
-#                    elif ( DUAL_ENERGY == DE_EINT )
-#                    error : DE_EINT is NOT supported yet !!
-#                    endif
-#                    endif // #ifdef DUAL_ENERGY
-
-                     CorrVal[ENGY] = (real)0.5*( SQR(CorrVal[MOMX]) + SQR(CorrVal[MOMY]) + SQR(CorrVal[MOMZ]) ) / CorrVal[DENS]
-                                     + Pres*_Gamma_m1;
-                  }
+//                ensure the consistency between pressure, total energy density, and dual-energy variable
+//                --> assuming the variable "Pres" is correct
+//                --> no need to check the minimum pressure here since we have skipped those cells already
+                  CorrVal[ENGY] = (real)0.5*( SQR(CorrVal[MOMX]) + SQR(CorrVal[MOMY]) + SQR(CorrVal[MOMZ]) ) / CorrVal[DENS]
+                                  + Pres*_Gamma_m1;
 
 #                 ifdef DUAL_ENERGY
-                  else
-                  {
-                     if ( *DE_StatusPtr1D == DE_UPDATED_BY_ETOT  ||  *DE_StatusPtr1D == DE_UPDATED_BY_ETOT_GRA )
-                     {
-#                       if   ( DUAL_ENERGY == DE_ENPY )
-                        CorrVal[ENPY] = CPU_DensPres2Entropy( CorrVal[DENS], Pres, Gamma_m1 );
+#                 if   ( DUAL_ENERGY == DE_ENPY )
+                  CorrVal[ENPY] = CPU_DensPres2Entropy( CorrVal[DENS], Pres, Gamma_m1 );
 
-#                       elif ( DUAL_ENERGY == DE_EINT )
-#                       error : DE_EINT is NOT supported yet !!
-#                       endif
-                     }
-
-                     else
-                     {
-                        CorrVal[ENGY] = (real)0.5*( SQR(CorrVal[MOMX]) + SQR(CorrVal[MOMY]) + SQR(CorrVal[MOMZ]) ) / CorrVal[DENS]
-                                        + Pres*_Gamma_m1;
-                     }
-                  }
+#                 elif ( DUAL_ENERGY == DE_EINT )
+#                 error : DE_EINT is NOT supported yet !!
 #                 endif
+#                 endif // #ifdef DUAL_ENERGY
 
 
 //                store the corrected results

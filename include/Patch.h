@@ -33,11 +33,9 @@ long  LB_Corner2Index( const int lv, const int Corner[], const Check_t Check );
 //                                  --> Currently it is used for Par->ImproveAcc only
 //                                  --> Currently it's useless for buffer patches
 //                de_status       : Assigned to (DE_UPDATED_BY_ETOT / DE_UPDATED_BY_DUAL / DE_UPDATED_BY_MIN_PRES /
-//                                               DE_UPDATED_BY_1ST_FLUX / DE_UPDATED_BY_ETOT_GRA)
+//                                               DE_UPDATED_BY_ETOT_GRA)
 //                                  to indicate whether each cell is updated by the total energy, dual energy variable,
-//                                  minimum allowed pressure, or 1st-order-flux correction
-//                                  --> For DE_UPDATED_BY_1ST_FLUX, we don't further distinguish between the update by total energy,
-//                                      dual-energy variable, and minimum allowed pressure
+//                                  or minimum allowed pressure
 //                                  --> DE_UPDATED_BY_XXX are defined in Macro.h
 //                                  --> It's a character array with the size PS1^3
 //                                  --> Currently it's only allocated for Sg=0
