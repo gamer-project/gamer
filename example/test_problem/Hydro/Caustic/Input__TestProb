@@ -1,0 +1,6 @@
+# problem-specific runtime parameters
+Caustic_VelPeak      0.15915494309     # peak velocity
+Caustic_Dens         1.0               # background density
+Caustic_Pres         1.0e-10           # background pressure
+Caustic_Dir          0                 # spatial direction: (0/1) --> (x/diagonal) [0]
+

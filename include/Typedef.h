@@ -39,6 +39,7 @@ const TestProbID_t
    TESTPROB_HYDRO_BONDI                   =    3,
    TESTPROB_HYDRO_CLUSTER_MERGER_VS_FLASH =    4,
    TESTPROB_HYDRO_AGORA_ISOLATED_GALAXY   =    5,
+   TESTPROB_HYDRO_CAUSTIC                 =    6,
 
    TESTPROB_ELBDM_EXTPOT                  = 1000;
 
