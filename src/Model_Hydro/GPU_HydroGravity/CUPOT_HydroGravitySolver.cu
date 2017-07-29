@@ -257,14 +257,22 @@ __global__ void CUPOT_HydroGravitySolver(       real g_Flu_Array_New[][GRA_NIN][
 
 //    update the total energy density
 #     ifdef DUAL_ENERGY
+
 //    for the unsplitting method with the dual-energy formalism, we correct the **total energy density**
-//    only if the dual-energy status == DE_UPDATED_BY_ETOT
-//    --> because for (a) DE_UPDATED_BY_DUAL     --> Eint has been updated by the dual-energy variable
-//                    (b) DE_UPDATED_BY_MIN_PRES --> Eint has been set to the minimum threshold
-//                    (c) DE_UPDATED_BY_1ST_FLUX --> Eint has been updated by the 1st-order-flux correction, which is
-//                                                   essentially an operator splitting approach
-      if ( g_DE_Array[bx][g_idx] == DE_UPDATED_BY_ETOT )
+//    only if the dual-energy status != DE_UPDATED_BY_DUAL
+//    --> for (a) DE_UPDATED_BY_DUAL     --> Eint has been updated by the dual-energy variable
+//            (b) DE_UPDATED_BY_MIN_PRES --> Eint has been set to the minimum threshold
+//    --> currently for (b) we still update the total energy density
+
+      if ( g_DE_Array[bx][g_idx] == DE_UPDATED_BY_DUAL )
       {
+//       fix the internal energy and the dual-energy variable
+         Etot_out = Eint_in + Ek_out;
+      }
+
+      else
+      {
+//       update the total energy, where internal energy and dual-energy variable may change as well
          Etot_out = Etot_in + (real)0.5*( px_old*Acc_old[0] + py_old*Acc_old[1] + pz_old*Acc_old[2] +
                                           px_new*Acc_new[0] + py_new*Acc_new[1] + pz_new*Acc_new[2] );
 
@@ -273,18 +281,13 @@ __global__ void CUPOT_HydroGravitySolver(       real g_Flu_Array_New[][GRA_NIN][
          if ( Etot_out - Ek_out >= MinEint )
             g_DE_Array[bx][g_idx] = DE_UPDATED_BY_ETOT_GRA;
 
-//       (b) otherwise restore the original internal energy and keep the dual-energy status == DE_UPDATED_BY_ETOT
+//       (b) otherwise restore the original internal energy and keep the original dual-energy status
          else
             Etot_out = Eint_in + Ek_out;
       }
 
-//    if the dual-energy status != DE_UPDATED_BY_ETOT, we fix the internal energy
-      else
-      {
-         Etot_out = Eint_in + Ek_out;
-      }
-
 #     else // # ifdef DUAL_ENERGY
+
 //    for the unsplitting method without the dual-energy formalism, we always correct the total energy density
 //    instead of the kinematic energy density
 //    --> internal energy may change
@@ -296,6 +299,7 @@ __global__ void CUPOT_HydroGravitySolver(       real g_Flu_Array_New[][GRA_NIN][
 //    --> restore to the original internal energy if the updated value becomes smaller than the threshold
       if ( Etot_out - Ek_out < MinEint )
          Etot_out = Eint_in + Ek_out;
+
 #     endif // #ifdef DUAL_ENERGY ... else ...
 
 

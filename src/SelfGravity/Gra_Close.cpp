@@ -59,7 +59,7 @@ void Gra_Close( const int lv, const int SaveSg, const real h_Flu_Array_G[][GRA_N
 //          update the dual-energy status (which is always stored in Sg=0)
             amr->patch[0][lv][PID]->de_status[k][j][i] = h_DE_Array_G[N][k][j][i];
 
-//          correct entropy to be consistent with the updated internal energy
+//          correct the dual-energy variable to be consistent with the updated internal energy
 //          --> only necessary for cells with the dual-energy status labelled as DE_UPDATED_BY_ETOT_GRA
 //              since for all other cases we fix the internal energy in the gravity solver
 #           ifdef UNSPLIT_GRAVITY
