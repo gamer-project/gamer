@@ -1,0 +1,8 @@
+# problem-specific runtime parameters
+SphCol_Dens_Bg          1.0         # background mass density
+SphCol_Dens_Delta       1.0e-2      # top-hat mass density --> total density = Dens_Bg*( 1 + Dens_Delta )
+SphCol_Engy_Bg          1.0e-08     # background energy density
+SphCol_Radius           1.0e-1      # top-hat radius
+SphCol_Center_X        -1.0         # top-hat center x (<0.0 -> default = box center) [-1.0]
+SphCol_Center_Y        -1.0         # top-hat center y (<0.0 -> default = box center) [-1.0]
+SphCol_Center_Z        -1.0         # top-hat center z (<0.0 -> default = box center) [-1.0]

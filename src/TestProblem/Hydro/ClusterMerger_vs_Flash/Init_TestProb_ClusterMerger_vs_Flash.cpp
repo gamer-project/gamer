@@ -57,7 +57,7 @@ void Validate()
 #  endif
 
 #  ifdef COMOVING
-   Aux_Error( ERROR_INFO, "COMOVING must be enabled !!\n" );
+   Aux_Error( ERROR_INFO, "COMOVING must be disabled !!\n" );
 #  endif
 
    if ( !OPT__UNIT )
