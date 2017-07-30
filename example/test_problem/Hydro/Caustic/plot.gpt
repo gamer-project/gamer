@@ -80,7 +80,7 @@ do for [ID=START_ID:END_ID:DELTA_ID] {
 
 
 #  plot
-   plot FILE_IN u 4:12 w l lc 6 notitle
+   plot FILE_IN u 4:12 w p lc 6 notitle
 
 
    if ( GPVAL_TERM eq 'qt' ) { if ( PAUSE <= 0.0 ) { pause mouse }   else { pause PAUSE } };
