@@ -57,36 +57,45 @@ extern real (*d_FC_Flux_z)  [NCOMP_TOTAL][ N_FC_FLUX*N_FC_FLUX*N_FC_FLUX ];
 // Function    :  CUAPI_MemAllocate_Fluid
 // Description :  Allocate GPU and CPU memory for the fluid solver
 //
-// Parameter   :  Flu_NPatchGroup   : Number of patch groups evaluated simultaneously by GPU
-//                GPU_NStream       : Number of CUDA stream objects
+// Parameter   :  Flu_NPG     : Number of patch groups evaluated simultaneously by GPU for the fluid solver
+//                Pot_NPG     : Number of patch groups evaluated simultaneously by GPU for the gravity solver
+//                              --> Here it is used only for the dt solver
+//                GPU_NStream : Number of CUDA stream objects
 //-------------------------------------------------------------------------------------------------------
-void CUAPI_MemAllocate_Fluid( const int Flu_NPatchGroup, const int GPU_NStream )
+void CUAPI_MemAllocate_Fluid( const int Flu_NPG, const int Pot_NPG, const int GPU_NStream )
 {
 
 // size of the global memory arrays in all models
-   const int  Flu_NPatch        = 8*Flu_NPatchGroup;
-   const long Flu_MemSize_F_In  = sizeof(real  )*Flu_NPatchGroup*FLU_NIN *FLU_NXT*FLU_NXT*FLU_NXT;
-   const long Flu_MemSize_F_Out = sizeof(real  )*Flu_NPatchGroup*FLU_NOUT*PS2*PS2*PS2;
-   const long Flux_MemSize      = sizeof(real  )*Flu_NPatchGroup*9*NFLUX_TOTAL*PS2*PS2;
+   const int  Flu_NP            = 8*Flu_NPG;
+#  ifdef GRAVITY
+   const int  Pot_NP            = 8*Pot_NPG;
+#  endif
+   const long Flu_MemSize_F_In  = sizeof(real  )*Flu_NPG*FLU_NIN *FLU_NXT*FLU_NXT*FLU_NXT;
+   const long Flu_MemSize_F_Out = sizeof(real  )*Flu_NPG*FLU_NOUT*PS2*PS2*PS2;
+   const long Flux_MemSize      = sizeof(real  )*Flu_NPG*9*NFLUX_TOTAL*PS2*PS2;
 #  ifdef UNSPLIT_GRAVITY
-   const long Pot_MemSize_USG_F = sizeof(real  )*Flu_NPatchGroup*USG_NXT_F*USG_NXT_F*USG_NXT_F;
-   const long Corner_MemSize    = sizeof(double)*Flu_NPatchGroup*3;
+   const long Pot_MemSize_USG_F = sizeof(real  )*Flu_NPG*USG_NXT_F*USG_NXT_F*USG_NXT_F;
+   const long Corner_MemSize    = sizeof(double)*Flu_NPG*3;
 #  endif
 #  ifdef DUAL_ENERGY
-   const long DE_MemSize_F_Out  = sizeof(char  )*Flu_NPatchGroup*PS2*PS2*PS2;
+   const long DE_MemSize_F_Out  = sizeof(char  )*Flu_NPG*PS2*PS2*PS2;
 #  endif
-   const long dt_MemSize_T      = sizeof(real  )*Flu_NPatch;
-   const long Flu_MemSize_T     = sizeof(real  )*Flu_NPatch*NCOMP_FLUID*CUBE(PS1);
+#  ifdef GRAVITY
+   const long dt_MemSize_T      = sizeof(real  )*MAX( Flu_NP, Pot_NP ); // dt_Array_T is used for both DT_FLU_SOLVER and DT_GRA_SOLVER
+#  else
+   const long dt_MemSize_T      = sizeof(real  )*Flu_NP;
+#  endif
+   const long Flu_MemSize_T     = sizeof(real  )*Flu_NP*NCOMP_FLUID*CUBE(PS1);
 
 // the size of the global memory arrays in different models
 #  if   ( MODEL == HYDRO )
 #  if ( FLU_SCHEME == MHM  ||  FLU_SCHEME == MHM_RP  ||  FLU_SCHEME == CTU )
    const long PriVar_MemSize    = Flu_MemSize_F_In;
-   const long FC_Var_MemSize    = sizeof(real)*Flu_NPatchGroup*NCOMP_TOTAL*N_FC_VAR*N_FC_VAR*N_FC_VAR;
-   const long FC_Flux_MemSize   = sizeof(real)*Flu_NPatchGroup*NCOMP_TOTAL*N_FC_FLUX*N_FC_FLUX*N_FC_FLUX;
+   const long FC_Var_MemSize    = sizeof(real)*Flu_NPG*NCOMP_TOTAL*N_FC_VAR*N_FC_VAR*N_FC_VAR;
+   const long FC_Flux_MemSize   = sizeof(real)*Flu_NPG*NCOMP_TOTAL*N_FC_FLUX*N_FC_FLUX*N_FC_FLUX;
 
 #  if ( LR_SCHEME == PPM )
-   const long Slope_PPM_MemSize = sizeof(real)*Flu_NPatchGroup*NCOMP_TOTAL*N_SLOPE_PPM*N_SLOPE_PPM*N_SLOPE_PPM;
+   const long Slope_PPM_MemSize = sizeof(real)*Flu_NPG*NCOMP_TOTAL*N_SLOPE_PPM*N_SLOPE_PPM*N_SLOPE_PPM;
 #  endif
 
 #  endif // #if ( FLU_SCHEME == MHM  ||  FLU_SCHEME == MHM_RP  ||  FLU_SCHEME == CTU )
