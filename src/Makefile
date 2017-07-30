@@ -30,7 +30,7 @@ SIMU_OPTION += -DPOT_SCHEME=SOR
 SIMU_OPTION += -DUNSPLIT_GRAVITY
 
 # comoving frame
-#SIMU_OPTION += -DCOMOVING
+SIMU_OPTION += -DCOMOVING
 
 # particles (must work with GRAVITY; set MODEL=PAR_ONLY for particle-only simulations)
 #SIMU_OPTION += -DPARTICLE
