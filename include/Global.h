@@ -23,7 +23,6 @@ extern long       NCorrUnphy[NLEVEL];                 // number of cells correct
 extern long       Step;                               // number of main steps
 extern double     dTime_Base;                         // physical time interval at the base level
 
-extern real       MinDtInfo_Fluid[NLEVEL];            // maximum CFL speed at each level
 extern double     FlagTable_Rho        [NLEVEL-1];    // refinement criterion of density
 extern double     FlagTable_RhoGradient[NLEVEL-1];    // refinement criterion of density gradient
 extern double     FlagTable_Lohner     [NLEVEL-1][4]; // refinement criterion based on Lohner's error estimator
@@ -107,7 +106,6 @@ extern double           DUAL_ENERGY_SWITCH;
 extern double           DT__PHASE, FlagTable_EngyDensity[NLEVEL-1][2];
 extern bool             OPT__FLAG_ENGY_DENSITY, OPT__INT_PHASE, ELBDM_TAYLOR3_AUTO;
 extern double           ELBDM_TAYLOR3_COEFF, ELBDM_MASS, ELBDM_PLANCK_CONST, ELBDM_ETA, MIN_DENS;
-extern real             MinDtInfo_Phase[NLEVEL];            // maximum time derivative of phase at each level
 #ifdef QUARTIC_SELF_INTERACTION
 extern double           ELBDM_LAMBDA;
 #endif
@@ -121,7 +119,6 @@ extern double           ELBDM_LAMBDA;
 // ============================================================================================================
 #ifdef GRAVITY
 extern double     AveDensity_Init;                    // initial average mass density (in all levels)
-extern real       MinDtInfo_Gravity[NLEVEL];          // maximum gravitational acceleration at each level
 extern int        Pot_ParaBuf;                        // number of parallel buffers to exchange potential for the
                                                       // Poisson/Gravity solvers and the potential refinement
 extern int        Rho_ParaBuf;                        // number of parallel buffers to exchange density for the Poisson solver
@@ -165,7 +162,6 @@ extern bool       OPT__RECORD_LOAD_BALANCE;
 // ============================================================================================================
 #ifdef PARTICLE
 extern double          DT__PARVEL, DT__PARVEL_MAX, DT__PARACC;
-extern real            MinDtInfo_ParVelAcc[2][NLEVEL];
 extern bool            OPT__OUTPUT_PAR_TEXT, OPT__CK_PARTICLE, OPT__FLAG_NPAR_CELL, OPT__FLAG_PAR_MASS_CELL;
 extern int             OPT__PARTICLE_COUNT, OPT__FLAG_NPAR_PATCH, FlagTable_NParPatch[NLEVEL-1], FlagTable_NParCell[NLEVEL-1];
 extern double          FlagTable_ParMassCell[NLEVEL-1];

@@ -25,7 +25,6 @@ double               DumpTime               = 0.0;
 
 double               dTime_Base;
 double               Time_Prev            [NLEVEL];
-real                 MinDtInfo_Fluid      [NLEVEL];
 double               FlagTable_Rho        [NLEVEL-1];
 double               FlagTable_RhoGradient[NLEVEL-1];
 double               FlagTable_Lohner     [NLEVEL-1][4];
@@ -102,7 +101,6 @@ bool                 OPT__FLAG_ENGY_DENSITY, OPT__INT_PHASE;
 bool                 ELBDM_TAYLOR3_AUTO;
 double               ELBDM_TAYLOR3_COEFF;
 double               ELBDM_MASS, ELBDM_PLANCK_CONST, ELBDM_ETA, MIN_DENS;
-real                 MinDtInfo_Phase[NLEVEL];
 #ifdef QUARTIC_SELF_INTERACTION
 double               ELBDM_LAMBDA;
 #endif
@@ -114,7 +112,6 @@ double               ELBDM_LAMBDA;
 // (2-2) self-gravity
 #ifdef GRAVITY
 double               AveDensity_Init = -1.0;    // initialize it as <= 0 to check if it is properly set later
-real                 MinDtInfo_Gravity[NLEVEL];
 int                  Pot_ParaBuf, Rho_ParaBuf;
 
 real                *GreenFuncK      = NULL;
@@ -149,7 +146,6 @@ bool                 OPT__RECORD_LOAD_BALANCE;
 // (2-5) particle
 #ifdef PARTICLE
 double               DT__PARVEL, DT__PARVEL_MAX, DT__PARACC;
-real                 MinDtInfo_ParVelAcc[2][NLEVEL];
 bool                 OPT__OUTPUT_PAR_TEXT, OPT__CK_PARTICLE, OPT__FLAG_NPAR_CELL, OPT__FLAG_PAR_MASS_CELL;
 int                  OPT__PARTICLE_COUNT, OPT__FLAG_NPAR_PATCH, FlagTable_NParPatch[NLEVEL-1], FlagTable_NParCell[NLEVEL-1];
 double               FlagTable_ParMassCell[NLEVEL-1];
