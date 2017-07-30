@@ -25,6 +25,8 @@ void Flu_FixUp( const int lv )
    const int  Offset[6]  = { 0, PS1-1, 0, (PS1-1)*PS1, 0, (PS1-1)*SQR(PS1) }; // x=0/PS1-1, y=0/PS1-1, z=0/PS1-1 faces
    const int  didx[3][2] = { PS1, SQR(PS1), 1, SQR(PS1), 1, PS1 };
 
+//###EXPERIMENTAL: (does not work well and thus has been disabled for now)
+/*
 // when enabling cooling, we want to fix the specific internal energy so that it won't be corrected by the flux fix-up operation
 // --> it doesn't make much sense to correct the total energy density, pressure, or dual-energy variable when cooling is
 //     adopted since the total energy is not conserved anymore
@@ -36,6 +38,7 @@ void Flu_FixUp( const int lv )
 #  else
    const bool FixSEint   = false;
 #  endif
+*/
 
    real CorrVal[NFLUX_TOTAL];    // values after applying the flux correction
    real (*FluxPtr)[PATCH_SIZE][PATCH_SIZE] = NULL;
@@ -164,13 +167,18 @@ void Flu_FixUp( const int lv )
 
 //                calculate the pressure
 #                 if ( MODEL == HYDRO  ||  MODEL == MHD )
-                  real ForPres[NCOMP_TOTAL], Pres;
+                  real Pres;
+                  real *ForPres = CorrVal;
 
+//###EXPERIMENTAL: (does not work well and thus has been disabled for now)
+/*
+                  real ForPres[NCOMP_TOTAL];
 //                when FixSEint is on, use FluidPtr1D to calculate the original pressure
                   if ( FixSEint )
                      for (int v=0; v<NCOMP_TOTAL; v++)   ForPres[v] = *FluidPtr1D[v];
                   else
                      for (int v=0; v<NCOMP_TOTAL; v++)   ForPres[v] = CorrVal    [v];
+*/
 
 #                 if   ( DUAL_ENERGY == DE_ENPY )
 //                must determine to use CPU_GetPressure() or CPU_DensEntropy2Pres() since the fluid variables stored
@@ -191,8 +199,11 @@ void Flu_FixUp( const int lv )
 #                 endif // MODEL
 
 
+//###EXPERIMENTAL: (does not work well and thus has been disabled for now)
+/*
 //                correct pressure to restore the original specific internal energy
                   if ( FixSEint )   Pres *= CorrVal[DENS] / *FluidPtr1D[DENS];
+*/
 
 
 //                do not apply the flux correction if there are any unphysical results
