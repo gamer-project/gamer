@@ -30,6 +30,12 @@ extern Timer_t *Timer_Par_2Son   [NLEVEL];
 void EvolveLevel( const int lv, const double dTime_FaLv )
 {
 
+#  ifdef TIMING
+   MPI_Barrier( MPI_COMM_WORLD );
+   Timer_Lv[lv]->Start();
+#  endif
+
+
 #  ifdef GRAVITY
    const bool SelfGravity       = ( OPT__GRAVITY_TYPE == GRAVITY_SELF  ||  OPT__GRAVITY_TYPE == GRAVITY_BOTH );
 #  endif
@@ -57,11 +63,6 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
    while (  ( lv == 0 && amr->NUpdateLv[lv] == 0 )  ||
             ( lv >  0 && Time[lv] < Time[lv-1] )  )
    {
-#     ifdef TIMING
-      MPI_Barrier( MPI_COMM_WORLD );
-      Timer_Lv[lv]->Start();
-#     endif
-
 //    1. calculate the evolution time-step
 // ===============================================================================================
       switch ( OPT__DT_LEVEL )
@@ -449,7 +450,7 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
 // ===============================================================================================
 #        ifdef TIMING
          MPI_Barrier( MPI_COMM_WORLD );
-         Timer_Lv[lv]->Stop( false );
+         Timer_Lv[lv]->Stop();
 #        endif
 
          EvolveLevel( lv+1, dTime_SubStep );
@@ -573,12 +574,13 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
       } // if ( lv != NLEVEL-1  &&  AdvanceCounter[lv] % REGRID_COUNT == 0 ) ... else ...
 #     endif
 
-#     ifdef TIMING
-      MPI_Barrier( MPI_COMM_WORLD );
-      Timer_Lv[lv]->Stop( true );
-#     endif
-
    } // while()
+
+
+#  ifdef TIMING
+   MPI_Barrier( MPI_COMM_WORLD );
+   Timer_Lv[lv]->Stop();
+#  endif
 
 } // FUNCTION : EvolveLevel
 
