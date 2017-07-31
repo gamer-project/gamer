@@ -13,7 +13,7 @@ EXECUTABLE := gamer
 # (a) common options for all models
 # -------------------------------------------------------------------------------
 # model: HYDRO/MHD/ELBDM/PAR_ONLY (PAR_ONLY must work with PARTICLE)
-SIMU_OPTION += -DMODEL=ELBDM
+SIMU_OPTION += -DMODEL=HYDRO
 
 # self-gravity
 SIMU_OPTION += -DGRAVITY
@@ -23,17 +23,17 @@ SIMU_OPTION += -DPOT_SCHEME=SOR
 
 # store GRA_GHOST_SIZE ghost-zone potential for each patch on each side (in patch->pot_ext)
 # --> currently only for improving accuracy for particles around the patch boundaries (by Par->ImproveAcc)
-#SIMU_OPTION += -DSTORE_POT_GHOST
+SIMU_OPTION += -DSTORE_POT_GHOST
 
 # use unsplitting method to couple gravity to the target model (for HYDRO and MHD only; ELBDM is not supported yet)
 # --> must be off if GRAVITY is off
-#SIMU_OPTION += -DUNSPLIT_GRAVITY
+SIMU_OPTION += -DUNSPLIT_GRAVITY
 
 # comoving frame
 #SIMU_OPTION += -DCOMOVING
 
 # particles (must work with GRAVITY; set MODEL=PAR_ONLY for particle-only simulations)
-#SIMU_OPTION += -DPARTICLE
+SIMU_OPTION += -DPARTICLE
 
 # maximum number of AMR levels including the base level (level id = 0 ... NLEVEL-1)
 SIMU_OPTION += -DNLEVEL=10
@@ -42,7 +42,7 @@ SIMU_OPTION += -DNLEVEL=10
 SIMU_OPTION += -DMAX_PATCH=1000000
 
 # support Grackle, a chemistry and radiative cooling library
-#SIMU_OPTION += -DSUPPORT_GRACKLE
+SIMU_OPTION += -DSUPPORT_GRACKLE
 
 
 # (b) model-dependent options
@@ -56,7 +56,7 @@ SIMU_OPTION += -DFLU_SCHEME=CTU
 SIMU_OPTION += -DLR_SCHEME=PPM
 
 # Riemann solver: EXACT/ROE/HLLE/HLLC ##all are useless in RTVD, HLLE/HLLC are useless in WAF##
-SIMU_OPTION += -DRSOLVER=ROE
+SIMU_OPTION += -DRSOLVER=HLLC
 
 # dual energy formalism: DE_ENPY/DE_EINT (evolve entropy or internal energy; DE_EINT is not supported yet) ##useless in RTVD/WAF##
 SIMU_OPTION += -DDUAL_ENERGY=DE_ENPY
