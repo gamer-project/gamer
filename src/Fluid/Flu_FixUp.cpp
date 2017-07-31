@@ -236,6 +236,7 @@ void Flu_FixUp( const int lv )
 //                ensure the consistency between pressure, total energy density, and dual-energy variable
 //                --> assuming the variable "Pres" is correct
 //                --> no need to check the minimum pressure here since we have skipped those cells already
+#                 if   ( MODEL == HYDRO  ||  MODEL == MHD )
                   CorrVal[ENGY] = (real)0.5*( SQR(CorrVal[MOMX]) + SQR(CorrVal[MOMY]) + SQR(CorrVal[MOMZ]) ) / CorrVal[DENS]
                                   + Pres*_Gamma_m1;
 
@@ -247,6 +248,7 @@ void Flu_FixUp( const int lv )
 #                 error : DE_EINT is NOT supported yet !!
 #                 endif
 #                 endif // #ifdef DUAL_ENERGY
+#                 endif // HYDRO/MHD
 
 
 //                store the corrected results
