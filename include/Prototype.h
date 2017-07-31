@@ -399,17 +399,15 @@ bool Hydro_Flag_Vorticity( const int i, const int j, const int k, const int lv, 
 
 // ELBDM model
 #elif ( MODEL == ELBDM )
-void ELBDM_Init_StartOver_AssignData( const int lv );
-void ELBDM_Init_UM_AssignData( const int lv, real *UM_Data, const int NVar );
-void ELBDM_GetTimeStep_Fluid( double &dt, double &dTime, int &MinDtLv, const double dt_dTime );
-void ELBDM_GetTimeStep_Gravity( double &dt, double &dTime, int &MinDtLv, real MinDtVar[], const double dt_dTime );
-void ELBDM_GetTimeStep_Phase( double &dt, double &dTime, int &MinDtLv, real *MinDtVar, const double dt_dTime );
-void ELBDM_GetMaxPot( real MaxPot[], real MinDtVar_AllLv[][3] );
-void ELBDM_GetMaxPhaseDerivative( real MaxdS_dt[], real MinDtVar_AllLv[][3] );
-bool ELBDM_Flag_EngyDensity( const int i, const int j, const int k, const real Real_Array[],
-                             const real Imag_Array[], const double Angle_2pi, const double Eps );
-real ELBDM_UnwrapPhase( const real Phase_Ref, const real Phase_Wrapped );
-real ELBDM_SetTaylor3Coeff( const real dt, const real dh, const real Eta );
+void   ELBDM_Init_StartOver_AssignData( const int lv );
+void   ELBDM_Init_UM_AssignData( const int lv, real *UM_Data, const int NVar );
+double ELBDM_GetTimeStep_Fluid( const int lv );
+double ELBDM_GetTimeStep_Gravity( const int lv );
+double ELBDM_GetTimeStep_Phase( const int lv );
+bool   ELBDM_Flag_EngyDensity( const int i, const int j, const int k, const real Real_Array[],
+                               const real Imag_Array[], const double Angle_2pi, const double Eps );
+real   ELBDM_UnwrapPhase( const real Phase_Ref, const real Phase_Wrapped );
+real   ELBDM_SetTaylor3Coeff( const real dt, const real dh, const real Eta );
 
 
 #else

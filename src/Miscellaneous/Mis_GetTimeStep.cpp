@@ -68,7 +68,7 @@ double Mis_GetTimeStep( const int lv, const double dTime_SyncFaLv, const double 
 #  warning : WAIT MHD !!!
 
 #  elif ( MODEL == ELBDM )
-// ELBDM_GetTimeStep_Fluid( dt1, dTime1, MinDtLv_Fluid, dt_dTime );
+   dTime[NdTime] = dTime_dt * ELBDM_GetTimeStep_Fluid( lv );
    sprintf( dTime_Name[NdTime++], "%s", "ELBDM_CFL" );
 
 #  else
@@ -87,7 +87,7 @@ double Mis_GetTimeStep( const int lv, const double dTime_SyncFaLv, const double 
 #  warning : WAIT MHD !!!
 
 #  elif ( MODEL == ELBDM )
-// ELBDM_GetTimeStep_Gravity( dt2, dTime2, MinDtLv_Gravity, MinDtVar_Gravity, dt_dTime );
+   dTime[NdTime] = dTime_dt * ELBDM_GetTimeStep_Gravity( lv  );
    sprintf( dTime_Name[NdTime++], "%s", "ELBDM_Pot" );
 
 #  else
@@ -157,13 +157,9 @@ double Mis_GetTimeStep( const int lv, const double dTime_SyncFaLv, const double 
 // 1.7 CRITERION SEVEN : phase rotation ##ELBDM ONLY##
 // =============================================================================================================
 #  if ( MODEL == ELBDM )
-   const bool ELBDM_PhaseDt = ( DT__PHASE != 0.0 ) ? true : false;
-   int    MinDtLv_Phase;
-   real   MinDtVar_Phase[NCOMP_FLUID];
-
-   if ( ELBDM_PhaseDt )
+   if ( DT__PHASE != 0.0 )
    {
-      ELBDM_GetTimeStep_Phase( dt7, dTime7, MinDtLv_Phase, MinDtVar_Phase, dt_dTime );
+      dTime[NdTime] = dTime_dt * ELBDM_GetTimeStep_Phase( lv );
       sprintf( dTime_Name[NdTime++], "%s", "ELBDM_Phase" );
    }
 #  endif
