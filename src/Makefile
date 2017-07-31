@@ -13,7 +13,7 @@ EXECUTABLE := gamer
 # (a) common options for all models
 # -------------------------------------------------------------------------------
 # model: HYDRO/MHD/ELBDM/PAR_ONLY (PAR_ONLY must work with PARTICLE)
-SIMU_OPTION += -DMODEL=HYDRO
+SIMU_OPTION += -DMODEL=ELBDM
 
 # self-gravity
 SIMU_OPTION += -DGRAVITY
@@ -27,10 +27,10 @@ SIMU_OPTION += -DPOT_SCHEME=SOR
 
 # use unsplitting method to couple gravity to the target model (for HYDRO and MHD only; ELBDM is not supported yet)
 # --> must be off if GRAVITY is off
-SIMU_OPTION += -DUNSPLIT_GRAVITY
+#SIMU_OPTION += -DUNSPLIT_GRAVITY
 
 # comoving frame
-SIMU_OPTION += -DCOMOVING
+#SIMU_OPTION += -DCOMOVING
 
 # particles (must work with GRAVITY; set MODEL=PAR_ONLY for particle-only simulations)
 #SIMU_OPTION += -DPARTICLE

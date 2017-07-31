@@ -1,8 +1,5 @@
 #include "Copyright.h"
 #include "GAMER.h"
-#ifdef INTEL
-#include <mathimf.h>
-#endif
 
 
 

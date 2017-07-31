@@ -16,6 +16,8 @@ double dt_min_for_solver;
 // Parameter   :  TSolver : Target dt solver
 //                          --> DT_FLU_SOLVER, DT_GRA_SOLVER
 //                lv      : Target refinement level
+//
+// Return      :  Minimum time-step among all MPI ranks
 //-------------------------------------------------------------------------------------------------------
 double dt_InvokeSolver( const Solver_t TSolver, const int lv )
 {
