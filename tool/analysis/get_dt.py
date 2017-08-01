@@ -19,18 +19,23 @@ parser.add_argument( '-o', action='store', required=True,  type=str, dest='filen
 
 args=parser.parse_args()
 
-# take note
-print( '\nCommand-line arguments:' )
-print( '-------------------------------------------------------------------' )
-for t in range( len(sys.argv) ):
-   print str(sys.argv[t]),
-print( '' )
-print( '-------------------------------------------------------------------\n' )
-
 # check
 assert args.lv     >= 0, '-l (%d) < 0' % (args.lv)
 assert args.column >= 0, '-c (%d) < 0' % (args.column)
 assert args.nave   >= 1, '-n (%d) < 1' % (args.nave)
+
+
+# take note
+File_Out = open( args.filename_out, "w" )
+
+File_Out.write( '#Command-line arguments:\n' )
+File_Out.write( '#-------------------------------------------------------------------\n' )
+File_Out.write( '#' )
+for t in range( len(sys.argv) ):
+   File_Out.write( ' %s' % str(sys.argv[t]) )
+File_Out.write( '\n' )
+File_Out.write( '#-------------------------------------------------------------------\n\n' )
+
 
 
 # load the level, time, and dt from the simulation log file
@@ -47,7 +52,6 @@ dt     = log[ 2, row_lv ]
 t_ave  = 0.0
 dt_ave = 0.0
 
-File_Out = open( args.filename_out, "w" )
 File_Out.write( "#%13s   %13s\n" % ("Time", "dt") )
 
 for i in range( 0, dt.size, 1 ):
