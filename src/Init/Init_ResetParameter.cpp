@@ -61,9 +61,9 @@ void Init_ResetParameter()
 #     elif ( FLU_SCHEME == WAF )
       DT__FLUID = 0.50;
 #     elif ( FLU_SCHEME == MHM )
-      DT__FLUID = 0.50;
+      DT__FLUID = 1.00;
 #     elif ( FLU_SCHEME == MHM_RP )
-      DT__FLUID = 0.50;
+      DT__FLUID = 1.00;
 #     elif ( FLU_SCHEME == CTU )
       DT__FLUID = 0.50;
 #     else
