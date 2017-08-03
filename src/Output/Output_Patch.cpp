@@ -114,6 +114,10 @@ void Output_Patch( const int lv, const int PID, const int FluSg, const int PotSg
 #  if   ( MODEL == HYDRO )
    fprintf( File, "%14s%14s%14s%14s%14s%14s", "Density", "Px", "Py", "Pz", "Energy", "Pressure" );
 
+#  ifdef DUAL_ENERGY
+   fprintf( File, "%14s", "DE-status" );
+#  endif
+
 #  elif ( MODEL == MHD )
 #  warning : WAIT MHD !!!
 
@@ -153,10 +157,14 @@ void Output_Patch( const int lv, const int PID, const int FluSg, const int PotSg
             fprintf( File, " %13.6e", u[v] );
          }
 
-//       output pressure in HYDRO
+//       output pressure and dual-energy status in HYDRO
 #        if   ( MODEL == HYDRO )
          fprintf( File, " %13.6e", ( u[ENGY]-0.5*(u[MOMX]*u[MOMX]+u[MOMY]*u[MOMY]+u[MOMZ]*u[MOMZ])/u[DENS] )*
                                    (GAMMA-1.0) );
+#        ifdef DUAL_ENERGY
+         fprintf( File, " %13c", Relation->de_status[k][j][i] );
+#        endif
+
 #        elif ( MODEL == MHD )
 #        warning : WAIT MHD !!!
 #        endif // MODEL
