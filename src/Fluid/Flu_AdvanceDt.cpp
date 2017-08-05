@@ -52,10 +52,11 @@ bool Flu_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, co
    InvokeSolver( FLUID_SOLVER, lv, TimeNew, TimeOld, dt, NULL_REAL, SaveSg, NULL_INT, OverlapMPI, Overlap_Sync );
 
 
-// collect the fluid solver status from all ranks
+// collect the fluid solver status from all ranks (only necessary for AUTO_REDUCE_DT)
    bool FluStatus_AllRank;
 
-   MPI_Allreduce( &FluStatus_ThisRank, &FluStatus_AllRank, 1, MPI_INT, MPI_BAND, MPI_COMM_WORLD );
+   if ( AUTO_REDUCE_DT )   MPI_Allreduce( &FluStatus_ThisRank, &FluStatus_AllRank, 1, MPI_INT, MPI_BAND, MPI_COMM_WORLD );
+   else                    FluStatus_AllRank = GAMER_SUCCESS;
 
 
 // note that we always have FluStatus == GAMER_SUCCESS if AUTO_REDUCE_DT is disabled
