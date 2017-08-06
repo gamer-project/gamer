@@ -649,26 +649,27 @@ void Aux_TakeNote()
 //    record the parameters of domain refinement
       fprintf( Note, "Parameters of Domain Refinement\n" );
       fprintf( Note, "***********************************************************************************\n" );
-      fprintf( Note, "REGRID_COUNT                    %d\n",      REGRID_COUNT            );
-      fprintf( Note, "FLAG_BUFFER_SIZE                %d\n",      FLAG_BUFFER_SIZE        );
-      fprintf( Note, "MAX_LEVEL                       %d\n",      MAX_LEVEL               );
-      fprintf( Note, "OPT__FLAG_RHO                   %d\n",      OPT__FLAG_RHO           );
-      fprintf( Note, "OPT__FLAG_RHO_GRADIENT          %d\n",      OPT__FLAG_RHO_GRADIENT  );
+      fprintf( Note, "REGRID_COUNT                    %d\n",      REGRID_COUNT              );
+      fprintf( Note, "FLAG_BUFFER_SIZE                %d\n",      FLAG_BUFFER_SIZE          );
+      fprintf( Note, "FLAG_BUFFER_SIZE_MAXM1_LV       %d\n",      FLAG_BUFFER_SIZE_MAXM1_LV );
+      fprintf( Note, "MAX_LEVEL                       %d\n",      MAX_LEVEL                 );
+      fprintf( Note, "OPT__FLAG_RHO                   %d\n",      OPT__FLAG_RHO             );
+      fprintf( Note, "OPT__FLAG_RHO_GRADIENT          %d\n",      OPT__FLAG_RHO_GRADIENT    );
 #     if   ( MODEL == HYDRO )
-      fprintf( Note, "OPT__FLAG_PRES_GRADIENT         %d\n",      OPT__FLAG_PRES_GRADIENT );
-      fprintf( Note, "OPT__FLAG_VORTICITY             %d\n",      OPT__FLAG_VORTICITY     );
-      fprintf( Note, "OPT__FLAG_JEANS                 %d\n",      OPT__FLAG_JEANS         );
+      fprintf( Note, "OPT__FLAG_PRES_GRADIENT         %d\n",      OPT__FLAG_PRES_GRADIENT   );
+      fprintf( Note, "OPT__FLAG_VORTICITY             %d\n",      OPT__FLAG_VORTICITY       );
+      fprintf( Note, "OPT__FLAG_JEANS                 %d\n",      OPT__FLAG_JEANS           );
 #     elif ( MODEL == MHD )
 #     warning : WAIT MHD !!!
 #     endif
 #     if ( MODEL == ELBDM )
-      fprintf( Note, "OPT__FLAG_ENGY_DENSITY          %d\n",      OPT__FLAG_ENGY_DENSITY  );
+      fprintf( Note, "OPT__FLAG_ENGY_DENSITY          %d\n",      OPT__FLAG_ENGY_DENSITY    );
 #     endif
-      fprintf( Note, "OPT__FLAG_LOHNER_DENS           %d\n",      OPT__FLAG_LOHNER_DENS   );
+      fprintf( Note, "OPT__FLAG_LOHNER_DENS           %d\n",      OPT__FLAG_LOHNER_DENS     );
 #     if   ( MODEL == HYDRO )
-      fprintf( Note, "OPT__FLAG_LOHNER_ENGY           %d\n",      OPT__FLAG_LOHNER_ENGY   );
-      fprintf( Note, "OPT__FLAG_LOHNER_PRES           %d\n",      OPT__FLAG_LOHNER_PRES   );
-      fprintf( Note, "OPT__FLAG_LOHNER_TEMP           %d\n",      OPT__FLAG_LOHNER_TEMP   );
+      fprintf( Note, "OPT__FLAG_LOHNER_ENGY           %d\n",      OPT__FLAG_LOHNER_ENGY     );
+      fprintf( Note, "OPT__FLAG_LOHNER_PRES           %d\n",      OPT__FLAG_LOHNER_PRES     );
+      fprintf( Note, "OPT__FLAG_LOHNER_TEMP           %d\n",      OPT__FLAG_LOHNER_TEMP     );
 #     elif ( MODEL == MHD )
 #     warning : WAIT MHD !!!
 #     endif
@@ -677,19 +678,19 @@ void Aux_TakeNote()
                                                                   (OPT__FLAG_LOHNER_FORM==LOHNER_FORM_INV1) ? "LOHNER_FORM_INV1" :
                                                                   (OPT__FLAG_LOHNER_FORM==LOHNER_FORM_INV2) ? "LOHNER_FORM_INV2" :
                                                                                                                "UNKNOWN" );
-      fprintf( Note, "OPT__FLAG_USER                  %d\n",      OPT__FLAG_USER          );
-      fprintf( Note, "OPT__FLAG_REGION                %d\n",      OPT__FLAG_REGION        );
+      fprintf( Note, "OPT__FLAG_USER                  %d\n",      OPT__FLAG_USER            );
+      fprintf( Note, "OPT__FLAG_REGION                %d\n",      OPT__FLAG_REGION          );
 #     ifdef PARTICLE
-      fprintf( Note, "OPT__FLAG_NPAR_PATCH            %d\n",      OPT__FLAG_NPAR_PATCH    );
-      fprintf( Note, "OPT__FLAG_NPAR_CELL             %d\n",      OPT__FLAG_NPAR_CELL     );
-      fprintf( Note, "OPT__FLAG_PAR_MASS_CELL         %d\n",      OPT__FLAG_PAR_MASS_CELL );
+      fprintf( Note, "OPT__FLAG_NPAR_PATCH            %d\n",      OPT__FLAG_NPAR_PATCH      );
+      fprintf( Note, "OPT__FLAG_NPAR_CELL             %d\n",      OPT__FLAG_NPAR_CELL       );
+      fprintf( Note, "OPT__FLAG_PAR_MASS_CELL         %d\n",      OPT__FLAG_PAR_MASS_CELL   );
 #     endif
-      fprintf( Note, "OPT__PATCH_COUNT                %d\n",      OPT__PATCH_COUNT        );
+      fprintf( Note, "OPT__PATCH_COUNT                %d\n",      OPT__PATCH_COUNT          );
 #     ifdef PARTICLE
-      fprintf( Note, "OPT__PARTICLE_COUNT             %d\n",      OPT__PARTICLE_COUNT     );
+      fprintf( Note, "OPT__PARTICLE_COUNT             %d\n",      OPT__PARTICLE_COUNT       );
 #     endif
-      fprintf( Note, "OPT__REUSE_MEMORY               %d\n",      OPT__REUSE_MEMORY       );
-      fprintf( Note, "OPT__MEMORY_POOL                %d\n",      OPT__MEMORY_POOL        );
+      fprintf( Note, "OPT__REUSE_MEMORY               %d\n",      OPT__REUSE_MEMORY         );
+      fprintf( Note, "OPT__MEMORY_POOL                %d\n",      OPT__MEMORY_POOL          );
       fprintf( Note, "***********************************************************************************\n" );
       fprintf( Note, "\n\n");
 

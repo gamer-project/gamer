@@ -817,6 +817,15 @@ void Init_ResetParameter()
    }
 
 
+// FLAG_BUFFER_SIZE at the level MAX_LEVEL-1
+   if ( FLAG_BUFFER_SIZE_MAXM1_LV < 0 )
+   {
+      FLAG_BUFFER_SIZE_MAXM1_LV = FLAG_BUFFER_SIZE;
+
+      PRINT_WARNING( FLAG_BUFFER_SIZE_MAXM1_LV, FORMAT_INT, "" );
+   }
+
+
 // remove symbolic constants and macros only used in this structure
 #  undef FORMAT_INT
 #  undef FORMAT_FLT

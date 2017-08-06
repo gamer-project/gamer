@@ -12,8 +12,8 @@ void Prepare_for_Lohner( const OptLohnerForm_t Form, const real *Var1D, real *Av
 // Description :  Flag the real patches at level "lv" according to the given refinement criteria
 //
 // Note        :  1. Flag operation of the buffer patches is performed by the function "Flag_Buffer"
-//                2. In this function, the buffer patches may still be flagged due to the FLAG_BUFFER_SIZE
-//                   extension and the grandson check
+//                2. In this function, the buffer patches may still be flagged due to non-zero FLAG_BUFFER_SIZE
+//                   (and FLAG_BUFFER_SIZE_MAXM1_LV) and the grandson check
 //                3. To add new refinement criteria, please edit the function "Flag_Check"
 //                4. Definition of the function "Prepare_for_Lohner" is put in the file "Flag_Lohner"
 //
@@ -36,10 +36,10 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
    for (int PID=0; PID<amr->num[lv]; PID++)  amr->patch[0][lv][PID]->flag = false;
 
 
-// set sibling indices
    const int SibID_Array[3][3][3]     = {  { {18, 10, 19}, {14,   4, 16}, {20, 11, 21} },
                                            { { 6,  2,  7}, { 0, 999,  1}, { 8,  3,  9} },
-                                           { {22, 12, 23}, {15,   5, 17}, {24, 13, 25} }  };
+                                           { {22, 12, 23}, {15,   5, 17}, {24, 13, 25} }  };    // sibling indices
+   const int  FlagBuf                 = ( lv < MAX_LEVEL-1 ) ? FLAG_BUFFER_SIZE : FLAG_BUFFER_SIZE_MAXM1_LV;
    const real dv                      = CUBE( amr->dh[lv] );
    const bool IntPhase_No             = false;                 // for invoking "Prepare_PatchData"
    const int  NPG                     = 1;                     // for invoking "Prepare_PatchData"
@@ -155,7 +155,7 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
       }
 
 
-//    loop over all REAL patches (the buffer patches will be flagged only due to the FLAG_BUFFER_SIZE
+//    loop over all REAL patches (the buffer patches will be flagged only due to the FlagBuf
 //    extension or the grandson check )
 #     pragma omp for schedule( runtime )
       for (int PID0=0; PID0<amr->NPatchComma[lv][1]; PID0+=8)
@@ -341,16 +341,16 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
 
 //             loop over all cells within the target patch
                for (int k=0; k<PS1; k++)  {  if ( NextPatch )  break;
-                                             k_start = ( k - FLAG_BUFFER_SIZE < 0    ) ? 0 : 1;
-                                             k_end   = ( k + FLAG_BUFFER_SIZE >= PS1 ) ? 2 : 1;
+                                             k_start = ( k - FlagBuf < 0    ) ? 0 : 1;
+                                             k_end   = ( k + FlagBuf >= PS1 ) ? 2 : 1;
 
                for (int j=0; j<PS1; j++)  {  if ( NextPatch )  break;
-                                             j_start = ( j - FLAG_BUFFER_SIZE < 0    ) ? 0 : 1;
-                                             j_end   = ( j + FLAG_BUFFER_SIZE >= PS1 ) ? 2 : 1;
+                                             j_start = ( j - FlagBuf < 0    ) ? 0 : 1;
+                                             j_end   = ( j + FlagBuf >= PS1 ) ? 2 : 1;
 
                for (int i=0; i<PS1; i++)  {  if ( NextPatch )  break;
-                                             i_start = ( i - FLAG_BUFFER_SIZE < 0    ) ? 0 : 1;
-                                             i_end   = ( i + FLAG_BUFFER_SIZE >= PS1 ) ? 2 : 1;
+                                             i_start = ( i - FlagBuf < 0    ) ? 0 : 1;
+                                             i_end   = ( i + FlagBuf >= PS1 ) ? 2 : 1;
 
 //                check if the target cell satisfies the refinement criteria (useless pointers are always == NULL)
                   if (  lv < MAX_LEVEL  &&  Flag_Check( lv, PID, i, j, k, dv, Fluid, Pot, Pres, Lohner_Var+LocalID*Lohner_Stride,
@@ -359,7 +359,7 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
 //                   flag itself
                      amr->patch[0][lv][PID]->flag = true;
 
-//                   flag sibling patches according to the size of FLAG_BUFFER_SIZE
+//                   flag sibling patches according to the size of FlagBuf
                      for (int kk=k_start; kk<=k_end; kk++)
                      for (int jj=j_start; jj<=j_end; jj++)
                      for (int ii=i_start; ii<=i_end; ii++)
@@ -382,8 +382,8 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
                         }
                      }
 
-//                   for FLAG_BUFFER_SIZE == PATCH_SIZE, once a cell is flagged, all 26 siblings will be flagged
-                     if ( FLAG_BUFFER_SIZE == PS1 )   NextPatch = true;
+//                   for FlagBuf == PATCH_SIZE, once a cell is flagged, all 26 siblings will be flagged
+                     if ( FlagBuf == PS1 )   NextPatch = true;
 
                   } // check flag
                }}} // k, j, i

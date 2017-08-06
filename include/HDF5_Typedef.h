@@ -352,6 +352,7 @@ struct InputPara_t
 // domain refinement
    int    RegridCount;
    int    FlagBufferSize;
+   int    FlagBufferSizeMaxM1Lv;
    int    MaxLevel;
    int    Opt__Flag_Rho;
    int    Opt__Flag_RhoGradient;

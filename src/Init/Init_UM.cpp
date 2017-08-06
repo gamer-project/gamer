@@ -36,7 +36,6 @@ void Init_UM()
 
 
    const char  FileName[]     = "UM_START";
-   const int   Buffer         = FLAG_BUFFER_SIZE;
    const int   UM_lv          = OPT__UM_START_LEVEL;
    const int   UM_NVar        = OPT__UM_START_NVAR;
    const int   UM_Size_Tot[3] = {  NX0_TOT[0]*(1<<UM_lv),         // size of the input data
@@ -183,7 +182,8 @@ void Init_UM()
 // create level : UM_lv -> 1
 // ===========================================================================================================
 // construct the FlagMap for levels UM_lv-1 -> 0
-   for (int lv=UM_lv; lv>0; lv--)   UM_CreateLevel( UM_Data[lv], lv, FlagMap, Buffer, UM_NVar );
+   for (int lv=UM_lv; lv>0; lv--)
+      UM_CreateLevel( UM_Data[lv], lv, FlagMap, (lv<MAX_LEVEL-1)?FLAG_BUFFER_SIZE:FLAG_BUFFER_SIZE_MAXM1_LV, UM_NVar );
 
 // flag levels 0 -> UM_lv-1 and construct levels 1-> UM_lv accordingly
 // (we still have to loop over ALL levels since several lists needed to be initialized)
