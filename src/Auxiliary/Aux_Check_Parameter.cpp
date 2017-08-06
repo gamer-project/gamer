@@ -591,16 +591,6 @@ void Aux_Check_Parameter()
 // ------------------------------
    if ( MPI_Rank == 0 ) {
 
-#  if ( FLU_SCHEME == MHM  &&  LR_SCHEME == PPM )
-#     warning : WARNING : PPM is not recommended for the MHM scheme !!
-      Aux_Message( stderr, "WARNING : PPM has not been well tested for the MHM scheme !!\n" );
-#  endif
-
-#  if ( FLU_SCHEME == MHM_RP  &&  LR_SCHEME == PPM )
-#     warning : WARNING : PPM is not recommended for MHM_RP scheme !!
-      Aux_Message( stderr, "WARNING : PPM has not been well tested for the MHM_RP scheme !!\n" );
-#  endif
-
 #  if ( defined RSOLVER  &&  RSOLVER == EXACT )
 #     warning : WARNING : exact RSOLVER is not recommended since the vacuum solution has not been implemented
       Aux_Message( stderr, "WARNING : exact Riemann solver is not recommended since the vacuum solution " );
