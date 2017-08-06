@@ -91,7 +91,7 @@ OPT__RECORD_LOAD_BALANCE      1           # record the load-balance info [1]
 # fluid solver in HYDRO (MODEL==HYDRO only)
 GAMMA                         1.40        # ratio of specific heats (i.e., adiabatic index) [5.0/3.0]
 MOLECULAR_WEIGHT              0.6         # mean molecular weight -> currently only for post-processing [0.6]
-MINMOD_COEFF                  2.0         # coefficient of the generalized MinMod limiter (1.0~2.0) [2.0]
+MINMOD_COEFF                  1.5         # coefficient of the generalized MinMod limiter (1.0~2.0) [1.5]
 EP_COEFF                      1.25        # coefficient of the extrema-preserving limiter (>=1.0) [1.25] ##DEPRECATED##
 OPT__LR_LIMITER               4           # slope limiter of data reconstruction in the MHM/MHM_RP/CTU schemes:
                                           # (0=none, 1=vanLeer, 2=generalized MinMod, 3=vanAlbada, 4=vanLeer+generalized MinMod,
