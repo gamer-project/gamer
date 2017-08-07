@@ -30,10 +30,6 @@ void Grackle_Close( const int lv, const int SaveSg, const real h_Che_Array[][CHE
    const int Idx_Ek      = 2;
    const real  Gamma_m1  = GAMMA - (real)1.0;
    const real _Gamma_m1  = (real)1.0 / Gamma_m1;
-#  ifdef GRAVITY
-   const real JeansCoeff = ( JEANS_MIN_PRES ) ?
-                            NEWTON_G*SQR(JEANS_MIN_PRES_NCELL*amr->dh[JEANS_MIN_PRES_LEVEL])/(GAMMA*M_PI) : NULL_REAL;
-#  endif
 
    int  N, PID, PID0;
    real Dens, Pres;
@@ -55,12 +51,6 @@ void Grackle_Close( const int lv, const int SaveSg, const real h_Che_Array[][CHE
             Dens = h_Che_Array[N][Idx_Dens ][t];
             Pres = h_Che_Array[N][Idx_sEint][t]*Dens*Gamma_m1;
             Pres = CPU_CheckMinPres( Pres, MIN_PRES );
-
-//          apply the minimum pressure check from the Jeans length
-#           ifdef GRAVITY
-            if ( JEANS_MIN_PRES )
-            Pres = CPU_CheckMinPres( Pres, JeansCoeff*SQR(Dens) );
-#           endif
 
 //          update the total energy density
             *( amr->patch[SaveSg][lv][PID]->fluid[ENGY][0][0] + t ) = Pres*_Gamma_m1 + h_Che_Array[N][Idx_Ek][t];

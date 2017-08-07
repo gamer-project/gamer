@@ -586,13 +586,18 @@ void Aux_Check_Parameter()
    else if ( MPI_Rank == 0 )
       Aux_Message( stderr, "WARNING : MIN_PRES (%13.7e) is on --> please ensure that this value is reasonable !!\n", MIN_PRES );
 
+#  if ( FLU_SCHEME == RTVD  ||  FLU_SCHEME == WAF )
+   if ( JEANS_MIN_PRES )
+      Aux_Error( ERROR_INFO, "RTVD and WAF fluid schemes do not support \"JEANS_MIN_PRES\" !!\n" );
+#  endif
+
 
 // warnings
 // ------------------------------
    if ( MPI_Rank == 0 ) {
 
 #  if ( defined RSOLVER  &&  RSOLVER == EXACT )
-#     warning : WARNING : exact RSOLVER is not recommended since the vacuum solution has not been implemented
+#     warning : WARNING : exact Riemann solver is not recommended since the vacuum solution has not been implemented
       Aux_Message( stderr, "WARNING : exact Riemann solver is not recommended since the vacuum solution " );
       Aux_Message( stderr,           "has not been implemented !!\n" );
 #  endif

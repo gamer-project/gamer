@@ -33,7 +33,8 @@ static __device__ void CUFLU_RiemannPredict( const real g_Fluid_In   [][NCOMP_TO
                                                    real g_Half_Var   [][NCOMP_TOTAL][ FLU_NXT*FLU_NXT*FLU_NXT ],
                                              const real dt, const real _dh, const real Gamma,
                                              const real MinDens, const real MinPres,
-                                             const bool NormPassive, const int NNorm, const int NormIdx[] );
+                                             const bool NormPassive, const int NNorm, const int NormIdx[],
+                                             const bool JeansMinPres, const real JeansMinPres_Coeff );
 #endif
 
 #ifdef UNSPLIT_GRAVITY
@@ -113,42 +114,44 @@ __constant__ int *NormIdx_d = NULL;
 //                              - A Practical Introduction ~ by Eleuterio F. Toro"
 //                   MHM_RP : Stone & Gardiner, NewA, 14, 139 (2009)
 //
-// Parameter   :  g_Fluid_In       : Global memory array storing the input fluid variables
-//                g_Fluid_Out      : Global memory array to store the output fluid variables
-//                g_DE_Out         : Global memory array to store the output dual-energy status
-//                g_Flux           : Global memory array to store the output fluxes
-//                g_Corner         : Global memory array storing the physical corner coordinates of each patch group (USELESS CURRENTLY)
-//                g_Pot_USG        : Global memory array storing the input potential for UNSPLIT_GRAVITY (NOT SUPPORTED in RTVD)
-//                g_PriVar         : Global memory array to store the primitive variables
-//                g_Slope_PPM_x    : Global memory array to store the x-slope for the PPM reconstruction
-//                g_Slope_PPM_y    : Global memory array to store the y-slope for the PPM reconstruction
-//                g_Slope_PPM_z    : Global memory array to store the z-slope for the PPM reconstruction
-//                g_FC_Var_xL      : Global memory array to store the half-step variables on the -x surface
-//                g_FC_Var_xR      : Global memory array to store the half-step variables on the +x surface
-//                g_FC_Var_yL      : Global memory array to store the half-step variables on the -y surface
-//                g_FC_Var_yR      : Global memory array to store the half-step variables on the +y surface
-//                g_FC_Var_zL      : Global memory array to store the half-step variables on the -z surface
-//                g_FC_Var_zR      : Global memory array to store the half-step variables on the +z surface
-//                g_FC_Flux_x      : Global memory array to store the face-centered fluxes in the x direction
-//                g_FC_Flux_y      : Global memory array to store the face-centered fluxes in the y direction
-//                g_FC_Flux_z      : Global memory array to store the face-centered fluxes in the z direction
-//                dt               : Time interval to advance solution
-//                _dh              : 1 / grid size
-//                Gamma            : Ratio of specific heats
-//                StoreFlux        : true --> store the coarse-fine fluxes
-//                LR_Limiter       : Slope limiter for the data reconstruction in the MHM/MHM_RP/CTU schemes
-//                                   (0/1/2/3/4) = (vanLeer/generalized MinMod/vanAlbada/
-//                                                  vanLeer + generalized MinMod/extrema-preserving) limiter
-//                MinMod_Coeff     : Coefficient of the generalized MinMod limiter
-//                EP_Coeff         : Coefficient of the extrema-preserving limiter
-//                Time             : Current physical time                                     (for UNSPLIT_GRAVITY only)
-//                GravityType      : Types of gravity --> self-gravity, external gravity, both (for UNSPLIT_GRAVITY only)
-//                MinDens/Pres     : Minimum allowed density and pressure
-//                DualEnergySwitch : Use the dual-energy formalism if E_int/E_kin < DualEnergySwitch
-//                NormPassive      : true --> normalize passive scalars so that the sum of their mass density
-//                                            is equal to the gas mass density
-//                NNorm            : Number of passive scalars to be normalized
-//                                   --> Should be set to the global variable "PassiveNorm_NVar"
+// Parameter   :  g_Fluid_In         : Global memory array storing the input fluid variables
+//                g_Fluid_Out        : Global memory array to store the output fluid variables
+//                g_DE_Out           : Global memory array to store the output dual-energy status
+//                g_Flux             : Global memory array to store the output fluxes
+//                g_Corner           : Global memory array storing the physical corner coordinates of each patch group (USELESS CURRENTLY)
+//                g_Pot_USG          : Global memory array storing the input potential for UNSPLIT_GRAVITY (NOT SUPPORTED in RTVD)
+//                g_PriVar           : Global memory array to store the primitive variables
+//                g_Slope_PPM_x      : Global memory array to store the x-slope for the PPM reconstruction
+//                g_Slope_PPM_y      : Global memory array to store the y-slope for the PPM reconstruction
+//                g_Slope_PPM_z      : Global memory array to store the z-slope for the PPM reconstruction
+//                g_FC_Var_xL        : Global memory array to store the half-step variables on the -x surface
+//                g_FC_Var_xR        : Global memory array to store the half-step variables on the +x surface
+//                g_FC_Var_yL        : Global memory array to store the half-step variables on the -y surface
+//                g_FC_Var_yR        : Global memory array to store the half-step variables on the +y surface
+//                g_FC_Var_zL        : Global memory array to store the half-step variables on the -z surface
+//                g_FC_Var_zR        : Global memory array to store the half-step variables on the +z surface
+//                g_FC_Flux_x        : Global memory array to store the face-centered fluxes in the x direction
+//                g_FC_Flux_y        : Global memory array to store the face-centered fluxes in the y direction
+//                g_FC_Flux_z        : Global memory array to store the face-centered fluxes in the z direction
+//                dt                 : Time interval to advance solution
+//                _dh                : 1 / grid size
+//                Gamma              : Ratio of specific heats
+//                StoreFlux          : true --> store the coarse-fine fluxes
+//                LR_Limiter         : Slope limiter for the data reconstruction in the MHM/MHM_RP/CTU schemes
+//                                     (0/1/2/3/4) = (vanLeer/generalized MinMod/vanAlbada/
+//                                                    vanLeer + generalized MinMod/extrema-preserving) limiter
+//                MinMod_Coeff       : Coefficient of the generalized MinMod limiter
+//                EP_Coeff           : Coefficient of the extrema-preserving limiter
+//                Time               : Current physical time                                     (for UNSPLIT_GRAVITY only)
+//                GravityType        : Types of gravity --> self-gravity, external gravity, both (for UNSPLIT_GRAVITY only)
+//                MinDens/Pres       : Minimum allowed density and pressure
+//                DualEnergySwitch   : Use the dual-energy formalism if E_int/E_kin < DualEnergySwitch
+//                NormPassive        : true --> normalize passive scalars so that the sum of their mass density
+//                                              is equal to the gas mass density
+//                NNorm              : Number of passive scalars to be normalized
+//                                     --> Should be set to the global variable "PassiveNorm_NVar"
+//                JeansMinPres       : Apply minimum pressure estimated from the Jeans length
+//                JeansMinPres_Coeff : Coefficient used by JeansMinPres = G*(Jeans_NCell*Jeans_dh)^2/(Gamma*pi);
 //-------------------------------------------------------------------------------------------------------
 __global__ void CUFLU_FluidSolver_MHM( const real g_Fluid_In[]   [NCOMP_TOTAL][ FLU_NXT*FLU_NXT*FLU_NXT ],
                                        real g_Fluid_Out     []   [NCOMP_TOTAL][ PS2*PS2*PS2 ],
@@ -173,7 +176,8 @@ __global__ void CUFLU_FluidSolver_MHM( const real g_Fluid_In[]   [NCOMP_TOTAL][ 
                                        const LR_Limiter_t LR_Limiter, const real MinMod_Coeff,
                                        const real EP_Coeff, const double Time, const OptGravityType_t GravityType,
                                        const real MinDens, const real MinPres, const real DualEnergySwitch,
-                                       const bool NormPassive, const int NNorm )
+                                       const bool NormPassive, const int NNorm,
+                                       const bool JeansMinPres, const real JeansMinPres_Coeff )
 {
 
 #  ifdef UNSPLIT_GRAVITY
@@ -201,7 +205,8 @@ __global__ void CUFLU_FluidSolver_MHM( const real g_Fluid_In[]   [NCOMP_TOTAL][ 
 
 // (1.a-2) evaluate the half-step cell-centered solution
    CUFLU_RiemannPredict( g_Fluid_In, g_Half_Flux_x, g_Half_Flux_y, g_Half_Flux_z, g_Half_Var,
-                         dt, _dh, Gamma, MinDens, MinPres, NormPassive, NNorm, NormIdx_d );
+                         dt, _dh, Gamma, MinDens, MinPres, NormPassive, NNorm, NormIdx_d,
+                         JeansMinPres, JeansMinPres_Coeff );
    __syncthreads();
 
 
@@ -217,7 +222,8 @@ __global__ void CUFLU_FluidSolver_MHM( const real g_Fluid_In[]   [NCOMP_TOTAL][ 
 
 
 // (1.b-1) conserved variables --> primitive variables
-   CUFLU_Con2Pri_AllGrids( g_Fluid_In, g_PriVar, Gamma, MinPres, NormPassive, NNorm, NormIdx_d );
+   CUFLU_Con2Pri_AllGrids( g_Fluid_In, g_PriVar, Gamma, MinPres, NormPassive, NNorm, NormIdx_d,
+                           JeansMinPres, JeansMinPres_Coeff );
    __syncthreads();
 
 
@@ -330,10 +336,11 @@ __device__ void CUFLU_RiemannPredict_Flux( const real g_Fluid_In   [][NCOMP_TOTA
       #define RiemannSolver( Dir, VarL, VarR )                                               \
       {                                                                                      \
          /* do NOT convert any passive variable to mass fraction for the Riemann solvers */  \
-         const bool NormPassive_No = false;                                                  \
+         const bool NormPassive_No  = false;                                                 \
+         const bool JeansMinPres_No = false;                                                 \
                                                                                              \
-         VarL = CUFLU_Con2Pri( VarL, Gamma_m1, MinPres, NormPassive_No, NULL_INT, NULL );    \
-         VarR = CUFLU_Con2Pri( VarR, Gamma_m1, MinPres, NormPassive_No, NULL_INT, NULL );    \
+         VarL = CUFLU_Con2Pri( VarL, Gamma_m1, MinPres, NormPassive_No, NULL_INT, NULL, JeansMinPres_No, NULL_REAL ); \
+         VarR = CUFLU_Con2Pri( VarR, Gamma_m1, MinPres, NormPassive_No, NULL_INT, NULL, JeansMinPres_No, NULL_REAL ); \
                                                                                              \
          FC_Flux = CUFLU_RiemannSolver_Exact( Dir, NULL, NULL, NULL, VarL, VarR, Gamma );    \
       } // RiemannSolver
@@ -426,21 +433,23 @@ __device__ void CUFLU_RiemannPredict_Flux( const real g_Fluid_In   [][NCOMP_TOTA
 //                   --> "__syncthreads" must be called before using the output data
 //                6. The size of the g_Half_Var array are assumed to be "N_HF_VAR"
 //
-// Parameter   :  g_Fluid_In    : Global memory array storing the input fluid variables
-//                g_Half_Flux_x : Global memory array storing the face-centered fluxes in the x direction
-//                g_Half_Flux_y : Global memory array storing the face-centered fluxes in the y direction
-//                g_Half_Flux_z : Global memory array storing the face-centered fluxes in the z direction
-//                g_Half_Var    : Global memory array to store the half-step solution
-//                dt            : Time interval to advance solution
-//                _dh           : 1 / grid size
-//                Gamma         : Ratio of specific heats
-//                MinDens/Pres  : Minimum allowed density and pressure
-//                NormPassive   : true --> normalize passive scalars so that the sum of their mass density
-//                                         is equal to the gas mass density
-//                NNorm         : Number of passive scalars to be normalized
-//                                --> Should be set to the global variable "PassiveNorm_NVar"
-//                NormIdx       : Target variable indices to be normalized
-//                                --> Should be set to the global variable "PassiveNorm_VarIdx"
+// Parameter   :  g_Fluid_In         : Global memory array storing the input fluid variables
+//                g_Half_Flux_x      : Global memory array storing the face-centered fluxes in the x direction
+//                g_Half_Flux_y      : Global memory array storing the face-centered fluxes in the y direction
+//                g_Half_Flux_z      : Global memory array storing the face-centered fluxes in the z direction
+//                g_Half_Var         : Global memory array to store the half-step solution
+//                dt                 : Time interval to advance solution
+//                _dh                : 1 / grid size
+//                Gamma              : Ratio of specific heats
+//                MinDens/Pres       : Minimum allowed density and pressure
+//                NormPassive        : true --> normalize passive scalars so that the sum of their mass density
+//                                              is equal to the gas mass density
+//                NNorm              : Number of passive scalars to be normalized
+//                                     --> Should be set to the global variable "PassiveNorm_NVar"
+//                NormIdx            : Target variable indices to be normalized
+//                                     --> Should be set to the global variable "PassiveNorm_VarIdx"
+//                JeansMinPres       : Apply minimum pressure estimated from the Jeans length
+//                JeansMinPres_Coeff : Coefficient used by JeansMinPres = G*(Jeans_NCell*Jeans_dh)^2/(Gamma*pi);
 //-------------------------------------------------------------------------------------------------------
 __device__ void CUFLU_RiemannPredict( const real g_Fluid_In   [][NCOMP_TOTAL][ FLU_NXT*FLU_NXT*FLU_NXT ],
                                       const real g_Half_Flux_x[][NCOMP_TOTAL][ N_FC_FLUX*N_FC_FLUX*N_FC_FLUX ],
@@ -449,7 +458,8 @@ __device__ void CUFLU_RiemannPredict( const real g_Fluid_In   [][NCOMP_TOTAL][ F
                                             real g_Half_Var   [][NCOMP_TOTAL][ FLU_NXT*FLU_NXT*FLU_NXT ],
                                       const real dt, const real _dh, const real Gamma,
                                       const real MinDens, const real MinPres,
-                                      const bool NormPassive, const int NNorm, const int NormIdx[] )
+                                      const bool NormPassive, const int NNorm, const int NormIdx[],
+                                      const bool JeansMinPres, const real JeansMinPres_Coeff )
 {
 
    const uint  bx       = blockIdx.x;
@@ -519,7 +529,8 @@ __device__ void CUFLU_RiemannPredict( const real g_Fluid_In   [][NCOMP_TOTAL][ F
 
 
 //    conserved variables --> primitive variables
-      Var = CUFLU_Con2Pri( Var, Gamma_m1, MinPres, NormPassive, NNorm, NormIdx_d );
+      Var = CUFLU_Con2Pri( Var, Gamma_m1, MinPres, NormPassive, NNorm, NormIdx_d,
+                           JeansMinPres, JeansMinPres_Coeff );
 
 
 //    save the updated data back to the output global array

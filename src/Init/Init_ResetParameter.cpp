@@ -788,9 +788,9 @@ void Init_ResetParameter()
 #  endif
 
 
-// currently JEANS_MIN_PRES only works with SUPPORT_GRACKLE + GRAVITY
+// JEANS_MIN_PRES must work with GRAVITY
 #  if ( MODEL == HYDRO  ||  MODEL == MHD )
-#  if ( !defined SUPPORT_GRACKLE  ||  !defined GRAVITY )
+#  ifndef GRAVITY
    if ( JEANS_MIN_PRES )
    {
       JEANS_MIN_PRES = false;

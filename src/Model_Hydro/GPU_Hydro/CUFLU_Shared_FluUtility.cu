@@ -10,13 +10,15 @@
 static __device__ FluVar CUFLU_Pri2Con( const FluVar Pri, const real _Gamma_m1,
                                         const bool NormPassive, const int NNorm, const int NormIdx[] );
 static __device__ FluVar CUFLU_Con2Pri( const FluVar Con, const real Gamma_m1, const real MinPres,
-                                        const bool NormPassive, const int NNorm, const int NormIdx[] );
+                                        const bool NormPassive, const int NNorm, const int NormIdx[],
+                                        const bool JeansMinPres, const real JeansMinPres_Coeff );
 static __device__ FluVar CUFLU_Con2Flux( const FluVar Input, const real Gamma_m1, const int XYZ, const real MinPres );
 static __device__ FluVar CUFLU_Rotate3D( const FluVar In, const int XYZ, const bool Forward );
 static __device__ void CUFLU_Con2Pri_AllGrids( const real g_Fluid_In[][NCOMP_TOTAL][ FLU_NXT*FLU_NXT*FLU_NXT ],
                                                real g_PriVar[][NCOMP_TOTAL][ FLU_NXT*FLU_NXT*FLU_NXT ],
                                                const real Gamma, const real MinPres,
-                                               const bool NormPassive, const int NNorm, const int NormIdx[] );
+                                               const bool NormPassive, const int NNorm, const int NormIdx[],
+                                               const bool JeansMinPres, const real JeansMinPres_Coeff );
 static __device__ real CUFLU_CheckMinPres( const real InPres, const real MinPres );
 static __device__ real CUFLU_CheckMinPresInEngy( const FluVar ConVar, const real Gamma_m1, const real _Gamma_m1, const real MinPres );
 #ifdef CHECK_NEGATIVE_IN_FLUID
@@ -179,17 +181,20 @@ __device__ FluVar CUFLU_Pri2Con( const FluVar Pri, const real _Gamma_m1,
 //                   --> But note that here we do NOT ensure "sum(mass fraction) == 1.0"
 //                       --> It is done by calling CUFLU_NormalizePassive() in CUFLU_Shared_FullStepUpdate()
 //
-// Parameter   :  Con         : Input conserved variables
-//                Gamma_m1    : Gamma - 1.0
-//                MinPres     : Minimum allowed pressure
-//                NormPassive : true --> convert passive scalars to mass fraction
-//                NNorm       : Number of passive scalars for the option "NormPassive"
-//                              --> Should be set to the global variable "PassiveNorm_NVar"
-//                NormIdx     : Target variable indices for the option "NormPassive"
-//                              --> Should be set to the global variable "PassiveNorm_VarIdx"
+// Parameter   :  Con                : Input conserved variables
+//                Gamma_m1           : Gamma - 1.0
+//                MinPres            : Minimum allowed pressure
+//                NormPassive        : true --> convert passive scalars to mass fraction
+//                NNorm              : Number of passive scalars for the option "NormPassive"
+//                                     --> Should be set to the global variable "PassiveNorm_NVar"
+//                NormIdx            : Target variable indices for the option "NormPassive"
+//                                     --> Should be set to the global variable "PassiveNorm_VarIdx"
+//                JeansMinPres       : Apply minimum pressure estimated from the Jeans length
+//                JeansMinPres_Coeff : Coefficient used by JeansMinPres = G*(Jeans_NCell*Jeans_dh)^2/(Gamma*pi);
 //-------------------------------------------------------------------------------------------------------
 __device__ FluVar CUFLU_Con2Pri( const FluVar Con, const real Gamma_m1, const real MinPres,
-                                 const bool NormPassive, const int NNorm, const int NormIdx[] )
+                                 const bool NormPassive, const int NNorm, const int NormIdx[],
+                                 const bool JeansMinPres, const real JeansMinPres_Coeff )
 {
 
    const real _Rho = (real)1.0/Con.Rho;
@@ -201,6 +206,11 @@ __device__ FluVar CUFLU_Con2Pri( const FluVar Con, const real Gamma_m1, const re
    Pri.Pz  = Con.Pz*_Rho;
    Pri.Egy = Gamma_m1*(  Con.Egy - (real)0.5*( Con.Px*Con.Px + Con.Py*Con.Py + Con.Pz*Con.Pz )*_Rho  );
    Pri.Egy = CUFLU_CheckMinPres( Pri.Egy, MinPres );
+
+// pressure floor required to resolve the Jeans length
+// --> note that currently we do not modify the dual-energy variable (e.g., entropy) accordingly
+   if ( JeansMinPres )
+   Pri.Egy = CUFLU_CheckMinPres( Pri.Egy, JeansMinPres_Coeff*SQR(Pri.Rho) );
 
 // passive scalars
 #  if ( NCOMP_PASSIVE > 0 )
@@ -222,20 +232,23 @@ __device__ FluVar CUFLU_Con2Pri( const FluVar Con, const real Gamma_m1, const re
 // Function    :  CUFLU_Con2Pri_AllGrids
 // Description :  Conserved variables --> primitive variables for all grids
 //
-// Parameter   :  g_Fluid_In  : Global memory array storing the input fluid variables
-//                g_PriVar    : Global memory array to store the output primitive variables
-//                Gamma       : Ratio of specific heats
-//                MinPres     : Minimum allowed pressure
-//                NormPassive : true --> convert passive scalars to mass fraction
-//                NNorm       : Number of passive scalars for the option "NormPassive"
-//                              --> Should be set to the global variable "PassiveNorm_NVar"
-//                NormIdx     : Target variable indices for the option "NormPassive"
-//                              --> Should be set to the global variable "PassiveNorm_VarIdx"
+// Parameter   :  g_Fluid_In         : Global memory array storing the input fluid variables
+//                g_PriVar           : Global memory array to store the output primitive variables
+//                Gamma              : Ratio of specific heats
+//                MinPres            : Minimum allowed pressure
+//                NormPassive        : true --> convert passive scalars to mass fraction
+//                NNorm              : Number of passive scalars for the option "NormPassive"
+//                                     --> Should be set to the global variable "PassiveNorm_NVar"
+//                NormIdx            : Target variable indices for the option "NormPassive"
+//                                     --> Should be set to the global variable "PassiveNorm_VarIdx"
+//                JeansMinPres       : Apply minimum pressure estimated from the Jeans length
+//                JeansMinPres_Coeff : Coefficient used by JeansMinPres = G*(Jeans_NCell*Jeans_dh)^2/(Gamma*pi);
 //-------------------------------------------------------------------------------------------------------
 __device__ void CUFLU_Con2Pri_AllGrids( const real g_Fluid_In[][NCOMP_TOTAL][ FLU_NXT*FLU_NXT*FLU_NXT ],
                                         real g_PriVar[][NCOMP_TOTAL][ FLU_NXT*FLU_NXT*FLU_NXT ],
                                         const real Gamma, const real MinPres,
-                                        const bool NormPassive, const int NNorm, const int NormIdx[] )
+                                        const bool NormPassive, const int NNorm, const int NormIdx[],
+                                        const bool JeansMinPres, const real JeansMinPres_Coeff )
 {
 
    const uint bx       = blockIdx.x;
@@ -259,7 +272,7 @@ __device__ void CUFLU_Con2Pri_AllGrids( const real g_Fluid_In[][NCOMP_TOTAL][ FL
       for (int v=0; v<NCOMP_PASSIVE; v++)    Var.Passive[v] = g_Fluid_In[bx][ NCOMP_FLUID + v ][ID];
 #     endif
 
-      Var = CUFLU_Con2Pri( Var, Gamma_m1, MinPres, NormPassive, NNorm, NormIdx );
+      Var = CUFLU_Con2Pri( Var, Gamma_m1, MinPres, NormPassive, NNorm, NormIdx, JeansMinPres, JeansMinPres_Coeff );
 
       g_PriVar[bx][0][ID] = Var.Rho;
       g_PriVar[bx][1][ID] = Var.Px;

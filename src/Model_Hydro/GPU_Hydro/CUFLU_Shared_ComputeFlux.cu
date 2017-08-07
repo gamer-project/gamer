@@ -262,10 +262,11 @@ __device__ void CUFLU_ComputeFlux( const real g_FC_Var_xL[][NCOMP_TOTAL][ N_FC_V
       #define RiemannSolver( Dir, VarL, VarR )                                               \
       {                                                                                      \
          /* do NOT convert any passive variable to mass fraction for the Riemann solvers */  \
-         const bool NormPassive_No = false;                                                  \
+         const bool NormPassive_No  = false;                                                 \
+         const bool JeansMinPres_No = false;                                                 \
                                                                                              \
-         VarL = CUFLU_Con2Pri( VarL, Gamma_m1, MinPres, NormPassive_No, NULL_INT, NULL );    \
-         VarR = CUFLU_Con2Pri( VarR, Gamma_m1, MinPres, NormPassive_No, NULL_INT, NULL );    \
+         VarL = CUFLU_Con2Pri( VarL, Gamma_m1, MinPres, NormPassive_No, NULL_INT, NULL, JeansMinPres_No, NULL_REAL ); \
+         VarR = CUFLU_Con2Pri( VarR, Gamma_m1, MinPres, NormPassive_No, NULL_INT, NULL, JeansMinPres_No, NULL_REAL ); \
                                                                                              \
          FC_Flux = CUFLU_RiemannSolver_Exact( Dir, NULL, NULL, NULL, VarL, VarR, Gamma );    \
       } // RiemannSolver
