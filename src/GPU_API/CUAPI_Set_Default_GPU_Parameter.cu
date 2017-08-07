@@ -57,7 +57,8 @@ __global__ void CUFLU_FluidSolver_MHM( const real g_Fluid_In[]   [NCOMP_TOTAL][ 
                                        const LR_Limiter_t LR_Limiter, const real MinMod_Coeff,
                                        const real EP_Coeff, const double Time, const OptGravityType_t GravityType,
                                        const real MinDens, const real MinPres, const real DualEnergySwitch,
-                                       const bool NormPassive, const int NNorm );
+                                       const bool NormPassive, const int NNorm,
+                                       const bool JeansMinPres, const real JeansMinPres_Coeff );
 #ifdef UNSPLIT_GRAVITY
 int CUFLU_FluidSolver_SetConstMem_ExtAcc( double ExtAcc_AuxArray_h[] );
 #endif
@@ -88,7 +89,8 @@ __global__ void CUFLU_FluidSolver_CTU( const real g_Fluid_In[]   [NCOMP_TOTAL][ 
                                        const LR_Limiter_t LR_Limiter, const real MinMod_Coeff,
                                        const real EP_Coeff, const double Time, const OptGravityType_t GravityType,
                                        const real MinDens, const real MinPres, const real DualEnergySwitch,
-                                       const bool NormPassive, const int NNorm );
+                                       const bool NormPassive, const int NNorm,
+                                       const bool JeansMinPres, const real JeansMinPres_Coeff );
 #ifdef UNSPLIT_GRAVITY
 int CUFLU_FluidSolver_SetConstMem_ExtAcc( double ExtAcc_AuxArray_h[] );
 #endif

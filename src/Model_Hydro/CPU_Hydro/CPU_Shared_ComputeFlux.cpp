@@ -8,7 +8,8 @@
 
 #if   ( RSOLVER == EXACT )
 extern void CPU_Con2Pri( const real In[], real Out[], const real Gamma_m1, const real MinPres,
-                         const bool NormPassive, const int NNorm, const int NormIdx[] );
+                         const bool NormPassive, const int NNorm, const int NormIdx[],
+                         const bool JeansMinPres, const real JeansMinPres_Coeff );
 extern void CPU_RiemannSolver_Exact( const int XYZ, real eival_out[], real L_star_out[], real R_star_out[],
                                      real Flux_Out[], const real L_In[], const real R_In[], const real Gamma );
 #elif ( RSOLVER == ROE )
@@ -200,10 +201,11 @@ void CPU_ComputeFlux( const real FC_Var[][6][NCOMP_TOTAL], real FC_Flux[][3][NCO
 
 
 #        if   ( RSOLVER == EXACT )
-         const bool NormPassive_No = false;  // do NOT convert any passive variable to mass fraction for the Riemann solvers
+         const bool NormPassive_No  = false; // do NOT convert any passive variable to mass fraction for the Riemann solvers
+         const bool JeansMinPres_No = false;
 
-         CPU_Con2Pri( ConVar_L, PriVar_L, Gamma_m1, MinPres, NormPassive_No, NULL_INT, NULL );
-         CPU_Con2Pri( ConVar_R, PriVar_R, Gamma_m1, MinPres, NormPassive_No, NULL_INT, NULL );
+         CPU_Con2Pri( ConVar_L, PriVar_L, Gamma_m1, MinPres, NormPassive_No, NULL_INT, NULL, JeansMinPres_No, NULL_REAL );
+         CPU_Con2Pri( ConVar_R, PriVar_R, Gamma_m1, MinPres, NormPassive_No, NULL_INT, NULL, JeansMinPres_No, NULL_REAL );
 
          CPU_RiemannSolver_Exact( d, NULL, NULL, NULL, FC_Flux[ID1][d], PriVar_L, PriVar_R, Gamma );
 #        elif ( RSOLVER == ROE )

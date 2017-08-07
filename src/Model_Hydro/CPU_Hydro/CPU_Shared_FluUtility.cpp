@@ -64,18 +64,21 @@ void CPU_Rotate3D( real InOut[], const int XYZ, const bool Forward )
 //                   --> But note that here we do NOT ensure "sum(mass fraction) == 1.0"
 //                       --> It is done by calling CPU_NormalizePassive() in CPU_Shared_FullStepUpdate()
 //
-// Parameter   :  In          : Array storing the input conserved variables
-//                Out         : Array to store the output primitive variables
-//                Gamma_m1    : Gamma - 1
-//                MinPres     : Minimum allowed pressure
-//                NormPassive : true --> convert passive scalars to mass fraction
-//                NNorm       : Number of passive scalars for the option "NormPassive"
-//                              --> Should be set to the global variable "PassiveNorm_NVar"
-//                NormIdx     : Target variable indices for the option "NormPassive"
-//                              --> Should be set to the global variable "PassiveNorm_VarIdx"
+// Parameter   :  In                 : Array storing the input conserved variables
+//                Out                : Array to store the output primitive variables
+//                Gamma_m1           : Gamma - 1
+//                MinPres            : Minimum allowed pressure
+//                NormPassive        : true --> convert passive scalars to mass fraction
+//                NNorm              : Number of passive scalars for the option "NormPassive"
+//                                     --> Should be set to the global variable "PassiveNorm_NVar"
+//                NormIdx            : Target variable indices for the option "NormPassive"
+//                                     --> Should be set to the global variable "PassiveNorm_VarIdx"
+//                JeansMinPres       : Apply minimum pressure estimated from the Jeans length
+//                JeansMinPres_Coeff : Coefficient used by JeansMinPres = G*(Jeans_NCell*Jeans_dh)^2/(Gamma*pi);
 //-------------------------------------------------------------------------------------------------------
 void CPU_Con2Pri( const real In[], real Out[], const real Gamma_m1, const real MinPres,
-                  const bool NormPassive, const int NNorm, const int NormIdx[] )
+                  const bool NormPassive, const int NNorm, const int NormIdx[],
+                  const bool JeansMinPres, const real JeansMinPres_Coeff )
 {
 
    const bool CheckMinPres_Yes = true;
@@ -86,6 +89,11 @@ void CPU_Con2Pri( const real In[], real Out[], const real Gamma_m1, const real M
    Out[2] = In[2]*_Rho;
    Out[3] = In[3]*_Rho;
    Out[4] = CPU_GetPressure( In[0], In[1], In[2], In[3], In[4], Gamma_m1, CheckMinPres_Yes, MinPres );
+
+// pressure floor required to resolve the Jeans length
+// --> note that currently we do not modify the dual-energy variable (e.g., entropy) accordingly
+   if ( JeansMinPres )
+   Out[4] = CPU_CheckMinPres( Out[4], JeansMinPres_Coeff*SQR(Out[0]) );
 
 // passive scalars
 #  if ( NCOMP_PASSIVE > 0 )

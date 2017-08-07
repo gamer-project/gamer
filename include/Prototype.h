@@ -75,7 +75,8 @@ void CPU_FluidSolver( real h_Flu_Array_In [][FLU_NIN    ][ FLU_NXT*FLU_NXT*FLU_N
                       const WAF_Limiter_t WAF_Limiter, const real ELBDM_Eta, real ELBDM_Taylor3_Coeff,
                       const bool ELBDM_Taylor3_Auto, const double Time, const OptGravityType_t GravityType,
                       const real MinDens, const real MinPres, const real DualEnergySwitch,
-                      const bool NormPassive, const int NNorm, const int NormIdx[] );
+                      const bool NormPassive, const int NNorm, const int NormIdx[],
+                      const bool JeansMinPres, const real JeansMinPres_Coeff );
 real CPU_GetPressure( const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy,
                       const real Gamma_m1, const bool CheckMinPres, const real MinPres );
 real CPU_GetTemperature( const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy,
@@ -428,7 +429,8 @@ void CUAPI_Asyn_FluidSolver( real h_Flu_Array_In [][FLU_NIN    ][ FLU_NXT*FLU_NX
                              const WAF_Limiter_t WAF_Limiter, const real ELBDM_Eta, real ELBDM_Taylor3_Coeff,
                              const bool ELBDM_Taylor3_Auto, const double Time, const OptGravityType_t GravityType,
                              const int GPU_NStream, const real MinDens, const real MinPres, const real DualEnergySwitch,
-                             const bool NormPassive, const int NNorm );
+                             const bool NormPassive, const int NNorm,
+                             const bool JeansMinPres, const real JeansMinPres_Coeff );
 void CUAPI_Asyn_dtSolver( const Solver_t TSolver, real h_dt_Array[], const real h_Flu_Array[][NCOMP_FLUID][ CUBE(PS1) ],
                           const real h_Pot_Array[][ CUBE(GRA_NXT) ], const double h_Corner_Array[][3],
                           const int NPatchGroup, const real dh, const real Safety, const real Gamma, const real MinPres,

@@ -166,10 +166,11 @@ __device__ FluVar CUFLU_RiemannSolver_Roe( const int XYZ, const FluVar L_In, con
 #     define Recalculate_Flux( L, R, Flux_Out )                                                    \
       {                                                                                            \
          /* do NOT convert any passive variable to mass fraction for the Riemann solvers */        \
-         const bool NormPassive_No = false;                                                        \
+         const bool NormPassive_No  = false;                                                       \
+         const bool JeansMinPres_No = false;                                                       \
                                                                                                    \
-         L = CUFLU_Con2Pri( L, Gamma_m1, MinPres, NormPassive_No, NULL_INT, NULL );                \
-         R = CUFLU_Con2Pri( R, Gamma_m1, MinPres, NormPassive_No, NULL_INT, NULL );                \
+         L = CUFLU_Con2Pri( L, Gamma_m1, MinPres, NormPassive_No, NULL_INT, NULL, JeansMinPres_No, NULL_REAL ); \
+         R = CUFLU_Con2Pri( R, Gamma_m1, MinPres, NormPassive_No, NULL_INT, NULL, JeansMinPres_No, NULL_REAL ); \
                                                                                                    \
          Flux_Out = CUFLU_RiemannSolver_Exact( 0, NULL, NULL, NULL, L, R, Gamma );                 \
       } // Recalculate_Flux

@@ -40,7 +40,8 @@ void CPU_FluidSolver_MHM( const real Flu_Array_In[][NCOMP_TOTAL][ FLU_NXT*FLU_NX
                           const bool StoreFlux, const LR_Limiter_t LR_Limiter, const real MinMod_Coeff,
                           const real EP_Coeff, const double Time, const OptGravityType_t GravityType,
                           const double ExtAcc_AuxArray[], const real MinDens, const real MinPres,
-                          const real DualEnergySwitch, const bool NormPassive, const int NNorm, const int NormIdx[] );
+                          const real DualEnergySwitch, const bool NormPassive, const int NNorm, const int NormIdx[],
+                          const bool JeansMinPres, const real JeansMinPres_Coeff );
 #elif ( FLU_SCHEME == CTU )
 void CPU_FluidSolver_CTU( const real Flu_Array_In[][NCOMP_TOTAL][ FLU_NXT*FLU_NXT*FLU_NXT ],
                           real Flu_Array_Out     [][NCOMP_TOTAL][ PS2*PS2*PS2 ],
@@ -52,7 +53,8 @@ void CPU_FluidSolver_CTU( const real Flu_Array_In[][NCOMP_TOTAL][ FLU_NXT*FLU_NX
                           const bool StoreFlux, const LR_Limiter_t LR_Limiter, const real MinMod_Coeff,
                           const real EP_Coeff, const double Time, const OptGravityType_t GravityType,
                           const double ExtAcc_AuxArray[], const real MinDens, const real MinPres,
-                          const real DualEnergySwitch, const bool NormPassive, const int NNorm, const int NormIdx[] );
+                          const real DualEnergySwitch, const bool NormPassive, const int NNorm, const int NormIdx[],
+                          const bool JeansMinPres, const real JeansMinPres_Coeff );
 #endif // FLU_SCHEME
 
 #elif ( MODEL == MHD )
@@ -120,6 +122,8 @@ void CPU_ELBDMSolver( real Flu_Array_In [][FLU_NIN    ][ FLU_NXT*FLU_NXT*FLU_NXT
 //                                       --> Should be set to the global variable "PassiveNorm_NVar"
 //                NormIdx              : Target variable indices to be normalized
 //                                       --> Should be set to the global variable "PassiveNorm_VarIdx"
+//                JeansMinPres         : Apply minimum pressure estimated from the Jeans length
+//                JeansMinPres_Coeff   : Coefficient used by JeansMinPres = G*(Jeans_NCell*Jeans_dh)^2/(Gamma*pi);
 //
 // Useless parameters in HYDRO : ELBDM_Eta, ELBDM_Taylor3_Coeff, ELBDM_Taylor3_Auto
 // Useless parameters in ELBDM : Gamma, LR_Limiter, MinMod_Coeff, EP_Coeff, WAF_Limiter, MinPres
@@ -135,7 +139,8 @@ void CPU_FluidSolver( real h_Flu_Array_In [][FLU_NIN    ][ FLU_NXT*FLU_NXT*FLU_N
                       const WAF_Limiter_t WAF_Limiter, const real ELBDM_Eta, real ELBDM_Taylor3_Coeff,
                       const bool ELBDM_Taylor3_Auto, const double Time, const OptGravityType_t GravityType,
                       const real MinDens, const real MinPres, const real DualEnergySwitch,
-                      const bool NormPassive, const int NNorm, const int NormIdx[] )
+                      const bool NormPassive, const int NNorm, const int NormIdx[],
+                      const bool JeansMinPres, const real JeansMinPres_Coeff )
 {
 
 // check
@@ -173,13 +178,15 @@ void CPU_FluidSolver( real h_Flu_Array_In [][FLU_NIN    ][ FLU_NXT*FLU_NXT*FLU_N
 
       CPU_FluidSolver_MHM ( h_Flu_Array_In, h_Flu_Array_Out, h_DE_Array_Out, h_Flux_Array, h_Corner_Array, h_Pot_Array_USG,
                             NPatchGroup, dt, dh, Gamma, StoreFlux, LR_Limiter, MinMod_Coeff, EP_Coeff, Time,
-                            GravityType, ExtAcc_AuxArray, MinDens, MinPres, DualEnergySwitch, NormPassive, NNorm, NormIdx );
+                            GravityType, ExtAcc_AuxArray, MinDens, MinPres, DualEnergySwitch, NormPassive, NNorm, NormIdx,
+                            JeansMinPres, JeansMinPres_Coeff );
 
 #     elif ( FLU_SCHEME == CTU )
 
       CPU_FluidSolver_CTU ( h_Flu_Array_In, h_Flu_Array_Out, h_DE_Array_Out, h_Flux_Array, h_Corner_Array, h_Pot_Array_USG,
                             NPatchGroup, dt, dh, Gamma, StoreFlux, LR_Limiter, MinMod_Coeff, EP_Coeff, Time,
-                            GravityType, ExtAcc_AuxArray, MinDens, MinPres, DualEnergySwitch, NormPassive, NNorm, NormIdx );
+                            GravityType, ExtAcc_AuxArray, MinDens, MinPres, DualEnergySwitch, NormPassive, NNorm, NormIdx,
+                            JeansMinPres, JeansMinPres_Coeff );
 
 #     else
 

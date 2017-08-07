@@ -47,7 +47,8 @@ __global__ void CUFLU_FluidSolver_MHM( const real g_Fluid_In[]   [NCOMP_TOTAL][ 
                                        const LR_Limiter_t LR_Limiter, const real MinMod_Coeff,
                                        const real EP_Coeff, const double Time, const OptGravityType_t GravityType,
                                        const real MinDens, const real MinPres, const real DualEnergySwitch,
-                                       const bool NormPassive, const int NNorm );
+                                       const bool NormPassive, const int NNorm,
+                                       const bool JeansMinPres, const real JeansMinPres_Coeff );
 #elif ( FLU_SCHEME == CTU )
 __global__ void CUFLU_FluidSolver_CTU( const real g_Fluid_In[]   [NCOMP_TOTAL][ FLU_NXT*FLU_NXT*FLU_NXT ],
                                        real g_Fluid_Out     []   [NCOMP_TOTAL][ PS2*PS2*PS2 ],
@@ -72,7 +73,8 @@ __global__ void CUFLU_FluidSolver_CTU( const real g_Fluid_In[]   [NCOMP_TOTAL][ 
                                        const LR_Limiter_t LR_Limiter, const real MinMod_Coeff,
                                        const real EP_Coeff, const double Time, const OptGravityType_t GravityType,
                                        const real MinDens, const real MinPres, const real DualEnergySwitch,
-                                       const bool NormPassive, const int NNorm );
+                                       const bool NormPassive, const int NNorm,
+                                       const bool JeansMinPres, const real JeansMinPres_Coeff );
 #endif // FLU_SCHEME
 
 #elif ( MODEL == MHD )
@@ -194,6 +196,8 @@ extern cudaStream_t *Stream;
 //                                                is equal to the gas mass density
 //                NNorm                : Number of passive scalars to be normalized
 //                                       --> Should be set to the global variable "PassiveNorm_NVar"
+//                JeansMinPres         : Apply minimum pressure estimated from the Jeans length
+//                JeansMinPres_Coeff   : Coefficient used by JeansMinPres = G*(Jeans_NCell*Jeans_dh)^2/(Gamma*pi);
 //
 // Useless parameters in HYDRO : ELBDM_Eta
 // Useless parameters in ELBDM : h_Flux_Array, Gamma, LR_Limiter, MinMod_Coeff, EP_Coeff, WAF_Limite, MinPres
@@ -209,7 +213,8 @@ void CUAPI_Asyn_FluidSolver( real h_Flu_Array_In [][FLU_NIN    ][ FLU_NXT*FLU_NX
                              const WAF_Limiter_t WAF_Limiter, const real ELBDM_Eta, real ELBDM_Taylor3_Coeff,
                              const bool ELBDM_Taylor3_Auto, const double Time, const OptGravityType_t GravityType,
                              const int GPU_NStream, const real MinDens, const real MinPres, const real DualEnergySwitch,
-                             const bool NormPassive, const int NNorm )
+                             const bool NormPassive, const int NNorm,
+                             const bool JeansMinPres, const real JeansMinPres_Coeff )
 {
 
 // check
@@ -384,7 +389,8 @@ void CUAPI_Asyn_FluidSolver( real h_Flu_Array_In [][FLU_NIN    ][ FLU_NXT*FLU_NX
                                  d_FC_Flux_y       + UsedPatch[s],
                                  d_FC_Flux_z       + UsedPatch[s],
                                  dt, _dh, Gamma, StoreFlux, LR_Limiter, MinMod_Coeff, EP_Coeff,
-                                 Time, GravityType, MinDens, MinPres, DualEnergySwitch, NormPassive, NNorm );
+                                 Time, GravityType, MinDens, MinPres, DualEnergySwitch, NormPassive, NNorm,
+                                 JeansMinPres, JeansMinPres_Coeff );
 
 #        elif ( FLU_SCHEME == CTU )
 
@@ -409,7 +415,8 @@ void CUAPI_Asyn_FluidSolver( real h_Flu_Array_In [][FLU_NIN    ][ FLU_NXT*FLU_NX
                                  d_FC_Flux_y       + UsedPatch[s],
                                  d_FC_Flux_z       + UsedPatch[s],
                                  dt, _dh, Gamma, StoreFlux, LR_Limiter, MinMod_Coeff, EP_Coeff,
-                                 Time, GravityType, MinDens, MinPres, DualEnergySwitch, NormPassive, NNorm );
+                                 Time, GravityType, MinDens, MinPres, DualEnergySwitch, NormPassive, NNorm,
+                                 JeansMinPres, JeansMinPres_Coeff );
 
 #        else
 
