@@ -71,10 +71,6 @@ void Validate()
    Aux_Error( ERROR_INFO, "COMOVING must be disabled !!\n" );
 #  endif
 
-#  ifndef DUAL_ENERGY
-   Aux_Error( ERROR_INFO, "DUAL_ENERGY must be enabled !!\n" );
-#  endif
-
    if ( !OPT__UNIT )
       Aux_Error( ERROR_INFO, "OPT__UNIT must be enabled !!\n" );
 
@@ -83,17 +79,41 @@ void Validate()
       Aux_Error( ERROR_INFO, "do not use periodic BC for this test !!\n" );
 #  endif
 
-   if (  ( amr->BoxSize[0] != amr->BoxSize[1] || amr->BoxSize[0] != amr->BoxSize[2] )  &&  MPI_Rank == 0  )
-      Aux_Message( stderr, "WARNING : non-cubic box (currently the flag routine \"Flag_AGORA()\" assumes a cubic box) !!\n" );
-
-   if ( INIT_SUBSAMPLING_NCELL != 0  &&  MPI_Rank == 0 )
-      Aux_Message( stderr, "WARNING : INIT_SUBSAMPLING_NCELL (%d) != 0 will lead to non-uniform initial disk temperature !!\n",
-                   INIT_SUBSAMPLING_NCELL );
-
 #  ifdef PARTICLE
    if ( OPT__INIT == INIT_STARTOVER  &&  amr->Par->Init != PAR_INIT_BY_FUNCTION )
       Aux_Error( ERROR_INFO, "please set PAR_INIT = 1 (by FUNCTION) !!\n" );
 #  endif
+
+
+   if ( MPI_Rank == 0 )
+   {
+#     if ( FLU_SCHEME != MHM  &&  FLU_SCHEME != CTU )
+         Aux_Message( stderr, "WARNING : it's recommended to adopt either MHM or CTU schemes for this test !!\n" );
+#     endif
+
+#     ifndef DUAL_ENERGY
+         Aux_Message( stderr, "WARNING : it's recommended to enable DUAL_ENERGY for this test !!\n" );
+#     endif
+
+      if ( MINMOD_COEFF > 1.5 )
+         Aux_Message( stderr, "WARNING : it's recommended to set MINMOD_COEFF <= 1.5 for this test !!\n" );
+
+      if ( FLAG_BUFFER_SIZE < 5 )
+         Aux_Message( stderr, "WARNING : it's recommended to set FLAG_BUFFER_SIZE >= 5 for this test !!\n" );
+
+      if ( FLAG_BUFFER_SIZE_MAXM1_LV < 2 )
+         Aux_Message( stderr, "WARNING : it's recommended to set FLAG_BUFFER_SIZE_MAXM1_LV >= 2 for this test !!\n" );
+
+      if ( !JEANS_MIN_PRES )
+         Aux_Message( stderr, "WARNING : it's recommended to enable JEANS_MIN_PRES for this test !!\n" );
+
+      if ( amr->BoxSize[0] != amr->BoxSize[1]  ||  amr->BoxSize[0] != amr->BoxSize[2] )
+         Aux_Message( stderr, "WARNING : non-cubic box (currently the flag routine \"Flag_AGORA()\" assumes a cubic box) !!\n" );
+
+      if ( INIT_SUBSAMPLING_NCELL != 0 )
+         Aux_Message( stderr, "WARNING : INIT_SUBSAMPLING_NCELL (%d) != 0 will lead to non-uniform initial disk temperature !!\n",
+                      INIT_SUBSAMPLING_NCELL );
+   } // if ( MPI_Rank == 0 )
 
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Validating test problem %d ... done\n", TESTPROB_ID );
