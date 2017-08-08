@@ -329,7 +329,7 @@ int main( int argc, char *argv[] )
    Timer_Total.Start();
 
 #  ifdef TIMING
-   Timer_t  Timer_Init( 1 ), Timer_Other( 1 );
+   Timer_t  Timer_Init, Timer_Other;
    Timer_Init.Start();
 #  endif
 
@@ -360,7 +360,7 @@ int main( int argc, char *argv[] )
 
 
 #  ifdef TIMING
-   Timer_Init.Stop( false );
+   Timer_Init.Stop();
 #  endif
 // ======================================================================================================
 
@@ -382,7 +382,7 @@ int main( int argc, char *argv[] )
 
 //    1. advance all physical attributes by one global time-step
 //    ---------------------------------------------------------------------------------------------------
-      TIMING_FUNC(   EvolveLevel( 0, NULL_REAL ),   Timer_Main[2],   false   );
+      TIMING_FUNC(   EvolveLevel( 0, NULL_REAL ),   Timer_Main[2]   );
 
       Step ++;
 //    ---------------------------------------------------------------------------------------------------
@@ -392,31 +392,31 @@ int main( int argc, char *argv[] )
 //       --> synchronize particles, restrict data, recalculate potential and particle acceleration, ...
 //    ---------------------------------------------------------------------------------------------------
       if ( OPT__CORR_AFTER_ALL_SYNC == CORR_AFTER_SYNC_EVERY_STEP )
-      TIMING_FUNC(   Flu_CorrAfterAllSync(),     Timer_Main[6],   false   );
+      TIMING_FUNC(   Flu_CorrAfterAllSync(),     Timer_Main[6]   );
 //    ---------------------------------------------------------------------------------------------------
 
 
 //    3. output data and execute auxiliary functions
 //    ---------------------------------------------------------------------------------------------------
-      TIMING_FUNC(   Output_DumpData( 1 ),            Timer_Main[3],   false   );
+      TIMING_FUNC(   Output_DumpData( 1 ),            Timer_Main[3]   );
 
       if ( OPT__PATCH_COUNT == 1 )
-      TIMING_FUNC(   Aux_Record_PatchCount(),         Timer_Main[4],   false   );
+      TIMING_FUNC(   Aux_Record_PatchCount(),         Timer_Main[4]   );
 
       if ( OPT__RECORD_MEMORY )
-      TIMING_FUNC(   Aux_GetMemInfo(),                Timer_Main[4],   false   );
+      TIMING_FUNC(   Aux_GetMemInfo(),                Timer_Main[4]   );
 
       if ( OPT__RECORD_USER  &&  Aux_Record_User_Ptr != NULL )
-      TIMING_FUNC(   Aux_Record_User_Ptr(),           Timer_Main[4],   false   );
+      TIMING_FUNC(   Aux_Record_User_Ptr(),           Timer_Main[4]   );
 
-      TIMING_FUNC(   Aux_Record_CorrUnphy(),          Timer_Main[4],   false   );
+      TIMING_FUNC(   Aux_Record_CorrUnphy(),          Timer_Main[4]   );
 
 #     ifdef PARTICLE
       if ( OPT__PARTICLE_COUNT == 1 )
-      TIMING_FUNC(   Par_Aux_Record_ParticleCount(),  Timer_Main[4],   false   );
+      TIMING_FUNC(   Par_Aux_Record_ParticleCount(),  Timer_Main[4]   );
 #     endif
 
-      TIMING_FUNC(   Aux_Check(),                     Timer_Main[4],   false   );
+      TIMING_FUNC(   Aux_Check(),                     Timer_Main[4]   );
 //    ---------------------------------------------------------------------------------------------------
 
 
@@ -434,7 +434,7 @@ int main( int argc, char *argv[] )
 
 //    enable this functionality only if OPT__MANUAL_CONTROL is on
       if ( OPT__MANUAL_CONTROL )
-      TIMING_FUNC(   End_StopManually( Terminate ),   Timer_Main[4],   false   );
+      TIMING_FUNC(   End_StopManually( Terminate ),   Timer_Main[4]   );
 //    ---------------------------------------------------------------------------------------------------
 
 
@@ -472,7 +472,7 @@ int main( int argc, char *argv[] )
       } // if ( LB_EstimateLoadImbalance() > amr->LB->WLI_Max )
 
 #     ifdef TIMING
-      Timer_Main[5]->Stop( false );
+      Timer_Main[5]->Stop();
 #     endif
 #     endif // #ifdef LOAD_BALANCE
 //    ---------------------------------------------------------------------------------------------------
@@ -482,18 +482,18 @@ int main( int argc, char *argv[] )
 //    ---------------------------------------------------------------------------------------------------
 #     ifdef TIMING
       MPI_Barrier( MPI_COMM_WORLD );
-      Timer_Main[0]->Stop( false );
+      Timer_Main[0]->Stop();
 
       Timer_Other.Start();
 
       if ( OPT__RECORD_PERFORMANCE )
-      Aux_Record_Performance( Timer_Main[0]->GetValue(0) );
+      Aux_Record_Performance( Timer_Main[0]->GetValue() );
 
       Aux_Record_Timing();
 
       Aux_ResetTimer();
 
-      Timer_Other.Stop( false );
+      Timer_Other.Stop();
 #     endif
 //    ---------------------------------------------------------------------------------------------------
 

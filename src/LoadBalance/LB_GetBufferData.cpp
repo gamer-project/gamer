@@ -656,7 +656,7 @@ void LB_GetBufferData( const int lv, const int FluSg, const int PotSg, const Get
    } // switch ( GetBufMode )
 
 #  ifdef TIMING
-   if ( OPT__TIMING_MPI )  Timer_MPI[0]->Stop( false );
+   if ( OPT__TIMING_MPI )  Timer_MPI[0]->Stop();
 #  endif
 
 
@@ -682,7 +682,7 @@ void LB_GetBufferData( const int lv, const int FluSg, const int PotSg, const Get
 #  endif
 
 #  ifdef TIMING
-   if ( OPT__TIMING_MPI )  Timer_MPI[1]->Stop( false );
+   if ( OPT__TIMING_MPI )  Timer_MPI[1]->Stop();
 #  endif
 
 
@@ -959,7 +959,7 @@ void LB_GetBufferData( const int lv, const int FluSg, const int PotSg, const Get
    } // switch ( GetBufMode )
 
 #  ifdef TIMING
-   if ( OPT__TIMING_MPI )  Timer_MPI[2]->Stop( false );
+   if ( OPT__TIMING_MPI )  Timer_MPI[2]->Stop();
 #  endif
 
 
@@ -1000,8 +1000,8 @@ void LB_GetBufferData( const int lv, const int FluSg, const int PotSg, const Get
 
       fprintf( File, "%3d %15s %4d %4d %10.5f %10.5f %10.5f %8.3f %8.3f %10.3f %10.3f\n",
                lv, ModeName, NVar_Tot, (GetBufMode==DATA_RESTRICT || GetBufMode==COARSE_FINE_FLUX)?-1:ParaBuf,
-               Timer_MPI[0]->GetValue(0), Timer_MPI[2]->GetValue(0), Timer_MPI[1]->GetValue(0),
-               SendMB, RecvMB, SendMB/Timer_MPI[1]->GetValue(0), RecvMB/Timer_MPI[1]->GetValue(0) );
+               Timer_MPI[0]->GetValue(), Timer_MPI[2]->GetValue(), Timer_MPI[1]->GetValue(),
+               SendMB, RecvMB, SendMB/Timer_MPI[1]->GetValue(), RecvMB/Timer_MPI[1]->GetValue() );
 
       fclose( File );
 

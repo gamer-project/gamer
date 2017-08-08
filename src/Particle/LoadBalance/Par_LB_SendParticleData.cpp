@@ -88,7 +88,7 @@ void Par_LB_SendParticleData( const int NParVar, int *SendBuf_NPatchEachRank, in
 //    --> make the MPI bandwidth measured here more accurate
       if ( OPT__TIMING_BARRIER )    MPI_Barrier( MPI_COMM_WORLD );
 
-      if ( OPT__TIMING_MPI )  time0 = Timer->GetValue( Timer->WorkingID );
+      if ( OPT__TIMING_MPI )  time0 = Timer->GetValue();
 
       Timer->Start();
    }
@@ -215,11 +215,11 @@ void Par_LB_SendParticleData( const int NParVar, int *SendBuf_NPatchEachRank, in
 #  ifdef TIMING
    if ( Timer != NULL )
    {
-      Timer->Stop( true );
+      Timer->Stop();
 
       if ( OPT__TIMING_MPI )
       {
-         dtime = Timer->GetValue( Timer->WorkingID-1 ) - time0;
+         dtime = Timer->GetValue() - time0;
 
 //       output to the same log file as LB_GetBufferData
          char FileName[100];
