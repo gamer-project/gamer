@@ -103,7 +103,7 @@ void Par_UpdateParticle( const int lv, const double TimeNew, const double TimeOl
          Aux_Error( ERROR_INFO, "Cannot determine PotSg for OPT__DT_LEVEL == DT_LEVEL_SHARED (lv %d, PrepTime %20.14e, SgTime[0] %20.14e, SgTime[1] %20.14e !!\n",
                     lv, PrepPotTime, amr->PotSgTime[lv][0], amr->PotSgTime[lv][1] );
          else if ( UpdateStep == PAR_UPSTEP_PRED )
-         Aux_Error( ERROR_INFO, "Potential interpolation is unnecessary (lv %d, PrepTime %20.14e, SgTime[0] %20.14e, SgTime[1] %20.14e !!\n",
+         Aux_Error( ERROR_INFO, "Potential interpolation should be unnecessary (lv %d, PrepTime %20.14e, SgTime[0] %20.14e, SgTime[1] %20.14e !!\n",
                     lv, PrepPotTime, amr->PotSgTime[lv][0], amr->PotSgTime[lv][1] );
 
          PotIntTime    = true;
