@@ -168,7 +168,7 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData[], const in
    {
 //    check
       if ( OPT__DT_LEVEL == DT_LEVEL_SHARED )
-      Aux_Error( ERROR_INFO, "cannot determine FluSg (lv %d, PrepTime %20.14e, SgTime[0] %20.14e, SgTime[1] %20.14e !!\n",
+      Aux_Error( ERROR_INFO, "cannot determine FluSg for OPT__DT_LEVEL == DT_LEVEL_SHARED (lv %d, PrepTime %20.14e, SgTime[0] %20.14e, SgTime[1] %20.14e !!\n",
                  lv, PrepTime, amr->FluSgTime[lv][0], amr->FluSgTime[lv][1] );
 
 //    print warning messages if temporal extrapolation is required
@@ -232,7 +232,7 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData[], const in
    {
 //    check
       if ( OPT__DT_LEVEL == DT_LEVEL_SHARED )
-      Aux_Error( ERROR_INFO, "cannot determine PotSg (lv %d, PrepTime %20.14e, SgTime[0] %20.14e, SgTime[1] %20.14e !!\n",
+      Aux_Error( ERROR_INFO, "cannot determine PotSg for OPT__DT_LEVEL == DT_LEVEL_SHARED (lv %d, PrepTime %20.14e, SgTime[0] %20.14e, SgTime[1] %20.14e !!\n",
                  lv, PrepTime, amr->PotSgTime[lv][0], amr->PotSgTime[lv][1] );
 
 //    print warning messages if temporal extrapolation is required

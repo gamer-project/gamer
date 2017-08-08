@@ -76,7 +76,7 @@ void Poi_Prepare_Pot( const int lv, const double PrepTime, real h_Pot_Array_P_In
    {
 //    check
       if ( OPT__DT_LEVEL == DT_LEVEL_SHARED )
-      Aux_Error( ERROR_INFO, "cannot determine PotSg (lv %d, PrepTime %20.14e, SgTime[0] %20.14e, SgTime[1] %20.14e !!\n",
+      Aux_Error( ERROR_INFO, "cannot determine PotSg for OPT__DT_LEVEL == DT_LEVEL_SHARED (lv %d, PrepTime %20.14e, SgTime[0] %20.14e, SgTime[1] %20.14e !!\n",
                  FaLv, PrepTime, amr->PotSgTime[FaLv][0], amr->PotSgTime[FaLv][1] );
 
 //    print warning messages if temporal extrapolation is required
