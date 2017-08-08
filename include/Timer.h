@@ -148,17 +148,17 @@ struct Timer_t
 // macro for timing functions
 #ifdef TIMING
 
-#  define TIMING_FUNC( call, timer, next )                        \
+#  define TIMING_FUNC( call, timer )                              \
    {                                                              \
       if ( OPT__TIMING_BARRIER ) MPI_Barrier( MPI_COMM_WORLD );   \
       timer->Start();                                             \
       call;                                                       \
-      timer->Stop( next );                                        \
+      timer->Stop();                                              \
    }
 
 #else
 
-#  define TIMING_FUNC( call, timer, next )   call
+#  define TIMING_FUNC( call, timer )   call
 
 #endif
 
@@ -177,7 +177,7 @@ struct Timer_t
       timer->Start();                           \
       call;                                     \
       GPU_SYNC();                               \
-      timer->Stop( false );                     \
+      timer->Stop();                            \
    }
 
 #else
