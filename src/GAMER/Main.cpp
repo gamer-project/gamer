@@ -301,9 +301,9 @@ Timer_t *Timer_Par_MPI    [NLEVEL][6];
 #endif
 
 #ifdef TIMING_SOLVER
-Timer_t *Timer_Pre         [NLEVEL][5];
-Timer_t *Timer_Sol         [NLEVEL][5];
-Timer_t *Timer_Clo         [NLEVEL][5];
+Timer_t *Timer_Pre         [NLEVEL][NSOLVER];
+Timer_t *Timer_Sol         [NLEVEL][NSOLVER];
+Timer_t *Timer_Clo         [NLEVEL][NSOLVER];
 Timer_t *Timer_Poi_PreRho  [NLEVEL];
 Timer_t *Timer_Poi_PreFlu  [NLEVEL];
 Timer_t *Timer_Poi_PrePot_C[NLEVEL];
