@@ -2,6 +2,7 @@
 #include "GAMER.h"
 
 #ifdef TIMING
+extern Timer_t *Timer_dt         [NLEVEL];
 extern Timer_t *Timer_Flu_Advance[NLEVEL];
 extern Timer_t *Timer_Gra_Advance[NLEVEL];
 extern Timer_t *Timer_Che_Advance[NLEVEL];
@@ -65,6 +66,11 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
    {
 //    1. calculate the evolution time-step
 // ===============================================================================================
+#     ifdef TIMING
+      if ( OPT__TIMING_BARRIER )    MPI_Barrier( MPI_COMM_WORLD );
+      Timer_dt[lv]->Start();
+#     endif
+
       switch ( OPT__DT_LEVEL )
       {
          case ( DT_LEVEL_SHARED ):
@@ -115,6 +121,10 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
             Aux_Message( stdout, "Time: %13.7e -> %13.7e,   Step: %7ld -> %7ld,   dt_base: %13.7e\n",
                          Time[0], Time[0]+dTime_Base, Step, Step+1, dTime_Base );
       }
+
+#     ifdef TIMING
+      Timer_dt[lv]->Stop();
+#     endif
 // ===============================================================================================
 
 

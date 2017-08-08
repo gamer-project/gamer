@@ -284,6 +284,7 @@ real (*d_Pot_Array_T)[ CUBE(GRA_NXT) ]                                     = NUL
 #ifdef TIMING
 Timer_t *Timer_Main[7];
 Timer_t *Timer_MPI[3];
+Timer_t *Timer_dt         [NLEVEL];
 Timer_t *Timer_Flu_Advance[NLEVEL];
 Timer_t *Timer_Gra_Advance[NLEVEL];
 Timer_t *Timer_Che_Advance[NLEVEL];
