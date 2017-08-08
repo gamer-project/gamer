@@ -153,6 +153,9 @@ const Check_t
 
 // target solver in "InvokeSolvers"
 // --> must start from 0 because of the current TIMING_SOLVER implementation
+// --> when adding new solvers, please modify the NSOLVER constant accordingly
+const int NSOLVER = 7;
+
 typedef int Solver_t;
 const Solver_t
    FLUID_SOLVER               = 0

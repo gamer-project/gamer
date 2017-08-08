@@ -8,9 +8,9 @@ static void Solver( const Solver_t TSolver, const int lv, const double TimeNew, 
 static void Closing_Step( const Solver_t TSolver, const int lv, const int SaveSg_Flu, const int SaveSg_Pot, const int NPG,
                           const int *PID0_List, const int ArrayID, const double dt );
 
-extern Timer_t *Timer_Pre         [NLEVEL][8];
-extern Timer_t *Timer_Sol         [NLEVEL][8];
-extern Timer_t *Timer_Clo         [NLEVEL][8];
+extern Timer_t *Timer_Pre         [NLEVEL][NSOLVER];
+extern Timer_t *Timer_Sol         [NLEVEL][NSOLVER];
+extern Timer_t *Timer_Clo         [NLEVEL][NSOLVER];
 #ifdef GRAVITY
 extern Timer_t *Timer_Poi_PreRho  [NLEVEL];
 extern Timer_t *Timer_Poi_PreFlu  [NLEVEL];
