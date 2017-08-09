@@ -341,7 +341,8 @@ struct InputPara_t
 #  ifdef COMOVING
    double Dt__MaxDeltaA;
 #  endif
-   double Dt__FlexibleRange;
+   double Dt__SyncParentLv;
+   double Dt__SyncChildrenLv;
    int    Opt__DtUser;
    int    Opt__DtLevel;
    int    Opt__RecordDt;

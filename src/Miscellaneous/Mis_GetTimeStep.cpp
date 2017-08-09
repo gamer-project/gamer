@@ -188,7 +188,12 @@ double Mis_GetTimeStep( const int lv, const double dTime_SyncFaLv, const double 
    for (int t=0; t<NdTime; t++)  dTime_min = fmin( dTime_min, dTime[t] );
 
 
-// 2.2 synchronize with the parent level
+// 2.2 record the physical time interval
+// --> here we do not consider the time-step required to synchronize with the parent level (i.e., dTime_SyncFaLv)
+   dTime_AllLv[lv] = dTime_min;
+
+
+// 2.3 synchronize with the parent level
    if ( OPT__DT_LEVEL == DT_LEVEL_FLEXIBLE )
    {
       if ( lv > 0 )
@@ -199,7 +204,7 @@ double Mis_GetTimeStep( const int lv, const double dTime_SyncFaLv, const double 
             MPI_Exit();
          }
 
-         if ( (1.0+DT__FLEXIBLE_RANGE)*dTime_min >= dTime_SyncFaLv )    dTime_min = dTime_SyncFaLv;
+         if ( (1.0+DT__SYNC_PARENT_LV)*dTime_min >= dTime_SyncFaLv )    dTime_min = dTime_SyncFaLv;
       }
 
       dTime[NdTime] = dTime_SyncFaLv;
@@ -207,7 +212,21 @@ double Mis_GetTimeStep( const int lv, const double dTime_SyncFaLv, const double 
    }
 
 
-// 2.3 reduce dt for AUTO_REDUCE_DT
+// 2.4 synchronize with the children level
+/*
+const double SyncFactor      = 0.9;
+const double dTime_SyncSonLv = 2.0*dTime_AllLv[lv+1];
+
+if ( dTime_min != dTime_SyncFaLv  &&  lv < TOP_LEVEL  &&  dTime_min > dTime_SyncSonLv  &&  dTime_min*SyncFactor < dTime_SyncSonLv )
+   dTime_min = dTime_SyncSonLv;
+
+dTime[NdTime] = dTime_SyncSonLv;
+sprintf( dTime_Name[NdTime++], "%s", "Sync_SonLv" );
+*/
+
+
+// 2.5 reduce dt for AUTO_REDUCE_DT
+// --> must do this AFTER checking all other dt criteria
    if ( AUTO_REDUCE_DT )   dTime_min *= AutoReduceDtCoeff;
 
 

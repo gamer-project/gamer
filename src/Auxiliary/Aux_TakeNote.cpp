@@ -635,7 +635,8 @@ void Aux_TakeNote()
 #     ifdef COMOVING
       fprintf( Note, "DT__MAX_DELTA_A                 %13.7e\n",  DT__MAX_DELTA_A           );
 #     endif
-      fprintf( Note, "DT__FLEXIBLE_RANGE              %13.7e\n",  DT__FLEXIBLE_RANGE        );
+      fprintf( Note, "DT__SYNC_PARENT_LV              %13.7e\n",  DT__SYNC_PARENT_LV        );
+      fprintf( Note, "DT__SYNC_CHILDREN_LV            %13.7e\n",  DT__SYNC_CHILDREN_LV      );
       fprintf( Note, "OPT__DT_USER                    %d\n",      OPT__DT_USER              );
       fprintf( Note, "OPT__DT_LEVEL                   %d\n",      OPT__DT_LEVEL             );
       fprintf( Note, "AUTO_REDUCE_DT                  %d\n",      AUTO_REDUCE_DT            );
