@@ -242,8 +242,12 @@ void Init_Restart()
    fseek( File, 2*sizeof(long), SEEK_CUR );
 #  endif
 
+   if ( FormatVersion >= 2130 )
+   fread( dTime_AllLv,                    sizeof(double), NLv_Restart, File );
+
 
 // set parameters in levels that do not exist in the input file
+// --> assuming dTime_AllLv[] has been initialized as 0.0 properly
    for (int lv=NLv_Restart; lv<NLEVEL; lv++)
    {
       Time          [lv] = Time[0];
