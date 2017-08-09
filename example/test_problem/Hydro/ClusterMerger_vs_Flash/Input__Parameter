@@ -75,7 +75,7 @@ DT__PARACC                    0.5         # dt criterion: particle acceleration 
 DT__SYNC_PARENT_LV            0.1         # dt criterion: allow dt to adjust by (1.0+DT__SYNC_PARENT) in order to synchronize
                                           #               with the parent level (for OPT__DT_LEVEL==3 only) [0.1]
 DT__SYNC_CHILDREN_LV          0.1         # dt criterion: allow dt to adjust by (1.0-DT__SYNC_CHILDREN) in order to synchronize
-                                          #               with the children level (for OPT__DT_LEVEL==3 only) [0.1]
+                                          #               with the children level (for OPT__DT_LEVEL==3 only; 0=off) [0.1]
 OPT__DT_USER                  0           # dt criterion: user-defined -> edit "Mis_GetTimeStep_UserCriteria.cpp" [0]
 OPT__DT_LEVEL                 3           # dt at different AMR levels (1=shared, 2=differ by two, 3=flexible) [3]
 OPT__RECORD_DT                1           # record info of the dt determination [1]
