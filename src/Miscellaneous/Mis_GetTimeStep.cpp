@@ -194,6 +194,7 @@ double Mis_GetTimeStep( const int lv, const double dTime_SyncFaLv, const double 
 
 
 // 2.3 synchronize with the parent level
+// --> increase dt at the current level by a small factor in order to synchronize with the parent level
    if ( OPT__DT_LEVEL == DT_LEVEL_FLEXIBLE )
    {
       if ( lv > 0 )
@@ -213,16 +214,23 @@ double Mis_GetTimeStep( const int lv, const double dTime_SyncFaLv, const double 
 
 
 // 2.4 synchronize with the children level
-/*
-const double SyncFactor      = 0.9;
-const double dTime_SyncSonLv = 2.0*dTime_AllLv[lv+1];
+// --> reduce dt at the current level by a small factor in order to synchronize with the children level easier
+// --> assuming that dt at the children level is already known and won't change much in the next sub-step
+// --> this could remove the additional sub-steps at the children level required to synchronize with this level
+//     (these additional sub-steps usually have much smaller time-steps compared to the CFL condition)
+// --> note that we do not apply this adjustment when this level is going to synchronize with its parent level
+//     (i.e., dTime_min == dTime_SyncFaLv)
+   if ( OPT__DT_LEVEL == DT_LEVEL_FLEXIBLE  &&  DT__SYNC_CHILDREN_LV > 0.0 )
+   {
+      const bool   Try2SyncSon     = ( lv < TOP_LEVEL  &&  NPatchTotal[lv+1] > 0  &&  dTime_min != dTime_SyncFaLv );
+      const double dTime_SyncSonLv = ( Try2SyncSon ) ? 2.0*dTime_AllLv[lv+1] : NULL_REAL;
 
-if ( dTime_min != dTime_SyncFaLv  &&  lv < TOP_LEVEL  &&  dTime_min > dTime_SyncSonLv  &&  dTime_min*SyncFactor < dTime_SyncSonLv )
-   dTime_min = dTime_SyncSonLv;
+      if ( Try2SyncSon  &&  dTime_min > dTime_SyncSonLv  &&  dTime_min*(1.0-DT__SYNC_CHILDREN_LV) < dTime_SyncSonLv )
+         dTime_min = dTime_SyncSonLv;
 
-dTime[NdTime] = dTime_SyncSonLv;
-sprintf( dTime_Name[NdTime++], "%s", "Sync_SonLv" );
-*/
+      dTime[NdTime] = dTime_SyncSonLv;
+      sprintf( dTime_Name[NdTime++], "%s", "Sync_SonLv" );
+   }
 
 
 // 2.5 reduce dt for AUTO_REDUCE_DT
