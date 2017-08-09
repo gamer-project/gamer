@@ -17,7 +17,7 @@ Procedure for outputting new variables:
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Output_DumpData_Total (FormatVersion = 2120)
+// Function    :  Output_DumpData_Total (FormatVersion = 2130)
 // Description :  Output all simulation data in the binary form, which can be used as a restart file
 //
 // Note        :  1. This output format is deprecated and is mainly used for debugging only
@@ -27,6 +27,7 @@ Procedure for outputting new variables:
 //
 // Revision    :  2110 : 2016/10/03 --> output HUBBLE0, OPT__UNIT, UNIT_L/M/T/V/D/E, MOLECULAR_WEIGHT
 //                2120 : 2017/02/14 --> output passive grid and particle variables
+//                2130 : 2018/08/09 --> output dTime_AllLv
 //-------------------------------------------------------------------------------------------------------
 void Output_DumpData_Total( const char *FileName )
 {
@@ -166,7 +167,7 @@ void Output_DumpData_Total( const char *FileName )
 
 //    a. output the information of data format
 //    =================================================================================================
-      const long FormatVersion = 2120;
+      const long FormatVersion = 2130;
       const long CheckCode     = 123456789;
 
       fseek( File, HeaderOffset_Format, SEEK_SET );
@@ -713,6 +714,7 @@ void Output_DumpData_Total( const char *FileName )
       fwrite( &AveDensity_Init,           sizeof(double),                  1,             File );
       fwrite( &NParAllRank,               sizeof(long),                    1,             File );
       fwrite( &FileOffset_Particle,       sizeof(long),                    1,             File );
+      fwrite( dTime_AllLv,                sizeof(double),             NLEVEL,             File );
 
 
 //    move the file position indicator to the end of the header ==> prepare to output patch data
