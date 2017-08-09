@@ -70,7 +70,7 @@ Procedure for outputting new variables:
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2242)
+// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2250)
 // Description :  Output all simulation data in the HDF5 format, which can be used as a restart file
 //                or loaded by YT
 //
@@ -137,6 +137,7 @@ Procedure for outputting new variables:
 //                2240 : 2017/07/26 --> output AUTO_REDUCE_DT*
 //                2241 : 2017/08/05 --> output FLAG_BUFFER_SIZE_MAXM1_LV
 //                2242 : 2017/08/09 --> output DT__SYNC_PARENT_LV and DT__SYNC_CHILDREN_LV; remove DT__FLEXIBLE_RANGE
+//                2250 : 2017/08/09 --> output dTime_AllLv[]
 //-------------------------------------------------------------------------------------------------------
 void Output_DumpData_Total_HDF5( const char *FileName )
 {
@@ -1242,7 +1243,7 @@ void FillIn_KeyInfo( KeyInfo_t &KeyInfo )
 
    const time_t CalTime  = time( NULL );   // calendar time
 
-   KeyInfo.FormatVersion = 2242;
+   KeyInfo.FormatVersion = 2250;
    KeyInfo.Model         = MODEL;
    KeyInfo.NLevel        = NLEVEL;
    KeyInfo.NCompFluid    = NCOMP_FLUID;
@@ -1285,6 +1286,7 @@ void FillIn_KeyInfo( KeyInfo_t &KeyInfo )
       KeyInfo.CellScale     [lv] = amr->scale    [lv];
       KeyInfo.NPatch        [lv] = NPatchTotal   [lv];
       KeyInfo.AdvanceCounter[lv] = AdvanceCounter[lv];
+      KeyInfo.dTime_AllLv   [lv] = dTime_AllLv   [lv];
    }
 
    KeyInfo.CodeVersion  = (char*)"gamer";
@@ -2077,6 +2079,7 @@ void GetCompound_KeyInfo( hid_t &H5_TypeID )
    H5Tinsert( H5_TypeID, "BoxSize",            HOFFSET(KeyInfo_t,BoxSize        ),    H5_TypeID_Arr_3Double   );
    H5Tinsert( H5_TypeID, "Time",               HOFFSET(KeyInfo_t,Time           ),    H5_TypeID_Arr_NLvDouble );
    H5Tinsert( H5_TypeID, "CellSize",           HOFFSET(KeyInfo_t,CellSize       ),    H5_TypeID_Arr_NLvDouble );
+   H5Tinsert( H5_TypeID, "dTime_AllLv",        HOFFSET(KeyInfo_t,dTime_AllLv    ),    H5_TypeID_Arr_NLvDouble );
 #  ifdef GRAVITY
    H5Tinsert( H5_TypeID, "AveDens_Init",       HOFFSET(KeyInfo_t,AveDens_Init   ),    H5T_NATIVE_DOUBLE       );
 #  endif

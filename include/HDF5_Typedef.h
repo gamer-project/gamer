@@ -62,9 +62,10 @@ struct KeyInfo_t
    int    Par_NPassive;             // PAR_NPASSIVE
 #  endif
 
-   double BoxSize [3];
-   double Time    [NLEVEL];
-   double CellSize[NLEVEL];         // amr->dh[lv]
+   double BoxSize[3];
+   double Time       [NLEVEL];
+   double CellSize   [NLEVEL];      // amr->dh[lv]
+   double dTime_AllLv[NLEVEL];
 #  ifdef GRAVITY
    double AveDens_Init;             // AveDensity_Init
 #  endif
