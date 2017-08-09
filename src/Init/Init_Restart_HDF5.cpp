@@ -172,6 +172,7 @@ void Init_Restart_HDF5( const char *FileName )
    LoadField( "BoxSize",             KeyInfo.BoxSize,            H5_SetID_KeyInfo, H5_TypeID_KeyInfo, Fatal,  amr->BoxSize,   3,    Fatal );
    LoadField( "Time",                KeyInfo.Time,               H5_SetID_KeyInfo, H5_TypeID_KeyInfo, Fatal,  NullPtr,       -1, NonFatal );
    LoadField( "CellSize",            KeyInfo.CellSize,           H5_SetID_KeyInfo, H5_TypeID_KeyInfo, Fatal,  NullPtr,       -1, NonFatal );
+   LoadField( "dTime_AllLv",         KeyInfo.dTime_AllLv,        H5_SetID_KeyInfo, H5_TypeID_KeyInfo, Fatal,  NullPtr,       -1, NonFatal );
 #  ifdef GRAVITY
    LoadField( "AveDens_Init",       &KeyInfo.AveDens_Init,       H5_SetID_KeyInfo, H5_TypeID_KeyInfo, Fatal,  NullPtr,       -1, NonFatal );
 #  endif
@@ -192,6 +193,9 @@ void Init_Restart_HDF5( const char *FileName )
       Time          [lv] = KeyInfo.Time          [lv];
       NPatchTotal   [lv] = KeyInfo.NPatch        [lv];
       AdvanceCounter[lv] = KeyInfo.AdvanceCounter[lv];
+
+      if ( KeyInfo.FormatVersion >= 2250 )
+      dTime_AllLv   [lv] = KeyInfo.dTime_AllLv   [lv];
    }
 
    Step                          = KeyInfo.Step;
@@ -204,6 +208,7 @@ void Init_Restart_HDF5( const char *FileName )
 
 
 // 1-6. set parameters in levels that do not exist in the input file
+// --> assuming dTime_AllLv[] has been initialized as 0.0 properly
    for (int lv=KeyInfo.NLevel; lv<NLEVEL; lv++)
    {
       Time          [lv] = 0.0;
