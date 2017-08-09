@@ -17,6 +17,7 @@
 AMR_t               *amr = NULL;
 
 double               Time[NLEVEL]           = { 0.0 };
+double               dTime_AllLv[NLEVEL]    = { 0.0 };
 long                 AdvanceCounter[NLEVEL] = { 0 };
 long                 NCorrUnphy[NLEVEL]     = { 0 };
 long                 Step                   = 0;
@@ -40,7 +41,7 @@ int                  Flu_ParaBuf;
 
 char                *PassiveFieldName_Grid[NCOMP_PASSIVE];
 
-double               BOX_SIZE, DT__FLUID, DT__FLUID_INIT, END_T, OUTPUT_DT, DT__FLEXIBLE_RANGE;
+double               BOX_SIZE, DT__FLUID, DT__FLUID_INIT, END_T, OUTPUT_DT, DT__SYNC_PARENT_LV, DT__SYNC_CHILDREN_LV;
 long                 END_STEP;
 int                  NX0_TOT[3], OUTPUT_STEP, REGRID_COUNT, FLU_GPU_NPGROUP, OMP_NTHREAD;
 int                  MPI_NRank, MPI_NRank_X[3], GPU_NSTREAM, FLAG_BUFFER_SIZE, FLAG_BUFFER_SIZE_MAXM1_LV, MAX_LEVEL;

@@ -18,6 +18,7 @@
 extern AMR_t     *amr;                                // AMR tree structure
 extern double     Time[NLEVEL];                       // "present"  physical time at each level
 extern double     Time_Prev[NLEVEL];                  // "previous" physical time at each level
+extern double     dTime_AllLv[NLEVEL];                // current evolution physical time interval at each level
 extern long       AdvanceCounter[NLEVEL];             // number of sub-steps that each level has been evolved
 extern long       NCorrUnphy[NLEVEL];                 // number of cells corrected by either OPT__1ST_FLUX_CORR or MIN_DENS/PRES
 extern long       Step;                               // number of main steps
@@ -45,7 +46,7 @@ extern char      *PassiveFieldName_Grid[NCOMP_PASSIVE];
 extern int        PassiveNorm_NVar;
 extern int        PassiveNorm_VarIdx[NCOMP_PASSIVE];
 
-extern double     BOX_SIZE, DT__FLUID, DT__FLUID_INIT, END_T, OUTPUT_DT, DT__FLEXIBLE_RANGE;
+extern double     BOX_SIZE, DT__FLUID, DT__FLUID_INIT, END_T, OUTPUT_DT, DT__SYNC_PARENT_LV, DT__SYNC_CHILDREN_LV;
 extern long int   END_STEP;
 extern int        NX0_TOT[3], OUTPUT_STEP, REGRID_COUNT, FLU_GPU_NPGROUP, OMP_NTHREAD;
 extern int        MPI_NRank, MPI_NRank_X[3], GPU_NSTREAM, FLAG_BUFFER_SIZE, FLAG_BUFFER_SIZE_MAXM1_LV, MAX_LEVEL;

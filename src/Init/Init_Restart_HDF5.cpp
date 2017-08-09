@@ -1557,7 +1557,8 @@ void Check_InputPara( const char *FileName )
 #  ifdef COMOVING
    LoadField( "Dt__MaxDeltaA",           &RS.Dt__MaxDeltaA,           SID, TID, NonFatal, &RT.Dt__MaxDeltaA,            1, NonFatal );
 #  endif
-   LoadField( "Dt__FlexibleRange",       &RS.Dt__FlexibleRange,       SID, TID, NonFatal, &RT.Dt__FlexibleRange,        1, NonFatal );
+   LoadField( "Dt__SyncParentLv",        &RS.Dt__SyncParentLv,        SID, TID, NonFatal, &RT.Dt__SyncParentLv,         1, NonFatal );
+   LoadField( "Dt__SyncChildrenLv",      &RS.Dt__SyncChildrenLv,      SID, TID, NonFatal, &RT.Dt__SyncChildrenLv,       1, NonFatal );
    LoadField( "Opt__DtUser",             &RS.Opt__DtUser,             SID, TID, NonFatal, &RT.Opt__DtUser,              1, NonFatal );
    LoadField( "Opt__DtLevel",            &RS.Opt__DtLevel,            SID, TID, NonFatal, &RT.Opt__DtLevel,             1, NonFatal );
    LoadField( "Opt__RecordDt",           &RS.Opt__RecordDt,           SID, TID, NonFatal, &RT.Opt__RecordDt,            1, NonFatal );

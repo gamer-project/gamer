@@ -84,8 +84,10 @@ DT__PARVEL                    0.5         # dt criterion: particle velocity safe
 DT__PARVEL_MAX               -1.0         # dt criterion: maximum allowed dt from particle velocity (<0=off) [-1.0]
 DT__PARACC                    0.5         # dt criterion: particle acceleration safety factor (0=off) [0.5] ##STORE_PAR_ACC ONLY##
 DT__MAX_DELTA_A               0.01        # dt criterion: maximum variation of the cosmic scale factor [0.01]
-DT__FLEXIBLE_RANGE            0.1         # dt criterion: allow dt to increase by a factor of (1.0+DT__FLEXIBLE_RANGE) in order to
-                                          #               be synchronized with the parent level (for OPT__DT_LEVEL==3 only) [0.1]
+DT__SYNC_PARENT_LV            0.1         # dt criterion: allow dt to adjust by (1.0+DT__SYNC_PARENT) in order to synchronize
+                                          #               with the parent level (for OPT__DT_LEVEL==3 only) [0.1]
+DT__SYNC_CHILDREN_LV          0.1         # dt criterion: allow dt to adjust by (1.0-DT__SYNC_CHILDREN) in order to synchronize
+                                          #               with the children level (for OPT__DT_LEVEL==3 only) [0.1]
 OPT__DT_USER                  0           # dt criterion: user-defined -> edit "Mis_GetTimeStep_UserCriteria.cpp" [0]
 OPT__DT_LEVEL                 3           # dt at different AMR levels (1=shared, 2=differ by two, 3=flexible) [3]
 OPT__RECORD_DT                1           # record info of the dt determination [1]
