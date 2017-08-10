@@ -137,7 +137,7 @@ void   CPU_DualEnergyFix( const real Dens, const real MomX, const real MomY, con
 //-------------------------------------------------------------------------------------------------------
 // Function    :  CPU_Fluid2Entropy
 // Description :  Evaluate the gas entropy from the input fluid variables
-//                --> Here entropy is defined as "pressure / density^(Gamma-1)"
+//                --> Here entropy is defined as "pressure / density^(Gamma-1)" (i.e., entropy per volume)
 //
 // Note        :  1. Used by the dual-energy formalism
 //                2. Invoked by the functions "Hydro_Init_StartOver_AssignData, Gra_Close"
@@ -173,7 +173,7 @@ real CPU_Fluid2Entropy( const real Dens, const real MomX, const real MomY, const
 //-------------------------------------------------------------------------------------------------------
 // Function    :  CPU/CUFLU_DensPres2Entropy
 // Description :  Evaluate the gas entropy from the input density and pressure
-//                --> Here entropy is defined as "pressure / density^(Gamma-1)"
+//                --> Here entropy is defined as "pressure / density^(Gamma-1)" (i.e., entropy per volume)
 //
 // Note        :  1. Used by the dual-energy formalism
 //                2. Invoked by the functions "CPU_Fluid2Entropy, CPU_DualEnergyFix, CUFLU_DualEnergyFix"
@@ -211,7 +211,7 @@ real   CPU_DensPres2Entropy( const real Dens, const real Pres, const real Gamma_
 //-------------------------------------------------------------------------------------------------------
 // Function    :  CPU/CUFLU_DensEntropy2Pres
 // Description :  Evaluate the gas pressure from the input density and entropy
-//                --> Here entropy is defined as "pressure / density^(Gamma-1)"
+//                --> Here entropy is defined as "pressure / density^(Gamma-1)" (i.e., entropy per volume)
 //
 // Note        :  1. Used by the dual-energy formalism
 //                2. Invoked by the functions "CPU_DualEnergyFix, Flu_Close, Hydro_Aux_Check_Negative,
