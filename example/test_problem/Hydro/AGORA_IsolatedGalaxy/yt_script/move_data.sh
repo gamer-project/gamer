@@ -28,3 +28,7 @@ mv *Slice_z_velocity_magnitude.png        gas_vabs/slice-z
 
 mv *Particle_x_*.png                      par_mass/proj-x
 mv *Particle_z_*.png                      par_mass/proj-z
+
+
+mkdir gas_profile
+mv fig__gas_profile* gas_profile/
