@@ -25,8 +25,14 @@ for ds in ts.piter():
 
 #  calculate various profiles
 #  ==================================================================================
-#  define center as the location of peak gas density
-   v, cen = ds.h.find_max( ("gas", "density") )
+#  define center as the location of peak gas density within 1 kpc from the center of gas mass
+   v, cen1 = ds.h.find_max( ("gas", "density") )
+   sp1  = ds.sphere( cen1, (30.0, "kpc") )
+   cen2 = sp1.quantities.center_of_mass( use_gas=True, use_particles=False ).in_units( "kpc" )
+   sp2  = ds.sphere( cen2, (1.0, "kpc") )
+   cen3 = sp2.quantities.max_location( ("gas", "density") )
+   cen  = ds.arr( [cen3[1].d, cen3[2].d, cen3[3].d], 'code_length' )
+
 
 #  only include the data within a sphere with a radius of width_kpc
    sp = ds.sphere( cen, (0.5*width_kpc, "kpc") )
