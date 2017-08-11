@@ -11,6 +11,8 @@ mkdir gas_vabs
 mkdir gas_vabs/slice-x gas_vabs/slice-z
 mkdir par_mass
 mkdir par_mass/proj-x par_mass/proj-z
+mkdir gas_profile
+mkdir gas_temp-vs-dens
 
 
 mv *Slice_x_density.png                   gas_dens/slice-x
@@ -29,6 +31,7 @@ mv *Slice_z_velocity_magnitude.png        gas_vabs/slice-z
 mv *Particle_x_*.png                      par_mass/proj-x
 mv *Particle_z_*.png                      par_mass/proj-z
 
-
-mkdir gas_profile
 mv fig__gas_profile* gas_profile/
+
+mv *density_temperature_cell_mass* gas_temp-vs-dens
+
