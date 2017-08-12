@@ -404,13 +404,16 @@ VPATH := $(dir $(wildcard TestProblem/*/*/))
 
 # location of libraries
 # -------------------------------------------------------------------------------
+# Blue Waters (only need to specify the path of user-installed packages)
+#GRACKLE_PATH      :=
+
 # campus UIUC (intel-15.0 + openmpi-1.8.4)
 CUDA_TOOLKIT_PATH := /usr/local/cuda/7.0
 FFTW_PATH         := /projects/ncsa/grav/softwares/fftw/2.1.5
 MPI_PATH          := /usr/local/mpi/openmpi-1.8.4-intel-15.0
 HDF5_PATH         := /projects/ncsa/grav/softwares/miniconda2
 GRACKLE_PATH      := /home/hyschive/local
-#GSL_PATH          := /usr/local/gsl/gsl-1.16
+GSL_PATH          := /usr/local/gsl/gsl-1.16
 
 # campus UIUC (gcc-4.9.2 + openmpi-1.8.4)
 #CUDA_TOOLKIT_PATH := /usr/local/cuda/7.0
@@ -511,15 +514,19 @@ GRACKLE_PATH      := /home/hyschive/local
 # compilers
 # -------------------------------------------------------------------------------
 NVCC := $(CUDA_TOOLKIT_PATH)/bin/nvcc
+#NVCC := nvcc -ccbin CC
 ifeq "$(findstring SERIAL, $(SIMU_OPTION))" "SERIAL"
    ifeq "$(findstring INTEL, $(SIMU_OPTION))" "INTEL"
    CXX := icpc
+#  CXX := CC
    else
    CXX := g++
+#  CXX := CC
    endif
 else
 #  CXX := $(MPI_PATH)/bin/mpiCC
    CXX := $(MPI_PATH)/bin/mpicxx
+#  CXX := CC
 endif
 
 
@@ -641,7 +648,8 @@ CXXWARN_FLAG += -Wno-unknown-pragmas
 endif
 
 ifeq "$(findstring INTEL, $(SIMU_OPTION))" "INTEL"
-CXXFLAG  := $(CXXWARN_FLAG) $(COMMONFLAG) $(OPENMP) -O3 -xSSE4.2 -fp-model precise #-ipo
+#CXXFLAG  := $(CXXWARN_FLAG) $(COMMONFLAG) $(OPENMP) -O3 -xSSE4.2 -fp-model precise #-ipo
+CXXFLAG  := $(CXXWARN_FLAG) $(COMMONFLAG) $(OPENMP) -fast
 else
 CXXFLAG  := $(CXXWARN_FLAG) $(COMMONFLAG) $(OPENMP) -O3
 endif
