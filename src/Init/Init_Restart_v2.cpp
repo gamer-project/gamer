@@ -256,6 +256,25 @@ void Init_Restart()
    }
 
 
+// reset parameters for OPT__RESTART_RESET
+   if ( OPT__RESTART_RESET )
+   {
+      for (int lv=0; lv<NLEVEL; lv++)
+      {
+#        ifdef COMOVING
+         Time          [lv] = A_INIT;
+#        else
+         Time          [lv] = 0.0;
+#        endif
+         AdvanceCounter[lv] = 0;
+         dTime_AllLv   [lv] = 0.0;
+      }
+
+      Step            = 0;
+      AveDensity_Init = -1.0;    // set to an arbitrary negative value
+   }
+
+
 // set Flu(Pot)SgTime
    for (int lv=0; lv<NLEVEL; lv++)
    {
@@ -267,7 +286,7 @@ void Init_Restart()
 
 
 // set the next dump ID
-   if ( INIT_DUMPID < 0 )  DumpID ++;
+   if ( INIT_DUMPID < 0 )  DumpID = ( OPT__RESTART_RESET ) ? 0 : DumpID+1;
    else                    DumpID = INIT_DUMPID;
 
 
@@ -908,13 +927,13 @@ void Load_Parameter_After_2000( FILE *File, const int FormatVersion, int &NLv_Re
 
 
 // set some default parameters
-   if ( END_T < 0.0 )
+   if ( END_T < 0.0  &&  !OPT__RESTART_RESET )
    {
       END_T = end_t;
       if ( MPI_Rank == 0 )    Aux_Message( stdout, "      NOTE : parameter %s is reset to %14.7e\n", "END_T", END_T );
    }
 
-   if ( END_STEP < 0 )
+   if ( END_STEP < 0  &&  !OPT__RESTART_RESET )
    {
       END_STEP = end_step;
       if ( MPI_Rank == 0 )    Aux_Message( stdout, "      NOTE : parameter %s is reset to %ld\n", "END_STEP", END_STEP );
