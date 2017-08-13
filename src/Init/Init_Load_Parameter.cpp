@@ -261,6 +261,7 @@ void Init_Load_Parameter()
    ReadPara->Add( "OPT__INIT",                  &OPT__INIT,                      -1,               1,             3              );
    ReadPara->Add( "RESTART_LOAD_NRANK",         &RESTART_LOAD_NRANK,              1,               1,             NoMax_int      );
    ReadPara->Add( "OPT__RESTART_HEADER",        &OPT__RESTART_HEADER,             RESTART_HEADER_CHECK, 0,        1              );
+   ReadPara->Add( "OPT__RESTART_RESET",         &OPT__RESTART_RESET,              false,           Useless_bool,  Useless_bool   );
    ReadPara->Add( "OPT__UM_START_LEVEL",        &OPT__UM_START_LEVEL,             0,               0,             TOP_LEVEL      );
    ReadPara->Add( "OPT__UM_START_NVAR",         &OPT__UM_START_NVAR,              1,               1,             NCOMP_TOTAL    );
    ReadPara->Add( "OPT__UM_START_DOWNGRADE",    &OPT__UM_START_DOWNGRADE,         true,            Useless_bool,  Useless_bool   );

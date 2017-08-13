@@ -1699,6 +1699,7 @@ void Check_InputPara( const char *FileName )
    LoadField( "Opt__Init",               &RS.Opt__Init,               SID, TID, NonFatal, &RT.Opt__Init,                1, NonFatal );
    LoadField( "RestartLoadNRank",        &RS.RestartLoadNRank,        SID, TID, NonFatal, &RT.RestartLoadNRank,         1, NonFatal );
    LoadField( "Opt__RestartHeader",      &RS.Opt__RestartHeader,      SID, TID, NonFatal, &RT.Opt__RestartHeader,       1, NonFatal );
+   LoadField( "Opt__RestartReset",       &RS.Opt__RestartReset,       SID, TID, NonFatal, &RT.Opt__RestartReset,        1, NonFatal );
    LoadField( "Opt__UM_Start_Level",     &RS.Opt__UM_Start_Level,     SID, TID, NonFatal, &RT.Opt__UM_Start_Level,      1, NonFatal );
    LoadField( "Opt__UM_Start_NVar",      &RS.Opt__UM_Start_NVar,      SID, TID, NonFatal, &RT.Opt__UM_Start_NVar,       1, NonFatal );
    LoadField( "Opt__UM_Start_Downgrade", &RS.Opt__UM_Start_Downgrade, SID, TID, NonFatal, &RT.Opt__UM_Start_Downgrade,  1, NonFatal );

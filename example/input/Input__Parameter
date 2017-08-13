@@ -201,6 +201,7 @@ OPT__EXTERNAL_POT             0           # add the external potential (incompat
 OPT__INIT                     1           # initialization option: (1=StartOver, 2=RESTART, 3=UM_START)
 RESTART_LOAD_NRANK            1           # number of parallel I/O (i.e., number of MPI ranks) for restart [1]
 OPT__RESTART_HEADER           1           # RESTART header: (0=skip, 1=check the header info) [1]
+OPT__RESTART_RESET            0           # reset the simulation info during restart as if running with OPT__INIT==1 (StartOver) [0]
 OPT__UM_START_LEVEL           0           # AMR level corresponding to the input uniform-mesh array (must >= 0) [0]
 OPT__UM_START_NVAR            1           # number of variables per cell stored in the uniform-mesh array (1~NCOMP_TOTAL) [1]
 OPT__UM_START_DOWNGRADE       1           # downgrade the uniform-mesh data from level OPT__UM_START_LEVEL to 0 [1]
