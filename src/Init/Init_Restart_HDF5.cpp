@@ -134,13 +134,13 @@ void Init_Restart_HDF5( const char *FileName )
 
    MPI_Barrier( MPI_COMM_WORLD );
 
-   LoadField( "Model",          &KeyInfo.Model,          H5_SetID_KeyInfo, H5_TypeID_KeyInfo, Fatal, &Model,          1,    Fatal );
-   LoadField( "Gravity",        &KeyInfo.Gravity,        H5_SetID_KeyInfo, H5_TypeID_KeyInfo, Fatal, &Gravity,        1,    Fatal );
-   LoadField( "Particle",       &KeyInfo.Particle,       H5_SetID_KeyInfo, H5_TypeID_KeyInfo, Fatal, &Particle,       1,    Fatal );
-   LoadField( "NLevel",         &KeyInfo.NLevel,         H5_SetID_KeyInfo, H5_TypeID_KeyInfo, Fatal,  NullPtr,       -1, NonFatal );
-   LoadField( "NCompFluid",     &KeyInfo.NCompFluid,     H5_SetID_KeyInfo, H5_TypeID_KeyInfo, Fatal, &NCompFluid,     1,    Fatal );
-   LoadField( "NCompPassive",   &KeyInfo.NCompPassive,   H5_SetID_KeyInfo, H5_TypeID_KeyInfo, Fatal, &NCompPassive,   1,    Fatal );
-   LoadField( "PatchSize",      &KeyInfo.PatchSize,      H5_SetID_KeyInfo, H5_TypeID_KeyInfo, Fatal, &PatchSize,      1,    Fatal );
+   LoadField( "Model",          &KeyInfo.Model,          H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal, &Model,         1,    Fatal );
+   LoadField( "Gravity",        &KeyInfo.Gravity,        H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal, &Gravity,       1,    Fatal );
+   LoadField( "Particle",       &KeyInfo.Particle,       H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal, &Particle,      1,    Fatal );
+   LoadField( "NLevel",         &KeyInfo.NLevel,         H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  NullPtr,      -1, NonFatal );
+   LoadField( "NCompFluid",     &KeyInfo.NCompFluid,     H5_SetID_KeyInfo, H5_TypeID_KeyInfo, NonFatal, &NCompFluid,    1,    Fatal );
+   LoadField( "NCompPassive",   &KeyInfo.NCompPassive,   H5_SetID_KeyInfo, H5_TypeID_KeyInfo, NonFatal, &NCompPassive,  1,    Fatal );
+   LoadField( "PatchSize",      &KeyInfo.PatchSize,      H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal, &PatchSize,     1,    Fatal );
 
 // runtime NLEVEL must be >= loaded NLEVEL
    if      ( KeyInfo.NLevel > NLEVEL )
@@ -156,29 +156,29 @@ void Init_Restart_HDF5( const char *FileName )
 
    MPI_Barrier( MPI_COMM_WORLD );
 
-   LoadField( "DumpID",             &KeyInfo.DumpID,             H5_SetID_KeyInfo, H5_TypeID_KeyInfo, Fatal,  NullPtr,       -1, NonFatal );
-   LoadField( "NX0",                 KeyInfo.NX0,                H5_SetID_KeyInfo, H5_TypeID_KeyInfo, Fatal,  NX0_TOT,        3,    Fatal );
-   LoadField( "BoxScale",            KeyInfo.BoxScale,           H5_SetID_KeyInfo, H5_TypeID_KeyInfo, Fatal,  NullPtr,       -1, NonFatal );
-   LoadField( "NPatch",              KeyInfo.NPatch,             H5_SetID_KeyInfo, H5_TypeID_KeyInfo, Fatal,  NullPtr,       -1, NonFatal );
-   LoadField( "CellScale",           KeyInfo.CellScale,          H5_SetID_KeyInfo, H5_TypeID_KeyInfo, Fatal,  NullPtr,       -1, NonFatal );
+   LoadField( "DumpID",         &KeyInfo.DumpID,         H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  NullPtr,      -1, NonFatal );
+   LoadField( "NX0",             KeyInfo.NX0,            H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  NX0_TOT,       3,    Fatal );
+   LoadField( "BoxScale",        KeyInfo.BoxScale,       H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  NullPtr,      -1, NonFatal );
+   LoadField( "NPatch",          KeyInfo.NPatch,         H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  NullPtr,      -1, NonFatal );
+   LoadField( "CellScale",       KeyInfo.CellScale,      H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  NullPtr,      -1, NonFatal );
 
-   LoadField( "Step",               &KeyInfo.Step,               H5_SetID_KeyInfo, H5_TypeID_KeyInfo, Fatal,  NullPtr,       -1, NonFatal );
-   LoadField( "AdvanceCounter",      KeyInfo.AdvanceCounter,     H5_SetID_KeyInfo, H5_TypeID_KeyInfo, Fatal,  NullPtr,       -1, NonFatal );
+   LoadField( "Step",           &KeyInfo.Step,           H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  NullPtr,      -1, NonFatal );
+   LoadField( "AdvanceCounter",  KeyInfo.AdvanceCounter, H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  NullPtr,      -1, NonFatal );
 #  ifdef PARTICLE
-   LoadField( "Par_NPar",           &KeyInfo.Par_NPar,           H5_SetID_KeyInfo, H5_TypeID_KeyInfo, Fatal,  NullPtr,       -1, NonFatal );
-   LoadField( "Par_NPassive",       &KeyInfo.Par_NPassive,       H5_SetID_KeyInfo, H5_TypeID_KeyInfo, Fatal, &Par_NPassive,   1,    Fatal );
+   LoadField( "Par_NPar",       &KeyInfo.Par_NPar,       H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  NullPtr,      -1, NonFatal );
+   LoadField( "Par_NPassive",   &KeyInfo.Par_NPassive,   H5_SetID_KeyInfo, H5_TypeID_KeyInfo, NonFatal, &Par_NPassive,  1,    Fatal );
 #  endif
 
-   LoadField( "BoxSize",             KeyInfo.BoxSize,            H5_SetID_KeyInfo, H5_TypeID_KeyInfo, Fatal,  amr->BoxSize,   3,    Fatal );
-   LoadField( "Time",                KeyInfo.Time,               H5_SetID_KeyInfo, H5_TypeID_KeyInfo, Fatal,  NullPtr,       -1, NonFatal );
-   LoadField( "CellSize",            KeyInfo.CellSize,           H5_SetID_KeyInfo, H5_TypeID_KeyInfo, Fatal,  NullPtr,       -1, NonFatal );
-   LoadField( "dTime_AllLv",         KeyInfo.dTime_AllLv,        H5_SetID_KeyInfo, H5_TypeID_KeyInfo, Fatal,  NullPtr,       -1, NonFatal );
+   LoadField( "BoxSize",         KeyInfo.BoxSize,        H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  amr->BoxSize,  3,    Fatal );
+   LoadField( "Time",            KeyInfo.Time,           H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  NullPtr,      -1, NonFatal );
+   LoadField( "CellSize",        KeyInfo.CellSize,       H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  NullPtr,      -1, NonFatal );
+   LoadField( "dTime_AllLv",     KeyInfo.dTime_AllLv,    H5_SetID_KeyInfo, H5_TypeID_KeyInfo, NonFatal,  NullPtr,      -1, NonFatal );
 #  ifdef GRAVITY
-   LoadField( "AveDens_Init",       &KeyInfo.AveDens_Init,       H5_SetID_KeyInfo, H5_TypeID_KeyInfo, Fatal,  NullPtr,       -1, NonFatal );
+   LoadField( "AveDens_Init",   &KeyInfo.AveDens_Init,   H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  NullPtr,      -1, NonFatal );
 #  endif
 
-   LoadField( "CodeVersion",        &KeyInfo.CodeVersion,        H5_SetID_KeyInfo, H5_TypeID_KeyInfo, Fatal,  NullPtr,       -1, NonFatal );
-   LoadField( "DumpWallTime",       &KeyInfo.DumpWallTime,       H5_SetID_KeyInfo, H5_TypeID_KeyInfo, Fatal,  NullPtr,       -1, NonFatal );
+   LoadField( "CodeVersion",    &KeyInfo.CodeVersion,    H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  NullPtr,      -1, NonFatal );
+   LoadField( "DumpWallTime",   &KeyInfo.DumpWallTime,   H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  NullPtr,      -1, NonFatal );
 
 
 // 1-4. close all objects
