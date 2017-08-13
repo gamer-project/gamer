@@ -2,6 +2,10 @@
 #include "TestProb.h"
 
 
+static void BC( real fluid[], const double x, const double y, const double z, const double Time,
+                const int lv, double AuxArray[] );
+static void Init_ExtPot();
+
 
 // problem-specific global variables
 // =======================================================================================
