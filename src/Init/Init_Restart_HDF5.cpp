@@ -188,23 +188,33 @@ void Init_Restart_HDF5( const char *FileName )
 
 
 // 1-5. set internal parameters
+// 1-5-1. parameters must be reset
    for (int lv=0; lv<KeyInfo.NLevel; lv++)
    {
-      Time          [lv] = KeyInfo.Time          [lv];
-      NPatchTotal   [lv] = KeyInfo.NPatch        [lv];
-      AdvanceCounter[lv] = KeyInfo.AdvanceCounter[lv];
-
-      if ( KeyInfo.FormatVersion >= 2250 )
-      dTime_AllLv   [lv] = KeyInfo.dTime_AllLv   [lv];
+      NPatchTotal[lv] = KeyInfo.NPatch[lv];
    }
 
-   Step                          = KeyInfo.Step;
-#  ifdef GRAVITY
-   AveDensity_Init               = KeyInfo.AveDens_Init;
-#  endif
 #  ifdef PARTICLE
    amr->Par->NPar_Active_AllRank = KeyInfo.Par_NPar;
 #  endif
+
+// 1-5-2. parameters reset only when OPT__RESTART_RESET is disabled
+   if ( ! OPT__RESTART_RESET )
+   {
+      for (int lv=0; lv<KeyInfo.NLevel; lv++)
+      {
+         Time          [lv] = KeyInfo.Time          [lv];
+         AdvanceCounter[lv] = KeyInfo.AdvanceCounter[lv];
+
+         if ( KeyInfo.FormatVersion >= 2250 )
+         dTime_AllLv   [lv] = KeyInfo.dTime_AllLv   [lv];
+      }
+
+      Step            = KeyInfo.Step;
+#     ifdef GRAVITY
+      AveDensity_Init = KeyInfo.AveDens_Init;
+#     endif
+   }
 
 
 // 1-6. set parameters in levels that do not exist in the input file
@@ -228,12 +238,14 @@ void Init_Restart_HDF5( const char *FileName )
 
 
 // 1-8. set the next dump ID
-   if ( INIT_DUMPID < 0 )  DumpID = KeyInfo.DumpID + 1;
-   else                    DumpID = INIT_DUMPID;
+   if ( INIT_DUMPID < 0 )
+      DumpID = ( OPT__RESTART_RESET ) ? 0 : KeyInfo.DumpID + 1;
+   else
+      DumpID = INIT_DUMPID;
 
 
 // 1-9. reset parameters from the restart file
-   ResetParameter( FileName, &END_T, &END_STEP );
+   if ( ! OPT__RESTART_RESET )   ResetParameter( FileName, &END_T, &END_STEP );
 
 
 // 1-10. check all other simulation information (by rank 0 only)

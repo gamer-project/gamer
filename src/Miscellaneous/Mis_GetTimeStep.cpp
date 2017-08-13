@@ -122,8 +122,12 @@ double Mis_GetTimeStep( const int lv, const double dTime_SyncFaLv, const double 
 
       if ( dTime[NdTime] <= 0.0 )
       {
+         Aux_Message( stderr, "********************************************************************************\n" );
          Aux_Message( stderr, "ERROR : dTime (%20.14e) <= 0.0, something is wrong !!\n", dTime[NdTime] );
          Aux_Message( stderr, "        (DumpTime %20.14e, Time %20.14e, lv %d)\n", DumpTime, Time[lv], lv );
+         Aux_Message( stderr, "        Rank <%d>, file <%s>, line <%d>, function <%s>\n",
+                      MPI_Rank, __FILE__, __LINE__, __FUNCTION__ );
+         Aux_Message( stderr, "********************************************************************************\n" );
          MPI_Exit();
       }
 
@@ -137,8 +141,12 @@ double Mis_GetTimeStep( const int lv, const double dTime_SyncFaLv, const double 
 
    if ( dTime[NdTime] <= 0.0 )
    {
+      Aux_Message( stderr, "********************************************************************************\n" );
       Aux_Message( stderr, "ERROR : dTime (%20.14e) <= 0.0, something is wrong !!\n", dTime[NdTime] );
       Aux_Message( stderr, "        (END_T %20.14e, Time %20.14e, lv %d)\n", END_T, Time[lv], lv );
+      Aux_Message( stderr, "        Rank <%d>, file <%s>, line <%d>, function <%s>\n",
+                   MPI_Rank, __FILE__, __LINE__, __FUNCTION__ );
+      Aux_Message( stderr, "********************************************************************************\n" );
       MPI_Exit();
    }
 
@@ -200,10 +208,7 @@ double Mis_GetTimeStep( const int lv, const double dTime_SyncFaLv, const double 
       if ( lv > 0 )
       {
          if ( dTime_SyncFaLv <= 0.0 )
-         {
-            Aux_Message( stderr, "ERROR : dTime_SyncFaLv (%20.14e) <= 0.0, something is wrong !!\n", dTime_SyncFaLv );
-            MPI_Exit();
-         }
+            Aux_Error( ERROR_INFO, "dTime_SyncFaLv (%20.14e) <= 0.0, something is wrong !!\n", dTime_SyncFaLv );
 
          if ( (1.0+DT__SYNC_PARENT_LV)*dTime_min >= dTime_SyncFaLv )    dTime_min = dTime_SyncFaLv;
       }
