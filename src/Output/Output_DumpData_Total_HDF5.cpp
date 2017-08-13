@@ -70,7 +70,7 @@ Procedure for outputting new variables:
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2250)
+// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2251)
 // Description :  Output all simulation data in the HDF5 format, which can be used as a restart file
 //                or loaded by YT
 //
@@ -138,6 +138,7 @@ Procedure for outputting new variables:
 //                2241 : 2017/08/05 --> output FLAG_BUFFER_SIZE_MAXM1_LV
 //                2242 : 2017/08/09 --> output DT__SYNC_PARENT_LV and DT__SYNC_CHILDREN_LV; remove DT__FLEXIBLE_RANGE
 //                2250 : 2017/08/09 --> output dTime_AllLv[]
+//                2251 : 2017/08/12 --> output OPT__RESTART_RESET
 //-------------------------------------------------------------------------------------------------------
 void Output_DumpData_Total_HDF5( const char *FileName )
 {
@@ -1243,7 +1244,7 @@ void FillIn_KeyInfo( KeyInfo_t &KeyInfo )
 
    const time_t CalTime  = time( NULL );   // calendar time
 
-   KeyInfo.FormatVersion = 2250;
+   KeyInfo.FormatVersion = 2251;
    KeyInfo.Model         = MODEL;
    KeyInfo.NLevel        = NLEVEL;
    KeyInfo.NCompFluid    = NCOMP_FLUID;
@@ -1905,6 +1906,7 @@ void FillIn_InputPara( InputPara_t &InputPara )
    InputPara.Opt__Init               = OPT__INIT;
    InputPara.RestartLoadNRank        = RESTART_LOAD_NRANK;
    InputPara.Opt__RestartHeader      = OPT__RESTART_HEADER;
+   InputPara.Opt__RestartReset       = OPT__RESTART_RESET;
    InputPara.Opt__UM_Start_Level     = OPT__UM_START_LEVEL;
    InputPara.Opt__UM_Start_NVar      = OPT__UM_START_NVAR;
    InputPara.Opt__UM_Start_Downgrade = OPT__UM_START_DOWNGRADE;
@@ -2567,6 +2569,7 @@ void GetCompound_InputPara( hid_t &H5_TypeID )
    H5Tinsert( H5_TypeID, "Opt__Init",               HOFFSET(InputPara_t,Opt__Init              ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "RestartLoadNRank",        HOFFSET(InputPara_t,RestartLoadNRank       ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "Opt__RestartHeader",      HOFFSET(InputPara_t,Opt__RestartHeader     ), H5T_NATIVE_INT     );
+   H5Tinsert( H5_TypeID, "Opt__RestartReset",       HOFFSET(InputPara_t,Opt__RestartReset      ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "Opt__UM_Start_Level",     HOFFSET(InputPara_t,Opt__UM_Start_Level    ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "Opt__UM_Start_NVar",      HOFFSET(InputPara_t,Opt__UM_Start_NVar     ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "Opt__UM_Start_Downgrade", HOFFSET(InputPara_t,Opt__UM_Start_Downgrade), H5T_NATIVE_INT     );
