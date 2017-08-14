@@ -271,7 +271,9 @@ void Init_Restart()
       }
 
       Step            = 0;
+#     ifdef GRAVITY
       AveDensity_Init = -1.0;    // set to an arbitrary negative value
+#     endif
    }
 
 

@@ -9,12 +9,6 @@
 
 
 
-#ifdef GRAVITY
-extern double ExtPot_AuxArray[EXT_POT_NAUX_MAX];
-extern double ExtAcc_AuxArray[EXT_ACC_NAUX_MAX];
-#endif
-
-
 // fluid solver prototypes in different models
 #if   ( MODEL == HYDRO )
 #if   ( FLU_SCHEME == RTVD )
@@ -59,9 +53,6 @@ __global__ void CUFLU_FluidSolver_MHM( const real g_Fluid_In[]   [NCOMP_TOTAL][ 
                                        const real MinDens, const real MinPres, const real DualEnergySwitch,
                                        const bool NormPassive, const int NNorm,
                                        const bool JeansMinPres, const real JeansMinPres_Coeff );
-#ifdef UNSPLIT_GRAVITY
-int CUFLU_FluidSolver_SetConstMem_ExtAcc( double ExtAcc_AuxArray_h[] );
-#endif
 #if ( NCOMP_PASSIVE > 0 )
 int CUFLU_FluidSolver_SetConstMem_NormIdx( int NormIdx_h[] );
 #endif
@@ -91,9 +82,6 @@ __global__ void CUFLU_FluidSolver_CTU( const real g_Fluid_In[]   [NCOMP_TOTAL][ 
                                        const real MinDens, const real MinPres, const real DualEnergySwitch,
                                        const bool NormPassive, const int NNorm,
                                        const bool JeansMinPres, const real JeansMinPres_Coeff );
-#ifdef UNSPLIT_GRAVITY
-int CUFLU_FluidSolver_SetConstMem_ExtAcc( double ExtAcc_AuxArray_h[] );
-#endif
 #if ( NCOMP_PASSIVE > 0 )
 int CUFLU_FluidSolver_SetConstMem_NormIdx( int NormIdx_h[] );
 #endif
@@ -106,7 +94,6 @@ __global__ void CUPOT_dtSolver_HydroGravity( real g_dt_Array[],
                                              const double g_Corner_Array[][3],
                                              const real dh, const real Safety, const bool P5_Gradient,
                                              const OptGravityType_t GravityType, const double ExtAcc_Time );
-int CUPOT_dtSolver_HydroGravity_SetConstMem( double ExtAcc_AuxArray_h[] );
 #endif
 #elif ( MODEL == MHD )
 #warning : WAIT MHD !!!
@@ -160,7 +147,6 @@ __global__ void CUPOT_HydroGravitySolver(       real g_Flu_Array_New[][GRA_NIN][
                                                 char g_DE_Array[][ PS1*PS1*PS1 ],
                                           const real Gra_Const, const bool P5_Gradient, const OptGravityType_t GravityType,
                                           const double TimeNew, const double TimeOld, const real dt, const real dh, const real MinEint );
-int CUPOT_HydroGravitySolver_SetConstMem( double ExtAcc_AuxArray_h[] );
 
 #elif ( MODEL == MHD )
 #warning :: WAIT MHD !!!
@@ -171,7 +157,6 @@ __global__ void CUPOT_ELBDMGravitySolver(       real g_Flu_Array[][GRA_NIN][ PS1
                                           const double g_Corner_Array[][3],
                                           const real EtaDt, const real dh, const real Lambda, const bool ExtPot,
                                           const double Time );
-int CUPOT_ELBDMGravitySolver_SetConstMem( double ExtPot_AuxArray_h[] );
 
 #else
 #error : ERROR : unsupported MODEL !!
@@ -401,6 +386,7 @@ void CUAPI_Set_Default_GPU_Parameter( int &GPU_NStream, int &Flu_GPU_NPGroup, in
 
 
 // (4) set the constant variables
+// --> note that the auxiliary arrays for the external acceleration and potential are set by CUAPI_Init_ExternalAccPot()
 #  if ( NCOMP_PASSIVE > 0 )
    if  ( OPT__NORMALIZE_PASSIVE )
    {
@@ -417,28 +403,7 @@ void CUAPI_Set_Default_GPU_Parameter( int &GPU_NStream, int &Flu_GPU_NPGroup, in
 
 #  ifdef GRAVITY
    if ( CUPOT_PoissonSolver_SetConstMem() != 0 )
-   Aux_Error( ERROR_INFO, "CUPOT_PoissonSolver_SetConstMem failed ...\n" );
-
-#  if ( MODEL == HYDRO )
-   if ( OPT__GRAVITY_TYPE == GRAVITY_EXTERNAL  ||  OPT__GRAVITY_TYPE == GRAVITY_BOTH )
-   {
-      if (  CUPOT_HydroGravitySolver_SetConstMem( ExtAcc_AuxArray ) != 0  )
-         Aux_Error( ERROR_INFO, "CUPOT_HydroGravitySolver_SetConstMem failed ...\n" );
-
-#     if (  defined UNSPLIT_GRAVITY  &&  ( FLU_SCHEME == MHM || FLU_SCHEME == MHM_RP || FLU_SCHEME == CTU )  )
-      if (  CUFLU_FluidSolver_SetConstMem_ExtAcc( ExtAcc_AuxArray ) != 0  )
-         Aux_Error( ERROR_INFO, "CUFLU_FluidSolver_SetConstMem_ExtAcc failed ...\n" );
-#     endif
-
-      if (  CUPOT_dtSolver_HydroGravity_SetConstMem( ExtAcc_AuxArray ) != 0  )
-         Aux_Error( ERROR_INFO, "CUPOT_dtSolver_HydroGravity_SetConstMem failed ...\n" );
-   }
-#  endif // if ( MODEL == HYDRO )
-
-#  if ( MODEL == ELBDM )
-   if (  OPT__EXTERNAL_POT  &&  CUPOT_ELBDMGravitySolver_SetConstMem( ExtPot_AuxArray ) != 0  )
-   Aux_Error( ERROR_INFO, "CUPOT_ELBDMGravitySolver_SetConstMem failed ...\n" );
-#  endif
+      Aux_Error( ERROR_INFO, "CUPOT_PoissonSolver_SetConstMem failed ...\n" );
 #  endif // #ifdef GRAVITY
 
 
