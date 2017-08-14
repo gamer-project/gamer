@@ -276,7 +276,7 @@ endif # MODEL
 # ------------------------------------------------------------------------------------
 ifeq "$(findstring GRAVITY, $(SIMU_OPTION))" "GRAVITY"
 CUDA_FILE   += CUAPI_MemAllocate_PoissonGravity.cu  CUAPI_MemFree_PoissonGravity.cu \
-               CUAPI_Asyn_PoissonGravitySolver.cu
+               CUAPI_Asyn_PoissonGravitySolver.cu  CUAPI_Init_ExternalAccPot.cu
 
 CUDA_FILE   += CUPOT_PoissonSolver_SOR_10to14cube.cu  CUPOT_PoissonSolver_SOR_16to18cube.cu \
                CUPOT_PoissonSolver_MG.cu
@@ -290,7 +290,7 @@ CC_FILE     += Init_FFTW.cpp  Gra_Close.cpp  Gra_Prepare_Flu.cpp  Gra_Prepare_Po
                End_MemFree_PoissonGravity.cpp  Init_Set_Default_SOR_Parameter.cpp \
                Init_Set_Default_MG_Parameter.cpp  Poi_GetAverageDensity.cpp  Init_GreenFuncK.cpp \
                Init_ExternalPot.cpp  Poi_BoundaryCondition_Extrapolation.cpp  CPU_ExternalAcc.cpp \
-               Gra_Prepare_USG.cpp  Init_ExternalAcc.cpp  Poi_StorePotWithGhostZone.cpp
+               Gra_Prepare_USG.cpp  Init_ExternalAcc.cpp  Poi_StorePotWithGhostZone.cpp  Init_ExternalAccPot.cpp
 
 vpath %.cu     SelfGravity/GPU_Poisson  SelfGravity/GPU_Gravity
 vpath %.cpp    SelfGravity/CPU_Poisson  SelfGravity/CPU_Gravity  SelfGravity

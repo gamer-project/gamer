@@ -1,11 +1,6 @@
 #include "Copyright.h"
 #include "GAMER.h"
 
-#ifdef GRAVITY
-extern void (*Init_ExternalAcc_Ptr)();
-extern void (*Init_ExternalPot_Ptr)();
-#endif
-
 #ifdef PARTICLE
 extern void (*Par_Init_ByFunction_Ptr)();
 #endif
@@ -79,15 +74,9 @@ void Init_GAMER( int *argc, char ***argv )
 
 
 // initialize the external potential and acceleration parameters
-// --> must be called AFTER Init_TestProb() but BEFORE CUAPI_Set_Default_GPU_Parameter()
-// --> these function pointers point to "Init_ExternalAcc()" and "Init_ExternalPot()" by default
-//     but may be overwritten by various test problem initializers
+// --> must be called AFTER Init_TestProb()
 #  ifdef GRAVITY
-   if (  ( OPT__GRAVITY_TYPE == GRAVITY_EXTERNAL || OPT__GRAVITY_TYPE == GRAVITY_BOTH )  &&  Init_ExternalAcc_Ptr != NULL  )
-      Init_ExternalAcc_Ptr();
-
-   if ( OPT__EXTERNAL_POT  &&  Init_ExternalPot_Ptr != NULL )
-      Init_ExternalPot_Ptr();
+   Init_ExternalAccPot();
 #  endif
 
 
@@ -97,7 +86,7 @@ void Init_GAMER( int *argc, char ***argv )
 
 
 // set the GPU ID and several GPU parameters
-// --> must be called AFTER Init_ExternalAcc(), Init_ExternalPot(), and Init_PassiveVariable()
+// --> must be called AFTER Init_PassiveVariable()
 #  ifdef GPU
 #  ifndef GRAVITY
    int POT_GPU_NPGROUP = NULL_INT;

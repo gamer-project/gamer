@@ -64,6 +64,13 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
    while (  ( lv == 0 && amr->NUpdateLv[lv] == 0 )  ||
             ( lv >  0 && Time[lv] < Time[lv-1] )  )
    {
+//    0. reset the external acceleration and potential since they may be a function of time
+// ===============================================================================================
+#     ifdef GRAVITY
+      Init_ExternalAccPot();
+#     endif
+
+
 //    1. calculate the evolution time-step
 // ===============================================================================================
 #     ifdef TIMING
