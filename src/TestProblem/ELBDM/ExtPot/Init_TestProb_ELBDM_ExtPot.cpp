@@ -217,17 +217,11 @@ void BC( real fluid[], const double x, const double y, const double z, const dou
 void Init_ExtPot()
 {
 
-   if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ...\n", __FUNCTION__ );
-
-
 // ExtPot_AuxArray has the size of EXT_POT_NAUX_MAX (default = 10)
    ExtPot_AuxArray[0] = ExtPot_Cen[0];
    ExtPot_AuxArray[1] = ExtPot_Cen[1];
    ExtPot_AuxArray[2] = ExtPot_Cen[2];
    ExtPot_AuxArray[3] = ExtPot_M*NEWTON_G;
-
-
-   if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", __FUNCTION__ );
 
 } // FUNCTION : Init_ExtPot
 #endif // #if ( MODEL == ELBDM  &&  defined GRAVITY )
