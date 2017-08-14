@@ -31,9 +31,6 @@ void (*Init_ExternalPot_Ptr)() = Init_ExternalPot;
 void Init_ExternalPot()
 {
 
-   if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ...\n", __FUNCTION__ );
-
-
 // ExtPot_AuxArray has the size of EXT_POT_NAUX_MAX defined in CUPOT.h (default = 10)
 // --> by default we set
 //        ExtPot_AuxArray[0] = x coordinate of the external potential center
@@ -51,9 +48,6 @@ void Init_ExternalPot()
    ExtPot_AuxArray[2] = 0.5*amr->BoxSize[2];
    ExtPot_AuxArray[3] = GM;
    */
-
-
-   if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", __FUNCTION__ );
 
 } // FUNCTION : Init_ExternalPot
 

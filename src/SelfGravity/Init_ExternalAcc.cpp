@@ -31,9 +31,6 @@ void (*Init_ExternalAcc_Ptr)() = Init_ExternalAcc;
 void Init_ExternalAcc()
 {
 
-   if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ...\n", __FUNCTION__ );
-
-
 // ExtAcc_AuxArray has the size of EXT_ACC_NAUX_MAX defined in CUPOT.h (default = 10)
 // --> by default we set
 //     ExtAcc_AuxArray[0] = x coordinate of the external acceleration center
@@ -54,9 +51,6 @@ void Init_ExternalAcc()
    ExtAcc_AuxArray[3] = GM;
    ExtAcc_AuxArray[4] = Eps;
    */
-
-
-   if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", __FUNCTION__ );
 
 } // FUNCTION : Init_ExternalAcc
 
