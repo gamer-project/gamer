@@ -465,15 +465,17 @@ struct InputPara_t
 
 // Grackle
 #  ifdef SUPPORT_GRACKLE
-   int   Grackle_Mode;
-   int   Grackle_Verbose;
-   int   Grackle_Cooling;
-   int   Grackle_Primordial;
-   int   Grackle_Metal;
-   int   Grackle_UV;
-   int   Grackle_CMB_Floor;
-   char *Grackle_CloudyTable;
-   int   Che_GPU_NPGroup;
+   int    Grackle_Mode;
+   int    Grackle_Verbose;
+   int    Grackle_Cooling;
+   int    Grackle_Primordial;
+   int    Grackle_Metal;
+   int    Grackle_UV;
+   int    Grackle_CMB_Floor;
+   int    Grackle_PE_Heating;
+   double Grackle_PE_HeatingRate;
+   char  *Grackle_CloudyTable;
+   int    Che_GPU_NPGroup;
 #  endif
 
 // initialization

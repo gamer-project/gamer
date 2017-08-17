@@ -1703,6 +1703,8 @@ void Check_InputPara( const char *FileName )
    LoadField( "Grackle_Metal",           &RS.Grackle_Metal,           SID, TID, NonFatal, &RT.Grackle_Metal,            1, NonFatal );
    LoadField( "Grackle_UV",              &RS.Grackle_UV,              SID, TID, NonFatal, &RT.Grackle_UV,               1, NonFatal );
    LoadField( "Grackle_CMB_Floor",       &RS.Grackle_CMB_Floor,       SID, TID, NonFatal, &RT.Grackle_CMB_Floor,        1, NonFatal );
+   LoadField( "Grackle_PE_Heating",      &RS.Grackle_PE_Heating,      SID, TID, NonFatal, &RT.Grackle_PE_Heating,       1, NonFatal );
+   LoadField( "Grackle_PE_HeatingRate",  &RS.Grackle_PE_HeatingRate,  SID, TID, NonFatal, &RT.Grackle_PE_HeatingRate,   1, NonFatal );
    LoadField( "Grackle_Mode",            &RS.Grackle_Mode,            SID, TID, NonFatal, &RT.Grackle_Mode,             1, NonFatal );
    LoadField( "Che_GPU_NPGroup",         &RS.Che_GPU_NPGroup,         SID, TID, NonFatal, &RT.Che_GPU_NPGroup,          1, NonFatal );
 #  endif

@@ -125,6 +125,8 @@ GRACKLE_PRIMORDIAL            0           # ...    "primordial_chemistry" (0=Clo
 GRACKLE_METAL                 0           # ...    "metal_cooling" [0]
 GRACKLE_UV                    0           # ...    "UVbackground" [0]
 GRACKLE_CMB_FLOOR             0           # ...    "cmb_temperature_floor" [1]
+GRACKLE_PE_HEATING            0           # ...    "photoelectric_heating" [0]
+GRACKLE_PE_HEATING_RATE       8.5e-26     # ...    "photoelectric_heating_rate (in erg/cm^3/s)" [8.5e-26]
 GRACKLE_CLOUDY_TABLE          CloudyData_noUVB.h5  # "grackle_data_file"
 CHE_GPU_NPGROUP              -1           # number of patch groups sent into the CPU/GPU Grackle solver (<=0=auto) [-1]
 

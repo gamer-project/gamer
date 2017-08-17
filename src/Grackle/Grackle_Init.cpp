@@ -93,13 +93,15 @@ void Grackle_Init()
 
 
 // set chemistry by accessing "grackle_data"
-   grackle_data->use_grackle            = ( GRACKLE_MODE == GRACKLE_MODE_ORI );
-   grackle_data->with_radiative_cooling = GRACKLE_COOLING;
-   grackle_data->primordial_chemistry   = GRACKLE_PRIMORDIAL;
-   grackle_data->metal_cooling          = GRACKLE_METAL;
-   grackle_data->UVbackground           = GRACKLE_UV;
-   grackle_data->cmb_temperature_floor  = GRACKLE_CMB_FLOOR;
-   grackle_data->grackle_data_file      = GRACKLE_CLOUDY_TABLE;
+   grackle_data->use_grackle                = ( GRACKLE_MODE == GRACKLE_MODE_ORI );
+   grackle_data->with_radiative_cooling     = GRACKLE_COOLING;
+   grackle_data->primordial_chemistry       = GRACKLE_PRIMORDIAL;
+   grackle_data->metal_cooling              = GRACKLE_METAL;
+   grackle_data->UVbackground               = GRACKLE_UV;
+   grackle_data->cmb_temperature_floor      = GRACKLE_CMB_FLOOR;
+   grackle_data->photoelectric_heating      = GRACKLE_PE_HEATING;
+   grackle_data->photoelectric_heating_rate = GRACKLE_PE_HEATING_RATE;
+   grackle_data->grackle_data_file          = GRACKLE_CLOUDY_TABLE;
 
 #  ifdef OPENMP
 // currently we apply the OpenMP parallelization to **multiple patches** instead of **cells inside a patch**
