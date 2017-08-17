@@ -155,11 +155,9 @@
 // variable indices in the array "passive" [NCOMP_FLUID ... NCOMP_TOTAL-1]
 #if ( NCOMP_PASSIVE > 0 )
 // example for NCOMP_PASSIVE == 3
-/*
 #  define  METAL              ( NCOMP_FLUID + 0 )
-#  define  OXYGEN             ( NCOMP_FLUID + 1 )
-#  define  FE                 ( NCOMP_FLUID + 2 )
-*/
+#  define  HI                 ( NCOMP_FLUID + 1 )
+#  define  HII                ( NCOMP_FLUID + 2 )
 // always store entropy (or internal energy) for the dual energy formalism as the last passive variable
 #  if   ( DUAL_ENERGY == DE_ENPY )
 #  define  ENPY               ( NCOMP_TOTAL-1 )
@@ -178,11 +176,9 @@
 // variable indices in the array "flux_passive" [NFLUX_FLUID ... NFLUX_TOTAL-1]
 #if ( NCOMP_PASSIVE > 0 )
 // example for NCOMP_PASSIVE == 3
-/*
 #  define  FLUX_METAL         ( NFLUX_FLUID + 0 )
-#  define  FLUX_OXYGEN        ( NFLUX_FLUID + 1 )
-#  define  FLUX_FE            ( NFLUX_FLUID + 2 )
-*/
+#  define  FLUX_HI            ( NFLUX_FLUID + 1 )
+#  define  FLUX_HII           ( NFLUX_FLUID + 2 )
 // always store entropy (or internal energy) for the dual energy formalism as the last passive variable
 #  if   ( DUAL_ENERGY == DE_ENPY )
 #  define  FLUX_ENPY          ( NFLUX_TOTAL-1 )
@@ -200,11 +196,9 @@
 
 #if ( NCOMP_PASSIVE > 0 )
 // example for NCOMP_PASSIVE == 3
-/*
 #  define _METAL              ( 1 << METAL  )
-#  define _OXYGEN             ( 1 << OXYGEN )
-#  define _FE                 ( 1 << FE     )
-*/
+#  define _HI                 ( 1 << HI     )
+#  define _HII                ( 1 << HII    )
 // always store entropy (or internal energy) for the dual energy formalism as the last passive variable
 #  if   ( DUAL_ENERGY == DE_ENPY )
 #  define _ENPY               ( 1 << ENPY )
@@ -222,11 +216,9 @@
 
 #if ( NFLUX_PASSIVE > 0 )
 // example for NFLUX_PASSIVE == 3
-/*
 #  define _FLUX_METAL         ( 1 << FLUX_METAL  )
-#  define _FLUX_OXYGEN        ( 1 << FLUX_OXYGEN )
-#  define _FLUX_FE            ( 1 << FLUX_FE     )
-*/
+#  define _FLUX_HI            ( 1 << FLUX_HI     )
+#  define _FLUX_HII           ( 1 << FLUX_HII    )
 // always store entropy (or internal energy) for the dual energy formalism as the last passive variable
 #  if   ( DUAL_ENERGY == DE_ENPY )
 #  define _FLUX_ENPY          ( 1 << FLUX_ENPY )
@@ -322,8 +314,8 @@
 // example for PAR_NPASSIVE == 3
 /*
 #  define  PAR_METAL          0
-#  define  PAR_OXYGEN         1
-#  define  PAR_FE             2
+#  define  PAR_HI             1
+#  define  PAR_HII            2
 */
 #endif
 

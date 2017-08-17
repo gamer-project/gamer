@@ -63,7 +63,7 @@ SIMU_OPTION += -DDUAL_ENERGY=DE_ENPY
 
 # number of passively advected scalars (**excluding** entropy or internal energy even when DUAL_ENERGY is on)
 # --> for simulations without any passive scalar, please set this variable to 0 and do NOT comment it out
-SIMU_OPTION += -DNCOMP_PASSIVE_MAKEFILE=0
+SIMU_OPTION += -DNCOMP_PASSIVE_MAKEFILE=1
 
 
 # (b-2) MHD options

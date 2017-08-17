@@ -14,20 +14,24 @@ static double  AGORA_DiskScaleHeight;           // disk scale height
 static double  AGORA_DiskTotalMass;             // disk total mass (gas + stars)
 static double  AGORA_DiskGasMassFrac;           // disk gas mass fraction (disk_gas_mass / disk_total_mass)
 static double  AGORA_DiskGasTemp;               // disk gas temperature
-static double  AGORA_HaloGasNumDensH;           // halo atomic hydrogen number density (halo gas mass density / atomic_hydrogen_mass)
+static double  AGORA_HaloGasNumDensH;           // halo atomic hydrogen number density (halo_gas_mass_density / atomic_hydrogen_mass)
 static double  AGORA_HaloGasTemp;               // halo gas temperature
+
+static bool    AGORA_UseMetal;                  // add and advect a metal density field
+                                                // --> to enable this option, one must
+                                                //     (1) set AGORA_(Disk/Halo)MetalMassFrac properly
+                                                //     (2) set DNCOMP_PASSIVE_MAKEFILE>=1 in the Makefile
+                                                //     (3) define METAL in Macro.h (hard coding, ugh!)
+                                                // --> necessary if one wants to enable metal_cooling in Grackle
+static double  AGORA_DiskMetalMassFrac;         // disk metal mass fraction (disk_metal_mass / disk_gas_mass)
+static double  AGORA_HaloMetalMassFrac;         // halo metal mass fraction (halo_metal_mass / halo_gas_mass)
+
 
 static double  AGORA_DiskGasDens0;              // disk gas mass density coefficient
 static double  AGORA_HaloGasDens;               // halo gas mass density
 static double  AGORA_HaloGasPres;               // halo gas pressure
 static double *AGORA_VcProf = NULL;             // circular velocity radial profile [radius, velocity]
 static int     AGORA_VcProf_NBin;               // number of radial bin in AGORA_VcProf
-
-/*
-static double  AGORA_HaloMetallicity;
-static double  AGORA_DiskMetallicity;
-static double  AGORA_MetalMassFrac;
-*/
 // =======================================================================================
 
 
@@ -167,10 +171,25 @@ void SetParameter()
    ReadPara->Add( "AGORA_DiskGasTemp",       &AGORA_DiskGasTemp,        -1.0,          Eps_double,       NoMax_double      );
    ReadPara->Add( "AGORA_HaloGasNumDensH",   &AGORA_HaloGasNumDensH,    -1.0,          Eps_double,       NoMax_double      );
    ReadPara->Add( "AGORA_HaloGasTemp",       &AGORA_HaloGasTemp,        -1.0,          Eps_double,       NoMax_double      );
+   ReadPara->Add( "AGORA_UseMetal",          &AGORA_UseMetal,            false,        Useless_bool,     Useless_bool      );
+   ReadPara->Add( "AGORA_DiskMetalMassFrac", &AGORA_DiskMetalMassFrac,   0.0,          0.0,              1.0               );
+   ReadPara->Add( "AGORA_HaloMetalMassFrac", &AGORA_HaloMetalMassFrac,   0.0,          0.0,              1.0               );
 
    ReadPara->Read( FileName );
 
    delete ReadPara;
+
+// check the runtime parameters
+   if ( AGORA_UseMetal )
+   {
+#     if (  ( defined DUAL_ENERGY && NCOMP_PASSIVE < 2 )  ||  ( !defined DUAL_ENERGY && NCOMP_PASSIVE < 1 )  )
+         Aux_Error( ERROR_INFO, "please set NCOMP_PASSIVE_MAKEFILE >= 1 in the Makefile for \"AGORA_UseMetal\" !!\n" );
+#     endif
+
+#     ifndef METAL
+         Aux_Error( ERROR_INFO, "please define the symbolic constant \"METAL\" properly in Macro.h for \"AGORA_UseMetal\" !!\n" );
+#     endif
+   }
 
 // convert to code units
    AGORA_DiskScaleLength *= Const_kpc  / UNIT_L;
@@ -242,6 +261,10 @@ void SetParameter()
       Aux_Message( stdout, "  DiskGasTemp       = %13.7e K\n",       AGORA_DiskGasTemp     * UNIT_E/Const_kB   );
       Aux_Message( stdout, "  HaloGasNumDensH   = %13.7e cm^{-3}\n", AGORA_HaloGasNumDensH / CUBE(UNIT_L)      );
       Aux_Message( stdout, "  HaloGasTemp       = %13.7e K\n",       AGORA_HaloGasTemp     * UNIT_E/Const_kB   );
+      Aux_Message( stdout, "  UseMetal          = %d\n",             AGORA_UseMetal                            );
+      if ( AGORA_UseMetal ) {
+      Aux_Message( stdout, "  DiskMetalMassFrac = %13.7e\n",         AGORA_DiskMetalMassFrac                   );
+      Aux_Message( stdout, "  HaloMetalMassFrac = %13.7e\n",         AGORA_HaloMetalMassFrac                   ); }
       Aux_Message( stdout, "=============================================================================\n" );
    }
 
@@ -306,6 +329,9 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
       fluid[MOMZ] = 0.0;
       fluid[ENGY] = DiskGasPres / ( GAMMA - 1.0 )
                     + 0.5*( SQR(fluid[MOMX]) + SQR(fluid[MOMY]) + SQR(fluid[MOMZ]) ) / fluid[DENS];
+
+      if ( AGORA_UseMetal )
+      fluid[METAL] = fluid[DENS]*AGORA_DiskMetalMassFrac;
    }
 
 // halo component
@@ -317,6 +343,9 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
       fluid[MOMZ] = 0.0;
       fluid[ENGY] = AGORA_HaloGasPres / ( GAMMA - 1.0 )
                     + 0.5*( SQR(fluid[MOMX]) + SQR(fluid[MOMY]) + SQR(fluid[MOMZ]) ) / fluid[DENS];
+
+      if ( AGORA_UseMetal )
+      fluid[METAL] = fluid[DENS]*AGORA_HaloMetalMassFrac;
    } // if ( DiskPres > AGORA_HaloGasPres ) ... else ...
 
 } // FUNCTION : SetGridIC
