@@ -169,6 +169,8 @@ GracklePriChe_t      GRACKLE_PRIMORDIAL;
 bool                 GRACKLE_METAL;
 bool                 GRACKLE_UV;
 bool                 GRACKLE_CMB_FLOOR;
+bool                 GRACKLE_PE_HEATING;
+double               GRACKLE_PE_HEATING_RATE;
 char                 GRACKLE_CLOUDY_TABLE[MAX_STRING];
 int                  CHE_GPU_NPGROUP;
 #endif

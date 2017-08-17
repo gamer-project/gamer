@@ -70,7 +70,7 @@ Procedure for outputting new variables:
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2251)
+// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2252)
 // Description :  Output all simulation data in the HDF5 format, which can be used as a restart file
 //                or loaded by YT
 //
@@ -139,6 +139,7 @@ Procedure for outputting new variables:
 //                2242 : 2017/08/09 --> output DT__SYNC_PARENT_LV and DT__SYNC_CHILDREN_LV; remove DT__FLEXIBLE_RANGE
 //                2250 : 2017/08/09 --> output dTime_AllLv[]
 //                2251 : 2017/08/12 --> output OPT__RESTART_RESET
+//                2252 : 2017/08/17 --> output GRACKLE_PE_HEATING and GRACKLE_PE_HEATING_RATE
 //-------------------------------------------------------------------------------------------------------
 void Output_DumpData_Total_HDF5( const char *FileName )
 {
@@ -1244,7 +1245,7 @@ void FillIn_KeyInfo( KeyInfo_t &KeyInfo )
 
    const time_t CalTime  = time( NULL );   // calendar time
 
-   KeyInfo.FormatVersion = 2251;
+   KeyInfo.FormatVersion = 2252;
    KeyInfo.Model         = MODEL;
    KeyInfo.NLevel        = NLEVEL;
    KeyInfo.NCompFluid    = NCOMP_FLUID;
@@ -1898,6 +1899,8 @@ void FillIn_InputPara( InputPara_t &InputPara )
    InputPara.Grackle_Metal           = GRACKLE_METAL;
    InputPara.Grackle_UV              = GRACKLE_UV;
    InputPara.Grackle_CMB_Floor       = GRACKLE_CMB_FLOOR;
+   InputPara.Grackle_PE_Heating      = GRACKLE_PE_HEATING;
+   InputPara.Grackle_PE_HeatingRate  = GRACKLE_PE_HEATING_RATE;
    InputPara.Grackle_CloudyTable     = GRACKLE_CLOUDY_TABLE;
    InputPara.Che_GPU_NPGroup         = CHE_GPU_NPGROUP;
 #  endif
@@ -2561,6 +2564,8 @@ void GetCompound_InputPara( hid_t &H5_TypeID )
    H5Tinsert( H5_TypeID, "Grackle_Metal",           HOFFSET(InputPara_t,Grackle_Metal          ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "Grackle_UV",              HOFFSET(InputPara_t,Grackle_UV             ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "Grackle_CMB_Floor",       HOFFSET(InputPara_t,Grackle_CMB_Floor      ), H5T_NATIVE_INT     );
+   H5Tinsert( H5_TypeID, "Grackle_PE_Heating",      HOFFSET(InputPara_t,Grackle_PE_Heating     ), H5T_NATIVE_INT     );
+   H5Tinsert( H5_TypeID, "Grackle_PE_HeatingRate",  HOFFSET(InputPara_t,Grackle_PE_HeatingRate ), H5T_NATIVE_DOUBLE  );
    H5Tinsert( H5_TypeID, "Grackle_CloudyTable",     HOFFSET(InputPara_t,Grackle_CloudyTable    ), H5_TypeID_VarStr   );
    H5Tinsert( H5_TypeID, "Che_GPU_NPGroup",         HOFFSET(InputPara_t,Che_GPU_NPGroup        ), H5T_NATIVE_INT     );
 #  endif
