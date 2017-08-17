@@ -73,7 +73,7 @@ void SetParameter()
    const char FileName[] = "Input__TestProb";
    ReadPara_t *ReadPara  = new ReadPara_t;
 
-// add parameters in the following format (some handy constants are defined in TestProb.h):
+// (1-1) add parameters in the following format (some handy constants are defined in TestProb.h):
 // --> note that VARIABLE, DEFAULT, MIN, and MAX must have the same data type
 // --> some handy constants (e.g., NoMin_int, Eps_float, ...) are defined in "ReadPara.h"
 // ********************************************************************************************************************************
@@ -87,7 +87,9 @@ void SetParameter()
 
    delete ReadPara;
 
-// set the default values
+// (1-2) set the default values
+
+// (1-3) check the runtime parameters
 
 
 // (2) set the problem-specific derived parameters
