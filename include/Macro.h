@@ -472,8 +472,8 @@
 // Grackle constants
 #ifdef SUPPORT_GRACKLE
 
-#  define CHE_NPREP              3
-#  define CHE_NIN                2
+#  define CHE_NPREP              4
+#  define CHE_NIN                3
 #  define CHE_NOUT               1
 
 #endif // #ifdef SUPPORT_GRACKLE

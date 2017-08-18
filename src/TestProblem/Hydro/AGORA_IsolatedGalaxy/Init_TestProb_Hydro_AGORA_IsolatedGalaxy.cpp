@@ -191,6 +191,14 @@ void SetParameter()
 #     endif
    }
 
+   else
+   {
+#     ifdef SUPPORT_GRACKLE
+      if ( GRACKLE_METAL )
+         Aux_Error( ERROR_INFO, "please enable \"AGORA_UseMetal\" for \"GRACKLE_METAL\" !!\n" );
+#     endif
+   }
+
 // convert to code units
    AGORA_DiskScaleLength *= Const_kpc  / UNIT_L;
    AGORA_DiskScaleHeight *= Const_kpc  / UNIT_L;

@@ -44,12 +44,6 @@ void Grackle_Init()
    if ( GRACKLE_PRIMORDIAL != GRACKLE_PRI_CHE_CLOUDY )
       Aux_Error( ERROR_INFO, "only support \"GRACKLE_PRIMORDIAL\" = %d for now !!\n", GRACKLE_PRI_CHE_CLOUDY );
 
-   if ( GRACKLE_METAL )
-      Aux_Error( ERROR_INFO, "\"GRACKLE_METAL\" is not supported yet !!\n" );
-
-   if ( GRACKLE_UV )
-      Aux_Error( ERROR_INFO, "\"GRACKLE_UV\" is not supported yet !!\n" );
-
    if (  ( GRACKLE_PRIMORDIAL == GRACKLE_PRI_CHE_CLOUDY || GRACKLE_METAL || GRACKLE_UV )  &&
          !Aux_CheckFileExist(GRACKLE_CLOUDY_TABLE)  )
       Aux_Error( ERROR_INFO, "Grackle data file \"%s\" does not exist !!\n", GRACKLE_CLOUDY_TABLE );

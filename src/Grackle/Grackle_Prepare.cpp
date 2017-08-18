@@ -11,8 +11,8 @@
 // Description :  Fill up the input host array "h_Che_Array" for the CPU/GPU Grackle solver
 //
 // Note        :  1. Prepare CHE_NPREP variables
-//                   --> CHE_NPREP = 3 currently
-//                   --> [mass density, specific internal energy, kinematic energy density]
+//                   --> CHE_NPREP = 4 currently
+//                   --> [mass density, specific internal energy, kinematic energy density, metal density]
 //                2. This function always prepares the latest FluSg data
 //
 // Parameter   :  lv          : Target refinement level
@@ -26,6 +26,7 @@ void Grackle_Prepare( const int lv, real h_Che_Array[][CHE_NPREP][ CUBE(PS1) ], 
    const int  Idx_Dens        = 0;
    const int  Idx_sEint       = 1;
    const int  Idx_Ek          = 2;
+   const int  Idx_Metal       = 3;
    const real dh              = (real)amr->dh[lv];
 #  ifdef DUAL_ENERGY
    const real  Gamma_m1       = GAMMA - (real)1.0;
@@ -73,6 +74,13 @@ void Grackle_Prepare( const int lv, real h_Che_Array[][CHE_NPREP][ CUBE(PS1) ], 
             h_Che_Array[N][Idx_Dens ][t] = Dens;
             h_Che_Array[N][Idx_sEint][t] = sEint;
             h_Che_Array[N][Idx_Ek   ][t] = Ek;
+
+//          prepare the metallicity if metal cooling is enabled
+//          --> one must add the METAL field as an passively advected scalar for that
+#           if (  ( defined DUAL_ENERGY && NCOMP_PASSIVE > 1 )  ||  ( !defined DUAL_ENERGY && NCOMP_PASSIVE > 0 )  )
+            if ( GRACKLE_METAL )
+            h_Che_Array[N][Idx_Metal][t] = *( amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[METAL][0][0] + t );
+#           endif
          }
 
          if ( GRACKLE_MODE == GRACKLE_MODE_ORI )
@@ -80,6 +88,9 @@ void Grackle_Prepare( const int lv, real h_Che_Array[][CHE_NPREP][ CUBE(PS1) ], 
             Che_FieldData[N].density         = h_Che_Array[N][Idx_Dens ];
             Che_FieldData[N].internal_energy = h_Che_Array[N][Idx_sEint];
             Che_FieldData[N].grid_dx         = dh;
+
+            if ( GRACKLE_METAL )
+            Che_FieldData[N].metal_density   = h_Che_Array[N][Idx_Metal];
          }
       } // for (int LocalID=0; LocalID<8; LocalID++)
    } // for (int TID=0; TID<NPG; TID++)
