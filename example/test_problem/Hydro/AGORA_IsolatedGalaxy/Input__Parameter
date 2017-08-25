@@ -122,12 +122,12 @@ GRACKLE_MODE                  1           # (0=off, 1=original Grackle, 2=reduce
 GRACKLE_VERBOSE               1           # map to "grackle_verbose" [1]
 GRACKLE_COOLING               1           # ...    "with_radiative_cooling" [1]
 GRACKLE_PRIMORDIAL            0           # ...    "primordial_chemistry" (0=Cloudy, 1/2/3=6-/9-/12-species) [0]
-GRACKLE_METAL                 0           # ...    "metal_cooling" [0]
-GRACKLE_UV                    0           # ...    "UVbackground" [0]
-GRACKLE_CMB_FLOOR             0           # ...    "cmb_temperature_floor" [1]
-GRACKLE_PE_HEATING            0           # ...    "photoelectric_heating" [0]
+GRACKLE_METAL                 1           # ...    "metal_cooling" [0]
+GRACKLE_UV                    1           # ...    "UVbackground" [0]
+GRACKLE_CMB_FLOOR             1           # ...    "cmb_temperature_floor" [1]
+GRACKLE_PE_HEATING            1           # ...    "photoelectric_heating" [0]
 GRACKLE_PE_HEATING_RATE       8.5e-26     # ...    "photoelectric_heating_rate (in erg/cm^3/s)" [8.5e-26]
-GRACKLE_CLOUDY_TABLE          CloudyData_noUVB.h5  # "grackle_data_file"
+GRACKLE_CLOUDY_TABLE          CloudyData_UVB=HM2012.h5   # "grackle_data_file"
 CHE_GPU_NPGROUP              -1           # number of patch groups sent into the CPU/GPU Grackle solver (<=0=auto) [-1]
 
 

@@ -12,7 +12,7 @@ AGORA_HaloGasNumDensH      7.71910124754943e-7     # halo atomic hydrogen number
                                                    # = halo_gas_mass_density / atomic_hydrogen_mass [cm^{-3}]
 AGORA_HaloGasTemp          1.0e6                   # halo gas temperature [K]
 
-AGORA_UseMetal             0                       # add and advect a metal density field
+AGORA_UseMetal             1                       # add and advect a metal density field
                                                    # --> to enable this option, one must
                                                    #     (1) set AGORA_(Disk/Halo)MetalMassFrac properly
                                                    #     (2) set DNCOMP_PASSIVE_MAKEFILE>=1 in the Makefile
