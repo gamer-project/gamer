@@ -42,6 +42,7 @@ SIMU_OPTION += -DNLEVEL=10
 SIMU_OPTION += -DMAX_PATCH=1000000
 
 # support Grackle, a chemistry and radiative cooling library
+# --> please enable OpenMP in Grackle by "make omp-on"
 SIMU_OPTION += -DSUPPORT_GRACKLE
 
 

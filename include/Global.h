@@ -225,7 +225,7 @@ extern real       (*h_Flu_Array_USG_G[2])[GRA_NIN-1][PS1][PS1][PS1];
 #endif
 
 #ifdef SUPPORT_GRACKLE
-extern real       (*h_Che_Array      [2])[CHE_NPREP][ CUBE(PS1) ];
+extern real       (*h_Che_Array      [2])[CHE_NPREP][ CUBE(PS2) ];
 extern grackle_field_data *Che_FieldData;
 extern code_units Che_Units;
 #endif

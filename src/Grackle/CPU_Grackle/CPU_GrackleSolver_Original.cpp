@@ -22,12 +22,12 @@
 void CPU_GrackleSolver_Original( grackle_field_data Che_FieldData[], code_units Che_Units, const int NPatchGroup, const real dt )
 {
 
-   const int NPatch = NPatchGroup*8;
-
-
-// loop over all patches
-#  pragma omp parallel for schedule( runtime )
-   for (int p=0; p<NPatch; p++)
+// loop over all patch groups
+// --> note that we use the OpenMP implementation in Grackle directly, which applies the parallelization to different cells
+//     within the same patch group
+// --> this approach is found to be much more efficient than parallelizing different patches or patch groups here
+//#  pragma omp parallel for schedule( runtime )
+   for (int p=0; p<NPatchGroup; p++)
    {
       if (  solve_chemistry( &Che_Units, &Che_FieldData[p], dt ) == 0  )
          Aux_Error( ERROR_INFO, "Grackle solve_chemistry() failed !!\n" );

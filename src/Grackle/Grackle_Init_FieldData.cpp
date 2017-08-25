@@ -27,15 +27,13 @@ void Grackle_Init_FieldData( const int Che_NPG )
 
 
 // allocate memory
-   const int Che_NP = 8*Che_NPG;
-
-   Che_FieldData = new grackle_field_data [Che_NP];
+   Che_FieldData = new grackle_field_data [Che_NPG];
 
 
 // initialization
    const int NDim = 3;
 
-   for (int t=0; t<Che_NP; t++)
+   for (int t=0; t<Che_NPG; t++)
    {
 //    fields not evolving with time
       Che_FieldData[t].grid_rank               = NDim;
@@ -43,11 +41,12 @@ void Grackle_Init_FieldData( const int Che_NPG )
       Che_FieldData[t].grid_start              = new int [NDim];
       Che_FieldData[t].grid_end                = new int [NDim];
 
+//    [PS2][PS2][PS2] is found to be much more efficient than [PS2*PS2*PS2][1][1]
       for (int d=0; d<NDim; d++)
       {
-         Che_FieldData[t].grid_dimension[d]    = PS1;
+         Che_FieldData[t].grid_dimension[d]    = PS2;
          Che_FieldData[t].grid_start    [d]    = 0;
-         Che_FieldData[t].grid_end      [d]    = PS1 - 1;
+         Che_FieldData[t].grid_end      [d]    = PS2 - 1;
       }
 
 //    fields set by Grackle_Prepare() during each time-step
@@ -81,7 +80,7 @@ void Grackle_Init_FieldData( const int Che_NPG )
       Che_FieldData[t].RT_HeII_ionization_rate = NULL;
       Che_FieldData[t].RT_H2_dissociation_rate = NULL;
       Che_FieldData[t].RT_heating_rate         = NULL;
-   } // for (int t=0; t<Che_NP; t++)
+   } // for (int t=0; t<Che_NPG; t++)
 
 } // FUNCTION : Grackle_Init_FieldData
 

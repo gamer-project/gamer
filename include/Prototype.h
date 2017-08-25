@@ -546,8 +546,8 @@ void Grackle_Init();
 void Grackle_End();
 void Init_MemAllocate_Grackle( const int Che_NPG );
 void End_MemFree_Grackle();
-void Grackle_Prepare( const int lv, real h_Che_Array[][CHE_NPREP][ CUBE(PS1) ], const int NPG, const int *PID0_List );
-void Grackle_Close( const int lv, const int SaveSg, const real h_Che_Array[][CHE_NPREP][ CUBE(PS1) ],
+void Grackle_Prepare( const int lv, real h_Che_Array[][CHE_NPREP][ CUBE(PS2) ], const int NPG, const int *PID0_List );
+void Grackle_Close( const int lv, const int SaveSg, const real h_Che_Array[][CHE_NPREP][ CUBE(PS2) ],
                     const int NPG, const int *PID0_List );
 void Grackle_Init_FieldData( const int Che_NPG );
 void Grackle_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, const double dt, const int SaveSg,
