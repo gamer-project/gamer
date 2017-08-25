@@ -26,11 +26,9 @@ void Init_MemAllocate_Grackle( const int Che_NPG )
    if ( GRACKLE_MODE == GRACKLE_MODE_NONE )  return;
 
 
-   const int Che_NP = 8*Che_NPG;
-
    for (int t=0; t<2; t++)
    {
-      h_Che_Array[t] = new real [Che_NP][CHE_NPREP][ CUBE(PS1) ];
+      h_Che_Array[t] = new real [Che_NPG][CHE_NPREP][ CUBE(PS2) ];
    }
 
 } // FUNCTION : Init_MemAllocate_Grackle

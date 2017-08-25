@@ -98,14 +98,16 @@ void Grackle_Init()
    grackle_data->grackle_data_file          = GRACKLE_CLOUDY_TABLE;
 
 #  ifdef OPENMP
-// currently we apply the OpenMP parallelization to **multiple patches** instead of **cells inside a patch**
-// --> therefore, we should disable OpenMP for Grackle (i.e., no nested parallelization)
-// grackle_data->omp_nthreads           = OMP_NTHREAD;
-   grackle_data->omp_nthreads           = 1;
+// currently we adopt the OpenMP implementation in Grackle directly, which applies the parallelization to
+// **different cells inside a patch group** instead of **different patch groups**
+// --> this approach is found to be more efficient
+// --> therefore, we should enable OpenMP for Grackle and disable OpenMP in CPU_GrackleSolver_Original()
+//     to avoid the nested parallelization
+   grackle_data->omp_nthreads               = OMP_NTHREAD;
 #  endif
 
 #  if ( MODEL == HYDRO )
-   grackle_data->Gamma                  = GAMMA;
+   grackle_data->Gamma                      = GAMMA;
 
 #  elif ( MODEL == MHD )
 #  warning : WAIT MHD !!!

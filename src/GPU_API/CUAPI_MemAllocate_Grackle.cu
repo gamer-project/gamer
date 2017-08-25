@@ -20,9 +20,8 @@ void CUAPI_MemAllocate_Grackle( const int Che_NPG )
 
 
 // size of the global memory array(s)
-   const long Che_NP           = 8*Che_NPG;
-   const long Che_MemSize_In   = sizeof(real)*Che_NP*CHE_NIN  *CUBE(PS1);
-   const long Che_MemSize_Prep = sizeof(real)*Che_NP*CHE_NPREP*CUBE(PS1);
+   const long Che_MemSize_In   = sizeof(real)*Che_NPG*CHE_NIN  *CUBE(PS2);
+   const long Che_MemSize_Prep = sizeof(real)*Che_NPG*CHE_NPREP*CUBE(PS2);
 
 // output the total memory requirement
    long TotalSize = Che_MemSize_In;
