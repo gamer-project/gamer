@@ -206,12 +206,12 @@ void Par_Init_ByFunction_AGORA()
    const real Useless = -1.0;
 
 #  ifdef STAR_FORMATION
-   for (int p=0; p<NPar_MyRank; p++)   amr->Par->Passive[p][PAR_CREATION_TIME] = Useless;
+   for (int p=0; p<NPar_MyRank; p++)   amr->Par->Passive[PAR_CREATION_TIME][p] = Useless;
 #  endif
 
 #  if ( PAR_NPASSIVE > 0 )
    if ( AGORA_UseMetal )
-   for (int p=0; p<NPar_MyRank; p++)   amr->Par->Passive[p][PAR_METAL]         = Useless;
+   for (int p=0; p<NPar_MyRank; p++)   amr->Par->Passive[PAR_METAL        ][p] = Useless;
 #  endif
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );
