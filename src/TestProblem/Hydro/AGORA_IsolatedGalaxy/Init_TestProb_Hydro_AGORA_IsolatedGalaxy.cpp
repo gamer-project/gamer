@@ -21,7 +21,7 @@ static double  AGORA_HaloGasTemp;               // halo gas temperature
                                                 // --> to enable this option, one must
                                                 //     (1) set AGORA_(Disk/Halo)MetalMassFrac properly
                                                 //     (2) set NCOMP_PASSIVE_MAKEFILE>=1 and PAR_NPASSIVE_MAKEFILE>=1 in the Makefile
-                                                //     (3) define METAL and PAR_METAL in Macro.h (hard coding, ugh!)
+                                                //     (3) define METAL and PAR_METAL_FRAC in Macro.h (hard coding, ugh!)
                                                 // --> necessary if one wants to enable metal_cooling in Grackle
 static double  AGORA_DiskMetalMassFrac;         // disk metal mass fraction (disk_metal_mass / disk_gas_mass)
 static double  AGORA_HaloMetalMassFrac;         // halo metal mass fraction (halo_metal_mass / halo_gas_mass)
@@ -194,8 +194,8 @@ void SetParameter()
          Aux_Error( ERROR_INFO, "please set PAR_NPASSIVE_MAKEFILE >= 1 in the Makefile for \"AGORA_UseMetal\" !!\n" );
 #     endif
 
-#     ifndef PAR_METAL
-         Aux_Error( ERROR_INFO, "please define the symbolic constant \"PAR_METAL\" properly in Macro.h for \"AGORA_UseMetal\" !!\n" );
+#     ifndef PAR_METAL_FRAC
+         Aux_Error( ERROR_INFO, "please define the symbolic constant \"PAR_METAL_FRAC\" properly in Macro.h for \"AGORA_UseMetal\" !!\n" );
 #     endif
    }
 
