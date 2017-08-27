@@ -129,8 +129,8 @@
 
 // for ELBDM, we do not need to transfer the density component into GPU
 #elif ( MODEL == ELBDM )
-#  define FLU_NIN             ( NCOMP_TOTAL-1 )
-#  define FLU_NOUT            ( NCOMP_TOTAL-0 )
+#  define FLU_NIN             ( NCOMP_TOTAL - 1 )
+#  define FLU_NOUT            ( NCOMP_TOTAL - 0 )
 
 #elif ( MODEL == PAR_ONLY )
 #  define FLU_NIN             0
@@ -158,11 +158,12 @@
 #  define  METAL              ( NCOMP_FLUID + 0 )
 #  define  HI                 ( NCOMP_FLUID + 1 )
 #  define  HII                ( NCOMP_FLUID + 2 )
+
 // always store entropy (or internal energy) for the dual energy formalism as the last passive variable
 #  if   ( DUAL_ENERGY == DE_ENPY )
-#  define  ENPY               ( NCOMP_TOTAL-1 )
+#  define  ENPY               ( NCOMP_TOTAL - 1 )
 #  elif ( DUAL_ENERGY == DE_EINT )
-#  define  EINT               ( NCOMP_TOTAL-1 )
+#  define  EINT               ( NCOMP_TOTAL - 1 )
 #  endif
 #endif
 
@@ -181,9 +182,9 @@
 #  define  FLUX_HII           ( NFLUX_FLUID + 2 )
 // always store entropy (or internal energy) for the dual energy formalism as the last passive variable
 #  if   ( DUAL_ENERGY == DE_ENPY )
-#  define  FLUX_ENPY          ( NFLUX_TOTAL-1 )
+#  define  FLUX_ENPY          ( NFLUX_TOTAL - 1 )
 #  elif ( DUAL_ENERGY == DE_EINT )
-#  define  FLUX_EINT          ( NFLUX_TOTAL-1 )
+#  define  FLUX_EINT          ( NFLUX_TOTAL - 1 )
 #  endif
 #endif
 
@@ -307,16 +308,27 @@
 #  define  PAR_ACCY           9
 #  define  PAR_ACCZ          10
 
+// number of passive particle attributes
+// --> including PAR_CREATION_TIME when STAR_FORMATION is adopted
+#ifdef STAR_FORMATION
+#  define PAR_NPASSIVE        ( PAR_NPASSIVE_MAKEFILE + 1 )
+#else
+#  define PAR_NPASSIVE        ( PAR_NPASSIVE_MAKEFILE     )
+#endif
+
 // passive variable indices in the array "Passive" [0 ... PAR_NPASSIVE-1]
 // --> note that unlike the passive scalars on cells, the indices of passive particle attributes start from 0
 // --> this may be modified in the future
 #if ( PAR_NPASSIVE > 0 )
 // example for PAR_NPASSIVE == 3
-/*
 #  define  PAR_METAL          0
 #  define  PAR_HI             1
 #  define  PAR_HII            2
-*/
+
+// always store PAR_CREATION_TIME as the last passive attribute
+#  ifdef STAR_FORMATION
+#  define  PAR_CREATION_TIME  ( PAR_NPASSIVE - 1 )
+#  endif
 #endif
 
 // symbolic constants used as function parameters (e.g., Prepare_PatchData)

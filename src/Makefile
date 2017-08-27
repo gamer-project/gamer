@@ -62,7 +62,7 @@ SIMU_OPTION += -DRSOLVER=HLLC
 # dual energy formalism: DE_ENPY/DE_EINT (evolve entropy or internal energy; DE_EINT is not supported yet) ##useless in RTVD/WAF##
 SIMU_OPTION += -DDUAL_ENERGY=DE_ENPY
 
-# number of passively advected scalars (**excluding** entropy or internal energy even when DUAL_ENERGY is on)
+# number of passively advected scalars (**excluding** entropy or internal energy used by DUAL_ENERGY)
 # --> for simulations without any passive scalar, please set this variable to 0 and do NOT comment it out
 SIMU_OPTION += -DNCOMP_PASSIVE_MAKEFILE=1
 
@@ -95,8 +95,12 @@ endif # MODEL
 # store particle acceleration
 SIMU_OPTION += -DSTORE_PAR_ACC
 
-# number of passive particle attributes
-SIMU_OPTION += -DPAR_NPASSIVE=0
+# allow for creating new particles after initialization
+SIMU_OPTION += -DSTAR_FORMATION
+
+# number of passive particle attributes (**excluding** PAR_CREATION_TIME used by STAR_FORMATION)
+# --> for simulations without any passive attributes, please set this variable to 0 and do NOT comment it out
+SIMU_OPTION += -DPAR_NPASSIVE_MAKEFILE=1
 
 
 # (d) optimization options and other features
