@@ -17,11 +17,11 @@ static double  AGORA_DiskGasTemp;               // disk gas temperature
 static double  AGORA_HaloGasNumDensH;           // halo atomic hydrogen number density (halo_gas_mass_density / atomic_hydrogen_mass)
 static double  AGORA_HaloGasTemp;               // halo gas temperature
 
-static bool    AGORA_UseMetal;                  // add and advect a metal density field
+       bool    AGORA_UseMetal;                  // add and advect a metal density field
                                                 // --> to enable this option, one must
                                                 //     (1) set AGORA_(Disk/Halo)MetalMassFrac properly
-                                                //     (2) set DNCOMP_PASSIVE_MAKEFILE>=1 in the Makefile
-                                                //     (3) define METAL in Macro.h (hard coding, ugh!)
+                                                //     (2) set NCOMP_PASSIVE_MAKEFILE>=1 and PAR_NPASSIVE_MAKEFILE>=1 in the Makefile
+                                                //     (3) define METAL and PAR_METAL in Macro.h (hard coding, ugh!)
                                                 // --> necessary if one wants to enable metal_cooling in Grackle
 static double  AGORA_DiskMetalMassFrac;         // disk metal mass fraction (disk_metal_mass / disk_gas_mass)
 static double  AGORA_HaloMetalMassFrac;         // halo metal mass fraction (halo_metal_mass / halo_gas_mass)
@@ -189,6 +189,14 @@ void SetParameter()
 #     ifndef METAL
          Aux_Error( ERROR_INFO, "please define the symbolic constant \"METAL\" properly in Macro.h for \"AGORA_UseMetal\" !!\n" );
 #     endif
+
+#     if (  ( defined STAR_FORMATION && PAR_NPASSIVE < 2 )  ||  ( !defined STAR_FORMATION && PAR_NPASSIVE < 1 )  )
+         Aux_Error( ERROR_INFO, "please set PAR_NPASSIVE_MAKEFILE >= 1 in the Makefile for \"AGORA_UseMetal\" !!\n" );
+#     endif
+
+#     ifndef PAR_METAL
+         Aux_Error( ERROR_INFO, "please define the symbolic constant \"PAR_METAL\" properly in Macro.h for \"AGORA_UseMetal\" !!\n" );
+#     endif
    }
 
    else
@@ -338,8 +346,10 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
       fluid[ENGY] = DiskGasPres / ( GAMMA - 1.0 )
                     + 0.5*( SQR(fluid[MOMX]) + SQR(fluid[MOMY]) + SQR(fluid[MOMZ]) ) / fluid[DENS];
 
+#     if ( NCOMP_PASSIVE > 0 )
       if ( AGORA_UseMetal )
       fluid[METAL] = fluid[DENS]*AGORA_DiskMetalMassFrac;
+#     endif
    }
 
 // halo component
@@ -352,8 +362,10 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
       fluid[ENGY] = AGORA_HaloGasPres / ( GAMMA - 1.0 )
                     + 0.5*( SQR(fluid[MOMX]) + SQR(fluid[MOMY]) + SQR(fluid[MOMZ]) ) / fluid[DENS];
 
+#     if ( NCOMP_PASSIVE > 0 )
       if ( AGORA_UseMetal )
       fluid[METAL] = fluid[DENS]*AGORA_HaloMetalMassFrac;
+#     endif
    } // if ( DiskPres > AGORA_HaloGasPres ) ... else ...
 
 } // FUNCTION : SetGridIC

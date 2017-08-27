@@ -194,6 +194,12 @@ void Aux_TakeNote()
 #     else
       fprintf( Note, "STORE_PAR_ACC                   OFF\n" );
 #     endif
+
+#     ifdef STAR_FORMATION
+      fprintf( Note, "STAR_FORMATION                  ON\n" );
+#     else
+      fprintf( Note, "STAR_FORMATION                  OFF\n" );
+#     endif
 #     endif
 
       fprintf( Note, "***********************************************************************************\n" );

@@ -7,6 +7,7 @@
 extern char AGORA_HaloPar_Filename[1000];
 extern char AGORA_DiskPar_Filename[1000];
 extern char AGORA_BulgePar_Filename[1000];
+extern bool AGORA_UseMetal;
 
 
 
@@ -193,6 +194,25 @@ void Par_Init_ByFunction_AGORA()
       amr->Par->PosY[p] += BoxCenter[1];
       amr->Par->PosZ[p] += BoxCenter[2];
    }
+
+   if ( MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );
+
+
+// initialize the passive particle attributes, specifically, PAR_CREATION_TIME and PAR_METAL
+// --> set to an arbitrary negative value to indicate that they are actually useless since they are only used
+//     for star particles created during the evolution
+   if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Initializing passive particle attributes ... " );
+
+   const real Useless = -1.0;
+
+#  ifdef STAR_FORMATION
+   for (int p=0; p<NPar_MyRank; p++)   amr->Par->Passive[p][PAR_CREATION_TIME] = Useless;
+#  endif
+
+#  if ( PAR_NPASSIVE > 0 )
+   if ( AGORA_UseMetal )
+   for (int p=0; p<NPar_MyRank; p++)   amr->Par->Passive[p][PAR_METAL]         = Useless;
+#  endif
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );
 
