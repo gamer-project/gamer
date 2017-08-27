@@ -139,6 +139,7 @@ struct Makefile_t
 
 #  ifdef PARTICLE
    int StoreParAcc;
+   int StarFormation;
    int Par_NPassive;
 #  endif
 
