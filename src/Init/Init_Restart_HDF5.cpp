@@ -1297,6 +1297,7 @@ void Check_Makefile( const char *FileName )
 
 #  ifdef PARTICLE
    LoadField( "StoreParAcc",        &RS.StoreParAcc,        SID, TID, NonFatal, &RT.StoreParAcc,         1, NonFatal );
+   LoadField( "StarFormation",      &RS.StarFormation,      SID, TID, NonFatal, &RT.StarFormation,       1, NonFatal );
    LoadField( "Par_NPassive",       &RS.Par_NPassive,       SID, TID, NonFatal, &RT.Par_NPassive,        1,    Fatal );
 #  endif
 

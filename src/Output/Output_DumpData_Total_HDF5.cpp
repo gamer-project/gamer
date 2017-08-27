@@ -70,7 +70,7 @@ Procedure for outputting new variables:
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2252)
+// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2253)
 // Description :  Output all simulation data in the HDF5 format, which can be used as a restart file
 //                or loaded by YT
 //
@@ -140,6 +140,7 @@ Procedure for outputting new variables:
 //                2250 : 2017/08/09 --> output dTime_AllLv[]
 //                2251 : 2017/08/12 --> output OPT__RESTART_RESET
 //                2252 : 2017/08/17 --> output GRACKLE_PE_HEATING and GRACKLE_PE_HEATING_RATE
+//                2253 : 2017/08/27 --> output STAR_FORMATION
 //-------------------------------------------------------------------------------------------------------
 void Output_DumpData_Total_HDF5( const char *FileName )
 {
@@ -1245,7 +1246,7 @@ void FillIn_KeyInfo( KeyInfo_t &KeyInfo )
 
    const time_t CalTime  = time( NULL );   // calendar time
 
-   KeyInfo.FormatVersion = 2252;
+   KeyInfo.FormatVersion = 2253;
    KeyInfo.Model         = MODEL;
    KeyInfo.NLevel        = NLEVEL;
    KeyInfo.NCompFluid    = NCOMP_FLUID;
@@ -1489,6 +1490,13 @@ void FillIn_Makefile( Makefile_t &Makefile )
 #  else
    Makefile.StoreParAcc        = 0;
 #  endif
+
+#  ifdef STAR_FORMATION
+   Makefile.StarFormation      = 1;
+#  else
+   Makefile.StarFormation      = 0;
+#  endif
+
    Makefile.Par_NPassive       = PAR_NPASSIVE;
 #  endif
 
@@ -2174,6 +2182,7 @@ void GetCompound_Makefile( hid_t &H5_TypeID )
 
 #  ifdef PARTICLE
    H5Tinsert( H5_TypeID, "StoreParAcc",        HOFFSET(Makefile_t,StoreParAcc       ), H5T_NATIVE_INT );
+   H5Tinsert( H5_TypeID, "StarFormation",      HOFFSET(Makefile_t,StarFormation     ), H5T_NATIVE_INT );
    H5Tinsert( H5_TypeID, "Par_NPassive",       HOFFSET(Makefile_t,Par_NPassive      ), H5T_NATIVE_INT );
 #  endif
 
