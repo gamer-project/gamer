@@ -321,9 +321,9 @@
 // --> this may be modified in the future
 #if ( PAR_NPASSIVE > 0 )
 // example for PAR_NPASSIVE == 3
-#  define  PAR_METAL          0
-#  define  PAR_HI             1
-#  define  PAR_HII            2
+#  define  PAR_METAL_FRAC     0
+#  define  PAR_HI_FRAC        1
+#  define  PAR_HII_FRAC       2
 
 // always store PAR_CREATION_TIME as the last passive attribute
 #  ifdef STAR_FORMATION

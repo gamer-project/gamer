@@ -198,7 +198,7 @@ void Par_Init_ByFunction_AGORA()
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );
 
 
-// initialize the passive particle attributes, specifically, PAR_CREATION_TIME and PAR_METAL
+// initialize the passive particle attributes, specifically, PAR_CREATION_TIME and PAR_METAL_FRAC
 // --> set to an arbitrary negative value to indicate that they are actually useless since they are only used
 //     for star particles created during the evolution
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Initializing passive particle attributes ... " );
@@ -211,7 +211,7 @@ void Par_Init_ByFunction_AGORA()
 
 #  if ( PAR_NPASSIVE > 0 )
    if ( AGORA_UseMetal )
-   for (int p=0; p<NPar_MyRank; p++)   amr->Par->Passive[PAR_METAL        ][p] = Useless;
+   for (int p=0; p<NPar_MyRank; p++)   amr->Par->Passive[PAR_METAL_FRAC   ][p] = Useless;
 #  endif
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );
