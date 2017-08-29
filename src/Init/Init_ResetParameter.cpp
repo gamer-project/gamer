@@ -32,7 +32,7 @@ void Init_ResetParameter()
 #  define PRINT_WARNING( name, format, reason )                                                                \
    {                                                                                                           \
       if ( MPI_Rank == 0 )                                                                                     \
-         Aux_Message( stderr, "WARNING : parameter [%-25s] is reset to [" EXPAND_AND_QUOTE(format) "] %s\n",   \
+         Aux_Message( stderr, "WARNING : parameter [%-28s] is reset to [" EXPAND_AND_QUOTE(format) "] %s\n",   \
                       #name, name, reason );                                                                   \
    }
 

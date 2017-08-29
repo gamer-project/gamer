@@ -1225,6 +1225,13 @@ void Aux_Check_Parameter()
 
 // warning
 // ------------------------------
+   if ( MPI_Rank == 0 ) {
+
+   if ( SF_CREATE_STAR_MIN_LEVEL > MAX_LEVEL )
+      Aux_Message( stderr, "WARNING : SF_CREATE_STAR_MIN_LEVEL (%d) > MAX_LEVEL (%d) --> no star particles will form !!\n",
+                   SF_CREATE_STAR_MIN_LEVEL, MAX_LEVEL );
+
+   } // if ( MPI_Rank == 0 )
 
 #endif // ifdef STAR_FORMATION
 

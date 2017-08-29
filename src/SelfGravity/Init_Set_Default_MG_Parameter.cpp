@@ -27,7 +27,7 @@ void Init_Set_Default_MG_Parameter( int &Max_Iter, int &NPre_Smooth, int &NPost_
 #  define PRINT_WARNING( name, value, format, reason )                                                         \
    {                                                                                                           \
       if ( MPI_Rank == 0 )                                                                                     \
-         Aux_Message( stderr, "WARNING : parameter [%-25s] is reset to [" EXPAND_AND_QUOTE(format) "] %s\n",   \
+         Aux_Message( stderr, "WARNING : parameter [%-28s] is reset to [" EXPAND_AND_QUOTE(format) "] %s\n",   \
                       #name, value, reason );                                                                  \
    }
 
