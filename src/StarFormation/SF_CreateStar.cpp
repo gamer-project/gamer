@@ -34,7 +34,7 @@ void SF_CreateStar( const int lv, const real TimeNew, const real dt )
 
 
 // initialiez the random number generators the first time this function is called
-   static bool FirstTime;
+   static bool FirstTime = true;
 
    if ( FirstTime )
    {
