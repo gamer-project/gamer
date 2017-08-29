@@ -1696,6 +1696,7 @@ void Check_InputPara( const char *FileName )
    LoadField( "Opt__ExternalPot",        &RS.Opt__ExternalPot,        SID, TID, NonFatal, &RT.Opt__ExternalPot,         1, NonFatal );
 #  endif
 
+// Grackle
 #  ifdef SUPPORT_GRACKLE
    LoadField( "Grackle_Mode",            &RS.Grackle_Mode,            SID, TID, NonFatal, &RT.Grackle_Mode,             1, NonFatal );
    LoadField( "Grackle_Verbose",         &RS.Grackle_Verbose,         SID, TID, NonFatal, &RT.Grackle_Verbose,          1, NonFatal );
@@ -1708,6 +1709,17 @@ void Check_InputPara( const char *FileName )
    LoadField( "Grackle_PE_HeatingRate",  &RS.Grackle_PE_HeatingRate,  SID, TID, NonFatal, &RT.Grackle_PE_HeatingRate,   1, NonFatal );
    LoadField( "Grackle_Mode",            &RS.Grackle_Mode,            SID, TID, NonFatal, &RT.Grackle_Mode,             1, NonFatal );
    LoadField( "Che_GPU_NPGroup",         &RS.Che_GPU_NPGroup,         SID, TID, NonFatal, &RT.Che_GPU_NPGroup,          1, NonFatal );
+#  endif
+
+// star formation
+#  ifdef STAR_FORMATION
+   LoadField( "SF_CreateStar_Scheme",       &RS.SF_CreateStar_Scheme,       SID, TID, NonFatal, &RT.SF_CreateStar_Scheme,       1, NonFatal );
+   LoadField( "SF_CreateStar_RSeed",        &RS.SF_CreateStar_RSeed,        SID, TID, NonFatal, &RT.SF_CreateStar_RSeed,        1, NonFatal );
+   LoadField( "SF_CreateStar_MinLevel",     &RS.SF_CreateStar_MinLevel,     SID, TID, NonFatal, &RT.SF_CreateStar_MinLevel,     1, NonFatal );
+   LoadField( "SF_CreateStar_MinGasDens",   &RS.SF_CreateStar_MinGasDens,   SID, TID, NonFatal, &RT.SF_CreateStar_MinGasDens,   1, NonFatal );
+   LoadField( "SF_CreateStar_MassEff",      &RS.SF_CreateStar_MassEff,      SID, TID, NonFatal, &RT.SF_CreateStar_MassEff,      1, NonFatal );
+   LoadField( "SF_CreateStar_MinStarMass",  &RS.SF_CreateStar_MinStarMass,  SID, TID, NonFatal, &RT.SF_CreateStar_MinStarMass,  1, NonFatal );
+   LoadField( "SF_CreateStar_MaxStarMFrac", &RS.SF_CreateStar_MaxStarMFrac, SID, TID, NonFatal, &RT.SF_CreateStar_MaxStarMFrac, 1, NonFatal );
 #  endif
 
 // initialization
