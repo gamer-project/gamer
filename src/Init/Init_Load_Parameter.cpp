@@ -188,7 +188,7 @@ void Init_Load_Parameter()
 #  ifdef STAR_FORMATION
    ReadPara->Add( "SF_CREATE_STAR_SCHEME",         &SF_CREATE_STAR_SCHEME,         0,              0,             1              );
    ReadPara->Add( "SF_CREATE_STAR_RSEED",          &SF_CREATE_STAR_RSEED,          123,            0,             NoMax_int      );
-   ReadPara->Add( "SF_CREATE_STAR_MIN_LEVEL",      &SF_CREATE_STAR_MIN_LEVEL,      0,              0,             TOP_LEVEL      );
+   ReadPara->Add( "SF_CREATE_STAR_MIN_LEVEL",      &SF_CREATE_STAR_MIN_LEVEL,      0,              NoMin_int,     TOP_LEVEL      );
    ReadPara->Add( "SF_CREATE_STAR_MIN_GAS_DENS",   &SF_CREATE_STAR_MIN_GAS_DENS,   1.0e1,          0.0,           NoMax_double   );
    ReadPara->Add( "SF_CREATE_STAR_MASS_EFF",       &SF_CREATE_STAR_MASS_EFF,       1.0e-2,         Eps_double,    1.0            );
    ReadPara->Add( "SF_CREATE_STAR_MIN_STAR_MASS",  &SF_CREATE_STAR_MIN_STAR_MASS,  0.0,            0.0,           NoMax_double   );
