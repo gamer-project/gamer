@@ -479,6 +479,17 @@ struct InputPara_t
    int    Che_GPU_NPGroup;
 #  endif
 
+// star formation
+#  ifdef STAR_FORMATION
+   int    SF_CreateStar_Scheme;
+   int    SF_CreateStar_RSeed;
+   int    SF_CreateStar_MinLevel;
+   double SF_CreateStar_MinGasDens;
+   double SF_CreateStar_MassEff;
+   double SF_CreateStar_MinStarMass;
+   double SF_CreateStar_MaxStarMFrac;
+#  endif
+
 // initialization
    int    Opt__Init;
    int    RestartLoadNRank;
