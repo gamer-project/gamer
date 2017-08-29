@@ -17,7 +17,7 @@ static double  AGORA_DiskGasTemp;               // disk gas temperature
 static double  AGORA_HaloGasNumDensH;           // halo atomic hydrogen number density (halo_gas_mass_density / atomic_hydrogen_mass)
 static double  AGORA_HaloGasTemp;               // halo gas temperature
 
-       bool    AGORA_UseMetal;                  // add and advect a metal density field
+       bool    AGORA_UseMetal = false;          // add and advect a metal density field
                                                 // --> to enable this option, one must
                                                 //     (1) set AGORA_(Disk/Halo)MetalMassFrac properly
                                                 //     (2) set NCOMP_PASSIVE_MAKEFILE>=1 and PAR_NPASSIVE_MAKEFILE>=1 in the Makefile
@@ -346,6 +346,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
       fluid[ENGY] = DiskGasPres / ( GAMMA - 1.0 )
                     + 0.5*( SQR(fluid[MOMX]) + SQR(fluid[MOMY]) + SQR(fluid[MOMZ]) ) / fluid[DENS];
 
+//###: HARD-CODED FIELDS
 #     if ( NCOMP_PASSIVE > 0 )
       if ( AGORA_UseMetal )
       fluid[METAL] = fluid[DENS]*AGORA_DiskMetalMassFrac;
@@ -362,6 +363,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
       fluid[ENGY] = AGORA_HaloGasPres / ( GAMMA - 1.0 )
                     + 0.5*( SQR(fluid[MOMX]) + SQR(fluid[MOMY]) + SQR(fluid[MOMZ]) ) / fluid[DENS];
 
+//###: HARD-CODED FIELDS
 #     if ( NCOMP_PASSIVE > 0 )
       if ( AGORA_UseMetal )
       fluid[METAL] = fluid[DENS]*AGORA_HaloMetalMassFrac;
