@@ -16,6 +16,9 @@
 //                       required here
 //                3. This function also sets the default values for the derived runtime parameters
 //                   (i.e., those depend on the input runtime parameters, e.g., amr->dh[]/BoxSize[]/BoxScale[])
+//                4. This function also converts all input parameters to the code units if necessary
+//                   --> Only for those not in code units when loading from the input parameter files
+//                       (e.g., SF_CREATE_STAR_MIN_GAS_DENS & SF_CREATE_STAR_MIN_STAR_MASS)
 //-------------------------------------------------------------------------------------------------------
 void Init_ResetParameter()
 {
@@ -824,6 +827,32 @@ void Init_ResetParameter()
 
       PRINT_WARNING( FLAG_BUFFER_SIZE_MAXM1_LV, FORMAT_INT, "" );
    }
+
+
+// SF_CREATE_STAR_MIN_LEVEL
+#  ifdef STAR_FORMATION
+   if ( SF_CREATE_STAR_MIN_LEVEL < 0 )
+   {
+      SF_CREATE_STAR_MIN_LEVEL = MAX_LEVEL;
+
+      PRINT_WARNING( SF_CREATE_STAR_MIN_LEVEL, FORMAT_INT, "" );
+   }
+#  endif
+
+
+// convert to code units
+#  ifdef STAR_FORMATION
+// SF_CREATE_STAR_MIN_GAS_DENS: HI count/cm^3 --> mass density in code units
+   SF_CREATE_STAR_MIN_GAS_DENS *= Const_mH / UNIT_D;
+
+   PRINT_WARNING( SF_CREATE_STAR_MIN_GAS_DENS, FORMAT_FLT, "to be consistent with the code units" );
+
+
+// SF_CREATE_STAR_MIN_STAR_MASS: Msun --> code units
+   SF_CREATE_STAR_MIN_STAR_MASS *= Const_Msun / UNIT_M;
+
+   PRINT_WARNING( SF_CREATE_STAR_MIN_STAR_MASS, FORMAT_FLT, "to be consistent with the code units" );
+#  endif
 
 
 // remove symbolic constants and macros only used in this structure

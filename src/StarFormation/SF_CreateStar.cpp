@@ -38,12 +38,13 @@ void SF_CreateStar( const int lv, const real TimeNew, const real dt )
 
    if ( FirstTime )
    {
+      int NT;
 #     ifdef OPENMP
 #     pragma omp parallel
 #     pragma omp master
-      {  const int NT = omp_get_num_threads();  }
+      {  NT = omp_get_num_threads();  }
 #     else
-      {  const int NT = 1;                      }
+      {  NT = 1;                      }
 #     endif
 
       drand_buf = new drand48_data [NT];
@@ -64,13 +65,13 @@ void SF_CreateStar( const int lv, const real TimeNew, const real dt )
 // invoke the target star-formation method
    switch ( SF_CREATE_STAR_SCHEME )
    {
-      case SF_CREATE_STAR_SCHEME_AGORA:   SF_CreateStar_AGORA( lv, TimeNew, dt, drand_buf, SF_CREATE_STAR_MIN_GAS_DENS
+      case SF_CREATE_STAR_SCHEME_AGORA:   SF_CreateStar_AGORA( lv, TimeNew, dt, drand_buf, SF_CREATE_STAR_MIN_GAS_DENS,
                                                                SF_CREATE_STAR_MASS_EFF, SF_CREATE_STAR_MIN_STAR_MASS,
                                                                SF_CREATE_STAR_MAX_STAR_MFRAC, UseMetal );
       break;
 
-      case SF_CREATE_STAR_SCHEME_NONE:    return; 
-      break
+      case SF_CREATE_STAR_SCHEME_NONE:    return;
+      break;
 
       default :
          Aux_Error( ERROR_INFO, "incorrect parameter %s = %d !!\n", "SF_CREATE_STAR_SCHEME", SF_CREATE_STAR_SCHEME );

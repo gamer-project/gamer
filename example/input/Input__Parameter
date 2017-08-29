@@ -7,7 +7,8 @@
 # 3. Parameters set to "auto" (usually by setting to a negative value) do not have deterministic default values
 #    and will be set according to the adopted compilation options and/or other runtime parameters
 # 4. To add new parameters, please edit "Init/Init_Load_Parameter.cpp"
-# 5. All dimensional variables should be set consistently with the code units (set by UNIT_L/M/T/V/D)
+# 5. All dimensional variables should be set consistently with the code units (set by UNIT_L/M/T/V/D) unless
+#    otherwise specified (e.g., SF_CREATE_STAR_MIN_GAS_DENS & SF_CREATE_STAR_MIN_STAR_MASS)
 # 6. For boolean options: 0/1 -> off/on
 # =================================================================================================================
 
@@ -141,6 +142,16 @@ GRACKLE_PE_HEATING            0           # ...    "photoelectric_heating" [0]
 GRACKLE_PE_HEATING_RATE       8.5e-26     # ...    "photoelectric_heating_rate (in erg/cm^3/s)" [8.5e-26]
 GRACKLE_CLOUDY_TABLE          CloudyData_noUVB.h5  # "grackle_data_file"
 CHE_GPU_NPGROUP              -1           # number of patch groups sent into the CPU/GPU Grackle solver (<=0=auto) [-1]
+
+
+# star formation (STAR_FORMATION only)
+SF_CREATE_STAR_SCHEME         0           # star formation schemes (0=off, 1=AGORA) [0]
+SF_CREATE_STAR_RSEED          123         # random seed [123]
+SF_CREATE_STAR_MIN_LEVEL      0           # minimum AMR level allowed to form stars (<0=auto -> MAX_LEVEL) [0]
+SF_CREATE_STAR_MIN_GAS_DENS   1.0e1       # minimum gas density allowed to form stars (in HI count/cm^3) [1.0e1]
+SF_CREATE_STAR_MASS_EFF       1.0e-2      # Gas-to-star mass conversion efficiency [1.0e-2]
+SF_CREATE_STAR_MIN_STAR_MASS  0.0         # minimum star particle mass for the stochastical star formation (in Msun) [0.0]
+SF_CREATE_STAR_MAX_STAR_MFRAC 0.5         # maximum gas mass fraction allowed to convert to stars per substep [0.5]
 
 
 # fluid solver in HYDRO (MODEL==HYDRO only)

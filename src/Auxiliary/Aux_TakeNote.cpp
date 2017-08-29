@@ -725,7 +725,7 @@ void Aux_TakeNote()
 
 //    record the parameters of Grackle
 #     ifdef SUPPORT_GRACKLE
-      fprintf( Note, "Grackle\n" );
+      fprintf( Note, "Parameters of Grackle\n" );
       fprintf( Note, "***********************************************************************************\n" );
       fprintf( Note, "GRACKLE_MODE                    %d\n",      GRACKLE_MODE            );
       if ( GRACKLE_MODE != GRACKLE_MODE_NONE ) {
@@ -742,6 +742,24 @@ void Aux_TakeNote()
       fprintf( Note, "***********************************************************************************\n" );
       fprintf( Note, "\n\n");
 #     endif // #ifdef SUPPORT_GRACKLE
+
+
+//    record the parameters of star formation
+#     ifdef STAR_FORMATION
+      fprintf( Note, "Parameters of Star Formation\n" );
+      fprintf( Note, "***********************************************************************************\n" );
+      fprintf( Note, "SF_CREATE_STAR_SCHEME           %d\n",           SF_CREATE_STAR_SCHEME                          );
+      fprintf( Note, "SF_CREATE_STAR_RSEED            %d\n",           SF_CREATE_STAR_RSEED                           );
+      fprintf( Note, "SF_CREATE_STAR_MIN_LEVEL        %d\n",           SF_CREATE_STAR_MIN_LEVEL                       );
+      fprintf( Note, "SF_CREATE_STAR_MIN_GAS_DENS     %13.7e\n",       SF_CREATE_STAR_MIN_GAS_DENS                    );
+      fprintf( Note, "                              = %13.7e cm^-3\n", SF_CREATE_STAR_MIN_GAS_DENS*UNIT_D/Const_mH    );
+      fprintf( Note, "SF_CREATE_STAR_MASS_EFF         %13.7e\n",       SF_CREATE_STAR_MASS_EFF                        );
+      fprintf( Note, "SF_CREATE_STAR_MIN_STAR_MASS    %13.7e\n",       SF_CREATE_STAR_MIN_STAR_MASS                   );
+      fprintf( Note, "                              = %13.7e Msun\n",  SF_CREATE_STAR_MIN_STAR_MASS*UNIT_M/Const_Msun );
+      fprintf( Note, "SF_CREATE_STAR_MAX_STAR_MFRAC   %13.7e\n",       SF_CREATE_STAR_MAX_STAR_MFRAC                  );
+      fprintf( Note, "***********************************************************************************\n" );
+      fprintf( Note, "\n\n");
+#     endif // #ifdef STAR_FORMATION
 
 
 //    record the parameters of Fluid solver in different models

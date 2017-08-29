@@ -131,6 +131,16 @@ GRACKLE_CLOUDY_TABLE          CloudyData_UVB=HM2012.h5   # "grackle_data_file"
 CHE_GPU_NPGROUP              -1           # number of patch groups sent into the CPU/GPU Grackle solver (<=0=auto) [-1]
 
 
+# star formation (STAR_FORMATION only)
+SF_CREATE_STAR_SCHEME         1           # star formation schemes (0=off, 1=AGORA) [0]
+SF_CREATE_STAR_RSEED          123         # random seed [123]
+SF_CREATE_STAR_MIN_LEVEL     -1           # minimum AMR level allowed to form stars (<0=auto -> MAX_LEVEL) [0]
+SF_CREATE_STAR_MIN_GAS_DENS   7.0e0       # minimum gas density allowed to form stars (in HI count/cm^3) [1.0e1]
+SF_CREATE_STAR_MASS_EFF       1.0e-2      # Gas-to-star mass conversion efficiency [1.0e-2]
+SF_CREATE_STAR_MIN_STAR_MASS  8.0e4       # minimum star particle mass for the stochastical star formation (in Msun) [0.0]
+SF_CREATE_STAR_MAX_STAR_MFRAC 0.5         # maximum gas mass fraction allowed to convert to stars per substep [0.5]
+
+
 # fluid solver in HYDRO (MODEL==HYDRO only)
 GAMMA                         1.666667    # ratio of specific heats (i.e., adiabatic index) [5.0/3.0]
 MOLECULAR_WEIGHT              0.6         # mean molecular weight -> currently only for post-processing [0.6]
