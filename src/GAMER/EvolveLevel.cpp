@@ -439,6 +439,24 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
       } // if ( GRACKLE_MODE != GRACKLE_MODE_NONE )
 #     endif // #ifdef SUPPORT_GRACKLE
 
+
+// *********************************
+//    6-2. star formation
+// *********************************
+#     ifdef STAR_FORMATION
+      if ( SF_CREATE_STAR_SCHEME != SF_CREATE_STAR_SCHEME_NONE )
+      {
+         if ( OPT__VERBOSE  &&  MPI_Rank == 0 )
+            Aux_Message( stdout, "   Lv %2d: SF_CreateStar, counter = %8ld ... ", lv, AdvanceCounter[lv] );
+
+         SF_CreateStar( lv, TimeNew, dt_SubStep );
+
+         Buf_GetBufferData( lv, amr->FluSg[lv], NULL_INT, DATA_GENERAL, _TOTAL, Flu_ParaBuf, USELB_YES );
+
+         if ( OPT__VERBOSE  &&  MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );
+      } // if ( SF_CREATE_STAR_SCHEME != SF_CREATE_STAR_SCHEME_NONE )
+#     endif // #ifdef STAR_FORMATION
+
 // ===============================================================================================
 
 

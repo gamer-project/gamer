@@ -749,6 +749,7 @@ void Aux_TakeNote()
       fprintf( Note, "Parameters of Star Formation\n" );
       fprintf( Note, "***********************************************************************************\n" );
       fprintf( Note, "SF_CREATE_STAR_SCHEME           %d\n",           SF_CREATE_STAR_SCHEME                          );
+      if ( SF_CREATE_STAR_SCHEME != SF_CREATE_STAR_SCHEME_NONE ) {
       fprintf( Note, "SF_CREATE_STAR_RSEED            %d\n",           SF_CREATE_STAR_RSEED                           );
       fprintf( Note, "SF_CREATE_STAR_MIN_LEVEL        %d\n",           SF_CREATE_STAR_MIN_LEVEL                       );
       fprintf( Note, "SF_CREATE_STAR_MIN_GAS_DENS     %13.7e\n",       SF_CREATE_STAR_MIN_GAS_DENS                    );
@@ -756,7 +757,7 @@ void Aux_TakeNote()
       fprintf( Note, "SF_CREATE_STAR_MASS_EFF         %13.7e\n",       SF_CREATE_STAR_MASS_EFF                        );
       fprintf( Note, "SF_CREATE_STAR_MIN_STAR_MASS    %13.7e\n",       SF_CREATE_STAR_MIN_STAR_MASS                   );
       fprintf( Note, "                              = %13.7e Msun\n",  SF_CREATE_STAR_MIN_STAR_MASS*UNIT_M/Const_Msun );
-      fprintf( Note, "SF_CREATE_STAR_MAX_STAR_MFRAC   %13.7e\n",       SF_CREATE_STAR_MAX_STAR_MFRAC                  );
+      fprintf( Note, "SF_CREATE_STAR_MAX_STAR_MFRAC   %13.7e\n",       SF_CREATE_STAR_MAX_STAR_MFRAC                  ); }
       fprintf( Note, "***********************************************************************************\n" );
       fprintf( Note, "\n\n");
 #     endif // #ifdef STAR_FORMATION
