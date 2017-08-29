@@ -80,7 +80,7 @@ void SF_CreateStar_AGORA( const int lv, const real TimeNew, const real dt, struc
    const real   Eff_times_dt   = Efficiency*dt;
 
    double x0, y0, z0, x, y, z, Random;
-   real   GasDens, _GasDens, GasMass, _Time_FreeFall, StarMFrac, GasMFracLeft;
+   real   GasDens, _GasDens, GasMass, _Time_FreeFall, StarMFrac, StarMass, GasMFracLeft;
    real   NewParVar[PAR_NVAR], NewParPassive[PAR_NPASSIVE];
    real   (*fluid)[PS1][PS1][PS1] = NULL;
    real   (*pot)[PS1][PS1]        = NULL;
@@ -133,8 +133,8 @@ void SF_CreateStar_AGORA( const int lv, const real TimeNew, const real dt, struc
          if ( StarMass < MinStarMass )
          {
 //###: OPENMP
-//          drand48_r( drand_buf[thread_id], &Random )
-            drand48_r( drand_buf[0], &Random );
+//          drand48_r( drand_buf+thread_id, &Random )
+            drand48_r( drand_buf, &Random );
 
             if ( (real)Random < StarMass*_MinStarMass )  StarMFrac = MinStarMass / GasMass;
             else                                         continue;
@@ -177,7 +177,7 @@ void SF_CreateStar_AGORA( const int lv, const real TimeNew, const real dt, struc
 //       note that we store the metal mass **fraction** instead of density in particles
 //       currently the metal field is hard coded ... ugh!
          if ( UseMetal )
-         NewParPassive[PAR_METAL_FRAC   ] = fluid[METAL] * _GasDens;
+         NewParPassive[PAR_METAL_FRAC   ] = fluid[METAL][k][j][i] * _GasDens;
 
          NewParPassive[PAR_CREATION_TIME] = TimeNew;
 

@@ -196,6 +196,19 @@ extern int             CHE_GPU_NPGROUP;
 #endif
 
 
+// (2-8) star formation
+// ============================================================================================================
+#ifdef STAR_FORMATION
+extern SF_CreateStarScheme_t SF_CREATE_STAR_SCHEME;
+extern int                   SF_CREATE_STAR_RSEED;
+extern int                   SF_CREATE_STAR_MIN_LEVEL;
+extern double                SF_CREATE_STAR_MIN_GAS_DENS;
+extern double                SF_CREATE_STAR_MASS_EFF;
+extern double                SF_CREATE_STAR_MIN_STAR_MASS;
+extern double                SF_CREATE_STAR_MAX_STAR_MFRAC;
+#endif
+
+
 
 // 3. CPU (host) arrays for transferring data between CPU and GPU
 // ============================================================================================================

@@ -175,6 +175,17 @@ char                 GRACKLE_CLOUDY_TABLE[MAX_STRING];
 int                  CHE_GPU_NPGROUP;
 #endif
 
+// (2-8) star formation
+#ifdef STAR_FORMATION
+SF_CreateStarScheme_t SF_CREATE_STAR_SCHEME;
+int                   SF_CREATE_STAR_RSEED;
+int                   SF_CREATE_STAR_MIN_LEVEL;
+double                SF_CREATE_STAR_MIN_GAS_DENS;
+double                SF_CREATE_STAR_MASS_EFF;
+double                SF_CREATE_STAR_MIN_STAR_MASS;
+double                SF_CREATE_STAR_MAX_STAR_MFRAC;
+#endif
+
 
 // 3. CPU (host) arrays for transferring data between CPU and GPU
 // =======================================================================================================
