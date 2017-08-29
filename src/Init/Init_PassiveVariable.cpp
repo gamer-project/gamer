@@ -79,7 +79,7 @@ void Init_PassiveVariable()
 // 1-4. particle creation time when STAR_FORMATION is enabled
 // --> we always store it as the last passive attribute
 #  if ( defined PARTICLE  &&  defined STAR_FORMATION )
-   sprintf( PassiveFieldName_Par[PAR_NPASSIVE-1], "Par_CreationTime" );
+   sprintf( PassiveFieldName_Par[PAR_NPASSIVE-1], "ParCreationTime" );
 #  endif
 
 
