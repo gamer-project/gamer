@@ -75,6 +75,7 @@ void Grackle_Prepare( const int lv, real h_Che_Array[][CHE_NPREP][ CUBE(PS2) ], 
             h_Che_Array[TID][Idx_sEint][idx_pg] = sEint;
             h_Che_Array[TID][Idx_Ek   ][idx_pg] = Ek;
 
+//###: HARD-CODED FIELDS
 //          prepare the metallicity if metal cooling is enabled
 //          --> one must add the METAL field as an passively advected scalar for that
 #           if (  ( defined DUAL_ENERGY && NCOMP_PASSIVE > 1 )  ||  ( !defined DUAL_ENERGY && NCOMP_PASSIVE > 0 )  )

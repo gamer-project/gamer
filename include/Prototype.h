@@ -556,5 +556,15 @@ void CPU_GrackleSolver_Original( grackle_field_data Che_FieldData[], code_units 
 #endif // #ifdef SUPPORT_GRACKLE
 
 
+// star formation
+#ifdef STAR_FORMATION
+void SF_CreateStar( const int lv, const real TimeNew, const real dt );
+void SF_FreeRNG();
+void SF_CreateStar_AGORA( const int lv, const real TimeNew, const real dt, struct drand48_data *drand_buf,
+                          const real GasDensThres, const real Efficiency, const real MinStarMass, const real MaxStarMFrac,
+                          const bool UseMetal );
+#endif
+
+
 
 #endif // __PROTOTYPE_H__

@@ -329,5 +329,15 @@ const GracklePriChe_t
 #endif
 
 
+// star formation
+#ifdef STAR_FORMATION
+// schemes of creating new star particles
+typedef int SF_CreateStarScheme_t;
+const SF_CreateStarScheme_t
+   SF_CREATE_STAR_SCHEME_NONE  = 0,
+   SF_CREATE_STAR_SCHEME_AGORA = 1;
+#endif
+
+
 
 #endif  // #ifndef __TYPEDEF_H__

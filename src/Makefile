@@ -22,7 +22,8 @@ SIMU_OPTION += -DGRAVITY
 SIMU_OPTION += -DPOT_SCHEME=SOR
 
 # store GRA_GHOST_SIZE ghost-zone potential for each patch on each side (in patch->pot_ext)
-# --> currently only for improving accuracy for particles around the patch boundaries (by Par->ImproveAcc)
+# --> (1) for improving accuracy for particles around the patch boundaries (by Par->ImproveAcc)
+#     (2) currently must be enabled for STAR_FORMATION + STORE_PAR_ACC
 SIMU_OPTION += -DSTORE_POT_GHOST
 
 # use unsplitting method to couple gravity to the target model (for HYDRO and MHD only; ELBDM is not supported yet)
@@ -96,6 +97,8 @@ endif # MODEL
 SIMU_OPTION += -DSTORE_PAR_ACC
 
 # allow for creating new particles after initialization
+# --> must turn on PARTICLE
+# --> must turn on STORE_POT_GHOST when STORE_PAR_ACC is adopted
 SIMU_OPTION += -DSTAR_FORMATION
 
 # number of passive particle attributes (**excluding** PAR_CREATION_TIME used by STAR_FORMATION)
@@ -393,6 +396,15 @@ CC_FILE     += Grackle_Init.cpp  Grackle_End.cpp  Init_MemAllocate_Grackle.cpp  
 
 vpath %.cpp    Grackle  Grackle/CPU_Grackle
 endif # SUPPORT_GRACKLE
+
+
+# star formation source files (included only if "STAR_FORMATION" is turned on)
+# ------------------------------------------------------------------------------------
+ifeq "$(findstring STAR_FORMATION, $(SIMU_OPTION))" "STAR_FORMATION"
+CC_FILE     += SF_CreateStar.cpp  SF_CreateStar_AGORA.cpp
+
+vpath %.cpp    StarFormation
+endif # STAR_FORMATION
 
 
 # test problem source files

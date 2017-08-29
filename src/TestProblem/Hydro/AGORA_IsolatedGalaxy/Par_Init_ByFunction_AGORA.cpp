@@ -209,6 +209,7 @@ void Par_Init_ByFunction_AGORA()
    for (int p=0; p<NPar_MyRank; p++)   amr->Par->Passive[PAR_CREATION_TIME][p] = Useless;
 #  endif
 
+//###: HARD-CODED FIELDS
 #  if ( PAR_NPASSIVE > 0 )
    if ( AGORA_UseMetal )
    for (int p=0; p<NPar_MyRank; p++)   amr->Par->Passive[PAR_METAL_FRAC   ][p] = Useless;

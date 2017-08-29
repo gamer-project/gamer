@@ -96,6 +96,12 @@ void End_MemFree()
    End_MemFree_PassiveFieldName();
 
 
+// 7. star formation random number generator
+#  ifdef STAR_FORMATION
+   SF_FreeRNG();
+#  endif
+
+
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );
 
 } // FUNCTION : End_MemFree

@@ -1208,6 +1208,27 @@ void Aux_Check_Parameter()
 #endif // SUPPORT_GRACKLE
 
 
+
+// star formation
+// =======================================================================================
+#ifdef STAR_FORMATION
+
+// errors
+// ------------------------------
+#  ifndef PARTICLE
+#     error : STAR_FORMATION must work with PARTICLE !!
+#  endif
+
+#  if ( defined STORE_PAR_ACC  &&  !defined STORE_POT_GHOST )
+#     error : STAR_FORMATION + STORE_PAR_ACC must work with STORE_POT_GHOST !!
+#  endif
+
+// warning
+// ------------------------------
+
+#endif // ifdef STAR_FORMATION
+
+
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "Aux_Check_Parameter ... done\n" );
 
 } // FUNCTION : Aux_Check_Parameter
