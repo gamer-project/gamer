@@ -55,14 +55,14 @@ void Init_PassiveVariable()
 /*
 #  if ( NCOMP_PASSIVE > 0 )
    sprintf( PassiveFieldName_Grid[0], "Metal" );
-   sprintf( PassiveFieldName_Grid[1], "Oxygen" );
-   sprintf( PassiveFieldName_Grid[2], "Fe" );
+   sprintf( PassiveFieldName_Grid[1], "HI" );
+   sprintf( PassiveFieldName_Grid[2], "HII" );
 #  endif
 
 #  if ( defined PARTICLE  &&  PAR_NPASSIVE > 0 )
-   sprintf( PassiveFieldName_Par [0], "Par_Metal" );
-   sprintf( PassiveFieldName_Par [1], "Par_Oxygen" );
-   sprintf( PassiveFieldName_Par [2], "Par_Fe" );
+   sprintf( PassiveFieldName_Par [0], "ParMetalFrac" );
+   sprintf( PassiveFieldName_Par [1], "ParHIFrac" );
+   sprintf( PassiveFieldName_Par [2], "ParHIIFrac" );
 #  endif
 */
 
@@ -79,7 +79,7 @@ void Init_PassiveVariable()
 // 1-4. particle creation time when STAR_FORMATION is enabled
 // --> we always store it as the last passive attribute
 #  if ( defined PARTICLE  &&  defined STAR_FORMATION )
-   sprintf( PassiveFieldName_Par[PAR_NPASSIVE-1], "ParCreationTime" );
+   sprintf( PassiveFieldName_Par[PAR_NPASSIVE-1], "ParCreTime" );
 #  endif
 
 
