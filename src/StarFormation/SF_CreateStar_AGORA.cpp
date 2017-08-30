@@ -73,6 +73,7 @@ void SF_CreateStar_AGORA( const int lv, const real TimeNew, const real dt, struc
    }
 
 
+// constant parameters
    const double dh             = amr->dh[lv];
    const real   dv             = CUBE( dh );
    const int    FluSg          = amr->FluSg[lv];
@@ -83,16 +84,36 @@ void SF_CreateStar_AGORA( const int lv, const real TimeNew, const real dt, struc
 // const real   GraConst       = ( OPT__GRA_P5_GRADIENT ) ? -1.0/(12.0*dh) : -1.0/(2.0*dh);
    const real   GraConst       = ( false                ) ? -1.0/(12.0*dh) : -1.0/(2.0*dh); // P5 is NOT supported yet
 
+
+// start of OpenMP parallel region
+#  pragma omp parallel
+   {
+
+// thread-private variables
+#  ifdef OPENMP
+   const int TID = omp_get_thread_num();
+#  else
+   const int TID = 0;
+#  endif
+
    double x0, y0, z0, x, y, z;
    real   GasDens, _GasDens, GasMass, _Time_FreeFall, StarMFrac, StarMass, GasMFracLeft;
-   real   NewParVar[PAR_NVAR], NewParPassive[PAR_NPASSIVE];
    real   (*fluid)[PS1][PS1][PS1]      = NULL;
    real   (*pot_ext)[GRA_NXT][GRA_NXT] = NULL;
 
+   const int MaxNewParPerPatch = CUBE(PS1);
+   real   (*NewParVar    )[PAR_NVAR    ] = new real [MaxNewParPerPatch][PAR_NVAR    ];
+   real   (*NewParPassive)[PAR_NPASSIVE] = new real [MaxNewParPerPatch][PAR_NPASSIVE];
+   long    *NewParID                     = new long [MaxNewParPerPatch];
+
+   int NNewPar;
+
 
 // loop over all real patches
-//###: OPENMP
-//#  pragma omp parallel for
+// use static schedule to ensure the bitwise reproducibility when running with the same numbers of OpenMP threads and MPI ranks
+// --> bitwise reproducibility will still break when running with different numbers of OpenMP threads and/or MPI ranks
+//     unless BITWISE_REPRODUCIBILITY is enabled
+#  pragma omp for schedule( static )
    for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
    {
 //    skip non-leaf patches
@@ -104,6 +125,7 @@ void SF_CreateStar_AGORA( const int lv, const real TimeNew, const real dt, struc
       x0      = amr->patch[0][lv][PID]->EdgeL[0] + 0.5*dh;
       y0      = amr->patch[0][lv][PID]->EdgeL[1] + 0.5*dh;
       z0      = amr->patch[0][lv][PID]->EdgeL[2] + 0.5*dh;
+      NNewPar = 0;
 
       for (int k=0; k<PS1; k++)
       for (int j=0; j<PS1; j++)
@@ -136,9 +158,7 @@ void SF_CreateStar_AGORA( const int lv, const real TimeNew, const real dt, struc
          if ( StarMass < MinStarMass )
          {
             double Random;
-//###: OPENMP
-//          drand48_r( drand_buf+thread_id, &Random )
-            drand48_r( drand_buf, &Random );
+            drand48_r( drand_buf+TID, &Random );   // ensure different threads use different drand_buf
 
             if ( (real)Random < StarMass*_MinStarMass )  StarMFrac = MinStarMass / GasMass;
             else                                         continue;
@@ -151,24 +171,30 @@ void SF_CreateStar_AGORA( const int lv, const real TimeNew, const real dt, struc
 
 
 
-//       2. create the star particles
+//       2. store the information of new star particles
+//       --> we will not create these new particles until looping over all cells in a patch in order to reduce
+//           the OpenMP synchronization overhead
 //       ===========================================================================================================
-//###: OPENMP
-//       2-1. calculate the new particle attributes
-//       2-1-1. intrinsic attributes
+//       check
+#        ifdef GAMER_DEBUG
+         if ( NNewPar >= MaxNewParPerPatch )
+            Aux_Error( ERROR_INFO, "NNewPar (%d) >= MaxNewParPerPatch (%d) !!\n", NNewPar, MaxNewParPerPatch );
+#        endif
+
+//       2-1. intrinsic attributes
          _GasDens = (real)1.0 / GasDens;
          x        = x0 + i*dh;
          y        = y0 + j*dh;
          z        = z0 + k*dh;
 
-         NewParVar[PAR_MASS] = StarMass;
-         NewParVar[PAR_POSX] = x;
-         NewParVar[PAR_POSY] = y;
-         NewParVar[PAR_POSZ] = z;
-         NewParVar[PAR_VELX] = fluid[MOMX][k][j][i]*_GasDens;
-         NewParVar[PAR_VELY] = fluid[MOMY][k][j][i]*_GasDens;
-         NewParVar[PAR_VELZ] = fluid[MOMZ][k][j][i]*_GasDens;
-         NewParVar[PAR_TIME] = TimeNew;
+         NewParVar[NNewPar][PAR_MASS] = StarMass;
+         NewParVar[NNewPar][PAR_POSX] = x;
+         NewParVar[NNewPar][PAR_POSY] = y;
+         NewParVar[NNewPar][PAR_POSZ] = z;
+         NewParVar[NNewPar][PAR_VELX] = fluid[MOMX][k][j][i]*_GasDens;
+         NewParVar[NNewPar][PAR_VELY] = fluid[MOMY][k][j][i]*_GasDens;
+         NewParVar[NNewPar][PAR_VELZ] = fluid[MOMZ][k][j][i]*_GasDens;
+         NewParVar[NNewPar][PAR_TIME] = TimeNew;
 
 //       particle acceleration
 #        ifdef STORE_PAR_ACC
@@ -219,38 +245,22 @@ void SF_CreateStar_AGORA( const int lv, const real TimeNew, const real dt, struc
             GasAcc[2] += GraConst*( pot_zp - pot_zm );
          }
 
-         NewParVar[PAR_ACCX] = GasAcc[0];
-         NewParVar[PAR_ACCY] = GasAcc[1];
-         NewParVar[PAR_ACCZ] = GasAcc[2];
+         NewParVar[NNewPar][PAR_ACCX] = GasAcc[0];
+         NewParVar[NNewPar][PAR_ACCY] = GasAcc[1];
+         NewParVar[NNewPar][PAR_ACCZ] = GasAcc[2];
 #        endif // ifdef STORE_PAR_ACC
 
-//       2-1-2. passive attributes
+
+//       2-2. passive attributes
 //###: HARD-CODED FIELDS
 //       note that we store the metal mass **fraction** instead of density in particles
 //       currently the metal field is hard coded ... ugh!
          if ( UseMetal )
-         NewParPassive[PAR_METAL_FRAC   ] = fluid[METAL][k][j][i] * _GasDens;
+         NewParPassive[NNewPar][PAR_METAL_FRAC   ] = fluid[METAL][k][j][i] * _GasDens;
 
-         NewParPassive[PAR_CREATION_TIME] = TimeNew;
+         NewParPassive[NNewPar][PAR_CREATION_TIME] = TimeNew;
 
-
-//       2-2. add particles to the particle repository
-         const long ParID = amr->Par->AddOneParticle( NewParVar, NewParPassive );
-
-
-//       2-3. add particles to the patch
-#        ifdef DEBUG_PARTICLE
-//       do not set ParPos too early since pointers to the particle repository (e.g., amr->Par->PosX)
-//       may change after calling amr->Par->AddOneParticle()
-         const real *ParPos[3] = { amr->Par->PosX, amr->Par->PosY, amr->Par->PosZ };
-         char Comment[100];
-         sprintf( Comment, "%s", __FUNCTION__ );
-
-         amr->patch[0][lv][PID]->AddParticle( 1, &ParID, &amr->Par->NPar_Lv[lv],
-                                              ParPos, amr->Par->NPar_AcPlusInac, Comment );
-#        else
-         amr->patch[0][lv][PID]->AddParticle( 1, &ParID, &amr->Par->NPar_Lv[lv] );
-#        endif
+         NNewPar ++;
 
 
 
@@ -260,7 +270,47 @@ void SF_CreateStar_AGORA( const int lv, const real TimeNew, const real dt, struc
 
          for (int v=0; v<NCOMP_TOTAL; v++)   fluid[v][k][j][i] *= GasMFracLeft;
       } // i,j,k
+
+
+
+//    4. create new star particles
+//    ===========================================================================================================
+//    use OpenMP critical construct since both amr->Par->AddOneParticle() and amr->patch[0][lv][PID]->AddParticle()
+//    will modify some global variables
+//    --> note that the order of which thread calls amr->Par->AddOneParticle() is nondeterministic and may change from run to run
+//        --> order of particles stored in the particle repository (i.e., their particle ID) may change from run to run
+//        --> particle text file may change from run to run since it's dumped according to the order of particle ID
+//    --> but it's not an issue since the actual data of each particle will not be affected
+#     pragma omp critical
+      {
+//       4-1. add particles to the particle repository
+         for (int p=0; p<NNewPar; p++)
+            NewParID[p] = amr->Par->AddOneParticle( NewParVar[p], NewParPassive[p] );
+
+
+//       4-2. add particles to the patch
+#        ifdef DEBUG_PARTICLE
+//       do not set ParPos too early since pointers to the particle repository (e.g., amr->Par->PosX)
+//       may change after calling amr->Par->AddOneParticle()
+         const real *ParPos[3] = { amr->Par->PosX, amr->Par->PosY, amr->Par->PosZ };
+         char Comment[100];
+         sprintf( Comment, "%s", __FUNCTION__ );
+
+         amr->patch[0][lv][PID]->AddParticle( NNewPar, NewParID, &amr->Par->NPar_Lv[lv],
+                                              ParPos, amr->Par->NPar_AcPlusInac, Comment );
+#        else
+         amr->patch[0][lv][PID]->AddParticle( NNewPar, NewParID, &amr->Par->NPar_Lv[lv] );
+#        endif
+      } // pragma omp critical
+
    } // for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
+
+// free memory
+   delete [] NewParVar;
+   delete [] NewParPassive;
+   delete [] NewParID;
+
+   } // end of OpenMP parallel region
 
 
 // get the total number of active particles in all MPI ranks
