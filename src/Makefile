@@ -94,7 +94,7 @@ endif # MODEL
 # (c) PARTICLE options
 # ------------------------------------------------------------------------------------
 # store particle acceleration
-#SIMU_OPTION += -DSTORE_PAR_ACC
+SIMU_OPTION += -DSTORE_PAR_ACC
 
 # allow for creating new particles after initialization
 # --> must turn on PARTICLE

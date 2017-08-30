@@ -23,6 +23,8 @@ extern double ExtAcc_AuxArray[EXT_ACC_NAUX_MAX];
 //                   --> It is because, currently, this function always uses the pot_ext[] array of each patch
 //                       to calculate the gravitationally acceleration of the new star particles
 //                3. One must invoke Buf_GetBufferData( ..., _TOTAL, ... ) after calling this function
+//                4. Currently this function does not check whether the cell mass exceeds the Jeans mass
+//                   --> Ref: "jeanmass" in star_maker_ssn.F of Enzo
 //
 // Parameter   :  lv           : Target refinement level
 //                TimeNew      : Current physical time (after advancing solution by dt)
@@ -78,13 +80,14 @@ void SF_CreateStar_AGORA( const int lv, const real TimeNew, const real dt, struc
    const real   Coeff_FreeFall = SQRT( (32.0*NEWTON_G)/(3.0*M_PI) );
    const real  _MinStarMass    = (real)1.0 / MinStarMass;
    const real   Eff_times_dt   = Efficiency*dt;
+// const real   GraConst       = ( OPT__GRA_P5_GRADIENT ) ? -1.0/(12.0*dh) : -1.0/(2.0*dh);
+   const real   GraConst       = ( false                ) ? -1.0/(12.0*dh) : -1.0/(2.0*dh); // P5 is NOT supported yet
 
-   double x0, y0, z0, x, y, z, Random;
+   double x0, y0, z0, x, y, z;
    real   GasDens, _GasDens, GasMass, _Time_FreeFall, StarMFrac, StarMass, GasMFracLeft;
    real   NewParVar[PAR_NVAR], NewParPassive[PAR_NPASSIVE];
-   real   (*fluid)[PS1][PS1][PS1] = NULL;
-   real   (*pot)[PS1][PS1]        = NULL;
-   long   ParID;
+   real   (*fluid)[PS1][PS1][PS1]      = NULL;
+   real   (*pot_ext)[GRA_NXT][GRA_NXT] = NULL;
 
 
 // loop over all real patches
@@ -96,11 +99,11 @@ void SF_CreateStar_AGORA( const int lv, const real TimeNew, const real dt, struc
       if ( amr->patch[0][lv][PID]->son != -1 )  continue;
 
 
-      fluid = amr->patch[FluSg][lv][PID]->fluid;
-      pot   = amr->patch[PotSg][lv][PID]->pot;
-      x0    = amr->patch[0][lv][PID]->EdgeL[0] + 0.5*dh;
-      y0    = amr->patch[0][lv][PID]->EdgeL[1] + 0.5*dh;
-      z0    = amr->patch[0][lv][PID]->EdgeL[2] + 0.5*dh;
+      fluid   = amr->patch[FluSg][lv][PID]->fluid;
+      pot_ext = amr->patch[PotSg][lv][PID]->pot_ext;
+      x0      = amr->patch[0][lv][PID]->EdgeL[0] + 0.5*dh;
+      y0      = amr->patch[0][lv][PID]->EdgeL[1] + 0.5*dh;
+      z0      = amr->patch[0][lv][PID]->EdgeL[2] + 0.5*dh;
 
       for (int k=0; k<PS1; k++)
       for (int j=0; j<PS1; j++)
@@ -132,6 +135,7 @@ void SF_CreateStar_AGORA( const int lv, const real TimeNew, const real dt, struc
 //       --> Eq. [5] in Goldbaum et al. (2015)
          if ( StarMass < MinStarMass )
          {
+            double Random;
 //###: OPENMP
 //          drand48_r( drand_buf+thread_id, &Random )
             drand48_r( drand_buf, &Random );
@@ -166,11 +170,59 @@ void SF_CreateStar_AGORA( const int lv, const real TimeNew, const real dt, struc
          NewParVar[PAR_VELZ] = fluid[MOMZ][k][j][i]*_GasDens;
          NewParVar[PAR_TIME] = TimeNew;
 
+//       particle acceleration
 #        ifdef STORE_PAR_ACC
-         NewParVar[PAR_ACCX] = NULL_REAL;
-         NewParVar[PAR_ACCY] = NULL_REAL;
-         NewParVar[PAR_ACCZ] = NULL_REAL;
-#        endif
+         real pot_xm = (real)0.0;
+         real pot_xp = (real)0.0;
+         real pot_ym = (real)0.0;
+         real pot_yp = (real)0.0;
+         real pot_zm = (real)0.0;
+         real pot_zp = (real)0.0;
+
+//       self-gravity potential
+         if ( OPT__GRAVITY_TYPE == GRAVITY_SELF  ||  OPT__GRAVITY_TYPE == GRAVITY_BOTH )
+         {
+            const int ii = i + GRA_GHOST_SIZE;
+            const int jj = j + GRA_GHOST_SIZE;
+            const int kk = k + GRA_GHOST_SIZE;
+
+            pot_xm = pot_ext[kk  ][jj  ][ii-1];
+            pot_xp = pot_ext[kk  ][jj  ][ii+1];
+            pot_ym = pot_ext[kk  ][jj-1][ii  ];
+            pot_yp = pot_ext[kk  ][jj+1][ii  ];
+            pot_zm = pot_ext[kk-1][jj  ][ii  ];
+            pot_zp = pot_ext[kk+1][jj  ][ii  ];
+         }
+
+//       external potential (currently useful only for ELBDM; always work with OPT__GRAVITY_TYPE == GRAVITY_SELF)
+         if ( OPT__EXTERNAL_POT )
+         {
+            pot_xm += CPU_ExternalPot( x-dh, y,    z,    TimeNew, ExtPot_AuxArray );
+            pot_xp += CPU_ExternalPot( x+dh, y,    z,    TimeNew, ExtPot_AuxArray );
+            pot_ym += CPU_ExternalPot( x,    y-dh, z,    TimeNew, ExtPot_AuxArray );
+            pot_yp += CPU_ExternalPot( x,    y+dh, z,    TimeNew, ExtPot_AuxArray );
+            pot_zm += CPU_ExternalPot( x,    y,    z-dh, TimeNew, ExtPot_AuxArray );
+            pot_zp += CPU_ExternalPot( x,    y,    z+dh, TimeNew, ExtPot_AuxArray );
+         }
+
+//       external acceleration (currently useful only for HYDRO)
+         real GasAcc[3] = { (real)0.0, (real)0.0, (real)0.0 };
+
+         if ( OPT__GRAVITY_TYPE == GRAVITY_EXTERNAL  ||  OPT__GRAVITY_TYPE == GRAVITY_BOTH )
+            CPU_ExternalAcc( GasAcc, x, y, z, TimeNew, ExtAcc_AuxArray );
+
+//       self-gravity
+         if ( OPT__GRAVITY_TYPE == GRAVITY_SELF  ||  OPT__GRAVITY_TYPE == GRAVITY_BOTH )
+         {
+            GasAcc[0] += GraConst*( pot_xp - pot_xm );
+            GasAcc[1] += GraConst*( pot_yp - pot_ym );
+            GasAcc[2] += GraConst*( pot_zp - pot_zm );
+         }
+
+         NewParVar[PAR_ACCX] = GasAcc[0];
+         NewParVar[PAR_ACCY] = GasAcc[1];
+         NewParVar[PAR_ACCZ] = GasAcc[2];
+#        endif // ifdef STORE_PAR_ACC
 
 //       2-1-2. passive attributes
 //###: HARD-CODED FIELDS
@@ -183,7 +235,7 @@ void SF_CreateStar_AGORA( const int lv, const real TimeNew, const real dt, struc
 
 
 //       2-2. add particles to the particle repository
-         ParID = amr->Par->AddOneParticle( NewParVar, NewParPassive );
+         const long ParID = amr->Par->AddOneParticle( NewParVar, NewParPassive );
 
 
 //       2-3. add particles to the patch
