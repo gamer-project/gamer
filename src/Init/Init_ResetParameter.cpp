@@ -852,7 +852,18 @@ void Init_ResetParameter()
    SF_CREATE_STAR_MIN_STAR_MASS *= Const_Msun / UNIT_M;
 
    PRINT_WARNING( SF_CREATE_STAR_MIN_STAR_MASS, FORMAT_FLT, "to be consistent with the code units" );
+
+
+// enable SF_CREATE_STAR_DET_RANDOM in the debug mode
+#  ifdef GAMER_DEBUG
+   if ( !SF_CREATE_STAR_DET_RANDOM )
+   {
+      SF_CREATE_STAR_DET_RANDOM = true;
+
+      PRINT_WARNING( SF_CREATE_STAR_DET_RANDOM, FORMAT_INT, "since GAMER_DEBUG is enabled" );
+   }
 #  endif
+#  endif // #ifdef STAR_FORMATION
 
 
 // remove symbolic constants and macros only used in this structure

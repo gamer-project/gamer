@@ -50,6 +50,8 @@ void SF_CreateStar( const int lv, const real TimeNew, const real dt )
       drand_buf = new drand48_data [NT];
 
 //    make sure that different threads in different MPI ranks have different random seeds
+//    --> even when SF_CREATE_STAR_DET_RANDOM is enabled, we still set random seeds here just in case that not all
+//        star formation methods support SF_CREATE_STAR_DET_RANDOM
       for (int t=0; t<NT; t++)   srand48_r(  SF_CREATE_STAR_RSEED + MPI_Rank*1000 + t, drand_buf + t  );
 
       FirstTime = false;
@@ -67,7 +69,8 @@ void SF_CreateStar( const int lv, const real TimeNew, const real dt )
    {
       case SF_CREATE_STAR_SCHEME_AGORA:   SF_CreateStar_AGORA( lv, TimeNew, dt, drand_buf, SF_CREATE_STAR_MIN_GAS_DENS,
                                                                SF_CREATE_STAR_MASS_EFF, SF_CREATE_STAR_MIN_STAR_MASS,
-                                                               SF_CREATE_STAR_MAX_STAR_MFRAC, UseMetal );
+                                                               SF_CREATE_STAR_MAX_STAR_MFRAC, SF_CREATE_STAR_DET_RANDOM,
+                                                               UseMetal );
       break;
 
       case SF_CREATE_STAR_SCHEME_NONE:    return;
