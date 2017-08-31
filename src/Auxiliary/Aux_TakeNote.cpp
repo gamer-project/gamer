@@ -751,6 +751,7 @@ void Aux_TakeNote()
       fprintf( Note, "SF_CREATE_STAR_SCHEME           %d\n",           SF_CREATE_STAR_SCHEME                          );
       if ( SF_CREATE_STAR_SCHEME != SF_CREATE_STAR_SCHEME_NONE ) {
       fprintf( Note, "SF_CREATE_STAR_RSEED            %d\n",           SF_CREATE_STAR_RSEED                           );
+      fprintf( Note, "SF_CREATE_STAR_DET_RANDOM       %d\n",           SF_CREATE_STAR_DET_RANDOM                      );
       fprintf( Note, "SF_CREATE_STAR_MIN_LEVEL        %d\n",           SF_CREATE_STAR_MIN_LEVEL                       );
       fprintf( Note, "SF_CREATE_STAR_MIN_GAS_DENS     %13.7e\n",       SF_CREATE_STAR_MIN_GAS_DENS                    );
       fprintf( Note, "                              = %13.7e cm^-3\n", SF_CREATE_STAR_MIN_GAS_DENS*UNIT_D/Const_mH    );

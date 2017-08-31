@@ -36,6 +36,7 @@ extern double ExtAcc_AuxArray[EXT_ACC_NAUX_MAX];
 //                Efficiency   : Gas-to-star mass efficiency                                    (--> "SF_CREATE_STAR_MASS_EFF"      )
 //                MinStarMass  : Minimum star particle mass for the stochastical star formation (--> "SF_CREATE_STAR_MIN_STAR_MASS" )
 //                MaxStarMFrac : Maximum gas mass fraction allowed to convert to stars          (--> "SF_CREATE_STAR_MAX_STAR_MFRAC")
+//                DetRandom    : Make random numbers determinisitic                             (--> "SF_CREATE_STAR_DET_RANDOM"    )
 //                UseMetal     : Store the metal mass fraction in star particles
 //
 // Return      :  1. Particle repository will be updated
@@ -43,7 +44,7 @@ extern double ExtAcc_AuxArray[EXT_ACC_NAUX_MAX];
 //-------------------------------------------------------------------------------------------------------
 void SF_CreateStar_AGORA( const int lv, const real TimeNew, const real dt, struct drand48_data *drand_buf,
                           const real GasDensThres, const real Efficiency, const real MinStarMass, const real MaxStarMFrac,
-                          const bool UseMetal )
+                          const bool DetRandom, const bool UseMetal )
 {
 
 // check
@@ -118,6 +119,18 @@ void SF_CreateStar_AGORA( const int lv, const real TimeNew, const real dt, struc
    {
 //    skip non-leaf patches
       if ( amr->patch[0][lv][PID]->son != -1 )  continue;
+
+
+//    to get deterministic and different random numbers for all patches, reset the random seed of each patch according to
+//    its location and time
+//    --> patches at different time and/or AMR levels may still have the same random seeds...
+      if ( DetRandom )
+      {
+//       the factor "1.0e6" in the end is just to make random seeds at different times more different, especially for
+//       extremely small time-step
+         const long RSeed = SF_CREATE_STAR_RSEED + amr->patch[0][lv][PID]->LB_Idx + long(TimeNew*UNIT_T/Const_yr*1.0e6);
+         srand48_r( RSeed, drand_buf+TID );
+      }
 
 
       fluid   = amr->patch[FluSg][lv][PID]->fluid;
