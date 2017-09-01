@@ -128,7 +128,7 @@ for ds in ts.piter():
 #  (2) gas temperature
    ax[0][1].plot( radius, gas_temp, 'r-o', lw=2, mec='none', ms=markersize )
    ax[0][1].set_yscale( 'log', nonposy='clip' )
-   ax[0][1].set_ylim( 1.0e3, 1.0e4 )
+   ax[0][1].set_ylim( 1.0e1, 1.0e4 )
    ax[0][1].yaxis.set_minor_locator( plt.LogLocator(base=10.0, subs=[2.0,5.0,8.0]) )
    ax[0][1].set_ylabel( "$\mathrm{T\ [K]}$", fontsize='large' )
 
