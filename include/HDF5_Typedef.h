@@ -483,6 +483,7 @@ struct InputPara_t
 #  ifdef STAR_FORMATION
    int    SF_CreateStar_Scheme;
    int    SF_CreateStar_RSeed;
+   int    SF_CreateStar_DetRandom;
    int    SF_CreateStar_MinLevel;
    double SF_CreateStar_MinGasDens;
    double SF_CreateStar_MassEff;
