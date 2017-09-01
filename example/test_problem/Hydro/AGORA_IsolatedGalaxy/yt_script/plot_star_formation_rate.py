@@ -18,17 +18,17 @@ ds = yt.load( filein )
 
 # define the particle filter for the newly formed stars
 def new_star( pfilter, data ):
-   filter = data[ "all", "ParCreationTime" ] > 0
+   filter = data[ "all", "ParCreTime" ] > 0
    return filter
 
-add_particle_filter( "new_star", function=new_star, filtered_type="all", requires=["ParCreationTime"] )
+add_particle_filter( "new_star", function=new_star, filtered_type="all", requires=["ParCreTime"] )
 ds.add_particle_filter( "new_star" )
 
 
 # get the mass and creation time of the new stars
 ad            = ds.all_data()
-mass          = ad[ "new_star", "ParMass"         ].in_units( "Msun" )
-creation_time = ad[ "new_star", "ParCreationTime" ].in_units( "Myr" )
+mass          = ad[ "new_star", "ParMass"    ].in_units( "Msun" )
+creation_time = ad[ "new_star", "ParCreTime" ].in_units( "Myr" )
 
 
 # bin the data
