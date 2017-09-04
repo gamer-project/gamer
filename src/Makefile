@@ -767,7 +767,7 @@ $(OBJ_PATH)/%.o : %.cpp
 $(EXECUTABLE) : $(OBJ)
 	$(CXX) -o $@ $^ $(LIB) $(OPENMP)
 	rm ./*.linkinfo -f
-	cp $(EXECUTABLE) ../bin/run/
+	cp $(EXECUTABLE) ../bin/
 
 
 # clean
