@@ -1,11 +1,32 @@
+import argparse
+import sys
 import yt
 
-yt.enable_parallelism()
+# load the command-line parameters
+parser = argparse.ArgumentParser( description='Plot the particle projection' )
 
-idx_start   = 0
-idx_end     = 50
-didx        = 1
-prefix      = '../Data_'
+parser.add_argument( '-s', action='store', required=True,  type=int, dest='idx_start',
+                     help='first data index' )
+parser.add_argument( '-e', action='store', required=True,  type=int, dest='idx_end',
+                     help='last data index' )
+parser.add_argument( '-d', action='store', required=False, type=int, dest='didx',
+                     help='delta data index [%(default)d]', default=1 )
+
+args=parser.parse_args()
+
+# take note
+print( '\nCommand-line arguments:' )
+print( '-------------------------------------------------------------------' )
+for t in range( len(sys.argv) ):
+   print str(sys.argv[t]),
+print( '' )
+print( '-------------------------------------------------------------------\n' )
+
+
+idx_start   = args.idx_start
+idx_end     = args.idx_end
+didx        = args.didx
+prefix      = '../'
 
 colormap    = 'algae'
 width_kpc   = 30
@@ -13,7 +34,10 @@ depth_kpc   = 30
 center_mode = 'c'
 dpi         = 150
 
-ts = yt.load( [ prefix+'%06d'%idx for idx in range(idx_start, idx_end+1, didx) ] )
+
+yt.enable_parallelism()
+
+ts = yt.load( [ prefix+'/Data_%06d'%idx for idx in range(idx_start, idx_end+1, didx) ] )
 #ts = yt.load( 'Data_??????' )
 
 
