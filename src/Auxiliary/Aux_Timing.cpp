@@ -512,8 +512,8 @@ void Timing__EvolveLevel( const char FileName[], const double Time_LB_Main[][3] 
                         Time_LB[lv][ 0][v], Time_LB[lv][27][v], Time_LB[lv][ 1][v], Time_LB[lv][ 2][v], Time_LB[lv][ 3][v], Time_LB[lv][28][v], Time_LB[lv][ 4][v],
                         Time_LB[lv][ 5][v], Time_LB[lv][ 6][v], Time_LB[lv][ 7][v], Time_LB[lv][ 8][v], Time_LB[lv][ 9][v], Time_LB[lv][10][v],
                         Time_LB[lv][11][v], Time_LB[lv][12][v], Time_LB[lv][13][v], Time_LB[lv][14][v], Time_LB[lv][15][v], Time_LB[lv][16][v],
-                        Time_LB[lv][19][v], Time_LB[lv][20][v], Time_LB[lv][17][v], Time_LB[lv][21][v], Time_LB[lv][18][v], Time_LB[lv][22][v],
-                        Time_LB[lv][23][v], Time_LB[lv][24][v], Time_LB[lv][25][v], Time_LB[lv][26][v],
+                        Time_LB[lv][17][v], Time_LB[lv][18][v], Time_LB[lv][21][v], Time_LB[lv][22][v], Time_LB[lv][19][v], Time_LB[lv][23][v],
+                        Time_LB[lv][20][v], Time_LB[lv][24][v], Time_LB[lv][25][v], Time_LB[lv][26][v],
                         Sum_LB [lv][v] );
             }
 
@@ -564,8 +564,8 @@ void Timing__EvolveLevel( const char FileName[], const double Time_LB_Main[][3] 
                   Time_LB[0][ 0][v], Time_LB[0][27][v], Time_LB[0][ 1][v], Time_LB[0][ 2][v], Time_LB[0][ 3][v], Time_LB[0][28][v], Time_LB[0][ 4][v],
                   Time_LB[0][ 5][v], Time_LB[0][ 6][v], Time_LB[0][ 7][v], Time_LB[0][ 8][v], Time_LB[0][ 9][v], Time_LB[0][10][v],
                   Time_LB[0][11][v], Time_LB[0][12][v], Time_LB[0][13][v], Time_LB[0][14][v], Time_LB[0][15][v], Time_LB[0][16][v],
-                  Time_LB[0][19][v], Time_LB[0][20][v], Time_LB[0][17][v], Time_LB[0][21][v], Time_LB[0][18][v], Time_LB[0][22][v],
-                  Time_LB[0][23][v], Time_LB[0][24][v], Time_LB[0][25][v], Time_LB[0][26][v],
+                  Time_LB[0][17][v], Time_LB[0][18][v], Time_LB[0][21][v], Time_LB[0][22][v], Time_LB[0][19][v], Time_LB[0][23][v],
+                  Time_LB[0][20][v], Time_LB[0][24][v], Time_LB[0][25][v], Time_LB[0][26][v],
                   Sum_LB [0][v] );
 
          fprintf( File, "\n\n" );
