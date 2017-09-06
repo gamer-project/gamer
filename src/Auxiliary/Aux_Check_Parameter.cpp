@@ -164,6 +164,9 @@ void Aux_Check_Parameter()
                  "OVERLAP_MPI", "OPT__OVERLAP_MPI" );
 #  endif
 
+   if ( OPT__OVERLAP_MPI )
+      Aux_Error( ERROR_INFO, "\"%s\" is NOT supported yet !!\n", "OPT__OVERLAP_MPI" );
+
    if ( AUTO_REDUCE_DT )
    {
       if ( OPT__OVERLAP_MPI )

@@ -143,6 +143,8 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
       if ( OPT__VERBOSE  &&  MPI_Rank == 0 )
          Aux_Message( stdout, "   Lv %2d: Flu_AdvanceDt, counter = %8ld ... ", lv, AdvanceCounter[lv] );
 
+      if ( false ) {}
+      /*
       if ( OPT__OVERLAP_MPI )
       {
 //       enable OpenMP nested parallelism
@@ -182,6 +184,7 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
          omp_set_nested( false );
 #        endif
       } // if ( OPT__OVERLAP_MPI )
+      */
 
       else
       {
@@ -292,6 +295,8 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
 
       else // lv > 0
       {
+         if ( false ) {}
+         /*
          if ( OPT__OVERLAP_MPI )
          {
 //          enable OpenMP nested parallelism
@@ -333,6 +338,7 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
             omp_set_nested( false );
 #           endif
          } // if ( OPT__OVERLAP_MPI )
+         */
 
          else
          {
