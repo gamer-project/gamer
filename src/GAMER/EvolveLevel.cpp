@@ -164,10 +164,10 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
 #              ifdef GRAVITY
                if ( SelfGravity )
                TIMING_FUNC(   Buf_GetBufferData( lv, SaveSg_Flu, NULL_INT, DATA_GENERAL, _DENS,  Rho_ParaBuf, USELB_YES ),
-                              Timer_GetBuf[lv][0]  );
+                              Timer_GetBuf[lv][0]   );
 #              else
                TIMING_FUNC(   Buf_GetBufferData( lv, SaveSg_Flu, NULL_INT, DATA_GENERAL, _TOTAL, Flu_ParaBuf, USELB_YES ),
-                              Timer_GetBuf[lv][2]  );
+                              Timer_GetBuf[lv][2]   );
 #              endif
             }
 
@@ -175,7 +175,7 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
             {
 //             advance patches not needed to be sent
                TIMING_FUNC(   Flu_AdvanceDt( lv, TimeNew, TimeOld, dt_SubStep, SaveSg_Flu, true, false ),
-                              Timer_Flu_Advance[lv]  );
+                              Timer_Flu_Advance[lv]   );
             }
          } // OpenMP parallel sections
 
@@ -191,7 +191,7 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
          int FluStatus_AllRank;
 
          TIMING_FUNC(   FluStatus_AllRank = Flu_AdvanceDt( lv, TimeNew, TimeOld, dt_SubStep, SaveSg_Flu, false, false ),
-                        Timer_Flu_Advance[lv]  );
+                        Timer_Flu_Advance[lv]   );
 
 //       do nothing if AUTO_REDUCE_DT is disabled
          if ( AUTO_REDUCE_DT )
@@ -234,15 +234,6 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
                continue;
             }
          } // if ( AUTO_REDUCE_DT )
-
-#        ifdef GRAVITY
-         if ( SelfGravity )
-         TIMING_FUNC(   Buf_GetBufferData( lv, SaveSg_Flu, NULL_INT, DATA_GENERAL, _DENS,  Rho_ParaBuf, USELB_YES ),
-                        Timer_GetBuf[lv][0]  );
-#        else
-         TIMING_FUNC(   Buf_GetBufferData( lv, SaveSg_Flu, NULL_INT, DATA_GENERAL, _TOTAL, Flu_ParaBuf, USELB_YES ),
-                        Timer_GetBuf[lv][2]  );
-#        endif
       } // if ( OPT__OVERLAP_MPI ) ... else ...
 
       amr->FluSg    [lv]             = SaveSg_Flu;
@@ -262,11 +253,11 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
       TIMING_FUNC(   Par_UpdateParticle( lv, TimeNew, TimeOld, PAR_UPSTEP_PRED,
                                          (amr->Par->Integ == PAR_INTEG_EULER) ? StoreAcc_Yes    : StoreAcc_No,
                                          (amr->Par->Integ == PAR_INTEG_EULER) ? UseStoredAcc_No : UseStoredAcc_Yes ),
-                     Timer_Par_Update[lv][0]  );
+                     Timer_Par_Update[lv][0]   );
 #     else
       TIMING_FUNC(   Par_UpdateParticle( lv, TimeNew, TimeOld, PAR_UPSTEP_PRED,
                                          StoreAcc_No, UseStoredAcc_No ),
-                     Timer_Par_Update[lv][0]  );
+                     Timer_Par_Update[lv][0]   );
 #     endif
 
       if ( OPT__VERBOSE  &&  MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );
@@ -275,7 +266,7 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
          Aux_Message( stdout, "   Lv %2d: Par_PassParticle2Sibling %9s... ", lv, "" );
 
       TIMING_FUNC(   Par_PassParticle2Sibling( lv, TimingSendPar_Yes ),
-                     Timer_Par_2Sib[lv]  );
+                     Timer_Par_2Sib[lv]   );
 
       if ( OPT__VERBOSE  &&  MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );
 #     endif
@@ -317,11 +308,11 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
                   if ( SelfGravity )
                   TIMING_FUNC(   Buf_GetBufferData( lv, NULL_INT, SaveSg_Pot, POT_FOR_POISSON, _POTE,
                                                     Pot_ParaBuf, USELB_YES ),
-                                 Timer_GetBuf[lv][1]  );
+                                 Timer_GetBuf[lv][1]   );
 
                   TIMING_FUNC(   Buf_GetBufferData( lv, SaveSg_Flu, NULL_INT, DATA_GENERAL,    _TOTAL,
                                                     Flu_ParaBuf, USELB_YES ),
-                                 Timer_GetBuf[lv][2]  );
+                                 Timer_GetBuf[lv][2]   );
                }
 
 #              pragma omp section
@@ -329,7 +320,7 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
 //                advance patches not needed to be sent
                   TIMING_FUNC(   Gra_AdvanceDt( lv, TimeNew, TimeOld, dt_SubStep, SaveSg_Flu, SaveSg_Pot,
                                  SelfGravity, true, true, false),
-                                 Timer_Gra_Advance[lv]  );
+                                 Timer_Gra_Advance[lv]   );
                }
             } // OpenMP parallel sections
 
@@ -342,16 +333,19 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
 
          else
          {
+//          exchange the updated density field in the buffer patches for the Poisson solver
+            if ( SelfGravity )
+            TIMING_FUNC(   Buf_GetBufferData( lv, SaveSg_Flu, NULL_INT, DATA_GENERAL, _DENS, Rho_ParaBuf, USELB_YES ),
+                           Timer_GetBuf[lv][0]   );
+
             TIMING_FUNC(   Gra_AdvanceDt( lv, TimeNew, TimeOld, dt_SubStep, SaveSg_Flu, SaveSg_Pot,
                                           SelfGravity, true, false, false ),
-                           Timer_Gra_Advance[lv]  );
+                           Timer_Gra_Advance[lv]   );
 
+//          exchange the updated potential in the buffer patches
             if ( SelfGravity )
             TIMING_FUNC(   Buf_GetBufferData( lv, NULL_INT, SaveSg_Pot, POT_FOR_POISSON, _POTE,  Pot_ParaBuf, USELB_YES ),
-                           Timer_GetBuf[lv][1]  );
-
-            TIMING_FUNC(   Buf_GetBufferData( lv, SaveSg_Flu, NULL_INT, DATA_GENERAL,    _TOTAL, Flu_ParaBuf, USELB_YES ),
-                           Timer_GetBuf[lv][2]  );
+                           Timer_GetBuf[lv][1]   );
          } // if ( OPT__OVERLAP_MPI ) ... else ...
 
 //       note that the current implementation of external potential does NOT use PotSg/PotSgTime
@@ -378,10 +372,10 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
 
 #        ifdef STORE_PAR_ACC
          TIMING_FUNC(   Par_UpdateParticle( lv, TimeNew, TimeOld, PAR_UPSTEP_CORR, StoreAcc_Yes, UseStoredAcc_No ),
-                        Timer_Par_Update[lv][1]  );
+                        Timer_Par_Update[lv][1]   );
 #        else
          TIMING_FUNC(   Par_UpdateParticle( lv, TimeNew, TimeOld, PAR_UPSTEP_CORR, StoreAcc_No,  UseStoredAcc_No ),
-                        Timer_Par_Update[lv][1]  );
+                        Timer_Par_Update[lv][1]   );
 #        endif
 
          if ( OPT__VERBOSE  &&  MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );
@@ -394,10 +388,10 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
 //          apply velocity correction for particles just travelling from lv to lv-1
 #           ifdef STORE_PAR_ACC
             TIMING_FUNC(   Par_UpdateParticle( lv-1, TimeNew, TimeOld, PAR_UPSTEP_CORR, StoreAcc_Yes, UseStoredAcc_No ),
-                           Timer_Par_Update[lv][2]  );
+                           Timer_Par_Update[lv][2]   );
 #           else
             TIMING_FUNC(   Par_UpdateParticle( lv-1, TimeNew, TimeOld, PAR_UPSTEP_CORR, StoreAcc_No,  UseStoredAcc_No ),
-                           Timer_Par_Update[lv][2]  );
+                           Timer_Par_Update[lv][2]   );
 #           endif
 
             if ( OPT__VERBOSE  &&  MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );
@@ -408,7 +402,7 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
          Aux_Message( stdout, "   Lv %2d: Par_PassParticle2Son %12s ... ", lv, "" );
 
       TIMING_FUNC(   Par_PassParticle2Son_AllPatch( lv, TimingSendPar_Yes ),
-                     Timer_Par_2Son[lv]  );
+                     Timer_Par_2Son[lv]   );
 
       if ( OPT__VERBOSE  &&  MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );
 #     endif
@@ -429,18 +423,9 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
          if ( OPT__VERBOSE  &&  MPI_Rank == 0 )
             Aux_Message( stdout, "   Lv %2d: Grackle_AdvanceDt, counter = %4ld ... ", lv, AdvanceCounter[lv] );
 
+//       we have assumed that Grackle_AdvanceDt() requires no ghost zones
          TIMING_FUNC(   Grackle_AdvanceDt( lv, TimeNew, TimeOld, dt_SubStep, SaveSg_Che, false, false ),
-                        Timer_Che_Advance[lv]  );
-
-#        if   ( DUAL_ENERGY == DE_ENPY )
-         const int VarModifiedByGrackle = ( _ENGY | _ENPY );
-#        elif ( DUAL_ENERGY == DE_EINT )
-         const int VarModifiedByGrackle = ( _ENGY | _EINT );
-#        else
-         const int VarModifiedByGrackle = ( _ENGY );
-#        endif
-         TIMING_FUNC(   Buf_GetBufferData( lv, SaveSg_Che, NULL_INT, DATA_GENERAL, VarModifiedByGrackle, Flu_ParaBuf, USELB_YES ),
-                        Timer_GetBuf[lv][8]  );
+                        Timer_Che_Advance[lv]   );
 
          if ( OPT__VERBOSE  &&  MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );
       } // if ( GRACKLE_MODE != GRACKLE_MODE_NONE )
@@ -456,17 +441,20 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
          if ( OPT__VERBOSE  &&  MPI_Rank == 0 )
             Aux_Message( stdout, "   Lv %2d: SF_CreateStar, counter = %8ld ... ", lv, AdvanceCounter[lv] );
 
+//       we have assumed that SF_CreateStar() requires no ghost zones
          TIMING_FUNC(   SF_CreateStar( lv, TimeNew, dt_SubStep ),
-                        Timer_SF[lv]  );
-
-         TIMING_FUNC(   Buf_GetBufferData( lv, amr->FluSg[lv], NULL_INT, DATA_GENERAL, _TOTAL, Flu_ParaBuf, USELB_YES ),
-                        Timer_GetBuf[lv][2]  );
+                        Timer_SF[lv]   );
 
          if ( OPT__VERBOSE  &&  MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );
       } // if ( SF_CREATE_STAR_SCHEME != SF_CREATE_STAR_SCHEME_NONE )
 #     endif // #ifdef STAR_FORMATION
 
 // ===============================================================================================
+
+
+//    exchange the updated fluid field in the buffer patches
+      TIMING_FUNC(   Buf_GetBufferData( lv, SaveSg_Flu, NULL_INT, DATA_GENERAL, _TOTAL, Flu_ParaBuf, USELB_YES ),
+                     Timer_GetBuf[lv][2]   );
 
 
       dTime_SoFar       += dTime_SubStep;
@@ -503,19 +491,19 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
 
          if ( OPT__FIXUP_FLUX )
          TIMING_FUNC(   Buf_GetBufferData( lv, NULL_INT, NULL_INT, COARSE_FINE_FLUX, _FLUX_TOTAL, NULL_INT, USELB_YES ),
-                        Timer_GetBuf[lv][6]  );
+                        Timer_GetBuf[lv][6]   );
 
-         TIMING_FUNC(   Flu_FixUp( lv ),   Timer_FixUp[lv]  );
+         TIMING_FUNC(   Flu_FixUp( lv ),   Timer_FixUp[lv]   );
 
 #        ifdef LOAD_BALANCE
          if ( OPT__FIXUP_RESTRICT )
          TIMING_FUNC(   LB_GetBufferData( lv, amr->FluSg[lv], NULL_INT, DATA_RESTRICT, _TOTAL, NULL_INT ),
-                        Timer_GetBuf[lv][7]  );
+                        Timer_GetBuf[lv][7]   );
 #        endif
 
          if ( OPT__FIXUP_FLUX  ||  OPT__FIXUP_RESTRICT )
          TIMING_FUNC(   Buf_GetBufferData( lv, amr->FluSg[lv], NULL_INT, DATA_AFTER_FIXUP, _TOTAL, Flu_ParaBuf, USELB_YES  ),
-                        Timer_GetBuf[lv][3]  );
+                        Timer_GetBuf[lv][3]   );
 
          if ( OPT__VERBOSE  &&  MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );
 // ===============================================================================================
@@ -579,7 +567,7 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
 #        ifdef STORE_POT_GHOST
          if ( SelfGravity )
          TIMING_FUNC(   Poi_StorePotWithGhostZone( lv+1, amr->PotSg[lv+1], false ),
-                        Timer_Refine[lv]  );
+                        Timer_Refine[lv]   );
 #        endif
 
          if ( OPT__VERBOSE  &&  MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );

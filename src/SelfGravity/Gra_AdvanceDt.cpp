@@ -138,9 +138,6 @@ void Gra_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, co
          TIMING_FUNC(   Flu_ResetByUser_API_Ptr( lv, SaveSg_Flu, TimeNew ),
                         Timer_Gra_Advance[lv]   );
 
-         TIMING_FUNC(   Buf_GetBufferData( lv, SaveSg_Flu, NULL_INT, DATA_GENERAL, _TOTAL, Flu_ParaBuf, USELB_YES ),
-                        Timer_GetBuf[lv][2]  );
-
          amr->FluSg[0] = SaveSg_Flu;
       } // if ( Gravity )
    } // if ( lv == 0 )
