@@ -72,7 +72,7 @@ DT__FLUID_INIT               -1.0         # dt criterion: DT__FLUID at the first
 DT__GRAVITY                   0.35355     # dt criterion: gravity solver safety factor (<0=auto) [-1.0]
 DT__PARVEL                    0.5         # dt criterion: particle velocity safety factor [0.5]
 DT__PARVEL_MAX               -1.0         # dt criterion: maximum allowed dt from particle velocity (<0=off) [-1.0]
-DT__PARACC                    0.5         # dt criterion: particle acceleration safety factor (0=off) [0.5] ##STORE_PAR_ACC ONLY##
+DT__PARACC                    0.0         # dt criterion: particle acceleration safety factor (0=off) [0.5] ##STORE_PAR_ACC ONLY##
 DT__SYNC_PARENT_LV            0.05        # dt criterion: allow dt to adjust by (1.0+DT__SYNC_PARENT) in order to synchronize
                                           #               with the parent level (for OPT__DT_LEVEL==3 only) [0.1]
 DT__SYNC_CHILDREN_LV          0.1         # dt criterion: allow dt to adjust by (1.0-DT__SYNC_CHILDREN) in order to synchronize
