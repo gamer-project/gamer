@@ -34,11 +34,11 @@ while true; do
 #     restart simulation from the last snapshot automatically
       if [ ${RESTART_AUTO} -eq 1 ]; then
 
-#        check the retart counter
+#        check the restart counter
          if [ ${RESTART_COUNT} -lt ${RESTART_COUNT_MAX} ]; then
 
 #           turn on the restart mode in the runtime parameter file
-            RESTART_LINE=$(sed -n '/\ OPT__INIT\ /=' Input__Parameter)
+            RESTART_LINE=$(sed -n '/OPT__INIT\ /=' Input__Parameter)
             sed -i "${RESTART_LINE}s/1\ /2\ /" Input__Parameter
             sed -i "${RESTART_LINE}s/3\ /2\ /" Input__Parameter
 
