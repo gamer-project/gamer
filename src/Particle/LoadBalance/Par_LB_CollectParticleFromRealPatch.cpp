@@ -144,11 +144,15 @@ void Par_LB_CollectParticleFromRealPatch( const int lv,
 
 
 // 1. get the number of particles to be sent
-   int *SendBuf_NParEachPatch = new int [Real_NPatchTotal];
+   const int NParVar = 4;  // mass + position*3
+
+   int  *SendBuf_NParEachPatch = new int  [Real_NPatchTotal];
+   long *SendBuf_Offset        = new long [Real_NPatchTotal];
 
    int PID, NParThisPatch, NSendParTotal = 0;
 
 // loop over all target real patches
+#  pragma omp parallel for private( PID, NParThisPatch ) reduction( +:NSendParTotal ) schedule( PAR_OMP_SCHED, PAR_OMP_SCHED_CHUNK )
    for (int t=0; t<Real_NPatchTotal; t++)
    {
       PID = Real_PIDList[t];
@@ -167,22 +171,27 @@ void Par_LB_CollectParticleFromRealPatch( const int lv,
       SendBuf_NParEachPatch[t]  = NParThisPatch;
    } // for (int t=0; t<Real_NPatchTotal; t++)
 
+// get the array offset of each patch (mainly for the OpenMP parallelization)
+   SendBuf_Offset[0] = 0L;
+   for (int t=0; t<Real_NPatchTotal-1; t++)  SendBuf_Offset[t+1] = SendBuf_Offset[t] + long(SendBuf_NParEachPatch[t]*NParVar);
+
 
 // 2. prepare the particle data to be sent
-   const int NParVar = 4;  // mass*1 + position*3
-
 // reuse the MPI send buffer declared in LB_GetBufferData for better MPI performance
    real *SendBuf_ParDataEachPatch = LB_GetBufferData_MemAllocate_Send( NSendParTotal*NParVar );
 
-   real  *SendPtr         = SendBuf_ParDataEachPatch;
+   real  *SendPtr         = NULL;
    long  *ParList         = NULL;
    real **ParMassPos_Copy = NULL;
    long   ParID;
 
+#  pragma omp parallel for private( PID, NParThisPatch, SendPtr, ParList, ParMassPos_Copy, ParID ) \
+                           schedule( PAR_OMP_SCHED, PAR_OMP_SCHED_CHUNK )
    for (int t=0; t<Real_NPatchTotal; t++)
    {
       PID           = Real_PIDList         [t];
       NParThisPatch = SendBuf_NParEachPatch[t];
+      SendPtr       = SendBuf_ParDataEachPatch + SendBuf_Offset[t];
 
 //    skip patches with no particles
       if ( NParThisPatch == 0 )  continue;
@@ -276,15 +285,23 @@ void Par_LB_CollectParticleFromRealPatch( const int lv,
 
 // free the send buffer in advance to save memory
    delete [] SendBuf_NParEachPatch;
+   delete [] SendBuf_Offset;
 
 
 // 4. store the received particle data to each patch
-   const real *RecvPtr = RecvBuf_ParDataEachPatch;
+   const real *RecvPtr = NULL;
 
+// 4-0. get the array offset of each patch (mainly for the OpenMP parallelization)
+   long *RecvBuf_Offset = new long [Buff_NPatchTotal];
+   RecvBuf_Offset[0] = 0L;
+   for (int t=0; t<Buff_NPatchTotal-1; t++)  RecvBuf_Offset[t+1] = RecvBuf_Offset[t] + long(RecvBuf_NParEachPatch[t]*NParVar);
+
+#  pragma omp parallel for private( PID, NParThisPatch, RecvPtr ) schedule( PAR_OMP_SCHED, PAR_OMP_SCHED_CHUNK )
    for (int t=0; t<Buff_NPatchTotal; t++)
    {
       PID           = Buff_PIDList         [t];
       NParThisPatch = RecvBuf_NParEachPatch[t];
+      RecvPtr       = RecvBuf_ParDataEachPatch + RecvBuf_Offset[t];
 
 //    4-1. set the number of particles in this patch
       amr->patch[0][lv][PID]->NPar_Copy = NParThisPatch;
@@ -336,6 +353,7 @@ void Par_LB_CollectParticleFromRealPatch( const int lv,
 
 // 5. free memory
    delete [] RecvBuf_NParEachPatch;
+   delete [] RecvBuf_Offset;
 
 } // FUNCTION : Par_LB_CollectParticleFromRealPatch
 
