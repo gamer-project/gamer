@@ -32,7 +32,7 @@ void Gra_Close( const int lv, const int SaveSg, const real h_Flu_Array_G[][GRA_N
    int N, PID, PID0;
 
 
-#  pragma omp parallel for private( N, PID, PID0 ) schedule( runtime )
+#  pragma omp parallel for private( N, PID, PID0 ) schedule( static )
    for (int TID=0; TID<NPG; TID++)
    {
       PID0 = PID0_List[TID];

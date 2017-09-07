@@ -9,9 +9,13 @@
 // Function    :  Init_OpenMP
 // Description :  Initialize OpenMP
 //
-// Note        :  The schedule clause specified here only applies to all solver-related routines
-//                (e.g., XXX_Prepare_XXX, XXX_Close, CPU_XXXSolver_XXX, Flu_FixUp, Flu_Restrict, Flag_Real,
-//                 Hydro_GetTimeStep_Gravity, ...)
+// Note        :  1. The schedule clause specified here only applies to those using the "runtime" schedule
+//                   --> We adopt the "runtime" schedule if the workload of each iteration may be different
+//                   --> We adopt the "static" schedule if the workload of each iteration is the same
+//                   --> The schedule of most particle routines is however controlled by the symbolic constant
+//                       "PAR_OMP_SCHED" and "PAR_OMP_SCHED_CHUNK" defined in "Macro.h"
+//
+// Return      :  None
 //-------------------------------------------------------------------------------------------------------
 void Init_OpenMP()
 {

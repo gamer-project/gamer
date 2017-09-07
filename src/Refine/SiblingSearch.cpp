@@ -27,7 +27,7 @@ void SiblingSearch( const int lv )
 
    
 // lv > 0 :
-#  pragma omp parallel for
+#  pragma omp parallel for schedule( runtime )
    for (int PID=0; PID<amr->num[lv]; PID++)
    {
       int FaSib, FaSibSon;

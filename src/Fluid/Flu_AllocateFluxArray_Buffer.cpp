@@ -28,7 +28,7 @@ void Flu_AllocateFluxArray_Buffer( const int lv )
    {
       for (int t=0; t<4; t++)    Table[t] = TABLE_03(s,t);
 
-#     pragma omp parallel for private( PID, SonPID, SibPID )
+#     pragma omp parallel for private( PID, SonPID, SibPID ) schedule( runtime )
       for (int PID0=amr->NPatchComma[lv][s+1]; PID0<amr->NPatchComma[lv][s+2]; PID0+=8)
       for (int t=0; t<4; t++)
       {

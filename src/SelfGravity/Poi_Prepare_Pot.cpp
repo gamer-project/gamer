@@ -122,7 +122,7 @@ void Poi_Prepare_Pot( const int lv, const double PrepTime, real h_Pot_Array_P_In
 
 
 //    prepare the coarse-grid potential for eight patches (one patch group) at a time
-#     pragma omp for schedule( runtime )
+#     pragma omp for schedule( static )
       for (int TID=0; TID<NPG; TID++)
       {
          PID0  = PID0_List[TID];

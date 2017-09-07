@@ -24,7 +24,7 @@ void dt_Prepare_Flu( const int lv, real h_Flu_Array_T[][NCOMP_FLUID][ CUBE(PS1) 
 
    int N, PID, PID0;
 
-#  pragma omp parallel for private( N, PID, PID0 ) schedule( runtime )
+#  pragma omp parallel for private( N, PID, PID0 ) schedule( static )
    for (int TID=0; TID<NPG; TID++)
    {
       PID0 = PID0_List[TID];

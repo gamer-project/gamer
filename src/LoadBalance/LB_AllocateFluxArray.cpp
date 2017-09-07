@@ -55,7 +55,7 @@ void LB_AllocateFluxArray( const int FaLv )
 
 // 1. deallocate the flux arrays allocated previously
 // ============================================================================================================
-#  pragma omp parallel for
+#  pragma omp parallel for schedule( runtime )
    for (int FaPID=0; FaPID<amr->NPatchComma[FaLv][3]; FaPID++)  amr->patch[0][FaLv][FaPID]->fdelete();
 
 

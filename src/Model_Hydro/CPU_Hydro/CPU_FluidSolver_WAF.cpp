@@ -139,7 +139,7 @@ void CPU_FluidSolver_WAF( real Flu_Array_In [][NCOMP_TOTAL][ FLU_NXT*FLU_NXT*FLU
 
       else // z->y->x
       {
-#        pragma omp for
+#        pragma omp for schedule( runtime )
          for (int P=0; P<NPatchGroup; P++)
          {
 //          x-y-z --> z-x-y for conservative variables
@@ -187,7 +187,7 @@ void CPU_FluidSolver_WAF( real Flu_Array_In [][NCOMP_TOTAL][ FLU_NXT*FLU_NXT*FLU
 //    copy the updated fluid variables into the output array "Flu_Array_Out"
       int ID1, ID2, ii, jj, kk;
 
-#     pragma omp for
+#     pragma omp for schedule( runtime )
       for (int P=0; P<NPatchGroup; P++)   {
       for (int v=0; v<5; v++)             {
       for (int k=0; k<PS2; k++)           {  kk = k + FLU_GHOST_SIZE;

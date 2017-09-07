@@ -93,7 +93,7 @@ void Par_CollectParticle2OneLevel( const int FaLv, const bool PredictPos, const 
 
 
 //###NOTE: OpenMP may not improve performance here
-#  pragma omp parallel for schedule( runtime )
+#  pragma omp parallel for schedule( PAR_OMP_SCHED, PAR_OMP_SCHED_CHUNK )
    for (int FaPID=0; FaPID<amr->NPatchComma[FaLv][1]; FaPID++)
    {
 //    check

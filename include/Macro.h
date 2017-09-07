@@ -599,6 +599,13 @@
 #endif
 
 
+// OpenMP scheduling for particle routines
+#if ( defined PARTICLE  &&  defined OPENMP )
+#  define PAR_OMP_SCHED          dynamic
+#  define PAR_OMP_SCHED_CHUNK    8
+#endif
+
+
 // NULL values
 #ifndef NULL
 #  define NULL             0

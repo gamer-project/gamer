@@ -35,7 +35,7 @@ void Grackle_Close( const int lv, const int SaveSg, const real h_Che_Array[][CHE
    real Dens, Pres;
 
 
-#  pragma omp parallel for private( idx_pg, PID, PID0, Dens, Pres ) schedule( runtime )
+#  pragma omp parallel for private( idx_pg, PID, PID0, Dens, Pres ) schedule( static )
    for (int TID=0; TID<NPG; TID++)
    {
       PID0   = PID0_List[TID];

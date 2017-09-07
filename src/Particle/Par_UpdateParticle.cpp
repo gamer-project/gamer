@@ -185,7 +185,7 @@ void Par_UpdateParticle( const int lv, const double TimeNew, const double TimeOl
 
 
 // loop over all **real** patch groups
-#  pragma omp for schedule( runtime )
+#  pragma omp for schedule( PAR_OMP_SCHED, PAR_OMP_SCHED_CHUNK )
    for (int PID0=0; PID0<amr->NPatchComma[lv][1]; PID0+=8)
    {
 //    1. find the patch groups with target particles

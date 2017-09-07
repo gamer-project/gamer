@@ -27,7 +27,7 @@ void Gra_Prepare_Corner( const int lv, double h_Corner_Array_G[][3], const int N
    int N, PID, PID0;
 
 
-//#  pragma omp parallel for private( N, PID, PID0 ) schedule( runtime )
+#  pragma omp parallel for private( N, PID, PID0 ) schedule( static )
    for (int TID=0; TID<NPG; TID++)
    {
       PID0 = PID0_List[TID];

@@ -99,7 +99,7 @@ void Flu_Restrict( const int FaLv, const int SonFluSg, const int FaFluSg, const 
 
 // restrict
 #  pragma omp parallel for private( SonPID, FaPID, Disp_i, Disp_j, Disp_k, ii, jj, kk, I, J, K, Ip, Jp, Kp, \
-                                    TFluVarIdx ) schedule( runtime )
+                                    TFluVarIdx ) schedule( static )
    for (int SonPID0=0; SonPID0<amr->NPatchComma[SonLv][1]; SonPID0+=8)
    {
       FaPID = amr->patch[0][SonLv][SonPID0]->father;
