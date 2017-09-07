@@ -602,7 +602,7 @@
 // OpenMP scheduling for particle routines
 #if ( defined PARTICLE  &&  defined OPENMP )
 #  define PAR_OMP_SCHED          dynamic
-#  define PAR_OMP_SCHED_CHUNK    8
+#  define PAR_OMP_SCHED_CHUNK    1
 #endif
 
 

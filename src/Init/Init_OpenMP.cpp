@@ -32,8 +32,8 @@ void Init_OpenMP()
 // schedule
    const int chunk_size = 1;
 // omp_set_schedule( omp_sched_static,  chunk_size );
-// omp_set_schedule( omp_sched_dynamic, chunk_size );
-   omp_set_schedule( omp_sched_guided,  chunk_size );
+   omp_set_schedule( omp_sched_dynamic, chunk_size );
+// omp_set_schedule( omp_sched_guided,  chunk_size );
 // omp_set_schedule( omp_sched_auto,    chunk_size );
 
 
