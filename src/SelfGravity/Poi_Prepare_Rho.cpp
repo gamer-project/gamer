@@ -48,7 +48,7 @@ void Poi_Prepare_Rho( const int lv, const double PrepTime, real h_Rho_Array_P[][
 
    if ( OPT__BC_POT == BC_POT_PERIODIC  ||  Comoving )
    {
-#     pragma omp parallel for schedule( runtime )
+#     pragma omp parallel for schedule( static )
       for (int TID=0; TID<8*NPG; TID++)
       for (int k=0; k<RHO_NXT; k++)
       for (int j=0; j<RHO_NXT; j++)

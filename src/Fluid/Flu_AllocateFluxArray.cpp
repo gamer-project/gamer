@@ -20,7 +20,7 @@ void Flu_AllocateFluxArray( const int lv )
 
 
 // deallocate the flux arrays allocated previously
-#  pragma omp parallel for
+#  pragma omp parallel for schedule( runtime )
    for (int PID=0; PID<amr->NPatchComma[lv][7]; PID++)   amr->patch[0][lv][PID]->fdelete();
 
 
@@ -29,7 +29,7 @@ void Flu_AllocateFluxArray( const int lv )
 
    if ( amr->NPatchComma[lv+1][7] != 0 )
    {
-#     pragma omp parallel for private( SibPID )
+#     pragma omp parallel for private( SibPID ) schedule( runtime )
       for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
       {
          if ( amr->patch[0][lv][PID]->son == -1 )

@@ -24,7 +24,7 @@ void Poi_Close( const int lv, const int SaveSg, const real h_Pot_Array_P_Out[][G
 
    int ii, jj, kk, N, PID, PID0;
 
-#  pragma omp parallel for private( ii, jj, kk, N, PID, PID0 ) schedule( runtime )
+#  pragma omp parallel for private( ii, jj, kk, N, PID, PID0 ) schedule( static )
    for (int TID=0; TID<NPG; TID++)
    {
       PID0 = PID0_List[TID];

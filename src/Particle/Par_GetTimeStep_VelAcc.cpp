@@ -81,7 +81,7 @@ void Par_GetTimeStep_VelAcc( double &dt_vel, double &dt_acc, const int lv )
       TID = 0;
 #     endif
 
-#     pragma omp for schedule( runtime )
+#     pragma omp for schedule( PAR_OMP_SCHED, PAR_OMP_SCHED_CHUNK )
       for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
       for (int p=0; p<amr->patch[0][lv][PID]->NPar; p++)
       {

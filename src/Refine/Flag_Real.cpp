@@ -32,7 +32,7 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
 
 
 // initialize all flags as false
-#  pragma omp parallel for
+#  pragma omp parallel for schedule( static )
    for (int PID=0; PID<amr->num[lv]; PID++)  amr->patch[0][lv][PID]->flag = false;
 
 
@@ -459,7 +459,7 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
 
 
 // apply the proper-nesting constraint again (should also apply to the buffer patches)
-#  pragma omp parallel for
+#  pragma omp parallel for schedule( runtime )
    for (int PID=0; PID<amr->num[lv]; PID++)
    {
       for (int sib=0; sib<26; sib++)

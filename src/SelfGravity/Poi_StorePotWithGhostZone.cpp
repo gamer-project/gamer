@@ -18,7 +18,7 @@
 //                3. After grid refinement, only newly-allocated patches need to get pot_ext
 //                   --> We set pot_ext[0][0][0] == POT_EXT_NEED_INIT for newly-allocated patches
 //                       so as to distinguish them from other existing patches
-//                4. Currently "pot_ext" it is only used for Par->ImproveAcc
+//                4. Currently "pot_ext" is only used for Par->ImproveAcc and star formation routines
 //
 // Parameter   :  lv       : Target refinement level
 //                PotSg    : Target potential sandglass

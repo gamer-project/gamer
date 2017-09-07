@@ -37,7 +37,7 @@ void Grackle_Prepare( const int lv, real h_Che_Array[][CHE_NPREP][ CUBE(PS2) ], 
    int  idx_pg, PID, PID0;    // idx_pg: array indices within a patch group
    real Dens, Px, Py, Pz, Etot, _Dens, Ek, sEint;
 
-#  pragma omp parallel for private( idx_pg, PID, PID0, Dens, Px, Py, Pz, Etot, _Dens, Ek, sEint ) schedule( runtime )
+#  pragma omp parallel for private( idx_pg, PID, PID0, Dens, Px, Py, Pz, Etot, _Dens, Ek, sEint ) schedule( static )
    for (int TID=0; TID<NPG; TID++)
    {
       PID0   = PID0_List[TID];

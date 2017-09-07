@@ -27,7 +27,7 @@ void Buf_ResetBufferFlux( const int lv )
 
    real (*FluxPtr)[PATCH_SIZE][PATCH_SIZE] = NULL;
 
-#  pragma omp parallel for private( FluxPtr )
+#  pragma omp parallel for private( FluxPtr ) schedule( runtime )
    for (int PID=amr->NPatchComma[lv][1]; PID<amr->NPatchComma[lv][27]; PID++)
    for (int s=0; s<6; s++)
    {

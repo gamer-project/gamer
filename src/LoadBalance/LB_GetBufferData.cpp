@@ -398,7 +398,7 @@ void LB_GetBufferData( const int lv, const int FluSg, const int PotSg, const Get
       case POT_FOR_POISSON : case POT_AFTER_REFINE:
 #     endif
 //    ----------------------------------------------
-#        pragma omp parallel for private( SendPtr, Counter, SPID, SSib, TFluVarIdx )
+#        pragma omp parallel for private( SendPtr, Counter, SPID, SSib, TFluVarIdx ) schedule( runtime )
          for (int r=0; r<MPI_NRank; r++)
          {
             SendPtr = SendBuf + Send_NDisp[r];
@@ -471,7 +471,7 @@ void LB_GetBufferData( const int lv, const int FluSg, const int PotSg, const Get
 
       case DATA_AFTER_FIXUP :
 //    ----------------------------------------------
-#        pragma omp parallel for private( SendPtr, Counter, SPID, SSib, TFluVarIdx )
+#        pragma omp parallel for private( SendPtr, Counter, SPID, SSib, TFluVarIdx ) schedule( runtime )
          for (int r=0; r<MPI_NRank; r++)
          {
             SendPtr = SendBuf + Send_NDisp[r];
@@ -570,7 +570,7 @@ void LB_GetBufferData( const int lv, const int FluSg, const int PotSg, const Get
 
       case DATA_RESTRICT :
 //    ----------------------------------------------
-#        pragma omp parallel for private( SendPtr, SPID, TFluVarIdx )
+#        pragma omp parallel for private( SendPtr, SPID, TFluVarIdx ) schedule( runtime )
          for (int r=0; r<MPI_NRank; r++)
          {
             SendPtr = SendBuf + Send_NDisp[r];
@@ -620,7 +620,7 @@ void LB_GetBufferData( const int lv, const int FluSg, const int PotSg, const Get
 
       case COARSE_FINE_FLUX :
 //    ----------------------------------------------
-#        pragma omp parallel for private( SendPtr, Counter, SPID, SSib, FluxPtr, TFluVarIdx )
+#        pragma omp parallel for private( SendPtr, Counter, SPID, SSib, FluxPtr, TFluVarIdx ) schedule( runtime )
          for (int r=0; r<MPI_NRank; r++)
          {
             SendPtr = SendBuf + Send_NDisp[r];
@@ -700,7 +700,7 @@ void LB_GetBufferData( const int lv, const int FluSg, const int PotSg, const Get
       case POT_FOR_POISSON : case POT_AFTER_REFINE:
 #     endif
 //    ----------------------------------------------
-#        pragma omp parallel for private( RecvPtr, Counter, RPID, RSib, TFluVarIdx )
+#        pragma omp parallel for private( RecvPtr, Counter, RPID, RSib, TFluVarIdx ) schedule( runtime )
          for (int r=0; r<MPI_NRank; r++)
          {
             RecvPtr = RecvBuf + Recv_NDisp[r];
@@ -773,7 +773,7 @@ void LB_GetBufferData( const int lv, const int FluSg, const int PotSg, const Get
 
       case DATA_AFTER_FIXUP :
 //    ----------------------------------------------
-#        pragma omp parallel for private( RecvPtr, Counter, RPID, RSib, TFluVarIdx )
+#        pragma omp parallel for private( RecvPtr, Counter, RPID, RSib, TFluVarIdx ) schedule( runtime )
          for (int r=0; r<MPI_NRank; r++)
          {
             RecvPtr = RecvBuf + Recv_NDisp[r];
@@ -872,7 +872,7 @@ void LB_GetBufferData( const int lv, const int FluSg, const int PotSg, const Get
 
       case DATA_RESTRICT :
 //    ----------------------------------------------
-#        pragma omp parallel for private( RecvPtr, RPID, TFluVarIdx )
+#        pragma omp parallel for private( RecvPtr, RPID, TFluVarIdx ) schedule( runtime )
          for (int r=0; r<MPI_NRank; r++)
          {
             RecvPtr = RecvBuf + Recv_NDisp[r];
@@ -922,7 +922,7 @@ void LB_GetBufferData( const int lv, const int FluSg, const int PotSg, const Get
 
       case COARSE_FINE_FLUX :
 //    ----------------------------------------------
-#        pragma omp parallel for private( RecvPtr, Counter, RPID, RSib, FluxPtr, TFluVarIdx )
+#        pragma omp parallel for private( RecvPtr, Counter, RPID, RSib, FluxPtr, TFluVarIdx ) schedule( runtime )
          for (int r=0; r<MPI_NRank; r++)
          {
             RecvPtr = RecvBuf + Recv_NDisp[r];

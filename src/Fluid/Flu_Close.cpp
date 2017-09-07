@@ -77,7 +77,7 @@ void Flu_Close( const int lv, const int SaveSg, real h_Flux_Array[][9][NFLUX_TOT
 
    int I, J, K, KJI, PID0;
 
-#  pragma omp parallel for private( I, J, K, KJI, PID0 ) schedule( runtime )
+#  pragma omp parallel for private( I, J, K, KJI, PID0 ) schedule( static )
    for (int TID=0; TID<NPG; TID++)
    {
       PID0 = PID0_List[TID];
@@ -424,7 +424,7 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
          = ( OPT__1ST_FLUX_CORR == FIRST_FLUX_CORR_3D1D ) ? new real [Corr1D_NCell][Corr1D_NCell][Corr1D_NCell][NCOMP_TOTAL]
                                                           : NULL;
 
-#  pragma omp for schedule( runtime ) reduction( +:NCorrThisTime )
+#  pragma omp for reduction( +:NCorrThisTime ) schedule( runtime )
    for (int TID=0; TID<NPG; TID++)
    {
       for (ijk_out[2]=0; ijk_out[2]<PS2; ijk_out[2]++)

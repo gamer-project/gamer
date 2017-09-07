@@ -57,7 +57,7 @@ void Par_PassParticle2Sibling( const int lv, const bool TimingSendPar )
 #  pragma omp parallel private( NPar, NGuess, NPar_Remove, ArraySize, ijk, TSib, ParID, RemoveParList, EdgeL, EdgeR )
    {
 
-#  pragma omp for schedule( runtime ) reduction( +:NPar_Remove_Tot )
+#  pragma omp for reduction( +:NPar_Remove_Tot ) schedule( PAR_OMP_SCHED, PAR_OMP_SCHED_CHUNK )
 // loop over all **real** patches
    for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
    {
