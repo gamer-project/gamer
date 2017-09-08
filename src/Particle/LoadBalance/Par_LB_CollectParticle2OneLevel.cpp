@@ -171,8 +171,8 @@ void Par_LB_CollectParticle2OneLevel( const int FaLv, const bool PredictPos, con
    int (*NPatchAcc) = new int [MAX_LEVEL-FaLv];    // accumulative number of patches at each target level
    int NPatchAll;
 
-   NPatchAll    = 0;
-   NPatchAcc[0] = 0;
+   NPatchAll    = 0;    // note that it includes patches **without** particles --> different from NSendPatchTotal declared later
+   NPatchAcc[0] = 0;    // note that it includes patches **without** particles
 
    for (int lv=FaLv+1, q=0; lv<=MAX_LEVEL; lv++, q++)
    {
@@ -194,7 +194,7 @@ void Par_LB_CollectParticle2OneLevel( const int FaLv, const bool PredictPos, con
    for (int lv=FaLv+1, q=0; lv<=MAX_LEVEL; lv++, q++)
    for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
    {
-//    skip patches with no particles
+//    skip patches without particles
       if ( amr->patch[0][lv][PID]->NPar == 0 )  continue;
 
 #     ifdef DEBUG_PARTICLE
@@ -217,6 +217,7 @@ void Par_LB_CollectParticle2OneLevel( const int FaLv, const bool PredictPos, con
       const int TRank   = LB_Index2Rank( FaLv, LB_Idx, CHECK_ON );
       const int AccIdx  = NPatchAcc[q] + PID;
 
+//    both NParForEachRank[] and NPatchForEachRank[] do NOT include patches without particles
       NParForEachRank  [TRank ] += amr->patch[0][lv][PID]->NPar;
       NPatchForEachRank[TRank ] ++;
       TRank_AllPatch   [AccIdx] = TRank;
@@ -225,6 +226,7 @@ void Par_LB_CollectParticle2OneLevel( const int FaLv, const bool PredictPos, con
 
 
 // 1-2. allocate the send buffers
+// both NSendPatchTotal and NSendParTotal do NOT include patches without particles
    int NSendPatchTotal=0, NSendParTotal=0;
 
    for (int r=0; r<MPI_NRank; r++)
@@ -254,7 +256,7 @@ void Par_LB_CollectParticle2OneLevel( const int FaLv, const bool PredictPos, con
    }
 
 
-// 1-4. set the array offsets of the send buffer of each patch
+// 1-4. set the array offsets of the send buffer of each patch (mainly for the OpenMP parallelization)
    int *OffsetEachPatch_Patch   = new int [NPatchAll];
    int *OffsetEachPatch_ParData = new int [NPatchAll];   // actually useless in the JustCountNPar mode
 
@@ -264,6 +266,9 @@ void Par_LB_CollectParticle2OneLevel( const int FaLv, const bool PredictPos, con
       const int NParThisPatch = amr->patch[0][lv][PID]->NPar;
       const int AccIdx        = NPatchAcc[q] + PID;
       const int TRank         = TRank_AllPatch[AccIdx];
+
+//    skip patches without particles (must skip since OffsetEachRank_* are not set for patches without particles)
+      if ( NParThisPatch == 0 )  continue;
 
       OffsetEachPatch_Patch  [AccIdx] = OffsetEachRank_Patch  [TRank];
       OffsetEachPatch_ParData[AccIdx] = OffsetEachRank_ParData[TRank];
@@ -284,7 +289,7 @@ void Par_LB_CollectParticle2OneLevel( const int FaLv, const bool PredictPos, con
       const int  AccIdx        = NPatchAcc[q] + PID;
       const long LBIdx         = LBIdx_AllPatch[AccIdx];
 
-//    skip patches with no particles
+//    skip patches without particles (must skip since many variables are not set for patches without particles)
       if ( NParThisPatch == 0 )  continue;
 
 //    copy data into the send buffer
