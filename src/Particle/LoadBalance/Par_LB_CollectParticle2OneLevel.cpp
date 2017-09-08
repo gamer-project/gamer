@@ -162,16 +162,28 @@ void Par_LB_CollectParticle2OneLevel( const int FaLv, const bool PredictPos, con
    long *SendBuf_LBIdxEachPatch   = NULL;
    real *SendBuf_ParDataEachPatch = NULL;
 
-   long LB_Idx;
-   int  TRank;
-
 #  if ( LOAD_BALANCE != HILBERT )
    const int PatchScaleFaLv = PS1 * amr->scale[FaLv];
-   int FaCr[3];
 #  endif
 
 
 // 1-1. get the number of patches and particles sent to each rank
+   int (*NPatchAcc) = new int [MAX_LEVEL-FaLv];    // accumulative number of patches at each target level
+   int NPatchAll;
+
+   NPatchAll    = 0;
+   NPatchAcc[0] = 0;
+
+   for (int lv=FaLv+1, q=0; lv<=MAX_LEVEL; lv++, q++)
+   {
+      NPatchAll += amr->NPatchComma[lv][1];
+
+      if ( q > 0 )   NPatchAcc[q] = NPatchAcc[q-1] + amr->NPatchComma[lv-1][1];
+   }
+
+   int  *TRank_AllPatch = new int  [NPatchAll];
+   long *LBIdx_AllPatch = new long [NPatchAll];
+
    for (int r=0; r<MPI_NRank; r++)
    {
       NParForEachRank  [r] = 0;
@@ -179,7 +191,7 @@ void Par_LB_CollectParticle2OneLevel( const int FaLv, const bool PredictPos, con
    }
 
 // loop over all real patches at higher levels
-   for (int lv=FaLv+1; lv<=MAX_LEVEL; lv++)
+   for (int lv=FaLv+1, q=0; lv<=MAX_LEVEL; lv++, q++)
    for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
    {
 //    skip patches with no particles
@@ -196,15 +208,19 @@ void Par_LB_CollectParticle2OneLevel( const int FaLv, const bool PredictPos, con
 
 //###NOTE: faster version can only be applied to the Hilbert space-filling curve
 #     if ( LOAD_BALANCE == HILBERT )
-      LB_Idx = amr->patch[0][lv][PID]->LB_Idx / ( 1 << (3*(lv-FaLv)) );
+      const long LB_Idx = amr->patch[0][lv][PID]->LB_Idx / ( 1 << (3*(lv-FaLv)) );
 #     else
+      int FaCr[3];
       for (int d=0; d<3; d++)    FaCr[d] = amr->patch[0][lv][PID]->corner[d] - amr->patch[0][lv][PID]->corner[d]%PatchScaleFaLv;
-      LB_Idx = LB_Corner2Index( FaLv, FaCr, CHECK_ON );
+      const long LB_Idx = LB_Corner2Index( FaLv, FaCr, CHECK_ON );
 #     endif
-      TRank  = LB_Index2Rank( FaLv, LB_Idx, CHECK_ON );
+      const int TRank   = LB_Index2Rank( FaLv, LB_Idx, CHECK_ON );
+      const int AccIdx  = NPatchAcc[q] + PID;
 
-      NParForEachRank  [TRank] += amr->patch[0][lv][PID]->NPar;
-      NPatchForEachRank[TRank] ++;
+      NParForEachRank  [TRank ] += amr->patch[0][lv][PID]->NPar;
+      NPatchForEachRank[TRank ] ++;
+      TRank_AllPatch   [AccIdx] = TRank;
+      LBIdx_AllPatch   [AccIdx] = LB_Idx;
    } // for lv, PID
 
 
@@ -224,90 +240,108 @@ void Par_LB_CollectParticle2OneLevel( const int FaLv, const bool PredictPos, con
    if ( !JustCountNPar )   SendBuf_ParDataEachPatch = LB_GetBufferData_MemAllocate_Send( NSendParTotal*NParVar );
 
 
-// 1-3. set the array offsets of each send buffer
-   int *Offset_NParEachPatch    = new int [MPI_NRank];
-   int *Offset_LBIdxEachPatch   = Offset_NParEachPatch;
-   int *Offset_ParDataEachPatch = new int [MPI_NRank];   // actually useless in the JustCountNPar mode
+// 1-3. set the array offsets of the send buffer of each rank
+   int *OffsetEachRank_Patch   = new int [MPI_NRank];
+   int *OffsetEachRank_ParData = new int [MPI_NRank];    // actually useless in the JustCountNPar mode
 
-   Offset_NParEachPatch   [0] = 0;
-   Offset_ParDataEachPatch[0] = 0;
+   OffsetEachRank_Patch  [0] = 0;
+   OffsetEachRank_ParData[0] = 0;
 
    for (int r=1; r<MPI_NRank; r++)
    {
-      Offset_NParEachPatch   [r] = Offset_NParEachPatch   [r-1] + NPatchForEachRank[r-1];
-      Offset_ParDataEachPatch[r] = Offset_ParDataEachPatch[r-1] + NParForEachRank  [r-1]*NParVar;
+      OffsetEachRank_Patch  [r] = OffsetEachRank_Patch  [r-1] + NPatchForEachRank[r-1];
+      OffsetEachRank_ParData[r] = OffsetEachRank_ParData[r-1] + NParForEachRank  [r-1]*NParVar;
    }
 
 
-// 1-4. fill the send buffers
-   long ParID;
-   int  NParThisPatch;
+// 1-4. set the array offsets of the send buffer of each patch
+   int *OffsetEachPatch_Patch   = new int [NPatchAll];
+   int *OffsetEachPatch_ParData = new int [NPatchAll];   // actually useless in the JustCountNPar mode
 
-   for (int lv=FaLv+1; lv<=MAX_LEVEL; lv++)
+   for (int lv=FaLv+1, q=0; lv<=MAX_LEVEL; lv++, q++)
    for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
    {
-      NParThisPatch = amr->patch[0][lv][PID]->NPar;
+      const int NParThisPatch = amr->patch[0][lv][PID]->NPar;
+      const int AccIdx        = NPatchAcc[q] + PID;
+      const int TRank         = TRank_AllPatch[AccIdx];
+
+      OffsetEachPatch_Patch  [AccIdx] = OffsetEachRank_Patch  [TRank];
+      OffsetEachPatch_ParData[AccIdx] = OffsetEachRank_ParData[TRank];
+
+      OffsetEachRank_Patch  [TRank] += 1;
+      OffsetEachRank_ParData[TRank] += NParThisPatch*NParVar;
+   }
+
+   delete [] OffsetEachRank_Patch;
+   delete [] OffsetEachRank_ParData;
+
+
+// 1-5. fill the send buffers
+   for (int lv=FaLv+1, q=0; lv<=MAX_LEVEL; lv++, q++)
+   for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
+   {
+      const int  NParThisPatch = amr->patch[0][lv][PID]->NPar;
+      const int  AccIdx        = NPatchAcc[q] + PID;
+      const long LBIdx         = LBIdx_AllPatch[AccIdx];
 
 //    skip patches with no particles
       if ( NParThisPatch == 0 )  continue;
 
-//###NOTE: faster version can only be applied to the Hilbert space-filling curve
-#     if ( LOAD_BALANCE == HILBERT )
-      LB_Idx = amr->patch[0][lv][PID]->LB_Idx / ( 1 << (3*(lv-FaLv)) );
-#     else
-      for (int d=0; d<3; d++)    FaCr[d] = amr->patch[0][lv][PID]->corner[d] - amr->patch[0][lv][PID]->corner[d]%PatchScaleFaLv;
-      LB_Idx = LB_Corner2Index( FaLv, FaCr, CHECK_ON );
-#     endif
-      TRank  = LB_Index2Rank( FaLv, LB_Idx, CHECK_ON );
-
 //    copy data into the send buffer
 #     ifdef DEBUG_PARTICLE
-      if ( Offset_NParEachPatch[TRank] >= NSendPatchTotal )
-         Aux_Error( ERROR_INFO, "Offset_NParEachPatch[%d] (%d) >= max (%d) !!\n",
-                    TRank, Offset_NParEachPatch[TRank], NSendPatchTotal );
+      if ( OffsetEachPatch_Patch[AccIdx] >= NSendPatchTotal )
+         Aux_Error( ERROR_INFO, "OffsetEachPatch_Patch[%d] (%d) >= max (%d) !!\n",
+                    AccIdx, OffsetEachPatch_Patch[AccIdx], NSendPatchTotal );
 
-      if ( Offset_NParEachPatch[TRank] + PAR_POSZ >= NSendParTotal*NParVar )
-         Aux_Error( ERROR_INFO, "Offset_NParEachPatch[%d] + PAR_POSZ (%d) >= max (%d) !!\n",
-                    TRank, Offset_NParEachPatch[TRank] + PAR_POSZ, NSendParTotal*NParVar );
+      if ( OffsetEachPatch_ParData[AccIdx] + PAR_POSZ >= NSendParTotal*NParVar )
+         Aux_Error( ERROR_INFO, "OffsetEachPatch_ParData[%d] + PAR_POSZ (%d) >= max (%d) !!\n",
+                    AccIdx, OffsetEachPatch_ParData[AccIdx] + PAR_POSZ, NSendParTotal*NParVar );
 #     endif
 
-      SendBuf_NParEachPatch [ Offset_NParEachPatch[TRank] ] = NParThisPatch;
-      SendBuf_LBIdxEachPatch[ Offset_NParEachPatch[TRank] ] = LB_Idx;
+      SendBuf_NParEachPatch [ OffsetEachPatch_Patch[AccIdx] ] = NParThisPatch;
+      SendBuf_LBIdxEachPatch[ OffsetEachPatch_Patch[AccIdx] ] = LBIdx;
 
       if ( !JustCountNPar )
-      for (int p=0; p<NParThisPatch; p++)
       {
-         ParID = amr->patch[0][lv][PID]->ParList[p];
+         real *SendPtr = SendBuf_ParDataEachPatch + OffsetEachPatch_ParData[AccIdx];
 
-         SendBuf_ParDataEachPatch[ Offset_ParDataEachPatch[TRank] + PAR_MASS ] = amr->Par->Mass[ParID];
-         SendBuf_ParDataEachPatch[ Offset_ParDataEachPatch[TRank] + PAR_POSX ] = amr->Par->PosX[ParID];
-         SendBuf_ParDataEachPatch[ Offset_ParDataEachPatch[TRank] + PAR_POSY ] = amr->Par->PosY[ParID];
-         SendBuf_ParDataEachPatch[ Offset_ParDataEachPatch[TRank] + PAR_POSZ ] = amr->Par->PosZ[ParID];
-
-//       predict particle position to TargetTime
-         if ( PredictPos )
+         for (int p=0; p<NParThisPatch; p++)
          {
-//          there should be no particles waiting for velocity correction since these particles are collected from **higher** levels
-//          if ( amr->Par->Time[ParID] < (real)0.0 )  continue;
-#           ifdef DEBUG_PARTICLE
-            if ( amr->Par->Time[ParID] < (real)0.0 )  Aux_Error( ERROR_INFO, "ParTime[%ld] = %21.14e < 0.0 !!\n",
-                 ParID, amr->Par->Time[ParID] );
-#           endif
+            const long ParID = amr->patch[0][lv][PID]->ParList[p];
 
-//          note that we don't have to worry about the periodic BC here (in other word, Pos can lie outside the box)
-            Par_PredictPos( 1, &ParID, SendBuf_ParDataEachPatch + Offset_ParDataEachPatch[TRank] + PAR_POSX,
-                                       SendBuf_ParDataEachPatch + Offset_ParDataEachPatch[TRank] + PAR_POSY,
-                                       SendBuf_ParDataEachPatch + Offset_ParDataEachPatch[TRank] + PAR_POSZ,
-                            TargetTime );
-         }
+            *( SendPtr + PAR_MASS ) = amr->Par->Mass[ParID];
+            *( SendPtr + PAR_POSX ) = amr->Par->PosX[ParID];
+            *( SendPtr + PAR_POSY ) = amr->Par->PosY[ParID];
+            *( SendPtr + PAR_POSZ ) = amr->Par->PosZ[ParID];
 
-//       update array offset
-         Offset_ParDataEachPatch[TRank] += NParVar;
-      } // for (int p=0; p<NParThisPatch; p++)
+//          predict particle position to TargetTime
+            if ( PredictPos )
+            {
+//             there should be no particles waiting for velocity correction since these particles are collected from **higher** levels
+//             if ( amr->Par->Time[ParID] < (real)0.0 )  continue;
+#              ifdef DEBUG_PARTICLE
+               if ( amr->Par->Time[ParID] < (real)0.0 )  Aux_Error( ERROR_INFO, "ParTime[%ld] = %21.14e < 0.0 !!\n",
+                    ParID, amr->Par->Time[ParID] );
+#              endif
 
-//    update array offset
-      Offset_NParEachPatch[TRank] ++;
+//             note that we don't have to worry about the periodic BC here (in other word, Pos can lie outside the box)
+               Par_PredictPos( 1, &ParID, SendPtr+PAR_POSX, SendPtr+PAR_POSY, SendPtr+PAR_POSZ, TargetTime );
+            }
+
+//          update array offset
+            SendPtr += NParVar;
+         } // for (int p=0; p<NParThisPatch; p++)
+      } // if ( !JustCountNPar )
    } // for lv, PID
+
+
+// 1-6. free memory
+   delete [] OffsetEachPatch_Patch;
+   delete [] OffsetEachPatch_ParData;
+   delete [] NParForEachRank;
+   delete [] TRank_AllPatch;
+   delete [] LBIdx_AllPatch;
+   delete [] NPatchAcc;
 
 
 
@@ -408,7 +442,7 @@ void Par_LB_CollectParticle2OneLevel( const int FaLv, const bool PredictPos, con
          for (int v=0; v<NParVar; v++)
             amr->patch[0][FaLv][FaPID]->ParMassPos_Copy[v] = new real [ amr->patch[0][FaLv][FaPID]->NPar_Copy ];
 
-//       reset to zero (instead of NPar) since we will use NPar_Copy to record the number of patches that have been
+//       reset to zero (instead of NPar) since we will use NPar_Copy to record the number of particles that has been
 //       added to the ParMassPos_Copy array
          amr->patch[0][FaLv][FaPID]->NPar_Copy = 0;
       }
@@ -473,9 +507,17 @@ void Par_LB_CollectParticle2OneLevel( const int FaLv, const bool PredictPos, con
    } // for (int t=0; t<NRecvPatchTotal; t++)
 
 
-// 4. add particles temporarily residing in this patch to the ParMassPos_Copy array
-   int idx;
+// 3-5. free memory
+   delete [] RecvBuf_NPatchEachRank;
+   delete [] RecvBuf_NParEachPatch;
+   delete [] RecvBuf_LBIdxEachPatch;
+   delete [] RecvBuf_LBIdxEachPatch_IdxTable;
+   delete [] Match_LBIdxEachPatch;
+   delete [] FaPIDList;
 
+
+
+// 4. add particles temporarily residing in this patch to the ParMassPos_Copy array
    if ( !JustCountNPar )
    for (int FaPID=0; FaPID<amr->NPatchComma[FaLv][1]; FaPID++)
    {
@@ -483,8 +525,8 @@ void Par_LB_CollectParticle2OneLevel( const int FaLv, const bool PredictPos, con
       {
          for (int p=0; p<amr->patch[0][FaLv][FaPID]->NPar; p++)
          {
-            ParID = amr->patch[0][FaLv][FaPID]->ParList[p];
-            idx   = amr->patch[0][FaLv][FaPID]->NPar_Copy + p;
+            const long ParID = amr->patch[0][FaLv][FaPID]->ParList[p];
+            const int  idx   = amr->patch[0][FaLv][FaPID]->NPar_Copy + p;
 
 //          4-1. check if this particle is indeed waiting for the velocity correction (i.e., ParTime = -dt_half < 0.0 for KDK)
 #           ifdef DEBUG_PARTICLE
@@ -508,6 +550,7 @@ void Par_LB_CollectParticle2OneLevel( const int FaLv, const bool PredictPos, con
    } // for (int FaPID=0; FaPID<amr->NPatchComma[FaLv][1]; FaPID++)
 
 
+
 // 5. check if we do collect all particles at levels >= FaLv
 #  ifdef DEBUG_PARTICLE
    long NParLocal_Get=0, NParLocal_Check=0, NParAllRank_Get, NParAllRank_Check;
@@ -528,6 +571,7 @@ void Par_LB_CollectParticle2OneLevel( const int FaLv, const bool PredictPos, con
                     FaLv, NParAllRank_Get, NParAllRank_Check );
    }
 #  endif // #ifdef DEBUG_PARTICLE
+
 
 
 // 6. collect particles for buffer patches
@@ -556,19 +600,6 @@ void Par_LB_CollectParticle2OneLevel( const int FaLv, const bool PredictPos, con
          amr->Par->R2B_Real_NPatchTotal[FaLv][1], amr->Par->R2B_Real_PIDList[FaLv][1], amr->Par->R2B_Real_NPatchEachRank[FaLv][1],
          PredictPos, TargetTime, Timer[2], Timer_Comment );
    }
-
-
-// 7. free memory
-   delete [] RecvBuf_NPatchEachRank;
-   delete [] RecvBuf_NParEachPatch;
-   delete [] RecvBuf_LBIdxEachPatch;
-
-   delete [] NParForEachRank;
-   delete [] Offset_NParEachPatch;
-   delete [] Offset_ParDataEachPatch;
-   delete [] RecvBuf_LBIdxEachPatch_IdxTable;
-   delete [] Match_LBIdxEachPatch;
-   delete [] FaPIDList;
 
 } // FUNCTION : Par_LB_CollectParticle2OneLevel
 
