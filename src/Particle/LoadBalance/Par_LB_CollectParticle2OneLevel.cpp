@@ -458,12 +458,15 @@ void Par_LB_CollectParticle2OneLevel( const int FaLv, const bool PredictPos, con
 
 
 // 3-4. store the received particle data
+// --> currently we do not implement OpenMP here since different received patches at lv>FaLv may map to the same patch at FaLv
+// --> one cannot naively parallelize the "for (int t=0; t<NRecvPatchTotal; t++)" loop
    const real *RecvPtr = RecvBuf_ParDataEachPatch;
    int NPar_Copy_Old;
 
    if ( !JustCountNPar )
    for (int t=0; t<NRecvPatchTotal; t++)
    {
+//    different "t" may map to the same "FaPID_Match"
       FaPID_Match   = FaPIDList[t];
       NPar_Copy_Old = amr->patch[0][FaLv][FaPID_Match]->NPar_Copy;
 
