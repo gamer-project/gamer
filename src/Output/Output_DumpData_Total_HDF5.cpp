@@ -70,7 +70,7 @@ Procedure for outputting new variables:
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2255)
+// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2256)
 // Description :  Output all simulation data in the HDF5 format, which can be used as a restart file
 //                or loaded by YT
 //
@@ -143,6 +143,7 @@ Procedure for outputting new variables:
 //                2253 : 2017/08/27 --> output STAR_FORMATION
 //                2254 : 2017/08/29 --> output star formation parameters
 //                2255 : 2017/09/01 --> output SF_CREATION_STAR_DET_RANDOM
+//                2256 : 2017/09/10 --> output FLAG_BUFFER_SIZE_MAXM2_LV
 //-------------------------------------------------------------------------------------------------------
 void Output_DumpData_Total_HDF5( const char *FileName )
 {
@@ -1248,7 +1249,7 @@ void FillIn_KeyInfo( KeyInfo_t &KeyInfo )
 
    const time_t CalTime  = time( NULL );   // calendar time
 
-   KeyInfo.FormatVersion = 2255;
+   KeyInfo.FormatVersion = 2256;
    KeyInfo.Model         = MODEL;
    KeyInfo.NLevel        = NLEVEL;
    KeyInfo.NCompFluid    = NCOMP_FLUID;
@@ -1786,6 +1787,7 @@ void FillIn_InputPara( InputPara_t &InputPara )
    InputPara.RegridCount             = REGRID_COUNT;
    InputPara.FlagBufferSize          = FLAG_BUFFER_SIZE;
    InputPara.FlagBufferSizeMaxM1Lv   = FLAG_BUFFER_SIZE_MAXM1_LV;
+   InputPara.FlagBufferSizeMaxM2Lv   = FLAG_BUFFER_SIZE_MAXM2_LV;
    InputPara.MaxLevel                = MAX_LEVEL;
    InputPara.Opt__Flag_Rho           = OPT__FLAG_RHO;
    InputPara.Opt__Flag_RhoGradient   = OPT__FLAG_RHO_GRADIENT;
@@ -2459,6 +2461,7 @@ void GetCompound_InputPara( hid_t &H5_TypeID )
    H5Tinsert( H5_TypeID, "RegridCount",             HOFFSET(InputPara_t,RegridCount            ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "FlagBufferSize",          HOFFSET(InputPara_t,FlagBufferSize         ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "FlagBufferSizeMaxM1Lv",   HOFFSET(InputPara_t,FlagBufferSizeMaxM1Lv  ), H5T_NATIVE_INT     );
+   H5Tinsert( H5_TypeID, "FlagBufferSizeMaxM2Lv",   HOFFSET(InputPara_t,FlagBufferSizeMaxM2Lv  ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "MaxLevel",                HOFFSET(InputPara_t,MaxLevel               ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "Opt__Flag_Rho",           HOFFSET(InputPara_t,Opt__Flag_Rho          ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "Opt__Flag_RhoGradient",   HOFFSET(InputPara_t,Opt__Flag_RhoGradient  ), H5T_NATIVE_INT     );
