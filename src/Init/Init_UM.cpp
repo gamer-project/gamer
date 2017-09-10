@@ -183,7 +183,10 @@ void Init_UM()
 // ===========================================================================================================
 // construct the FlagMap for levels UM_lv-1 -> 0
    for (int lv=UM_lv; lv>0; lv--)
-      UM_CreateLevel( UM_Data[lv], lv, FlagMap, (lv<MAX_LEVEL-1)?FLAG_BUFFER_SIZE:FLAG_BUFFER_SIZE_MAXM1_LV, UM_NVar );
+      UM_CreateLevel( UM_Data[lv], lv, FlagMap, (lv==MAX_LEVEL-1)?FLAG_BUFFER_SIZE_MAXM1_LV:
+                                                (lv==MAX_LEVEL-2)?FLAG_BUFFER_SIZE_MAXM2_LV:
+                                                                  FLAG_BUFFER_SIZE,
+                      UM_NVar );
 
 // flag levels 0 -> UM_lv-1 and construct levels 1-> UM_lv accordingly
 // (we still have to loop over ALL levels since several lists needed to be initialized)

@@ -12,8 +12,8 @@ void Prepare_for_Lohner( const OptLohnerForm_t Form, const real *Var1D, real *Av
 // Description :  Flag the real patches at level "lv" according to the given refinement criteria
 //
 // Note        :  1. Flag operation of the buffer patches is performed by the function "Flag_Buffer"
-//                2. In this function, the buffer patches may still be flagged due to non-zero FLAG_BUFFER_SIZE
-//                   (and FLAG_BUFFER_SIZE_MAXM1_LV) and the grandson check
+//                2. In this function, the buffer patches may still be flagged due to non-zero
+//                   (FLAG_BUFFER_SIZE, FLAG_BUFFER_SIZE_MAXM1_LV, FLAG_BUFFER_SIZE_MAXM2_LV) and the grandson check
 //                3. To add new refinement criteria, please edit the function "Flag_Check"
 //                4. Definition of the function "Prepare_for_Lohner" is put in the file "Flag_Lohner"
 //
@@ -39,7 +39,9 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
    const int SibID_Array[3][3][3]     = {  { {18, 10, 19}, {14,   4, 16}, {20, 11, 21} },
                                            { { 6,  2,  7}, { 0, 999,  1}, { 8,  3,  9} },
                                            { {22, 12, 23}, {15,   5, 17}, {24, 13, 25} }  };    // sibling indices
-   const int  FlagBuf                 = ( lv < MAX_LEVEL-1 ) ? FLAG_BUFFER_SIZE : FLAG_BUFFER_SIZE_MAXM1_LV;
+   const int  FlagBuf                 = ( lv == MAX_LEVEL-1 ) ? FLAG_BUFFER_SIZE_MAXM1_LV :
+                                        ( lv == MAX_LEVEL-2 ) ? FLAG_BUFFER_SIZE_MAXM2_LV :
+                                                                FLAG_BUFFER_SIZE;
    const real dv                      = CUBE( amr->dh[lv] );
    const bool IntPhase_No             = false;                 // for invoking "Prepare_PatchData"
    const int  NPG                     = 1;                     // for invoking "Prepare_PatchData"
