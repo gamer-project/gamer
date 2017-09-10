@@ -356,6 +356,7 @@ struct InputPara_t
    int    RegridCount;
    int    FlagBufferSize;
    int    FlagBufferSizeMaxM1Lv;
+   int    FlagBufferSizeMaxM2Lv;
    int    MaxLevel;
    int    Opt__Flag_Rho;
    int    Opt__Flag_RhoGradient;
