@@ -828,11 +828,11 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData[], const in
 
 //    interpolate density
       Interpolate( CData_Dens, CSize, CStart, CRange, FData_Dens, FSize, FStart, 1, IntScheme,
-                   PhaseUnwrapping_No, EnsureMonotonicity_Yes );
+                   PhaseUnwrapping_No, &EnsureMonotonicity_Yes );
 
 //    interpolate phase
       Interpolate( CData_Real, CSize, CStart, CRange, FData_Real, FSize, FStart, 1, IntScheme,
-                   PhaseUnwrapping_Yes, EnsureMonotonicity_No );
+                   PhaseUnwrapping_Yes, &EnsureMonotonicity_No );
    } // if ( IntPhase )
 
 
@@ -841,7 +841,7 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData[], const in
    {
       for (int v=0; v<NVar_Flu; v++)
       Interpolate( CData+CSize3D*v, CSize, CStart, CRange, IntData+FSize3D*v, FSize, FStart, 1,
-                   IntScheme, PhaseUnwrapping_No, Monotonicity[v] );
+                   IntScheme, PhaseUnwrapping_No, Monotonicity );
    } // if ( IntPhase ) ... else ...
 
 // retrieve real and imaginary parts when phase interpolation is adopted
@@ -874,7 +874,7 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData[], const in
 // c3. interpolation on original variables for models != ELBDM
    for (int v=0; v<NVar_Flu; v++)
       Interpolate( CData+CSize3D*v, CSize, CStart, CRange, IntData+FSize3D*v, FSize, FStart, 1,
-                   IntScheme, PhaseUnwrapping_No, Monotonicity[v] );
+                   IntScheme, PhaseUnwrapping_No, Monotonicity );
 
 #  endif // #if ( MODEL == ELBDM ) ... else ...
 
@@ -887,35 +887,35 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData[], const in
    if ( PrepVx )
    {
       Interpolate( CData+CSize3D*NVar_SoFar, CSize, CStart, CRange, IntData+FSize3D*NVar_SoFar, FSize, FStart, 1,
-                   IntScheme, PhaseUnwrapping_No, EnsureMonotonicity_Yes );
+                   IntScheme, PhaseUnwrapping_No, &EnsureMonotonicity_Yes );
       NVar_SoFar ++;
    }
 
    if ( PrepVy )
    {
       Interpolate( CData+CSize3D*NVar_SoFar, CSize, CStart, CRange, IntData+FSize3D*NVar_SoFar, FSize, FStart, 1,
-                   IntScheme, PhaseUnwrapping_No, EnsureMonotonicity_Yes );
+                   IntScheme, PhaseUnwrapping_No, &EnsureMonotonicity_Yes );
       NVar_SoFar ++;
    }
 
    if ( PrepVz )
    {
       Interpolate( CData+CSize3D*NVar_SoFar, CSize, CStart, CRange, IntData+FSize3D*NVar_SoFar, FSize, FStart, 1,
-                   IntScheme, PhaseUnwrapping_No, EnsureMonotonicity_Yes );
+                   IntScheme, PhaseUnwrapping_No, &EnsureMonotonicity_Yes );
       NVar_SoFar ++;
    }
 
    if ( PrepPres )
    {
       Interpolate( CData+CSize3D*NVar_SoFar, CSize, CStart, CRange, IntData+FSize3D*NVar_SoFar, FSize, FStart, 1,
-                   IntScheme, PhaseUnwrapping_No, EnsureMonotonicity_Yes );
+                   IntScheme, PhaseUnwrapping_No, &EnsureMonotonicity_Yes );
       NVar_SoFar ++;
    }
 
    if ( PrepTemp )
    {
       Interpolate( CData+CSize3D*NVar_SoFar, CSize, CStart, CRange, IntData+FSize3D*NVar_SoFar, FSize, FStart, 1,
-                   IntScheme, PhaseUnwrapping_No, EnsureMonotonicity_Yes );
+                   IntScheme, PhaseUnwrapping_No, &EnsureMonotonicity_Yes );
       NVar_SoFar ++;
    }
 
@@ -935,7 +935,7 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData[], const in
    if ( PrepPot )
    {
       Interpolate( CData+CSize3D*NVar_SoFar, CSize, CStart, CRange, IntData+FSize3D*NVar_SoFar, FSize, FStart, 1,
-                   IntScheme, PhaseUnwrapping_No, EnsureMonotonicity_No );
+                   IntScheme, PhaseUnwrapping_No, &EnsureMonotonicity_No );
       NVar_SoFar ++;
    }
 #  endif

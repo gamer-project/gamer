@@ -30,7 +30,7 @@
 //-------------------------------------------------------------------------------------------------------
 void Int_CQuartic( real CData[], const int CSize[3], const int CStart[3], const int CRange[3],
 	           real FData[], const int FSize[3], const int FStart[3], const int NComp,
-                   const bool UnwrapPhase, const bool Monotonic, const real MonoCoeff )
+                   const bool UnwrapPhase, const bool Monotonic[], const real MonoCoeff )
 {
 
 // interpolation-scheme-dependent parameters
@@ -109,7 +109,7 @@ void Int_CQuartic( real CData[], const int CSize[3], const int CStart[3], const 
                      IntCoeff[3]*CPtr[Idx_InR1] + IntCoeff[4]*CPtr[Idx_InR2];
 
 //       ensure monotonicity
-         if ( Monotonic )
+         if ( Monotonic[v] )
          {
             LSlopeDh_4 = CPtr[Idx_InC ] - CPtr[Idx_InL1];
             RSlopeDh_4 = CPtr[Idx_InR1] - CPtr[Idx_InC ];
@@ -130,7 +130,7 @@ void Int_CQuartic( real CData[], const int CSize[3], const int CStart[3], const 
 
             else
                SlopeDh_4 = (real)0.0;
-         } // if ( Monotonic )
+         } // if ( Monotonic[v] )
 
          TDataX[ Idx_Out       ] = CPtr[Idx_InC] - SlopeDh_4;
          TDataX[ Idx_Out + Tdx ] = CPtr[Idx_InC] + SlopeDh_4;
@@ -168,7 +168,7 @@ void Int_CQuartic( real CData[], const int CSize[3], const int CStart[3], const 
          SlopeDh_4 = IntCoeff[0]*TDataX[Idx_InL2] + IntCoeff[1]*TDataX[Idx_InL1] +
                      IntCoeff[3]*TDataX[Idx_InR1] + IntCoeff[4]*TDataX[Idx_InR2];
 
-         if ( Monotonic )
+         if ( Monotonic[v] )
          {
             LSlopeDh_4 = TDataX[Idx_InC ] - TDataX[Idx_InL1];
             RSlopeDh_4 = TDataX[Idx_InR1] - TDataX[Idx_InC ];
@@ -189,7 +189,7 @@ void Int_CQuartic( real CData[], const int CSize[3], const int CStart[3], const 
 
             else
                SlopeDh_4 = (real)0.0;
-         } // if ( Monotonic )
+         } // if ( Monotonic[v] )
 
          TDataY[ Idx_Out       ] = TDataX[Idx_InC] - SlopeDh_4;
          TDataY[ Idx_Out + Tdy ] = TDataX[Idx_InC] + SlopeDh_4;
@@ -227,7 +227,7 @@ void Int_CQuartic( real CData[], const int CSize[3], const int CStart[3], const 
          SlopeDh_4 = IntCoeff[0]*TDataY[Idx_InL2] + IntCoeff[1]*TDataY[Idx_InL1] +
                      IntCoeff[3]*TDataY[Idx_InR1] + IntCoeff[4]*TDataY[Idx_InR2];
 
-         if ( Monotonic )
+         if ( Monotonic[v] )
          {
             LSlopeDh_4 = TDataY[Idx_InC ] - TDataY[Idx_InL1];
             RSlopeDh_4 = TDataY[Idx_InR1] - TDataY[Idx_InC ];
@@ -248,7 +248,7 @@ void Int_CQuartic( real CData[], const int CSize[3], const int CStart[3], const 
 
             else
                SlopeDh_4 = (real)0.0;
-         } // if ( Monotonic )
+         } // if ( Monotonic[v] )
 
          FPtr[ Idx_Out       ] = TDataY[Idx_InC] - SlopeDh_4;
          FPtr[ Idx_Out + Fdz ] = TDataY[Idx_InC] + SlopeDh_4;
