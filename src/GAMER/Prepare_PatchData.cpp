@@ -612,8 +612,9 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
 #     endif
 
 //    Array: array to store the prepared data of one patch group (including the ghost-zone data)
+//    --> for PrepUnit == UNIT_PATCHGROUP, this pointer points to h_Input_Array directly (which will be set later)
+      real *Array     = ( PrepUnit == UNIT_PATCH ) ? new real [ NVar_Tot*PGSize3D ] : NULL;
       real *Array_Ptr = NULL;
-      real *Array     = new real [ NVar_Tot*PGSize3D ];
 
 
 //    IntData: array to store the interpolation results (allocate with the maximum required size)
@@ -729,6 +730,10 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
 #        endif
 
          for (int d=0; d<3; d++)    xyz0[d] = amr->patch[0][lv][PID0]->EdgeL[d] + (0.5-GhostSize)*dh;
+
+//       Array points to h_Input_Array directly for PrepUnit == UNIT_PATCHGROUP
+         if ( PrepUnit == UNIT_PATCHGROUP )  Array = h_Input_Array + TID*NVar_Tot*PGSize3D;
+
 
 //       a. fill up the central region of Array (ghost zone is not filled up yet)
 // ------------------------------------------------------------------------------------------------------------
@@ -1572,15 +1577,9 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
             }
          } // if ( PatchByPatch )
 
-         else if ( PrepUnit == UNIT_PATCHGROUP )
-            memcpy( h_Input_Array + TID*NVar_Tot*PGSize3D, Array, NVar_Tot*PGSize3D*sizeof(real) );
-
-         else
-            Aux_Error( ERROR_INFO, "incorrect parameter %s = %d !!\n", "PrepUnit", PrepUnit );
-
       } // for (int TID=0; TID<NPG; TID++)
 
-      delete [] Array;
+      if ( PrepUnit == UNIT_PATCH )    delete [] Array;
       delete [] IntData;
 
    } // end of OpenMP parallel region
