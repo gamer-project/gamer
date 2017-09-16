@@ -31,7 +31,7 @@
 //-------------------------------------------------------------------------------------------------------
 void Int_Quadratic( real CData[], const int CSize[3], const int CStart[3], const int CRange[3],
 		    real FData[], const int FSize[3], const int FStart[3], const int NComp,
-                    const bool UnwrapPhase, const bool Monotonic, const real MonoCoeff )
+                    const bool UnwrapPhase, const bool Monotonic[], const real MonoCoeff )
 {
 
 // interpolation-scheme-dependent parameters
@@ -109,7 +109,7 @@ void Int_Quadratic( real CData[], const int CSize[3], const int CStart[3], const
          TDataX[ Idx_Out + Tdx ] = R[0]*CPtr[Idx_InL] + R[1]*CPtr[Idx_InC] + R[2]*CPtr[Idx_InR];
 
 //       ensure monotonicity
-         if ( Monotonic )
+         if ( Monotonic[v] )
          {
             LSlopeDh_4 = CPtr[Idx_InC] - CPtr[Idx_InL];
             RSlopeDh_4 = CPtr[Idx_InR] - CPtr[Idx_InC];
@@ -150,7 +150,7 @@ void Int_Quadratic( real CData[], const int CSize[3], const int CStart[3], const
                TDataX[ Idx_Out       ] = CPtr[Idx_InC];
                TDataX[ Idx_Out + Tdx ] = CPtr[Idx_InC];
             } // if ( LSlopeDh_4*RSlopeDh_4 > (real)0.0 ) ... else 
-         } // if ( Monotonic )
+         } // if ( Monotonic[v] )
       } // k,j,i
 
 
@@ -184,7 +184,7 @@ void Int_Quadratic( real CData[], const int CSize[3], const int CStart[3], const
          TDataY[ Idx_Out + Tdy ] = R[0]*TDataX[Idx_InL] + R[1]*TDataX[Idx_InC] + R[2]*TDataX[Idx_InR];
 
 //       ensure monotonicity
-         if ( Monotonic )
+         if ( Monotonic[v] )
          {
             LSlopeDh_4 = TDataX[Idx_InC] - TDataX[Idx_InL];
             RSlopeDh_4 = TDataX[Idx_InR] - TDataX[Idx_InC];
@@ -225,7 +225,7 @@ void Int_Quadratic( real CData[], const int CSize[3], const int CStart[3], const
                TDataY[ Idx_Out       ] = TDataX[Idx_InC];
                TDataY[ Idx_Out + Tdy ] = TDataX[Idx_InC];
             } // if ( LSlopeDh_4*RSlopeDh_4 > (real)0.0 ) ... else 
-         } // if ( Monotonic )
+         } // if ( Monotonic[v] )
       } // k,j,i
 
 
@@ -259,7 +259,7 @@ void Int_Quadratic( real CData[], const int CSize[3], const int CStart[3], const
          FPtr[ Idx_Out + Fdz ] = R[0]*TDataY[Idx_InL] + R[1]*TDataY[Idx_InC] + R[2]*TDataY[Idx_InR];
 
 //       ensure monotonicity
-         if ( Monotonic )
+         if ( Monotonic[v] )
          {
             LSlopeDh_4 = TDataY[Idx_InC] - TDataY[Idx_InL];
             RSlopeDh_4 = TDataY[Idx_InR] - TDataY[Idx_InC];
@@ -300,7 +300,7 @@ void Int_Quadratic( real CData[], const int CSize[3], const int CStart[3], const
                FPtr[ Idx_Out       ] = TDataY[Idx_InC];
                FPtr[ Idx_Out + Fdz ] = TDataY[Idx_InC];
             } // if ( LSlopeDh_4*RSlopeDh_4 > (real)0.0 ) ... else 
-         } // if ( Monotonic )
+         } // if ( Monotonic[v] )
       } // k,j,i
 
       CPtr += CDisp;
