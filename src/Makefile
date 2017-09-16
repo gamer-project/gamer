@@ -672,12 +672,17 @@ else
 CXXFLAG  := $(CXXWARN_FLAG) $(COMMONFLAG) $(OPENMP) -O3
 endif
 
-# debug flag (currently we include debugging information even when GAMER_DEBUG is off)
-ifeq "$(findstring INTEL, $(SIMU_OPTION))" "INTEL"
-   CXXFLAG += -g
-else
-   CXXFLAG += -g
+# debug flag
+ifeq "$(findstring GAMER_DEBUG, $(SIMU_OPTION))" "GAMER_DEBUG"
+   ifeq "$(findstring INTEL, $(SIMU_OPTION))" "INTEL"
+      CXXFLAG += -fstack-protector-all
+      LIB     += -lssp
+   else
+      CXXFLAG += -fstack-protector-all
+   endif
 endif
+# currently we include '-g' even when GAMER_DEBUG is off
+CXXFLAG += -g
 
 # fixes compilation issues on Intel MPI
 ifeq "$(findstring SERIAL, $(SIMU_OPTION))" ""
