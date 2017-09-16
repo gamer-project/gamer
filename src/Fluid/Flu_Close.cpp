@@ -4,7 +4,7 @@
 
 
 // status of the fluid solver used by AUTO_REDUCE_DT (declared in Flu_AdvanceDt.cpp)
-extern bool FluStatus_ThisRank;
+extern int FluStatus_ThisRank;
 
 
 static void StoreFlux( const int lv, const real Flux_Array[][9][NFLUX_TOTAL][4*PATCH_SIZE*PATCH_SIZE],

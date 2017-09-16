@@ -3,7 +3,7 @@
 
 
 // status of the fluid solver used by AUTO_REDUCE_DT
-bool FluStatus_ThisRank;
+int FluStatus_ThisRank;
 
 
 // defined in Flu_SwapFluxPointer.cpp
@@ -38,8 +38,8 @@ extern void (*Flu_ResetByUser_API_Ptr)( const int lv, const int FluSg, const dou
 // Return      : GAMER_SUCCESS / GAMER_FAILED
 //               --> Mainly used for the option "AUTO_REDUCE_DT"
 //-------------------------------------------------------------------------------------------------------
-bool Flu_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, const double dt, const int SaveSg,
-                    const bool OverlapMPI, const bool Overlap_Sync )
+int Flu_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, const double dt, const int SaveSg,
+                   const bool OverlapMPI, const bool Overlap_Sync )
 {
 
 // initialize the flux_tmp arrays for AUTO_REDUCE_DT
@@ -53,10 +53,10 @@ bool Flu_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, co
 
 
 // collect the fluid solver status from all ranks (only necessary for AUTO_REDUCE_DT)
-   bool FluStatus_AllRank;
+   int FluStatus_AllRank;
 
 // the parenthesis enclosing MPI_Allreduce() is necessary to compile in the serial mode
-   if ( AUTO_REDUCE_DT )   { MPI_Allreduce( &FluStatus_ThisRank, &FluStatus_AllRank, 1, MPI_INT, MPI_BAND, MPI_COMM_WORLD ); }
+   if ( AUTO_REDUCE_DT )   { MPI_Allreduce( &FluStatus_ThisRank, &FluStatus_AllRank, 1, MPI_INT, MPI_LAND, MPI_COMM_WORLD ); }
    else                    FluStatus_AllRank = GAMER_SUCCESS;
 
 
