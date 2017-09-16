@@ -15,7 +15,7 @@ void Output_DumpManually( int &Dump_global )
 
    const char FileName[] = "DUMP_GAMER_DUMP";
 
-   int Dump_local  = false;
+   int Dump_local = false;
 
 
 // enforce NFS to flush the file information
