@@ -419,8 +419,8 @@ void Aux_TakeNote()
 #     endif // #ifdef GPU
 
 #     ifdef GRAVITY
-      fprintf( Note, "EXT_POT_NAUX_MAX                %d\n",      EXT_POT_NAUX_MAX        );
-      fprintf( Note, "EXT_ACC_NAUX_MAX                %d\n",      EXT_ACC_NAUX_MAX        );
+      fprintf( Note, "EXT_POT_NAUX_MAX                %d\n",      EXT_POT_NAUX_MAX );
+      fprintf( Note, "EXT_ACC_NAUX_MAX                %d\n",      EXT_ACC_NAUX_MAX );
 #     endif
 
       fprintf( Note, "***********************************************************************************\n" );
@@ -430,72 +430,72 @@ void Aux_TakeNote()
 //    record the symbolic constants
       fprintf( Note, "Symbolic Constants\n" );
       fprintf( Note, "***********************************************************************************\n" );
-      fprintf( Note, "#define NCOMP_FLUID             %d\n",      NCOMP_FLUID             );
-      fprintf( Note, "#define NCOMP_PASSIVE           %d\n",      NCOMP_PASSIVE           );
-      fprintf( Note, "#define FLU_NIN                 %d\n",      FLU_NIN                 );
-      fprintf( Note, "#define FLU_NOUT                %d\n",      FLU_NOUT                );
-      fprintf( Note, "#define NFLUX_FLUID             %d\n",      NFLUX_FLUID             );
-      fprintf( Note, "#define NFLUX_PASSIVE           %d\n",      NFLUX_PASSIVE           );
+      fprintf( Note, "#define NCOMP_FLUID             %d\n",      NCOMP_FLUID         );
+      fprintf( Note, "#define NCOMP_PASSIVE           %d\n",      NCOMP_PASSIVE       );
+      fprintf( Note, "#define FLU_NIN                 %d\n",      FLU_NIN             );
+      fprintf( Note, "#define FLU_NOUT                %d\n",      FLU_NOUT            );
+      fprintf( Note, "#define NFLUX_FLUID             %d\n",      NFLUX_FLUID         );
+      fprintf( Note, "#define NFLUX_PASSIVE           %d\n",      NFLUX_PASSIVE       );
 #     ifdef GRAVITY
-      fprintf( Note, "#define GRA_NIN                 %d\n",      GRA_NIN                 );
+      fprintf( Note, "#define GRA_NIN                 %d\n",      GRA_NIN             );
 #     endif
 #     ifdef SUPPORT_GRACKLE
-      fprintf( Note, "#define CHE_NPREP               %d\n",      CHE_NPREP               );
-      fprintf( Note, "#define CHE_NIN                 %d\n",      CHE_NIN                 );
-      fprintf( Note, "#define CHE_NOUT                %d\n",      CHE_NOUT                );
+      fprintf( Note, "#define CHE_NPREP               %d\n",      CHE_NPREP           );
+      fprintf( Note, "#define CHE_NIN                 %d\n",      CHE_NIN             );
+      fprintf( Note, "#define CHE_NOUT                %d\n",      CHE_NOUT            );
 #     endif
-      fprintf( Note, "#define PATCH_SIZE              %d\n",      PATCH_SIZE              );
-      fprintf( Note, "#define MAX_PATCH               %d\n",      MAX_PATCH               );
-      fprintf( Note, "#define NLEVEL                  %d\n",      NLEVEL                  );
+      fprintf( Note, "#define PATCH_SIZE              %d\n",      PATCH_SIZE          );
+      fprintf( Note, "#define MAX_PATCH               %d\n",      MAX_PATCH           );
+      fprintf( Note, "#define NLEVEL                  %d\n",      NLEVEL              );
       fprintf( Note, "\n" );
-      fprintf( Note, "#define FLU_GHOST_SIZE          %d\n",      FLU_GHOST_SIZE          );
+      fprintf( Note, "#define FLU_GHOST_SIZE          %d\n",      FLU_GHOST_SIZE      );
 #     ifdef GRAVITY
-      fprintf( Note, "#define POT_GHOST_SIZE          %d\n",      POT_GHOST_SIZE          );
-      fprintf( Note, "#define RHO_GHOST_SIZE          %d\n",      RHO_GHOST_SIZE          );
-      fprintf( Note, "#define GRA_GHOST_SIZE          %d\n",      GRA_GHOST_SIZE          );
+      fprintf( Note, "#define POT_GHOST_SIZE          %d\n",      POT_GHOST_SIZE      );
+      fprintf( Note, "#define RHO_GHOST_SIZE          %d\n",      RHO_GHOST_SIZE      );
+      fprintf( Note, "#define GRA_GHOST_SIZE          %d\n",      GRA_GHOST_SIZE      );
 #     ifdef UNSPLIT_GRAVITY
-      fprintf( Note, "#define USG_GHOST_SIZE          %d\n",      USG_GHOST_SIZE          );
+      fprintf( Note, "#define USG_GHOST_SIZE          %d\n",      USG_GHOST_SIZE      );
 #     endif
 #     ifdef PARTICLE
-      fprintf( Note, "#define RHOEXT_GHOST_SIZE       %d\n",      RHOEXT_GHOST_SIZE       );
+      fprintf( Note, "#define RHOEXT_GHOST_SIZE       %d\n",      RHOEXT_GHOST_SIZE   );
 #     endif
 #     endif
-      fprintf( Note, "#define FLU_NXT                 %d\n",      FLU_NXT                 );
+      fprintf( Note, "#define FLU_NXT                 %d\n",      FLU_NXT             );
 #     ifdef GRAVITY
-      fprintf( Note, "#define POT_NXT                 %d\n",      POT_NXT                 );
-      fprintf( Note, "#define RHO_NXT                 %d\n",      RHO_NXT                 );
-      fprintf( Note, "#define GRA_NXT                 %d\n",      GRA_NXT                 );
+      fprintf( Note, "#define POT_NXT                 %d\n",      POT_NXT             );
+      fprintf( Note, "#define RHO_NXT                 %d\n",      RHO_NXT             );
+      fprintf( Note, "#define GRA_NXT                 %d\n",      GRA_NXT             );
 #     ifdef UNSPLIT_GRAVITY
-      fprintf( Note, "#define USG_NXT_F               %d\n",      USG_NXT_F               );
-      fprintf( Note, "#define USG_NXT_G               %d\n",      USG_NXT_G               );
+      fprintf( Note, "#define USG_NXT_F               %d\n",      USG_NXT_F           );
+      fprintf( Note, "#define USG_NXT_G               %d\n",      USG_NXT_G           );
 #     endif
 #     endif
 #     ifdef PARTICLE
-      fprintf( Note, "#define RHOEXT_NXT              %d\n",      RHOEXT_NXT              );
+      fprintf( Note, "#define RHOEXT_NXT              %d\n",      RHOEXT_NXT          );
 #     endif
 #     ifdef GPU
-      fprintf( Note, "#define FLU_BLOCK_SIZE_X        %d\n",      FLU_BLOCK_SIZE_X        );
-      fprintf( Note, "#define FLU_BLOCK_SIZE_Y        %d\n",      FLU_BLOCK_SIZE_Y        );
+      fprintf( Note, "#define FLU_BLOCK_SIZE_X        %d\n",      FLU_BLOCK_SIZE_X    );
+      fprintf( Note, "#define FLU_BLOCK_SIZE_Y        %d\n",      FLU_BLOCK_SIZE_Y    );
 #     ifdef GRAVITY
 #     if   ( POT_SCHEME == SOR )
-      fprintf( Note, "#define POT_BLOCK_SIZE_Z        %d\n",      POT_BLOCK_SIZE_Z        );
+      fprintf( Note, "#define POT_BLOCK_SIZE_Z        %d\n",      POT_BLOCK_SIZE_Z    );
 #     elif ( POT_SCHEME == MG )
-      fprintf( Note, "#define POT_BLOCK_SIZE_X        %d\n",      POT_BLOCK_SIZE_X        );
+      fprintf( Note, "#define POT_BLOCK_SIZE_X        %d\n",      POT_BLOCK_SIZE_X    );
 #     endif
-      fprintf( Note, "#define GRA_BLOCK_SIZE_Z        %d\n",      GRA_BLOCK_SIZE_Z        );
+      fprintf( Note, "#define GRA_BLOCK_SIZE_Z        %d\n",      GRA_BLOCK_SIZE_Z    );
 #     endif // #ifdef GRAVITY
-      fprintf( Note, "#define DT_FLU_BLOCK_SIZE       %d\n",      DT_FLU_BLOCK_SIZE       );
+      fprintf( Note, "#define DT_FLU_BLOCK_SIZE       %d\n",      DT_FLU_BLOCK_SIZE   );
 #     ifdef GRAVITY
-      fprintf( Note, "#define DT_GRA_BLOCK_SIZE_ Z    %d\n",      DT_GRA_BLOCK_SIZE_Z     );
+      fprintf( Note, "#define DT_GRA_BLOCK_SIZE_ Z    %d\n",      DT_GRA_BLOCK_SIZE_Z );
 #     endif
 #     endif // #ifdef GPU
 #     ifdef PARTICLE
-      fprintf( Note, "#define PAR_NVAR                %d\n",      PAR_NVAR                );
-      fprintf( Note, "#define PAR_NPASSIVE            %d\n",      PAR_NPASSIVE            );
+      fprintf( Note, "#define PAR_NVAR                %d\n",      PAR_NVAR            );
+      fprintf( Note, "#define PAR_NPASSIVE            %d\n",      PAR_NPASSIVE        );
 #     endif
-      fprintf( Note, "#define MAX_STRING              %d\n",      MAX_STRING              );
-      fprintf( Note, "#define TINY_NUMBER             %20.14e\n", TINY_NUMBER             );
-      fprintf( Note, "#define HUGE_NUMBER             %20.14e\n", HUGE_NUMBER             );
+      fprintf( Note, "#define MAX_STRING              %d\n",      MAX_STRING          );
+      fprintf( Note, "#define TINY_NUMBER             %20.14e\n", TINY_NUMBER         );
+      fprintf( Note, "#define HUGE_NUMBER             %20.14e\n", HUGE_NUMBER         );
       fprintf( Note, "***********************************************************************************\n" );
       fprintf( Note, "\n\n");
 
@@ -503,23 +503,23 @@ void Aux_TakeNote()
 //    record the parameters of simulation scale
       fprintf( Note, "Parameters of Simulation Scale\n" );
       fprintf( Note, "***********************************************************************************\n" );
-      fprintf( Note, "BOX_SIZE (input)                %20.14e\n", BOX_SIZE                );
-      fprintf( Note, "BOX_SIZE_X                      %20.14e\n", amr->BoxSize[0]         );
-      fprintf( Note, "BOX_SIZE_Y                      %20.14e\n", amr->BoxSize[1]         );
-      fprintf( Note, "BOX_SIZE_Z                      %20.14e\n", amr->BoxSize[2]         );
-      fprintf( Note, "BOX_SCALE_X                     %d\n",      amr->BoxScale[0]        );
-      fprintf( Note, "BOX_SCALE_Y                     %d\n",      amr->BoxScale[1]        );
-      fprintf( Note, "BOX_SCALE_Z                     %d\n",      amr->BoxScale[2]        );
-      fprintf( Note, "NX0_TOT[0]                      %d\n",      NX0_TOT[0]              );
-      fprintf( Note, "NX0_TOT[1]                      %d\n",      NX0_TOT[1]              );
-      fprintf( Note, "NX0_TOT[2]                      %d\n",      NX0_TOT[2]              );
-      fprintf( Note, "MPI_NRank                       %d\n",      MPI_NRank               );
-      fprintf( Note, "MPI_NRank_X[0]                  %d\n",      MPI_NRank_X[0]          );
-      fprintf( Note, "MPI_NRank_X[1]                  %d\n",      MPI_NRank_X[1]          );
-      fprintf( Note, "MPI_NRank_X[2]                  %d\n",      MPI_NRank_X[2]          );
-      fprintf( Note, "OMP_NTHREAD                     %d\n",      OMP_NTHREAD             );
-      fprintf( Note, "END_T                           %20.14e\n", END_T                   );
-      fprintf( Note, "END_STEP                        %ld\n",     END_STEP                );
+      fprintf( Note, "BOX_SIZE (input)                %20.14e\n", BOX_SIZE         );
+      fprintf( Note, "BOX_SIZE_X                      %20.14e\n", amr->BoxSize[0]  );
+      fprintf( Note, "BOX_SIZE_Y                      %20.14e\n", amr->BoxSize[1]  );
+      fprintf( Note, "BOX_SIZE_Z                      %20.14e\n", amr->BoxSize[2]  );
+      fprintf( Note, "BOX_SCALE_X                     %d\n",      amr->BoxScale[0] );
+      fprintf( Note, "BOX_SCALE_Y                     %d\n",      amr->BoxScale[1] );
+      fprintf( Note, "BOX_SCALE_Z                     %d\n",      amr->BoxScale[2] );
+      fprintf( Note, "NX0_TOT[0]                      %d\n",      NX0_TOT[0]       );
+      fprintf( Note, "NX0_TOT[1]                      %d\n",      NX0_TOT[1]       );
+      fprintf( Note, "NX0_TOT[2]                      %d\n",      NX0_TOT[2]       );
+      fprintf( Note, "MPI_NRank                       %d\n",      MPI_NRank        );
+      fprintf( Note, "MPI_NRank_X[0]                  %d\n",      MPI_NRank_X[0]   );
+      fprintf( Note, "MPI_NRank_X[1]                  %d\n",      MPI_NRank_X[1]   );
+      fprintf( Note, "MPI_NRank_X[2]                  %d\n",      MPI_NRank_X[2]   );
+      fprintf( Note, "OMP_NTHREAD                     %d\n",      OMP_NTHREAD      );
+      fprintf( Note, "END_T                           %20.14e\n", END_T            );
+      fprintf( Note, "END_STEP                        %ld\n",     END_STEP         );
       fprintf( Note, "***********************************************************************************\n" );
       fprintf( Note, "\n\n");
 
@@ -575,15 +575,15 @@ void Aux_TakeNote()
 //    record the parameters of boundary condition
       fprintf( Note, "Parameters of Boundary Condition\n" );
       fprintf( Note, "***********************************************************************************\n" );
-      fprintf( Note, "OPT__BC_FLU[0] (-x)             %d\n",      OPT__BC_FLU[0]          );
-      fprintf( Note, "OPT__BC_FLU[1] (+x)             %d\n",      OPT__BC_FLU[1]          );
-      fprintf( Note, "OPT__BC_FLU[2] (-y)             %d\n",      OPT__BC_FLU[2]          );
-      fprintf( Note, "OPT__BC_FLU[3] (+y)             %d\n",      OPT__BC_FLU[3]          );
-      fprintf( Note, "OPT__BC_FLU[4] (-z)             %d\n",      OPT__BC_FLU[4]          );
-      fprintf( Note, "OPT__BC_FLU[5] (+z)             %d\n",      OPT__BC_FLU[5]          );
+      fprintf( Note, "OPT__BC_FLU[0] (-x)             %d\n",      OPT__BC_FLU[0] );
+      fprintf( Note, "OPT__BC_FLU[1] (+x)             %d\n",      OPT__BC_FLU[1] );
+      fprintf( Note, "OPT__BC_FLU[2] (-y)             %d\n",      OPT__BC_FLU[2] );
+      fprintf( Note, "OPT__BC_FLU[3] (+y)             %d\n",      OPT__BC_FLU[3] );
+      fprintf( Note, "OPT__BC_FLU[4] (-z)             %d\n",      OPT__BC_FLU[4] );
+      fprintf( Note, "OPT__BC_FLU[5] (+z)             %d\n",      OPT__BC_FLU[5] );
 #     ifdef GRAVITY
-      fprintf( Note, "OPT__BC_POT                     %d\n",      OPT__BC_POT             );
-      fprintf( Note, "GFUNC_COEFF0                    %13.7e\n",  GFUNC_COEFF0            );
+      fprintf( Note, "OPT__BC_POT                     %d\n",      OPT__BC_POT    );
+      fprintf( Note, "GFUNC_COEFF0                    %13.7e\n",  GFUNC_COEFF0   );
 #     endif
       fprintf( Note, "***********************************************************************************\n" );
       fprintf( Note, "\n\n");
@@ -615,9 +615,9 @@ void Aux_TakeNote()
 #     ifdef COMOVING
       fprintf( Note, "Parameters of Cosmological Simulation\n" );
       fprintf( Note, "***********************************************************************************\n" );
-      fprintf( Note, "A_INIT                          %13.7e\n",  A_INIT                  );
-      fprintf( Note, "OMEGA_M0                        %13.7e\n",  OMEGA_M0                );
-      fprintf( Note, "HUBBLE0 (h)                     %13.7e\n",  HUBBLE0                 );
+      fprintf( Note, "A_INIT                          %13.7e\n",  A_INIT   );
+      fprintf( Note, "OMEGA_M0                        %13.7e\n",  OMEGA_M0 );
+      fprintf( Note, "HUBBLE0 (h)                     %13.7e\n",  HUBBLE0  );
       fprintf( Note, "***********************************************************************************\n" );
       fprintf( Note, "\n\n");
 #     endif
@@ -708,17 +708,17 @@ void Aux_TakeNote()
 #     ifndef SERIAL
       fprintf( Note, "Parameters of Parallelization\n" );
       fprintf( Note, "***********************************************************************************\n" );
-      fprintf( Note, "Flu_ParaBuf                     %d\n",      Flu_ParaBuf             );
+      fprintf( Note, "Flu_ParaBuf                     %d\n",      Flu_ParaBuf              );
 #     ifdef GRAVITY
-      fprintf( Note, "Pot_ParaBuf                     %d\n",      Pot_ParaBuf             );
-      fprintf( Note, "Rho_ParaBuf                     %d\n",      Rho_ParaBuf             );
+      fprintf( Note, "Pot_ParaBuf                     %d\n",      Pot_ParaBuf              );
+      fprintf( Note, "Rho_ParaBuf                     %d\n",      Rho_ParaBuf              );
 #     endif
 #     ifdef LOAD_BALANCE
-      fprintf( Note, "LB_WLI_MAX                      %13.7e\n",  amr->LB->WLI_Max        );
+      fprintf( Note, "LB_WLI_MAX                      %13.7e\n",  amr->LB->WLI_Max         );
 #     ifdef PARTICLE
-      fprintf( Note, "LB_PAR_WEIGHT                   %13.7e\n",  amr->LB->Par_Weight     );
+      fprintf( Note, "LB_PAR_WEIGHT                   %13.7e\n",  amr->LB->Par_Weight      );
 #     endif
-      fprintf( Note, "OPT__RECORD_LOAD_BALANCE        %d\n",      OPT__RECORD_LOAD_BALANCE);
+      fprintf( Note, "OPT__RECORD_LOAD_BALANCE        %d\n",      OPT__RECORD_LOAD_BALANCE );
 #     endif // #ifdef LOAD_BALANCE
       fprintf( Note, "***********************************************************************************\n" );
       fprintf( Note, "\n\n");
@@ -838,37 +838,37 @@ void Aux_TakeNote()
 //    record the parameters of Fluid solver in different models
       fprintf( Note, "Parameters of Fluid Solver (in all models)\n" );
       fprintf( Note, "***********************************************************************************\n" );
-      fprintf( Note, "FLU_GPU_NPGROUP                 %d\n",      FLU_GPU_NPGROUP         );
-      fprintf( Note, "GPU_NSTREAM                     %d\n",      GPU_NSTREAM             );
-      fprintf( Note, "OPT__FIXUP_FLUX                 %d\n",      OPT__FIXUP_FLUX         );
-      fprintf( Note, "OPT__FIXUP_RESTRICT             %d\n",      OPT__FIXUP_RESTRICT     );
-      fprintf( Note, "OPT__CORR_AFTER_ALL_SYNC        %d\n",      OPT__CORR_AFTER_ALL_SYNC);
-      fprintf( Note, "OPT__NORMALIZE_PASSIVE          %d\n",      OPT__NORMALIZE_PASSIVE  );
+      fprintf( Note, "FLU_GPU_NPGROUP                 %d\n",      FLU_GPU_NPGROUP          );
+      fprintf( Note, "GPU_NSTREAM                     %d\n",      GPU_NSTREAM              );
+      fprintf( Note, "OPT__FIXUP_FLUX                 %d\n",      OPT__FIXUP_FLUX          );
+      fprintf( Note, "OPT__FIXUP_RESTRICT             %d\n",      OPT__FIXUP_RESTRICT      );
+      fprintf( Note, "OPT__CORR_AFTER_ALL_SYNC        %d\n",      OPT__CORR_AFTER_ALL_SYNC );
+      fprintf( Note, "OPT__NORMALIZE_PASSIVE          %d\n",      OPT__NORMALIZE_PASSIVE   );
 
 //    target passive scalars to be normalized
       if ( OPT__NORMALIZE_PASSIVE ) {
-      fprintf( Note, "   Number of scalars            %d\n",      PassiveNorm_NVar        );
-      fprintf( Note, "   Target scalars              "                                    );
+      fprintf( Note, "   Number of scalars            %d\n",      PassiveNorm_NVar         );
+      fprintf( Note, "   Target scalars              "                                     );
       for (int v=0; v<PassiveNorm_NVar; v++)
       fprintf( Note, " %s",                                       PassiveFieldName_Grid[ PassiveNorm_VarIdx[v] ] );
       fprintf( Note, "\n" ); }
 
-      fprintf( Note, "OPT__OVERLAP_MPI                %d\n",      OPT__OVERLAP_MPI        );
-      fprintf( Note, "OPT__RESET_FLUID                %d\n",      OPT__RESET_FLUID        );
+      fprintf( Note, "OPT__OVERLAP_MPI                %d\n",      OPT__OVERLAP_MPI         );
+      fprintf( Note, "OPT__RESET_FLUID                %d\n",      OPT__RESET_FLUID         );
 #     if ( MODEL == HYDRO  ||  MODEL == MHD  ||  MODEL == ELBDM )
-      fprintf( Note, "MIN_DENS                        %13.7e\n",  MIN_DENS                );
+      fprintf( Note, "MIN_DENS                        %13.7e\n",  MIN_DENS                 );
 #     endif
 #     if ( MODEL == HYDRO  ||  MODEL == MHD )
-      fprintf( Note, "MIN_PRES                        %13.7e\n",  MIN_PRES                );
-      fprintf( Note, "JEANS_MIN_PRES                  %d\n",      JEANS_MIN_PRES          );
+      fprintf( Note, "MIN_PRES                        %13.7e\n",  MIN_PRES                 );
+      fprintf( Note, "JEANS_MIN_PRES                  %d\n",      JEANS_MIN_PRES           );
       if ( JEANS_MIN_PRES ) {
-      fprintf( Note, "JEANS_MIN_PRES_LEVEL            %d\n",      JEANS_MIN_PRES_LEVEL    );
-      fprintf( Note, "JEANS_MIN_PRES_NCELL            %d\n",      JEANS_MIN_PRES_NCELL    ); }
+      fprintf( Note, "JEANS_MIN_PRES_LEVEL            %d\n",      JEANS_MIN_PRES_LEVEL     );
+      fprintf( Note, "JEANS_MIN_PRES_NCELL            %d\n",      JEANS_MIN_PRES_NCELL     ); }
 #     endif
 #     ifdef DUAL_ENERGY
-      fprintf( Note, "DUAL_ENERGY_SWITCH              %13.7e\n",  DUAL_ENERGY_SWITCH      );
+      fprintf( Note, "DUAL_ENERGY_SWITCH              %13.7e\n",  DUAL_ENERGY_SWITCH       );
 #     endif
-      fprintf( Note, "WITH_COARSE_FINE_FLUX           %d\n",      amr->WithFlux           );
+      fprintf( Note, "WITH_COARSE_FINE_FLUX           %d\n",      amr->WithFlux            );
 #     ifndef SERIAL
       int MPI_Thread_Status;
       MPI_Query_thread( &MPI_Thread_Status );
@@ -891,22 +891,22 @@ void Aux_TakeNote()
 #     ifdef GRAVITY
       fprintf( Note, "Parameters of Poisson and Gravity Solvers\n" );
       fprintf( Note, "***********************************************************************************\n" );
-      fprintf( Note, "NEWTON_G                        %13.7e\n",  NEWTON_G                );
+      fprintf( Note, "NEWTON_G                        %13.7e\n",  NEWTON_G             );
 #     if   ( POT_SCHEME == SOR )
-      fprintf( Note, "SOR_OMEGA                       %13.7e\n",  SOR_OMEGA               );
-      fprintf( Note, "SOR_MAX_ITER                    %d\n",      SOR_MAX_ITER            );
-      fprintf( Note, "SOR_MIN_ITER                    %d\n",      SOR_MIN_ITER            );
+      fprintf( Note, "SOR_OMEGA                       %13.7e\n",  SOR_OMEGA            );
+      fprintf( Note, "SOR_MAX_ITER                    %d\n",      SOR_MAX_ITER         );
+      fprintf( Note, "SOR_MIN_ITER                    %d\n",      SOR_MIN_ITER         );
 #     elif ( POT_SCHEME == MG )
-      fprintf( Note, "MG_MAX_ITER                     %d\n",      MG_MAX_ITER             );
-      fprintf( Note, "MG_NPRE_SMOOTH                  %d\n",      MG_NPRE_SMOOTH          );
-      fprintf( Note, "MG_NPOST_SMOOTH                 %d\n",      MG_NPOST_SMOOTH         );
-      fprintf( Note, "MG_TOLERATED_ERROR              %13.7e\n",  MG_TOLERATED_ERROR      );
+      fprintf( Note, "MG_MAX_ITER                     %d\n",      MG_MAX_ITER          );
+      fprintf( Note, "MG_NPRE_SMOOTH                  %d\n",      MG_NPRE_SMOOTH       );
+      fprintf( Note, "MG_NPOST_SMOOTH                 %d\n",      MG_NPOST_SMOOTH      );
+      fprintf( Note, "MG_TOLERATED_ERROR              %13.7e\n",  MG_TOLERATED_ERROR   );
 #     endif
-      fprintf( Note, "POT_GPU_NPGROUP                 %d\n",      POT_GPU_NPGROUP         );
-      fprintf( Note, "OPT__GRA_P5_GRADIENT            %d\n",      OPT__GRA_P5_GRADIENT    );
-      fprintf( Note, "OPT__GRAVITY_TYPE               %d\n",      OPT__GRAVITY_TYPE       );
-      fprintf( Note, "OPT__EXTERNAL_POT               %d\n",      OPT__EXTERNAL_POT       );
-      fprintf( Note, "AveDensity_Init                 %13.7e\n",  AveDensity_Init         );
+      fprintf( Note, "POT_GPU_NPGROUP                 %d\n",      POT_GPU_NPGROUP      );
+      fprintf( Note, "OPT__GRA_P5_GRADIENT            %d\n",      OPT__GRA_P5_GRADIENT );
+      fprintf( Note, "OPT__GRAVITY_TYPE               %d\n",      OPT__GRAVITY_TYPE    );
+      fprintf( Note, "OPT__EXTERNAL_POT               %d\n",      OPT__EXTERNAL_POT    );
+      fprintf( Note, "AveDensity_Init                 %13.7e\n",  AveDensity_Init      );
       fprintf( Note, "***********************************************************************************\n" );
       fprintf( Note, "\n\n");
 #     endif // #ifdef GRAVITY
@@ -998,27 +998,27 @@ void Aux_TakeNote()
 //    record the parameters of data dump
       fprintf( Note, "Parameters of Data Dump\n" );
       fprintf( Note, "***********************************************************************************\n" );
-      fprintf( Note, "OPT__OUTPUT_TOTAL               %d\n",      OPT__OUTPUT_TOTAL       );
-      fprintf( Note, "OPT__OUTPUT_PART                %d\n",      OPT__OUTPUT_PART        );
-      fprintf( Note, "OPT__OUTPUT_USER                %d\n",      OPT__OUTPUT_USER        );
+      fprintf( Note, "OPT__OUTPUT_TOTAL               %d\n",      OPT__OUTPUT_TOTAL    );
+      fprintf( Note, "OPT__OUTPUT_PART                %d\n",      OPT__OUTPUT_PART     );
+      fprintf( Note, "OPT__OUTPUT_USER                %d\n",      OPT__OUTPUT_USER     );
 #     ifdef PARTICLE
-      fprintf( Note, "OPT__OUTPUT_PAR_TEXT            %d\n",      OPT__OUTPUT_PAR_TEXT    );
+      fprintf( Note, "OPT__OUTPUT_PAR_TEXT            %d\n",      OPT__OUTPUT_PAR_TEXT );
 #     endif
-      fprintf( Note, "OPT__OUTPUT_BASEPS              %d\n",      OPT__OUTPUT_BASEPS      );
-      fprintf( Note, "OPT__OUTPUT_BASE                %d\n",      OPT__OUTPUT_BASE        );
+      fprintf( Note, "OPT__OUTPUT_BASEPS              %d\n",      OPT__OUTPUT_BASEPS   );
+      fprintf( Note, "OPT__OUTPUT_BASE                %d\n",      OPT__OUTPUT_BASE     );
 #     ifdef GRAVITY
-      fprintf( Note, "OPT__OUTPUT_POT                 %d\n",      OPT__OUTPUT_POT         );
+      fprintf( Note, "OPT__OUTPUT_POT                 %d\n",      OPT__OUTPUT_POT      );
 #     endif
 #     ifdef PARTICLE
-      fprintf( Note, "OPT__OUTPUT_PAR_DENS            %d\n",      OPT__OUTPUT_PAR_DENS    );
+      fprintf( Note, "OPT__OUTPUT_PAR_DENS            %d\n",      OPT__OUTPUT_PAR_DENS );
 #     endif
-      fprintf( Note, "OPT__OUTPUT_MODE                %d\n",      OPT__OUTPUT_MODE        );
-      fprintf( Note, "OUTPUT_STEP                     %d\n",      OUTPUT_STEP             );
-      fprintf( Note, "OUTPUT_DT                       %20.14e\n", OUTPUT_DT               );
-      fprintf( Note, "OUTPUT_PART_X                   %20.14e\n", OUTPUT_PART_X           );
-      fprintf( Note, "OUTPUT_PART_Y                   %20.14e\n", OUTPUT_PART_Y           );
-      fprintf( Note, "OUTPUT_PART_Z                   %20.14e\n", OUTPUT_PART_Z           );
-      fprintf( Note, "INIT_DUMPID                     %d\n",      INIT_DUMPID             );
+      fprintf( Note, "OPT__OUTPUT_MODE                %d\n",      OPT__OUTPUT_MODE     );
+      fprintf( Note, "OUTPUT_STEP                     %d\n",      OUTPUT_STEP          );
+      fprintf( Note, "OUTPUT_DT                       %20.14e\n", OUTPUT_DT            );
+      fprintf( Note, "OUTPUT_PART_X                   %20.14e\n", OUTPUT_PART_X        );
+      fprintf( Note, "OUTPUT_PART_Y                   %20.14e\n", OUTPUT_PART_Y        );
+      fprintf( Note, "OUTPUT_PART_Z                   %20.14e\n", OUTPUT_PART_Z        );
+      fprintf( Note, "INIT_DUMPID                     %d\n",      INIT_DUMPID          );
       fprintf( Note, "***********************************************************************************\n" );
       fprintf( Note, "\n\n");
 
@@ -1027,8 +1027,8 @@ void Aux_TakeNote()
 #     ifdef SUPPORT_LIBYT
       fprintf( Note, "Parameters of YT Inline Analysis\n" );
       fprintf( Note, "***********************************************************************************\n" );
-      fprintf( Note, "YT_SCRIPT                       %s\n",      YT_SCRIPT               );
-      fprintf( Note, "YT_VERBOSE                      %d\n",      YT_VERBOSE              );
+      fprintf( Note, "YT_SCRIPT                       %s\n",      YT_SCRIPT  );
+      fprintf( Note, "YT_VERBOSE                      %d\n",      YT_VERBOSE );
       fprintf( Note, "***********************************************************************************\n" );
       fprintf( Note, "\n\n");
 #     endif
@@ -1037,14 +1037,15 @@ void Aux_TakeNote()
 //    record the parameters of miscellaneous purposes
       fprintf( Note, "Parameters of Miscellaneous Purposes\n" );
       fprintf( Note, "***********************************************************************************\n" );
-      fprintf( Note, "OPT__VERBOSE                    %d\n",      OPT__VERBOSE            );
-      fprintf( Note, "OPT__TIMING_BARRIER             %d\n",      OPT__TIMING_BARRIER     );
-      fprintf( Note, "OPT__TIMING_BALANCE             %d\n",      OPT__TIMING_BALANCE     );
-      fprintf( Note, "OPT__TIMING_MPI                 %d\n",      OPT__TIMING_MPI         );
-      fprintf( Note, "OPT__RECORD_MEMORY              %d\n",      OPT__RECORD_MEMORY      );
-      fprintf( Note, "OPT__RECORD_PERFORMANCE         %d\n",      OPT__RECORD_PERFORMANCE );
-      fprintf( Note, "OPT__MANUAL_CONTROL             %d\n",      OPT__MANUAL_CONTROL     );
-      fprintf( Note, "OPT__RECORD_USER                %d\n",      OPT__RECORD_USER        );
+      fprintf( Note, "OPT__VERBOSE                    %d\n",      OPT__VERBOSE             );
+      fprintf( Note, "OPT__TIMING_BARRIER             %d\n",      OPT__TIMING_BARRIER      );
+      fprintf( Note, "OPT__TIMING_BALANCE             %d\n",      OPT__TIMING_BALANCE      );
+      fprintf( Note, "OPT__TIMING_MPI                 %d\n",      OPT__TIMING_MPI          );
+      fprintf( Note, "OPT__RECORD_MEMORY              %d\n",      OPT__RECORD_MEMORY       );
+      fprintf( Note, "OPT__RECORD_PERFORMANCE         %d\n",      OPT__RECORD_PERFORMANCE  );
+      fprintf( Note, "OPT__MANUAL_CONTROL             %d\n",      OPT__MANUAL_CONTROL      );
+      fprintf( Note, "OPT__RECORD_USER                %d\n",      OPT__RECORD_USER         );
+      fprintf( Note, "OPT__OPTIMIZE_AGGRESSIVE        %d\n",      OPT__OPTIMIZE_AGGRESSIVE );
       fprintf( Note, "***********************************************************************************\n" );
       fprintf( Note, "\n\n");
 
@@ -1052,22 +1053,22 @@ void Aux_TakeNote()
 //    record the parameters of simulation checks
       fprintf( Note, "Parameters of Simulation Checks\n" );
       fprintf( Note, "***********************************************************************************\n" );
-      fprintf( Note, "OPT__CK_REFINE                  %d\n",      OPT__CK_REFINE          );
-      fprintf( Note, "OPT__CK_PROPER_NESTING          %d\n",      OPT__CK_PROPER_NESTING  );
-      fprintf( Note, "OPT__CK_CONSERVATION            %d\n",      OPT__CK_CONSERVATION    );
+      fprintf( Note, "OPT__CK_REFINE                  %d\n",      OPT__CK_REFINE            );
+      fprintf( Note, "OPT__CK_PROPER_NESTING          %d\n",      OPT__CK_PROPER_NESTING    );
+      fprintf( Note, "OPT__CK_CONSERVATION            %d\n",      OPT__CK_CONSERVATION      );
       fprintf( Note, "OPT__CK_NORMALIZE_PASSIVE       %d\n",      OPT__CK_NORMALIZE_PASSIVE );
-      fprintf( Note, "OPT__CK_RESTRICT                %d\n",      OPT__CK_RESTRICT        );
-      fprintf( Note, "OPT__CK_FINITE                  %d\n",      OPT__CK_FINITE          );
-      fprintf( Note, "OPT__CK_PATCH_ALLOCATE          %d\n",      OPT__CK_PATCH_ALLOCATE  );
-      fprintf( Note, "OPT__CK_FLUX_ALLOCATE           %d\n",      OPT__CK_FLUX_ALLOCATE   );
+      fprintf( Note, "OPT__CK_RESTRICT                %d\n",      OPT__CK_RESTRICT          );
+      fprintf( Note, "OPT__CK_FINITE                  %d\n",      OPT__CK_FINITE            );
+      fprintf( Note, "OPT__CK_PATCH_ALLOCATE          %d\n",      OPT__CK_PATCH_ALLOCATE    );
+      fprintf( Note, "OPT__CK_FLUX_ALLOCATE           %d\n",      OPT__CK_FLUX_ALLOCATE     );
 #     if   ( MODEL == HYDRO )
-      fprintf( Note, "OPT__CK_NEGATIVE                %d\n",      OPT__CK_NEGATIVE        );
+      fprintf( Note, "OPT__CK_NEGATIVE                %d\n",      OPT__CK_NEGATIVE          );
 #     elif ( MODEL == MHD )
 #     warning : WAIT MHD !!!
 #     endif // MODEL
-      fprintf( Note, "OPT__CK_MEMFREE                 %13.7e\n",  OPT__CK_MEMFREE         );
+      fprintf( Note, "OPT__CK_MEMFREE                 %13.7e\n",  OPT__CK_MEMFREE           );
 #     ifdef PARTICLE
-      fprintf( Note, "OPT__CK_PARTICLE                %d\n",      OPT__CK_PARTICLE        );
+      fprintf( Note, "OPT__CK_PARTICLE                %d\n",      OPT__CK_PARTICLE          );
 #     endif
       fprintf( Note, "***********************************************************************************\n" );
       fprintf( Note, "\n\n");

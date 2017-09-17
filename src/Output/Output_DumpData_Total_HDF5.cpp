@@ -70,7 +70,7 @@ Procedure for outputting new variables:
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2256)
+// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2257)
 // Description :  Output all simulation data in the HDF5 format, which can be used as a restart file
 //                or loaded by YT
 //
@@ -144,6 +144,7 @@ Procedure for outputting new variables:
 //                2254 : 2017/08/29 --> output star formation parameters
 //                2255 : 2017/09/01 --> output SF_CREATION_STAR_DET_RANDOM
 //                2256 : 2017/09/10 --> output FLAG_BUFFER_SIZE_MAXM2_LV
+//                2257 : 2017/09/17 --> output OPT__OPTIMIZE_AGGRESSIVE
 //-------------------------------------------------------------------------------------------------------
 void Output_DumpData_Total_HDF5( const char *FileName )
 {
@@ -1249,7 +1250,7 @@ void FillIn_KeyInfo( KeyInfo_t &KeyInfo )
 
    const time_t CalTime  = time( NULL );   // calendar time
 
-   KeyInfo.FormatVersion = 2256;
+   KeyInfo.FormatVersion = 2257;
    KeyInfo.Model         = MODEL;
    KeyInfo.NLevel        = NLEVEL;
    KeyInfo.NCompFluid    = NCOMP_FLUID;
@@ -1992,6 +1993,7 @@ void FillIn_InputPara( InputPara_t &InputPara )
    InputPara.Opt__RecordPerformance  = OPT__RECORD_PERFORMANCE;
    InputPara.Opt__ManualControl      = OPT__MANUAL_CONTROL;
    InputPara.Opt__RecordUser         = OPT__RECORD_USER;
+   InputPara.Opt__OptimizeAggressive = OPT__OPTIMIZE_AGGRESSIVE;
 
 // simulation checks
    InputPara.Opt__Ck_Refine          = OPT__CK_REFINE;
@@ -2671,6 +2673,7 @@ void GetCompound_InputPara( hid_t &H5_TypeID )
    H5Tinsert( H5_TypeID, "Opt__RecordPerformance",  HOFFSET(InputPara_t,Opt__RecordPerformance ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "Opt__ManualControl",      HOFFSET(InputPara_t,Opt__ManualControl     ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "Opt__RecordUser",         HOFFSET(InputPara_t,Opt__RecordUser        ), H5T_NATIVE_INT     );
+   H5Tinsert( H5_TypeID, "Opt__OptimizeAggressive", HOFFSET(InputPara_t,Opt__OptimizeAggressive), H5T_NATIVE_INT     );
 
 // simulation checks
    H5Tinsert( H5_TypeID, "Opt__Ck_Refine",          HOFFSET(InputPara_t,Opt__Ck_Refine         ), H5T_NATIVE_INT     );

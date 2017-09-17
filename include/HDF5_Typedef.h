@@ -555,6 +555,7 @@ struct InputPara_t
    int    Opt__RecordPerformance;
    int    Opt__ManualControl;
    int    Opt__RecordUser;
+   int    Opt__OptimizeAggressive;
 
 // simulation checks
    int    Opt__Ck_Refine;
