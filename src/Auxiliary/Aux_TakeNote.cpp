@@ -4,6 +4,7 @@
 #ifdef GRAVITY
 #include "CUPOT.h"
 #endif
+#include <sched.h>
 
 
 
@@ -1072,31 +1073,6 @@ void Aux_TakeNote()
       fprintf( Note, "\n\n");
 
 
-//    record the parameters of OpenMP
-#     ifdef OPENMP
-      int omp_nthread, omp_chunk_size, omp_nested;
-      omp_sched_t omp_schedule;
-
-      omp_nested = omp_get_nested();
-      omp_get_schedule( &omp_schedule, &omp_chunk_size );
-#     pragma omp parallel
-#     pragma omp master
-      { omp_nthread = omp_get_num_threads(); }
-
-      fprintf( Note, "Parameters of OpenMP\n" );
-      fprintf( Note, "***********************************************************************************\n" );
-      fprintf( Note, "OMP__NUM_THREADS                %d\n",      omp_nthread             );
-      fprintf( Note, "OMP__SCHEDULE                   %s\n",      ( omp_schedule == omp_sched_static  ) ? "STATIC"  :
-                                                                  ( omp_schedule == omp_sched_dynamic ) ? "DYNAMIC" :
-                                                                  ( omp_schedule == omp_sched_guided  ) ? "GUIDED"  :
-                                                                  ( omp_schedule == omp_sched_auto    ) ? "AUTO"    : "UNKNOWN" );
-      fprintf( Note, "OMP__SCHEDULE_CHUNK_SIZE        %d\n",      omp_chunk_size          );
-      fprintf( Note, "OMP__NESTED                     %s\n",      ( omp_nested ) ? "ON" : "OFF" );
-      fprintf( Note, "***********************************************************************************\n" );
-      fprintf( Note, "\n\n");
-#     endif // #ifdef OPENMP
-
-
 //    record the flag criterion (density/density gradient/pressure gradient/user-defined)
       if ( OPT__FLAG_RHO )
       {
@@ -1285,6 +1261,76 @@ void Aux_TakeNote()
       fclose( Note );
    }
 #  endif // #ifndef GPU
+
+
+// record the OpenMP status
+#  ifdef OPENMP
+   int omp_nthread, omp_chunk_size, omp_nested;
+   omp_sched_t omp_schedule;
+
+   omp_nested = omp_get_nested();
+   omp_get_schedule( &omp_schedule, &omp_chunk_size );
+
+#  pragma omp parallel
+#  pragma omp master
+   { omp_nthread = omp_get_num_threads(); }
+
+   if ( MPI_Rank == 0 )
+   {
+      Note = fopen( FileName, "a" );
+      fprintf( Note, "OpenMP Diagnosis\n" );
+      fprintf( Note, "***********************************************************************************\n" );
+      fprintf( Note, "OMP__SCHEDULE                   %s\n",      ( omp_schedule == omp_sched_static  ) ? "STATIC"  :
+                                                                  ( omp_schedule == omp_sched_dynamic ) ? "DYNAMIC" :
+                                                                  ( omp_schedule == omp_sched_guided  ) ? "GUIDED"  :
+                                                                  ( omp_schedule == omp_sched_auto    ) ? "AUTO"    : "UNKNOWN" );
+      fprintf( Note, "OMP__SCHEDULE_CHUNK_SIZE        %d\n",      omp_chunk_size          );
+      fprintf( Note, "OMP__NESTED                     %s\n",      ( omp_nested ) ? "ON" : "OFF" );
+      fprintf( Note, "\n" );
+      fprintf( Note, "CPU core IDs of all OpenMP threads (tid == thread ID):\n" );
+      fprintf( Note, "----------------------------------------------------------------------------------------------------------\n" );
+      fprintf( Note, "%5s  %10s  %7s", "Rank", "Host", "NThread" );
+      for (int t=0; t<omp_nthread; t++)
+      fprintf( Note, "  tid-%02d", t );
+      fprintf( Note, "\n" );
+      fclose( Note );
+   }
+
+// record the CPU core id of each OpenMP thread
+   int *omp_core_id = new int [omp_nthread];
+
+#  pragma omp parallel
+   { omp_core_id[ omp_get_thread_num() ] = sched_getcpu(); }
+
+   for (int YourTurn=0; YourTurn<MPI_NRank; YourTurn++)
+   {
+      if ( MPI_Rank == YourTurn )
+      {
+         char MPI_Host[1024];
+         gethostname( MPI_Host, 1024 );
+
+         Note = fopen( FileName, "a" );
+         fprintf( Note, "%5d  %10s  %7d", MPI_Rank, MPI_Host, omp_nthread );
+         for (int t=0; t<omp_nthread; t++)   fprintf( Note, "  %6d", omp_core_id[t] );
+         fprintf( Note, "\n" );
+         fflush( Note );
+         fclose( Note );
+      }
+
+      MPI_Barrier( MPI_COMM_WORLD );
+   }
+
+   delete [] omp_core_id;
+
+   if ( MPI_Rank == 0 )
+   {
+      Note = fopen( FileName, "a" );
+      fprintf( Note, "----------------------------------------------------------------------------------------------------------\n" );
+      fprintf( Note, "***********************************************************************************\n" );
+      fprintf( Note, "\n\n");
+      fclose( Note );
+   }
+#  endif // #ifdef OPENMP
 
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "Aux_TakeNote ... done\n" );
