@@ -58,22 +58,23 @@ void Par_UpdateParticle( const int lv, const double TimeNew, const double TimeOl
                          const bool StoreAcc, const bool UseStoredAcc )
 {
 
-   const ParInterp_t IntScheme  = amr->Par->Interp;
-   const bool   IntPhase_No     = false;
-   const real   MinDens_No      = -1.0;
-   const real   MinPres_No      = -1.0;
-   const double dh              = amr->dh[lv];
-   const double _dh             = 1.0/dh;
-   const double PrepPotTime     = ( UpdateStep==PAR_UPSTEP_CORR || UpdateStep==PAR_UPSTEP_ACC_ONLY ) ? TimeNew : TimeOld;
+   const ParInterp_t IntScheme    = amr->Par->Interp;
+   const bool   IntPhase_No       = false;
+   const bool   DE_Consistency_No = false;
+   const real   MinDens_No        = -1.0;
+   const real   MinPres_No        = -1.0;
+   const double dh                = amr->dh[lv];
+   const double _dh               = 1.0/dh;
+   const double PrepPotTime       = ( UpdateStep==PAR_UPSTEP_CORR || UpdateStep==PAR_UPSTEP_ACC_ONLY ) ? TimeNew : TimeOld;
 
-   const int  GraGhost_Par      = 1;                     // always set to 1 for particles (P5 gradient is not supported yet)
-   const int  ParGhost          = amr->Par->GhostSize;
-   const int  PotGhost          = GraGhost_Par + ParGhost;
-   const int  PotSize           = PS1 + 2*PotGhost;
-   const int  AccSize           = PS1 + 2*ParGhost;
-   const real Const_8           = (real)8.0;
-// const real GraConst          = ( OPT__GRA_P5_GRADIENT ) ? -1.0/(12.0*dh) : -1.0/(2.0*dh); // but P5 is NOT supported yet
-   const real GraConst          = ( false                ) ? -1.0/(12.0*dh) : -1.0/(2.0*dh); // but P5 is NOT supported yet
+   const int  GraGhost_Par        = 1;                      // always set to 1 for particles (P5 gradient is not supported yet)
+   const int  ParGhost            = amr->Par->GhostSize;
+   const int  PotGhost            = GraGhost_Par + ParGhost;
+   const int  PotSize             = PS1 + 2*PotGhost;
+   const int  AccSize             = PS1 + 2*ParGhost;
+   const real Const_8             = (real)8.0;
+// const real GraConst            = ( OPT__GRA_P5_GRADIENT ) ? -1.0/(12.0*dh) : -1.0/(2.0*dh); // but P5 is NOT supported yet
+   const real GraConst            = ( false                ) ? -1.0/(12.0*dh) : -1.0/(2.0*dh); // but P5 is NOT supported yet
 
    real *ParPos[3] = { amr->Par->PosX, amr->Par->PosY, amr->Par->PosZ };
    real *ParVel[3] = { amr->Par->VelX, amr->Par->VelY, amr->Par->VelZ };
@@ -254,7 +255,7 @@ void Par_UpdateParticle( const int lv, const double TimeNew, const double TimeOl
 #        endif // #ifdef STORE_POT_GHOST
             Prepare_PatchData( lv, PrepPotTime, Pot, PotGhost, 1, &PID0, _POTE,
                                OPT__GRA_INT_SCHEME, UNIT_PATCH, NSIDE_26, IntPhase_No, OPT__BC_FLU, OPT__BC_POT,
-                               MinDens_No, MinPres_No );
+                               MinDens_No, MinPres_No, DE_Consistency_No );
       } // if ( OPT__GRAVITY_TYPE == GRAVITY_SELF  ||  OPT__GRAVITY_TYPE == GRAVITY_BOTH )
 
 

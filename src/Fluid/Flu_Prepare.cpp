@@ -36,25 +36,30 @@ void Flu_Prepare( const int lv, const double PrepTime, real h_Flu_Array_F_In[], 
 #  endif
 
 
-   const bool   IntPhase_No = false;
-   const real   MinDens_No  = -1.0;
-   const real   MinPres_No  = -1.0;
-
 #  if ( MODEL != HYDRO  &&  MODEL != MHD )
-   const double MIN_DENS    = -1.0;    // set to an arbitrarily negative value to disable it
-   const double MIN_PRES    = -1.0;    // ...
+   const double MIN_DENS           = -1.0;    // set to an arbitrarily negative value to disable it
+   const double MIN_PRES           = -1.0;    // ...
 #  endif
+
+   const bool   IntPhase_No        = false;
+   const real   MinDens_No         = -1.0;
+   const real   MinPres_No         = -1.0;
+   const bool   DE_Consistency_Yes = true;
+   const bool   DE_Consistency_No  = false;
+   const bool   DE_Consistency     = ( OPT__OPTIMIZE_AGGRESSIVE ) ? DE_Consistency_No : DE_Consistency_Yes;
+   const real   MinDens            = ( OPT__OPTIMIZE_AGGRESSIVE ) ? MinDens_No : MIN_DENS;
+   const real   MinPres            = ( OPT__OPTIMIZE_AGGRESSIVE ) ? MinPres_No : MIN_PRES;
 
 
 // prepare the fluid array
 #  if ( MODEL == ELBDM )
    Prepare_PatchData( lv, PrepTime, h_Flu_Array_F_In,  FLU_GHOST_SIZE, NPG, PID0_List, _REAL|_IMAG|_PASSIVE,
                       OPT__FLU_INT_SCHEME, UNIT_PATCHGROUP, NSIDE_26, OPT__INT_PHASE,
-                      OPT__BC_FLU, BC_POT_NONE, MinDens_No, MinPres_No );
+                      OPT__BC_FLU, BC_POT_NONE, MinDens_No, MinPres_No, DE_Consistency_No );
 #  else
    Prepare_PatchData( lv, PrepTime, h_Flu_Array_F_In,  FLU_GHOST_SIZE, NPG, PID0_List, _TOTAL,
                       OPT__FLU_INT_SCHEME, UNIT_PATCHGROUP, NSIDE_26, IntPhase_No,
-                      OPT__BC_FLU, BC_POT_NONE, MIN_DENS, MIN_PRES );
+                      OPT__BC_FLU, BC_POT_NONE, MinDens, MinPres, DE_Consistency );
 #  endif
 
 #  ifdef UNSPLIT_GRAVITY
@@ -62,7 +67,7 @@ void Flu_Prepare( const int lv, const double PrepTime, real h_Flu_Array_F_In[], 
    if ( OPT__GRAVITY_TYPE == GRAVITY_SELF  ||  OPT__GRAVITY_TYPE == GRAVITY_BOTH )
    Prepare_PatchData( lv, PrepTime, h_Pot_Array_USG_F, USG_GHOST_SIZE, NPG, PID0_List,
                       _POTE,         OPT__GRA_INT_SCHEME, UNIT_PATCHGROUP, NSIDE_26, IntPhase_No,
-                      OPT__BC_FLU, OPT__BC_POT, MinDens_No, MinPres_No );
+                      OPT__BC_FLU, OPT__BC_POT, MinDens_No, MinPres_No, DE_Consistency_No );
 
 // prepare the corner array
    if ( OPT__GRAVITY_TYPE == GRAVITY_EXTERNAL  ||  OPT__GRAVITY_TYPE == GRAVITY_BOTH  ||  OPT__EXTERNAL_POT )

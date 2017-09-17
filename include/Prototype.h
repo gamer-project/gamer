@@ -130,7 +130,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
                         const int GhostSize, const int NPG, const int *PID0_List, int TVar,
                         const IntScheme_t IntScheme, const PrepUnit_t PrepUnit, const NSide_t NSide,
                         const bool IntPhase, const OptFluBC_t FluBC[], const OptPotBC_t PotBC,
-                        const real MinDens, const real MinPres );
+                        const real MinDens, const real MinPres, const bool DE_Consistency );
 
 
 // Init

@@ -60,12 +60,15 @@ static int Table_01( const int SibID, const int Side, const char dim, const int 
 //                PotBC          : Gravity boundary condition (not used currently)
 //                BC_Face        : Priority of the B.C. along different boundary faces (z>y>x)
 //                MinPres        : Minimum allowed pressure
+//                DE_Consistency : Ensure the consistency between pressure, total energy density, and the dual-energy variable
+//                                 when DUAL_ENERGY is on
 //-------------------------------------------------------------------------------------------------------
 void InterpolateGhostZone( const int lv, const int PID, real IntData[], const int SibID, const double PrepTime,
                            const int GhostSize, const IntScheme_t IntScheme, const int NTSib[], int *TSib[],
                            const int TVar, const int NVar_Tot, const int NVar_Flu, const int TFluVarIdxList[],
                            const int NVar_Der, const int TDerVarList[], const bool IntPhase,
-                           const OptFluBC_t FluBC[], const OptPotBC_t PotBC, const int BC_Face[], const real MinPres )
+                           const OptFluBC_t FluBC[], const OptPotBC_t PotBC, const int BC_Face[], const real MinPres,
+                           const bool DE_Consistency )
 {
 
 // check
@@ -950,7 +953,7 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData[], const in
 // ------------------------------------------------------------------------------------------------------------
 #  if (  ( MODEL == HYDRO || MODEL == MHD )  &&  defined DUAL_ENERGY  )
 // apply this correction only when preparing all fluid variables
-   if (  ( TVar & _TOTAL ) == _TOTAL  )
+   if (  ( TVar & _TOTAL ) == _TOTAL  &&  DE_Consistency )
    {
       const real _Gamma_m1       = (real)1.0 / Gamma_m1;
       const real UseEnpy2FixEngy = HUGE_NUMBER;
@@ -972,9 +975,8 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData[], const in
 //           the runtime parameter DUAL_ENERGY_SWITCH here
          CPU_DualEnergyFix( FData_Dens[t], FData_MomX[t], FData_MomY[t], FData_MomZ[t], FData_Engy[t], FData_Enpy[t],
                             dummy, Gamma_m1, _Gamma_m1, (MinPres>=0.0), MinPres, UseEnpy2FixEngy );
-
       }
-   } // if (  ( TVar & _TOTAL ) == _TOTAL  )
+   } // if (  ( TVar & _TOTAL ) == _TOTAL  &&  DE_Consistency  )
 #  endif // if (  ( MODEL == HYDRO || MODEL == MHD )  &&  defined DUAL_ENERGY  )
 
 } // FUNCTION : InterpolateGhostZone

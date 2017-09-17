@@ -84,14 +84,15 @@ void Patch2Slab( real *RhoK, real *SendBuf_Rho, real *RecvBuf_Rho, long *SendBuf
 
 
 // 2. prepare the temporary send buffer and record lists
-   const OptPotBC_t  PotBC_None  = BC_POT_NONE;
-   const IntScheme_t IntScheme   = INT_NONE;
-   const NSide_t     NSide_None  = NSIDE_00;
-   const bool        IntPhase_No = false;
-   const real        MinDens_No  = -1.0;
-   const real        MinPres_No  = -1.0;
-   const int         GhostSize   = 0;
-   const int         NPG         = 1;
+   const OptPotBC_t  PotBC_None        = BC_POT_NONE;
+   const IntScheme_t IntScheme         = INT_NONE;
+   const NSide_t     NSide_None        = NSIDE_00;
+   const bool        IntPhase_No       = false;
+   const bool        DE_Consistency_No = false;
+   const real        MinDens_No        = -1.0;
+   const real        MinPres_No        = -1.0;
+   const int         GhostSize         = 0;
+   const int         NPG               = 1;
 
    real (*Dens)[PS1][PS1][PS1] = new real [8*NPG][PS1][PS1][PS1];
 
@@ -101,7 +102,7 @@ void Patch2Slab( real *RhoK, real *SendBuf_Rho, real *RecvBuf_Rho, long *SendBuf
 //    also note that we do not check minimum density here since no ghost zones are required
       Prepare_PatchData( 0, PrepTime, Dens[0][0][0], GhostSize, NPG, &PID0, _TOTAL_DENS,
                          IntScheme, UNIT_PATCH, NSide_None, IntPhase_No, OPT__BC_FLU, PotBC_None,
-                         MinDens_No, MinPres_No );
+                         MinDens_No, MinPres_No, DE_Consistency_No );
 
       for (int PID=PID0, LocalID=0; PID<PID0+8; PID++, LocalID++)
       {

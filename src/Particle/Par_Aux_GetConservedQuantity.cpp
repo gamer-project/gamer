@@ -75,16 +75,17 @@ void Par_Aux_GetConservedQuantity( double &Mass_Total, double &MomX_Total, doubl
 
 // 2. potential energy
 #  ifdef GRAVITY
-   const ParInterp_t IntScheme = amr->Par->Interp;
-   const bool IntPhase_No      = false;
-   const real MinDens_No       = -1.0;
-   const real MinPres_No       = -1.0;
+   const ParInterp_t IntScheme  = amr->Par->Interp;
+   const bool IntPhase_No       = false;
+   const bool DE_Consistency_No = false;
+   const real MinDens_No        = -1.0;
+   const real MinPres_No        = -1.0;
 
-   const int  PotGhost         = amr->Par->GhostSize;
-   const int  PotSize          = PS1 + 2*PotGhost;
+   const int  PotGhost          = amr->Par->GhostSize;
+   const int  PotSize           = PS1 + 2*PotGhost;
 
-   const real *Pos[3] = { amr->Par->PosX, amr->Par->PosY, amr->Par->PosZ };
-   const real *Mass   = amr->Par->Mass;
+   const real *Pos[3]           = { amr->Par->PosX, amr->Par->PosY, amr->Par->PosZ };
+   const real *Mass             = amr->Par->Mass;
 
    double Ep_ThisRank = 0.0;
    double PrepPotTime, dh, _dh;
@@ -187,7 +188,7 @@ void Par_Aux_GetConservedQuantity( double &Mass_Total, double &MomX_Total, doubl
 #           endif
                Prepare_PatchData( lv, PrepPotTime, Pot, PotGhost, 1, &PID0, _POTE,
                                   OPT__GRA_INT_SCHEME, UNIT_PATCH, (PotGhost==0)?NSIDE_00:NSIDE_26, IntPhase_No,
-                                  OPT__BC_FLU, OPT__BC_POT, MinDens_No, MinPres_No );
+                                  OPT__BC_FLU, OPT__BC_POT, MinDens_No, MinPres_No, DE_Consistency_No );
          } // if ( OPT__GRAVITY_TYPE == GRAVITY_SELF  ||  OPT__GRAVITY_TYPE == GRAVITY_BOTH )
 
 
