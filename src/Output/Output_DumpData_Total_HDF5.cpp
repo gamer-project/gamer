@@ -767,18 +767,19 @@ void Output_DumpData_Total_HDF5( const char *FileName )
 
 // 5-3. start to dump data (serial instead of parallel)
 #  ifdef PARTICLE
-   const bool IntPhase_No      = false;
-   const real MinDens_No       = -1.0;
-   const real MinPres_No       = -1.0;
-   const bool TimingSendPar_No = false;
-   const bool PredictParPos_No = false;   // particles synchronization is done in "Flu_CorrAfterAllSync()"
-   const bool JustCountNPar_No = false;
+   const bool IntPhase_No       = false;
+   const bool DE_Consistency_No = false;
+   const real MinDens_No        = -1.0;
+   const real MinPres_No        = -1.0;
+   const bool TimingSendPar_No  = false;
+   const bool PredictParPos_No  = false;   // particles synchronization is done in "Flu_CorrAfterAllSync()"
+   const bool JustCountNPar_No  = false;
 #  ifdef LOAD_BALANCE
-   const bool SibBufPatch      = true;
-   const bool FaSibBufPatch    = true;
+   const bool SibBufPatch       = true;
+   const bool FaSibBufPatch     = true;
 #  else
-   const bool SibBufPatch      = NULL_BOOL;
-   const bool FaSibBufPatch    = NULL_BOOL;
+   const bool SibBufPatch       = NULL_BOOL;
+   const bool FaSibBufPatch     = NULL_BOOL;
 #  endif
 
    int *PID0List = NULL;
@@ -866,7 +867,7 @@ void Output_DumpData_Total_HDF5( const char *FileName )
                   Prepare_PatchData( lv, Time[lv], FieldData[0][0][0], 0, amr->NPatchComma[lv][1]/8, PID0List,
                                      ( OPT__OUTPUT_PAR_DENS == PAR_OUTPUT_DENS_PAR_ONLY ) ? _PAR_DENS : _TOTAL_DENS,
                                      OPT__RHO_INT_SCHEME, UNIT_PATCH, NSIDE_00, IntPhase_No, OPT__BC_FLU, BC_POT_NONE,
-                                     MinDens_No, MinPres_No );
+                                     MinDens_No, MinPres_No, DE_Consistency_No );
 
                   delete [] PID0List;
                }

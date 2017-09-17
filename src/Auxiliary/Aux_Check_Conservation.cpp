@@ -58,19 +58,20 @@ void Aux_Check_Conservation( const char *comment )
 
 
 #  if   ( MODEL == HYDRO )
-   const int NVar_NoPassive    = 8;    // 8: mass, momentum (x/y/z), kinematic/thermal/potential/total energies
-                                       // --> note that **total energy** is put in the last element ==> [7] instead of [ENGY==4]
+   const int NVar_NoPassive       = 8;    // 8: mass, momentum (x/y/z), kinematic/thermal/potential/total energies
+                                          // --> note that **total energy** is put in the last element ==> [7] instead of [ENGY==4]
 #  elif ( MODEL == MHD )
 #  warning : WAIT MHD !!!
 
 #  elif ( MODEL == ELBDM )
-   const int NVar_NoPassive    = 5;    // 5: mass, kinematic/gravitational/self-interaction/total energies
-   const IntScheme_t IntScheme = INT_CQUAR;
-   const bool   IntPhase_No    = false;
-   const int    NGhost         = 1;    // number of ghost zones for calculating the gradient of wave function
-   const int    Size_Flu       = PS1 + 2*NGhost;
-   const int    NPG            = 1;
-   const double _2Eta2         = 0.5/SQR(ELBDM_ETA);
+   const int NVar_NoPassive       = 5;    // 5: mass, kinematic/gravitational/self-interaction/total energies
+   const IntScheme_t IntScheme    = INT_CQUAR;
+   const bool   IntPhase_No       = false;
+   const bool   DE_Consistency_No = false;
+   const int    NGhost            = 1;    // number of ghost zones for calculating the gradient of wave function
+   const int    Size_Flu          = PS1 + 2*NGhost;
+   const int    NPG               = 1;
+   const double _2Eta2            = 0.5/SQR(ELBDM_ETA);
 
    real GradR[3], GradI[3], _dh2;
    int  ip, im, jp, jm, kp, km;
@@ -120,7 +121,7 @@ void Aux_Check_Conservation( const char *comment )
 
          Prepare_PatchData( lv, Time[lv], Flu_ELBDM[0][0][0][0], NGhost, NPG, &PID0, _REAL|_IMAG,
                             IntScheme, UNIT_PATCH, NSIDE_06, IntPhase_No, OPT__BC_FLU, BC_POT_NONE,
-                            MinDens_No, MinPres_No );
+                            MinDens_No, MinPres_No, DE_Consistency_No );
 #        endif
 
          for (int PID=PID0; PID<PID0+8; PID++)

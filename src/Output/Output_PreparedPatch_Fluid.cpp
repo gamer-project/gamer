@@ -15,7 +15,7 @@
 //                Example:
 //                Prepare_PatchData( lv, PrepTime, h_Flu_Array_F_In,  FLU_GHOST_SIZE, NPG, PID0_List, _TOTAL,
 //                                   OPT__FLU_INT_SCHEME, UNIT_PATCHGROUP, NSIDE_26, IntPhase_No,
-//                                   OPT__BC_FLU, BC_POT_NONE, MIN_DENS, MIN_PRES );
+//                                   OPT__BC_FLU, BC_POT_NONE, MIN_DENS, MIN_PRES, false );
 //
 //                const int TLv  = 1;
 //                const int TPID = 12;
