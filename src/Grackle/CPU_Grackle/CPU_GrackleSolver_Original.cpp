@@ -19,19 +19,29 @@
 //                NPatchGroup   : Number of patch groups to be evaluated
 //                dt            : Time interval to advance solution
 //-----------------------------------------------------------------------------------------
-void CPU_GrackleSolver_Original( grackle_field_data Che_FieldData[], code_units Che_Units, const int NPatchGroup, const real dt )
+void CPU_GrackleSolver_Original( grackle_field_data *Che_FieldData, code_units Che_Units, const int NPatchGroup, const real dt )
 {
 
-// loop over all patch groups
-// --> note that we use the OpenMP implementation in Grackle directly, which applies the parallelization to different cells
-//     within the same patch group
-// --> this approach is found to be much more efficient than parallelizing different patches or patch groups here
-//#  pragma omp parallel for schedule( runtime )
-   for (int p=0; p<NPatchGroup; p++)
+// set grid_dimension, grid_start, and grid_end
+   const int OptFac = 16;  // optimization factor
+   if ( SQR(PS2)%OptFac != 0 )   Aux_Error( ERROR_INFO, "SQR(PS2) %% OptFac != 0 !!\n" );
+
+   Che_FieldData->grid_dimension[0] = PS2*OptFac;
+   Che_FieldData->grid_dimension[1] = 1;
+   Che_FieldData->grid_dimension[2] = SQR(PS2)*NPatchGroup/OptFac;
+
+   for (int d=0; d<3; d++)
    {
-      if (  solve_chemistry( &Che_Units, &Che_FieldData[p], dt ) == 0  )
-         Aux_Error( ERROR_INFO, "Grackle solve_chemistry() failed !!\n" );
+      Che_FieldData->grid_start[d] = 0;
+      Che_FieldData->grid_end  [d] = Che_FieldData->grid_dimension[d] - 1;
    }
+
+// invoke Grackle
+// --> note that we use the OpenMP implementation in Grackle directly, which applies the parallelization to the first two
+//     dimensiones of the input grid
+// --> this approach is found to be much more efficient than parallelizing different patches or patch groups here
+   if (  solve_chemistry( &Che_Units, Che_FieldData, dt ) == 0  )
+      Aux_Error( ERROR_INFO, "Grackle solve_chemistry() failed !!\n" );
 
 } // FUNCTION : CPU_GrackleSolver_Original
 

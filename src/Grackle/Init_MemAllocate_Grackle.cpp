@@ -28,7 +28,7 @@ void Init_MemAllocate_Grackle( const int Che_NPG )
 
    for (int t=0; t<2; t++)
    {
-      h_Che_Array[t] = new real [Che_NPG][CHE_NPREP][ CUBE(PS2) ];
+      h_Che_Array[t] = new real [ (long)CHE_NPREP*(long)Che_NPG*(long)CUBE(PS2) ];
    }
 
 } // FUNCTION : Init_MemAllocate_Grackle

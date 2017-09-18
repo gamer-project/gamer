@@ -21,25 +21,35 @@
 //                NPG         : Number of patch groups to store the updated data
 //                PID0_List   : List recording the patch indicies with LocalID==0 to be udpated
 //-------------------------------------------------------------------------------------------------------
-void Grackle_Close( const int lv, const int SaveSg, const real h_Che_Array[][CHE_NPREP][ CUBE(PS2) ],
-                    const int NPG, const int *PID0_List )
+void Grackle_Close( const int lv, const int SaveSg, const real h_Che_Array[], const int NPG, const int *PID0_List )
 {
 
-   const int Idx_Dens    = 0;
-   const int Idx_sEint   = 1;
-   const int Idx_Ek      = 2;
+   const int   Idx_Dens  = 0;
+   const int   Idx_sEint = 1;
+   const int   Idx_Ek    = 2;
+   const int   Size1pg   = CUBE(PS2);
+   const int   Size1v    = NPG*Size1pg;
    const real  Gamma_m1  = GAMMA - (real)1.0;
    const real _Gamma_m1  = (real)1.0 / Gamma_m1;
 
    int  idx_pg, PID, PID0;    // idx_pg: array indices within a patch group
    real Dens, Pres;
 
+   const real *Ptr_Dens0  = h_Che_Array + Idx_Dens *Size1v;
+   const real *Ptr_sEint0 = h_Che_Array + Idx_sEint*Size1v;
+   const real *Ptr_Ek0    = h_Che_Array + Idx_Ek   *Size1v;
 
-#  pragma omp parallel for private( idx_pg, PID, PID0, Dens, Pres ) schedule( static )
+   const real *Ptr_Dens=NULL, *Ptr_sEint=NULL, *Ptr_Ek=NULL;
+
+
+#  pragma omp parallel for private( idx_pg, PID, PID0, Dens, Pres, Ptr_Dens, Ptr_sEint, Ptr_Ek ) schedule( static )
    for (int TID=0; TID<NPG; TID++)
    {
-      PID0   = PID0_List[TID];
-      idx_pg = 0;
+      PID0      = PID0_List[TID];
+      idx_pg    = 0;
+      Ptr_Dens  = Ptr_Dens0  + TID*Size1pg;
+      Ptr_sEint = Ptr_sEint0 + TID*Size1pg;
+      Ptr_Ek    = Ptr_Ek0    + TID*Size1pg;
 
       for (int LocalID=0; LocalID<8; LocalID++)
       {
@@ -48,12 +58,12 @@ void Grackle_Close( const int lv, const int SaveSg, const real h_Che_Array[][CHE
          for (int idx_p=0; idx_p<CUBE(PS1); idx_p++)
          {
 //          apply the minimum pressure check
-            Dens = h_Che_Array[TID][Idx_Dens ][idx_pg];
-            Pres = h_Che_Array[TID][Idx_sEint][idx_pg]*Dens*Gamma_m1;
+            Dens = Ptr_Dens [idx_pg];
+            Pres = Ptr_sEint[idx_pg]*Dens*Gamma_m1;
             Pres = CPU_CheckMinPres( Pres, MIN_PRES );
 
 //          update the total energy density
-            *( amr->patch[SaveSg][lv][PID]->fluid[ENGY][0][0] + idx_p ) = Pres*_Gamma_m1 + h_Che_Array[TID][Idx_Ek][idx_pg];
+            *( amr->patch[SaveSg][lv][PID]->fluid[ENGY][0][0] + idx_p ) = Pres*_Gamma_m1 + Ptr_Ek[idx_pg];
 
 //          update the dual-energy variable to be consistent with the updated pressure
 #           ifdef DUAL_ENERGY
