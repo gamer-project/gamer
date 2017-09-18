@@ -27,60 +27,60 @@ void Grackle_Init_FieldData( const int Che_NPG )
 
 
 // allocate memory
-   Che_FieldData = new grackle_field_data [Che_NPG];
+   Che_FieldData = new grackle_field_data;
 
 
 // initialization
    const int NDim = 3;
 
-   for (int t=0; t<Che_NPG; t++)
+// fields not evolving with time
+   Che_FieldData->grid_rank               = NDim;
+   Che_FieldData->grid_dimension          = new int [NDim];
+   Che_FieldData->grid_start              = new int [NDim];
+   Che_FieldData->grid_end                = new int [NDim];
+
+// grid_dimension, grid_start, and grid_end are set by CPU_GrackleSolver_Original() since the number
+// of patch groups advanced at a time is not a constant
+   /*
+   for (int d=0; d<NDim; d++)
    {
-//    fields not evolving with time
-      Che_FieldData[t].grid_rank               = NDim;
-      Che_FieldData[t].grid_dimension          = new int [NDim];
-      Che_FieldData[t].grid_start              = new int [NDim];
-      Che_FieldData[t].grid_end                = new int [NDim];
+      Che_FieldData->grid_dimension[d]    = PS2;
+      Che_FieldData->grid_start    [d]    = 0;
+      Che_FieldData->grid_end      [d]    = PS2 - 1;
+   }
+   */
 
-//    [PS2][PS2][PS2] is found to be much more efficient than [PS2*PS2*PS2][1][1]
-      for (int d=0; d<NDim; d++)
-      {
-         Che_FieldData[t].grid_dimension[d]    = PS2;
-         Che_FieldData[t].grid_start    [d]    = 0;
-         Che_FieldData[t].grid_end      [d]    = PS2 - 1;
-      }
+// fields set by Grackle_Prepare() during each time-step
+   Che_FieldData->density                 = NULL;
+   Che_FieldData->internal_energy         = NULL;
+   Che_FieldData->grid_dx                 = NULL_REAL;
 
-//    fields set by Grackle_Prepare() during each time-step
-      Che_FieldData[t].density                 = NULL;
-      Che_FieldData[t].internal_energy         = NULL;
-      Che_FieldData[t].grid_dx                 = NULL_REAL;
+// fields not supported yet
+   Che_FieldData->x_velocity              = NULL;
+   Che_FieldData->y_velocity              = NULL;
+   Che_FieldData->z_velocity              = NULL;
+   Che_FieldData->metal_density           = NULL;
 
-//    fields not supported yet
-      Che_FieldData[t].x_velocity              = NULL;
-      Che_FieldData[t].y_velocity              = NULL;
-      Che_FieldData[t].z_velocity              = NULL;
-      Che_FieldData[t].metal_density           = NULL;
-
-//    fields not supported yet
-      Che_FieldData[t].HI_density              = NULL;
-      Che_FieldData[t].HII_density             = NULL;
-      Che_FieldData[t].HM_density              = NULL;
-      Che_FieldData[t].HeI_density             = NULL;
-      Che_FieldData[t].HeII_density            = NULL;
-      Che_FieldData[t].HeIII_density           = NULL;
-      Che_FieldData[t].H2I_density             = NULL;
-      Che_FieldData[t].H2II_density            = NULL;
-      Che_FieldData[t].DI_density              = NULL;
-      Che_FieldData[t].DII_density             = NULL;
-      Che_FieldData[t].HDI_density             = NULL;
-      Che_FieldData[t].e_density               = NULL;
-      Che_FieldData[t].volumetric_heating_rate = NULL;
-      Che_FieldData[t].specific_heating_rate   = NULL;
-      Che_FieldData[t].RT_HI_ionization_rate   = NULL;
-      Che_FieldData[t].RT_HeI_ionization_rate  = NULL;
-      Che_FieldData[t].RT_HeII_ionization_rate = NULL;
-      Che_FieldData[t].RT_H2_dissociation_rate = NULL;
-      Che_FieldData[t].RT_heating_rate         = NULL;
-   } // for (int t=0; t<Che_NPG; t++)
+// fields not supported yet
+   Che_FieldData->HI_density              = NULL;
+   Che_FieldData->HII_density             = NULL;
+   Che_FieldData->HM_density              = NULL;
+   Che_FieldData->HeI_density             = NULL;
+   Che_FieldData->HeII_density            = NULL;
+   Che_FieldData->HeIII_density           = NULL;
+   Che_FieldData->H2I_density             = NULL;
+   Che_FieldData->H2II_density            = NULL;
+   Che_FieldData->DI_density              = NULL;
+   Che_FieldData->DII_density             = NULL;
+   Che_FieldData->HDI_density             = NULL;
+   Che_FieldData->e_density               = NULL;
+   Che_FieldData->volumetric_heating_rate = NULL;
+   Che_FieldData->specific_heating_rate   = NULL;
+   Che_FieldData->RT_HI_ionization_rate   = NULL;
+   Che_FieldData->RT_HeI_ionization_rate  = NULL;
+   Che_FieldData->RT_HeII_ionization_rate = NULL;
+   Che_FieldData->RT_H2_dissociation_rate = NULL;
+   Che_FieldData->RT_heating_rate         = NULL;
 
 } // FUNCTION : Grackle_Init_FieldData
 
