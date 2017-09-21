@@ -343,7 +343,10 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
                            Timer_Gra_Advance[lv]   );
 
 //          exchange the updated potential in the buffer patches
-            if ( SelfGravity )
+//          --> we will do this after all other operations (e.g., star formation) if OPT__MINIMIZE_MPI_BARRIER is adopted
+//              --> assuming that all remaining operations do not need to access the potential in the buffer patches
+//              --> one must enable both STORE_POT_GHOST and PAR_IMPROVE_ACC for this purpose
+            if ( SelfGravity  &&  !OPT__MINIMIZE_MPI_BARRIER )
             TIMING_FUNC(   Buf_GetBufferData( lv, NULL_INT, SaveSg_Pot, POT_FOR_POISSON, _POTE,  Pot_ParaBuf, USELB_YES ),
                            Timer_GetBuf[lv][1]   );
          } // if ( OPT__OVERLAP_MPI ) ... else ...
@@ -398,14 +401,19 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
          }
       }
 
-      if ( OPT__VERBOSE  &&  MPI_Rank == 0 )
-         Aux_Message( stdout, "   Lv %2d: Par_PassParticle2Son %12s ... ", lv, "" );
+//    pass particles to the children patches
+//    --> we will do this later (just before the star-formation routines) if OPT__MINIMIZE_MPI_BARRIER is adopted
+      if ( !OPT__MINIMIZE_MPI_BARRIER )
+      {
+         if ( OPT__VERBOSE  &&  MPI_Rank == 0 )
+            Aux_Message( stdout, "   Lv %2d: Par_PassParticle2Son %12s ... ", lv, "" );
 
-      TIMING_FUNC(   Par_PassParticle2Son_AllPatch( lv, TimingSendPar_Yes ),
-                     Timer_Par_2Son[lv]   );
+         TIMING_FUNC(   Par_PassParticle2Son_AllPatch( lv, TimingSendPar_Yes ),
+                        Timer_Par_2Son[lv]   );
 
-      if ( OPT__VERBOSE  &&  MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );
-#     endif
+         if ( OPT__VERBOSE  &&  MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );
+      }
+#     endif // #ifdef PARTICLE
 // ===============================================================================================
 
 
@@ -432,6 +440,22 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
 #     endif // #ifdef SUPPORT_GRACKLE
 
 
+#     ifdef PARTICLE
+//    pass particles to the children patches here if OPT__MINIMIZE_MPI_BARRIER is adopted
+//    --> do this before any star-formation routines so that particles always live in the leaf patches
+      if ( OPT__MINIMIZE_MPI_BARRIER )
+      {
+         if ( OPT__VERBOSE  &&  MPI_Rank == 0 )
+            Aux_Message( stdout, "   Lv %2d: Par_PassParticle2Son %12s ... ", lv, "" );
+
+         TIMING_FUNC(   Par_PassParticle2Son_AllPatch( lv, TimingSendPar_Yes ),
+                        Timer_Par_2Son[lv]   );
+
+         if ( OPT__VERBOSE  &&  MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );
+      }
+#     endif // #ifdef PARTICLE
+
+
 // *********************************
 //    6-2. star formation
 // *********************************
@@ -455,6 +479,13 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
 //    exchange the updated fluid field in the buffer patches
       TIMING_FUNC(   Buf_GetBufferData( lv, SaveSg_Flu, NULL_INT, DATA_GENERAL, _TOTAL, Flu_ParaBuf, USELB_YES ),
                      Timer_GetBuf[lv][2]   );
+
+//    exchange the updated potential in the buffer patches here if OPT__MINIMIZE_MPI_BARRIER is adopted
+#     ifdef GRAVITY
+      if ( lv > 0  &&  SelfGravity  &&  OPT__MINIMIZE_MPI_BARRIER )
+      TIMING_FUNC(   Buf_GetBufferData( lv, NULL_INT, SaveSg_Pot, POT_FOR_POISSON, _POTE,  Pot_ParaBuf, USELB_YES ),
+                     Timer_GetBuf[lv][1]   );
+#     endif
 
 
       dTime_SoFar       += dTime_SubStep;
