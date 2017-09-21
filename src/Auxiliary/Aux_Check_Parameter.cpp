@@ -213,6 +213,11 @@ void Aux_Check_Parameter()
 #     ifdef PARTICLE
       if ( !amr->Par->ImproveAcc )
          Aux_Error( ERROR_INFO, "OPT__MINIMIZE_MPI_BARRIER must work with PAR_IMPROVE_ACC when PARTICLE is on !!\n" );
+
+#     ifdef LOAD_BALANCE
+      if ( LB_INPUT__PAR_WEIGHT == 0.0 )
+         Aux_Message( stderr, "WARNING : consider fine tuning \"LB_INPUT__PAR_WEIGHT\" to optimize the performance of OPT__MINIMIZE_MPI_BARRIER !!\n" );
+#     endif
 #     endif
 
       if ( OPT__TIMING_BARRIER )
