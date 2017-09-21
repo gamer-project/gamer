@@ -55,7 +55,8 @@ int Flu_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, con
 // collect the fluid solver status from all ranks (only necessary for AUTO_REDUCE_DT)
    int FluStatus_AllRank;
 
-// the parenthesis enclosing MPI_Allreduce() is necessary to compile in the serial mode
+// the parenthesis enclosing MPI_Allreduce() is necessary for the serial mode
+// note that AUTO_REDUCE_DT may deteriorate the performance of OPT__MINIMIZE_MPI_BARRIER because of the following extra MPI call
    if ( AUTO_REDUCE_DT )   { MPI_Allreduce( &FluStatus_ThisRank, &FluStatus_AllRank, 1, MPI_INT, MPI_BAND, MPI_COMM_WORLD ); }
    else                    FluStatus_AllRank = GAMER_SUCCESS;
 
