@@ -397,6 +397,7 @@ struct InputPara_t
 #  endif
    int    Opt__RecordLoadBalance;
 #  endif
+   int    Opt__MinimizeMPIBarrier;
 
 // fluid solvers in HYDRO
 #  if ( MODEL == HYDRO )
