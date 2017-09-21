@@ -159,6 +159,7 @@ extern double     LB_INPUT__PAR_WEIGHT;               // LB->Par_Weight loaded f
 #endif
 extern bool       OPT__RECORD_LOAD_BALANCE;
 #endif
+extern bool       OPT__MINIMIZE_MPI_BARRIER;
 
 
 // (2-5) particle

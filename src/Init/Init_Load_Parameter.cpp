@@ -166,6 +166,7 @@ void Init_Load_Parameter()
 #  endif
    ReadPara->Add( "OPT__RECORD_LOAD_BALANCE",   &OPT__RECORD_LOAD_BALANCE,        true,            Useless_bool,  Useless_bool   );
 #  endif
+   ReadPara->Add( "OPT__MINIMIZE_MPI_BARRIER",  &OPT__MINIMIZE_MPI_BARRIER,       true,            Useless_bool,  Useless_bool   );
 
 
 // Grackle

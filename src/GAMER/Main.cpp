@@ -145,6 +145,7 @@ double               LB_INPUT__PAR_WEIGHT;
 #endif
 bool                 OPT__RECORD_LOAD_BALANCE;
 #endif
+bool                 OPT__MINIMIZE_MPI_BARRIER;
 
 // (2-5) particle
 #ifdef PARTICLE

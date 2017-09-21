@@ -204,6 +204,24 @@ void Aux_Check_Parameter()
         OPT__CORR_AFTER_ALL_SYNC != CORR_AFTER_SYNC_BEFORE_DUMP )
       Aux_Error( ERROR_INFO, "incorrect option \"OPT__CORR_AFTER_ALL_SYNC = %d\" [0/1/2] !!\n", OPT__CORR_AFTER_ALL_SYNC );
 
+   if ( OPT__MINIMIZE_MPI_BARRIER )
+   {
+#     if ( defined GRAVITY  &&  !defined STORE_POT_GHOST )
+         Aux_Error( ERROR_INFO, "OPT__MINIMIZE_MPI_BARRIER must work with STORE_POT_GHOST when GRAVITY is on !!\n" );
+#     endif
+
+#     ifdef PARTICLE
+      if ( !amr->Par->ImproveAcc )
+         Aux_Error( ERROR_INFO, "OPT__MINIMIZE_MPI_BARRIER must work with PAR_IMPROVE_ACC when PARTICLE is on !!\n" );
+#     endif
+
+      if ( OPT__TIMING_BARRIER )
+         Aux_Error( ERROR_INFO, "OPT__MINIMIZE_MPI_BARRIER does NOT work with OPT__TIMING_BARRIER !!\n" );
+
+      if ( AUTO_REDUCE_DT  &&  MPI_Rank == 0 )
+         Aux_Message( stderr, "WARNING : AUTO_REDUCE_DT will introduce an extra MPI barrier for OPT__MINIMIZE_MPI_BARRIER !!\n" );
+   }
+
 
 // general warnings
 // =======================================================================================

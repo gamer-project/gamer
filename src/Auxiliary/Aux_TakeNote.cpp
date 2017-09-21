@@ -708,18 +708,19 @@ void Aux_TakeNote()
 #     ifndef SERIAL
       fprintf( Note, "Parameters of Parallelization\n" );
       fprintf( Note, "***********************************************************************************\n" );
-      fprintf( Note, "Flu_ParaBuf                     %d\n",      Flu_ParaBuf              );
+      fprintf( Note, "Flu_ParaBuf                     %d\n",      Flu_ParaBuf               );
 #     ifdef GRAVITY
-      fprintf( Note, "Pot_ParaBuf                     %d\n",      Pot_ParaBuf              );
-      fprintf( Note, "Rho_ParaBuf                     %d\n",      Rho_ParaBuf              );
+      fprintf( Note, "Pot_ParaBuf                     %d\n",      Pot_ParaBuf               );
+      fprintf( Note, "Rho_ParaBuf                     %d\n",      Rho_ParaBuf               );
 #     endif
 #     ifdef LOAD_BALANCE
-      fprintf( Note, "LB_WLI_MAX                      %13.7e\n",  amr->LB->WLI_Max         );
+      fprintf( Note, "LB_WLI_MAX                      %13.7e\n",  amr->LB->WLI_Max          );
 #     ifdef PARTICLE
-      fprintf( Note, "LB_PAR_WEIGHT                   %13.7e\n",  amr->LB->Par_Weight      );
+      fprintf( Note, "LB_PAR_WEIGHT                   %13.7e\n",  amr->LB->Par_Weight       );
 #     endif
-      fprintf( Note, "OPT__RECORD_LOAD_BALANCE        %d\n",      OPT__RECORD_LOAD_BALANCE );
+      fprintf( Note, "OPT__RECORD_LOAD_BALANCE        %d\n",      OPT__RECORD_LOAD_BALANCE  );
 #     endif // #ifdef LOAD_BALANCE
+      fprintf( Note, "OPT__MINIMIZE_MPI_BARRIER       %d\n",      OPT__MINIMIZE_MPI_BARRIER );
       fprintf( Note, "***********************************************************************************\n" );
       fprintf( Note, "\n\n");
 #     endif // #ifndef SERIAL
