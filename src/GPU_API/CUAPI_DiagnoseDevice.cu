@@ -13,8 +13,8 @@
 void CUAPI_DiagnoseDevice()
 {
 
-   if ( MPI_Rank == 0 )    Aux_Message( stdout, "CUAPI_DiagnoseDevice ... " ); 
-    
+   if ( MPI_Rank == 0 )    Aux_Message( stdout, "CUAPI_DiagnoseDevice ... " );
+
 
 // get the hostname and PID of each process
    const int PID = getpid();
@@ -22,11 +22,11 @@ void CUAPI_DiagnoseDevice()
    gethostname( Host, 1024 );
 
 
-// get the number of devices 
+// get the number of devices
    int DeviceCount;
    CUDA_CHECK_ERROR(  cudaGetDeviceCount( &DeviceCount )  );
 
-   if ( DeviceCount == 0 )   
+   if ( DeviceCount == 0 )
       Aux_Error( ERROR_INFO, "no devices supporting CUDA at MPI_Rank %2d (host = %8s) !!\n", MPI_Rank, Host );
 
 
@@ -62,12 +62,12 @@ void CUAPI_DiagnoseDevice()
        fprintf( Note, "***********************************************************************************\n" );
        fclose( Note );
    }
-   
+
    for (int YourTurn=0; YourTurn<MPI_NRank; YourTurn++)
    {
       if ( MPI_Rank == YourTurn )
       {
-         int DriverVersion = 0, RuntimeVersion = 0;     
+         int DriverVersion = 0, RuntimeVersion = 0;
          CUDA_CHECK_ERROR(  cudaDriverGetVersion( &DriverVersion )  );
          CUDA_CHECK_ERROR(  cudaRuntimeGetVersion( &RuntimeVersion )  );
 
@@ -88,9 +88,9 @@ void CUAPI_DiagnoseDevice()
          fprintf( Note, "CUDA Major Revision Number        : %d\n"    , DeviceProp.major );
          fprintf( Note, "CUDA Minor Revision Number        : %d\n"    , DeviceProp.minor );
          fprintf( Note, "Clock Rate                        : %f GHz\n", DeviceProp.clockRate/1.0e6 );
-         fprintf( Note, "Global Memory Size                : %d MB\n" , (int)DeviceProp.totalGlobalMem/1024/1024 ); 
-         fprintf( Note, "Constant Memory Size              : %d KB\n" , (int)DeviceProp.totalConstMem/1024 ); 
-         fprintf( Note, "Shared Memory Size per Block      : %d KB\n" , (int)DeviceProp.sharedMemPerBlock/1024 ); 
+         fprintf( Note, "Global Memory Size                : %d MB\n" , (long)DeviceProp.totalGlobalMem/1024/1024 );
+         fprintf( Note, "Constant Memory Size              : %d KB\n" , (long)DeviceProp.totalConstMem/1024 );
+         fprintf( Note, "Shared Memory Size per Block      : %d KB\n" , (long)DeviceProp.sharedMemPerBlock/1024 );
          fprintf( Note, "Number of Registers per Block     : %d\n"    , DeviceProp.regsPerBlock );
          fprintf( Note, "Warp Size                         : %d\n"    , DeviceProp.warpSize );
          fprintf( Note, "Number of Multiprocessors:        : %d\n"    , DeviceProp.multiProcessorCount );
@@ -102,7 +102,7 @@ void CUAPI_DiagnoseDevice()
          fprintf( Note, "Concurrent Copy and Execution     : %s\n"    , DeviceProp.asyncEngineCount>0  ? "Yes" : "No" );
          fprintf( Note, "Concurrent Up/Downstream Copies   : %s\n"    , DeviceProp.asyncEngineCount==2 ? "Yes" : "No" );
 #        if ( CUDART_VERSION >= 3000 )
-         fprintf( Note, "Concurrent Kernel Execution       : %s\n"    , DeviceProp.concurrentKernels ? "Yes" : 
+         fprintf( Note, "Concurrent Kernel Execution       : %s\n"    , DeviceProp.concurrentKernels ? "Yes" :
                                                                                                        "No" );
 #        endif
 #        if ( CUDART_VERSION >= 3010 )
