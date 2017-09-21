@@ -874,6 +874,17 @@ void Init_ResetParameter()
 #  endif // #ifdef STAR_FORMATION
 
 
+// disable OPT__MINIMIZE_MPI_BARRIER in the serial mode
+#  ifdef SERIAL
+   if ( OPT__MINIMIZE_MPI_BARRIER )
+   {
+      OPT__MINIMIZE_MPI_BARRIER = false;
+
+      PRINT_WARNING( OPT__MINIMIZE_MPI_BARRIER, FORMAT_INT, "since SERIAL is enabled" );
+   }
+#  endif
+
+
 // remove symbolic constants and macros only used in this structure
 #  undef FORMAT_INT
 #  undef FORMAT_FLT
