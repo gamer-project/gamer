@@ -70,7 +70,7 @@ Procedure for outputting new variables:
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2257)
+// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2258)
 // Description :  Output all simulation data in the HDF5 format, which can be used as a restart file
 //                or loaded by YT
 //
@@ -145,6 +145,7 @@ Procedure for outputting new variables:
 //                2255 : 2017/09/01 --> output SF_CREATION_STAR_DET_RANDOM
 //                2256 : 2017/09/10 --> output FLAG_BUFFER_SIZE_MAXM2_LV
 //                2257 : 2017/09/17 --> output OPT__OPTIMIZE_AGGRESSIVE
+//                2258 : 2017/09/21 --> output OPT__MINIMIZE_MPI_BARRIER
 //-------------------------------------------------------------------------------------------------------
 void Output_DumpData_Total_HDF5( const char *FileName )
 {
@@ -1251,7 +1252,7 @@ void FillIn_KeyInfo( KeyInfo_t &KeyInfo )
 
    const time_t CalTime  = time( NULL );   // calendar time
 
-   KeyInfo.FormatVersion = 2257;
+   KeyInfo.FormatVersion = 2258;
    KeyInfo.Model         = MODEL;
    KeyInfo.NLevel        = NLEVEL;
    KeyInfo.NCompFluid    = NCOMP_FLUID;
@@ -1830,6 +1831,7 @@ void FillIn_InputPara( InputPara_t &InputPara )
 #  endif
    InputPara.Opt__RecordLoadBalance  = OPT__RECORD_LOAD_BALANCE;
 #  endif
+   InputPara.Opt__MinimizeMPIBarrier = OPT__MINIMIZE_MPI_BARRIER;
 
 // fluid solvers in HYDRO
 #  if ( MODEL == HYDRO )
@@ -2505,6 +2507,7 @@ void GetCompound_InputPara( hid_t &H5_TypeID )
 #  endif
    H5Tinsert( H5_TypeID, "Opt__RecordLoadBalance",  HOFFSET(InputPara_t,Opt__RecordLoadBalance ), H5T_NATIVE_INT     );
 #  endif
+   H5Tinsert( H5_TypeID, "Opt__MinimizeMPIBarrier", HOFFSET(InputPara_t,Opt__MinimizeMPIBarrier), H5T_NATIVE_INT     );
 
 // fluid solvers in HYDRO
 #  if ( MODEL == HYDRO )
