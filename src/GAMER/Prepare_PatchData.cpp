@@ -699,7 +699,9 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
 #           endif // #ifdef DEBUG_PARTICLE
 
 //          set the left edge of the rho_ext array
-            for (int d=0; d<3; d++)    EdgeL[d] = amr->patch[0][lv][PID]->EdgeL[d] - RHOEXT_GHOST_SIZE*dh;
+            const double RhoExtGhostPhySize = RHOEXT_GHOST_SIZE*dh;
+            for (int d=0; d<3; d++)    EdgeL[d] = amr->patch[0][lv][PID]->EdgeL[d] - RhoExtGhostPhySize;
+
 
 //          deposit particle mass on grids (**from particles to their home patch**)
 //          --> don't have to worry about the periodicity (even for external buffer patches) here since
