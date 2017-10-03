@@ -7,7 +7,8 @@
 # 3. Parameters set to "auto" (usually by setting to a negative value) do not have deterministic default values
 #    and will be set according to the adopted compilation options and/or other runtime parameters
 # 4. To add new parameters, please edit "Init/Init_Load_Parameter.cpp"
-# 5. All dimensional variables should be set consistently with the code units (set by UNIT_L/M/T/V/D)
+# 5. All dimensional variables should be set consistently with the code units (set by UNIT_L/M/T/V/D) unless
+#    otherwise specified (e.g., SF_CREATE_STAR_MIN_GAS_DENS & SF_CREATE_STAR_MIN_STAR_MASS)
 # 6. For boolean options: 0/1 -> off/on
 # =================================================================================================================
 
@@ -192,6 +193,7 @@ OPT__RECORD_PERFORMANCE       1           # record the code performance [1]
 OPT__MANUAL_CONTROL           1           # support manually dump data or stop run during the runtime
                                           # (by generating the file DUMP_GAMER_DUMP or STOP_GAMER_STOP) [1]
 OPT__RECORD_USER              0           # record the user-specified info -> edit "Aux_RecordUser.cpp" [0]
+OPT__OPTIMIZE_AGGRESSIVE      0           # apply aggressive optimizations (experimental) [0]
 
 
 # checks
