@@ -75,6 +75,10 @@ void Init_Function_User( real fluid[], const double x, const double y, const dou
 //                   but may be overwritten by various test problem initializers
 //                3. The function pointer "Flu_ResetByUser_Func_Ptr" points to "Flu_ResetByUser_Func()" by default
 //                   but may be overwritten by various test problem initializers
+//                4. One can disable OpenMP in this routine by setting OPT__INIT_GRID_WITH_OMP = 0
+//                   --> Useful when Init_Function_User_Ptr() does not support OpenMP parallelization
+//                       (e.g., it may not be thread-safe or may involve a random number generator for which
+//                       all threads would share the same random seed if OpenMP is not disabled)
 //
 // Parameter   :  lv : Target refinement level
 //-------------------------------------------------------------------------------------------------------
@@ -83,6 +87,12 @@ void Hydro_Init_StartOver_AssignData( const int lv )
 
 // check
    if ( Init_Function_User_Ptr == NULL )  Aux_Error( ERROR_INFO, "Init_Function_User_Ptr == NULL !!\n" );
+
+
+// set the number of OpenMP threads
+#  ifdef OPENMP
+   const int OMP_NThread = ( OPT__INIT_GRID_WITH_OMP ) ? OMP_NTHREAD : 1;
+#  endif
 
 
    const int    NSub     = INIT_SUBSAMPLING_NCELL;
@@ -98,7 +108,7 @@ void Hydro_Init_StartOver_AssignData( const int lv )
 
    if ( NSub > 1 )   // with sub-sampling
    {
-#     pragma omp parallel for private( fluid, fluid_sub, x, y, z, x0, y0, z0 ) schedule( runtime )
+#     pragma omp parallel for private( fluid, fluid_sub, x, y, z, x0, y0, z0 ) schedule( runtime ) num_threads( OMP_NThread )
       for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
       for (int k=0; k<PS1; k++)  {  z0 = amr->patch[0][lv][PID]->EdgeL[2] + k*dh + 0.5*dh_sub;
       for (int j=0; j<PS1; j++)  {  y0 = amr->patch[0][lv][PID]->EdgeL[1] + j*dh + 0.5*dh_sub;
@@ -149,7 +159,7 @@ void Hydro_Init_StartOver_AssignData( const int lv )
 
    else // without sub-sampling
    {
-#     pragma omp parallel for private( fluid, x, y, z ) schedule( runtime )
+#     pragma omp parallel for private( fluid, x, y, z ) schedule( runtime ) num_threads( OMP_NThread )
       for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
       for (int k=0; k<PS1; k++)  {  z = amr->patch[0][lv][PID]->EdgeL[2] + (k+0.5)*dh;
       for (int j=0; j<PS1; j++)  {  y = amr->patch[0][lv][PID]->EdgeL[1] + (j+0.5)*dh;
