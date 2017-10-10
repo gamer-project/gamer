@@ -47,6 +47,9 @@ void Validate()
    Aux_Error( ERROR_INFO, "PARTICLE must be disabled !!\n" );
 #  endif
 
+   if ( !OPT__INIT_RESTRICT )
+      Aux_Error( ERROR_INFO, "OPT__INIT_RESTRICT must be enabled !!\n" );
+
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Validating test problem %d ... done\n", TESTPROB_ID );
 
@@ -119,11 +122,6 @@ void SetParameter()
    if ( END_T < 0.0 ) {
       END_T = End_T_Default;
       PRINT_WARNING( "END_T", END_T, FORMAT_REAL );
-   }
-
-   if ( !OPT__INIT_RESTRICT ) {
-      OPT__INIT_RESTRICT = true;
-      PRINT_WARNING( "OPT__INIT_RESTRICT", OPT__INIT_RESTRICT, FORMAT_BOOL );
    }
 
 
