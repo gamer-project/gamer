@@ -70,7 +70,7 @@ Procedure for outputting new variables:
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2258)
+// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2259)
 // Description :  Output all simulation data in the HDF5 format, which can be used as a restart file
 //                or loaded by YT
 //
@@ -146,6 +146,7 @@ Procedure for outputting new variables:
 //                2256 : 2017/09/10 --> output FLAG_BUFFER_SIZE_MAXM2_LV
 //                2257 : 2017/09/17 --> output OPT__OPTIMIZE_AGGRESSIVE
 //                2258 : 2017/09/21 --> output OPT__MINIMIZE_MPI_BARRIER
+//                2259 : 2017/10/10 --> output OPT__INIT_GRID_WITH_OMP
 //-------------------------------------------------------------------------------------------------------
 void Output_DumpData_Total_HDF5( const char *FileName )
 {
@@ -1252,7 +1253,7 @@ void FillIn_KeyInfo( KeyInfo_t &KeyInfo )
 
    const time_t CalTime  = time( NULL );   // calendar time
 
-   KeyInfo.FormatVersion = 2258;
+   KeyInfo.FormatVersion = 2259;
    KeyInfo.Model         = MODEL;
    KeyInfo.NLevel        = NLEVEL;
    KeyInfo.NCompFluid    = NCOMP_FLUID;
@@ -1944,6 +1945,7 @@ void FillIn_InputPara( InputPara_t &InputPara )
    InputPara.Opt__UM_Start_Refine    = OPT__UM_START_REFINE;
    InputPara.Opt__UM_Factor_5over3   = OPT__UM_FACTOR_5OVER3;
    InputPara.Opt__InitRestrict       = OPT__INIT_RESTRICT;
+   InputPara.Opt__InitGridWithOMP    = OPT__INIT_GRID_WITH_OMP;
    InputPara.Opt__GPUID_Select       = OPT__GPUID_SELECT;
    InputPara.Init_Subsampling_NCell  = INIT_SUBSAMPLING_NCELL;
 
@@ -2625,6 +2627,7 @@ void GetCompound_InputPara( hid_t &H5_TypeID )
    H5Tinsert( H5_TypeID, "Opt__UM_Start_Refine",    HOFFSET(InputPara_t,Opt__UM_Start_Refine   ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "Opt__UM_Factor_5over3",   HOFFSET(InputPara_t,Opt__UM_Factor_5over3  ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "Opt__InitRestrict",       HOFFSET(InputPara_t,Opt__InitRestrict      ), H5T_NATIVE_INT     );
+   H5Tinsert( H5_TypeID, "Opt__InitGridWithOMP",    HOFFSET(InputPara_t,Opt__InitGridWithOMP   ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "Opt__GPUID_Select",       HOFFSET(InputPara_t,Opt__GPUID_Select      ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "Init_Subsampling_NCell",  HOFFSET(InputPara_t,Init_Subsampling_NCell ), H5T_NATIVE_INT     );
 

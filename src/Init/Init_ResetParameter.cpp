@@ -885,6 +885,17 @@ void Init_ResetParameter()
 #  endif
 
 
+// disable OPT__INIT_GRID_WITH_OMP if OPENMP is disabled
+#  ifndef OPENMP
+   if ( OPT__INIT_GRID_WITH_OMP )
+   {
+      OPT__INIT_GRID_WITH_OMP = false;
+
+      PRINT_WARNING( OPT__INIT_GRID_WITH_OMP, FORMAT_INT, "since OPENMP is disabled" );
+   }
+#  endif
+
+
 // remove symbolic constants and macros only used in this structure
 #  undef FORMAT_INT
 #  undef FORMAT_FLT
