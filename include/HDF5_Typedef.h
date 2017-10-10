@@ -504,6 +504,7 @@ struct InputPara_t
    int    Opt__UM_Start_Refine;
    int    Opt__UM_Factor_5over3;
    int    Opt__InitRestrict;
+   int    Opt__InitGridWithOMP;
    int    Opt__GPUID_Select;
    int    Init_Subsampling_NCell;
 

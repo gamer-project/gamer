@@ -285,6 +285,7 @@ void Init_Load_Parameter()
    ReadPara->Add( "OPT__UM_START_REFINE",       &OPT__UM_START_REFINE,            true,            Useless_bool,  Useless_bool   );
    ReadPara->Add( "OPT__UM_FACTOR_5OVER3",      &OPT__UM_FACTOR_5OVER3,           false,           Useless_bool,  Useless_bool   );
    ReadPara->Add( "OPT__INIT_RESTRICT",         &OPT__INIT_RESTRICT,              true,            Useless_bool,  Useless_bool   );
+   ReadPara->Add( "OPT__INIT_GRID_WITH_OMP",    &OPT__INIT_GRID_WITH_OMP,         true,            Useless_bool,  Useless_bool   );
    ReadPara->Add( "OPT__GPUID_SELECT",          &OPT__GPUID_SELECT,              -2,              -3,             NoMax_int      );
    ReadPara->Add( "INIT_SUBSAMPLING_NCELL",     &INIT_SUBSAMPLING_NCELL,          0,               0,             NoMax_int      );
 

@@ -926,6 +926,7 @@ void Aux_TakeNote()
       fprintf( Note, "OPT__UM_START_REFINE            %d\n",      OPT__UM_START_REFINE    );
       fprintf( Note, "OPT__UM_FACTOR_5OVER3           %d\n",      OPT__UM_FACTOR_5OVER3   );
       fprintf( Note, "OPT__INIT_RESTRICT              %d\n",      OPT__INIT_RESTRICT      );
+      fprintf( Note, "OPT__INIT_GRID_WITH_OMP         %d\n",      OPT__INIT_GRID_WITH_OMP );
       fprintf( Note, "OPT__GPUID_SELECT               %d\n",      OPT__GPUID_SELECT       );
       fprintf( Note, "INIT_SUBSAMPLING_NCELL          %d\n",      INIT_SUBSAMPLING_NCELL  );
       fprintf( Note, "***********************************************************************************\n" );
