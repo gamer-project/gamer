@@ -52,20 +52,20 @@ SIMU_OPTION += -DMAX_PATCH=1000000
 # ------------------------------------------------------------------------------------
 ifeq "$(findstring MODEL=HYDRO, $(SIMU_OPTION))" "MODEL=HYDRO"
 # hydrodynamic scheme: RTVD/WAF/MHM/MHM_RP/CTU (WAF is deprecated)
-SIMU_OPTION += -DFLU_SCHEME=MHM
+SIMU_OPTION += -DFLU_SCHEME=CTU
 
 # scheme of spatial data reconstruction: PLM/PPM (piecewise-linear/piecewise-parabolic) ##useless in RTVD/WAF##
 SIMU_OPTION += -DLR_SCHEME=PPM
 
 # Riemann solver: EXACT/ROE/HLLE/HLLC ##all are useless in RTVD, HLLE/HLLC are useless in WAF##
-SIMU_OPTION += -DRSOLVER=HLLC
+SIMU_OPTION += -DRSOLVER=ROE
 
 # dual energy formalism: DE_ENPY/DE_EINT (evolve entropy or internal energy; DE_EINT is not supported yet) ##useless in RTVD/WAF##
-SIMU_OPTION += -DDUAL_ENERGY=DE_ENPY
+#SIMU_OPTION += -DDUAL_ENERGY=DE_ENPY
 
 # number of passively advected scalars (**excluding** entropy or internal energy used by DUAL_ENERGY)
 # --> for simulations without any passive scalar, please set this variable to 0 and do NOT comment it out
-SIMU_OPTION += -DNCOMP_PASSIVE_MAKEFILE=1
+SIMU_OPTION += -DNCOMP_PASSIVE_MAKEFILE=0
 
 
 # (b-2) MHD options
