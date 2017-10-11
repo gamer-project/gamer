@@ -227,7 +227,7 @@ OPT__UM_START_REFINE          1           # refine the uniform-mesh data from le
 OPT__UM_FACTOR_5OVER3         0           # multiply the input mass density by 5/3 to correct the growing-mode amplitude [0]
 OPT__INIT_RESTRICT            1           # restrict all data during the initialization [1]
 OPT__INIT_GRID_WITH_OMP       1           # enable OpenMP when assigning the initial condition of each grid patch [1]
-OPT__GPUID_SELECT            -2           # GPU ID selection mode: (-3=Laohu, -2=CUDA, -1=MPI rank, >=0=input) [-2]
+OPT__GPUID_SELECT            -1           # GPU ID selection mode: (-3=Laohu, -2=CUDA, -1=MPI rank, >=0=input) [-1]
 INIT_SUBSAMPLING_NCELL        0           # perform sub-sampling during initialization: (0=off, >0=# of sub-sampling cells) [0]
 
 

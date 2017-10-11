@@ -125,7 +125,7 @@ OPT__RESTART_HEADER           1           # RESTART header: (0=skip, 1=check the
 OPT__RESTART_RESET            0           # reset the simulation info during restart as if running with OPT__INIT==1 (StartOver) [0]
 OPT__INIT_RESTRICT            1           # restrict all data during the initialization [1]
 OPT__INIT_GRID_WITH_OMP       0           # enable OpenMP when assigning the initial condition of each grid patch [1]
-OPT__GPUID_SELECT            -2           # GPU ID selection mode: (-3=Laohu, -2=CUDA, -1=MPI rank, >=0=input) [-2]
+OPT__GPUID_SELECT            -1           # GPU ID selection mode: (-3=Laohu, -2=CUDA, -1=MPI rank, >=0=input) [-1]
 INIT_SUBSAMPLING_NCELL        0           # perform sub-sampling during initialization: (0=off, >0=# of sub-sampling cells) [0]
 
 
