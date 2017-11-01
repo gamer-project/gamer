@@ -147,7 +147,7 @@ void Init_Load_Parameter();
 void Init_MemoryPool();
 void Init_ResetParameter();
 void Init_MemAllocate();
-void Init_MemAllocate_Fluid( const int Flu_NPatchGroup );
+void Init_MemAllocate_Fluid( const int Flu_NPatchGroup, const int Pot_NPatchGroup );
 void Init_Parallelization();
 void Init_RecordBasePatch();
 void Init_Refine( const int lv );
