@@ -24,14 +24,18 @@ void Init_MemAllocate()
 
 // b. allocate memory for all GPU (or CPU) solvers (including the global memory in GPU)
 #  ifdef GPU
-#  ifdef GRAVITY
-   CUAPI_MemAllocate_Fluid( FLU_GPU_NPGROUP, POT_GPU_NPGROUP, GPU_NSTREAM );
+#     ifdef GRAVITY
+      CUAPI_MemAllocate_Fluid( FLU_GPU_NPGROUP, POT_GPU_NPGROUP, GPU_NSTREAM );
+#     else
+      CUAPI_MemAllocate_Fluid( FLU_GPU_NPGROUP, NULL_INT,        GPU_NSTREAM );
+#     endif
 #  else
-   CUAPI_MemAllocate_Fluid( FLU_GPU_NPGROUP, NULL_INT,        GPU_NSTREAM );
-#  endif
-#  else
-   Init_MemAllocate_Fluid ( FLU_GPU_NPGROUP );
-#  endif
+#     ifdef GRAVITY
+      Init_MemAllocate_Fluid ( FLU_GPU_NPGROUP, POT_GPU_NPGROUP );
+#     else
+      Init_MemAllocate_Fluid ( FLU_GPU_NPGROUP, NULL_INT );
+#     endif
+#  endif // #ifdef GPU ... else ...
 
 #  ifdef GRAVITY
 #     ifdef GPU

@@ -11,10 +11,16 @@
 //
 // Note        :  Work when using CPUs only
 //-------------------------------------------------------------------------------------------------------
-void Init_MemAllocate_Fluid( const int Flu_NPatchGroup )
+void Init_MemAllocate_Fluid( const int Flu_NPatchGroup, const int Pot_NPatchGroup )
 {
 
    const int Flu_NPatch = 8*Flu_NPatchGroup;
+#  ifdef GRAVITY
+   const int Pot_NPatch = 8*Pot_NPatchGroup;
+   const int dt_NPatch  = MAX( Flu_NPatch, Pot_NPatch );
+#  else
+   const int dt_NPatch  = Flu_NPatch;
+#  endif
 
    for (int t=0; t<2; t++)
    {
@@ -31,7 +37,7 @@ void Init_MemAllocate_Fluid( const int Flu_NPatchGroup )
       h_Corner_Array_F [t] = new double [Flu_NPatchGroup][3];
 #     endif
 
-      h_dt_Array_T     [t] = new real [Flu_NPatch];
+      h_dt_Array_T     [t] = new real [dt_NPatch];
       h_Flu_Array_T    [t] = new real [Flu_NPatch][NCOMP_FLUID][ CUBE(PS1) ];
 
 #     ifdef DUAL_ENERGY
