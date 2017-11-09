@@ -91,8 +91,8 @@ void Validate()
 
    if ( MPI_Rank == 0 )
    {
-#     if ( FLU_SCHEME != MHM  &&  FLU_SCHEME != CTU )
-         Aux_Message( stderr, "WARNING : it's recommended to adopt either MHM or CTU schemes for this test !!\n" );
+#     if ( FLU_SCHEME != MHM )
+         Aux_Message( stderr, "WARNING : it's recommended to adopt the MHM scheme for this test !!\n" );
 #     endif
 
 #     ifndef DUAL_ENERGY
