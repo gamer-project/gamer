@@ -52,13 +52,13 @@ SIMU_OPTION += -DSUPPORT_GRACKLE
 # ------------------------------------------------------------------------------------
 ifeq "$(findstring MODEL=HYDRO, $(SIMU_OPTION))" "MODEL=HYDRO"
 # hydrodynamic scheme: RTVD/WAF/MHM/MHM_RP/CTU (WAF is deprecated)
-SIMU_OPTION += -DFLU_SCHEME=CTU
+SIMU_OPTION += -DFLU_SCHEME=MHM
 
 # scheme of spatial data reconstruction: PLM/PPM (piecewise-linear/piecewise-parabolic) ##useless in RTVD/WAF##
 SIMU_OPTION += -DLR_SCHEME=PPM
 
 # Riemann solver: EXACT/ROE/HLLE/HLLC ##all are useless in RTVD, HLLE/HLLC are useless in WAF##
-SIMU_OPTION += -DRSOLVER=ROE
+SIMU_OPTION += -DRSOLVER=HLLC
 
 # dual energy formalism: DE_ENPY/DE_EINT (evolve entropy or internal energy; DE_EINT is not supported yet) ##useless in RTVD/WAF##
 SIMU_OPTION += -DDUAL_ENERGY=DE_ENPY
@@ -132,11 +132,11 @@ SIMU_OPTION += -DINTEL
 # double precision (not supported for the GPU + self-gravity mode in non-Fermi GPUs)
 #SIMU_OPTION += -DFLOAT8
 
-# serial mode (in which no MPI libraries are required)
-#SIMU_OPTION += -DSERIAL
+# serial mode (in which no MPI libraries are required; must disable LOAD_BALANCE)
+SIMU_OPTION += -DSERIAL
 
-# load-balance parallelization (one must not turn on the option "SERIAL") (HILBERT)
-SIMU_OPTION += -DLOAD_BALANCE=HILBERT
+# load-balance parallelization (must disable SERIAL) (HILBERT)
+#SIMU_OPTION += -DLOAD_BALANCE=HILBERT
 
 # overlap MPI communication with computation (experimental, only supported in LOAD_BALANCE)
 #SIMU_OPTION += -DOVERLAP_MPI
