@@ -150,9 +150,9 @@ void StoreFlux( const int lv, const real h_Flux_Array[][9][NFLUX_TOTAL][4*PATCH_
       for (int PID=PID0; PID<PID0+8; PID++)
       for (int s=0; s<6; s++)
       {
-//       for debug mode, store the fluxes to be corrected in the "flux_debug" array
-#        ifdef GAMER_DEBUG
-         FluxPtr = amr->patch[0][lv][PID]->flux_debug[s];
+//       for bitwise reproducibility, store the fluxes to be corrected in the "flux_bitrep" array
+#        ifdef BITWISE_REPRODUCIBILITY
+         FluxPtr = amr->patch[0][lv][PID]->flux_bitrep[s];
 #        else
          FluxPtr = amr->patch[0][lv][PID]->flux[s];
 #        endif

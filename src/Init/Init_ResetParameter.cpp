@@ -862,13 +862,13 @@ void Init_ResetParameter()
    PRINT_WARNING( SF_CREATE_STAR_MIN_STAR_MASS, FORMAT_FLT, "to be consistent with the code units" );
 
 
-// enable SF_CREATE_STAR_DET_RANDOM in the debug mode
-#  ifdef GAMER_DEBUG
+// enable SF_CREATE_STAR_DET_RANDOM to achieve bitwise reproducibility
+#  ifdef BITWISE_REPRODUCIBILITY
    if ( !SF_CREATE_STAR_DET_RANDOM )
    {
       SF_CREATE_STAR_DET_RANDOM = true;
 
-      PRINT_WARNING( SF_CREATE_STAR_DET_RANDOM, FORMAT_INT, "since GAMER_DEBUG is enabled" );
+      PRINT_WARNING( SF_CREATE_STAR_DET_RANDOM, FORMAT_INT, "since BITWISE_REPRODUCIBILITY is enabled" );
    }
 #  endif
 #  endif // #ifdef STAR_FORMATION

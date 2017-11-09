@@ -210,20 +210,6 @@ void Init_GAMER( int *argc, char ***argv )
 // record the initial weighted load-imbalance factor
    if ( OPT__RECORD_LOAD_BALANCE )  LB_EstimateLoadImbalance();
 
-
-// fill up the data for patches that are not leaf patches (for RESTART only)
-// --> It's for bitwise consistency between load-balance and non-load-balance runs
-// --> Should be deprecated (or removed) after adding the makefile option "BITWISE_REPRODUCIBILITY",
-//     which will always apply data restriction before dumping data
-   if ( OPT__INIT == INIT_RESTART )
-   for (int lv=NLEVEL-2; lv>=0; lv--)
-   {
-      Flu_Restrict( lv, amr->FluSg[lv+1], amr->FluSg[lv], NULL_INT, NULL_INT, _TOTAL );
-
-      LB_GetBufferData( lv, amr->FluSg[lv], NULL_INT, DATA_RESTRICT, _TOTAL, NULL_INT );
-
-      Buf_GetBufferData( lv, amr->FluSg[lv], NULL_INT, DATA_GENERAL, _TOTAL, Flu_ParaBuf, USELB_YES );
-   }
 #  endif // #ifdef LOAD_BALANCE
 
 
