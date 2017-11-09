@@ -254,6 +254,10 @@ void Aux_Check_Parameter()
 
    if ( MPI_Rank == 0 ) {
 
+#  if ( defined GAMER_DEBUG  &&  !defined BITWISE_REPRODUCIBILITY )
+      Aux_Message( stderr, "WARNING : you might want to turn on BITWISE_REPRODUCIBILITY for GAMER_DEBUG !!\n" );
+#  endif
+
    if ( !OPT__OUTPUT_TOTAL  &&  !OPT__OUTPUT_PART  &&  !OPT__OUTPUT_USER  &&  !OPT__OUTPUT_BASEPS )
 #  ifdef PARTICLE
    if ( !OPT__OUTPUT_PAR_TEXT )

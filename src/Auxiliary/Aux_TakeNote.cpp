@@ -223,6 +223,12 @@ void Aux_TakeNote()
       fprintf( Note, "GAMER_DEBUG                     OFF\n" );
 #     endif
 
+#     ifdef BITWISE_REPRODUCIBILITY
+      fprintf( Note, "BITWISE_REPRODUCIBILITY         ON\n" );
+#     else
+      fprintf( Note, "BITWISE_REPRODUCIBILITY         OFF\n" );
+#     endif
+
 #     ifdef TIMING
       fprintf( Note, "TIMING                          ON\n" );
 #     else

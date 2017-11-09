@@ -1243,62 +1243,63 @@ void Check_Makefile( const char *FileName )
 // 4. load and compare all target fields one-by-one
    Makefile_t RS;    // RS = ReStart
 
-   LoadField( "Model",              &RS.Model,              SID, TID, NonFatal, &RT.Model,               1,    Fatal );
-   LoadField( "Gravity",            &RS.Gravity,            SID, TID, NonFatal, &RT.Gravity,             1,    Fatal );
-   LoadField( "Comoving",           &RS.Comoving,           SID, TID, NonFatal, &RT.Comoving,            1,    Fatal );
-   LoadField( "Particle",           &RS.Particle,           SID, TID, NonFatal, &RT.Particle,            1,    Fatal );
+   LoadField( "Model",                  &RS.Model,                  SID, TID, NonFatal, &RT.Model,                  1,    Fatal );
+   LoadField( "Gravity",                &RS.Gravity,                SID, TID, NonFatal, &RT.Gravity,                1,    Fatal );
+   LoadField( "Comoving",               &RS.Comoving,               SID, TID, NonFatal, &RT.Comoving,               1,    Fatal );
+   LoadField( "Particle",               &RS.Particle,               SID, TID, NonFatal, &RT.Particle,               1,    Fatal );
 
-   LoadField( "UseGPU",             &RS.UseGPU,             SID, TID, NonFatal, &RT.UseGPU,              1, NonFatal );
-   LoadField( "GAMER_Debug",        &RS.GAMER_Debug,        SID, TID, NonFatal, &RT.GAMER_Debug,         1, NonFatal );
-   LoadField( "Timing",             &RS.Timing,             SID, TID, NonFatal, &RT.Timing,              1, NonFatal );
-   LoadField( "TimingSolver",       &RS.TimingSolver,       SID, TID, NonFatal, &RT.TimingSolver,        1, NonFatal );
-   LoadField( "Intel",              &RS.Intel,              SID, TID, NonFatal, &RT.Intel,               1, NonFatal );
-   LoadField( "Float8",             &RS.Float8,             SID, TID, NonFatal, &RT.Float8,              1, NonFatal );
-   LoadField( "Serial",             &RS.Serial,             SID, TID, NonFatal, &RT.Serial,              1, NonFatal );
-   LoadField( "LoadBalance",        &RS.LoadBalance,        SID, TID, NonFatal, &RT.LoadBalance,         1, NonFatal );
-   LoadField( "OverlapMPI",         &RS.OverlapMPI,         SID, TID, NonFatal, &RT.OverlapMPI,          1, NonFatal );
-   LoadField( "OpenMP",             &RS.OpenMP,             SID, TID, NonFatal, &RT.OpenMP,              1, NonFatal );
-   LoadField( "GPU_Arch",           &RS.GPU_Arch,           SID, TID, NonFatal, &RT.GPU_Arch,            1, NonFatal );
-   LoadField( "Laohu",              &RS.Laohu,              SID, TID, NonFatal, &RT.Laohu,               1, NonFatal );
-   LoadField( "SupportHDF5",        &RS.SupportHDF5,        SID, TID, NonFatal, &RT.SupportHDF5,         1, NonFatal );
-   LoadField( "SupportGSL",         &RS.SupportGSL,         SID, TID, NonFatal, &RT.SupportGSL,          1, NonFatal );
-   LoadField( "SupportGrackle",     &RS.SupportGrackle,     SID, TID, NonFatal, &RT.SupportGrackle,      1, NonFatal );
+   LoadField( "UseGPU",                 &RS.UseGPU,                 SID, TID, NonFatal, &RT.UseGPU,                 1, NonFatal );
+   LoadField( "GAMER_Debug",            &RS.GAMER_Debug,            SID, TID, NonFatal, &RT.GAMER_Debug,            1, NonFatal );
+   LoadField( "BitwiseReproducibility", &RS.BitwiseReproducibility, SID, TID, NonFatal, &RT.BitwiseReproducibility, 1, NonFatal );
+   LoadField( "Timing",                 &RS.Timing,                 SID, TID, NonFatal, &RT.Timing,                 1, NonFatal );
+   LoadField( "TimingSolver",           &RS.TimingSolver,           SID, TID, NonFatal, &RT.TimingSolver,           1, NonFatal );
+   LoadField( "Intel",                  &RS.Intel,                  SID, TID, NonFatal, &RT.Intel,                  1, NonFatal );
+   LoadField( "Float8",                 &RS.Float8,                 SID, TID, NonFatal, &RT.Float8,                 1, NonFatal );
+   LoadField( "Serial",                 &RS.Serial,                 SID, TID, NonFatal, &RT.Serial,                 1, NonFatal );
+   LoadField( "LoadBalance",            &RS.LoadBalance,            SID, TID, NonFatal, &RT.LoadBalance,            1, NonFatal );
+   LoadField( "OverlapMPI",             &RS.OverlapMPI,             SID, TID, NonFatal, &RT.OverlapMPI,             1, NonFatal );
+   LoadField( "OpenMP",                 &RS.OpenMP,                 SID, TID, NonFatal, &RT.OpenMP,                 1, NonFatal );
+   LoadField( "GPU_Arch",               &RS.GPU_Arch,               SID, TID, NonFatal, &RT.GPU_Arch,               1, NonFatal );
+   LoadField( "Laohu",                  &RS.Laohu,                  SID, TID, NonFatal, &RT.Laohu,                  1, NonFatal );
+   LoadField( "SupportHDF5",            &RS.SupportHDF5,            SID, TID, NonFatal, &RT.SupportHDF5,            1, NonFatal );
+   LoadField( "SupportGSL",             &RS.SupportGSL,             SID, TID, NonFatal, &RT.SupportGSL,             1, NonFatal );
+   LoadField( "SupportGrackle",         &RS.SupportGrackle,         SID, TID, NonFatal, &RT.SupportGrackle,         1, NonFatal );
 
-   LoadField( "NLevel",             &RS.NLevel,             SID, TID, NonFatal, &RT.NLevel,              1, NonFatal );
-   LoadField( "MaxPatch",           &RS.MaxPatch,           SID, TID, NonFatal, &RT.MaxPatch,            1, NonFatal );
+   LoadField( "NLevel",                 &RS.NLevel,                 SID, TID, NonFatal, &RT.NLevel,                 1, NonFatal );
+   LoadField( "MaxPatch",               &RS.MaxPatch,               SID, TID, NonFatal, &RT.MaxPatch,               1, NonFatal );
 
 #  ifdef GRAVITY
-   LoadField( "PotScheme",          &RS.PotScheme,          SID, TID, NonFatal, &RT.PotScheme,           1, NonFatal );
-   LoadField( "StorePotGhost",      &RS.StorePotGhost,      SID, TID, NonFatal, &RT.StorePotGhost,       1, NonFatal );
-   LoadField( "UnsplitGravity",     &RS.UnsplitGravity,     SID, TID, NonFatal, &RT.UnsplitGravity,      1, NonFatal );
+   LoadField( "PotScheme",              &RS.PotScheme,              SID, TID, NonFatal, &RT.PotScheme,              1, NonFatal );
+   LoadField( "StorePotGhost",          &RS.StorePotGhost,          SID, TID, NonFatal, &RT.StorePotGhost,          1, NonFatal );
+   LoadField( "UnsplitGravity",         &RS.UnsplitGravity,         SID, TID, NonFatal, &RT.UnsplitGravity,         1, NonFatal );
 #  endif
 
 #  if   ( MODEL == HYDRO )
-   LoadField( "FluScheme",          &RS.FluScheme,          SID, TID, NonFatal, &RT.FluScheme,           1, NonFatal );
+   LoadField( "FluScheme",              &RS.FluScheme,              SID, TID, NonFatal, &RT.FluScheme,              1, NonFatal );
 #  ifdef LR_SCHEME
-   LoadField( "LRScheme",           &RS.LRScheme,           SID, TID, NonFatal, &RT.LRScheme,            1, NonFatal );
+   LoadField( "LRScheme",               &RS.LRScheme,               SID, TID, NonFatal, &RT.LRScheme,               1, NonFatal );
 #  endif
 #  ifdef RSOLVER
-   LoadField( "RSolver",            &RS.RSolver,            SID, TID, NonFatal, &RT.RSolver,             1, NonFatal );
+   LoadField( "RSolver",                &RS.RSolver,                SID, TID, NonFatal, &RT.RSolver,                1, NonFatal );
 #  endif
-   LoadField( "DualEnergy",         &RS.DualEnergy,         SID, TID, NonFatal, &RT.DualEnergy,          1, NonFatal );
+   LoadField( "DualEnergy",             &RS.DualEnergy,             SID, TID, NonFatal, &RT.DualEnergy,             1, NonFatal );
 
 #  elif ( MODEL == MHD )
 #  warning : WAIT MHD !!!
 
 #  elif ( MODEL == ELBDM )
-   LoadField( "ConserveMass",       &RS.ConserveMass,       SID, TID, NonFatal, &RT.ConserveMass,        1, NonFatal );
-   LoadField( "Laplacian4th",       &RS.Laplacian4th,       SID, TID, NonFatal, &RT.Laplacian4th,        1, NonFatal );
-   LoadField( "SelfInteraction4",   &RS.SelfInteraction4,   SID, TID, NonFatal, &RT.SelfInteraction4,    1, NonFatal );
+   LoadField( "ConserveMass",           &RS.ConserveMass,           SID, TID, NonFatal, &RT.ConserveMass,           1, NonFatal );
+   LoadField( "Laplacian4th",           &RS.Laplacian4th,           SID, TID, NonFatal, &RT.Laplacian4th,           1, NonFatal );
+   LoadField( "SelfInteraction4",       &RS.SelfInteraction4,       SID, TID, NonFatal, &RT.SelfInteraction4,       1, NonFatal );
 
 #  else
 #  error : unsupported MODEL !!
 #  endif // MODEL
 
 #  ifdef PARTICLE
-   LoadField( "StoreParAcc",        &RS.StoreParAcc,        SID, TID, NonFatal, &RT.StoreParAcc,         1, NonFatal );
-   LoadField( "StarFormation",      &RS.StarFormation,      SID, TID, NonFatal, &RT.StarFormation,       1, NonFatal );
-   LoadField( "Par_NPassive",       &RS.Par_NPassive,       SID, TID, NonFatal, &RT.Par_NPassive,        1,    Fatal );
+   LoadField( "StoreParAcc",            &RS.StoreParAcc,            SID, TID, NonFatal, &RT.StoreParAcc,            1, NonFatal );
+   LoadField( "StarFormation",          &RS.StarFormation,          SID, TID, NonFatal, &RT.StarFormation,          1, NonFatal );
+   LoadField( "Par_NPassive",           &RS.Par_NPassive,           SID, TID, NonFatal, &RT.Par_NPassive,           1,    Fatal );
 #  endif
 
 
