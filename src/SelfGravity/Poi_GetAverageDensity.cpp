@@ -17,8 +17,9 @@
 //             :  2. For the Poisson solver with the isolated BC in the comoving frames, the UNITY will be
 //                   subtracted from the total density at each cell when solving the Poisson equation at
 //                   all levels in order to be consistent with the Poisson eq. in the comoving frame
-//                3. For the debug mode, we perform summation in a specific order in order to ensure that
-//                   the round-off errors will be the same in runs with different numbers of MPI ranks
+//                3. For bitwise reproducibility (i.e., when BITWISE_REPRODUCIBILITY is enabled), we perform
+//                   summation in a deterministic order to ensure that the round-off errors will be the same
+//                   in runs with different numbers of MPI ranks
 //                4. Include both the fluid and particles's mass
 //
 // Parameter   :  None
@@ -46,9 +47,9 @@ void Poi_GetAverageDensity()
 // ==================================================================================================
 
 
-// 2. for debug mode
+// 2. for bitwise reproducibility
 // ==================================================================================================
-#  ifdef GAMER_DEBUG
+#  ifdef BITWISE_REPRODUCIBILITY
 
 // only use rank 0 for summation in the debug mode
    const int NP[3]  = { NX0_TOT[0]/PATCH_SIZE, NX0_TOT[1]/PATCH_SIZE, NX0_TOT[2]/PATCH_SIZE };
@@ -178,7 +179,7 @@ void Poi_GetAverageDensity()
 
 // 3. for general cases
 // ==================================================================================================
-#  else // #ifdef GAMER_DEBUG
+#  else // #ifdef BITWISE_REPRODUCIBILITY
 
 // evaluate the sum of density (we only use the base-level data because the restriction condition is assumed
 // to be fulfilled
@@ -212,7 +213,7 @@ void Poi_GetAverageDensity()
    AveDensity_Init += ParMassSum_total / ( amr->BoxSize[0]*amr->BoxSize[1]*amr->BoxSize[2] );
 #  endif // #ifdef PARTICLE
 
-#  endif // #ifdef GAMER_DEBUG ... else ...
+#  endif // #ifdef BITWISE_REPRODUCIBILITY ... else ...
 
 
 // 4. output results

@@ -6,7 +6,7 @@
 static bool WithinRho( const int idx[], const int RhoSize );
 static bool FarAwayParticle( real ParPosX, real ParPosY, real ParPosZ, const bool Periodic, const real PeriodicSize_Phy[],
                              const real EdgeL[], const real EdgeR[] );
-#ifdef DEBUG_PARTICLE
+#ifdef BITWISE_REPRODUCIBILITY
 void SortParticle( const long NPar, const real *PosX, const real *PosY, const real *PosZ, int *IdxTable );
 #endif
 
@@ -33,8 +33,7 @@ void SortParticle( const long NPar, const real *PosX, const real *PosY, const re
 //                   two patches (i.e., one patch group) along one direction (i.e., NX0_TOT[0/1/2] = 2*PATCH_SIZE)
 //                   --> It is because for that extreme case we need to consider both the target particles and their
 //                       image particles when assigning mass to a single array (Rho), which is not considered here!
-//                6. In debug mode, particles are sorted by their position before the mass deposition
-//                   --> Ensure the bitwise reproducibility when running with different number of nodes
+//                6. For bitwise reproducibility, particles are sorted by their position before mass deposition
 //                   --> Also refer to the note of the routine "SortParticle"
 //
 // Parameter   :  ParList         : List of target particle IDs
@@ -147,8 +146,8 @@ void Par_MassAssignment( const long *ParList, const long NPar, const ParInterp_t
 
 
 // 3-1/2: sort particles by their position to fix the order of mass assignment
-//        --> necessary for achieving the bitwise reproducibility
-#  ifdef DEBUG_PARTICLE
+//        --> necessary for achieving bitwise reproducibility
+#  ifdef BITWISE_REPRODUCIBILITY
    int *Sort_IdxTable = new int [NPar];   // it will fail if "long" is actually required for NPar
 
    SortParticle( NPar, Pos[0], Pos[1], Pos[2], Sort_IdxTable );
@@ -183,7 +182,7 @@ void Par_MassAssignment( const long *ParList, const long NPar, const ParInterp_t
       {
          for (long p=0; p<NPar; p++)
          {
-#           ifdef DEBUG_PARTICLE
+#           ifdef BITWISE_REPRODUCIBILITY
             Idx = Sort_IdxTable[p];
 #           else
             Idx = p;
@@ -238,7 +237,7 @@ void Par_MassAssignment( const long *ParList, const long NPar, const ParInterp_t
 
          for (long p=0; p<NPar; p++)
          {
-#           ifdef DEBUG_PARTICLE
+#           ifdef BITWISE_REPRODUCIBILITY
             Idx = Sort_IdxTable[p];
 #           else
             Idx = p;
@@ -309,7 +308,7 @@ void Par_MassAssignment( const long *ParList, const long NPar, const ParInterp_t
 
          for (long p=0; p<NPar; p++)
          {
-#           ifdef DEBUG_PARTICLE
+#           ifdef BITWISE_REPRODUCIBILITY
             Idx = Sort_IdxTable[p];
 #           else
             Idx = p;
@@ -382,7 +381,7 @@ void Par_MassAssignment( const long *ParList, const long NPar, const ParInterp_t
       for (int d=0; d<3; d++)    delete [] Pos[d];
    }
 
-#  ifdef DEBUG_PARTICLE
+#  ifdef BITWISE_REPRODUCIBILITY
    delete [] Sort_IdxTable;
 #  endif
 
@@ -471,7 +470,7 @@ bool FarAwayParticle( real ParPosX, real ParPosY, real ParPosZ, const bool Perio
 
 
 
-#ifdef DEBUG_PARTICLE
+#ifdef BITWISE_REPRODUCIBILITY
 //-------------------------------------------------------------------------------------------------------
 // Function    :  SortParticle
 // Description :  Sort particles by their position
@@ -566,7 +565,7 @@ void SortParticle( const long NPar, const real *PosX, const real *PosY, const re
    delete [] PosX_Sorted;
 
 } // FUNCTION : SortParticle
-#endif // #ifdef DEBUG_PARTICLE
+#endif // #ifdef BITWISE_REPRODUCIBILITY
 
 
 
