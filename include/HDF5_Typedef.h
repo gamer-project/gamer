@@ -95,6 +95,7 @@ struct Makefile_t
 
    int UseGPU;
    int GAMER_Debug;
+   int BitwiseReproducibility;
    int Timing;
    int TimingSolver;
    int Intel;
