@@ -1,7 +1,19 @@
 
 
 
-# name of the executable file
+# ===========================================================================
+# INSTRUCTIONS
+#
+# To compile GAMER, please set the following three configurations properly:
+#
+# (1) simulation options
+# (2) compiler and flags
+# (3) library paths
+# ===========================================================================
+
+
+
+# executable
 #######################################################################################################
 EXECUTABLE := gamer
 
@@ -12,29 +24,29 @@ EXECUTABLE := gamer
 
 # (a) common options for all models
 # -------------------------------------------------------------------------------
-# model: HYDRO/MHD/ELBDM/PAR_ONLY (PAR_ONLY must work with PARTICLE)
+# model: HYDRO/MHD/ELBDM/PAR_ONLY (PAR_ONLY is not supported yet)
 SIMU_OPTION += -DMODEL=HYDRO
 
 # self-gravity
-SIMU_OPTION += -DGRAVITY
+#SIMU_OPTION += -DGRAVITY
 
 # Poisson solver: SOR/MG (successive-overrelaxation/multigrid)
-SIMU_OPTION += -DPOT_SCHEME=SOR
+#SIMU_OPTION += -DPOT_SCHEME=SOR
 
 # store GRA_GHOST_SIZE ghost-zone potential for each patch on each side (in patch->pot_ext)
 # --> (1) for improving accuracy for particles around the patch boundaries (by Par->ImproveAcc)
 #     (2) currently must be enabled for STAR_FORMATION + STORE_PAR_ACC
-SIMU_OPTION += -DSTORE_POT_GHOST
+#SIMU_OPTION += -DSTORE_POT_GHOST
 
 # use unsplitting method to couple gravity to the target model (for HYDRO and MHD only; ELBDM is not supported yet)
 # --> must be off if GRAVITY is off
-SIMU_OPTION += -DUNSPLIT_GRAVITY
+#SIMU_OPTION += -DUNSPLIT_GRAVITY
 
 # comoving frame
 #SIMU_OPTION += -DCOMOVING
 
 # particles (must work with GRAVITY; set MODEL=PAR_ONLY for particle-only simulations)
-SIMU_OPTION += -DPARTICLE
+#SIMU_OPTION += -DPARTICLE
 
 # maximum number of AMR levels including the base level (level id = 0 ... NLEVEL-1)
 SIMU_OPTION += -DNLEVEL=10
@@ -44,7 +56,7 @@ SIMU_OPTION += -DMAX_PATCH=1000000
 
 # support Grackle, a chemistry and radiative cooling library
 # --> please enable OpenMP in Grackle by "make omp-on"
-SIMU_OPTION += -DSUPPORT_GRACKLE
+#SIMU_OPTION += -DSUPPORT_GRACKLE
 
 
 # (b) model-dependent options
@@ -52,20 +64,20 @@ SIMU_OPTION += -DSUPPORT_GRACKLE
 # ------------------------------------------------------------------------------------
 ifeq "$(findstring MODEL=HYDRO, $(SIMU_OPTION))" "MODEL=HYDRO"
 # hydrodynamic scheme: RTVD/WAF/MHM/MHM_RP/CTU (WAF is deprecated)
-SIMU_OPTION += -DFLU_SCHEME=MHM
+SIMU_OPTION += -DFLU_SCHEME=CTU
 
 # scheme of spatial data reconstruction: PLM/PPM (piecewise-linear/piecewise-parabolic) ##useless in RTVD/WAF##
 SIMU_OPTION += -DLR_SCHEME=PPM
 
 # Riemann solver: EXACT/ROE/HLLE/HLLC ##all are useless in RTVD, HLLE/HLLC are useless in WAF##
-SIMU_OPTION += -DRSOLVER=HLLC
+SIMU_OPTION += -DRSOLVER=ROE
 
 # dual energy formalism: DE_ENPY/DE_EINT (evolve entropy or internal energy; DE_EINT is not supported yet) ##useless in RTVD/WAF##
-SIMU_OPTION += -DDUAL_ENERGY=DE_ENPY
+#SIMU_OPTION += -DDUAL_ENERGY=DE_ENPY
 
 # number of passively advected scalars (**excluding** entropy or internal energy used by DUAL_ENERGY)
 # --> for simulations without any passive scalar, please set this variable to 0 and do NOT comment it out
-SIMU_OPTION += -DNCOMP_PASSIVE_MAKEFILE=1
+SIMU_OPTION += -DNCOMP_PASSIVE_MAKEFILE=0
 
 
 # (b-2) MHD options
@@ -94,31 +106,31 @@ endif # MODEL
 # (c) PARTICLE options
 # ------------------------------------------------------------------------------------
 # store particle acceleration
-SIMU_OPTION += -DSTORE_PAR_ACC
+#SIMU_OPTION += -DSTORE_PAR_ACC
 
 # allow for creating new particles after initialization
 # --> must turn on PARTICLE
 # --> must turn on STORE_POT_GHOST when STORE_PAR_ACC is adopted
-SIMU_OPTION += -DSTAR_FORMATION
+#SIMU_OPTION += -DSTAR_FORMATION
 
 # number of passive particle attributes (**excluding** PAR_CREATION_TIME used by STAR_FORMATION)
 # --> for simulations without any passive attributes, please set this variable to 0 and do NOT comment it out
-SIMU_OPTION += -DPAR_NPASSIVE_MAKEFILE=1
+SIMU_OPTION += -DPAR_NPASSIVE_MAKEFILE=0
 
 
 # (d) optimization options and other features
 # ------------------------------------------------------------------------------------
 # GPU acceleration (to disable GPU, please comment out both -DGPU and -DGPU_ARCH)
-SIMU_OPTION += -DGPU
+#SIMU_OPTION += -DGPU
 
 # GPU architecture: FERMI/KEPLER/MAXWELL/PASCAL
-SIMU_OPTION += -DGPU_ARCH=KEPLER
+#SIMU_OPTION += -DGPU_ARCH=KEPLER
 
 # debug mode
 #SIMU_OPTION += -DGAMER_DEBUG
 
 # bitwise reproducibility
-SIMU_OPTION += -DBITWISE_REPRODUCIBILITY
+#SIMU_OPTION += -DBITWISE_REPRODUCIBILITY
 
 # measure the wall-clock time of GAMER
 SIMU_OPTION += -DTIMING
@@ -126,17 +138,14 @@ SIMU_OPTION += -DTIMING
 # measure the wall-clock time of GPU solvers (will disable CPU/GPU overlapping; must turn on TIMING)
 #SIMU_OPTION += -DTIMING_SOLVER
 
-# intel compiler (default: GNU compiler)
-SIMU_OPTION += -DINTEL
-
 # double precision (not supported for the GPU + self-gravity mode in non-Fermi GPUs)
 #SIMU_OPTION += -DFLOAT8
 
 # serial mode (in which no MPI libraries are required; must disable LOAD_BALANCE)
-#SIMU_OPTION += -DSERIAL
+SIMU_OPTION += -DSERIAL
 
 # load-balance parallelization (must disable SERIAL) (HILBERT)
-SIMU_OPTION += -DLOAD_BALANCE=HILBERT
+#SIMU_OPTION += -DLOAD_BALANCE=HILBERT
 
 # overlap MPI communication with computation (experimental, only supported in LOAD_BALANCE)
 #SIMU_OPTION += -DOVERLAP_MPI
@@ -148,13 +157,150 @@ SIMU_OPTION += -DOPENMP
 #SIMU_OPTION += -DLAOHU
 
 # support HDF5 format
-SIMU_OPTION += -DSUPPORT_HDF5
+#SIMU_OPTION += -DSUPPORT_HDF5
 
 # support GNU scientific library
 #SIMU_OPTION += -DSUPPORT_GSL
 
 # support yt inline analysis
 #SIMU_OPTION += -DSUPPORT_LIBYT
+
+
+
+
+
+# compiler and flags
+#######################################################################################################
+
+# intel
+# -------------------------------------------------------------------------------
+ CXX         = icpc                                      # serial compiler
+#CXX         = $(MPI_PATH)/bin/mpicxx                    # MPI compiler
+#CXX         = CC                                        # cray wrapper script
+ CXXFLAG     = -g -O3                                    # optimization flags
+#CXXFLAG     = -g -fast
+ CXXFLAG    += -w1                                       # warning flags
+ OPENMPFLAG  = -fopenmp                                  # openmp flag
+ LIB         = -limf                                     # libraries and linker flags
+
+# for debug only
+ifeq "$(findstring GAMER_DEBUG, $(SIMU_OPTION))" "GAMER_DEBUG"
+ CXXFLAG    += -fstack-protector-all
+ LIB        += -lssp
+endif
+
+# suppress warning when OpenMP is disabled
+ifeq "$(findstring OPENMP, $(SIMU_OPTION))" ""
+ CXXFLAG    += -Wno-unknown-pragmas -diag-disable 3180
+endif
+
+
+# gnu
+# -------------------------------------------------------------------------------
+# CXX         = g++                                       # serial compiler
+##CXX         = $(MPI_PATH)/bin/mpicxx                    # MPI compiler
+##CXX         = CC                                        # cray wrapper script
+# CXXFLAG     = -g -O3                                    # optimization flags
+##CXXFLAG     = -g -Ofast
+# CXXFLAG    += -Wall -Wextra                             # warning flags
+# CXXFLAG    += -Wno-unused-variable -Wno-unused-parameter \
+#               -Wno-maybe-uninitialized -Wno-unused-but-set-variable \
+#               -Wno-unused-result -Wno-unused-function
+# OPENMPFLAG  = -fopenmp                                  # openmp flag
+# LIB         =                                           # libraries and linker flags
+#
+## for debug only
+#ifeq "$(findstring GAMER_DEBUG, $(SIMU_OPTION))" "GAMER_DEBUG"
+# CXXFLAG    += -fstack-protector-all
+#endif
+#
+## suppress warning when OpenMP is disabled
+#ifeq "$(findstring OPENMP, $(SIMU_OPTION))" ""
+# CXXFLAG    += -Wno-unknown-pragmas
+#endif
+
+
+# CUDA
+# -------------------------------------------------------------------------------
+ NVCC = $(CUDA_PATH)/bin/nvcc                            # CUDA compiler
+#NVCC = nvcc -ccbin CC                                   # CUDA compiler used in the Cray environment
+
+
+
+
+
+# library paths
+#######################################################################################################
+
+# template
+#CUDA_PATH    :=
+#FFTW_PATH    :=
+#MPI_PATH     :=
+#HDF5_PATH    :=
+#GRACKLE_PATH :=
+#GSL_PATH     :=
+
+# NCSA-bluewaters (only need to specify the path of user-installed packages)
+#GRACKLE_PATH :=
+
+# UIUC-campus (intel-15.0 + openmpi-1.8.4)
+CUDA_PATH    := /usr/local/cuda/7.0
+FFTW_PATH    := /projects/ncsa/grav/softwares/fftw/2.1.5
+MPI_PATH     := /usr/local/mpi/openmpi-1.8.4-intel-15.0
+HDF5_PATH    := /projects/ncsa/grav/softwares/miniconda2
+GRACKLE_PATH := /home/hyschive/local
+GSL_PATH     := /usr/local/gsl/gsl-1.16
+
+# UIUC-campus (gcc-4.9.2 + openmpi-1.8.4)
+#CUDA_PATH    := /usr/local/cuda/7.0
+#FFTW_PATH    := /projects/ncsa/grav/softwares/fftw/2.1.5-openmpi-1.8.4-gcc-4.9.2
+#MPI_PATH     := /usr/local/mpi/openmpi-1.8.4-gcc-4.9.2
+#HDF5_PATH    := /projects/ncsa/grav/softwares/miniconda2
+#GSL_PATH     := /usr/local/gsl/gsl-1.16
+
+# NCSA-hybrid (gcc)
+#CUDA_PATH    := /usr/local/cuda-8.0
+#MPI_PATH     := /home/hyschive/project/software/openmpi/2.0.2
+#FFTW_PATH    := /home/hyschive/project/software/fftw/2.1.5
+#HDF5_PATH    := /home/hyschive/project/software/miniconda2
+#GSL_PATH     :=
+
+# NCSA-nano (intel 2016)
+#CUDA_PATH    := /usr/local/cuda
+#MPI_PATH     := /mnt/lustre/allen/hyschive/software/openmpi/2.0.2
+#FFTW_PATH    := /mnt/lustre/allen/hyschive/software/fftw/2.1.5
+#HDF5_PATH    := /mnt/lustre/allen/hyschive/software/miniconda2
+#GSL_PATH     :=
+
+# NCSA-dxl (gcc, serial)
+#CUDA_PATH    :=
+#FFTW_PATH    := /home/hyschive/software/fftw/2.1.5
+#MPI_PATH     := /usr
+#HDF5_PATH    := /home/hyschive/software/miniconda2
+#GSL_PATH     := /usr/lib
+#LIBYT_PATH   := /home/hyschive/project/libyt/libyt.dev/libyt
+
+# NTU-hulk (openmpi-intel-qlc)
+#CUDA_PATH    := /opt/gpu/cuda/4.2
+#FFTW_PATH    := /opt/math/fftw/2.1.5-intel-qlc
+#MPI_PATH     := /usr/mpi/intel/openmpi-1.4.3-qlc
+#HDF5_PATH    := /opt/hdf5/1.8.9
+#MPI_PATH     := /opt/mpi/openmpi/1.6.0-intel
+#CUDA_PATH    := /usr/local/cuda-7.5
+
+# NTU-hulk (openmpi-gcc-qlc)
+#CUDA_PATH    := /opt/gpu/cuda/4.2
+#FFTW_PATH    := /opt/math/fftw/2.1.5-gcc-qlc
+#MPI_PATH     := /opt/mpi/openmpi/1.8.1-gcc-qlc
+#HDF5_PATH    := /opt/hdf5/1.8.9
+
+# NAOC-laohu (OpenMPI-1.3.2-intel)
+#CUDA_PATH    := $(CUDA_INSTALL_PATH)
+#FFTW_PATH    := /ifs/data/hsiyu/Software/fftw/2.1.5-openmpi-1.3.2-intel
+#MPI_PATH     := /usr/mpi/intel/openmpi-1.3.2-qlc
+#GPUID_PATH   := /ifs/data/hsiyu/Software/gpudevmgr
+
+
 
 
 
@@ -422,134 +568,6 @@ VPATH := $(dir $(wildcard TestProblem/*/*/))
 # rules and targets
 #######################################################################################################
 
-# location of libraries
-# -------------------------------------------------------------------------------
-# Blue Waters (only need to specify the path of user-installed packages)
-#GRACKLE_PATH      :=
-
-# campus UIUC (intel-15.0 + openmpi-1.8.4)
-CUDA_TOOLKIT_PATH := /usr/local/cuda/7.0
-FFTW_PATH         := /projects/ncsa/grav/softwares/fftw/2.1.5
-MPI_PATH          := /usr/local/mpi/openmpi-1.8.4-intel-15.0
-HDF5_PATH         := /projects/ncsa/grav/softwares/miniconda2
-GRACKLE_PATH      := /home/hyschive/local
-GSL_PATH          := /usr/local/gsl/gsl-1.16
-
-# campus UIUC (gcc-4.9.2 + openmpi-1.8.4)
-#CUDA_TOOLKIT_PATH := /usr/local/cuda/7.0
-#FFTW_PATH         := /projects/ncsa/grav/softwares/fftw/2.1.5-openmpi-1.8.4-gcc-4.9.2
-#MPI_PATH          := /usr/local/mpi/openmpi-1.8.4-gcc-4.9.2
-#HDF5_PATH         := /projects/ncsa/grav/softwares/miniconda2
-#GSL_PATH          := /usr/local/gsl/gsl-1.16
-
-# hybrid (gcc)
-#CUDA_TOOLKIT_PATH := /usr/local/cuda-8.0
-#MPI_PATH          := /home/hyschive/project/software/openmpi/2.0.2
-#FFTW_PATH         := /home/hyschive/project/software/fftw/2.1.5
-#HDF5_PATH         := /home/hyschive/project/software/miniconda2
-#GSL_PATH          :=
-
-# nano (intel 2016)
-#CUDA_TOOLKIT_PATH := /usr/local/cuda
-#MPI_PATH          := /mnt/lustre/allen/hyschive/software/openmpi/2.0.2
-#FFTW_PATH         := /mnt/lustre/allen/hyschive/software/fftw/2.1.5
-#HDF5_PATH         := /mnt/lustre/allen/hyschive/software/miniconda2
-#GSL_PATH          :=
-
-# dxl (gcc, serial)
-#CUDA_TOOLKIT_PATH :=
-#FFTW_PATH         := /home/hyschive/software/fftw/2.1.5
-#MPI_PATH          := /usr
-#HDF5_PATH         := /home/hyschive/software/miniconda2
-#GSL_PATH          := /usr/lib
-#LIBYT_PATH        := /home/hyschive/project/libyt/libyt.dev/libyt
-
-# hulk (openmpi-intel-qlc)
-#CUDA_TOOLKIT_PATH := /opt/gpu/cuda/4.2
-#FFTW_PATH         := /opt/math/fftw/2.1.5-intel-qlc
-#MPI_PATH          := /usr/mpi/intel/openmpi-1.4.3-qlc
-#HDF5_PATH         := /opt/hdf5/1.8.9
-#MPI_PATH          := /opt/mpi/openmpi/1.6.0-intel
-#CUDA_TOOLKIT_PATH := /usr/local/cuda-7.5
-
-# hulk (openmpi-gcc-qlc)
-#CUDA_TOOLKIT_PATH := /opt/gpu/cuda/4.2
-#FFTW_PATH         := /opt/math/fftw/2.1.5-gcc-qlc
-#MPI_PATH          := /opt/mpi/openmpi/1.8.1-gcc-qlc
-#HDF5_PATH         := /opt/hdf5/1.8.9
-
-# geisha (intel)
-#CUDA_TOOLKIT_PATH := /usr/local/cuda
-#FFTW_PATH         := /opt/math/fftw_openmpi_intel
-#MPI_PATH          := /opt/mpi/openmpi_intel
-
-# geisha (gcc)
-#CUDA_TOOLKIT_PATH := /usr/local/cuda
-#FFTW_PATH         := /opt/math/fftw_openmpi
-#MPI_PATH          := /opt/mpi/openmpi
-
-# dirac at NERSC (OpenMPI-1.6.0)
-#CUDA_TOOLKIT_PATH := /usr/common/usg/cuda/4.1
-#FFTW_PATH         := /project/projectdirs/gamer/hsiyu/Software/fftw/2.1.5-openmpi-1.6.0-intel
-#MPI_PATH          := /usr/common/usg/openmpi/1.6/intel
-
-# dirac at NERSC (without thread support)
-#CUDA_TOOLKIT_PATH := /usr/common/usg/cuda/4.1
-#FFTW_PATH         := /project/projectdirs/gamer/hsiyu/Software/fftw/2.1.5-openmpi-1.4.2-intel
-#MPI_PATH          := /usr/common/usg/openmpi/1.4.2/intel
-
-# dirac at NERSC (with thread support)
-#CUDA_TOOLKIT_PATH := /usr/common/usg/cuda/4.1
-#FFTW_PATH         := /global/scratch/sd/hsiyu/fftw.2.1.5-intel-thread
-#MPI_PATH          := /global/scratch/sd/hsiyu/OpenMPI.1.5.3_Intel_Thread
-
-# dirac at NERSC (OpenMPI-1.5.4)
-#CUDA_TOOLKIT_PATH := /usr/common/usg/cuda/4.1
-#FFTW_PATH         := /project/projectdirs/gamer/hsiyu/Software/fftw/2.1.5-openmpi-1.5.4-intel
-#MPI_PATH          := /project/projectdirs/gamer/hsiyu/Software/mpi/openmpi/1.5.4-intel
-
-# dirac at NERSC (MVAPICH2-1.5.1p1)
-#CUDA_TOOLKIT_PATH := /usr/common/usg/cuda/4.1
-#FFTW_PATH         := /project/projectdirs/gamer/hsiyu/Software/fftw/2.1.5-mvapich2-1.5.1p1-gcc
-#MPI_PATH          := /usr/common/usg/mvapich2/1.5.1p1/gcc
-
-# laohu at NAOC (OpenMPI-1.3.2-intel)
-#CUDA_TOOLKIT_PATH := $(CUDA_INSTALL_PATH)
-#FFTW_PATH         := /ifs/data/hsiyu/Software/fftw/2.1.5-openmpi-1.3.2-intel
-#MPI_PATH          := /usr/mpi/intel/openmpi-1.3.2-qlc
-#GPUID_PATH        := /ifs/data/hsiyu/Software/gpudevmgr
-
-# formosa4 (fish:mvapich2-1.8a2-intel)
-#CUDA_TOOLKIT_PATH := /usr/local/cuda
-#FFTW_PATH         := /home/u11thc00/fish/Software/fftw/2.1.5-mvapich2-1.8a2-intel
-#MPI_PATH          := /home/u11thc00/fish/Software/mpi/mvapich2/1.8a2-intel
-
-# coxhydrae at ARI
-#CUDA_TOOLKIT_PATH := /usr/local/cuda
-#FFTW_PATH         := /data/hsiyu/Software/fftw/2.1.5
-#FFTW_PATH         := /home/liulei/local
-#MPI_PATH          := /usr
-
-
-# compilers
-# -------------------------------------------------------------------------------
-NVCC := $(CUDA_TOOLKIT_PATH)/bin/nvcc
-#NVCC := nvcc -ccbin CC
-ifeq "$(findstring SERIAL, $(SIMU_OPTION))" "SERIAL"
-   ifeq "$(findstring INTEL, $(SIMU_OPTION))" "INTEL"
-   CXX := icpc
-#  CXX := CC
-   else
-   CXX := g++
-#  CXX := CC
-   endif
-else
-#  CXX := $(MPI_PATH)/bin/mpiCC
-   CXX := $(MPI_PATH)/bin/mpicxx
-#  CXX := CC
-endif
-
-
 # object files
 # -------------------------------------------------------------------------------
 OBJ_PATH := Object
@@ -561,15 +579,10 @@ endif
 
 # libraries
 # -------------------------------------------------------------------------------
-LIB :=
 ifeq "$(findstring GPU, $(SIMU_OPTION))" "GPU"
-LIB += -L$(CUDA_TOOLKIT_PATH)/lib64
-#LIB += -L$(CUDA_TOOLKIT_PATH)/lib
+LIB += -L$(CUDA_PATH)/lib64
+#LIB += -L$(CUDA_PATH)/lib
 LIB += -lcudart
-endif
-
-ifeq "$(findstring INTEL, $(SIMU_OPTION))" "INTEL"
-LIB += -limf
 endif
 
 ifeq "$(findstring LAOHU, $(SIMU_OPTION))" "LAOHU"
@@ -590,14 +603,6 @@ ifeq "$(findstring GRAVITY, $(SIMU_OPTION))" "GRAVITY"
       else
          LIB += -lsrfftw_mpi -lsfftw_mpi -lsrfftw -lsfftw
       endif
-   endif
-endif
-
-ifeq "$(findstring OPENMP, $(SIMU_OPTION))" "OPENMP"
-   ifeq "$(findstring INTEL, $(SIMU_OPTION))" "INTEL"
-      OPENMP := -fopenmp
-   else
-      OPENMP := -fopenmp
    endif
 endif
 
@@ -650,42 +655,7 @@ endif
 # CXX flags
 # -------------------------------------------------------------------------------
 COMMONFLAG := $(INCLUDE) $(SIMU_OPTION)
-
-ifeq "$(findstring INTEL, $(SIMU_OPTION))" "INTEL"
-CXXWARN_FLAG := -w1
-else
-CXXWARN_FLAG := -Wextra -Wall -Wswitch -Wformat -Wchar-subscripts -Wparentheses -Wmultichar \
-                -Wtrigraphs -Wpointer-arith -Wcast-align -Wreturn-type -Wno-unused-function
-CXXWARN_FLAG += -Wno-unused-variable -Wno-unused-parameter -Wno-maybe-uninitialized -Wno-unused-but-set-variable \
-                -Wno-unused-result
-endif
-
-ifeq "$(findstring OPENMP, $(SIMU_OPTION))" ""
-CXXWARN_FLAG += -Wno-unknown-pragmas
-   ifeq "$(findstring INTEL, $(SIMU_OPTION))" "INTEL"
-      CXXWARN_FLAG += -diag-disable 3180
-   endif
-endif
-
-ifeq "$(findstring INTEL, $(SIMU_OPTION))" "INTEL"
-CXXFLAG  := $(CXXWARN_FLAG) $(COMMONFLAG) $(OPENMP) -O3
-#CXXFLAG  := $(CXXWARN_FLAG) $(COMMONFLAG) $(OPENMP) -O3 -xSSE4.2 -fp-model precise #-ipo
-#CXXFLAG  := $(CXXWARN_FLAG) $(COMMONFLAG) $(OPENMP) -fast
-else
-CXXFLAG  := $(CXXWARN_FLAG) $(COMMONFLAG) $(OPENMP) -O3
-endif
-
-# debug flag
-ifeq "$(findstring GAMER_DEBUG, $(SIMU_OPTION))" "GAMER_DEBUG"
-   ifeq "$(findstring INTEL, $(SIMU_OPTION))" "INTEL"
-      CXXFLAG += -fstack-protector-all
-      LIB     += -lssp
-   else
-      CXXFLAG += -fstack-protector-all
-   endif
-endif
-# currently we include '-g' even when GAMER_DEBUG is off
-CXXFLAG += -g
+CXXFLAG    += $(COMMONFLAG) $(OPENMPFLAG)
 
 # fixes compilation issues on Intel MPI
 ifeq "$(findstring SERIAL, $(SIMU_OPTION))" ""
@@ -696,7 +666,7 @@ endif
 # NVCC flags
 # -------------------------------------------------------------------------------
 # common flags
-NVCCFLAG_COM := -Xcompiler $(COMMONFLAG) -O3 -Xptxas -v #-Xopencc -OPT:Olimit=0
+NVCCFLAG_COM := -Xcompiler $(COMMONFLAG) -O3 #-Xopencc -OPT:Olimit=0
 
 ifeq      "$(findstring GPU_ARCH=FERMI,   $(SIMU_OPTION))" "GPU_ARCH=FERMI"
    NVCCFLAG_COM += -gencode arch=compute_20,code=\"compute_20,sm_20\"
@@ -716,8 +686,7 @@ else ifeq "$(findstring GPU, $(SIMU_OPTION))" "GPU"
 endif
 
 ifeq "$(findstring GAMER_DEBUG, $(SIMU_OPTION))" "GAMER_DEBUG"
-   NVCCFLAG_COM += -g
-#  NVCCFLAG_COM += -g -G   # -G may cause the GPU Poisson solver to fail
+   NVCCFLAG_COM += -g -Xptxas -v   # "-G" may cause the GPU Poisson solver to fail
 endif
 
 # fluid solver flags
@@ -731,9 +700,9 @@ ifeq      "$(findstring GPU_ARCH=FERMI, $(SIMU_OPTION))" "GPU_ARCH=FERMI"
    endif
 else ifeq "$(findstring GPU_ARCH=KEPLER, $(SIMU_OPTION))" "GPU_ARCH=KEPLER"
    ifeq "$(findstring FLOAT8, $(SIMU_OPTION))" "FLOAT8"
-     NVCCFLAG_FLU += --maxrregcount=128
+#    NVCCFLAG_FLU += --maxrregcount=128
    else
-     NVCCFLAG_FLU += --maxrregcount=64
+#    NVCCFLAG_FLU += --maxrregcount=64
    endif
 else ifeq "$(findstring GPU_ARCH=MAXWELL, $(SIMU_OPTION))" "GPU_ARCH=MAXWELL"
    ifeq "$(findstring FLOAT8, $(SIMU_OPTION))" "FLOAT8"
@@ -753,38 +722,60 @@ endif
 NVCCFLAG_POT += -Xptxas -dlcm=ca
 
 
+# remove extra whitespaces
+# -------------------------------------------------------------------------------
+CXX          := $(strip $(CXX))
+CXXFLAG      := $(strip $(CXXFLAG))
+OPENMPFLAG   := $(strip $(OPENMPFLAG))
+LIB          := $(strip $(LIB))
+NVCC         := $(strip $(NVCC))
+NVCCFLAG_COM := $(strip $(NVCCFLAG_COM))
+NVCCFLAG_FLU := $(strip $(NVCCFLAG_FLU))
+NVCCFLAG_POT := $(strip $(NVCCFLAG_POT))
+
+
 # implicit rules (do NOT modify the order of the following rules)
 # -------------------------------------------------------------------------------
 ifeq "$(findstring GPU, $(SIMU_OPTION))" "GPU"
 $(OBJ_PATH)/CUAPI_%.o : CUAPI_%.cu
-	$(NVCC) $(NVCCFLAG_COM) -o $@ -c $<
+	@echo "Compiling $<"
+	@$(NVCC) $(NVCCFLAG_COM) -o $@ -c $<
 
 $(OBJ_PATH)/CUFLU_%.o : CUFLU_%.cu
-	$(NVCC) $(NVCCFLAG_COM) $(NVCCFLAG_FLU) -o $@ -c $<
+	@echo "Compiling $<"
+	@$(NVCC) $(NVCCFLAG_COM) $(NVCCFLAG_FLU) -o $@ -c $<
 
 $(OBJ_PATH)/CUPOT_%.o : CUPOT_%.cu
-	$(NVCC) $(NVCCFLAG_COM) $(NVCCFLAG_POT) -o $@ -c $<
+	@echo "Compiling $<"
+	@$(NVCC) $(NVCCFLAG_COM) $(NVCCFLAG_POT) -o $@ -c $<
 endif
 
 $(OBJ_PATH)/%.o : %.cpp
-	$(CXX) $(CXXFLAG) -o $@ -c $<
+	@echo "Compiling $<"
+	@$(CXX) $(CXXFLAG) -o $@ -c $<
 
 
 # linking
 # -------------------------------------------------------------------------------
 $(EXECUTABLE) : $(OBJ)
-	$(CXX) -o $@ $^ $(LIB) $(OPENMP)
-	rm ./*.linkinfo -f
-	cp $(EXECUTABLE) ../bin/
+	@echo "Linking"
+	@$(CXX) -o $@ $^ $(LIB) $(OPENMPFLAG); \
+	(if [ -e $@ ]; then \
+		printf "\nCompiling GAMER --> Successful!\n\n"; \
+		cp $(EXECUTABLE) ../bin/; \
+	else \
+		printf "\nCompiling GAMER --> Failed!\n\n"; \
+	fi)
+	@rm ./*.linkinfo -f
 
 
 # clean
 # -------------------------------------------------------------------------------
 .PHONY: clean
 clean :
-	rm -f $(OBJ_PATH)/*
-	rm -f $(EXECUTABLE)
-	rm ./*.linkinfo -f
+	@rm -f $(OBJ_PATH)/*
+	@rm -f $(EXECUTABLE)
+	@rm ./*.linkinfo -f
 
 
 
