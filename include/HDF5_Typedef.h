@@ -98,7 +98,6 @@ struct Makefile_t
    int BitwiseReproducibility;
    int Timing;
    int TimingSolver;
-   int Intel;
    int Float8;
    int Serial;
    int LoadBalance;

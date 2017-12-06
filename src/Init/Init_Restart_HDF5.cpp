@@ -1253,7 +1253,6 @@ void Check_Makefile( const char *FileName )
    LoadField( "BitwiseReproducibility", &RS.BitwiseReproducibility, SID, TID, NonFatal, &RT.BitwiseReproducibility, 1, NonFatal );
    LoadField( "Timing",                 &RS.Timing,                 SID, TID, NonFatal, &RT.Timing,                 1, NonFatal );
    LoadField( "TimingSolver",           &RS.TimingSolver,           SID, TID, NonFatal, &RT.TimingSolver,           1, NonFatal );
-   LoadField( "Intel",                  &RS.Intel,                  SID, TID, NonFatal, &RT.Intel,                  1, NonFatal );
    LoadField( "Float8",                 &RS.Float8,                 SID, TID, NonFatal, &RT.Float8,                 1, NonFatal );
    LoadField( "Serial",                 &RS.Serial,                 SID, TID, NonFatal, &RT.Serial,                 1, NonFatal );
    LoadField( "LoadBalance",            &RS.LoadBalance,            SID, TID, NonFatal, &RT.LoadBalance,            1, NonFatal );

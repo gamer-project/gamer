@@ -1125,14 +1125,6 @@ void Load_Parameter_After_1200( FILE *File, const int FormatVersion, int &NLv_Re
                       "TIMING_SOLVER", "ON", "OFF");
 #     endif
 
-#     ifdef INTEL
-      if ( !intel )
-         Aux_Message( stderr, "WARNING : %s : RESTART file (%s) != runtime (%s) !!\n", "INTEL", "OFF", "ON" );
-#     else
-      if (  intel )
-         Aux_Message( stderr, "WARNING : %s : RESTART file (%s) != runtime (%s) !!\n", "INTEL", "ON", "OFF" );
-#     endif
-
 #     ifdef SERIAL
       if ( !serial )
          Aux_Message( stderr, "WARNING : %s : RESTART file (%s) != runtime (%s) !!\n", "SERIAL", "OFF", "ON" );
