@@ -185,8 +185,8 @@ SIMU_OPTION += -DOPENMP
 
 # for debug only
 ifeq "$(findstring GAMER_DEBUG, $(SIMU_OPTION))" "GAMER_DEBUG"
- CXXFLAG    += -fstack-protector-all
- LIB        += -lssp
+#CXXFLAG    += -fstack-protector-all
+#LIB        += -lssp
 endif
 
 # suppress warning when OpenMP is disabled
@@ -211,7 +211,7 @@ endif
 #
 ## for debug only
 #ifeq "$(findstring GAMER_DEBUG, $(SIMU_OPTION))" "GAMER_DEBUG"
-# CXXFLAG    += -fstack-protector-all
+##CXXFLAG    += -fstack-protector-all
 #endif
 #
 ## suppress warning when OpenMP is disabled
