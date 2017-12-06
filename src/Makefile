@@ -256,6 +256,7 @@ GSL_PATH     := /usr/local/gsl/gsl-1.16
 #FFTW_PATH    := /projects/ncsa/grav/softwares/fftw/2.1.5-openmpi-1.8.4-gcc-4.9.2
 #MPI_PATH     := /usr/local/mpi/openmpi-1.8.4-gcc-4.9.2
 #HDF5_PATH    := /projects/ncsa/grav/softwares/miniconda2
+#GRACKLE_PATH := /home/hyschive/local
 #GSL_PATH     := /usr/local/gsl/gsl-1.16
 
 # NCSA-hybrid (gcc)
@@ -654,13 +655,18 @@ endif
 
 # CXX flags
 # -------------------------------------------------------------------------------
-COMMONFLAG := $(INCLUDE) $(SIMU_OPTION)
-CXXFLAG    += $(COMMONFLAG) $(OPENMPFLAG)
+# remove the OpenMP flag if OPENMP is disabled
+ifeq "$(findstring OPENMP, $(SIMU_OPTION))" ""
+   OPENMPFLAG =
+endif
 
 # fixes compilation issues on Intel MPI
 ifeq "$(findstring SERIAL, $(SIMU_OPTION))" ""
    CXXFLAG += -DMPICH_IGNORE_CXX_SEEK
 endif
+
+COMMONFLAG := $(INCLUDE) $(SIMU_OPTION)
+CXXFLAG    += $(COMMONFLAG) $(OPENMPFLAG)
 
 
 # NVCC flags
@@ -700,9 +706,9 @@ ifeq      "$(findstring GPU_ARCH=FERMI, $(SIMU_OPTION))" "GPU_ARCH=FERMI"
    endif
 else ifeq "$(findstring GPU_ARCH=KEPLER, $(SIMU_OPTION))" "GPU_ARCH=KEPLER"
    ifeq "$(findstring FLOAT8, $(SIMU_OPTION))" "FLOAT8"
-#    NVCCFLAG_FLU += --maxrregcount=128
+     NVCCFLAG_FLU += --maxrregcount=128
    else
-#    NVCCFLAG_FLU += --maxrregcount=64
+     NVCCFLAG_FLU += --maxrregcount=64
    endif
 else ifeq "$(findstring GPU_ARCH=MAXWELL, $(SIMU_OPTION))" "GPU_ARCH=MAXWELL"
    ifeq "$(findstring FLOAT8, $(SIMU_OPTION))" "FLOAT8"
