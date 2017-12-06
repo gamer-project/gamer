@@ -70,7 +70,7 @@ Procedure for outputting new variables:
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2260)
+// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2261)
 // Description :  Output all simulation data in the HDF5 format, which can be used as a restart file
 //                or loaded by YT
 //
@@ -147,6 +147,7 @@ Procedure for outputting new variables:
 //                2257 : 2017/09/17 --> output OPT__OPTIMIZE_AGGRESSIVE
 //                2258 : 2017/09/21 --> output OPT__MINIMIZE_MPI_BARRIER
 //                2259 : 2017/10/10 --> output OPT__INIT_GRID_WITH_OMP
+//                2261 : 2017/12/05 --> no longer define INTEL
 //-------------------------------------------------------------------------------------------------------
 void Output_DumpData_Total_HDF5( const char *FileName )
 {
@@ -1253,7 +1254,7 @@ void FillIn_KeyInfo( KeyInfo_t &KeyInfo )
 
    const time_t CalTime  = time( NULL );   // calendar time
 
-   KeyInfo.FormatVersion = 2260;
+   KeyInfo.FormatVersion = 2261;
    KeyInfo.Model         = MODEL;
    KeyInfo.NLevel        = NLEVEL;
    KeyInfo.NCompFluid    = NCOMP_FLUID;
@@ -1369,12 +1370,6 @@ void FillIn_Makefile( Makefile_t &Makefile )
    Makefile.TimingSolver           = 1;
 #  else
    Makefile.TimingSolver           = 0;
-#  endif
-
-#  ifdef INTEL
-   Makefile.Intel                  = 1;
-#  else
-   Makefile.Intel                  = 0;
 #  endif
 
 #  ifdef FLOAT8
@@ -2167,7 +2162,6 @@ void GetCompound_Makefile( hid_t &H5_TypeID )
    H5Tinsert( H5_TypeID, "BitwiseReproducibility", HOFFSET(Makefile_t,BitwiseReproducibility ), H5T_NATIVE_INT );
    H5Tinsert( H5_TypeID, "Timing",                 HOFFSET(Makefile_t,Timing                 ), H5T_NATIVE_INT );
    H5Tinsert( H5_TypeID, "TimingSolver",           HOFFSET(Makefile_t,TimingSolver           ), H5T_NATIVE_INT );
-   H5Tinsert( H5_TypeID, "Intel",                  HOFFSET(Makefile_t,Intel                  ), H5T_NATIVE_INT );
    H5Tinsert( H5_TypeID, "Float8",                 HOFFSET(Makefile_t,Float8                 ), H5T_NATIVE_INT );
    H5Tinsert( H5_TypeID, "Serial",                 HOFFSET(Makefile_t,Serial                 ), H5T_NATIVE_INT );
    H5Tinsert( H5_TypeID, "LoadBalance",            HOFFSET(Makefile_t,LoadBalance            ), H5T_NATIVE_INT );

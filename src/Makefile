@@ -233,23 +233,23 @@ endif
 #######################################################################################################
 
 # template
-#CUDA_PATH    :=
-#FFTW_PATH    :=
-#MPI_PATH     :=
-#HDF5_PATH    :=
-#GRACKLE_PATH :=
-#GSL_PATH     :=
+CUDA_PATH    :=
+FFTW_PATH    :=
+MPI_PATH     :=
+HDF5_PATH    :=
+GRACKLE_PATH :=
+GSL_PATH     :=
 
 # NCSA-bluewaters (only need to specify the path of user-installed packages)
 #GRACKLE_PATH :=
 
 # UIUC-campus (intel-15.0 + openmpi-1.8.4)
-CUDA_PATH    := /usr/local/cuda/7.0
-FFTW_PATH    := /projects/ncsa/grav/softwares/fftw/2.1.5
-MPI_PATH     := /usr/local/mpi/openmpi-1.8.4-intel-15.0
-HDF5_PATH    := /projects/ncsa/grav/softwares/miniconda2
-GRACKLE_PATH := /home/hyschive/local
-GSL_PATH     := /usr/local/gsl/gsl-1.16
+#CUDA_PATH    := /usr/local/cuda/7.0
+#FFTW_PATH    := /projects/ncsa/grav/softwares/fftw/2.1.5
+#MPI_PATH     := /usr/local/mpi/openmpi-1.8.4-intel-15.0
+#HDF5_PATH    := /projects/ncsa/grav/softwares/miniconda2
+#GRACKLE_PATH := /home/hyschive/local
+#GSL_PATH     := /usr/local/gsl/gsl-1.16
 
 # UIUC-campus (gcc-4.9.2 + openmpi-1.8.4)
 #CUDA_PATH    := /usr/local/cuda/7.0

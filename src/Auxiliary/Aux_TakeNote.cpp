@@ -241,12 +241,6 @@ void Aux_TakeNote()
       fprintf( Note, "TIMING_SOLVER                   OFF\n" );
 #     endif
 
-#     ifdef INTEL
-      fprintf( Note, "Compiler                        Intel\n" );
-#     else
-      fprintf( Note, "Compiler                        GNU\n" );
-#     endif
-
 #     ifdef FLOAT8
       fprintf( Note, "FLOAT8                          ON\n" );
 #     else
