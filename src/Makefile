@@ -258,12 +258,12 @@ endif
 #######################################################################################################
 
 # template
-#CUDA_PATH    :=
-#FFTW_PATH    :=
-#MPI_PATH     :=
-#HDF5_PATH    :=
-#GRACKLE_PATH :=
-#GSL_PATH     :=
+CUDA_PATH    :=
+FFTW_PATH    :=
+MPI_PATH     :=
+HDF5_PATH    :=
+GRACKLE_PATH :=
+GSL_PATH     :=
 
 # NCSA-bluewaters (only need to specify the path of user-installed packages)
 #GRACKLE_PATH :=
@@ -299,12 +299,12 @@ endif
 #GSL_PATH     :=
 
 # NCSA-dxl (gcc, serial)
-CUDA_PATH    :=
-FFTW_PATH    := /home/hyschive/software/fftw/2.1.5
-MPI_PATH     := /usr
-HDF5_PATH    := /home/hyschive/software/miniconda2
-GSL_PATH     := /usr/lib
-LIBYT_PATH   := /home/hyschive/project/libyt/libyt.dev/libyt
+#CUDA_PATH    :=
+#FFTW_PATH    := /home/hyschive/software/fftw/2.1.5
+#MPI_PATH     := /usr
+#HDF5_PATH    := /home/hyschive/software/miniconda2
+#GSL_PATH     := /usr/lib
+#LIBYT_PATH   := /home/hyschive/project/libyt/libyt.dev/libyt
 
 # NTU-hulk (openmpi-intel-qlc)
 #CUDA_PATH    := /opt/gpu/cuda/4.2
