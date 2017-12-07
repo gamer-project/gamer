@@ -4,7 +4,7 @@
 # ===========================================================================
 # INSTRUCTIONS
 #
-# To compile GAMER, please set the following three configurations properly:
+# To compile GAMER, please set the following configurations properly:
 #
 # (1) simulation options
 # (2) compiler and flags
@@ -22,60 +22,46 @@ EXECUTABLE := gamer
 # simulation options
 #######################################################################################################
 
-# (a) common options for all models
+# (a) physical modules
 # -------------------------------------------------------------------------------
-# model: HYDRO/MHD/ELBDM/PAR_ONLY (PAR_ONLY is not supported yet)
+# physical model: HYDRO/MHD/ELBDM/PAR_ONLY (ELBDM: wave dark matter; PAR_ONLY: particle-only)
+# --> must be set in any cases; PAR_ONLY is not supported yet
 SIMU_OPTION += -DMODEL=HYDRO
 
-# self-gravity
+# enable gravity
 #SIMU_OPTION += -DGRAVITY
 
-# Poisson solver: SOR/MG (successive-overrelaxation/multigrid)
-#SIMU_OPTION += -DPOT_SCHEME=SOR
-
-# store GRA_GHOST_SIZE ghost-zone potential for each patch on each side (in patch->pot_ext)
-# --> (1) for improving accuracy for particles around the patch boundaries (by Par->ImproveAcc)
-#     (2) currently must be enabled for STAR_FORMATION + STORE_PAR_ACC
-#SIMU_OPTION += -DSTORE_POT_GHOST
-
-# use unsplitting method to couple gravity to the target model (for HYDRO and MHD only; ELBDM is not supported yet)
-# --> must be off if GRAVITY is off
-#SIMU_OPTION += -DUNSPLIT_GRAVITY
-
-# comoving frame
-#SIMU_OPTION += -DCOMOVING
-
-# particles (must work with GRAVITY; set MODEL=PAR_ONLY for particle-only simulations)
+# enable particles
+# --> must enable GRAVITY
 #SIMU_OPTION += -DPARTICLE
 
-# maximum number of AMR levels including the base level (level id = 0 ... NLEVEL-1)
-SIMU_OPTION += -DNLEVEL=10
-
-# maximum number of patches at each AMR level
-SIMU_OPTION += -DMAX_PATCH=1000000
-
 # support Grackle, a chemistry and radiative cooling library
-# --> please enable OpenMP in Grackle by "make omp-on"
+# --> please enable OpenMP when compiling Grackle (by "make omp-on")
 #SIMU_OPTION += -DSUPPORT_GRACKLE
 
 
-# (b) model-dependent options
+# (b) options of different physical modules
 # (b-1) hydro options
 # ------------------------------------------------------------------------------------
 ifeq "$(findstring MODEL=HYDRO, $(SIMU_OPTION))" "MODEL=HYDRO"
-# hydrodynamic scheme: RTVD/WAF/MHM/MHM_RP/CTU (WAF is deprecated)
+# hydrodynamic scheme: RTVD/WAF/MHM/MHM_RP/CTU
+# --> must be set when MODEL=HYDRO; WAF is deprecated
 SIMU_OPTION += -DFLU_SCHEME=CTU
 
-# scheme of spatial data reconstruction: PLM/PPM (piecewise-linear/piecewise-parabolic) ##useless in RTVD/WAF##
+# scheme of spatial data reconstruction: PLM/PPM (piecewise-linear/piecewise-parabolic)
+# --> useless for RTVD/WAF
 SIMU_OPTION += -DLR_SCHEME=PPM
 
-# Riemann solver: EXACT/ROE/HLLE/HLLC ##all are useless in RTVD, HLLE/HLLC are useless in WAF##
+# Riemann solver: EXACT/ROE/HLLE/HLLC
+# --> all are useless for RTVD; HLLE/HLLC are useless for WAF
 SIMU_OPTION += -DRSOLVER=ROE
 
-# dual energy formalism: DE_ENPY/DE_EINT (evolve entropy or internal energy; DE_EINT is not supported yet) ##useless in RTVD/WAF##
+# dual energy formalism: DE_ENPY/DE_EINT (evolve entropy or internal energy)
+# --> DE_EINT is not supported yet; useless for RTVD/WAF
 #SIMU_OPTION += -DDUAL_ENERGY=DE_ENPY
 
 # number of passively advected scalars (**excluding** entropy or internal energy used by DUAL_ENERGY)
+# --> useless for RTVD/WAF
 # --> for simulations without any passive scalar, please set this variable to 0 and do NOT comment it out
 SIMU_OPTION += -DNCOMP_PASSIVE_MAKEFILE=0
 
@@ -94,33 +80,68 @@ SIMU_OPTION += -DCONSERVE_MASS
 # 4-th order Laplacian
 SIMU_OPTION += -DLAPLACIAN_4TH
 
-# include the quartic self-interaction potential (must turn on GRAVITY as well, not work with COMOVING yet)
+# include the quartic self-interaction potential
+# --> must turn on GRAVITY; does not support COMOVING
 #SIMU_OPTION += -DQUARTIC_SELF_INTERACTION
 
-# number of passively advected scalars (not supported for ELBDM yet --> must be 0)
+# number of passively advected scalars
+# --> not supported yet and must be set to 0
 SIMU_OPTION += -DNCOMP_PASSIVE_MAKEFILE=0
 
 endif # MODEL
 
 
-# (c) PARTICLE options
+# (b-4) gravity options
+# -------------------------------------------------------------------------------
+ifeq "$(findstring GRAVITY, $(SIMU_OPTION))" "GRAVITY"
+# Poisson solver: SOR/MG (successive-overrelaxation (recommended)/multigrid)
+# --> must be set when GRAVITY is enabled
+SIMU_OPTION += -DPOT_SCHEME=SOR
+
+# store GRA_GHOST_SIZE ghost-zone potential for each patch on each side
+# --> recommended when PARTICLE is enabled for improving accuracy for particles around the patch boundaries
+# --> must be enabled for STAR_FORMATION + STORE_PAR_ACC
+SIMU_OPTION += -DSTORE_POT_GHOST
+
+# use unsplitting method to couple gravity to the target model (recommended)
+# --> for HYDRO and MHD only; ELBDM is not supported yet
+SIMU_OPTION += -DUNSPLIT_GRAVITY
+
+# comoving frame for cosmological simulations
+# --> not supported for PARTICLE
+#SIMU_OPTION += -DCOMOVING
+endif # GRAVITY
+
+
+# (b-5) particle options
 # ------------------------------------------------------------------------------------
-# store particle acceleration
-#SIMU_OPTION += -DSTORE_PAR_ACC
+ifeq "$(findstring PARTICLE, $(SIMU_OPTION))" "PARTICLE"
+# store particle acceleration (recommended)
+SIMU_OPTION += -DSTORE_PAR_ACC
 
 # allow for creating new particles after initialization
-# --> must turn on PARTICLE
 # --> must turn on STORE_POT_GHOST when STORE_PAR_ACC is adopted
 #SIMU_OPTION += -DSTAR_FORMATION
 
 # number of passive particle attributes (**excluding** PAR_CREATION_TIME used by STAR_FORMATION)
 # --> for simulations without any passive attributes, please set this variable to 0 and do NOT comment it out
 SIMU_OPTION += -DPAR_NPASSIVE_MAKEFILE=0
+endif # PARTICLE
 
 
-# (d) optimization options and other features
+# (d) miscellaneous options (AMR, GPU, parallelization, optimizations, ...)
 # ------------------------------------------------------------------------------------
-# GPU acceleration (to disable GPU, please comment out both -DGPU and -DGPU_ARCH)
+# maximum number of AMR levels including the root level (level id = 0 ... NLEVEL-1)
+# --> must be set in any cases
+SIMU_OPTION += -DNLEVEL=10
+
+# maximum number of patches on each AMR level
+# --> must be set in any cases
+SIMU_OPTION += -DMAX_PATCH=1000000
+
+# GPU acceleration
+# --> must set GPU_ARCH as well
+# --> to disable GPU, please comment out both GPU and GPU_ARCH
 #SIMU_OPTION += -DGPU
 
 # GPU architecture: FERMI/KEPLER/MAXWELL/PASCAL
@@ -135,19 +156,23 @@ SIMU_OPTION += -DPAR_NPASSIVE_MAKEFILE=0
 # measure the wall-clock time of GAMER
 SIMU_OPTION += -DTIMING
 
-# measure the wall-clock time of GPU solvers (will disable CPU/GPU overlapping; must turn on TIMING)
+# measure the wall-clock time of GPU solvers (will disable CPU/GPU overlapping)
+# --> must enable TIMING
 #SIMU_OPTION += -DTIMING_SOLVER
 
-# double precision (not supported for the GPU + self-gravity mode in non-Fermi GPUs)
+# double precision
 #SIMU_OPTION += -DFLOAT8
 
-# serial mode (in which no MPI libraries are required; must disable LOAD_BALANCE)
+# serial mode (in which no MPI libraries are required)
+# --> must disable LOAD_BALANCE
 SIMU_OPTION += -DSERIAL
 
-# load-balance parallelization (must disable SERIAL) (HILBERT)
+# load-balance parallelization: HILBERT
+# --> must disable SERIAL
 #SIMU_OPTION += -DLOAD_BALANCE=HILBERT
 
-# overlap MPI communication with computation (experimental, only supported in LOAD_BALANCE)
+# overlap MPI communication with computation
+# --> NOT supported yet; must enable LOAD_BALANCE
 #SIMU_OPTION += -DOVERLAP_MPI
 
 # enable OpenMP parallelization
@@ -174,50 +199,50 @@ SIMU_OPTION += -DOPENMP
 
 # intel
 # -------------------------------------------------------------------------------
- CXX         = icpc                                      # serial compiler
-#CXX         = $(MPI_PATH)/bin/mpicxx                    # MPI compiler
-#CXX         = CC                                        # cray wrapper script
- CXXFLAG     = -g -O3                                    # optimization flags
-#CXXFLAG     = -g -fast
- CXXFLAG    += -w1                                       # warning flags
- OPENMPFLAG  = -fopenmp                                  # openmp flag
- LIB         = -limf                                     # libraries and linker flags
-
-# for debug only
-ifeq "$(findstring GAMER_DEBUG, $(SIMU_OPTION))" "GAMER_DEBUG"
-#CXXFLAG    += -fstack-protector-all
-#LIB        += -lssp
-endif
-
-# suppress warning when OpenMP is disabled
-ifeq "$(findstring OPENMP, $(SIMU_OPTION))" ""
- CXXFLAG    += -Wno-unknown-pragmas -diag-disable 3180
-endif
-
-
-# gnu
-# -------------------------------------------------------------------------------
-# CXX         = g++                                       # serial compiler
+# CXX         = icpc                                      # serial compiler
 ##CXX         = $(MPI_PATH)/bin/mpicxx                    # MPI compiler
 ##CXX         = CC                                        # cray wrapper script
 # CXXFLAG     = -g -O3                                    # optimization flags
-##CXXFLAG     = -g -Ofast
-# CXXFLAG    += -Wall -Wextra                             # warning flags
-# CXXFLAG    += -Wno-unused-variable -Wno-unused-parameter \
-#               -Wno-maybe-uninitialized -Wno-unused-but-set-variable \
-#               -Wno-unused-result -Wno-unused-function
+##CXXFLAG     = -g -fast
+# CXXFLAG    += -w1                                       # warning flags
 # OPENMPFLAG  = -fopenmp                                  # openmp flag
-# LIB         =                                           # libraries and linker flags
+# LIB         = -limf                                     # libraries and linker flags
 #
 ## for debug only
 #ifeq "$(findstring GAMER_DEBUG, $(SIMU_OPTION))" "GAMER_DEBUG"
 ##CXXFLAG    += -fstack-protector-all
+##LIB        += -lssp
 #endif
 #
 ## suppress warning when OpenMP is disabled
 #ifeq "$(findstring OPENMP, $(SIMU_OPTION))" ""
-# CXXFLAG    += -Wno-unknown-pragmas
+# CXXFLAG    += -Wno-unknown-pragmas -diag-disable 3180
 #endif
+
+
+# gnu
+# -------------------------------------------------------------------------------
+ CXX         = g++                                       # serial compiler
+#CXX         = $(MPI_PATH)/bin/mpicxx                    # MPI compiler
+#CXX         = CC                                        # cray wrapper script
+ CXXFLAG     = -g -O3                                    # optimization flags
+#CXXFLAG     = -g -Ofast
+ CXXFLAG    += -Wall -Wextra                             # warning flags
+ CXXFLAG    += -Wno-unused-variable -Wno-unused-parameter \
+               -Wno-maybe-uninitialized -Wno-unused-but-set-variable \
+               -Wno-unused-result -Wno-unused-function
+ OPENMPFLAG  = -fopenmp                                  # openmp flag
+ LIB         =                                           # libraries and linker flags
+
+# for debug only
+ifeq "$(findstring GAMER_DEBUG, $(SIMU_OPTION))" "GAMER_DEBUG"
+#CXXFLAG    += -fstack-protector-all
+endif
+
+# suppress warning when OpenMP is disabled
+ifeq "$(findstring OPENMP, $(SIMU_OPTION))" ""
+ CXXFLAG    += -Wno-unknown-pragmas
+endif
 
 
 # CUDA
@@ -233,12 +258,12 @@ endif
 #######################################################################################################
 
 # template
-CUDA_PATH    :=
-FFTW_PATH    :=
-MPI_PATH     :=
-HDF5_PATH    :=
-GRACKLE_PATH :=
-GSL_PATH     :=
+#CUDA_PATH    :=
+#FFTW_PATH    :=
+#MPI_PATH     :=
+#HDF5_PATH    :=
+#GRACKLE_PATH :=
+#GSL_PATH     :=
 
 # NCSA-bluewaters (only need to specify the path of user-installed packages)
 #GRACKLE_PATH :=
@@ -274,12 +299,12 @@ GSL_PATH     :=
 #GSL_PATH     :=
 
 # NCSA-dxl (gcc, serial)
-#CUDA_PATH    :=
-#FFTW_PATH    := /home/hyschive/software/fftw/2.1.5
-#MPI_PATH     := /usr
-#HDF5_PATH    := /home/hyschive/software/miniconda2
-#GSL_PATH     := /usr/lib
-#LIBYT_PATH   := /home/hyschive/project/libyt/libyt.dev/libyt
+CUDA_PATH    :=
+FFTW_PATH    := /home/hyschive/software/fftw/2.1.5
+MPI_PATH     := /usr
+HDF5_PATH    := /home/hyschive/software/miniconda2
+GSL_PATH     := /usr/lib
+LIBYT_PATH   := /home/hyschive/project/libyt/libyt.dev/libyt
 
 # NTU-hulk (openmpi-intel-qlc)
 #CUDA_PATH    := /opt/gpu/cuda/4.2
