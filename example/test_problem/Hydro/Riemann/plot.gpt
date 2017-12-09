@@ -13,7 +13,6 @@ DATA_ID         = 10
 # terminal
 # -----------------------------------------------------------
 #set term x11 enhanced
-#set term png enhanced crop size 1280,800
  set term png enhanced
 #set term postscript eps enhanced color 'Helvetica' 16
 
@@ -32,6 +31,7 @@ DATA_ID         = 10
 # set the output file
 # -----------------------------------------------------------
 if      ( GPVAL_TERM eq 'pngcairo'   ) FILE_OUT_EXT='png'; \
+else if ( GPVAL_TERM eq 'png'        ) FILE_OUT_EXT='png'; \
 else if ( GPVAL_TERM eq 'postscript' ) FILE_OUT_EXT='eps'; \
 else if ( GPVAL_TERM ne 'x11'        ) print 'Unkown terminal for settting the output file extension !!'; quit
 
