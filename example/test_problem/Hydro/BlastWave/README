@@ -1,16 +1,16 @@
 Compilation flags:
 ========================================
 Enable : MODEL=HYDRO
-Disable: COMOVING, PARTICLE, GRAVITY
+Disable: GRAVITY, PARTICLE
 
 
 Default setup:
 ========================================
-1. Adopt the Lohner's error estimator of both mass density and pressure as the refinement criteria
-2. Refinement threshold of the Lohner's error estimator = 0.80
-3. Maximum refinement level (MAX_LEVEL) = 3
+1. Adopt the Lohner's error estimator on pressure as the refinement criteria
+   --> Refinement threshold = 0.80
+2. Maximum refinement level (MAX_LEVEL) = 3
 
 
 Note:
 ========================================
-1. A simple gnuplot script "plot.gpt" is attached
+1. Two plot scripts are attached: "plot_profile.gpt" and "plot_slice.py"
