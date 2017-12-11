@@ -1244,13 +1244,13 @@ void Aux_TakeNote()
       if ( MPI_Rank == YourTurn )
       {
          Note = fopen( FileName, "a" );
+         if ( MPI_Rank != 0 )    fprintf( Note, "\n" );
          fprintf( Note, "MPI_Rank = %3d, hostname = %10s, PID = %5d\n", MPI_Rank, Host, PID );
          fprintf( Note, "CPU Info :\n" );
          fflush( Note );
 
          Aux_GetCPUInfo( FileName );
 
-         fprintf( Note, "\n" );
          fclose( Note );
       }
 
@@ -1261,6 +1261,7 @@ void Aux_TakeNote()
    {
       Note = fopen( FileName, "a" );
       fprintf( Note, "***********************************************************************************\n" );
+      fprintf( Note, "\n\n");
       fclose( Note );
    }
 #  endif // #ifndef GPU
@@ -1291,7 +1292,7 @@ void Aux_TakeNote()
       fprintf( Note, "OMP__NESTED                     %s\n",      ( omp_nested ) ? "ON" : "OFF" );
       fprintf( Note, "\n" );
       fprintf( Note, "CPU core IDs of all OpenMP threads (tid == thread ID):\n" );
-      fprintf( Note, "----------------------------------------------------------------------------------------------------------\n" );
+      fprintf( Note, "------------------------------------------------------------------------\n" );
       fprintf( Note, "%5s  %10s  %7s", "Rank", "Host", "NThread" );
       for (int t=0; t<omp_nthread; t++)
       fprintf( Note, "  tid-%02d", t );
@@ -1328,7 +1329,6 @@ void Aux_TakeNote()
    if ( MPI_Rank == 0 )
    {
       Note = fopen( FileName, "a" );
-      fprintf( Note, "----------------------------------------------------------------------------------------------------------\n" );
       fprintf( Note, "***********************************************************************************\n" );
       fprintf( Note, "\n\n");
       fclose( Note );

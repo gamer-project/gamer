@@ -72,6 +72,7 @@ void CUAPI_DiagnoseDevice()
          CUDA_CHECK_ERROR(  cudaRuntimeGetVersion( &RuntimeVersion )  );
 
          FILE *Note = fopen( FileName, "a" );
+         if ( MPI_Rank != 0 )   fprintf( Note, "\n\n" );
          fprintf( Note, "MPI_Rank = %3d, hostname = %10s, PID = %5d\n\n", MPI_Rank, Host, PID );
          fprintf( Note, "CPU Info :\n" );
          fflush( Note );
@@ -108,8 +109,6 @@ void CUAPI_DiagnoseDevice()
 #        if ( CUDART_VERSION >= 3010 )
          fprintf( Note, "GPU has ECC Support Enabled       : %s\n"    , DeviceProp.ECCEnabled ? "Yes" : "No" );
 #        endif
-
-         fprintf( Note, "\n\n" );
 
          fclose( Note );
        }
