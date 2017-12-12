@@ -10,10 +10,14 @@ static char    Merger_File_Prof1[1000];   // profile table of cluster 1
 static char    Merger_File_Prof2[1000];   // profile table of cluster 2
        char    Merger_File_Par1 [1000];   // particle file of cluster 1
        char    Merger_File_Par2 [1000];   // particle file of cluster 2
-       double  Merger_Coll_D;             // initial distance between two clusters
-       double  Merger_Coll_B;             // impact parameter
-       double  Merger_Coll_BulkVel1;      // bulk velocity of cluster 1 (on the left  side)
-       double  Merger_Coll_BulkVel2;      // bulk velocity of cluster 2 (on the right side)
+       double  Merger_Coll_PosX1;         // x-position of the first cluster
+       double  Merger_Coll_PosY1;         // y-position of the first cluster
+       double  Merger_Coll_PosX2;         // x-position of the second cluster
+       double  Merger_Coll_PosY2;         // y-position of the second cluster
+       double  Merger_Coll_VelX1;         // x-velocity of the first cluster
+       double  Merger_Coll_VelY1;         // y-velocity of the first cluster
+       double  Merger_Coll_VelX2;         // x-velocity of the second cluster
+       double  Merger_Coll_VelY2;         // y-velocity of the second cluster
 
 static double *Merger_Prof1 = NULL;       // radial profiles [gas mass density/gas pressure/radius] of cluster 1
 static double *Merger_Prof2 = NULL;       // radial profiles [gas mass density/gas pressure/radius] of cluster 2
@@ -21,17 +25,13 @@ static int     Merger_NBin1;              // number of radial bins of cluster 1
 static int     Merger_NBin2;              // number of radial bins of cluster 2
 // =======================================================================================
 
-
 // problem-specific function prototypes
 #ifdef PARTICLE
-void Par_Init_ByFunction_Merger( const long NPar_ThisRank, const long NPar_AllRank,
-                                 real *ParMass, real *ParPosX, real *ParPosY, real *ParPosZ,
-                                 real *ParVelX, real *ParVelY, real *ParVelZ, real *ParTime,
-                                 real *AllAttribute[PAR_NATT_TOTAL] );
+void Par_Init_ByFunction_ClusterMerger( const long NPar_ThisRank, const long NPar_AllRank,
+                                       real *ParMass, real *ParPosX, real *ParPosY, real *ParPosZ,
+                                       real *ParVelX, real *ParVelY, real *ParVelZ, real *ParTime,
+                                       real *AllAttribute[PAR_NATT_TOTAL]);
 #endif
-
-
-
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Validate
@@ -126,10 +126,14 @@ void SetParameter()
    ReadPara->Add( "Merger_File_Par1",        Merger_File_Par1,        Useless_str,     Useless_str,   Useless_str    );
    ReadPara->Add( "Merger_File_Prof2",       Merger_File_Prof2,       Useless_str,     Useless_str,   Useless_str    );
    ReadPara->Add( "Merger_File_Par2",        Merger_File_Par2,        Useless_str,     Useless_str,   Useless_str    );
-   ReadPara->Add( "Merger_Coll_D",          &Merger_Coll_D,          -1.0,             0.0,           NoMax_double   );
-   ReadPara->Add( "Merger_Coll_B",          &Merger_Coll_B,          -1.0,             0.0,           NoMax_double   );
-   ReadPara->Add( "Merger_Coll_BulkVel1",   &Merger_Coll_BulkVel1,   -1.0,             NoMin_double,  NoMax_double   );
-   ReadPara->Add( "Merger_Coll_BulkVel2",   &Merger_Coll_BulkVel2,   -1.0,             NoMin_double,  NoMax_double   );
+   ReadPara->Add( "Merger_Coll_PosX1",      &Merger_Coll_PosX1,      -1.0,             NoMin_double,  NoMax_double   );
+   ReadPara->Add( "Merger_Coll_PosY1",      &Merger_Coll_PosY1,      -1.0,             NoMin_double,  NoMax_double   );
+   ReadPara->Add( "Merger_Coll_PosX2",      &Merger_Coll_PosX2,      -1.0,             NoMin_double,  NoMax_double   );
+   ReadPara->Add( "Merger_Coll_PosY2",      &Merger_Coll_PosY2,      -1.0,             NoMin_double,  NoMax_double   );
+   ReadPara->Add( "Merger_Coll_VelX1",      &Merger_Coll_VelX1,      -1.0,             NoMin_double,  NoMax_double   );
+   ReadPara->Add( "Merger_Coll_VelY1",      &Merger_Coll_VelY1,      -1.0,             NoMin_double,  NoMax_double   );
+   ReadPara->Add( "Merger_Coll_VelX2",      &Merger_Coll_VelX2,      -1.0,             NoMin_double,  NoMax_double   );
+   ReadPara->Add( "Merger_Coll_VelY2",      &Merger_Coll_VelY2,      -1.0,             NoMin_double,  NoMax_double   );
 
    ReadPara->Read( FileName );
 
@@ -138,10 +142,14 @@ void SetParameter()
 // convert to code units
    if ( Merger_Coll )
    {
-      Merger_Coll_D        *= Const_kpc          / UNIT_L;
-      Merger_Coll_B        *= Const_kpc          / UNIT_L;
-      Merger_Coll_BulkVel1 *= (Const_km/Const_s) / UNIT_V;
-      Merger_Coll_BulkVel2 *= (Const_km/Const_s) / UNIT_V;
+      Merger_Coll_PosX1 *= Const_kpc / UNIT_L;
+      Merger_Coll_PosY1 *= Const_kpc / UNIT_L;
+      Merger_Coll_PosX2 *= Const_kpc / UNIT_L;
+      Merger_Coll_PosY2 *= Const_kpc / UNIT_L;
+      Merger_Coll_VelX1 *= (Const_km/Const_s) / UNIT_V;
+      Merger_Coll_VelY1 *= (Const_km/Const_s) / UNIT_V;
+      Merger_Coll_VelX2 *= (Const_km/Const_s) / UNIT_V;
+      Merger_Coll_VelY2 *= (Const_km/Const_s) / UNIT_V;
    }
 
 
@@ -216,11 +224,6 @@ void SetParameter()
       if ( Merger_Coll )
       Aux_Message( stdout, "   particle file 2  = %s\n",           Merger_File_Par2 );
       Aux_Message( stdout, "   test mode        = %s\n",          (Merger_Coll)? "merging cluster":"single cluster" );
-      if ( Merger_Coll ) {
-      Aux_Message( stdout, "   initial distance = % 14.7e kpc\n",  Merger_Coll_D*UNIT_L/Const_kpc );
-      Aux_Message( stdout, "   impact parameter = % 14.7e kpc\n",  Merger_Coll_B*UNIT_L/Const_kpc );
-      Aux_Message( stdout, "   bulk velocity 1  = %+14.7e km/s\n", Merger_Coll_BulkVel1*UNIT_V/(Const_km/Const_s) );
-      Aux_Message( stdout, "   bulk velocity 2  = %+14.7e km/s\n", Merger_Coll_BulkVel2*UNIT_V/(Const_km/Const_s) ); }
       Aux_Message( stdout, "=============================================================================\n" );
    }
 
@@ -264,10 +267,10 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 
    if ( Merger_Coll )
    {
-      const double ClusterCenter1[3] = { BoxCenter[0]-0.5*Merger_Coll_D, BoxCenter[1]-0.5*Merger_Coll_B, BoxCenter[2] };
-      const double ClusterCenter2[3] = { BoxCenter[0]+0.5*Merger_Coll_D, BoxCenter[1]+0.5*Merger_Coll_B, BoxCenter[2] };
+      const double ClusterCenter1[3] = { Merger_Coll_PosX1, Merger_Coll_PosY1, BoxCenter[2] };
+      const double ClusterCenter2[3] = { Merger_Coll_PosX2, Merger_Coll_PosY2, BoxCenter[2] };
 
-      double r1, r2, Dens1, Dens2, Pres1, Pres2, Vel;
+      double r1, r2, Dens1, Dens2, Pres1, Pres2, VelX, VelY;
 
 //    for each cell, we sum up the density and pressure from each halo and then calculate the weighted velocity
       r1    = sqrt( SQR(x-ClusterCenter1[0]) + SQR(y-ClusterCenter1[1]) + SQR(z-ClusterCenter1[2]) );
@@ -276,7 +279,8 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
       Dens2 = Mis_InterpolateFromTable( Merger_NBin2, Table_R2, Table_D2, r2 );
       Pres1 = Mis_InterpolateFromTable( Merger_NBin1, Table_R1, Table_P1, r1 );
       Pres2 = Mis_InterpolateFromTable( Merger_NBin2, Table_R2, Table_P2, r2 );
-      Vel   = ( Merger_Coll_BulkVel1*Dens1 + Merger_Coll_BulkVel2*Dens2 ) / ( Dens1 + Dens2 );
+      VelX  = ( Merger_Coll_VelX1*Dens1 + Merger_Coll_VelX2*Dens2 ) / ( Dens1 + Dens2 );
+      VelY  = ( Merger_Coll_VelY1*Dens1 + Merger_Coll_VelY2*Dens2 ) / ( Dens1 + Dens2 );
 
       if ( Dens1 == NULL_REAL  ||  Pres1 == NULL_REAL )
          Aux_Error( ERROR_INFO, "interpolation failed at radius %13.7e for cluster 1 (probably outside the input table) !!\n", r1 );
@@ -285,8 +289,8 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
          Aux_Error( ERROR_INFO, "interpolation failed at radius %13.7e for cluster 2 (probably outside the input table) !!\n", r2 );
 
       fluid[DENS] = Dens1 + Dens2;
-      fluid[MOMX] = fluid[DENS]*Vel;
-      fluid[MOMY] = 0.0;
+      fluid[MOMX] = fluid[DENS]*VelX;
+      fluid[MOMY] = fluid[DENS]*VelY;
       fluid[MOMZ] = 0.0;
       fluid[ENGY] = ( Pres1 + Pres2 ) / ( GAMMA - 1.0 )
                     + 0.5*( SQR(fluid[MOMX]) + SQR(fluid[MOMY]) + SQR(fluid[MOMZ]) ) / fluid[DENS];
@@ -334,7 +338,7 @@ void End_ClusterMerger()
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Init_TestProb_Hydro_ClusterMerger_vs_Flash
+// Function    :  Init_TestProb_Hydro_ClusterMerger
 // Description :  Test problem initializer
 //
 // Note        :  None
@@ -343,7 +347,7 @@ void End_ClusterMerger()
 //
 // Return      :  None
 //-------------------------------------------------------------------------------------------------------
-void Init_TestProb_Hydro_ClusterMerger_vs_Flash()
+void Init_TestProb_Hydro_ClusterMerger()
 {
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ...\n", __FUNCTION__ );
@@ -361,10 +365,10 @@ void Init_TestProb_Hydro_ClusterMerger_vs_Flash()
 // set the function pointers of various problem-specific routines
    Init_Function_User_Ptr  = SetGridIC;
    End_User_Ptr            = End_ClusterMerger;
-   Par_Init_ByFunction_Ptr = Par_Init_ByFunction_Merger;
+   Par_Init_ByFunction_Ptr = Par_Init_ByFunction_ClusterMerger;
 #  endif // if ( MODEL == HYDRO  &&  defined PARTICLE )
 
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", __FUNCTION__ );
 
-} // FUNCTION : Init_TestProb_Hydro_ClusterMerger_vs_Flash
+} // FUNCTION : Init_TestProb_Hydro_ClusterMerger
