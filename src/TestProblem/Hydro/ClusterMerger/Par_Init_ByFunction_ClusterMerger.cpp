@@ -9,16 +9,18 @@ typedef double real_par_in;
 extern char    Merger_File_Par1[1000];
 extern char    Merger_File_Par2[1000];
 extern bool    Merger_Coll;
-extern double  Merger_Coll_D;
-extern double  Merger_Coll_B;
-extern double  Merger_Coll_BulkVel1;
-extern double  Merger_Coll_BulkVel2;
-
-
+extern double  Merger_Coll_PosX1;
+extern double  Merger_Coll_PosY1;
+extern double  Merger_Coll_PosX2;
+extern double  Merger_Coll_PosY2;
+extern double  Merger_Coll_VelX1;
+extern double  Merger_Coll_VelY1;
+extern double  Merger_Coll_VelX2;
+extern double  Merger_Coll_VelY2;
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Par_Init_ByFunction_Merger
+// Function    :  Par_Init_ByFunction_ClusterMerger
 // Description :  Initialize all particle attributes for the merging cluster test
 //                --> Modified from "Par_Init_ByFile.cpp"
 //
@@ -55,10 +57,10 @@ extern double  Merger_Coll_BulkVel2;
 //
 // Return      :  ParMass, ParPosX/Y/Z, ParVelX/Y/Z, ParTime, AllAttribute
 //-------------------------------------------------------------------------------------------------------
-void Par_Init_ByFunction_Merger( const long NPar_ThisRank, const long NPar_AllRank,
-                                 real *ParMass, real *ParPosX, real *ParPosY, real *ParPosZ,
-                                 real *ParVelX, real *ParVelY, real *ParVelZ, real *ParTime,
-                                 real *AllAttribute[PAR_NATT_TOTAL] )
+void Par_Init_ByFunction_ClusterMerger( const long NPar_ThisRank, const long NPar_AllRank,
+                                        real *ParMass, real *ParPosX, real *ParPosY, real *ParPosZ,
+                                        real *ParVelX, real *ParVelY, real *ParVelZ, real *ParTime,
+                                        real *AllAttribute[PAR_NATT_TOTAL] )
 {
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ...\n", __FUNCTION__ );
@@ -95,7 +97,7 @@ void Par_Init_ByFunction_Merger( const long NPar_ThisRank, const long NPar_AllRa
    NPar_AllCluster = NPar_EachCluster[0] + NPar_EachCluster[1];
 
    if ( NPar_AllCluster != NPar_AllRank )
-      Aux_Error( ERROR_INFO, "total number of particles found in disk [%ld] != expect [%ld] !!\n",
+      Aux_Error( ERROR_INFO, "total number of particles found in cluster [%ld] != expect [%ld] !!\n",
                  NPar_AllCluster, NPar_AllRank );
 
    MPI_Barrier( MPI_COMM_WORLD );
@@ -190,9 +192,9 @@ void Par_Init_ByFunction_Merger( const long NPar_ThisRank, const long NPar_AllRa
    if ( Merger_Coll )
    {
       const double ClusterCenter1[3]
-         = { BoxCenter[0]-0.5*Merger_Coll_D, BoxCenter[1]-0.5*Merger_Coll_B, BoxCenter[2] };
+         = { Merger_Coll_PosX1, Merger_Coll_PosY1, BoxCenter[2] };
       const double ClusterCenter2[3]
-         = { BoxCenter[0]+0.5*Merger_Coll_D, BoxCenter[1]+0.5*Merger_Coll_B, BoxCenter[2] };
+         = { Merger_Coll_PosX2, Merger_Coll_PosY2, BoxCenter[2] };
 
       for (long p=0; p<NPar_ThisRank_EachCluster[0]; p++)
       for (int d=0; d<3; d++)
@@ -211,11 +213,17 @@ void Par_Init_ByFunction_Merger( const long NPar_ThisRank, const long NPar_AllRa
    }
 
 
-// add the bulk velocity (to velocity-x only)
+// add the bulk velocity
    if ( Merger_Coll )
    {
-      for (long p=0;                            p<NPar_ThisRank_EachCluster[0]; p++)   ParVelX[p] += Merger_Coll_BulkVel1;
-      for (long p=NPar_ThisRank_EachCluster[0]; p<NPar_ThisRank;                p++)   ParVelX[p] += Merger_Coll_BulkVel2;
+      for (long p=0; p<NPar_ThisRank_EachCluster[0]; p++) {  
+         ParVelX[p] += Merger_Coll_VelX1;
+         ParVelY[p] += Merger_Coll_VelY1;
+      }
+      for (long p=NPar_ThisRank_EachCluster[0]; p<NPar_ThisRank; p++) {  
+         ParVelX[p] += Merger_Coll_VelX2;
+         ParVelY[p] += Merger_Coll_VelY2;
+      }
    }
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );
@@ -223,7 +231,7 @@ void Par_Init_ByFunction_Merger( const long NPar_ThisRank, const long NPar_AllRa
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", __FUNCTION__ );
 
-} // FUNCTION : Par_Init_ByFunction_Merger
+} // FUNCTION : Par_Init_ByFunction_ClusterMerger
 
 
 
