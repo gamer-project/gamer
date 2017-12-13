@@ -1,0 +1,6 @@
+# parameters for the ELBDM plane wave test
+1.0         PWave_Lambda            # plane wave wavelength (will be reset to "diagonal/3" if PWave_XYZ == 3)
+1.0         PWave_Amp               # plane wave amplitude 
+0.0         PWave_Phase0            # plane wave phase constant
+0           PWave_XYZ               # plane wave direction (0/1/2/3 <-> x/y/z/diagonal)
++1.0        PWave_LR                # plane wave direction (<0/>0 <-> negative/positive direction)
