@@ -1,0 +1,10 @@
+# problem-specific runtime parameters
+Bondi_MassBH            3.0e9       # black hole mass (in Msun)
+Bondi_Rho0              5.82e-25    # background density (in g/cm^3)
+Bondi_T0                0.60        # background temperature (in keV)
+Bondi_RefineRadius0     0.9375      # refinement radius at the base level (in kpc)
+Bondi_HalfMaxLvRefR     1           # halve the refinement radius at the maximum level [1]
+Bondi_InBC_Rho          1.0e-32     # density     inside the void region (in g/cm^3)
+Bondi_InBC_T            1.0e-7      # temperature inside the void region (in keV)
+Bondi_InBC_NCell        2.0         # number of finest cells (can be a fractional number) for the inner BC
+Bondi_Soften_NCell      0.0         # number of finest cells (can be a fractional number) for the soften length (<=0.0 -> disable)
