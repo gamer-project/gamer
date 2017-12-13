@@ -202,14 +202,14 @@ void Init_TestProb_Template()
 // set the function pointers of various problem-specific routines
    Init_Function_User_Ptr   = SetGridIC;
    Output_User_Ptr          = NULL;       // example: Hydro/AcousticWave/Init_TestProb_Hydro_AcousticWave.cpp --> OutputError()
-   Flag_User_Ptr            = NULL;       // example: Hydro/Bondi/Flag_Bondi.cpp
+   Flag_User_Ptr            = NULL;       // example: AGORA_IsolatedGalaxy/Flag_AGORA.cpp
    Mis_GetTimeStep_User_Ptr = NULL;
-   Aux_Record_User_Ptr      = NULL;       // example: Hydro/Bondi/Record_Bondi.cpp
+   Aux_Record_User_Ptr      = NULL;
    BC_User_Ptr              = NULL;       // example: ELBDM/ExtPot/Init_TestProb_ELBDM_ExtPot.cpp --> BC()
    Flu_ResetByUser_Func_Ptr = NULL;
    End_User_Ptr             = NULL;       // example: Hydro/ClusterMerger_vs_Flash/Init_TestProb_Hydro_ClusterMerger_vs_Flash.cpp --> End_ClusterMerger()
 #  ifdef GRAVITY
-   Init_ExternalAcc_Ptr     = NULL;       // example: Hydro/Bondi/Init_ExternalAcc_Bondi.cpp
+   Init_ExternalAcc_Ptr     = NULL;
    Init_ExternalPot_Ptr     = NULL;       // example: ELBDM/ExtPot/Init_TestProb_ELBDM_ExtPot.cpp --> Init_ExtPot()
 #  endif
 #  ifdef PARTICLE
