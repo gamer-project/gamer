@@ -1,0 +1,5 @@
+# parameters for the ELBDM soliton test
+1           Soliton_N               # total number of solitons
+-1          Soliton_RSeed           # random seed for setting the center coordinates of each soliton (<=0 -> set manually)
+0.1         Soliton_Scale           # scale factor (density ~ scale^4) of ALL solitons (<=0 -> set manually)
+0.0         Soliton_EmptyRegion     # regions without solitons (-> only at [Soliton_EmptyRegion:BOX_SIZE-Soliton_EmptyRegion])
