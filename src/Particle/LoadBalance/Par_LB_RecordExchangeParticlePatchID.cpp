@@ -1,4 +1,3 @@
-#include "Copyright.h"
 #include "GAMER.h"
 
 #if ( defined PARTICLE  &&  defined LOAD_BALANCE )

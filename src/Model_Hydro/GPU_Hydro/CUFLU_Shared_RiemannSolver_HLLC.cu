@@ -1,4 +1,3 @@
-#include "Copyright.h"
 #ifndef __CUFLU_RIEMANNSOLVER_HLLC_CU__
 #define __CUFLU_RIEMANNSOLVER_HLLC_CU__
 

@@ -1,4 +1,3 @@
-#include "Copyright.h"
 #ifndef __CUFLU_FULLSTEPUPDATE_CU__
 #define __CUFLU_FULLSTEPUPDATE_CU__
 

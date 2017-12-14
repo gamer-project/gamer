@@ -1,4 +1,3 @@
-#include "Copyright.h"
 #ifdef __CUDACC__
 #include "Macro.h"
 #else
