@@ -1,4 +1,3 @@
-#include "Copyright.h"
 #include "GAMER.h"
 
 #if ( MODEL == ELBDM  &&  defined GAMER_DEBUG )

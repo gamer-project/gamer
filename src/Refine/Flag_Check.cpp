@@ -1,4 +1,3 @@
-#include "Copyright.h"
 #include "GAMER.h"
 
 static bool Check_Gradient( const int i, const int j, const int k, const real Input[], const double Threshold );

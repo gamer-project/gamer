@@ -1,4 +1,3 @@
-#include "Copyright.h"
 #ifdef LOAD_BALANCE
 
 #include "GAMER.h"

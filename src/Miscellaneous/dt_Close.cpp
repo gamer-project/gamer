@@ -1,4 +1,3 @@
-#include "Copyright.h"
 #include "GAMER.h"
 
 // declared in dt_InvokeSolver.cpp

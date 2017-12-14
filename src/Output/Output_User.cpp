@@ -1,4 +1,3 @@
-#include "Copyright.h"
 #include "GAMER.h"
 
 // declare as static so that other functions cannot invoke it directly and must use the function pointer

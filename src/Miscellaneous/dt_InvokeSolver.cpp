@@ -1,4 +1,3 @@
-#include "Copyright.h"
 #include "GAMER.h"
 
 double dt_min_for_solver;

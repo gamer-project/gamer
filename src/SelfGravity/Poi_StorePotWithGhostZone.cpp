@@ -1,4 +1,3 @@
-#include "Copyright.h"
 #include "GAMER.h"
 
 #if ( defined GRAVITY  &&  defined STORE_POT_GHOST )

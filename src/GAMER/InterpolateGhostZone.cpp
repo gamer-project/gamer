@@ -1,4 +1,3 @@
-#include "Copyright.h"
 #include "GAMER.h"
 
 static int Table_01( const int SibID, const int Side, const char dim, const int w01, const int w02,

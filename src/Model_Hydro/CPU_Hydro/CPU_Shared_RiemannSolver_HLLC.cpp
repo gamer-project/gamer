@@ -1,4 +1,3 @@
-#include "Copyright.h"
 #include "GAMER.h"
 #include "CUFLU.h"
 

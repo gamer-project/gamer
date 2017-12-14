@@ -1,4 +1,3 @@
-#include "Copyright.h"
 #include "GAMER.h"
 
 static void WriteFile( FILE *File, const int lv, const int PID, const int i, const int j, const int k,
