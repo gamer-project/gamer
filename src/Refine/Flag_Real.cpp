@@ -1,4 +1,3 @@
-#include "Copyright.h"
 #include "GAMER.h"
 
 void Flag_Grandson( const int lv, const int PID, const int LocalID );

@@ -1,4 +1,3 @@
-#include "Copyright.h"
 #include "GAMER.h"
 
 #define COMMENT_SYM     '#'   // comment symbol

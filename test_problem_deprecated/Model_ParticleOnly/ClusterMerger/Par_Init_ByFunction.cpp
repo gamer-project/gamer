@@ -1,4 +1,3 @@
-#include "Copyright.h"
 #include "GAMER.h"
 #ifdef SUPPORT_GSL
 #include <gsl/gsl_rng.h>

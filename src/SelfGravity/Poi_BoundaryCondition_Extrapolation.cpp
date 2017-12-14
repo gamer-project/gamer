@@ -1,4 +1,3 @@
-#include "Copyright.h"
 #include "GAMER.h"
 
 static void BC_Extrapolation_xm( real *Array, const int NVar, const int GhostSize, const int ArraySizeX, const int ArraySizeY,

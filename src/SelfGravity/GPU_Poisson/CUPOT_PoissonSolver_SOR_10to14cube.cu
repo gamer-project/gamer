@@ -1,4 +1,3 @@
-#include "Copyright.h"
 #include "Macro.h"
 #include "CUPOT.h"
 

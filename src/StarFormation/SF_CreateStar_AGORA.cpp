@@ -1,4 +1,3 @@
-#include "Copyright.h"
 #include "GAMER.h"
 
 #if (  defined PARTICLE  &&  defined STAR_FORMATION  &&  ( MODEL==HYDRO || MODEL==MHD )  )

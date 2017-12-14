@@ -1,4 +1,3 @@
-#include "Copyright.h"
 #ifndef __CUFLU_COMPUTEFLUX_CU__
 #define __CUFLU_COMPUTEFLUX_CU__
 
