@@ -1,4 +1,3 @@
-#include "Copyright.h"
 #ifndef GPU
 
 #include "GAMER.h"

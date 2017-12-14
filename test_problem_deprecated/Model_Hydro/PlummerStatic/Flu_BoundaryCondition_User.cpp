@@ -1,4 +1,3 @@
-#include "Copyright.h"
 #include "GAMER.h"
 
 static void BC_User( const double Time, const double x, const double y, const double z, real *BVal );

@@ -1,4 +1,3 @@
-#include "Copyright.h"
 #ifndef __CUFLU_DATARECONSTRUCTION_CU__
 #define __CUFLU_DATARECONSTRUCTION_CU__
 

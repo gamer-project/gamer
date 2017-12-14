@@ -1,4 +1,3 @@
-#include "Copyright.h"
 #ifndef __CUFLU_FLUUTILITY_CU__
 #define __CUFLU_FLUUTILITY_CU__
 

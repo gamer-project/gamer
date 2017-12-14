@@ -1,4 +1,3 @@
-#include "Copyright.h"
 #include "GAMER.h"
 
 void InterpolateGhostZone( const int lv, const int PID, real IntData[], const int SibID, const double PrepTime,

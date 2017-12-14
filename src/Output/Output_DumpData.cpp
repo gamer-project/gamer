@@ -1,4 +1,3 @@
-#include "Copyright.h"
 #include "GAMER.h"
 
 static void Write_DumpRecord();

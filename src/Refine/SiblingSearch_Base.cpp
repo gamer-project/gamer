@@ -1,4 +1,3 @@
-#include "Copyright.h"
 #include "GAMER.h"
 
 static void FindBaseSibling( const int PID );
