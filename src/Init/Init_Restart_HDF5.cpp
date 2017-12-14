@@ -1,6 +1,5 @@
 #ifdef SUPPORT_HDF5
 
-#include "Copyright.h"
 #include "GAMER.h"
 #include "HDF5_Typedef.h"
 #include <typeinfo>

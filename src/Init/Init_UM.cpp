@@ -1,4 +1,3 @@
-#include "Copyright.h"
 #include "GAMER.h"
 
 static void UM_Downgrade( const real *Input, real *Output, const int NX, const int NY, const int NZ,

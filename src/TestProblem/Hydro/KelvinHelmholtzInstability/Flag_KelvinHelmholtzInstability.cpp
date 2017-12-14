@@ -1,4 +1,3 @@
-#include "Copyright.h"
 #include "GAMER.h"
 
 extern bool KH_AllRankSame;
