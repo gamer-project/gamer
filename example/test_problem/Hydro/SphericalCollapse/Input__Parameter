@@ -137,7 +137,7 @@ OPT__OVERLAP_MPI              0           # overlap MPI communication with CPU/G
 OPT__RESET_FLUID              0           # reset fluid variables after each update -> edit "Flu_ResetByUser.cpp" [0]
 MIN_DENS                      0.0         # minimum mass density (must >= 0.0) [0.0] ##HYDRO, MHD, and ELBDM ONLY##
 MIN_PRES                      0.0         # minimum pressure     (must >= 0.0) [0.0] ##HYDRO and MHD ONLY##
-JEANS_MIN_PRES                0           # minimum pressure estimated from the Jeans length [0] ##HYDRO/MHD, SUPPORT_GRACKLE, GRAVITY ONLY##
+JEANS_MIN_PRES                0           # minimum pressure estimated from the Jeans length [0] ##HYDRO/MHD and GRAVITY ONLY##
 JEANS_MIN_PRES_LEVEL         -1           # for JEANS_MIN_PRES; ensure Jeans length is resolved by JEANS_MIN_PRES_NCELL*dh[JEANS_MIN_PRES_LEVEL]
                                           # (<0=auto -> MAX_LEVEL) [-1]
 JEANS_MIN_PRES_NCELL          4           # for JEANS_MIN_PRES; see JEANS_MIN_PRES_LEVEL [4]

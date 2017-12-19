@@ -977,16 +977,16 @@ void Aux_Check_Parameter()
       Aux_Error( ERROR_INFO, "Rho_ParaBuf (%d) > PATCH_SIZE (%d) !!\n", Rho_ParaBuf, PATCH_SIZE );
 
 #  if ( POT_SCHEME == SOR )
-   if ( SOR_OMEGA <= 0.0 )    Aux_Error( ERROR_INFO, "SOR_OMEGA (%14.7e) <= 0.0 !!\n", SOR_OMEGA );
+   if ( SOR_OMEGA < 0.0 )     Aux_Error( ERROR_INFO, "SOR_OMEGA (%14.7e) < 0.0 !!\n", SOR_OMEGA );
    if ( SOR_MAX_ITER < 0 )    Aux_Error( ERROR_INFO, "SOR_MAX_ITER (%d) < 0 !!\n", SOR_MAX_ITER );
    if ( SOR_MIN_ITER < 3 )    Aux_Error( ERROR_INFO, "SOR_MIN_ITER (%d) < 3 !!\n", SOR_MIN_ITER );
 #  endif
 
 #  if ( POT_SCHEME == MG )
    if ( MG_MAX_ITER < 0 )              Aux_Error( ERROR_INFO, "MG_MAX_ITER (%d) < 0 !!\n", MG_MAX_ITER );
-   if ( MG_NPRE_SMOOTH <= 0 )          Aux_Error( ERROR_INFO, "MG_NPRE_SMOOTH (%d) <= 0 !!\n", MG_NPRE_SMOOTH );
-   if ( MG_NPOST_SMOOTH <= 0 )         Aux_Error( ERROR_INFO, "MG_NPOST_SMOOTH (%d) <= 0 !!\n", MG_NPOST_SMOOTH );
-   if ( MG_TOLERATED_ERROR <= 0.0 )    Aux_Error( ERROR_INFO, "MG_TOLERATED_ERROR (%14.7e) <= 0.0 !!\n", MG_TOLERATED_ERROR );
+   if ( MG_NPRE_SMOOTH < 0 )           Aux_Error( ERROR_INFO, "MG_NPRE_SMOOTH (%d) < 0 !!\n", MG_NPRE_SMOOTH );
+   if ( MG_NPOST_SMOOTH < 0 )          Aux_Error( ERROR_INFO, "MG_NPOST_SMOOTH (%d) < 0 !!\n", MG_NPOST_SMOOTH );
+   if ( MG_TOLERATED_ERROR < 0.0 )     Aux_Error( ERROR_INFO, "MG_TOLERATED_ERROR (%14.7e) < 0.0 !!\n", MG_TOLERATED_ERROR );
 #  endif
 
    if ( POT_GPU_NPGROUP % GPU_NSTREAM != 0 )
@@ -1226,9 +1226,11 @@ void Aux_Check_Parameter()
 
 // errors
 // ------------------------------
+   /*
    if ( CHE_GPU_NPGROUP % GPU_NSTREAM != 0 )
       Aux_Error( ERROR_INFO, "CHE_GPU_NPGROUP (%d) %% GPU_NSTREAM (%d) != 0 !!\n",
                  CHE_GPU_NPGROUP, GPU_NSTREAM );
+                 */
 
 // warning
 // ------------------------------

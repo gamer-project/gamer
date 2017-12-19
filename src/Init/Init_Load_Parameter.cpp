@@ -76,7 +76,7 @@ void Init_Load_Parameter()
 // do no check PAR_NPAR since it may be reset by restart
    ReadPara->Add( "PAR_NPAR",                   &amr->Par->NPar_Active_AllRank,  -1L,              NoMin_long,    NoMax_long     );
    ReadPara->Add( "PAR_INIT",                   &amr->Par->Init,                 -1,               1,             3              );
-   ReadPara->Add( "PAR_INTERP",                 &amr->Par->Interp,                PAR_INTERP_TSC,  1,             3              );
+   ReadPara->Add( "PAR_INTERP",                 &amr->Par->Interp,                PAR_INTERP_CIC,  1,             3              );
    ReadPara->Add( "PAR_INTEG",                  &amr->Par->Integ,                 PAR_INTEG_KDK,   1,             2              );
    ReadPara->Add( "PAR_IMPROVE_ACC",            &amr->Par->ImproveAcc,            true,            Useless_bool,  Useless_bool   );
    ReadPara->Add( "PAR_PREDICT_POS",            &amr->Par->PredictPos,            true,            Useless_bool,  Useless_bool   );
@@ -200,7 +200,7 @@ void Init_Load_Parameter()
 
 // fluid solvers in HYDRO and MHD
 #  if ( MODEL == HYDRO )
-   ReadPara->Add( "GAMMA",                      &GAMMA,                           5.0/3.0,         Eps_double,    NoMax_double   );
+   ReadPara->Add( "GAMMA",                      &GAMMA,                           5.0/3.0,         1.0,           NoMax_double   );
    ReadPara->Add( "MOLECULAR_WEIGHT",           &MOLECULAR_WEIGHT,                0.6,             Eps_double,    NoMax_double   );
    ReadPara->Add( "MINMOD_COEFF",               &MINMOD_COEFF,                    1.5,             1.0,           2.0            );
    ReadPara->Add( "EP_COEFF",                   &EP_COEFF,                        1.25,            1.0,           NoMax_double   );
