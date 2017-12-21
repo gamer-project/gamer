@@ -10,7 +10,7 @@
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Aux_TakeNote
-// Description :  Record simulation parameters and the content in the file "Input__NoteScript" to the
+// Description :  Record simulation parameters and the content in the file "Input__Note" to the
 //                note file "Record__Note"
 //-------------------------------------------------------------------------------------------------------
 void Aux_TakeNote()
@@ -27,13 +27,13 @@ void Aux_TakeNote()
       if ( Aux_CheckFileExist(FileName) )
          Aux_Message( stderr, "WARNING : file \"%s\" already exists !!\n", FileName );
 
-//    copy the content in the file "Input__NoteScript"
+//    copy the content in the file "Input__Note"
       Note = fopen( FileName, "a" );
-      fprintf( Note, "\n\n\nSimulation Note\n" );
+      fprintf( Note, "\n\n\nSimulation Notes\n" );
       fprintf( Note, "***********************************************************************************\n" );
       fclose( Note );
 
-      system( "cat ./Input__NoteScript >> Record__Note" );
+      system( "cat ./Input__Note >> Record__Note" );
 
       Note = fopen( FileName, "a" );
       fprintf( Note, "***********************************************************************************\n" );
