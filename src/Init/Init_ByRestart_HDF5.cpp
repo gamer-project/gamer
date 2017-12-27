@@ -25,7 +25,7 @@ static void ResetParameter( const char *FileName, double *EndT, long *EndStep );
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Init_Restart_HDF5
+// Function    :  Init_ByRestart_HDF5
 // Description :  Reload a previous HDF5 output as the initial condition
 //
 // Note        :  1. "OPT__RESTART_HEADER == RESTART_HEADER_CHECK"
@@ -35,13 +35,13 @@ static void ResetParameter( const char *FileName, double *EndT, long *EndStep );
 //                   "OPT__RESTART_HEADER == RESTART_HEADER_SKIP"
 //                   --> Skip the header information in the RESTART file
 //
-//                2. This function will be invoked by "Init_Restart" automatically if the restart file
+//                2. This function will be invoked by "Init_ByRestart" automatically if the restart file
 //                   is determined to a HDF5 file
 //                3. Only work for format version >= 2100 (PARTICLE only works for version >= 2200)
 //
 // Parameter   :  FileName : Target file name
 //-------------------------------------------------------------------------------------------------------
-void Init_Restart_HDF5( const char *FileName )
+void Init_ByRestart_HDF5( const char *FileName )
 {
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ...\n", __FUNCTION__ );
@@ -869,7 +869,7 @@ void Init_Restart_HDF5( const char *FileName )
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", __FUNCTION__ );
 
-} // FUNCTION : Init_Restart_HDF5
+} // FUNCTION : Init_ByRestart_HDF5
 
 
 
@@ -1729,11 +1729,10 @@ void Check_InputPara( const char *FileName )
    LoadField( "RestartLoadNRank",        &RS.RestartLoadNRank,        SID, TID, NonFatal, &RT.RestartLoadNRank,         1, NonFatal );
    LoadField( "Opt__RestartHeader",      &RS.Opt__RestartHeader,      SID, TID, NonFatal, &RT.Opt__RestartHeader,       1, NonFatal );
    LoadField( "Opt__RestartReset",       &RS.Opt__RestartReset,       SID, TID, NonFatal, &RT.Opt__RestartReset,        1, NonFatal );
-   LoadField( "Opt__UM_Start_Level",     &RS.Opt__UM_Start_Level,     SID, TID, NonFatal, &RT.Opt__UM_Start_Level,      1, NonFatal );
-   LoadField( "Opt__UM_Start_NVar",      &RS.Opt__UM_Start_NVar,      SID, TID, NonFatal, &RT.Opt__UM_Start_NVar,       1, NonFatal );
-   LoadField( "Opt__UM_Start_Downgrade", &RS.Opt__UM_Start_Downgrade, SID, TID, NonFatal, &RT.Opt__UM_Start_Downgrade,  1, NonFatal );
-   LoadField( "Opt__UM_Start_Refine",    &RS.Opt__UM_Start_Refine,    SID, TID, NonFatal, &RT.Opt__UM_Start_Refine,     1, NonFatal );
-   LoadField( "Opt__UM_Factor_5over3",   &RS.Opt__UM_Factor_5over3,   SID, TID, NonFatal, &RT.Opt__UM_Factor_5over3,    1, NonFatal );
+   LoadField( "Opt__UM_IC_Level",        &RS.Opt__UM_IC_Level,        SID, TID, NonFatal, &RT.Opt__UM_IC_Level,         1, NonFatal );
+   LoadField( "Opt__UM_IC_NVar",         &RS.Opt__UM_IC_NVar,         SID, TID, NonFatal, &RT.Opt__UM_IC_NVar,          1, NonFatal );
+   LoadField( "Opt__UM_IC_Downgrade",    &RS.Opt__UM_IC_Downgrade,    SID, TID, NonFatal, &RT.Opt__UM_IC_Downgrade,     1, NonFatal );
+   LoadField( "Opt__UM_IC_Refine",       &RS.Opt__UM_IC_Refine,       SID, TID, NonFatal, &RT.Opt__UM_IC_Refine,        1, NonFatal );
    LoadField( "Opt__InitRestrict",       &RS.Opt__InitRestrict,       SID, TID, NonFatal, &RT.Opt__InitRestrict,        1, NonFatal );
    LoadField( "Opt__InitGridWithOMP",    &RS.Opt__InitGridWithOMP,    SID, TID, NonFatal, &RT.Opt__InitGridWithOMP,     1, NonFatal );
    LoadField( "Opt__GPUID_Select",       &RS.Opt__GPUID_Select,       SID, TID, NonFatal, &RT.Opt__GPUID_Select,        1, NonFatal );

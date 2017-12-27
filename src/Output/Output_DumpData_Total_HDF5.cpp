@@ -61,7 +61,7 @@ Procedure for outputting new variables:
 1. Add the new variable into one of the data structures (XXX) defined in "HDF5_Typedef.h"
 2. Edit "GetCompound_XXX" to insert the new variables into the compound datatype
 3. Edit "FillIn_XXX" to fill in the new variables
-4. Edit "Check_XXX" in "Init_Restart_HDF5.cpp" to load and compare the new variables
+4. Edit "Check_XXX" in "Init_ByRestart_HDF5.cpp" to load and compare the new variables
 5. Modify FormatVersion and CodeVersion
 ======================================================================================================*/
 
@@ -69,7 +69,7 @@ Procedure for outputting new variables:
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2261)
+// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2262)
 // Description :  Output all simulation data in the HDF5 format, which can be used as a restart file
 //                or loaded by YT
 //
@@ -147,6 +147,7 @@ Procedure for outputting new variables:
 //                2258 : 2017/09/21 --> output OPT__MINIMIZE_MPI_BARRIER
 //                2259 : 2017/10/10 --> output OPT__INIT_GRID_WITH_OMP
 //                2261 : 2017/12/05 --> no longer define INTEL
+//                2262 : 2017/12/27 --> rename all UM variables
 //-------------------------------------------------------------------------------------------------------
 void Output_DumpData_Total_HDF5( const char *FileName )
 {
@@ -1939,11 +1940,10 @@ void FillIn_InputPara( InputPara_t &InputPara )
    InputPara.RestartLoadNRank        = RESTART_LOAD_NRANK;
    InputPara.Opt__RestartHeader      = OPT__RESTART_HEADER;
    InputPara.Opt__RestartReset       = OPT__RESTART_RESET;
-   InputPara.Opt__UM_Start_Level     = OPT__UM_START_LEVEL;
-   InputPara.Opt__UM_Start_NVar      = OPT__UM_START_NVAR;
-   InputPara.Opt__UM_Start_Downgrade = OPT__UM_START_DOWNGRADE;
-   InputPara.Opt__UM_Start_Refine    = OPT__UM_START_REFINE;
-   InputPara.Opt__UM_Factor_5over3   = OPT__UM_FACTOR_5OVER3;
+   InputPara.Opt__UM_IC_Level        = OPT__UM_IC_LEVEL;
+   InputPara.Opt__UM_IC_NVar         = OPT__UM_IC_NVAR;
+   InputPara.Opt__UM_IC_Downgrade    = OPT__UM_IC_DOWNGRADE;
+   InputPara.Opt__UM_IC_Refine       = OPT__UM_IC_REFINE;
    InputPara.Opt__InitRestrict       = OPT__INIT_RESTRICT;
    InputPara.Opt__InitGridWithOMP    = OPT__INIT_GRID_WITH_OMP;
    InputPara.Opt__GPUID_Select       = OPT__GPUID_SELECT;
@@ -2621,11 +2621,10 @@ void GetCompound_InputPara( hid_t &H5_TypeID )
    H5Tinsert( H5_TypeID, "RestartLoadNRank",        HOFFSET(InputPara_t,RestartLoadNRank       ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "Opt__RestartHeader",      HOFFSET(InputPara_t,Opt__RestartHeader     ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "Opt__RestartReset",       HOFFSET(InputPara_t,Opt__RestartReset      ), H5T_NATIVE_INT     );
-   H5Tinsert( H5_TypeID, "Opt__UM_Start_Level",     HOFFSET(InputPara_t,Opt__UM_Start_Level    ), H5T_NATIVE_INT     );
-   H5Tinsert( H5_TypeID, "Opt__UM_Start_NVar",      HOFFSET(InputPara_t,Opt__UM_Start_NVar     ), H5T_NATIVE_INT     );
-   H5Tinsert( H5_TypeID, "Opt__UM_Start_Downgrade", HOFFSET(InputPara_t,Opt__UM_Start_Downgrade), H5T_NATIVE_INT     );
-   H5Tinsert( H5_TypeID, "Opt__UM_Start_Refine",    HOFFSET(InputPara_t,Opt__UM_Start_Refine   ), H5T_NATIVE_INT     );
-   H5Tinsert( H5_TypeID, "Opt__UM_Factor_5over3",   HOFFSET(InputPara_t,Opt__UM_Factor_5over3  ), H5T_NATIVE_INT     );
+   H5Tinsert( H5_TypeID, "Opt__UM_IC_Level",        HOFFSET(InputPara_t,Opt__UM_IC_Level       ), H5T_NATIVE_INT     );
+   H5Tinsert( H5_TypeID, "Opt__UM_IC_NVar",         HOFFSET(InputPara_t,Opt__UM_IC_NVar        ), H5T_NATIVE_INT     );
+   H5Tinsert( H5_TypeID, "Opt__UM_IC_Downgrade",    HOFFSET(InputPara_t,Opt__UM_IC_Downgrade   ), H5T_NATIVE_INT     );
+   H5Tinsert( H5_TypeID, "Opt__UM_IC_Refine",       HOFFSET(InputPara_t,Opt__UM_IC_Refine      ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "Opt__InitRestrict",       HOFFSET(InputPara_t,Opt__InitRestrict      ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "Opt__InitGridWithOMP",    HOFFSET(InputPara_t,Opt__InitGridWithOMP   ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "Opt__GPUID_Select",       HOFFSET(InputPara_t,Opt__GPUID_Select      ), H5T_NATIVE_INT     );

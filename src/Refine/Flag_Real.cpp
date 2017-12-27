@@ -188,7 +188,7 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
                }
             }
 
-//          check further --> necessary for OPT__UM_START_DOWNGRADE to avoid refinement near the boundary
+//          check further --> necessary for OPT__UM_IC_DOWNGRADE to avoid refinement near the boundary
             if ( ProperNesting  &&  NoRefineNearBoundary )
             {
                for (int d=0; d<3; d++)
@@ -474,7 +474,7 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
          }
       }
 
-//    check further --> necessary for OPT__UM_START_DOWNGRADE to avoid refinement near the boundary
+//    check further --> necessary for OPT__UM_IC_DOWNGRADE to avoid refinement near the boundary
       if ( amr->patch[0][lv][PID]->flag  &&  NoRefineNearBoundary )
       {
         for (int d=0; d<3; d++)

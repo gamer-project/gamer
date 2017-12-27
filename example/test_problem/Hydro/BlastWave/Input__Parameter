@@ -124,14 +124,9 @@ MIN_PRES                      0.0         # minimum pressure     (must >= 0.0) [
 
 
 # initialization
-OPT__INIT                     1           # initialization option: (1=StartOver, 2=RESTART, 3=UM_START)
+OPT__INIT                     1           # initialization option: (1=FUNCTION, 2=RESTART, 3=FILE->"UM_IC")
 RESTART_LOAD_NRANK            1           # number of parallel I/O (i.e., number of MPI ranks) for restart [1]
 OPT__RESTART_HEADER           1           # RESTART header: (0=skip, 1=check the header info) [1]
-OPT__UM_START_LEVEL           0           # AMR level corresponding to the input uniform-mesh array (must >= 0) [0]
-OPT__UM_START_NVAR            1           # number of variables per cell stored in the uniform-mesh array (1~NCOMP_TOTAL) [1]
-OPT__UM_START_DOWNGRADE       1           # downgrade the uniform-mesh data from level OPT__UM_START_LEVEL to 0 [1]
-OPT__UM_START_REFINE          1           # refine the uniform-mesh data from level OPT__UM_START_LEVEL to MAX_LEVEL [1]
-OPT__UM_FACTOR_5OVER3         0           # multiply the input mass density by 5/3 to correct the growing-mode amplitude [0]
 OPT__INIT_RESTRICT            1           # restrict all data during the initialization [1]
 OPT__GPUID_SELECT            -1           # GPU ID selection mode: (-3=Laohu, -2=CUDA, -1=MPI rank, >=0=input) [-1]
 INIT_SUBSAMPLING_NCELL       16           # perform sub-sampling during initialization: (0=off, >0=# of sub-sampling cells) [0]

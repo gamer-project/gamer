@@ -84,7 +84,7 @@ void Validate()
 #  endif
 
 #  ifdef PARTICLE
-   if ( OPT__INIT == INIT_STARTOVER  &&  amr->Par->Init != PAR_INIT_BY_FUNCTION )
+   if ( OPT__INIT == INIT_BY_FUNCTION  &&  amr->Par->Init != PAR_INIT_BY_FUNCTION )
       Aux_Error( ERROR_INFO, "please set PAR_INIT = 1 (by FUNCTION) !!\n" );
 #  endif
 
@@ -216,7 +216,7 @@ void SetParameter()
    AGORA_HaloGasTemp     *= Const_kB   / UNIT_E;
 
 // load the circular velocity radial profile
-   if ( OPT__INIT != INIT_RESTART )
+   if ( OPT__INIT != INIT_BY_RESTART )
    {
       const bool RowMajor_No = false;     // load data into the column-major order
       const bool AllocMem_Yes = true;     // allocate memory for AGORA_VcProf

@@ -498,11 +498,10 @@ struct InputPara_t
    int    RestartLoadNRank;
    int    Opt__RestartHeader;
    int    Opt__RestartReset;
-   int    Opt__UM_Start_Level;
-   int    Opt__UM_Start_NVar;
-   int    Opt__UM_Start_Downgrade;
-   int    Opt__UM_Start_Refine;
-   int    Opt__UM_Factor_5over3;
+   int    Opt__UM_IC_Level;
+   int    Opt__UM_IC_NVar;
+   int    Opt__UM_IC_Downgrade;
+   int    Opt__UM_IC_Refine;
    int    Opt__InitRestrict;
    int    Opt__InitGridWithOMP;
    int    Opt__GPUID_Select;

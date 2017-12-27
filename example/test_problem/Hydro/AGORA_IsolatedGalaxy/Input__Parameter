@@ -58,7 +58,7 @@ OPT__BC_POT                   2           # gravity boundary condition: (1=perio
 
 # particle (PARTICLE only)
 PAR_NPAR                      212500      # total number of particles (must be set for PAR_INIT == 1/3)
-PAR_INIT                      1           # initialization option for particles: (1=FUNCTION, 2=RESTART, 3=FILE->"PAR_START")
+PAR_INIT                      1           # initialization option for particles: (1=FUNCTION, 2=RESTART, 3=FILE->"PAR_IC")
 PAR_INTERP                    2           # particle interpolation scheme: (1=NGP, 2=CIC, 3=TSC) [2]
 PAR_INTEG                     2           # particle integration scheme: (1=Euler, 2=KDK) [2]
 PAR_IMPROVE_ACC               1           # improve force accuracy at patch boundaries [1] ##STORE_POT_GHOST and PAR_INTERP=2/3 ONLY##
@@ -188,7 +188,7 @@ OPT__EXTERNAL_POT             0           # add the external potential (incompat
 
 
 # initialization
-OPT__INIT                     1           # initialization option: (1=StartOver, 2=RESTART, 3=UM_START)
+OPT__INIT                     1           # initialization option: (1=FUNCTION, 2=RESTART, 3=FILE->"UM_IC")
 RESTART_LOAD_NRANK            256         # number of parallel I/O (i.e., number of MPI ranks) for restart [1]
 OPT__RESTART_HEADER           1           # RESTART header: (0=skip, 1=check the header info) [1]
 OPT__INIT_RESTRICT            1           # restrict all data during the initialization [1]

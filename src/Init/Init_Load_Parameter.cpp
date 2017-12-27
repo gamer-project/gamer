@@ -278,11 +278,10 @@ void Init_Load_Parameter()
    ReadPara->Add( "RESTART_LOAD_NRANK",         &RESTART_LOAD_NRANK,              1,               1,             NoMax_int      );
    ReadPara->Add( "OPT__RESTART_HEADER",        &OPT__RESTART_HEADER,             RESTART_HEADER_CHECK, 0,        1              );
    ReadPara->Add( "OPT__RESTART_RESET",         &OPT__RESTART_RESET,              false,           Useless_bool,  Useless_bool   );
-   ReadPara->Add( "OPT__UM_START_LEVEL",        &OPT__UM_START_LEVEL,             0,               0,             TOP_LEVEL      );
-   ReadPara->Add( "OPT__UM_START_NVAR",         &OPT__UM_START_NVAR,              1,               1,             NCOMP_TOTAL    );
-   ReadPara->Add( "OPT__UM_START_DOWNGRADE",    &OPT__UM_START_DOWNGRADE,         true,            Useless_bool,  Useless_bool   );
-   ReadPara->Add( "OPT__UM_START_REFINE",       &OPT__UM_START_REFINE,            true,            Useless_bool,  Useless_bool   );
-   ReadPara->Add( "OPT__UM_FACTOR_5OVER3",      &OPT__UM_FACTOR_5OVER3,           false,           Useless_bool,  Useless_bool   );
+   ReadPara->Add( "OPT__UM_IC_LEVEL",           &OPT__UM_IC_LEVEL,                0,               0,             TOP_LEVEL      );
+   ReadPara->Add( "OPT__UM_IC_NVAR",            &OPT__UM_IC_NVAR,                 NCOMP_TOTAL,     NoMin_int,     NCOMP_TOTAL    );
+   ReadPara->Add( "OPT__UM_IC_DOWNGRADE",       &OPT__UM_IC_DOWNGRADE,            true,            Useless_bool,  Useless_bool   );
+   ReadPara->Add( "OPT__UM_IC_REFINE",          &OPT__UM_IC_REFINE,               true,            Useless_bool,  Useless_bool   );
    ReadPara->Add( "OPT__INIT_RESTRICT",         &OPT__INIT_RESTRICT,              true,            Useless_bool,  Useless_bool   );
    ReadPara->Add( "OPT__INIT_GRID_WITH_OMP",    &OPT__INIT_GRID_WITH_OMP,         true,            Useless_bool,  Useless_bool   );
    ReadPara->Add( "OPT__GPUID_SELECT",          &OPT__GPUID_SELECT,              -1,              -3,             NoMax_int      );

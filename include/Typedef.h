@@ -50,9 +50,9 @@ const TestProbID_t
 // program initialization options
 typedef int OptInit_t;
 const OptInit_t
-   INIT_STARTOVER = 1,
-   INIT_RESTART   = 2,
-   INIT_UM        = 3;
+   INIT_BY_FUNCTION = 1,
+   INIT_BY_RESTART  = 2,
+   INIT_BY_FILE     = 3;
 
 
 // program restart options
