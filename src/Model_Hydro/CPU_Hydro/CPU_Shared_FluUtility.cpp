@@ -402,14 +402,14 @@ double CPU_Temperature2Pressure( const double Dens, const double Temp, const dou
 //
 // Note        :  1. Should be invoked AFTER applying the floor values to passive scalars
 //                2. Invoked by CPU_Shared_FullStepUpdate(), Prepare_PatchData(), Refine(), LB_Refine_AllocateNewPatch(),
-//                   Flu_FixUp(), XXX_Init_StartOver_AssignData(), XXX_Init_UM_AssignData(), Flu_Close()
+//                   Flu_FixUp(), XXX_Init_ByFunction_AssignData(), XXX_Init_ByFile_AssignData(), Flu_Close()
 //
-// Parameter   :  GasDens  : Gas mass density
-//                Passive  : Passive scalar array (with the size NCOMP_PASSIVE)
-//                NNorm    : Number of passive scalars to be normalized
-//                           --> Should be set to the global variable "PassiveNorm_NVar"
-//                NormIdx  : Target variable indices to be normalized
-//                           --> Should be set to the global variable "PassiveNorm_VarIdx"
+// Parameter   :  GasDens : Gas mass density
+//                Passive : Passive scalar array (with the size NCOMP_PASSIVE)
+//                NNorm   : Number of passive scalars to be normalized
+//                          --> Should be set to the global variable "PassiveNorm_NVar"
+//                NormIdx : Target variable indices to be normalized
+//                          --> Should be set to the global variable "PassiveNorm_VarIdx"
 //
 // Return      :  Passive
 //-------------------------------------------------------------------------------------------------------

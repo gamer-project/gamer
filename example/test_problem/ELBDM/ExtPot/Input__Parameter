@@ -115,7 +115,7 @@ OPT__EXTERNAL_POT             1           # add the external potential (incompat
 
 
 # initialization
-OPT__INIT                     1           # initialization option: (1=StartOver, 2=RESTART, 3=UM_START)
+OPT__INIT                     1           # initialization option: (1=FUNCTION, 2=RESTART, 3=FILE->"UM_IC")
 RESTART_LOAD_NRANK            1           # number of parallel I/O (i.e., number of MPI ranks) for restart [1]
 OPT__RESTART_HEADER           1           # RESTART header: (0=skip, 1=check the header info) [1]
 OPT__INIT_RESTRICT            1           # restrict all data during the initialization [1]

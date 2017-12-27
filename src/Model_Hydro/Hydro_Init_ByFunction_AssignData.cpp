@@ -20,13 +20,13 @@ extern bool (*Flu_ResetByUser_Func_Ptr)( real fluid[], const double x, const dou
 // Function    :  Init_Function_User
 // Description :  Function to initialize the fluid field
 //
-// Note        :  1. Invoked by "Hydro_Init_StartOver_AssignData" using the function pointer "Init_Function_User_Ptr"
+// Note        :  1. Invoked by "Hydro_Init_ByFunction_AssignData" using the function pointer "Init_Function_User_Ptr"
 //                   --> The function pointer may be reset by various test problem initializers, in which case
 //                       this funtion will become useless
 //                2. This function will be invoked by multiple OpenMP threads when OPENMP is enabled
 //                   --> Please ensure that everything here is thread-safe
 //                3. Even when DUAL_ENERGY is adopted, one does NOT need to set the dual-energy variable here
-//                   --> It will be set automatically in "Hydro_Init_StartOver_AssignData()"
+//                   --> It will be set automatically in "Hydro_Init_ByFunction_AssignData()"
 //
 // Parameter   :  fluid    : Fluid field to be initialized
 //                x/y/z    : Target physical coordinates
@@ -67,10 +67,10 @@ void Init_Function_User( real fluid[], const double x, const double y, const dou
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Hydro_Init_StartOver_AssignData
+// Function    :  Hydro_Init_ByFunction_AssignData
 // Description :  Construct the initial condition in HYDRO
 //
-// Note        :  1. Work for the option "OPT__INIT == INIT_STARTOVER"
+// Note        :  1. Work for the option "OPT__INIT == INIT_BY_FUNCTION"
 //                2. The function pointer "Init_Function_User_Ptr" points to "Init_Function_User()" by default
 //                   but may be overwritten by various test problem initializers
 //                3. The function pointer "Flu_ResetByUser_Func_Ptr" points to "Flu_ResetByUser_Func()" by default
@@ -82,7 +82,7 @@ void Init_Function_User( real fluid[], const double x, const double y, const dou
 //
 // Parameter   :  lv : Target refinement level
 //-------------------------------------------------------------------------------------------------------
-void Hydro_Init_StartOver_AssignData( const int lv )
+void Hydro_Init_ByFunction_AssignData( const int lv )
 {
 
 // check
@@ -196,7 +196,7 @@ void Hydro_Init_StartOver_AssignData( const int lv )
       }}}
    } // if ( NSub > 1 ) ... else ...
 
-} // FUNCTION : Hydro_Init_StartOver_AssignData
+} // FUNCTION : Hydro_Init_ByFunction_AssignData
 
 
 

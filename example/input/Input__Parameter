@@ -64,7 +64,7 @@ GFUNC_COEFF0                 -1.0         # Green's function coefficient at the 
 
 # particle (PARTICLE only)
 PAR_NPAR                      0           # total number of particles (must be set for PAR_INIT == 1/3)
-PAR_INIT                      1           # initialization option for particles: (1=FUNCTION, 2=RESTART, 3=FILE->"PAR_START")
+PAR_INIT                      1           # initialization option for particles: (1=FUNCTION, 2=RESTART, 3=FILE->"PAR_IC")
 PAR_INTERP                    3           # particle interpolation scheme: (1=NGP, 2=CIC, 3=TSC) [2]
 PAR_INTEG                     2           # particle integration scheme: (1=Euler, 2=KDK) [2]
 PAR_IMPROVE_ACC               1           # improve force accuracy at patch boundaries [1] ##STORE_POT_GHOST and PAR_INTERP=2/3 ONLY##
@@ -217,15 +217,14 @@ OPT__EXTERNAL_POT             0           # add the external potential (incompat
 
 
 # initialization
-OPT__INIT                     1           # initialization option: (1=StartOver, 2=RESTART, 3=UM_START)
+OPT__INIT                     1           # initialization option: (1=FUNCTION, 2=RESTART, 3=FILE->"UM_IC")
 RESTART_LOAD_NRANK            1           # number of parallel I/O (i.e., number of MPI ranks) for restart [1]
 OPT__RESTART_HEADER           1           # RESTART header: (0=skip, 1=check the header info) [1]
-OPT__RESTART_RESET            0           # reset the simulation info during restart as if running with OPT__INIT==1 (StartOver) [0]
-OPT__UM_START_LEVEL           0           # AMR level corresponding to the input uniform-mesh array (must >= 0) [0]
-OPT__UM_START_NVAR            1           # number of variables per cell stored in the uniform-mesh array (1~NCOMP_TOTAL) [1]
-OPT__UM_START_DOWNGRADE       1           # downgrade the uniform-mesh data from level OPT__UM_START_LEVEL to 0 [1]
-OPT__UM_START_REFINE          1           # refine the uniform-mesh data from level OPT__UM_START_LEVEL to MAX_LEVEL [1]
-OPT__UM_FACTOR_5OVER3         0           # multiply the input mass density by 5/3 to correct the growing-mode amplitude [0]
+OPT__RESTART_RESET            0           # reset the simulation info during restart as if running with OPT__INIT==1 [0]
+OPT__UM_IC_LEVEL              0           # AMR level corresponding to the input uniform-mesh array (must >= 0) [0]
+OPT__UM_IC_NVAR              -1           # number of variables in the uniform-mesh array (1~NCOMP_TOTAL; <=0=NCOMP_TOTAL) [NCOMP_TOTAL]
+OPT__UM_IC_DOWNGRADE          1           # downgrade the uniform-mesh data from level OPT__UM_IC_LEVEL to 0 [1]
+OPT__UM_IC_REFINE             1           # refine the uniform-mesh data from level OPT__UM_IC_LEVEL to MAX_LEVEL [1]
 OPT__INIT_RESTRICT            1           # restrict all data during the initialization [1]
 OPT__INIT_GRID_WITH_OMP       1           # enable OpenMP when assigning the initial condition of each grid patch [1]
 OPT__GPUID_SELECT            -1           # GPU ID selection mode: (-3=Laohu, -2=CUDA, -1=MPI rank, >=0=input) [-1]

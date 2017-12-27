@@ -109,7 +109,7 @@ void Init_GAMER( int *argc, char ***argv )
 #  endif
 
 
-// load the tables of the flag criteria from the input files "Input__FLAG_XXX"
+// load the tables of the flag criteria from the input files "Input__Flag_XXX"
    Init_Load_FlagCriteria();
 
 
@@ -167,11 +167,11 @@ void Init_GAMER( int *argc, char ***argv )
 // initialize the AMR structure and fluid field
    switch ( OPT__INIT )
    {
-      case INIT_STARTOVER:    Init_StartOver();    break;
+      case INIT_BY_FUNCTION :    Init_ByFunction();   break;
 
-      case INIT_RESTART :     Init_Restart();      break;
+      case INIT_BY_RESTART :     Init_ByRestart();    break;
 
-      case INIT_UM :          Init_UM();           break;
+      case INIT_BY_FILE :        Init_ByFile();       break;
 
       default : Aux_Error( ERROR_INFO, "incorrect parameter %s = %d !!\n", "OPT__INIT", OPT__INIT );
    }
@@ -184,8 +184,8 @@ void Init_GAMER( int *argc, char ***argv )
 // improve load balance
 #  ifdef LOAD_BALANCE
 
-// we don't have to redistribute all patches during the RESTART process since we already did that in Init_Restart()
-// --> but note that Init_Restart() does NOT consider load-balance weighting of particles
+// we don't have to redistribute all patches during the RESTART process since we already did that in Init_ByRestart()
+// --> but note that Init_ByRestart() does NOT consider load-balance weighting of particles
 // we don't have enough information to calculate the load-balance weighting of particles when
 // calling LB_Init_LoadBalance() for the first time
 // --> must disable particle weighting (by setting ParWeight==0.0) first
@@ -197,7 +197,7 @@ void Init_GAMER( int *argc, char ***argv )
    const bool   ResetLB_Yes      = true;
    const bool   ResetLB_No       = false;
 
-   LB_Init_LoadBalance( (OPT__INIT==INIT_RESTART)?Redistribute_No:Redistribute_Yes, ParWeight_Zero, ResetLB_No );
+   LB_Init_LoadBalance( (OPT__INIT==INIT_BY_RESTART)?Redistribute_No:Redistribute_Yes, ParWeight_Zero, ResetLB_No );
 
 // redistribute patches again if we want to take into account the load-balance weighting of particles
 #  ifdef PARTICLE
@@ -212,7 +212,7 @@ void Init_GAMER( int *argc, char ***argv )
 
 // fill up the data of non-leaf patches (for RESTART only)
 // --> actually, it's only necessary when restarting from a C-binary snapshot since it does not store non-leaf data
-   if ( OPT__INIT == INIT_RESTART )
+   if ( OPT__INIT == INIT_BY_RESTART )
    for (int lv=NLEVEL-2; lv>=0; lv--)
    {
       Flu_Restrict( lv, amr->FluSg[lv+1], amr->FluSg[lv], NULL_INT, NULL_INT, _TOTAL );
@@ -231,7 +231,7 @@ void Init_GAMER( int *argc, char ***argv )
       if ( OPT__BC_POT == BC_POT_ISOLATED )  Init_GreenFuncK();
 
 
-//    evaluate the initial average density if it is not set yet (may already be set in Init_Restart)
+//    evaluate the initial average density if it is not set yet (may already be set in Init_ByRestart)
       if ( AveDensity_Init <= 0.0 )    Poi_GetAverageDensity();
 
 

@@ -17,16 +17,16 @@ void (*Flu_ResetByUser_API_Ptr)( const int lv, const int FluSg, const double TTi
 // Function    :  Flu_ResetByUser_Func
 // Description :  Function to reset the fluid field
 //
-// Note        :  1. Invoked by "Flu_ResetByUser_API()" and "Model_Init_StartOver_AssignData()" using the
+// Note        :  1. Invoked by "Flu_ResetByUser_API()" and "Model_Init_ByFunction_AssignData()" using the
 //                   function pointer "Flu_ResetByUser_Func_Ptr"
 //                   --> The function pointer may be reset by various test problem initializers, in which case
 //                       this funtion will become useless
 //                2. This function will be invoked when constructing the initial condition
-//                    (by calling "Model_Init_StartOver_AssignData()") and after each update
+//                    (by calling "Model_Init_ByFunction_AssignData()") and after each update
 //                    (by calling "Flu_ResetByUser_API()")
 //                3. Input "fluid" array stores the original values
 //                4. Even when DUAL_ENERGY is adopted, one does NOT need to set the dual-energy variable here
-//                   --> It will be set automatically in "Flu_ResetByUser_API()" and "Model_Init_StartOver_AssignData()"
+//                   --> It will be set automatically in "Flu_ResetByUser_API()" and "Model_Init_ByFunction_AssignData()"
 //                5. Enabled by the runtime option "OPT__RESET_FLUID"
 //
 // Parameter   :  fluid    : Fluid array storing both the input (origial) and reset values
@@ -86,7 +86,7 @@ bool Flu_ResetByUser_Func( real fluid[], const double x, const double y, const d
 //                   --> The function pointer may be reset by various test problem initializers, in which case
 //                       this funtion will become useless
 //                3. Currently NOT applied to the input uniform array
-//                   --> Init_UM() does NOT call this function
+//                   --> Init_ByFile() does NOT call this function
 //                4. Currently does not work with "OPT__OVERLAP_MPI"
 //                5. The function pointer "Flu_ResetByUser_Func_Ptr" points to "Flu_ResetByUser_Func()" by default
 //                   but may be overwritten by various test problem initializers

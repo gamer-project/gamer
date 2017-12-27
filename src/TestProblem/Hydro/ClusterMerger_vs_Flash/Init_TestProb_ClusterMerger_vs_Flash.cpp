@@ -69,7 +69,7 @@ void Validate()
 #  endif
 
 #  ifdef PARTICLE
-   if ( OPT__INIT == INIT_STARTOVER  &&  amr->Par->Init != PAR_INIT_BY_FUNCTION )
+   if ( OPT__INIT == INIT_BY_FUNCTION  &&  amr->Par->Init != PAR_INIT_BY_FUNCTION )
       Aux_Error( ERROR_INFO, "please set PAR_INIT = 1 (by FUNCTION) !!\n" );
 #  endif
 
@@ -137,7 +137,7 @@ void SetParameter()
 
 
 // (2) load the radial profiles
-   if ( OPT__INIT != INIT_RESTART )
+   if ( OPT__INIT != INIT_BY_RESTART )
    {
       const bool RowMajor_No  = false;       // load data into the column-major order
       const bool AllocMem_Yes = true;        // allocate memory for Merger_Prof1/2
@@ -176,7 +176,7 @@ void SetParameter()
          Table_R[b] /= UNIT_L;
       }
       } // if ( Merger_Coll )
-   } // if ( OPT__INIT != INIT_RESTART )
+   } // if ( OPT__INIT != INIT_BY_RESTART )
 
 
 // (3) reset other general-purpose parameters

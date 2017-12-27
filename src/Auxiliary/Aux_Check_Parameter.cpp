@@ -69,14 +69,14 @@ void Aux_Check_Parameter()
    if ( NX0_TOT[0]%PS2 != 0  ||  NX0_TOT[1]%PS2 != 0  ||  NX0_TOT[2]%PS2 != 0 )
       Aux_Error( ERROR_INFO, "number of base-level patches in each direction must be \"a multiple of TWO\" !!\n" );
 
-   if ( END_STEP < 0  &&  OPT__INIT != INIT_RESTART )
+   if ( END_STEP < 0  &&  OPT__INIT != INIT_BY_RESTART )
       Aux_Error( ERROR_INFO, "incorrect parameter \"%s = %d\" [>=0] !!\n", "END_STEP", END_STEP );
 
-   if ( END_T < 0.0  &&  OPT__INIT != INIT_RESTART )
+   if ( END_T < 0.0  &&  OPT__INIT != INIT_BY_RESTART )
       Aux_Error( ERROR_INFO, "incorrect parameter \"%s = %14.7e\" [>=0] !!\n", "END_T", END_T );
 
 #  ifdef LOAD_BALANCE
-   if ( OPT__INIT != INIT_RESTART )
+   if ( OPT__INIT != INIT_BY_RESTART )
 #  endif
    if ( NX0_TOT[0]%(PS2*MPI_NRank_X[0]) != 0  ||  NX0_TOT[1]%(PS2*MPI_NRank_X[1]) != 0  ||
         NX0_TOT[2]%(PS2*MPI_NRank_X[2]) != 0 )
@@ -84,7 +84,7 @@ void Aux_Check_Parameter()
                  "a multiple of TWO" );
 
 #  ifdef LOAD_BALANCE
-   if ( OPT__INIT != INIT_RESTART )
+   if ( OPT__INIT != INIT_BY_RESTART )
 #  endif
    if ( MPI_NRank_X[0]*MPI_NRank_X[1]*MPI_NRank_X[2] != MPI_NRank )
       Aux_Error( ERROR_INFO, "MPI_NRank_X[0]*MPI_NRank_X[1]*MPI_NRank_X[2] (%d) != MPI_NRank (%d) !!\n",
@@ -119,9 +119,6 @@ void Aux_Check_Parameter()
 
    if (  OPT__OUTPUT_BASEPS  &&  ( NX0_TOT[0] != NX0_TOT[1] || NX0_TOT[0] != NX0_TOT[2] )  )
       Aux_Error( ERROR_INFO, "\"%s\" only works with CUBIC domain !!\n", "OPT__OUTPUT_BASEPS" );
-
-   if ( OPT__INIT == INIT_UM  &&  OPT__UM_START_NVAR != 1  &&  OPT__UM_FACTOR_5OVER3 )
-      Aux_Error( ERROR_INFO, "OPT__UM_FACTOR_5OVER3 only works when OPT__UM_START_NVAR == 1 !!\n" );
 
    if ( OPT__CK_REFINE  &&  !OPT__FLAG_RHO )
       Aux_Error( ERROR_INFO, "currently the check \"%s\" must work with \"%s\" !!\n",
@@ -372,19 +369,6 @@ void Aux_Check_Parameter()
    }
 #  endif
 
-   if (  OPT__INIT == INIT_UM  &&  OPT__UM_FACTOR_5OVER3  )
-   {
-#     if ( MODEL != HYDRO  &&  MODEL != MHD  &&  MODEL != ELBDM )
-      Aux_Message( stderr, "WARNING : OPT__UM_FACTOR_5OVER3 has no effect in the current model !!\n" );
-#     endif
-
-#     ifndef COMOVING
-      Aux_Message( stderr, "WARNING : COMOVING is NOT defined for OPT__UM_FACTOR_5OVER3 !!\n" );
-#     endif
-
-      Aux_Message( stderr, "REMINDER : please make sure that \"background density ~= 1.0\" for OPT__UM_FACTOR_5OVER3\n" );
-   }
-
 #  if ( defined GRAVITY  &&  GRA_GHOST_SIZE == 0  &&  defined STORE_POT_GHOST )
    Aux_Message( stderr, "WARNING : STORE_POT_GHOST is useless when GRA_GHOST_SIZE == 0 !!\n" );
 #  endif
@@ -542,7 +526,7 @@ void Aux_Check_Parameter()
       Aux_Message( stderr, "WARNING : DT__FLUID_INIT (%14.7e) is not within the normal range [0...1] !!\n",
                    DT__FLUID_INIT );
 
-   if ( OPT__RESET_FLUID  &&   OPT__INIT == INIT_UM )
+   if ( OPT__RESET_FLUID  &&   OPT__INIT == INIT_BY_FILE )
       Aux_Message( stderr, "WARNING : \"%s\" will NOT be applied to the input uniform data !!\n", "OPT__RESET_FLUID" );
 
    } // if ( MPI_Rank == 0 )
@@ -651,8 +635,8 @@ void Aux_Check_Parameter()
    if ( OPT__CK_FLUX_ALLOCATE  &&  !OPT__FIXUP_FLUX )
       Aux_Message( stderr, "WARNING : %s is useless since %s is off !!\n", "OPT__CK_FLUX_ALLOCATE", "OPT__FIXUP_FLUX" );
 
-   if ( OPT__INIT == INIT_UM )
-      Aux_Message( stderr, "WARNING : currently we don't check MIN_DENS/PRES for the initial data loaded from UM_START !!\n" );
+   if ( OPT__INIT == INIT_BY_FILE )
+      Aux_Message( stderr, "WARNING : currently we don't check MIN_DENS/PRES for the initial data loaded from UM_IC !!\n" );
 
    if ( OPT__1ST_FLUX_CORR != FIRST_FLUX_CORR_NONE )
       Aux_Message( stderr, "REMINDER : OPT__1ST_FLUX_CORR may break the strict conservation of fluid variables\n" );
@@ -922,8 +906,8 @@ void Aux_Check_Parameter()
       Aux_Message( stderr, "WARNING : %s is useless in ELBDM when CONSERVE_MASS is off !!\n", "OPT__FIXUP_FLUX" );
 #  endif
 
-   if ( OPT__INIT == INIT_UM )
-      Aux_Message( stderr, "WARNING : currently we don't check MIN_DENS for the initial data loaded from UM_START !!\n" );
+   if ( OPT__INIT == INIT_BY_FILE )
+      Aux_Message( stderr, "WARNING : currently we don't check MIN_DENS for the initial data loaded from UM_IC !!\n" );
 
    } // if ( MPI_Rank == 0 )
 
@@ -1152,7 +1136,7 @@ void Aux_Check_Parameter()
 #     error : ERROR : PARTICLE must work with either SERIAL or LOAD_BALANCE !!
 #  endif
 
-   if ( OPT__INIT != INIT_RESTART )
+   if ( OPT__INIT != INIT_BY_RESTART )
    {
       if ( amr->Par->Init == PAR_INIT_BY_RESTART )    Aux_Error( ERROR_INFO, "PAR_INIT == RESTART but OPT__INIT != RESTART !!\n" );
 
