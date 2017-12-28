@@ -1,7 +1,10 @@
 #include "GAMER.h"
 
 #ifdef PARTICLE
-extern void (*Par_Init_ByFunction_Ptr)();
+extern void (*Par_Init_ByFunction_Ptr)( const long NPar_ThisRank, const long NPar_AllRank,
+                                        real *ParMass, real *ParPosX, real *ParPosY, real *ParPosZ,
+                                        real *ParVelX, real *ParVelY, real *ParVelZ, real *ParTime,
+                                        real *ParPassive[PAR_NPASSIVE] );
 #endif
 
 
@@ -138,7 +141,10 @@ void Init_GAMER( int *argc, char ***argv )
    {
       case PAR_INIT_BY_FUNCTION:
          if ( Par_Init_ByFunction_Ptr == NULL )    Aux_Error( ERROR_INFO, "Par_Init_ByFunction_Ptr == NULL !!\n" );
-         Par_Init_ByFunction_Ptr();
+         Par_Init_ByFunction_Ptr( amr->Par->NPar_Active, amr->Par->NPar_Active_AllRank,
+                                  amr->Par->Mass, amr->Par->PosX, amr->Par->PosY, amr->Par->PosZ,
+                                  amr->Par->VelX, amr->Par->VelY, amr->Par->VelZ, amr->Par->Time,
+                                  amr->Par->Passive );
          break;
 
       case PAR_INIT_BY_RESTART:
