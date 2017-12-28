@@ -62,7 +62,6 @@ bool                 OPT__CK_CONSERVATION, OPT__RESET_FLUID, OPT__RECORD_USER, O
 bool                 OPT__OPTIMIZE_AGGRESSIVE, OPT__INIT_GRID_WITH_OMP;
 TestProbID_t         TESTPROB_ID;
 OptInit_t            OPT__INIT;
-OptRestartH_t        OPT__RESTART_HEADER;
 OptOutputFormat_t    OPT__OUTPUT_TOTAL;
 OptOutputPart_t      OPT__OUTPUT_PART;
 OptOutputMode_t      OPT__OUTPUT_MODE;
