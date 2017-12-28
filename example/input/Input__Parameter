@@ -219,7 +219,7 @@ OPT__EXTERNAL_POT             0           # add the external potential (incompat
 # initialization
 OPT__INIT                     1           # initialization option: (1=FUNCTION, 2=RESTART, 3=FILE->"UM_IC")
 RESTART_LOAD_NRANK            1           # number of parallel I/O (i.e., number of MPI ranks) for restart [1]
-OPT__RESTART_RESET            0           # reset the simulation info during restart as if running with OPT__INIT==1 [0]
+OPT__RESTART_RESET            0           # reset some simulation status parameters (e.g., current step and time) during restart [0]
 OPT__UM_IC_LEVEL              0           # AMR level corresponding to the input uniform-mesh array (must >= 0) [0]
 OPT__UM_IC_NVAR              -1           # number of variables in the uniform-mesh array (1~NCOMP_TOTAL; <=0=NCOMP_TOTAL) [NCOMP_TOTAL]
 OPT__UM_IC_DOWNGRADE          1           # downgrade the uniform-mesh data from level OPT__UM_IC_LEVEL to 0 [1]
