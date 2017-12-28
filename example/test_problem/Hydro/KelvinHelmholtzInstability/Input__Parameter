@@ -121,7 +121,6 @@ MIN_PRES                      1.0e-5      # minimum pressure     (must >= 0.0) [
 # initialization
 OPT__INIT                     1           # initialization option: (1=FUNCTION, 2=RESTART, 3=FILE->"UM_IC")
 RESTART_LOAD_NRANK            1           # number of parallel I/O (i.e., number of MPI ranks) for restart [1]
-OPT__RESTART_HEADER           1           # RESTART header: (0=skip, 1=check the header info) [1]
 OPT__RESTART_RESET            0           # reset the simulation info during restart as if running with OPT__INIT==1 [0]
 OPT__INIT_RESTRICT            1           # restrict all data during the initialization [1]
 OPT__INIT_GRID_WITH_OMP       0           # enable OpenMP when assigning the initial condition of each grid patch [1]

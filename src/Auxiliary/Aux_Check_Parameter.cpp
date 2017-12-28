@@ -277,12 +277,6 @@ void Aux_Check_Parameter()
    Aux_Message( stderr, "          between GPU and CPU and hence will decrease the overall performance !!\n" );
 #  endif
 
-   if ( OPT__RESTART_HEADER == RESTART_HEADER_SKIP )
-   {
-      Aux_Message( stderr, "WARNING : to skip the header check during restart, you must make sure that \n" );
-      Aux_Message( stderr, "          everything is set correctly in both Input__Parameter and Makefile !!\n" );
-   }
-
    if ( OPT__CK_REFINE )
       Aux_Message( stderr, "WARNING : currently the check \"%s\" only works with \"%s\" !!\n",
                    "OPT__CK_REFINE", "OPT__FLAG_RHO == 1" );

@@ -126,7 +126,6 @@ MIN_PRES                      0.0         # minimum pressure     (must >= 0.0) [
 # initialization
 OPT__INIT                     1           # initialization option: (1=FUNCTION, 2=RESTART, 3=FILE->"UM_IC")
 RESTART_LOAD_NRANK            1           # number of parallel I/O (i.e., number of MPI ranks) for restart [1]
-OPT__RESTART_HEADER           1           # RESTART header: (0=skip, 1=check the header info) [1]
 OPT__INIT_RESTRICT            1           # restrict all data during the initialization [1]
 OPT__GPUID_SELECT            -1           # GPU ID selection mode: (-3=Laohu, -2=CUDA, -1=MPI rank, >=0=input) [-1]
 INIT_SUBSAMPLING_NCELL       16           # perform sub-sampling during initialization: (0=off, >0=# of sub-sampling cells) [0]

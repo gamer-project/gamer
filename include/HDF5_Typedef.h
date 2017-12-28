@@ -496,7 +496,6 @@ struct InputPara_t
 // initialization
    int    Opt__Init;
    int    RestartLoadNRank;
-   int    Opt__RestartHeader;
    int    Opt__RestartReset;
    int    Opt__UM_IC_Level;
    int    Opt__UM_IC_NVar;

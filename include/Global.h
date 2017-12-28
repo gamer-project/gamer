@@ -68,7 +68,6 @@ extern bool       OPT__OPTIMIZE_AGGRESSIVE, OPT__INIT_GRID_WITH_OMP;
 
 extern TestProbID_t       TESTPROB_ID;
 extern OptInit_t          OPT__INIT;
-extern OptRestartH_t      OPT__RESTART_HEADER;
 extern IntScheme_t        OPT__FLU_INT_SCHEME, OPT__REF_FLU_INT_SCHEME;
 extern OptOutputFormat_t  OPT__OUTPUT_TOTAL;
 extern OptOutputPart_t    OPT__OUTPUT_PART;

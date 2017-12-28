@@ -27,13 +27,6 @@ extern void CompareVar( const char *VarName, const double RestartVar, const doub
 // Note        :  1. This function will always load the file named "RESTART"
 //                   --> You can just make a symbolic link named RESTART to the file you want to use as the
 //                       initial condition
-//
-//                2. "OPT__RESTART_HEADER == RESTART_HEADER_CHECK"
-//                   --> Check if the parameters loaded from the RESTART file are consistent with the
-//                       parameters loaded from the Input__Parameter file
-//
-//                   "OPT__RESTART_HEADER == RESTART_HEADER_SKIP"
-//                   --> Skip the header information in the RESTART file
 //-------------------------------------------------------------------------------------------------------
 void Init_ByRestart_v1( const char FileName[] )
 {
@@ -133,19 +126,10 @@ void Init_ByRestart_v1( const char FileName[] )
    bool DataOrder_xyzv = false;
    bool LoadPot        = false;
 
-   if ( OPT__RESTART_HEADER != RESTART_HEADER_SKIP )
-   {
-      if ( FormatVersion < 1200 )
-         Load_Parameter_Before_1200( File, FormatVersion, NLv_Restart, DataOrder_xyzv, LoadPot );
-      else
-         Load_Parameter_After_1200 ( File, FormatVersion, NLv_Restart, DataOrder_xyzv, LoadPot );
-   }
-
+   if ( FormatVersion < 1200 )
+      Load_Parameter_Before_1200( File, FormatVersion, NLv_Restart, DataOrder_xyzv, LoadPot );
    else
-   {
-      if ( MPI_Rank == 0 )
-         Aux_Message( stderr, "WARNING : skipping header information is dangerous and is not recommended !!\n" );
-   }
+      Load_Parameter_After_1200 ( File, FormatVersion, NLv_Restart, DataOrder_xyzv, LoadPot );
 
 
 // set the rescale factor for different NLEVEL
@@ -818,7 +802,7 @@ void Load_Parameter_Before_1200( FILE *File, const int FormatVersion, int &NLv_R
 // Function    :  Load_Parameter_After_1200
 // Description :  Load all simulation parameters from the RESTART file with format version >= 1200
 //
-// Note        :  "OPT__RESTART_HEADER == RESTART_HEADER_INHERIC" can be used in this function
+// Note        :  1. Invoked by Init_ByRestart_v1()
 //
 // Parameter   :  File           : RESTART file pointer
 //                FormatVersion  : Format version of the RESTART file

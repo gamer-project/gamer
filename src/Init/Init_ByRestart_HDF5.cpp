@@ -28,16 +28,9 @@ static void ResetParameter( const char *FileName, double *EndT, long *EndStep );
 // Function    :  Init_ByRestart_HDF5
 // Description :  Reload a previous HDF5 output as the initial condition
 //
-// Note        :  1. "OPT__RESTART_HEADER == RESTART_HEADER_CHECK"
-//                   --> Check if the parameters loaded from the RESTART file are consistent with the
-//                       parameters loaded from the Input__Parameter file
-//
-//                   "OPT__RESTART_HEADER == RESTART_HEADER_SKIP"
-//                   --> Skip the header information in the RESTART file
-//
-//                2. This function will be invoked by "Init_ByRestart" automatically if the restart file
-//                   is determined to a HDF5 file
-//                3. Only work for format version >= 2100 (PARTICLE only works for version >= 2200)
+// Note        :  1. This function will be invoked by "Init_ByRestart" automatically if the restart file
+//                   is in the HDF5 format
+//                2. Only work for format version >= 2100 (PARTICLE only works for version >= 2200)
 //
 // Parameter   :  FileName : Target file name
 //-------------------------------------------------------------------------------------------------------
@@ -248,7 +241,7 @@ void Init_ByRestart_HDF5( const char *FileName )
 
 
 // 1-10. check all other simulation information (by rank 0 only)
-   if ( OPT__RESTART_HEADER  &&  MPI_Rank == 0 )
+   if ( MPI_Rank == 0 )
    {
       Check_Makefile ( FileName );
       Check_SymConst ( FileName );
@@ -1727,7 +1720,6 @@ void Check_InputPara( const char *FileName )
 // initialization
    LoadField( "Opt__Init",               &RS.Opt__Init,               SID, TID, NonFatal, &RT.Opt__Init,                1, NonFatal );
    LoadField( "RestartLoadNRank",        &RS.RestartLoadNRank,        SID, TID, NonFatal, &RT.RestartLoadNRank,         1, NonFatal );
-   LoadField( "Opt__RestartHeader",      &RS.Opt__RestartHeader,      SID, TID, NonFatal, &RT.Opt__RestartHeader,       1, NonFatal );
    LoadField( "Opt__RestartReset",       &RS.Opt__RestartReset,       SID, TID, NonFatal, &RT.Opt__RestartReset,        1, NonFatal );
    LoadField( "Opt__UM_IC_Level",        &RS.Opt__UM_IC_Level,        SID, TID, NonFatal, &RT.Opt__UM_IC_Level,         1, NonFatal );
    LoadField( "Opt__UM_IC_NVar",         &RS.Opt__UM_IC_NVar,         SID, TID, NonFatal, &RT.Opt__UM_IC_NVar,          1, NonFatal );

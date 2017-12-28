@@ -917,7 +917,6 @@ void Aux_TakeNote()
       fprintf( Note, "***********************************************************************************\n" );
       fprintf( Note, "OPT__INIT                       %d\n",      OPT__INIT               );
       fprintf( Note, "RESTART_LOAD_NRANK              %d\n",      RESTART_LOAD_NRANK      );
-      fprintf( Note, "OPT__RESTART_HEADER             %d\n",      OPT__RESTART_HEADER     );
       fprintf( Note, "OPT__RESTART_RESET              %d\n",      OPT__RESTART_RESET      );
       fprintf( Note, "OPT__UM_IC_LEVEL                %d\n",      OPT__UM_IC_LEVEL        );
       fprintf( Note, "OPT__UM_IC_NVAR                 %d\n",      OPT__UM_IC_NVAR         );

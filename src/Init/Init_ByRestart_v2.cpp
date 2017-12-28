@@ -28,18 +28,11 @@ void CompareVar( const char *VarName, const double RestartVar, const double Runt
 //                   --> You can just make a symbolic link named RESTART to the file you want to use as the
 //                       initial condition
 //
-//                2. "OPT__RESTART_HEADER == RESTART_HEADER_CHECK"
-//                   --> Check if the parameters loaded from the RESTART file are consistent with the
-//                       parameters loaded from the Input__Parameter file
+//                2. This function will invoke "Init_ByRestart_HDF5" automatically if the restart file
+//                   is in the HDF5 format
 //
-//                   "OPT__RESTART_HEADER == RESTART_HEADER_SKIP"
-//                   --> Skip the header information in the RESTART file
-//
-//                3. This function will invoke "Init_ByRestart_HDF5" automatically if the restart file
-//                   is determined to a HDF5 file
-//
-//                4. This function will invoke "Init_ByRestart_v1" automatically if the restart file
-//                   is determined to a simple binary format in version 1 (i.e., FormatVersion < 2000)
+//                3. This function will invoke "Init_ByRestart_v1" automatically if the restart file
+//                   is in a simple binary format in version 1 (i.e., FormatVersion < 2000)
 //-------------------------------------------------------------------------------------------------------
 void Init_ByRestart()
 {
@@ -181,15 +174,8 @@ void Init_ByRestart()
    bool LoadPot     = false;
    bool LoadParDens = false;
 
-   if ( OPT__RESTART_HEADER != RESTART_HEADER_SKIP )
-      Load_Parameter_After_2000( File, FormatVersion, NLv_Restart, LoadPot, LoadParDens,
-                                 HeaderOffset_Makefile, HeaderOffset_Constant, HeaderOffset_Parameter );
-
-   else
-   {
-      if ( MPI_Rank == 0 )
-         Aux_Message( stderr, "WARNING : skipping header information is dangerous and is not recommended !!\n" );
-   }
+   Load_Parameter_After_2000( File, FormatVersion, NLv_Restart, LoadPot, LoadParDens,
+                              HeaderOffset_Makefile, HeaderOffset_Constant, HeaderOffset_Parameter );
 
 
 // set the rescale factor for different NLEVEL
