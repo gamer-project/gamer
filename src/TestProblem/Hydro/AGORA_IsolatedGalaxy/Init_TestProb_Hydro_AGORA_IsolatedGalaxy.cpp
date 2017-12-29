@@ -20,7 +20,7 @@ static double  AGORA_HaloGasTemp;               // halo gas temperature
        bool    AGORA_UseMetal = false;          // add and advect a metal density field
                                                 // --> to enable this option, one must
                                                 //     (1) set AGORA_(Disk/Halo)MetalMassFrac properly
-                                                //     (2) set NCOMP_PASSIVE_MAKEFILE>=1 and PAR_NPASSIVE_MAKEFILE>=1 in the Makefile
+                                                //     (2) set NCOMP_PASSIVE_USER>=1 and PAR_NPASSIVE_USER>=1 in the Makefile
                                                 //     (3) define METAL and PAR_METAL_FRAC in Macro.h (hard coding, ugh!)
                                                 // --> necessary if one wants to enable metal_cooling in Grackle
 static double  AGORA_DiskMetalMassFrac;         // disk metal mass fraction (disk_metal_mass / disk_gas_mass)
@@ -38,10 +38,12 @@ static int     AGORA_VcProf_NBin;               // number of radial bin in AGORA
 // problem-specific function prototypes
 double GaussianQuadratureIntegrate( const double dx, const double dy, const double dz, const double ds );
 bool Flag_AGORA( const int i, const int j, const int k, const int lv, const int PID, const double Threshold );
+#ifdef PARTICLE
 void Par_Init_ByFunction_AGORA( const long NPar_ThisRank, const long NPar_AllRank,
                                 real *ParMass, real *ParPosX, real *ParPosY, real *ParPosZ,
                                 real *ParVelX, real *ParVelY, real *ParVelZ, real *ParTime,
                                 real *ParPassive[PAR_NPASSIVE] );
+#endif
 
 
 
@@ -186,7 +188,7 @@ void SetParameter()
    if ( AGORA_UseMetal )
    {
 #     if (  ( defined DUAL_ENERGY && NCOMP_PASSIVE < 2 )  ||  ( !defined DUAL_ENERGY && NCOMP_PASSIVE < 1 )  )
-         Aux_Error( ERROR_INFO, "please set NCOMP_PASSIVE_MAKEFILE >= 1 in the Makefile for \"AGORA_UseMetal\" !!\n" );
+         Aux_Error( ERROR_INFO, "please set NCOMP_PASSIVE_USER >= 1 in the Makefile for \"AGORA_UseMetal\" !!\n" );
 #     endif
 
 #     ifndef METAL
@@ -194,7 +196,7 @@ void SetParameter()
 #     endif
 
 #     if (  ( defined STAR_FORMATION && PAR_NPASSIVE < 2 )  ||  ( !defined STAR_FORMATION && PAR_NPASSIVE < 1 )  )
-         Aux_Error( ERROR_INFO, "please set PAR_NPASSIVE_MAKEFILE >= 1 in the Makefile for \"AGORA_UseMetal\" !!\n" );
+         Aux_Error( ERROR_INFO, "please set PAR_NPASSIVE_USER >= 1 in the Makefile for \"AGORA_UseMetal\" !!\n" );
 #     endif
 
 #     ifndef PAR_METAL_FRAC
