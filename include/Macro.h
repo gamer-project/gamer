@@ -103,9 +103,9 @@
 // number of passively advected components in each cell
 // --> including entropy (or internal energy) when the dual energy formalism is adopted
 #if (  ( MODEL == HYDRO || MODEL == MHD )  &&  defined DUAL_ENERGY  )
-#  define NCOMP_PASSIVE       ( NCOMP_PASSIVE_MAKEFILE + 1 )
+#  define NCOMP_PASSIVE       ( NCOMP_PASSIVE_USER + 1 )
 #else
-#  define NCOMP_PASSIVE       ( NCOMP_PASSIVE_MAKEFILE )
+#  define NCOMP_PASSIVE       ( NCOMP_PASSIVE_USER )
 #endif
 
 // assuming all passive scalars have the corresponding fluxes
@@ -311,9 +311,9 @@
 // number of passive particle attributes
 // --> including PAR_CREATION_TIME when STAR_FORMATION is adopted
 #ifdef STAR_FORMATION
-#  define PAR_NPASSIVE        ( PAR_NPASSIVE_MAKEFILE + 1 )
+#  define PAR_NPASSIVE        ( PAR_NPASSIVE_USER + 1 )
 #else
-#  define PAR_NPASSIVE        ( PAR_NPASSIVE_MAKEFILE     )
+#  define PAR_NPASSIVE        ( PAR_NPASSIVE_USER     )
 #endif
 
 // passive variable indices in the array "Passive" [0 ... PAR_NPASSIVE-1]

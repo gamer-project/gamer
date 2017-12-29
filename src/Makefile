@@ -64,7 +64,7 @@ SIMU_OPTION += -DRSOLVER=ROE
 # number of passively advected scalars (**excluding** entropy or internal energy used by DUAL_ENERGY)
 # --> useless for RTVD/WAF
 # --> for simulations without any passive scalar, please set this variable to 0 and do NOT comment it out
-SIMU_OPTION += -DNCOMP_PASSIVE_MAKEFILE=0
+SIMU_OPTION += -DNCOMP_PASSIVE_USER=0
 
 
 # (b-2) MHD options
@@ -87,7 +87,7 @@ SIMU_OPTION += -DLAPLACIAN_4TH
 
 # number of passively advected scalars
 # --> not supported yet and must be set to 0
-SIMU_OPTION += -DNCOMP_PASSIVE_MAKEFILE=0
+SIMU_OPTION += -DNCOMP_PASSIVE_USER=0
 
 endif # MODEL
 
@@ -126,7 +126,7 @@ SIMU_OPTION += -DSTORE_PAR_ACC
 
 # number of passive particle attributes (**excluding** PAR_CREATION_TIME used by STAR_FORMATION)
 # --> for simulations without any passive attributes, please set this variable to 0 and do NOT comment it out
-SIMU_OPTION += -DPAR_NPASSIVE_MAKEFILE=0
+SIMU_OPTION += -DPAR_NPASSIVE_USER=0
 endif # PARTICLE
 
 
