@@ -23,10 +23,12 @@ static int     Merger_NBin2;              // number of radial bins of cluster 2
 
 
 // problem-specific function prototypes
+#ifdef PARTICLE
 void Par_Init_ByFunction_Merger( const long NPar_ThisRank, const long NPar_AllRank,
                                  real *ParMass, real *ParPosX, real *ParPosY, real *ParPosZ,
                                  real *ParVelX, real *ParVelY, real *ParVelZ, real *ParTime,
                                  real *ParPassive[PAR_NPASSIVE] );
+#endif
 
 
 
