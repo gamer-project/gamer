@@ -32,7 +32,6 @@ bool Flag_User( const int i, const int j, const int k, const int lv, const int P
 
    /*
    const double dh     = amr->dh[lv];                                                  // grid size
-   const int    scale  = amr->scale[lv];                                               // grid scale
    const double Pos[3] = { amr->patch[0][lv][PID]->EdgeL[0] + (i+0.5)*dh,              // x,y,z position
                            amr->patch[0][lv][PID]->EdgeL[1] + (j+0.5)*dh,
                            amr->patch[0][lv][PID]->EdgeL[2] + (k+0.5)*dh  };
