@@ -19,8 +19,14 @@ static char    Merger_File_Prof2[1000];   // profile table of cluster 2
        double  Merger_Coll_VelX2;         // x-velocity of the second cluster
        double  Merger_Coll_VelY2;         // y-velocity of the second cluster
 
-static double *Merger_Prof1 = NULL;       // radial profiles [gas mass density/gas pressure/radius] of cluster 1
-static double *Merger_Prof2 = NULL;       // radial profiles [gas mass density/gas pressure/radius] of cluster 2
+static double *Table_R1 = NULL;           // radius of cluster 1
+static double *Table_D1 = NULL;           // density of cluster 1
+static double *Table_P1 = NULL;           // pressure of cluster 1
+
+static double *Table_R2 = NULL;           // radius of cluster 1
+static double *Table_D2 = NULL;           // density of cluster 1
+static double *Table_P2 = NULL;           // pressure of cluster 1
+
 static int     Merger_NBin1;              // number of radial bins of cluster 1
 static int     Merger_NBin2;              // number of radial bins of cluster 2
 // =======================================================================================
@@ -161,37 +167,32 @@ void SetParameter()
       const int  NCol         = 3;           // total number of columns to load
       const int  Col[NCol]    = {2, 6, 7};   // target columns: (density, pressure, radius)
       double *Table_D, *Table_P, *Table_R;
+      const string filename1(Merger_File_Prof1);
+      const string filename2(Merger_File_Prof2);
 
-//    cluster 1
+      // cluster 1
+      Merger_NBin1 = ReadNumPoints(filename1);
       Merger_NBin1 = Aux_LoadTable( Merger_Prof1, Merger_File_Prof1, NCol, Col, RowMajor_No, AllocMem_Yes );
 
-//    convert to code units (assuming the input units are cgs)
-      Table_D = Merger_Prof1 + 0*Merger_NBin1;
-      Table_P = Merger_Prof1 + 1*Merger_NBin1;
-      Table_R = Merger_Prof1 + 2*Merger_NBin1;
-
+      // convert to code units (assuming the input units are cgs)
       for (int b=0; b<Merger_NBin1; b++)
       {
-         Table_D[b] /= UNIT_D;
-         Table_P[b] /= UNIT_P;
-         Table_R[b] /= UNIT_L;
+         Table_R1[b] /= UNIT_L;
+         Table_D1[b] /= UNIT_D;
+         Table_P1[b] /= UNIT_P;
       }
 
-//    cluster 2
+      // cluster 2
       if ( Merger_Coll ) {
-      Merger_NBin2 = Aux_LoadTable( Merger_Prof2, Merger_File_Prof2, NCol, Col, RowMajor_No, AllocMem_Yes );
+         Merger_NBin2 = ReadNumPoints(filename2);
 
-//    convert to code units (assuming the input units are cgs)
-      Table_D = Merger_Prof2 + 0*Merger_NBin2;
-      Table_P = Merger_Prof2 + 1*Merger_NBin2;
-      Table_R = Merger_Prof2 + 2*Merger_NBin2;
-
-      for (int b=0; b<Merger_NBin2; b++)
-      {
-         Table_D[b] /= UNIT_D;
-         Table_P[b] /= UNIT_P;
-         Table_R[b] /= UNIT_L;
-      }
+         // convert to code units (assuming the input units are cgs)
+         for (int b=0; b<Merger_NBin2; b++)
+         {
+            Table_R2[b] /= UNIT_L;
+            Table_D2[b] /= UNIT_D;
+            Table_P2[b] /= UNIT_P;
+         }
       } // if ( Merger_Coll )
    } // if ( OPT__INIT != INIT_BY_RESTART )
 
