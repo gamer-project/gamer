@@ -1,0 +1,201 @@
+#include "hdf5.h"
+
+int ReadNumPoints(std::string filename)
+{
+
+  hid_t   file_id, dataset, dataspace;
+  herr_t  status;
+  hsize_t dims[1], maxdims[1];
+
+  int rank;
+
+  file_id = H5Fopen(filename.c_str(), H5F_ACC_RDONLY, H5P_DEFAULT);
+
+  dataset   = H5Dopen(file_id, "/fields/radius");
+  dataspace = H5Dget_space(dataset);
+  rank      = H5Sget_simple_extent_dims(dataspace, dims, maxdims);
+
+  H5Fclose(file_id);
+
+  return (int)dims[0];
+
+}
+
+void ReadProfile(std::string filename, std::string fieldname, double field[])
+{
+
+  hid_t   file_id, dataset;
+  herr_t  status;
+
+  file_id = H5Fopen(filename.c_str(), H5F_ACC_RDONLY, H5P_DEFAULT);
+
+  dataset   = H5Dopen(file_id, fieldname.c_str());
+  status = H5Dread(dataset, H5T_NATIVE_DOUBLE, H5S_ALL,
+                   H5S_ALL, H5P_DEFAULT, field);
+  H5Dclose(dataset);
+
+  H5Fclose(file_id);
+
+  return;
+
+}
+
+void ReadParticleNumber(std::string filename)
+{
+
+  hid_t   file_id, dataset, dataspace;
+  herr_t  status;
+  hsize_t dims[1], maxdims[1];
+
+  int rank;
+
+  file_id = H5Fopen(filename.c_str(), H5F_ACC_RDONLY, H5P_DEFAULT);
+
+  dataset   = H5Dopen(file_id, "/dm/particle_mass");
+  dataspace = H5Dget_space(dataset);
+  rank      = H5Sget_simple_extent_dims(dataspace, dims, maxdims);
+
+  H5Fclose(file_id);
+
+  return (int)dims[0];
+
+}
+
+void ReadParticles(std::string filename, double xpos[], 
+                   double ypos[], double zpos[], double xvel[],
+                   double yvel[], double zvel[], double mass[])
+{
+
+  hid_t   file_id, dataset, dataspace, memspace;
+  herr_t  status;
+
+  hsize_t start[2], stride[2], count[2], dims[2], maxdims[2];
+  hsize_t start1d[1], stride1d[1], count1d[1], dims1d[1], maxdims1d[1];
+
+  int rank;
+
+  stride[0] = 1;
+  stride[1] = 1;
+  start[0] = 0;
+  
+  file_id = H5Fopen(filename.c_str(), H5F_ACC_RDONLY, H5P_DEFAULT);
+
+  dataset   = H5Dopen(file_id, "/dm/particle_position");
+
+  dataspace = H5Dget_space(dataset);
+
+  rank      = H5Sget_simple_extent_dims(dataspace, dims, maxdims);
+
+  count[0] = dims[0];
+  count[1] = 1;
+
+  dims[1] = 1;
+ 
+  start[1] = 0;
+
+  status = H5Sselect_hyperslab(dataspace, H5S_SELECT_SET, start,
+                               stride, count, NULL);
+  memspace = H5Screate_simple(rank, dims, NULL);
+  status = H5Dread(dataset, H5T_NATIVE_DOUBLE, memspace, dataspace,
+                   H5P_DEFAULT, xpos);
+  
+  H5Sclose(memspace);
+  H5Sclose(dataspace);
+
+  dataspace = H5Dget_space(dataset);
+
+  start[1] = 1;
+
+  status = H5Sselect_hyperslab(dataspace, H5S_SELECT_SET, start,
+                               stride, count, NULL);
+  memspace = H5Screate_simple(rank, dims, NULL);
+  status = H5Dread(dataset, H5T_NATIVE_DOUBLE, memspace, dataspace,
+                   H5P_DEFAULT, ypos);
+  
+  H5Sclose(memspace);
+  H5Sclose(dataspace);
+
+  dataspace = H5Dget_space(dataset);
+
+  start[1] = 2;
+
+  status = H5Sselect_hyperslab(dataspace, H5S_SELECT_SET, start,
+                               stride, count, NULL);
+  memspace = H5Screate_simple(rank, dims, NULL);
+  status = H5Dread(dataset, H5T_NATIVE_DOUBLE, memspace, dataspace,
+                   H5P_DEFAULT, zpos);
+  
+  H5Sclose(memspace);
+  H5Sclose(dataspace);
+
+  H5Dclose(dataset);
+
+  dataset   = H5Dopen(file_id, "/dm/particle_velocity");
+
+  dataspace = H5Dget_space(dataset);
+
+  start[1] = 0;
+
+  status = H5Sselect_hyperslab(dataspace, H5S_SELECT_SET, start,
+                               stride, count, NULL);
+  memspace = H5Screate_simple(rank, dims, NULL);
+  status = H5Dread(dataset, H5T_NATIVE_DOUBLE, memspace, dataspace,
+                   H5P_DEFAULT, xvel);
+
+  H5Sclose(memspace);
+  H5Sclose(dataspace);
+
+  dataspace = H5Dget_space(dataset);
+
+  start[1] = 1;
+
+  status = H5Sselect_hyperslab(dataspace, H5S_SELECT_SET, start,
+                               stride, count, NULL);
+  memspace = H5Screate_simple(rank, dims, NULL);
+  status = H5Dread(dataset, H5T_NATIVE_DOUBLE, memspace, dataspace,
+                   H5P_DEFAULT, yvel);
+
+  H5Sclose(memspace);
+  H5Sclose(dataspace);
+
+  dataspace = H5Dget_space(dataset);
+
+  start[1] = 2;
+
+  status = H5Sselect_hyperslab(dataspace, H5S_SELECT_SET, start,
+                               stride, count, NULL);
+  memspace = H5Screate_simple(rank, dims, NULL);
+  status = H5Dread(dataset, H5T_NATIVE_DOUBLE, memspace, dataspace,
+                   H5P_DEFAULT, zvel);
+
+  H5Sclose(memspace);
+  H5Sclose(dataspace);
+
+  H5Dclose(dataset);
+
+  dataset   = H5Dopen(file_id, "/dm/particle_mass");
+
+  dataspace = H5Dget_space(dataset);
+
+  rank      = H5Sget_simple_extent_dims(dataspace, dims1d, maxdims1d);
+
+  count1d[0] = dims1d[0];
+  stride1d[0] = 1;
+  start1d[0] = 0;
+
+  status = H5Sselect_hyperslab(dataspace, H5S_SELECT_SET, start1d,
+                               stride1d, count1d, NULL);
+  memspace = H5Screate_simple(rank, dims1d, NULL);
+  status = H5Dread(dataset, H5T_NATIVE_DOUBLE, memspace, dataspace,
+                   H5P_DEFAULT, mass);
+
+  H5Sclose(memspace);
+  H5Sclose(dataspace);
+
+  H5Dclose(dataset);
+
+  H5Fclose(file_id);
+
+  return;
+
+}
