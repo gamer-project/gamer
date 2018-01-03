@@ -7,7 +7,7 @@
 void Init_TestProb_Hydro_BlastWave();
 void Init_TestProb_Hydro_AcousticWave();
 void Init_TestProb_Hydro_Bondi();
-void Init_TestProb_Hydro_ClusterMerger_vs_Flash();
+void Init_TestProb_Hydro_ClusterMerger();
 void Init_TestProb_Hydro_AGORA_IsolatedGalaxy();
 void Init_TestProb_Hydro_Caustic();
 void Init_TestProb_Hydro_SphericalCollapse();
@@ -50,7 +50,7 @@ void Init_TestProb()
       case TESTPROB_HYDRO_BLAST_WAVE :                   Init_TestProb_Hydro_BlastWave();                   break;
       case TESTPROB_HYDRO_ACOUSTIC_WAVE :                Init_TestProb_Hydro_AcousticWave();                break;
 //    case TESTPROB_HYDRO_BONDI :                        Init_TestProb_Hydro_Bondi();                       break;
-      case TESTPROB_HYDRO_CLUSTER_MERGER_VS_FLASH :      Init_TestProb_Hydro_ClusterMerger_vs_Flash();      break;
+      case TESTPROB_HYDRO_CLUSTER_MERGER :               Init_TestProb_Hydro_ClusterMerger();               break;
       case TESTPROB_HYDRO_AGORA_ISOLATED_GALAXY :        Init_TestProb_Hydro_AGORA_IsolatedGalaxy();        break;
       case TESTPROB_HYDRO_CAUSTIC :                      Init_TestProb_Hydro_Caustic();                     break;
       case TESTPROB_HYDRO_SPHERICAL_COLLAPSE :           Init_TestProb_Hydro_SphericalCollapse();           break;

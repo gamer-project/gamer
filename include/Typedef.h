@@ -37,7 +37,7 @@ const TestProbID_t
    TESTPROB_HYDRO_BLAST_WAVE                   =    1,
    TESTPROB_HYDRO_ACOUSTIC_WAVE                =    2,
    TESTPROB_HYDRO_BONDI                        =    3,
-   TESTPROB_HYDRO_CLUSTER_MERGER_VS_FLASH      =    4,
+   TESTPROB_HYDRO_CLUSTER_MERGER               =    4,
    TESTPROB_HYDRO_AGORA_ISOLATED_GALAXY        =    5,
    TESTPROB_HYDRO_CAUSTIC                      =    6,
    TESTPROB_HYDRO_SPHERICAL_COLLAPSE           =    7,
