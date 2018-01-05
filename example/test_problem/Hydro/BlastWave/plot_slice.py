@@ -20,7 +20,7 @@ args=parser.parse_args()
 print( '\nCommand-line arguments:' )
 print( '-------------------------------------------------------------------' )
 for t in range( len(sys.argv) ):
-   print str(sys.argv[t]),
+   print( str(sys.argv[t]) ),
 print( '' )
 print( '-------------------------------------------------------------------\n' )
 
