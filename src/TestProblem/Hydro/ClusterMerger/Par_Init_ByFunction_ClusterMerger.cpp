@@ -18,6 +18,11 @@ extern double  Merger_Coll_VelY1;
 extern double  Merger_Coll_VelX2;
 extern double  Merger_Coll_VelY2;
 
+long Read_Particle_Number(std::string filename);
+void Read_Particles(std::string filename, long offset, long num,
+                    real_par_in mass[], real_par_in xpos[], real_par_in ypos[], 
+                    real_par_in zpos[], real_par_in xvel[], real_par_in yvel[], 
+                    real_par_in zvel[]);
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Par_Init_ByFunction_ClusterMerger
@@ -65,9 +70,7 @@ void Par_Init_ByFunction_ClusterMerger( const long NPar_ThisRank, const long NPa
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ...\n", __FUNCTION__ );
 
-
    const long NParAtt = 7;   // mass, pos*3, vel*3
-
 // check file existence
    if ( !Aux_CheckFileExist(Merger_File_Par1) )
       Aux_Error( ERROR_INFO, "file \"%s\" does not exist !!\n", Merger_File_Par1 );
@@ -75,24 +78,27 @@ void Par_Init_ByFunction_ClusterMerger( const long NPar_ThisRank, const long NPa
    if ( Merger_Coll  &&  !Aux_CheckFileExist(Merger_File_Par2) )
       Aux_Error( ERROR_INFO, "file \"%s\" does not exist !!\n", Merger_File_Par2 );
 
+   const string filename1(Merger_File_Par1);
+   const string filename2(Merger_File_Par2);
 
 // check file size
-   FILE *File=NULL;
-   long  NPar_EachCluster[2]={0,0}, NPar_AllCluster;
+   long NPar_EachCluster[2]={0,0}, NPar_AllCluster;
 
-   File  = fopen( Merger_File_Par1, "rb" );
-   fseek( File, 0, SEEK_END );
-   NPar_EachCluster[0] = ftell( File ) / ( NParAtt*sizeof(real_par_in) );
-   fclose( File );
-   if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Number of particles in cluster 1 = %ld\n", NPar_EachCluster[0] );
+   if ( MPI_Rank == 0 ) 
 
-   if ( Merger_Coll ) {
-   File  = fopen( Merger_File_Par2, "rb" );
-   fseek( File, 0, SEEK_END );
-   NPar_EachCluster[1] = ftell( File ) / ( NParAtt*sizeof(real_par_in) );
-   fclose( File );
-   if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Number of particles in cluster 2 = %ld\n", NPar_EachCluster[1] );
+      NPar_EachCluster[0] = Read_Particle_Number(filename1);
+
+      Aux_Message( stdout, "   Number of particles in cluster 1 = %ld\n", 
+                  NPar_EachCluster[0] );
+
+      if ( Merger_Coll ) {
+         NPar_EachCluster[1] = Read_Particle_Number(filename2);
+         Aux_Message( stdout, "   Number of particles in cluster 2 = %ld\n", NPar_EachCluster[1] );
+      }
+
    }
+
+   MPI_Bcast(NPar_EachCluster, 2, MPI_LONG, 0, MPI_COMM_WORLD);
 
    NPar_AllCluster = NPar_EachCluster[0] + NPar_EachCluster[1];
 
@@ -100,88 +106,99 @@ void Par_Init_ByFunction_ClusterMerger( const long NPar_ThisRank, const long NPa
       Aux_Error( ERROR_INFO, "total number of particles found in cluster [%ld] != expect [%ld] !!\n",
                  NPar_AllCluster, NPar_AllRank );
 
-   MPI_Barrier( MPI_COMM_WORLD );
-
-
 // prepare to load data
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Preparing to load data ... " );
 
    const int NCluster = ( Merger_Coll ) ? 2 : 1;
-   long NPar_ThisRank_EachCluster[2]={0,0}, FileOffset[2];   // [0/1] --> cluster 1/2
+   long NPar_ThisRank_EachCluster[2]={0,0}, Offset[2];   // [0/1] --> cluster 1/2
 
    for (int c=0; c<NCluster; c++)
    {
 //    get the number of particles loaded by each rank for each cluster
       long NPar_ThisCluster_EachRank[MPI_NRank];
 
-      if ( c == 0 )  NPar_ThisRank_EachCluster[0] = NPar_EachCluster[0] / MPI_NRank + ( (MPI_Rank<NPar_EachCluster[0]%MPI_NRank)?1:0 );
-      else           NPar_ThisRank_EachCluster[1] = NPar_ThisRank - NPar_ThisRank_EachCluster[0];
+      if ( c == 0 )  
+         NPar_ThisRank_EachCluster[0] = NPar_EachCluster[0] / MPI_NRank + ( (MPI_Rank<NPar_EachCluster[0]%MPI_NRank)?1:0 );
+      else           
+         NPar_ThisRank_EachCluster[1] = NPar_ThisRank - NPar_ThisRank_EachCluster[0];
 
-      MPI_Allgather( &NPar_ThisRank_EachCluster[c], 1, MPI_LONG, NPar_ThisCluster_EachRank, 1, MPI_LONG, MPI_COMM_WORLD );
+      MPI_Allgather( &NPar_ThisRank_EachCluster[c], 1, MPI_LONG, NPar_ThisCluster_EachRank, 1, MPI_LONG,                         MPI_COMM_WORLD );
 
 //    check if the total number of particles is correct
       long NPar_Check = 0;
-      for (int r=0; r<MPI_NRank; r++)  NPar_Check += NPar_ThisCluster_EachRank[r];
+      for (int r=0; r<MPI_NRank; r++)  
+         NPar_Check += NPar_ThisCluster_EachRank[r];
       if ( NPar_Check != NPar_EachCluster[c] )
          Aux_Error( ERROR_INFO, "total number of particles in cluster %d: found (%ld) != expect (%ld) !!\n",
                     c, NPar_Check, NPar_EachCluster[c] );
 
 //    set the file offset for this rank
-      FileOffset[c] = 0;
-      for (int r=0; r<MPI_Rank; r++)   FileOffset[c] = FileOffset[c] + NPar_ThisCluster_EachRank[r]*NParAtt*sizeof(real_par_in);
+      Offset[c] = 0;
+      for (int r=0; r<MPI_Rank; r++) 
+         Offset[c] = Offset[c] + NPar_ThisCluster_EachRank[r];
    }
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );
 
 
 // load data to the particle repository
-   real_par_in (*ParData_ThisRank)[NParAtt] = new real_par_in [ MAX(NPar_ThisRank_EachCluster[0], NPar_ThisRank_EachCluster[1]) ][NParAtt];
 
    for (int c=0; c<NCluster; c++)
    {
 //    load data
       if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Loading cluster %d ... ", c );
 
-//    note that fread may fail for large files if sizeof(size_t) == 4 instead of 8
-      FILE *File = fopen( (c==0)?Merger_File_Par1:Merger_File_Par2, "rb" );
+      real_par_in *mass = new real_par_in [NPar_ThisRank_EachCluster[c]];
+      real_par_in *xpos = new real_par_in [NPar_ThisRank_EachCluster[c]];
+      real_par_in *ypos = new real_par_in [NPar_ThisRank_EachCluster[c]];
+      real_par_in *zpos = new real_par_in [NPar_ThisRank_EachCluster[c]];
+      real_par_in *xvel = new real_par_in [NPar_ThisRank_EachCluster[c]];
+      real_par_in *yvel = new real_par_in [NPar_ThisRank_EachCluster[c]];
+      real_par_in *zvel = new real_par_in [NPar_ThisRank_EachCluster[c]];
 
-      fseek( File, FileOffset[c], SEEK_SET );
-      fread( ParData_ThisRank, sizeof(real_par_in), NPar_ThisRank_EachCluster[c]*NParAtt, File );
-      fclose( File );
+      const string filename((c==0)? Merger_File_Par1:Merger_File_Par2);
 
-      if ( MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );
+      Read_Particles(filename, Offset[c], NPar_ThisRank_EachCluster[c],
+                     mass, xpos, ypos, zpos, xvel, yvel, zvel);
 
+      if ( MPI_Rank == 0 ) Aux_Message( stdout, "done\n" );
 
 //    store data to the particle repository
-      if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Storing cluster %d to the particle repository ... ", c );
+      if ( MPI_Rank == 0 )    
+         Aux_Message( stdout, "   Storing cluster %d to the particle repository ... ", c );
 
       for (long p=0; p<NPar_ThisRank_EachCluster[c]; p++)
       {
 //       particle index offset
          const long pp = p + c*NPar_ThisRank_EachCluster[0];
 
-//       we have assumed that particle data in the file are stored in the order [ID][Mass/PosX/Y/Z/VelX/Y/Z]
 //       --> convert to code unit before storing to the particle repository to avoid floating-point overflow
 //       --> we have assumed that the loaded data are in cgs
-         ParMass[pp] = real( ParData_ThisRank[p][0] / UNIT_M );
+         ParMass[pp] = real( mass[p] / UNIT_M );
 
-         ParPosX[pp] = real( ParData_ThisRank[p][1] / UNIT_L );
-         ParPosY[pp] = real( ParData_ThisRank[p][2] / UNIT_L );
-         ParPosZ[pp] = real( ParData_ThisRank[p][3] / UNIT_L );
+         ParPosX[pp] = real( xpos[p] / UNIT_L );
+         ParPosY[pp] = real( ypos[p] / UNIT_L );
+         ParPosZ[pp] = real( zpos[p] / UNIT_L );
 
-         ParVelX[pp] = real( ParData_ThisRank[p][4] / UNIT_V );
-         ParVelY[pp] = real( ParData_ThisRank[p][5] / UNIT_V );
-         ParVelZ[pp] = real( ParData_ThisRank[p][6] / UNIT_V );
+         ParVelX[pp] = real( xvel[p] / UNIT_V );
+         ParVelY[pp] = real( yvel[p] / UNIT_V );
+         ParVelZ[pp] = real( zvel[p] / UNIT_V );
 
 //       synchronize all particles to the physical time at the base level
          ParTime[pp] = Time[0];
       }
 
-      if ( MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );
+      delete [] mass;
+      delete [] xpos;
+      delete [] ypos;
+      delete [] zpos;
+      delete [] xvel;
+      delete [] yvel;
+      delete [] zvel;
+
    } // for (int c=0; c<NCluster; c++)
 
-   delete [] ParData_ThisRank;
-
+   if ( MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );
 
 // shift center (assuming the center of loaded particles = [0,0,0])
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Shifting particle center and adding bulk velocity ... " );

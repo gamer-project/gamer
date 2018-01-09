@@ -1,5 +1,7 @@
 #include "hdf5.h"
 
+typedef double real_par_in;
+
 int Read_Num_Points(std::string filename)
 {
 
@@ -40,7 +42,7 @@ void Read_Profile(std::string filename, std::string fieldname, double field[])
 
 }
 
-void ReadParticleNumber(std::string filename)
+long Read_Particle_Number(std::string filename)
 {
 
   hid_t   file_id, dataset, dataspace;
@@ -57,13 +59,14 @@ void ReadParticleNumber(std::string filename)
 
   H5Fclose(file_id);
 
-  return (int)dims[0];
+  return (long)dims[0];
 
 }
 
-void ReadParticles(std::string filename, double xpos[], 
-                   double ypos[], double zpos[], double xvel[],
-                   double yvel[], double zvel[], double mass[])
+void Read_Particles(std::string filename, long offset, long num, 
+                    real_par_in xpos[], real_par_in ypos[], real_par_in zpos[], 
+                    real_par_in xvel[], real_par_in yvel[], real_par_in zvel[], 
+                    real_par_in mass[])
 {
 
   hid_t   file_id, dataset, dataspace, memspace;
@@ -76,7 +79,7 @@ void ReadParticles(std::string filename, double xpos[],
 
   stride[0] = 1;
   stride[1] = 1;
-  start[0] = 0;
+  start[0] = (hsize_t)offset;
   
   file_id = H5Fopen(filename.c_str(), H5F_ACC_RDONLY, H5P_DEFAULT);
 
@@ -86,7 +89,7 @@ void ReadParticles(std::string filename, double xpos[],
 
   rank      = H5Sget_simple_extent_dims(dataspace, dims, maxdims);
 
-  count[0] = dims[0];
+  count[0] = (hsize_t)num;
   count[1] = 1;
 
   dims[1] = 1;
