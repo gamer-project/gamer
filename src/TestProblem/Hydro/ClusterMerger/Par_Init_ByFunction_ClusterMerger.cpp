@@ -98,7 +98,9 @@ void Par_Init_ByFunction_ClusterMerger( const long NPar_ThisRank, const long NPa
 
    }
 
+#ifndef SERIAL
    MPI_Bcast(NPar_EachCluster, 2, MPI_LONG, 0, MPI_COMM_WORLD);
+#endif
 
    NPar_AllCluster = NPar_EachCluster[0] + NPar_EachCluster[1];
 

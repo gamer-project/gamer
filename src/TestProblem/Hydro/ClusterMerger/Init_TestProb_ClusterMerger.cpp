@@ -176,7 +176,9 @@ void SetParameter()
          Aux_Message(stdout, "num_points1 = %d\n", num_points1);
       }
 
+#ifndef SERIAL
       MPI_Bcast(&Merger_NBin1, 1, MPI_INT, 0, MPI_COMM_WORLD);
+#endif
 
       Table_R1 = new double [Merger_NBin1];
       Table_D1 = new double [Merger_NBin1];
@@ -186,9 +188,11 @@ void SetParameter()
       Read_Profile(filename1, "/fields/density", Table_D1);
       Read_Profile(filename1, "/fields/pressure", Table_P1);
 
+#ifndef SERIAL
       MPI_Bcast(Table_R1, Merger_NBin1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
       MPI_Bcast(Table_D1, Merger_NBin1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
       MPI_Bcast(Table_P1, Merger_NBin1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+#endif
 
       // convert to code units (assuming the input units are cgs)
       for (int b=0; b<Merger_NBin1; b++)
@@ -207,8 +211,9 @@ void SetParameter()
             Aux_Message(stdout, "num_points2 = %d\n", num_points2);
          }
 
+#ifndef SERIAL
          MPI_Bcast(&Merger_NBin2, 1, MPI_INT, 0, MPI_COMM_WORLD);
-
+#endif
          Table_R2 = new double [Merger_NBin2];
          Table_D2 = new double [Merger_NBin2];
          Table_P2 = new double [Merger_NBin2];
@@ -217,9 +222,11 @@ void SetParameter()
          Read_Profile(filename2, "/fields/density", Table_D2);
          Read_Profile(filename2, "/fields/pressure", Table_P2);
 
+#ifndef SERIAL
          MPI_Bcast(Table_R2, Merger_NBin2, MPI_DOUBLE, 0, MPI_COMM_WORLD);
          MPI_Bcast(Table_D2, Merger_NBin2, MPI_DOUBLE, 0, MPI_COMM_WORLD);
          MPI_Bcast(Table_P2, Merger_NBin2, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+#endif
 
          // convert to code units (assuming the input units are cgs)
          for (int b=0; b<Merger_NBin2; b++)
