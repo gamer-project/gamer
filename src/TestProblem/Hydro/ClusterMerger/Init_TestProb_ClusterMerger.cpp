@@ -39,6 +39,9 @@ void Par_Init_ByFunction_ClusterMerger( const long NPar_ThisRank, const long NPa
                                        real *AllAttribute[PAR_NATT_TOTAL]);
 #endif
 
+int Read_Num_Points(std::string filename);
+void Read_Profile(std::string filename, std::string fieldname, double field[]);
+
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Validate
 // Description :  Validate the compilation flags and runtime parameters for this test problem
@@ -162,17 +165,30 @@ void SetParameter()
 // (2) load the radial profiles
    if ( OPT__INIT != INIT_BY_RESTART )
    {
-      const bool RowMajor_No  = false;       // load data into the column-major order
-      const bool AllocMem_Yes = true;        // allocate memory for Merger_Prof1/2
-      const int  NCol         = 3;           // total number of columns to load
-      const int  Col[NCol]    = {2, 6, 7};   // target columns: (density, pressure, radius)
-      double *Table_D, *Table_P, *Table_R;
+
       const string filename1(Merger_File_Prof1);
       const string filename2(Merger_File_Prof2);
 
       // cluster 1
-      Merger_NBin1 = ReadNumPoints(filename1);
-      Merger_NBin1 = Aux_LoadTable( Merger_Prof1, Merger_File_Prof1, NCol, Col, RowMajor_No, AllocMem_Yes );
+      Merger_NBin1 = Read_Num_Points(filename1);
+      if (MPI_Rank == 0) {
+         Merger_NBin1 = ReadNumPoints(filename1);
+         Aux_Message(stdout, "num_points1 = %d\n", num_points1);
+      }
+
+      MPI_Bcast(&Merger_NBin1, 1, MPI_INT, 0, MPI_COMM_WORLD);
+
+      Table_R1 = new double [Merger_NBin1];
+      Table_D1 = new double [Merger_NBin1];
+      Table_P1 = new double [Merger_NBin1];
+
+      Read_Profile(filename1, "/fields/radius", Table_R1);
+      Read_Profile(filename1, "/fields/density", Table_D1);
+      Read_Profile(filename1, "/fields/pressure", Table_P1);
+
+      MPI_Bcast(Table_R1, Merger_NBin1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+      MPI_Bcast(Table_D1, Merger_NBin1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+      MPI_Bcast(Table_P1, Merger_NBin1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
 
       // convert to code units (assuming the input units are cgs)
       for (int b=0; b<Merger_NBin1; b++)
@@ -184,7 +200,26 @@ void SetParameter()
 
       // cluster 2
       if ( Merger_Coll ) {
-         Merger_NBin2 = ReadNumPoints(filename2);
+
+         Merger_NBin2 = Read_Num_Points(filename2);
+         if (MPI_Rank == 0) {
+            Merger_NBin2 = ReadNumPoints(filename2);
+            Aux_Message(stdout, "num_points2 = %d\n", num_points2);
+         }
+
+         MPI_Bcast(&Merger_NBin2, 1, MPI_INT, 0, MPI_COMM_WORLD);
+
+         Table_R2 = new double [Merger_NBin2];
+         Table_D2 = new double [Merger_NBin2];
+         Table_P2 = new double [Merger_NBin2];
+
+         Read_Profile(filename2, "/fields/radius", Table_R2);
+         Read_Profile(filename2, "/fields/density", Table_D2);
+         Read_Profile(filename2, "/fields/pressure", Table_P2);
+
+         MPI_Bcast(Table_R2, Merger_NBin2, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+         MPI_Bcast(Table_D2, Merger_NBin2, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+         MPI_Bcast(Table_P2, Merger_NBin2, MPI_DOUBLE, 0, MPI_COMM_WORLD);
 
          // convert to code units (assuming the input units are cgs)
          for (int b=0; b<Merger_NBin2; b++)
@@ -259,12 +294,6 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 {
 
    const double  BoxCenter[3] = { 0.5*amr->BoxSize[0], 0.5*amr->BoxSize[1], 0.5*amr->BoxSize[2] };
-   const double *Table_D1     = Merger_Prof1 + 0*Merger_NBin1;    // density  table of cluster 1
-   const double *Table_P1     = Merger_Prof1 + 1*Merger_NBin1;    // pressure table of cluster 1
-   const double *Table_R1     = Merger_Prof1 + 2*Merger_NBin1;    // radius   table of cluster 1
-   const double *Table_D2     = Merger_Prof2 + 0*Merger_NBin2;    // density  table of cluster 2
-   const double *Table_P2     = Merger_Prof2 + 1*Merger_NBin2;    // pressure table of cluster 2
-   const double *Table_R2     = Merger_Prof2 + 2*Merger_NBin2;    // radius   table of cluster 2
 
    if ( Merger_Coll )
    {
@@ -330,8 +359,13 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 void End_ClusterMerger()
 {
 
-   delete [] Merger_Prof1;
-   delete [] Merger_Prof2;
+   delete [] Table_R1;
+   delete [] Table_D1;
+   delete [] Table_P1;
+
+   delete [] Table_R2;
+   delete [] Table_D2;
+   delete [] Table_P2;
 
 } // FUNCTION : End_ClusterMerger
 #endif // #if ( MODEL == HYDRO  &&  defined PARTICLE )

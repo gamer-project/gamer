@@ -1,6 +1,6 @@
 #include "hdf5.h"
 
-int ReadNumPoints(std::string filename)
+int Read_Num_Points(std::string filename)
 {
 
   hid_t   file_id, dataset, dataspace;
@@ -21,7 +21,7 @@ int ReadNumPoints(std::string filename)
 
 }
 
-void ReadProfile(std::string filename, std::string fieldname, double field[])
+void Read_Profile(std::string filename, std::string fieldname, double field[])
 {
 
   hid_t   file_id, dataset;
@@ -29,7 +29,7 @@ void ReadProfile(std::string filename, std::string fieldname, double field[])
 
   file_id = H5Fopen(filename.c_str(), H5F_ACC_RDONLY, H5P_DEFAULT);
 
-  dataset   = H5Dopen(file_id, fieldname.c_str());
+  dataset = H5Dopen(file_id, fieldname.c_str());
   status = H5Dread(dataset, H5T_NATIVE_DOUBLE, H5S_ALL,
                    H5S_ALL, H5P_DEFAULT, field);
   H5Dclose(dataset);
