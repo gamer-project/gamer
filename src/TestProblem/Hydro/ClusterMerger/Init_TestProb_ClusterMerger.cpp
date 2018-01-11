@@ -1,7 +1,6 @@
 #include "GAMER.h"
 #include "TestProb.h"
-
-
+#include "hdf5.h"
 
 // problem-specific global variables
 // =======================================================================================
@@ -414,3 +413,43 @@ void Init_TestProb_Hydro_ClusterMerger()
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", __FUNCTION__ );
 
 } // FUNCTION : Init_TestProb_Hydro_ClusterMerger
+
+int Read_Num_Points(string filename)
+{
+
+  hid_t   file_id, dataset, dataspace;
+  herr_t  status;
+  hsize_t dims[1], maxdims[1];
+
+  int rank;
+
+  file_id = H5Fopen(filename.c_str(), H5F_ACC_RDONLY, H5P_DEFAULT);
+
+  dataset   = H5Dopen(file_id, "/fields/radius", H5P_DEFAULT);
+  dataspace = H5Dget_space(dataset);
+  rank      = H5Sget_simple_extent_dims(dataspace, dims, maxdims);
+
+  H5Fclose(file_id);
+
+  return (int)dims[0];
+
+}
+
+void Read_Profile(string filename, string fieldname, double field[])
+{
+
+  hid_t   file_id, dataset;
+  herr_t  status;
+
+  file_id = H5Fopen(filename.c_str(), H5F_ACC_RDONLY, H5P_DEFAULT);
+
+  dataset = H5Dopen(file_id, fieldname.c_str(), H5P_DEFAULT);
+  status = H5Dread(dataset, H5T_NATIVE_DOUBLE, H5S_ALL,
+                   H5S_ALL, H5P_DEFAULT, field);
+  H5Dclose(dataset);
+
+  H5Fclose(file_id);
+
+  return;
+
+}
