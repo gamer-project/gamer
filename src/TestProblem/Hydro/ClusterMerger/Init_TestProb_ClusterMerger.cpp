@@ -1,5 +1,8 @@
 #include "GAMER.h"
 #include "TestProb.h"
+
+#ifdef SUPPORT_HDF5
+
 #include "hdf5.h"
 
 // problem-specific global variables
@@ -32,14 +35,16 @@ static int     Merger_NBin2;              // number of radial bins of cluster 2
 
 // problem-specific function prototypes
 #ifdef PARTICLE
-void Par_Init_ByFunction_ClusterMerger( const long NPar_ThisRank, const long NPar_AllRank,
+void Par_Init_ByFunction_ClusterMerger(const long NPar_ThisRank, 
+                                       const long NPar_AllRank,
                                        real *ParMass, real *ParPosX, real *ParPosY, real *ParPosZ,
                                        real *ParVelX, real *ParVelY, real *ParVelZ, real *ParTime,
                                        real *AllAttribute[PAR_NATT_TOTAL]);
 #endif
 
-int Read_Num_Points(string filename);
-void Read_Profile(string filename, string fieldname, double field[]);
+int Read_Num_Points_ClusterMerger(string filename);
+void Read_Profile_ClusterMerger(string filename, string fieldname, 
+                                double field[]);
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Validate
@@ -169,9 +174,8 @@ void SetParameter()
       const string filename2(Merger_File_Prof2);
 
       // cluster 1
-      Merger_NBin1 = Read_Num_Points(filename1);
       if (MPI_Rank == 0) {
-         Merger_NBin1 = ReadNumPoints(filename1);
+         Merger_NBin1 = Read_Num_Points_ClusterMerger(filename1);
          Aux_Message(stdout, "num_points1 = %d\n", num_points1);
       }
 
@@ -183,9 +187,9 @@ void SetParameter()
       Table_D1 = new double [Merger_NBin1];
       Table_P1 = new double [Merger_NBin1];
 
-      Read_Profile(filename1, "/fields/radius", Table_R1);
-      Read_Profile(filename1, "/fields/density", Table_D1);
-      Read_Profile(filename1, "/fields/pressure", Table_P1);
+      Read_Profile_ClusterMerger(filename1, "/fields/radius", Table_R1);
+      Read_Profile_ClusterMerger(filename1, "/fields/density", Table_D1);
+      Read_Profile_ClusterMerger(filename1, "/fields/pressure", Table_P1);
 
 #ifndef SERIAL
       MPI_Bcast(Table_R1, Merger_NBin1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
@@ -204,9 +208,8 @@ void SetParameter()
       // cluster 2
       if ( Merger_Coll ) {
 
-         Merger_NBin2 = Read_Num_Points(filename2);
          if (MPI_Rank == 0) {
-            Merger_NBin2 = ReadNumPoints(filename2);
+            Merger_NBin2 = Read_Num_Points_ClusterMerger(filename2);
             Aux_Message(stdout, "num_points2 = %d\n", num_points2);
          }
 
@@ -217,9 +220,9 @@ void SetParameter()
          Table_D2 = new double [Merger_NBin2];
          Table_P2 = new double [Merger_NBin2];
 
-         Read_Profile(filename2, "/fields/radius", Table_R2);
-         Read_Profile(filename2, "/fields/density", Table_D2);
-         Read_Profile(filename2, "/fields/pressure", Table_P2);
+         Read_Profile_ClusterMerger(filename2, "/fields/radius", Table_R2);
+         Read_Profile_ClusterMerger(filename2, "/fields/density", Table_D2);
+         Read_Profile_ClusterMerger(filename2, "/fields/pressure", Table_P2);
 
 #ifndef SERIAL
          MPI_Bcast(Table_R2, Merger_NBin2, MPI_DOUBLE, 0, MPI_COMM_WORLD);
@@ -414,7 +417,7 @@ void Init_TestProb_Hydro_ClusterMerger()
 
 } // FUNCTION : Init_TestProb_Hydro_ClusterMerger
 
-int Read_Num_Points(string filename)
+int Read_Num_Points_ClusterMerger(string filename)
 {
 
   hid_t   file_id, dataset, dataspace;
@@ -433,9 +436,10 @@ int Read_Num_Points(string filename)
 
   return (int)dims[0];
 
-}
+} // FUNCTION : Read_Num_Points_ClusterMerger
 
-void Read_Profile(string filename, string fieldname, double field[])
+void Read_Profile_ClusterMerger(string filename, string fieldname, 
+                                double field[])
 {
 
   hid_t   file_id, dataset;
@@ -452,4 +456,6 @@ void Read_Profile(string filename, string fieldname, double field[])
 
   return;
 
-}
+} // FUNCTION : Read_Profile_ClusterMerger
+
+#endif // #ifdef SUPPORT_HDF5

@@ -1,7 +1,9 @@
 #include "GAMER.h"
-#include "hdf5.h"
 
 #ifdef PARTICLE
+#ifdef SUPPORT_HDF5
+
+#include "hdf5.h"
 
 // floating-point type in the input particle file
 typedef double real_par_in;
@@ -19,11 +21,12 @@ extern double  Merger_Coll_VelY1;
 extern double  Merger_Coll_VelX2;
 extern double  Merger_Coll_VelY2;
 
-long Read_Particle_Number(string filename);
-void Read_Particles(string filename, long offset, long num,
-                    real_par_in mass[], real_par_in xpos[], real_par_in ypos[], 
-                    real_par_in zpos[], real_par_in xvel[], real_par_in yvel[], 
-                    real_par_in zvel[]);
+long Read_Particle_Number_ClusterMerger(string filename);
+void Read_Particles_ClusterMerger(string filename, long offset, long num,
+                                  real_par_in mass[], real_par_in xpos[], 
+                                  real_par_in ypos[], real_par_in zpos[], 
+                                  real_par_in xvel[], real_par_in yvel[], 
+                                  real_par_in zvel[]);
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Par_Init_ByFunction_ClusterMerger
@@ -87,13 +90,13 @@ void Par_Init_ByFunction_ClusterMerger( const long NPar_ThisRank, const long NPa
 
    if ( MPI_Rank == 0 ) 
 
-      NPar_EachCluster[0] = Read_Particle_Number(filename1);
+      NPar_EachCluster[0] = Read_Particle_Number_ClusterMerger(filename1);
 
       Aux_Message( stdout, "   Number of particles in cluster 1 = %ld\n", 
                   NPar_EachCluster[0] );
 
       if ( Merger_Coll ) {
-         NPar_EachCluster[1] = Read_Particle_Number(filename2);
+         NPar_EachCluster[1] = Read_Particle_Number_ClusterMerger(filename2);
          Aux_Message( stdout, "   Number of particles in cluster 2 = %ld\n", NPar_EachCluster[1] );
       }
 
@@ -161,8 +164,8 @@ void Par_Init_ByFunction_ClusterMerger( const long NPar_ThisRank, const long NPa
 
       const string filename((c==0)? Merger_File_Par1:Merger_File_Par2);
 
-      Read_Particles(filename, Offset[c], NPar_ThisRank_EachCluster[c],
-                     mass, xpos, ypos, zpos, xvel, yvel, zvel);
+      Read_Particles_ClusterMerger(filename, Offset[c], NPar_ThisRank_EachCluster[c],
+                                   mass, xpos, ypos, zpos, xvel, yvel, zvel);
 
       if ( MPI_Rank == 0 ) Aux_Message( stdout, "done\n" );
 
@@ -253,7 +256,7 @@ void Par_Init_ByFunction_ClusterMerger( const long NPar_ThisRank, const long NPa
 
 } // FUNCTION : Par_Init_ByFunction_ClusterMerger
 
-long Read_Particle_Number(string filename)
+long Read_Particle_Number_ClusterMerger(string filename)
 {
 
   hid_t   file_id, dataset, dataspace;
@@ -272,12 +275,13 @@ long Read_Particle_Number(string filename)
 
   return (long)dims[0];
 
-}
+} // FUNCTION : Read_Particle_Number_ClusterMerger
 
-void Read_Particles(string filename, long offset, long num, 
-                    real_par_in xpos[], real_par_in ypos[], real_par_in zpos[], 
-                    real_par_in xvel[], real_par_in yvel[], real_par_in zvel[], 
-                    real_par_in mass[])
+void Read_Particles_ClusterMerger(string filename, long offset, long num, 
+                                  real_par_in xpos[], real_par_in ypos[], 
+                                  real_par_in zpos[], real_par_in xvel[], 
+                                  real_par_in yvel[], real_par_in zvel[], 
+                                  real_par_in mass[])
 {
 
   hid_t   file_id, dataset, dataspace, memspace;
@@ -412,8 +416,9 @@ void Read_Particles(string filename, long offset, long num,
 
   return;
 
-}
+} // FUNCTION : Read_Particles_ClusterMerger
 
+#endif // #ifdef SUPPORT_HDF5
 #endif // #ifdef PARTICLE
 
 
