@@ -39,8 +39,8 @@ void Par_Init_ByFunction_ClusterMerger( const long NPar_ThisRank, const long NPa
                                        real *AllAttribute[PAR_NATT_TOTAL]);
 #endif
 
-int Read_Num_Points(std::string filename);
-void Read_Profile(std::string filename, std::string fieldname, double field[]);
+int Read_Num_Points(string filename);
+void Read_Profile(string filename, string fieldname, double field[]);
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Validate
