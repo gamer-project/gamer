@@ -18,8 +18,8 @@ extern double  Merger_Coll_VelY1;
 extern double  Merger_Coll_VelX2;
 extern double  Merger_Coll_VelY2;
 
-long Read_Particle_Number(std::string filename);
-void Read_Particles(std::string filename, long offset, long num,
+long Read_Particle_Number(string filename);
+void Read_Particles(string filename, long offset, long num,
                     real_par_in mass[], real_par_in xpos[], real_par_in ypos[], 
                     real_par_in zpos[], real_par_in xvel[], real_par_in yvel[], 
                     real_par_in zvel[]);

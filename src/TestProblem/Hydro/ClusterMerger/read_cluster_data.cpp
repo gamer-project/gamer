@@ -1,8 +1,9 @@
+#include "GAMER.h"
 #include "hdf5.h"
 
 typedef double real_par_in;
 
-int Read_Num_Points(std::string filename)
+int Read_Num_Points(string filename)
 {
 
   hid_t   file_id, dataset, dataspace;
@@ -13,7 +14,7 @@ int Read_Num_Points(std::string filename)
 
   file_id = H5Fopen(filename.c_str(), H5F_ACC_RDONLY, H5P_DEFAULT);
 
-  dataset   = H5Dopen(file_id, "/fields/radius");
+  dataset   = H5Dopen(file_id, "/fields/radius", H5P_DEFAULT);
   dataspace = H5Dget_space(dataset);
   rank      = H5Sget_simple_extent_dims(dataspace, dims, maxdims);
 
@@ -23,7 +24,7 @@ int Read_Num_Points(std::string filename)
 
 }
 
-void Read_Profile(std::string filename, std::string fieldname, double field[])
+void Read_Profile(string filename, string fieldname, double field[])
 {
 
   hid_t   file_id, dataset;
@@ -31,7 +32,7 @@ void Read_Profile(std::string filename, std::string fieldname, double field[])
 
   file_id = H5Fopen(filename.c_str(), H5F_ACC_RDONLY, H5P_DEFAULT);
 
-  dataset = H5Dopen(file_id, fieldname.c_str());
+  dataset = H5Dopen(file_id, fieldname.c_str(), H5P_DEFAULT);
   status = H5Dread(dataset, H5T_NATIVE_DOUBLE, H5S_ALL,
                    H5S_ALL, H5P_DEFAULT, field);
   H5Dclose(dataset);
@@ -42,7 +43,7 @@ void Read_Profile(std::string filename, std::string fieldname, double field[])
 
 }
 
-long Read_Particle_Number(std::string filename)
+long Read_Particle_Number(string filename)
 {
 
   hid_t   file_id, dataset, dataspace;
@@ -53,7 +54,7 @@ long Read_Particle_Number(std::string filename)
 
   file_id = H5Fopen(filename.c_str(), H5F_ACC_RDONLY, H5P_DEFAULT);
 
-  dataset   = H5Dopen(file_id, "/dm/particle_mass");
+  dataset   = H5Dopen(file_id, "/dm/particle_mass", H5P_DEFAULT);
   dataspace = H5Dget_space(dataset);
   rank      = H5Sget_simple_extent_dims(dataspace, dims, maxdims);
 
@@ -63,7 +64,7 @@ long Read_Particle_Number(std::string filename)
 
 }
 
-void Read_Particles(std::string filename, long offset, long num, 
+void Read_Particles(string filename, long offset, long num, 
                     real_par_in xpos[], real_par_in ypos[], real_par_in zpos[], 
                     real_par_in xvel[], real_par_in yvel[], real_par_in zvel[], 
                     real_par_in mass[])
@@ -83,7 +84,7 @@ void Read_Particles(std::string filename, long offset, long num,
   
   file_id = H5Fopen(filename.c_str(), H5F_ACC_RDONLY, H5P_DEFAULT);
 
-  dataset   = H5Dopen(file_id, "/dm/particle_position");
+  dataset   = H5Dopen(file_id, "/dm/particle_position", H5P_DEFAULT);
 
   dataspace = H5Dget_space(dataset);
 
@@ -133,7 +134,7 @@ void Read_Particles(std::string filename, long offset, long num,
 
   H5Dclose(dataset);
 
-  dataset   = H5Dopen(file_id, "/dm/particle_velocity");
+  dataset   = H5Dopen(file_id, "/dm/particle_velocity", H5P_DEFAULT);
 
   dataspace = H5Dget_space(dataset);
 
@@ -176,7 +177,7 @@ void Read_Particles(std::string filename, long offset, long num,
 
   H5Dclose(dataset);
 
-  dataset   = H5Dopen(file_id, "/dm/particle_mass");
+  dataset   = H5Dopen(file_id, "/dm/particle_mass", H5P_DEFAULT);
 
   dataspace = H5Dget_space(dataset);
 
