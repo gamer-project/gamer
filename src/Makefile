@@ -409,7 +409,7 @@ CC_FILE     += Table_01.cpp  Table_02.cpp  Table_03.cpp  Table_04.cpp  Table_05.
                Table_07.cpp
 
 vpath %.cu     GPU_API
-vpath %.cpp    GAMER  Init  Refine  Fluid  Interpolation  Tables  Output  Miscellaneous  Auxiliary
+vpath %.cpp    Main  Init  Refine  Fluid  Interpolation  Tables  Output  Miscellaneous  Auxiliary
 
 
 # hydrodynamic source files (included only if "MODEL=HYDRO")
