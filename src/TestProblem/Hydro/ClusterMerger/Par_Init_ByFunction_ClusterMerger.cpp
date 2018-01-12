@@ -1,9 +1,10 @@
 #include "GAMER.h"
 
 #ifdef PARTICLE
-#ifdef SUPPORT_HDF5
 
+#ifdef SUPPORT_HDF5
 #include "hdf5.h"
+#endif
 
 // floating-point type in the input particle file
 typedef double real_par_in;
@@ -256,6 +257,8 @@ void Par_Init_ByFunction_ClusterMerger( const long NPar_ThisRank, const long NPa
 
 } // FUNCTION : Par_Init_ByFunction_ClusterMerger
 
+#ifdef SUPPORT_HDF5
+
 long Read_Particle_Number_ClusterMerger(string filename)
 {
 
@@ -419,6 +422,7 @@ void Read_Particles_ClusterMerger(string filename, long offset, long num,
 } // FUNCTION : Read_Particles_ClusterMerger
 
 #endif // #ifdef SUPPORT_HDF5
+
 #endif // #ifdef PARTICLE
 
 

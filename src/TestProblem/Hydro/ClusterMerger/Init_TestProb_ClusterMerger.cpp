@@ -2,8 +2,8 @@
 #include "TestProb.h"
 
 #ifdef SUPPORT_HDF5
-
 #include "hdf5.h"
+#endif
 
 // problem-specific global variables
 // =======================================================================================
@@ -72,6 +72,10 @@ void Validate()
 
 #  ifndef PARTICLE
    Aux_Error( ERROR_INFO, "PARTICLE must be enabled !!\n" );
+#  endif
+
+#  ifndef SUPPORT_HDF5
+   Aux_Error( ERROR_INFO, "SUPPORT_HDF5 must be enabled !!\n" );
 #  endif
 
 #  ifdef COMOVING
@@ -416,6 +420,8 @@ void Init_TestProb_Hydro_ClusterMerger()
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", __FUNCTION__ );
 
 } // FUNCTION : Init_TestProb_Hydro_ClusterMerger
+
+#ifdef SUPPORT_HDF5
 
 int Read_Num_Points_ClusterMerger(string filename)
 {
