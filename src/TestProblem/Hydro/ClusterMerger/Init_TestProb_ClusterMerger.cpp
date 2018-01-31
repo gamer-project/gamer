@@ -180,7 +180,7 @@ void SetParameter()
       // cluster 1
       if (MPI_Rank == 0) {
          Merger_NBin1 = Read_Num_Points_ClusterMerger(filename1);
-         Aux_Message(stdout, "num_points1 = %d\n", num_points1);
+         Aux_Message(stdout, "num_points1 = %d\n", Merger_NBin1);
       }
 
 #ifndef SERIAL
@@ -214,7 +214,7 @@ void SetParameter()
 
          if (MPI_Rank == 0) {
             Merger_NBin2 = Read_Num_Points_ClusterMerger(filename2);
-            Aux_Message(stdout, "num_points2 = %d\n", num_points2);
+            Aux_Message(stdout, "num_points2 = %d\n", Merger_NBin2);
          }
 
 #ifndef SERIAL

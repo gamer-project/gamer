@@ -87,9 +87,10 @@ void Par_Init_ByFunction_ClusterMerger( const long NPar_ThisRank, const long NPa
    const string filename2(Merger_File_Par2);
 
 // check file size
-   long NPar_EachCluster[2]={0,0}, NPar_AllCluster;
+   long NPar_EachCluster[2] = {0,0};
+   long NPar_AllCluster;
 
-   if ( MPI_Rank == 0 ) 
+   if ( MPI_Rank == 0 ) {
 
       NPar_EachCluster[0] = Read_Particle_Number_ClusterMerger(filename1);
 
