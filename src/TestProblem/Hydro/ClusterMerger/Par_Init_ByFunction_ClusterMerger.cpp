@@ -1,3 +1,5 @@
+
+
 #include "GAMER.h"
 
 #ifdef PARTICLE
@@ -167,7 +169,7 @@ void Par_Init_ByFunction_ClusterMerger( const long NPar_ThisRank, const long NPa
       const string filename((c==0)? Merger_File_Par1:Merger_File_Par2);
 
       Read_Particles_ClusterMerger(filename, Offset[c], NPar_ThisRank_EachCluster[c],
-                                   mass, xpos, ypos, zpos, xvel, yvel, zvel);
+                                   xpos, ypos, zpos, xvel, yvel, zvel, mass);
 
       if ( MPI_Rank == 0 ) Aux_Message( stdout, "done\n" );
 
@@ -311,10 +313,11 @@ void Read_Particles_ClusterMerger(string filename, long offset, long num,
   count[0] = (hsize_t)num;
   count[1] = 1;
 
+  dims[0] = count[0];
   dims[1] = 1;
  
   start[1] = 0;
-
+  
   status = H5Sselect_hyperslab(dataspace, H5S_SELECT_SET, start,
                                stride, count, NULL);
   memspace = H5Screate_simple(rank, dims, NULL);
