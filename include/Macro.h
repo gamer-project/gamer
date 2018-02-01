@@ -101,6 +101,10 @@
 
 
 // number of passively advected components in each cell
+// --> define NCOMP_PASSIVE_USER if not set in the Makefile
+#ifndef NCOMP_PASSIVE_USER
+#  define NCOMP_PASSIVE_USER  0
+#endif
 // --> including entropy (or internal energy) when the dual energy formalism is adopted
 #if (  ( MODEL == HYDRO || MODEL == MHD )  &&  defined DUAL_ENERGY  )
 #  define NCOMP_PASSIVE       ( NCOMP_PASSIVE_USER + 1 )
@@ -309,6 +313,10 @@
 #  define  PAR_ACCZ          10
 
 // number of passive particle attributes
+// --> define PAR_NPASSIVE_USER if not set in the Makefile
+#ifndef PAR_NPASSIVE_USER
+#  define PAR_NPASSIVE_USER   0
+#endif
 // --> including PAR_CREATION_TIME when STAR_FORMATION is adopted
 #ifdef STAR_FORMATION
 #  define PAR_NPASSIVE        ( PAR_NPASSIVE_USER + 1 )
