@@ -33,6 +33,7 @@ for ds in ts.piter():
    sz_temp.save()
 
 
+#  CDM particles
    cdm_mass = yt.ParticlePlot( ds, 'particle_position_x', 'particle_position_y', 'particle_mass', center='c', depth=(8.0*Mpc) )
 
    cdm_mass.set_background_color( 'particle_mass' )
