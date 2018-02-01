@@ -375,14 +375,15 @@ LIBYT_PATH   :=
 #CUDA_PATH    :=
 #FFTW_PATH    := /usr/local/fftw-2.1.5
 #MPI_PATH     := /usr/local/mpich-3.2
-#HDF5_PATH    := ${HOME}/miniconda3
+#HDF5_PATH    := /usr/local/hdf5-1.8.20_serial
 #GRACKLE_PATH :=
 #GSL_PATH     := /usr/local/gsl-1.16
 
-
-
-
-
+# NASA Pleiades (intel compilers and SGI MPI)
+CUDA_PATH    := /nasa/cuda/sles12/8.0
+FFTW_PATH    := /u/jzuhone/opt/fftw-2.1.5
+MPI_PATH     := /nasa/sgi/mpt/2.14r19
+HDF5_PATH    := /nasa/hdf5/1.8.17/serial
 
 # source files
 #######################################################################################################
