@@ -294,7 +294,7 @@ void Read_Particles_ClusterMerger(string filename, long offset, long num,
   herr_t  status;
 
   hsize_t start[2], stride[2], count[2], dims[2], maxdims[2];
-  hsize_t start1d[1], stride1d[1], count1d[1], dims1d[1], maxdims1d[1];
+  hsize_t start1d[1], stride1d[1], count1d[1], dims1d[1];
 
   int rank;
 
@@ -317,13 +317,13 @@ void Read_Particles_ClusterMerger(string filename, long offset, long num,
   dims[1] = 1;
  
   start[1] = 0;
-  
+
   status = H5Sselect_hyperslab(dataspace, H5S_SELECT_SET, start,
                                stride, count, NULL);
   memspace = H5Screate_simple(rank, dims, NULL);
   status = H5Dread(dataset, H5T_NATIVE_DOUBLE, memspace, dataspace,
                    H5P_DEFAULT, xpos);
-  
+
   H5Sclose(memspace);
   H5Sclose(dataspace);
 
@@ -402,9 +402,8 @@ void Read_Particles_ClusterMerger(string filename, long offset, long num,
 
   dataspace = H5Dget_space(dataset);
 
-  rank      = H5Sget_simple_extent_dims(dataspace, dims1d, maxdims1d);
-
-  count1d[0] = dims1d[0];
+  count1d[0] = (hsize_t)num;
+  dims1d[0] = (hsize_t)num;
   stride1d[0] = 1;
   start1d[0] = 0;
 
