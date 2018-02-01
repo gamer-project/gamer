@@ -19,6 +19,12 @@ EXECUTABLE := gamer
 
 
 
+# output detailed compilation commands (0/1 = off/on)
+#######################################################################################################
+COMPILE_VERBOSE := 0
+
+
+
 # simulation options
 #######################################################################################################
 
@@ -145,7 +151,7 @@ SIMU_OPTION += -DMAX_PATCH=1000000
 #SIMU_OPTION += -DGPU
 
 # GPU architecture: FERMI/KEPLER/MAXWELL/PASCAL
-#SIMU_OPTION += -DGPU_ARCH=KEPLER
+SIMU_OPTION += -DGPU_ARCH=KEPLER
 
 # debug mode
 #SIMU_OPTION += -DGAMER_DEBUG
@@ -767,29 +773,43 @@ NVCCFLAG_POT := $(strip $(NVCCFLAG_POT))
 
 # implicit rules (do NOT modify the order of the following rules)
 # -------------------------------------------------------------------------------
+# output detailed compilation commands or not
+ifeq "$(COMPILE_VERBOSE)" "0"
+ECHO = @
+else
+ECHO =
+endif
+
+# GPU codes
 ifeq "$(filter -DGPU, $(SIMU_OPTION))" "-DGPU"
 $(OBJ_PATH)/CUAPI_%.o : CUAPI_%.cu
 	@echo "Compiling $<"
-	@$(NVCC) $(NVCCFLAG_COM) -o $@ -c $<
+	$(ECHO)$(NVCC) $(NVCCFLAG_COM) -o $@ -c $<
 
 $(OBJ_PATH)/CUFLU_%.o : CUFLU_%.cu
 	@echo "Compiling $<"
-	@$(NVCC) $(NVCCFLAG_COM) $(NVCCFLAG_FLU) -o $@ -c $<
+	$(ECHO)$(NVCC) $(NVCCFLAG_COM) $(NVCCFLAG_FLU) -o $@ -c $<
 
 $(OBJ_PATH)/CUPOT_%.o : CUPOT_%.cu
 	@echo "Compiling $<"
-	@$(NVCC) $(NVCCFLAG_COM) $(NVCCFLAG_POT) -o $@ -c $<
-endif
+	$(ECHO)$(NVCC) $(NVCCFLAG_COM) $(NVCCFLAG_POT) -o $@ -c $<
+endif # GPU
 
+# CPU codes
 $(OBJ_PATH)/%.o : %.cpp
 	@echo "Compiling $<"
-	@$(CXX) $(CXXFLAG) -o $@ -c $<
+	$(ECHO)$(CXX) $(CXXFLAG) -o $@ -c $<
 
 
 # linking
 # -------------------------------------------------------------------------------
 $(EXECUTABLE) : $(OBJ)
 	@echo "Linking"
+ifeq "$(COMPILE_VERBOSE)" "1"
+	$(CXX) -o $@ $^ $(LIB) $(OPENMPFLAG)
+	@printf "\nCompiling GAMER --> Successful!\n\n"; \
+	cp $(EXECUTABLE) ../bin/
+else
 	@$(CXX) -o $@ $^ $(LIB) $(OPENMPFLAG); \
 	(if [ -e $@ ]; then \
 		printf "\nCompiling GAMER --> Successful!\n\n"; \
@@ -797,6 +817,7 @@ $(EXECUTABLE) : $(OBJ)
 	else \
 		printf "\nCompiling GAMER --> Failed!\n\n"; \
 	fi)
+endif
 	@rm ./*.linkinfo -f
 
 
