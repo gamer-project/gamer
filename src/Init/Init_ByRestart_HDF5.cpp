@@ -380,18 +380,27 @@ void Init_ByRestart_HDF5( const char *FileName )
 
       for (int t=0; t<NPatchTotal[lv]; t++)
       {
+//       set LoadIdx_Start to "the first patch belonging to this rank"
          if (  LoadIdx_Start[lv] == -1  &&  LB_Index2Rank( lv, LBIdxList_EachLv[lv][t], CHECK_ON ) == MPI_Rank  )
             LoadIdx_Start[lv] = t;
 
-         if (                               LB_Index2Rank( lv, LBIdxList_EachLv[lv][t], CHECK_ON ) >  MPI_Rank  )
+//       set LoadIdx_Stop to "the last patch belonging to this rank + 1"
+         if ( LoadIdx_Start[lv] != -1 )
          {
-            LoadIdx_Stop [lv] = t;
-            break;
+            if (  LB_Index2Rank( lv, LBIdxList_EachLv[lv][t], CHECK_ON ) > MPI_Rank  )
+            {
+               LoadIdx_Stop[lv] = t;
+               break;
+            }
+
+//          rank owning the last patch needs to be treated separately
+            else if ( t == NPatchTotal[lv] - 1 )
+            {
+               LoadIdx_Stop[lv] = NPatchTotal[lv];
+               break;
+            }
          }
       }
-
-//    take care of the last rank with patches (ranks without any patch will have Start=Stop=-1, which is fine)
-      if ( LoadIdx_Start[lv] != -1  &&  LoadIdx_Stop[lv] == -1 )  LoadIdx_Stop[lv] = NPatchTotal[lv];
 
 #     ifdef DEBUG_HDF5
       if ( LoadIdx_Start[lv]%8 != 0  &&  LoadIdx_Start[lv] != -1 )
@@ -402,7 +411,7 @@ void Init_ByRestart_HDF5( const char *FileName )
 
       if (  ( LoadIdx_Start[lv] == -1 && LoadIdx_Stop[lv] != -1 )  ||
             ( LoadIdx_Start[lv] != -1 && LoadIdx_Stop[lv] == -1 )   )
-         Aux_Error( ERROR_INFO, "LoadIdx_Start/Stop[%d] =  %d/%d !!\n", lv, LoadIdx_Start[lv], LoadIdx_Stop[lv] );
+         Aux_Error( ERROR_INFO, "LoadIdx_Start/Stop[%d] = %d/%d !!\n", lv, LoadIdx_Start[lv], LoadIdx_Stop[lv] );
 #     endif
    } // for (int lv=0; lv<KeyInfo.NLevel; lv++)
 
