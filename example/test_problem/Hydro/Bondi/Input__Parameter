@@ -138,6 +138,7 @@ OPT__GRAVITY_TYPE             2           # gravity source: (1=self-gravity, 2=e
 OPT__INIT                     1           # initialization option: (1=StartOver, 2=RESTART, 3=UM_START)
 RESTART_LOAD_NRANK            1           # number of parallel I/O (i.e., number of MPI ranks) for restart [1]
 OPT__INIT_RESTRICT            1           # restrict all data during the initialization [1]
+OPT__INIT_GRID_WITH_OMP       1           # enable OpenMP when assigning the initial condition of each grid patch [1]
 OPT__GPUID_SELECT            -1           # GPU ID selection mode: (-3=Laohu, -2=CUDA, -1=MPI rank, >=0=input) [-1]
 INIT_SUBSAMPLING_NCELL        0           # perform sub-sampling during initialization: (0=off, >0=# of sub-sampling cells) [0]
 
@@ -158,11 +159,15 @@ INIT_DUMPID                  -1           # set the first dump ID (<0=auto) [-1]
 
 # miscellaneous
 OPT__VERBOSE                  0           # output the simulation progress in detail [0]
+OPT__TIMING_BARRIER          -1           # synchronize before timing -> more accurate, but may slow down the run (<0=auto) [-1]
+OPT__TIMING_BALANCE           0           # record the max/min elapsed time in various code sections for checking load balance [0]
+OPT__TIMING_MPI               0           # record the MPI bandwidth achieved in various code sections [0] ##LOAD_BALANCE ONLY##
 OPT__RECORD_MEMORY            1           # record the memory consumption [1]
 OPT__RECORD_PERFORMANCE       1           # record the code performance [1]
 OPT__MANUAL_CONTROL           1           # support manually dump data or stop run during the runtime
                                           # (by generating the file DUMP_GAMER_DUMP or STOP_GAMER_STOP) [1]
 OPT__RECORD_USER              1           # record the user-specified info -> edit "Aux_RecordUser.cpp" [0]
+OPT__OPTIMIZE_AGGRESSIVE      0           # apply aggressive optimizations (experimental) [0]
 
 
 # checks

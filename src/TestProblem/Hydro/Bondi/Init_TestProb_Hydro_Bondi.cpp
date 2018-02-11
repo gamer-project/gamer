@@ -253,13 +253,11 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 
 // set the uniform background here
 // --> the central void region will be reset by calling ResetVoid()
-#  if ( MODEL == HYDRO )
    fluid[DENS] = Bondi_Rho0;
    fluid[MOMX] = 0.0;
    fluid[MOMY] = 0.0;
    fluid[MOMZ] = 0.0;
    fluid[ENGY] = SQR(Bondi_Cs)*Bondi_Rho0/( GAMMA*(GAMMA-1.0) );
-#  endif
 
 } // FUNCTION : SetGridIC
 #endif // #if ( MODEL == HYDRO  &&  defined GRAVITY )
