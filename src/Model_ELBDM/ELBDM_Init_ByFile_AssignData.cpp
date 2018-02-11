@@ -6,7 +6,7 @@
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  ELBDM_Init_UM_AssignData
+// Function    :  ELBDM_Init_ByFile_AssignData
 // Description :  Use the input uniform-mesh array to assign data to all patches at level "lv"
 //
 // Note        :  1. Work in the model ELBDM
@@ -15,11 +15,11 @@
 //                   (2) NVar == 2: load both real and imaginary parts, and then *calculate* the density field
 //                3. Data format in the UM_START file : [k][j][i][v]
 //
-// Parameter   :  lv       : Target refinement level to assign data 
+// Parameter   :  lv       : Target refinement level to assign data
 //                UM_Data  : Input uniform-mesh array
 //                NVar     : Number of variables stored in UM_Data
 //-------------------------------------------------------------------------------------------------------
-void ELBDM_Init_UM_AssignData( const int lv, real *UM_Data, const int NVar )
+void ELBDM_Init_ByFile_AssignData( const int lv, real *UM_Data, const int NVar )
 {
 
 // check
@@ -52,14 +52,6 @@ void ELBDM_Init_UM_AssignData( const int lv, real *UM_Data, const int NVar )
 
          if ( NVar == 1 )
          {
-//          multiply the input density perturbation by 5/3 to have the growing-mode amplitude correct
-            if ( OPT__UM_FACTOR_5OVER3 )  
-            {
-               const real AveDens = 1.0;     // !! we have assumed that the background density == 1.0 !!
-               const real Factor  = 5.0/3.0; // growing-mode amplitude = total amplitude * 3/5
-               UM_Data[Idx] = ( UM_Data[Idx] - AveDens )*Factor + AveDens;
-            }
-
             amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[DENS][k][j][i] = UM_Data[Idx];
             amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[REAL][k][j][i] = SQRT( UM_Data[Idx] );
             amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[IMAG][k][j][i] = (real)0.0;
@@ -74,7 +66,7 @@ void ELBDM_Init_UM_AssignData( const int lv, real *UM_Data, const int NVar )
       }}}
    }
 
-} // FUNCTION : ELBDM_Init_UM_AssignData
+} // FUNCTION : ELBDM_Init_ByFile_AssignData
 
 
 
