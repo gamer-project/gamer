@@ -1,0 +1,15 @@
+Compilation flags:
+========================================
+Enable : MODEL=HYDRO
+Disable: GRAVITY, PARTICLE
+
+
+Default setup:
+========================================
+
+
+Note:
+========================================
+1. Ref: Molnar, S., Schive, H-Y., et al., 2017, ApJ, 835, 57
+        https://arxiv.org/abs/1612.02341
+

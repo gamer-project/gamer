@@ -7,7 +7,7 @@
 #include "hdf5.h"
 #endif
 
-void Init_Restart_v1( const char FileName[] );
+void Init_ByRestart_v1( const char FileName[] );
 void Load_Parameter_After_2000( FILE *File, const int FormatVersion, int &NLv_Restart, bool &LoadPot, bool &LoadParDens,
                                 const long HeaderOffset_Makefile, const long HeaderOffset_Constant,
                                 const long HeaderOffset_Parameter );
@@ -21,27 +21,20 @@ void CompareVar( const char *VarName, const double RestartVar, const double Runt
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Init_Restart
+// Function    :  Init_ByRestart
 // Description :  Reload a previous output as the initial condition
 //
 // Note        :  1. This function will always load the file named "RESTART"
 //                   --> You can just make a symbolic link named RESTART to the file you want to use as the
 //                       initial condition
 //
-//                2. "OPT__RESTART_HEADER == RESTART_HEADER_CHECK"
-//                   --> Check if the parameters loaded from the RESTART file are consistent with the
-//                       parameters loaded from the Input__Parameter file
+//                2. This function will invoke "Init_ByRestart_HDF5" automatically if the restart file
+//                   is in the HDF5 format
 //
-//                   "OPT__RESTART_HEADER == RESTART_HEADER_SKIP"
-//                   --> Skip the header information in the RESTART file
-//
-//                3. This function will invoke "Init_Restart_HDF5" automatically if the restart file
-//                   is determined to a HDF5 file
-//
-//                4. This function will invoke "Init_Restart_v1" automatically if the restart file
-//                   is determined to a simple binary format in version 1 (i.e., FormatVersion < 2000)
+//                3. This function will invoke "Init_ByRestart_v1" automatically if the restart file
+//                   is in a simple binary format in version 1 (i.e., FormatVersion < 2000)
 //-------------------------------------------------------------------------------------------------------
-void Init_Restart()
+void Init_ByRestart()
 {
 
    const char FileName[] = "RESTART";
@@ -51,7 +44,7 @@ void Init_Restart()
 #  ifdef SUPPORT_HDF5
    if (  Aux_CheckFileExist(FileName)  &&  H5Fis_hdf5(FileName)  )
    {
-      Init_Restart_HDF5( FileName );
+      Init_ByRestart_HDF5( FileName );
       return;
    }
 #  endif
@@ -105,7 +98,7 @@ void Init_Restart()
 
       if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Switch to version 1 ...\n" );
 
-      Init_Restart_v1( FileName );
+      Init_ByRestart_v1( FileName );
       return;
    }
 
@@ -181,15 +174,8 @@ void Init_Restart()
    bool LoadPot     = false;
    bool LoadParDens = false;
 
-   if ( OPT__RESTART_HEADER != RESTART_HEADER_SKIP )
-      Load_Parameter_After_2000( File, FormatVersion, NLv_Restart, LoadPot, LoadParDens,
-                                 HeaderOffset_Makefile, HeaderOffset_Constant, HeaderOffset_Parameter );
-
-   else
-   {
-      if ( MPI_Rank == 0 )
-         Aux_Message( stderr, "WARNING : skipping header information is dangerous and is not recommended !!\n" );
-   }
+   Load_Parameter_After_2000( File, FormatVersion, NLv_Restart, LoadPot, LoadParDens,
+                              HeaderOffset_Makefile, HeaderOffset_Constant, HeaderOffset_Parameter );
 
 
 // set the rescale factor for different NLEVEL
@@ -723,7 +709,7 @@ void Init_Restart()
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", __FUNCTION__ );
 
-} // FUNCTION : Init_Restart
+} // FUNCTION : Init_ByRestart
 
 
 

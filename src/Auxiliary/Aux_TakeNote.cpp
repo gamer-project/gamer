@@ -10,7 +10,7 @@
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Aux_TakeNote
-// Description :  Record simulation parameters and the content in the file "Input__NoteScript" to the
+// Description :  Record simulation parameters and the content in the file "Input__Note" to the
 //                note file "Record__Note"
 //-------------------------------------------------------------------------------------------------------
 void Aux_TakeNote()
@@ -27,13 +27,13 @@ void Aux_TakeNote()
       if ( Aux_CheckFileExist(FileName) )
          Aux_Message( stderr, "WARNING : file \"%s\" already exists !!\n", FileName );
 
-//    copy the content in the file "Input__NoteScript"
+//    copy the content in the file "Input__Note"
       Note = fopen( FileName, "a" );
-      fprintf( Note, "\n\n\nSimulation Note\n" );
+      fprintf( Note, "\n\n\nSimulation Notes\n" );
       fprintf( Note, "***********************************************************************************\n" );
       fclose( Note );
 
-      system( "cat ./Input__NoteScript >> Record__Note" );
+      system( "cat ./Input__Note >> Record__Note" );
 
       Note = fopen( FileName, "a" );
       fprintf( Note, "***********************************************************************************\n" );
@@ -917,13 +917,11 @@ void Aux_TakeNote()
       fprintf( Note, "***********************************************************************************\n" );
       fprintf( Note, "OPT__INIT                       %d\n",      OPT__INIT               );
       fprintf( Note, "RESTART_LOAD_NRANK              %d\n",      RESTART_LOAD_NRANK      );
-      fprintf( Note, "OPT__RESTART_HEADER             %d\n",      OPT__RESTART_HEADER     );
       fprintf( Note, "OPT__RESTART_RESET              %d\n",      OPT__RESTART_RESET      );
-      fprintf( Note, "OPT__UM_START_LEVEL             %d\n",      OPT__UM_START_LEVEL     );
-      fprintf( Note, "OPT__UM_START_NVAR              %d\n",      OPT__UM_START_NVAR      );
-      fprintf( Note, "OPT__UM_START_DOWNGRADE         %d\n",      OPT__UM_START_DOWNGRADE );
-      fprintf( Note, "OPT__UM_START_REFINE            %d\n",      OPT__UM_START_REFINE    );
-      fprintf( Note, "OPT__UM_FACTOR_5OVER3           %d\n",      OPT__UM_FACTOR_5OVER3   );
+      fprintf( Note, "OPT__UM_IC_LEVEL                %d\n",      OPT__UM_IC_LEVEL        );
+      fprintf( Note, "OPT__UM_IC_NVAR                 %d\n",      OPT__UM_IC_NVAR         );
+      fprintf( Note, "OPT__UM_IC_DOWNGRADE            %d\n",      OPT__UM_IC_DOWNGRADE    );
+      fprintf( Note, "OPT__UM_IC_REFINE               %d\n",      OPT__UM_IC_REFINE       );
       fprintf( Note, "OPT__INIT_RESTRICT              %d\n",      OPT__INIT_RESTRICT      );
       fprintf( Note, "OPT__INIT_GRID_WITH_OMP         %d\n",      OPT__INIT_GRID_WITH_OMP );
       fprintf( Note, "OPT__GPUID_SELECT               %d\n",      OPT__GPUID_SELECT       );

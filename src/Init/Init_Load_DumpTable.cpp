@@ -5,7 +5,7 @@
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Init_Load_DumpTable
-// Description :  Load the dump table from the file "Input__DumpTable"  
+// Description :  Load the dump table from the file "Input__DumpTable"
 //-------------------------------------------------------------------------------------------------------
 void Init_Load_DumpTable()
 {
@@ -29,7 +29,7 @@ void Init_Load_DumpTable()
    DumpTable = new double [MaxLine];
 
 
-// skip the header 
+// skip the header
    getline( &input_line, &len, File );
 
 // begin to read
@@ -51,15 +51,15 @@ void Init_Load_DumpTable()
          if ( line == 0 )
             Aux_Error( ERROR_INFO, "please provide at least one data dump time in the dump table !!\n" );
 
-         DumpTable_NDump   = line;                 // record the number of data dumps 
-         DumpTable[line]   = __FLT_MAX__;          // set the next dump as an extremely large number 
+         DumpTable_NDump   = line;                 // record the number of data dumps
+         DumpTable[line]   = __FLT_MAX__;          // set the next dump as an extremely large number
 
          if ( DumpTable[line-1] < END_T )
          {
             END_T          = DumpTable[line-1];    // reset the ending time as the time of the last dump
 
-            if ( MPI_Rank == 0 )   
-               Aux_Message( stdout, "NOTE : the END_T is reset to the time of the last data dump = %13.7e\n", 
+            if ( MPI_Rank == 0 )
+               Aux_Message( stdout, "NOTE : the END_T is reset to the time of the last data dump = %13.7e\n",
                             END_T );
          }
 

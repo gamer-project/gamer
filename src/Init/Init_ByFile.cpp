@@ -13,30 +13,30 @@ static void UM_Flag( const int lv, const int *FlagMap );
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Init_UM
+// Function    :  Init_ByFile
 // Description :  Set up the initial condition from an input uniform-mesh array
 //
-// Note        :  a. Create levels from 0 to OPT__UM_START_LEVEL
-//                   --> no levels above OPT__UM_START_LEVEL will be created
-//                   --> ALL patches at levels 0 to OPT__UM_START_LEVEL will be created. In other words,
-//                       the simulation domain will be FULLY REFINED to level OPT__UM_START_LEVEL.
-//                b. The uniform-mesh input file should be named as "UM_START"
+// Note        :  a. Create levels from 0 to OPT__UM_IC_LEVEL
+//                   --> no levels above OPT__UM_IC_LEVEL will be created
+//                   --> ALL patches at levels 0 to OPT__UM_IC_LEVEL will be created. In other words,
+//                       the simulation domain will be FULLY REFINED to level OPT__UM_IC_LEVEL.
+//                b. The uniform-mesh input file should be named as "UM_IC"
 //                c. This function can load any number of input values per cell (from 1 to NCOMP_TOTAL)
-//                   --> determined by the input parameter "OPT__UM_START_NVAR"
-//                   --> if "OPT__UM_START_NVAR < NCOMP_TOTAL", one must specify the way to assign values to all
+//                   --> determined by the input parameter "OPT__UM_IC_NVAR"
+//                   --> if "OPT__UM_IC_NVAR < NCOMP_TOTAL", one must specify the way to assign values to all
 //                       variables in the function "UM_AssignData"
-//                d. The data format in the UM_START file should be [k][j][i][v] instead of [v][k][j][i]
+//                d. The data format in the UM_IC file should be [k][j][i][v] instead of [v][k][j][i]
 //                   --> different from the data layout adopted in GAMER versions after 1.0.beta4.0
 //-------------------------------------------------------------------------------------------------------
-void Init_UM()
+void Init_ByFile()
 {
 
-   if ( MPI_Rank == 0 )    Aux_Message( stdout, "Init_UM ... \n" );
+   if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... \n", __FUNCTION__ );
 
 
-   const char  FileName[]     = "UM_START";
-   const int   UM_lv          = OPT__UM_START_LEVEL;
-   const int   UM_NVar        = OPT__UM_START_NVAR;
+   const char  FileName[]     = "UM_IC";
+   const int   UM_lv          = OPT__UM_IC_LEVEL;
+   const int   UM_NVar        = OPT__UM_IC_NVAR;
    const int   UM_Size_Tot[3] = {  NX0_TOT[0]*(1<<UM_lv),         // size of the input data
                                    NX0_TOT[1]*(1<<UM_lv),
                                    NX0_TOT[2]*(1<<UM_lv) };
@@ -216,13 +216,13 @@ void Init_UM()
    for (int lv=0; lv<UM_lv; lv++)   delete [] UM_Data[lv];
 
 
-// downgrade the uniform-mesh data from level=OPT__UM_START_LEVEL to level=0
+// downgrade the uniform-mesh data from level=OPT__UM_IC_LEVEL to level=0
 // ===========================================================================================================
-   if ( OPT__UM_START_DOWNGRADE )
+   if ( OPT__UM_IC_DOWNGRADE )
    {
       if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Derefining the uniform-mesh data ...\n" );
 
-      for (int lv=OPT__UM_START_LEVEL-1; lv>=0; lv--)
+      for (int lv=OPT__UM_IC_LEVEL-1; lv>=0; lv--)
       {
          if ( MPI_Rank == 0 )    Aux_Message( stdout, "      Lv %2d ... ", lv+1 );
 
@@ -237,19 +237,19 @@ void Init_UM()
          Buf_GetBufferData( lv+1, amr->FluSg[lv+1], NULL_INT, DATA_AFTER_REFINE, _TOTAL, Flu_ParaBuf, USELB_NO );
 
          if ( MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );
-      } // for (int lv=OPT__UM_START_LEVEL-1; lv>=0; lv--)
+      } // for (int lv=OPT__UM_IC_LEVEL-1; lv>=0; lv--)
 
       if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Downgrading the uniform-mesh data ... done\n" );
-   } // if ( OPT__INIT == INIT_UM  &&  OPT__UM_START_DOWNGRADE )
+   } // if ( OPT__UM_IC_DOWNGRADE )
 
 
-// refine the uniform-mesh data from level=OPT__UM_START_LEVEL to level=MAX_LEVEL
+// refine the uniform-mesh data from level=OPT__UM_IC_LEVEL to level=MAX_LEVEL
 // ===========================================================================================================
-   if ( OPT__UM_START_REFINE )
+   if ( OPT__UM_IC_REFINE )
    {
       if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Refining the uniform-mesh data ...\n" );
 
-      for (int lv=OPT__UM_START_LEVEL; lv<MAX_LEVEL; lv++)
+      for (int lv=OPT__UM_IC_LEVEL; lv<MAX_LEVEL; lv++)
       {
          if ( MPI_Rank == 0 )    Aux_Message( stdout, "      Lv %2d ... ", lv );
 
@@ -264,15 +264,15 @@ void Init_UM()
          Buf_GetBufferData( lv+1, amr->FluSg[lv+1], NULL_INT, DATA_AFTER_REFINE, _TOTAL, Flu_ParaBuf, USELB_NO );
 
          if ( MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );
-      } // for (int lv=OPT__UM_START_LEVEL; lv<MAX_LEVEL; lv++)
+      } // for (int lv=OPT__UM_IC_LEVEL; lv<MAX_LEVEL; lv++)
 
       if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Refining the uniform-mesh data ... done\n" );
-   } // if ( OPT__INIT == INIT_UM  &&  OPT__UM_START_REFINE )
+   } // if ( OPT__UM_IC_REFINE )
 
 
-   if ( MPI_Rank == 0 )    Aux_Message( stdout, "Init_UM ... done\n" );
+   if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", __FUNCTION__ );
 
-} // FUNCTION : Init_UM
+} // FUNCTION : Init_ByFile
 
 
 
@@ -316,7 +316,7 @@ void UM_CreateLevel( real *UM_Data, const int lv, int **FlagMap, const int Buffe
 //       const int RhoID = RhoID0 + NVar*(k*NY*NX + j*NX + i);
 
 //       if ( UM_Data[RhoID] > MinRho )
-         if ( true )    // always flag all patches at level <= OPT__UM_START_LEVEL
+         if ( true )    // always flag all patches at level <= OPT__UM_IC_LEVEL
          {
 //          get the right index and corner of the patch 0 in the local patch group (8 patches = 1 patch group)
             const int ip2           = ip - ip%2;
@@ -542,7 +542,7 @@ void UM_Flag( const int lv, const int *FlagMap )
 // Description :  Use the input uniform-mesh array to assign data to all patches at level "lv"
 //
 // Note        :  If "NVar == NCOMP_TOTAL", we just copy the values recorded in UM_Data to all patches.
-//                Otherwise, the model-dependent function "XXX_Init_UM_AssignData" must be provided to
+//                Otherwise, the model-dependent function "XXX_Init_ByFile_AssignData" must be provided to
 //                specify the way to assign data.
 //
 // Parameter   :  lv       : Target refinement level to assign data
@@ -603,13 +603,13 @@ void UM_AssignData( const int lv, real *UM_Data, const int NVar )
    else
    {
 #     if   ( MODEL == HYDRO )
-      Hydro_Init_UM_AssignData( lv, UM_Data, NVar );
+      Hydro_Init_ByFile_AssignData( lv, UM_Data, NVar );
 
 #     elif ( MODEL == MHD )
 #     warning : WAIT MHD !!!
 
 #     elif ( MODEL == ELBDM )
-      ELBDM_Init_UM_AssignData( lv, UM_Data, NVar );
+      ELBDM_Init_ByFile_AssignData( lv, UM_Data, NVar );
 
 #     else
 #     error : ERROR : unsupported MODEL !!

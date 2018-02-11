@@ -23,7 +23,12 @@ static int     Merger_NBin2;              // number of radial bins of cluster 2
 
 
 // problem-specific function prototypes
-void Par_Init_ByFunction_Merger();
+#ifdef PARTICLE
+void Par_Init_ByFunction_Merger( const long NPar_ThisRank, const long NPar_AllRank,
+                                 real *ParMass, real *ParPosX, real *ParPosY, real *ParPosZ,
+                                 real *ParVelX, real *ParVelY, real *ParVelZ, real *ParTime,
+                                 real *ParPassive[PAR_NPASSIVE] );
+#endif
 
 
 
@@ -69,7 +74,7 @@ void Validate()
 #  endif
 
 #  ifdef PARTICLE
-   if ( OPT__INIT == INIT_STARTOVER  &&  amr->Par->Init != PAR_INIT_BY_FUNCTION )
+   if ( OPT__INIT == INIT_BY_FUNCTION  &&  amr->Par->Init != PAR_INIT_BY_FUNCTION )
       Aux_Error( ERROR_INFO, "please set PAR_INIT = 1 (by FUNCTION) !!\n" );
 #  endif
 
@@ -106,9 +111,9 @@ void SetParameter()
    const char FileName[] = "Input__TestProb";
    ReadPara_t *ReadPara  = new ReadPara_t;
 
-// add parameters in the following format (some handy constants are defined in TestProb.h):
+// add parameters in the following format:
 // --> note that VARIABLE, DEFAULT, MIN, and MAX must have the same data type
-// --> some handy constants (e.g., NoMin_int, Eps_float, ...) are defined in "ReadPara.h"
+// --> some handy constants (e.g., NoMin_int, Eps_float, ...) are defined in "include/ReadPara.h"
 // ********************************************************************************************************************************
 // ReadPara->Add( "KEY_IN_THE_FILE",        &VARIABLE,               DEFAULT,          MIN,           MAX            );
 // ********************************************************************************************************************************
@@ -137,7 +142,7 @@ void SetParameter()
 
 
 // (2) load the radial profiles
-   if ( OPT__INIT != INIT_RESTART )
+   if ( OPT__INIT != INIT_BY_RESTART )
    {
       const bool RowMajor_No  = false;       // load data into the column-major order
       const bool AllocMem_Yes = true;        // allocate memory for Merger_Prof1/2
@@ -176,7 +181,7 @@ void SetParameter()
          Table_R[b] /= UNIT_L;
       }
       } // if ( Merger_Coll )
-   } // if ( OPT__INIT != INIT_RESTART )
+   } // if ( OPT__INIT != INIT_BY_RESTART )
 
 
 // (3) reset other general-purpose parameters

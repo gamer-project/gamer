@@ -25,23 +25,16 @@ static void ResetParameter( const char *FileName, double *EndT, long *EndStep );
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Init_Restart_HDF5
+// Function    :  Init_ByRestart_HDF5
 // Description :  Reload a previous HDF5 output as the initial condition
 //
-// Note        :  1. "OPT__RESTART_HEADER == RESTART_HEADER_CHECK"
-//                   --> Check if the parameters loaded from the RESTART file are consistent with the
-//                       parameters loaded from the Input__Parameter file
-//
-//                   "OPT__RESTART_HEADER == RESTART_HEADER_SKIP"
-//                   --> Skip the header information in the RESTART file
-//
-//                2. This function will be invoked by "Init_Restart" automatically if the restart file
-//                   is determined to a HDF5 file
-//                3. Only work for format version >= 2100 (PARTICLE only works for version >= 2200)
+// Note        :  1. This function will be invoked by "Init_ByRestart" automatically if the restart file
+//                   is in the HDF5 format
+//                2. Only work for format version >= 2100 (PARTICLE only works for version >= 2200)
 //
 // Parameter   :  FileName : Target file name
 //-------------------------------------------------------------------------------------------------------
-void Init_Restart_HDF5( const char *FileName )
+void Init_ByRestart_HDF5( const char *FileName )
 {
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ...\n", __FUNCTION__ );
@@ -248,7 +241,7 @@ void Init_Restart_HDF5( const char *FileName )
 
 
 // 1-10. check all other simulation information (by rank 0 only)
-   if ( OPT__RESTART_HEADER  &&  MPI_Rank == 0 )
+   if ( MPI_Rank == 0 )
    {
       Check_Makefile ( FileName );
       Check_SymConst ( FileName );
@@ -387,18 +380,27 @@ void Init_Restart_HDF5( const char *FileName )
 
       for (int t=0; t<NPatchTotal[lv]; t++)
       {
+//       set LoadIdx_Start to "the first patch belonging to this rank"
          if (  LoadIdx_Start[lv] == -1  &&  LB_Index2Rank( lv, LBIdxList_EachLv[lv][t], CHECK_ON ) == MPI_Rank  )
             LoadIdx_Start[lv] = t;
 
-         if (                               LB_Index2Rank( lv, LBIdxList_EachLv[lv][t], CHECK_ON ) >  MPI_Rank  )
+//       set LoadIdx_Stop to "the last patch belonging to this rank + 1"
+         if ( LoadIdx_Start[lv] != -1 )
          {
-            LoadIdx_Stop [lv] = t;
-            break;
+            if (  LB_Index2Rank( lv, LBIdxList_EachLv[lv][t], CHECK_ON ) > MPI_Rank  )
+            {
+               LoadIdx_Stop[lv] = t;
+               break;
+            }
+
+//          rank owning the last patch needs to be treated separately
+            else if ( t == NPatchTotal[lv] - 1 )
+            {
+               LoadIdx_Stop[lv] = NPatchTotal[lv];
+               break;
+            }
          }
       }
-
-//    take care of the last rank with patches (ranks without any patch will have Start=Stop=-1, which is fine)
-      if ( LoadIdx_Start[lv] != -1  &&  LoadIdx_Stop[lv] == -1 )  LoadIdx_Stop[lv] = NPatchTotal[lv];
 
 #     ifdef DEBUG_HDF5
       if ( LoadIdx_Start[lv]%8 != 0  &&  LoadIdx_Start[lv] != -1 )
@@ -409,7 +411,7 @@ void Init_Restart_HDF5( const char *FileName )
 
       if (  ( LoadIdx_Start[lv] == -1 && LoadIdx_Stop[lv] != -1 )  ||
             ( LoadIdx_Start[lv] != -1 && LoadIdx_Stop[lv] == -1 )   )
-         Aux_Error( ERROR_INFO, "LoadIdx_Start/Stop[%d] =  %d/%d !!\n", lv, LoadIdx_Start[lv], LoadIdx_Stop[lv] );
+         Aux_Error( ERROR_INFO, "LoadIdx_Start/Stop[%d] = %d/%d !!\n", lv, LoadIdx_Start[lv], LoadIdx_Stop[lv] );
 #     endif
    } // for (int lv=0; lv<KeyInfo.NLevel; lv++)
 
@@ -869,7 +871,7 @@ void Init_Restart_HDF5( const char *FileName )
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", __FUNCTION__ );
 
-} // FUNCTION : Init_Restart_HDF5
+} // FUNCTION : Init_ByRestart_HDF5
 
 
 
@@ -1727,13 +1729,11 @@ void Check_InputPara( const char *FileName )
 // initialization
    LoadField( "Opt__Init",               &RS.Opt__Init,               SID, TID, NonFatal, &RT.Opt__Init,                1, NonFatal );
    LoadField( "RestartLoadNRank",        &RS.RestartLoadNRank,        SID, TID, NonFatal, &RT.RestartLoadNRank,         1, NonFatal );
-   LoadField( "Opt__RestartHeader",      &RS.Opt__RestartHeader,      SID, TID, NonFatal, &RT.Opt__RestartHeader,       1, NonFatal );
    LoadField( "Opt__RestartReset",       &RS.Opt__RestartReset,       SID, TID, NonFatal, &RT.Opt__RestartReset,        1, NonFatal );
-   LoadField( "Opt__UM_Start_Level",     &RS.Opt__UM_Start_Level,     SID, TID, NonFatal, &RT.Opt__UM_Start_Level,      1, NonFatal );
-   LoadField( "Opt__UM_Start_NVar",      &RS.Opt__UM_Start_NVar,      SID, TID, NonFatal, &RT.Opt__UM_Start_NVar,       1, NonFatal );
-   LoadField( "Opt__UM_Start_Downgrade", &RS.Opt__UM_Start_Downgrade, SID, TID, NonFatal, &RT.Opt__UM_Start_Downgrade,  1, NonFatal );
-   LoadField( "Opt__UM_Start_Refine",    &RS.Opt__UM_Start_Refine,    SID, TID, NonFatal, &RT.Opt__UM_Start_Refine,     1, NonFatal );
-   LoadField( "Opt__UM_Factor_5over3",   &RS.Opt__UM_Factor_5over3,   SID, TID, NonFatal, &RT.Opt__UM_Factor_5over3,    1, NonFatal );
+   LoadField( "Opt__UM_IC_Level",        &RS.Opt__UM_IC_Level,        SID, TID, NonFatal, &RT.Opt__UM_IC_Level,         1, NonFatal );
+   LoadField( "Opt__UM_IC_NVar",         &RS.Opt__UM_IC_NVar,         SID, TID, NonFatal, &RT.Opt__UM_IC_NVar,          1, NonFatal );
+   LoadField( "Opt__UM_IC_Downgrade",    &RS.Opt__UM_IC_Downgrade,    SID, TID, NonFatal, &RT.Opt__UM_IC_Downgrade,     1, NonFatal );
+   LoadField( "Opt__UM_IC_Refine",       &RS.Opt__UM_IC_Refine,       SID, TID, NonFatal, &RT.Opt__UM_IC_Refine,        1, NonFatal );
    LoadField( "Opt__InitRestrict",       &RS.Opt__InitRestrict,       SID, TID, NonFatal, &RT.Opt__InitRestrict,        1, NonFatal );
    LoadField( "Opt__InitGridWithOMP",    &RS.Opt__InitGridWithOMP,    SID, TID, NonFatal, &RT.Opt__InitGridWithOMP,     1, NonFatal );
    LoadField( "Opt__GPUID_Select",       &RS.Opt__GPUID_Select,       SID, TID, NonFatal, &RT.Opt__GPUID_Select,        1, NonFatal );
