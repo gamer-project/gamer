@@ -203,11 +203,11 @@ void CUAPI_Set_Default_GPU_Parameter( int &GPU_NStream, int &Flu_GPU_NPGroup, in
 #           if   ( GPU_ARCH == FERMI )
             GPU_NStream = 8;
 #           elif ( GPU_ARCH == KEPLER )
-            GPU_NStream = 48;             // optimized for K40
+            GPU_NStream = 32;
 #           elif ( GPU_ARCH == MAXWELL )
-            GPU_NStream = 32;             // may be optimized further
+            GPU_NStream = 32;
 #           elif ( GPU_ARCH == PASCAL )
-            GPU_NStream = 32;             // may be optimized further
+            GPU_NStream = 32;
 #           else
 #           error : UNKNOWN GPU_ARCH !!
 #           endif
@@ -219,11 +219,11 @@ void CUAPI_Set_Default_GPU_Parameter( int &GPU_NStream, int &Flu_GPU_NPGroup, in
 #           if   ( GPU_ARCH == FERMI )
             GPU_NStream = 8;
 #           elif ( GPU_ARCH == KEPLER )
-            GPU_NStream = 48;             // optimized for K40
+            GPU_NStream = 32;
 #           elif ( GPU_ARCH == MAXWELL )
-            GPU_NStream = 32;             // may be optimized further
+            GPU_NStream = 32;
 #           elif ( GPU_ARCH == PASCAL )
-            GPU_NStream = 32;             // may be optimized further
+            GPU_NStream = 32;
 #           else
 #           error : ERROR : UNKNOWN GPU_ARCH !!
 #           endif
@@ -235,8 +235,9 @@ void CUAPI_Set_Default_GPU_Parameter( int &GPU_NStream, int &Flu_GPU_NPGroup, in
       else
          GPU_NStream = 1;
 
-      if ( MPI_Rank == 0 )  Aux_Message( stdout, "NOTE : parameter \"%s\" is set to the default value = %d\n",
-                                         "GPU_NSTREAM", GPU_NSTREAM );
+      if ( MPI_Rank == 0 )
+         Aux_Message( stdout, "NOTE : parameter \"%s\" is set to the default value = %d"
+                              " --> might be further fine-tuned\n", "GPU_NSTREAM", GPU_NSTREAM );
    } // if ( GPU_NStream <= 0 )
 
 
@@ -248,11 +249,11 @@ void CUAPI_Set_Default_GPU_Parameter( int &GPU_NStream, int &Flu_GPU_NPGroup, in
 #        if   ( GPU_ARCH == FERMI )
          Flu_GPU_NPGroup = 1*GPU_NStream*DeviceProp.multiProcessorCount;
 #        elif ( GPU_ARCH == KEPLER )
-         Flu_GPU_NPGroup = 32*DeviceProp.multiProcessorCount;  // optimized for K40 (for GPU_NStream=48, NPGroup=480)
+         Flu_GPU_NPGroup = 1*GPU_NStream*DeviceProp.multiProcessorCount;
 #        elif ( GPU_ARCH == MAXWELL )
-         Flu_GPU_NPGroup = 32*DeviceProp.multiProcessorCount;  // may be optimized further
+         Flu_GPU_NPGroup = 1*GPU_NStream*DeviceProp.multiProcessorCount;
 #        elif ( GPU_ARCH == PASCAL )
-         Flu_GPU_NPGroup = 32*DeviceProp.multiProcessorCount;  // optimized for P100 (for GPU_NStream=32, NPGroup=1792)
+         Flu_GPU_NPGroup = 1*GPU_NStream*DeviceProp.multiProcessorCount;
 #        else
 #        error : UNKNOWN GPU_ARCH !!
 #        endif
@@ -264,11 +265,11 @@ void CUAPI_Set_Default_GPU_Parameter( int &GPU_NStream, int &Flu_GPU_NPGroup, in
 #        if   ( GPU_ARCH == FERMI )
          Flu_GPU_NPGroup = 1*GPU_NStream*DeviceProp.multiProcessorCount;
 #        elif ( GPU_ARCH == KEPLER )
-         Flu_GPU_NPGroup = 32*DeviceProp.multiProcessorCount;  // optimized for K40 (for GPU_NStream=48, NPGroup=480)
+         Flu_GPU_NPGroup = 1*GPU_NStream*DeviceProp.multiProcessorCount;
 #        elif ( GPU_ARCH == MAXWELL )
-         Flu_GPU_NPGroup = 32*DeviceProp.multiProcessorCount;  // may be optimized further
+         Flu_GPU_NPGroup = 1*GPU_NStream*DeviceProp.multiProcessorCount;
 #        elif ( GPU_ARCH == PASCAL )
-         Flu_GPU_NPGroup = 32*DeviceProp.multiProcessorCount;  // may be optimized further
+         Flu_GPU_NPGroup = 1*GPU_NStream*DeviceProp.multiProcessorCount;
 #        else
 #        error : UNKNOWN GPU_ARCH !!
 #        endif
@@ -276,8 +277,9 @@ void CUAPI_Set_Default_GPU_Parameter( int &GPU_NStream, int &Flu_GPU_NPGroup, in
 #        error : ERROR : UNKNOWN MODEL !!
 #     endif // MODEL
 
-      if ( MPI_Rank == 0 )  Aux_Message( stdout, "NOTE : parameter \"%s\" is set to the default value = %d\n",
-                                         "FLU_GPU_NPGROUP", Flu_GPU_NPGroup );
+      if ( MPI_Rank == 0 )
+         Aux_Message( stdout, "NOTE : parameter \"%s\" is set to the default value = %d"
+                              " --> might be further fine-tuned\n", "FLU_GPU_NPGROUP", Flu_GPU_NPGroup );
    } // if ( Flu_GPU_NPGroup <= 0 )
 
 // (2-2) POT_GPU_NPGROUP
@@ -287,17 +289,18 @@ void CUAPI_Set_Default_GPU_Parameter( int &GPU_NStream, int &Flu_GPU_NPGroup, in
 #     if   ( GPU_ARCH == FERMI )
       Pot_GPU_NPGroup = 1*GPU_NStream*DeviceProp.multiProcessorCount;
 #     elif ( GPU_ARCH == KEPLER )
-      Pot_GPU_NPGroup = 32*DeviceProp.multiProcessorCount;  // optimized for K40 (for GPU_NStream=48, NPGroup=480)
+      Pot_GPU_NPGroup = 1*GPU_NStream*DeviceProp.multiProcessorCount;
 #     elif ( GPU_ARCH == MAXWELL )
-      Pot_GPU_NPGroup = 32*DeviceProp.multiProcessorCount;  // may be optimized further
+      Pot_GPU_NPGroup = 1*GPU_NStream*DeviceProp.multiProcessorCount;
 #     elif ( GPU_ARCH == PASCAL )
-      Pot_GPU_NPGroup = 32*DeviceProp.multiProcessorCount;  // optimized for P100 (for GPU_NStream=32, NPGroup=1792)
+      Pot_GPU_NPGroup = 1*GPU_NStream*DeviceProp.multiProcessorCount;
 #     else
 #     error : UNKNOWN GPU_ARCH !!
 #     endif
 
-      if ( MPI_Rank == 0 )  Aux_Message( stdout, "NOTE : parameter \"%s\" is set to the default value = %d\n",
-                                         "POT_GPU_NPGROUP", Pot_GPU_NPGroup );
+      if ( MPI_Rank == 0 )
+         Aux_Message( stdout, "NOTE : parameter \"%s\" is set to the default value = %d"
+                              " --> might be further fine-tuned\n", "POT_GPU_NPGROUP", Pot_GPU_NPGroup );
    } // if ( Pot_GPU_NPGroup <= 0 )
 #  endif
 
@@ -306,19 +309,20 @@ void CUAPI_Set_Default_GPU_Parameter( int &GPU_NStream, int &Flu_GPU_NPGroup, in
    if ( Che_GPU_NPGroup <= 0 )
    {
 #     if   ( GPU_ARCH == FERMI )
-      Che_GPU_NPGroup = 1*GPU_NStream*DeviceProp.multiProcessorCount;   // not optimized yet
+      Che_GPU_NPGroup = 1*GPU_NStream*DeviceProp.multiProcessorCount;
 #     elif ( GPU_ARCH == KEPLER )
-      Che_GPU_NPGroup = 32*DeviceProp.multiProcessorCount;              // not optimized yet
+      Che_GPU_NPGroup = 1*GPU_NStream*DeviceProp.multiProcessorCount;
 #     elif ( GPU_ARCH == MAXWELL )
-      Che_GPU_NPGroup = 32*DeviceProp.multiProcessorCount;              // not optimized yet
+      Che_GPU_NPGroup = 1*GPU_NStream*DeviceProp.multiProcessorCount;
 #     elif ( GPU_ARCH == PASCAL )
-      Che_GPU_NPGroup = 32*DeviceProp.multiProcessorCount;              // not optimized yet
+      Che_GPU_NPGroup = 1*GPU_NStream*DeviceProp.multiProcessorCount;
 #     else
 #     error : UNKNOWN GPU_ARCH !!
 #     endif
 
-      if ( MPI_Rank == 0 )  Aux_Message( stdout, "NOTE : parameter \"%s\" is set to the default value = %d\n",
-                                         "CHE_GPU_NPGROUP", Che_GPU_NPGroup );
+      if ( MPI_Rank == 0 )
+         Aux_Message( stdout, "NOTE : parameter \"%s\" is set to the default value = %d"
+                              " --> might be further fine-tuned\n", "CHE_GPU_NPGROUP", Che_GPU_NPGroup );
    } // if ( Che_GPU_NPGroup <= 0 )
 #  endif
 
