@@ -9,7 +9,7 @@
 /*======================================================================================================
 Procedure for outputting new variables:
 1. Add the new variables into one of the header sections
-2. Add the corresponding (i) fread (ii) CompareVar in "Init_Restart_v2/Load_Parameter_After_2000"
+2. Add the corresponding (i) fread (ii) CompareVar in "Init_ByRestart_v2/Load_Parameter_After_2000"
 ======================================================================================================*/
 
 

@@ -17,7 +17,7 @@
 //                4. Particles loaded here are only temporarily stored in this rank
 //                   --> They will be redistributed when calling "Par_LB_Init_RedistributeByRectangular
 //                       and LB_Init_LoadBalance"
-//                5. Currently the target file name is fixed to "PAR_START"
+//                5. Currently the target file name is fixed to "PAR_IC"
 //                6. File format: plain C binary in the format [Number of particles][Particle attributes]
 //                   --> [Particle 0][Attribute 0], [Particle 0][Attribute 1], ...
 //                   --> Note that it's different from the internal data format in the particle repository,
@@ -37,7 +37,7 @@ void Par_Init_ByFile()
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ...\n", __FUNCTION__ );
 
 
-   const char FileName[] = "PAR_START";
+   const char FileName[] = "PAR_IC";
    const int  NParVar    = 7;             // mass, pos*3, vel*3
 
 

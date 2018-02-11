@@ -43,6 +43,7 @@ const TestProbID_t
    TESTPROB_HYDRO_SPHERICAL_COLLAPSE           =    7,
    TESTPROB_HYDRO_KELVIN_HELMHOLTZ_INSTABILITY =    8,
    TESTPROB_HYDRO_RIEMANN                      =    9,
+   TESTPROB_HYDRO_COLLIDING_JETS               =   10,
 
    TESTPROB_ELBDM_EXTPOT                       = 1000;
 
@@ -50,9 +51,9 @@ const TestProbID_t
 // program initialization options
 typedef int OptInit_t;
 const OptInit_t
-   INIT_STARTOVER = 1,
-   INIT_RESTART   = 2,
-   INIT_UM        = 3;
+   INIT_BY_FUNCTION = 1,
+   INIT_BY_RESTART  = 2,
+   INIT_BY_FILE     = 3;
 
 
 // program restart options

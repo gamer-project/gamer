@@ -72,6 +72,7 @@ void Init_Unit()
 
 
 //    set all code units
+//    --> do NOT modify the following order of setting different units (otherwise some combinations may fail)
 //    (1) length unit
       if ( UNIT_L <= 0.0 )
       {

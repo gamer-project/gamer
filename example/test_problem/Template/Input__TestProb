@@ -1,4 +1,5 @@
 # problem-specific runtime parameters
-var_double           1.0e0          # double precision variable
-var_int              2              # integer variable
+var_bool             0              # boolean variable [1]
+var_double           123.0          # double precision variable (>0.0) [1.0]
+var_int              456            # integer variable (0-5) [2]
 var_str              filename       # string variable

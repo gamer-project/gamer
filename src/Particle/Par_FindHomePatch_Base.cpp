@@ -11,7 +11,7 @@
 //
 // Note        :  1. This function use the array "BaseP" to find the home patch
 //                   --> It should NOT be used for LOAD_BALANCE except during the initialization
-//                2. Invoked by "Init_StartOver"
+//                2. Invoked by "Init_ByFunction"
 //                3. This function assumes that all particles stored in "amr->Par->XXX" are located
 //                   in the sub-domain calculated by this rank
 //
