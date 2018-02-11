@@ -67,7 +67,7 @@ void Init_Parallelization()
 
 // the following operations are useless for LOAD_BALANCE during restart
 #  ifdef LOAD_BALANCE
-   if ( OPT__INIT == INIT_RESTART )
+   if ( OPT__INIT == INIT_BY_RESTART )
    {
       if ( MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );
 
@@ -334,7 +334,7 @@ void Init_Parallelization()
          Aux_Error( ERROR_INFO, "Total number of active particles in all ranks (%ld) != expected (%ld) !!\n",
                     NPar_Sum, amr->Par->NPar_Active_AllRank );
 #     endif
-   } // if ( OPT__INIT != INIT_RESTART )
+   } // if ( OPT__INIT != INIT_BY_RESTART )
 #  endif // #ifdef PARTICLE
 
 

@@ -9,8 +9,8 @@
 // 
 // Note        :  a. This function assumes that the relations between levels "0, 1, 2, ..., lv-1" have already
 //                   been constructed correctly
-//                b. Currently this function only works for the functions "Init_Restart_v1, Init_Restart_v2,
-//                   and Init_Restart_HDF5"
+//                b. Currently this function only works for the functions "Init_ByRestart_v1, Init_ByRestart_v2,
+//                   and Init_ByRestart_HDF5"
 //                c. Only work on the "real" patches
 //
 // Parameter   :  lv    : Target refinement level

@@ -313,12 +313,12 @@ void LB_SetCutPoint( const int lv, long *CutPoint, const bool InputLBIdx0AndLoad
 
 
 //    4. set the cut points
+      for (int t=0; t<MPI_NRank+1; t++)   CutPoint[t] = -1;
+
 //    4-1. take care of the case with no patches at all
       if ( NPG_Total == 0 )
       {
          Load_Ave = 0.0;
-
-         for (int t=0; t<MPI_NRank+1; t++)   CutPoint[t] = -1;
 
          if ( OPT__VERBOSE )
             for (int r=0; r<MPI_NRank; r++)  Load_Record[r] = 0.0;
@@ -376,7 +376,7 @@ void LB_SetCutPoint( const int lv, long *CutPoint, const bool InputLBIdx0AndLoad
                   LoadAcc += LoadThisPG;
                }
 
-//             record the **accumulated** wordload of each rank
+//             record the **accumulated** workload of each rank
                if ( OPT__VERBOSE )  Load_Record[ CutIdx - 1 ] = LoadAcc;
 
                CutIdx ++;
@@ -389,6 +389,28 @@ void LB_SetCutPoint( const int lv, long *CutPoint, const bool InputLBIdx0AndLoad
             } // if ( LoadAcc+LoadThisPG >= LoadTarget ) ... else ...
 
          } // for (int PG=0; PG<NPG_Total; PG++)
+
+//       4.5 take care of the special case where the last several ranks have no patches at all
+         for (int t=CutIdx; t<MPI_NRank; t++)
+         {
+            CutPoint[t] = CutPoint[MPI_NRank];
+
+            if ( OPT__VERBOSE )  Load_Record[ t - 1 ] = Load_Ave*MPI_NRank;
+         }
+
+//       4.6 check
+#        ifdef GAMER_DEBUG
+//       all cut points must be set properly
+         for (int t=0; t<MPI_NRank+1; t++)
+            if ( CutPoint[t] == -1 )
+               Aux_Error( ERROR_INFO, "lv %d, CutPoint[%d] == -1 !!\n", lv, t );
+
+//       monotonicity
+         for (int t=0; t<MPI_NRank; t++)
+            if ( CutPoint[t+1] < CutPoint[t] )
+               Aux_Error( ERROR_INFO, "lv %d, CutPoint[%d] (%ld) < CutPoint[%d] (%ld) !!\n",
+                          lv, t+1, CutPoint[t+1], t, CutPoint[t] );
+#        endif
       } // if ( NPG_Total == 0 ) ... else ...
 
 

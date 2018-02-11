@@ -645,7 +645,7 @@ void Init_ResetParameter()
 
 // MPI_NRank_X is useless during restart if LOAD_BALANCE is on
 #  ifdef LOAD_BALANCE
-   if ( OPT__INIT == INIT_RESTART )
+   if ( OPT__INIT == INIT_BY_RESTART )
    {
       for (int d=0; d<3; d++)    MPI_NRank_X[d] = -1;
 
@@ -699,15 +699,24 @@ void Init_ResetParameter()
 #  endif
 
 
-// OPT__UM_START_DOWNGRADE must be turned on for the isolated Poisson solver
+// OPT__UM_IC_DOWNGRADE must be turned on for the isolated Poisson solver
 #  ifdef GRAVITY
-   if ( !OPT__UM_START_DOWNGRADE  &&  OPT__BC_POT == BC_POT_ISOLATED  &&  OPT__UM_START_LEVEL > 0 )
+   if ( OPT__INIT == INIT_BY_FILE  &&  !OPT__UM_IC_DOWNGRADE  &&  OPT__BC_POT == BC_POT_ISOLATED  &&  OPT__UM_IC_LEVEL > 0 )
    {
-      OPT__UM_START_DOWNGRADE = true;
+      OPT__UM_IC_DOWNGRADE = true;
 
-      PRINT_WARNING( OPT__UM_START_DOWNGRADE, FORMAT_INT, "for the isolated gravity" );
+      PRINT_WARNING( OPT__UM_IC_DOWNGRADE, FORMAT_INT, "for the isolated gravity" );
    }
 #  endif
+
+
+// OPT__UM_IC_NVAR
+   if ( OPT__INIT == INIT_BY_FILE  &&  OPT__UM_IC_NVAR <= 0 )
+   {
+      OPT__UM_IC_NVAR = NCOMP_TOTAL;
+
+      PRINT_WARNING( OPT__UM_IC_NVAR, FORMAT_INT, "" );
+   }
 
 
 // HDF5 is not supported if "SUPPORT_HDF5" is disabled
@@ -746,7 +755,7 @@ void Init_ResetParameter()
 
 // set particle initialization to PAR_INIT_BY_RESTART for restart
 #  ifdef PARTICLE
-   if ( OPT__INIT == INIT_RESTART  &&  amr->Par->Init != PAR_INIT_BY_RESTART )
+   if ( OPT__INIT == INIT_BY_RESTART  &&  amr->Par->Init != PAR_INIT_BY_RESTART )
    {
       amr->Par->Init = PAR_INIT_BY_RESTART;
 

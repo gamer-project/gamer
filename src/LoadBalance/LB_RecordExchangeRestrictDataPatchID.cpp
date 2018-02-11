@@ -192,7 +192,7 @@ void LB_RecordExchangeRestrictDataPatchID( const int FaLv )
          LB_RecvR_IDList[r][t] = amr->LB->IdxList_Real_IdxTable[FaLv][ Match_R[t] ];
 
 #     ifdef GAMER_DEBUG
-//    4.5 check: every patch in the recv list should have son not home)
+//    4.5 check: every patch in the recv list should have son not home
       int SonPID;
 
       for (int t=0; t<LB_RecvR_NList[r]; t++)

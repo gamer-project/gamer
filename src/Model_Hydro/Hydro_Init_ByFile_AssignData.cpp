@@ -6,24 +6,24 @@
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Hydro_Init_UM_AssignData
+// Function    :  Hydro_Init_ByFile_AssignData
 // Description :  Use the input uniform-mesh array to assign data to all patches at level "lv"
 //
 // Note        :  1. Work in the model HYDRO
 //                2. Only load "density". Momentum x/y/z are initialized as zero. Total energy is initialized
 //                   by specifying the sound speed parameter "Cs".
-//                3. Data format in the UM_START file : [k][j][i][v]
+//                3. Data format in the UM_IC file: [k][j][i][v]
 //
 // Parameter   :  lv       : Target refinement level to assign data
 //                UM_Data  : Input uniform-mesh array
 //                NVar     : Number of variables stored in UM_Data
 //-------------------------------------------------------------------------------------------------------
-void Hydro_Init_UM_AssignData( const int lv, real *UM_Data, const int NVar )
+void Hydro_Init_ByFile_AssignData( const int lv, real *UM_Data, const int NVar )
 {
 
 // check
    if ( NVar != 1 )
-      Aux_Error( ERROR_INFO, "%s only supports OPT__UM_START_NVAR == 1 (for total gas density) !!\n", __FUNCTION__ );
+      Aux_Error( ERROR_INFO, "%s only supports OPT__UM_IC_NVAR == 1 (for total gas density) !!\n", __FUNCTION__ );
 
 #  if ( NCOMP_PASSIVE > 0 )
    Aux_Error( ERROR_INFO, "%s does NOT support passive scalars !!\n", __FUNCTION__ );
@@ -75,14 +75,6 @@ void Hydro_Init_UM_AssignData( const int lv, real *UM_Data, const int NVar )
 //       assuming that UM_Data only stores density, momentum == 0, and sound speed = Cs
          if ( NVar == 1 )
          {
-//          multiply the input density field by 5/3 to have the growing-mode amplitude correct
-            if ( OPT__UM_FACTOR_5OVER3 )
-            {
-               const real AveDens = 1.0;     // !! we have assumed that the background density == 1.0 !!
-               const real Factor  = 5.0/3.0; // growing-mode amplitude = total amplitude * 3/5
-               UM_Data[Idx] = ( UM_Data[Idx] - AveDens )*Factor + AveDens;
-            }
-
             amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[DENS][k][j][i] = UM_Data[Idx];
             amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[MOMX][k][j][i] = 0.0;
             amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[MOMY][k][j][i] = 0.0;
@@ -100,7 +92,7 @@ void Hydro_Init_UM_AssignData( const int lv, real *UM_Data, const int NVar )
       }}}
    }
 
-} // FUNCTION : Hydro_Init_UM_AssignData
+} // FUNCTION : Hydro_Init_ByFile_AssignData
 
 
 

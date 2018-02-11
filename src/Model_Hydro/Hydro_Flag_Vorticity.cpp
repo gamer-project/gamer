@@ -10,7 +10,7 @@
 // Function    :  Hydro_Flag_Vorticity
 // Description :  Check if the vorticity of the input data at the cell (i,j,k) exceeds the given threshold
 //
-// Note        :  1. Flag if curl(v)*dh/|v| > threshold
+// Note        :  1. Flag if |curl(v)|*dh/|v| > threshold
 //                2. For cells adjacent to the patch boundary, only first-order approximation is adopted
 //                   to estimate derivatives. Otherwise, second-order approximation is adopted.
 //                   --> Do NOT need to prepare the ghost-zone data for the target patch

@@ -1,0 +1,33 @@
+# problem-specific runtime parameters
+Jet_NJet             1           # number of jets (1/2)
+
+Jet_BgDens           1.25e-29    # ambient density (in cgs units)
+Jet_BgTemp           1.00        # ambient temperature (in keV)
+Jet_BgVel_x         +0.0         # ambient velocity x (in cgs units) [0.0]
+Jet_BgVel_y         +2.0e8       # ambient velocity y (in cgs units) [0.0]
+Jet_BgVel_z         +0.0         # ambient velocity z (in cgs units) [0.0]
+
+Jet0_Radius          0.35        # jet 0: radius of the cylinder-shape jet source (in kpc)
+Jet0_HalfHeight      0.70        # jet 0: half height of the cylinder-shape jet source (in kpc)
+Jet0_SrcVel          4.0e9       # jet 0: jet velocity (in cgs units)
+Jet0_SrcDens         1.0e-30     # jet 0: jet density (in cgs units)
+Jet0_SrcTemp         2.0e1       # jet 0: jet temperature (in keV)
+Jet0_Vec_x          +1.0         # jet 0: jet orientation vector x (x,y,z don't have to be a unit vector)
+Jet0_Vec_y          +0.0         # jet 0: jet orientation vector y
+Jet0_Vec_z          +0.0         # jet 0: jet orientation vector z
+Jet0_CenOffset_x    +0.0         # jet 0: jet central coordinates offset x (in kpc)
+Jet0_CenOffset_y    +0.0         # jet 0: jet central coordinates offset y (in kpc)
+Jet0_CenOffset_z    +0.0         # jet 0: jet central coordinates offset z (in kpc)
+
+#Jet1_Radius          0.35        # jet 1: radius of the cylinder-shape jet source (in kpc)
+#Jet1_HalfHeight      0.70        # jet 1: half height of the cylinder-shape jet source (in kpc)
+#Jet1_SrcVel          4.0e9       # jet 1: jet velocity (in cgs units)
+#Jet1_SrcDens         1.0e-30     # jet 1: jet density (in cgs units)
+#Jet1_SrcTemp         2.0e1       # jet 1: jet temperature (in keV)
+#Jet1_Vec_x          +3.0         # jet 1: jet orientation vector x (x,y,z don't have to be a unit vector)
+#Jet1_Vec_y          +1.0         # jet 1: jet orientation vector y
+#Jet1_Vec_z          +0.0         # jet 1: jet orientation vector z
+#Jet1_CenOffset_x    +0.0         # jet 1: jet central coordinates offset x (in kpc)
+#Jet1_CenOffset_y    -4.0         # jet 1: jet central coordinates offset y (in kpc)
+#Jet1_CenOffset_z    +0.21        # jet 1: jet central coordinates offset z (in kpc)
+

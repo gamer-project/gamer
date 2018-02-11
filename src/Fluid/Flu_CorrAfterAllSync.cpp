@@ -26,10 +26,9 @@
 //                   1-4. Recalculate particle acceleration
 //                        --> Because particles have been synchronized and potential has been recalculated
 //                        --> Must work with STORE_PAR_ACC
-//                2. Invoked by main()
+//                2. Invoked by main() and Output_DumpData()
 //                3. Do nothing if there are only base-level patches
 //                4. Strictly speaking, this function belongs to both Fluid, SelfGravity, and Particle categories
-//                5. Invoked by main() and Output_DumpData()
 //
 // Parameter   :  None
 //

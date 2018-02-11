@@ -151,16 +151,16 @@ void Init_MemAllocate_Fluid( const int Flu_NPatchGroup, const int Pot_NPatchGrou
 void Init_Parallelization();
 void Init_RecordBasePatch();
 void Init_Refine( const int lv );
-void Init_Restart();
+void Init_ByRestart();
 void Init_Unit();
 void Init_PassiveVariable();
 #ifdef SUPPORT_HDF5
-void Init_Restart_HDF5( const char *FileName );
+void Init_ByRestart_HDF5( const char *FileName );
 #endif
 void Init_Reload_OldFormat();
-void Init_StartOver();
+void Init_ByFunction();
 void Init_TestProb();
-void Init_UM();
+void Init_ByFile();
 #ifdef OPENMP
 void Init_OpenMP();
 #endif
@@ -382,8 +382,8 @@ int  LB_Index2Rank( const int lv, const long LB_Idx, const Check_t Check );
 void Hydro_Aux_Check_Negative( const int lv, const int Mode, const char *comment );
 void Hydro_GetTimeStep_Gravity( double &dt, double &dTime, int &MinDtLv, real &MinDtVar, const double dt_dTime );
 void Hydro_GetMaxAcc( real MaxAcc[] );
-void Hydro_Init_StartOver_AssignData( const int lv );
-void Hydro_Init_UM_AssignData( const int lv, real *UM_Data, const int NVar );
+void Hydro_Init_ByFunction_AssignData( const int lv );
+void Hydro_Init_ByFile_AssignData( const int lv, real *UM_Data, const int NVar );
 void Hydro_BoundaryCondition_Outflow( real *Array, const int BC_Face, const int NVar, const int GhostSize,
                                       const int ArraySizeX, const int ArraySizeY, const int ArraySizeZ,
                                       const int Idx_Start[], const int Idx_End[] );
@@ -401,8 +401,8 @@ bool Hydro_Flag_Vorticity( const int i, const int j, const int k, const int lv, 
 
 // ELBDM model
 #elif ( MODEL == ELBDM )
-void   ELBDM_Init_StartOver_AssignData( const int lv );
-void   ELBDM_Init_UM_AssignData( const int lv, real *UM_Data, const int NVar );
+void   ELBDM_Init_ByFunction_AssignData( const int lv );
+void   ELBDM_Init_ByFile_AssignData( const int lv, real *UM_Data, const int NVar );
 double ELBDM_GetTimeStep_Fluid( const int lv );
 double ELBDM_GetTimeStep_Gravity( const int lv );
 double ELBDM_GetTimeStep_Phase( const int lv );

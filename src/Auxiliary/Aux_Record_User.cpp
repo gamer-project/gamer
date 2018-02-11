@@ -21,7 +21,7 @@ void (*Aux_Record_User_Ptr)() = Aux_Record_User;
 //
 // Parameter   :  None
 //-------------------------------------------------------------------------------------------------------
-void Aux_Record_User( )
+void Aux_Record_User()
 {
 
    const char FileName[] = "Record__User";

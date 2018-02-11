@@ -139,7 +139,7 @@ void   CPU_DualEnergyFix( const real Dens, const real MomX, const real MomY, con
 //                --> Here entropy is defined as "pressure / density^(Gamma-1)" (i.e., entropy per volume)
 //
 // Note        :  1. Used by the dual-energy formalism
-//                2. Invoked by the functions "Hydro_Init_StartOver_AssignData, Gra_Close"
+//                2. Invoked by the functions "Hydro_Init_ByFunction_AssignData, Gra_Close"
 //                3. Currently this function does NOT apply the minimum pressure check when calling CPU_GetPressure()
 //                   --> However, note that CPU_DensPres2Entropy() does apply a floor value (TINY_NUMBER) for entropy
 //
