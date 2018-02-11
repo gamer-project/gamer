@@ -58,7 +58,7 @@ void Init_Function_User( real fluid[], const double x, const double y, const dou
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  ELBDM_Init_StartOver_AssignData
+// Function    :  ELBDM_Init_ByFunction_AssignData
 // Description :  Construct the initial condition in ELBDM
 //
 // Note        :  1. Work for the option "OPT__INIT == INIT_STARTOVER"
@@ -73,7 +73,7 @@ void Init_Function_User( real fluid[], const double x, const double y, const dou
 //
 // Parameter   :  lv : Target refinement level
 //-------------------------------------------------------------------------------------------------------
-void ELBDM_Init_StartOver_AssignData( const int lv )
+void ELBDM_Init_ByFunction_AssignData( const int lv )
 {
 
 // check
@@ -105,9 +105,9 @@ void ELBDM_Init_StartOver_AssignData( const int lv )
 
          for (int v=0; v<NCOMP_TOTAL; v++)   fluid[v] = 0.0;
 
-         for (int kk=0; kk<NSub; kk++)    {  z = z0 + (double)kk*dh_sub;
-         for (int jj=0; jj<NSub; jj++)    {  y = y0 + (double)jj*dh_sub;
-         for (int ii=0; ii<NSub; ii++)    {  x = x0 + (double)ii*dh_sub;
+         for (int kk=0; kk<NSub; kk++)    {  z = z0 + kk*dh_sub;
+         for (int jj=0; jj<NSub; jj++)    {  y = y0 + jj*dh_sub;
+         for (int ii=0; ii<NSub; ii++)    {  x = x0 + ii*dh_sub;
 
             Init_Function_User_Ptr( fluid_sub, x, y, z, Time[lv], lv, NULL );
 
@@ -184,7 +184,7 @@ void ELBDM_Init_StartOver_AssignData( const int lv )
       }}}
    } // if ( NSub > 1 ) ... else ...
 
-} // FUNCTION : ELBDM_Init_StartOver_AssignData
+} // FUNCTION : ELBDM_Init_ByFunction_AssignData
 
 
 
