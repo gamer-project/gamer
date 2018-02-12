@@ -103,7 +103,7 @@ void Validate()
 
 
 
-#if ( MODEL == ELBDM  &&  defined GRAVITY )
+#if ( MODEL == ELBDM  &&  defined GRAVITY  &&  defined COMOVING )
 //-------------------------------------------------------------------------------------------------------
 // Function    :  SetParameter
 // Description :  Load and set the problem-specific runtime parameters
@@ -253,7 +253,7 @@ void OutputError()
    Output_L1Error( SetGridIC, Prefix, Part, NULL_REAL, NULL_REAL, NULL_REAL );
 
 } // FUNCTION : OutputError
-#endif // #if ( MODEL == ELBDM  &&  defined GRAVITY )
+#endif // #if ( MODEL == ELBDM  &&  defined GRAVITY  &&  defined COMOVING )
 
 
 
@@ -277,7 +277,7 @@ void Init_TestProb_ELBDM_JeansInstabilityComoving()
    Validate();
 
 
-#  if ( MODEL == ELBDM  &&  defined GRAVITY )
+#  if ( MODEL == ELBDM  &&  defined GRAVITY  &&  defined COMOVING )
 // set the problem-specific runtime parameters
    SetParameter();
 
@@ -292,7 +292,7 @@ void Init_TestProb_ELBDM_JeansInstabilityComoving()
    End_User_Ptr             = NULL;
    Init_ExternalAcc_Ptr     = NULL;
    Init_ExternalPot_Ptr     = NULL;
-#  endif // #if ( MODEL == ELBDM  &&  defined GRAVITY )
+#  endif // #if ( MODEL == ELBDM  &&  defined GRAVITY  &&  defined COMOVING )
 
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", __FUNCTION__ );
