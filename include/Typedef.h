@@ -45,7 +45,8 @@ const TestProbID_t
    TESTPROB_HYDRO_RIEMANN                      =    9,
    TESTPROB_HYDRO_COLLIDING_JETS               =   10,
 
-   TESTPROB_ELBDM_EXTPOT                       = 1000;
+   TESTPROB_ELBDM_EXTPOT                       = 1000,
+   TESTPROB_ELBDM_JEANS_INSTABILITY_COMOVING   = 1001;
 
 
 // program initialization options

@@ -1,0 +1,3 @@
+# problem-specific runtime parameters
+Jeans_RealAmp0       4.0e-10        # proportional coefficient of the real part of the wave function
+Jeans_Phase0         0.0            # initial phase shift
