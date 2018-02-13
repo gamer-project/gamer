@@ -1,0 +1,8 @@
+# problem-specific runtime parameters
+Soliton_N                   1        # total number of solitons
+Soliton_RSeed              -1        # random seed for setting the soliton centra (<0 -> hard-coding if Soliton_N>1) [0]
+Soliton_FixedScale          0.1      # fixed scale factor (density ~ scale^4) for ALL solitons (<=0.0 -> hard-coding) [1.0]
+Soliton_EmptyRegion         0.0      # soliton-free region [0.0]
+                                     # -> solitons only reside in [Soliton_EmptyRegion : BOX_SIZE-Soliton_EmptyRegion]
+                                     # -> useful only when Soliton_RSeed >= 0
+Soliton_DensProf_Filename   SolitonDensityProfile_Lambda0.0    # filename of the input soliton density profile

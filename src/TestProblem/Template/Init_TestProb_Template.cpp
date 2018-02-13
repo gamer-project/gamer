@@ -104,7 +104,7 @@ void SetParameter()
 // ReadPara->Add( "KEY_IN_THE_FILE",   &VARIABLE,              DEFAULT,       MIN,              MAX               );
 // ********************************************************************************************************************************
    ReadPara->Add( "var_bool",          &var_bool,              true,          Useless_bool,     Useless_bool      );
-   ReadPara->Add( "var_double",        &var_double,            1.0,           Eps_double        NoMax_double      );
+   ReadPara->Add( "var_double",        &var_double,            1.0,           Eps_double,       NoMax_double      );
    ReadPara->Add( "var_int",           &var_int,               2,             0,                5                 );
    ReadPara->Add( "var_str",            var_str,               Useless_str,   Useless_str,      Useless_str       );
 
