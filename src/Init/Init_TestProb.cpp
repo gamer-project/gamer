@@ -17,6 +17,8 @@ void Init_TestProb_Hydro_CollidingJets();
 
 void Init_TestProb_ELBDM_ExtPot();
 void Init_TestProb_ELBDM_JeansInstabilityComoving();
+void Init_TestProb_ELBDM_JeansInstabilityPhysical();
+void Init_TestProb_ELBDM_Soliton();
 
 
 
@@ -55,6 +57,8 @@ void Init_TestProb()
 
       case TESTPROB_ELBDM_EXTPOT :                       Init_TestProb_ELBDM_ExtPot();                      break;
       case TESTPROB_ELBDM_JEANS_INSTABILITY_COMOVING :   Init_TestProb_ELBDM_JeansInstabilityComoving();    break;
+//    case TESTPROB_ELBDM_JEANS_INSTABILITY_PHYSICAL :   Init_TestProb_ELBDM_JeansInstabilityPhysical();    break;
+      case TESTPROB_ELBDM_SOLITON :                      Init_TestProb_ELBDM_Soliton();                     break;
 
       default: Aux_Error( ERROR_INFO, "unsupported TESTPROB_ID (%d) !!\n", TESTPROB_ID );
    } // switch( TESTPROB_ID )
