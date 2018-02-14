@@ -120,13 +120,15 @@ void Par_Init_ByFunction_AGORA( const long NPar_ThisRank, const long NPar_AllRan
 
 
 // get the number of particles in each rank and set the corresponding offsets
-   if ( NParVar*NPar_AllRank > (long)__INT_MAX__ )
+   if ( (long)NParVar*NPar_AllRank > (long)__INT_MAX__ )
       Aux_Error( ERROR_INFO, "Total number of particle attributes to be sent (%ld) exceeds the maximum integer (%ld) !!\n",
                  (long)NParVar*NPar_AllRank, (long)__INT_MAX__ );
 
    int NSend[MPI_NRank], SendDisp[MPI_NRank];
+   int NPar_ThisRank_int = NPar_ThisRank;    // (i) convert to "int" and (ii) remove the "const" declaration
+                                             // --> (ii) is necessary for OpenMPI version < 1.7
 
-   MPI_Gather( &NPar_ThisRank, 1, MPI_INT, NSend, 1, MPI_INT, 0, MPI_COMM_WORLD );
+   MPI_Gather( &NPar_ThisRank_int, 1, MPI_INT, NSend, 1, MPI_INT, 0, MPI_COMM_WORLD );
 
    if ( MPI_Rank == 0 )
    {
