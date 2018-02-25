@@ -1257,7 +1257,6 @@ void Aux_Check_Parameter()
       Aux_Message( stderr, "WARNING : SF_CREATE_STAR_SCHEME == 1 will break bitwise reproducibility due to the \n" );
       Aux_Message( stderr, "          random values used for the stochastic star formation !!\n" );
       Aux_Message( stderr, "          --> Enable \"SF_CREATE_STAR_DET_RANDOM\" if reproducibility is of great concern\n" );
-      Aux_Message( stderr, "              (note that it is automatically enabled when BITWISE_REPRODUCIBILITY is adopted)\n" );
    }
 
    } // if ( MPI_Rank == 0 )

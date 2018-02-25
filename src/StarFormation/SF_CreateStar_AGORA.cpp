@@ -112,7 +112,7 @@ void SF_CreateStar_AGORA( const int lv, const real TimeNew, const real dt, struc
 // loop over all real patches
 // use static schedule to ensure bitwise reproducibility when running with the same numbers of OpenMP threads and MPI ranks
 // --> bitwise reproducibility will still break when running with different numbers of OpenMP threads and/or MPI ranks
-//     unless BITWISE_REPRODUCIBILITY is enabled
+//     unless both BITWISE_REPRODUCIBILITY and SF_CREATE_STAR_DET_RANDOM are enabled
 #  pragma omp for schedule( static )
    for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
    {

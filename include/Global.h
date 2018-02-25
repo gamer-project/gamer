@@ -203,7 +203,7 @@ extern int             CHE_GPU_NPGROUP;
 #ifdef STAR_FORMATION
 extern SF_CreateStarScheme_t SF_CREATE_STAR_SCHEME;
 extern int                   SF_CREATE_STAR_RSEED;
-extern bool                  SF_CREATE_STAR_DET_RANDOM;
+extern int                   SF_CREATE_STAR_DET_RANDOM;
 extern int                   SF_CREATE_STAR_MIN_LEVEL;
 extern double                SF_CREATE_STAR_MIN_GAS_DENS;
 extern double                SF_CREATE_STAR_MASS_EFF;

@@ -845,7 +845,7 @@ void Init_ResetParameter()
    }
 
 
-// SF_CREATE_STAR_MIN_LEVEL
+// star-formation options
 #  ifdef STAR_FORMATION
    if ( SF_CREATE_STAR_MIN_LEVEL < 0 )
    {
@@ -853,7 +853,19 @@ void Init_ResetParameter()
 
       PRINT_WARNING( SF_CREATE_STAR_MIN_LEVEL, FORMAT_INT, "" );
    }
-#  endif
+
+   if ( SF_CREATE_STAR_DET_RANDOM < 0 )
+   {
+#     ifdef BITWISE_REPRODUCIBILITY
+         SF_CREATE_STAR_DET_RANDOM = 1;
+         PRINT_WARNING( SF_CREATE_STAR_DET_RANDOM, FORMAT_INT, "since BITWISE_REPRODUCIBILITY is enabled" );
+#     else
+         SF_CREATE_STAR_DET_RANDOM = 0;
+         PRINT_WARNING( SF_CREATE_STAR_DET_RANDOM, FORMAT_INT, "since BITWISE_REPRODUCIBILITY is disabled" );
+#     endif
+
+   }
+#  endif // #ifdef STAR_FORMATION
 
 
 // convert to code units
@@ -868,17 +880,6 @@ void Init_ResetParameter()
    SF_CREATE_STAR_MIN_STAR_MASS *= Const_Msun / UNIT_M;
 
    PRINT_WARNING( SF_CREATE_STAR_MIN_STAR_MASS, FORMAT_FLT, "to be consistent with the code units" );
-
-
-// enable SF_CREATE_STAR_DET_RANDOM to achieve bitwise reproducibility
-#  ifdef BITWISE_REPRODUCIBILITY
-   if ( !SF_CREATE_STAR_DET_RANDOM )
-   {
-      SF_CREATE_STAR_DET_RANDOM = true;
-
-      PRINT_WARNING( SF_CREATE_STAR_DET_RANDOM, FORMAT_INT, "since BITWISE_REPRODUCIBILITY is enabled" );
-   }
-#  endif
 #  endif // #ifdef STAR_FORMATION
 
 

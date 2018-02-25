@@ -180,7 +180,7 @@ int                  CHE_GPU_NPGROUP;
 #ifdef STAR_FORMATION
 SF_CreateStarScheme_t SF_CREATE_STAR_SCHEME;
 int                   SF_CREATE_STAR_RSEED;
-bool                  SF_CREATE_STAR_DET_RANDOM;
+int                   SF_CREATE_STAR_DET_RANDOM;
 int                   SF_CREATE_STAR_MIN_LEVEL;
 double                SF_CREATE_STAR_MIN_GAS_DENS;
 double                SF_CREATE_STAR_MASS_EFF;
