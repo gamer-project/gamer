@@ -317,6 +317,7 @@ GSL_PATH     :=
 #FFTW_PATH    := /opt/math/fftw/2.1.5-intel-qlc
 #MPI_PATH     := /usr/mpi/intel/openmpi-1.4.3-qlc
 #HDF5_PATH    := /opt/hdf5/1.8.9
+#GRACKLE_PATH := /work1/fish/Software/grackle
 #MPI_PATH     := /opt/mpi/openmpi/1.6.0-intel
 #CUDA_PATH    := /usr/local/cuda-7.5
 
