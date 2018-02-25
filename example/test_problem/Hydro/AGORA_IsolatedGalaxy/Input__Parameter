@@ -137,7 +137,7 @@ CHE_GPU_NPGROUP              -1           # number of patch groups sent into the
 # star formation (STAR_FORMATION only)
 SF_CREATE_STAR_SCHEME         1           # star formation schemes (0=off, 1=AGORA) [0]
 SF_CREATE_STAR_RSEED          123         # random seed [123]
-SF_CREATE_STAR_DET_RANDOM     0           # make random numbers deterministic (i.e., independent of OpenMP and MPI) [0]
+SF_CREATE_STAR_DET_RANDOM    -1           # make random numbers deterministic (i.e., independent of OpenMP and MPI, <0=auto) [-1]
 SF_CREATE_STAR_MIN_LEVEL     -1           # minimum AMR level allowed to form stars (<0=auto -> MAX_LEVEL) [0]
 SF_CREATE_STAR_MIN_GAS_DENS   5.0e0       # minimum gas density allowed to form stars (in HI count/cm^3) [1.0e1]
 SF_CREATE_STAR_MASS_EFF       1.0e-2      # Gas-to-star mass conversion efficiency [1.0e-2]
