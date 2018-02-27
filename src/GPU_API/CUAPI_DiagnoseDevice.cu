@@ -1,4 +1,6 @@
-#include "GAMER.h"
+#include "CUAPI.h"
+
+void Aux_GetCPUInfo( const char *FileName );
 
 #ifdef GPU
 

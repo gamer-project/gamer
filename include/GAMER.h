@@ -70,10 +70,6 @@ using namespace std;
 #  include "Serial.h"
 #endif
 
-#ifdef __CUDACC__
-#  include "CUAPI.h"
-#endif
-
 
 
 #endif // #ifndef __GAMER_H__
