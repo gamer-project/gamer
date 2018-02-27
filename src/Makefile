@@ -196,6 +196,11 @@ SIMU_OPTION += -DOPENMP
 # support yt inline analysis
 #SIMU_OPTION += -DSUPPORT_LIBYT
 
+# random number implementation: RNG_GNU_EXT/RNG_CPP11 (GNU extension drand48_r/c++11 <random>)
+# --> use RNG_GNU_EXT for compilers supporting GNU extensions (**not supported on some macOS**)
+#     use RNG_CPP11   for compilers supporting c++11 (**may need to add -std=c++11 to CXXFLAG**)
+SIMU_OPTION += -DRANDOM_NUMBER=RNG_GNU_EXT
+
 
 
 
