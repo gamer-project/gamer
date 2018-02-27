@@ -208,7 +208,8 @@ SIMU_OPTION += -DOPENMP
 # CXX         = icpc                                      # serial compiler
 ##CXX         = $(MPI_PATH)/bin/mpicxx                    # MPI compiler
 ##CXX         = CC                                        # cray wrapper script
-# CXXFLAG     = -g -O3                                    # optimization flags
+# CXXFLAG     = -g -O3                                    # general flags
+##CXXFLAG     = -g -O3 -std=c++11 -gxx-name=YOUR_G++
 ##CXXFLAG     = -g -fast
 # CXXFLAG    += -w1                                       # warning flags
 # OPENMPFLAG  = -fopenmp                                  # openmp flag
@@ -231,7 +232,8 @@ SIMU_OPTION += -DOPENMP
  CXX         = g++                                       # serial compiler
 #CXX         = $(MPI_PATH)/bin/mpicxx                    # MPI compiler
 #CXX         = CC                                        # cray wrapper script
- CXXFLAG     = -g -O3                                    # optimization flags
+ CXXFLAG     = -g -O3                                    # general flags
+#CXXFLAG     = -g -O3 -std=c++11
 #CXXFLAG     = -g -Ofast
  CXXFLAG    += -Wall -Wextra                             # warning flags
  CXXFLAG    += -Wno-unused-variable -Wno-unused-parameter \
@@ -254,7 +256,8 @@ endif
 # CUDA
 # -------------------------------------------------------------------------------
  NVCC = $(CUDA_PATH)/bin/nvcc                            # CUDA compiler
-#NVCC = nvcc -ccbin CC                                   # CUDA compiler used in the Cray environment
+#NVCC = $(CUDA_PATH)/bin/nvcc -ccbin YOUR_G++            # with a specified host compiler
+#NVCC = nvcc -ccbin CC                                   # for the Cray environment
 
 
 
@@ -324,8 +327,11 @@ GSL_PATH     :=
 # NTU-hulk (openmpi-gcc-qlc)
 #CUDA_PATH    := /opt/gpu/cuda/4.2
 #FFTW_PATH    := /opt/math/fftw/2.1.5-gcc-qlc
-#MPI_PATH     := /opt/mpi/openmpi/1.8.1-gcc-qlc
+#MPI_PATH     := /usr/mpi/gcc/openmpi-1.4.3-qlc
 #HDF5_PATH    := /opt/hdf5/1.8.9
+#GRACKLE_PATH := /work1/fish/Software/grackle
+#MPI_PATH     := /opt/mpi/openmpi/1.8.1-gcc-qlc
+#CUDA_PATH    := /usr/local/cuda-7.5
 
 # NAOC-laohu (OpenMPI-1.3.2-intel)
 #CUDA_PATH    := $(CUDA_INSTALL_PATH)
@@ -704,7 +710,7 @@ CXXFLAG    += $(COMMONFLAG) $(OPENMPFLAG)
 # NVCC flags
 # -------------------------------------------------------------------------------
 # common flags
-NVCCFLAG_COM := -Xcompiler $(COMMONFLAG) -O3 #-Xopencc -OPT:Olimit=0
+NVCCFLAG_COM := $(COMMONFLAG) -O3 # -Xcompiler #-Xopencc -OPT:Olimit=0
 
 ifeq      "$(filter -DGPU_ARCH=FERMI,   $(SIMU_OPTION))" "-DGPU_ARCH=FERMI"
    NVCCFLAG_COM += -gencode arch=compute_20,code=\"compute_20,sm_20\"
