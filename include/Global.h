@@ -240,7 +240,8 @@ extern real       (*h_Flu_Array_USG_G[2])[GRA_NIN-1][PS1][PS1][PS1];
 #endif
 #endif
 
-#ifdef SUPPORT_GRACKLE
+// do not declare Grackle variables for CUDA source files since they do not include <grackle.h>
+#if ( defined SUPPORT_GRACKLE  &&  !defined __CUDACC__ )
 extern real       (*h_Che_Array      [2]);
 extern grackle_field_data *Che_FieldData;
 extern code_units Che_Units;

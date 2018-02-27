@@ -1,4 +1,4 @@
-#include "GAMER.h"
+#include "CUAPI.h"
 #include "CUFLU.h"
 #ifdef GRAVITY
 #include "CUPOT.h"

@@ -1,4 +1,4 @@
-#include "GAMER.h"
+#include "CUAPI.h"
 
 #if ( defined GPU  &&  defined GRAVITY )
 
