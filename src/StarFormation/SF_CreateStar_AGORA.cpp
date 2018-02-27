@@ -30,7 +30,7 @@ extern double ExtAcc_AuxArray[EXT_ACC_NAUX_MAX];
 //                dt           : Time interval to advance solution
 //                               --> Currently this function does not distinguish dt and the physical time interval (dTime)
 //                               --> Does NOT support COMOVING yet
-//                drand_buf    : Buffer for the reentrant and thread-safe random number generator drand48_r()
+//                RNG          : Random number generator
 //                GasDensThres : Minimum gas density for creating star particles                (--> "SF_CREATE_STAR_MIN_GAS_DENS"  )
 //                Efficiency   : Gas-to-star mass efficiency                                    (--> "SF_CREATE_STAR_MASS_EFF"      )
 //                MinStarMass  : Minimum star particle mass for the stochastical star formation (--> "SF_CREATE_STAR_MIN_STAR_MASS" )
@@ -41,7 +41,7 @@ extern double ExtAcc_AuxArray[EXT_ACC_NAUX_MAX];
 // Return      :  1. Particle repository will be updated
 //                2. fluid[] array of gas will be updated
 //-------------------------------------------------------------------------------------------------------
-void SF_CreateStar_AGORA( const int lv, const real TimeNew, const real dt, struct drand48_data *drand_buf,
+void SF_CreateStar_AGORA( const int lv, const real TimeNew, const real dt, RandomNumber_t *RNG,
                           const real GasDensThres, const real Efficiency, const real MinStarMass, const real MaxStarMFrac,
                           const bool DetRandom, const bool UseMetal )
 {
@@ -128,7 +128,7 @@ void SF_CreateStar_AGORA( const int lv, const real TimeNew, const real dt, struc
 //       the factor "1.0e6" in the end is just to make random seeds at different times more different, especially for
 //       extremely small time-step
          const long RSeed = SF_CREATE_STAR_RSEED + amr->patch[0][lv][PID]->LB_Idx + long(TimeNew*UNIT_T/Const_yr*1.0e6);
-         srand48_r( RSeed, drand_buf+TID );
+         RNG->SetSeed( TID, RSeed );
       }
 
 
@@ -169,8 +169,10 @@ void SF_CreateStar_AGORA( const int lv, const real TimeNew, const real dt, struc
 //       --> Eq. [5] in Goldbaum et al. (2015)
          if ( StarMass < MinStarMass )
          {
-            double Random;
-            drand48_r( drand_buf+TID, &Random );   // ensure different threads use different drand_buf
+            const double Min = 0.0;
+            const double Max = 1.0;
+
+            double Random = RNG->GetValue( TID, Min, Max );
 
             if ( (real)Random < StarMass*_MinStarMass )  StarMFrac = MinStarMass / GasMass;
             else                                         continue;

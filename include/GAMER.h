@@ -62,6 +62,7 @@ using namespace std;
 #include "Typedef.h"
 #include "AMR.h"
 #include "Timer.h"
+#include "RandomNumber.h"
 #include "Global.h"
 #include "Prototype.h"
 #include "PhysicalConstant.h"
