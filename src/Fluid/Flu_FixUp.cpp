@@ -207,7 +207,7 @@ void Flu_FixUp( const int lv )
 
 //                do not apply the flux correction if there are any unphysical results
 #                 if   ( MODEL == HYDRO  ||  MODEL == MHD )
-                  if ( CorrVal[DENS] <= MIN_DENS  ||  Pres <= MIN_PRES  ||  !isfinite(Pres)
+                  if ( CorrVal[DENS] <= MIN_DENS  ||  Pres <= MIN_PRES  ||  !Aux_IsFinite(Pres)
 #                      if   ( DUAL_ENERGY == DE_ENPY )
                        ||  ( (*DE_StatusPtr1D == DE_UPDATED_BY_DUAL || *DE_StatusPtr1D == DE_UPDATED_BY_MIN_PRES)
                               && CorrVal[ENPY] <= (real)2.0*TINY_NUMBER )
