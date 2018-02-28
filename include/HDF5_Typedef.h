@@ -108,6 +108,7 @@ struct Makefile_t
    int SupportHDF5;
    int SupportGSL;
    int SupportGrackle;
+   int RandomNumber;
 
 #  ifdef GRAVITY
    int PotScheme;
