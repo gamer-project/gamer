@@ -719,17 +719,6 @@ void Init_ResetParameter()
    }
 
 
-// HDF5 is not supported if "SUPPORT_HDF5" is disabled
-#  ifndef SUPPORT_HDF5
-   if ( OPT__OUTPUT_TOTAL == OUTPUT_FORMAT_HDF5 )
-   {
-      OPT__OUTPUT_TOTAL = OUTPUT_FORMAT_CBINARY;
-
-      PRINT_WARNING( OPT__OUTPUT_TOTAL, FORMAT_INT, "since SUPPORT_HDF5 is disabled" );
-   }
-#  endif
-
-
 // always turn on "OPT__CK_PARTICLE" when debugging particles
 #  ifdef DEBUG_PARTICLE
    if ( !OPT__CK_PARTICLE )
