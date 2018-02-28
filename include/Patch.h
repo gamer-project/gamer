@@ -6,7 +6,7 @@
 #include "Macro.h"
 
 #ifdef PARTICLE
-#  include <cmath>
+#  include <math.h>
 #  include "Particle.h"
 #endif
 

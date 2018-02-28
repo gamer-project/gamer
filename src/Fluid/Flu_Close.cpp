@@ -300,8 +300,8 @@ bool Unphysical( const real Fluid[], const real Gamma_m1, const int CheckMinEngy
 // note that since MIN_DENS and MIN_PRES are declared as double, they must be converted to **real** before the comparison
 // --> otherwise LHS in the comparison will be converted from real to double, which is inconsistent with the assignment
 //     (e.g., "Update[DENS] = FMAX( Update[DENS], (real)MIN_DENS" )
-   if (  !isfinite(Fluid[DENS])  ||  !isfinite(Fluid[MOMX])  ||  !isfinite(Fluid[MOMY])  ||
-         !isfinite(Fluid[MOMZ])  ||  !isfinite(Fluid[ENGY])  ||
+   if (  !Aux_IsFinite(Fluid[DENS])  ||  !Aux_IsFinite(Fluid[MOMX])  ||  !Aux_IsFinite(Fluid[MOMY])  ||
+         !Aux_IsFinite(Fluid[MOMZ])  ||  !Aux_IsFinite(Fluid[ENGY])  ||
          Fluid[DENS] < (real)MIN_DENS  )
       return true;
 

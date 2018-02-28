@@ -293,7 +293,7 @@ double Mis_GetTimeStep( const int lv, const double dTime_SyncFaLv, const double 
 
 // 4. verify time-step
 // =============================================================================================================
-   if ( dTime_min <= 0.0  ||  !isfinite(dTime_min) )
+   if ( dTime_min <= 0.0  ||  !Aux_IsFinite(dTime_min) )
       Aux_Error( ERROR_INFO, "incorrect time-step (dTime_min = %20.14e) !!\n", dTime_min );
 
 

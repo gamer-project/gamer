@@ -44,7 +44,7 @@ void Aux_Check_Finite( const int lv, const char *comment )
 
                for (int v=0; v<NVar; v++)
                {
-                  if ( ! isfinite(Data[v]) )
+                  if ( ! Aux_IsFinite(Data[v]) )
                   {
                      if ( Pass )
                      {
@@ -62,7 +62,7 @@ void Aux_Check_Finite( const int lv, const char *comment )
                                   j*amr->scale[lv] + amr->patch[0][lv][PID]->corner[1],
                                   k*amr->scale[lv] + amr->patch[0][lv][PID]->corner[2],
                                   v );
-                  } // if ( ! isfinite(Data[v]) )
+                  } // if ( ! Aux_IsFinite(Data[v]) )
                } // for (int v=0; v<NVar; v++)
             } // i,j,k
          } // for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
