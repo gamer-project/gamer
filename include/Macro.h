@@ -73,6 +73,11 @@
 #define HILBERT      1
 
 
+// random number implementation
+#define RNG_GNU_EXT  1
+#define RNG_CPP11    2
+
+
 // NCOMP_FLUID : number of active components in each cell (i.e., the "fluid" array)
 //               --> do not include passive components here, which is set by NCOMP_PASSIVE
 // NFLUX_FLUID : number of active components in the "flux" array

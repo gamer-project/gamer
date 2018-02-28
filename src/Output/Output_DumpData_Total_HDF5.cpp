@@ -69,7 +69,7 @@ Procedure for outputting new variables:
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2263)
+// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2264)
 // Description :  Output all simulation data in the HDF5 format, which can be used as a restart file
 //                or loaded by YT
 //
@@ -149,6 +149,7 @@ Procedure for outputting new variables:
 //                2261 : 2017/12/05 --> no longer define INTEL
 //                2262 : 2017/12/27 --> rename all UM variables
 //                2263 : 2017/12/27 --> remove OPT__RESTART_HEADER
+//                2264 : 2018/02/28 --> add RANDOM_NUMBER
 //-------------------------------------------------------------------------------------------------------
 void Output_DumpData_Total_HDF5( const char *FileName )
 {
@@ -1255,7 +1256,7 @@ void FillIn_KeyInfo( KeyInfo_t &KeyInfo )
 
    const time_t CalTime  = time( NULL );   // calendar time
 
-   KeyInfo.FormatVersion = 2263;
+   KeyInfo.FormatVersion = 2264;
    KeyInfo.Model         = MODEL;
    KeyInfo.NLevel        = NLEVEL;
    KeyInfo.NCompFluid    = NCOMP_FLUID;
@@ -1432,6 +1433,8 @@ void FillIn_Makefile( Makefile_t &Makefile )
 #  else
    Makefile.SupportGrackle         = 0;
 #  endif
+
+   Makefile.RandomNumber           = RANDOM_NUMBER;
 
    Makefile.NLevel                 = NLEVEL;
    Makefile.MaxPatch               = MAX_PATCH;
@@ -2171,6 +2174,7 @@ void GetCompound_Makefile( hid_t &H5_TypeID )
    H5Tinsert( H5_TypeID, "SupportHDF5",            HOFFSET(Makefile_t,SupportHDF5            ), H5T_NATIVE_INT );
    H5Tinsert( H5_TypeID, "SupportGSL",             HOFFSET(Makefile_t,SupportGSL             ), H5T_NATIVE_INT );
    H5Tinsert( H5_TypeID, "SupportGrackle",         HOFFSET(Makefile_t,SupportGrackle         ), H5T_NATIVE_INT );
+   H5Tinsert( H5_TypeID, "RandomNumber",           HOFFSET(Makefile_t,RandomNumber           ), H5T_NATIVE_INT );
 
    H5Tinsert( H5_TypeID, "NLevel",                 HOFFSET(Makefile_t,NLevel                 ), H5T_NATIVE_INT );
    H5Tinsert( H5_TypeID, "MaxPatch",               HOFFSET(Makefile_t,MaxPatch               ), H5T_NATIVE_INT );

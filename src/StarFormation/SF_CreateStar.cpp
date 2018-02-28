@@ -3,7 +3,7 @@
 #ifdef STAR_FORMATION
 
 
-struct drand48_data *drand_buf = NULL;
+static RandomNumber_t *RNG = NULL;
 
 //###: HARD-CODED FIELDS
 extern bool AGORA_UseMetal;
@@ -37,6 +37,7 @@ void SF_CreateStar( const int lv, const real TimeNew, const real dt )
 
    if ( FirstTime )
    {
+//    get the number of OpenMP threads
       int NT;
 #     ifdef OPENMP
 #     pragma omp parallel
@@ -46,12 +47,17 @@ void SF_CreateStar( const int lv, const real TimeNew, const real dt )
       {  NT = 1;                      }
 #     endif
 
-      drand_buf = new drand48_data [NT];
+//    allocate RNG
+      RNG = new RandomNumber_t( NT );
 
 //    make sure that different threads in different MPI ranks have different random seeds
 //    --> even when SF_CREATE_STAR_DET_RANDOM is enabled, we still set random seeds here just in case that not all
 //        star formation methods support SF_CREATE_STAR_DET_RANDOM
-      for (int t=0; t<NT; t++)   srand48_r(  SF_CREATE_STAR_RSEED + MPI_Rank*1000 + t, drand_buf + t  );
+      for (int t=0; t<NT; t++)
+      {
+         const long RSeed = SF_CREATE_STAR_RSEED + MPI_Rank*1000 + t;
+         RNG->SetSeed( t, RSeed );
+      }
 
       FirstTime = false;
    }
@@ -67,7 +73,7 @@ void SF_CreateStar( const int lv, const real TimeNew, const real dt )
    switch ( SF_CREATE_STAR_SCHEME )
    {
 #     if ( MODEL==HYDRO  ||  MODEL==MHD )
-      case SF_CREATE_STAR_SCHEME_AGORA:   SF_CreateStar_AGORA( lv, TimeNew, dt, drand_buf, SF_CREATE_STAR_MIN_GAS_DENS,
+      case SF_CREATE_STAR_SCHEME_AGORA:   SF_CreateStar_AGORA( lv, TimeNew, dt, RNG, SF_CREATE_STAR_MIN_GAS_DENS,
                                                                SF_CREATE_STAR_MASS_EFF, SF_CREATE_STAR_MIN_STAR_MASS,
                                                                SF_CREATE_STAR_MAX_STAR_MFRAC, SF_CREATE_STAR_DET_RANDOM,
                                                                UseMetal );
@@ -98,8 +104,8 @@ void SF_CreateStar( const int lv, const real TimeNew, const real dt )
 void SF_FreeRNG()
 {
 
-   delete [] drand_buf;
-   drand_buf = NULL;
+   delete RNG;
+   RNG = NULL;
 
 } // FUNCTION : SF_FreeRNG
 

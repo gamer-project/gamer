@@ -306,6 +306,14 @@ void Aux_TakeNote()
       fprintf( Note, "SUPPORT_GSL                     OFF\n" );
 #     endif
 
+#     if   ( RANDOM_NUMBER == RNG_GNU_EXT )
+      fprintf( Note, "RANDOM_NUMBER                   RNG_GNU_EXT\n" );
+#     elif ( RANDOM_NUMBER == RNG_CPP11 )
+      fprintf( Note, "RANDOM_NUMBER                   RNG_CPP11\n" );
+#     else
+      fprintf( Note, "RANDOM_NUMBER                   UNKNOWN\n" );
+#     endif
+
       fprintf( Note, "***********************************************************************************\n" );
       fprintf( Note, "\n\n");
 
