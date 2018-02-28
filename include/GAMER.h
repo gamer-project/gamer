@@ -11,11 +11,10 @@
 #  include <mpi.h>
 #endif
 
-#include <iostream>
 #include <cstring>
 #include <cstdlib>
 #include <cassert>
-#include <cmath>
+#include <math.h>
 #include <malloc.h>
 #include <stdio.h>
 #include <unistd.h>
@@ -55,8 +54,6 @@ extern "C" {
 #ifdef SUPPORT_LIBYT
 #  include <libyt.h>
 #endif
-
-using namespace std;
 
 #include "Macro.h"
 #include "Typedef.h"

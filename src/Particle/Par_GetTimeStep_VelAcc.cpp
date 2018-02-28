@@ -124,7 +124,7 @@ void Par_GetTimeStep_VelAcc( double &dt_vel, double &dt_acc, const int lv )
 
 
 // verify the minimum time-step
-   if ( !isfinite(dt_vel)  &&  amr->Par->NPar_Lv[lv] > 0  &&  MPI_Rank == 0 )
+   if ( !Aux_IsFinite(dt_vel)  &&  amr->Par->NPar_Lv[lv] > 0  &&  MPI_Rank == 0 )
    {
       Aux_Message( stderr, "WARNING : time-step estimation by particle velocity is incorrect (dt_vel = %13.7e) !!\n", dt_vel );
       Aux_Message( stderr, "          --> Likely all particles have zero velocity\n" );
@@ -133,7 +133,7 @@ void Par_GetTimeStep_VelAcc( double &dt_vel, double &dt_acc, const int lv )
       Aux_Message( stderr, "          --> You might want to set DT__PARVEL_MAX properly\n" );
    }
 
-   if ( UseAcc  &&  !isfinite(dt_acc)  &&  amr->Par->NPar_Lv[lv] )
+   if ( UseAcc  &&  !Aux_IsFinite(dt_acc)  &&  amr->Par->NPar_Lv[lv] )
       Aux_Error( ERROR_INFO, "time-step estimation by particle acceleration is incorrect (dt_acc = %13.7e) !!\n", dt_acc );
 
 

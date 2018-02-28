@@ -214,7 +214,7 @@ SIMU_OPTION += -DRANDOM_NUMBER=RNG_GNU_EXT
 ##CXX         = $(MPI_PATH)/bin/mpicxx                    # MPI compiler
 ##CXX         = CC                                        # cray wrapper script
 # CXXFLAG     = -g -O3                                    # general flags
-##CXXFLAG     = -g -O3 -std=c++11 -gxx-name=YOUR_G++
+##CXXFLAG     = -g -O3 -std=c++11 #-gxx-name=YOUR_G++
 ##CXXFLAG     = -g -fast
 # CXXFLAG    += -w1                                       # warning flags
 # OPENMPFLAG  = -fopenmp                                  # openmp flag
@@ -369,7 +369,7 @@ CC_FILE     += Aux_Check_Parameter.cpp  Aux_Check_Conservation.cpp  Aux_Check.cp
                Aux_GetMemInfo.cpp  Aux_Message.cpp  Aux_Record_PatchCount.cpp  Aux_TakeNote.cpp  Aux_Timing.cpp \
                Aux_Check_MemFree.cpp  Aux_Record_Performance.cpp  Aux_CheckFileExist.cpp  Aux_Array.cpp \
                Aux_Record_User.cpp  Aux_Record_CorrUnphy.cpp  Aux_SwapPointer.cpp  Aux_Check_NormalizePassive.cpp \
-               Aux_LoadTable.cpp
+               Aux_LoadTable.cpp  Aux_IsFinite.cpp
 
 CC_FILE     += CPU_FluidSolver.cpp  Flu_AdvanceDt.cpp  Flu_Prepare.cpp  Flu_Close.cpp  Flu_FixUp.cpp \
                Flu_Restrict.cpp  Flu_AllocateFluxArray.cpp  Flu_BoundaryCondition_User.cpp  Flu_ResetByUser.cpp \
