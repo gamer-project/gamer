@@ -209,7 +209,7 @@ SIMU_OPTION += -DOPENMP
 ##CXX         = $(MPI_PATH)/bin/mpicxx                    # MPI compiler
 ##CXX         = CC                                        # cray wrapper script
 # CXXFLAG     = -g -O3                                    # general flags
-##CXXFLAG     = -g -O3 -std=c++11 -gxx-name=YOUR_G++
+##CXXFLAG     = -g -O3 -std=c++11 #-gxx-name=YOUR_G++
 ##CXXFLAG     = -g -fast
 # CXXFLAG    += -w1                                       # warning flags
 # OPENMPFLAG  = -fopenmp                                  # openmp flag
