@@ -14,7 +14,7 @@
 #include <cstring>
 #include <cstdlib>
 #include <cassert>
-#include <cmath>
+#include <math.h>
 #include <malloc.h>
 #include <stdio.h>
 #include <unistd.h>
