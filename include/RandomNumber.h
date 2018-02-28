@@ -43,8 +43,8 @@ struct RandomNumber_t
 // data members
 // ===================================================================================
 #  if   ( RANDOM_NUMBER == RNG_CPP11 )
-   mt19937 *RNG;
-   uniform_real_distribution <double> Distribution;
+   std::mt19937 *RNG;
+   std::uniform_real_distribution <double> Distribution;
 
 #  elif ( RANDOM_NUMBER == RNG_GNU_EXT )
    struct drand48_data *RNG;
@@ -78,7 +78,7 @@ struct RandomNumber_t
 
 //    allocate RNG
 #     if   ( RANDOM_NUMBER == RNG_CPP11 )
-      RNG = new mt19937      [N];
+      RNG = new std::mt19937 [N];
 #     elif ( RANDOM_NUMBER == RNG_GNU_EXT )
       RNG = new drand48_data [N];
 #     endif
