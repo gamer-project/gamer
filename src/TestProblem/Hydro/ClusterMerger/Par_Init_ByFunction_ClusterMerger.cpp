@@ -1,5 +1,3 @@
-
-
 #include "GAMER.h"
 
 #ifdef PARTICLE
@@ -405,7 +403,7 @@ void Read_Particles_ClusterMerger(string filename, long offset, long num,
   count1d[0] = (hsize_t)num;
   dims1d[0] = (hsize_t)num;
   stride1d[0] = 1;
-  start1d[0] = 0;
+  start1d[0] = (hsize_t)offset;
 
   status = H5Sselect_hyperslab(dataspace, H5S_SELECT_SET, start1d,
                                stride1d, count1d, NULL);
