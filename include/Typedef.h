@@ -44,6 +44,7 @@ const TestProbID_t
    TESTPROB_HYDRO_KELVIN_HELMHOLTZ_INSTABILITY =    8,
    TESTPROB_HYDRO_RIEMANN                      =    9,
    TESTPROB_HYDRO_COLLIDING_JETS               =   10,
+   TESTPROB_HYDRO_PLUMMER                      =   11,
 
    TESTPROB_ELBDM_EXTPOT                       = 1000;
 

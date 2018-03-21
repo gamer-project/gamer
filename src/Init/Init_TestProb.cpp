@@ -14,6 +14,7 @@ void Init_TestProb_Hydro_SphericalCollapse();
 void Init_TestProb_Hydro_KelvinHelmholtzInstability();
 void Init_TestProb_Hydro_Riemann();
 void Init_TestProb_Hydro_CollidingJets();
+void Init_TestProb_Hydro_Plummer();
 
 void Init_TestProb_ELBDM_ExtPot();
 
@@ -51,6 +52,7 @@ void Init_TestProb()
       case TESTPROB_HYDRO_KELVIN_HELMHOLTZ_INSTABILITY : Init_TestProb_Hydro_KelvinHelmholtzInstability();  break;
       case TESTPROB_HYDRO_RIEMANN :                      Init_TestProb_Hydro_Riemann();                     break;
       case TESTPROB_HYDRO_COLLIDING_JETS :               Init_TestProb_Hydro_CollidingJets();               break;
+      case TESTPROB_HYDRO_PLUMMER :                      Init_TestProb_Hydro_Plummer();                     break;
 
       case TESTPROB_ELBDM_EXTPOT :                       Init_TestProb_ELBDM_ExtPot();                      break;
 

@@ -1,0 +1,20 @@
+Compilation flags:
+========================================
+Enable : MODEL=HYDRO, GRAVITY, PARTICLE
+Disable: COMOVING
+
+
+Default setup:
+========================================
+
+
+Note:
+========================================
+1. Test the evolution of the Plummer model
+   --> Plummer_Collision = 0: test the stability of a single Plummer cloud
+                           1: test the collision of two Plummer clouds
+2. One can set NCOMP_PASSIVE_USER = 2 for Plummer_Collision == 1
+   --> Different clouds will be assigned with different passive scalars
+3. Plummer cloud(s) can have both gas and particles
+   --> Plummer_GasMFrac: gas mass fraction
+
