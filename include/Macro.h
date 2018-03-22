@@ -23,6 +23,7 @@
 #define KEPLER       2
 #define MAXWELL      3
 #define PASCAL       4
+#define VOLTA        5
 
 
 // models

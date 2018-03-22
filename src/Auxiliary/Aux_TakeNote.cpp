@@ -283,6 +283,8 @@ void Aux_TakeNote()
       fprintf( Note, "GPU_ARCH                        MAXWELL\n" );
 #     elif ( GPU_ARCH == PASCAL )
       fprintf( Note, "GPU_ARCH                        PASCAL\n" );
+#     elif ( GPU_ARCH == VOLTA )
+      fprintf( Note, "GPU_ARCH                        VOLTA\n" );
 #     else
       fprintf( Note, "GPU_ARCH                        UNKNOWN\n" );
 #     endif
