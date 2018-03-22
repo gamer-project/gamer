@@ -178,6 +178,12 @@ void CUAPI_SetDevice( const int Mode )
                              "        --> Please reset GPU_ARCH in the Makefile properly\n",
                  DeviceProp.name, DeviceProp.major, DeviceProp.minor );
 
+#  elif ( GPU_ARCH == VOLTA )
+   if ( DeviceProp.major != 7 )
+      Aux_Error( ERROR_INFO, "GPU \"%s\" with the compute capability %d.%d is incompatible with the Volta architecture !!\n"
+                             "        --> Please reset GPU_ARCH in the Makefile properly\n",
+                 DeviceProp.name, DeviceProp.major, DeviceProp.minor );
+
 #  else
 #  error : UNKNOWN GPU_ARCH !!
 #  endif // GPU_ARCH

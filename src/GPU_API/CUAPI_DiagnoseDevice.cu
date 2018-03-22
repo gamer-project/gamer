@@ -48,6 +48,7 @@ void CUAPI_DiagnoseDevice()
    else if ( DeviceProp.major == 3 )                             NCorePerMP = 192;
    else if ( DeviceProp.major == 5 )                             NCorePerMP = 128;
    else if ( DeviceProp.major == 6 )                             NCorePerMP =  64;
+   else if ( DeviceProp.major == 7 )                             NCorePerMP =  64;
    else
       fprintf( stderr, "WARNING : unable to determine the number of cores per multiprocessor for version %d.%d ...\n",
                DeviceProp.major, DeviceProp.minor );
@@ -104,8 +105,7 @@ void CUAPI_DiagnoseDevice()
          fprintf( Note, "Concurrent Copy and Execution     : %s\n"    , DeviceProp.asyncEngineCount>0  ? "Yes" : "No" );
          fprintf( Note, "Concurrent Up/Downstream Copies   : %s\n"    , DeviceProp.asyncEngineCount==2 ? "Yes" : "No" );
 #        if ( CUDART_VERSION >= 3000 )
-         fprintf( Note, "Concurrent Kernel Execution       : %s\n"    , DeviceProp.concurrentKernels ? "Yes" :
-                                                                                                       "No" );
+         fprintf( Note, "Concurrent Kernel Execution       : %s\n"    , DeviceProp.concurrentKernels ? "Yes" : "No" );
 #        endif
 #        if ( CUDART_VERSION >= 3010 )
          fprintf( Note, "GPU has ECC Support Enabled       : %s\n"    , DeviceProp.ECCEnabled ? "Yes" : "No" );
