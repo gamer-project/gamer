@@ -158,7 +158,7 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
 
 
 //    loop over all REAL patches (the buffer patches will be flagged only due to the FlagBuf
-//    extension or the grandson check )
+//    extension or the grandson check)
 #     pragma omp for schedule( runtime )
       for (int PID0=0; PID0<amr->NPatchComma[lv][1]; PID0+=8)
       {

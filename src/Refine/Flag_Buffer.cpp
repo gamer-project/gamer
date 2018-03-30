@@ -10,8 +10,8 @@
 // Description :  Flag the buffer patches (also the boundary patches)
 //
 // Note        :  a. All flags should be initialized as "false" by calling the function "Flag_Real" in advance
-//                b. The arrays "ParaVar->BuffFlag_NList" and "ParaVar->BuffFlag_PosList" must be prepared 
-//                   in advance by calling the functions "Buf_RecordBoundaryFlag" and "MPI_ExchangeBoundaryFlag" 
+//                b. The arrays "ParaVar->BuffFlag_NList" and "ParaVar->BuffFlag_PosList" must be prepared
+//                   in advance by calling the functions "Buf_RecordBoundaryFlag" and "MPI_ExchangeBoundaryFlag"
 //                c. No OpenMP directives are applied in this function
 //
 // Parameter   :  lv : Target refinement level to be flagged
@@ -31,13 +31,13 @@ void Flag_Buffer( const int lv )
       for (int ID=0; ID<amr->ParaVar->BuffFlag_NList[lv][s]; ID+=FlagLayer)
       {
 #        ifdef GAMER_DEBUG
-         if ( MPI_SibRank[s] < 0 )  Aux_Error( ERROR_INFO, "amr->ParaVar->BuffFlag_NList[%d][%d] = %d != 0 !!\n", 
+         if ( MPI_SibRank[s] < 0 )  Aux_Error( ERROR_INFO, "amr->ParaVar->BuffFlag_NList[%d][%d] = %d != 0 !!\n",
                                                lv, s, amr->ParaVar->BuffFlag_NList[lv][s] );
 #        endif
 
          FlagPos = amr->ParaVar->BuffFlag_PosList[lv][s][ID];
 
-         while ( amr->ParaVar->BounP_PosList[lv][s][TargetID] != FlagPos )  
+         while ( amr->ParaVar->BounP_PosList[lv][s][TargetID] != FlagPos )
          {
             TargetID++;
 

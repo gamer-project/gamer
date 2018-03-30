@@ -22,7 +22,7 @@ bool Flag_Region( const int i, const int j, const int k, const int lv, const int
    const double dh     = amr->dh[lv];                                         // cell size
    const double Pos[3] = { amr->patch[0][lv][PID]->EdgeL[0] + (i+0.5)*dh,     // x,y,z position
                            amr->patch[0][lv][PID]->EdgeL[1] + (j+0.5)*dh,
-                           amr->patch[0][lv][PID]->EdgeL[2] + (k+0.5)*dh  };  
+                           amr->patch[0][lv][PID]->EdgeL[2] + (k+0.5)*dh  };
 
    bool Within = true;
 

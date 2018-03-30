@@ -16,11 +16,11 @@ void SiblingSearch_Base()
 
 // initialize all siblings as -1
    for (int PID=0; PID<amr->num[0]; PID++)
-   for (int s=0; s<26; s++)         
-      amr->patch[0][0][PID]->sibling[s] = -1;  
+   for (int s=0; s<26; s++)
+      amr->patch[0][0][PID]->sibling[s] = -1;
 
 // construct the sibling relation for the real patches
-   for (int PID=0; PID<amr->NPatchComma[0][1]; PID++)   
+   for (int PID=0; PID<amr->NPatchComma[0][1]; PID++)
       FindBaseSibling( PID );
 
 // construct the sibling relation for the buffer patches
@@ -28,7 +28,7 @@ void SiblingSearch_Base()
    for (int s=0; s<26; s++)
    for (int PID0=amr->NPatchComma[0][s+1]; PID0<amr->NPatchComma[0][s+2]; PID0+=8)
    for (int t=0; t<TABLE_04(s); t++)
-      FindBaseSibling( PID0+TABLE_03(s,t) ); 
+      FindBaseSibling( PID0+TABLE_03(s,t) );
 #  endif
 
 } // FUNCTION : SiblingSearch_Base
@@ -37,7 +37,7 @@ void SiblingSearch_Base()
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  FindBaseSibling
-// Description :  Construct the sibling relation for the input base-level patch 
+// Description :  Construct the sibling relation for the input base-level patch
 //
 // Note        :  For the base-level sibling relation, it uses the BaseP list to locate sibling patches
 //
@@ -47,7 +47,7 @@ void FindBaseSibling( const int PID )
 {
 
    const int NPatch1D[3] = { NX0[0]/PATCH_SIZE+4, NX0[1]/PATCH_SIZE+4, NX0[2]/PATCH_SIZE+4 };
-   const int scale0      = amr->scale[0]; 
+   const int scale0      = amr->scale[0];
 
    int order[3], Sib[26];     // order[3] : (i,j,k)th patch in (x,y,z) direction
 

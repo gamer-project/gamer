@@ -8,7 +8,7 @@
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Refine_Buffer
 // Description :  Construct buffer patches at level "lv+1" according to the flagging result of buffer patches
-//                at level "lv" 
+//                at level "lv"
 //
 // Parameter   :  lv          : Target level to be refined
 //                SonTable    : Table recording the linking index of each buffer father patch to GrandTable
@@ -24,14 +24,14 @@ void Refine_Buffer( const int lv, const int *SonTable, const int *GrandTable )
 
 // a. allocate buffer patches
 // ------------------------------------------------------------------------------------------------
-   for (int s=0; s<26; s++)   
+   for (int s=0; s<26; s++)
    {
 //    determine the buffer patches that must store physical data
       for (int LocalID=0; LocalID<8; LocalID++)
       {
          if (  TABLE_01( s, 'x', -1, 0, 1 ) == TABLE_02( LocalID, 'x', -1, 1 )  ||
                TABLE_01( s, 'y', -1, 0, 1 ) == TABLE_02( LocalID, 'y', -1, 1 )  ||
-               TABLE_01( s, 'z', -1, 0, 1 ) == TABLE_02( LocalID, 'z', -1, 1 )      )  
+               TABLE_01( s, 'z', -1, 0, 1 ) == TABLE_02( LocalID, 'z', -1, 1 )      )
             AllocData[LocalID] = false;
 
          else
@@ -47,7 +47,7 @@ void Refine_Buffer( const int lv, const int *SonTable, const int *GrandTable )
 
          if ( amr->patch[0][lv][PID]->flag )
          {
-//          construct relation : father -> child   
+//          construct relation : father -> child
             amr->patch[0][lv][PID]->son = amr->num[lv+1];
 
 
@@ -86,7 +86,7 @@ void Refine_Buffer( const int lv, const int *SonTable, const int *GrandTable )
    if ( lv < NLEVEL-2 )
    {
       /*
-      for (int s=0; s<26; s++)   
+      for (int s=0; s<26; s++)
       {
          if ( amr->NPatchComma[lv+2][s+1] == amr->NPatchComma[lv+2][s+2] )    continue;
 
@@ -103,12 +103,12 @@ void Refine_Buffer( const int lv, const int *SonTable, const int *GrandTable )
                {
                   const int SonPID    = SonPID0 + t;
                   const int GrandPID0 = GrandTable[ TempSonID + t ];
-                 
+
                   if ( GrandPID0 != -1 )
                   {
                      amr->patch[0][lv+1][SonPID]->son = GrandPID0;
-                 
-                     for (int GrandPID=GrandPID0; GrandPID<GrandPID0+8; GrandPID++) 
+
+                     for (int GrandPID=GrandPID0; GrandPID<GrandPID0+8; GrandPID++)
                         amr->patch[0][lv+2][GrandPID]->father = SonPID;
                   }
                }
