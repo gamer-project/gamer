@@ -176,15 +176,15 @@ void Aux_Check_Parameter()
 
 #  if ( MODEL != HYDRO )
    for (int f=0; f<6; f++)
-   if ( OPT__BC_FLU[f] == BC_FLU_OUTFLOW  ||  OPT__BC_FLU[f] == BC_FLU_REFLECTING )
-      Aux_Error( ERROR_INFO, "outflow and reflecting boundary conditions (OPT__BC_FLU=2/3) only work with HYDRO !!\n" );
+      if ( OPT__BC_FLU[f] == BC_FLU_REFLECTING )
+         Aux_Error( ERROR_INFO, "reflecting boundary condition (OPT__BC_FLU=3) only works with HYDRO !!\n" );
 #  endif
 
-   if (  ( OPT__BC_FLU[0] == BC_FLU_PERIODIC || OPT__BC_FLU[1] == BC_FLU_PERIODIC || OPT__BC_FLU[2] == BC_FLU_PERIODIC ||
-           OPT__BC_FLU[3] == BC_FLU_PERIODIC || OPT__BC_FLU[4] == BC_FLU_PERIODIC || OPT__BC_FLU[5] == BC_FLU_PERIODIC   ) &&
-         ( OPT__BC_FLU[0] != BC_FLU_PERIODIC || OPT__BC_FLU[1] != BC_FLU_PERIODIC || OPT__BC_FLU[2] != BC_FLU_PERIODIC ||
-           OPT__BC_FLU[3] != BC_FLU_PERIODIC || OPT__BC_FLU[4] != BC_FLU_PERIODIC || OPT__BC_FLU[5] != BC_FLU_PERIODIC   )   )
-      Aux_Error( ERROR_INFO, "currently the periodic BC cannot be mixed with non-periodic BC. !!\n" );
+   for (int f=0; f<6; f+=2)
+      if (  ( OPT__BC_FLU[f] == BC_FLU_PERIODIC  &&  OPT__BC_FLU[f+1] != BC_FLU_PERIODIC )  ||
+            ( OPT__BC_FLU[f] != BC_FLU_PERIODIC  &&  OPT__BC_FLU[f+1] == BC_FLU_PERIODIC )   )
+         Aux_Error( ERROR_INFO, "periodic and non-periodic boundary conditions cannot be mixed along the same dimension"
+                                "--> please modify OPT__BC_FLU[%d/%d] !!\n", f, f+1 );
 
 #  ifndef TIMING
    if ( OPT__TIMING_MPI )  Aux_Error( ERROR_INFO, "OPT__TIMING_MPI must work with TIMING !!\n" );
@@ -322,12 +322,6 @@ void Aux_Check_Parameter()
       Aux_Message( stderr, "WARNING : OpenMP is NOT turned on for \"%s\" !!\n", "OPT__OVERLAP_MPI" );
 #     endif
    } // if ( OPT__OVERLAP_MPI )
-
-   if (  ( OPT__BC_FLU[0] == BC_FLU_USER || OPT__BC_FLU[1] == BC_FLU_USER || OPT__BC_FLU[2] == BC_FLU_USER ||
-           OPT__BC_FLU[3] == BC_FLU_USER || OPT__BC_FLU[4] == BC_FLU_USER || OPT__BC_FLU[5] == BC_FLU_USER   ) &&
-         ( OPT__BC_FLU[0] != BC_FLU_USER || OPT__BC_FLU[1] != BC_FLU_USER || OPT__BC_FLU[2] != BC_FLU_USER ||
-           OPT__BC_FLU[3] != BC_FLU_USER || OPT__BC_FLU[4] != BC_FLU_USER || OPT__BC_FLU[5] != BC_FLU_USER   )   )
-      Aux_Message( stderr, "WARNING : corner cells may not be well defined when mixing user-defined BC with others !!\n" );
 
    if ( OPT__TIMING_BARRIER )
       Aux_Message( stderr, "WARNING : \"%s\" may deteriorate performance (especially if %s is on) ...\n",
@@ -832,10 +826,6 @@ void Aux_Check_Parameter()
       Aux_Error( ERROR_INFO, "unsupported interpolation scheme \"%s = %d\" when OPT__INT_PHASE is on !!\n",
                  "OPT__FLU_INT_SCHEME", OPT__FLU_INT_SCHEME );
 
-   for (int f=0; f<6; f++)
-   if ( OPT__BC_FLU[f] == BC_FLU_REFLECTING  ||  OPT__BC_FLU[f] == BC_FLU_OUTFLOW )
-      Aux_Error( ERROR_INFO, "unsupported option \"OPT__BC_FLU[%d] = %d\" [1/4] !!\n", f, OPT__BC_FLU[f] );
-
    if ( MIN_DENS == 0.0  &&  MPI_Rank == 0 )
       Aux_Message( stderr, "WARNING : MIN_DENS == 0.0 could be dangerous and is mainly for debugging only !!\n" );
    else if ( MPI_Rank == 0 )
@@ -985,11 +975,6 @@ void Aux_Check_Parameter()
       Aux_Error( ERROR_INFO, "Pot_ParaBuf (%d) < NGhost_RefPot (%d) --> refinement will fail !!\n",
                  Pot_ParaBuf, NGhost_RefPot );
 #  endif
-
-   if ( OPT__GRAVITY_TYPE == GRAVITY_SELF  ||  OPT__GRAVITY_TYPE == GRAVITY_BOTH )
-   if (  ( OPT__BC_FLU[0] == BC_FLU_PERIODIC && OPT__BC_POT != BC_POT_PERIODIC )  ||
-         ( OPT__BC_FLU[0] != BC_FLU_PERIODIC && OPT__BC_POT == BC_POT_PERIODIC )    )
-      Aux_Error( ERROR_INFO, "periodic BC must be applied to both fluid and self-gravity solvers at the same time !!\n" );
 
    if ( OPT__BC_POT != BC_POT_PERIODIC  &&  OPT__BC_POT != BC_POT_ISOLATED )
       Aux_Error( ERROR_INFO, "unsupported option \"OPT__BC_POT = %d\" [1/2] !!\n", OPT__BC_POT );
