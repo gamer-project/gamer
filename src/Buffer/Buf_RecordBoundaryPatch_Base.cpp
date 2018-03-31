@@ -10,7 +10,7 @@
 // Description :  Record the base-level patches near the sub-domain boundaries in
 //                "amr->ParaVar->BounP_IDList[0]"
 //
-// Note        :  Invoked by the function "Buf_RecordBoundaryPatch"
+// Note        :  Invoked by Buf_RecordBoundaryPatch()
 //-------------------------------------------------------------------------------------------------------
 void Buf_RecordBoundaryPatch_Base()
 {
@@ -67,9 +67,7 @@ void Buf_RecordBoundaryPatch_Base()
             amr->ParaVar->BounP_PosList[0][s][ amr->ParaVar->BounP_NList[0][s] ] = ID_BounP;
             amr->ParaVar->BounP_NList  [0][s] ++;
          }
-
       }}}
-
    } // for (int s=0; s<26; s++)
 
 } // FUNCTION : Buf_RecordBoundaryPatch_Base

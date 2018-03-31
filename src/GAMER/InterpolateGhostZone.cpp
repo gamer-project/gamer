@@ -137,7 +137,7 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData[], const in
    if ( La > PATCH_SIZE )  Aux_Error( ERROR_INFO, "La (%d) > PATCH_SIZE (%d) !!\n", La, PATCH_SIZE );
 
 
-// coarse-grid array stored all data required for interpolation (including the ghost zones in each side)
+// coarse-grid array to store all the data required for interpolation (including the ghost zones in each side)
    real *CData_Ptr = NULL;
    real *CData     = new real [ NVar_Tot*CSize3D ];
 

@@ -9,8 +9,8 @@
 // Function    :  Buf_AllocateBufferPatch
 // Description :  Allocate the buffer patches at level "lv"
 //
-// Note        :  a. Currently it only works for the functions "Init_Reload" and "Init_BaseLevel"
-//                b. For the base level, no data transfer is required
+// Note        :  1. Currently it only works for the functions "Init_ByRestart_*" and "Init_BaseLevel"
+//                2. For the base level, no data transfer is required
 //
 // Parameter   :  Tamr : Target AMR_t pointer
 //                lv   : Target refinement lv to allocate buffer patches
@@ -75,7 +75,7 @@ void Buf_AllocateBufferPatch( AMR_t *Tamr, const int lv )
    } // for (int s=0; s<26; s++)
 
 
-// b. get the position of buffer patches to be refined at level "lv"
+// b. get the position of buffer patches to be refined at level "lv-1"
    MPI_ExchangeBufferPosition( NSend, NRecv, Send_PosList, Recv_PosList );
 
 

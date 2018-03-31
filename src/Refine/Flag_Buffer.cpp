@@ -41,7 +41,7 @@ void Flag_Buffer( const int lv )
          {
             TargetID++;
 
-//          the BounPID must exist due to the proper-nesting condition
+//          BounPID must exist due to the proper-nesting condition
 #           ifdef GAMER_DEBUG
             if ( TargetID >= amr->ParaVar->BounP_NList[lv][s] )
                Aux_Error( ERROR_INFO, "incorrect parameter %s = %d !!\n", "TargetID", TargetID );
@@ -52,7 +52,7 @@ void Flag_Buffer( const int lv )
          BuffPID = amr->patch[0][lv][BounPID]->sibling[s];
 
 
-//       the BuffPID must exist and be a buffer patch since that the flagging status should be the same over all processes
+//       BuffPID must exist and be a buffer patch since that the flagging status should be the same over all processes
 #        ifdef GAMER_DEBUG
          if ( BuffPID < amr->NPatchComma[lv][1]  ||  BuffPID >= amr->num[lv] )
             Aux_Error( ERROR_INFO, "incorrect parameter %s = %d !!\n", "BuffPID", BuffPID );
@@ -78,7 +78,6 @@ void Flag_Buffer( const int lv )
                amr->patch[0][lv][SibPID]->flag = true;
             }
          }
-
       } // for (int ID=0; ID<BuffFlag_NList[lv][s]; ID+=FlagLayer)
 
 

@@ -461,6 +461,7 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
 
 
 // apply the proper-nesting constraint again (should also apply to the buffer patches)
+// --> necessary because of the flag buffers
 #  pragma omp parallel for schedule( runtime )
    for (int PID=0; PID<amr->num[lv]; PID++)
    {
@@ -549,9 +550,10 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
 // Description :  Properly flag the siblings of patch "PID" at level "lv" to ensure that the proper-nesting
 //                condition is satisfied at level "lv+2"
 //
-// Note        :  Properly take care of the non-periodic BC where there are no buffer patches outside the simulation box
-//                and hence the proper-nesting constraint cannot be applied to the real patches adajacent to the simulation
-//                boundary (sibling index <= SIB_OFFSET_NONPERIODIC)
+// Note        :  1. Properly take care of the non-periodic BC which does not allocate buffer patches
+//                2. No need to validate the proper-nesting constraint when flagging the sibling patches on level "lv"
+//                   (in other words, these sibling patches on lv must be allowed to be flagged) since the existence of
+//                   grandson patches should already enforce this constraint
 //
 // Parameter   :  lv      : Target level to be flagged
 //                PID     : Target patch ID at level "lv"
@@ -565,6 +567,7 @@ void Flag_Grandson( const int lv, const int PID, const int LocalID )
    switch ( LocalID )
    {
       case 0:
+//       must ensure SibPID >= 0 due to the non-periodic B.C., for which we can have SibPID = SIB_OFFSET_NONPERIODIC-sib < -1
          SibPID = amr->patch[0][lv][PID]->sibling[ 0];   if ( SibPID >= 0 )   amr->patch[0][lv][SibPID]->flag = true;
          SibPID = amr->patch[0][lv][PID]->sibling[ 2];   if ( SibPID >= 0 )   amr->patch[0][lv][SibPID]->flag = true;
          SibPID = amr->patch[0][lv][PID]->sibling[ 4];   if ( SibPID >= 0 )   amr->patch[0][lv][SibPID]->flag = true;

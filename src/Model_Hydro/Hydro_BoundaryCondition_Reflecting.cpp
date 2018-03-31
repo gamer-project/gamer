@@ -2,23 +2,23 @@
 
 #if ( MODEL == HYDRO )
 
-static void BC_Reflecting_xm( real *Array, const int NVar_Flu, const int TFluVarIdxList[], const int NVar_Der, 
-                              const int TDerVarList[], const int GhostSize, const int ArraySizeX, const int ArraySizeY, 
+static void BC_Reflecting_xm( real *Array, const int NVar_Flu, const int TFluVarIdxList[], const int NVar_Der,
+                              const int TDerVarList[], const int GhostSize, const int ArraySizeX, const int ArraySizeY,
                               const int ArraySizeZ, const int Idx_Start[], const int Idx_End[] );
-static void BC_Reflecting_xp( real *Array, const int NVar_Flu, const int TFluVarIdxList[], const int NVar_Der, 
-                              const int TDerVarList[], const int GhostSize, const int ArraySizeX, const int ArraySizeY, 
+static void BC_Reflecting_xp( real *Array, const int NVar_Flu, const int TFluVarIdxList[], const int NVar_Der,
+                              const int TDerVarList[], const int GhostSize, const int ArraySizeX, const int ArraySizeY,
                               const int ArraySizeZ, const int Idx_Start[], const int Idx_End[] );
-static void BC_Reflecting_ym( real *Array, const int NVar_Flu, const int TFluVarIdxList[], const int NVar_Der, 
-                              const int TDerVarList[], const int GhostSize, const int ArraySizeX, const int ArraySizeY, 
+static void BC_Reflecting_ym( real *Array, const int NVar_Flu, const int TFluVarIdxList[], const int NVar_Der,
+                              const int TDerVarList[], const int GhostSize, const int ArraySizeX, const int ArraySizeY,
                               const int ArraySizeZ, const int Idx_Start[], const int Idx_End[] );
-static void BC_Reflecting_yp( real *Array, const int NVar_Flu, const int TFluVarIdxList[], const int NVar_Der, 
-                              const int TDerVarList[], const int GhostSize, const int ArraySizeX, const int ArraySizeY, 
+static void BC_Reflecting_yp( real *Array, const int NVar_Flu, const int TFluVarIdxList[], const int NVar_Der,
+                              const int TDerVarList[], const int GhostSize, const int ArraySizeX, const int ArraySizeY,
                               const int ArraySizeZ, const int Idx_Start[], const int Idx_End[] );
-static void BC_Reflecting_zm( real *Array, const int NVar_Flu, const int TFluVarIdxList[], const int NVar_Der, 
-                              const int TDerVarList[], const int GhostSize, const int ArraySizeX, const int ArraySizeY, 
+static void BC_Reflecting_zm( real *Array, const int NVar_Flu, const int TFluVarIdxList[], const int NVar_Der,
+                              const int TDerVarList[], const int GhostSize, const int ArraySizeX, const int ArraySizeY,
                               const int ArraySizeZ, const int Idx_Start[], const int Idx_End[] );
-static void BC_Reflecting_zp( real *Array, const int NVar_Flu, const int TFluVarIdxList[], const int NVar_Der, 
-                              const int TDerVarList[], const int GhostSize, const int ArraySizeX, const int ArraySizeY, 
+static void BC_Reflecting_zp( real *Array, const int NVar_Flu, const int TFluVarIdxList[], const int NVar_Der,
+                              const int TDerVarList[], const int GhostSize, const int ArraySizeX, const int ArraySizeY,
                               const int ArraySizeZ, const int Idx_Start[], const int Idx_End[] );
 
 
@@ -28,13 +28,14 @@ static void BC_Reflecting_zp( real *Array, const int NVar_Flu, const int TFluVar
 // Function    :  Hydro_BoundaryCondition_Reflecting
 // Description :  Fill up the ghost-zone values by the reflecting B.C.
 //
-// Note        :  Work for the functions "Prepare_PatchData, InterpolateGhostZone, Refine, LB_Refine_AllocateNewPatch"
-// 
+// Note        :  1. Work for the functions "Prepare_PatchData, InterpolateGhostZone, Refine, LB_Refine_AllocateNewPatch"
+//                2. Similar to the outflow (i.e., zero-gradient) B.C. except that the normal vecotor components change sign
+//
 // Parameter   :  Array          : Array to store the prepared data of one patch group (including the ghost-zone data)
 //                BC_Face        : Boundary face (0~5) --> (-x,+x,-y,+y,-z,+z)
 //                NVar_Flu       : Number of fluid variables to be prepared (derived variables is NOT included)
 //                GhostSize      : Number of ghost zones
-//                ArraySizeX/Y/Z : Size of Array including the ghost zones on each side 
+//                ArraySizeX/Y/Z : Size of Array including the ghost zones on each side
 //                Idx_Start      : Minimum array indices
 //                Idx_End        : Maximum array indices
 //                TFluVarIdxList : List recording the target fluid variable indices ( = [0 ... NCOMP_TOTAL-1] )
@@ -44,7 +45,7 @@ static void BC_Reflecting_zp( real *Array, const int NVar_Flu, const int TFluVar
 // Return      :  Array
 //-------------------------------------------------------------------------------------------------------
 void Hydro_BoundaryCondition_Reflecting( real *Array, const int BC_Face, const int NVar_Flu, const int GhostSize,
-                                         const int ArraySizeX, const int ArraySizeY, const int ArraySizeZ, 
+                                         const int ArraySizeX, const int ArraySizeY, const int ArraySizeZ,
                                          const int Idx_Start[], const int Idx_End[], const int TFluVarIdxList[],
                                          const int NVar_Der, const int TDerVarList[] )
 {
@@ -80,13 +81,13 @@ void Hydro_BoundaryCondition_Reflecting( real *Array, const int BC_Face, const i
       default: Aux_Error( ERROR_INFO, "incorrect boundary face (%d) !!\n", BC_Face );
    } // switch ( BC_Face )
 
-   if ( NVar_Flu != 0  &&  TFluVarIdxList == NULL )   
+   if ( NVar_Flu != 0  &&  TFluVarIdxList == NULL )
       Aux_Error( ERROR_INFO, "NVar_Flu = %d != 0, TFluVarIdxList == NULL !!\n", NVar_Flu );
 
-   if ( NVar_Der != 0  &&  TDerVarList == NULL )   
+   if ( NVar_Der != 0  &&  TDerVarList == NULL )
       Aux_Error( ERROR_INFO, "NVar_Der = %d != 0, TDerVarList == NULL !!\n", NVar_Der );
 #  endif // #ifdef GAMER_DEBUG
-   
+
 
 // set the boundary values at different boundary faces
    switch ( BC_Face )
@@ -122,21 +123,21 @@ void Hydro_BoundaryCondition_Reflecting( real *Array, const int BC_Face, const i
 //
 // Note        :  1. Work for the function "Hydro_BoundaryCondition_Reflecting"
 //                2. Use the input parameter "NVar_Flu" and "TFluVarIdxList" to control the target fluid variables
-// 
+//
 // Parameter   :  Array          : Array to store the prepared data of one patch group (including the ghost-zone data)
 //                NVar_Flu       : Number of fluid variables to be prepared (derived variables is NOT included)
 //                TFluVarIdxList : List recording the target fluid variable indices ( = [0 ... NCOMP_TOTAL-1] )
 //                NVar_Der       : Number of derived variables to be prepared
 //                TDerVarList    : List recording the target derived variables
 //                GhostSize      : Number of ghost zones
-//                ArraySizeX/Y/Z : Size of Array including the ghost zones on each side 
+//                ArraySizeX/Y/Z : Size of Array including the ghost zones on each side
 //                Idx_Start      : Minimum array indices
 //                Idx_End        : Maximum array indices
 //
 // Return      :  Array
 //-------------------------------------------------------------------------------------------------------
-void BC_Reflecting_xm( real *Array, const int NVar_Flu, const int TFluVarIdxList[], const int NVar_Der, 
-                       const int TDerVarList[], const int GhostSize, const int ArraySizeX, const int ArraySizeY, 
+void BC_Reflecting_xm( real *Array, const int NVar_Flu, const int TFluVarIdxList[], const int NVar_Der,
+                       const int TDerVarList[], const int GhostSize, const int ArraySizeX, const int ArraySizeY,
                        const int ArraySizeZ, const int Idx_Start[], const int Idx_End[] )
 {
 
@@ -149,7 +150,7 @@ void BC_Reflecting_xm( real *Array, const int NVar_Flu, const int TFluVarIdxList
 
 // set the boundary values
    for (int v=0; v<NVar_Flu; v++)
-   {  
+   {
       TFluVarIdx = TFluVarIdxList[v];
 
       if ( TFluVarIdx == MOMX )
@@ -178,7 +179,7 @@ void BC_Reflecting_xm( real *Array, const int NVar_Flu, const int TFluVarIdxList
 
 // derived variables
    for (int v2=0, v=NVar_Flu; v2<NVar_Der; v2++, v++)
-   {  
+   {
       if ( TDerVarList[v2] == _VELX )
       {
          for (int k=Idx_Start[2]; k<=Idx_End[2]; k++)    {
@@ -212,21 +213,21 @@ void BC_Reflecting_xm( real *Array, const int NVar_Flu, const int TFluVarIdxList
 //
 // Note        :  1. Work for the function "Hydro_BoundaryCondition_Reflecting"
 //                2. Use the input parameter "NVar_Flu" and "TFluVarIdxList" to control the target fluid variables
-// 
+//
 // Parameter   :  Array          : Array to store the prepared data of one patch group (including the ghost-zone data)
 //                NVar_Flu       : Number of fluid variables to be prepared (derived variables is NOT included)
 //                TFluVarIdxList : List recording the target fluid variable indices ( = [0 ... NCOMP_TOTAL-1] )
 //                NVar_Der       : Number of derived variables to be prepared
 //                TDerVarList    : List recording the target derived variables
 //                GhostSize      : Number of ghost zones
-//                ArraySizeX/Y/Z : Size of Array including the ghost zones on each side 
+//                ArraySizeX/Y/Z : Size of Array including the ghost zones on each side
 //                Idx_Start      : Minimum array indices
 //                Idx_End        : Maximum array indices
 //
 // Return      :  Array
 //-------------------------------------------------------------------------------------------------------
-void BC_Reflecting_xp( real *Array, const int NVar_Flu, const int TFluVarIdxList[], const int NVar_Der, 
-                       const int TDerVarList[], const int GhostSize, const int ArraySizeX, const int ArraySizeY, 
+void BC_Reflecting_xp( real *Array, const int NVar_Flu, const int TFluVarIdxList[], const int NVar_Der,
+                       const int TDerVarList[], const int GhostSize, const int ArraySizeX, const int ArraySizeY,
                        const int ArraySizeZ, const int Idx_Start[], const int Idx_End[] )
 {
 
@@ -239,7 +240,7 @@ void BC_Reflecting_xp( real *Array, const int NVar_Flu, const int TFluVarIdxList
 
 // set the boundary values
    for (int v=0; v<NVar_Flu; v++)
-   {  
+   {
       TFluVarIdx = TFluVarIdxList[v];
 
       if ( TFluVarIdx == MOMX )
@@ -252,7 +253,7 @@ void BC_Reflecting_xp( real *Array, const int NVar_Flu, const int TFluVarIdxList
 
          }}}
       }
-      
+
       else
       {
          for (int k=Idx_Start[2]; k<=Idx_End[2]; k++)    {
@@ -268,7 +269,7 @@ void BC_Reflecting_xp( real *Array, const int NVar_Flu, const int TFluVarIdxList
 
 // derived variables
    for (int v2=0, v=NVar_Flu; v2<NVar_Der; v2++, v++)
-   {  
+   {
       if ( TDerVarList[v2] == _VELX )
       {
          for (int k=Idx_Start[2]; k<=Idx_End[2]; k++)    {
@@ -279,7 +280,7 @@ void BC_Reflecting_xp( real *Array, const int NVar_Flu, const int TFluVarIdxList
 
          }}}
       }
-      
+
       else
       {
          for (int k=Idx_Start[2]; k<=Idx_End[2]; k++)    {
@@ -302,21 +303,21 @@ void BC_Reflecting_xp( real *Array, const int NVar_Flu, const int TFluVarIdxList
 //
 // Note        :  1. Work for the function "Hydro_BoundaryCondition_Reflecting"
 //                2. Use the input parameter "NVar_Flu" and "TFluVarIdxList" to control the target fluid variables
-// 
+//
 // Parameter   :  Array          : Array to store the prepared data of one patch group (including the ghost-zone data)
 //                NVar_Flu       : Number of fluid variables to be prepared (derived variables is NOT included)
 //                TFluVarIdxList : List recording the target fluid variable indices ( = [0 ... NCOMP_TOTAL-1] )
 //                NVar_Der       : Number of derived variables to be prepared
 //                TDerVarList    : List recording the target derived variables
 //                GhostSize      : Number of ghost zones
-//                ArraySizeX/Y/Z : Size of Array including the ghost zones on each side 
+//                ArraySizeX/Y/Z : Size of Array including the ghost zones on each side
 //                Idx_Start      : Minimum array indices
 //                Idx_End        : Maximum array indices
 //
 // Return      :  Array
 //-------------------------------------------------------------------------------------------------------
-void BC_Reflecting_ym( real *Array, const int NVar_Flu, const int TFluVarIdxList[], const int NVar_Der, 
-                       const int TDerVarList[], const int GhostSize, const int ArraySizeX, const int ArraySizeY, 
+void BC_Reflecting_ym( real *Array, const int NVar_Flu, const int TFluVarIdxList[], const int NVar_Der,
+                       const int TDerVarList[], const int GhostSize, const int ArraySizeX, const int ArraySizeY,
                        const int ArraySizeZ, const int Idx_Start[], const int Idx_End[] )
 {
 
@@ -329,7 +330,7 @@ void BC_Reflecting_ym( real *Array, const int NVar_Flu, const int TFluVarIdxList
 
 // set the boundary values
    for (int v=0; v<NVar_Flu; v++)
-   {  
+   {
       TFluVarIdx = TFluVarIdxList[v];
 
       if ( TFluVarIdx == MOMY )
@@ -358,7 +359,7 @@ void BC_Reflecting_ym( real *Array, const int NVar_Flu, const int TFluVarIdxList
 
 // derived variables
    for (int v2=0, v=NVar_Flu; v2<NVar_Der; v2++, v++)
-   {  
+   {
       if ( TDerVarList[v2] == _VELY )
       {
          for (int k=Idx_Start[2]; k<=Idx_End[2]; k++)    {
@@ -392,21 +393,21 @@ void BC_Reflecting_ym( real *Array, const int NVar_Flu, const int TFluVarIdxList
 //
 // Note        :  1. Work for the function "Hydro_BoundaryCondition_Reflecting"
 //                2. Use the input parameter "NVar_Flu" and "TFluVarIdxList" to control the target fluid variables
-// 
+//
 // Parameter   :  Array          : Array to store the prepared data of one patch group (including the ghost-zone data)
 //                NVar_Flu       : Number of fluid variables to be prepared (derived variables is NOT included)
 //                TFluVarIdxList : List recording the target fluid variable indices ( = [0 ... NCOMP_TOTAL-1] )
 //                NVar_Der       : Number of derived variables to be prepared
 //                TDerVarList    : List recording the target derived variables
 //                GhostSize      : Number of ghost zones
-//                ArraySizeX/Y/Z : Size of Array including the ghost zones on each side 
+//                ArraySizeX/Y/Z : Size of Array including the ghost zones on each side
 //                Idx_Start      : Minimum array indices
 //                Idx_End        : Maximum array indices
 //
 // Return      :  Array
 //-------------------------------------------------------------------------------------------------------
-void BC_Reflecting_yp( real *Array, const int NVar_Flu, const int TFluVarIdxList[], const int NVar_Der, 
-                       const int TDerVarList[], const int GhostSize, const int ArraySizeX, const int ArraySizeY, 
+void BC_Reflecting_yp( real *Array, const int NVar_Flu, const int TFluVarIdxList[], const int NVar_Der,
+                       const int TDerVarList[], const int GhostSize, const int ArraySizeX, const int ArraySizeY,
                        const int ArraySizeZ, const int Idx_Start[], const int Idx_End[] )
 {
 
@@ -419,7 +420,7 @@ void BC_Reflecting_yp( real *Array, const int NVar_Flu, const int TFluVarIdxList
 
 // set the boundary values
    for (int v=0; v<NVar_Flu; v++)
-   {  
+   {
       TFluVarIdx = TFluVarIdxList[v];
 
       if ( TFluVarIdx == MOMY )
@@ -448,7 +449,7 @@ void BC_Reflecting_yp( real *Array, const int NVar_Flu, const int TFluVarIdxList
 
 // derived variables
    for (int v2=0, v=NVar_Flu; v2<NVar_Der; v2++, v++)
-   {  
+   {
       if ( TDerVarList[v2] == _VELY )
       {
          for (int k=Idx_Start[2]; k<=Idx_End[2]; k++)    {
@@ -482,21 +483,21 @@ void BC_Reflecting_yp( real *Array, const int NVar_Flu, const int TFluVarIdxList
 //
 // Note        :  1. Work for the function "Hydro_BoundaryCondition_Reflecting"
 //                2. Use the input parameter "NVar_Flu" and "TFluVarIdxList" to control the target fluid variables
-// 
+//
 // Parameter   :  Array          : Array to store the prepared data of one patch group (including the ghost-zone data)
 //                NVar_Flu       : Number of fluid variables to be prepared (derived variables is NOT included)
 //                TFluVarIdxList : List recording the target fluid variable indices ( = [0 ... NCOMP_TOTAL-1] )
 //                NVar_Der       : Number of derived variables to be prepared
 //                TDerVarList    : List recording the target derived variables
 //                GhostSize      : Number of ghost zones
-//                ArraySizeX/Y/Z : Size of Array including the ghost zones on each side 
+//                ArraySizeX/Y/Z : Size of Array including the ghost zones on each side
 //                Idx_Start      : Minimum array indices
 //                Idx_End        : Maximum array indices
 //
 // Return      :  Array
 //-------------------------------------------------------------------------------------------------------
-void BC_Reflecting_zm( real *Array, const int NVar_Flu, const int TFluVarIdxList[], const int NVar_Der, 
-                       const int TDerVarList[], const int GhostSize, const int ArraySizeX, const int ArraySizeY, 
+void BC_Reflecting_zm( real *Array, const int NVar_Flu, const int TFluVarIdxList[], const int NVar_Der,
+                       const int TDerVarList[], const int GhostSize, const int ArraySizeX, const int ArraySizeY,
                        const int ArraySizeZ, const int Idx_Start[], const int Idx_End[] )
 {
 
@@ -509,7 +510,7 @@ void BC_Reflecting_zm( real *Array, const int NVar_Flu, const int TFluVarIdxList
 
 // set the boundary values
    for (int v=0; v<NVar_Flu; v++)
-   {  
+   {
       TFluVarIdx = TFluVarIdxList[v];
 
       if ( TFluVarIdx == MOMZ )
@@ -538,7 +539,7 @@ void BC_Reflecting_zm( real *Array, const int NVar_Flu, const int TFluVarIdxList
 
 // derived variables
    for (int v2=0, v=NVar_Flu; v2<NVar_Der; v2++, v++)
-   {  
+   {
       if ( TDerVarList[v2] == _VELZ )
       {
          for (int k=Idx_Start[2]; k<=Idx_End[2]; k++)    {  kk = k_ref - k;
@@ -572,21 +573,21 @@ void BC_Reflecting_zm( real *Array, const int NVar_Flu, const int TFluVarIdxList
 //
 // Note        :  1. Work for the function "Hydro_BoundaryCondition_Reflecting"
 //                2. Use the input parameter "NVar_Flu" and "TFluVarIdxList" to control the target fluid variables
-// 
+//
 // Parameter   :  Array          : Array to store the prepared data of one patch group (including the ghost-zone data)
 //                NVar_Flu       : Number of fluid variables to be prepared (derived variables is NOT included)
 //                TFluVarIdxList : List recording the target fluid variable indices ( = [0 ... NCOMP_TOTAL-1] )
 //                NVar_Der       : Number of derived variables to be prepared
 //                TDerVarList    : List recording the target derived variables
 //                GhostSize      : Number of ghost zones
-//                ArraySizeX/Y/Z : Size of Array including the ghost zones on each side 
+//                ArraySizeX/Y/Z : Size of Array including the ghost zones on each side
 //                Idx_Start      : Minimum array indices
 //                Idx_End        : Maximum array indices
 //
 // Return      :  Array
 //-------------------------------------------------------------------------------------------------------
-void BC_Reflecting_zp( real *Array, const int NVar_Flu, const int TFluVarIdxList[], const int NVar_Der, 
-                       const int TDerVarList[], const int GhostSize, const int ArraySizeX, const int ArraySizeY, 
+void BC_Reflecting_zp( real *Array, const int NVar_Flu, const int TFluVarIdxList[], const int NVar_Der,
+                       const int TDerVarList[], const int GhostSize, const int ArraySizeX, const int ArraySizeY,
                        const int ArraySizeZ, const int Idx_Start[], const int Idx_End[] )
 {
 
@@ -599,7 +600,7 @@ void BC_Reflecting_zp( real *Array, const int NVar_Flu, const int TFluVarIdxList
 
 // set the boundary values
    for (int v=0; v<NVar_Flu; v++)
-   {  
+   {
       TFluVarIdx = TFluVarIdxList[v];
 
       if ( TFluVarIdx == MOMZ )
@@ -628,7 +629,7 @@ void BC_Reflecting_zp( real *Array, const int NVar_Flu, const int TFluVarIdxList
 
 // derived variables
    for (int v2=0, v=NVar_Flu; v2<NVar_Der; v2++, v++)
-   {  
+   {
       if ( TDerVarList[v2] == _VELZ )
       {
          for (int k=Idx_Start[2]; k<=Idx_End[2]; k++)    {  kk = k_ref - k;

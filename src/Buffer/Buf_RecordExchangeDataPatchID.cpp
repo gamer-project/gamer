@@ -54,7 +54,7 @@ void Buf_RecordExchangeDataPatchID( const int lv )
       }
 
 
-//    nothing to do if there are no boundary patches at the target direction
+//    nothing to do if there are no boundary patches in the target direction
       if ( amr->ParaVar->BounP_NList[lv][s] == 0 )    continue;
 
 

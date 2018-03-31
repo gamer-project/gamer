@@ -7,8 +7,8 @@
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Flu_AllocateFluxArray_Buffer
-// Description :  Allocate flux arrays for the coarse-grid buffer patches (at level lv) adjacent to the 
-//                coarse-fine boundaries 
+// Description :  Allocate flux arrays for the coarse-grid buffer patches (at level lv) adjacent to the
+//                coarse-fine boundaries
 //
 // Parameter   :  lv : Target coarse-grid level
 //-------------------------------------------------------------------------------------------------------
@@ -18,7 +18,7 @@ void Flu_AllocateFluxArray_Buffer( const int lv )
 // check
    if ( !amr->WithFlux )
       Aux_Message( stderr, "WARNING : why invoking %s when amr->WithFlux is off ??\n", __FUNCTION__ );
-   
+
 
    const int MirrorSib[6] = { 1, 0, 3, 2, 5, 4 };
    int PID, SonPID, SibPID, Table[4];
@@ -44,7 +44,7 @@ void Flu_AllocateFluxArray_Buffer( const int lv )
          }
       }
    } // for (int s=0; s<6; s++)
-   
+
 } // FUNCTION : Flu_AllocateFluxArray_Buffer
 
 
