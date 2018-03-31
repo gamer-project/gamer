@@ -10,9 +10,9 @@
 // Description :  Construct buffer patches at level "lv+1" according to the flagging result of buffer patches
 //                at level "lv"
 //
-// Parameter   :  lv          : Target level to be refined
-//                SonTable    : Table recording the linking index of each buffer father patch to GrandTable
-//                GrandTable  : Table recording the patch IDs of grandson buffer patches
+// Parameter   :  lv         : Target level to be refined
+//                SonTable   : Table recording the linking index of each buffer father patch to GrandTable
+//                GrandTable : Table recording the patch IDs of grandson buffer patches
 //-------------------------------------------------------------------------------------------------------
 void Refine_Buffer( const int lv, const int *SonTable, const int *GrandTable )
 {
@@ -42,7 +42,7 @@ void Refine_Buffer( const int lv, const int *SonTable, const int *GrandTable )
       for (int PID=amr->NPatchComma[lv][s+1]; PID<amr->NPatchComma[lv][s+2]; PID++)
       {
 #        ifdef GAMER_DEBUG
-         if ( MPI_SibRank[s] < 0 )  Aux_Error( ERROR_INFO, "why there are buffer patches !!\n" );
+         if ( MPI_SibRank[s] < 0 )  Aux_Error( ERROR_INFO, "why are there buffer patches !!\n" );
 #        endif
 
          if ( amr->patch[0][lv][PID]->flag )

@@ -5,7 +5,7 @@
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  TABLE_02
-// Description :  Return w0, or w1 according to the inputs "LocalID" and "dim" 
+// Description :  Return w0, or w1 according to the inputs "LocalID" and "dim"
 //
 // Note        :  This table is particularly useful when the required values depended on the direction
 //                of the local ID of patch within a patch group
@@ -33,7 +33,7 @@ int TABLE_02( const int LocalID, const char dim, const int w0, const int w1 )
                return w1;
 
             default:
-               Aux_Error( ERROR_INFO, "incorrect parameter %s = %c, %s = %d\" !!\n", 
+               Aux_Error( ERROR_INFO, "incorrect parameter %s = %c, %s = %d\" !!\n",
                           "dim", dim, "LocalID", LocalID );
          }
 
@@ -47,7 +47,7 @@ int TABLE_02( const int LocalID, const char dim, const int w0, const int w1 )
                return w1;
 
             default:
-               Aux_Error( ERROR_INFO, "incorrect parameter %s = %c, %s = %d\" !!\n", 
+               Aux_Error( ERROR_INFO, "incorrect parameter %s = %c, %s = %d\" !!\n",
                           "dim", dim, "LocalID", LocalID );
          }
 
@@ -61,7 +61,7 @@ int TABLE_02( const int LocalID, const char dim, const int w0, const int w1 )
                return w1;
 
             default:
-               Aux_Error( ERROR_INFO, "incorrect parameter %s = %c, %s = %d\" !!\n", 
+               Aux_Error( ERROR_INFO, "incorrect parameter %s = %c, %s = %d\" !!\n",
                           "dim", dim, "LocalID", LocalID );
          }
 

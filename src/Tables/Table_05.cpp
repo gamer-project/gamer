@@ -5,16 +5,16 @@
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  TABLE_05
-// Description :  Return the number of layers of the NeiFlag_PosList and BounFlag_PosList 
+// Description :  Return the number of layers of the NeiFlag_PosList and BounFlag_PosList
 //
-// Note        :  Work for the functions "Flag_Buffer" "Buf_RecordExchangeDataPatchID" and 
-//                "Buf_RecordBoundaryFlag" 
+// Note        :  Work for the functions "Flag_Buffer" "Buf_RecordExchangeDataPatchID" and
+//                "Buf_RecordBoundaryFlag"
 //
 // Parameter   :  SibID : Sibling index (0~25)
 //-------------------------------------------------------------------------------------------------------
 int TABLE_05( const int SibID )
 {
-   
+
    switch ( SibID )
    {
       case 0: case 1: case 2: case 3: case 4: case 5:

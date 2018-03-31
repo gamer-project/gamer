@@ -94,9 +94,6 @@ bool ParDensArray_Initialized = false;
 //                IntPhase       : true --> Perform interpolation on rho/phase instead of real/imag parts in ELBDM
 //                                      --> TVar must contain _REAL and _IMAG
 //                FluBC          : Fluid boundary condition
-//                                 --> This variable is used to determine whether periodic BC is adopted even in the cases
-//                                     where we are NOT preparing any fluid variable (i.e., _POTE | _PAR_DENS)
-//                                     --> Therefore it must be provided correctly at any instance
 //                PotBC          : Gravity boundary condition
 //                MinDens/Pres   : Minimum allowed density/pressure in the output array (<0.0 ==> off)
 //                                 --> MinDens can be applied to both _DENS and _TOTAL_DENS but cannot be applied to _PAR_DENS
@@ -192,11 +189,11 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
 
       if ( FluBC[f] != BC_FLU_PERIODIC    &&  FluBC[f] != BC_FLU_OUTFLOW  &&
            FluBC[f] != BC_FLU_REFLECTING  &&  FluBC[f] != BC_FLU_USER        )
-         Aux_Error( ERROR_INFO, "unsupported parameter %s[%d] = %d !!\n", "FluBC", f, FluBC[f] );
+         Aux_Error( ERROR_INFO, "unsupported parameter FluBC[%d] = %d !!\n", f, FluBC[f] );
 
 #     if ( MODEL != HYDRO )
-      if ( FluBC[f] == BC_FLU_OUTFLOW  ||  FluBC[f] == BC_FLU_REFLECTING )
-         Aux_Error( ERROR_INFO, "outflow and reflecting boundary conditions (OPT__BC_FLU=2/3) only work with HYDRO !!\n" );
+      if ( FluBC[f] == BC_FLU_REFLECTING )
+         Aux_Error( ERROR_INFO, "reflecting boundary condition (OPT__BC_FLU=3) only works with HYDRO !!\n" );
 #     endif
    }
 
@@ -303,7 +300,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
    NVar_Der = 0;
 
 #  if   ( MODEL == HYDRO )
-   const int NVar_Der_Max = 4;
+   const int NVar_Der_Max = 5;
    int TDerVarList[NVar_Der_Max];
 
    if ( PrepVx   )   TDerVarList[ NVar_Der ++ ] = _VELX;
@@ -697,7 +694,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
             }
 #           endif // #ifdef DEBUG_PARTICLE
 
-//          set the left edge of the rho_ext array
+//          set the left edge of rho_ext[]
             const double RhoExtGhostPhySize = RHOEXT_GHOST_SIZE*dh;
             for (int d=0; d<3; d++)    EdgeL[d] = amr->patch[0][lv][PID]->EdgeL[d] - RhoExtGhostPhySize;
 
@@ -707,7 +704,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
 //              (1) all input particles should be close to the target patches even with position prediction
 //              (2) amr->patch[0][lv][PID]->EdgeL/R already assumes periodicity for external buffer patches
 //              --> Periodic_No, CheckFarAway_No
-//          --> remember to initialize rho_ext as zero (by InitZero_Yes)
+//          --> remember to initialize rho_ext[] as zero (by InitZero_Yes)
             Par_MassAssignment( ParList, NPar, amr->Par->Interp, amr->patch[0][lv][PID]->rho_ext[0][0], RHOEXT_NXT,
                                 EdgeL, dh, (amr->Par->PredictPos && !UseInputMassPos), PrepTime, InitZero_Yes,
                                 Periodic_No, NULL, UnitDens_No, CheckFarAway_No, UseInputMassPos, InputMassPos );
@@ -716,7 +713,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
 #     endif // #ifdef PARTICLE
 
 
-//    note that the total density array needs rho_ext of nearby patches
+//    note that the total density array needs rho_ext[] of nearby patches
 //    --> the next omp task must wait for the previous one
 //    --> but since there is an implicit barrier at the end of the **for** construct --> no need to call "pragma omp barrier"
 

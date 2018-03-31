@@ -7,7 +7,7 @@
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  MPI_ExchangeBufferPosition
-// Description :  Exchange the positions of buffer patches 
+// Description :  Exchange the positions of buffer patches
 //
 // Note        :  Currently it only works for the function "Buf_AllocateBufferPatch"
 //
@@ -31,7 +31,7 @@ void MPI_ExchangeBufferPosition( int NSend[26], int NRecv[26], int *Send_PosList
       for (int t=0; t<2; t++)
       {
          SendTarget[t] = ( MPI_SibRank[ v[s+t] ] < 0 ) ? MPI_PROC_NULL : MPI_SibRank[ v[s+t] ];
-         RecvTarget[t] = ( MPI_SibRank[ v[s+t] ] < 0 ) ? MPI_PROC_NULL : MPI_SibRank[ v[s+t] ];     
+         RecvTarget[t] = ( MPI_SibRank[ v[s+t] ] < 0 ) ? MPI_PROC_NULL : MPI_SibRank[ v[s+t] ];
       }
 
       MPI_Isend( &NSend[ v[s  ] ], 1, MPI_INT, SendTarget[0], 0, MPI_COMM_WORLD, &Req[0] );
@@ -59,12 +59,12 @@ void MPI_ExchangeBufferPosition( int NSend[26], int NRecv[26], int *Send_PosList
       for (int t=0; t<2; t++)
       {
          SendTarget[t] = ( NSend[ v[s+t] ] == 0 ) ? MPI_PROC_NULL : MPI_SibRank[ v[s+t] ];
-         RecvTarget[t] = ( NRecv[ v[s+t] ] == 0 ) ? MPI_PROC_NULL : MPI_SibRank[ v[s+t] ];      
+         RecvTarget[t] = ( NRecv[ v[s+t] ] == 0 ) ? MPI_PROC_NULL : MPI_SibRank[ v[s+t] ];
 
 #        ifdef GAMER_DEBUG
-         if (  NSend[ v[s+t] ] != 0  &&  ( SendTarget[t] < 0 || SendTarget[t] >= MPI_NRank )  )  
+         if (  NSend[ v[s+t] ] != 0  &&  ( SendTarget[t] < 0 || SendTarget[t] >= MPI_NRank )  )
             Aux_Error( ERROR_INFO, "incorrect SendTarget[%d] = %d !!\n", t, SendTarget[t] );
-         if (  NRecv[ v[s+t] ] != 0  &&  ( RecvTarget[t] < 0 || RecvTarget[t] >= MPI_NRank )  )  
+         if (  NRecv[ v[s+t] ] != 0  &&  ( RecvTarget[t] < 0 || RecvTarget[t] >= MPI_NRank )  )
             Aux_Error( ERROR_INFO, "incorrect RecvTarget[%d] = %d !!\n", t, RecvTarget[t] );
 #        endif
       }

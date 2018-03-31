@@ -236,10 +236,16 @@ void CorrectFlux( const int lv, const real h_Flux_Array[][9][NFLUX_TOTAL][4*PATC
 
          for (int s=0; s<6; s++)
          {
+//          skip patches adjacent to the non-periodic boundaries (which will have Table_01() < -1)
             if ( Table_01( lv, PID0, s ) == -1 )
             {
                FaPID    = amr->patch[0][lv  ][ PID0]->father;
                FaSibPID = amr->patch[0][lv-1][FaPID]->sibling[s];
+
+#              ifdef GAMER_DEBUG
+               if ( FaSibPID < 0 )
+                  Aux_Error( ERROR_INFO, "FaSibPID = %d < 0 (lv %d, FaPID %d, s %d, PID0 %d) !!\n", FaSibPID, lv-1, FaPID, s, PID0 );
+#              endif
 
 //             for AUTO_REDUCE_DT, store the updated fluxes in the temporary array "flux_tmp" since
 //             we may need to abandon these updated results if the fluid solver fails

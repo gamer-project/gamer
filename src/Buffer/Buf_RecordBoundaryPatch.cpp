@@ -39,7 +39,6 @@ void Buf_RecordBoundaryPatch( const int lv )
 // begin the main loop of Buf_RecordBoundaryPatch
    for (int s=0; s<26; s++)
    {
-
 //    initialize the BounP_NList[lv][s] as 0
       amr->ParaVar->BounP_NList[lv][s] = 0;
 
@@ -93,7 +92,6 @@ void Buf_RecordBoundaryPatch( const int lv )
 
          PID0  = amr->patch[0][lv-1][FaPID]->son;
 
-//       we have assumed that the outermost buffer patches will NOT have child patches
          if ( PID0 != -1 )
          {
             Corner = amr->patch[0][lv][PID0]->corner;
@@ -102,6 +100,7 @@ void Buf_RecordBoundaryPatch( const int lv )
 
             Pos0 = ( ijk[2]*ListLength[1] + ijk[1] )*ListLength[0] + ijk[0];
 
+//          we do not refine the outermost buffer patches
             for (int Side=0; Side<NSide; Side++)
             {
                Pos = Pos0 + Side%2 + (Side/2)*ListLength1D;
@@ -110,7 +109,6 @@ void Buf_RecordBoundaryPatch( const int lv )
                amr->ParaVar->BounP_PosList[lv][s][ amr->ParaVar->BounP_NList[lv][s] ] = Pos;
                amr->ParaVar->BounP_NList  [lv][s] ++;
             }
-
          } // if ( PID0 != -1 )
       } // for (int FaID=0; FaID<amr->ParaVar->NList[lv-1][s]; FaID++)
 
@@ -129,7 +127,6 @@ void Buf_RecordBoundaryPatch( const int lv )
          amr->ParaVar->BounP_IDList [lv][s] = NULL;
          amr->ParaVar->BounP_PosList[lv][s] = NULL;
       }
-
    } // for (int s=0; s<26; s++)
 
 } // FUNCTION : Buf_RecordBoundaryPatch

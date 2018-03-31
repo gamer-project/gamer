@@ -32,7 +32,7 @@ void SiblingSearch( const int lv )
       int FaSib, FaSibSon;
       patch_t *fa = amr->patch[0][lv-1][ amr->patch[0][lv][PID]->father ];
 
-      // initialize all siblings as -1
+//    initialize all siblings as -1
       for (int s=0; s<26; s++)      amr->patch[0][lv][PID]->sibling[s] = -1;
 
       switch ( PID%8 )

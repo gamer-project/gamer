@@ -58,15 +58,15 @@ void FindFather( const int lv, const int Mode )
 //       b. find the father patch
          for (int FaLv=1; FaLv<lv; FaLv++)
          {
-            GrandPaLv      = FaLv - 1;
-            GrandPaPID     = FaPID;
-            GrandPaCorner  = amr->patch[0][GrandPaLv][GrandPaPID]->corner;
-            FaPS           = PATCH_SIZE*amr->scale[FaLv];
+            GrandPaLv     = FaLv - 1;
+            GrandPaPID    = FaPID;
+            GrandPaCorner = amr->patch[0][GrandPaLv][GrandPaPID]->corner;
+            FaPS          = PATCH_SIZE*amr->scale[FaLv];
 
             for (int d=0; d<3; d++)
-               LocalPos[d] = ( Corner[d] - GrandPaCorner[d] ) / FaPS;
+            LocalPos[d]   = ( Corner[d] - GrandPaCorner[d] ) / FaPS;
 
-            LocalID_1D     = LocalPos[2]*4 + LocalPos[1]*2 + LocalPos[0];
+            LocalID_1D    = LocalPos[2]*4 + LocalPos[1]*2 + LocalPos[0];
 
             switch ( LocalID_1D )
             {

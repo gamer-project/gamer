@@ -8,7 +8,7 @@
 // Description :  Perform spatial interpolation based on the quartic interpolation
 //
 // Note	       :  a. The spatial disribution is approximated by a quartic polynomial in each direction
-//                   --> A quartic polynomial, which passes through the CENTRAL values in five cells, 
+//                   --> A quartic polynomial, which passes through the CENTRAL values in five cells,
 //                       is used to approximate the spatial distribution
 //		  b. The interpolation result is neither conservative nor monotonic
 //		  c. 3D interpolation is achieved by performing interpolation along x, y, and z directions
@@ -16,7 +16,7 @@
 //		  d. The "Monotonic" option is used to ensure that the interpolation results are monotonic
 //		     --> A slope limiter is adopted to ensure the monotonicity
 //
-// Parameter   :  CData	      : Input coarse-grid array 
+// Parameter   :  CData	      : Input coarse-grid array
 //		  CSize	      : Size of the CData array
 //		  CStart      : (x,y,z) starting indices to perform interpolation on the CData array
 //		  CRange      : Number of grids in each direction to perform interpolation
@@ -93,7 +93,7 @@ void Int_Quartic( real CData[], const int CSize[3], const int CStart[3], const i
 #     endif
 
 
-//    interpolation along x direction   
+//    interpolation along x direction
       for (int In_z=CStart[2]-CGhost, Out_z=0;  In_z<CStart[2]+CRange[2]+CGhost;  In_z++, Out_z++)
       for (int In_y=CStart[1]-CGhost, Out_y=0;  In_y<CStart[1]+CRange[1]+CGhost;  In_y++, Out_y++)
       for (int In_x=CStart[0],        Out_x=0;  In_x<CStart[0]+CRange[0];         In_x++, Out_x+=2)
@@ -105,9 +105,9 @@ void Int_Quartic( real CData[], const int CSize[3], const int CStart[3], const i
          Idx_InR1 = Idx_InC  + Cdx;
          Idx_InR2 = Idx_InR1 + Cdx;
 
-         TDataX[ Idx_Out       ] = L[0]*CPtr[Idx_InL2] + L[1]*CPtr[Idx_InL1] + L[2]*CPtr[Idx_InC] + 
+         TDataX[ Idx_Out       ] = L[0]*CPtr[Idx_InL2] + L[1]*CPtr[Idx_InL1] + L[2]*CPtr[Idx_InC] +
                                    L[3]*CPtr[Idx_InR1] + L[4]*CPtr[Idx_InR2];
-         TDataX[ Idx_Out + Tdx ] = R[0]*CPtr[Idx_InL2] + R[1]*CPtr[Idx_InL1] + R[2]*CPtr[Idx_InC] + 
+         TDataX[ Idx_Out + Tdx ] = R[0]*CPtr[Idx_InL2] + R[1]*CPtr[Idx_InL1] + R[2]*CPtr[Idx_InC] +
                                    R[3]*CPtr[Idx_InR1] + R[4]*CPtr[Idx_InR2];
 
 //       ensure monotonicity
@@ -152,7 +152,7 @@ void Int_Quartic( real CData[], const int CSize[3], const int CStart[3], const i
             {
                TDataX[ Idx_Out       ] = CPtr[Idx_InC];
                TDataX[ Idx_Out + Tdx ] = CPtr[Idx_InC];
-            } // if ( LSlopeDh_4*RSlopeDh_4 > (real)0.0 ) ... else 
+            } // if ( LSlopeDh_4*RSlopeDh_4 > (real)0.0 ) ... else
          } // if ( Monotonic[v] )
       } // k,j,i
 
@@ -173,7 +173,7 @@ void Int_Quartic( real CData[], const int CSize[3], const int CStart[3], const i
 #     endif
 
 
-//    interpolation along y direction   
+//    interpolation along y direction
       for (int InOut_z=0;             InOut_z<CRange[2]+2*CGhost;  InOut_z++)
       for (int In_y=CGhost, Out_y=0;  In_y   <CGhost+CRange[1];    In_y++, Out_y+=2)
       for (int InOut_x=0;             InOut_x<2*CRange[0];         InOut_x++)
@@ -185,9 +185,9 @@ void Int_Quartic( real CData[], const int CSize[3], const int CStart[3], const i
          Idx_InR1 = Idx_InC  + Tdy;
          Idx_InR2 = Idx_InR1 + Tdy;
 
-         TDataY[ Idx_Out       ] = L[0]*TDataX[Idx_InL2] + L[1]*TDataX[Idx_InL1] + L[2]*TDataX[Idx_InC] + 
+         TDataY[ Idx_Out       ] = L[0]*TDataX[Idx_InL2] + L[1]*TDataX[Idx_InL1] + L[2]*TDataX[Idx_InC] +
                                    L[3]*TDataX[Idx_InR1] + L[4]*TDataX[Idx_InR2];
-         TDataY[ Idx_Out + Tdy ] = R[0]*TDataX[Idx_InL2] + R[1]*TDataX[Idx_InL1] + R[2]*TDataX[Idx_InC] + 
+         TDataY[ Idx_Out + Tdy ] = R[0]*TDataX[Idx_InL2] + R[1]*TDataX[Idx_InL1] + R[2]*TDataX[Idx_InC] +
                                    R[3]*TDataX[Idx_InR1] + R[4]*TDataX[Idx_InR2];
 
 //       ensure monotonicity
@@ -232,7 +232,7 @@ void Int_Quartic( real CData[], const int CSize[3], const int CStart[3], const i
             {
                TDataY[ Idx_Out       ] = TDataX[Idx_InC];
                TDataY[ Idx_Out + Tdy ] = TDataX[Idx_InC];
-            } // if ( LSlopeDh_4*RSlopeDh_4 > (real)0.0 ) ... else 
+            } // if ( LSlopeDh_4*RSlopeDh_4 > (real)0.0 ) ... else
          } // if ( Monotonic[v] )
       } // k,j,i
 
@@ -253,7 +253,7 @@ void Int_Quartic( real CData[], const int CSize[3], const int CStart[3], const i
 #     endif
 
 
-//    interpolation along z direction   
+//    interpolation along z direction
       for (int In_z=CGhost, Out_z=FStart[2];  In_z<CGhost+CRange[2];  In_z++, Out_z+=2)
       for (int In_y=0,      Out_y=FStart[1];  In_y<2*CRange[1];       In_y++, Out_y++)
       for (int In_x=0,      Out_x=FStart[0];  In_x<2*CRange[0];       In_x++, Out_x++)
@@ -265,9 +265,9 @@ void Int_Quartic( real CData[], const int CSize[3], const int CStart[3], const i
          Idx_InR1 = Idx_InC  + TdzY;
          Idx_InR2 = Idx_InR1 + TdzY;
 
-         FPtr[ Idx_Out       ] = L[0]*TDataY[Idx_InL2] + L[1]*TDataY[Idx_InL1] + L[2]*TDataY[Idx_InC] + 
+         FPtr[ Idx_Out       ] = L[0]*TDataY[Idx_InL2] + L[1]*TDataY[Idx_InL1] + L[2]*TDataY[Idx_InC] +
                                  L[3]*TDataY[Idx_InR1] + L[4]*TDataY[Idx_InR2];
-         FPtr[ Idx_Out + Fdz ] = R[0]*TDataY[Idx_InL2] + R[1]*TDataY[Idx_InL1] + R[2]*TDataY[Idx_InC] + 
+         FPtr[ Idx_Out + Fdz ] = R[0]*TDataY[Idx_InL2] + R[1]*TDataY[Idx_InL1] + R[2]*TDataY[Idx_InC] +
                                  R[3]*TDataY[Idx_InR1] + R[4]*TDataY[Idx_InR2];
 
 //       ensure monotonicity
@@ -312,7 +312,7 @@ void Int_Quartic( real CData[], const int CSize[3], const int CStart[3], const i
             {
                FPtr[ Idx_Out       ] = TDataY[Idx_InC];
                FPtr[ Idx_Out + Fdz ] = TDataY[Idx_InC];
-            } // if ( LSlopeDh_4*RSlopeDh_4 > (real)0.0 ) ... else 
+            } // if ( LSlopeDh_4*RSlopeDh_4 > (real)0.0 ) ... else
          } // if ( Monotonic[v] )
       } // k,j,i
 

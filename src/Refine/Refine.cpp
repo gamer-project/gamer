@@ -11,16 +11,15 @@ void ELBDM_GetPhase_DebugOnly( real *CData, const int CSize );
 // Function    :  Refine
 // Description :  Construct patches at level "lv+1" according to the flagging result at level "lv"
 //
-// Note        :  1. This function will also construct buffer patches at level "lv+1" by calling the function
-//                   "Refine_Buffer"
+// Note        :  1. This function will also construct buffer patches at level "lv+1" by calling Refine_Buffer()
 //                2. Data of all sibling-buffer patches must be prepared in advance for creating new
 //                   fine-grid patches by spatial interpolation
-//                3. If LOAD_BALANCE is turned on, this function will invoke "LB_Refine" and then return
+//                3. If LOAD_BALANCE is turned on and UseLBFunc==true, this function will invoke LB_Refine() instead
 //
-// Parameter   :  lv          : Target refinement level to be refined
-//                UseLBFunc   : Use the load-balance alternative functions for the grid refinement
-//                              --> USELB_YES : use the load-balance alternative functions
-//                                  USELB_NO  : do not use the load-balance alternative functions
+// Parameter   :  lv        : Target refinement level to be refined
+//                UseLBFunc : Invoke the load-balance alternative functions for the grid refinement
+//                            --> USELB_YES : use the load-balance alternative functions
+//                                USELB_NO  : do not use the load-balance alternative functions
 //-------------------------------------------------------------------------------------------------------
 void Refine( const int lv, const UseLBFunc_t UseLBFunc )
 {
@@ -319,6 +318,7 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
             SibPID = Pedigree->sibling[sib];
 
 //          it will violate the proper-nesting condition if the flagged patch is NOT surrounded by siblings
+//          --> when adopting self-gravity we currently don't allow for refinement near the simulation boundaries
 #           ifdef GAMER_DEBUG
             if ( SibPID < 0 )
                Aux_Error( ERROR_INFO, "no sibling patch is found for FaLv %d, FaPID %d, sib %d !!\n", lv, PID, sib );
@@ -682,13 +682,11 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
 
 
 // allocate flux arrays for level "lv"
-   if ( amr->WithFlux )
-   Flu_AllocateFluxArray( lv );
+   if ( amr->WithFlux )    Flu_AllocateFluxArray( lv );
 
 
 // allocate flux arrays for level "lv+1"
-   if ( lv < NLEVEL-2  &&  amr->WithFlux )
-      Flu_AllocateFluxArray( lv+1 );
+   if ( lv < NLEVEL-2  &&  amr->WithFlux )   Flu_AllocateFluxArray( lv+1 );
 
 
 // get the IDs of patches for sending and receiving data between neighbor ranks
