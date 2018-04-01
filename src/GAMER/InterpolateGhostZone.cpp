@@ -686,6 +686,11 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData[], const in
          {
             BC_Sibling = SIB_OFFSET_NONPERIODIC - SibPID;
 
+#           ifdef GAMER_DEBUG
+            if ( BC_Face[BC_Sibling] < 0  ||  BC_Face[BC_Sibling] > 5 )
+               Aux_Error( ERROR_INFO, "incorrect BC_Face[%d] = %d !!\n", BC_Sibling, BC_Face[BC_Sibling] );
+#           endif
+
             switch ( FluBC[ BC_Face[BC_Sibling] ] )
             {
 #              if ( MODEL == HYDRO  ||  MODEL == MHD )

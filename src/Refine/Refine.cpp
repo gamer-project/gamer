@@ -105,9 +105,10 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
       BC_Face_tmp[2] = TABLE_01( s, 'z', 4, -1, 5 );
 
 //    z > y > x
-      if      ( BC_Face_tmp[2] != -1 )   BC_Face[s] = BC_Face_tmp[2];
-      else if ( BC_Face_tmp[1] != -1 )   BC_Face[s] = BC_Face_tmp[1];
-      else if ( BC_Face_tmp[0] != -1 )   BC_Face[s] = BC_Face_tmp[0];
+      if      ( BC_Face_tmp[2] != -1  &&  OPT__BC_FLU[BC_Face_tmp[2]] != BC_FLU_PERIODIC )   BC_Face[s] = BC_Face_tmp[2];
+      else if ( BC_Face_tmp[1] != -1  &&  OPT__BC_FLU[BC_Face_tmp[1]] != BC_FLU_PERIODIC )   BC_Face[s] = BC_Face_tmp[1];
+      else if ( BC_Face_tmp[0] != -1  &&  OPT__BC_FLU[BC_Face_tmp[0]] != BC_FLU_PERIODIC )   BC_Face[s] = BC_Face_tmp[0];
+      else                                                                                   BC_Face[s] = NULL_INT;
    }
 
    for (int v=0; v<NCOMP_TOTAL; v++)   FluVarIdxList[v] = v;
@@ -268,6 +269,11 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
                }
 
                BC_Sibling = SIB_OFFSET_NONPERIODIC - SibPID;
+
+#              ifdef GAMER_DEBUG
+               if ( BC_Face[BC_Sibling] < 0  ||  BC_Face[BC_Sibling] > 5 )
+                  Aux_Error( ERROR_INFO, "incorrect BC_Face[%d] = %d !!\n", BC_Sibling, BC_Face[BC_Sibling] );
+#              endif
 
                switch ( OPT__BC_FLU[ BC_Face[BC_Sibling] ] )
                {
