@@ -183,10 +183,10 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
 #     endif
    }
 
+   if ( FluBC == NULL )    Aux_Error( ERROR_INFO, "FluBC == NULL !!\n" );
+
    for (int f=0; f<6; f++)
    {
-      if ( FluBC == NULL )    Aux_Error( ERROR_INFO, "FluBC == NULL !!\n" );
-
       if ( FluBC[f] != BC_FLU_PERIODIC    &&  FluBC[f] != BC_FLU_OUTFLOW  &&
            FluBC[f] != BC_FLU_REFLECTING  &&  FluBC[f] != BC_FLU_USER        )
          Aux_Error( ERROR_INFO, "unsupported parameter FluBC[%d] = %d !!\n", f, FluBC[f] );
@@ -1207,16 +1207,20 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
                   BC_Idx_End  [d] = TABLE_01( Side, 'x'+d, GhostSize, PS2, GhostSize ) + BC_Idx_Start[d] - 1;
                }
 
+               BC_Sibling = SIB_OFFSET_NONPERIODIC - SibPID0;
+
+#              ifdef GAMER_DEBUG
+               if ( BC_Face[BC_Sibling] < 0  ||  BC_Face[BC_Sibling] > 5 )
+                  Aux_Error( ERROR_INFO, "incorrect BC_Face[%d] = %d !!\n", BC_Sibling, BC_Face[BC_Sibling] );
+
+               if ( FluBC[ BC_Face[BC_Sibling] ] == BC_FLU_PERIODIC )
+                  Aux_Error( ERROR_INFO, "FluBC == BC_FLU_PERIODIC (BC_Sibling %d, BC_Face %d, SibPID0 %d, PID0 %d, Side %d) !!\n",
+                             BC_Sibling, BC_Face[BC_Sibling], SibPID0, PID0, Side );
+#              endif
+
 //             (b3-1) fluid B.C.
                if ( TVar & (_TOTAL|_DERIVED) )
                {
-                  BC_Sibling = SIB_OFFSET_NONPERIODIC - SibPID0;
-
-#                 ifdef GAMER_DEBUG
-                  if ( BC_Face[BC_Sibling] < 0  ||  BC_Face[BC_Sibling] > 5 )
-                     Aux_Error( ERROR_INFO, "incorrect BC_Face[%d] = %d !!\n", BC_Sibling, BC_Face[BC_Sibling] );
-#                 endif
-
                   switch ( FluBC[ BC_Face[BC_Sibling] ] )
                   {
 #                    if ( MODEL == HYDRO  ||  MODEL == MHD )
@@ -1246,7 +1250,6 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
                   } // switch ( FluBC[ BC_Face[BC_Sibling] ] )
 
                   Array_Ptr += NVar_Flu*PGSize3D;
-
                } // if ( TVar & (_TOTAL|_DERIVED) )
 
 
@@ -1254,18 +1257,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
 #              ifdef GRAVITY
                if ( PrepPot )
                {
-//                check
-#                 ifdef GAMER_DEBUG
-                  if ( lv != 0 )
-                     Aux_Error( ERROR_INFO, "preparing the potential field outside the simulation domain at lv (%d) > 0 !!\n",
-                                lv );
-
-                  if ( PotBC != BC_POT_ISOLATED )
-                     Aux_Error( ERROR_INFO, "preparing the potential field for non-isolated BC !!\n" );
-#                 endif
-
-                  BC_Sibling = SIB_OFFSET_NONPERIODIC - SibPID0;
-
+//                extrapolate potential
                   Poi_BoundaryCondition_Extrapolation( Array_Ptr, BC_Face[BC_Sibling], 1, GhostSize,
                                                        PGSize1D, PGSize1D, PGSize1D, BC_Idx_Start, BC_Idx_End );
 
