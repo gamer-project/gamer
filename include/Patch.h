@@ -569,8 +569,8 @@ struct patch_t
 #     ifdef STORE_POT_GHOST
       if ( pot_ext == NULL )  pot_ext = new real [GRA_NXT][GRA_NXT][GRA_NXT];
 
-//    always initialize pot_ext (even if pot_ext != NULL when calling this this function) to indicate that this array
-//    has NOT been properly set --> used by Poi_StorePotWithGhostZone
+//    always initialize pot_ext (even if pot_ext != NULL when calling this function) to indicate that this array
+//    has NOT been properly set --> used by Poi_StorePotWithGhostZone()
       pot_ext[0][0][0] = POT_EXT_NEED_INIT;
 #     endif
 
