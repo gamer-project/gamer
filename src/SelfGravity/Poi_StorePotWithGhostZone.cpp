@@ -9,8 +9,8 @@
 // Function    :  Poi_StorePotWithGhostZone
 // Description :  Fill up the potential array with ghost zones, "pot_ext", for each target patch
 //
-// Note        :  1. Called by Gra_AdvancedDt after the base-level FFT solver, EvolveLevel after grid
-//                   refinement, and Main after the base-level FFT when GAMER_DEBUG is on
+// Note        :  1. Called by Gra_AdvancedDt() after the base-level FFT solver, EvolveLevel() after grid
+//                   refinement, and Flu_CorrAfterAllSync() when OPT__CORR_AFTER_ALL_SYNC is enabled
 //                2. For potential at lv>0, the "pot_ext" array is filled by "Poi_Close" directly
 //                   (except after grid refinement). Therefore, one does NOT need to call this function
 //                   for that.
@@ -18,6 +18,7 @@
 //                   --> We set pot_ext[0][0][0] == POT_EXT_NEED_INIT for newly-allocated patches
 //                       so as to distinguish them from other existing patches
 //                4. Currently "pot_ext" is only used for Par->ImproveAcc and star formation routines
+//                5. Use extrapolation to fill the ghost zones outside the non-periodic boundaries
 //
 // Parameter   :  lv       : Target refinement level
 //                PotSg    : Target potential sandglass
