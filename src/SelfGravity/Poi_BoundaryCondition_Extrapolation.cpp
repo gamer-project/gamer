@@ -1,17 +1,22 @@
 #include "GAMER.h"
 
+
+// quadratic polynomial requires 3 data points
+#define STENCIL 3
+
+
 static void BC_Extrapolation_xm( real *Array, const int NVar, const int GhostSize, const int ArraySizeX, const int ArraySizeY,
-                                 const int ArraySizeZ, const int Idx_Start[], const int Idx_End[], const real Coeff[][3] );
+                                 const int ArraySizeZ, const int Idx_Start[], const int Idx_End[], const real Coeff[][STENCIL] );
 static void BC_Extrapolation_xp( real *Array, const int NVar, const int GhostSize, const int ArraySizeX, const int ArraySizeY,
-                                 const int ArraySizeZ, const int Idx_Start[], const int Idx_End[], const real Coeff[][3] );
+                                 const int ArraySizeZ, const int Idx_Start[], const int Idx_End[], const real Coeff[][STENCIL] );
 static void BC_Extrapolation_ym( real *Array, const int NVar, const int GhostSize, const int ArraySizeX, const int ArraySizeY,
-                                 const int ArraySizeZ, const int Idx_Start[], const int Idx_End[], const real Coeff[][3] );
+                                 const int ArraySizeZ, const int Idx_Start[], const int Idx_End[], const real Coeff[][STENCIL] );
 static void BC_Extrapolation_yp( real *Array, const int NVar, const int GhostSize, const int ArraySizeX, const int ArraySizeY,
-                                 const int ArraySizeZ, const int Idx_Start[], const int Idx_End[], const real Coeff[][3] );
+                                 const int ArraySizeZ, const int Idx_Start[], const int Idx_End[], const real Coeff[][STENCIL] );
 static void BC_Extrapolation_zm( real *Array, const int NVar, const int GhostSize, const int ArraySizeX, const int ArraySizeY,
-                                 const int ArraySizeZ, const int Idx_Start[], const int Idx_End[], const real Coeff[][3] );
+                                 const int ArraySizeZ, const int Idx_Start[], const int Idx_End[], const real Coeff[][STENCIL] );
 static void BC_Extrapolation_zp( real *Array, const int NVar, const int GhostSize, const int ArraySizeX, const int ArraySizeY,
-                                 const int ArraySizeZ, const int Idx_Start[], const int Idx_End[], const real Coeff[][3] );
+                                 const int ArraySizeZ, const int Idx_Start[], const int Idx_End[], const real Coeff[][STENCIL] );
 
 
 
@@ -49,27 +54,51 @@ void Poi_BoundaryCondition_Extrapolation( real *Array, const int BC_Face, const 
    {
       case 0:  if ( Idx_Start[0] != 0  ||  Idx_End[0] != GhostSize-1 )
                   Aux_Error( ERROR_INFO, "incorrect index range (Start %d, End %d, GhostSize %d, Face %d) !!\n",
-                             Idx_Start[0], Idx_End[0], GhostSize, BC_Face );  break;
+                             Idx_Start[0], Idx_End[0], GhostSize, BC_Face );
+               if ( ArraySizeX < GhostSize + STENCIL )
+                  Aux_Error( ERROR_INFO, "ArraySizeX (%d) < GhostSize (%d) + STENCIL (%d) !!\n",
+                             ArraySizeX, GhostSize, STENCIL );
+               break;
 
       case 1:  if ( Idx_Start[0] != ArraySizeX-GhostSize  ||  Idx_End[0] != ArraySizeX-1 )
                   Aux_Error( ERROR_INFO, "incorrect index range (Start %d, End %d, GhostSize %d, Face %d) !!\n",
-                             Idx_Start[0], Idx_End[0], GhostSize, BC_Face );  break;
+                             Idx_Start[0], Idx_End[0], GhostSize, BC_Face );
+               if ( ArraySizeX < GhostSize + STENCIL )
+                  Aux_Error( ERROR_INFO, "ArraySizeX (%d) < GhostSize (%d) + STENCIL (%d) !!\n",
+                             ArraySizeX, GhostSize, STENCIL );
+               break;
 
       case 2:  if ( Idx_Start[1] != 0  ||  Idx_End[1] != GhostSize-1 )
                   Aux_Error( ERROR_INFO, "incorrect index range (Start %d, End %d, GhostSize %d, Face %d) !!\n",
-                             Idx_Start[1], Idx_End[1], GhostSize, BC_Face );  break;
+                             Idx_Start[1], Idx_End[1], GhostSize, BC_Face );
+               if ( ArraySizeY < GhostSize + STENCIL )
+                  Aux_Error( ERROR_INFO, "ArraySizeY (%d) < GhostSize (%d) + STENCIL (%d) !!\n",
+                             ArraySizeY, GhostSize, STENCIL );
+               break;
 
       case 3:  if ( Idx_Start[1] != ArraySizeY-GhostSize  ||  Idx_End[1] != ArraySizeY-1 )
                   Aux_Error( ERROR_INFO, "incorrect index range (Start %d, End %d, GhostSize %d, Face %d) !!\n",
-                             Idx_Start[1], Idx_End[1], GhostSize, BC_Face );  break;
+                             Idx_Start[1], Idx_End[1], GhostSize, BC_Face );
+               if ( ArraySizeY < GhostSize + STENCIL )
+                  Aux_Error( ERROR_INFO, "ArraySizeY (%d) < GhostSize (%d) + STENCIL (%d) !!\n",
+                             ArraySizeY, GhostSize, STENCIL );
+               break;
 
       case 4:  if ( Idx_Start[2] != 0  ||  Idx_End[2] != GhostSize-1 )
                   Aux_Error( ERROR_INFO, "incorrect index range (Start %d, End %d, GhostSize %d, Face %d) !!\n",
-                             Idx_Start[2], Idx_End[2], GhostSize, BC_Face );  break;
+                             Idx_Start[2], Idx_End[2], GhostSize, BC_Face );
+               if ( ArraySizeZ < GhostSize + STENCIL )
+                  Aux_Error( ERROR_INFO, "ArraySizeZ (%d) < GhostSize (%d) + STENCIL (%d) !!\n",
+                             ArraySizeZ, GhostSize, STENCIL );
+               break;
 
       case 5:  if ( Idx_Start[2] != ArraySizeZ-GhostSize  ||  Idx_End[2] != ArraySizeZ-1 )
                   Aux_Error( ERROR_INFO, "incorrect index range (Start %d, End %d, GhostSize %d, Face %d) !!\n",
-                             Idx_Start[2], Idx_End[2], GhostSize, BC_Face );  break;
+                             Idx_Start[2], Idx_End[2], GhostSize, BC_Face );
+               if ( ArraySizeZ < GhostSize + STENCIL )
+                  Aux_Error( ERROR_INFO, "ArraySizeZ (%d) < GhostSize (%d) + STENCIL (%d) !!\n",
+                             ArraySizeZ, GhostSize, STENCIL );
+               break;
 
       default: Aux_Error( ERROR_INFO, "incorrect boundary face (%d) !!\n", BC_Face );
    } // switch ( BC_Face )
@@ -79,7 +108,7 @@ void Poi_BoundaryCondition_Extrapolation( real *Array, const int BC_Face, const 
 // determine the extrapolation coefficients with the quadratic polynomial
 // --> Coeff[0/GhostSize-1][]: closest/furthest ghost    cell to the ghost-interior interface
 //     Coeff[][0/2]          : closest/furthest interior cell to the ghost-interior interface
-   real (*Coeff)[3] = new real [GhostSize][3];
+   real (*Coeff)[STENCIL] = new real [GhostSize][STENCIL];
 
    for (int t=0; t<GhostSize; t++)
    {
@@ -126,7 +155,7 @@ void Poi_BoundaryCondition_Extrapolation( real *Array, const int BC_Face, const 
 // Return      :  Array
 //-------------------------------------------------------------------------------------------------------
 void BC_Extrapolation_xm( real *Array, const int NVar, const int GhostSize, const int ArraySizeX, const int ArraySizeY,
-                          const int ArraySizeZ, const int Idx_Start[], const int Idx_End[], const real Coeff[][3] )
+                          const int ArraySizeZ, const int Idx_Start[], const int Idx_End[], const real Coeff[][STENCIL] )
 {
 
    const int i_ref = GhostSize;  // reference i index
@@ -164,7 +193,7 @@ void BC_Extrapolation_xm( real *Array, const int NVar, const int GhostSize, cons
 // Return      :  Array
 //-------------------------------------------------------------------------------------------------------
 void BC_Extrapolation_xp( real *Array, const int NVar, const int GhostSize, const int ArraySizeX, const int ArraySizeY,
-                          const int ArraySizeZ, const int Idx_Start[], const int Idx_End[], const real Coeff[][3] )
+                          const int ArraySizeZ, const int Idx_Start[], const int Idx_End[], const real Coeff[][STENCIL] )
 {
 
    const int i_ref = ArraySizeX - GhostSize - 1;   // reference i index
@@ -202,7 +231,7 @@ void BC_Extrapolation_xp( real *Array, const int NVar, const int GhostSize, cons
 // Return      :  Array
 //-------------------------------------------------------------------------------------------------------
 void BC_Extrapolation_ym( real *Array, const int NVar, const int GhostSize, const int ArraySizeX, const int ArraySizeY,
-                          const int ArraySizeZ, const int Idx_Start[], const int Idx_End[], const real Coeff[][3] )
+                          const int ArraySizeZ, const int Idx_Start[], const int Idx_End[], const real Coeff[][STENCIL] )
 {
 
    const int j_ref = GhostSize;  // reference j index
@@ -240,7 +269,7 @@ void BC_Extrapolation_ym( real *Array, const int NVar, const int GhostSize, cons
 // Return      :  Array
 //-------------------------------------------------------------------------------------------------------
 void BC_Extrapolation_yp( real *Array, const int NVar, const int GhostSize, const int ArraySizeX, const int ArraySizeY,
-                          const int ArraySizeZ, const int Idx_Start[], const int Idx_End[], const real Coeff[][3] )
+                          const int ArraySizeZ, const int Idx_Start[], const int Idx_End[], const real Coeff[][STENCIL] )
 {
 
    const int j_ref = ArraySizeY - GhostSize - 1;   // reference j index
@@ -278,7 +307,7 @@ void BC_Extrapolation_yp( real *Array, const int NVar, const int GhostSize, cons
 // Return      :  Array
 //-------------------------------------------------------------------------------------------------------
 void BC_Extrapolation_zm( real *Array, const int NVar, const int GhostSize, const int ArraySizeX, const int ArraySizeY,
-                          const int ArraySizeZ, const int Idx_Start[], const int Idx_End[], const real Coeff[][3] )
+                          const int ArraySizeZ, const int Idx_Start[], const int Idx_End[], const real Coeff[][STENCIL] )
 {
 
    const int k_ref = GhostSize;  // reference k index
@@ -316,7 +345,7 @@ void BC_Extrapolation_zm( real *Array, const int NVar, const int GhostSize, cons
 // Return      :  Array
 //-------------------------------------------------------------------------------------------------------
 void BC_Extrapolation_zp( real *Array, const int NVar, const int GhostSize, const int ArraySizeX, const int ArraySizeY,
-                          const int ArraySizeZ, const int Idx_Start[], const int Idx_End[], const real Coeff[][3] )
+                          const int ArraySizeZ, const int Idx_Start[], const int Idx_End[], const real Coeff[][STENCIL] )
 {
 
    const int k_ref = ArraySizeZ - GhostSize - 1;   // reference k index
