@@ -96,6 +96,7 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
 // determine the priority of different boundary faces (z>y>x) to set the corner cells properly for the non-periodic B.C.
    const int  NDer       = 0;
    const int *DerVarList = NULL;
+
    int BC_Face[26], BC_Face_tmp[3], FluVarIdxList[NCOMP_TOTAL];
 
    for (int s=0; s<26; s++)
@@ -232,21 +233,18 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
 //       (c1.3.2.1) prepare the fluid data
          for (int sib=0; sib<NSide_Flu; sib++)
          {
-            SibPID   = Pedigree->sibling[sib];
+            SibPID = Pedigree->sibling[sib];
 
-            Loop [0] = TABLE_01( sib, 'x', CGhost_Flu, PATCH_SIZE, CGhost_Flu );
-            Loop [1] = TABLE_01( sib, 'y', CGhost_Flu, PATCH_SIZE, CGhost_Flu );
-            Loop [2] = TABLE_01( sib, 'z', CGhost_Flu, PATCH_SIZE, CGhost_Flu );
-            Disp1[0] = TABLE_01( sib, 'x', 0, CGhost_Flu, CGhost_Flu+PATCH_SIZE );
-            Disp1[1] = TABLE_01( sib, 'y', 0, CGhost_Flu, CGhost_Flu+PATCH_SIZE );
-            Disp1[2] = TABLE_01( sib, 'z', 0, CGhost_Flu, CGhost_Flu+PATCH_SIZE );
+            for (int d=0; d<3; d++)
+            {
+               Loop [d] = TABLE_01( sib, 'x'+d, CGhost_Flu, PATCH_SIZE, CGhost_Flu );
+               Disp1[d] = TABLE_01( sib, 'x'+d, 0, CGhost_Flu, CGhost_Flu+PATCH_SIZE );
+            }
 
 //          (c1.3.2.1-1) if the target sibling patch exists --> just copy data from the nearby patches at the same level
             if ( SibPID >= 0 )
             {
-               Disp2[0] = TABLE_01( sib, 'x', PATCH_SIZE-CGhost_Flu, 0, 0 );
-               Disp2[1] = TABLE_01( sib, 'y', PATCH_SIZE-CGhost_Flu, 0, 0 );
-               Disp2[2] = TABLE_01( sib, 'z', PATCH_SIZE-CGhost_Flu, 0, 0 );
+               for (int d=0; d<3; d++)    Disp2[d] = TABLE_01( sib, 'x'+d, PATCH_SIZE-CGhost_Flu, 0, 0 );
 
                for (int v=0; v<NCOMP_TOTAL; v++) {
                for (int k=0; k<Loop[2]; k++) {  K = k + Disp1[2];    K2 = k + Disp2[2];
@@ -273,16 +271,20 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
 #              ifdef GAMER_DEBUG
                if ( BC_Face[BC_Sibling] < 0  ||  BC_Face[BC_Sibling] > 5 )
                   Aux_Error( ERROR_INFO, "incorrect BC_Face[%d] = %d !!\n", BC_Sibling, BC_Face[BC_Sibling] );
+
+               if ( OPT__BC_FLU[ BC_Face[BC_Sibling] ] == BC_FLU_PERIODIC )
+                  Aux_Error( ERROR_INFO, "OPT__BC_FLU == BC_FLU_PERIODIC (BC_Sibling %d, BC_Face %d, SibPID %d, PID %d, sib %d, lv %d) !!\n",
+                             BC_Sibling, BC_Face[BC_Sibling], SibPID, PID, sib, lv );
 #              endif
 
                switch ( OPT__BC_FLU[ BC_Face[BC_Sibling] ] )
                {
-#                 if ( MODEL == HYDRO  ||  MODEL == MHD )
                   case BC_FLU_OUTFLOW:
                      Hydro_BoundaryCondition_Outflow   ( Flu_CData[0][0][0], BC_Face[BC_Sibling], NCOMP_TOTAL, CGhost_Flu,
                                                          CSize_Flu, CSize_Flu, CSize_Flu, BC_Idx_Start, BC_Idx_End );
                   break;
 
+#                 if ( MODEL == HYDRO  ||  MODEL == MHD )
                   case BC_FLU_REFLECTING:
                      Hydro_BoundaryCondition_Reflecting( Flu_CData[0][0][0], BC_Face[BC_Sibling], NCOMP_TOTAL, CGhost_Flu,
                                                          CSize_Flu, CSize_Flu, CSize_Flu, BC_Idx_Start, BC_Idx_End,
@@ -307,11 +309,8 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
 
 
 //          (c1.3.2.1-3) it will violate the proper-nesting condition if the flagged patch is NOT surrounded by siblings
-            else if ( SibPID == -1 )
-               Aux_Error( ERROR_INFO, "no sibling patch is found for FaLv %d, FaPID %d, sib %d !!\n", lv, PID, sib );
-
             else
-               Aux_Error( ERROR_INFO, "SibPID == %d (PID %d, Sib %d) !!\n", SibPID, PID, sib );
+               Aux_Error( ERROR_INFO, "SibPID = %d (lv %d, PID %d, Sib %d) !!\n", SibPID, lv, PID, sib );
 
          } // for (int sib=0; sib<NSide_Flu; sib++)
 
@@ -323,30 +322,56 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
          {
             SibPID = Pedigree->sibling[sib];
 
-//          it will violate the proper-nesting condition if the flagged patch is NOT surrounded by siblings
-//          --> when adopting self-gravity we currently don't allow for refinement near the simulation boundaries
-#           ifdef GAMER_DEBUG
-            if ( SibPID < 0 )
-               Aux_Error( ERROR_INFO, "no sibling patch is found for FaLv %d, FaPID %d, sib %d !!\n", lv, PID, sib );
-#           endif
+            for (int d=0; d<3; d++)
+            {
+               Loop [d] = TABLE_01( sib, 'x'+d, CGhost_Pot, PATCH_SIZE, CGhost_Pot );
+               Disp1[d] = TABLE_01( sib, 'x'+d, 0, CGhost_Pot, CGhost_Pot+PATCH_SIZE );
+            }
 
-            Loop [0] = TABLE_01( sib, 'x', CGhost_Pot, PATCH_SIZE, CGhost_Pot );
-            Loop [1] = TABLE_01( sib, 'y', CGhost_Pot, PATCH_SIZE, CGhost_Pot );
-            Loop [2] = TABLE_01( sib, 'z', CGhost_Pot, PATCH_SIZE, CGhost_Pot );
-            Disp1[0] = TABLE_01( sib, 'x', 0, CGhost_Pot, CGhost_Pot+PATCH_SIZE );
-            Disp1[1] = TABLE_01( sib, 'y', 0, CGhost_Pot, CGhost_Pot+PATCH_SIZE );
-            Disp1[2] = TABLE_01( sib, 'z', 0, CGhost_Pot, CGhost_Pot+PATCH_SIZE );
-            Disp2[0] = TABLE_01( sib, 'x', PATCH_SIZE-CGhost_Pot, 0, 0 );
-            Disp2[1] = TABLE_01( sib, 'y', PATCH_SIZE-CGhost_Pot, 0, 0 );
-            Disp2[2] = TABLE_01( sib, 'z', PATCH_SIZE-CGhost_Pot, 0, 0 );
+//          (c1.3.2.2-1) if the target sibling patch exists --> just copy data from the nearby patches at the same level
+            if ( SibPID >= 0 )
+            {
+               for (int d=0; d<3; d++)    Disp2[d] = TABLE_01( sib, 'x'+d, PATCH_SIZE-CGhost_Pot, 0, 0 );
 
-            for (int k=0; k<Loop[2]; k++) {  K = k + Disp1[2];    K2 = k + Disp2[2];
-            for (int j=0; j<Loop[1]; j++) {  J = j + Disp1[1];    J2 = j + Disp2[1];
-            for (int i=0; i<Loop[0]; i++) {  I = i + Disp1[0];    I2 = i + Disp2[0];
+               for (int k=0; k<Loop[2]; k++) {  K = k + Disp1[2];    K2 = k + Disp2[2];
+               for (int j=0; j<Loop[1]; j++) {  J = j + Disp1[1];    J2 = j + Disp2[1];
+               for (int i=0; i<Loop[0]; i++) {  I = i + Disp1[0];    I2 = i + Disp2[0];
 
-               Pot_CData[K][J][I] = amr->patch[CPotSg][lv][SibPID]->pot[K2][J2][I2];
+                  Pot_CData[K][J][I] = amr->patch[CPotSg][lv][SibPID]->pot[K2][J2][I2];
 
-            }}}
+               }}}
+            } // if ( SibPID >= 0 )
+
+
+//          (c1.3.2.2-2) if the target sibling patch lies outside the simulation domain --> apply the specified B.C.
+            else if ( SibPID <= SIB_OFFSET_NONPERIODIC )
+            {
+               for (int d=0; d<3; d++)
+               {
+                  BC_Idx_Start[d] = Disp1[d];
+                  BC_Idx_End  [d] = Loop[d] + BC_Idx_Start[d] - 1;
+               }
+
+               BC_Sibling = SIB_OFFSET_NONPERIODIC - SibPID;
+
+#              ifdef GAMER_DEBUG
+               if ( BC_Face[BC_Sibling] < 0  ||  BC_Face[BC_Sibling] > 5 )
+                  Aux_Error( ERROR_INFO, "incorrect BC_Face[%d] = %d !!\n", BC_Sibling, BC_Face[BC_Sibling] );
+
+               if ( OPT__BC_FLU[ BC_Face[BC_Sibling] ] == BC_FLU_PERIODIC )
+                  Aux_Error( ERROR_INFO, "OPT__BC_FLU == BC_FLU_PERIODIC (BC_Sibling %d, BC_Face %d, SibPID %d, PID %d, sib %d, lv %d) !!\n",
+                             BC_Sibling, BC_Face[BC_Sibling], SibPID, PID, sib, lv );
+#              endif
+
+//             extrapolate potential
+               Poi_BoundaryCondition_Extrapolation( Pot_CData[0][0], BC_Face[BC_Sibling], 1, CGhost_Pot,
+                                                    CSize_Pot, CSize_Pot, CSize_Pot, BC_Idx_Start, BC_Idx_End );
+            }
+
+
+//          (c1.3.2.1-3) it will violate the proper-nesting condition if the flagged patch is NOT surrounded by siblings
+            else
+               Aux_Error( ERROR_INFO, "SibPID = %d (lv %d, PID %d, Sib %d) !!\n", SibPID, lv, PID, sib );
 
          } // for (int sib=0; sib<NSide_Pot; sib++)
 #        endif // #ifdef GRAVITY
