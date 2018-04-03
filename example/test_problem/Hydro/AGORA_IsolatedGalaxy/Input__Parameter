@@ -106,6 +106,7 @@ OPT__FLAG_REGION              0           # flag: specify the regions **allowed*
 OPT__FLAG_NPAR_PATCH          0           # flag: # of particles per patch (Input__Flag_NParPatch): (0=off, 1=itself, 2=itself+siblings) [0]
 OPT__FLAG_NPAR_CELL           0           # flag: # of particles per cell  (Input__Flag_NParCell) [0]
 OPT__FLAG_PAR_MASS_CELL       1           # flag: total particle mass per cell (Input__Flag_ParMassCell) [0]
+OPT__NO_FLAG_NEAR_BOUNDARY    0           # flag: disallow refinement near the boundaries [0]
 OPT__PATCH_COUNT              1           # record the # of patches   at each level: (0=off, 1=every step, 2=every sub-step) [1]
 OPT__PARTICLE_COUNT           1           # record the # of particles at each level: (0=off, 1=every step, 2=every sub-step) [1]
 OPT__REUSE_MEMORY             2           # reuse patch memory to reduce memory fragmentation: (0=off, 1=on, 2=aggressive) [2]
