@@ -1223,12 +1223,12 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
                {
                   switch ( FluBC[ BC_Face[BC_Sibling] ] )
                   {
-#                    if ( MODEL == HYDRO  ||  MODEL == MHD )
                      case BC_FLU_OUTFLOW:
                         Hydro_BoundaryCondition_Outflow   ( Array_Ptr, BC_Face[BC_Sibling], NVar_Flu+NVar_Der, GhostSize,
                                                             PGSize1D, PGSize1D, PGSize1D, BC_Idx_Start, BC_Idx_End );
                      break;
 
+#                    if ( MODEL == HYDRO  ||  MODEL == MHD )
                      case BC_FLU_REFLECTING:
                         Hydro_BoundaryCondition_Reflecting( Array_Ptr, BC_Face[BC_Sibling], NVar_Flu,          GhostSize,
                                                             PGSize1D, PGSize1D, PGSize1D, BC_Idx_Start, BC_Idx_End,
