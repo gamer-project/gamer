@@ -62,14 +62,14 @@ Procedure for outputting new variables:
 2. Edit "GetCompound_XXX" to insert the new variables into the compound datatype
 3. Edit "FillIn_XXX" to fill in the new variables
 4. Edit "Check_XXX" in "Init_ByRestart_HDF5.cpp" to load and compare the new variables
-5. Modify FormatVersion and CodeVersion
+5. Update FormatVersion
 ======================================================================================================*/
 
 
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2264)
+// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2265)
 // Description :  Output all simulation data in the HDF5 format, which can be used as a restart file
 //                or loaded by YT
 //
@@ -150,6 +150,7 @@ Procedure for outputting new variables:
 //                2262 : 2017/12/27 --> rename all UM variables
 //                2263 : 2017/12/27 --> remove OPT__RESTART_HEADER
 //                2264 : 2018/02/28 --> add RANDOM_NUMBER
+//                2265 : 2018/04/02 --> add OPT__NO_FLAG_NEAR_BOUNDARY
 //-------------------------------------------------------------------------------------------------------
 void Output_DumpData_Total_HDF5( const char *FileName )
 {
@@ -1256,7 +1257,7 @@ void FillIn_KeyInfo( KeyInfo_t &KeyInfo )
 
    const time_t CalTime  = time( NULL );   // calendar time
 
-   KeyInfo.FormatVersion = 2264;
+   KeyInfo.FormatVersion = 2265;
    KeyInfo.Model         = MODEL;
    KeyInfo.NLevel        = NLEVEL;
    KeyInfo.NCompFluid    = NCOMP_FLUID;
@@ -1822,6 +1823,7 @@ void FillIn_InputPara( InputPara_t &InputPara )
    InputPara.Opt__Flag_NParCell      = OPT__FLAG_NPAR_CELL;
    InputPara.Opt__Flag_ParMassCell   = OPT__FLAG_PAR_MASS_CELL;
 #  endif
+   InputPara.Opt__NoFlagNearBoundary = OPT__NO_FLAG_NEAR_BOUNDARY;
    InputPara.Opt__PatchCount         = OPT__PATCH_COUNT;
 #  ifdef PARTICLE
    InputPara.Opt__ParticleCount      = OPT__PARTICLE_COUNT;
@@ -2498,6 +2500,7 @@ void GetCompound_InputPara( hid_t &H5_TypeID )
    H5Tinsert( H5_TypeID, "Opt__Flag_NParCell",      HOFFSET(InputPara_t,Opt__Flag_NParCell     ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "Opt__Flag_ParMassCell",   HOFFSET(InputPara_t,Opt__Flag_ParMassCell  ), H5T_NATIVE_INT     );
 #  endif
+   H5Tinsert( H5_TypeID, "Opt__NoFlagNearBoundary", HOFFSET(InputPara_t,Opt__NoFlagNearBoundary), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "Opt__PatchCount",         HOFFSET(InputPara_t,Opt__PatchCount        ), H5T_NATIVE_INT     );
 #  ifdef PARTICLE
    H5Tinsert( H5_TypeID, "Opt__ParticleCount",      HOFFSET(InputPara_t,Opt__ParticleCount     ), H5T_NATIVE_INT     );

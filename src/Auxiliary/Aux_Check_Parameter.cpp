@@ -300,10 +300,11 @@ void Aux_Check_Parameter()
 #  endif
 
    if ( !Flag )
-   {
-      Aux_Message( stderr, "WARNING : all flag criteria are turned off --> no refinement will be " );
-      Aux_Message( stderr, "performed !!\n" );
-   }
+      Aux_Message( stderr, "WARNING : all flag criteria are turned off --> no refinement will be performed !!" );
+
+   if ( OPT__NO_FLAG_NEAR_BOUNDARY  )
+      Aux_Message( stderr, "WARNING : OPT__NO_FLAG_NEAR_BOUNDARY is on --> patches adjacent to the "
+                           "simulation boundaries are NOT allowed for refinement !!\n" );
 
    if ( OPT__OVERLAP_MPI )
    {
@@ -1011,12 +1012,6 @@ void Aux_Check_Parameter()
    if ( DT__GRAVITY < 0.0  ||  DT__GRAVITY > 1.0 )
       Aux_Message( stderr, "WARNING : DT__GRAVITY (%14.7e) is not within the normal range [0...1] !!\n",
                    DT__GRAVITY );
-
-   if (  ( OPT__GRAVITY_TYPE == GRAVITY_SELF || OPT__GRAVITY_TYPE == GRAVITY_BOTH )  &&  OPT__BC_POT == BC_POT_ISOLATED  )
-   {
-      Aux_Message( stderr, "WARNING : currently the patches adjacent to the simulation boundary are NOT allowed to be\n" );
-      Aux_Message( stderr, "          refined if the self-gravity with the isolated BC is adopted !!\n" );
-   }
 
    if ( OPT__EXTERNAL_POT  &&  OPT__OUTPUT_POT )
       Aux_Message( stderr, "WARNING : currently OPT__OUTPUT_POT does NOT include the external potential !!\n" );

@@ -383,6 +383,7 @@ struct InputPara_t
    int    Opt__Flag_NParCell;
    int    Opt__Flag_ParMassCell;
 #  endif
+   int    Opt__NoFlagNearBoundary;
    int    Opt__PatchCount;
 #  ifdef PARTICLE
    int    Opt__ParticleCount;
