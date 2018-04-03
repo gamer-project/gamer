@@ -511,12 +511,12 @@ void PrepareCData( const int FaLv, const int FaPID, real *const FaData,
 
          switch ( OPT__BC_FLU[ BC_Face[BC_Sibling] ] )
          {
-#           if ( MODEL == HYDRO  ||  MODEL == MHD )
             case BC_FLU_OUTFLOW:    
                Hydro_BoundaryCondition_Outflow   ( FaData_Flu, BC_Face[BC_Sibling], NCOMP_TOTAL, FaGhost_Flu,
                                                    FaSize_Flu, FaSize_Flu, FaSize_Flu, BC_Idx_Start, BC_Idx_End );
             break;
 
+#           if ( MODEL == HYDRO  ||  MODEL == MHD )
             case BC_FLU_REFLECTING:
                Hydro_BoundaryCondition_Reflecting( FaData_Flu, BC_Face[BC_Sibling], NCOMP_TOTAL, FaGhost_Flu,
                                                    FaSize_Flu, FaSize_Flu, FaSize_Flu, BC_Idx_Start, BC_Idx_End, 
