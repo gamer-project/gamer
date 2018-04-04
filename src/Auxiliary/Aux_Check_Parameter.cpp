@@ -1143,10 +1143,10 @@ void Aux_Check_Parameter()
       Aux_Error( ERROR_INFO, "DT__PARACC (%14.7e) is NOT supported when STORE_PAR_ACC is off !!\n", DT__PARACC );
 #  endif
 
-   if ( OPT__BC_FLU[0] == BC_FLU_PERIODIC )
    for (int d=0; d<3; d++)
    {
-      if ( NX0_TOT[d]/PS2 == 1 )
+//    we have assumed that OPT__BC_FLU[2*d] == OPT__BC_FLU[2*d+1] when adopting the periodic BC
+      if ( OPT__BC_FLU[2*d] == BC_FLU_PERIODIC  &&  NX0_TOT[d]/PS2 == 1 )
          Aux_Error( ERROR_INFO, "\"%s\" does NOT work for NX0_TOT[%d] = 2*PATCH_SIZE when periodic BC is adopted !!\n",
                     "Par_MassAssignment()", d );
    }

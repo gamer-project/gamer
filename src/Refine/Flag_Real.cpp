@@ -60,9 +60,9 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
    const OptPotBC_t OPT__BC_POT       = BC_POT_NONE;
 #  endif
 #  ifdef PARTICLE
-   const bool PredictPos_No           = false;                 // used by Par_MassAssignment
+   const bool PredictPos_No           = false;                 // used by Par_MassAssignment()
    const bool InitZero_Yes            = true;
-   const bool Periodic_No             = false;
+   const bool Periodic_No[3]          = { false, false, false };
    const bool UnitDens_Yes            = true;
    const bool UnitDens_No             = false;
    const bool CheckFarAway_No         = false;
@@ -128,7 +128,7 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
       real (*Lohner_Var)                 = NULL;   // array storing the variables for Lohner
       real (*Lohner_Ave)                 = NULL;   // array storing the averages of Lohner_Var for Lohner
       real (*Lohner_Slope)               = NULL;   // array storing the slopes of Lohner_Var for Lohner
-      real (*ParCount)[PS1][PS1]         = NULL;   // declare as **real** to be consistent with Par_MassAssignment
+      real (*ParCount)[PS1][PS1]         = NULL;   // declare as **real** to be consistent with Par_MassAssignment()
       real (*ParDens )[PS1][PS1]         = NULL;
 
       int  i_start, i_end, j_start, j_end, k_start, k_end, SibID, SibPID, PID;
