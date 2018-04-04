@@ -483,7 +483,7 @@
 #  endif // #ifdef UNSPLIT_GRAVITY
 
 
-// number of density ghost zones for storing the temporary particle mass density (in the array rho_ext)
+// number of density ghost zones for storing the temporary particle mass density in rho_ext[]
 #  ifdef PARTICLE
 #     define RHOEXT_GHOST_SIZE   2
 #  endif

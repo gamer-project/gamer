@@ -14,6 +14,8 @@
 //                   --> We assume that they have already been synchronized with TargetTime
 //                2. Called by "Par_MassAssignment, Par_LB_CollectParticle2OneLevel, and
 //                   Par_LB_CollectParticleFromRealPatch"
+//                3. This function does NOT take care of periodicity
+//                   --> Particle may lie outside the simulation domain after prediction
 //
 // Parmaeter   :  NPar        : Number of target particles
 //                ParList     : List of target particle IDs

@@ -311,6 +311,7 @@ struct patch_t
 //       EdgeR[d] = (double)(  ( corner[d] + BoxScale[d] + PScale ) % BoxScale[d] )*dh_min;
 //       --> otherwise the buffer patches just outside the simulation left edge (and the real patches just inside the simulation
 //           right edge) will have EdgeR==0 instead of EdgeR==BoxSize
+//       --> assuming periodicity
          EdgeL[d] = (double)(  ( corner[d] + BoxScale[d] ) % BoxScale[d]           )*dh_min;
          EdgeR[d] = (double)(  ( corner[d] + BoxScale[d] ) % BoxScale[d] + PScale  )*dh_min;
 
