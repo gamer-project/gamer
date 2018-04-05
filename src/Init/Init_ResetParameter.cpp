@@ -307,11 +307,22 @@ void Init_ResetParameter()
 
 // particle options
 #  ifdef PARTICLE
-   if ( OPT__BC_POT == BC_POT_ISOLATED  &&  amr->Par->RemoveCell < 0.0 )
+// check if the periodic BC is applied to all directions
+   bool PeriodicAllDir = true;
+   for (int t=0; t<6; t++)
+   {
+      if ( OPT__BC_FLU[t] != BC_FLU_PERIODIC )
+      {
+         PeriodicAllDir = false;
+         break;
+      }
+   }
+
+// set RemoveCell to the distance where potential extrapolation is required when adopting non-periodic BC
+   if ( !PeriodicAllDir  &&  amr->Par->RemoveCell < 0.0 )
    {
       switch ( amr->Par->Interp )
       {
-//       set amr->Par->RemoveCell to the distance where potential extrapolation is required
          case ( PAR_INTERP_NGP ):   amr->Par->RemoveCell = 1.0;   break;
          case ( PAR_INTERP_CIC ):   amr->Par->RemoveCell = 1.5;   break;
          case ( PAR_INTERP_TSC ):   amr->Par->RemoveCell = 2.0;   break;
@@ -320,6 +331,15 @@ void Init_ResetParameter()
 
       const double PAR_REMOVE_CELL = amr->Par->RemoveCell;
       PRINT_WARNING( PAR_REMOVE_CELL, FORMAT_FLT, "for the adopted PAR_INTERP scheme" );
+   }
+
+// RemoveCell is useless for the periodic B.C.
+   else if ( PeriodicAllDir  &&  amr->Par->RemoveCell >= 0.0 )
+   {
+      amr->Par->RemoveCell = -1.0;
+
+      const double PAR_REMOVE_CELL = amr->Par->RemoveCell;
+      PRINT_WARNING( PAR_REMOVE_CELL, FORMAT_FLT, "since the periodic BC is adopted along all directions" );
    }
 
 // number of ghost zones for the particle interpolation scheme
@@ -726,18 +746,6 @@ void Init_ResetParameter()
       OPT__CK_PARTICLE = true;
 
       PRINT_WARNING( OPT__CK_PARTICLE, FORMAT_INT, "since DEBUG_PARTICLE is enabled" );
-   }
-#  endif
-
-
-// RemoveCell is useless for the periodic B.C.
-#  ifdef PARTICLE
-   if ( OPT__BC_POT == BC_POT_PERIODIC  &&  amr->Par->RemoveCell >= 0.0 )
-   {
-      amr->Par->RemoveCell = -1.0;
-
-      const double PAR_REMOVE_CELL = amr->Par->RemoveCell;
-      PRINT_WARNING( PAR_REMOVE_CELL, FORMAT_FLT, "since the periodic BC is adopted" );
    }
 #  endif
 

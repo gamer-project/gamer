@@ -52,17 +52,14 @@ void Par_Aux_InitCheck()
 
 
 // 2. remove particles outside the active region for non-periodic B.C.
-   if ( OPT__BC_POT != BC_POT_PERIODIC )
+   for (long ParID=0; ParID<amr->Par->NPar_AcPlusInac; ParID++)
    {
-      for (long ParID=0; ParID<amr->Par->NPar_AcPlusInac; ParID++)
+      if (  !Par_WithinActiveRegion( Pos[0][ParID], Pos[1][ParID], Pos[2][ParID] )  )
       {
-         if (  !Par_WithinActiveRegion( Pos[0][ParID], Pos[1][ParID], Pos[2][ParID] )  )
-         {
-            amr->Par->RemoveOneParticle( ParID, PAR_INACTIVE_OUTSIDE );
+         amr->Par->RemoveOneParticle( ParID, PAR_INACTIVE_OUTSIDE );
 
-            Aux_Message( stderr, "WARNING : removing particle %10d (Pos = [%14.7e, %14.7e, %14.7e], Time = %13.7e)\n",
-                         ParID, Pos[0][ParID], Pos[1][ParID], Pos[2][ParID], Time[0] );
-         }
+         Aux_Message( stderr, "WARNING : removing particle %10d (Pos = [%14.7e, %14.7e, %14.7e], Time = %13.7e)\n",
+                      ParID, Pos[0][ParID], Pos[1][ParID], Pos[2][ParID], Time[0] );
       }
    }
 

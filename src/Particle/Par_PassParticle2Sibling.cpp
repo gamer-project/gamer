@@ -19,16 +19,16 @@ extern Timer_t *Timer_Par_MPI[NLEVEL][6];
 //                   --> But note that for C->F we only send particles to the sibling patches and do NOT
 //                       send them to the sibling-son patches in this function. These particles are stored in
 //                       the sibling patches temporarily for the velocity correction in KDK (because we don't
-//                       have potential at lv+1 level at this point), and are sent to lv+1 level after that.
+//                       have potential at lv+1 level at this point) and will be sent to lv+1 level after that.
 //                2. After calculating the target sibling patch, the particle position will be re-mapped
 //                   into the simulation domain if periodic B.C. is assumed
 //                3. Particles transferred to buffer patches (at either lv or lv-1) will be resent to their
-//                   corresponding real patches by calling "Par_LB_SendParticle2RealPatch"
+//                   corresponding real patches by calling Par_LB_ExchangeParticleBetweenPatch()
 //
-// Parameter   :  lv             : Target refinement level
-//                TimingSendPar  : Measure the elapsed time of the routine "Par_LB_SendParticleData",
-//                                 which is called by "Par_LB_ExchangeParticleBetweenPatch"
-//                                 --> LOAD_BALANCE only
+// Parameter   :  lv            : Target refinement level
+//                TimingSendPar : Measure the elapsed time of Par_LB_SendParticleData(), which is called by
+//                                Par_LB_ExchangeParticleBetweenPatch()
+//                                --> LOAD_BALANCE only
 //-------------------------------------------------------------------------------------------------------
 void Par_PassParticle2Sibling( const int lv, const bool TimingSendPar )
 {
@@ -44,7 +44,7 @@ void Par_PassParticle2Sibling( const int lv, const bool TimingSendPar )
    const double BoxEdge[3]       = { (NX0_TOT[0]*(1<<TOP_LEVEL))*dh_min,
                                      (NX0_TOT[1]*(1<<TOP_LEVEL))*dh_min,
                                      (NX0_TOT[2]*(1<<TOP_LEVEL))*dh_min }; // prevent from the round-off error problem
-// ParPos should NOT be used after calling Par_LB_ExchangeParticleBetweenPatch since amr->Par->ParVar may be reallocated
+// ParPos should NOT be used after calling Par_LB_ExchangeParticleBetweenPatch() since amr->Par->ParVar may be reallocated
    real *ParPos[3]               = { amr->Par->PosX, amr->Par->PosY, amr->Par->PosZ };
 
    int     NPar_Remove_Tot=0;
@@ -135,8 +135,7 @@ void Par_PassParticle2Sibling( const int lv, const bool TimingSendPar )
 
 
 //       2-3. remove particles lying outside the active region for non-periodic B.C. (by setting mass as PAR_INACTIVE_OUTSIDE)
-         if (  OPT__BC_POT != BC_POT_PERIODIC  &&
-               !Par_WithinActiveRegion( ParPos[0][ParID], ParPos[1][ParID], ParPos[2][ParID] )  )
+         if (  !Par_WithinActiveRegion( ParPos[0][ParID], ParPos[1][ParID], ParPos[2][ParID] )  )
          {
             RemoveParList[ NPar_Remove ++ ] = p;
             NPar_Remove_Tot ++;
@@ -382,22 +381,24 @@ void Par_PassParticle2Sibling( const int lv, const bool TimingSendPar )
 // Description :  Check whether the input coordinates are within the active region
 //
 // Note        :  1. Active region is defined as [RemoveCell ... BoxSize-RemoveCell]
-//                2. Useful only for non-periodic particles
-//                   --> For removing particles lying too close to the simulation boundaries, where
-//                       the potential extrapolation can lead to large errors
+//                2. Useful only for non-periodic boundaries
+//                   --> For removing particles lying too close to the simulation boundaries where
+//                       the potential extrapolation may lead to large errors
 //
 // Parameter   :  x/y/z : Input coordinates
 //
-// Return      :  true/false  : inside/outside the active region
+// Return      :  true/false : inside/outside the active region
 //-------------------------------------------------------------------------------------------------------
 bool Par_WithinActiveRegion( const real x, const real y, const real z )
 {
 
+// RemoveCell has the unit of root-level cell
    const double RemoveZone = amr->Par->RemoveCell*amr->dh[0];
 
-   if ( x < RemoveZone  ||  x > amr->BoxSize[0]-RemoveZone )   return false;
-   if ( y < RemoveZone  ||  y > amr->BoxSize[1]-RemoveZone )   return false;
-   if ( z < RemoveZone  ||  z > amr->BoxSize[2]-RemoveZone )   return false;
+// assuming OPT__BC_FLU[2*d] == OPT__BC_FLU[2*d+1] for d=0-2 when adoping periodic BC
+   if (  OPT__BC_FLU[0] != BC_FLU_PERIODIC  &&  ( x < RemoveZone || x > amr->BoxSize[0]-RemoveZone )  )  return false;
+   if (  OPT__BC_FLU[2] != BC_FLU_PERIODIC  &&  ( y < RemoveZone || y > amr->BoxSize[1]-RemoveZone )  )  return false;
+   if (  OPT__BC_FLU[4] != BC_FLU_PERIODIC  &&  ( z < RemoveZone || z > amr->BoxSize[2]-RemoveZone )  )  return false;
 
    return true;
 
