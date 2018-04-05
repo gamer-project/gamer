@@ -53,6 +53,17 @@ void Par_PassParticle2Sibling( const int lv, const bool TimingSendPar )
    int    *RemoveParList;
    double *EdgeL, *EdgeR;
 
+// check if the periodic BC is applied to all directions
+   bool PeriodicAllDir = true;
+   for (int t=0; t<6; t++)
+   {
+      if ( OPT__BC_FLU[t] != BC_FLU_PERIODIC )
+      {
+         PeriodicAllDir = false;
+         break;
+      }
+   }
+
 #  pragma omp parallel private( NPar, NGuess, NPar_Remove, ArraySize, ijk, TSib, ParID, RemoveParList, EdgeL, EdgeR )
    {
 
@@ -94,7 +105,7 @@ void Par_PassParticle2Sibling( const int lv, const bool TimingSendPar )
             ijk[d] = ( ParPos[d][ParID] < EdgeL[d] ) ? 0 : (ParPos[d][ParID] < EdgeR[d]) ? 1 : 2;
 
 //          2-2. reset particle position for periodic B.C.
-            if ( OPT__BC_POT == BC_POT_PERIODIC  &&  ijk[d] != 1 )
+            if ( OPT__BC_FLU[2*d] == BC_FLU_PERIODIC  &&  ijk[d] != 1 )
             {
                if ( ParPos[d][ParID] < 0.0 )
                {
@@ -128,14 +139,14 @@ void Par_PassParticle2Sibling( const int lv, const bool TimingSendPar )
                                 d, ParID, ParPos[d][ParID], BoxEdge[d] );
 #                 endif
                }
-            } // if ( OPT__BC_POT == BC_POT_PERIODIC  &&  ijk[d] != 1 )
+            } // if ( OPT__BC_FLU[2*d] == BC_FLU_PERIODIC  &&  ijk[d] != 1 )
          } // for (int d=0; d<3; d++)
 
          TSib = SibID[ ijk[2] ][ ijk[1] ][ ijk[0] ];
 
 
 //       2-3. remove particles lying outside the active region for non-periodic B.C. (by setting mass as PAR_INACTIVE_OUTSIDE)
-         if (  !Par_WithinActiveRegion( ParPos[0][ParID], ParPos[1][ParID], ParPos[2][ParID] )  )
+         if (  !PeriodicAllDir  &&  !Par_WithinActiveRegion( ParPos[0][ParID], ParPos[1][ParID], ParPos[2][ParID] )  )
          {
             RemoveParList[ NPar_Remove ++ ] = p;
             NPar_Remove_Tot ++;
