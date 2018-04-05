@@ -21,7 +21,7 @@ extern double ExtAcc_AuxArray[EXT_ACC_NAUX_MAX];
 //                2. Does not take into account the "periodic B.C." when updating particles
 //                   --> After update, the particle position may lie outside the simulation box
 //                   --> It will be corrected in the function "Par_PassParticle2Sibling"
-//                   (however, periodic B.C. is taken into account when calculating the gravitational force)
+//                   --> However, periodic B.C. is taken into account when calculating gravity if OPT__BC_POT == BC_POT_PERIODIC
 //                3. For the K-D-K scheme, this function performs either prediction (K-D) or correction (last K) operation
 //                   --> Use the input parameter "UpdateStep" to control
 //                4. For the Euler scheme, this function completes the full update
@@ -44,14 +44,14 @@ extern double ExtAcc_AuxArray[EXT_ACC_NAUX_MAX];
 //                   --> Use "TimeNew" to determine the target time
 //                   --> StoreAcc must be on, and UseStoredAcc must be off
 //
-// Parameter   :  lv             : Target refinement level
-//                TimeNew        : Target physical time to reach (also used by PAR_UPSTEP_ACC_ONLY)
-//                TimeOld        : Physical time before update
-//                UpdateStep     : PAR_UPSTEP_PRED/PAR_UPSTEP_CORR/PAR_UPSTEP_ACC_ONLY
-//                                 (CORR is for PAR_INTEG_KDK only, and ACC_ONLY is for STORE_PAR_ACC only)
-//                StoreAcc       : Store the acceleration of each particle (must work with STORE_PAR_ACC)
-//                UseStoredAcc   : Use the acceleration of each particle stored previously for advancing particles
-//                                 (must work with STORE_PAR_ACC)
+// Parameter   :  lv           : Target refinement level
+//                TimeNew      : Target physical time to reach (also used by PAR_UPSTEP_ACC_ONLY)
+//                TimeOld      : Physical time before update
+//                UpdateStep   : PAR_UPSTEP_PRED/PAR_UPSTEP_CORR/PAR_UPSTEP_ACC_ONLY
+//                               (CORR is for PAR_INTEG_KDK only, and ACC_ONLY is for STORE_PAR_ACC only)
+//                StoreAcc     : Store the acceleration of each particle (must work with STORE_PAR_ACC)
+//                UseStoredAcc : Use the acceleration of each particle stored previously for advancing particles
+//                               (must work with STORE_PAR_ACC)
 //-------------------------------------------------------------------------------------------------------
 void Par_UpdateParticle( const int lv, const double TimeNew, const double TimeOld, const ParUpStep_t UpdateStep,
                          const bool StoreAcc, const bool UseStoredAcc )
@@ -189,7 +189,7 @@ void Par_UpdateParticle( const int lv, const double TimeNew, const double TimeOl
    for (int PID0=0; PID0<amr->NPatchComma[lv][1]; PID0+=8)
    {
 //    1. find the patch groups with target particles
-//    --> use patch group as the calculation unit since "Prepare_PatchData" only work with patch group
+//    --> use patch group as the calculation unit since Prepare_PatchData() only work with patch group
 //    --> disadvantage: some patches may not have particles ... (they will be skipped later)
       GotYou = false;
 
