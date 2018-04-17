@@ -217,18 +217,18 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
    if ( z_periodic >= z_shear )
    {
       fluid[DENS] = KH_Rho1;
-      fluid[MOMX] = KH_Rho1*( KH_Vx1 + RandomNumber(&RNG,-KH_RAmp,KH_RAmp) );
-      fluid[MOMY] = KH_Rho1*( KH_Vy1 + RandomNumber(&RNG,-KH_RAmp,KH_RAmp) );
-      fluid[MOMZ] = KH_Rho1*(    0.0 + RandomNumber(&RNG,-KH_RAmp,KH_RAmp) );
+      fluid[MOMX] = KH_Rho1*( KH_Vx1 + RandomNumber(RNG,-KH_RAmp,KH_RAmp) );
+      fluid[MOMY] = KH_Rho1*( KH_Vy1 + RandomNumber(RNG,-KH_RAmp,KH_RAmp) );
+      fluid[MOMZ] = KH_Rho1*(    0.0 + RandomNumber(RNG,-KH_RAmp,KH_RAmp) );
    }
 
 // region 2
    else
    {
       fluid[DENS] = KH_Rho2;
-      fluid[MOMX] = KH_Rho2*( KH_Vx2 + RandomNumber(&RNG,-KH_RAmp,KH_RAmp) );
-      fluid[MOMY] = KH_Rho2*( KH_Vy2 + RandomNumber(&RNG,-KH_RAmp,KH_RAmp) );
-      fluid[MOMZ] = KH_Rho2*(    0.0 + RandomNumber(&RNG,-KH_RAmp,KH_RAmp) );
+      fluid[MOMX] = KH_Rho2*( KH_Vx2 + RandomNumber(RNG,-KH_RAmp,KH_RAmp) );
+      fluid[MOMY] = KH_Rho2*( KH_Vy2 + RandomNumber(RNG,-KH_RAmp,KH_RAmp) );
+      fluid[MOMZ] = KH_Rho2*(    0.0 + RandomNumber(RNG,-KH_RAmp,KH_RAmp) );
    }
 
    fluid[ENGY] = KH_Pres/(GAMMA-1.0) + 0.5*( SQR(fluid[MOMX]) + SQR(fluid[MOMY]) + SQR(fluid[MOMZ]) ) / fluid[DENS];
