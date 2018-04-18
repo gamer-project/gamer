@@ -350,6 +350,15 @@ LIBYT_PATH   :=
 #MPI_PATH     := /usr/mpi/intel/openmpi-1.3.2-qlc
 #GPUID_PATH   := /ifs/data/hsiyu/Software/gpudevmgr
 
+# A "typical" macOS installation without GPU
+#CUDA_PATH    :=
+#FFTW_PATH    := /usr/local/fftw-2.1.5
+#MPI_PATH     := /usr/local/mpich-3.2
+#HDF5_PATH    := ${HOME}/miniconda3
+#GRACKLE_PATH :=
+#GSL_PATH     := /usr/local/gsl-1.16
+
+
 
 
 
