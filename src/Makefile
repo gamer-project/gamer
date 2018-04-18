@@ -842,7 +842,7 @@ else
 		printf "\nCompiling GAMER --> Failed!\n\n"; \
 	fi)
 endif
-	@rm ./*.linkinfo -f
+	@rm -f ./*.linkinfo
 
 
 # clean
@@ -851,7 +851,7 @@ endif
 clean :
 	@rm -f $(OBJ_PATH)/*
 	@rm -f $(EXECUTABLE)
-	@rm ./*.linkinfo -f
+	@rm -f ./*.linkinfo 
 
 
 
