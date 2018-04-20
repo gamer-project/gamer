@@ -7,16 +7,16 @@
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  LB_AllocateBufferPatch_Father
-// Description :  Allocate father-buffer patches at SonLv-1 for the "real" patches at SonLv to ensure that 
+// Description :  Allocate father-buffer patches at SonLv-1 for the "real" patches at SonLv to ensure that
 //                the proper-nesting condition is satisfied for these "real" patches
 //
-// Note        :  1. Eight father-buffer patches are allocated at a time 
-//                2. Father-buffer patches at SonLv-1 are NOT allocated for the "sibling-buffer" patches at SonLv 
+// Note        :  1. Eight father-buffer patches are allocated at a time
+//                2. Father-buffer patches at SonLv-1 are NOT allocated for the "sibling-buffer" patches at SonLv
 //                   --> Proper-nesting condition may not be satisfied for the "sibling-buffer" patches at SonLv
 //                   --> However, all sibling patches at SonLv should have fathers after calling this function
 //                   --> However, in the current implementation, the father indices of all sibling/father-buffer
 //                       patches are always set to -1
-//                3. Father buffer patches at SonLv-1 are NOT allocated for the "father-buffer" patches at SonLv 
+//                3. Father buffer patches at SonLv-1 are NOT allocated for the "father-buffer" patches at SonLv
 //                4. This function will reconstruct the list "LB_PaddedCr1DList[SonLv-1]"
 //                5. SearchAllSon == true  --> search over all real patches at SonLv
 //                                == false --> search over patches recorded in TargetSonPID0
@@ -39,15 +39,15 @@
 //                NewFaBufPID0   : Lists recording indices of all newly-allocated father-buffer patches
 //                                 with LocalID==0 (useful only if "RecordFaPID == true")
 //-------------------------------------------------------------------------------------------------------
-void LB_AllocateBufferPatch_Father( const int SonLv, 
-                                    const bool SearchAllSon, const int NInput, int* TargetSonPID0, 
+void LB_AllocateBufferPatch_Father( const int SonLv,
+                                    const bool SearchAllSon, const int NInput, int* TargetSonPID0,
                                     const bool RecordFaPID, int* NNewFaBuf0, int** NewFaBufPID0 )
 {
 
 // base-level patches do not have fathers
-   if ( SonLv == 0 )    
+   if ( SonLv == 0 )
    {
-      if ( RecordFaPID )   
+      if ( RecordFaPID )
       {
          *NNewFaBuf0   = 0;
          *NewFaBufPID0 = NULL;
@@ -62,7 +62,7 @@ void LB_AllocateBufferPatch_Father( const int SonLv,
       Aux_Error( ERROR_INFO, "SonLv %d, NInput %d, TargetSonPID0 == NULL !!\n", SonLv, NInput );
 
    if ( !SearchAllSon  &&  ( NInput < 0 || NInput > amr->NPatchComma[SonLv][1]/8 )  )
-      Aux_Error( ERROR_INFO, "SonLv %d, incorrect NInput = %d (SonNReal0 = %d) !!\n", 
+      Aux_Error( ERROR_INFO, "SonLv %d, incorrect NInput = %d (SonNReal0 = %d) !!\n",
                  SonLv, NInput, amr->NPatchComma[SonLv][1]/8 );
 
    if ( amr->NPatchComma[SonLv-1][3] != amr->num[SonLv-1] )
@@ -93,8 +93,8 @@ void LB_AllocateBufferPatch_Father( const int SonLv,
    ulong *FaCr1D_List = new ulong [NFaBuf_Max];
 
 
-// nothing to do if there is no target real patch at SonLv   
-   if ( NTargetSon0 == 0 )    
+// nothing to do if there is no target real patch at SonLv
+   if ( NTargetSon0 == 0 )
    {
       if ( RecordFaPID )
       {
@@ -157,11 +157,11 @@ void LB_AllocateBufferPatch_Father( const int SonLv,
       }
 
 //    no external buffer patches will be allocated for the non-periodic B.C.
-      for (int k=Start[2]; k<=Start[2]+1; k++)  
-      {  
+      for (int k=Start[2]; k<=Start[2]+1; k++)
+      {
          if ( OPT__BC_FLU[0] != BC_FLU_PERIODIC )
          {
-            FaCr3D[2] = Cr3D[2] + k*FaPGScale;  
+            FaCr3D[2] = Cr3D[2] + k*FaPGScale;
 
             if ( FaCr3D[2] < 0  ||  FaCr3D[2] >= amr->BoxScale[2] )  continue;
          }
@@ -170,7 +170,7 @@ void LB_AllocateBufferPatch_Father( const int SonLv,
          {
             if ( OPT__BC_FLU[0] != BC_FLU_PERIODIC )
             {
-               FaCr3D[1] = Cr3D[1] + j*FaPGScale;  
+               FaCr3D[1] = Cr3D[1] + j*FaPGScale;
 
                if ( FaCr3D[1] < 0  ||  FaCr3D[1] >= amr->BoxScale[1] )  continue;
             }
@@ -179,13 +179,13 @@ void LB_AllocateBufferPatch_Father( const int SonLv,
             {
                if ( OPT__BC_FLU[0] != BC_FLU_PERIODIC )
                {
-                  FaCr3D[0] = Cr3D[0] + i*FaPGScale;  
+                  FaCr3D[0] = Cr3D[0] + i*FaPGScale;
 
                   if ( FaCr3D[0] < 0  ||  FaCr3D[0] >= amr->BoxScale[0] )  continue;
                }
 
 #              ifdef GAMER_DEBUG
-               if ( NFaBuf_Dup >= NFaBuf_Max ) 
+               if ( NFaBuf_Dup >= NFaBuf_Max )
                   Aux_Error( ERROR_INFO, "NFaBuf_Dup (%ld) >= NFaBuf_Max (%ld) !!\n", NFaBuf_Dup, NFaBuf_Max );
 #              endif
 
@@ -212,7 +212,7 @@ void LB_AllocateBufferPatch_Father( const int SonLv,
       if ( FaCr1D_List[t] != FaCr1D_List[t-1] )    FaCr1D_List[ NFaBuf++ ] = FaCr1D_List[t];
 
 
-// 3. get the matching list   
+// 3. get the matching list
    char *Match = new char [NFaBuf];
    Mis_Matching_char( amr->num[FaLv], amr->LB->PaddedCr1DList[FaLv], NFaBuf, FaCr1D_List, Match );
 
@@ -222,7 +222,7 @@ void LB_AllocateBufferPatch_Father( const int SonLv,
       for (int t=0; t<NFaBuf; t++)
       {
          if ( Match[t] != 1 )
-            Aux_Error( ERROR_INFO, "FaCr1D_List[%d] = %lu does not find matching father patch at level %d !!\n", 
+            Aux_Error( ERROR_INFO, "FaCr1D_List[%d] = %lu does not find matching father patch at level %d !!\n",
                        t, FaCr1D_List[t], FaLv );
       }
    }
@@ -259,7 +259,7 @@ void LB_AllocateBufferPatch_Father( const int SonLv,
          if ( OPT__BC_FLU[0] != BC_FLU_PERIODIC )
          {
             for (int d=0; d<3; d++)
-               if ( FaCr3D[d] < 0  ||  FaCr3D[d] >= amr->BoxScale[d] )   
+               if ( FaCr3D[d] < 0  ||  FaCr3D[d] >= amr->BoxScale[d] )
                   Aux_Error( ERROR_INFO, "FaCr3D[%d] = %d lies outside the simulation box !!\n", d, FaCr3D[d] );
          }
 #        endif
@@ -283,9 +283,9 @@ void LB_AllocateBufferPatch_Father( const int SonLv,
 
    if ( NP_New != NP_Old )
    {
-      amr->LB->PaddedCr1DList         [FaLv] = (ulong*)realloc( amr->LB->PaddedCr1DList         [FaLv], 
+      amr->LB->PaddedCr1DList         [FaLv] = (ulong*)realloc( amr->LB->PaddedCr1DList         [FaLv],
                                                                 NP_New*sizeof(ulong) );
-      amr->LB->PaddedCr1DList_IdxTable[FaLv] = (int*  )realloc( amr->LB->PaddedCr1DList_IdxTable[FaLv], 
+      amr->LB->PaddedCr1DList_IdxTable[FaLv] = (int*  )realloc( amr->LB->PaddedCr1DList_IdxTable[FaLv],
                                                                 NP_New*sizeof(int ) );
 
 //    must re-input all PaddedCr1D in order to get the correct LB_PaddedCr1DList_IdxTable[FaLv]
@@ -300,7 +300,7 @@ void LB_AllocateBufferPatch_Father( const int SonLv,
       {
          if ( amr->LB->PaddedCr1DList[FaLv][t] == amr->LB->PaddedCr1DList[FaLv][t-1] )
             Aux_Error( ERROR_INFO, "duplicate patches at lv %d, PaddedCr1D %lu, PID = %d and %d !!\n",
-                       FaLv, amr->LB->PaddedCr1DList[FaLv][t], amr->LB->PaddedCr1DList_IdxTable[FaLv][t], 
+                       FaLv, amr->LB->PaddedCr1DList[FaLv][t], amr->LB->PaddedCr1DList_IdxTable[FaLv][t],
                        amr->LB->PaddedCr1DList_IdxTable[FaLv][t-1] );
       }
 #     endif

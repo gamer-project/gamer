@@ -11,7 +11,7 @@ ulong LB_Hilbert_c2i( ulong const coord[], const uint NBits );
 // Function    :  LB_Corner2Index
 // Description :  Transform the 3D patch corner coordinatest to the 1D load-balance indices
 //
-// Note        :  1. "amr->ResPower2[lv]" must be prepared in advance 
+// Note        :  1. "amr->ResPower2[lv]" must be prepared in advance
 //                2. Periodic B.C. is applied
 //                3. By inputting "amr->ResPower2[lv]" for LB_Hilbert_c2i, we ensure the following property
 //                   "FaLBIdx*8 == SonLBIdx - SonLBIdx%8"
@@ -26,7 +26,7 @@ ulong LB_Hilbert_c2i( ulong const coord[], const uint NBits );
 // Parameter   :  Check :  Check whether the input corner lies in the simulation box
 //                         --> effective only in the DEBUG mode
 //
-// Return      :  1D load-balance indices 
+// Return      :  1D load-balance indices
 //-------------------------------------------------------------------------------------------------------
 long LB_Corner2Index( const int lv, const int Corner[], const Check_t Check )
 {
@@ -52,7 +52,7 @@ long LB_Corner2Index( const int lv, const int Corner[], const Check_t Check )
    ulong Coord[3];
    int   Cr_Periodic[3];
 
-   for (int d=0; d<3; d++)    
+   for (int d=0; d<3; d++)
    {
 //###PERIODIC B.C. (ok if the non-periodic B.C. is adopted since other parts of the code have been carefully revised)
       Cr_Periodic[d] = ( Corner[d] + amr->BoxScale[d] ) % amr->BoxScale[d];
@@ -69,9 +69,9 @@ long LB_Corner2Index( const int lv, const int Corner[], const Check_t Check )
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  LB_Index2Corner
-// Description :  Transform the 1D load-balance indices to the 3D patch corner coordinates 
+// Description :  Transform the 1D load-balance indices to the 3D patch corner coordinates
 //
-// Note        :  1. "amr->ResPower2[lv]" must be prepared in advance 
+// Note        :  1. "amr->ResPower2[lv]" must be prepared in advance
 //                2. By inputting "amr->ResPower2[lv]" for LB_Hilbert_i2c, we ensure the following property
 //                   "FaLBIdx*8 == SonLBIdx - SonLBIdx%8"
 //                   --> Hilbert curve in different levels have the similar indexing order in space
@@ -113,15 +113,15 @@ void LB_Index2Corner( const int lv, const long LB_Idx, int Corner[], const Check
 // Function    :  LB_Index2Rank
 // Description :  Return the MPI rank which the input LB_Idx belongs to
 //
-// Note        :  "LB_CutPoint[lv]" must be prepared in advance 
+// Note        :  "LB_CutPoint[lv]" must be prepared in advance
 //
-// Return      :  success  : target MPI rank 
+// Return      :  success  : target MPI rank
 //                fail     : -1
 //
 // Parameter   :  lv       : Refinement level of the input LB_Idx
 //                LB_Idx   : Space-filling-curve index for load balance
 //                Check    : Check whether or not the input LB_Idx lies in the range of LB_CutPoint
-//                           (this check may fail during the grid refinement --> if that's the case, 
+//                           (this check may fail during the grid refinement --> if that's the case,
 //                            turn this check off during the grid refinement)
 //
 // Return      :  MPI rank
@@ -134,7 +134,7 @@ int LB_Index2Rank( const int lv, const long LB_Idx, const Check_t Check )
       if ( LB_Idx >= amr->LB->CutPoint[lv][r]  &&  LB_Idx < amr->LB->CutPoint[lv][r+1] )  return r;
 
    if ( Check == CHECK_ON )
-      Aux_Error( ERROR_INFO, "no target rank was found for lv %d, LB_Idx %ld !!\n", 
+      Aux_Error( ERROR_INFO, "no target rank was found for lv %d, LB_Idx %ld !!\n",
                  lv, LB_Idx );
 
    return -1;

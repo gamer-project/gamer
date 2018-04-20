@@ -10,10 +10,10 @@ void Flag_Grandson( const int lv, const int PID, const int LocalID );
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  LB_GrandsonCheck 
-// Description :  Grandson check for the flag operation 
+// Function    :  LB_GrandsonCheck
+// Description :  Grandson check for the flag operation
 //
-// Note        :  Invoked by the function "Flag_Real" 
+// Note        :  Invoked by the function "Flag_Real"
 //
 // Parameter   :  FaLv : Target refinement level to be flagged
 //-------------------------------------------------------------------------------------------------------
@@ -40,7 +40,7 @@ void LB_GrandsonCheck( const int FaLv )
 
 
 // initialize arrays
-   for (int r=0; r<MPI_NRank; r++)     
+   for (int r=0; r<MPI_NRank; r++)
    {
       MemSize   [r] = MemUnit;
       Query_Temp[r] = (long*)malloc( MemSize[r]*sizeof(long) );
@@ -66,7 +66,7 @@ void LB_GrandsonCheck( const int FaLv )
                {
 //                flag the corresponding siblings of patch PID
                   Flag_Grandson( FaLv, FaPID, LocalID );
-   
+
 //                flag the patch PID
                   amr->patch[0][FaLv][FaPID]->flag = true;
                }
@@ -87,7 +87,7 @@ void LB_GrandsonCheck( const int FaLv )
             TRank    = SON_OFFSET_LB - SonPID;
 
 //          allocate enough memory
-            if ( NQuery[TRank] >= MemSize[TRank] )  
+            if ( NQuery[TRank] >= MemSize[TRank] )
             {
                MemSize   [TRank] += MemUnit;
                Query_Temp[TRank]  = (long*)realloc( Query_Temp[TRank], MemSize[TRank]*sizeof(long) );
@@ -115,8 +115,8 @@ void LB_GrandsonCheck( const int FaLv )
 
 
 // 4. transfer data to get reply : (SendBuf_Query --> RecvBuf_Query --> SendBuf_Reply --> RecvBuf_Reply)
-// ==========================================================================================   
-   int   Query_Disp[MPI_NRank], Reply_Disp[MPI_NRank], NReply[MPI_NRank], NQuery_Total, NReply_Total; 
+// ==========================================================================================
+   int   Query_Disp[MPI_NRank], Reply_Disp[MPI_NRank], NReply[MPI_NRank], NQuery_Total, NReply_Total;
    int   Counter, SonPID0;
    long *SendBuf_Query=NULL, *RecvBuf_Query=NULL, *QueryPtr=NULL;
    int  *SendBuf_Reply=NULL, *RecvBuf_Reply=NULL, *ReplyPtr=NULL;
@@ -130,8 +130,8 @@ void LB_GrandsonCheck( const int FaLv )
    Reply_Disp[0] = 0;
    for (int r=1; r<MPI_NRank; r++)
    {
-      Query_Disp[r] = Query_Disp[r-1] + NQuery[r-1]; 
-      Reply_Disp[r] = Reply_Disp[r-1] + NReply[r-1]; 
+      Query_Disp[r] = Query_Disp[r-1] + NQuery[r-1];
+      Reply_Disp[r] = Reply_Disp[r-1] + NReply[r-1];
    }
    NQuery_Total = Query_Disp[MPI_NRank-1] + NQuery[MPI_NRank-1];
    NReply_Total = Reply_Disp[MPI_NRank-1] + NReply[MPI_NRank-1];
@@ -149,7 +149,7 @@ void LB_GrandsonCheck( const int FaLv )
    for (int t=0; t<NReply_Total; t++)   SendBuf_Reply[t] = 0;
 
 // 4.3 send queries
-   MPI_Alltoallv( SendBuf_Query, NQuery, Query_Disp, MPI_LONG, 
+   MPI_Alltoallv( SendBuf_Query, NQuery, Query_Disp, MPI_LONG,
                   RecvBuf_Query, NReply, Reply_Disp, MPI_LONG, MPI_COMM_WORLD );
 
 // 4.4 prepare replies
@@ -185,7 +185,7 @@ void LB_GrandsonCheck( const int FaLv )
    } // for (int r=0; r<MPI_NRank; r++)
 
 // 4.5 send replies
-   MPI_Alltoallv( SendBuf_Reply, NReply, Reply_Disp, MPI_INT, 
+   MPI_Alltoallv( SendBuf_Reply, NReply, Reply_Disp, MPI_INT,
                   RecvBuf_Reply, NQuery, Query_Disp, MPI_INT, MPI_COMM_WORLD );
 
 

@@ -15,9 +15,9 @@ static void SetSiblingExternal( const int lv, const int NTarget0, const int *Tar
 //-------------------------------------------------------------------------------------------------------
 // Function    :  LB_SiblingSearch
 // Description :  Construct the sibling patch relation
-// 
-// Note        :  1. LB_PaddedCr1DList and LB_PaddedCr1DList_IdxTable at SonLv and FaLv must be properly prepared 
-//                2. SearchAllPID == true  --> Works on all patches at lv (including real, sibling-buffer 
+//
+// Note        :  1. LB_PaddedCr1DList and LB_PaddedCr1DList_IdxTable at SonLv and FaLv must be properly prepared
+//                2. SearchAllPID == true  --> Works on all patches at lv (including real, sibling-buffer
 //                                             and father-buffer patches)
 //                                == false --> Only works on PID0 recorded in TargetPID0
 //
@@ -55,13 +55,13 @@ void LB_SiblingSearch( const int lv, const bool SearchAllPID, const int NInput, 
    int   NSearch, Count, *Match, PID0;
    long  Cr1D_Disp[26];
 
-   ulong *SibCr1D_Search   = new ulong [ NSearch_Max ]; 
+   ulong *SibCr1D_Search   = new ulong [ NSearch_Max ];
    ulong *SibCr1D          = new ulong [ NSearch_Max ];
    int   *SibCr1D_IdxTable = new  int  [ NSearch_Max ];
 
 
 // nothing to do if there is no target patches
-   if ( NTarget0 == 0 )    
+   if ( NTarget0 == 0 )
    {
       delete [] SibCr1D_Search;
       delete [] SibCr1D;
@@ -75,7 +75,7 @@ void LB_SiblingSearch( const int lv, const bool SearchAllPID, const int NInput, 
    if ( SearchAllPID )
    {
       for (int PID=0; PID<NPatch; PID++)
-      for (int s=0; s<NSib; s++)          
+      for (int s=0; s<NSib; s++)
          amr->patch[0][lv][PID]->sibling[s] = -1;
 
       TargetPID0 = new int [NTarget0];
@@ -127,15 +127,15 @@ void LB_SiblingSearch( const int lv, const bool SearchAllPID, const int NInput, 
       if ( SibCr1D_Search[t] != SibCr1D_Search[t-1] )   SibCr1D_Search[ NSearch ++ ] = SibCr1D_Search[t];
 
 
-// 4. matching   
+// 4. matching
    Match = new int [NSearch];
    Mis_Matching_int( NPatch, amr->LB->PaddedCr1DList[lv], NSearch, SibCr1D_Search, Match );
 
 
-// 5. construct the sibling relation   
+// 5. construct the sibling relation
    const int PGScale = PATCH_SIZE*Scale2;
-   const int SibID[3][3][3] = {  { {18, 10, 19}, {14,  4, 16}, {20, 11, 21} }, 
-                                 { { 6,  2,  7}, { 0, -1,  1}, { 8,  3,  9} }, 
+   const int SibID[3][3][3] = {  { {18, 10, 19}, {14,  4, 16}, {20, 11, 21} },
+                                 { { 6,  2,  7}, { 0, -1,  1}, { 8,  3,  9} },
                                  { {22, 12, 23}, {15,  5, 17}, {24, 13, 25} }  };
    ulong Cr1D;
    int   SibPID0, dID[3], Start = 0;
@@ -165,10 +165,10 @@ void LB_SiblingSearch( const int lv, const bool SearchAllPID, const int NInput, 
 
                   for (int d=0; d<3; d++)    dID[d] = 1 + ( Cr2[d] - Cr1[d] ) / PGScale;
 
-//                for NLEVEL == 1, buffer patch groups can have sibling PaddedCr1D map to wrong buffer 
+//                for NLEVEL == 1, buffer patch groups can have sibling PaddedCr1D map to wrong buffer
 //                patch groups in the opposite direction (check the note for a more detailed explanation)
 #                 if ( NLEVEL == 1 )
-                  if (  dID[0]<0 || dID[0]>2 || dID[1]<0 || dID[1]>2  )    
+                  if (  dID[0]<0 || dID[0]>2 || dID[1]<0 || dID[1]>2  )
                   {
                      m++;
                      continue;
@@ -176,7 +176,7 @@ void LB_SiblingSearch( const int lv, const bool SearchAllPID, const int NInput, 
 #                 endif
 
 #                 ifdef GAMER_DEBUG
-                  if (  ( NLEVEL != 1 && (dID[0]<0 || dID[0]>2 || dID[1]<0 || dID[1]>2) )  
+                  if (  ( NLEVEL != 1 && (dID[0]<0 || dID[0]>2 || dID[1]<0 || dID[1]>2) )
                         || dID[2]<0 || dID[2]>2 || ( dID[0]==1 && dID[1]==1 && dID[2]==1 )  )
                      Aux_Error( ERROR_INFO, "lv %d, PID0 %d, SibPID0 %d, incorrect dID[3]=(%d,%d,%d) !!\n",
                                 lv, PID0, SibPID0, dID[0], dID[1], dID[2] );
@@ -194,7 +194,7 @@ void LB_SiblingSearch( const int lv, const bool SearchAllPID, const int NInput, 
 
 #           ifdef GAMER_DEBUG
             if ( m == NSearch_Max - 1 )
-               Aux_Error( ERROR_INFO, "lv %d, SibPID0 %d, Cr1D %lu has no matching patch !!\n", 
+               Aux_Error( ERROR_INFO, "lv %d, SibPID0 %d, Cr1D %lu has no matching patch !!\n",
                           lv, SibPID0, Cr1D );
 #           endif
 
@@ -222,7 +222,7 @@ void LB_SiblingSearch( const int lv, const bool SearchAllPID, const int NInput, 
 //       check 1: PID's sibling's mirror-sibling = PID
          if ( amr->patch[0][lv][SibPID]->sibling[ MirrorSib[s] ] != PID )
             Aux_Error( ERROR_INFO, "lv %d, PID[%d]->Sib[%d] = %d != SibPID[%d]->MirrorSib[%d] = %d !!\n",
-                       lv, PID, s, SibPID, SibPID, MirrorSib[s], 
+                       lv, PID, s, SibPID, SibPID, MirrorSib[s],
                        amr->patch[0][lv][SibPID]->sibling[ MirrorSib[s] ] );
 
 //       check 2: PID's sibling has correct coordinates
@@ -239,7 +239,7 @@ void LB_SiblingSearch( const int lv, const bool SearchAllPID, const int NInput, 
 #  endif // #ifdef GAMER_DEBUG
 
 
-// free memory   
+// free memory
    delete [] SibCr1D_Search;
    delete [] SibCr1D;
    delete [] SibCr1D_IdxTable;
@@ -251,9 +251,9 @@ void LB_SiblingSearch( const int lv, const bool SearchAllPID, const int NInput, 
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  SetSiblingInSamePatchGroup 
+// Function    :  SetSiblingInSamePatchGroup
 // Description :  Construct the sibling patch relation for patches within the same patch group
-// 
+//
 // Note        :  Sibling relation of patches in different patch groups are constructed by
 //                "SetSiblingInDiffPatchGroup"
 //
@@ -349,9 +349,9 @@ void SetSiblingInSamePatchGroup( const int lv, const int PID0 )
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  SetSiblingInDiffPatchGroup 
+// Function    :  SetSiblingInDiffPatchGroup
 // Description :  Construct the sibling patch relation for patches in different patch group
-// 
+//
 // Note        :  Sibling relation of patches in the same patch group are constructed by
 //                "SetSiblingInSamePatchGroup"
 //
@@ -400,17 +400,17 @@ void SetSiblingInDiffPatchGroup( const int lv, const int PID0, const int SibPID0
             amr->patch[0][lv][ SibPID0+4 ]->sibling[ 7] = PID0+0;
             amr->patch[0][lv][ SibPID0+6 ]->sibling[16] = PID0+0;
             amr->patch[0][lv][ SibPID0+7 ]->sibling[19] = PID0+0;
-                                                                
+
             amr->patch[0][lv][ SibPID0+1 ]->sibling[ 9] = PID0+2;
             amr->patch[0][lv][ SibPID0+4 ]->sibling[ 1] = PID0+2;
             amr->patch[0][lv][ SibPID0+6 ]->sibling[21] = PID0+2;
             amr->patch[0][lv][ SibPID0+7 ]->sibling[16] = PID0+2;
-                                                                
+
             amr->patch[0][lv][ SibPID0+1 ]->sibling[17] = PID0+3;
             amr->patch[0][lv][ SibPID0+4 ]->sibling[23] = PID0+3;
             amr->patch[0][lv][ SibPID0+6 ]->sibling[ 1] = PID0+3;
             amr->patch[0][lv][ SibPID0+7 ]->sibling[ 7] = PID0+3;
-                                                                
+
             amr->patch[0][lv][ SibPID0+1 ]->sibling[25] = PID0+5;
             amr->patch[0][lv][ SibPID0+4 ]->sibling[17] = PID0+5;
             amr->patch[0][lv][ SibPID0+6 ]->sibling[ 9] = PID0+5;
@@ -446,17 +446,17 @@ void SetSiblingInDiffPatchGroup( const int lv, const int PID0, const int SibPID0
             amr->patch[0][lv][ SibPID0+2 ]->sibling[ 6] = PID0+1;
             amr->patch[0][lv][ SibPID0+3 ]->sibling[14] = PID0+1;
             amr->patch[0][lv][ SibPID0+5 ]->sibling[18] = PID0+1;
-                                                                
+
             amr->patch[0][lv][ SibPID0+0 ]->sibling[ 8] = PID0+4;
             amr->patch[0][lv][ SibPID0+2 ]->sibling[ 0] = PID0+4;
             amr->patch[0][lv][ SibPID0+3 ]->sibling[20] = PID0+4;
             amr->patch[0][lv][ SibPID0+5 ]->sibling[14] = PID0+4;
-                                                                
+
             amr->patch[0][lv][ SibPID0+0 ]->sibling[15] = PID0+6;
             amr->patch[0][lv][ SibPID0+2 ]->sibling[22] = PID0+6;
             amr->patch[0][lv][ SibPID0+3 ]->sibling[ 0] = PID0+6;
             amr->patch[0][lv][ SibPID0+5 ]->sibling[ 6] = PID0+6;
-                                                                
+
             amr->patch[0][lv][ SibPID0+0 ]->sibling[24] = PID0+7;
             amr->patch[0][lv][ SibPID0+2 ]->sibling[15] = PID0+7;
             amr->patch[0][lv][ SibPID0+3 ]->sibling[ 8] = PID0+7;
@@ -492,17 +492,17 @@ void SetSiblingInDiffPatchGroup( const int lv, const int PID0, const int SibPID0
             amr->patch[0][lv][ SibPID0+4 ]->sibling[ 8] = PID0+0;
             amr->patch[0][lv][ SibPID0+5 ]->sibling[11] = PID0+0;
             amr->patch[0][lv][ SibPID0+7 ]->sibling[20] = PID0+0;
-                                                                
+
             amr->patch[0][lv][ SibPID0+2 ]->sibling[ 9] = PID0+1;
             amr->patch[0][lv][ SibPID0+4 ]->sibling[ 3] = PID0+1;
             amr->patch[0][lv][ SibPID0+5 ]->sibling[21] = PID0+1;
             amr->patch[0][lv][ SibPID0+7 ]->sibling[11] = PID0+1;
-                                                                
+
             amr->patch[0][lv][ SibPID0+2 ]->sibling[13] = PID0+3;
             amr->patch[0][lv][ SibPID0+4 ]->sibling[24] = PID0+3;
             amr->patch[0][lv][ SibPID0+5 ]->sibling[ 3] = PID0+3;
             amr->patch[0][lv][ SibPID0+7 ]->sibling[ 8] = PID0+3;
-                                                                
+
             amr->patch[0][lv][ SibPID0+2 ]->sibling[25] = PID0+6;
             amr->patch[0][lv][ SibPID0+4 ]->sibling[13] = PID0+6;
             amr->patch[0][lv][ SibPID0+5 ]->sibling[ 9] = PID0+6;
@@ -538,17 +538,17 @@ void SetSiblingInDiffPatchGroup( const int lv, const int PID0, const int SibPID0
             amr->patch[0][lv][ SibPID0+1 ]->sibling[ 6] = PID0+2;
             amr->patch[0][lv][ SibPID0+3 ]->sibling[10] = PID0+2;
             amr->patch[0][lv][ SibPID0+6 ]->sibling[18] = PID0+2;
-                                                                
+
             amr->patch[0][lv][ SibPID0+0 ]->sibling[ 7] = PID0+4;
             amr->patch[0][lv][ SibPID0+1 ]->sibling[ 2] = PID0+4;
             amr->patch[0][lv][ SibPID0+3 ]->sibling[19] = PID0+4;
             amr->patch[0][lv][ SibPID0+6 ]->sibling[10] = PID0+4;
-                                                                
+
             amr->patch[0][lv][ SibPID0+0 ]->sibling[12] = PID0+5;
             amr->patch[0][lv][ SibPID0+1 ]->sibling[22] = PID0+5;
             amr->patch[0][lv][ SibPID0+3 ]->sibling[ 2] = PID0+5;
             amr->patch[0][lv][ SibPID0+6 ]->sibling[ 6] = PID0+5;
-                                                                
+
             amr->patch[0][lv][ SibPID0+0 ]->sibling[23] = PID0+7;
             amr->patch[0][lv][ SibPID0+1 ]->sibling[12] = PID0+7;
             amr->patch[0][lv][ SibPID0+3 ]->sibling[ 7] = PID0+7;
@@ -572,7 +572,7 @@ void SetSiblingInDiffPatchGroup( const int lv, const int PID0, const int SibPID0
          amr->patch[0][lv][ PID0+2 ]->sibling[ 4] = SibPID0+5;
          amr->patch[0][lv][ PID0+2 ]->sibling[19] = SibPID0+6;
          amr->patch[0][lv][ PID0+2 ]->sibling[16] = SibPID0+7;
-         
+
          amr->patch[0][lv][ PID0+4 ]->sibling[18] = SibPID0+3;
          amr->patch[0][lv][ PID0+4 ]->sibling[14] = SibPID0+5;
          amr->patch[0][lv][ PID0+4 ]->sibling[10] = SibPID0+6;
@@ -584,17 +584,17 @@ void SetSiblingInDiffPatchGroup( const int lv, const int PID0, const int SibPID0
             amr->patch[0][lv][ SibPID0+5 ]->sibling[12] = PID0+0;
             amr->patch[0][lv][ SibPID0+6 ]->sibling[15] = PID0+0;
             amr->patch[0][lv][ SibPID0+7 ]->sibling[22] = PID0+0;
-                                                                
+
             amr->patch[0][lv][ SibPID0+3 ]->sibling[17] = PID0+1;
             amr->patch[0][lv][ SibPID0+5 ]->sibling[23] = PID0+1;
             amr->patch[0][lv][ SibPID0+6 ]->sibling[ 5] = PID0+1;
             amr->patch[0][lv][ SibPID0+7 ]->sibling[12] = PID0+1;
-                                                                
+
             amr->patch[0][lv][ SibPID0+3 ]->sibling[13] = PID0+2;
             amr->patch[0][lv][ SibPID0+5 ]->sibling[ 5] = PID0+2;
             amr->patch[0][lv][ SibPID0+6 ]->sibling[24] = PID0+2;
             amr->patch[0][lv][ SibPID0+7 ]->sibling[15] = PID0+2;
-                                                                
+
             amr->patch[0][lv][ SibPID0+3 ]->sibling[25] = PID0+4;
             amr->patch[0][lv][ SibPID0+5 ]->sibling[17] = PID0+4;
             amr->patch[0][lv][ SibPID0+6 ]->sibling[13] = PID0+4;
@@ -630,17 +630,17 @@ void SetSiblingInDiffPatchGroup( const int lv, const int PID0, const int SibPID0
             amr->patch[0][lv][ SibPID0+1 ]->sibling[14] = PID0+3;
             amr->patch[0][lv][ SibPID0+2 ]->sibling[10] = PID0+3;
             amr->patch[0][lv][ SibPID0+4 ]->sibling[18] = PID0+3;
-                                                                
+
             amr->patch[0][lv][ SibPID0+0 ]->sibling[11] = PID0+5;
             amr->patch[0][lv][ SibPID0+1 ]->sibling[20] = PID0+5;
             amr->patch[0][lv][ SibPID0+2 ]->sibling[ 4] = PID0+5;
             amr->patch[0][lv][ SibPID0+4 ]->sibling[14] = PID0+5;
-                                                                
+
             amr->patch[0][lv][ SibPID0+0 ]->sibling[16] = PID0+6;
             amr->patch[0][lv][ SibPID0+1 ]->sibling[ 4] = PID0+6;
             amr->patch[0][lv][ SibPID0+2 ]->sibling[19] = PID0+6;
             amr->patch[0][lv][ SibPID0+4 ]->sibling[10] = PID0+6;
-                                                                
+
             amr->patch[0][lv][ SibPID0+0 ]->sibling[21] = PID0+7;
             amr->patch[0][lv][ SibPID0+1 ]->sibling[11] = PID0+7;
             amr->patch[0][lv][ SibPID0+2 ]->sibling[16] = PID0+7;
@@ -660,7 +660,7 @@ void SetSiblingInDiffPatchGroup( const int lv, const int PID0, const int SibPID0
          {
             amr->patch[0][lv][ SibPID0+4 ]->sibling[ 9] = PID0+0;
             amr->patch[0][lv][ SibPID0+7 ]->sibling[21] = PID0+0;
-                                                                
+
             amr->patch[0][lv][ SibPID0+4 ]->sibling[25] = PID0+3;
             amr->patch[0][lv][ SibPID0+7 ]->sibling[ 9] = PID0+3;
          }
@@ -678,7 +678,7 @@ void SetSiblingInDiffPatchGroup( const int lv, const int PID0, const int SibPID0
          {
             amr->patch[0][lv][ SibPID0+2 ]->sibling[ 8] = PID0+1;
             amr->patch[0][lv][ SibPID0+5 ]->sibling[20] = PID0+1;
-                                                                
+
             amr->patch[0][lv][ SibPID0+2 ]->sibling[24] = PID0+6;
             amr->patch[0][lv][ SibPID0+5 ]->sibling[ 8] = PID0+6;
          }
@@ -696,7 +696,7 @@ void SetSiblingInDiffPatchGroup( const int lv, const int PID0, const int SibPID0
          {
             amr->patch[0][lv][ SibPID0+1 ]->sibling[ 7] = PID0+2;
             amr->patch[0][lv][ SibPID0+6 ]->sibling[19] = PID0+2;
-                                                                
+
             amr->patch[0][lv][ SibPID0+1 ]->sibling[23] = PID0+5;
             amr->patch[0][lv][ SibPID0+6 ]->sibling[ 7] = PID0+5;
          }
@@ -714,7 +714,7 @@ void SetSiblingInDiffPatchGroup( const int lv, const int PID0, const int SibPID0
          {
             amr->patch[0][lv][ SibPID0+0 ]->sibling[ 6] = PID0+4;
             amr->patch[0][lv][ SibPID0+3 ]->sibling[18] = PID0+4;
-                                                                
+
             amr->patch[0][lv][ SibPID0+0 ]->sibling[22] = PID0+7;
             amr->patch[0][lv][ SibPID0+3 ]->sibling[ 6] = PID0+7;
          }
@@ -732,7 +732,7 @@ void SetSiblingInDiffPatchGroup( const int lv, const int PID0, const int SibPID0
          {
             amr->patch[0][lv][ SibPID0+5 ]->sibling[13] = PID0+0;
             amr->patch[0][lv][ SibPID0+7 ]->sibling[24] = PID0+0;
-                                                                
+
             amr->patch[0][lv][ SibPID0+5 ]->sibling[25] = PID0+1;
             amr->patch[0][lv][ SibPID0+7 ]->sibling[13] = PID0+1;
          }
@@ -750,7 +750,7 @@ void SetSiblingInDiffPatchGroup( const int lv, const int PID0, const int SibPID0
          {
             amr->patch[0][lv][ SibPID0+3 ]->sibling[12] = PID0+2;
             amr->patch[0][lv][ SibPID0+6 ]->sibling[22] = PID0+2;
-                                                                
+
             amr->patch[0][lv][ SibPID0+3 ]->sibling[23] = PID0+4;
             amr->patch[0][lv][ SibPID0+6 ]->sibling[12] = PID0+4;
          }
@@ -768,7 +768,7 @@ void SetSiblingInDiffPatchGroup( const int lv, const int PID0, const int SibPID0
          {
             amr->patch[0][lv][ SibPID0+2 ]->sibling[11] = PID0+3;
             amr->patch[0][lv][ SibPID0+4 ]->sibling[20] = PID0+3;
-                                                                
+
             amr->patch[0][lv][ SibPID0+2 ]->sibling[21] = PID0+6;
             amr->patch[0][lv][ SibPID0+4 ]->sibling[11] = PID0+6;
          }
@@ -786,7 +786,7 @@ void SetSiblingInDiffPatchGroup( const int lv, const int PID0, const int SibPID0
          {
             amr->patch[0][lv][ SibPID0+0 ]->sibling[10] = PID0+5;
             amr->patch[0][lv][ SibPID0+1 ]->sibling[18] = PID0+5;
-                                                                
+
             amr->patch[0][lv][ SibPID0+0 ]->sibling[19] = PID0+7;
             amr->patch[0][lv][ SibPID0+1 ]->sibling[10] = PID0+7;
          }
@@ -804,7 +804,7 @@ void SetSiblingInDiffPatchGroup( const int lv, const int PID0, const int SibPID0
          {
             amr->patch[0][lv][ SibPID0+6 ]->sibling[17] = PID0+0;
             amr->patch[0][lv][ SibPID0+7 ]->sibling[23] = PID0+0;
-                                                                
+
             amr->patch[0][lv][ SibPID0+6 ]->sibling[25] = PID0+2;
             amr->patch[0][lv][ SibPID0+7 ]->sibling[17] = PID0+2;
          }
@@ -822,7 +822,7 @@ void SetSiblingInDiffPatchGroup( const int lv, const int PID0, const int SibPID0
          {
             amr->patch[0][lv][ SibPID0+1 ]->sibling[16] = PID0+3;
             amr->patch[0][lv][ SibPID0+4 ]->sibling[19] = PID0+3;
-                                                                
+
             amr->patch[0][lv][ SibPID0+1 ]->sibling[21] = PID0+5;
             amr->patch[0][lv][ SibPID0+4 ]->sibling[16] = PID0+5;
          }
@@ -840,7 +840,7 @@ void SetSiblingInDiffPatchGroup( const int lv, const int PID0, const int SibPID0
          {
             amr->patch[0][lv][ SibPID0+3 ]->sibling[15] = PID0+1;
             amr->patch[0][lv][ SibPID0+5 ]->sibling[22] = PID0+1;
-                                                                
+
             amr->patch[0][lv][ SibPID0+3 ]->sibling[24] = PID0+4;
             amr->patch[0][lv][ SibPID0+5 ]->sibling[15] = PID0+4;
          }
@@ -858,7 +858,7 @@ void SetSiblingInDiffPatchGroup( const int lv, const int PID0, const int SibPID0
          {
             amr->patch[0][lv][ SibPID0+0 ]->sibling[14] = PID0+6;
             amr->patch[0][lv][ SibPID0+2 ]->sibling[18] = PID0+6;
-                                                                
+
             amr->patch[0][lv][ SibPID0+0 ]->sibling[20] = PID0+7;
             amr->patch[0][lv][ SibPID0+2 ]->sibling[14] = PID0+7;
          }
@@ -903,7 +903,7 @@ void SetSiblingInDiffPatchGroup( const int lv, const int PID0, const int SibPID0
          if ( BothSide )
             amr->patch[0][lv][ SibPID0+4 ]->sibling[21] = PID0+3;
       break;
-      
+
 
       case 23:
          amr->patch[0][lv][ PID0+6 ]->sibling[23] = SibPID0+2;
@@ -939,9 +939,9 @@ void SetSiblingInDiffPatchGroup( const int lv, const int PID0, const int SibPID0
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  SetSiblingExternal 
+// Function    :  SetSiblingExternal
 // Description :  Set the sibling indices for the patches adjacent to the simulation domain (for non-periodic B.C. only)
-// 
+//
 // Note        :  If a target sibling patch is an external patch (which lies outside the simulation domain),
 //                the corresponding sibling index is set to "SIB_OFFSET_NONPERIODIC-Sibling", where Sibling
 //                represents the sibling direction of the boundary region.
@@ -955,11 +955,11 @@ void SetSiblingExternal( const int lv, const int NTarget0, const int *TargetPID0
 
 // check
 #  ifdef GAMER_DEBUG
-   if ( NTarget0 > 0  &&  TargetPID0 == NULL )  
+   if ( NTarget0 > 0  &&  TargetPID0 == NULL )
       Aux_Error( ERROR_INFO, "something is wrong ... (NTarget0 = %d) !!\n", NTarget0 );
 #  endif
 
-   
+
 // maximum corner coordinates for the internal patches
    const int MaxIntCr[3] = { amr->BoxScale[0] - PATCH_SIZE*amr->scale[lv],
                              amr->BoxScale[1] - PATCH_SIZE*amr->scale[lv],

@@ -7,13 +7,13 @@
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  LB_FindSonNotHome
-// Description :  Assign son indices for father patches without sons at home (these father patches can either 
+// Description :  Assign son indices for father patches without sons at home (these father patches can either
 //                have no sons or have sons not home)
-// 
-// Note        :  1. Should be applied to both real and buffer patches 
+//
+// Note        :  1. Should be applied to both real and buffer patches
 //                2. For patches with sons living abroad (not at the same rank as iteself), their son indices
 //                   are set to "SON_OFFSET_LB-SonRank", where SonRank represents the MPI rank where their sons live.
-//                   (e.g., if the real son is at rank 123, the son index is set to SON_OFFSET_LB-123=-1123 for 
+//                   (e.g., if the real son is at rank 123, the son index is set to SON_OFFSET_LB-123=-1123 for
 //                   SON_OFFSET_LB==-1000)
 //                   --> All patches with sons will have SonPID != -1
 //                3. This function will search over all father patches with SonPID <= -1
@@ -33,7 +33,7 @@
 void LB_FindSonNotHome( const int FaLv, const bool SearchAllFa, const int NInput, int* TargetFaPID )
 {
 
-// nothing to do for the maximum level   
+// nothing to do for the maximum level
    if ( FaLv == NLEVEL - 1 )  return;
 
 
@@ -116,14 +116,14 @@ void LB_FindSonNotHome( const int FaLv, const bool SearchAllFa, const int NInput
             }
          }
 
-         if ( !External  &&  TRank == MPI_Rank )   
+         if ( !External  &&  TRank == MPI_Rank )
          {
 #           ifdef GAMER_DEBUG
             if ( amr->patch[0][FaLv][FaPID]->son < -1 )
-               Aux_Error( ERROR_INFO, "FaLv %d, FaPID (%d)'s SonPID < -1 !!\n", 
+               Aux_Error( ERROR_INFO, "FaLv %d, FaPID (%d)'s SonPID < -1 !!\n",
                           FaLv, FaPID, amr->patch[0][FaLv][FaPID]->son );
 #           endif
-               
+
             continue;
          }
 
@@ -133,7 +133,7 @@ void LB_FindSonNotHome( const int FaLv, const bool SearchAllFa, const int NInput
 #        endif
 
 //       allocate enough memory
-         if ( NQuery[TRank] >= MemSize_Query[TRank] )  
+         if ( NQuery[TRank] >= MemSize_Query[TRank] )
          {
             MemSize_Query[TRank] += MemUnit_Query[TRank];
             Query_Temp   [TRank]  = (long*)realloc( Query_Temp[TRank], MemSize_Query[TRank]*sizeof(long) );
@@ -149,7 +149,7 @@ void LB_FindSonNotHome( const int FaLv, const bool SearchAllFa, const int NInput
    } // for (int t=0; t<NTargetFa; t++)
 
 // 1.3 sort the query list for different ranks
-   for (int r=0; r<MPI_NRank; r++)  
+   for (int r=0; r<MPI_NRank; r++)
    {
       FaPID_IdxTable[r] = new int [ NQuery[r] ];
 
@@ -188,16 +188,16 @@ void LB_FindSonNotHome( const int FaLv, const bool SearchAllFa, const int NInput
       SendBuf_Query[ Counter ++ ] = Query_Temp[r][t];
 
 // 2.3 send queries
-   MPI_Alltoallv( SendBuf_Query, NQuery, Query_Disp, MPI_LONG, 
+   MPI_Alltoallv( SendBuf_Query, NQuery, Query_Disp, MPI_LONG,
                   RecvBuf_Query, NReply, Reply_Disp, MPI_LONG, MPI_COMM_WORLD );
 
 // 2.4 prepare replies
    for (int r=0; r<MPI_NRank; r++)
-      Mis_Matching_char( amr->NPatchComma[SonLv][1], amr->LB->IdxList_Real[SonLv], NReply[r], 
+      Mis_Matching_char( amr->NPatchComma[SonLv][1], amr->LB->IdxList_Real[SonLv], NReply[r],
                          RecvBuf_Query+Reply_Disp[r], SendBuf_Reply+Reply_Disp[r] );
 
 // 2.5 send replies
-   MPI_Alltoallv( SendBuf_Reply, NReply, Reply_Disp, MPI_CHAR, 
+   MPI_Alltoallv( SendBuf_Reply, NReply, Reply_Disp, MPI_CHAR,
                   RecvBuf_Reply, NQuery, Query_Disp, MPI_CHAR, MPI_COMM_WORLD );
 
 
@@ -260,7 +260,7 @@ void LB_FindSonNotHome( const int FaLv, const bool SearchAllFa, const int NInput
       SonPID = amr->patch[0][FaLv][FaPID]->son;
 
       if ( SonPID >= SonNReal )
-         Aux_Error( ERROR_INFO, "Check 2, FaLv %d: FaPID (%d) -> son (%d) >= SonNReal (%d) !!\n", 
+         Aux_Error( ERROR_INFO, "Check 2, FaLv %d: FaPID (%d) -> son (%d) >= SonNReal (%d) !!\n",
                     FaLv, FaPID, SonPID, SonNReal );
    }
 
@@ -273,7 +273,7 @@ void LB_FindSonNotHome( const int FaLv, const bool SearchAllFa, const int NInput
       if ( amr->patch[0][FaLv][FaPID]->son != SonPID0 )
          Aux_Error( ERROR_INFO, "Check 3, SonLv %d: FaPID (%d) -> son (%d) != SonPID (%d) -> SonPID0 (%d) !!\n",
                     SonLv, FaPID, amr->patch[0][FaLv][FaPID]->son, SonPID, SonPID0 );
-   }   
+   }
 
 // check 4 : son's father = itself
    for (FaPID=0; FaPID<NFaPatch; FaPID++)
@@ -302,8 +302,8 @@ void LB_FindSonNotHome( const int FaLv, const bool SearchAllFa, const int NInput
       {
          Corner_Fa = amr->patch[0][FaLv][FaPID]->corner;
 
-         if (  Corner_Son[0] == Corner_Fa[0]  &&  
-               Corner_Son[1] == Corner_Fa[1]  && 
+         if (  Corner_Son[0] == Corner_Fa[0]  &&
+               Corner_Son[1] == Corner_Fa[1]  &&
                Corner_Son[2] == Corner_Fa[2]     )
          {
             if ( amr->patch[0][SonLv][SonPID0]->father != FaPID )
