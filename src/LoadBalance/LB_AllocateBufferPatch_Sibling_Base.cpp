@@ -16,7 +16,7 @@
 //                   but it is faster
 //                4. All buffer patches should be removed in advance
 //
-// Parameter   :  None 
+// Parameter   :  None
 //-------------------------------------------------------------------------------------------------------
 void LB_AllocateBufferPatch_Sibling_Base()
 {
@@ -102,7 +102,7 @@ void LB_AllocateBufferPatch_Sibling_Base()
 //                                      = PaddedCr1D + Disp
 //             (because PaddedCr1D + Disp >= 0; ==> reduced modulo again)
                FaPaddedCr1D[ NAlloc_Temp ++ ] = amr->patch[0][0][PID0]->PaddedCr1D + (ulong)Cr1D_Disp[k+1][j+1][i+1];
-            } 
+            }
          }
 
          else // non-periodic B.C.
@@ -116,7 +116,7 @@ void LB_AllocateBufferPatch_Sibling_Base()
                }
 
                FaPaddedCr1D[ NAlloc_Temp ++ ] = amr->patch[0][0][PID0]->PaddedCr1D + (ulong)Cr1D_Disp[k+1][j+1][i+1];
-            } 
+            }
          } // if ( OPT__BC_FLU[0] == BC_FLU_PERIODIC ) ... else ...
 
       }}} // k,j,i
@@ -136,7 +136,7 @@ void LB_AllocateBufferPatch_Sibling_Base()
 
 
 // 4. allocate sibling-buffer patches
-// ==========================================================================================   
+// ==========================================================================================
    int FaCr3D[3];
 
    for (int t=0; t<NAlloc; t++)
@@ -170,7 +170,7 @@ void LB_AllocateBufferPatch_Sibling_Base()
 
 
 // 5. record the padded 1D corner coordinates (which can be overwritten by "LB_AllocateBufferPatch_Father")
-// ==========================================================================================   
+// ==========================================================================================
    const int NPatch = amr->NPatchComma[0][2];
 
    amr->LB->PaddedCr1DList         [0] = (ulong*)realloc( amr->LB->PaddedCr1DList         [0],
@@ -189,7 +189,7 @@ void LB_AllocateBufferPatch_Sibling_Base()
    {
       if ( amr->LB->PaddedCr1DList[0][t] == amr->LB->PaddedCr1DList[0][t-1] )
          Aux_Error( ERROR_INFO, "duplicate patches at lv 0, PaddedCr1D %lu, PID = %d and %d !!\n",
-                    amr->LB->PaddedCr1DList[0][t], amr->LB->PaddedCr1DList_IdxTable[0][t], 
+                    amr->LB->PaddedCr1DList[0][t], amr->LB->PaddedCr1DList_IdxTable[0][t],
                     amr->LB->PaddedCr1DList_IdxTable[0][t-1] );
    }
 #  endif

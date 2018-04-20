@@ -17,7 +17,7 @@ void LB_AllocateFluxArray( const int FaLv )
 {
 
 // check
-   if ( !amr->WithFlux ) 
+   if ( !amr->WithFlux )
       Aux_Message( stderr, "WARNING : why invoking %s when amr->WithFlux is off ??\n", __FUNCTION__ );
 
 
@@ -120,7 +120,7 @@ void LB_AllocateFluxArray( const int FaLv )
    } // if ( NPatchTotal[SonLv] != 0 )
 
 
-// 3. sort the recv list 
+// 3. sort the recv list
 // ============================================================================================================
    for (int r=0; r<MPI_NRank; r++)
    {
@@ -144,9 +144,9 @@ void LB_AllocateFluxArray( const int FaLv )
       Mis_Heapsort( LB_RecvF_NList[r], TempIDList, TempIdxTable );
 
       for (int t=1; t<LB_RecvF_NList[r]; t++)
-         if ( TempIDList[t] == TempIDList[t-1]  &&  
+         if ( TempIDList[t] == TempIDList[t-1]  &&
               Temp_SibList[r][ TempIdxTable[t] ] == Temp_SibList[r][ TempIdxTable[t-1] ])
-            Aux_Error( ERROR_INFO, "FaLv %d, Rank %d, repeated recv PID %d and Sib %d !!\n", 
+            Aux_Error( ERROR_INFO, "FaLv %d, Rank %d, repeated recv PID %d and Sib %d !!\n",
                        FaLv, r, TempIDList[t], Temp_SibList[r][ TempIdxTable[t] ] );
 
       delete [] TempIDList;
@@ -158,8 +158,8 @@ void LB_AllocateFluxArray( const int FaLv )
 // 4. broadcast the recv list to all other ranks
 // ============================================================================================================
    int   Send_Disp_F[MPI_NRank], Recv_Disp_F[MPI_NRank], NSend_Total_F, NRecv_Total_F, Counter;
-   int  *SendBuf_SibID=NULL, *RecvBuf_SibID=NULL; 
-   long *SendBuf_LBIdx=NULL, *RecvBuf_LBIdx=NULL; 
+   int  *SendBuf_SibID=NULL, *RecvBuf_SibID=NULL;
+   long *SendBuf_LBIdx=NULL, *RecvBuf_LBIdx=NULL;
 
 // 4.1 broadcast the number of elements received from different ranks
    MPI_Alltoall( LB_RecvF_NList, 1, MPI_INT, LB_SendF_NList, 1, MPI_INT, MPI_COMM_WORLD );
@@ -190,10 +190,10 @@ void LB_AllocateFluxArray( const int FaLv )
    }
 
 // 4.3 broadcast the recv list
-   MPI_Alltoallv( SendBuf_SibID, LB_RecvF_NList, Send_Disp_F, MPI_INT, 
+   MPI_Alltoallv( SendBuf_SibID, LB_RecvF_NList, Send_Disp_F, MPI_INT,
                   RecvBuf_SibID, LB_SendF_NList, Recv_Disp_F, MPI_INT,  MPI_COMM_WORLD );
 
-   MPI_Alltoallv( SendBuf_LBIdx, LB_RecvF_NList, Send_Disp_F, MPI_LONG, 
+   MPI_Alltoallv( SendBuf_LBIdx, LB_RecvF_NList, Send_Disp_F, MPI_LONG,
                   RecvBuf_LBIdx, LB_SendF_NList, Recv_Disp_F, MPI_LONG, MPI_COMM_WORLD );
 
 
@@ -221,7 +221,7 @@ void LB_AllocateFluxArray( const int FaLv )
                         RecvBuf_LBIdx+Recv_Disp_F[r], Match_F );
 
 //    check : all target patches must be found
-      #ifdef GAMER_DEBUG       
+      #ifdef GAMER_DEBUG
       for (int t=0; t<LB_SendF_NList[r]; t++)
          if ( Match_F[t] == -1 )
             Aux_Error( ERROR_INFO, "FaLv %d, TRank %d, LB_Idx %ld found no matching patches !!\n",
@@ -248,11 +248,11 @@ void LB_AllocateFluxArray( const int FaLv )
             Aux_Error( ERROR_INFO, "TRank %d, FaLv %d, SibPID %d, TPID (%d) < 0 !!\n", r, FaLv, SibPID, TPID );
 
          if ( TPID < FaNReal )
-            Aux_Error( ERROR_INFO, "TRank %d, FaLv %d, SibPID %d, TPID %d is not a buffer patch !!\n", 
+            Aux_Error( ERROR_INFO, "TRank %d, FaLv %d, SibPID %d, TPID %d is not a buffer patch !!\n",
                        r, FaLv, SibPID, TPID );
 
          if ( amr->patch[0][FaLv][TPID]->son != -1 )
-            Aux_Error( ERROR_INFO, "TRank %d, FaLv %d, TPID %d has son (SonPID = %d) !!\n", 
+            Aux_Error( ERROR_INFO, "TRank %d, FaLv %d, TPID %d has son (SonPID = %d) !!\n",
                        r, FaLv, TPID, amr->patch[0][FaLv][TPID]->son );
 #        endif
 

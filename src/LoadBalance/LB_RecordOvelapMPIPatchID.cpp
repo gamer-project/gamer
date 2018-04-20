@@ -8,7 +8,7 @@
 //-------------------------------------------------------------------------------------------------------
 // Function    :  LB_RecordOverlapMPIPatchID
 // Description :  Construct the patch indices for overlapping MPI time with CPU/GPU computation
-// 
+//
 // Note        :  This function must be invoked AFTER the function "LB_RecordExchangeDataPatchID"
 //
 // Parameter   :  Lv : Target refinement level for recording lists
@@ -104,7 +104,7 @@ void LB_RecordOverlapMPIPatchID( const int Lv )
       if ( PotSyncList[t] )   amr->LB->OverlapMPI_PotSyncPID0 [Lv][ amr->LB->OverlapMPI_PotSyncN [Lv] ++ ] = PID0;
       else                    amr->LB->OverlapMPI_PotAsyncPID0[Lv][ amr->LB->OverlapMPI_PotAsyncN[Lv] ++ ] = PID0;
 #     endif
-   } 
+   }
 
 
 // free memory
