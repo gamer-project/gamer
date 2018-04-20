@@ -23,8 +23,8 @@ ulong LB_Hilbert_c2i( ulong const coord[], const uint NBits );
 //                   return the same value if NBits1%3 = NBits2%3
 //                   --> LB_Hilbert_c2i( Coord, NBits1 ) = LB_Hilbert_c2i( Coord, NBits1+3 ) = LB_Hilbert_c2i( Coord, NBits1+6 ) ...
 //
-// Parameter   :  Check :  Check whether the input corner lies in the simulation box
-//                         --> effective only in the DEBUG mode
+// Parameter   :  Check : Check whether the input corner lies in the simulation box
+//                        --> effective only in the DEBUG mode
 //
 // Return      :  1D load-balance indices
 //-------------------------------------------------------------------------------------------------------
@@ -77,8 +77,8 @@ long LB_Corner2Index( const int lv, const int Corner[], const Check_t Check )
 //                   --> Hilbert curve in different levels have the similar indexing order in space
 //                   --> Son patches are more likely to be put in the same MPI rank as their father patches
 //
-// Parameter   :  Check :  Check whether the output corner lies in the simulation box
-//                         --> effective only in the DEBUG mode
+// Parameter   :  Check : Check whether the output corner lies in the simulation box
+//                        --> effective only in the DEBUG mode
 //-------------------------------------------------------------------------------------------------------
 void LB_Index2Corner( const int lv, const long LB_Idx, int Corner[], const Check_t Check )
 {
@@ -115,16 +115,14 @@ void LB_Index2Corner( const int lv, const long LB_Idx, int Corner[], const Check
 //
 // Note        :  "LB_CutPoint[lv]" must be prepared in advance
 //
-// Return      :  success  : target MPI rank
-//                fail     : -1
+// Parameter   :  lv     : Refinement level of the input LB_Idx
+//                LB_Idx : Space-filling-curve index for load balance
+//                Check  : Check whether or not the input LB_Idx lies in the range of LB_CutPoint
+//                         (this check may fail during the grid refinement --> if that's the case,
+//                          turn this check off during the grid refinement)
 //
-// Parameter   :  lv       : Refinement level of the input LB_Idx
-//                LB_Idx   : Space-filling-curve index for load balance
-//                Check    : Check whether or not the input LB_Idx lies in the range of LB_CutPoint
-//                           (this check may fail during the grid refinement --> if that's the case,
-//                            turn this check off during the grid refinement)
-//
-// Return      :  MPI rank
+// Return      :  success : target MPI rank
+//                fail    : -1
 //-------------------------------------------------------------------------------------------------------
 int LB_Index2Rank( const int lv, const long LB_Idx, const Check_t Check )
 {
