@@ -100,6 +100,7 @@ long  LB_Corner2Index( const int lv, const int Corner[], const Check_t Check );
 //                                  --> each PaddedCr1D defines a unique 3D position
 //                                  --> patches at different levels with the same PaddedCr1D have the same
 //                                      3D corner coordinates
+//                                  --> this number is independent of periodicity (because of the padded patches)
 //                LB_Idx          : Space-filling-curve index for load balance
 //                NPar            : Number of particles belonging to this leaf patch
 //                ParListSize     : Size of the array ParList (ParListSize can be >= NPar)
@@ -300,8 +301,8 @@ struct patch_t
       }
 #     endif
 
-      PaddedCr1D = Mis_Idx3D2Idx1D( BoxNScale_Padded, Cr_Padded );
-      LB_Idx     = LB_Corner2Index( lv, corner, CHECK_OFF );   // this number always assumes periodicity
+      PaddedCr1D = Mis_Idx3D2Idx1D( BoxNScale_Padded, Cr_Padded );   // independent of periodicity
+      LB_Idx     = LB_Corner2Index( lv, corner, CHECK_OFF );         // always assumes periodicity
 
 //    set the patch edge
       const int PScale = PS1*( 1<<(TOP_LEVEL-lv) );
