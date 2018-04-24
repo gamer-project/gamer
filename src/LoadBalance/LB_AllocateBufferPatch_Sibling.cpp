@@ -9,11 +9,11 @@
 // Function    :  LB_AllocateBufferPatch_Sibling
 // Description :  Allocate sibling-buffer patches for all real patches at lv
 //
-// Note        :  1. This function should be invoked BEFORE LB_AllocateBufferPatch_Father
-//                2. For the base level, an alternative function "LB_AllocateBufferPatch_Sibling_Base"
+// Note        :  1. This function should be invoked BEFORE LB_AllocateBufferPatch_Father()
+//                2. For the base level, an alternative function LB_AllocateBufferPatch_Sibling_Base()
 //                   will be invoked (which should be faster)
-//                3. During grid refinement, an alternative function "LB_Refine_AllocateBufferPatch_Sibling"
-//                   will be inovked (which should be faster)
+//                3. During grid refinement, an alternative function LB_Refine_AllocateBufferPatch_Sibling()
+//                   will be invoked (which should be faster)
 //                4. All buffer patches should be removed in advance
 //
 // Parameter   :  lv : Target refinement level to allocate sibling-buffer patches
@@ -41,7 +41,7 @@ void LB_AllocateBufferPatch_Sibling( const int lv )
                                amr->BoxScale[1]/PGScale + 2,
                                amr->BoxScale[2]/PGScale + 2 };
 
-   int  *Cr0, Cr[3], Cr_In[3], TRank;
+   int  *Cr0, Cr[3], TRank;
    long  LB_Idx, Coord1D;
    int   MemUnit_Int[MPI_NRank], MemSize_Int[MPI_NRank], MemUnit_Ext[MPI_NRank], MemSize_Ext[MPI_NRank];
    int   MemUnit_Query[MPI_NRank], MemSize_Query[MPI_NRank];
@@ -50,12 +50,12 @@ void LB_AllocateBufferPatch_Sibling( const int lv )
    int  *Ext_IdxTable[MPI_NRank];
    int   NQuery_Temp[MPI_NRank], NQuery[MPI_NRank], Int_NQuery_Temp[MPI_NRank], Int_NQuery[MPI_NRank];
    int   Ext_NQuery_Temp[MPI_NRank], Ext_NQuery[MPI_NRank];
-   bool  External; // true --> the buffer patch lies outside the simulatio box
+   bool  Internal, Allocate;
 
 
 // 1. prepare send
 // ==========================================================================================
-// 1.1 set memory size for the function "realloc"
+// 1.1 set memory size for realloc()
    for (int r=0; r<MPI_NRank; r++)
    {
       MemUnit_Query  [r] = amr->NPatchComma[lv][1];   // set arbitrarily
@@ -85,36 +85,44 @@ void LB_AllocateBufferPatch_Sibling( const int lv )
    {
       Cr0 = amr->patch[0][lv][PID0]->corner;
 
-      for (int k=-1; k<=1; k++)  {  Cr   [2] = Cr0[2] + k*PGScale;
-                                    Cr_In[2] = ( Cr[2] + amr->BoxScale[2] ) % amr->BoxScale[2];
+      for (int k=-1; k<=1; k++)  {  Cr[2] = Cr0[2] + k*PGScale;
+      for (int j=-1; j<=1; j++)  {  Cr[1] = Cr0[1] + j*PGScale;
+      for (int i=-1; i<=1; i++)  {  Cr[0] = Cr0[0] + i*PGScale;
 
-      for (int j=-1; j<=1; j++)  {  Cr   [1] = Cr0[1] + j*PGScale;
-                                    Cr_In[1] = ( Cr[1] + amr->BoxScale[1] ) % amr->BoxScale[1];
-
-      for (int i=-1; i<=1; i++)  {  Cr   [0] = Cr0[0] + i*PGScale;
-                                    Cr_In[0] = ( Cr[0] + amr->BoxScale[0] ) % amr->BoxScale[0];
-
-         LB_Idx = LB_Corner2Index( lv, Cr_In, CHECK_ON );
+         LB_Idx = LB_Corner2Index( lv, Cr, CHECK_OFF );
 
 //       ignore LB_Idx lying outside the range
          if ( LB_Idx < amr->LB->CutPoint[lv][0]  ||  LB_Idx >= amr->LB->CutPoint[lv][MPI_NRank] )  continue;
 
          TRank = LB_Index2Rank( lv, LB_Idx, CHECK_ON );
 
-//       check whether it is an internal or external patch
-         External = false;
+
+//       criteria to allocate a buffer patch:
+//       --> internal patch: residing in another rank
+//           external patch: the external direction is periodic
+//       --> internal patches are defined as those with corner[] within the simulation domain
+         Internal = true;
+         Allocate = true;
+
          for (int d=0; d<3; d++)
          {
-            if ( Cr[d] != Cr_In[d] )
+            if ( Cr[d] < 0  ||  Cr[d] >= amr->BoxScale[d] )
             {
-               External = true;
-               break;
+               Internal = false;
+
+               if ( OPT__BC_FLU[2*d] != BC_FLU_PERIODIC )
+               {
+                  Allocate = false;
+                  break;
+               }
             }
          }
 
-//       no external buffer patches will be allocated for non-periodic B.C.
-         if (   (  OPT__BC_FLU[0] == BC_FLU_PERIODIC  &&  (  External || TRank != MPI_Rank )  )   ||
-                (  OPT__BC_FLU[0] != BC_FLU_PERIODIC  &&  ( !External && TRank != MPI_Rank )  )     )
+         if ( Internal )   Allocate = ( TRank != MPI_Rank );
+
+
+//       record the buffer patches to be allocated
+         if ( Allocate )
          {
 //          a. query list (internal + external buffer patches)
             if ( NQuery_Temp[TRank] >= MemSize_Query[TRank] )
@@ -125,8 +133,20 @@ void LB_AllocateBufferPatch_Sibling( const int lv )
 
             Query_Temp[TRank][ NQuery_Temp[TRank] ++ ] = LB_Idx;
 
-//          b. external buffer patch list
-            if ( External )
+//          b. internal buffer patch list
+            if ( Internal )
+            {
+               if ( Int_NQuery_Temp[TRank] >= MemSize_Int[TRank] )
+               {
+                  MemSize_Int[TRank] += MemUnit_Int[TRank];
+                  Int_LBIdx  [TRank]  = (long*)realloc( Int_LBIdx[TRank], MemSize_Int[TRank]*sizeof(long) );
+               }
+
+               Int_LBIdx[TRank][ Int_NQuery_Temp[TRank] ++ ] = LB_Idx;
+            }
+
+//          c. external buffer patch list
+            else
             {
                if ( Ext_NQuery_Temp[TRank] >= MemSize_Ext[TRank] )
                {
@@ -144,19 +164,7 @@ void LB_AllocateBufferPatch_Sibling( const int lv )
                Ext_NQuery_Temp[TRank] ++;
             }
 
-//          c. internal buffer patch list
-            else
-            {
-               if ( Int_NQuery_Temp[TRank] >= MemSize_Int[TRank] )
-               {
-                  MemSize_Int[TRank] += MemUnit_Int[TRank];
-                  Int_LBIdx  [TRank]  = (long*)realloc( Int_LBIdx[TRank], MemSize_Int[TRank]*sizeof(long) );
-               }
-
-               Int_LBIdx[TRank][ Int_NQuery_Temp[TRank] ++ ] = LB_Idx;
-            }
-
-         } // if ( TRank != MPI_Rank  ||  External )
+         } // if ( Allocate )
       }}} // k,j,i
    } // for (int PID0=0; PID0<amr->NPatchComma[lv][1]; PID0+=8)
 
@@ -266,7 +274,7 @@ void LB_AllocateBufferPatch_Sibling( const int lv )
 
 // 3. allocate buffer patches
 // ==========================================================================================
-   int  Int_Counter, Ext_Counter, Cr3D[3], Counter2=0;
+   int  Int_Counter, Ext_Counter, Counter2=0;
    long Int_Target, Ext_Target, Cr1D;
 
    for (int r=0; r<MPI_NRank; r++)
@@ -289,34 +297,25 @@ void LB_AllocateBufferPatch_Sibling( const int lv )
 
          if ( RecvBuf_Reply[ Counter2 ++ ] == 1 )
          {
+//          note that a given LB_Idx can map to both internal and external patches at the same time
             if ( LB_Idx == Int_Target ) // internal buffer patches
             {
-               LB_Index2Corner( lv, LB_Idx, Cr3D, CHECK_ON );
+               LB_Index2Corner( lv, LB_Idx, Cr, CHECK_ON );
 
 //             father patch is still unkown, data array is not allocated yet
-               amr->pnew( lv, Cr3D[0],        Cr3D[1],        Cr3D[2],        -1, false, false );
-               amr->pnew( lv, Cr3D[0]+PScale, Cr3D[1],        Cr3D[2],        -1, false, false );
-               amr->pnew( lv, Cr3D[0],        Cr3D[1]+PScale, Cr3D[2],        -1, false, false );
-               amr->pnew( lv, Cr3D[0],        Cr3D[1],        Cr3D[2]+PScale, -1, false, false );
-               amr->pnew( lv, Cr3D[0]+PScale, Cr3D[1]+PScale, Cr3D[2],        -1, false, false );
-               amr->pnew( lv, Cr3D[0],        Cr3D[1]+PScale, Cr3D[2]+PScale, -1, false, false );
-               amr->pnew( lv, Cr3D[0]+PScale, Cr3D[1],        Cr3D[2]+PScale, -1, false, false );
-               amr->pnew( lv, Cr3D[0]+PScale, Cr3D[1]+PScale, Cr3D[2]+PScale, -1, false, false );
+               amr->pnew( lv, Cr[0],        Cr[1],        Cr[2],        -1, false, false );
+               amr->pnew( lv, Cr[0]+PScale, Cr[1],        Cr[2],        -1, false, false );
+               amr->pnew( lv, Cr[0],        Cr[1]+PScale, Cr[2],        -1, false, false );
+               amr->pnew( lv, Cr[0],        Cr[1],        Cr[2]+PScale, -1, false, false );
+               amr->pnew( lv, Cr[0]+PScale, Cr[1]+PScale, Cr[2],        -1, false, false );
+               amr->pnew( lv, Cr[0],        Cr[1]+PScale, Cr[2]+PScale, -1, false, false );
+               amr->pnew( lv, Cr[0]+PScale, Cr[1],        Cr[2]+PScale, -1, false, false );
+               amr->pnew( lv, Cr[0]+PScale, Cr[1]+PScale, Cr[2]+PScale, -1, false, false );
 
                amr->NPatchComma[lv][2] += 8;
 
                Int_Counter ++;
                Int_Target = ( Int_Counter < Int_NQuery[r] ) ? Int_LBIdx[r][Int_Counter] : -1;
-
-//             check : no external buffer patches should be allocated for the non-periodic B.C.
-#              ifdef GAMER_DEBUG
-               if ( OPT__BC_FLU[0] != BC_FLU_PERIODIC )
-               {
-                  for (int d=0; d<3; d++)
-                  if ( Cr3D[d] < 0  ||  Cr3D[d] >= amr->BoxScale[d] )
-                     Aux_Error( ERROR_INFO, "Cr3D[%d] = %d lies outside the simulation box for the non-periodic B.C. !!\n" );
-               }
-#              endif
             }
 
             if ( LB_Idx == Ext_Target ) // external buffer patches
@@ -324,25 +323,35 @@ void LB_AllocateBufferPatch_Sibling( const int lv )
 //             loop over all external buffer patches mapping to the same internal real patches
                do
                {
-                  Cr1D    = Ext_Coord1D[r][ Ext_IdxTable[r][Ext_Counter] ];
-                  Cr3D[0] = PGScale*( -1 + Cr1D%NPG_Padded[0]                               );
-                  Cr3D[1] = PGScale*( -1 + Cr1D%(NPG_Padded[0]*NPG_Padded[1])/NPG_Padded[0] );
-                  Cr3D[2] = PGScale*( -1 + Cr1D/(NPG_Padded[0]*NPG_Padded[1])               );
+                  Cr1D  = Ext_Coord1D[r][ Ext_IdxTable[r][Ext_Counter] ];
+                  Cr[0] = PGScale*( -1 + Cr1D%NPG_Padded[0]                               );
+                  Cr[1] = PGScale*( -1 + Cr1D%(NPG_Padded[0]*NPG_Padded[1])/NPG_Padded[0] );
+                  Cr[2] = PGScale*( -1 + Cr1D/(NPG_Padded[0]*NPG_Padded[1])               );
 
 //                father patch is still unkown, data array is not allocated yet
-                  amr->pnew( lv, Cr3D[0],        Cr3D[1],        Cr3D[2],        -1, false, false );
-                  amr->pnew( lv, Cr3D[0]+PScale, Cr3D[1],        Cr3D[2],        -1, false, false );
-                  amr->pnew( lv, Cr3D[0],        Cr3D[1]+PScale, Cr3D[2],        -1, false, false );
-                  amr->pnew( lv, Cr3D[0],        Cr3D[1],        Cr3D[2]+PScale, -1, false, false );
-                  amr->pnew( lv, Cr3D[0]+PScale, Cr3D[1]+PScale, Cr3D[2],        -1, false, false );
-                  amr->pnew( lv, Cr3D[0],        Cr3D[1]+PScale, Cr3D[2]+PScale, -1, false, false );
-                  amr->pnew( lv, Cr3D[0]+PScale, Cr3D[1],        Cr3D[2]+PScale, -1, false, false );
-                  amr->pnew( lv, Cr3D[0]+PScale, Cr3D[1]+PScale, Cr3D[2]+PScale, -1, false, false );
+                  amr->pnew( lv, Cr[0],        Cr[1],        Cr[2],        -1, false, false );
+                  amr->pnew( lv, Cr[0]+PScale, Cr[1],        Cr[2],        -1, false, false );
+                  amr->pnew( lv, Cr[0],        Cr[1]+PScale, Cr[2],        -1, false, false );
+                  amr->pnew( lv, Cr[0],        Cr[1],        Cr[2]+PScale, -1, false, false );
+                  amr->pnew( lv, Cr[0]+PScale, Cr[1]+PScale, Cr[2],        -1, false, false );
+                  amr->pnew( lv, Cr[0],        Cr[1]+PScale, Cr[2]+PScale, -1, false, false );
+                  amr->pnew( lv, Cr[0]+PScale, Cr[1],        Cr[2]+PScale, -1, false, false );
+                  amr->pnew( lv, Cr[0]+PScale, Cr[1]+PScale, Cr[2]+PScale, -1, false, false );
 
                   amr->NPatchComma[lv][2] += 8;
 
                   Ext_Counter ++;
                   Ext_Target = ( Ext_Counter < Ext_NQuery[r] ) ? Ext_LBIdx[r][Ext_Counter] : -1;
+
+//                check : no external buffer patches should be allocated for the non-periodic B.C.
+#                 ifdef GAMER_DEBUG
+                  for (int d=0; d<3; d++)
+                  {
+                     if (  OPT__BC_FLU[2*d] != BC_FLU_PERIODIC  &&  ( Cr[d] < 0 || Cr[d] >= amr->BoxScale[d] )  )
+                        Aux_Error( ERROR_INFO, "Cr[%d] = %d lies outside the simulation box for non-periodic BC !!\n",
+                                   d, Cr[d] );
+                  }
+#                 endif
                }
                while ( Ext_Target == Ext_LBIdx[r][Ext_Counter-1] );
 
@@ -351,6 +360,7 @@ void LB_AllocateBufferPatch_Sibling( const int lv )
 
          else
          {
+//          note that a given LB_Idx can map to both internal and external patches at the same time
             if ( LB_Idx == Int_Target ) // skip the non-existing internal buffer patches
             {
                Int_Counter ++;
