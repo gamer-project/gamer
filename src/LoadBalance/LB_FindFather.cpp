@@ -9,9 +9,9 @@
 // Function    :  LB_FindFather
 // Description :  Construct the patch relation : son <-> father
 //
-// Note        :  1. LB_PaddedCr1DList and LB_PaddedCr1DList_IdxTable must be properly prepared
+// Note        :  1. LB_PaddedCr1DList[] and LB_PaddedCr1DList_IdxTable[] must be properly prepared
 //                   at SonLv and FaLv
-//                2. Father-buffer patches should be allocated in advance by "LB_AllocateBufferPatch_Father"
+//                2. Father-buffer patches should be allocated in advance by LB_AllocateBufferPatch_Father()
 //                3. One should find father patches only for the "real" patches at SonLv (applying to
 //                   sibling-buffer and father-buffer patches is not necessary)
 //                   --> Father patches found by this function will never be "external" patches
@@ -21,12 +21,12 @@
 //                6. This function does NOT initialize son indices as -1 for all patches at FaLv
 //                7. This function does NOT initialize father indices as -1 for all patches at SonLv
 //
-// Parameter   :  SonLv          : Target refinement level of sons
-//                SearchAllSon   : Search over all son patches at SonLv
-//                NInput         : Number of target son patches (with LocalID==0) in "TargetSonPID0"
-//                                 (useful only if SearchAllSon == false)
-//                TargetSonPID0  : Lists recording all target son patches (with LocalID==0)
-//                                 (useful only if SearchAllSon == false)
+// Parameter   :  SonLv         : Target refinement level of sons
+//                SearchAllSon  : Search over all son patches at SonLv
+//                NInput        : Number of target son patches (with LocalID==0) in "TargetSonPID0"
+//                                (useful only if SearchAllSon == false)
+//                TargetSonPID0 : Lists recording all target son patches (with LocalID==0)
+//                                (useful only if SearchAllSon == false)
 //-------------------------------------------------------------------------------------------------------
 void LB_FindFather( const int SonLv, const bool SearchAllSon, const int NInput, int* TargetSonPID0 )
 {
@@ -118,10 +118,8 @@ void LB_FindFather( const int SonLv, const bool SearchAllSon, const int NInput, 
          amr->patch[0][FaLv][FaPID]->son = SonPID0;
       }
 
-#     ifdef GAMER_DEBUG
       else // find no father (should NOT happen for any real patches)
          Aux_Error( ERROR_INFO, "SonLv %d, SonPID0 %d found no father !!\n", SonLv, SonPID0 );
-#     endif
    }
 
 
