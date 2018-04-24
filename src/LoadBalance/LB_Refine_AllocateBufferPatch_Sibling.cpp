@@ -9,10 +9,10 @@
 // Function    :  LB_Refine_AllocateBufferPatch_Sibling
 // Description :  Allocate sibling-buffer patches for all real patches at SonLv
 //
-// Note        :  1. This function is invoked by the function "LB_Refine_AllocateNewPatch"
-//                   --> Alternative function of LB_AllocateBufferPatch_Sibling
+// Note        :  1. This function is invoked by LB_Refine_AllocateNewPatch()
+//                   --> Alternative function of LB_AllocateBufferPatch_Sibling()
 //                   --> Faster
-//                2. This function should be invoked BEFORE LB_AllocateBufferPatch_Father
+//                2. This function should be invoked BEFORE LB_AllocateBufferPatch_Father()
 //                   --> There should be no father-buffer patches at SonLv
 //                   --> amr->num[SonLv] should be equal to amr->NPatchComma[SonLv][2]
 //                3. This function assumes that all real and buffer patches at SonLv-1 have been allocated,
