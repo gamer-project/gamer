@@ -9,10 +9,9 @@
 // Function    :  LB_AllocateBufferPatch_Sibling_Base
 // Description :  Allocate sibling-buffer patches for all real patches at the base level
 //
-// Note        :  1. This function should be invoked BEFORE LB_AllocateBufferPatch_Father
-//                2. This function are invoked by "LB_AllocateBufferPatch_Sibling" and
-//                   "LB_Refine_AllocateBufferPatch_Sibling"
-//                3. This function should give exactly the same results as "LB_AllocateBufferPatch_Sibling( 0 )"
+// Note        :  1. This function should be invoked BEFORE LB_AllocateBufferPatch_Father()
+//                2. This function is invoked by LB_AllocateBufferPatch_Sibling()
+//                3. This function should give exactly the same results as LB_AllocateBufferPatch_Sibling( 0 )
 //                   but it is faster
 //                4. All buffer patches should be removed in advance
 //
@@ -53,9 +52,9 @@ void LB_AllocateBufferPatch_Sibling_Base()
    const int PScale  = PATCH_SIZE*amr->scale[0];
    const int PGScale = 2*PScale;
 
-   int   Cr[3], TRank, *Cr0;
-   long  LBIdx;
-   bool  External;
+   int  Cr[3], TRank, *Cr0;
+   long LBIdx;
+   bool Internal, Allocate;
 
    int    MemSize = MemUnit, NAlloc_Temp = 0;
    ulong *FaPaddedCr1D = (ulong*)malloc( MemSize*sizeof(ulong) );
@@ -69,31 +68,43 @@ void LB_AllocateBufferPatch_Sibling_Base()
       for (int j=-1; j<=1; j++)   {  Cr[1] = Cr0[1] + j*PGScale;
       for (int i=-1; i<=1; i++)   {  Cr[0] = Cr0[0] + i*PGScale;
 
-//       determine the rank where the target patches are located
+//       determine the host rank of the target patch
          LBIdx = LB_Corner2Index( 0, Cr, CHECK_OFF );
          TRank = LB_Index2Rank( 0, LBIdx, CHECK_ON );
 
-//       check whether it is an internal or external patch
-         External = false;
+
+//       criteria to allocate a buffer patch:
+//       --> internal patch: residing in another rank
+//           external patch: the external direction is periodic
+//       --> internal patches are defined as those with corner[] within the simulation domain
+         Internal = true;
+         Allocate = true;
+
          for (int d=0; d<3; d++)
          {
             if ( Cr[d] < 0  ||  Cr[d] >= amr->BoxScale[d] )
             {
-               External = true;
-               break;
+               Internal = false;
+
+               if ( OPT__BC_FLU[2*d] != BC_FLU_PERIODIC )
+               {
+                  Allocate = false;
+                  break;
+               }
             }
          }
 
-//       record the padded 1D corner coordinates of the sibling-buffer patches to be allocated
-         if ( OPT__BC_FLU[0] == BC_FLU_PERIODIC )  // periodic B.C.
+         if ( Internal )   Allocate = ( TRank != MPI_Rank );
+
+
+//       record the padded 1D corner coordinates of the sibling-buffer patch to be allocated
+         if ( Allocate )
          {
-            if ( External  ||  TRank != MPI_Rank )
+            if ( NAlloc_Temp >= MemSize )
             {
-               if ( NAlloc_Temp >= MemSize )
-               {
-                  MemSize      += MemUnit;
-                  FaPaddedCr1D  = (ulong*)realloc( FaPaddedCr1D, MemSize*sizeof(ulong) );
-               }
+               MemSize      += MemUnit;
+               FaPaddedCr1D  = (ulong*)realloc( FaPaddedCr1D, MemSize*sizeof(ulong) );
+            }
 
 //###NOTE: Disp = i*dr[0] + j*dr[1] + k*dr[2] can be negative! But it's OK to conduct PaddedCr1D + (ulong)Disp
 //         as long as we guarantee "PaddedCr1D + Disp >= 0"
@@ -101,24 +112,8 @@ void LB_AllocateBufferPatch_Sibling_Base()
 //         --> PaddedCr1D + (ulong)Disp = PaddedCr1D + Disp + UINT_MAX + 1 = PaddedCr1D + Disp + UINT_MAX + 1 - (UINT_MAX + 1)
 //                                      = PaddedCr1D + Disp
 //             (because PaddedCr1D + Disp >= 0; ==> reduced modulo again)
-               FaPaddedCr1D[ NAlloc_Temp ++ ] = amr->patch[0][0][PID0]->PaddedCr1D + (ulong)Cr1D_Disp[k+1][j+1][i+1];
-            }
+            FaPaddedCr1D[ NAlloc_Temp ++ ] = amr->patch[0][0][PID0]->PaddedCr1D + (ulong)Cr1D_Disp[k+1][j+1][i+1];
          }
-
-         else // non-periodic B.C.
-         {
-            if ( !External  &&  TRank != MPI_Rank )   // no external buffer patches will be allocated for non-periodic B.C.
-            {
-               if ( NAlloc_Temp >= MemSize )
-               {
-                  MemSize      += MemUnit;
-                  FaPaddedCr1D  = (ulong*)realloc( FaPaddedCr1D, MemSize*sizeof(ulong) );
-               }
-
-               FaPaddedCr1D[ NAlloc_Temp ++ ] = amr->patch[0][0][PID0]->PaddedCr1D + (ulong)Cr1D_Disp[k+1][j+1][i+1];
-            }
-         } // if ( OPT__BC_FLU[0] == BC_FLU_PERIODIC ) ... else ...
-
       }}} // k,j,i
    } // for (int PID0=0; PID0<amr->NPatchComma[0][1]; PID0+=8)
 
@@ -169,7 +164,8 @@ void LB_AllocateBufferPatch_Sibling_Base()
 
 
 
-// 5. record the padded 1D corner coordinates (which can be overwritten by "LB_AllocateBufferPatch_Father")
+// 5. record the padded 1D corner coordinates
+//    --> can be overwritten by LB_AllocateBufferPatch_Father()
 // ==========================================================================================
    const int NPatch = amr->NPatchComma[0][2];
 
