@@ -13,7 +13,7 @@ void Flag_Grandson( const int lv, const int PID, const int LocalID );
 // Function    :  LB_GrandsonCheck
 // Description :  Grandson check for the flag operation
 //
-// Note        :  Invoked by the function "Flag_Real"
+// Note        :  Invoked by Flag_Real()
 //
 // Parameter   :  FaLv : Target refinement level to be flagged
 //-------------------------------------------------------------------------------------------------------
