@@ -10,7 +10,7 @@
 // Description :  Assign son indices for father patches without sons at home (these father patches can either
 //                have no sons or have sons not home)
 //
-// Note        :  1. Should be applied to both real and buffer patches
+// Note        :  1. Apply to both real and buffer patches
 //                2. For patches with sons living abroad (not at the same rank as iteself), their son indices
 //                   are set to "SON_OFFSET_LB-SonRank", where SonRank represents the MPI rank where their sons live.
 //                   (e.g., if the real son is at rank 123, the son index is set to SON_OFFSET_LB-123=-1123 for
@@ -18,10 +18,11 @@
 //                   --> All patches with sons will have SonPID != -1
 //                3. This function will search over all father patches with SonPID <= -1
 //                4. Son indices will always be real patches at SonLv (or SON_OFFSET_LB-SonRank, where SonRank
-//                   is still the home rank of the **real** son patch)
-//                   --> Even if there is a buffer patch at FaLv which has the same PaddedCr1D as a buffer patch at SonLv
-//                       (and two buffer patches are at the same rank), the son index of the patch at FaLv will still be set
-//                        to "SON_OFFSET_LB-SonRank", where SonRank == MPI_Rank)
+//                   is the home rank of the **real** son patch)
+//                   --> Even if there is an external buffer patch at FaLv with the same PaddedCr1D as an
+//                       external buffer patch at SonLv and both the two buffer patches and the real patch
+//                       corresponding to the buffer patch at SonLv are in the same rank, the son index of the
+//                       buffer patch at FaLv will still be set to "SON_OFFSET_LB-SonRank" with SonRank == MPI_Rank
 //
 // Parameter   :  FaLv        : Target refinement level of fathers
 //                SearchAllFa : Whether to search over all father patches or not
@@ -46,7 +47,7 @@ void LB_FindSonNotHome( const int FaLv, const bool SearchAllFa, const int NInput
 
 
    const int  SonLv     = FaLv + 1;
-   const int  NFaPatch  = amr->num[FaLv];
+   const int  NFaPatch  = amr->num[FaLv];    // real + buffer patches
    const int  NTargetFa = ( SearchAllFa ) ? NFaPatch : NInput;
 
    int FaPID;
@@ -64,11 +65,11 @@ void LB_FindSonNotHome( const int FaLv, const bool SearchAllFa, const int NInput
 
 // 1 construct the query list for different ranks
 // ==========================================================================================
-   int   TRank, Cr_In[3], MemUnit_Query[MPI_NRank], MemSize_Query[MPI_NRank], NQuery[MPI_NRank];
+   int   TRank, MemUnit_Query[MPI_NRank], MemSize_Query[MPI_NRank], NQuery[MPI_NRank];
    int  *Cr, *FaPID_List[MPI_NRank], *FaPID_IdxTable[MPI_NRank];
    long  LB_Idx;
    long *Query_Temp[MPI_NRank];
-   bool  External;
+   bool  Internal;
 
 // 1.1 set memory allocation unit
    for (int r=0; r<MPI_NRank; r++)
@@ -89,34 +90,40 @@ void LB_FindSonNotHome( const int FaLv, const bool SearchAllFa, const int NInput
       {
          Cr = amr->patch[0][FaLv][FaPID]->corner;
 
-//###PERIODIC B.C. (ok for the non-periodic B.C. since no external buffer patches will be allocated for that)
-         for (int d=0; d<3; d++)    Cr_In[d] = ( Cr[d] + amr->BoxScale[d] ) % amr->BoxScale[d];
-
 //###NOTE: faster version can only be applied to the Hilbert space-filling curve
 #        if ( LOAD_BALANCE == HILBERT )
-         LB_Idx = 8*amr->patch[0][FaLv][FaPID]->LB_Idx;        // faster, LB_Idx of one of the eight sons
+         LB_Idx = 8*amr->patch[0][FaLv][FaPID]->LB_Idx;     // faster, LB_Idx of one of the eight sons
 #        else
-         LB_Idx = LB_Corner2Index( SonLv, Cr_In, CHECK_ON );   // LB_Idx of son 0
+         LB_Idx = LB_Corner2Index( SonLv, Cr, CHECK_OFF );  // LB_Idx of son 0
 #        endif
 
 //       ignore LB_Idx lying outside the range
-         if ( LB_Idx < amr->LB->CutPoint[SonLv][0]  ||  LB_Idx >= amr->LB->CutPoint[SonLv][MPI_NRank] )  continue;
+         if ( LB_Idx < amr->LB->CutPoint[SonLv][0]  ||  LB_Idx >= amr->LB->CutPoint[SonLv][MPI_NRank] )
+         {
+            amr->patch[0][FaLv][FaPID]->son = -1;
+            continue;
+         }
 
-         TRank = LB_Index2Rank( SonLv, LB_Idx, CHECK_ON );
-
-//###PERIODIC B.C. (ok for the non-periodic B.C. since no external buffer patches will be allocated for that)
 //       ignore internal patches in the same rank
-         External = false;
+         TRank    = LB_Index2Rank( SonLv, LB_Idx, CHECK_ON );
+         Internal = true;
+
          for (int d=0; d<3; d++)
          {
-            if ( Cr[d] != Cr_In[d] )
+            if ( Cr[d] < 0  ||  Cr[d] >= amr->BoxScale[d] )
             {
-               External = true;
+               Internal = false;
+
+#              ifdef GAMER_DEBUG
+               if ( OPT__BC_FLU[2*d] != BC_FLU_PERIODIC )
+                  Aux_Error( ERROR_INFO, "external patch (lv %d, PID %d) for the non-periodic BC !!\n", FaLv, FaPID );
+#              endif
+
                break;
             }
          }
 
-         if ( !External  &&  TRank == MPI_Rank )
+         if ( Internal  &&  TRank == MPI_Rank )
          {
 #           ifdef GAMER_DEBUG
             if ( amr->patch[0][FaLv][FaPID]->son < -1 )
@@ -126,11 +133,6 @@ void LB_FindSonNotHome( const int FaLv, const bool SearchAllFa, const int NInput
 
             continue;
          }
-
-#        ifdef GAMER_DEBUG
-         if ( External  &&  OPT__BC_FLU[0] != BC_FLU_PERIODIC )
-            Aux_Error( ERROR_INFO, "external patch (lv %d, PID %d) is found in the non-periodic B.C. !!\n", FaLv, FaPID );
-#        endif
 
 //       allocate enough memory
          if ( NQuery[TRank] >= MemSize_Query[TRank] )
@@ -214,24 +216,21 @@ void LB_FindSonNotHome( const int FaLv, const bool SearchAllFa, const int NInput
       {
          amr->patch[0][FaLv][FaPID]->son = SON_OFFSET_LB - r;
 
-//       check : only external father-buffer patches can be home
+//       check : only external buffer patches can have sons at home but with son indices < -1
 #        ifdef GAMER_DEBUG
          Cr = amr->patch[0][FaLv][FaPID]->corner;
 
-//###PERIODIC B.C. (ok for the non-periodic B.C. since no external buffer patches will be allocated for that)
-         for (int d=0; d<3; d++)    Cr_In[d] = ( Cr[d] + amr->BoxScale[d] ) % amr->BoxScale[d];
-
-         External = false;
+         Internal = true;
          for (int d=0; d<3; d++)
          {
-            if ( Cr[d] != Cr_In[d] )
+            if ( Cr[d] < 0  ||  Cr[d] >= amr->BoxScale[d] )
             {
-               External = true;
+               Internal = false;
                break;
             }
          }
 
-         if ( !External  &&  r == MPI_Rank )
+         if ( Internal  &&  r == MPI_Rank )
             Aux_Error( ERROR_INFO, "FaLv %d, FaPID %d's son should be home !!\n", FaLv, FaPID );
 #        endif
       } // if ( RecvBuf_Reply[ Counter ++ ] == 1 )
