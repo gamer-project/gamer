@@ -348,8 +348,7 @@ int TABLE_07( const int SibID, const int Count );
 // LoadBalance
 long LB_Corner2Index( const int lv, const int Corner[], const Check_t Check );
 #ifdef LOAD_BALANCE
-void LB_AllocateBufferPatch_Father( const int SonLv,
-                                    const bool SearchAllSon, const int NInput, int* TargetSonPID0,
+void LB_AllocateBufferPatch_Father( const int SonLv, const bool SearchAllSon, const int NInput, int* TargetSonPID0,
                                     const bool RecordFaPID, int* NNewFaBuf0, int** NewFaBufPID0 );
 void LB_AllocateBufferPatch_Sibling_Base();
 void LB_AllocateBufferPatch_Sibling( const int lv );
