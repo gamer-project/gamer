@@ -11,7 +11,7 @@
 //                2. Construct the MPI send and recv lists for exchanging fluxes at FaLv
 //                3. According to the send list, allocate flux arrays for the buffer patches at FaLv
 //
-// Parameter   :  FaLv  : Coarse-grid level
+// Parameter   :  FaLv : Coarse-grid level
 //-------------------------------------------------------------------------------------------------------
 void LB_AllocateFluxArray( const int FaLv )
 {

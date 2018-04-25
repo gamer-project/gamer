@@ -9,7 +9,7 @@
 // Function    :  LB_RecordOverlapMPIPatchID
 // Description :  Construct the patch indices for overlapping MPI time with CPU/GPU computation
 //
-// Note        :  This function must be invoked AFTER the function "LB_RecordExchangeDataPatchID"
+// Note        :  This function must be invoked AFTER LB_RecordExchangeDataPatchID()
 //
 // Parameter   :  Lv : Target refinement level for recording lists
 //-------------------------------------------------------------------------------------------------------

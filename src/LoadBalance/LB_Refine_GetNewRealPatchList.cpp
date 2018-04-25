@@ -16,24 +16,24 @@ void PrepareCData( const int FaLv, const int FaPID, real *const FaData,
 // Function    :  LB_Refine_GetNewRealPatchList
 // Description :  Get the lists of father patches at FaLv to allocate/deallocate real son patches at FaLv+1
 //
-// Note        :  1. This function is invoked by the function "LB_Refine"
-//                2. Coarse-grid data for creating new patches are also collected in "NewCData_Away"
+// Note        :  1. This function is invoked by LB_Refine()
+//                2. Coarse-grid data for creating new patches are also collected in NewCData_Away[]
 //                   --> Data of all sibling-buffer patches at FaLv must be prepared in advance in order to
 //                       prepare the coarse-grid data for spatial interpolation
 //                3. Home/Away : target patches at home/not at home
 //                4. Cr1D and CData lists are unsorted
 //                5. Use "call-by-reference" for the input parameters
 //
-// Parameter   :  FaLv           : Target refinement level to be refined
-//                NNew_Home      : Number of home patches at FaLv to allocate son patches
-//                NewPID_Home    : Patch indices of home patches at FaLv to allocate son patches
-//                NNew_Away      : Number of away patches at FaLv to allocate son patches
-//                NewCr1D_Away   : Padded 1D corner of away patches at FaLv to allocate son patches
-//                NewCData_Away  : Coarse-grid data of away patches at FaLv to allocate son patches
-//                NDel_Home      : Number of home patches at FaLv to deallocate son patches
-//                DelPID_Home    : Patch indices of home patches at FaLv to deallocate son patches
-//                NDel_Away      : Number of away patches at FaLv to deallocate son patches
-//                DelCr1D_Away   : Padded 1D corner of away patches at FaLv to deallocate son patches
+// Parameter   :  FaLv          : Target refinement level to be refined
+//                NNew_Home     : Number of home patches at FaLv to allocate son patches
+//                NewPID_Home   : Patch indices of home patches at FaLv to allocate son patches
+//                NNew_Away     : Number of away patches at FaLv to allocate son patches
+//                NewCr1D_Away  : Padded 1D corner of away patches at FaLv to allocate son patches
+//                NewCData_Away : Coarse-grid data of away patches at FaLv to allocate son patches
+//                NDel_Home     : Number of home patches at FaLv to deallocate son patches
+//                DelPID_Home   : Patch indices of home patches at FaLv to deallocate son patches
+//                NDel_Away     : Number of away patches at FaLv to deallocate son patches
+//                DelCr1D_Away  : Padded 1D corner of away patches at FaLv to deallocate son patches
 //
 //                PARTICLE-only parameters (call-by-reference)
 //                RefineF2S_Send_NPatchTotal : Total number of patches for exchanging particles from fathers to sons
