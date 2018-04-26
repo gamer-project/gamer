@@ -20,32 +20,32 @@ static void DeallocateSonPatch( const int FaLv, const int FaPID, const int NNew_
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  LB_Refine_AllocateNewPatch
-// Description :  Allocate/deallocate real son patches at FaLv+1
+// Description :  Allocate/deallocate patches at FaLv+1
 //
-// Note        :  1. This function is invoked by the function "LB_Refine"
+// Note        :  1. This function is invoked by LB_Refine()
 //                2. Home/Away : target patches at home/not at home
 //                3. Input Cr1D and CData lists are unsorted
 //                4. After invoking this function, some father-buffer patches at FaLv may become useless
 //                   --> Currently we do not remove these patches for the consideration of better performance
-//                5. This function will also allocate new father-buffer patches at FaLv, and new sibling-buffer
+//                5. This function will also allocate new father-buffer patches at FaLv and new sibling-buffer
 //                   and father-buffer patches at FaLv+1
+//                   --> Reallocating father-buffer patches at FaLv+1 is necessary because all buffer patches
+//                       at FaLv+1 will be deallocated before allocating/deallocating real patches at FaLv+1
+//                       --> Make implementation easier
 //                6. All MPI lists are NOT reconstructed here
 //                7. Several alternative functions are invoked here for better performance
-//                   (e.g., LB_AllocateBufferPatch_Sibling --> LB_Refine_AllocateBufferPatch_Sibling)
-//                8. All buffer patches at FaLv+1 are deallocated before allocating/deallocating real
-//                   patches at FaLv+1
-//                   --> make implementation easier
+//                   (e.g., LB_AllocateBufferPatch_Sibling() --> LB_Refine_AllocateBufferPatch_Sibling())
 //
-// Parameter   :  FaLv           : Target refinement level to be refined
-//                NNew_Home      : Number of home patches at FaLv to allocate son patches
-//                NewPID_Home    : Patch indices of home patches at FaLv to allocate son patches
-//                NNew_Away      : Number of away patches at FaLv to allocate son patches
-//                NewCr1D_Away   : Padded 1D corner of away patches at FaLv to allocate son patches
-//                NewCData_Away  : Coarse-grid data of away patches at FaLv to allocate son patches
-//                NDel_Home      : Number of home patches at FaLv to deallocate son patches
-//                DelPID_Home    : Patch indices of home patches at FaLv to deallocate son patches
-//                NDel_Away      : Number of away patches at FaLv to deallocate son patches
-//                DelCr1D_Away   : Padded 1D corner of away patches at FaLv to deallocate son patches
+// Parameter   :  FaLv          : Target refinement level to be refined
+//                NNew_Home     : Number of home patches at FaLv to allocate son patches
+//                NewPID_Home   : Patch indices of home patches at FaLv to allocate son patches
+//                NNew_Away     : Number of away patches at FaLv to allocate son patches
+//                NewCr1D_Away  : Padded 1D corner of away patches at FaLv to allocate son patches
+//                NewCData_Away : Coarse-grid data of away patches at FaLv to allocate son patches
+//                NDel_Home     : Number of home patches at FaLv to deallocate son patches
+//                DelPID_Home   : Patch indices of home patches at FaLv to deallocate son patches
+//                NDel_Away     : Number of away patches at FaLv to deallocate son patches
+//                DelCr1D_Away  : Padded 1D corner of away patches at FaLv to deallocate son patches
 //
 //                PARTICLE-only parameters (call-by-reference)
 //                RefineS2F_Send_NPatchTotal : Total number of patches for exchanging particles from sons to fathers
@@ -164,14 +164,14 @@ void LB_Refine_AllocateNewPatch( const int FaLv, int NNew_Home, int *NewPID_Home
 //    2-2. backup fluid and pot data
       for (int t=0; t<NBufBk; t++)
       {
-//       note that this patch may have only fluid, only pot, or both
+//       note that this patch may have only fluid[], only pot[], or both
          const int SonPID = PID_BufBk[t];
 
-//       2-2-1. if OPT__REUSE_MEMORY is used, backup fluid and pot arrays by swapping the pointers of Sg=0/1 so that
+//       2-2-1. if OPT__REUSE_MEMORY is used, backup fluid[] and pot[] by swapping the pointers of Sg=0/1 so that
 //              these temporarily stored buffer patch data won't be overwritten by newly allocated real patches
 //              --> also note that we need to be careful about any routine that may swap patch pointers between
 //                  different PIDs (e.g., DeallocateSonPatch)
-//                  --> must swap the fluid array with FSg_Flu2 and pot array with FSg_Pot2 back (otherwise the fluid
+//                  --> must swap fluid[] with FSg_Flu2 and pot[] with FSg_Pot2 back (otherwise the fluid
 //                      and pot pointers will point to wrong arrays after swapping patch pointers)
 //              --> ugly trick ...
          if ( OPT__REUSE_MEMORY )
@@ -184,8 +184,8 @@ void LB_Refine_AllocateNewPatch( const int FaLv, int NNew_Home, int *NewPID_Home
 #           endif
          }
 
-//       2-2-2. if OPT__REUSE_MEMORY is not used, backup fluid and pot arrays in temporary pointers
-//              --> don't need to backup pot_ext since it's actually useless for buffer patches
+//       2-2-2. if OPT__REUSE_MEMORY is not used, backup fluid[] and pot[] in temporary pointers
+//              --> no need to backup pot_ext[] since it's actually useless for buffer patches
          else
          {
             flu_BufBk[t] = amr->patch[FSg_Flu][SonLv][SonPID]->fluid;
@@ -281,9 +281,10 @@ void LB_Refine_AllocateNewPatch( const int FaLv, int NNew_Home, int *NewPID_Home
       BC_Face_tmp[2] = TABLE_01( s, 'z', 4, -1, 5 );
 
 //    z > y > x
-      if      ( BC_Face_tmp[2] != -1 )   BC_Face[s] = BC_Face_tmp[2];
-      else if ( BC_Face_tmp[1] != -1 )   BC_Face[s] = BC_Face_tmp[1];
-      else if ( BC_Face_tmp[0] != -1 )   BC_Face[s] = BC_Face_tmp[0];
+      if      ( BC_Face_tmp[2] != -1  &&  OPT__BC_FLU[BC_Face_tmp[2]] != BC_FLU_PERIODIC )   BC_Face[s] = BC_Face_tmp[2];
+      else if ( BC_Face_tmp[1] != -1  &&  OPT__BC_FLU[BC_Face_tmp[1]] != BC_FLU_PERIODIC )   BC_Face[s] = BC_Face_tmp[1];
+      else if ( BC_Face_tmp[0] != -1  &&  OPT__BC_FLU[BC_Face_tmp[0]] != BC_FLU_PERIODIC )   BC_Face[s] = BC_Face_tmp[0];
+      else                                                                                   BC_Face[s] = NULL_INT;
    }
 
    for (int v=0; v<NCOMP_TOTAL; v++)   FluVarIdxList[v] = v;
@@ -516,7 +517,7 @@ void LB_Refine_AllocateNewPatch( const int FaLv, int NNew_Home, int *NewPID_Home
 
 
 
-// 10. restore the fluid and pot arrays in the buffer patches
+// 10. restore fluid[] and pot[] in the buffer patches
 // ==========================================================================================
    real (*fluid_ptr)[PATCH_SIZE][PATCH_SIZE][PATCH_SIZE] = NULL;
 #  ifdef GRAVITY
@@ -637,14 +638,14 @@ void LB_Refine_AllocateNewPatch( const int FaLv, int NNew_Home, int *NewPID_Home
 //
 // Note        :  Just to avoid duplicate code segment
 //
-// Parameter   :  FaLv           : Target refinement level to be refined
-//                Cr             : Corner coordinates of the son patch with LocalID == 0
-//                PScale         : Scale of one patch at SonLv
-//                FaPID          : Father patch index (can be -1 for the away patches)
-//                CData          : Coarse-grid data for assigning data to son patches by spatial interpolation
-//                                 (initialize as NULL if father patch is home --> prepare CData here)
-//                BC_Face        : Corresponding boundary faces (0~5) along 26 sibling directions ->for non-periodic B.C. only
-//                FluVarIdxList  : List of target fluid variable indices                          ->for non-periodic B.C. only
+// Parameter   :  FaLv          : Target refinement level to be refined
+//                Cr            : Corner coordinates of the son patch with LocalID == 0
+//                PScale        : Scale of one patch at SonLv
+//                FaPID         : Father patch index (can be -1 for the away patches)
+//                CData         : Coarse-grid data for assigning data to son patches by spatial interpolation
+//                                (initialize as NULL if father patch is home --> prepare CData here)
+//                BC_Face       : Corresponding boundary faces (0~5) along 26 sibling directions -> for non-periodic B.C. only
+//                FluVarIdxList : List of target fluid variable indices                          -> for non-periodic B.C. only
 //
 // Return      :  SonPID with LocalID == 0
 //-------------------------------------------------------------------------------------------------------
@@ -995,14 +996,14 @@ int AllocateSonPatch( const int FaLv, const int *Cr, const int PScale, const int
 // Description :  Deallocate eight son patches at FaLv+1
 //
 // Note        :  1. Just to avoid duplicate code segment
-//                2. List "NewSonPID0_Real" will be reset
+//                2. List NewSonPID0_Real[] will be reset
 //
-// Parameter   :  FaLv              : Target refinement level to be refined
-//                FaPID             : Father patch index to remove sons
-//                NNew_Real0        : Number of newly-allocated real patches with LocalID==0
-//                NewSonPID0_Real   : List recording the indices of all newly-allocated real patches
-//                                    with LocalID==0
-//                SwitchIdx         : Element in NewSonPID0_Real to be reset
+// Parameter   :  FaLv            : Target refinement level to be refined
+//                FaPID           : Father patch index to remove sons
+//                NNew_Real0      : Number of newly-allocated real patches with LocalID==0
+//                NewSonPID0_Real : List recording the indices of all newly-allocated real patches
+//                                  with LocalID==0
+//                SwitchIdx       : Element in NewSonPID0_Real to be reset
 //
 //                PARTICLE-only parameters (call-by-reference)
 //                RefineS2F_Send_NPatchTotal : Total number of patches for exchanging particles from sons to fathers
