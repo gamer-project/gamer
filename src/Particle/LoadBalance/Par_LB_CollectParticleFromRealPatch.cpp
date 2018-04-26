@@ -16,27 +16,27 @@
 //                2. All Target patches (those in Buff_PIDList[] and Real_PIDList[]) must be patches at the same level "lv"
 //                3. Currently this function only collects particle mass and position
 //                   --> For particle mass assignment only
-//                   --> But it should be generalized to work with arbitrary particle attributes
+//                   --> But it should be generalized to work with arbitrary particle attributes in the future
 //                4. This function is called by Par_LB_CollectParticle2OneLevel()
 //                5. ParMassPos_Copy[] will be allocated for all target buffer patches with particles in the
 //                   corresponding real patches
 //                   --> Must be deallocated afterward by calling Par_LB_CollectParticle2OneLevel_FreeMemory()
 //
-// Parameter   :  lv                   : Target refinement level
-//                Buff_NPatchTotal     : Total number of buffer patches in Buff_PIDList
-//                Buff_PIDList         : Target buffer patch indices
-//                Buff_NPatchEachRank  : Number of buffer patches to receive particles from each rank
-//                Real_NPatchTotal     : Total number of real patches in Real_PIDList
-//                Real_PIDList         : Target real patch indices
-//                Real_NPatchEachRank  : Number of real patches to send particles to each rank
-//                PredictPos           : Predict particle position, which is useful for particle mass assignement
-//                                       --> We send particle position **after** prediction so that we don't have to
-//                                           send particle velocity
-//                TargetTime           : Target time for predicting the particle position
-//                Timer                : Timer used by "Par_LB_SendParticleData"
-//                Timer_Comment        : String used by "Par_LB_SendParticleData"
+// Parameter   :  lv                  : Target refinement level
+//                Buff_NPatchTotal    : Total number of buffer patches in Buff_PIDList
+//                Buff_PIDList        : Target buffer patch indices
+//                Buff_NPatchEachRank : Number of buffer patches to receive particles from each rank
+//                Real_NPatchTotal    : Total number of real patches in Real_PIDList
+//                Real_PIDList        : Target real patch indices
+//                Real_NPatchEachRank : Number of real patches to send particles to each rank
+//                PredictPos          : Predict particle position, which is useful for particle mass assignement
+//                                      --> We send particle position **after** prediction so that we don't have to
+//                                          send particle velocity
+//                TargetTime          : Target time for predicting the particle position
+//                Timer               : Timer used by Par_LB_SendParticleData()
+//                Timer_Comment       : String used by Par_LB_SendParticleData()
 //
-// Return      :  NPar_Copy and ParMassPos_Copy (if NPar_Copy > 0) for all buffer patches specified in Buff_PIDList
+// Return      :  NPar_Copy and ParMassPos_Copy[] (if NPar_Copy > 0) for all buffer patches specified in Buff_PIDList[]
 //-------------------------------------------------------------------------------------------------------
 void Par_LB_CollectParticleFromRealPatch( const int lv,
                                           const int Buff_NPatchTotal, const int *Buff_PIDList, int *Buff_NPatchEachRank,
@@ -137,7 +137,7 @@ void Par_LB_CollectParticleFromRealPatch( const int lv,
 #  endif // #ifdef DEBUG_PARTICLE
 
 
-// must NOT call "return" here even if Buff/Real_NPatchTotal==0 since this rank still needs to call Par_LB_SendParticleData
+// must NOT call "return" here even if Buff/Real_NPatchTotal==0 since this rank still needs to call Par_LB_SendParticleData()
 // if ( Real_NPatchTotal == 0 )   return;
 // if ( Buff_NPatchTotal == 0 )   return;
 

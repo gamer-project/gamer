@@ -9,7 +9,7 @@
 // Function    :  Par_LB_Init_RedistributeByRectangular
 // Description :  Redistribute particles assuming the rectangular domain decomposition
 //
-// Note        :  1. Usefully only during the initialization when calling "Init_GAMER"
+// Note        :  1. Usefully only during the initialization when calling Init_GAMER()
 //                2. Inactive particles will NOT be redistributed
 //                3. Redistribute the Time, Mass, Pos, Vel, and all passive variables of particles
 //                   --> Acc is not redistributed since it has not been initialized
