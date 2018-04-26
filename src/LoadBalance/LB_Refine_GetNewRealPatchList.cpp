@@ -315,9 +315,10 @@ void LB_Refine_GetNewRealPatchList( const int FaLv, int &NNew_Home, int *&NewPID
       BC_Face_tmp[2] = TABLE_01( s, 'z', 4, -1, 5 );
 
 //    z > y > x
-      if      ( BC_Face_tmp[2] != -1 )   BC_Face[s] = BC_Face_tmp[2];
-      else if ( BC_Face_tmp[1] != -1 )   BC_Face[s] = BC_Face_tmp[1];
-      else if ( BC_Face_tmp[0] != -1 )   BC_Face[s] = BC_Face_tmp[0];
+      if      ( BC_Face_tmp[2] != -1  &&  OPT__BC_FLU[BC_Face_tmp[2]] != BC_FLU_PERIODIC )   BC_Face[s] = BC_Face_tmp[2];
+      else if ( BC_Face_tmp[1] != -1  &&  OPT__BC_FLU[BC_Face_tmp[1]] != BC_FLU_PERIODIC )   BC_Face[s] = BC_Face_tmp[1];
+      else if ( BC_Face_tmp[0] != -1  &&  OPT__BC_FLU[BC_Face_tmp[0]] != BC_FLU_PERIODIC )   BC_Face[s] = BC_Face_tmp[0];
+      else                                                                                   BC_Face[s] = NULL_INT;
    }
 
    for (int v=0; v<NCOMP_TOTAL; v++)   FluVarIdxList[v] = v;
@@ -388,19 +389,19 @@ void LB_Refine_GetNewRealPatchList( const int FaLv, int &NNew_Home, int *&NewPID
 // Description :  Prepare coarse-grid data for spatial interpolation
 //
 // Note        :  1. Data of all sibling-buffer patches at FaLv must be prepared in advance
-//                2. This function is also used in "LB_Refine_AllocateNewPatch"
+//                2. This function is also used by LB_Refine_AllocateNewPatch()
 //
-// Parameter   :  FaLv           : Coarse-grid refinement level
-//                FaPID          : Father patch index to prepare the coarse-grid data
-//                FaData         : Array to store the coarse-grid data
-//                FaSg_Flu       : Sandglass for the fluid solver
-//                FaGhost_Flu    : Ghost size for the fluid solver
-//                NSide_Flu      : Number of sibling directions to prepare the ghost-zone data (6/26) for the fluid solver
-//                FaSg_Pot       : Sandglass for the Poisson solver
-//                FaGhost_Pot    : Ghost size for the Poisson solver
-//                NSide_Pot      : Number of sibling directions to prepare the ghost-zone data (6/26) for the Poisson solver
-//                BC_Face        : Corresponding boundary faces (0~5) along 26 sibling directions ->for non-periodic B.C. only
-//                FluVarIdxList  : List of target fluid variable indices                          ->for non-periodic B.C. only
+// Parameter   :  FaLv          : Coarse-grid refinement level
+//                FaPID         : Father patch index to prepare the coarse-grid data
+//                FaData        : Array to store the coarse-grid data
+//                FaSg_Flu      : Sandglass for the fluid solver
+//                FaGhost_Flu   : Ghost size for the fluid solver
+//                NSide_Flu     : Number of sibling directions to prepare the ghost-zone data (6/26) for the fluid solver
+//                FaSg_Pot      : Sandglass for the Poisson solver
+//                FaGhost_Pot   : Ghost size for the Poisson solver
+//                NSide_Pot     : Number of sibling directions to prepare the ghost-zone data (6/26) for the Poisson solver
+//                BC_Face       : Corresponding boundary faces (0~5) along 26 sibling directions -> for non-periodic B.C. only
+//                FluVarIdxList : List of target fluid variable indices                          -> for non-periodic B.C. only
 //
 // Return      :  FaData
 //-------------------------------------------------------------------------------------------------------
@@ -458,7 +459,7 @@ void PrepareCData( const int FaLv, const int FaPID, real *const FaData,
 #  endif
 
 
-// 2. fill up the ghost zone of FaData (no interpolation is required)
+// 2. fill up the ghost zones of FaData (no interpolation is required)
    const int  NDer       = 0;
    const int *DerVarList = NULL;
 
