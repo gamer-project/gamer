@@ -15,7 +15,7 @@
 //                2. This function should be invoked BEFORE LB_AllocateBufferPatch_Father()
 //                   --> There should be no father-buffer patches at SonLv
 //                   --> amr->num[SonLv] should be equal to amr->NPatchComma[SonLv][2]
-//                3. This function assumes that all real and buffer patches at SonLv-1 have been allocated,
+//                3. This function assumes that all real and buffer patches at SonLv-1 have been allocated
 //                   and the sibling relation at SonLv-1 and the father <-> son relation between SonLv
 //                   and SonLv-1 have been constructed
 //                4. This function should NOT be applied to the base level
@@ -34,7 +34,7 @@ void LB_Refine_AllocateBufferPatch_Sibling( const int SonLv )
                  SonLv, amr->NPatchComma[SonLv][1], SonLv, amr->num[SonLv] );
 
 
-// 1. initialize the NotAllocateList (to ensure no duplicate patches at SonLv)
+// 1. initialize NotAllocateList[] (to ensure no duplicate patches at SonLv)
 // ==========================================================================================
    const int FaLv     = SonLv - 1;
    const int NFaPatch = amr->num[FaLv];
