@@ -12,8 +12,8 @@
 // Note        :  1. Skip particles with time < 0.0
 //                   --> These are the particles waiting for velocity correction in the KDK scheme
 //                   --> We assume that they have already been synchronized with TargetTime
-//                2. Called by "Par_MassAssignment, Par_LB_CollectParticle2OneLevel, and
-//                   Par_LB_CollectParticleFromRealPatch"
+//                2. Called by Par_MassAssignment(), Par_LB_CollectParticle2OneLevel(), and
+//                   Par_LB_CollectParticleFromRealPatch()
 //                3. This function does NOT take care of periodicity
 //                   --> Particle may lie outside the simulation domain after prediction
 //
@@ -61,7 +61,7 @@ void Par_PredictPos( const long NPar, const long *ParList, real *ParPosX, real *
 
       dt = (real)TargetTime - amr->Par->Time[ParID];
 
-//    note that we don't have to worry about the periodic BC here (in other word, ParPos can lie outside the simulation box)
+//    note that we don't have to worry about the periodic BC here (in other words, ParPos can lie outside the simulation box)
       ParPosX[p] += amr->Par->VelX[ParID]*dt;
       ParPosY[p] += amr->Par->VelY[ParID]*dt;
       ParPosZ[p] += amr->Par->VelZ[ParID]*dt;

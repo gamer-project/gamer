@@ -12,11 +12,11 @@
 // Note        :  1. After calling this function, father patch will have no particles (NPar == 0)
 //                   --> Particles should always reside in "leaf" patches
 //                2. This function should always be called after new son patches are allocated
-//                   --> Invoked by "Init_Refine, Refine, & LB_Refine_AllocateNewPatch"
+//                   --> Invoked by Init_Refine(), Refine(), & LB_Refine_AllocateNewPatch()
 //                3. This function can also be used even when son patches already have particles
 //                   --> The case where particles just cross a coarse-fine boundary (from coarse to fine)
-//                   --> Invoked by "Par_PassParticle2Sibling_AllPatch", which is invoked
-//                       in EvolveLevel after the velocity correction in KDK
+//                   --> Invoked by Par_PassParticle2Sibling_AllPatch(), which is invoked
+//                       by EvolveLevel() after the velocity correction in KDK
 //                4. Target father patch can be either real or buffer
 //
 // Parameter   :  FaLv  : Father refinement level

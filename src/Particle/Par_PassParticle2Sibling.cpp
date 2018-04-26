@@ -321,7 +321,7 @@ void Par_PassParticle2Sibling( const int lv, const bool TimingSendPar )
 // 7. send particles from buffer patches to the corresponding real patches
 //    --> note that after calling the following rourtines, some particles may reside in **non-leaf** real patches
 //    --> they will be sent again to leaf real patches after the velocity correction operation
-//        (by the function Par_PassParticle2Son_AllPatch)
+//        --> by Par_PassParticle2Son_AllPatch()
 #  ifdef LOAD_BALANCE
 
    Timer_t *Timer[2] = { NULL, NULL };
