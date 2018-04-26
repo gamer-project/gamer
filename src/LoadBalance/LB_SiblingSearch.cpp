@@ -8,6 +8,7 @@ static void SetSiblingInSamePatchGroup( const int lv, const int PID0 );
 static void SetSiblingInDiffPatchGroup( const int lv, const int PID0, const int SibPID0, const int SibID,
                                         const bool BothSide );
 static void SetSiblingExternal( const int lv, const int NTarget0, const int *TargetPID0 );
+static void SetSiblingExternal_CheckPeriodicity( int *Sibling, const int Boundary );
 
 
 
@@ -942,7 +943,7 @@ void SetSiblingInDiffPatchGroup( const int lv, const int PID0, const int SibPID0
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  SetSiblingExternal
-// Description :  Set the sibling indices for the patches adjacent to the simulation domain (for non-periodic B.C. only)
+// Description :  Set the sibling indices of patches adjacent to the simulation domain (for non-periodic B.C. only)
 //
 // Note        :  If a target sibling patch is an external patch (which lies outside the simulation domain),
 //                the corresponding sibling index is set to "SIB_OFFSET_NONPERIODIC-Sibling", where Sibling
@@ -1005,361 +1006,369 @@ void SetSiblingExternal( const int lv, const int NTarget0, const int *TargetPID0
 
 //       reset Sibling[] only if they are -1 to skip the periodic directions
 //       sibling 0
-         if ( Sibling[ 0] == -1 )
-         if ( Cr[0] == 0           )         Sibling[ 0] = SIB_OFFSET_NONPERIODIC - 0;
+         if ( Cr[0] == 0           )         SetSiblingExternal_CheckPeriodicity( Sibling+ 0,  0 );
 
 //       sibling 1
-         if ( Sibling[ 1] == -1 )
-         if ( Cr[0] == MaxIntCr[0] )         Sibling[ 1] = SIB_OFFSET_NONPERIODIC - 1;
+         if ( Cr[0] == MaxIntCr[0] )         SetSiblingExternal_CheckPeriodicity( Sibling+ 1,  1 );
 
 //       sibling 2
-         if ( Sibling[ 2] == -1 )
-         if ( Cr[1] == 0           )         Sibling[ 2] = SIB_OFFSET_NONPERIODIC - 2;
+         if ( Cr[1] == 0           )         SetSiblingExternal_CheckPeriodicity( Sibling+ 2,  2 );
 
 //       sibling 3
-         if ( Sibling[ 3] == -1 )
-         if ( Cr[1] == MaxIntCr[1] )         Sibling[ 3] = SIB_OFFSET_NONPERIODIC - 3;
+         if ( Cr[1] == MaxIntCr[1] )         SetSiblingExternal_CheckPeriodicity( Sibling+ 3,  3 );
 
 //       sibling 4
-         if ( Sibling[ 4] == -1 )
-         if ( Cr[2] == 0           )         Sibling[ 4] = SIB_OFFSET_NONPERIODIC - 4;
+         if ( Cr[2] == 0           )         SetSiblingExternal_CheckPeriodicity( Sibling+ 4,  4 );
 
 //       sibling 5
-         if ( Sibling[ 5] == -1 )
-         if ( Cr[2] == MaxIntCr[2] )         Sibling[ 5] = SIB_OFFSET_NONPERIODIC - 5;
+         if ( Cr[2] == MaxIntCr[2] )         SetSiblingExternal_CheckPeriodicity( Sibling+ 5,  5 );
 
 //       sibling 6
-         if ( Sibling[ 6] == -1 )
          if ( Cr[0] == 0 )
          {
-            if ( Cr[1] == 0 )                Sibling[ 6] = SIB_OFFSET_NONPERIODIC - 6;
-            else                             Sibling[ 6] = SIB_OFFSET_NONPERIODIC - 0;
+            if ( Cr[1] == 0 )                SetSiblingExternal_CheckPeriodicity( Sibling+ 6,  6 );
+            else                             SetSiblingExternal_CheckPeriodicity( Sibling+ 6,  0 );
          }
          else
-            if ( Cr[1] == 0 )                Sibling[ 6] = SIB_OFFSET_NONPERIODIC - 2;
+            if ( Cr[1] == 0 )                SetSiblingExternal_CheckPeriodicity( Sibling+ 6,  2 );
 
 //       sibling 7
-         if ( Sibling[ 7] == -1 )
          if ( Cr[0] == MaxIntCr[0] )
          {
-            if ( Cr[1] == 0 )                Sibling[ 7] = SIB_OFFSET_NONPERIODIC - 7;
-            else                             Sibling[ 7] = SIB_OFFSET_NONPERIODIC - 1;
+            if ( Cr[1] == 0 )                SetSiblingExternal_CheckPeriodicity( Sibling+ 7,  7 );
+            else                             SetSiblingExternal_CheckPeriodicity( Sibling+ 7,  1 );
          }
          else
-            if ( Cr[1] == 0 )                Sibling[ 7] = SIB_OFFSET_NONPERIODIC - 2;
+            if ( Cr[1] == 0 )                SetSiblingExternal_CheckPeriodicity( Sibling+ 7,  2 );
 
 //       sibling 8
-         if ( Sibling[ 8] == -1 )
          if ( Cr[0] == 0 )
          {
-            if ( Cr[1] == MaxIntCr[1] )      Sibling[ 8] = SIB_OFFSET_NONPERIODIC - 8;
-            else                             Sibling[ 8] = SIB_OFFSET_NONPERIODIC - 0;
+            if ( Cr[1] == MaxIntCr[1] )      SetSiblingExternal_CheckPeriodicity( Sibling+ 8,  8 );
+            else                             SetSiblingExternal_CheckPeriodicity( Sibling+ 8,  0 );
          }
          else
-            if ( Cr[1] == MaxIntCr[1] )      Sibling[ 8] = SIB_OFFSET_NONPERIODIC - 3;
+            if ( Cr[1] == MaxIntCr[1] )      SetSiblingExternal_CheckPeriodicity( Sibling+ 8,  3 );
 
 //       sibling 9
-         if ( Sibling[ 9] == -1 )
          if ( Cr[0] == MaxIntCr[0] )
          {
-            if ( Cr[1] == MaxIntCr[1] )      Sibling[ 9] = SIB_OFFSET_NONPERIODIC - 9;
-            else                             Sibling[ 9] = SIB_OFFSET_NONPERIODIC - 1;
+            if ( Cr[1] == MaxIntCr[1] )      SetSiblingExternal_CheckPeriodicity( Sibling+ 9,  9 );
+            else                             SetSiblingExternal_CheckPeriodicity( Sibling+ 9,  1 );
          }
          else
-            if ( Cr[1] == MaxIntCr[1] )      Sibling[ 9] = SIB_OFFSET_NONPERIODIC - 3;
+            if ( Cr[1] == MaxIntCr[1] )      SetSiblingExternal_CheckPeriodicity( Sibling+ 9,  3 );
 
 //       sibling 10
-         if ( Sibling[10] == -1 )
          if ( Cr[1] == 0 )
          {
-            if ( Cr[2] == 0 )                Sibling[10] = SIB_OFFSET_NONPERIODIC - 10;
-            else                             Sibling[10] = SIB_OFFSET_NONPERIODIC - 2;
+            if ( Cr[2] == 0 )                SetSiblingExternal_CheckPeriodicity( Sibling+10, 10 );
+            else                             SetSiblingExternal_CheckPeriodicity( Sibling+10,  2 );
          }
          else
-            if ( Cr[2] == 0 )                Sibling[10] = SIB_OFFSET_NONPERIODIC - 4;
+            if ( Cr[2] == 0 )                SetSiblingExternal_CheckPeriodicity( Sibling+10,  4 );
 
 //       sibling 11
-         if ( Sibling[11] == -1 )
          if ( Cr[1] == MaxIntCr[1] )
          {
-            if ( Cr[2] == 0 )                Sibling[11] = SIB_OFFSET_NONPERIODIC - 11;
-            else                             Sibling[11] = SIB_OFFSET_NONPERIODIC - 3;
+            if ( Cr[2] == 0 )                SetSiblingExternal_CheckPeriodicity( Sibling+11, 11 );
+            else                             SetSiblingExternal_CheckPeriodicity( Sibling+11,  3 );
          }
          else
-            if ( Cr[2] == 0 )                Sibling[11] = SIB_OFFSET_NONPERIODIC - 4;
+            if ( Cr[2] == 0 )                SetSiblingExternal_CheckPeriodicity( Sibling+11,  4 );
 
 //       sibling 12
-         if ( Sibling[12] == -1 )
          if ( Cr[1] == 0 )
          {
-            if ( Cr[2] == MaxIntCr[2] )      Sibling[12] = SIB_OFFSET_NONPERIODIC - 12;
-            else                             Sibling[12] = SIB_OFFSET_NONPERIODIC - 2;
+            if ( Cr[2] == MaxIntCr[2] )      SetSiblingExternal_CheckPeriodicity( Sibling+12, 12 );
+            else                             SetSiblingExternal_CheckPeriodicity( Sibling+12,  2 );
          }
          else
-            if ( Cr[2] == MaxIntCr[2] )      Sibling[12] = SIB_OFFSET_NONPERIODIC - 5;
+            if ( Cr[2] == MaxIntCr[2] )      SetSiblingExternal_CheckPeriodicity( Sibling+12,  5 );
 
 //       sibling 13
-         if ( Sibling[13] == -1 )
          if ( Cr[1] == MaxIntCr[1] )
          {
-            if ( Cr[2] == MaxIntCr[2] )      Sibling[13] = SIB_OFFSET_NONPERIODIC - 13;
-            else                             Sibling[13] = SIB_OFFSET_NONPERIODIC - 3;
+            if ( Cr[2] == MaxIntCr[2] )      SetSiblingExternal_CheckPeriodicity( Sibling+13, 13 );
+            else                             SetSiblingExternal_CheckPeriodicity( Sibling+13,  3 );
          }
          else
-            if ( Cr[2] == MaxIntCr[2] )      Sibling[13] = SIB_OFFSET_NONPERIODIC - 5;
+            if ( Cr[2] == MaxIntCr[2] )      SetSiblingExternal_CheckPeriodicity( Sibling+13,  5 );
 
 //       sibling 14
-         if ( Sibling[14] == -1 )
          if ( Cr[2] == 0 )
          {
-            if ( Cr[0] == 0 )                Sibling[14] = SIB_OFFSET_NONPERIODIC - 14;
-            else                             Sibling[14] = SIB_OFFSET_NONPERIODIC - 4;
+            if ( Cr[0] == 0 )                SetSiblingExternal_CheckPeriodicity( Sibling+14, 14 );
+            else                             SetSiblingExternal_CheckPeriodicity( Sibling+14,  4 );
          }
          else
-            if ( Cr[0] == 0 )                Sibling[14] = SIB_OFFSET_NONPERIODIC - 0;
+            if ( Cr[0] == 0 )                SetSiblingExternal_CheckPeriodicity( Sibling+14,  0 );
 
 //       sibling 15
-         if ( Sibling[15] == -1 )
          if ( Cr[2] == MaxIntCr[2] )
          {
-            if ( Cr[0] == 0 )                Sibling[15] = SIB_OFFSET_NONPERIODIC - 15;
-            else                             Sibling[15] = SIB_OFFSET_NONPERIODIC - 5;
+            if ( Cr[0] == 0 )                SetSiblingExternal_CheckPeriodicity( Sibling+15, 15 );
+            else                             SetSiblingExternal_CheckPeriodicity( Sibling+15,  5 );
          }
          else
-            if ( Cr[0] == 0 )                Sibling[15] = SIB_OFFSET_NONPERIODIC - 0;
+            if ( Cr[0] == 0 )                SetSiblingExternal_CheckPeriodicity( Sibling+15,  0 );
 
 //       sibling 16
-         if ( Sibling[16] == -1 )
          if ( Cr[2] == 0 )
          {
-            if ( Cr[0] == MaxIntCr[0] )      Sibling[16] = SIB_OFFSET_NONPERIODIC - 16;
-            else                             Sibling[16] = SIB_OFFSET_NONPERIODIC - 4;
+            if ( Cr[0] == MaxIntCr[0] )      SetSiblingExternal_CheckPeriodicity( Sibling+16, 16 );
+            else                             SetSiblingExternal_CheckPeriodicity( Sibling+16,  4 );
          }
          else
-            if ( Cr[0] == MaxIntCr[0] )      Sibling[16] = SIB_OFFSET_NONPERIODIC - 1;
+            if ( Cr[0] == MaxIntCr[0] )      SetSiblingExternal_CheckPeriodicity( Sibling+16,  1 );
 
 //       sibling 17
-         if ( Sibling[17] == -1 )
          if ( Cr[2] == MaxIntCr[2] )
          {
-            if ( Cr[0] == MaxIntCr[0] )      Sibling[17] = SIB_OFFSET_NONPERIODIC - 17;
-            else                             Sibling[17] = SIB_OFFSET_NONPERIODIC - 5;
+            if ( Cr[0] == MaxIntCr[0] )      SetSiblingExternal_CheckPeriodicity( Sibling+17, 17 );
+            else                             SetSiblingExternal_CheckPeriodicity( Sibling+17,  5 );
          }
          else
-            if ( Cr[0] == MaxIntCr[0] )      Sibling[17] = SIB_OFFSET_NONPERIODIC - 1;
+            if ( Cr[0] == MaxIntCr[0] )      SetSiblingExternal_CheckPeriodicity( Sibling+17,  1 );
 
 //       sibling 18
-         if ( Sibling[18] == -1 )
          if ( Cr[0] == 0 )
          {
             if ( Cr[1] == 0 )
             {
-               if ( Cr[2] == 0 )             Sibling[18] = SIB_OFFSET_NONPERIODIC - 18;
-               else                          Sibling[18] = SIB_OFFSET_NONPERIODIC - 6;
+               if ( Cr[2] == 0 )             SetSiblingExternal_CheckPeriodicity( Sibling+18, 18 );
+               else                          SetSiblingExternal_CheckPeriodicity( Sibling+18,  6 );
             }
             else
             {
-               if ( Cr[2] == 0 )             Sibling[18] = SIB_OFFSET_NONPERIODIC - 14;
-               else                          Sibling[18] = SIB_OFFSET_NONPERIODIC - 0;
+               if ( Cr[2] == 0 )             SetSiblingExternal_CheckPeriodicity( Sibling+18, 14 );
+               else                          SetSiblingExternal_CheckPeriodicity( Sibling+18,  0 );
             }
          }
          else
          {
             if ( Cr[1] == 0 )
             {
-               if ( Cr[2] == 0 )             Sibling[18] = SIB_OFFSET_NONPERIODIC - 10;
-               else                          Sibling[18] = SIB_OFFSET_NONPERIODIC - 2;
+               if ( Cr[2] == 0 )             SetSiblingExternal_CheckPeriodicity( Sibling+18, 10 );
+               else                          SetSiblingExternal_CheckPeriodicity( Sibling+18,  2 );
             }
             else
-               if ( Cr[2] == 0 )             Sibling[18] = SIB_OFFSET_NONPERIODIC - 4;
+               if ( Cr[2] == 0 )             SetSiblingExternal_CheckPeriodicity( Sibling+18,  4 );
          }
 
 //       sibling 19
-         if ( Sibling[19] == -1 )
          if ( Cr[0] == MaxIntCr[0] )
          {
             if ( Cr[1] == 0 )
             {
-               if ( Cr[2] == 0 )             Sibling[19] = SIB_OFFSET_NONPERIODIC - 19;
-               else                          Sibling[19] = SIB_OFFSET_NONPERIODIC - 7;
+               if ( Cr[2] == 0 )             SetSiblingExternal_CheckPeriodicity( Sibling+19, 19 );
+               else                          SetSiblingExternal_CheckPeriodicity( Sibling+19,  7 );
             }
             else
             {
-               if ( Cr[2] == 0 )             Sibling[19] = SIB_OFFSET_NONPERIODIC - 16;
-               else                          Sibling[19] = SIB_OFFSET_NONPERIODIC - 1;
+               if ( Cr[2] == 0 )             SetSiblingExternal_CheckPeriodicity( Sibling+19, 16 );
+               else                          SetSiblingExternal_CheckPeriodicity( Sibling+19,  1 );
             }
          }
          else
          {
             if ( Cr[1] == 0 )
             {
-               if ( Cr[2] == 0 )             Sibling[19] = SIB_OFFSET_NONPERIODIC - 10;
-               else                          Sibling[19] = SIB_OFFSET_NONPERIODIC - 2;
+               if ( Cr[2] == 0 )             SetSiblingExternal_CheckPeriodicity( Sibling+19, 10 );
+               else                          SetSiblingExternal_CheckPeriodicity( Sibling+19,  2 );
             }
             else
-               if ( Cr[2] == 0 )             Sibling[19] = SIB_OFFSET_NONPERIODIC - 4;
+               if ( Cr[2] == 0 )             SetSiblingExternal_CheckPeriodicity( Sibling+19,  4 );
          }
 
 //       sibling 20
-         if ( Sibling[20] == -1 )
          if ( Cr[0] == 0 )
          {
             if ( Cr[1] == MaxIntCr[1] )
             {
-               if ( Cr[2] == 0 )             Sibling[20] = SIB_OFFSET_NONPERIODIC - 20;
-               else                          Sibling[20] = SIB_OFFSET_NONPERIODIC - 8;
+               if ( Cr[2] == 0 )             SetSiblingExternal_CheckPeriodicity( Sibling+20, 20 );
+               else                          SetSiblingExternal_CheckPeriodicity( Sibling+20,  8 );
             }
             else
             {
-               if ( Cr[2] == 0 )             Sibling[20] = SIB_OFFSET_NONPERIODIC - 14;
-               else                          Sibling[20] = SIB_OFFSET_NONPERIODIC - 0;
+               if ( Cr[2] == 0 )             SetSiblingExternal_CheckPeriodicity( Sibling+20, 14 );
+               else                          SetSiblingExternal_CheckPeriodicity( Sibling+20,  0 );
             }
          }
          else
          {
             if ( Cr[1] == MaxIntCr[1] )
             {
-               if ( Cr[2] == 0 )             Sibling[20] = SIB_OFFSET_NONPERIODIC - 11;
-               else                          Sibling[20] = SIB_OFFSET_NONPERIODIC - 3;
+               if ( Cr[2] == 0 )             SetSiblingExternal_CheckPeriodicity( Sibling+20, 11 );
+               else                          SetSiblingExternal_CheckPeriodicity( Sibling+20,  3 );
             }
             else
-               if ( Cr[2] == 0 )             Sibling[20] = SIB_OFFSET_NONPERIODIC - 4;
+               if ( Cr[2] == 0 )             SetSiblingExternal_CheckPeriodicity( Sibling+20,  4 );
          }
 
 //       sibling 21
-         if ( Sibling[21] == -1 )
          if ( Cr[0] == MaxIntCr[0] )
          {
             if ( Cr[1] == MaxIntCr[1] )
             {
-               if ( Cr[2] == 0 )             Sibling[21] = SIB_OFFSET_NONPERIODIC - 21;
-               else                          Sibling[21] = SIB_OFFSET_NONPERIODIC - 9;
+               if ( Cr[2] == 0 )             SetSiblingExternal_CheckPeriodicity( Sibling+21, 21 );
+               else                          SetSiblingExternal_CheckPeriodicity( Sibling+21,  9 );
             }
             else
             {
-               if ( Cr[2] == 0 )             Sibling[21] = SIB_OFFSET_NONPERIODIC - 16;
-               else                          Sibling[21] = SIB_OFFSET_NONPERIODIC - 1;
+               if ( Cr[2] == 0 )             SetSiblingExternal_CheckPeriodicity( Sibling+21, 16 );
+               else                          SetSiblingExternal_CheckPeriodicity( Sibling+21,  1 );
             }
          }
          else
          {
             if ( Cr[1] == MaxIntCr[1] )
             {
-               if ( Cr[2] == 0 )             Sibling[21] = SIB_OFFSET_NONPERIODIC - 11;
-               else                          Sibling[21] = SIB_OFFSET_NONPERIODIC - 3;
+               if ( Cr[2] == 0 )             SetSiblingExternal_CheckPeriodicity( Sibling+21, 11 );
+               else                          SetSiblingExternal_CheckPeriodicity( Sibling+21,  3 );
             }
             else
-               if ( Cr[2] == 0 )             Sibling[21] = SIB_OFFSET_NONPERIODIC - 4;
+               if ( Cr[2] == 0 )             SetSiblingExternal_CheckPeriodicity( Sibling+21,  4 );
          }
 
 //       sibling 22
-         if ( Sibling[22] == -1 )
          if ( Cr[0] == 0 )
          {
             if ( Cr[1] == 0 )
             {
-               if ( Cr[2] == MaxIntCr[2] )   Sibling[22] = SIB_OFFSET_NONPERIODIC - 22;
-               else                          Sibling[22] = SIB_OFFSET_NONPERIODIC - 6;
+               if ( Cr[2] == MaxIntCr[2] )   SetSiblingExternal_CheckPeriodicity( Sibling+22, 22 );
+               else                          SetSiblingExternal_CheckPeriodicity( Sibling+22,  6 );
             }
             else
             {
-               if ( Cr[2] == MaxIntCr[2] )   Sibling[22] = SIB_OFFSET_NONPERIODIC - 15;
-               else                          Sibling[22] = SIB_OFFSET_NONPERIODIC - 0;
+               if ( Cr[2] == MaxIntCr[2] )   SetSiblingExternal_CheckPeriodicity( Sibling+22, 15 );
+               else                          SetSiblingExternal_CheckPeriodicity( Sibling+22,  0 );
             }
          }
          else
          {
             if ( Cr[1] == 0 )
             {
-               if ( Cr[2] == MaxIntCr[2] )   Sibling[22] = SIB_OFFSET_NONPERIODIC - 12;
-               else                          Sibling[22] = SIB_OFFSET_NONPERIODIC - 2;
+               if ( Cr[2] == MaxIntCr[2] )   SetSiblingExternal_CheckPeriodicity( Sibling+22, 12 );
+               else                          SetSiblingExternal_CheckPeriodicity( Sibling+22,  2 );
             }
             else
-               if ( Cr[2] == MaxIntCr[2] )   Sibling[22] = SIB_OFFSET_NONPERIODIC - 5;
+               if ( Cr[2] == MaxIntCr[2] )   SetSiblingExternal_CheckPeriodicity( Sibling+22,  5 );
          }
 
 //       sibling 23
-         if ( Sibling[23] == -1 )
          if ( Cr[0] == MaxIntCr[0] )
          {
             if ( Cr[1] == 0 )
             {
-               if ( Cr[2] == MaxIntCr[2] )   Sibling[23] = SIB_OFFSET_NONPERIODIC - 23;
-               else                          Sibling[23] = SIB_OFFSET_NONPERIODIC - 7;
+               if ( Cr[2] == MaxIntCr[2] )   SetSiblingExternal_CheckPeriodicity( Sibling+23, 23 );
+               else                          SetSiblingExternal_CheckPeriodicity( Sibling+23,  7 );
             }
             else
             {
-               if ( Cr[2] == MaxIntCr[2] )   Sibling[23] = SIB_OFFSET_NONPERIODIC - 17;
-               else                          Sibling[23] = SIB_OFFSET_NONPERIODIC - 1;
+               if ( Cr[2] == MaxIntCr[2] )   SetSiblingExternal_CheckPeriodicity( Sibling+23, 17 );
+               else                          SetSiblingExternal_CheckPeriodicity( Sibling+23,  1 );
             }
          }
          else
          {
             if ( Cr[1] == 0 )
             {
-               if ( Cr[2] == MaxIntCr[2] )   Sibling[23] = SIB_OFFSET_NONPERIODIC - 12;
-               else                          Sibling[23] = SIB_OFFSET_NONPERIODIC - 2;
+               if ( Cr[2] == MaxIntCr[2] )   SetSiblingExternal_CheckPeriodicity( Sibling+23, 12 );
+               else                          SetSiblingExternal_CheckPeriodicity( Sibling+23,  2 );
             }
             else
-               if ( Cr[2] == MaxIntCr[2] )   Sibling[23] = SIB_OFFSET_NONPERIODIC - 5;
+               if ( Cr[2] == MaxIntCr[2] )   SetSiblingExternal_CheckPeriodicity( Sibling+23,  5 );
          }
 
 //       sibling 24
-         if ( Sibling[24] == -1 )
          if ( Cr[0] == 0 )
          {
             if ( Cr[1] == MaxIntCr[1] )
             {
-               if ( Cr[2] == MaxIntCr[2] )   Sibling[24] = SIB_OFFSET_NONPERIODIC - 24;
-               else                          Sibling[24] = SIB_OFFSET_NONPERIODIC - 8;
+               if ( Cr[2] == MaxIntCr[2] )   SetSiblingExternal_CheckPeriodicity( Sibling+24, 24 );
+               else                          SetSiblingExternal_CheckPeriodicity( Sibling+24,  8 );
             }
             else
             {
-               if ( Cr[2] == MaxIntCr[2] )   Sibling[24] = SIB_OFFSET_NONPERIODIC - 15;
-               else                          Sibling[24] = SIB_OFFSET_NONPERIODIC - 0;
+               if ( Cr[2] == MaxIntCr[2] )   SetSiblingExternal_CheckPeriodicity( Sibling+24, 15 );
+               else                          SetSiblingExternal_CheckPeriodicity( Sibling+24,  0 );
             }
          }
          else
          {
             if ( Cr[1] == MaxIntCr[1] )
             {
-               if ( Cr[2] == MaxIntCr[2] )   Sibling[24] = SIB_OFFSET_NONPERIODIC - 13;
-               else                          Sibling[24] = SIB_OFFSET_NONPERIODIC - 3;
+               if ( Cr[2] == MaxIntCr[2] )   SetSiblingExternal_CheckPeriodicity( Sibling+24, 13 );
+               else                          SetSiblingExternal_CheckPeriodicity( Sibling+24,  3 );
             }
             else
-               if ( Cr[2] == MaxIntCr[2] )   Sibling[24] = SIB_OFFSET_NONPERIODIC - 5;
+               if ( Cr[2] == MaxIntCr[2] )   SetSiblingExternal_CheckPeriodicity( Sibling+24,  5 );
          }
 
 //       sibling 25
-         if ( Sibling[25] == -1 )
          if ( Cr[0] == MaxIntCr[0] )
          {
             if ( Cr[1] == MaxIntCr[1] )
             {
-               if ( Cr[2] == MaxIntCr[2] )   Sibling[25] = SIB_OFFSET_NONPERIODIC - 25;
-               else                          Sibling[25] = SIB_OFFSET_NONPERIODIC - 9;
+               if ( Cr[2] == MaxIntCr[2] )   SetSiblingExternal_CheckPeriodicity( Sibling+25, 25 );
+               else                          SetSiblingExternal_CheckPeriodicity( Sibling+25,  9 );
             }
             else
             {
-               if ( Cr[2] == MaxIntCr[2] )   Sibling[25] = SIB_OFFSET_NONPERIODIC - 17;
-               else                          Sibling[25] = SIB_OFFSET_NONPERIODIC - 1;
+               if ( Cr[2] == MaxIntCr[2] )   SetSiblingExternal_CheckPeriodicity( Sibling+25, 17 );
+               else                          SetSiblingExternal_CheckPeriodicity( Sibling+25,  1 );
             }
          }
          else
          {
             if ( Cr[1] == MaxIntCr[1] )
             {
-               if ( Cr[2] == MaxIntCr[2] )   Sibling[25] = SIB_OFFSET_NONPERIODIC - 13;
-               else                          Sibling[25] = SIB_OFFSET_NONPERIODIC - 3;
+               if ( Cr[2] == MaxIntCr[2] )   SetSiblingExternal_CheckPeriodicity( Sibling+25, 13 );
+               else                          SetSiblingExternal_CheckPeriodicity( Sibling+25,  3 );
             }
             else
-               if ( Cr[2] == MaxIntCr[2] )   Sibling[25] = SIB_OFFSET_NONPERIODIC - 5;
+               if ( Cr[2] == MaxIntCr[2] )   SetSiblingExternal_CheckPeriodicity( Sibling+25,  5 );
          }
 
       } // for (int PID=PID0; PID<PID0+8; PID++)
    } // for (int t=0; t<NTarget0; t++)
 
 } // FUNCTION : SetSiblingExternal
+
+
+
+//-------------------------------------------------------------------------------------------------------
+// Function    :  SetSiblingExternal_CheckPeriodicity
+// Description :  Set the sibling indices of patches adjacent to the simulation domain if the target
+//                boundary direction is non-periodic
+//
+// Note        :  1. Invoked by SetSiblingExternal()
+//                2. Do nothing if the target boundary direction is periodic
+//                   --> A boundary direction is defined to be periodic only if its associated directions
+//                       along x/y/z are all periodic
+//                   --> For example, Boundary=26 is periodic only if x, y, and z directions are all periodic
+//
+// Parameter   :  Sibling  : Pointer of Sibling[] to be set
+//                Boundary : Boundary direction (0-25)
+//-------------------------------------------------------------------------------------------------------
+void SetSiblingExternal_CheckPeriodicity( int *Sibling, const int Boundary )
+{
+
+   bool Periodic = true;
+
+   for (int d=0; d<3; d++)
+   {
+      if (  TABLE_01( Boundary, 'x'+d, true, false, true )  &&  OPT__BC_FLU[2*d] != BC_FLU_PERIODIC  )
+      {
+         Periodic = false;
+         break;
+      }
+   }
+
+   if ( !Periodic )  *Sibling = SIB_OFFSET_NONPERIODIC - Boundary;
+
+} // FUNCTION : SetSiblingExternal_CheckPeriodicity
 
 
 
