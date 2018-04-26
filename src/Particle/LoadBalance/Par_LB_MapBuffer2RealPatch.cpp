@@ -9,21 +9,21 @@
 // Function    :  Par_LB_MapBuffer2RealPatch
 // Description :  Obtain the indices of real patches corresponding to the input buffer patches
 //
-// Note        :  1. Target patches (those in Buff_PIDList) must be buffer patches at level "lv"
+// Note        :  1. Target patches (those in Buff_PIDList[]) must be buffer patches at level "lv"
 //                   --> Unless UseInputLBIdx==true, in which case we don't care whether patches stored in
-//                       Buff_PIDList are buffer or real patches
+//                       Buff_PIDList[] are buffer or real patches
 //                       --> Useful for constructing the PID lists for exchanging particles between fathers
-//                           and son (the F2S lists constructed in Par_LB_RecordExchangeParticlePatchID)
-//                           --> Since in this special case Buff_PIDList actually stores the PID of real father
+//                           and son (the F2S lists constructed in Par_LB_RecordExchangeParticlePatchID())
+//                           --> Since in this special case Buff_PIDList[] actually stores the PID of real father
 //                               patches at lv-1
-//                2. Arrays "Buff_PIDList, Buff_NPatchEachRank, and Real_NPatchEachRank" must be preallocated
-//                   Array "Real_PIDList" will be allocated (using call-by-reference) here and must be free'd
+//                2. Buff_PIDList[], Buff_NPatchEachRank[], and Real_NPatchEachRank[] must be preallocated.
+//                   Real_PIDList[] will be allocated (using call-by-reference) here and must be free'd
 //                   manually by calling "delete []"
-//                3. Input array "Buff_PIDList" will be sorted according to their target MPI rank
+//                3. Input array Buff_PIDList[] will be sorted according to their target MPI rank
 //                4. Both "Buff_PIDList, Real_NPatchTotal, and Real_PIDList" are inputted as "call-by-reference"
 //
 // Parameter   :  lv                   : Target refinement level
-//                Buff_NPatchTotal     : Total number of buffer patches in the Buff_PIDList
+//                Buff_NPatchTotal     : Total number of buffer patches in the Buff_PIDList[]
 //                Buff_PIDList         : Input array storing the target buffer patch indices
 //                                       --> It will be sorted after calling this function
 //                Buff_NPatchEachRank  : Output array to store the number of buffer patches belonging to each rank
@@ -37,7 +37,7 @@
 //                UseInputLBIdx        : true --> Use the input load-balance indices instead of recalculating it
 //                Buff_LBIdxList_Input : Load-balance indices used by UseInputLBIdx
 //
-// Return      :  Buff_PIDList, Buff_NPatchEachRank, Real_NPatchTotal, Real_PIDList, Real_NPatchEachRank
+// Return      :  Buff_PIDList[], Buff_NPatchEachRank[], Real_NPatchTotal, Real_PIDList[], Real_NPatchEachRank[]
 //-------------------------------------------------------------------------------------------------------
 void Par_LB_MapBuffer2RealPatch( const int lv, const int  Buff_NPatchTotal, int *&Buff_PIDList, int *Buff_NPatchEachRank,
                                                      int &Real_NPatchTotal, int *&Real_PIDList, int *Real_NPatchEachRank,
@@ -79,8 +79,8 @@ void Par_LB_MapBuffer2RealPatch( const int lv, const int  Buff_NPatchTotal, int 
 
 // 1. exchange the target load-balance indices between all ranks
 // 1-1. get the LB_Idx of all target buffer patches
-// --> note that the LB_Idx stored in each patch always assumes periodicity
-// --> so external buffer patches can still find the corresponding real patches correctly
+//      --> note that the LB_Idx stored in each patch always assumes periodicity
+//      --> so external buffer patches can still find the corresponding real patches correctly
    long *Buff_LBIdxList = NULL;
 
    if ( UseInputLBIdx )
@@ -157,7 +157,7 @@ void Par_LB_MapBuffer2RealPatch( const int lv, const int  Buff_NPatchTotal, int 
 // 1-6. store the sorted PID list
    memcpy( Buff_PIDList, Buff_PIDList_Sort, Buff_NPatchTotal*sizeof(int) );
    delete [] Buff_PIDList_Sort;
-// do NOT use the following codes since we don't know whether Buff_PIDList is allocated by malloc or new
+// do NOT use the following codes since we don't know whether Buff_PIDList[] is allocated by malloc or new
 // delete [] Buff_PIDList;
 // Buff_PIDList = Buff_PIDList_Sort
 
