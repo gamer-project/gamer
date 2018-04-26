@@ -509,6 +509,15 @@ void PrepareCData( const int FaLv, const int FaPID, real *const FaData,
 
          BC_Sibling = SIB_OFFSET_NONPERIODIC - SibPID;
 
+#        ifdef GAMER_DEBUG
+         if ( BC_Face[BC_Sibling] < 0  ||  BC_Face[BC_Sibling] > 5 )
+            Aux_Error( ERROR_INFO, "incorrect BC_Face[%d] = %d !!\n", BC_Sibling, BC_Face[BC_Sibling] );
+
+         if ( OPT__BC_FLU[ BC_Face[BC_Sibling] ] == BC_FLU_PERIODIC )
+            Aux_Error( ERROR_INFO, "OPT__BC_FLU == BC_FLU_PERIODIC (BC_Sibling %d, BC_Face %d, SibPID %d, FaPID %d, sib %d, FaLv %d) !!\n",
+                       BC_Sibling, BC_Face[BC_Sibling], SibPID, FaPID, sib, FaLv );
+#        endif
+
          switch ( OPT__BC_FLU[ BC_Face[BC_Sibling] ] )
          {
             case BC_FLU_OUTFLOW:
@@ -541,11 +550,8 @@ void PrepareCData( const int FaLv, const int FaPID, real *const FaData,
 
 
 //    2.1.3 it will violate the proper-nesting condition if the flagged patch is NOT surrounded by siblings
-      else if ( SibPID == -1 )
-         Aux_Error( ERROR_INFO, "no sibling patch is found for FaLv %d, FaPID %d, sib %d !!\n", FaLv, FaPID, sib );
-
       else
-         Aux_Error( ERROR_INFO, "SibPID == %d (FaPID %d, sib %d) !!\n", SibPID, FaPID, sib );
+         Aux_Error( ERROR_INFO, "SibPID == %d (FaLv %d, FaPID %d, sib %d) !!\n", SibPID, FaLv, FaPID, sib );
 
    } // for (int sib=0; sib<NSide_Flu; sib++)
 
@@ -556,27 +562,58 @@ void PrepareCData( const int FaLv, const int FaPID, real *const FaData,
    {
       SibPID = amr->patch[0][FaLv][FaPID]->sibling[sib];
 
-//    it will violate the proper-nesting condition if the flagged patch is NOT surrounded by sibling patches
-#     ifdef GAMER_DEBUG
-      if ( SibPID < 0 )
-         Aux_Error( ERROR_INFO, "no sibling patch is found for FaLv %d, FaPID %d, sib %d !!\n", FaLv, FaPID, sib );
-#     endif
-
       for (int d=0; d<3; d++)
       {
          Loop [d] = TABLE_01( sib, 'x'+d, FaGhost_Pot, PATCH_SIZE, FaGhost_Pot );
          Disp1[d] = TABLE_01( sib, 'x'+d, 0, FaGhost_Pot, FaGhost_Pot+PATCH_SIZE );
-         Disp2[d] = TABLE_01( sib, 'x'+d, PATCH_SIZE-FaGhost_Pot, 0, 0 );
       }
 
-      for (int k=0; k<Loop[2]; k++)    {  K = k + Disp1[2];    K2 = k + Disp2[2];
-      for (int j=0; j<Loop[1]; j++)    {  J = j + Disp1[1];    J2 = j + Disp2[1];
-      for (int i=0; i<Loop[0]; i++)    {  I = i + Disp1[0];    I2 = i + Disp2[0];
+//    2.2.1 if the target sibling patch exists --> just copy data from the nearby patches at the same level
+      if ( SibPID >= 0 )
+      {
+         for (int d=0; d<3; d++)    Disp2[d] = TABLE_01( sib, 'x'+d, PATCH_SIZE-FaGhost_Pot, 0, 0 );
 
-         Idx = (K*FaSize_Pot + J)*FaSize_Pot + I;
+         for (int k=0; k<Loop[2]; k++)    {  K = k + Disp1[2];    K2 = k + Disp2[2];
+         for (int j=0; j<Loop[1]; j++)    {  J = j + Disp1[1];    J2 = j + Disp2[1];
+         for (int i=0; i<Loop[0]; i++)    {  I = i + Disp1[0];    I2 = i + Disp2[0];
 
-         FaData_Pot[Idx] = amr->patch[FaSg_Pot][FaLv][SibPID]->pot[K2][J2][I2];
-      }}}
+            Idx = (K*FaSize_Pot + J)*FaSize_Pot + I;
+
+            FaData_Pot[Idx] = amr->patch[FaSg_Pot][FaLv][SibPID]->pot[K2][J2][I2];
+
+         }}}
+      }
+
+
+//    2.2.2 if the target sibling patch lies outside the simulation domain --> apply the specified B.C.
+      else if ( SibPID <= SIB_OFFSET_NONPERIODIC )
+      {
+         for (int d=0; d<3; d++)
+         {
+            BC_Idx_Start[d] = Disp1[d];
+            BC_Idx_End  [d] = Loop[d] + BC_Idx_Start[d] - 1;
+         }
+
+         BC_Sibling = SIB_OFFSET_NONPERIODIC - SibPID;
+
+#        ifdef GAMER_DEBUG
+         if ( BC_Face[BC_Sibling] < 0  ||  BC_Face[BC_Sibling] > 5 )
+            Aux_Error( ERROR_INFO, "incorrect BC_Face[%d] = %d !!\n", BC_Sibling, BC_Face[BC_Sibling] );
+
+         if ( OPT__BC_FLU[ BC_Face[BC_Sibling] ] == BC_FLU_PERIODIC )
+            Aux_Error( ERROR_INFO, "OPT__BC_FLU == BC_FLU_PERIODIC (BC_Sibling %d, BC_Face %d, SibPID %d, FaPID %d, sib %d, FaLv %d) !!\n",
+                       BC_Sibling, BC_Face[BC_Sibling], SibPID, FaPID, sib, FaLv );
+#        endif
+
+//       extrapolate potential
+         Poi_BoundaryCondition_Extrapolation( FaData_Pot, BC_Face[BC_Sibling], 1, FaGhost_Pot,
+                                              FaSize_Pot, FaSize_Pot, FaSize_Pot, BC_Idx_Start, BC_Idx_End );
+      }
+
+
+//    2.2.3 it will violate the proper-nesting condition if the flagged patch is NOT surrounded by siblings
+      else
+         Aux_Error( ERROR_INFO, "SibPID == %d (FaLv %d, FaPID %d, sib %d) !!\n", SibPID, FaLv, FaPID, sib );
 
    } // for (int sib=0; sib<NSide_Pot; sib++)
 #  endif // #ifdef GRAVITY
