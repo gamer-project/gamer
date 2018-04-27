@@ -9,10 +9,11 @@
 // Function    :  Par_LB_Refine_SendParticle2Father
 // Description :  Send particles to leaf real patches at FaLv after grid refinement
 //
-// Note        :  1. Called by LB_Refine
-//                2. After deleting patches at FaLv+1, their particles may temporarily reside in buffer patches
-//                   at FaLv. This function send these particles to their corresponding real patches at Falv.
-//                3. The input array RefineS2F_Send_PIDList must be free'd manually after calling this function
+// Note        :  1. Called by LB_Refine()
+//                2. After deleting patches at FaLv+1, their particles may temporarily reside in the
+//                   buffer-father patches at FaLv. This function send these particles to their corresponding
+//                   real patches at Falv.
+//                3. Input array RefineS2F_Send_PIDList[] must be free'd manually after calling this function
 //
 // Parameter   :  FaLv                       : Target father level
 //                RefineS2F_Send_NPatchTotal : Total number of buffer patches at FaLv for sending particles
@@ -76,7 +77,7 @@ void Par_LB_Refine_SendParticle2Father( const int FaLv, const int RefineS2F_Send
       NULL, NULL );
 
 
-// 3. free memory (RefineS2F_Send_PIDList will be free'd by LB_Refine)
+// 3. free memory (RefineS2F_Send_PIDList[] will be free'd by LB_Refine())
    delete [] RefineS2F_Recv_PIDList;
 
 } // FUNCTION : Par_LB_Refine_SendParticle2Father
