@@ -9,7 +9,7 @@
 // Function    :  Buf_AllocateBufferPatch
 // Description :  Allocate the buffer patches at level "lv"
 //
-// Note        :  1. Currently it only works for the functions "Init_ByRestart_*" and "Init_BaseLevel"
+// Note        :  1. Currently it only works for Init_ByRestart_*() and Init_BaseLevel()
 //                2. For the base level, no data transfer is required
 //
 // Parameter   :  Tamr : Target AMR_t pointer
@@ -22,7 +22,7 @@ void Buf_AllocateBufferPatch( AMR_t *Tamr, const int lv )
       Aux_Error( ERROR_INFO, "incorrect parameter %s = %d !!\n", "lv", lv );
 
 
-// invoke the function "Buf_AllocateBufferPatch_Base" for the base level
+// invoke Buf_AllocateBufferPatch_Base() for the base level
    if ( lv == 0 )
    {
       Buf_AllocateBufferPatch_Base( Tamr );
@@ -41,7 +41,7 @@ void Buf_AllocateBufferPatch( AMR_t *Tamr, const int lv )
       Recv_PosList[s] = NULL;
    }
 
-// a. set up the Send_PosList by scanning over the BounP_IDList at level "lv-1"
+// a. set up Send_PosList[] by scanning over BounP_IDList[] at level "lv-1"
    for (int s=0; s<26; s++)
    {
 //    initialize counter as zero

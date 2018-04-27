@@ -38,6 +38,11 @@ void Flu_AllocateFluxArray_Buffer( const int lv )
          {
             SibPID = amr->patch[0][lv][PID]->sibling[ MirrorSib[s] ];
 
+//          SibPID, if exists, must be a real patch
+#           ifdef GAMER_DEBUG
+            if ( SibPID < -1 )   Aux_Error( ERROR_INFO, "lv %d, SibPID (%d) < -1 !!\n", lv, SibPID );
+#           endif
+
             if ( SibPID != -1 )
             if ( amr->patch[0][lv][SibPID]->son != -1 )
                amr->patch[0][lv][PID]->fnew( MirrorSib[s], AUTO_REDUCE_DT );

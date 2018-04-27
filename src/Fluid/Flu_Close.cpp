@@ -836,7 +836,7 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Table_01
-// Description :  Return the sibling patch ID for the function "CorrectFlux"
+// Description :  Return the sibling patch ID for CorrectFlux()
 //
 // Parameter   :  lv    : Target refinement level
 //                PID   : Target patch index
