@@ -5,7 +5,7 @@
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  TABLE_06
-// Description :  Return the sibling index used by the functions "Flag_Buffer" and "Buf_RecordBoundaryFlag"
+// Description :  Return the sibling index used by Flag_Buffer() and Buf_RecordBoundaryFlag()
 //
 // Parameter   :  SibID     : Sibling index (0~25)
 //                FlagLayer : Flag layer (1~8)
