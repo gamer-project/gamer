@@ -12,8 +12,8 @@
 //
 // Note        :  Work for both periodic and non-periodic BC's
 //
-// Parameter   :  lv       : Target refinement level
-//                comment  : You can put the location where this function is invoked in this string
+// Parameter   :  lv      : Target refinement level
+//                comment : You can put the location where this function is invoked in this string
 //-------------------------------------------------------------------------------------------------------
 void Aux_Check_ProperNesting( const int lv, const char *comment )
 {
