@@ -8,7 +8,7 @@
 //###OPTIMIZATION : use heap sort or quick sort
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Buf_RecordBoundaryPatch
-// Description :  Record the patches near the sub-domain boundaries in "amr->ParaVar->BounP_IDList"
+// Description :  Record the patches near the sub-domain boundaries in amr->ParaVar->BounP_IDList[]
 //
 // Parameter   :  lv : Target refinement level
 //-------------------------------------------------------------------------------------------------------
@@ -81,7 +81,7 @@ void Buf_RecordBoundaryPatch( const int lv )
       ListLength1D = ( s < 2 ) ? ListLength[1] : ListLength[0];
 
 
-//    fill up the arrays "amr->ParaVar->BounP_IDList[lv][s] and amr->ParaVar->BounP_PosList[lv][s]"
+//    fill up amr->ParaVar->BounP_IDList[lv][s][] and amr->ParaVar->BounP_PosList[lv][s][]
       for (int FaID=0; FaID<amr->ParaVar->BounP_NList[lv-1][s]; FaID++)
       {
          FaPID = amr->ParaVar->BounP_IDList[lv-1][s][FaID];

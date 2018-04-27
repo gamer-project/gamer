@@ -53,7 +53,7 @@ void Buf_RecordBoundaryPatch_Base()
       amr->ParaVar->BounP_PosList[0][s] = new int [ Width[0]*Width[1]*Width[2] ];
 
 
-//    fill up the arrays "BounP_IDList[0][s] and BounP_PosList[0][s]"
+//    fill up BounP_IDList[0][s][] and BounP_PosList[0][s][]
       for (int k=0; k<Width[2]; k++)   {  kk = k + Disp[2];
       for (int j=0; j<Width[1]; j++)   {  jj = j + Disp[1];
       for (int i=0; i<Width[0]; i++)   {  ii = i + Disp[0];
