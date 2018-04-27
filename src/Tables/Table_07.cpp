@@ -9,8 +9,8 @@
 //
 // Note        :  a. Must follow the order : x -> y -> z
 //                   (otherwise the function "Buf_FindBoundaryPatch" will fail)
-//                b. Similar to the table "TABLE_03"
-//                c. Work for the functions "Buf_RecordExchangeDataPatchID" and "Buf_RecordBoundaryPatch"
+//                b. Similar to the table TABLE_03()
+//                c. Work for Buf_RecordExchangeDataPatchID() and Buf_RecordBoundaryPatch()
 //
 // Parameter   :  SibID : Sibling index (0~25)
 //                Count : Patch counter (0~3)

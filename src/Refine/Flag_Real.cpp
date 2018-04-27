@@ -175,7 +175,8 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
 
             for (int sib=0; sib<26; sib++)
             {
-//             do not check if sibling[]<-1 to allow for refinement around boundaries first
+//             do not check if sibling[]<-1 to allow for refinement around boundaries
+//             --> not considering OPT__NO_FLAG_NEAR_BOUNDARY yet
                if ( amr->patch[0][lv][PID]->sibling[sib] == -1 )
                {
                   ProperNesting = false;
