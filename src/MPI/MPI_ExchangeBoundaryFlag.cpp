@@ -7,7 +7,7 @@
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  MPI_ExchangeBoundaryFlag
-// Description :  Get the "BuffFlag_NList" and "BuffFlag_PosList" from 26 neighbor ranks
+// Description :  Get BuffFlag_NList[] and BuffFlag_PosList[] from 26 neighbor ranks
 //
 // Parameter   :  lv : Target refinement level
 //-------------------------------------------------------------------------------------------------------
@@ -19,7 +19,7 @@ void MPI_ExchangeBoundaryFlag( const int lv )
    MPI_Request Req[4];
 
 
-// a. get the BuffFlag_NList
+// a. get BuffFlag_NList[]
    for (int s=0; s<26; s+=2)
    {
 //    properly deal with the non-periodic B.C.
@@ -44,7 +44,7 @@ void MPI_ExchangeBoundaryFlag( const int lv )
    } // for (int s=0; s<26; s+=2)
 
 
-// b. allocate memory for "BuffFlag_PosList" (which will be deallocated in the function "Flag_Buffer")
+// b. allocate memory for BuffFlag_PosList[] (which will be deallocated by Flag_Buffer())
    for (int s=0; s<26; s++)
    {
       if ( amr->ParaVar->BuffFlag_PosList[lv][s] != NULL )
@@ -57,7 +57,7 @@ void MPI_ExchangeBoundaryFlag( const int lv )
    }
 
 
-// c. get the BuffFlag_PosList
+// c. get BuffFlag_PosList[]
    for (int s=0; s<26; s+=2)
    {
       for (int t=0; t<2; t++)
@@ -88,7 +88,7 @@ void MPI_ExchangeBoundaryFlag( const int lv )
    } // for (int s=0; s<26; s+=2)
 
 
-// d. deallocate memory for "BounFlag_PosList"
+// d. deallocate memory for BounFlag_PosList[]
    for (int s=0; s<26; s++)
    {
       if ( amr->ParaVar->BounFlag_PosList[lv][s] != NULL )

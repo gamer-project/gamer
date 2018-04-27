@@ -9,10 +9,10 @@
 // Function    :  Flag_Buffer
 // Description :  Flag the buffer patches (also the boundary patches)
 //
-// Note        :  a. All flags should be initialized as "false" by calling the function "Flag_Real" in advance
-//                b. The arrays "ParaVar->BuffFlag_NList" and "ParaVar->BuffFlag_PosList" must be prepared
-//                   in advance by calling the functions "Buf_RecordBoundaryFlag" and "MPI_ExchangeBoundaryFlag"
-//                c. No OpenMP directives are applied in this function
+// Note        :  1. All flags should be initialized as "false" by calling Flag_Real() in advance
+//                2. ParaVar->BuffFlag_NList[] and ParaVar->BuffFlag_PosList[] must be prepared
+//                   in advance by calling Buf_RecordBoundaryFlag() and MPI_ExchangeBoundaryFlag()
+//                3. No OpenMP directives are applied in this function
 //
 // Parameter   :  lv : Target refinement level to be flagged
 //-------------------------------------------------------------------------------------------------------

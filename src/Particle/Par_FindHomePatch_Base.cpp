@@ -110,23 +110,26 @@ void Par_FindHomePatch_Base( const int *BaseP )
             for (int s=0; s<26; s++)
             {
                SibPID = amr->patch[0][0][TPID]->sibling[s];
-               EdgeL  = amr->patch[0][0][SibPID]->EdgeL;
-               EdgeR  = amr->patch[0][0][SibPID]->EdgeR;
 
                if ( SibPID < amr->NPatchComma[0][1]  &&  SibPID >= 0 )  // make sure that the sibling patch is a real patch
-               if ( Pos[0][ParID] >= EdgeL[0]  &&  Pos[0][ParID] < EdgeR[0]  &&
-                    Pos[1][ParID] >= EdgeL[1]  &&  Pos[1][ParID] < EdgeR[1]  &&
-                    Pos[2][ParID] >= EdgeL[2]  &&  Pos[2][ParID] < EdgeR[2]    )
                {
-                  Aux_Message( stderr, "WARNING : correct home patch has been found (PID %d)\n", SibPID );
-                  for (int dd=0; dd<3; dd++)
-                  Aux_Message( stderr, "          L/R edge[%d] %13.7e/%13.7e, particle pos[%d] %13.7e\n",
-                               dd, amr->patch[0][0][SibPID]->EdgeL[dd], amr->patch[0][0][SibPID]->EdgeR[dd],
-                               dd, Pos[dd][ParID] );
+                  EdgeL = amr->patch[0][0][SibPID]->EdgeL;
+                  EdgeR = amr->patch[0][0][SibPID]->EdgeR;
 
-                  TPID = SibPID;
-                  Pass = true;
-                  break;
+                  if ( Pos[0][ParID] >= EdgeL[0]  &&  Pos[0][ParID] < EdgeR[0]  &&
+                       Pos[1][ParID] >= EdgeL[1]  &&  Pos[1][ParID] < EdgeR[1]  &&
+                       Pos[2][ParID] >= EdgeL[2]  &&  Pos[2][ParID] < EdgeR[2]    )
+                  {
+                     Aux_Message( stderr, "WARNING : correct home patch has been found (PID %d)\n", SibPID );
+                     for (int dd=0; dd<3; dd++)
+                     Aux_Message( stderr, "          L/R edge[%d] %13.7e/%13.7e, particle pos[%d] %13.7e\n",
+                                  dd, amr->patch[0][0][SibPID]->EdgeL[dd], amr->patch[0][0][SibPID]->EdgeR[dd],
+                                  dd, Pos[dd][ParID] );
+
+                     TPID = SibPID;
+                     Pass = true;
+                     break;
+                  }
                }
             }
          } // if ( !Pass );
@@ -135,6 +138,10 @@ void Par_FindHomePatch_Base( const int *BaseP )
 
 
 #        ifdef DEBUG_PARTICLE
+//       check: whether the home patch is a real patch
+         if ( TPID >= amr->NPatchComma[0][1]  ||  TPID <= -1 )
+            Aux_Error( ERROR_INFO, "particle %ld's home patch (PID %d) is a buffer patch !!\n", ParID, TPID );
+
 //       check: whether the particle indeed lies in the target home patch
          for (int d=0; d<3; d++)
          {
@@ -143,10 +150,6 @@ void Par_FindHomePatch_Base( const int *BaseP )
                Aux_Error( ERROR_INFO, "wrong home patch (PID %d, L/R edge %13.7e/%13.7e, particle pos[%d][%d] %13.7e) !!\n",
                           TPID, amr->patch[0][0][TPID]->EdgeL[d], amr->patch[0][0][TPID]->EdgeR[d], d, ParID, Pos[d][ParID] );
          }
-
-//       check: whether the home patch is a real patch
-         if ( TPID >= amr->NPatchComma[0][1]  ||  TPID <= -1 )
-            Aux_Error( ERROR_INFO, "particle %ld's home patch (PID %d) is a buffer patch !!\n", ParID, TPID );
 #        endif // #ifdef DEBUG_PARTICLE
 
 

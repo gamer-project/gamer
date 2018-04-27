@@ -7,7 +7,7 @@
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Poi_Prepare_Rho
-// Description :  Prepare the input array "h_Rho_Array_P" for the Poisson solver
+// Description :  Prepare h_Rho_Array_P[] for the Poisson solver
 //
 // Note        :  1. Invoke the function "Prepare_PatchData"
 //                2. Minimum density threshold (MIN_DENS) is applied

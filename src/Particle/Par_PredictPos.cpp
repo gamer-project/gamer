@@ -61,7 +61,9 @@ void Par_PredictPos( const long NPar, const long *ParList, real *ParPosX, real *
 
       dt = (real)TargetTime - amr->Par->Time[ParID];
 
-//    note that we don't have to worry about the periodic BC here (in other words, ParPos can lie outside the simulation box)
+//    note that we do not consider periodicity here
+//    --> ParPos[] may lie outside the simulation box
+//    --> caller function is reponsible for taking care of the periodicity
       ParPosX[p] += amr->Par->VelX[ParID]*dt;
       ParPosY[p] += amr->Par->VelY[ParID]*dt;
       ParPosZ[p] += amr->Par->VelZ[ParID]*dt;

@@ -24,7 +24,7 @@ void Output_BoundaryFlagList( const int option, const int lv, const char *commen
    if ( option )  sprintf( FileName, "BoundaryFlagList_%d_%d", MPI_Rank, lv );
    else           sprintf( FileName, "BufferFlagList_%d_%d", MPI_Rank, lv );
 
-   if ( comment != NULL )       
+   if ( comment != NULL )
    {
       strcat( FileName, "_" );
       strcat( FileName, comment );
@@ -41,15 +41,15 @@ void Output_BoundaryFlagList( const int option, const int lv, const char *commen
 
    for (int s=0; s<26; s++)
    {
-      const int NP    = ( option ) ? amr->ParaVar->BounFlag_NList  [lv][s] : 
+      const int NP    = ( option ) ? amr->ParaVar->BounFlag_NList  [lv][s] :
                                      amr->ParaVar->BuffFlag_NList  [lv][s];
-      const int *List = ( option ) ? amr->ParaVar->BounFlag_PosList[lv][s] : 
+      const int *List = ( option ) ? amr->ParaVar->BounFlag_PosList[lv][s] :
                                      amr->ParaVar->BuffFlag_PosList[lv][s];
       const int FlagLayer = TABLE_05( s );
 
       fprintf( File, "Face = %d     Length = %d\n", s, NP );
 
-      for (int P=0; P<NP; P++)  
+      for (int P=0; P<NP; P++)
       {
          fprintf( File, "%5d ", List[P] );
 

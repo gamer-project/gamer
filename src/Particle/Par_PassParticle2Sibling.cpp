@@ -105,6 +105,8 @@ void Par_PassParticle2Sibling( const int lv, const bool TimingSendPar )
             ijk[d] = ( ParPos[d][ParID] < EdgeL[d] ) ? 0 : (ParPos[d][ParID] < EdgeR[d]) ? 1 : 2;
 
 //          2-2. reset particle position for periodic B.C.
+//               --> note that EdgeL/R in amr->patch always assumes periodicity
+//               --> OK when calling patch->AddParticle() in the debug mode
             if ( OPT__BC_FLU[2*d] == BC_FLU_PERIODIC  &&  ijk[d] != 1 )
             {
                if ( ParPos[d][ParID] < 0.0 )
