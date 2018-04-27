@@ -1494,7 +1494,7 @@ void FillIn_Makefile( Makefile_t &Makefile )
 #  endif
 
 #  else
-#  error : unsupported MODEL !!    
+#  error : unsupported MODEL !!
 #  endif // MODEL
 
 #  ifdef PARTICLE

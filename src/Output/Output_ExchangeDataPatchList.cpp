@@ -24,7 +24,7 @@ void Output_ExchangeDataPatchList( const int option, const int lv, const char *c
    if ( option )  sprintf( FileName, "SendDataPatchList_%d_%d", MPI_Rank, lv );
    else           sprintf( FileName, "RecvDataPatchList_%d_%d", MPI_Rank, lv );
 
-   if ( comment != NULL )       
+   if ( comment != NULL )
    {
       strcat( FileName, "_" );
       strcat( FileName, comment );

@@ -20,7 +20,7 @@ extern double ExtAcc_AuxArray[EXT_ACC_NAUX_MAX];
 // Note        :  1. Does not work with "P5_Gradient"
 //                2. Does not take into account the "periodic B.C." when updating particles
 //                   --> After update, the particle position may lie outside the simulation box
-//                   --> It will be corrected in the function "Par_PassParticle2Sibling"
+//                   --> It will be corrected by Par_PassParticle2Sibling()
 //                   --> However, periodic B.C. is taken into account when calculating gravity if OPT__BC_POT == BC_POT_PERIODIC
 //                3. For the K-D-K scheme, this function performs either prediction (K-D) or correction (last K) operation
 //                   --> Use the input parameter "UpdateStep" to control

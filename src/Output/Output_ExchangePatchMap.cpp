@@ -7,8 +7,8 @@
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Output_ExchangePatchMap
-// Description :  Output the map which marks the patches prepared for sending and receiving data from 
-//                neighbor ranks 
+// Description :  Output the map which marks the patches prepared for sending and receiving data from
+//                neighbor ranks
 //
 // Note        :  ( S  .  R )  <-->  (Send  Nothing  Receive)
 //
@@ -18,12 +18,12 @@ void Output_ExchangePatchMap( const int lv, const int xyz, const char *comment )
 {
 
 // set up parameters for outputing different slice
-   const int NPatch1D[3] = { NX0[0]/PATCH_SIZE*(1<<lv)+4, 
-                             NX0[1]/PATCH_SIZE*(1<<lv)+4, 
+   const int NPatch1D[3] = { NX0[0]/PATCH_SIZE*(1<<lv)+4,
+                             NX0[1]/PATCH_SIZE*(1<<lv)+4,
                              NX0[2]/PATCH_SIZE*(1<<lv)+4  };
    const char *Dim[2]    = { NULL, NULL };
    int *ii = NULL, *jj = NULL, *kk = NULL;
-   int i, j, k, i_end, j_end, k_end; 
+   int i, j, k, i_end, j_end, k_end;
 
    i_end = j_end = k_end = 0;
 
@@ -31,7 +31,7 @@ void Output_ExchangePatchMap( const int lv, const int xyz, const char *comment )
    {
       case 0:
          Dim[0] = "X";  Dim[1] = "YZ";
-         ii = &k;    jj = &i;    kk = &j; 
+         ii = &k;    jj = &i;    kk = &j;
          i_end = NPatch1D[1];
          j_end = NPatch1D[2];
          k_end = NPatch1D[0];
@@ -39,7 +39,7 @@ void Output_ExchangePatchMap( const int lv, const int xyz, const char *comment )
 
       case 1:
          Dim[0] = "Y";  Dim[1] = "XZ";
-         ii = &i;    jj = &k;    kk = &j; 
+         ii = &i;    jj = &k;    kk = &j;
          i_end = NPatch1D[0];
          j_end = NPatch1D[2];
          k_end = NPatch1D[1];
@@ -47,7 +47,7 @@ void Output_ExchangePatchMap( const int lv, const int xyz, const char *comment )
 
       case 2:
          Dim[0] = "Z";  Dim[1] = "XY";
-         ii = &i;    jj = &j;    kk = &k; 
+         ii = &i;    jj = &j;    kk = &k;
          i_end = NPatch1D[0];
          j_end = NPatch1D[1];
          k_end = NPatch1D[2];
@@ -60,7 +60,7 @@ void Output_ExchangePatchMap( const int lv, const int xyz, const char *comment )
 
    char FileName[100];
    sprintf( FileName, "ExchangePatchMap_%d_%d_%2s", MPI_Rank, lv, Dim[1] );
-   if ( comment != NULL )       
+   if ( comment != NULL )
    {
       strcat( FileName, "_" );
       strcat( FileName, comment );
@@ -111,15 +111,15 @@ void Output_ExchangePatchMap( const int lv, const int xyz, const char *comment )
       ID = kp*NPatch1D[1]*NPatch1D[0] + jp*NPatch1D[0] + ip;
 
 //    the ID should never repeat for receiving data
-      if ( Map[ID] != '.' )      
-         Aux_Message( stderr, "WARNING : repeated ID (Rank = %d, P = %d, (ip, jp, kp) = (%d,%d,%d)) !!\n", 
+      if ( Map[ID] != '.' )
+         Aux_Message( stderr, "WARNING : repeated ID (Rank = %d, P = %d, (ip, jp, kp) = (%d,%d,%d)) !!\n",
                       MPI_Rank, P, ip, jp, kp );
 
       Map[ID] = 'R';
    }
 
 
-// output the Map slice by slice 
+// output the Map slice by slice
    FILE *File = fopen( FileName, "w" );
    fprintf( File, "Time = %13.7e  Step = %ld  Rank = %d  Level = %d\n\n", Time[0], Step, MPI_Rank, lv );
 
@@ -129,7 +129,7 @@ void Output_ExchangePatchMap( const int lv, const int xyz, const char *comment )
 
       for (j=j_end-1; j>=0; j--)
       {
-         for (i=0; i<i_end; i++)   
+         for (i=0; i<i_end; i++)
          {
             ID = (*kk)*NPatch1D[1]*NPatch1D[0] + (*jj)*NPatch1D[0] + (*ii);
 

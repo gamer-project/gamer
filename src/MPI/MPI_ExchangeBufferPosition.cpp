@@ -9,7 +9,7 @@
 // Function    :  MPI_ExchangeBufferPosition
 // Description :  Exchange the positions of buffer patches
 //
-// Note        :  Currently it only works for the function "Buf_AllocateBufferPatch"
+// Note        :  Currently it only works for Buf_AllocateBufferPatch()
 //
 // Parameter   :  NSend        : Number of data to be sent in 26 sibling directions
 //                NRecv        : Number of data to be received in 26 sibling directions

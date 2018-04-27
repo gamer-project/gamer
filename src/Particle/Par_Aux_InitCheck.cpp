@@ -9,7 +9,7 @@
 // Function    :  Par_Aux_InitCheck
 // Description :  Check the initial condition of particles
 //
-// Note        :  1. Invoked by "Init_GAMER"
+// Note        :  1. Invoked by Init_GAMER()
 //                2. Check if all particles lie within the simulation box
 //                3. Remove particles outside the active region for non-periodic B.C.
 //                4. There should be no inactive particles before calling this function
@@ -27,7 +27,7 @@ void Par_Aux_InitCheck()
 
 
 // 1. all active particles should lie within the simulation domain
-// (periodicity should be taken care of in the initial condition, not here)
+//    --> periodicity should be taken care of in the initial condition, not here
    for (long ParID=0; ParID<amr->Par->NPar_AcPlusInac; ParID++)
    {
 //    there should be no inactive particles initially
