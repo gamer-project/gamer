@@ -137,8 +137,11 @@ void Par_Init_ByFunction_Plummer( const long NPar_ThisRank, const long NPar_AllR
          for (int d=0; d<3; d++)    Pos_AllRank[d][p] += Coll_Offset*( (p<NPar_AllRank/2)?-1.0:+1.0 );
 
 //       check periodicity
-         if ( OPT__BC_POT == BC_POT_PERIODIC )
-         for (int d=0; d<3; d++)    Pos_AllRank[d][p] = FMOD( Pos_AllRank[d][p]+(real)amr->BoxSize[d], (real)amr->BoxSize[d] );
+         for (int d=0; d<3; d++)
+         {
+            if ( OPT__BC_FLU[d*2] == BC_FLU_PERIODIC )
+               Pos_AllRank[d][p] = FMOD( Pos_AllRank[d][p]+(real)amr->BoxSize[d], (real)amr->BoxSize[d] );
+         }
 
 
 //       velocity

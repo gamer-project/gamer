@@ -13,11 +13,11 @@ extern int  KH_PeriodicZFactor;
 //
 // Note        :  Users can put their favorite flag criteria in this function
 //
-// Parameter   :  i,j,k       : Indices of the target element in the patch ptr[ amr->FluSg[lv] ][lv][PID]
-//                lv          : Refinement level of the target patch
-//                PID         : ID of the target patch
-//                Threshold   : User-provided threshold for the flag operation, which is loaded from the
-//                              file "Input__Flag_User"
+// Parameter   :  i,j,k     : Indices of the target element in the patch ptr[ amr->FluSg[lv] ][lv][PID]
+//                lv        : Refinement level of the target patch
+//                PID       : ID of the target patch
+//                Threshold : User-provided threshold for the flag operation, which is loaded from the
+//                            file "Input__Flag_User"
 //
 // Return      :  "true"  if the flag criteria are satisfied
 //                "false" if the flag criteria are not satisfied
