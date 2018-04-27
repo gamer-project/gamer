@@ -9,9 +9,9 @@
 // Function    :  Par_FindHomePatch_Base
 // Description :  Find the particle's home patch at the base level
 //
-// Note        :  1. This function use the array "BaseP" to find the home patch
+// Note        :  1. This function uses BaseP[] to find the home patch
 //                   --> It should NOT be used for LOAD_BALANCE except during the initialization
-//                2. Invoked by "Init_ByFunction"
+//                2. Invoked by Init_ByFunction()
 //                3. This function assumes that all particles stored in "amr->Par->XXX" are located
 //                   in the sub-domain calculated by this rank
 //
@@ -80,6 +80,11 @@ void Par_FindHomePatch_Base( const int *BaseP )
 //       2. get the home patch ID
          TPID = BaseP3D[ ijk[2] ][ ijk[1] ][ ijk[0] ];
 
+//       verify that the home patch exists
+#        ifdef DEBUG_PARTICLE
+         if ( TPID <= -1 )    Aux_Error( ERROR_INFO, "particle %ld, TPID (%d) <= -1 !!\n", ParID, TPID );
+#        endif
+
 
 //       3. check the home patch carefully to prevent from any issue resulting from round-off errors
          Pass = true;
@@ -108,7 +113,7 @@ void Par_FindHomePatch_Base( const int *BaseP )
                EdgeL  = amr->patch[0][0][SibPID]->EdgeL;
                EdgeR  = amr->patch[0][0][SibPID]->EdgeR;
 
-               if ( SibPID < amr->NPatchComma[0][1] )    // make sure that the sibling patch is a real patch
+               if ( SibPID < amr->NPatchComma[0][1]  &&  SibPID >= 0 )  // make sure that the sibling patch is a real patch
                if ( Pos[0][ParID] >= EdgeL[0]  &&  Pos[0][ParID] < EdgeR[0]  &&
                     Pos[1][ParID] >= EdgeL[1]  &&  Pos[1][ParID] < EdgeR[1]  &&
                     Pos[2][ParID] >= EdgeL[2]  &&  Pos[2][ParID] < EdgeR[2]    )
@@ -140,7 +145,7 @@ void Par_FindHomePatch_Base( const int *BaseP )
          }
 
 //       check: whether the home patch is a real patch
-         if ( TPID >= amr->NPatchComma[0][1] )
+         if ( TPID >= amr->NPatchComma[0][1]  ||  TPID <= -1 )
             Aux_Error( ERROR_INFO, "particle %ld's home patch (PID %d) is a buffer patch !!\n", ParID, TPID );
 #        endif // #ifdef DEBUG_PARTICLE
 

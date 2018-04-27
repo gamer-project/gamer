@@ -972,6 +972,8 @@ int AllocateSonPatch( const int FaLv, const int *Cr, const int PScale, const int
 
 
 // 4. pass particles from father to son if they are in the same rank
+//    --> otherwise these particles will be transferred to the real son patches by calling
+//        Par_LB_Refine_SendParticle2Son() in LB_Refine()
 #  ifdef PARTICLE
    if ( FaPID >= 0  &&  FaPID < amr->NPatchComma[FaLv][1] )    Par_PassParticle2Son( FaLv, FaPID );
 #  endif
@@ -1036,6 +1038,8 @@ void DeallocateSonPatch( const int FaLv, const int FaPID, const int NNew_Real0, 
    Par_PassParticle2Father( FaLv, FaPID );
 
 // record the father patch indices for exchanging particles if they are buffer patches with particles
+// --> these particles will be transferred to the real father patches by calling
+//     Par_LB_Refine_SendParticle2Father() in LB_Refine()
    if ( FaPID >= amr->NPatchComma[FaLv][1]  &&  amr->patch[0][FaLv][FaPID]->NPar > 0 )
    {
 #     ifdef DEBUG_PARTICLE

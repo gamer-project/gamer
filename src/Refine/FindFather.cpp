@@ -7,15 +7,15 @@
 // Function    :  FindFather
 // Description :  Construct the patch relation between levels "lv" and "lv-1"
 //
-// Note        :  a. This function assumes that the relations between levels "0, 1, 2, ..., lv-1" have already
+// Note        :  1. This function assumes that the relations between levels "0, 1, 2, ..., lv-1" have already
 //                   been constructed correctly
-//                b. Currently this function only works for the functions "Init_ByRestart_v1, Init_ByRestart_v2,
-//                   and Init_ByRestart_HDF5"
-//                c. Only work on the "real" patches
+//                2. Currently this function only works for Init_ByRestart_v1(), Init_ByRestart_v2(),
+//                   and Init_ByRestart_HDF5()
+//                3. Only work on the "real" patches
 //
-// Parameter   :  lv    : Target refinement level
-//                Mode  : 1 --> Find the father patch hierarchically from the base level
-//                        2 --> Find the father patch by searching over all patches at level "lv-1"
+// Parameter   :  lv   : Target refinement level
+//                Mode : 1 --> Find the father patch hierarchically from the base level
+//                       2 --> Find the father patch by searching over all patches at level "lv-1"
 //-------------------------------------------------------------------------------------------------------
 void FindFather( const int lv, const int Mode )
 {

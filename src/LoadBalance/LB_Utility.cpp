@@ -54,7 +54,8 @@ long LB_Corner2Index( const int lv, const int Corner[], const Check_t Check )
 
    for (int d=0; d<3; d++)
    {
-//###PERIODIC B.C. (ok if the non-periodic B.C. is adopted since other parts of the code have been carefully revised)
+//    always assume periodicity even if the non-periodic B.C. is adopted
+//    --> OK since other parts of the code have been carefully revised
       Cr_Periodic[d] = ( Corner[d] + amr->BoxScale[d] ) % amr->BoxScale[d];
       Coord      [d] = Cr_Periodic[d] / PatchScale;
    }
