@@ -46,7 +46,8 @@ void Validate()
    Aux_Error( ERROR_INFO, "PARTICLE must be disabled !!\n" );
 #  endif
 
-   if ( OPT__BC_FLU[0] != BC_FLU_PERIODIC )
+   for (int f=0; f<6; f++)
+   if ( OPT__BC_FLU[f] != BC_FLU_PERIODIC )
       Aux_Error( ERROR_INFO, "please set \"OPT__BC_FLU_* = 1\" (i.e., periodic BC) !!\n" );
 
 
