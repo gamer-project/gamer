@@ -103,7 +103,7 @@ void Par_LB_RecordExchangeParticlePatchID( const int MainLv )
 
 
 // 2. get the buffer patches at MainLv and MainLv-1 to RECEIVE particles
-//    also get the buffer patches at MainLv-1 to SEND particles
+//    and the buffer patches at MainLv-1 to SEND particles
 // loop over all "real (both leaf and non-leaf)" patches at MainLv with LocalID == 0
    for (int PID0=0; PID0<NReal[0]; PID0+=8)
    {

@@ -9,13 +9,13 @@
 // Function    :  Par_LB_Refine_SendParticle2Son
 // Description :  Send particles to leaf real patches at FaLv+1 after grid refinement
 //
-// Note        :  1. Called by LB_Refine
+// Note        :  1. Called by LB_Refine()
 //                2. After allocating new real patches at FaLv+1, their particles may still reside in **real**
 //                   father patches temporarily if sons and fathers are NOT in the same rank. This function
 //                   send these particles from real father patches at one rank to their real son patches in
 //                   a different rank.
-//                   --> Similar to the function "Par_PassParticle2Son_AllPatch"
-//                3. The input arrays RefineF2S_Send_PIDList and RefineF2S_Send_LBIdxList must be free'd manually
+//                   --> Similar to the function Par_PassParticle2Son_AllPatch()
+//                3. Input arrays RefineF2S_Send_PIDList[] and RefineF2S_Send_LBIdxList[] must be free'd manually
 //                   after calling this function
 //
 // Parameter   :  FaLv                       : Target father level
@@ -55,7 +55,7 @@ void Par_LB_Refine_SendParticle2Son( const int FaLv, const int RefineF2S_Send_NP
    int  RefineF2S_Recv_NPatchTotal;
    int *RefineF2S_Recv_PIDList = NULL;
 
-// 1-1. find the real patches at SonLv corresponding to RefineF2S_Send_LBIdxList
+// 1-1. find the real patches at SonLv corresponding to RefineF2S_Send_LBIdxList[]
    Par_LB_MapBuffer2RealPatch( SonLv, RefineF2S_Send_NPatchTotal,
                                       RefineF2S_Send_PIDList,
                                       RefineF2S_Send_NPatchEachRank,
@@ -114,7 +114,7 @@ void Par_LB_Refine_SendParticle2Son( const int FaLv, const int RefineF2S_Send_NP
       Par_PassParticle2Son( FaLv, RefineF2S_Recv_PIDList[t] );
 
 
-// 4. free memory (RefineF2S_Send_PIDList and RefineF2S_Send_LBIdxList will be free'd by LB_Refine)
+// 4. free memory (RefineF2S_Send_PIDList[] and RefineF2S_Send_LBIdxList[] will be free'd by LB_Refine())
    delete [] RefineF2S_Recv_PIDList;
 
 } // FUNCTION : Par_LB_Refine_SendParticle2Son
