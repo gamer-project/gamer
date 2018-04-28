@@ -90,6 +90,8 @@ __global__ void CUFLU_ELBDMSolver( real g_Fluid_In [][FLU_NIN ][ FLU_NXT*FLU_NXT
 #error : ERROR : unsupported MODEL !!
 #endif // MODEL
 
+real ELBDM_SetTaylor3Coeff( const real dt, const real dh, const real Eta );
+
 
 // device pointers
 extern real (*d_Flu_Array_F_In )[FLU_NIN ][ FLU_NXT*FLU_NXT*FLU_NXT ];
