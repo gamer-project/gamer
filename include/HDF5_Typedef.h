@@ -108,6 +108,7 @@ struct Makefile_t
    int SupportHDF5;
    int SupportGSL;
    int SupportGrackle;
+   int RandomNumber;
 
 #  ifdef GRAVITY
    int PotScheme;
@@ -382,6 +383,7 @@ struct InputPara_t
    int    Opt__Flag_NParCell;
    int    Opt__Flag_ParMassCell;
 #  endif
+   int    Opt__NoFlagNearBoundary;
    int    Opt__PatchCount;
 #  ifdef PARTICLE
    int    Opt__ParticleCount;

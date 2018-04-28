@@ -18,14 +18,14 @@ static void SetReceiveSibling( int* RSib_List[] );
 // Description :  Construct the MPI sending and receiving data lists for exchanging both hydro
 //                and potential data
 //
-// Note        :  1. LB_RecvH_IDList is unsorted --> use "LB_RecvH_IDList_Idxtable" to obtain the correct order
+// Note        :  1. LB_RecvH_IDList[] is unsorted --> use LB_RecvH_IDList_Idxtable[] to obtain the correct order
 //                   <--> All other lists are sorted
 //                2. This function will NOT deallocate any fluid/pot arrays allocated previously
 //
 // Parameter   :  Lv          : Target refinement level for recording MPI lists
 //                AfterRefine : Record the difference between old and new MPI lists after grid refinement
 //                              --> Minimizing the MPI time after grid refinement by only exchanging the
-//                                  buffer data that do not exist in the old MPI lists
+//                                  buffer data not existing in the old MPI lists
 //-------------------------------------------------------------------------------------------------------
 void LB_RecordExchangeDataPatchID( const int Lv, const bool AfterRefine )
 {
@@ -210,6 +210,7 @@ void LB_RecordExchangeDataPatchID( const int Lv, const bool AfterRefine )
             FaBuff[ NFaBuff ++ ] = FaSibPID0;
 
 #           ifdef GAMER_DEBUG
+//          FaSibPID0 < -1 is disallowed even for non-periodic B.C. (since SibPID0 == -1 instead of < -1)
             if ( FaSibPID0 < 0 )
                Aux_Error( ERROR_INFO, "Lv %d, SonPID0 %d, FaPID %d has no sibling [%d] !!\n",
                           Lv, SonPID0, FaPID, s );
@@ -222,6 +223,7 @@ void LB_RecordExchangeDataPatchID( const int Lv, const bool AfterRefine )
                FaBuff[ NFaBuff ++ ] = FaSibPID;
 
 #              ifdef GAMER_DEBUG
+//             FaSibPID < -1 is allowed for non-periodic B.C. even though FaSibPID0 < -1 is disallowed
                if ( FaSibPID == -1 )
                   Aux_Error( ERROR_INFO, "Lv %d, FaSibPID0 %d has no sibling [%d] !!\n",
                              Lv, FaSibPID0, Side );
@@ -258,7 +260,7 @@ void LB_RecordExchangeDataPatchID( const int Lv, const bool AfterRefine )
    } // for (int SonPID0=0; SonPID0<amr->NPatchComma[SonLv][1]; SonPID0+=8)
 
 
-// 2.3 father sibling patches at Lv (for Poisson solver only)
+// 2.3 father-sibling patches at Lv (for Poisson solver only)
 #  ifdef GRAVITY
    if ( SonLv < NLEVEL )
    for (int SonPID0=0; SonPID0<amr->NPatchComma[SonLv][1]; SonPID0+=8)  // loop over all "real" patches at SonLv
@@ -383,7 +385,7 @@ void LB_RecordExchangeDataPatchID( const int Lv, const bool AfterRefine )
 #     ifdef GRAVITY
       if ( SibList_G[t] )
       {
-//       get TRank it is not calculated yet
+//       get TRank only if it is not calculated yet
          if ( SibList_H[t] == 0 )
          {
             SibPID   = t + NReal;
@@ -794,13 +796,13 @@ void LB_RecordExchangeDataPatchID( const int Lv, const bool AfterRefine )
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  SetTargetLocalID
-// Description :  Set the target local indices for preparing ghost-zone data at fine-grid level
+// Description :  Set the target local indices for preparing ghost-zone data at the fine-grid level
 //
-// Note        :  1. Faster than using TABLE_03 and TABLE_04
+// Note        :  1. Faster than using TABLE_03() and TABLE_04()
 //                2. TLocalID needs to be deallocated manually
 //
-// Parameter   :  NTLocalID   : Number of target local indices along different sibling directions
-//                TLocalID    : Target local indices along different sibling directions
+// Parameter   :  NTLocalID : Number of target local indices along different sibling directions
+//                TLocalID  : Target local indices along different sibling directions
 //-------------------------------------------------------------------------------------------------------
 void SetTargetLocalID( int NTLocalID[], int *TLocalID[] )
 {
@@ -894,12 +896,12 @@ void SetTargetLocalID( int NTLocalID[], int *TLocalID[] )
 // Function    :  SetTargetSibPID0
 // Description :  Set the starting patch indices of the target sibling patches for the input patch group
 //
-// Note        :  This function can be used to replace "Table_02" in "Prepare_PatchData"
+// Note        :  This function can be used to replace Table_02() in Prepare_PatchData()
 //
-// Parameter   :  lv             : Target refinement level
-//                PID0           : Patch index with LocalID==0 in the target patch group
-//                SibPID0_List   : Array storing the patch indices of the sibling patches along different
-//                                 directions
+// Parameter   :  lv           : Target refinement level
+//                PID0         : Patch index with LocalID==0 in the target patch group
+//                SibPID0_List : Array storing the patch indices of the sibling patches along different
+//                               directions
 //-------------------------------------------------------------------------------------------------------
 void SetTargetSibPID0( const int lv, const int PID0, int SibPID0_List[] )
 {
@@ -1025,13 +1027,13 @@ void SetSiblingMask( int SibMask_Check[], int SibMask_Clear[], int SibMask_Dupli
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  SetReceiveSibling
-// Description :  Set the sibling directions for receiving ghost-zone data at coarse-grid level
+// Description :  Set the sibling directions for receiving ghost-zone data at the coarse-grid level
 //
-// Note        :  1. RSib_List needs to be deallocated manually
-//                2. The order of sibling indices recorded in RSib_List must be defined consistently with those
-//                   defined in "SetTargetSibling"
+// Note        :  1. RSib_List[] needs to be deallocated manually
+//                2. The order of sibling indices recorded in RSib_List[] must be defined consistently with those
+//                   defined in SetTargetSibling()
 //
-// Parameter   :  RSib_List   : Target sibling indices along different sibling directions
+// Parameter   :  RSib_List : Target sibling indices along different sibling directions
 //-------------------------------------------------------------------------------------------------------
 void SetReceiveSibling( int* RSib_List[] )
 {

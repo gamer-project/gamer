@@ -12,22 +12,22 @@
 // Note        :  1. Information of both the send patches "Send_NPatchTotal, Send_PIDList, Send_NPatchEachRank"
 //                   and the corresponding recv patches "Recv_NPatchTotal, Recv_PIDList, Recv_NPatchEachRank" must be
 //                   provided. The mapping between send and recv patches can be calculated in advance by
-//                   "Par_LB_MapBuffer2RealPatch" if send patches are buffer and recv patches are real
-//                2. All Target patches (those in Send_PIDList and Recv_PIDList) must be patches at the same level "lv"
-//                3. Currently this function exchange all particles attributes (both ParVar and Passive arrays)
+//                   Par_LB_MapBuffer2RealPatch() if send patches are buffer and recv patches are real
+//                2. All Target patches (those in Send_PIDList[] and Recv_PIDList[]) must be patches at the same level "lv"
+//                3. Currently this function exchange all particles attributes (both ParVar[] and Passive[])
 //                   --> But it can be generalized to work with arbitrary particle attributes
-//                4. This function is called by "Par_PassParticle2Sibling, Par_PassParticle2Son_AllPatch,
-//                   Par_LB_Refine_SendParticle2Son, and Par_LB_Refine_SendParticle2Father"
+//                4. This function is called by Par_PassParticle2Sibling(), Par_PassParticle2Son_AllPatch(),
+//                   Par_LB_Refine_SendParticle2Son(), and Par_LB_Refine_SendParticle2Father()
 //
-// Parameter   :  lv                   : Target refinement level
-//                Send_NPatchTotal     : Total number of patches in Send_PIDList
-//                Send_PIDList         : Patch indices to send particles
-//                Send_NPatchEachRank  : Number of patches to send particles to each rank
-//                Recv_NPatchTotal     : Total number of patches in Recv_PIDList
-//                Recv_PIDList         : Patch indices to receive particles
-//                Recv_NPatchEachRank  : Number of patches to receive particles from each rank
-//                Timer                : Timer used by "Par_LB_SendParticleData"
-//                Timer_Comment        : String used by "Par_LB_SendParticleData"
+// Parameter   :  lv                  : Target refinement level
+//                Send_NPatchTotal    : Total number of patches in Send_PIDList
+//                Send_PIDList        : Patch indices to send particles
+//                Send_NPatchEachRank : Number of patches to send particles to each rank
+//                Recv_NPatchTotal    : Total number of patches in Recv_PIDList
+//                Recv_PIDList        : Patch indices to receive particles
+//                Recv_NPatchEachRank : Number of patches to receive particles from each rank
+//                Timer               : Timer used by "Par_LB_SendParticleData"
+//                Timer_Comment       : String used by "Par_LB_SendParticleData"
 //
 // Return      :  New particles will be added to the particle repository of this rank and linked to the
 //                target recv patches
@@ -108,7 +108,7 @@ void Par_LB_ExchangeParticleBetweenPatch( const int lv,
 #  endif // #ifdef DEBUG_PARTICLE
 
 
-// must NOT call "return" here even if Send/Recv_NPatchTotal==0 since this rank still needs to call Par_LB_SendParticleData
+// must NOT call "return" here even if Send/Recv_NPatchTotal==0 since this rank still needs to call Par_LB_SendParticleData()
 // if ( Send_NPatchTotal == 0 )   return;
 // if ( Recv_NPatchTotal == 0 )   return;
 

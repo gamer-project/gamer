@@ -1,24 +1,14 @@
-
-# -----------------------------------------------------------
-# GNUPLOT plot particle v1.1 (09/19/2014)
-# 1. Support different views  --> VIEW
-# 2. Support double precision --> FLOAT8
 #
-# GNUPLOT plot particle v1.0 (07/23/2014)
-# 1. First version
-# -----------------------------------------------------------
-
-
 reset
 
 
 # target files
 # -----------------------------------------------------------
-FILE_IN_PREFIX  = 'Particle'
+FILE_IN_PREFIX  = '../Particle'
 FILE_IN_SUFFIX  = ''
 FILE_OUT_PREFIX = 'Fig__XXX'
 START_ID        = 0
-END_ID          = 50
+END_ID          = 19
 DELTA_ID        = 1
 BINARY          = 0     # (0/1) = ASCII/BINARY
 PAUSE           = -1.0  # <= 0.0 --> mouse
@@ -38,7 +28,7 @@ FLOAT8          = 1     # (0/1) -> (single/double precision)
 #set key reverse Left spacing 2 right
 #set format x "10^{%T}"
 #set format y "10^{%T}"
-#set pointsize 0.6
+ set pointsize 0.6
 #set xyplane at 0.0
  set xrange [0.5:2.5]
  set yrange [0.5:2.5]
@@ -78,7 +68,7 @@ do for [ID=START_ID:END_ID:DELTA_ID] {
 
 
 #  load the physical time
-   RECORD__DUMP = './Record__Dump'
+   RECORD__DUMP = '../Record__Dump'
    NHEADER      = 1
    LOAD_TIME    = sprintf( "awk '{if(NR==%d+%d) {print $2}}' %s", NHEADER, ID+1, RECORD__DUMP )
    TIME         = system( LOAD_TIME )*1.0    # *1.0 --> convert string to number
@@ -106,18 +96,11 @@ do for [ID=START_ID:END_ID:DELTA_ID] {
    }
    else {
       if ( VIEW == 0 ) { splot FILE_IN u 3:4:5 w p pt 5 notitle }
-      if ( VIEW == 1 ) {  plot FILE_IN u 3:4 every ::0::9999      w p pt 5 ps 0.6 lc 1 notit, \
-                               FILE_IN u 3:4 every ::0::0         w p pt 7 ps 1.0 lc 4 notit, \
-                               FILE_IN u 3:4 every ::1::1         w p pt 7 ps 1.0 lc 5 notit, \
-                               FILE_IN u 3:4 every ::2::2         w p pt 7 ps 1.0 lc 3 notit, \
-                               FILE_IN u 3:4 every ::3::3         w p pt 7 ps 1.0 lc 7 notit, \
-                               FILE_IN u 3:4 every ::4::4         w p pt 7 ps 1.0 lc 8 notit, \
-                               FILE_IN u 3:4 every ::10000::19999 w p pt 5 ps 0.6 lc 2 notit, \
-                               FILE_IN u 3:4 every ::10000::10000 w p pt 9 ps 1.0 lc 4 notit, \
-                               FILE_IN u 3:4 every ::10001::10001 w p pt 9 ps 1.0 lc 5 notit, \
-                               FILE_IN u 3:4 every ::10002::10002 w p pt 9 ps 1.0 lc 3 notit, \
-                               FILE_IN u 3:4 every ::10003::10003 w p pt 9 ps 1.0 lc 7 notit, \
-                               FILE_IN u 3:4 every ::10004::10004 w p pt 9 ps 1.0 lc 8 notit }
+      if ( VIEW == 1 ) {  plot FILE_IN u 3:4   w p pt 5 notitle, FILE_IN u 3:4 every ::0::0 w p pt 7 ps 1 lc 4 notit, \
+                                                                 FILE_IN u 3:4 every ::1::1 w p pt 7 ps 1 lc 5 notit, \
+                                                                 FILE_IN u 3:4 every ::2::2 w p pt 7 ps 1 lc 3 notit, \
+                                                                 FILE_IN u 3:4 every ::3::3 w p pt 7 ps 1 lc 7 notit, \
+                                                                 FILE_IN u 3:4 every ::4::4 w p pt 7 ps 1 lc 8 notit }
       if ( VIEW == 2 ) {  plot FILE_IN u 4:5   w p pt 5 notitle }
       if ( VIEW == 3 ) {  plot FILE_IN u 3:5   w p pt 5 notitle }
    }
@@ -125,7 +108,7 @@ do for [ID=START_ID:END_ID:DELTA_ID] {
 
    if ( GPVAL_TERM eq 'x11' ) { if ( PAUSE <= 0.0 ) { pause mouse }   else { pause PAUSE } };
 
-} #do for [ID=START_ID:END_ID:DELTA_ID] 
+} #do for [ID=START_ID:END_ID:DELTA_ID]
 
 
 print "Done";

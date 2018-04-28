@@ -5,7 +5,7 @@
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Flu_AllocateFluxArray
-// Description :  Allocate flux arrays for the coarse-grid patches (at level lv ) adjacent to the 
+// Description :  Allocate flux arrays for the coarse-grid patches (at level lv ) adjacent to the
 //                coarse-fine boundaries (including the buffer patches)
 //
 // Parameter   :  lv : Coarse-grid level
@@ -14,7 +14,7 @@ void Flu_AllocateFluxArray( const int lv )
 {
 
 // check
-   if ( !amr->WithFlux )    
+   if ( !amr->WithFlux )
       Aux_Message( stderr, "WARNING : why invoking %s when amr->WithFlux is off ??\n", __FUNCTION__ );
 
 
@@ -46,7 +46,7 @@ void Flu_AllocateFluxArray( const int lv )
 // allocate flux arrays for the buffer patches
    if ( amr->NPatchComma[lv+1][7] != 0 )  Flu_AllocateFluxArray_Buffer( lv );
 
-   
+
 // get the PIDs for sending/receiving fluxes to/from neighboring ranks
    Buf_RecordExchangeFluxPatchID( lv );
 

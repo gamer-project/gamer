@@ -6,8 +6,8 @@
 static void CollectParticle( const int FaLv, const int FaPID, int &NPar_SoFar, long *ParList );
 #endif
 
-// flag (declared in Prepare_PatchData.cpp) for checking whether Par_CollectParticle2OneLevel is properly called before
-// preparing either _PAR_DENS or _TOTAL_DENS data in Prepare_PatchData
+// flag (declared in Prepare_PatchData.cpp) for checking whether Par_CollectParticle2OneLevel() has been called before
+// preparing either _PAR_DENS or _TOTAL_DENS data in Prepare_PatchData()
 extern bool Particle_Collected;
 
 
@@ -51,17 +51,17 @@ extern bool Particle_Collected;
 //                       --> ParList_Copy will NOT be allocated
 //                   --> Particle count is stored in NPar_Copy
 //
-// Parameter   :  FaLv           : Target refinement leve
-//                PredictPos     : true --> Predict particle position to TargetTime (for LOAD_BALANCE only)
-//                TargetTime     : Target time for predicting the particle position (for LOAD_BALANCE only)
-//                SibBufPatch    : true --> Collect particles for sibling-buffer patches at FaLv as well
-//                                          (for LOAD_BALANCE only)
-//                FaSibBufPatch  : true --> Collect particles for father-sibling-buffer patches at FaLv-1 as well
-//                                          (do nothing if FaLv==0) (for LOAD_BALANCE only)
-//                JustCountNPar  : Just count the number of particles in each real patch at FaLv. Don't collect
-//                                 particle indices (or collect particle mass and position for LOAD_BALANCE)
-//                TimingSendPar  : Measure the elapsed time of the routine "Par_LB_SendParticleData" in
-//                                 Par_LB_CollectParticle2OneLevel (for LOAD_BALANCE only)
+// Parameter   :  FaLv          : Target refinement leve
+//                PredictPos    : true --> Predict particle position to TargetTime (for LOAD_BALANCE only)
+//                TargetTime    : Target time for predicting the particle position (for LOAD_BALANCE only)
+//                SibBufPatch   : true --> Collect particles for sibling-buffer patches at FaLv as well
+//                                         (for LOAD_BALANCE only)
+//                FaSibBufPatch : true --> Collect particles for father-sibling-buffer patches at FaLv-1 as well
+//                                         (do nothing if FaLv==0) (for LOAD_BALANCE only)
+//                JustCountNPar : Just count the number of particles in each real patch at FaLv. Don't collect
+//                                particle indices (or collect particle mass and position for LOAD_BALANCE)
+//                TimingSendPar : Measure the elapsed time of the routine "Par_LB_SendParticleData" in
+//                                Par_LB_CollectParticle2OneLevel (for LOAD_BALANCE only)
 //
 // Return      :  NPar_Copy and ParList_Copy (if JustCountNPar == false) for all non-leaf real patches at FaLv
 //-------------------------------------------------------------------------------------------------------
@@ -175,10 +175,10 @@ void Par_CollectParticle2OneLevel( const int FaLv, const bool PredictPos, const 
 //                2. For LOAD_BALANCE, this function will call the alternative function
 //                   "Par_LB_CollectParticle2OneLevel_FreeMemory"
 //
-// Parameter   :  FaLv           : Target refinement leve
-//                SibBufPatch    : true --> Release memory for sibling-buffer patches at FaLv as well (for LOAD_BALANCE only)
-//                FaSibBufPatch  : true --> Release memory for father-sibling-buffer patches at FaLv-1 as well
-//                                          (do nothing if FaLv==0) (for LOAD_BALANCE only)
+// Parameter   :  FaLv          : Target refinement leve
+//                SibBufPatch   : true --> Release memory for sibling-buffer patches at FaLv as well (for LOAD_BALANCE only)
+//                FaSibBufPatch : true --> Release memory for father-sibling-buffer patches at FaLv-1 as well
+//                                         (do nothing if FaLv==0) (for LOAD_BALANCE only)
 //
 // Return      :  None
 //-------------------------------------------------------------------------------------------------------
@@ -221,11 +221,11 @@ void Par_CollectParticle2OneLevel_FreeMemory( const int FaLv, const bool SibBufP
 //
 // Note        :  This function will search over all descendants recursively
 //
-// Parameter   :  FaLv        : Father patch level
-//                FaPID       : Father patch ID
-//                NPar_SoFar  : Number of particles counted so for
-//                              --> used as the starting array index in ParList
-//                ParList     : Array to store the particle IDs
+// Parameter   :  FaLv       : Father patch level
+//                FaPID      : Father patch ID
+//                NPar_SoFar : Number of particles counted so for
+//                             --> used as the starting array index in ParList
+//                ParList    : Array to store the particle IDs
 //
 // Return      :  NPar_SoFar, ParList
 //-------------------------------------------------------------------------------------------------------

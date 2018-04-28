@@ -22,7 +22,7 @@ void LB_Output_LBIdx( const int lv )
    int  Coord[3];
    char FileName[100];
 
-// set the filename   
+// set the filename
    sprintf( FileName, "LBIdxMap_Lv%02d", lv );
 
 
@@ -31,7 +31,7 @@ void LB_Output_LBIdx( const int lv )
       Aux_Message( stderr, "WARNING : file \"%s\" already exists and will be overwritten !!\n", FileName );
 
 
-// output the load-balance indices   
+// output the load-balance indices
    for (int YourTurn=0; YourTurn<MPI_NRank; YourTurn++)
    {
       if ( MPI_Rank == YourTurn )
@@ -48,17 +48,17 @@ void LB_Output_LBIdx( const int lv )
             List[PID] = LB_Idx;
          }
 
-//       sorting         
+//       sorting
          Mis_Heapsort( NP, List, NULL );
 
-//       get corner         
+//       get corner
          for (int t=0; t<NP; t++)
          {
             LB_Index2Corner( lv, List[t], Coord, CHECK_ON );
             fprintf( File, "%8ld: %8d %8d %8d\n", List[t], Coord[0], Coord[1], Coord[2] );
          }
 
-//       add an empty line between the outputs of different MPI ranks         
+//       add an empty line between the outputs of different MPI ranks
          fprintf( File, "\n" );
 
          delete [] List;

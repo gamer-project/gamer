@@ -1,0 +1,15 @@
+# problem-specific runtime parameters
+Plummer_RSeed           123                  # random seed for setting particle position and velocity (>=0) [123]
+Plummer_Rho0            1.0                  # peak density [1.0]
+Plummer_R0              0.1                  # scale radius [0.1]
+Plummer_MaxR            0.375                # maximum radius for particles [0.375]
+Plummer_Collision       0                    # (0/1)--> single Plummer cloud/two colliding Plummer clouds
+Plummer_Collision_D     1.5                  # distance between two colliding Plummer clouds [1.5]
+#Plummer_CenterX         1.5                  # central x coordinate [box center]
+#Plummer_CenterY         1.5                  # central y coordinate [box center]
+#Plummer_CenterZ         1.5                  # central z coordinate [box center]
+Plummer_BulkVelX        0.0                  # bulk velocity in x
+Plummer_BulkVelY        0.0                  # bulk velocity in y
+Plummer_BulkVelZ        0.0                  # bulk velocity in z
+Plummer_GasMFrac        0.5                  # gas mass fraction (0.0<input<=1.0) [0.5]
+Plummer_NBinR           1000                 # number of radial bins in the mass profile table [1000]

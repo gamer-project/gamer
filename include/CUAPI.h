@@ -3,7 +3,27 @@
 
 
 
-#include "Prototype.h"
+#ifndef GAMER_DEBUG
+#  define NDEBUG
+#endif
+
+#ifndef SERIAL
+#  include <mpi.h>
+#endif
+
+#include <stdio.h>
+#include <unistd.h>
+#include "Macro.h"
+#include "Typedef.h"
+#include "Timer.h"
+#include "Global.h"
+#include "PhysicalConstant.h"
+
+#ifdef SERIAL
+#  include "Serial.h"
+#endif
+
+void Aux_Error( const char *File, const int Line, const char *Func, const char *Format, ... );
 
 
 // CUDA error check

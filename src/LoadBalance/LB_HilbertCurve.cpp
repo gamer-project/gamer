@@ -11,9 +11,9 @@
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  bitTranspose, LB_Hilbert_i2c, LB_Hilbert_c2i
-// Description :  Construct Hilbert curve indices  
+// Description :  Construct Hilbert curve indices
 //
-// Note        :  Thess functions are written by Doug Moore in the Department of Computational and Applied 
+// Note        :  Thess functions are written by Doug Moore in the Department of Computational and Applied
 //                Math at Rice University.
 //
 //                Website : http://www.tiac.net/~sw/2008/10/Hilbert/moore/index.html
@@ -57,7 +57,7 @@ do {                                                                    \
 #define ones(T,k) ((((T)2) << (k-1)) - 1)
 
 #define rdbit(w,k) (((w) >> (k)) & 1)
-     
+
 #define rotateRight(arg, nRots, nDims)                                  \
 ((((arg) >> (nRots)) | ((arg) << ((nDims)-(nRots)))) & ones(bitmask_t,nDims))
 
@@ -142,7 +142,7 @@ bitTranspose(unsigned nDims, unsigned nBits, bitmask_t inCoords)
 
 /*****************************************************************
  * hilbert_i2c
- * 
+ *
  * Convert an index into a Hilbert curve to a set of coordinates.
  * Inputs:
  *  nDims:      Number of coordinate axes.
@@ -162,7 +162,7 @@ void LB_Hilbert_i2c( ulong index, ulong coord[], const uint nBits )
 
 // check
    if ( nDims*nBits > 8*sizeof(bitmask_t) )
-      Aux_Error( ERROR_INFO, "nDims (%d) * nBits (%d) must not exceed %ld\n", 
+      Aux_Error( ERROR_INFO, "nDims (%d) * nBits (%d) must not exceed %ld\n",
                  nDims, nBits, 8*sizeof(bitmask_t) );
 
 
@@ -219,7 +219,7 @@ void LB_Hilbert_i2c( ulong index, ulong coord[], const uint nBits )
 
 /*****************************************************************
  * hilbert_c2i
- * 
+ *
  * Convert coordinates of a point on a Hilbert curve to its index.
  * Inputs:
  *  nDims:      Number of coordinates.
@@ -243,7 +243,7 @@ ulong LB_Hilbert_c2i( ulong const coord[], const uint nBits )
          Aux_Error( ERROR_INFO, "coord[%d] = %lu >= 2^%u = %u !!\n", d, coord[d], nBits, (1U<<nBits) );
 
    if ( nDims*nBits > 8*sizeof(bitmask_t) )
-      Aux_Error( ERROR_INFO, "nDims (%d) * nBits (%d) must not exceed %ld\n", 
+      Aux_Error( ERROR_INFO, "nDims (%d) * nBits (%d) must not exceed %ld\n",
                  nDims, nBits, 8*sizeof(bitmask_t) );
 
 

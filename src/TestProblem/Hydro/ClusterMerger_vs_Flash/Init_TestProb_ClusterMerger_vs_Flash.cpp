@@ -68,9 +68,13 @@ void Validate()
    if ( !OPT__UNIT )
       Aux_Error( ERROR_INFO, "OPT__UNIT must be enabled !!\n" );
 
+   for (int f=0; f<6; f++)
+   if ( OPT__BC_FLU[f] == BC_FLU_PERIODIC )
+      Aux_Error( ERROR_INFO, "do not use periodic BC (OPT__BC_FLU* = 1) for this test !!\n" );
+
 #  ifdef GRAVITY
-   if ( OPT__BC_FLU[0] == BC_FLU_PERIODIC  ||  OPT__BC_POT == BC_POT_PERIODIC )
-      Aux_Error( ERROR_INFO, "do not use periodic BC for this test !!\n" );
+   if ( OPT__BC_POT == BC_POT_PERIODIC )
+      Aux_Error( ERROR_INFO, "do not use periodic BC (OPT__BC_POT = 1) for this test !!\n" );
 #  endif
 
 #  ifdef PARTICLE

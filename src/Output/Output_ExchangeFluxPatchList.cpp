@@ -31,7 +31,7 @@ void Output_ExchangeFluxPatchList( const int option, const int lv, const char *c
                break;
    }
 
-   if ( comment != NULL )       
+   if ( comment != NULL )
    {
       strcat( FileName, "_" );
       strcat( FileName, comment );

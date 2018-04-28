@@ -5,12 +5,12 @@
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Mis_BinarySearch
-// Description :  Use binary search to locate the position of an input number in a sorted array 
+// Description :  Use binary search to locate the position of an input number in a sorted array
 //
 // Note        :  1. "Array" must be sorted in advance in ascending numerical order
 //                2. If there are multiple elements matching Key, the return index can be any of them
 //                3. An overloaded function for the "long" Array and Key is also created
-//                4. Overloaded with different types 
+//                4. Overloaded with different types
 //                   --> Explicit template instantiation is put in the end of this file
 //
 // Return      :     match --> array index

@@ -13,13 +13,13 @@
 //                   are NOT real patches, we need to send these restricted data back to their homes
 //                2. This function will NOT deallocate any fluid array
 //                   --> We have assumed that all fluid arrays have been deallocated by
-//                       "LB_RecordExchangeDataPatchID"
+//                       LB_RecordExchangeDataPatchID()
 //                   --> Otherwise some fluid arrays may be useless if they are allocated by
-//                       LB_RecordExchangeRestrictDataPatchID previously but later on their real
-//                       son patches are deallocated
+//                       LB_RecordExchangeRestrictDataPatchID() previously but later on the corresponding
+//                       real son patches are deallocated
 //                       --> Actually it is the case in the current version
 //
-// Parameter   :  FaLv  : Target refinement level for constructing MPI lists
+// Parameter   :  FaLv : Target refinement level for constructing MPI lists
 //-------------------------------------------------------------------------------------------------------
 void LB_RecordExchangeRestrictDataPatchID( const int FaLv )
 {

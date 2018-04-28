@@ -7,7 +7,7 @@
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Init_MPI
-// Description :  Initialize MPI 
+// Description :  Initialize MPI
 //
 // Parameter   :  argc, argv --> please inherit from the main function
 //-------------------------------------------------------------------------------------------------------
@@ -23,7 +23,7 @@ void Init_MPI( int *argc, char ***argv )
 // MPI_Init_thread( argc, argv, MPI_THREAD_MULTIPLE,   &MPI_Thread_Status );
    MPI_Comm_rank( MPI_COMM_WORLD, &MPI_Rank );
 
-   if ( MPI_Rank == 0 )    
+   if ( MPI_Rank == 0 )
    {
       Aux_Message( stdout, "Init_MPI ... done\n" );
       Aux_Message( stdout, "   Current level of MPI thread support : " );

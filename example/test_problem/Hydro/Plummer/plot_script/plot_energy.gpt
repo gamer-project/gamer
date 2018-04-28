@@ -15,12 +15,12 @@ set term x11 enhanced
 #set format x "10^{%T}"
 set log y
 set xlabel "Time"
-set ylabel "Relative error in energy"
+set ylabel "Relative energy error"
 set format y "10^{%T}"
 #set xrange [0.0:20.0]
-set yrange [1.0e-5:1.0e-2]
+set yrange [1.0e-5:1.0e-1]
 
-plot "Record__Conservation" u 1:(abs($26)) w l
+plot "../Record__Conservation" u 1:(abs($26)) w l notit
 
 if ( GPVAL_TERM eq 'x11' ) { pause -1 };
 

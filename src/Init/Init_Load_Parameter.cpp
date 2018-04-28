@@ -149,6 +149,7 @@ void Init_Load_Parameter()
    ReadPara->Add( "OPT__FLAG_NPAR_CELL",        &OPT__FLAG_NPAR_CELL,             false,           Useless_bool,  Useless_bool   );
    ReadPara->Add( "OPT__FLAG_PAR_MASS_CELL",    &OPT__FLAG_PAR_MASS_CELL,         false,           Useless_bool,  Useless_bool   );
 #  endif
+   ReadPara->Add( "OPT__NO_FLAG_NEAR_BOUNDARY", &OPT__NO_FLAG_NEAR_BOUNDARY,      false,           Useless_bool,  Useless_bool   );
    ReadPara->Add( "OPT__PATCH_COUNT",           &OPT__PATCH_COUNT,                1,               0,             2              );
 #  ifdef PARTICLE
    ReadPara->Add( "OPT__PARTICLE_COUNT",        &OPT__PARTICLE_COUNT,             1,               0,             2              );
@@ -189,7 +190,8 @@ void Init_Load_Parameter()
 #  ifdef STAR_FORMATION
    ReadPara->Add( "SF_CREATE_STAR_SCHEME",         &SF_CREATE_STAR_SCHEME,         0,              0,             1              );
    ReadPara->Add( "SF_CREATE_STAR_RSEED",          &SF_CREATE_STAR_RSEED,          123,            0,             NoMax_int      );
-   ReadPara->Add( "SF_CREATE_STAR_DET_RANDOM",     &SF_CREATE_STAR_DET_RANDOM,     false,          Useless_bool,  Useless_bool   );
+// do not check SF_CREATE_STAR_DET_RANDOM since its default depends on the makefile option BITWISE_REPRODUCIBILITY
+   ReadPara->Add( "SF_CREATE_STAR_DET_RANDOM",     &SF_CREATE_STAR_DET_RANDOM,    -1,              NoMin_int,     NoMax_int      );
    ReadPara->Add( "SF_CREATE_STAR_MIN_LEVEL",      &SF_CREATE_STAR_MIN_LEVEL,      0,              NoMin_int,     TOP_LEVEL      );
    ReadPara->Add( "SF_CREATE_STAR_MIN_GAS_DENS",   &SF_CREATE_STAR_MIN_GAS_DENS,   1.0e1,          0.0,           NoMax_double   );
    ReadPara->Add( "SF_CREATE_STAR_MASS_EFF",       &SF_CREATE_STAR_MASS_EFF,       1.0e-2,         Eps_double,    1.0            );

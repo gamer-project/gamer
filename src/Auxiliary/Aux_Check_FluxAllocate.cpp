@@ -11,8 +11,8 @@
 //                   array is allocated
 //                2. Work for both periodic and non-periodic BC's
 //
-// Parameter   :  lv       : Target refinement level
-//                comment  : You can put the location where this function is invoked in this string
+// Parameter   :  lv      : Target refinement level
+//                comment : You can put the location where this function is invoked in this string
 //-------------------------------------------------------------------------------------------------------
 void Aux_Check_FluxAllocate( const int lv, const char *comment )
 {
@@ -152,7 +152,7 @@ void Aux_Check_FluxAllocate( const int lv, const char *comment )
          } // for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
 
 
-//       check all buffer patches (buffer patches in LOAD_BALANCE are treated differently in the above)
+//       check all buffer patches (buffer patches in LOAD_BALANCE are treated differently above)
 #        ifndef LOAD_BALANCE
          const int MirrorSib[6] = { 1, 0, 3, 2, 5, 4 };
          int PID, Table[4];

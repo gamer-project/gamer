@@ -57,7 +57,12 @@ real WarpReduction_Shuffle( real val )
 //    val = RED( val, __shfl_down(val,offset,WARP_SIZE) );
 
 //    use this approach instead to invoke "__shfl_down(val,offset, WARP_SIZE)" only once
+//    also, note that __shfl_down has been deprecated since CUDA 9.0
+#     if ( CUDART_VERSION >= 9000 )
+      const real tmp = __shfl_down_sync( 0xffffffff, val, offset, WARP_SIZE );
+#     else
       const real tmp = __shfl_down( val, offset, WARP_SIZE );
+#     endif
       val = RED( val, tmp );
    }
 

@@ -13,19 +13,19 @@ extern Timer_t *Timer_Par_MPI[NLEVEL][6];
 // Function    :  Par_PassParticle2Son_AllPatch
 // Description :  Pass particles from father to sons for all patches at the target level
 //
-// Note        :  1. It simply invokes Par_PassParticle2Son for all patches at the target level
+// Note        :  1. It simply invokes Par_PassParticle2Son() for all patches at the target level
 //                   (and with sons at home)
 //                   --> For patches with sons living abroad, this function will first collect
 //                       particles from other ranks to the father-buffer patches in this rank
-//                       by calling Par_LB_ExchangeParticleBetweenPatch, and then pass
+//                       by calling Par_LB_ExchangeParticleBetweenPatch(), and then pass
 //                       these particles to the real son patches in the same rank by calling
-//                       Par_PassParticle2Son again
-//                2. It is invoked in EvolveLevel after the velocity correction in KDK
+//                       Par_PassParticle2Son() again
+//                2. It is invoked by EvolveLevel() after the velocity correction in KDK
 //
-// Parameter   :  FaLv           : Father's refinement level
-//                TimingSendPar  : Measure the elapsed time of the routine "Par_LB_SendParticleData",
-//                                 which is called by "Par_LB_ExchangeParticleBetweenPatch"
-//                                 --> LOAD_BALANCE only
+// Parameter   :  FaLv          : Father's refinement level
+//                TimingSendPar : Measure the elapsed time of Par_LB_SendParticleData(), which is
+//                                called by Par_LB_ExchangeParticleBetweenPatch()
+//                                --> LOAD_BALANCE only
 //-------------------------------------------------------------------------------------------------------
 void Par_PassParticle2Son_AllPatch( const int FaLv, const bool TimingSendPar )
 {
