@@ -280,7 +280,7 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
                switch ( OPT__BC_FLU[ BC_Face[BC_Sibling] ] )
                {
                   case BC_FLU_OUTFLOW:
-                     Hydro_BoundaryCondition_Outflow   ( Flu_CData[0][0][0], BC_Face[BC_Sibling], NCOMP_TOTAL, CGhost_Flu,
+                     Flu_BoundaryCondition_Outflow     ( Flu_CData[0][0][0], BC_Face[BC_Sibling], NCOMP_TOTAL, CGhost_Flu,
                                                          CSize_Flu, CSize_Flu, CSize_Flu, BC_Idx_Start, BC_Idx_End );
                   break;
 

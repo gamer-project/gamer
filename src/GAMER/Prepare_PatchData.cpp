@@ -1224,7 +1224,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
                   switch ( FluBC[ BC_Face[BC_Sibling] ] )
                   {
                      case BC_FLU_OUTFLOW:
-                        Hydro_BoundaryCondition_Outflow   ( Array_Ptr, BC_Face[BC_Sibling], NVar_Flu+NVar_Der, GhostSize,
+                        Flu_BoundaryCondition_Outflow     ( Array_Ptr, BC_Face[BC_Sibling], NVar_Flu+NVar_Der, GhostSize,
                                                             PGSize1D, PGSize1D, PGSize1D, BC_Idx_Start, BC_Idx_End );
                      break;
 
