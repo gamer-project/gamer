@@ -8,6 +8,7 @@ static void SetSiblingInSamePatchGroup( const int lv, const int PID0 );
 static void SetSiblingInDiffPatchGroup( const int lv, const int PID0, const int SibPID0, const int SibID,
                                         const bool BothSide );
 static void SetSiblingExternal( const int lv, const int NTarget0, const int *TargetPID0 );
+static void SetSiblingExternal_CheckPeriodicity( int *Sibling, const int Boundary );
 
 
 
@@ -15,18 +16,18 @@ static void SetSiblingExternal( const int lv, const int NTarget0, const int *Tar
 //-------------------------------------------------------------------------------------------------------
 // Function    :  LB_SiblingSearch
 // Description :  Construct the sibling patch relation
-// 
-// Note        :  1. LB_PaddedCr1DList and LB_PaddedCr1DList_IdxTable at SonLv and FaLv must be properly prepared 
-//                2. SearchAllPID == true  --> Works on all patches at lv (including real, sibling-buffer 
+//
+// Note        :  1. LB_PaddedCr1DList[] and LB_PaddedCr1DList_IdxTable[] at SonLv and FaLv must be properly prepared
+//                2. SearchAllPID == true  --> Works on all patches at lv (including real, sibling-buffer
 //                                             and father-buffer patches)
 //                                == false --> Only works on PID0 recorded in TargetPID0
 //
-// Parameter   :  lv             : Target refinement level
-//                SearchAllPID   : Whether to search over all patches at lv or not
-//                NInput         : Number of target patches (with LocalID==0) in "TargetPID0"
-//                                 (useful only if "SearchAllPID == false")
-//                TargetPID0     : Lists recording all target patches (with LocalID==0)
-//                                 (useful only if "SearchAllPID == false")
+// Parameter   :  lv           : Target refinement level
+//                SearchAllPID : Whether to search over all patches at lv or not
+//                NInput       : Number of target patches (with LocalID==0) in "TargetPID0"
+//                               (useful only if "SearchAllPID == false")
+//                TargetPID0   : Lists recording all target patches (with LocalID==0)
+//                               (useful only if "SearchAllPID == false")
 //-------------------------------------------------------------------------------------------------------
 void LB_SiblingSearch( const int lv, const bool SearchAllPID, const int NInput, int *TargetPID0 )
 {
@@ -55,13 +56,13 @@ void LB_SiblingSearch( const int lv, const bool SearchAllPID, const int NInput, 
    int   NSearch, Count, *Match, PID0;
    long  Cr1D_Disp[26];
 
-   ulong *SibCr1D_Search   = new ulong [ NSearch_Max ]; 
+   ulong *SibCr1D_Search   = new ulong [ NSearch_Max ];
    ulong *SibCr1D          = new ulong [ NSearch_Max ];
    int   *SibCr1D_IdxTable = new  int  [ NSearch_Max ];
 
 
 // nothing to do if there is no target patches
-   if ( NTarget0 == 0 )    
+   if ( NTarget0 == 0 )
    {
       delete [] SibCr1D_Search;
       delete [] SibCr1D;
@@ -75,7 +76,7 @@ void LB_SiblingSearch( const int lv, const bool SearchAllPID, const int NInput, 
    if ( SearchAllPID )
    {
       for (int PID=0; PID<NPatch; PID++)
-      for (int s=0; s<NSib; s++)          
+      for (int s=0; s<NSib; s++)
          amr->patch[0][lv][PID]->sibling[s] = -1;
 
       TargetPID0 = new int [NTarget0];
@@ -127,15 +128,15 @@ void LB_SiblingSearch( const int lv, const bool SearchAllPID, const int NInput, 
       if ( SibCr1D_Search[t] != SibCr1D_Search[t-1] )   SibCr1D_Search[ NSearch ++ ] = SibCr1D_Search[t];
 
 
-// 4. matching   
+// 4. matching
    Match = new int [NSearch];
    Mis_Matching_int( NPatch, amr->LB->PaddedCr1DList[lv], NSearch, SibCr1D_Search, Match );
 
 
-// 5. construct the sibling relation   
+// 5. construct the sibling relation
    const int PGScale = PATCH_SIZE*Scale2;
-   const int SibID[3][3][3] = {  { {18, 10, 19}, {14,  4, 16}, {20, 11, 21} }, 
-                                 { { 6,  2,  7}, { 0, -1,  1}, { 8,  3,  9} }, 
+   const int SibID[3][3][3] = {  { {18, 10, 19}, {14,  4, 16}, {20, 11, 21} },
+                                 { { 6,  2,  7}, { 0, -1,  1}, { 8,  3,  9} },
                                  { {22, 12, 23}, {15,  5, 17}, {24, 13, 25} }  };
    ulong Cr1D;
    int   SibPID0, dID[3], Start = 0;
@@ -165,10 +166,10 @@ void LB_SiblingSearch( const int lv, const bool SearchAllPID, const int NInput, 
 
                   for (int d=0; d<3; d++)    dID[d] = 1 + ( Cr2[d] - Cr1[d] ) / PGScale;
 
-//                for NLEVEL == 1, buffer patch groups can have sibling PaddedCr1D map to wrong buffer 
+//                for NLEVEL == 1, buffer patch groups can have sibling PaddedCr1D map to wrong buffer
 //                patch groups in the opposite direction (check the note for a more detailed explanation)
 #                 if ( NLEVEL == 1 )
-                  if (  dID[0]<0 || dID[0]>2 || dID[1]<0 || dID[1]>2  )    
+                  if (  dID[0]<0 || dID[0]>2 || dID[1]<0 || dID[1]>2  )
                   {
                      m++;
                      continue;
@@ -176,7 +177,7 @@ void LB_SiblingSearch( const int lv, const bool SearchAllPID, const int NInput, 
 #                 endif
 
 #                 ifdef GAMER_DEBUG
-                  if (  ( NLEVEL != 1 && (dID[0]<0 || dID[0]>2 || dID[1]<0 || dID[1]>2) )  
+                  if (  ( NLEVEL != 1 && (dID[0]<0 || dID[0]>2 || dID[1]<0 || dID[1]>2) )
                         || dID[2]<0 || dID[2]>2 || ( dID[0]==1 && dID[1]==1 && dID[2]==1 )  )
                      Aux_Error( ERROR_INFO, "lv %d, PID0 %d, SibPID0 %d, incorrect dID[3]=(%d,%d,%d) !!\n",
                                 lv, PID0, SibPID0, dID[0], dID[1], dID[2] );
@@ -194,7 +195,7 @@ void LB_SiblingSearch( const int lv, const bool SearchAllPID, const int NInput, 
 
 #           ifdef GAMER_DEBUG
             if ( m == NSearch_Max - 1 )
-               Aux_Error( ERROR_INFO, "lv %d, SibPID0 %d, Cr1D %lu has no matching patch !!\n", 
+               Aux_Error( ERROR_INFO, "lv %d, SibPID0 %d, Cr1D %lu has no matching patch !!\n",
                           lv, SibPID0, Cr1D );
 #           endif
 
@@ -204,7 +205,9 @@ void LB_SiblingSearch( const int lv, const bool SearchAllPID, const int NInput, 
 
 
 // 5.3 set the sibling indices for the patches adjacent to the simulation domain (for non-periodic B.C. only)
-   if ( OPT__BC_FLU[0] != BC_FLU_PERIODIC )     SetSiblingExternal( lv, NTarget0, TargetPID0 );
+   if ( OPT__BC_FLU[0] != BC_FLU_PERIODIC  ||
+        OPT__BC_FLU[2] != BC_FLU_PERIODIC  ||
+        OPT__BC_FLU[4] != BC_FLU_PERIODIC   )   SetSiblingExternal( lv, NTarget0, TargetPID0 );
 
 
 // check results in debug mode
@@ -222,7 +225,7 @@ void LB_SiblingSearch( const int lv, const bool SearchAllPID, const int NInput, 
 //       check 1: PID's sibling's mirror-sibling = PID
          if ( amr->patch[0][lv][SibPID]->sibling[ MirrorSib[s] ] != PID )
             Aux_Error( ERROR_INFO, "lv %d, PID[%d]->Sib[%d] = %d != SibPID[%d]->MirrorSib[%d] = %d !!\n",
-                       lv, PID, s, SibPID, SibPID, MirrorSib[s], 
+                       lv, PID, s, SibPID, SibPID, MirrorSib[s],
                        amr->patch[0][lv][SibPID]->sibling[ MirrorSib[s] ] );
 
 //       check 2: PID's sibling has correct coordinates
@@ -239,7 +242,7 @@ void LB_SiblingSearch( const int lv, const bool SearchAllPID, const int NInput, 
 #  endif // #ifdef GAMER_DEBUG
 
 
-// free memory   
+// free memory
    delete [] SibCr1D_Search;
    delete [] SibCr1D;
    delete [] SibCr1D_IdxTable;
@@ -251,14 +254,14 @@ void LB_SiblingSearch( const int lv, const bool SearchAllPID, const int NInput, 
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  SetSiblingInSamePatchGroup 
+// Function    :  SetSiblingInSamePatchGroup
 // Description :  Construct the sibling patch relation for patches within the same patch group
-// 
-// Note        :  Sibling relation of patches in different patch groups are constructed by
-//                "SetSiblingInDiffPatchGroup"
 //
-// Parameter   :  lv    : Target refinement level
-//                PID0  : Index of the patch with LocalID==0
+// Note        :  Sibling relation of patches in different patch groups is constructed by
+//                SetSiblingInDiffPatchGroup()
+//
+// Parameter   :  lv   : Target refinement level
+//                PID0 : Index of the patch with LocalID==0
 //-------------------------------------------------------------------------------------------------------
 void SetSiblingInSamePatchGroup( const int lv, const int PID0 )
 {
@@ -349,11 +352,11 @@ void SetSiblingInSamePatchGroup( const int lv, const int PID0 )
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  SetSiblingInDiffPatchGroup 
-// Description :  Construct the sibling patch relation for patches in different patch group
-// 
-// Note        :  Sibling relation of patches in the same patch group are constructed by
-//                "SetSiblingInSamePatchGroup"
+// Function    :  SetSiblingInDiffPatchGroup
+// Description :  Construct the sibling patch relation for patches in different patch groups
+//
+// Note        :  Sibling relation of patches in the same patch group is constructed by
+//                SetSiblingInSamePatchGroup()
 //
 // Parameter   :  lv       : Target refinement level
 //                PID0     : Index of the target patch with LocalID==0
@@ -400,17 +403,17 @@ void SetSiblingInDiffPatchGroup( const int lv, const int PID0, const int SibPID0
             amr->patch[0][lv][ SibPID0+4 ]->sibling[ 7] = PID0+0;
             amr->patch[0][lv][ SibPID0+6 ]->sibling[16] = PID0+0;
             amr->patch[0][lv][ SibPID0+7 ]->sibling[19] = PID0+0;
-                                                                
+
             amr->patch[0][lv][ SibPID0+1 ]->sibling[ 9] = PID0+2;
             amr->patch[0][lv][ SibPID0+4 ]->sibling[ 1] = PID0+2;
             amr->patch[0][lv][ SibPID0+6 ]->sibling[21] = PID0+2;
             amr->patch[0][lv][ SibPID0+7 ]->sibling[16] = PID0+2;
-                                                                
+
             amr->patch[0][lv][ SibPID0+1 ]->sibling[17] = PID0+3;
             amr->patch[0][lv][ SibPID0+4 ]->sibling[23] = PID0+3;
             amr->patch[0][lv][ SibPID0+6 ]->sibling[ 1] = PID0+3;
             amr->patch[0][lv][ SibPID0+7 ]->sibling[ 7] = PID0+3;
-                                                                
+
             amr->patch[0][lv][ SibPID0+1 ]->sibling[25] = PID0+5;
             amr->patch[0][lv][ SibPID0+4 ]->sibling[17] = PID0+5;
             amr->patch[0][lv][ SibPID0+6 ]->sibling[ 9] = PID0+5;
@@ -446,17 +449,17 @@ void SetSiblingInDiffPatchGroup( const int lv, const int PID0, const int SibPID0
             amr->patch[0][lv][ SibPID0+2 ]->sibling[ 6] = PID0+1;
             amr->patch[0][lv][ SibPID0+3 ]->sibling[14] = PID0+1;
             amr->patch[0][lv][ SibPID0+5 ]->sibling[18] = PID0+1;
-                                                                
+
             amr->patch[0][lv][ SibPID0+0 ]->sibling[ 8] = PID0+4;
             amr->patch[0][lv][ SibPID0+2 ]->sibling[ 0] = PID0+4;
             amr->patch[0][lv][ SibPID0+3 ]->sibling[20] = PID0+4;
             amr->patch[0][lv][ SibPID0+5 ]->sibling[14] = PID0+4;
-                                                                
+
             amr->patch[0][lv][ SibPID0+0 ]->sibling[15] = PID0+6;
             amr->patch[0][lv][ SibPID0+2 ]->sibling[22] = PID0+6;
             amr->patch[0][lv][ SibPID0+3 ]->sibling[ 0] = PID0+6;
             amr->patch[0][lv][ SibPID0+5 ]->sibling[ 6] = PID0+6;
-                                                                
+
             amr->patch[0][lv][ SibPID0+0 ]->sibling[24] = PID0+7;
             amr->patch[0][lv][ SibPID0+2 ]->sibling[15] = PID0+7;
             amr->patch[0][lv][ SibPID0+3 ]->sibling[ 8] = PID0+7;
@@ -492,17 +495,17 @@ void SetSiblingInDiffPatchGroup( const int lv, const int PID0, const int SibPID0
             amr->patch[0][lv][ SibPID0+4 ]->sibling[ 8] = PID0+0;
             amr->patch[0][lv][ SibPID0+5 ]->sibling[11] = PID0+0;
             amr->patch[0][lv][ SibPID0+7 ]->sibling[20] = PID0+0;
-                                                                
+
             amr->patch[0][lv][ SibPID0+2 ]->sibling[ 9] = PID0+1;
             amr->patch[0][lv][ SibPID0+4 ]->sibling[ 3] = PID0+1;
             amr->patch[0][lv][ SibPID0+5 ]->sibling[21] = PID0+1;
             amr->patch[0][lv][ SibPID0+7 ]->sibling[11] = PID0+1;
-                                                                
+
             amr->patch[0][lv][ SibPID0+2 ]->sibling[13] = PID0+3;
             amr->patch[0][lv][ SibPID0+4 ]->sibling[24] = PID0+3;
             amr->patch[0][lv][ SibPID0+5 ]->sibling[ 3] = PID0+3;
             amr->patch[0][lv][ SibPID0+7 ]->sibling[ 8] = PID0+3;
-                                                                
+
             amr->patch[0][lv][ SibPID0+2 ]->sibling[25] = PID0+6;
             amr->patch[0][lv][ SibPID0+4 ]->sibling[13] = PID0+6;
             amr->patch[0][lv][ SibPID0+5 ]->sibling[ 9] = PID0+6;
@@ -538,17 +541,17 @@ void SetSiblingInDiffPatchGroup( const int lv, const int PID0, const int SibPID0
             amr->patch[0][lv][ SibPID0+1 ]->sibling[ 6] = PID0+2;
             amr->patch[0][lv][ SibPID0+3 ]->sibling[10] = PID0+2;
             amr->patch[0][lv][ SibPID0+6 ]->sibling[18] = PID0+2;
-                                                                
+
             amr->patch[0][lv][ SibPID0+0 ]->sibling[ 7] = PID0+4;
             amr->patch[0][lv][ SibPID0+1 ]->sibling[ 2] = PID0+4;
             amr->patch[0][lv][ SibPID0+3 ]->sibling[19] = PID0+4;
             amr->patch[0][lv][ SibPID0+6 ]->sibling[10] = PID0+4;
-                                                                
+
             amr->patch[0][lv][ SibPID0+0 ]->sibling[12] = PID0+5;
             amr->patch[0][lv][ SibPID0+1 ]->sibling[22] = PID0+5;
             amr->patch[0][lv][ SibPID0+3 ]->sibling[ 2] = PID0+5;
             amr->patch[0][lv][ SibPID0+6 ]->sibling[ 6] = PID0+5;
-                                                                
+
             amr->patch[0][lv][ SibPID0+0 ]->sibling[23] = PID0+7;
             amr->patch[0][lv][ SibPID0+1 ]->sibling[12] = PID0+7;
             amr->patch[0][lv][ SibPID0+3 ]->sibling[ 7] = PID0+7;
@@ -572,7 +575,7 @@ void SetSiblingInDiffPatchGroup( const int lv, const int PID0, const int SibPID0
          amr->patch[0][lv][ PID0+2 ]->sibling[ 4] = SibPID0+5;
          amr->patch[0][lv][ PID0+2 ]->sibling[19] = SibPID0+6;
          amr->patch[0][lv][ PID0+2 ]->sibling[16] = SibPID0+7;
-         
+
          amr->patch[0][lv][ PID0+4 ]->sibling[18] = SibPID0+3;
          amr->patch[0][lv][ PID0+4 ]->sibling[14] = SibPID0+5;
          amr->patch[0][lv][ PID0+4 ]->sibling[10] = SibPID0+6;
@@ -584,17 +587,17 @@ void SetSiblingInDiffPatchGroup( const int lv, const int PID0, const int SibPID0
             amr->patch[0][lv][ SibPID0+5 ]->sibling[12] = PID0+0;
             amr->patch[0][lv][ SibPID0+6 ]->sibling[15] = PID0+0;
             amr->patch[0][lv][ SibPID0+7 ]->sibling[22] = PID0+0;
-                                                                
+
             amr->patch[0][lv][ SibPID0+3 ]->sibling[17] = PID0+1;
             amr->patch[0][lv][ SibPID0+5 ]->sibling[23] = PID0+1;
             amr->patch[0][lv][ SibPID0+6 ]->sibling[ 5] = PID0+1;
             amr->patch[0][lv][ SibPID0+7 ]->sibling[12] = PID0+1;
-                                                                
+
             amr->patch[0][lv][ SibPID0+3 ]->sibling[13] = PID0+2;
             amr->patch[0][lv][ SibPID0+5 ]->sibling[ 5] = PID0+2;
             amr->patch[0][lv][ SibPID0+6 ]->sibling[24] = PID0+2;
             amr->patch[0][lv][ SibPID0+7 ]->sibling[15] = PID0+2;
-                                                                
+
             amr->patch[0][lv][ SibPID0+3 ]->sibling[25] = PID0+4;
             amr->patch[0][lv][ SibPID0+5 ]->sibling[17] = PID0+4;
             amr->patch[0][lv][ SibPID0+6 ]->sibling[13] = PID0+4;
@@ -630,17 +633,17 @@ void SetSiblingInDiffPatchGroup( const int lv, const int PID0, const int SibPID0
             amr->patch[0][lv][ SibPID0+1 ]->sibling[14] = PID0+3;
             amr->patch[0][lv][ SibPID0+2 ]->sibling[10] = PID0+3;
             amr->patch[0][lv][ SibPID0+4 ]->sibling[18] = PID0+3;
-                                                                
+
             amr->patch[0][lv][ SibPID0+0 ]->sibling[11] = PID0+5;
             amr->patch[0][lv][ SibPID0+1 ]->sibling[20] = PID0+5;
             amr->patch[0][lv][ SibPID0+2 ]->sibling[ 4] = PID0+5;
             amr->patch[0][lv][ SibPID0+4 ]->sibling[14] = PID0+5;
-                                                                
+
             amr->patch[0][lv][ SibPID0+0 ]->sibling[16] = PID0+6;
             amr->patch[0][lv][ SibPID0+1 ]->sibling[ 4] = PID0+6;
             amr->patch[0][lv][ SibPID0+2 ]->sibling[19] = PID0+6;
             amr->patch[0][lv][ SibPID0+4 ]->sibling[10] = PID0+6;
-                                                                
+
             amr->patch[0][lv][ SibPID0+0 ]->sibling[21] = PID0+7;
             amr->patch[0][lv][ SibPID0+1 ]->sibling[11] = PID0+7;
             amr->patch[0][lv][ SibPID0+2 ]->sibling[16] = PID0+7;
@@ -660,7 +663,7 @@ void SetSiblingInDiffPatchGroup( const int lv, const int PID0, const int SibPID0
          {
             amr->patch[0][lv][ SibPID0+4 ]->sibling[ 9] = PID0+0;
             amr->patch[0][lv][ SibPID0+7 ]->sibling[21] = PID0+0;
-                                                                
+
             amr->patch[0][lv][ SibPID0+4 ]->sibling[25] = PID0+3;
             amr->patch[0][lv][ SibPID0+7 ]->sibling[ 9] = PID0+3;
          }
@@ -678,7 +681,7 @@ void SetSiblingInDiffPatchGroup( const int lv, const int PID0, const int SibPID0
          {
             amr->patch[0][lv][ SibPID0+2 ]->sibling[ 8] = PID0+1;
             amr->patch[0][lv][ SibPID0+5 ]->sibling[20] = PID0+1;
-                                                                
+
             amr->patch[0][lv][ SibPID0+2 ]->sibling[24] = PID0+6;
             amr->patch[0][lv][ SibPID0+5 ]->sibling[ 8] = PID0+6;
          }
@@ -696,7 +699,7 @@ void SetSiblingInDiffPatchGroup( const int lv, const int PID0, const int SibPID0
          {
             amr->patch[0][lv][ SibPID0+1 ]->sibling[ 7] = PID0+2;
             amr->patch[0][lv][ SibPID0+6 ]->sibling[19] = PID0+2;
-                                                                
+
             amr->patch[0][lv][ SibPID0+1 ]->sibling[23] = PID0+5;
             amr->patch[0][lv][ SibPID0+6 ]->sibling[ 7] = PID0+5;
          }
@@ -714,7 +717,7 @@ void SetSiblingInDiffPatchGroup( const int lv, const int PID0, const int SibPID0
          {
             amr->patch[0][lv][ SibPID0+0 ]->sibling[ 6] = PID0+4;
             amr->patch[0][lv][ SibPID0+3 ]->sibling[18] = PID0+4;
-                                                                
+
             amr->patch[0][lv][ SibPID0+0 ]->sibling[22] = PID0+7;
             amr->patch[0][lv][ SibPID0+3 ]->sibling[ 6] = PID0+7;
          }
@@ -732,7 +735,7 @@ void SetSiblingInDiffPatchGroup( const int lv, const int PID0, const int SibPID0
          {
             amr->patch[0][lv][ SibPID0+5 ]->sibling[13] = PID0+0;
             amr->patch[0][lv][ SibPID0+7 ]->sibling[24] = PID0+0;
-                                                                
+
             amr->patch[0][lv][ SibPID0+5 ]->sibling[25] = PID0+1;
             amr->patch[0][lv][ SibPID0+7 ]->sibling[13] = PID0+1;
          }
@@ -750,7 +753,7 @@ void SetSiblingInDiffPatchGroup( const int lv, const int PID0, const int SibPID0
          {
             amr->patch[0][lv][ SibPID0+3 ]->sibling[12] = PID0+2;
             amr->patch[0][lv][ SibPID0+6 ]->sibling[22] = PID0+2;
-                                                                
+
             amr->patch[0][lv][ SibPID0+3 ]->sibling[23] = PID0+4;
             amr->patch[0][lv][ SibPID0+6 ]->sibling[12] = PID0+4;
          }
@@ -768,7 +771,7 @@ void SetSiblingInDiffPatchGroup( const int lv, const int PID0, const int SibPID0
          {
             amr->patch[0][lv][ SibPID0+2 ]->sibling[11] = PID0+3;
             amr->patch[0][lv][ SibPID0+4 ]->sibling[20] = PID0+3;
-                                                                
+
             amr->patch[0][lv][ SibPID0+2 ]->sibling[21] = PID0+6;
             amr->patch[0][lv][ SibPID0+4 ]->sibling[11] = PID0+6;
          }
@@ -786,7 +789,7 @@ void SetSiblingInDiffPatchGroup( const int lv, const int PID0, const int SibPID0
          {
             amr->patch[0][lv][ SibPID0+0 ]->sibling[10] = PID0+5;
             amr->patch[0][lv][ SibPID0+1 ]->sibling[18] = PID0+5;
-                                                                
+
             amr->patch[0][lv][ SibPID0+0 ]->sibling[19] = PID0+7;
             amr->patch[0][lv][ SibPID0+1 ]->sibling[10] = PID0+7;
          }
@@ -804,7 +807,7 @@ void SetSiblingInDiffPatchGroup( const int lv, const int PID0, const int SibPID0
          {
             amr->patch[0][lv][ SibPID0+6 ]->sibling[17] = PID0+0;
             amr->patch[0][lv][ SibPID0+7 ]->sibling[23] = PID0+0;
-                                                                
+
             amr->patch[0][lv][ SibPID0+6 ]->sibling[25] = PID0+2;
             amr->patch[0][lv][ SibPID0+7 ]->sibling[17] = PID0+2;
          }
@@ -822,7 +825,7 @@ void SetSiblingInDiffPatchGroup( const int lv, const int PID0, const int SibPID0
          {
             amr->patch[0][lv][ SibPID0+1 ]->sibling[16] = PID0+3;
             amr->patch[0][lv][ SibPID0+4 ]->sibling[19] = PID0+3;
-                                                                
+
             amr->patch[0][lv][ SibPID0+1 ]->sibling[21] = PID0+5;
             amr->patch[0][lv][ SibPID0+4 ]->sibling[16] = PID0+5;
          }
@@ -840,7 +843,7 @@ void SetSiblingInDiffPatchGroup( const int lv, const int PID0, const int SibPID0
          {
             amr->patch[0][lv][ SibPID0+3 ]->sibling[15] = PID0+1;
             amr->patch[0][lv][ SibPID0+5 ]->sibling[22] = PID0+1;
-                                                                
+
             amr->patch[0][lv][ SibPID0+3 ]->sibling[24] = PID0+4;
             amr->patch[0][lv][ SibPID0+5 ]->sibling[15] = PID0+4;
          }
@@ -858,7 +861,7 @@ void SetSiblingInDiffPatchGroup( const int lv, const int PID0, const int SibPID0
          {
             amr->patch[0][lv][ SibPID0+0 ]->sibling[14] = PID0+6;
             amr->patch[0][lv][ SibPID0+2 ]->sibling[18] = PID0+6;
-                                                                
+
             amr->patch[0][lv][ SibPID0+0 ]->sibling[20] = PID0+7;
             amr->patch[0][lv][ SibPID0+2 ]->sibling[14] = PID0+7;
          }
@@ -903,7 +906,7 @@ void SetSiblingInDiffPatchGroup( const int lv, const int PID0, const int SibPID0
          if ( BothSide )
             amr->patch[0][lv][ SibPID0+4 ]->sibling[21] = PID0+3;
       break;
-      
+
 
       case 23:
          amr->patch[0][lv][ PID0+6 ]->sibling[23] = SibPID0+2;
@@ -939,34 +942,33 @@ void SetSiblingInDiffPatchGroup( const int lv, const int PID0, const int SibPID0
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  SetSiblingExternal 
-// Description :  Set the sibling indices for the patches adjacent to the simulation domain (for non-periodic B.C. only)
-// 
+// Function    :  SetSiblingExternal
+// Description :  Set the sibling indices of patches adjacent to the simulation domain (for non-periodic B.C. only)
+//
 // Note        :  If a target sibling patch is an external patch (which lies outside the simulation domain),
 //                the corresponding sibling index is set to "SIB_OFFSET_NONPERIODIC-Sibling", where Sibling
 //                represents the sibling direction of the boundary region.
 //
-// Parameter   :  lv          : Target refinement level
-//                NTarget0    : Number of target patches (with LocalID==0) in "TargetPID0"
-//                TargetPID0  : Lists recording all target patches (with LocalID==0)
+// Parameter   :  lv         : Target refinement level
+//                NTarget0   : Number of target patches (with LocalID==0) in "TargetPID0"
+//                TargetPID0 : Lists recording all target patches (with LocalID==0)
 //-------------------------------------------------------------------------------------------------------
 void SetSiblingExternal( const int lv, const int NTarget0, const int *TargetPID0 )
 {
 
 // check
 #  ifdef GAMER_DEBUG
-   if ( NTarget0 > 0  &&  TargetPID0 == NULL )  
+   if ( NTarget0 > 0  &&  TargetPID0 == NULL )
       Aux_Error( ERROR_INFO, "something is wrong ... (NTarget0 = %d) !!\n", NTarget0 );
 #  endif
 
-   
+
 // maximum corner coordinates for the internal patches
    const int MaxIntCr[3] = { amr->BoxScale[0] - PATCH_SIZE*amr->scale[lv],
                              amr->BoxScale[1] - PATCH_SIZE*amr->scale[lv],
                              amr->BoxScale[2] - PATCH_SIZE*amr->scale[lv] };
-   int *Cr      = NULL;
    int *Sibling = NULL;
-   int PID0;
+   int PID0, Cr[3];
 
 #  pragma omp parallel for private( Cr, Sibling, PID0 ) schedule( runtime )
    for (int t=0; t<NTarget0; t++)
@@ -975,10 +977,13 @@ void SetSiblingExternal( const int lv, const int NTarget0, const int *TargetPID0
 
 //    no external patches should ever exist for the non-periodic B.C.
 #     ifdef GAMER_DEBUG
-      if ( amr->patch[0][lv][PID0]->corner[0] < 0  ||  amr->patch[0][lv][PID0+7]->corner[0] > MaxIntCr[0]  ||
-           amr->patch[0][lv][PID0]->corner[1] < 0  ||  amr->patch[0][lv][PID0+7]->corner[1] > MaxIntCr[1]  ||
-           amr->patch[0][lv][PID0]->corner[2] < 0  ||  amr->patch[0][lv][PID0+7]->corner[2] > MaxIntCr[2]     )
-         Aux_Error( ERROR_INFO, "external patch (lv %d, PID0 %d) is found for non-periodic B.C. !!\n", lv, PID0 );
+      for (int d=0; d<3; d++)
+      {
+         if (  OPT__BC_FLU[2*d] != BC_FLU_PERIODIC  &&
+               ( amr->patch[0][lv][PID0]->corner[d] < 0 || amr->patch[0][lv][PID0+7]->corner[d] > MaxIntCr[d] )  )
+            Aux_Error( ERROR_INFO, "external patch (lv %d, PID0 %d, dir %d) is found for non-periodic B.C. !!\n",
+                       lv, PID0, d );
+      }
 #     endif
 
 //    skip all patch groups not adjacent to the simulation bondaries
@@ -989,148 +994,166 @@ void SetSiblingExternal( const int lv, const int NTarget0, const int *TargetPID0
 
       for (int PID=PID0; PID<PID0+8; PID++)
       {
-         Cr      = amr->patch[0][lv][PID]->corner;
          Sibling = amr->patch[0][lv][PID]->sibling;
 
-//       sibling 0 ~ 5
-         if ( Cr[0] == 0           )         Sibling[ 0] = SIB_OFFSET_NONPERIODIC - 0;
-         if ( Cr[0] == MaxIntCr[0] )         Sibling[ 1] = SIB_OFFSET_NONPERIODIC - 1;
-         if ( Cr[1] == 0           )         Sibling[ 2] = SIB_OFFSET_NONPERIODIC - 2;
-         if ( Cr[1] == MaxIntCr[1] )         Sibling[ 3] = SIB_OFFSET_NONPERIODIC - 3;
-         if ( Cr[2] == 0           )         Sibling[ 4] = SIB_OFFSET_NONPERIODIC - 4;
-         if ( Cr[2] == MaxIntCr[2] )         Sibling[ 5] = SIB_OFFSET_NONPERIODIC - 5;
+//       apply periodicity to corner[] so that external and internal patches can be treated the same
+         for (int d=0; d<3; d++)
+         {
+            Cr[d] = amr->patch[0][lv][PID]->corner[d];
+
+            if ( OPT__BC_FLU[2*d] == BC_FLU_PERIODIC )   Cr[d] = ( Cr[d] + amr->BoxScale[d] ) % amr->BoxScale[d];
+         }
+
+//       reset Sibling[] only if they are -1 to skip the periodic directions
+//       sibling 0
+         if ( Cr[0] == 0           )         SetSiblingExternal_CheckPeriodicity( Sibling+ 0,  0 );
+
+//       sibling 1
+         if ( Cr[0] == MaxIntCr[0] )         SetSiblingExternal_CheckPeriodicity( Sibling+ 1,  1 );
+
+//       sibling 2
+         if ( Cr[1] == 0           )         SetSiblingExternal_CheckPeriodicity( Sibling+ 2,  2 );
+
+//       sibling 3
+         if ( Cr[1] == MaxIntCr[1] )         SetSiblingExternal_CheckPeriodicity( Sibling+ 3,  3 );
+
+//       sibling 4
+         if ( Cr[2] == 0           )         SetSiblingExternal_CheckPeriodicity( Sibling+ 4,  4 );
+
+//       sibling 5
+         if ( Cr[2] == MaxIntCr[2] )         SetSiblingExternal_CheckPeriodicity( Sibling+ 5,  5 );
 
 //       sibling 6
          if ( Cr[0] == 0 )
          {
-            if ( Cr[1] == 0 )                Sibling[ 6] = SIB_OFFSET_NONPERIODIC - 6;
-            else                             Sibling[ 6] = SIB_OFFSET_NONPERIODIC - 0;
+            if ( Cr[1] == 0 )                SetSiblingExternal_CheckPeriodicity( Sibling+ 6,  6 );
+            else                             SetSiblingExternal_CheckPeriodicity( Sibling+ 6,  0 );
          }
          else
-            if ( Cr[1] == 0 )                Sibling[ 6] = SIB_OFFSET_NONPERIODIC - 2;
+            if ( Cr[1] == 0 )                SetSiblingExternal_CheckPeriodicity( Sibling+ 6,  2 );
 
 //       sibling 7
          if ( Cr[0] == MaxIntCr[0] )
          {
-            if ( Cr[1] == 0 )                Sibling[ 7] = SIB_OFFSET_NONPERIODIC - 7;
-            else                             Sibling[ 7] = SIB_OFFSET_NONPERIODIC - 1;
+            if ( Cr[1] == 0 )                SetSiblingExternal_CheckPeriodicity( Sibling+ 7,  7 );
+            else                             SetSiblingExternal_CheckPeriodicity( Sibling+ 7,  1 );
          }
          else
-            if ( Cr[1] == 0 )                Sibling[ 7] = SIB_OFFSET_NONPERIODIC - 2;
+            if ( Cr[1] == 0 )                SetSiblingExternal_CheckPeriodicity( Sibling+ 7,  2 );
 
 //       sibling 8
          if ( Cr[0] == 0 )
          {
-            if ( Cr[1] == MaxIntCr[1] )      Sibling[ 8] = SIB_OFFSET_NONPERIODIC - 8;
-            else                             Sibling[ 8] = SIB_OFFSET_NONPERIODIC - 0;
+            if ( Cr[1] == MaxIntCr[1] )      SetSiblingExternal_CheckPeriodicity( Sibling+ 8,  8 );
+            else                             SetSiblingExternal_CheckPeriodicity( Sibling+ 8,  0 );
          }
          else
-            if ( Cr[1] == MaxIntCr[1] )      Sibling[ 8] = SIB_OFFSET_NONPERIODIC - 3;
+            if ( Cr[1] == MaxIntCr[1] )      SetSiblingExternal_CheckPeriodicity( Sibling+ 8,  3 );
 
 //       sibling 9
          if ( Cr[0] == MaxIntCr[0] )
          {
-            if ( Cr[1] == MaxIntCr[1] )      Sibling[ 9] = SIB_OFFSET_NONPERIODIC - 9;
-            else                             Sibling[ 9] = SIB_OFFSET_NONPERIODIC - 1;
+            if ( Cr[1] == MaxIntCr[1] )      SetSiblingExternal_CheckPeriodicity( Sibling+ 9,  9 );
+            else                             SetSiblingExternal_CheckPeriodicity( Sibling+ 9,  1 );
          }
          else
-            if ( Cr[1] == MaxIntCr[1] )      Sibling[ 9] = SIB_OFFSET_NONPERIODIC - 3;
+            if ( Cr[1] == MaxIntCr[1] )      SetSiblingExternal_CheckPeriodicity( Sibling+ 9,  3 );
 
 //       sibling 10
          if ( Cr[1] == 0 )
          {
-            if ( Cr[2] == 0 )                Sibling[10] = SIB_OFFSET_NONPERIODIC - 10;
-            else                             Sibling[10] = SIB_OFFSET_NONPERIODIC - 2;
+            if ( Cr[2] == 0 )                SetSiblingExternal_CheckPeriodicity( Sibling+10, 10 );
+            else                             SetSiblingExternal_CheckPeriodicity( Sibling+10,  2 );
          }
          else
-            if ( Cr[2] == 0 )                Sibling[10] = SIB_OFFSET_NONPERIODIC - 4;
+            if ( Cr[2] == 0 )                SetSiblingExternal_CheckPeriodicity( Sibling+10,  4 );
 
 //       sibling 11
          if ( Cr[1] == MaxIntCr[1] )
          {
-            if ( Cr[2] == 0 )                Sibling[11] = SIB_OFFSET_NONPERIODIC - 11;
-            else                             Sibling[11] = SIB_OFFSET_NONPERIODIC - 3;
+            if ( Cr[2] == 0 )                SetSiblingExternal_CheckPeriodicity( Sibling+11, 11 );
+            else                             SetSiblingExternal_CheckPeriodicity( Sibling+11,  3 );
          }
          else
-            if ( Cr[2] == 0 )                Sibling[11] = SIB_OFFSET_NONPERIODIC - 4;
+            if ( Cr[2] == 0 )                SetSiblingExternal_CheckPeriodicity( Sibling+11,  4 );
 
 //       sibling 12
          if ( Cr[1] == 0 )
          {
-            if ( Cr[2] == MaxIntCr[2] )      Sibling[12] = SIB_OFFSET_NONPERIODIC - 12;
-            else                             Sibling[12] = SIB_OFFSET_NONPERIODIC - 2;
+            if ( Cr[2] == MaxIntCr[2] )      SetSiblingExternal_CheckPeriodicity( Sibling+12, 12 );
+            else                             SetSiblingExternal_CheckPeriodicity( Sibling+12,  2 );
          }
          else
-            if ( Cr[2] == MaxIntCr[2] )      Sibling[12] = SIB_OFFSET_NONPERIODIC - 5;
+            if ( Cr[2] == MaxIntCr[2] )      SetSiblingExternal_CheckPeriodicity( Sibling+12,  5 );
 
 //       sibling 13
          if ( Cr[1] == MaxIntCr[1] )
          {
-            if ( Cr[2] == MaxIntCr[2] )      Sibling[13] = SIB_OFFSET_NONPERIODIC - 13;
-            else                             Sibling[13] = SIB_OFFSET_NONPERIODIC - 3;
+            if ( Cr[2] == MaxIntCr[2] )      SetSiblingExternal_CheckPeriodicity( Sibling+13, 13 );
+            else                             SetSiblingExternal_CheckPeriodicity( Sibling+13,  3 );
          }
          else
-            if ( Cr[2] == MaxIntCr[2] )      Sibling[13] = SIB_OFFSET_NONPERIODIC - 5;
+            if ( Cr[2] == MaxIntCr[2] )      SetSiblingExternal_CheckPeriodicity( Sibling+13,  5 );
 
 //       sibling 14
          if ( Cr[2] == 0 )
          {
-            if ( Cr[0] == 0 )                Sibling[14] = SIB_OFFSET_NONPERIODIC - 14;
-            else                             Sibling[14] = SIB_OFFSET_NONPERIODIC - 4;
+            if ( Cr[0] == 0 )                SetSiblingExternal_CheckPeriodicity( Sibling+14, 14 );
+            else                             SetSiblingExternal_CheckPeriodicity( Sibling+14,  4 );
          }
          else
-            if ( Cr[0] == 0 )                Sibling[14] = SIB_OFFSET_NONPERIODIC - 0;
+            if ( Cr[0] == 0 )                SetSiblingExternal_CheckPeriodicity( Sibling+14,  0 );
 
 //       sibling 15
          if ( Cr[2] == MaxIntCr[2] )
          {
-            if ( Cr[0] == 0 )                Sibling[15] = SIB_OFFSET_NONPERIODIC - 15;
-            else                             Sibling[15] = SIB_OFFSET_NONPERIODIC - 5;
+            if ( Cr[0] == 0 )                SetSiblingExternal_CheckPeriodicity( Sibling+15, 15 );
+            else                             SetSiblingExternal_CheckPeriodicity( Sibling+15,  5 );
          }
          else
-            if ( Cr[0] == 0 )                Sibling[15] = SIB_OFFSET_NONPERIODIC - 0;
+            if ( Cr[0] == 0 )                SetSiblingExternal_CheckPeriodicity( Sibling+15,  0 );
 
 //       sibling 16
          if ( Cr[2] == 0 )
          {
-            if ( Cr[0] == MaxIntCr[0] )      Sibling[16] = SIB_OFFSET_NONPERIODIC - 16;
-            else                             Sibling[16] = SIB_OFFSET_NONPERIODIC - 4;
+            if ( Cr[0] == MaxIntCr[0] )      SetSiblingExternal_CheckPeriodicity( Sibling+16, 16 );
+            else                             SetSiblingExternal_CheckPeriodicity( Sibling+16,  4 );
          }
          else
-            if ( Cr[0] == MaxIntCr[0] )      Sibling[16] = SIB_OFFSET_NONPERIODIC - 1;
+            if ( Cr[0] == MaxIntCr[0] )      SetSiblingExternal_CheckPeriodicity( Sibling+16,  1 );
 
 //       sibling 17
          if ( Cr[2] == MaxIntCr[2] )
          {
-            if ( Cr[0] == MaxIntCr[0] )      Sibling[17] = SIB_OFFSET_NONPERIODIC - 17;
-            else                             Sibling[17] = SIB_OFFSET_NONPERIODIC - 5;
+            if ( Cr[0] == MaxIntCr[0] )      SetSiblingExternal_CheckPeriodicity( Sibling+17, 17 );
+            else                             SetSiblingExternal_CheckPeriodicity( Sibling+17,  5 );
          }
          else
-            if ( Cr[0] == MaxIntCr[0] )      Sibling[17] = SIB_OFFSET_NONPERIODIC - 1;
+            if ( Cr[0] == MaxIntCr[0] )      SetSiblingExternal_CheckPeriodicity( Sibling+17,  1 );
 
 //       sibling 18
          if ( Cr[0] == 0 )
          {
             if ( Cr[1] == 0 )
             {
-               if ( Cr[2] == 0 )             Sibling[18] = SIB_OFFSET_NONPERIODIC - 18;
-               else                          Sibling[18] = SIB_OFFSET_NONPERIODIC - 6;
+               if ( Cr[2] == 0 )             SetSiblingExternal_CheckPeriodicity( Sibling+18, 18 );
+               else                          SetSiblingExternal_CheckPeriodicity( Sibling+18,  6 );
             }
             else
             {
-               if ( Cr[2] == 0 )             Sibling[18] = SIB_OFFSET_NONPERIODIC - 14;
-               else                          Sibling[18] = SIB_OFFSET_NONPERIODIC - 0;
+               if ( Cr[2] == 0 )             SetSiblingExternal_CheckPeriodicity( Sibling+18, 14 );
+               else                          SetSiblingExternal_CheckPeriodicity( Sibling+18,  0 );
             }
          }
          else
          {
             if ( Cr[1] == 0 )
             {
-               if ( Cr[2] == 0 )             Sibling[18] = SIB_OFFSET_NONPERIODIC - 10;
-               else                          Sibling[18] = SIB_OFFSET_NONPERIODIC - 2;
+               if ( Cr[2] == 0 )             SetSiblingExternal_CheckPeriodicity( Sibling+18, 10 );
+               else                          SetSiblingExternal_CheckPeriodicity( Sibling+18,  2 );
             }
             else
-               if ( Cr[2] == 0 )             Sibling[18] = SIB_OFFSET_NONPERIODIC - 4;
+               if ( Cr[2] == 0 )             SetSiblingExternal_CheckPeriodicity( Sibling+18,  4 );
          }
 
 //       sibling 19
@@ -1138,24 +1161,24 @@ void SetSiblingExternal( const int lv, const int NTarget0, const int *TargetPID0
          {
             if ( Cr[1] == 0 )
             {
-               if ( Cr[2] == 0 )             Sibling[19] = SIB_OFFSET_NONPERIODIC - 19;
-               else                          Sibling[19] = SIB_OFFSET_NONPERIODIC - 7;
+               if ( Cr[2] == 0 )             SetSiblingExternal_CheckPeriodicity( Sibling+19, 19 );
+               else                          SetSiblingExternal_CheckPeriodicity( Sibling+19,  7 );
             }
             else
             {
-               if ( Cr[2] == 0 )             Sibling[19] = SIB_OFFSET_NONPERIODIC - 16;
-               else                          Sibling[19] = SIB_OFFSET_NONPERIODIC - 1;
+               if ( Cr[2] == 0 )             SetSiblingExternal_CheckPeriodicity( Sibling+19, 16 );
+               else                          SetSiblingExternal_CheckPeriodicity( Sibling+19,  1 );
             }
          }
          else
          {
             if ( Cr[1] == 0 )
             {
-               if ( Cr[2] == 0 )             Sibling[19] = SIB_OFFSET_NONPERIODIC - 10;
-               else                          Sibling[19] = SIB_OFFSET_NONPERIODIC - 2;
+               if ( Cr[2] == 0 )             SetSiblingExternal_CheckPeriodicity( Sibling+19, 10 );
+               else                          SetSiblingExternal_CheckPeriodicity( Sibling+19,  2 );
             }
             else
-               if ( Cr[2] == 0 )             Sibling[19] = SIB_OFFSET_NONPERIODIC - 4;
+               if ( Cr[2] == 0 )             SetSiblingExternal_CheckPeriodicity( Sibling+19,  4 );
          }
 
 //       sibling 20
@@ -1163,24 +1186,24 @@ void SetSiblingExternal( const int lv, const int NTarget0, const int *TargetPID0
          {
             if ( Cr[1] == MaxIntCr[1] )
             {
-               if ( Cr[2] == 0 )             Sibling[20] = SIB_OFFSET_NONPERIODIC - 20;
-               else                          Sibling[20] = SIB_OFFSET_NONPERIODIC - 8;
+               if ( Cr[2] == 0 )             SetSiblingExternal_CheckPeriodicity( Sibling+20, 20 );
+               else                          SetSiblingExternal_CheckPeriodicity( Sibling+20,  8 );
             }
             else
             {
-               if ( Cr[2] == 0 )             Sibling[20] = SIB_OFFSET_NONPERIODIC - 14;
-               else                          Sibling[20] = SIB_OFFSET_NONPERIODIC - 0;
+               if ( Cr[2] == 0 )             SetSiblingExternal_CheckPeriodicity( Sibling+20, 14 );
+               else                          SetSiblingExternal_CheckPeriodicity( Sibling+20,  0 );
             }
          }
          else
          {
             if ( Cr[1] == MaxIntCr[1] )
             {
-               if ( Cr[2] == 0 )             Sibling[20] = SIB_OFFSET_NONPERIODIC - 11;
-               else                          Sibling[20] = SIB_OFFSET_NONPERIODIC - 3;
+               if ( Cr[2] == 0 )             SetSiblingExternal_CheckPeriodicity( Sibling+20, 11 );
+               else                          SetSiblingExternal_CheckPeriodicity( Sibling+20,  3 );
             }
             else
-               if ( Cr[2] == 0 )             Sibling[20] = SIB_OFFSET_NONPERIODIC - 4;
+               if ( Cr[2] == 0 )             SetSiblingExternal_CheckPeriodicity( Sibling+20,  4 );
          }
 
 //       sibling 21
@@ -1188,24 +1211,24 @@ void SetSiblingExternal( const int lv, const int NTarget0, const int *TargetPID0
          {
             if ( Cr[1] == MaxIntCr[1] )
             {
-               if ( Cr[2] == 0 )             Sibling[21] = SIB_OFFSET_NONPERIODIC - 21;
-               else                          Sibling[21] = SIB_OFFSET_NONPERIODIC - 9;
+               if ( Cr[2] == 0 )             SetSiblingExternal_CheckPeriodicity( Sibling+21, 21 );
+               else                          SetSiblingExternal_CheckPeriodicity( Sibling+21,  9 );
             }
             else
             {
-               if ( Cr[2] == 0 )             Sibling[21] = SIB_OFFSET_NONPERIODIC - 16;
-               else                          Sibling[21] = SIB_OFFSET_NONPERIODIC - 1;
+               if ( Cr[2] == 0 )             SetSiblingExternal_CheckPeriodicity( Sibling+21, 16 );
+               else                          SetSiblingExternal_CheckPeriodicity( Sibling+21,  1 );
             }
          }
          else
          {
             if ( Cr[1] == MaxIntCr[1] )
             {
-               if ( Cr[2] == 0 )             Sibling[21] = SIB_OFFSET_NONPERIODIC - 11;
-               else                          Sibling[21] = SIB_OFFSET_NONPERIODIC - 3;
+               if ( Cr[2] == 0 )             SetSiblingExternal_CheckPeriodicity( Sibling+21, 11 );
+               else                          SetSiblingExternal_CheckPeriodicity( Sibling+21,  3 );
             }
             else
-               if ( Cr[2] == 0 )             Sibling[21] = SIB_OFFSET_NONPERIODIC - 4;
+               if ( Cr[2] == 0 )             SetSiblingExternal_CheckPeriodicity( Sibling+21,  4 );
          }
 
 //       sibling 22
@@ -1213,24 +1236,24 @@ void SetSiblingExternal( const int lv, const int NTarget0, const int *TargetPID0
          {
             if ( Cr[1] == 0 )
             {
-               if ( Cr[2] == MaxIntCr[2] )   Sibling[22] = SIB_OFFSET_NONPERIODIC - 22;
-               else                          Sibling[22] = SIB_OFFSET_NONPERIODIC - 6;
+               if ( Cr[2] == MaxIntCr[2] )   SetSiblingExternal_CheckPeriodicity( Sibling+22, 22 );
+               else                          SetSiblingExternal_CheckPeriodicity( Sibling+22,  6 );
             }
             else
             {
-               if ( Cr[2] == MaxIntCr[2] )   Sibling[22] = SIB_OFFSET_NONPERIODIC - 15;
-               else                          Sibling[22] = SIB_OFFSET_NONPERIODIC - 0;
+               if ( Cr[2] == MaxIntCr[2] )   SetSiblingExternal_CheckPeriodicity( Sibling+22, 15 );
+               else                          SetSiblingExternal_CheckPeriodicity( Sibling+22,  0 );
             }
          }
          else
          {
             if ( Cr[1] == 0 )
             {
-               if ( Cr[2] == MaxIntCr[2] )   Sibling[22] = SIB_OFFSET_NONPERIODIC - 12;
-               else                          Sibling[22] = SIB_OFFSET_NONPERIODIC - 2;
+               if ( Cr[2] == MaxIntCr[2] )   SetSiblingExternal_CheckPeriodicity( Sibling+22, 12 );
+               else                          SetSiblingExternal_CheckPeriodicity( Sibling+22,  2 );
             }
             else
-               if ( Cr[2] == MaxIntCr[2] )   Sibling[22] = SIB_OFFSET_NONPERIODIC - 5;
+               if ( Cr[2] == MaxIntCr[2] )   SetSiblingExternal_CheckPeriodicity( Sibling+22,  5 );
          }
 
 //       sibling 23
@@ -1238,24 +1261,24 @@ void SetSiblingExternal( const int lv, const int NTarget0, const int *TargetPID0
          {
             if ( Cr[1] == 0 )
             {
-               if ( Cr[2] == MaxIntCr[2] )   Sibling[23] = SIB_OFFSET_NONPERIODIC - 23;
-               else                          Sibling[23] = SIB_OFFSET_NONPERIODIC - 7;
+               if ( Cr[2] == MaxIntCr[2] )   SetSiblingExternal_CheckPeriodicity( Sibling+23, 23 );
+               else                          SetSiblingExternal_CheckPeriodicity( Sibling+23,  7 );
             }
             else
             {
-               if ( Cr[2] == MaxIntCr[2] )   Sibling[23] = SIB_OFFSET_NONPERIODIC - 17;
-               else                          Sibling[23] = SIB_OFFSET_NONPERIODIC - 1;
+               if ( Cr[2] == MaxIntCr[2] )   SetSiblingExternal_CheckPeriodicity( Sibling+23, 17 );
+               else                          SetSiblingExternal_CheckPeriodicity( Sibling+23,  1 );
             }
          }
          else
          {
             if ( Cr[1] == 0 )
             {
-               if ( Cr[2] == MaxIntCr[2] )   Sibling[23] = SIB_OFFSET_NONPERIODIC - 12;
-               else                          Sibling[23] = SIB_OFFSET_NONPERIODIC - 2;
+               if ( Cr[2] == MaxIntCr[2] )   SetSiblingExternal_CheckPeriodicity( Sibling+23, 12 );
+               else                          SetSiblingExternal_CheckPeriodicity( Sibling+23,  2 );
             }
             else
-               if ( Cr[2] == MaxIntCr[2] )   Sibling[23] = SIB_OFFSET_NONPERIODIC - 5;
+               if ( Cr[2] == MaxIntCr[2] )   SetSiblingExternal_CheckPeriodicity( Sibling+23,  5 );
          }
 
 //       sibling 24
@@ -1263,24 +1286,24 @@ void SetSiblingExternal( const int lv, const int NTarget0, const int *TargetPID0
          {
             if ( Cr[1] == MaxIntCr[1] )
             {
-               if ( Cr[2] == MaxIntCr[2] )   Sibling[24] = SIB_OFFSET_NONPERIODIC - 24;
-               else                          Sibling[24] = SIB_OFFSET_NONPERIODIC - 8;
+               if ( Cr[2] == MaxIntCr[2] )   SetSiblingExternal_CheckPeriodicity( Sibling+24, 24 );
+               else                          SetSiblingExternal_CheckPeriodicity( Sibling+24,  8 );
             }
             else
             {
-               if ( Cr[2] == MaxIntCr[2] )   Sibling[24] = SIB_OFFSET_NONPERIODIC - 15;
-               else                          Sibling[24] = SIB_OFFSET_NONPERIODIC - 0;
+               if ( Cr[2] == MaxIntCr[2] )   SetSiblingExternal_CheckPeriodicity( Sibling+24, 15 );
+               else                          SetSiblingExternal_CheckPeriodicity( Sibling+24,  0 );
             }
          }
          else
          {
             if ( Cr[1] == MaxIntCr[1] )
             {
-               if ( Cr[2] == MaxIntCr[2] )   Sibling[24] = SIB_OFFSET_NONPERIODIC - 13;
-               else                          Sibling[24] = SIB_OFFSET_NONPERIODIC - 3;
+               if ( Cr[2] == MaxIntCr[2] )   SetSiblingExternal_CheckPeriodicity( Sibling+24, 13 );
+               else                          SetSiblingExternal_CheckPeriodicity( Sibling+24,  3 );
             }
             else
-               if ( Cr[2] == MaxIntCr[2] )   Sibling[24] = SIB_OFFSET_NONPERIODIC - 5;
+               if ( Cr[2] == MaxIntCr[2] )   SetSiblingExternal_CheckPeriodicity( Sibling+24,  5 );
          }
 
 //       sibling 25
@@ -1288,30 +1311,64 @@ void SetSiblingExternal( const int lv, const int NTarget0, const int *TargetPID0
          {
             if ( Cr[1] == MaxIntCr[1] )
             {
-               if ( Cr[2] == MaxIntCr[2] )   Sibling[25] = SIB_OFFSET_NONPERIODIC - 25;
-               else                          Sibling[25] = SIB_OFFSET_NONPERIODIC - 9;
+               if ( Cr[2] == MaxIntCr[2] )   SetSiblingExternal_CheckPeriodicity( Sibling+25, 25 );
+               else                          SetSiblingExternal_CheckPeriodicity( Sibling+25,  9 );
             }
             else
             {
-               if ( Cr[2] == MaxIntCr[2] )   Sibling[25] = SIB_OFFSET_NONPERIODIC - 17;
-               else                          Sibling[25] = SIB_OFFSET_NONPERIODIC - 1;
+               if ( Cr[2] == MaxIntCr[2] )   SetSiblingExternal_CheckPeriodicity( Sibling+25, 17 );
+               else                          SetSiblingExternal_CheckPeriodicity( Sibling+25,  1 );
             }
          }
          else
          {
             if ( Cr[1] == MaxIntCr[1] )
             {
-               if ( Cr[2] == MaxIntCr[2] )   Sibling[25] = SIB_OFFSET_NONPERIODIC - 13;
-               else                          Sibling[25] = SIB_OFFSET_NONPERIODIC - 3;
+               if ( Cr[2] == MaxIntCr[2] )   SetSiblingExternal_CheckPeriodicity( Sibling+25, 13 );
+               else                          SetSiblingExternal_CheckPeriodicity( Sibling+25,  3 );
             }
             else
-               if ( Cr[2] == MaxIntCr[2] )   Sibling[25] = SIB_OFFSET_NONPERIODIC - 5;
+               if ( Cr[2] == MaxIntCr[2] )   SetSiblingExternal_CheckPeriodicity( Sibling+25,  5 );
          }
 
       } // for (int PID=PID0; PID<PID0+8; PID++)
    } // for (int t=0; t<NTarget0; t++)
 
 } // FUNCTION : SetSiblingExternal
+
+
+
+//-------------------------------------------------------------------------------------------------------
+// Function    :  SetSiblingExternal_CheckPeriodicity
+// Description :  Set the sibling indices of patches adjacent to the simulation domain if the target
+//                boundary direction is non-periodic
+//
+// Note        :  1. Invoked by SetSiblingExternal()
+//                2. Do nothing if the target boundary direction is periodic
+//                   --> A boundary direction is defined to be periodic only if its associated directions
+//                       along x/y/z are all periodic
+//                   --> For example, Boundary=26 is periodic only if x, y, and z directions are all periodic
+//
+// Parameter   :  Sibling  : Pointer of Sibling[] to be set
+//                Boundary : Boundary direction (0-25)
+//-------------------------------------------------------------------------------------------------------
+void SetSiblingExternal_CheckPeriodicity( int *Sibling, const int Boundary )
+{
+
+   bool Periodic = true;
+
+   for (int d=0; d<3; d++)
+   {
+      if (  TABLE_01( Boundary, 'x'+d, true, false, true )  &&  OPT__BC_FLU[2*d] != BC_FLU_PERIODIC  )
+      {
+         Periodic = false;
+         break;
+      }
+   }
+
+   if ( !Periodic )  *Sibling = SIB_OFFSET_NONPERIODIC - Boundary;
+
+} // FUNCTION : SetSiblingExternal_CheckPeriodicity
 
 
 

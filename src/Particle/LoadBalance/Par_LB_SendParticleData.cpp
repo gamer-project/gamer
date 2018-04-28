@@ -15,10 +15,10 @@
 //                   --> Except for RecvBuf_ParDataEachPatch, which is just a pointer to the MPI recv buffer
 //                       declared in LB_GetBufferData
 //                3. SendBuf_ParDataEachPatch format: [ParID][ParAttribute] instead of [ParAttribute][ParID]
-//                4. Called by "Par_LB_CollectParticleFromRealPatch, Par_LB_CollectParticle2OneLevel, and
-//                   Par_LB_ExchangeParticleBetweenPatch"
-//                   --> Par_LB_ExchangeParticleBetweenPatch is called by
-//                       "Par_PassParticle2Sibling and Par_PassParticle2Son_AllPatch"
+//                4. Called by Par_LB_CollectParticleFromRealPatch(), Par_LB_CollectParticle2OneLevel(), and
+//                   Par_LB_ExchangeParticleBetweenPatch()
+//                   --> Par_LB_ExchangeParticleBetweenPatch() is called by
+//                       Par_PassParticle2Sibling() and Par_PassParticle2Son_AllPatch()
 //
 // Parameter   :  NParVar                  : Number of particle attributes to be sent
 //                SendBuf_NPatchEachRank   : MPI send buffer --> number of patches sent to each rank

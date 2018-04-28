@@ -5,13 +5,13 @@
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Mis_Idx1D2Idx3D
-// Description :  Transform a 1D index to 3D indices 
+// Description :  Transform a 1D index to 3D indices
 //
-// Note        :  Overloaded with different types 
+// Note        :  Overloaded with different types
 //                --> Explicit template instantiation is put in the end of this file
 //
 // Parameter   :  Size  : Size in all three spatial directions
-//                Idx1D : Input 1D index 
+//                Idx1D : Input 1D index
 //                Idx3D : Output 3D index
 //-------------------------------------------------------------------------------------------------------
 template <typename T>
@@ -33,11 +33,11 @@ void Mis_Idx1D2Idx3D( const int Size[], const T Idx1D, int Idx3D[] )
 // Description :  Transform 3D indices to a 1D index
 //
 // Note        :  The macro "IDX321" does the same job
-//                
+//
 // Parameter   :  Size  : Size in all three spatial directions
 //                Idx3D : Output 3D index
 //
-// Return      :  1D index 
+// Return      :  1D index
 //-------------------------------------------------------------------------------------------------------
 ulong Mis_Idx3D2Idx1D( const int Size[], const int Idx3D[] )
 {

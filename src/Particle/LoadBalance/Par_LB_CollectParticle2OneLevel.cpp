@@ -14,54 +14,54 @@ extern Timer_t *Timer_Par_MPI[NLEVEL][6];
 // Description :  Parallel version of Par_CollectParticle2OneLevel for collecting particles from all
 //                descendants (sons, grandsons, ...) to patches at a target level
 //
-// Note        :  1. ParList in all descendants will NOT be changeed after calling this function
-//                2. Array ParMassPos_Copy will be allocated for the target patches at FaLv
-//                   --> Must be deallocated afterward by calling Par_LB_CollectParticle2OneLevel_FreeMemory
+// Note        :  1. ParList[] in all descendants will NOT be changeed after calling this function
+//                2. ParMassPos_Copy[] will be allocated for the target patches at FaLv
+//                   --> Must be deallocated afterward by calling Par_LB_CollectParticle2OneLevel_FreeMemory()
 //                3. Only work on non-leaf real patches and buffer patches (which can be either real or buffer)
-//                   --> For leaf real patches the ParList_Copy will NOT be allocated
-//                   --> However, it does take into account the occasional situation where non-leaf real patches may
+//                   --> For leaf real patches the ParList_Copy[] will NOT be allocated
+//                   --> However, it does take into account the corner case where non-leaf real patches may
 //                       have NPar>0 temporarily after updating particle position.
-//                       It's because particles travelling from coarse to fine grids will stay in coarse grids
-//                       temporarily until the velocity correction is done.
+//                       --> It's because particles travelling from coarse to fine grids will stay in coarse grids
+//                           temporarily until the velocity correction is done.
 //                       --> For these patches, NPar_Copy will be **the sum of NPar and the number of particles
-//                           collected from other patches**, and ParList_Copy (or ParMassPos_Copy) will contain
+//                           collected from other patches**, and ParList_Copy[] (or ParMassPos_Copy[]) will contain
 //                           information of particles belonging to NPar as well.
 //                       --> It makes implementation simplier. **For leaf real patches, one only needs to consider
-//                           NPar and ParList. While for all other patches, one only needs to consider NPar_Copy,
-//                           ParList_Copy (or ParMassPos_Copy). One never needs to consider both.**
-//                4. Invoked by Par_CollectParticle2OneLevel
+//                           NPar and ParList[]. While for all other patches, one only needs to consider NPar_Copy,
+//                           ParList_Copy[] (or ParMassPos_Copy[]). One never needs to consider both.**
+//                4. Invoked by Par_CollectParticle2OneLevel()
 //                5. This function only collects particle mass and position
 //                   --> Mainly for depositing particle mass onto grids
 //                   --> Particle position are predicted before sending to other ranks so that we don't have to
 //                       send particle velocity
-//                       --> Accordingly, if Par->PredictPos is on, then ParMassPos_Copy always stores the data
+//                       --> Accordingly, if Par->PredictPos is on, ParMassPos_Copy[] always stores the data
 //                           after position prediction
-//                6. When SibBufPatch is on, this function will also collect particles for sibling-buffer patchesat FaLv
+//                6. When SibBufPatch is on, this function will also collect particles for sibling-buffer patches at FaLv
 //                   --> Moreover, if FaSibBufPatch is also on, it will also collect particles for
 //                       father-sibling-buffer patches at FaLv-1 (if FaLv > 0)
 //                       --> Useful for constructing the density field at FaLv for the Poisson solver at FaLv
-//                       --> These data will be stored in NPar_Copy and ParMassPos_Copy as well
+//                       --> These data will be stored in NPar_Copy and ParMassPos_Copy[] as well
 //                7. Option "JustCountNPar" can be used to count the number of particles in each real patch at FaLv
 //                   --> Do NOT collect other particle data (e.g., particle mass and position)
 //                   --> Particle count is stored in NPar_Copy
-//                   --> ParMassPos_Copy will NOT be allocated
+//                   --> ParMassPos_Copy[] will NOT be allocated
 //                   --> Currently it does NOT work with the options SibBufPatch and FaSibBufPatch
 //                       --> It only counts particles for **real** patches at FaLv
 //                   --> Does NOT work with "PredictPos"
 //
-// Parameter   :  FaLv           : Father's refinement level
-//                PredictPos     : Predict particle position, which is useful for particle mass assignement
-//                                 --> We send particle position **after** prediction so that we don't have to
-//                                     send particle velocity
-//                TargetTime     : Target time for predicting the particle position
-//                SibBufPatch    : true --> Collect particles for sibling-buffer patches at FaLv as well
-//                FaSibBufPatch  : true --> Collect particles for father-sibling-buffer patches at FaLv-1 as well
-//                                          (do nothing if FaLv==0)
-//                JustCountNPar  : Just count the number of particles in each real patch at FaLv. Don't collect
-//                                 other particle data (e.g., particle mass and position)
-//                TimingSendPar  : Measure the elapsed time of the routine "Par_LB_SendParticleData"
+// Parameter   :  FaLv          : Father's refinement level
+//                PredictPos    : Predict particle position, which is useful for particle mass assignement
+//                                --> We send particle position **after** prediction so that we don't have to
+//                                    send particle velocity
+//                TargetTime    : Target time for predicting the particle position
+//                SibBufPatch   : true --> Collect particles for sibling-buffer patches at FaLv as well
+//                FaSibBufPatch : true --> Collect particles for father-sibling-buffer patches at FaLv-1 as well
+//                                         (do nothing if FaLv==0)
+//                JustCountNPar : Just count the number of particles in each real patch at FaLv. Don't collect
+//                                other particle data (e.g., particle mass and position)
+//                TimingSendPar : Measure the elapsed time of the routine "Par_LB_SendParticleData"
 //
-// Return      :  NPar_Copy and ParMassPos_Copy array (if JustCountNPar == false) for all non-leaf patches at FaLv
+// Return      :  NPar_Copy and ParMassPos_Copy[] (if JustCountNPar == false) for all non-leaf patches at FaLv
 //                (and for sibling-buffer patches at FaLv if SibBufPatch is on, and for father-sibling-buffer
 //                patches at FaLv-1 if FaSibBufPatch is on and FaLv>0)
 //-------------------------------------------------------------------------------------------------------
@@ -330,7 +330,7 @@ void Par_LB_CollectParticle2OneLevel( const int FaLv, const bool PredictPos, con
                        ParID, amr->Par->Time[ParID] );
 #                 endif
 
-//                note that we don't have to worry about the periodic BC here (in other word, Pos can lie outside the box)
+//                note that we don't have to worry about the periodic BC here (in other words, Pos can lie outside the box)
                   Par_PredictPos( 1, &ParID, SendPtr+PAR_POSX, SendPtr+PAR_POSY, SendPtr+PAR_POSZ, TargetTime );
                }
 
@@ -621,10 +621,10 @@ void Par_LB_CollectParticle2OneLevel( const int FaLv, const bool PredictPos, con
 //
 // Note        :  1. Invoded by Par_CollectParticle2OneLevel_FreeMemory
 //
-// Parameter   :  lv             : Target refinement level
-//                SibBufPatch    : true --> Release memory for sibling-buffer patches at lv as well
-//                FaSibBufPatch  : true --> Release memory for father-sibling-buffer patches at lv-1 as well
-//                                          (do nothing if lv==0)
+// Parameter   :  lv            : Target refinement level
+//                SibBufPatch   : true --> Release memory for sibling-buffer patches at lv as well
+//                FaSibBufPatch : true --> Release memory for father-sibling-buffer patches at lv-1 as well
+//                                         (do nothing if lv==0)
 //
 // Return      :  None
 //-------------------------------------------------------------------------------------------------------

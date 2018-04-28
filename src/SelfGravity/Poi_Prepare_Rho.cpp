@@ -7,16 +7,16 @@
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Poi_Prepare_Rho
-// Description :  Prepare the input array "h_Rho_Array_P" for the Poisson solver
+// Description :  Prepare h_Rho_Array_P[] for the Poisson solver
 //
 // Note        :  1. Invoke the function "Prepare_PatchData"
 //                2. Minimum density threshold (MIN_DENS) is applied
 //
-// Parameter   :  lv             : Target refinement level
-//                PrepTime       : Target physical time to prepare the coarse-grid data
-//                h_Rho_Array_P  : Host array to store the prepared data
-//                NPG            : Number of patch groups to be prepared at a time
-//                PID0_List      : List recording the patch indicies with LocalID==0 to be udpated
+// Parameter   :  lv            : Target refinement level
+//                PrepTime      : Target physical time to prepare the coarse-grid data
+//                h_Rho_Array_P : Host array to store the prepared data
+//                NPG           : Number of patch groups to be prepared at a time
+//                PID0_List     : List recording the patch indicies with LocalID==0 to be udpated
 //-------------------------------------------------------------------------------------------------------
 void Poi_Prepare_Rho( const int lv, const double PrepTime, real h_Rho_Array_P[][RHO_NXT][RHO_NXT][RHO_NXT],
                       const int NPG, const int *PID0_List )

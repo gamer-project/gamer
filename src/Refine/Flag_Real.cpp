@@ -10,17 +10,18 @@ void Prepare_for_Lohner( const OptLohnerForm_t Form, const real *Var1D, real *Av
 // Function    :  Flag_Real
 // Description :  Flag the real patches at level "lv" according to the given refinement criteria
 //
-// Note        :  1. Flag operation of the buffer patches is performed by the function "Flag_Buffer"
-//                2. In this function, the buffer patches may still be flagged due to non-zero
+// Note        :  1. Buffer patches are flagged by Flag_Buffer()
+//                   --> But they can still be flagged by this function due to the non-zero
 //                   (FLAG_BUFFER_SIZE, FLAG_BUFFER_SIZE_MAXM1_LV, FLAG_BUFFER_SIZE_MAXM2_LV) and the grandson check
-//                3. To add new refinement criteria, please edit the function "Flag_Check"
-//                4. Definition of the function "Prepare_for_Lohner" is put in the file "Flag_Lohner"
+//                3. To add new refinement criteria, please edit Flag_Check()
+//                4. Prepare_for_Lohner() is defined in Flag_Lohner.cpp
 //
-// Parameter   :  lv          : Target refinement level to be flagged
-//                UseLBFunc   : Use the load-balance alternative functions for the grandson check and exchanging
-//                              the buffer flags (useless if LOAD_BALANCE is off)
-//                              --> USELB_YES : use the load-balance alternative functions
-//                                  USELB_NO  : do not use the load-balance alternative functions
+// Parameter   :  lv        : Target refinement level to be flagged
+//                UseLBFunc : Use the load-balance alternative functions for the grandson check and exchanging
+//                            the buffer flags (useless if LOAD_BALANCE is off)
+//                            --> USELB_YES : use the load-balance alternative functions
+//                                USELB_NO  : do not use the load-balance alternative functions
+//                                            --> useful for LOAD_BALANCE during the initialization
 //-------------------------------------------------------------------------------------------------------
 void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
 {
@@ -59,9 +60,9 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
    const OptPotBC_t OPT__BC_POT       = BC_POT_NONE;
 #  endif
 #  ifdef PARTICLE
-   const bool PredictPos_No           = false;                 // used by Par_MassAssignment
+   const bool PredictPos_No           = false;                 // used by Par_MassAssignment()
    const bool InitZero_Yes            = true;
-   const bool Periodic_No             = false;
+   const bool Periodic_No[3]          = { false, false, false };
    const bool UnitDens_Yes            = true;
    const bool UnitDens_No             = false;
    const bool CheckFarAway_No         = false;
@@ -72,14 +73,9 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
    const bool TimingSendPar_No        = false;
 #  endif
 
-//###NOTE: no refinement is allowed near the simulation boundary if the isolated BC for self-gravity is selected
-#  ifdef GRAVITY
-   const bool NoRefineNearBoundary    =  (  ( OPT__GRAVITY_TYPE == GRAVITY_SELF || OPT__GRAVITY_TYPE == GRAVITY_BOTH )  &&
-                                            OPT__BC_POT == BC_POT_ISOLATED  ) ? true : false;
-#  else
-   const bool NoRefineNearBoundary    = false;
-#  endif
-   const int  NoRefineBoundaryRegion  = ( NoRefineNearBoundary ) ? PS1*( 1<<(NLEVEL-lv) )*( (1<<lv)-1 ) : NULL_INT;
+// flag-free region used by OPT__NO_FLAG_NEAR_BOUNDARY
+// --> must be set precisely on the target level for OPT__UM_IC_DOWNGRADE
+   const int  NoRefineBoundaryRegion  = ( OPT__NO_FLAG_NEAR_BOUNDARY ) ? PS1*( 1<<(NLEVEL-lv) )*( (1<<lv)-1 ) : NULL_INT;
 
 
 // set the variables for the Lohner's error estimator
@@ -132,7 +128,7 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
       real (*Lohner_Var)                 = NULL;   // array storing the variables for Lohner
       real (*Lohner_Ave)                 = NULL;   // array storing the averages of Lohner_Var for Lohner
       real (*Lohner_Slope)               = NULL;   // array storing the slopes of Lohner_Var for Lohner
-      real (*ParCount)[PS1][PS1]         = NULL;   // declare as **real** to be consistent with Par_MassAssignment
+      real (*ParCount)[PS1][PS1]         = NULL;   // declare as **real** to be consistent with Par_MassAssignment()
       real (*ParDens )[PS1][PS1]         = NULL;
 
       int  i_start, i_end, j_start, j_end, k_start, k_end, SibID, SibPID, PID;
@@ -158,7 +154,7 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
 
 
 //    loop over all REAL patches (the buffer patches will be flagged only due to the FlagBuf
-//    extension or the grandson check )
+//    extension or the grandson check)
 #     pragma omp for schedule( runtime )
       for (int PID0=0; PID0<amr->NPatchComma[lv][1]; PID0+=8)
       {
@@ -179,17 +175,17 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
 
             for (int sib=0; sib<26; sib++)
             {
-//             for the non-periodic BC we have sibling index = SIB_OFFSET_NONPERIODIC - sibling = -1000 - sibling < 0
-               if (  (  NoRefineNearBoundary && amr->patch[0][lv][PID]->sibling[sib] < 0   )  ||
-                     ( !NoRefineNearBoundary && amr->patch[0][lv][PID]->sibling[sib] == -1 )     )
+//             do not check if sibling[]<-1 to allow for refinement around boundaries
+//             --> not considering OPT__NO_FLAG_NEAR_BOUNDARY yet
+               if ( amr->patch[0][lv][PID]->sibling[sib] == -1 )
                {
                   ProperNesting = false;
                   break;
                }
             }
 
-//          check further --> necessary for OPT__UM_IC_DOWNGRADE to avoid refinement near the boundary
-            if ( ProperNesting  &&  NoRefineNearBoundary )
+//          check further if refinement around boundaries is forbidden
+            if ( OPT__NO_FLAG_NEAR_BOUNDARY  &&  ProperNesting )
             {
                for (int d=0; d<3; d++)
                {
@@ -197,7 +193,7 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
                   int CornerR = CornerL + Mis_Cell2Scale( PS1, lv );
 
                   if ( CornerL <= 0                + NoRefineBoundaryRegion  ||
-                       CornerR >= amr->BoxScale[d] - NoRefineBoundaryRegion     )
+                       CornerR >= amr->BoxScale[d] - NoRefineBoundaryRegion    )
                   {
                      ProperNesting = false;
                      break;
@@ -376,10 +372,12 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
                            if ( SibPID == -1 )
                               Aux_Error( ERROR_INFO, "SibPID == -1 --> proper-nesting check failed !!\n" );
 
-                           if ( SibPID <= SIB_OFFSET_NONPERIODIC  &&  NoRefineNearBoundary )
-                              Aux_Error( ERROR_INFO, "SibPID == %d when NoRefineNearBoundary is on !!\n", SibPID );
+                           if ( SibPID <= SIB_OFFSET_NONPERIODIC  &&  OPT__NO_FLAG_NEAR_BOUNDARY )
+                              Aux_Error( ERROR_INFO, "SibPID (%d) <= %d when OPT__NO_FLAG_NEAR_BOUNDARY is on !!\n",
+                                         SibPID, SIB_OFFSET_NONPERIODIC );
 #                          endif
 
+//                         note that we can have SibPID <= SIB_OFFSET_NONPERIODIC when OPT__NO_FLAG_NEAR_BOUNDARY == false
                            if ( SibPID >= 0 )   amr->patch[0][lv][SibPID]->flag = true;
                         }
                      }
@@ -423,10 +421,12 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
                            if ( SibPID == -1 )
                               Aux_Error( ERROR_INFO, "SibPID == -1 --> proper-nesting check failed !!\n" );
 
-                           if ( SibPID <= SIB_OFFSET_NONPERIODIC  &&  NoRefineNearBoundary )
-                              Aux_Error( ERROR_INFO, "SibPID == %d when NoRefineNearBoundary is on !!\n", SibPID );
+                           if ( SibPID <= SIB_OFFSET_NONPERIODIC  &&  OPT__NO_FLAG_NEAR_BOUNDARY )
+                              Aux_Error( ERROR_INFO, "SibPID (%d) <= %d when OPT__NO_FLAG_NEAR_BOUNDARY is on !!\n",
+                                         SibPID, SIB_OFFSET_NONPERIODIC );
 #                          endif
 
+//                         note that we can have SibPID <= SIB_OFFSET_NONPERIODIC when OPT__NO_FLAG_NEAR_BOUNDARY == false
                            if ( SibPID >= 0 )   amr->patch[0][lv][SibPID]->flag = true;
                         }
                      }
@@ -461,21 +461,22 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
 
 
 // apply the proper-nesting constraint again (should also apply to the buffer patches)
+// --> necessary because of the flag buffers
 #  pragma omp parallel for schedule( runtime )
    for (int PID=0; PID<amr->num[lv]; PID++)
    {
       for (int sib=0; sib<26; sib++)
       {
-         if (  (  NoRefineNearBoundary && amr->patch[0][lv][PID]->sibling[sib] < 0   )  ||
-               ( !NoRefineNearBoundary && amr->patch[0][lv][PID]->sibling[sib] == -1 )     )
+//       do not check if sibling[]<-1 to allow for refinement around boundaries first
+         if ( amr->patch[0][lv][PID]->sibling[sib] == -1 )
          {
             amr->patch[0][lv][PID]->flag = false;
             break;
          }
       }
 
-//    check further --> necessary for OPT__UM_IC_DOWNGRADE to avoid refinement near the boundary
-      if ( amr->patch[0][lv][PID]->flag  &&  NoRefineNearBoundary )
+//    check further if refinement around boundaries is forbidden
+      if ( OPT__NO_FLAG_NEAR_BOUNDARY  &&  amr->patch[0][lv][PID]->flag )
       {
         for (int d=0; d<3; d++)
         {
@@ -483,7 +484,7 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
            int CornerR = CornerL + Mis_Cell2Scale( PS1, lv );
 
            if ( CornerL <= 0                + NoRefineBoundaryRegion  ||
-                CornerR >= amr->BoxScale[d] - NoRefineBoundaryRegion     )
+                CornerR >= amr->BoxScale[d] - NoRefineBoundaryRegion    )
             {
                amr->patch[0][lv][PID]->flag = false;
                break;
@@ -549,9 +550,10 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
 // Description :  Properly flag the siblings of patch "PID" at level "lv" to ensure that the proper-nesting
 //                condition is satisfied at level "lv+2"
 //
-// Note        :  Properly take care of the non-periodic BC where there are no buffer patches outside the simulation box
-//                and hence the proper-nesting constraint cannot be applied to the real patches adajacent to the simulation
-//                boundary (sibling index <= SIB_OFFSET_NONPERIODIC)
+// Note        :  1. Properly take care of the non-periodic BC which does not allocate buffer patches
+//                2. No need to validate the proper-nesting constraint when flagging the sibling patches on level "lv"
+//                   (in other words, these sibling patches on lv must be allowed to be flagged) since the existence of
+//                   grandson patches should already enforce this constraint
 //
 // Parameter   :  lv      : Target level to be flagged
 //                PID     : Target patch ID at level "lv"
@@ -565,6 +567,7 @@ void Flag_Grandson( const int lv, const int PID, const int LocalID )
    switch ( LocalID )
    {
       case 0:
+//       must ensure SibPID >= 0 due to the non-periodic B.C., for which we can have SibPID = SIB_OFFSET_NONPERIODIC-sib < -1
          SibPID = amr->patch[0][lv][PID]->sibling[ 0];   if ( SibPID >= 0 )   amr->patch[0][lv][SibPID]->flag = true;
          SibPID = amr->patch[0][lv][PID]->sibling[ 2];   if ( SibPID >= 0 )   amr->patch[0][lv][SibPID]->flag = true;
          SibPID = amr->patch[0][lv][PID]->sibling[ 4];   if ( SibPID >= 0 )   amr->patch[0][lv][SibPID]->flag = true;

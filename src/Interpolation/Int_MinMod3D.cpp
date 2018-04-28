@@ -7,15 +7,15 @@
 // Function    :  Int_MinMod3D
 // Description :  Perform spatial interpolation based on the MinMod limiter
 //
-// Note        :  a. The slope at each grid is determined by the minimum slope between the right slope 
-//                   (difference between the right grid and itself) and the left slope (difference between 
+// Note        :  a. The slope at each grid is determined by the minimum slope between the right slope
+//                   (difference between the right grid and itself) and the left slope (difference between
 //                   itself and the left slope)
 //                b. The slope is chosen to be zero if the right and left slopes have different signs
 //                c. The interpolation result is BOTH conservative and monotonic
 //		  d. 3D interpolation is achieved by performing interpolation along x, y, and z directions
 //		     in order --> different from MINMOD1D
 //
-// Parameter   :  CData       : Input coarse-grid array 
+// Parameter   :  CData       : Input coarse-grid array
 //                CSize       : Size of the CData array
 //                CStart      : (x,y,z) starting indices to perform interpolation on the CData array
 //                CRange      : Number of grids in each direction to perform interpolation
@@ -83,7 +83,7 @@ void Int_MinMod3D( real CData[], const int CSize[3], const int CStart[3], const 
 #     endif
 
 
-//    interpolation along x direction   
+//    interpolation along x direction
       for (int In_z=CStart[2]-CGhost, Out_z=0;  In_z<CStart[2]+CRange[2]+CGhost;  In_z++, Out_z++)
       for (int In_y=CStart[1]-CGhost, Out_y=0;  In_y<CStart[1]+CRange[1]+CGhost;  In_y++, Out_y++)
       for (int In_x=CStart[0],        Out_x=0;  In_x<CStart[0]+CRange[0];         In_x++, Out_x+=2)
@@ -121,7 +121,7 @@ void Int_MinMod3D( real CData[], const int CSize[3], const int CStart[3], const 
 #     endif
 
 
-//    interpolation along y direction   
+//    interpolation along y direction
       for (int InOut_z=0;             InOut_z<CRange[2]+2*CGhost;  InOut_z++)
       for (int In_y=CGhost, Out_y=0;  In_y   <CGhost+CRange[1];    In_y++, Out_y+=2)
       for (int InOut_x=0;             InOut_x<2*CRange[0];         InOut_x++)
@@ -159,7 +159,7 @@ void Int_MinMod3D( real CData[], const int CSize[3], const int CStart[3], const 
 #     endif
 
 
-//    interpolation along z direction   
+//    interpolation along z direction
       for (int In_z=CGhost, Out_z=FStart[2];  In_z<CGhost+CRange[2];  In_z++, Out_z+=2)
       for (int In_y=0,      Out_y=FStart[1];  In_y<2*CRange[1];       In_y++, Out_y++)
       for (int In_x=0,      Out_x=FStart[0];  In_x<2*CRange[0];       In_x++, Out_x++)

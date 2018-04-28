@@ -10,7 +10,7 @@
 // Description :  Construct the MPI sending and receiving data lists for exchanging hydro data after
 //                the fix-up operation
 //
-// Note        :  1. This function must be invoked AFTER the function "LB_RecordExchangeDataPatchID"
+// Note        :  1. This function must be invoked AFTER LB_RecordExchangeDataPatchID()
 //                2. All real and buffer patches must know whether or not they have sons
 //                3. The lists constructed by this function (SendX/RecvX) are subsets of the lists (SendH/RecvH)
 //                   --> To reduce the amount of data to be transferred after the fix-up operation
@@ -22,8 +22,8 @@
 //                           coarse-fine boundaaries
 //                       --> For example: real_patch(lv 1, GID 0) | buffer_patch(lv 1, GID 1) | buffer_patch(lv 2, GID 2)
 //                           In this case, even though GID 0 and GID 1 are at the same level, we still need to exchange
-//                           data for GID 1 because it's right interface is a coarse-fine boundary. But it is not taken
-//                           care in the current implementation of LOAD_BALANCE
+//                           data for GID 1 because it's right interface is a coarse-fine boundary. But this corner case
+//                           is currently not taken care of.
 //                       --> One quick solution is to replace DATA_AFTER_FIXUP by DATA_GENERAL when calling Buf_GetBufferData()
 //                           after Flu_FixUp() in EvolveLevel()
 //
@@ -84,8 +84,9 @@ void LB_RecordExchangeFixUpDataPatchID( const int Lv )
 // 2 data to be sent and received after the restriction fix-up operation
 // ============================================================================================================
 // note that even when OPT__FIXUP_RESTRICT is off we still need to do data restriction in several places
-// (e.g., restart, and OPT__CORR_AFTER_ALL_SYNC)
-// --> for simplicity and sustainability, we always prepare the following data transfer list even when OPT__FIXUP_RESTRICT is off
+// (e.g., restart and OPT__CORR_AFTER_ALL_SYNC)
+// --> for simplicity and sustainability, we always prepare the following data transfer list (even when
+//     OPT__FIXUP_RESTRICT is off)
 // if ( OPT__FIXUP_RESTRICT )
    if ( true )
    {
@@ -96,7 +97,7 @@ void LB_RecordExchangeFixUpDataPatchID( const int Lv )
          {
             TPID = LB_SendH_IDList[r][t];
 
-            if ( amr->patch[0][Lv][TPID]->son != -1 ) // sons may not be home --> need LB_RecordExchangeRestrictDataPatchID
+            if ( amr->patch[0][Lv][TPID]->son != -1 ) // sons may not be home --> need LB_RecordExchangeRestrictDataPatchID()
             {
                LB_SendX_IDList [r][ LB_SendX_NList[r] ] = TPID;
                LB_SendX_SibList[r][ LB_SendX_NList[r] ] = LB_SendH_SibList[r][t];
@@ -115,6 +116,7 @@ void LB_RecordExchangeFixUpDataPatchID( const int Lv )
             TPID = LB_RecvH_IDList[r][ LB_RecvH_IDList_IdxTable[r][t] ];
 
             if ( amr->patch[0][Lv][TPID]->son != -1 ) // assuming that all buffer patches know whether or not they have sons
+                                                      // --> LB_FindSonNotHome() applies to both real and buffer patches
             {
                LB_RecvX_IDList [r][ LB_RecvX_NList[r] ] = TPID;
                LB_RecvX_SibList[r][ LB_RecvX_NList[r] ] = LB_RecvH_SibList[r][t];

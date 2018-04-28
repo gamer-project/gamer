@@ -24,14 +24,14 @@ extern Timer_t *Timer_Poi_PrePot_F[NLEVEL];
 // Function    :  InvokeSolver
 // Description :  Invoke the GPU (or CPU) solvers and enable the concurrent execution between CPU and GPU
 //
-// Note        :  a. Use the input parameter "TSolver" to control the target solver
-//                b. Each solver involves three steps
-//                   --> 1. preparation step : prepare the input data
-//                       2. execution   step : invoke the solvers --> advance solutions or evaluate potential
-//                       3. closing     step : store the updated data
-//                c. Currently the fluid solver can only store the updated data in the different sandglass from
+// Note        :  1. Use the input parameter "TSolver" to control the target solver
+//                2. Each solver involves three steps
+//                   --> (1) preparation step : prepare the input data
+//                       (2) execution   step : invoke the solvers --> advance solutions or evaluate potential
+//                       (3) closing     step : store the updated data
+//                3. Currently the fluid solver can only store the updated data in the different sandglass from
 //                   the input data
-//                d. For LOAD_BALANCE, one can turn on the option "OPT__OVERLAP_MPI" to enable the
+//                4. For LOAD_BALANCE, one can turn on the option "OPT__OVERLAP_MPI" to enable the
 //                   overlapping between MPI communication and CPU/GPU computation
 //
 // Parameter   :  TSolver      : Target solver

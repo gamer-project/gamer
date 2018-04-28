@@ -23,6 +23,7 @@
 #define KEPLER       2
 #define MAXWELL      3
 #define PASCAL       4
+#define VOLTA        5
 
 
 // models
@@ -71,6 +72,11 @@
 
 // load-balance parallelization
 #define HILBERT      1
+
+
+// random number implementation
+#define RNG_GNU_EXT  1
+#define RNG_CPP11    2
 
 
 // NCOMP_FLUID : number of active components in each cell (i.e., the "fluid" array)
@@ -477,7 +483,7 @@
 #  endif // #ifdef UNSPLIT_GRAVITY
 
 
-// number of density ghost zones for storing the temporary particle mass density (in the array rho_ext)
+// number of density ghost zones for storing the temporary particle mass density in rho_ext[]
 #  ifdef PARTICLE
 #     define RHOEXT_GHOST_SIZE   2
 #  endif

@@ -5,7 +5,7 @@
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Mis_GetTotalPatchNumber
-// Description :  Get the total number of real patches among all GAMER ranks 
+// Description :  Get the total number of real patches among all GAMER ranks
 //
 // Note        :  None
 //

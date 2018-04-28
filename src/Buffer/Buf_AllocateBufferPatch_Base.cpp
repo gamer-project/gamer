@@ -9,10 +9,9 @@
 // Function    :  Buf_AllocateBufferPatch_Base
 // Description :  Allocate buffer patches for the base level
 //
-// Note        :  a. The "corner" recorded in the buffer patches are not correct (NOT periodic). They are
-//                   useful only for the function "Buf_RecordBasePatchID"
-//                b. Invoked by the function "Buf_AllocateBufferPatch"
-//                c. No buffer patches will be allocated for patches lying outside the simulation domain if
+// Note        :  1. corner[] recorded in the buffer patches are already non-periodic
+//                2. Invoked by Buf_AllocateBufferPatch()
+//                3. No buffer patches will be allocated for patches lying outside the simulation domain if
 //                   non-periodic B.C. is adopted
 //
 // Parameter   :  Tamr : Target AMR_t pointer

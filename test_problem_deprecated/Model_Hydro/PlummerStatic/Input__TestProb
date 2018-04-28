@@ -1,3 +1,0 @@
-# parameters for the HYDRO Plummer hydrostatic test
-0.1         Plummer_r0              # scale radius
-1.0         Plummer_M               # total mass

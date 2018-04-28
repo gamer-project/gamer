@@ -16,7 +16,7 @@
 //		  d. The "Monotonic" option is used to ensure that the interpolation results are monotonic
 //		     --> A slope limiter is adopted to ensure the monotonicity
 //
-// Parameter   :  CData       : Input coarse-grid array 
+// Parameter   :  CData       : Input coarse-grid array
 //                CSize       : Size of the CData array
 //                CStart      : (x,y,z) starting indices to perform interpolation on the CData array
 //                CRange      : Number of grids in each direction to perform interpolation
@@ -89,7 +89,7 @@ void Int_CQuadratic( real CData[], const int CSize[3], const int CStart[3], cons
 #     endif
 
 
-//    interpolation along x direction   
+//    interpolation along x direction
       for (int In_z=CStart[2]-CGhost, Out_z=0;  In_z<CStart[2]+CRange[2]+CGhost;  In_z++, Out_z++)
       for (int In_y=CStart[1]-CGhost, Out_y=0;  In_y<CStart[1]+CRange[1]+CGhost;  In_y++, Out_y++)
       for (int In_x=CStart[0],        Out_x=0;  In_x<CStart[0]+CRange[0];         In_x++, Out_x+=2)
@@ -145,7 +145,7 @@ void Int_CQuadratic( real CData[], const int CSize[3], const int CStart[3], cons
 #     endif
 
 
-//    interpolation along y direction   
+//    interpolation along y direction
       for (int InOut_z=0;             InOut_z<CRange[2]+2*CGhost;  InOut_z++)
       for (int In_y=CGhost, Out_y=0;  In_y   <CGhost+CRange[1];    In_y++, Out_y+=2)
       for (int InOut_x=0;             InOut_x<2*CRange[0];         InOut_x++)
@@ -200,7 +200,7 @@ void Int_CQuadratic( real CData[], const int CSize[3], const int CStart[3], cons
 #     endif
 
 
-//    interpolation along z direction   
+//    interpolation along z direction
       for (int In_z=CGhost, Out_z=FStart[2];  In_z<CGhost+CRange[2];  In_z++, Out_z+=2)
       for (int In_y=0,      Out_y=FStart[1];  In_y<2*CRange[1];       In_y++, Out_y++)
       for (int In_x=0,      Out_x=FStart[0];  In_x<2*CRange[0];       In_x++, Out_x++)

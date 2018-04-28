@@ -11,11 +11,11 @@
 //                sprintf( comment, "Step%d", AdvanceCounter[6] );
 //                Output_Patch( 6, 5560, comment );
 //
-// Parameter   :  lv       : Target refinement level 
-//                PID      : Target patch index
-//                FluSg    : Sandglass of the fluid data
-//                PotSg    : Sandglass of the potential data
-//                comment  : String to attach to the end of the file name
+// Parameter   :  lv      : Target refinement level
+//                PID     : Target patch index
+//                FluSg   : Sandglass of the fluid data
+//                PotSg   : Sandglass of the potential data
+//                comment : String to attach to the end of the file name
 //-------------------------------------------------------------------------------------------------------
 void Output_Patch( const int lv, const int PID, const int FluSg, const int PotSg, const char *comment )
 {
@@ -50,7 +50,7 @@ void Output_Patch( const int lv, const int PID, const int FluSg, const int PotSg
 
    char FileName[100];
    sprintf( FileName, "Patch_r%d_lv%d_p%d", MPI_Rank, lv, PID );
-   if ( comment != NULL )       
+   if ( comment != NULL )
    {
       strcat( FileName, "_" );
       strcat( FileName, comment );
@@ -63,10 +63,10 @@ void Output_Patch( const int lv, const int PID, const int FluSg, const int PotSg
 // output patch information
    FILE *File = fopen( FileName, "w" );
 
-   fprintf( File, "Rank %d  Lv %d  PID %d  Local ID %d  FluSg %d  PotSg %d  Time %13.7e  Step %ld  Counter %ld\n", 
+   fprintf( File, "Rank %d  Lv %d  PID %d  Local ID %d  FluSg %d  PotSg %d  Time %13.7e  Step %ld  Counter %ld\n",
             MPI_Rank, lv, PID, PID%8, FluSg, PotSg, Time[lv], Step, AdvanceCounter[lv] );
 
-   fprintf( File, "Father %d  Son %d  Corner (%10d,%10d,%10d)  Size %13.7e", Relation->father, Relation->son, 
+   fprintf( File, "Father %d  Son %d  Corner (%10d,%10d,%10d)  Size %13.7e", Relation->father, Relation->son,
             Relation->corner[0], Relation->corner[1], Relation->corner[2], PS1*amr->dh[lv] );
 #  ifdef LOAD_BALANCE
    fprintf( File, "  LB_Idx %ld  PaddedCr1D %lu", Relation->LB_Idx, Relation->PaddedCr1D );
@@ -83,15 +83,15 @@ void Output_Patch( const int lv, const int PID, const int FluSg, const int PotSg
    fprintf( File, "\nSibling, Sibling->Son, and Father->Sibling Lists :\n" );
 
    int Sib, FaSib, SibSon, Fa;
-   for (int S=0; S<26; S++)   
+   for (int S=0; S<26; S++)
    {
       Fa     = Relation->father;
       Sib    = Relation->sibling[S];
-      FaSib  = ( Fa == -1 ) ? -1 : ( amr->patch[0][lv-1][Fa] != NULL ) ? 
+      FaSib  = ( Fa == -1 ) ? -1 : ( amr->patch[0][lv-1][Fa] != NULL ) ?
                                      amr->patch[0][lv-1][Fa]->sibling[S] : -999;
-      SibSon = ( Sib < 0 )  ? Sib : amr->patch[0][lv][Sib]->son; 
+      SibSon = ( Sib < 0 )  ? Sib : amr->patch[0][lv][Sib]->son;
 
-      fprintf( File, "Sib[%2d] = %6d     Sib_Son = %6d     Fa_Sib[%2d] = %6d\n", 
+      fprintf( File, "Sib[%2d] = %6d     Sib_Son = %6d     Fa_Sib[%2d] = %6d\n",
                S, Sib, SibSon, S, FaSib );
    }
    fprintf( File, "\n" );
@@ -138,19 +138,19 @@ void Output_Patch( const int lv, const int PID, const int FluSg, const int PotSg
 
 
 // output data
-   real u[NCOMP_FLUID]; 
+   real u[NCOMP_FLUID];
 
    for (int k=0; k<PATCH_SIZE; k++)
    for (int j=0; j<PATCH_SIZE; j++)
    for (int i=0; i<PATCH_SIZE; i++)
    {
-//    output cell indices      
+//    output cell indices
       fprintf( File, "(%2d,%2d,%2d)", i, j, k );
 
       if ( FluData->fluid != NULL )
       {
 //       output all variables in the fluid array
-         for (int v=0; v<NCOMP_FLUID; v++)   
+         for (int v=0; v<NCOMP_FLUID; v++)
          {
             u[v] = FluData->fluid[v][k][j][i];
             fprintf( File, " %13.6e", u[v] );
@@ -169,7 +169,7 @@ void Output_Patch( const int lv, const int PID, const int FluSg, const int PotSg
 #        endif // MODEL
 
 //       output the passive variables
-         for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)   
+         for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)
          fprintf( File, " %13.6e", FluData->fluid[v][k][j][i] );
       } // if ( FluData->fluid != NULL )
 
@@ -184,7 +184,7 @@ void Output_Patch( const int lv, const int PID, const int FluSg, const int PotSg
 #        warning : WAIT MHD !!!
 #        endif // MODEL
 
-         for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)   
+         for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)
          fprintf( File, " %13s", "" );
       } // if ( FluData->fluid != NULL ) ... else ...
 
@@ -205,7 +205,7 @@ void Output_Patch( const int lv, const int PID, const int FluSg, const int PotSg
    fprintf( File, "== PARTICLE DATA == \n" );
    fprintf( File, "===================\n" );
    fprintf( File, "\n" );
-   fprintf( File, "%5s  %10s  %13s  %13s  %13s  %13s  %13s  %13s  %13s  %13s", 
+   fprintf( File, "%5s  %10s  %13s  %13s  %13s  %13s  %13s  %13s  %13s  %13s",
             "No.", "ParID", "Mass", "X", "Y", "Z", "Vx", "Vy", "Vz", "Time" );
 #  ifdef STORE_PAR_ACC
    fprintf( File, "  %13s  %13s  %13s", "AccX", "AccY", "AccZ" );
@@ -218,7 +218,7 @@ void Output_Patch( const int lv, const int PID, const int FluSg, const int PotSg
    {
       ParID = Relation->ParList[p];
 
-      fprintf( File, "%5d  %10ld  %13.6e  %13.6e  %13.6e  %13.6e  %13.6e  %13.6e  %13.6e  %13.6e", 
+      fprintf( File, "%5d  %10ld  %13.6e  %13.6e  %13.6e  %13.6e  %13.6e  %13.6e  %13.6e  %13.6e",
                p, ParID, amr->Par->Mass[ParID],
                amr->Par->PosX[ParID], amr->Par->PosY[ParID], amr->Par->PosZ[ParID],
                amr->Par->VelX[ParID], amr->Par->VelY[ParID], amr->Par->VelZ[ParID],

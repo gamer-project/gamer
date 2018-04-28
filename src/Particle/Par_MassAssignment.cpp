@@ -3,7 +3,7 @@
 #ifdef PARTICLE
 
 static bool WithinRho( const int idx[], const int RhoSize );
-static bool FarAwayParticle( real ParPosX, real ParPosY, real ParPosZ, const bool Periodic, const real PeriodicSize_Phy[],
+static bool FarAwayParticle( real ParPosX, real ParPosY, real ParPosZ, const bool Periodic[], const real PeriodicSize_Phy[],
                              const real EdgeL[], const real EdgeR[] );
 #ifdef BITWISE_REPRODUCIBILITY
 void SortParticle( const long NPar, const real *PosX, const real *PosY, const real *PosZ, int *IdxTable );
@@ -14,54 +14,57 @@ void SortParticle( const long NPar, const real *PosX, const real *PosY, const re
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Par_MassAssignment
-// Description :  Deposit particle mass to grid
+// Description :  Deposit particle mass onto grid
 //
 // Note        :  1. Three different schemes are supported
 //                   (1) NGP : Nearest-Grid-Point
 //                   (2) CIC : Could-In-Cell
 //                   (3) TSC : Triangular-Shaped-Cloud
-//                2. The deposited density field will be stored in Rho
+//                2. The deposited density field will be stored in Rho[]
 //                   --> This array will be initialized as zero only if "InitZero=true"
-//                3. Particles having no contribution to Rho (which has the range EdgeL[d] <= r[d] < EdgeL[d]+RhoSize*dh )
+//                3. Particles having no contribution to Rho[] (which has the range EdgeL[d] <= r[d] < EdgeL[d]+RhoSize*dh )
 //                   will be ignored
-//                4. Particles position will be predicted to the target physical time if PredictPos is on
-//                   --> But they will NOT be stored back to the global Pos array
+//                4. Particle position will be predicted to the target physical time if PredictPos is on
+//                   --> But they will NOT be stored back to the global Pos[] array
 //                   --> Also remember to skip particles waiting for velocity correction since they have time
 //                       temporarily set to -dt (moreover, they should already be synchronized with TargetTime)
 //                5. This function does NOT work with periodic boundary condition when the root grid has only
-//                   two patches (i.e., one patch group) along one direction (i.e., NX0_TOT[0/1/2] = 2*PATCH_SIZE)
-//                   --> It is because for that extreme case we need to consider both the target particles and their
-//                       image particles when assigning mass to a single array (Rho), which is not considered here!
+//                   two patches (i.e., one patch group) along any direction (i.e., NX0_TOT[0/1/2] = 2*PATCH_SIZE)
+//                   --> It is because for that extreme case
+//                       --> we can have RhoSize > PeriodicSize[] due to the ghost zones
+//                       --> need to consider both the target particles and their image particles when assigning
+//                           mass to Rho[] (in other words, each target particle may contribute to more than one cell
+//                           even with the NGP scheme), which is not considered here!
+//                   --> This is the reason for the check "if ( Periodic[d]  &&  RhoSize > PeriodicSize[d] ) ..."
 //                6. For bitwise reproducibility, particles are sorted by their position before mass deposition
-//                   --> Also refer to the note of the routine "SortParticle"
+//                   --> Also refer to the note of the routine SortParticle[]
 //
 // Parameter   :  ParList         : List of target particle IDs
 //                NPar            : Number of particles
 //                IntScheme       : Particle interpolation scheme
 //                Rho             : Array to store the output density field (assumed to be a cubic array)
-//                RhoSize         : Size of Rho in 1D
-//                EdgeL           : Left edge of the array Rho
-//                dh              : cell size of Rho
+//                RhoSize         : Size of Rho[] along each direction
+//                EdgeL           : Left edge of Rho[]
+//                dh              : cell size of Rho[]
 //                PredictPos      : true --> predict particle position to TargetTime
 //                TargetTime      : Target time for predicting the particle position
-//                InitZero        : True --> initialize Rho as zero
-//                Periodic        : True --> apply periodic boundary condition
+//                InitZero        : True --> initialize Rho[] as zero
+//                Periodic        : True --> apply periodic boundary condition to the target direction
 //                PeriodicSize    : Number of cells in the periodic box (in the unit of dh)
 //                UnitDens        : Assign unit density to each particle regardless of the real particle mass
 //                                  and cell size
 //                                  --> Useful for counting the number of particles on each cell (together
 //                                      with IntScheme == PAR_INTERP_NGP), which can be used as a refinement
-//                                      criterion (OPT__FLAG_NPAR_CELL)
+//                                      criterion (i.e., OPT__FLAG_NPAR_CELL)
 //                CheckFarAway    : True --> check whether the input particles are far away from the given density array
 //                                       --> If true, don't calculate their mass assignment cell indices at all
-//                                       --> This may will improve performance when some the input particles have no
-//                                           contribution at all to the given density array. However, it may also introduce
-//                                           additional overhead if all input particles are guaranteed to have contribution
-//                                           to the density array.
-//                UseInputMassPos : Use the input array "InputMassPos" to obtain particle mass and position
+//                                       --> This may improve performance when some of the input particles have no
+//                                           contribution at all to Rho[]. However, it may also introduce additional
+//                                           overhead if most input particles do have contribution to Rho[].
+//                UseInputMassPos : Use the input array InputMassPos[] to obtain particle mass and position
 //                                  --> Used by LOAD_BALANCE, where particle position and mass may be stored in the
-//                                      ParMassPos_Copy array of each patch
-//                                  --> ParList becomes useless and must be set to NULL
+//                                      ParMassPos_Copy[] array of each patch
+//                                  --> ParList[] becomes useless and must be set to NULL
 //                                  --> Does not work with PredictPos since we don't have the information of particle
 //                                      time and velocity
 //                InputMassPos    : Particle mass and position arrays used by UseInputMassPos
@@ -70,19 +73,22 @@ void SortParticle( const long NPar, const real *PosX, const real *PosY, const re
 //-------------------------------------------------------------------------------------------------------
 void Par_MassAssignment( const long *ParList, const long NPar, const ParInterp_t IntScheme, real *Rho,
                          const int RhoSize, const double *EdgeL, const double dh, const bool PredictPos,
-                         const double TargetTime, const bool InitZero, const bool Periodic, const int PeriodicSize[3],
+                         const double TargetTime, const bool InitZero, const bool Periodic[], const int PeriodicSize[3],
                          const bool UnitDens, const bool CheckFarAway, const bool UseInputMassPos, real **InputMassPos )
 {
 
 // check
 #  ifdef DEBUG_PARTICLE
    if ( Rho == NULL )   Aux_Error( ERROR_INFO, "Rho == NULL !!\n" );
+
    if ( EdgeL == NULL )    Aux_Error( ERROR_INFO, "EdgeL == NULL !!\n" );
+
    if ( PredictPos  &&  TargetTime < 0.0 )   Aux_Error( ERROR_INFO, "TargetTime = %14.7e < 0.0 !!\n", TargetTime );
-   if ( Periodic )
-      for (int d=0; d<3; d++)
-         if ( RhoSize > PeriodicSize[d] )
+
+   for (int d=0; d<3; d++)
+      if ( Periodic[d]  &&  RhoSize > PeriodicSize[d] )
             Aux_Error( ERROR_INFO, "RhoSize (%d) > PeriodicSize[%d] (%d) !!\n", RhoSize, d, PeriodicSize[d] );
+
    if ( UseInputMassPos )
    {
       if ( ParList != NULL )  Aux_Error( ERROR_INFO, "ParList != NULL for UseInputMassPos !!\n" );
@@ -94,6 +100,7 @@ void Par_MassAssignment( const long *ParList, const long NPar, const ParInterp_t
       Aux_Message( stderr, "WARNING : are you sure you want to use UseInputMassPos when LOAD_BALANCE is off !?\n" );
 #     endif
    }
+
    else
    {
       if ( NPar > 0  &&  ParList == NULL )   Aux_Error( ERROR_INFO, "ParList == NULL for NPar = %ld !!\n", NPar );
@@ -169,7 +176,7 @@ void Par_MassAssignment( const long *ParList, const long NPar, const ParInterp_t
       EdgeWithGhostL  [d] = real( EdgeL[d] - Ghost_Phy );
       EdgeWithGhostR  [d] = real( EdgeL[d] + Ghost_Phy + RhoSize*dh );
 
-      if ( Periodic )
+      if ( Periodic[d] )
       PeriodicSize_Phy[d] = real( PeriodicSize[d]*dh );
    }
 
@@ -198,7 +205,7 @@ void Par_MassAssignment( const long *ParList, const long NPar, const ParInterp_t
                idx[d] = (int)FLOOR( ( Pos[d][Idx] - EdgeL[d] )*_dh );
 
 //             periodicity
-               if ( Periodic )
+               if ( Periodic[d] )
                {
                   idx[d] = ( idx[d] + PeriodicSize[d] ) % PeriodicSize[d];
 
@@ -210,8 +217,8 @@ void Par_MassAssignment( const long *ParList, const long NPar, const ParInterp_t
                }
             }
 
-//          4.1.2 assign mass if within the Rho array
-//          check for inactive particles (which have negative mass)
+//          4.1.2 assign mass if within Rho[]
+//          check inactive particles (which have negative mass)
 #           ifdef DEBUG_PARTICLE
             if ( Mass[Idx] < (real)0.0 )
                Aux_Error( ERROR_INFO, "Mass[%ld] = %14.7e < 0.0 !!\n", Idx, Mass[Idx] );
@@ -256,7 +263,7 @@ void Par_MassAssignment( const long *ParList, const long NPar, const ParInterp_t
                dr      [d] -= (double)idxLR[0][d];
 
 //             periodicity
-               if ( Periodic )
+               if ( Periodic[d] )
                {
                   for (int t=0; t<2; t++)
                   {
@@ -275,8 +282,8 @@ void Par_MassAssignment( const long *ParList, const long NPar, const ParInterp_t
                Frac[1][d] =       dr[d];
             } // for (int d=0; d<3; d++)
 
-//          4.2.3 assign mass if within the Rho array
-//          check for inactive particles (which have negative mass)
+//          4.2.3 assign mass if within Rho[]
+//          check inactive particles (which have negative mass)
 #           ifdef DEBUG_PARTICLE
             if ( Mass[Idx] < (real)0.0 )
                Aux_Error( ERROR_INFO, "Mass[%ld] = %14.7e < 0.0 !!\n", Idx, Mass[Idx] );
@@ -328,11 +335,11 @@ void Par_MassAssignment( const long *ParList, const long NPar, const ParInterp_t
                dr       [d] -= (double)idxLCR[1][d];
 
 //             periodicity
-               if ( Periodic )
+               if ( Periodic[d] )
                {
                   for (int t=0; t<3; t++)
                   {
-                     idxLCR[t][d]  = ( idxLCR[t][d] + PeriodicSize[d] ) % PeriodicSize[d];
+                     idxLCR[t][d] = ( idxLCR[t][d] + PeriodicSize[d] ) % PeriodicSize[d];
 
 #                    ifdef DEBUG_PARTICLE
                      if ( idxLCR[t][d] < 0  ||  idxLCR[t][d] >= PeriodicSize[d] )
@@ -348,8 +355,8 @@ void Par_MassAssignment( const long *ParList, const long NPar, const ParInterp_t
                Frac[2][d] = 0.5*SQR( dr[d] );
             } // for (int d=0; d<3; d++)
 
-//          4.3.3 assign mass if within the Rho array
-//          check for inactive particles (which have negative mass)
+//          4.3.3 assign mass if within Rho[]
+//          check inactive particles (which have negative mass)
 #           ifdef DEBUG_PARTICLE
             if ( Mass[Idx] < (real)0.0 )
                Aux_Error( ERROR_INFO, "Mass[%ld] = %14.7e < 0.0 !!\n", Idx, Mass[Idx] );
@@ -392,8 +399,10 @@ void Par_MassAssignment( const long *ParList, const long NPar, const ParInterp_t
 // Function    :  WithinRho
 // Description :  Check whether the input cell lies within the Rho array
 //
-// Parameter   :  idx      : Cell indices
-//                RhoSize  : Size of the Rho array
+// Note        :  This function does NOT consider periodicity
+//
+// Parameter   :  idx     : Cell indices
+//                RhoSize : Size of the Rho array
 //
 // Return      :  true --> within the target region
 //-------------------------------------------------------------------------------------------------------
@@ -419,22 +428,23 @@ bool WithinRho( const int idx[], const int RhoSize )
 //
 // Note        :  1. Periodic BC is taken care of by considering the position of image particles
 //                2. Particles pass this check are guaranteed to have contribution to the density array.
-//                   However, some cells with mass deposted from these particles may still lie outside
-//                   the density array. Therefore, we must apply **WithinRho** to check furthre.
+//                   However, some cells with mass deposited from these particles may still lie outside
+//                   the density array. Therefore, we must still call WithinRho() to check furthre.
 //
-// Parameter   :  ParPosX/Y/Z       : Particle position
-//                Periodic          : True --> apply periodic boundary condition
-//                PeriodicSize_Phy  : Size of the periodic box
-//                EdgeL/R           : Left and right edge of the density array
+// Parameter   :  ParPosX/Y/Z      : Particle position
+//                Periodic         : True --> apply periodic boundary condition to the target direction
+//                PeriodicSize_Phy : Size of the periodic box
+//                EdgeL/R          : Left and right edge of the density array (including ghost zones outside
+//                                   the density array)
 //
 // Return      :  (true / false) <--> particle (has no / does have) contribution to the give density array
 //-------------------------------------------------------------------------------------------------------
-bool FarAwayParticle( real ParPosX, real ParPosY, real ParPosZ, const bool Periodic, const real PeriodicSize_Phy[],
+bool FarAwayParticle( real ParPosX, real ParPosY, real ParPosZ, const bool Periodic[], const real PeriodicSize_Phy[],
                       const real EdgeL[], const real EdgeR[] )
 {
 
 // x
-   if ( Periodic )
+   if ( Periodic[0] )
    {
       if      ( ParPosX <  EdgeL[0] )  ParPosX += PeriodicSize_Phy[0];
       else if ( ParPosX >= EdgeR[0] )  ParPosX -= PeriodicSize_Phy[0];
@@ -444,7 +454,7 @@ bool FarAwayParticle( real ParPosX, real ParPosY, real ParPosZ, const bool Perio
 
 
 // y
-   if ( Periodic )
+   if ( Periodic[1] )
    {
       if      ( ParPosY <  EdgeL[1] )  ParPosY += PeriodicSize_Phy[1];
       else if ( ParPosY >= EdgeR[1] )  ParPosY -= PeriodicSize_Phy[1];
@@ -454,7 +464,7 @@ bool FarAwayParticle( real ParPosX, real ParPosY, real ParPosZ, const bool Perio
 
 
 // z
-   if ( Periodic )
+   if ( Periodic[2] )
    {
       if      ( ParPosZ <  EdgeL[2] )  ParPosZ += PeriodicSize_Phy[2];
       else if ( ParPosZ >= EdgeR[2] )  ParPosZ -= PeriodicSize_Phy[2];
@@ -480,6 +490,10 @@ bool FarAwayParticle( real ParPosX, real ParPosY, real ParPosZ, const bool Perio
 //                   --> Not supported yet since we may not have the velocity information (e.g., when InputMassPos is adopted)
 //                2. Currently IdxTable has the type "int" instead of "long" since Mis_Heapsort() doesn't
 //                   support "long" yet...
+//
+// Parameter   :  NPar     : Number of particles
+//                PosX/Y/Z : Particle position
+//                IdxTable : Index table to be returned
 //
 // Return      :  IdxTable
 //-------------------------------------------------------------------------------------------------------

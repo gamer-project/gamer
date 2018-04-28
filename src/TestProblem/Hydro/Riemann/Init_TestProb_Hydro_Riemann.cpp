@@ -64,9 +64,6 @@ void Validate()
    Aux_Error( ERROR_INFO, "PARTICLE must be disabled !!\n" );
 #  endif
 
-   if ( OPT__BC_FLU[0] != BC_FLU_OUTFLOW )
-      Aux_Error( ERROR_INFO, "please set \"OPT__BC_FLU_* = 2\" (i.e., outflow BC) !!\n" );
-
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Validating test problem %d ... done\n", TESTPROB_ID );
 

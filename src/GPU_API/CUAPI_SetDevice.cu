@@ -1,4 +1,4 @@
-#include "GAMER.h"
+#include "CUAPI.h"
 #include "CUFLU.h"
 #ifdef GRAVITY
 #include "CUPOT.h"
@@ -175,6 +175,12 @@ void CUAPI_SetDevice( const int Mode )
 #  elif ( GPU_ARCH == PASCAL )
    if ( DeviceProp.major != 6 )
       Aux_Error( ERROR_INFO, "GPU \"%s\" with the compute capability %d.%d is incompatible with the Pascal architecture !!\n"
+                             "        --> Please reset GPU_ARCH in the Makefile properly\n",
+                 DeviceProp.name, DeviceProp.major, DeviceProp.minor );
+
+#  elif ( GPU_ARCH == VOLTA )
+   if ( DeviceProp.major != 7 )
+      Aux_Error( ERROR_INFO, "GPU \"%s\" with the compute capability %d.%d is incompatible with the Volta architecture !!\n"
                              "        --> Please reset GPU_ARCH in the Makefile properly\n",
                  DeviceProp.name, DeviceProp.major, DeviceProp.minor );
 

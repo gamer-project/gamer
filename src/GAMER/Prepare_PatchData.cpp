@@ -10,7 +10,7 @@ static void SetTargetSibling( int NTSib[], int *TSib[] );
 static int Table_01( const int SibID, const char dim, const int Count, const int GhostSize );
 static int Table_02( const int lv, const int PID, const int Side );
 
-// flags for checking whether (1) Prepare_PatchData_InitParticleDensityArray and (2) Par_CollectParticle2OneLevel
+// flags for checking whether (1) Prepare_PatchData_InitParticleDensityArray() and (2) Par_CollectParticle2OneLevel()
 // are properly called before preparing either _PAR_DENS or _TOTAL_DENS
 #ifdef PARTICLE
 bool Particle_Collected       = false;
@@ -40,21 +40,21 @@ bool ParDensArray_Initialized = false;
 //                   _FLUID (where _DENS may be replaced by _TOTAL_DENS) -> _PASSIVE -> _DERIVED --> _POTE --> _PAR_DENS
 //                   ** DERIVED must be prepared immediately after FLU and PASSIVE so that both FLU, PASSIVE, and DERIVED
 //                      can be prepared at the same time for the non-periodic BC. **
-//                7. For _PAR_DENS and _TOTAL_DENS (for PARTICLE only), the rho_ext arrays of patches at Lv=lv will be allocated
-//                   to store the partice mass density
+//                7. For _PAR_DENS and _TOTAL_DENS (for PARTICLE only), the rho_ext[] arrays of patches at Lv=lv will be
+//                   allocated to store the partice mass density
 //                   --> amr->patch[0][lv][PID]->rho_ext
 //                   --> These arrays must be deallocated manually by calling Prepare_PatchData_FreeParticleDensityArray
 //                       --> If OPT__REUSE_MEMORY is on, Prepare_PatchData_FreeParticleDensityArray will NOT free memory
-//                           for rho_ext. Instead, rho_ext will be free'd together with other data arrays (e.g., fluid, pot)
+//                           for rho_ext[]. Instead, rho_ext[] will be free'd together with other data arrays (e.g., fluid, pot)
 //                   --> Note that this array does NOT necessary store the correct particle mass density
 //                       (especially for cells adjacent to the C-C and C-F boundaries) and thus should NOT be used outside
 //                       Prepare_PatchData)
 //                   --> Before calling this function, one must call
-//                       (1) Par_CollectParticle2OneLevel --> to collect particles from higher levels and from other MPI ranks
-//                       (2) Prepare_PatchData_InitParticleDensityArray --> to initialize all rho_ext arrays
+//                       (1) Par_CollectParticle2OneLevel() --> to collect particles from higher levels and from other MPI ranks
+//                       (2) Prepare_PatchData_InitParticleDensityArray() --> to initialize all rho_ext[] arrays
 //                   --> After calling this function, one must call the following two functions to free memory
-//                       (1) Par_CollectParticle2OneLevel_FreeMemory
-//                       (2) Prepare_PatchData_FreeParticleDensityArray
+//                       (1) Par_CollectParticle2OneLevel_FreeMemory()
+//                       (2) Prepare_PatchData_FreeParticleDensityArray()
 //                8. Patches stored in PID0_List must be real patches (cannot NOT be buffer patches)
 //                9. For simplicity, currently the mode _TEMP returns **pressure/density**, which does NOT include normalization
 //                   --> For OPT__FLAG_LOHNER_TEMP only
@@ -94,9 +94,6 @@ bool ParDensArray_Initialized = false;
 //                IntPhase       : true --> Perform interpolation on rho/phase instead of real/imag parts in ELBDM
 //                                      --> TVar must contain _REAL and _IMAG
 //                FluBC          : Fluid boundary condition
-//                                 --> This variable is used to determine whether periodic BC is adopted even in the cases
-//                                     where we are NOT preparing any fluid variable (i.e., _POTE | _PAR_DENS)
-//                                     --> Therefore it must be provided correctly at any instance
 //                PotBC          : Gravity boundary condition
 //                MinDens/Pres   : Minimum allowed density/pressure in the output array (<0.0 ==> off)
 //                                 --> MinDens can be applied to both _DENS and _TOTAL_DENS but cannot be applied to _PAR_DENS
@@ -186,17 +183,17 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
 #     endif
    }
 
+   if ( FluBC == NULL )    Aux_Error( ERROR_INFO, "FluBC == NULL !!\n" );
+
    for (int f=0; f<6; f++)
    {
-      if ( FluBC == NULL )    Aux_Error( ERROR_INFO, "FluBC == NULL !!\n" );
-
       if ( FluBC[f] != BC_FLU_PERIODIC    &&  FluBC[f] != BC_FLU_OUTFLOW  &&
            FluBC[f] != BC_FLU_REFLECTING  &&  FluBC[f] != BC_FLU_USER        )
-         Aux_Error( ERROR_INFO, "unsupported parameter %s[%d] = %d !!\n", "FluBC", f, FluBC[f] );
+         Aux_Error( ERROR_INFO, "unsupported parameter FluBC[%d] = %d !!\n", f, FluBC[f] );
 
 #     if ( MODEL != HYDRO )
-      if ( FluBC[f] == BC_FLU_OUTFLOW  ||  FluBC[f] == BC_FLU_REFLECTING )
-         Aux_Error( ERROR_INFO, "outflow and reflecting boundary conditions (OPT__BC_FLU=2/3) only work with HYDRO !!\n" );
+      if ( FluBC[f] == BC_FLU_REFLECTING )
+         Aux_Error( ERROR_INFO, "reflecting boundary condition (OPT__BC_FLU=3) only works with HYDRO !!\n" );
 #     endif
    }
 
@@ -303,7 +300,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
    NVar_Der = 0;
 
 #  if   ( MODEL == HYDRO )
-   const int NVar_Der_Max = 4;
+   const int NVar_Der_Max = 5;
    int TDerVarList[NVar_Der_Max];
 
    if ( PrepVx   )   TDerVarList[ NVar_Der ++ ] = _VELX;
@@ -487,9 +484,10 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
       BC_Face_tmp[2] = TABLE_01( s, 'z', 4, -1, 5 );
 
 //    z > y > x
-      if      ( BC_Face_tmp[2] != -1 )   BC_Face[s] = BC_Face_tmp[2];
-      else if ( BC_Face_tmp[1] != -1 )   BC_Face[s] = BC_Face_tmp[1];
-      else if ( BC_Face_tmp[0] != -1 )   BC_Face[s] = BC_Face_tmp[0];
+      if      ( BC_Face_tmp[2] != -1  &&  FluBC[BC_Face_tmp[2]] != BC_FLU_PERIODIC )   BC_Face[s] = BC_Face_tmp[2];
+      else if ( BC_Face_tmp[1] != -1  &&  FluBC[BC_Face_tmp[1]] != BC_FLU_PERIODIC )   BC_Face[s] = BC_Face_tmp[1];
+      else if ( BC_Face_tmp[0] != -1  &&  FluBC[BC_Face_tmp[0]] != BC_FLU_PERIODIC )   BC_Face[s] = BC_Face_tmp[0];
+      else                                                                             BC_Face[s] = NULL_INT;
    }
 
 
@@ -505,8 +503,8 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
 // constant settings related to particle mass assignment
    const bool InitZero_Yes     = true;
    const bool InitZero_No      = false;
-   const bool Periodic_No      = false;
-   const bool Periodic_Yes     = true;
+   const bool Periodic_No[3]   = { false, false, false };
+   const bool Periodic_Check[3]= { FluBC[0]==BC_FLU_PERIODIC, FluBC[2]==BC_FLU_PERIODIC, FluBC[4]==BC_FLU_PERIODIC };
    const bool UnitDens_No      = false;
    const bool CheckFarAway_Yes = true;
    const bool CheckFarAway_No  = false;
@@ -566,7 +564,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
                                          NPar, lv, PID );
 #           endif
 
-//          record PID (exclude patches with no particles or with particles deposited onto rho_ext already)
+//          record PID (exclude patches with no particles or with particles deposited onto rho_ext[] already)
             if (  ( amr->patch[0][lv][PID]->rho_ext == NULL ||
                     amr->patch[0][lv][PID]->rho_ext[0][0][0] == RHO_EXT_NEED_INIT )  &&  NPar > 0  )
             {
@@ -625,7 +623,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
       real *IntData = new real [ NVar_Tot*PS2*PS2*GhostSize_Padded ];
 
 
-//    assign particle mass on grids
+//    assign particle mass onto grids
 #     ifdef PARTICLE
       if ( PrepParOnlyDens || PrepTotalDens )
       {
@@ -697,17 +695,17 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
             }
 #           endif // #ifdef DEBUG_PARTICLE
 
-//          set the left edge of the rho_ext array
+//          set the left edge of rho_ext[]
             const double RhoExtGhostPhySize = RHOEXT_GHOST_SIZE*dh;
             for (int d=0; d<3; d++)    EdgeL[d] = amr->patch[0][lv][PID]->EdgeL[d] - RhoExtGhostPhySize;
 
 
-//          deposit particle mass on grids (**from particles to their home patch**)
+//          deposit particle mass onto grids (**from particles in their home patch**)
 //          --> don't have to worry about the periodicity (even for external buffer patches) here since
 //              (1) all input particles should be close to the target patches even with position prediction
 //              (2) amr->patch[0][lv][PID]->EdgeL/R already assumes periodicity for external buffer patches
 //              --> Periodic_No, CheckFarAway_No
-//          --> remember to initialize rho_ext as zero (by InitZero_Yes)
+//          --> remember to initialize rho_ext[] as zero (by InitZero_Yes)
             Par_MassAssignment( ParList, NPar, amr->Par->Interp, amr->patch[0][lv][PID]->rho_ext[0][0], RHOEXT_NXT,
                                 EdgeL, dh, (amr->Par->PredictPos && !UseInputMassPos), PrepTime, InitZero_Yes,
                                 Periodic_No, NULL, UnitDens_No, CheckFarAway_No, UseInputMassPos, InputMassPos );
@@ -716,7 +714,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
 #     endif // #ifdef PARTICLE
 
 
-//    note that the total density array needs rho_ext of nearby patches
+//    note that the total density array needs rho_ext[] of nearby patches
 //    --> the next omp task must wait for the previous one
 //    --> but since there is an implicit barrier at the end of the **for** construct --> no need to call "pragma omp barrier"
 
@@ -927,7 +925,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
          } // for (int LocalID=0; LocalID<8; LocalID++ )
 
 
-//       b. fill up the ghost zone of Array
+//       b. fill up the ghost zone of Array[]
 // ------------------------------------------------------------------------------------------------------------
          for (int Side=0; Side<NSide; Side++)
          {
@@ -1209,19 +1207,28 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
                   BC_Idx_End  [d] = TABLE_01( Side, 'x'+d, GhostSize, PS2, GhostSize ) + BC_Idx_Start[d] - 1;
                }
 
+               BC_Sibling = SIB_OFFSET_NONPERIODIC - SibPID0;
+
+#              ifdef GAMER_DEBUG
+               if ( BC_Face[BC_Sibling] < 0  ||  BC_Face[BC_Sibling] > 5 )
+                  Aux_Error( ERROR_INFO, "incorrect BC_Face[%d] = %d !!\n", BC_Sibling, BC_Face[BC_Sibling] );
+
+               if ( FluBC[ BC_Face[BC_Sibling] ] == BC_FLU_PERIODIC )
+                  Aux_Error( ERROR_INFO, "FluBC == BC_FLU_PERIODIC (BC_Sibling %d, BC_Face %d, SibPID0 %d, PID0 %d, Side %d) !!\n",
+                             BC_Sibling, BC_Face[BC_Sibling], SibPID0, PID0, Side );
+#              endif
+
 //             (b3-1) fluid B.C.
                if ( TVar & (_TOTAL|_DERIVED) )
                {
-                  BC_Sibling = SIB_OFFSET_NONPERIODIC - SibPID0;
-
                   switch ( FluBC[ BC_Face[BC_Sibling] ] )
                   {
-#                    if ( MODEL == HYDRO  ||  MODEL == MHD )
                      case BC_FLU_OUTFLOW:
                         Hydro_BoundaryCondition_Outflow   ( Array_Ptr, BC_Face[BC_Sibling], NVar_Flu+NVar_Der, GhostSize,
                                                             PGSize1D, PGSize1D, PGSize1D, BC_Idx_Start, BC_Idx_End );
                      break;
 
+#                    if ( MODEL == HYDRO  ||  MODEL == MHD )
                      case BC_FLU_REFLECTING:
                         Hydro_BoundaryCondition_Reflecting( Array_Ptr, BC_Face[BC_Sibling], NVar_Flu,          GhostSize,
                                                             PGSize1D, PGSize1D, PGSize1D, BC_Idx_Start, BC_Idx_End,
@@ -1243,7 +1250,6 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
                   } // switch ( FluBC[ BC_Face[BC_Sibling] ] )
 
                   Array_Ptr += NVar_Flu*PGSize3D;
-
                } // if ( TVar & (_TOTAL|_DERIVED) )
 
 
@@ -1251,18 +1257,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
 #              ifdef GRAVITY
                if ( PrepPot )
                {
-//                check
-#                 ifdef GAMER_DEBUG
-                  if ( lv != 0 )
-                     Aux_Error( ERROR_INFO, "preparing the potential field outside the simulation domain at lv (%d) > 0 !!\n",
-                                lv );
-
-                  if ( PotBC != BC_POT_ISOLATED )
-                     Aux_Error( ERROR_INFO, "preparing the potential field for non-isolated BC !!\n" );
-#                 endif
-
-                  BC_Sibling = SIB_OFFSET_NONPERIODIC - SibPID0;
-
+//                extrapolate potential
                   Poi_BoundaryCondition_Extrapolation( Array_Ptr, BC_Face[BC_Sibling], 1, GhostSize,
                                                        PGSize1D, PGSize1D, PGSize1D, BC_Idx_Start, BC_Idx_End );
 
@@ -1321,7 +1316,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
                if ( amr->patch[0][lv][PID]->rho_ext == NULL  ||
                     amr->patch[0][lv][PID]->rho_ext[0][0][0] == RHO_EXT_NEED_INIT )    continue;
 
-//             calculate the offset between rho_nxt and ArrayDens
+//             calculate the offset between rho_ext[] and ArrayDens[]
                const int Disp_i = TABLE_02( LocalID, 'x', GhostSize-RHOEXT_GHOST_SIZE, GhostSize+PATCH_SIZE-RHOEXT_GHOST_SIZE );
                const int Disp_j = TABLE_02( LocalID, 'y', GhostSize-RHOEXT_GHOST_SIZE, GhostSize+PATCH_SIZE-RHOEXT_GHOST_SIZE );
                const int Disp_k = TABLE_02( LocalID, 'z', GhostSize-RHOEXT_GHOST_SIZE, GhostSize+PATCH_SIZE-RHOEXT_GHOST_SIZE );
@@ -1466,15 +1461,15 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
                   }
 #                 endif // #ifdef DEBUG_PARTICLE
 
-//                (c3-2-2) deposit particle mass on grids (**from particles in father-sibling patches**)
+//                (c3-2-2) deposit particle mass onto grids (**from particles in the father-sibling patches**)
 //                         --> need to take care of the periodicity here since particles may have position far
-//                             away from the target patch boundaries (i.e., the values stored in patch->EdgeL/R)
-//                             --> Periodic_Yes, CheckFarAway_Yes
+//                             away from the target patch boundaries (i.e., patch->EdgeL/R)
+//                             --> Periodic_Check, CheckFarAway_Yes
                   if ( NPar > 0 )
                   Par_MassAssignment( ParList, NPar, amr->Par->Interp, ArrayDens, PGSize1D, EdgeL, dh,
                                       (amr->Par->PredictPos && !UseInputMassPos), PrepTime, InitZero_No,
-                                      (FluBC[0]==BC_FLU_PERIODIC)?Periodic_Yes:Periodic_No, PeriodicNCell,
-                                      UnitDens_No, CheckFarAway_Yes, UseInputMassPos, InputMassPos );
+                                      Periodic_Check, PeriodicNCell, UnitDens_No, CheckFarAway_Yes,
+                                      UseInputMassPos, InputMassPos );
                } // else if ( SibPID0 == -1 )
             } // for (int Side=0; Side<26; Side++) if ( amr->Par->GhostSize > 0  ||  GhostSize > 0 )
          } // if ( PrepParOnlyDens || PrepTotalDens )
@@ -2295,13 +2290,13 @@ void SetTargetSibling( int NTSib[], int *TSib[] )
 #ifdef PARTICLE
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Prepare_PatchData_InitParticleDensityArray
-// Description :  Initialize the rho_ext arrays by setting rho_ext[0][0][0] == RHO_EXT_NEED_INIT
+// Description :  Initialize rho_ext[] by setting rho_ext[0][0][0] = RHO_EXT_NEED_INIT
 //
-// Note        :  1. Currently this function is called by "Gra_AdvanceDt, Main, and Output_DumpData_Total"
-//                2. Apply to all (real and buffer) patches with rho_ext allocated already
-//                3. Do nothing if rho_ext == NULL. In this case, rho_ext will be allocated and initialized
-//                   as rho_ext[0][0][0] == RHO_EXT_NEED_INIT when calling Prepare_PatchData
-//                4. rho_ext array is always stored in Sg==0
+// Note        :  1. Currently this function is called by "Gra_AdvanceDt(), Main(), and Output_DumpData_Total()"
+//                2. Apply to all (real and buffer) patches with rho_ext[] allocated already
+//                3. Do nothing if rho_ext == NULL. In this case, rho_ext[] will be allocated and initialized
+//                   as rho_ext[0][0][0] == RHO_EXT_NEED_INIT when calling Prepare_PatchData()
+//                4. rho_ext[] is always stored in Sg==0
 //
 // Parameter   :  lv : Target refinement level
 //-------------------------------------------------------------------------------------------------------
@@ -2324,10 +2319,9 @@ void Prepare_PatchData_InitParticleDensityArray( const int lv )
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Prepare_PatchData_FreeParticleDensityArray
-// Description :  Free the rho_ext arrays, which are allocated in Prepare_PatchData temporarily
-//                for storing the partice mass density
+// Description :  Free rho_ext[] allocated by Prepare_PatchData() temporarily for storing the partice mass density
 //
-// Note        :  1. Currently this function is called by "Gra_AdvanceDt, Main, and Output_DumpData_Total"
+// Note        :  1. Currently this function is called by "Gra_AdvanceDt(), Main(), and Output_DumpData_Total()"
 //                2. Apply to buffer patches as well
 //                3. Do not free memory if OPT__REUSE_MEMORY is on
 //
@@ -2348,7 +2342,7 @@ void Prepare_PatchData_FreeParticleDensityArray( const int lv )
       }
    }
 
-// set flag to false to indicate that Prepare_PatchData_InitParticleDensityArray has not been called
+// set flag to false to indicate that Prepare_PatchData_InitParticleDensityArray() has not been called
    ParDensArray_Initialized = false;
 
 } // FUNCTION : Prepare_PatchData_FreeParticleDensityArray

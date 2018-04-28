@@ -176,15 +176,15 @@ void Aux_Check_Parameter()
 
 #  if ( MODEL != HYDRO )
    for (int f=0; f<6; f++)
-   if ( OPT__BC_FLU[f] == BC_FLU_OUTFLOW  ||  OPT__BC_FLU[f] == BC_FLU_REFLECTING )
-      Aux_Error( ERROR_INFO, "outflow and reflecting boundary conditions (OPT__BC_FLU=2/3) only work with HYDRO !!\n" );
+      if ( OPT__BC_FLU[f] == BC_FLU_REFLECTING )
+         Aux_Error( ERROR_INFO, "reflecting boundary condition (OPT__BC_FLU=3) only works with HYDRO !!\n" );
 #  endif
 
-   if (  ( OPT__BC_FLU[0] == BC_FLU_PERIODIC || OPT__BC_FLU[1] == BC_FLU_PERIODIC || OPT__BC_FLU[2] == BC_FLU_PERIODIC ||
-           OPT__BC_FLU[3] == BC_FLU_PERIODIC || OPT__BC_FLU[4] == BC_FLU_PERIODIC || OPT__BC_FLU[5] == BC_FLU_PERIODIC   ) &&
-         ( OPT__BC_FLU[0] != BC_FLU_PERIODIC || OPT__BC_FLU[1] != BC_FLU_PERIODIC || OPT__BC_FLU[2] != BC_FLU_PERIODIC ||
-           OPT__BC_FLU[3] != BC_FLU_PERIODIC || OPT__BC_FLU[4] != BC_FLU_PERIODIC || OPT__BC_FLU[5] != BC_FLU_PERIODIC   )   )
-      Aux_Error( ERROR_INFO, "currently the periodic BC cannot be mixed with non-periodic BC. !!\n" );
+   for (int f=0; f<6; f+=2)
+      if (  ( OPT__BC_FLU[f] == BC_FLU_PERIODIC  &&  OPT__BC_FLU[f+1] != BC_FLU_PERIODIC )  ||
+            ( OPT__BC_FLU[f] != BC_FLU_PERIODIC  &&  OPT__BC_FLU[f+1] == BC_FLU_PERIODIC )   )
+         Aux_Error( ERROR_INFO, "periodic and non-periodic boundary conditions cannot be mixed along the same dimension"
+                                "--> please modify OPT__BC_FLU[%d/%d] !!\n", f, f+1 );
 
 #  ifndef TIMING
    if ( OPT__TIMING_MPI )  Aux_Error( ERROR_INFO, "OPT__TIMING_MPI must work with TIMING !!\n" );
@@ -300,10 +300,11 @@ void Aux_Check_Parameter()
 #  endif
 
    if ( !Flag )
-   {
-      Aux_Message( stderr, "WARNING : all flag criteria are turned off --> no refinement will be " );
-      Aux_Message( stderr, "performed !!\n" );
-   }
+      Aux_Message( stderr, "WARNING : all flag criteria are turned off --> no refinement will be performed !!" );
+
+   if ( OPT__NO_FLAG_NEAR_BOUNDARY  )
+      Aux_Message( stderr, "WARNING : OPT__NO_FLAG_NEAR_BOUNDARY is on --> patches adjacent to the "
+                           "simulation boundaries are NOT allowed for refinement !!\n" );
 
    if ( OPT__OVERLAP_MPI )
    {
@@ -322,12 +323,6 @@ void Aux_Check_Parameter()
       Aux_Message( stderr, "WARNING : OpenMP is NOT turned on for \"%s\" !!\n", "OPT__OVERLAP_MPI" );
 #     endif
    } // if ( OPT__OVERLAP_MPI )
-
-   if (  ( OPT__BC_FLU[0] == BC_FLU_USER || OPT__BC_FLU[1] == BC_FLU_USER || OPT__BC_FLU[2] == BC_FLU_USER ||
-           OPT__BC_FLU[3] == BC_FLU_USER || OPT__BC_FLU[4] == BC_FLU_USER || OPT__BC_FLU[5] == BC_FLU_USER   ) &&
-         ( OPT__BC_FLU[0] != BC_FLU_USER || OPT__BC_FLU[1] != BC_FLU_USER || OPT__BC_FLU[2] != BC_FLU_USER ||
-           OPT__BC_FLU[3] != BC_FLU_USER || OPT__BC_FLU[4] != BC_FLU_USER || OPT__BC_FLU[5] != BC_FLU_USER   )   )
-      Aux_Message( stderr, "WARNING : corner cells may not be well defined when mixing user-defined BC with others !!\n" );
 
    if ( OPT__TIMING_BARRIER )
       Aux_Message( stderr, "WARNING : \"%s\" may deteriorate performance (especially if %s is on) ...\n",
@@ -401,7 +396,7 @@ void Aux_Check_Parameter()
 
 // for sending fluid data fixed by coarse-fine fluxes correctly
    if ( OPT__FIXUP_FLUX  &&  Flu_ParaBuf >= PATCH_SIZE )
-      Aux_Error( ERROR_INFO, "we must have \"%s\" for \"%s\" in LOAD_BALANCE !!\n",
+      Aux_Error( ERROR_INFO, "\"%s\" is required for \"%s\" in LOAD_BALANCE --> check LB_RecordExchangeFixUpDataPatchID() !!\n",
                  "Flu_ParaBuf < PATCH_SIZE", "OPT__FIXUP_FLUX" );
 
 // ensure that the variable "PaddedCr1D" will not overflow
@@ -832,10 +827,6 @@ void Aux_Check_Parameter()
       Aux_Error( ERROR_INFO, "unsupported interpolation scheme \"%s = %d\" when OPT__INT_PHASE is on !!\n",
                  "OPT__FLU_INT_SCHEME", OPT__FLU_INT_SCHEME );
 
-   for (int f=0; f<6; f++)
-   if ( OPT__BC_FLU[f] == BC_FLU_REFLECTING  ||  OPT__BC_FLU[f] == BC_FLU_OUTFLOW )
-      Aux_Error( ERROR_INFO, "unsupported option \"OPT__BC_FLU[%d] = %d\" [1/4] !!\n", f, OPT__BC_FLU[f] );
-
    if ( MIN_DENS == 0.0  &&  MPI_Rank == 0 )
       Aux_Message( stderr, "WARNING : MIN_DENS == 0.0 could be dangerous and is mainly for debugging only !!\n" );
    else if ( MPI_Rank == 0 )
@@ -986,11 +977,6 @@ void Aux_Check_Parameter()
                  Pot_ParaBuf, NGhost_RefPot );
 #  endif
 
-   if ( OPT__GRAVITY_TYPE == GRAVITY_SELF  ||  OPT__GRAVITY_TYPE == GRAVITY_BOTH )
-   if (  ( OPT__BC_FLU[0] == BC_FLU_PERIODIC && OPT__BC_POT != BC_POT_PERIODIC )  ||
-         ( OPT__BC_FLU[0] != BC_FLU_PERIODIC && OPT__BC_POT == BC_POT_PERIODIC )    )
-      Aux_Error( ERROR_INFO, "periodic BC must be applied to both fluid and self-gravity solvers at the same time !!\n" );
-
    if ( OPT__BC_POT != BC_POT_PERIODIC  &&  OPT__BC_POT != BC_POT_ISOLATED )
       Aux_Error( ERROR_INFO, "unsupported option \"OPT__BC_POT = %d\" [1/2] !!\n", OPT__BC_POT );
 
@@ -1026,12 +1012,6 @@ void Aux_Check_Parameter()
    if ( DT__GRAVITY < 0.0  ||  DT__GRAVITY > 1.0 )
       Aux_Message( stderr, "WARNING : DT__GRAVITY (%14.7e) is not within the normal range [0...1] !!\n",
                    DT__GRAVITY );
-
-   if (  ( OPT__GRAVITY_TYPE == GRAVITY_SELF || OPT__GRAVITY_TYPE == GRAVITY_BOTH )  &&  OPT__BC_POT == BC_POT_ISOLATED  )
-   {
-      Aux_Message( stderr, "WARNING : currently the patches adjacent to the simulation boundary are NOT allowed to be\n" );
-      Aux_Message( stderr, "          refined if the self-gravity with the isolated BC is adopted !!\n" );
-   }
 
    if ( OPT__EXTERNAL_POT  &&  OPT__OUTPUT_POT )
       Aux_Message( stderr, "WARNING : currently OPT__OUTPUT_POT does NOT include the external potential !!\n" );
@@ -1163,10 +1143,10 @@ void Aux_Check_Parameter()
       Aux_Error( ERROR_INFO, "DT__PARACC (%14.7e) is NOT supported when STORE_PAR_ACC is off !!\n", DT__PARACC );
 #  endif
 
-   if ( OPT__BC_FLU[0] == BC_FLU_PERIODIC )
    for (int d=0; d<3; d++)
    {
-      if ( NX0_TOT[d]/PS2 == 1 )
+//    we have assumed that OPT__BC_FLU[2*d] == OPT__BC_FLU[2*d+1] when adopting the periodic BC
+      if ( OPT__BC_FLU[2*d] == BC_FLU_PERIODIC  &&  NX0_TOT[d]/PS2 == 1 )
          Aux_Error( ERROR_INFO, "\"%s\" does NOT work for NX0_TOT[%d] = 2*PATCH_SIZE when periodic BC is adopted !!\n",
                     "Par_MassAssignment()", d );
    }
@@ -1257,7 +1237,6 @@ void Aux_Check_Parameter()
       Aux_Message( stderr, "WARNING : SF_CREATE_STAR_SCHEME == 1 will break bitwise reproducibility due to the \n" );
       Aux_Message( stderr, "          random values used for the stochastic star formation !!\n" );
       Aux_Message( stderr, "          --> Enable \"SF_CREATE_STAR_DET_RANDOM\" if reproducibility is of great concern\n" );
-      Aux_Message( stderr, "              (note that it is automatically enabled when BITWISE_REPRODUCIBILITY is adopted)\n" );
    }
 
    } // if ( MPI_Rank == 0 )

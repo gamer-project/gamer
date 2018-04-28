@@ -36,22 +36,15 @@ void Gra_Prepare_USG( const int lv, const double PrepTime,
 
 // prepare potential
    if ( OPT__GRAVITY_TYPE == GRAVITY_SELF  ||  OPT__GRAVITY_TYPE == GRAVITY_BOTH )
-   {
-      if ( lv == 0 )
-      Prepare_PatchData( lv, PrepTime, &h_Pot_Array_USG_G[0][0][0][0], USG_GHOST_SIZE, NPG, PID0_List, _POTE,
-                         OPT__GRA_INT_SCHEME, UNIT_PATCH, NSIDE_06, IntPhase_No, OPT__BC_FLU, OPT__BC_POT,
-                         MinDens_No, MinPres_No, DE_Consistency_No );
-      else
-      Prepare_PatchData( lv, PrepTime, &h_Pot_Array_USG_G[0][0][0][0], USG_GHOST_SIZE, NPG, PID0_List, _POTE,
-                         OPT__GRA_INT_SCHEME, UNIT_PATCH, NSIDE_06, IntPhase_No, OPT__BC_FLU, OPT__BC_POT,
-                         MinDens_No, MinPres_No, DE_Consistency_No );
-   }
+   Prepare_PatchData( lv, PrepTime, &h_Pot_Array_USG_G[0][0][0][0], USG_GHOST_SIZE, NPG, PID0_List, _POTE,
+                      OPT__GRA_INT_SCHEME, UNIT_PATCH, NSIDE_06, IntPhase_No, OPT__BC_FLU, OPT__BC_POT,
+                      MinDens_No, MinPres_No, DE_Consistency_No );
 
 // prepare density + momentum
 // --> we do not check minimum density here since no ghost zones are required
-      Prepare_PatchData( lv, PrepTime,  h_Flu_Array_USG_G[0][0][0][0], 0,              NPG, PID0_List, _DENS|_MOMX|_MOMY|_MOMZ,
-                         INT_NONE,            UNIT_PATCH, NSIDE_00, IntPhase_No, OPT__BC_FLU, BC_POT_NONE,
-                         MinDens_No, MinPres_No, DE_Consistency_No );
+   Prepare_PatchData( lv, PrepTime,  h_Flu_Array_USG_G[0][0][0][0], 0,              NPG, PID0_List, _DENS|_MOMX|_MOMY|_MOMZ,
+                      INT_NONE,            UNIT_PATCH, NSIDE_00, IntPhase_No, OPT__BC_FLU, BC_POT_NONE,
+                      MinDens_No, MinPres_No, DE_Consistency_No );
 
 } // FUNCTION : Gra_Prepare_USG
 

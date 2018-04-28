@@ -7,12 +7,12 @@
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Buf_RecordBoundaryFlag
-// Description :  Record the flags of boundary patches in "amr->ParaVar->BounFlag_PosList" for the function
-//                "MPI_ExchangeBoundaryFlag"
+// Description :  Record the flags of boundary patches in amr->ParaVar->BounFlag_PosList[] for
+//                MPI_ExchangeBoundaryFlag()
 //
-// Note        :  1. Invoked by the function "Flag_Real"
+// Note        :  1. Invoked by Flag_Real()
 //                2. No OpenMP directives are applied in this function since the counter
-//                   "amr->ParaVar->BounFlag_NList"
+//                   amr->ParaVar->BounFlag_NList[]
 //
 // Parameter   :  lv : Target refinement level to be flagged
 //-------------------------------------------------------------------------------------------------------
@@ -25,7 +25,7 @@ void Buf_RecordBoundaryFlag( const int lv )
 
    int FlagPos, PID, SibPID, FlagLayer, Sib;
 
-// begin the main loop of Buf_RecordBoundaryFlag
+// begin the main loop of Buf_RecordBoundaryFlag()
    for (int s=0; s<26; s++)
    {
 //    initialize the counter as zero
@@ -52,11 +52,11 @@ void Buf_RecordBoundaryFlag( const int lv )
       FlagLayer = TABLE_05( s );
 
 
-//    allocate the maximum necessary memory (which will be deallocated in the function "MPI_ExchangeBoundaryFlag")
+//    allocate the maximum necessary memory (which will be deallocated by MPI_ExchangeBoundaryFlag())
       amr->ParaVar->BounFlag_PosList[lv][s] = new int [ FlagLayer*amr->ParaVar->BounP_NList[lv][s] ];
 
 
-//    fill up the array "BounFlag_PosList[lv][s]"
+//    fill up BounFlag_PosList[lv][s][]
       for (int ID=0; ID<amr->ParaVar->BounP_NList[lv][s]; ID++)
       {
          FlagPos = amr->ParaVar->BounP_PosList[lv][s][ID];

@@ -8,10 +8,10 @@
 //-------------------------------------------------------------------------------------------------------
 // Function    :  LB_FindFather
 // Description :  Construct the patch relation : son <-> father
-// 
-// Note        :  1. LB_PaddedCr1DList and LB_PaddedCr1DList_IdxTable must be properly prepared 
+//
+// Note        :  1. LB_PaddedCr1DList[] and LB_PaddedCr1DList_IdxTable[] must be properly prepared
 //                   at SonLv and FaLv
-//                2. Father-buffer patches should be allocated in advance by "LB_AllocateBufferPatch_Father"
+//                2. Father-buffer patches should be allocated in advance by LB_AllocateBufferPatch_Father()
 //                3. One should find father patches only for the "real" patches at SonLv (applying to
 //                   sibling-buffer and father-buffer patches is not necessary)
 //                   --> Father patches found by this function will never be "external" patches
@@ -21,12 +21,12 @@
 //                6. This function does NOT initialize son indices as -1 for all patches at FaLv
 //                7. This function does NOT initialize father indices as -1 for all patches at SonLv
 //
-// Parameter   :  SonLv          : Target refinement level of sons
-//                SearchAllSon   : Search over all son patches at SonLv
-//                NInput         : Number of target son patches (with LocalID==0) in "TargetSonPID0"
-//                                 (useful only if SearchAllSon == false)
-//                TargetSonPID0  : Lists recording all target son patches (with LocalID==0)
-//                                 (useful only if SearchAllSon == false)
+// Parameter   :  SonLv         : Target refinement level of sons
+//                SearchAllSon  : Search over all son patches at SonLv
+//                NInput        : Number of target son patches (with LocalID==0) in "TargetSonPID0"
+//                                (useful only if SearchAllSon == false)
+//                TargetSonPID0 : Lists recording all target son patches (with LocalID==0)
+//                                (useful only if SearchAllSon == false)
 //-------------------------------------------------------------------------------------------------------
 void LB_FindFather( const int SonLv, const bool SearchAllSon, const int NInput, int* TargetSonPID0 )
 {
@@ -53,13 +53,13 @@ void LB_FindFather( const int SonLv, const bool SearchAllSon, const int NInput, 
    int SonPID, SonPID0, FaID, FaPID;
 
 
-// 1. nothing to do if there is no target real patch at SonLv   
-   if ( NTargetSon0 == 0 )    
+// 1. nothing to do if there is no target real patch at SonLv
+   if ( NTargetSon0 == 0 )
    {
       delete [] Cr1D_Son0;
       delete [] Cr1D_Son0_IdxTable;
       delete [] Match_Son0;
-      
+
       return;
    }
 
@@ -97,11 +97,11 @@ void LB_FindFather( const int SonLv, const bool SearchAllSon, const int NInput, 
    Mis_Heapsort( NTargetSon0, Cr1D_Son0, Cr1D_Son0_IdxTable );
 
 
-// 4. matching   
+// 4. matching
    Mis_Matching_int( amr->num[FaLv], amr->LB->PaddedCr1DList[FaLv], NTargetSon0, Cr1D_Son0, Match_Son0 );
 
 
-// 5. construct father <-> son relation   
+// 5. construct father <-> son relation
    for (int t=0; t<NTargetSon0; t++)
    {
       SonPID0 = TargetSonPID0[ Cr1D_Son0_IdxTable[t] ];
@@ -118,10 +118,8 @@ void LB_FindFather( const int SonLv, const bool SearchAllSon, const int NInput, 
          amr->patch[0][FaLv][FaPID]->son = SonPID0;
       }
 
-#     ifdef GAMER_DEBUG
       else // find no father (should NOT happen for any real patches)
          Aux_Error( ERROR_INFO, "SonLv %d, SonPID0 %d found no father !!\n", SonLv, SonPID0 );
-#     endif
    }
 
 
@@ -134,7 +132,7 @@ void LB_FindFather( const int SonLv, const bool SearchAllSon, const int NInput, 
    {
       SonPID0 = TargetSonPID0[t];
 
-      for (SonPID=SonPID0; SonPID<SonPID0+8; SonPID++) 
+      for (SonPID=SonPID0; SonPID<SonPID0+8; SonPID++)
          if ( amr->patch[0][SonLv][SonPID]->father == -1 )
             Aux_Error( ERROR_INFO, "Check 1, SonLv %d: SonPID (%d) has no father !!\n", SonLv, SonPID );
    }
@@ -145,7 +143,7 @@ void LB_FindFather( const int SonLv, const bool SearchAllSon, const int NInput, 
       SonPID = amr->patch[0][FaLv][FaPID]->son;
 
       if ( SonPID >= amr->NPatchComma[SonLv][1] )
-         Aux_Error( ERROR_INFO, "Check 2, FaLv %d: FaPID (%d) -> son (%d) >= SonNReal (%d) !!\n", 
+         Aux_Error( ERROR_INFO, "Check 2, FaLv %d: FaPID (%d) -> son (%d) >= SonNReal (%d) !!\n",
                     FaLv, FaPID, SonPID, amr->NPatchComma[SonLv][1] );
    }
 
@@ -154,7 +152,7 @@ void LB_FindFather( const int SonLv, const bool SearchAllSon, const int NInput, 
    {
       SonPID0 = TargetSonPID0[t];
 
-      for (SonPID=SonPID0; SonPID<SonPID0+8; SonPID++) 
+      for (SonPID=SonPID0; SonPID<SonPID0+8; SonPID++)
       {
          FaPID = amr->patch[0][SonLv][SonPID]->father;
 
@@ -192,8 +190,8 @@ void LB_FindFather( const int SonLv, const bool SearchAllSon, const int NInput, 
       {
          Corner_Fa = amr->patch[0][FaLv][FaPID]->corner;
 
-         if (  Corner_Son[0] == Corner_Fa[0]  &&  
-               Corner_Son[1] == Corner_Fa[1]  && 
+         if (  Corner_Son[0] == Corner_Fa[0]  &&
+               Corner_Son[1] == Corner_Fa[1]  &&
                Corner_Son[2] == Corner_Fa[2]     )
          {
             if ( amr->patch[0][SonLv][SonPID0]->father != FaPID )
@@ -213,7 +211,7 @@ void LB_FindFather( const int SonLv, const bool SearchAllSon, const int NInput, 
    {
       SonPID0 = TargetSonPID0[t];
 
-      for (SonPID=SonPID0; SonPID<SonPID0+8; SonPID++) 
+      for (SonPID=SonPID0; SonPID<SonPID0+8; SonPID++)
       {
          FaPID = amr->patch[0][SonLv][SonPID]->father;
 
