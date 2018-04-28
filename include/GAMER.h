@@ -11,11 +11,10 @@
 #  include <mpi.h>
 #endif
 
-#include <iostream>
 #include <cstring>
 #include <cstdlib>
 #include <cassert>
-#include <cmath>
+#include <math.h>
 #include <malloc.h>
 #include <stdio.h>
 #include <unistd.h>
@@ -56,22 +55,17 @@ extern "C" {
 #  include <libyt.h>
 #endif
 
-using namespace std;
-
 #include "Macro.h"
 #include "Typedef.h"
 #include "AMR.h"
 #include "Timer.h"
+#include "RandomNumber.h"
 #include "Global.h"
 #include "Prototype.h"
 #include "PhysicalConstant.h"
 
 #ifdef SERIAL
 #  include "Serial.h"
-#endif
-
-#ifdef __CUDACC__
-#  include "CUAPI.h"
 #endif
 
 

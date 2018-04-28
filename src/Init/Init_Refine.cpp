@@ -23,7 +23,6 @@ void Init_Refine( const int lv )
 
    for (int m=0; m<27; m++)
    {
-
 //    all real patches must store physical data
       if ( m == 0 )
          for (int LocalID=0; LocalID<8; LocalID++)    AllocData[LocalID] = true;
@@ -48,7 +47,6 @@ void Init_Refine( const int lv )
       {
          if ( amr->patch[0][lv][PID]->flag )
          {
-
 //          construct relation : father -> child
             amr->patch[0][lv][PID]->son = amr->num[lv+1];
 
@@ -74,7 +72,6 @@ void Init_Refine( const int lv )
 #           ifdef PARTICLE
             Par_PassParticle2Son( lv, PID );
 #           endif
-
          } // if ( amr->patch[0][lv][PID]->flag )
       } // for (int PID=amr->NPatchComma[lv][s+1]; PID<amr->NPatchComma[lv][s+2]; PID++)
 

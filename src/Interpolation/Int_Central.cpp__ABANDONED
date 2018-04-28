@@ -5,12 +5,12 @@
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Int_Central
-// Description :  Perform the central interpolation 
+// Description :  Perform the central interpolation
 //
 // Note        :  a. The slope at each grid is determined by the difference between the right and left grids
 //                b. The interpolation result is conservative but NOT monotonic
 //
-// Parameter   :  CData    : Input coarse-grid array 
+// Parameter   :  CData    : Input coarse-grid array
 //                CSize    : Size of the CData array
 //                CStart   : (x,y,z) starting indices to perform interpolation on the CData array
 //                CRange   : Number of grids in each direction to perform interpolation
@@ -49,7 +49,7 @@ void Int_Central( const real CData[], const int CSize[3], const int CStart[3], c
          Slope_x = (real)0.125 * ( CData[CID+Cdx] - CData[CID-Cdx] );
          Slope_y = (real)0.125 * ( CData[CID+Cdy] - CData[CID-Cdy] );
          Slope_z = (real)0.125 * ( CData[CID+Cdz] - CData[CID-Cdz] );
-            
+
          FData[FID            ] = CData[CID] - Slope_z - Slope_y - Slope_x;
          FData[FID        +Fdx] = CData[CID] - Slope_z - Slope_y + Slope_x;
          FData[FID    +Fdy    ] = CData[CID] - Slope_z + Slope_y - Slope_x;

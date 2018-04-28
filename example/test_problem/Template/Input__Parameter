@@ -33,13 +33,14 @@ TESTPROB_ID                   0           # test problem ID [0]
                                           #    1: HYDRO blast wave
                                           #    2: HYDRO acoustic wave
                                           #    3: HYDRO Bondi accretion (+GRAVITY)
-                                          #    4: HYDRO cluster merger vs. Flash (+GRAVITY)
-                                          #    5: HYDRO AGORA isolated galaxy (+GRAVITY)
+                                          #    4: HYDRO cluster merger vs. Flash (+GRAVITY & PARTICLE)
+                                          #    5: HYDRO AGORA isolated galaxy (+GRAVITY & PARTICLE & STAR_FORMATION & GRACKLE)
                                           #    6: HYDRO caustic wave
-                                          #    7: HYDRO spherical collapse
+                                          #    7: HYDRO spherical collapse (+GRAVITY & COMOVING)
                                           #    8: HYDRO Kelvin Helmholtz instability
                                           #    9: HYDRO Riemann problems
                                           #   10: HYDRO colliding jets
+                                          #   11: HYDRO Plummer cloud(s) (+GRAVITY & PARTICLE)
                                           # 1000: ELBDM external potential (+GRAVITY)
 
 
@@ -122,6 +123,7 @@ OPT__FLAG_REGION              0           # flag: specify the regions **allowed*
 OPT__FLAG_NPAR_PATCH          0           # flag: # of particles per patch (Input__Flag_NParPatch): (0=off, 1=itself, 2=itself+siblings) [0]
 OPT__FLAG_NPAR_CELL           0           # flag: # of particles per cell  (Input__Flag_NParCell) [0]
 OPT__FLAG_PAR_MASS_CELL       0           # flag: total particle mass per cell (Input__Flag_ParMassCell) [0]
+OPT__NO_FLAG_NEAR_BOUNDARY    0           # flag: disallow refinement near the boundaries [0]
 OPT__PATCH_COUNT              1           # record the # of patches   at each level: (0=off, 1=every step, 2=every sub-step) [1]
 OPT__PARTICLE_COUNT           1           # record the # of particles at each level: (0=off, 1=every step, 2=every sub-step) [1]
 OPT__REUSE_MEMORY             2           # reuse patch memory to reduce memory fragmentation: (0=off, 1=on, 2=aggressive) [2]
@@ -153,7 +155,7 @@ CHE_GPU_NPGROUP              -1           # number of patch groups sent into the
 # star formation (STAR_FORMATION only)
 SF_CREATE_STAR_SCHEME         0           # star formation schemes (0=off, 1=AGORA) [0]
 SF_CREATE_STAR_RSEED          123         # random seed [123]
-SF_CREATE_STAR_DET_RANDOM     0           # make random numbers deterministic (i.e., independent of OpenMP and MPI) [0]
+SF_CREATE_STAR_DET_RANDOM    -1           # make random numbers deterministic (i.e., independent of OpenMP and MPI, <0=auto) [-1]
 SF_CREATE_STAR_MIN_LEVEL      0           # minimum AMR level allowed to form stars (<0=auto -> MAX_LEVEL) [0]
 SF_CREATE_STAR_MIN_GAS_DENS   1.0e1       # minimum gas density allowed to form stars (in HI count/cm^3) [1.0e1]
 SF_CREATE_STAR_MASS_EFF       1.0e-2      # Gas-to-star mass conversion efficiency [1.0e-2]

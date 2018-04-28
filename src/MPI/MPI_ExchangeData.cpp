@@ -24,13 +24,13 @@ void MPI_ExchangeData( const int TargetRank[2], const int SendSize[2], const int
 
    for (int t=0; t<2; t++)
    {
-      SendTarget[t] = ( SendSize[t] == 0 ) ? MPI_PROC_NULL : TargetRank[t];     
-      RecvTarget[t] = ( RecvSize[t] == 0 ) ? MPI_PROC_NULL : TargetRank[t];     
+      SendTarget[t] = ( SendSize[t] == 0 ) ? MPI_PROC_NULL : TargetRank[t];
+      RecvTarget[t] = ( RecvSize[t] == 0 ) ? MPI_PROC_NULL : TargetRank[t];
 
 #     ifdef GAMER_DEBUG
-      if (  SendSize[t] != 0  &&  ( SendTarget[t] < 0 || SendTarget[t] >= MPI_NRank )  )  
+      if (  SendSize[t] != 0  &&  ( SendTarget[t] < 0 || SendTarget[t] >= MPI_NRank )  )
          Aux_Error( ERROR_INFO, "incorrect SendTarget[%d] = %d !!\n", t, SendTarget[t] );
-      if (  RecvSize[t] != 0  &&  ( RecvTarget[t] < 0 || RecvTarget[t] >= MPI_NRank )  )  
+      if (  RecvSize[t] != 0  &&  ( RecvTarget[t] < 0 || RecvTarget[t] >= MPI_NRank )  )
          Aux_Error( ERROR_INFO, "incorrect RecvTarget[%d] = %d !!\n", t, RecvTarget[t] );
 #     endif
    }

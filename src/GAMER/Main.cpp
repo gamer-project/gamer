@@ -59,7 +59,7 @@ bool                 OPT__OUTPUT_BASEPS, OPT__CK_REFINE, OPT__CK_PROPER_NESTING,
 bool                 OPT__CK_RESTRICT, OPT__CK_PATCH_ALLOCATE, OPT__FIXUP_FLUX, OPT__CK_FLUX_ALLOCATE, OPT__CK_NORMALIZE_PASSIVE;
 bool                 OPT__UM_IC_DOWNGRADE, OPT__UM_IC_REFINE, OPT__TIMING_MPI;
 bool                 OPT__CK_CONSERVATION, OPT__RESET_FLUID, OPT__RECORD_USER, OPT__NORMALIZE_PASSIVE, AUTO_REDUCE_DT;
-bool                 OPT__OPTIMIZE_AGGRESSIVE, OPT__INIT_GRID_WITH_OMP;
+bool                 OPT__OPTIMIZE_AGGRESSIVE, OPT__INIT_GRID_WITH_OMP, OPT__NO_FLAG_NEAR_BOUNDARY;
 TestProbID_t         TESTPROB_ID;
 OptInit_t            OPT__INIT;
 OptOutputFormat_t    OPT__OUTPUT_TOTAL;
@@ -180,7 +180,7 @@ int                  CHE_GPU_NPGROUP;
 #ifdef STAR_FORMATION
 SF_CreateStarScheme_t SF_CREATE_STAR_SCHEME;
 int                   SF_CREATE_STAR_RSEED;
-bool                  SF_CREATE_STAR_DET_RANDOM;
+int                   SF_CREATE_STAR_DET_RANDOM;
 int                   SF_CREATE_STAR_MIN_LEVEL;
 double                SF_CREATE_STAR_MIN_GAS_DENS;
 double                SF_CREATE_STAR_MASS_EFF;

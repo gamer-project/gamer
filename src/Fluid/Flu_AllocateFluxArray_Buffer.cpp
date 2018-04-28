@@ -7,8 +7,8 @@
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Flu_AllocateFluxArray_Buffer
-// Description :  Allocate flux arrays for the coarse-grid buffer patches (at level lv) adjacent to the 
-//                coarse-fine boundaries 
+// Description :  Allocate flux arrays for the coarse-grid buffer patches (at level lv) adjacent to the
+//                coarse-fine boundaries
 //
 // Parameter   :  lv : Target coarse-grid level
 //-------------------------------------------------------------------------------------------------------
@@ -18,7 +18,7 @@ void Flu_AllocateFluxArray_Buffer( const int lv )
 // check
    if ( !amr->WithFlux )
       Aux_Message( stderr, "WARNING : why invoking %s when amr->WithFlux is off ??\n", __FUNCTION__ );
-   
+
 
    const int MirrorSib[6] = { 1, 0, 3, 2, 5, 4 };
    int PID, SonPID, SibPID, Table[4];
@@ -38,13 +38,18 @@ void Flu_AllocateFluxArray_Buffer( const int lv )
          {
             SibPID = amr->patch[0][lv][PID]->sibling[ MirrorSib[s] ];
 
+//          SibPID, if exists, must be a real patch
+#           ifdef GAMER_DEBUG
+            if ( SibPID < -1 )   Aux_Error( ERROR_INFO, "lv %d, SibPID (%d) < -1 !!\n", lv, SibPID );
+#           endif
+
             if ( SibPID != -1 )
             if ( amr->patch[0][lv][SibPID]->son != -1 )
                amr->patch[0][lv][PID]->fnew( MirrorSib[s], AUTO_REDUCE_DT );
          }
       }
    } // for (int s=0; s<6; s++)
-   
+
 } // FUNCTION : Flu_AllocateFluxArray_Buffer
 
 

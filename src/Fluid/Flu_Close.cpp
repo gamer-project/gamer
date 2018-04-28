@@ -236,10 +236,16 @@ void CorrectFlux( const int lv, const real h_Flux_Array[][9][NFLUX_TOTAL][4*PATC
 
          for (int s=0; s<6; s++)
          {
+//          skip patches adjacent to the non-periodic boundaries (which will have Table_01() < -1)
             if ( Table_01( lv, PID0, s ) == -1 )
             {
                FaPID    = amr->patch[0][lv  ][ PID0]->father;
                FaSibPID = amr->patch[0][lv-1][FaPID]->sibling[s];
+
+#              ifdef GAMER_DEBUG
+               if ( FaSibPID < 0 )
+                  Aux_Error( ERROR_INFO, "FaSibPID = %d < 0 (lv %d, FaPID %d, s %d, PID0 %d) !!\n", FaSibPID, lv-1, FaPID, s, PID0 );
+#              endif
 
 //             for AUTO_REDUCE_DT, store the updated fluxes in the temporary array "flux_tmp" since
 //             we may need to abandon these updated results if the fluid solver fails
@@ -300,8 +306,8 @@ bool Unphysical( const real Fluid[], const real Gamma_m1, const int CheckMinEngy
 // note that since MIN_DENS and MIN_PRES are declared as double, they must be converted to **real** before the comparison
 // --> otherwise LHS in the comparison will be converted from real to double, which is inconsistent with the assignment
 //     (e.g., "Update[DENS] = FMAX( Update[DENS], (real)MIN_DENS" )
-   if (  !isfinite(Fluid[DENS])  ||  !isfinite(Fluid[MOMX])  ||  !isfinite(Fluid[MOMY])  ||
-         !isfinite(Fluid[MOMZ])  ||  !isfinite(Fluid[ENGY])  ||
+   if (  !Aux_IsFinite(Fluid[DENS])  ||  !Aux_IsFinite(Fluid[MOMX])  ||  !Aux_IsFinite(Fluid[MOMY])  ||
+         !Aux_IsFinite(Fluid[MOMZ])  ||  !Aux_IsFinite(Fluid[ENGY])  ||
          Fluid[DENS] < (real)MIN_DENS  )
       return true;
 
@@ -830,7 +836,7 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Table_01
-// Description :  Return the sibling patch ID for the function "CorrectFlux"
+// Description :  Return the sibling patch ID for CorrectFlux()
 //
 // Parameter   :  lv    : Target refinement level
 //                PID   : Target patch index

@@ -6,7 +6,7 @@
 #include "Macro.h"
 
 #ifdef PARTICLE
-#  include <cmath>
+#  include <math.h>
 #  include "Particle.h"
 #endif
 
@@ -100,6 +100,7 @@ long  LB_Corner2Index( const int lv, const int Corner[], const Check_t Check );
 //                                  --> each PaddedCr1D defines a unique 3D position
 //                                  --> patches at different levels with the same PaddedCr1D have the same
 //                                      3D corner coordinates
+//                                  --> this number is independent of periodicity (because of the padded patches)
 //                LB_Idx          : Space-filling-curve index for load balance
 //                NPar            : Number of particles belonging to this leaf patch
 //                ParListSize     : Size of the array ParList (ParListSize can be >= NPar)
@@ -300,8 +301,8 @@ struct patch_t
       }
 #     endif
 
-      PaddedCr1D = Mis_Idx3D2Idx1D( BoxNScale_Padded, Cr_Padded );
-      LB_Idx     = LB_Corner2Index( lv, corner, CHECK_OFF );   // this number always assumes periodicity
+      PaddedCr1D = Mis_Idx3D2Idx1D( BoxNScale_Padded, Cr_Padded );   // independent of periodicity
+      LB_Idx     = LB_Corner2Index( lv, corner, CHECK_OFF );         // always assumes periodicity
 
 //    set the patch edge
       const int PScale = PS1*( 1<<(TOP_LEVEL-lv) );
@@ -311,6 +312,7 @@ struct patch_t
 //       EdgeR[d] = (double)(  ( corner[d] + BoxScale[d] + PScale ) % BoxScale[d] )*dh_min;
 //       --> otherwise the buffer patches just outside the simulation left edge (and the real patches just inside the simulation
 //           right edge) will have EdgeR==0 instead of EdgeR==BoxSize
+//       --> assuming periodicity
          EdgeL[d] = (double)(  ( corner[d] + BoxScale[d] ) % BoxScale[d]           )*dh_min;
          EdgeR[d] = (double)(  ( corner[d] + BoxScale[d] ) % BoxScale[d] + PScale  )*dh_min;
 
@@ -569,8 +571,8 @@ struct patch_t
 #     ifdef STORE_POT_GHOST
       if ( pot_ext == NULL )  pot_ext = new real [GRA_NXT][GRA_NXT][GRA_NXT];
 
-//    always initialize pot_ext (even if pot_ext != NULL when calling this this function) to indicate that this array
-//    has NOT been properly set --> used by Poi_StorePotWithGhostZone
+//    always initialize pot_ext (even if pot_ext != NULL when calling this function) to indicate that this array
+//    has NOT been properly set --> used by Poi_StorePotWithGhostZone()
       pot_ext[0][0][0] = POT_EXT_NEED_INIT;
 #     endif
 

@@ -6,7 +6,7 @@
 
 void PrepareCData( const int FaLv, const int FaPID, real *const FaData,
                    const int FaSg_Flu, const int FaGhost_Flu, const int NSide_Flu,
-                   const int FaSg_Pot, const int FaGhost_Pot, const int NSide_Pot, 
+                   const int FaSg_Pot, const int FaGhost_Pot, const int NSide_Pot,
                    const int BC_Face[], const int FluVarIdxList[] );
 
 
@@ -16,24 +16,24 @@ void PrepareCData( const int FaLv, const int FaPID, real *const FaData,
 // Function    :  LB_Refine_GetNewRealPatchList
 // Description :  Get the lists of father patches at FaLv to allocate/deallocate real son patches at FaLv+1
 //
-// Note        :  1. This function is invoked by the function "LB_Refine"
-//                2. Coarse-grid data for creating new patches are also collected in "NewCData_Away"
-//                   --> Data of all sibling-buffer patches at FaLv must be prepared in advance in order to 
+// Note        :  1. This function is invoked by LB_Refine()
+//                2. Coarse-grid data for creating new patches are also collected in NewCData_Away[]
+//                   --> Data of all sibling-buffer patches at FaLv must be prepared in advance in order to
 //                       prepare the coarse-grid data for spatial interpolation
 //                3. Home/Away : target patches at home/not at home
 //                4. Cr1D and CData lists are unsorted
 //                5. Use "call-by-reference" for the input parameters
 //
-// Parameter   :  FaLv           : Target refinement level to be refined
-//                NNew_Home      : Number of home patches at FaLv to allocate son patches
-//                NewPID_Home    : Patch indices of home patches at FaLv to allocate son patches
-//                NNew_Away      : Number of away patches at FaLv to allocate son patches
-//                NewCr1D_Away   : Padded 1D corner of away patches at FaLv to allocate son patches
-//                NewCData_Away  : Coarse-grid data of away patches at FaLv to allocate son patches
-//                NDel_Home      : Number of home patches at FaLv to deallocate son patches
-//                DelPID_Home    : Patch indices of home patches at FaLv to deallocate son patches
-//                NDel_Away      : Number of away patches at FaLv to deallocate son patches
-//                DelCr1D_Away   : Padded 1D corner of away patches at FaLv to deallocate son patches
+// Parameter   :  FaLv          : Target refinement level to be refined
+//                NNew_Home     : Number of home patches at FaLv to allocate son patches
+//                NewPID_Home   : Patch indices of home patches at FaLv to allocate son patches
+//                NNew_Away     : Number of away patches at FaLv to allocate son patches
+//                NewCr1D_Away  : Padded 1D corner of away patches at FaLv to allocate son patches
+//                NewCData_Away : Coarse-grid data of away patches at FaLv to allocate son patches
+//                NDel_Home     : Number of home patches at FaLv to deallocate son patches
+//                DelPID_Home   : Patch indices of home patches at FaLv to deallocate son patches
+//                NDel_Away     : Number of away patches at FaLv to deallocate son patches
+//                DelCr1D_Away  : Padded 1D corner of away patches at FaLv to deallocate son patches
 //
 //                PARTICLE-only parameters (call-by-reference)
 //                RefineF2S_Send_NPatchTotal : Total number of patches for exchanging particles from fathers to sons
@@ -43,8 +43,8 @@ void PrepareCData( const int FaLv, const int FaPID, real *const FaData,
 // Return      :  NNew_Home, NewPID_Home, NNew_Away, NewCr1D_Away, NewCData_Away, NDel_Home, DelPID_Home,
 //                NDel_Away, DelCr1D_Away
 //-------------------------------------------------------------------------------------------------------
-void LB_Refine_GetNewRealPatchList( const int FaLv, int &NNew_Home, int *&NewPID_Home, int &NNew_Away, 
-                                    ulong *&NewCr1D_Away, real *&NewCData_Away, int &NDel_Home, int *&DelPID_Home, 
+void LB_Refine_GetNewRealPatchList( const int FaLv, int &NNew_Home, int *&NewPID_Home, int &NNew_Away,
+                                    ulong *&NewCr1D_Away, real *&NewCData_Away, int &NDel_Home, int *&DelPID_Home,
                                     int &NDel_Away, ulong *&DelCr1D_Away,
                                     int &RefineF2S_Send_NPatchTotal, int *&RefineF2S_Send_PIDList,
                                     long *&RefineF2S_Send_LBIdxList )
@@ -58,7 +58,7 @@ void LB_Refine_GetNewRealPatchList( const int FaLv, int &NNew_Home, int *&NewPID
 
    patch_t *TP=NULL;
    long   LBIdx, CP_Min_local, CP_Max_local;          // CP : CutPoint --> for resetting min/max of LB->CutPoint
-   int    TRank; 
+   int    TRank;
    int    NewMemSize[MPI_NRank], NNew_Send[MPI_NRank];
    int    DelMemSize[MPI_NRank], NDel_Send[MPI_NRank];
    int   *NewPID_Send[MPI_NRank];
@@ -138,7 +138,7 @@ void LB_Refine_GetNewRealPatchList( const int FaLv, int &NNew_Home, int *&NewPID
          else // TRank != MPI_Rank (target son patches are not home)
          {
 //          allocate enough memory
-            if ( NNew_Send[TRank] >= NewMemSize[TRank] )  
+            if ( NNew_Send[TRank] >= NewMemSize[TRank] )
             {
                NewMemSize  [TRank] += MemUnit;
                NewCr1D_Send[TRank]  = (ulong*)realloc( NewCr1D_Send[TRank], NewMemSize[TRank]*sizeof(ulong) );
@@ -250,8 +250,8 @@ void LB_Refine_GetNewRealPatchList( const int FaLv, int &NNew_Home, int *&NewPID
 
    int New_Send_Disp[MPI_NRank], New_Recv_Disp[MPI_NRank], NNew_Recv[MPI_NRank], NNew_Send_Total, NNew_Recv_Total;
    int Del_Send_Disp[MPI_NRank], Del_Recv_Disp[MPI_NRank], NDel_Recv[MPI_NRank], NDel_Send_Total, NDel_Recv_Total;
-   int New_Send_Disp_CData[MPI_NRank], New_Recv_Disp_CData[MPI_NRank]; 
-   int NNew_Send_CData[MPI_NRank], NNew_Recv_CData[MPI_NRank]; 
+   int New_Send_Disp_CData[MPI_NRank], New_Recv_Disp_CData[MPI_NRank];
+   int NNew_Send_CData[MPI_NRank], NNew_Recv_CData[MPI_NRank];
    int Counter;
    ulong *New_SendBuf_Cr1D=NULL, *New_RecvBuf_Cr1D=NULL, *Del_SendBuf_Cr1D=NULL, *Del_RecvBuf_Cr1D=NULL;
    real  *New_SendBuf_CData=NULL, *New_RecvBuf_CData=NULL;
@@ -287,7 +287,7 @@ void LB_Refine_GetNewRealPatchList( const int FaLv, int &NNew_Home, int *&NewPID
       New_Recv_Disp_CData[r] = PSize*New_Recv_Disp[r];
    }
 
-// variables to be returned   
+// variables to be returned
    NNew_Away         = NNew_Recv_Total;
    NDel_Away         = NDel_Recv_Total;
    NewCr1D_Away      = new ulong [NNew_Recv_Total      ];
@@ -315,9 +315,10 @@ void LB_Refine_GetNewRealPatchList( const int FaLv, int &NNew_Home, int *&NewPID
       BC_Face_tmp[2] = TABLE_01( s, 'z', 4, -1, 5 );
 
 //    z > y > x
-      if      ( BC_Face_tmp[2] != -1 )   BC_Face[s] = BC_Face_tmp[2];
-      else if ( BC_Face_tmp[1] != -1 )   BC_Face[s] = BC_Face_tmp[1];
-      else if ( BC_Face_tmp[0] != -1 )   BC_Face[s] = BC_Face_tmp[0];
+      if      ( BC_Face_tmp[2] != -1  &&  OPT__BC_FLU[BC_Face_tmp[2]] != BC_FLU_PERIODIC )   BC_Face[s] = BC_Face_tmp[2];
+      else if ( BC_Face_tmp[1] != -1  &&  OPT__BC_FLU[BC_Face_tmp[1]] != BC_FLU_PERIODIC )   BC_Face[s] = BC_Face_tmp[1];
+      else if ( BC_Face_tmp[0] != -1  &&  OPT__BC_FLU[BC_Face_tmp[0]] != BC_FLU_PERIODIC )   BC_Face[s] = BC_Face_tmp[0];
+      else                                                                                   BC_Face[s] = NULL_INT;
    }
 
    for (int v=0; v<NCOMP_TOTAL; v++)   FluVarIdxList[v] = v;
@@ -350,20 +351,20 @@ void LB_Refine_GetNewRealPatchList( const int FaLv, int &NNew_Home, int *&NewPID
 
 // 2.4 broadcast the send data
 // 2.4.1 new Cr1D
-   MPI_Alltoallv( New_SendBuf_Cr1D, NNew_Send, New_Send_Disp, MPI_UNSIGNED_LONG, 
+   MPI_Alltoallv( New_SendBuf_Cr1D, NNew_Send, New_Send_Disp, MPI_UNSIGNED_LONG,
                   New_RecvBuf_Cr1D, NNew_Recv, New_Recv_Disp, MPI_UNSIGNED_LONG, MPI_COMM_WORLD );
 
 // 2.4.2 new CData
 #  ifdef FLOAT8
-   MPI_Alltoallv( New_SendBuf_CData, NNew_Send_CData, New_Send_Disp_CData, MPI_DOUBLE, 
+   MPI_Alltoallv( New_SendBuf_CData, NNew_Send_CData, New_Send_Disp_CData, MPI_DOUBLE,
                   New_RecvBuf_CData, NNew_Recv_CData, New_Recv_Disp_CData, MPI_DOUBLE, MPI_COMM_WORLD );
 #  else
-   MPI_Alltoallv( New_SendBuf_CData, NNew_Send_CData, New_Send_Disp_CData, MPI_FLOAT, 
+   MPI_Alltoallv( New_SendBuf_CData, NNew_Send_CData, New_Send_Disp_CData, MPI_FLOAT,
                   New_RecvBuf_CData, NNew_Recv_CData, New_Recv_Disp_CData, MPI_FLOAT,  MPI_COMM_WORLD );
 #  endif
 
 // 2.4.3 delete Cr1D
-   MPI_Alltoallv( Del_SendBuf_Cr1D, NDel_Send, Del_Send_Disp, MPI_UNSIGNED_LONG, 
+   MPI_Alltoallv( Del_SendBuf_Cr1D, NDel_Send, Del_Send_Disp, MPI_UNSIGNED_LONG,
                   Del_RecvBuf_Cr1D, NDel_Recv, Del_Recv_Disp, MPI_UNSIGNED_LONG, MPI_COMM_WORLD );
 
 
@@ -388,25 +389,25 @@ void LB_Refine_GetNewRealPatchList( const int FaLv, int &NNew_Home, int *&NewPID
 // Description :  Prepare coarse-grid data for spatial interpolation
 //
 // Note        :  1. Data of all sibling-buffer patches at FaLv must be prepared in advance
-//                2. This function is also used in "LB_Refine_AllocateNewPatch"
+//                2. This function is also used by LB_Refine_AllocateNewPatch()
 //
-// Parameter   :  FaLv           : Coarse-grid refinement level
-//                FaPID          : Father patch index to prepare the coarse-grid data 
-//                FaData         : Array to store the coarse-grid data
-//                FaSg_Flu       : Sandglass for the fluid solver
-//                FaGhost_Flu    : Ghost size for the fluid solver
-//                NSide_Flu      : Number of sibling directions to prepare the ghost-zone data (6/26) for the fluid solver
-//                FaSg_Pot       : Sandglass for the Poisson solver
-//                FaGhost_Pot    : Ghost size for the Poisson solver
-//                NSide_Pot      : Number of sibling directions to prepare the ghost-zone data (6/26) for the Poisson solver
-//                BC_Face        : Corresponding boundary faces (0~5) along 26 sibling directions ->for non-periodic B.C. only
-//                FluVarIdxList  : List of target fluid variable indices                          ->for non-periodic B.C. only
+// Parameter   :  FaLv          : Coarse-grid refinement level
+//                FaPID         : Father patch index to prepare the coarse-grid data
+//                FaData        : Array to store the coarse-grid data
+//                FaSg_Flu      : Sandglass for the fluid solver
+//                FaGhost_Flu   : Ghost size for the fluid solver
+//                NSide_Flu     : Number of sibling directions to prepare the ghost-zone data (6/26) for the fluid solver
+//                FaSg_Pot      : Sandglass for the Poisson solver
+//                FaGhost_Pot   : Ghost size for the Poisson solver
+//                NSide_Pot     : Number of sibling directions to prepare the ghost-zone data (6/26) for the Poisson solver
+//                BC_Face       : Corresponding boundary faces (0~5) along 26 sibling directions -> for non-periodic B.C. only
+//                FluVarIdxList : List of target fluid variable indices                          -> for non-periodic B.C. only
 //
 // Return      :  FaData
 //-------------------------------------------------------------------------------------------------------
 void PrepareCData( const int FaLv, const int FaPID, real *const FaData,
                    const int FaSg_Flu, const int FaGhost_Flu, const int NSide_Flu,
-                   const int FaSg_Pot, const int FaGhost_Pot, const int NSide_Pot, 
+                   const int FaSg_Pot, const int FaGhost_Pot, const int NSide_Pot,
                    const int BC_Face[], const int FluVarIdxList[] )
 {
 
@@ -458,7 +459,7 @@ void PrepareCData( const int FaLv, const int FaPID, real *const FaData,
 #  endif
 
 
-// 2. fill up the ghost zone of FaData (no interpolation is required)
+// 2. fill up the ghost zones of FaData (no interpolation is required)
    const int  NDer       = 0;
    const int *DerVarList = NULL;
 
@@ -484,7 +485,7 @@ void PrepareCData( const int FaLv, const int FaPID, real *const FaData,
       if ( SibPID >= 0 )
       {
          for (int d=0; d<3; d++)    Disp2[d] = TABLE_01( sib, 'x'+d, PATCH_SIZE-FaGhost_Flu, 0, 0 );
-     
+
          for (int v=0; v<NCOMP_TOTAL; v++){
          for (int k=0; k<Loop[2]; k++)    {  K = k + Disp1[2];    K2 = k + Disp2[2];
          for (int j=0; j<Loop[1]; j++)    {  J = j + Disp1[1];    J2 = j + Disp2[1];
@@ -509,17 +510,26 @@ void PrepareCData( const int FaLv, const int FaPID, real *const FaData,
 
          BC_Sibling = SIB_OFFSET_NONPERIODIC - SibPID;
 
+#        ifdef GAMER_DEBUG
+         if ( BC_Face[BC_Sibling] < 0  ||  BC_Face[BC_Sibling] > 5 )
+            Aux_Error( ERROR_INFO, "incorrect BC_Face[%d] = %d !!\n", BC_Sibling, BC_Face[BC_Sibling] );
+
+         if ( OPT__BC_FLU[ BC_Face[BC_Sibling] ] == BC_FLU_PERIODIC )
+            Aux_Error( ERROR_INFO, "OPT__BC_FLU == BC_FLU_PERIODIC (BC_Sibling %d, BC_Face %d, SibPID %d, FaPID %d, sib %d, FaLv %d) !!\n",
+                       BC_Sibling, BC_Face[BC_Sibling], SibPID, FaPID, sib, FaLv );
+#        endif
+
          switch ( OPT__BC_FLU[ BC_Face[BC_Sibling] ] )
          {
-#           if ( MODEL == HYDRO  ||  MODEL == MHD )
-            case BC_FLU_OUTFLOW:    
+            case BC_FLU_OUTFLOW:
                Hydro_BoundaryCondition_Outflow   ( FaData_Flu, BC_Face[BC_Sibling], NCOMP_TOTAL, FaGhost_Flu,
                                                    FaSize_Flu, FaSize_Flu, FaSize_Flu, BC_Idx_Start, BC_Idx_End );
             break;
 
+#           if ( MODEL == HYDRO  ||  MODEL == MHD )
             case BC_FLU_REFLECTING:
                Hydro_BoundaryCondition_Reflecting( FaData_Flu, BC_Face[BC_Sibling], NCOMP_TOTAL, FaGhost_Flu,
-                                                   FaSize_Flu, FaSize_Flu, FaSize_Flu, BC_Idx_Start, BC_Idx_End, 
+                                                   FaSize_Flu, FaSize_Flu, FaSize_Flu, BC_Idx_Start, BC_Idx_End,
                                                    FluVarIdxList, NDer, DerVarList );
             break;
 #           if ( MODEL == MHD )
@@ -529,11 +539,11 @@ void PrepareCData( const int FaLv, const int FaPID, real *const FaData,
 
             case BC_FLU_USER:
                Flu_BoundaryCondition_User        ( FaData_Flu,                      NCOMP_TOTAL,
-                                                   FaSize_Flu, FaSize_Flu, FaSize_Flu, BC_Idx_Start, BC_Idx_End, 
+                                                   FaSize_Flu, FaSize_Flu, FaSize_Flu, BC_Idx_Start, BC_Idx_End,
                                                    FluVarIdxList, Time[FaLv], amr->dh[FaLv], xyz, _TOTAL, FaLv );
             break;
 
-            default: 
+            default:
                Aux_Error( ERROR_INFO, "unsupported fluid B.C. (%d) !!\n", OPT__BC_FLU[ BC_Face[BC_Sibling] ] );
 
          } // switch ( OPT__BC_FLU[ BC_Face[BC_Sibling] ] )
@@ -541,11 +551,8 @@ void PrepareCData( const int FaLv, const int FaPID, real *const FaData,
 
 
 //    2.1.3 it will violate the proper-nesting condition if the flagged patch is NOT surrounded by siblings
-      else if ( SibPID == -1 )
-         Aux_Error( ERROR_INFO, "no sibling patch is found for FaLv %d, FaPID %d, sib %d !!\n", FaLv, FaPID, sib );
-
       else
-         Aux_Error( ERROR_INFO, "SibPID == %d (FaPID %d, sib %d) !!\n", SibPID, FaPID, sib );
+         Aux_Error( ERROR_INFO, "SibPID == %d (FaLv %d, FaPID %d, sib %d) !!\n", SibPID, FaLv, FaPID, sib );
 
    } // for (int sib=0; sib<NSide_Flu; sib++)
 
@@ -556,27 +563,58 @@ void PrepareCData( const int FaLv, const int FaPID, real *const FaData,
    {
       SibPID = amr->patch[0][FaLv][FaPID]->sibling[sib];
 
-//    it will violate the proper-nesting condition if the flagged patch is NOT surrounded by sibling patches
-#     ifdef GAMER_DEBUG
-      if ( SibPID < 0 )
-         Aux_Error( ERROR_INFO, "no sibling patch is found for FaLv %d, FaPID %d, sib %d !!\n", FaLv, FaPID, sib );
-#     endif
-
       for (int d=0; d<3; d++)
       {
          Loop [d] = TABLE_01( sib, 'x'+d, FaGhost_Pot, PATCH_SIZE, FaGhost_Pot );
          Disp1[d] = TABLE_01( sib, 'x'+d, 0, FaGhost_Pot, FaGhost_Pot+PATCH_SIZE );
-         Disp2[d] = TABLE_01( sib, 'x'+d, PATCH_SIZE-FaGhost_Pot, 0, 0 );
       }
-     
-      for (int k=0; k<Loop[2]; k++)    {  K = k + Disp1[2];    K2 = k + Disp2[2];
-      for (int j=0; j<Loop[1]; j++)    {  J = j + Disp1[1];    J2 = j + Disp2[1];
-      for (int i=0; i<Loop[0]; i++)    {  I = i + Disp1[0];    I2 = i + Disp2[0];
 
-         Idx = (K*FaSize_Pot + J)*FaSize_Pot + I;
+//    2.2.1 if the target sibling patch exists --> just copy data from the nearby patches at the same level
+      if ( SibPID >= 0 )
+      {
+         for (int d=0; d<3; d++)    Disp2[d] = TABLE_01( sib, 'x'+d, PATCH_SIZE-FaGhost_Pot, 0, 0 );
 
-         FaData_Pot[Idx] = amr->patch[FaSg_Pot][FaLv][SibPID]->pot[K2][J2][I2];
-      }}}
+         for (int k=0; k<Loop[2]; k++)    {  K = k + Disp1[2];    K2 = k + Disp2[2];
+         for (int j=0; j<Loop[1]; j++)    {  J = j + Disp1[1];    J2 = j + Disp2[1];
+         for (int i=0; i<Loop[0]; i++)    {  I = i + Disp1[0];    I2 = i + Disp2[0];
+
+            Idx = (K*FaSize_Pot + J)*FaSize_Pot + I;
+
+            FaData_Pot[Idx] = amr->patch[FaSg_Pot][FaLv][SibPID]->pot[K2][J2][I2];
+
+         }}}
+      }
+
+
+//    2.2.2 if the target sibling patch lies outside the simulation domain --> apply the specified B.C.
+      else if ( SibPID <= SIB_OFFSET_NONPERIODIC )
+      {
+         for (int d=0; d<3; d++)
+         {
+            BC_Idx_Start[d] = Disp1[d];
+            BC_Idx_End  [d] = Loop[d] + BC_Idx_Start[d] - 1;
+         }
+
+         BC_Sibling = SIB_OFFSET_NONPERIODIC - SibPID;
+
+#        ifdef GAMER_DEBUG
+         if ( BC_Face[BC_Sibling] < 0  ||  BC_Face[BC_Sibling] > 5 )
+            Aux_Error( ERROR_INFO, "incorrect BC_Face[%d] = %d !!\n", BC_Sibling, BC_Face[BC_Sibling] );
+
+         if ( OPT__BC_FLU[ BC_Face[BC_Sibling] ] == BC_FLU_PERIODIC )
+            Aux_Error( ERROR_INFO, "OPT__BC_FLU == BC_FLU_PERIODIC (BC_Sibling %d, BC_Face %d, SibPID %d, FaPID %d, sib %d, FaLv %d) !!\n",
+                       BC_Sibling, BC_Face[BC_Sibling], SibPID, FaPID, sib, FaLv );
+#        endif
+
+//       extrapolate potential
+         Poi_BoundaryCondition_Extrapolation( FaData_Pot, BC_Face[BC_Sibling], 1, FaGhost_Pot,
+                                              FaSize_Pot, FaSize_Pot, FaSize_Pot, BC_Idx_Start, BC_Idx_End );
+      }
+
+
+//    2.2.3 it will violate the proper-nesting condition if the flagged patch is NOT surrounded by siblings
+      else
+         Aux_Error( ERROR_INFO, "SibPID == %d (FaLv %d, FaPID %d, sib %d) !!\n", SibPID, FaLv, FaPID, sib );
 
    } // for (int sib=0; sib<NSide_Pot; sib++)
 #  endif // #ifdef GRAVITY

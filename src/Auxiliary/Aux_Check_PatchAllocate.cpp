@@ -12,7 +12,7 @@
 //                   of the patch scale at level lv
 //                3. All patches (real+buffer) in the same rank have different corner coordinates
 //                4. All real patches in all ranks have different corner coordinates
-//                5. The corner coordinate of any buffer patch do match the corner coordinates of one real patch
+//                5. The corner coordinates of any buffer patch do match the corner coordinates of one real patch
 //                   (unless they lie outside the simulation box for the periodic B.C.)
 //                6. Check if sibling patches have the correct coordinates
 //                7. Work for both periodic and non-periodic BC's
@@ -20,8 +20,8 @@
 // Note           This check will not detect the useless buffer patches (which do map to real patches but
 //                do not provide any useful information during simulations)
 //
-// Parameter   :  lv       : Target refinement level
-//                comment  : You can put the location where this function is invoked in this string
+// Parameter   :  lv      : Target refinement level
+//                comment : You can put the location where this function is invoked in this string
 //-------------------------------------------------------------------------------------------------------
 void Aux_Check_PatchAllocate( const int lv, const char *comment )
 {
@@ -72,7 +72,7 @@ void Aux_Check_PatchAllocate( const int lv, const char *comment )
                Cr_Padded[d] = amr->patch[0][lv][PID]->corner[d] + PGScale;
 
 //             check 1 
-               if ( PID < NReal  ||  OPT__BC_FLU[0] != BC_FLU_PERIODIC )   // real patches or non-periodic B.C
+               if ( PID < NReal  ||  OPT__BC_FLU[2*d] != BC_FLU_PERIODIC )    // real patches or non-periodic B.C
                {
                   if ( Cr_Padded[d] < PGScale  ||  Cr_Padded[d] > BoxScale_Padded[d]-PGScale-PScale )
                   {
@@ -226,15 +226,18 @@ void Aux_Check_PatchAllocate( const int lv, const char *comment )
    if ( MPI_Rank == 0 )
    {
 //    apply periodic boundary condition for the external buffer patches     
-      if ( OPT__BC_FLU[0] == BC_FLU_PERIODIC )
+      if ( OPT__BC_FLU[0] == BC_FLU_PERIODIC  ||  OPT__BC_FLU[2] == BC_FLU_PERIODIC  ||  OPT__BC_FLU[4] == BC_FLU_PERIODIC )
       for (int t=0; t<NBuff_Tot; t++)
       {
          Mis_Idx1D2Idx3D( BoxScale_Padded, Cr1D_Buff[t], Cr_Padded );
 
          for (int d=0; d<3; d++)
          {
-            if      ( Cr_Padded[d] < PGScale )                             Cr_Padded[d] += amr->BoxScale[d];
-            else if ( Cr_Padded[d] > BoxScale_Padded[d]-PGScale-PScale )   Cr_Padded[d] -= amr->BoxScale[d];
+            if ( OPT__BC_FLU[2*d] == BC_FLU_PERIODIC )
+            {
+               if      ( Cr_Padded[d] < PGScale )                             Cr_Padded[d] += amr->BoxScale[d];
+               else if ( Cr_Padded[d] > BoxScale_Padded[d]-PGScale-PScale )   Cr_Padded[d] -= amr->BoxScale[d];
+            }
          }
 
          Cr1D_Buff[t] = Mis_Idx3D2Idx1D( BoxScale_Padded, Cr_Padded );

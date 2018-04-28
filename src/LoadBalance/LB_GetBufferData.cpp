@@ -44,7 +44,7 @@ extern Timer_t *Timer_MPI[3];
 //                TVar        : Target variables to exchange
 //                              --> Supported variables in different models:
 //                                  HYDRO : _DENS, _MOMX, _MOMY, _MOMZ, _ENGY,[, _POTE]
-//                                  MHD   : 
+//                                  MHD   :
 //                                  ELBDM : _DENS, _REAL, _IMAG, [, _POTE]
 //                              --> _FLUID, _PASSIVE, and _TOTAL apply to all models
 //                              --> In addition, the flux variables (e.g., _FLUX_DENS) are also supported
@@ -110,7 +110,7 @@ void LB_GetBufferData( const int lv, const int FluSg, const int PotSg, const Get
 
 // determine the components to be prepared (TFluVarIdx : target fluid variable indices ( = [0 ... NCOMP_TOTAL-1/NFLUX_TOTAL-1] )
    bool ExchangeFlu = ( GetBufMode == COARSE_FINE_FLUX ) ?
-                      TVar & _FLUX_TOTAL : TVar & _TOTAL;                        // whether or not to exchage the fluid data 
+                      TVar & _FLUX_TOTAL : TVar & _TOTAL;                        // whether or not to exchage the fluid data
 #  ifdef GRAVITY
    bool ExchangePot = (  GetBufMode != COARSE_FINE_FLUX  &&  (TVar & _POTE)  );  // whether or not to exchange the potential data
 #  endif

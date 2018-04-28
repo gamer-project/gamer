@@ -137,7 +137,7 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData[], const in
    if ( La > PATCH_SIZE )  Aux_Error( ERROR_INFO, "La (%d) > PATCH_SIZE (%d) !!\n", La, PATCH_SIZE );
 
 
-// coarse-grid array stored all data required for interpolation (including the ghost zones in each side)
+// coarse-grid array to store all the data required for interpolation (including the ghost zones in each side)
    real *CData_Ptr = NULL;
    real *CData     = new real [ NVar_Tot*CSize3D ];
 
@@ -681,19 +681,28 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData[], const in
             BC_Idx_End  [d] = Loop2[d] + BC_Idx_Start[d] - 1;
          }
 
+         BC_Sibling = SIB_OFFSET_NONPERIODIC - SibPID;
+
+#        ifdef GAMER_DEBUG
+         if ( BC_Face[BC_Sibling] < 0  ||  BC_Face[BC_Sibling] > 5 )
+            Aux_Error( ERROR_INFO, "incorrect BC_Face[%d] = %d !!\n", BC_Sibling, BC_Face[BC_Sibling] );
+
+         if ( FluBC[ BC_Face[BC_Sibling] ] == BC_FLU_PERIODIC )
+            Aux_Error( ERROR_INFO, "FluBC == BC_FLU_PERIODIC (BC_Sibling %d, BC_Face %d, SibPID %d, PID %d, Side %d) !!\n",
+                       BC_Sibling, BC_Face[BC_Sibling], SibPID, PID, Side );
+#        endif
+
 //       b3-1. fluid B.C.
          if ( NVar_Flu + NVar_Der > 0 )
          {
-            BC_Sibling = SIB_OFFSET_NONPERIODIC - SibPID;
-
             switch ( FluBC[ BC_Face[BC_Sibling] ] )
             {
-#              if ( MODEL == HYDRO  ||  MODEL == MHD )
                case BC_FLU_OUTFLOW:
                   Hydro_BoundaryCondition_Outflow   ( CData_Ptr, BC_Face[BC_Sibling], NVar_Flu+NVar_Der, CGhost,
                                                       CSize[0], CSize[1], CSize[2], BC_Idx_Start, BC_Idx_End );
                break;
 
+#              if ( MODEL == HYDRO  ||  MODEL == MHD )
                case BC_FLU_REFLECTING:
                   Hydro_BoundaryCondition_Reflecting( CData_Ptr, BC_Face[BC_Sibling], NVar_Flu,          CGhost,
                                                       CSize[0], CSize[1], CSize[2], BC_Idx_Start, BC_Idx_End,
@@ -715,12 +724,18 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData[], const in
             } // switch ( FluBC[ BC_Face[BC_Sibling] ] )
 
             CData_Ptr += NVar_Flu*CSize3D;
-
          } // if ( NVar_Flu > 0 )
 
 //       b3-2. potential B.C.
 #        ifdef GRAVITY
-         if ( PrepPot )    Aux_Error( ERROR_INFO, "targeting potential data lie outside the simulation domain !!\n" );
+         if ( PrepPot )
+         {
+//          extrapolate potential
+            Poi_BoundaryCondition_Extrapolation( CData_Ptr, BC_Face[BC_Sibling], 1, CGhost,
+                                                 CSize[0], CSize[1], CSize[2], BC_Idx_Start, BC_Idx_End );
+
+            CData_Ptr += 1*CSize3D;
+         }
 #        endif // #ifdef GRAVITY
 
       } // else if ( SibPID <= SIB_OFFSET_NONPERIODIC )

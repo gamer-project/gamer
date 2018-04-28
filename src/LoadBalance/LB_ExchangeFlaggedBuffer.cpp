@@ -6,11 +6,11 @@
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  LB_ExchangeFlaggedBuffer 
-// Description :  Flag real patches flagged by either flag-buffer check or grandson check in other 
+// Function    :  LB_ExchangeFlaggedBuffer
+// Description :  Flag real patches flagged by either flag-buffer check or grandson check in other
 //                MPI ranks
 //
-// Note        :  1. After calling this function, all ranks should have correct flag results for 
+// Note        :  1. After calling this function, all ranks should have correct flag results for
 //                   all real patches
 //                2. Flag list is sorted by the recv rank instead of the send rank
 //                   --> Sorting and matching only need to be done once
@@ -46,7 +46,7 @@ void LB_ExchangeFlaggedBuffer( const int lv )
          TRank = LB_Index2Rank( lv, LBIdx, CHECK_ON );
 
 //       allocate enough memory
-         if ( NSend[TRank] >= MemSize[TRank] )  
+         if ( NSend[TRank] >= MemSize[TRank] )
          {
             MemSize  [TRank] += MemUnit;
             Send_Temp[TRank]  = (long*)realloc( Send_Temp[TRank], MemSize[TRank]*sizeof(long) );
@@ -62,7 +62,7 @@ void LB_ExchangeFlaggedBuffer( const int lv )
 // 2. broadcast the unsorted send list to all other ranks
 // ==========================================================================================
    int   NRecv[MPI_NRank], Send_Disp[MPI_NRank], Recv_Disp[MPI_NRank], NSend_Total, NRecv_Total, Counter;
-   long *SendBuf=NULL, *RecvBuf=NULL; 
+   long *SendBuf=NULL, *RecvBuf=NULL;
 
 // 2.1 broadcast the number of elements sent to different ranks
    MPI_Alltoall( NSend, 1, MPI_INT, NRecv, 1, MPI_INT, MPI_COMM_WORLD );
@@ -87,13 +87,13 @@ void LB_ExchangeFlaggedBuffer( const int lv )
       SendBuf[ Counter ++ ] = Send_Temp[r][t];
 
 // 2.3 broadcast the send list
-   MPI_Alltoallv( SendBuf, NSend, Send_Disp, MPI_LONG, 
+   MPI_Alltoallv( SendBuf, NSend, Send_Disp, MPI_LONG,
                   RecvBuf, NRecv, Recv_Disp, MPI_LONG, MPI_COMM_WORLD );
 
 
 // 3. flag real patches according to the received flag results
 // ============================================================================================================
-   int  TPID; 
+   int  TPID;
    int *Match = new int [NRecv_Total];
 
 // 3.1 sort the received list

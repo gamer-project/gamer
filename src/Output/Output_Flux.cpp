@@ -7,16 +7,16 @@
 // Function    :  Output_Flux
 // Description :  Output the flux of a single patch
 //
-// Parameter   :  lv       : Target refinement level
-//                PID      : Target patch ID 
-//                Sib      : Target sibling direction of the flux : ( 0,1,2,3,4,5 ) <--> ( -x,+x,-y,+y,-z,+z )
-//                comment  : String to attach to the end of the file name
+// Parameter   :  lv      : Target refinement level
+//                PID     : Target patch ID
+//                Sib     : Target sibling direction of the flux : ( 0,1,2,3,4,5 ) <--> ( -x,+x,-y,+y,-z,+z )
+//                comment : String to attach to the end of the file name
 //-------------------------------------------------------------------------------------------------------
 void Output_Flux( const int lv, const int PID, const int Sib, const char *comment )
 {
 
 // check
-   if ( lv < 0  ||  lv >= NLEVEL )     
+   if ( lv < 0  ||  lv >= NLEVEL )
       Aux_Error( ERROR_INFO, "incorrect parameter %s = %d !!\n", "lv", lv );
 
    if ( PID < 0  ||  PID >= MAX_PATCH )
@@ -36,7 +36,7 @@ void Output_Flux( const int lv, const int PID, const int Sib, const char *commen
 
    char FileName[100];
    sprintf( FileName, "Flux_r%d_lv%d_p%d%c%c", MPI_Rank, lv, PID, 45-2*(Sib%2), 120+Sib/2 );
-   if ( comment != NULL )       
+   if ( comment != NULL )
    {
       strcat( FileName, "_" );
       strcat( FileName, comment );
@@ -46,7 +46,6 @@ void Output_Flux( const int lv, const int PID, const int Sib, const char *commen
       Aux_Message( stderr, "WARNING : file \"%s\" already exists and will be overwritten !!\n", FileName );
 
 
-   real (*FluxPtr)[PATCH_SIZE][PATCH_SIZE] = amr->patch[0][lv][PID]->flux[Sib];
    char label[2] = { '?', '?' };
 
    switch ( Sib )
@@ -62,18 +61,19 @@ void Output_Flux( const int lv, const int PID, const int Sib, const char *commen
 // output header
    FILE *File = fopen( FileName, "w" );
 
-   fprintf( File, "Rank  %d    Level  %d    Patch  %d    Local ID  %d    Time  %13.7e    Counter  %ld\n", 
+   fprintf( File, "Rank  %d    Level  %d    Patch  %d    Local ID  %d    Time  %13.7e    Counter  %ld\n",
             MPI_Rank, lv, PID, PID%8, Time[lv], AdvanceCounter[lv] );
-   fprintf( File, "Father  %d     Son  %d     Corner  (%10d,%10d,%10d)\n\n", Relation->father, Relation->son, 
+   fprintf( File, "Father  %d     Son  %d     Corner  (%10d,%10d,%10d)\n\n", Relation->father, Relation->son,
             Relation->corner[0], Relation->corner[1], Relation->corner[2] );
    fprintf( File, "Flux at %c%c surface\n\n", 45-2*(Sib%2), 120+Sib/2  );
 
-// output flux 
+// output flux
+   real (*FluxPtr)[PATCH_SIZE][PATCH_SIZE] = amr->patch[0][lv][PID]->flux[Sib];
    if ( FluxPtr != NULL )
    {
 #     if   ( MODEL == HYDRO )
-      fprintf( File, "( %c, %c )%16s%16s%16s%16s%16s\n", label[0], label[1], "Density Flux", "Px Flux", 
-                                                         "Py Flux", "Pz Flux", "Energy Flux" ); 
+      fprintf( File, "( %c, %c )%16s%16s%16s%16s%16s\n", label[0], label[1], "Density Flux", "Px Flux",
+                                                         "Py Flux", "Pz Flux", "Energy Flux" );
 #     elif ( MODEL == MHD )
 #     warning : WAIT MHD !!!
 

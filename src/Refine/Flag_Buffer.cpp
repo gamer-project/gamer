@@ -9,10 +9,10 @@
 // Function    :  Flag_Buffer
 // Description :  Flag the buffer patches (also the boundary patches)
 //
-// Note        :  a. All flags should be initialized as "false" by calling the function "Flag_Real" in advance
-//                b. The arrays "ParaVar->BuffFlag_NList" and "ParaVar->BuffFlag_PosList" must be prepared 
-//                   in advance by calling the functions "Buf_RecordBoundaryFlag" and "MPI_ExchangeBoundaryFlag" 
-//                c. No OpenMP directives are applied in this function
+// Note        :  1. All flags should be initialized as "false" by calling Flag_Real() in advance
+//                2. ParaVar->BuffFlag_NList[] and ParaVar->BuffFlag_PosList[] must be prepared
+//                   in advance by calling Buf_RecordBoundaryFlag() and MPI_ExchangeBoundaryFlag()
+//                3. No OpenMP directives are applied in this function
 //
 // Parameter   :  lv : Target refinement level to be flagged
 //-------------------------------------------------------------------------------------------------------
@@ -31,17 +31,17 @@ void Flag_Buffer( const int lv )
       for (int ID=0; ID<amr->ParaVar->BuffFlag_NList[lv][s]; ID+=FlagLayer)
       {
 #        ifdef GAMER_DEBUG
-         if ( MPI_SibRank[s] < 0 )  Aux_Error( ERROR_INFO, "amr->ParaVar->BuffFlag_NList[%d][%d] = %d != 0 !!\n", 
+         if ( MPI_SibRank[s] < 0 )  Aux_Error( ERROR_INFO, "amr->ParaVar->BuffFlag_NList[%d][%d] = %d != 0 !!\n",
                                                lv, s, amr->ParaVar->BuffFlag_NList[lv][s] );
 #        endif
 
          FlagPos = amr->ParaVar->BuffFlag_PosList[lv][s][ID];
 
-         while ( amr->ParaVar->BounP_PosList[lv][s][TargetID] != FlagPos )  
+         while ( amr->ParaVar->BounP_PosList[lv][s][TargetID] != FlagPos )
          {
             TargetID++;
 
-//          the BounPID must exist due to the proper-nesting condition
+//          BounPID must exist due to the proper-nesting condition
 #           ifdef GAMER_DEBUG
             if ( TargetID >= amr->ParaVar->BounP_NList[lv][s] )
                Aux_Error( ERROR_INFO, "incorrect parameter %s = %d !!\n", "TargetID", TargetID );
@@ -52,7 +52,7 @@ void Flag_Buffer( const int lv )
          BuffPID = amr->patch[0][lv][BounPID]->sibling[s];
 
 
-//       the BuffPID must exist and be a buffer patch since that the flagging status should be the same over all processes
+//       BuffPID must exist and be a buffer patch since that the flagging status should be the same over all processes
 #        ifdef GAMER_DEBUG
          if ( BuffPID < amr->NPatchComma[lv][1]  ||  BuffPID >= amr->num[lv] )
             Aux_Error( ERROR_INFO, "incorrect parameter %s = %d !!\n", "BuffPID", BuffPID );
@@ -78,7 +78,6 @@ void Flag_Buffer( const int lv )
                amr->patch[0][lv][SibPID]->flag = true;
             }
          }
-
       } // for (int ID=0; ID<BuffFlag_NList[lv][s]; ID+=FlagLayer)
 
 

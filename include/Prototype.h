@@ -45,6 +45,8 @@ template <typename T> void Aux_DeallocateArray2D( T** &Array );
 template <typename T> void Aux_DeallocateArray3D( T*** &Array );
 template <typename T> int  Aux_LoadTable( T *&Data, const char *FileName, const int NCol_Target, const int TCol[],
                                           const bool RowMajor, const bool AllocMem );
+int Aux_IsFinite( const float x );
+int Aux_IsFinite( const double x );
 
 
 // Buffer
@@ -346,8 +348,7 @@ int TABLE_07( const int SibID, const int Count );
 // LoadBalance
 long LB_Corner2Index( const int lv, const int Corner[], const Check_t Check );
 #ifdef LOAD_BALANCE
-void LB_AllocateBufferPatch_Father( const int SonLv,
-                                    const bool SearchAllSon, const int NInput, int* TargetSonPID0,
+void LB_AllocateBufferPatch_Father( const int SonLv, const bool SearchAllSon, const int NInput, int* TargetSonPID0,
                                     const bool RecordFaPID, int* NNewFaBuf0, int** NewFaBufPID0 );
 void LB_AllocateBufferPatch_Sibling_Base();
 void LB_AllocateBufferPatch_Sibling( const int lv );
@@ -482,7 +483,7 @@ void Par_PassParticle2Father( const int FaLv, const int FaPID );
 void Par_Aux_Check_Particle( const char *comment );
 void Par_MassAssignment( const long *ParList, const long NPar, const ParInterp_t IntScheme, real *Rho,
                          const int RhoSize, const double *EdgeL, const double dh, const bool PredictPos,
-                         const double TargetTime, const bool InitZero, const bool Periodic, const int PeriodicSize[3],
+                         const double TargetTime, const bool InitZero, const bool Periodic[], const int PeriodicSize[3],
                          const bool UnitDens, const bool CheckFarAway, const bool UseInputMassPos, real **InputMassPos );
 void Par_UpdateParticle( const int lv, const double TimeNew, const double TimeOld, const ParUpStep_t UpdateStep,
                          const bool StoreAcc, const bool UseStoredAcc );
@@ -559,7 +560,7 @@ void CPU_GrackleSolver_Original( grackle_field_data *Che_FieldData, code_units C
 #ifdef STAR_FORMATION
 void SF_CreateStar( const int lv, const real TimeNew, const real dt );
 void SF_FreeRNG();
-void SF_CreateStar_AGORA( const int lv, const real TimeNew, const real dt, struct drand48_data *drand_buf,
+void SF_CreateStar_AGORA( const int lv, const real TimeNew, const real dt, RandomNumber_t *RNG,
                           const real GasDensThres, const real Efficiency, const real MinStarMass, const real MaxStarMFrac,
                           const bool DetRandom, const bool UseMetal );
 #endif

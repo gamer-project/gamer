@@ -64,7 +64,7 @@ extern bool       OPT__OUTPUT_BASEPS, OPT__CK_REFINE, OPT__CK_PROPER_NESTING, OP
 extern bool       OPT__CK_RESTRICT, OPT__CK_PATCH_ALLOCATE, OPT__FIXUP_FLUX, OPT__CK_FLUX_ALLOCATE, OPT__CK_NORMALIZE_PASSIVE;
 extern bool       OPT__UM_IC_DOWNGRADE, OPT__UM_IC_REFINE, OPT__TIMING_MPI;
 extern bool       OPT__CK_CONSERVATION, OPT__RESET_FLUID, OPT__RECORD_USER, OPT__NORMALIZE_PASSIVE, AUTO_REDUCE_DT;
-extern bool       OPT__OPTIMIZE_AGGRESSIVE, OPT__INIT_GRID_WITH_OMP;
+extern bool       OPT__OPTIMIZE_AGGRESSIVE, OPT__INIT_GRID_WITH_OMP, OPT__NO_FLAG_NEAR_BOUNDARY;
 
 extern TestProbID_t       TESTPROB_ID;
 extern OptInit_t          OPT__INIT;
@@ -203,7 +203,7 @@ extern int             CHE_GPU_NPGROUP;
 #ifdef STAR_FORMATION
 extern SF_CreateStarScheme_t SF_CREATE_STAR_SCHEME;
 extern int                   SF_CREATE_STAR_RSEED;
-extern bool                  SF_CREATE_STAR_DET_RANDOM;
+extern int                   SF_CREATE_STAR_DET_RANDOM;
 extern int                   SF_CREATE_STAR_MIN_LEVEL;
 extern double                SF_CREATE_STAR_MIN_GAS_DENS;
 extern double                SF_CREATE_STAR_MASS_EFF;
@@ -242,8 +242,11 @@ extern real       (*h_Flu_Array_USG_G[2])[GRA_NIN-1][PS1][PS1][PS1];
 
 #ifdef SUPPORT_GRACKLE
 extern real       (*h_Che_Array      [2]);
+// do not declare Grackle variables for CUDA source files since they do not include <grackle.h>
+#ifndef __CUDACC__
 extern grackle_field_data *Che_FieldData;
 extern code_units Che_Units;
+#endif
 #endif
 
 extern real        *h_dt_Array_T[2];
