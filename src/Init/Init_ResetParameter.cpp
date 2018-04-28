@@ -719,17 +719,6 @@ void Init_ResetParameter()
 #  endif
 
 
-// OPT__UM_IC_DOWNGRADE must be turned on for the isolated Poisson solver
-#  ifdef GRAVITY
-   if ( OPT__INIT == INIT_BY_FILE  &&  !OPT__UM_IC_DOWNGRADE  &&  OPT__BC_POT == BC_POT_ISOLATED  &&  OPT__UM_IC_LEVEL > 0 )
-   {
-      OPT__UM_IC_DOWNGRADE = true;
-
-      PRINT_WARNING( OPT__UM_IC_DOWNGRADE, FORMAT_INT, "for the isolated gravity" );
-   }
-#  endif
-
-
 // OPT__UM_IC_NVAR
    if ( OPT__INIT == INIT_BY_FILE  &&  OPT__UM_IC_NVAR <= 0 )
    {

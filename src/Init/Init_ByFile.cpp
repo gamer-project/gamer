@@ -16,17 +16,23 @@ static void UM_Flag( const int lv, const int *FlagMap );
 // Function    :  Init_ByFile
 // Description :  Set up the initial condition from an input uniform-mesh array
 //
-// Note        :  a. Create levels from 0 to OPT__UM_IC_LEVEL
-//                   --> no levels above OPT__UM_IC_LEVEL will be created
+// Note        :  1. Create levels from 0 to OPT__UM_IC_LEVEL
+//                   --> No levels above OPT__UM_IC_LEVEL will be created
+//                       --> Unless OPT__UM_IC_REFINE is enabled, for which levels at OPT__UM_IC_LEVEL+1 ~ MAX_LEVEL
+//                           will also be generated based on the given refinement criteria
 //                   --> ALL patches at levels 0 to OPT__UM_IC_LEVEL will be created. In other words,
-//                       the simulation domain will be FULLY REFINED to level OPT__UM_IC_LEVEL.
-//                b. The uniform-mesh input file should be named as "UM_IC"
-//                c. This function can load any number of input values per cell (from 1 to NCOMP_TOTAL)
-//                   --> determined by the input parameter "OPT__UM_IC_NVAR"
-//                   --> if "OPT__UM_IC_NVAR < NCOMP_TOTAL", one must specify the way to assign values to all
-//                       variables in the function "UM_AssignData"
-//                d. The data format in the UM_IC file should be [k][j][i][v] instead of [v][k][j][i]
-//                   --> different from the data layout adopted in GAMER versions after 1.0.beta4.0
+//                       the simulation domain will be fully refined to level OPT__UM_IC_LEVEL.
+//                       --> But if OPT__UM_IC_DOWNGRADE, patches at levels 1~OPT__UM_IC_LEVEL
+//                           may be removed if not satisfying the refinement criteria
+//                2. The uniform-mesh input file should be named as "UM_IC"
+//                3. This function can load any number of input values per cell (from 1 to NCOMP_TOTAL)
+//                   --> Determined by the input parameter "OPT__UM_IC_NVAR"
+//                   --> If "OPT__UM_IC_NVAR < NCOMP_TOTAL", one must specify the way to assign values to all
+//                       variables in Model_Init_ByFile_AssignData()
+//                4. The data format in the UM_IC file should be [k][j][i][v] instead of [v][k][j][i]
+//                   --> Different from the data layout of patch->fluid
+//
+// Parameter   :  None
 //-------------------------------------------------------------------------------------------------------
 void Init_ByFile()
 {
@@ -166,9 +172,9 @@ void Init_ByFile()
 
    Init_BaseLevel();
 
-#   ifdef PARTICLE
-    Par_FindHomePatch_Base( BaseP );
-#   endif
+#  ifdef PARTICLE
+   Par_FindHomePatch_Base( BaseP );
+#  endif
 
 // assign data for the base level
    UM_AssignData( 0, UM_Data[0], UM_NVar );
@@ -282,11 +288,11 @@ void Init_ByFile()
 //
 // Note        :  The flag buffer zones are also included
 //
-// Parameter   :  UM_Data  : Input uniform-mesh array at level "lv"
-//                lv       : Target refinement level to be constructed
-//                FlagMap  : Map recording the refinement flag of each patch
-//                Buffer   : Size of the flag buffer
-//                NVar     : Number of variables
+// Parameter   :  UM_Data : Input uniform-mesh array at level "lv"
+//                lv      : Target refinement level to be constructed
+//                FlagMap : Map recording the refinement flag of each patch
+//                Buffer  : Size of the flag buffer
+//                NVar    : Number of variables
 //-------------------------------------------------------------------------------------------------------
 void UM_CreateLevel( real *UM_Data, const int lv, int **FlagMap, const int Buffer, const int NVar )
 {
@@ -302,6 +308,7 @@ void UM_CreateLevel( real *UM_Data, const int lv, int **FlagMap, const int Buffe
    const int NY             = PATCH_SIZE * ( NPatch1D[1]-4 );
 
 
+// skip buffer patches
    for (int kp=2; kp<NPatch1D[2]-2; kp++)         // kp : (kp)th patch in the z direction
    for (int jp=2; jp<NPatch1D[1]-2; jp++)
    for (int ip=2; ip<NPatch1D[0]-2; ip++)
@@ -379,11 +386,11 @@ void UM_CreateLevel( real *UM_Data, const int lv, int **FlagMap, const int Buffe
 // Description :  For a given Son at level "Son_lv" with origin equal to "Son_ip, Son_jp, Son_kp",
 //                find all its ancestors according to the proper-nesting condition
 //
-// Parameter   :  Son_lv   : Tefinement level of the son patch
-//                Son_ip   : "Son_ip"-th son patch in the x direction
-//                Son_jp   : "Son_jp"-th son patch in the y direction
-//                Son_kp   : "Son_kp"-th son patch in the z direction
-//                FlagMap  : Map recording the refinement flag of each patch
+// Parameter   :  Son_lv  : Tefinement level of the son patch
+//                Son_ip  : "Son_ip"-th son patch in the x direction
+//                Son_jp  : "Son_jp"-th son patch in the y direction
+//                Son_kp  : "Son_kp"-th son patch in the z direction
+//                FlagMap : Map recording the refinement flag of each patch
 //-------------------------------------------------------------------------------------------------------
 void UM_FindAncestor( const int Son_lv, const int Son_ip, const int Son_jp, const int Son_kp, int **FlagMap )
 {
@@ -508,8 +515,8 @@ void UM_RecordFlagMap( const int lv, int *FlagMap, const int ip, const int jp, c
 // Function    :  UM_Flag
 // Description :  Flag patches at level "lv" according to the FlagMap[lv]
 //
-// Parameter   :  lv       : Refinement level to be flagged
-//                FlagMap  : Map recording the refinement flag of each patch
+// Parameter   :  lv      : Refinement level to be flagged
+//                FlagMap : Map recording the refinement flag of each patch
 //-------------------------------------------------------------------------------------------------------
 void UM_Flag( const int lv, const int *FlagMap )
 {
@@ -542,12 +549,12 @@ void UM_Flag( const int lv, const int *FlagMap )
 // Description :  Use the input uniform-mesh array to assign data to all patches at level "lv"
 //
 // Note        :  If "NVar == NCOMP_TOTAL", we just copy the values recorded in UM_Data to all patches.
-//                Otherwise, the model-dependent function "XXX_Init_ByFile_AssignData" must be provided to
+//                Otherwise, the model-dependent function XXX_Init_ByFile_AssignData() must be provided to
 //                specify the way to assign data.
 //
-// Parameter   :  lv       : Target refinement level to assign data
-//                UM_Data  : Input uniform-mesh array
-//                NVar     : Number of variables stored in UM_Data
+// Parameter   :  lv      : Target refinement level to assign data
+//                UM_Data : Input uniform-mesh array
+//                NVar    : Number of variables stored in UM_Data
 //-------------------------------------------------------------------------------------------------------
 void UM_AssignData( const int lv, real *UM_Data, const int NVar )
 {
