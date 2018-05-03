@@ -402,7 +402,7 @@ void Init_ByRestart()
 //    d0-2. set the cut points
 //    --> do NOT consider load-balance weighting of particles since at this point we don't have that information
       const double ParWeight_Zero = 0.0;
-      LB_SetCutPoint( lv, amr->LB->CutPoint[lv], InputLBIdx0AndLoad_Yes, LBIdx0_AllRank, Load_AllRank, ParWeight_Zero );
+      LB_SetCutPoint( lv, NPatchTotal[lv]/8, amr->LB->CutPoint[lv], InputLBIdx0AndLoad_Yes, LBIdx0_AllRank, Load_AllRank, ParWeight_Zero );
 
       if ( MPI_Rank == 0 )
       {
