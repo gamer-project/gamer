@@ -340,9 +340,9 @@ struct AMR_t
    //                2. This function will scan over amr->num[lv] patches
    //                3. The variables "scale, FluSg, PotSg, and dh" will NOT be modified
    //
-   // Parameter   :  lv                : Target refinement level
-   //                ReusePatchMemory  : true  --> mark patch as inactive, but do not deallocate memory (for OPT__REUSE_MEMORY)
-   //                                    false --> deallocate patch
+   // Parameter   :  lv               : Target refinement level
+   //                ReusePatchMemory : true  --> mark patch as inactive, but do not deallocate memory (for OPT__REUSE_MEMORY)
+   //                                   false --> deallocate patch
    //===================================================================================
    void Lvdelete( const int lv, const bool ReusePatchMemory )
    {
