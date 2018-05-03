@@ -27,8 +27,8 @@ static void LB_RedistributeParticle_End( real **ParVar_Old, real **Passive_Old )
 //
 // Parameter   :  Redistribute : true  --> Redistribute all real patches according to the load-balance weighting of each patch
 //                                         and initialize all load-balance related set-up
-//                               false --> Initialize all load-balance related set-up, but do NOT invoke "LB_SetCutPoint"
-//                                         and "LB_RedistributeRealPatch" to redistribute all real patches
+//                               false --> Initialize all load-balance related set-up, but do NOT invoke LB_SetCutPoint()
+//                                         and LB_RedistributeRealPatch() to redistribute all real patches
 //                                     --> Currently it is used only during the RESTART process since we already call
 //                                         LB_SetCutPoint() and load real patches accordingly when calling Init_Reload()
 //                ParWeight    : Relative load-balance weighting of particles
@@ -468,12 +468,11 @@ void LB_SetCutPoint( const int lv, long *CutPoint, const bool InputLBIdx0AndLoad
 //-------------------------------------------------------------------------------------------------------
 // Function    :  LB_RedistrubteRealPatch
 // Description :  Redistribute real patches (and particles) to different ranks according to the cut point
-//                array "amr->LB->CutPoint[lv]"
+//                array amr->LB->CutPoint[]
 //
-// Note        :  1. All ranks must have the array "LB_CutPoint" prepared
-//                2. This function assumes that the "patch group" is adopted as the basic unit for data
-//                   redistribution
-//                3. Real patches with LB_Idx in the range "CutPoint[r] <= LB_Idx < CutPoint[r+1]"
+// Note        :  1. All ranks must have LB_CutPoint[] prepared in advance
+//                2. This function adopts the "patch group" as the basic unit for data redistribution
+//                3. Real patches with LB_Idx in the range "CutPoint[lv][r] <= LB_Idx < CutPoint[lv][r+1]"
 //                   will be sent to rank "r"
 //                4. Particles will be redistributed along with the leaf patches as well
 //
@@ -978,8 +977,8 @@ void LB_RedistributeRealPatch( const int lv, real **ParVar_Old, real **Passive_O
 //                   when calling LB_RedistributeRealPatch later
 //                3. One must call LB_SetCutPoint for all levels in advance
 //
-// Parameter   :  ParVar_Old  : Pointers for backing up the old particle attribute arrays (amr->Par->ParVar)
-//                PassiveOld  : Pointers for backing up the old particle attribute arrays (amr->Par->Passive)
+// Parameter   :  ParVar_Old : Pointers for backing up the old particle attribute arrays (amr->Par->ParVar)
+//                PassiveOld : Pointers for backing up the old particle attribute arrays (amr->Par->Passive)
 //
 // Return      :  None
 //-------------------------------------------------------------------------------------------------------
@@ -1021,12 +1020,12 @@ void LB_RedistributeParticle_Init( real **ParVar_Old, real **Passive_Old )
    for (int r=0; r<MPI_NRank; r++)  Recv_NPar_Sum += Recv_NPar[r];
 
 
-// reset particle variables (do not reset NPar_Lv since we will need it for debug in LB_RedistributeRealPatch)
+// reset particle variables (do not reset NPar_Lv since we will need it for debug in LB_RedistributeRealPatch())
    amr->Par->InitRepo( Recv_NPar_Sum, MPI_NRank );
 
 // reset the total number of particles to be zero
 // --> so particle repository is pre-allocated, but it contains no active particle yet
-// --> we will add active particles in LB_RedistributeRealPatch
+// --> we will add active particles in LB_RedistributeRealPatch()
    amr->Par->NPar_AcPlusInac = 0;
    amr->Par->NPar_Active     = 0;
 
@@ -1040,8 +1039,8 @@ void LB_RedistributeParticle_Init( real **ParVar_Old, real **Passive_Old )
 //
 // Note        :  1. Free old particle attribute arrays
 //
-// Parameter   :  ParVar_Old  : Pointers for backing up the old particle attribute arrays (amr->Par->ParVar)
-//                PassiveOld  : Pointers for backing up the old particle attribute arrays (amr->Par->Passive)
+// Parameter   :  ParVar_Old : Pointers for backing up the old particle attribute arrays (amr->Par->ParVar)
+//                PassiveOld : Pointers for backing up the old particle attribute arrays (amr->Par->Passive)
 //
 // Return      :  None
 //-------------------------------------------------------------------------------------------------------
