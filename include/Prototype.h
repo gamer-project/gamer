@@ -364,7 +364,8 @@ void LB_GetBufferData( const int lv, const int FluSg, const int PotSg, const Get
 real*LB_GetBufferData_MemAllocate_Send( const int NSend );
 real*LB_GetBufferData_MemAllocate_Recv( const int NRecv );
 void LB_GrandsonCheck( const int lv );
-void LB_Init_LoadBalance( const bool Redistribute, const double ParWeight, const bool Reset );
+void LB_Init_LoadBalance( const bool Redistribute, const double ParWeight, const bool Reset, const int TLv );
+void LB_Init_BaseLevel();
 void LB_SetCutPoint( const int lv, const int NPG_Total, long *CutPoint, const bool InputLBIdx0AndLoad,
                      long *LBIdx0_AllRank_Input, double *Load_AllRank_Input, const double ParWeight );
 void LB_EstimateWorkload_AllPatchGroup( const int lv, const double ParWeight, double *Load_PG );
@@ -478,7 +479,7 @@ void CUAPI_MemFree_Grackle();
 #ifdef PARTICLE
 void Par_Init_ByFile();
 void Par_Output_TextFile( const char *comment );
-void Par_FindHomePatch_Base( const int *BaseP );
+void Par_FindHomePatch_Base();
 void Par_PassParticle2Son( const int FaLv, const int FaPID );
 void Par_PassParticle2Son_AllPatch( const int FaLv, const bool TimingSendPar );
 void Par_PassParticle2Father( const int FaLv, const int FaPID );
