@@ -357,7 +357,7 @@ void LB_AllocateBufferPatch_Sibling_Base();
 void LB_AllocateBufferPatch_Sibling( const int lv );
 void LB_AllocateFluxArray( const int FaLv );
 void LB_ExchangeFlaggedBuffer( const int lv );
-void LB_FindFather( const int SonLv, const bool SearchAllSon, const int NInput, int* TargetSonPID0 );
+void LB_FindFather( const int SonLv, const bool SearchAllSon, const int NInput, int* TargetSonPID0, const bool ResetSonID );
 void LB_FindSonNotHome( const int FaLv, const bool SearchAllFa, const int NInput, int* TargetFaPID );
 void LB_GetBufferData( const int lv, const int FluSg, const int PotSg, const GetBufMode_t GetBufMode,
                        const int TVar, const int ParaBuf );

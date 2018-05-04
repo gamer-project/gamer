@@ -23,6 +23,8 @@
 //                       external buffer patch at SonLv and both the two buffer patches and the real patch
 //                       corresponding to the buffer patch at SonLv are in the same rank, the son index of the
 //                       buffer patch at FaLv will still be set to "SON_OFFSET_LB-SonRank" with SonRank == MPI_Rank
+//                5. Must invoke LB_FindFather( FaLv+1 ) in advance to properly set the son indices of patches
+//                   at FaLv with sons at home
 //
 // Parameter   :  FaLv        : Target refinement level of fathers
 //                SearchAllFa : Whether to search over all father patches or not
