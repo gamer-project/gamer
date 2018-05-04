@@ -141,6 +141,8 @@ void LB_Init_LoadBalance( const bool Redistribute, const double ParWeight, const
 
 
 // 4. contruct the patch relation
+   const bool ResetSonID_Yes = true;
+
    for (int lv=lv_min; lv<=lv_max; lv++)
    {
       if ( OPT__VERBOSE  &&  MPI_Rank == 0 )    Aux_Message( stdout, "   Constructing patch relation at Lv %2d ... \n", lv );
@@ -149,9 +151,14 @@ void LB_Init_LoadBalance( const bool Redistribute, const double ParWeight, const
       LB_SiblingSearch( lv, true, NULL_INT, NULL );
 
 //    4.2 father-son relation between lv and lv-1
+//        --> must reset the son indices on lv-1 as -1 (i.e., using ResetSonID_Yes) when applying
+//            LB_Init_LoadBalance() to a single level since, after redistributing patches on lv,
+//            the sons of some of the patches on lv-1 may move abroad (and thus their son indices
+//            should be changed from >=0 to <=SON_OFFSET_LB)
+//        --> but LB_FindSonNotHome() only checks patches with son indices <= -1
       if ( lv > 0 )
       {
-         LB_FindFather    ( lv,   true, NULL_INT, NULL );
+         LB_FindFather    ( lv,   true, NULL_INT, NULL, ResetSonID_Yes );
          LB_FindSonNotHome( lv-1, true, NULL_INT, NULL );
       }
 
@@ -164,7 +171,7 @@ void LB_Init_LoadBalance( const bool Redistribute, const double ParWeight, const
 //       4.4 father-son relation between lv+1 and lv
          if ( lv < TOP_LEVEL )
          {
-            LB_FindFather    ( lv+1, true, NULL_INT, NULL );
+            LB_FindFather    ( lv+1, true, NULL_INT, NULL, ResetSonID_Yes );
             LB_FindSonNotHome( lv,   true, NULL_INT, NULL );
          }
       }

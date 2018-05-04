@@ -15,11 +15,15 @@
 //                3. One should find father patches only for the "real" patches at SonLv (applying to
 //                   sibling-buffer and father-buffer patches is not necessary)
 //                   --> Father patches found by this function will never be "external" patches
-//                4. Sibling-buffer and father-buffer patches at SonLv will have father indices == -1
-//                5. For father patches with sons not home, their "father->son" relation should be set
-//                   by "LB_FindSonNotHome"
-//                6. This function does NOT initialize son indices as -1 for all patches at FaLv
-//                7. This function does NOT initialize father indices as -1 for all patches at SonLv
+//                   --> Sibling-buffer and father-buffer patches at SonLv will always have father indices == -1
+//                4. When SearchAllSon == true, we initialize the father indices as -1 for all (real+buffer)
+//                   patches at SonLv
+//                5. When ResetSonID == true, we initialize the son indices as -1 for all (real+buffer)
+//                   patches at SonLv-1
+//                6. For father patches with sons not home, their "father->son" relation should be set
+//                   by LB_FindSonNotHome()
+//                   --> But must invoke LB_FindFather(SonLv) first to properly set the son indices of patches
+//                       at SonLv-1 with sons at home
 //
 // Parameter   :  SonLv         : Target refinement level of sons
 //                SearchAllSon  : Search over all son patches at SonLv
@@ -27,8 +31,10 @@
 //                                (useful only if SearchAllSon == false)
 //                TargetSonPID0 : Lists recording all target son patches (with LocalID==0)
 //                                (useful only if SearchAllSon == false)
+//                ResetSonID    : Initialize the son indices as -1 for all (real+buffer) patches at SonLv-1
+//                                --> Currently only used by LB_Init_LoadBalance() during initialization
 //-------------------------------------------------------------------------------------------------------
-void LB_FindFather( const int SonLv, const bool SearchAllSon, const int NInput, int* TargetSonPID0 )
+void LB_FindFather( const int SonLv, const bool SearchAllSon, const int NInput, int* TargetSonPID0, const bool ResetSonID )
 {
 
 // nothing to do for the base level
@@ -51,6 +57,14 @@ void LB_FindFather( const int SonLv, const bool SearchAllSon, const int NInput, 
    int   *Match_Son0         = new int   [NTargetSon0];
 
    int SonPID, SonPID0, FaID, FaPID;
+
+
+// 0. initialize son and father indices
+   if ( SearchAllSon )
+   for (int SonPID=0; SonPID<amr->num[SonLv]; SonPID++)  amr->patch[0][SonLv][SonPID]->father = -1;
+
+   if ( ResetSonID )
+   for (int FaPID=0; FaPID<amr->num[FaLv]; FaPID++)      amr->patch[0][FaLv][FaPID]->son = -1;
 
 
 // 1. nothing to do if there is no target real patch at SonLv
