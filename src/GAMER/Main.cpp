@@ -480,7 +480,9 @@ int main( int argc, char *argv[] )
 #        else
          const double ParWeight        = 0.0;
 #        endif
-         LB_Init_LoadBalance( Redistribute_Yes, ParWeight, ResetLB_Yes );
+         const int    AllLv            = -1;
+
+         LB_Init_LoadBalance( Redistribute_Yes, ParWeight, ResetLB_Yes, AllLv );
 
          if ( OPT__PATCH_COUNT > 0 )         Aux_Record_PatchCount();
 

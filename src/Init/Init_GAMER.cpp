@@ -159,14 +159,7 @@ void Init_GAMER( int *argc, char ***argv )
                     "PAR_INIT", (int)amr->Par->Init );
    }
 
-   if ( amr->Par->Init != PAR_INIT_BY_RESTART )
-   {
-      Par_Aux_InitCheck();
-
-#     ifndef SERIAL
-      Par_LB_Init_RedistributeByRectangular();
-#     endif
-   }
+   if ( amr->Par->Init != PAR_INIT_BY_RESTART )    Par_Aux_InitCheck();
 #  endif // #ifdef PARTICLE
 
 
@@ -192,23 +185,28 @@ void Init_GAMER( int *argc, char ***argv )
 
 // we don't have to redistribute all patches during the RESTART process since we already did that in Init_ByRestart()
 // --> but note that Init_ByRestart() does NOT consider load-balance weighting of particles
+
 // we don't have enough information to calculate the load-balance weighting of particles when
 // calling LB_Init_LoadBalance() for the first time
+// --> for example, LB_EstimateWorkload_AllPatchGroup()->Par_CollectParticle2OneLevel()->Par_LB_CollectParticle2OneLevel()
+//     needs amr->LB->IdxList_Real[], which will be constructed only AFTER calling LB_Init_LoadBalance()
 // --> must disable particle weighting (by setting ParWeight==0.0) first
+
 // must not reset load-balance variables (i.e., must adopt ResetLB_No) when calling LB_Init_LoadBalance() for the first time
-// since we MUST NOT overwrite IdxList_Real and IdxList_Real_IdxList set during the restart process
+// since we MUST NOT overwrite IdxList_Real[] and IdxList_Real_IdxList[] set during the restart process
    const double ParWeight_Zero   = 0.0;
    const bool   Redistribute_Yes = true;
    const bool   Redistribute_No  = false;
    const bool   ResetLB_Yes      = true;
    const bool   ResetLB_No       = false;
+   const int    AllLv            = -1;
 
-   LB_Init_LoadBalance( (OPT__INIT==INIT_BY_RESTART)?Redistribute_No:Redistribute_Yes, ParWeight_Zero, ResetLB_No );
+   LB_Init_LoadBalance( (OPT__INIT==INIT_BY_RESTART)?Redistribute_No:Redistribute_Yes, ParWeight_Zero, ResetLB_No, AllLv );
 
 // redistribute patches again if we want to take into account the load-balance weighting of particles
 #  ifdef PARTICLE
    if ( amr->LB->Par_Weight > 0.0 )
-   LB_Init_LoadBalance( Redistribute_Yes, amr->LB->Par_Weight, ResetLB_Yes );
+   LB_Init_LoadBalance( Redistribute_Yes, amr->LB->Par_Weight, ResetLB_Yes, AllLv );
 #  endif
 
 
