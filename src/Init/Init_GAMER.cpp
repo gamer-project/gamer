@@ -181,56 +181,10 @@ void Init_GAMER( int *argc, char ***argv )
    }
 
 
-// get the total number of patches at all ranks
-   for (int lv=0; lv<NLEVEL; lv++)     Mis_GetTotalPatchNumber( lv );
-
-
-// improve load balance
-#  ifdef LOAD_BALANCE
-
-// we don't have to redistribute all patches during the RESTART process since we already did that in Init_ByRestart()
-// --> but note that Init_ByRestart() does NOT consider load-balance weighting of particles
-
-// we don't have enough information to calculate the load-balance weighting of particles when
-// calling LB_Init_LoadBalance() for the first time
-// --> for example, LB_EstimateWorkload_AllPatchGroup()->Par_CollectParticle2OneLevel()->Par_LB_CollectParticle2OneLevel()
-//     needs amr->LB->IdxList_Real[], which will be constructed only AFTER calling LB_Init_LoadBalance()
-// --> must disable particle weighting (by setting ParWeight==0.0) first
-
-// must not reset load-balance variables (i.e., must adopt ResetLB_No) when calling LB_Init_LoadBalance() for the first time
-// since we MUST NOT overwrite IdxList_Real[] and IdxList_Real_IdxList[] set during the restart process
-   const double ParWeight_Zero   = 0.0;
-   const bool   Redistribute_Yes = true;
-   const bool   Redistribute_No  = false;
-   const bool   ResetLB_Yes      = true;
-   const bool   ResetLB_No       = false;
-   const int    AllLv            = -1;
-
-   LB_Init_LoadBalance( (OPT__INIT==INIT_BY_RESTART)?Redistribute_No:Redistribute_Yes, ParWeight_Zero, ResetLB_No, AllLv );
-
-// redistribute patches again if we want to take into account the load-balance weighting of particles
-#  ifdef PARTICLE
-   if ( amr->LB->Par_Weight > 0.0 )
-   LB_Init_LoadBalance( Redistribute_Yes, amr->LB->Par_Weight, ResetLB_Yes, AllLv );
-#  endif
-
-
 // record the initial weighted load-imbalance factor
+#  ifdef LOAD_BALANCE
    if ( OPT__RECORD_LOAD_BALANCE )  LB_EstimateLoadImbalance();
-
-
-// fill up the data of non-leaf patches (for RESTART only)
-// --> actually, it's only necessary when restarting from a C-binary snapshot since it does not store non-leaf data
-   if ( OPT__INIT == INIT_BY_RESTART )
-   for (int lv=NLEVEL-2; lv>=0; lv--)
-   {
-      Flu_Restrict( lv, amr->FluSg[lv+1], amr->FluSg[lv], NULL_INT, NULL_INT, _TOTAL );
-
-      LB_GetBufferData( lv, amr->FluSg[lv], NULL_INT, DATA_RESTRICT, _TOTAL, NULL_INT );
-
-      Buf_GetBufferData( lv, amr->FluSg[lv], NULL_INT, DATA_GENERAL, _TOTAL, Flu_ParaBuf, USELB_YES );
-   }
-#  endif // #ifdef LOAD_BALANCE
+#  endif
 
 
 #  ifdef GRAVITY

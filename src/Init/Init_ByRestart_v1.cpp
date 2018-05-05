@@ -449,14 +449,51 @@ void Init_ByRestart_v1( const char FileName[] )
    if ( DataOrder_xyzv )  delete [] InvData_Flu;
 
 
-#  ifndef LOAD_BALANCE
-// the following operations are useful only when LOAD_BALANCE is NOT enabled
+// get the total number of real patches at all ranks
+   for (int lv=0; lv<NLEVEL; lv++)     Mis_GetTotalPatchNumber( lv );
+
+
+// e-1. improve load balance
 // ===================================================================================================================
+#  ifdef LOAD_BALANCE
 
-// g. construct the relation "father <-> son" for the out-of-core computing (no longer useful)
+// no need to redistribute all patches again since we already did that when loading data from disks
+// --> but note that we have not considerer load-balance weighting of particles yet
+
+// we don't have enough information to calculate the load-balance weighting of particles when
+// calling LB_Init_LoadBalance() for the first time
+// --> for example, LB_EstimateWorkload_AllPatchGroup()->Par_CollectParticle2OneLevel()->Par_LB_CollectParticle2OneLevel()
+//     needs amr->LB->IdxList_Real[], which will be constructed only AFTER calling LB_Init_LoadBalance()
+// --> must disable particle weighting (by setting ParWeight==0.0) first
+
+// must not reset load-balance variables (i.e., must adopt ResetLB_No) when calling LB_Init_LoadBalance() for the first time
+// since we MUST NOT overwrite IdxList_Real[] and IdxList_Real_IdxList[] already set above
+   const double ParWeight_Zero   = 0.0;
+   const bool   Redistribute_Yes = true;
+   const bool   Redistribute_No  = false;
+   const bool   ResetLB_Yes      = true;
+   const bool   ResetLB_No       = false;
+   const int    AllLv            = -1;
+
+   LB_Init_LoadBalance( Redistribute_No, ParWeight_Zero, ResetLB_No, AllLv );
 
 
-// h. complete all levels
+// fill up the data of non-leaf patches
+// --> only necessary when restarting from a C-binary snapshot since it does not store non-leaf data
+   for (int lv=NLEVEL-2; lv>=0; lv--)
+   {
+      Flu_Restrict( lv, amr->FluSg[lv+1], amr->FluSg[lv], NULL_INT, NULL_INT, _TOTAL );
+
+      LB_GetBufferData( lv, amr->FluSg[lv], NULL_INT, DATA_RESTRICT, _TOTAL, NULL_INT );
+
+      Buf_GetBufferData( lv, amr->FluSg[lv], NULL_INT, DATA_GENERAL, _TOTAL, Flu_ParaBuf, USELB_YES );
+   }
+
+
+// e-2. complete all levels for the case without LOAD_BALANCE
+// ===================================================================================================================
+#  else // #ifdef LOAD_BALANCE
+
    for (int lv=0; lv<NLEVEL; lv++)
    {
 //    construct the relation "father <-> son" for the in-core computing
@@ -482,11 +519,11 @@ void Init_ByRestart_v1( const char FileName[] )
    } // for (int lv=0; lv<NLEVEL; lv++)
 
 
-// i. fill up the data for top-level buffer patches
+// fill up the data for top-level buffer patches
    Buf_GetBufferData( NLEVEL-1, amr->FluSg[NLEVEL-1], NULL_INT, DATA_GENERAL, _TOTAL, Flu_ParaBuf, USELB_NO );
 
 
-// j. fill up the data for patches that are not leaf patches
+// fill up the data for patches that are not leaf patches
    for (int lv=NLEVEL-2; lv>=0; lv--)
    {
 //    data restriction: lv+1 --> lv
@@ -496,8 +533,7 @@ void Init_ByRestart_v1( const char FileName[] )
       Buf_GetBufferData( lv, amr->FluSg[lv], NULL_INT, DATA_GENERAL, _TOTAL, Flu_ParaBuf, USELB_NO );
    } // for (int lv=NLEVEL-2; lv>=0; lv--)
 
-// ===================================================================================================================
-#  endif // #ifndef LOAD_BALANCE
+#  endif // #ifdef LOAD_BALANCE ... else ...
 
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", __FUNCTION__ );

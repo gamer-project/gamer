@@ -210,12 +210,13 @@ void Init_ByFile()
       Buf_GetBufferData( lv+1, amr->FluSg[lv+1], NULL_INT, DATA_GENERAL, _TOTAL, Flu_ParaBuf, USELB_NO );
    }
 
-// get the total number of patches in all ranks
+// get the total number of real patches in all ranks
    for (int lv=0; lv<NLEVEL; lv++)     Mis_GetTotalPatchNumber( lv );
 
    delete [] Input;
    for (int lv=0; lv<UM_lv; lv++)   delete [] FlagMap[lv];
    for (int lv=0; lv<UM_lv; lv++)   delete [] UM_Data[lv];
+
 
 
 // downgrade the uniform-mesh data from level=OPT__UM_IC_LEVEL to level=0
@@ -245,6 +246,7 @@ void Init_ByFile()
    } // if ( OPT__UM_IC_DOWNGRADE )
 
 
+
 // refine the uniform-mesh data from level=OPT__UM_IC_LEVEL to level=MAX_LEVEL
 // ===========================================================================================================
    if ( OPT__UM_IC_REFINE )
@@ -270,6 +272,34 @@ void Init_ByFile()
 
       if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Refining the uniform-mesh data ... done\n" );
    } // if ( OPT__UM_IC_REFINE )
+
+
+// get the total number of real patches at all ranks again
+   for (int lv=0; lv<NLEVEL; lv++)     Mis_GetTotalPatchNumber( lv );
+
+
+
+// improve load balance
+// ===========================================================================================================
+#  ifdef LOAD_BALANCE
+// we don't have enough information to calculate the load-balance weighting of particles when
+// calling LB_Init_LoadBalance() for the first time
+// --> for example, LB_EstimateWorkload_AllPatchGroup()->Par_CollectParticle2OneLevel()->Par_LB_CollectParticle2OneLevel()
+//     needs amr->LB->IdxList_Real[], which will be constructed only AFTER calling LB_Init_LoadBalance()
+// --> must disable particle weighting (by setting ParWeight==0.0) first
+   const double ParWeight_Zero   = 0.0;
+   const bool   Redistribute_Yes = true;
+   const bool   ResetLB_Yes      = true;
+   const int    AllLv            = -1;
+
+   LB_Init_LoadBalance( Redistribute_Yes, ParWeight_Zero, ResetLB_Yes, AllLv );
+
+// redistribute patches again if we want to take into account the load-balance weighting of particles
+#  ifdef PARTICLE
+   if ( amr->LB->Par_Weight > 0.0 )
+   LB_Init_LoadBalance( Redistribute_Yes, amr->LB->Par_Weight, ResetLB_Yes, AllLv );
+#  endif
+#  endif // #ifdef LOAD_BALANCE
 
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", __FUNCTION__ );
