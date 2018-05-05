@@ -64,6 +64,10 @@ void Init_ByFunction()
    } // if ( OPT__INIT_RESTRICT )
 
 
+// get the total number of real patches at all ranks
+   for (int lv=0; lv<NLEVEL; lv++)     Mis_GetTotalPatchNumber( lv );
+
+
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", __FUNCTION__ );
 
 } // FUNCTION : Init_ByFunction
