@@ -17,10 +17,6 @@ BOX_SIZE                      1.0         # box size along the longest side (in 
 NX0_TOT_X                     32          # number of base-level cells along x
 NX0_TOT_Y                     32          # number of base-level cells along y
 NX0_TOT_Z                     32          # number of base-level cells along z
-MPI_NRANK                     1           # total number of MPI ranks (must = MPI_NRANK_X[0]*MPI_NRANK_X[1]*MPI_NRANK_X[2])
-MPI_NRANK_X                   1           # number of MPI ranks along x
-MPI_NRANK_Y                   1           # number of MPI ranks along y
-MPI_NRANK_Z                   1           # number of MPI ranks along z
 OMP_NTHREAD                  -1           # number of OpenMP threads (<=0=auto -> omp_get_max_threads) [-1] ##OPENMP ONLY##
 END_T                        -1.0         # end physical time (<0=auto -> must be set by test problems or restart) [-1.0]
 END_STEP                     -1           # end step (<0=auto -> must be set by test problems or restart) [-1]
