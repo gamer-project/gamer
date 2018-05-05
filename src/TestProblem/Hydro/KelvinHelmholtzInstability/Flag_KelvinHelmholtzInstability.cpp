@@ -1,6 +1,5 @@
 #include "GAMER.h"
 
-extern bool KH_AllRankSame;
 extern int  KH_RefineShearMaxLv;
 extern int  KH_PeriodicZFactor;
 
@@ -26,8 +25,7 @@ bool Flag_KelvinHelmholtzInstability( const int i, const int j, const int k, con
 {
 
    const double dh          = amr->dh[lv];
-   const double dz_periodic = ( KH_AllRankSame ) ? amr->BoxSize[2] / KH_PeriodicZFactor / MPI_NRank_X[2]
-                                                 : amr->BoxSize[2] / KH_PeriodicZFactor;
+   const double dz_periodic = amr->BoxSize[2] / KH_PeriodicZFactor;
    const double z_shear     = 0.5*dz_periodic;
    const double z           = amr->patch[0][lv][PID]->EdgeL[2] + (k+0.5)*dh;
    const double z_periodic  = fmod( z, dz_periodic );
