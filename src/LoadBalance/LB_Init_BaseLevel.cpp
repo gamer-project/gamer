@@ -95,10 +95,6 @@ void LB_Init_BaseLevel()
    Par_FindHomePatch_Base();
 #  endif
 
-
-// 4. initialize load balance
-// LB_Init_LoadBalance( const bool Redistribute, const double ParWeight, const bool Reset )
-
 } // FUNCTION : LB_Init_BaseLevel
 
 

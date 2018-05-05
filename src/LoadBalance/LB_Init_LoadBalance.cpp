@@ -153,8 +153,8 @@ void LB_Init_LoadBalance( const bool Redistribute, const double ParWeight, const
 //    4.2 father-son relation between lv and lv-1
 //        --> must reset the son indices on lv-1 as -1 (i.e., using ResetSonID_Yes) when applying
 //            LB_Init_LoadBalance() to a single level since, after redistributing patches on lv,
-//            the sons of some of the patches on lv-1 may move abroad (and thus their son indices
-//            should be changed from >=0 to <=SON_OFFSET_LB)
+//            the sons of some patches on lv-1 may move abroad (and thus their son indices should
+//            be changed from >=0 to <=SON_OFFSET_LB)
 //        --> but LB_FindSonNotHome() only checks patches with son indices <= -1
       if ( lv > 0 )
       {
