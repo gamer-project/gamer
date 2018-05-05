@@ -65,9 +65,9 @@ void Init_Parallelization()
 #  endif
 
 
-// the following operations are useless for LOAD_BALANCE during restart
+// following operations are useful for LOAD_BALANCE only when adopting INIT_BY_FILE
 #  ifdef LOAD_BALANCE
-   if ( OPT__INIT == INIT_BY_RESTART )
+   if ( OPT__INIT != INIT_BY_FILE )
    {
       if ( MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );
 
@@ -80,7 +80,8 @@ void Init_Parallelization()
    if ( MPI_Rank == 0 )
    {
       if ( MPI_NRank_X[0]*MPI_NRank_X[1]*MPI_NRank_X[2] != MPI_NRank )
-         Aux_Error( ERROR_INFO, "MPI_NRank_X[0]*MPI_NRank_X[1]*MPI_NRank_X[2] != MPI_NRank !!\n" );
+         Aux_Error( ERROR_INFO, "MPI_NRANK_X (%d) * MPI_NRANK_Y (%d) * MPI_NRANK_Z (%d) = %d != MPI_Comm_size (%d) !!\n",
+                    MPI_NRank_X[0], MPI_NRank_X[1], MPI_NRank_X[2], MPI_NRank_X[0]*MPI_NRank_X[1]*MPI_NRank_X[2], MPI_NRank );
 
       for (int d=0; d<3; d++)
       if ( MPI_NRank_X[d] <= 0 )    Aux_Error( ERROR_INFO, "MPI_NRank_X[%d] = %d <= 0 !!\n", d,  MPI_NRank_X[d] );
