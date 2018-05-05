@@ -18,7 +18,12 @@ void Init_GAMER( int *argc, char ***argv )
 {
 
 // initialize MPI
+#  ifdef SERIAL
+   MPI_Rank  = 0;
+   MPI_NRank = 1;
+#  else
    Init_MPI( argc, argv );
+#  endif
 
 
 // initialize the AMR structure
