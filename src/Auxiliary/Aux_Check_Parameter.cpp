@@ -1175,11 +1175,20 @@ void Aux_Check_Parameter()
 
    } // if ( MPI_Rank == 0 )
 
+
 #else // #ifdef PARTICLE
+
+
+// warning
+// ------------------------------
+   if ( MPI_Rank == 0 ) {
 
 #  ifdef STORE_POT_GHOST
    Aux_Message( stderr, "WARNING : currently STORE_POT_GHOST is useless when PARTICLE is disabled !!\n" );
 #  endif
+
+   }
+
 
 #endif // PARTICLE
 

@@ -44,6 +44,10 @@ void LB_SetCutPoint( const int lv, const int NPG_Total, long *CutPoint, const bo
                      long *LBIdx0_AllRank_Input, double *Load_AllRank_Input, const double ParWeight )
 {
 
+   if ( OPT__VERBOSE  &&  MPI_Rank == 0 )
+      Aux_Message( stdout, "      %s at Lv %2d ... \n", __FUNCTION__, lv );
+
+
 // check
    if ( MPI_Rank == 0  &&  InputLBIdx0AndLoad  &&  ( LBIdx0_AllRank_Input == NULL || Load_AllRank_Input == NULL )  )
       Aux_Error( ERROR_INFO, "LBIdx0_AllRank_Input/Load_AllRank_Input == NULL when InputLBIdx0AndLoad is on !!\n" );
@@ -254,15 +258,15 @@ void LB_SetCutPoint( const int lv, const int NPG_Total, long *CutPoint, const bo
 
          for (int r=0; r<MPI_NRank; r++)
          {
-            Aux_Message( stdout, "   Lv %2d: Rank %4d, Cut %15ld -> %15ld, Load_Weighted %9.3e\n",
+            Aux_Message( stdout, "         Lv %2d: Rank %4d, Cut %15ld -> %15ld, Load_Weighted %9.3e\n",
                          lv, r, CutPoint[r], CutPoint[r+1], Load_Record[r] );
 
             if ( Load_Record[r] > Load_Max )    Load_Max = Load_Record[r];
          }
 
-         Aux_Message( stdout, "   Load_Ave %9.3e, Load_Max %9.3e --> Load_Imbalance = %6.2f%%\n",
+         Aux_Message( stdout, "         Load_Ave %9.3e, Load_Max %9.3e --> Load_Imbalance = %6.2f%%\n",
                       Load_Ave, Load_Max, (NPG_Total == 0) ? 0.0 : 100.0*(Load_Max-Load_Ave)/Load_Ave );
-         Aux_Message( stdout, "   =============================================================================\n" );
+         Aux_Message( stdout, "         =============================================================================\n" );
 
          delete [] Load_Record;
       }
@@ -284,6 +288,10 @@ void LB_SetCutPoint( const int lv, const int NPG_Total, long *CutPoint, const bo
          delete [] Load_AllRank;
       }
    }
+
+
+   if ( OPT__VERBOSE  &&  MPI_Rank == 0 )
+      Aux_Message( stdout, "      %s at Lv %2d ... done\n", __FUNCTION__, lv );
 
 } // FUNCTION : LB_SetCutPoint
 

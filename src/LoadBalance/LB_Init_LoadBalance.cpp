@@ -50,7 +50,14 @@ static void LB_RedistributeParticle_End( real **ParVar_Old, real **Passive_Old )
 void LB_Init_LoadBalance( const bool Redistribute, const double ParWeight, const bool Reset, const int TLv )
 {
 
-   if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ...\n", __FUNCTION__ );
+   if ( MPI_Rank == 0 )
+   {
+      char lv_str[MAX_STRING];
+      if ( TLv < 0 )    sprintf( lv_str, "%s", "all levels" );
+      else              sprintf( lv_str, "Lv %d", TLv );
+
+      Aux_Message( stdout, "   %s at %s ...\n", __FUNCTION__, lv_str );
+   }
 
 
 // check
@@ -82,12 +89,7 @@ void LB_Init_LoadBalance( const bool Redistribute, const double ParWeight, const
 
    if ( Redistribute )
    for (int lv=lv_min; lv<=lv_max; lv++)
-   {
-      if ( OPT__VERBOSE  &&  MPI_Rank == 0 )
-         Aux_Message( stdout, "   Calculating load-balance indices at Lv %2d ... \n", lv );
-
       LB_SetCutPoint( lv, NPatchTotal[lv]/8, amr->LB->CutPoint[lv], InputLBIdxAndLoad_No, NULL, NULL, ParWeight );
-   }
 
 
 // 2. reinitialize arrays used by the load-balance routines
@@ -116,7 +118,7 @@ void LB_Init_LoadBalance( const bool Redistribute, const double ParWeight, const
 
    for (int lv=lv_min; lv<=lv_max; lv++)
    {
-      if ( OPT__VERBOSE  &&  MPI_Rank == 0 )    Aux_Message( stdout, "   Re-distributing patches at Lv %2d ... \n", lv );
+      if ( OPT__VERBOSE  &&  MPI_Rank == 0 )    Aux_Message( stdout, "      Re-distributing patches at Lv %2d ... ", lv );
 
 //    3.1 re-distribute real patches
       if ( Redistribute )
@@ -133,6 +135,8 @@ void LB_Init_LoadBalance( const bool Redistribute, const double ParWeight, const
 //    3.4 allocate father-buffer patches at lv-1
       if ( lv > 0 )
       LB_AllocateBufferPatch_Father( lv,   true, NULL_INT, NULL, false, NULL, NULL );
+
+      if ( OPT__VERBOSE  &&  MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );
    } // for (int lv=lv_min; lv<=lv_max; lv++)
 
 #  ifdef PARTICLE
@@ -145,7 +149,7 @@ void LB_Init_LoadBalance( const bool Redistribute, const double ParWeight, const
 
    for (int lv=lv_min; lv<=lv_max; lv++)
    {
-      if ( OPT__VERBOSE  &&  MPI_Rank == 0 )    Aux_Message( stdout, "   Constructing patch relation at Lv %2d ... \n", lv );
+      if ( OPT__VERBOSE  &&  MPI_Rank == 0 ) Aux_Message( stdout, "      Constructing patch relation at Lv %2d ... ", lv );
 
 //    4.1 sibling relation at lv
       LB_SiblingSearch( lv, true, NULL_INT, NULL );
@@ -175,6 +179,8 @@ void LB_Init_LoadBalance( const bool Redistribute, const double ParWeight, const
             LB_FindSonNotHome( lv,   true, NULL_INT, NULL );
          }
       }
+
+      if ( OPT__VERBOSE  &&  MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );
    } // for (int lv=lv_min; lv<=lv_max; lv++)
 
 
@@ -184,6 +190,8 @@ void LB_Init_LoadBalance( const bool Redistribute, const double ParWeight, const
 
    for (int lv=lv_min_mpi; lv<=lv_max_mpi; lv++)
    {
+      if ( OPT__VERBOSE  &&  MPI_Rank == 0 )    Aux_Message( stdout, "      Constructing MPI lists at Lv %2d ... ", lv );
+
 //    5.1 list for exchanging hydro and potential data
       LB_RecordExchangeDataPatchID( lv, false );
 
@@ -210,6 +218,8 @@ void LB_Init_LoadBalance( const bool Redistribute, const double ParWeight, const
 #     ifdef PARTICLE
       Par_LB_RecordExchangeParticlePatchID( lv );
 #     endif
+
+      if ( OPT__VERBOSE  &&  MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );
    } // for (int lv=lv_min_mpi; lv<=lv_max_mpi; lv++)
 
 // 5.7 list for exchanging particles on TLv+1
@@ -222,15 +232,26 @@ void LB_Init_LoadBalance( const bool Redistribute, const double ParWeight, const
 // 6. get the buffer data
    for (int lv=lv_min_mpi; lv<=lv_max_mpi; lv++)
    {
+      if ( OPT__VERBOSE  &&  MPI_Rank == 0 ) Aux_Message( stdout, "      Transferring buffer data at Lv %2d ... ", lv );
+
       Buf_GetBufferData( lv, amr->FluSg[lv], NULL_INT, DATA_GENERAL,    _TOTAL, Flu_ParaBuf, USELB_YES );
 
 #     ifdef GRAVITY
       Buf_GetBufferData( lv, NULL_INT, amr->PotSg[lv], POT_FOR_POISSON, _POTE,  Pot_ParaBuf, USELB_YES );
 #     endif
+
+      if ( OPT__VERBOSE  &&  MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );
    }
 
 
-   if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", __FUNCTION__ );
+   if ( MPI_Rank == 0 )
+   {
+      char lv_str[MAX_STRING];
+      if ( TLv < 0 )    sprintf( lv_str, "%s", "all levels" );
+      else              sprintf( lv_str, "Lv %d", TLv );
+
+      Aux_Message( stdout, "   %s at %s ... done\n", __FUNCTION__, lv_str );
+   }
 
 } // FUNCTION : LB_Init_LoadBalance
 
