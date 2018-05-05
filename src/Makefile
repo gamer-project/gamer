@@ -561,7 +561,8 @@ CC_FILE     += LB_Init_LoadBalance.cpp  LB_AllocateBufferPatch_Sibling.cpp  LB_R
                LB_Refine.cpp  LB_Refine_GetNewRealPatchList.cpp  LB_Refine_AllocateNewPatch.cpp \
                LB_FindSonNotHome.cpp  LB_Refine_AllocateBufferPatch_Sibling.cpp \
                LB_AllocateBufferPatch_Sibling_Base.cpp  LB_RecordExchangeFixUpDataPatchID.cpp \
-               LB_EstimateWorkload_AllPatchGroup.cpp  LB_EstimateLoadImbalance.cpp  LB_SetCutPoint.cpp
+               LB_EstimateWorkload_AllPatchGroup.cpp  LB_EstimateLoadImbalance.cpp  LB_SetCutPoint.cpp \
+               LB_Init_BaseLevel.cpp  LB_Init_ByFunction.cpp  LB_Init_Refine.cpp
 
 endif # LOAD_BALANCE
 

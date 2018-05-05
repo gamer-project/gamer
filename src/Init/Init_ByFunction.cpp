@@ -1,16 +1,25 @@
 #include "GAMER.h"
 
-static void Init_ByFunction_AssignData( const int lv );
+void Init_ByFunction_AssignData( const int lv );
 
 
 
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Init_ByFunction
-// Description :  Set up the initial condition by invoking the function "Init_ByFunction_AssignData"
+// Description :  Set up the initial condition by invoking Init_ByFunction_AssignData()
+//
+// Note        :  1. Invoke the alternative function LB_Init_ByFunction() when LOAD_BALANCE is adopted
 //-------------------------------------------------------------------------------------------------------
 void Init_ByFunction()
 {
+
+// invoke the alternative load-balance function
+#  ifdef LOAD_BALANCE
+   LB_Init_ByFunction();
+   return;
+#  endif
+
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... \n", __FUNCTION__ );
 
@@ -21,13 +30,7 @@ void Init_ByFunction()
       if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Constructing level %d ... ", lv );
 
       if ( lv == 0 )
-      {
-         Init_BaseLevel();
-
-#        ifdef PARTICLE
-         Par_FindHomePatch_Base( BaseP );
-#        endif
-      }
+      Init_BaseLevel();
 
       Init_ByFunction_AssignData( lv );
 

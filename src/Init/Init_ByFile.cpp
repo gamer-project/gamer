@@ -172,10 +172,6 @@ void Init_ByFile()
 
    Init_BaseLevel();
 
-#  ifdef PARTICLE
-   Par_FindHomePatch_Base( BaseP );
-#  endif
-
 // assign data for the base level
    UM_AssignData( 0, UM_Data[0], UM_NVar );
 

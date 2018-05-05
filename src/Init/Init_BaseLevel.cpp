@@ -51,4 +51,9 @@ void Init_BaseLevel()
 // get the IDs of patches for sending and receiving data between neighbor ranks
    Buf_RecordExchangeDataPatchID( 0 );
 
+// find the base-level home patches of all particles
+#  ifdef PARTICLE
+   Par_FindHomePatch_Base();
+#  endif
+
 } // FUNCTION : Init_BaseLevel
