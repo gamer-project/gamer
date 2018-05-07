@@ -432,11 +432,7 @@ void Init_ResetParameter()
 // OPT__CORR_AFTER_ALL_SYNC
    if ( OPT__CORR_AFTER_ALL_SYNC == CORR_AFTER_SYNC_DEFAULT )
    {
-#     ifdef GAMER_DEBUG
-      OPT__CORR_AFTER_ALL_SYNC = CORR_AFTER_SYNC_EVERY_STEP;
-#     else
       OPT__CORR_AFTER_ALL_SYNC = CORR_AFTER_SYNC_BEFORE_DUMP;
-#     endif
 
       PRINT_WARNING( OPT__CORR_AFTER_ALL_SYNC, FORMAT_INT, "" );
    }
@@ -733,18 +729,6 @@ void Init_ResetParameter()
 
       const ParInit_t PAR_INIT = amr->Par->Init;
       PRINT_WARNING( PAR_INIT, FORMAT_INT, "for restart" );
-   }
-#  endif
-
-
-// always enable OPT__CORR_AFTER_ALL_SYNC in the debug mode
-// --> but "OPT__CORR_AFTER_ALL_SYNC == CORR_AFTER_SYNC_BEFORE_DUMP" is allowed in the debug mode if set by users
-#  ifdef GAMER_DEBUG
-   if ( OPT__CORR_AFTER_ALL_SYNC == CORR_AFTER_SYNC_NONE )
-   {
-      OPT__CORR_AFTER_ALL_SYNC = CORR_AFTER_SYNC_EVERY_STEP;
-
-      PRINT_WARNING( OPT__CORR_AFTER_ALL_SYNC, FORMAT_INT, "since GAMER_DEBUG is enabled" );
    }
 #  endif
 
