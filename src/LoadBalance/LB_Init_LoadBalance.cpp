@@ -224,8 +224,8 @@ void LB_Init_LoadBalance( const bool Redistribute, const double ParWeight, const
 
 // 5.7 list for exchanging particles on TLv+1
 #  ifdef PARTICLE
-   if ( TLv < TOP_LEVEL )
-   Par_LB_RecordExchangeParticlePatchID( lv+1 );
+   if ( TLv >= 0  &&  TLv < TOP_LEVEL )
+   Par_LB_RecordExchangeParticlePatchID( TLv+1 );
 #  endif
 
 

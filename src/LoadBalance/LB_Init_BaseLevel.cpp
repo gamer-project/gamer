@@ -10,7 +10,7 @@
 // Description :  Construct the base level during initialization for LOAD_BALANCE
 //
 // Note        :  1. Invoked by LB_Init_ByFunction()
-//                2. Invoke Par_FindHomePatch_Base() to associate particles with base-level patches
+//                2. Invoke Par_FindHomePatch_UniformGrid() to associate particles with base-level patches
 //                3. Invoke LB_Init_LoadBalance() to initialize load-balancing on the base level
 //
 // Parameter   :  None
@@ -92,7 +92,7 @@ void LB_Init_BaseLevel()
 
 // 3. find the base-level home patches of all particles
 #  ifdef PARTICLE
-   Par_FindHomePatch_Base();
+   Par_FindHomePatch_UniformGrid( lv0 );
 #  endif
 
 } // FUNCTION : LB_Init_BaseLevel
