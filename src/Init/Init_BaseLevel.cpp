@@ -53,7 +53,7 @@ void Init_BaseLevel()
 
 // find the base-level home patches of all particles
 #  ifdef PARTICLE
-   Par_FindHomePatch_Base();
+   Par_FindHomePatch_UniformGrid( 0 );
 #  endif
 
 } // FUNCTION : Init_BaseLevel
