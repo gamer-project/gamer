@@ -198,8 +198,11 @@ void Init_ResetParameter()
 
    for (int d=0; d<3; d++)
    {
-      amr->BoxSize [d] = NX0_TOT[d]*amr->dh   [0];
-      amr->BoxScale[d] = NX0_TOT[d]*amr->scale[0];
+      amr->BoxSize  [d] = NX0_TOT[d]*amr->dh   [0];
+      amr->BoxScale [d] = NX0_TOT[d]*amr->scale[0];
+      amr->BoxEdgeL [d] = 0.0;
+      amr->BoxEdgeR [d] = amr->BoxSize[d];
+      amr->BoxCenter[d] = 0.5*( amr->BoxEdgeL[d] + amr->BoxEdgeR[d] );
    }
 
 
