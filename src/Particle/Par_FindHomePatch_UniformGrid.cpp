@@ -46,6 +46,8 @@ void Par_FindHomePatch_UniformGrid( const int lv )
 #  endif
 
    const real *Pos[3] = { amr->Par->PosX, amr->Par->PosY, amr->Par->PosZ };
+   const int   NReal  = amr->NPatchComma[lv][1];
+
    real TParPos[3];
 
    long *HomeLBIdx          = new long [amr->Par->NPar_Active];
@@ -63,9 +65,21 @@ void Par_FindHomePatch_UniformGrid( const int lv )
 // sort the LBIdx list
    Mis_Heapsort( amr->Par->NPar_Active, HomeLBIdx, HomeLBIdx_IdxTable );
 
+// construct and sort the LBIdx list of all real patches for the SERIAL mode
+#  ifdef SERIAL
+   long *RealPatchLBIdx          = new long [NReal];
+   int  *RealPatchLBIdx_IdxTable = new int  [NReal];
+
+   for (int PID=0; PID<NReal; PID++)   RealPatchLBIdx[PID] = amr->patch[0][lv][PID]->LB_Idx;
+
+   Mis_Heapsort( NReal, RealPatchLBIdx, RealPatchLBIdx_IdxTable );
+#  else
+   long *RealPatchLBIdx          = amr->LB->IdxList_Real         [lv];
+   int  *RealPatchLBIdx_IdxTable = amr->LB->IdxList_Real_IdxTable[lv];
+#  endif
+
 // LBIdx --> home (real) patch indices
-   Mis_Matching_int( amr->NPatchComma[lv][1], amr->LB->IdxList_Real[lv], amr->Par->NPar_Active,
-                     HomeLBIdx, MatchIdx );
+   Mis_Matching_int( NReal, RealPatchLBIdx, amr->Par->NPar_Active, HomeLBIdx, MatchIdx );
 
 // check: every particle must have a home patch
 #  ifdef DEBUG_PARTICLE
@@ -85,19 +99,19 @@ void Par_FindHomePatch_UniformGrid( const int lv )
    for (long t=0; t<amr->Par->NPar_Active; t++)
    {
       const long ParID = HomeLBIdx_IdxTable[t];
-      const int  PID   = amr->LB->IdxList_Real_IdxTable[lv][ MatchIdx[t] ];
+      const int  PID   = RealPatchLBIdx_IdxTable[ MatchIdx[t] ];
 
       HomePID[ParID] = PID;
    }
 
 
 // 3. count the number of particles in each patch and allocate the particle list
-   for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)   amr->patch[0][lv][PID]->ParListSize = 0;
+   for (int PID=0; PID<NReal; PID++)   amr->patch[0][lv][PID]->ParListSize = 0;
 
    for (long ParID=0; ParID<amr->Par->NPar_Active; ParID++)
       amr->patch[0][lv][ HomePID[ParID] ]->ParListSize ++;
 
-   for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
+   for (int PID=0; PID<NReal; PID++)
    {
       if ( amr->patch[0][lv][PID]->ParList != NULL )
       {
@@ -133,6 +147,10 @@ void Par_FindHomePatch_UniformGrid( const int lv )
    delete [] HomeLBIdx_IdxTable;
    delete [] HomePID;
    delete [] MatchIdx;
+#  ifdef SERIAL
+   delete [] RealPatchLBIdx;
+   delete [] RealPatchLBIdx_IdxTable;
+#  endif
 
 } // FUNCTION : Par_FindHomePatch_UniformGrid
 
