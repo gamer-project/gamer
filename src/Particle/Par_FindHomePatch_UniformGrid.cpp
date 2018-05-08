@@ -27,43 +27,49 @@ void Par_FindHomePatch_UniformGrid( const int lv )
 {
 
 // check
+#  ifdef DEBUG_PARTICLE
    if ( lv < 0  ||  lv > TOP_LEVEL )   Aux_Error( ERROR_INFO, "incorrect lv = %d !!\n", lv );
+#  endif
 
 
 // 1. redistribute all particles to their home ranks
-   void SendParticle2HomeRank();
+   SendParticle2HomeRank( lv );
 
 
 // 2. find the home patch
-//    --> note that SendParticle2HomeRank() should have remove all inactive particles (i.e., with Mass<0.0)
-//    --> so in the following we have assumed that all particles are active and their home patches exist
-   real *Pos[3] = { amr->Par->PosX, amr->Par->PosY, amr->Par->PosZ };
+//    --> note that SendParticle2HomeRank() should already remove all inactive particles (i.e., those with Mass<0.0)
+//    --> so in the following we can assume that all particles are active and their home patches exist
+#  ifdef DEBUG_PARTICLE
+   if ( amr->Par->NPar_Active != amr->Par->NPar_AcPlusInac )
+      Aux_Error( ERROR_INFO, "NPar_Active (%ld) != NPar_AcPlusInac (%ld) !!\n",
+                 amr->Par->NPar_Active, amr->Par->NPar_AcPlusInac );
+#  endif
 
-   long *HomeLBIdx          = new long [amr->Par->NPar_AcPlusInac];
-   int  *HomeLBIdx_IdxTable = new int  [amr->Par->NPar_AcPlusInac];
-   int  *HomePID            = new int  [amr->Par->NPar_AcPlusInac];
-   int  *MatchIdx           = new int  [amr->Par->NPar_AcPlusInac];
-
+   const real *Pos[3] = { amr->Par->PosX, amr->Par->PosY, amr->Par->PosZ };
    real TParPos[3];
 
-   for (long ParID=0; ParID<amr->Par->NPar_AcPlusInac; ParID++)
+   long *HomeLBIdx          = new long [amr->Par->NPar_Active];
+   int  *HomeLBIdx_IdxTable = new int  [amr->Par->NPar_Active];
+   int  *HomePID            = new int  [amr->Par->NPar_Active];
+   int  *MatchIdx           = new int  [amr->Par->NPar_Active];
+
+// get the load-balance index of the particle's home patch
+   for (long ParID=0; ParID<amr->Par->NPar_Active; ParID++)
    {
-//    get the load-balance index of the particle's home patch
-//    --> must NOT skip inactive particles (i.e., Mass[ParID]<0.0) here since
       for (int d=0; d<3; d++)    TParPos[d] = Pos[d][ParID];
       HomeLBIdx[ParID] = ParPos2LBIdx( lv, TParPos );
    }
 
 // sort the LBIdx list
-   Mis_Heapsort( amr->Par->NPar_AcPlusInac, HomeLBIdx, HomeLBIdx_IdxTable );
+   Mis_Heapsort( amr->Par->NPar_Active, HomeLBIdx, HomeLBIdx_IdxTable );
 
 // LBIdx --> home (real) patch indices
-   Mis_Matching_int( amr->NPatchComma[lv][1], amr->LB->IdxList_Real[lv], amr->Par->NPar_AcPlusInac,
+   Mis_Matching_int( amr->NPatchComma[lv][1], amr->LB->IdxList_Real[lv], amr->Par->NPar_Active,
                      HomeLBIdx, MatchIdx );
 
 // check: every particle must have a home patch
 #  ifdef DEBUG_PARTICLE
-   for (long t=0; t<amr->Par->NPar_AcPlusInac; t++)
+   for (long t=0; t<amr->Par->NPar_Active; t++)
    {
       if ( MatchIdx[t] == -1 )
       {
@@ -76,7 +82,7 @@ void Par_FindHomePatch_UniformGrid( const int lv )
 #  endif
 
 // record the home patch indices
-   for (long t=0; t<amr->Par->NPar_AcPlusInac; t++)
+   for (long t=0; t<amr->Par->NPar_Active; t++)
    {
       const long ParID = HomeLBIdx_IdxTable[t];
       const int  PID   = amr->LB->IdxList_Real_IdxTable[lv][ MatchIdx[t] ];
@@ -88,12 +94,16 @@ void Par_FindHomePatch_UniformGrid( const int lv )
 // 3. count the number of particles in each patch and allocate the particle list
    for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)   amr->patch[0][lv][PID]->ParListSize = 0;
 
-   for (long ParID=0; ParID<amr->Par->NPar_AcPlusInac; ParID++)
+   for (long ParID=0; ParID<amr->Par->NPar_Active; ParID++)
       amr->patch[0][lv][ HomePID[ParID] ]->ParListSize ++;
 
    for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
    {
-      if (  amr->patch[0][lv][PID]->ParList != NULL )    free( amr->patch[0][lv][PID]->ParList );
+      if ( amr->patch[0][lv][PID]->ParList != NULL )
+      {
+         free( amr->patch[0][lv][PID]->ParList );
+         amr->patch[0][lv][PID]->ParList = NULL;
+      }
 
       if ( amr->patch[0][lv][PID]->ParListSize > 0 )
       {
@@ -105,16 +115,14 @@ void Par_FindHomePatch_UniformGrid( const int lv )
 // 4. associate particles with their home patches
    amr->Par->NPar_Lv[lv] = 0;
 
-   for (long t=0; t<amr->Par->NPar_AcPlusInac; t++)
+// no OpenMP since AddParticle() will modify amr->Par->NPar_Lv[]
+   for (long ParID=0; ParID<amr->Par->NPar_Active; ParID++)
    {
-      const long ParID = HomeLBIdx_IdxTable[t];
-      const int  PID   = amr->LB->IdxList_Real_IdxTable[lv][ MatchIdx[t] ];
+      const int PID = HomePID[ParID];
 
-//###NOTE : no OpenMP since AddParticle will modify amr->Par->NPar_Lv[]
 #     ifdef DEBUG_PARTICLE
-      const real *ParPos[3] = { amr->Par->PosX, amr->Par->PosY, amr->Par->PosZ };
       amr->patch[0][lv][PID]->AddParticle( 1, &ParID, &amr->Par->NPar_Lv[lv],
-                                           ParPos, amr->Par->NPar_AcPlusInac, __FUNCTION__ );
+                                           Pos, amr->Par->NPar_Active, __FUNCTION__ );
 #     else
       amr->patch[0][lv][PID]->AddParticle( 1, &ParID, &amr->Par->NPar_Lv[lv] );
 #     endif
@@ -264,18 +272,14 @@ void SendParticle2HomeRank( const int lv )
 
 
 // 4. reset particle parameters
+   if ( amr->Par->InactiveParList != NULL )  free( amr->Par->InactiveParList );
+
    amr->Par->NPar_AcPlusInac     = (long)Recv_Count_Sum;
    amr->Par->NPar_Active         = (long)Recv_Count_Sum;
    amr->Par->NPar_Inactive       = 0;                       // since we don't redistribute inactive particles
    amr->Par->ParListSize         = (long)Recv_Count_Sum;
    amr->Par->InactiveParListSize = (long)MAX( 1, Recv_Count_Sum/100 );
-
-   if ( amr->Par->InactiveParList != NULL )
-   {
-      free( amr->Par->InactiveParList );
-
-      amr->Par->InactiveParList = (long*)malloc( amr->Par->InactiveParListSize*sizeof(long) );
-   }
+   amr->Par->InactiveParList     = (long*)malloc( amr->Par->InactiveParListSize*sizeof(long) );
 
 
 // 5. reset attribute pointers and reallocate the acceleration arrays
@@ -305,12 +309,11 @@ void SendParticle2HomeRank( const int lv )
 
 // 6. check
 #  ifdef DEBUG_PARTICLE
-   Mass = amr->Par->Mass;
-
    for (long ParID=0; ParID<amr->Par->NPar_AcPlusInac; ParID++)
    {
 //    there should be no inactive particles
-      if ( Mass[ParID] < 0.0 )   Aux_Error( ERROR_INFO, "Mass[%ld] = %14.7e < 0.0 !!\n", ParID, Mass[ParID] );
+      if ( amr->Par->Mass[ParID] < 0.0 )
+         Aux_Error( ERROR_INFO, "ParMass[%ld] = %14.7e < 0.0 !!\n", ParID, amr->Par->Mass[ParID] );
    }
 #  endif
 
@@ -360,8 +363,7 @@ long ParPos2LBIdx( const int lv, const real ParPos[] )
 
    for (int d=0; d<3; d++)
    {
-      Cr[d] = fmod( (double)ParPos[d]-amr->BoxEdgeL[d], PatchPhySize );
-      Cr[d] = (int)Cr[d]*PatchScale;
+      Cr[d] = (int)fmod( (double)ParPos[d]-amr->BoxEdgeL[d], PatchPhySize )*PatchScale;
 
 //    check the home patch corner carefully to prevent from any issue resulting from round-off errors
 //    --> make sure to adopt the same procedure of calculating the patch left/right edges as Patch.h
