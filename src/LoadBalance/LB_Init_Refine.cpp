@@ -13,6 +13,7 @@
 //                2. Only apply to real patches
 //                   --> Buffer patches will be allocated later when invoking LB_Init_LoadBalance()
 //                3. Must inovke Flag_Real( FaLv ) in advance
+//                4. LB_Init_LoadBalance() will be invoked later to optimize load-balancing
 //
 // Parameter   :  FaLv : Target level to be refined (FaLv --> FaLv+1)
 //-------------------------------------------------------------------------------------------------------
