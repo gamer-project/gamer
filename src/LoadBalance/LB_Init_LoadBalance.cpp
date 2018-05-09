@@ -35,9 +35,8 @@ static void LB_RedistributeParticle_End( real **ParVar_Old, real **Passive_Old )
 //                               --> Weighting of each patch is estimated as "PATCH_SIZE^3 + NParThisPatch*ParWeight"
 //                               --> <= 0.0 : do not consider particle weighting
 //                                            --> Currently we force ParWeight==0.0 when calling LB_Init_LoadBalance()
-//                                                for the first time in Init_GAMER() (for OPT__INIT=2/3) since for which
-//                                                we may not have enough information for calculating particle weighting
-//                                                at that time
+//                                                for the first time during the restart process since we don't have enough
+//                                                information for calculating particle weighting at that time
 //                                            --> For example, Par_LB_CollectParticle2OneLevel() invoked by
 //                                                LB_EstimateWorkload_AllPatchGroup() needs amr->LB->IdxList_Real[], which
 //                                                will be constructed only AFTER calling LB_Init_LoadBalance()
