@@ -65,18 +65,14 @@ void Par_FindHomePatch_UniformGrid( const int lv )
 // sort the LBIdx list
    Mis_Heapsort( amr->Par->NPar_Active, HomeLBIdx, HomeLBIdx_IdxTable );
 
-// construct and sort the LBIdx list of all real patches for the SERIAL mode
-#  ifdef SERIAL
+// construct and sort the LBIdx list of all real patches
+// --> do not use amr->LB->IdxList_Real[] since it may not be constructed yet
    long *RealPatchLBIdx          = new long [NReal];
    int  *RealPatchLBIdx_IdxTable = new int  [NReal];
 
    for (int PID=0; PID<NReal; PID++)   RealPatchLBIdx[PID] = amr->patch[0][lv][PID]->LB_Idx;
 
    Mis_Heapsort( NReal, RealPatchLBIdx, RealPatchLBIdx_IdxTable );
-#  else
-   long *RealPatchLBIdx          = amr->LB->IdxList_Real         [lv];
-   int  *RealPatchLBIdx_IdxTable = amr->LB->IdxList_Real_IdxTable[lv];
-#  endif
 
 // LBIdx --> home (real) patch indices
    Mis_Matching_int( NReal, RealPatchLBIdx, amr->Par->NPar_Active, HomeLBIdx, MatchIdx );
@@ -147,10 +143,8 @@ void Par_FindHomePatch_UniformGrid( const int lv )
    delete [] HomeLBIdx_IdxTable;
    delete [] HomePID;
    delete [] MatchIdx;
-#  ifdef SERIAL
    delete [] RealPatchLBIdx;
    delete [] RealPatchLBIdx_IdxTable;
-#  endif
 
 } // FUNCTION : Par_FindHomePatch_UniformGrid
 
@@ -372,16 +366,16 @@ long ParPos2LBIdx( const int lv, const real ParPos[] )
 
 
 // calculate the home patch corner
-   const double dh_min       = amr->dh[TOP_LEVEL];
-   const double PatchPhySize = PS1*amr->dh[lv];
-   const int    PatchScale   = PS1*amr->scale[lv];
+   const double dh_min        = amr->dh[TOP_LEVEL];
+   const double _PatchPhySize = 1.0/( PS1*amr->dh[lv] );
+   const int    PatchScale    = PS1*amr->scale[lv];
 
    double PatchEdgeL, PatchEdgeR;
    int    Cr[3];
 
    for (int d=0; d<3; d++)
    {
-      Cr[d] = (int)fmod( (double)ParPos[d]-amr->BoxEdgeL[d], PatchPhySize )*PatchScale;
+      Cr[d] = (int)floor(  ( (double)ParPos[d] - amr->BoxEdgeL[d] )*_PatchPhySize  )*PatchScale;
 
 //    check the home patch corner carefully to prevent from any issue resulting from round-off errors
 //    --> make sure to adopt the same procedure of calculating the patch left/right edges as Patch.h
@@ -398,7 +392,7 @@ long ParPos2LBIdx( const int lv, const real ParPos[] )
 
       if ( ParPos[d] < PatchEdgeL  ||  ParPos[d] >= PatchEdgeR )
          Aux_Error( ERROR_INFO, "incorrect home patch (dim %d, ParPos %14.7e, PatchEdgeL/R %14.7e/%14.7e) !!\n",
-                    d, ParPos, PatchEdgeL, PatchEdgeR );
+                    d, ParPos[d], PatchEdgeL, PatchEdgeR );
 
       if ( PatchEdgeL < amr->BoxEdgeL[d]  ||  PatchEdgeR > amr->BoxEdgeR[d] )
          Aux_Error( ERROR_INFO, "incorrect home patch (dim %d, PatchEdgeL/R %14.7e/%14.7e, BoxEdgeL/R %14.7e/%14.7e) !!\n",
