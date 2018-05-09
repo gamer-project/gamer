@@ -25,7 +25,7 @@ void Init_Parallelization()
 #  endif
 
    if ( MPI_NRank != NRank )
-      Aux_Error( ERROR_INFO, "MPI_NRank (%d) != MPI_Comm_size (%d) --> Is the runtime parameter MPI_NRANK consistent with mpirun?\n",
+      Aux_Error( ERROR_INFO, "MPI_NRank (%d) != MPI_Comm_size (%d) --> something is seriously wrong !!\n",
                  MPI_NRank, NRank );
 
 
@@ -65,6 +65,34 @@ void Init_Parallelization()
 #  endif
 
 
+// 2. number of particles in each rank
+#  ifdef PARTICLE
+   if ( amr->Par->Init != PAR_INIT_BY_RESTART )
+   {
+      if ( amr->Par->NPar_Active_AllRank < 0 )
+         Aux_Error( ERROR_INFO, "NPar_Active_AllRank = %ld < 0 !!\n", amr->Par->NPar_Active_AllRank );
+
+      const int NPar_per_Rank  = amr->Par->NPar_Active_AllRank / MPI_NRank;
+      const int Rank_with_more = amr->Par->NPar_Active_AllRank % MPI_NRank;
+
+//    assuming all particles are active initially (some of them may be marked as inactive when calling Par_Aux_InitCheck())
+      amr->Par->NPar_AcPlusInac = NPar_per_Rank;
+
+      if ( MPI_Rank < Rank_with_more )    amr->Par->NPar_AcPlusInac ++;
+
+//    check
+#     ifdef DEBUG_PARTICLE
+      long NPar_Sum = 0;
+      MPI_Reduce( &amr->Par->NPar_AcPlusInac, &NPar_Sum, 1, MPI_LONG, MPI_SUM, 0, MPI_COMM_WORLD );
+
+      if ( MPI_Rank == 0  &&  NPar_Sum != amr->Par->NPar_Active_AllRank )
+         Aux_Error( ERROR_INFO, "Total number of active particles in all ranks (%ld) != expected (%ld) !!\n",
+                    NPar_Sum, amr->Par->NPar_Active_AllRank );
+#     endif
+   } // if ( amr->Par->Init != PAR_INIT_BY_RESTART )
+#  endif // #ifdef PARTICLE
+
+
 // following operations are useful for LOAD_BALANCE only when adopting INIT_BY_FILE
 #  ifdef LOAD_BALANCE
    if ( OPT__INIT != INIT_BY_FILE )
@@ -88,17 +116,17 @@ void Init_Parallelization()
    }
 
 
-// 2. number of coarse-grid cells in one rank for the rectangular domain decomposition
+// 3. number of coarse-grid cells in one rank for the rectangular domain decomposition
    for (int d=0; d<3; d++)    NX0[d] = NX0_TOT[d] / MPI_NRank_X[d];
 
 
-// 3. MPI ranks in different spatial directions
+// 4. MPI ranks in different spatial directions
    MPI_Rank_X[0] =  MPI_Rank%MPI_NRank_X[0];
    MPI_Rank_X[1] = (MPI_Rank/MPI_NRank_X[0]) % MPI_NRank_X[1];
    MPI_Rank_X[2] = (MPI_Rank/MPI_NRank_X[0]) / MPI_NRank_X[1];
 
 
-// 4. sibling MPI ranks
+// 5. sibling MPI ranks
    const int Buf     = 1;
    const int Size[3] = { MPI_NRank_X[0]+2*Buf, MPI_NRank_X[1]+2*Buf, MPI_NRank_X[2]+2*Buf };
 
@@ -168,7 +196,7 @@ void Init_Parallelization()
    delete [] RankMap;
 
 
-// 5. left/right edges of each subdomain
+// 6. left/right edges of each subdomain
 #  ifndef SERIAL
    const double dh_min             = amr->dh[TOP_LEVEL];
    const int    SubDomain_Scale[3] = { amr->BoxScale[0]/MPI_NRank_X[0],
@@ -216,34 +244,6 @@ void Init_Parallelization()
    delete [] SubDomain_EdgeL;
    delete [] SubDomain_EdgeR;
 #  endif // ifndef SERIAL
-
-
-// 6. number of particles for each rank (only during the initialization)
-#  ifdef PARTICLE
-   if ( amr->Par->Init != PAR_INIT_BY_RESTART )
-   {
-      if ( amr->Par->NPar_Active_AllRank < 0 )
-         Aux_Error( ERROR_INFO, "NPar_Active_AllRank = %ld < 0 !!\n", amr->Par->NPar_Active_AllRank );
-
-      const int NPar_per_Rank  = amr->Par->NPar_Active_AllRank / MPI_NRank;
-      const int Rank_with_more = amr->Par->NPar_Active_AllRank % MPI_NRank;
-
-//    assuming all particles are active initially (some of them may be marked as inactive when calling Par_Aux_InitCheck)
-      amr->Par->NPar_AcPlusInac = NPar_per_Rank;
-
-      if ( MPI_Rank < Rank_with_more )    amr->Par->NPar_AcPlusInac ++;
-
-//    check
-#     ifdef DEBUG_PARTICLE
-      long NPar_Sum = 0;
-      MPI_Reduce( &amr->Par->NPar_AcPlusInac, &NPar_Sum, 1, MPI_LONG, MPI_SUM, 0, MPI_COMM_WORLD );
-
-      if ( MPI_Rank == 0  &&  NPar_Sum != amr->Par->NPar_Active_AllRank )
-         Aux_Error( ERROR_INFO, "Total number of active particles in all ranks (%ld) != expected (%ld) !!\n",
-                    NPar_Sum, amr->Par->NPar_Active_AllRank );
-#     endif
-   } // if ( OPT__INIT != INIT_BY_RESTART )
-#  endif // #ifdef PARTICLE
 
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );
