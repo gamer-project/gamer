@@ -11,7 +11,7 @@
 //
 // Note        :  1. Invoked by LB_Init_ByFunction()
 //                2. Invoke Par_FindHomePatch_UniformGrid() to associate particles with base-level patches
-//                3. Invoke LB_Init_LoadBalance() to initialize load-balancing on the base level
+//                3. LB_Init_LoadBalance() will be invoked later to optimize load-balancing
 //
 // Parameter   :  None
 //
