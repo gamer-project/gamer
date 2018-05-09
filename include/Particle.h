@@ -483,9 +483,9 @@ struct Particle_t
    //                2. Particles being removed will NOT be actually deleted in the memory.
    //                   Instead, their masses are assigned to Marker, which must be negative
    //                   in order to be distinguishable from active particles.
-   //                   --> IDs of all removed particles will be recorded in the array InactiveParList
+   //                   --> IDs of all removed particles will be recorded in InactiveParList[]
    //                   --> These IDs will be reassigned to new particles added later on when
-   //                       calling AddOneParticle
+   //                       calling AddOneParticle()
    //                3. Note that the global variable "AveDensity_Init" will NOT be recalculated
    //                   automatically here
    //
