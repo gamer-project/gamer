@@ -199,7 +199,7 @@ void SendParticle2HomeRank( const int lv )
 
 //    record the home patch
 #     ifdef SERIAL
-      TRank[ParID] = 1;
+      TRank[ParID] = 0;
 #     else
       TRank[ParID] = LB_Index2Rank( lv, LBIdx, CHECK_ON );
 #     endif
