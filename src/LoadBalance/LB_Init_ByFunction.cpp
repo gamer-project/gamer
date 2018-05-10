@@ -25,12 +25,13 @@ void LB_Init_ByFunction()
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... \n", __FUNCTION__ );
 
 
-   const bool   Redistribute_Yes = true;
-   const bool   ResetLB_Yes      = true;
+   const bool   FindHomePatchForPar_Yes = true;
+   const bool   Redistribute_Yes        = true;
+   const bool   ResetLB_Yes             = true;
 #  ifdef PARTICLE
-   const double Par_Weight       = amr->LB->Par_Weight;
+   const double Par_Weight              = amr->LB->Par_Weight;
 #  else
-   const double Par_Weight       = 0.0;
+   const double Par_Weight              = 0.0;
 #  endif
 
 
@@ -41,7 +42,7 @@ void LB_Init_ByFunction()
 
 //    initialize the base level
       if ( lv == 0 )
-         LB_Init_BaseLevel();
+         Init_UniformGrid( lv, FindHomePatchForPar_Yes );
 
 //    initialize the refinement levels
       else

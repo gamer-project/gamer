@@ -14,7 +14,7 @@ static void SendParticle2HomeRank( const int lv );
 //
 // Note        :  1. The target level must be fully occupied by patches
 //                   --> So either "lv=0" or "lv-1 is fully refined"
-//                2. Invoked by LB_Init_BaseLevel() and Init_ByFile()
+//                2. Invoked by Init_UniformGrid() and Init_ByFile()
 //                3. After calling this function, the amr->Par structure will be reconstructed and
 //                   all particles will be associated with their home patches on lv
 //
