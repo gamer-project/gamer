@@ -166,6 +166,7 @@ void Init_Reload_OldFormat();
 void Init_ByFunction();
 void Init_TestProb();
 void Init_ByFile();
+void Init_UniformGrid( const int lv, const bool FindHomePatchForPar );
 #ifdef OPENMP
 void Init_OpenMP();
 #endif
@@ -366,7 +367,6 @@ real*LB_GetBufferData_MemAllocate_Recv( const int NRecv );
 void LB_GrandsonCheck( const int lv );
 void LB_Init_LoadBalance( const bool Redistribute, const double ParWeight, const bool Reset, const int TLv );
 void LB_Init_ByFunction();
-void LB_Init_BaseLevel();
 void LB_Init_Refine( const int FaLv );
 void LB_SetCutPoint( const int lv, const int NPG_Total, long *CutPoint, const bool InputLBIdx0AndLoad,
                      long *LBIdx0_AllRank_Input, double *Load_AllRank_Input, const double ParWeight );
