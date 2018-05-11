@@ -1,34 +1,33 @@
 #include "GAMER.h"
 
-static void UM_Downgrade( const real *Input, real *Output, const int NX, const int NY, const int NZ,
-                          const int NVar );
-static void UM_AssignData( const int lv, real *UM_Data, const int NVar );
-static void UM_CreateLevel( real *UM_Data, const int lv, int **FlagMap, const int Buffer, const int NVar );
-static void UM_RecordFlagMap( const int lv, int *FlagMap, const int ip, const int jp, const int kp );
-static void UM_FindAncestor( const int Son_lv, const int Son_ip, const int Son_jp, const int Son_kp,
-                             int **FlagMap );
-static void UM_Flag( const int lv, const int *FlagMap );
+// declare as static so that other functions cannot invoke it directly and must use the function pointer
+static void Init_ByFile_Default( real fluid_out[], const real fluid_in[], const int nvar_in );
+
+// this function pointer may be overwritten by various test problem initializers
+void (*Init_ByFile_User_Ptr)( real fluid_out[], const real fluid_in[], const int nvar_in ) = Init_ByFile_Default;
+
+static void Init_ByFile_AssignData( const char UM_Filename[], const int UM_lv, const int UM_NVar, const int UM_LoadNRank );
 
 
 
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Init_ByFile
-// Description :  Set up the initial condition from an input uniform-mesh array
+// Description :  Set up initial condition from an input uniform-mesh array
 //
 // Note        :  1. Create levels from 0 to OPT__UM_IC_LEVEL
-//                   --> No levels above OPT__UM_IC_LEVEL will be created
-//                       --> Unless OPT__UM_IC_REFINE is enabled, for which levels at OPT__UM_IC_LEVEL+1 ~ MAX_LEVEL
-//                           will also be generated based on the given refinement criteria
-//                   --> ALL patches at levels 0 to OPT__UM_IC_LEVEL will be created. In other words,
+//                   --> No levels above OPT__UM_IC_LEVEL will be created unless OPT__UM_IC_REFINE is enabled,
+//                       for which levels OPT__UM_IC_LEVEL+1 ~ MAX_LEVEL may also be generated based on the
+//                       given refinement criteria
+//                   --> ALL patches on levels 0 to OPT__UM_IC_LEVEL will be created. In other words,
 //                       the simulation domain will be fully refined to level OPT__UM_IC_LEVEL.
-//                       --> But if OPT__UM_IC_DOWNGRADE, patches at levels 1~OPT__UM_IC_LEVEL
+//                       --> But if OPT__UM_IC_DOWNGRADE is enabled, patches on levels 1~OPT__UM_IC_LEVEL
 //                           may be removed if not satisfying the refinement criteria
-//                2. The uniform-mesh input file should be named as "UM_IC"
-//                3. This function can load any number of input values per cell (from 1 to NCOMP_TOTAL)
+//                2. The uniform-mesh input file must be named as "UM_IC"
+//                3. This function can load any number of input variables per cell (from 1 to NCOMP_TOTAL)
 //                   --> Determined by the input parameter "OPT__UM_IC_NVAR"
 //                   --> If "OPT__UM_IC_NVAR < NCOMP_TOTAL", one must specify the way to assign values to all
-//                       variables in Model_Init_ByFile_AssignData()
+//                       variables using the function pointer Init_ByFile_User_Ptr()
 //                4. The data format in the UM_IC file should be [k][j][i][v] instead of [v][k][j][i]
 //                   --> Different from the data layout of patch->fluid
 //
@@ -40,42 +39,31 @@ void Init_ByFile()
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... \n", __FUNCTION__ );
 
 
-   const char  FileName[]     = "UM_IC";
-   const int   UM_lv          = OPT__UM_IC_LEVEL;
-   const int   UM_NVar        = OPT__UM_IC_NVAR;
-   const int   UM_Size_Tot[3] = {  NX0_TOT[0]*(1<<UM_lv),         // size of the input data
-                                   NX0_TOT[1]*(1<<UM_lv),
-                                   NX0_TOT[2]*(1<<UM_lv) };
-   const int   UM_Size[3]     = {  UM_Size_Tot[0]/MPI_NRank_X[0], // size of the input data loaded by each rank
-                                   UM_Size_Tot[1]/MPI_NRank_X[1],
-                                   UM_Size_Tot[2]/MPI_NRank_X[2] };
+   const char UM_Filename[] = "UM_IC";
+   const int  UM_Size3D[3]  = { NX0_TOT[0]*(1<<OPT__UM_IC_LEVEL),
+                                NX0_TOT[1]*(1<<OPT__UM_IC_LEVEL),
+                                NX0_TOT[2]*(1<<OPT__UM_IC_LEVEL) };
 
-   real *Input;               // store the input data
-   real *UM_Data[UM_lv+1];    // downgraded variables at each level
-   int  *FlagMap[UM_lv];      // record the positions of patches to be flagged at each level ( 1-->flag )
+// check
+   if ( OPT__UM_IC_LEVEL < 0  ||  OPT__UM_IC_LEVEL > TOP_LEVEL )
+      Aux_Error( ERROR_INFO, "OPT__UM_IC_LEVEL (%d) > TOP_LEVEL (%d) !!\n", OPT__UM_IC_LEVEL, TOP_LEVEL );
 
+   if ( OPT__UM_IC_NVAR < 1  ||  OPT__UM_IC_NVAR > NCOMP_TOTAL )
+      Aux_Error( ERROR_INFO, "invalid OPT__UM_IC_NVAR = %d (accepeted range: %d ~ %d) !!\n",
+                 OPT__UM_IC_NVAR, 1, NCOMP_TOTAL );
 
+   if ( !Aux_CheckFileExist(UM_Filename) )
+      Aux_Error( ERROR_INFO, "file \"%s\" does not exist !!\n", UM_Filename );
 
-// initial check
-// ===========================================================================================================
-   if ( UM_lv < 0  ||  UM_lv > NLEVEL-1 )
-      Aux_Error( ERROR_INFO, "incorrect parameter %s = %d > NLEVEL-1 !!\n", "UM_lv", UM_lv );
-
-   if ( UM_NVar < 1  ||  UM_NVar > NCOMP_TOTAL )
-      Aux_Error( ERROR_INFO, "incorrect parameter %s = %d !!\n", "UM_NVar", UM_NVar );
-
-   if ( !Aux_CheckFileExist(FileName) )
-      Aux_Error( ERROR_INFO, "file \"%s\" does not exist !!\n", FileName );
-
-   FILE *FileTemp = fopen( FileName, "rb" );
+// check file size
+   FILE *FileTemp = fopen( UM_Filename, "rb" );
 
    fseek( FileTemp, 0, SEEK_END );
 
-   const long ExpectSize = long(UM_NVar)*UM_Size_Tot[0]*UM_Size_Tot[1]*UM_Size_Tot[2]*sizeof(real);
+   const long ExpectSize = long(OPT__UM_IC_NVAR)*(long)UM_Size3D[0]*(long)UM_Size3D[1]*(long)UM_Size3D[2]*sizeof(real);
    const long FileSize   = ftell( FileTemp );
    if ( FileSize != ExpectSize )
-      Aux_Error( ERROR_INFO, "size of the file <%s> = %ld != expect = %ld !!\n",
-                 FileName, FileSize, ExpectSize );
+      Aux_Error( ERROR_INFO, "size of the file <%s> (%ld) != expect (%ld) !!\n", UM_Filename, FileSize, ExpectSize );
 
    fclose( FileTemp );
 
@@ -83,223 +71,163 @@ void Init_ByFile()
 
 
 
-// set the file offset for this rank
-// ===========================================================================================================
-   const long offset0 = (long)UM_NVar * sizeof(real) * ( (long)MPI_Rank_X[2]*UM_Size[2]*UM_Size_Tot[1]*UM_Size_Tot[0]
-                                                             + MPI_Rank_X[1]*UM_Size[1]*UM_Size_Tot[0]
-                                                             + MPI_Rank_X[0]*UM_Size[0] );
-   long offset, ID;
+// 1. allocate all real patches on levels 0 ~ OPT__UM_IC_LEVEL
+   const bool FindHomePatchForPar_Yes = true;
+   const bool FindHomePatchForPar_No  = false;
 
-
-
-// load the initial condition from the input uniform-mesh data
-// ===========================================================================================================
-   if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Loading data ...\n" );
-
-   Input = new real [ (long)UM_NVar*UM_Size[0]*UM_Size[1]*UM_Size[2] ];
-
-   for (int TargetRank=0; TargetRank<MPI_NRank; TargetRank++)
+   for (int lv=0; lv<=OPT__UM_IC_LEVEL; lv++)
    {
-      if ( MPI_Rank == TargetRank )
-      {
-         if ( !Aux_CheckFileExist(FileName) )   Aux_Error( ERROR_INFO, "file \"%s\" does not exist !!\n", FileName );
+      if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Allocating level %d ...\n", lv );
 
-         FILE *File = fopen( FileName, "rb" );
+//    associate particles with home patches on the level **OPT__UM_IC_LEVEL** only
+      Init_UniformGrid( lv, (lv==OPT__UM_IC_LEVEL)?FindHomePatchForPar_Yes:FindHomePatchForPar_No );
 
-//       begin to load data
-         for (int k=0; k<UM_Size[2]; k++)
-         for (int j=0; j<UM_Size[1]; j++)
-         {
-            offset = offset0 + (long)UM_NVar*sizeof(real)*( (long)k*UM_Size_Tot[1]*UM_Size_Tot[0] + j*UM_Size_Tot[0] );
-            ID     = (long)UM_NVar * ( (long)k*UM_Size[1]*UM_Size[0] + j*UM_Size[0] );
+//    construct IdxList_Real[]
+//    --> necessary for calling LB_Init_LoadBalance() later with Redistribute_No
+#     ifdef LOAD_BALANCE
+      if ( amr->LB->IdxList_Real         [lv] != NULL )   delete [] amr->LB->IdxList_Real         [lv];
+      if ( amr->LB->IdxList_Real_IdxTable[lv] != NULL )   delete [] amr->LB->IdxList_Real_IdxTable[lv];
 
-            fseek( File, offset, SEEK_SET );
-            fread( &Input[ID], sizeof(real), UM_NVar*UM_Size[0], File );
+      amr->LB->IdxList_Real         [lv] = new long [ amr->NPatchComma[lv][1] ];
+      amr->LB->IdxList_Real_IdxTable[lv] = new int  [ amr->NPatchComma[lv][1] ];
 
-//          verify that we do NOT exceed the file size
-            if ( feof(File) )
-               Aux_Error( ERROR_INFO, "rank %d reach the end of the file <%s> in the function <%s> !!\n",
-                          MPI_Rank, FileName, __FUNCTION__ );
-         }
+      for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
+         amr->LB->IdxList_Real[lv][PID] = amr->patch[0][lv][PID]->LB_Idx;
 
-         fclose( File );
-      }
+      Mis_Heapsort( amr->NPatchComma[lv][1], amr->LB->IdxList_Real[lv], amr->LB->IdxList_Real_IdxTable[lv] );
+#     endif
 
-      MPI_Barrier( MPI_COMM_WORLD );
+//    get the total number of real patches
+      Mis_GetTotalPatchNumber( lv );
 
-   } // for (int TargetRank=0; TargetRank<NGPU; TargetRank++)
+      if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Allocating level %d ... done\n", lv );
+   } // for (int lv=0; lv<=OPT__UM_IC_LEVEL; lv++)
 
 
 
-// allocate and initialize the FlagMap array
-// ===========================================================================================================
-   for (int lv=0; lv<UM_lv; lv++)
+// 2. initialize load-balancing
+#  ifdef LOAD_BALANCE
+// no need to redistribute patches since Init_UniformGrid() already takes into account load balancing
+// --> but particle weighting is not considered yet
+// --> we will invoke LB_Init_LoadBalance() again after Flu_Restrict() for that
+
+// must not reset load-balance variables (i.e., must adopt ResetLB_No) to avoid overwritting IdxList_Real[]
+// and IdxList_Real_IdxList[] already set above
+   const double ParWeight_Zero  = 0.0;
+   const bool   Redistribute_No = false;
+   const bool   ResetLB_No      = false;
+   const int    AllLv           = -1;
+
+   LB_Init_LoadBalance( Redistribute_No, ParWeight_Zero, ResetLB_No, AllLv );
+#  endif
+
+
+
+// 3. assign data on level OPT__UM_IC_LEVEL by the input file UM_IC
+   Init_ByFile_AssignData( UM_Filename, OPT__UM_IC_LEVEL, OPT__UM_IC_NVAR, OPT__UM_IC_LOAD_NRANK );
+
+#  ifdef LOAD_BALANCE
+   Buf_GetBufferData( OPT__UM_IC_LEVEL, amr->FluSg[OPT__UM_IC_LEVEL], NULL_INT, DATA_GENERAL, _TOTAL,
+                      Flu_ParaBuf, USELB_YES );
+#  endif
+
+
+// 4. assign data on levels 0 ~ OPT__UM_IC_LEVEL-1 by data restriction
+   for (int lv=OPT__UM_IC_LEVEL-1; lv>=0; lv--)
    {
-      const int NPatch1D[3] = { (NX0[0]/PATCH_SIZE)*(1<<lv) + 4,
-                                (NX0[1]/PATCH_SIZE)*(1<<lv) + 4,
-                                (NX0[2]/PATCH_SIZE)*(1<<lv) + 4  };
-      const int NPatch = NPatch1D[0]*NPatch1D[1]*NPatch1D[2];
+      if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Restricting level %d ... ", lv );
 
-      FlagMap[lv] = new int [NPatch];
+      Flu_Restrict( lv, amr->FluSg[lv+1], amr->FluSg[lv], NULL_INT, NULL_INT, _TOTAL );
 
-      for (int P=0; P<NPatch; P++)  FlagMap[lv][P] = -1;
+#     ifdef LOAD_BALANCE
+      LB_GetBufferData( lv, amr->FluSg[lv], NULL_INT, DATA_RESTRICT, _TOTAL, NULL_INT );
+
+      Buf_GetBufferData( lv, amr->FluSg[lv], NULL_INT, DATA_GENERAL, _TOTAL, Flu_ParaBuf, USELB_YES );
+#     endif
+
+      if ( MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );
    }
 
 
 
-// compute the downgraded data at levels 0 -> UM_lv
-// ===========================================================================================================
-   if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Downgrading data ...\n" );
+// 5. optimize load-balancing to take into account particle weighting
+#  if ( defined PARTICLE  &&  defined LOAD_BALANCE )
+   const bool Redistribute_Yes = true;
+   const bool ResetLB_Yes      = true;
 
-   UM_Data[UM_lv] = Input;
+   if ( amr->LB->Par_Weight > 0.0 )
+      LB_Init_LoadBalance( Redistribute_Yes, amr->LB->Par_Weight, ResetLB_Yes, AllLv );
+#  endif
 
-   for (int lv=UM_lv-1; lv>=0; lv--)
+
+
+// 6. derefine the uniform-mesh data from levels OPT__UM_IC_LEVEL to 1
+   /*
+#  ifdef PARTICLE
+   const double Par_Weight = amr->LB->Par_Weight;
+#  else
+   const double Par_Weight = 0.0;
+#  endif
+
+   if ( OPT__UM_IC_DOWNGRADE )
+   for (int lv=OPT__UM_IC_LEVEL-1; lv>=0; lv--)
    {
-      const int NX = NX0[0] * (1<<lv);
-      const int NY = NX0[1] * (1<<lv);
-      const int NZ = NX0[2] * (1<<lv);
+      if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Downgrading level %d ... ", lv+1 );
 
-      UM_Data[lv] = new real [ (long)UM_NVar*NX*NY*NZ ];
+      Flag_Real( lv, USELB_NO );
 
-      UM_Downgrade( UM_Data[lv+1], UM_Data[lv], NX, NY, NZ, UM_NVar );
-   }
+#     ifdef LOAD_BALANCE
 
+      ...
 
+      LB_Init_LoadBalance( Redistribute_Yes, Par_Weight, ResetLB_Yes, lv+1 );
 
-// create level : 0
-// ===========================================================================================================
-   if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Constructing level 0 ...\n" );
+#     else
 
-   Init_BaseLevel();
-
-// assign data for the base level
-   UM_AssignData( 0, UM_Data[0], UM_NVar );
-
-// get the buffer data for the base level
-   Buf_GetBufferData( 0, amr->FluSg[0], NULL_INT, DATA_GENERAL, _TOTAL, Flu_ParaBuf, USELB_NO );
-
-
-
-// create level : UM_lv -> 1
-// ===========================================================================================================
-// construct the FlagMap for levels UM_lv-1 -> 0
-   for (int lv=UM_lv; lv>0; lv--)
-      UM_CreateLevel( UM_Data[lv], lv, FlagMap, (lv==MAX_LEVEL-1)?FLAG_BUFFER_SIZE_MAXM1_LV:
-                                                (lv==MAX_LEVEL-2)?FLAG_BUFFER_SIZE_MAXM2_LV:
-                                                                  FLAG_BUFFER_SIZE,
-                      UM_NVar );
-
-// flag levels 0 -> UM_lv-1 and construct levels 1-> UM_lv accordingly
-// (we still have to loop over ALL levels since several lists needed to be initialized)
-   for (int lv=0; lv<NLEVEL-1; lv++)
-   {
-      if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Constructing level %d ...\n", lv+1 );
-
-      if ( lv < UM_lv )  UM_Flag( lv, FlagMap[lv] );
-
-      Buf_RecordBoundaryFlag( lv );
+      ...
 
       MPI_ExchangeBoundaryFlag( lv );
 
       Flag_Buffer( lv );
 
-      Init_Refine( lv );
+      Refine( lv, USELB_NO );
 
-      UM_AssignData( lv+1, UM_Data[lv+1], UM_NVar );
+      Buf_GetBufferData( lv+1, amr->FluSg[lv+1], NULL_INT, DATA_AFTER_REFINE, _TOTAL, Flu_ParaBuf, USELB_NO );
+#     endif // #ifdef LOAD_BALANCE ... else ...
 
-      Buf_GetBufferData( lv+1, amr->FluSg[lv+1], NULL_INT, DATA_GENERAL, _TOTAL, Flu_ParaBuf, USELB_NO );
-   }
-
-// get the total number of real patches in all ranks
-   for (int lv=0; lv<NLEVEL; lv++)     Mis_GetTotalPatchNumber( lv );
-
-   delete [] Input;
-   for (int lv=0; lv<UM_lv; lv++)   delete [] FlagMap[lv];
-   for (int lv=0; lv<UM_lv; lv++)   delete [] UM_Data[lv];
+      if ( MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );
+   } // for (int lv=OPT__UM_IC_LEVEL-1; lv>=0; lv--)
 
 
 
-// downgrade the uniform-mesh data from level=OPT__UM_IC_LEVEL to level=0
-// ===========================================================================================================
-   if ( OPT__UM_IC_DOWNGRADE )
-   {
-      if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Derefining the uniform-mesh data ...\n" );
-
-      for (int lv=OPT__UM_IC_LEVEL-1; lv>=0; lv--)
-      {
-         if ( MPI_Rank == 0 )    Aux_Message( stdout, "      Lv %2d ... ", lv+1 );
-
-         Flag_Real( lv, USELB_NO );
-
-         MPI_ExchangeBoundaryFlag( lv );
-
-         Flag_Buffer( lv );
-
-         Refine( lv, USELB_NO );
-
-         Buf_GetBufferData( lv+1, amr->FluSg[lv+1], NULL_INT, DATA_AFTER_REFINE, _TOTAL, Flu_ParaBuf, USELB_NO );
-
-         if ( MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );
-      } // for (int lv=OPT__UM_IC_LEVEL-1; lv>=0; lv--)
-
-      if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Downgrading the uniform-mesh data ... done\n" );
-   } // if ( OPT__UM_IC_DOWNGRADE )
-
-
-
-// refine the uniform-mesh data from level=OPT__UM_IC_LEVEL to level=MAX_LEVEL
-// ===========================================================================================================
+// 7. refine the uniform-mesh data from levels OPT__UM_IC_LEVEL to MAX_LEVEL-1
    if ( OPT__UM_IC_REFINE )
+   for (int lv=OPT__UM_IC_LEVEL; lv<MAX_LEVEL; lv++)
    {
-      if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Refining the uniform-mesh data ...\n" );
+      if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Refining level %d ... ", lv+1 );
 
-      for (int lv=OPT__UM_IC_LEVEL; lv<MAX_LEVEL; lv++)
-      {
-         if ( MPI_Rank == 0 )    Aux_Message( stdout, "      Lv %2d ... ", lv );
+      Flag_Real( lv, USELB_NO );
 
-         Flag_Real( lv, USELB_NO );
+#     ifdef LOAD_BALANCE
 
-         MPI_ExchangeBoundaryFlag( lv );
+      ...
 
-         Flag_Buffer( lv );
+      LB_Init_LoadBalance( Redistribute_Yes, Par_Weight, ResetLB_Yes, lv+1 );
 
-         Refine( lv, USELB_NO );
+#     else
 
-         Buf_GetBufferData( lv+1, amr->FluSg[lv+1], NULL_INT, DATA_AFTER_REFINE, _TOTAL, Flu_ParaBuf, USELB_NO );
+      MPI_ExchangeBoundaryFlag( lv );
 
-         if ( MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );
-      } // for (int lv=OPT__UM_IC_LEVEL; lv<MAX_LEVEL; lv++)
+      Flag_Buffer( lv );
 
-      if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Refining the uniform-mesh data ... done\n" );
-   } // if ( OPT__UM_IC_REFINE )
+      Refine( lv, USELB_NO );
 
+      Buf_GetBufferData( lv+1, amr->FluSg[lv+1], NULL_INT, DATA_AFTER_REFINE, _TOTAL, Flu_ParaBuf, USELB_NO );
+#     endif // #ifdef LOAD_BALANCE
 
-// get the total number of real patches at all ranks again
-   for (int lv=0; lv<NLEVEL; lv++)     Mis_GetTotalPatchNumber( lv );
-
-
-
-// improve load balance
-// ===========================================================================================================
-#  ifdef LOAD_BALANCE
-// we don't have enough information to calculate the load-balance weighting of particles when
-// calling LB_Init_LoadBalance() for the first time
-// --> for example, LB_EstimateWorkload_AllPatchGroup()->Par_CollectParticle2OneLevel()->Par_LB_CollectParticle2OneLevel()
-//     needs amr->LB->IdxList_Real[], which will be constructed only AFTER calling LB_Init_LoadBalance()
-// --> must disable particle weighting (by setting ParWeight==0.0) first
-   const double ParWeight_Zero   = 0.0;
-   const bool   Redistribute_Yes = true;
-   const bool   ResetLB_Yes      = true;
-   const int    AllLv            = -1;
-
-   LB_Init_LoadBalance( Redistribute_Yes, ParWeight_Zero, ResetLB_Yes, AllLv );
-
-// redistribute patches again if we want to take into account the load-balance weighting of particles
-#  ifdef PARTICLE
-   if ( amr->LB->Par_Weight > 0.0 )
-   LB_Init_LoadBalance( Redistribute_Yes, amr->LB->Par_Weight, ResetLB_Yes, AllLv );
-#  endif
-#  endif // #ifdef LOAD_BALANCE
+      if ( MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );
+   } // for (int lv=OPT__UM_IC_LEVEL; lv<MAX_LEVEL; lv++)
+   */
 
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", __FUNCTION__ );
@@ -309,344 +237,145 @@ void Init_ByFile()
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  UM_CreateLevel
-// Description :  Create all patches at level lv
+// Function    :  Init_ByFile_AssignData
+// Description :  Use the input uniform-mesh array stored in the file "UM_Filename" to assign data to all
+//                real patches on level "UM_lv"
 //
-// Note        :  The flag buffer zones are also included
+// Note        :  1. The function pointer Init_ByFile_User_Ptr() points to Init_ByFile_Default() by default
+//                   but may be overwritten by various test problem initializers
 //
-// Parameter   :  UM_Data : Input uniform-mesh array at level "lv"
-//                lv      : Target refinement level to be constructed
-//                FlagMap : Map recording the refinement flag of each patch
-//                Buffer  : Size of the flag buffer
-//                NVar    : Number of variables
+// Parameter   :  UM_Filename  : Target file name
+//                UM_lv        : Target AMR level
+//                UM_NVar      : Number of variables
+//                UM_LoadNRank : Number of parallel I/O
+//
+// Return      :  amr->patch->fluid
 //-------------------------------------------------------------------------------------------------------
-void UM_CreateLevel( real *UM_Data, const int lv, int **FlagMap, const int Buffer, const int NVar )
+void Init_ByFile_AssignData( const char UM_Filename[], const int UM_lv, const int UM_NVar, const int UM_LoadNRank )
 {
 
-   const int NPatch1D[3]    = { (NX0[0]/PATCH_SIZE)*(1<<(lv  )) + 4,
-                                (NX0[1]/PATCH_SIZE)*(1<<(lv  )) + 4,
-                                (NX0[2]/PATCH_SIZE)*(1<<(lv  )) + 4  };
-   const int Fa_NPatch1D[3] = { (NX0[0]/PATCH_SIZE)*(1<<(lv-1)) + 4,
-                                (NX0[1]/PATCH_SIZE)*(1<<(lv-1)) + 4,
-                                (NX0[2]/PATCH_SIZE)*(1<<(lv-1)) + 4  };
-
-   const int NX             = PATCH_SIZE * ( NPatch1D[0]-4 );
-   const int NY             = PATCH_SIZE * ( NPatch1D[1]-4 );
+   if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Loading data from the input file ...\n" );
 
 
-// skip buffer patches
-   for (int kp=2; kp<NPatch1D[2]-2; kp++)         // kp : (kp)th patch in the z direction
-   for (int jp=2; jp<NPatch1D[1]-2; jp++)
-   for (int ip=2; ip<NPatch1D[0]-2; ip++)
+// check
+   if ( Init_ByFile_User_Ptr == NULL )  Aux_Error( ERROR_INFO, "Init_ByFile_User_Ptr == NULL !!\n" );
+
+
+   const int UM_Size3D[3] = { NX0_TOT[0]*(1<<UM_lv),
+                              NX0_TOT[1]*(1<<UM_lv),
+                              NX0_TOT[2]*(1<<UM_lv) };
+   const int UM_scale     = amr->scale[UM_lv];
+
+   long Offset3D_File0[3], Offset_File0, Offset_File, Offset_PG;
+   real fluid[NCOMP_TOTAL];
+
+   real *PG_Data = new real [ CUBE(PS2)*UM_NVar ];
+
+
+// load data with UM_LoadNRank ranks at a time
+   for (int TRank0=0; TRank0<MPI_NRank; TRank0+=UM_LoadNRank)
    {
-//    const int RhoID0  = NVar * ( (kp-2)*PATCH_SIZE*NY*NX + (jp-2)*PATCH_SIZE*NX + (ip-2)*PATCH_SIZE );
-      bool mark         = false;
+      if ( MPI_Rank >= TRank0  &&  MPI_Rank < TRank0+UM_LoadNRank )
+      {
+         if ( MPI_Rank == TRank0 )  Aux_Message( stdout, "      Loading ranks %4d -- %4d ... ",
+                                                 TRank0, MIN(TRank0+UM_LoadNRank-1, MPI_NRank-1) );
 
-      for (int k=0; k<PATCH_SIZE; k++)   {  if (mark) break;
-      for (int j=0; j<PATCH_SIZE; j++)   {  if (mark) break;
-      for (int i=0; i<PATCH_SIZE; i++)   {  if (mark) break;
+         FILE *File = fopen( UM_Filename, "rb" );
 
-//       const int RhoID = RhoID0 + NVar*(k*NY*NX + j*NX + i);
-
-//       if ( UM_Data[RhoID] > MinRho )
-         if ( true )    // always flag all patches at level <= OPT__UM_IC_LEVEL
+//       load one patch group at a time
+         for (int PID0=0; PID0<amr->NPatchComma[UM_lv][1]; PID0+=8)
          {
-//          get the right index and corner of the patch 0 in the local patch group (8 patches = 1 patch group)
-            const int ip2           = ip - ip%2;
-            const int jp2           = jp - jp%2;
-            const int kp2           = kp - kp%2;
+//          calculate the file offset of the target patch group
+            for (int d=0; d<3; d++)    Offset3D_File0[d] = amr->patch[0][UM_lv][PID0]->corner[d] / UM_scale;
 
-            const int Fa_Corner[3]  = { ip2*PATCH_SIZE/2, jp2*PATCH_SIZE/2, kp2*PATCH_SIZE/2 };
-
-
-//          evaluate the corner of the grid at level lv-1 enclosing the grid (i,j,k) at level lv
-            const int i2            = i - i%2;
-            const int j2            = j - j%2;
-            const int k2            = k - k%2;
-            const int Fa_FlagPos[3] = { (ip*PATCH_SIZE+i2)/2, (jp*PATCH_SIZE+j2)/2, (kp*PATCH_SIZE+k2)/2 };
+            Offset_File0  = IDX321( Offset3D_File0[0], Offset3D_File0[1], Offset3D_File0[2], UM_Size3D[0], UM_Size3D[1] );
+            Offset_File0 *= (long)UM_NVar*sizeof(real);
 
 
-//          evaluate the patch id in each direction including the buffer zone
-            const int ip_start = ip2 - (  Fa_FlagPos[0]-Buffer <  Fa_Corner[0]  ?  2:0  );
-            const int jp_start = jp2 - (  Fa_FlagPos[1]-Buffer <  Fa_Corner[1]  ?  2:0  );
-            const int kp_start = kp2 - (  Fa_FlagPos[2]-Buffer <  Fa_Corner[2]  ?  2:0  );
-            const int ip_end   = ip2 + (  Fa_FlagPos[0]+Buffer >= Fa_Corner[0]+PATCH_SIZE  ?  3:1  );
-            const int jp_end   = jp2 + (  Fa_FlagPos[1]+Buffer >= Fa_Corner[1]+PATCH_SIZE  ?  3:1  );
-            const int kp_end   = kp2 + (  Fa_FlagPos[2]+Buffer >= Fa_Corner[2]+PATCH_SIZE  ?  3:1  );
+//          load data from the disk (one row at a time)
+            Offset_PG = 0;
 
-
-//          create patches including the buffer zone
-            for ( int kp3=kp_start; kp3<kp_end; kp3+=2 )
-            for ( int jp3=jp_start; jp3<jp_end; jp3+=2 )
-            for ( int ip3=ip_start; ip3<ip_end; ip3+=2 )
+            for (int k=0; k<PS2; k++)
+            for (int j=0; j<PS2; j++)
             {
-               const int Fa_ip = 1 + ip3/2;
-               const int Fa_jp = 1 + jp3/2;
-               const int Fa_kp = 1 + kp3/2;
+               Offset_File = Offset_File0 + (long)UM_NVar*sizeof(real)*( ((long)k*UM_Size3D[1] + j)*UM_Size3D[0] );
 
-               const int Fa_FlagID = Fa_kp*Fa_NPatch1D[1]*Fa_NPatch1D[0] + Fa_jp*Fa_NPatch1D[0] + Fa_ip;
+               fseek( File, Offset_File, SEEK_SET );
+               fread( PG_Data+Offset_PG, sizeof(real), UM_NVar*PS2, File );
 
-               if ( FlagMap[lv-1][Fa_FlagID] == -1 )
-               {
-//                create new patches in level 0 ~ lv-1 (to ensure the proper-nesting condition)
-                  UM_FindAncestor( lv, ip3, jp3, kp3, FlagMap );
+//             verify that the file size is not exceeded
+               if ( feof(File) )   Aux_Error( ERROR_INFO, "reaching the end of the file \"%s\" !!\n", UM_Filename );
 
-//                record the position of patches being flagged at level "lv-1"
-                  UM_RecordFlagMap( lv-1, FlagMap[lv-1], Fa_ip, Fa_jp, Fa_kp );
-               }
-
-            } // kp3, jp3, ip3
-
-//          set mark = true to stop looping the root patch
-            mark = true;
-
-         } // if ( true )
-      }}} // k, j, i
-   } // kp, jp, ip
-} // FUNCTION : UM_CreateLevel
-
-
-
-//-------------------------------------------------------------------------------------------------------
-// Function    :  UM_FindAncestor
-// Description :  For a given Son at level "Son_lv" with origin equal to "Son_ip, Son_jp, Son_kp",
-//                find all its ancestors according to the proper-nesting condition
-//
-// Parameter   :  Son_lv  : Tefinement level of the son patch
-//                Son_ip  : "Son_ip"-th son patch in the x direction
-//                Son_jp  : "Son_jp"-th son patch in the y direction
-//                Son_kp  : "Son_kp"-th son patch in the z direction
-//                FlagMap : Map recording the refinement flag of each patch
-//-------------------------------------------------------------------------------------------------------
-void UM_FindAncestor( const int Son_lv, const int Son_ip, const int Son_jp, const int Son_kp, int **FlagMap )
-{
-
-   const int Fa_lv               = Son_lv - 1;
-   const int GrandPa_NPatch1D[3] = { (NX0[0]/PATCH_SIZE)*(1<<(Fa_lv-1)) + 4,
-                                     (NX0[1]/PATCH_SIZE)*(1<<(Fa_lv-1)) + 4,
-                                     (NX0[2]/PATCH_SIZE)*(1<<(Fa_lv-1)) + 4  };
-
-   const int Fa_ip               = 1 + Son_ip/2;
-   const int Fa_jp               = 1 + Son_jp/2;
-   const int Fa_kp               = 1 + Son_kp/2;
-
-   const int Fa_ip2              = Fa_ip - Fa_ip%2;         // the ip of the patch 0 in the local patch group
-   const int Fa_jp2              = Fa_jp - Fa_jp%2;
-   const int Fa_kp2              = Fa_kp - Fa_kp%2;
-
-   const int dip                 = 2*( -1 + 2*(Fa_ip%2) );  // the interval of ip of the sibling patch group
-   const int djp                 = 2*( -1 + 2*(Fa_jp%2) );  // (even -> -2 ; odd -> +2)
-   const int dkp                 = 2*( -1 + 2*(Fa_kp%2) );
-
-
-// base-level patches will always exist
-   if ( Fa_lv == 0 )    return;
-
-
-// allcoate/find eight patch groups (each with eight patches) at level Fa_lv to surround the target son patch
-   for (int Fa_kp3=Fa_kp2, kc=0; kc<2; Fa_kp3+=dkp, kc++)
-   for (int Fa_jp3=Fa_jp2, jc=0; jc<2; Fa_jp3+=djp, jc++)
-   for (int Fa_ip3=Fa_ip2, ic=0; ic<2; Fa_ip3+=dip, ic++)
-   {
-      const int GrandPa_ip = 1 + Fa_ip3/2;
-      const int GrandPa_jp = 1 + Fa_jp3/2;
-      const int GrandPa_kp = 1 + Fa_kp3/2;
-
-      const int GrandPa_FlagID =   GrandPa_kp*GrandPa_NPatch1D[1]*GrandPa_NPatch1D[0]
-                                 + GrandPa_jp*GrandPa_NPatch1D[0] + GrandPa_ip;
-
-
-      if ( FlagMap[Fa_lv-1][GrandPa_FlagID] == -1 )
-      {
-//       create new patches in level 0 ~ Fa_lv-1 (to ensure the proper-nesting condition)
-         UM_FindAncestor( Fa_lv, Fa_ip3, Fa_jp3, Fa_kp3, FlagMap );
-
-//       record the position of patches being flagged in the level "Fa_lv-1"
-         UM_RecordFlagMap( Fa_lv-1, FlagMap[Fa_lv-1], GrandPa_ip, GrandPa_jp, GrandPa_kp );
-      }
-   }
-
-} // FUNCTION : UM_FindAncestor
-
-
-
-//-------------------------------------------------------------------------------------------------------
-// Function    :  UM_Downgrade
-// Description :  Downgrade the data of Input array by a factor of two and store in the Output array
-//
-// Parameter   :  Input  : Input array
-//                Output : Output array
-//                NX     : Size of the Output array in the x direction
-//                NY     : Size of the Output array in the y direction
-//                NZ     : Size of the Output array in the z direction
-//                NVar   : Number of variables
-//-------------------------------------------------------------------------------------------------------
-void UM_Downgrade( const real *Input, real *Output, const int NX, const int NY, const int NZ, const int NVar )
-{
-
-   const int NX2 = 2*NX;
-   const int NY2 = 2*NY;
-   int ii, jj, kk;
-
-   for (int k=0; k<NZ; k++)   {  kk = 2*k;
-   for (int j=0; j<NY; j++)   {  jj = 2*j;
-   for (int i=0; i<NX; i++)   {  ii = 2*i;
-   for (int v=0; v<NVar; v++) {
-
-      const long OutID   =    (long)NVar * ( (long)k*NY*NX+ j*NX+ i ) + v;
-      const long InID[8] = {  (long)NVar * ( (long)(kk+0)*NY2*NX2 + (jj+0)*NX2 + (ii+0) ) + v,
-                              (long)NVar * ( (long)(kk+0)*NY2*NX2 + (jj+0)*NX2 + (ii+1) ) + v,
-                              (long)NVar * ( (long)(kk+0)*NY2*NX2 + (jj+1)*NX2 + (ii+0) ) + v,
-                              (long)NVar * ( (long)(kk+1)*NY2*NX2 + (jj+0)*NX2 + (ii+0) ) + v,
-                              (long)NVar * ( (long)(kk+0)*NY2*NX2 + (jj+1)*NX2 + (ii+1) ) + v,
-                              (long)NVar * ( (long)(kk+1)*NY2*NX2 + (jj+1)*NX2 + (ii+0) ) + v,
-                              (long)NVar * ( (long)(kk+1)*NY2*NX2 + (jj+0)*NX2 + (ii+1) ) + v,
-                              (long)NVar * ( (long)(kk+1)*NY2*NX2 + (jj+1)*NX2 + (ii+1) ) + v  };
-
-      Output[OutID] = 0.125*(   Input[InID[0]] + Input[InID[1]] + Input[InID[2]] + Input[InID[3]]
-                              + Input[InID[4]] + Input[InID[5]] + Input[InID[6]] + Input[InID[7]] );
-   }}}}
-
-} // FUNCTION : UM_Downgrade
-
-
-
-//-------------------------------------------------------------------------------------------------------
-// Function    :  UM_RecordFlagMap
-// Description :  Record the postion of patches being flagged at level "lv"
-//
-// Note        :  +1 : Flagged
-//                -1 : Unflagged
-//
-// Parameter   :  lv       : Target refinement level to be flagged
-//                FlagMap  : Map recording the refinement flag of each patch
-//                ip,jp,kp : Sequence numbers of patch in each direction
-//-------------------------------------------------------------------------------------------------------
-void UM_RecordFlagMap( const int lv, int *FlagMap, const int ip, const int jp, const int kp )
-{
-
-   const int NPatch1D[3] = { (NX0[0]/PATCH_SIZE)*(1<<lv) + 4,
-                             (NX0[1]/PATCH_SIZE)*(1<<lv) + 4,
-                             (NX0[2]/PATCH_SIZE)*(1<<lv) + 4  };
-
-   const int FlagID      = kp*NPatch1D[1]*NPatch1D[0] + jp*NPatch1D[0] + ip;
-
-   FlagMap[FlagID] = 1;
-
-} // FUNCTION : UM_RecordFlagMap
-
-
-
-//-------------------------------------------------------------------------------------------------------
-// Function    :  UM_Flag
-// Description :  Flag patches at level "lv" according to the FlagMap[lv]
-//
-// Parameter   :  lv      : Refinement level to be flagged
-//                FlagMap : Map recording the refinement flag of each patch
-//-------------------------------------------------------------------------------------------------------
-void UM_Flag( const int lv, const int *FlagMap )
-{
-
-   const int scale0      = amr->scale[ 0];
-   const int scale       = amr->scale[lv];
-   const int NPatch1D[3] = { (NX0[0]/PATCH_SIZE)*(1<<lv) + 4,
-                             (NX0[1]/PATCH_SIZE)*(1<<lv) + 4,
-                             (NX0[2]/PATCH_SIZE)*(1<<lv) + 4  };
-
-   int ip, jp, kp, FlagID;
-
-   for (int PID=0; PID<amr->num[lv]; PID++)
-   {
-      ip       = ( amr->patch[0][lv][PID]->corner[0] - MPI_Rank_X[0]*NX0[0]*scale0 ) / (PATCH_SIZE*scale) + 2;
-      jp       = ( amr->patch[0][lv][PID]->corner[1] - MPI_Rank_X[1]*NX0[1]*scale0 ) / (PATCH_SIZE*scale) + 2;
-      kp       = ( amr->patch[0][lv][PID]->corner[2] - MPI_Rank_X[2]*NX0[2]*scale0 ) / (PATCH_SIZE*scale) + 2;
-
-      FlagID   = kp*NPatch1D[1]*NPatch1D[0] + jp*NPatch1D[0] + ip;
-
-      amr->patch[0][lv][PID]->flag = ( FlagMap[FlagID] == 1 ) ? true : false;
-   }
-
-} // FUNCTION : UM_Flag
-
-
-
-//-------------------------------------------------------------------------------------------------------
-// Function    :  UM_AssignData
-// Description :  Use the input uniform-mesh array to assign data to all patches at level "lv"
-//
-// Note        :  If "NVar == NCOMP_TOTAL", we just copy the values recorded in UM_Data to all patches.
-//                Otherwise, the model-dependent function XXX_Init_ByFile_AssignData() must be provided to
-//                specify the way to assign data.
-//
-// Parameter   :  lv      : Target refinement level to assign data
-//                UM_Data : Input uniform-mesh array
-//                NVar    : Number of variables stored in UM_Data
-//-------------------------------------------------------------------------------------------------------
-void UM_AssignData( const int lv, real *UM_Data, const int NVar )
-{
-
-   if ( NVar == NCOMP_TOTAL )
-   {
-      const int NX[3]  = { NX0[0]*(1<<lv), NX0[1]*(1<<lv), NX0[2]*(1<<lv) };
-      const int scale0 = amr->scale[ 0];
-      const int scale  = amr->scale[lv];
-
-      int *Corner;
-      int ii, jj, kk;
-      long Idx;
-
-      for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
-      {
-         Corner = amr->patch[0][lv][PID]->corner;
-
-         for (int k=0; k<PATCH_SIZE; k++)    { kk = ( Corner[2] - MPI_Rank_X[2]*NX0[2]*scale0 ) / scale + k;
-         for (int j=0; j<PATCH_SIZE; j++)    { jj = ( Corner[1] - MPI_Rank_X[1]*NX0[1]*scale0 ) / scale + j;
-         for (int i=0; i<PATCH_SIZE; i++)    { ii = ( Corner[0] - MPI_Rank_X[0]*NX0[0]*scale0 ) / scale + i;
-
-            Idx = (long)NVar*( (long)kk*NX[1]*NX[0] + jj*NX[0]+ ii );
-
-//          load all variables
-            for (int v=0; v<NCOMP_TOTAL; v++)
-               amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[v][k][j][i] = UM_Data[ Idx + v ];
-
-//          floor and normalize passive scalars
-#           if ( NCOMP_PASSIVE > 0 )
-            for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)
-               amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[v][k][j][i]
-                  = FMAX( amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[v][k][j][i], TINY_NUMBER );
-
-            if ( OPT__NORMALIZE_PASSIVE )
-            {
-               real Passive[NCOMP_PASSIVE];
-
-               for (int v=0; v<NCOMP_PASSIVE; v++)
-                  Passive[v] = amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[ NCOMP_FLUID + v ][k][j][i];
-
-               CPU_NormalizePassive( amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[DENS][k][j][i],
-                                     Passive, PassiveNorm_NVar, PassiveNorm_VarIdx );
-
-               for (int v=0; v<NCOMP_PASSIVE; v++)
-                  amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[ NCOMP_FLUID + v ][k][j][i] = Passive[v];
+               Offset_PG += UM_NVar*PS2;
             }
-#           endif
-         }}} // i,j,k
-      } // for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
-   } // if ( NVar == NCOMP_TOTAL )
 
-   else
-   {
-#     if   ( MODEL == HYDRO )
-      Hydro_Init_ByFile_AssignData( lv, UM_Data, NVar );
 
-#     elif ( MODEL == MHD )
-#     warning : WAIT MHD !!!
+//          copy data to each patch
+            for (int LocalID=0; LocalID<8; LocalID++)
+            {
+               const int PID    = PID0 + LocalID;
+               const int Disp_i = TABLE_02( LocalID, 'x', 0, PS1 );
+               const int Disp_j = TABLE_02( LocalID, 'y', 0, PS1 );
+               const int Disp_k = TABLE_02( LocalID, 'z', 0, PS1 );
 
-#     elif ( MODEL == ELBDM )
-      ELBDM_Init_ByFile_AssignData( lv, UM_Data, NVar );
+               for (int k=0; k<PS1; k++)
+               for (int j=0; j<PS1; j++)
+               for (int i=0; i<PS1; i++)
+               {
+                  Offset_PG = (long)UM_NVar*IDX321( i+Disp_i, j+Disp_j, k+Disp_k, PS2, PS2 );
 
-#     else
-#     error : ERROR : unsupported MODEL !!
-#     endif // MODEL
-   } // if ( NVar == NCOMP_TOTAL ) ... else ...
+                  Init_ByFile_User_Ptr( fluid, PG_Data+Offset_PG, UM_NVar );
 
-} // FUNCTION : UM_AssignData
+                  for (int v=0; v<NCOMP_TOTAL; v++)
+                     amr->patch[ amr->FluSg[UM_lv] ][UM_lv][PID]->fluid[v][k][j][i] = fluid[v];
+               }
+            } // for (int LocalID=0; LocalID<8; LocalID++)
+         } // for (int PID0=0; PID0<amr->NPatchComma[UM_lv][1]; PID0+=8)
+
+         fclose( File );
+
+         if ( MPI_Rank == TRank0 )  Aux_Message( stdout, "done\n" );
+      } // if ( MPI_Rank >= TRank0  &&  MPI_Rank < TRank0+UM_LoadNRank )
+
+      MPI_Barrier( MPI_COMM_WORLD );
+   } // for (int TRank0=0; TRank0<MPI_NRank; TRank0+=UM_LoadNRank)
+
+   delete [] PG_Data;
+
+
+   if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Loading data from the input file ... done\n" );
+
+} // FUNCTION : Init_ByFile_AssignData
+
+
+
+//-------------------------------------------------------------------------------------------------------
+// Function    :  Init_ByFile_Default
+// Description :  Function to actually set the fluid field from the input uniform-mesh array
+//
+// Note        :  1. Invoked by Init_ByFile_AssignData() using the function pointer Init_ByFile_User_Ptr()
+//                   --> The function pointer may be reset by various test problem initializers, in which case
+//                       this funtion will become useless
+//                2. Does not floor and normalize passive scalars
+//                3. Does not calculate the dual-energy variable
+//                   --> When adopting DUAL_ENERGY, the input uniform-mesh array must include the dual-energy
+//                       variable
+//                4. Assuming nvar_in (i.e., OPT__UM_IC_NVAR) == NCOMP_TOTAL
+//
+// Parameter   :  fluid_out : Fluid field to be set
+//                fluid_in  : Fluid field loaded from the uniform-mesh array (UM_IC)
+//                nvar_in   : Number of variables in fluid_in
+//
+// Return      :  fluid_out
+//-------------------------------------------------------------------------------------------------------
+void Init_ByFile_Default( real fluid_out[], const real fluid_in[], const int nvar_in )
+{
+
+#  ifdef GAMER_DEBUG
+   if ( nvar_in != NCOMP_TOTAL )
+      Aux_Error( ERROR_INFO, "nvar_in (%d) != NCOMP_TOTAL (%d) !!\n", nvar_in, NCOMP_TOTAL );
+#  endif
+
+   for (int v=0; v<nvar_in; v++)    fluid_out[v] = fluid_in[v];
+
+} // Init_ByFile_Default
