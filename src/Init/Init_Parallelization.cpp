@@ -93,14 +93,11 @@ void Init_Parallelization()
 #  endif // #ifdef PARTICLE
 
 
-// following operations are useful for LOAD_BALANCE only when adopting INIT_BY_FILE
+// following operations are useless for LOAD_BALANCE
 #  ifdef LOAD_BALANCE
-   if ( OPT__INIT != INIT_BY_FILE )
-   {
-      if ( MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );
+   if ( MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );
 
-      return;
-   }
+   return;
 #  endif
 
 
