@@ -226,6 +226,7 @@ OPT__UM_IC_LEVEL              0           # AMR level corresponding to the input
 OPT__UM_IC_NVAR              -1           # number of variables in the uniform-mesh array (1~NCOMP_TOTAL; <=0=NCOMP_TOTAL) [NCOMP_TOTAL]
 OPT__UM_IC_DOWNGRADE          1           # downgrade the uniform-mesh data from level OPT__UM_IC_LEVEL to 0 [1]
 OPT__UM_IC_REFINE             1           # refine the uniform-mesh data from level OPT__UM_IC_LEVEL to MAX_LEVEL [1]
+OPT__UM_IC_LOAD_NRANK         1           # number of parallel I/O (i.e., number of MPI ranks) for OPT__INIT=3 [1]
 OPT__INIT_RESTRICT            1           # restrict all data during the initialization [1]
 OPT__INIT_GRID_WITH_OMP       1           # enable OpenMP when assigning the initial condition of each grid patch [1]
 OPT__GPUID_SELECT            -1           # GPU ID selection mode: (-3=Laohu, -2=CUDA, -1=MPI rank, >=0=input) [-1]

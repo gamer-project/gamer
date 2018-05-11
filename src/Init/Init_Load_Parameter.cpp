@@ -282,6 +282,7 @@ void Init_Load_Parameter()
    ReadPara->Add( "OPT__UM_IC_NVAR",            &OPT__UM_IC_NVAR,                 NCOMP_TOTAL,     NoMin_int,     NCOMP_TOTAL    );
    ReadPara->Add( "OPT__UM_IC_DOWNGRADE",       &OPT__UM_IC_DOWNGRADE,            true,            Useless_bool,  Useless_bool   );
    ReadPara->Add( "OPT__UM_IC_REFINE",          &OPT__UM_IC_REFINE,               true,            Useless_bool,  Useless_bool   );
+   ReadPara->Add( "OPT__UM_IC_LOAD_NRANK",      &OPT__UM_IC_LOAD_NRANK,           1,               1,             NoMax_int      );
    ReadPara->Add( "OPT__INIT_RESTRICT",         &OPT__INIT_RESTRICT,              true,            Useless_bool,  Useless_bool   );
    ReadPara->Add( "OPT__INIT_GRID_WITH_OMP",    &OPT__INIT_GRID_WITH_OMP,         true,            Useless_bool,  Useless_bool   );
    ReadPara->Add( "OPT__GPUID_SELECT",          &OPT__GPUID_SELECT,              -1,              -3,             NoMax_int      );

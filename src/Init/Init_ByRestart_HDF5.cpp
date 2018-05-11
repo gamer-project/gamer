@@ -1775,6 +1775,7 @@ void Check_InputPara( const char *FileName )
    LoadField( "Opt__UM_IC_NVar",         &RS.Opt__UM_IC_NVar,         SID, TID, NonFatal, &RT.Opt__UM_IC_NVar,          1, NonFatal );
    LoadField( "Opt__UM_IC_Downgrade",    &RS.Opt__UM_IC_Downgrade,    SID, TID, NonFatal, &RT.Opt__UM_IC_Downgrade,     1, NonFatal );
    LoadField( "Opt__UM_IC_Refine",       &RS.Opt__UM_IC_Refine,       SID, TID, NonFatal, &RT.Opt__UM_IC_Refine,        1, NonFatal );
+   LoadField( "Opt__UM_IC_LoadNRank",    &RS.Opt__UM_IC_LoadNRank,    SID, TID, NonFatal, &RT.Opt__UM_IC_LoadNRank,     1, NonFatal );
    LoadField( "Opt__InitRestrict",       &RS.Opt__InitRestrict,       SID, TID, NonFatal, &RT.Opt__InitRestrict,        1, NonFatal );
    LoadField( "Opt__InitGridWithOMP",    &RS.Opt__InitGridWithOMP,    SID, TID, NonFatal, &RT.Opt__InitGridWithOMP,     1, NonFatal );
    LoadField( "Opt__GPUID_Select",       &RS.Opt__GPUID_Select,       SID, TID, NonFatal, &RT.Opt__GPUID_Select,        1, NonFatal );
