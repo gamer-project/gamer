@@ -162,11 +162,15 @@ void Init_ByFile()
 
 
 // 6. derefine the uniform-mesh data from levels OPT__UM_IC_LEVEL to 1
-   /*
 #  ifdef PARTICLE
    const double Par_Weight = amr->LB->Par_Weight;
 #  else
    const double Par_Weight = 0.0;
+#  endif
+#  ifdef LOAD_BALANCE
+   const UseLBFunc_t UseLB = USELB_YES;
+#  else
+   const UseLBFunc_t UseLB = USELB_NO;
 #  endif
 
    if ( OPT__UM_IC_DOWNGRADE )
@@ -174,26 +178,18 @@ void Init_ByFile()
    {
       if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Downgrading level %d ... ", lv+1 );
 
-      Flag_Real( lv, USELB_NO );
+      Flag_Real( lv, UseLB );
+
+      Refine( lv, UseLB );
 
 #     ifdef LOAD_BALANCE
+//    no need to exchange potential since we haven't calculated it yet
+      Buf_GetBufferData( lv,   amr->FluSg[lv  ], NULL_INT, DATA_AFTER_REFINE, _TOTAL, Flu_ParaBuf, USELB_YES );
 
-      ...
+      Buf_GetBufferData( lv+1, amr->FluSg[lv+1], NULL_INT, DATA_AFTER_REFINE, _TOTAL, Flu_ParaBuf, USELB_YES );
 
       LB_Init_LoadBalance( Redistribute_Yes, Par_Weight, ResetLB_Yes, lv+1 );
-
-#     else
-
-      ...
-
-      MPI_ExchangeBoundaryFlag( lv );
-
-      Flag_Buffer( lv );
-
-      Refine( lv, USELB_NO );
-
-      Buf_GetBufferData( lv+1, amr->FluSg[lv+1], NULL_INT, DATA_AFTER_REFINE, _TOTAL, Flu_ParaBuf, USELB_NO );
-#     endif // #ifdef LOAD_BALANCE ... else ...
+#     endif
 
       if ( MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );
    } // for (int lv=OPT__UM_IC_LEVEL-1; lv>=0; lv--)
@@ -204,30 +200,23 @@ void Init_ByFile()
    if ( OPT__UM_IC_REFINE )
    for (int lv=OPT__UM_IC_LEVEL; lv<MAX_LEVEL; lv++)
    {
-      if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Refining level %d ... ", lv+1 );
+      if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Refining level %d ... ", lv );
 
-      Flag_Real( lv, USELB_NO );
+      Flag_Real( lv, UseLB );
+
+      Refine( lv, UseLB );
 
 #     ifdef LOAD_BALANCE
+//    no need to exchange potential since we haven't calculated it yet
+      Buf_GetBufferData( lv,   amr->FluSg[lv  ], NULL_INT, DATA_AFTER_REFINE, _TOTAL, Flu_ParaBuf, USELB_YES );
 
-      ...
+      Buf_GetBufferData( lv+1, amr->FluSg[lv+1], NULL_INT, DATA_AFTER_REFINE, _TOTAL, Flu_ParaBuf, USELB_YES );
 
       LB_Init_LoadBalance( Redistribute_Yes, Par_Weight, ResetLB_Yes, lv+1 );
-
-#     else
-
-      MPI_ExchangeBoundaryFlag( lv );
-
-      Flag_Buffer( lv );
-
-      Refine( lv, USELB_NO );
-
-      Buf_GetBufferData( lv+1, amr->FluSg[lv+1], NULL_INT, DATA_AFTER_REFINE, _TOTAL, Flu_ParaBuf, USELB_NO );
-#     endif // #ifdef LOAD_BALANCE
+#     endif
 
       if ( MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );
    } // for (int lv=OPT__UM_IC_LEVEL; lv<MAX_LEVEL; lv++)
-   */
 
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", __FUNCTION__ );
