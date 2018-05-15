@@ -115,7 +115,21 @@ void LB_Init_LoadBalance( const bool Redistribute, const double ParWeight, const
 #  endif
 
 #  ifdef PARTICLE
-   if ( Redistribute  &&  TLv < 0 )    LB_RedistributeParticle_Init( ParVar_Old, Passive_Old );
+   if ( Redistribute )
+   {
+      if ( TLv < 0 )    LB_RedistributeParticle_Init( ParVar_Old, Passive_Old );
+      else
+      {
+         for (int v=0; v<PAR_NVAR; v++)      ParVar_Old [v] = amr->Par->ParVar [v];
+         for (int v=0; v<PAR_NPASSIVE; v++)  Passive_Old[v] = amr->Par->Passive[v];
+      }
+   }
+
+   else
+   {
+      for (int v=0; v<PAR_NVAR; v++)      ParVar_Old [v] = NULL;
+      for (int v=0; v<PAR_NPASSIVE; v++)  Passive_Old[v] = NULL;
+   }
 #  endif
 
    for (int lv=lv_min; lv<=lv_max; lv++)
@@ -124,10 +138,7 @@ void LB_Init_LoadBalance( const bool Redistribute, const double ParWeight, const
 
 //    3.1 re-distribute real patches (and particles)
       if ( Redistribute )
-      {
-         if ( TLv < 0 )    LB_RedistributeRealPatch( lv, ParVar_Old,       Passive_Old,       RemoveParFromRepo_No  );
-         else              LB_RedistributeRealPatch( lv, amr->Par->ParVar, amr->Par->Passive, RemoveParFromRepo_Yes );
-      }
+      LB_RedistributeRealPatch( lv, ParVar_Old, Passive_Old, (TLv<0)?RemoveParFromRepo_No:RemoveParFromRepo_Yes );
 
 //    3.2 allocate sibling-buffer patches at lv
       LB_AllocateBufferPatch_Sibling( lv );
