@@ -31,7 +31,7 @@ void Init_Load_Parameter()
    ReadPara->Add( "NX0_TOT_X",                  &NX0_TOT[0],                     -1,               PS2,           NoMax_int      );
    ReadPara->Add( "NX0_TOT_Y",                  &NX0_TOT[1],                     -1,               PS2,           NoMax_int      );
    ReadPara->Add( "NX0_TOT_Z",                  &NX0_TOT[2],                     -1,               PS2,           NoMax_int      );
-// do not check MPI_NRANK_X/Y/Z since they are only used for OPT__INIT==INIT_BY_FILE and will be deprecated in the future
+// do not check MPI_NRANK_X/Y/Z since they are deprecated
    ReadPara->Add( "MPI_NRANK_X",                &MPI_NRank_X[0],                 -1,               NoMin_int,     NoMax_int      );
    ReadPara->Add( "MPI_NRANK_Y",                &MPI_NRank_X[1],                 -1,               NoMin_int,     NoMax_int      );
    ReadPara->Add( "MPI_NRANK_Z",                &MPI_NRank_X[2],                 -1,               NoMin_int,     NoMax_int      );
