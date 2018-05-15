@@ -45,7 +45,7 @@ void LB_SetCutPoint( const int lv, const int NPG_Total, long *CutPoint, const bo
 {
 
    if ( OPT__VERBOSE  &&  MPI_Rank == 0 )
-      Aux_Message( stdout, "      %s at Lv %2d ... \n", __FUNCTION__, lv );
+      Aux_Message( stdout, "      %s at Lv %2d ...\n", __FUNCTION__, lv );
 
 
 // check

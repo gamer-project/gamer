@@ -22,7 +22,7 @@ void Init_ByFunction_AssignData( const int lv );
 void LB_Init_ByFunction()
 {
 
-   if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... \n", __FUNCTION__ );
+   if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ...\n", __FUNCTION__ );
 
 
    const bool   FindHomePatchForPar_Yes = true;

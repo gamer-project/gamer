@@ -21,7 +21,7 @@
 void Init_MemoryPool()
 {
 
-   if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... \n", __FUNCTION__ );
+   if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ...\n", __FUNCTION__ );
 
 
    if ( ! OPT__REUSE_MEMORY )    Aux_Error( ERROR_INFO, "Please turn on OPT__REUSE_MEMORY for OPT__MEMORY_POOL !!\n" );

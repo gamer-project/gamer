@@ -14,7 +14,7 @@
 void Aux_Check_Parameter()
 {
 
-   if ( MPI_Rank == 0 )    Aux_Message( stdout, "Aux_Check_Parameter ... \n" );
+   if ( MPI_Rank == 0 )    Aux_Message( stdout, "Aux_Check_Parameter ...\n" );
 
 
 // general errors
