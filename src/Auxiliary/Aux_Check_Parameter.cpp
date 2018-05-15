@@ -66,8 +66,9 @@ void Aux_Check_Parameter()
    if ( MPI_NRank != NRank )
       Aux_Error( ERROR_INFO, "MPI_NRank (%d) != MPI_Comm_size (%d) !!\n", MPI_NRank, NRank );
 
-   if ( NX0_TOT[0]%PS2 != 0  ||  NX0_TOT[1]%PS2 != 0  ||  NX0_TOT[2]%PS2 != 0 )
-      Aux_Error( ERROR_INFO, "number of base-level patches in each direction must be \"a multiple of TWO\" !!\n" );
+   for (int d=0; d<3; d++)
+      if ( NX0_TOT[d]%PS2 != 0 )
+         Aux_Error( ERROR_INFO, "NX0_TOT_%c (%d) is NOT a multiple of %d (i.e., two patches) !!\n", 'X'+d, NX0_TOT[d], PS2 );
 
    if ( END_STEP < 0  &&  OPT__INIT != INIT_BY_RESTART )
       Aux_Error( ERROR_INFO, "incorrect parameter \"%s = %d\" [>=0] !!\n", "END_STEP", END_STEP );
@@ -143,11 +144,9 @@ void Aux_Check_Parameter()
 #  ifdef SERIAL
    if ( MPI_NRank != 1 )   Aux_Error( ERROR_INFO, "\"MPI_NRank != 1\" in the serial code !!\n" );
 
-   if ( MPI_NRank_X[0] != 1 )    Aux_Error( ERROR_INFO, "\"MPI_NRank_X[0] != 1\" in the serial code !!\n" );
-
-   if ( MPI_NRank_X[1] != 1 )    Aux_Error( ERROR_INFO, "\"MPI_NRank_X[1] != 1\" in the serial code !!\n" );
-
-   if ( MPI_NRank_X[2] != 1 )    Aux_Error( ERROR_INFO, "\"MPI_NRank_X[2] != 1\" in the serial code !!\n" );
+   for (int d=0; d<3; d++)
+      if ( MPI_NRank_X[d] != 1 )
+         Aux_Error( ERROR_INFO, "\"MPI_NRank_%c (%d) != 1\" in the serial code !!\n", 'X'+d, MPI_NRank_X[d] );
 #  endif // #ifdef SERIAL
 
 #  ifndef OVERLAP_MPI
@@ -223,6 +222,12 @@ void Aux_Check_Parameter()
    if ( OPT__CORR_AFTER_ALL_SYNC != CORR_AFTER_SYNC_BEFORE_DUMP  &&  OPT__CORR_AFTER_ALL_SYNC != CORR_AFTER_SYNC_EVERY_STEP )
       Aux_Error( ERROR_INFO, "please set OPT__CORR_AFTER_ALL_SYNC to 1/2 when BITWISE_REPRODUCIBILITY is enabled !!\n" );
 #  endif
+
+#  if ( !defined SERIAL  &&  !defined LOAD_BALANCE )
+   if ( OPT__INIT == INIT_BY_FILE )
+      Aux_Error( ERROR_INFO, "must enable either SERIAL or LOAD_BALANCE for OPT__INIT=3 !!\n" );
+#  endif
+
 
 
 // general warnings

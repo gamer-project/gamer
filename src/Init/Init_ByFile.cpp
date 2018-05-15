@@ -30,6 +30,8 @@ static void Init_ByFile_AssignData( const char UM_Filename[], const int UM_lv, c
 //                       variables using the function pointer Init_ByFile_User_Ptr()
 //                4. The data format in the UM_IC file should be [k][j][i][v] instead of [v][k][j][i]
 //                   --> Different from the data layout of patch->fluid
+//                5. Does not work with rectangular domain decomposition anymore
+//                   --> Must enable either SERIAL or LOAD_BALANCE
 //
 // Parameter   :  None
 //-------------------------------------------------------------------------------------------------------
@@ -45,6 +47,10 @@ void Init_ByFile()
                                 NX0_TOT[2]*(1<<OPT__UM_IC_LEVEL) };
 
 // check
+#  if ( !defined SERIAL  &&  !defined LOAD_BALANCE )
+      Aux_Error( ERROR_INFO, "must enable either SERIAL or LOAD_BALANCE for %s !!\n", __FUNCTION__ );
+#  endif
+
    if ( OPT__UM_IC_LEVEL < 0  ||  OPT__UM_IC_LEVEL > TOP_LEVEL )
       Aux_Error( ERROR_INFO, "OPT__UM_IC_LEVEL (%d) > TOP_LEVEL (%d) !!\n", OPT__UM_IC_LEVEL, TOP_LEVEL );
 
@@ -105,7 +111,7 @@ void Init_ByFile()
 
 
 
-// 2. initialize load-balancing
+// 2. initialize load-balancing (or construct patch relation for SERIAL)
 #  ifdef LOAD_BALANCE
 // no need to redistribute patches since Init_UniformGrid() already takes into account load balancing
 // --> but particle weighting is not considered yet
@@ -113,13 +119,36 @@ void Init_ByFile()
 
 // must not reset load-balance variables (i.e., must adopt ResetLB_No) to avoid overwritting IdxList_Real[]
 // and IdxList_Real_IdxList[] already set above
-   const double ParWeight_Zero  = 0.0;
-   const bool   Redistribute_No = false;
-   const bool   ResetLB_No      = false;
-   const int    AllLv           = -1;
+   const double ParWeight_Zero   = 0.0;
+   const bool   Redistribute_Yes = true;
+   const bool   Redistribute_No  = false;
+   const bool   ResetLB_Yes      = true;
+   const bool   ResetLB_No       = false;
+   const int    AllLv            = -1;
 
    LB_Init_LoadBalance( Redistribute_No, ParWeight_Zero, ResetLB_No, AllLv );
-#  endif
+
+#  else // for SERIAL
+
+   for (int lv=0; lv<=OPT__UM_IC_LEVEL; lv++)
+   {
+//    set up BaseP[]
+      if ( lv == 0 )
+      Init_RecordBasePatch();
+
+//    construct father-son relation
+      if ( lv > 0 )
+      FindFather( lv, 1 );
+
+//    construct sibling relation
+      SiblingSearch( lv );
+
+//    allocate flux arrays on "lv-1"
+//    --> must do this after constructing the patch relation on lv-1 and lv
+      if ( lv > 0  &&  amr->WithFlux )
+      Flu_AllocateFluxArray( lv-1 );
+   }
+#  endif // #ifdef LOAD_BALANCE ... else ...
 
 
 
@@ -152,9 +181,6 @@ void Init_ByFile()
 
 // 5. optimize load-balancing to take into account particle weighting
 #  if ( defined PARTICLE  &&  defined LOAD_BALANCE )
-   const bool Redistribute_Yes = true;
-   const bool ResetLB_Yes      = true;
-
    if ( amr->LB->Par_Weight > 0.0 )
       LB_Init_LoadBalance( Redistribute_Yes, amr->LB->Par_Weight, ResetLB_Yes, AllLv );
 #  endif
@@ -162,7 +188,7 @@ void Init_ByFile()
 
 
 // 6. derefine the uniform-mesh data from levels OPT__UM_IC_LEVEL to 1
-#  ifdef PARTICLE
+#  if ( defined PARTICLE  &&  defined LOAD_BALANCE )
    const double Par_Weight = amr->LB->Par_Weight;
 #  else
    const double Par_Weight = 0.0;

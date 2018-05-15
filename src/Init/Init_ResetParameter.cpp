@@ -645,15 +645,12 @@ void Init_ResetParameter()
 #  endif
 
 #  ifdef LOAD_BALANCE
-   if ( OPT__INIT != INIT_BY_FILE )
    for (int d=0; d<3; d++)
+   if ( MPI_NRank_X[d] > 0 )
    {
-      if ( MPI_NRank_X[d] > 0 )
-      {
-         MPI_NRank_X[d] = -1;
+      MPI_NRank_X[d] = -1;
 
-         PRINT_WARNING( MPI_NRank_X[d], FORMAT_INT, "since it's useless" );
-      }
+      PRINT_WARNING( MPI_NRank_X[d], FORMAT_INT, "since it's useless" );
    }
 #  endif
 
