@@ -24,7 +24,7 @@ extern "C" { int GetFreeGpuDevID( int, int ); }
 void CUAPI_SetDevice( const int Mode )
 {
 
-   if ( MPI_Rank == 0 )    Aux_Message( stdout, "CUAPI_SetDevice ... \n" );
+   if ( MPI_Rank == 0 )    Aux_Message( stdout, "CUAPI_SetDevice ...\n" );
 
 
 // check

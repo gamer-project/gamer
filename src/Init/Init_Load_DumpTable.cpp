@@ -10,7 +10,7 @@
 void Init_Load_DumpTable()
 {
 
-   if ( MPI_Rank == 0 )    Aux_Message( stdout, "Init_Load_DumpTable ... \n" );
+   if ( MPI_Rank == 0 )    Aux_Message( stdout, "Init_Load_DumpTable ...\n" );
 
 
    const char FileName[] = "Input__DumpTable";

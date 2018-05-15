@@ -151,7 +151,7 @@ void Init_ByRestart_v1( const char FileName[] )
 
 // c. load the simulation information
 // =================================================================================================
-   if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Loading simulation information ... \n" );
+   if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Loading simulation information ...\n" );
 
    int  NDataPatch_Total[NLv_Restart];
    uint Counter_tmp     [NLv_Restart];

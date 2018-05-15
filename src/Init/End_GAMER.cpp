@@ -15,7 +15,7 @@ extern void (*End_User_Ptr)();
 void End_GAMER()
 {
 
-   if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... \n", __FUNCTION__ );
+   if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ...\n", __FUNCTION__ );
 
 
 #  ifdef TIMING

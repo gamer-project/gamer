@@ -36,7 +36,7 @@ static void Init_ByFile_AssignData( const char UM_Filename[], const int UM_lv, c
 void Init_ByFile()
 {
 
-   if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... \n", __FUNCTION__ );
+   if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ...\n", __FUNCTION__ );
 
 
    const char UM_Filename[] = "UM_IC";

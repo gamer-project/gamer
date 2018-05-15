@@ -187,7 +187,7 @@ void Init_ByRestart()
 
 // c. load the simulation information
 // =================================================================================================
-   if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Loading simulation information ... \n" );
+   if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Loading simulation information ...\n" );
 
 // verify the check code
    long checkcode;

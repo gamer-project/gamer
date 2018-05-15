@@ -16,7 +16,7 @@
 void Aux_TakeNote()
 {
 
-   if ( MPI_Rank == 0 )    Aux_Message( stdout, "Aux_TakeNote ... \n" );
+   if ( MPI_Rank == 0 )    Aux_Message( stdout, "Aux_TakeNote ...\n" );
 
 
    const char FileName[] = "Record__Note";
