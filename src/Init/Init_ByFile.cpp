@@ -1,10 +1,14 @@
 #include "GAMER.h"
 
 // declare as static so that other functions cannot invoke it directly and must use the function pointer
-static void Init_ByFile_Default( real fluid_out[], const real fluid_in[], const int nvar_in );
+static void Init_ByFile_Default( real fluid_out[], const real fluid_in[], const int nvar_in,
+                                 const double x, const double y, const double z, const double Time,
+                                 const int lv, double AuxArray[] );
 
 // this function pointer may be overwritten by various test problem initializers
-void (*Init_ByFile_User_Ptr)( real fluid_out[], const real fluid_in[], const int nvar_in ) = Init_ByFile_Default;
+void (*Init_ByFile_User_Ptr)( real fluid_out[], const real fluid_in[], const int nvar_in,
+                              const double x, const double y, const double z, const double Time,
+                              const int lv, double AuxArray[] ) = Init_ByFile_Default;
 
 static void Init_ByFile_AssignData( const char UM_Filename[], const int UM_lv, const int UM_NVar, const int UM_LoadNRank );
 
@@ -32,6 +36,7 @@ static void Init_ByFile_AssignData( const char UM_Filename[], const int UM_lv, c
 //                   --> Different from the data layout of patch->fluid
 //                5. Does not work with rectangular domain decomposition anymore
 //                   --> Must enable either SERIAL or LOAD_BALANCE
+//                6. OpenMP is not supported yet
 //
 // Parameter   :  None
 //-------------------------------------------------------------------------------------------------------
@@ -276,13 +281,15 @@ void Init_ByFile_AssignData( const char UM_Filename[], const int UM_lv, const in
    if ( Init_ByFile_User_Ptr == NULL )  Aux_Error( ERROR_INFO, "Init_ByFile_User_Ptr == NULL !!\n" );
 
 
-   const int UM_Size3D[3] = { NX0_TOT[0]*(1<<UM_lv),
-                              NX0_TOT[1]*(1<<UM_lv),
-                              NX0_TOT[2]*(1<<UM_lv) };
-   const int UM_scale     = amr->scale[UM_lv];
+   const int    UM_Size3D[3] = { NX0_TOT[0]*(1<<UM_lv),
+                                 NX0_TOT[1]*(1<<UM_lv),
+                                 NX0_TOT[2]*(1<<UM_lv) };
+   const int    scale        = amr->scale[UM_lv];
+   const double dh           = amr->dh[UM_lv];
 
-   long Offset3D_File0[3], Offset_File0, Offset_File, Offset_PG;
-   real fluid[NCOMP_TOTAL];
+   long   Offset3D_File0[3], Offset_File0, Offset_File, Offset_PG;
+   real   fluid[NCOMP_TOTAL];
+   double x, y, z;
 
    real *PG_Data = new real [ CUBE(PS2)*UM_NVar ];
 
@@ -301,7 +308,7 @@ void Init_ByFile_AssignData( const char UM_Filename[], const int UM_lv, const in
          for (int PID0=0; PID0<amr->NPatchComma[UM_lv][1]; PID0+=8)
          {
 //          calculate the file offset of the target patch group
-            for (int d=0; d<3; d++)    Offset3D_File0[d] = amr->patch[0][UM_lv][PID0]->corner[d] / UM_scale;
+            for (int d=0; d<3; d++)    Offset3D_File0[d] = amr->patch[0][UM_lv][PID0]->corner[d] / scale;
 
             Offset_File0  = IDX321( Offset3D_File0[0], Offset3D_File0[1], Offset3D_File0[2], UM_Size3D[0], UM_Size3D[1] );
             Offset_File0 *= (long)UM_NVar*sizeof(real);
@@ -333,17 +340,17 @@ void Init_ByFile_AssignData( const char UM_Filename[], const int UM_lv, const in
                const int Disp_j = TABLE_02( LocalID, 'y', 0, PS1 );
                const int Disp_k = TABLE_02( LocalID, 'z', 0, PS1 );
 
-               for (int k=0; k<PS1; k++)
-               for (int j=0; j<PS1; j++)
-               for (int i=0; i<PS1; i++)
-               {
+               for (int k=0; k<PS1; k++)  {  z = amr->patch[0][UM_lv][PID]->EdgeL[2] + (k+0.5)*dh;
+               for (int j=0; j<PS1; j++)  {  y = amr->patch[0][UM_lv][PID]->EdgeL[1] + (j+0.5)*dh;
+               for (int i=0; i<PS1; i++)  {  x = amr->patch[0][UM_lv][PID]->EdgeL[0] + (i+0.5)*dh;
+
                   Offset_PG = (long)UM_NVar*IDX321( i+Disp_i, j+Disp_j, k+Disp_k, PS2, PS2 );
 
-                  Init_ByFile_User_Ptr( fluid, PG_Data+Offset_PG, UM_NVar );
+                  Init_ByFile_User_Ptr( fluid, PG_Data+Offset_PG, UM_NVar, x, y, z, Time[UM_lv], UM_lv, NULL );
 
                   for (int v=0; v<NCOMP_TOTAL; v++)
                      amr->patch[ amr->FluSg[UM_lv] ][UM_lv][PID]->fluid[v][k][j][i] = fluid[v];
-               }
+               }}}
             } // for (int LocalID=0; LocalID<8; LocalID++)
          } // for (int PID0=0; PID0<amr->NPatchComma[UM_lv][1]; PID0+=8)
 
@@ -380,10 +387,16 @@ void Init_ByFile_AssignData( const char UM_Filename[], const int UM_lv, const in
 // Parameter   :  fluid_out : Fluid field to be set
 //                fluid_in  : Fluid field loaded from the uniform-mesh array (UM_IC)
 //                nvar_in   : Number of variables in fluid_in
+//                x/y/z     : Target physical coordinates
+//                Time      : Target physical time
+//                lv        : Target AMR level
+//                AuxArray  : Auxiliary array
 //
 // Return      :  fluid_out
 //-------------------------------------------------------------------------------------------------------
-void Init_ByFile_Default( real fluid_out[], const real fluid_in[], const int nvar_in )
+void Init_ByFile_Default( real fluid_out[], const real fluid_in[], const int nvar_in,
+                          const double x, const double y, const double z, const double Time,
+                          const int lv, double AuxArray[] )
 {
 
 #  ifdef GAMER_DEBUG

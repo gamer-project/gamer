@@ -392,7 +392,6 @@ void Hydro_Aux_Check_Negative( const int lv, const int Mode, const char *comment
 void Hydro_GetTimeStep_Gravity( double &dt, double &dTime, int &MinDtLv, real &MinDtVar, const double dt_dTime );
 void Hydro_GetMaxAcc( real MaxAcc[] );
 void Hydro_Init_ByFunction_AssignData( const int lv );
-void Hydro_Init_ByFile_AssignData( const int lv, real *UM_Data, const int NVar );
 void Hydro_BoundaryCondition_Reflecting( real *Array, const int BC_Face, const int NVar_Flu, const int GhostSize,
                                          const int ArraySizeX, const int ArraySizeY, const int ArraySizeZ,
                                          const int Idx_Start[], const int Idx_End[], const int TFluVarIdxList[],
