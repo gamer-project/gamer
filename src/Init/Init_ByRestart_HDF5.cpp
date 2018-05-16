@@ -361,7 +361,8 @@ void Init_ByRestart_HDF5( const char *FileName )
 
 //    do NOT consider load-balance weighting of particles since at this point we don't have that information
       const double ParWeight_Zero = 0.0;
-      LB_SetCutPoint( lv, amr->LB->CutPoint[lv], InputLBIdx0AndLoad_Yes, LBIdx0_AllRank, Load_AllRank, ParWeight_Zero );
+      LB_SetCutPoint( lv, NPatchTotal[lv]/8, amr->LB->CutPoint[lv], InputLBIdx0AndLoad_Yes, LBIdx0_AllRank, Load_AllRank,
+                      ParWeight_Zero );
 
 //    free memory
       if ( MPI_Rank == 0 )
@@ -787,6 +788,9 @@ void Init_ByRestart_HDF5( const char *FileName )
 
       Mis_Heapsort( amr->NPatchComma[lv][1], amr->LB->IdxList_Real[lv], amr->LB->IdxList_Real_IdxTable[lv] );
 #     endif
+
+//    get the total number of real patches at all ranks
+      Mis_GetTotalPatchNumber( lv );
    }
 
 
@@ -837,8 +841,42 @@ void Init_ByRestart_HDF5( const char *FileName )
 
 
 
-// 5. complete the tree structure (only necessary when LOAD_BALANCE is OFF)
-#  ifndef LOAD_BALANCE
+// 5-1. improve load balance
+// ===================================================================================================================
+#  ifdef LOAD_BALANCE
+
+// no need to redistribute all patches again since we already did that when loading data from disks
+// --> but note that we have not considerer load-balance weighting of particles yet
+
+// we don't have enough information to calculate the load-balance weighting of particles when
+// calling LB_Init_LoadBalance() for the first time
+// --> for example, LB_EstimateWorkload_AllPatchGroup()->Par_CollectParticle2OneLevel()->Par_LB_CollectParticle2OneLevel()
+//     needs amr->LB->IdxList_Real[], which will be constructed only AFTER calling LB_Init_LoadBalance()
+// --> must disable particle weighting (by setting ParWeight==0.0) first
+
+// must not reset load-balance variables (i.e., must adopt ResetLB_No) when calling LB_Init_LoadBalance() for the first time
+// since we MUST NOT overwrite IdxList_Real[] and IdxList_Real_IdxList[] already set above
+   const double ParWeight_Zero   = 0.0;
+   const bool   Redistribute_Yes = true;
+   const bool   Redistribute_No  = false;
+   const bool   ResetLB_Yes      = true;
+   const bool   ResetLB_No       = false;
+   const int    AllLv            = -1;
+
+   LB_Init_LoadBalance( Redistribute_No, ParWeight_Zero, ResetLB_No, AllLv );
+
+// redistribute patches again if we want to take into account the load-balance weighting of particles
+#  ifdef PARTICLE
+   if ( amr->LB->Par_Weight > 0.0 )
+   LB_Init_LoadBalance( Redistribute_Yes, amr->LB->Par_Weight, ResetLB_Yes, AllLv );
+#  endif
+
+
+
+// 5-2. complete all levels for the case without LOAD_BALANCE
+// ===================================================================================================================
+#  else // #ifdef LOAD_BALANCE
+
    for (int lv=0; lv<NLEVEL; lv++)
    {
 //    construct the relation "father <-> son"
@@ -866,7 +904,8 @@ void Init_ByRestart_HDF5( const char *FileName )
       Buf_GetBufferData( lv, amr->FluSg[lv], NULL_INT, DATA_GENERAL, _TOTAL, Flu_ParaBuf, USELB_NO );
 
    } // for (int lv=0; lv<NLEVEL; lv++)
-#  endif // #ifndef LOAD_BALANCE
+
+#  endif // #ifdef LOAD_BALANCE ... else ...
 
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", __FUNCTION__ );
@@ -1736,6 +1775,7 @@ void Check_InputPara( const char *FileName )
    LoadField( "Opt__UM_IC_NVar",         &RS.Opt__UM_IC_NVar,         SID, TID, NonFatal, &RT.Opt__UM_IC_NVar,          1, NonFatal );
    LoadField( "Opt__UM_IC_Downgrade",    &RS.Opt__UM_IC_Downgrade,    SID, TID, NonFatal, &RT.Opt__UM_IC_Downgrade,     1, NonFatal );
    LoadField( "Opt__UM_IC_Refine",       &RS.Opt__UM_IC_Refine,       SID, TID, NonFatal, &RT.Opt__UM_IC_Refine,        1, NonFatal );
+   LoadField( "Opt__UM_IC_LoadNRank",    &RS.Opt__UM_IC_LoadNRank,    SID, TID, NonFatal, &RT.Opt__UM_IC_LoadNRank,     1, NonFatal );
    LoadField( "Opt__InitRestrict",       &RS.Opt__InitRestrict,       SID, TID, NonFatal, &RT.Opt__InitRestrict,        1, NonFatal );
    LoadField( "Opt__InitGridWithOMP",    &RS.Opt__InitGridWithOMP,    SID, TID, NonFatal, &RT.Opt__InitGridWithOMP,     1, NonFatal );
    LoadField( "Opt__GPUID_Select",       &RS.Opt__GPUID_Select,       SID, TID, NonFatal, &RT.Opt__GPUID_Select,        1, NonFatal );

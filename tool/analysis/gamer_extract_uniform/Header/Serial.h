@@ -41,7 +41,6 @@
 #define MPI_ExchangeBoundaryFlag( lv ) {}
 #define MPI_ExchangeBufferPosition( NSend, NRecv, Send_PosList, Recv_PosList ) {}
 #define MPI_ExchangeData( TargetRank, SendSize, RecvSize, SendBuffer, RecvBuffer ) {}
-#define MPI_CubeSlice( Dir, SendBuf, RecvBuf ) {}
 #define Init_MPI( argc, argv )   { MyRank = 0; }
 #define MPI_Exit() \
    {  cout << flush; fprintf( stderr, "\nProgram termination ...... rank %d\n\n", MyRank ); exit(-1);   }
