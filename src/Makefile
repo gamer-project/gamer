@@ -453,7 +453,7 @@ endif
 else ifeq "$(filter -DMODEL=ELBDM, $(SIMU_OPTION))" "-DMODEL=ELBDM"
 CUDA_FILE   += CUFLU_ELBDMSolver.cu
 
-CC_FILE     += CPU_ELBDMSolver.cpp  ELBDM_Init_ByFunction_AssignData.cpp  ELBDM_Init_ByFile_AssignData.cpp \
+CC_FILE     += CPU_ELBDMSolver.cpp  ELBDM_Init_ByFunction_AssignData.cpp \
                ELBDM_GetTimeStep_Fluid.cpp  ELBDM_Flag_EngyDensity.cpp  ELBDM_UnwrapPhase.cpp \
                ELBDM_GetTimeStep_Phase.cpp  ELBDM_SetTaylor3Coeff.cpp
 
