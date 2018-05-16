@@ -407,7 +407,6 @@ bool Hydro_Flag_Vorticity( const int i, const int j, const int k, const int lv, 
 // ELBDM model
 #elif ( MODEL == ELBDM )
 void   ELBDM_Init_ByFunction_AssignData( const int lv );
-void   ELBDM_Init_ByFile_AssignData( const int lv, real *UM_Data, const int NVar );
 double ELBDM_GetTimeStep_Fluid( const int lv );
 double ELBDM_GetTimeStep_Gravity( const int lv );
 double ELBDM_GetTimeStep_Phase( const int lv );
