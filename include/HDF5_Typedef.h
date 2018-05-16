@@ -503,6 +503,7 @@ struct InputPara_t
    int    Opt__UM_IC_NVar;
    int    Opt__UM_IC_Downgrade;
    int    Opt__UM_IC_Refine;
+   int    Opt__UM_IC_LoadNRank;
    int    Opt__InitRestrict;
    int    Opt__InitGridWithOMP;
    int    Opt__GPUID_Select;

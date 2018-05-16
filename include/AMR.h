@@ -46,6 +46,9 @@ void Aux_Error( const char *File, const int Line, const char *Func, const char *
 //                                    total # of patches (=num[lv]), same as [3], ...]
 //                               --> In all cases, [ 1] gives the total number of "real" patches
 //                                                 [26] gives the total number of "real+buffer" patches
+//                BoxEdgeL    : Simulation box left  edge in the adopted coordinate system
+//                BoxEdgeR    : Simulation box right edge in the adopted coordinate system
+//                BoxCenter   : Simulation box center     in the adopted coordinate system
 //                dh          : Grid size at each level
 //                BoxSize     : Simulation box physical size
 //                BoxScale    : Simulation box scale
@@ -94,6 +97,9 @@ struct AMR_t
    int    NPatchComma [NLEVEL][28];
    double dh          [NLEVEL];
    int    ResPower2   [NLEVEL];
+   double BoxEdgeL    [3];
+   double BoxEdgeR    [3];
+   double BoxCenter   [3];
    double BoxSize     [3];
    int    BoxScale    [3];
    bool   WithFlux;
@@ -340,9 +346,9 @@ struct AMR_t
    //                2. This function will scan over amr->num[lv] patches
    //                3. The variables "scale, FluSg, PotSg, and dh" will NOT be modified
    //
-   // Parameter   :  lv                : Target refinement level
-   //                ReusePatchMemory  : true  --> mark patch as inactive, but do not deallocate memory (for OPT__REUSE_MEMORY)
-   //                                    false --> deallocate patch
+   // Parameter   :  lv               : Target refinement level
+   //                ReusePatchMemory : true  --> mark patch as inactive, but do not deallocate memory (for OPT__REUSE_MEMORY)
+   //                                   false --> deallocate patch
    //===================================================================================
    void Lvdelete( const int lv, const bool ReusePatchMemory )
    {

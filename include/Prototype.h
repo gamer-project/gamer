@@ -166,6 +166,7 @@ void Init_Reload_OldFormat();
 void Init_ByFunction();
 void Init_TestProb();
 void Init_ByFile();
+void Init_UniformGrid( const int lv, const bool FindHomePatchForPar );
 #ifdef OPENMP
 void Init_OpenMP();
 #endif
@@ -357,14 +358,18 @@ void LB_AllocateBufferPatch_Sibling_Base();
 void LB_AllocateBufferPatch_Sibling( const int lv );
 void LB_AllocateFluxArray( const int FaLv );
 void LB_ExchangeFlaggedBuffer( const int lv );
-void LB_FindFather( const int SonLv, const bool SearchAllSon, const int NInput, int* TargetSonPID0 );
+void LB_FindFather( const int SonLv, const bool SearchAllSon, const int NInput, int* TargetSonPID0, const bool ResetSonID );
 void LB_FindSonNotHome( const int FaLv, const bool SearchAllFa, const int NInput, int* TargetFaPID );
 void LB_GetBufferData( const int lv, const int FluSg, const int PotSg, const GetBufMode_t GetBufMode,
                        const int TVar, const int ParaBuf );
 real*LB_GetBufferData_MemAllocate_Send( const int NSend );
 real*LB_GetBufferData_MemAllocate_Recv( const int NRecv );
 void LB_GrandsonCheck( const int lv );
-void LB_Init_LoadBalance( const bool Redistribute, const double ParWeight, const bool Reset );
+void LB_Init_LoadBalance( const bool Redistribute, const double ParWeight, const bool Reset, const int TLv );
+void LB_Init_ByFunction();
+void LB_Init_Refine( const int FaLv );
+void LB_SetCutPoint( const int lv, const int NPG_Total, long *CutPoint, const bool InputLBIdx0AndLoad,
+                     long *LBIdx0_AllRank_Input, double *Load_AllRank_Input, const double ParWeight );
 void LB_EstimateWorkload_AllPatchGroup( const int lv, const double ParWeight, double *Load_PG );
 double LB_EstimateLoadImbalance();
 void LB_SetCutPoint( const int lv, long *CutPoint, const bool InputLBIdx0AndLoad, long *LBIdx0_AllRank_Input,
@@ -387,7 +392,6 @@ void Hydro_Aux_Check_Negative( const int lv, const int Mode, const char *comment
 void Hydro_GetTimeStep_Gravity( double &dt, double &dTime, int &MinDtLv, real &MinDtVar, const double dt_dTime );
 void Hydro_GetMaxAcc( real MaxAcc[] );
 void Hydro_Init_ByFunction_AssignData( const int lv );
-void Hydro_Init_ByFile_AssignData( const int lv, real *UM_Data, const int NVar );
 void Hydro_BoundaryCondition_Reflecting( real *Array, const int BC_Face, const int NVar_Flu, const int GhostSize,
                                          const int ArraySizeX, const int ArraySizeY, const int ArraySizeZ,
                                          const int Idx_Start[], const int Idx_End[], const int TFluVarIdxList[],
@@ -476,7 +480,7 @@ void CUAPI_MemFree_Grackle();
 #ifdef PARTICLE
 void Par_Init_ByFile();
 void Par_Output_TextFile( const char *comment );
-void Par_FindHomePatch_Base( const int *BaseP );
+void Par_FindHomePatch_UniformGrid( const int lv );
 void Par_PassParticle2Son( const int FaLv, const int FaPID );
 void Par_PassParticle2Son_AllPatch( const int FaLv, const bool TimingSendPar );
 void Par_PassParticle2Father( const int FaLv, const int FaPID );
@@ -505,7 +509,6 @@ void Prepare_PatchData_FreeParticleDensityArray( const int lv );
 void Par_PredictPos( const long NPar, const long *ParList, real *ParPosX, real *ParPosY, real *ParPosZ,
                      const double TargetTime );
 #ifdef LOAD_BALANCE
-void Par_LB_Init_RedistributeByRectangular();
 void Par_LB_CollectParticle2OneLevel( const int FaLv, const bool PredictPos, const double TargetTime,
                                       const bool SibBufPatch, const bool FaSibBufPatch, const bool JustCountNPar,
                                       const bool TimingSendPar );

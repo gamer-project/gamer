@@ -8,6 +8,5 @@ KH_Vy1                -0.5       # background velocity y in the upper region
 KH_Vy2                +0.5       # background velocity y in the lower region
 KH_Rho1                1.0       # mass density in the upper region
 KH_Rho2                2.0       # mass density in the lower region
-KH_AllRankSame         0         # assign the same initial condition for all MPI ranks --> suitable for the weak scaling test
 KH_RefineShearMaxLv    2         # refine the regions around the shear plane to this level
 KH_PeriodicZFactor     1         # decompose the simulation domain further into N periodic subdomains along the z axis

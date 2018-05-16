@@ -16,7 +16,6 @@ static double KH_Vy1;               // background velocity y in the upper region
 static double KH_Vy2;               // background velocity y in the lower region
 static double KH_Rho1;              // mass density in the upper region
 static double KH_Rho2;              // mass density in the lower region
-       bool   KH_AllRankSame;       // assign the same initial condition for all MPI ranks --> suitable for the weak scaling test
        int    KH_RefineShearMaxLv;  // refine the regions around the shear plane to this level
        int    KH_PeriodicZFactor;   // decompose the simulation domain further into N periodic subdomains along the z axis
 
@@ -116,7 +115,6 @@ void SetParameter()
    ReadPara->Add( "KH_Vy2",              &KH_Vy2,                NoDef_double,  NoMin_double,     NoMax_double      );
    ReadPara->Add( "KH_Rho1",             &KH_Rho1,               -1.0,          Eps_double,       NoMax_double      );
    ReadPara->Add( "KH_Rho2",             &KH_Rho2,               -1.0,          Eps_double,       NoMax_double      );
-   ReadPara->Add( "KH_AllRankSame",      &KH_AllRankSame,        false,         Useless_bool,     Useless_bool      );
    ReadPara->Add( "KH_RefineShearMaxLv", &KH_RefineShearMaxLv,   2,             0,                TOP_LEVEL         );
    ReadPara->Add( "KH_PeriodicZFactor",  &KH_PeriodicZFactor,    1,             1,                NoMax_int         );
 
@@ -125,8 +123,7 @@ void SetParameter()
    delete ReadPara;
 
 // set the random seed of each MPI rank
-   if ( KH_AllRankSame )   srand48_r( KH_RSeed,          &drand_buf );
-   else                    srand48_r( KH_RSeed+MPI_Rank, &drand_buf );
+   srand48_r( KH_RSeed+MPI_Rank, &drand_buf );
 
 
 // (2) set the problem-specific derived parameters
@@ -162,7 +159,6 @@ void SetParameter()
       Aux_Message( stdout, "  KH_Vy2              = % 14.7e\n", KH_Vy2 );
       Aux_Message( stdout, "  KH_Rho1             = % 14.7e\n", KH_Rho1 );
       Aux_Message( stdout, "  KH_Rho2             = % 14.7e\n", KH_Rho2 );
-      Aux_Message( stdout, "  KH_AllRankSame      = %d\n",      KH_AllRankSame );
       Aux_Message( stdout, "  KH_RefineShearMaxLv = %d\n",      KH_RefineShearMaxLv );
       Aux_Message( stdout, "  KH_PeriodicZFactor  = %d\n",      KH_PeriodicZFactor );
       Aux_Message( stdout, "=============================================================================\n" );
@@ -198,8 +194,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
                 const int lv, double AuxArray[] )
 {
 
-   const double dz_periodic = ( KH_AllRankSame ) ? amr->BoxSize[2] / KH_PeriodicZFactor / MPI_NRank_X[2]
-                                                 : amr->BoxSize[2] / KH_PeriodicZFactor;
+   const double dz_periodic = amr->BoxSize[2] / KH_PeriodicZFactor;
    const double z_shear     = 0.5*dz_periodic;
    const double z_periodic  = fmod( z, dz_periodic );
 

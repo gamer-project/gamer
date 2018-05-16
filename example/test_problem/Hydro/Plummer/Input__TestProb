@@ -12,4 +12,4 @@ Plummer_BulkVelX        0.0                  # bulk velocity in x
 Plummer_BulkVelY        0.0                  # bulk velocity in y
 Plummer_BulkVelZ        0.0                  # bulk velocity in z
 Plummer_GasMFrac        0.5                  # gas mass fraction (0.0<input<=1.0) [0.5]
-Plummer_NBinR           1000                 # number of radial bins in the mass profile table [1000]
+Plummer_MassProfNBin    1000                 # number of radial bins in the mass profile table [1000]

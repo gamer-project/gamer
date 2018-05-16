@@ -10,7 +10,6 @@
 // Note        :  BaseP array is used to
 //                (1) construct the sibling relation at the base level --> SiblingSearch_Base
 //                (2) find the father patch                            --> FindFather
-//                (3) find the particle's home patch at the base level --> Par_FindHomePatch_Base
 //-------------------------------------------------------------------------------------------------------
 void Init_RecordBasePatch()
 {

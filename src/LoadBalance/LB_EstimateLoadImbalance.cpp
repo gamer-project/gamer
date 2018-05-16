@@ -20,7 +20,7 @@
 //                       --> WLI estimated here will be different from both Record__PatchCount and
 //                           Record__ParticleCount. The latter only considers particles in the leaf patches
 //                4. Invoked by main() to determine whether we should redistribute all patches
-//                   (by calling LB_Init_LoadBalance) to improve the load balance
+//                   (by calling LB_Init_LoadBalance()) to improve the load balance
 //
 // Return      :  amr->LB->WLI
 //-------------------------------------------------------------------------------------------------------
