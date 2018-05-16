@@ -26,7 +26,7 @@ extern bool AGORA_UseMetal;
 //                       in this function. They will later be removed automatically when calling Par_Aux_InitCheck()
 //                       in Init_GAMER().
 //                3. Particles set by this function are only temporarily stored in this MPI rank
-//                   --> They will later be redistributed when calling Par_LB_Init_RedistributeByRectangular()
+//                   --> They will later be redistributed when calling Par_FindHomePatch_UniformGrid()
 //                       and LB_Init_LoadBalance()
 //                   --> Therefore, there is no constraint on which particles should be set by this function
 //                4. Input particle IC text file format: (x, y, z, vx, vy, vz, mass)

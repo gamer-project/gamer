@@ -22,7 +22,7 @@
 void Init_ResetParameter()
 {
 
-   if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... \n", __FUNCTION__ );
+   if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ...\n", __FUNCTION__ );
 
 
 // helper macro for printing warning messages
@@ -198,8 +198,11 @@ void Init_ResetParameter()
 
    for (int d=0; d<3; d++)
    {
-      amr->BoxSize [d] = NX0_TOT[d]*amr->dh   [0];
-      amr->BoxScale[d] = NX0_TOT[d]*amr->scale[0];
+      amr->BoxSize  [d] = NX0_TOT[d]*amr->dh   [0];
+      amr->BoxScale [d] = NX0_TOT[d]*amr->scale[0];
+      amr->BoxEdgeL [d] = 0.0;
+      amr->BoxEdgeR [d] = amr->BoxSize[d];
+      amr->BoxCenter[d] = 0.5*( amr->BoxEdgeL[d] + amr->BoxEdgeR[d] );
    }
 
 
@@ -429,11 +432,7 @@ void Init_ResetParameter()
 // OPT__CORR_AFTER_ALL_SYNC
    if ( OPT__CORR_AFTER_ALL_SYNC == CORR_AFTER_SYNC_DEFAULT )
    {
-#     ifdef GAMER_DEBUG
-      OPT__CORR_AFTER_ALL_SYNC = CORR_AFTER_SYNC_EVERY_STEP;
-#     else
       OPT__CORR_AFTER_ALL_SYNC = CORR_AFTER_SYNC_BEFORE_DUMP;
-#     endif
 
       PRINT_WARNING( OPT__CORR_AFTER_ALL_SYNC, FORMAT_INT, "" );
    }
@@ -506,34 +505,6 @@ void Init_ResetParameter()
 
       PRINT_WARNING( OPT__INT_TIME, FORMAT_INT, "since OPT__DT_LEVEL == DT_LEVEL_SHARED" );
    }
-
-
-// reset the MPI rank in the serial mode
-#  ifdef SERIAL
-   if ( MPI_NRank != 1 )
-   {
-      MPI_NRank = 1;
-      PRINT_WARNING( MPI_NRank, FORMAT_INT, "since SERIAL is enabled" );
-   }
-
-   if ( MPI_NRank_X[0] != 1 )
-   {
-      MPI_NRank_X[0] = 1;
-      PRINT_WARNING( MPI_NRank_X[0], FORMAT_INT, "since SERIAL is enabled" );
-   }
-
-   if ( MPI_NRank_X[1] != 1 )
-   {
-      MPI_NRank_X[1] = 1;
-      PRINT_WARNING( MPI_NRank_X[1], FORMAT_INT, "since SERIAL is enabled" );
-   }
-
-   if ( MPI_NRank_X[2] != 1 )
-   {
-      MPI_NRank_X[2] = 1;
-      PRINT_WARNING( MPI_NRank_X[2], FORMAT_INT, "since SERIAL is enabled" );
-   }
-#  endif // #ifdef SERIAL
 
 
 // always turn on "OPT__VERBOSE" in the debug mode
@@ -663,15 +634,23 @@ void Init_ResetParameter()
 #  endif
 
 
-// MPI_NRank_X is useless during restart if LOAD_BALANCE is on
-#  ifdef LOAD_BALANCE
-   if ( OPT__INIT == INIT_BY_RESTART )
+// reset MPI_NRank_X
+#  ifdef SERIAL
+   for (int d=0; d<3; d++)
+   if ( MPI_NRank_X[d] != 1 )
    {
-      for (int d=0; d<3; d++)    MPI_NRank_X[d] = -1;
+      MPI_NRank_X[d] = 1;
+      PRINT_WARNING( MPI_NRank_X[d], FORMAT_INT, "for SERIAL" );
+   }
+#  endif
 
-      PRINT_WARNING( MPI_NRank_X[0], FORMAT_INT, "during restart since LOAD_BALANCE is enabled" );
-      PRINT_WARNING( MPI_NRank_X[1], FORMAT_INT, "during restart since LOAD_BALANCE is enabled" );
-      PRINT_WARNING( MPI_NRank_X[2], FORMAT_INT, "during restart since LOAD_BALANCE is enabled" );
+#  ifdef LOAD_BALANCE
+   for (int d=0; d<3; d++)
+   if ( MPI_NRank_X[d] > 0 )
+   {
+      MPI_NRank_X[d] = -1;
+
+      PRINT_WARNING( MPI_NRank_X[d], FORMAT_INT, "since it's useless" );
    }
 #  endif
 
@@ -747,18 +726,6 @@ void Init_ResetParameter()
 
       const ParInit_t PAR_INIT = amr->Par->Init;
       PRINT_WARNING( PAR_INIT, FORMAT_INT, "for restart" );
-   }
-#  endif
-
-
-// always enable OPT__CORR_AFTER_ALL_SYNC in the debug mode
-// --> but "OPT__CORR_AFTER_ALL_SYNC == CORR_AFTER_SYNC_BEFORE_DUMP" is allowed in the debug mode if set by users
-#  ifdef GAMER_DEBUG
-   if ( OPT__CORR_AFTER_ALL_SYNC == CORR_AFTER_SYNC_NONE )
-   {
-      OPT__CORR_AFTER_ALL_SYNC = CORR_AFTER_SYNC_EVERY_STEP;
-
-      PRINT_WARNING( OPT__CORR_AFTER_ALL_SYNC, FORMAT_INT, "since GAMER_DEBUG is enabled" );
    }
 #  endif
 

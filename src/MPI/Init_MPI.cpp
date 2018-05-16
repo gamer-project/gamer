@@ -22,6 +22,7 @@ void Init_MPI( int *argc, char ***argv )
    MPI_Init_thread( argc, argv, MPI_THREAD_SERIALIZED, &MPI_Thread_Status );
 // MPI_Init_thread( argc, argv, MPI_THREAD_MULTIPLE,   &MPI_Thread_Status );
    MPI_Comm_rank( MPI_COMM_WORLD, &MPI_Rank );
+   MPI_Comm_size( MPI_COMM_WORLD, &MPI_NRank );
 
    if ( MPI_Rank == 0 )
    {
@@ -43,6 +44,7 @@ void Init_MPI( int *argc, char ***argv )
 
    MPI_Init( argc, argv );
    MPI_Comm_rank( MPI_COMM_WORLD, &MPI_Rank );
+   MPI_Comm_size( MPI_COMM_WORLD, &MPI_NRank );
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "Init_MPI ... done\n" );
 #  endif

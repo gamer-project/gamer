@@ -15,8 +15,6 @@ Note:
 1. Adopt the periodic boundary condition
 2. Shear velocity is defined on the x-y plane
 3. Random values are added to velocity in all three directions
-4. When KH_AllRankSame == true, all MPI ranks will assign the same initial condition
-   --> Suitable for the weak scaling test
-5. yt script "plot_density.py" for visualization
-6. Must disable "OPT__INIT_GRID_WITH_OMP"
+4. yt script "plot_density.py" for visualization
+5. Must disable "OPT__INIT_GRID_WITH_OMP"
    --> Otherwise all threads would share the same random seed

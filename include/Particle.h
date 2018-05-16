@@ -284,8 +284,8 @@ struct Particle_t
    //                2. For LOAD_BALANCE, some lists recording the information for exchanging
    //                   particles between different ranks are also allocated here
    //
-   // Parameter   :  NPar_Input  : Total number of active particles
-   //                NRank       : Total number of MPI ranks
+   // Parameter   :  NPar_Input : Total number of active particles
+   //                NRank      : Total number of MPI ranks
    //===================================================================================
    void InitRepo( const long NPar_Input, const int NRank )
    {
@@ -301,7 +301,7 @@ struct Particle_t
       InactiveParListSize = MAX( 1, ParListSize/100 );   // set arbitrarily (but must > 0)
 
 //    allocate arrays (use malloc so that realloc can be used later to resize the array)
-//    --> free memory first since other functions (e.g., LB_Init_LoadBalance) will call InitRepo again
+//    --> free memory first since other functions (e.g., LB_Init_LoadBalance()) will call InitRepo() again
       for (int v=0; v<PAR_NVAR; v++)
       {
          if ( ParVar[v] != NULL )   free( ParVar[v] );
@@ -385,8 +385,8 @@ struct Particle_t
    //                4. Note that the global variable "AveDensity_Init" will NOT be recalculated
    //                   automatically here
    //
-   // Parameter   :  NewVar      : Array storing the         variables of new particles
-   //                NewPassive  : Array storing the passive variables of new particles
+   // Parameter   :  NewVar     : Array storing the         variables of new particles
+   //                NewPassive : Array storing the passive variables of new particles
    //
    // Return      :  Index of the new particle (ParID)
    //===================================================================================
@@ -483,15 +483,15 @@ struct Particle_t
    //                2. Particles being removed will NOT be actually deleted in the memory.
    //                   Instead, their masses are assigned to Marker, which must be negative
    //                   in order to be distinguishable from active particles.
-   //                   --> IDs of all removed particles will be recorded in the array InactiveParList
+   //                   --> IDs of all removed particles will be recorded in InactiveParList[]
    //                   --> These IDs will be reassigned to new particles added later on when
-   //                       calling AddOneParticle
+   //                       calling AddOneParticle()
    //                3. Note that the global variable "AveDensity_Init" will NOT be recalculated
    //                   automatically here
    //
-   // Parameter   :  ParID       : Particle ID to be removed
-   //                Marker      : Value assigned to the mass of the particle being removed
-   //                              (PAR_INACTIVE_OUTSIDE or PAR_INACTIVE_MPI)
+   // Parameter   :  ParID  : Particle ID to be removed
+   //                Marker : Value assigned to the mass of the particle being removed
+   //                         (PAR_INACTIVE_OUTSIDE or PAR_INACTIVE_MPI)
    //
    // Return      :  None
    //===================================================================================

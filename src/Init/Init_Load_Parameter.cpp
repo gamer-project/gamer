@@ -31,8 +31,7 @@ void Init_Load_Parameter()
    ReadPara->Add( "NX0_TOT_X",                  &NX0_TOT[0],                     -1,               PS2,           NoMax_int      );
    ReadPara->Add( "NX0_TOT_Y",                  &NX0_TOT[1],                     -1,               PS2,           NoMax_int      );
    ReadPara->Add( "NX0_TOT_Z",                  &NX0_TOT[2],                     -1,               PS2,           NoMax_int      );
-   ReadPara->Add( "MPI_NRANK",                  &MPI_NRank,                      -1,               1,             NoMax_int      );
-// do not check MPI_NRANK_X/Y/Z since they can be negative during restart and will be deprecated in the future
+// do not check MPI_NRANK_X/Y/Z since they are deprecated
    ReadPara->Add( "MPI_NRANK_X",                &MPI_NRank_X[0],                 -1,               NoMin_int,     NoMax_int      );
    ReadPara->Add( "MPI_NRANK_Y",                &MPI_NRank_X[1],                 -1,               NoMin_int,     NoMax_int      );
    ReadPara->Add( "MPI_NRANK_Z",                &MPI_NRank_X[2],                 -1,               NoMin_int,     NoMax_int      );
@@ -283,6 +282,7 @@ void Init_Load_Parameter()
    ReadPara->Add( "OPT__UM_IC_NVAR",            &OPT__UM_IC_NVAR,                 NCOMP_TOTAL,     NoMin_int,     NCOMP_TOTAL    );
    ReadPara->Add( "OPT__UM_IC_DOWNGRADE",       &OPT__UM_IC_DOWNGRADE,            true,            Useless_bool,  Useless_bool   );
    ReadPara->Add( "OPT__UM_IC_REFINE",          &OPT__UM_IC_REFINE,               true,            Useless_bool,  Useless_bool   );
+   ReadPara->Add( "OPT__UM_IC_LOAD_NRANK",      &OPT__UM_IC_LOAD_NRANK,           1,               1,             NoMax_int      );
    ReadPara->Add( "OPT__INIT_RESTRICT",         &OPT__INIT_RESTRICT,              true,            Useless_bool,  Useless_bool   );
    ReadPara->Add( "OPT__INIT_GRID_WITH_OMP",    &OPT__INIT_GRID_WITH_OMP,         true,            Useless_bool,  Useless_bool   );
    ReadPara->Add( "OPT__GPUID_SELECT",          &OPT__GPUID_SELECT,              -1,              -3,             NoMax_int      );

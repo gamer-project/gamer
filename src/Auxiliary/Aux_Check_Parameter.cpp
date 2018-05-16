@@ -14,7 +14,7 @@
 void Aux_Check_Parameter()
 {
 
-   if ( MPI_Rank == 0 )    Aux_Message( stdout, "Aux_Check_Parameter ... \n" );
+   if ( MPI_Rank == 0 )    Aux_Message( stdout, "Aux_Check_Parameter ...\n" );
 
 
 // general errors
@@ -66,8 +66,9 @@ void Aux_Check_Parameter()
    if ( MPI_NRank != NRank )
       Aux_Error( ERROR_INFO, "MPI_NRank (%d) != MPI_Comm_size (%d) !!\n", MPI_NRank, NRank );
 
-   if ( NX0_TOT[0]%PS2 != 0  ||  NX0_TOT[1]%PS2 != 0  ||  NX0_TOT[2]%PS2 != 0 )
-      Aux_Error( ERROR_INFO, "number of base-level patches in each direction must be \"a multiple of TWO\" !!\n" );
+   for (int d=0; d<3; d++)
+      if ( NX0_TOT[d]%PS2 != 0 )
+         Aux_Error( ERROR_INFO, "NX0_TOT_%c (%d) is NOT a multiple of %d (i.e., two patches) !!\n", 'X'+d, NX0_TOT[d], PS2 );
 
    if ( END_STEP < 0  &&  OPT__INIT != INIT_BY_RESTART )
       Aux_Error( ERROR_INFO, "incorrect parameter \"%s = %d\" [>=0] !!\n", "END_STEP", END_STEP );
@@ -75,20 +76,16 @@ void Aux_Check_Parameter()
    if ( END_T < 0.0  &&  OPT__INIT != INIT_BY_RESTART )
       Aux_Error( ERROR_INFO, "incorrect parameter \"%s = %14.7e\" [>=0] !!\n", "END_T", END_T );
 
-#  ifdef LOAD_BALANCE
-   if ( OPT__INIT != INIT_BY_RESTART )
-#  endif
+#  ifndef LOAD_BALANCE
    if ( NX0_TOT[0]%(PS2*MPI_NRank_X[0]) != 0  ||  NX0_TOT[1]%(PS2*MPI_NRank_X[1]) != 0  ||
         NX0_TOT[2]%(PS2*MPI_NRank_X[2]) != 0 )
       Aux_Error( ERROR_INFO, "number of base-level patches in each direction and in each MPI rank must be \"%s\" !!\n",
                  "a multiple of TWO" );
 
-#  ifdef LOAD_BALANCE
-   if ( OPT__INIT != INIT_BY_RESTART )
-#  endif
    if ( MPI_NRank_X[0]*MPI_NRank_X[1]*MPI_NRank_X[2] != MPI_NRank )
-      Aux_Error( ERROR_INFO, "MPI_NRank_X[0]*MPI_NRank_X[1]*MPI_NRank_X[2] (%d) != MPI_NRank (%d) !!\n",
-                 MPI_NRank_X[0]*MPI_NRank_X[1]*MPI_NRank_X[2], MPI_NRank );
+      Aux_Error( ERROR_INFO, "MPI_NRANK_X (%d) * MPI_NRANK_Y (%d) * MPI_NRANK_Z (%d) = %d != MPI_Comm_size (%d) !!\n",
+                 MPI_NRank_X[0], MPI_NRank_X[1], MPI_NRank_X[2], MPI_NRank_X[0]*MPI_NRank_X[1]*MPI_NRank_X[2], MPI_NRank );
+#  endif
 
    if ( OPT__OUTPUT_MODE == OUTPUT_CONST_STEP  &&  OUTPUT_STEP <= 0 )
       Aux_Error( ERROR_INFO, "OUTPUT_STEP (%ld) <= 0 !!\n", OUTPUT_STEP );
@@ -147,11 +144,9 @@ void Aux_Check_Parameter()
 #  ifdef SERIAL
    if ( MPI_NRank != 1 )   Aux_Error( ERROR_INFO, "\"MPI_NRank != 1\" in the serial code !!\n" );
 
-   if ( MPI_NRank_X[0] != 1 )    Aux_Error( ERROR_INFO, "\"MPI_NRank_X[0] != 1\" in the serial code !!\n" );
-
-   if ( MPI_NRank_X[1] != 1 )    Aux_Error( ERROR_INFO, "\"MPI_NRank_X[1] != 1\" in the serial code !!\n" );
-
-   if ( MPI_NRank_X[2] != 1 )    Aux_Error( ERROR_INFO, "\"MPI_NRank_X[2] != 1\" in the serial code !!\n" );
+   for (int d=0; d<3; d++)
+      if ( MPI_NRank_X[d] != 1 )
+         Aux_Error( ERROR_INFO, "\"MPI_NRank_%c (%d) != 1\" in the serial code !!\n", 'X'+d, MPI_NRank_X[d] );
 #  endif // #ifdef SERIAL
 
 #  ifndef OVERLAP_MPI
@@ -227,6 +222,12 @@ void Aux_Check_Parameter()
    if ( OPT__CORR_AFTER_ALL_SYNC != CORR_AFTER_SYNC_BEFORE_DUMP  &&  OPT__CORR_AFTER_ALL_SYNC != CORR_AFTER_SYNC_EVERY_STEP )
       Aux_Error( ERROR_INFO, "please set OPT__CORR_AFTER_ALL_SYNC to 1/2 when BITWISE_REPRODUCIBILITY is enabled !!\n" );
 #  endif
+
+#  if ( !defined SERIAL  &&  !defined LOAD_BALANCE )
+   if ( OPT__INIT == INIT_BY_FILE )
+      Aux_Error( ERROR_INFO, "must enable either SERIAL or LOAD_BALANCE for OPT__INIT=3 !!\n" );
+#  endif
+
 
 
 // general warnings
@@ -1175,11 +1176,20 @@ void Aux_Check_Parameter()
 
    } // if ( MPI_Rank == 0 )
 
+
 #else // #ifdef PARTICLE
+
+
+// warning
+// ------------------------------
+   if ( MPI_Rank == 0 ) {
 
 #  ifdef STORE_POT_GHOST
    Aux_Message( stderr, "WARNING : currently STORE_POT_GHOST is useless when PARTICLE is disabled !!\n" );
 #  endif
+
+   }
+
 
 #endif // PARTICLE
 

@@ -367,7 +367,7 @@ void LB_Refine_AllocateNewPatch( const int FaLv, int NNew_Home, int *NewPID_Home
 
    LB_AllocateBufferPatch_Father( SonLv, false, NNew_Real0, NewSonPID0_Real, true, &NNewFaBuf0, &NewFaBufPID0 );
 
-   LB_FindFather( SonLv, false, NNoFa, NewSonPID0_NoFa );
+   LB_FindFather( SonLv, false, NNoFa, NewSonPID0_NoFa, false );
 
 
 
@@ -510,7 +510,7 @@ void LB_Refine_AllocateNewPatch( const int FaLv, int NNew_Home, int *NewPID_Home
 // 9.3 father <-> son relation
    if ( GraLv < NLEVEL )
    {
-      LB_FindFather( GraLv, true, NULL_INT, NULL );
+      LB_FindFather( GraLv, true, NULL_INT, NULL, false );
 
       LB_FindSonNotHome( SonLv, false, 8*NNew_All0, NewSonPID_All );
    }

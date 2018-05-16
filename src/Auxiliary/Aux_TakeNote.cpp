@@ -16,7 +16,7 @@
 void Aux_TakeNote()
 {
 
-   if ( MPI_Rank == 0 )    Aux_Message( stdout, "Aux_TakeNote ... \n" );
+   if ( MPI_Rank == 0 )    Aux_Message( stdout, "Aux_TakeNote ...\n" );
 
 
    const char FileName[] = "Record__Note";
@@ -933,6 +933,7 @@ void Aux_TakeNote()
       fprintf( Note, "OPT__UM_IC_NVAR                 %d\n",      OPT__UM_IC_NVAR         );
       fprintf( Note, "OPT__UM_IC_DOWNGRADE            %d\n",      OPT__UM_IC_DOWNGRADE    );
       fprintf( Note, "OPT__UM_IC_REFINE               %d\n",      OPT__UM_IC_REFINE       );
+      fprintf( Note, "OPT__UM_IC_LOAD_NRANK           %d\n",      OPT__UM_IC_LOAD_NRANK   );
       fprintf( Note, "OPT__INIT_RESTRICT              %d\n",      OPT__INIT_RESTRICT      );
       fprintf( Note, "OPT__INIT_GRID_WITH_OMP         %d\n",      OPT__INIT_GRID_WITH_OMP );
       fprintf( Note, "OPT__GPUID_SELECT               %d\n",      OPT__GPUID_SELECT       );

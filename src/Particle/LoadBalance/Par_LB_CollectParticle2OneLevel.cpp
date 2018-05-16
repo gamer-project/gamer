@@ -119,9 +119,10 @@ void Par_LB_CollectParticle2OneLevel( const int FaLv, const bool PredictPos, con
 #  endif // #ifdef DEBUG_PARTICLE
 
 
-// 0. jump to step 5 if the target level is the maximum level --> just collect particles for buffer patches
-//    (note that we don't have to set NPar_Copy here since leaf real patches always have NPar_Copy == -1)
-   if ( FaLv == MAX_LEVEL )
+// 0. jump to step 5 if FaLv+1 is guaranteed to have no particle
+//    --> just collect particles for buffer patches
+//    --> note that we don't have to set NPar_Copy here since leaf real patches always have NPar_Copy == -1
+   if ( FaLv == TOP_LEVEL  ||  NPatchTotal[FaLv+1] == 0 )
    {
 //    0-1. sibling-buffer patches at FaLv
       if ( SibBufPatch  &&  !JustCountNPar )
