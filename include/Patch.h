@@ -257,7 +257,7 @@ struct patch_t
    //===================================================================================
    patch_t( const int scale_x, const int scale_y, const int scale_z, const int FaPID, const bool FluData,
             const bool MagData, const bool PotData, const bool DE_Status, const int lv, const int BoxScale[],
-            const double BoxEdgeL[], const double dh_min[] )
+            const double BoxEdgeL[], const double dh_min )
    {
 
 //    always initialize field pointers (e.g., fluid, pot, ...) as NULL if they are not allocated here
@@ -304,7 +304,7 @@ struct patch_t
    //===================================================================================
    void Activate( const int scale_x, const int scale_y, const int scale_z, const int FaPID, const bool FluData,
                   const bool MagData, const bool PotData, const bool DE_Status, const int lv, const int BoxScale[],
-                  const double BoxEdgeL[], const double dh_min[], const bool InitPtrAsNull )
+                  const double BoxEdgeL[], const double dh_min, const bool InitPtrAsNull )
    {
 
       corner[0] = scale_x;
@@ -345,13 +345,13 @@ struct patch_t
 //       --> otherwise the buffer patches just outside the simulation left edge (and the real patches just inside the simulation
 //           right edge) will have EdgeR=BoxEdgeL instead of EdgeR=BoxEdgeR
 //       --> assuming periodicity
-         EdgeL[d] = BoxEdgeL[d] + (double)(  ( corner[d] + BoxScale[d] ) % BoxScale[d]           )*dh_min[d];
-         EdgeR[d] = BoxEdgeL[d] + (double)(  ( corner[d] + BoxScale[d] ) % BoxScale[d] + PScale  )*dh_min[d];
+         EdgeL[d] = BoxEdgeL[d] + (double)(  ( corner[d] + BoxScale[d] ) % BoxScale[d]           )*dh_min;
+         EdgeR[d] = BoxEdgeL[d] + (double)(  ( corner[d] + BoxScale[d] ) % BoxScale[d] + PScale  )*dh_min;
 
 //       do no use the following non-periodic version anymore --> it does not work with the current particle implementation
          /*
-         EdgeL[d] = BoxEdgeL[d] + (double)corner[d]*dh_min[d];
-         EdgeR[d] = BoxEdgeL[d] + (double)( corner[d] + PScale )*dh_min[d];
+         EdgeL[d] = BoxEdgeL[d] + (double)corner[d]*dh_min;
+         EdgeR[d] = BoxEdgeL[d] + (double)( corner[d] + PScale )*dh_min;
          */
       }
 
