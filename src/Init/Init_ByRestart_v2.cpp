@@ -464,7 +464,7 @@ void Init_ByRestart()
                      LoadCorner[2] >= TargetRange_Min[2]  &&  LoadCorner[2] < TargetRange_Max[2]     )
 #              endif
                {
-                  amr->pnew( lv, LoadCorner[0], LoadCorner[1], LoadCorner[2], -1, true, true );
+                  amr->pnew( lv, LoadCorner[0], LoadCorner[1], LoadCorner[2], -1, true, true, true );
 
 //                d3. load the physical data if it is a leaf patch
                   if ( *LoadSon == -1 )
