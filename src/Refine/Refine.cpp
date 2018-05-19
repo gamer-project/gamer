@@ -186,14 +186,14 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
 //       (c1.2) allocate child patches and construct relation : child -> father
          Cr = Pedigree->corner;
 
-         amr->pnew( lv+1, Cr[0],       Cr[1],       Cr[2],       PID, true, true );
-         amr->pnew( lv+1, Cr[0]+Width, Cr[1],       Cr[2],       PID, true, true );
-         amr->pnew( lv+1, Cr[0],       Cr[1]+Width, Cr[2],       PID, true, true );
-         amr->pnew( lv+1, Cr[0],       Cr[1],       Cr[2]+Width, PID, true, true );
-         amr->pnew( lv+1, Cr[0]+Width, Cr[1]+Width, Cr[2],       PID, true, true );
-         amr->pnew( lv+1, Cr[0],       Cr[1]+Width, Cr[2]+Width, PID, true, true );
-         amr->pnew( lv+1, Cr[0]+Width, Cr[1],       Cr[2]+Width, PID, true, true );
-         amr->pnew( lv+1, Cr[0]+Width, Cr[1]+Width, Cr[2]+Width, PID, true, true );
+         amr->pnew( lv+1, Cr[0],       Cr[1],       Cr[2],       PID, true, true, true );
+         amr->pnew( lv+1, Cr[0]+Width, Cr[1],       Cr[2],       PID, true, true, true );
+         amr->pnew( lv+1, Cr[0],       Cr[1]+Width, Cr[2],       PID, true, true, true );
+         amr->pnew( lv+1, Cr[0],       Cr[1],       Cr[2]+Width, PID, true, true, true );
+         amr->pnew( lv+1, Cr[0]+Width, Cr[1]+Width, Cr[2],       PID, true, true, true );
+         amr->pnew( lv+1, Cr[0],       Cr[1]+Width, Cr[2]+Width, PID, true, true, true );
+         amr->pnew( lv+1, Cr[0]+Width, Cr[1],       Cr[2]+Width, PID, true, true, true );
+         amr->pnew( lv+1, Cr[0]+Width, Cr[1]+Width, Cr[2]+Width, PID, true, true, true );
 
 
 //       (c1.3) assign data to child patches by spatial interpolation

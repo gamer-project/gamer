@@ -379,7 +379,7 @@ void Init_ByRestart_v1( const char FileName[] )
 #              endif
                {
 
-                  amr->pnew( lv, LoadCorner[0], LoadCorner[1], LoadCorner[2], -1, true, true );
+                  amr->pnew( lv, LoadCorner[0], LoadCorner[1], LoadCorner[2], -1, true, true, true );
 
 //                d3. load the physical data if it is a leaf patch
                   if ( LoadSon == -1 )

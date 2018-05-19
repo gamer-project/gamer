@@ -671,14 +671,14 @@ int AllocateSonPatch( const int FaLv, const int *Cr, const int PScale, const int
 
 
 // 2. allocate child patches and construct relation : child -> father
-   amr->pnew( SonLv, Cr[0],        Cr[1],        Cr[2],        FaPID, true, true );
-   amr->pnew( SonLv, Cr[0]+PScale, Cr[1],        Cr[2],        FaPID, true, true );
-   amr->pnew( SonLv, Cr[0],        Cr[1]+PScale, Cr[2],        FaPID, true, true );
-   amr->pnew( SonLv, Cr[0],        Cr[1],        Cr[2]+PScale, FaPID, true, true );
-   amr->pnew( SonLv, Cr[0]+PScale, Cr[1]+PScale, Cr[2],        FaPID, true, true );
-   amr->pnew( SonLv, Cr[0],        Cr[1]+PScale, Cr[2]+PScale, FaPID, true, true );
-   amr->pnew( SonLv, Cr[0]+PScale, Cr[1],        Cr[2]+PScale, FaPID, true, true );
-   amr->pnew( SonLv, Cr[0]+PScale, Cr[1]+PScale, Cr[2]+PScale, FaPID, true, true );
+   amr->pnew( SonLv, Cr[0],        Cr[1],        Cr[2],        FaPID, true, true, true );
+   amr->pnew( SonLv, Cr[0]+PScale, Cr[1],        Cr[2],        FaPID, true, true, true );
+   amr->pnew( SonLv, Cr[0],        Cr[1]+PScale, Cr[2],        FaPID, true, true, true );
+   amr->pnew( SonLv, Cr[0],        Cr[1],        Cr[2]+PScale, FaPID, true, true, true );
+   amr->pnew( SonLv, Cr[0]+PScale, Cr[1]+PScale, Cr[2],        FaPID, true, true, true );
+   amr->pnew( SonLv, Cr[0],        Cr[1]+PScale, Cr[2]+PScale, FaPID, true, true, true );
+   amr->pnew( SonLv, Cr[0]+PScale, Cr[1],        Cr[2]+PScale, FaPID, true, true, true );
+   amr->pnew( SonLv, Cr[0]+PScale, Cr[1]+PScale, Cr[2]+PScale, FaPID, true, true, true );
 
    amr->NPatchComma[SonLv][1] += 8;
 

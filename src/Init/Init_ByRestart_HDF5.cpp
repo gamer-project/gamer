@@ -1109,7 +1109,7 @@ void LoadOnePatch( const hid_t H5_FileID, const int lv, const int GID, const boo
    int     SonGID0, PID;
 
 // allocate patch
-   amr->pnew( lv, CrList[GID][0], CrList[GID][1], CrList[GID][2], -1, WithData_Yes, WithData_Yes );
+   amr->pnew( lv, CrList[GID][0], CrList[GID][1], CrList[GID][2], -1, WithData_Yes, WithData_Yes, WithData_Yes );
 
    PID = amr->num[lv] - 1;
 

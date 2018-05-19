@@ -138,14 +138,14 @@ void Buf_AllocateBufferPatch( AMR_t *Tamr, const int lv )
 
          Tamr->patch[0][lv-1][BuffPID]->son = Tamr->num[lv];
 
-         Tamr->pnew( lv, Corner[0],      Corner[1],      Corner[2],      BuffPID, AllocData[0], AllocData[0] );
-         Tamr->pnew( lv, Corner[0]+Disp, Corner[1],      Corner[2],      BuffPID, AllocData[1], AllocData[1] );
-         Tamr->pnew( lv, Corner[0],      Corner[1]+Disp, Corner[2],      BuffPID, AllocData[2], AllocData[2] );
-         Tamr->pnew( lv, Corner[0],      Corner[1],      Corner[2]+Disp, BuffPID, AllocData[3], AllocData[3] );
-         Tamr->pnew( lv, Corner[0]+Disp, Corner[1]+Disp, Corner[2],      BuffPID, AllocData[4], AllocData[4] );
-         Tamr->pnew( lv, Corner[0],      Corner[1]+Disp, Corner[2]+Disp, BuffPID, AllocData[5], AllocData[5] );
-         Tamr->pnew( lv, Corner[0]+Disp, Corner[1],      Corner[2]+Disp, BuffPID, AllocData[6], AllocData[6] );
-         Tamr->pnew( lv, Corner[0]+Disp, Corner[1]+Disp, Corner[2]+Disp, BuffPID, AllocData[7], AllocData[7] );
+         Tamr->pnew( lv, Corner[0],      Corner[1],      Corner[2],      BuffPID, AllocData[0], AllocData[0], AllocData[0] );
+         Tamr->pnew( lv, Corner[0]+Disp, Corner[1],      Corner[2],      BuffPID, AllocData[1], AllocData[1], AllocData[1] );
+         Tamr->pnew( lv, Corner[0],      Corner[1]+Disp, Corner[2],      BuffPID, AllocData[2], AllocData[2], AllocData[2] );
+         Tamr->pnew( lv, Corner[0],      Corner[1],      Corner[2]+Disp, BuffPID, AllocData[3], AllocData[3], AllocData[3] );
+         Tamr->pnew( lv, Corner[0]+Disp, Corner[1]+Disp, Corner[2],      BuffPID, AllocData[4], AllocData[4], AllocData[4] );
+         Tamr->pnew( lv, Corner[0],      Corner[1]+Disp, Corner[2]+Disp, BuffPID, AllocData[5], AllocData[5], AllocData[5] );
+         Tamr->pnew( lv, Corner[0]+Disp, Corner[1],      Corner[2]+Disp, BuffPID, AllocData[6], AllocData[6], AllocData[6] );
+         Tamr->pnew( lv, Corner[0]+Disp, Corner[1]+Disp, Corner[2]+Disp, BuffPID, AllocData[7], AllocData[7], AllocData[7] );
 
 //       record the number of buffer patches in each sibling direction
          Tamr->NPatchComma[lv][s+2] += 8;
