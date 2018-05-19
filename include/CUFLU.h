@@ -30,41 +30,65 @@
 // ## macros for different models ##
 // #################################
 
-// 1. hydro macro
+// 1. hydro/MHD macro
 //=========================================================================================
-#if   ( MODEL == HYDRO )
+#if   ( MODEL == HYDRO  ||  MODEL == MHD )
 // structure data type for the GPU hydro kernels
 // --> note that for FluVar we must define Passive[] even when NCOMP_PASSIVE == 0
 // --> FluVar5 is used for variables which do not need to consider passive scalars even when NCOMP_PASSIVE > 0
 //     (e.g., eigenvectors/eigenvalues in CUFLU_Shared_RiemannSolver_Roe() )
-struct FluVar  { real Rho, Px, Py, Pz, Egy, Passive[NCOMP_PASSIVE]; };
-struct FluVar5 { real Rho, Px, Py, Pz, Egy; };
+#if   ( MODEL == HYDRO )
+struct FluVar   { real Rho, Px, Py, Pz, Egy, Passive[NCOMP_PASSIVE]; };
+struct FluVar5  { real Rho, Px, Py, Pz, Egy; };
+#elif ( MODEL == MHD )
+struct FluVar   { real Rho, Px, Py, Pz, Egy, Passive[NCOMP_PASSIVE], Bx, By, Bz; };
+struct MHDVar1D { real Rho, Px, Py, Pz, Egy, By, Bz; };
+#endif
 
 
 // size of different arrays
 #if ( FLU_SCHEME == MHM  ||  FLU_SCHEME == MHM_RP  ||  FLU_SCHEME == CTU )
 
-#  define N_FC_VAR        ( PS2 + 2      )
-#  define N_SLOPE_PPM     ( N_FC_VAR + 2 )
 
 #  if   ( FLU_SCHEME == MHM )
 
+#     define N_FC_VAR     ( PS2 + 2      )
 #     define N_FL_FLUX    ( PS2 + 1      )
 #     define N_FC_FLUX    ( N_FL_FLUX    )
 
 #  elif ( FLU_SCHEME == MHM_RP )
 
+#     define N_FC_VAR     ( PS2 + 2      )
+#     if   ( MODEL == HYDRO )
 #     define N_FL_FLUX    ( PS2 + 1      )
-#     define N_HF_VAR     ( FLU_NXT - 2  )
 #     define N_HF_FLUX    ( FLU_NXT - 1  )
+#     elif ( MODEL == MHD )
+#     define N_FL_FLUX    ( PS2 + 2      )
+#     define N_HF_FLUX    ( FLU_NXT      )
+#     endif
+#     define N_HF_VAR     ( FLU_NXT - 2  )
 #     define N_FC_FLUX    ( N_HF_FLUX    )
 
 #  elif ( FLU_SCHEME == CTU )
 
+#     if   ( MODEL == HYDRO )
+#     define N_FC_VAR     ( PS2 + 2      )
 #     define N_FL_FLUX    ( N_FC_VAR     )
+#     elif ( MODEL == MHD )
+#     define N_FC_VAR     ( PS2 + 4      )
+#     define N_FL_FLUX    ( N_FC_VAR - 2 )
+#     endif
 #     define N_HF_FLUX    ( N_FC_VAR     )
 #     define N_FC_FLUX    ( N_FC_VAR     )
 
+#  endif
+
+#  define N_SLOPE_PPM     ( N_FC_VAR + 2 )
+
+#  if ( MODEL == MHD )
+#  define N_HF_ELE        ( N_HF_FLUX - 1 )
+#  define N_FL_ELE        ( N_FL_FLUX - 1 )
+#  define N_LC_ELE        ( N_FC_FLUX - 1 )
 #  endif
 
 #endif // #if ( FLU_SCHEME == MHM  ||  FLU_SCHEME == MHM_RP  ||  FLU_SCHEME == CTU )
@@ -89,15 +113,24 @@ struct FluVar5 { real Rho, Px, Py, Pz, Egy; };
 
 
 // verify that the density and pressure in the intermediate states of Roe's Riemann solver are positive.
-// --> if either is negative, we switch to other Riemann solvers (EXACT/HLLE/HLLC)
+// --> if either is negative, we switch to other Riemann solvers (EXACT/HLLE/HLLC/HLLD)
 #if (  ( FLU_SCHEME == MHM || FLU_SCHEME == MHM_RP || FLU_SCHEME == CTU )  &&  RSOLVER == ROE  )
+#  if   ( MODEL == HYDRO )
 //#  define CHECK_INTERMEDIATE    HLLC
 #  define CHECK_INTERMEDIATE    HLLE
+#  elif ( MODEL == MHD )
+//#  define CHECK_INTERMEDIATE    HLLD
+#  define CHECK_INTERMEDIATE    HLLE
+#  endif
 #endif
 
+// use Eulerian with Y factor for Roe Solver in MHD
+#if (  MODEL == MHD  &&  ( RSOLVER == ROE || RSOLVER == HLLE )  )
+#  define EULERY
+#endif
 
 // do not use the reference states for HLL solvers during the data reconstruction, as suggested in ATHENA
-#if (  FLU_SCHEME != RTVD  &&  ( RSOLVER == HLLE || RSOLVER == HLLC )  )
+#if (  defined RSOLVER  &&  ( RSOLVER == HLLE || RSOLVER == HLLC || RSOLVER == HLLD )  )
 
 #  define HLL_NO_REF_STATE
 
@@ -115,23 +148,17 @@ struct FluVar5 { real Rho, Px, Py, Pz, Egy; };
 #endif
 
 
-// maximum allowed error for the exact Riemann solver and the WAF scheme
-#if ( FLU_SCHEME == WAF  ||  ( FLU_SCHEME != RTVD && RSOLVER == EXACT )  ||  CHECK_INTERMEDIATE == EXACT )
+// maximum allowed error for the exact Riemann solver, WAF scheme, and some MHD operations
+#if ( FLU_SCHEME == WAF  ||  RSOLVER == EXACT  ||  CHECK_INTERMEDIATE == EXACT  ||  MODEL == MHD )
 #  ifdef FLOAT8
-#     define MAX_ERROR    1.e-15
+#     define MAX_ERROR    1.0e-14
 #  else
-#     define MAX_ERROR    1.e-06f
+#     define MAX_ERROR    1.0e-06f
 #  endif
 #endif
 
 
-// 2. MHD macro
-//=========================================================================================
-#elif ( MODEL == MHD )
-#warning : WAIT MHD !!!!
-
-
-// 3. ELBDM macro
+// 2. ELBDM macro
 //=========================================================================================
 #elif ( MODEL == ELBDM )
 
@@ -266,8 +293,91 @@ struct FluVar5 { real Rho, Px, Py, Pz, Egy; };
 // 2. MHD solver
 //=========================================================================================
 #elif ( MODEL == MHD )
-#     define FLU_BLOCK_SIZE_X       0
-#     define FLU_BLOCK_SIZE_Y       0
+#if ( FLU_SCHEME == MHM_RP )
+
+#  if   ( GPU_ARCH == FERMI )
+#     ifdef FLOAT8
+#     define FLU_BLOCK_SIZE_X       256
+#     else
+#     define FLU_BLOCK_SIZE_X       512
+#     endif
+#  elif ( GPU_ARCH == KEPLER )
+#     ifdef FLOAT8
+#     define FLU_BLOCK_SIZE_X       256
+#     else
+#     define FLU_BLOCK_SIZE_X       512
+#     endif
+#  elif ( GPU_ARCH == MAXWELL )
+#     ifdef FLOAT8
+#     define FLU_BLOCK_SIZE_X       256
+#     else
+#     define FLU_BLOCK_SIZE_X       512      // not optimized yet
+#     endif
+#  elif ( GPU_ARCH == PASCAL )
+#     ifdef FLOAT8
+#     define FLU_BLOCK_SIZE_X       256
+#     else
+#     define FLU_BLOCK_SIZE_X       512      // not optimized yet
+#     endif
+#  elif ( GPU_ARCH == VOLTA )
+#     ifdef FLOAT8
+#     define FLU_BLOCK_SIZE_X       256
+#     else
+#     define FLU_BLOCK_SIZE_X       512      // not optimized yet
+#     endif
+#  else
+#     define FLU_BLOCK_SIZE_X       NULL_INT
+#     ifdef GPU
+#     error : UNKNOWN GPU_ARCH !!
+#     endif
+#  endif
+
+#     define FLU_BLOCK_SIZE_Y       1
+
+#elif ( FLU_SCHEME == CTU )
+
+#  if   ( GPU_ARCH == FERMI )
+#     ifdef FLOAT8
+#     define FLU_BLOCK_SIZE_X       256
+#     else
+#     define FLU_BLOCK_SIZE_X       512
+#     endif
+#  elif ( GPU_ARCH == KEPLER )
+#     ifdef FLOAT8
+#     define FLU_BLOCK_SIZE_X       256
+#     else
+#     define FLU_BLOCK_SIZE_X       512
+#     endif
+#  elif ( GPU_ARCH == MAXWELL )
+#     ifdef FLOAT8
+#     define FLU_BLOCK_SIZE_X       256
+#     else
+#     define FLU_BLOCK_SIZE_X       512      // not optimized yet
+#     endif
+#  elif ( GPU_ARCH == PASCAL )
+#     ifdef FLOAT8
+#     define FLU_BLOCK_SIZE_X       256
+#     else
+#     define FLU_BLOCK_SIZE_X       512      // not optimized yet
+#     endif
+#  elif ( GPU_ARCH == VOLTA )
+#     ifdef FLOAT8
+#     define FLU_BLOCK_SIZE_X       256
+#     else
+#     define FLU_BLOCK_SIZE_X       512      // not optimized yet
+#     endif
+#  else
+#     define FLU_BLOCK_SIZE_X       NULL_INT
+#     ifdef GPU
+#     error : UNKNOWN GPU_ARCH !!
+#     endif
+#  endif
+
+#     define FLU_BLOCK_SIZE_Y       1
+
+#else
+#  error : ERROR : unsupported MHD scheme in the makefile !!
+#endif
 
 
 // 3. ELBDM kinematic solver

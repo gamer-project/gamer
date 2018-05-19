@@ -51,6 +51,9 @@
 #define ROE          2
 #define HLLE         3
 #define HLLC         4
+#if (MODEL == MHD )
+#define HLLD         5
+#endif
 
 
 // dual-energy variables
@@ -79,18 +82,21 @@
 #define RNG_CPP11    2
 
 
-// NCOMP_FLUID : number of active components in each cell (i.e., the "fluid" array)
-//               --> do not include passive components here, which is set by NCOMP_PASSIVE
-// NFLUX_FLUID : number of active components in the "flux" array
-//               --> do not include passive components here, which is set by NFLUX_PASSIVE
+// NCOMP_FLUID    : number of active components in each cell (for patch->fluid[])
+//                  --> do not include passive components here, which is set by NCOMP_PASSIVE
+// NFLUX_FLUID    : number of active components in patch->flux[]
+//                  --> do not include passive components here, which is set by NFLUX_PASSIVE
+// NCOMP_MAGNETIC : number of magnetic fields in each cell (for patch->magnetic[])
+// NELECTRIC      : number of transverse magnetic fields on each cell face (for patch->electric[])
 #if   ( MODEL == HYDRO )
 #  define NCOMP_FLUID         5
 #  define NFLUX_FLUID         NCOMP_FLUID
 
 #elif ( MODEL == MHD )
-#  warning : WAIT MHD !!!
 #  define NCOMP_FLUID         5
+#  define NCOMP_MAGNETIC      3
 #  define NFLUX_FLUID         NCOMP_FLUID
+#  define NELECTRIC           2
 
 // for ELBDM, we only need the density flux
 #elif ( MODEL == ELBDM )
@@ -127,15 +133,16 @@
 #  define NFLUX_TOTAL         ( NFLUX_FLUID + NFLUX_PASSIVE )
 
 
-// number of input/output variables in the fluid solver
+// number of input/output fluid variables in the fluid solver
 #if   ( MODEL == HYDRO )
 #  define FLU_NIN             NCOMP_TOTAL
 #  define FLU_NOUT            NCOMP_TOTAL
 
 #elif ( MODEL == MHD )
-#  warning : WAIT MHD !!!
 #  define FLU_NIN             NCOMP_TOTAL
 #  define FLU_NOUT            NCOMP_TOTAL
+#  define MAG_NIN             NCOMP_MAGNETIC
+#  define MAG_NOUT            NCOMP_MAGNETIC
 
 // for ELBDM, we do not need to transfer the density component into GPU
 #elif ( MODEL == ELBDM )
@@ -153,16 +160,23 @@
 
 // main variables in different models
 // --> note that we must set "_VAR_NAME = 1<<VAR_NAME" (e.g., _DENS == 1<<DENS)
-#if   ( MODEL == HYDRO )
+#if   ( MODEL == HYDRO  ||  MODEL == MHD )
 
-// variable indices in the array "fluid" [0 ... NCOMP_FLUID-1]
+// variable indices in patch->fluid[0 ... NCOMP_FLUID-1]
 #  define  DENS               0
 #  define  MOMX               1
 #  define  MOMY               2
 #  define  MOMZ               3
 #  define  ENGY               4
 
-// variable indices in the array "passive" [NCOMP_FLUID ... NCOMP_TOTAL-1]
+// variable indices in patch->magnetic[0 ... NCOMP_MAGNETIC-1]
+#  if ( MODEL == MHD )
+#  define  MAGX               0
+#  define  MAGY               1
+#  define  MAGZ               2
+#  endif
+
+// variable indices in patch->fluid[NCOMP_FLUID ... NCOMP_TOTAL-1]
 #if ( NCOMP_PASSIVE > 0 )
 // example for NCOMP_PASSIVE == 3
 #  define  METAL              ( NCOMP_FLUID + 0 )
@@ -177,14 +191,14 @@
 #  endif
 #endif
 
-// variable indices in the array "flux" [0 ... NFLUX_FLUID-1]
+// variable indices in patch->flux[0 ... NFLUX_FLUID-1]
 #  define  FLUX_DENS          0
 #  define  FLUX_MOMX          1
 #  define  FLUX_MOMY          2
 #  define  FLUX_MOMZ          3
 #  define  FLUX_ENGY          4
 
-// variable indices in the array "flux_passive" [NFLUX_FLUID ... NFLUX_TOTAL-1]
+// variable indices in patch->flux[NFLUX_FLUID ... NFLUX_TOTAL-1]
 #if ( NCOMP_PASSIVE > 0 )
 // example for NCOMP_PASSIVE == 3
 #  define  FLUX_METAL         ( NFLUX_FLUID + 0 )
@@ -204,6 +218,13 @@
 #  define _MOMY               ( 1 << MOMY )
 #  define _MOMZ               ( 1 << MOMZ )
 #  define _ENGY               ( 1 << ENGY )
+
+#  if ( MODEL == MHD )
+#  define _MAGX               ( 1 << MAGX )
+#  define _MAGY               ( 1 << MAGY )
+#  define _MAGZ               ( 1 << MAGZ )
+#  define _MAG                ( _MAGX | _MAGY | _MAGZ )
+#  endif
 
 #if ( NCOMP_PASSIVE > 0 )
 // example for NCOMP_PASSIVE == 3
@@ -248,17 +269,13 @@
 #  define _DERIVED            ( _VELX | _VELY | _VELZ | _PRES | _TEMP )
 
 
-#elif ( MODEL == MHD )
-#  warning : WAIT MHD !!!
-
-
 #elif ( MODEL == ELBDM )
-// variable indices in the array "fluid"
+// variable indices patch->fluid[0 ... NCOMP_FLUID-1]
 #  define  DENS               0
 #  define  REAL               1
 #  define  IMAG               2
 
-// variable indices in the array "flux" [0 ... NFLUX_FLUID-1]
+// variable indices in patch->flux[0 ... NFLUX_FLUID-1]
 #  define  FLUX_DENS          0
 
 // symbolic constants used as function parameters (e.g., Prepare_PatchData)
@@ -394,8 +411,19 @@
 #  endif
 
 #elif ( MODEL == MHD )     // MHD
-#        warning : WAIT MHD !!!
-#        define FLU_GHOST_SIZE      ?
+#  if   ( FLU_SCHEME == MHM_RP )
+#     if ( LR_SCHEME == PLM )
+#        define FLU_GHOST_SIZE      3
+#     else // PPM
+#        define FLU_GHOST_SIZE      4
+#     endif
+#  elif ( FLU_SCHEME == CTU )
+#     if ( LR_SCHEME == PLM )
+#        define FLU_GHOST_SIZE      3
+#     else // PPM
+#        define FLU_GHOST_SIZE      4
+#     endif
+#  endif
 
 #elif ( MODEL == ELBDM )   // ELBDM
 #  ifdef LAPLACIAN_4TH
@@ -413,11 +441,7 @@
 #ifdef GRAVITY
 
 // number of input and output variables in the gravity solver
-#  if   ( MODEL == HYDRO )
-#     define GRA_NIN             NCOMP_FLUID
-
-#  elif ( MODEL == MHD )
-#     warning : WAIT MHD !!!
+#  if   ( MODEL == HYDRO  ||  MODEL == MHD )
 #     define GRA_NIN             NCOMP_FLUID
 
 // for ELBDM, we do not need to transfer the density component
@@ -434,15 +458,7 @@
 
 
 // number of potential ghost zones for advancing fluid by gravity ~ Gravity solver
-#  if   ( MODEL == HYDRO )
-#     ifdef STORE_POT_GHOST
-#     define GRA_GHOST_SIZE      2
-#     else
-#     define GRA_GHOST_SIZE      1
-//#   define GRA_GHOST_SIZE      2
-#     endif
-
-#  elif ( MODEL == MHD )
+#  if   ( MODEL == HYDRO  ||  MODEL == MHD )
 #     ifdef STORE_POT_GHOST
 #     define GRA_GHOST_SIZE      2
 #     else
@@ -509,6 +525,11 @@
 #define PATCH_SIZE                   8
 #define PS1             ( 1*PATCH_SIZE )
 #define PS2             ( 2*PATCH_SIZE )
+#define PS2_P1          ( PS2 + 1 )
+#define PS2_P2          ( PS2 + 2 )
+#define PS2_P3          ( PS2 + 3 )
+#define PS1_M1          ( PS1 - 1 )
+#define PS1_P1          ( PS1 + 1 )
 
 
 // the size of arrays (in one dimension) sending into GPU
@@ -720,7 +741,7 @@
 // ################################
 // ## Remove useless definitions ##
 // ################################
-#if ( MODEL == HYDRO )
+#if ( MODEL == HYDRO  ||  MODEL == MHD )
 #  if ( FLU_SCHEME != MHM  &&  FLU_SCHEME != MHM_RP  &&  FLU_SCHEME != CTU )
 #  undef LR_SCHEME
 #  endif
@@ -728,22 +749,6 @@
 #  if ( FLU_SCHEME != MHM  &&  FLU_SCHEME != MHM_RP  &&  FLU_SCHEME != CTU  &&  FLU_SCHEME != WAF )
 #  undef RSOLVER
 #  endif
-
-#elif ( MODEL == MHD )
-#  warning : WAIT MHD !!!
-#endif // MODEL
-
-#if ( MODEL != HYDRO  &&  MODEL != MHD )
-#  undef FLU_SCHEME
-#  undef LR_SCHEME
-#  undef RSOLVER
-#  undef DUAL_ENERGY
-#endif
-
-#ifndef GRAVITY
-#  undef POT_SCHEME
-#  undef STORE_POT_GHOST
-#  undef UNSPLIT_GRAVITY
 #endif
 
 #if ( MODEL == PAR_ONLY )

@@ -76,6 +76,23 @@ SIMU_OPTION += -DNCOMP_PASSIVE_USER=0
 # (b-2) MHD options
 # ------------------------------------------------------------------------------------
 else ifeq "$(filter -DMODEL=MHD, $(SIMU_OPTION))" "-DMODEL=MHD"
+# MHD scheme: MHM_RP/CTU
+# --> must be set when MODEL=MHD
+SIMU_OPTION += -DFLU_SCHEME=CTU
+
+# scheme of spatial data reconstruction: PLM/PPM (piecewise-linear/piecewise-parabolic)
+SIMU_OPTION += -DLR_SCHEME=PPM
+
+# Riemann solver: ROE/HLLE/HLLD
+SIMU_OPTION += -DRSOLVER=ROE
+
+# dual energy formalism: DE_ENPY/DE_EINT (evolve entropy or internal energy)
+# --> DE_EINT is not supported yet
+#SIMU_OPTION += -DDUAL_ENERGY=DE_ENPY
+
+# number of passively advected scalars (**excluding** entropy or internal energy used by DUAL_ENERGY)
+# --> for simulations without any passive scalar, either set it to 0 or comment it out
+SIMU_OPTION += -DNCOMP_PASSIVE_USER=0
 
 
 # (b-3) ELBDM options
@@ -437,11 +454,22 @@ endif
 # MHD source files (included only if "MODEL=MHD")
 # -------------------------------------------------------------------------------
 else ifeq "$(filter -DMODEL=MHD, $(SIMU_OPTION))" "-DMODEL=MHD"
+#CUDA_FILE   += CUFLU_dtSolver_MHDCFL.cu  CUFLU_FluidSolver_MHM.cu  CUFLU_FluidSolver_CTU.cu
+
+#CC_FILE     += CPU_FluidSolver_MHM.cpp  CPU_FluidSolver_CTU.cpp  CPU_Shared_DataReconstruction.cpp \
+#               CPU_Shared_FluUtility.cpp  CPU_Shared_ComputeFlux.cpp  CPU_dtSolver_MHDCFL.cpp \
+#               CPU_Shared_FullStepUpdate.cpp  CPU_Shared_RiemannSolver_Exact.cpp  CPU_Shared_RiemannSolver_Roe.cpp \
+#               CPU_Shared_RiemannSolver_HLLE.cpp  CPU_Shared_RiemannSolver_HLLD.cpp  CPU_Shared_DualEnergy.cpp \
+
+#CC_FILE     += MHD_Init_ByFunction_AssignData.cpp  Hydro_Aux_Check_Negative.cpp  MHD_BoundaryCondition_Reflecting.cpp
 
 vpath %.cu     Model_MHD/GPU_MHD
 vpath %.cpp    Model_MHD/CPU_MHD  Model_MHD
 
 ifeq "$(filter -DGRAVITY, $(SIMU_OPTION))" "-DGRAVITY"
+#CUDA_FILE   += CUPOT_MHDGravitySolver.cu  CUPOT_dtSolver_MHDGravity.cu
+
+#CC_FILE     += CPU_MHDGravitySolver.cpp  CPU_dtSolver_MHDGravity.cpp
 
 vpath %.cu     Model_MHD/GPU_MHDGravity
 vpath %.cpp    Model_MHD/CPU_MHDGravity
