@@ -46,11 +46,11 @@ void Aux_Error( const char *File, const int Line, const char *Func, const char *
 //                                    total # of patches (=num[lv]), same as [3], ...]
 //                               --> In all cases, [ 1] gives the total number of "real" patches
 //                                                 [26] gives the total number of "real+buffer" patches
+//                dh          : Grid size at each level
 //                BoxEdgeL    : Simulation box left  edge in the adopted coordinate system
 //                BoxEdgeR    : Simulation box right edge in the adopted coordinate system
 //                BoxCenter   : Simulation box center     in the adopted coordinate system
-//                dh          : Grid size at each level
-//                BoxSize     : Simulation box physical size
+//                BoxSize     : Simulation box size       in the adopted coordinate system
 //                BoxScale    : Simulation box scale
 //                WithFlux    : Whether of not to allocate the flux arrays at all coarse-fine boundaries
 //                Par         : Particle data
@@ -90,6 +90,10 @@ struct AMR_t
    int    scale       [NLEVEL];
    int    FluSg       [NLEVEL];
    double FluSgTime   [NLEVEL][2];
+#  if ( MODEL == MHD )
+   int    MagSg       [NLEVEL];
+   double MagSgTime   [NLEVEL][2];
+#  endif
 #  ifdef GRAVITY
    int    PotSg       [NLEVEL];
    double PotSgTime   [NLEVEL][2];
@@ -103,6 +107,9 @@ struct AMR_t
    double BoxSize     [3];
    int    BoxScale    [3];
    bool   WithFlux;
+#  if ( MODEL == MHD )
+   bool   WithElectric;
+#  endif
    long   NUpdateLv   [NLEVEL];
 
 
@@ -121,6 +128,9 @@ struct AMR_t
          num  [lv] = 0;
          scale[lv] = 1<<(NLEVEL-1-lv);
          FluSg[lv] = 0;
+#        if ( MODEL == MHD )
+         MagSg[lv] = FluSg[lv];
+#        endif
 #        ifdef GRAVITY
          PotSg[lv] = FluSg[lv];
 #        endif
@@ -129,6 +139,10 @@ struct AMR_t
 //       --> these will be reset by Init_SetDefaultParameter and Init_ByRestart_*
          FluSgTime[lv][   FluSg[lv] ] = -__FLT_MAX__;
          FluSgTime[lv][ 1-FluSg[lv] ] = -__FLT_MAX__;
+#        if ( MODEL == MHD )
+         MagSgTime[lv][   MagSg[lv] ] = -__FLT_MAX__;
+         MagSgTime[lv][ 1-MagSg[lv] ] = -__FLT_MAX__;
+#        endif
 #        ifdef GRAVITY
          PotSgTime[lv][   PotSg[lv] ] = -__FLT_MAX__;
          PotSgTime[lv][ 1-PotSg[lv] ] = -__FLT_MAX__;
@@ -156,7 +170,10 @@ struct AMR_t
       LB = NULL;
 #     endif
 
-      WithFlux = false;
+      WithFlux     = false;
+#     if ( MODEL == MHD )
+      WithElectric = false;
+#     endif
 
    } // METHOD : AMR_t
 
@@ -210,14 +227,15 @@ struct AMR_t
    //                2. Sg = 0 : Store both data and relation (father,son.sibling,corner,flag,flux)
    //                   Sg = 1 : Store only data
    //
-   // Parameter   :  lv       : Target refinement level
-   //                x,y,z    : Physical coordinates of the patch corner
-   //                FaPID    : Patch ID of the parent patch at level "lv-1"
-   //                FluData  : true --> Allocate hydrodynamic array "fluid"
-   //                PotData  : true --> Allocate potential array "pot"
+   // Parameter   :  lv          : Target refinement level
+   //                scale_x/y/z : Grid scale indices (not physical coordinates) of the patch corner
+   //                FaPID       : Patch ID of the parent patch at level "lv-1"
+   //                FluData     : true --> Allocate fluid[]
+   //                MagData     : true --> Allocate magnetic[]
+   //                PotData     : true --> Allocate pot[]
    //===================================================================================
-   void pnew( const int lv, const int x, const int y, const int z, const int FaPID, const bool FluData,
-              const bool PotData )
+   void pnew( const int lv, const int scale_x, const int scale_y, const int scale_z, const int FaPID,
+              const bool FluData, const bool MagData, const bool PotData )
    {
 
       const int NewPID = num[lv];
@@ -234,8 +252,10 @@ struct AMR_t
             Aux_Error( ERROR_INFO, "conflicting patch allocation (Lv %d, PID %d, FaPID %d) !!\n", lv, NewPID, FaPID );
 #        endif
 
-         patch[0][lv][NewPID] = new patch_t( x, y, z, FaPID, FluData, PotData, FluData, lv, BoxScale, dh[TOP_LEVEL] );
-         patch[1][lv][NewPID] = new patch_t( 0, 0, 0,    -1, FluData, PotData,   false, lv, BoxScale, dh[TOP_LEVEL] );
+         patch[0][lv][NewPID] = new patch_t( scale_x, scale_y, scale_z, FaPID, FluData, MagData, PotData, FluData, lv,
+                                             BoxScale, BoxEdgeL, dh[TOP_LEVEL] );
+         patch[1][lv][NewPID] = new patch_t(       0,       0,       0,    -1, FluData, MagData, PotData,   false, lv,
+                                             BoxScale, BoxEdgeL, dh[TOP_LEVEL] );
       }
 
 //    reactivate inactive patches
@@ -255,8 +275,10 @@ struct AMR_t
 //       do NOT initialize field pointers as NULL since they may be allocated already
          const bool InitPtrAsNull_No = false;
 
-         patch[0][lv][NewPID]->Activate( x, y, z, FaPID, FluData, PotData, FluData, lv, BoxScale, dh[TOP_LEVEL], InitPtrAsNull_No );
-         patch[1][lv][NewPID]->Activate( 0, 0, 0,    -1, FluData, PotData,   false, lv, BoxScale, dh[TOP_LEVEL], InitPtrAsNull_No );
+         patch[0][lv][NewPID]->Activate( scale_x, scale_y, scale_z, FaPID, FluData, MagData, PotData, FluData, lv,
+                                         BoxScale, BoxEdgeL, dh[TOP_LEVEL], InitPtrAsNull_No );
+         patch[1][lv][NewPID]->Activate(       0,       0,       0,    -1, FluData, MagData, PotData,   false, lv,
+                                         BoxScale, BoxEdgeL, dh[TOP_LEVEL], InitPtrAsNull_No );
       } // if ( patch[0][lv][NewPID] == NULL ) ... else ...
 
       num[lv] ++;

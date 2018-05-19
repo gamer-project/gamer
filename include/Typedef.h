@@ -181,21 +181,19 @@ const Solver_t
 // target mode in "Buf_GetBufferData and LB_GetBufferData"
 typedef int GetBufMode_t;
 const GetBufMode_t
+   DATA_GENERAL         = 1
+  ,DATA_AFTER_FIXUP     = 2
+  ,DATA_AFTER_REFINE    = 3
+  ,DATA_RESTRICT        = 4
+  ,COARSE_FINE_FLUX     = 5
 #ifdef GRAVITY
-   DATA_GENERAL      = 1,
-   DATA_AFTER_FIXUP  = 2,
-   DATA_AFTER_REFINE = 3,
-   DATA_RESTRICT     = 4,
-   COARSE_FINE_FLUX  = 5,
-   POT_FOR_POISSON   = 6,
-   POT_AFTER_REFINE  = 7;
-#else
-   DATA_GENERAL      = 1,
-   DATA_AFTER_FIXUP  = 2,
-   DATA_AFTER_REFINE = 3,
-   DATA_RESTRICT     = 4,
-   COARSE_FINE_FLUX  = 5;
-#endif // #ifdef GRAVITY ... else ...
+  ,POT_FOR_POISSON      = 6
+  ,POT_AFTER_REFINE     = 7
+#endif
+#if ( MODEL == MHD )
+  ,COARSE_FINE_ELECTRIC = 8
+#endif
+  ;
 
 
 // fluid boundary conditions
@@ -281,7 +279,7 @@ const OptLohnerForm_t
 
 
 // OPT__1ST_FLUX_CORR and OPT__1ST_FLUX_CORR_SCHEME options
-#if ( MODEL == HYDRO || MODEL == MHD )
+#if ( MODEL == HYDRO  ||  MODEL == MHD )
 typedef int Opt1stFluxCorr_t;
 const Opt1stFluxCorr_t
    FIRST_FLUX_CORR_NONE    = 0,
@@ -290,11 +288,16 @@ const Opt1stFluxCorr_t
 
 typedef int OptRSolver1st_t;
 const OptRSolver1st_t
-   RSOLVER_1ST_NONE    = 0,
-   RSOLVER_1ST_ROE     = 1,
-   RSOLVER_1ST_HLLC    = 2,
-   RSOLVER_1ST_HLLE    = 3;
-#endif // #if ( MODEL == HYDRO || MODEL == MHD )
+   RSOLVER_1ST_NONE    = 0
+  ,RSOLVER_1ST_ROE     = 1
+  ,RSOLVER_1ST_HLLC    = 2
+#  if   ( MODEL == HYDRO )
+  ,RSOLVER_1ST_HLLE    = 3
+#  elif ( MODEL == MHD )
+  ,RSOLVER_1ST_HLLD    = 4
+#  endif
+  ;
+#endif // #if ( MODEL == HYDRO  ||  MODEL == MHD )
 
 
 // OPT__CORR_AFTER_ALL_SYNC options

@@ -170,7 +170,7 @@ OPT__LR_LIMITER               4           # slope limiter of data reconstruction
 OPT__WAF_LIMITER              2           # flux limiter in WAF (0=none, 1=SuperBee, 2=vanLeer, 3=vanAlbada, 4=MinBee) [2] ##DEPRECATED##
 OPT__1ST_FLUX_CORR            2           # correct unphysical results (defined by MIN_DENS/PRES) by the 1st-order fluxes:
                                           # (0=off, 1=3D, 2=3D+1D) [2] ##MHM/MHM_RP/CTU ONLY##
-OPT__1ST_FLUX_CORR_SCHEME     1           # Riemann solver for OPT__1ST_FLUX_CORR (0=none, 1=Roe, 2=HLLC 3=HLLE) [1]
+OPT__1ST_FLUX_CORR_SCHEME     1           # Riemann solver for OPT__1ST_FLUX_CORR (0=none, 1=Roe, 2=HLLC, 3=HLLE, 4=HLLD) [1]
 DUAL_ENERGY_SWITCH            2.0e-2      # apply dual-energy if E_int/E_kin < DUAL_ENERGY_SWITCH [2.0e-2] ##DUAL_ENERGY ONLY##
 
 
