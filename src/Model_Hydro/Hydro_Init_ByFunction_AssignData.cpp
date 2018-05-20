@@ -254,8 +254,7 @@ void   MHD_Init_ByFunction_AssignData( const int lv )
 
 //       add the magnetic energy
 #        if ( MODEL == MHD )
-#        warning : WAIT MHD !!!
-//       fluid[ENGY] += MHD_GetCellCenterBEnergy( lv, PID, i, j, k );
+         fluid[ENGY] += MHD_GetCellCenteredBEnergy( lv, PID, i, j, k );
 #        endif
 
 

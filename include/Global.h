@@ -96,9 +96,6 @@ extern double           MIN_DENS, MIN_PRES;
 #ifdef DUAL_ENERGY
 extern double           DUAL_ENERGY_SWITCH;
 #endif
-#if ( MODEL == MHD )
-#warning WAIT MHD !!!
-#endif
 
 #elif ( MODEL == ELBDM )
 extern double           DT__PHASE, FlagTable_EngyDensity[NLEVEL-1][2];

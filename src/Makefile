@@ -462,7 +462,8 @@ CC_FILE     += CPU_Shared_RiemannSolver_Roe.cpp  CPU_Shared_RiemannSolver_HLLE.c
 #               CPU_Shared_FullStepUpdate.cpp  CPU_Shared_RiemannSolver_Exact.cpp  \
 #               CPU_Shared_RiemannSolver_HLLD.cpp  CPU_Shared_DualEnergy.cpp \
 
-CC_FILE     += MHD_Init_ByFunction_AssignData.cpp  #Hydro_Aux_Check_Negative.cpp  MHD_BoundaryCondition_Reflecting.cpp
+CC_FILE     += MHD_Init_ByFunction_AssignData.cpp  MHD_GetCellCenteredB.cpp
+#CC_FILE     += Hydro_Aux_Check_Negative.cpp  MHD_BoundaryCondition_Reflecting.cpp
 
 vpath %.cu     Model_MHD/GPU_MHD
 vpath %.cpp    Model_MHD/CPU_MHD  Model_MHD

@@ -402,6 +402,8 @@ bool Hydro_Flag_Vorticity( const int i, const int j, const int k, const int lv, 
 // MHD model
 #elif ( MODEL == MHD )
 void MHD_Init_ByFunction_AssignData( const int lv );
+void MHD_GetCellCenteredBField( real B[], const int lv, const int PID, const int i, const int j, const int k );
+real MHD_GetCellCenteredBEnergy( const int lv, const int PID, const int i, const int j, const int k );
 
 
 // ELBDM model
