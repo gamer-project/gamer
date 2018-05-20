@@ -86,7 +86,7 @@ void ELBDM_Init_ByFunction_AssignData( const int lv )
 #  endif
 
 
-   const int    NSub   = INIT_SUBSAMPLING_NCELL;
+   const int    NSub   = ( INIT_SUBSAMPLING_NCELL <= 0 ) ? 1 : INIT_SUBSAMPLING_NCELL;
    const double dh     = amr->dh[lv];
    const double dh_sub = dh / NSub;
    const double _NSub3 = 1.0/(NSub*NSub*NSub);
@@ -95,94 +95,54 @@ void ELBDM_Init_ByFunction_AssignData( const int lv )
    double x, y, z, x0, y0, z0;
 
 
-   if ( NSub > 1 )   // with sub-sampling
-   {
-#     pragma omp parallel for private( fluid, fluid_sub, x, y, z, x0, y0, z0 ) schedule( runtime ) num_threads( OMP_NThread )
-      for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
-      for (int k=0; k<PS1; k++)  {  z0 = amr->patch[0][lv][PID]->EdgeL[2] + k*dh + 0.5*dh_sub;
-      for (int j=0; j<PS1; j++)  {  y0 = amr->patch[0][lv][PID]->EdgeL[1] + j*dh + 0.5*dh_sub;
-      for (int i=0; i<PS1; i++)  {  x0 = amr->patch[0][lv][PID]->EdgeL[0] + i*dh + 0.5*dh_sub;
+#  pragma omp parallel for private( fluid, fluid_sub, x, y, z, x0, y0, z0 ) schedule( runtime ) num_threads( OMP_NThread )
+   for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
+   for (int k=0; k<PS1; k++)  {  z0 = amr->patch[0][lv][PID]->EdgeL[2] + k*dh + 0.5*dh_sub;
+   for (int j=0; j<PS1; j++)  {  y0 = amr->patch[0][lv][PID]->EdgeL[1] + j*dh + 0.5*dh_sub;
+   for (int i=0; i<PS1; i++)  {  x0 = amr->patch[0][lv][PID]->EdgeL[0] + i*dh + 0.5*dh_sub;
 
-         for (int v=0; v<NCOMP_TOTAL; v++)   fluid[v] = 0.0;
+      for (int v=0; v<NCOMP_TOTAL; v++)   fluid[v] = 0.0;
 
-         for (int kk=0; kk<NSub; kk++)    {  z = z0 + kk*dh_sub;
-         for (int jj=0; jj<NSub; jj++)    {  y = y0 + jj*dh_sub;
-         for (int ii=0; ii<NSub; ii++)    {  x = x0 + ii*dh_sub;
+      for (int kk=0; kk<NSub; kk++)    {  z = z0 + kk*dh_sub;
+      for (int jj=0; jj<NSub; jj++)    {  y = y0 + jj*dh_sub;
+      for (int ii=0; ii<NSub; ii++)    {  x = x0 + ii*dh_sub;
 
-            Init_Function_User_Ptr( fluid_sub, x, y, z, Time[lv], lv, NULL );
-
-//          modify the initial condition if required
-            if ( OPT__RESET_FLUID  &&  Flu_ResetByUser_Func_Ptr != NULL )
-               Flu_ResetByUser_Func_Ptr( fluid_sub, x, y, z, Time[lv], lv, NULL );
-
-            for (int v=0; v<NCOMP_TOTAL; v++)   fluid[v] += fluid_sub[v];
-
-         }}}
-
-//       ensure density = real_part^2 + imaginary_part^2
-         fluid[REAL] *= _NSub3;
-         fluid[IMAG] *= _NSub3;
-         fluid[DENS]  = fluid[REAL]*fluid[REAL] + fluid[IMAG]*fluid[IMAG];
-
-//       check minimum density (but keep phase fixed)
-         if ( fluid[DENS] < (real)MIN_DENS )
-         {
-            const real Rescale = SQRT( (real)MIN_DENS/fluid[DENS] );
-
-            fluid[REAL] *= Rescale;
-            fluid[IMAG] *= Rescale;
-            fluid[DENS]  = (real)MIN_DENS;
-         }
-
-//       floor and normalize passive scalars (actually passive scalars are NOT supported by ELBDM yet)
-#        if ( NCOMP_PASSIVE > 0 )
-         for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)  fluid[v] = FMAX( fluid[v], TINY_NUMBER );
-
-         if ( OPT__NORMALIZE_PASSIVE )
-            CPU_NormalizePassive( fluid[DENS], fluid+NCOMP_FLUID, PassiveNorm_NVar, PassiveNorm_VarIdx );
-#        endif
-
-         for (int v=0; v<NCOMP_TOTAL; v++)   amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[v][k][j][i] = fluid[v];
-
-      }}}
-   } // if ( NSub > 1 )
-
-   else // without sub-sampling
-   {
-#     pragma omp parallel for private( fluid, x, y, z ) schedule( runtime ) num_threads( OMP_NThread )
-      for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
-      for (int k=0; k<PS1; k++)  {  z = amr->patch[0][lv][PID]->EdgeL[2] + (k+0.5)*dh;
-      for (int j=0; j<PS1; j++)  {  y = amr->patch[0][lv][PID]->EdgeL[1] + (j+0.5)*dh;
-      for (int i=0; i<PS1; i++)  {  x = amr->patch[0][lv][PID]->EdgeL[0] + (i+0.5)*dh;
-
-         Init_Function_User_Ptr( fluid, x, y, z, Time[lv], lv, NULL );
+         Init_Function_User_Ptr( fluid_sub, x, y, z, Time[lv], lv, NULL );
 
 //       modify the initial condition if required
          if ( OPT__RESET_FLUID  &&  Flu_ResetByUser_Func_Ptr != NULL )
-            Flu_ResetByUser_Func_Ptr( fluid, x, y, z, Time[lv], lv, NULL );
+            Flu_ResetByUser_Func_Ptr( fluid_sub, x, y, z, Time[lv], lv, NULL );
 
-//       check minimum density (but keep phase fixed)
-         if ( fluid[DENS] < (real)MIN_DENS )
-         {
-            const real Rescale = SQRT( (real)MIN_DENS/fluid[DENS] );
-
-            fluid[REAL] *= Rescale;
-            fluid[IMAG] *= Rescale;
-            fluid[DENS]  = (real)MIN_DENS;
-         }
-
-//       floor and normalize passive scalars (actually passive scalars are NOT supported by ELBDM yet)
-#        if ( NCOMP_PASSIVE > 0 )
-         for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)  fluid[v] = FMAX( fluid[v], TINY_NUMBER );
-
-         if ( OPT__NORMALIZE_PASSIVE )
-            CPU_NormalizePassive( fluid[DENS], fluid+NCOMP_FLUID, PassiveNorm_NVar, PassiveNorm_VarIdx );
-#        endif
-
-         for (int v=0; v<NCOMP_TOTAL; v++)   amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[v][k][j][i] = fluid[v];
+         for (int v=0; v<NCOMP_TOTAL; v++)   fluid[v] += fluid_sub[v];
 
       }}}
-   } // if ( NSub > 1 ) ... else ...
+
+//    ensure density = real_part^2 + imaginary_part^2
+      fluid[REAL] *= _NSub3;
+      fluid[IMAG] *= _NSub3;
+      fluid[DENS]  = fluid[REAL]*fluid[REAL] + fluid[IMAG]*fluid[IMAG];
+
+//    check minimum density (but keep phase fixed)
+      if ( fluid[DENS] < (real)MIN_DENS )
+      {
+         const real Rescale = SQRT( (real)MIN_DENS/fluid[DENS] );
+
+         fluid[REAL] *= Rescale;
+         fluid[IMAG] *= Rescale;
+         fluid[DENS]  = (real)MIN_DENS;
+      }
+
+//    floor and normalize passive scalars (actually passive scalars are NOT supported by ELBDM yet)
+#     if ( NCOMP_PASSIVE > 0 )
+      for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)  fluid[v] = FMAX( fluid[v], TINY_NUMBER );
+
+      if ( OPT__NORMALIZE_PASSIVE )
+         CPU_NormalizePassive( fluid[DENS], fluid+NCOMP_FLUID, PassiveNorm_NVar, PassiveNorm_VarIdx );
+#     endif
+
+      for (int v=0; v<NCOMP_TOTAL; v++)   amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[v][k][j][i] = fluid[v];
+
+   }}}
 
 } // FUNCTION : ELBDM_Init_ByFunction_AssignData
 
