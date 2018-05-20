@@ -401,7 +401,7 @@ bool Hydro_Flag_Vorticity( const int i, const int j, const int k, const int lv, 
 
 // MHD model
 #elif ( MODEL == MHD )
-#warning : WAIT MHD !!!
+void MHD_Init_ByFunction_AssignData( const int lv );
 
 
 // ELBDM model
