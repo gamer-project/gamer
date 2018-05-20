@@ -2,7 +2,11 @@
 #include "CUFLU.h"
 
 // some functions in this file need to be defined even when using GPU
-#if ( MODEL == HYDRO )
+#if ( MODEL == HYDRO  ||  MODEL == MHD )
+
+#if ( MODEL == MHD )
+#warning : WAIT MHD !!!
+#endif
 
 
 
@@ -446,4 +450,4 @@ void CPU_NormalizePassive( const real GasDens, real Passive[], const int NNorm, 
 
 
 
-#endif // #if ( MODEL == HYDRO )
+#endif // #if ( MODEL == HYDRO  ||  MODEL == MHD )

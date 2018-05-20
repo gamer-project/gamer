@@ -1,8 +1,11 @@
 #include "GAMER.h"
 #include "CUFLU.h"
 
-#if ( MODEL == HYDRO )
+#if ( MODEL == HYDRO  ||  MODEL == MHD )
 
+#if ( MODEL == MHD )
+#warning : WAIT MHD !!!
+#endif
 
 
 extern void CPU_Rotate3D( real InOut[], const int XYZ, const bool Forward );
@@ -169,4 +172,4 @@ void CPU_RiemannSolver_HLLE( const int XYZ, real Flux_Out[], const real L_In[], 
 
 
 
-#endif // #if ( MODEL == HYDRO )
+#endif // #if ( MODEL == HYDRO  ||  MODEL == MHD )

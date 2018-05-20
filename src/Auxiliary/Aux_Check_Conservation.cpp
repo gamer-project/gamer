@@ -56,11 +56,12 @@ void Aux_Check_Conservation( const char *comment )
    }
 
 
-#  if   ( MODEL == HYDRO )
+#  if   ( MODEL == HYDRO  ||  MODEL == MHD )
    const int NVar_NoPassive       = 8;    // 8: mass, momentum (x/y/z), kinematic/thermal/potential/total energies
                                           // --> note that **total energy** is put in the last element ==> [7] instead of [ENGY==4]
-#  elif ( MODEL == MHD )
+#  if ( MODEL == MHD )
 #  warning : WAIT MHD !!!
+#  endif
 
 #  elif ( MODEL == ELBDM )
    const int NVar_NoPassive       = 5;    // 5: mass, kinematic/gravitational/self-interaction/total energies

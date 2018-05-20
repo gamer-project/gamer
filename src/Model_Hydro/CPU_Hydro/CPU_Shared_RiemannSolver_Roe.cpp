@@ -1,7 +1,11 @@
 #include "GAMER.h"
 #include "CUFLU.h"
 
-#if ( MODEL == HYDRO )
+#if ( MODEL == HYDRO  ||  MODEL == MHD )
+
+#if ( MODEL == MHD )
+#warning : WAIT MHD !!!
+#endif
 
 
 
@@ -203,7 +207,7 @@ void CPU_RiemannSolver_Roe( const int XYZ, real Flux_Out[], const real L_In[], c
 
 #           else
 
-#           error : ERROR : unsupported CHECK_INTERMEDIATE (EXACT/HLLE/HLLC) !!
+#           error : ERROR : unsupported CHECK_INTERMEDIATE (EXACT/HLLE/HLLC/HLLD) !!
 
 #           endif
 
@@ -251,4 +255,4 @@ void CPU_RiemannSolver_Roe( const int XYZ, real Flux_Out[], const real L_In[], c
 
 
 
-#endif // #if ( MODEL == HYDRO )
+#endif // #if ( MODEL == HYDRO  ||  MODEL == MHD )

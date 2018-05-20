@@ -290,10 +290,11 @@ typedef int OptRSolver1st_t;
 const OptRSolver1st_t
    RSOLVER_1ST_NONE    = 0
   ,RSOLVER_1ST_ROE     = 1
+#  if ( MODEL == HYDRO )
   ,RSOLVER_1ST_HLLC    = 2
-#  if   ( MODEL == HYDRO )
+#  endif
   ,RSOLVER_1ST_HLLE    = 3
-#  elif ( MODEL == MHD )
+#  if ( MODEL == MHD )
   ,RSOLVER_1ST_HLLD    = 4
 #  endif
   ;

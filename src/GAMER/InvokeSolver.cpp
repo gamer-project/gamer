@@ -412,7 +412,7 @@ void Solver( const Solver_t TSolver, const int lv, const double TimeNew, const d
    const bool   ELBDM_TAYLOR3_AUTO      = NULL_BOOL;
 #  endif
 
-#  if ( MODEL != HYDRO )
+#  if ( MODEL != HYDRO  &&  MODEL != MHD )
    const LR_Limiter_t  OPT__LR_LIMITER  = LR_LIMITER_NONE;
    const WAF_Limiter_t OPT__WAF_LIMITER = WAF_LIMITER_NONE;
    const bool   Flu_XYZ                 = true;
@@ -453,8 +453,8 @@ void Solver( const Solver_t TSolver, const int lv, const double TimeNew, const d
 #  endif
 #  endif
 
-#  if ( MODEL != HYDRO  &&  MODEL != ELBDM )
-#  error : ERROR : ADD THE MODEL-DEPENDENT USELESS VARIABLES FOR THE NEW MODELS HERE
+#  if ( MODEL != HYDRO  &&  MODEL != MHD  &&  MODEL != ELBDM )
+#  error : ERROR : ADD MODEL-DEPENDENT USELESS VARIABLES FOR THE NEW MODELS HERE !!
 #  endif
 
    const real MinEint = MIN_PRES / ( GAMMA - (real)1.0 );

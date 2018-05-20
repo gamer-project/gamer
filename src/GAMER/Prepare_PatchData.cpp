@@ -243,7 +243,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
    const int    PGSize3D         = CUBE( PGSize1D );
    const int    GhostSize_Padded = GhostSize + (GhostSize&1);
 
-#  if   ( MODEL == HYDRO )
+#  if   ( MODEL == HYDRO  ||  MODEL == MHD )
    const bool CheckMinPres_No  = false;   // we check minimum pressure in the end of this function (step d)
    const real Gamma_m1         = GAMMA - (real)1.0;
    const real _Gamma_m1        = (real)1.0 / Gamma_m1;
@@ -253,8 +253,9 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
    const bool PrepPres         = ( TVar & _PRES ) ? true : false;
    const bool PrepTemp         = ( TVar & _TEMP ) ? true : false;
 
-#  elif ( MODEL == MHD   )
-#  warning : WAIT MHD !!
+#  if ( MODEL == MHD )
+#     warning : WAIT MHD !!
+#  endif
 
 #  elif ( MODEL == ELBDM )
 // no derived variables yet
@@ -299,7 +300,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
 
    NVar_Der = 0;
 
-#  if   ( MODEL == HYDRO )
+#  if   ( MODEL == HYDRO  ||  MODEL == MHD )
    const int NVar_Der_Max = 5;
    int TDerVarList[NVar_Der_Max];
 
@@ -308,9 +309,9 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
    if ( PrepVz   )   TDerVarList[ NVar_Der ++ ] = _VELZ;
    if ( PrepPres )   TDerVarList[ NVar_Der ++ ] = _PRES;
    if ( PrepTemp )   TDerVarList[ NVar_Der ++ ] = _TEMP;
-
-#  elif ( MODEL == MHD   )
+#  if ( MODEL == MHD )
 #  warning : WAIT MHD !!
+#  endif
 
 #  elif ( MODEL == ELBDM )
 // no derived variables yet
@@ -1228,15 +1229,22 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
                                                             PGSize1D, PGSize1D, PGSize1D, BC_Idx_Start, BC_Idx_End );
                      break;
 
-#                    if ( MODEL == HYDRO  ||  MODEL == MHD )
+#                    if   ( MODEL == HYDRO )
                      case BC_FLU_REFLECTING:
                         Hydro_BoundaryCondition_Reflecting( Array_Ptr, BC_Face[BC_Sibling], NVar_Flu,          GhostSize,
                                                             PGSize1D, PGSize1D, PGSize1D, BC_Idx_Start, BC_Idx_End,
                                                             TFluVarIdxList, NVar_Der, TDerVarList );
                      break;
-#                    if ( MODEL == MHD )
+
+#                    elif ( MODEL == MHD )
 #                    warning : WAIT MHD !!!
-#                    endif
+                     case BC_FLU_REFLECTING:
+                     /*
+                        MHD_BoundaryCondition_Reflecting  ( Array_Ptr, BC_Face[BC_Sibling], NVar_Flu,          GhostSize,
+                                                            PGSize1D, PGSize1D, PGSize1D, BC_Idx_Start, BC_Idx_End,
+                                                            TFluVarIdxList, NVar_Der, TDerVarList );
+                     */
+                     break;
 #                    endif
 
                      case BC_FLU_USER:
