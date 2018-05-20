@@ -284,15 +284,22 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
                                                          CSize_Flu, CSize_Flu, CSize_Flu, BC_Idx_Start, BC_Idx_End );
                   break;
 
-#                 if ( MODEL == HYDRO  ||  MODEL == MHD )
+#                 if   ( MODEL == HYDRO )
                   case BC_FLU_REFLECTING:
                      Hydro_BoundaryCondition_Reflecting( Flu_CData[0][0][0], BC_Face[BC_Sibling], NCOMP_TOTAL, CGhost_Flu,
                                                          CSize_Flu, CSize_Flu, CSize_Flu, BC_Idx_Start, BC_Idx_End,
                                                          FluVarIdxList, NDer, DerVarList );
                   break;
-#                 if ( MODEL == MHD )
+
+#                 elif ( MODEL == MHD )
 #                 warning : WAIT MHD !!!
-#                 endif
+                  case BC_FLU_REFLECTING:
+                     /*
+                     MHD_BoundaryCondition_Reflecting  ( Flu_CData[0][0][0], BC_Face[BC_Sibling], NCOMP_TOTAL, CGhost_Flu,
+                                                         CSize_Flu, CSize_Flu, CSize_Flu, BC_Idx_Start, BC_Idx_End,
+                                                         FluVarIdxList, NDer, DerVarList );
+                     */
+                  break;
 #                 endif
 
                   case BC_FLU_USER:

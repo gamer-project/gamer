@@ -702,15 +702,22 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData[], const in
                                                       CSize[0], CSize[1], CSize[2], BC_Idx_Start, BC_Idx_End );
                break;
 
-#              if ( MODEL == HYDRO  ||  MODEL == MHD )
+#              if   ( MODEL == HYDRO )
                case BC_FLU_REFLECTING:
                   Hydro_BoundaryCondition_Reflecting( CData_Ptr, BC_Face[BC_Sibling], NVar_Flu,          CGhost,
                                                       CSize[0], CSize[1], CSize[2], BC_Idx_Start, BC_Idx_End,
                                                       TFluVarIdxList, NVar_Der, TDerVarList );
                break;
-#              if ( MODEL == MHD )
+
+#              elif ( MODEL == MHD )
 #              warning : WAIT MHD !!!
-#              endif
+               case BC_FLU_REFLECTING:
+               /*
+                  MHD_BoundaryCondition_Reflecting  ( CData_Ptr, BC_Face[BC_Sibling], NVar_Flu,          CGhost,
+                                                      CSize[0], CSize[1], CSize[2], BC_Idx_Start, BC_Idx_End,
+                                                      TFluVarIdxList, NVar_Der, TDerVarList );
+               */
+               break;
 #              endif
 
                case BC_FLU_USER:

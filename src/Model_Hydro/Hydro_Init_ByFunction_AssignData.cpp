@@ -38,7 +38,7 @@ real (*Init_Function_BField_User_Ptr)( const int comp, const double x, const dou
 //                   --> Please ensure that everything here is thread-safe
 //                3. Even when DUAL_ENERGY is adopted, one does NOT need to set the dual-energy variable here
 //                   --> It will be set automatically in Hydro_Init_ByFunction_AssignData()
-//                4. For MHD, do NOT add manetic energy (i.e., 0.5*B^2) to fluid[ENGY] here
+//                4. For MHD, do NOT add magnetic energy (i.e., 0.5*B^2) to fluid[ENGY] here
 //                   --> It will be added automatically later
 //
 // Parameter   :  fluid    : Fluid field to be initialized
@@ -118,12 +118,12 @@ real Init_Function_BField_User( const int comp, const double x, const double y, 
          break;
 
 //    B_Y
-      case 0:
+      case 1:
          B_comp = (real)2.0;
          break;
 
 //    B_Z
-      case 0:
+      case 2:
          B_comp = (real)3.0;
          break;
 
@@ -254,7 +254,8 @@ void   MHD_Init_ByFunction_AssignData( const int lv )
 
 //       add the magnetic energy
 #        if ( MODEL == MHD )
-         fluid[ENGY] += MHD_GetCellCenterBEnergy( lv, PID, i, j, k );
+#        warning : WAIT MHD !!!
+//       fluid[ENGY] += MHD_GetCellCenterBEnergy( lv, PID, i, j, k );
 #        endif
 
 

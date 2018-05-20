@@ -33,7 +33,7 @@ COMPILE_VERBOSE := 0
 # physical model: HYDRO/MHD/ELBDM/PAR_ONLY (ELBDM: wave dark matter; PAR_ONLY: particle-only)
 # --> must be set in any cases; PAR_ONLY is not supported yet;
 #     MHD and ELBDM are not publicly available yet but will be released soon
-SIMU_OPTION += -DMODEL=HYDRO
+SIMU_OPTION += -DMODEL=MHD
 
 # enable gravity
 #SIMU_OPTION += -DGRAVITY
@@ -456,10 +456,11 @@ endif
 else ifeq "$(filter -DMODEL=MHD, $(SIMU_OPTION))" "-DMODEL=MHD"
 #CUDA_FILE   += CUFLU_dtSolver_MHDCFL.cu  CUFLU_FluidSolver_MHM.cu  CUFLU_FluidSolver_CTU.cu
 
+CC_FILE     += CPU_Shared_RiemannSolver_Roe.cpp  CPU_Shared_RiemannSolver_HLLE.cpp  CPU_Shared_FluUtility.cpp
 #CC_FILE     += CPU_FluidSolver_MHM.cpp  CPU_FluidSolver_CTU.cpp  CPU_Shared_DataReconstruction.cpp \
-#               CPU_Shared_FluUtility.cpp  CPU_Shared_ComputeFlux.cpp  CPU_dtSolver_MHDCFL.cpp \
-#               CPU_Shared_FullStepUpdate.cpp  CPU_Shared_RiemannSolver_Exact.cpp  CPU_Shared_RiemannSolver_Roe.cpp \
-#               CPU_Shared_RiemannSolver_HLLE.cpp  CPU_Shared_RiemannSolver_HLLD.cpp  CPU_Shared_DualEnergy.cpp \
+#               CPU_Shared_ComputeFlux.cpp  CPU_dtSolver_MHDCFL.cpp \
+#               CPU_Shared_FullStepUpdate.cpp  CPU_Shared_RiemannSolver_Exact.cpp  \
+#               CPU_Shared_RiemannSolver_HLLD.cpp  CPU_Shared_DualEnergy.cpp \
 
 CC_FILE     += MHD_Init_ByFunction_AssignData.cpp  #Hydro_Aux_Check_Negative.cpp  MHD_BoundaryCondition_Reflecting.cpp
 

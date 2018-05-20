@@ -74,7 +74,7 @@ OptTimeStepLevel_t   OPT__DT_LEVEL;
 // 2. global variables for different applications
 // =======================================================================================================
 // (2-1) fluid solver in different models
-#if   ( MODEL == HYDRO )
+#if   ( MODEL == HYDRO  ||  MODEL == MHD )
 double               FlagTable_PresGradient[NLEVEL-1], FlagTable_Vorticity[NLEVEL-1], FlagTable_Jeans[NLEVEL-1];
 double               GAMMA, MINMOD_COEFF, EP_COEFF, MOLECULAR_WEIGHT;
 LR_Limiter_t         OPT__LR_LIMITER;
@@ -88,12 +88,8 @@ double               MIN_DENS, MIN_PRES;
 #ifdef DUAL_ENERGY
 double               DUAL_ENERGY_SWITCH;
 #endif
-
-#elif ( MODEL == MHD )
+#if ( MODEL == MHD )
 #warning : WAIT MHD !!!
-double               MIN_DENS, MIN_PRES;
-#ifdef DUAL_ENERGY
-double               DUAL_ENERGY_SWITCH;
 #endif
 
 #elif ( MODEL == ELBDM )
@@ -245,7 +241,7 @@ double (*d_Corner_Array_F)[3]                                              = NUL
 #ifdef DUAL_ENERGY
 char (*d_DE_Array_F_Out)[ PS2*PS2*PS2 ]                                    = NULL;
 #endif
-#if ( MODEL == HYDRO )
+#if ( MODEL == HYDRO  ||  MODEL == MHD )
 #if ( FLU_SCHEME == MHM  ||  FLU_SCHEME == MHM_RP  ||  FLU_SCHEME == CTU )
 real (*d_PriVar)     [NCOMP_TOTAL][ FLU_NXT*FLU_NXT*FLU_NXT ]              = NULL;
 real (*d_Slope_PPM_x)[NCOMP_TOTAL][ N_SLOPE_PPM*N_SLOPE_PPM*N_SLOPE_PPM ]  = NULL;
@@ -261,8 +257,9 @@ real (*d_FC_Flux_x)  [NCOMP_TOTAL][ N_FC_FLUX*N_FC_FLUX*N_FC_FLUX ]        = NUL
 real (*d_FC_Flux_y)  [NCOMP_TOTAL][ N_FC_FLUX*N_FC_FLUX*N_FC_FLUX ]        = NULL;
 real (*d_FC_Flux_z)  [NCOMP_TOTAL][ N_FC_FLUX*N_FC_FLUX*N_FC_FLUX ]        = NULL;
 #endif // FLU_SCHEME
-#elif ( MODEL == MHD )
+#if ( MODEL == MHD )
 #warning : WAIT MHD !!!
+#endif
 #endif // MODEL
 
 #ifdef GRAVITY

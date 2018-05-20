@@ -477,6 +477,7 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
                      }
                      break;
 
+#                 if ( MODEL == HYDRO )
                   case RSOLVER_1ST_HLLC:
                      for (int d=0; d<3; d++)
                      {
@@ -484,6 +485,7 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
                         CPU_RiemannSolver_HLLC( d, FluxR[d], VarC,    VarR[d], GAMMA, MIN_PRES );
                      }
                      break;
+#                 endif
 
                   case RSOLVER_1ST_HLLE:
                      for (int d=0; d<3; d++)
@@ -493,9 +495,22 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
                      }
                      break;
 
+#                 if ( MODEL == MHD )
+#                 warning : WAIT MHD !!!
+                  case RSOLVER_1ST_HLLD:
+                     /*
+                     for (int d=0; d<3; d++)
+                     {
+                        CPU_RiemannSolver_HLLD( d, FluxL[d], VarL[d], VarC,    GAMMA, MIN_PRES );
+                        CPU_RiemannSolver_HLLD( d, FluxR[d], VarC,    VarR[d], GAMMA, MIN_PRES );
+                     }
+                     */
+                     break;
+#                 endif
+
                   default:
                      Aux_Error( ERROR_INFO, "unnsupported Riemann solver (%d) !!\n", OPT__1ST_FLUX_CORR_SCHEME );
-               }
+               } // switch ( OPT__1ST_FLUX_CORR_SCHEME )
 
 //             recalculate the first-order solution for a full time-step
                for (int d=0; d<3; d++)
@@ -558,15 +573,27 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
                               CPU_RiemannSolver_Roe ( d, FluxR_1D, Corr1D_InOut_PtrC, Corr1D_InOut_PtrR, GAMMA, MIN_PRES );
                            break;
 
+#                          if ( MODEL == HYDRO )
                            case RSOLVER_1ST_HLLC:
                               CPU_RiemannSolver_HLLC( d, FluxL_1D, Corr1D_InOut_PtrL, Corr1D_InOut_PtrC, GAMMA, MIN_PRES );
                               CPU_RiemannSolver_HLLC( d, FluxR_1D, Corr1D_InOut_PtrC, Corr1D_InOut_PtrR, GAMMA, MIN_PRES );
                            break;
+#                          endif
 
                            case RSOLVER_1ST_HLLE:
                               CPU_RiemannSolver_HLLE( d, FluxL_1D, Corr1D_InOut_PtrL, Corr1D_InOut_PtrC, GAMMA, MIN_PRES );
                               CPU_RiemannSolver_HLLE( d, FluxR_1D, Corr1D_InOut_PtrC, Corr1D_InOut_PtrR, GAMMA, MIN_PRES );
                            break;
+
+#                          if ( MODEL == MHD )
+#                          warning : WAIT MHD !!!
+                           case RSOLVER_1ST_HLLD:
+                              /*
+                              CPU_RiemannSolver_HLLD( d, FluxL_1D, Corr1D_InOut_PtrL, Corr1D_InOut_PtrC, GAMMA, MIN_PRES );
+                              CPU_RiemannSolver_HLLD( d, FluxR_1D, Corr1D_InOut_PtrC, Corr1D_InOut_PtrR, GAMMA, MIN_PRES );
+                              */
+                           break;
+#                          endif
 
                            default:
                               Aux_Error( ERROR_INFO, "unnsupported Riemann solver (%d) !!\n", OPT__1ST_FLUX_CORR_SCHEME );
