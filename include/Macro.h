@@ -731,6 +731,14 @@
 #define IDX321( i, j, k, Ni, Nj )   (  ( (k)*(Nj) + (j) )*(Ni) + (i)  )
 
 
+// 3D to 1D array indices transformation for patch->magnetic[]
+# if ( MODEL == MHD )
+#define IDX321_BX( i, j, k )        (  ( (k)*PS1    + (j) )*PS1_P1 + (i)  )
+#define IDX321_BY( i, j, k )        (  ( (k)*PS1_P1 + (j) )*PS1    + (i)  )
+#define IDX321_BZ( i, j, k )        (  ( (k)*PS1    + (j) )*PS1    + (i)  )
+#endif
+
+
 // helper macros for printing symbolic constants in macros
 // ref: https://stackoverflow.com/questions/3419332/c-preprocessor-stringify-the-result-of-a-macro
 #  define QUOTE( str )              #str

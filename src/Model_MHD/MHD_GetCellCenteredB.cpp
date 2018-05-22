@@ -44,9 +44,9 @@ void MHD_GetCellCenteredBField( real B_CC[], const int lv, const int PID, const 
 // FC = face-centered
    const real (*B_FC)[PS1_P1*PS1*PS1] = amr->patch[ amr->MagSg[lv] ][lv][PID]->magnetic;
 
-   B_CC[0] = (real)0.5*(  B_FC[0][ IDX321(i,j,k,PS1_P1,PS1   ) ] + B_FC[0][ IDX321(i+1,j,  k,  PS1_P1,PS1   ) ]  );
-   B_CC[1] = (real)0.5*(  B_FC[1][ IDX321(i,j,k,PS1,   PS1_P1) ] + B_FC[1][ IDX321(i,  j+1,k,  PS1,   PS1_P1) ]  );
-   B_CC[2] = (real)0.5*(  B_FC[2][ IDX321(i,j,k,PS1,   PS1   ) ] + B_FC[2][ IDX321(i,  j,  k+1,PS1,   PS1   ) ]  );
+   B_CC[0] = (real)0.5*(  B_FC[0][ IDX321_BX(i,j,k) ] + B_FC[0][ IDX321_BX(i+1,j,  k  ) ]  );
+   B_CC[1] = (real)0.5*(  B_FC[1][ IDX321_BY(i,j,k) ] + B_FC[1][ IDX321_BY(i,  j+1,k  ) ]  );
+   B_CC[2] = (real)0.5*(  B_FC[2][ IDX321_BZ(i,j,k) ] + B_FC[2][ IDX321_BZ(i,  j,  k+1) ]  );
 
 } // FUNCTION : MHD_GetCellCenteredBField
 
