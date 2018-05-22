@@ -314,22 +314,35 @@ bool Unphysical( const real Fluid[], const real Gamma_m1, const int CheckMinEngy
    if ( CheckMinEngyOrPres == CheckMinEngy  &&  Fluid[ENGY] < (real)MIN_PRES )
       return true;
 
-   if ( CheckMinEngyOrPres == CheckMinPres  &&
-        (
-#          if ( DUAL_ENERGY == DE_ENPY )
-//         when the dual-energy formalism is adopted, do NOT calculate pressure from "Etot-Ekin" since it would suffer
-//         from large round-off errors
-//         currently we use TINY_NUMBER as the floor value of entropy and hence here we use 2.0*TINY_NUMBER to validate entropy
-//         --> in general, for MIN_PRES > 0.0, we expect that unphysical entropy would lead to unphysical pressure
-//         --> however, the check "Fluid[ENPY] < (real)2.0*TINY_NUMBER" is necessary when MIN_PRES == 0.0
-           CPU_DensEntropy2Pres( Fluid[DENS], Fluid[ENPY], Gamma_m1, CorrPres_No, NULL_REAL ) < (real)MIN_PRES  ||
-           Fluid[ENPY] < (real)2.0*TINY_NUMBER
+#  ifndef DUAL_ENERGY
+#  if   ( MODEL == HYDRO )
+   const real EngyB = NULL_REAL;
+#  elif ( MODEL == MHD )
+#  warning : WAIT MHD !!!
+   const real EngyB = NULL_REAL;
+#  endif
+#  endif // #indef DUAL_ENERGY
 
-#          else
-           CPU_GetPressure( Fluid[DENS], Fluid[MOMX], Fluid[MOMY], Fluid[MOMZ], Fluid[ENGY],
-                            Gamma_m1, CorrPres_No, NULL_REAL ) < (real)MIN_PRES
-#          endif
-        )
+   if ( CheckMinEngyOrPres == CheckMinPres  &&
+         (
+//          when the dual-energy formalism is adopted, do NOT calculate pressure from "Etot-Ekin" since it would suffer
+//          from large round-off errors
+//          currently we use TINY_NUMBER as the floor value of entropy and hence here we use 2.0*TINY_NUMBER to validate entropy
+//          --> in general, for MIN_PRES > 0.0, we expect that unphysical entropy would lead to unphysical pressure
+//          --> however, the check "Fluid[ENPY] < (real)2.0*TINY_NUMBER" is necessary when MIN_PRES == 0.0
+#           if   ( DUAL_ENERGY == DE_ENPY )
+            CPU_DensEntropy2Pres( Fluid[DENS], Fluid[ENPY], Gamma_m1, CorrPres_No, NULL_REAL ) < (real)MIN_PRES  ||
+            Fluid[ENPY] < (real)2.0*TINY_NUMBER
+
+#           elif ( DUAL_ENERGY == DE_EINT )
+#           error : DE_EINT is NOT supported yet !!
+
+#           else // without DUAL_ENERGY
+            CPU_GetPressure( Fluid[DENS], Fluid[MOMX], Fluid[MOMY], Fluid[MOMZ], Fluid[ENGY],
+                             Gamma_m1, CorrPres_No, NULL_REAL, EngyB ) < (real)MIN_PRES
+
+#           endif // DUAL_ENERGY
+         )
       )
       return true;
 
@@ -668,8 +681,16 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
 //              --> otherwise AUTO_REDUCE_DT may not be triggered due to this pressure floor
 #           else
             if ( !AUTO_REDUCE_DT )
-            Update[ENGY] = CPU_CheckMinPresInEngy( Update[DENS], Update[MOMX], Update[MOMY], Update[MOMZ], Update[ENGY],
-                                                   Gamma_m1, _Gamma_m1, MIN_PRES );
+            {
+#              if   ( MODEL == HYDRO )
+               const real EngyB = NULL_REAL;
+#              elif ( MODEL == MHD )
+#              warning : WAIT MHD !!!
+               const real EngyB = NULL_REAL;
+#              endif
+               Update[ENGY] = CPU_CheckMinPresInEngy( Update[DENS], Update[MOMX], Update[MOMY], Update[MOMZ], Update[ENGY],
+                                                      Gamma_m1, _Gamma_m1, MIN_PRES, EngyB );
+            }
 #           endif
 
 
@@ -702,6 +723,17 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
 
                   for (int v=0; v<NCOMP_TOTAL; v++)   In[v] = h_Flu_Array_F_In[TID][v][idx_in];
 
+#                 if   ( MODEL == HYDRO )
+                  const real EngyB_In     = NULL_REAL;
+                  const real EngyB_Out    = NULL_REAL;
+                  const real EngyB_Update = NULL_REAL;
+#                 elif ( MODEL == MHD )
+#                 warning : WAIT MHD !!!
+                  const real EngyB_In     = NULL_REAL;
+                  const real EngyB_Out    = NULL_REAL;
+                  const real EngyB_Update = NULL_REAL;
+#                 endif
+
 //                output information about the failed cell
                   fprintf( File, "PID                              = %5d\n", PID_Failed );
                   fprintf( File, "(i,j,k) in the patch             = (%2d,%2d,%2d)\n", ijk_out[0]%PS1, ijk_out[1]%PS1, ijk_out[2]%PS1 );
@@ -717,7 +749,7 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
                   fprintf( File, "input        = (%14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e",
                            In[DENS], In[MOMX], In[MOMY], In[MOMZ], In[ENGY],
                            CPU_GetPressure(In[DENS], In[MOMX], In[MOMY], In[MOMZ], In[ENGY],
-                                           Gamma_m1, CheckMinPres_No, NULL_REAL) );
+                                           Gamma_m1, CheckMinPres_No, NULL_REAL, EngyB_In) );
 #                 if ( DUAL_ENERGY == DE_ENPY )
                   fprintf( File, ", %14.7e", In[ENPY] );
 #                 endif
@@ -725,7 +757,7 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
                   fprintf( File, "ouptut (old) = (%14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e",
                            Out[DENS], Out[MOMX], Out[MOMY], Out[MOMZ], Out[ENGY],
                            CPU_GetPressure(Out[DENS], Out[MOMX], Out[MOMY], Out[MOMZ], Out[ENGY],
-                                           Gamma_m1, CheckMinPres_No, NULL_REAL) );
+                                           Gamma_m1, CheckMinPres_No, NULL_REAL, EngyB_Out) );
 #                 if ( DUAL_ENERGY == DE_ENPY )
                   fprintf( File, ", %14.7e", Out[ENPY] );
 #                 endif
@@ -733,7 +765,7 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
                   fprintf( File, "output (new) = (%14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e",
                            Update[DENS], Update[MOMX], Update[MOMY], Update[MOMZ], Update[ENGY],
                            CPU_GetPressure(Update[DENS], Update[MOMX], Update[MOMY], Update[MOMZ], Update[ENGY],
-                                           Gamma_m1, CheckMinPres_No, NULL_REAL) );
+                                           Gamma_m1, CheckMinPres_No, NULL_REAL, EngyB_Update) );
 #                 if ( DUAL_ENERGY == DE_ENPY )
                   fprintf( File, ", %14.7e", Update[ENPY] );
 #                 endif
@@ -760,18 +792,31 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
                         fprintf( File, " %13.6e", tmp[v] );
                      }
 
+#                    if   ( MODEL == HYDRO )
+                     const real EngyB_tmp = NULL_REAL;
+#                    elif ( MODEL == MHD )
+#                    warning : WAIT MHD !!!
+                     const real EngyB_tmp = NULL_REAL;
+#                    endif
+
                      fprintf( File, " %13.6e\n", CPU_GetPressure(tmp[0], tmp[1], tmp[2], tmp[3], tmp[4],
-                                                                 Gamma_m1, CheckMinPres_No, NULL_REAL) );
+                                                                 Gamma_m1, CheckMinPres_No, NULL_REAL, EngyB_tmp) );
                   }
 
                   fclose( File );
 
 //                output the failed patch (mainly for recording the sibling information)
-#                 ifdef GRAVITY
-                  Output_Patch( lv, PID_Failed, amr->FluSg[lv], amr->PotSg[lv], "Unphy" );
-#                 else
-                  Output_Patch( lv, PID_Failed, amr->FluSg[lv], NULL_INT,       "Unphy" );
+#                 if   ( MODEL == HYDRO )
+                  const int MagSg = NULL_INT;
+#                 elif ( MODEL == MHD )
+                  const int MagSg = amr->MagSg[lv];
 #                 endif
+#                 ifdef GRAVITY
+                  const int PotSg = amr->PotSg[lv];
+#                 else
+                  const int PotSg = NULL_INT;
+#                 endif
+                  Output_Patch( lv, PID_Failed, amr->FluSg[lv], MagSg, PotSg, "Unphy" );
                } // if ( !AUTO_REDUCE_DT )
             } // if ( Unphysical(Update) )
 

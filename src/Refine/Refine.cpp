@@ -535,12 +535,19 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
                                Flu_FData[MOMZ][k][j][i], Flu_FData[ENGY][k][j][i], Flu_FData[ENPY][k][j][i],
                                dummy, Gamma_m1, _Gamma_m1, CheckMinPres_Yes, MIN_PRES, UseEnpy2FixEngy );
 
-#           else
+#           else // #ifdef DUAL_ENERGY
+
 //          check minimum pressure
+#           if   ( MODEL == HYDRO )
+            const real EngyB = NULL_REAL;
+#           elif ( MODEL == MHD )
+#           warning : WAIT MHD !!!
+            const real EngyB = NULL_REAL;
+#           endif
             Flu_FData[ENGY][k][j][i]
                = CPU_CheckMinPresInEngy( Flu_FData[DENS][k][j][i], Flu_FData[MOMX][k][j][i], Flu_FData[MOMY][k][j][i],
                                          Flu_FData[MOMZ][k][j][i], Flu_FData[ENGY][k][j][i],
-                                         Gamma_m1, _Gamma_m1, MIN_PRES );
+                                         Gamma_m1, _Gamma_m1, MIN_PRES, EngyB );
 #           endif // #ifdef DUAL_ENERGY ... else ...
 #           endif // #if ( MODEL == HYDRO  ||  MODEL == MHD )
 

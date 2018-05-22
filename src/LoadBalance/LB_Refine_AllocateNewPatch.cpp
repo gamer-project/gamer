@@ -883,12 +883,19 @@ int AllocateSonPatch( const int FaLv, const int *Cr, const int PScale, const int
                          FData_Flu[MOMZ][k][j][i], FData_Flu[ENGY][k][j][i], FData_Flu[ENPY][k][j][i],
                          dummy, Gamma_m1, _Gamma_m1, CheckMinPres_Yes, MIN_PRES, UseEnpy2FixEngy );
 
-#     else
+#     else // #ifdef DUAL_ENERGY
+
 //    check minimum pressure
+#     if   ( MODEL == HYDRO )
+      const real EngyB = NULL_REAL;
+#     elif ( MODEL == MHD )
+#     warning : WAIT MHD !!!
+      const real EngyB = NULL_REAL;
+#     endif
       FData_Flu[ENGY][k][j][i]
          = CPU_CheckMinPresInEngy( FData_Flu[DENS][k][j][i], FData_Flu[MOMX][k][j][i], FData_Flu[MOMY][k][j][i],
                                    FData_Flu[MOMZ][k][j][i], FData_Flu[ENGY][k][j][i],
-                                   Gamma_m1, _Gamma_m1, MIN_PRES );
+                                   Gamma_m1, _Gamma_m1, MIN_PRES, EngyB );
 #     endif // #ifdef DUAL_ENERGY ... else ...
 #     endif // #if ( MODEL == HYDRO  ||  MODEL == MHD )
 

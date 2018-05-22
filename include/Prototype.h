@@ -80,9 +80,9 @@ void CPU_FluidSolver( real h_Flu_Array_In [][FLU_NIN    ][ FLU_NXT*FLU_NXT*FLU_N
                       const bool NormPassive, const int NNorm, const int NormIdx[],
                       const bool JeansMinPres, const real JeansMinPres_Coeff );
 real CPU_GetPressure( const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy,
-                      const real Gamma_m1, const bool CheckMinPres, const real MinPres );
+                      const real Gamma_m1, const bool CheckMinPres, const real MinPres, const real EngyB );
 real CPU_GetTemperature( const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy,
-                         const real Gamma_m1, const bool CheckMinPres, const real MinPres );
+                         const real Gamma_m1, const bool CheckMinPres, const real MinPres, const real EngyB );
 double CPU_Temperature2Pressure( const double Dens, const double Temp, const double mu, const double m_H,
                                  const bool CheckMinPres, const double MinPres );
 real CPU_CheckMinPres( const real InPres, const real MinPres );
@@ -99,7 +99,7 @@ real CPU_DensEntropy2Pres( const real Dens, const real Enpy, const real Gamma_m1
 #endif
 #endif
 real CPU_CheckMinPresInEngy( const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy,
-                             const real Gamma_m1, const real _Gamma_m1, const real MinPres );
+                             const real Gamma_m1, const real _Gamma_m1, const real MinPres, const real EngyB );
 int Flu_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, const double dt, const int SaveSg,
                    const bool OverlapMPI, const bool Overlap_Sync );
 void Flu_AllocateFluxArray( const int lv );
@@ -233,7 +233,7 @@ void Output_DumpManually( int &Dump_global );
 void Output_FlagMap( const int lv, const int xyz, const char *comment );
 void Output_Flux( const int lv, const int PID, const int Sib, const char *comment );
 void Output_PatchCorner( const int lv, const char *comment );
-void Output_Patch( const int lv, const int PID, const int FluSg, const int PotSg, const char *comment );
+void Output_Patch( const int lv, const int PID, const int FluSg, const int MagSg, const int PotSg, const char *comment );
 void Output_PatchMap( const int lv, const int PID, const int TSg, const int Comp, const char *comment );
 void Output_PreparedPatch_Fluid( const int TLv, const int TPID,
                                  const real h_Flu_Array[][FLU_NIN][FLU_NXT*FLU_NXT*FLU_NXT],
@@ -401,6 +401,7 @@ bool Hydro_Flag_Vorticity( const int i, const int j, const int k, const int lv, 
 
 // MHD model
 #elif ( MODEL == MHD )
+void MHD_Aux_Check_Negative( const int lv, const int Mode, const char *comment );
 void MHD_Init_ByFunction_AssignData( const int lv );
 void MHD_GetCellCenteredBField( real B[], const int lv, const int PID, const int i, const int j, const int k );
 real MHD_GetCellCenteredBEnergy( const int lv, const int PID, const int i, const int j, const int k );

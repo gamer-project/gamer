@@ -91,7 +91,12 @@ void CPU_Con2Pri( const real In[], real Out[], const real Gamma_m1, const real M
    Out[1] = In[1]*_Rho;
    Out[2] = In[2]*_Rho;
    Out[3] = In[3]*_Rho;
-   Out[4] = CPU_GetPressure( In[0], In[1], In[2], In[3], In[4], Gamma_m1, CheckMinPres_Yes, MinPres );
+#  if   ( MODEL == HYDRO )
+   Out[4] = CPU_GetPressure( In[0], In[1], In[2], In[3], In[4], Gamma_m1, CheckMinPres_Yes, MinPres, NULL_REAL );
+#  elif ( MODEL == MHD )
+#  warning : WAIT MHD !!!
+// Out[4] = CPU_GetPressure( In[0], In[1], In[2], In[3], In[4], Gamma_m1, CheckMinPres_Yes, MinPres, EngyB );
+#  endif
 
 // pressure floor required to resolve the Jeans length
 // --> note that currently we do not modify the dual-energy variable (e.g., entropy) accordingly
@@ -176,7 +181,12 @@ void CPU_Con2Flux( const int XYZ, real Flux[], const real Input[], const real Ga
 
    CPU_Rotate3D( Var, XYZ, true );
 
-   Pres = CPU_GetPressure( Var[0], Var[1], Var[2], Var[3], Var[4], Gamma_m1, CheckMinPres_Yes, MinPres );
+#  if   ( MODEL == HYDRO )
+   Pres = CPU_GetPressure( Var[0], Var[1], Var[2], Var[3], Var[4], Gamma_m1, CheckMinPres_Yes, MinPres, NULL_REAL );
+#  elif ( MODEL == MHD )
+#  warning : WAIT MHD !!!
+// Pres = CPU_GetPressure( Var[0], Var[1], Var[2], Var[3], Var[4], Gamma_m1, CheckMinPres_Yes, MinPres, EngyB );
+#  endif
    Vx   = Var[1] / Var[0];
 
    Flux[0] = Var[1];
@@ -232,6 +242,7 @@ real CPU_CheckMinPres( const real InPres, const real MinPres )
 //                   --> Currently it simply sets a minimum allowed value for pressure
 //                       --> Please set MIN_PRES in the runtime parameter file "Input__Parameter"
 //                3. One must input conserved variables instead of primitive variables
+//                4. For MHD, one must provide the magnetic energy density EngyB (i.e., 0.5*B^2)
 //
 // Parameter   :  Dens     : Mass density
 //                MomX/Y/Z : Momentum density
@@ -239,11 +250,13 @@ real CPU_CheckMinPres( const real InPres, const real MinPres )
 //                Gamma_m1 : Gamma - 1
 //               _Gamma_m1 : 1/(Gamma - 1)
 //                MinPres  : Minimum allowed pressure
+//                EngyB    : Magnetic energy density (0.5*B^2)
+//                           --> For MHD only
 //
 // Return      :  Total energy with pressure greater than the given threshold
 //-------------------------------------------------------------------------------------------------------
 real CPU_CheckMinPresInEngy( const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy,
-                             const real Gamma_m1, const real _Gamma_m1, const real MinPres )
+                             const real Gamma_m1, const real _Gamma_m1, const real MinPres, const real EngyB )
 {
 
    real InPres, OutPres, Ek, _Dens;
@@ -251,12 +264,23 @@ real CPU_CheckMinPresInEngy( const real Dens, const real MomX, const real MomY, 
 // we didn't use CPU_GetPressure() here to void calculating kinematic energy (Ek) twice
    _Dens   = (real)1.0 / Dens;
    Ek      = (real)0.5*( SQR(MomX) + SQR(MomY) + SQR(MomZ) ) * _Dens;
+#  if   ( MODEL == HYDRO )
    InPres  = Gamma_m1*( Engy - Ek );
+#  elif ( MODEL == MHD )
+   InPres  = Gamma_m1*( Engy - Ek - EngyB );
+#  endif
    OutPres = CPU_CheckMinPres( InPres, MinPres );
 
 // do not modify energy (even the round-off errors) if the input pressure passes the check of CPU_CheckMinPres()
-   if ( InPres == OutPres )   return Engy;
-   else                       return Ek + _Gamma_m1*OutPres;
+   if ( InPres == OutPres )
+      return Engy;
+
+   else
+#     if   ( MODEL == HYDRO )
+      return Ek + _Gamma_m1*OutPres;
+#     elif ( MODEL == MHD )
+      return Ek + _Gamma_m1*OutPres + EngyB;
+#     endif
 
 } // FUNCTION : CPU_CheckMinPresInEngy
 
@@ -290,30 +314,36 @@ bool CPU_CheckNegative( const real Input )
 // Description :  Evaluate the fluid pressure
 //
 // Note        :  1. Currently only work with the adiabatic EOS
-//                2. Invoked by the functions "Hydro_GetTimeStep_Fluid", "Prepare_PatchData", "InterpolateGhostZone",
-//                   "Hydro_Aux_Check_Negative" ...
-//                3. One must input conserved variables instead of primitive variables
+//                2. One must input conserved variables instead of primitive variables
+//                3. For MHD, Engy is the total energy density including the magnetic energy EngyB=0.5*B^2,
+//                   and thus one must provide EngyB to calculate the gas pressure
 //
 // Parameter   :  Dens         : Mass density
 //                MomX/Y/Z     : Momentum density
-//                Engy         : Energy density
+//                Engy         : Energy density (including the magnetic energy density for MHD)
 //                Gamma_m1     : Gamma - 1, where Gamma is the adiabatic index
 //                CheckMinPres : Return CPU_CheckMinPres()
 //                               --> In some cases we actually want to check if pressure becomes unphysical,
 //                                   for which we don't want to enable this option
 //                                   --> For example: Flu_FixUp(), Flu_Close(), Hydro_Aux_Check_Negative()
 //                MinPres      : Minimum allowed pressure
+//                EngyB        : Magnetic energy density (0.5*B^2)
+//                               --> For MHD only
 //
-// Return      :  Pressure
+// Return      :  Gas pressure (Pres)
 //-------------------------------------------------------------------------------------------------------
 real CPU_GetPressure( const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy,
-                      const real Gamma_m1, const bool CheckMinPres, const real MinPres )
+                      const real Gamma_m1, const bool CheckMinPres, const real MinPres, const real EngyB )
 {
 
    real _Dens, Pres;
 
-  _Dens = (real)1.0 / Dens;
-   Pres = Gamma_m1*(  Engy - (real)0.5*_Dens*( SQR(MomX) + SQR(MomY) + SQR(MomZ) )  );
+  _Dens  = (real)1.0 / Dens;
+   Pres  = Engy - (real)0.5*_Dens*( SQR(MomX) + SQR(MomY) + SQR(MomZ) );
+#  if ( MODEL == MHD )
+   Pres -= EngyB;
+#  endif
+   Pres *= Gamma_m1;
 
    if ( CheckMinPres )   Pres = CPU_CheckMinPres( Pres, MinPres );
 
@@ -328,7 +358,8 @@ real CPU_GetPressure( const real Dens, const real MomX, const real MomY, const r
 // Description :  Evaluate the fluid temperature
 //
 // Note        :  1. Currently only work with the adiabatic EOS
-//                2. For simplicity, currently this function only returns **pressure/density**, which does NOT include normalization
+//                2. For simplicity, currently this function only returns **pressure/density**, which does
+//                   NOT include normalization
 //                   --> For OPT__FLAG_LOHNER_TEMP only
 //                   --> Also note that currently it only checks minimum pressure but not minimum density
 //
@@ -341,14 +372,16 @@ real CPU_GetPressure( const real Dens, const real MomX, const real MomY, const r
 //                                   for which we don't want to enable this option
 //                                   --> For example: Flu_FixUp(), Flu_Close(), Hydro_Aux_Check_Negative()
 //                MinPres      : Minimum allowed pressure
+//                EngyB        : Magnetic energy density (0.5*B^2)
+//                               --> For MHD only
 //
 // Return      :  Temperature
 //-------------------------------------------------------------------------------------------------------
 real CPU_GetTemperature( const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy,
-                         const real Gamma_m1, const bool CheckMinPres, const real MinPres )
+                         const real Gamma_m1, const bool CheckMinPres, const real MinPres, const real EngyB )
 {
 
-   return CPU_GetPressure( Dens, MomX, MomY, MomZ, Engy, Gamma_m1, CheckMinPres, MinPres ) / Dens;
+   return CPU_GetPressure( Dens, MomX, MomY, MomZ, Engy, Gamma_m1, CheckMinPres, MinPres, EngyB ) / Dens;
 
 } // FUNCTION : CPU_GetTemperature
 

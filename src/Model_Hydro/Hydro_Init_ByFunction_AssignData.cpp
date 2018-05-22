@@ -253,15 +253,18 @@ void   MHD_Init_ByFunction_AssignData( const int lv )
 
 
 //       add the magnetic energy
-#        if ( MODEL == MHD )
-         fluid[ENGY] += MHD_GetCellCenteredBEnergy( lv, PID, i, j, k );
+#        if   ( MODEL == HYDRO )
+         const real EngyB = NULL_REAL;
+#        elif ( MODEL == MHD )
+         const real EngyB = MHD_GetCellCenteredBEnergy( lv, PID, i, j, k );
+         fluid[ENGY] += EngyB;
 #        endif
 
 
 //       check minimum density and pressure
          fluid[DENS] = FMAX( fluid[DENS], (real)MIN_DENS );
          fluid[ENGY] = CPU_CheckMinPresInEngy( fluid[DENS], fluid[MOMX], fluid[MOMY], fluid[MOMZ], fluid[ENGY],
-                                               Gamma_m1, _Gamma_m1, MIN_PRES );
+                                               Gamma_m1, _Gamma_m1, MIN_PRES, EngyB );
 
 //       calculate the dual-energy variable (entropy or internal energy)
 #        if   ( DUAL_ENERGY == DE_ENPY )

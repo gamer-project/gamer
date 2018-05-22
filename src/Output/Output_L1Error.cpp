@@ -47,15 +47,16 @@ void Output_L1Error( void (*AnalFunc)( real fluid[], const double x, const doubl
 // output filename
    char FileName[NCOMP_FLUID][200];
 
-#  if   ( MODEL == HYDRO )
+#  if   ( MODEL == HYDRO  ||  MODEL == MHD )
    sprintf( FileName[0], "%s_Dens_%06d", Prefix, DumpID );
    sprintf( FileName[1], "%s_MomX_%06d", Prefix, DumpID );
    sprintf( FileName[2], "%s_MomY_%06d", Prefix, DumpID );
    sprintf( FileName[3], "%s_MomZ_%06d", Prefix, DumpID );
    sprintf( FileName[4], "%s_Pres_%06d", Prefix, DumpID );
 
-#  elif ( MODEL == MHD )
+#  if ( MODEL == MHD )
 #  warning : WAIT MHD !!!
+#  endif
 
 #  elif ( MODEL == ELBDM )
    sprintf( FileName[0], "%s_Dens_%06d", Prefix, DumpID );
@@ -210,12 +211,13 @@ void Output_L1Error( void (*AnalFunc)( real fluid[], const double x, const doubl
 //    output header
       if ( FirstTime )
       {
-#        if   ( MODEL == HYDRO )
+#        if   ( MODEL == HYDRO  ||  MODEL == MHD )
          fprintf( File_L1, "#%5s %13s %19s %19s %19s %19s %19s\n",
                   "NGrid", "Time", "Error(Dens)", "Error(MomX)", "Error(MomY)", "Error(MomZ)", "Error(Pres)" );
 
-#        elif ( MODEL == MHD )
+#        if ( MODEL == MHD )
 #        warning : WAIT MHD !!!
+#        endif
 
 #        elif ( MODEL == ELBDM )
          fprintf( File_L1, "#%5s %13s %19s %19s %19s\n",
@@ -279,12 +281,18 @@ void WriteFile( void (*AnalFunc)( real fluid[], const double x, const double y, 
 
 
 // convert total energy to pressure
-#  if ( MODEL == HYDRO )
+#  if ( MODEL == HYDRO  ||  MODEL == MHD )
    const bool   CheckMinPres_No = false;
    const double Gamma_m1        = GAMMA - 1.0;
+#  if   ( MODEL == HYDRO )
+   const real   EngyB           = NULL_REAL;
+#  elif ( MODEL == MHD )
+#  warning : WAIT MHD !!!
+   const real   EngyB           = NULL_REAL;
+#  endif
 
    fluid[ENGY] = CPU_GetPressure( fluid[DENS], fluid[MOMX], fluid[MOMY], fluid[MOMZ], fluid[ENGY],
-                                  Gamma_m1, CheckMinPres_No, NULL_REAL );
+                                  Gamma_m1, CheckMinPres_No, NULL_REAL, EngyB );
 #  endif
 
 
@@ -298,9 +306,15 @@ void WriteFile( void (*AnalFunc)( real fluid[], const double x, const double y, 
 
 
 // convert total energy to pressure
-#  if ( MODEL == HYDRO )
+#  if ( MODEL == HYDRO  || MODEL == MHD )
+#  if   ( MODEL == HYDRO )
+   const real EngyB_Anal = NULL_REAL;
+#  elif ( MODEL == MHD )
+#  warning : WAIT MHD !!!
+   const real EngyB_Anal = NULL_REAL;
+#  endif
    Anal[ENGY] = CPU_GetPressure( Anal[DENS], Anal[MOMX], Anal[MOMY], Anal[MOMZ], Anal[ENGY],
-                                 Gamma_m1, CheckMinPres_No, NULL_REAL );
+                                 Gamma_m1, CheckMinPres_No, NULL_REAL, EngyB_Anal );
 #  endif
 
 

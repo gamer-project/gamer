@@ -191,7 +191,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
            FluBC[f] != BC_FLU_REFLECTING  &&  FluBC[f] != BC_FLU_USER        )
          Aux_Error( ERROR_INFO, "unsupported parameter FluBC[%d] = %d !!\n", f, FluBC[f] );
 
-#     if ( MODEL != HYDRO )
+#     if ( MODEL != HYDRO  &&  MODEL != MHD )
       if ( FluBC[f] == BC_FLU_REFLECTING )
          Aux_Error( ERROR_INFO, "reflecting boundary condition (OPT__BC_FLU=3) only works with HYDRO !!\n" );
 #     endif
@@ -774,7 +774,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
 
 
 //          (a2) derived variables
-#           if   ( MODEL == HYDRO )
+#           if   ( MODEL == HYDRO  ||  MODEL == MHD )
             if ( PrepVx )
             {
                for (int k=0; k<PATCH_SIZE; k++)    {  K    = k + Disp_k;
@@ -844,17 +844,29 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
 
                   for (int v=0; v<NCOMP_FLUID; v++)   Fluid[v] = amr->patch[FluSg][lv][PID]->fluid[v][k][j][i];
 
+#                 if   ( MODEL == HYDRO )
+                  const real EngyB = NULL_REAL;
+#                 elif ( MODEL == MHD )
+#                 warning : WAIT MHD !!!
+                  const real EngyB = NULL_REAL;
+#                 endif
                   Array_Ptr[Idx1] = CPU_GetPressure( Fluid[DENS], Fluid[MOMX], Fluid[MOMY], Fluid[MOMZ], Fluid[ENGY],
-                                                     Gamma_m1, CheckMinPres_No, NULL_REAL );
+                                                     Gamma_m1, CheckMinPres_No, NULL_REAL, EngyB );
 
                   if ( FluIntTime ) // temporal interpolation
                   {
                      for (int v=0; v<NCOMP_FLUID; v++)   Fluid[v] = amr->patch[FluSg_IntT][lv][PID]->fluid[v][k][j][i];
 
+#                    if   ( MODEL == HYDRO )
+                     const real EngyB = NULL_REAL;
+#                    elif ( MODEL == MHD )
+#                    warning : WAIT MHD !!!
+                     const real EngyB = NULL_REAL;
+#                    endif
                      Array_Ptr[Idx1] =   FluWeighting     *Array_Ptr[Idx1]
                                        + FluWeighting_IntT*CPU_GetPressure( Fluid[DENS], Fluid[MOMX], Fluid[MOMY],
                                                                             Fluid[MOMZ], Fluid[ENGY],
-                                                                            Gamma_m1, CheckMinPres_No, NULL_REAL );
+                                                                            Gamma_m1, CheckMinPres_No, NULL_REAL, EngyB );
                   }
 
                   Idx1 ++;
@@ -872,17 +884,29 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
 
                   for (int v=0; v<NCOMP_FLUID; v++)   Fluid[v] = amr->patch[FluSg][lv][PID]->fluid[v][k][j][i];
 
+#                 if   ( MODEL == HYDRO )
+                  const real EngyB = NULL_REAL;
+#                 elif ( MODEL == MHD )
+#                 warning : WAIT MHD !!!
+                  const real EngyB = NULL_REAL;
+#                 endif
                   Array_Ptr[Idx1] = CPU_GetTemperature( Fluid[DENS], Fluid[MOMX], Fluid[MOMY], Fluid[MOMZ], Fluid[ENGY],
-                                                        Gamma_m1, (MinPres>=0.0), MinPres );
+                                                        Gamma_m1, (MinPres>=0.0), MinPres, EngyB );
 
                   if ( FluIntTime ) // temporal interpolation
                   {
                      for (int v=0; v<NCOMP_FLUID; v++)   Fluid[v] = amr->patch[FluSg_IntT][lv][PID]->fluid[v][k][j][i];
 
+#                    if   ( MODEL == HYDRO )
+                     const real EngyB = NULL_REAL;
+#                    elif ( MODEL == MHD )
+#                    warning : WAIT MHD !!!
+                     const real EngyB = NULL_REAL;
+#                    endif
                      Array_Ptr[Idx1] =   FluWeighting     *Array_Ptr[Idx1]
                                        + FluWeighting_IntT*CPU_GetTemperature( Fluid[DENS], Fluid[MOMX], Fluid[MOMY],
                                                                                Fluid[MOMZ], Fluid[ENGY],
-                                                                               Gamma_m1, (MinPres>=0.0), MinPres );
+                                                                               Gamma_m1, (MinPres>=0.0), MinPres, EngyB );
                   }
 
                   Idx1 ++;
@@ -979,7 +1003,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
 
 
 //                (b1-2) derived variables
-#                 if   ( MODEL == HYDRO )
+#                 if   ( MODEL == HYDRO  ||  MODEL == MHD )
                   if ( PrepVx )
                   {
                      for (int k=0; k<Loop_k; k++)  {  K = k + Disp_k;   K2 = k + Disp_k2;
@@ -1049,17 +1073,29 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
 
                         for (int v=0; v<NCOMP_FLUID; v++)   Fluid[v] = amr->patch[FluSg][lv][SibPID]->fluid[v][K2][J2][I2];
 
+#                       if   ( MODEL == HYDRO )
+                        const real EngyB = NULL_REAL;
+#                       elif ( MODEL == MHD )
+#                       warning : WAIT MHD !!!
+                        const real EngyB = NULL_REAL;
+#                       endif
                         Array_Ptr[Idx1] = CPU_GetPressure( Fluid[DENS], Fluid[MOMX], Fluid[MOMY], Fluid[MOMZ], Fluid[ENGY],
-                                                           Gamma_m1, CheckMinPres_No, NULL_REAL );
+                                                           Gamma_m1, CheckMinPres_No, NULL_REAL, EngyB );
 
                         if ( FluIntTime ) // temporal interpolation
                         {
                            for (int v=0; v<NCOMP_FLUID; v++)   Fluid[v] = amr->patch[FluSg_IntT][lv][SibPID]->fluid[v][K2][J2][I2];
 
+#                          if   ( MODEL == HYDRO )
+                           const real EngyB = NULL_REAL;
+#                          elif ( MODEL == MHD )
+#                          warning : WAIT MHD !!!
+                           const real EngyB = NULL_REAL;
+#                          endif
                            Array_Ptr[Idx1] =   FluWeighting     *Array_Ptr[Idx1]
                                              + FluWeighting_IntT*CPU_GetPressure( Fluid[DENS], Fluid[MOMX], Fluid[MOMY],
                                                                                   Fluid[MOMZ], Fluid[ENGY],
-                                                                                  Gamma_m1, CheckMinPres_No, NULL_REAL );
+                                                                                  Gamma_m1, CheckMinPres_No, NULL_REAL, EngyB );
                         }
 
                         Idx1 ++;
@@ -1077,17 +1113,29 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
 
                         for (int v=0; v<NCOMP_FLUID; v++)   Fluid[v] = amr->patch[FluSg][lv][SibPID]->fluid[v][K2][J2][I2];
 
+#                       if   ( MODEL == HYDRO )
+                        const real EngyB = NULL_REAL;
+#                       elif ( MODEL == MHD )
+#                       warning : WAIT MHD !!!
+                        const real EngyB = NULL_REAL;
+#                       endif
                         Array_Ptr[Idx1] = CPU_GetTemperature( Fluid[DENS], Fluid[MOMX], Fluid[MOMY], Fluid[MOMZ], Fluid[ENGY],
-                                                              Gamma_m1, (MinPres>=0.0), MinPres );
+                                                              Gamma_m1, (MinPres>=0.0), MinPres, EngyB );
 
                         if ( FluIntTime ) // temporal interpolation
                         {
                            for (int v=0; v<NCOMP_FLUID; v++)   Fluid[v] = amr->patch[FluSg_IntT][lv][SibPID]->fluid[v][K2][J2][I2];
 
+#                          if   ( MODEL == HYDRO )
+                           const real EngyB = NULL_REAL;
+#                          elif ( MODEL == MHD )
+#                          warning : WAIT MHD !!!
+                           const real EngyB = NULL_REAL;
+#                          endif
                            Array_Ptr[Idx1] =   FluWeighting     *Array_Ptr[Idx1]
                                              + FluWeighting_IntT*CPU_GetTemperature( Fluid[DENS], Fluid[MOMX], Fluid[MOMY],
                                                                                      Fluid[MOMZ], Fluid[ENGY],
-                                                                                     Gamma_m1, (MinPres>=0.0), MinPres );
+                                                                                     Gamma_m1, (MinPres>=0.0), MinPres, EngyB );
                         }
 
                         Idx1 ++;
@@ -1095,9 +1143,6 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
 
                      Array_Ptr += PGSize3D;
                   }
-
-#                 elif ( MODEL == MHD   )
-#                 warning : WAIT MHD !!
 
 #                 elif ( MODEL == ELBDM )
 //                no derived variables yet
@@ -1545,8 +1590,16 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
 
 //             apply minimum pressure to the energy field
                for (int t=0; t<PGSize3D; t++)
+               {
+#                 if   ( MODEL == HYDRO )
+                  const real EngyB = NULL_REAL;
+#                 elif ( MODEL == MHD )
+#                 warning : WAIT MHD !!!
+                  const real EngyB = NULL_REAL;
+#                 endif
                   ArrayEngy[t] = CPU_CheckMinPresInEngy( ArrayDens[t], ArrayMomX[t], ArrayMomY[t], ArrayMomZ[t], ArrayEngy[t],
-                                                         Gamma_m1, _Gamma_m1, MinPres );
+                                                         Gamma_m1, _Gamma_m1, MinPres, EngyB );
+               }
             } // if ( (TVar & _FLUID) == _FLUID )
          } // if ( MinPres >= (real)0.0 )
 #        endif // #if ( MODEL == HYDRO  ||  MODEL == MHD )
