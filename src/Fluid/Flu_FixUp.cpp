@@ -183,17 +183,29 @@ void Flu_FixUp( const int lv )
 //                must determine to use CPU_GetPressure() or CPU_DensEntropy2Pres() since the fluid variables stored
 //                in CorrVal[] may not be fully consistent (as it's not corrected by CPU_DualEnergyFix())
 //                --> note that currently we adopt CPU_DensEntropy2Pres() for DE_UPDATED_BY_MIN_PRES
+#                 if   ( MODEL == HYDRO )
+                  const real EngyB = NULL_REAL;
+#                 elif ( MODEL == MHD )
+#                 warning : WAIT MHD !!!
+                  const real EngyB = NULL_REAL;
+#                 endif
                   Pres = ( *DE_StatusPtr1D == DE_UPDATED_BY_ETOT  ||  *DE_StatusPtr1D == DE_UPDATED_BY_ETOT_GRA ) ?
                          CPU_GetPressure( ForPres[DENS], ForPres[MOMX], ForPres[MOMY], ForPres[MOMZ], ForPres[ENGY],
-                                          Gamma_m1, CheckMinPres_No, NULL_REAL )
+                                          Gamma_m1, CheckMinPres_No, NULL_REAL, EngyB )
                        : CPU_DensEntropy2Pres( ForPres[DENS], ForPres[ENPY], Gamma_m1, CheckMinPres_No, NULL_REAL );
 
 #                 elif ( DUAL_ENERGY == DE_EINT )
 #                 error : DE_EINT is NOT supported yet !!
 
 #                 else
+#                 if   ( MODEL == HYDRO )
+                  const real EngyB = NULL_REAL;
+#                 elif ( MODEL == MHD )
+#                 warning : WAIT MHD !!!
+                  const real EngyB = NULL_REAL;
+#                 endif
                   Pres = CPU_GetPressure( ForPres[DENS], ForPres[MOMX], ForPres[MOMY], ForPres[MOMZ], ForPres[ENGY],
-                                          Gamma_m1, CheckMinPres_No, NULL_REAL );
+                                          Gamma_m1, CheckMinPres_No, NULL_REAL, EngyB );
 #                 endif // DUAL_ENERGY
 #                 endif // MODEL
 
@@ -235,18 +247,21 @@ void Flu_FixUp( const int lv )
 //                ensure the consistency between pressure, total energy density, and dual-energy variable
 //                --> assuming the variable "Pres" is correct
 //                --> no need to check the minimum pressure here since we have skipped those cells already
-#                 if   ( MODEL == HYDRO  ||  MODEL == MHD )
+#                 if ( MODEL == HYDRO  ||  MODEL == MHD )
                   CorrVal[ENGY] = (real)0.5*( SQR(CorrVal[MOMX]) + SQR(CorrVal[MOMY]) + SQR(CorrVal[MOMZ]) ) / CorrVal[DENS]
                                   + Pres*_Gamma_m1;
+#                 if ( MODEL == MHD )
+#                 warning : WAIT MHD !!!
+//                const real EngyB = ...;
+//                CorrVal[ENGY] += EngyB;
+#                 endif
 
-#                 ifdef DUAL_ENERGY
 #                 if   ( DUAL_ENERGY == DE_ENPY )
                   CorrVal[ENPY] = CPU_DensPres2Entropy( CorrVal[DENS], Pres, Gamma_m1 );
 
 #                 elif ( DUAL_ENERGY == DE_EINT )
 #                 error : DE_EINT is NOT supported yet !!
-#                 endif
-#                 endif // #ifdef DUAL_ENERGY
+#                 endif // DUAL_ENERGY
 #                 endif // HYDRO/MHD
 
 

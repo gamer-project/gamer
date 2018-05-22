@@ -252,10 +252,16 @@ void TGradient_Correction( real FC_Var[][6][NCOMP_TOTAL], const real FC_Flux[][3
          FC_Var[ID][dL][0] = FMAX( FC_Var[ID][dL][0], MinDens );
          FC_Var[ID][dR][0] = FMAX( FC_Var[ID][dR][0], MinDens );
 
+#        if   ( MODEL == HYDRO )
+         const real EngyB = NULL_REAL;
+#        elif ( MODEL == MHD )
+#        warning : WAIT MHD !!!
+         const real EngyB = NULL_REAL;
+#        endif
          FC_Var[ID][dL][4] = CPU_CheckMinPresInEngy( FC_Var[ID][dL][0], FC_Var[ID][dL][1], FC_Var[ID][dL][2],
-                                                     FC_Var[ID][dL][3], FC_Var[ID][dL][4], Gamma_m1, _Gamma_m1, MinPres );
+                                                     FC_Var[ID][dL][3], FC_Var[ID][dL][4], Gamma_m1, _Gamma_m1, MinPres, EngyB );
          FC_Var[ID][dR][4] = CPU_CheckMinPresInEngy( FC_Var[ID][dR][0], FC_Var[ID][dR][1], FC_Var[ID][dR][2],
-                                                     FC_Var[ID][dR][3], FC_Var[ID][dR][4], Gamma_m1, _Gamma_m1, MinPres );
+                                                     FC_Var[ID][dR][3], FC_Var[ID][dR][4], Gamma_m1, _Gamma_m1, MinPres, EngyB );
 
 #        if ( NCOMP_PASSIVE > 0 )
          for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++) {

@@ -345,7 +345,8 @@ void CPU_AdvanceX( real u[][ FLU_NXT*FLU_NXT*FLU_NXT ], real fc[PS2*PS2][3][5], 
 
 //       enforce positive density and pressure
          ux[i][0] = FMAX( ux[i][0], MinDens );
-         ux[i][4] = CPU_CheckMinPresInEngy( ux[i][0], ux[i][1], ux[i][2], ux[i][3], ux[i][4], Gamma_m1, _Gamma_m1, MinPres );
+         ux[i][4] = CPU_CheckMinPresInEngy( ux[i][0], ux[i][1], ux[i][2], ux[i][3], ux[i][4],
+                                            Gamma_m1, _Gamma_m1, MinPres, NULL_REAL );
 
 //       check negative density and energy
 #        ifdef CHECK_NEGATIVE_IN_FLUID

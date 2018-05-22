@@ -142,9 +142,15 @@ void Flu_ResetByUser_API( const int lv, const int FluSg, const double TTime )
          {
 #           if ( MODEL == HYDRO  ||  MODEL == MHD )
 //          check minimum density and pressure
+#           if   ( MODEL == HYDRO )
+            const real EngyB = NULL_REAL;
+#           elif ( MODEL == MHD )
+#           warning : WAIT MHD !!!
+            const real EngyB = NULL_REAL;
+#           endif
             fluid[DENS] = FMAX( fluid[DENS], (real)MIN_DENS );
             fluid[ENGY] = CPU_CheckMinPresInEngy( fluid[DENS], fluid[MOMX], fluid[MOMY], fluid[MOMZ], fluid[ENGY],
-                                                  Gamma_m1, _Gamma_m1, MIN_PRES );
+                                                  Gamma_m1, _Gamma_m1, MIN_PRES, EngyB );
 
 //          calculate the dual-energy variable (entropy or internal energy)
 #           if   ( DUAL_ENERGY == DE_ENPY )

@@ -72,9 +72,15 @@ void CPU_FullStepUpdate( const real Input[][ FLU_NXT*FLU_NXT*FLU_NXT ], real Out
 //    --> this consideration holds even when DUAL_ENERGY is adopted (e.g., when density is negative, even when DUAL_ENERGY is on,
 //        we still want to try the 1st-order-flux correction before setting a floor value)
       /*
+#     if   ( MODEL == HYDRO )
+      const real EngyB = NULL_REAL;
+#     elif ( MODEL == MHD )
+#     warning : WAIT MHD !!!
+      const real EngyB = NULL_REAL;
+#     endif
       Output[DENS][ID2] = FMAX( Output[DENS][ID2], MinDens );
       Output[ENGY][ID2] = CPU_CheckMinPresInEngy( Output[DENS][ID2], Output[MOMX][ID2], Output[MOMY][ID2], Output[MOMZ][ID2],
-                                                  Output[ENGY][ID2], Gamma_m1, _Gamma_m1, MinPres );
+                                                  Output[ENGY][ID2], Gamma_m1, _Gamma_m1, MinPres, EngyB );
       */
 
 

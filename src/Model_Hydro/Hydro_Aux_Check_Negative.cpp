@@ -1,6 +1,6 @@
 #include "GAMER.h"
 
-#if ( MODEL == HYDRO )
+#if ( MODEL == HYDRO  ||  MODEL == MHD )
 
 
 // 1: check negative values
@@ -19,16 +19,20 @@
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Hydro_Aux_Check_Negative
+// Function    :  Hydro/MHD_Aux_Check_Negative
 // Description :  Check if there is any cell with negative density or pressure
 //
-// Parameter   :  lv       : Target refinement level
-//                Mode     : 1 : Check negative density
-//                           2 : Check negative pressure (and entropy when DUAL_ENERGY == DE_ENPY)
-//                           3 : Both
-//                comment  : You can put the location where this function is invoked in this string
+// Parameter   :  lv      : Target refinement level
+//                Mode    : 1 : Check negative density
+//                          2 : Check negative pressure (and entropy when DUAL_ENERGY == DE_ENPY)
+//                          3 : Both
+//                comment : You can put the location where this function is invoked in this string
 //-------------------------------------------------------------------------------------------------------
+#if   ( MODEL == HYDRO )
 void Hydro_Aux_Check_Negative( const int lv, const int Mode, const char *comment )
+#elif ( MODEL == MHD )
+void   MHD_Aux_Check_Negative( const int lv, const int Mode, const char *comment )
+#endif
 {
 
 // check
@@ -64,10 +68,17 @@ void Hydro_Aux_Check_Negative( const int lv, const int Mode, const char *comment
 
 #           if ( DUAL_ENERGY == DE_ENPY )
             Pres = CPU_DensEntropy2Pres( Fluid[DENS], Fluid[ENPY], Gamma_m1, CheckMinPres_No, NULL_REAL );
+
 #           else
-            Pres = CPU_GetPressure( Fluid[DENS], Fluid[MOMX], Fluid[MOMY], Fluid[MOMZ], Fluid[ENGY],
-                                    Gamma_m1, CheckMinPres_No, NULL_REAL );
+#           if   ( MODEL == HYDRO )
+            const real EngyB = NULL_REAL;
+#           elif ( MODEL == MHD )
+#           warning : WAIT MHD !!!
+            const real EngyB = NULL_REAL;
 #           endif
+            Pres = CPU_GetPressure( Fluid[DENS], Fluid[MOMX], Fluid[MOMY], Fluid[MOMZ], Fluid[ENGY],
+                                    Gamma_m1, CheckMinPres_No, NULL_REAL, EngyB );
+#           endif // DUAL_ENERGY
 
             if ( Mode == 1  ||  Mode == 3 )
             {
@@ -155,8 +166,8 @@ void Hydro_Aux_Check_Negative( const int lv, const int Mode, const char *comment
                       comment, __FUNCTION__, lv, Time[lv], Step );
    }
 
-} // FUNCTION : Hydro_Aux_Check_Negative
+} // FUNCTION : Hydro/MHD_Aux_Check_Negative
 
 
 
-#endif // #if ( MODEL == HYDRO )
+#endif // #if ( MODEL == HYDRO  ||  MODEL == MHD )

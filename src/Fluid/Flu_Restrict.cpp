@@ -214,15 +214,22 @@ void Flu_Restrict( const int FaLv, const int SonFluSg, const int FaFluSg, const 
                             amr->patch[FaFluSg][FaLv][FaPID]->fluid[ENPY][k][j][i],
                             dummy, Gamma_m1, _Gamma_m1, CheckMinPres_Yes, MIN_PRES, UseEnpy2FixEngy );
 
-#        else
+#        else // #ifdef DUAL_ENERGY
+
 //       actually it might not be necessary to check the minimum pressure here
+#        if   ( MODEL == HYDRO )
+         const real EngyB = NULL_REAL;
+#        elif ( MODEL == MHD )
+#        warning : WAIT MHD !!!
+         const real EngyB = NULL_REAL;
+#        endif
          amr->patch[FaFluSg][FaLv][FaPID]->fluid[ENGY][k][j][i]
             = CPU_CheckMinPresInEngy( amr->patch[FaFluSg][FaLv][FaPID]->fluid[DENS][k][j][i],
                                       amr->patch[FaFluSg][FaLv][FaPID]->fluid[MOMX][k][j][i],
                                       amr->patch[FaFluSg][FaLv][FaPID]->fluid[MOMY][k][j][i],
                                       amr->patch[FaFluSg][FaLv][FaPID]->fluid[MOMZ][k][j][i],
                                       amr->patch[FaFluSg][FaLv][FaPID]->fluid[ENGY][k][j][i],
-                                      Gamma_m1, _Gamma_m1, MIN_PRES );
+                                      Gamma_m1, _Gamma_m1, MIN_PRES, EngyB );
 #        endif // #ifdef DUAL_ENERGY ... else ...
       } // i,j,k
 #     endif // #if ( MODEL == HYDRO  ||  MODEL == MHD )

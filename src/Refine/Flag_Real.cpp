@@ -213,7 +213,7 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
 
 
 //             evaluate pressure
-#              if   ( MODEL == HYDRO )
+#              if ( MODEL == HYDRO  ||  MODEL == MHD )
                if ( OPT__FLAG_PRES_GRADIENT )
                {
                   const bool CheckMinPres_Yes = true;
@@ -225,7 +225,9 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
                   for (int j=0; j<PS1; j++)
                   for (int i=0; i<PS1; i++)
                   {
+//                   if applicable, compute pressure from the dual-energy variable to reduce the round-off errors
 #                    ifdef DUAL_ENERGY
+
 #                    if   ( DUAL_ENERGY == DE_ENPY )
                      Pres[k][j][i] = CPU_DensEntropy2Pres( Fluid[DENS][k][j][i], Fluid[ENPY][k][j][i],
                                                            Gamma_m1, CheckMinPres_Yes, MIN_PRES );
@@ -233,17 +235,21 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
 #                    error : DE_EINT is NOT supported yet !!
 #                    endif
 
-#                    else
+#                    else // #ifdef DUAL_ENERGY
+
+#                    if   ( MODEL == HYDRO )
+                     const real EngyB = NULL_REAL;
+#                    elif ( MODEL == MHD )
+                     const real EngyB = MHD_GetCellCenteredBEnergy( lv, PID, i, j, k );
+#                    endif
                      Pres[k][j][i] = CPU_GetPressure( Fluid[DENS][k][j][i], Fluid[MOMX][k][j][i], Fluid[MOMY][k][j][i],
                                                       Fluid[MOMZ][k][j][i], Fluid[ENGY][k][j][i],
-                                                      Gamma_m1, CheckMinPres_Yes, MIN_PRES );
+                                                      Gamma_m1, CheckMinPres_Yes, MIN_PRES, EngyB );
+
 #                    endif // #ifdef DUAL_ENERGY ... else ...
                   } // k,j,i
                } // if ( OPT__FLAG_PRES_GRADIENT )
-
-#              elif ( MODEL == MHD )
-#              warning : WAIT MHD !!!
-#              endif // MODEL
+#              endif // #if ( MODEL == HYDRO  ||  MODEL == MHD )
 
 
 //             evaluate the averages and slopes along x/y/z for Lohner

@@ -271,7 +271,7 @@ void CPU_AdvanceX( real u[][ FLU_NXT*FLU_NXT*FLU_NXT ], const real dt, const rea
       {
          u_half[0][i] = FMAX( u_half[0][i], MinDens );
          u_half[4][i] = CPU_CheckMinPresInEngy( u_half[0][i], u_half[1][i], u_half[2][i], u_half[3][i], u_half[4][i],
-                                                Gamma_m1, _Gamma_m1, MinPres );
+                                                Gamma_m1, _Gamma_m1, MinPres, NULL_REAL );
       }
 
 

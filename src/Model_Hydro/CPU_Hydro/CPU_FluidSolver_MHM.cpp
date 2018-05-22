@@ -388,9 +388,15 @@ void CPU_RiemannPredict( const real Flu_Array_In[][ FLU_NXT*FLU_NXT*FLU_NXT ], c
          Half_Var[ID1][v] = Flu_Array_In[v][ID2] - dt_dh2*( dF[0][v] + dF[1][v] + dF[2][v] );
 
 //    ensure positive density and pressure
+#     if   ( MODEL == HYDRO )
+      const real EngyB = NULL_REAL;
+#     elif ( MODEL == MHD )
+#     warning : WAIT MHD !!!
+      const real EngyB = NULL_REAL;
+#     endif
       Half_Var[ID1][0] = FMAX( Half_Var[ID1][0], MinDens );
       Half_Var[ID1][4] = CPU_CheckMinPresInEngy( Half_Var[ID1][0], Half_Var[ID1][1], Half_Var[ID1][2],
-                                                 Half_Var[ID1][3], Half_Var[ID1][4], Gamma_m1, _Gamma_m1, MinPres );
+                                                 Half_Var[ID1][3], Half_Var[ID1][4], Gamma_m1, _Gamma_m1, MinPres, EngyB );
 #     if ( NCOMP_PASSIVE > 0 )
       for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)
       Half_Var[ID1][v] = FMAX( Half_Var[ID1][v], TINY_NUMBER );
@@ -470,7 +476,7 @@ void CPU_HancockPredict( real FC_Var[][6][NCOMP_TOTAL], const real dt, const rea
       {
          FC_Var[ID1][f][0] = FMAX( FC_Var[ID1][f][0], MinDens );
          FC_Var[ID1][f][4] = CPU_CheckMinPresInEngy( FC_Var[ID1][f][0], FC_Var[ID1][f][1], FC_Var[ID1][f][2],
-                                                     FC_Var[ID1][f][3], FC_Var[ID1][f][4], Gamma_m1, _Gamma_m1, MinPres );
+                                                     FC_Var[ID1][f][3], FC_Var[ID1][f][4], Gamma_m1, _Gamma_m1, MinPres, NULL_REAL );
 #        if ( NCOMP_PASSIVE > 0 )
          for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)
          FC_Var[ID1][f][v] = FMAX( FC_Var[ID1][f][v], TINY_NUMBER );
