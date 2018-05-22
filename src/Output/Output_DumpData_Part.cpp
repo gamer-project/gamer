@@ -10,6 +10,9 @@ static void WriteFile( FILE *File, const int lv, const int PID, const int i, con
 // Function    :  Output_DumpData_Part
 // Description :  Output part of data in the ASCII form
 //
+// Note        :  1. Used for the runtime option "OPT__OUTPUT_PART"
+//                2. For MHD, this function outputs the **cell-centered** magnetic field and energy
+//
 // Parameter   :  Part     : OUTPUT_XY   : xy plane
 //                           OUTPUT_YZ   : yz plane
 //                           OUTPUT_XZ   : xz plane
@@ -109,12 +112,11 @@ void Output_DumpData_Part( const OptOutputPart_t Part, const bool BaseOnly, cons
          {
             fprintf( File, "#%10s %10s %10s %20s %20s %20s", "i", "j", "k", "x", "y", "z" );
 
-#           if   ( MODEL == HYDRO )
-            fprintf( File, "%14s%14s%14s%14s%14s%14s", "Density", "Momentum x", "Momentum y", "Momentum z", "Energy",
-                                                       "Pressure" );
-
-#           elif ( MODEL == MHD )
-#           warning : WAIT MHD !!!
+#           if   ( MODEL == HYDRO  ||  MODEL == MHD )
+            fprintf( File, "%14s%14s%14s%14s%14s%14s", "Density", "Momentum x", "Momentum y", "Momentum z", "Energy", "Pressure" );
+#           if ( MODEL == MHD )
+            fprintf( File, "%14s%14s%14s%14s", "B_X", "B_Y", "B_Z", "0.5*B^2" );
+#           endif
 
 #           elif ( MODEL == ELBDM )
             fprintf( File, "%14s%14s%14s", "Density", "Real", "Imag" );
@@ -226,29 +228,39 @@ void WriteFile( FILE *File, const int lv, const int PID, const int i, const int 
 
    for (int v=0; v<NCOMP_FLUID; v++)   u[v] = amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[v][k][j][i];
 
-// output cell indices and coordinates
+// cell indices and coordinates
    fprintf( File, " %10d %10d %10d %20.14e %20.14e %20.14e",
             ii, jj, kk, (ii+scale_2)*dh_min, (jj+scale_2)*dh_min, (kk+scale_2)*dh_min );
 
-// output all active variables in the fluid array
+// all active variables in the fluid array
    for (int v=0; v<NCOMP_FLUID; v++)   fprintf( File, " %13.6e", u[v] );
 
-// output pressure in HYDRO
-#  if   ( MODEL == HYDRO )
+// gas pressure
+#  if ( MODEL == HYDRO  ||  MODEL == MHD )
    const bool CheckMinPres_Yes = true;
-   fprintf( File, " %13.6e", CPU_GetPressure(u[DENS], u[MOMX], u[MOMY], u[MOMZ], u[ENGY], GAMMA-1.0, CheckMinPres_Yes, MIN_PRES) );
+#  if   ( MODEL == HYDRO )
+   const real EngyB            = NULL_REAL;
 #  elif ( MODEL == MHD )
-#  warning : WAIT MHD !!!
-#  endif // MODEL
+   const real EngyB            = MHD_GetCellCenteredBEnergy( lv, PID, i, j, k );
+#  endif
+   fprintf( File, " %13.6e", CPU_GetPressure(u[DENS],u[MOMX],u[MOMY],u[MOMZ],u[ENGY],GAMMA-1.0,CheckMinPres_Yes,MIN_PRES,EngyB) );
+#  endif // HYDRO/MHD
 
-// output all passive scalars
+// magnetic field
+#  if ( MODEL == MHD )
+   real B[3];
+   MHD_GetCellCenteredBField( B, lv, PID, i, j, k );
+   fprintf( File, " %13.6e %13.6e %13.6e %13.6e", B[MAGX], B[MAGY], B[MAGZ], EngyB );
+#  endif
+
+// passive scalars
    for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)  fprintf( File, " %13.6e", amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[v][k][j][i] );
 
-// output potential
+// potential
 #  ifdef GRAVITY
    if ( OPT__OUTPUT_POT )
    fprintf( File, " %13.6e", amr->patch[ amr->PotSg[lv] ][lv][PID]->pot[k][j][i] );
-#  endif // gravity
+#  endif
 
    fprintf( File, "\n" );
 
