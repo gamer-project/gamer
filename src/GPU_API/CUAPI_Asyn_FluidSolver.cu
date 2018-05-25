@@ -76,9 +76,6 @@ __global__ void CUFLU_FluidSolver_CTU( const real g_Fluid_In[]   [NCOMP_TOTAL][ 
                                        const bool JeansMinPres, const real JeansMinPres_Coeff );
 #endif // FLU_SCHEME
 
-#elif ( MODEL == MHD )
-#warning : WAIT MHD !!!
-
 #elif ( MODEL == ELBDM )
 __global__ void CUFLU_ELBDMSolver( real g_Fluid_In [][FLU_NIN ][ FLU_NXT*FLU_NXT*FLU_NXT ],
                                    real g_Fluid_Out[][FLU_NOUT][ PS2*PS2*PS2 ],
@@ -96,14 +93,12 @@ extern real (*d_Flu_Array_F_In )[FLU_NIN ][ FLU_NXT*FLU_NXT*FLU_NXT ];
 extern real (*d_Flu_Array_F_Out)[FLU_NOUT][ PS2*PS2*PS2 ];
 extern real (*d_Flux_Array)[9][NFLUX_TOTAL][ PS2*PS2 ];
 extern double (*d_Corner_Array_F)[3];
-#if ( MODEL == HYDRO  ||  MODEL == MHD )
+#if ( MODEL == HYDRO )
 #ifdef DUAL_ENERGY
 extern char (*d_DE_Array_F_Out)[ PS2*PS2*PS2 ];
 #else
 static char (*d_DE_Array_F_Out)[ PS2*PS2*PS2 ] = NULL;
 #endif
-#endif
-#if ( MODEL == HYDRO )
 #if ( FLU_SCHEME == MHM  ||  FLU_SCHEME == MHM_RP  ||  FLU_SCHEME == CTU )
 extern real (*d_PriVar)     [NCOMP_TOTAL][ FLU_NXT*FLU_NXT*FLU_NXT ];
 extern real (*d_Slope_PPM_x)[NCOMP_TOTAL][ N_SLOPE_PPM*N_SLOPE_PPM*N_SLOPE_PPM ];
@@ -118,18 +113,13 @@ extern real (*d_FC_Var_zR)  [NCOMP_TOTAL][ N_FC_VAR*N_FC_VAR*N_FC_VAR ];
 extern real (*d_FC_Flux_x)  [NCOMP_TOTAL][ N_FC_FLUX*N_FC_FLUX*N_FC_FLUX ];
 extern real (*d_FC_Flux_y)  [NCOMP_TOTAL][ N_FC_FLUX*N_FC_FLUX*N_FC_FLUX ];
 extern real (*d_FC_Flux_z)  [NCOMP_TOTAL][ N_FC_FLUX*N_FC_FLUX*N_FC_FLUX ];
-#endif // FLU_SCHEME
-#elif ( MODEL == MHD )
-#warning : WAIT MHD !!!
-#endif // MODEL
-
+#endif
 #ifdef UNSPLIT_GRAVITY
 extern real (*d_Pot_Array_USG_F)[ USG_NXT_F*USG_NXT_F*USG_NXT_F ];
 #else
-#if ( MODEL == HYDRO  ||  MODEL == MHD )
 static real (*d_Pot_Array_USG_F)[ USG_NXT_F*USG_NXT_F*USG_NXT_F ] = NULL;
 #endif
-#endif // #ifdef UNSPLIT_GRAVITY ... else ...
+#endif // #if ( MODEL == HYDRO )
 
 extern cudaStream_t *Stream;
 
@@ -237,9 +227,6 @@ void CUAPI_Asyn_FluidSolver( real h_Flu_Array_In [][FLU_NIN    ][ FLU_NXT*FLU_NX
    }
 #  endif
 
-#  elif ( MODEL == MHD )
-#  warning : WAIT MHD !!!
-
 #  elif ( MODEL == ELBDM )
 
 #  else
@@ -259,9 +246,6 @@ void CUAPI_Asyn_FluidSolver( real h_Flu_Array_In [][FLU_NIN    ][ FLU_NXT*FLU_NX
 
 // model-dependent operations
 #  if   ( MODEL == HYDRO )
-
-#  elif ( MODEL == MHD )
-#  warning : WAIT MHD !!!
 
 #  elif ( MODEL == ELBDM )
 // evaluate the optimized Taylor expansion coefficient
@@ -423,9 +407,6 @@ void CUAPI_Asyn_FluidSolver( real h_Flu_Array_In [][FLU_NIN    ][ FLU_NXT*FLU_NX
 
 #        endif // FLU_SCHEME
 
-#     elif ( MODEL == MHD )
-#     warning :: WAIT MHD !!!
-
 #     elif ( MODEL == ELBDM )
 
          CUFLU_ELBDMSolver <<< NPatch_per_Stream[s], BlockDim_FluidSolver, 0, Stream[s] >>>
@@ -458,15 +439,10 @@ void CUAPI_Asyn_FluidSolver( real h_Flu_Array_In [][FLU_NIN    ][ FLU_NXT*FLU_NX
       CUDA_CHECK_ERROR(  cudaMemcpyAsync( h_Flux_Array    + UsedPatch[s], d_Flux_Array      + UsedPatch[s],
                          Flux_MemSize[s],    cudaMemcpyDeviceToHost, Stream[s] )  );
 
-#     if   ( MODEL == HYDRO )
 #     ifdef DUAL_ENERGY
       CUDA_CHECK_ERROR(  cudaMemcpyAsync( h_DE_Array_Out  + UsedPatch[s], d_DE_Array_F_Out  + UsedPatch[s],
                          DE_MemSize_Out[s],  cudaMemcpyDeviceToHost, Stream[s] )  );
 #     endif
-
-#     elif ( MODEL == MHD )
-#     warning : WAIT MHD !!!
-#     endif // MODEL
    } // for (int s=0; s<GPU_NStream; s++)
 
 

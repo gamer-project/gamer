@@ -1,6 +1,6 @@
 #include "GAMER.h"
 
-#if ( MODEL == HYDRO  ||  MODEL == MHD )
+#if ( MODEL == HYDRO )
 
 
 // 1: check negative values
@@ -19,7 +19,7 @@
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Hydro/MHD_Aux_Check_Negative
+// Function    :  HydroAux_Check_Negative
 // Description :  Check if there is any cell with negative density or pressure
 //
 // Parameter   :  lv      : Target refinement level
@@ -28,11 +28,7 @@
 //                          3 : Both
 //                comment : You can put the location where this function is invoked in this string
 //-------------------------------------------------------------------------------------------------------
-#if   ( MODEL == HYDRO )
 void Hydro_Aux_Check_Negative( const int lv, const int Mode, const char *comment )
-#elif ( MODEL == MHD )
-void   MHD_Aux_Check_Negative( const int lv, const int Mode, const char *comment )
-#endif
 {
 
 // check
@@ -70,10 +66,11 @@ void   MHD_Aux_Check_Negative( const int lv, const int Mode, const char *comment
             Pres = CPU_DensEntropy2Pres( Fluid[DENS], Fluid[ENPY], Gamma_m1, CheckMinPres_No, NULL_REAL );
 
 #           else
-#           if   ( MODEL == HYDRO )
-            const real EngyB = NULL_REAL;
-#           elif ( MODEL == MHD )
+
+#           ifdef MHD
 #           warning : WAIT MHD !!!
+            const real EngyB = NULL_REAL;
+#           else
             const real EngyB = NULL_REAL;
 #           endif
             Pres = CPU_GetPressure( Fluid[DENS], Fluid[MOMX], Fluid[MOMY], Fluid[MOMZ], Fluid[ENGY],
@@ -166,8 +163,8 @@ void   MHD_Aux_Check_Negative( const int lv, const int Mode, const char *comment
                       comment, __FUNCTION__, lv, Time[lv], Step );
    }
 
-} // FUNCTION : Hydro/MHD_Aux_Check_Negative
+} // FUNCTION : Hydro_Aux_Check_Negative
 
 
 
-#endif // #if ( MODEL == HYDRO  ||  MODEL == MHD )
+#endif // #if ( MODEL == HYDRO )

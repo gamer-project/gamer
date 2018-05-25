@@ -95,9 +95,6 @@ void Output_PreparedPatch_Fluid( const int TLv, const int TPID,
 #     endif
       fprintf( File, "%16s", "Pressure" );
 
-#     elif ( MODEL == MHD )
-#     warning : WAIT MHD !!!
-
 #     elif ( MODEL == ELBDM )
       fprintf( File, "(%3s,%3s,%3s )%16s%16s",                 "i", "j", "k", "Real", "Imag" );
 
@@ -129,12 +126,15 @@ void Output_PreparedPatch_Fluid( const int TLv, const int TPID,
          for (int v=0; v<FLU_NIN; v++)    fprintf( File, "  %14.7e", u[v] );
 
 //       output pressure in HYDRO
-#        if   ( MODEL == HYDRO )
-         fprintf( File, "  %14.7e", ( u[ENGY]-0.5*(u[MOMX]*u[MOMX]+u[MOMY]*u[MOMY]+u[MOMZ]*u[MOMZ])/u[DENS] )*(GAMMA-1.0) );
-
-#        elif ( MODEL == MHD )
+#        if ( MODEL == HYDRO )
+#        ifdef MHD
 #        warning : WAIT MHD !!!
-#        endif // MODEL
+         const real EngyB = NULL_REAL;
+#        else
+         const real EngyB = NULL_REAL;
+#        endif
+         fprintf( File, "  %14.7e", CPU_GetPressure(u[DENS],u[MOMX],u[MOMY],u[MOMZ],u[ENGY],GAMMA-1.0,false,NULL_REAL,EngyB) );
+#        endif
 
          fprintf( File, "\n" );
       }}}

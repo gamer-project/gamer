@@ -72,8 +72,9 @@ void Init_ResetParameter()
 #     error : unsupported CPU hydro scheme
 #     endif
 
-#     elif  ( MODEL == MHD )
+#     ifdef MHD
 #     warning : WAIT MHD !!!
+#     endif
 
 #     elif  ( MODEL == ELBDM )
 #     ifdef GRAVITY
@@ -107,13 +108,8 @@ void Init_ResetParameter()
    {
 #     if   ( MODEL == HYDRO )
       DT__GRAVITY = 0.50;
-
-#     elif  ( MODEL == MHD )
-#     warning : WAIT MHD !!!
-
 #     elif  ( MODEL == ELBDM )
       DT__GRAVITY = 0.125;
-
 #     else
 #     error : ERROR : unsupported MODEL !!
 #     endif // MODEL
@@ -216,13 +212,8 @@ void Init_ResetParameter()
 // whether of not to allocate fluxes at the coarse-fine boundaries
 #  if   ( MODEL == HYDRO )
    if ( OPT__FIXUP_FLUX )  amr->WithFlux = true;
-
-#  elif ( MODEL == MHD )
-#  warning : WAIT MHD !!!
-
 #  elif ( MODEL == ELBDM )
    if ( OPT__FIXUP_FLUX )  amr->WithFlux = true;
-
 #  else
 #  error : ERROR : unsupported MODEL !!
 #  endif // MODEL
@@ -267,9 +258,6 @@ void Init_ResetParameter()
 
       PRINT_WARNING( OPT__REF_FLU_INT_SCHEME, FORMAT_INT, "" );
    }
-
-#  elif ( MODEL == MHD )
-#  warning : WAIT MHD !!!
 
 #  elif ( MODEL == ELBDM )
    if ( OPT__FLU_INT_SCHEME == INT_DEFAULT )
@@ -383,7 +371,7 @@ void Init_ResetParameter()
 
 
 // 1st-order flux correction
-#  if ( MODEL == HYDRO  ||  MODEL == MHD )
+#  if ( MODEL == HYDRO )
    if ( OPT__1ST_FLUX_CORR == FIRST_FLUX_CORR_NONE  &&  OPT__1ST_FLUX_CORR_SCHEME != RSOLVER_1ST_NONE )
    {
       OPT__1ST_FLUX_CORR_SCHEME = RSOLVER_1ST_NONE;
@@ -518,20 +506,20 @@ void Init_ResetParameter()
 #  endif
 
 
-// flux operations are useful in HYDRO/MHD/ELBDM only
-#  if ( MODEL != HYDRO  &&  MODEL != MHD  &&  MODEL != ELBDM )
+// flux operations are useful in HYDRO/ELBDM only
+#  if ( MODEL != HYDRO  &&  MODEL != ELBDM )
    if ( OPT__FIXUP_FLUX )
    {
       OPT__FIXUP_FLUX = false;
 
-      PRINT_WARNING( OPT__FIXUP_FLUX, FORMAT_INT, "since it's only supported in HYDRO/MHD/ELBDM" );
+      PRINT_WARNING( OPT__FIXUP_FLUX, FORMAT_INT, "since it's only supported in HYDRO/ELBDM" );
    }
 
    if ( OPT__CK_FLUX_ALLOCATE )
    {
       OPT__CK_FLUX_ALLOCATE = false;
 
-      PRINT_WARNING( OPT__CK_FLUX_ALLOCATE, FORMAT_INT, "since it's only supported in HYDRO/MHD/ELBDM" );
+      PRINT_WARNING( OPT__CK_FLUX_ALLOCATE, FORMAT_INT, "since it's only supported in HYDRO/ELBDM" );
    }
 #  endif
 
@@ -561,19 +549,19 @@ void Init_ResetParameter()
 #  endif // #ifndef DENS
 
 
-// conservation check is supported only in HYDRO, MHD, and ELBDM
-#  if ( MODEL != HYDRO  &&  MODEL != MHD  &&  MODEL != ELBDM )
+// conservation check is supported only in HYDRO/ELBDM
+#  if ( MODEL != HYDRO  &&  MODEL != ELBDM )
    if ( OPT__CK_CONSERVATION )
    {
       OPT__CK_CONSERVATION = false;
 
-      PRINT_WARNING( OPT__CK_CONSERVATION, FORMAT_INT, "since it's only supported in HYDRO/MHD/ELBDM" );
+      PRINT_WARNING( OPT__CK_CONSERVATION, FORMAT_INT, "since it's only supported in HYDRO/ELBDM" );
    }
 #  endif
 
 
 // disable OPT__LR_LIMITER and OPT__WAF_LIMITER if they are useless
-#  if ( MODEL == HYDRO  ||  MODEL == MHD )
+#  if ( MODEL == HYDRO )
 #  if ( FLU_SCHEME != MHM  &&  FLU_SCHEME != MHM_RP  &&  FLU_SCHEME != CTU )
    if ( OPT__LR_LIMITER != LR_LIMITER_NONE )
    {
@@ -591,11 +579,11 @@ void Init_ResetParameter()
       PRINT_WARNING( OPT__WAF_LIMITER, FORMAT_INT, "since it's only useful for the WAF scheme" );
    }
 #  endif
-#  endif // #if ( MODEL == HYDRO  ||  MODEL == MHD )
+#  endif // #if ( MODEL == HYDRO )
 
 
 // disable the refinement flag of Jeans length if GRAVITY is disabled
-#  if (  (MODEL == HYDRO || MODEL == MHD )  &&  !defined GRAVITY  )
+#  if ( MODEL == HYDRO  &&  !defined GRAVITY )
    if ( OPT__FLAG_JEANS )
    {
       OPT__FLAG_JEANS = false;
@@ -753,7 +741,7 @@ void Init_ResetParameter()
 
 
 // JEANS_MIN_PRES must work with GRAVITY
-#  if ( MODEL == HYDRO  ||  MODEL == MHD )
+#  if ( MODEL == HYDRO )
 #  ifndef GRAVITY
    if ( JEANS_MIN_PRES )
    {

@@ -1202,7 +1202,7 @@ void Load_Parameter_After_1200( FILE *File, const int FormatVersion, int &NLv_Re
       CompareVar( "FLU_GHOST_SIZE",          flu_ghost_size,         FLU_GHOST_SIZE,            NonFatal );
       CompareVar( "FLU_BLOCK_SIZE_X",        flu_block_size_x,       FLU_BLOCK_SIZE_X,          NonFatal );
       CompareVar( "FLU_BLOCK_SIZE_Y",        flu_block_size_y,       FLU_BLOCK_SIZE_Y,          NonFatal );
-#     if ( MODEL == HYDRO  ||  MODEL == MHD )
+#     if ( MODEL == HYDRO )
       CompareVar( "MIN_PRES",                min_pres,         (real)MIN_PRES,                  NonFatal );
 #     endif
 
@@ -1307,12 +1307,6 @@ void Load_Parameter_After_1200( FILE *File, const int FormatVersion, int &NLv_Re
          Aux_Message( stderr, "WARNING : %s : RESTART file (%s) != runtime (%s) !!\n",
                       "WAF_DISSIPATE", "ON", "OFF" );
 #     endif
-
-
-//    check in MHD
-//    ----------------
-#     elif ( MODEL == MHD )
-#     warning : WAIT MHD !!!
 
 
 //    check in ELBDM
@@ -1421,9 +1415,6 @@ void Load_Parameter_After_1200( FILE *File, const int FormatVersion, int &NLv_Re
       CompareVar( "EP_COEFF",                ep_coeff,               (real)EP_COEFF,                  NonFatal );
       CompareVar( "OPT__LR_LIMITER",         opt__lr_limiter,         (int)OPT__LR_LIMITER,           NonFatal );
       CompareVar( "OPT__WAF_LIMITER",        opt__waf_limiter,        (int)OPT__WAF_LIMITER,          NonFatal );
-
-#     elif ( MODEL == MHD )
-#     warning : WAIT MHD !!!
 
 #     elif ( MODEL == ELBDM )
       CompareVar( "DT__PHASE",               dt__phase,                    DT__PHASE,                 NonFatal );

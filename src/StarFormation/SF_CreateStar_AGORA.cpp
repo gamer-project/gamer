@@ -1,6 +1,6 @@
 #include "GAMER.h"
 
-#if (  defined PARTICLE  &&  defined STAR_FORMATION  &&  ( MODEL==HYDRO || MODEL==MHD )  )
+#if ( defined PARTICLE  &&  defined STAR_FORMATION  &&  MODEL == HYDRO )
 
 
 #ifdef GRAVITY
@@ -334,4 +334,4 @@ void SF_CreateStar_AGORA( const int lv, const real TimeNew, const real dt, Rando
 
 
 
-#endif // #if (  defined PARTICLE  &&  defined STAR_FORMATION  &&  ( MODEL==HYDRO || MODEL==MHD )  )
+#endif // #if ( defined PARTICLE  &&  defined STAR_FORMATION  &&  MODEL == HYDRO )

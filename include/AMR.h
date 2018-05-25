@@ -90,7 +90,7 @@ struct AMR_t
    int    scale       [NLEVEL];
    int    FluSg       [NLEVEL];
    double FluSgTime   [NLEVEL][2];
-#  if ( MODEL == MHD )
+#  ifdef MHD
    int    MagSg       [NLEVEL];
    double MagSgTime   [NLEVEL][2];
 #  endif
@@ -107,7 +107,7 @@ struct AMR_t
    double BoxSize     [3];
    int    BoxScale    [3];
    bool   WithFlux;
-#  if ( MODEL == MHD )
+#  ifdef MHD
    bool   WithElectric;
 #  endif
    long   NUpdateLv   [NLEVEL];
@@ -128,7 +128,7 @@ struct AMR_t
          num  [lv] = 0;
          scale[lv] = 1<<(NLEVEL-1-lv);
          FluSg[lv] = 0;
-#        if ( MODEL == MHD )
+#        ifdef MHD
          MagSg[lv] = FluSg[lv];
 #        endif
 #        ifdef GRAVITY
@@ -139,7 +139,7 @@ struct AMR_t
 //       --> these will be reset by Init_SetDefaultParameter and Init_ByRestart_*
          FluSgTime[lv][   FluSg[lv] ] = -__FLT_MAX__;
          FluSgTime[lv][ 1-FluSg[lv] ] = -__FLT_MAX__;
-#        if ( MODEL == MHD )
+#        ifdef MHD
          MagSgTime[lv][   MagSg[lv] ] = -__FLT_MAX__;
          MagSgTime[lv][ 1-MagSg[lv] ] = -__FLT_MAX__;
 #        endif
@@ -171,7 +171,7 @@ struct AMR_t
 #     endif
 
       WithFlux     = false;
-#     if ( MODEL == MHD )
+#     ifdef MHD
       WithElectric = false;
 #     endif
 

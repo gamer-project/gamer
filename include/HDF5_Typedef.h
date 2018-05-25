@@ -125,9 +125,9 @@ struct Makefile_t
    int RSolver;
 #  endif
    int DualEnergy;
-
-#  elif ( MODEL == MHD )
+#  ifdef MHD
 #  warning : WAIT MHD !!!
+#  endif
 
 #  elif ( MODEL == ELBDM )
    int ConserveMass;
@@ -231,24 +231,18 @@ struct SymConst_t
    int    HLL_NoRefState;
    int    HLL_IncludeAllWaves;
    int    WAF_Dissipate;
-
 #  ifdef N_FC_VAR
    int    N_FC_Var;
 #  endif
-
 #  ifdef N_SLOPE_PPM
    int    N_Slope_PPM;
 #  endif
-
 #  ifdef MAX_ERROR
    double MaxError;
 #  endif
-
-#  elif ( MODEL == MHD )
-   int    Flu_BlockSize_x;
-   int    Flu_BlockSize_y;
+#  ifdef MHD
 #  warning : WAIT MHD !!!
-
+#  endif
 
 #  elif  ( MODEL == ELBDM )
    int    Flu_BlockSize_x;
@@ -424,7 +418,7 @@ struct InputPara_t
    int    ELBDM_Taylor3_Auto;
 #  endif
 
-// fluid solvers in both HYDRO/MHD/ELBDM
+// fluid solvers in different models
    int    Flu_GPU_NPGroup;
    int    GPU_NStream;
    int    Opt__FixUp_Flux;
@@ -436,10 +430,10 @@ struct InputPara_t
    char  *PassiveFieldName_Grid[NCOMP_PASSIVE];
    int    Opt__OverlapMPI;
    int    Opt__ResetFluid;
-#  if ( MODEL == HYDRO  ||  MODEL == MHD  ||  MODEL == ELBDM )
+#  if ( MODEL == HYDRO  ||  MODEL == ELBDM )
    double MinDens;
 #  endif
-#  if ( MODEL == HYDRO  ||  MODEL == MHD )
+#  if ( MODEL == HYDRO )
    double MinPres;
    int    JeansMinPres;
    int    JeansMinPres_Level;

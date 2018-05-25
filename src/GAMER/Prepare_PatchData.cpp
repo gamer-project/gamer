@@ -72,7 +72,6 @@ bool ParDensArray_Initialized = false;
 //                                 --> Supported variables in different models:
 //                                     HYDRO : _DENS, _MOMX, _MOMY, _MOMZ, _ENGY, _VELX, _VELY, _VELZ, _PRES, _TEMP,
 //                                             [, _POTE]
-//                                     MHD   :
 //                                     ELBDM : _DENS, _REAL, _IMAG [, _POTE]
 //                                 --> _FLUID, _PASSIVE, _TOTAL, and _DERIVED apply to all models
 //                IntScheme      : Interpolation scheme
@@ -142,7 +141,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
 
    if ( MinDens >= (real)0.0 )
    {
-#     if ( MODEL == HYDRO  ||  MODEL == MHD  ||  MODEL == ELBDM )
+#     if ( MODEL == HYDRO  ||  MODEL == ELBDM )
 #     ifdef PARTICLE
       if ( !(TVar & _DENS)  &&  !(TVar & _TOTAL_DENS) )
          Aux_Error( ERROR_INFO, "MinDens (%13.7e) >= 0.0, but neither _DENS nor _TOTAL_DENS is found !!\n", MinDens );
@@ -151,7 +150,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
          Aux_Error( ERROR_INFO, "MinDens (%13.7e) >= 0.0, but _DENS is not found !!\n", MinDens );
 #     endif
 #     else
-         Aux_Error( ERROR_INFO, "MinDens (%13.7e) >= 0.0 can only be applied to HYDRO/MHD/ELBDM !!\n", MinDens );
+         Aux_Error( ERROR_INFO, "MinDens (%13.7e) >= 0.0 can only be applied to HYDRO/ELBDM !!\n", MinDens );
 #     endif
 
 #     if ( MODEL == ELBDM )
@@ -162,14 +161,14 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
 
    if ( MinPres >= (real)0.0 )
    {
-#     if ( MODEL == HYDRO  ||  MODEL == MHD )
+#     if ( MODEL == HYDRO )
 //    note that when PARTICLE is on, we should NOT allow MinPres check when TVar & _TOTAL_DENS == true because
 //    we won't have gas density prepared to calculate pressure (we only have **total** density)
 //    --> but when PARTICLE is off, we have _TOTAL_DENS == _DENS (see Macro.h), and thus MinPres check is allowed
       if ( !(TVar & _PRES)  &&  !(TVar & _TEMP)  &&  (TVar & _FLUID) != _FLUID )
          Aux_Error( ERROR_INFO, "MinPres (%13.7e) >= 0.0, but cannot find _PRES, _TEMP, or _FLUID !!\n", MinPres );
 #     else
-         Aux_Error( ERROR_INFO, "MinPres (%13.7e) >= 0.0 can only be applied to HYDRO/MHD !!\n", MinPres );
+         Aux_Error( ERROR_INFO, "MinPres (%13.7e) >= 0.0 can only be applied to HYDRO !!\n", MinPres );
 #     endif
    }
 
@@ -191,7 +190,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
            FluBC[f] != BC_FLU_REFLECTING  &&  FluBC[f] != BC_FLU_USER        )
          Aux_Error( ERROR_INFO, "unsupported parameter FluBC[%d] = %d !!\n", f, FluBC[f] );
 
-#     if ( MODEL != HYDRO  &&  MODEL != MHD )
+#     if ( MODEL != HYDRO )
       if ( FluBC[f] == BC_FLU_REFLECTING )
          Aux_Error( ERROR_INFO, "reflecting boundary condition (OPT__BC_FLU=3) only works with HYDRO !!\n" );
 #     endif
@@ -243,7 +242,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
    const int    PGSize3D         = CUBE( PGSize1D );
    const int    GhostSize_Padded = GhostSize + (GhostSize&1);
 
-#  if   ( MODEL == HYDRO  ||  MODEL == MHD )
+#  if   ( MODEL == HYDRO )
    const bool CheckMinPres_No  = false;   // we check minimum pressure in the end of this function (step d)
    const real Gamma_m1         = GAMMA - (real)1.0;
    const real _Gamma_m1        = (real)1.0 / Gamma_m1;
@@ -252,9 +251,8 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
    const bool PrepVz           = ( TVar & _VELZ ) ? true : false;
    const bool PrepPres         = ( TVar & _PRES ) ? true : false;
    const bool PrepTemp         = ( TVar & _TEMP ) ? true : false;
-
-#  if ( MODEL == MHD )
-#     warning : WAIT MHD !!
+#  ifdef MHD
+#  warning : WAIT MHD !!
 #  endif
 
 #  elif ( MODEL == ELBDM )
@@ -300,7 +298,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
 
    NVar_Der = 0;
 
-#  if   ( MODEL == HYDRO  ||  MODEL == MHD )
+#  if   ( MODEL == HYDRO )
    const int NVar_Der_Max = 5;
    int TDerVarList[NVar_Der_Max];
 
@@ -309,7 +307,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
    if ( PrepVz   )   TDerVarList[ NVar_Der ++ ] = _VELZ;
    if ( PrepPres )   TDerVarList[ NVar_Der ++ ] = _PRES;
    if ( PrepTemp )   TDerVarList[ NVar_Der ++ ] = _TEMP;
-#  if ( MODEL == MHD )
+#  ifdef MHD
 #  warning : WAIT MHD !!
 #  endif
 
@@ -610,7 +608,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
 //    thread-private variables
       int    J, K, I2, J2, K2, Idx1, Idx2, PID0, TFluVarIdx, BC_Sibling, BC_Idx_Start[3], BC_Idx_End[3];
       double xyz0[3];            // corner coordinates for the user-specified B.C.
-#     if ( MODEL == HYDRO  ||  MODEL == MHD )
+#     if ( MODEL == HYDRO )
       real Fluid[NCOMP_FLUID];   // for calculating pressure and temperature only --> don't need NCOMP_TOTAL
 #     endif
 
@@ -774,7 +772,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
 
 
 //          (a2) derived variables
-#           if   ( MODEL == HYDRO  ||  MODEL == MHD )
+#           if   ( MODEL == HYDRO )
             if ( PrepVx )
             {
                for (int k=0; k<PATCH_SIZE; k++)    {  K    = k + Disp_k;
@@ -844,10 +842,10 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
 
                   for (int v=0; v<NCOMP_FLUID; v++)   Fluid[v] = amr->patch[FluSg][lv][PID]->fluid[v][k][j][i];
 
-#                 if   ( MODEL == HYDRO )
-                  const real EngyB = NULL_REAL;
-#                 elif ( MODEL == MHD )
+#                 ifdef MHD
 #                 warning : WAIT MHD !!!
+                  const real EngyB = NULL_REAL;
+#                 else
                   const real EngyB = NULL_REAL;
 #                 endif
                   Array_Ptr[Idx1] = CPU_GetPressure( Fluid[DENS], Fluid[MOMX], Fluid[MOMY], Fluid[MOMZ], Fluid[ENGY],
@@ -857,10 +855,10 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
                   {
                      for (int v=0; v<NCOMP_FLUID; v++)   Fluid[v] = amr->patch[FluSg_IntT][lv][PID]->fluid[v][k][j][i];
 
-#                    if   ( MODEL == HYDRO )
-                     const real EngyB = NULL_REAL;
-#                    elif ( MODEL == MHD )
+#                    ifdef MHD
 #                    warning : WAIT MHD !!!
+                     const real EngyB = NULL_REAL;
+#                    else
                      const real EngyB = NULL_REAL;
 #                    endif
                      Array_Ptr[Idx1] =   FluWeighting     *Array_Ptr[Idx1]
@@ -884,10 +882,10 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
 
                   for (int v=0; v<NCOMP_FLUID; v++)   Fluid[v] = amr->patch[FluSg][lv][PID]->fluid[v][k][j][i];
 
-#                 if   ( MODEL == HYDRO )
-                  const real EngyB = NULL_REAL;
-#                 elif ( MODEL == MHD )
+#                 ifdef MHD
 #                 warning : WAIT MHD !!!
+                  const real EngyB = NULL_REAL;
+#                 else
                   const real EngyB = NULL_REAL;
 #                 endif
                   Array_Ptr[Idx1] = CPU_GetTemperature( Fluid[DENS], Fluid[MOMX], Fluid[MOMY], Fluid[MOMZ], Fluid[ENGY],
@@ -897,10 +895,10 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
                   {
                      for (int v=0; v<NCOMP_FLUID; v++)   Fluid[v] = amr->patch[FluSg_IntT][lv][PID]->fluid[v][k][j][i];
 
-#                    if   ( MODEL == HYDRO )
-                     const real EngyB = NULL_REAL;
-#                    elif ( MODEL == MHD )
+#                    ifdef MHD
 #                    warning : WAIT MHD !!!
+                     const real EngyB = NULL_REAL;
+#                    else
                      const real EngyB = NULL_REAL;
 #                    endif
                      Array_Ptr[Idx1] =   FluWeighting     *Array_Ptr[Idx1]
@@ -914,9 +912,6 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
 
                Array_Ptr += PGSize3D;
             }
-
-#           elif ( MODEL == MHD   )
-#           warning : WAIT MHD !!
 
 #           elif ( MODEL == ELBDM )
 //          no derived variables yet
@@ -1003,7 +998,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
 
 
 //                (b1-2) derived variables
-#                 if   ( MODEL == HYDRO  ||  MODEL == MHD )
+#                 if   ( MODEL == HYDRO )
                   if ( PrepVx )
                   {
                      for (int k=0; k<Loop_k; k++)  {  K = k + Disp_k;   K2 = k + Disp_k2;
@@ -1073,10 +1068,10 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
 
                         for (int v=0; v<NCOMP_FLUID; v++)   Fluid[v] = amr->patch[FluSg][lv][SibPID]->fluid[v][K2][J2][I2];
 
-#                       if   ( MODEL == HYDRO )
-                        const real EngyB = NULL_REAL;
-#                       elif ( MODEL == MHD )
+#                       ifdef MHD
 #                       warning : WAIT MHD !!!
+                        const real EngyB = NULL_REAL;
+#                       else
                         const real EngyB = NULL_REAL;
 #                       endif
                         Array_Ptr[Idx1] = CPU_GetPressure( Fluid[DENS], Fluid[MOMX], Fluid[MOMY], Fluid[MOMZ], Fluid[ENGY],
@@ -1086,10 +1081,10 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
                         {
                            for (int v=0; v<NCOMP_FLUID; v++)   Fluid[v] = amr->patch[FluSg_IntT][lv][SibPID]->fluid[v][K2][J2][I2];
 
-#                          if   ( MODEL == HYDRO )
-                           const real EngyB = NULL_REAL;
-#                          elif ( MODEL == MHD )
+#                          ifdef MHD
 #                          warning : WAIT MHD !!!
+                           const real EngyB = NULL_REAL;
+#                          else
                            const real EngyB = NULL_REAL;
 #                          endif
                            Array_Ptr[Idx1] =   FluWeighting     *Array_Ptr[Idx1]
@@ -1113,10 +1108,10 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
 
                         for (int v=0; v<NCOMP_FLUID; v++)   Fluid[v] = amr->patch[FluSg][lv][SibPID]->fluid[v][K2][J2][I2];
 
-#                       if   ( MODEL == HYDRO )
-                        const real EngyB = NULL_REAL;
-#                       elif ( MODEL == MHD )
+#                       ifdef MHD
 #                       warning : WAIT MHD !!!
+                        const real EngyB = NULL_REAL;
+#                       else
                         const real EngyB = NULL_REAL;
 #                       endif
                         Array_Ptr[Idx1] = CPU_GetTemperature( Fluid[DENS], Fluid[MOMX], Fluid[MOMY], Fluid[MOMZ], Fluid[ENGY],
@@ -1126,10 +1121,10 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
                         {
                            for (int v=0; v<NCOMP_FLUID; v++)   Fluid[v] = amr->patch[FluSg_IntT][lv][SibPID]->fluid[v][K2][J2][I2];
 
-#                          if   ( MODEL == HYDRO )
-                           const real EngyB = NULL_REAL;
-#                          elif ( MODEL == MHD )
+#                          ifdef MHD
 #                          warning : WAIT MHD !!!
+                           const real EngyB = NULL_REAL;
+#                          else
                            const real EngyB = NULL_REAL;
 #                          endif
                            Array_Ptr[Idx1] =   FluWeighting     *Array_Ptr[Idx1]
@@ -1274,21 +1269,11 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
                                                             PGSize1D, PGSize1D, PGSize1D, BC_Idx_Start, BC_Idx_End );
                      break;
 
-#                    if   ( MODEL == HYDRO )
+#                    if ( MODEL == HYDRO )
                      case BC_FLU_REFLECTING:
                         Hydro_BoundaryCondition_Reflecting( Array_Ptr, BC_Face[BC_Sibling], NVar_Flu,          GhostSize,
                                                             PGSize1D, PGSize1D, PGSize1D, BC_Idx_Start, BC_Idx_End,
                                                             TFluVarIdxList, NVar_Der, TDerVarList );
-                     break;
-
-#                    elif ( MODEL == MHD )
-#                    warning : WAIT MHD !!!
-                     case BC_FLU_REFLECTING:
-                     /*
-                        MHD_BoundaryCondition_Reflecting  ( Array_Ptr, BC_Face[BC_Sibling], NVar_Flu,          GhostSize,
-                                                            PGSize1D, PGSize1D, PGSize1D, BC_Idx_Start, BC_Idx_End,
-                                                            TFluVarIdxList, NVar_Der, TDerVarList );
-                     */
                      break;
 #                    endif
 
@@ -1533,7 +1518,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
 //       --> note that it's unnecessary to check negative passive scalars thanks to the monotonic interpolation
 // ------------------------------------------------------------------------------------------------------------
 //       (d1) minimum density
-#        if ( MODEL == HYDRO  ||  MODEL == MHD  ||  MODEL == ELBDM )
+#        if ( MODEL == HYDRO  ||  MODEL == ELBDM )
          if ( MinDens >= (real)0.0 )
          {
 //          note that _DENS is turned on automatically for _TOTAL_DENS (and total density is stored in DENS)
@@ -1548,13 +1533,13 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
                for (int t=0; t<PGSize3D; t++)   ArrayDens[t] = FMAX( ArrayDens[t], MinDens );
             }
          } // if ( MinDens >= (real)0.0 )
-#        endif // #if ( MODEL == HYDRO  ||  MODEL == MHD  ||  MODEL == ELBDM )
+#        endif // #if ( MODEL == HYDRO  ||  MODEL == ELBDM )
 
 
 //       (d2) minimum pressure
 //            --> note that it should be applied AFTER checking the minimum density since modifying density will also
 //                modify pressure when calculating it from the energy field
-#        if ( MODEL == HYDRO  ||  MODEL == MHD )
+#        if ( MODEL == HYDRO )
          if ( MinPres >= (real)0.0 )
          {
 //          (d2-1) pressure as a derived field
@@ -1591,10 +1576,10 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
 //             apply minimum pressure to the energy field
                for (int t=0; t<PGSize3D; t++)
                {
-#                 if   ( MODEL == HYDRO )
-                  const real EngyB = NULL_REAL;
-#                 elif ( MODEL == MHD )
+#                 ifdef MHD
 #                 warning : WAIT MHD !!!
+                  const real EngyB = NULL_REAL;
+#                 else
                   const real EngyB = NULL_REAL;
 #                 endif
                   ArrayEngy[t] = CPU_CheckMinPresInEngy( ArrayDens[t], ArrayMomX[t], ArrayMomY[t], ArrayMomZ[t], ArrayEngy[t],
@@ -1602,7 +1587,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
                }
             } // if ( (TVar & _FLUID) == _FLUID )
          } // if ( MinPres >= (real)0.0 )
-#        endif // #if ( MODEL == HYDRO  ||  MODEL == MHD )
+#        endif // #if ( MODEL == HYDRO )
 
 
 //       e. copy data from Array to h_Input_Array

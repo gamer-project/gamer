@@ -114,7 +114,7 @@ bool Flag_Check( const int lv, const int PID, const int i, const int j, const in
 
 // check Jeans length
 // ===========================================================================================
-#  if (  ( MODEL == HYDRO || MODEL == MHD )  &&  defined GRAVITY  )
+#  if ( MODEL == HYDRO  &&  defined GRAVITY )
    if ( OPT__FLAG_JEANS )
    {
       const bool CheckMinPres_Yes = true;
@@ -132,10 +132,10 @@ bool Flag_Check( const int lv, const int PID, const int i, const int j, const in
 
 #     else // #ifdef DUAL_ENERGY
 
-#     if   ( MODEL == HYDRO )
-      const real EngyB = NULL_REAL;
-#     elif ( MODEL == MHD )
+#     ifdef MHD
       const real EngyB = MHD_GetCellCenteredBEnergy( lv, PID, i, j, k );
+#     else
+      const real EngyB = NULL_REAL;
 #     endif
       const real Pres  = CPU_GetPressure( Dens, Fluid[MOMX][k][j][i], Fluid[MOMY][k][j][i], Fluid[MOMZ][k][j][i],
                                           Fluid[ENGY][k][j][i], Gamma_m1, CheckMinPres_Yes, MIN_PRES, EngyB );

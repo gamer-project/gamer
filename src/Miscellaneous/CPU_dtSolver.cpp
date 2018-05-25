@@ -22,9 +22,6 @@ void CPU_dtSolver_HydroGravity( real dt_Array[],
                                 const double ExtAcc_Time );
 #endif
 
-#elif ( MODEL == MHD )
-#  warning : WAIT MHD !!!
-
 #elif ( MODEL == ELBDM )
 
 #else
@@ -79,10 +76,6 @@ void CPU_dtSolver( const Solver_t TSolver, real dt_Array[], const real Flu_Array
                                     GravityType, ExtAcc_AuxArray, TargetTime );
       break;
 #     endif
-
-
-#     elif ( MODEL == MHD )
-#        warning : WAIT MHD !!!
 
 
 #     elif ( MODEL == ELBDM )

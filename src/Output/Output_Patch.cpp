@@ -33,7 +33,7 @@ void Output_Patch( const int lv, const int PID, const int FluSg, const int MagSg
    if ( FluSg < 0  ||  FluSg >= 2 )
       Aux_Error( ERROR_INFO, "incorrect parameter %s = %d !!\n", "FluSg", FluSg );
 
-#  if ( MODEL == MHD )
+#  ifdef MHD
    if ( MagSg < 0  ||  MagSg >= 2 )
       Aux_Error( ERROR_INFO, "incorrect parameter %s = %d !!\n", "MagSg", MagSg );
 #  endif
@@ -52,7 +52,7 @@ void Output_Patch( const int lv, const int PID, const int FluSg, const int MagSg
 
    patch_t *Relation                   = amr->patch[    0][lv][PID];
    real    (*fluid)[PS1][PS1][PS1]     = amr->patch[FluSg][lv][PID]->fluid;
-#  if ( MODEL == MHD )
+#  ifdef MHD
    real    (*magnetic)[PS1_P1*PS1*PS1] = amr->patch[MagSg][lv][PID]->magnetic;
 #  endif
 #  ifdef GRAVITY
@@ -112,7 +112,7 @@ void Output_Patch( const int lv, const int PID, const int FluSg, const int MagSg
 // check whether or not the target patch stores physical data
    if ( fluid == NULL )
       Aux_Message( stderr, "WARNING : Lv = %d, PID = %d does NOT store fluid data !!\n", lv, PID );
-#  if ( MODEL == MHD )
+#  ifdef MHD
    if ( magnetic == NULL )
       Aux_Message( stderr, "WARNING : Lv = %d, PID = %d does NOT store magnetic field data !!\n", lv, PID );
 #  endif
@@ -127,9 +127,9 @@ void Output_Patch( const int lv, const int PID, const int FluSg, const int MagSg
 // header
    fprintf( File, "(%2s,%2s,%2s)", "i", "j", "k" );
 
-#  if   ( MODEL == HYDRO  ||  MODEL == MHD )
+#  if   ( MODEL == HYDRO )
    fprintf( File, "%14s%14s%14s%14s%14s%14s", "Density", "Momentum X", "Momentum Y", "Momentum Z", "Energy", "Pressure" );
-#  if ( MODEL == MHD )
+#  ifdef MHD
    fprintf( File, "%14s%14s%14s%14s", "B_X", "B_Y", "B_Z", "0.5*B^2" );
 #  endif
 #  ifdef DUAL_ENERGY
@@ -173,23 +173,22 @@ void Output_Patch( const int lv, const int PID, const int FluSg, const int MagSg
          }
 
 //       pressure
-#        if ( MODEL == HYDRO  ||  MODEL == MHD )
-
-#        if   ( MODEL == HYDRO )
-         const real Pres  = CPU_GetPressure( u[DENS], u[MOMX], u[MOMY], u[MOMZ], u[ENGY],
-                                             GAMMA-1.0, false, NULL_REAL, NULL_REAL );
-#        elif ( MODEL == MHD )
+#        if ( MODEL == HYDRO )
+#        ifdef MHD
 //       set pressure to NULL_REAL if somehow magnetic[] is not allocated (likely due to a bug)
          const real EngyB = ( magnetic == NULL ) ? NULL_REAL :
                                                    MHD_GetCellCenteredBEnergy( lv, PID, i, j, k );
          const real Pres  = ( magnetic == NULL ) ? NULL_REAL :
                                                    CPU_GetPressure( u[DENS], u[MOMX], u[MOMY], u[MOMZ], u[ENGY],
                                                                     GAMMA-1.0, false, NULL_REAL, EngyB );
+#        else
+         const real Pres  = CPU_GetPressure( u[DENS], u[MOMX], u[MOMY], u[MOMZ], u[ENGY],
+                                             GAMMA-1.0, false, NULL_REAL, NULL_REAL );
 #        endif
          fprintf( File, " %13.6e", Pres );
 
 //       magnetic field
-#        if ( MODEL == MHD )
+#        ifdef MHD
          real B[3] = { NULL_REAL, NULL_REAL, NULL_REAL };
          if ( magnetic != NULL )    MHD_GetCellCenteredBField( B, lv, PID, i, j, k );
          fprintf( File, " %13.6e %13.6e %13.6e %13.6e", B[MAGX], B[MAGY], B[MAGZ], EngyB );
@@ -199,7 +198,7 @@ void Output_Patch( const int lv, const int PID, const int FluSg, const int MagSg
 #        ifdef DUAL_ENERGY
          fprintf( File, " %13c", Relation->de_status[k][j][i] );
 #        endif
-#        endif // if ( MODEL == HYDRO  ||  MODEL == MHD )
+#        endif // if ( MODEL == HYDRO )
 
 //       passive variables
          for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)
@@ -211,10 +210,10 @@ void Output_Patch( const int lv, const int PID, const int FluSg, const int MagSg
 //       output empty strings if the fluid array is not allocated
          for (int v=0; v<NCOMP_FLUID; v++)   fprintf( File, " %13s", "" );
 
-#        if ( MODEL == HYDRO  ||  MODEL == MHD )
+#        if ( MODEL == HYDRO )
          fprintf( File, " %13s", "" );
 
-#        if ( MODEL == MHD )
+#        ifdef MHD
          fprintf( File, " %13s", "" );
 #        endif
 
@@ -222,7 +221,7 @@ void Output_Patch( const int lv, const int PID, const int FluSg, const int MagSg
          fprintf( File, " %13s", "" );
 #        endif
 
-#        endif // #if ( MODEL == HYDRO  ||  MODEL == MHD )
+#        endif // #if ( MODEL == HYDRO )
 
          for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)
          fprintf( File, " %13s", "" );
@@ -240,7 +239,7 @@ void Output_Patch( const int lv, const int PID, const int FluSg, const int MagSg
 
 
 // 3. output face-centered magnetic field
-#  if ( MODEL == MHD )
+#  ifdef MHD
    fprintf( File, "\n" );
    fprintf( File, "====================================\n" );
    fprintf( File, "== MAGNETIC FIELD (face-centered) == \n" );
@@ -274,7 +273,7 @@ void Output_Patch( const int lv, const int PID, const int FluSg, const int MagSg
          fprintf( File, "\n" );
       } // i,j,k
    } // if ( magnetic != NULL )
-#  endif // #if ( MODEL == MHD )
+#  endif // #ifdef MHd
 
 
 

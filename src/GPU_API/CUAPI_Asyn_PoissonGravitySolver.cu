@@ -41,8 +41,6 @@ __global__ void CUPOT_HydroGravitySolver(       real g_Flu_Array_New[][GRA_NIN][
                                                 char g_DE_Array[][ PS1*PS1*PS1 ],
                                           const real Gra_Const, const bool P5_Gradient, const OptGravityType_t GravityType,
                                           const double TimeNew, const double TimeOld, const real dt, const real dh, const real MinEint );
-#elif ( MODEL == MHD )
-#warning : WAIT MHD !!!
 
 #elif ( MODEL == ELBDM )
 __global__ void CUPOT_ELBDMGravitySolver(       real g_Flu_Array[][GRA_NIN][ PS1*PS1*PS1 ],
@@ -62,7 +60,7 @@ extern real (*d_Pot_Array_P_In )[ POT_NXT*POT_NXT*POT_NXT ];
 extern real (*d_Pot_Array_P_Out)[ GRA_NXT*GRA_NXT*GRA_NXT ];
 extern real (*d_Flu_Array_G    )[GRA_NIN][ PS1*PS1*PS1 ];
 extern double (*d_Corner_Array_G)[3];
-#if ( MODEL == HYDRO  ||  MODEL == MHD )
+#if ( MODEL == HYDRO )
 #ifdef UNSPLIT_GRAVITY
 extern real (*d_Pot_Array_USG_G)[ USG_NXT_G*USG_NXT_G*USG_NXT_G ];
 extern real (*d_Flu_Array_USG_G)[GRA_NIN-1][ PS1*PS1*PS1        ];
@@ -75,7 +73,7 @@ extern char (*d_DE_Array_G)[ PS1*PS1*PS1 ];
 #else
 static char (*d_DE_Array_G)[ PS1*PS1*PS1 ] = NULL;
 #endif
-#endif // #if ( MODEL == HYDRO  ||  MODEL == MHD )
+#endif // #if ( MODEL == HYDRO )
 
 extern cudaStream_t *Stream;
 
@@ -170,9 +168,6 @@ void CUAPI_Asyn_PoissonGravitySolver( const real h_Rho_Array    [][RHO_NXT][RHO_
 // model-dependent constants
 #  if   ( MODEL == HYDRO )
    const real Gra_Const   = ( P5_Gradient ) ? -dt/(12.0*dh) : -dt/( 2.0*dh);
-
-#  elif ( MODEL == MHD )
-#  warning : WAIT MHD !!!
 
 #  elif ( MODEL == ELBDM )
    const real ELBDM_EtaDt = ELBDM_Eta*dt;
@@ -387,8 +382,6 @@ void CUAPI_Asyn_PoissonGravitySolver( const real h_Rho_Array    [][RHO_NXT][RHO_
                                     d_DE_Array_G      + UsedPatch[s],
                                     Gra_Const, P5_Gradient, GravityType,
                                     TimeNew, TimeOld, dt, dh, MinEint );
-#        elif ( MODEL == MHD )
-#        warning : WAITH MHD !!!
 
 #        elif ( MODEL == ELBDM )
          CUPOT_ELBDMGravitySolver <<< NPatch_per_Stream[s], Gra_Block_Dim, 0, Stream[s] >>>

@@ -129,7 +129,7 @@ void Init_Load_Parameter()
    ReadPara->Add( "OPT__FLAG_RHO",              &OPT__FLAG_RHO,                   false,           Useless_bool,  Useless_bool   );
    ReadPara->Add( "OPT__FLAG_RHO_GRADIENT",     &OPT__FLAG_RHO_GRADIENT,          false,           Useless_bool,  Useless_bool   );
    ReadPara->Add( "OPT__FLAG_LOHNER_DENS",      &OPT__FLAG_LOHNER_DENS,           false,           Useless_bool,  Useless_bool   );
-#  if ( MODEL == HYDRO   ||  MODEL == MHD )
+#  if ( MODEL == HYDRO )
    ReadPara->Add( "OPT__FLAG_PRES_GRADIENT",    &OPT__FLAG_PRES_GRADIENT,         false,           Useless_bool,  Useless_bool   );
    ReadPara->Add( "OPT__FLAG_VORTICITY",        &OPT__FLAG_VORTICITY,             false,           Useless_bool,  Useless_bool   );
    ReadPara->Add( "OPT__FLAG_JEANS",            &OPT__FLAG_JEANS,                 false,           Useless_bool,  Useless_bool   );
@@ -199,7 +199,7 @@ void Init_Load_Parameter()
 #  endif
 
 
-// fluid solvers in HYDRO and MHD
+// fluid solvers in HYDRO
 #  if ( MODEL == HYDRO )
    ReadPara->Add( "GAMMA",                      &GAMMA,                           5.0/3.0,         1.0,           NoMax_double   );
    ReadPara->Add( "MOLECULAR_WEIGHT",           &MOLECULAR_WEIGHT,                0.6,             Eps_double,    NoMax_double   );
@@ -212,10 +212,7 @@ void Init_Load_Parameter()
 #  ifdef DUAL_ENERGY
    ReadPara->Add( "DUAL_ENERGY_SWITCH",         &DUAL_ENERGY_SWITCH,              2.0e-2,          0.0,           NoMax_double   );
 #  endif
-
-#  elif ( MODEL == MHD )
-#  warning : WAIT MHD !!!
-#  endif // #if ( MODEL == HYDRO/MHD )
+#  endif // #if ( MODEL == HYDRO )
 
 
 // fluid solver in ELBDM
@@ -242,10 +239,10 @@ void Init_Load_Parameter()
    ReadPara->Add( "OPT__NORMALIZE_PASSIVE",     &OPT__NORMALIZE_PASSIVE,          true,            Useless_bool,  Useless_bool   );
    ReadPara->Add( "OPT__OVERLAP_MPI",           &OPT__OVERLAP_MPI,                false,           Useless_bool,  Useless_bool   );
    ReadPara->Add( "OPT__RESET_FLUID",           &OPT__RESET_FLUID,                false,           Useless_bool,  Useless_bool   );
-#  if ( MODEL == HYDRO  ||  MODEL == MHD  ||  MODEL == ELBDM )
+#  if ( MODEL == HYDRO  ||  MODEL == ELBDM )
    ReadPara->Add( "MIN_DENS",                   &MIN_DENS,                        0.0,             0.0,           NoMax_double   );
 #  endif
-#  if ( MODEL == HYDRO  ||  MODEL == MHD )
+#  if ( MODEL == HYDRO )
    ReadPara->Add( "MIN_PRES",                   &MIN_PRES,                        0.0,             0.0,           NoMax_double   );
    ReadPara->Add( "JEANS_MIN_PRES",             &JEANS_MIN_PRES,                  false,           Useless_bool,  Useless_bool   );
    ReadPara->Add( "JEANS_MIN_PRES_LEVEL",       &JEANS_MIN_PRES_LEVEL,           -1,               NoMin_int,     NLEVEL-1       );
@@ -361,7 +358,7 @@ void Init_Load_Parameter()
    ReadPara->Add( "OPT__CK_FINITE",             &OPT__CK_FINITE,                  false,           Useless_bool,  Useless_bool   );
    ReadPara->Add( "OPT__CK_PATCH_ALLOCATE",     &OPT__CK_PATCH_ALLOCATE,          false,           Useless_bool,  Useless_bool   );
    ReadPara->Add( "OPT__CK_FLUX_ALLOCATE",      &OPT__CK_FLUX_ALLOCATE,           false,           Useless_bool,  Useless_bool   );
-#  if ( MODEL == HYDRO  ||  MODEL == MHD )
+#  if ( MODEL == HYDRO )
    ReadPara->Add( "OPT__CK_NEGATIVE",           &OPT__CK_NEGATIVE,                0,               0,             3              );
 #  endif
    ReadPara->Add( "OPT__CK_MEMFREE",            &OPT__CK_MEMFREE,                 1.0,             0.0,           NoMax_double   );

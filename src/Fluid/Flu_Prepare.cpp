@@ -35,7 +35,7 @@ void Flu_Prepare( const int lv, const double PrepTime, real h_Flu_Array_F_In[], 
 #  endif
 
 
-#  if ( MODEL != HYDRO  &&  MODEL != MHD )
+#  if ( MODEL != HYDRO )
    const double MIN_DENS           = -1.0;    // set to an arbitrarily negative value to disable it
    const double MIN_PRES           = -1.0;    // ...
 #  endif

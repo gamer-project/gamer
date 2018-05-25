@@ -35,8 +35,9 @@ extern real (*d_FC_Flux_y)  [NCOMP_TOTAL][ N_FC_FLUX*N_FC_FLUX*N_FC_FLUX ];
 extern real (*d_FC_Flux_z)  [NCOMP_TOTAL][ N_FC_FLUX*N_FC_FLUX*N_FC_FLUX ];
 #endif // #if ( FLU_SCHEME == MHM  ||  FLU_SCHEME == MHM_RP  ||  FLU_SCHEME == CTU )
 
-#elif ( MODEL == MHD )
+#ifdef MHD
 #warning : WAIT MHD !!!
+#endif
 
 #elif ( MODEL != ELBDM )
 #warning : DO YOU WANT TO ADD SOMETHING HERE FOR THE NEW MODEL ??
@@ -119,9 +120,6 @@ void CUAPI_MemFree_Fluid( const int GPU_NStream )
    d_FC_Flux_y   = NULL;
    d_FC_Flux_z   = NULL;
 #  endif // #if ( FLU_SCHEME == MHM  ||  FLU_SCHEME == MHM_RP  ||  FLU_SCHEME == CTU )
-
-#  elif ( MODEL == MHD )
-#  warning : WAIT MHD !!!
 
 #  elif ( MODEL != ELBDM )
 #  warning : DO YOU WANT TO ADD SOMETHING HERE FOR THE NEW MODEL ??

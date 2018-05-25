@@ -760,9 +760,6 @@ int AllocateSonPatch( const int FaLv, const int *Cr, const int PScale, const int
       */
                                        Monotonicity[v] = EnsureMonotonicity_Yes;
 
-#     elif ( MODEL == MHD )
-#     warning : WAIT MHD !!!
-
 #     elif ( MODEL == ELBDM )
       if ( v != REAL  &&  v != IMAG )  Monotonicity[v] = EnsureMonotonicity_Yes;
       else                             Monotonicity[v] = EnsureMonotonicity_No;
@@ -839,8 +836,8 @@ int AllocateSonPatch( const int FaLv, const int *Cr, const int PScale, const int
 // 3.2.3 check minimum density and pressure
 // --> note that it's unnecessary to check negative passive scalars thanks to the monotonic interpolation
 // --> but we do renormalize passive scalars here
-#  if ( MODEL == HYDRO  ||  MODEL == MHD  ||  MODEL == ELBDM  ||  (defined DENS && NCOMP_PASSIVE>0) )
-#  if ( MODEL == HYDRO  ||  MODEL == MHD )
+#  if ( MODEL == HYDRO  ||  MODEL == ELBDM  ||  (defined DENS && NCOMP_PASSIVE>0) )
+#  if ( MODEL == HYDRO )
    const real  Gamma_m1 = GAMMA - (real)1.0;
    const real _Gamma_m1 = (real)1.0 / Gamma_m1;
 #  endif
@@ -869,7 +866,7 @@ int AllocateSonPatch( const int FaLv, const int *Cr, const int PScale, const int
          FData_Flu[DENS][k][j][i] = MIN_DENS;
       }
 
-#     if ( MODEL == HYDRO  ||  MODEL == MHD )
+#     if ( MODEL == HYDRO )
 #     ifdef DUAL_ENERGY
 //    ensure consistency between pressure, total energy density, and the dual-energy variable
 //    --> here we ALWAYS use the dual-energy variable to correct the total energy density
@@ -886,10 +883,10 @@ int AllocateSonPatch( const int FaLv, const int *Cr, const int PScale, const int
 #     else // #ifdef DUAL_ENERGY
 
 //    check minimum pressure
-#     if   ( MODEL == HYDRO )
-      const real EngyB = NULL_REAL;
-#     elif ( MODEL == MHD )
+#     ifdef MHD
 #     warning : WAIT MHD !!!
+      const real EngyB = NULL_REAL;
+#     else
       const real EngyB = NULL_REAL;
 #     endif
       FData_Flu[ENGY][k][j][i]
@@ -897,7 +894,7 @@ int AllocateSonPatch( const int FaLv, const int *Cr, const int PScale, const int
                                    FData_Flu[MOMZ][k][j][i], FData_Flu[ENGY][k][j][i],
                                    Gamma_m1, _Gamma_m1, MIN_PRES, EngyB );
 #     endif // #ifdef DUAL_ENERGY ... else ...
-#     endif // #if ( MODEL == HYDRO  ||  MODEL == MHD )
+#     endif // #if ( MODEL == HYDRO )
 
 
 //    normalize passive scalars
@@ -914,7 +911,7 @@ int AllocateSonPatch( const int FaLv, const int *Cr, const int PScale, const int
       }
 #     endif
    } // i,j,k
-#  endif // #if ( MODEL == HYDRO  ||  MODEL == MHD  ||  MODEL == ELBDM )
+#  endif // #if ( MODEL == HYDRO  ||  MODEL == ELBDM )
 
 
 // 3.3 copy data from FData_XXX to patch pointers

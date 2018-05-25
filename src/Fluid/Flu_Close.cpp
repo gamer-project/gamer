@@ -10,7 +10,7 @@ static void StoreFlux( const int lv, const real Flux_Array[][9][NFLUX_TOTAL][4*P
                        const int NPG, const int *PID0_List, const real dt );
 static void CorrectFlux( const int lv, const real Flux_Array[][9][NFLUX_TOTAL][4*PATCH_SIZE*PATCH_SIZE],
                          const int NPG, const int *PID0_List, const real dt );
-#if ( MODEL == HYDRO  ||  MODEL == MHD )
+#if ( MODEL == HYDRO )
 static bool Unphysical( const real Fluid[], const real Gamma_m1, const int CheckMinEngyOrPres );
 static void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
                                const real h_Flu_Array_F_In[][FLU_NIN][FLU_NXT*FLU_NXT*FLU_NXT],
@@ -56,7 +56,7 @@ void Flu_Close( const int lv, const int SaveSg, real h_Flux_Array[][9][NFLUX_TOT
 
 // try to correct the unphysical results in h_Flu_Array_F_Out (e.g., negative density)
 // --> must be done BEFORE invoking both StoreFlux() and CorrectFlux() since CorrectUnphysical() might modify the flux array
-#  if ( MODEL == HYDRO  ||  MODEL == MHD )
+#  if ( MODEL == HYDRO )
    CorrectUnphysical( lv, NPG, PID0_List, h_Flu_Array_F_In, h_Flu_Array_F_Out, h_DE_Array_F_Out, h_Flux_Array, dt );
 #  endif
 
@@ -274,14 +274,14 @@ void CorrectFlux( const int lv, const real h_Flux_Array[][9][NFLUX_TOTAL][4*PATC
 
 
 
-#if ( MODEL == HYDRO  ||  MODEL == MHD )
+#if ( MODEL == HYDRO )
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Unphysical
 // Description :  Check whether the input variables are unphysical
 //
 // Note        :  1. One can put arbitrary criteria here. Cells violating the conditions will be recalculated
 //                   in "CorrectUnphysical"
-//                2. Currently it is used for MODEL==HYDRO/MHD to check whether the input density and pressure
+//                2. Currently it is used for MODEL==HYDRO to check whether the input density and pressure
 //                   (or energy density) is smaller than the given thresholds
 //                   --> It also checks if any variable is -inf, +inf, or nan
 //                   --> It does NOT check if passive scalars are negative
@@ -315,10 +315,10 @@ bool Unphysical( const real Fluid[], const real Gamma_m1, const int CheckMinEngy
       return true;
 
 #  ifndef DUAL_ENERGY
-#  if   ( MODEL == HYDRO )
-   const real EngyB = NULL_REAL;
-#  elif ( MODEL == MHD )
+#  ifdef MHD
 #  warning : WAIT MHD !!!
+   const real EngyB = NULL_REAL;
+#  else
    const real EngyB = NULL_REAL;
 #  endif
 #  endif // #indef DUAL_ENERGY
@@ -361,7 +361,7 @@ bool Unphysical( const real Fluid[], const real Gamma_m1, const int CheckMinEngy
 //                --> For example, negative density
 //
 // Note        :  1. Define unphysical values in the function "Unphysical"
-//                2. Currently it is only used for MODEL==HYDRO/MHD to check if density or pressure is smaller than
+//                2. Currently it is only used for MODEL==HYDRO to check if density or pressure is smaller than
 //                   the minimum allowed values (i.e., MIN_DENS and MIN_PRES)
 //                   --> It also checks if any variable is -inf, +inf, and nan
 //                   --> But one can define arbitrary criteria in "Unphysical" to trigger the correction
@@ -490,7 +490,7 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
                      }
                      break;
 
-#                 if ( MODEL == HYDRO )
+#                 ifndef MHD
                   case RSOLVER_1ST_HLLC:
                      for (int d=0; d<3; d++)
                      {
@@ -508,7 +508,7 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
                      }
                      break;
 
-#                 if ( MODEL == MHD )
+#                 ifdef MHD
 #                 warning : WAIT MHD !!!
                   case RSOLVER_1ST_HLLD:
                      /*
@@ -586,7 +586,7 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
                               CPU_RiemannSolver_Roe ( d, FluxR_1D, Corr1D_InOut_PtrC, Corr1D_InOut_PtrR, GAMMA, MIN_PRES );
                            break;
 
-#                          if ( MODEL == HYDRO )
+#                          ifndef MHD
                            case RSOLVER_1ST_HLLC:
                               CPU_RiemannSolver_HLLC( d, FluxL_1D, Corr1D_InOut_PtrL, Corr1D_InOut_PtrC, GAMMA, MIN_PRES );
                               CPU_RiemannSolver_HLLC( d, FluxR_1D, Corr1D_InOut_PtrC, Corr1D_InOut_PtrR, GAMMA, MIN_PRES );
@@ -598,7 +598,7 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
                               CPU_RiemannSolver_HLLE( d, FluxR_1D, Corr1D_InOut_PtrC, Corr1D_InOut_PtrR, GAMMA, MIN_PRES );
                            break;
 
-#                          if ( MODEL == MHD )
+#                          ifdef MHD
 #                          warning : WAIT MHD !!!
                            case RSOLVER_1ST_HLLD:
                               /*
@@ -682,10 +682,10 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
 #           else
             if ( !AUTO_REDUCE_DT )
             {
-#              if   ( MODEL == HYDRO )
-               const real EngyB = NULL_REAL;
-#              elif ( MODEL == MHD )
+#              ifdef MHD
 #              warning : WAIT MHD !!!
+               const real EngyB = NULL_REAL;
+#              else
                const real EngyB = NULL_REAL;
 #              endif
                Update[ENGY] = CPU_CheckMinPresInEngy( Update[DENS], Update[MOMX], Update[MOMY], Update[MOMZ], Update[ENGY],
@@ -723,12 +723,12 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
 
                   for (int v=0; v<NCOMP_TOTAL; v++)   In[v] = h_Flu_Array_F_In[TID][v][idx_in];
 
-#                 if   ( MODEL == HYDRO )
+#                 ifdef MHD
+#                 warning : WAIT MHD !!!
                   const real EngyB_In     = NULL_REAL;
                   const real EngyB_Out    = NULL_REAL;
                   const real EngyB_Update = NULL_REAL;
-#                 elif ( MODEL == MHD )
-#                 warning : WAIT MHD !!!
+#                 else
                   const real EngyB_In     = NULL_REAL;
                   const real EngyB_Out    = NULL_REAL;
                   const real EngyB_Update = NULL_REAL;
@@ -792,10 +792,10 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
                         fprintf( File, " %13.6e", tmp[v] );
                      }
 
-#                    if   ( MODEL == HYDRO )
-                     const real EngyB_tmp = NULL_REAL;
-#                    elif ( MODEL == MHD )
+#                    ifdef MHD
 #                    warning : WAIT MHD !!!
+                     const real EngyB_tmp = NULL_REAL;
+#                    else
                      const real EngyB_tmp = NULL_REAL;
 #                    endif
 
@@ -806,10 +806,10 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
                   fclose( File );
 
 //                output the failed patch (mainly for recording the sibling information)
-#                 if   ( MODEL == HYDRO )
-                  const int MagSg = NULL_INT;
-#                 elif ( MODEL == MHD )
+#                 ifdef MHD
                   const int MagSg = amr->MagSg[lv];
+#                 else
+                  const int MagSg = NULL_INT;
 #                 endif
 #                 ifdef GRAVITY
                   const int PotSg = amr->PotSg[lv];
@@ -898,7 +898,7 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
    }
 
 } // FUNCTION : CorrectUnphysical
-#endif // #if ( MODEL == HYDRO  ||  MODEL == MHD )
+#endif // #if ( MODEL == HYDRO )
 
 
 

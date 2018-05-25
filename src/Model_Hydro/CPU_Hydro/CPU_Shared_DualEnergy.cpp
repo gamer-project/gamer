@@ -6,7 +6,9 @@
 #include "CUFLU.h"
 
 // some functions in this file need to be defined even when using GPU
-#if (  ( MODEL == HYDRO || MODEL == MHD )  &&  defined DUAL_ENERGY )
+#if ( MODEL == HYDRO  &&  defined DUAL_ENERGY )
+
+
 
 #if ( DUAL_ENERGY == DE_ENPY  &&  defined __CUDACC__ )
 static __device__ real CUFLU_DensPres2Entropy( const real Dens, const real Pres, const real Gamma_m1 );
@@ -73,7 +75,7 @@ void   CPU_DualEnergyFix( const real Dens, const real MomX, const real MomY, con
 
    Ekin = (real)0.5*( SQR(MomX) + SQR(MomY) + SQR(MomZ) )/Dens;
    Eint = Etot - Ekin;
-#  if ( MODEL == MHD )
+#  ifdef MHD
 #  warning : WAIT MHD !!!
 #  endif
 
@@ -96,7 +98,7 @@ void   CPU_DualEnergyFix( const real Dens, const real MomX, const real MomY, con
 #     endif
 
       Etot      = Ekin + Eint;
-#     if ( MODEL == MHD )
+#     ifdef MHD
 #     warning : WAIT MHD !!!
 #     endif
       DE_Status = DE_UPDATED_BY_DUAL;
@@ -123,7 +125,7 @@ void   CPU_DualEnergyFix( const real Dens, const real MomX, const real MomY, con
 
 //    ensure that both energy and entropy are consistent with the pressure floor
       Etot      = Ekin + Eint;
-#     if ( MODEL == MHD )
+#     ifdef MHD
 #     warning : WAIT MHD !!!
 #     endif
 #     ifdef __CUDACC__
@@ -168,10 +170,10 @@ real CPU_Fluid2Entropy( const real Dens, const real MomX, const real MomY, const
    real Pres, Enpy;
 
 // calculate pressure and convert it to entropy
-#  if   ( MODEL == HYDRO )
-   const real EngyB = NULL_REAL;
-#  elif ( MODEL == MHD )
+#  ifdef MHD
 #  warning : WAIT MHD !!!
+   const real EngyB = NULL_REAL;
+#  else
    const real EngyB = NULL_REAL;
 #  endif
    Pres = CPU_GetPressure( Dens, MomX, MomY, MomZ, Engy, Gamma_m1, CheckMinPres_No, NULL_REAL, EngyB );
@@ -276,4 +278,4 @@ real   CPU_DensEntropy2Pres( const real Dens, const real Enpy, const real Gamma_
 
 
 
-#endif // #if (  ( MODEL == HYDRO || MODEL == MHD )  &&  defined DUAL_ENERGY )
+#endif // #if ( MODEL == HYDRO  &&  defined DUAL_ENERGY )

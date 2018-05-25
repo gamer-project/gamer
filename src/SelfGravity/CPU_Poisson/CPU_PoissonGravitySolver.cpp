@@ -39,9 +39,6 @@ void CPU_HydroGravitySolver(       real Flu_Array_New[][GRA_NIN][PS1][PS1][PS1],
                              const OptGravityType_t GravityType, const double ExtAcc_AuxArray[],
                              const double TimeNew, const double TimeOld, const real MinEint );
 
-#elif ( MODEL == MHD )
-#warning : WAIT MHD !!!
-
 #elif ( MODEL == ELBDM )
 void CPU_ELBDMGravitySolver(       real Flu_Array[][GRA_NIN][PATCH_SIZE][PATCH_SIZE][PATCH_SIZE],
                              const real Pot_Array[][GRA_NXT][GRA_NXT][GRA_NXT],
@@ -172,9 +169,6 @@ void CPU_PoissonGravitySolver( const real h_Rho_Array    [][RHO_NXT][RHO_NXT][RH
 #     if   ( MODEL == HYDRO )
       CPU_HydroGravitySolver( h_Flu_Array, h_Pot_Array_Out, h_Corner_Array, h_Pot_Array_USG, h_Flu_Array_USG, h_DE_Array,
                               NPatchGroup, dt, dh, P5_Gradient, GravityType, ExtAcc_AuxArray, TimeNew, TimeOld, MinEint );
-
-#     elif ( MODEL == MHD )
-#     error : WAIT MHD !!!
 
 #     elif ( MODEL == ELBDM )
       CPU_ELBDMGravitySolver( h_Flu_Array, h_Pot_Array_Out, h_Corner_Array, NPatchGroup, ELBDM_Eta*dt, dh, ELBDM_Lambda,

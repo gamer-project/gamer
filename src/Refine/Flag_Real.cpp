@@ -51,7 +51,7 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
    const int  Lohner_NAve             = Lohner_NCell - 2;      // size of the average array for Lohner
    const int  Lohner_NSlope           = Lohner_NAve;           // size of the slope array for Lohner
    const IntScheme_t Lohner_IntScheme = INT_MINMOD1D;          // interpolation scheme for Lohner
-#  if (  ( MODEL == HYDRO || MODEL == MHD )  &&  defined GRAVITY  )
+#  if ( MODEL == HYDRO  &&  defined GRAVITY )
    const real JeansCoeff              = M_PI*GAMMA/( SQR(FlagTable_Jeans[lv])*NEWTON_G ); // flag if dh^2 > JeansCoeff*Pres/Dens^2
 #  else
    const real JeansCoeff              = NULL_REAL;
@@ -82,14 +82,11 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
    int  Lohner_NVar=0, Lohner_TVar=0, Lohner_Stride;
    real MinDens=-1.0, MinPres=-1.0;    // default is to turn off minimum density/pressure checks
 
-#  if   ( MODEL == HYDRO  ||  MODEL == MHD )
+#  if   ( MODEL == HYDRO )
    if ( OPT__FLAG_LOHNER_DENS )  {  Lohner_NVar++;   Lohner_TVar |= _DENS;   MinDens = MIN_DENS;  }
    if ( OPT__FLAG_LOHNER_ENGY )  {  Lohner_NVar++;   Lohner_TVar |= _ENGY;                        }
    if ( OPT__FLAG_LOHNER_PRES )  {  Lohner_NVar++;   Lohner_TVar |= _PRES;   MinPres = MIN_PRES;  }
    if ( OPT__FLAG_LOHNER_TEMP )  {  Lohner_NVar++;   Lohner_TVar |= _TEMP;   MinPres = MIN_PRES;  }
-
-#  elif ( MODEL == MHD )
-#  warning : WAIT MHD !!!
 
 #  elif ( MODEL == ELBDM )
    if ( OPT__FLAG_LOHNER_DENS )
@@ -134,11 +131,9 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
       int  i_start, i_end, j_start, j_end, k_start, k_end, SibID, SibPID, PID;
       bool ProperNesting, NextPatch;
 
-#     if   ( MODEL == HYDRO )
+#     if ( MODEL == HYDRO )
       if ( OPT__FLAG_PRES_GRADIENT )   Pres = new real [PS1][PS1][PS1];
-#     elif ( MODEL == MHD )
-#     warning : WAIT MHD !!!
-#     endif // MODEL
+#     endif
 
 #     ifdef PARTICLE
       if ( OPT__FLAG_NPAR_CELL )       ParCount = new real [PS1][PS1][PS1];
@@ -213,7 +208,7 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
 
 
 //             evaluate pressure
-#              if ( MODEL == HYDRO  ||  MODEL == MHD )
+#              if ( MODEL == HYDRO )
                if ( OPT__FLAG_PRES_GRADIENT )
                {
                   const bool CheckMinPres_Yes = true;
@@ -237,10 +232,10 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
 
 #                    else // #ifdef DUAL_ENERGY
 
-#                    if   ( MODEL == HYDRO )
-                     const real EngyB = NULL_REAL;
-#                    elif ( MODEL == MHD )
+#                    ifdef MHD
                      const real EngyB = MHD_GetCellCenteredBEnergy( lv, PID, i, j, k );
+#                    else
+                     const real EngyB = NULL_REAL;
 #                    endif
                      Pres[k][j][i] = CPU_GetPressure( Fluid[DENS][k][j][i], Fluid[MOMX][k][j][i], Fluid[MOMY][k][j][i],
                                                       Fluid[MOMZ][k][j][i], Fluid[ENGY][k][j][i],
@@ -249,7 +244,7 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
 #                    endif // #ifdef DUAL_ENERGY ... else ...
                   } // k,j,i
                } // if ( OPT__FLAG_PRES_GRADIENT )
-#              endif // #if ( MODEL == HYDRO  ||  MODEL == MHD )
+#              endif // #if ( MODEL == HYDRO )
 
 
 //             evaluate the averages and slopes along x/y/z for Lohner
@@ -436,7 +431,7 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
                            if ( SibPID >= 0 )   amr->patch[0][lv][SibPID]->flag = true;
                         }
                      }
-                  } // if ( NParThisPatch > NParFlag  )
+                  } // if ( NParThisPatch > NParFlag )
                } // if ( OPT__FLAG_NPAR_PATCH != 0 )
 #              endif // #ifdef PARTICLE
 

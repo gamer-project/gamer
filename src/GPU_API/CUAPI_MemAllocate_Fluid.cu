@@ -25,7 +25,7 @@ extern real *d_dt_Array_T;
 extern real (*d_Flu_Array_T)[NCOMP_FLUID][ CUBE(PS1) ];
 
 // global memory arrays in different models
-#if ( MODEL == HYDRO )
+#if   ( MODEL == HYDRO )
 #if ( FLU_SCHEME == MHM  ||  FLU_SCHEME == MHM_RP  ||  FLU_SCHEME == CTU )
 extern real (*d_PriVar)     [NCOMP_TOTAL][ FLU_NXT*FLU_NXT*FLU_NXT ];
 extern real (*d_Slope_PPM_x)[NCOMP_TOTAL][ N_SLOPE_PPM*N_SLOPE_PPM*N_SLOPE_PPM ];
@@ -42,8 +42,9 @@ extern real (*d_FC_Flux_y)  [NCOMP_TOTAL][ N_FC_FLUX*N_FC_FLUX*N_FC_FLUX ];
 extern real (*d_FC_Flux_z)  [NCOMP_TOTAL][ N_FC_FLUX*N_FC_FLUX*N_FC_FLUX ];
 #endif // #if ( FLU_SCHEME == MHM  ||  FLU_SCHEME == MHM_RP  ||  FLU_SCHEME == CTU )
 
-#elif ( MODEL == MHD )
+#ifdef MHD
 #warning : WAIT MHD !!!
+#endif
 
 #elif ( MODEL != ELBDM )
 #warning : DO YOU WANT TO ADD SOMETHING HERE FOR THE NEW MODEL ??
@@ -92,15 +93,10 @@ void CUAPI_MemAllocate_Fluid( const int Flu_NPG, const int Pot_NPG, const int GP
    const long PriVar_MemSize    = Flu_MemSize_F_In;
    const long FC_Var_MemSize    = sizeof(real)*Flu_NPG*NCOMP_TOTAL*N_FC_VAR*N_FC_VAR*N_FC_VAR;
    const long FC_Flux_MemSize   = sizeof(real)*Flu_NPG*NCOMP_TOTAL*N_FC_FLUX*N_FC_FLUX*N_FC_FLUX;
-
 #  if ( LR_SCHEME == PPM )
    const long Slope_PPM_MemSize = sizeof(real)*Flu_NPG*NCOMP_TOTAL*N_SLOPE_PPM*N_SLOPE_PPM*N_SLOPE_PPM;
 #  endif
-
 #  endif // #if ( FLU_SCHEME == MHM  ||  FLU_SCHEME == MHM_RP  ||  FLU_SCHEME == CTU )
-
-#  elif ( MODEL == MHD )
-#  warning : WAIT MHD !!!
 
 #  elif ( MODEL != ELBDM )
 #  warning : DO YOU WANT TO ADD SOMETHING HERE FOR THE NEW MODEL ??
@@ -125,17 +121,12 @@ void CUAPI_MemAllocate_Fluid( const int Flu_NPG, const int Pot_NPG, const int GP
 #  endif
 
 #  if   ( MODEL == HYDRO )
-
 #  if ( FLU_SCHEME == MHM  ||  FLU_SCHEME == MHM_RP  ||  FLU_SCHEME == CTU )
    TotalSize += PriVar_MemSize + 6*FC_Var_MemSize + 3*FC_Flux_MemSize;
-
 #  if ( LR_SCHEME == PPM )
    TotalSize += 3*Slope_PPM_MemSize;
-#  endif // PPM
+#  endif
 #  endif // MHM/MHM_RP/CTU
-
-#  elif ( MODEL == MHD )
-#  warning : WAIT MHD !!!
 
 #  elif ( MODEL != ELBDM )
 #  warning : DO YOU WANT TO ADD SOMETHING HERE FOR THE NEW MODEL ??
@@ -189,9 +180,6 @@ void CUAPI_MemAllocate_Fluid( const int Flu_NPG, const int Pot_NPG, const int GP
    CUDA_CHECK_ERROR(  cudaMalloc( (void**) &d_FC_Flux_y, FC_Flux_MemSize )  );
    CUDA_CHECK_ERROR(  cudaMalloc( (void**) &d_FC_Flux_z, FC_Flux_MemSize )  );
 #  endif // #if ( FLU_SCHEME == MHM  ||  FLU_SCHEME == MHM_RP  ||  FLU_SCHEME == CTU )
-
-#  elif ( MODEL == MHD )
-#  warning : WAIT MHD !!!
 
 #  elif ( MODEL != ELBDM )
 #  warning : DO YOU WANT TO ADD SOMETHING HERE FOR THE NEW MODEL ??
