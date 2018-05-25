@@ -705,7 +705,7 @@ void Init_ByRestart_HDF5( const char *FileName )
                {
                   if (  TABLE_02( LocalID, 'x'+d, 0, 1 ) != (amr->patch[0][lv][PID]->corner[d]/PatchScale)%2  )
                   {
-                     Output_Patch( lv, PID, 0, 0, NULL );
+                     Output_Patch( lv, PID, 0, 0, 0, NULL );
                      Aux_Error( ERROR_INFO, "lv %d, PID %d, LocalID does not match patch corner (patch has been output) !!\n",
                                  lv, PID );
                   }
