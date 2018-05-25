@@ -1155,7 +1155,7 @@ void Load_Parameter_After_2000( FILE *File, const int FormatVersion, int &NLv_Re
       CompareVar( "FLU_GHOST_SIZE",          flu_ghost_size,         FLU_GHOST_SIZE,            NonFatal );
       CompareVar( "FLU_BLOCK_SIZE_X",        flu_block_size_x,       FLU_BLOCK_SIZE_X,          NonFatal );
       CompareVar( "FLU_BLOCK_SIZE_Y",        flu_block_size_y,       FLU_BLOCK_SIZE_Y,          NonFatal );
-#     if ( MODEL == HYDRO  ||  MODEL == MHD )
+#     if ( MODEL == HYDRO )
       CompareVar( "MIN_PRES",                min_pres,               MIN_PRES,                  NonFatal );
 #     endif
 
@@ -1280,12 +1280,6 @@ void Load_Parameter_After_2000( FILE *File, const int FormatVersion, int &NLv_Re
          Aux_Message( stderr, "WARNING : %s : RESTART file (%s) != runtime (%s) !!\n",
                       "WAF_DISSIPATE", "ON", "OFF" );
 #     endif
-
-
-//    check in MHD
-//    ----------------
-#     elif ( MODEL == MHD )
-#     warning : WAIT MHD !!!
 
 
 //    check in ELBDM
@@ -1453,9 +1447,6 @@ void Load_Parameter_After_2000( FILE *File, const int FormatVersion, int &NLv_Re
 //    convert OPT__1ST_FLUX_CORR to bool to be consistent with the old format where OPT__1ST_FLUX_CORR is bool instead of int
       CompareVar( "OPT__1ST_FLUX_CORR",        opt__1st_flux_corr,        (bool)OPT__1ST_FLUX_CORR,        NonFatal );
       CompareVar( "OPT__1ST_FLUX_CORR_SCHEME", opt__1st_flux_corr_scheme, (int )OPT__1ST_FLUX_CORR_SCHEME, NonFatal );
-
-#     elif ( MODEL == MHD )
-#     warning : WAIT MHD !!!
 
 #     elif ( MODEL == ELBDM )
       CompareVar( "DT__PHASE",               dt__phase,                    DT__PHASE,                 NonFatal );

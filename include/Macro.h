@@ -28,7 +28,7 @@
 
 // models
 #define HYDRO        1
-#define MHD          2
+//#define MHD        2     // MHD is now regarded as an option of HYDRO
 #define ELBDM        3
 #define PAR_ONLY     4
 
@@ -51,9 +51,7 @@
 #define ROE          2
 #define HLLE         3
 #define HLLC         4
-#if (MODEL == MHD )
 #define HLLD         5
-#endif
 
 
 // dual-energy variables
@@ -91,12 +89,10 @@
 #if   ( MODEL == HYDRO )
 #  define NCOMP_FLUID         5
 #  define NFLUX_FLUID         NCOMP_FLUID
-
-#elif ( MODEL == MHD )
-#  define NCOMP_FLUID         5
+# ifdef MHD
 #  define NCOMP_MAGNETIC      3
-#  define NFLUX_FLUID         NCOMP_FLUID
 #  define NELECTRIC           2
+# endif
 
 // for ELBDM, we only need the density flux
 #elif ( MODEL == ELBDM )
@@ -118,7 +114,7 @@
 #  define NCOMP_PASSIVE_USER  0
 #endif
 // --> including entropy (or internal energy) when the dual energy formalism is adopted
-#if (  ( MODEL == HYDRO || MODEL == MHD )  &&  defined DUAL_ENERGY  )
+#if ( MODEL == HYDRO  &&  defined DUAL_ENERGY )
 #  define NCOMP_PASSIVE       ( NCOMP_PASSIVE_USER + 1 )
 #else
 #  define NCOMP_PASSIVE       ( NCOMP_PASSIVE_USER )
@@ -137,12 +133,10 @@
 #if   ( MODEL == HYDRO )
 #  define FLU_NIN             NCOMP_TOTAL
 #  define FLU_NOUT            NCOMP_TOTAL
-
-#elif ( MODEL == MHD )
-#  define FLU_NIN             NCOMP_TOTAL
-#  define FLU_NOUT            NCOMP_TOTAL
+# ifdef MHD
 #  define MAG_NIN             NCOMP_MAGNETIC
 #  define MAG_NOUT            NCOMP_MAGNETIC
+# endif
 
 // for ELBDM, we do not need to transfer the density component into GPU
 #elif ( MODEL == ELBDM )
@@ -160,7 +154,7 @@
 
 // main variables in different models
 // --> note that we must set "_VAR_NAME = 1<<VAR_NAME" (e.g., _DENS == 1<<DENS)
-#if   ( MODEL == HYDRO  ||  MODEL == MHD )
+#if   ( MODEL == HYDRO )
 
 // variable indices in patch->fluid[0 ... NCOMP_FLUID-1]
 #  define  DENS               0
@@ -170,7 +164,7 @@
 #  define  ENGY               4
 
 // variable indices in patch->magnetic[0 ... NCOMP_MAGNETIC-1]
-#  if ( MODEL == MHD )
+#  ifdef MHD
 #  define  MAGX               0
 #  define  MAGY               1
 #  define  MAGZ               2
@@ -219,7 +213,7 @@
 #  define _MOMZ               ( 1 << MOMZ )
 #  define _ENGY               ( 1 << ENGY )
 
-#  if ( MODEL == MHD )
+#  ifdef MHD
 #  define _MAGX               ( 1 << MAGX )
 #  define _MAGY               ( 1 << MAGY )
 #  define _MAGZ               ( 1 << MAGZ )
@@ -404,24 +398,17 @@
 #     endif
 #  elif ( FLU_SCHEME == CTU )
 #     if ( LR_SCHEME == PLM )
+#       ifdef MHD
+#        define FLU_GHOST_SIZE      3
+#       else
 #        define FLU_GHOST_SIZE      2
+#       endif
 #     else // PPM
-#        define FLU_GHOST_SIZE      3
-#     endif
-#  endif
-
-#elif ( MODEL == MHD )     // MHD
-#  if   ( FLU_SCHEME == MHM_RP )
-#     if ( LR_SCHEME == PLM )
-#        define FLU_GHOST_SIZE      3
-#     else // PPM
+#       ifdef MHD
 #        define FLU_GHOST_SIZE      4
-#     endif
-#  elif ( FLU_SCHEME == CTU )
-#     if ( LR_SCHEME == PLM )
+#       else
 #        define FLU_GHOST_SIZE      3
-#     else // PPM
-#        define FLU_GHOST_SIZE      4
+#       endif
 #     endif
 #  endif
 
@@ -441,7 +428,7 @@
 #ifdef GRAVITY
 
 // number of input and output variables in the gravity solver
-#  if   ( MODEL == HYDRO  ||  MODEL == MHD )
+#  if   ( MODEL == HYDRO )
 #     define GRA_NIN             NCOMP_FLUID
 
 // for ELBDM, we do not need to transfer the density component
@@ -458,7 +445,7 @@
 
 
 // number of potential ghost zones for advancing fluid by gravity ~ Gravity solver
-#  if   ( MODEL == HYDRO  ||  MODEL == MHD )
+#  if   ( MODEL == HYDRO )
 #     ifdef STORE_POT_GHOST
 #     define GRA_GHOST_SIZE      2
 #     else
@@ -488,8 +475,6 @@
 // number of potential ghost zones for correcting the half-step velocity if UNSPLIT_GRAVITY is on
 #  ifdef UNSPLIT_GRAVITY
 #  if   ( MODEL == HYDRO )
-#     define USG_GHOST_SIZE      1
-#  elif ( MODEL == MHD )
 #     define USG_GHOST_SIZE      1
 #  elif ( MODEL == ELBDM )
 #     define USG_GHOST_SIZE      0
@@ -732,7 +717,7 @@
 
 
 // 3D to 1D array indices transformation for patch->magnetic[]
-# if ( MODEL == MHD )
+#ifdef MHD
 #define IDX321_BX( i, j, k )        (  ( (k)*PS1    + (j) )*PS1_P1 + (i)  )
 #define IDX321_BY( i, j, k )        (  ( (k)*PS1_P1 + (j) )*PS1    + (i)  )
 #define IDX321_BZ( i, j, k )        (  ( (k)*PS1    + (j) )*PS1    + (i)  )
@@ -749,7 +734,7 @@
 // ################################
 // ## Remove useless definitions ##
 // ################################
-#if ( MODEL == HYDRO  ||  MODEL == MHD )
+#if ( MODEL == HYDRO )
 #  if ( FLU_SCHEME != MHM  &&  FLU_SCHEME != MHM_RP  &&  FLU_SCHEME != CTU )
 #  undef LR_SCHEME
 #  endif

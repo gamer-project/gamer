@@ -121,7 +121,7 @@ void Aux_Check_Parameter()
       Aux_Error( ERROR_INFO, "currently the check \"%s\" must work with \"%s\" !!\n",
                  "OPT__CK_REFINE", "OPT__FLAG_RHO" );
 
-#  if   ( MODEL == HYDRO  ||  MODEL == MHD )
+#  if   ( MODEL == HYDRO )
    if (  ( OPT__FLAG_LOHNER_DENS || OPT__FLAG_LOHNER_ENGY || OPT__FLAG_LOHNER_PRES || OPT__FLAG_LOHNER_TEMP )
          &&  Flu_ParaBuf < 2  )
       Aux_Error( ERROR_INFO, "Lohner error estimator does NOT work when Flu_ParaBuf (%d) < 2 !!\n", Flu_ParaBuf );
@@ -451,11 +451,9 @@ void Aux_Check_Parameter()
 
 // errors
 // ------------------------------
-#  if   ( MODEL == HYDRO )
+#  if ( MODEL == HYDRO )
    if ( fabs(GAMMA-5.0/3.0) > 1.0e-4 )
       Aux_Error( ERROR_INFO, "GAMMA must be equal to 5.0/3.0 in cosmological simuluations !!\n" );
-#  elif ( MODEL == MHD )
-#  warning : WAIT MHD !!!
 #  endif
 
 
@@ -773,19 +771,6 @@ void Aux_Check_Parameter()
 
 
 
-// fluid solver in MHD
-// =======================================================================================
-#  elif ( MODEL == MHD )
-#  warning : WAIT MHD !!!
-
-// errors
-// ------------------------------
-
-// warnings
-// ------------------------------
-
-
-
 // fluid solver in ELBDM
 // =======================================================================================
 #  elif ( MODEL == ELBDM )
@@ -1059,19 +1044,6 @@ void Aux_Check_Parameter()
    if ( GRA_GHOST_SIZE > 2 )  Aux_Message( stderr, "WARNING : \"GRA_GHOST_SIZE > 2\" !?\n" );
 
    } // if ( MPI_Rank == 0 )
-
-
-
-// gravity solver in MHD
-// =======================================================================================
-#  elif ( MODEL == MHD )
-#  warning : WAIT MHD !!!
-
-// errors
-// ------------------------------
-
-// warnings
-// ------------------------------
 
 
 

@@ -1,9 +1,9 @@
 #include "GAMER.h"
 #include "CUFLU.h"
 
-#if ( MODEL == HYDRO  ||  MODEL == MHD )
+#if ( MODEL == HYDRO )
 
-#if ( MODEL == MHD )
+#ifdef MHD
 #warning : WAIT MHD !!!
 #endif
 
@@ -172,4 +172,4 @@ void CPU_RiemannSolver_HLLE( const int XYZ, real Flux_Out[], const real L_In[], 
 
 
 
-#endif // #if ( MODEL == HYDRO  ||  MODEL == MHD )
+#endif // #if ( MODEL == HYDRO )

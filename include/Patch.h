@@ -171,7 +171,7 @@ struct patch_t
 // ===================================================================================
    real (*fluid)[PATCH_SIZE][PATCH_SIZE][PATCH_SIZE];
 
-#  if ( MODEL == MHD )
+#  ifdef MHD
    real (*magnetic)[PS1_P1*PATCH_SIZE*PATCH_SIZE];
 #  endif
 
@@ -196,7 +196,7 @@ struct patch_t
    real (*flux_bitrep[6])[PATCH_SIZE][PATCH_SIZE];
 #  endif
 
-#  if ( MODEL == MHD )
+#  ifdef MHD
    real (*electric       [18]);
    real (*electric_tmp   [18]);
 #  ifdef BITWISE_REPRODUCIBILITY
@@ -361,7 +361,7 @@ struct patch_t
       {
          fluid     = NULL;
 
-#        if ( MODEL == MHD )
+#        ifdef MHD
          magnetic  = NULL;
 #        endif
 
@@ -390,7 +390,7 @@ struct patch_t
 #        endif
       }
 
-#     if ( MODEL == MHD )
+#     ifdef MHD
       for (int s=0; s<18; s++)
       {
          electric       [s] = NULL;
@@ -402,7 +402,7 @@ struct patch_t
 #     endif
 
       if ( FluData )    hnew();
-#     if ( MODEL == MHD )
+#     ifdef MHD
       if ( MagData )    mnew();
 #     endif
 #     ifdef GRAVITY
@@ -447,7 +447,7 @@ struct patch_t
 
       fdelete();
       hdelete();
-#     if ( MODEL == MHD )
+#     ifdef MHD
       edelete();
       mdelete();
 #     endif
@@ -563,7 +563,7 @@ struct patch_t
 
 
 
-#  if ( MODEL == MHD )
+#  ifdef MHD
    //===================================================================================
    // Method      :  enew
    // Description :  Allocate electric[] in the given direction
@@ -682,7 +682,7 @@ struct patch_t
 
 
 
-#  if ( MODEL == MHD )
+#  ifdef MHD
    //===================================================================================
    // Method      :  mnew
    // Description :  Allocate magnetic[]
@@ -713,7 +713,7 @@ struct patch_t
       magnetic = NULL;
 
    } // METHOD : mdelete
-#  endif // #if ( MODEL == MHD )
+#  endif // #ifdef MHD
 
 
 

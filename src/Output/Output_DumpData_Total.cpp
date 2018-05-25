@@ -400,7 +400,7 @@ void Output_DumpData_Total( const char *FileName )
 
       const int    ncomp_fluid           = NCOMP_FLUID;
       const int    patch_size            = PATCH_SIZE;
-#     if ( MODEL == HYDRO  ||  MODEL == MHD )
+#     if ( MODEL == HYDRO )
       const double min_pres              = MIN_PRES;
 #     else
       const double min_pres              = NULL_REAL;
@@ -572,9 +572,6 @@ void Output_DumpData_Total( const char *FileName )
       const bool   opt__1st_flux_corr        = (bool)OPT__1ST_FLUX_CORR;
       const int    opt__1st_flux_corr_scheme = (int)OPT__1ST_FLUX_CORR_SCHEME;
 #     else
-#     if ( MODEL == MHD )
-#     warning : WAIT MHD !!!
-#     endif
       const bool   OPT__FLAG_PRES_GRADIENT   = NULL_BOOL;
       const double GAMMA                     = NULL_REAL;
       const double MOLECULAR_WEIGHT          = NULL_REAL;

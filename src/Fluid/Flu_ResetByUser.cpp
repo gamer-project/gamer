@@ -111,7 +111,7 @@ void Flu_ResetByUser_API( const int lv, const int FluSg, const double TTime )
 
 
    const double dh       = amr->dh[lv];
-#  if ( MODEL == HYDRO  ||  MODEL == MHD )
+#  if ( MODEL == HYDRO )
    const real   Gamma_m1 = GAMMA - (real)1.0;
    const real  _Gamma_m1 = (real)1.0 / Gamma_m1;
 #  endif
@@ -140,12 +140,12 @@ void Flu_ResetByUser_API( const int lv, const int FluSg, const double TTime )
 //       operations necessary only when this cell has been reset
          if ( Reset )
          {
-#           if ( MODEL == HYDRO  ||  MODEL == MHD )
+#           if ( MODEL == HYDRO )
 //          check minimum density and pressure
-#           if   ( MODEL == HYDRO )
-            const real EngyB = NULL_REAL;
-#           elif ( MODEL == MHD )
+#           ifdef MHD
 #           warning : WAIT MHD !!!
+            const real EngyB = NULL_REAL;
+#           else
             const real EngyB = NULL_REAL;
 #           endif
             fluid[DENS] = FMAX( fluid[DENS], (real)MIN_DENS );
@@ -166,7 +166,7 @@ void Flu_ResetByUser_API( const int lv, const int FluSg, const double TTime )
             if ( OPT__NORMALIZE_PASSIVE )
                CPU_NormalizePassive( fluid[DENS], fluid+NCOMP_FLUID, PassiveNorm_NVar, PassiveNorm_VarIdx );
 #           endif
-#           endif // if ( MODEL == HYDRO  ||  MODEL == MHD )
+#           endif // if ( MODEL == HYDRO )
 
 //          store the reset values
             for (int v=0; v<NCOMP_TOTAL; v++)   amr->patch[FluSg][lv][PID]->fluid[v][k][j][i] = fluid[v];

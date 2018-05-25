@@ -397,14 +397,10 @@ void Hydro_BoundaryCondition_Reflecting( real *Array, const int BC_Face, const i
                                          const int Idx_Start[], const int Idx_End[], const int TFluVarIdxList[],
                                          const int NVar_Der, const int TDerVarList[] );
 bool Hydro_Flag_Vorticity( const int i, const int j, const int k, const int lv, const int PID, const double Threshold );
-
-
-// MHD model
-#elif ( MODEL == MHD )
-void MHD_Aux_Check_Negative( const int lv, const int Mode, const char *comment );
-void MHD_Init_ByFunction_AssignData( const int lv );
+#ifdef MHD
 void MHD_GetCellCenteredBField( real B[], const int lv, const int PID, const int i, const int j, const int k );
 real MHD_GetCellCenteredBEnergy( const int lv, const int PID, const int i, const int j, const int k );
+#endif
 
 
 // ELBDM model

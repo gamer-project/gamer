@@ -56,9 +56,6 @@ void CPU_FluidSolver_CTU( const real Flu_Array_In[][NCOMP_TOTAL][ FLU_NXT*FLU_NX
                           const bool JeansMinPres, const real JeansMinPres_Coeff );
 #endif // FLU_SCHEME
 
-#elif ( MODEL == MHD )
-#warning : WAIT MHD !!!
-
 #elif ( MODEL == ELBDM )
 void CPU_ELBDMSolver( real Flu_Array_In [][FLU_NIN    ][ FLU_NXT*FLU_NXT*FLU_NXT ],
                       real Flu_Array_Out[][FLU_NOUT   ][ PS2*PS2*PS2 ],
@@ -192,10 +189,6 @@ void CPU_FluidSolver( real h_Flu_Array_In [][FLU_NIN    ][ FLU_NXT*FLU_NXT*FLU_N
 #     error : unsupported CPU hydro scheme
 
 #     endif
-
-
-#  elif ( MODEL == MHD )
-#     warning : WAIT MHD !!!
 
 
 #  elif ( MODEL == ELBDM )

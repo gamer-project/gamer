@@ -1,6 +1,6 @@
 #include "GAMER.h"
 
-#if ( MODEL == MHD )
+#ifdef MHD
 #warning : WAIT MHD !!!
 #endif
 
@@ -11,12 +11,11 @@
 // Function    :  Aux_Check_Conservation
 // Description :  Verify the conservation laws
 //                --> HYDRO    : check mass, momentum, and energy
-//                    MHD      : check mass, momentum, and energy
 //                    ELBDM    : check mass and energy
 //                    PAR_ONLY : check mass, momentum, and energy
 //                    Passive scalars
 //
-// Note        :  1. This check only works with the models HYDRO, MHD, ELBDM, and PAR_ONLY
+// Note        :  1. This check only works with the models HYDRO, ELBDM, and PAR_ONLY
 //                2. The values measured during the first function call will be taken as the reference values
 //                   to estimate errors
 //                   --> Note that during RESTART the reference values will be recalculated since they are NOT
@@ -42,8 +41,8 @@ void Aux_Check_Conservation( const char *comment )
    return;
 #  endif
 
-#  if ( MODEL != HYDRO  &&  MODEL != MHD  &&  MODEL != ELBDM  &&  MODEL != PAR_ONLY )
-   Aux_Message( stderr, "WARNING : function \"%s\" is supported only in the models HYDRO, MHD, ELBDM, and PAR_ONLY !!\n",
+#  if ( MODEL != HYDRO  &&  MODEL != ELBDM  &&  MODEL != PAR_ONLY )
+   Aux_Message( stderr, "WARNING : function \"%s\" is supported only in the models HYDRO, ELBDM, and PAR_ONLY !!\n",
                 __FUNCTION__ );
    OPT__CK_CONSERVATION = false;
    return;
@@ -56,11 +55,14 @@ void Aux_Check_Conservation( const char *comment )
    }
 
 
-#  if   ( MODEL == HYDRO  ||  MODEL == MHD )
+#  if   ( MODEL == HYDRO )
+#  ifdef MHD
+#  warning : WAIT MHD !!! // add magnetic energy
    const int NVar_NoPassive       = 8;    // 8: mass, momentum (x/y/z), kinematic/thermal/potential/total energies
                                           // --> note that **total energy** is put in the last element ==> [7] instead of [ENGY==4]
-#  if ( MODEL == MHD )
-#  warning : WAIT MHD !!!
+#  else
+   const int NVar_NoPassive       = 8;    // 8: mass, momentum (x/y/z), kinematic/thermal/potential/total energies
+                                          // --> note that **total energy** is put in the last element ==> [7] instead of [ENGY==4]
 #  endif
 
 #  elif ( MODEL == ELBDM )
@@ -159,8 +161,9 @@ void Aux_Check_Conservation( const char *comment )
 #                 endif
                } // i,j,k
 
-#              elif ( MODEL == MHD )
+#              ifdef MHD
 #              warning : WAIT MHD !!!
+#              endif
 
 #              elif ( MODEL == ELBDM )
                for (int k=0; k<PATCH_SIZE; k++)
@@ -225,7 +228,7 @@ void Aux_Check_Conservation( const char *comment )
       } // for (int PID0=0; PID0<amr->NPatchComma[lv][1]; PID0+=8)
 
 //    get the total energy
-#     if   ( MODEL == HYDRO  ||  MODEL == MHD )
+#     if   ( MODEL == HYDRO )
       Fluid_lv[7] = Fluid_lv[4] + Fluid_lv[5] + Fluid_lv[6];
 #     elif ( MODEL == ELBDM )
       Fluid_lv[4] = Fluid_lv[1] + Fluid_lv[2] + Fluid_lv[3];
@@ -292,13 +295,13 @@ void Aux_Check_Conservation( const char *comment )
          Aux_Message( File, "# Ref step     : %ld\n",    Step    );
          Aux_Message( File, "\n" );
 
-#        if   ( MODEL == HYDRO  ||  MODEL == MHD )
-         Aux_Message( File, "# Mass_Gas     : total HYDRO/MHD mass\n" );
-         Aux_Message( File, "# MomX/Y/Z_Gas : total HYDRO/MHD momentum\n" );
-         Aux_Message( File, "# Ekin_Gas     : total HYDRO/MHD kinematic energy\n" );
-         Aux_Message( File, "# Ethe_Gas     : total HYDRO/MHD thermal energy\n" );
-         Aux_Message( File, "# Epot_Gas     : total HYDRO/MHD potential energy\n" );
-         Aux_Message( File, "# Etot_Gas     : total HYDRO/MHD energy\n" );
+#        if   ( MODEL == HYDRO )
+         Aux_Message( File, "# Mass_Gas     : total HYDRO mass\n" );
+         Aux_Message( File, "# MomX/Y/Z_Gas : total HYDRO momentum\n" );
+         Aux_Message( File, "# Ekin_Gas     : total HYDRO kinematic energy\n" );
+         Aux_Message( File, "# Ethe_Gas     : total HYDRO thermal energy\n" );
+         Aux_Message( File, "# Epot_Gas     : total HYDRO potential energy\n" );
+         Aux_Message( File, "# Etot_Gas     : total HYDRO energy\n" );
 
 #        elif ( MODEL == ELBDM )
          Aux_Message( File, "# Mass_Psi     : total ELBDM mass\n" );
@@ -321,13 +324,13 @@ void Aux_Check_Conservation( const char *comment )
          Aux_Message( File, "# Etot_Par     : total PARTICLE energy\n" );
 
 #        if ( MODEL != PAR_ONLY )
-         Aux_Message( File, "# Mass_All     : sum of the total HYDRO/MHD/ELBDM + PARTICLE mass\n" );
-#        if ( MODEL == HYDRO  ||  MODEL == MHD )
-         Aux_Message( File, "# MomX_All     : sum of the total HYDRO/MHD/ELBDM + PARTICLE momentum x\n" );
-         Aux_Message( File, "# MomY_All     : sum of the total HYDRO/MHD/ELBDM + PARTICLE momentum y\n" );
-         Aux_Message( File, "# MomZ_All     : sum of the total HYDRO/MHD/ELBDM + PARTICLE momentum z\n" );
+         Aux_Message( File, "# Mass_All     : sum of the total HYDRO/ELBDM + PARTICLE mass\n" );
+#        if ( MODEL == HYDRO )
+         Aux_Message( File, "# MomX_All     : sum of the total HYDRO/ELBDM + PARTICLE momentum x\n" );
+         Aux_Message( File, "# MomY_All     : sum of the total HYDRO/ELBDM + PARTICLE momentum y\n" );
+         Aux_Message( File, "# MomZ_All     : sum of the total HYDRO/ELBDM + PARTICLE momentum z\n" );
 #        endif
-         Aux_Message( File, "# Etot_All     : sum of the total HYDRO/MHD/ELBDM + PARTICLE energy\n" );
+         Aux_Message( File, "# Etot_All     : sum of the total HYDRO/ELBDM + PARTICLE energy\n" );
 #        endif // if ( MODEL != PAR_ONLY )
 #        endif // #ifdef PARTICLE
 
@@ -345,7 +348,7 @@ void Aux_Check_Conservation( const char *comment )
 
          Aux_Message( File, "#%12s  %10s", "Time", "Step" );
 
-#        if   ( MODEL == HYDRO  ||  MODEL == MHD )
+#        if   ( MODEL == HYDRO )
          Aux_Message( File, "  %14s  %14s  %14s", "Mass_Gas", "Mass_Gas_AErr", "Mass_Gas_RErr" );
          Aux_Message( File, "  %14s  %14s  %14s", "MomX_Gas", "MomX_Gas_AErr", "MomX_Gas_RErr" );
          Aux_Message( File, "  %14s  %14s  %14s", "MomY_Gas", "MomY_Gas_AErr", "MomY_Gas_RErr" );
@@ -381,7 +384,7 @@ void Aux_Check_Conservation( const char *comment )
 
 #        if ( MODEL != PAR_ONLY )
          Aux_Message( File, "  %14s  %14s  %14s", "Mass_All", "Mass_All_AErr", "Mass_All_RErr" );
-#        if ( MODEL == HYDRO  ||  MODEL == MHD )
+#        if ( MODEL == HYDRO )
          Aux_Message( File, "  %14s  %14s  %14s", "MomX_All", "MomX_All_AErr", "MomX_All_RErr" );
          Aux_Message( File, "  %14s  %14s  %14s", "MomY_All", "MomY_All_AErr", "MomY_All_RErr" );
          Aux_Message( File, "  %14s  %14s  %14s", "MomZ_All", "MomZ_All_AErr", "MomZ_All_RErr" );
@@ -405,12 +408,12 @@ void Aux_Check_Conservation( const char *comment )
 
 //    calculate the sum of conserved quantities in different models
 #     if ( defined PARTICLE  &&  MODEL != PAR_ONLY )
-#     if   ( MODEL == HYDRO  ||  MODEL == MHD )
+#     if   ( MODEL == HYDRO )
       const double Mass_All     = Fluid_AllRank[0] + Mass_Par;
       const double MomX_All     = Fluid_AllRank[1] + MomX_Par;
       const double MomY_All     = Fluid_AllRank[2] + MomY_Par;
       const double MomZ_All     = Fluid_AllRank[3] + MomZ_Par;
-      const double Etot_All     = Fluid_AllRank[7] + Etot_Par;       // for HYDRO/MHD, total energy is stored in the 7th element
+      const double Etot_All     = Fluid_AllRank[7] + Etot_Par;       // for HYDRO, total energy is stored in the 7th element
 
       const double Mass_All_Ref = Fluid_Ref    [0] + Mass_Par_Ref;
       const double MomX_All_Ref = Fluid_Ref    [1] + MomX_Par_Ref;
@@ -447,7 +450,7 @@ void Aux_Check_Conservation( const char *comment )
 
 #     if ( MODEL != PAR_ONLY )
       Aux_Message( File, "  %14.7e  %14.7e  %14.7e", Mass_All, Mass_All-Mass_All_Ref, (Mass_All-Mass_All_Ref)/fabs(Mass_All_Ref) );
-#     if ( MODEL == HYDRO  ||  MODEL == MHD )
+#     if ( MODEL == HYDRO )
       Aux_Message( File, "  %14.7e  %14.7e  %14.7e", MomX_All, MomX_All-MomX_All_Ref, (MomX_All-MomX_All_Ref)/fabs(MomX_All_Ref) );
       Aux_Message( File, "  %14.7e  %14.7e  %14.7e", MomY_All, MomY_All-MomY_All_Ref, (MomY_All-MomY_All_Ref)/fabs(MomY_All_Ref) );
       Aux_Message( File, "  %14.7e  %14.7e  %14.7e", MomZ_All, MomZ_All-MomZ_All_Ref, (MomZ_All-MomZ_All_Ref)/fabs(MomZ_All_Ref) );

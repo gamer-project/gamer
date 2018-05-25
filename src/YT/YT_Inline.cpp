@@ -70,8 +70,9 @@ void YT_Inline()
    sprintf( FieldLabel[MOMZ], "MomZ" );
    sprintf( FieldLabel[ENGY], "Engy" );
 
-#  elif ( MODEL == MHD )
+#  ifdef MHD
 #  warning : WAIT MHD !!!
+#  endif
 
 #  elif ( MODEL == ELBDM )
    sprintf( FieldLabel[DENS], "Dens" );

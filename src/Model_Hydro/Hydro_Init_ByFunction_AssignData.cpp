@@ -1,6 +1,6 @@
 #include "GAMER.h"
 
-#if ( MODEL == HYDRO  ||  MODEL == MHD )
+#if ( MODEL == HYDRO )
 
 // declare as static so that other functions cannot invoke it directly and must use the function pointer
 static void Init_Function_User( real fluid[], const double x, const double y, const double z, const double Time,
@@ -13,7 +13,7 @@ void (*Init_Function_User_Ptr)( real fluid[], const double x, const double y, co
 extern bool (*Flu_ResetByUser_Func_Ptr)( real fluid[], const double x, const double y, const double z, const double Time,
                                          const int lv, double AuxArray[] );
 
-#if ( MODEL == MHD )
+#ifdef MHD
 // declare as static so that other functions cannot invoke it directly and must use the function pointer
 static real Init_Function_BField_User( const int comp, const double x, const double y, const double z, const double Time,
                                        const int lv, double AuxArray[] );
@@ -79,12 +79,12 @@ void Init_Function_User( real fluid[], const double x, const double y, const dou
 
 
 
-#if ( MODEL == MHD )
+#ifdef MHD
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Init_Function_BField_User
 // Description :  Function to initialize the magnetic field
 //
-// Note        :  1. Invoked by MHD_Init_ByFunction_AssignData() using the function pointer "Init_Function_BField_User_Ptr"
+// Note        :  1. Invoked by Hydro_Init_ByFunction_AssignData() using the function pointer "Init_Function_BField_User_Ptr"
 //                   --> The function pointer may be reset by various test problem initializers, in which case
 //                       this funtion will become useless
 //                2. This function will be invoked by multiple OpenMP threads when OPENMP is enabled
@@ -134,13 +134,13 @@ real Init_Function_BField_User( const int comp, const double x, const double y, 
    return B_comp;
 
 } // FUNCTION : Init_Function_BField_User
-#endif // #if ( MODEL == MHD )
+#endif // #ifdef MHD
 
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Hydro/MHD_Init_ByFunction_AssignData
-// Description :  Construct the initial condition in HYDRO and MHD
+// Function    :  HydroInit_ByFunction_AssignData
+// Description :  Construct the initial condition in HYDRO
 //
 // Note        :  1. Work for the option "OPT__INIT == INIT_BY_FUNCTION"
 //                2. The function pointers "Init_Function_User_Ptr/Flu_ResetByUser_Func_Ptr/Init_Function_BField_User_Ptr"
@@ -154,17 +154,13 @@ real Init_Function_BField_User( const int comp, const double x, const double y, 
 //
 // Parameter   :  lv : Target refinement level
 //-------------------------------------------------------------------------------------------------------
-#if   ( MODEL == HYDRO )
 void Hydro_Init_ByFunction_AssignData( const int lv )
-#elif ( MODEL == MHD )
-void   MHD_Init_ByFunction_AssignData( const int lv )
-#endif
 {
 
 // check
    if ( Init_Function_User_Ptr == NULL )  Aux_Error( ERROR_INFO, "Init_Function_User_Ptr == NULL !!\n" );
 
-#  if ( MODEL == MHD )
+#  ifdef MHD
    if ( Init_Function_BField_User_Ptr == NULL )    Aux_Error( ERROR_INFO, "Init_Function_BField_User_Ptr == NULL !!\n" );
 #  endif
 
@@ -181,7 +177,7 @@ void   MHD_Init_ByFunction_AssignData( const int lv )
    const double _NSub3   = 1.0/CUBE(NSub);
    const real   Gamma_m1 = GAMMA - (real)1.0;
    const real  _Gamma_m1 = (real)1.0 / Gamma_m1;
-#  if ( MODEL == MHD )
+#  ifdef MHD
    const double _NSub2   = 1.0/SQR(NSub);
 #  endif
 
@@ -193,7 +189,7 @@ void   MHD_Init_ByFunction_AssignData( const int lv )
    for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
    {
 //    1. set the magnetic field
-#     if ( MODEL == MHD )
+#     ifdef MHD
 //    loop over B_X/Y/Z
       for (int v=0; v<NCOMP_MAGNETIC; v++)
       {
@@ -224,7 +220,7 @@ void   MHD_Init_ByFunction_AssignData( const int lv )
             amr->patch[ amr->MagSg[lv] ][lv][PID]->magnetic[v][ id ++ ] = B_sub*_NSub2;
          }}} // i,j,k
       } // for (int v=0; v<3; v++)
-#     endif // if ( MODEL == MHD )
+#     endif // #ifdef MHD
 
 
 
@@ -253,11 +249,11 @@ void   MHD_Init_ByFunction_AssignData( const int lv )
 
 
 //       add the magnetic energy
-#        if   ( MODEL == HYDRO )
-         const real EngyB = NULL_REAL;
-#        elif ( MODEL == MHD )
+#        ifdef MHD
          const real EngyB = MHD_GetCellCenteredBEnergy( lv, PID, i, j, k );
          fluid[ENGY] += EngyB;
+#        else
+         const real EngyB = NULL_REAL;
 #        endif
 
 
@@ -286,8 +282,8 @@ void   MHD_Init_ByFunction_AssignData( const int lv )
       }}} // i,j,k
    } // for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
 
-} // FUNCTION : Hydro/MHD_Init_ByFunction_AssignData
+} // FUNCTION : Hydro_Init_ByFunction_AssignData
 
 
 
-#endif // #if ( MODEL == HYDRO  ||  MODEL == MHD )
+#endif // #if ( MODEL == HYDRO )

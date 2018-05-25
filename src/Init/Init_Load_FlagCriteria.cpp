@@ -15,7 +15,7 @@ void Init_Load_FlagCriteria()
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ...\n", __FUNCTION__ );
 
 
-#  if ( MODEL != HYDRO  &&  MODEL != MHD )
+#  if ( MODEL != HYDRO )
    const bool OPT__FLAG_PRES_GRADIENT = false;
    double *FlagTable_PresGradient     = NULL;
 
@@ -42,7 +42,7 @@ void Init_Load_FlagCriteria()
    double *FlagTable_ParMassCell      = NULL;
 #  endif
 
-#  if   ( MODEL == HYDRO  ||  MODEL == MHD )
+#  if   ( MODEL == HYDRO )
    const bool OPT__FLAG_LOHNER = ( OPT__FLAG_LOHNER_DENS || OPT__FLAG_LOHNER_ENGY || OPT__FLAG_LOHNER_PRES || OPT__FLAG_LOHNER_TEMP );
 #  elif ( MODEL == ELBDM )
    const bool OPT__FLAG_LOHNER = OPT__FLAG_LOHNER_DENS;
@@ -84,7 +84,7 @@ void Init_Load_FlagCriteria()
 
       FlagTable_User        [lv]    = -1.0;
 
-#     if   ( MODEL == HYDRO   ||  MODEL == MHD )
+#     if   ( MODEL == HYDRO )
       FlagTable_PresGradient[lv]    = -1.0;
       FlagTable_Vorticity   [lv]    = -1.0;
       FlagTable_Jeans       [lv]    = -1.0;

@@ -1,5 +1,9 @@
 #include "GAMER.h"
 
+#ifdef MHD
+#warning : WAIT MHD !!!
+#endif
+
 
 
 
@@ -18,7 +22,6 @@
 //                TVar     : Target variables
 //                           --> Supported variables in different models:
 //                               HYDRO : _DENS, _MOMX, _MOMY, _MOMZ, _ENGY,[, _POTE]
-//                               MHD   :
 //                               ELBDM : _DENS, _REAL, _IMAG, [, _POTE]
 //                           --> _FLUID, _PASSIVE, and _TOTAL apply to all models
 //-------------------------------------------------------------------------------------------------------
@@ -69,7 +72,7 @@ void Flu_Restrict( const int FaLv, const int SonFluSg, const int FaFluSg, const 
 #  ifdef GRAVITY
    const bool ResPot    = TVar & _POTE;
 #  endif
-#  if ( MODEL == HYDRO  ||  MODEL == MHD )
+#  if ( MODEL == HYDRO )
    const real  Gamma_m1 = GAMMA - (real)1.0;
    const real _Gamma_m1 = (real)1.0 / Gamma_m1;
 #  endif
@@ -191,7 +194,7 @@ void Flu_Restrict( const int FaLv, const int SonFluSg, const int FaFluSg, const 
 
 //    check the minimum pressure and, when the dual-energy formalism is adopted, ensure the consistency between
 //    pressure, total energy density, and the dual-energy variable
-#     if ( MODEL == HYDRO  ||  MODEL == MHD )
+#     if ( MODEL == HYDRO )
 //    apply this correction only when preparing all fluid variables
       if (  ( TVar & _TOTAL ) == _TOTAL  )
       for (int k=0; k<PATCH_SIZE; k++)
@@ -217,10 +220,10 @@ void Flu_Restrict( const int FaLv, const int SonFluSg, const int FaFluSg, const 
 #        else // #ifdef DUAL_ENERGY
 
 //       actually it might not be necessary to check the minimum pressure here
-#        if   ( MODEL == HYDRO )
-         const real EngyB = NULL_REAL;
-#        elif ( MODEL == MHD )
+#        ifdef MHD
 #        warning : WAIT MHD !!!
+         const real EngyB = NULL_REAL;
+#        else
          const real EngyB = NULL_REAL;
 #        endif
          amr->patch[FaFluSg][FaLv][FaPID]->fluid[ENGY][k][j][i]
@@ -232,7 +235,7 @@ void Flu_Restrict( const int FaLv, const int SonFluSg, const int FaFluSg, const 
                                       Gamma_m1, _Gamma_m1, MIN_PRES, EngyB );
 #        endif // #ifdef DUAL_ENERGY ... else ...
       } // i,j,k
-#     endif // #if ( MODEL == HYDRO  ||  MODEL == MHD )
+#     endif // #if ( MODEL == HYDRO )
 
 
 //    rescale real and imaginary parts to get the correct density in ELBDM

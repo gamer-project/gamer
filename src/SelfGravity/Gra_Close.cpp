@@ -41,8 +41,8 @@ void Gra_Close( const int lv, const int SaveSg, const real h_Flu_Array_G[][GRA_N
          PID = PID0 + LocalID;
          N   = 8*TID + LocalID;
 
-#        if ( MODEL == HYDRO  ||  MODEL == MHD )
-//       density field is sent in and out but NOT updated in the hydro/MHD gravity solver
+#        if ( MODEL == HYDRO )
+//       density field is sent in and out but NOT updated in the hydro gravity solver
          for (int v=1; v<GRA_NIN; v++)
          for (int k=0; k<PATCH_SIZE; k++)
          for (int j=0; j<PATCH_SIZE; j++)

@@ -101,7 +101,7 @@ void Flu_BoundaryCondition_User( real *Array, const int NVar_Flu, const int Arra
    const double y0 = Corner[1] + (double)Idx_Start[1]*dh;
    const double z0 = Corner[2] + (double)Idx_Start[2]*dh;
 
-#  if   ( MODEL == HYDRO  ||  MODEL == MHD )
+#  if   ( MODEL == HYDRO )
    const bool CheckMinPres_Yes = true;
    const real Gamma_m1         = GAMMA - (real)1.0;
    const bool PrepVx           = ( TVar & _VELX ) ? true : false;
@@ -109,8 +109,7 @@ void Flu_BoundaryCondition_User( real *Array, const int NVar_Flu, const int Arra
    const bool PrepVz           = ( TVar & _VELZ ) ? true : false;
    const bool PrepPres         = ( TVar & _PRES ) ? true : false;
    const bool PrepTemp         = ( TVar & _TEMP ) ? true : false;
-
-#  if ( MODEL == MHD )
+#  ifdef MHD
 #  warning : WAIT MHD !!!
 #  endif
 
@@ -128,8 +127,11 @@ void Flu_BoundaryCondition_User( real *Array, const int NVar_Flu, const int Arra
 
 // set the boundary values
    int    i, j, k, v2;
-   real   BVal[NCOMP_TOTAL], EngyB=NULL_REAL;
+   real   BVal[NCOMP_TOTAL];
    double x, y, z;
+#  if ( MODEL == HYDRO )
+   real   EngyB=NULL_REAL;
+#  endif
 
    for (k=Idx_Start[2], z=z0; k<=Idx_End[2]; k++, z+=dh)
    for (j=Idx_Start[1], y=y0; j<=Idx_End[1]; j++, y+=dh)
@@ -143,10 +145,11 @@ void Flu_BoundaryCondition_User( real *Array, const int NVar_Flu, const int Arra
 //    derived variables
       v2 = NVar_Flu;
 
-#     if   ( MODEL == HYDRO  ||  MODEL == MHD )
-#     if ( MODEL == MHD )
+#     if   ( MODEL == HYDRO )
+#     ifdef MHD
 #     warning : WAIT MHD !!!
 //    if ( PrepPres || PresTemp )   EngyB = ...;
+//    add other MHD derived variables
 #     endif
 
       if ( PrepVx   )   Array3D[ v2 ++ ][k][j][i] = BVal[MOMX] / BVal[DENS];
@@ -156,10 +159,6 @@ void Flu_BoundaryCondition_User( real *Array, const int NVar_Flu, const int Arra
                                                                      Gamma_m1, CheckMinPres_Yes, MIN_PRES, EngyB );
       if ( PrepTemp )   Array3D[ v2 ++ ][k][j][i] = CPU_GetTemperature( BVal[DENS], BVal[MOMX], BVal[MOMY], BVal[MOMZ], BVal[ENGY],
                                                                         Gamma_m1, CheckMinPres_Yes, MIN_PRES, EngyB );
-
-#     if ( MODEL == MHD )
-#     warning : WAIT MHD !!!
-#     endif
 
 #     elif ( MODEL == ELBDM )
 //    no derived variables yet

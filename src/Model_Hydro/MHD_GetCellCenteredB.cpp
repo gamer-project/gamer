@@ -1,6 +1,6 @@
 #include "GAMER.h"
 
-#if ( MODEL == MHD )
+#if ( MODEL == HYDRO  &&  defined MHD )
 
 
 
@@ -95,4 +95,4 @@ real MHD_GetCellCenteredBEnergy( const int lv, const int PID, const int i, const
 
 
 
-#endif // #if ( MODEL == MHD )
+#endif // #if ( MODEL == HYDRO  &&  defined MHD )

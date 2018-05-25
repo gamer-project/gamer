@@ -1445,23 +1445,28 @@ void FillIn_Makefile( Makefile_t &Makefile )
 // model-dependent options
 #  ifdef GRAVITY
    Makefile.PotScheme              = POT_SCHEME;
+
 #  ifdef STORE_POT_GHOST
    Makefile.StorePotGhost          = 1;
 #  else
    Makefile.StorePotGhost          = 0;
 #  endif
+
 #  ifdef UNSPLIT_GRAVITY
    Makefile.UnsplitGravity         = 1;
 #  else
    Makefile.UnsplitGravity         = 0;
 #  endif
-#  endif
+
+#  endif // #ifdef GRAVITY
 
 #  if   ( MODEL == HYDRO )
    Makefile.FluScheme              = FLU_SCHEME;
+
 #  ifdef LR_SCHEME
    Makefile.LRScheme               = LR_SCHEME;
 #  endif
+
 #  ifdef RSOLVER
    Makefile.RSolver                = RSOLVER;
 #  endif
@@ -1472,8 +1477,10 @@ void FillIn_Makefile( Makefile_t &Makefile )
    Makefile.DualEnergy             = 0;
 #  endif
 
-#  elif ( MODEL == MHD )
+#  ifdef MHD
 #  warning : WAIT MHD !!!
+#  endif
+
 
 #  elif ( MODEL == ELBDM )
 #  ifdef CONSERVE_MASS
@@ -1493,6 +1500,7 @@ void FillIn_Makefile( Makefile_t &Makefile )
 #  else
    Makefile.SelfInteraction4       = 0;
 #  endif
+
 
 #  else
 #  error : unsupported MODEL !!
@@ -1657,25 +1665,18 @@ void FillIn_SymConst( SymConst_t &SymConst )
 #  else
    SymConst.WAF_Dissipate        = 0;
 #  endif
-
 #  ifdef N_FC_VAR
    SymConst.N_FC_Var             = N_FC_VAR;
 #  endif
-
 #  ifdef N_SLOPE_PPM
    SymConst.N_Slope_PPM          = N_SLOPE_PPM;
 #  endif
-
 #  ifdef MAX_ERROR
    SymConst.MaxError             = MAX_ERROR;
 #  endif
-
-
-#  elif ( MODEL == MHD )
-   SymConst.Flu_BlockSize_x      = FLU_BLOCK_SIZE_X;
-   SymConst.Flu_BlockSize_y      = FLU_BLOCK_SIZE_Y;
+#  ifdef MHD
 #  warning : WAIT MHD !!!
-
+#  endif
 
 #  elif  ( MODEL == ELBDM )
    SymConst.Flu_BlockSize_x      = FLU_BLOCK_SIZE_X;
@@ -1865,7 +1866,7 @@ void FillIn_InputPara( InputPara_t &InputPara )
    InputPara.ELBDM_Taylor3_Auto      = ELBDM_TAYLOR3_AUTO;
 #  endif
 
-// fluid solvers in both HYDRO/MHD/ELBDM
+// fluid solvers in different models
    InputPara.Flu_GPU_NPGroup         = FLU_GPU_NPGROUP;
    InputPara.GPU_NStream             = GPU_NSTREAM;
    InputPara.Opt__FixUp_Flux         = OPT__FIXUP_FLUX;
@@ -1883,10 +1884,10 @@ void FillIn_InputPara( InputPara_t &InputPara )
 
    InputPara.Opt__OverlapMPI         = OPT__OVERLAP_MPI;
    InputPara.Opt__ResetFluid         = OPT__RESET_FLUID;
-#  if ( MODEL == HYDRO  ||  MODEL == MHD  ||  MODEL == ELBDM )
+#  if ( MODEL == HYDRO  ||  MODEL == ELBDM )
    InputPara.MinDens                 = MIN_DENS;
 #  endif
-#  if ( MODEL == HYDRO  ||  MODEL == MHD )
+#  if ( MODEL == HYDRO )
    InputPara.MinPres                 = MIN_PRES;
    InputPara.JeansMinPres            = JEANS_MIN_PRES;
    InputPara.JeansMinPres_Level      = JEANS_MIN_PRES_LEVEL;
@@ -2025,7 +2026,7 @@ void FillIn_InputPara( InputPara_t &InputPara )
 #  endif
 
 // flag tables
-#  if   ( MODEL == HYDRO  ||  MODEL == MHD )
+#  if   ( MODEL == HYDRO )
    const bool Opt__FlagLohner = ( OPT__FLAG_LOHNER_DENS || OPT__FLAG_LOHNER_ENGY || OPT__FLAG_LOHNER_PRES || OPT__FLAG_LOHNER_TEMP );
 #  elif ( MODEL == ELBDM )
    const bool Opt__FlagLohner = OPT__FLAG_LOHNER_DENS;
@@ -2198,9 +2199,9 @@ void GetCompound_Makefile( hid_t &H5_TypeID )
    H5Tinsert( H5_TypeID, "RSolver",                HOFFSET(Makefile_t,RSolver                ), H5T_NATIVE_INT );
 #  endif
    H5Tinsert( H5_TypeID, "DualEnergy",             HOFFSET(Makefile_t,DualEnergy             ), H5T_NATIVE_INT );
-
-#  elif ( MODEL == MHD )
+#  ifdef MHD
 #  warning : WAIT MHD !!!
+#  endif
 
 #  elif ( MODEL == ELBDM )
    H5Tinsert( H5_TypeID, "ConserveMass",           HOFFSET(Makefile_t,ConserveMass           ), H5T_NATIVE_INT );
@@ -2308,11 +2309,9 @@ void GetCompound_SymConst( hid_t &H5_TypeID )
 #  ifdef MAX_ERROR
    H5Tinsert( H5_TypeID, "MaxError",             HOFFSET(SymConst_t,MaxError            ), H5T_NATIVE_DOUBLE );
 #  endif
-
-#  elif ( MODEL == MHD )
-   H5Tinsert( H5_TypeID, "Flu_BlockSize_x",      HOFFSET(SymConst_t,Flu_BlockSize_x     ), H5T_NATIVE_INT    );
-   H5Tinsert( H5_TypeID, "Flu_BlockSize_y",      HOFFSET(SymConst_t,Flu_BlockSize_y     ), H5T_NATIVE_INT    );
+#  ifdef MHD
 #  warning : WAIT MHD !!!
+#  endif
 
 #  elif  ( MODEL == ELBDM )
    H5Tinsert( H5_TypeID, "Flu_BlockSize_x",      HOFFSET(SymConst_t,Flu_BlockSize_x     ), H5T_NATIVE_INT    );
@@ -2543,7 +2542,7 @@ void GetCompound_InputPara( hid_t &H5_TypeID )
    H5Tinsert( H5_TypeID, "ELBDM_Taylor3_Auto",      HOFFSET(InputPara_t,ELBDM_Taylor3_Auto     ), H5T_NATIVE_INT     );
 #  endif
 
-// fluid solvers in both HYDRO/MHD/ELBDM
+// fluid solvers in different models
    H5Tinsert( H5_TypeID, "Flu_GPU_NPGroup",         HOFFSET(InputPara_t,Flu_GPU_NPGroup        ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "GPU_NStream",             HOFFSET(InputPara_t,GPU_NStream            ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "Opt__FixUp_Flux",         HOFFSET(InputPara_t,Opt__FixUp_Flux        ), H5T_NATIVE_INT     );
@@ -2566,10 +2565,10 @@ void GetCompound_InputPara( hid_t &H5_TypeID )
 #  endif
    H5Tinsert( H5_TypeID, "Opt__OverlapMPI",         HOFFSET(InputPara_t,Opt__OverlapMPI        ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "Opt__ResetFluid",         HOFFSET(InputPara_t,Opt__ResetFluid        ), H5T_NATIVE_INT     );
-#  if ( MODEL == HYDRO  ||  MODEL == MHD  ||  MODEL == ELBDM )
+#  if ( MODEL == HYDRO  ||  MODEL == ELBDM )
    H5Tinsert( H5_TypeID, "MinDens",                 HOFFSET(InputPara_t,MinDens                ), H5T_NATIVE_DOUBLE  );
 #  endif
-#  if ( MODEL == HYDRO  ||  MODEL == MHD )
+#  if ( MODEL == HYDRO )
    H5Tinsert( H5_TypeID, "MinPres",                 HOFFSET(InputPara_t,MinPres                ), H5T_NATIVE_DOUBLE  );
    H5Tinsert( H5_TypeID, "JeansMinPres",            HOFFSET(InputPara_t,JeansMinPres           ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "JeansMinPres_Level",      HOFFSET(InputPara_t,JeansMinPres_Level     ), H5T_NATIVE_INT     );

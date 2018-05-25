@@ -18,8 +18,6 @@ __global__ void CUPOT_dtSolver_HydroGravity( real g_dt_Array[],
                                              const real dh, const real Safety, const bool P5_Gradient,
                                              const OptGravityType_t GravityType, const double ExtAcc_Time );
 #endif
-#elif ( MODEL == MHD )
-#warning : WAIT MHD !!!
 
 #elif ( MODEL == ELBDM )
 
@@ -241,10 +239,6 @@ void CUAPI_Asyn_dtSolver( const Solver_t TSolver, real h_dt_Array[], const real 
          default :
             Aux_Error( ERROR_INFO, "incorrect parameter %s = %d !!\n", "TSolver", TSolver );
       }
-
-
-#     elif ( MODEL == MHD )
-#     warning :: WAIT MHD !!!
 
 #     elif ( MODEL == ELBDM )
 

@@ -88,9 +88,6 @@ void Init_ByFunction_AssignData( const int lv )
 #  if   ( MODEL == HYDRO )
    Hydro_Init_ByFunction_AssignData( lv );
 
-#  elif ( MODEL == MHD )
-   MHD_Init_ByFunction_AssignData( lv );
-
 #  elif ( MODEL == ELBDM )
    ELBDM_Init_ByFunction_AssignData( lv );
 

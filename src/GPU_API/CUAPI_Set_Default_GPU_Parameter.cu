@@ -94,8 +94,6 @@ __global__ void CUPOT_dtSolver_HydroGravity( real g_dt_Array[],
                                              const real dh, const real Safety, const bool P5_Gradient,
                                              const OptGravityType_t GravityType, const double ExtAcc_Time );
 #endif
-#elif ( MODEL == MHD )
-#warning : WAIT MHD !!!
 
 #elif ( MODEL == ELBDM )
 __global__ void CUFLU_ELBDMSolver( real g_Fluid_In [][FLU_NIN ][ FLU_NXT*FLU_NXT*FLU_NXT ],
@@ -147,8 +145,6 @@ __global__ void CUPOT_HydroGravitySolver(       real g_Flu_Array_New[][GRA_NIN][
                                           const real Gra_Const, const bool P5_Gradient, const OptGravityType_t GravityType,
                                           const double TimeNew, const double TimeOld, const real dt, const real dh, const real MinEint );
 
-#elif ( MODEL == MHD )
-#warning :: WAIT MHD !!!
 
 #elif ( MODEL == ELBDM )
 __global__ void CUPOT_ELBDMGravitySolver(       real g_Flu_Array[][GRA_NIN][ PS1*PS1*PS1 ],
@@ -214,8 +210,9 @@ void CUAPI_Set_Default_GPU_Parameter( int &GPU_NStream, int &Flu_GPU_NPGroup, in
 #           error : UNKNOWN GPU_ARCH !!
 #           endif
 
-#        elif ( MODEL == MHD )
-#        warning :: WAIT MHD !!!
+#           ifdef MHD
+#           warning : WAIT MHD !!!
+#           endif
 
 #        elif ( MODEL == ELBDM )
 #           if   ( GPU_ARCH == FERMI )
@@ -264,8 +261,9 @@ void CUAPI_Set_Default_GPU_Parameter( int &GPU_NStream, int &Flu_GPU_NPGroup, in
 #        error : UNKNOWN GPU_ARCH !!
 #        endif
 
-#     elif ( MODEL == MHD )
-#        warning :: WAIT MHD !!!
+#        ifdef MHD
+#        warning : WAIT MHD !!!
+#        endif
 
 #     elif ( MODEL == ELBDM )
 #        if   ( GPU_ARCH == FERMI )
@@ -358,8 +356,9 @@ void CUAPI_Set_Default_GPU_Parameter( int &GPU_NStream, int &Flu_GPU_NPGroup, in
    CUDA_CHECK_ERROR(  cudaFuncSetCacheConfig( CUPOT_dtSolver_HydroGravity, cudaFuncCachePreferShared )  );
 #  endif
 
-#  elif ( MODEL == MHD )
-#  warning :: WAIT MHD !!!
+#  ifdef MHD
+#  warning : WAIT MHD !!!
+#  endif
 
 #  elif ( MODEL == ELBDM )
    CUDA_CHECK_ERROR(  cudaFuncSetCacheConfig( CUFLU_ELBDMSolver,      cudaFuncCachePreferShared )  );
@@ -387,9 +386,6 @@ void CUAPI_Set_Default_GPU_Parameter( int &GPU_NStream, int &Flu_GPU_NPGroup, in
 #  if   ( MODEL == HYDRO )
    CUDA_CHECK_ERROR( cudaFuncSetCacheConfig( CUPOT_HydroGravitySolver,           cudaFuncCachePreferShared ) );
 
-#  elif ( MODEL == MHD )
-#  warning : WAIT MHD !!!
-
 #  elif ( MODEL == ELBDM )
    CUDA_CHECK_ERROR( cudaFuncSetCacheConfig( CUPOT_ELBDMGravitySolver,           cudaFuncCachePreferL1     ) );
 
@@ -408,11 +404,7 @@ void CUAPI_Set_Default_GPU_Parameter( int &GPU_NStream, int &Flu_GPU_NPGroup, in
 #     if ( MODEL == HYDRO  &&  ( FLU_SCHEME == MHM || FLU_SCHEME == MHM_RP || FLU_SCHEME == CTU )  )
       if ( CUFLU_FluidSolver_SetConstMem_NormIdx(PassiveNorm_VarIdx) != 0  )
          Aux_Error( ERROR_INFO, "CUFLU_FluidSolver_SetConstMem_NormIdx failed ...\n" );
-
-#     elif ( MODEL == MHD )
-#     warning : WAIT MHD !!!
-
-#     endif // MODEL
+#     endif
    }
 #  endif // #if ( NCOMP_PASSIVE > 0 )
 

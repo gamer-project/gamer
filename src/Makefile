@@ -30,10 +30,10 @@ COMPILE_VERBOSE := 0
 
 # (a) physical modules
 # -------------------------------------------------------------------------------
-# physical model: HYDRO/MHD/ELBDM/PAR_ONLY (ELBDM: wave dark matter; PAR_ONLY: particle-only)
+# physical model: HYDRO/ELBDM/PAR_ONLY (ELBDM: wave dark matter; PAR_ONLY: particle-only)
 # --> must be set in any cases; PAR_ONLY is not supported yet;
-#     MHD and ELBDM are not publicly available yet but will be released soon
-SIMU_OPTION += -DMODEL=MHD
+#     ELBDM is not publicly available yet but will be released soon
+SIMU_OPTION += -DMODEL=HYDRO
 
 # enable gravity
 #SIMU_OPTION += -DGRAVITY
@@ -53,14 +53,16 @@ SIMU_OPTION += -DMODEL=MHD
 ifeq "$(filter -DMODEL=HYDRO, $(SIMU_OPTION))" "-DMODEL=HYDRO"
 # hydrodynamic scheme: RTVD/WAF/MHM/MHM_RP/CTU
 # --> must be set when MODEL=HYDRO; WAF is deprecated
+# --> MHD only supports MHM_RP and CTU
 SIMU_OPTION += -DFLU_SCHEME=CTU
 
 # scheme of spatial data reconstruction: PLM/PPM (piecewise-linear/piecewise-parabolic)
 # --> useless for RTVD/WAF
 SIMU_OPTION += -DLR_SCHEME=PPM
 
-# Riemann solver: EXACT/ROE/HLLE/HLLC
-# --> all are useless for RTVD; HLLE/HLLC are useless for WAF
+# Riemann solver: EXACT/ROE/HLLE/HLLC/HLLD
+# --> all of them are useless for RTVD; HLLE/HLLC/HLLD are useless for WAF
+# --> HLLD is only for MHD, while EXACT and HLLC are only for pure hydro
 SIMU_OPTION += -DRSOLVER=ROE
 
 # dual energy formalism: DE_ENPY/DE_EINT (evolve entropy or internal energy)
@@ -72,30 +74,11 @@ SIMU_OPTION += -DRSOLVER=ROE
 # --> for simulations without any passive scalar, either set it to 0 or comment it out
 SIMU_OPTION += -DNCOMP_PASSIVE_USER=0
 
-
-# (b-2) MHD options
-# ------------------------------------------------------------------------------------
-else ifeq "$(filter -DMODEL=MHD, $(SIMU_OPTION))" "-DMODEL=MHD"
-# MHD scheme: MHM_RP/CTU
-# --> must be set when MODEL=MHD
-SIMU_OPTION += -DFLU_SCHEME=CTU
-
-# scheme of spatial data reconstruction: PLM/PPM (piecewise-linear/piecewise-parabolic)
-SIMU_OPTION += -DLR_SCHEME=PPM
-
-# Riemann solver: ROE/HLLE/HLLD
-SIMU_OPTION += -DRSOLVER=ROE
-
-# dual energy formalism: DE_ENPY/DE_EINT (evolve entropy or internal energy)
-# --> DE_EINT is not supported yet
-#SIMU_OPTION += -DDUAL_ENERGY=DE_ENPY
-
-# number of passively advected scalars (**excluding** entropy or internal energy used by DUAL_ENERGY)
-# --> for simulations without any passive scalar, either set it to 0 or comment it out
-SIMU_OPTION += -DNCOMP_PASSIVE_USER=0
+# magnetohydrodynamics
+SIMU_OPTION += -DMHD
 
 
-# (b-3) ELBDM options
+# (b-2) ELBDM options
 # ------------------------------------------------------------------------------------
 else ifeq "$(filter -DMODEL=ELBDM, $(SIMU_OPTION))" "-DMODEL=ELBDM"
 # enforce the mass conservation
@@ -115,7 +98,7 @@ SIMU_OPTION += -DNCOMP_PASSIVE_USER=0
 endif # MODEL
 
 
-# (b-4) gravity options
+# (b-3) gravity options
 # -------------------------------------------------------------------------------
 ifeq "$(filter -DGRAVITY, $(SIMU_OPTION))" "-DGRAVITY"
 # Poisson solver: SOR/MG (successive-overrelaxation (recommended)/multigrid)
@@ -128,7 +111,7 @@ SIMU_OPTION += -DPOT_SCHEME=SOR
 SIMU_OPTION += -DSTORE_POT_GHOST
 
 # use unsplitting method to couple gravity to the target model (recommended)
-# --> for HYDRO and MHD only; ELBDM is not supported yet
+# --> for HYDRO only; ELBDM is not supported yet
 SIMU_OPTION += -DUNSPLIT_GRAVITY
 
 # comoving frame for cosmological simulations
@@ -137,7 +120,7 @@ SIMU_OPTION += -DUNSPLIT_GRAVITY
 endif # GRAVITY
 
 
-# (b-5) particle options
+# (b-4) particle options
 # ------------------------------------------------------------------------------------
 ifeq "$(filter -DPARTICLE, $(SIMU_OPTION))" "-DPARTICLE"
 # store particle acceleration (recommended)
@@ -153,7 +136,7 @@ SIMU_OPTION += -DPAR_NPASSIVE_USER=0
 endif # PARTICLE
 
 
-# (d) miscellaneous options (AMR, GPU, parallelization, optimizations, ...)
+# (c) miscellaneous options (AMR, GPU, parallelization, optimizations, ...)
 # ------------------------------------------------------------------------------------
 # maximum number of AMR levels including the root level (level id = 0 ... NLEVEL-1)
 # --> must be set in any cases
@@ -450,32 +433,10 @@ vpath %.cu     Model_Hydro/GPU_HydroGravity
 vpath %.cpp    Model_Hydro/CPU_HydroGravity
 endif
 
+ifeq "$(filter -DMHD, $(SIMU_OPTION))" "-DMHD"
+#CUDA_FILE   +=
 
-# MHD source files (included only if "MODEL=MHD")
-# -------------------------------------------------------------------------------
-else ifeq "$(filter -DMODEL=MHD, $(SIMU_OPTION))" "-DMODEL=MHD"
-#CUDA_FILE   += CUFLU_dtSolver_MHDCFL.cu  CUFLU_FluidSolver_MHM.cu  CUFLU_FluidSolver_CTU.cu
-
-CC_FILE     += CPU_Shared_RiemannSolver_Roe.cpp  CPU_Shared_RiemannSolver_HLLE.cpp  CPU_Shared_FluUtility.cpp \
-               CPU_Shared_DualEnergy.cpp
-#CC_FILE     += CPU_FluidSolver_MHM.cpp  CPU_FluidSolver_CTU.cpp  CPU_Shared_DataReconstruction.cpp \
-#               CPU_Shared_ComputeFlux.cpp  CPU_dtSolver_MHDCFL.cpp \
-#               CPU_Shared_FullStepUpdate.cpp  CPU_Shared_RiemannSolver_Exact.cpp  \
-#               CPU_Shared_RiemannSolver_HLLD.cpp  CPU_Shared_DualEnergy.cpp \
-
-CC_FILE     += MHD_Init_ByFunction_AssignData.cpp  MHD_GetCellCenteredB.cpp  MHD_Aux_Check_Negative.cpp
-#CC_FILE     += MHD_BoundaryCondition_Reflecting.cpp
-
-vpath %.cu     Model_MHD/GPU_MHD
-vpath %.cpp    Model_MHD/CPU_MHD  Model_MHD
-
-ifeq "$(filter -DGRAVITY, $(SIMU_OPTION))" "-DGRAVITY"
-#CUDA_FILE   += CUPOT_MHDGravitySolver.cu  CUPOT_dtSolver_MHDGravity.cu
-
-#CC_FILE     += CPU_MHDGravitySolver.cpp  CPU_dtSolver_MHDGravity.cpp
-
-vpath %.cu     Model_MHD/GPU_MHDGravity
-vpath %.cpp    Model_MHD/CPU_MHDGravity
+CC_FILE     += MHD_GetCellCenteredB.cpp
 endif
 
 

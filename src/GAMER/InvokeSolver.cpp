@@ -412,7 +412,7 @@ void Solver( const Solver_t TSolver, const int lv, const double TimeNew, const d
    const bool   ELBDM_TAYLOR3_AUTO      = NULL_BOOL;
 #  endif
 
-#  if ( MODEL != HYDRO  &&  MODEL != MHD )
+#  if ( MODEL != HYDRO )
    const LR_Limiter_t  OPT__LR_LIMITER  = LR_LIMITER_NONE;
    const WAF_Limiter_t OPT__WAF_LIMITER = WAF_LIMITER_NONE;
    const bool   Flu_XYZ                 = true;
@@ -423,10 +423,10 @@ void Solver( const Solver_t TSolver, const int lv, const double TimeNew, const d
    const bool   Flu_XYZ                 = 1 - ( AdvanceCounter[lv]%2 );    // forward/backward sweep
 #  endif
 
-#  if ( MODEL != HYDRO  &&  MODEL != MHD  &&  MODEL != ELBDM )
+#  if ( MODEL != HYDRO  &&  MODEL != ELBDM )
    const double MIN_DENS                = NULL_REAL;
 #  endif
-#  if ( MODEL != HYDRO  &&  MODEL != MHD )
+#  if ( MODEL != HYDRO )
    const double MIN_PRES                = NULL_REAL;
 #  endif
 
@@ -453,13 +453,13 @@ void Solver( const Solver_t TSolver, const int lv, const double TimeNew, const d
 #  endif
 #  endif
 
-#  if ( MODEL != HYDRO  &&  MODEL != MHD  &&  MODEL != ELBDM )
+#  if ( MODEL != HYDRO  &&  MODEL != ELBDM )
 #  error : ERROR : ADD MODEL-DEPENDENT USELESS VARIABLES FOR THE NEW MODELS HERE !!
 #  endif
 
    const real MinEint = MIN_PRES / ( GAMMA - (real)1.0 );
 
-#  if (  ( MODEL == HYDRO || MODEL == MHD )  &&  defined GRAVITY  )
+#  if ( MODEL == HYDRO  &&  defined GRAVITY )
    const real JeansMinPres_Coeff = ( JEANS_MIN_PRES ) ?
                                    NEWTON_G*SQR(JEANS_MIN_PRES_NCELL*amr->dh[JEANS_MIN_PRES_LEVEL])/(GAMMA*M_PI) : NULL_REAL;
 #  else
@@ -613,9 +613,6 @@ void Solver( const Solver_t TSolver, const int lv, const double TimeNew, const d
 #        endif
       break;
 #     endif
-
-#     elif ( MODEL == MHD )
-#        warning : WAIT MHD !!!
 
 #     elif ( MODEL == ELBDM )
 #     ifdef GRAVITY

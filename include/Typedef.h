@@ -190,7 +190,7 @@ const GetBufMode_t
   ,POT_FOR_POISSON      = 6
   ,POT_AFTER_REFINE     = 7
 #endif
-#if ( MODEL == MHD )
+#ifdef MHD
   ,COARSE_FINE_ELECTRIC = 8
 #endif
   ;
@@ -279,7 +279,7 @@ const OptLohnerForm_t
 
 
 // OPT__1ST_FLUX_CORR and OPT__1ST_FLUX_CORR_SCHEME options
-#if ( MODEL == HYDRO  ||  MODEL == MHD )
+#if ( MODEL == HYDRO )
 typedef int Opt1stFluxCorr_t;
 const Opt1stFluxCorr_t
    FIRST_FLUX_CORR_NONE    = 0,
@@ -290,15 +290,11 @@ typedef int OptRSolver1st_t;
 const OptRSolver1st_t
    RSOLVER_1ST_NONE    = 0
   ,RSOLVER_1ST_ROE     = 1
-#  if ( MODEL == HYDRO )
   ,RSOLVER_1ST_HLLC    = 2
-#  endif
   ,RSOLVER_1ST_HLLE    = 3
-#  if ( MODEL == MHD )
   ,RSOLVER_1ST_HLLD    = 4
-#  endif
   ;
-#endif // #if ( MODEL == HYDRO  ||  MODEL == MHD )
+#endif // #if ( MODEL == HYDRO )
 
 
 // OPT__CORR_AFTER_ALL_SYNC options

@@ -112,9 +112,9 @@ void Output_DumpData_Part( const OptOutputPart_t Part, const bool BaseOnly, cons
          {
             fprintf( File, "#%10s %10s %10s %20s %20s %20s", "i", "j", "k", "x", "y", "z" );
 
-#           if   ( MODEL == HYDRO  ||  MODEL == MHD )
+#           if   ( MODEL == HYDRO )
             fprintf( File, "%14s%14s%14s%14s%14s%14s", "Density", "Momentum x", "Momentum y", "Momentum z", "Energy", "Pressure" );
-#           if ( MODEL == MHD )
+#           ifdef MHD
             fprintf( File, "%14s%14s%14s%14s", "B_X", "B_Y", "B_Z", "0.5*B^2" );
 #           endif
 
@@ -236,18 +236,18 @@ void WriteFile( FILE *File, const int lv, const int PID, const int i, const int 
    for (int v=0; v<NCOMP_FLUID; v++)   fprintf( File, " %13.6e", u[v] );
 
 // gas pressure
-#  if ( MODEL == HYDRO  ||  MODEL == MHD )
+#  if ( MODEL == HYDRO )
    const bool CheckMinPres_Yes = true;
-#  if   ( MODEL == HYDRO )
-   const real EngyB            = NULL_REAL;
-#  elif ( MODEL == MHD )
+#  ifdef MHD
    const real EngyB            = MHD_GetCellCenteredBEnergy( lv, PID, i, j, k );
+#  else
+   const real EngyB            = NULL_REAL;
 #  endif
    fprintf( File, " %13.6e", CPU_GetPressure(u[DENS],u[MOMX],u[MOMY],u[MOMZ],u[ENGY],GAMMA-1.0,CheckMinPres_Yes,MIN_PRES,EngyB) );
-#  endif // HYDRO/MHD
+#  endif
 
 // magnetic field
-#  if ( MODEL == MHD )
+#  ifdef MHD
    real B[3];
    MHD_GetCellCenteredBField( B, lv, PID, i, j, k );
    fprintf( File, " %13.6e %13.6e %13.6e %13.6e", B[MAGX], B[MAGY], B[MAGZ], EngyB );

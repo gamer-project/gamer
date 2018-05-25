@@ -82,7 +82,7 @@ extern OptTimeStepLevel_t OPT__DT_LEVEL;
 // 2. global variables for different applications
 // ============================================================================================================
 // (2-1) fluid solver in different models
-#if   ( MODEL == HYDRO  ||  MODEL == MHD )
+#if   ( MODEL == HYDRO )
 extern double           FlagTable_PresGradient[NLEVEL-1], FlagTable_Vorticity[NLEVEL-1], FlagTable_Jeans[NLEVEL-1];
 extern double           GAMMA, MINMOD_COEFF, EP_COEFF, MOLECULAR_WEIGHT;
 extern LR_Limiter_t     OPT__LR_LIMITER;

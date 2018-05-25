@@ -2,9 +2,9 @@
 #include "CUFLU.h"
 
 // some functions in this file need to be defined even when using GPU
-#if ( MODEL == HYDRO  ||  MODEL == MHD )
+#if ( MODEL == HYDRO )
 
-#if ( MODEL == MHD )
+#ifdef MHD
 #warning : WAIT MHD !!!
 #endif
 
@@ -86,17 +86,18 @@ void CPU_Con2Pri( const real In[], real Out[], const real Gamma_m1, const real M
 
    const bool CheckMinPres_Yes = true;
    const real _Rho             = (real)1.0 / In[0];
+#  ifdef MHD
+#  warning : WAIT MHD !!!
+   const real EngyB            = NULL_REAL;
+#  else
+   const real EngyB            = NULL_REAL;
+#  endif
 
    Out[0] = In[0];
    Out[1] = In[1]*_Rho;
    Out[2] = In[2]*_Rho;
    Out[3] = In[3]*_Rho;
-#  if   ( MODEL == HYDRO )
-   Out[4] = CPU_GetPressure( In[0], In[1], In[2], In[3], In[4], Gamma_m1, CheckMinPres_Yes, MinPres, NULL_REAL );
-#  elif ( MODEL == MHD )
-#  warning : WAIT MHD !!!
-// Out[4] = CPU_GetPressure( In[0], In[1], In[2], In[3], In[4], Gamma_m1, CheckMinPres_Yes, MinPres, EngyB );
-#  endif
+   Out[4] = CPU_GetPressure( In[0], In[1], In[2], In[3], In[4], Gamma_m1, CheckMinPres_Yes, MinPres, EngyB );
 
 // pressure floor required to resolve the Jeans length
 // --> note that currently we do not modify the dual-energy variable (e.g., entropy) accordingly
@@ -181,12 +182,13 @@ void CPU_Con2Flux( const int XYZ, real Flux[], const real Input[], const real Ga
 
    CPU_Rotate3D( Var, XYZ, true );
 
-#  if   ( MODEL == HYDRO )
-   Pres = CPU_GetPressure( Var[0], Var[1], Var[2], Var[3], Var[4], Gamma_m1, CheckMinPres_Yes, MinPres, NULL_REAL );
-#  elif ( MODEL == MHD )
+#  ifdef MHD
 #  warning : WAIT MHD !!!
-// Pres = CPU_GetPressure( Var[0], Var[1], Var[2], Var[3], Var[4], Gamma_m1, CheckMinPres_Yes, MinPres, EngyB );
+   const real EngyB = NULL_REAL;
+#  else
+   const real EngyB = NULL_REAL;
 #  endif
+   Pres = CPU_GetPressure( Var[0], Var[1], Var[2], Var[3], Var[4], Gamma_m1, CheckMinPres_Yes, MinPres, EngyB );
    Vx   = Var[1] / Var[0];
 
    Flux[0] = Var[1];
@@ -264,10 +266,10 @@ real CPU_CheckMinPresInEngy( const real Dens, const real MomX, const real MomY, 
 // we didn't use CPU_GetPressure() here to void calculating kinematic energy (Ek) twice
    _Dens   = (real)1.0 / Dens;
    Ek      = (real)0.5*( SQR(MomX) + SQR(MomY) + SQR(MomZ) ) * _Dens;
-#  if   ( MODEL == HYDRO )
-   InPres  = Gamma_m1*( Engy - Ek );
-#  elif ( MODEL == MHD )
+#  ifdef MHD
    InPres  = Gamma_m1*( Engy - Ek - EngyB );
+#  else
+   InPres  = Gamma_m1*( Engy - Ek );
 #  endif
    OutPres = CPU_CheckMinPres( InPres, MinPres );
 
@@ -276,10 +278,10 @@ real CPU_CheckMinPresInEngy( const real Dens, const real MomX, const real MomY, 
       return Engy;
 
    else
-#     if   ( MODEL == HYDRO )
-      return Ek + _Gamma_m1*OutPres;
-#     elif ( MODEL == MHD )
+#     ifdef MHD
       return Ek + _Gamma_m1*OutPres + EngyB;
+#     else
+      return Ek + _Gamma_m1*OutPres;
 #     endif
 
 } // FUNCTION : CPU_CheckMinPresInEngy
@@ -340,7 +342,7 @@ real CPU_GetPressure( const real Dens, const real MomX, const real MomY, const r
 
   _Dens  = (real)1.0 / Dens;
    Pres  = Engy - (real)0.5*_Dens*( SQR(MomX) + SQR(MomY) + SQR(MomZ) );
-#  if ( MODEL == MHD )
+#  ifdef MHD
    Pres -= EngyB;
 #  endif
    Pres *= Gamma_m1;
@@ -483,4 +485,4 @@ void CPU_NormalizePassive( const real GasDens, real Passive[], const int NNorm, 
 
 
 
-#endif // #if ( MODEL == HYDRO  ||  MODEL == MHD )
+#endif // #if ( MODEL == HYDRO )
