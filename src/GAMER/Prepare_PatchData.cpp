@@ -9,6 +9,8 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData[], const in
 static void SetTargetSibling( int NTSib[], int *TSib[] );
 static int Table_01( const int SibID, const char dim, const int Count, const int GhostSize );
 static int Table_02( const int lv, const int PID, const int Side );
+void SetTempIntPara( const int lv, const int Sg_Current, const double PrepTime, const double Time0, const double Time1,
+                     bool &IntTime, int &Sg, int &Sg_IntT, real &Weighting, real &Weighting_IntT );
 
 // flags for checking whether (1) Prepare_PatchData_InitParticleDensityArray() and (2) Par_CollectParticle2OneLevel()
 // are properly called before preparing either _PAR_DENS or _TOTAL_DENS
@@ -62,8 +64,6 @@ bool ParDensArray_Initialized = false;
 //
 // Parameter   :  lv             : Target refinement level
 //                PrepTime       : Target physical time to prepare data
-//                                 --> Currently it must be equal to either Time[lv] or Time_Prev[lv]
-//                                 --> Temporal interpolation at Lv=lv is NOT supported
 //                h_Input_Array  : Host array to store the prepared data
 //                GhostSize      : Number of ghost zones to be prepared
 //                NPG            : Number of patch groups prepared at a time
@@ -285,6 +285,9 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
 
 // TFluVarIdxList : List recording the target fluid and passive variable indices ( = [0 ... NCOMP_TOTAL-1] )
    int NTSib[26], *TSib[26], NVar_Flu, NVar_Der, NVar_Tot, TFluVarIdxList[NCOMP_TOTAL];
+#  ifdef MHD
+   int NVar_MagFC=0, NVar_MagCC=0;
+#  endif
 
 // set up the target sibling indices for the function "InterpolateGhostZone"
    SetTargetSibling( NTSib, TSib );
@@ -343,91 +346,51 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
    int  FluSg, FluSg_IntT;
    real FluWeighting, FluWeighting_IntT;
 
-   if ( NVar_Flu + NVar_Der != 0 ) {
-   if      (  Mis_CompareRealValue( PrepTime, amr->FluSgTime[lv][   amr->FluSg[lv] ], NULL, false )  )
+// fluid
+   if ( NVar_Flu + NVar_Der != 0 )
    {
-      FluIntTime        = false;
-      FluSg             = amr->FluSg[lv];
-      FluSg_IntT        = NULL_INT;
-      FluWeighting      = NULL_REAL;
-      FluWeighting_IntT = NULL_REAL;
-   }
+      SetTempIntPara( lv, amr->FluSg[lv], PrepTime, amr->FluSgTime[lv][0], amr->FluSgTime[lv][1],
+                      FluIntTime, FluSg, FluSg_IntT, FluWeighting, FluWeighting_IntT );
 
-   else if (  Mis_CompareRealValue( PrepTime, amr->FluSgTime[lv][ 1-amr->FluSg[lv] ], NULL, false )  )
-   {
-      FluIntTime        = false;
-      FluSg             = 1 - amr->FluSg[lv];
-      FluSg_IntT        = NULL_INT;
-      FluWeighting      = NULL_REAL;
-      FluWeighting_IntT = NULL_REAL;
-   }
-
-   else
-   {
 //    check: although temporal interpolation is allowed, currently PrepTime is expected to be equal to either
 //           amr->FluSgTime[lv][0] or amr->FluSgTime[lv][1]
-      Aux_Error( ERROR_INFO, "cannot determine FluSg (lv %d, PrepTime %20.14e, SgTime[0] %20.14e, SgTime[1] %20.14e !!\n",
-                 lv, PrepTime, amr->FluSgTime[lv][0], amr->FluSgTime[lv][1] );
+      if ( FluIntTime  &&  MPI_Rank == 0 )
+         Aux_Message( stderr, "WARNING : cannot determine FluSg "
+                              "          (lv %d, PrepTime %20.14e, SgTime[0] %20.14e, SgTime[1] %20.14e) !!\n",
+                      lv, PrepTime, amr->FluSgTime[lv][0], amr->FluSgTime[lv][1] );
+   }
 
-//    print warning messages if temporal extrapolation is required
-      const double TimeMin = MIN( amr->FluSgTime[lv][0], amr->FluSgTime[lv][1] );
-      const double TimeMax = MAX( amr->FluSgTime[lv][0], amr->FluSgTime[lv][1] );
+// magnetic field
+#  ifdef MHD
+   bool MagIntTime;
+   int  MagSg, MagSg_IntT;
+   real MagWeighting, MagWeighting_IntT;
 
-      if ( TimeMin < 0.0 )
-         Aux_Error( ERROR_INFO, "TimeMin (%21.14e) < 0.0 ==> one of the fluid arrays has not been initialized !!\n", TimeMin );
+   if ( NVar_MagFC + NVar_MagCC != 0 )
+   {
+      SetTempIntPara( lv, amr->MagSg[lv], PrepTime, amr->MagSgTime[lv][0], amr->MagSgTime[lv][1],
+                      MagIntTime, MagSg, MagSg_IntT, MagWeighting, MagWeighting_IntT );
 
-      if (  ( PrepTime < TimeMin  ||  PrepTime-TimeMax >= 1.0e-12*TimeMax )  &&  MPI_Rank == 0  )
-         Aux_Message( stderr, "WARNING : temporal extrapolation (lv %d, T_Prep %20.14e, T_Min %20.14e, T_Max %20.14e)\n",
-                      lv, PrepTime, TimeMin, TimeMax );
+//    check: although temporal interpolation is allowed, currently PrepTime is expected to be equal to either
+//           amr->MagSgTime[lv][0] or amr->MagSgTime[lv][1]
+      if ( MagIntTime  &&  MPI_Rank == 0 )
+         Aux_Message( stderr, "WARNING : cannot determine MagSg "
+                              "          (lv %d, PrepTime %20.14e, SgTime[0] %20.14e, SgTime[1] %20.14e) !!\n",
+                      lv, PrepTime, amr->MagSgTime[lv][0], amr->MagSgTime[lv][1] );
+   }
+#  endif // #ifdef MHD
 
-      if ( OPT__INT_TIME )
-      {
-         FluIntTime        = true;
-         FluSg             = 0;
-         FluSg_IntT        = 1;
-         FluWeighting      =   ( +amr->FluSgTime[lv][FluSg_IntT] - PrepTime )
-                             / (  amr->FluSgTime[lv][FluSg_IntT] - amr->FluSgTime[lv][FluSg] );
-         FluWeighting_IntT =   ( -amr->FluSgTime[lv][FluSg     ] + PrepTime )
-                             / (  amr->FluSgTime[lv][FluSg_IntT] - amr->FluSgTime[lv][FluSg] );
-      }
-
-      else
-      {
-         FluIntTime        = false;
-         FluSg             = amr->FluSg[lv]; // set to the current Sg
-         FluSg_IntT        = NULL_INT;
-         FluWeighting      = NULL_REAL;
-         FluWeighting_IntT = NULL_REAL;
-      }
-   } // Mis_CompareRealValue
-   } // if ( NVar_Flu + NVar_Der != 0 )
-
+// potential
 #  ifdef GRAVITY
    bool PotIntTime;
    int  PotSg, PotSg_IntT;
    real PotWeighting, PotWeighting_IntT;
 
-   if ( PrepPot ) {
-   if      (  Mis_CompareRealValue( PrepTime, amr->PotSgTime[lv][   amr->PotSg[lv] ], NULL, false )  )
+   if ( PrepPot )
    {
-      PotIntTime        = false;
-      PotSg             = amr->PotSg[lv];
-      PotSg_IntT        = NULL_INT;
-      PotWeighting      = NULL_REAL;
-      PotWeighting_IntT = NULL_REAL;
-   }
+      SetTempIntPara( lv, amr->PotSg[lv], PrepTime, amr->PotSgTime[lv][0], amr->PotSgTime[lv][1],
+                      PotIntTime, PotSg, PotSg_IntT, PotWeighting, PotWeighting_IntT );
 
-   else if (  Mis_CompareRealValue( PrepTime, amr->PotSgTime[lv][ 1-amr->PotSg[lv] ], NULL, false )  )
-   {
-      PotIntTime        = false;
-      PotSg             = 1 - amr->PotSg[lv];
-      PotSg_IntT        = NULL_INT;
-      PotWeighting      = NULL_REAL;
-      PotWeighting_IntT = NULL_REAL;
-   }
-
-   else
-   {
 //    check: although temporal interpolation is allowed, currently PrepTime is expected to be equal to either
 //           amr->PotSgTime[lv][0] or amr->PotSgTime[lv][1]
 //           --> the only exception is when calling Par_UpdateParticle() to prepare the coarse-grid potential
@@ -435,41 +398,11 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
 #     ifdef PARTICLE
       if ( amr->Par->ImproveAcc )
 #     endif
-      Aux_Error( ERROR_INFO, "cannot determine PotSg (lv %d, PrepTime %20.14e, SgTime[0] %20.14e, SgTime[1] %20.14e !!\n",
-                 lv, PrepTime, amr->PotSgTime[lv][0], amr->PotSgTime[lv][1] );
-
-//    print warning messages if temporal extrapolation is required
-      const double TimeMin = MIN( amr->PotSgTime[lv][0], amr->PotSgTime[lv][1] );
-      const double TimeMax = MAX( amr->PotSgTime[lv][0], amr->PotSgTime[lv][1] );
-
-      if ( TimeMin < 0.0 )
-         Aux_Error( ERROR_INFO, "TimeMin (%21.14e) < 0.0 ==> one of the potential arrays has not been initialized !!\n", TimeMin );
-
-      if (  ( PrepTime < TimeMin  ||  PrepTime-TimeMax >= 1.0e-12*TimeMax )  &&  MPI_Rank == 0  )
-         Aux_Message( stderr, "WARNING : temporal extrapolation (lv %d, T_Prep %20.14e, T_Min %20.14e, T_Max %20.14e)\n",
-                      lv, PrepTime, TimeMin, TimeMax );
-
-      if ( OPT__INT_TIME )
-      {
-         PotIntTime        = true;
-         PotSg             = 0;
-         PotSg_IntT        = 1;
-         PotWeighting      =   ( +amr->PotSgTime[lv][PotSg_IntT] - PrepTime )
-                             / ( amr->PotSgTime[lv][PotSg_IntT] - amr->PotSgTime[lv][PotSg] );
-         PotWeighting_IntT =   ( -amr->PotSgTime[lv][PotSg     ] + PrepTime )
-                             / ( amr->PotSgTime[lv][PotSg_IntT] - amr->PotSgTime[lv][PotSg] );
-      }
-
-      else
-      {
-         PotIntTime        = false;
-         PotSg             = amr->PotSg[lv]; // set to the current Sg
-         PotSg_IntT        = NULL_INT;
-         PotWeighting      = NULL_REAL;
-         PotWeighting_IntT = NULL_REAL;
-      }
-   } // Mis_CompareRealValue
-   } // if ( PrepPot )
+      if ( PotIntTime  &&  MPI_Rank == 0 )
+         Aux_Message( stderr, "WARNING : cannot determine PotSg "
+                              "          (lv %d, PrepTime %20.14e, SgTime[0] %20.14e, SgTime[1] %20.14e) !!\n",
+                      lv, PrepTime, amr->PotSgTime[lv][0], amr->PotSgTime[lv][1] );
+   }
 #  endif // #ifdef GRAVITY
 
 
@@ -1643,6 +1576,85 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
 
 
 
+//-------------------------------------------------------------------------------------------------------
+// Function    :  SetTempIntPara
+// Description :  Set the temporal interpolation parameters
+//
+// Note        :  1. Invoked by Prepare_PatchData() and InterpolateGhostZone()
+//                2. Apply to fluid, potential, and magnetic field
+//                3. Use call-by-reference to set the returned parameters
+//
+// Parameter   :  lv            : Target refinement level
+//                Sg_Current    : Current Sg
+//                PrepTime      : Target physical time to prepare data
+//                Time0         : Physical time of Sg=0
+//                Time1         : Physical time of Sg=1
+//                IntTime       : Whether or not the temporal interpolation is required
+//                Sg            : Sg if temporal interpolation is not required
+//                Sg_Int        : Sg if temporal interpolation is required
+//                Weighting     : Weighting for the data stored in Sg
+//                Weighting_Int : Weighting for the data stored in Sg_Int
+//
+// Return      :  IntTime, Sg, Sg_Int, Weighting, Weighting_Int
+//-------------------------------------------------------------------------------------------------------
+void SetTempIntPara( const int lv, const int Sg_Current, const double PrepTime, const double Time0, const double Time1,
+                     bool &IntTime, int &Sg, int &Sg_IntT, real &Weighting, real &Weighting_IntT )
+{
+
+   if      (  Mis_CompareRealValue( PrepTime, Time0, NULL, false )  )
+   {
+      IntTime        = false;
+      Sg             = 0;
+      Sg_IntT        = NULL_INT;
+      Weighting      = NULL_REAL;
+      Weighting_IntT = NULL_REAL;
+   }
+
+   else if (  Mis_CompareRealValue( PrepTime, Time1, NULL, false )  )
+   {
+      IntTime        = false;
+      Sg             = 1;
+      Sg_IntT        = NULL_INT;
+      Weighting      = NULL_REAL;
+      Weighting_IntT = NULL_REAL;
+   }
+
+   else
+   {
+//    print warning messages if temporal extrapolation is required
+      const double TimeMin = MIN( Time0, Time1 );
+      const double TimeMax = MAX( Time0, Time1 );
+
+      if ( TimeMin < 0.0 )
+         Aux_Error( ERROR_INFO, "TimeMin (%21.14e) < 0.0 ==> one of the data arrays has not been initialized !!\n", TimeMin );
+
+      if (  ( PrepTime < TimeMin  ||  PrepTime-TimeMax >= 1.0e-12*TimeMax )  &&  MPI_Rank == 0  )
+         Aux_Message( stderr, "WARNING : performing temporal extrapolation (lv %d, T_Prep %20.14e, T_Min %20.14e, T_Max %20.14e)\n",
+                      lv, PrepTime, TimeMin, TimeMax );
+
+      if ( OPT__INT_TIME )
+      {
+         IntTime        = true;
+         Sg             = 0;
+         Sg_IntT        = 1;
+         Weighting      =   ( +Time1 - PrepTime ) / ( Time1 - Time0 );
+         Weighting_IntT =   ( -Time0 + PrepTime ) / ( Time1 - Time0 );
+      }
+
+      else
+      {
+         IntTime        = false;
+         Sg             = Sg_Current;
+         Sg_IntT        = NULL_INT;
+         Weighting      = NULL_REAL;
+         Weighting_IntT = NULL_REAL;
+      }
+   } // Mis_CompareRealValue
+
+} // FUNCTION : SetTempIntPara
+
+
+
 // ============
 // |  Tables  |
 // ============
@@ -1835,7 +1847,7 @@ int Table_01( const int SibID, const char dim, const int Count, const int GhostS
 // Function    :  Table_02
 // Description :  Return the patch ID of the 0th patch (local ID = 0) of the sibling patch group
 //
-// Note        :  Work for the function "Prepare_PatchData"
+// Note        :  Work for Prepare_PatchData()
 //
 // Parameter   :  lv    : Target refinement level
 //                PID   : Target patch ID to find its sibling patches
@@ -1994,7 +2006,7 @@ int Table_02( const int lv, const int PID, const int Side )
 // Function    :  SetTargetSibling
 // Description :  Set the target sibling directions for preparing the ghost-zone data at the coarse-grid level
 //
-// Note        :  1. Work for the function "Prepare_PatchData"
+// Note        :  1. Work for Prepare_PatchData()
 //                2. TSib needs to be deallocated manually
 //                3. Sibling directions recorded in TSib must be in ascending numerical order for filling the
 //                   non-periodic ghost-zone data in the function "InterpolateGhostZone"

@@ -2,6 +2,8 @@
 
 static int Table_01( const int SibID, const int Side, const char dim, const int w01, const int w02,
                      const int w10, const int w11, const int w12, const int w20, const int w21 );
+void SetTempIntPara( const int lv, const int Sg_Current, const double PrepTime, const double Time0, const double Time1,
+                     bool &IntTime, int &Sg, int &Sg_IntT, real &Weighting, real &Weighting_IntT );
 
 
 
@@ -146,128 +148,56 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData[], const in
    int  FluSg, FluSg_IntT;
    real FluWeighting, FluWeighting_IntT;
 
-   if ( NVar_Flu + NVar_Der != 0 ) {
-   if      (  Mis_CompareRealValue( PrepTime, amr->FluSgTime[lv][   amr->FluSg[lv] ], NULL, false )  )
+// fluid
+   if ( NVar_Flu + NVar_Der != 0 )
    {
-      FluIntTime        = false;
-      FluSg             = amr->FluSg[lv];
-      FluSg_IntT        = NULL_INT;
-      FluWeighting      = NULL_REAL;
-      FluWeighting_IntT = NULL_REAL;
+      SetTempIntPara( lv, amr->FluSg[lv], PrepTime, amr->FluSgTime[lv][0], amr->FluSgTime[lv][1],
+                      FluIntTime, FluSg, FluSg_IntT, FluWeighting, FluWeighting_IntT );
+
+      if ( FluIntTime  &&  OPT__DT_LEVEL == DT_LEVEL_SHARED )
+         Aux_Error( ERROR_INFO, "cannot determine FluSg for OPT__DT_LEVEL == DT_LEVEL_SHARED "
+                                "(lv %d, PrepTime %20.14e, SgTime[0] %20.14e, SgTime[1] %20.14e !!\n",
+                    lv, PrepTime, amr->FluSgTime[lv][0], amr->FluSgTime[lv][1] );
    }
 
-   else if (  Mis_CompareRealValue( PrepTime, amr->FluSgTime[lv][ 1-amr->FluSg[lv] ], NULL, false )  )
+// magnetic field
+#  ifdef MHD
+   bool MagIntTime;
+   int  MagSg, MagSg_IntT;
+   real MagWeighting, MagWeighting_IntT;
+#  ifdef MHD
+#  warning : REMOVE THESE !!!!!!!!!!!!!!!!!
+   int NVar_MagFC=0, NVar_MagCC=0;
+#  endif
+
+   if ( NVar_MagFC + NVar_MagCC != 0 )
    {
-      FluIntTime        = false;
-      FluSg             = 1 - amr->FluSg[lv];
-      FluSg_IntT        = NULL_INT;
-      FluWeighting      = NULL_REAL;
-      FluWeighting_IntT = NULL_REAL;
+      SetTempIntPara( lv, amr->MagSg[lv], PrepTime, amr->MagSgTime[lv][0], amr->MagSgTime[lv][1],
+                      MagIntTime, MagSg, MagSg_IntT, MagWeighting, MagWeighting_IntT );
+
+      if ( MagIntTime  &&  OPT__DT_LEVEL == DT_LEVEL_SHARED )
+         Aux_Error( ERROR_INFO, "cannot determine MagSg for OPT__DT_LEVEL == DT_LEVEL_SHARED "
+                                "(lv %d, PrepTime %20.14e, SgTime[0] %20.14e, SgTime[1] %20.14e !!\n",
+                    lv, PrepTime, amr->MagSgTime[lv][0], amr->MagSgTime[lv][1] );
    }
+#  endif // #ifdef MHD
 
-   else
-   {
-//    check
-      if ( OPT__DT_LEVEL == DT_LEVEL_SHARED )
-      Aux_Error( ERROR_INFO, "cannot determine FluSg for OPT__DT_LEVEL == DT_LEVEL_SHARED (lv %d, PrepTime %20.14e, SgTime[0] %20.14e, SgTime[1] %20.14e !!\n",
-                 lv, PrepTime, amr->FluSgTime[lv][0], amr->FluSgTime[lv][1] );
-
-//    print warning messages if temporal extrapolation is required
-      const double TimeMin = MIN( amr->FluSgTime[lv][0], amr->FluSgTime[lv][1] );
-      const double TimeMax = MAX( amr->FluSgTime[lv][0], amr->FluSgTime[lv][1] );
-
-      if ( TimeMin < 0.0 )
-         Aux_Error( ERROR_INFO, "TimeMin (%21.14e) < 0.0 ==> one of the fluid arrays has not been initialized !!\n", TimeMin );
-
-      if ( PrepTime < TimeMin  ||  PrepTime-TimeMax >= 1.0e-12*TimeMax )
-         Aux_Message( stderr, "WARNING : temporal extrapolation (lv %d, T_Prep %20.14e, T_Min %20.14e, T_Max %20.14e)\n",
-                      lv, PrepTime, TimeMin, TimeMax );
-
-      if ( OPT__INT_TIME )
-      {
-         FluIntTime        = true;
-         FluSg             = 0;
-         FluSg_IntT        = 1;
-         FluWeighting      =   ( +amr->FluSgTime[lv][FluSg_IntT] - PrepTime )
-                             / (  amr->FluSgTime[lv][FluSg_IntT] - amr->FluSgTime[lv][FluSg] );
-         FluWeighting_IntT =   ( -amr->FluSgTime[lv][FluSg     ] + PrepTime )
-                             / (  amr->FluSgTime[lv][FluSg_IntT] - amr->FluSgTime[lv][FluSg] );
-      }
-
-      else
-      {
-         FluIntTime        = false;
-         FluSg             = amr->FluSg[lv]; // set to the current Sg
-         FluSg_IntT        = NULL_INT;
-         FluWeighting      = NULL_REAL;
-         FluWeighting_IntT = NULL_REAL;
-      }
-   } // Mis_CompareRealValue
-   } // if ( NVar_Flu + NVar_Der != 0 )
-
+// potential
 #  ifdef GRAVITY
    bool PotIntTime;
    int  PotSg, PotSg_IntT;
    real PotWeighting, PotWeighting_IntT;
 
-   if ( PrepPot ) {
-   if      (  Mis_CompareRealValue( PrepTime, amr->PotSgTime[lv][   amr->PotSg[lv] ], NULL, false )  )
+   if ( PrepPot )
    {
-      PotIntTime        = false;
-      PotSg             = amr->PotSg[lv];
-      PotSg_IntT        = NULL_INT;
-      PotWeighting      = NULL_REAL;
-      PotWeighting_IntT = NULL_REAL;
+      SetTempIntPara( lv, amr->PotSg[lv], PrepTime, amr->PotSgTime[lv][0], amr->PotSgTime[lv][1],
+                      PotIntTime, PotSg, PotSg_IntT, PotWeighting, PotWeighting_IntT );
+
+      if ( PotIntTime  &&  OPT__DT_LEVEL == DT_LEVEL_SHARED )
+         Aux_Error( ERROR_INFO, "cannot determine PotSg for OPT__DT_LEVEL == DT_LEVEL_SHARED "
+                                "(lv %d, PrepTime %20.14e, SgTime[0] %20.14e, SgTime[1] %20.14e !!\n",
+                    lv, PrepTime, amr->PotSgTime[lv][0], amr->PotSgTime[lv][1] );
    }
-
-   else if (  Mis_CompareRealValue( PrepTime, amr->PotSgTime[lv][ 1-amr->PotSg[lv] ], NULL, false )  )
-   {
-      PotIntTime        = false;
-      PotSg             = 1 - amr->PotSg[lv];
-      PotSg_IntT        = NULL_INT;
-      PotWeighting      = NULL_REAL;
-      PotWeighting_IntT = NULL_REAL;
-   }
-
-   else
-   {
-//    check
-      if ( OPT__DT_LEVEL == DT_LEVEL_SHARED )
-      Aux_Error( ERROR_INFO, "cannot determine PotSg for OPT__DT_LEVEL == DT_LEVEL_SHARED (lv %d, PrepTime %20.14e, SgTime[0] %20.14e, SgTime[1] %20.14e !!\n",
-                 lv, PrepTime, amr->PotSgTime[lv][0], amr->PotSgTime[lv][1] );
-
-//    print warning messages if temporal extrapolation is required
-      const double TimeMin = MIN( amr->PotSgTime[lv][0], amr->PotSgTime[lv][1] );
-      const double TimeMax = MAX( amr->PotSgTime[lv][0], amr->PotSgTime[lv][1] );
-
-      if ( TimeMin < 0.0 )
-         Aux_Error( ERROR_INFO, "TimeMin (%21.14e) < 0.0 ==> one of the potential arrays has not been initialized !!\n", TimeMin );
-
-      if ( PrepTime < TimeMin  ||  PrepTime-TimeMax >= 1.0e-12*TimeMax )
-         Aux_Message( stderr, "WARNING : temporal extrapolation (lv %d, T_Prep %20.14e, T_Min %20.14e, T_Max %20.14e)\n",
-                      lv, PrepTime, TimeMin, TimeMax );
-
-      if ( OPT__INT_TIME )
-      {
-         PotIntTime        = true;
-         PotSg             = 0;
-         PotSg_IntT        = 1;
-         PotWeighting      =   ( +amr->PotSgTime[lv][PotSg_IntT] - PrepTime )
-                             / (  amr->PotSgTime[lv][PotSg_IntT] - amr->PotSgTime[lv][PotSg] );
-         PotWeighting_IntT =   ( -amr->PotSgTime[lv][PotSg     ] + PrepTime )
-                             / (  amr->PotSgTime[lv][PotSg_IntT] - amr->PotSgTime[lv][PotSg] );
-      }
-
-      else
-      {
-         PotIntTime        = false;
-         PotSg             = amr->PotSg[lv]; // set to the current Sg
-         PotSg_IntT        = NULL_INT;
-         PotWeighting      = NULL_REAL;
-         PotWeighting_IntT = NULL_REAL;
-      }
-   } // Mis_CompareRealValue
-   } // if ( PrepPot )
 #  endif // #ifdef GRAVITY
 
 
