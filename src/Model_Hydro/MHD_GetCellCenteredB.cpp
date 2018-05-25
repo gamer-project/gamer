@@ -12,16 +12,17 @@
 //
 // Note        :  1. Use the central average operator
 //                2. Return all three components of the magnetic field
-//                3. Always output the value stored in amr->MagSg[lv]
 //
 // Parameter   :  B_CC  : Cell-centered magnetic field to be returned
 //                lv    : Target AMR level
 //                PID   : Target patch index
 //                i/j/k : Target array indices of the patch
+//                MagSg : Sandglass of the magnetic field data
 //
 // Return      :  B_CC
 //-------------------------------------------------------------------------------------------------------
-void MHD_GetCellCenteredBField( real B_CC[], const int lv, const int PID, const int i, const int j, const int k )
+void MHD_GetCellCenteredBField( real B_CC[], const int lv, const int PID, const int i, const int j, const int k,
+                                const int MagSg )
 {
 
 // check
@@ -36,13 +37,13 @@ void MHD_GetCellCenteredBField( real B_CC[], const int lv, const int PID, const 
    if ( j < 0  ||  j >= PS1 )    Aux_Error( ERROR_INFO, "incorrect j = %d !!\n", j );
    if ( k < 0  ||  k >= PS1 )    Aux_Error( ERROR_INFO, "incorrect k = %d !!\n", k );
 
-   if ( amr->patch[ amr->MagSg[lv] ][lv][PID]->magnetic == NULL )
-         Aux_Error( ERROR_INFO, "magnetic == NULL (lv %d, PID %d, MagSg %d) !!\n", lv, PID, amr->MagSg[lv] );
+   if ( amr->patch[MagSg][lv][PID]->magnetic == NULL )
+         Aux_Error( ERROR_INFO, "magnetic == NULL (lv %d, PID %d, MagSg %d) !!\n", lv, PID, MagSg );
 #  endif
 
 
 // FC = face-centered
-   const real (*B_FC)[PS1_P1*PS1*PS1] = amr->patch[ amr->MagSg[lv] ][lv][PID]->magnetic;
+   const real (*B_FC)[PS1_P1*PS1*PS1] = amr->patch[MagSg][lv][PID]->magnetic;
 
    B_CC[0] = (real)0.5*(  B_FC[0][ IDX321_BX(i,j,k) ] + B_FC[0][ IDX321_BX(i+1,j,  k  ) ]  );
    B_CC[1] = (real)0.5*(  B_FC[1][ IDX321_BY(i,j,k) ] + B_FC[1][ IDX321_BY(i,  j+1,k  ) ]  );
@@ -62,10 +63,12 @@ void MHD_GetCellCenteredBField( real B_CC[], const int lv, const int PID, const 
 // Parameter   :  lv    : Target AMR level
 //                PID   : Target patch index
 //                i/j/k : Target array indices of the patch
+//                MagSg : Sandglass of the magnetic field data
 //
 // Return      :  0.5*B^2 at the center of the target cell
 //-------------------------------------------------------------------------------------------------------
-real MHD_GetCellCenteredBEnergy( const int lv, const int PID, const int i, const int j, const int k )
+real MHD_GetCellCenteredBEnergy( const int lv, const int PID, const int i, const int j, const int k,
+                                 const int MagSg )
 {
 
 // check
@@ -85,7 +88,7 @@ real MHD_GetCellCenteredBEnergy( const int lv, const int PID, const int i, const
 // CC = cell-centered
    real B_CC[3], BEngy;
 
-   MHD_GetCellCenteredBField( B_CC, lv, PID, i, j, k );
+   MHD_GetCellCenteredBField( B_CC, lv, PID, i, j, k, MagSg );
 
    BEngy = (real)0.5*( SQR(B_CC[0]) + SQR(B_CC[1]) + SQR(B_CC[2]) );
 

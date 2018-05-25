@@ -239,7 +239,7 @@ void WriteFile( FILE *File, const int lv, const int PID, const int i, const int 
 #  if ( MODEL == HYDRO )
    const bool CheckMinPres_Yes = true;
 #  ifdef MHD
-   const real EngyB            = MHD_GetCellCenteredBEnergy( lv, PID, i, j, k );
+   const real EngyB            = MHD_GetCellCenteredBEnergy( lv, PID, i, j, k, amr->MagSg[lv] );
 #  else
    const real EngyB            = NULL_REAL;
 #  endif
@@ -249,7 +249,7 @@ void WriteFile( FILE *File, const int lv, const int PID, const int i, const int 
 // magnetic field
 #  ifdef MHD
    real B[3];
-   MHD_GetCellCenteredBField( B, lv, PID, i, j, k );
+   MHD_GetCellCenteredBField( B, lv, PID, i, j, k, amr->MagSg[lv] );
    fprintf( File, " %13.6e %13.6e %13.6e %13.6e", B[MAGX], B[MAGY], B[MAGZ], EngyB );
 #  endif
 

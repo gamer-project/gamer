@@ -133,7 +133,7 @@ bool Flag_Check( const int lv, const int PID, const int i, const int j, const in
 #     else // #ifdef DUAL_ENERGY
 
 #     ifdef MHD
-      const real EngyB = MHD_GetCellCenteredBEnergy( lv, PID, i, j, k );
+      const real EngyB = MHD_GetCellCenteredBEnergy( lv, PID, i, j, k, amr->MagSg[lv] );
 #     else
       const real EngyB = NULL_REAL;
 #     endif

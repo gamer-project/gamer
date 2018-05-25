@@ -233,7 +233,7 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
 #                    else // #ifdef DUAL_ENERGY
 
 #                    ifdef MHD
-                     const real EngyB = MHD_GetCellCenteredBEnergy( lv, PID, i, j, k );
+                     const real EngyB = MHD_GetCellCenteredBEnergy( lv, PID, i, j, k, amr->MagSg[lv] );
 #                    else
                      const real EngyB = NULL_REAL;
 #                    endif

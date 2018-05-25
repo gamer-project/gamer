@@ -150,7 +150,7 @@ real Init_Function_BField_User( const int comp, const double x, const double y, 
 //                   --> Useful if "Init_Function_User_Ptr/Flu_ResetByUser_Func_Ptr/Init_Function_BField_User_Ptr"
 //                       do not support OpenMP
 //                       (e.g., they may not be thread-safe or may involve a random number generator for which
-//                       all threads would share the same random seed when adopting OpenMP) 
+//                       all threads would share the same random seed when adopting OpenMP)
 //
 // Parameter   :  lv : Target refinement level
 //-------------------------------------------------------------------------------------------------------
@@ -250,7 +250,7 @@ void Hydro_Init_ByFunction_AssignData( const int lv )
 
 //       add the magnetic energy
 #        ifdef MHD
-         const real EngyB = MHD_GetCellCenteredBEnergy( lv, PID, i, j, k );
+         const real EngyB = MHD_GetCellCenteredBEnergy( lv, PID, i, j, k, amr->MagSg[lv] );
          fluid[ENGY] += EngyB;
 #        else
          const real EngyB = NULL_REAL;
