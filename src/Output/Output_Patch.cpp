@@ -177,7 +177,7 @@ void Output_Patch( const int lv, const int PID, const int FluSg, const int MagSg
 #        ifdef MHD
 //       set pressure to NULL_REAL if somehow magnetic[] is not allocated (likely due to a bug)
          const real EngyB = ( magnetic == NULL ) ? NULL_REAL :
-                                                   MHD_GetCellCenteredBEnergy( lv, PID, i, j, k );
+                                                   MHD_GetCellCenteredBEnergy( lv, PID, i, j, k, MagSg );
          const real Pres  = ( magnetic == NULL ) ? NULL_REAL :
                                                    CPU_GetPressure( u[DENS], u[MOMX], u[MOMY], u[MOMZ], u[ENGY],
                                                                     GAMMA-1.0, false, NULL_REAL, EngyB );
@@ -190,7 +190,7 @@ void Output_Patch( const int lv, const int PID, const int FluSg, const int MagSg
 //       magnetic field
 #        ifdef MHD
          real B[3] = { NULL_REAL, NULL_REAL, NULL_REAL };
-         if ( magnetic != NULL )    MHD_GetCellCenteredBField( B, lv, PID, i, j, k );
+         if ( magnetic != NULL )    MHD_GetCellCenteredBField( B, lv, PID, i, j, k, MagSg );
          fprintf( File, " %13.6e %13.6e %13.6e %13.6e", B[MAGX], B[MAGY], B[MAGZ], EngyB );
 #        endif
 

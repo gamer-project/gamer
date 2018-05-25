@@ -398,8 +398,10 @@ void Hydro_BoundaryCondition_Reflecting( real *Array, const int BC_Face, const i
                                          const int NVar_Der, const int TDerVarList[] );
 bool Hydro_Flag_Vorticity( const int i, const int j, const int k, const int lv, const int PID, const double Threshold );
 #ifdef MHD
-void MHD_GetCellCenteredBField( real B[], const int lv, const int PID, const int i, const int j, const int k );
-real MHD_GetCellCenteredBEnergy( const int lv, const int PID, const int i, const int j, const int k );
+void MHD_GetCellCenteredBField( real B[], const int lv, const int PID, const int i, const int j, const int k,
+                                const int MagSg );
+real MHD_GetCellCenteredBEnergy( const int lv, const int PID, const int i, const int j, const int k,
+                                 const int MagSg );
 #endif
 
 
