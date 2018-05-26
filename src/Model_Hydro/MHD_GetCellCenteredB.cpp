@@ -27,8 +27,7 @@ void MHD_GetCellCenteredBField( real B_CC[], const int lv, const int PID, const 
 
 // check
 #  ifdef GAMER_DEBUG
-   if ( lv < 0  ||  lv > TOP_LEVEL )
-      Aux_Error( ERROR_INFO, "incorrect lv = %d !!\n", lv );
+   if ( lv < 0  ||  lv > TOP_LEVEL )   Aux_Error( ERROR_INFO, "incorrect lv = %d !!\n", lv );
 
    if ( PID < 0  ||  PID >= amr->num[lv] )
       Aux_Error( ERROR_INFO, "incorrect PID = %d (total number of patches = %d) !!\n", PID, amr->num[lv] );
@@ -36,6 +35,8 @@ void MHD_GetCellCenteredBField( real B_CC[], const int lv, const int PID, const 
    if ( i < 0  ||  i >= PS1 )    Aux_Error( ERROR_INFO, "incorrect i = %d !!\n", i );
    if ( j < 0  ||  j >= PS1 )    Aux_Error( ERROR_INFO, "incorrect j = %d !!\n", j );
    if ( k < 0  ||  k >= PS1 )    Aux_Error( ERROR_INFO, "incorrect k = %d !!\n", k );
+
+   if ( MagSg != 0  &&  MagSg != 1 )   Aux_Error( ERROR_INFO, "MagSg (%d) != 0/1 !!\n", MagSg );
 
    if ( amr->patch[MagSg][lv][PID]->magnetic == NULL )
          Aux_Error( ERROR_INFO, "magnetic == NULL (lv %d, PID %d, MagSg %d) !!\n", lv, PID, MagSg );
@@ -73,8 +74,7 @@ real MHD_GetCellCenteredBEnergy( const int lv, const int PID, const int i, const
 
 // check
 #  ifdef GAMER_DEBUG
-   if ( lv < 0  ||  lv > TOP_LEVEL )
-      Aux_Error( ERROR_INFO, "incorrect lv = %d !!\n", lv );
+   if ( lv < 0  ||  lv > TOP_LEVEL )   Aux_Error( ERROR_INFO, "incorrect lv = %d !!\n", lv );
 
    if ( PID < 0  ||  PID >= amr->num[lv] )
       Aux_Error( ERROR_INFO, "incorrect PID = %d (total number of patches = %d) !!\n", PID, amr->num[lv] );
@@ -82,6 +82,8 @@ real MHD_GetCellCenteredBEnergy( const int lv, const int PID, const int i, const
    if ( i < 0  ||  i >= PS1 )    Aux_Error( ERROR_INFO, "incorrect i = %d !!\n", i );
    if ( j < 0  ||  j >= PS1 )    Aux_Error( ERROR_INFO, "incorrect j = %d !!\n", j );
    if ( k < 0  ||  k >= PS1 )    Aux_Error( ERROR_INFO, "incorrect k = %d !!\n", k );
+
+   if ( MagSg != 0  &&  MagSg != 1 )   Aux_Error( ERROR_INFO, "MagSg (%d) != 0/1 !!\n", MagSg );
 #  endif
 
 

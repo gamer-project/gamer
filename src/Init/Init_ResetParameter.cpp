@@ -406,11 +406,17 @@ void Init_ResetParameter()
       Time_Prev[lv] = -__FLT_MAX__;    // initialize as negative to indicate that it has not been set yet
 
       amr->FluSgTime[lv][   amr->FluSg[lv] ] = Time[lv];
+#     ifdef MHD
+      amr->MagSgTime[lv][   amr->MagSg[lv] ] = Time[lv];
+#     endif
 #     ifdef GRAVITY
       amr->PotSgTime[lv][   amr->PotSg[lv] ] = Time[lv];
 #     endif
 
       amr->FluSgTime[lv][ 1-amr->FluSg[lv] ] = Time_Prev[lv];
+#     ifdef MHD
+      amr->MagSgTime[lv][ 1-amr->MagSg[lv] ] = Time_Prev[lv];
+#     endif
 #     ifdef GRAVITY
       amr->PotSgTime[lv][ 1-amr->PotSg[lv] ] = Time_Prev[lv];
 #     endif

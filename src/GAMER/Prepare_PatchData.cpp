@@ -366,7 +366,8 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
    int  MagSg, MagSg_IntT;
    real MagWeighting, MagWeighting_IntT;
 
-   if ( NVar_MagFC + NVar_MagCC != 0 )
+// check NVar_Der as well since we might need B field for calculating, for example, gas pressure
+   if ( NVar_MagFC + NVar_MagCC + NVar_Der != 0 )
    {
       SetTempIntPara( lv, amr->MagSg[lv], PrepTime, amr->MagSgTime[lv][0], amr->MagSgTime[lv][1],
                       MagIntTime, MagSg, MagSg_IntT, MagWeighting, MagWeighting_IntT );

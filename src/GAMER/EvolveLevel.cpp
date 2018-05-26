@@ -138,6 +138,9 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
 //    2. fluid solver
 // ===============================================================================================
       const int SaveSg_Flu = 1 - amr->FluSg[lv];
+#     ifdef MHD
+      const int SaveSg_Mag = 1 - amr->MagSg[lv];
+#     endif
 
       if ( OPT__VERBOSE  &&  MPI_Rank == 0 )
          Aux_Message( stdout, "   Lv %2d: Flu_AdvanceDt, counter = %8ld ... ", lv, AdvanceCounter[lv] );
@@ -237,6 +240,10 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
 
       amr->FluSg    [lv]             = SaveSg_Flu;
       amr->FluSgTime[lv][SaveSg_Flu] = TimeNew;
+#     ifdef MHD
+      amr->MagSg    [lv]             = SaveSg_Mag;
+      amr->MagSgTime[lv][SaveSg_Mag] = TimeNew;
+#     endif
 
       if ( OPT__VERBOSE  &&  MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );
 // ===============================================================================================
@@ -569,6 +576,9 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
 
          Time          [lv+1]                     = Time[lv];
          amr->FluSgTime[lv+1][ amr->FluSg[lv+1] ] = Time[lv];
+#        ifdef MHD
+         amr->MagSgTime[lv+1][ amr->MagSg[lv+1] ] = Time[lv];
+#        endif
 #        ifdef GRAVITY
 //       note that the current implementation of external potential does NOT use PotSg/PotSgTime
          if ( SelfGravity )

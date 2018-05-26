@@ -223,6 +223,9 @@ void Init_ByRestart_HDF5( const char *FileName )
    for (int lv=0; lv<NLEVEL; lv++)
    {
       amr->FluSgTime[lv][ amr->FluSg[lv] ] = Time[lv];
+#     ifdef MHD
+      amr->MagSgTime[lv][ amr->MagSg[lv] ] = Time[lv];
+#     endif
 #     ifdef GRAVITY
       amr->PotSgTime[lv][ amr->PotSg[lv] ] = Time[lv];
 #     endif
