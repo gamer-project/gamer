@@ -9,7 +9,7 @@
 // Function    :  Poi_Prepare_Rho
 // Description :  Prepare h_Rho_Array_P[] for the Poisson solver
 //
-// Note        :  1. Invoke the function "Prepare_PatchData"
+// Note        :  1. Invoke Prepare_PatchData()
 //                2. Minimum density threshold (MIN_DENS) is applied
 //
 // Parameter   :  lv            : Target refinement level
@@ -26,7 +26,7 @@ void Poi_Prepare_Rho( const int lv, const double PrepTime, real h_Rho_Array_P[][
    const bool DE_Consistency_No = false;
    const real MinPres_No        = -1.0;
 
-   Prepare_PatchData( lv, PrepTime, &h_Rho_Array_P[0][0][0][0], RHO_GHOST_SIZE, NPG, PID0_List, _TOTAL_DENS,
+   Prepare_PatchData( lv, PrepTime, &h_Rho_Array_P[0][0][0][0], NULL, RHO_GHOST_SIZE, NPG, PID0_List, _TOTAL_DENS, 0,
                       OPT__RHO_INT_SCHEME, UNIT_PATCH, NSIDE_26, IntPhase_No, OPT__BC_FLU, BC_POT_NONE,
                       MIN_DENS, MinPres_No, DE_Consistency_No );
 

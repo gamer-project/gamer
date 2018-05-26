@@ -131,8 +131,8 @@ void EvolveLevel( const int lv, const double dTime_FaLv );
 void InvokeSolver( const Solver_t TSolver, const int lv, const double TimeNew, const double TimeOld, const double dt,
                    const double Poi_Coeff, const int SaveSg_Flu, const int SaveSg_Pot,
                    const bool OverlapMPI, const bool Overlap_Sync );
-void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array,
-                        const int GhostSize, const int NPG, const int *PID0_List, int TVar,
+void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, real *OutputFC,
+                        const int GhostSize, const int NPG, const int *PID0_List, int TVarCC, int TVarFC,
                         const IntScheme_t IntScheme, const PrepUnit_t PrepUnit, const NSide_t NSide,
                         const bool IntPhase, const OptFluBC_t FluBC[], const OptPotBC_t PotBC,
                         const real MinDens, const real MinPres, const bool DE_Consistency );

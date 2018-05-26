@@ -252,7 +252,7 @@ void Par_UpdateParticle( const int lv, const double TimeNew, const double TimeOl
 
          else
 #        endif // #ifdef STORE_POT_GHOST
-            Prepare_PatchData( lv, PrepPotTime, Pot, PotGhost, 1, &PID0, _POTE,
+            Prepare_PatchData( lv, PrepPotTime, Pot, NULL, PotGhost, 1, &PID0, _POTE, 0,
                                OPT__GRA_INT_SCHEME, UNIT_PATCH, NSIDE_26, IntPhase_No, OPT__BC_FLU, OPT__BC_POT,
                                MinDens_No, MinPres_No, DE_Consistency_No );
       } // if ( OPT__GRAVITY_TYPE == GRAVITY_SELF  ||  OPT__GRAVITY_TYPE == GRAVITY_BOTH )

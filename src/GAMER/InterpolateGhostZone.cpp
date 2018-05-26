@@ -72,6 +72,9 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData[], const in
 {
 
 // check
+#  ifdef MHD
+   Aux_Error( ERROR_INFO, "%s does not support MHD yet !!\n", __FUNCTION__ );
+#  endif
 #  ifdef GAMER_DEBUG
 // nothing to do if GhostSize == 0
    if ( GhostSize == 0 )
