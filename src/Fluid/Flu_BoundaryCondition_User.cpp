@@ -15,7 +15,7 @@ void (*BC_User_Ptr)( real fluid[], const double x, const double y, const double 
 // Function    :  BC_User
 // Description :  User-specified boundary condition
 //
-// Note        :  1. Invoked by "Flu_BoundaryCondition_User" using the function pointer "BC_User_Ptr"
+// Note        :  1. Invoked by Flu_BoundaryCondition_User() using the function pointer "BC_User_Ptr"
 //                   --> The function pointer may be reset by various test problem initializers, in which case
 //                       this funtion will become useless
 //                2. Always return NCOMP_TOTAL variables
@@ -69,8 +69,8 @@ void BC_User( real fluid[], const double x, const double y, const double z, cons
 // Function    :  Flu_BoundaryCondition_User
 // Description :  Fill up the ghost-zone values by the user-specified boundary condition
 //
-// Note        :  1. Work for the functions "Prepare_PatchData, InterpolateGhostZone, Refine, LB_Refine_AllocateNewPatch"
-//                2. The function pointer "BC_User_Ptr" points to "BC_User()" by default but may be overwritten
+// Note        :  1. Work for Prepare_PatchData(), InterpolateGhostZone(), Refine(), LB_Refine_AllocateNewPatch()
+//                2. The function pointer "BC_User_Ptr" points to BC_User() by default but may be overwritten
 //                   by various test problem initializers
 //
 // Parameter   :  Array          : Array to store the prepared data of one patch group (including the ghost-zone data)

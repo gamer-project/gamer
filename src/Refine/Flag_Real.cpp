@@ -43,9 +43,9 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
                                         ( lv == MAX_LEVEL-2 ) ? FLAG_BUFFER_SIZE_MAXM2_LV :
                                                                 FLAG_BUFFER_SIZE;
    const real dv                      = CUBE( amr->dh[lv] );
-   const bool IntPhase_No             = false;                 // for invoking "Prepare_PatchData"
-   const bool DE_Consistency_No       = false;                 // for invoking "Prepare_PatchData"
-   const int  NPG                     = 1;                     // for invoking "Prepare_PatchData"
+   const bool IntPhase_No             = false;                 // for invoking Prepare_PatchData()
+   const bool DE_Consistency_No       = false;                 // for invoking Prepare_PatchData()
+   const int  NPG                     = 1;                     // for invoking Prepare_PatchData()
    const int  Lohner_NGhost           = 2;                     // number of ghost cells for the Lohner error estimator
    const int  Lohner_NCell            = PS1 + 2*Lohner_NGhost; // size of the variable array for Lohner
    const int  Lohner_NAve             = Lohner_NCell - 2;      // size of the average array for Lohner
@@ -155,7 +155,7 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
       {
 //       prepare the ghost-zone data for Lohner
          if ( Lohner_NVar > 0 )
-            Prepare_PatchData( lv, Time[lv], Lohner_Var, Lohner_NGhost, NPG, &PID0, Lohner_TVar,
+            Prepare_PatchData( lv, Time[lv], Lohner_Var, NULL, Lohner_NGhost, NPG, &PID0, Lohner_TVar, 0,
                                Lohner_IntScheme, UNIT_PATCH, NSIDE_26, IntPhase_No, OPT__BC_FLU, OPT__BC_POT,
                                MinDens, MinPres, DE_Consistency_No );
 

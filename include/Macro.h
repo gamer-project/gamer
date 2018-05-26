@@ -163,13 +163,6 @@
 #  define  MOMZ               3
 #  define  ENGY               4
 
-// variable indices in patch->magnetic[0 ... NCOMP_MAGNETIC-1]
-#  ifdef MHD
-#  define  MAGX               0
-#  define  MAGY               1
-#  define  MAGZ               2
-#  endif
-
 // variable indices in patch->fluid[NCOMP_FLUID ... NCOMP_TOTAL-1]
 #if ( NCOMP_PASSIVE > 0 )
 // example for NCOMP_PASSIVE == 3
@@ -178,12 +171,19 @@
 #  define  HII                ( NCOMP_FLUID + 2 )
 
 // always store entropy (or internal energy) for the dual energy formalism as the last passive variable
-#  if   ( DUAL_ENERGY == DE_ENPY )
+# if   ( DUAL_ENERGY == DE_ENPY )
 #  define  ENPY               ( NCOMP_TOTAL - 1 )
 #  elif ( DUAL_ENERGY == DE_EINT )
 #  define  EINT               ( NCOMP_TOTAL - 1 )
-#  endif
+# endif
 #endif
+
+// variable indices in patch->magnetic[0 ... NCOMP_MAGNETIC-1]
+# ifdef MHD
+#  define  MAGX               0
+#  define  MAGY               1
+#  define  MAGZ               2
+# endif
 
 // variable indices in patch->flux[0 ... NFLUX_FLUID-1]
 #  define  FLUX_DENS          0
@@ -199,11 +199,11 @@
 #  define  FLUX_HI            ( NFLUX_FLUID + 1 )
 #  define  FLUX_HII           ( NFLUX_FLUID + 2 )
 // always store entropy (or internal energy) for the dual energy formalism as the last passive variable
-#  if   ( DUAL_ENERGY == DE_ENPY )
+# if   ( DUAL_ENERGY == DE_ENPY )
 #  define  FLUX_ENPY          ( NFLUX_TOTAL - 1 )
-#  elif ( DUAL_ENERGY == DE_EINT )
+# elif ( DUAL_ENERGY == DE_EINT )
 #  define  FLUX_EINT          ( NFLUX_TOTAL - 1 )
-#  endif
+# endif
 #endif
 
 // symbolic constants used as function parameters (e.g., Prepare_PatchData)
@@ -213,25 +213,28 @@
 #  define _MOMZ               ( 1 << MOMZ )
 #  define _ENGY               ( 1 << ENGY )
 
-#  ifdef MHD
-#  define _MAGX               ( 1 << MAGX )
-#  define _MAGY               ( 1 << MAGY )
-#  define _MAGZ               ( 1 << MAGZ )
-#  define _MAG                ( _MAGX | _MAGY | _MAGZ )
-#  endif
-
 #if ( NCOMP_PASSIVE > 0 )
 // example for NCOMP_PASSIVE == 3
 #  define _METAL              ( 1 << METAL  )
 #  define _HI                 ( 1 << HI     )
 #  define _HII                ( 1 << HII    )
 // always store entropy (or internal energy) for the dual energy formalism as the last passive variable
-#  if   ( DUAL_ENERGY == DE_ENPY )
+# if   ( DUAL_ENERGY == DE_ENPY )
 #  define _ENPY               ( 1 << ENPY )
-#  elif ( DUAL_ENERGY == DE_EINT )
+# elif ( DUAL_ENERGY == DE_EINT )
 #  define _EINT               ( 1 << EINT )
-#  endif
+# endif
 #endif // #if ( NCOMP_PASSIVE > 0 )
+
+// magnetic field
+# ifdef MHD
+#  define _MAGX               ( 1 << MAGX )
+#  define _MAGY               ( 1 << MAGY )
+#  define _MAGZ               ( 1 << MAGZ )
+#  define _MAG                ( _MAGX | _MAGY | _MAGZ )
+# else
+#  define _MAG                0
+# endif
 
 // symbolic constants of flux used as function parameters (e.g., Buf_GetBufferData)
 #  define _FLUX_DENS          ( 1 << FLUX_DENS )
@@ -246,11 +249,11 @@
 #  define _FLUX_HI            ( 1 << FLUX_HI     )
 #  define _FLUX_HII           ( 1 << FLUX_HII    )
 // always store entropy (or internal energy) for the dual energy formalism as the last passive variable
-#  if   ( DUAL_ENERGY == DE_ENPY )
+# if   ( DUAL_ENERGY == DE_ENPY )
 #  define _FLUX_ENPY          ( 1 << FLUX_ENPY )
-#  elif ( DUAL_ENERGY == DE_EINT )
+# elif ( DUAL_ENERGY == DE_EINT )
 #  define _FLUX_EINT          ( 1 << FLUX_EINT )
-#  endif
+# endif
 #endif // #if ( NFLUX_PASSIVE > 0 )
 
 // derived variables
@@ -260,7 +263,15 @@
 #  define _VELZ               ( 1 << (NCOMP_TOTAL+3) )
 #  define _PRES               ( 1 << (NCOMP_TOTAL+4) )
 #  define _TEMP               ( 1 << (NCOMP_TOTAL+5) )
+# ifdef MHD
+#  define _MAGX_CC            ( 1 << (NCOMP_TOTAL+6) )
+#  define _MAGY_CC            ( 1 << (NCOMP_TOTAL+7) )
+#  define _MAGZ_CC            ( 1 << (NCOMP_TOTAL+8) )
+#  define _MAG_ENGY_CC        ( 1 << (NCOMP_TOTAL+9) )
+#  define _DERIVED            ( _VELX | _VELY | _VELZ | _PRES | _TEMP | _MAGX_CC | _MAGY_CC | _MAGZ_CC | _MAG_ENGY_CC )
+# else
 #  define _DERIVED            ( _VELX | _VELY | _VELZ | _PRES | _TEMP )
+# endif
 
 
 #elif ( MODEL == ELBDM )
@@ -364,9 +375,9 @@
 
 #  else
 
-// note that _TEMP == ( 1 << (NCOMP_TOTAL+5) )
-#  define _PAR_DENS           ( 1 << (NCOMP_TOTAL+6) )
-#  define _TOTAL_DENS         ( 1 << (NCOMP_TOTAL+7) )
+// note that _MAG_ENGY_CC == ( 1 << (NCOMP_TOTAL+9) )
+#  define _PAR_DENS           ( 1 << (NCOMP_TOTAL+10) )
+#  define _TOTAL_DENS         ( 1 << (NCOMP_TOTAL+11) )
 
 #  endif // if ( MODEL == PAR_ONLY ) ... else ...
 
