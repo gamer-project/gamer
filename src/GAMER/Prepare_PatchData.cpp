@@ -1709,9 +1709,14 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
 // ------------------------------------------------------------------------------------------------------------
          if ( PrepUnit == UNIT_PATCH ) // separate the prepared patch group data into individual patches
          {
-            const int PSize1D = PATCH_SIZE + 2*GhostSize;  // size of a single patch including the ghost zone
-            const int PSize3D = PSize1D*PSize1D*PSize1D;
+            const int PSize1D_CC = PS1 + 2*GhostSize;    // width of a single patch including ghost zones
+            const int PSize3D_CC = CUBE(PSize1D_CC);
+            const int PSize1D_FC = PSize1D_CC + 1;
+            const int PSize3D_FC = PSize1D_FC*SQR(PSize1D_CC);
+
             real *OutputCC_Ptr = NULL;
+            real *OutputFC_Ptr = NULL;
+
 
             for (int LocalID=0; LocalID<8; LocalID++)
             {
@@ -1720,24 +1725,80 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
                const int Disp_j = TABLE_02( LocalID, 'y', 0, PATCH_SIZE );
                const int Disp_k = TABLE_02( LocalID, 'z', 0, PATCH_SIZE );
 
+//             cell-centered variables
                Data1PG_CC_Ptr = Data1PG_CC;
-               OutputCC_Ptr    = OutputCC + N*NVarCC_Tot*PSize3D;
-               Idx2            = 0;
+               OutputCC_Ptr   = OutputCC + N*NVarCC_Tot*PSize3D_CC;
+               Idx2           = 0;
 
                for (int v=0; v<NVarCC_Tot; v++)
                {
-                  for (int k=Disp_k; k<Disp_k+PSize1D; k++)
-                  for (int j=Disp_j; j<Disp_j+PSize1D; j++)
+                  for (int k=Disp_k; k<Disp_k+PSize1D_CC; k++)
+                  for (int j=Disp_j; j<Disp_j+PSize1D_CC; j++)
                   {
                      Idx1 = IDX321( Disp_i, j, k, PGSize1D_CC, PGSize1D_CC );
 
-                     for (int i=0; i<PSize1D; i++)    OutputCC_Ptr[ Idx2 ++ ] = Data1PG_CC_Ptr[ Idx1 ++ ];
+                     for (int i=0; i<PSize1D_CC; i++)    OutputCC_Ptr[ Idx2 ++ ] = Data1PG_CC_Ptr[ Idx1 ++ ];
                   }
 
                   Data1PG_CC_Ptr += PGSize3D_CC;
                }
-            }
-         } // if ( PatchByPatch )
+
+
+//             face-centered variables
+               Data1PG_FC_Ptr = Data1PG_FC;
+               OutputFC_Ptr   = OutputFC + N*NVarFC_Tot*PSize3D_FC;
+               Idx2           = 0;
+
+               for (int v=0; v<NVarFC_Tot; v++)
+               {
+                  TVarFCIdx = TVarFCIdxList[v];
+
+#                 ifdef MHD
+
+//                set array indices
+                  const int norm_dir = ( TVarFCIdx == MAGX ) ? 0 :
+                                       ( TVarFCIdx == MAGY ) ? 1 :
+                                       ( TVarFCIdx == MAGZ ) ? 2 : -1;
+#                 ifdef GAMER_DEBUG
+                  if ( norm_dir == -1 )   Aux_Error( ERROR_INFO, "Target face-centered variable != MAGX/Y/Z !!\n" );
+#                 endif
+
+                  int size_p[3], size_pg[3];    // p=patch, pg=patch_group
+
+                  for (int d=0; d<3; d++)
+                  {
+                     if ( d == norm_dir )
+                     {
+                        size_p [d] = PSize1D_FC;
+                        size_pg[d] = PGSize1D_FC;
+                     }
+
+                     else
+                     {
+                        size_p [d] = PSize1D_CC;
+                        size_pg[d] = PGSize1D_CC;
+                     }
+                  }
+
+#                 elif // #ifdef MHD
+                  Aux_Error( ERROR_INFO, "currently only MHD supports face-centered variables !!" );
+#                 endif // #ifdef MHD ... else ...
+
+
+//                copy data
+                  for (int k=Disp_k; k<Disp_k+size_p[2]; k++)
+                  for (int j=Disp_j; j<Disp_j+size_p[1]; j++)
+                  {
+                     Idx1 = IDX321( Disp_i, j, k, size_pg[0], size_pg[1] );
+
+                     for (int i=0; i<size_p[0]; i++)  OutputFC_Ptr[ Idx2 ++ ] = Data1PG_FC_Ptr[ Idx1 ++ ];
+                  }
+
+                  Data1PG_FC_Ptr += PGSize3D_FC;
+               } // for (int v=0; v<NVarFC_Tot; v++)
+
+            } // for (int LocalID=0; LocalID<8; LocalID++)
+         } // if ( PrepUnit == UNIT_PATCH )
 
       } // for (int TID=0; TID<NPG; TID++)
 
