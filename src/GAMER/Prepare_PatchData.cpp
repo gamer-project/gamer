@@ -30,7 +30,7 @@ bool ParDensArray_Initialized = false;
 //                   face-centered variables, respectively
 //                   --> TVarCC and TVarFC can be any combination of the symbolic constants defined in "Macro.h"
 //                       (e.g., "TVarCC = _DENS", "TVarCC = _MOMX|ENGY", "TVarCC = _TOTAL", "TVarFC = _MAGX|_MAGZ")
-//                2. If "GhostSize != 0" --> the function "InterpolateGhostZone" will be used to fill up the
+//                2. If "GhostSize != 0" --> use InterpolateGhostZone() to fill out the
 //                   ghost-zone values by spatial interpolation if the corresponding sibling patches do
 //                   NOT exist
 //                4. Use PrepTime to determine the physical time to prepare data
@@ -252,9 +252,11 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
 
 
    const double dh               = amr->dh[lv];
-   const int    PGSize1D         = 2*( PATCH_SIZE + GhostSize );  // size of a single patch group including the ghost zone
-   const int    PGSize3D         = CUBE( PGSize1D );
+   const int    PGSize1D_CC      = 2*( PS1 + GhostSize );   // width of a single patch group including ghost zones
+   const int    PGSize3D_CC      = CUBE( PGSize1D_CC );
    const int    GhostSize_Padded = GhostSize + (GhostSize&1);
+   const int    PGSize1D_FC      = PGSize1D_CC + 1;
+   const int    PGSize3D_FC      = PGSize1D_FC*SQR(PGSize1D_CC);
 
 #  if   ( MODEL == HYDRO )
    const bool CheckMinPres_No  = false;   // we check minimum pressure in the end of this function (step d)
@@ -352,14 +354,14 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
 // --> currently we do not consider any face-centered derived variable
 // --> assuming that _VAR_NAME = 1<<VAR_NAME (e.g., _MAGX == 1<<MAGX)
 // --> it also determines the order of variables stored in OutputFC (which is the same as patch->magnetic[])
-   int NVarFC = 0;
+   int NVarFC_Tot = 0;
 
 #  ifdef MHD
    const bool PrepMag = ( TVarFC & _MAG ) ? true : false;
    int TVarFCIdxList[NCOMP_MAGNETIC];
 
    for (int v=0; v<NCOMP_MAGNETIC; v++)
-      if ( TVarFC & (1<<v) )  TVarFCIdxList[ NVarFC++ ] = v;
+      if ( TVarFC & (1<<v) )  TVarFCIdxList[ NVarFC_Tot++ ] = v;
 
 #  else
 // currently no other models require any face-centered variable
@@ -368,11 +370,21 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
 
 
 // nothing to do if no target variable is found
-   if ( NVarCC_Tot == 0  &&  NVarFC == 0  &&  MPI_Rank == 0 )
+   if ( NVarCC_Tot == 0  &&  NVarFC_Tot == 0  &&  MPI_Rank == 0 )
    {
       Aux_Message( stderr, "WARNING : no target variable is found !!\n" );
       return;
    }
+
+
+// validate the output pointers
+#  ifdef GAMER_DEBUG
+   if ( NVarCC_Tot > 0  &&  OutputCC == NULL )
+      Aux_Error( ERROR_INFO, "OutputCC == NULL (NVarCC_Tot %d) !!\n", NVarCC_Tot );
+
+   if ( NVarFC_Tot > 0  &&  OutputFC == NULL )
+      Aux_Error( ERROR_INFO, "OutputFC == NULL (NVarFC_Tot %d) !!\n", NVarFC_Tot );
+#  endif
 
 
 // temporal interpolation parameters
@@ -574,21 +586,27 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
 #  pragma omp parallel
    {
 //    thread-private variables
-      int    J, K, I2, J2, K2, Idx1, Idx2, PID0, TVarCCIdx_Flu, BC_Sibling, BC_Idx_Start[3], BC_Idx_End[3];
+      int    J, K, I2, J2, K2, Idx1, Idx2, PID0, TVarCCIdx_Flu, TVarFCIdx, BC_Sibling, BC_Idx_Start[3], BC_Idx_End[3];
       double xyz0[3];            // corner coordinates for the user-specified B.C.
 #     if ( MODEL == HYDRO )
       real Fluid[NCOMP_FLUID];   // for calculating pressure and temperature only --> don't need NCOMP_TOTAL
 #     endif
 
-//    Data1PG_CC: array to store the prepared cell-centered data of one patch group (including the ghost-zone data)
-//    --> for PrepUnit == UNIT_PATCHGROUP, this pointer points to OutputCC directly (which will be set later)
-//        for PrepUnit == UNIT_PATCH, this array will be copied to different patches in OutputCC later
-      real *Data1PG_CC     = ( PrepUnit == UNIT_PATCH ) ? new real [ NVarCC_Tot*PGSize3D ] : NULL;
+//    Data1PG_CC/FC: array to store the prepared cell-centered/face-centered data of one patch group
+//                   (including the ghost-zone data)
+//    --> for PrepUnit == UNIT_PATCHGROUP, these pointers point to OutputCC/FC directly (which will be set later)
+//        for PrepUnit == UNIT_PATCH, these arrays will be copied to different patches in OutputCC/FC later
+      real *Data1PG_CC     = ( PrepUnit == UNIT_PATCH ) ? new real [ NVarCC_Tot*PGSize3D_CC ] : NULL;
       real *Data1PG_CC_Ptr = NULL;
+      real *Data1PG_FC     = ( PrepUnit == UNIT_PATCH ) ? new real [ NVarFC_Tot*PGSize3D_FC ] : NULL;
+      real *Data1PG_FC_Ptr = NULL;
 
 
 //    IntData: array to store the interpolation results (allocate with the maximum required size)
       real *IntData = new real [ NVarCC_Tot*PS2*PS2*GhostSize_Padded ];
+#     ifdef MHD
+#     warning : WAIT MHD !!!
+#     endif
 
 
 //    assign particle mass onto grids
@@ -703,11 +721,15 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
 
          for (int d=0; d<3; d++)    xyz0[d] = amr->patch[0][lv][PID0]->EdgeL[d] + (0.5-GhostSize)*dh;
 
-//       Data1PG_CC points to OutputCC directly for PrepUnit == UNIT_PATCHGROUP
-         if ( PrepUnit == UNIT_PATCHGROUP )  Data1PG_CC = OutputCC + TID*NVarCC_Tot*PGSize3D;
+//       Data1PG_CC/FC point to OutputCC/FC directly for PrepUnit == UNIT_PATCHGROUP
+         if ( PrepUnit == UNIT_PATCHGROUP )
+         {
+            Data1PG_CC = OutputCC + TID*NVarCC_Tot*PGSize3D_CC;
+            Data1PG_FC = OutputFC + TID*NVarFC_Tot*PGSize3D_FC;
+         }
 
 
-//       a. fill up the central region of Data1PG_CC (ghost zone is not filled up yet)
+//       a. fill out the central region of Data1PG_CC[]/FC[] (ghost zones will be filled out later)
 // ------------------------------------------------------------------------------------------------------------
          for (int LocalID=0; LocalID<8; LocalID++ )
          {
@@ -717,15 +739,16 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
             const int Disp_k = TABLE_02( LocalID, 'z', GhostSize, GhostSize+PATCH_SIZE );
 
             Data1PG_CC_Ptr = Data1PG_CC;
+            Data1PG_FC_Ptr = Data1PG_FC;
 
-//          (a1) fluid data
+//          (a1) fluid data (cell-centered)
             for (int v=0; v<NVarCC_Flu; v++)
             {
                TVarCCIdx_Flu = TVarCCIdxList_Flu[v];
 
                for (int k=0; k<PATCH_SIZE; k++)    {  K    = k + Disp_k;
                for (int j=0; j<PATCH_SIZE; j++)    {  J    = j + Disp_j;
-                                                      Idx1 = IDX321( Disp_i, J, K, PGSize1D, PGSize1D );
+                                                      Idx1 = IDX321( Disp_i, J, K, PGSize1D_CC, PGSize1D_CC );
                for (int i=0; i<PATCH_SIZE; i++)    {
 
                   Data1PG_CC_Ptr[Idx1] = amr->patch[FluSg][lv][PID]->fluid[TVarCCIdx_Flu][k][j][i];
@@ -736,17 +759,17 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
                   Idx1 ++;
                }}}
 
-               Data1PG_CC_Ptr += PGSize3D;
+               Data1PG_CC_Ptr += PGSize3D_CC;
             }
 
 
-//          (a2) derived variables
+//          (a2) derived variables (cell-centered)
 #           if   ( MODEL == HYDRO )
             if ( PrepVx )
             {
                for (int k=0; k<PATCH_SIZE; k++)    {  K    = k + Disp_k;
                for (int j=0; j<PATCH_SIZE; j++)    {  J    = j + Disp_j;
-                                                      Idx1 = IDX321( Disp_i, J, K, PGSize1D, PGSize1D );
+                                                      Idx1 = IDX321( Disp_i, J, K, PGSize1D_CC, PGSize1D_CC );
                for (int i=0; i<PATCH_SIZE; i++)    {
 
                   Data1PG_CC_Ptr[Idx1] = amr->patch[FluSg][lv][PID]->fluid[MOMX][k][j][i] /
@@ -759,14 +782,14 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
                   Idx1 ++;
                }}}
 
-               Data1PG_CC_Ptr += PGSize3D;
-            }
+               Data1PG_CC_Ptr += PGSize3D_CC;
+            } // if ( PrepVx )
 
             if ( PrepVy )
             {
                for (int k=0; k<PATCH_SIZE; k++)    {  K    = k + Disp_k;
                for (int j=0; j<PATCH_SIZE; j++)    {  J    = j + Disp_j;
-                                                      Idx1 = IDX321( Disp_i, J, K, PGSize1D, PGSize1D );
+                                                      Idx1 = IDX321( Disp_i, J, K, PGSize1D_CC, PGSize1D_CC );
                for (int i=0; i<PATCH_SIZE; i++)    {
 
                   Data1PG_CC_Ptr[Idx1] = amr->patch[FluSg][lv][PID]->fluid[MOMY][k][j][i] /
@@ -779,14 +802,14 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
                   Idx1 ++;
                }}}
 
-               Data1PG_CC_Ptr += PGSize3D;
-            }
+               Data1PG_CC_Ptr += PGSize3D_CC;
+            } // if ( PrepVy )
 
             if ( PrepVz )
             {
                for (int k=0; k<PATCH_SIZE; k++)    {  K    = k + Disp_k;
                for (int j=0; j<PATCH_SIZE; j++)    {  J    = j + Disp_j;
-                                                      Idx1 = IDX321( Disp_i, J, K, PGSize1D, PGSize1D );
+                                                      Idx1 = IDX321( Disp_i, J, K, PGSize1D_CC, PGSize1D_CC );
                for (int i=0; i<PATCH_SIZE; i++)    {
 
                   Data1PG_CC_Ptr[Idx1] = amr->patch[FluSg][lv][PID]->fluid[MOMZ][k][j][i] /
@@ -799,14 +822,14 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
                   Idx1 ++;
                }}}
 
-               Data1PG_CC_Ptr += PGSize3D;
-            }
+               Data1PG_CC_Ptr += PGSize3D_CC;
+            } // if ( PrepVz )
 
             if ( PrepPres )
             {
                for (int k=0; k<PATCH_SIZE; k++)    {  K    = k + Disp_k;
                for (int j=0; j<PATCH_SIZE; j++)    {  J    = j + Disp_j;
-                                                      Idx1 = IDX321( Disp_i, J, K, PGSize1D, PGSize1D );
+                                                      Idx1 = IDX321( Disp_i, J, K, PGSize1D_CC, PGSize1D_CC );
                for (int i=0; i<PATCH_SIZE; i++)    {
 
                   for (int v=0; v<NCOMP_FLUID; v++)   Fluid[v] = amr->patch[FluSg][lv][PID]->fluid[v][k][j][i];
@@ -837,14 +860,14 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
                   Idx1 ++;
                }}}
 
-               Data1PG_CC_Ptr += PGSize3D;
-            }
+               Data1PG_CC_Ptr += PGSize3D_CC;
+            } // if ( PrepPres )
 
             if ( PrepTemp )
             {
                for (int k=0; k<PATCH_SIZE; k++)    {  K    = k + Disp_k;
                for (int j=0; j<PATCH_SIZE; j++)    {  J    = j + Disp_j;
-                                                      Idx1 = IDX321( Disp_i, J, K, PGSize1D, PGSize1D );
+                                                      Idx1 = IDX321( Disp_i, J, K, PGSize1D_CC, PGSize1D_CC );
                for (int i=0; i<PATCH_SIZE; i++)    {
 
                   for (int v=0; v<NCOMP_FLUID; v++)   Fluid[v] = amr->patch[FluSg][lv][PID]->fluid[v][k][j][i];
@@ -875,11 +898,13 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
                   Idx1 ++;
                }}}
 
-               Data1PG_CC_Ptr += PGSize3D;
-            }
+               Data1PG_CC_Ptr += PGSize3D_CC;
+            } // if ( PrepTemp )
+
 
 #           elif ( MODEL == ELBDM )
 //          no derived variables yet
+
 
 #           else
 #           error : unsupported MODEL !!
@@ -887,12 +912,12 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
 
 
 #           ifdef GRAVITY
-//          (a3) potential data
+//          (a3) potential data (cell-centered)
             if ( PrepPot )
             {
                for (int k=0; k<PATCH_SIZE; k++)    {  K    = k + Disp_k;
                for (int j=0; j<PATCH_SIZE; j++)    {  J    = j + Disp_j;
-                                                      Idx1 = IDX321( Disp_i, J, K, PGSize1D, PGSize1D );
+                                                      Idx1 = IDX321( Disp_i, J, K, PGSize1D_CC, PGSize1D_CC );
                for (int i=0; i<PATCH_SIZE; i++)    {
 
                   Data1PG_CC_Ptr[Idx1] = amr->patch[PotSg][lv][PID]->pot[k][j][i];
@@ -903,14 +928,71 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
                   Idx1 ++;
                }}}
 
-               Data1PG_CC_Ptr += PGSize3D;
+               Data1PG_CC_Ptr += PGSize3D_CC;
             } // if ( PrepPot )
 #           endif // #ifdef GRAVITY
+
+
+//          (a4) face-centered variables (e.g., magnetic field)
+            for (int v=0; v<NVarFC_Tot; v++)
+            {
+               TVarFCIdx = TVarFCIdxList[v];
+
+#              ifdef MHD
+
+//             set array indices
+               const int norm_dir = ( TVarFCIdx == MAGX ) ? 0 :
+                                    ( TVarFCIdx == MAGY ) ? 1 :
+                                    ( TVarFCIdx == MAGZ ) ? 2 : -1;
+#              ifdef GAMER_DEBUG
+               if ( norm_dir == -1 )   Aux_Error( ERROR_INFO, "Target face-centered variable != MAGX/Y/Z !!\n" );
+#              endif
+
+               int ijk_s[3], ijk_e[3], size_i[3], size_o[3], idx_i, idx_o;    // s/e=start/end; i/o=in/out
+
+               for (int d=0; d<3; d++)
+               {
+                  ijk_s [d] = 0;
+                  ijk_e [d] = PS1;
+                  size_i[d] = PS1;
+                  size_o[d] = PGSize1D_CC;
+               }
+
+//             avoid redundant assignment of the patch interface values by only adopting the right interface
+//             of the left patch
+               ijk_s [norm_dir] += TABLE_02( LocalID, 'x'+norm_dir, 0, 1 );
+               ijk_e [norm_dir] ++;
+               size_i[norm_dir] ++;
+               size_o[norm_dir] ++;
+
+
+//             copy data
+               for (int k=ijk_s[2]; k<ijk_e[2]; k++)  {  K     = k + Disp_k;
+               for (int j=ijk_s[1]; j<ijk_e[1]; j++)  {  J     = j + Disp_j;
+                                                         idx_o = IDX321( ijk_s[0]+Disp_i, J, K, size_o[0], size_o[1] );
+                                                         idx_i = IDX321( ijk_s[0],        j, k, size_i[0], size_i[1] );
+               for (int i=ijk_s[0]; i<ijk_e[0]; i++)  {
+
+                  Data1PG_FC_Ptr[idx_o] = amr->patch[MagSg][lv][PID]->magnetic[TVarFCIdx][idx_i];
+
+                  if ( MagIntTime ) // temporal interpolation
+                  Data1PG_FC_Ptr[idx_o] =   MagWeighting     *Data1PG_FC_Ptr[idx_o]
+                                          + MagWeighting_IntT*amr->patch[MagSg_IntT][lv][PID]->magnetic[TVarFCIdx][idx_i];
+                  idx_i ++;
+                  idx_o ++;
+               }}}
+
+#              elif // #ifdef MHD
+               Aux_Error( ERROR_INFO, "currently only MHD supports face-centered variables !!" );
+#              endif // #ifdef MHD ... else ...
+
+               Data1PG_FC_Ptr += PGSize3D_FC;
+            } // for (int v=0; v<NVarFC_Tot; v++)
 
          } // for (int LocalID=0; LocalID<8; LocalID++ )
 
 
-//       b. fill up the ghost zone of Data1PG_CC[]
+//       b. fill out the ghost zones of Data1PG_CC[]/FC[]
 // ------------------------------------------------------------------------------------------------------------
          for (int Side=0; Side<NSide; Side++)
          {
@@ -923,32 +1005,34 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
 //          (b1) if the target sibling patch exists --> just copy data from the nearby patches at the same level
             if ( SibPID0 >= 0 )
             {
-               const int Loop_i  = TABLE_01( Side, 'x', GhostSize, PATCH_SIZE, GhostSize );
-               const int Loop_j  = TABLE_01( Side, 'y', GhostSize, PATCH_SIZE, GhostSize );
-               const int Loop_k  = TABLE_01( Side, 'z', GhostSize, PATCH_SIZE, GhostSize );
-               const int Disp_i2 = TABLE_01( Side, 'x', PATCH_SIZE-GhostSize, 0, 0 );
-               const int Disp_j2 = TABLE_01( Side, 'y', PATCH_SIZE-GhostSize, 0, 0 );
-               const int Disp_k2 = TABLE_01( Side, 'z', PATCH_SIZE-GhostSize, 0, 0 );
+               int loop[3], disp2[3];
+               for (int d=0; d<3; d++)
+               {
+                  loop [d] = TABLE_01( Side, 'x'+d, GhostSize, PS1, GhostSize );
+                  disp2[d] = TABLE_01( Side, 'x'+d, PS1-GhostSize, 0, 0 );
+               }
 
 //###OPTIMIZATION: simplify TABLE_03 and TABLE_04
                for (int Count=0; Count<TABLE_04( Side ); Count++)
                {
-                  const int SibPID = TABLE_03( Side, Count ) + SibPID0;
-                  const int Disp_i = Table_01( Side, 'x', Count, GhostSize );
-                  const int Disp_j = Table_01( Side, 'y', Count, GhostSize );
-                  const int Disp_k = Table_01( Side, 'z', Count, GhostSize );
+                  const int LocalID = TABLE_03( Side, Count );
+                  const int SibPID  = SibPID0 + LocalID;
+
+                  int disp[3];
+                  for (int d=0; d<3; d++)    disp[d] = Table_01( Side, 'x'+d, Count, GhostSize );
 
                   Data1PG_CC_Ptr = Data1PG_CC;
+                  Data1PG_FC_Ptr = Data1PG_FC;
 
-//                (b1-1) fluid data
+//                (b1-1) fluid data (cell-centered)
                   for (int v=0; v<NVarCC_Flu; v++)
                   {
                      TVarCCIdx_Flu = TVarCCIdxList_Flu[v];
 
-                     for (int k=0; k<Loop_k; k++)  {  K = k + Disp_k;   K2 = k + Disp_k2;
-                     for (int j=0; j<Loop_j; j++)  {  J = j + Disp_j;   J2 = j + Disp_j2;
-                                                      Idx1 = IDX321( Disp_i, J, K, PGSize1D, PGSize1D );
-                     for (I2=Disp_i2; I2<Disp_i2+Loop_i; I2++) {
+                     for (int k=0; k<loop[2]; k++)  { K = k + disp[2];   K2 = k + disp2[2];
+                     for (int j=0; j<loop[1]; j++)  { J = j + disp[1];   J2 = j + disp2[1];
+                                                      Idx1 = IDX321( disp[0], J, K, PGSize1D_CC, PGSize1D_CC );
+                     for (I2=disp2[0]; I2<disp2[0]+loop[0]; I2++) {
 
                         Data1PG_CC_Ptr[Idx1] = amr->patch[FluSg][lv][SibPID]->fluid[TVarCCIdx_Flu][K2][J2][I2];
 
@@ -960,18 +1044,18 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
                         Idx1 ++;
                      }}}
 
-                     Data1PG_CC_Ptr += PGSize3D;
+                     Data1PG_CC_Ptr += PGSize3D_CC;
                   }
 
 
-//                (b1-2) derived variables
+//                (b1-2) derived variables (cell-centered)
 #                 if   ( MODEL == HYDRO )
                   if ( PrepVx )
                   {
-                     for (int k=0; k<Loop_k; k++)  {  K = k + Disp_k;   K2 = k + Disp_k2;
-                     for (int j=0; j<Loop_j; j++)  {  J = j + Disp_j;   J2 = j + Disp_j2;
-                                                      Idx1 = IDX321( Disp_i, J, K, PGSize1D, PGSize1D );
-                     for (I2=Disp_i2; I2<Disp_i2+Loop_i; I2++) {
+                     for (int k=0; k<loop[2]; k++)  { K = k + disp[2];   K2 = k + disp2[2];
+                     for (int j=0; j<loop[1]; j++)  { J = j + disp[1];   J2 = j + disp2[1];
+                                                      Idx1 = IDX321( disp[0], J, K, PGSize1D_CC, PGSize1D_CC );
+                     for (I2=disp2[0]; I2<disp2[0]+loop[0]; I2++) {
 
                         Data1PG_CC_Ptr[Idx1] = amr->patch[FluSg][lv][SibPID]->fluid[MOMX][K2][J2][I2] /
                                                amr->patch[FluSg][lv][SibPID]->fluid[DENS][K2][J2][I2];
@@ -983,15 +1067,15 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
                         Idx1 ++;
                      }}}
 
-                     Data1PG_CC_Ptr += PGSize3D;
+                     Data1PG_CC_Ptr += PGSize3D_CC;
                   }
 
                   if ( PrepVy )
                   {
-                     for (int k=0; k<Loop_k; k++)  {  K = k + Disp_k;   K2 = k + Disp_k2;
-                     for (int j=0; j<Loop_j; j++)  {  J = j + Disp_j;   J2 = j + Disp_j2;
-                                                      Idx1 = IDX321( Disp_i, J, K, PGSize1D, PGSize1D );
-                     for (I2=Disp_i2; I2<Disp_i2+Loop_i; I2++) {
+                     for (int k=0; k<loop[2]; k++)  { K = k + disp[2];   K2 = k + disp2[2];
+                     for (int j=0; j<loop[1]; j++)  { J = j + disp[1];   J2 = j + disp2[1];
+                                                      Idx1 = IDX321( disp[0], J, K, PGSize1D_CC, PGSize1D_CC );
+                     for (I2=disp2[0]; I2<disp2[0]+loop[0]; I2++) {
 
                         Data1PG_CC_Ptr[Idx1] = amr->patch[FluSg][lv][SibPID]->fluid[MOMY][K2][J2][I2] /
                                                amr->patch[FluSg][lv][SibPID]->fluid[DENS][K2][J2][I2];
@@ -1003,15 +1087,15 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
                         Idx1 ++;
                      }}}
 
-                     Data1PG_CC_Ptr += PGSize3D;
+                     Data1PG_CC_Ptr += PGSize3D_CC;
                   }
 
                   if ( PrepVz )
                   {
-                     for (int k=0; k<Loop_k; k++)  {  K = k + Disp_k;   K2 = k + Disp_k2;
-                     for (int j=0; j<Loop_j; j++)  {  J = j + Disp_j;   J2 = j + Disp_j2;
-                                                      Idx1 = IDX321( Disp_i, J, K, PGSize1D, PGSize1D );
-                     for (I2=Disp_i2; I2<Disp_i2+Loop_i; I2++) {
+                     for (int k=0; k<loop[2]; k++)  { K = k + disp[2];   K2 = k + disp2[2];
+                     for (int j=0; j<loop[1]; j++)  { J = j + disp[1];   J2 = j + disp2[1];
+                                                      Idx1 = IDX321( disp[0], J, K, PGSize1D_CC, PGSize1D_CC );
+                     for (I2=disp2[0]; I2<disp2[0]+loop[0]; I2++) {
 
                         Data1PG_CC_Ptr[Idx1] = amr->patch[FluSg][lv][SibPID]->fluid[MOMZ][K2][J2][I2] /
                                                amr->patch[FluSg][lv][SibPID]->fluid[DENS][K2][J2][I2];
@@ -1023,15 +1107,15 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
                         Idx1 ++;
                      }}}
 
-                     Data1PG_CC_Ptr += PGSize3D;
+                     Data1PG_CC_Ptr += PGSize3D_CC;
                   }
 
                   if ( PrepPres )
                   {
-                     for (int k=0; k<Loop_k; k++)  {  K = k + Disp_k;   K2 = k + Disp_k2;
-                     for (int j=0; j<Loop_j; j++)  {  J = j + Disp_j;   J2 = j + Disp_j2;
-                                                      Idx1 = IDX321( Disp_i, J, K, PGSize1D, PGSize1D );
-                     for (I2=Disp_i2; I2<Disp_i2+Loop_i; I2++) {
+                     for (int k=0; k<loop[2]; k++)  { K = k + disp[2];   K2 = k + disp2[2];
+                     for (int j=0; j<loop[1]; j++)  { J = j + disp[1];   J2 = j + disp2[1];
+                                                      Idx1 = IDX321( disp[0], J, K, PGSize1D_CC, PGSize1D_CC );
+                     for (I2=disp2[0]; I2<disp2[0]+loop[0]; I2++) {
 
                         for (int v=0; v<NCOMP_FLUID; v++)   Fluid[v] = amr->patch[FluSg][lv][SibPID]->fluid[v][K2][J2][I2];
 
@@ -1061,15 +1145,15 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
                         Idx1 ++;
                      }}}
 
-                     Data1PG_CC_Ptr += PGSize3D;
+                     Data1PG_CC_Ptr += PGSize3D_CC;
                   }
 
                   if ( PrepTemp )
                   {
-                     for (int k=0; k<Loop_k; k++)  {  K = k + Disp_k;   K2 = k + Disp_k2;
-                     for (int j=0; j<Loop_j; j++)  {  J = j + Disp_j;   J2 = j + Disp_j2;
-                                                      Idx1 = IDX321( Disp_i, J, K, PGSize1D, PGSize1D );
-                     for (I2=Disp_i2; I2<Disp_i2+Loop_i; I2++) {
+                     for (int k=0; k<loop[2]; k++)  { K = k + disp[2];   K2 = k + disp2[2];
+                     for (int j=0; j<loop[1]; j++)  { J = j + disp[1];   J2 = j + disp2[1];
+                                                      Idx1 = IDX321( disp[0], J, K, PGSize1D_CC, PGSize1D_CC );
+                     for (I2=disp2[0]; I2<disp2[0]+loop[0]; I2++) {
 
                         for (int v=0; v<NCOMP_FLUID; v++)   Fluid[v] = amr->patch[FluSg][lv][SibPID]->fluid[v][K2][J2][I2];
 
@@ -1099,7 +1183,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
                         Idx1 ++;
                      }}}
 
-                     Data1PG_CC_Ptr += PGSize3D;
+                     Data1PG_CC_Ptr += PGSize3D_CC;
                   }
 
 #                 elif ( MODEL == ELBDM )
@@ -1111,13 +1195,13 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
 
 
 #                 ifdef GRAVITY
-//                (b1-3) potential data
+//                (b1-3) potential data (cell-centered)
                   if ( PrepPot )
                   {
-                     for (int k=0; k<Loop_k; k++)  {  K = k + Disp_k;   K2 = k + Disp_k2;
-                     for (int j=0; j<Loop_j; j++)  {  J = j + Disp_j;   J2 = j + Disp_j2;
-                                                      Idx1 = IDX321( Disp_i, J, K, PGSize1D, PGSize1D );
-                     for (I2=Disp_i2; I2<Disp_i2+Loop_i; I2++) {
+                     for (int k=0; k<loop[2]; k++)  { K = k + disp[2];   K2 = k + disp2[2];
+                     for (int j=0; j<loop[1]; j++)  { J = j + disp[1];   J2 = j + disp2[1];
+                                                      Idx1 = IDX321( disp[0], J, K, PGSize1D_CC, PGSize1D_CC );
+                     for (I2=disp2[0]; I2<disp2[0]+loop[0]; I2++) {
 
                         Data1PG_CC_Ptr[Idx1] = amr->patch[PotSg][lv][SibPID]->pot[K2][J2][I2];
 
@@ -1127,9 +1211,71 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
                         Idx1 ++;
                      }}}
 
-                     Data1PG_CC_Ptr += PGSize3D;
+                     Data1PG_CC_Ptr += PGSize3D_CC;
                   }
 #                 endif // #ifdef GRAVITY
+
+
+//                (b1-4) face-centered variables
+                  for (int v=0; v<NVarFC_Tot; v++)
+                  {
+                     TVarFCIdx = TVarFCIdxList[v];
+
+#                    ifdef MHD
+//                   set array indices
+                     const int norm_dir = ( TVarFCIdx == MAGX ) ? 0 :
+                                          ( TVarFCIdx == MAGY ) ? 1 :
+                                          ( TVarFCIdx == MAGZ ) ? 2 : -1;
+#                    ifdef GAMER_DEBUG
+                     if ( norm_dir == -1 )   Aux_Error( ERROR_INFO, "Target face-centered variable != MAGX/Y/Z !!\n" );
+#                    endif
+
+                     int ijk_s[3], ijk_e[3], size_i[3], size_o[3], disp_o[3], idx_i, idx_o;  // s/e=start/end; i/o=in/out
+
+                     for (int d=0; d<3; d++)
+                     {
+                        ijk_s [d] = disp2[d];
+                        ijk_e [d] = disp2[d] + loop[d];
+                        size_i[d] = PS1;
+                        size_o[d] = PGSize1D_CC;
+                        disp_o[d] = disp[d] - disp2[d];
+                     }
+
+//                   avoid redundant assignment of the patch interface values **within the same patch group**
+//                   by only adopting the right interface of the left patch
+//                   --> but always assign the interface values of patches **outside** the target patch group
+//                       --> for ensuring adopting the fine-grid values instead of the interpolated values
+                     ijk_s [norm_dir] += TABLE_01( Side, 'x'+norm_dir, 0, TABLE_02(LocalID,'x'+norm_dir,0,1), 0 );
+                     ijk_e [norm_dir] ++;
+                     size_i[norm_dir] ++;
+                     size_o[norm_dir] ++;
+
+
+//                   copy data
+                     for (int k=ijk_s[2]; k<ijk_e[2]; k++)  {  K     = k + disp_o[2];
+                     for (int j=ijk_s[1]; j<ijk_e[1]; j++)  {  J     = j + disp_o[1];
+                                                               idx_o = IDX321( ijk_s[0]+disp_o[0], J, K, size_o[0], size_o[1] );
+                                                               idx_i = IDX321( ijk_s[0],           j, k, size_i[0], size_i[1] );
+                     for (int i=ijk_s[0]; i<ijk_e[0]; i++)  {
+
+                        Data1PG_FC_Ptr[idx_o] = amr->patch[MagSg][lv][SibPID]->magnetic[TVarFCIdx][idx_i];
+
+                        if ( MagIntTime ) // temporal interpolation
+                        Data1PG_FC_Ptr[idx_o] =
+                           MagWeighting     *Data1PG_FC_Ptr[idx_o]
+                         + MagWeighting_IntT*amr->patch[MagSg_IntT][lv][SibPID]->magnetic[TVarFCIdx][idx_i];
+
+                        idx_i ++;
+                        idx_o ++;
+                     }}}
+
+#                    elif
+                     Aux_Error( ERROR_INFO, "currently only MHD supports face-centered variables !!" );
+#                    endif // #ifdef MHD ... else ...
+
+                     Data1PG_FC_Ptr += PGSize3D_FC;
+                  } // for (int v=0; v<NVarFC_Tot; v++)
+
                } // for (int Count=0; Count<TABLE_04( Side ); Count++)
             } // if ( SibPID0 >= 0 )
 
@@ -1185,7 +1331,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
                {
                   for (int k=0; k<Loop_k; k++)  {  K = k + Disp_k1;  K2 = k + Disp_k2;
                   for (int j=0; j<Loop_j; j++)  {  J = j + Disp_j1;  J2 = j + Disp_j2;
-                                                   Idx1 = IDX321( Disp_i1, J,  K,  PGSize1D, PGSize1D );
+                                                   Idx1 = IDX321( Disp_i1, J,  K,  PGSize1D_CC, PGSize1D_CC );
                                                    Idx2 = IDX321( Disp_i2, J2, K2, FSize[0], FSize[1] );
                   for (int i=0; i<Loop_i; i++)  {
 
@@ -1193,7 +1339,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
 
                   }}}
 
-                  Data1PG_CC_Ptr += PGSize3D;
+                  Data1PG_CC_Ptr += PGSize3D_CC;
                   IntData_Ptr    += FSize[0]*FSize[1]*FSize[2];
                }
 
@@ -1232,20 +1378,20 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
                   {
                      case BC_FLU_OUTFLOW:
                         Flu_BoundaryCondition_Outflow     ( Data1PG_CC_Ptr, BC_Face[BC_Sibling], NVarCC_Flu+NVarCC_Der, GhostSize,
-                                                            PGSize1D, PGSize1D, PGSize1D, BC_Idx_Start, BC_Idx_End );
+                                                            PGSize1D_CC, PGSize1D_CC, PGSize1D_CC, BC_Idx_Start, BC_Idx_End );
                      break;
 
 #                    if ( MODEL == HYDRO )
                      case BC_FLU_REFLECTING:
                         Hydro_BoundaryCondition_Reflecting( Data1PG_CC_Ptr, BC_Face[BC_Sibling], NVarCC_Flu,            GhostSize,
-                                                            PGSize1D, PGSize1D, PGSize1D, BC_Idx_Start, BC_Idx_End,
+                                                            PGSize1D_CC, PGSize1D_CC, PGSize1D_CC, BC_Idx_Start, BC_Idx_End,
                                                             TVarCCIdxList_Flu, NVarCC_Der, TVarCCList_Der );
                      break;
 #                    endif
 
                      case BC_FLU_USER:
                         Flu_BoundaryCondition_User        ( Data1PG_CC_Ptr,                      NVarCC_Flu,
-                                                            PGSize1D, PGSize1D, PGSize1D, BC_Idx_Start, BC_Idx_End,
+                                                            PGSize1D_CC, PGSize1D_CC, PGSize1D_CC, BC_Idx_Start, BC_Idx_End,
                                                             TVarCCIdxList_Flu, PrepTime, dh, xyz0, TVarCC, lv );
                      break;
 
@@ -1253,7 +1399,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
                         Aux_Error( ERROR_INFO, "unsupported fluid B.C. (%d) !!\n", FluBC[ BC_Face[BC_Sibling] ] );
                   } // switch ( FluBC[ BC_Face[BC_Sibling] ] )
 
-                  Data1PG_CC_Ptr += NVarCC_Flu*PGSize3D;
+                  Data1PG_CC_Ptr += NVarCC_Flu*PGSize3D_CC;
                } // if ( TVarCC & (_TOTAL|_DERIVED) )
 
 
@@ -1263,9 +1409,9 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
                {
 //                extrapolate potential
                   Poi_BoundaryCondition_Extrapolation( Data1PG_CC_Ptr, BC_Face[BC_Sibling], 1, GhostSize,
-                                                       PGSize1D, PGSize1D, PGSize1D, BC_Idx_Start, BC_Idx_End );
+                                                       PGSize1D_CC, PGSize1D_CC, PGSize1D_CC, BC_Idx_Start, BC_Idx_End );
 
-                  Data1PG_CC_Ptr += 1*PGSize3D;
+                  Data1PG_CC_Ptr += 1*PGSize3D_CC;
                } // if ( PrepPot )
 #              endif // #ifdef GRAVITY
 
@@ -1305,10 +1451,10 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
             if ( DensIdx == -1 )    Aux_Error( ERROR_INFO, "DensIdx == -1 !!\n" );
 #           endif
 
-            ArrayDens = Data1PG_CC + DensIdx*PGSize3D;
+            ArrayDens = Data1PG_CC + DensIdx*PGSize3D_CC;
 
 //          initialize density array as zero if there are no other density fields
-            if ( PrepParOnlyDens )  for (int t=0; t<PGSize3D; t++)   ArrayDens[t] = (real)0.0;
+            if ( PrepParOnlyDens )  for (int t=0; t<PGSize3D_CC; t++)   ArrayDens[t] = (real)0.0;
 
 
 //          (c2) deposit particle mass in the central eight patches
@@ -1329,13 +1475,13 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
                const int is = ( Disp_i >= 0 ) ? 0 : -Disp_i;
                const int js = ( Disp_j >= 0 ) ? 0 : -Disp_j;
                const int ks = ( Disp_k >= 0 ) ? 0 : -Disp_k;
-               const int ie = ( RHOEXT_NXT+Disp_i <= PGSize1D ) ? RHOEXT_NXT-1 : PGSize1D-Disp_i-1;
-               const int je = ( RHOEXT_NXT+Disp_j <= PGSize1D ) ? RHOEXT_NXT-1 : PGSize1D-Disp_j-1;
-               const int ke = ( RHOEXT_NXT+Disp_k <= PGSize1D ) ? RHOEXT_NXT-1 : PGSize1D-Disp_k-1;
+               const int ie = ( RHOEXT_NXT+Disp_i <= PGSize1D_CC ) ? RHOEXT_NXT-1 : PGSize1D_CC-Disp_i-1;
+               const int je = ( RHOEXT_NXT+Disp_j <= PGSize1D_CC ) ? RHOEXT_NXT-1 : PGSize1D_CC-Disp_j-1;
+               const int ke = ( RHOEXT_NXT+Disp_k <= PGSize1D_CC ) ? RHOEXT_NXT-1 : PGSize1D_CC-Disp_k-1;
 
 //             add particle density to the total density array
                for (int k=ks; k<=ke; k++)  {  K    = k + Disp_k;
-               for (int j=js; j<=je; j++)  {  Idx1 = IDX321( is+Disp_i, j+Disp_j, K, PGSize1D, PGSize1D );
+               for (int j=js; j<=je; j++)  {  Idx1 = IDX321( is+Disp_i, j+Disp_j, K, PGSize1D_CC, PGSize1D_CC );
                for (int i=is; i<=ie; i++)  {
 
                   ArrayDens[ Idx1 ++ ] += amr->patch[0][lv][PID]->rho_ext[k][j][i];
@@ -1379,13 +1525,13 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
                      const int is = ( is_LG+Disp_i >= 0 ) ? is_LG : -Disp_i;
                      const int js = ( js_LG+Disp_j >= 0 ) ? js_LG : -Disp_j;
                      const int ks = ( ks_LG+Disp_k >= 0 ) ? ks_LG : -Disp_k;
-                     const int ie = ( ie_LG+Disp_i < PGSize1D ) ? ie_LG : PGSize1D-Disp_i-1;
-                     const int je = ( je_LG+Disp_j < PGSize1D ) ? je_LG : PGSize1D-Disp_j-1;
-                     const int ke = ( ke_LG+Disp_k < PGSize1D ) ? ke_LG : PGSize1D-Disp_k-1;
+                     const int ie = ( ie_LG+Disp_i < PGSize1D_CC ) ? ie_LG : PGSize1D_CC-Disp_i-1;
+                     const int je = ( je_LG+Disp_j < PGSize1D_CC ) ? je_LG : PGSize1D_CC-Disp_j-1;
+                     const int ke = ( ke_LG+Disp_k < PGSize1D_CC ) ? ke_LG : PGSize1D_CC-Disp_k-1;
 
 //                   add particle density to the total density array
                      for (int k=ks; k<=ke; k++)  {  K    = k + Disp_k;
-                     for (int j=js; j<=je; j++)  {  Idx1 = IDX321( is+Disp_i, j+Disp_j, K, PGSize1D, PGSize1D );
+                     for (int j=js; j<=je; j++)  {  Idx1 = IDX321( is+Disp_i, j+Disp_j, K, PGSize1D_CC, PGSize1D_CC );
                      for (int i=is; i<=ie; i++)  {
 
                         ArrayDens[ Idx1 ++ ] += amr->patch[0][lv][SibPID]->rho_ext[k][j][i];
@@ -1470,7 +1616,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
 //                             away from the target patch boundaries (i.e., patch->EdgeL/R)
 //                             --> Periodic_Check, CheckFarAway_Yes
                   if ( NPar > 0 )
-                  Par_MassAssignment( ParList, NPar, amr->Par->Interp, ArrayDens, PGSize1D, EdgeL, dh,
+                  Par_MassAssignment( ParList, NPar, amr->Par->Interp, ArrayDens, PGSize1D_CC, EdgeL, dh,
                                       (amr->Par->PredictPos && !UseInputMassPos), PrepTime, InitZero_No,
                                       Periodic_Check, PeriodicNCell, UnitDens_No, CheckFarAway_Yes,
                                       UseInputMassPos, InputMassPos );
@@ -1492,11 +1638,11 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
             {
 //             assuming that the order of variables stored in OutputCC is the same as patch->fluid[]
                const int DensIdx = DENS;
-               real *ArrayDens = Data1PG_CC + DensIdx*PGSize3D;
+               real *ArrayDens = Data1PG_CC + DensIdx*PGSize3D_CC;
 
 //             apply minimum density
 //             --> note that for ELBDM it will result in dens != real^2 + imag^2
-               for (int t=0; t<PGSize3D; t++)   ArrayDens[t] = FMAX( ArrayDens[t], MinDens );
+               for (int t=0; t<PGSize3D_CC; t++)   ArrayDens[t] = FMAX( ArrayDens[t], MinDens );
             }
          } // if ( MinDens >= (real)0.0 )
 #        endif // #if ( MODEL == HYDRO  ||  MODEL == ELBDM )
@@ -1517,10 +1663,10 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
                if ( PrepVy )  PresIdx ++;
                if ( PrepVz )  PresIdx ++;
 
-               real *ArrayPres = Data1PG_CC + PresIdx*PGSize3D;
+               real *ArrayPres = Data1PG_CC + PresIdx*PGSize3D_CC;
 
 //             apply minimum pressure
-               for (int t=0; t<PGSize3D; t++)   ArrayPres[t] = FMAX( ArrayPres[t], MinPres );
+               for (int t=0; t<PGSize3D_CC; t++)   ArrayPres[t] = FMAX( ArrayPres[t], MinPres );
             }
 
 //          (d2-2) pressure in the energy field --> work only when ALL active fluid fields are prepared
@@ -1536,14 +1682,14 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
                const int MomZIdx = MOMZ;
                const int EngyIdx = ENGY;
 
-               real *ArrayDens = Data1PG_CC + DensIdx*PGSize3D;
-               real *ArrayMomX = Data1PG_CC + MomXIdx*PGSize3D;
-               real *ArrayMomY = Data1PG_CC + MomYIdx*PGSize3D;
-               real *ArrayMomZ = Data1PG_CC + MomZIdx*PGSize3D;
-               real *ArrayEngy = Data1PG_CC + EngyIdx*PGSize3D;
+               real *ArrayDens = Data1PG_CC + DensIdx*PGSize3D_CC;
+               real *ArrayMomX = Data1PG_CC + MomXIdx*PGSize3D_CC;
+               real *ArrayMomY = Data1PG_CC + MomYIdx*PGSize3D_CC;
+               real *ArrayMomZ = Data1PG_CC + MomZIdx*PGSize3D_CC;
+               real *ArrayEngy = Data1PG_CC + EngyIdx*PGSize3D_CC;
 
 //             apply minimum pressure to the energy field
-               for (int t=0; t<PGSize3D; t++)
+               for (int t=0; t<PGSize3D_CC; t++)
                {
 #                 ifdef MHD
 #                 warning : WAIT MHD !!!
@@ -1583,19 +1729,23 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
                   for (int k=Disp_k; k<Disp_k+PSize1D; k++)
                   for (int j=Disp_j; j<Disp_j+PSize1D; j++)
                   {
-                     Idx1 = IDX321( Disp_i, j, k, PGSize1D, PGSize1D );
+                     Idx1 = IDX321( Disp_i, j, k, PGSize1D_CC, PGSize1D_CC );
 
                      for (int i=0; i<PSize1D; i++)    OutputCC_Ptr[ Idx2 ++ ] = Data1PG_CC_Ptr[ Idx1 ++ ];
                   }
 
-                  Data1PG_CC_Ptr += PGSize3D;
+                  Data1PG_CC_Ptr += PGSize3D_CC;
                }
             }
          } // if ( PatchByPatch )
 
       } // for (int TID=0; TID<NPG; TID++)
 
-      if ( PrepUnit == UNIT_PATCH )    delete [] Data1PG_CC;
+      if ( PrepUnit == UNIT_PATCH )
+      {
+         delete [] Data1PG_CC;
+         delete [] Data1PG_FC;
+      }
       delete [] IntData;
 
    } // end of OpenMP parallel region
