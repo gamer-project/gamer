@@ -6,15 +6,21 @@
 // problem-specific global variables
 // =======================================================================================
 static int      Soliton_N;                               // total number of solitons
-static int      Soliton_RSeed;                           // random seed for setting Soliton_Center (<0 --> set manually)
-static double   Soliton_FixedScale;                      // fixed scale factor for all solitons (<=0.0 --> set manually)
-static double   Soliton_EmptyRegion;                     // soliton-free region from the boundary (useful only when Soliton_RSeed>=0)
-static char     Soliton_DensProf_Filename[MAX_STRING];   // filename of the soliton density profile
+static int      Soliton_RSeed;                           // random seed for setting Soliton_Center[]
+                                                         //    (<0 --> hard coding each soliton)
+static double   Soliton_CoreRadiusAll;                   // core radius for all solitons
+                                                         //    (<=0.0 --> hard coding each soliton)
+static double   Soliton_EmptyRegion;                     // soliton-free region from the boundary
+                                                         //    (useful only when Soliton_RSeed>=0)
+static char     Soliton_DensProf_Filename[MAX_STRING];   // filename of the reference soliton density profile
 
 static int      Soliton_DensProf_NBin;                   // number of radial bins of the soliton density profile
 static double  *Soliton_DensProf   = NULL;               // soliton density profile [radius/density]
-static double  *Soliton_Scale      = NULL;               // scale factor of each soliton
+static double  *Soliton_CoreRadius = NULL;               // core radius of each soliton
 static double (*Soliton_Center)[3] = NULL;               // center coordinates of each soliton
+static double  *Soliton_Lambda     = NULL;               // scale factor of each soliton (defined as the ratio
+                                                         // between the core radii of the target and reference
+                                                         // soliton profiles)
 // =======================================================================================
 
 
@@ -107,7 +113,7 @@ void SetParameter()
 // ********************************************************************************************************************************
    ReadPara->Add( "Soliton_N",                 &Soliton_N,                 -1,             1,                NoMax_int         );
    ReadPara->Add( "Soliton_RSeed",             &Soliton_RSeed,              0,             NoMin_int,        NoMax_int         );
-   ReadPara->Add( "Soliton_FixedScale",        &Soliton_FixedScale,         1.0,           NoMin_double,     NoMax_double      );
+   ReadPara->Add( "Soliton_CoreRadiusAll",     &Soliton_CoreRadiusAll,      NoDef_double,  NoMin_double,     NoMax_double      );
    ReadPara->Add( "Soliton_EmptyRegion",       &Soliton_EmptyRegion,        0.0,           NoMin_double,     NoMax_double      );
    ReadPara->Add( "Soliton_DensProf_Filename",  Soliton_DensProf_Filename,  Useless_str,   Useless_str,      Useless_str       );
 
@@ -121,24 +127,28 @@ void SetParameter()
    if ( Soliton_RSeed >= 0  &&  Soliton_EmptyRegion < 0.0 )
       Aux_Error( ERROR_INFO, "Soliton_EmptyRegion (%14.7e) < 0.0 !!\n", Soliton_EmptyRegion );
 
+   if ( Soliton_CoreRadiusAll == NoDef_double )
+      Aux_Error( ERROR_INFO, "Runtime parameter \"Soliton_CoreRadiusAll\" is not set !!\n" );
+
 
 // (2) set the problem-specific derived parameters
 // (2-1) allocate memory
-   Soliton_Scale  = new double [Soliton_N];
-   Soliton_Center = new double [Soliton_N][3];
+   Soliton_CoreRadius = new double [Soliton_N];
+   Soliton_Center     = new double [Soliton_N][3];
+   Soliton_Lambda     = new double [Soliton_N];
 
-// (2-2) soliton scale factors
-   if ( Soliton_FixedScale > 0.0 )
+// (2-2) soliton core radii
+   if ( Soliton_CoreRadiusAll > 0.0 )
    {
-      for (int t=0; t<Soliton_N; t++)  Soliton_Scale[t] = Soliton_FixedScale;
+      for (int t=0; t<Soliton_N; t++)  Soliton_CoreRadius[t] = Soliton_CoreRadiusAll;
    }
 
    else
    {
-//    for Soliton_FixedScale <= 0.0, comment out the following line and hard code the scale factor of each soliton
-      Aux_Error( ERROR_INFO, "for Soliton_FixedScale <= 0.0, please comment out this error check and hard code "
-                             "the scale factor of each soliton !!\n" );
-//    for (int t=0; t<Soliton_N; t++)  Soliton_Scale[t] = XXX;
+//    for Soliton_CoreRadiusAll <= 0.0, comment out the following line and hard code the core radius of each soliton
+      Aux_Error( ERROR_INFO, "for Soliton_CoreRadiusAll <= 0.0, please comment out this error check and hard code "
+                             "the core radius of each soliton !!\n" );
+//    for (int t=0; t<Soliton_N; t++)  Soliton_CoreRadius[t] = XXX;
    }
 
 // (2-3) soliton centers
@@ -176,16 +186,41 @@ void SetParameter()
    } // if ( Soliton_RSeed >= 0 ) ... else ...
 
 
-// (3) load the soliton density profile
+// (3) load the reference soliton density profile and evaluate the scale factor
    if ( OPT__INIT != INIT_BY_RESTART )
    {
+//    load the reference profile
       const bool RowMajor_No  = false;    // load data into the column-major order
       const bool AllocMem_Yes = true;     // allocate memory for Soliton_DensProf
       const int  NCol         = 2;        // total number of columns to load
       const int  Col[NCol]    = {0, 1};   // target columns: (radius, density)
 
       Soliton_DensProf_NBin = Aux_LoadTable( Soliton_DensProf, Soliton_DensProf_Filename, NCol, Col, RowMajor_No, AllocMem_Yes );
-   }
+
+
+//    get the core radius of the reference profile
+      const double *RadiusRef = Soliton_DensProf + 0*Soliton_DensProf_NBin;
+      const double *DensRef   = Soliton_DensProf + 1*Soliton_DensProf_NBin;
+      const double  DensCore  = 0.5*DensRef[0];   // define core radius as the half-density radius
+
+      double CoreRadiusRef = NULL_REAL;
+
+      for (int b=1; b<Soliton_DensProf_NBin-1; b++)
+      {
+         if ( DensRef[b] >= DensCore  &&  DensRef[b+1] <= DensCore )
+         {
+            CoreRadiusRef = 0.5*( RadiusRef[b] + RadiusRef[b+1] );
+            break;
+         }
+      }
+
+      if ( CoreRadiusRef == NULL_REAL )
+         Aux_Error( ERROR_INFO, "cannot determine the reference core radius !!\n" );
+
+
+//    evaluate the scale factor of each soliton
+      for (int t=0; t<Soliton_N; t++)  Soliton_Lambda[t] = Soliton_CoreRadius[t] / CoreRadiusRef;
+   } // if ( OPT__INIT != INIT_BY_RESTART )
 
 
 // (4) reset other general-purpose parameters
@@ -216,10 +251,10 @@ void SetParameter()
       Aux_Message( stdout, "  number of bins of the density profile     = %d\n",     Soliton_DensProf_NBin      );
       Aux_Message( stdout, "\n" );
       Aux_Message( stdout, "  Soliton info:\n" );
-      Aux_Message( stdout, "  %7s  %13s  %13s  %13s  %13s\n", "ID", "Scale", "Center_X", "Center_Y", "Center_Z" );
+      Aux_Message( stdout, "  %7s  %13s  %13s  %13s  %13s\n", "ID", "CoreRadius", "Center_X", "Center_Y", "Center_Z" );
       for (int t=0; t<Soliton_N; t++)
       Aux_Message( stdout, "  %7d  %13.6e  %13.6e  %13.6e  %13.6e\n",
-                   t, Soliton_Scale[t], Soliton_Center[t][0], Soliton_Center[t][1], Soliton_Center[t][2] );
+                   t, Soliton_CoreRadius[t], Soliton_Center[t][0], Soliton_Center[t][1], Soliton_Center[t][2] );
       Aux_Message( stdout, "=============================================================================\n" );
    }
 
@@ -267,7 +302,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 
 //    rescale radius (~scale^-1)
 //    --> we rescale "r" instead of "Table_Radius" just for convenience
-      r *= Soliton_Scale[t];
+      r *= Soliton_CoreRadius[t];
 
 //    linear interpolation
       Dens = Mis_InterpolateFromTable( Soliton_DensProf_NBin, Table_Radius, Table_Density, r );
@@ -282,7 +317,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
       }
 
 //    rescale density (~scale^4) and add to the fluid array
-      fluid[DENS] += Dens*SQR( Soliton_Scale[t] )*SQR( Soliton_Scale[t] );
+      fluid[DENS] += Dens*SQR( Soliton_CoreRadius[t] )*SQR( Soliton_CoreRadius[t] );
    } // for (int t=0; t<Soliton_N; t++)
 
 
@@ -306,8 +341,9 @@ void End_Soliton()
 {
 
    delete [] Soliton_DensProf;
-   delete [] Soliton_Scale;
+   delete [] Soliton_CoreRadius;
    delete [] Soliton_Center;
+   delete [] Soliton_Lambda;
 
 } // FUNCTION : End_Soliton
 
