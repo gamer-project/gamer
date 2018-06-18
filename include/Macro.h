@@ -701,9 +701,10 @@
 #define MIN( a, b )     (  ( (a) < (b) ) ? (a) : (b)  )
 
 
-// square/cube function
-#define SQR(  a )       ( (a)*(a)     )
-#define CUBE( a )       ( (a)*(a)*(a) )
+// power functions
+#define SQR(  a )       ( (a)*(a)         )
+#define CUBE( a )       ( (a)*(a)*(a)     )
+#define POW4( a )       ( (a)*(a)*(a)*(a) )
 
 
 // 3D to 1D array indices transformation

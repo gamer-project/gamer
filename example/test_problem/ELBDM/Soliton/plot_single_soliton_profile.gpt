@@ -7,7 +7,7 @@ FILE_IN_PREFIX  = 'Diag'
 FILE_IN_SUFFIX  = ''
 FILE_OUT_PREFIX = 'Fig__SingleSoliton'
 FILE_REF        = 'SolitonDensityProfile_Lambda0.0'
-SCALE           = 0.1      # soliton scale factor (Soliton_FixedScale)
+SCALE_L         = 9.52     # soliton length scale factor (Soliton_ScaleL)
 BOX_SIZE        = 384.0    # simulation box size (BOX_SIZE)
 START_ID        = 0
 END_ID          = 50
@@ -72,10 +72,10 @@ do for [ID=START_ID:END_ID:DELTA_ID] {
 #  plot
    center = 0.5*BOX_SIZE
 
-   plot FILE_IN  u (abs($4-center)*3**0.5):($7**0.5) w p pt 6 lc 4 title 'Dens^{1/2}' \
-       ,FILE_IN  u (abs($4-center)*3**0.5):($8     ) w p pt 7 lc 6 title 'Real' \
-       ,FILE_IN  u (abs($4-center)*3**0.5):($9     ) w p pt 8 lc 7 title 'Imag' \
-       ,FILE_REF u ($1/SCALE):($2**0.5*SCALE**2)     w l      lc 8 title 'Analytical'
+   plot FILE_IN  u (abs($4-center)*3**0.5):($7**0.5)  w p pt 6 lc 4 title 'Dens^{1/2}' \
+       ,FILE_IN  u (abs($4-center)*3**0.5):($8     )  w p pt 7 lc 6 title 'Real' \
+       ,FILE_IN  u (abs($4-center)*3**0.5):($9     )  w p pt 8 lc 7 title 'Imag' \
+       ,FILE_REF u ($1*SCALE_L):($2**0.5*SCALE_L**-2) w l      lc 8 title 'Analytical'
 
 
    if ( GPVAL_TERM eq 'x11' ) { if ( PAUSE <= 0.0 ) { pause mouse }   else { pause PAUSE } };
