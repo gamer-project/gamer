@@ -18,9 +18,10 @@ static int      Soliton_DensProf_NBin;                   // number of radial bin
 static double  *Soliton_DensProf   = NULL;               // soliton density profile [radius/density]
 static double  *Soliton_CoreRadius = NULL;               // core radius of each soliton
 static double (*Soliton_Center)[3] = NULL;               // center coordinates of each soliton
-static double  *Soliton_Lambda     = NULL;               // scale factor of each soliton (defined as the ratio
-                                                         // between the core radii of the target and reference
-                                                         // soliton profiles)
+static double  *Soliton_ScaleL     = NULL;               // L/D: length/density scale factors of each soliton
+                                                         //      (defined as the ratio between the core radii/peak
+                                                         //      density of the target and reference soliton profiles)
+static double  *Soliton_ScaleD     = NULL;
 // =======================================================================================
 
 
@@ -135,7 +136,8 @@ void SetParameter()
 // (2-1) allocate memory
    Soliton_CoreRadius = new double [Soliton_N];
    Soliton_Center     = new double [Soliton_N][3];
-   Soliton_Lambda     = new double [Soliton_N];
+   Soliton_ScaleL     = new double [Soliton_N];
+   Soliton_ScaleD     = new double [Soliton_N];
 
 // (2-2) soliton core radii
    if ( Soliton_CoreRadiusAll > 0.0 )
@@ -186,7 +188,7 @@ void SetParameter()
    } // if ( Soliton_RSeed >= 0 ) ... else ...
 
 
-// (3) load the reference soliton density profile and evaluate the scale factor
+// (3) load the reference soliton density profile and evaluate the scale factors
    if ( OPT__INIT != INIT_BY_RESTART )
    {
 //    load the reference profile
@@ -218,8 +220,12 @@ void SetParameter()
          Aux_Error( ERROR_INFO, "cannot determine the reference core radius !!\n" );
 
 
-//    evaluate the scale factor of each soliton
-      for (int t=0; t<Soliton_N; t++)  Soliton_Lambda[t] = Soliton_CoreRadius[t] / CoreRadiusRef;
+//    evaluate the scale factors of each soliton
+      for (int t=0; t<Soliton_N; t++)
+      {
+         Soliton_ScaleL[t] = Soliton_CoreRadius[t] / CoreRadiusRef;
+         Soliton_ScaleD[t] = 1.0 / ( 4.0*M_PI*NEWTON_G*SQR(ELBDM_ETA)*POW4(Soliton_ScaleL[t]) );
+      }
    } // if ( OPT__INIT != INIT_BY_RESTART )
 
 
@@ -242,7 +248,7 @@ void SetParameter()
 // (5) make a note
    if ( MPI_Rank == 0 )
    {
-      Aux_Message( stdout, "=============================================================================\n" );
+      Aux_Message( stdout, "======================================================================================\n" );
       Aux_Message( stdout, "  test problem ID                           = %d\n",     TESTPROB_ID                );
       Aux_Message( stdout, "  total number of solitons                  = %d\n",     Soliton_N                  );
       Aux_Message( stdout, "  random seed for setting the center coord. = %d\n",     Soliton_RSeed              );
@@ -251,11 +257,13 @@ void SetParameter()
       Aux_Message( stdout, "  number of bins of the density profile     = %d\n",     Soliton_DensProf_NBin      );
       Aux_Message( stdout, "\n" );
       Aux_Message( stdout, "  Soliton info:\n" );
-      Aux_Message( stdout, "  %7s  %13s  %13s  %13s  %13s\n", "ID", "CoreRadius", "Center_X", "Center_Y", "Center_Z" );
+      Aux_Message( stdout, "  %7s  %13s  %13s  %13s  %13s  %13s\n",
+                   "ID", "CoreRadius", "ScaleL", "Center_X", "Center_Y", "Center_Z" );
       for (int t=0; t<Soliton_N; t++)
-      Aux_Message( stdout, "  %7d  %13.6e  %13.6e  %13.6e  %13.6e\n",
-                   t, Soliton_CoreRadius[t], Soliton_Center[t][0], Soliton_Center[t][1], Soliton_Center[t][2] );
-      Aux_Message( stdout, "=============================================================================\n" );
+      Aux_Message( stdout, "  %7d  %13.6e  %13.6e  %13.6e  %13.6e  %13.6e\n",
+                   t, Soliton_CoreRadius[t], Soliton_ScaleL[t],
+                   Soliton_Center[t][0], Soliton_Center[t][1], Soliton_Center[t][2] );
+      Aux_Message( stdout, "======================================================================================\n" );
    }
 
 
@@ -289,7 +297,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
    const double *Table_Radius  = Soliton_DensProf + 0*Soliton_DensProf_NBin;  // radius
    const double *Table_Density = Soliton_DensProf + 1*Soliton_DensProf_NBin;  // density
 
-   double r, Dens;
+   double r_tar, r_ref, dens_ref;
 
 
 // initialize density as zero since there may be multiple solitons
@@ -298,26 +306,29 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 // loop over all solitons to get the total density
    for (int t=0; t<Soliton_N; t++)
    {
-      r = sqrt( SQR(x-Soliton_Center[t][0]) + SQR(y-Soliton_Center[t][1]) + SQR(z-Soliton_Center[t][2]) );
+      r_tar = sqrt( SQR(x-Soliton_Center[t][0]) + SQR(y-Soliton_Center[t][1]) + SQR(z-Soliton_Center[t][2]) );
 
-//    rescale radius (~scale^-1)
-//    --> we rescale "r" instead of "Table_Radius" just for convenience
-      r *= Soliton_CoreRadius[t];
+//    rescale radius (target radius --> reference radius)
+      r_ref = r_tar / Soliton_ScaleL[t];
 
 //    linear interpolation
-      Dens = Mis_InterpolateFromTable( Soliton_DensProf_NBin, Table_Radius, Table_Density, r );
+      dens_ref = Mis_InterpolateFromTable( Soliton_DensProf_NBin, Table_Radius, Table_Density, r_ref );
 
-      if ( Dens == NULL_REAL )
+      if ( dens_ref == NULL_REAL )
       {
-         if      ( r <  Table_Radius[0] )                         Dens = Table_Density[0];
-         else if ( r >= Table_Radius[Soliton_DensProf_NBin-1] )   Dens = Table_Density[Soliton_DensProf_NBin-1];
+         if      ( r_ref <  Table_Radius[0] )
+            dens_ref = Table_Density[0];
+
+         else if ( r_ref >= Table_Radius[Soliton_DensProf_NBin-1] )
+            dens_ref = Table_Density[Soliton_DensProf_NBin-1];
+
          else
             Aux_Error( ERROR_INFO, "interpolation failed at radius %13.7e (min/max radius = %13.7e/%13.7e) !!\n",
-                       r, Table_Radius[0], Table_Radius[Soliton_DensProf_NBin-1] );
+                       r_ref, Table_Radius[0], Table_Radius[Soliton_DensProf_NBin-1] );
       }
 
-//    rescale density (~scale^4) and add to the fluid array
-      fluid[DENS] += Dens*SQR( Soliton_CoreRadius[t] )*SQR( Soliton_CoreRadius[t] );
+//    rescale density (reference density --> target density) and add to the fluid array
+      fluid[DENS] += dens_ref*Soliton_ScaleD[t];
    } // for (int t=0; t<Soliton_N; t++)
 
 
@@ -343,7 +354,8 @@ void End_Soliton()
    delete [] Soliton_DensProf;
    delete [] Soliton_CoreRadius;
    delete [] Soliton_Center;
-   delete [] Soliton_Lambda;
+   delete [] Soliton_ScaleL;
+   delete [] Soliton_ScaleD;
 
 } // FUNCTION : End_Soliton
 
