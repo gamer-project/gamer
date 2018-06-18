@@ -257,11 +257,11 @@ void SetParameter()
       Aux_Message( stdout, "  number of bins of the density profile     = %d\n",     Soliton_DensProf_NBin      );
       Aux_Message( stdout, "\n" );
       Aux_Message( stdout, "  Soliton info:\n" );
-      Aux_Message( stdout, "  %7s  %13s  %13s  %13s  %13s  %13s\n",
-                   "ID", "CoreRadius", "ScaleL", "Center_X", "Center_Y", "Center_Z" );
+      Aux_Message( stdout, "  %7s  %13s  %13s  %13s  %13s  %13s  %13s\n",
+                   "ID", "CoreRadius", "ScaleL", "ScaleD", "Center_X", "Center_Y", "Center_Z" );
       for (int t=0; t<Soliton_N; t++)
-      Aux_Message( stdout, "  %7d  %13.6e  %13.6e  %13.6e  %13.6e  %13.6e\n",
-                   t, Soliton_CoreRadius[t], Soliton_ScaleL[t],
+      Aux_Message( stdout, "  %7d  %13.6e  %13.6e  %13.6e  %13.6e  %13.6e  %13.6e\n",
+                   t, Soliton_CoreRadius[t], Soliton_ScaleL[t], Soliton_ScaleD[t],
                    Soliton_Center[t][0], Soliton_Center[t][1], Soliton_Center[t][2] );
       Aux_Message( stdout, "======================================================================================\n" );
    }
