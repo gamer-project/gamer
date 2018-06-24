@@ -7,13 +7,13 @@
 // Function    :  Int_CQuadratic
 // Description :  Perform spatial interpolation based on the conservative quadratic interpolation
 //
-// Note        :  a. It is the 3D generalization of the 1D central interpolation
+// Note        :  1. It is the 3D generalization of the 1D central interpolation
 //                   --> A quadratic polynomial, which preserves the AVERAGE values in three cells, is used to
 //                       approximate the spatial distribution
-//                b. The interpolation result is conservative but NOT monotonic if the option "Monotonic" is off
-//		  c. 3D interpolation is achieved by performing interpolation along x, y, and z directions
+//                2. The interpolation result is conservative but NOT monotonic if the option "Monotonic" is off
+//		  3. 3D interpolation is achieved by performing interpolation along x, y, and z directions
 //		     in order
-//		  d. The "Monotonic" option is used to ensure that the interpolation results are monotonic
+//		  4. The "Monotonic" option is used to ensure that the interpolation results are monotonic
 //		     --> A slope limiter is adopted to ensure the monotonicity
 //
 // Parameter   :  CData       : Input coarse-grid array
