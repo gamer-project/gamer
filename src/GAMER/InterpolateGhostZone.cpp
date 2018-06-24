@@ -123,9 +123,9 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData[], const in
    Int_Table( IntScheme, NSide, CGhost );
 
    const double dh               = amr->dh[lv];
-   const int    GhostSize_Padded = GhostSize + (GhostSize&1);
-   const int    CGrid            = (GhostSize+1)/2 + 2*CGhost;    // number of coarse grids required for interpolation
-   const int    La               = CGrid - CGhost;                // number of coarse grids in the central region
+   const int    GhostSize_Padded = GhostSize + (GhostSize&1);     // # of interpolated cells must an even number
+   const int    CGrid            = GhostSize_Padded/2 + 2*CGhost; // # of coarse cells required for interpolation
+   const int    CGrid_PID        = CGrid - CGhost;                // # of overlapped cells between CGrid and PID
 
    for (int d=0; d<3; d++)
    {
@@ -138,7 +138,8 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData[], const in
 
 
 // we assume that we only need ONE coarse-grid patch in each sibling direction
-   if ( La > PATCH_SIZE )  Aux_Error( ERROR_INFO, "La (%d) > PATCH_SIZE (%d) !!\n", La, PATCH_SIZE );
+   if ( CGrid_PID > PATCH_SIZE )
+      Aux_Error( ERROR_INFO, "CGrid_PID (%d) > PATCH_SIZE (%d) !!\n", CGrid_PID, PATCH_SIZE );
 
 
 // coarse-grid array to store all the data required for interpolation (including the ghost zones in each side)
@@ -213,10 +214,10 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData[], const in
 
    for (int d=0; d<3; d++)
    {
-      Loop1[d] = TABLE_01( SibID, 'x'+d, La, PATCH_SIZE, La );
-      Disp1[d] = TABLE_01( SibID, 'x'+d, PATCH_SIZE-La, 0, 0 );
+      Loop1[d] = TABLE_01( SibID, 'x'+d, CGrid_PID, PATCH_SIZE, CGrid_PID );
+      Disp1[d] = TABLE_01( SibID, 'x'+d, PATCH_SIZE-CGrid_PID, 0, 0 );
       Disp2[d] = TABLE_01( SibID, 'x'+d, 0, CGhost, CGhost );
-      xyz  [d] = TABLE_01( SibID, 'x'+d, amr->patch[0][lv][PID]->EdgeL[d] + (0.5+PS1-La)*dh,
+      xyz  [d] = TABLE_01( SibID, 'x'+d, amr->patch[0][lv][PID]->EdgeL[d] + (0.5+PS1-CGrid_PID)*dh,
                                          amr->patch[0][lv][PID]->EdgeL[d] + (0.5-CGhost)*dh,
                                          amr->patch[0][lv][PID]->EdgeL[d] + (0.5-CGhost)*dh );
    }
@@ -431,9 +432,9 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData[], const in
 
       for (int d=0; d<3; d++)
       {
-         Loop2[d] = Table_01( SibID, Side, 'x'+d, La, CGhost, CGhost, PATCH_SIZE, CGhost, CGhost, La );
-         Disp3[d] = Table_01( SibID, Side, 'x'+d, 0, La, 0, CGhost, CGhost+PATCH_SIZE, 0, CGhost );
-         Disp4[d] = Table_01( SibID, Side, 'x'+d, PATCH_SIZE-La, 0, PATCH_SIZE-CGhost, 0, 0,
+         Loop2[d] = Table_01( SibID, Side, 'x'+d, CGrid_PID, CGhost, CGhost, PATCH_SIZE, CGhost, CGhost, CGrid_PID );
+         Disp3[d] = Table_01( SibID, Side, 'x'+d, 0, CGrid_PID, 0, CGhost, CGhost+PATCH_SIZE, 0, CGhost );
+         Disp4[d] = Table_01( SibID, Side, 'x'+d, PATCH_SIZE-CGrid_PID, 0, PATCH_SIZE-CGhost, 0, 0,
                               PATCH_SIZE-CGhost, 0 );
       }
 
