@@ -982,7 +982,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
                   idx_o ++;
                }}}
 
-#              elif // #ifdef MHD
+#              else
                Aux_Error( ERROR_INFO, "currently only MHD supports face-centered variables !!" );
 #              endif // #ifdef MHD ... else ...
 
@@ -994,6 +994,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
 
 //       b. fill out the ghost zones of Data1PG_CC[]/FC[]
 // ------------------------------------------------------------------------------------------------------------
+//       direct memory copy
          for (int Side=0; Side<NSide; Side++)
          {
 //          nothing to do if no ghost zone is required
@@ -1269,7 +1270,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
                         idx_o ++;
                      }}}
 
-#                    elif
+#                    else
                      Aux_Error( ERROR_INFO, "currently only MHD supports face-centered variables !!" );
 #                    endif // #ifdef MHD ... else ...
 
@@ -1278,10 +1279,22 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
 
                } // for (int Count=0; Count<TABLE_04( Side ); Count++)
             } // if ( SibPID0 >= 0 )
+         } // for (int Side=0; Side<NSide; Side++)
 
+
+//       interpolation or boundary condition
+//       --> apply interpolation AFTER copying data from all existing sibling patches to Data1PG_CC[]
+//           since the divergence-free interpolation on the magnetic field requires these data
+         for (int Side=0; Side<NSide; Side++)
+         {
+//          nothing to do if no ghost zone is required
+            if ( GhostSize == 0 )   break;
+
+
+            const int SibPID0 = Table_02( lv, PID0, Side );    // the 0th patch of the sibling patch group
 
 //          (b2) if the target sibling patch does not exist --> interpolate from patches at level lv-1
-            else if ( SibPID0 == -1 )
+            if ( SibPID0 == -1 )
             {
 //             interpolation should never be applied to the base level
 #              ifdef GAMER_DEBUG
@@ -1417,7 +1430,8 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
 
             } // else if ( SibPID0 <= SIB_OFFSET_NONPERIODIC )
 
-            else
+
+            else if ( SibPID0 < 0 )
                Aux_Error( ERROR_INFO, "SibPID0 == %d (lv %d, PID0 %d, Side %d) !!\n", SibPID0, lv, PID0, Side );
 
          } // for (int Side=0; Side<NSide; Side++)
@@ -1753,17 +1767,18 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
                {
                   TVarFCIdx = TVarFCIdxList[v];
 
-#                 ifdef MHD
 
 //                set array indices
+                  int size_p[3], size_pg[3];    // p=patch, pg=patch_group
+
+#                 ifdef MHD
+
                   const int norm_dir = ( TVarFCIdx == MAGX ) ? 0 :
                                        ( TVarFCIdx == MAGY ) ? 1 :
                                        ( TVarFCIdx == MAGZ ) ? 2 : -1;
 #                 ifdef GAMER_DEBUG
                   if ( norm_dir == -1 )   Aux_Error( ERROR_INFO, "Target face-centered variable != MAGX/Y/Z !!\n" );
 #                 endif
-
-                  int size_p[3], size_pg[3];    // p=patch, pg=patch_group
 
                   for (int d=0; d<3; d++)
                   {
@@ -1780,7 +1795,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
                      }
                   }
 
-#                 elif // #ifdef MHD
+#                 else
                   Aux_Error( ERROR_INFO, "currently only MHD supports face-centered variables !!" );
 #                 endif // #ifdef MHD ... else ...
 
