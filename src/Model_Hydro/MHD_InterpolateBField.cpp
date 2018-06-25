@@ -339,6 +339,7 @@ void GetFaceCoeff_C( real FaceCoeff[], const real *CData, const int Offset, cons
    switch ( IntScheme )
    {
       case INT_MINMOD1D :
+      {
          for (int t=0; t<2; t++)
          {
             const int idx = t + 1;
@@ -349,10 +350,12 @@ void GetFaceCoeff_C( real FaceCoeff[], const real *CData, const int Offset, cons
             if ( RSlope*LSlope <= (real)0.0 )   FaceCoeff[idx] = (real)0.0;
             else                                FaceCoeff[idx] = ( FABS(RSlope) < FABS(LSlope) ) ? RSlope : LSlope;
          }
-         break; // INT_MINMOD1D
+      } // INT_MINMOD1D
+      break;
 
 
       case INT_VANLEER :
+      {
          for (int t=0; t<2; t++)
          {
             const int idx = t + 1;
@@ -363,10 +366,12 @@ void GetFaceCoeff_C( real FaceCoeff[], const real *CData, const int Offset, cons
             if ( RSlope*LSlope <= (real)0.0 )   FaceCoeff[idx] = (real)0.0;
             else                                FaceCoeff[idx] = MonoCoeff*RSlope*LSlope/(LSlope+RSlope);
          }
-         break; // INT_VANLEER
+      } // INT_VANLEER
+      break;
 
 
       case INT_CQUAD :
+      {
          for (int t=0; t<2; t++)
          {
             const int idx = t + 1;
@@ -393,10 +398,12 @@ void GetFaceCoeff_C( real FaceCoeff[], const real *CData, const int Offset, cons
                   FaceCoeff[idx] = (real)0.0;
             } // if ( Monotonic )
          } // for (int t=0; t<2; t++)
-         break; // INT_CQUAD
+      } // INT_CQUAD
+      break;
 
 
       case INT_CQUAR :
+      {
          const real IntCoeff[2] = { 3.0/32.0, 22.0/32.0 };
 
          for (int t=0; t<2; t++)
@@ -427,7 +434,8 @@ void GetFaceCoeff_C( real FaceCoeff[], const real *CData, const int Offset, cons
                   FaceCoeff[idx] = (real)0.0;
             } // if ( Monotonic )
          } // for (int t=0; t<2; t++)
-         break; // INT_CQUAR
+      } // INT_CQUAR
+      break;
 
 
       default :
