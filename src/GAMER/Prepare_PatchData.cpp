@@ -1,11 +1,11 @@
 #include "GAMER.h"
 
-void InterpolateGhostZone( const int lv, const int PID, real IntData[], const int SibID, const double PrepTime,
-                           const int GhostSize, const IntScheme_t IntScheme, const int NTSib[], int *TSib[],
-                           const int TVarCC, const int NVarCC_Tot, const int NVarCC_Flu, const int TVarCCIdxList_Flu[],
-                           const int NVarCC_Der, const int TVarCCList_Der[], const bool IntPhase,
-                           const OptFluBC_t FluBC[], const OptPotBC_t PotBC, const int BC_Face[], const real MinPres,
-                           const bool DE_Consistency );
+void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real IntData_FC[], const int SibID,
+                           const double PrepTime, const int GhostSize, const IntScheme_t IntScheme,
+                           const int NTSib[], int *TSib[], const int TVar, const int NVar_Tot, const int NVar_Flu,
+                           const int TFluVarIdxList[], const int NVar_Der, const int TDerVarList[],
+                           const bool IntPhase, const OptFluBC_t FluBC[], const OptPotBC_t PotBC, const int BC_Face[],
+                           const real MinPres, const bool DE_Consistency );
 static void SetTargetSibling( int NTSib[], int *TSib[] );
 static int Table_01( const int SibID, const char dim, const int Count, const int GhostSize );
 static int Table_02( const int lv, const int PID, const int Side );
@@ -602,11 +602,10 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
       real *Data1PG_FC_Ptr = NULL;
 
 
-//    IntData: array to store the interpolation results (allocate with the maximum required size)
-      real *IntData = new real [ NVarCC_Tot*PS2*PS2*GhostSize_Padded ];
-#     ifdef MHD
-#     warning : WAIT MHD !!!
-#     endif
+//    IntData_CC/FC: arrays to store the interpolated cell-/face-centered results
+//    --> allocate it only once but with the maximum required size to reduce the number of memory allocations
+      real *IntData_CC = new real [ NVarCC_Tot*PS2*PS2*(GhostSize_Padded  ) ];
+      real *IntData_FC = new real [ NVarFC_Tot*PS2*PS2*(GhostSize_Padded+1) ];
 
 
 //    assign particle mass onto grids
@@ -1308,9 +1307,10 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
 
 //             get the array size to store the interpolation result
                int FSize[3];
-               for (int d=0; d<3; d++)  FSize[d] = TABLE_01( Side, 'x'+d, GhostSize_Padded, 2*PATCH_SIZE, GhostSize_Padded );
+               for (int d=0; d<3; d++)  FSize[d] = TABLE_01( Side, 'x'+d, GhostSize_Padded, PS2, GhostSize_Padded );
 
-               real *IntData_Ptr = NULL;
+               real *IntData_CC_Ptr = NULL;
+               real *IntData_FC_Ptr = NULL;
 
 
 //             determine the target PID at lv-1
@@ -1323,42 +1323,101 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
 #              endif
 
 
-//             perform interpolation and store the results in IntData
-               InterpolateGhostZone( lv-1, FaSibPID, IntData, Side, PrepTime, GhostSize, IntScheme, NTSib, TSib,
+//             (b2-1) perform interpolation and store the results in IntData_CC[] and IntData_FC[]
+               InterpolateGhostZone( lv-1, FaSibPID, IntData_CC, IntData_FC, Side, PrepTime, GhostSize, IntScheme, NTSib, TSib,
                                      TVarCC, NVarCC_Tot, NVarCC_Flu, TVarCCIdxList_Flu, NVarCC_Der, TVarCCList_Der, IntPhase,
                                      FluBC, PotBC, BC_Face, MinPres, DE_Consistency );
 
 
-//             properly copy data from IntData[] to Data1PG_CC[]
+//             (b2-2) copy cell-centered data from IntData_CC[] to Data1PG_CC[]
+//             --> must get rid of NUseless-cell-wide useless data returned by InterpolateGhostZone()
                const int NUseless = GhostSize & 1;
-               const int Loop_i   = TABLE_01( Side, 'x', GhostSize, 2*PATCH_SIZE, GhostSize );
-               const int Loop_j   = TABLE_01( Side, 'y', GhostSize, 2*PATCH_SIZE, GhostSize );
-               const int Loop_k   = TABLE_01( Side, 'z', GhostSize, 2*PATCH_SIZE, GhostSize );
-               const int Disp_i1  = TABLE_01( Side, 'x', 0, GhostSize, GhostSize+2*PATCH_SIZE );
-               const int Disp_j1  = TABLE_01( Side, 'y', 0, GhostSize, GhostSize+2*PATCH_SIZE );
-               const int Disp_k1  = TABLE_01( Side, 'z', 0, GhostSize, GhostSize+2*PATCH_SIZE );
-               const int Disp_i2  = TABLE_01( Side, 'x', NUseless, 0, 0 );
-               const int Disp_j2  = TABLE_01( Side, 'y', NUseless, 0, 0 );
-               const int Disp_k2  = TABLE_01( Side, 'z', NUseless, 0, 0 );
+               int loop[3], disp1[3], disp2[3];
+
+               for (int d=0; d<3; d++)
+               {
+                  loop [d] = TABLE_01( Side, 'x'+d, GhostSize, PS2, GhostSize );
+                  disp1[d] = TABLE_01( Side, 'x'+d, 0, GhostSize, GhostSize+PS2 );
+                  disp2[d] = TABLE_01( Side, 'x'+d, NUseless, 0, 0 );
+               }
 
                Data1PG_CC_Ptr = Data1PG_CC;
-               IntData_Ptr    = IntData;
+               IntData_CC_Ptr = IntData_CC;
 
                for (int v=0; v<NVarCC_Tot; v++)
                {
-                  for (int k=0; k<Loop_k; k++)  {  K = k + Disp_k1;  K2 = k + Disp_k2;
-                  for (int j=0; j<Loop_j; j++)  {  J = j + Disp_j1;  J2 = j + Disp_j2;
-                                                   Idx1 = IDX321( Disp_i1, J,  K,  PGSize1D_CC, PGSize1D_CC );
-                                                   Idx2 = IDX321( Disp_i2, J2, K2, FSize[0], FSize[1] );
-                  for (int i=0; i<Loop_i; i++)  {
+                  for (int k=0; k<loop[2]; k++) {  K = k + disp1[2];  K2 = k + disp2[2];
+                  for (int j=0; j<loop[1]; j++) {  J = j + disp1[1];  J2 = j + disp2[1];
+                                                   Idx1 = IDX321( disp1[0], J,  K,  PGSize1D_CC, PGSize1D_CC );
+                                                   Idx2 = IDX321( disp2[0], J2, K2, FSize[0], FSize[1] );
+                  for (int i=0; i<loop[0]; i++) {
 
-                     Data1PG_CC_Ptr[ Idx1 ++ ] = IntData_Ptr[ Idx2 ++ ];
+                     Data1PG_CC_Ptr[ Idx1 ++ ] = IntData_CC_Ptr[ Idx2 ++ ];
 
                   }}}
 
                   Data1PG_CC_Ptr += PGSize3D_CC;
-                  IntData_Ptr    += FSize[0]*FSize[1]*FSize[2];
+                  IntData_CC_Ptr += FSize[0]*FSize[1]*FSize[2];
                }
+
+
+//             (b2-3) copy face-centered data from IntData_FC[] to Data1PG_FC[]
+//             --> must get rid of NUseless-cell-wide useless data returned by InterpolateGhostZone()
+               Data1PG_FC_Ptr = Data1PG_FC;
+               IntData_FC_Ptr = IntData_FC;
+
+               for (int v=0; v<NVarFC_Tot; v++)
+               {
+                  TVarFCIdx = TVarFCIdxList[v];
+
+#                 ifdef MHD
+
+//                set array indices
+                  const int norm_dir = ( TVarFCIdx == MAGX ) ? 0 :
+                                       ( TVarFCIdx == MAGY ) ? 1 :
+                                       ( TVarFCIdx == MAGZ ) ? 2 : -1;
+#                 ifdef GAMER_DEBUG
+                  if ( norm_dir == -1 )   Aux_Error( ERROR_INFO, "Target face-centered variable != MAGX/Y/Z !!\n" );
+#                 endif
+
+                  int ijk_s[3], ijk_e[3], size_i[3], size_o[3], disp_o[3], idx_i, idx_o;  // s/e=start/end; i/o=in/out
+
+                  for (int d=0; d<3; d++)
+                  {
+                     ijk_s [d] = disp2[d];
+                     ijk_e [d] = disp2[d] + loop[d];
+                     size_i[d] = FSize[d];
+                     size_o[d] = PGSize1D_CC;
+                     disp_o[d] = disp1[d] - disp2[d];
+                  }
+
+//                avoid redundant assignment of the patch interface values
+                  ijk_s [norm_dir] += TABLE_01( Side, 'x'+norm_dir, 0, 0, 1 );
+                  ijk_e [norm_dir] += TABLE_01( Side, 'x'+norm_dir, 0, 1, 1 );
+                  size_i[norm_dir] ++;
+                  size_o[norm_dir] ++;
+
+
+//                copy data
+                  for (int k=ijk_s[2]; k<ijk_e[2]; k++)  {  K     = k + disp_o[2];
+                  for (int j=ijk_s[1]; j<ijk_e[1]; j++)  {  J     = j + disp_o[1];
+                                                            idx_o = IDX321( ijk_s[0]+disp_o[0], J, K, size_o[0], size_o[1] );
+                                                            idx_i = IDX321( ijk_s[0],           j, k, size_i[0], size_i[1] );
+                  for (int i=ijk_s[0]; i<ijk_e[0]; i++)  {
+
+                     Data1PG_FC_Ptr[idx_o] = IntData_FC_Ptr[idx_i];
+
+                     idx_i ++;
+                     idx_o ++;
+                  }}}
+
+                  IntData_FC_Ptr += size_i[0]*size_i[1]*size_i[2];
+#                 else
+                  Aux_Error( ERROR_INFO, "currently only MHD supports face-centered variables !!" );
+#                 endif // #ifdef MHD ... else ...
+
+                  Data1PG_FC_Ptr += PGSize3D_FC;
+               } // for (int v=0; v<NVarFC_Tot; v++)
 
             } // else if ( SibPID0 == -1 )
 
@@ -1771,11 +1830,11 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
                {
                   TVarFCIdx = TVarFCIdxList[v];
 
+#                 ifdef MHD
 
 //                set array indices
                   int size_p[3], size_pg[3];    // p=patch, pg=patch_group
 
-#                 ifdef MHD
 
                   const int norm_dir = ( TVarFCIdx == MAGX ) ? 0 :
                                        ( TVarFCIdx == MAGY ) ? 1 :
@@ -1799,10 +1858,6 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
                      }
                   }
 
-#                 else
-                  Aux_Error( ERROR_INFO, "currently only MHD supports face-centered variables !!" );
-#                 endif // #ifdef MHD ... else ...
-
 
 //                copy data
                   for (int k=Disp_k; k<Disp_k+size_p[2]; k++)
@@ -1812,6 +1867,10 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
 
                      for (int i=0; i<size_p[0]; i++)  OutputFC_Ptr[ Idx2 ++ ] = Data1PG_FC_Ptr[ Idx1 ++ ];
                   }
+
+#                 else
+                  Aux_Error( ERROR_INFO, "currently only MHD supports face-centered variables !!" );
+#                 endif // #ifdef MHD ... else ...
 
                   Data1PG_FC_Ptr += PGSize3D_FC;
                } // for (int v=0; v<NVarFC_Tot; v++)
@@ -1826,7 +1885,8 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
          delete [] Data1PG_CC;
          delete [] Data1PG_FC;
       }
-      delete [] IntData;
+      delete [] IntData_CC;
+      delete [] IntData_FC;
 
    } // end of OpenMP parallel region
 
