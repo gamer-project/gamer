@@ -28,7 +28,7 @@ void SetTempIntPara( const int lv, const int Sg_Current, const double PrepTime, 
 //
 // Parameter   :  lv             : Target "coarse-grid" refinement level
 //                PID            : Patch ID at level "lv" used for interpolation
-//                IntData        : Array to store the interpolation result
+//                IntData_CC/FC  : Arrays to store the cell-/face-centered interpolation results
 //                SibID          : Sibling index (0~25) used to determine the interpolation region
 //                PrepTime       : Target physical time to prepare data
 //                GhostSize      : Number of ghost zones
@@ -63,12 +63,12 @@ void SetTempIntPara( const int lv, const int Sg_Current, const double PrepTime, 
 //                DE_Consistency : Ensure the consistency between pressure, total energy density, and the dual-energy variable
 //                                 when DUAL_ENERGY is on
 //-------------------------------------------------------------------------------------------------------
-void InterpolateGhostZone( const int lv, const int PID, real IntData[], const int SibID, const double PrepTime,
-                           const int GhostSize, const IntScheme_t IntScheme, const int NTSib[], int *TSib[],
-                           const int TVar, const int NVar_Tot, const int NVar_Flu, const int TFluVarIdxList[],
-                           const int NVar_Der, const int TDerVarList[], const bool IntPhase,
-                           const OptFluBC_t FluBC[], const OptPotBC_t PotBC, const int BC_Face[], const real MinPres,
-                           const bool DE_Consistency )
+void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real IntData_FC[], const int SibID,
+                           const double PrepTime, const int GhostSize, const IntScheme_t IntScheme,
+                           const int NTSib[], int *TSib[], const int TVar, const int NVar_Tot, const int NVar_Flu,
+                           const int TFluVarIdxList[], const int NVar_Der, const int TDerVarList[],
+                           const bool IntPhase, const OptFluBC_t FluBC[], const OptPotBC_t PotBC, const int BC_Face[],
+                           const real MinPres, const bool DE_Consistency )
 {
 
 // check
@@ -720,7 +720,7 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData[], const in
 
 
 
-// c. interpolation : CData --> IntData
+// c. interpolation : CData[] --> IntData_CC[]
 // ------------------------------------------------------------------------------------------------------------
    const bool PhaseUnwrapping_Yes    = true;
    const bool PhaseUnwrapping_No     = false;
@@ -793,12 +793,12 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData[], const in
 #     endif
 
 //    determine the array index to store density
-      CData_Dens = CData   + ( (DensIdx==-1) ? ImagIdx : DensIdx )*CSize3D;
-      CData_Real = CData   + RealIdx*CSize3D;
-      CData_Imag = CData   + ImagIdx*CSize3D;
-      FData_Dens = IntData + ( (DensIdx==-1) ? ImagIdx : DensIdx )*FSize3D;
-      FData_Real = IntData + RealIdx*FSize3D;
-      FData_Imag = IntData + ImagIdx*FSize3D;
+      CData_Dens = CData      + ( (DensIdx==-1) ? ImagIdx : DensIdx )*CSize3D;
+      CData_Real = CData      + RealIdx*CSize3D;
+      CData_Imag = CData      + ImagIdx*CSize3D;
+      FData_Dens = IntData_CC + ( (DensIdx==-1) ? ImagIdx : DensIdx )*FSize3D;
+      FData_Real = IntData_CC + RealIdx*FSize3D;
+      FData_Imag = IntData_CC + ImagIdx*FSize3D;
 
 //    get the wrapped phase (store in the REAL component) and density (store in the IMAG component)
       real Re, Im;
@@ -827,7 +827,7 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData[], const in
    else // if ( IntPhase )
    {
       for (int v=0; v<NVar_Flu; v++)
-      Interpolate( CData+CSize3D*v, CSize, CStart, CRange, IntData+FSize3D*v, FSize, FStart, 1,
+      Interpolate( CData+CSize3D*v, CSize, CStart, CRange, IntData_CC+FSize3D*v, FSize, FStart, 1,
                    IntScheme, PhaseUnwrapping_No, Monotonicity );
    } // if ( IntPhase ) ... else ...
 
@@ -860,7 +860,7 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData[], const in
 
 // c3. interpolation on original variables for models != ELBDM
    for (int v=0; v<NVar_Flu; v++)
-      Interpolate( CData+CSize3D*v, CSize, CStart, CRange, IntData+FSize3D*v, FSize, FStart, 1,
+      Interpolate( CData+CSize3D*v, CSize, CStart, CRange, IntData_CC+FSize3D*v, FSize, FStart, 1,
                    IntScheme, PhaseUnwrapping_No, Monotonicity );
 
 #  endif // #if ( MODEL == ELBDM ) ... else ...
@@ -873,35 +873,35 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData[], const in
 // we now apply monotonic interpolation to ALL fluid variables
    if ( PrepVx )
    {
-      Interpolate( CData+CSize3D*NVar_SoFar, CSize, CStart, CRange, IntData+FSize3D*NVar_SoFar, FSize, FStart, 1,
+      Interpolate( CData+CSize3D*NVar_SoFar, CSize, CStart, CRange, IntData_CC+FSize3D*NVar_SoFar, FSize, FStart, 1,
                    IntScheme, PhaseUnwrapping_No, &EnsureMonotonicity_Yes );
       NVar_SoFar ++;
    }
 
    if ( PrepVy )
    {
-      Interpolate( CData+CSize3D*NVar_SoFar, CSize, CStart, CRange, IntData+FSize3D*NVar_SoFar, FSize, FStart, 1,
+      Interpolate( CData+CSize3D*NVar_SoFar, CSize, CStart, CRange, IntData_CC+FSize3D*NVar_SoFar, FSize, FStart, 1,
                    IntScheme, PhaseUnwrapping_No, &EnsureMonotonicity_Yes );
       NVar_SoFar ++;
    }
 
    if ( PrepVz )
    {
-      Interpolate( CData+CSize3D*NVar_SoFar, CSize, CStart, CRange, IntData+FSize3D*NVar_SoFar, FSize, FStart, 1,
+      Interpolate( CData+CSize3D*NVar_SoFar, CSize, CStart, CRange, IntData_CC+FSize3D*NVar_SoFar, FSize, FStart, 1,
                    IntScheme, PhaseUnwrapping_No, &EnsureMonotonicity_Yes );
       NVar_SoFar ++;
    }
 
    if ( PrepPres )
    {
-      Interpolate( CData+CSize3D*NVar_SoFar, CSize, CStart, CRange, IntData+FSize3D*NVar_SoFar, FSize, FStart, 1,
+      Interpolate( CData+CSize3D*NVar_SoFar, CSize, CStart, CRange, IntData_CC+FSize3D*NVar_SoFar, FSize, FStart, 1,
                    IntScheme, PhaseUnwrapping_No, &EnsureMonotonicity_Yes );
       NVar_SoFar ++;
    }
 
    if ( PrepTemp )
    {
-      Interpolate( CData+CSize3D*NVar_SoFar, CSize, CStart, CRange, IntData+FSize3D*NVar_SoFar, FSize, FStart, 1,
+      Interpolate( CData+CSize3D*NVar_SoFar, CSize, CStart, CRange, IntData_CC+FSize3D*NVar_SoFar, FSize, FStart, 1,
                    IntScheme, PhaseUnwrapping_No, &EnsureMonotonicity_Yes );
       NVar_SoFar ++;
    }
@@ -918,7 +918,7 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData[], const in
 // c5. interpolation on potential
    if ( PrepPot )
    {
-      Interpolate( CData+CSize3D*NVar_SoFar, CSize, CStart, CRange, IntData+FSize3D*NVar_SoFar, FSize, FStart, 1,
+      Interpolate( CData+CSize3D*NVar_SoFar, CSize, CStart, CRange, IntData_CC+FSize3D*NVar_SoFar, FSize, FStart, 1,
                    IntScheme, PhaseUnwrapping_No, &EnsureMonotonicity_No );
       NVar_SoFar ++;
    }
@@ -942,13 +942,13 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData[], const in
       const real _Gamma_m1       = (real)1.0 / Gamma_m1;
       const real UseEnpy2FixEngy = HUGE_NUMBER;
 
-//    assuming that the order of variables stored in IntData is the same as patch->fluid[]
-      real *FData_Dens = IntData + DENS*FSize3D;
-      real *FData_MomX = IntData + MOMX*FSize3D;
-      real *FData_MomY = IntData + MOMY*FSize3D;
-      real *FData_MomZ = IntData + MOMZ*FSize3D;
-      real *FData_Engy = IntData + ENGY*FSize3D;
-      real *FData_Enpy = IntData + ENPY*FSize3D;
+//    assuming that the order of variables stored in IntData_CC[] is the same as patch->fluid[]
+      real *FData_Dens = IntData_CC + DENS*FSize3D;
+      real *FData_MomX = IntData_CC + MOMX*FSize3D;
+      real *FData_MomY = IntData_CC + MOMY*FSize3D;
+      real *FData_MomZ = IntData_CC + MOMZ*FSize3D;
+      real *FData_Engy = IntData_CC + ENGY*FSize3D;
+      real *FData_Enpy = IntData_CC + ENPY*FSize3D;
 
       char dummy;    // we do not record the dual-energy status here
 
