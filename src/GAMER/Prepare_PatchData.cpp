@@ -958,8 +958,8 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
                   size_o[d] = PGSize1D_CC;
                }
 
-//             avoid redundant assignment of the patch interface values by only adopting the right interface
-//             of the left patch
+//             avoid redundant assignment of the patch interface values by copying the left interface
+//             of only the left patch
                ijk_s [norm_dir] += TABLE_02( LocalID, 'x'+norm_dir, 0, 1 );
                ijk_e [norm_dir] ++;
                size_i[norm_dir] ++;
@@ -1243,11 +1243,15 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
                      }
 
 //                   avoid redundant assignment of the patch interface values **within the same patch group**
-//                   by only adopting the right interface of the left patch
-//                   --> but always assign the interface values of patches **outside** the target patch group
-//                       --> for ensuring adopting the fine-grid values instead of the interpolated values
-                     ijk_s [norm_dir] += TABLE_01( Side, 'x'+norm_dir, 0, TABLE_02(LocalID,'x'+norm_dir,0,1), 0 );
-                     ijk_e [norm_dir] ++;
+//                   by copying the left interface of only the left patch
+//                   --> but always assign the interface values of patches **outside** the target patch group (PID0)
+//                       --> to provide B field on the C-F interfaces for the divergence-free interpolation
+//                       --> but it will result in redundant data copy on the F-F interfaces
+//                           --> the checks of (Side<6) below only avoid the redundant copies on the F-F interfaces
+//                               between the central 8 patches and their sibling patches but do not remove the
+//                               redundant copies on the F-F interfaces between those sibling patches
+                     ijk_s [norm_dir] += TABLE_01( Side, 'x'+norm_dir, 0, TABLE_02(LocalID,'x'+norm_dir,0,1), (Side<6)?1:0 );
+                     ijk_e [norm_dir] += TABLE_01( Side, 'x'+norm_dir, (Side<6)?0:1, 1, 1 );
                      size_i[norm_dir] ++;
                      size_o[norm_dir] ++;
 
