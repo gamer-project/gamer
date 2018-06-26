@@ -8,8 +8,7 @@
 // Description :  Output the fluid data of a "single patch" plus its ghost zones prepared by the function
 //                "Flu_Prepare"
 //
-// Note        :  This function should be placed after invoking "Prepare_PatchData" in the function
-//                "Flu_Prepare"
+// Note        :  This function should be placed after invoking Prepare_PatchData() in Flu_Prepare()
 //
 //                Example:
 //                Prepare_PatchData( lv, PrepTime, h_Flu_Array_F_In,  FLU_GHOST_SIZE, NPG, PID0_List, _TOTAL,

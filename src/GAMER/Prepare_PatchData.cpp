@@ -1,11 +1,14 @@
 #include "GAMER.h"
 
-void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real IntData_FC[], const int SibID,
-                           const double PrepTime, const int GhostSize, const IntScheme_t IntScheme,
-                           const int NTSib[], int *TSib[], const int TVar, const int NVar_Tot, const int NVar_Flu,
-                           const int TFluVarIdxList[], const int NVar_Der, const int TDerVarList[],
-                           const bool IntPhase, const OptFluBC_t FluBC[], const OptPotBC_t PotBC, const int BC_Face[],
-                           const real MinPres, const bool DE_Consistency );
+void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real IntData_FC[],
+                           const int SibID, const double PrepTime, const int GhostSize,
+                           const IntScheme_t IntScheme_CC, const IntScheme_t IntScheme_FC,
+                           const int NTSib[], int *TSib[], const int TVarCC, const int NVarCC_Tot,
+                           const int NVarCC_Flu, const int TVarCCIdxList_Flu[],
+                           const int NVarCC_Der, const int TVarCCList_Der[],
+                           const int TVarFC, const int NVarFC_Tot, const int TVarFCIdxList[],
+                           const bool IntPhase, const OptFluBC_t FluBC[], const OptPotBC_t PotBC,
+                           const int BC_Face[], const real MinPres, const bool DE_Consistency );
 static void SetTargetSibling( int NTSib[], int *TSib[] );
 static int Table_01( const int SibID, const char dim, const int Count, const int GhostSize );
 static int Table_02( const int lv, const int PID, const int Side );
@@ -80,8 +83,8 @@ bool ParDensArray_Initialized = false;
 //                                 --> Supported variables in different models:
 //                                     HYDRO with MHD : _MAGX, _MAGY, _MAGZ, _MAG
 //                                     ELBDM          : none
-//                IntScheme      : Interpolation scheme
-//                                 --> currently supported schemes include
+//                IntScheme_CC   : Interpolation scheme for the cell-centered variables
+//                                 --> Supported schemes include
 //                                     INT_MINMOD1D : MinMod-1D
 //                                     INT_MINMOD3D : MinMod-3D
 //                                     INT_VANLEER  : vanLeer
@@ -89,6 +92,12 @@ bool ParDensArray_Initialized = false;
 //                                     INT_QUAD     : quadratic
 //                                     INT_CQUAR    : conservative quartic
 //                                     INT_QUAR     : quartic
+//                IntScheme_FC   : Interpolation scheme for the face-centered variables
+//                                 --> Supported schemes include
+//                                     INT_MINMOD1D : MinMod-1D
+//                                     INT_VANLEER  : vanLeer
+//                                     INT_CQUAD    : conservative quadratic
+//                                     INT_CQUAR    : conservative quartic
 //                PrepUnit       : Whether or not to separate the prepared data into individual patches
 //                                 --> UNIT_PATCH      : prepare data "patch by patch"
 //                                     UNIT_PATCHGROUP : prepare data "patch group by patch group"
@@ -124,8 +133,8 @@ bool ParDensArray_Initialized = false;
 //-------------------------------------------------------------------------------------------------------
 void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, real *OutputFC,
                         const int GhostSize, const int NPG, const int *PID0_List, int TVarCC, int TVarFC,
-                        const IntScheme_t IntScheme, const PrepUnit_t PrepUnit, const NSide_t NSide,
-                        const bool IntPhase, const OptFluBC_t FluBC[], const OptPotBC_t PotBC,
+                        const IntScheme_t IntScheme_CC, const IntScheme_t IntScheme_FC, const PrepUnit_t PrepUnit,
+                        const NSide_t NSide, const bool IntPhase, const OptFluBC_t FluBC[], const OptPotBC_t PotBC,
                         const real MinDens, const real MinPres, const bool DE_Consistency )
 {
 
@@ -733,9 +742,9 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
          for (int LocalID=0; LocalID<8; LocalID++ )
          {
             const int PID    = PID0 + LocalID;
-            const int Disp_i = TABLE_02( LocalID, 'x', GhostSize, GhostSize+PATCH_SIZE );
-            const int Disp_j = TABLE_02( LocalID, 'y', GhostSize, GhostSize+PATCH_SIZE );
-            const int Disp_k = TABLE_02( LocalID, 'z', GhostSize, GhostSize+PATCH_SIZE );
+            const int Disp_i = TABLE_02( LocalID, 'x', GhostSize, GhostSize+PS1 );
+            const int Disp_j = TABLE_02( LocalID, 'y', GhostSize, GhostSize+PS1 );
+            const int Disp_k = TABLE_02( LocalID, 'z', GhostSize, GhostSize+PS1 );
 
             Data1PG_CC_Ptr = Data1PG_CC;
             Data1PG_FC_Ptr = Data1PG_FC;
@@ -745,10 +754,10 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
             {
                TVarCCIdx_Flu = TVarCCIdxList_Flu[v];
 
-               for (int k=0; k<PATCH_SIZE; k++)    {  K    = k + Disp_k;
-               for (int j=0; j<PATCH_SIZE; j++)    {  J    = j + Disp_j;
-                                                      Idx1 = IDX321( Disp_i, J, K, PGSize1D_CC, PGSize1D_CC );
-               for (int i=0; i<PATCH_SIZE; i++)    {
+               for (int k=0; k<PS1; k++)  {  K    = k + Disp_k;
+               for (int j=0; j<PS1; j++)  {  J    = j + Disp_j;
+                                             Idx1 = IDX321( Disp_i, J, K, PGSize1D_CC, PGSize1D_CC );
+               for (int i=0; i<PS1; i++)  {
 
                   Data1PG_CC_Ptr[Idx1] = amr->patch[FluSg][lv][PID]->fluid[TVarCCIdx_Flu][k][j][i];
 
@@ -766,10 +775,10 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
 #           if   ( MODEL == HYDRO )
             if ( PrepVx )
             {
-               for (int k=0; k<PATCH_SIZE; k++)    {  K    = k + Disp_k;
-               for (int j=0; j<PATCH_SIZE; j++)    {  J    = j + Disp_j;
-                                                      Idx1 = IDX321( Disp_i, J, K, PGSize1D_CC, PGSize1D_CC );
-               for (int i=0; i<PATCH_SIZE; i++)    {
+               for (int k=0; k<PS1; k++)  {  K    = k + Disp_k;
+               for (int j=0; j<PS1; j++)  {  J    = j + Disp_j;
+                                             Idx1 = IDX321( Disp_i, J, K, PGSize1D_CC, PGSize1D_CC );
+               for (int i=0; i<PS1; i++)  {
 
                   Data1PG_CC_Ptr[Idx1] = amr->patch[FluSg][lv][PID]->fluid[MOMX][k][j][i] /
                                          amr->patch[FluSg][lv][PID]->fluid[DENS][k][j][i];
@@ -786,10 +795,10 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
 
             if ( PrepVy )
             {
-               for (int k=0; k<PATCH_SIZE; k++)    {  K    = k + Disp_k;
-               for (int j=0; j<PATCH_SIZE; j++)    {  J    = j + Disp_j;
+               for (int k=0; k<PS1; k++)    {  K    = k + Disp_k;
+               for (int j=0; j<PS1; j++)    {  J    = j + Disp_j;
                                                       Idx1 = IDX321( Disp_i, J, K, PGSize1D_CC, PGSize1D_CC );
-               for (int i=0; i<PATCH_SIZE; i++)    {
+               for (int i=0; i<PS1; i++)    {
 
                   Data1PG_CC_Ptr[Idx1] = amr->patch[FluSg][lv][PID]->fluid[MOMY][k][j][i] /
                                          amr->patch[FluSg][lv][PID]->fluid[DENS][k][j][i];
@@ -806,10 +815,10 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
 
             if ( PrepVz )
             {
-               for (int k=0; k<PATCH_SIZE; k++)    {  K    = k + Disp_k;
-               for (int j=0; j<PATCH_SIZE; j++)    {  J    = j + Disp_j;
-                                                      Idx1 = IDX321( Disp_i, J, K, PGSize1D_CC, PGSize1D_CC );
-               for (int i=0; i<PATCH_SIZE; i++)    {
+               for (int k=0; k<PS1; k++)  {  K    = k + Disp_k;
+               for (int j=0; j<PS1; j++)  {  J    = j + Disp_j;
+                                             Idx1 = IDX321( Disp_i, J, K, PGSize1D_CC, PGSize1D_CC );
+               for (int i=0; i<PS1; i++)  {
 
                   Data1PG_CC_Ptr[Idx1] = amr->patch[FluSg][lv][PID]->fluid[MOMZ][k][j][i] /
                                           amr->patch[FluSg][lv][PID]->fluid[DENS][k][j][i];
@@ -826,10 +835,10 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
 
             if ( PrepPres )
             {
-               for (int k=0; k<PATCH_SIZE; k++)    {  K    = k + Disp_k;
-               for (int j=0; j<PATCH_SIZE; j++)    {  J    = j + Disp_j;
-                                                      Idx1 = IDX321( Disp_i, J, K, PGSize1D_CC, PGSize1D_CC );
-               for (int i=0; i<PATCH_SIZE; i++)    {
+               for (int k=0; k<PS1; k++)  {  K    = k + Disp_k;
+               for (int j=0; j<PS1; j++)  {  J    = j + Disp_j;
+                                             Idx1 = IDX321( Disp_i, J, K, PGSize1D_CC, PGSize1D_CC );
+               for (int i=0; i<PS1; i++)  {
 
                   for (int v=0; v<NCOMP_FLUID; v++)   Fluid[v] = amr->patch[FluSg][lv][PID]->fluid[v][k][j][i];
 
@@ -864,10 +873,10 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
 
             if ( PrepTemp )
             {
-               for (int k=0; k<PATCH_SIZE; k++)    {  K    = k + Disp_k;
-               for (int j=0; j<PATCH_SIZE; j++)    {  J    = j + Disp_j;
-                                                      Idx1 = IDX321( Disp_i, J, K, PGSize1D_CC, PGSize1D_CC );
-               for (int i=0; i<PATCH_SIZE; i++)    {
+               for (int k=0; k<PS1; k++)  {  K    = k + Disp_k;
+               for (int j=0; j<PS1; j++)  {  J    = j + Disp_j;
+                                             Idx1 = IDX321( Disp_i, J, K, PGSize1D_CC, PGSize1D_CC );
+               for (int i=0; i<PS1; i++)  {
 
                   for (int v=0; v<NCOMP_FLUID; v++)   Fluid[v] = amr->patch[FluSg][lv][PID]->fluid[v][k][j][i];
 
@@ -914,10 +923,10 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
 //          (a3) potential data (cell-centered)
             if ( PrepPot )
             {
-               for (int k=0; k<PATCH_SIZE; k++)    {  K    = k + Disp_k;
-               for (int j=0; j<PATCH_SIZE; j++)    {  J    = j + Disp_j;
-                                                      Idx1 = IDX321( Disp_i, J, K, PGSize1D_CC, PGSize1D_CC );
-               for (int i=0; i<PATCH_SIZE; i++)    {
+               for (int k=0; k<PS1; k++)  {  K    = k + Disp_k;
+               for (int j=0; j<PS1; j++)  {  J    = j + Disp_j;
+                                             Idx1 = IDX321( Disp_i, J, K, PGSize1D_CC, PGSize1D_CC );
+               for (int i=0; i<PS1; i++)  {
 
                   Data1PG_CC_Ptr[Idx1] = amr->patch[PotSg][lv][PID]->pot[k][j][i];
 
@@ -1324,9 +1333,10 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
 
 
 //             (b2-1) perform interpolation and store the results in IntData_CC[] and IntData_FC[]
-               InterpolateGhostZone( lv-1, FaSibPID, IntData_CC, IntData_FC, Side, PrepTime, GhostSize, IntScheme, NTSib, TSib,
-                                     TVarCC, NVarCC_Tot, NVarCC_Flu, TVarCCIdxList_Flu, NVarCC_Der, TVarCCList_Der, IntPhase,
-                                     FluBC, PotBC, BC_Face, MinPres, DE_Consistency );
+               InterpolateGhostZone( lv-1, FaSibPID, IntData_CC, IntData_FC, Side, PrepTime, GhostSize,
+                                     IntScheme_CC, IntScheme_FC, NTSib, TSib, TVarCC, NVarCC_Tot, NVarCC_Flu,
+                                     TVarCCIdxList_Flu, NVarCC_Der, TVarCCList_Der, TVarFC, NVarFC_Tot, TVarFCIdxList,
+                                     IntPhase, FluBC, PotBC, BC_Face, MinPres, DE_Consistency );
 
 
 //             (b2-2) copy cell-centered data from IntData_CC[] to Data1PG_CC[]
@@ -1544,9 +1554,9 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
                     amr->patch[0][lv][PID]->rho_ext[0][0][0] == RHO_EXT_NEED_INIT )    continue;
 
 //             calculate the offset between rho_ext[] and ArrayDens[]
-               const int Disp_i = TABLE_02( LocalID, 'x', GhostSize-RHOEXT_GHOST_SIZE, GhostSize+PATCH_SIZE-RHOEXT_GHOST_SIZE );
-               const int Disp_j = TABLE_02( LocalID, 'y', GhostSize-RHOEXT_GHOST_SIZE, GhostSize+PATCH_SIZE-RHOEXT_GHOST_SIZE );
-               const int Disp_k = TABLE_02( LocalID, 'z', GhostSize-RHOEXT_GHOST_SIZE, GhostSize+PATCH_SIZE-RHOEXT_GHOST_SIZE );
+               const int Disp_i = TABLE_02( LocalID, 'x', GhostSize-RHOEXT_GHOST_SIZE, GhostSize+PS1-RHOEXT_GHOST_SIZE );
+               const int Disp_j = TABLE_02( LocalID, 'y', GhostSize-RHOEXT_GHOST_SIZE, GhostSize+PS1-RHOEXT_GHOST_SIZE );
+               const int Disp_k = TABLE_02( LocalID, 'z', GhostSize-RHOEXT_GHOST_SIZE, GhostSize+PS1-RHOEXT_GHOST_SIZE );
 
 //             take care of the case with GhostSize < RHOEXT_GHOST_SIZE
                const int is = ( Disp_i >= 0 ) ? 0 : -Disp_i;
@@ -1798,9 +1808,9 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
             for (int LocalID=0; LocalID<8; LocalID++)
             {
                const int N      = 8*TID + LocalID;
-               const int Disp_i = TABLE_02( LocalID, 'x', 0, PATCH_SIZE );
-               const int Disp_j = TABLE_02( LocalID, 'y', 0, PATCH_SIZE );
-               const int Disp_k = TABLE_02( LocalID, 'z', 0, PATCH_SIZE );
+               const int Disp_i = TABLE_02( LocalID, 'x', 0, PS1 );
+               const int Disp_j = TABLE_02( LocalID, 'y', 0, PS1 );
+               const int Disp_k = TABLE_02( LocalID, 'z', 0, PS1 );
 
 //             cell-centered variables
                Data1PG_CC_Ptr = Data1PG_CC;
@@ -2011,7 +2021,7 @@ int Table_01( const int SibID, const char dim, const int Count, const int GhostS
                switch ( Count )
                {
                   case 0: case 2:   return GhostSize;
-                  case 1: case 3:   return GhostSize + PATCH_SIZE;
+                  case 1: case 3:   return GhostSize + PS1;
                   default:
                      Aux_Error( ERROR_INFO, "incorrect parameter %s = %d, %s = %d !!\n",
                                 "SibID", SibID, "Count", Count );
@@ -2023,7 +2033,7 @@ int Table_01( const int SibID, const char dim, const int Count, const int GhostS
                switch ( Count )
                {
                   case 0: case 1:   return GhostSize;
-                  case 2: case 3:   return GhostSize + PATCH_SIZE;
+                  case 2: case 3:   return GhostSize + PS1;
                   default:
                      Aux_Error( ERROR_INFO, "incorrect parameter %s = %d, %s = %d !!\n",
                                 "SibID", SibID, "Count", Count );
@@ -2035,7 +2045,7 @@ int Table_01( const int SibID, const char dim, const int Count, const int GhostS
                switch ( Count )
                {
                   case 0:  return GhostSize;
-                  case 1:  return GhostSize + PATCH_SIZE;
+                  case 1:  return GhostSize + PS1;
                   default:
                      Aux_Error( ERROR_INFO, "incorrect parameter %s = %d, %s = %d !!\n",
                                 "SibID", SibID, "Count", Count );
@@ -2043,7 +2053,7 @@ int Table_01( const int SibID, const char dim, const int Count, const int GhostS
             }
 
             case 1: case 7: case 9: case 16: case 17: case 19: case 21: case 23: case 25:
-               return GhostSize + 2*PATCH_SIZE;
+               return GhostSize + 2*PS1;
 
             default:
                Aux_Error( ERROR_INFO, "incorrect parameter %s = %d !!\n", "SibID", SibID );
@@ -2064,7 +2074,7 @@ int Table_01( const int SibID, const char dim, const int Count, const int GhostS
                switch ( Count )
                {
                   case 0: case 1:   return GhostSize;
-                  case 2: case 3:   return GhostSize + PATCH_SIZE;
+                  case 2: case 3:   return GhostSize + PS1;
                   default:
                      Aux_Error( ERROR_INFO, "incorrect parameter %s = %d, %s = %d !!\n",
                                 "SibID", SibID, "Count", Count );
@@ -2076,7 +2086,7 @@ int Table_01( const int SibID, const char dim, const int Count, const int GhostS
                switch ( Count )
                {
                   case 0: case 2:   return GhostSize;
-                  case 1: case 3:   return GhostSize + PATCH_SIZE;
+                  case 1: case 3:   return GhostSize + PS1;
                   default:
                      Aux_Error( ERROR_INFO, "incorrect parameter %s = %d, %s = %d !!\n",
                                 "SibID", SibID, "Count", Count );
@@ -2088,7 +2098,7 @@ int Table_01( const int SibID, const char dim, const int Count, const int GhostS
                switch ( Count )
                {
                   case 0:  return GhostSize;
-                  case 1:  return GhostSize + PATCH_SIZE;
+                  case 1:  return GhostSize + PS1;
                   default:
                      Aux_Error( ERROR_INFO, "incorrect parameter %s = %d, %s = %d !!\n",
                                 "SibID", SibID, "Count", Count );
@@ -2096,7 +2106,7 @@ int Table_01( const int SibID, const char dim, const int Count, const int GhostS
             }
 
             case 3: case 8: case 9: case 11: case 13: case 20: case 21: case 24: case 25:
-               return GhostSize + 2*PATCH_SIZE;
+               return GhostSize + 2*PS1;
 
             default:
                Aux_Error( ERROR_INFO, "incorrect parameter %s = %d !!\n", "SibID", SibID );
@@ -2117,7 +2127,7 @@ int Table_01( const int SibID, const char dim, const int Count, const int GhostS
                switch ( Count )
                {
                   case 0: case 2:   return GhostSize;
-                  case 1: case 3:   return GhostSize + PATCH_SIZE;
+                  case 1: case 3:   return GhostSize + PS1;
                   default:
                      Aux_Error( ERROR_INFO, "incorrect parameter %s = %d, %s = %d !!\n",
                                 "SibID", SibID, "Count", Count );
@@ -2129,7 +2139,7 @@ int Table_01( const int SibID, const char dim, const int Count, const int GhostS
                switch ( Count )
                {
                   case 0: case 1:   return GhostSize;
-                  case 2: case 3:   return GhostSize + PATCH_SIZE;
+                  case 2: case 3:   return GhostSize + PS1;
                   default:
                      Aux_Error( ERROR_INFO, "incorrect parameter %s = %d, %s = %d !!\n",
                                 "SibID", SibID, "Count", Count );
@@ -2141,7 +2151,7 @@ int Table_01( const int SibID, const char dim, const int Count, const int GhostS
                switch ( Count )
                {
                   case 0:  return GhostSize;
-                  case 1:  return GhostSize + PATCH_SIZE;
+                  case 1:  return GhostSize + PS1;
                   default:
                      Aux_Error( ERROR_INFO, "incorrect parameter %s = %d, %s = %d !!\n",
                                 "SibID", SibID, "Count", Count );
@@ -2149,7 +2159,7 @@ int Table_01( const int SibID, const char dim, const int Count, const int GhostS
             }
 
             case 5: case 12: case 13: case 15: case 17: case 22: case 23: case 24: case 25:
-               return GhostSize + 2*PATCH_SIZE;
+               return GhostSize + 2*PS1;
 
             default:
                Aux_Error( ERROR_INFO, "incorrect parameter %s = %d !!\n", "SibID", SibID );

@@ -26,8 +26,8 @@ void Poi_Prepare_Rho( const int lv, const double PrepTime, real h_Rho_Array_P[][
    const bool DE_Consistency_No = false;
    const real MinPres_No        = -1.0;
 
-   Prepare_PatchData( lv, PrepTime, &h_Rho_Array_P[0][0][0][0], NULL, RHO_GHOST_SIZE, NPG, PID0_List, _TOTAL_DENS, 0,
-                      OPT__RHO_INT_SCHEME, UNIT_PATCH, NSIDE_26, IntPhase_No, OPT__BC_FLU, BC_POT_NONE,
+   Prepare_PatchData( lv, PrepTime, &h_Rho_Array_P[0][0][0][0], NULL, RHO_GHOST_SIZE, NPG, PID0_List, _TOTAL_DENS, _NONE,
+                      OPT__RHO_INT_SCHEME, INT_NONE, UNIT_PATCH, NSIDE_26, IntPhase_No, OPT__BC_FLU, BC_POT_NONE,
                       MIN_DENS, MinPres_No, DE_Consistency_No );
 
 // subtract the background density to be consistent with the periodic (and/or comoving) base-level FFT solver

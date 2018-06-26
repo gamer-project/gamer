@@ -133,8 +133,8 @@ void InvokeSolver( const Solver_t TSolver, const int lv, const double TimeNew, c
                    const bool OverlapMPI, const bool Overlap_Sync );
 void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, real *OutputFC,
                         const int GhostSize, const int NPG, const int *PID0_List, int TVarCC, int TVarFC,
-                        const IntScheme_t IntScheme, const PrepUnit_t PrepUnit, const NSide_t NSide,
-                        const bool IntPhase, const OptFluBC_t FluBC[], const OptPotBC_t PotBC,
+                        const IntScheme_t IntScheme_CC, const IntScheme_t IntScheme_FC, const PrepUnit_t PrepUnit,
+                        const NSide_t NSide, const bool IntPhase, const OptFluBC_t FluBC[], const OptPotBC_t PotBC,
                         const real MinDens, const real MinPres, const bool DE_Consistency );
 
 
