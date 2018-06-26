@@ -52,20 +52,20 @@ void Flu_Prepare( const int lv, const double PrepTime, real h_Flu_Array_F_In[], 
 
 // prepare the fluid array
 #  if ( MODEL == ELBDM )
-   Prepare_PatchData( lv, PrepTime, h_Flu_Array_F_In,  NULL, FLU_GHOST_SIZE, NPG, PID0_List, _REAL|_IMAG|_PASSIVE, 0,
-                      OPT__FLU_INT_SCHEME, UNIT_PATCHGROUP, NSIDE_26, OPT__INT_PHASE,
+   Prepare_PatchData( lv, PrepTime, h_Flu_Array_F_In,  NULL, FLU_GHOST_SIZE, NPG, PID0_List, _REAL|_IMAG|_PASSIVE, _NONE,
+                      OPT__FLU_INT_SCHEME, INT_NONE, UNIT_PATCHGROUP, NSIDE_26, OPT__INT_PHASE,
                       OPT__BC_FLU, BC_POT_NONE, MinDens_No, MinPres_No, DE_Consistency_No );
 #  else
-   Prepare_PatchData( lv, PrepTime, h_Flu_Array_F_In,  NULL, FLU_GHOST_SIZE, NPG, PID0_List, _TOTAL, 0,
-                      OPT__FLU_INT_SCHEME, UNIT_PATCHGROUP, NSIDE_26, IntPhase_No,
+   Prepare_PatchData( lv, PrepTime, h_Flu_Array_F_In,  NULL, FLU_GHOST_SIZE, NPG, PID0_List, _TOTAL, _NONE,
+                      OPT__FLU_INT_SCHEME, INT_NONE, UNIT_PATCHGROUP, NSIDE_26, IntPhase_No,
                       OPT__BC_FLU, BC_POT_NONE, MinDens, MinPres, DE_Consistency );
 #  endif
 
 #  ifdef UNSPLIT_GRAVITY
 // prepare the potential array
    if ( OPT__GRAVITY_TYPE == GRAVITY_SELF  ||  OPT__GRAVITY_TYPE == GRAVITY_BOTH )
-   Prepare_PatchData( lv, PrepTime, h_Pot_Array_USG_F, NULL, USG_GHOST_SIZE, NPG, PID0_List, _POTE, 0,
-                      OPT__GRA_INT_SCHEME, UNIT_PATCHGROUP, NSIDE_26, IntPhase_No,
+   Prepare_PatchData( lv, PrepTime, h_Pot_Array_USG_F, NULL, USG_GHOST_SIZE, NPG, PID0_List, _POTE, _NONE,
+                      OPT__GRA_INT_SCHEME, INT_NONE, UNIT_PATCHGROUP, NSIDE_26, IntPhase_No,
                       OPT__BC_FLU, OPT__BC_POT, MinDens_No, MinPres_No, DE_Consistency_No );
 
 // prepare the corner array

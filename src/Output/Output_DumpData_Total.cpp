@@ -780,9 +780,9 @@ void Output_DumpData_Total( const char *FileName )
                      {
 //                      we do not check minimum density here (just because it's unnecessary)
                         Prepare_PatchData( lv, Time[lv], ParDensArray[0], NULL, 0, 1, &PID,
-                                           ( OPT__OUTPUT_PAR_DENS == PAR_OUTPUT_DENS_PAR_ONLY ) ? _PAR_DENS : _TOTAL_DENS, 0,
-                                           OPT__RHO_INT_SCHEME, UNIT_PATCH, NSIDE_00, IntPhase_No, OPT__BC_FLU, BC_POT_NONE,
-                                           MinDens_No, MinPres_No, DE_Consistency_No );
+                                           ( OPT__OUTPUT_PAR_DENS == PAR_OUTPUT_DENS_PAR_ONLY ) ? _PAR_DENS : _TOTAL_DENS,
+                                           _NONE, OPT__RHO_INT_SCHEME, INT_NONE, UNIT_PATCH, NSIDE_00, IntPhase_No,
+                                           OPT__BC_FLU, BC_POT_NONE, MinDens_No, MinPres_No, DE_Consistency_No );
                         break;
                      }
                   }

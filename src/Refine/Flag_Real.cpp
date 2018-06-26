@@ -155,8 +155,8 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
       {
 //       prepare the ghost-zone data for Lohner
          if ( Lohner_NVar > 0 )
-            Prepare_PatchData( lv, Time[lv], Lohner_Var, NULL, Lohner_NGhost, NPG, &PID0, Lohner_TVar, 0,
-                               Lohner_IntScheme, UNIT_PATCH, NSIDE_26, IntPhase_No, OPT__BC_FLU, OPT__BC_POT,
+            Prepare_PatchData( lv, Time[lv], Lohner_Var, NULL, Lohner_NGhost, NPG, &PID0, Lohner_TVar, _NONE,
+                               Lohner_IntScheme, INT_NONE, UNIT_PATCH, NSIDE_26, IntPhase_No, OPT__BC_FLU, OPT__BC_POT,
                                MinDens, MinPres, DE_Consistency_No );
 
 

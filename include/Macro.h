@@ -305,6 +305,7 @@
 
 
 // symbolic constants used by all models
+#  define _NONE               0
 #  define _FLUID              (  ( 1 << NCOMP_FLUID ) - 1           )
 #  define _PASSIVE            (  ( 1 << NCOMP_TOTAL ) - 1 - _FLUID  )
 #  define _TOTAL              (  ( 1 << NCOMP_TOTAL ) - 1           )
