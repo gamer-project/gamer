@@ -769,7 +769,11 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
             if ( norm_dir == -1 )   Aux_Error( ERROR_INFO, "Target face-centered variable != MAGX/Y/Z !!\n" );
 #           endif
 
-            const int Useless = NULL_INT;
+
+//          only need data along the two transverse directions
+            if ( CSide >= 6  ||  CSide == norm_dir*2  ||  CSide == norm_dir*2+1 )   continue;
+
+
             int ijk_os[3], ijk_oe[3], size_i[3], disp_i[3], idx_i, idx_o, ii, ji, ki;  // s/e=start/end; i/o=in/out
 
             for (int d=0; d<3; d++)
