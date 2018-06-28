@@ -84,8 +84,8 @@ static real (*GetCellB[3])( const real [], const real, const real ) = { GetCellB
 //
 // Return      :  FData[]
 //-------------------------------------------------------------------------------------------------------
-void MHD_InterpolateBField( const real *CData[3], const int CSize[3][3], const int CStart[3][3], const int CRange[3],
-                                  real *FData[3], const int FSize[3][3], const int FStart[3][3],
+void MHD_InterpolateBField( const real **CData, const int CSize[3][3], const int CStart[3][3], const int CRange[3],
+                                  real **FData, const int FSize[3][3], const int FStart[3][3],
                             const real *FInterface[6], const IntScheme_t IntScheme, const bool Monotonic )
 {
 

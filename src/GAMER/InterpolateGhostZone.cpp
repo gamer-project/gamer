@@ -1,6 +1,6 @@
 #include "GAMER.h"
 
-static int Table_01( const int SibID, const int Side, const char dim, const int w01, const int w02,
+static int Table_01( const int FSide, const int CSide, const char dim, const int w01, const int w02,
                      const int w10, const int w11, const int w12, const int w20, const int w21 );
 void SetTempIntPara( const int lv, const int Sg_Current, const double PrepTime, const double Time0, const double Time1,
                      bool &IntTime, int &Sg, int &Sg_IntT, real &Weighting, real &Weighting_IntT );
@@ -16,7 +16,7 @@ void SetTempIntPara( const int lv, const int Sg_Current, const double PrepTime, 
 //                2. Use the input parameter "TVarCC" and "TVarFC" to control the target variables
 //                3. Use the input parameters "IntScheme_CC/FC" to control the interpolation schemes for the
 //                   cell-/face-centered variables
-//                4. Invoke the function "Interpolate" for spatial interpolation
+//                4. Invoke Interpolate() for spatial interpolation
 //                5. Data preparation order: FLU -> PASSIVE -> DERIVED --> POTE --> GRA_RHO
 //                   ** DERIVED must be prepared immediately after FLU and PASSIVE so that both FLU, PASSIVE, and DERIVED
 //                      can be prepared at the same time for the non-periodic BC. **
@@ -30,7 +30,7 @@ void SetTempIntPara( const int lv, const int Sg_Current, const double PrepTime, 
 // Parameter   :  lv                : Target "coarse-grid" refinement level
 //                PID               : Patch ID at level "lv" used for interpolation
 //                IntData_CC/FC     : Arrays to store the cell-/face-centered interpolation results
-//                SibID             : Sibling index (0~25) used to determine the interpolation region
+//                FSide             : Fine-patch sibling index (0~25) for determining the interpolation region
 //                PrepTime          : Target physical time to prepare data
 //                GhostSize         : Number of ghost zones
 //                IntScheme_CC      : Interpolation scheme for the cell-centered variables
@@ -80,22 +80,21 @@ void SetTempIntPara( const int lv, const int Sg_Current, const double PrepTime, 
 //                MinPres           : Minimum allowed pressure
 //                DE_Consistency    : Ensure the consistency between pressure, total energy density, and the
 //                                    dual-energy variable when DUAL_ENERGY is on
+//                FInterface        : B field on the coarse-fine interfaces for the divergence-preserving interpolation
 //-------------------------------------------------------------------------------------------------------
 void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real IntData_FC[],
-                           const int SibID, const double PrepTime, const int GhostSize,
+                           const int FSide, const double PrepTime, const int GhostSize,
                            const IntScheme_t IntScheme_CC, const IntScheme_t IntScheme_FC,
                            const int NTSib[], int *TSib[], const int TVarCC, const int NVarCC_Tot,
                            const int NVarCC_Flu, const int TVarCCIdxList_Flu[],
                            const int NVarCC_Der, const int TVarCCList_Der[],
                            const int TVarFC, const int NVarFC_Tot, const int TVarFCIdxList[],
                            const bool IntPhase, const OptFluBC_t FluBC[], const OptPotBC_t PotBC,
-                           const int BC_Face[], const real MinPres, const bool DE_Consistency )
+                           const int BC_Face[], const real MinPres, const bool DE_Consistency,
+                           const real *FInterface[6] )
 {
 
 // check
-#  ifdef MHD
-   Aux_Error( ERROR_INFO, "%s does not support MHD yet !!\n", __FUNCTION__ );
-#  endif
 #  ifdef GAMER_DEBUG
 // nothing to do if GhostSize == 0
    if ( GhostSize == 0 )
@@ -107,6 +106,16 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
 // temporal interpolation should be unnecessary for the shared time-step integration
    if ( OPT__DT_LEVEL == DT_LEVEL_SHARED  &&  OPT__INT_TIME )
       Aux_Error( ERROR_INFO, "OPT__INT_TIME should be disabled when \"OPT__DT_LEVEL == DT_LEVEL_SHARED\" !!\n" );
+
+   if ( TVarFC != _NONE )
+   {
+#     ifdef MHD
+      if ( TVarFC != _MAG  ||  NVarFC_Tot != NCOMP_MAGNETIC )
+         Aux_Error( ERROR_INFO, "%s must work on all three magnetic components at once !!\n", __FUNCTION__ );
+#     else
+      Aux_Error( ERROR_INFO, "currently only MHD supports face-centered variables !!" );
+#     endif
+   }
 #  endif // #ifdef GAMER_DEBUG
 
 
@@ -140,32 +149,65 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
 
 // set up parameters for the adopted interpolation scheme
    int NSide_CC, CGhost_CC, CSize_CC[3], FSize_CC[3], CSize3D_CC, FSize3D_CC;
+   int NSide_FC, CGhost_FC, CSize_FC[3][3], FSize_FC[3][3], CSize3D_FC[3], FSize3D_FC[3];
 
    Int_Table( IntScheme_CC, NSide_CC, CGhost_CC );
+   Int_Table( IntScheme_FC, NSide_FC, CGhost_FC );
 
-   const double dh               = amr->dh[lv];
-   const int    GhostSize_Padded = GhostSize + (GhostSize&1);        // # of interpolated cells must an even number
-   const int    CGrid            = GhostSize_Padded/2 + 2*CGhost_CC; // # of coarse cells required for interpolation
-   const int    CGrid_PID        = CGrid - CGhost_CC;                // # of overlapped cells between CGrid and PID
+   const double dh                 = amr->dh[lv];
+   const int    GhostSize_Padded   = GhostSize + (GhostSize&1);         // # of interpolated cells must an even number
+   const int    GhostSize_Padded_2 = GhostSize_Padded / 2;
+   const int    CGrid_CC           = GhostSize_Padded_2 + 2*CGhost_CC;  // # of coarse cells required for interpolating
+   const int    CGrid_FC_N         = GhostSize_Padded_2 + 1;            // cell-/face-centered variables
+   const int    CGrid_FC_T         = GhostSize_Padded_2 + 2*CGhost_FC;  // (N/T = normal/transverse)
+   const int    CGrid_CC_PID       = CGrid_CC   - CGhost_CC;            // # of overlapped cells between CGrid_CC/FC and PID
+   const int    CGrid_FC_PID       = CGrid_FC_T - CGhost_FC;
 
    for (int d=0; d<3; d++)
    {
-      CSize_CC[d] = TABLE_01( SibID, 'x'+d, CGrid, PS1+2*CGhost_CC, CGrid );
-      FSize_CC[d] = TABLE_01( SibID, 'x'+d, GhostSize_Padded, PS2, GhostSize_Padded );
+      CSize_CC[d] = TABLE_01( FSide, 'x'+d, CGrid_CC, PS1+2*CGhost_CC, CGrid_CC );
+      FSize_CC[d] = TABLE_01( FSide, 'x'+d, GhostSize_Padded, PS2, GhostSize_Padded );
+
+      for (int v=0; v<3; v++)
+      {
+         if ( v == d )
+         {
+            CSize_FC[v][d] = TABLE_01( FSide, 'x'+d, CGrid_FC_N, PS1+1, CGrid_FC_N );
+            FSize_FC[v][d] = FSize_CC[d] + 1;
+         }
+         else
+         {
+            CSize_FC[v][d] = TABLE_01( FSide, 'x'+d, CGrid_FC_T, PS1+2*CGhost_FC, CGrid_FC_T );
+            FSize_FC[v][d] = FSize_CC[d];
+         }
+      }
    }
 
    CSize3D_CC = CSize_CC[0]*CSize_CC[1]*CSize_CC[2];
    FSize3D_CC = FSize_CC[0]*FSize_CC[1]*FSize_CC[2];
+   for (int v=0; v<3; v++)
+   {
+      CSize3D_FC[v] = CSize_FC[v][0]*CSize_FC[v][1]*CSize_FC[v][2];
+      FSize3D_FC[v] = FSize_FC[v][0]*FSize_FC[v][1]*FSize_FC[v][2];
+   }
 
 
 // we assume that we only need ONE coarse-grid patch in each sibling direction
-   if ( CGrid_PID > PS1 )
-      Aux_Error( ERROR_INFO, "CGrid_PID (%d) > PATCH_SIZE (%d) !!\n", CGrid_PID, PS1 );
+   if ( CGrid_CC_PID > PS1 )
+      Aux_Error( ERROR_INFO, "CGrid_CC_PID (%d) > PATCH_SIZE (%d) !!\n", CGrid_CC_PID, PS1 );
+
+   if ( CGrid_FC_PID > PS1 )
+      Aux_Error( ERROR_INFO, "CGrid_FC_PID (%d) > PATCH_SIZE (%d) !!\n", CGrid_FC_PID, PS1 );
 
 
-// coarse-grid array to store all the data required for interpolation (including the ghost zones in each side)
+// coarse-grid data for interpolation (including the ghost zones on each side)
    real *CData_CC_Ptr = NULL;
    real *CData_CC     = new real [ NVarCC_Tot*CSize3D_CC ];
+   real **CData_FC    = NULL;
+
+// assuming NVarFC_Tot = either 0 or 3
+   CData_FC = new real* [NVarFC_Tot];
+   for (int v=0; v<NVarFC_Tot; v++)    CData_FC[v] = new real [ CSize3D_FC[v] ];
 
 
 // temporal interpolation parameters
@@ -190,13 +232,9 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
    bool MagIntTime;
    int  MagSg, MagSg_IntT;
    real MagWeighting, MagWeighting_IntT;
-#  ifdef MHD
-#  warning : REMOVE THESE !!!!!!!!!!!!!!!!!
-   int NVar_MagFC=0, NVar_MagCC=0;
-#  endif
 
-// check NVarCC_Der as well since we might need B field for calculating, for example, gas pressure
-   if ( NVar_MagFC + NVar_MagCC + NVarCC_Der != 0 )
+// check PrepPres and PrepTemp since they also require B field
+   if ( NVarFC_Tot>0 || PrepPres || PrepTemp )
    {
       SetTempIntPara( lv, amr->MagSg[lv], PrepTime, amr->MagSgTime[lv][0], amr->MagSgTime[lv][1],
                       MagIntTime, MagSg, MagSg_IntT, MagWeighting, MagWeighting_IntT );
@@ -235,10 +273,10 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
 
    for (int d=0; d<3; d++)
    {
-      Loop1[d] = TABLE_01( SibID, 'x'+d, CGrid_PID, PS1, CGrid_PID );
-      Disp1[d] = TABLE_01( SibID, 'x'+d, PS1-CGrid_PID, 0, 0 );
-      Disp2[d] = TABLE_01( SibID, 'x'+d, 0, CGhost_CC, CGhost_CC );
-      xyz  [d] = TABLE_01( SibID, 'x'+d, amr->patch[0][lv][PID]->EdgeL[d] + (0.5+PS1-CGrid_PID)*dh,
+      Loop1[d] = TABLE_01( FSide, 'x'+d, CGrid_CC_PID, PS1, CGrid_CC_PID );
+      Disp1[d] = TABLE_01( FSide, 'x'+d, PS1-CGrid_CC_PID, 0, 0 );
+      Disp2[d] = TABLE_01( FSide, 'x'+d, 0, CGhost_CC, CGhost_CC );
+      xyz  [d] = TABLE_01( FSide, 'x'+d, amr->patch[0][lv][PID]->EdgeL[d] + (0.5+PS1-CGrid_CC_PID)*dh,
                                          amr->patch[0][lv][PID]->EdgeL[d] + (0.5-CGhost_CC)*dh,
                                          amr->patch[0][lv][PID]->EdgeL[d] + (0.5-CGhost_CC)*dh );
    }
@@ -440,22 +478,80 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
 #  endif // #ifdef GRAVITY
 
 
+// a4. face-centered variables (e.g., magnetic field)
+   for (int v=0; v<NVarFC_Tot; v++)
+   {
+      const int TVarFCIdx = TVarFCIdxList[v];
+
+#     ifdef MHD
+//    set array indices
+      const int norm_dir = ( TVarFCIdx == MAGX ) ? 0 :
+                           ( TVarFCIdx == MAGY ) ? 1 :
+                           ( TVarFCIdx == MAGZ ) ? 2 : -1;
+#     ifdef GAMER_DEBUG
+      if ( norm_dir == -1 )   Aux_Error( ERROR_INFO, "Target face-centered variable != MAGX/Y/Z !!\n" );
+#     endif
+
+      int ijk_os[3], ijk_oe[3], size_i[3], disp_i[3], idx_i, idx_o, ii, ji, ki;  // s/e=start/end; i/o=in/out
+
+      for (int d=0; d<3; d++)
+      {
+         if ( d == norm_dir )
+         {
+            ijk_os[d] = 0;
+            ijk_oe[d] = CSize_FC[v][d];
+            size_i[d] = PS1 + 1;
+            disp_i[d] = TABLE_01( FSide, 'x'+d, PS1-GhostSize_Padded_2, 0, 0 );
+         }
+
+         else
+         {
+            ijk_os[d] = TABLE_01( FSide, 'x'+d, 0, CGhost_FC, CGhost_FC );
+            ijk_oe[d] = ijk_os[d] + TABLE_01( FSide, 'x'+d, CGrid_FC_PID, PS1, CGrid_FC_PID );
+            size_i[d] = PS1;
+            disp_i[d] = TABLE_01( FSide, 'x'+d, PS1-CGrid_FC_PID, 0, 0 ) - ijk_os[d];
+         }
+      }
+
+
+//    copy data
+      for (int ko=ijk_os[2]; ko<ijk_oe[2]; ko++)   {  ki    = ko + disp_i[2];
+      for (int jo=ijk_os[1]; jo<ijk_oe[1]; jo++)   {  ji    = jo + disp_i[1];
+                                                      idx_i = IDX321( ijk_os[0]+disp_i[0], ji, ki, size_i[0], size_i[1] );
+                                                      idx_o = IDX321( ijk_os[0],           jo, ko, CSize_FC[v][0], CSize_FC[v][1] );
+      for (int io=ijk_os[0]; io<ijk_oe[0]; io++)   {
+
+         CData_FC[v][idx_o] = amr->patch[MagSg][lv][PID]->magnetic[TVarFCIdx][idx_i];
+
+         if ( MagIntTime ) // temporal interpolation
+         CData_FC[v][idx_o] =   MagWeighting     *CData_FC[v][idx_o]
+                              + MagWeighting_IntT*amr->patch[MagSg_IntT][lv][PID]->magnetic[TVarFCIdx][idx_i];
+
+         idx_i ++;
+         idx_o ++;
+      }}}
+
+#     else
+      Aux_Error( ERROR_INFO, "currently only MHD supports face-centered variables !!" );
+#     endif // #ifdef MHD ... else ...
+   } // for (int v=0; v<NVarFC_Tot; v++)
+
 
 
 // b. fill up the ghost zone of CData_CC[] and CData_FC[]
 // ------------------------------------------------------------------------------------------------------------
-   int Loop2[3], Disp3[3], Disp4[3], Side, SibPID, BC_Sibling, BC_Idx_Start[3], BC_Idx_End[3];
+   int Loop2[3], Disp3[3], Disp4[3], CSide, SibPID, BC_Sibling, BC_Idx_Start[3], BC_Idx_End[3];
 
-   for (int CSib=0; CSib<NTSib[SibID]; CSib++)
+   for (int s=0; s<NTSib[FSide]; s++)
    {
-      Side   = TSib[SibID][CSib];
-      SibPID = amr->patch[0][lv][PID]->sibling[Side];
+      CSide  = TSib[FSide][s];
+      SibPID = amr->patch[0][lv][PID]->sibling[CSide];
 
       for (int d=0; d<3; d++)
       {
-         Loop2[d] = Table_01( SibID, Side, 'x'+d, CGrid_PID, CGhost_CC, CGhost_CC, PS1, CGhost_CC, CGhost_CC, CGrid_PID );
-         Disp3[d] = Table_01( SibID, Side, 'x'+d, 0, CGrid_PID, 0, CGhost_CC, CGhost_CC+PS1, 0, CGhost_CC );
-         Disp4[d] = Table_01( SibID, Side, 'x'+d, PS1-CGrid_PID, 0, PS1-CGhost_CC, 0, 0, PS1-CGhost_CC, 0 );
+         Loop2[d] = Table_01( FSide, CSide, 'x'+d, CGrid_CC_PID, CGhost_CC, CGhost_CC, PS1, CGhost_CC, CGhost_CC, CGrid_CC_PID );
+         Disp3[d] = Table_01( FSide, CSide, 'x'+d, 0, CGrid_CC_PID, 0, CGhost_CC, CGhost_CC+PS1, 0, CGhost_CC );
+         Disp4[d] = Table_01( FSide, CSide, 'x'+d, PS1-CGrid_CC_PID, 0, PS1-CGhost_CC, 0, 0, PS1-CGhost_CC, 0 );
       }
 
 
@@ -657,13 +753,75 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
             CData_CC_Ptr += CSize3D_CC;
          }
 #        endif // #ifdef GRAVITY
+
+
+//       b1-4. face-centered variables (e.g., magnetic field)
+         for (int v=0; v<NVarFC_Tot; v++)
+         {
+            const int TVarFCIdx = TVarFCIdxList[v];
+
+#           ifdef MHD
+//          set array indices
+            const int norm_dir = ( TVarFCIdx == MAGX ) ? 0 :
+                                 ( TVarFCIdx == MAGY ) ? 1 :
+                                 ( TVarFCIdx == MAGZ ) ? 2 : -1;
+#           ifdef GAMER_DEBUG
+            if ( norm_dir == -1 )   Aux_Error( ERROR_INFO, "Target face-centered variable != MAGX/Y/Z !!\n" );
+#           endif
+
+            const int Useless = NULL_INT;
+            int ijk_os[3], ijk_oe[3], size_i[3], disp_i[3], idx_i, idx_o, ii, ji, ki;  // s/e=start/end; i/o=in/out
+
+            for (int d=0; d<3; d++)
+            {
+               if ( d == norm_dir )
+               {
+                  ijk_os[d] = 0;
+                  ijk_oe[d] = CSize_FC[v][d];
+                  size_i[d] = PS1 + 1;
+                  disp_i[d] = TABLE_01( FSide, 'x'+d, PS1-GhostSize_Padded_2, 0, 0 );
+               }
+
+               else
+               {
+                  ijk_os[d] = Table_01( FSide, CSide, 'x'+d, 0, CGrid_FC_PID, 0, CGhost_FC, CGhost_FC+PS1, 0, CGhost_FC );
+                  ijk_oe[d] = ijk_os[d] + Table_01( FSide, CSide, 'x'+d, CGrid_FC_PID, CGhost_FC,
+                                                    CGhost_FC, PS1, CGhost_FC, CGhost_FC, CGrid_FC_PID );
+                  size_i[d] = PS1;
+                  disp_i[d] = Table_01( FSide, CSide, 'x'+d, PS1-CGrid_FC_PID, 0,
+                                        PS1-CGhost_FC, 0, 0, PS1-CGhost_FC, 0 ) - ijk_os[d];
+               }
+            }
+
+
+//          copy data
+            for (int ko=ijk_os[2]; ko<ijk_oe[2]; ko++)   {  ki    = ko + disp_i[2];
+            for (int jo=ijk_os[1]; jo<ijk_oe[1]; jo++)   {  ji    = jo + disp_i[1];
+                                                            idx_i = IDX321( ijk_os[0]+disp_i[0], ji, ki, size_i[0], size_i[1] );
+                                                            idx_o = IDX321( ijk_os[0],           jo, ko, CSize_FC[v][0], CSize_FC[v][1] );
+            for (int io=ijk_os[0]; io<ijk_oe[0]; io++)   {
+
+               CData_FC[v][idx_o] = amr->patch[MagSg][lv][SibPID]->magnetic[TVarFCIdx][idx_i];
+
+               if ( MagIntTime ) // temporal interpolation
+               CData_FC[v][idx_o] =   MagWeighting     *CData_FC[v][idx_o]
+                                    + MagWeighting_IntT*amr->patch[MagSg_IntT][lv][SibPID]->magnetic[TVarFCIdx][idx_i];
+
+               idx_i ++;
+               idx_o ++;
+            }}}
+
+#           else
+            Aux_Error( ERROR_INFO, "currently only MHD supports face-centered variables !!" );
+#           endif // #ifdef MHD ... else ...
+         } // for (int v=0; v<NVarFC_Tot; v++)
       } // if ( SibPID >= 0 )
 
 
 //    b2. if the target sibling patch does not exist --> something is wrong !!
       else if ( SibPID == -1 )
-         Aux_Error( ERROR_INFO, "incorrect parameter %s = %d (Rank %d, Lv %d, PID %d, Side %d) !!\n",
-                    "SibPID", SibPID, MPI_Rank, lv, PID, Side );
+         Aux_Error( ERROR_INFO, "incorrect parameter %s = %d (Rank %d, Lv %d, PID %d, CSide %d) !!\n",
+                    "SibPID", SibPID, MPI_Rank, lv, PID, CSide );
 
 
 //    b3. if the target sibling patch lies outside the simulation domain --> apply the specified B.C.
@@ -684,8 +842,8 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
             Aux_Error( ERROR_INFO, "incorrect BC_Face[%d] = %d !!\n", BC_Sibling, BC_Face[BC_Sibling] );
 
          if ( FluBC[ BC_Face[BC_Sibling] ] == BC_FLU_PERIODIC )
-            Aux_Error( ERROR_INFO, "FluBC == BC_FLU_PERIODIC (BC_Sibling %d, BC_Face %d, SibPID %d, PID %d, Side %d) !!\n",
-                       BC_Sibling, BC_Face[BC_Sibling], SibPID, PID, Side );
+            Aux_Error( ERROR_INFO, "FluBC == BC_FLU_PERIODIC (BC_Sibling %d, BC_Face %d, SibPID %d, PID %d, CSide %d) !!\n",
+                       BC_Sibling, BC_Face[BC_Sibling], SibPID, PID, CSide );
 #        endif
 
 //       b3-1. fluid B.C.
@@ -734,30 +892,30 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
       } // else if ( SibPID <= SIB_OFFSET_NONPERIODIC )
 
       else
-         Aux_Error( ERROR_INFO, "SibPID == %d (PID %d, Side %d) !!\n", SibPID, PID, Side );
+         Aux_Error( ERROR_INFO, "SibPID == %d (PID %d, CSide %d) !!\n", SibPID, PID, CSide );
 
-   } // for (int CSib=0; CSib<NTSib[SibID]; CSib++)
+   } // for (int s=0; s<NTSib[FSide]; s++)
 
 
 
 // c. interpolation : CData_CC[] --> IntData_CC[]
 // ------------------------------------------------------------------------------------------------------------
-   const bool PhaseUnwrapping_Yes    = true;
-   const bool PhaseUnwrapping_No     = false;
-   const bool EnsureMonotonicity_Yes = true;
-   const bool EnsureMonotonicity_No  = false;
-   int CStart[3], CRange[3], FStart[3], NVarCC_SoFar;
+   const bool PhaseUnwrapping_Yes = true;
+   const bool PhaseUnwrapping_No  = false;
+   const bool Monotonicity_Yes    = true;
+   const bool Monotonicity_No     = false;
+   int CStart_CC[3], CRange_CC[3], FStart_CC[3], NVarCC_SoFar;
 
    for (int d=0; d<3; d++)
    {
-      CStart[d] = CGhost_CC;
-      CRange[d] = CSize_CC[d] - 2*CGhost_CC;
-      FStart[d] = 0;
+      CStart_CC[d] = CGhost_CC;
+      CRange_CC[d] = CSize_CC[d] - 2*CGhost_CC;
+      FStart_CC[d] = 0;
    }
 
 
 // determine which variables require **monotonic** interpolation
-   bool Monotonicity[NVarCC_Flu];
+   bool Monotonicity_CC[NVarCC_Flu];
 
    for (int v=0; v<NVarCC_Flu; v++)
    {
@@ -767,18 +925,18 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
 //    we now apply monotonic interpolation to ALL fluid variables (which helps alleviate the issue of negative density/pressure)
       /*
       if ( TVarCCIdx_Flu == DENS  ||  TVarCCIdx_Flu == ENGY  ||  TVarCCIdx_Flu >= NCOMP_FLUID )
-         Monotonicity[v] = EnsureMonotonicity_Yes;
+         Monotonicity_CC[v] = Monotonicity_Yes;
       else
-         Monotonicity[v] = EnsureMonotonicity_No;
+         Monotonicity_CC[v] = Monotonicity_No;
       */
-         Monotonicity[v] = EnsureMonotonicity_Yes;
+         Monotonicity_CC[v] = Monotonicity_Yes;
 
 #     elif ( MODEL == ELBDM )
 //    apply monotonic interpolation to density and all passive scalars
       if ( TVarCCIdx_Flu != REAL  &&  TVarCCIdx_Flu != IMAG )
-         Monotonicity[v] = EnsureMonotonicity_Yes;
+         Monotonicity_CC[v] = Monotonicity_Yes;
       else
-         Monotonicity[v] = EnsureMonotonicity_No;
+         Monotonicity_CC[v] = Monotonicity_No;
 
 #     else
 #     error : DO YOU WANT TO ENSURE THE POSITIVITY OF INTERPOLATION IN THIS NEW MODEL ??
@@ -837,12 +995,12 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
       }
 
 //    interpolate density
-      Interpolate( CData_Dens, CSize_CC, CStart, CRange, FData_Dens, FSize_CC, FStart, 1, IntScheme_CC,
-                   PhaseUnwrapping_No, &EnsureMonotonicity_Yes );
+      Interpolate( CData_Dens, CSize_CC, CStart_CC, CRange_CC, FData_Dens, FSize_CC, FStart_CC,
+                   1, IntScheme_CC, PhaseUnwrapping_No, &Monotonicity_Yes );
 
 //    interpolate phase
-      Interpolate( CData_Real, CSize_CC, CStart, CRange, FData_Real, FSize_CC, FStart, 1, IntScheme_CC,
-                   PhaseUnwrapping_Yes, &EnsureMonotonicity_No );
+      Interpolate( CData_Real, CSize_CC, CStart_CC, CRange_CC, FData_Real, FSize_CC, FStart_CC,
+                   1, IntScheme_CC, PhaseUnwrapping_Yes, &Monotonicity_No );
    } // if ( IntPhase )
 
 
@@ -850,8 +1008,9 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
    else // if ( IntPhase )
    {
       for (int v=0; v<NVarCC_Flu; v++)
-      Interpolate( CData_CC+CSize3D_CC*v, CSize_CC, CStart, CRange, IntData_CC+FSize3D_CC*v, FSize_CC, FStart, 1,
-                   IntScheme_CC, PhaseUnwrapping_No, Monotonicity );
+      Interpolate( CData_CC+CSize3D_CC*v, CSize_CC, CStart_CC, CRange_CC,
+                   IntData_CC+FSize3D_CC*v, FSize_CC, FStart_CC,
+                   1, IntScheme_CC, PhaseUnwrapping_No, Monotonicity_CC );
    } // if ( IntPhase ) ... else ...
 
 // retrieve real and imaginary parts when phase interpolation is adopted
@@ -881,51 +1040,57 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
 #  else // #if ( MODEL == ELBDM )
 
 
-// c3. interpolation on original variables for models != ELBDM
+// c3. interpolation on original cell-centered variables for models != ELBDM
    for (int v=0; v<NVarCC_Flu; v++)
-      Interpolate( CData_CC+CSize3D_CC*v, CSize_CC, CStart, CRange, IntData_CC+FSize3D_CC*v, FSize_CC, FStart, 1,
-                   IntScheme_CC, PhaseUnwrapping_No, Monotonicity );
+      Interpolate( CData_CC+CSize3D_CC*v, CSize_CC, CStart_CC, CRange_CC,
+                   IntData_CC+FSize3D_CC*v, FSize_CC, FStart_CC,
+                   1, IntScheme_CC, PhaseUnwrapping_No, Monotonicity_CC );
 
 #  endif // #if ( MODEL == ELBDM ) ... else ...
 
    NVarCC_SoFar = NVarCC_Flu;
 
 
-// c4. derived variables
+// c4. interpolation on derived variables
 #  if   ( MODEL == HYDRO )
 // we now apply monotonic interpolation to ALL fluid variables
    if ( PrepVx )
    {
-      Interpolate( CData_CC+CSize3D_CC*NVarCC_SoFar, CSize_CC, CStart, CRange, IntData_CC+FSize3D_CC*NVarCC_SoFar,
-                   FSize_CC, FStart, 1, IntScheme_CC, PhaseUnwrapping_No, &EnsureMonotonicity_Yes );
+      Interpolate( CData_CC+CSize3D_CC*NVarCC_SoFar, CSize_CC, CStart_CC, CRange_CC,
+                   IntData_CC+FSize3D_CC*NVarCC_SoFar, FSize_CC, FStart_CC,
+                   1, IntScheme_CC, PhaseUnwrapping_No, &Monotonicity_Yes );
       NVarCC_SoFar ++;
    }
 
    if ( PrepVy )
    {
-      Interpolate( CData_CC+CSize3D_CC*NVarCC_SoFar, CSize_CC, CStart, CRange, IntData_CC+FSize3D_CC*NVarCC_SoFar,
-                   FSize_CC, FStart, 1, IntScheme_CC, PhaseUnwrapping_No, &EnsureMonotonicity_Yes );
+      Interpolate( CData_CC+CSize3D_CC*NVarCC_SoFar, CSize_CC, CStart_CC, CRange_CC,
+                   IntData_CC+FSize3D_CC*NVarCC_SoFar, FSize_CC, FStart_CC,
+                   1, IntScheme_CC, PhaseUnwrapping_No, &Monotonicity_Yes );
       NVarCC_SoFar ++;
    }
 
    if ( PrepVz )
    {
-      Interpolate( CData_CC+CSize3D_CC*NVarCC_SoFar, CSize_CC, CStart, CRange, IntData_CC+FSize3D_CC*NVarCC_SoFar,
-                   FSize_CC, FStart, 1, IntScheme_CC, PhaseUnwrapping_No, &EnsureMonotonicity_Yes );
+      Interpolate( CData_CC+CSize3D_CC*NVarCC_SoFar, CSize_CC, CStart_CC, CRange_CC,
+                   IntData_CC+FSize3D_CC*NVarCC_SoFar, FSize_CC, FStart_CC,
+                   1, IntScheme_CC, PhaseUnwrapping_No, &Monotonicity_Yes );
       NVarCC_SoFar ++;
    }
 
    if ( PrepPres )
    {
-      Interpolate( CData_CC+CSize3D_CC*NVarCC_SoFar, CSize_CC, CStart, CRange, IntData_CC+FSize3D_CC*NVarCC_SoFar,
-                   FSize_CC, FStart, 1, IntScheme_CC, PhaseUnwrapping_No, &EnsureMonotonicity_Yes );
+      Interpolate( CData_CC+CSize3D_CC*NVarCC_SoFar, CSize_CC, CStart_CC, CRange_CC,
+                   IntData_CC+FSize3D_CC*NVarCC_SoFar, FSize_CC, FStart_CC,
+                   1, IntScheme_CC, PhaseUnwrapping_No, &Monotonicity_Yes );
       NVarCC_SoFar ++;
    }
 
    if ( PrepTemp )
    {
-      Interpolate( CData_CC+CSize3D_CC*NVarCC_SoFar, CSize_CC, CStart, CRange, IntData_CC+FSize3D_CC*NVarCC_SoFar,
-                   FSize_CC, FStart, 1, IntScheme_CC, PhaseUnwrapping_No, &EnsureMonotonicity_Yes );
+      Interpolate( CData_CC+CSize3D_CC*NVarCC_SoFar, CSize_CC, CStart_CC, CRange_CC,
+                   IntData_CC+FSize3D_CC*NVarCC_SoFar, FSize_CC, FStart_CC,
+                   1, IntScheme_CC, PhaseUnwrapping_No, &Monotonicity_Yes );
       NVarCC_SoFar ++;
    }
 
@@ -937,17 +1102,55 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
 #  endif // MODEL
 
 
-#  ifdef GRAVITY
 // c5. interpolation on potential
+#  ifdef GRAVITY
    if ( PrepPot )
    {
-      Interpolate( CData_CC+CSize3D_CC*NVarCC_SoFar, CSize_CC, CStart, CRange, IntData_CC+FSize3D_CC*NVarCC_SoFar,
-                   FSize_CC, FStart, 1, IntScheme_CC, PhaseUnwrapping_No, &EnsureMonotonicity_No );
+      Interpolate( CData_CC+CSize3D_CC*NVarCC_SoFar, CSize_CC, CStart_CC, CRange_CC,
+                   IntData_CC+FSize3D_CC*NVarCC_SoFar, FSize_CC, FStart_CC,
+                   1, IntScheme_CC, PhaseUnwrapping_No, &Monotonicity_No );
       NVarCC_SoFar ++;
    }
 #  endif
 
+
+// c6. interpolation on face-centered variables
+   if ( NVarFC_Tot > 0 )
+   {
+#     ifdef MHD
+//    c6-1. set the array indices
+      real *FData_FC[3] = { IntData_FC,
+                            IntData_FC + FSize3D_FC[0],
+                            IntData_FC + FSize3D_FC[0]+FSize3D_FC[1] };
+      int CStart_FC[3][3], CRange_FC[3], FStart_FC[3][3];
+
+      for (int d=0; d<3; d++)
+      {
+         CRange_FC[d] = CRange_CC[d];
+
+         for (int v=0; v<3; v++)
+         {
+            CStart_FC[v][d] = ( v == d ) ? 0 : CGhost_FC;
+            FStart_FC[v][d] = 0;
+         }
+      }
+
+//    c6-2. divergence-perserving interpolation
+      MHD_InterpolateBField( (const real**)CData_FC, CSize_FC, CStart_FC, CRange_FC,
+                             FData_FC, FSize_FC, FStart_FC, FInterface,
+                             IntScheme_FC, Monotonicity_Yes );
+
+#     else
+      Aux_Error( ERROR_INFO, "currently only MHD supports face-centered variables !!" );
+#     endif
+   } // if ( NVarFC_Tot > 0 )
+
+
+// free memory
    delete [] CData_CC;
+   for (int v=0; v<NVarFC_Tot; v++)    delete [] CData_FC[v];
+   delete [] CData_FC;
+
 
 
 // d. ensure the consistency between pressure, total energy density, and the dual-energy variable
@@ -996,14 +1199,14 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Table_01
-// Description :  return the loop size and displacement required by the function "InterpolateGhostZone"
+// Description :  return the loop size and displacement required by InterpolateGhostZone()
 //
-// Parameter   :  SibID       : Sibling index ONE (0~25)
-//                Side        : Sibling index TWO (0~25)
+// Parameter   :  FSide       : Fine-patch sibling index (0~25)
+//                CSide       : Coarse-patch sibling index (0~25)
 //                dim         : Target spatial direction (x/y/z)
 //                w01 ... w21 : Returned values
 //-------------------------------------------------------------------------------------------------------
-int Table_01( const int SibID, const int Side, const char dim, const int w01, const int w02,
+int Table_01( const int FSide, const int CSide, const char dim, const int w01, const int w02,
               const int w10, const int w11, const int w12, const int w20, const int w21 )
 {
 
@@ -1011,15 +1214,15 @@ int Table_01( const int SibID, const int Side, const char dim, const int w01, co
    {
       case 'x':
       {
-         switch ( SibID )
+         switch ( FSide )
          {
             case 0: case 6: case 8: case 14: case 15: case 18: case 20: case 22: case 24:
             {
-               switch ( Side )
+               switch ( CSide )
                {
                   case 0: case 6: case 8: case 14: case 15: case 18: case 20: case 22: case 24:
                      Aux_Error( ERROR_INFO, "incorrect parameter %s = %d, %s = %d !!\n",
-                                "SibID", SibID, "Side", Side );
+                                "FSide", FSide, "CSide", CSide );
 
                   case 2: case 3: case 4: case 5: case 10: case 11: case 12: case 13:
                      return w01;
@@ -1031,7 +1234,7 @@ int Table_01( const int SibID, const int Side, const char dim, const int w01, co
 
             case 2: case 3: case 4: case 5: case 10: case 11: case 12: case 13:
             {
-               switch ( Side )
+               switch ( CSide )
                {
                   case 0: case 6: case 8: case 14: case 15: case 18: case 20: case 22: case 24:
                      return w10;
@@ -1046,7 +1249,7 @@ int Table_01( const int SibID, const int Side, const char dim, const int w01, co
 
             case 1: case 7: case 9: case 16: case 17: case 19: case 21: case 23: case 25:
             {
-               switch ( Side )
+               switch ( CSide )
                {
                   case 0: case 6: case 8: case 14: case 15: case 18: case 20: case 22: case 24:
                      return w20;
@@ -1056,25 +1259,25 @@ int Table_01( const int SibID, const int Side, const char dim, const int w01, co
 
                   case 1: case 7: case 9: case 16: case 17: case 19: case 21: case 23: case 25:
                      Aux_Error( ERROR_INFO, "incorrect parameter %s = %d, %s = %d !!\n",
-                                "SibID", SibID, "Side", Side );
+                                "FSide", FSide, "CSide", CSide );
                }
             }
 
-         } // switch ( SibID )
+         } // switch ( FSide )
       } // case 'x':
 
 
       case 'y':
       {
-         switch ( SibID )
+         switch ( FSide )
          {
             case 2: case 6: case 7: case 10: case 12: case 18: case 19: case 22: case 23:
             {
-               switch ( Side )
+               switch ( CSide )
                {
                   case 2: case 6: case 7: case 10: case 12: case 18: case 19: case 22: case 23:
                      Aux_Error( ERROR_INFO, "incorrect parameter %s = %d, %s = %d !!\n",
-                                "SibID", SibID, "Side", Side );
+                                "FSide", FSide, "CSide", CSide );
 
                   case 0: case 1: case 4: case 5: case 14: case 15: case 16: case 17:
                      return w01;
@@ -1086,7 +1289,7 @@ int Table_01( const int SibID, const int Side, const char dim, const int w01, co
 
             case 0: case 1: case 4: case 5: case 14: case 15: case 16: case 17:
             {
-               switch ( Side )
+               switch ( CSide )
                {
                   case 2: case 6: case 7: case 10: case 12: case 18: case 19: case 22: case 23:
                      return w10;
@@ -1101,7 +1304,7 @@ int Table_01( const int SibID, const int Side, const char dim, const int w01, co
 
             case 3: case 8: case 9: case 11: case 13: case 20: case 21: case 24: case 25:
             {
-               switch ( Side )
+               switch ( CSide )
                {
                   case 2: case 6: case 7: case 10: case 12: case 18: case 19: case 22: case 23:
                      return w20;
@@ -1111,25 +1314,25 @@ int Table_01( const int SibID, const int Side, const char dim, const int w01, co
 
                   case 3: case 8: case 9: case 11: case 13: case 20: case 21: case 24: case 25:
                      Aux_Error( ERROR_INFO, "incorrect parameter %s = %d, %s = %d !!\n",
-                                "SibID", SibID, "Side", Side );
+                                "FSide", FSide, "CSide", CSide );
                }
             }
 
-         } // switch ( SibID )
+         } // switch ( FSide )
       } // case 'y':
 
 
       case 'z':
       {
-         switch ( SibID )
+         switch ( FSide )
          {
             case 4: case 10: case 11: case 14: case 16: case 18: case 19: case 20: case 21:
             {
-               switch ( Side )
+               switch ( CSide )
                {
                   case 4: case 10: case 11: case 14: case 16: case 18: case 19: case 20: case 21:
                      Aux_Error( ERROR_INFO, "incorrect parameter %s = %d, %s = %d !!\n",
-                                "SibID", SibID, "Side", Side );
+                                "FSide", FSide, "CSide", CSide );
 
                   case 0: case 1: case 2: case 3: case 6: case 7: case 8: case 9:
                      return w01;
@@ -1141,7 +1344,7 @@ int Table_01( const int SibID, const int Side, const char dim, const int w01, co
 
             case 0: case 1: case 2: case 3: case 6: case 7: case 8: case 9:
             {
-               switch ( Side )
+               switch ( CSide )
                {
                   case 4: case 10: case 11: case 14: case 16: case 18: case 19: case 20: case 21:
                      return w10;
@@ -1156,7 +1359,7 @@ int Table_01( const int SibID, const int Side, const char dim, const int w01, co
 
             case 5: case 12: case 13: case 15: case 17: case 22: case 23: case 24: case 25:
             {
-               switch ( Side )
+               switch ( CSide )
                {
                   case 4: case 10: case 11: case 14: case 16: case 18: case 19: case 20: case 21:
                      return w20;
@@ -1166,11 +1369,11 @@ int Table_01( const int SibID, const int Side, const char dim, const int w01, co
 
                   case 5: case 12: case 13: case 15: case 17: case 22: case 23: case 24: case 25:
                      Aux_Error( ERROR_INFO, "incorrect parameter %s = %d, %s = %d !!\n",
-                                "SibID", SibID, "Side", Side );
+                                "FSide", FSide, "CSide", CSide );
                }
             }
 
-         } // switch ( SibID )
+         } // switch ( FSide )
       } // case 'z':
 
 
