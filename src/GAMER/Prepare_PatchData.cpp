@@ -8,7 +8,8 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
                            const int NVarCC_Der, const int TVarCCList_Der[],
                            const int TVarFC, const int NVarFC_Tot, const int TVarFCIdxList[],
                            const bool IntPhase, const OptFluBC_t FluBC[], const OptPotBC_t PotBC,
-                           const int BC_Face[], const real MinPres, const bool DE_Consistency );
+                           const int BC_Face[], const real MinPres, const bool DE_Consistency,
+                           const real *FInterface[6] );
 static void SetTargetSibling( int NTSib[], int *TSib[] );
 static int Table_01( const int SibID, const char dim, const int Count, const int GhostSize );
 static int Table_02( const int lv, const int PID, const int Side );
@@ -1322,7 +1323,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
                real *IntData_FC_Ptr = NULL;
 
 
-//             determine the target PID at lv-1
+//             (b2-1) determine the target PID at lv-1
                const int FaPID    = amr->patch[0][lv][PID0]->father;
                const int FaSibPID = amr->patch[0][lv-1][FaPID]->sibling[Side];
 
@@ -1332,14 +1333,46 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
 #              endif
 
 
-//             (b2-1) perform interpolation and store the results in IntData_CC[] and IntData_FC[]
+//             (b2-2) collect the fine-grid magnetic field on the interpolation boundaries for the
+//             divergence-preserving interpolation
+               const real *FInterface[6] = { NULL, NULL, NULL, NULL, NULL, NULL };
+
+               /*
+#              ifdef MHD
+               if ( NVarFC_Tot > 0 )
+               for (int f=0; f<6; f++)
+               {
+                  const int norm_dir = f/2;  // [0,0,1,1,2,2]
+                  const int sign     = f&1;  // [0,1,0,1,0,1]
+
+                  if (  TABLE_01( Side, 'x'+norm_dir, 0, NULL_INT, 1 ) != sign  )
+                  {
+                     int FaSibSibPID;
+
+                     if (  ( FaSibSibPID = amr->patch[0][lv-1][FaSibPID]->sibling[f] ) >= 0  )
+                     {
+                        if ( amr->patch[0][lv-1][FaSibSibPID]->son != -1 )
+                        {
+                           const int tran_dir1 = (norm_dir+1)%3;
+                           const int tran_dir2 = (norm_dir+2)%3;
+
+                           FInterface[f] = new real [ 4*CRange_FC[tran_dir1]*CRange_FC[tran_dir2] ];
+                        }
+                     }
+                  }
+               } // for (int f=0; f<6; f++)
+#              endif // #ifdef MHD
+               */
+
+
+//             (b2-3) perform interpolation and store the results in IntData_CC[] and IntData_FC[]
                InterpolateGhostZone( lv-1, FaSibPID, IntData_CC, IntData_FC, Side, PrepTime, GhostSize,
                                      IntScheme_CC, IntScheme_FC, NTSib, TSib, TVarCC, NVarCC_Tot, NVarCC_Flu,
                                      TVarCCIdxList_Flu, NVarCC_Der, TVarCCList_Der, TVarFC, NVarFC_Tot, TVarFCIdxList,
-                                     IntPhase, FluBC, PotBC, BC_Face, MinPres, DE_Consistency );
+                                     IntPhase, FluBC, PotBC, BC_Face, MinPres, DE_Consistency, FInterface );
 
 
-//             (b2-2) copy cell-centered data from IntData_CC[] to Data1PG_CC[]
+//             (b2-4) copy cell-centered data from IntData_CC[] to Data1PG_CC[]
 //             --> must get rid of NUseless-cell-wide useless data returned by InterpolateGhostZone()
                const int NUseless = GhostSize & 1;
                int loop[3], disp1[3], disp2[3];
@@ -1371,7 +1404,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
                }
 
 
-//             (b2-3) copy face-centered data from IntData_FC[] to Data1PG_FC[]
+//             (b2-5) copy face-centered data from IntData_FC[] to Data1PG_FC[]
 //             --> must get rid of NUseless-cell-wide useless data returned by InterpolateGhostZone()
                Data1PG_FC_Ptr = Data1PG_FC;
                IntData_FC_Ptr = IntData_FC;
