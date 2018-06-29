@@ -509,13 +509,15 @@ struct InputPara_t
    int    Opt__Int_Phase;
 #  endif
    int    Opt__Flu_IntScheme;
+   int    Opt__RefFlu_IntScheme;
+#  ifdef MHD
+   int    Opt__Mag_IntScheme;
+   int    Opt__RefMag_IntScheme;
+#  endif
 #  ifdef GRAVITY
    int    Opt__Pot_IntScheme;
    int    Opt__Rho_IntScheme;
    int    Opt__Gra_IntScheme;
-#  endif
-   int    Opt__RefFlu_IntScheme;
-#  ifdef GRAVITY
    int    Opt__RefPot_IntScheme;
 #  endif
    double IntMonoCoeff;

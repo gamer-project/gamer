@@ -294,6 +294,10 @@ void Init_Load_Parameter()
 // do not check OPT__FLU_INT_SCHEME and OPT__REF_FLU_INT_SCHEME since they may be reset by Init_ResetDefaultParameter()
    ReadPara->Add( "OPT__FLU_INT_SCHEME",        &OPT__FLU_INT_SCHEME,             INT_DEFAULT,     NoMin_int,     NoMax_int      );
    ReadPara->Add( "OPT__REF_FLU_INT_SCHEME",    &OPT__REF_FLU_INT_SCHEME,         INT_DEFAULT,     NoMin_int,     NoMax_int      );
+#  ifdef MHD
+   ReadPara->Add( "OPT__MAG_INT_SCHEME",        &OPT__MAG_INT_SCHEME,             INT_CQUAD,       NoMin_int,     NoMax_int      );
+   ReadPara->Add( "OPT__REF_MAG_INT_SCHEME",    &OPT__REF_MAG_INT_SCHEME,         INT_CQUAD,       NoMin_int,     NoMax_int      );
+#  endif
 #  ifdef GRAVITY
    ReadPara->Add( "OPT__POT_INT_SCHEME",        &OPT__POT_INT_SCHEME,             INT_QUAD,        4,             5              );
    ReadPara->Add( "OPT__RHO_INT_SCHEME",        &OPT__RHO_INT_SCHEME,             INT_CQUAD,       1,             7              );

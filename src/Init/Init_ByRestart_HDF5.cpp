@@ -1782,13 +1782,15 @@ void Check_InputPara( const char *FileName )
    LoadField( "Opt__Int_Phase",          &RS.Opt__Int_Phase,          SID, TID, NonFatal, &RT.Opt__Int_Phase,           1, NonFatal );
 #  endif
    LoadField( "Opt__Flu_IntScheme",      &RS.Opt__Flu_IntScheme,      SID, TID, NonFatal, &RT.Opt__Flu_IntScheme,       1, NonFatal );
+   LoadField( "Opt__RefFlu_IntScheme",   &RS.Opt__RefFlu_IntScheme,   SID, TID, NonFatal, &RT.Opt__RefFlu_IntScheme,    1, NonFatal );
+#  ifdef MHD
+   LoadField( "Opt__Mag_IntScheme",      &RS.Opt__Mag_IntScheme,      SID, TID, NonFatal, &RT.Opt__Mag_IntScheme,       1, NonFatal );
+   LoadField( "Opt__RefMag_IntScheme",   &RS.Opt__RefMag_IntScheme,   SID, TID, NonFatal, &RT.Opt__RefMag_IntScheme,    1, NonFatal );
+#  endif
 #  ifdef GRAVITY
    LoadField( "Opt__Pot_IntScheme",      &RS.Opt__Pot_IntScheme,      SID, TID, NonFatal, &RT.Opt__Pot_IntScheme,       1, NonFatal );
    LoadField( "Opt__Rho_IntScheme",      &RS.Opt__Rho_IntScheme,      SID, TID, NonFatal, &RT.Opt__Rho_IntScheme,       1, NonFatal );
    LoadField( "Opt__Gra_IntScheme",      &RS.Opt__Gra_IntScheme,      SID, TID, NonFatal, &RT.Opt__Gra_IntScheme,       1, NonFatal );
-#  endif
-   LoadField( "Opt__RefFlu_IntScheme",   &RS.Opt__RefFlu_IntScheme,   SID, TID, NonFatal, &RT.Opt__RefFlu_IntScheme,    1, NonFatal );
-#  ifdef GRAVITY
    LoadField( "Opt__RefPot_IntScheme",   &RS.Opt__RefPot_IntScheme,   SID, TID, NonFatal, &RT.Opt__RefPot_IntScheme,    1, NonFatal );
 #  endif
    LoadField( "IntMonoCoeff",            &RS.IntMonoCoeff,            SID, TID, NonFatal, &RT.IntMonoCoeff,             1, NonFatal );

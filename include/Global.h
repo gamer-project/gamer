@@ -96,6 +96,9 @@ extern double           MIN_DENS, MIN_PRES;
 #ifdef DUAL_ENERGY
 extern double           DUAL_ENERGY_SWITCH;
 #endif
+#ifdef MHD
+extern IntScheme_t      OPT__MAG_INT_SCHEME, OPT__REF_MAG_INT_SCHEME;
+#endif
 
 #elif ( MODEL == ELBDM )
 extern double           DT__PHASE, FlagTable_EngyDensity[NLEVEL-1][2];
