@@ -1963,13 +1963,15 @@ void FillIn_InputPara( InputPara_t &InputPara )
    InputPara.Opt__Int_Phase          = OPT__INT_PHASE;
 #  endif
    InputPara.Opt__Flu_IntScheme      = OPT__FLU_INT_SCHEME;
+   InputPara.Opt__RefFlu_IntScheme   = OPT__REF_FLU_INT_SCHEME;
+#  ifdef MHD
+   InputPara.Opt__Mag_IntScheme      = OPT__MAG_INT_SCHEME;
+   InputPara.Opt__RefMag_IntScheme   = OPT__REF_MAG_INT_SCHEME;
+#  endif
 #  ifdef GRAVITY
    InputPara.Opt__Pot_IntScheme      = OPT__POT_INT_SCHEME;
    InputPara.Opt__Rho_IntScheme      = OPT__RHO_INT_SCHEME;
    InputPara.Opt__Gra_IntScheme      = OPT__GRA_INT_SCHEME;
-#  endif
-   InputPara.Opt__RefFlu_IntScheme   = OPT__REF_FLU_INT_SCHEME;
-#  ifdef GRAVITY
    InputPara.Opt__RefPot_IntScheme   = OPT__REF_POT_INT_SCHEME;
 #  endif
    InputPara.IntMonoCoeff            = INT_MONO_COEFF;
@@ -2644,13 +2646,15 @@ void GetCompound_InputPara( hid_t &H5_TypeID )
    H5Tinsert( H5_TypeID, "Opt__Int_Phase",          HOFFSET(InputPara_t,Opt__Int_Phase         ), H5T_NATIVE_INT     );
 #  endif
    H5Tinsert( H5_TypeID, "Opt__Flu_IntScheme",      HOFFSET(InputPara_t,Opt__Flu_IntScheme     ), H5T_NATIVE_INT     );
+   H5Tinsert( H5_TypeID, "Opt__RefFlu_IntScheme",   HOFFSET(InputPara_t,Opt__RefFlu_IntScheme  ), H5T_NATIVE_INT     );
+#  ifdef MHD
+   H5Tinsert( H5_TypeID, "Opt__Mag_IntScheme",      HOFFSET(InputPara_t,Opt__Mag_IntScheme     ), H5T_NATIVE_INT     );
+   H5Tinsert( H5_TypeID, "Opt__RefMag_IntScheme",   HOFFSET(InputPara_t,Opt__RefMag_IntScheme  ), H5T_NATIVE_INT     );
+#  endif
 #  ifdef GRAVITY
    H5Tinsert( H5_TypeID, "Opt__Pot_IntScheme",      HOFFSET(InputPara_t,Opt__Pot_IntScheme     ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "Opt__Rho_IntScheme",      HOFFSET(InputPara_t,Opt__Rho_IntScheme     ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "Opt__Gra_IntScheme",      HOFFSET(InputPara_t,Opt__Gra_IntScheme     ), H5T_NATIVE_INT     );
-#  endif
-   H5Tinsert( H5_TypeID, "Opt__RefFlu_IntScheme",   HOFFSET(InputPara_t,Opt__RefFlu_IntScheme  ), H5T_NATIVE_INT     );
-#  ifdef GRAVITY
    H5Tinsert( H5_TypeID, "Opt__RefPot_IntScheme",   HOFFSET(InputPara_t,Opt__RefPot_IntScheme  ), H5T_NATIVE_INT     );
 #  endif
    H5Tinsert( H5_TypeID, "IntMonoCoeff",            HOFFSET(InputPara_t,IntMonoCoeff           ), H5T_NATIVE_DOUBLE  );

@@ -235,6 +235,8 @@ OPT__INT_TIME                 1           # perform "temporal" interpolation for
 OPT__INT_PHASE                1           # interpolation on phase (does not support MinMod-1D) [1] ##ELBDM ONLY##
 OPT__FLU_INT_SCHEME          -1           # ghost-zone fluid variables for the fluid solver [-1]
 OPT__REF_FLU_INT_SCHEME      -1           # newly allocated fluid variables during grid refinement [-1]
+OPT__MAG_INT_SCHEME           4           # ghost-zone magnetic field for the MHD solver (2,3,4,6 only) [4]
+OPT__REF_MAG_INT_SCHEME       4           # newly allocated magnetic field during grid refinement (2,3,4,6 only) [4]
 OPT__POT_INT_SCHEME           5           # ghost-zone potential for the Poisson solver (only supports 4 & 5) [5]
 OPT__RHO_INT_SCHEME           4           # ghost-zone mass density for the Poisson solver [4]
 OPT__GRA_INT_SCHEME           5           # ghost-zone potential for the gravity solver (for UNSPLIT_GRAVITY as well) [5]

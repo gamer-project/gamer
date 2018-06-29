@@ -89,6 +89,7 @@ double               MIN_DENS, MIN_PRES;
 double               DUAL_ENERGY_SWITCH;
 #endif
 #ifdef MHD
+IntScheme_t          OPT__MAG_INT_SCHEME, OPT__REF_MAG_INT_SCHEME;
 #warning : WAIT MHD !!!
 #endif
 

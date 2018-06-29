@@ -953,6 +953,16 @@ void Aux_TakeNote()
                                                                   ( OPT__FLU_INT_SCHEME == INT_CQUAR    ) ? "CQUAR"    :
                                                                   ( OPT__FLU_INT_SCHEME == INT_QUAR     ) ? "QUAR"     :
                                                                                                             "UNKNOWN" );
+#     ifdef MHD
+      fprintf( Note, "OPT__MAG_INT_SCHEME             %s\n",      ( OPT__MAG_INT_SCHEME == INT_MINMOD3D ) ? "MINMOD3D" :
+                                                                  ( OPT__MAG_INT_SCHEME == INT_MINMOD1D ) ? "MINMOD1D" :
+                                                                  ( OPT__MAG_INT_SCHEME == INT_VANLEER  ) ? "VANLEER"  :
+                                                                  ( OPT__MAG_INT_SCHEME == INT_CQUAD    ) ? "CQUAD"    :
+                                                                  ( OPT__MAG_INT_SCHEME == INT_QUAD     ) ? "QUAD"     :
+                                                                  ( OPT__MAG_INT_SCHEME == INT_CQUAR    ) ? "CQUAR"    :
+                                                                  ( OPT__MAG_INT_SCHEME == INT_QUAR     ) ? "QUAR"     :
+                                                                                                            "UNKNOWN" );
+#     endif
 #     ifdef GRAVITY
       fprintf( Note, "OPT__POT_INT_SCHEME             %s\n",      ( OPT__POT_INT_SCHEME == INT_MINMOD3D ) ? "MINMOD3D" :
                                                                   ( OPT__POT_INT_SCHEME == INT_MINMOD1D ) ? "MINMOD1D" :
@@ -987,6 +997,16 @@ void Aux_TakeNote()
                                                                ( OPT__REF_FLU_INT_SCHEME == INT_CQUAR    ) ? "CQUAR"    :
                                                                ( OPT__REF_FLU_INT_SCHEME == INT_QUAR     ) ? "QUAR"     :
                                                                                                              "UNKNOWN" );
+#     ifdef MHD
+      fprintf( Note, "OPT__REF_MAG_INT_SCHEME         %s\n",   ( OPT__REF_MAG_INT_SCHEME == INT_MINMOD3D ) ? "MINMOD3D" :
+                                                               ( OPT__REF_MAG_INT_SCHEME == INT_MINMOD1D ) ? "MINMOD1D" :
+                                                               ( OPT__REF_MAG_INT_SCHEME == INT_VANLEER  ) ? "VANLEER"  :
+                                                               ( OPT__REF_MAG_INT_SCHEME == INT_CQUAD    ) ? "CQUAD"    :
+                                                               ( OPT__REF_MAG_INT_SCHEME == INT_QUAD     ) ? "QUAD"     :
+                                                               ( OPT__REF_MAG_INT_SCHEME == INT_CQUAR    ) ? "CQUAR"    :
+                                                               ( OPT__REF_MAG_INT_SCHEME == INT_QUAR     ) ? "QUAR"     :
+                                                                                                             "UNKNOWN" );
+#     endif
 #     ifdef GRAVITY
       fprintf( Note, "OPT__REF_POT_INT_SCHEME         %s\n",   ( OPT__REF_POT_INT_SCHEME == INT_MINMOD3D ) ? "MINMOD3D" :
                                                                ( OPT__REF_POT_INT_SCHEME == INT_MINMOD1D ) ? "MINMOD1D" :
