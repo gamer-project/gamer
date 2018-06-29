@@ -15,6 +15,11 @@ static int Table_01( const int SibID, const char dim, const int Count, const int
 static int Table_02( const int lv, const int PID, const int Side );
 void SetTempIntPara( const int lv, const int Sg_Current, const double PrepTime, const double Time0, const double Time1,
                      bool &IntTime, int &Sg, int &Sg_IntT, real &Weighting, real &Weighting_IntT );
+#ifdef MHD
+static void MHD_SetFInterface( real *FInt_Data, real *FInt_Ptr[6], const real *Data1PG_FC, const int lv, const int PID0,
+                               const int Side, const int GhostSize, const int MagSg, const int MagSg_IntT,
+                               const bool MagIntTime, const real MagWeighting, const real MagWeighting_IntT );
+#endif
 
 // flags for checking whether (1) Prepare_PatchData_InitParticleDensityArray() and (2) Par_CollectParticle2OneLevel()
 // are properly called before preparing either _PAR_DENS or _TOTAL_DENS
@@ -523,7 +528,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
 
             if ( SibPID0 >= 0 )
             {
-               for (int Count=0; Count<TABLE_04( Side ); Count++)
+               for (int Count=0; Count<TABLE_04(Side); Count++)
                {
 #                 ifdef DEBUG_PARTICLE
                   if ( NNearByPatch >= NNearByPatchMax )
@@ -616,6 +621,15 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
 //    --> allocate it only once but with the maximum required size to reduce the number of memory allocations
       real *IntData_CC = new real [ NVarCC_Tot*PS2*PS2*(GhostSize_Padded  ) ];
       real *IntData_FC = new real [ NVarFC_Tot*PS2*PS2*(GhostSize_Padded+1) ];
+
+
+//    B field on the coarse-fine interfaces for the divergence-preserving interpolation
+//    --> allocate it only once but with the maximum required size to reduce the number of memory allocations
+#     ifdef MHD
+      real *FInterface_Data = NULL;
+
+      if ( NVarFC_Tot > 0 )   FInterface_Data = new real [ SQR(PS2) + 4*PS2*GhostSize_Padded ];
+#     endif
 
 
 //    assign particle mass onto grids
@@ -1333,43 +1347,22 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
 #              endif
 
 
-//             (b2-2) collect the fine-grid magnetic field on the interpolation boundaries for the
-//             divergence-preserving interpolation
-               const real *FInterface[6] = { NULL, NULL, NULL, NULL, NULL, NULL };
-
-               /*
+//             (b2-2) collect the fine-grid magnetic field on the coarse-fine interpolation boundaries
+//             for the divergence-preserving interpolation
+               real *FInterface_Ptr[6] = { NULL, NULL, NULL, NULL, NULL, NULL };
 #              ifdef MHD
                if ( NVarFC_Tot > 0 )
-               for (int f=0; f<6; f++)
-               {
-                  const int norm_dir = f/2;  // [0,0,1,1,2,2]
-                  const int sign     = f&1;  // [0,1,0,1,0,1]
-
-                  if (  TABLE_01( Side, 'x'+norm_dir, 0, NULL_INT, 1 ) != sign  )
-                  {
-                     int FaSibSibPID;
-
-                     if (  ( FaSibSibPID = amr->patch[0][lv-1][FaSibPID]->sibling[f] ) >= 0  )
-                     {
-                        if ( amr->patch[0][lv-1][FaSibSibPID]->son != -1 )
-                        {
-                           const int tran_dir1 = (norm_dir+1)%3;
-                           const int tran_dir2 = (norm_dir+2)%3;
-
-                           FInterface[f] = new real [ 4*CRange_FC[tran_dir1]*CRange_FC[tran_dir2] ];
-                        }
-                     }
-                  }
-               } // for (int f=0; f<6; f++)
-#              endif // #ifdef MHD
-               */
+               MHD_SetFInterface( FInterface_Data, FInterface_Ptr, Data1PG_FC, lv, PID0, Side, GhostSize,
+                                  MagSg, MagSg_IntT, MagIntTime, MagWeighting, MagWeighting_IntT );
+#              endif
 
 
 //             (b2-3) perform interpolation and store the results in IntData_CC[] and IntData_FC[]
                InterpolateGhostZone( lv-1, FaSibPID, IntData_CC, IntData_FC, Side, PrepTime, GhostSize,
                                      IntScheme_CC, IntScheme_FC, NTSib, TSib, TVarCC, NVarCC_Tot, NVarCC_Flu,
                                      TVarCCIdxList_Flu, NVarCC_Der, TVarCCList_Der, TVarFC, NVarFC_Tot, TVarFCIdxList,
-                                     IntPhase, FluBC, PotBC, BC_Face, MinPres, DE_Consistency, FInterface );
+                                     IntPhase, FluBC, PotBC, BC_Face, MinPres, DE_Consistency,
+                                     (const real **)FInterface_Ptr );
 
 
 //             (b2-4) copy cell-centered data from IntData_CC[] to Data1PG_CC[]
@@ -1931,6 +1924,10 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
       delete [] IntData_CC;
       delete [] IntData_FC;
 
+#     ifdef MHD
+      delete [] FInterface_Data;
+#     endif
+
    } // end of OpenMP parallel region
 
 
@@ -2030,7 +2027,7 @@ void SetTempIntPara( const int lv, const int Sg_Current, const double PrepTime, 
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Table_01
-// Description :  Return the displacement for the function "Prepare_PatchData"
+// Description :  Return the displacement for Prepare_PatchData()
 //
 // Parameter   :  SibID     : Sibling index (0~25)
 //                dim       : Target spatial direction (x/y/z)
@@ -2046,7 +2043,7 @@ int Table_01( const int SibID, const char dim, const int Count, const int GhostS
       {
          switch ( SibID )
          {
-            case 0:case 6: case 8: case 14: case 15: case 18: case 20: case 22: case 24:
+            case 0: case 6: case 8: case 14: case 15: case 18: case 20: case 22: case 24:
                return 0;
 
             case 2: case 3:
@@ -2378,8 +2375,8 @@ int Table_02( const int lv, const int PID, const int Side )
 // Note        :  1. Work for Prepare_PatchData()
 //                2. TSib needs to be deallocated manually
 //                3. Sibling directions recorded in TSib must be in ascending numerical order for filling the
-//                   non-periodic ghost-zone data in the function "InterpolateGhostZone"
-//                   --> Therefore, this function CANNOT be applied in "LB_RecordExchangeDataPatchID", in which
+//                   non-periodic ghost-zone data in InterpolateGhostZone()
+//                   --> Therefore, this function CANNOT be applied in LB_RecordExchangeDataPatchID(), in which
 //                       case "SetTargetSibling" and "SetReceiveSibling" must be declared consistently
 //
 // Parameter   :  NTSib : Number of target sibling patches along different sibling directions
@@ -2719,7 +2716,7 @@ void SetTargetSibling( int NTSib[], int *TSib[] )
 // Function    :  Prepare_PatchData_InitParticleDensityArray
 // Description :  Initialize rho_ext[] by setting rho_ext[0][0][0] = RHO_EXT_NEED_INIT
 //
-// Note        :  1. Currently this function is called by "Gra_AdvanceDt(), Main(), and Output_DumpData_Total()"
+// Note        :  1. Currently this function is called by Gra_AdvanceDt(), Main(), and Output_DumpData_Total()
 //                2. Apply to all (real and buffer) patches with rho_ext[] allocated already
 //                3. Do nothing if rho_ext == NULL. In this case, rho_ext[] will be allocated and initialized
 //                   as rho_ext[0][0][0] == RHO_EXT_NEED_INIT when calling Prepare_PatchData()
@@ -2748,7 +2745,7 @@ void Prepare_PatchData_InitParticleDensityArray( const int lv )
 // Function    :  Prepare_PatchData_FreeParticleDensityArray
 // Description :  Free rho_ext[] allocated by Prepare_PatchData() temporarily for storing the partice mass density
 //
-// Note        :  1. Currently this function is called by "Gra_AdvanceDt(), Main(), and Output_DumpData_Total()"
+// Note        :  1. Currently this function is called by Gra_AdvanceDt(), Main(), and Output_DumpData_Total()
 //                2. Apply to buffer patches as well
 //                3. Do not free memory if OPT__REUSE_MEMORY is on
 //
@@ -2774,3 +2771,231 @@ void Prepare_PatchData_FreeParticleDensityArray( const int lv )
 
 } // FUNCTION : Prepare_PatchData_FreeParticleDensityArray
 #endif // #ifdef PARTICLE
+
+
+
+#ifdef MHD
+//-------------------------------------------------------------------------------------------------------
+// Function    :  MHD_SetFInterface
+// Description :  Collect the fine-grid magnetic field on the coarse-fine interpolation boundaries
+//                for the divergence-preserving interpolation
+//
+// Note        :  1. Collected B field (i.e., the FInt_Ptr[] array) will be passed to
+//                   MHD_InterpolateBField() when invoking InterpolateGhostZone()
+//                2. Currently the temporal interpolation, altough supported, is not actually used
+//                   --> MagIntTime is always false
+//                3. Since the interpolated ghost zones must be an even number (i.e., GhostSize_Padded),
+//                   when GhostSize is an odd number, one cannot use Data1PG_FC[] to get all the required
+//                   fine-grid magnetic field
+//                   --> We only copy data from Data1PG_FC[] on the interfaces between the central
+//                       patch group and it's sibling patches
+//                   --> For the B field on the interfaces outside the central patch group, we recollect
+//                       data from each patch
+//                4. FInt_Data[] is preallocated to avoid frequent memory allocation/deallocation
+//
+// Parameter   :  FInt_Data         : Array to store the fine-grid magnetic field to be returned
+//                FInt_Ptr          : Poitner arrays pointing to FInt_Data[]
+//                Data1PG_FC        : Array storing the already prepared fine-grid magnetic field
+//                lv                : Target refinement level
+//                PID0              : 0th PID of the central patch group on lv
+//                Side              : Target sibling direction relative to PID0
+//                GhostSize         : Number of ghost zones to be prepared
+//                MagSg             : Sandglass of the magnetic field
+//                MagSg_IntT        : Sandglass for conducting temporal interpolation on the magnetic field
+//                MagIntTime        : Whether or not to perform temporal interpolation on the magnetic field
+//                MagWeighting      : Weighting of data stored in MagSg      when MagIntTime is on
+//                MagWeighting_IntT : Weighting of data stored in MagSg_IntT when MagIntTime is on
+//
+//
+// Return      :  FInt_Data, FInt_Ptr
+//-------------------------------------------------------------------------------------------------------
+void MHD_SetFInterface( real *FInt_Data, real *FInt_Ptr[6], const real *Data1PG_FC, const int lv, const int PID0,
+                        const int Side, const int GhostSize, const int MagSg, const int MagSg_IntT,
+                        const bool MagIntTime, const real MagWeighting, const real MagWeighting_IntT )
+{
+
+   const int FaPID            = amr->patch[0][lv][PID0]->father;
+   const int FaSibPID         = amr->patch[0][lv-1][FaPID]->sibling[Side];
+   const int GhostSize_Padded = GhostSize + (GhostSize&1);
+   const int PGSize1D_CC      = 2*( PS1 + GhostSize );
+   const int PGSize1D_FC      = PGSize1D_CC + 1;
+   const int PGSize3D_FC      = PGSize1D_FC*SQR(PGSize1D_CC);
+
+   const real *Data1PG_FC_Ptr = NULL;
+   int FaSibSibPID, SibPID0, norm_dir, sign, FInt_Side, Offset=0;
+   int LCR[3], loop[3], disp_i[3], disp_o[3], size_i[3], size_o[3], ijk_i[3], ijk_o[3], idx_i, idx_o;    // i/o=in/out
+
+
+#  ifdef GAMER_DEBUG
+   if ( amr->patch[0][lv-1][FaSibPID]->son != -1 )
+      Aux_Error( ERROR_INFO, "son = %d != -1 (lv %d, FaSibPID %d) !!\n",
+                 amr->patch[0][lv-1][FaSibPID]->son, lv, FaSibPID );
+#  endif
+
+
+// iterate over the six faces of the target ghost-zone region
+   for (int f=0; f<6; f++)
+   {
+      norm_dir = f/2;   // [0,0,1,1,2,2]
+      sign     = f&1;   // [0,1,0,1,0,1]
+
+//    nothing to do on the left/right faces of left/right patches
+      if (  TABLE_01( Side, 'x'+norm_dir, 0, NULL_INT, 1 ) == sign  )   continue;
+
+
+//    check if the target face is a coarse-fine interface
+      if (  ( FaSibSibPID = amr->patch[0][lv-1][FaSibPID]->sibling[f] ) >= 0  &&
+            ( SibPID0 = amr->patch[0][lv-1][FaSibSibPID]->son ) != -1  )
+      {
+//       1. get the sibling direction index relative to the central patch group
+//          --> i.e., between FaPID and FaSibSibPID
+         FInt_Side = -2;
+
+//       target sibling->sibling patch group == central patch group
+         if ( FaSibSibPID == FaPID )
+            FInt_Side = -1;
+
+         else
+         {
+            for (int s=0; s<26; s++)
+            {
+               if ( amr->patch[0][lv-1][FaPID]->sibling[s] == FaSibSibPID )
+               {
+                  FInt_Side = s;
+                  break;
+               }
+            }
+         }
+
+#        ifdef GAMER_DEBUG
+         if ( FInt_Side == -2 )  Aux_Error( ERROR_INFO, "cannot determine the sibling direction index !!\n" );
+#        endif
+
+
+//       2. copy data to FInt_Data[] --> similar to step (b1) in Prepare_PatchData()
+         FInt_Ptr[f] = FInt_Data + Offset;
+
+//       2-1. copy data from the central patches
+//            --> note that these data have already been stored in Data1PG_FC[]
+         if ( FInt_Side == -1 )
+         {
+//          set array indices
+            for (int d=0; d<3; d++)
+            {
+               if ( d == norm_dir )
+               {
+                  size_i[d] = PGSize1D_FC;
+                  size_o[d] = 1;
+                  disp_i[d] = GhostSize + sign*PS2;
+               }
+
+               else
+               {
+                  size_i[d] = PGSize1D_CC;
+                  size_o[d] = PS2;
+                  disp_i[d] = GhostSize;
+               } // if ( d == norm_dir ) ... else ...
+            }  // for (int d=0; d<3; d++)
+
+//          copy data
+            Data1PG_FC_Ptr = Data1PG_FC + norm_dir*PGSize3D_FC;
+
+            for (int k=0; k<size_o[2]; k++) { ijk_i[2] = k + disp_i[2];
+            for (int j=0; j<size_o[1]; j++) { ijk_i[1] = j + disp_i[1];
+                                              idx_i = IDX321( disp_i[0], ijk_i[1], ijk_i[2], size_i[0], size_i[1] );
+                                              idx_o = IDX321(         0,        j,        k, size_o[0], size_o[1] );
+            for (int i=0; i<size_o[0]; i++) {
+
+               FInt_Ptr[f][idx_o] = Data1PG_FC_Ptr[idx_i];
+
+               idx_i ++;
+               idx_o ++;
+            }}} // i,j,k
+         } // if ( FInt_Side == -1 )
+
+
+//       2-2. copy data from the sibling patches
+         else
+         {
+//          set array indices
+            for (int d=0; d<3; d++)
+            {
+               LCR[d] = TABLE_01( FInt_Side, 'x'+d, -1, 0, 1 );
+
+               if ( d == norm_dir )
+               {
+                  size_i[d] = PS1 + 1;
+                  size_o[d] = 1;
+                  loop  [d] = 1;
+                  disp_i[d] = ( sign == 0 ) ? PS1 : 0;
+               }
+
+               else
+               {
+                  size_i[d] = PS1;
+
+                  switch ( LCR[d] )
+                  {
+                     case -1:
+                        size_o[d] = GhostSize_Padded;
+                        loop  [d] = GhostSize_Padded;
+                        disp_i[d] = PS1 - GhostSize_Padded;
+                        break;
+
+                     case 0:
+                        size_o[d] = PS2;
+                        loop  [d] = PS1;
+                        disp_i[d] = 0;
+                        break;
+
+                     case 1:
+                        size_o[d] = GhostSize_Padded;
+                        loop  [d] = GhostSize_Padded;
+                        disp_i[d] = 0;
+                        break;
+
+                     default:
+                        Aux_Error( ERROR_INFO, "incorrect LCR[%d] = %d !!\n", d, LCR[d] );
+                        exit( -1 );
+                  }
+               } // if ( d == norm_dir ) ... else ...
+            }  // for (int d=0; d<3; d++)
+
+            for (int Count=0; Count<TABLE_04(FInt_Side); Count++)
+            {
+               const int LocalID = TABLE_03( FInt_Side, Count );
+               const int SibPID  = SibPID0 + LocalID;
+
+   //          set array indices
+               for (int d=0; d<3; d++)
+               {
+                  if (  d == norm_dir  ||  LCR[d] != 0 )    disp_o[d] = 0;
+                  else                                      disp_o[d] = TABLE_02( LocalID, 'x'+d, 0, PS1 );
+               }
+
+//             copy data
+               for (int k=0; k<loop[2]; k++) { ijk_i[2] = k + disp_i[2];   ijk_o[2] = k + disp_o[2];
+               for (int j=0; j<loop[1]; j++) { ijk_i[1] = j + disp_i[1];   ijk_o[1] = j + disp_o[1];
+                                               idx_i = IDX321( disp_i[0], ijk_i[1], ijk_i[2], size_i[0], size_i[1] );
+                                               idx_o = IDX321( disp_o[0], ijk_o[1], ijk_o[2], size_o[0], size_o[1] );
+               for (int i=0; i<loop[0]; i++) {
+
+                  FInt_Ptr[f][idx_o] = amr->patch[MagSg][lv][SibPID]->magnetic[norm_dir][idx_i];
+
+                  if ( MagIntTime ) // temporal interpolation
+                  FInt_Ptr[f][idx_o] =
+                     MagWeighting     *FInt_Ptr[f][idx_o]
+                   + MagWeighting_IntT*amr->patch[MagSg_IntT][lv][SibPID]->magnetic[norm_dir][idx_i];
+
+                  idx_i ++;
+                  idx_o ++;
+               }}} // i,j,k
+            } // for (int Count=0; Count<TABLE_04(FInt_Side); Count++)
+         } // if ( FInt_Side == -1 ) ... else ...
+
+         Offset += size_o[0]*size_o[1]*size_o[2];
+      } // check C-F interface
+   } // for (int f=0; f<6; f++)
+
+} // FUNCTION : MHD_SetFInterface
+#endif // #ifdef MHD
