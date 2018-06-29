@@ -151,8 +151,11 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
    int NSide_CC, CGhost_CC, CSize_CC[3], FSize_CC[3], CSize3D_CC, FSize3D_CC;
    int NSide_FC, CGhost_FC, CSize_FC[3][3], FSize_FC[3][3], CSize3D_FC[3], FSize3D_FC[3];
 
-   Int_Table( IntScheme_CC, NSide_CC, CGhost_CC );
-   Int_Table( IntScheme_FC, NSide_FC, CGhost_FC );
+   if ( NVarCC_Tot > 0 )   Int_Table( IntScheme_CC, NSide_CC, CGhost_CC );
+   else                    CGhost_CC = 0;
+
+   if ( NVarFC_Tot > 0 )   Int_Table( IntScheme_FC, NSide_FC, CGhost_FC );
+   else                    CGhost_FC = 0;
 
    const double dh                 = amr->dh[lv];
    const int    GhostSize_Padded   = GhostSize + (GhostSize&1);         // # of interpolated cells must an even number
@@ -379,8 +382,7 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
          for (int v=0; v<NCOMP_FLUID; v++)   Fluid[v] = amr->patch[FluSg][lv][PID]->fluid[v][k1][j1][i1];
 
 #        ifdef MHD
-#        warning : WAIT MHD !!!
-         const real EngyB = NULL_REAL;
+         const real EngyB = MHD_GetCellCenteredBEnergy( lv, PID, i1, j1, k1, MagSg );
 #        else
          const real EngyB = NULL_REAL;
 #        endif
@@ -392,8 +394,7 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
             for (int v=0; v<NCOMP_FLUID; v++)   Fluid[v] = amr->patch[FluSg_IntT][lv][PID]->fluid[v][k1][j1][i1];
 
 #           ifdef MHD
-#           warning : WAIT MHD !!!
-            const real EngyB = NULL_REAL;
+            const real EngyB = MHD_GetCellCenteredBEnergy( lv, PID, i1, j1, k1, MagSg_IntT );
 #           else
             const real EngyB = NULL_REAL;
 #           endif
@@ -418,8 +419,7 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
          for (int v=0; v<NCOMP_FLUID; v++)   Fluid[v] = amr->patch[FluSg][lv][PID]->fluid[v][k1][j1][i1];
 
 #        ifdef MHD
-#        warning : WAIT MHD !!!
-         const real EngyB = NULL_REAL;
+         const real EngyB = MHD_GetCellCenteredBEnergy( lv, PID, i1, j1, k1, MagSg );
 #        else
          const real EngyB = NULL_REAL;
 #        endif
@@ -431,8 +431,7 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
             for (int v=0; v<NCOMP_FLUID; v++)   Fluid[v] = amr->patch[FluSg_IntT][lv][PID]->fluid[v][k1][j1][i1];
 
 #           ifdef MHD
-#           warning : WAIT MHD !!!
-            const real EngyB = NULL_REAL;
+            const real EngyB = MHD_GetCellCenteredBEnergy( lv, PID, i1, j1, k1, MagSg_IntT );
 #           else
             const real EngyB = NULL_REAL;
 #           endif
@@ -655,8 +654,7 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
                for (int v=0; v<NCOMP_FLUID; v++)   Fluid[v] = amr->patch[FluSg][lv][SibPID]->fluid[v][k2][j2][i2];
 
 #              ifdef MHD
-#              warning : WAIT MHD !!!
-               const real EngyB = NULL_REAL;
+               const real EngyB = MHD_GetCellCenteredBEnergy( lv, SibPID, i2, j2, k2, MagSg );
 #              else
                const real EngyB = NULL_REAL;
 #              endif
@@ -668,8 +666,7 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
                   for (int v=0; v<NCOMP_FLUID; v++)   Fluid[v] = amr->patch[FluSg_IntT][lv][SibPID]->fluid[v][k2][j2][i2];
 
 #                 ifdef MHD
-#                 warning : WAIT MHD !!!
-                  const real EngyB = NULL_REAL;
+                  const real EngyB = MHD_GetCellCenteredBEnergy( lv, SibPID, i2, j2, k2, MagSg_IntT );
 #                 else
                   const real EngyB = NULL_REAL;
 #                 endif
@@ -694,8 +691,7 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
                for (int v=0; v<NCOMP_FLUID; v++)   Fluid[v] = amr->patch[FluSg][lv][SibPID]->fluid[v][k2][j2][i2];
 
 #              ifdef MHD
-#              warning : WAIT MHD !!!
-               const real EngyB = NULL_REAL;
+               const real EngyB = MHD_GetCellCenteredBEnergy( lv, SibPID, i2, j2, k2, MagSg );
 #              else
                const real EngyB = NULL_REAL;
 #              endif
@@ -707,8 +703,7 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
                   for (int v=0; v<NCOMP_FLUID; v++)   Fluid[v] = amr->patch[FluSg_IntT][lv][SibPID]->fluid[v][k2][j2][i2];
 
 #                 ifdef MHD
-#                 warning : WAIT MHD !!!
-                  const real EngyB = NULL_REAL;
+                  const real EngyB = MHD_GetCellCenteredBEnergy( lv, SibPID, i2, j2, k2, MagSg_IntT );
 #                 else
                   const real EngyB = NULL_REAL;
 #                 endif
