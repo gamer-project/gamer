@@ -2886,7 +2886,7 @@ void MHD_SetFInterface( real *FInt_Data, real *FInt_Ptr[6], const real *Data1PG_
                {
                   size_i[d] = PGSize1D_FC;
                   size_o[d] = 1;
-                  disp_i[d] = GhostSize + sign*PS2;
+                  disp_i[d] = GhostSize + (1-sign)*PS2;
                }
 
                else
@@ -2899,11 +2899,11 @@ void MHD_SetFInterface( real *FInt_Data, real *FInt_Ptr[6], const real *Data1PG_
 
 //          copy data
             Data1PG_FC_Ptr = Data1PG_FC + norm_dir*PGSize3D_FC;
+            idx_o = 0;
 
             for (int k=0; k<size_o[2]; k++) { ijk_i[2] = k + disp_i[2];
             for (int j=0; j<size_o[1]; j++) { ijk_i[1] = j + disp_i[1];
                                               idx_i = IDX321( disp_i[0], ijk_i[1], ijk_i[2], size_i[0], size_i[1] );
-                                              idx_o = IDX321(         0,        j,        k, size_o[0], size_o[1] );
             for (int i=0; i<size_o[0]; i++) {
 
                FInt_Ptr[f][idx_o] = Data1PG_FC_Ptr[idx_i];
@@ -2966,7 +2966,10 @@ void MHD_SetFInterface( real *FInt_Data, real *FInt_Ptr[6], const real *Data1PG_
                const int LocalID = TABLE_03( FInt_Side, Count );
                const int SibPID  = SibPID0 + LocalID;
 
-   //          set array indices
+//             skip patches not adjacent to the target coarse-fine interface
+               if (  TABLE_02( LocalID, 'x'+norm_dir, 0, 1 ) == sign  )    continue;
+
+//             set array indices
                for (int d=0; d<3; d++)
                {
                   if (  d == norm_dir  ||  LCR[d] != 0 )    disp_o[d] = 0;
