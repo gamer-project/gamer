@@ -120,16 +120,12 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
 
 
 #  if   ( MODEL == HYDRO )
-   const bool CheckMinPres_No = false;    // we check minimum pressure in the end of Prepare_PatchData()
    const real Gamma_m1        = GAMMA - (real)1.0;
    const bool PrepVx          = ( TVarCC & _VELX ) ? true : false;
    const bool PrepVy          = ( TVarCC & _VELY ) ? true : false;
    const bool PrepVz          = ( TVarCC & _VELZ ) ? true : false;
    const bool PrepPres        = ( TVarCC & _PRES ) ? true : false;
    const bool PrepTemp        = ( TVarCC & _TEMP ) ? true : false;
-#  ifdef MHD
-#  warning : WAIT MHD !!!
-#  endif
 
 #  elif ( MODEL == ELBDM )
 // no derived variables yet
@@ -387,7 +383,7 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
          const real EngyB = NULL_REAL;
 #        endif
          CData_CC_Ptr[Idx] = CPU_GetPressure( Fluid[DENS], Fluid[MOMX], Fluid[MOMY], Fluid[MOMZ], Fluid[ENGY],
-                                              Gamma_m1, CheckMinPres_No, NULL_REAL, EngyB );
+                                              Gamma_m1, (MinPres>=(real)0.0), MinPres, EngyB );
 
          if ( FluIntTime ) // temporal interpolation
          {
@@ -398,9 +394,10 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
 #           else
             const real EngyB = NULL_REAL;
 #           endif
-            CData_CC_Ptr[Idx] = FluWeighting     *CData_CC_Ptr[Idx]
-                              + FluWeighting_IntT*CPU_GetPressure( Fluid[DENS], Fluid[MOMX], Fluid[MOMY], Fluid[MOMZ], Fluid[ENGY],
-                                                                   Gamma_m1, CheckMinPres_No, NULL_REAL, EngyB );
+            CData_CC_Ptr[Idx] =
+               FluWeighting     *CData_CC_Ptr[Idx]
+             + FluWeighting_IntT*CPU_GetPressure( Fluid[DENS], Fluid[MOMX], Fluid[MOMY], Fluid[MOMZ], Fluid[ENGY],
+                                                  Gamma_m1, (MinPres>=(real)0.0), MinPres, EngyB );
          }
 
          Idx ++;
@@ -424,7 +421,7 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
          const real EngyB = NULL_REAL;
 #        endif
          CData_CC_Ptr[Idx] = CPU_GetTemperature( Fluid[DENS], Fluid[MOMX], Fluid[MOMY], Fluid[MOMZ], Fluid[ENGY],
-                                                 Gamma_m1, (MinPres>=0.0), MinPres, EngyB );
+                                                 Gamma_m1, (MinPres>=(real)0.0), MinPres, EngyB );
 
          if ( FluIntTime ) // temporal interpolation
          {
@@ -435,9 +432,10 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
 #           else
             const real EngyB = NULL_REAL;
 #           endif
-            CData_CC_Ptr[Idx] = FluWeighting     *CData_CC_Ptr[Idx]
-                              + FluWeighting_IntT*CPU_GetTemperature( Fluid[DENS], Fluid[MOMX], Fluid[MOMY], Fluid[MOMZ],
-                                                                      Fluid[ENGY], Gamma_m1, (MinPres>=0.0), MinPres, EngyB );
+            CData_CC_Ptr[Idx] =
+               FluWeighting     *CData_CC_Ptr[Idx]
+             + FluWeighting_IntT*CPU_GetTemperature( Fluid[DENS], Fluid[MOMX], Fluid[MOMY], Fluid[MOMZ], Fluid[ENGY],
+                                                     Gamma_m1, (MinPres>=(real)0.0), MinPres, EngyB );
          }
 
          Idx ++;
@@ -659,7 +657,7 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
                const real EngyB = NULL_REAL;
 #              endif
                CData_CC_Ptr[Idx] = CPU_GetPressure( Fluid[DENS], Fluid[MOMX], Fluid[MOMY], Fluid[MOMZ], Fluid[ENGY],
-                                                    Gamma_m1, CheckMinPres_No, NULL_REAL, EngyB );
+                                                    Gamma_m1, (MinPres>=(real)0.0), MinPres, EngyB );
 
                if ( FluIntTime ) // temporal interpolation
                {
@@ -670,9 +668,10 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
 #                 else
                   const real EngyB = NULL_REAL;
 #                 endif
-                  CData_CC_Ptr[Idx] =  FluWeighting     *CData_CC_Ptr[Idx]
-                                     + FluWeighting_IntT*CPU_GetPressure( Fluid[DENS], Fluid[MOMX], Fluid[MOMY], Fluid[MOMZ],
-                                                                          Fluid[ENGY], Gamma_m1, CheckMinPres_No, NULL_REAL, EngyB );
+                  CData_CC_Ptr[Idx] =
+                     FluWeighting     *CData_CC_Ptr[Idx]
+                   + FluWeighting_IntT*CPU_GetPressure( Fluid[DENS], Fluid[MOMX], Fluid[MOMY], Fluid[MOMZ], Fluid[ENGY],
+                                                        Gamma_m1, (MinPres>=(real)0.0), MinPres, EngyB );
                }
 
                Idx ++;
@@ -696,7 +695,7 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
                const real EngyB = NULL_REAL;
 #              endif
                CData_CC_Ptr[Idx] = CPU_GetTemperature( Fluid[DENS], Fluid[MOMX], Fluid[MOMY], Fluid[MOMZ], Fluid[ENGY],
-                                                       Gamma_m1, (MinPres>=0.0), MinPres, EngyB );
+                                                       Gamma_m1, (MinPres>=(real)0.0), MinPres, EngyB );
 
                if ( FluIntTime ) // temporal interpolation
                {
@@ -707,10 +706,10 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
 #                 else
                   const real EngyB = NULL_REAL;
 #                 endif
-                  CData_CC_Ptr[Idx] =  FluWeighting     *CData_CC_Ptr[Idx]
-                                     + FluWeighting_IntT*CPU_GetTemperature( Fluid[DENS], Fluid[MOMX], Fluid[MOMY],
-                                                                             Fluid[MOMZ], Fluid[ENGY],
-                                                                             Gamma_m1, (MinPres>=0.0), MinPres, EngyB );
+                  CData_CC_Ptr[Idx] =
+                     FluWeighting     *CData_CC_Ptr[Idx]
+                   + FluWeighting_IntT*CPU_GetTemperature( Fluid[DENS], Fluid[MOMX], Fluid[MOMY], Fluid[MOMZ], Fluid[ENGY],
+                                                           Gamma_m1, (MinPres>=(real)0.0), MinPres, EngyB );
                }
 
                Idx ++;
@@ -1183,7 +1182,7 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
 //       --> we achieve that by setting the dual-energy switch to an extremely larger number and ignore
 //           the runtime parameter DUAL_ENERGY_SWITCH here
          CPU_DualEnergyFix( FData_Dens[t], FData_MomX[t], FData_MomY[t], FData_MomZ[t], FData_Engy[t], FData_Enpy[t],
-                            dummy, Gamma_m1, _Gamma_m1, (MinPres>=0.0), MinPres, UseEnpy2FixEngy );
+                            dummy, Gamma_m1, _Gamma_m1, (MinPres>=(real)0.0), MinPres, UseEnpy2FixEngy );
       }
    } // if (  ( TVarCC & _TOTAL ) == _TOTAL  &&  DE_Consistency  )
 #  endif // if ( MODEL == HYDRO  &&  defined DUAL_ENERGY )

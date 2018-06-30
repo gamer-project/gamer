@@ -47,7 +47,6 @@ void Flu_Prepare( const int lv, const double PrepTime, real h_Flu_Array_F_In[], 
    const bool   DE_Consistency_No  = false;
    const bool   DE_Consistency     = ( OPT__OPTIMIZE_AGGRESSIVE ) ? DE_Consistency_No : DE_Consistency_Yes;
    const real   MinDens            = ( OPT__OPTIMIZE_AGGRESSIVE ) ? MinDens_No : MIN_DENS;
-   const real   MinPres            = ( OPT__OPTIMIZE_AGGRESSIVE ) ? MinPres_No : MIN_PRES;
 
 
 // prepare the fluid array
@@ -58,7 +57,7 @@ void Flu_Prepare( const int lv, const double PrepTime, real h_Flu_Array_F_In[], 
 #  else
    Prepare_PatchData( lv, PrepTime, h_Flu_Array_F_In,  NULL, FLU_GHOST_SIZE, NPG, PID0_List, _TOTAL, _NONE,
                       OPT__FLU_INT_SCHEME, INT_NONE, UNIT_PATCHGROUP, NSIDE_26, IntPhase_No,
-                      OPT__BC_FLU, BC_POT_NONE, MinDens, MinPres, DE_Consistency );
+                      OPT__BC_FLU, BC_POT_NONE, MinDens, MinPres_No, DE_Consistency );
 #  endif
 
 #  ifdef UNSPLIT_GRAVITY
