@@ -406,7 +406,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
 //           amr->FluSgTime[lv][0] or amr->FluSgTime[lv][1]
       if ( FluIntTime  &&  MPI_Rank == 0 )
          Aux_Message( stderr, "WARNING : cannot determine FluSg "
-                              "          (lv %d, PrepTime %20.14e, SgTime[0] %20.14e, SgTime[1] %20.14e) !!\n",
+                              "(lv %d, PrepTime %20.14e, SgTime[0] %20.14e, SgTime[1] %20.14e) !!\n",
                       lv, PrepTime, amr->FluSgTime[lv][0], amr->FluSgTime[lv][1] );
    }
 
@@ -426,7 +426,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
 //           amr->MagSgTime[lv][0] or amr->MagSgTime[lv][1]
       if ( MagIntTime  &&  MPI_Rank == 0 )
          Aux_Message( stderr, "WARNING : cannot determine MagSg "
-                              "          (lv %d, PrepTime %20.14e, SgTime[0] %20.14e, SgTime[1] %20.14e) !!\n",
+                              "(lv %d, PrepTime %20.14e, SgTime[0] %20.14e, SgTime[1] %20.14e) !!\n",
                       lv, PrepTime, amr->MagSgTime[lv][0], amr->MagSgTime[lv][1] );
    }
 #  endif // #ifdef MHD
@@ -451,7 +451,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
 #     endif
       if ( PotIntTime  &&  MPI_Rank == 0 )
          Aux_Message( stderr, "WARNING : cannot determine PotSg "
-                              "          (lv %d, PrepTime %20.14e, SgTime[0] %20.14e, SgTime[1] %20.14e) !!\n",
+                              "(lv %d, PrepTime %20.14e, SgTime[0] %20.14e, SgTime[1] %20.14e) !!\n",
                       lv, PrepTime, amr->PotSgTime[lv][0], amr->PotSgTime[lv][1] );
    }
 #  endif // #ifdef GRAVITY
@@ -2840,6 +2840,7 @@ void MHD_SetFInterface( real *FInt_Data, real *FInt_Ptr[6], const real *Data1PG_
                                               idx_i = IDX321( disp_i[0], ijk_i[1], ijk_i[2], size_i[0], size_i[1] );
             for (int i=0; i<size_o[0]; i++) {
 
+//             no temporal interpolation since it has already been applied to Data1PG_FC_Ptr[] if necessary
                FInt_Ptr[f][idx_o] = Data1PG_FC_Ptr[idx_i];
 
                idx_i ++;
