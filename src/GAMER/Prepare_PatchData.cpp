@@ -29,6 +29,23 @@ bool ParDensArray_Initialized = false;
 #endif
 
 
+// check the divergence-free B field (for debug)
+#ifdef MHD
+//#  define MHD_CHECK_DIV_B
+
+# ifdef MHD_CHECK_DIV_B
+#  ifdef FLOAT8
+#  define DIV_B_TOLERANCE  1.0e-12
+#  else
+#  define DIV_B_TOLERANCE  1.0e-5f
+#  endif
+
+static void MHD_CheckDivB( const real *Data1PG_FC, const int GhostSize, const real Tolerance,
+                           const int lv, const double PrepTime );
+# endif // #ifdef MHD_CHECK_DIV_B
+#endif // MHD
+
+
 
 
 //-------------------------------------------------------------------------------------------------------
@@ -1731,9 +1748,10 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
 #        endif // #ifdef PARTICLE
 
 
-//       d. check minimum density
-//       --> note that it's unnecessary to check negative passive scalars thanks to the monotonic interpolation
+//       d. checks
 // ------------------------------------------------------------------------------------------------------------
+//       (d1) minimum density
+//       --> note that it's unnecessary to check negative passive scalars thanks to the monotonic interpolation
 #        if ( MODEL == HYDRO  ||  MODEL == ELBDM )
          if ( MinDens >= (real)0.0 )
          {
@@ -1750,6 +1768,12 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
             }
          } // if ( MinDens >= (real)0.0 )
 #        endif // #if ( MODEL == HYDRO  ||  MODEL == ELBDM )
+
+
+//       (d2) divergence-free magnetic field
+#        if ( defined MHD  &&  defined MHD_CHECK_DIV_B )
+         if ( PrepMag )    MHD_CheckDivB( Data1PG_FC, GhostSize, DIV_B_TOLERANCE, lv, PrepTime );
+#        endif
 
 
 //       e. copy data from Data1PG_CC[] to OutputCC[]
@@ -2936,4 +2960,91 @@ void MHD_SetFInterface( real *FInt_Data, real *FInt_Ptr[6], const real *Data1PG_
    } // for (int f=0; f<6; f++)
 
 } // FUNCTION : MHD_SetFInterface
+
+
+
+#ifdef MHD_CHECK_DIV_B
+//-------------------------------------------------------------------------------------------------------
+// Function    :  MHD_CheckDivB
+// Description :  Check if the divergence of the prepared magnetic field exceeds a given threshold
+//
+// Note        :  1. To enable this check, define MHD_CHECK_DIV_B and set the tolerance value
+//                   in DIV_B_TOLERANCE manually on the top of this file
+//                   --> Currently this check is disabled even when GAMER_DEBUG is on
+//                2. This check may fail when both spatial and temporal interpolations are required
+//                   to prepare the ghost-zone B field
+//                   --> Because the area-averaged fine-grid B field on a coarse-fine interface !=
+//                       **temporally interpolated** coarse-grid B field on the same interface
+//                   --> Coarse cells adjacent to a C-F boundary is NOT divergence-free
+//                       --> Since we will use the original fine-grid data on this C-F interface
+//                   --> Moreover, the adopted interpolation scheme for B field is divergence-preserving
+//                       instead of divergence-free
+//
+// Parameter   :  Data1PG_FC : Array storing the prepared B field to be checked
+//                GhostSize  : Number of ghost zones
+//                Tolerance  : Tolerance relative error in div(B)
+//                             --> Relative error is defined as |div(B)|*dh/<B>
+//                lv         : Target refinement level
+//                PrepTime   : Target physical time
+//
+// Return      :  None
+//-------------------------------------------------------------------------------------------------------
+void MHD_CheckDivB( const real *Data1PG_FC, const int GhostSize, const real Tolerance,
+                    const int lv, const double PrepTime )
+{
+
+   const int  PGSize1D_CC = 2*( PS1 + GhostSize );
+   const int  PGSize1D_FC = PGSize1D_CC + 1;
+   const int  PGSize3D_FC = PGSize1D_FC*SQR(PGSize1D_CC);
+   const int  didx_Bx     = 1;
+   const int  didx_By     = PGSize1D_CC;
+   const int  didx_Bz     = SQR(PGSize1D_CC);
+   const real one_six     = 1.0/6.0;
+
+   const real *Bx = Data1PG_FC + MAGX*PGSize3D_FC;
+   const real *By = Data1PG_FC + MAGY*PGSize3D_FC;
+   const real *Bz = Data1PG_FC + MAGZ*PGSize3D_FC;
+
+   real BxL, BxR, ByL, ByR, BzL, BzR, AveB, DivB, DivB_max=-1.0;
+   int  idx_Bx, idx_By, idx_Bz, i_max, j_max, k_max;
+
+
+// find the cell with the maximum div(B)
+   for (int k=0; k<PGSize1D_CC; k++ )
+   for (int j=0; j<PGSize1D_CC; j++ )
+   for (int i=0; i<PGSize1D_CC; i++ )
+   {
+      idx_Bx = IDX321( i, j, k, PGSize1D_FC, PGSize1D_CC );
+      idx_By = IDX321( i, j, k, PGSize1D_CC, PGSize1D_FC );
+      idx_Bz = IDX321( i, j, k, PGSize1D_CC, PGSize1D_CC );
+
+      BxL = Bx[ idx_Bx           ];
+      ByL = By[ idx_By           ];
+      BzL = Bz[ idx_Bz           ];
+      BxR = Bx[ idx_Bx + didx_Bx ];
+      ByR = By[ idx_By + didx_By ];
+      BzR = Bz[ idx_Bz + didx_Bz ];
+
+      AveB = ( BxR + ByR + BzR + BxL + ByL + BzL ) * one_six;
+      DivB = ( BxR + ByR + BzR - BxL - ByL - BzL );
+      DivB = FABS( DivB );
+
+      if ( DivB > DivB_max )
+      {
+         DivB_max = DivB;
+         i_max    = i;
+         j_max    = j;
+         k_max    = k;
+      }
+   } // i,j,k
+
+
+// warning if the maximum div(B) exceeds the tolerance value
+   if ( DivB_max > Tolerance )
+      Aux_Message( stderr, "WARNING : max div(B) = %20.14e at [%2d,%2d,%2d] (lv %d, PrepTime %20.14e, GhostSize %d) !!\n",
+                   DivB_max, i_max-GhostSize, j_max-GhostSize, k_max-GhostSize, lv, PrepTime, GhostSize );
+
+} // FUNCTION : MHD_CheckDivB
+#endif // #ifdef MHD_CHECK_DIV_B
+
 #endif // #ifdef MHD
