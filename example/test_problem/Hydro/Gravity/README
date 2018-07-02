@@ -1,0 +1,12 @@
+Compilation flags:
+========================================
+Enable : MODEL=HYDRO, GRAVITY
+Disable: PARTICLE, COMOVING, DUAL_ENERGY
+
+
+Default setup:
+========================================
+
+
+Note:
+========================================
