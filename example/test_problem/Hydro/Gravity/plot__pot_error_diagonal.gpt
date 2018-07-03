@@ -1,0 +1,53 @@
+#
+reset
+
+
+# input parameters
+# -----------------------------------------------------------
+FILE_IN  = 'PotError.txt'
+FILE_OUT = 'Fig__PotError_Diagonal'
+BOX_SIZE = 1.0e2
+
+
+# terminal
+# -----------------------------------------------------------
+#set term x11 enhanced
+ set term png enhanced crop size 1280,800 font ",16"
+#set term postscript eps enhanced color 'Helvetica' 16
+
+
+# plot style
+# -----------------------------------------------------------
+ set log xy
+ set key reverse Left spacing 2 right
+ set xlabel "r [code unit]"
+ set ylabel "Relative potential error"
+ set format x "10^{%T}"
+ set format y "10^{%T}"
+ set pointsize 1.0
+ set size square
+#set xrange [0.0:0.25]
+#set yrange [1.e-3:1.0e-1]
+
+
+# set the output filename
+# -----------------------------------------------------------
+if      ( GPVAL_TERM eq 'pngcairo'   ) FILE_OUT_EXT='png'; \
+else if ( GPVAL_TERM eq 'png'        ) FILE_OUT_EXT='png'; \
+else if ( GPVAL_TERM eq 'postscript' ) FILE_OUT_EXT='eps'; \
+else if ( GPVAL_TERM ne 'x11'        ) print 'Unkown terminal for settting the output file extension !!'; quit
+
+if ( GPVAL_TERM ne 'x11' ) { set output sprintf( '%s.%s', FILE_OUT, FILE_OUT_EXT ) }
+
+
+# plot
+# -----------------------------------------------------------
+C       = 0.5*BOX_SIZE
+REL_ERR = 9
+
+plot 'PotError.txt' u ((($4-C)**2+($5-C)**2+($6-C)**2)**0.5):REL_ERR w p pt 6 lc 7 notit
+
+
+if ( GPVAL_TERM eq 'x11' ) { pause -1 };
+
+
