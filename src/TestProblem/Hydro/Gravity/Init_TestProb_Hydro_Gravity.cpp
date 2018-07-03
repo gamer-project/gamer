@@ -3,6 +3,9 @@
 
 
 
+static void OutputError();
+
+
 // problem-specific global variables
 // =======================================================================================
 typedef int DensProf_t;
@@ -207,6 +210,95 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
    fluid[ENGY] = NULL_REAL;
 
 } // FUNCTION : SetGridIC
+
+
+
+//-------------------------------------------------------------------------------------------------------
+// Function    :  OutputError
+// Description :  Output the gravitational potential errors
+//
+// Note        :  1. Overwrite the gas field
+//                   [MOMX] --> absolute errors of potential
+//                   [MOMY] --> relative errors of potential
+//                2. Invoke both Output_DumpData_Total() and Output_DumpData_Part() to output the
+//                   overwritten data
+//                   --> binary data filename = "PotError.bin"
+//                       text   data filename = "PotError.txt"
+//
+// Parameter   :  None
+//
+// Return      :  None
+//-------------------------------------------------------------------------------------------------------
+void OutputError()
+{
+
+   const char   filename_bin[] = "PotError.bin";
+   const char   filename_txt[] = "PotError.txt";
+   const double coeff_NFW      = -4.0*M_PI*NEWTON_G*SQR(Gra_Radius0)*Gra_Dens0;
+   const double coeff_Her      = -2.0*M_PI*NEWTON_G*SQR(Gra_Radius0)*Gra_Dens0;
+
+   real  (*fluid)[PS1][PS1][PS1], nume, anal, abserr, relerr;
+   double dh, x, y, z, x0, y0, z0, r, s;
+
+
+// 1. calculate errors and overwrite gas field
+//    [MOMX] --> absolute errors of potential
+//    [MOMY] --> relative errors of potential
+#  pragma omp parallel for private( fluid, nume, anal, abserr, relerr, dh, x, y, z, x0, y0, z0, r, s ) schedule( runtime )
+   for (int lv=0; lv<NLEVEL; lv++)
+   {
+      dh = amr->dh[lv];
+
+      for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
+      {
+         x0 = amr->patch[0][lv][PID]->EdgeL[0] + 0.5*dh;
+         y0 = amr->patch[0][lv][PID]->EdgeL[1] + 0.5*dh;
+         z0 = amr->patch[0][lv][PID]->EdgeL[2] + 0.5*dh;
+
+         for (int k=0; k<PS1; k++)  {  z = z0 + k*dh;
+         for (int j=0; j<PS1; j++)  {  y = y0 + j*dh;
+         for (int i=0; i<PS1; i++)  {  x = x0 + i*dh;
+
+            fluid = amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid;
+            nume  = amr->patch[ amr->PotSg[lv] ][lv][PID]->pot[k][j][i];
+            r     = sqrt( SQR(x-amr->BoxCenter[0]) + SQR(y-amr->BoxCenter[1]) + SQR(z-amr->BoxCenter[2]) );
+            s     = r / Gra_Radius0;
+
+            switch ( Gra_DensProf )
+            {
+               case DENSPROF_NFW :
+                  anal = coeff_NFW*log( 1.0 + s )/s;
+                  break;
+
+               case DENSPROF_HERNQUIST :
+                  anal = coeff_Her/( 1.0 + s );
+                  break;
+
+               default :
+                  Aux_Error( ERROR_INFO, "unsupported density profile (Gra_DensProf = %d) !!\n", Gra_DensProf );
+                  exit( -1 );
+            }
+
+            abserr = nume - anal;
+            relerr = FABS( abserr / anal );
+
+            fluid[MOMX][k][j][i] = abserr;
+            fluid[MOMY][k][j][i] = relerr;
+         }}} // i,j,k
+      } // PID
+   } // lv
+
+
+// 2. output errors
+#  ifdef SUPPORT_HDF5
+   Output_DumpData_Total_HDF5( filename_bin );
+#  else
+   Output_DumpData_Total     ( filename_bin );
+#  endif
+
+   Output_DumpData_Part( OUTPUT_DIAG, false, NULL_INT, NULL_INT, NULL_INT, filename_txt );
+
+} // FUNCTION : OutputError
 #endif // #if ( MODEL == HYDRO )
 
 
@@ -237,7 +329,7 @@ void Init_TestProb_Hydro_Gravity()
 
 
    Init_Function_User_Ptr = SetGridIC;
-   Output_User_Ptr        = NULL;
+   Output_User_Ptr        = OutputError;
 #  endif // #if ( MODEL == HYDRO )
 
 

@@ -3,6 +3,9 @@
 
 
 
+static void OutputError();
+
+
 // problem-specific global variables
 // =======================================================================================
 static double Acoustic_RhoAmp;      // amplitude of the density perturbation (assuming background density = 1.0)
