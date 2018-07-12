@@ -80,6 +80,10 @@ void Init_GAMER( int *argc, char ***argv )
    Init_TestProb();
 
 
+// initialize all fields
+   Init_Field();
+
+
 // initialize the external potential and acceleration parameters
 // --> must be called AFTER Init_TestProb()
 #  ifdef GRAVITY
