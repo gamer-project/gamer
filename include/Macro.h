@@ -716,6 +716,25 @@
 #  define EXPAND_AND_QUOTE( str )   QUOTE( str )
 
 
+// convenient macros for defining and declaring global variables
+// ==> predefine DEFINE_GLOBAL in the file actually **defines** these global variables
+// ==> there should be one and only one file that defines DEFINE_GLOBAL
+
+// SET_GLOBAL will invoke either SET_GLOBAL_INIT or SET_GLOBAL_NOINIT depending on the number of arguments
+// ==> http://stackoverflow.com/questions/11761703/overloading-macro-on-number-of-arguments
+#define GET_MACRO( _1, _2, TARGET_MACRO, ... )  TARGET_MACRO
+#define SET_GLOBAL( ... )   GET_MACRO( __VA_ARGS__, SET_GLOBAL_INIT, SET_GLOBAL_NOINIT ) ( __VA_ARGS__ )
+
+// SET_GLOBAL_INIT/NOINIT are for global variables with/without initialization
+#ifdef DEFINE_GLOBAL
+# define SET_GLOBAL_INIT( declaration, init_value )   declaration = init_value
+# define SET_GLOBAL_NOINIT( declaration )             declaration
+#else
+# define SET_GLOBAL_INIT( declaration, init_value )   extern declaration
+# define SET_GLOBAL_NOINIT( declaration )             extern declaration
+#endif
+
+
 
 // ################################
 // ## Remove useless definitions ##

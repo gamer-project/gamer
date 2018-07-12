@@ -1,4 +1,7 @@
+// define DEFINE_GLOBAL since this file **defines** all global variables
+#define DEFINE_GLOBAL
 #include "GAMER.h"
+#undef DEFINE_GLOBAL
 #include "CUFLU.h"
 
 #ifdef GRAVITY

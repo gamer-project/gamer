@@ -159,16 +159,18 @@ void Init_Refine( const int lv );
 void Init_ByRestart();
 void Init_Unit();
 void Init_PassiveVariable();
-#ifdef SUPPORT_HDF5
-void Init_ByRestart_HDF5( const char *FileName );
-#endif
 void Init_Reload_OldFormat();
 void Init_ByFunction();
 void Init_TestProb();
 void Init_ByFile();
 void Init_UniformGrid( const int lv, const bool FindHomePatchForPar );
+void Init_Field();
+int  AddField( const char *InputLabel );
 #ifdef OPENMP
 void Init_OpenMP();
+#endif
+#ifdef SUPPORT_HDF5
+void Init_ByRestart_HDF5( const char *FileName );
 #endif
 
 
