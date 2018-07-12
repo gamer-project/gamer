@@ -240,9 +240,9 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 
    switch ( Riemann_XYZ )
    {
-      case 0 : r=x; TVar[0]=Idx_Dens; TVar[1]=Idx_MomX; TVar[2]=Idx_MomY; TVar[3]=Idx_MomZ; TVar[4]=Idx_Engy; BoxCen=0.5*amr->BoxSize[0]; break;
-      case 1 : r=y; TVar[0]=Idx_Dens; TVar[1]=Idx_MomY; TVar[2]=Idx_MomZ; TVar[3]=Idx_MomX; TVar[4]=Idx_Engy; BoxCen=0.5*amr->BoxSize[1]; break;
-      case 2 : r=z; TVar[0]=Idx_Dens; TVar[1]=Idx_MomZ; TVar[2]=Idx_MomX; TVar[3]=Idx_MomY; TVar[4]=Idx_Engy; BoxCen=0.5*amr->BoxSize[2]; break;
+      case 0 : r=x; TVar[0]=DENS; TVar[1]=MOMX; TVar[2]=MOMY; TVar[3]=MOMZ; TVar[4]=ENGY; BoxCen=0.5*amr->BoxSize[0]; break;
+      case 1 : r=y; TVar[0]=DENS; TVar[1]=MOMY; TVar[2]=MOMZ; TVar[3]=MOMX; TVar[4]=ENGY; BoxCen=0.5*amr->BoxSize[1]; break;
+      case 2 : r=z; TVar[0]=DENS; TVar[1]=MOMZ; TVar[2]=MOMX; TVar[3]=MOMY; TVar[4]=ENGY; BoxCen=0.5*amr->BoxSize[2]; break;
       default : Aux_Error( ERROR_INFO, "incorrect parameter %s = %d !!\n", "Riemann_XYZ", Riemann_XYZ );
    }
 
@@ -252,7 +252,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
       fluid[ TVar[1] ] = Riemann_RhoL*Riemann_VelL;
       fluid[ TVar[2] ] = Riemann_RhoL*Riemann_VelL_T;
       fluid[ TVar[3] ] = 0.0;
-      fluid[ TVar[4] ] = 0.5*( SQR(fluid[Idx_MomX]) + SQR(fluid[Idx_MomY]) + SQR(fluid[Idx_MomZ]) )/fluid[Idx_Dens] + Riemann_PreL*_Gamma_m1;
+      fluid[ TVar[4] ] = 0.5*( SQR(fluid[MOMX]) + SQR(fluid[MOMY]) + SQR(fluid[MOMZ]) )/fluid[DENS] + Riemann_PreL*_Gamma_m1;
    }
 
    else
@@ -261,7 +261,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
       fluid[ TVar[1] ] = Riemann_RhoR*Riemann_VelR;
       fluid[ TVar[2] ] = Riemann_RhoR*Riemann_VelR_T;
       fluid[ TVar[3] ] = 0.0;
-      fluid[ TVar[4] ] = 0.5*( SQR(fluid[Idx_MomX]) + SQR(fluid[Idx_MomY]) + SQR(fluid[Idx_MomZ]) )/fluid[Idx_Dens] + Riemann_PreR*_Gamma_m1;
+      fluid[ TVar[4] ] = 0.5*( SQR(fluid[MOMX]) + SQR(fluid[MOMY]) + SQR(fluid[MOMZ]) )/fluid[DENS] + Riemann_PreR*_Gamma_m1;
    }
 
    if ( Riemann_LR < 0 )
