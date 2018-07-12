@@ -66,11 +66,13 @@ void Validate()
 // warnings
    if ( MPI_Rank == 0 )
    {
+#     ifdef GRAVITY
       if ( OPT__BC_POT == BC_POT_PERIODIC )
          Aux_Message( stderr, "WARNING : periodic BC for gravity (OPT__BC_POT=1) is not recommended for this test !!\n" );
 
       if ( !OPT__OUTPUT_POT )
          Aux_Message( stderr, "WARNING : turn on OPT__OUTPUT_POT to output gravitational potential !!\n" );
+#     endif
    }
 
 
@@ -80,7 +82,7 @@ void Validate()
 
 
 
-#if ( MODEL == HYDRO )
+#if ( MODEL == HYDRO  &&  defined GRAVITY )
 //-------------------------------------------------------------------------------------------------------
 // Function    :  SetParameter
 // Description :  Load and set the problem-specific runtime parameters
@@ -299,7 +301,7 @@ void OutputError()
    Output_DumpData_Part( OUTPUT_DIAG, false, NULL_INT, NULL_INT, NULL_INT, filename_txt );
 
 } // FUNCTION : OutputError
-#endif // #if ( MODEL == HYDRO )
+#endif // #if ( MODEL == HYDRO  &&  defined GRAVITY )
 
 
 
@@ -323,14 +325,14 @@ void Init_TestProb_Hydro_Gravity()
    Validate();
 
 
-#  if ( MODEL == HYDRO )
+#  if ( MODEL == HYDRO  &&  defined GRAVITY )
 // set the problem-specific runtime parameters
    SetParameter();
 
 
    Init_Function_User_Ptr = SetGridIC;
    Output_User_Ptr        = OutputError;
-#  endif // #if ( MODEL == HYDRO )
+#  endif
 
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", __FUNCTION__ );
