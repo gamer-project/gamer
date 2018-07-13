@@ -15,8 +15,11 @@
        double Plummer_BulkVel[3];   // bulk velocity
        double Plummer_GasMFrac;     // gas mass fraction
        int    Plummer_MassProfNBin; // number of radial bins in the mass profile table
+static bool   Plummer_AddColor;     // assign different colors to different clouds for Plummer_Collision
 
 static double Plummer_FreeT;        // free-fall time at Plummer_R0
+static int    Plummer_Idx_Cloud0 = Idx_Undefined;  // field indices for Plummer_AddColor
+static int    Plummer_Idx_Cloud1 = Idx_Undefined;
 // =======================================================================================
 
 // problem-specific function prototypes
@@ -135,6 +138,7 @@ void SetParameter()
    ReadPara->Add( "Plummer_BulkVelZ",     &Plummer_BulkVel[2],    0.0,           NoMin_double,     NoMax_double      );
    ReadPara->Add( "Plummer_GasMFrac",     &Plummer_GasMFrac,      0.5,           Eps_double,       1.0               );
    ReadPara->Add( "Plummer_MassProfNBin", &Plummer_MassProfNBin,  1000,          2,                NoMax_int         );
+   ReadPara->Add( "Plummer_AddColor",     &Plummer_AddColor,      false,         Useless_bool,     Useless_bool      );
 
    ReadPara->Read( FileName );
 
@@ -144,8 +148,17 @@ void SetParameter()
    for (int d=0; d<3; d++)
       if ( Plummer_Center[d] == NoDef_double )  Plummer_Center[d] = 0.5*amr->BoxSize[d];
 
-// (1-3) check the runtime parameters
+   if ( !Plummer_Collision  &&  Plummer_AddColor )
+   {
+      Plummer_AddColor = false;
 
+      if ( MPI_Rank == 0 )
+         Aux_Message( stderr, "WARNING : Plummer_AddColor is only useful when Plummer_Collision is on !!\n" );
+   }
+
+// (1-3) check the runtime parameters
+   if ( Plummer_AddColor  &&  NCOMP_PASSIVE_USER != 2 )
+         Aux_Error( ERROR_INFO, "Please set NCOMP_PASSIVE_USER to 2 for \"Plummer_AddColor\" !!\n" );
 
 // (2) set the problem-specific derived parameters
 #  ifdef GRAVITY
@@ -182,8 +195,9 @@ void SetParameter()
                                                                                      "colliding clouds":"single cloud" );
       for (int d=0; d<3; d++)
       Aux_Message( stdout, "  central coordinate [%d]                   = %14.7e\n", d, Plummer_Center[d] );
-      if ( Plummer_Collision )
+      if ( Plummer_Collision ) {
       Aux_Message( stdout, "  initial distance between two clouds       = %13.7e\n", Plummer_Collision_D );
+      Aux_Message( stdout, "  assign colors to different clouds         = %d\n",     Plummer_AddColor ); }
       for (int d=0; d<3; d++)
       Aux_Message( stdout, "  bulk velocity [%d]                        = %14.7e\n", d, Plummer_BulkVel[d] );
 #     if ( MODEL == HYDRO )
@@ -254,13 +268,8 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
          fluid[ENGY] += (  NEWTON_G*TotM*GasRho0 / ( 6.0*Plummer_R0*CUBE(1.0 + a2) ) + PresBg  ) / ( GAMMA - 1.0 );
 #        endif
 
-#        if ( NCOMP_PASSIVE_USER > 0 )
-#        if ( NCOMP_PASSIVE_USER == 2 )
-         fluid[ (t==-1)?NCOMP_FLUID:NCOMP_FLUID+1 ] = Dens;
-#        else
-#        error : ERROR : please specify how to set the passive scalars here !!
-#        endif
-#        endif // #if ( NCOMP_PASSIVE > 0 )
+         if ( Plummer_AddColor )
+         fluid[ (t==-1)?Plummer_Idx_Cloud0:Plummer_Idx_Cloud1 ] = Dens;
       }
 
       fluid[MOMX]  = fluid[DENS]*Plummer_BulkVel[0];
@@ -289,6 +298,63 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
    } // if ( Plummer_Collision ) ... else ...
 
 } // FUNCTION : SetGridIC
+
+
+
+//-------------------------------------------------------------------------------------------------------
+// Function    :  SetNewField
+// Description :  Set the problem-specific fields
+//
+// Note        :  1. It takes 4 steps to add a new field
+//                   (1) Set NCOMP_PASSIVE_USER to 1 (or N if there are N new fields) in the Makefile
+//
+//                   (2) Declare a global integer variable on the top of the test problem initializer file
+//                       (e.g., Init_TestProb_YourTestProblem.cpp) to store the new field index. For example,
+//
+//                         static int NewFieldIdx;
+//
+//                   (3) Define a function (e.g., SetNewField()) to invoke AddField() to set the field label and
+//                       get the field index. For example,
+//
+//                         void SetNewField()
+//                         {
+//                            NewFieldIdx = AddField( "NewFieldLabel" );
+//                         }
+//
+//                       You also need to link SetNewField() to the function pointer "Init_Field_User_Ptr" in the
+//                       test problem entry function (e.g., Init_TestProb_YourTestProblem()):
+//
+//                         Init_Field_User_Ptr = SetNewField;
+//
+//                   (4) Assign values to the new field in SetGridIC() using the correct field index.
+//                       For example,
+//
+//                         fluid[Idx_NewField] = 1.0;
+//
+//                   Caveat: skip steps (2) and (3) if all the new fields have been pre-defined in Field.h
+//                           (e.g., fields used by Grackle)
+//                      --> These fields will be set automatically by Init_Field()
+//                      --> Use the pre-defined field indices to access these fields (e.g., Idx_Metal for
+//                          the metalicity field used by Grackle)
+//
+//                2. By invoking AddField() for each of the problem-specific fields:
+//                   --> Field label sent to AddField() will be used as the output name of the field
+//                   --> Field index returned by AddField() can be used to access the field data
+//
+// Parameter   :  None
+//
+// Return      :  None
+//-------------------------------------------------------------------------------------------------------
+void SetNewField()
+{
+
+   if ( Plummer_AddColor )
+   {
+      Plummer_Idx_Cloud0 = AddField( "Cloud0" );
+      Plummer_Idx_Cloud1 = AddField( "Cloud1" );
+   }
+
+} // FUNCTION : SetNewField
 #endif // #if ( MODEL == HYDRO )
 
 
@@ -319,6 +385,7 @@ void Init_TestProb_Hydro_Plummer()
 
 
    Init_Function_User_Ptr   = SetGridIC;
+   Init_Field_User_Ptr      = SetNewField;
    Flag_User_Ptr            = NULL;
    Mis_GetTimeStep_User_Ptr = NULL;
    BC_User_Ptr              = NULL;

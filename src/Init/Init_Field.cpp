@@ -1,5 +1,12 @@
 #include "GAMER.h"
 
+// declare as static so that other functions cannot invoke it directly and must use the function pointer
+void Init_Field_User();
+
+// this function pointer may be overwritten by various test problem initializers
+void (*Init_Field_User_Ptr)() = Init_Field_User;
+
+
 static int NDefinedField = 0;    // total number of defined fields --> for debug only
 
 
@@ -54,14 +61,14 @@ void Init_Field()
 #  endif
 
 
-
 // 3. add user-defined fields
+   if ( Init_Field_User_Ptr != NULL )  Init_Field_User_Ptr();
 
 
 // 4. validate if all fields have been set properly
    if ( NDefinedField != NCOMP_TOTAL )
       Aux_Error( ERROR_INFO, "Total number of defined fields (%d) != expectation (%d) !!\n"
-                 "        --> Modify NCOMP_PASSIVE_USER in the Makefile properly\n",
+                 "        --> Modify NCOMP_PASSIVE_USER in the Makefile or invoke AddField() properly\n",
                  NDefinedField, NCOMP_TOTAL );
 
 
@@ -76,7 +83,7 @@ void Init_Field()
 // Description :  Add a new field to the field list
 //
 // Note        :  1. This function will (i) set the label and (ii) return the index of the newly added field
-//                   --> Field label will be used as the name of the output field
+//                   --> Field label will be used as the output name of the field
 //                   --> Field index can be used to access the field data (e.g., amr->patch->fluid[])
 //                2. One must invoke AddField() exactly NCOMP_TOTAL times to set the labels of all fields
 //                3. Invoked by Init_Field() and various test problem initializers
@@ -101,3 +108,26 @@ int AddField( const char *InputLabel )
    return NDefinedField ++;
 
 } // FUNCTION : AddField
+
+
+
+
+//-------------------------------------------------------------------------------------------------------
+// Function    :  Init_Field_User
+// Description :  Add user-defined field
+//
+// Note        :  1. Invoked by Init_Field() using the function pointer "Init_Field_User_Ptr"
+//                   --> The function pointer may be reset by various test problem initializers, in which case
+//                       this funtion will become useless
+//
+// Parameter   :  None
+//
+// Return      :  None
+//-------------------------------------------------------------------------------------------------------
+void Init_Field_User()
+{
+
+// example
+// Idx_NewField = AddField( "NewFieldLabel" );
+
+} // FUNCTION : Init_Field_User

@@ -225,6 +225,7 @@ void Init_TestProb_Template()
 // 4. enable the corresponding runtime option in "Input__Parameter"
 //    --> for instance, enable OPT__OUTPUT_USER for Output_User_Ptr
    Init_Function_User_Ptr   = SetGridIC;
+   Init_Field_User_Ptr      = NULL;       // set NCOMP_PASSIVE_USER;        example: TestProblem/Hydro/Plummer/Init_TestProb_Hydro_Plummer.cpp --> SetNewField()
    Flag_User_Ptr            = NULL;       // option: OPT__FLAG_USER;        example: Refine/Flag_User.cpp
    Mis_GetTimeStep_User_Ptr = NULL;       // option: OPT__DT_USER;          example: Miscellaneous/Mis_GetTimeStep_User.cpp
    BC_User_Ptr              = NULL;       // option: OPT__BC_FLU_*=4;       example: TestProblem/ELBDM/ExtPot/Init_TestProb_ELBDM_ExtPot.cpp --> BC()
