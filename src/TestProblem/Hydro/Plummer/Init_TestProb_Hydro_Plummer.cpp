@@ -18,8 +18,9 @@
 static bool   Plummer_AddColor;     // assign different colors to different clouds for Plummer_Collision
 
 static double Plummer_FreeT;        // free-fall time at Plummer_R0
-static int    Plummer_Idx_Cloud0 = Idx_Undefined;  // field indices for Plummer_AddColor
-static int    Plummer_Idx_Cloud1 = Idx_Undefined;
+
+static FieldIdx_t Plummer_Idx_Cloud0 = Idx_Undefined;    // field indices for Plummer_AddColor
+static FieldIdx_t Plummer_Idx_Cloud1 = Idx_Undefined;
 // =======================================================================================
 
 // problem-specific function prototypes
