@@ -67,7 +67,7 @@ void Init_Field()
 
 // 4. validate if all fields have been set properly
    if ( NDefinedField != NCOMP_TOTAL )
-      Aux_Error( ERROR_INFO, "Total number of defined fields (%d) != expectation (%d) !!\n"
+      Aux_Error( ERROR_INFO, "total number of defined fields (%d) != expectation (%d) !!\n"
                  "        --> Modify NCOMP_PASSIVE_USER in the Makefile or invoke AddField() properly\n",
                  NDefinedField, NCOMP_TOTAL );
 
@@ -92,18 +92,18 @@ void Init_Field()
 //
 // Return      :  Set FieldLabel[] and return the index of the newly added field
 //-------------------------------------------------------------------------------------------------------
-int AddField( const char *InputLabel )
+FieldIdx_t AddField( const char *InputLabel )
 {
 
 // check
    if ( NDefinedField+1 > NCOMP_TOTAL )
-      Aux_Error( ERROR_INFO, "Total number of defined fields (%d) exceeds expectation (%d) after adding the field \"%s\" !!\n"
+      Aux_Error( ERROR_INFO, "total number of defined fields (%d) exceeds expectation (%d) after adding the field \"%s\" !!\n"
                  "        --> Modify NCOMP_PASSIVE_USER in the Makefile properly\n",
                  NDefinedField+1, NCOMP_TOTAL, InputLabel );
 
    for (int v=0; v<NDefinedField; v++)
       if (  strcmp( FieldLabel[v], InputLabel ) == 0  )
-         Aux_Error( ERROR_INFO, "Duplicate field label \"%s\" !!\n", InputLabel );
+         Aux_Error( ERROR_INFO, "duplicate field label \"%s\" !!\n", InputLabel );
 
 
 // set field label
@@ -115,6 +115,41 @@ int AddField( const char *InputLabel )
 
 } // FUNCTION : AddField
 
+
+
+//-------------------------------------------------------------------------------------------------------
+// Function    :  GetFieldIndex
+// Description :  Return the index of the target field
+//
+// Note        :  1. Usage: FieldIdx = GetFieldIndex( FieldLabel );
+//                2. Return Idx_Undefined if the target field cannot be found
+//
+// Parameter   :  InputLabel : target field label
+//
+// Return      :  Sucess: index of the target field
+//                Failed: Idx_Undefined
+//-------------------------------------------------------------------------------------------------------
+FieldIdx_t GetFieldIndex( const char *InputLabel )
+{
+
+   FieldIdx_t Idx_Out = Idx_Undefined;
+
+   for (int v=0; v<NDefinedField; v++)
+   {
+      if (  strcmp( FieldLabel[v], InputLabel ) == 0  )
+      {
+         Idx_Out = v;
+         break;
+      }
+   }
+
+   if ( Idx_Out == Idx_Undefined )
+      Aux_Message( stderr, "WARNING : cannot find the target field \"%s\" in %s() !!\n",
+                   InputLabel, __FUNCTION__ );
+
+   return Idx_Out;
+
+} // FUNCTION : GetFieldIndex
 
 
 
