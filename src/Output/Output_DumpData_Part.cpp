@@ -214,9 +214,9 @@ void WriteFile( FILE *File, const int lv, const int PID, const int i, const int 
 
    const double dh_min  = amr->dh[TOP_LEVEL];
    const double scale_2 = 0.5*amr->scale[lv];
-   real u[NCOMP_FLUID];
+   real u[NCOMP_TOTAL];
 
-   for (int v=0; v<NCOMP_FLUID; v++)   u[v] = amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[v][k][j][i];
+   for (int v=0; v<NCOMP_TOTAL; v++)   u[v] = amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[v][k][j][i];
 
 // output cell indices and coordinates
    fprintf( File, " %10d %10d %10d %20.14e %20.14e %20.14e",
