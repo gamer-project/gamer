@@ -101,8 +101,14 @@ int AddField( const char *InputLabel )
                  "        --> Modify NCOMP_PASSIVE_USER in the Makefile properly\n",
                  NDefinedField+1, NCOMP_TOTAL, InputLabel );
 
+   for (int v=0; v<NDefinedField; v++)
+      if (  strcmp( FieldLabel[v], InputLabel ) == 0  )
+         Aux_Error( ERROR_INFO, "Duplicate field label \"%s\" !!\n", InputLabel );
+
+
 // set field label
    FieldLabel[NDefinedField] = InputLabel;
+
 
 // return field index
    return NDefinedField ++;
