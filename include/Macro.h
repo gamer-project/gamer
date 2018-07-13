@@ -165,15 +165,19 @@
 // variable indices in the array "passive" [NCOMP_FLUID ... NCOMP_TOTAL-1]
 #if ( NCOMP_PASSIVE > 0 )
 // example for NCOMP_PASSIVE == 3
+/*
 #  define  METAL              ( NCOMP_FLUID + 0 )
 #  define  HI                 ( NCOMP_FLUID + 1 )
 #  define  HII                ( NCOMP_FLUID + 2 )
+*/
 
-// always store entropy (or internal energy) for the dual energy formalism as the last passive variable
+// always store the dual-energy variable as the **first** passive variable
+// --> so that ENPY/EINT can be determined during compilation
+// --> convenient (and probably also more efficient) for the fluid solver
 #  if   ( DUAL_ENERGY == DE_ENPY )
-#  define  ENPY               ( NCOMP_TOTAL - 1 )
+#  define  ENPY               ( NCOMP_FLUID + 0 )
 #  elif ( DUAL_ENERGY == DE_EINT )
-#  define  EINT               ( NCOMP_TOTAL - 1 )
+#  define  EINT               ( NCOMP_FLUID + 0 )
 #  endif
 #endif
 

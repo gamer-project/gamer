@@ -21,10 +21,14 @@ SET_GLOBAL( FieldIdx_t Idx_MomX,    Idx_Undefined );
 SET_GLOBAL( FieldIdx_t Idx_MomY,    Idx_Undefined );
 SET_GLOBAL( FieldIdx_t Idx_MomZ,    Idx_Undefined );
 SET_GLOBAL( FieldIdx_t Idx_Engy,    Idx_Undefined );
-
+#if   ( DUAL_ENERGY == DE_ENPY )
+SET_GLOBAL( FieldIdx_t Idx_Enpy,    Idx_Undefined );
+#elif ( DUAL_ENERGY == DE_EINT )
+SET_GLOBAL( FieldIdx_t Idx_Eint,    Idx_Undefined );
+#endif
+SET_GLOBAL( FieldIdx_t Idx_Metal,   Idx_Undefined );
 
 #elif ( MODEL == ELBDM )
-
 
 #else
 #  error : ERROR : unsupported MODEL !!

@@ -23,13 +23,14 @@ void Init_Field()
 
 
 // 1. add main predefined fields
-//    --> must not change the following order of their declaration
+//    --> must not change the following order of declaration since they must be consistent
+//        with the symbolic constants defined in Macro.h (e.g., DENS)
 #  if   ( MODEL == HYDRO  ||  MODEL == MHD )
-   Idx_Dens = AddField( "Dens" );
-   Idx_MomX = AddField( "MomX" );
-   Idx_MomY = AddField( "MomY" );
-   Idx_MomZ = AddField( "MomZ" );
-   Idx_Engy = AddField( "Engy" );
+   Idx_Dens    = AddField( "Dens" );
+   Idx_MomX    = AddField( "MomX" );
+   Idx_MomY    = AddField( "MomY" );
+   Idx_MomZ    = AddField( "MomZ" );
+   Idx_Engy    = AddField( "Engy" );
 
 #  elif ( MODEL == ELBDM )
 
@@ -39,8 +40,19 @@ void Init_Field()
 
 
 // 2. add other predefined fields
-// entropy
-// grackle-related field
+//    --> must declare the dual-energy variable first in order to be consistent with the symbolic
+//        constant ENPY (or EINT) defined in Macro.h
+#  if   ( DUAL_ENERGY == DE_ENPY )
+   Idx_Enpy    = AddField( "Entropy" );
+#  elif ( DUAL_ENERGY == DE_EINT )
+   Idx_Eint    = AddField( "Eint" );
+#  endif
+
+#  ifdef SUPPORT_GRACKLE
+   if ( GRACKLE_METAL )
+   Idx_Metal   = AddField( "Metal" );
+#  endif
+
 
 
 // 3. add user-defined fields
@@ -78,9 +90,9 @@ int AddField( const char *InputLabel )
 
 // check
    if ( NDefinedField+1 > NCOMP_TOTAL )
-      Aux_Error( ERROR_INFO, "Total number of defined fields (%d) exceeds expectation (%d) !!\n"
+      Aux_Error( ERROR_INFO, "Total number of defined fields (%d) exceeds expectation (%d) after adding the field \"%s\" !!\n"
                  "        --> Modify NCOMP_PASSIVE_USER in the Makefile properly\n",
-                 NDefinedField+1, NCOMP_TOTAL );
+                 NDefinedField+1, NCOMP_TOTAL, InputLabel );
 
 // set field label
    FieldLabel[NDefinedField] = InputLabel;

@@ -21,7 +21,6 @@ static double  AGORA_HaloGasTemp;               // halo gas temperature
                                                 // --> to enable this option, one must
                                                 //     (1) set AGORA_(Disk/Halo)MetalMassFrac properly
                                                 //     (2) set NCOMP_PASSIVE_USER>=1 and PAR_NPASSIVE_USER>=1 in the Makefile
-                                                //     (3) define METAL and PAR_METAL_FRAC in Macro.h (hard coding, ugh!)
                                                 // --> necessary if one wants to enable metal_cooling in Grackle
 static double  AGORA_DiskMetalMassFrac;         // disk metal mass fraction (disk_metal_mass / disk_gas_mass)
 static double  AGORA_HaloMetalMassFrac;         // halo metal mass fraction (halo_metal_mass / halo_gas_mass)
@@ -191,12 +190,8 @@ void SetParameter()
 // check the runtime parameters
    if ( AGORA_UseMetal )
    {
-#     if (  ( defined DUAL_ENERGY && NCOMP_PASSIVE < 2 )  ||  ( !defined DUAL_ENERGY && NCOMP_PASSIVE < 1 )  )
+#     if ( NCOMP_PASSIVE_USER < 1 )
          Aux_Error( ERROR_INFO, "please set NCOMP_PASSIVE_USER >= 1 in the Makefile for \"AGORA_UseMetal\" !!\n" );
-#     endif
-
-#     ifndef METAL
-         Aux_Error( ERROR_INFO, "please define the symbolic constant \"METAL\" properly in Macro.h for \"AGORA_UseMetal\" !!\n" );
 #     endif
 
 #     if (  ( defined STAR_FORMATION && PAR_NPASSIVE < 2 )  ||  ( !defined STAR_FORMATION && PAR_NPASSIVE < 1 )  )
@@ -355,10 +350,9 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
       fluid[ENGY] = DiskGasPres / ( GAMMA - 1.0 )
                     + 0.5*( SQR(fluid[MOMX]) + SQR(fluid[MOMY]) + SQR(fluid[MOMZ]) ) / fluid[DENS];
 
-//###: HARD-CODED FIELDS
 #     if ( NCOMP_PASSIVE > 0 )
       if ( AGORA_UseMetal )
-      fluid[METAL] = fluid[DENS]*AGORA_DiskMetalMassFrac;
+      fluid[Idx_Metal] = fluid[DENS]*AGORA_DiskMetalMassFrac;
 #     endif
    }
 
@@ -372,10 +366,9 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
       fluid[ENGY] = AGORA_HaloGasPres / ( GAMMA - 1.0 )
                     + 0.5*( SQR(fluid[MOMX]) + SQR(fluid[MOMY]) + SQR(fluid[MOMZ]) ) / fluid[DENS];
 
-//###: HARD-CODED FIELDS
 #     if ( NCOMP_PASSIVE > 0 )
       if ( AGORA_UseMetal )
-      fluid[METAL] = fluid[DENS]*AGORA_HaloMetalMassFrac;
+      fluid[Idx_Metal] = fluid[DENS]*AGORA_HaloMetalMassFrac;
 #     endif
    } // if ( DiskPres > AGORA_HaloGasPres ) ... else ...
 
