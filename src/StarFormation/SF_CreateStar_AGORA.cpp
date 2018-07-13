@@ -268,9 +268,8 @@ void SF_CreateStar_AGORA( const int lv, const real TimeNew, const real dt, Rando
 //       2-2. passive attributes
 //###: HARD-CODED FIELDS
 //       note that we store the metal mass **fraction** instead of density in particles
-//       currently the metal field is hard coded ... ugh!
          if ( UseMetal )
-         NewParPassive[NNewPar][PAR_METAL_FRAC   ] = fluid[METAL][k][j][i] * _GasDens;
+         NewParPassive[NNewPar][PAR_METAL_FRAC   ] = fluid[Idx_Metal][k][j][i] * _GasDens;
 
          NewParPassive[NNewPar][PAR_CREATION_TIME] = TimeNew;
 

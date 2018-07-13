@@ -23,20 +23,20 @@
 void Grackle_Close( const int lv, const int SaveSg, const real h_Che_Array[], const int NPG, const int *PID0_List )
 {
 
-   const int   Idx_Dens  = 0;
-   const int   Idx_sEint = 1;
-   const int   Idx_Ek    = 2;
-   const int   Size1pg   = CUBE(PS2);
-   const int   Size1v    = NPG*Size1pg;
-   const real  Gamma_m1  = GAMMA - (real)1.0;
-   const real _Gamma_m1  = (real)1.0 / Gamma_m1;
+   const int   hCheIdx_Dens  = 0;
+   const int   hCheIdx_sEint = 1;
+   const int   hCheIdx_Ek    = 2;
+   const int   Size1pg       = CUBE(PS2);
+   const int   Size1v        = NPG*Size1pg;
+   const real  Gamma_m1      = GAMMA - (real)1.0;
+   const real _Gamma_m1      = (real)1.0 / Gamma_m1;
 
    int  idx_pg, PID, PID0;    // idx_pg: array indices within a patch group
    real Dens, Pres;
 
-   const real *Ptr_Dens0  = h_Che_Array + Idx_Dens *Size1v;
-   const real *Ptr_sEint0 = h_Che_Array + Idx_sEint*Size1v;
-   const real *Ptr_Ek0    = h_Che_Array + Idx_Ek   *Size1v;
+   const real *Ptr_Dens0  = h_Che_Array + hCheIdx_Dens *Size1v;
+   const real *Ptr_sEint0 = h_Che_Array + hCheIdx_sEint*Size1v;
+   const real *Ptr_Ek0    = h_Che_Array + hCheIdx_Ek   *Size1v;
 
    const real *Ptr_Dens=NULL, *Ptr_sEint=NULL, *Ptr_Ek=NULL;
 
