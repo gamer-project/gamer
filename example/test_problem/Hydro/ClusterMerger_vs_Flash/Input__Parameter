@@ -139,7 +139,7 @@ OPT__FIXUP_FLUX               1           # correct coarse grids by the fine-gri
 OPT__FIXUP_RESTRICT           1           # correct coarse grids by averaging the fine-grid data [1]
 OPT__CORR_AFTER_ALL_SYNC     -1           # apply various corrections after all levels are synchronized (see "Flu_CorrAfterAllSync"):
                                           # (-1=auto, 0=off, 1=every step, 2=before dump) [-1]
-OPT__NORMALIZE_PASSIVE        1           # ensure "sum(passive_scalar_density) == gas_density" -> edit "Init_PassiveVariable.cpp" [1]
+OPT__NORMALIZE_PASSIVE        1           # ensure "sum(passive_scalar_density) == gas_density" [1]
 MIN_DENS                      1.0e-07     # minimum mass density (must >= 0.0) [0.0] ##HYDRO, MHD, and ELBDM ONLY##
 MIN_PRES                      1.0e-09     # minimum pressure     (must >= 0.0) [0.0] ##HYDRO and MHD ONLY##
 
