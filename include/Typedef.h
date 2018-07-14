@@ -315,6 +315,17 @@ const OptTimeStepLevel_t
    DT_LEVEL_FLEXIBLE  = 3;
 
 
+// AddField() option
+typedef int NormPassive_t;
+const NormPassive_t
+   NORMALIZE_NO  = 0,
+   NORMALIZE_YES = 1;
+
+
+// field types
+typedef int FieldIdx_t;
+
+
 // Grackle
 #ifdef SUPPORT_GRACKLE
 // original Grackle or the reduced CPU/GPU implementation in GAMER

@@ -4,8 +4,8 @@
 
 
 #include "Macro.h"
+#include "Typedef.h"
 
-typedef int FieldIdx_t;
 const FieldIdx_t Idx_Undefined = -1;   // must be outside the range [0, NCOMP_TOTAL-1]
 
 

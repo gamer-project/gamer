@@ -7,7 +7,7 @@ void Init_Field_User();
 void (*Init_Field_User_Ptr)() = Init_Field_User;
 
 
-static int NDefinedField = 0;    // total number of defined fields --> for debug only
+static int NDefinedField;  // total number of defined fields --> for debug only
 
 
 
@@ -29,15 +29,20 @@ void Init_Field()
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ...\n", __FUNCTION__ );
 
 
+// 0. initialize counters as zeros
+   NDefinedField    = 0;
+   PassiveNorm_NVar = 0;
+
+
 // 1. add main predefined fields
 //    --> must not change the following order of declaration since they must be consistent
 //        with the symbolic constants defined in Macro.h (e.g., DENS)
 #  if   ( MODEL == HYDRO  ||  MODEL == MHD )
-   Idx_Dens    = AddField( "Dens" );
-   Idx_MomX    = AddField( "MomX" );
-   Idx_MomY    = AddField( "MomY" );
-   Idx_MomZ    = AddField( "MomZ" );
-   Idx_Engy    = AddField( "Engy" );
+   Idx_Dens    = AddField( "Dens",     NORMALIZE_NO );
+   Idx_MomX    = AddField( "MomX",     NORMALIZE_NO );
+   Idx_MomY    = AddField( "MomY",     NORMALIZE_NO );
+   Idx_MomZ    = AddField( "MomZ",     NORMALIZE_NO );
+   Idx_Engy    = AddField( "Engy",     NORMALIZE_NO );
 
 #  elif ( MODEL == ELBDM )
 
@@ -50,14 +55,14 @@ void Init_Field()
 //    --> must declare the dual-energy variable first in order to be consistent with the symbolic
 //        constant ENPY (or EINT) defined in Macro.h
 #  if   ( DUAL_ENERGY == DE_ENPY )
-   Idx_Enpy    = AddField( "Entropy" );
+   Idx_Enpy    = AddField( "Entropy",  NORMALIZE_NO );
 #  elif ( DUAL_ENERGY == DE_EINT )
-   Idx_Eint    = AddField( "Eint" );
+   Idx_Eint    = AddField( "Eint",     NORMALIZE_NO );
 #  endif
 
 #  ifdef SUPPORT_GRACKLE
    if ( GRACKLE_METAL )
-   Idx_Metal   = AddField( "Metal" );
+   Idx_Metal   = AddField( "Metal",    NORMALIZE_NO );
 #  endif
 
 
@@ -82,36 +87,65 @@ void Init_Field()
 // Function    :  AddField
 // Description :  Add a new field to the field list
 //
-// Note        :  1. This function will (i) set the label and (ii) return the index of the newly added field
-//                   --> Field label will be used as the output name of the field
-//                   --> Field index can be used to access the field data (e.g., amr->patch->fluid[])
+// Note        :  1. This function will
+//                   (1) set the field label, which will be used as the output name of the field
+//                   (2) return the index of the new field, which can be used to access the field data
+//                       (e.g., amr->patch->fluid[])
+//                   (3) add the new field to the normalization list PassiveNorm_VarIdx[] if requested
+//                       --> The sum of passive scalars in this list will be normalized to the gas density
+//                       --> sum(passive_scalar_density) == gas_density
 //                2. One must invoke AddField() exactly NCOMP_TOTAL times to set the labels of all fields
 //                3. Invoked by Init_Field() and various test problem initializers
 //
 // Parameter   :  InputLabel : Label (i.e., name) of the new field
+//                Norm       : whether or not to normalize the new field
 //
-// Return      :  Set FieldLabel[] and return the index of the newly added field
+// Return      :  (1) FieldLabel[]
+//                (2) Index of the newly added field
+//                (3) PassiveNorm_NVar & PassiveNorm_VarIdx[]
 //-------------------------------------------------------------------------------------------------------
-FieldIdx_t AddField( const char *InputLabel )
+FieldIdx_t AddField( const char *InputLabel, const NormPassive_t Norm )
 {
 
+   const FieldIdx_t FieldIdx = NDefinedField ++;
+
+
 // check
-   if ( NDefinedField+1 > NCOMP_TOTAL )
+   if ( NDefinedField > NCOMP_TOTAL )
       Aux_Error( ERROR_INFO, "total number of defined fields (%d) exceeds expectation (%d) after adding the field \"%s\" !!\n"
                  "        --> Modify NCOMP_PASSIVE_USER in the Makefile properly\n",
-                 NDefinedField+1, NCOMP_TOTAL, InputLabel );
+                 NDefinedField, NCOMP_TOTAL, InputLabel );
 
-   for (int v=0; v<NDefinedField; v++)
+   for (int v=0; v<NDefinedField-1; v++)
       if (  strcmp( FieldLabel[v], InputLabel ) == 0  )
          Aux_Error( ERROR_INFO, "duplicate field label \"%s\" !!\n", InputLabel );
 
 
 // set field label
-   FieldLabel[NDefinedField] = InputLabel;
+   FieldLabel[FieldIdx] = InputLabel;
+
+
+// set the normalization list
+// --> note that PassiveNorm_VarIdx[] starts from 0 instead of NCOMP_FLUID
+   if ( OPT__NORMALIZE_PASSIVE  &&  Norm )
+   {
+      const int NormIdx = PassiveNorm_NVar ++;
+
+      if ( PassiveNorm_NVar > NCOMP_PASSIVE )
+         Aux_Error( ERROR_INFO, "total number of normalized passive scalars (%d) exceeds expectation (%d) after adding the field \"%s\" !!\n",
+                    PassiveNorm_NVar, NCOMP_PASSIVE, InputLabel );
+
+      if ( FieldIdx < NCOMP_FLUID )
+      Aux_Error( ERROR_INFO, "Field index to be normalized (%d) < NCOMP_FLUID (%d) !!\n"
+                 "        --> One should not add any main field to the normalization list\n",
+                 FieldIdx, NCOMP_FLUID );
+
+      PassiveNorm_VarIdx[NormIdx] = FieldIdx - NCOMP_FLUID;
+   }
 
 
 // return field index
-   return NDefinedField ++;
+   return FieldIdx;
 
 } // FUNCTION : AddField
 
