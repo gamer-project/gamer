@@ -319,8 +319,12 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 //
 //                         void SetNewField()
 //                         {
-//                            NewFieldIdx = AddField( "NewFieldLabel" );
+//                            NewFieldIdx = AddField( "NewFieldLabel", NORMALIZE_YES );
 //                         }
+//
+//                       The second parameter should be either NORMALIZE_YES or NORMALIZE_NO, which determines
+//                       whether the new field should be normalized by the total gas density
+//                       (also controlled by the option OPT__NORMALIZE_PASSIVE).
 //
 //                       You also need to link SetNewField() to the function pointer "Init_Field_User_Ptr" in the
 //                       test problem entry function (e.g., Init_TestProb_YourTestProblem()):
@@ -351,8 +355,8 @@ void SetNewField()
 
    if ( Plummer_AddColor )
    {
-      Plummer_Idx_Cloud0 = AddField( "Cloud0" );
-      Plummer_Idx_Cloud1 = AddField( "Cloud1" );
+      Plummer_Idx_Cloud0 = AddField( "Cloud0", NORMALIZE_YES );
+      Plummer_Idx_Cloud1 = AddField( "Cloud1", NORMALIZE_YES );
    }
 
 } // FUNCTION : SetNewField

@@ -858,10 +858,10 @@ void Aux_TakeNote()
 
 //    target passive scalars to be normalized
       if ( OPT__NORMALIZE_PASSIVE ) {
-      fprintf( Note, "   Number of scalars            %d\n",      PassiveNorm_NVar         );
-      fprintf( Note, "   Target scalars              "                                     );
+      fprintf( Note, "   Number of fields             %d\n",      PassiveNorm_NVar         );
+      fprintf( Note, "   Target fields               "                                     );
       for (int v=0; v<PassiveNorm_NVar; v++)
-      fprintf( Note, " %s",                                       PassiveFieldName_Grid[ PassiveNorm_VarIdx[v] ] );
+      fprintf( Note, " %s",                                       FieldLabel[ NCOMP_FLUID + PassiveNorm_VarIdx[v] ] );
       fprintf( Note, "\n" ); }
 
       fprintf( Note, "OPT__OVERLAP_MPI                %d\n",      OPT__OVERLAP_MPI         );

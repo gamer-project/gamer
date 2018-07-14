@@ -264,4 +264,10 @@ extern real       (*h_Pot_Array_T[2])[ CUBE(GRA_NXT) ];
 
 
 
+// 5. global variables related to different fields
+// ============================================================================================================
+/*** Defined in Field.h ***/
+
+
+
 #endif // #ifndef __GLOBAL_H__
