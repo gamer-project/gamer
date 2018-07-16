@@ -69,7 +69,7 @@ void YT_AddAllGrid( yt_grid *Grid, const int *GID_Offset, const int NField, char
 
 //       3. set other field parameters
          Grid[GID].num_fields   = NField;
-         Grid[GID].field_labels = FieldLabel;
+         Grid[GID].field_labels = (const char **)FieldLabel;
 #        ifdef FLOAT8
          Grid[GID].field_ftype  = YT_DOUBLE;
 #        else

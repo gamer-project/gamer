@@ -278,6 +278,7 @@ MPI_PATH     :=
 HDF5_PATH    :=
 GRACKLE_PATH :=
 GSL_PATH     :=
+LIBYT_PATH   :=
 
 # NCSA-bluewaters (only need to specify the path of user-installed packages)
 #GRACKLE_PATH :=
@@ -326,6 +327,8 @@ GSL_PATH     :=
 #MPI_PATH     := /usr/mpi/intel/openmpi-1.4.3-qlc
 #HDF5_PATH    := /opt/hdf5/1.8.9
 #GRACKLE_PATH := /work1/fish/Software/grackle
+#GSL_PATH     := /opt/math/gsl
+#LIBYT_PATH   := /project/fish/libyt/libyt
 #MPI_PATH     := /opt/mpi/openmpi/1.6.0-intel
 #CUDA_PATH    := /usr/local/cuda-7.5
 
