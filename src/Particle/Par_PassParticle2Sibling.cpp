@@ -44,7 +44,7 @@ void Par_PassParticle2Sibling( const int lv, const bool TimingSendPar )
    const double BoxEdge[3]       = { (NX0_TOT[0]*(1<<TOP_LEVEL))*dh_min,
                                      (NX0_TOT[1]*(1<<TOP_LEVEL))*dh_min,
                                      (NX0_TOT[2]*(1<<TOP_LEVEL))*dh_min }; // prevent from the round-off error problem
-// ParPos should NOT be used after calling Par_LB_ExchangeParticleBetweenPatch() since amr->Par->ParVar may be reallocated
+// ParPos should NOT be used after calling Par_LB_ExchangeParticleBetweenPatch() since amr->Par->Attribute may be reallocated
    real *ParPos[3]               = { amr->Par->PosX, amr->Par->PosY, amr->Par->PosZ };
 
    int     NPar_Remove_Tot=0;

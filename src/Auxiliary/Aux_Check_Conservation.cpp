@@ -363,9 +363,8 @@ void Aux_Check_Conservation( const char *comment )
 #        endif
 
 #        if ( NCOMP_PASSIVE > 0 )
-         for (int v=0; v<NCOMP_PASSIVE; v++)
-         Aux_Message( File, "  %14s  %9s_AErr  %9s_RErr", PassiveFieldName_Grid[v], PassiveFieldName_Grid[v],
-                                                          PassiveFieldName_Grid[v] );
+         for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)
+         Aux_Message( File, "  %14s  %9s_AErr  %9s_RErr", FieldLabel[v], FieldLabel[v], FieldLabel[v] );
          Aux_Message( File, "  %14s  %14s  %14s", "PassNorm", "PassNorm_AErr", "PassNorm_RErr" );
 #        endif
 

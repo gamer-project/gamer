@@ -3,7 +3,7 @@
 #ifdef SUPPORT_LIBYT
 
 void YT_SetParameter( const int NPatchAllLv );
-void YT_AddAllGrid( yt_grid *Grid, const int *GID_Offset, const int NField, char **FieldLabel );
+void YT_AddAllGrid( yt_grid *Grid, const int *GID_Offset, const int NField, char **FieldLabelForYT );
 
 
 
@@ -60,32 +60,13 @@ void YT_Inline()
 #  endif
 
 // 3-2. set the field labels
-   char **FieldLabel = new char* [NField];
-   for (int v=0; v<NField; v++)  FieldLabel[v] = new char [MAX_STRING];
+   char **FieldLabelForYT = new char* [NField];
+   for (int v=0; v<NField; v++)  FieldLabelForYT[v] = new char [MAX_STRING];
 
-#  if ( MODEL == HYDRO )
-   sprintf( FieldLabel[DENS], "Dens" );
-   sprintf( FieldLabel[MOMX], "MomX" );
-   sprintf( FieldLabel[MOMY], "MomY" );
-   sprintf( FieldLabel[MOMZ], "MomZ" );
-   sprintf( FieldLabel[ENGY], "Engy" );
-
-#  elif ( MODEL == MHD )
-#  warning : WAIT MHD !!!
-
-#  elif ( MODEL == ELBDM )
-   sprintf( FieldLabel[DENS], "Dens" );
-   sprintf( FieldLabel[REAL], "Real" );
-   sprintf( FieldLabel[IMAG], "Imag" );
-
-#  else
-#  error : unsupported MODEL !!
-#  endif // MODEL
-
-   for (int v=0; v<NCOMP_PASSIVE; v++)    sprintf( FieldLabel[NCOMP_FLUID+v], "%s", PassiveFieldName_Grid[v] );
+   for (int v=0; v<NCOMP_TOTAL; v++)   sprintf( FieldLabelForYT[v], FieldLabel[v] );
 
 #  ifdef GRAVITY
-   sprintf( FieldLabel[NCOMP_TOTAL], "Pote" );
+   sprintf( FieldLabelForYT[NCOMP_TOTAL], PotLabel );
 #  endif
 
 // 3-3. prepare all patches for libyt
@@ -93,7 +74,7 @@ void YT_Inline()
 
    for (int GID=0; GID<NPatchAllLv; GID++)   Grid[GID].field_data = new void* [NField];
 
-   YT_AddAllGrid( Grid, GID_Offset, NField, FieldLabel );
+   YT_AddAllGrid( Grid, GID_Offset, NField, FieldLabelForYT );
 
 
 // 4. perform yt inline analysis
@@ -102,8 +83,8 @@ void YT_Inline()
 
 // 5. free resource
    delete [] NPatchAllRank;
-   for (int v=0; v<NField; v++)  delete [] FieldLabel[v];
-   delete [] FieldLabel;
+   for (int v=0; v<NField; v++)  delete [] FieldLabelForYT[v];
+   delete [] FieldLabelForYT;
    for (int GID=0; GID<NPatchAllLv; GID++)   delete [] Grid[GID].field_data;
    delete [] Grid;
 

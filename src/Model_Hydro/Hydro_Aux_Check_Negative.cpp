@@ -77,26 +77,18 @@ void Hydro_Aux_Check_Negative( const int lv, const int Mode, const char *comment
                   {
                      Aux_Message( stderr, "\"%s\" : <%s> FAILED at level %2d, Time = %13.7e, Step = %ld !!\n",
                                   comment, __FUNCTION__, lv, Time[lv], Step );
-                     Aux_Message( stderr, "%4s  %7s  %19s  %10s  %21s  %21s  %21s  %21s  %21s",
-                                  "Rank", "PID", "Patch Corner", "Grid ID", "Dens", "MomX", "MomY", "MomZ", "Engy" );
-#                    if ( NCOMP_PASSIVE > 0 )
-                     for (int v=0; v<NCOMP_PASSIVE; v++)
-                     Aux_Message( stderr, "  %21s", PassiveFieldName_Grid[v] );
-#                    endif
+                     Aux_Message( stderr, "%4s  %7s  %19s  %10s", "Rank", "PID", "Patch Corner", "Cell Idx" );
+                     for (int v=0; v<NCOMP_TOTAL; v++)   Aux_Message( stderr, "  %21s", FieldLabel[v] );
                      Aux_Message( stderr, "  %21s\n", "Pres" );
 
                      Pass = false;
                   }
 
-                  Aux_Message( stderr, "%4d  %7d  (%5d,%5d,%5d)  (%2d,%2d,%2d)  %21.14e  %21.14e  %21.14e  %21.14e  %21.14e",
+                  Aux_Message( stderr, "%4d  %7d  (%5d,%5d,%5d)  (%2d,%2d,%2d)",
                                MPI_Rank, PID, amr->patch[0][lv][PID]->corner[0],
                                               amr->patch[0][lv][PID]->corner[1],
-                                              amr->patch[0][lv][PID]->corner[2], i, j, k,
-                               Fluid[DENS], Fluid[MOMX], Fluid[MOMY], Fluid[MOMZ], Fluid[ENGY] );
-#                 if ( NCOMP_PASSIVE > 0 )
-                  for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)
-                  Aux_Message( stderr, "  %21.14e", Fluid[v] );
-#                 endif
+                                              amr->patch[0][lv][PID]->corner[2], i, j, k );
+                  for (int v=0; v<NCOMP_TOTAL; v++)   Aux_Message( stderr, "  %21.14e", Fluid[v] );
                   Aux_Message( stderr, "  %21.14e\n", Pres );
                }
             } // if ( Mode == 1  ||  Mode == 3 )
@@ -114,26 +106,18 @@ void Hydro_Aux_Check_Negative( const int lv, const int Mode, const char *comment
                   {
                      Aux_Message( stderr, "\"%s\" : <%s> FAILED at level %2d, Time = %13.7e, Step = %ld !!\n",
                                   comment, __FUNCTION__, lv, Time[lv], Step );
-                     Aux_Message( stderr, "%4s  %7s  %19s  %10s  %21s  %21s  %21s  %21s  %21s",
-                                  "Rank", "PID", "Patch Corner", "Grid ID", "Dens", "MomX", "MomY", "MomZ", "Engy" );
-#                    if ( NCOMP_PASSIVE > 0 )
-                     for (int v=0; v<NCOMP_PASSIVE; v++)
-                     Aux_Message( stderr, "  %21s", PassiveFieldName_Grid[v] );
-#                    endif
+                     Aux_Message( stderr, "%4s  %7s  %19s  %10s", "Rank", "PID", "Patch Corner", "Cell Idx" );
+                     for (int v=0; v<NCOMP_TOTAL; v++)   Aux_Message( stderr, "  %21s", FieldLabel[v] );
                      Aux_Message( stderr, "  %21s\n", "Pres" );
 
                      Pass = false;
                   }
 
-                  Aux_Message( stderr, "%4d  %7d  (%5d,%5d,%5d)  (%2d,%2d,%2d)  %21.14e  %21.14e  %21.14e  %21.14e  %21.14e",
+                  Aux_Message( stderr, "%4d  %7d  (%5d,%5d,%5d)  (%2d,%2d,%2d)",
                                MPI_Rank, PID, amr->patch[0][lv][PID]->corner[0],
                                               amr->patch[0][lv][PID]->corner[1],
-                                              amr->patch[0][lv][PID]->corner[2], i, j, k,
-                               Fluid[DENS], Fluid[MOMX], Fluid[MOMY], Fluid[MOMZ], Fluid[ENGY] );
-#                 if ( NCOMP_PASSIVE > 0 )
-                  for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)
-                  Aux_Message( stderr, "  %21.14e", Fluid[v] );
-#                 endif
+                                              amr->patch[0][lv][PID]->corner[2], i, j, k );
+                  for (int v=0; v<NCOMP_TOTAL; v++)   Aux_Message( stderr, "  %21.14e", Fluid[v] );
                   Aux_Message( stderr, "  %21.14e\n", Pres );
                }
             } // if ( Mode == 2  ||  Mode == 3 )

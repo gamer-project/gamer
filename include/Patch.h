@@ -117,7 +117,7 @@ long  LB_Corner2Index( const int lv, const int Corner[], const Check_t Check );
 //                                  --> **Leaf real** patches will always have NPar_Copy == -1
 //                                  --> In SERIAL mode, these non-leaf real patches will have their particle
 //                                      IDs stored in ParList_Copy, which points to the same particle repository
-//                                      (i.e., the amr->Par->ParVar/Passive arrays). In comparison, in LOAD_BALANCE mode,
+//                                      (i.e., the amr->Par->Attribute[]). In comparison, in LOAD_BALANCE mode,
 //                                      since particles corresponding to NPar_Copy may be collected from other ranks,
 //                                      these patches will allocate a local particle attribute array called ParMassPos_Copy
 //                                      (since currently we only collect mass and position for these particles).

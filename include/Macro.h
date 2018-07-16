@@ -156,6 +156,7 @@
 #if   ( MODEL == HYDRO )
 
 // variable indices in the array "fluid" [0 ... NCOMP_FLUID-1]
+// --> must NOT modify their values
 #  define  DENS               0
 #  define  MOMX               1
 #  define  MOMY               2
@@ -164,21 +165,14 @@
 
 // variable indices in the array "passive" [NCOMP_FLUID ... NCOMP_TOTAL-1]
 #if ( NCOMP_PASSIVE > 0 )
-// example for NCOMP_PASSIVE == 3
-/*
-#  define  METAL              ( NCOMP_FLUID + 0 )
-#  define  HI                 ( NCOMP_FLUID + 1 )
-#  define  HII                ( NCOMP_FLUID + 2 )
-*/
-
 // always store the dual-energy variable as the **first** passive variable
 // --> so that ENPY/EINT can be determined during compilation
 // --> convenient (and probably also more efficient) for the fluid solver
-#  if   ( DUAL_ENERGY == DE_ENPY )
+# if   ( DUAL_ENERGY == DE_ENPY )
 #  define  ENPY               ( NCOMP_FLUID + 0 )
-#  elif ( DUAL_ENERGY == DE_EINT )
+# elif ( DUAL_ENERGY == DE_EINT )
 #  define  EINT               ( NCOMP_FLUID + 0 )
-#  endif
+# endif
 #endif
 
 // variable indices in the array "flux" [0 ... NFLUX_FLUID-1]
@@ -190,16 +184,12 @@
 
 // variable indices in the array "flux_passive" [NFLUX_FLUID ... NFLUX_TOTAL-1]
 #if ( NCOMP_PASSIVE > 0 )
-// example for NCOMP_PASSIVE == 3
-#  define  FLUX_METAL         ( NFLUX_FLUID + 0 )
-#  define  FLUX_HI            ( NFLUX_FLUID + 1 )
-#  define  FLUX_HII           ( NFLUX_FLUID + 2 )
-// always store entropy (or internal energy) for the dual energy formalism as the last passive variable
-#  if   ( DUAL_ENERGY == DE_ENPY )
-#  define  FLUX_ENPY          ( NFLUX_TOTAL - 1 )
-#  elif ( DUAL_ENERGY == DE_EINT )
-#  define  FLUX_EINT          ( NFLUX_TOTAL - 1 )
-#  endif
+// always store the dual-energy variable as the **first** passive variable
+# if   ( DUAL_ENERGY == DE_ENPY )
+#  define  FLUX_ENPY          ( NFLUX_FLUID + 0 )
+# elif ( DUAL_ENERGY == DE_EINT )
+#  define  FLUX_EINT          ( NFLUX_FLUID + 0 )
+# endif
 #endif
 
 // symbolic constants used as function parameters (e.g., Prepare_PatchData)
@@ -210,16 +200,11 @@
 #  define _ENGY               ( 1 << ENGY )
 
 #if ( NCOMP_PASSIVE > 0 )
-// example for NCOMP_PASSIVE == 3
-#  define _METAL              ( 1 << METAL  )
-#  define _HI                 ( 1 << HI     )
-#  define _HII                ( 1 << HII    )
-// always store entropy (or internal energy) for the dual energy formalism as the last passive variable
-#  if   ( DUAL_ENERGY == DE_ENPY )
+# if   ( DUAL_ENERGY == DE_ENPY )
 #  define _ENPY               ( 1 << ENPY )
-#  elif ( DUAL_ENERGY == DE_EINT )
+# elif ( DUAL_ENERGY == DE_EINT )
 #  define _EINT               ( 1 << EINT )
-#  endif
+# endif
 #endif // #if ( NCOMP_PASSIVE > 0 )
 
 // symbolic constants of flux used as function parameters (e.g., Buf_GetBufferData)
@@ -230,16 +215,11 @@
 #  define _FLUX_ENGY          ( 1 << FLUX_ENGY )
 
 #if ( NFLUX_PASSIVE > 0 )
-// example for NFLUX_PASSIVE == 3
-#  define _FLUX_METAL         ( 1 << FLUX_METAL  )
-#  define _FLUX_HI            ( 1 << FLUX_HI     )
-#  define _FLUX_HII           ( 1 << FLUX_HII    )
-// always store entropy (or internal energy) for the dual energy formalism as the last passive variable
-#  if   ( DUAL_ENERGY == DE_ENPY )
+# if   ( DUAL_ENERGY == DE_ENPY )
 #  define _FLUX_ENPY          ( 1 << FLUX_ENPY )
-#  elif ( DUAL_ENERGY == DE_EINT )
+# elif ( DUAL_ENERGY == DE_EINT )
 #  define _FLUX_EINT          ( 1 << FLUX_EINT )
-#  endif
+# endif
 #endif // #if ( NFLUX_PASSIVE > 0 )
 
 // derived variables
@@ -302,14 +282,45 @@
 // symbolic constants for particles
 #ifdef PARTICLE
 
-// number of variables stored in each particle (excluding the passive variables)
-#  ifdef STORE_PAR_ACC
-#  define PAR_NVAR            ( 11 + 0 )
-#  else
-#  define PAR_NVAR            (  8 + 0 )
-#  endif
+// number of built-in particle attributes
+// (1) mass, position*3, velocity*3, and time
+#  define PAR_NATT_BUILTIN0   8
 
-// variable indices in the array "ParVar" [0 ... PAR_NVAR-1]
+// acceleration*3 when STORE_PAR_ACC is adopted
+# ifdef STORE_PAR_ACC
+#  define PAR_NATT_BUILTIN1   3
+# else
+#  define PAR_NATT_BUILTIN1   0
+# endif
+
+// particle creation time when STAR_FORMATION is adopted
+# ifdef STAR_FORMATION
+#  define PAR_NATT_BUILTIN2   1
+# else
+#  define PAR_NATT_BUILTIN2   0
+# endif
+
+// **total** number of bulit-in particle attributes
+#  define PAR_NATT_BUILTIN    ( PAR_NATT_BUILTIN0 + PAR_NATT_BUILTIN1 + PAR_NATT_BUILTIN2 )
+
+
+// number of particle attributes that we do not want to store on disk (currently time + acceleration*3)
+#  define PAR_NATT_UNSTORED   ( 1 + PAR_NATT_BUILTIN1 )
+#  define PAR_NATT_STORED     ( PAR_NATT_TOTAL - PAR_NATT_UNSTORED )
+
+
+// define PAR_NATT_USER if not set in the Makefile
+# ifndef PAR_NATT_USER
+#  define PAR_NATT_USER       0
+# endif
+
+
+// total number of particle attributes (built-in + user-defined)
+#  define PAR_NATT_TOTAL      ( PAR_NATT_BUILTIN + PAR_NATT_USER )
+
+
+// indices of built-in particle attributes in Par->Attribute[]
+// --> must NOT modify their values
 #  define  PAR_MASS           0
 #  define  PAR_POSX           1
 #  define  PAR_POSY           2
@@ -317,37 +328,16 @@
 #  define  PAR_VELX           4
 #  define  PAR_VELY           5
 #  define  PAR_VELZ           6
-#  define  PAR_TIME           7
-#  define  PAR_ACCX           8
-#  define  PAR_ACCY           9
-#  define  PAR_ACCZ          10
 
-// number of passive particle attributes
-// --> define PAR_NPASSIVE_USER if not set in the Makefile
-#ifndef PAR_NPASSIVE_USER
-#  define PAR_NPASSIVE_USER   0
-#endif
-// --> including PAR_CREATION_TIME when STAR_FORMATION is adopted
-#ifdef STAR_FORMATION
-#  define PAR_NPASSIVE        ( PAR_NPASSIVE_USER + 1 )
-#else
-#  define PAR_NPASSIVE        ( PAR_NPASSIVE_USER     )
-#endif
+// always put acceleration and time at the end of the particle attribute list
+// --> make it easier to discard them when storing data on disk (see Output_DumpData_Total(_HDF5).cpp)
+# ifdef STORE_PAR_ACC
+#  define  PAR_ACCX           ( PAR_NATT_TOTAL - 4 )
+#  define  PAR_ACCY           ( PAR_NATT_TOTAL - 3 )
+#  define  PAR_ACCZ           ( PAR_NATT_TOTAL - 2 )
+# endif
+#  define  PAR_TIME           ( PAR_NATT_TOTAL - 1 )
 
-// passive variable indices in the array "Passive" [0 ... PAR_NPASSIVE-1]
-// --> note that unlike the passive scalars on cells, the indices of passive particle attributes start from 0
-// --> this may be modified in the future
-#if ( PAR_NPASSIVE > 0 )
-// example for PAR_NPASSIVE == 3
-#  define  PAR_METAL_FRAC     0
-#  define  PAR_HI_FRAC        1
-#  define  PAR_HII_FRAC       2
-
-// always store PAR_CREATION_TIME as the last passive attribute
-#  ifdef STAR_FORMATION
-#  define  PAR_CREATION_TIME  ( PAR_NPASSIVE - 1 )
-#  endif
-#endif
 
 // symbolic constants used as function parameters (e.g., Prepare_PatchData)
 #  if ( MODEL == PAR_ONLY )
