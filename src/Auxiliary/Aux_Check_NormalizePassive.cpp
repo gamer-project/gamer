@@ -21,10 +21,23 @@ void Aux_Check_NormalizePassive( const int lv, const char *comment )
 
 // check
 #  ifndef DENS
-   Aux_Message( stderr, "WARNING : function \"%s\" is supported only when DENS is defined !!\n", __FUNCTION__ );
    OPT__CK_NORMALIZE_PASSIVE = false;
+
+   if ( MPI_Rank == 0 )
+      Aux_Message( stderr, "WARNING : \"OPT__CK_NORMALIZE_PASSIVE\" is supported only when DENS is defined !!\n" );
+
    return;
 #  endif
+
+   if ( PassiveNorm_NVar <= 0 )
+   {
+      OPT__CK_NORMALIZE_PASSIVE = false;
+
+      if ( MPI_Rank == 0 )
+         Aux_Message( stderr, "WARNING : \"OPT__CK_NORMALIZE_PASSIVE\" is disabled since there are no passive scalars to be normalized !!\n" );
+
+      return;
+   }
 
 
 #  ifdef FLOAT8
