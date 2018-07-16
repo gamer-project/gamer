@@ -1,6 +1,6 @@
 Compilation flags:
 ========================================
-Enable : MODEL=HYDRO, GRAVITY, PARTICLE
+Enable : MODEL=HYDRO, GRAVITY
 Disable: COMOVING
 
 

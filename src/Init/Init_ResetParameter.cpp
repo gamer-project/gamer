@@ -730,28 +730,6 @@ void Init_ResetParameter()
 #  endif
 
 
-// turn off OPT__NORMALIZE_PASSIVE if there are no passive scalars
-#  if (  NCOMP_PASSIVE <= 0  ||  ( defined DUAL_ENERGY && NCOMP_PASSIVE == 1 )  )
-   if ( OPT__NORMALIZE_PASSIVE )
-   {
-      OPT__NORMALIZE_PASSIVE = false;
-
-      PRINT_WARNING( OPT__NORMALIZE_PASSIVE, FORMAT_INT, "since there are no passive scalars" );
-   }
-#  endif
-
-
-// OPT__CK_NORMALIZE_PASSIVE must work with OPT__NORMALIZE_PASSIVE
-#  if ( NCOMP_PASSIVE > 0 )
-   if ( OPT__CK_NORMALIZE_PASSIVE  &&  !OPT__NORMALIZE_PASSIVE )
-   {
-      OPT__CK_NORMALIZE_PASSIVE = false;
-
-      PRINT_WARNING( OPT__CK_NORMALIZE_PASSIVE, FORMAT_INT, "since OPT__NORMALIZE_PASSIVE is disabled" );
-   }
-#  endif
-
-
 // JEANS_MIN_PRES must work with GRAVITY
 #  if ( MODEL == HYDRO  ||  MODEL == MHD )
 #  ifndef GRAVITY

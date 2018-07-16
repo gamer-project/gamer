@@ -77,6 +77,16 @@ void Init_Field()
                  NDefinedField, NCOMP_TOTAL );
 
 
+// 5. turn off OPT__NORMALIZE_PASSIVE if there are no passive scalars to be normalized
+   if ( OPT__NORMALIZE_PASSIVE  &&  PassiveNorm_NVar == 0 )
+   {
+      OPT__NORMALIZE_PASSIVE = false;
+
+      if ( MPI_Rank == 0 )
+         Aux_Message( stderr, "WARNING : disabling \"OPT__NORMALIZE_PASSIVE\" since there are no passive scalars to be normalized !!\n" );
+   }
+
+
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", __FUNCTION__ );
 
 } // FUNCTION : Init_Field
@@ -127,7 +137,9 @@ FieldIdx_t AddField( char *InputLabel, const NormPassive_t Norm )
 
 // set the normalization list
 // --> note that PassiveNorm_VarIdx[] starts from 0 instead of NCOMP_FLUID
-   if ( OPT__NORMALIZE_PASSIVE  &&  Norm )
+// --> currently we set PassiveNorm_VarIdx[] no mater OPT__NORMALIZE_PASSIVE is on or off
+//     --> this allows Aux_Check_Conservation() to work on passive scalars even when OPT__NORMALIZE_PASSIVE is off
+   if ( Norm )
    {
       const int NormIdx = PassiveNorm_NVar ++;
 

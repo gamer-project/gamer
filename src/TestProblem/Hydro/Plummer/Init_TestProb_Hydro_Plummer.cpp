@@ -59,10 +59,6 @@ void Validate()
    Aux_Error( ERROR_INFO, "GRAVITY must be enabled !!\n" );
 #  endif
 
-#  ifndef PARTICLE
-   Aux_Error( ERROR_INFO, "PARTICLE must be enabled !!\n" );
-#  endif
-
 #  ifdef COMOVING
    Aux_Error( ERROR_INFO, "COMOVING must be disabled !!\n" );
 #  endif
@@ -150,16 +146,21 @@ void SetParameter()
       if ( Plummer_Center[d] == NoDef_double )  Plummer_Center[d] = 0.5*amr->BoxSize[d];
 
    if ( !Plummer_Collision  &&  Plummer_AddColor )
+      Aux_Error( ERROR_INFO, "\"Plummer_AddColor\" must work with \"Plummer_Collision\" !!\n" );
+
+// (1-3) check and reset the runtime parameters
+   if ( Plummer_AddColor  &&  NCOMP_PASSIVE_USER != 2 )
+      Aux_Error( ERROR_INFO, "please set NCOMP_PASSIVE_USER to 2 for \"Plummer_AddColor\" !!\n" );
+
+#  ifndef PARTICLE
+   if ( Plummer_GasMFrac != 1.0 )
    {
-      Plummer_AddColor = false;
+      Plummer_GasMFrac = 1.0;
 
       if ( MPI_Rank == 0 )
-         Aux_Message( stderr, "WARNING : Plummer_AddColor is only useful when Plummer_Collision is on !!\n" );
+         Aux_Message( stderr, "WARNING : \"Plummer_GasMFrac\" is reset to 1.0 since PARTICLE is disabled !!\n" );
    }
-
-// (1-3) check the runtime parameters
-   if ( Plummer_AddColor  &&  NCOMP_PASSIVE_USER != 2 )
-         Aux_Error( ERROR_INFO, "Please set NCOMP_PASSIVE_USER to 2 for \"Plummer_AddColor\" !!\n" );
+#  endif
 
 // (2) set the problem-specific derived parameters
 #  ifdef GRAVITY

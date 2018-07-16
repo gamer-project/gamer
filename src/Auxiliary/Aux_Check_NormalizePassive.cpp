@@ -8,11 +8,9 @@
 // Description :  Verify that the passive scalars are properly normalized
 //                --> sum(passive scalar mass density) = gas_mass_density
 //
-// Note        :  1. Only check variables stored in PassiveNorm_VarIdx
-//                2. Must turn on OPT__NORMALIZE_PASSIVE
-//                3. One can edit Init_PassiveVariable.cpp to set the target passive scalars
-//                   --> Default is to include all passive scalars except for the internal energy
-//                       used by the dual-energy formalism
+// Note        :  1. Only check variables stored in PassiveNorm_VarIdx[]
+//                2. This check will likely fail if OPT__NORMALIZE_PASSIVE is disabled
+//                3. Target passive scalars to be normalized are determined when invoking AddField()
 //
 // Parameter   :  lv       : Target refinement level
 //                comment  : You can put the location where this function is invoked in this string
