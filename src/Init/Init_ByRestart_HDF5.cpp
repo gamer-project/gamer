@@ -247,8 +247,8 @@ void Init_ByRestart_HDF5( const char *FileName )
    if ( MPI_Rank == 0 )
    {
       Check_Makefile ( FileName, KeyInfo.FormatVersion );
-      Check_SymConst ( FileName, KeyIkey.FormatVersion );
-      Check_InputPara( FileName, KeyIkey.FormatVersion );
+      Check_SymConst ( FileName, KeyInfo.FormatVersion );
+      Check_InputPara( FileName, KeyInfo.FormatVersion );
    }
 
 
@@ -1305,7 +1305,7 @@ void Check_Makefile( const char *FileName, const int FormatVersion )
 #  ifdef PARTICLE
    LoadField( "StoreParAcc",            &RS.StoreParAcc,            SID, TID, NonFatal, &RT.StoreParAcc,            1, NonFatal );
    LoadField( "StarFormation",          &RS.StarFormation,          SID, TID, NonFatal, &RT.StarFormation,          1, NonFatal );
-   if ( KeyInfo.FormatVersion >= 2267 )
+   if ( FormatVersion >= 2267 )
    LoadField( "Par_NAttUser",           &RS.Par_NAttUser,           SID, TID, NonFatal, &RT.Par_NAttUser,           1,    Fatal );
    else
    LoadField( "Par_NAttUser",           &RS.Par_NAttUser,           SID, TID, NonFatal, &RT.Par_NAttUser,           1, NonFatal );
@@ -1412,7 +1412,7 @@ void Check_SymConst( const char *FileName, const int FormatVersion )
 #  endif // #ifdef GRAVITY
 
 #  ifdef PARTICLE
-   if ( KeyInfo.FormatVersion >= 2267 )
+   if ( FormatVersion >= 2267 )
    LoadField( "Par_NAttStored",       &RS.Par_NAttStored,       SID, TID, NonFatal, &RT.Par_NAttStored,        1,    Fatal );
    else
    LoadField( "Par_NAttStored",       &RS.Par_NAttStored,       SID, TID, NonFatal, &RT.Par_NAttStored,        1, NonFatal );
