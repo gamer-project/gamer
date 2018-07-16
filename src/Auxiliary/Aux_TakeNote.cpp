@@ -858,8 +858,8 @@ void Aux_TakeNote()
       fprintf( Note, "OPT__NORMALIZE_PASSIVE          %d\n",      OPT__NORMALIZE_PASSIVE   );
 
 //    target passive scalars to be normalized
-      if ( OPT__NORMALIZE_PASSIVE ) {
       fprintf( Note, "   Number of fields             %d\n",      PassiveNorm_NVar         );
+      if ( PassiveNorm_NVar > 0 ) {
       fprintf( Note, "   Target fields               "                                     );
       for (int v=0; v<PassiveNorm_NVar; v++)
       fprintf( Note, " %s",                                       FieldLabel[ NCOMP_FLUID + PassiveNorm_VarIdx[v] ] );
