@@ -142,7 +142,6 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
 void End_GAMER();
 void End_MemFree();
 void End_MemFree_Fluid();
-void End_MemFree_PassiveFieldName();
 void End_StopManually( int &Terminate_global );
 void Init_BaseLevel();
 void Init_GAMER( int *argc, char ***argv );
@@ -158,15 +157,14 @@ void Init_RecordBasePatch();
 void Init_Refine( const int lv );
 void Init_ByRestart();
 void Init_Unit();
-void Init_PassiveVariable();
 void Init_Reload_OldFormat();
 void Init_ByFunction();
 void Init_TestProb();
 void Init_ByFile();
 void Init_UniformGrid( const int lv, const bool FindHomePatchForPar );
 void Init_Field();
-FieldIdx_t AddField( const char *InputLabel, const NormPassive_t Norm );
-FieldIdx_t GetFieldIndex( const char *InputLabel );
+FieldIdx_t AddField( char *InputLabel, const NormPassive_t Norm );
+FieldIdx_t GetFieldIndex( char *InputLabel );
 #ifdef OPENMP
 void Init_OpenMP();
 #endif
@@ -525,7 +523,7 @@ void Par_LB_ExchangeParticleBetweenPatch( const int lv,
                                           const int Send_NPatchTotal, const int *Send_PIDList, int *Send_NPatchEachRank,
                                           const int Recv_NPatchTotal, const int *Recv_PIDList, int *Recv_NPatchEachRank,
                                           Timer_t *Timer, const char *Timer_Comment );
-void Par_LB_SendParticleData( const int NParVar, int *SendBuf_NPatchEachRank, int *SendBuf_NParEachPatch,
+void Par_LB_SendParticleData( const int NParAtt, int *SendBuf_NPatchEachRank, int *SendBuf_NParEachPatch,
                               long *SendBuf_LBIdxEachPatch, real *SendBuf_ParDataEachPatch, const int NSendParTotal,
                               int *&RecvBuf_NPatchEachRank, int *&RecvBuf_NParEachPatch, long *&RecvBuf_LBIdxEachPatch,
                               real *&RecvBuf_ParDataEachPatch, int &NRecvPatchTotal, int &NRecvParTotal,

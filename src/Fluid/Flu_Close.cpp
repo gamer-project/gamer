@@ -714,11 +714,9 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
 
 //                output all data in the input fluid array (including ghost zones)
                   fprintf( File, "\n===============================================================================================\n" );
-                  fprintf( File, "(%2s,%2s,%2s)%14s%14s%14s%14s%14s%14s",
-                           "i", "j", "k", "Density", "Px", "Py", "Pz", "Energy", "Pressure" );
-#                 if ( NCOMP_PASSIVE > 0 )
-                  for (int v=0; v<NCOMP_PASSIVE; v++)    fprintf( File, "%14s", PassiveFieldName_Grid[v] );
-#                 endif
+                  fprintf( File, "(%2s,%2s,%2s)", "i", "j", "k" );
+                  for (int v=0; v<NCOMP_TOTAL; v++)   fprintf( File, "%14s", FieldLabel[v] );
+                  fprintf( File, "%14s", "Pressure" );
                   fprintf( File, "\n" );
 
                   for (int k=0; k<FLU_NXT; k++)

@@ -104,7 +104,7 @@ void Init_Field()
 //                (2) Index of the newly added field
 //                (3) PassiveNorm_NVar & PassiveNorm_VarIdx[]
 //-------------------------------------------------------------------------------------------------------
-FieldIdx_t AddField( const char *InputLabel, const NormPassive_t Norm )
+FieldIdx_t AddField( char *InputLabel, const NormPassive_t Norm )
 {
 
    const FieldIdx_t FieldIdx = NDefinedField ++;
@@ -163,7 +163,7 @@ FieldIdx_t AddField( const char *InputLabel, const NormPassive_t Norm )
 // Return      :  Sucess: index of the target field
 //                Failed: Idx_Undefined
 //-------------------------------------------------------------------------------------------------------
-FieldIdx_t GetFieldIndex( const char *InputLabel )
+FieldIdx_t GetFieldIndex( char *InputLabel )
 {
 
    FieldIdx_t Idx_Out = Idx_Undefined;

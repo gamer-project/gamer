@@ -46,6 +46,13 @@ void Grackle_Prepare( const int lv, real h_Che_Array[], const int NPG, const int
    real *Ptr_Dens=NULL, *Ptr_sEint=NULL, *Ptr_Ek=NULL, *Ptr_Metal=NULL;
 
 
+// check
+#  ifdef GAMER_DEBUG
+   if ( GRACKLE_METAL  &&  Idx_Metal == Idx_Undefined )
+      Aux_Error( ERROR_INFO, "Idx_Metal is undefined for \"GRACKLE_METAL\" !!\n" );
+#  endif
+
+
 #  pragma omp parallel for private( idx_pg, PID, PID0, Dens, Px, Py, Pz, Etot, _Dens, Ek, sEint, \
                                     Ptr_Dens, Ptr_sEint, Ptr_Ek, Ptr_Metal ) schedule( static )
    for (int TID=0; TID<NPG; TID++)

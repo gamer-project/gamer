@@ -37,20 +37,23 @@ extern bool AGORA_UseMetal;
 //                ParPosX/Y/Z   : Particle position array with the size of NPar_ThisRank
 //                ParVelX/Y/Z   : Particle velocity array with the size of NPar_ThisRank
 //                ParTime       : Particle time     array with the size of NPar_ThisRank
-//                ParPassive    : Particle passive attributes pointer array with the size [PAR_NPASSIVE][NPar_ThisRank]
+//                AllAttribute  : Pointer array for all particle attributes
+//                                --> Dimension = [PAR_NATT_TOTAL][NPar_ThisRank]
+//                                --> Use the attribute indices defined in Field.h (e.g., Idx_ParCreTime)
+//                                    to access the data
 //
-// Return      :  ParMass, ParPosX/Y/Z, ParVelX/Y/Z, ParTime, ParPassive
+// Return      :  ParMass, ParPosX/Y/Z, ParVelX/Y/Z, ParTime, AllAttribute
 //-------------------------------------------------------------------------------------------------------
 void Par_Init_ByFunction_AGORA( const long NPar_ThisRank, const long NPar_AllRank,
                                 real *ParMass, real *ParPosX, real *ParPosY, real *ParPosZ,
                                 real *ParVelX, real *ParVelY, real *ParVelZ, real *ParTime,
-                                real *ParPassive[PAR_NPASSIVE] )
+                                real *AllAttribute[PAR_NATT_TOTAL] )
 {
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ...\n", __FUNCTION__ );
 
 
-   const int NParVar = 7;  // mass, pos*3, vel*3
+   const int NParAtt = 7;  // mass, pos*3, vel*3
    real *ParData_AllRank = NULL;
 
 // load data --> for simplicity, currently only the root rank will load data from disk
@@ -86,7 +89,7 @@ void Par_Init_ByFunction_AGORA( const long NPar_ThisRank, const long NPar_AllRan
 
 
 //    allocate memory to store all particles loaded from disk
-      ParData_AllRank = new real [NPar_Sum*NParVar];
+      ParData_AllRank = new real [NPar_Sum*NParAtt];
 
 
 //    load data from the three particle tables
@@ -103,7 +106,7 @@ void Par_Init_ByFunction_AGORA( const long NPar_ThisRank, const long NPar_AllRan
          Aux_Message( stdout, "   Loading particles from the file \"%s\" ... ", Filename[t] );
 
 //       must use a temporary pointer "tmp_ptr" for Aux_LoadTable() because of the call-by-reference approach
-         real *tmp_ptr = ParData_AllRank + NPar_Loaded*NParVar;
+         real *tmp_ptr = ParData_AllRank + NPar_Loaded*NParAtt;
 
          NPar_Loaded += Aux_LoadTable( tmp_ptr, Filename[t], NCol, Col, RowMajor_Yes, AllocMem_No );
 
@@ -120,9 +123,9 @@ void Par_Init_ByFunction_AGORA( const long NPar_ThisRank, const long NPar_AllRan
 
 
 // get the number of particles in each rank and set the corresponding offsets
-   if ( (long)NParVar*NPar_AllRank > (long)__INT_MAX__ )
+   if ( (long)NParAtt*NPar_AllRank > (long)__INT_MAX__ )
       Aux_Error( ERROR_INFO, "Total number of particle attributes to be sent (%ld) exceeds the maximum integer (%ld) !!\n",
-                 (long)NParVar*NPar_AllRank, (long)__INT_MAX__ );
+                 (long)NParAtt*NPar_AllRank, (long)__INT_MAX__ );
 
    int NSend[MPI_NRank], SendDisp[MPI_NRank];
    int NPar_ThisRank_int = NPar_ThisRank;    // (i) convert to "int" and (ii) remove the "const" declaration
@@ -132,7 +135,7 @@ void Par_Init_ByFunction_AGORA( const long NPar_ThisRank, const long NPar_AllRan
 
    if ( MPI_Rank == 0 )
    {
-      for (int r=0; r<MPI_NRank; r++)  NSend[r] *= NParVar;
+      for (int r=0; r<MPI_NRank; r++)  NSend[r] *= NParAtt;
 
       SendDisp[0] = 0;
       for (int r=1; r<MPI_NRank; r++)  SendDisp[r] = SendDisp[r-1] + NSend[r-1];
@@ -141,14 +144,14 @@ void Par_Init_ByFunction_AGORA( const long NPar_ThisRank, const long NPar_AllRan
 
 // send particles from the root rank to all ranks
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Sending particles from the root rank to all ranks ... " );
-   real (*ParData_MyRank)[NParVar] = new real [NPar_ThisRank][NParVar];
+   real (*ParData_MyRank)[NParAtt] = new real [NPar_ThisRank][NParAtt];
 
 #  ifdef FLOAT8
    MPI_Scatterv( ParData_AllRank,   NSend, SendDisp,       MPI_DOUBLE,
-                 ParData_MyRank[0], NPar_ThisRank*NParVar, MPI_DOUBLE, 0, MPI_COMM_WORLD );
+                 ParData_MyRank[0], NPar_ThisRank*NParAtt, MPI_DOUBLE, 0, MPI_COMM_WORLD );
 #  else
    MPI_Scatterv( ParData_AllRank,   NSend, SendDisp,        MPI_FLOAT,
-                 ParData_MyRank[0], NPar_ThisRank*NParVar,  MPI_FLOAT, 0, MPI_COMM_WORLD );
+                 ParData_MyRank[0], NPar_ThisRank*NParAtt,  MPI_FLOAT, 0, MPI_COMM_WORLD );
 #  endif
 
    delete [] ParData_AllRank;
@@ -215,22 +218,19 @@ void Par_Init_ByFunction_AGORA( const long NPar_ThisRank, const long NPar_AllRan
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );
 
 
-// initialize the passive particle attributes, specifically, PAR_CREATION_TIME and PAR_METAL_FRAC
+// initialize problem-specific particle attributes, specifically, Idx_ParCreTime and Idx_ParMetalFrac
 // --> set to an arbitrary negative value to indicate that they are actually useless since they are only used
 //     for star particles created during the evolution
-   if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Initializing passive particle attributes ... " );
+   if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Initializing problem-specific particle attributes ... " );
 
    const real Useless = -1.0;
 
 #  ifdef STAR_FORMATION
-   for (int p=0; p<NPar_ThisRank; p++)    ParPassive[PAR_CREATION_TIME][p] = Useless;
+   for (int p=0; p<NPar_ThisRank; p++)    AllAttribute[Idx_ParCreTime  ][p] = Useless;
 #  endif
 
-//###: HARD-CODED FIELDS
-#  if ( PAR_NPASSIVE > 0 )
    if ( AGORA_UseMetal )
-   for (int p=0; p<NPar_ThisRank; p++)    ParPassive[PAR_METAL_FRAC   ][p] = Useless;
-#  endif
+   for (int p=0; p<NPar_ThisRank; p++)    AllAttribute[Idx_ParMetalFrac][p] = Useless;
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );
 

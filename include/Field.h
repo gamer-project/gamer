@@ -15,18 +15,19 @@ const FieldIdx_t Idx_Undefined = -1;   // must be outside the range [0, NCOMP_TO
 // ** SET_GLOBAL( FieldIdx_t Idx_NewField, Idx_Undefined ); **
 // **                                                       **
 // ***********************************************************
+
 #if   ( MODEL == HYDRO  ||  MODEL == MHD )
-SET_GLOBAL( FieldIdx_t Idx_Dens,    Idx_Undefined );
-SET_GLOBAL( FieldIdx_t Idx_MomX,    Idx_Undefined );
-SET_GLOBAL( FieldIdx_t Idx_MomY,    Idx_Undefined );
-SET_GLOBAL( FieldIdx_t Idx_MomZ,    Idx_Undefined );
-SET_GLOBAL( FieldIdx_t Idx_Engy,    Idx_Undefined );
+SET_GLOBAL( FieldIdx_t Idx_Dens,          Idx_Undefined );
+SET_GLOBAL( FieldIdx_t Idx_MomX,          Idx_Undefined );
+SET_GLOBAL( FieldIdx_t Idx_MomY,          Idx_Undefined );
+SET_GLOBAL( FieldIdx_t Idx_MomZ,          Idx_Undefined );
+SET_GLOBAL( FieldIdx_t Idx_Engy,          Idx_Undefined );
 #if   ( DUAL_ENERGY == DE_ENPY )
-SET_GLOBAL( FieldIdx_t Idx_Enpy,    Idx_Undefined );
+SET_GLOBAL( FieldIdx_t Idx_Enpy,          Idx_Undefined );
 #elif ( DUAL_ENERGY == DE_EINT )
-SET_GLOBAL( FieldIdx_t Idx_Eint,    Idx_Undefined );
+SET_GLOBAL( FieldIdx_t Idx_Eint,          Idx_Undefined );
 #endif
-SET_GLOBAL( FieldIdx_t Idx_Metal,   Idx_Undefined );
+SET_GLOBAL( FieldIdx_t Idx_Metal,         Idx_Undefined );
 
 #elif ( MODEL == ELBDM )
 
@@ -35,10 +36,43 @@ SET_GLOBAL( FieldIdx_t Idx_Metal,   Idx_Undefined );
 #endif // MODEL
 
 
-// field labels
-SET_GLOBAL( const char *FieldLabel[NCOMP_TOTAL] );
+
+// ***************************************************************
+// ** Add new particle attribute indices below with the format: **
+// **                                                           **
+// ** SET_GLOBAL( FieldIdx_t Idx_NewAttribute, Idx_Undefined ); **
+// **                                                           **
+// ***************************************************************
+
+#ifdef PARTICLE
+SET_GLOBAL( FieldIdx_t Idx_ParMass,       Idx_Undefined );
+SET_GLOBAL( FieldIdx_t Idx_ParPosX,       Idx_Undefined );
+SET_GLOBAL( FieldIdx_t Idx_ParPosY,       Idx_Undefined );
+SET_GLOBAL( FieldIdx_t Idx_ParPosZ,       Idx_Undefined );
+SET_GLOBAL( FieldIdx_t Idx_ParVelX,       Idx_Undefined );
+SET_GLOBAL( FieldIdx_t Idx_ParVelY,       Idx_Undefined );
+SET_GLOBAL( FieldIdx_t Idx_ParVelZ,       Idx_Undefined );
+SET_GLOBAL( FieldIdx_t Idx_ParTime,       Idx_Undefined );
+#ifdef STORE_PAR_ACC
+SET_GLOBAL( FieldIdx_t Idx_ParAccX,       Idx_Undefined );
+SET_GLOBAL( FieldIdx_t Idx_ParAccY,       Idx_Undefined );
+SET_GLOBAL( FieldIdx_t Idx_ParAccZ,       Idx_Undefined );
+#endif
+#ifdef STAR_FORMATION
+SET_GLOBAL( FieldIdx_t Idx_ParCreTime,    Idx_Undefined );
+#endif
+SET_GLOBAL( FieldIdx_t Idx_ParMetalFrac,  Idx_Undefined );
+#endif // #ifdef PARTICLE
+
+
+
+// field and particle attribute labels
+SET_GLOBAL( char *FieldLabel[NCOMP_TOTAL] );
 #ifdef GRAVITY
-SET_GLOBAL( const char *PotLabel, "Pote" );  // potential label is currently fixed
+SET_GLOBAL( char *PotLabel, "Pote" );  // potential label is currently fixed
+#endif
+#ifdef PARTICLE
+SET_GLOBAL( char *ParAttLabel[PAR_NATT_TOTAL] );
 #endif
 
 

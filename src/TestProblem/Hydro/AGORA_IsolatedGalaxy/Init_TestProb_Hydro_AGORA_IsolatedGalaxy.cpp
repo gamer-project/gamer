@@ -20,7 +20,7 @@ static double  AGORA_HaloGasTemp;               // halo gas temperature
        bool    AGORA_UseMetal = false;          // add and advect a metal density field
                                                 // --> to enable this option, one must
                                                 //     (1) set AGORA_(Disk/Halo)MetalMassFrac properly
-                                                //     (2) set NCOMP_PASSIVE_USER>=1 and PAR_NPASSIVE_USER>=1 in the Makefile
+                                                //     (2) set NCOMP_PASSIVE_USER>=1 and PAR_NATT_USER>=1 in the Makefile
                                                 // --> necessary if one wants to enable metal_cooling in Grackle
 static double  AGORA_DiskMetalMassFrac;         // disk metal mass fraction (disk_metal_mass / disk_gas_mass)
 static double  AGORA_HaloMetalMassFrac;         // halo metal mass fraction (halo_metal_mass / halo_gas_mass)
@@ -41,7 +41,7 @@ bool Flag_AGORA( const int i, const int j, const int k, const int lv, const int 
 void Par_Init_ByFunction_AGORA( const long NPar_ThisRank, const long NPar_AllRank,
                                 real *ParMass, real *ParPosX, real *ParPosY, real *ParPosZ,
                                 real *ParVelX, real *ParVelY, real *ParVelZ, real *ParTime,
-                                real *ParPassive[PAR_NPASSIVE] );
+                                real *AllAttribute[PAR_NATT_TOTAL] );
 #endif
 
 
@@ -190,17 +190,11 @@ void SetParameter()
 // check the runtime parameters
    if ( AGORA_UseMetal )
    {
-#     if ( NCOMP_PASSIVE_USER < 1 )
-         Aux_Error( ERROR_INFO, "please set NCOMP_PASSIVE_USER >= 1 in the Makefile for \"AGORA_UseMetal\" !!\n" );
-#     endif
+      if ( Idx_Metal == Idx_Undefined )
+         Aux_Error( ERROR_INFO, "Idx_Metal is undefined for \"AGORA_UseMetal\" !!\n" );
 
-#     if (  ( defined STAR_FORMATION && PAR_NPASSIVE < 2 )  ||  ( !defined STAR_FORMATION && PAR_NPASSIVE < 1 )  )
-         Aux_Error( ERROR_INFO, "please set PAR_NPASSIVE_USER >= 1 in the Makefile for \"AGORA_UseMetal\" !!\n" );
-#     endif
-
-#     ifndef PAR_METAL_FRAC
-         Aux_Error( ERROR_INFO, "please define the symbolic constant \"PAR_METAL_FRAC\" properly in Macro.h for \"AGORA_UseMetal\" !!\n" );
-#     endif
+      if ( Idx_ParMetalFrac == Idx_Undefined )
+         Aux_Error( ERROR_INFO, "Idx_ParMetalFrac is undefined for \"AGORA_UseMetal\" !!\n" );
    }
 
    else

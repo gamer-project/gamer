@@ -499,8 +499,9 @@ void Aux_TakeNote()
 #     endif
 #     endif // #ifdef GPU
 #     ifdef PARTICLE
-      fprintf( Note, "#define PAR_NVAR                %d\n",      PAR_NVAR            );
-      fprintf( Note, "#define PAR_NPASSIVE            %d\n",      PAR_NPASSIVE        );
+      fprintf( Note, "#define PAR_NATT_TOTAL          %d\n",      PAR_NATT_TOTAL      );
+      fprintf( Note, "#define PAR_NATT_USER           %d\n",      PAR_NATT_USER       );
+      fprintf( Note, "#define PAR_NATT_STORED         %d\n",      PAR_NATT_STORED     );
 #     endif
       fprintf( Note, "#define MAX_STRING              %d\n",      MAX_STRING          );
       fprintf( Note, "#define TINY_NUMBER             %20.14e\n", TINY_NUMBER         );

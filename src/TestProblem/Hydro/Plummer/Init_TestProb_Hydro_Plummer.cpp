@@ -28,7 +28,7 @@ static FieldIdx_t Plummer_Idx_Cloud1 = Idx_Undefined;
 void Par_Init_ByFunction_Plummer( const long NPar_ThisRank, const long NPar_AllRank,
                                   real *ParMass, real *ParPosX, real *ParPosY, real *ParPosZ,
                                   real *ParVelX, real *ParVelY, real *ParVelZ, real *ParTime,
-                                  real *ParPassive[PAR_NPASSIVE] );
+                                  real *AllAttribute[PAR_NATT_TOTAL] );
 #endif
 
 

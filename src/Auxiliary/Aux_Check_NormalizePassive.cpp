@@ -69,7 +69,7 @@ void Aux_Check_NormalizePassive( const int lv, const char *comment )
                                   comment, __FUNCTION__, lv, Time[lv], Step );
                      Aux_Message( stderr, "%4s  %7s  %7s", "Rank", "PID", "(i,j,k)" );
                      for (int v=0; v<PassiveNorm_NVar; v++)
-                     Aux_Message( stderr, "  %13s", PassiveFieldName_Grid[ PassiveNorm_VarIdx[v] ] );
+                     Aux_Message( stderr, "  %13s", FieldLabel[ NCOMP_FLUID + PassiveNorm_VarIdx[v] ] );
                      Aux_Message( stderr, "  %13s  %13s  %13s", "Sum", "GasDens", "RelErr" );
                      Aux_Message( stderr, "\n" );
 
