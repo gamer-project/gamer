@@ -157,6 +157,7 @@
 
 // variable indices in the array "fluid" [0 ... NCOMP_FLUID-1]
 // --> must NOT modify their values
+// --> in addition, they must be consistent with the order these fields are declared in Init_Field()
 #  define  DENS               0
 #  define  MOMX               1
 #  define  MOMY               2
@@ -165,13 +166,13 @@
 
 // variable indices in the array "passive" [NCOMP_FLUID ... NCOMP_TOTAL-1]
 #if ( NCOMP_PASSIVE > 0 )
-// always store the dual-energy variable as the **first** passive variable
+// always store the dual-energy variable as the **last** passive variable
 // --> so that ENPY/EINT can be determined during compilation
 // --> convenient (and probably also more efficient) for the fluid solver
 # if   ( DUAL_ENERGY == DE_ENPY )
-#  define  ENPY               ( NCOMP_FLUID + 0 )
+#  define  ENPY               ( NCOMP_TOTAL - 1 )
 # elif ( DUAL_ENERGY == DE_EINT )
-#  define  EINT               ( NCOMP_FLUID + 0 )
+#  define  EINT               ( NCOMP_TOTAL - 1 )
 # endif
 #endif
 
