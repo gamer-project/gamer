@@ -304,8 +304,8 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  SetNewField
-// Description :  Set the problem-specific fields
+// Function    :  AddNewField_Plummer
+// Description :  Add the problem-specific fields
 //
 // Note        :  1. It takes 4 steps to add a new field
 //                   (1) Set NCOMP_PASSIVE_USER to 1 (or N if there are N new fields) in the Makefile
@@ -315,10 +315,10 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 //
 //                         static int NewFieldIdx;
 //
-//                   (3) Define a function (e.g., SetNewField()) to invoke AddField() to set the field label and
+//                   (3) Define a function (e.g., AddNewField()) to invoke AddField() to set the field label and
 //                       get the field index. For example,
 //
-//                         void SetNewField()
+//                         void AddNewField()
 //                         {
 //                            NewFieldIdx = AddField( "NewFieldLabel", NORMALIZE_YES );
 //                         }
@@ -327,10 +327,10 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 //                       whether the new field should be normalized by the total gas density
 //                       (also controlled by the option OPT__NORMALIZE_PASSIVE).
 //
-//                       You also need to link SetNewField() to the function pointer "Init_Field_User_Ptr" in the
+//                       You also need to link AddNewField() to the function pointer "Init_Field_User_Ptr" in the
 //                       test problem entry function (e.g., Init_TestProb_YourTestProblem()):
 //
-//                         Init_Field_User_Ptr = SetNewField;
+//                         Init_Field_User_Ptr = AddNewField;
 //
 //                   (4) Assign values to the new field in SetGridIC() using the correct field index.
 //                       For example,
@@ -341,9 +341,9 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 //                           (e.g., fields used by Grackle)
 //                      --> These fields will be set automatically by Init_Field()
 //                      --> Use the pre-defined field indices to access these fields (e.g., Idx_Metal for
-//                          the metalicity field used by Grackle)
+//                          the metallicity field used by Grackle)
 //
-//                2. By invoking AddField() for each of the problem-specific fields:
+//                2. By invoking AddField() for each of the problem-specific field:
 //                   --> Field label sent to AddField() will be used as the output name of the field
 //                   --> Field index returned by AddField() can be used to access the field data
 //
@@ -351,7 +351,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 //
 // Return      :  None
 //-------------------------------------------------------------------------------------------------------
-void SetNewField()
+void AddNewField_Plummer()
 {
 
    if ( Plummer_AddColor )
@@ -360,7 +360,7 @@ void SetNewField()
       Plummer_Idx_Cloud1 = AddField( "Cloud1", NORMALIZE_YES );
    }
 
-} // FUNCTION : SetNewField
+} // FUNCTION : AddNewField_Plummer
 #endif // #if ( MODEL == HYDRO )
 
 
@@ -391,7 +391,7 @@ void Init_TestProb_Hydro_Plummer()
 
 
    Init_Function_User_Ptr   = SetGridIC;
-   Init_Field_User_Ptr      = SetNewField;
+   Init_Field_User_Ptr      = AddNewField_Plummer;
    Flag_User_Ptr            = NULL;
    Mis_GetTimeStep_User_Ptr = NULL;
    BC_User_Ptr              = NULL;
