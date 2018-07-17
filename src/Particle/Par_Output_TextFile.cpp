@@ -32,7 +32,7 @@ void Par_Output_TextFile( const char *FileName )
       fprintf( File, "#Time %20.14e   Step %13ld   Active Particles %13ld\n\n",
                Time[0], Step, amr->Par->NPar_Active_AllRank );
 
-      fprintf( File, "# " );
+      fprintf( File, "#" );
 
       for (int v=0; v<PAR_NATT_TOTAL; v++)
       fprintf( File, "  %*s", (v==0)?20:21, ParAttLabel[v] );

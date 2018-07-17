@@ -67,9 +67,9 @@ SIMU_OPTION += -DRSOLVER=ROE
 # --> DE_EINT is not supported yet; useless for RTVD/WAF
 #SIMU_OPTION += -DDUAL_ENERGY=DE_ENPY
 
-# number of passively advected scalars (**excluding** entropy or internal energy used by DUAL_ENERGY)
+# number of user-defined passively advected scalars
+# --> set it to 0 or comment it out if none is required
 # --> useless for RTVD/WAF
-# --> for simulations without any passive scalar, either set it to 0 or comment it out
 SIMU_OPTION += -DNCOMP_PASSIVE_USER=0
 
 
@@ -130,9 +130,9 @@ SIMU_OPTION += -DSTORE_PAR_ACC
 # --> must turn on STORE_POT_GHOST when STORE_PAR_ACC is adopted
 #SIMU_OPTION += -DSTAR_FORMATION
 
-# number of passive particle attributes (**excluding** PAR_CREATION_TIME used by STAR_FORMATION)
-# --> for simulations without any passive attributes, either set it to 0 or comment it out
-SIMU_OPTION += -DPAR_NPASSIVE_USER=0
+# number of user-defined particle attributes
+# --> set it to 0 or comment it out if none is required
+SIMU_OPTION += -DPAR_NATT_USER=0
 endif # PARTICLE
 
 

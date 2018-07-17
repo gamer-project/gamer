@@ -188,22 +188,10 @@ void SetParameter()
    delete ReadPara;
 
 // check the runtime parameters
-   if ( AGORA_UseMetal )
-   {
-      if ( Idx_Metal == Idx_Undefined )
-         Aux_Error( ERROR_INFO, "Idx_Metal is undefined for \"AGORA_UseMetal\" !!\n" );
-
-      if ( Idx_ParMetalFrac == Idx_Undefined )
-         Aux_Error( ERROR_INFO, "Idx_ParMetalFrac is undefined for \"AGORA_UseMetal\" !!\n" );
-   }
-
-   else
-   {
-#     ifdef SUPPORT_GRACKLE
-      if ( GRACKLE_METAL )
-         Aux_Error( ERROR_INFO, "please enable \"AGORA_UseMetal\" for \"GRACKLE_METAL\" !!\n" );
-#     endif
-   }
+#  ifdef SUPPORT_GRACKLE
+   if ( GRACKLE_METAL  &&  !AGORA_UseMetal )
+      Aux_Error( ERROR_INFO, "please enable \"AGORA_UseMetal\" for \"GRACKLE_METAL\" !!\n" );
+#  endif
 
 // convert to code units
    AGORA_DiskScaleLength *= Const_kpc  / UNIT_L;
@@ -311,6 +299,12 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
                 const int lv, double AuxArray[] )
 {
 
+// check
+#  ifdef GAMER_DEBUG
+   if ( AGORA_UseMetal  &&  Idx_Metal == Idx_Undefined )
+      Aux_Error( ERROR_INFO, "Idx_Metal is undefined for \"AGORA_UseMetal\" !!\n" );
+#  endif
+
    const bool   CheckMinPres_Yes = true;
    const double dx               = x - 0.5*amr->BoxSize[0];
    const double dy               = y - 0.5*amr->BoxSize[1];
@@ -344,10 +338,8 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
       fluid[ENGY] = DiskGasPres / ( GAMMA - 1.0 )
                     + 0.5*( SQR(fluid[MOMX]) + SQR(fluid[MOMY]) + SQR(fluid[MOMZ]) ) / fluid[DENS];
 
-#     if ( NCOMP_PASSIVE > 0 )
       if ( AGORA_UseMetal )
       fluid[Idx_Metal] = fluid[DENS]*AGORA_DiskMetalMassFrac;
-#     endif
    }
 
 // halo component
@@ -360,10 +352,8 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
       fluid[ENGY] = AGORA_HaloGasPres / ( GAMMA - 1.0 )
                     + 0.5*( SQR(fluid[MOMX]) + SQR(fluid[MOMY]) + SQR(fluid[MOMZ]) ) / fluid[DENS];
 
-#     if ( NCOMP_PASSIVE > 0 )
       if ( AGORA_UseMetal )
       fluid[Idx_Metal] = fluid[DENS]*AGORA_HaloMetalMassFrac;
-#     endif
    } // if ( DiskPres > AGORA_HaloGasPres ) ... else ...
 
 } // FUNCTION : SetGridIC
@@ -430,6 +420,58 @@ void End_AGORA()
    AGORA_VcProf = NULL;
 
 } // FUNCTION : End_AGORA
+
+
+
+//-------------------------------------------------------------------------------------------------------
+// Function    :  AddNewField_AGORA
+// Description :  Add the problem-specific grid fields
+//
+// Note        :  1. Ref: https://github.com/gamer-project/gamer/wiki/Adding-New-Simulations#v-add-problem-specific-grid-fields-and-particle-attributes
+//                2. Invoke AddField() for each of the problem-specific field:
+//                   --> Field label sent to AddField() will be used as the output name of the field
+//                   --> Field index returned by AddField() can be used to access the field data
+//                3. Pre-declared field indices are put in Field.h
+//
+// Parameter   :  None
+//
+// Return      :  None
+//-------------------------------------------------------------------------------------------------------
+void AddNewField_AGORA()
+{
+
+// add the metallicity field only if it has not been done
+// --> since Grackle may already add this field automatically when GRACKLE_METAL is enabled
+// --> also note that "Idx_Metal" has been predefined in Field.h
+   if ( AGORA_UseMetal  &&  Idx_Metal == Idx_Undefined )
+      Idx_Metal = AddField( "Metal", NORMALIZE_NO );
+
+} // FUNCTION : AddNewField_AGORA
+
+
+
+//-------------------------------------------------------------------------------------------------------
+// Function    :  AddNewParticleAttribute_AGORA
+// Description :  Add the problem-specific particle attributes
+//
+// Note        :  1. Ref: https://github.com/gamer-project/gamer/wiki/Adding-New-Simulations#v-add-problem-specific-grid-fields-and-particle-attributes
+//                2. Invoke AddParticleField() for each of the problem-specific particle attribute:
+//                   --> Attribute label sent to AddParticleField() will be used as the output name of the attribute
+//                   --> Attribute index returned by AddParticleField() can be used to access the particle attribute data
+//                3. Pre-declared attribute indices are put in Field.h
+//
+// Parameter   :  None
+//
+// Return      :  None
+//-------------------------------------------------------------------------------------------------------
+void AddNewParticleAttribute_AGORA()
+{
+
+// "Idx_ParMetalFrac" has been predefined in Field.h
+   if ( AGORA_UseMetal  &&  Idx_ParMetalFrac == Idx_Undefined )
+      Idx_ParMetalFrac = AddParticleAttribute( "ParMetalFrac" );
+
+} // FUNCTION : AddNewParticleAttribute_AGORA
 #endif // #if ( MODEL == HYDRO  &&  defined PARTICLE )
 
 
@@ -460,17 +502,19 @@ void Init_TestProb_Hydro_AGORA_IsolatedGalaxy()
 
 
 // set the function pointers of various problem-specific routines
-   Init_Function_User_Ptr   = SetGridIC;
-   Output_User_Ptr          = NULL;
-   Flag_User_Ptr            = Flag_AGORA;
-   Mis_GetTimeStep_User_Ptr = NULL;
-   Aux_Record_User_Ptr      = NULL;
-   BC_User_Ptr              = NULL;
-   Flu_ResetByUser_Func_Ptr = NULL;
-   End_User_Ptr             = End_AGORA;
-   Init_ExternalAcc_Ptr     = NULL;
-   Init_ExternalPot_Ptr     = NULL;
-   Par_Init_ByFunction_Ptr  = Par_Init_ByFunction_AGORA;
+   Init_Function_User_Ptr      = SetGridIC;
+   Init_Field_User_Ptr         = AddNewField_AGORA;
+   Output_User_Ptr             = NULL;
+   Flag_User_Ptr               = Flag_AGORA;
+   Mis_GetTimeStep_User_Ptr    = NULL;
+   Aux_Record_User_Ptr         = NULL;
+   BC_User_Ptr                 = NULL;
+   Flu_ResetByUser_Func_Ptr    = NULL;
+   End_User_Ptr                = End_AGORA;
+   Init_ExternalAcc_Ptr        = NULL;
+   Init_ExternalPot_Ptr        = NULL;
+   Par_Init_ByFunction_Ptr     = Par_Init_ByFunction_AGORA;
+   Par_Init_Attribute_User_Ptr = AddNewParticleAttribute_AGORA;
 #  endif // if ( MODEL == HYDRO  &&  defined PARTICLE )
 
 
