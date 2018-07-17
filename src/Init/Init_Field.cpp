@@ -173,12 +173,14 @@ FieldIdx_t AddField( char *InputLabel, const NormPassive_t Norm )
 // Note        :  1. Usage: FieldIdx = GetFieldIndex( FieldLabel );
 //                2. Return Idx_Undefined if the target field cannot be found
 //
-// Parameter   :  InputLabel : target field label
+// Parameter   :  InputLabel : Target field label
+//                Check      : Whether or not to terminate the program if the target field cannot be found
+//                             --> Accepted options: CHECK_ON / CHECK_OFF
 //
 // Return      :  Sucess: index of the target field
 //                Failed: Idx_Undefined
 //-------------------------------------------------------------------------------------------------------
-FieldIdx_t GetFieldIndex( char *InputLabel )
+FieldIdx_t GetFieldIndex( char *InputLabel, const Check_t Check )
 {
 
    FieldIdx_t Idx_Out = Idx_Undefined;
@@ -192,9 +194,8 @@ FieldIdx_t GetFieldIndex( char *InputLabel )
       }
    }
 
-   if ( Idx_Out == Idx_Undefined )
-      Aux_Message( stderr, "WARNING : cannot find the target field \"%s\" in %s() !!\n",
-                   InputLabel, __FUNCTION__ );
+   if ( Check == CHECK_ON  &&  Idx_Out == Idx_Undefined )
+      Aux_Error( ERROR_INFO, "cannot find the target field \"%s\" !!\n", InputLabel );
 
    return Idx_Out;
 
@@ -204,7 +205,7 @@ FieldIdx_t GetFieldIndex( char *InputLabel )
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Init_Field_User
-// Description :  Add user-defined field
+// Description :  Add user-defined fields
 //
 // Note        :  1. Invoked by Init_Field() using the function pointer "Init_Field_User_Ptr"
 //                   --> The function pointer may be reset by various test problem initializers, in which case

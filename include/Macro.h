@@ -166,7 +166,7 @@
 
 // variable indices in the array "passive" [NCOMP_FLUID ... NCOMP_TOTAL-1]
 #if ( NCOMP_PASSIVE > 0 )
-// always store the dual-energy variable as the **last** passive variable
+// always put the dual-energy variable at the END of the field list
 // --> so that ENPY/EINT can be determined during compilation
 // --> convenient (and probably also more efficient) for the fluid solver
 # if   ( DUAL_ENERGY == DE_ENPY )
@@ -185,11 +185,11 @@
 
 // variable indices in the array "flux_passive" [NFLUX_FLUID ... NFLUX_TOTAL-1]
 #if ( NCOMP_PASSIVE > 0 )
-// always store the dual-energy variable as the **first** passive variable
+// always put the dual-energy variable at the END of the field list
 # if   ( DUAL_ENERGY == DE_ENPY )
-#  define  FLUX_ENPY          ( NFLUX_FLUID + 0 )
+#  define  FLUX_ENPY          ( NFLUX_TOTAL - 1 )
 # elif ( DUAL_ENERGY == DE_EINT )
-#  define  FLUX_EINT          ( NFLUX_FLUID + 0 )
+#  define  FLUX_EINT          ( NFLUX_TOTAL - 1 )
 # endif
 #endif
 
@@ -330,7 +330,7 @@
 #  define  PAR_VELY           5
 #  define  PAR_VELZ           6
 
-// always put acceleration and time at the end of the particle attribute list
+// always put acceleration and time at the END of the particle attribute list
 // --> make it easier to discard them when storing data on disk (see Output_DumpData_Total(_HDF5).cpp)
 # ifdef STORE_PAR_ACC
 #  define  PAR_ACCX           ( PAR_NATT_TOTAL - 4 )

@@ -39,6 +39,7 @@ extern void (*Par_Init_ByFunction_Ptr)( const long NPar_ThisRank, const long NPa
                                         real *ParMass, real *ParPosX, real *ParPosY, real *ParPosZ,
                                         real *ParVelX, real *ParVelY, real *ParVelZ, real *ParTime,
                                         real *AllAttribute[PAR_NATT_TOTAL] );
+extern void (*Par_Init_Attribute_User_Ptr)();
 #endif
 
 

@@ -80,9 +80,12 @@ void Init_GAMER( int *argc, char ***argv )
    Init_TestProb();
 
 
-// initialize all fields
-// --> must be called BEFORE CUAPI_Set_Default_GPU_Parameter()
+// initialize all fields and particle attributes
+// --> Init_Field() must be called BEFORE CUAPI_Set_Default_GPU_Parameter()
    Init_Field();
+#  ifdef PARTICLE
+   Par_Init_Attribute();
+#  endif
 
 
 // initialize the external potential and acceleration parameters

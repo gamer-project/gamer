@@ -164,7 +164,7 @@ void Init_ByFile();
 void Init_UniformGrid( const int lv, const bool FindHomePatchForPar );
 void Init_Field();
 FieldIdx_t AddField( char *InputLabel, const NormPassive_t Norm );
-FieldIdx_t GetFieldIndex( char *InputLabel );
+FieldIdx_t GetFieldIndex( char *InputLabel, const Check_t Check );
 #ifdef OPENMP
 void Init_OpenMP();
 #endif
@@ -509,6 +509,9 @@ void Prepare_PatchData_InitParticleDensityArray( const int lv );
 void Prepare_PatchData_FreeParticleDensityArray( const int lv );
 void Par_PredictPos( const long NPar, const long *ParList, real *ParPosX, real *ParPosY, real *ParPosZ,
                      const double TargetTime );
+void Par_Init_Attribute();
+FieldIdx_t AddParticleAttribute( char *InputLabel );
+FieldIdx_t GetParticleAttributeIndex( char *InputLabel, const Check_t Check );
 #ifdef LOAD_BALANCE
 void Par_LB_CollectParticle2OneLevel( const int FaLv, const bool PredictPos, const double TargetTime,
                                       const bool SibBufPatch, const bool FaSibBufPatch, const bool JustCountNPar,
