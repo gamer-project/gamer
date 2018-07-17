@@ -52,14 +52,6 @@ void Init_Field()
 
 
 // 2. add other predefined fields
-//    --> must declare the dual-energy variable first in order to be consistent with the symbolic
-//        constant ENPY (or EINT) defined in Macro.h
-#  if   ( DUAL_ENERGY == DE_ENPY )
-   Idx_Enpy    = AddField( "Entropy",  NORMALIZE_NO );
-#  elif ( DUAL_ENERGY == DE_EINT )
-   Idx_Eint    = AddField( "Eint",     NORMALIZE_NO );
-#  endif
-
 #  ifdef SUPPORT_GRACKLE
    if ( GRACKLE_METAL )
    Idx_Metal   = AddField( "Metal",    NORMALIZE_NO );
@@ -70,14 +62,25 @@ void Init_Field()
    if ( Init_Field_User_Ptr != NULL )  Init_Field_User_Ptr();
 
 
-// 4. validate if all fields have been set properly
+// 4. must put the dual-energy variable at the END of the field list to be consistent with the symbolic
+//    constant ENPY (or EINT) defined in Macro.h
+//    --> as we still rely on these constants (e.g., DENS, ENPY) in the fluid solvers
+#  if   ( DUAL_ENERGY == DE_ENPY )
+   Idx_Enpy    = AddField( "Entropy",  NORMALIZE_NO );
+#  elif ( DUAL_ENERGY == DE_EINT )
+   Idx_Eint    = AddField( "Eint",     NORMALIZE_NO );
+#  endif
+
+
+
+// 5. validate if all fields have been set properly
    if ( NDefinedField != NCOMP_TOTAL )
       Aux_Error( ERROR_INFO, "total number of defined fields (%d) != expectation (%d) !!\n"
                  "        --> Modify NCOMP_PASSIVE_USER in the Makefile or invoke AddField() properly\n",
                  NDefinedField, NCOMP_TOTAL );
 
 
-// 5. turn off OPT__NORMALIZE_PASSIVE if there are no passive scalars to be normalized
+// 6. turn off OPT__NORMALIZE_PASSIVE if there are no passive scalars to be normalized
    if ( OPT__NORMALIZE_PASSIVE  &&  PassiveNorm_NVar == 0 )
    {
       OPT__NORMALIZE_PASSIVE = false;
