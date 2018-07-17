@@ -5,16 +5,12 @@
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Output_PreparedPatch_Fluid
-// Description :  Output the fluid data of a "single patch" plus its ghost zones prepared by the function
-//                "Flu_Prepare"
+// Description :  Output the fluid data of a "single patch" plus its ghost zones prepared by Flu_Prepare()
 //
-// Note        :  This function should be placed after invoking "Prepare_PatchData" in the function
-//                "Flu_Prepare"
+// Note        :  This function should be placed after invoking Prepare_PatchData() in Flu_Prepare()
 //
 //                Example:
-//                Prepare_PatchData( lv, PrepTime, h_Flu_Array_F_In,  FLU_GHOST_SIZE, NPG, PID0_List, _TOTAL,
-//                                   OPT__FLU_INT_SCHEME, UNIT_PATCHGROUP, NSIDE_26, IntPhase_No,
-//                                   OPT__BC_FLU, BC_POT_NONE, MIN_DENS, MIN_PRES, false );
+//                Prepare_PatchData( ... );
 //
 //                const int TLv  = 1;
 //                const int TPID = 12;
