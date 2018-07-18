@@ -122,6 +122,9 @@ void Init_ByRestart_HDF5( const char *FileName )
       if ( KeyInfo.FormatVersion < 2200 )
          Aux_Error( ERROR_INFO, "unsupported data format version for PARTICLE (only support version >= 2200) !!\n" );
 #     endif
+
+      if ( KeyInfo.FormatVersion < 2300 )
+         Aux_Message( stderr, "WARNING : loading user-defined fields or particle attributes from version < 2300 will likely fail !!\n" );
    }
 
    MPI_Barrier( MPI_COMM_WORLD );
@@ -158,7 +161,7 @@ void Init_ByRestart_HDF5( const char *FileName )
    LoadField( "AdvanceCounter",  KeyInfo.AdvanceCounter, H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  NullPtr,      -1, NonFatal );
 #  ifdef PARTICLE
    LoadField( "Par_NPar",       &KeyInfo.Par_NPar,       H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  NullPtr,      -1, NonFatal );
-   if ( KeyInfo.FormatVersion >= 2267 )
+   if ( KeyInfo.FormatVersion >= 2300 )
    LoadField( "Par_NAttStored", &KeyInfo.Par_NAttStored, H5_SetID_KeyInfo, H5_TypeID_KeyInfo, NonFatal, &Par_NAttStored,1,    Fatal );
    else
    LoadField( "Par_NAttStored", &KeyInfo.Par_NAttStored, H5_SetID_KeyInfo, H5_TypeID_KeyInfo, NonFatal, &Par_NAttStored,1, NonFatal );
@@ -1305,7 +1308,7 @@ void Check_Makefile( const char *FileName, const int FormatVersion )
 #  ifdef PARTICLE
    LoadField( "StoreParAcc",            &RS.StoreParAcc,            SID, TID, NonFatal, &RT.StoreParAcc,            1, NonFatal );
    LoadField( "StarFormation",          &RS.StarFormation,          SID, TID, NonFatal, &RT.StarFormation,          1, NonFatal );
-   if ( FormatVersion >= 2267 )
+   if ( FormatVersion >= 2300 )
    LoadField( "Par_NAttUser",           &RS.Par_NAttUser,           SID, TID, NonFatal, &RT.Par_NAttUser,           1,    Fatal );
    else
    LoadField( "Par_NAttUser",           &RS.Par_NAttUser,           SID, TID, NonFatal, &RT.Par_NAttUser,           1, NonFatal );
@@ -1412,7 +1415,7 @@ void Check_SymConst( const char *FileName, const int FormatVersion )
 #  endif // #ifdef GRAVITY
 
 #  ifdef PARTICLE
-   if ( FormatVersion >= 2267 )
+   if ( FormatVersion >= 2300 )
    LoadField( "Par_NAttStored",       &RS.Par_NAttStored,       SID, TID, NonFatal, &RT.Par_NAttStored,        1,    Fatal );
    else
    LoadField( "Par_NAttStored",       &RS.Par_NAttStored,       SID, TID, NonFatal, &RT.Par_NAttStored,        1, NonFatal );
