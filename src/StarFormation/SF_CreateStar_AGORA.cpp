@@ -18,7 +18,7 @@ extern double ExtAcc_AuxArray[EXT_ACC_NAUX_MAX];
 //
 // Note        :  1. Ref: (1) Nathan Goldbaum, et al., 2015, ApJ, 814, 131 (arXiv: 1510.08458), sec. 2.4
 //                        (2) Ji-hoon Kim, et al., 2016, ApJ, 833, 202 (arXiv: 1610.03066), sec. 3.2
-//                2. One must turn on STORE_POT_GHOST When adopting STORE_PAR_ACC
+//                2. One must turn on STORE_POT_GHOST when adopting STORE_PAR_ACC
 //                   --> It is because, currently, this function always uses the pot_ext[] array of each patch
 //                       to calculate the gravitationally acceleration of the new star particles
 //                3. One must invoke Buf_GetBufferData( ..., _TOTAL, ... ) after calling this function
@@ -47,7 +47,6 @@ void SF_CreateStar_AGORA( const int lv, const real TimeNew, const real dt, Rando
 {
 
 // check
-#  ifdef GAMER_DEBUG
 #  if ( defined STORE_PAR_ACC  &&  !defined STORE_POT_GHOST )
 #     error : STAR_FORMATION + STORE_PAR_ACC must work with STORE_POT_GHOST !!
 #  endif
@@ -60,6 +59,7 @@ void SF_CreateStar_AGORA( const int lv, const real TimeNew, const real dt, Rando
 #     error : SF_CreateStar_AGORA() does not support COMOVING yet !!
 #  endif
 
+#  ifdef GAMER_DEBUG
    if ( UseMetal  &&  Idx_ParMetalFrac == Idx_Undefined )
       Aux_Error( ERROR_INFO, "Idx_ParMetalFrac is undefined for \"UseMetal\" !!\n" );
 
@@ -97,7 +97,9 @@ void SF_CreateStar_AGORA( const int lv, const real TimeNew, const real dt, Rando
    double x0, y0, z0, x, y, z;
    real   GasDens, _GasDens, GasMass, _Time_FreeFall, StarMFrac, StarMass, GasMFracLeft;
    real   (*fluid)[PS1][PS1][PS1]      = NULL;
+#  ifdef STORE_POT_GHOST
    real   (*pot_ext)[GRA_NXT][GRA_NXT] = NULL;
+#  endif
 
    const int MaxNewParPerPatch = CUBE(PS1);
    real   (*NewParAtt)[PAR_NATT_TOTAL] = new real [MaxNewParPerPatch][PAR_NATT_TOTAL];
@@ -130,7 +132,9 @@ void SF_CreateStar_AGORA( const int lv, const real TimeNew, const real dt, Rando
 
 
       fluid   = amr->patch[FluSg][lv][PID]->fluid;
+#     ifdef STORE_POT_GHOST
       pot_ext = amr->patch[PotSg][lv][PID]->pot_ext;
+#     endif
       x0      = amr->patch[0][lv][PID]->EdgeL[0] + 0.5*dh;
       y0      = amr->patch[0][lv][PID]->EdgeL[1] + 0.5*dh;
       z0      = amr->patch[0][lv][PID]->EdgeL[2] + 0.5*dh;
@@ -223,12 +227,14 @@ void SF_CreateStar_AGORA( const int lv, const real TimeNew, const real dt, Rando
             const int jj = j + GRA_GHOST_SIZE;
             const int kk = k + GRA_GHOST_SIZE;
 
+#           ifdef STORE_POT_GHOST
             pot_xm = pot_ext[kk  ][jj  ][ii-1];
             pot_xp = pot_ext[kk  ][jj  ][ii+1];
             pot_ym = pot_ext[kk  ][jj-1][ii  ];
             pot_yp = pot_ext[kk  ][jj+1][ii  ];
             pot_zm = pot_ext[kk-1][jj  ][ii  ];
             pot_zp = pot_ext[kk+1][jj  ][ii  ];
+#           endif
          }
 
 //       external potential (currently useful only for ELBDM; always work with OPT__GRAVITY_TYPE == GRAVITY_SELF)
