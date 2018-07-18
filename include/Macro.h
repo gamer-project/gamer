@@ -151,11 +151,9 @@
 #endif // MODEL
 
 
-// main variables in different models
-// --> note that we must set "_VAR_NAME = 1<<VAR_NAME" (e.g., _DENS == 1<<DENS)
+// built-in fields in different models
 #if   ( MODEL == HYDRO )
-
-// variable indices in the array "fluid" [0 ... NCOMP_FLUID-1]
+// field indices of fluid[] --> element of [0 ... NCOMP_FLUID-1]
 // --> must NOT modify their values
 // --> in addition, they must be consistent with the order these fields are declared in Init_Field()
 #  define  DENS               0
@@ -164,7 +162,7 @@
 #  define  MOMZ               3
 #  define  ENGY               4
 
-// variable indices in the array "passive" [NCOMP_FLUID ... NCOMP_TOTAL-1]
+// field indices of passive[] --> element of [NCOMP_FLUID ... NCOMP_TOTAL-1]
 #if ( NCOMP_PASSIVE > 0 )
 // always put the dual-energy variable at the END of the field list
 // --> so that ENPY/EINT can be determined during compilation
@@ -176,16 +174,16 @@
 # endif
 #endif
 
-// variable indices in the array "flux" [0 ... NFLUX_FLUID-1]
+// flux indices of flux[] --> element of [0 ... NFLUX_FLUID-1]
 #  define  FLUX_DENS          0
 #  define  FLUX_MOMX          1
 #  define  FLUX_MOMY          2
 #  define  FLUX_MOMZ          3
 #  define  FLUX_ENGY          4
 
-// variable indices in the array "flux_passive" [NFLUX_FLUID ... NFLUX_TOTAL-1]
+// flux indices of flux_passive[] --> element of [NFLUX_FLUID ... NFLUX_TOTAL-1]
 #if ( NCOMP_PASSIVE > 0 )
-// always put the dual-energy variable at the END of the field list
+// always put the dual-energy variable at the END of the list
 # if   ( DUAL_ENERGY == DE_ENPY )
 #  define  FLUX_ENPY          ( NFLUX_TOTAL - 1 )
 # elif ( DUAL_ENERGY == DE_EINT )
@@ -193,7 +191,10 @@
 # endif
 #endif
 
-// symbolic constants used as function parameters (e.g., Prepare_PatchData)
+// bitwise field indices
+// --> must have "_VAR_NAME = 1<<VAR_NAME" (e.g., _DENS == 1<<DENS)
+// --> convenient for determining subsets of fields (e.g., _DENS|_ENGY)
+// --> used as function parameters (e.g., Prepare_PatchData(), Flu_FixUp(), Flu_Restrict(), Buf_GetBufferData())
 #  define _DENS               ( 1 << DENS )
 #  define _MOMX               ( 1 << MOMX )
 #  define _MOMY               ( 1 << MOMY )
@@ -208,7 +209,7 @@
 # endif
 #endif // #if ( NCOMP_PASSIVE > 0 )
 
-// symbolic constants of flux used as function parameters (e.g., Buf_GetBufferData)
+// bitwise flux indices
 #  define _FLUX_DENS          ( 1 << FLUX_DENS )
 #  define _FLUX_MOMX          ( 1 << FLUX_MOMX )
 #  define _FLUX_MOMY          ( 1 << FLUX_MOMY )
@@ -223,14 +224,16 @@
 # endif
 #endif // #if ( NFLUX_PASSIVE > 0 )
 
-// derived variables
-// note that _POTE = ( 1 << NCOMP_TOTAL )
-#  define _VELX               ( 1 << (NCOMP_TOTAL+1) )
-#  define _VELY               ( 1 << (NCOMP_TOTAL+2) )
-#  define _VELZ               ( 1 << (NCOMP_TOTAL+3) )
-#  define _PRES               ( 1 << (NCOMP_TOTAL+4) )
-#  define _TEMP               ( 1 << (NCOMP_TOTAL+5) )
+// bitwise indices of derived fields
+// --> start from (1<<NCOMP_TOTAL) to distinguish from the intrinsic fields
+// --> remember to define NDERIVE = total number of derived fields
+#  define _VELX               ( 1 << (NCOMP_TOTAL+0) )
+#  define _VELY               ( 1 << (NCOMP_TOTAL+1) )
+#  define _VELZ               ( 1 << (NCOMP_TOTAL+2) )
+#  define _PRES               ( 1 << (NCOMP_TOTAL+3) )
+#  define _TEMP               ( 1 << (NCOMP_TOTAL+4) )
 #  define _DERIVED            ( _VELX | _VELY | _VELZ | _PRES | _TEMP )
+#  define NDERIVE             5
 
 
 #elif ( MODEL == MHD )
@@ -238,28 +241,33 @@
 
 
 #elif ( MODEL == ELBDM )
-// variable indices in the array "fluid"
+// field indices of fluid[] --> element of [0 ... NCOMP_FLUID-1]
 #  define  DENS               0
 #  define  REAL               1
 #  define  IMAG               2
 
-// variable indices in the array "flux" [0 ... NFLUX_FLUID-1]
+// field indices of passive[] --> element of [NCOMP_FLUID ... NCOMP_TOTAL-1]
+// none for ELBDM
+
+// flux indices of flux[] --> element of [0 ... NFLUX_FLUID-1]
 #  define  FLUX_DENS          0
 
-// symbolic constants used as function parameters (e.g., Prepare_PatchData)
+// bitwise field indices
 #  define _DENS               ( 1 << DENS )
 #  define _REAL               ( 1 << REAL )
 #  define _IMAG               ( 1 << IMAG )
 
-// symbolic constants of flux used as function parameters (e.g., Buf_GetBufferData)
+// bitwise flux indices
 #  define _FLUX_DENS          ( 1 << FLUX_DENS )
 
-// derived variables
+// bitwise indices of derived fields
 #  define _DERIVED            0
+#  define NDERIVE             0
 
 
 #elif ( MODEL == PAR_ONLY )
 #  define _DERIVED            0
+#  define NDERIVE             0
 
 
 #else
@@ -267,17 +275,18 @@
 #endif // MODEL
 
 
-// symbolic constants used by all models
+// bitwise field indices used by all models
+# ifdef GRAVITY
+#  define _POTE               ( 1 << (NCOMP_TOTAL+NDERIVE) )
+# endif
 #  define _FLUID              (  ( 1 << NCOMP_FLUID ) - 1           )
 #  define _PASSIVE            (  ( 1 << NCOMP_TOTAL ) - 1 - _FLUID  )
 #  define _TOTAL              (  ( 1 << NCOMP_TOTAL ) - 1           )
-#  ifdef GRAVITY
-#  define _POTE               (  ( 1 << NCOMP_TOTAL )               )
-#  endif
 
 #  define _FLUX_FLUID         (  ( 1 << NFLUX_FLUID ) - 1                )
 #  define _FLUX_PASSIVE       (  ( 1 << NFLUX_TOTAL ) - 1 - _FLUX_FLUID  )
 #  define _FLUX_TOTAL         (  ( 1 << NFLUX_TOTAL ) - 1                )
+
 
 
 // symbolic constants for particles
@@ -340,26 +349,23 @@
 #  define  PAR_TIME           ( PAR_NATT_TOTAL - 1 )
 
 
-// symbolic constants used as function parameters (e.g., Prepare_PatchData)
-#  if ( MODEL == PAR_ONLY )
-// note that _POTE == ( 1 << 0 )
-#  define _PAR_DENS           ( 1 << 1 )
+// bitwise field indices related to particles
+// --> note that _POTE = ( 1 << (NCOMP_TOTAL+NDERIVE) )
+#  define _PAR_DENS           ( 1 << (NCOMP_TOTAL+NDERIVE+1) )
+
+# if ( MODEL == PAR_ONLY )
 #  define _TOTAL_DENS         ( _PAR_DENS )
-
-#  else
-
-// note that _TEMP == ( 1 << (NCOMP_TOTAL+5) )
-#  define _PAR_DENS           ( 1 << (NCOMP_TOTAL+6) )
-#  define _TOTAL_DENS         ( 1 << (NCOMP_TOTAL+7) )
-
-#  endif // if ( MODEL == PAR_ONLY ) ... else ...
+# else
+#  define _TOTAL_DENS         ( 1 << (NCOMP_TOTAL+NDERIVE+2) )
+# endif
 
 #else // #ifdef PARTICLE
 
-// set _TOTAL_DENS == _DENS if PARTICLE is off
+// total density equals gas density if there is no particle
 #  define _TOTAL_DENS         ( _DENS )
 
 #endif // #ifdef PARTICLE ... else ...
+
 
 
 // number of fluid ghost zones for the fluid solver
@@ -638,7 +644,7 @@
 #define GAMER_FAILED       0
 
 
-// macro for the function "Aux_Error"
+// symbolic constant for Aux_Error()
 #define ERROR_INFO         __FILE__, __LINE__, __FUNCTION__
 
 
@@ -728,6 +734,10 @@
 # define SET_GLOBAL_INIT( declaration, init_value )   extern declaration
 # define SET_GLOBAL_NOINIT( declaration )             extern declaration
 #endif
+
+
+// macro converting an array index (e.g., DENS) to bitwise index (e.g., _DENS=(1<<DENS))
+#define BIDX( idx )     ( 1 << (idx) )
 
 
 
