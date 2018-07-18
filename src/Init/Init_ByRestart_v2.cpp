@@ -1319,15 +1319,19 @@ void Load_Parameter_After_2000( FILE *File, const int FormatVersion, int &NLv_Re
 //    check in PARTICLE
 //    ------------------
 #     ifdef PARTICLE
-      if ( FormatVersion >= 2132 )
+      if ( FormatVersion >= 2200 )
       CompareVar( "PAR_NATT_STORED",         par_natt_stored,              PAR_NATT_STORED,              Fatal );
       else
       CompareVar( "PAR_NATT_STORED",         par_natt_stored,              PAR_NATT_STORED,           NonFatal );
 
-      if ( FormatVersion >= 2132 )
+      if ( FormatVersion >= 2200 )
       CompareVar( "PAR_NATT_USER",           par_natt_user,                PAR_NATT_USER,                Fatal );
       else
       CompareVar( "PAR_NATT_USER",           par_natt_user,                PAR_NATT_USER,             NonFatal );
+
+      if ( par_natt_user > 0  &&  FormatVersion < 2200  &&  MPI_Rank == 0 )
+         Aux_Message( stderr, "WARNING : loading user-defined particle attributes (PAR_NATT_USER = %d) "
+                              "from version < 2200 will likely fail !!\n", par_natt_user );
 #     endif
 
 

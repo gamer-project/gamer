@@ -69,7 +69,7 @@ Procedure for outputting new variables:
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2267)
+// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2300)
 // Description :  Output all simulation data in the HDF5 format, which can be used as a restart file
 //                or loaded by YT
 //
@@ -152,7 +152,11 @@ Procedure for outputting new variables:
 //                2264 : 2018/02/28 --> add RANDOM_NUMBER
 //                2265 : 2018/04/02 --> add OPT__NO_FLAG_NEAR_BOUNDARY
 //                2266 : 2018/05/11 --> add OPT__UM_IC_LOAD_NRANK
-//                2267 : 2018/07/16 --> replace PAR_NVAR and PAR_NPASSIVE by PAR_NATT_STORED and PAR_NATT_USER
+//                2300 : 2018/07/15 --> replace PAR_NVAR and PAR_NPASSIVE by PAR_NATT_STORED and PAR_NATT_USER;
+//                                      use the new infrastructure for adding user-defined grid fields and
+//                                      particle attributes
+//                                      --> imcompatible with version 2266 for the data with user-defined grid fields
+//                                          and particle attributes as their labels may have changed
 //-------------------------------------------------------------------------------------------------------
 void Output_DumpData_Total_HDF5( const char *FileName )
 {
@@ -1217,7 +1221,7 @@ void FillIn_KeyInfo( KeyInfo_t &KeyInfo )
 
    const time_t CalTime   = time( NULL );    // calendar time
 
-   KeyInfo.FormatVersion  = 2267;
+   KeyInfo.FormatVersion  = 2300;
    KeyInfo.Model          = MODEL;
    KeyInfo.NLevel         = NLEVEL;
    KeyInfo.NCompFluid     = NCOMP_FLUID;

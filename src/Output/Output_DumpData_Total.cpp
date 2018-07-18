@@ -16,7 +16,7 @@ Procedure for outputting new variables:
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Output_DumpData_Total (FormatVersion = 2132)
+// Function    :  Output_DumpData_Total (FormatVersion = 2200)
 // Description :  Output all simulation data in the binary form, which can be used as a restart file
 //
 // Note        :  1. This output format is deprecated and is mainly used for debugging only
@@ -28,7 +28,11 @@ Procedure for outputting new variables:
 //                2120 : 2017/02/14 --> output passive grid and particle variables
 //                2130 : 2017/08/09 --> output dTime_AllLv
 //                2131 : 2017/12/05 --> no longer define INTEL
-//                2132 : 2018/07/15 --> replace PAR_NVAR and PAR_NPASSIVE by PAR_NATT_STORED and PAR_NATT_USER
+//                2200 : 2018/07/15 --> replace PAR_NVAR and PAR_NPASSIVE by PAR_NATT_STORED and PAR_NATT_USER;
+//                                      use the new infrastructure for adding user-defined grid fields and
+//                                      particle attributes
+//                                      --> imcompatible with version 2131 for the data with user-defined particle
+//                                          attributes as the order of their indices may be different
 //-------------------------------------------------------------------------------------------------------
 void Output_DumpData_Total( const char *FileName )
 {
@@ -167,7 +171,7 @@ void Output_DumpData_Total( const char *FileName )
 
 //    a. output the information of data format
 //    =================================================================================================
-      const long FormatVersion = 2132;
+      const long FormatVersion = 2200;
       const long CheckCode     = 123456789;
 
       fseek( File, HeaderOffset_Format, SEEK_SET );
