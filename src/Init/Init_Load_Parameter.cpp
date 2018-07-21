@@ -279,7 +279,8 @@ void Init_Load_Parameter()
    ReadPara->Add( "RESTART_LOAD_NRANK",         &RESTART_LOAD_NRANK,              1,               1,             NoMax_int      );
    ReadPara->Add( "OPT__RESTART_RESET",         &OPT__RESTART_RESET,              false,           Useless_bool,  Useless_bool   );
    ReadPara->Add( "OPT__UM_IC_LEVEL",           &OPT__UM_IC_LEVEL,                0,               0,             TOP_LEVEL      );
-   ReadPara->Add( "OPT__UM_IC_NVAR",            &OPT__UM_IC_NVAR,                 NCOMP_TOTAL,     NoMin_int,     NCOMP_TOTAL    );
+// do not check OPT__UM_IC_NVAR since it depends on OPT__INIT
+   ReadPara->Add( "OPT__UM_IC_NVAR",            &OPT__UM_IC_NVAR,                -1,               NoMin_int,     NCOMP_TOTAL    );
    ReadPara->Add( "OPT__UM_IC_DOWNGRADE",       &OPT__UM_IC_DOWNGRADE,            true,            Useless_bool,  Useless_bool   );
    ReadPara->Add( "OPT__UM_IC_REFINE",          &OPT__UM_IC_REFINE,               true,            Useless_bool,  Useless_bool   );
    ReadPara->Add( "OPT__UM_IC_LOAD_NRANK",      &OPT__UM_IC_LOAD_NRANK,           1,               1,             NoMax_int      );
