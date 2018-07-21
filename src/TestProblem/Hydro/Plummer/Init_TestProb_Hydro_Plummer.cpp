@@ -307,45 +307,11 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 // Function    :  AddNewField_Plummer
 // Description :  Add the problem-specific fields
 //
-// Note        :  1. It takes 4 steps to add a new field
-//                   (1) Set NCOMP_PASSIVE_USER to 1 (or N if there are N new fields) in the Makefile
-//
-//                   (2) Declare a global integer variable on the top of the test problem initializer file
-//                       (e.g., Init_TestProb_YourTestProblem.cpp) to store the new field index. For example,
-//
-//                         static int NewFieldIdx;
-//
-//                   (3) Define a function (e.g., AddNewField()) to invoke AddField() to set the field label and
-//                       get the field index. For example,
-//
-//                         void AddNewField()
-//                         {
-//                            NewFieldIdx = AddField( "NewFieldLabel", NORMALIZE_YES );
-//                         }
-//
-//                       The second parameter should be either NORMALIZE_YES or NORMALIZE_NO, which determines
-//                       whether the new field should be normalized by the total gas density
-//                       (also controlled by the option OPT__NORMALIZE_PASSIVE).
-//
-//                       You also need to link AddNewField() to the function pointer "Init_Field_User_Ptr" in the
-//                       test problem entry function (e.g., Init_TestProb_YourTestProblem()):
-//
-//                         Init_Field_User_Ptr = AddNewField;
-//
-//                   (4) Assign values to the new field in SetGridIC() using the correct field index.
-//                       For example,
-//
-//                         fluid[Idx_NewField] = 1.0;
-//
-//                   Caveat: skip steps (2) and (3) if all the new fields have been pre-defined in Field.h
-//                           (e.g., fields used by Grackle)
-//                      --> These fields will be set automatically by Init_Field()
-//                      --> Use the pre-defined field indices to access these fields (e.g., Idx_Metal for
-//                          the metallicity field used by Grackle)
-//
-//                2. By invoking AddField() for each of the problem-specific field:
+// Note        :  1. Ref: https://github.com/gamer-project/gamer/wiki/Adding-New-Simulations#v-add-problem-specific-grid-fields-and-particle-attributes
+//                2. Invoke AddField() for each of the problem-specific field:
 //                   --> Field label sent to AddField() will be used as the output name of the field
 //                   --> Field index returned by AddField() can be used to access the field data
+//                3. Pre-declared field indices are put in Field.h
 //
 // Parameter   :  None
 //
