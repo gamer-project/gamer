@@ -701,7 +701,11 @@ void Init_ResetParameter()
 // OPT__UM_IC_NVAR
    if ( OPT__INIT == INIT_BY_FILE  &&  OPT__UM_IC_NVAR <= 0 )
    {
+#     ifdef DUAL_ENERGY
+      OPT__UM_IC_NVAR = NCOMP_TOTAL - 1;  // do not load the dual-energy field from the disk
+#     else
       OPT__UM_IC_NVAR = NCOMP_TOTAL;
+#     endif
 
       PRINT_WARNING( OPT__UM_IC_NVAR, FORMAT_INT, "" );
    }
