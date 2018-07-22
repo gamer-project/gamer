@@ -29,7 +29,12 @@ SET_GLOBAL( FieldIdx_t Idx_Eint,          Idx_Undefined );
 #endif
 SET_GLOBAL( FieldIdx_t Idx_Metal,         Idx_Undefined );
 
+
 #elif ( MODEL == ELBDM )
+SET_GLOBAL( FieldIdx_t Idx_Dens,          Idx_Undefined );
+SET_GLOBAL( FieldIdx_t Idx_Real,          Idx_Undefined );
+SET_GLOBAL( FieldIdx_t Idx_Imag,          Idx_Undefined );
+
 
 #else
 #  error : ERROR : unsupported MODEL !!
