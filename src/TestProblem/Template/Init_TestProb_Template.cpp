@@ -224,20 +224,22 @@ void Init_TestProb_Template()
 // 3. set the corresponding function pointer below to the new problem-specific function
 // 4. enable the corresponding runtime option in "Input__Parameter"
 //    --> for instance, enable OPT__OUTPUT_USER for Output_User_Ptr
-   Init_Function_User_Ptr   = SetGridIC;
-   Flag_User_Ptr            = NULL;       // option: OPT__FLAG_USER;        example: Refine/Flag_User.cpp
-   Mis_GetTimeStep_User_Ptr = NULL;       // option: OPT__DT_USER;          example: Miscellaneous/Mis_GetTimeStep_User.cpp
-   BC_User_Ptr              = NULL;       // option: OPT__BC_FLU_*=4;       example: TestProblem/ELBDM/ExtPot/Init_TestProb_ELBDM_ExtPot.cpp --> BC()
-   Flu_ResetByUser_Func_Ptr = NULL;       // option: OPT__RESET_FLUID;      example: Fluid/Flu_ResetByUser.cpp
-   Output_User_Ptr          = NULL;       // option: OPT__OUTPUT_USER;      example: TestProblem/Hydro/AcousticWave/Init_TestProb_Hydro_AcousticWave.cpp --> OutputError()
-   Aux_Record_User_Ptr      = NULL;       // option: OPT__RECORD_USER;      example: Auxiliary/Aux_Record_User.cpp
-   End_User_Ptr             = NULL;       // option: none;                  example: TestProblem/Hydro/ClusterMerger_vs_Flash/Init_TestProb_ClusterMerger_vs_Flash.cpp --> End_ClusterMerger()
+   Init_Function_User_Ptr      = SetGridIC;
+   Init_Field_User_Ptr         = NULL;    // set NCOMP_PASSIVE_USER;        example: TestProblem/Hydro/Plummer/Init_TestProb_Hydro_Plummer.cpp --> AddNewField()
+   Flag_User_Ptr               = NULL;    // option: OPT__FLAG_USER;        example: Refine/Flag_User.cpp
+   Mis_GetTimeStep_User_Ptr    = NULL;    // option: OPT__DT_USER;          example: Miscellaneous/Mis_GetTimeStep_User.cpp
+   BC_User_Ptr                 = NULL;    // option: OPT__BC_FLU_*=4;       example: TestProblem/ELBDM/ExtPot/Init_TestProb_ELBDM_ExtPot.cpp --> BC()
+   Flu_ResetByUser_Func_Ptr    = NULL;    // option: OPT__RESET_FLUID;      example: Fluid/Flu_ResetByUser.cpp
+   Output_User_Ptr             = NULL;    // option: OPT__OUTPUT_USER;      example: TestProblem/Hydro/AcousticWave/Init_TestProb_Hydro_AcousticWave.cpp --> OutputError()
+   Aux_Record_User_Ptr         = NULL;    // option: OPT__RECORD_USER;      example: Auxiliary/Aux_Record_User.cpp
+   End_User_Ptr                = NULL;    // option: none;                  example: TestProblem/Hydro/ClusterMerger_vs_Flash/Init_TestProb_ClusterMerger_vs_Flash.cpp --> End_ClusterMerger()
 #  ifdef GRAVITY
-   Init_ExternalAcc_Ptr     = NULL;       // option: OPT__GRAVITY_TYPE=2/3; example: SelfGravity/Init_ExternalAcc.cpp
-   Init_ExternalPot_Ptr     = NULL;       // option: OPT__EXTERNAL_POT;     example: TestProblem/ELBDM/ExtPot/Init_TestProb_ELBDM_ExtPot.cpp --> Init_ExtPot()
+   Init_ExternalAcc_Ptr        = NULL;    // option: OPT__GRAVITY_TYPE=2/3; example: SelfGravity/Init_ExternalAcc.cpp
+   Init_ExternalPot_Ptr        = NULL;    // option: OPT__EXTERNAL_POT;     example: TestProblem/ELBDM/ExtPot/Init_TestProb_ELBDM_ExtPot.cpp --> Init_ExtPot()
 #  endif
 #  ifdef PARTICLE
-   Par_Init_ByFunction_Ptr  = NULL;       // option: PAR_INIT=1;            example: Particle/Par_Init_ByFunction.cpp
+   Par_Init_ByFunction_Ptr     = NULL;    // option: PAR_INIT=1;            example: Particle/Par_Init_ByFunction.cpp
+   Par_Init_Attribute_User_Ptr = NULL;    // set PAR_NATT_USER;             example: TestProblem/Hydro/AGORA_IsolatedGalaxy/Init_TestProb_Hydro_AGORA_IsolatedGalaxy.cpp --> AddNewParticleAttribute()
 #  endif
 #  endif // #if ( MODEL == HYDRO )
 

@@ -20,6 +20,7 @@ extern void (*Init_Function_User_Ptr)( real fluid[], const double x, const doubl
 extern void (*Init_ByFile_User_Ptr)( real fluid_out[], const real fluid_in[], const int nvar_in,
                                      const double x, const double y, const double z, const double Time,
                                      const int lv, double AuxArray[] );
+extern void (*Init_Field_User_Ptr)();
 extern void (*Output_User_Ptr)();
 extern bool (*Flag_User_Ptr)( const int i, const int j, const int k, const int lv, const int PID, const double Threshold );
 extern void (*Mis_GetTimeStep_User_Ptr)( const int lv, const double dTime_dt );
@@ -37,7 +38,8 @@ extern void (*Init_ExternalPot_Ptr)();
 extern void (*Par_Init_ByFunction_Ptr)( const long NPar_ThisRank, const long NPar_AllRank,
                                         real *ParMass, real *ParPosX, real *ParPosY, real *ParPosZ,
                                         real *ParVelX, real *ParVelY, real *ParVelZ, real *ParTime,
-                                        real *ParPassive[PAR_NPASSIVE] );
+                                        real *AllAttribute[PAR_NATT_TOTAL] );
+extern void (*Par_Init_Attribute_User_Ptr)();
 #endif
 
 

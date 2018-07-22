@@ -4,10 +4,10 @@
 
 
 
-static void LB_RedistributeRealPatch( const int lv, real **ParVar_Old, real **Passive_Old, const bool RemoveParFromRepo );
+static void LB_RedistributeRealPatch( const int lv, real **ParAtt_Old, const bool RemoveParFromRepo );
 #ifdef PARTICLE
-static void LB_RedistributeParticle_Init( real **ParVar_Old, real **Passive_Old );
-static void LB_RedistributeParticle_End( real **ParVar_Old, real **Passive_Old );
+static void LB_RedistributeParticle_Init( real **ParAtt_Old );
+static void LB_RedistributeParticle_End( real **ParAtt_Old );
 #endif
 
 
@@ -107,28 +107,26 @@ void LB_Init_LoadBalance( const bool Redistribute, const double ParWeight, const
    const bool RemoveParFromRepo_No  = false;
 
 #  ifdef PARTICLE
-   real  *ParVar_Old [PAR_NVAR    ];
-   real  *Passive_Old[PAR_NPASSIVE];
+   real  *ParAtt_Old[PAR_NATT_TOTAL];
 #  else
-   real **ParVar_Old  = NULL;
-   real **Passive_Old = NULL;
+   real **ParAtt_Old = NULL;
 #  endif
 
 #  ifdef PARTICLE
    if ( Redistribute )
    {
-      if ( TLv < 0 )    LB_RedistributeParticle_Init( ParVar_Old, Passive_Old );
+      if ( TLv < 0 )
+         LB_RedistributeParticle_Init( ParAtt_Old );
+
       else
       {
-         for (int v=0; v<PAR_NVAR; v++)      ParVar_Old [v] = amr->Par->ParVar [v];
-         for (int v=0; v<PAR_NPASSIVE; v++)  Passive_Old[v] = amr->Par->Passive[v];
+         for (int v=0; v<PAR_NATT_TOTAL; v++)   ParAtt_Old[v] = amr->Par->Attribute[v];
       }
    }
 
    else
    {
-      for (int v=0; v<PAR_NVAR; v++)      ParVar_Old [v] = NULL;
-      for (int v=0; v<PAR_NPASSIVE; v++)  Passive_Old[v] = NULL;
+      for (int v=0; v<PAR_NATT_TOTAL; v++)   ParAtt_Old[v] = NULL;
    }
 #  endif
 
@@ -138,7 +136,7 @@ void LB_Init_LoadBalance( const bool Redistribute, const double ParWeight, const
 
 //    3.1 re-distribute real patches (and particles)
       if ( Redistribute )
-      LB_RedistributeRealPatch( lv, ParVar_Old, Passive_Old, (TLv<0)?RemoveParFromRepo_No:RemoveParFromRepo_Yes );
+      LB_RedistributeRealPatch( lv, ParAtt_Old, (TLv<0)?RemoveParFromRepo_No:RemoveParFromRepo_Yes );
 
 //    3.2 allocate sibling-buffer patches at lv
       LB_AllocateBufferPatch_Sibling( lv );
@@ -156,7 +154,7 @@ void LB_Init_LoadBalance( const bool Redistribute, const double ParWeight, const
    } // for (int lv=lv_min; lv<=lv_max; lv++)
 
 #  ifdef PARTICLE
-   if ( Redistribute  &&  TLv < 0 )    LB_RedistributeParticle_End( ParVar_Old, Passive_Old );
+   if ( Redistribute  &&  TLv < 0 )    LB_RedistributeParticle_End( ParAtt_Old );
 #  endif
 
 
@@ -285,12 +283,11 @@ void LB_Init_LoadBalance( const bool Redistribute, const double ParWeight, const
 //                4. Particles will be redistributed along with the leaf patches as well
 //
 // Parameter   :  lv                : Target refinement level
-//                ParVar_Old        : Pointers pointing to the particle attribute arrays (amr->Par->ParVar)
-//                PassiveOld        : Pointers pointing to the particle attribute arrays (amr->Par->Passive)
+//                ParAtt_Old        : Pointers pointing to the particle attribute arrays (amr->Par->Attribute[])
 //                RemoveParFromRepo : Remove particles on lv from the particle repository (amr->Par)
 //                                    --> Useful when applying LB_Init_LoadBalance() to a single level (i.e., TLv>=0)
 //-------------------------------------------------------------------------------------------------------
-void LB_RedistributeRealPatch( const int lv, real **ParVar_Old, real **Passive_Old, const bool RemoveParFromRepo )
+void LB_RedistributeRealPatch( const int lv, real **ParAtt_Old, const bool RemoveParFromRepo )
 {
 
 // 1. count the number of real patches (and particles) to be sent and received
@@ -321,7 +318,6 @@ void LB_RedistributeRealPatch( const int lv, real **ParVar_Old, real **Passive_O
 #  endif
 
 #  ifdef PARTICLE
-   const int  NParVar           = PAR_NVAR + PAR_NPASSIVE;
    const bool RemoveAllParticle = true;
 
    int  NSend_Total_ParData, NRecv_Total_ParData;
@@ -334,8 +330,7 @@ void LB_RedistributeRealPatch( const int lv, real **ParVar_Old, real **Passive_O
    int *Counter_ParData     = new int [MPI_NRank];
 
 #  ifdef DEBUG_PARTICLE
-   if ( ParVar_Old  == NULL )    Aux_Error( ERROR_INFO, "ParVar_Old == NULL !!\n" );
-   if ( Passive_Old == NULL )    Aux_Error( ERROR_INFO, "Passive_Old == NULL !!\n" );
+   if ( ParAtt_Old  == NULL )    Aux_Error( ERROR_INFO, "ParAtt_Old == NULL !!\n" );
 #  endif
 #  endif // #ifdef PARTICLE
 
@@ -365,7 +360,7 @@ void LB_RedistributeRealPatch( const int lv, real **ParVar_Old, real **Passive_O
 #     endif
    }
 #  ifdef PARTICLE
-   for (int r=0; r<MPI_NRank; r++)  Send_NCount_ParData[r] *= NParVar;
+   for (int r=0; r<MPI_NRank; r++)  Send_NCount_ParData[r] *= PAR_NATT_TOTAL;
 #  endif
 
 // 1.2 receive count
@@ -415,9 +410,9 @@ void LB_RedistributeRealPatch( const int lv, real **ParVar_Old, real **Passive_O
                  NSend_Total_Patch, amr->NPatchComma[lv][1] );
 #  endif
 #  ifdef DEBUG_PARTICLE
-   if ( NSend_Total_ParData != amr->Par->NPar_Lv[lv]*NParVar )
+   if ( NSend_Total_ParData != amr->Par->NPar_Lv[lv]*PAR_NATT_TOTAL )
       Aux_Error( ERROR_INFO, "NSend_Total_ParData (%d) != expected (%ld) !!\n",
-                 NSend_Total_ParData, amr->Par->NPar_Lv[lv]*NParVar );
+                 NSend_Total_ParData, amr->Par->NPar_Lv[lv]*PAR_NATT_TOTAL );
 #  endif
 
 
@@ -495,12 +490,11 @@ void LB_RedistributeRealPatch( const int lv, real **ParVar_Old, real **Passive_O
 
 //       there should be no inactive particles associated with patches
 #        ifdef DEBUG_PARTICLE
-         if ( ParVar_Old[PAR_MASS][ParID] < (real)0.0 )
-            Aux_Error( ERROR_INFO, "Mass[%ld] = %14.7e < 0.0 !!\n", ParID, ParVar_Old[PAR_MASS][ParID] );
+         if ( ParAtt_Old[PAR_MASS][ParID] < (real)0.0 )
+            Aux_Error( ERROR_INFO, "Mass[%ld] = %14.7e < 0.0 !!\n", ParID, ParAtt_Old[PAR_MASS][ParID] );
 #        endif
 
-         for (int v=0; v<PAR_NVAR; v++)      *SendPtr++ = ParVar_Old [v][ParID];
-         for (int v=0; v<PAR_NPASSIVE; v++)  *SendPtr++ = Passive_Old[v][ParID];
+         for (int v=0; v<PAR_NATT_TOTAL; v++)   *SendPtr++ = ParAtt_Old[v][ParID];
 
 //       remove this particle from the particle repository
          if ( RemoveParFromRepo )   amr->Par->RemoveOneParticle( ParID, PAR_INACTIVE_MPI );
@@ -509,7 +503,7 @@ void LB_RedistributeRealPatch( const int lv, real **ParVar_Old, real **Passive_O
 
       Counter        [TRank] ++;
 #     ifdef PARTICLE
-      Counter_ParData[TRank] += amr->patch[0][lv][PID]->NPar*NParVar;
+      Counter_ParData[TRank] += amr->patch[0][lv][PID]->NPar*PAR_NATT_TOTAL;
 
 //    detach particles from patches to avoid warning messages when deleting patches with particles
       amr->patch[0][lv][PID]->RemoveParticle( NULL_INT, NULL, &amr->Par->NPar_Lv[lv], RemoveAllParticle );
@@ -644,7 +638,7 @@ void LB_RedistributeRealPatch( const int lv, real **ParVar_Old, real **Passive_O
 // check: for RemoveParFromRepo == false, the size of particle repository should be exactly equal to the received particles
 // --> see LB_RedistributeParticle_Init()
 #  ifdef DEBUG_PARTICLE
-   const long NParExpect = amr->Par->NPar_AcPlusInac + NRecv_Total_ParData/NParVar;
+   const long NParExpect = amr->Par->NPar_AcPlusInac + NRecv_Total_ParData/PAR_NATT_TOTAL;
    if ( !RemoveParFromRepo  &&  NParExpect > amr->Par->ParListSize )
       Aux_Error( ERROR_INFO, "NParExpect (%ld) > ParListSize (%ld) !!\n", NParExpect, amr->Par->ParListSize );
 #  endif
@@ -705,17 +699,17 @@ void LB_RedistributeRealPatch( const int lv, real **ParVar_Old, real **Passive_O
          for (int p=0; p<RecvBuf_NPar[PID]; p++)
          {
 //          add a single particle to the particle repository
-            ParID        = amr->Par->AddOneParticle( RecvPtr_Par, RecvPtr_Par+PAR_NVAR );
-            RecvPtr_Par += NParVar;
+            ParID        = amr->Par->AddOneParticle( RecvPtr_Par );
+            RecvPtr_Par += PAR_NATT_TOTAL;
 
 //          store the new particle index
             ParList[p] = ParID;
 
 //          we do not transfer inactive particles
 #           ifdef DEBUG_PARTICLE
-            if ( amr->Par->ParVar[PAR_MASS][ParID] < (real)0.0 )
+            if ( amr->Par->Attribute[PAR_MASS][ParID] < (real)0.0 )
                Aux_Error( ERROR_INFO, "Transferring inactive particle (ParID %d, Mass %14.7e) !!\n",
-                          ParID, amr->Par->ParVar[PAR_MASS][ParID] );
+                          ParID, amr->Par->Attribute[PAR_MASS][ParID] );
 #           endif
          }
 
@@ -795,26 +789,19 @@ void LB_RedistributeRealPatch( const int lv, real **ParVar_Old, real **Passive_O
 //                   when calling LB_RedistributeRealPatch later().
 //                3. One must call LB_SetCutPoint() for all levels in advance
 //
-// Parameter   :  ParVar_Old : Pointers for backing up the old particle attribute arrays (amr->Par->ParVar)
-//                PassiveOld : Pointers for backing up the old particle attribute arrays (amr->Par->Passive)
+// Parameter   :  ParAtt_Old : Pointers for backing up the old particle attribute arrays (amr->Par->Attribute[])
 //
 // Return      :  None
 //-------------------------------------------------------------------------------------------------------
-void LB_RedistributeParticle_Init( real **ParVar_Old, real **Passive_Old )
+void LB_RedistributeParticle_Init( real **ParAtt_Old )
 {
 
 // backup the old particle attribute arrays
-// remember to reset ParVar and Passive to NULL so that amr->Par->InitRepo will NOT delete these arrays
-   for (int v=0; v<PAR_NVAR; v++)
+// remember to reset Attribute[] to NULL so that amr->Par->InitRepo will NOT delete these arrays
+   for (int v=0; v<PAR_NATT_TOTAL; v++)
    {
-      ParVar_Old      [v] = amr->Par->ParVar[v];
-      amr->Par->ParVar[v] = NULL;
-   }
-
-   for (int v=0; v<PAR_NPASSIVE; v++)
-   {
-      Passive_Old      [v] = amr->Par->Passive[v];
-      amr->Par->Passive[v] = NULL;
+      ParAtt_Old         [v] = amr->Par->Attribute[v];
+      amr->Par->Attribute[v] = NULL;
    }
 
 
@@ -857,17 +844,15 @@ void LB_RedistributeParticle_Init( real **ParVar_Old, real **Passive_Old )
 //
 // Note        :  1. Free old particle attribute arrays
 //
-// Parameter   :  ParVar_Old : Pointers for backing up the old particle attribute arrays (amr->Par->ParVar)
-//                PassiveOld : Pointers for backing up the old particle attribute arrays (amr->Par->Passive)
+// Parameter   :  ParAtt_Old : Pointers for backing up the old particle attribute arrays (amr->Par->Attribute[])
 //
 // Return      :  None
 //-------------------------------------------------------------------------------------------------------
-void LB_RedistributeParticle_End( real **ParVar_Old, real **Passive_Old )
+void LB_RedistributeParticle_End( real **ParAtt_Old )
 {
 
 // remove old particle attribute arrays
-   for (int v=0; v<PAR_NVAR;     v++)  free( ParVar_Old [v] );
-   for (int v=0; v<PAR_NPASSIVE; v++)  free( Passive_Old[v] );
+   for (int v=0; v<PAR_NATT_TOTAL; v++)   free( ParAtt_Old [v] );
 
 
 // check the total number of particles

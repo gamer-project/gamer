@@ -6,13 +6,13 @@
 static void Par_Init_ByFunction( const long NPar_ThisRank, const long NPar_AllRank,
                                  real *ParMass, real *ParPosX, real *ParPosY, real *ParPosZ,
                                  real *ParVelX, real *ParVelY, real *ParVelZ, real *ParTime,
-                                 real *ParPassive[PAR_NPASSIVE] );
+                                 real *AllAttribute[PAR_NATT_TOTAL] );
 
 // this function pointer may be overwritten by various test problem initializers
 void (*Par_Init_ByFunction_Ptr)( const long NPar_ThisRank, const long NPar_AllRank,
                                  real *ParMass, real *ParPosX, real *ParPosY, real *ParPosZ,
                                  real *ParVelX, real *ParVelY, real *ParVelZ, real *ParTime,
-                                 real *ParPassive[PAR_NPASSIVE] ) = Par_Init_ByFunction;
+                                 real *AllAttribute[PAR_NATT_TOTAL] ) = Par_Init_ByFunction;
 
 
 
@@ -41,14 +41,17 @@ void (*Par_Init_ByFunction_Ptr)( const long NPar_ThisRank, const long NPar_AllRa
 //                ParPosX/Y/Z   : Particle position array with the size of NPar_ThisRank
 //                ParVelX/Y/Z   : Particle velocity array with the size of NPar_ThisRank
 //                ParTime       : Particle time     array with the size of NPar_ThisRank
-//                ParPassive    : Particle passive attributes pointer array with the size [PAR_NPASSIVE][NPar_ThisRank]
+//                AllAttribute  : Pointer array for all particle attributes
+//                                --> Dimension = [PAR_NATT_TOTAL][NPar_ThisRank]
+//                                --> Use the attribute indices defined in Field.h (e.g., Idx_ParCreTime)
+//                                    to access the data
 //
-// Return      :  ParMass, ParPosX/Y/Z, ParVelX/Y/Z, ParTime, ParPassive
+// Return      :  ParMass, ParPosX/Y/Z, ParVelX/Y/Z, ParTime, AllAttribute
 //-------------------------------------------------------------------------------------------------------
 void Par_Init_ByFunction( const long NPar_ThisRank, const long NPar_AllRank,
                           real *ParMass, real *ParPosX, real *ParPosY, real *ParPosZ,
                           real *ParVelX, real *ParVelY, real *ParVelZ, real *ParTime,
-                          real *ParPassive[PAR_NPASSIVE] )
+                          real *AllAttribute[PAR_NATT_TOTAL] )
 {
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ...\n", __FUNCTION__ );
@@ -58,10 +61,10 @@ void Par_Init_ByFunction( const long NPar_ThisRank, const long NPar_AllRank,
    for (long p=0; p<NPar_ThisRank; p++)   ParTime[p] = Time[0];
 
 
-// initialize the particle creation time (PAR_CREATION_TIME) by an arbitrary negative value since it is
+// initialize the particle creation time by an arbitrary negative value since it is
 // only used for star particles created during evolution and is useless during initialization
 #  ifdef STAR_FORMATION
-   for (int p=0; p<NPar_ThisRank; p++)    ParPassive[PAR_CREATION_TIME][p] = -1.0;
+   for (int p=0; p<NPar_ThisRank; p++)    AllAttribute[Idx_ParCreTime][p] = -1.0;
 #  endif
 
 

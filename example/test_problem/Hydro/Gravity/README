@@ -1,0 +1,35 @@
+Compilation flags:
+========================================
+Enable : MODEL=HYDRO, GRAVITY
+Disable: PARTICLE, COMOVING, DUAL_ENERGY
+
+
+Default setup:
+========================================
+1. Adopt mass density as the refinement criteria
+   --> Input__Flag_Rho
+2. Maximum refinement level (MAX_LEVEL) = 6
+
+
+Note:
+========================================
+1. This test problem will overwrite gas field to store the gravitational potential errors
+
+      [gas momentum x] --> [absolute errors of potential]
+      [gas momentum y] --> [relative errors of potential]
+
+   Two output files will be generated:
+
+      "PotError.bin": binary file similar to Data_?????? but with the gas field overwritten
+      "PotError.txt": text   file storing the overwritten data along the diagonal
+
+2. Two plot scripts are provided:
+
+      "plot__pot_error_diagonal.gpt" --> plot the text file "PotError.txt" using gnuplot
+      "plot__pot_error_slice.py"     --> plot a slice of potential error from "PotError.bin" using yt
+
+3. Currently support 2 density profiles: NFW and Hernquist
+   --> Controlled by the parameter "Gra_DensProf"
+   --> Note that errors in NFW can be very large since the total mass in NFW diverges and the adopted analytical
+       solution assumes zero potential at infinity
+       --> Numerical and analytical solutions will differ by a DC term

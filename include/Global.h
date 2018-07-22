@@ -5,6 +5,9 @@
 
 #include "Macro.h"
 #include "AMR.h"
+#ifdef SUPPORT_LIBYT
+#include <libyt.h>
+#endif
 
 
 // **********************************************************************************************************
@@ -42,7 +45,6 @@ extern int       *BaseP;                              // table recording the IDs
 extern int        Flu_ParaBuf;                        // number of parallel buffers to exchange all fluid
                                                       // variables for the fluid solver and fluid refinement
 
-extern char      *PassiveFieldName_Grid[NCOMP_PASSIVE];
 extern int        PassiveNorm_NVar;
 extern int        PassiveNorm_VarIdx[NCOMP_PASSIVE];
 
@@ -169,7 +171,6 @@ extern bool            OPT__OUTPUT_PAR_TEXT, OPT__CK_PARTICLE, OPT__FLAG_NPAR_CE
 extern int             OPT__PARTICLE_COUNT, OPT__FLAG_NPAR_PATCH, FlagTable_NParPatch[NLEVEL-1], FlagTable_NParCell[NLEVEL-1];
 extern double          FlagTable_ParMassCell[NLEVEL-1];
 extern ParOutputDens_t OPT__OUTPUT_PAR_DENS;
-extern char           *PassiveFieldName_Par[PAR_NPASSIVE];
 #endif
 
 
@@ -261,6 +262,12 @@ extern real       (*h_Pot_Array_T[2])[ CUBE(GRA_NXT) ];
 // ============================================================================================================
 /*** These global variables are NOT included here. Instead, they are included by individual files
      only if necessary. ***/
+
+
+
+// 5. global variables related to different fields
+// ============================================================================================================
+/*** Defined in Field.h ***/
 
 
 

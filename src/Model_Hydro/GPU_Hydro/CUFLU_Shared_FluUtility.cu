@@ -435,11 +435,7 @@ __device__ void CUFLU_NormalizePassive( const real GasDens, real Passive[], cons
 // validate the target variable indices
 #  ifdef GAMER_DEBUG
    const int MinIdx = 0;
-#  ifdef DUAL_ENERGY
-   const int MaxIdx = NCOMP_PASSIVE - 2;
-#  else
    const int MaxIdx = NCOMP_PASSIVE - 1;
-#  endif
 
    for (int v=0; v<NNorm; v++)
    {

@@ -8,11 +8,9 @@
 // Description :  Verify that the passive scalars are properly normalized
 //                --> sum(passive scalar mass density) = gas_mass_density
 //
-// Note        :  1. Only check variables stored in PassiveNorm_VarIdx
-//                2. Must turn on OPT__NORMALIZE_PASSIVE
-//                3. One can edit Init_PassiveVariable.cpp to set the target passive scalars
-//                   --> Default is to include all passive scalars except for the internal energy
-//                       used by the dual-energy formalism
+// Note        :  1. Only check variables stored in PassiveNorm_VarIdx[]
+//                2. This check will likely fail if OPT__NORMALIZE_PASSIVE is disabled
+//                3. Target passive scalars to be normalized are determined when invoking AddField()
 //
 // Parameter   :  lv       : Target refinement level
 //                comment  : You can put the location where this function is invoked in this string
@@ -23,10 +21,23 @@ void Aux_Check_NormalizePassive( const int lv, const char *comment )
 
 // check
 #  ifndef DENS
-   Aux_Message( stderr, "WARNING : function \"%s\" is supported only when DENS is defined !!\n", __FUNCTION__ );
    OPT__CK_NORMALIZE_PASSIVE = false;
+
+   if ( MPI_Rank == 0 )
+      Aux_Message( stderr, "WARNING : \"OPT__CK_NORMALIZE_PASSIVE\" is supported only when DENS is defined !!\n" );
+
    return;
 #  endif
+
+   if ( PassiveNorm_NVar <= 0 )
+   {
+      OPT__CK_NORMALIZE_PASSIVE = false;
+
+      if ( MPI_Rank == 0 )
+         Aux_Message( stderr, "WARNING : \"OPT__CK_NORMALIZE_PASSIVE\" is disabled since there are no passive scalars to be normalized !!\n" );
+
+      return;
+   }
 
 
 #  ifdef FLOAT8
@@ -69,7 +80,7 @@ void Aux_Check_NormalizePassive( const int lv, const char *comment )
                                   comment, __FUNCTION__, lv, Time[lv], Step );
                      Aux_Message( stderr, "%4s  %7s  %7s", "Rank", "PID", "(i,j,k)" );
                      for (int v=0; v<PassiveNorm_NVar; v++)
-                     Aux_Message( stderr, "  %13s", PassiveFieldName_Grid[ PassiveNorm_VarIdx[v] ] );
+                     Aux_Message( stderr, "  %13s", FieldLabel[ NCOMP_FLUID + PassiveNorm_VarIdx[v] ] );
                      Aux_Message( stderr, "  %13s  %13s  %13s", "Sum", "GasDens", "RelErr" );
                      Aux_Message( stderr, "\n" );
 

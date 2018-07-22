@@ -5,16 +5,12 @@
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Output_PreparedPatch_Fluid
-// Description :  Output the fluid data of a "single patch" plus its ghost zones prepared by the function
-//                "Flu_Prepare"
+// Description :  Output the fluid data of a "single patch" plus its ghost zones prepared by Flu_Prepare()
 //
-// Note        :  This function should be placed after invoking "Prepare_PatchData" in the function
-//                "Flu_Prepare"
+// Note        :  This function should be placed after invoking Prepare_PatchData() in Flu_Prepare()
 //
 //                Example:
-//                Prepare_PatchData( lv, PrepTime, h_Flu_Array_F_In,  FLU_GHOST_SIZE, NPG, PID0_List, _TOTAL,
-//                                   OPT__FLU_INT_SCHEME, UNIT_PATCHGROUP, NSIDE_26, IntPhase_No,
-//                                   OPT__BC_FLU, BC_POT_NONE, MIN_DENS, MIN_PRES, false );
+//                Prepare_PatchData( ... );
 //
 //                const int TLv  = 1;
 //                const int TPID = 12;
@@ -88,21 +84,17 @@ void Output_PreparedPatch_Fluid( const int TLv, const int TPID,
       fprintf( File, "\n" );
 
 
-#     if   ( MODEL == HYDRO )
-      fprintf( File, "(%3s,%3s,%3s )%16s%16s%16s%16s%16s", "i", "j", "k", "Density", "Px", "Py", "Pz", "Energy" );
-#     if ( NCOMP_PASSIVE > 0 )
-      for (int v=0; v<NCOMP_PASSIVE; v++)    fprintf( File, "%16s", PassiveFieldName_Grid[v] );
-#     endif
-      fprintf( File, "%16s", "Pressure" );
+      fprintf( File, "(%3s,%3s,%3s )", "i", "j", "k" );
 
-#     elif ( MODEL == MHD )
-#     warning : WAIT MHD !!!
-
-#     elif ( MODEL == ELBDM )
-      fprintf( File, "(%3s,%3s,%3s )%16s%16s",                 "i", "j", "k", "Real", "Imag" );
+#     if ( MODEL == ELBDM )
+      fprintf( File, "%16s%16s", "Real", "Imag" );
 
 #     else
-#     warning : WARNING : DO YOU WANT TO ADD the FILE HEADER HERE FOR THE NEW MODEL ??
+      for (int v=0; v<FLU_NIN; v++)    fprintf( File, "%16s", FieldLabel[v] );
+
+#     if ( MODEL == HYDRO )
+      fprintf( File, "%16s", "Pressure" );
+#     endif
 #     endif // MODEL
 
       fprintf( File, "\n" );
@@ -130,7 +122,8 @@ void Output_PreparedPatch_Fluid( const int TLv, const int TPID,
 
 //       output pressure in HYDRO
 #        if   ( MODEL == HYDRO )
-         fprintf( File, "  %14.7e", ( u[ENGY]-0.5*(u[MOMX]*u[MOMX]+u[MOMY]*u[MOMY]+u[MOMZ]*u[MOMZ])/u[DENS] )*(GAMMA-1.0) );
+         const bool CheckMinPres_No = false;
+         fprintf( File, "  %14.7e", CPU_GetPressure(u[DENS],u[MOMX],u[MOMY],u[MOMZ],u[ENGY],GAMMA-1.0,CheckMinPres_No,NULL_REAL) );
 
 #        elif ( MODEL == MHD )
 #        warning : WAIT MHD !!!

@@ -499,8 +499,9 @@ void Aux_TakeNote()
 #     endif
 #     endif // #ifdef GPU
 #     ifdef PARTICLE
-      fprintf( Note, "#define PAR_NVAR                %d\n",      PAR_NVAR            );
-      fprintf( Note, "#define PAR_NPASSIVE            %d\n",      PAR_NPASSIVE        );
+      fprintf( Note, "#define PAR_NATT_TOTAL          %d\n",      PAR_NATT_TOTAL      );
+      fprintf( Note, "#define PAR_NATT_USER           %d\n",      PAR_NATT_USER       );
+      fprintf( Note, "#define PAR_NATT_STORED         %d\n",      PAR_NATT_STORED     );
 #     endif
       fprintf( Note, "#define MAX_STRING              %d\n",      MAX_STRING          );
       fprintf( Note, "#define TINY_NUMBER             %20.14e\n", TINY_NUMBER         );
@@ -857,11 +858,11 @@ void Aux_TakeNote()
       fprintf( Note, "OPT__NORMALIZE_PASSIVE          %d\n",      OPT__NORMALIZE_PASSIVE   );
 
 //    target passive scalars to be normalized
-      if ( OPT__NORMALIZE_PASSIVE ) {
-      fprintf( Note, "   Number of scalars            %d\n",      PassiveNorm_NVar         );
-      fprintf( Note, "   Target scalars              "                                     );
+      fprintf( Note, "   Number of fields             %d\n",      PassiveNorm_NVar         );
+      if ( PassiveNorm_NVar > 0 ) {
+      fprintf( Note, "   Target fields               "                                     );
       for (int v=0; v<PassiveNorm_NVar; v++)
-      fprintf( Note, " %s",                                       PassiveFieldName_Grid[ PassiveNorm_VarIdx[v] ] );
+      fprintf( Note, " %s",                                       FieldLabel[ NCOMP_FLUID + PassiveNorm_VarIdx[v] ] );
       fprintf( Note, "\n" ); }
 
       fprintf( Note, "OPT__OVERLAP_MPI                %d\n",      OPT__OVERLAP_MPI         );
