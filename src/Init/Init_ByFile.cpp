@@ -10,7 +10,8 @@ void (*Init_ByFile_User_Ptr)( real fluid_out[], const real fluid_in[], const int
                               const double x, const double y, const double z, const double Time,
                               const int lv, double AuxArray[] ) = Init_ByFile_Default;
 
-static void Init_ByFile_AssignData( const char UM_Filename[], const int UM_lv, const int UM_NVar, const int UM_LoadNRank );
+static void Init_ByFile_AssignData( const char UM_Filename[], const int UM_lv, const int UM_NVar, const int UM_LoadNRank,
+                                    const UM_IC_Format_t UM_Format );
 
 
 
@@ -51,7 +52,7 @@ void Init_ByFile()
 
 
    const char UM_Filename[] = "UM_IC";
-   const int  UM_Size3D[3]  = { NX0_TOT[0]*(1<<OPT__UM_IC_LEVEL),
+   const long UM_Size3D[3]  = { NX0_TOT[0]*(1<<OPT__UM_IC_LEVEL),
                                 NX0_TOT[1]*(1<<OPT__UM_IC_LEVEL),
                                 NX0_TOT[2]*(1<<OPT__UM_IC_LEVEL) };
 
@@ -75,7 +76,7 @@ void Init_ByFile()
 
    fseek( FileTemp, 0, SEEK_END );
 
-   const long ExpectSize = long(OPT__UM_IC_NVAR)*(long)UM_Size3D[0]*(long)UM_Size3D[1]*(long)UM_Size3D[2]*sizeof(real);
+   const long ExpectSize = long(OPT__UM_IC_NVAR)*UM_Size3D[0]*UM_Size3D[1]*UM_Size3D[2]*sizeof(real);
    const long FileSize   = ftell( FileTemp );
    if ( FileSize != ExpectSize )
       Aux_Error( ERROR_INFO, "size of the file <%s> (%ld) != expect (%ld) !!\n", UM_Filename, FileSize, ExpectSize );
@@ -162,7 +163,7 @@ void Init_ByFile()
 
 
 // 3. assign data on level OPT__UM_IC_LEVEL by the input file UM_IC
-   Init_ByFile_AssignData( UM_Filename, OPT__UM_IC_LEVEL, OPT__UM_IC_NVAR, OPT__UM_IC_LOAD_NRANK );
+   Init_ByFile_AssignData( UM_Filename, OPT__UM_IC_LEVEL, OPT__UM_IC_NVAR, OPT__UM_IC_LOAD_NRANK, OPT__UM_IC_FORMAT );
 
 #  ifdef LOAD_BALANCE
    Buf_GetBufferData( OPT__UM_IC_LEVEL, amr->FluSg[OPT__UM_IC_LEVEL], NULL_INT, DATA_GENERAL, _TOTAL,
@@ -272,10 +273,14 @@ void Init_ByFile()
 //                UM_lv        : Target AMR level
 //                UM_NVar      : Number of variables
 //                UM_LoadNRank : Number of parallel I/O
+//                UM_Format    : Data format of the file "UM_Filename"
+//                               --> UM_IC_FORMAT_VZYX: [field][z][y][x] in a row-major order
+//                                   UM_IC_FORMAT_ZYXV: [z][y][x][field] in a row-major order
 //
 // Return      :  amr->patch->fluid
 //-------------------------------------------------------------------------------------------------------
-void Init_ByFile_AssignData( const char UM_Filename[], const int UM_lv, const int UM_NVar, const int UM_LoadNRank )
+void Init_ByFile_AssignData( const char UM_Filename[], const int UM_lv, const int UM_NVar, const int UM_LoadNRank,
+                             const UM_IC_Format_t UM_Format )
 {
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Loading data from the input file ...\n" );
@@ -285,14 +290,16 @@ void Init_ByFile_AssignData( const char UM_Filename[], const int UM_lv, const in
    if ( Init_ByFile_User_Ptr == NULL )  Aux_Error( ERROR_INFO, "Init_ByFile_User_Ptr == NULL !!\n" );
 
 
-   const int    UM_Size3D[3] = { NX0_TOT[0]*(1<<UM_lv),
+   const long   UM_Size3D[3] = { NX0_TOT[0]*(1<<UM_lv),
                                  NX0_TOT[1]*(1<<UM_lv),
                                  NX0_TOT[2]*(1<<UM_lv) };
+   const long   UM_Size1v    =  UM_Size3D[0]*UM_Size3D[1]*UM_Size3D[2];
+   const int    NVarPerLoad  = ( UM_Format == UM_IC_FORMAT_ZYXV ) ? UM_NVar : 1;
    const int    scale        = amr->scale[UM_lv];
    const double dh           = amr->dh[UM_lv];
 
    long   Offset3D_File0[3], Offset_File0, Offset_File, Offset_PG;
-   real   fluid[NCOMP_TOTAL];
+   real   fluid_in[UM_NVar], fluid_out[NCOMP_TOTAL];
    double x, y, z;
 
    real *PG_Data = new real [ CUBE(PS2)*UM_NVar ];
@@ -315,24 +322,28 @@ void Init_ByFile_AssignData( const char UM_Filename[], const int UM_lv, const in
             for (int d=0; d<3; d++)    Offset3D_File0[d] = amr->patch[0][UM_lv][PID0]->corner[d] / scale;
 
             Offset_File0  = IDX321( Offset3D_File0[0], Offset3D_File0[1], Offset3D_File0[2], UM_Size3D[0], UM_Size3D[1] );
-            Offset_File0 *= (long)UM_NVar*sizeof(real);
+            Offset_File0 *= (long)NVarPerLoad*sizeof(real);
 
 
 //          load data from the disk (one row at a time)
             Offset_PG = 0;
 
-            for (int k=0; k<PS2; k++)
-            for (int j=0; j<PS2; j++)
+            for (int v=0; v<UM_NVar; v+=NVarPerLoad )
             {
-               Offset_File = Offset_File0 + (long)UM_NVar*sizeof(real)*( ((long)k*UM_Size3D[1] + j)*UM_Size3D[0] );
+               for (int k=0; k<PS2; k++)
+               for (int j=0; j<PS2; j++)
+               {
+                  Offset_File = Offset_File0 + (long)NVarPerLoad*sizeof(real)*( ((long)k*UM_Size3D[1] + j)*UM_Size3D[0] )
+                                + v*UM_Size1v*sizeof(real);
 
-               fseek( File, Offset_File, SEEK_SET );
-               fread( PG_Data+Offset_PG, sizeof(real), UM_NVar*PS2, File );
+                  fseek( File, Offset_File, SEEK_SET );
+                  fread( PG_Data+Offset_PG, sizeof(real), NVarPerLoad*PS2, File );
 
-//             verify that the file size is not exceeded
-               if ( feof(File) )   Aux_Error( ERROR_INFO, "reaching the end of the file \"%s\" !!\n", UM_Filename );
+//                verify that the file size is not exceeded
+                  if ( feof(File) )   Aux_Error( ERROR_INFO, "reaching the end of the file \"%s\" !!\n", UM_Filename );
 
-               Offset_PG += UM_NVar*PS2;
+                  Offset_PG += NVarPerLoad*PS2;
+               }
             }
 
 
@@ -348,12 +359,21 @@ void Init_ByFile_AssignData( const char UM_Filename[], const int UM_lv, const in
                for (int j=0; j<PS1; j++)  {  y = amr->patch[0][UM_lv][PID]->EdgeL[1] + (j+0.5)*dh;
                for (int i=0; i<PS1; i++)  {  x = amr->patch[0][UM_lv][PID]->EdgeL[0] + (i+0.5)*dh;
 
-                  Offset_PG = (long)UM_NVar*IDX321( i+Disp_i, j+Disp_j, k+Disp_k, PS2, PS2 );
+                  Offset_PG = (long)NVarPerLoad*IDX321( i+Disp_i, j+Disp_j, k+Disp_k, PS2, PS2 );
 
-                  Init_ByFile_User_Ptr( fluid, PG_Data+Offset_PG, UM_NVar, x, y, z, Time[UM_lv], UM_lv, NULL );
+                  if ( UM_Format == UM_IC_FORMAT_ZYXV )
+                     memcpy( fluid_in, PG_Data+Offset_PG, UM_NVar*sizeof(real) );
+
+                  else
+                  {
+                     for (int v=0; v<UM_NVar; v++)
+                        fluid_in[v] = *( PG_Data + Offset_PG + v*CUBE(PS2) );
+                  }
+
+                  Init_ByFile_User_Ptr( fluid_out, fluid_in, UM_NVar, x, y, z, Time[UM_lv], UM_lv, NULL );
 
                   for (int v=0; v<NCOMP_TOTAL; v++)
-                     amr->patch[ amr->FluSg[UM_lv] ][UM_lv][PID]->fluid[v][k][j][i] = fluid[v];
+                     amr->patch[ amr->FluSg[UM_lv] ][UM_lv][PID]->fluid[v][k][j][i] = fluid_out[v];
                }}}
             } // for (int LocalID=0; LocalID<8; LocalID++)
          } // for (int PID0=0; PID0<amr->NPatchComma[UM_lv][1]; PID0+=8)
