@@ -45,6 +45,9 @@ void Init_Field()
    Idx_Engy    = AddField( "Engy",     NORMALIZE_NO );
 
 #  elif ( MODEL == ELBDM )
+   Idx_Dens    = AddField( "Dens",     NORMALIZE_NO );
+   Idx_Real    = AddField( "Real",     NORMALIZE_NO );
+   Idx_Imag    = AddField( "Imag",     NORMALIZE_NO );
 
 #  else
 #    error : ERROR : unsupported MODEL !!
