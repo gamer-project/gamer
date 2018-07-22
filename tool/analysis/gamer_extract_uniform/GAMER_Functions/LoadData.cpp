@@ -1085,7 +1085,6 @@ void Load_Parameter_After_2000( FILE *File, const int FormatVersion, bool &LoadP
    LoadPot     = opt__output_pot;
    LoadPar     = particle;
    LoadParDens = opt__output_par_dens;
-   NParVarOut  = ( LoadPar ) ? 7+par_npassive : -1;   // mass, position x/y/z, velocity x/y/z, and passive variables
    BoxSize     = box_size;
    Gamma       = gamma;
    ELBDM_Eta   = elbdm_mass / elbdm_planck_const;
@@ -1102,6 +1101,14 @@ void Load_Parameter_After_2000( FILE *File, const int FormatVersion, bool &LoadP
    Unit_P      = unit_p;
    Mu          = molecular_weight;
    Comoving    = comoving;
+
+   if ( LoadPar )
+   {
+      if ( FormatVersion > 2131 )   NParVarOut = par_nvar;           // after version 2131, par_nvar = PAR_NATT_STORED
+      else                          NParVarOut = 7 + par_npassive;   // mass, position x/y/z, velocity x/y/z, and passive variables
+   }
+   else
+                                    NParVarOut = -1;
 
 } // FUNCTION : Load_Parameter_After_2000
 

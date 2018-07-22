@@ -701,7 +701,11 @@ void Init_ResetParameter()
 // OPT__UM_IC_NVAR
    if ( OPT__INIT == INIT_BY_FILE  &&  OPT__UM_IC_NVAR <= 0 )
    {
+#     ifdef DUAL_ENERGY
+      OPT__UM_IC_NVAR = NCOMP_TOTAL - 1;  // do not load the dual-energy field from the disk
+#     else
       OPT__UM_IC_NVAR = NCOMP_TOTAL;
+#     endif
 
       PRINT_WARNING( OPT__UM_IC_NVAR, FORMAT_INT, "" );
    }
@@ -726,28 +730,6 @@ void Init_ResetParameter()
 
       const ParInit_t PAR_INIT = amr->Par->Init;
       PRINT_WARNING( PAR_INIT, FORMAT_INT, "for restart" );
-   }
-#  endif
-
-
-// turn off OPT__NORMALIZE_PASSIVE if there are no passive scalars
-#  if (  NCOMP_PASSIVE <= 0  ||  ( defined DUAL_ENERGY && NCOMP_PASSIVE == 1 )  )
-   if ( OPT__NORMALIZE_PASSIVE )
-   {
-      OPT__NORMALIZE_PASSIVE = false;
-
-      PRINT_WARNING( OPT__NORMALIZE_PASSIVE, FORMAT_INT, "since there are no passive scalars" );
-   }
-#  endif
-
-
-// OPT__CK_NORMALIZE_PASSIVE must work with OPT__NORMALIZE_PASSIVE
-#  if ( NCOMP_PASSIVE > 0 )
-   if ( OPT__CK_NORMALIZE_PASSIVE  &&  !OPT__NORMALIZE_PASSIVE )
-   {
-      OPT__CK_NORMALIZE_PASSIVE = false;
-
-      PRINT_WARNING( OPT__CK_NORMALIZE_PASSIVE, FORMAT_INT, "since OPT__NORMALIZE_PASSIVE is disabled" );
    }
 #  endif
 

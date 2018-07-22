@@ -14,7 +14,7 @@
 //                   provided. The mapping between send and recv patches can be calculated in advance by
 //                   Par_LB_MapBuffer2RealPatch() if send patches are buffer and recv patches are real
 //                2. All Target patches (those in Send_PIDList[] and Recv_PIDList[]) must be patches at the same level "lv"
-//                3. Currently this function exchange all particles attributes (both ParVar[] and Passive[])
+//                3. Currently this function exchanges ALL particle attributes
 //                   --> But it can be generalized to work with arbitrary particle attributes
 //                4. This function is called by Par_PassParticle2Sibling(), Par_PassParticle2Son_AllPatch(),
 //                   Par_LB_Refine_SendParticle2Son(), and Par_LB_Refine_SendParticle2Father()
@@ -137,10 +137,9 @@ void Par_LB_ExchangeParticleBetweenPatch( const int lv,
 
 // 2. prepare the particle data to be sent (and then remove these particles from this rank)
    const bool RemoveAllPar_Yes = true;
-   const int  NParVar          = PAR_NVAR + PAR_NPASSIVE;
 
 // reuse the MPI send buffer declared in LB_GetBufferData for better MPI performance
-   real *SendBuf_ParDataEachPatch = LB_GetBufferData_MemAllocate_Send( NSendParTotal*NParVar );
+   real *SendBuf_ParDataEachPatch = LB_GetBufferData_MemAllocate_Send( NSendParTotal*PAR_NATT_TOTAL );
 
    real *SendPtr = SendBuf_ParDataEachPatch;
    long *ParList = NULL;
@@ -167,8 +166,7 @@ void Par_LB_ExchangeParticleBetweenPatch( const int lv,
          ParID = ParList[p];
 
 //       2-1. store particle data into the MPI send buffer
-         for (int v=0; v<PAR_NVAR;     v++)  *SendPtr++ = amr->Par->ParVar [v][ParID];
-         for (int v=0; v<PAR_NPASSIVE; v++)  *SendPtr++ = amr->Par->Passive[v][ParID];
+         for (int v=0; v<PAR_NATT_TOTAL; v++)   *SendPtr++ = amr->Par->Attribute[v][ParID];
 
 //       2-2. remove this particle from the particle repository of this rank
          amr->Par->RemoveOneParticle( ParID, PAR_INACTIVE_MPI );
@@ -197,7 +195,7 @@ void Par_LB_ExchangeParticleBetweenPatch( const int lv,
 
 // note that we don't exchange NPatchEachRank (which is already known) and LBIdxEachRank (which is useless here)
    Par_LB_SendParticleData(
-      NParVar,
+      PAR_NATT_TOTAL,
       SendBuf_NPatchEachRank, SendBuf_NParEachPatch, SendBuf_LBIdxEachRank, SendBuf_ParDataEachPatch, NSendParTotal,
       RecvBuf_NPatchEachRank, RecvBuf_NParEachPatch, RecvBuf_LBIdxEachRank, RecvBuf_ParDataEachPatch,
       NRecvPatchTotal, NRecvParTotal, Exchange_NPatchEachRank_No, Exchange_LBIdxEachRank_No, Exchange_ParDataEachRank_Yes,
@@ -233,17 +231,17 @@ void Par_LB_ExchangeParticleBetweenPatch( const int lv,
 //    4-2. add particles to the particle repository
       for (int p=0; p<NParThisPatch; p++)
       {
-         ParID    = amr->Par->AddOneParticle( RecvPtr, RecvPtr+PAR_NVAR );
-         RecvPtr += NParVar;
+         ParID    = amr->Par->AddOneParticle( RecvPtr );
+         RecvPtr += PAR_NATT_TOTAL;
 
 //       store the new particle index
          NewParIDList[p] = ParID;
 
 //       we do not transfer inactive particles
 #        ifdef DEBUG_PARTICLE
-         if ( amr->Par->ParVar[PAR_MASS][ParID] < (real)0.0 )
+         if ( amr->Par->Attribute[PAR_MASS][ParID] < (real)0.0 )
             Aux_Error( ERROR_INFO, "Find inactive particle (ParID %d, Mass %14.7e) !!\n",
-                       ParID, amr->Par->ParVar[PAR_MASS][ParID] );
+                       ParID, amr->Par->Attribute[PAR_MASS][ParID] );
 #        endif
       }
 

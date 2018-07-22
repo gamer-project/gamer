@@ -31,12 +31,12 @@ void Par_Output_TextFile( const char *FileName )
 
       fprintf( File, "#Time %20.14e   Step %13ld   Active Particles %13ld\n\n",
                Time[0], Step, amr->Par->NPar_Active_AllRank );
-      fprintf( File, "#  %20s  %21s  %21s  %21s  %21s  %21s  %21s  %21s", "Mass", "X", "Y", "Z", "Vx", "Vy", "Vz", "Time" );
-#     ifdef STORE_PAR_ACC
-      fprintf( File, "  %21s  %21s  %21s", "AccX", "AccY", "AccZ" );
-#     endif
-      for (int v=0; v<PAR_NPASSIVE; v++)
-      fprintf( File, "  %21s", PassiveFieldName_Par[v] );
+
+      fprintf( File, "#" );
+
+      for (int v=0; v<PAR_NATT_TOTAL; v++)
+      fprintf( File, "  %*s", (v==0)?20:21, ParAttLabel[v] );
+
       fprintf( File, "\n" );
 
       fclose( File );
@@ -55,8 +55,7 @@ void Par_Output_TextFile( const char *FileName )
 //          skip inactive particles
             if ( amr->Par->Mass[p] < 0.0 )   continue;
 
-            for (int v=0; v<PAR_NVAR;     v++)     fprintf( File, "  %21.14e", amr->Par->ParVar [v][p] );
-            for (int v=0; v<PAR_NPASSIVE; v++)     fprintf( File, "  %21.14e", amr->Par->Passive[v][p] );
+            for (int v=0; v<PAR_NATT_TOTAL; v++)   fprintf( File, "  %21.14e", amr->Par->Attribute[v][p] );
 
             fprintf( File, "\n" );
          }

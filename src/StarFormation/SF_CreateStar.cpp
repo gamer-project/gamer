@@ -5,9 +5,6 @@
 
 static RandomNumber_t *RNG = NULL;
 
-//###: HARD-CODED FIELDS
-extern bool AGORA_UseMetal;
-
 
 
 
@@ -63,10 +60,8 @@ void SF_CreateStar( const int lv, const real TimeNew, const real dt )
    }
 
 
-//###: HARD-CODED FIELDS
 // determine if metallicity is included
-// --> currently it's used by the AGORA_IsolatedGalaxy test only (but will be made more general-purpose soon)
-   const bool UseMetal = AGORA_UseMetal;
+   const bool UseMetal = ( Idx_Metal != Idx_Undefined );
 
 
 // invoke the target star-formation method

@@ -22,10 +22,10 @@
 void Grackle_Prepare( const int lv, real h_Che_Array[], const int NPG, const int *PID0_List )
 {
 
-   const int  Idx_Dens        = 0;
-   const int  Idx_sEint       = 1;
-   const int  Idx_Ek          = 2;
-   const int  Idx_Metal       = 3;
+   const int  hCheIdx_Dens    = 0;
+   const int  hCheIdx_sEint   = 1;
+   const int  hCheIdx_Ek      = 2;
+   const int  hCheIdx_Metal   = 3;
    const real dh              = (real)amr->dh[lv];
    const int  Size1pg         = CUBE(PS2);
    const int  Size1v          = NPG*Size1pg;
@@ -38,12 +38,19 @@ void Grackle_Prepare( const int lv, real h_Che_Array[], const int NPG, const int
    int  idx_pg, PID, PID0;    // idx_pg: array indices within a patch group
    real Dens, Px, Py, Pz, Etot, _Dens, Ek, sEint;
 
-   real *Ptr_Dens0  = h_Che_Array + Idx_Dens *Size1v;
-   real *Ptr_sEint0 = h_Che_Array + Idx_sEint*Size1v;
-   real *Ptr_Ek0    = h_Che_Array + Idx_Ek   *Size1v;
-   real *Ptr_Metal0 = h_Che_Array + Idx_Metal*Size1v;
+   real *Ptr_Dens0  = h_Che_Array + hCheIdx_Dens *Size1v;
+   real *Ptr_sEint0 = h_Che_Array + hCheIdx_sEint*Size1v;
+   real *Ptr_Ek0    = h_Che_Array + hCheIdx_Ek   *Size1v;
+   real *Ptr_Metal0 = h_Che_Array + hCheIdx_Metal*Size1v;
 
    real *Ptr_Dens=NULL, *Ptr_sEint=NULL, *Ptr_Ek=NULL, *Ptr_Metal=NULL;
+
+
+// check
+#  ifdef GAMER_DEBUG
+   if ( GRACKLE_METAL  &&  Idx_Metal == Idx_Undefined )
+      Aux_Error( ERROR_INFO, "Idx_Metal is undefined for \"GRACKLE_METAL\" !!\n" );
+#  endif
 
 
 #  pragma omp parallel for private( idx_pg, PID, PID0, Dens, Px, Py, Pz, Etot, _Dens, Ek, sEint, \
@@ -89,13 +96,9 @@ void Grackle_Prepare( const int lv, real h_Che_Array[], const int NPG, const int
             Ptr_sEint[idx_pg] = sEint;
             Ptr_Ek   [idx_pg] = Ek;
 
-//###: HARD-CODED FIELDS
-//          prepare the metallicity if metal cooling is enabled
-//          --> one must add the METAL field as an passively advected scalar for that
-#           if (  ( defined DUAL_ENERGY && NCOMP_PASSIVE > 1 )  ||  ( !defined DUAL_ENERGY && NCOMP_PASSIVE > 0 )  )
+//          prepare metallicity if metal cooling is enabled
             if ( GRACKLE_METAL )
-            Ptr_Metal[idx_pg] = *( amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[METAL][0][0] + idx_p );
-#           endif
+            Ptr_Metal[idx_pg] = *( amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[Idx_Metal][0][0] + idx_p );
 
             idx_pg ++;
          } // for (int idx_p=0; idx_p<CUBE(PS1); idx_p++)

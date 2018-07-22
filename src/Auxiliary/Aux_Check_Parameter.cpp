@@ -626,14 +626,7 @@ void Aux_Check_Parameter()
       Aux_Message( stderr, "WARNING : %s is useless since %s is off !!\n", "OPT__CK_FLUX_ALLOCATE", "OPT__FIXUP_FLUX" );
 
    if ( OPT__INIT == INIT_BY_FILE )
-   {
       Aux_Message( stderr, "WARNING : currently we don't check MIN_DENS/PRES for the initial data loaded from UM_IC !!\n" );
-
-#     ifdef DUAL_ENERGY
-      Aux_Message( stderr, "REMINDER : when adopting DUAL_ENERGY and OPT__INIT=3, store the gas entropy\n"
-                           "           as the last variable in the file \"UM_IC\"\n" );
-#     endif
-   }
 
    if ( OPT__1ST_FLUX_CORR != FIRST_FLUX_CORR_NONE )
       Aux_Message( stderr, "REMINDER : OPT__1ST_FLUX_CORR may break the strict conservation of fluid variables\n" );

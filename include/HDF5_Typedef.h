@@ -59,7 +59,7 @@ struct KeyInfo_t
    long   AdvanceCounter[NLEVEL];
 #  ifdef PARTICLE
    long   Par_NPar;                 // amr->Par->NPar_Active_AllRank
-   int    Par_NPassive;             // PAR_NPASSIVE
+   int    Par_NAttStored;           // PAR_NATT_STORED
 #  endif
 
    double BoxSize[3];
@@ -141,7 +141,7 @@ struct Makefile_t
 #  ifdef PARTICLE
    int StoreParAcc;
    int StarFormation;
-   int Par_NPassive;
+   int Par_NAttUser;
 #  endif
 
 }; // struct Makefile_t
@@ -212,7 +212,7 @@ struct SymConst_t
 
 
 #  ifdef PARTICLE
-   int    Par_NVar;
+   int    Par_NAttStored;
    int    RhoExt_GhostSize;
 
    int    Debug_Particle;
@@ -317,7 +317,7 @@ struct InputPara_t
    int    Par_PredictPos;
    double Par_RemoveCell;
    int    Par_GhostSize;
-   char  *PassiveFieldName_Par[PAR_NPASSIVE];
+   char  *ParAttLabel[PAR_NATT_TOTAL];
 #  endif
 
 // cosmology
@@ -433,7 +433,7 @@ struct InputPara_t
    int    Opt__NormalizePassive;
    int    NormalizePassive_NVar;
    int    NormalizePassive_VarIdx[NCOMP_PASSIVE];
-   char  *PassiveFieldName_Grid[NCOMP_PASSIVE];
+   char  *FieldLabel[NCOMP_TOTAL];
    int    Opt__OverlapMPI;
    int    Opt__ResetFluid;
 #  if ( MODEL == HYDRO  ||  MODEL == MHD  ||  MODEL == ELBDM )

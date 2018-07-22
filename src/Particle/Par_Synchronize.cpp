@@ -7,7 +7,7 @@
 static double CurrentSyncTime   = -1.0;
 static long   Backup_NPar       = -1;
 static long  *Backup_ParID      = NULL;
-static real (*Backup_ParVar)[7] = NULL;
+static real (*Backup_ParAtt)[7] = NULL;
 
 
 
@@ -17,7 +17,7 @@ static real (*Backup_ParVar)[7] = NULL;
 // Description :  Synchronize all particles to a given time
 //
 // Note        :  1. For SyncOption = PAR_SYNC_TEMP, particle position and velocity are only temporarily
-//                   synchronized and can be restored by calling Par_Synchronize_Restore
+//                   synchronized and can be restored by calling Par_Synchronize_Restore()
 //                2. For SyncOption = PAR_SYNC_FORCE, particle position and velocity are permanently
 //                   synchronized and cannot be restored
 //                3. One can use the static global variable "CurrentSyncTime" to check whether particles
@@ -25,12 +25,12 @@ static real (*Backup_ParVar)[7] = NULL;
 //                   outputting data and calculating total energy at the same step)
 //                4. Must work with STORE_PAR_ACC
 //                5. Particles may cross patch boundaries after synchronization
-//                   --> One may need to call "Par_PassParticle2Sibling" and "Par_PassParticle2Son_AllPatch" to
+//                   --> One may need to call Par_PassParticle2Sibling() and Par_PassParticle2Son_AllPatch() to
 //                       properly transfer particles between patches, especially for SyncOption = PAR_SYNC_FORCE
 //                6. Currently it's only invoked by Flu_CorrAfterAllSync()
 //
-// Parameter   :  SyncTime    : Target synchronization time
-//                SyncOption  : PAR_SYNC_NONE / PAR_SYNC_TEMP / PAR_SYNC_FORCE
+// Parameter   :  SyncTime   : Target synchronization time
+//                SyncOption : PAR_SYNC_NONE / PAR_SYNC_TEMP / PAR_SYNC_FORCE
 //
 // Return      :  0/1/2 --> success/PAR_SYNC_NONE/routine has already been called previously
 //-------------------------------------------------------------------------------------------------------
@@ -64,7 +64,7 @@ int Par_Synchronize( const double SyncTime, const ParSync_t SyncOption )
       MemSize       = MemUnit;
       Backup_NPar   = 0;
       Backup_ParID  = ( long *      )malloc(   MemSize*sizeof(long) );
-      Backup_ParVar = ( real (*)[7] )malloc( 7*MemSize*sizeof(real) );  // 7 = pos*3, vel*3, time
+      Backup_ParAtt = ( real (*)[7] )malloc( 7*MemSize*sizeof(real) );  // 7 = pos*3, vel*3, time
    }
 
 
@@ -98,17 +98,17 @@ int Par_Synchronize( const double SyncTime, const ParSync_t SyncOption )
             {
                MemSize      += MemUnit;
                Backup_ParID  = ( long *      )realloc( Backup_ParID,    MemSize*sizeof(long) );
-               Backup_ParVar = ( real (*)[7] )realloc( Backup_ParVar, 7*MemSize*sizeof(real) );
+               Backup_ParAtt = ( real (*)[7] )realloc( Backup_ParAtt, 7*MemSize*sizeof(real) );
             }
 
             Backup_ParID [ Backup_NPar ]    = p;
-            Backup_ParVar[ Backup_NPar ][0] = ParPos[0][p];
-            Backup_ParVar[ Backup_NPar ][1] = ParPos[1][p];
-            Backup_ParVar[ Backup_NPar ][2] = ParPos[2][p];
-            Backup_ParVar[ Backup_NPar ][3] = ParVel[0][p];
-            Backup_ParVar[ Backup_NPar ][4] = ParVel[1][p];
-            Backup_ParVar[ Backup_NPar ][5] = ParVel[2][p];
-            Backup_ParVar[ Backup_NPar ][6] = ParTime  [p];
+            Backup_ParAtt[ Backup_NPar ][0] = ParPos[0][p];
+            Backup_ParAtt[ Backup_NPar ][1] = ParPos[1][p];
+            Backup_ParAtt[ Backup_NPar ][2] = ParPos[2][p];
+            Backup_ParAtt[ Backup_NPar ][3] = ParVel[0][p];
+            Backup_ParAtt[ Backup_NPar ][4] = ParVel[1][p];
+            Backup_ParAtt[ Backup_NPar ][5] = ParVel[2][p];
+            Backup_ParAtt[ Backup_NPar ][6] = ParTime  [p];
 
             Backup_NPar ++;
          }
@@ -166,24 +166,24 @@ void Par_Synchronize_Restore( const double SyncTime )
    for (long p=0; p<Backup_NPar; p++)
    {
       ParID            = Backup_ParID [p];
-      ParPos[0][ParID] = Backup_ParVar[p][0];
-      ParPos[1][ParID] = Backup_ParVar[p][1];
-      ParPos[2][ParID] = Backup_ParVar[p][2];
-      ParVel[0][ParID] = Backup_ParVar[p][3];
-      ParVel[1][ParID] = Backup_ParVar[p][4];
-      ParVel[2][ParID] = Backup_ParVar[p][5];
-      ParTime  [ParID] = Backup_ParVar[p][6];
+      ParPos[0][ParID] = Backup_ParAtt[p][0];
+      ParPos[1][ParID] = Backup_ParAtt[p][1];
+      ParPos[2][ParID] = Backup_ParAtt[p][2];
+      ParVel[0][ParID] = Backup_ParAtt[p][3];
+      ParVel[1][ParID] = Backup_ParAtt[p][4];
+      ParVel[2][ParID] = Backup_ParAtt[p][5];
+      ParTime  [ParID] = Backup_ParAtt[p][6];
    }
 
 
 // free memory and set global static variables to indicate that particles are not synchronized anymore
    free( Backup_ParID  );
-   free( Backup_ParVar );
+   free( Backup_ParAtt );
 
    CurrentSyncTime = -1.0;
    Backup_NPar     = -1;
    Backup_ParID    = NULL;
-   Backup_ParVar   = NULL;
+   Backup_ParAtt   = NULL;
 
 } // FUNCTION : Par_Synchronize_Restore
 

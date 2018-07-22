@@ -227,38 +227,21 @@ void SendParticle2HomeRank( const int lv )
 
 
 // 3. redistribute particle attributes (one attribute at a time to save memory)
-   const int NAtt = 8 + PAR_NPASSIVE;  // 8 = mass, pos*3, vel*3, time --> do not transfer acceleration
    int Offset[MPI_NRank];
 
    real *SendBuf = new real [Send_Count_Sum];
    real *RecvBuf = NULL;
 
 // 3-1. record attribute pointers
-   real *AttPtr[NAtt], **AttPtrPtr[NAtt];
+   real *AttPtr[PAR_NATT_TOTAL], **AttPtrPtr[PAR_NATT_TOTAL];
 
-   AttPtr[0] = amr->Par->ParVar[PAR_MASS];
-   AttPtr[1] = amr->Par->ParVar[PAR_POSX];
-   AttPtr[2] = amr->Par->ParVar[PAR_POSY];
-   AttPtr[3] = amr->Par->ParVar[PAR_POSZ];
-   AttPtr[4] = amr->Par->ParVar[PAR_VELX];
-   AttPtr[5] = amr->Par->ParVar[PAR_VELY];
-   AttPtr[6] = amr->Par->ParVar[PAR_VELZ];
-   AttPtr[7] = amr->Par->ParVar[PAR_TIME];
+   for (int v=0; v<PAR_NATT_TOTAL; v++)
+   {
+      AttPtr   [v] =  amr->Par->Attribute[v];
+      AttPtrPtr[v] = &amr->Par->Attribute[v];
+   }
 
-   for (int v=8; v<NAtt; v++)    AttPtr[v] = amr->Par->Passive[v-8];
-
-   AttPtrPtr[0] = &amr->Par->ParVar[PAR_MASS];
-   AttPtrPtr[1] = &amr->Par->ParVar[PAR_POSX];
-   AttPtrPtr[2] = &amr->Par->ParVar[PAR_POSY];
-   AttPtrPtr[3] = &amr->Par->ParVar[PAR_POSZ];
-   AttPtrPtr[4] = &amr->Par->ParVar[PAR_VELX];
-   AttPtrPtr[5] = &amr->Par->ParVar[PAR_VELY];
-   AttPtrPtr[6] = &amr->Par->ParVar[PAR_VELZ];
-   AttPtrPtr[7] = &amr->Par->ParVar[PAR_TIME];
-
-   for (int v=8; v<NAtt; v++)    AttPtrPtr[v] = &amr->Par->Passive[v-8];
-
-   for (int v=0; v<NAtt; v++)
+   for (int v=0; v<PAR_NATT_TOTAL; v++)
    {
 //    3-2. initialize the array offsets of all target ranks
       for (int r=0; r<MPI_NRank; r++)  Offset[r] = Send_Disp[r];
@@ -280,7 +263,7 @@ void SendParticle2HomeRank( const int lv )
 #     else
       MPI_Alltoallv( SendBuf, Send_Count, Send_Disp, MPI_FLOAT,  RecvBuf, Recv_Count, Recv_Disp, MPI_FLOAT,  MPI_COMM_WORLD );
 #     endif
-   } // for (int v=0; v<NAtt; v++)
+   } // for (int v=0; v<PAR_NATT_TOTAL; v++)
 
 
 // 4. reset particle parameters
@@ -294,29 +277,20 @@ void SendParticle2HomeRank( const int lv )
    amr->Par->InactiveParList     = (long*)malloc( amr->Par->InactiveParListSize*sizeof(long) );
 
 
-// 5. reset attribute pointers and reallocate the acceleration arrays
-   amr->Par->Mass = amr->Par->ParVar[PAR_MASS];
-   amr->Par->PosX = amr->Par->ParVar[PAR_POSX];
-   amr->Par->PosY = amr->Par->ParVar[PAR_POSY];
-   amr->Par->PosZ = amr->Par->ParVar[PAR_POSZ];
-   amr->Par->VelX = amr->Par->ParVar[PAR_VELX];
-   amr->Par->VelY = amr->Par->ParVar[PAR_VELY];
-   amr->Par->VelZ = amr->Par->ParVar[PAR_VELZ];
-   amr->Par->Time = amr->Par->ParVar[PAR_TIME];
-
+// 5. reset attribute pointers
+   amr->Par->Mass = amr->Par->Attribute[PAR_MASS];
+   amr->Par->PosX = amr->Par->Attribute[PAR_POSX];
+   amr->Par->PosY = amr->Par->Attribute[PAR_POSY];
+   amr->Par->PosZ = amr->Par->Attribute[PAR_POSZ];
+   amr->Par->VelX = amr->Par->Attribute[PAR_VELX];
+   amr->Par->VelY = amr->Par->Attribute[PAR_VELY];
+   amr->Par->VelZ = amr->Par->Attribute[PAR_VELZ];
+   amr->Par->Time = amr->Par->Attribute[PAR_TIME];
 #  ifdef STORE_PAR_ACC
-   free( amr->Par->ParVar[PAR_ACCX] );
-   free( amr->Par->ParVar[PAR_ACCY] );
-   free( amr->Par->ParVar[PAR_ACCZ] );
-
-   amr->Par->ParVar[PAR_ACCX] = (real*)malloc( amr->Par->ParListSize*sizeof(real) );
-   amr->Par->ParVar[PAR_ACCY] = (real*)malloc( amr->Par->ParListSize*sizeof(real) );
-   amr->Par->ParVar[PAR_ACCZ] = (real*)malloc( amr->Par->ParListSize*sizeof(real) );
-
-   amr->Par->AccX = amr->Par->ParVar[PAR_ACCX];
-   amr->Par->AccY = amr->Par->ParVar[PAR_ACCY];
-   amr->Par->AccZ = amr->Par->ParVar[PAR_ACCZ];
-#  endif // #ifdef STORE_PAR_ACC
+   amr->Par->AccX = amr->Par->Attribute[PAR_ACCX];
+   amr->Par->AccY = amr->Par->Attribute[PAR_ACCY];
+   amr->Par->AccZ = amr->Par->Attribute[PAR_ACCZ];
+#  endif
 
 
 // 6. check
