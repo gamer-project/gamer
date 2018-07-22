@@ -58,6 +58,13 @@ const OptInit_t
    INIT_BY_FILE     = 3;
 
 
+// data format for OPT__INIT=INIT_BY_FILE
+typedef int UM_IC_Format_t;
+const UM_IC_Format_t
+   UM_IC_FORMAT_VZYX = 1,
+   UM_IC_FORMAT_ZYXV = 2;
+
+
 // program restart options
 typedef int OptRestartH_t;
 const OptRestartH_t
