@@ -91,11 +91,7 @@ void End_MemFree()
 #  endif
 
 
-// 6. string arrays for the passive variables
-   End_MemFree_PassiveFieldName();
-
-
-// 7. star formation random number generator
+// 6. star formation random number generator
 #  ifdef STAR_FORMATION
    SF_FreeRNG();
 #  endif

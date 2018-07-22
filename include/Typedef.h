@@ -45,6 +45,7 @@ const TestProbID_t
    TESTPROB_HYDRO_RIEMANN                      =    9,
    TESTPROB_HYDRO_COLLIDING_JETS               =   10,
    TESTPROB_HYDRO_PLUMMER                      =   11,
+   TESTPROB_HYDRO_GRAVITY                      =   12,
 
    TESTPROB_ELBDM_EXTPOT                       = 1000;
 
@@ -312,6 +313,17 @@ const OptTimeStepLevel_t
    DT_LEVEL_SHARED    = 1,
    DT_LEVEL_DIFF_BY_2 = 2,
    DT_LEVEL_FLEXIBLE  = 3;
+
+
+// AddField() option
+typedef int NormPassive_t;
+const NormPassive_t
+   NORMALIZE_NO  = 0,
+   NORMALIZE_YES = 1;
+
+
+// field types
+typedef int FieldIdx_t;
 
 
 // Grackle

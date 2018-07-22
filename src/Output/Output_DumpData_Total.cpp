@@ -16,7 +16,7 @@ Procedure for outputting new variables:
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Output_DumpData_Total (FormatVersion = 2131)
+// Function    :  Output_DumpData_Total (FormatVersion = 2200)
 // Description :  Output all simulation data in the binary form, which can be used as a restart file
 //
 // Note        :  1. This output format is deprecated and is mainly used for debugging only
@@ -28,6 +28,11 @@ Procedure for outputting new variables:
 //                2120 : 2017/02/14 --> output passive grid and particle variables
 //                2130 : 2017/08/09 --> output dTime_AllLv
 //                2131 : 2017/12/05 --> no longer define INTEL
+//                2200 : 2018/07/15 --> replace PAR_NVAR and PAR_NPASSIVE by PAR_NATT_STORED and PAR_NATT_USER;
+//                                      use the new infrastructure for adding user-defined grid fields and
+//                                      particle attributes
+//                                      --> imcompatible with version 2131 for the data with user-defined particle
+//                                          attributes as the order of their indices may be different
 //-------------------------------------------------------------------------------------------------------
 void Output_DumpData_Total( const char *FileName )
 {
@@ -70,7 +75,6 @@ void Output_DumpData_Total( const char *FileName )
 
 // get the number of partices in each rank and the corresponding global particle index offset
 #  ifdef PARTICLE
-   const int NParVar  = 7 + PAR_NPASSIVE;    // particle mass, position x/y/z, velocity x/y/z, and passive variables
    long GParID_Offset = 0;                   // GParID = global particle index (==> unique for each particle)
    long NPar_EachRank[MPI_NRank];
 
@@ -161,13 +165,13 @@ void Output_DumpData_Total( const char *FileName )
 
       FileOffset_Particle = ExpectFileSize;  // file offset at the beginning of particle data
 
-      ExpectFileSize += (long)NParVar*amr->Par->NPar_Active_AllRank*sizeof(real);
+      ExpectFileSize += (long)PAR_NATT_STORED*amr->Par->NPar_Active_AllRank*sizeof(real);
 #     endif
 
 
 //    a. output the information of data format
 //    =================================================================================================
-      const long FormatVersion = 2131;
+      const long FormatVersion = 2200;
       const long CheckCode     = 123456789;
 
       fseek( File, HeaderOffset_Format, SEEK_SET );
@@ -481,11 +485,11 @@ void Output_DumpData_Total( const char *FileName )
 #     endif
 
 #     ifdef PARTICLE
-      const int    par_nvar              = PAR_NVAR;
-      const int    par_npassive          = PAR_NPASSIVE;
+      const int    par_natt_stored       = PAR_NATT_STORED;
+      const int    par_natt_user         = PAR_NATT_USER;
 #     else
-      const int    par_nvar              = NULL_INT;
-      const int    par_npassive          = NULL_INT;
+      const int    par_natt_stored       = NULL_INT;
+      const int    par_natt_user         = NULL_INT;
 #     endif
 
       fwrite( &ncomp_fluid,               sizeof(int),                     1,             File );
@@ -507,8 +511,8 @@ void Output_DumpData_Total( const char *FileName )
       fwrite( &pot_block_size_x,          sizeof(int),                     1,             File );
       fwrite( &pot_block_size_z,          sizeof(int),                     1,             File );
       fwrite( &gra_block_size_z,          sizeof(int),                     1,             File );
-      fwrite( &par_nvar,                  sizeof(int),                     1,             File );
-      fwrite( &par_npassive,              sizeof(int),                     1,             File );
+      fwrite( &par_natt_stored,           sizeof(int),                     1,             File );
+      fwrite( &par_natt_user,             sizeof(int),                     1,             File );
 
 
 //    d. output the simulation parameters recorded in the file "Input__Parameter"
@@ -882,21 +886,10 @@ void Output_DumpData_Total( const char *FileName )
 // output particle data (one attribute at a time to avoid creating holes in the file)
    const long ParDataSize1v = amr->Par->NPar_Active_AllRank*sizeof(real);
 
-   real *ParData[NParVar];
-   long  NParInBuf, ParID, FileOffset_ThisVar;
-   int   NParThisPatch;
+   long NParInBuf, ParID, FileOffset_ThisVar;
+   int  NParThisPatch;
 
-   ParData[0] = amr->Par->Mass;
-   ParData[1] = amr->Par->PosX;
-   ParData[2] = amr->Par->PosY;
-   ParData[3] = amr->Par->PosZ;
-   ParData[4] = amr->Par->VelX;
-   ParData[5] = amr->Par->VelY;
-   ParData[6] = amr->Par->VelZ;
-
-   for (int v=0; v<PAR_NPASSIVE; v++)  ParData[7+v] = amr->Par->Passive[v];
-
-   for (int v=0; v<NParVar; v++)
+   for (int v=0; v<PAR_NATT_STORED; v++)
    for (int TargetMPIRank=0; TargetMPIRank<MPI_NRank; TargetMPIRank++)
    {
       if ( MPI_Rank == TargetMPIRank )
@@ -932,7 +925,7 @@ void Output_DumpData_Total( const char *FileName )
             {
                ParID = amr->patch[0][lv][PID]->ParList[p];
 
-               ParBuf[ NParInBuf ++ ] = ParData[v][ParID];
+               ParBuf[ NParInBuf ++ ] = amr->Par->Attribute[v][ParID];
             }
 
 //          store particle data from I/O buffer to disk
@@ -948,7 +941,7 @@ void Output_DumpData_Total( const char *FileName )
       } // if ( MPI_Rank == TargetMPIRank )
 
       MPI_Barrier( MPI_COMM_WORLD );
-   } // for (int TargetMPIRank=0; TargetMPIRank<MPI_NRank; TargetMPIRank++), for (int v=0; v<NParVar; v++)
+   } // for (int TargetMPIRank=0; TargetMPIRank<MPI_NRank; TargetMPIRank++), for (int v=0; v<PAR_NATT_STORED; v++)
 
    delete [] ParBuf;
 #  endif // #ifdef PARTICLE

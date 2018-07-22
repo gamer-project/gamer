@@ -122,7 +122,7 @@ GRACKLE_MODE                  1           # enable Grackle [1]
 GRACKLE_VERBOSE               1           # map to "grackle_verbose" [1]
 GRACKLE_COOLING               1           # ...    "with_radiative_cooling" [1]
 GRACKLE_PRIMORDIAL            0           # ...    "primordial_chemistry" (0=Cloudy, 1/2/3=6-/9-/12-species) [0]
-GRACKLE_METAL                 1           # ...    "metal_cooling" [0]
+GRACKLE_METAL                 1           # ...    "metal_cooling" (must increase NCOMP_PASSIVE_USER by 1) [0]
 GRACKLE_UV                    1           # ...    "UVbackground" [0]
 GRACKLE_CMB_FLOOR             1           # ...    "cmb_temperature_floor" [1]
 GRACKLE_PE_HEATING            1           # ...    "photoelectric_heating" [0]
@@ -164,7 +164,7 @@ OPT__FIXUP_FLUX               1           # correct coarse grids by the fine-gri
 OPT__FIXUP_RESTRICT           1           # correct coarse grids by averaging the fine-grid data [1]
 OPT__CORR_AFTER_ALL_SYNC     -1           # apply various corrections after all levels are synchronized (see "Flu_CorrAfterAllSync"):
                                           # (-1=auto, 0=off, 1=every step, 2=before dump) [-1]
-OPT__NORMALIZE_PASSIVE        0           # ensure "sum(passive_scalar_density) == gas_density" -> edit "Init_PassiveVariable.cpp" [1]
+OPT__NORMALIZE_PASSIVE        0           # ensure "sum(passive_scalar_density) == gas_density" [1]
 MIN_DENS                      0.0         # minimum mass density (must >= 0.0) [0.0] ##HYDRO, MHD, and ELBDM ONLY##
 MIN_PRES                      1.0e-15     # minimum pressure     (must >= 0.0) [0.0] ##HYDRO and MHD ONLY##
 JEANS_MIN_PRES                1           # minimum pressure estimated from the Jeans length [0] ##HYDRO/MHD and GRAVITY ONLY##

@@ -31,7 +31,7 @@ SIMU_OPTION += -DSUPPORT_HDF5
 
 # siimulation parameters
 #######################################################################################################
-NLEVEL        = 6         # level : 0 ~ NLEVEL-1 
+NLEVEL        = 10        # level : 0 ~ NLEVEL-1 
 NCOMP_PASSIVE = 0         # number of passive scalars
 MAX_PATCH     = 1000000   # the maximum number of patches in each level
 

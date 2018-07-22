@@ -18,7 +18,7 @@ extern double ExtAcc_AuxArray[EXT_ACC_NAUX_MAX];
 //
 // Note        :  1. Ref: (1) Nathan Goldbaum, et al., 2015, ApJ, 814, 131 (arXiv: 1510.08458), sec. 2.4
 //                        (2) Ji-hoon Kim, et al., 2016, ApJ, 833, 202 (arXiv: 1610.03066), sec. 3.2
-//                2. One must turn on STORE_POT_GHOST When adopting STORE_PAR_ACC
+//                2. One must turn on STORE_POT_GHOST when adopting STORE_PAR_ACC
 //                   --> It is because, currently, this function always uses the pot_ext[] array of each patch
 //                       to calculate the gravitationally acceleration of the new star particles
 //                3. One must invoke Buf_GetBufferData( ..., _TOTAL, ... ) after calling this function
@@ -59,18 +59,16 @@ void SF_CreateStar_AGORA( const int lv, const real TimeNew, const real dt, Rando
 #     error : SF_CreateStar_AGORA() does not support COMOVING yet !!
 #  endif
 
-   if ( UseMetal )
-   {
-      if ( PAR_NPASSIVE != 2 )
-         Aux_Error( ERROR_INFO, "currently the metal field is hard coded for UseMetal and thus PAR_NPASSIVE (%d) must be 2 !!\n",
-                    PAR_NPASSIVE );
-   }
+#  ifdef GAMER_DEBUG
+   if ( UseMetal  &&  Idx_ParMetalFrac == Idx_Undefined )
+      Aux_Error( ERROR_INFO, "Idx_ParMetalFrac is undefined for \"UseMetal\" !!\n" );
 
-   else
-   {
-      if ( PAR_NPASSIVE != 1 )
-         Aux_Error( ERROR_INFO, "currently the passive particle attributes must be hard coded when adding the new particles !!\n" );
-   }
+   if ( UseMetal  &&  Idx_Metal == Idx_Undefined )
+      Aux_Error( ERROR_INFO, "Idx_Metal is undefined for \"UseMetal\" !!\n" );
+
+   if ( Idx_ParCreTime == Idx_Undefined )
+      Aux_Error( ERROR_INFO, "Idx_ParCreTime is undefined !!\n" );
+#  endif // #ifdef GAMER_DEBUG
 
 
 // constant parameters
@@ -99,12 +97,13 @@ void SF_CreateStar_AGORA( const int lv, const real TimeNew, const real dt, Rando
    double x0, y0, z0, x, y, z;
    real   GasDens, _GasDens, GasMass, _Time_FreeFall, StarMFrac, StarMass, GasMFracLeft;
    real   (*fluid)[PS1][PS1][PS1]      = NULL;
+#  ifdef STORE_POT_GHOST
    real   (*pot_ext)[GRA_NXT][GRA_NXT] = NULL;
+#  endif
 
    const int MaxNewParPerPatch = CUBE(PS1);
-   real   (*NewParVar    )[PAR_NVAR    ] = new real [MaxNewParPerPatch][PAR_NVAR    ];
-   real   (*NewParPassive)[PAR_NPASSIVE] = new real [MaxNewParPerPatch][PAR_NPASSIVE];
-   long    *NewParID                     = new long [MaxNewParPerPatch];
+   real   (*NewParAtt)[PAR_NATT_TOTAL] = new real [MaxNewParPerPatch][PAR_NATT_TOTAL];
+   long    *NewParID                   = new long [MaxNewParPerPatch];
 
    int NNewPar;
 
@@ -133,7 +132,9 @@ void SF_CreateStar_AGORA( const int lv, const real TimeNew, const real dt, Rando
 
 
       fluid   = amr->patch[FluSg][lv][PID]->fluid;
+#     ifdef STORE_POT_GHOST
       pot_ext = amr->patch[PotSg][lv][PID]->pot_ext;
+#     endif
       x0      = amr->patch[0][lv][PID]->EdgeL[0] + 0.5*dh;
       y0      = amr->patch[0][lv][PID]->EdgeL[1] + 0.5*dh;
       z0      = amr->patch[0][lv][PID]->EdgeL[2] + 0.5*dh;
@@ -201,14 +202,14 @@ void SF_CreateStar_AGORA( const int lv, const real TimeNew, const real dt, Rando
          y        = y0 + j*dh;
          z        = z0 + k*dh;
 
-         NewParVar[NNewPar][PAR_MASS] = StarMass;
-         NewParVar[NNewPar][PAR_POSX] = x;
-         NewParVar[NNewPar][PAR_POSY] = y;
-         NewParVar[NNewPar][PAR_POSZ] = z;
-         NewParVar[NNewPar][PAR_VELX] = fluid[MOMX][k][j][i]*_GasDens;
-         NewParVar[NNewPar][PAR_VELY] = fluid[MOMY][k][j][i]*_GasDens;
-         NewParVar[NNewPar][PAR_VELZ] = fluid[MOMZ][k][j][i]*_GasDens;
-         NewParVar[NNewPar][PAR_TIME] = TimeNew;
+         NewParAtt[NNewPar][PAR_MASS] = StarMass;
+         NewParAtt[NNewPar][PAR_POSX] = x;
+         NewParAtt[NNewPar][PAR_POSY] = y;
+         NewParAtt[NNewPar][PAR_POSZ] = z;
+         NewParAtt[NNewPar][PAR_VELX] = fluid[MOMX][k][j][i]*_GasDens;
+         NewParAtt[NNewPar][PAR_VELY] = fluid[MOMY][k][j][i]*_GasDens;
+         NewParAtt[NNewPar][PAR_VELZ] = fluid[MOMZ][k][j][i]*_GasDens;
+         NewParAtt[NNewPar][PAR_TIME] = TimeNew;
 
 //       particle acceleration
 #        ifdef STORE_PAR_ACC
@@ -226,12 +227,14 @@ void SF_CreateStar_AGORA( const int lv, const real TimeNew, const real dt, Rando
             const int jj = j + GRA_GHOST_SIZE;
             const int kk = k + GRA_GHOST_SIZE;
 
+#           ifdef STORE_POT_GHOST
             pot_xm = pot_ext[kk  ][jj  ][ii-1];
             pot_xp = pot_ext[kk  ][jj  ][ii+1];
             pot_ym = pot_ext[kk  ][jj-1][ii  ];
             pot_yp = pot_ext[kk  ][jj+1][ii  ];
             pot_zm = pot_ext[kk-1][jj  ][ii  ];
             pot_zp = pot_ext[kk+1][jj  ][ii  ];
+#           endif
          }
 
 //       external potential (currently useful only for ELBDM; always work with OPT__GRAVITY_TYPE == GRAVITY_SELF)
@@ -259,20 +262,18 @@ void SF_CreateStar_AGORA( const int lv, const real TimeNew, const real dt, Rando
             GasAcc[2] += GraConst*( pot_zp - pot_zm );
          }
 
-         NewParVar[NNewPar][PAR_ACCX] = GasAcc[0];
-         NewParVar[NNewPar][PAR_ACCY] = GasAcc[1];
-         NewParVar[NNewPar][PAR_ACCZ] = GasAcc[2];
+         NewParAtt[NNewPar][PAR_ACCX] = GasAcc[0];
+         NewParAtt[NNewPar][PAR_ACCY] = GasAcc[1];
+         NewParAtt[NNewPar][PAR_ACCZ] = GasAcc[2];
 #        endif // ifdef STORE_PAR_ACC
 
 
-//       2-2. passive attributes
-//###: HARD-CODED FIELDS
+//       2-2. extrinsic attributes
 //       note that we store the metal mass **fraction** instead of density in particles
-//       currently the metal field is hard coded ... ugh!
          if ( UseMetal )
-         NewParPassive[NNewPar][PAR_METAL_FRAC   ] = fluid[METAL][k][j][i] * _GasDens;
+         NewParAtt[NNewPar][Idx_ParMetalFrac] = fluid[Idx_Metal][k][j][i] * _GasDens;
 
-         NewParPassive[NNewPar][PAR_CREATION_TIME] = TimeNew;
+         NewParAtt[NNewPar][Idx_ParCreTime  ] = TimeNew;
 
          NNewPar ++;
 
@@ -299,7 +300,7 @@ void SF_CreateStar_AGORA( const int lv, const real TimeNew, const real dt, Rando
       {
 //       4-1. add particles to the particle repository
          for (int p=0; p<NNewPar; p++)
-            NewParID[p] = amr->Par->AddOneParticle( NewParVar[p], NewParPassive[p] );
+            NewParID[p] = amr->Par->AddOneParticle( NewParAtt[p] );
 
 
 //       4-2. add particles to the patch
@@ -320,8 +321,7 @@ void SF_CreateStar_AGORA( const int lv, const real TimeNew, const real dt, Rando
    } // for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
 
 // free memory
-   delete [] NewParVar;
-   delete [] NewParPassive;
+   delete [] NewParAtt;
    delete [] NewParID;
 
    } // end of OpenMP parallel region

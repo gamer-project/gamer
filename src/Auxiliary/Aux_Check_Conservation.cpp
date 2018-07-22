@@ -82,8 +82,10 @@ void Aux_Check_Conservation( const char *comment )
 #  endif
 
 
-// NCOMP_PASSIVE + 1: individual passive scalars and the sum of scalars to be normalized
-   const int NVar = NVar_NoPassive + ( (NCOMP_PASSIVE>0)?(NCOMP_PASSIVE+1):0 );
+// get the sum of passive scalars to be normalized
+   const bool GetPassiveSum = ( PassiveNorm_NVar > 0 );
+   const int  NVar_Max      = NVar_NoPassive + NCOMP_PASSIVE + 1; // for declaring the static variable Fluid_Ref
+   const int  NVar          = NVar_NoPassive + NCOMP_PASSIVE + ( (GetPassiveSum)?1:0 );
 
    double dv, Fluid_ThisRank[NVar], Fluid_AllRank[NVar], Fluid_lv[NVar];   // dv : cell volume at each level
    int    FluSg;
@@ -207,7 +209,6 @@ void Aux_Check_Conservation( const char *comment )
 
 
 //             individual passive scalars
-#              if ( NCOMP_PASSIVE > 0 )
                for (int v=0; v<NCOMP_PASSIVE; v++)
                {
                   const int v1 = NVar_NoPassive + v;
@@ -218,7 +219,6 @@ void Aux_Check_Conservation( const char *comment )
                   for (int i=0; i<PATCH_SIZE; i++)
                      Fluid_lv[v1] += amr->patch[FluSg][lv][PID]->fluid[v2][k][j][i];
                }
-#              endif
             } // if ( amr->patch[0][lv][PID]->son == -1 )
          } // for (int PID=PID0; PID<PID0+8; PID++)
       } // for (int PID0=0; PID0<amr->NPatchComma[lv][1]; PID0+=8)
@@ -233,11 +233,8 @@ void Aux_Check_Conservation( const char *comment )
 #     endif
 
 //    sum of passive scalars to be normalized
-#     if ( NCOMP_PASSIVE > 0 )
-      if ( OPT__NORMALIZE_PASSIVE )
       for (int v=0; v<PassiveNorm_NVar; v++)
          Fluid_lv[ NVar - 1 ] += Fluid_lv[ NVar_NoPassive + PassiveNorm_VarIdx[v] ];
-#     endif
 
 //    sum over all levels
       for (int v=0; v<NVar; v++)    Fluid_ThisRank[v] += Fluid_lv[v]*dv;
@@ -262,7 +259,7 @@ void Aux_Check_Conservation( const char *comment )
    if ( MPI_Rank == 0 )
    {
 //    note that a variable length array cannot have static storage duration
-      static double Fluid_Ref[NVar];
+      static double Fluid_Ref[NVar_Max];
 #     ifdef PARTICLE
       static double Mass_Par_Ref, MomX_Par_Ref, MomY_Par_Ref, MomZ_Par_Ref, Ekin_Par_Ref, Epot_Par_Ref, Etot_Par_Ref;
 #     endif
@@ -307,10 +304,8 @@ void Aux_Check_Conservation( const char *comment )
          Aux_Message( File, "# Etot_Psi     : total ELBDM energy\n" );
 #        endif
 
-#        if ( NCOMP_PASSIVE > 0 )
-         Aux_Message( File, "# PassiveXX    : each individual passive scalar\n" );
+         if ( GetPassiveSum )
          Aux_Message( File, "# PassNorm     : sum of all target passive scalars to be normalized\n" );
-#        endif
 
 #        ifdef PARTICLE
          Aux_Message( File, "# Mass_Par     : total PARTICLE mass\n" );
@@ -362,12 +357,11 @@ void Aux_Check_Conservation( const char *comment )
          Aux_Message( File, "  %14s  %14s  %14s", "Etot_Psi", "Etot_Psi_AErr", "Etot_Psi_RErr" );
 #        endif
 
-#        if ( NCOMP_PASSIVE > 0 )
-         for (int v=0; v<NCOMP_PASSIVE; v++)
-         Aux_Message( File, "  %14s  %9s_AErr  %9s_RErr", PassiveFieldName_Grid[v], PassiveFieldName_Grid[v],
-                                                          PassiveFieldName_Grid[v] );
+         for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)
+         Aux_Message( File, "  %14s  %9s_AErr  %9s_RErr", FieldLabel[v], FieldLabel[v], FieldLabel[v] );
+
+         if ( GetPassiveSum )
          Aux_Message( File, "  %14s  %14s  %14s", "PassNorm", "PassNorm_AErr", "PassNorm_RErr" );
-#        endif
 
 #        ifdef PARTICLE
          Aux_Message( File, "  %14s  %14s  %14s", "Mass_Par", "Mass_Par_AErr", "Mass_Par_RErr" );
