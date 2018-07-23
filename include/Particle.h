@@ -36,6 +36,8 @@ void Aux_Error( const char *File, const int Line, const char *Func, const char *
 //                NPar_Inactive           : Total number of inactive particles in this MPI rank
 //                NPar_Lv                 : Total number of active particles at each level in this MPI rank
 //                Init                    : Initialization methods (1/2/3 --> call function/restart/load from file)
+//                ParICFormat             : Data format of the particle initialization file (1=[att][id], 2=[id][att])
+//                ParICMass               : Assign this mass to all particles for Init=3
 //                Interp                  : Mass/acceleration interpolation scheme (NGP,CIC,TSC)
 //                Integ                   : Integration scheme (PAR_INTEG_EULER, PAR_INTEG_KDK)
 //                ImproveAcc              : Improve force accuracy around the patch boundaries
@@ -100,54 +102,56 @@ struct Particle_t
 
 // data members
 // ===================================================================================
-   long        ParListSize;
-   long        InactiveParListSize;
-   long        NPar_Active_AllRank;
-   long        NPar_AcPlusInac;
-   long        NPar_Active;
-   long        NPar_Inactive;
-   long        NPar_Lv[NLEVEL];
-   ParInit_t   Init;
-   ParInterp_t Interp;
-   ParInteg_t  Integ;
-   bool        ImproveAcc;
-   bool        PredictPos;
-   double      RemoveCell;
-   int         GhostSize;
-   real       *Attribute[PAR_NATT_TOTAL];
-   long       *InactiveParList;
+   long          ParListSize;
+   long          InactiveParListSize;
+   long          NPar_Active_AllRank;
+   long          NPar_AcPlusInac;
+   long          NPar_Active;
+   long          NPar_Inactive;
+   long          NPar_Lv[NLEVEL];
+   ParInit_t     Init;
+   ParICFormat_t ParICFormat;
+   double        ParICMass;
+   ParInterp_t   Interp;
+   ParInteg_t    Integ;
+   bool          ImproveAcc;
+   bool          PredictPos;
+   double        RemoveCell;
+   int           GhostSize;
+   real         *Attribute[PAR_NATT_TOTAL];
+   long         *InactiveParList;
 
 #  ifdef LOAD_BALANCE
-   int         R2B_Real_NPatchTotal   [NLEVEL][2];
-   int        *R2B_Real_NPatchEachRank[NLEVEL][2];
-   int        *R2B_Real_PIDList       [NLEVEL][2];
-   int         R2B_Buff_NPatchTotal   [NLEVEL][2];
-   int        *R2B_Buff_NPatchEachRank[NLEVEL][2];
-   int        *R2B_Buff_PIDList       [NLEVEL][2];
+   int           R2B_Real_NPatchTotal   [NLEVEL][2];
+   int          *R2B_Real_NPatchEachRank[NLEVEL][2];
+   int          *R2B_Real_PIDList       [NLEVEL][2];
+   int           R2B_Buff_NPatchTotal   [NLEVEL][2];
+   int          *R2B_Buff_NPatchEachRank[NLEVEL][2];
+   int          *R2B_Buff_PIDList       [NLEVEL][2];
 
-   int         B2R_Real_NPatchTotal   [NLEVEL][2];
-   int        *B2R_Real_NPatchEachRank[NLEVEL][2];
-   int        *B2R_Real_PIDList       [NLEVEL][2];
-   int         B2R_Buff_NPatchTotal   [NLEVEL][2];
-   int        *B2R_Buff_NPatchEachRank[NLEVEL][2];
-   int        *B2R_Buff_PIDList       [NLEVEL][2];
+   int           B2R_Real_NPatchTotal   [NLEVEL][2];
+   int          *B2R_Real_NPatchEachRank[NLEVEL][2];
+   int          *B2R_Real_PIDList       [NLEVEL][2];
+   int           B2R_Buff_NPatchTotal   [NLEVEL][2];
+   int          *B2R_Buff_NPatchEachRank[NLEVEL][2];
+   int          *B2R_Buff_PIDList       [NLEVEL][2];
 
-   int         F2S_Send_NPatchTotal   [NLEVEL];
-   int        *F2S_Send_NPatchEachRank[NLEVEL];
-   int        *F2S_Send_PIDList       [NLEVEL];
-   int         F2S_Recv_NPatchTotal   [NLEVEL];
-   int        *F2S_Recv_NPatchEachRank[NLEVEL];
-   int        *F2S_Recv_PIDList       [NLEVEL];
+   int           F2S_Send_NPatchTotal   [NLEVEL];
+   int          *F2S_Send_NPatchEachRank[NLEVEL];
+   int          *F2S_Send_PIDList       [NLEVEL];
+   int           F2S_Recv_NPatchTotal   [NLEVEL];
+   int          *F2S_Recv_NPatchEachRank[NLEVEL];
+   int          *F2S_Recv_PIDList       [NLEVEL];
 #  endif // #ifdef LOAD_BALANCE
 
-   real       *Mass;
-   real       *PosX;
-   real       *PosY;
-   real       *PosZ;
-   real       *VelX;
-   real       *VelY;
-   real       *VelZ;
-   real       *Time;
+   real         *Mass;
+   real         *PosX;
+   real         *PosY;
+   real         *PosZ;
+   real         *VelX;
+   real         *VelY;
+   real         *VelZ;
+   real         *Time;
 #  ifdef STORE_PAR_ACC
    real       *AccX;
    real       *AccY;
@@ -169,6 +173,8 @@ struct Particle_t
       NPar_Active_AllRank = -1;
       NPar_AcPlusInac     = -1;
       Init                = PAR_INIT_NONE;
+      ParICFormat         = PAR_IC_FORMAT_NONE;
+      ParICMass           = -1.0;
       Interp              = PAR_INTERP_NONE;
       Integ               = PAR_INTEG_NONE;
       ImproveAcc          = true;
