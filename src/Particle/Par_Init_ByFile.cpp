@@ -22,9 +22,11 @@
 //                6. The data format of the PAR_IC file is controlled by the runtime parameter "PAR_IC_FORMAT"
 //                   --> PAR_IC_FORMAT_ATT_ID: [particle attribute][particle id] in a row-major order
 //                       PAR_IC_FORMAT_ID_ATT: [particle id][particle attribute] in a row-major order
-//                   --> Currently it only loads particle mass, position x/y/z, and velocity x/y/z
-//                       (and exactly in this order to be consistent with PAR_MASS, PAR_POSX/Y/Z, and PAR_VELX/Y/Z)
-//                7. For LOAD_BALANCE, the number of particles in each rank must be set in advance
+//                7  Currently it only loads particle mass, position x/y/z, and velocity x/y/z
+//                   (and must be in the same order of PAR_MASS, PAR_POSX/Y/Z, and PAR_VELX/Y/Z)
+//                   --> The mass of all particles can be set to PAR_IC_MASS instead (by having PAR_IC_MASS>=0.0)
+//                       --> In this case, the PAR_IC file should exclude the partice mass data
+//                8. For LOAD_BALANCE, the number of particles in each rank must be set in advance
 //                   --> Currently it's set by Init_Parallelization()
 //
 // Parameter   :  None
@@ -44,8 +46,9 @@ void Par_Init_ByFile()
 
    const char FileName[]     = "PAR_IC";
    const long NParAllRank    = amr->Par->NPar_Active_AllRank;
-         long NParThisRank   = amr->Par->NPar_AcPlusInac;   // cannot be "const" due to MPI_Allgather()
-   const int  NParAtt        = 7;   // mass, pos*3, vel*3
+         long NParThisRank   = amr->Par->NPar_AcPlusInac;            // cannot be "const" due to MPI_Allgather()
+   const bool SingleParMass  = amr->Par->ParICMass >= 0.0;
+   const int  NParAtt        = ( SingleParMass ) ? 6 : 7;            // [mass], pos*3, vel*3
    const int  NParAttPerLoad = ( amr->Par->ParICFormat == PAR_IC_FORMAT_ID_ATT ) ? NParAtt : 1;
 
 
@@ -103,7 +106,7 @@ void Par_Init_ByFile()
 // store data into the particle repository
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Storing data into particle repository ... " );
 
-   real ParData1[NParAtt];
+   real *ParData1 = new real [NParAtt];
 
    for (long p=0; p<NParThisRank; p++)
    {
@@ -120,13 +123,32 @@ void Par_Init_ByFile()
       }
 
 //    assuming that the orders of the particle attributes stored on the disk and in Par->Attribute[] are the same
-      for (int v=0; v<NParAtt; v++)    amr->Par->Attribute[v][p] = ParData1[v];
+      if ( SingleParMass )
+      {
+//       assign the same mass to all particles
+         amr->Par->Attribute[PAR_MASS][p] = amr->Par->ParICMass;
+
+         for (int v_in=0, v_out=0; v_in<NParAtt; v_in++, v_out++)
+         {
+//          skip the particle mass
+            if ( v_out == PAR_MASS )    v_out ++;
+
+            amr->Par->Attribute[v_out][p] = ParData1[v_in];
+         }
+      }
+
+      else
+      {
+         for (int v=0; v<NParAtt; v++)
+            amr->Par->Attribute[v][p] = ParData1[v];
+      }
 
 //    synchronize all particles to the physical time at the base level
       amr->Par->Time[p] = Time[0];
    }
 
    delete [] ParData_ThisRank;
+   delete [] ParData1;
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );
 

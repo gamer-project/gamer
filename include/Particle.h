@@ -37,6 +37,7 @@ void Aux_Error( const char *File, const int Line, const char *Func, const char *
 //                NPar_Lv                 : Total number of active particles at each level in this MPI rank
 //                Init                    : Initialization methods (1/2/3 --> call function/restart/load from file)
 //                ParICFormat             : Data format of the particle initialization file (1=[att][id], 2=[id][att])
+//                ParICMass               : Assign this mass to all particles for Init=3
 //                Interp                  : Mass/acceleration interpolation scheme (NGP,CIC,TSC)
 //                Integ                   : Integration scheme (PAR_INTEG_EULER, PAR_INTEG_KDK)
 //                ImproveAcc              : Improve force accuracy around the patch boundaries
@@ -110,6 +111,7 @@ struct Particle_t
    long          NPar_Lv[NLEVEL];
    ParInit_t     Init;
    ParICFormat_t ParICFormat;
+   double        ParICMass;
    ParInterp_t   Interp;
    ParInteg_t    Integ;
    bool          ImproveAcc;
@@ -172,6 +174,7 @@ struct Particle_t
       NPar_AcPlusInac     = -1;
       Init                = PAR_INIT_NONE;
       ParICFormat         = PAR_IC_FORMAT_NONE;
+      ParICMass           = -1.0;
       Interp              = PAR_INTERP_NONE;
       Integ               = PAR_INTEG_NONE;
       ImproveAcc          = true;
