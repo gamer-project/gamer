@@ -611,6 +611,7 @@ void Aux_TakeNote()
       fprintf( Note, "Par->NPar_Active_AllRank        %ld\n",     amr->Par->NPar_Active_AllRank );
       fprintf( Note, "Par->Init                       %d\n",      amr->Par->Init                );
       fprintf( Note, "Par->ParICFormat                %d\n",      amr->Par->ParICFormat         );
+      fprintf( Note, "Par->ParICMass                 %14.7e\n",   amr->Par->ParICMass           );
       fprintf( Note, "Par->Interp                     %d\n",      amr->Par->Interp              );
       fprintf( Note, "Par->Integ                      %d\n",      amr->Par->Integ               );
       fprintf( Note, "Par->GhostSize                  %d\n",      amr->Par->GhostSize           );
