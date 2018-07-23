@@ -33,12 +33,16 @@ static void Init_ByFile_AssignData( const char UM_Filename[], const int UM_lv, c
 //                   --> Determined by the input parameter "OPT__UM_IC_NVAR"
 //                   --> If "OPT__UM_IC_NVAR < NCOMP_TOTAL", one must specify the way to assign values to all
 //                       variables using the function pointer Init_ByFile_User_Ptr()
-//                   --> The only exception is when enabling DUAL_ENERGY, for which we will calculate the
-//                       dual-energy field (e.g., entropy) directly instead of load it from the disk
-//                       --> Only NCOMP_TOTAL-1 (which equals 5+NCOMP_PASSIVE_USER currently) fields should
-//                           be stored in "UM_IC"
-//                4. The data format in the UM_IC file should be [k][j][i][v] instead of [v][k][j][i]
-//                   --> Different from the data layout of patch->fluid
+//                       --> Two exceptions:
+//                           (1) When enabling DUAL_ENERGY, we will calculate the dual-energy field
+//                               (e.g., entropy) directly instead of load it from the disk
+//                               --> Only NCOMP_TOTAL-1 (which equals 5+NCOMP_PASSIVE_USER currently) fields
+//                                   should be stored in "UM_IC"
+//                           (2) For ELBDM, we will calculate the density field from the input wave function
+//                               directly instead of load it from the disk
+//                               --> Only NCOMP_TOTAL-1 (which equals 2+NCOMP_PASSIVE_USER currently) fields
+//                                   should be stored in "UM_IC"
+//                4. The data format of the UM_IC file is controlled by OPT__UM_IC_FORMAT
 //                5. Does not work with rectangular domain decomposition anymore
 //                   --> Must enable either SERIAL or LOAD_BALANCE
 //                6. OpenMP is not supported yet
@@ -406,8 +410,10 @@ void Init_ByFile_AssignData( const char UM_Filename[], const int UM_lv, const in
 //                3. Calculate the dual-energy variable automatically instead of load it from the disk
 //                   --> When adopting DUAL_ENERGY, the input uniform-mesh array must NOT include the dual-energy
 //                       variable
-//                4. Assuming nvar_in (i.e., OPT__UM_IC_NVAR) == NCOMP_TOTAL
-//                   --> Unless DUAL_ENERGY is enabled, for which it assumes nvar_in == NCOMP_TOTAL-1
+//                4. Calculate the density field automatically instead of load it from the disk for ELBDM
+//                   --> For ELBDM, the input uniform-mesh array must NOT include the density field
+//                5. Assuming nvar_in (i.e., OPT__UM_IC_NVAR) == NCOMP_TOTAL
+//                   --> Unless either DUAL_ENERGY or ELBDM is adopted, for which it assumes nvar_in == NCOMP_TOTAL-1
 //
 // Parameter   :  fluid_out : Fluid field to be set
 //                fluid_in  : Fluid field loaded from the uniform-mesh array (UM_IC)
@@ -425,32 +431,49 @@ void Init_ByFile_Default( real fluid_out[], const real fluid_in[], const int nva
 {
 
 #  ifdef GAMER_DEBUG
-#  ifdef DUAL_ENERGY
+#  if (  ( MODEL == HYDRO || MODEL == MHD )  &&  defined DUAL_ENERGY  )
    if ( nvar_in != NCOMP_TOTAL-1 )
       Aux_Error( ERROR_INFO, "nvar_in (%d) != NCOMP_TOTAL-1 (%d) when enabling DUAL_ENERGY !!\n", nvar_in, NCOMP_TOTAL-1 );
+
+#  elif ( MODEL == ELBDM )
+   if ( nvar_in != NCOMP_TOTAL-1 )
+      Aux_Error( ERROR_INFO, "nvar_in (%d) != NCOMP_TOTAL-1 (%d) for ELBDM !!\n", nvar_in, NCOMP_TOTAL-1 );
+
 #  else
    if ( nvar_in != NCOMP_TOTAL )
       Aux_Error( ERROR_INFO, "nvar_in (%d) != NCOMP_TOTAL (%d) !!\n", nvar_in, NCOMP_TOTAL );
 #  endif
-#  endif
+#  endif // #ifdef GAMER_DEBUG
 
    for (int v_in=0, v_out=0; v_in<nvar_in; v_in++, v_out++)
    {
-//    skip the dual-energy field
+//    skip the dual-energy field for HYDRO/MHD
+#     if ( MODEL == HYDRO  ||  MODEL == MHD )
 #     if   ( DUAL_ENERGY == DE_ENPY )
       if ( v_out == ENPY )    v_out ++;
 #     elif ( DUAL_ENERGY == DE_EINT )
       if ( v_out == EINT )    v_out ++;
 #     endif
 
+//    skip the density field for ELBDM
+#     elif ( MODEL == ELBDM )
+      if ( v_out == DENS )    v_out ++;
+#     endif // MODEL
+
       fluid_out[v_out] = fluid_in[v_in];
    }
 
-// calculate the dual-energy field
+// calculate the dual-energy field for HYDRO/MHD
+#  if ( MODEL == HYDRO  ||  MODEL == MHD )
 #  if   ( DUAL_ENERGY == DE_ENPY )
    fluid_out[ENPY] = CPU_Fluid2Entropy( fluid_in[DENS], fluid_in[MOMX], fluid_in[MOMY], fluid_in[MOMZ], fluid_in[ENGY], GAMMA-1.0 );
 #  elif ( DUAL_ENERGY == DE_EINT )
 #  error : DE_EINT is NOT supported yet !!
+#  endif
+
+// calculate the density field for ELBDM
+#  elif ( MODEL == ELBDM )
+   fluid_out[DENS] = SQR( fluid_out[REAL] ) + SQR( fluid_out[IMAG] );
 #  endif
 
 } // Init_ByFile_Default
