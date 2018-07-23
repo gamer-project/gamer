@@ -69,7 +69,7 @@ Procedure for outputting new variables:
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2300)
+// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2301)
 // Description :  Output all simulation data in the HDF5 format, which can be used as a restart file
 //                or loaded by YT
 //
@@ -157,6 +157,7 @@ Procedure for outputting new variables:
 //                                      particle attributes
 //                                      --> imcompatible with version 2266 for the data with user-defined grid fields
 //                                          and particle attributes as their labels may have changed
+//                2301 : 2018/07/24 --> add OPT__UM_IC_FORMAT, PAR_IC_FORMAT, and PAR_IC_MASS
 //-------------------------------------------------------------------------------------------------------
 void Output_DumpData_Total_HDF5( const char *FileName )
 {
@@ -1221,7 +1222,7 @@ void FillIn_KeyInfo( KeyInfo_t &KeyInfo )
 
    const time_t CalTime   = time( NULL );    // calendar time
 
-   KeyInfo.FormatVersion  = 2300;
+   KeyInfo.FormatVersion  = 2301;
    KeyInfo.Model          = MODEL;
    KeyInfo.NLevel         = NLEVEL;
    KeyInfo.NCompFluid     = NCOMP_FLUID;
@@ -1714,6 +1715,8 @@ void FillIn_InputPara( InputPara_t &InputPara )
 // particle
 #  ifdef PARTICLE
    InputPara.Par_Init                = amr->Par->Init;
+   InputPara.Par_ICFormat            = amr->Par->ParICFormat;
+   InputPara.Par_ICMass              = amr->Par->ParICMass;
    InputPara.Par_Interp              = amr->Par->Interp;
    InputPara.Par_Integ               = amr->Par->Integ;
    InputPara.Par_ImproveAcc          = amr->Par->ImproveAcc;
@@ -1911,6 +1914,7 @@ void FillIn_InputPara( InputPara_t &InputPara )
    InputPara.Opt__RestartReset       = OPT__RESTART_RESET;
    InputPara.Opt__UM_IC_Level        = OPT__UM_IC_LEVEL;
    InputPara.Opt__UM_IC_NVar         = OPT__UM_IC_NVAR;
+   InputPara.Opt__UM_IC_Format       = OPT__UM_IC_FORMAT;
    InputPara.Opt__UM_IC_Downgrade    = OPT__UM_IC_DOWNGRADE;
    InputPara.Opt__UM_IC_Refine       = OPT__UM_IC_REFINE;
    InputPara.Opt__UM_IC_LoadNRank    = OPT__UM_IC_LOAD_NRANK;
@@ -2383,6 +2387,8 @@ void GetCompound_InputPara( hid_t &H5_TypeID )
 // particle
 #  ifdef PARTICLE
    H5Tinsert( H5_TypeID, "Par_Init",                HOFFSET(InputPara_t,Par_Init               ), H5T_NATIVE_INT     );
+   H5Tinsert( H5_TypeID, "Par_ICFormat",            HOFFSET(InputPara_t,Par_ICFormat           ), H5T_NATIVE_INT     );
+   H5Tinsert( H5_TypeID, "Par_ICMass",              HOFFSET(InputPara_t,Par_ICMass             ), H5T_NATIVE_DOUBLE  );
    H5Tinsert( H5_TypeID, "Par_Interp",              HOFFSET(InputPara_t,Par_Interp             ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "Par_Integ",               HOFFSET(InputPara_t,Par_Integ              ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "Par_ImproveAcc",          HOFFSET(InputPara_t,Par_ImproveAcc         ), H5T_NATIVE_INT     );
@@ -2595,6 +2601,7 @@ void GetCompound_InputPara( hid_t &H5_TypeID )
    H5Tinsert( H5_TypeID, "Opt__RestartReset",       HOFFSET(InputPara_t,Opt__RestartReset      ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "Opt__UM_IC_Level",        HOFFSET(InputPara_t,Opt__UM_IC_Level       ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "Opt__UM_IC_NVar",         HOFFSET(InputPara_t,Opt__UM_IC_NVar        ), H5T_NATIVE_INT     );
+   H5Tinsert( H5_TypeID, "Opt__UM_IC_Format",       HOFFSET(InputPara_t,Opt__UM_IC_Format      ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "Opt__UM_IC_Downgrade",    HOFFSET(InputPara_t,Opt__UM_IC_Downgrade   ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "Opt__UM_IC_Refine",       HOFFSET(InputPara_t,Opt__UM_IC_Refine      ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "Opt__UM_IC_LoadNRank",    HOFFSET(InputPara_t,Opt__UM_IC_LoadNRank   ), H5T_NATIVE_INT     );
