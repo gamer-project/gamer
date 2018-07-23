@@ -280,7 +280,12 @@ void Init_Load_Parameter()
    ReadPara->Add( "OPT__RESTART_RESET",         &OPT__RESTART_RESET,              false,           Useless_bool,  Useless_bool   );
    ReadPara->Add( "OPT__UM_IC_LEVEL",           &OPT__UM_IC_LEVEL,                0,               0,             TOP_LEVEL      );
 // do not check OPT__UM_IC_NVAR since it depends on OPT__INIT and MODEL
+// --> also, we do not load the density field for ELBDM
+#  if ( MODEL == ELBDM )
+   ReadPara->Add( "OPT__UM_IC_NVAR",            &OPT__UM_IC_NVAR,                -1,               NoMin_int,     NCOMP_TOTAL-1  );
+#  else
    ReadPara->Add( "OPT__UM_IC_NVAR",            &OPT__UM_IC_NVAR,                -1,               NoMin_int,     NCOMP_TOTAL    );
+#  endif
    ReadPara->Add( "OPT__UM_IC_FORMAT",          &OPT__UM_IC_FORMAT,             UM_IC_FORMAT_VZYX, 1,             2              );
    ReadPara->Add( "OPT__UM_IC_DOWNGRADE",       &OPT__UM_IC_DOWNGRADE,            true,            Useless_bool,  Useless_bool   );
    ReadPara->Add( "OPT__UM_IC_REFINE",          &OPT__UM_IC_REFINE,               true,            Useless_bool,  Useless_bool   );
