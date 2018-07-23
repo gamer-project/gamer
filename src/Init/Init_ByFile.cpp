@@ -42,7 +42,7 @@ static void Init_ByFile_AssignData( const char UM_Filename[], const int UM_lv, c
 //                               directly instead of load it from the disk
 //                               --> Only NCOMP_TOTAL-1 (which equals 2+NCOMP_PASSIVE_USER currently) fields
 //                                   should be stored in "UM_IC"
-//                4. The data format of the UM_IC file is controlled by OPT__UM_IC_FORMAT
+//                4. The data format of the UM_IC file is controlled by the runtime parameter OPT__UM_IC_FORMAT
 //                5. Does not work with rectangular domain decomposition anymore
 //                   --> Must enable either SERIAL or LOAD_BALANCE
 //                6. OpenMP is not supported yet

@@ -61,8 +61,17 @@ const OptInit_t
 // data format for OPT__INIT=INIT_BY_FILE
 typedef int UM_IC_Format_t;
 const UM_IC_Format_t
+   UM_IC_FORMAT_NONE = 0,
    UM_IC_FORMAT_VZYX = 1,
    UM_IC_FORMAT_ZYXV = 2;
+
+
+// data format for PAR_INIT=PAR_INIT_BY_FILE
+typedef int ParICFormat_t;
+const ParICFormat_t
+   PAR_IC_FORMAT_NONE   = 0,
+   PAR_IC_FORMAT_ATT_ID = 1,
+   PAR_IC_FORMAT_ID_ATT = 2;
 
 
 // program restart options
