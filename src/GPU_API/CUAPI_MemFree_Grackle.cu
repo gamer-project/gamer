@@ -15,18 +15,10 @@ void CUAPI_MemFree_Grackle()
 {
 
 // free the device memory
-// --> necessary only for GRACKLE_MODE_GAMER
-   if ( GRACKLE_MODE == GRACKLE_MODE_GAMER )
-   {
-      /*
-      if ( d_Che_Array != NULL )    CUDA_CHECK_ERROR(  cudaFree( d_Che_Array )  );
-      d_Che_Array = NULL;
-      */
-   }
+// --> not necessary for now
 
 
 // free the host memory allocated by CUDA
-// --> necessary for both GRACKLE_MODE_ORI and GRACKLE_MODE_GAMER
    for (int t=0; t<2; t++)
    {
       if ( h_Che_Array[t] != NULL )    CUDA_CHECK_ERROR(  cudaFreeHost( h_Che_Array[t] )  );

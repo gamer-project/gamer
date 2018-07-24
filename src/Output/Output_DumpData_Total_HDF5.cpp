@@ -69,7 +69,7 @@ Procedure for outputting new variables:
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2301)
+// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2302)
 // Description :  Output all simulation data in the HDF5 format, which can be used as a restart file
 //                or loaded by YT
 //
@@ -158,6 +158,7 @@ Procedure for outputting new variables:
 //                                      --> imcompatible with version 2266 for the data with user-defined grid fields
 //                                          and particle attributes as their labels may have changed
 //                2301 : 2018/07/24 --> add OPT__UM_IC_FORMAT, PAR_IC_FORMAT, and PAR_IC_MASS
+//                2302 : 2018/07/24 --> Replace GRACKLE_MODE by GRACKLE_ACTIVATE
 //-------------------------------------------------------------------------------------------------------
 void Output_DumpData_Total_HDF5( const char *FileName )
 {
@@ -1222,7 +1223,7 @@ void FillIn_KeyInfo( KeyInfo_t &KeyInfo )
 
    const time_t CalTime   = time( NULL );    // calendar time
 
-   KeyInfo.FormatVersion  = 2301;
+   KeyInfo.FormatVersion  = 2302;
    KeyInfo.Model          = MODEL;
    KeyInfo.NLevel         = NLEVEL;
    KeyInfo.NCompFluid     = NCOMP_FLUID;
@@ -1883,7 +1884,7 @@ void FillIn_InputPara( InputPara_t &InputPara )
 
 // Grackle
 #  ifdef SUPPORT_GRACKLE
-   InputPara.Grackle_Mode            = GRACKLE_MODE;
+   InputPara.Grackle_Activate        = GRACKLE_ACTIVATE;
    InputPara.Grackle_Verbose         = GRACKLE_VERBOSE;
    InputPara.Grackle_Cooling         = GRACKLE_COOLING;
    InputPara.Grackle_Primordial      = GRACKLE_PRIMORDIAL;
@@ -2570,7 +2571,7 @@ void GetCompound_InputPara( hid_t &H5_TypeID )
 
 // Grackle
 #  ifdef SUPPORT_GRACKLE
-   H5Tinsert( H5_TypeID, "Grackle_Mode",            HOFFSET(InputPara_t,Grackle_Mode           ), H5T_NATIVE_INT     );
+   H5Tinsert( H5_TypeID, "Grackle_Activate",        HOFFSET(InputPara_t,Grackle_Activate       ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "Grackle_Verbose",         HOFFSET(InputPara_t,Grackle_Verbose        ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "Grackle_Cooling",         HOFFSET(InputPara_t,Grackle_Cooling        ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "Grackle_Primordial",      HOFFSET(InputPara_t,Grackle_Primordial     ), H5T_NATIVE_INT     );

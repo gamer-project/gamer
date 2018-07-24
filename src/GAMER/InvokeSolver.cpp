@@ -566,22 +566,7 @@ void Solver( const Solver_t TSolver, const int lv, const double TimeNew, const d
 
 #     ifdef SUPPORT_GRACKLE
       case GRACKLE_SOLVER :
-
-         if ( GRACKLE_MODE == GRACKLE_MODE_GAMER ) {
-#           ifdef GPU
-            Aux_Error( ERROR_INFO, "GRACKLE_MODE_GAMER - GPU IS NOT SUPPORTED YET !!\n" );
-#           else
-            Aux_Error( ERROR_INFO, "GRACKLE_MODE_GAMER - CPU IS NOT SUPPORTED YET !!\n" );
-#           endif
-         }
-
-         else if ( GRACKLE_MODE == GRACKLE_MODE_ORI ) {
-            CPU_GrackleSolver_Original( Che_FieldData, Che_Units, NPG, dt );
-         }
-
-         else {
-            Aux_Error( ERROR_INFO, "you shouldn't be here (GRACKLE_MODE = %d) !!\n", GRACKLE_MODE );
-         }
+         CPU_GrackleSolver( Che_FieldData, Che_Units, NPG, dt );
 
       break;
 #     endif // #ifdef SUPPORT_GRACKLE

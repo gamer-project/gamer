@@ -60,7 +60,7 @@ void End_MemFree()
 #  endif
 
 #  ifdef SUPPORT_GRACKLE
-   if ( GRACKLE_MODE != GRACKLE_MODE_NONE )
+   if ( GRACKLE_ACTIVATE )
    {
 #     ifdef GPU
       CUAPI_MemFree_Grackle();

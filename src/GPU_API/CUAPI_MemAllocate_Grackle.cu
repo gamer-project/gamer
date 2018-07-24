@@ -15,7 +15,7 @@ void CUAPI_MemAllocate_Grackle( const int Che_NPG )
 {
 
 // nothing to do if Grackle is disabled
-   if ( GRACKLE_MODE == GRACKLE_MODE_NONE )  return;
+   if ( !GRACKLE_ACTIVATE )   return;
 
 
 // size of the global memory array(s)
@@ -30,15 +30,10 @@ void CUAPI_MemAllocate_Grackle( const int Che_NPG )
 
 
 // allocate the device memory
-// --> necessary only for GRACKLE_MODE_GAMER
-   if ( GRACKLE_MODE == GRACKLE_MODE_GAMER )
-   {
-//    CUDA_CHECK_ERROR(  cudaMalloc( (void**) &d_Che_Array, Che_MemSize_In )  );
-   }
+// --> not necessary for now
 
 
 // allocate the host memory by CUDA
-// --> necessary for both GRACKLE_MODE_ORI and GRACKLE_MODE_GAMER
    for (int t=0; t<2; t++)
    {
       CUDA_CHECK_ERROR(  cudaMallocHost( (void**) &h_Che_Array[t], Che_MemSize_Prep )  );

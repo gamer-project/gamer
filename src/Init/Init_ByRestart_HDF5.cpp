@@ -898,7 +898,7 @@ void Init_ByRestart_HDF5( const char *FileName )
 // Note        :  1. This function works for arbitary datatype (int, float, char, 1D array ...)
 //                2. Memory must be allocated for FieldPtr in advance with sufficent size (except for "char *")
 //                3. For loading a string, which has (type(FieldPtr) = (char *)), the memory must be freed
-//                   manually by calling "free()"
+//                   manually by calling free()
 //                4. It can also compare the loaded variables (FieldPtr) with the reference value (ComprPtr)
 //                   (perform comparison only if "NCompr > 0")
 //                   --> Please make sure that "FieldPtr" and "ComprPtr" point to the same type since we
@@ -1712,7 +1712,7 @@ void Check_InputPara( const char *FileName, const int FormatVersion )
 
 // Grackle
 #  ifdef SUPPORT_GRACKLE
-   LoadField( "Grackle_Mode",            &RS.Grackle_Mode,            SID, TID, NonFatal, &RT.Grackle_Mode,             1, NonFatal );
+   LoadField( "Grackle_Activate",        &RS.Grackle_Activate,        SID, TID, NonFatal, &RT.Grackle_Activate,         1, NonFatal );
    LoadField( "Grackle_Verbose",         &RS.Grackle_Verbose,         SID, TID, NonFatal, &RT.Grackle_Verbose,          1, NonFatal );
    LoadField( "Grackle_Cooling",         &RS.Grackle_Cooling,         SID, TID, NonFatal, &RT.Grackle_Cooling,          1, NonFatal );
    LoadField( "Grackle_Primordial",      &RS.Grackle_Primordial,      SID, TID, NonFatal, &RT.Grackle_Primordial,       1, NonFatal );
@@ -1721,7 +1721,7 @@ void Check_InputPara( const char *FileName, const int FormatVersion )
    LoadField( "Grackle_CMB_Floor",       &RS.Grackle_CMB_Floor,       SID, TID, NonFatal, &RT.Grackle_CMB_Floor,        1, NonFatal );
    LoadField( "Grackle_PE_Heating",      &RS.Grackle_PE_Heating,      SID, TID, NonFatal, &RT.Grackle_PE_Heating,       1, NonFatal );
    LoadField( "Grackle_PE_HeatingRate",  &RS.Grackle_PE_HeatingRate,  SID, TID, NonFatal, &RT.Grackle_PE_HeatingRate,   1, NonFatal );
-   LoadField( "Grackle_Mode",            &RS.Grackle_Mode,            SID, TID, NonFatal, &RT.Grackle_Mode,             1, NonFatal );
+// LoadField( "Grackle_CloudyTable",     &RS.Grackle_CloudyTable,     SID, TID, NonFatal, &RT.Grackle_CloudyTable,      1, NonFatal );
    LoadField( "Che_GPU_NPGroup",         &RS.Che_GPU_NPGroup,         SID, TID, NonFatal, &RT.Che_GPU_NPGroup,          1, NonFatal );
 #  endif
 

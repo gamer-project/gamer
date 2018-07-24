@@ -21,7 +21,7 @@ void Grackle_Init()
 {
 
 // nothing to do if Grackle is disabled
-   if ( GRACKLE_MODE == GRACKLE_MODE_NONE )  return;
+   if ( !GRACKLE_ACTIVATE )   return;
 
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ...\n", __FUNCTION__ );
@@ -86,7 +86,7 @@ void Grackle_Init()
 
 
 // set chemistry by accessing "grackle_data"
-   grackle_data->use_grackle                = ( GRACKLE_MODE == GRACKLE_MODE_ORI );
+   grackle_data->use_grackle                = GRACKLE_ACTIVATE;
    grackle_data->with_radiative_cooling     = GRACKLE_COOLING;
    grackle_data->primordial_chemistry       = GRACKLE_PRIMORDIAL;
    grackle_data->metal_cooling              = GRACKLE_METAL;
