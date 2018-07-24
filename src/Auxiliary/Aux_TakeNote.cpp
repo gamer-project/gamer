@@ -743,8 +743,8 @@ void Aux_TakeNote()
 #     ifdef SUPPORT_GRACKLE
       fprintf( Note, "Parameters of Grackle\n" );
       fprintf( Note, "***********************************************************************************\n" );
-      fprintf( Note, "GRACKLE_MODE                    %d\n",      GRACKLE_MODE            );
-      if ( GRACKLE_MODE != GRACKLE_MODE_NONE ) {
+      fprintf( Note, "GRACKLE_ACTIVATE                %d\n",      GRACKLE_ACTIVATE        );
+      if ( GRACKLE_ACTIVATE ) {
       fprintf( Note, "GRACKLE_VERBOSE                 %d\n",      GRACKLE_VERBOSE         );
       fprintf( Note, "GRACKLE_COOLING                 %d\n",      GRACKLE_COOLING         );
       fprintf( Note, "GRACKLE_PRIMORDIAL              %d\n",      GRACKLE_PRIMORDIAL      );

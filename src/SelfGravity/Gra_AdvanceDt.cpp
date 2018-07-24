@@ -131,7 +131,7 @@ void Gra_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, co
 
 //       call Flu_ResetByUser_API_Ptr() here only if GRACKLE is disabled
 #        ifdef SUPPORT_GRACKLE
-         if ( GRACKLE_MODE == GRACKLE_MODE_NONE )
+         if ( !GRACKLE_ACTIVATE )
 #        endif
          if ( OPT__RESET_FLUID  &&  Flu_ResetByUser_API_Ptr != NULL )
          TIMING_FUNC(   Flu_ResetByUser_API_Ptr( lv, SaveSg_Flu, TimeNew ),
@@ -158,7 +158,7 @@ void Gra_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, co
 
 //    call Flu_ResetByUser_API_Ptr() here only if GRACKLE is disabled
 #     ifdef SUPPORT_GRACKLE
-      if ( GRACKLE_MODE == GRACKLE_MODE_NONE )
+      if ( !GRACKLE_ACTIVATE )
 #     endif
       if ( Gravity  &&  OPT__RESET_FLUID  &&  Flu_ResetByUser_API_Ptr != NULL )
          Flu_ResetByUser_API_Ptr( lv, SaveSg_Flu, TimeNew );

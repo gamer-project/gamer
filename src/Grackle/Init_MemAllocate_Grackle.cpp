@@ -22,7 +22,7 @@ void Init_MemAllocate_Grackle( const int Che_NPG )
 {
 
 // nothing to do if Grackle is disabled
-   if ( GRACKLE_MODE == GRACKLE_MODE_NONE )  return;
+   if ( !GRACKLE_ACTIVATE )   return;
 
 
    for (int t=0; t<2; t++)

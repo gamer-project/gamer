@@ -12,7 +12,6 @@
 // Note        :  1. Must be called AFTER Init_Load_Parameter()
 //                2. Invoked by Init_MemAllocate()
 //                   --> "Che_FieldData" is freed by End_MemFree()
-//                3. Useless if GRACKLE_MODE == GRACKLE_MODE_GAMER
 //
 // Parameter   :  Che_NPG : Number of patch groups to be evaluated at a time
 //
@@ -21,8 +20,8 @@
 void Grackle_Init_FieldData( const int Che_NPG )
 {
 
-// nothing to do if we are not using the original Grackle
-   if ( GRACKLE_MODE != GRACKLE_MODE_ORI )   return;
+// nothing to do if Grackle is disabled
+   if ( !GRACKLE_ACTIVATE )   return;
 
 
 // allocate memory

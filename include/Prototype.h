@@ -559,7 +559,7 @@ void Grackle_Close( const int lv, const int SaveSg, const real h_Che_Array[], co
 void Grackle_Init_FieldData( const int Che_NPG );
 void Grackle_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, const double dt, const int SaveSg,
                         const bool OverlapMPI, const bool Overlap_Sync );
-void CPU_GrackleSolver_Original( grackle_field_data *Che_FieldData, code_units Che_Units, const int NPatchGroup, const real dt );
+void CPU_GrackleSolver( grackle_field_data *Che_FieldData, code_units Che_Units, const int NPatchGroup, const real dt );
 #endif // #ifdef SUPPORT_GRACKLE
 
 

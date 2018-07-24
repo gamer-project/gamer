@@ -7,7 +7,7 @@
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Grackle_Prepare
-// Description :  Fill up the input host array "h_Che_Array" for the CPU/GPU Grackle solver
+// Description :  Fill up the input host array h_Che_Array[] for the Grackle solver
 //
 // Note        :  1. Prepare CHE_NPREP variables
 //                   --> CHE_NPREP = 4 currently
@@ -106,15 +106,12 @@ void Grackle_Prepare( const int lv, real h_Che_Array[], const int NPG, const int
       } // for (int LocalID=0; LocalID<8; LocalID++)
    } // for (int TID=0; TID<NPG; TID++)
 
-   if ( GRACKLE_MODE == GRACKLE_MODE_ORI )
-   {
-      Che_FieldData->density         = Ptr_Dens0;
-      Che_FieldData->internal_energy = Ptr_sEint0;
-      Che_FieldData->grid_dx         = dh;
+   Che_FieldData->density         = Ptr_Dens0;
+   Che_FieldData->internal_energy = Ptr_sEint0;
+   Che_FieldData->grid_dx         = dh;
 
-      if ( GRACKLE_METAL )
-      Che_FieldData->metal_density   = Ptr_Metal0;
-   }
+   if ( GRACKLE_METAL )
+   Che_FieldData->metal_density   = Ptr_Metal0;
 
 } // FUNCTION : Grackle_Prepare
 
