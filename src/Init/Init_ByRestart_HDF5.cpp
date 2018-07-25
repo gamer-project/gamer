@@ -899,23 +899,23 @@ void Init_ByRestart_HDF5( const char *FileName )
 //                2. Memory must be allocated for FieldPtr in advance with sufficent size (except for "char *")
 //                3. For loading a string, which has (type(FieldPtr) = (char *)), the memory must be freed
 //                   manually by calling free()
-//                4. It can also compare the loaded variables (FieldPtr) with the reference value (ComprPtr)
+//                4. It can also compare the loaded variables (FieldPtr) with the reference values (ComprPtr)
 //                   (perform comparison only if "NCompr > 0")
 //                   --> Please make sure that "FieldPtr" and "ComprPtr" point to the same type since we
 //                       use the type of "ComprPtr" to typecast "FieldPtr"
 //
-// Parameter   :  FieldName         : Name of the target field
-//                FieldPtr          : Pointer to store the retrieved data
-//                H5_SetID_Target   : HDF5 dataset  ID of the target compound variable
-//                H5_TypeID_Target  : HDF5 datatype ID of the target compound variable
-//                Fatal_Nonexist    : Whether or not the nonexistence of the target field is fatal
-//                                    --> true  : terminate the program     if the target field cannot be found
-//                                        false : display a warning message if the target field cannot be found
-//                ComprPtr          : Pointer to store the reference values for comparison
-//                NCompr            : Number of elements to be compared
-//                Fatal_Compr       : Whether or not the comparison result is fatal
-//                                    --> true  : terminate the program     if "FieldPtr[X] != ComprPtr[X]"
-//                                        false : display a warning message if "FieldPtr[X] != ComprPtr[X]"
+// Parameter   :  FieldName        : Name of the target field
+//                FieldPtr         : Pointer to store the retrieved data
+//                H5_SetID_Target  : HDF5 dataset  ID of the target compound variable
+//                H5_TypeID_Target : HDF5 datatype ID of the target compound variable
+//                Fatal_Nonexist   : Whether or not the nonexistence of the target field is fatal
+//                                   --> true  : terminate the program     if the target field cannot be found
+//                                       false : display a warning message if the target field cannot be found
+//                ComprPtr         : Pointer to store the reference values for comparison
+//                NCompr           : Number of elements to be compared
+//                Fatal_Compr      : Whether or not the comparison result is fatal
+//                                   --> true  : terminate the program     if "FieldPtr[X] != ComprPtr[X]"
+//                                       false : display a warning message if "FieldPtr[X] != ComprPtr[X]"
 //
 // Return      :  Success/fail <-> 0/<0
 //-------------------------------------------------------------------------------------------------------
@@ -976,6 +976,30 @@ herr_t LoadField( const char *FieldName, void *FieldPtr, const hid_t H5_SetID_Ta
 // comparison
    char ArrayIdx[10];
 
+// compare strings
+   if ( NCompr > 0  &&  typeid(T) == typeid(char) )
+   {
+      if (  strcmp( *(char**)FieldPtr, (char*)ComprPtr ) != 0  )
+      {
+         if ( Fatal_Compr )
+         {
+            Aux_Error( ERROR_INFO, "\"%s\" : RESTART file (%s) != runtime (%s) !!\n",
+                       FieldName, *(char**)FieldPtr, (char*)ComprPtr );
+            return -2;
+         }
+
+         else
+         {
+            if ( MPI_Rank == 0 )
+            Aux_Message( stderr, "WARNING : \"%s\" : RESTART file (%s) != runtime (%s) !!\n",
+                         FieldName, *(char**)FieldPtr, (char*)ComprPtr );
+            Check_Pass = false;
+         }
+      }
+   }
+
+// compare other data types
+   else
    for (int t=0; t<NCompr; t++)
    {
       if ( NCompr == 1 )   sprintf( ArrayIdx, "%s", "" );
@@ -1721,7 +1745,7 @@ void Check_InputPara( const char *FileName, const int FormatVersion )
    LoadField( "Grackle_CMB_Floor",       &RS.Grackle_CMB_Floor,       SID, TID, NonFatal, &RT.Grackle_CMB_Floor,        1, NonFatal );
    LoadField( "Grackle_PE_Heating",      &RS.Grackle_PE_Heating,      SID, TID, NonFatal, &RT.Grackle_PE_Heating,       1, NonFatal );
    LoadField( "Grackle_PE_HeatingRate",  &RS.Grackle_PE_HeatingRate,  SID, TID, NonFatal, &RT.Grackle_PE_HeatingRate,   1, NonFatal );
-// LoadField( "Grackle_CloudyTable",     &RS.Grackle_CloudyTable,     SID, TID, NonFatal, &RT.Grackle_CloudyTable,      1, NonFatal );
+   LoadField( "Grackle_CloudyTable",     &RS.Grackle_CloudyTable,     SID, TID, NonFatal,  RT.Grackle_CloudyTable,      1, NonFatal );
    LoadField( "Che_GPU_NPGroup",         &RS.Che_GPU_NPGroup,         SID, TID, NonFatal, &RT.Che_GPU_NPGroup,          1, NonFatal );
 #  endif
 
