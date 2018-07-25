@@ -47,11 +47,7 @@ void Init_MemAllocate()
 #  ifdef SUPPORT_GRACKLE
    if ( GRACKLE_ACTIVATE )
    {
-#     ifdef GPU
-      CUAPI_MemAllocate_Grackle( CHE_GPU_NPGROUP );
-#     else
-      Init_MemAllocate_Grackle ( CHE_GPU_NPGROUP );
-#     endif
+      Init_MemAllocate_Grackle( CHE_GPU_NPGROUP );
 
 //    initialize the "grackle_field_data" objects of Grackle
       Grackle_Init_FieldData( CHE_GPU_NPGROUP );
