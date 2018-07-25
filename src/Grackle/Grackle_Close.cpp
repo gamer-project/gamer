@@ -7,7 +7,7 @@
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Grackle_Close
-// Description :  Copy the specific internal energy updated by the CPU/GPU Grackle solver back to the
+// Description :  Copy the specific internal energy updated by the Grackle solver back to the
 //                patch pointers
 //
 // Note        :  1. Use SaveSg to determine where to store the data

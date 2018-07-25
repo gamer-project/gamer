@@ -1,6 +1,6 @@
 #include "GAMER.h"
 
-#if ( !defined GPU  &&  defined SUPPORT_GRACKLE )
+#ifdef SUPPORT_GRACKLE
 
 
 
@@ -9,7 +9,7 @@
 // Function    :  End_MemFree_Grackle
 // Description :  Free memory previously allocated by Init_MemAllocate_Grackle()
 //
-// Note        :  1. Only work when using CPUs only
+// Note        :  1. Work even when GPU is enabled
 //                2. Invoked by End_MemFree()
 //
 // Parameter   :  None
@@ -31,4 +31,4 @@ void End_MemFree_Grackle()
 
 
 
-#endif // #if ( !defined GPU  &&  defined SUPPORT_GRACKLE )
+#endif // #ifdef SUPPORT_GRACKLE

@@ -10,7 +10,7 @@
 // Description :  Update the internal energy by the various cooling and heating mechanisms
 //                in the original Grackle library
 //
-// Note        :  1. Currently it is used no matter GPU is enabled or not
+// Note        :  1. Currently it is used even when GPU is enabled
 //
 // Parameter   :  Che_FieldData : Array of Grackle "grackle_field_data" objects
 //                Che_Units     : Grackle "code_units" object
