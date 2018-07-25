@@ -3,6 +3,27 @@
 #ifdef SUPPORT_GRACKLE
 
 
+// global variables for accessing h_Che_Array[]
+// --> declared in Init_MemAllocate_Grackle.cpp
+extern int Che_NField;
+extern int CheIdx_Dens;
+extern int CheIdx_sEint;
+extern int CheIdx_Ek;
+extern int CheIdx_e;
+extern int CheIdx_HI;
+extern int CheIdx_HII;
+extern int CheIdx_HeI;
+extern int CheIdx_HeII;
+extern int CheIdx_HeIII;
+extern int CheIdx_HM;
+extern int CheIdx_H2I;
+extern int CheIdx_H2II;
+extern int CheIdx_DI;
+extern int CheIdx_DII;
+extern int CheIdx_HDI;
+extern int CheIdx_Metal;
+
+
 
 
 //-------------------------------------------------------------------------------------------------------
@@ -15,8 +36,6 @@
 //                       Grackle_AdvanceDt() in EvolveLevel()
 //                2. Che_NField and the corresponding array indices in h_Che_Array[] (e.g., CheIdx_Dens)
 //                   are declared and set by Init_MemAllocate_Grackle()
-//                   --> They are not declared in "Global.h", even though they are global variables,
-//                       simply because they are only used by a few Grackle routines
 //
 // Parameter   :  lv          : Target refinement level
 //                SaveSg      : Sandglass to store the updated data
@@ -27,32 +46,35 @@
 void Grackle_Close( const int lv, const int SaveSg, const real h_Che_Array[], const int NPG, const int *PID0_List )
 {
 
-   const int   hCheIdx_Dens  = 0;
-   const int   hCheIdx_sEint = 1;
-   const int   hCheIdx_Ek    = 2;
-   const int   Size1pg       = CUBE(PS2);
-   const int   Size1v        = NPG*Size1pg;
-   const real  Gamma_m1      = GAMMA - (real)1.0;
-   const real _Gamma_m1      = (real)1.0 / Gamma_m1;
+   const int   Size1pg  = CUBE(PS2);
+   const int   Size1v   = NPG*Size1pg;
+   const real  Gamma_m1 = GAMMA - (real)1.0;
+   const real _Gamma_m1 = (real)1.0 / Gamma_m1;
 
-   int  idx_pg, PID, PID0;    // idx_pg: array indices within a patch group
+   const real *Ptr_Dens0  = h_Che_Array + CheIdx_Dens *Size1v;
+   const real *Ptr_sEint0 = h_Che_Array + CheIdx_sEint*Size1v;
+   const real *Ptr_Ek0    = h_Che_Array + CheIdx_Ek   *Size1v;
+
+
+#  pragma omp parallel
+   {
+
+// thread-private variables
+   int  idx_pg, PID, PID0, offset;  // idx_pg: array indices within a patch group
    real Dens, Pres;
-
-   const real *Ptr_Dens0  = h_Che_Array + hCheIdx_Dens *Size1v;
-   const real *Ptr_sEint0 = h_Che_Array + hCheIdx_sEint*Size1v;
-   const real *Ptr_Ek0    = h_Che_Array + hCheIdx_Ek   *Size1v;
 
    const real *Ptr_Dens=NULL, *Ptr_sEint=NULL, *Ptr_Ek=NULL;
 
-
-#  pragma omp parallel for private( idx_pg, PID, PID0, Dens, Pres, Ptr_Dens, Ptr_sEint, Ptr_Ek ) schedule( static )
+#  pragma omp for schedule( static )
    for (int TID=0; TID<NPG; TID++)
    {
       PID0      = PID0_List[TID];
       idx_pg    = 0;
-      Ptr_Dens  = Ptr_Dens0  + TID*Size1pg;
-      Ptr_sEint = Ptr_sEint0 + TID*Size1pg;
-      Ptr_Ek    = Ptr_Ek0    + TID*Size1pg;
+      offset    = TID*Size1pg;
+
+      Ptr_Dens  = Ptr_Dens0  + offset;
+      Ptr_sEint = Ptr_sEint0 + offset;
+      Ptr_Ek    = Ptr_Ek0    + offset;
 
       for (int LocalID=0; LocalID<8; LocalID++)
       {
@@ -82,6 +104,8 @@ void Grackle_Close( const int lv, const int SaveSg, const real h_Che_Array[], co
          } // for (int idx_p=0; idx_p<CUBE(PS1); idx_p++)
       } // for (int LocalID=0; LocalID<8; LocalID++)
    } // for (int TID=0; TID<NPG; TID++)
+
+   } // end of OpenMP parallel region
 
 } // FUNCTION : Grackle_Close
 

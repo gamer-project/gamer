@@ -344,7 +344,7 @@ typedef int FieldIdx_t;
 
 // Grackle
 #ifdef SUPPORT_GRACKLE
-// primordial chemistry
+// map to the "primordial_chemistry" option of Grackle
 typedef int GracklePriChe_t;
 const GracklePriChe_t
    GRACKLE_PRI_CHE_CLOUDY = 0,
