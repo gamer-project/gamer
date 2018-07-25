@@ -118,6 +118,10 @@ void Grackle_Init()
      Aux_Error( ERROR_INFO, "initialize_chemistry_data() failed !!\n" );
 
 
+// initialize the "grackle_field_data" object of Grackle
+   Grackle_Init_FieldData();
+
+
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", __FUNCTION__ );
 
 } // FUNCTION : Grackle_Init

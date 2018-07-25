@@ -13,6 +13,10 @@
 // Note        :  1. Use SaveSg to determine where to store the data
 //                   --> Currently it's set to the same Sg as the fluid data when calling
 //                       Grackle_AdvanceDt() in EvolveLevel()
+//                2. Che_NField and the corresponding array indices in h_Che_Array[] (e.g., CheIdx_Dens)
+//                   are declared and set by Init_MemAllocate_Grackle()
+//                   --> They are not declared in "Global.h", even though they are global variables,
+//                       simply because they are only used by a few Grackle routines
 //
 // Parameter   :  lv          : Target refinement level
 //                SaveSg      : Sandglass to store the updated data

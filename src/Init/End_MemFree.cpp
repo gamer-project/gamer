@@ -66,7 +66,7 @@ void End_MemFree()
 
       if ( Che_FieldData != NULL )
       {
-         delete [] Che_FieldData;
+         delete Che_FieldData;
          Che_FieldData = NULL;
       }
    }
