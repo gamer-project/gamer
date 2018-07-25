@@ -100,7 +100,7 @@ void Grackle_Init()
 // currently we adopt the OpenMP implementation in Grackle directly, which applies the parallelization to
 // **different cells inside a patch group** instead of **different patch groups**
 // --> this approach is found to be more efficient
-// --> therefore, we should enable OpenMP for Grackle and disable OpenMP in CPU_GrackleSolver_Original()
+// --> therefore, we should enable OpenMP for Grackle and disable OpenMP in CPU_GrackleSolver()
 //     to avoid the nested parallelization
    grackle_data->omp_nthreads               = OMP_NTHREAD;
 #  endif

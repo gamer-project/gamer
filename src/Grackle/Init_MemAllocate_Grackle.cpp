@@ -1,6 +1,6 @@
 #include "GAMER.h"
 
-#if ( !defined GPU  &&  defined SUPPORT_GRACKLE )
+#ifdef SUPPORT_GRACKLE
 
 
 
@@ -9,7 +9,7 @@
 // Function    :  Init_MemAllocate_Grackle
 // Description :  Allocate the CPU memory for the Grackle solver
 //
-// Note        :  1. Only work when using CPUs only
+// Note        :  1. Work even when GPU is enabled
 //                2. Prepare CHE_NPREP variables
 //                   --> CHE_NPREP = 4 currently
 //                   --> [mass density, specific internal energy, kinematic energy density, metal density]
@@ -34,4 +34,4 @@ void Init_MemAllocate_Grackle( const int Che_NPG )
 
 
 
-#endif // #if ( !defined GPU  &&  defined SUPPORT_GRACKLE )
+#endif // #ifdef SUPPORT_GRACKLE

@@ -37,7 +37,7 @@ void Grackle_Init_FieldData( const int Che_NPG )
    Che_FieldData->grid_start              = new int [NDim];
    Che_FieldData->grid_end                = new int [NDim];
 
-// grid_dimension, grid_start, and grid_end are set by CPU_GrackleSolver_Original() since the number
+// grid_dimension, grid_start, and grid_end are set by CPU_GrackleSolver() since the number
 // of patch groups advanced at a time is not a constant
    /*
    for (int d=0; d<NDim; d++)
