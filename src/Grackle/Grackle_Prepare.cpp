@@ -9,9 +9,11 @@
 // Function    :  Grackle_Prepare
 // Description :  Fill up the input host array h_Che_Array[] for the Grackle solver
 //
-// Note        :  1. Prepare CHE_NPREP variables
-//                   --> CHE_NPREP = 4 currently
-//                   --> [mass density, specific internal energy, kinematic energy density, metal density]
+// Note        :  1. Prepare Che_NField variables
+//                   --> Che_NField and the corresponding array indices in h_Che_Array[] (e.g., CheIdx_Dens)
+//                       are declared and set by Init_MemAllocate_Grackle()
+//                   --> They are not declared in "Global.h", even though they are global variables,
+//                       simply because they are only used by a few Grackle routines
 //                2. This function always prepares the latest FluSg data
 //
 // Parameter   :  lv          : Target refinement level

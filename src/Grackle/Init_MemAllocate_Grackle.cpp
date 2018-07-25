@@ -3,6 +3,12 @@
 #ifdef SUPPORT_GRACKLE
 
 
+// global variables for accessing h_Che_Array[]
+// --> also used by Grackle_Prepare.cpp and Grackle_Close.cpp
+//int Che_NField = NULL_INT;
+int Che_NField = 4;
+
+
 
 
 //-------------------------------------------------------------------------------------------------------
@@ -10,11 +16,7 @@
 // Description :  Allocate the CPU memory for the Grackle solver
 //
 // Note        :  1. Work even when GPU is enabled
-//                2. Prepare CHE_NPREP variables
-//                   --> CHE_NPREP = 4 currently
-//                   --> [mass density, specific internal energy, kinematic energy density, metal density]
-//                3. Invoked by Init_MemAllocate()
-//                4. Use patches instead of patch groups as the allocation unit
+//                2. Invoked by Init_MemAllocate()
 //
 // Parameter   :  Che_NPG : Number of patch groups to be evaluated at a time
 //-------------------------------------------------------------------------------------------------------
@@ -25,10 +27,12 @@ void Init_MemAllocate_Grackle( const int Che_NPG )
    if ( !GRACKLE_ACTIVATE )   return;
 
 
+// set Che_NField ...
+
+
+// allocate the input/output array for the Grackle solver
    for (int t=0; t<2; t++)
-   {
-      h_Che_Array[t] = new real [ (long)CHE_NPREP*(long)Che_NPG*(long)CUBE(PS2) ];
-   }
+      h_Che_Array[t] = new real [ (long)Che_NField*(long)Che_NPG*(long)CUBE(PS2) ];
 
 } // FUNCTION : Init_MemAllocate_Grackle
 
