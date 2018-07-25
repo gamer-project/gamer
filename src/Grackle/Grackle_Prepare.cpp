@@ -45,9 +45,51 @@ void Grackle_Prepare( const int lv, real h_Che_Array[], const int NPG, const int
 
 // check
 #  ifdef GAMER_DEBUG
-   if ( GRACKLE_METAL  &&  Idx_Metal == Idx_Undefined )
-      Aux_Error( ERROR_INFO, "Idx_Metal is undefined for \"GRACKLE_METAL\" !!\n" );
-#  endif
+   if ( CheIdx_Dens == Idx_Undefined )
+      Aux_Error( ERROR_INFO, "CheIdx_Dens is undefined !!\n" );
+   if ( CheIdx_sEint == Idx_Undefined )
+      Aux_Error( ERROR_INFO, "CheIdx_sEint is undefined !!\n" );
+   if ( CheIdx_Ek == Idx_Undefined )
+      Aux_Error( ERROR_INFO, "CheIdx_Ek is undefined !!\n" );
+
+   if ( GRACKLE_PRIMORDIAL >= GRACKLE_PRI_CHE_NSPE6 ) {
+      if (  Idx_e == Idx_Undefined  ||  CheIdx_e == Idx_Undefined  )
+         Aux_Error( ERROR_INFO, "[Che]Idx_e is undefined for \"GRACKLE_PRI_CHE_NSPE6\" !!\n" );
+      if (  Idx_HI == Idx_Undefined  ||  CheIdx_HI == Idx_Undefined  )
+         Aux_Error( ERROR_INFO, "[Che]Idx_HI is undefined for \"GRACKLE_PRI_CHE_NSPE6\" !!\n" );
+      if (  Idx_HII == Idx_Undefined  ||  CheIdx_HII == Idx_Undefined  )
+         Aux_Error( ERROR_INFO, "[Che]Idx_HII is undefined for \"GRACKLE_PRI_CHE_NSPE6\" !!\n" );
+      if (  Idx_HeI == Idx_Undefined  ||  CheIdx_HeI == Idx_Undefined  )
+         Aux_Error( ERROR_INFO, "[Che]Idx_HeI is undefined for \"GRACKLE_PRI_CHE_NSPE6\" !!\n" );
+      if (  Idx_HeII == Idx_Undefined  ||  CheIdx_HeII == Idx_Undefined  )
+         Aux_Error( ERROR_INFO, "[Che]Idx_HeII is undefined for \"GRACKLE_PRI_CHE_NSPE6\" !!\n" );
+      if (  Idx_HeIII == Idx_Undefined  ||  CheIdx_HeIII == Idx_Undefined  )
+         Aux_Error( ERROR_INFO, "[Che]Idx_HeIII is undefined for \"GRACKLE_PRI_CHE_NSPE6\" !!\n" );
+   }
+
+   if ( GRACKLE_PRIMORDIAL >= GRACKLE_PRI_CHE_NSPE9 ) {
+      if (  Idx_HM == Idx_Undefined  ||  CheIdx_HM == Idx_Undefined  )
+         Aux_Error( ERROR_INFO, "[Che]Idx_HM is undefined for \"GRACKLE_PRI_CHE_NSPE9\" !!\n" );
+      if (  Idx_H2I == Idx_Undefined  ||  CheIdx_H2I == Idx_Undefined  )
+         Aux_Error( ERROR_INFO, "[Che]Idx_H2I is undefined for \"GRACKLE_PRI_CHE_NSPE9\" !!\n" );
+      if (  Idx_H2II == Idx_Undefined  ||  CheIdx_H2II == Idx_Undefined  )
+         Aux_Error( ERROR_INFO, "[Che]Idx_H2II is undefined for \"GRACKLE_PRI_CHE_NSPE9\" !!\n" );
+   }
+
+   if ( GRACKLE_PRIMORDIAL >= GRACKLE_PRI_CHE_NSPE12 ) {
+      if (  Idx_DI == Idx_Undefined  ||  CheIdx_DI == Idx_Undefined  )
+         Aux_Error( ERROR_INFO, "[Che]Idx_DI is undefined for \"GRACKLE_PRI_CHE_NSPE12\" !!\n" );
+      if (  Idx_DII == Idx_Undefined  ||  CheIdx_DII == Idx_Undefined  )
+         Aux_Error( ERROR_INFO, "[Che]Idx_DII is undefined for \"GRACKLE_PRI_CHE_NSPE12\" !!\n" );
+      if (  Idx_HDI == Idx_Undefined  ||  CheIdx_HDI == Idx_Undefined  )
+         Aux_Error( ERROR_INFO, "[Che]Idx_HDI is undefined for \"GRACKLE_PRI_CHE_NSPE12\" !!\n" );
+   }
+
+   if ( GRACKLE_METAL ) {
+      if (  Idx_Metal == Idx_Undefined  ||  CheIdx_Metal == Idx_Undefined  )
+         Aux_Error( ERROR_INFO, "[Che]Idx_Metal is undefined for \"GRACKLE_METAL\" !!\n" );
+   }
+#  endif // #ifdef GAMER_DEBUG
 
 
    const int  Size1pg         = CUBE(PS2);
@@ -61,6 +103,18 @@ void Grackle_Prepare( const int lv, real h_Che_Array[], const int NPG, const int
    real *Ptr_Dens0  = h_Che_Array + CheIdx_Dens *Size1v;
    real *Ptr_sEint0 = h_Che_Array + CheIdx_sEint*Size1v;
    real *Ptr_Ek0    = h_Che_Array + CheIdx_Ek   *Size1v;
+   real *Ptr_e0     = h_Che_Array + CheIdx_e    *Size1v;
+   real *Ptr_HI0    = h_Che_Array + CheIdx_HI   *Size1v;
+   real *Ptr_HII0   = h_Che_Array + CheIdx_HII  *Size1v;
+   real *Ptr_HeI0   = h_Che_Array + CheIdx_HeI  *Size1v;
+   real *Ptr_HeII0  = h_Che_Array + CheIdx_HeII *Size1v;
+   real *Ptr_HeIII0 = h_Che_Array + CheIdx_HeIII*Size1v;
+   real *Ptr_HM0    = h_Che_Array + CheIdx_HM   *Size1v;
+   real *Ptr_H2I0   = h_Che_Array + CheIdx_H2I  *Size1v;
+   real *Ptr_H2II0  = h_Che_Array + CheIdx_H2II *Size1v;
+   real *Ptr_DI0    = h_Che_Array + CheIdx_DI   *Size1v;
+   real *Ptr_DII0   = h_Che_Array + CheIdx_DII  *Size1v;
+   real *Ptr_HDI0   = h_Che_Array + CheIdx_HDI  *Size1v;
    real *Ptr_Metal0 = h_Che_Array + CheIdx_Metal*Size1v;
 
 
@@ -70,8 +124,11 @@ void Grackle_Prepare( const int lv, real h_Che_Array[], const int NPG, const int
 // thread-private variables
    int  idx_pg, PID, PID0, offset;  // idx_pg: array indices within a patch group
    real Dens, Px, Py, Pz, Etot, _Dens, Ek, sEint;
+   real (*fluid)[PS1][PS1][PS1]=NULL;;
 
-   real *Ptr_Dens=NULL, *Ptr_sEint=NULL, *Ptr_Ek=NULL, *Ptr_Metal=NULL;
+   real *Ptr_Dens=NULL, *Ptr_sEint=NULL, *Ptr_Ek=NULL, *Ptr_e=NULL, *Ptr_HI=NULL, *Ptr_HII=NULL;
+   real *Ptr_HeI=NULL, *Ptr_HeII=NULL, *Ptr_HeIII=NULL, *Ptr_HM=NULL, *Ptr_H2I=NULL, *Ptr_H2II=NULL;
+   real *Ptr_DI=NULL, *Ptr_DII=NULL, *Ptr_HDI=NULL, *Ptr_Metal=NULL;
 
 #  pragma omp for schedule( static )
    for (int TID=0; TID<NPG; TID++)
@@ -83,19 +140,32 @@ void Grackle_Prepare( const int lv, real h_Che_Array[], const int NPG, const int
       Ptr_Dens  = Ptr_Dens0  + offset;
       Ptr_sEint = Ptr_sEint0 + offset;
       Ptr_Ek    = Ptr_Ek0    + offset;
+      Ptr_e     = Ptr_e0     + offset;
+      Ptr_HI    = Ptr_HI0    + offset;
+      Ptr_HII   = Ptr_HII0   + offset;
+      Ptr_HeI   = Ptr_HeI0   + offset;
+      Ptr_HeII  = Ptr_HeII0  + offset;
+      Ptr_HeIII = Ptr_HeIII0 + offset;
+      Ptr_HM    = Ptr_HM0    + offset;
+      Ptr_H2I   = Ptr_H2I0   + offset;
+      Ptr_H2II  = Ptr_H2II0  + offset;
+      Ptr_DI    = Ptr_DI0    + offset;
+      Ptr_DII   = Ptr_DII0   + offset;
+      Ptr_HDI   = Ptr_HDI0   + offset;
       Ptr_Metal = Ptr_Metal0 + offset;
 
       for (int LocalID=0; LocalID<8; LocalID++)
       {
-         PID = PID0 + LocalID;
+         PID   = PID0 + LocalID;
+         fluid = amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid;
 
          for (int idx_p=0; idx_p<CUBE(PS1); idx_p++)
          {
-            Dens  = *( amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[DENS][0][0] + idx_p );
-            Px    = *( amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[MOMX][0][0] + idx_p );
-            Py    = *( amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[MOMY][0][0] + idx_p );
-            Pz    = *( amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[MOMZ][0][0] + idx_p );
-            Etot  = *( amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[ENGY][0][0] + idx_p );
+            Dens  = *( fluid[DENS][0][0] + idx_p );
+            Px    = *( fluid[MOMX][0][0] + idx_p );
+            Py    = *( fluid[MOMY][0][0] + idx_p );
+            Pz    = *( fluid[MOMZ][0][0] + idx_p );
+            Etot  = *( fluid[ENGY][0][0] + idx_p );
             _Dens = (real)1.0 / Dens;
             Ek    = (real)0.5*( SQR(Px) + SQR(Py) + SQR(Pz) )*_Dens;
 
@@ -103,8 +173,8 @@ void Grackle_Prepare( const int lv, real h_Che_Array[], const int NPG, const int
 #           ifdef DUAL_ENERGY
 
 #           if   ( DUAL_ENERGY == DE_ENPY )
-            sEint = CPU_DensEntropy2Pres( Dens, *( amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[ENPY][0][0] + idx_p ), Gamma_m1,
-                                          CheckMinPres_No, NULL_REAL )*_Dens*_Gamma_m1;
+            sEint = CPU_DensEntropy2Pres( Dens, *(fluid[ENPY][0][0]+idx_p), Gamma_m1, CheckMinPres_No, NULL_REAL )
+                    *_Dens*_Gamma_m1;
 #           elif ( DUAL_ENERGY == DE_EINT )
 #           error : DE_EINT is NOT supported yet !!
 #           endif
@@ -118,9 +188,33 @@ void Grackle_Prepare( const int lv, real h_Che_Array[], const int NPG, const int
             Ptr_sEint[idx_pg] = sEint;
             Ptr_Ek   [idx_pg] = Ek;
 
+//          6-species network
+            if ( GRACKLE_PRIMORDIAL >= GRACKLE_PRI_CHE_NSPE6 ) {
+            Ptr_e    [idx_pg] = *( fluid[Idx_e    ][0][0] + idx_p );
+            Ptr_HI   [idx_pg] = *( fluid[Idx_HI   ][0][0] + idx_p );
+            Ptr_HII  [idx_pg] = *( fluid[Idx_HII  ][0][0] + idx_p );
+            Ptr_HeI  [idx_pg] = *( fluid[Idx_HeI  ][0][0] + idx_p );
+            Ptr_HeII [idx_pg] = *( fluid[Idx_HeII ][0][0] + idx_p );
+            Ptr_HeIII[idx_pg] = *( fluid[Idx_HeIII][0][0] + idx_p );
+            }
+
+//          9-species network
+            if ( GRACKLE_PRIMORDIAL >= GRACKLE_PRI_CHE_NSPE9 ) {
+            Ptr_HM   [idx_pg] = *( fluid[Idx_HM   ][0][0] + idx_p );
+            Ptr_H2I  [idx_pg] = *( fluid[Idx_H2I  ][0][0] + idx_p );
+            Ptr_H2II [idx_pg] = *( fluid[Idx_H2II ][0][0] + idx_p );
+            }
+
+//          12-species network
+            if ( GRACKLE_PRIMORDIAL >= GRACKLE_PRI_CHE_NSPE12 ) {
+            Ptr_DI   [idx_pg] = *( fluid[Idx_DI   ][0][0] + idx_p );
+            Ptr_DII  [idx_pg] = *( fluid[Idx_DII  ][0][0] + idx_p );
+            Ptr_HDI  [idx_pg] = *( fluid[Idx_HDI  ][0][0] + idx_p );
+            }
+
 //          metallicity for metal cooling
             if ( GRACKLE_METAL )
-            Ptr_Metal[idx_pg] = *( amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[Idx_Metal][0][0] + idx_p );
+            Ptr_Metal[idx_pg] = *( fluid[Idx_Metal][0][0] + idx_p );
 
             idx_pg ++;
          } // for (int idx_p=0; idx_p<CUBE(PS1); idx_p++)
@@ -133,8 +227,31 @@ void Grackle_Prepare( const int lv, real h_Che_Array[], const int NPG, const int
 
 // set cell size and link pointers for different fields
    Che_FieldData->grid_dx         = amr->dh[lv];
+
    Che_FieldData->density         = Ptr_Dens0;
    Che_FieldData->internal_energy = Ptr_sEint0;
+
+   if ( GRACKLE_PRIMORDIAL >= GRACKLE_PRI_CHE_NSPE6 ) {
+   Che_FieldData->e_density       = Ptr_e0;
+   Che_FieldData->HI_density      = Ptr_HI0;
+   Che_FieldData->HII_density     = Ptr_HII0;
+   Che_FieldData->HeI_density     = Ptr_HeI0;
+   Che_FieldData->HeII_density    = Ptr_HeII0;
+   Che_FieldData->HeIII_density   = Ptr_HeIII0;
+   }
+
+   if ( GRACKLE_PRIMORDIAL >= GRACKLE_PRI_CHE_NSPE9 ) {
+   Che_FieldData->HM_density      = Ptr_HM0;
+   Che_FieldData->H2I_density     = Ptr_H2I0;
+   Che_FieldData->H2II_density    = Ptr_H2II0;
+   }
+
+   if ( GRACKLE_PRIMORDIAL >= GRACKLE_PRI_CHE_NSPE12 ) {
+   Che_FieldData->DI_density      = Ptr_DI0;
+   Che_FieldData->DII_density     = Ptr_DII0;
+   Che_FieldData->HDI_density     = Ptr_HDI0;
+   }
+
    if ( GRACKLE_METAL )
    Che_FieldData->metal_density   = Ptr_Metal0;
 
