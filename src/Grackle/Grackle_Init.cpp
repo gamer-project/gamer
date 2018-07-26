@@ -40,9 +40,6 @@ void Grackle_Init()
    Aux_Error( ERROR_INFO, "SUPPORT_GRACKLE does not work with COMOVING yet !!\n" );
 #  endif
 
-   if ( GRACKLE_PRIMORDIAL != GRACKLE_PRI_CHE_CLOUDY )
-      Aux_Error( ERROR_INFO, "only support \"GRACKLE_PRIMORDIAL\" = %d for now !!\n", GRACKLE_PRI_CHE_CLOUDY );
-
    if (  ( GRACKLE_PRIMORDIAL == GRACKLE_PRI_CHE_CLOUDY || GRACKLE_METAL || GRACKLE_UV )  &&
          !Aux_CheckFileExist(GRACKLE_CLOUDY_TABLE)  )
       Aux_Error( ERROR_INFO, "Grackle data file \"%s\" does not exist !!\n", GRACKLE_CLOUDY_TABLE );
