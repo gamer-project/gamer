@@ -74,8 +74,10 @@ void Init_Field()
    Idx_HDI     = AddField( "HDI",      NORMALIZE_YES );
    }
 
+// normalize the metallicity field only when adopting the non-equilibrium chemistry
+// --> may need a machanism to allow users to overwrite this default setup
    if ( GRACKLE_METAL )
-   Idx_Metal   = AddField( "Metal",    NORMALIZE_NO );
+   Idx_Metal   = AddField( "Metal",    (GRACKLE_PRIMORDIAL==GRACKLE_PRI_CHE_CLOUDY)?NORMALIZE_NO:NORMALIZE_YES );
 #  endif // #ifdef SUPPORT_GRACKLE
 
 
