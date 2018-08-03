@@ -472,7 +472,7 @@ struct InputPara_t
 
 // Grackle
 #  ifdef SUPPORT_GRACKLE
-   int    Grackle_Mode;
+   int    Grackle_Activate;
    int    Grackle_Verbose;
    int    Grackle_Cooling;
    int    Grackle_Primordial;

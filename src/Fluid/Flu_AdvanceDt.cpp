@@ -72,7 +72,7 @@ int Flu_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, con
       if ( false )
 #     endif
 #     ifdef SUPPORT_GRACKLE
-      if ( GRACKLE_MODE == GRACKLE_MODE_NONE )
+      if ( !GRACKLE_ACTIVATE )
 #     endif
       if ( OPT__RESET_FLUID  &&  Flu_ResetByUser_API_Ptr != NULL )   Flu_ResetByUser_API_Ptr( lv, SaveSg, TimeNew );
 

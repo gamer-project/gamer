@@ -164,7 +164,7 @@ yt_verbose           YT_VERBOSE;
 
 // (2-7) Grackle
 #ifdef SUPPORT_GRACKLE
-GrackleMode_t        GRACKLE_MODE;
+bool                 GRACKLE_ACTIVATE;
 bool                 GRACKLE_VERBOSE;
 bool                 GRACKLE_COOLING;
 GracklePriChe_t      GRACKLE_PRIMORDIAL;

@@ -186,7 +186,7 @@ extern yt_verbose      YT_VERBOSE;
 // (2-7) Grackle
 // ============================================================================================================
 #ifdef SUPPORT_GRACKLE
-extern GrackleMode_t   GRACKLE_MODE;
+extern bool            GRACKLE_ACTIVATE;
 extern bool            GRACKLE_VERBOSE;
 extern bool            GRACKLE_COOLING;
 extern GracklePriChe_t GRACKLE_PRIMORDIAL;

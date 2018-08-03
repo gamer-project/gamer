@@ -423,7 +423,7 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
 //    6-1. Grackle cooling/heating
 // *********************************
 #     ifdef SUPPORT_GRACKLE
-      if ( GRACKLE_MODE != GRACKLE_MODE_NONE )
+      if ( GRACKLE_ACTIVATE )
       {
          const int SaveSg_Che = SaveSg_Flu;  // save in the same FluSg
 
@@ -435,7 +435,7 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
                         Timer_Che_Advance[lv]   );
 
          if ( OPT__VERBOSE  &&  MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );
-      } // if ( GRACKLE_MODE != GRACKLE_MODE_NONE )
+      } // if ( GRACKLE_ACTIVATE )
 #     endif // #ifdef SUPPORT_GRACKLE
 
 

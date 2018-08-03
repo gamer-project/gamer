@@ -53,9 +53,32 @@ void Init_Field()
 
 // 2. add other predefined fields
 #  ifdef SUPPORT_GRACKLE
+   if ( GRACKLE_PRIMORDIAL >= GRACKLE_PRI_CHE_NSPE6 ) {
+   Idx_e       = AddField( "Electron", NORMALIZE_YES );
+   Idx_HI      = AddField( "HI",       NORMALIZE_YES );
+   Idx_HII     = AddField( "HII",      NORMALIZE_YES );
+   Idx_HeI     = AddField( "HeI",      NORMALIZE_YES );
+   Idx_HeII    = AddField( "HeII",     NORMALIZE_YES );
+   Idx_HeIII   = AddField( "HeIII",    NORMALIZE_YES );
+   }
+
+   if ( GRACKLE_PRIMORDIAL >= GRACKLE_PRI_CHE_NSPE9 ) {
+   Idx_HM      = AddField( "HM",       NORMALIZE_YES );
+   Idx_H2I     = AddField( "H2I",      NORMALIZE_YES );
+   Idx_H2II    = AddField( "H2II",     NORMALIZE_YES );
+   }
+
+   if ( GRACKLE_PRIMORDIAL >= GRACKLE_PRI_CHE_NSPE12 ) {
+   Idx_DI      = AddField( "DI",       NORMALIZE_YES );
+   Idx_DII     = AddField( "DII",      NORMALIZE_YES );
+   Idx_HDI     = AddField( "HDI",      NORMALIZE_YES );
+   }
+
+// normalize the metallicity field only when adopting the non-equilibrium chemistry
+// --> may need a machanism to allow users to overwrite this default setup
    if ( GRACKLE_METAL )
-   Idx_Metal   = AddField( "Metal",    NORMALIZE_NO );
-#  endif
+   Idx_Metal   = AddField( "Metal",    (GRACKLE_PRIMORDIAL==GRACKLE_PRI_CHE_CLOUDY)?NORMALIZE_NO:NORMALIZE_YES );
+#  endif // #ifdef SUPPORT_GRACKLE
 
 
 // 3. add user-defined fields
