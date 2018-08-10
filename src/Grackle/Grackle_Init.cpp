@@ -21,7 +21,7 @@ void Grackle_Init()
 {
 
 // nothing to do if Grackle is disabled
-   if ( GRACKLE_MODE == GRACKLE_MODE_NONE )  return;
+   if ( !GRACKLE_ACTIVATE )   return;
 
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ...\n", __FUNCTION__ );
@@ -39,9 +39,6 @@ void Grackle_Init()
 #  ifdef COMOVING
    Aux_Error( ERROR_INFO, "SUPPORT_GRACKLE does not work with COMOVING yet !!\n" );
 #  endif
-
-   if ( GRACKLE_PRIMORDIAL != GRACKLE_PRI_CHE_CLOUDY )
-      Aux_Error( ERROR_INFO, "only support \"GRACKLE_PRIMORDIAL\" = %d for now !!\n", GRACKLE_PRI_CHE_CLOUDY );
 
    if (  ( GRACKLE_PRIMORDIAL == GRACKLE_PRI_CHE_CLOUDY || GRACKLE_METAL || GRACKLE_UV )  &&
          !Aux_CheckFileExist(GRACKLE_CLOUDY_TABLE)  )
@@ -86,7 +83,7 @@ void Grackle_Init()
 
 
 // set chemistry by accessing "grackle_data"
-   grackle_data->use_grackle                = ( GRACKLE_MODE == GRACKLE_MODE_ORI );
+   grackle_data->use_grackle                = GRACKLE_ACTIVATE;
    grackle_data->with_radiative_cooling     = GRACKLE_COOLING;
    grackle_data->primordial_chemistry       = GRACKLE_PRIMORDIAL;
    grackle_data->metal_cooling              = GRACKLE_METAL;
@@ -100,7 +97,7 @@ void Grackle_Init()
 // currently we adopt the OpenMP implementation in Grackle directly, which applies the parallelization to
 // **different cells inside a patch group** instead of **different patch groups**
 // --> this approach is found to be more efficient
-// --> therefore, we should enable OpenMP for Grackle and disable OpenMP in CPU_GrackleSolver_Original()
+// --> therefore, we should enable OpenMP for Grackle and disable OpenMP in CPU_GrackleSolver()
 //     to avoid the nested parallelization
    grackle_data->omp_nthreads               = OMP_NTHREAD;
 #  endif
@@ -116,6 +113,10 @@ void Grackle_Init()
 // initialize the chemistry object
    if ( initialize_chemistry_data(&Che_Units) == 0 )
      Aux_Error( ERROR_INFO, "initialize_chemistry_data() failed !!\n" );
+
+
+// initialize the "grackle_field_data" object of Grackle
+   Grackle_Init_FieldData();
 
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", __FUNCTION__ );

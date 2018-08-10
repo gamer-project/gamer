@@ -448,11 +448,6 @@ void Aux_TakeNote()
 #     ifdef GRAVITY
       fprintf( Note, "#define GRA_NIN                 %d\n",      GRA_NIN             );
 #     endif
-#     ifdef SUPPORT_GRACKLE
-      fprintf( Note, "#define CHE_NPREP               %d\n",      CHE_NPREP           );
-      fprintf( Note, "#define CHE_NIN                 %d\n",      CHE_NIN             );
-      fprintf( Note, "#define CHE_NOUT                %d\n",      CHE_NOUT            );
-#     endif
       fprintf( Note, "#define PATCH_SIZE              %d\n",      PATCH_SIZE          );
       fprintf( Note, "#define MAX_PATCH               %d\n",      MAX_PATCH           );
       fprintf( Note, "#define NLEVEL                  %d\n",      NLEVEL              );
@@ -743,8 +738,8 @@ void Aux_TakeNote()
 #     ifdef SUPPORT_GRACKLE
       fprintf( Note, "Parameters of Grackle\n" );
       fprintf( Note, "***********************************************************************************\n" );
-      fprintf( Note, "GRACKLE_MODE                    %d\n",      GRACKLE_MODE            );
-      if ( GRACKLE_MODE != GRACKLE_MODE_NONE ) {
+      fprintf( Note, "GRACKLE_ACTIVATE                %d\n",      GRACKLE_ACTIVATE        );
+      if ( GRACKLE_ACTIVATE ) {
       fprintf( Note, "GRACKLE_VERBOSE                 %d\n",      GRACKLE_VERBOSE         );
       fprintf( Note, "GRACKLE_COOLING                 %d\n",      GRACKLE_COOLING         );
       fprintf( Note, "GRACKLE_PRIMORDIAL              %d\n",      GRACKLE_PRIMORDIAL      );

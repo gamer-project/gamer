@@ -43,6 +43,7 @@ SIMU_OPTION += -DMODEL=HYDRO
 #SIMU_OPTION += -DPARTICLE
 
 # support Grackle, a chemistry and radiative cooling library
+# --> must set NCOMP_PASSIVE_USER according to the primordial chemistry network set by GRACKLE_PRIMORDIAL
 # --> please enable OpenMP when compiling Grackle (by "make omp-on")
 #SIMU_OPTION += -DSUPPORT_GRACKLE
 
@@ -585,9 +586,7 @@ endif # SUPPORT_LIBYT
 # Grackle source files (included only if "SUPPORT_GRACKLE" is turned on)
 # ------------------------------------------------------------------------------------
 ifeq "$(filter -DSUPPORT_GRACKLE, $(SIMU_OPTION))" "-DSUPPORT_GRACKLE"
-CUDA_FILE   += CUAPI_MemAllocate_Grackle.cu  CUAPI_MemFree_Grackle.cu
-
-CC_FILE     += CPU_GrackleSolver_Original.cpp
+CC_FILE     += CPU_GrackleSolver.cpp
 
 CC_FILE     += Grackle_Init.cpp  Grackle_End.cpp  Init_MemAllocate_Grackle.cpp  End_MemFree_Grackle.cpp \
                Grackle_Prepare.cpp  Grackle_Close.cpp  Grackle_Init_FieldData.cpp  Grackle_AdvanceDt.cpp
