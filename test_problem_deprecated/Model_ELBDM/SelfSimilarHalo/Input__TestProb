@@ -1,3 +1,0 @@
-# parameters for the self-similar halo test
-profile.txt       SelSimHalo_FileName     # name of the profile table 
-0                 SelSimHalo_LoadPhase    # (0/1) <--> (load velocity and integrate to get phase/load phase directly)
