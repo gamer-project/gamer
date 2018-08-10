@@ -33,7 +33,7 @@ void Flu_FixUp( const int lv )
 //     --> fixing pressure is found to lead to extremely small dt
 //     --> fixing specific internal energy works better since it is directly proportional to the sound speed square
 #  ifdef SUPPORT_GRACKLE
-   const bool FixSEint   = ( GRACKLE_MODE != GRACKLE_MODE_NONE );
+   const bool FixSEint   = GRACKLE_ACTIVATE;
 #  else
    const bool FixSEint   = false;
 #  endif

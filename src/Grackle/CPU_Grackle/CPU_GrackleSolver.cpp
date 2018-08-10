@@ -6,19 +6,18 @@
 
 
 //-----------------------------------------------------------------------------------------
-// Function    :  CPU_GrackleSolver_Original
+// Function    :  CPU_GrackleSolver
 // Description :  Update the internal energy by the various cooling and heating mechanisms
 //                in the original Grackle library
 //
-// Note        :  1. Work for "GRACKLE_MODE == GRACKLE_MODE_ORI"
-//                   --> No matter GPU is enabled or not
+// Note        :  1. Currently it is used even when GPU is enabled
 //
 // Parameter   :  Che_FieldData : Array of Grackle "grackle_field_data" objects
 //                Che_Units     : Grackle "code_units" object
 //                NPatchGroup   : Number of patch groups to be evaluated
 //                dt            : Time interval to advance solution
 //-----------------------------------------------------------------------------------------
-void CPU_GrackleSolver_Original( grackle_field_data *Che_FieldData, code_units Che_Units, const int NPatchGroup, const real dt )
+void CPU_GrackleSolver( grackle_field_data *Che_FieldData, code_units Che_Units, const int NPatchGroup, const real dt )
 {
 
 // set grid_dimension, grid_start, and grid_end
@@ -42,7 +41,7 @@ void CPU_GrackleSolver_Original( grackle_field_data *Che_FieldData, code_units C
    if (  solve_chemistry( &Che_Units, Che_FieldData, dt ) == 0  )
       Aux_Error( ERROR_INFO, "Grackle solve_chemistry() failed !!\n" );
 
-} // FUNCTION : CPU_GrackleSolver_Original
+} // FUNCTION : CPU_GrackleSolver
 
 
 

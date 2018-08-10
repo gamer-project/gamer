@@ -497,16 +497,6 @@
 #endif // #ifdef GRAVITY
 
 
-// Grackle constants
-#ifdef SUPPORT_GRACKLE
-
-#  define CHE_NPREP              4
-#  define CHE_NIN                3
-#  define CHE_NOUT               1
-
-#endif // #ifdef SUPPORT_GRACKLE
-
-
 // patch size (number of cells of a single patch in the x/y/z directions)
 #define PATCH_SIZE                   8
 #define PS1             ( 1*PATCH_SIZE )
