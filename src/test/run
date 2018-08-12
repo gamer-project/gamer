@@ -1,0 +1,1 @@
+gcc con2pri.c -lm -DSR_DEBUG -I/usr/local/myprog/gsl-2.4/include -L/usr/local/myprog/gsl-2.4/lib/ -lgsl -lgslcblas && ./a.out

@@ -17,6 +17,10 @@ bool Particle_Collected       = false;
 bool ParDensArray_Initialized = false;
 #endif
 
+#if (MODEL == SR_HYDRO)
+void CPU_4Velto3Vel( const real In[], real Out[] );
+void CPU_Con2Pri (const real In[], real Out[], const real Gamma);
+#endif
 
 
 
@@ -142,7 +146,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
 
    if ( MinDens >= (real)0.0 )
    {
-#     if ( MODEL == HYDRO  ||  MODEL == MHD  ||  MODEL == ELBDM )
+#     if ( MODEL == HYDRO  ||  MODEL == MHD  ||  MODEL == ELBDM || MODEL == SR_HYDRO )
 #     ifdef PARTICLE
       if ( !(TVar & _DENS)  &&  !(TVar & _TOTAL_DENS) )
          Aux_Error( ERROR_INFO, "MinDens (%13.7e) >= 0.0, but neither _DENS nor _TOTAL_DENS is found !!\n", MinDens );
@@ -162,7 +166,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
 
    if ( MinPres >= (real)0.0 )
    {
-#     if ( MODEL == HYDRO  ||  MODEL == MHD )
+#     if ( MODEL == HYDRO  ||  MODEL == MHD || MODEL == SR_HYDRO )
 //    note that when PARTICLE is on, we should NOT allow MinPres check when TVar & _TOTAL_DENS == true because
 //    we won't have gas density prepared to calculate pressure (we only have **total** density)
 //    --> but when PARTICLE is off, we have _TOTAL_DENS == _DENS (see Macro.h), and thus MinPres check is allowed
@@ -191,9 +195,9 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
            FluBC[f] != BC_FLU_REFLECTING  &&  FluBC[f] != BC_FLU_USER        )
          Aux_Error( ERROR_INFO, "unsupported parameter FluBC[%d] = %d !!\n", f, FluBC[f] );
 
-#     if ( MODEL != HYDRO )
+#     if ( MODEL != HYDRO && MODEL != SR_HYDRO )
       if ( FluBC[f] == BC_FLU_REFLECTING )
-         Aux_Error( ERROR_INFO, "reflecting boundary condition (OPT__BC_FLU=3) only works with HYDRO !!\n" );
+         Aux_Error( ERROR_INFO, "reflecting boundary condition (OPT__BC_FLU=3) only works with HYDRO or SR-HYDRO !!\n" );
 #     endif
    }
 
@@ -256,6 +260,16 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
 #  elif ( MODEL == MHD   )
 #  warning : WAIT MHD !!
 
+#  elif ( MODEL == SR_HYDRO )
+   const bool CheckMinPres_No  = false;   // we check minimum pressure in the end of this function (step d)
+   const real Gamma_m1         = GAMMA - (real)1.0;
+   const real _Gamma_m1        = (real)1.0 / Gamma_m1;
+   const bool PrepVx           = ( TVar & _VELX ) ? true : false;
+   const bool PrepVy           = ( TVar & _VELY ) ? true : false;
+   const bool PrepVz           = ( TVar & _VELZ ) ? true : false;
+   const bool PrepPres         = ( TVar & _PRES ) ? true : false;
+   const bool PrepTemp         = ( TVar & _TEMP ) ? true : false;
+
 #  elif ( MODEL == ELBDM )
 // no derived variables yet
 
@@ -311,6 +325,16 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
 
 #  elif ( MODEL == MHD   )
 #  warning : WAIT MHD !!
+
+#  elif ( MODEL == SR_HYDRO )
+   const int NVar_Der_Max = 5;
+   int TDerVarList[NVar_Der_Max];
+
+   if ( PrepVx   )   TDerVarList[ NVar_Der ++ ] = _VELX;
+   if ( PrepVy   )   TDerVarList[ NVar_Der ++ ] = _VELY;
+   if ( PrepVz   )   TDerVarList[ NVar_Der ++ ] = _VELZ;
+   if ( PrepPres )   TDerVarList[ NVar_Der ++ ] = _PRES;
+   if ( PrepTemp )   TDerVarList[ NVar_Der ++ ] = _TEMP;
 
 #  elif ( MODEL == ELBDM )
 // no derived variables yet
@@ -609,7 +633,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
 //    thread-private variables
       int    J, K, I2, J2, K2, Idx1, Idx2, PID0, TFluVarIdx, BC_Sibling, BC_Idx_Start[3], BC_Idx_End[3];
       double xyz0[3];            // corner coordinates for the user-specified B.C.
-#     if ( MODEL == HYDRO  ||  MODEL == MHD )
+#     if ( MODEL == HYDRO  ||  MODEL == MHD || MODEL == SR_HYDRO )
       real Fluid[NCOMP_FLUID];   // for calculating pressure and temperature only --> don't need NCOMP_TOTAL
 #     endif
 
@@ -893,6 +917,154 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
 #           elif ( MODEL == MHD   )
 #           warning : WAIT MHD !!
 
+#           elif   ( MODEL == SR_HYDRO )
+            if ( PrepVx )
+            {
+               for (int k=0; k<PATCH_SIZE; k++)    {  K    = k + Disp_k;
+               for (int j=0; j<PATCH_SIZE; j++)    {  J    = j + Disp_j;
+                                                      Idx1 = IDX321( Disp_i, J, K, PGSize1D, PGSize1D );
+               for (int i=0; i<PATCH_SIZE; i++)    {
+
+                  real Cons[NCOMP_FLUID];
+                  real Prim1[NCOMP_FLUID]; // 4-velocity
+//                  real Prim2[NCOMP_FLUID]; // 3-velocity
+
+                  Cons[0]=amr->patch[FluSg][lv][PID]->fluid[DENS][k][j][i];
+                  Cons[1]=amr->patch[FluSg][lv][PID]->fluid[MOMX][k][j][i];
+                  Cons[2]=amr->patch[FluSg][lv][PID]->fluid[MOMY][k][j][i];
+                  Cons[3]=amr->patch[FluSg][lv][PID]->fluid[MOMZ][k][j][i];
+                  Cons[4]=amr->patch[FluSg][lv][PID]->fluid[ENGY][k][j][i];
+
+                  CPU_Con2Pri(Cons, Prim1, (real)GAMMA);
+//                  CPU_4Velto3Vel(Prim1,Prim2);
+
+                  Array_Ptr[Idx1] = Prim1[1];
+
+                  if ( FluIntTime ) // temporal interpolation
+                  Array_Ptr[Idx1] =   FluWeighting *Array_Ptr[Idx1] + FluWeighting_IntT*Prim1[1];
+                  Idx1 ++;
+               }}}
+
+               Array_Ptr += PGSize3D;
+            }
+
+            if ( PrepVy )
+            {
+               for (int k=0; k<PATCH_SIZE; k++)    {  K    = k + Disp_k;
+               for (int j=0; j<PATCH_SIZE; j++)    {  J    = j + Disp_j;
+                                                      Idx1 = IDX321( Disp_i, J, K, PGSize1D, PGSize1D );
+               for (int i=0; i<PATCH_SIZE; i++)    {
+
+                  real Cons[NCOMP_FLUID];
+                  real Prim1[NCOMP_FLUID];
+//                  real Prim2[NCOMP_FLUID]; // 3-velocity
+
+                  Cons[0]=amr->patch[FluSg][lv][PID]->fluid[DENS][k][j][i];
+                  Cons[1]=amr->patch[FluSg][lv][PID]->fluid[MOMX][k][j][i];
+                  Cons[2]=amr->patch[FluSg][lv][PID]->fluid[MOMY][k][j][i];
+                  Cons[3]=amr->patch[FluSg][lv][PID]->fluid[MOMZ][k][j][i];
+                  Cons[4]=amr->patch[FluSg][lv][PID]->fluid[ENGY][k][j][i];
+
+                  CPU_Con2Pri(Cons, Prim1, (real)GAMMA);
+//                  CPU_4Velto3Vel(Prim1,Prim2);
+
+                  Array_Ptr[Idx1] = Prim1[2];
+
+                  if ( FluIntTime ) // temporal interpolation
+                  Array_Ptr[Idx1] =   FluWeighting *Array_Ptr[Idx1] + FluWeighting_IntT*Prim1[2];
+                  Idx1 ++;
+               }}}
+
+               Array_Ptr += PGSize3D;
+            }
+
+            if ( PrepVz )
+            {
+               for (int k=0; k<PATCH_SIZE; k++)    {  K    = k + Disp_k;
+               for (int j=0; j<PATCH_SIZE; j++)    {  J    = j + Disp_j;
+                                                      Idx1 = IDX321( Disp_i, J, K, PGSize1D, PGSize1D );
+               for (int i=0; i<PATCH_SIZE; i++)    {
+
+                  real Cons[NCOMP_FLUID];
+                  real Prim1[NCOMP_FLUID]; // 4-velocity
+//                  real Prim2[NCOMP_FLUID]; // 3-velocity
+
+                  Cons[0]=amr->patch[FluSg][lv][PID]->fluid[DENS][k][j][i];
+                  Cons[1]=amr->patch[FluSg][lv][PID]->fluid[MOMX][k][j][i];
+                  Cons[2]=amr->patch[FluSg][lv][PID]->fluid[MOMY][k][j][i];
+                  Cons[3]=amr->patch[FluSg][lv][PID]->fluid[MOMZ][k][j][i];
+                  Cons[4]=amr->patch[FluSg][lv][PID]->fluid[ENGY][k][j][i];
+
+                  CPU_Con2Pri(Cons, Prim1, (real)GAMMA);
+//                  CPU_4Velto3Vel(Prim1,Prim2);
+
+
+                  Array_Ptr[Idx1] = Prim1[3];
+
+                  if ( FluIntTime ) // temporal interpolation
+                  Array_Ptr[Idx1] =   FluWeighting*Array_Ptr[Idx1] + FluWeighting_IntT*Prim1[3];
+                  Idx1 ++;
+               }}}
+
+               Array_Ptr += PGSize3D;
+            }
+
+            if ( PrepPres )
+            {
+               for (int k=0; k<PATCH_SIZE; k++)    {  K    = k + Disp_k;
+               for (int j=0; j<PATCH_SIZE; j++)    {  J    = j + Disp_j;
+                                                      Idx1 = IDX321( Disp_i, J, K, PGSize1D, PGSize1D );
+               for (int i=0; i<PATCH_SIZE; i++)    {
+
+                  for (int v=0; v<NCOMP_FLUID; v++)   Fluid[v] = amr->patch[FluSg][lv][PID]->fluid[v][k][j][i];
+
+                  Array_Ptr[Idx1] = CPU_GetPressure( Fluid[DENS], Fluid[MOMX], Fluid[MOMY], Fluid[MOMZ], Fluid[ENGY],
+                                                     Gamma_m1, CheckMinPres_No, NULL_REAL );
+
+                  if ( FluIntTime ) // temporal interpolation
+                  {
+                     for (int v=0; v<NCOMP_FLUID; v++)   Fluid[v] = amr->patch[FluSg_IntT][lv][PID]->fluid[v][k][j][i];
+
+                     Array_Ptr[Idx1] =   FluWeighting     *Array_Ptr[Idx1]
+                                       + FluWeighting_IntT*CPU_GetPressure( Fluid[DENS], Fluid[MOMX], Fluid[MOMY],
+                                                                            Fluid[MOMZ], Fluid[ENGY],
+                                                                            Gamma_m1, CheckMinPres_No, NULL_REAL );
+                  }
+
+                  Idx1 ++;
+               }}}
+
+               Array_Ptr += PGSize3D;
+            }
+
+            if ( PrepTemp )
+            {
+               for (int k=0; k<PATCH_SIZE; k++)    {  K    = k + Disp_k;
+               for (int j=0; j<PATCH_SIZE; j++)    {  J    = j + Disp_j;
+                                                      Idx1 = IDX321( Disp_i, J, K, PGSize1D, PGSize1D );
+               for (int i=0; i<PATCH_SIZE; i++)    {
+
+                  for (int v=0; v<NCOMP_FLUID; v++)   Fluid[v] = amr->patch[FluSg][lv][PID]->fluid[v][k][j][i];
+
+                  Array_Ptr[Idx1] = CPU_GetTemperature( Fluid[DENS], Fluid[MOMX], Fluid[MOMY], Fluid[MOMZ], Fluid[ENGY],
+                                                        Gamma_m1, (MinPres>=0.0), MinPres );
+
+                  if ( FluIntTime ) // temporal interpolation
+                  {
+                     for (int v=0; v<NCOMP_FLUID; v++)   Fluid[v] = amr->patch[FluSg_IntT][lv][PID]->fluid[v][k][j][i];
+
+                     Array_Ptr[Idx1] =   FluWeighting     *Array_Ptr[Idx1]
+                                       + FluWeighting_IntT*CPU_GetTemperature( Fluid[DENS], Fluid[MOMX], Fluid[MOMY],
+                                                                               Fluid[MOMZ], Fluid[ENGY],
+                                                                               Gamma_m1, (MinPres>=0.0), MinPres );
+                  }
+
+                  Idx1 ++;
+               }}}
+
+               Array_Ptr += PGSize3D;
+            }
+
 #           elif ( MODEL == ELBDM )
 //          no derived variables yet
 
@@ -1098,6 +1270,156 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
 #                 elif ( MODEL == MHD   )
 #                 warning : WAIT MHD !!
 
+#                 elif ( MODEL == SR_HYDRO )
+                  if ( PrepVx )
+                  {
+                     for (int k=0; k<Loop_k; k++)  {  K = k + Disp_k;   K2 = k + Disp_k2;
+                     for (int j=0; j<Loop_j; j++)  {  J = j + Disp_j;   J2 = j + Disp_j2;
+                                                      Idx1 = IDX321( Disp_i, J, K, PGSize1D, PGSize1D );
+                     for (I2=Disp_i2; I2<Disp_i2+Loop_i; I2++) {
+
+			real Cons[NCOMP_FLUID];
+			real Prim1[NCOMP_FLUID]; // 4-velocity
+//			real Prim2[NCOMP_FLUID]; // 3-velocity
+
+                        Cons[0]=amr->patch[FluSg][lv][SibPID]->fluid[DENS][K2][J2][I2];
+                        Cons[1]=amr->patch[FluSg][lv][SibPID]->fluid[MOMX][K2][J2][I2];
+                        Cons[2]=amr->patch[FluSg][lv][SibPID]->fluid[MOMY][K2][J2][I2];
+                        Cons[3]=amr->patch[FluSg][lv][SibPID]->fluid[MOMZ][K2][J2][I2];
+                        Cons[4]=amr->patch[FluSg][lv][SibPID]->fluid[ENGY][K2][J2][I2];
+
+			CPU_Con2Pri(Cons, Prim1, (real)GAMMA);
+//			CPU_4Velto3Vel(Prim1,Prim2);
+
+                        Array_Ptr[Idx1] = Prim1[1];
+
+                        if ( FluIntTime ) // temporal interpolation
+                        Array_Ptr[Idx1] =   FluWeighting     *Array_Ptr[Idx1]
+                                          + FluWeighting_IntT*Prim1[1];
+                        Idx1 ++;
+                     }}}
+
+                     Array_Ptr += PGSize3D;
+                  }
+
+                  if ( PrepVy )
+                  {
+                     for (int k=0; k<Loop_k; k++)  {  K = k + Disp_k;   K2 = k + Disp_k2;
+                     for (int j=0; j<Loop_j; j++)  {  J = j + Disp_j;   J2 = j + Disp_j2;
+                                                      Idx1 = IDX321( Disp_i, J, K, PGSize1D, PGSize1D );
+                     for (I2=Disp_i2; I2<Disp_i2+Loop_i; I2++) {
+
+			real Cons[NCOMP_FLUID];
+			real Prim1[NCOMP_FLUID]; // 4-velocity
+//			real Prim2[NCOMP_FLUID]; // 3-velocity
+
+                        Cons[0]=amr->patch[FluSg][lv][SibPID]->fluid[DENS][K2][J2][I2];
+                        Cons[1]=amr->patch[FluSg][lv][SibPID]->fluid[MOMX][K2][J2][I2];
+                        Cons[2]=amr->patch[FluSg][lv][SibPID]->fluid[MOMY][K2][J2][I2];
+                        Cons[3]=amr->patch[FluSg][lv][SibPID]->fluid[MOMZ][K2][J2][I2];
+                        Cons[4]=amr->patch[FluSg][lv][SibPID]->fluid[ENGY][K2][J2][I2];
+
+			CPU_Con2Pri(Cons, Prim1, (real)GAMMA);
+//			CPU_4Velto3Vel(Prim1,Prim2);
+
+                        Array_Ptr[Idx1] = Prim1[2];
+
+                        if ( FluIntTime ) // temporal interpolation
+                        Array_Ptr[Idx1] =   FluWeighting     *Array_Ptr[Idx1]
+                                          + FluWeighting_IntT*Prim1[2];
+                        Idx1 ++;
+                     }}}
+
+                     Array_Ptr += PGSize3D;
+                  }
+
+                  if ( PrepVz )
+                  {
+                     for (int k=0; k<Loop_k; k++)  {  K = k + Disp_k;   K2 = k + Disp_k2;
+                     for (int j=0; j<Loop_j; j++)  {  J = j + Disp_j;   J2 = j + Disp_j2;
+                                                      Idx1 = IDX321( Disp_i, J, K, PGSize1D, PGSize1D );
+                     for (I2=Disp_i2; I2<Disp_i2+Loop_i; I2++) {
+
+			real Cons[NCOMP_FLUID];
+			real Prim1[NCOMP_FLUID]; // 4-velocity
+//			real Prim2[NCOMP_FLUID]; // 3-velocity
+
+                        Cons[0]=amr->patch[FluSg][lv][SibPID]->fluid[DENS][K2][J2][I2];
+                        Cons[1]=amr->patch[FluSg][lv][SibPID]->fluid[MOMX][K2][J2][I2];
+                        Cons[2]=amr->patch[FluSg][lv][SibPID]->fluid[MOMY][K2][J2][I2];
+                        Cons[3]=amr->patch[FluSg][lv][SibPID]->fluid[MOMZ][K2][J2][I2];
+                        Cons[4]=amr->patch[FluSg][lv][SibPID]->fluid[ENGY][K2][J2][I2];
+
+			CPU_Con2Pri(Cons, Prim1, (real)GAMMA);
+//			CPU_4Velto3Vel(Prim1,Prim2);
+
+                        Array_Ptr[Idx1] = Prim1[3];
+
+                        if ( FluIntTime ) // temporal interpolation
+                        Array_Ptr[Idx1] =   FluWeighting     *Array_Ptr[Idx1]
+                                          + FluWeighting_IntT*Prim1[3];
+                        Idx1 ++;
+                     }}}
+
+                     Array_Ptr += PGSize3D;
+                  }
+
+                  if ( PrepPres )
+                  {
+                     for (int k=0; k<Loop_k; k++)  {  K = k + Disp_k;   K2 = k + Disp_k2;
+                     for (int j=0; j<Loop_j; j++)  {  J = j + Disp_j;   J2 = j + Disp_j2;
+                                                      Idx1 = IDX321( Disp_i, J, K, PGSize1D, PGSize1D );
+                     for (I2=Disp_i2; I2<Disp_i2+Loop_i; I2++) {
+
+                        for (int v=0; v<NCOMP_FLUID; v++)   Fluid[v] = amr->patch[FluSg][lv][SibPID]->fluid[v][K2][J2][I2];
+
+                        Array_Ptr[Idx1] = CPU_GetPressure( Fluid[DENS], Fluid[MOMX], Fluid[MOMY], Fluid[MOMZ], Fluid[ENGY],
+                                                           Gamma_m1, CheckMinPres_No, NULL_REAL );
+
+                        if ( FluIntTime ) // temporal interpolation
+                        {
+                           for (int v=0; v<NCOMP_FLUID; v++)   Fluid[v] = amr->patch[FluSg_IntT][lv][SibPID]->fluid[v][K2][J2][I2];
+
+                           Array_Ptr[Idx1] =   FluWeighting     *Array_Ptr[Idx1]
+                                             + FluWeighting_IntT*CPU_GetPressure( Fluid[DENS], Fluid[MOMX], Fluid[MOMY],
+                                                                                  Fluid[MOMZ], Fluid[ENGY],
+                                                                                  Gamma_m1, CheckMinPres_No, NULL_REAL );
+                        }
+
+                        Idx1 ++;
+                     }}}
+
+                     Array_Ptr += PGSize3D;
+                  }
+
+                  if ( PrepTemp )
+                  {
+                     for (int k=0; k<Loop_k; k++)  {  K = k + Disp_k;   K2 = k + Disp_k2;
+                     for (int j=0; j<Loop_j; j++)  {  J = j + Disp_j;   J2 = j + Disp_j2;
+                                                      Idx1 = IDX321( Disp_i, J, K, PGSize1D, PGSize1D );
+                     for (I2=Disp_i2; I2<Disp_i2+Loop_i; I2++) {
+
+                        for (int v=0; v<NCOMP_FLUID; v++)   Fluid[v] = amr->patch[FluSg][lv][SibPID]->fluid[v][K2][J2][I2];
+
+                        Array_Ptr[Idx1] = CPU_GetTemperature( Fluid[DENS], Fluid[MOMX], Fluid[MOMY], Fluid[MOMZ], Fluid[ENGY],
+                                                              Gamma_m1, (MinPres>=0.0), MinPres );
+
+                        if ( FluIntTime ) // temporal interpolation
+                        {
+                           for (int v=0; v<NCOMP_FLUID; v++)   Fluid[v] = amr->patch[FluSg_IntT][lv][SibPID]->fluid[v][K2][J2][I2];
+
+                           Array_Ptr[Idx1] =   FluWeighting     *Array_Ptr[Idx1]
+                                             + FluWeighting_IntT*CPU_GetTemperature( Fluid[DENS], Fluid[MOMX], Fluid[MOMY],
+                                                                                     Fluid[MOMZ], Fluid[ENGY],
+                                                                                     Gamma_m1, (MinPres>=0.0), MinPres );
+                        }
+
+                        Idx1 ++;
+                     }}}
+
+                     Array_Ptr += PGSize3D;
+                  }
+
 #                 elif ( MODEL == ELBDM )
 //                no derived variables yet
 
@@ -1228,7 +1550,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
                                                             PGSize1D, PGSize1D, PGSize1D, BC_Idx_Start, BC_Idx_End );
                      break;
 
-#                    if ( MODEL == HYDRO  ||  MODEL == MHD )
+#                    if ( MODEL == HYDRO || MODEL == SR_HYDRO )
                      case BC_FLU_REFLECTING:
                         Hydro_BoundaryCondition_Reflecting( Array_Ptr, BC_Face[BC_Sibling], NVar_Flu,          GhostSize,
                                                             PGSize1D, PGSize1D, PGSize1D, BC_Idx_Start, BC_Idx_End,
@@ -1480,7 +1802,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
 //       --> note that it's unnecessary to check negative passive scalars thanks to the monotonic interpolation
 // ------------------------------------------------------------------------------------------------------------
 //       (d1) minimum density
-#        if ( MODEL == HYDRO  ||  MODEL == MHD  ||  MODEL == ELBDM )
+#        if ( MODEL == HYDRO  ||  MODEL == MHD  ||  MODEL == ELBDM || MODEL == SR_HYDRO )
          if ( MinDens >= (real)0.0 )
          {
 //          note that _DENS is turned on automatically for _TOTAL_DENS (and total density is stored in DENS)
@@ -1501,7 +1823,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
 //       (d2) minimum pressure
 //            --> note that it should be applied AFTER checking the minimum density since modifying density will also
 //                modify pressure when calculating it from the energy field
-#        if ( MODEL == HYDRO  ||  MODEL == MHD )
+#        if ( MODEL == HYDRO  ||  MODEL == MHD || MODEL == SR_HYDRO )
          if ( MinPres >= (real)0.0 )
          {
 //          (d2-1) pressure as a derived field
@@ -1539,6 +1861,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
                for (int t=0; t<PGSize3D; t++)
                   ArrayEngy[t] = CPU_CheckMinPresInEngy( ArrayDens[t], ArrayMomX[t], ArrayMomY[t], ArrayMomZ[t], ArrayEngy[t],
                                                          Gamma_m1, _Gamma_m1, MinPres );
+
             } // if ( (TVar & _FLUID) == _FLUID )
          } // if ( MinPres >= (real)0.0 )
 #        endif // #if ( MODEL == HYDRO  ||  MODEL == MHD )

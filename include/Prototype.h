@@ -417,6 +417,18 @@ bool   ELBDM_Flag_EngyDensity( const int i, const int j, const int k, const real
 real   ELBDM_UnwrapPhase( const real Phase_Ref, const real Phase_Wrapped );
 real   ELBDM_SetTaylor3Coeff( const real dt, const real dh, const real Eta );
 
+// SR_HYDRO model
+#elif    ( MODEL == SR_HYDRO )
+void Hydro_Aux_Check_Negative( const int lv, const int Mode, const char *comment );
+void Hydro_GetTimeStep_Gravity( double &dt, double &dTime, int &MinDtLv, real &MinDtVar, const double dt_dTime );
+void Hydro_GetMaxAcc( real MaxAcc[] );
+void Hydro_Init_ByFunction_AssignData( const int lv );
+void Hydro_BoundaryCondition_Reflecting( real *Array, const int BC_Face, const int NVar_Flu, const int GhostSize,
+                                         const int ArraySizeX, const int ArraySizeY, const int ArraySizeZ,
+                                         const int Idx_Start[], const int Idx_End[], const int TFluVarIdxList[],
+                                         const int NVar_Der, const int TDerVarList[] );
+bool Hydro_Flag_Vorticity( const int i, const int j, const int k, const int lv, const int PID, const double Threshold );
+
 
 #else
 #error : ERROR : unsupported MODEL !!

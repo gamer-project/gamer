@@ -1,10 +1,27 @@
 #include "GAMER.h"
 #include "CUFLU.h"
+#include <gsl/gsl_math.h>
+#include <gsl/gsl_roots.h>
+#include <gsl/gsl_errno.h>
+
+#if ( MODEL == SR_HYDRO )
+struct FUN_Q_params
+{
+  real d;
+  real M1;
+  real M2;
+  real M3;
+  real E;
+  real Gamma;
+};
 
 // some functions in this file need to be defined even when using GPU
-#if ( MODEL == HYDRO )
 
+static real FUN_Q (real Q, void *ptr);
 
+static real D_FUN_Q (real Q, void *ptr);
+
+static void FDF_FUN_Q (real Q, void *ptr, real * f, real * df);
 
 
 //-------------------------------------------------------------------------------------------------------
@@ -20,36 +37,51 @@
 //                XYZ      : Target spatial direction : (0/1/2) --> (x/y/z)
 //                Forward  : (true/false) <--> (forward/backward)
 //-------------------------------------------------------------------------------------------------------
-void CPU_Rotate3D( real InOut[], const int XYZ, const bool Forward )
+void
+CPU_Rotate3D (real InOut[], const int XYZ, const bool Forward)
 {
+  if (XYZ == 0)
+    return;
 
-   if ( XYZ == 0 )   return;
+  real Temp[3];
+  for (int v = 0; v < 3; v++)
+    Temp[v] = InOut[v + 1];
 
+  if (Forward)
+    {
+      switch (XYZ)
+	{
+	case 1:
+	  InOut[1] = Temp[1];
+	  InOut[2] = Temp[2];
+	  InOut[3] = Temp[0];
+	  break;
+	case 2:
+	  InOut[1] = Temp[2];
+	  InOut[2] = Temp[0];
+	  InOut[3] = Temp[1];
+	  break;
+	}
+    }
 
-   real Temp[3];
-   for (int v=0; v<3; v++)    Temp[v] = InOut[v+1];
+  else				// backward
+    {
+      switch (XYZ)
+	{
+	case 1:
+	  InOut[1] = Temp[2];
+	  InOut[2] = Temp[0];
+	  InOut[3] = Temp[1];
+	  break;
+	case 2:
+	  InOut[1] = Temp[1];
+	  InOut[2] = Temp[2];
+	  InOut[3] = Temp[0];
+	  break;
+	}
+    }
 
-   if ( Forward )
-   {
-      switch ( XYZ )
-      {
-         case 1 : InOut[1] = Temp[1];  InOut[2] = Temp[2];  InOut[3] = Temp[0];     break;
-         case 2 : InOut[1] = Temp[2];  InOut[2] = Temp[0];  InOut[3] = Temp[1];     break;
-      }
-   }
-
-   else // backward
-   {
-      switch ( XYZ )
-      {
-         case 1 : InOut[1] = Temp[2];  InOut[2] = Temp[0];  InOut[3] = Temp[1];     break;
-         case 2 : InOut[1] = Temp[1];  InOut[2] = Temp[2];  InOut[3] = Temp[0];     break;
-      }
-   }
-
-} // FUNCTION : CPU_Rotate3D
-
-
+}				// FUNCTION : CPU_Rotate3D
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  CPU_Con2Pri
@@ -65,46 +97,121 @@ void CPU_Rotate3D( real InOut[], const int XYZ, const bool Forward )
 //
 // Parameter   :  In                 : Array storing the input conserved variables
 //                Out                : Array to store the output primitive variables
-//                Gamma_m1           : Gamma - 1
+//                Gamma              : Gamma
 //                MinPres            : Minimum allowed pressure
-//                NormPassive        : true --> convert passive scalars to mass fraction
-//                NNorm              : Number of passive scalars for the option "NormPassive"
-//                                     --> Should be set to the global variable "PassiveNorm_NVar"
-//                NormIdx            : Target variable indices for the option "NormPassive"
-//                                     --> Should be set to the global variable "PassiveNorm_VarIdx"
-//                JeansMinPres       : Apply minimum pressure estimated from the Jeans length
-//                JeansMinPres_Coeff : Coefficient used by JeansMinPres = G*(Jeans_NCell*Jeans_dh)^2/(Gamma*pi);
 //-------------------------------------------------------------------------------------------------------
-void CPU_Con2Pri( const real In[], real Out[], const real Gamma_m1, const real MinPres,
-                  const bool NormPassive, const int NNorm, const int NormIdx[],
-                  const bool JeansMinPres, const real JeansMinPres_Coeff )
+void
+CPU_Con2Pri (const real In[], real Out[], const real Gamma)
 {
+#ifdef SR_DEBUG
+  real In_temp[5] = { In[0], In[1], In[2], In[3], In[4] };
+  if ((In[0] < 0) || (In[4] < 0))
+    {
+      printf ("\n\nerror: D < 0 or E < 0!\n");
+      printf ("file: %s\nfunction: %s\n", __FILE__, __FUNCTION__);
+      printf ("line:%d\nD=%e, Mx=%e, My=%e, Mz=%e, E=%e\n", __LINE__, In[0], In[1], In[2], In[3], In[4]);
+      abort ();
+    }
+#endif
+  real Gamma_m1 = Gamma - (real) 1.0;
+  real M = SQRT (SQR (In[1]) + SQR (In[2]) + SQR (In[3]));
+#ifdef SR_DEBUG
+  if (M > In[4])
+    {
+      printf ("\n\nerror: |M| > E!\n");
+      printf ("file: %s\nfunction: %s\n", __FILE__, __FUNCTION__);
+      printf ("line:%d\nD=%e, Mx=%e, My=%e, Mz=%e, E=%e\n", __LINE__, In_temp[0], In_temp[1], In_temp[2], In_temp[3], In_temp[4]);
+      printf ("|M|=%e, E=%e, |M|-E=%e\n\n", M, In[4], M - In[4]);
+      abort ();
+    }
+#endif
+  if (fabs (M) > TINY_NUMBER)
+    {
+      int status;
 
-   const bool CheckMinPres_Yes = true;
-   const real _Rho             = (real)1.0 / In[0];
+      int iter = 0;
+      int max_iter = 200;
 
-   Out[0] = In[0];
-   Out[1] = In[1]*_Rho;
-   Out[2] = In[2]*_Rho;
-   Out[3] = In[3]*_Rho;
-   Out[4] = CPU_GetPressure( In[0], In[1], In[2], In[3], In[4], Gamma_m1, CheckMinPres_Yes, MinPres );
+      const gsl_root_fdfsolver_type *T;
 
-// pressure floor required to resolve the Jeans length
-// --> note that currently we do not modify the dual-energy variable (e.g., entropy) accordingly
-   if ( JeansMinPres )
-   Out[4] = CPU_CheckMinPres( Out[4], JeansMinPres_Coeff*SQR(Out[0]) );
+      gsl_root_fdfsolver *s;
 
-// passive scalars
-#  if ( NCOMP_PASSIVE > 0 )
-// copy all passive scalars
-   for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)  Out[v] = In[v];
+      real Q, Q0;
 
-// convert the mass density of target passive scalars to mass fraction
-   if ( NormPassive )
-      for (int v=0; v<NNorm; v++)   Out[ NCOMP_FLUID + NormIdx[v] ] *= _Rho;
-#  endif
+/* initial guess Q  */
+      if (In[0] > M / Gamma_m1)
+	{
+	  Q = M * (In[4] - M) / ((1 - 1 / Gamma) * In[0]);
+	}
+      else
+	{
+	  Q = In[4] * Gamma;
+	}
 
-} // FUNCTION : CPU_Con2Pri
+      gsl_function_fdf F;
+
+      struct FUN_Q_params params = { In[0], In[1], In[2], In[3], In[4], Gamma };
+
+      F.f = &FUN_Q;
+      F.df = &D_FUN_Q;
+      F.fdf = &FDF_FUN_Q;
+      F.params = &params;
+
+      T = gsl_root_fdfsolver_newton;
+      s = gsl_root_fdfsolver_alloc (T);
+      gsl_root_fdfsolver_set (s, &F, Q);
+
+      //printf ("status = %s\n", gsl_strerror (status)); 
+      do
+	{
+	  iter++;
+	  status = gsl_root_fdfsolver_iterate (s);
+	  //printf ("status = %s\n", gsl_strerror (status));
+	  Q0 = Q;
+	  Q = gsl_root_fdfsolver_root (s);
+	  status = gsl_root_test_delta (Q, Q0, 0, 1e-9);
+	  //printf ("status = %s\n", gsl_strerror (status));
+	}
+      while (status == GSL_CONTINUE && iter < max_iter);
+      //printf ("status = %s\n", gsl_strerror (status));
+
+      Out[1] = In[1] / Q;	/*Ux */
+      Out[2] = In[2] / Q;	/*Uy */
+      Out[3] = In[3] / Q;	/*Uz */
+
+      real Factor = SQRT (1 + SQR (Out[1]) + SQR (Out[2]) + SQR (Out[3]));
+
+      Out[0] = In[0] / Factor;	/*primitive density */
+      Out[4] = (Gamma_m1 / Gamma) * FABS (Q / Factor - Out[0]);	/*pressure */
+
+#ifdef SR_DEBUG
+      if (Out[4] < 0)
+	{
+	  printf ("\n\nerror: P < 0!\n");
+	  printf ("file: %s\nfunction: %s\nline:%d \n", __FILE__, __FUNCTION__, __LINE__);
+	  printf ("Q = %e\n", Q);
+	  printf ("D=%e, Mx=%e, My=%e, Mz=%e, E=%e\n",In_temp[0], In_temp[1], In_temp[2], In_temp[3], In_temp[4]);
+	  printf ("|M| > TINY_NUMBER!!\n");
+	  abort ();
+	}
+#endif
+      gsl_root_fdfsolver_free (s);
+    }
+  else if (In[4] >= In[0])
+    {
+      Out[1] = 0.0;
+      Out[2] = 0.0;
+      Out[3] = 0.0;
+      Out[0] = In[0];
+      Out[4] = Gamma_m1 * (In[4] - In[0]);
+    }
+  else
+    {
+      printf ("\n\nToo criticle to solve! Somthing went wrong!\n");
+      printf ("line:%d, D=%e, Mx=%e, My=%e, Mz=%e, E=%e\n", __LINE__, In_temp[0], In_temp[1], In_temp[2], In_temp[3], In_temp[4]);
+      abort ();
+    }
+}				// FUNCTION : CPU_Con2Pri
 
 
 
@@ -127,29 +234,58 @@ void CPU_Con2Pri( const real In[], real Out[], const real Gamma_m1, const real M
 //                NormIdx     : Target variable indices for the option "NormPassive"
 //                              --> Should be set to the global variable "PassiveNorm_VarIdx"
 //-------------------------------------------------------------------------------------------------------
-void CPU_Pri2Con( const real In[], real Out[], const real _Gamma_m1,
-                  const bool NormPassive, const int NNorm, const int NormIdx[] )
+void
+CPU_Pri2Con (const real In[], real Out[], const real Gamma)
 {
+  real Gamma_m1 = (real) Gamma - 1.0;
 
-   Out[0] = In[0];
-   Out[1] = In[0]*In[1];
-   Out[2] = In[0]*In[2];
-   Out[3] = In[0]*In[3];
-   Out[4] = In[4]*_Gamma_m1 + (real)0.5*In[0]*( In[1]*In[1] + In[2]*In[2] + In[3]*In[3] );
+  real Factor0 = 1 + SQR (In[1]) + SQR (In[2]) + SQR (In[3]);
+  real Factor1 = SQRT (Factor0);
+  real Factor2 = Gamma / Gamma_m1;
+  real Factor3 = In[0] + Factor2 * In[4];
+  real Factor4 = Factor3 * Factor1;
 
-// passive scalars
-#  if ( NCOMP_PASSIVE > 0 )
-// copy all passive scalars
-   for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)  Out[v] = In[v];
-
-// convert the mass fraction of target passive scalars back to mass density
-   if ( NormPassive )
-      for (int v=0; v<NNorm; v++)   Out[ NCOMP_FLUID + NormIdx[v] ] *= In[0];
-#  endif
-
-} // FUNCTION : CPU_Pri2Con
+  Out[0] = In[0] * Factor1;
+  Out[1] = Factor4 * In[1];
+  Out[2] = Factor4 * In[2];
+  Out[3] = Factor4 * In[3];
+  Out[4] = Factor3 * Factor0 - In[4];
+}				// FUNCTION : CPU_Pri2Con
 
 
+//-------------------------------------------------------------------------------------------------------
+// Function    :  CPU_4Velto3Vel
+// Description :  Convert 4-velocity to 3-velocity
+//-------------------------------------------------------------------------------------------------------
+
+void
+CPU_4Velto3Vel (const real In[], real Out[])
+{
+  real Factor = 1 / SQRT (1 + SQR (In[1]) + SQR (In[2]) + SQR (In[3]));
+
+  Out[0] = In[0];
+  Out[1] = In[1] * Factor;
+  Out[2] = In[2] * Factor;
+  Out[3] = In[3] * Factor;
+  Out[4] = In[4];
+}				// FUNCTION : CPU_4Velto3Vel
+
+//-------------------------------------------------------------------------------------------------------
+// Function    :  CPU_3Velto4Vel
+// Description :  Convert 3-velocity to 4-velocity
+//-------------------------------------------------------------------------------------------------------
+
+void
+CPU_3Velto4Vel (const real In[], real Out[])
+{
+  real Factor = 1 / SQRT (1 - SQR (In[1]) - SQR (In[2]) - SQR (In[3]));
+
+  Out[0] = In[0];
+  Out[1] = In[1] * Factor;
+  Out[2] = In[2] * Factor;
+  Out[3] = In[3] * Factor;
+  Out[4] = In[4];
+}				// FUNCTION : CPU_4Velto3Vel
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  CPU_Con2Flux
@@ -161,34 +297,38 @@ void CPU_Pri2Con( const real In[], real Out[], const real _Gamma_m1,
 //                Gamma_m1 : Gamma - 1
 //                MinPres  : Minimum allowed pressure
 //-------------------------------------------------------------------------------------------------------
-void CPU_Con2Flux( const int XYZ, real Flux[], const real Input[], const real Gamma_m1, const real MinPres )
+void
+CPU_Con2Flux (const int XYZ, real Flux[], const real Input[], const real Gamma_m1, const real MinPres)
 {
+  const bool CheckMinPres_Yes = true;
+  real ConVar[NCOMP_FLUID];	// don't need to include passive scalars since they don't have to be rotated1
+  real PriVar4[NCOMP_FLUID];	// d, Ux, Uy, Uz, P
+  real PriVar3[NCOMP_FLUID];	// d, Vx, Vy, Vz, P
+  real Gamma = Gamma_m1 + (real) 1.0;
+  real Pres, Vx;
+  real lFactor;
 
-   const bool CheckMinPres_Yes = true;
-   real Var[NCOMP_FLUID];  // don't need to include passive scalars since they don't have to be rotated
-   real Pres, Vx;
+  for (int v = 0; v < NCOMP_FLUID; v++)
+    ConVar[v] = Input[v];
 
-   for (int v=0; v<NCOMP_FLUID; v++)   Var[v] = Input[v];
+  CPU_Rotate3D (ConVar, XYZ, true);
 
-   CPU_Rotate3D( Var, XYZ, true );
+  CPU_Con2Pri (ConVar, PriVar4, Gamma);
 
-   Pres = CPU_GetPressure( Var[0], Var[1], Var[2], Var[3], Var[4], Gamma_m1, CheckMinPres_Yes, MinPres );
-   Vx   = Var[1] / Var[0];
+  CPU_4Velto3Vel (PriVar4, PriVar3);
 
-   Flux[0] = Var[1];
-   Flux[1] = Vx*Var[1] + Pres;
-   Flux[2] = Vx*Var[2];
-   Flux[3] = Vx*Var[3];
-   Flux[4] = Vx*( Var[4] + Pres );
+  Vx = PriVar3[1];
+  Pres = PriVar3[4];
 
-// passive scalars
-#  if ( NCOMP_PASSIVE > 0 )
-   for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)  Flux[v] = Input[v]*Vx;
-#  endif
+  Flux[0] = Input[0] * Vx;
+  Flux[1] = Input[1] * Vx + Pres;
+  Flux[2] = Input[2] * Vx;
+  Flux[3] = Input[3] * Vx;
+  Flux[4] = Input[1];
 
-   CPU_Rotate3D( Flux, XYZ, false );
+  CPU_Rotate3D (Flux, XYZ, false);
 
-} // FUNCTION : CPU_Con2Flux
+}				// FUNCTION : CPU_Con2Flux
 
 
 
@@ -209,12 +349,11 @@ void CPU_Con2Flux( const int XYZ, real Flux[], const real Input[], const real Ga
 //
 // Return      :  max( InPres, MinPres )
 //-------------------------------------------------------------------------------------------------------
-real CPU_CheckMinPres( const real InPres, const real MinPres )
+real
+CPU_CheckMinPres (const real InPres, const real MinPres)
 {
-
-   return FMAX( InPres, MinPres );
-
-} // FUNCTION : CPU_CheckMinPres
+  return FMAX (InPres, MinPres);
+}				// FUNCTION : CPU_CheckMinPres
 
 
 
@@ -238,22 +377,33 @@ real CPU_CheckMinPres( const real InPres, const real MinPres )
 //
 // Return      :  Total energy with pressure greater than the given threshold
 //-------------------------------------------------------------------------------------------------------
-real CPU_CheckMinPresInEngy( const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy,
-                             const real Gamma_m1, const real _Gamma_m1, const real MinPres )
+
+real
+CPU_CheckMinPresInEngy (const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy,
+			const real Gamma_m1, const real _Gamma_m1, const real MinPres)
 {
-   real InPres, OutPres, Ek, _Dens;
 
-// we didn't use CPU_GetPressure() here to void calculating kinematic energy (Ek) twice
-   _Dens   = (real)1.0 / Dens;
-   Ek      = (real)0.5*( SQR(MomX) + SQR(MomY) + SQR(MomZ) ) * _Dens;
-   InPres  = Gamma_m1*( Engy - Ek );
-   OutPres = CPU_CheckMinPres( InPres, MinPres );
+  real Con[5] = { Dens, MomX, MomY, MomZ, Engy };
+  real Pri[5] = { 0 };
+  real Gamma = Gamma_m1 + (real)1.0;
+  real OutPres;
 
-// do not modify energy (even the round-off errors) if the input pressure passes the check of CPU_CheckMinPres()
-   if ( InPres == OutPres )   return Engy;
-   else                       return Ek + _Gamma_m1*OutPres;
+  CPU_Con2Pri (Con, Pri, Gamma);
 
-} // FUNCTION : CPU_CheckMinPresInEngy
+  OutPres = CPU_CheckMinPres (Pri[4], MinPres);
+
+  if (Pri[4] == OutPres)
+    return Engy;
+  else
+    {
+      Pri[4] = OutPres;
+      CPU_Pri2Con (Pri, Con, Gamma);
+      return Con[4];
+    }
+
+    return Engy;
+
+}				// FUNCTION : CPU_CheckMinPresInEngy
 
 
 
@@ -269,13 +419,15 @@ real CPU_CheckMinPresInEngy( const real Dens, const real MomX, const real MomY, 
 // Return      :  true  --> Input <= 0.0  ||  >= __FLT_MAX__  ||  != itself (Nan)
 //                false --> otherwise
 //-------------------------------------------------------------------------------------------------------
-bool CPU_CheckNegative( const real Input )
+bool
+CPU_CheckNegative (const real Input)
 {
+  if (Input <= (real) 0.0 || Input >= __FLT_MAX__ || Input != Input)
+    return true;
+  else
+    return false;
 
-   if ( Input <= (real)0.0  ||  Input >= __FLT_MAX__  ||  Input != Input )    return true;
-   else                                                                       return false;
-
-} // FUNCTION : CPU_CheckNegative
+}				// FUNCTION : CPU_CheckNegative
 #endif // #ifdef CHECK_NEGATIVE_IN_FLUID
 
 
@@ -301,20 +453,31 @@ bool CPU_CheckNegative( const real Input )
 //
 // Return      :  Pressure
 //-------------------------------------------------------------------------------------------------------
-real CPU_GetPressure( const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy,
-                      const real Gamma_m1, const bool CheckMinPres, const real MinPres )
+real
+CPU_GetPressure (const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy,
+		 const real Gamma_m1, const bool CheckMinPres, const real MinPres)
 {
+  real In[NCOMP_FLUID];
+  real Out[NCOMP_FLUID];
+  real Gamma = Gamma_m1 + (real) 1.0;
+  real Pres;
 
-   real _Dens, Pres;
+  In[0] = Dens;
+  In[1] = MomX;
+  In[2] = MomY;
+  In[3] = MomZ;
+  In[4] = Engy;
 
-  _Dens = (real)1.0 / Dens;
-   Pres = Gamma_m1*(  Engy - (real)0.5*_Dens*( SQR(MomX) + SQR(MomY) + SQR(MomZ) )  );
+  CPU_Con2Pri (In, Out, Gamma);
 
-   if ( CheckMinPres )   Pres = CPU_CheckMinPres( Pres, MinPres );
+  Pres = Out[4];
 
-   return Pres;
+  if (CheckMinPres)
+    Pres = CPU_CheckMinPres (Pres, MinPres);
 
-} // FUNCTION : CPU_GetPressure
+  return Pres;
+
+}				// FUNCTION : CPU_GetPressure
 
 
 
@@ -339,13 +502,17 @@ real CPU_GetPressure( const real Dens, const real MomX, const real MomY, const r
 //
 // Return      :  Temperature
 //-------------------------------------------------------------------------------------------------------
-real CPU_GetTemperature( const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy,
-                         const real Gamma_m1, const bool CheckMinPres, const real MinPres )
+real
+CPU_GetTemperature (const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy,
+		    const real Gamma_m1, const bool CheckMinPres, const real MinPres)
 {
+  printf ("\n\nPlease modify %s properly.\n", __FUNCTION__);
+  printf ("file: %s\n", __FILE__);
+  printf ("line: %d\n", __LINE__);
+  abort ();
+  return CPU_GetPressure (Dens, MomX, MomY, MomZ, Engy, Gamma_m1, CheckMinPres, MinPres) / Dens;
 
-   return CPU_GetPressure( Dens, MomX, MomY, MomZ, Engy, Gamma_m1, CheckMinPres, MinPres ) / Dens;
-
-} // FUNCTION : CPU_GetTemperature
+}				// FUNCTION : CPU_GetTemperature
 
 
 
@@ -359,7 +526,7 @@ real CPU_GetTemperature( const real Dens, const real MomX, const real MomY, cons
 //                   --> Temperature should be converted to UNIT_E in advance
 //                       --> Example: T_code_unit = T_kelvin * Const_kB / UNIT_E
 //                3. Pressure floor (MinPres) is applied when CheckMinPres == true
-//                4. Currently this function always adopts double precision since
+//                4. Currently this function always adopts real precision since
 //                   (1) both Temp and m_H may exhibit extreme values depending on the code units, and
 //                   (2) we don't really care about the performance here since this function is usually
 //                       only used for constructing the initial condition
@@ -378,19 +545,24 @@ real CPU_GetTemperature( const real Dens, const real MomX, const real MomY, cons
 //
 // Return      :  Gas pressure
 //-------------------------------------------------------------------------------------------------------
-double CPU_Temperature2Pressure( const double Dens, const double Temp, const double mu, const double m_H,
-                                 const bool CheckMinPres, const double MinPres )
+real
+CPU_Temperature2Pressure (const real Dens, const real Temp, const real mu, const real m_H, const bool CheckMinPres, const real MinPres)
 {
+  printf ("\n\nPlease modify %s properly.\n", __FUNCTION__);
+  printf ("file: %s\n", __FILE__);
+  printf ("line: %d\n", __LINE__);
+  abort ();
 
-   double Pres;
+  real Pres;
 
-   Pres = Dens*Temp/(mu*m_H);
+  Pres = Dens * Temp / (mu * m_H);
 
-   if ( CheckMinPres )  Pres = CPU_CheckMinPres( (real)Pres, (real)MinPres );
+  if (CheckMinPres)
+    Pres = CPU_CheckMinPres ((real) Pres, (real) MinPres);
 
-   return Pres;
+  return Pres;
 
-} // FUNCTION : CPU_GetTemperature
+}				// FUNCTION : CPU_GetTemperature
 
 
 
@@ -412,33 +584,129 @@ double CPU_Temperature2Pressure( const double Dens, const double Temp, const dou
 //
 // Return      :  Passive
 //-------------------------------------------------------------------------------------------------------
-void CPU_NormalizePassive( const real GasDens, real Passive[], const int NNorm, const int NormIdx[] )
+void
+CPU_NormalizePassive (const real GasDens, real Passive[], const int NNorm, const int NormIdx[])
 {
+  printf ("\n\nPlease modify %s properly.\n", __FUNCTION__);
+  printf ("file: %s\n", __FILE__);
+  printf ("line: %d\n", __LINE__);
 
 // validate the target variable indices
-#  ifdef GAMER_DEBUG
-   const int MinIdx = 0;
-   const int MaxIdx = NCOMP_PASSIVE - 1;
+#ifdef GAMER_DEBUG
+  const int MinIdx = 0;
+#ifdef DUAL_ENERGY
+  const int MaxIdx = NCOMP_PASSIVE - 2;
+#else
+  const int MaxIdx = NCOMP_PASSIVE - 1;
+#endif
 
-   for (int v=0; v<NNorm; v++)
-   {
-      if ( NormIdx[v] < MinIdx  ||  NormIdx[v] > MaxIdx )
-         Aux_Error( ERROR_INFO, "NormIdx[%d] = %d is not within the correct range ([%d <= idx <= %d]) !!\n",
-                    v, NormIdx[v], MinIdx, MaxIdx );
-   }
-#  endif // #ifdef GAMER_DEBUG
-
-
-   real Norm, PassiveDens_Sum=(real)0.0;
-
-   for (int v=0; v<NNorm; v++)   PassiveDens_Sum += Passive[ NormIdx[v] ];
-
-   Norm = GasDens / PassiveDens_Sum;
-
-   for (int v=0; v<NNorm; v++)   Passive[ NormIdx[v] ] *= Norm;
-
-} // FUNCTION : CPU_NormalizePassive
+  for (int v = 0; v < NNorm; v++)
+    {
+      if (NormIdx[v] < MinIdx || NormIdx[v] > MaxIdx)
+	Aux_Error (ERROR_INFO, "NormIdx[%d] = %d is not within the correct range ([%d <= idx <= %d]) !!\n", v, NormIdx[v], MinIdx, MaxIdx);
+    }
+#endif // #ifdef GAMER_DEBUG
 
 
+  real Norm, PassiveDens_Sum = (real) 0.0;
 
-#endif // #if ( MODEL == HYDRO )
+  for (int v = 0; v < NNorm; v++)
+    PassiveDens_Sum += Passive[NormIdx[v]];
+
+  Norm = GasDens / PassiveDens_Sum;
+
+  for (int v = 0; v < NNorm; v++)
+    Passive[NormIdx[v]] *= Norm;
+
+}				// FUNCTION : CPU_NormalizePassive
+
+static real
+FUN_Q (real Q, void *ptr)
+{
+  struct FUN_Q_params *params = (struct FUN_Q_params *) ptr;
+
+  real d = (params->d);
+  real M1 = (params->M1);
+  real M2 = (params->M2);
+  real M3 = (params->M3);
+  real E = (params->E);
+  real Gamma = (params->Gamma);
+  real Gamma_m1 = (real) Gamma - 1.0;
+/*4-Velocity*/
+  real U1 = M1 / Q;
+  real U2 = M2 / Q;
+  real U3 = M3 / Q;
+
+  real rho = d / SQRT (1 + SQR (U1) + SQR (U2) + SQR (U3));
+
+  real pres = (Gamma_m1 / Gamma) * (Q / SQRT (1 + SQR (U1) + SQR (U2) + SQR (U3)) - rho);
+
+  real f = Q * SQRT (1 + SQR (U1) + SQR (U2) + SQR (U3)) - pres - E;
+
+  return f;
+}
+
+static real
+D_FUN_Q (real Q, void *ptr)
+{
+  struct FUN_Q_params *params = (struct FUN_Q_params *) ptr;
+
+  real d = (params->d);
+  real M1 = (params->M1);
+  real M2 = (params->M2);
+  real M3 = (params->M3);
+  real Gamma = (params->Gamma);
+  real Gamma_m1 = (real) Gamma - 1.0;
+
+  real U1 = M1 / Q;
+  real U2 = M2 / Q;
+  real U3 = M3 / Q;
+
+  real dU1 = -M1 / (Q * Q);
+  real dU2 = -M2 / (Q * Q);
+  real dU3 = -M3 / (Q * Q);
+
+  real dd = -d * POW (1 + SQR (U1) + SQR (U2) + SQR (U3), -1.5) * (U1 * dU1 + U2 * dU2 + U3 * dU3);
+
+  real dp = (Gamma_m1 / Gamma) * (1 / SQRT (1 + SQR (U1) + SQR (U2) + SQR (U3))
+				  - Q * POW (1 + SQR (U1) + SQR (U2) + SQR (U3), -1.5) * (U1 * dU1 + U2 * dU2 + U3 * dU3) - dd);
+
+  real df = SQRT (1 + SQR (U1) + SQR (U2) + SQR (U3)) + Q * (U1 * dU1 + U2 * dU2 + U3 * dU3) / SQRT (1 + SQR (U1) + SQR (U2) + SQR (U3)) - dp;
+
+  return df;
+}
+
+static void
+FDF_FUN_Q (real Q, void *ptr, real * f, real * df)
+{
+  struct FUN_Q_params *params = (struct FUN_Q_params *) ptr;
+
+  real d = (params->d);
+  real M1 = (params->M1);
+  real M2 = (params->M2);
+  real M3 = (params->M3);
+  real E = (params->E);
+  real Gamma = (params->Gamma);
+  real Gamma_m1 = (real) Gamma - 1.0;
+
+  real U1 = M1 / Q;
+  real U2 = M2 / Q;
+  real U3 = M3 / Q;
+
+  real rho = d / SQRT (1 + SQR (U1) + SQR (U2) + SQR (U3));
+  real pres = (Gamma_m1 / Gamma) * (Q / SQRT (1 + SQR (U1) + SQR (U2) + SQR (U3)) - rho);
+
+  real dU1 = -M1 / (Q * Q);
+  real dU2 = -M2 / (Q * Q);
+  real dU3 = -M3 / (Q * Q);
+
+  real drho = -d * POW (1 + SQR (U1) + SQR (U2) + SQR (U3), -1.5) * (U1 * dU1 + U2 * dU2 + U3 * dU3);
+
+  real dp = (Gamma_m1 / Gamma) * (1 / SQRT (1 + SQR (U1) + SQR (U2) + SQR (U3))
+				  - Q * POW (1 + SQR (U1) + SQR (U2) + SQR (U3), -1.5) * (U1 * dU1 + U2 * dU2 + U3 * dU3) - drho);
+
+  *f = Q * SQRT (1 + SQR (U1) + SQR (U2) + SQR (U3)) - pres - E;
+  *df = SQRT (1 + SQR (U1) + SQR (U2) + SQR (U3)) + Q * (U1 * dU1 + U2 * dU2 + U3 * dU3) / SQRT (1 + SQR (U1) + SQR (U2) + SQR (U3)) - dp;
+}
+
+#endif // #if ( MODEL == SR_HYDRO )

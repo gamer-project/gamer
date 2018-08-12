@@ -121,6 +121,12 @@ void Output_Patch( const int lv, const int PID, const int FluSg, const int PotSg
 #  elif ( MODEL == MHD )
 #  warning : WAIT MHD !!!
 
+#  elif   ( MODEL == SR_HYDRO )
+   fprintf( File, "%14s", "Pressure" );
+#  ifdef DUAL_ENERGY
+   fprintf( File, "%14s", "DE-status" );
+#  endif
+
 #  elif ( MODEL == ELBDM )
 
 #  else
@@ -164,6 +170,13 @@ void Output_Patch( const int lv, const int PID, const int FluSg, const int PotSg
 #        elif ( MODEL == MHD )
 #        warning : WAIT MHD !!!
 
+#        elif   ( MODEL == SR_HYDRO )
+         const bool CheckMinPres_No = false;
+         fprintf( File, " %13.6e", CPU_GetPressure(u[DENS],u[MOMX],u[MOMY],u[MOMZ],u[ENGY],GAMMA-1.0,CheckMinPres_No,NULL_REAL) );
+#        ifdef DUAL_ENERGY
+         fprintf( File, " %13c", Relation->de_status[k][j][i] );
+#        endif
+
 #        elif ( MODEL == ELBDM )
 
 #        else
@@ -184,6 +197,12 @@ void Output_Patch( const int lv, const int PID, const int FluSg, const int PotSg
 
 #        elif ( MODEL == MHD )
 #        warning : WAIT MHD !!!
+
+#        elif   ( MODEL == SR_HYDRO )
+         fprintf( File, " %13s", "" );
+#        ifdef DUAL_ENERGY
+         fprintf( File, " %13s", "" );
+#        endif
 
 #        elif ( MODEL == ELBDM )
 

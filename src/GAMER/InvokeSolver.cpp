@@ -412,7 +412,7 @@ void Solver( const Solver_t TSolver, const int lv, const double TimeNew, const d
    const bool   ELBDM_TAYLOR3_AUTO      = NULL_BOOL;
 #  endif
 
-#  if ( MODEL != HYDRO )
+#  if ( MODEL != HYDRO && MODEL != SR_HYDRO )
    const LR_Limiter_t  OPT__LR_LIMITER  = LR_LIMITER_NONE;
    const WAF_Limiter_t OPT__WAF_LIMITER = WAF_LIMITER_NONE;
    const bool   Flu_XYZ                 = true;
@@ -423,10 +423,10 @@ void Solver( const Solver_t TSolver, const int lv, const double TimeNew, const d
    const bool   Flu_XYZ                 = 1 - ( AdvanceCounter[lv]%2 );    // forward/backward sweep
 #  endif
 
-#  if ( MODEL != HYDRO  &&  MODEL != MHD  &&  MODEL != ELBDM )
+#  if ( MODEL != HYDRO  &&  MODEL != MHD  &&  MODEL != ELBDM && MODEL != SR_HYDRO )
    const double MIN_DENS                = NULL_REAL;
 #  endif
-#  if ( MODEL != HYDRO  &&  MODEL != MHD )
+#  if ( MODEL != HYDRO  &&  MODEL != MHD && MODEL != SR_HYDRO )
    const double MIN_PRES                = NULL_REAL;
 #  endif
 
@@ -453,7 +453,7 @@ void Solver( const Solver_t TSolver, const int lv, const double TimeNew, const d
 #  endif
 #  endif
 
-#  if ( MODEL != HYDRO  &&  MODEL != ELBDM )
+#  if ( MODEL != HYDRO  &&  MODEL != ELBDM && MODEL != SR_HYDRO)
 #  error : ERROR : ADD THE MODEL-DEPENDENT USELESS VARIABLES FOR THE NEW MODELS HERE
 #  endif
 
@@ -601,6 +601,33 @@ void Solver( const Solver_t TSolver, const int lv, const double TimeNew, const d
 
 #     elif ( MODEL == MHD )
 #        warning : WAIT MHD !!!
+
+#     elif ( MODEL == SR_HYDRO )
+      case DT_FLU_SOLVER:
+#        ifdef GPU
+         CUAPI_Asyn_dtSolver( TSolver, h_dt_Array_T[ArrayID], h_Flu_Array_T[ArrayID], NULL, NULL,
+                              NPG, dh, (Step==0)?DT__FLUID_INIT:DT__FLUID, GAMMA, MIN_PRES,
+                              NULL_BOOL, GRAVITY_NONE, NULL_BOOL, NULL_REAL, GPU_NSTREAM );
+#        else
+         CPU_dtSolver       ( TSolver, h_dt_Array_T[ArrayID], h_Flu_Array_T[ArrayID], NULL, NULL,
+                              NPG, dh, (Step==0)?DT__FLUID_INIT:DT__FLUID, GAMMA, MIN_PRES,
+                              NULL_BOOL, GRAVITY_NONE, NULL_BOOL, NULL_REAL );
+#        endif
+      break;
+
+#     ifdef GRAVITY
+      case DT_GRA_SOLVER:
+#        ifdef GPU
+         CUAPI_Asyn_dtSolver( TSolver, h_dt_Array_T[ArrayID], NULL, h_Pot_Array_T[ArrayID], h_Corner_Array_G[ArrayID],
+                              NPG, dh, DT__GRAVITY, NULL_REAL, NULL_REAL, OPT__GRA_P5_GRADIENT, OPT__GRAVITY_TYPE, NULL_BOOL,
+                              TimeNew, GPU_NSTREAM );
+#        else
+         CPU_dtSolver       ( TSolver, h_dt_Array_T[ArrayID], NULL, h_Pot_Array_T[ArrayID], h_Corner_Array_G[ArrayID],
+                              NPG, dh, DT__GRAVITY, NULL_REAL, NULL_REAL, OPT__GRA_P5_GRADIENT, OPT__GRAVITY_TYPE, NULL_BOOL,
+                              TimeNew );
+#        endif
+      break;
+#     endif
 
 #     elif ( MODEL == ELBDM )
 #     ifdef GRAVITY

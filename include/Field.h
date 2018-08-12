@@ -16,7 +16,7 @@ const FieldIdx_t Idx_Undefined = -1;   // must be outside the range [0, NCOMP_TO
 // **                                                       **
 // ***********************************************************
 
-#if   ( MODEL == HYDRO  ||  MODEL == MHD )
+#if   ( MODEL == HYDRO  ||  MODEL == MHD || MODEL == SR_HYDRO )
 // main fields
 SET_GLOBAL( FieldIdx_t Idx_Dens,          Idx_Undefined );
 SET_GLOBAL( FieldIdx_t Idx_MomX,          Idx_Undefined );

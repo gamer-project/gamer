@@ -49,6 +49,8 @@ void Aux_TakeNote()
       fprintf( Note, "MODEL                           HYDRO\n" );
 #     elif ( MODEL == MHD )
       fprintf( Note, "MODEL                           MHD\n" );
+#     elif ( MODEL == SR_HYDRO )
+      fprintf( Note, "MODEL                           SR-HYDRO\n" );
 #     elif ( MODEL == ELBDM )
       fprintf( Note, "MODEL                           ELBDM\n" );
 #     elif ( MODEL == PAR_ONLY )
@@ -162,7 +164,60 @@ void Aux_TakeNote()
 #     elif ( MODEL == MHD )
 #     warning : WAIT MHD !!!
 
-//    d. options in ELBDM
+//    d. options in SR-HYDRO
+#     elif   ( MODEL == SR_HYDRO )
+
+#     if   ( FLU_SCHEME == RTVD )
+      fprintf( Note, "FLU_SCHEME                      RTVD\n" );
+#     elif ( FLU_SCHEME == MHM )
+      fprintf( Note, "FLU_SCHEME                      MHM\n" );
+#     elif ( FLU_SCHEME == MHM_RP )
+      fprintf( Note, "FLU_SCHEME                      MHM with Riemann prediction\n" );
+#     elif ( FLU_SCHEME == CTU )
+      fprintf( Note, "FLU_SCHEME                      CTU\n" );
+#     elif ( FLU_SCHEME == WAF )
+      fprintf( Note, "FLU_SCHEME                      WAF\n" );
+#     elif ( FLU_SCHEME == NONE )
+      fprintf( Note, "FLU_SCHEME                      NONE\n" );
+#     else
+      fprintf( Note, "FLU_SCHEME                      UNKNOWN\n" );
+#     endif
+
+#     if   ( LR_SCHEME == PLM )
+      fprintf( Note, "LR_SCHEME                       PLM\n" );
+#     elif ( LR_SCHEME == PPM )
+      fprintf( Note, "LR_SCHEME                       PPM\n" );
+#     elif ( LR_SCHEME == NONE )
+      fprintf( Note, "LR_SCHEME                       NONE\n" );
+#     else
+      fprintf( Note, "LR_SCHEME                       UNKNOWN\n" );
+#     endif
+
+#     if   ( RSOLVER == EXACT )
+      fprintf( Note, "RSOLVER                         EXACT\n" );
+#     elif ( RSOLVER == ROE )
+      fprintf( Note, "RSOLVER                         ROE\n" );
+#     elif ( RSOLVER == HLLE )
+      fprintf( Note, "RSOLVER                         HLLE\n" );
+#     elif ( RSOLVER == HLLC )
+      fprintf( Note, "RSOLVER                         HLLC\n" );
+#     elif ( RSOLVER == NONE )
+      fprintf( Note, "RSOLVER                         NONE\n" );
+#     else
+      fprintf( Note, "RSOLVER                         UNKNOWN\n" );
+#     endif
+
+#     if   ( DUAL_ENERGY == DE_ENPY )
+      fprintf( Note, "DUAL_ENERGY                     DE_ENPY\n" );
+#     elif ( DUAL_ENERGY == DE_EINT )
+      fprintf( Note, "DUAL_ENERGY                     DE_EINT\n" );
+#     elif ( DUAL_ENERGY == NONE )
+      fprintf( Note, "DUAL_ENERGY                     NONE\n" );
+#     else
+      fprintf( Note, "DUAL_ENERGY                     UNKNOWN\n" );
+#     endif
+
+//    e. options in ELBDM
 #     elif ( MODEL == ELBDM )
 
 #     ifdef CONSERVE_MASS
@@ -369,6 +424,49 @@ void Aux_TakeNote()
 
 #     elif ( MODEL == MHD )
 #     warning : WAIT MHD !!!
+
+#     elif   ( MODEL == SR_HYDRO )
+#     ifdef CHECK_NEGATIVE_IN_FLUID
+      fprintf( Note, "CHECK_NEGATIVE_IN_FLUID         ON\n" );
+#     else
+      fprintf( Note, "CHECK_NEGATIVE_IN_FLUID         OFF\n" );
+#     endif
+
+#     ifdef CHAR_RECONSTRUCTION
+      fprintf( Note, "CHAR_RECONSTRUCTION             ON\n" );
+#     else
+      fprintf( Note, "CHAR_RECONSTRUCTION             OFF\n" );
+#     endif
+
+#     if   ( CHECK_INTERMEDIATE == EXACT )
+      fprintf( Note, "CHECK_INTERMEDIATE              EXACT\n" );
+#     elif ( CHECK_INTERMEDIATE == HLLE )
+      fprintf( Note, "CHECK_INTERMEDIATE              HLLE\n" );
+#     elif ( CHECK_INTERMEDIATE == HLLC )
+      fprintf( Note, "CHECK_INTERMEDIATE              HLLC\n" );
+#     elif ( CHECK_INTERMEDIATE == NONE )
+      fprintf( Note, "CHECK_INTERMEDIATE              OFF\n" );
+#     else
+      fprintf( Note, "CHECK_INTERMEDIATE              UNKNOWN\n" );
+#     endif
+
+#     ifdef HLL_NO_REF_STATE
+      fprintf( Note, "HLL_NO_REF_STATE                ON\n" );
+#     else
+      fprintf( Note, "HLL_NO_REF_STATE                OFF\n" );
+#     endif
+
+#     ifdef HLL_INCLUDE_ALL_WAVES
+      fprintf( Note, "HLL_INCLUDE_ALL_WAVES           ON\n" );
+#     else
+      fprintf( Note, "HLL_INCLUDE_ALL_WAVES           OFF\n" );
+#     endif
+
+#     ifdef WAF_DISSIPATE
+      fprintf( Note, "WAF_DISSIPATE                   ON\n" );
+#     else
+      fprintf( Note, "WAF_DISSIPATE                   OFF\n" );
+#     endif
 
 #     elif ( MODEL == ELBDM )
 
@@ -677,6 +775,10 @@ void Aux_TakeNote()
       fprintf( Note, "OPT__FLAG_JEANS                 %d\n",      OPT__FLAG_JEANS           );
 #     elif ( MODEL == MHD )
 #     warning : WAIT MHD !!!
+#     elif   ( MODEL == SR_HYDRO )
+      fprintf( Note, "OPT__FLAG_PRES_GRADIENT         %d\n",      OPT__FLAG_PRES_GRADIENT   );
+      fprintf( Note, "OPT__FLAG_VORTICITY             %d\n",      OPT__FLAG_VORTICITY       );
+      fprintf( Note, "OPT__FLAG_JEANS                 %d\n",      OPT__FLAG_JEANS           );
 #     endif
 #     if ( MODEL == ELBDM )
       fprintf( Note, "OPT__FLAG_ENGY_DENSITY          %d\n",      OPT__FLAG_ENGY_DENSITY    );
@@ -688,6 +790,10 @@ void Aux_TakeNote()
       fprintf( Note, "OPT__FLAG_LOHNER_TEMP           %d\n",      OPT__FLAG_LOHNER_TEMP     );
 #     elif ( MODEL == MHD )
 #     warning : WAIT MHD !!!
+#     elif ( MODEL == SR_HYDRO )
+      fprintf( Note, "OPT__FLAG_LOHNER_ENGY           %d\n",      OPT__FLAG_LOHNER_ENGY     );
+      fprintf( Note, "OPT__FLAG_LOHNER_PRES           %d\n",      OPT__FLAG_LOHNER_PRES     );
+      fprintf( Note, "OPT__FLAG_LOHNER_TEMP           %d\n",      OPT__FLAG_LOHNER_TEMP     );
 #     endif
       fprintf( Note, "OPT__FLAG_LOHNER_FORM           %s\n",      (OPT__FLAG_LOHNER_FORM==LOHNER_FLASH1   ) ? "LOHNER_FLASH1"    :
                                                                   (OPT__FLAG_LOHNER_FORM==LOHNER_FLASH2   ) ? "LOHNER_FLASH2"    :
@@ -808,6 +914,33 @@ void Aux_TakeNote()
 #     elif ( MODEL == MHD )
 #     warning : WAIT MHD !!!
 
+#     elif ( MODEL == SR_HYDRO )
+      fprintf( Note, "GAMMA                           %13.7e\n",  GAMMA                   );
+      fprintf( Note, "MOLECULAR_WEIGHT                %13.7e\n",  MOLECULAR_WEIGHT        );
+      fprintf( Note, "MINMOD_COEFF                    %13.7e\n",  MINMOD_COEFF            );
+      fprintf( Note, "EP_COEFF                        %13.7e\n",  EP_COEFF                );
+      fprintf( Note, "OPT__LR_LIMITER                 %s\n",      ( OPT__LR_LIMITER == VANLEER           ) ? "VANLEER"    :
+                                                                  ( OPT__LR_LIMITER == GMINMOD           ) ? "GMINMOD"    :
+                                                                  ( OPT__LR_LIMITER == ALBADA            ) ? "ALBADA"     :
+                                                                  ( OPT__LR_LIMITER == VL_GMINMOD        ) ? "VL_GMINMOD" :
+                                                                  ( OPT__LR_LIMITER == EXTPRE            ) ? "EXTPRE"     :
+                                                                  ( OPT__LR_LIMITER == LR_LIMITER_NONE   ) ? "NONE"       :
+                                                                                                             "UNKNOWN" );
+      fprintf( Note, "OPT__WAF_LIMITER                %s\n",      ( OPT__WAF_LIMITER == WAF_SUPERBEE     ) ? "WAF_SUPERBEE":
+                                                                  ( OPT__WAF_LIMITER == WAF_VANLEER      ) ? "WAF_VANLEER" :
+                                                                  ( OPT__WAF_LIMITER == WAF_ALBADA       ) ? "WAF_ALBADA"  :
+                                                                  ( OPT__WAF_LIMITER == WAF_MINBEE       ) ? "WAF_MINBEE"  :
+                                                                  ( OPT__WAF_LIMITER == WAF_LIMITER_NONE ) ? "NONE"        :
+                                                                                                             "UNKNOWN" );
+      fprintf( Note, "OPT__1ST_FLUX_CORR              %s\n",      ( OPT__1ST_FLUX_CORR == FIRST_FLUX_CORR_3D   ) ? "3D"   :
+                                                                  ( OPT__1ST_FLUX_CORR == FIRST_FLUX_CORR_3D1D ) ? "3D1D" :
+                                                                  ( OPT__1ST_FLUX_CORR == FIRST_FLUX_CORR_NONE ) ? "NONE" :
+                                                                                                                   "UNKNOWN" );
+      fprintf( Note, "OPT__1ST_FLUX_CORR_SCHEME       %s\n",      ( OPT__1ST_FLUX_CORR_SCHEME == RSOLVER_1ST_ROE  ) ? "RSOLVER_1ST_ROE"  :
+                                                                  ( OPT__1ST_FLUX_CORR_SCHEME == RSOLVER_1ST_HLLC ) ? "RSOLVER_1ST_HLLC" :
+                                                                  ( OPT__1ST_FLUX_CORR_SCHEME == RSOLVER_1ST_HLLE ) ? "RSOLVER_1ST_HLLE" :
+                                                                  ( OPT__1ST_FLUX_CORR_SCHEME == RSOLVER_1ST_NONE ) ? "NONE"             :
+                                                                                                                "UNKNOWN" );
 #     elif ( MODEL == ELBDM )
       if ( OPT__UNIT ) {
 //    since the mass unit in cosmological simulation has the 1/h dependence, the actual ELBDM_MASS adopted in the
@@ -864,7 +997,7 @@ void Aux_TakeNote()
 
       fprintf( Note, "OPT__OVERLAP_MPI                %d\n",      OPT__OVERLAP_MPI         );
       fprintf( Note, "OPT__RESET_FLUID                %d\n",      OPT__RESET_FLUID         );
-#     if ( MODEL == HYDRO  ||  MODEL == MHD  ||  MODEL == ELBDM )
+#     if ( MODEL == HYDRO  ||  MODEL == MHD  ||  MODEL == ELBDM || MODEL == SR_HYDRO )
       fprintf( Note, "MIN_DENS                        %13.7e\n",  MIN_DENS                 );
 #     endif
 #     if ( MODEL == HYDRO  ||  MODEL == MHD )
@@ -873,6 +1006,12 @@ void Aux_TakeNote()
       if ( JEANS_MIN_PRES ) {
       fprintf( Note, "JEANS_MIN_PRES_LEVEL            %d\n",      JEANS_MIN_PRES_LEVEL     );
       fprintf( Note, "JEANS_MIN_PRES_NCELL            %d\n",      JEANS_MIN_PRES_NCELL     ); }
+#     elif ( MODEL == SR_HYDRO )
+      fprintf( Note, "MIN_PRES                        %13.7e\n",  MIN_PRES                 );
+//      fprintf( Note, "JEANS_MIN_PRES                  %d\n",      JEANS_MIN_PRES           );
+//    if ( JEANS_MIN_PRES ) {
+//      fprintf( Note, "JEANS_MIN_PRES_LEVEL            %d\n",      JEANS_MIN_PRES_LEVEL     );
+//      fprintf( Note, "JEANS_MIN_PRES_NCELL            %d\n",      JEANS_MIN_PRES_NCELL     ); }
 #     endif
 #     ifdef DUAL_ENERGY
       fprintf( Note, "DUAL_ENERGY_SWITCH              %13.7e\n",  DUAL_ENERGY_SWITCH       );
@@ -1071,7 +1210,7 @@ void Aux_TakeNote()
       fprintf( Note, "OPT__CK_FINITE                  %d\n",      OPT__CK_FINITE            );
       fprintf( Note, "OPT__CK_PATCH_ALLOCATE          %d\n",      OPT__CK_PATCH_ALLOCATE    );
       fprintf( Note, "OPT__CK_FLUX_ALLOCATE           %d\n",      OPT__CK_FLUX_ALLOCATE     );
-#     if   ( MODEL == HYDRO )
+#     if   ( MODEL == HYDRO || MODEL == SR_HYDRO )
       fprintf( Note, "OPT__CK_NEGATIVE                %d\n",      OPT__CK_NEGATIVE          );
 #     elif ( MODEL == MHD )
 #     warning : WAIT MHD !!!
@@ -1137,6 +1276,38 @@ void Aux_TakeNote()
       }
 #     elif ( MODEL == MHD )
 #     warning : WAIT MHD !!!
+
+#     elif ( MODEL == SR_HYDRO )
+      if ( OPT__FLAG_PRES_GRADIENT )
+      {
+         fprintf( Note, "Flag Criterion (Pressure Gradient in HYDRO)\n" );
+         fprintf( Note, "***********************************************************************************\n" );
+         fprintf( Note, "  Level   Pressure Gradient\n" );
+         for (int lv=0; lv<MAX_LEVEL; lv++)  fprintf( Note, "%7d%20.7e\n", lv, FlagTable_PresGradient[lv] );
+         fprintf( Note, "***********************************************************************************\n" );
+         fprintf( Note, "\n\n");
+      }
+
+      if ( OPT__FLAG_VORTICITY )
+      {
+         fprintf( Note, "Flag Criterion (Vorticity in HYDRO)\n" );
+         fprintf( Note, "***********************************************************************************\n" );
+         fprintf( Note, "  Level           Vorticity\n" );
+         for (int lv=0; lv<MAX_LEVEL; lv++)  fprintf( Note, "%7d%20.7e\n", lv, FlagTable_Vorticity[lv] );
+         fprintf( Note, "***********************************************************************************\n" );
+         fprintf( Note, "\n\n");
+      }
+/*
+      if ( OPT__FLAG_JEANS )
+      {
+         fprintf( Note, "Flag Criterion (Jeans Length over Cell Size in HYDRO)\n" );
+         fprintf( Note, "***********************************************************************************\n" );
+         fprintf( Note, "  Level       lambda_J / dh\n" );
+         for (int lv=0; lv<MAX_LEVEL; lv++)  fprintf( Note, "%7d%20.7e\n", lv, FlagTable_Jeans[lv] );
+         fprintf( Note, "***********************************************************************************\n" );
+         fprintf( Note, "\n\n");
+      }
+*/
 #     endif
 
 #     if ( MODEL == ELBDM )
@@ -1152,7 +1323,7 @@ void Aux_TakeNote()
       }
 #     endif
 
-#     if   ( MODEL == HYDRO  ||  MODEL == MHD )
+#     if   ( MODEL == HYDRO  ||  MODEL == MHD || MODEL == SR_HYDRO )
       if ( OPT__FLAG_LOHNER_DENS || OPT__FLAG_LOHNER_ENGY || OPT__FLAG_LOHNER_PRES || OPT__FLAG_LOHNER_TEMP )
 #     elif ( MODEL == ELBDM )
       if ( OPT__FLAG_LOHNER_DENS )

@@ -10,7 +10,7 @@ static void StoreFlux( const int lv, const real Flux_Array[][9][NFLUX_TOTAL][4*P
                        const int NPG, const int *PID0_List, const real dt );
 static void CorrectFlux( const int lv, const real Flux_Array[][9][NFLUX_TOTAL][4*PATCH_SIZE*PATCH_SIZE],
                          const int NPG, const int *PID0_List, const real dt );
-#if ( MODEL == HYDRO  ||  MODEL == MHD )
+#if ( MODEL == HYDRO  ||  MODEL == MHD || MODEL == SR_HYDRO )
 static bool Unphysical( const real Fluid[], const real Gamma_m1, const int CheckMinEngyOrPres );
 static void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
                                const real h_Flu_Array_F_In[][FLU_NIN][FLU_NXT*FLU_NXT*FLU_NXT],
@@ -56,7 +56,7 @@ void Flu_Close( const int lv, const int SaveSg, real h_Flux_Array[][9][NFLUX_TOT
 
 // try to correct the unphysical results in h_Flu_Array_F_Out (e.g., negative density)
 // --> must be done BEFORE invoking both StoreFlux() and CorrectFlux() since CorrectUnphysical() might modify the flux array
-#  if ( MODEL == HYDRO  ||  MODEL == MHD )
+#  if ( MODEL == HYDRO  ||  MODEL == MHD || MODEL == SR_HYDRO )
    CorrectUnphysical( lv, NPG, PID0_List, h_Flu_Array_F_In, h_Flu_Array_F_Out, h_DE_Array_F_Out, h_Flux_Array, dt );
 #  endif
 
@@ -274,7 +274,7 @@ void CorrectFlux( const int lv, const real h_Flux_Array[][9][NFLUX_TOTAL][4*PATC
 
 
 
-#if ( MODEL == HYDRO  ||  MODEL == MHD )
+#if ( MODEL == HYDRO  ||  MODEL == MHD || MODEL == SR_HYDRO )
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Unphysical
 // Description :  Check whether the input variables are unphysical
@@ -469,6 +469,7 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
 //             (note that the recalculated flux does NOT include gravity even for UNSPLIT_GRAVITY --> reduce to 1st-order accuracy)
                switch ( OPT__1ST_FLUX_CORR_SCHEME )
                {
+#                 if ( MODEL == HYDRO )
                   case RSOLVER_1ST_ROE:
                      for (int d=0; d<3; d++)
                      {
@@ -476,7 +477,7 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
                         CPU_RiemannSolver_Roe( d, FluxR[d], VarC,    VarR[d], GAMMA, MIN_PRES );
                      }
                      break;
-
+#                 endif
                   case RSOLVER_1ST_HLLC:
                      for (int d=0; d<3; d++)
                      {
@@ -485,6 +486,7 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
                      }
                      break;
 
+#                 if ( MODEL == HYDRO )
                   case RSOLVER_1ST_HLLE:
                      for (int d=0; d<3; d++)
                      {
@@ -492,6 +494,7 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
                         CPU_RiemannSolver_HLLE( d, FluxR[d], VarC,    VarR[d], GAMMA, MIN_PRES );
                      }
                      break;
+#                 endif
 
                   default:
                      Aux_Error( ERROR_INFO, "unnsupported Riemann solver (%d) !!\n", OPT__1ST_FLUX_CORR_SCHEME );
@@ -553,20 +556,23 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
 //                      (note that the recalculated flux does NOT include gravity even for UNSPLIT_GRAVITY --> reduce to 1st-order accuracy)
                         switch ( OPT__1ST_FLUX_CORR_SCHEME )
                         {
+#                 if ( MODEL == HYDRO )
                            case RSOLVER_1ST_ROE:
                               CPU_RiemannSolver_Roe ( d, FluxL_1D, Corr1D_InOut_PtrL, Corr1D_InOut_PtrC, GAMMA, MIN_PRES );
                               CPU_RiemannSolver_Roe ( d, FluxR_1D, Corr1D_InOut_PtrC, Corr1D_InOut_PtrR, GAMMA, MIN_PRES );
                            break;
-
+#                 endif
                            case RSOLVER_1ST_HLLC:
                               CPU_RiemannSolver_HLLC( d, FluxL_1D, Corr1D_InOut_PtrL, Corr1D_InOut_PtrC, GAMMA, MIN_PRES );
                               CPU_RiemannSolver_HLLC( d, FluxR_1D, Corr1D_InOut_PtrC, Corr1D_InOut_PtrR, GAMMA, MIN_PRES );
                            break;
 
+#                 if ( MODEL == HYDRO )
                            case RSOLVER_1ST_HLLE:
                               CPU_RiemannSolver_HLLE( d, FluxL_1D, Corr1D_InOut_PtrL, Corr1D_InOut_PtrC, GAMMA, MIN_PRES );
                               CPU_RiemannSolver_HLLE( d, FluxR_1D, Corr1D_InOut_PtrC, Corr1D_InOut_PtrR, GAMMA, MIN_PRES );
                            break;
+#                 endif
 
                            default:
                               Aux_Error( ERROR_INFO, "unnsupported Riemann solver (%d) !!\n", OPT__1ST_FLUX_CORR_SCHEME );
@@ -640,9 +646,11 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
 //          --> apply it only when AUTO_REDUCE_DT is disabled
 //              --> otherwise AUTO_REDUCE_DT may not be triggered due to this pressure floor
 #           else
+
             if ( !AUTO_REDUCE_DT )
             Update[ENGY] = CPU_CheckMinPresInEngy( Update[DENS], Update[MOMX], Update[MOMY], Update[MOMZ], Update[ENGY],
                                                    Gamma_m1, _Gamma_m1, MIN_PRES );
+
 #           endif
 
 

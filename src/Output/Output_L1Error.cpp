@@ -57,6 +57,13 @@ void Output_L1Error( void (*AnalFunc)( real fluid[], const double x, const doubl
 #  elif ( MODEL == MHD )
 #  warning : WAIT MHD !!!
 
+#  elif   ( MODEL == SR_HYDRO )
+   sprintf( FileName[0], "%s_Dens_%06d", Prefix, DumpID );
+   sprintf( FileName[1], "%s_MomX_%06d", Prefix, DumpID );
+   sprintf( FileName[2], "%s_MomY_%06d", Prefix, DumpID );
+   sprintf( FileName[3], "%s_MomZ_%06d", Prefix, DumpID );
+   sprintf( FileName[4], "%s_Pres_%06d", Prefix, DumpID );
+
 #  elif ( MODEL == ELBDM )
    sprintf( FileName[0], "%s_Dens_%06d", Prefix, DumpID );
    sprintf( FileName[1], "%s_Real_%06d", Prefix, DumpID );
@@ -217,6 +224,10 @@ void Output_L1Error( void (*AnalFunc)( real fluid[], const double x, const doubl
 #        elif ( MODEL == MHD )
 #        warning : WAIT MHD !!!
 
+#        elif   ( MODEL == SR_HYDRO )
+         fprintf( File_L1, "#%5s %13s %19s %19s %19s %19s %19s\n",
+                  "NGrid", "Time", "Error(Dens)", "Error(MomX)", "Error(MomY)", "Error(MomZ)", "Error(Pres)" );
+
 #        elif ( MODEL == ELBDM )
          fprintf( File_L1, "#%5s %13s %19s %19s %19s\n",
                   "NGrid", "Time", "Error(Dens)", "Error(Real)", "Error(Imag)" );
@@ -285,6 +296,12 @@ void WriteFile( void (*AnalFunc)( real fluid[], const double x, const double y, 
 
    fluid[ENGY] = CPU_GetPressure( fluid[DENS], fluid[MOMX], fluid[MOMY], fluid[MOMZ], fluid[ENGY],
                                   Gamma_m1, CheckMinPres_No, NULL_REAL );
+#  elif ( MODEL == SR_HYDRO )
+   const bool   CheckMinPres_No = false;
+   const double Gamma_m1        = GAMMA - 1.0;
+
+   fluid[ENGY] = CPU_GetPressure( fluid[DENS], fluid[MOMX], fluid[MOMY], fluid[MOMZ], fluid[ENGY],
+                                  Gamma_m1, CheckMinPres_No, NULL_REAL );
 #  endif
 
 
@@ -299,6 +316,9 @@ void WriteFile( void (*AnalFunc)( real fluid[], const double x, const double y, 
 
 // convert total energy to pressure
 #  if ( MODEL == HYDRO )
+   Anal[ENGY] = CPU_GetPressure( Anal[DENS], Anal[MOMX], Anal[MOMY], Anal[MOMZ], Anal[ENGY],
+                                 Gamma_m1, CheckMinPres_No, NULL_REAL );
+#  elif ( MODEL == SR_HYDRO )
    Anal[ENGY] = CPU_GetPressure( Anal[DENS], Anal[MOMX], Anal[MOMY], Anal[MOMZ], Anal[ENGY],
                                  Gamma_m1, CheckMinPres_No, NULL_REAL );
 #  endif

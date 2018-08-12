@@ -1320,6 +1320,16 @@ void Check_Makefile( const char *FileName, const int FormatVersion )
 #  elif ( MODEL == MHD )
 #  warning : WAIT MHD !!!
 
+#  elif   ( MODEL == SR_HYDRO )
+   LoadField( "FluScheme",              &RS.FluScheme,              SID, TID, NonFatal, &RT.FluScheme,              1, NonFatal );
+#  ifdef LR_SCHEME
+   LoadField( "LRScheme",               &RS.LRScheme,               SID, TID, NonFatal, &RT.LRScheme,               1, NonFatal );
+#  endif
+#  ifdef RSOLVER
+   LoadField( "RSolver",                &RS.RSolver,                SID, TID, NonFatal, &RT.RSolver,                1, NonFatal );
+#  endif
+   LoadField( "DualEnergy",             &RS.DualEnergy,             SID, TID, NonFatal, &RT.DualEnergy,             1, NonFatal );
+
 #  elif ( MODEL == ELBDM )
    LoadField( "ConserveMass",           &RS.ConserveMass,           SID, TID, NonFatal, &RT.ConserveMass,           1, NonFatal );
    LoadField( "Laplacian4th",           &RS.Laplacian4th,           SID, TID, NonFatal, &RT.Laplacian4th,           1, NonFatal );
@@ -1472,6 +1482,25 @@ void Check_SymConst( const char *FileName, const int FormatVersion )
    LoadField( "Flu_BlockSize_x",      &RS.Flu_BlockSize_x,      SID, TID, NonFatal, &RT.Flu_BlockSize_x,       1, NonFatal );
    LoadField( "Flu_BlockSize_y",      &RS.Flu_BlockSize_y,      SID, TID, NonFatal, &RT.Flu_BlockSize_y,       1, NonFatal );
 #  warning : WAIT MHD !!!
+
+#  elif   ( MODEL == SR_HYDRO )
+   LoadField( "Flu_BlockSize_x",      &RS.Flu_BlockSize_x,      SID, TID, NonFatal, &RT.Flu_BlockSize_x,       1, NonFatal );
+   LoadField( "Flu_BlockSize_y",      &RS.Flu_BlockSize_y,      SID, TID, NonFatal, &RT.Flu_BlockSize_y,       1, NonFatal );
+   LoadField( "CheckNegativeInFluid", &RS.CheckNegativeInFluid, SID, TID, NonFatal, &RT.CheckNegativeInFluid,  1, NonFatal );
+   LoadField( "CharReconstruction",   &RS.CharReconstruction,   SID, TID, NonFatal, &RT.CharReconstruction,    1, NonFatal );
+   LoadField( "CheckIntermediate",    &RS.CheckIntermediate,    SID, TID, NonFatal, &RT.CheckIntermediate,     1, NonFatal );
+   LoadField( "HLL_NoRefState",       &RS.HLL_NoRefState,       SID, TID, NonFatal, &RT.HLL_NoRefState,        1, NonFatal );
+   LoadField( "HLL_IncludeAllWaves",  &RS.HLL_IncludeAllWaves,  SID, TID, NonFatal, &RT.HLL_IncludeAllWaves,   1, NonFatal );
+   LoadField( "WAF_Dissipate",        &RS.WAF_Dissipate,        SID, TID, NonFatal, &RT.WAF_Dissipate,         1, NonFatal );
+#  ifdef N_FC_VAR
+   LoadField( "N_FC_Var",             &RS.N_FC_Var,             SID, TID, NonFatal, &RT.N_FC_Var,              1, NonFatal );
+#  endif
+#  ifdef N_SLOPE_PPM
+   LoadField( "N_Slope_PPM",          &RS.N_Slope_PPM,          SID, TID, NonFatal, &RT.N_Slope_PPM,           1, NonFatal );
+#  endif
+#  ifdef MAX_ERROR
+   LoadField( "MaxError",             &RS.MaxError,             SID, TID, NonFatal, &RT.MaxError,              1, NonFatal );
+#  endif
 
 #  elif  ( MODEL == ELBDM )
    LoadField( "Flu_BlockSize_x",      &RS.Flu_BlockSize_x,      SID, TID, NonFatal, &RT.Flu_BlockSize_x,       1, NonFatal );
@@ -1633,11 +1662,16 @@ void Check_InputPara( const char *FileName, const int FormatVersion )
    LoadField( "Opt__Flag_Vorticity",     &RS.Opt__Flag_Vorticity,     SID, TID, NonFatal, &RT.Opt__Flag_Vorticity,      1, NonFatal );
    LoadField( "Opt__Flag_Jeans",         &RS.Opt__Flag_Jeans,         SID, TID, NonFatal, &RT.Opt__Flag_Jeans,          1, NonFatal );
 #  endif
+#  if ( MODEL == SR_HYDRO )
+   LoadField( "Opt__Flag_PresGradient",  &RS.Opt__Flag_PresGradient,  SID, TID, NonFatal, &RT.Opt__Flag_PresGradient,   1, NonFatal );
+   LoadField( "Opt__Flag_Vorticity",     &RS.Opt__Flag_Vorticity,     SID, TID, NonFatal, &RT.Opt__Flag_Vorticity,      1, NonFatal );
+   LoadField( "Opt__Flag_Jeans",         &RS.Opt__Flag_Jeans,         SID, TID, NonFatal, &RT.Opt__Flag_Jeans,          1, NonFatal );
+#  endif
 #  if ( MODEL == ELBDM )
    LoadField( "Opt__Flag_EngyDensity",   &RS.Opt__Flag_EngyDensity,   SID, TID, NonFatal, &RT.Opt__Flag_EngyDensity,    1, NonFatal );
 #  endif
    LoadField( "Opt__Flag_LohnerDens",    &RS.Opt__Flag_LohnerDens,    SID, TID, NonFatal, &RT.Opt__Flag_LohnerDens,     1, NonFatal );
-#  if ( MODEL == HYDRO )
+#  if ( MODEL == HYDRO || MODEL == SR_HYDRO )
    LoadField( "Opt__Flag_LohnerEngy",    &RS.Opt__Flag_LohnerEngy,    SID, TID, NonFatal, &RT.Opt__Flag_LohnerEngy,     1, NonFatal );
    LoadField( "Opt__Flag_LohnerPres",    &RS.Opt__Flag_LohnerPres,    SID, TID, NonFatal, &RT.Opt__Flag_LohnerPres,     1, NonFatal );
    LoadField( "Opt__Flag_LohnerTemp",    &RS.Opt__Flag_LohnerTemp,    SID, TID, NonFatal, &RT.Opt__Flag_LohnerTemp,     1, NonFatal );
@@ -1669,7 +1703,7 @@ void Check_InputPara( const char *FileName, const int FormatVersion )
    LoadField( "Opt__MinimizeMPIBarrier", &RS.Opt__MinimizeMPIBarrier, SID, TID, NonFatal, &RT.Opt__MinimizeMPIBarrier,  1, NonFatal );
 
 // fluid solvers in HYDRO
-#  if ( MODEL == HYDRO )
+#  if ( MODEL == HYDRO || MODEL == SR_HYDRO )
    LoadField( "Gamma",                   &RS.Gamma,                   SID, TID, NonFatal, &RT.Gamma,                    1, NonFatal );
    LoadField( "MolecularWeight",         &RS.MolecularWeight,         SID, TID, NonFatal, &RT.MolecularWeight,          1, NonFatal );
    LoadField( "MinMod_Coeff",            &RS.MinMod_Coeff,            SID, TID, NonFatal, &RT.MinMod_Coeff,             1, NonFatal );
@@ -1702,10 +1736,15 @@ void Check_InputPara( const char *FileName, const int FormatVersion )
    LoadField( "NormalizePassive_VarIdx",  RS.NormalizePassive_VarIdx, SID, TID, NonFatal,  RT.NormalizePassive_VarIdx, NP, NonFatal );
    LoadField( "Opt__OverlapMPI",         &RS.Opt__OverlapMPI,         SID, TID, NonFatal, &RT.Opt__OverlapMPI,          1, NonFatal );
    LoadField( "Opt__ResetFluid",         &RS.Opt__ResetFluid,         SID, TID, NonFatal, &RT.Opt__ResetFluid,          1, NonFatal );
-#  if ( MODEL == HYDRO  ||  MODEL == MHD  ||  MODEL == ELBDM )
+#  if ( MODEL == HYDRO  ||  MODEL == MHD  ||  MODEL == ELBDM || MODEL == SR_HYDRO )
    LoadField( "MinDens",                 &RS.MinDens,                 SID, TID, NonFatal, &RT.MinDens,                  1, NonFatal );
 #  endif
 #  if ( MODEL == HYDRO  ||  MODEL == MHD )
+   LoadField( "MinPres",                 &RS.MinPres,                 SID, TID, NonFatal, &RT.MinPres,                  1, NonFatal );
+   LoadField( "JeansMinPres",            &RS.JeansMinPres,            SID, TID, NonFatal, &RT.JeansMinPres,             1, NonFatal );
+   LoadField( "JeansMinPres_Level",      &RS.JeansMinPres_Level,      SID, TID, NonFatal, &RT.JeansMinPres_Level,       1, NonFatal );
+   LoadField( "JeansMinPres_NCell",      &RS.JeansMinPres_NCell,      SID, TID, NonFatal, &RT.JeansMinPres_NCell,       1, NonFatal );
+#  elif ( MODEL == SR_HYDRO )
    LoadField( "MinPres",                 &RS.MinPres,                 SID, TID, NonFatal, &RT.MinPres,                  1, NonFatal );
    LoadField( "JeansMinPres",            &RS.JeansMinPres,            SID, TID, NonFatal, &RT.JeansMinPres,             1, NonFatal );
    LoadField( "JeansMinPres_Level",      &RS.JeansMinPres_Level,      SID, TID, NonFatal, &RT.JeansMinPres_Level,       1, NonFatal );
@@ -1845,7 +1884,7 @@ void Check_InputPara( const char *FileName, const int FormatVersion )
    LoadField( "Opt__Ck_Finite",          &RS.Opt__Ck_Finite,          SID, TID, NonFatal, &RT.Opt__Ck_Finite,           1, NonFatal );
    LoadField( "Opt__Ck_PatchAllocate",   &RS.Opt__Ck_PatchAllocate,   SID, TID, NonFatal, &RT.Opt__Ck_PatchAllocate,    1, NonFatal );
    LoadField( "Opt__Ck_FluxAllocate",    &RS.Opt__Ck_FluxAllocate,    SID, TID, NonFatal, &RT.Opt__Ck_FluxAllocate,     1, NonFatal );
-#  if ( MODEL == HYDRO )
+#  if ( MODEL == HYDRO || MODEL == SR_HYDRO )
    LoadField( "Opt__Ck_Negative",        &RS.Opt__Ck_Negative,        SID, TID, NonFatal, &RT.Opt__Ck_Negative,         1, NonFatal );
 #  endif
    LoadField( "Opt__Ck_MemFree",         &RS.Opt__Ck_MemFree,         SID, TID, NonFatal, &RT.Opt__Ck_MemFree,          1, NonFatal );
@@ -1855,7 +1894,7 @@ void Check_InputPara( const char *FileName, const int FormatVersion )
 
 
 // flag tables
-#  if   ( MODEL == HYDRO  ||  MODEL == MHD )
+#  if   ( MODEL == HYDRO  ||  MODEL == MHD || MODEL == SR_HYDRO )
    const bool Opt__FlagLohner = ( OPT__FLAG_LOHNER_DENS || OPT__FLAG_LOHNER_ENGY || OPT__FLAG_LOHNER_PRES || OPT__FLAG_LOHNER_TEMP );
 #  elif ( MODEL == ELBDM )
    const bool Opt__FlagLohner = OPT__FLAG_LOHNER_DENS;
@@ -1879,6 +1918,10 @@ void Check_InputPara( const char *FileName, const int FormatVersion )
       RS.FlagTable_Vorticity   [lv]    = -1.0;
       RS.FlagTable_Jeans       [lv]    = -1.0;
 
+#     elif   ( MODEL == SR_HYDRO )
+      RS.FlagTable_PresGradient[lv]    = -1.0;
+      RS.FlagTable_Vorticity   [lv]    = -1.0;
+      RS.FlagTable_Jeans       [lv]    = -1.0;
 #     elif ( MODEL == ELBDM )
       for (int t=0; t<2; t++)
       RS.FlagTable_EngyDensity [lv][t] = -1.0;
@@ -1912,6 +1955,16 @@ void Check_InputPara( const char *FileName, const int FormatVersion )
    LoadField( "FlagTable_User",           RS.FlagTable_User,          SID, TID, NonFatal,  RT.FlagTable_User,          N1, NonFatal );
 
 #  if   ( MODEL == HYDRO )
+   if ( OPT__FLAG_PRES_GRADIENT )
+   LoadField( "FlagTable_PresGradient",   RS.FlagTable_PresGradient,  SID, TID, NonFatal,  RT.FlagTable_PresGradient,  N1, NonFatal );
+
+   if ( OPT__FLAG_VORTICITY )
+   LoadField( "FlagTable_Vorticity",      RS.FlagTable_Vorticity,     SID, TID, NonFatal,  RT.FlagTable_Vorticity,     N1, NonFatal );
+
+   if ( OPT__FLAG_JEANS )
+   LoadField( "FlagTable_Jeans",          RS.FlagTable_Jeans,         SID, TID, NonFatal,  RT.FlagTable_Jeans,         N1, NonFatal );
+
+#  elif   ( MODEL == SR_HYDRO )
    if ( OPT__FLAG_PRES_GRADIENT )
    LoadField( "FlagTable_PresGradient",   RS.FlagTable_PresGradient,  SID, TID, NonFatal,  RT.FlagTable_PresGradient,  N1, NonFatal );
 

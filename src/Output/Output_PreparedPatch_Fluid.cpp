@@ -92,7 +92,7 @@ void Output_PreparedPatch_Fluid( const int TLv, const int TPID,
 #     else
       for (int v=0; v<FLU_NIN; v++)    fprintf( File, "%16s", FieldLabel[v] );
 
-#     if ( MODEL == HYDRO )
+#     if ( MODEL == HYDRO || MODEL == SR_HYDRO )
       fprintf( File, "%16s", "Pressure" );
 #     endif
 #     endif // MODEL
@@ -127,6 +127,11 @@ void Output_PreparedPatch_Fluid( const int TLv, const int TPID,
 
 #        elif ( MODEL == MHD )
 #        warning : WAIT MHD !!!
+
+#        elif   ( MODEL == SR_HYDRO )
+         const bool CheckMinPres_No = false;
+         fprintf( File, "  %14.7e", CPU_GetPressure(u[DENS],u[MOMX],u[MOMY],u[MOMZ],u[ENGY],GAMMA-1.0,CheckMinPres_No,NULL_REAL) );
+
 #        endif // MODEL
 
          fprintf( File, "\n" );

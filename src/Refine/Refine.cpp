@@ -54,7 +54,7 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
    const int  FPotSg      = amr->PotSg[lv+1];               // sandglass of potential       at level "lv+1"
    const bool SelfGravity = ( OPT__GRAVITY_TYPE == GRAVITY_SELF  ||  OPT__GRAVITY_TYPE == GRAVITY_BOTH );
 #  endif
-#  if ( MODEL == HYDRO  ||  MODEL == MHD )
+#  if ( MODEL == HYDRO  ||  MODEL == MHD || MODEL == SR_HYDRO )
    const real  Gamma_m1   = GAMMA - (real)1.0;
    const real _Gamma_m1   = (real)1.0 / Gamma_m1;
 #  endif
@@ -284,7 +284,7 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
                                                          CSize_Flu, CSize_Flu, CSize_Flu, BC_Idx_Start, BC_Idx_End );
                   break;
 
-#                 if ( MODEL == HYDRO  ||  MODEL == MHD )
+#                 if ( MODEL == HYDRO  ||  MODEL == MHD || MODEL == SR_HYDRO )
                   case BC_FLU_REFLECTING:
                      Hydro_BoundaryCondition_Reflecting( Flu_CData[0][0][0], BC_Face[BC_Sibling], NCOMP_TOTAL, CGhost_Flu,
                                                          CSize_Flu, CSize_Flu, CSize_Flu, BC_Idx_Start, BC_Idx_End,
@@ -400,6 +400,8 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
 #           elif ( MODEL == MHD )
 #           warning : WAIT MHD !!!
 
+#           elif ( MODEL == SR_HYDRO )
+                                             Monotonicity[v] = EnsureMonotonicity_Yes;
 #           elif ( MODEL == ELBDM )
             if ( v != REAL  &&  v != IMAG )  Monotonicity[v] = EnsureMonotonicity_Yes;
             else                             Monotonicity[v] = EnsureMonotonicity_No;
@@ -489,7 +491,7 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
 //       (c1.3.3.3) check minimum density and pressure
 //       --> note that it's unnecessary to check negative passive scalars thanks to the monotonic interpolation
 //       --> but we do renormalize passive scalars here
-#        if ( MODEL == HYDRO  ||  MODEL == MHD  ||  MODEL == ELBDM  ||  (defined DENS && NCOMP_PASSIVE>0) )
+#        if ( MODEL == HYDRO  ||  MODEL == MHD || MODEL == SR_HYDRO  ||  MODEL == ELBDM  ||  (defined DENS && NCOMP_PASSIVE>0) )
          for (int k=0; k<FSize; k++)
          for (int j=0; j<FSize; j++)
          for (int i=0; i<FSize; i++)
@@ -514,7 +516,7 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
                Flu_FData[DENS][k][j][i] = MIN_DENS;
             }
 
-#           if ( MODEL == HYDRO  ||  MODEL == MHD )
+#           if ( MODEL == HYDRO  ||  MODEL == MHD || MODEL == SR_HYDRO )
 #           ifdef DUAL_ENERGY
 //          ensure consistency between pressure, total energy density, and the dual-energy variable
 //          --> here we ALWAYS use the dual-energy variable to correct the total energy density
@@ -529,11 +531,13 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
                                dummy, Gamma_m1, _Gamma_m1, CheckMinPres_Yes, MIN_PRES, UseEnpy2FixEngy );
 
 #           else
+
 //          check minimum pressure
             Flu_FData[ENGY][k][j][i]
                = CPU_CheckMinPresInEngy( Flu_FData[DENS][k][j][i], Flu_FData[MOMX][k][j][i], Flu_FData[MOMY][k][j][i],
                                          Flu_FData[MOMZ][k][j][i], Flu_FData[ENGY][k][j][i],
                                          Gamma_m1, _Gamma_m1, MIN_PRES );
+
 #           endif // #ifdef DUAL_ENERGY ... else ...
 #           endif // #if ( MODEL == HYDRO  ||  MODEL == MHD )
 

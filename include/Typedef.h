@@ -298,7 +298,7 @@ const OptLohnerForm_t
 
 
 // OPT__1ST_FLUX_CORR and OPT__1ST_FLUX_CORR_SCHEME options
-#if ( MODEL == HYDRO || MODEL == MHD )
+#if ( MODEL == HYDRO || MODEL == MHD || MODEL == SR_HYDRO )
 typedef int Opt1stFluxCorr_t;
 const Opt1stFluxCorr_t
    FIRST_FLUX_CORR_NONE    = 0,

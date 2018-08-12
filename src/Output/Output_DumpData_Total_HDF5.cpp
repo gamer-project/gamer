@@ -693,10 +693,11 @@ void Output_DumpData_Total_HDF5( const char *FileName )
 
 // 5. output the simulation grid data (density, momentum, ... etc)
    const int FieldSizeOnePatch = sizeof(real)*CUBE(PS1);
-
+#  ifdef ( MODEL == HYDRO || MODEL == SR_HYDRO )
    int  NFieldOut;
    char (*FieldName)[MAX_STRING]    = NULL;
    real (*FieldData)[PS1][PS1][PS1] = NULL;
+#  endif
 
 // 5-0. determine variable indices
    NFieldOut = NCOMP_TOTAL;

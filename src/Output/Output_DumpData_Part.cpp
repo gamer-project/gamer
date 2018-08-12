@@ -3,6 +3,10 @@
 static void WriteFile( FILE *File, const int lv, const int PID, const int i, const int j, const int k,
                        const int ii, const int jj, const int kk );
 
+#if (MODEL == SR_HYDRO)
+void CPU_4Velto3Vel( const real In[], real Out[] );
+void CPU_Con2Pri( const real In[], real Out[], const real Gamma );
+#endif
 
 
 
@@ -107,7 +111,7 @@ void Output_DumpData_Part( const OptOutputPart_t Part, const bool BaseOnly, cons
 //       output header
          if ( TargetMPIRank == 0 )
          {
-            fprintf( File, "#%10s %10s %10s %20s %20s %20s", "i", "j", "k", "x", "y", "z" );
+            fprintf( File, "#%10s %10s %10s %20s %20s %20s", "i[1]", "j[2]", "k[3]", "x[4]", "y[5]", "z[6]" );
 
 
             for (int v=0; v<NCOMP_TOTAL; v++)
@@ -120,9 +124,15 @@ void Output_DumpData_Part( const OptOutputPart_t Part, const bool BaseOnly, cons
 
 //          other derived fields
 #           if ( MODEL == HYDRO  ||  MODEL == MHD )
-            fprintf( File, "%14s", "Pressure" );
+            fprintf( File, "%14s", "Pressure[12]" );
+#           elif ( MODEL == SR_HYDRO )
+            fprintf( File, "%14s", "PrimDens[12]" );
+            fprintf( File, "%14s", "Vx[13]" );
+            fprintf( File, "%14s", "Vy[14]" );
+            fprintf( File, "%14s", "Vz[15]" );
+            fprintf( File, "%14s", "Pressure[16]" );
+            fprintf( File, "%19s", "Lorentz Fac[17]" );
 #           endif
-
             fprintf( File, "\n" );
          } // if ( TargetMPIRank == 0 )
 
@@ -222,8 +232,16 @@ void WriteFile( FILE *File, const int lv, const int PID, const int i, const int 
    fprintf( File, " %10d %10d %10d %20.14e %20.14e %20.14e",
             ii, jj, kk, (ii+scale_2)*dh_min, (jj+scale_2)*dh_min, (kk+scale_2)*dh_min );
 
-// output all variables in the fluid array
+// output all conserved variables in the fluid or sr-fluid array
    for (int v=0; v<NCOMP_TOTAL; v++)   fprintf( File, " %13.6e", u[v] );
+
+#  if (MODEL == SR_HYDRO)
+   CPU_Con2Pri(u,u,GAMMA);
+   CPU_4Velto3Vel(u,u);
+
+// output all primitive variables in the sr-fluid array
+   for (int v=0; v<NCOMP_TOTAL; v++)   fprintf( File, " %13.6e", u[v] );
+#  endif
 
 // output potential
 #  ifdef GRAVITY
@@ -237,6 +255,8 @@ void WriteFile( FILE *File, const int lv, const int PID, const int i, const int 
    fprintf( File, " %13.6e", CPU_GetPressure(u[DENS], u[MOMX], u[MOMY], u[MOMZ], u[ENGY], GAMMA-1.0, CheckMinPres_Yes, MIN_PRES) );
 #  elif ( MODEL == MHD )
 #  warning : WAIT MHD !!!
+#  elif ( MODEL == SR_HYDRO )
+   fprintf( File, " %17.6e", 1/SQRT(1-SQR(u[1])+SQR(u[2])+SQR(u[3])) );
 #  endif // MODEL
 
    fprintf( File, "\n" );

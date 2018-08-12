@@ -10,7 +10,7 @@ extern double ExtAcc_AuxArray[EXT_ACC_NAUX_MAX];
 #endif
 
 
-#if   ( MODEL == HYDRO )
+#if   ( MODEL == HYDRO || MODEL == SR_HYDRO )
 void CPU_dtSolver_HydroCFL( real dt_Array[], const real Flu_Array[][NCOMP_FLUID][ CUBE(PS1) ],
                             const int NPG, const real dh, const real Safety, const real Gamma, const real MinPres );
 #ifdef GRAVITY
@@ -83,6 +83,19 @@ void CPU_dtSolver( const Solver_t TSolver, real dt_Array[], const real Flu_Array
 
 #     elif ( MODEL == MHD )
 #        warning : WAIT MHD !!!
+
+#     elif   ( MODEL == SR_HYDRO )
+      case DT_FLU_SOLVER:
+         CPU_dtSolver_HydroCFL( dt_Array, Flu_Array, NPatchGroup, dh, Safety, Gamma, MinPres );
+      break;
+
+#     ifdef GRAVITY
+      case DT_GRA_SOLVER:
+         CPU_dtSolver_HydroGravity( dt_Array, Pot_Array, Corner_Array, NPatchGroup, dh, Safety, P5_Gradient,
+                                    GravityType, ExtAcc_AuxArray, TargetTime );
+      break;
+#     endif
+
 
 
 #     elif ( MODEL == ELBDM )

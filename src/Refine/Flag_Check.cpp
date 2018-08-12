@@ -39,7 +39,6 @@ bool Flag_Check( const int lv, const int PID, const int i, const int j, const in
                  const real *Lohner_Var, const real *Lohner_Ave, const real *Lohner_Slope, const int Lohner_NVar,
                  const real ParCount[][PS1][PS1], const real ParDens[][PS1][PS1], const real JeansCoeff )
 {
-
    bool Flag = false;
 
 // check whether the input cell is within the regions allowed to be refined
@@ -92,7 +91,7 @@ bool Flag_Check( const int lv, const int PID, const int i, const int j, const in
 
 // check pressure gradient
 // ===========================================================================================
-#  if ( MODEL == HYDRO )
+#  if ( MODEL == HYDRO || MODEL == SR_HYDRO )
    if ( OPT__FLAG_PRES_GRADIENT )
    {
       Flag |= Check_Gradient( i, j, k, &Pres[0][0][0], FlagTable_PresGradient[lv] );
@@ -103,7 +102,7 @@ bool Flag_Check( const int lv, const int PID, const int i, const int j, const in
 
 // check vorticity
 // ===========================================================================================
-#  if ( MODEL == HYDRO )
+#  if ( MODEL == HYDRO || MODEL == SR_HYDRO )
    if ( OPT__FLAG_VORTICITY )
    {
       Flag |= Hydro_Flag_Vorticity( i, j, k, lv, PID, FlagTable_Vorticity[lv] );
@@ -114,7 +113,7 @@ bool Flag_Check( const int lv, const int PID, const int i, const int j, const in
 
 // check Jeans length
 // ===========================================================================================
-#  if (  ( MODEL == HYDRO || MODEL == MHD )  &&  defined GRAVITY  )
+#  if (  ( MODEL == HYDRO || MODEL == MHD || MODEL == SR_HYDRO )  &&  defined GRAVITY  )
    if ( OPT__FLAG_JEANS )
    {
       const bool CheckMinPres_Yes = true;

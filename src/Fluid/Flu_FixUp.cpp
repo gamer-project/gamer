@@ -44,7 +44,7 @@ void Flu_FixUp( const int lv )
    real *FluidPtr1D0[NCOMP_TOTAL], *FluidPtr1D[NCOMP_TOTAL];
    int  didx_m, didx_n;
 
-#  if   ( MODEL == HYDRO  ||  MODEL == MHD )
+#  if   ( MODEL == HYDRO  ||  MODEL == MHD || MODEL == SR_HYDRO )
    const real  Gamma_m1       = GAMMA - (real)1.0;
    const real _Gamma_m1       = (real)1.0 / Gamma_m1;
    const bool CheckMinPres_No = false;
@@ -93,7 +93,7 @@ void Flu_FixUp( const int lv )
 #     endif // #ifdef GAMER_DEBUG
 
 
-#     if (  ( MODEL == HYDRO || MODEL == MHD )  &&  defined DUAL_ENERGY  )
+#     if (  ( MODEL == HYDRO || MODEL == MHD || MODEL == SR_HYDRO  )  &&  defined DUAL_ENERGY  )
 #     pragma omp parallel for private( CorrVal, FluxPtr, FluidPtr1D0, FluidPtr1D, didx_m, didx_n, \
                                        DE_StatusPtr1D0, DE_StatusPtr1D ) schedule( runtime )
 #     else
@@ -165,7 +165,7 @@ void Flu_FixUp( const int lv )
 
 
 //                calculate the pressure
-#                 if ( MODEL == HYDRO  ||  MODEL == MHD )
+#                 if ( MODEL == HYDRO  ||  MODEL == MHD || MODEL == SR_HYDRO )
                   real Pres;
                   real *ForPres = CorrVal;
 
@@ -206,7 +206,7 @@ void Flu_FixUp( const int lv )
 
 
 //                do not apply the flux correction if there are any unphysical results
-#                 if   ( MODEL == HYDRO  ||  MODEL == MHD )
+#                 if   ( MODEL == HYDRO  ||  MODEL == MHD || MODEL == SR_HYDRO )
                   if ( CorrVal[DENS] <= MIN_DENS  ||  Pres <= MIN_PRES  ||  !Aux_IsFinite(Pres)
 #                      if   ( DUAL_ENERGY == DE_ENPY )
                        ||  ( (*DE_StatusPtr1D == DE_UPDATED_BY_DUAL || *DE_StatusPtr1D == DE_UPDATED_BY_MIN_PRES)
@@ -236,6 +236,7 @@ void Flu_FixUp( const int lv )
 //                --> assuming the variable "Pres" is correct
 //                --> no need to check the minimum pressure here since we have skipped those cells already
 #                 if   ( MODEL == HYDRO  ||  MODEL == MHD )
+
                   CorrVal[ENGY] = (real)0.5*( SQR(CorrVal[MOMX]) + SQR(CorrVal[MOMY]) + SQR(CorrVal[MOMZ]) ) / CorrVal[DENS]
                                   + Pres*_Gamma_m1;
 

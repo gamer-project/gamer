@@ -135,6 +135,99 @@ struct FluVar5 { real Rho, Px, Py, Pz, Egy; };
 //=========================================================================================
 #elif ( MODEL == ELBDM )
 
+// 4. SR_HYDRO macro
+//=========================================================================================
+#elif   ( MODEL == SR_HYDRO )
+// structure data type for the GPU hydro kernels
+// --> note that for FluVar we must define Passive[] even when NCOMP_PASSIVE == 0
+// --> FluVar5 is used for variables which do not need to consider passive scalars even when NCOMP_PASSIVE > 0
+//     (e.g., eigenvectors/eigenvalues in CUFLU_Shared_RiemannSolver_Roe() )
+struct FluVar  { real Rho, Px, Py, Pz, Egy, Passive[NCOMP_PASSIVE]; };
+struct FluVar5 { real Rho, Px, Py, Pz, Egy; };
+
+
+// size of different arrays
+#if ( FLU_SCHEME == MHM  ||  FLU_SCHEME == MHM_RP  ||  FLU_SCHEME == CTU )
+
+#  define N_FC_VAR        ( PS2 + 2      )
+#  define N_SLOPE_PPM     ( N_FC_VAR + 2 )
+
+#  if   ( FLU_SCHEME == MHM )
+
+#     define N_FL_FLUX    ( PS2 + 1      )
+#     define N_FC_FLUX    ( N_FL_FLUX    )
+
+#  elif ( FLU_SCHEME == MHM_RP )
+
+#     define N_FL_FLUX    ( PS2 + 1      )
+#     define N_HF_VAR     ( FLU_NXT - 2  )
+#     define N_HF_FLUX    ( FLU_NXT - 1  )
+#     define N_FC_FLUX    ( N_HF_FLUX    )
+
+#  elif ( FLU_SCHEME == CTU )
+
+#     define N_FL_FLUX    ( N_FC_VAR     )
+#     define N_HF_FLUX    ( N_FC_VAR     )
+#     define N_FC_FLUX    ( N_FC_VAR     )
+
+#  endif
+
+#endif // #if ( FLU_SCHEME == MHM  ||  FLU_SCHEME == MHM_RP  ||  FLU_SCHEME == CTU )
+
+
+// check the non-physical negative values (e.g., negative density) inside the fluid solver
+#ifdef GAMER_DEBUG
+#  define CHECK_NEGATIVE_IN_FLUID
+#endif
+
+#ifdef CHECK_NEGATIVE_IN_FLUID
+#  include "stdio.h"
+#endif
+
+
+// perform spatial data reconstruction in characteristic variables (default: primitive variables)
+#if ( FLU_SCHEME == MHM  ||  FLU_SCHEME == MHM_RP  ||  FLU_SCHEME == CTU )
+#  ifndef GRAVITY
+//#     define CHAR_RECONSTRUCTION
+#  endif
+#endif
+
+
+// verify that the density and pressure in the intermediate states of Roe's Riemann solver are positive.
+// --> if either is negative, we switch to other Riemann solvers (EXACT/HLLE/HLLC)
+#if (  ( FLU_SCHEME == MHM || FLU_SCHEME == MHM_RP || FLU_SCHEME == CTU )  &&  RSOLVER == ROE  )
+//#  define CHECK_INTERMEDIATE    HLLC
+#  define CHECK_INTERMEDIATE    HLLE
+#endif
+
+
+// do not use the reference states for HLL solvers during the data reconstruction, as suggested in ATHENA
+#if (  FLU_SCHEME != RTVD  &&  ( RSOLVER == HLLE || RSOLVER == HLLC )  )
+
+#  define HLL_NO_REF_STATE
+
+// include waves both from left and right directions during the data reconstruction, as suggested in ATHENA
+#  ifdef HLL_NO_REF_STATE
+#     define HLL_INCLUDE_ALL_WAVES
+#  endif
+
+#endif
+
+
+// use the dissipative structure for the WAF scheme
+#if ( FLU_SCHEME == WAF )
+// #define WAF_DISSIPATE
+#endif
+
+
+// maximum allowed error for the exact Riemann solver and the WAF scheme
+#if ( FLU_SCHEME == WAF  ||  ( FLU_SCHEME != RTVD && RSOLVER == EXACT )  ||  CHECK_INTERMEDIATE == EXACT )
+#  ifdef FLOAT8
+#     define MAX_ERROR    1.e-15
+#  else
+#     define MAX_ERROR    1.e-06f
+#  endif
+#endif
 
 #else
 #  error : ERROR : unsupported MODEL !!
@@ -317,6 +410,114 @@ struct FluVar5 { real Rho, Px, Py, Pz, Egy; };
 #        endif
 #  endif
 
+// 3. SR_HYDRO solver
+//=========================================================================================
+#elif ( MODEL == SR_HYDRO )
+#if   ( FLU_SCHEME == RTVD )
+
+#     define FLU_BLOCK_SIZE_X       FLU_NXT
+
+#  ifdef FLOAT8
+#     define FLU_BLOCK_SIZE_Y       4
+#  else
+#     define FLU_BLOCK_SIZE_Y       8
+#  endif
+
+#elif ( FLU_SCHEME == WAF )
+
+#     define FLU_BLOCK_SIZE_X       FLU_NXT
+
+#  ifdef FLOAT8
+#     define FLU_BLOCK_SIZE_Y       4
+#  else
+#     define FLU_BLOCK_SIZE_Y       8
+#  endif
+
+#elif ( FLU_SCHEME == MHM  ||  FLU_SCHEME == MHM_RP )
+
+#  if   ( GPU_ARCH == FERMI )
+#     ifdef FLOAT8
+#     define FLU_BLOCK_SIZE_X       256
+#     else
+#     define FLU_BLOCK_SIZE_X       512
+#     endif
+#  elif ( GPU_ARCH == KEPLER )
+#     ifdef FLOAT8
+#     define FLU_BLOCK_SIZE_X       256
+#     else
+#     define FLU_BLOCK_SIZE_X       512
+#     endif
+#  elif ( GPU_ARCH == MAXWELL )
+#     ifdef FLOAT8
+#     define FLU_BLOCK_SIZE_X       256
+#     else
+#     define FLU_BLOCK_SIZE_X       512      // not optimized yet
+#     endif
+#  elif ( GPU_ARCH == PASCAL )
+#     ifdef FLOAT8
+#     define FLU_BLOCK_SIZE_X       256
+#     else
+#     define FLU_BLOCK_SIZE_X       512      // not optimized yet
+#     endif
+#  elif ( GPU_ARCH == VOLTA )
+#     ifdef FLOAT8
+#     define FLU_BLOCK_SIZE_X       256
+#     else
+#     define FLU_BLOCK_SIZE_X       512      // not optimized yet
+#     endif
+#  else
+#     define FLU_BLOCK_SIZE_X       NULL_INT
+#     ifdef GPU
+#     error : UNKNOWN GPU_ARCH !!
+#     endif
+#  endif
+
+#     define FLU_BLOCK_SIZE_Y       1
+
+#elif ( FLU_SCHEME == CTU )
+
+#  if   ( GPU_ARCH == FERMI )
+#     ifdef FLOAT8
+#     define FLU_BLOCK_SIZE_X       256
+#     else
+#     define FLU_BLOCK_SIZE_X       512
+#     endif
+#  elif ( GPU_ARCH == KEPLER )
+#     ifdef FLOAT8
+#     define FLU_BLOCK_SIZE_X       256
+#     else
+#     define FLU_BLOCK_SIZE_X       512
+#     endif
+#  elif ( GPU_ARCH == MAXWELL )
+#     ifdef FLOAT8
+#     define FLU_BLOCK_SIZE_X       256
+#     else
+#     define FLU_BLOCK_SIZE_X       512      // not optimized yet
+#     endif
+#  elif ( GPU_ARCH == PASCAL )
+#     ifdef FLOAT8
+#     define FLU_BLOCK_SIZE_X       256
+#     else
+#     define FLU_BLOCK_SIZE_X       512      // not optimized yet
+#     endif
+#  elif ( GPU_ARCH == VOLTA )
+#     ifdef FLOAT8
+#     define FLU_BLOCK_SIZE_X       256
+#     else
+#     define FLU_BLOCK_SIZE_X       512      // not optimized yet
+#     endif
+#  else
+#     define FLU_BLOCK_SIZE_X       NULL_INT
+#     ifdef GPU
+#     error : UNKNOWN GPU_ARCH !!
+#     endif
+#  endif
+
+#     define FLU_BLOCK_SIZE_Y       1
+
+#else
+#  error : ERROR : unsupported hydro scheme in the makefile !!
+#endif
 #endif // MODEL
 
 
@@ -351,7 +552,7 @@ struct FluVar5 { real Rho, Px, Py, Pz, Egy; };
 // ## function prototypes  ##
 // ##########################
 
-#if (  ( MODEL == HYDRO || MODEL == MHD )  &&  defined CHECK_NEGATIVE_IN_FLUID  )
+#if (  ( MODEL == HYDRO || MODEL == MHD || MODEL == SR_HYDRO )  &&  defined CHECK_NEGATIVE_IN_FLUID  )
 extern bool CPU_CheckNegative( const real Input );
 #endif
 

@@ -526,7 +526,7 @@ void PrepareCData( const int FaLv, const int FaPID, real *const FaData,
                                                    FaSize_Flu, FaSize_Flu, FaSize_Flu, BC_Idx_Start, BC_Idx_End );
             break;
 
-#           if ( MODEL == HYDRO  ||  MODEL == MHD )
+#           if ( MODEL == HYDRO  ||  MODEL == MHD || MODEL == SR_HYDRO )
             case BC_FLU_REFLECTING:
                Hydro_BoundaryCondition_Reflecting( FaData_Flu, BC_Face[BC_Sibling], NCOMP_TOTAL, FaGhost_Flu,
                                                    FaSize_Flu, FaSize_Flu, FaSize_Flu, BC_Idx_Start, BC_Idx_End,

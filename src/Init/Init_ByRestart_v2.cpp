@@ -1145,7 +1145,7 @@ void Load_Parameter_After_2000( FILE *File, const int FormatVersion, int &NLv_Re
       CompareVar( "FLU_GHOST_SIZE",          flu_ghost_size,         FLU_GHOST_SIZE,            NonFatal );
       CompareVar( "FLU_BLOCK_SIZE_X",        flu_block_size_x,       FLU_BLOCK_SIZE_X,          NonFatal );
       CompareVar( "FLU_BLOCK_SIZE_Y",        flu_block_size_y,       FLU_BLOCK_SIZE_Y,          NonFatal );
-#     if ( MODEL == HYDRO  ||  MODEL == MHD )
+#     if ( MODEL == HYDRO  ||  MODEL == MHD || MODEL == SR_HYDRO )
       CompareVar( "MIN_PRES",                min_pres,               MIN_PRES,                  NonFatal );
 #     endif
 
@@ -1276,6 +1276,73 @@ void Load_Parameter_After_2000( FILE *File, const int FormatVersion, int &NLv_Re
 //    ----------------
 #     elif ( MODEL == MHD )
 #     warning : WAIT MHD !!!
+
+//    check in SR-HYDRO
+//    ----------------
+#     elif ( MODEL == SR_HYDRO )
+
+      CompareVar( "FLU_SCHEME",              flu_scheme,             FLU_SCHEME,                NonFatal );
+
+#     ifdef LR_SCHEME
+      CompareVar( "LR_SCHEME",               lr_scheme,              LR_SCHEME,                 NonFatal );
+#     endif
+
+#     ifdef RSOLVER
+      CompareVar( "RSOLVER",                 rsolver,                RSOLVER,                   NonFatal );
+#     endif
+
+#     ifdef CHECK_INTERMEDIATE
+      CompareVar( "CHECK_INTERMEDIATE",      check_intermediate,     CHECK_INTERMEDIATE,        NonFatal );
+#     endif
+
+#     ifdef MAX_ERROR
+      CompareVar( "MAX_ERROR",               max_error,      (double)MAX_ERROR,                 NonFatal );
+#     endif
+
+      if ( !enforce_positive )
+         Aux_Message( stderr, "WARNING : %s : RESTART file (%s) != runtime (%s) !!\n",
+                      "MIN_DENS/MIN_PRES", "OFF", "ON" );
+
+#     ifdef CHAR_RECONSTRUCTION
+      if ( !char_reconstruction )
+         Aux_Message( stderr, "WARNING : %s : RESTART file (%s) != runtime (%s) !!\n",
+                      "CHAR_RECONSTRUCTION", "OFF", "ON" );
+#     else
+      if (  char_reconstruction )
+         Aux_Message( stderr, "WARNING : %s : RESTART file (%s) != runtime (%s) !!\n",
+                      "CHAR_RECONSTRUCTION", "ON", "OFF" );
+#     endif
+
+#     ifdef HLL_NO_REF_STATE
+      if ( !hll_no_ref_state )
+         Aux_Message( stderr, "WARNING : %s : RESTART file (%s) != runtime (%s) !!\n",
+                      "HLL_NO_REF_STATE", "OFF", "ON" );
+#     else
+      if (  hll_no_ref_state )
+         Aux_Message( stderr, "WARNING : %s : RESTART file (%s) != runtime (%s) !!\n",
+                      "HLL_NO_REF_STATE", "ON", "OFF" );
+#     endif
+
+#     ifdef HLL_INCLUDE_ALL_WAVES
+      if ( !hll_include_all_waves )
+         Aux_Message( stderr, "WARNING : %s : RESTART file (%s) != runtime (%s) !!\n",
+                      "HLL_INCLUDE_ALL_WAVES", "OFF", "ON" );
+#     else
+      if (  hll_include_all_waves )
+         Aux_Message( stderr, "WARNING : %s : RESTART file (%s) != runtime (%s) !!\n",
+                      "HLL_INCLUDE_ALL_WAVES", "ON", "OFF" );
+#     endif
+
+#     ifdef WAF_DISSIPATE
+      if ( !waf_dissipate )
+         Aux_Message( stderr, "WARNING : %s : RESTART file (%s) != runtime (%s) !!\n",
+                      "WAF_DISSIPATE", "OFF", "ON" );
+#     else
+      if (  waf_dissipate )
+         Aux_Message( stderr, "WARNING : %s : RESTART file (%s) != runtime (%s) !!\n",
+                      "WAF_DISSIPATE", "ON", "OFF" );
+#     endif
+
 
 
 //    check in ELBDM
@@ -1445,6 +1512,22 @@ void Load_Parameter_After_2000( FILE *File, const int FormatVersion, int &NLv_Re
 
 #     elif ( MODEL == MHD )
 #     warning : WAIT MHD !!!
+
+#     elif   ( MODEL == SR_HYDRO )
+      CompareVar( "OPT__FLAG_PRES_GRADIENT", opt__flag_pres_gradient,      OPT__FLAG_PRES_GRADIENT,   NonFatal );
+      CompareVar( "GAMMA",                   gamma,                        GAMMA,                     NonFatal );
+      if ( FormatVersion >= 2111 )
+      CompareVar( "MOLECULAR_WEIGHT",        molecular_weight,             MOLECULAR_WEIGHT,          NonFatal );
+      else
+      Aux_Message( stderr, "WARNING : restart file does not have the parameter \"%s\" !!\n", "MOLECULAR_WEIGHT" );
+      CompareVar( "MINMOD_COEFF",            minmod_coeff,                 MINMOD_COEFF,              NonFatal );
+      CompareVar( "EP_COEFF",                ep_coeff,                     EP_COEFF,                  NonFatal );
+      CompareVar( "OPT__LR_LIMITER",         opt__lr_limiter,         (int)OPT__LR_LIMITER,           NonFatal );
+      CompareVar( "OPT__WAF_LIMITER",        opt__waf_limiter,        (int)OPT__WAF_LIMITER,          NonFatal );
+
+//    convert OPT__1ST_FLUX_CORR to bool to be consistent with the old format where OPT__1ST_FLUX_CORR is bool instead of int
+      CompareVar( "OPT__1ST_FLUX_CORR",        opt__1st_flux_corr,        (bool)OPT__1ST_FLUX_CORR,        NonFatal );
+      CompareVar( "OPT__1ST_FLUX_CORR_SCHEME", opt__1st_flux_corr_scheme, (int )OPT__1ST_FLUX_CORR_SCHEME, NonFatal );
 
 #     elif ( MODEL == ELBDM )
       CompareVar( "DT__PHASE",               dt__phase,                    DT__PHASE,                 NonFatal );

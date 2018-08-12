@@ -751,7 +751,7 @@ int AllocateSonPatch( const int FaLv, const int *Cr, const int PScale, const int
 
    for (int v=0; v<NCOMP_TOTAL; v++)
    {
-#     if ( MODEL == HYDRO )
+#     if ( MODEL == HYDRO || MODEL == SR_HYDRO )
 //    we now apply monotonic interpolation to ALL fluid variables (which helps alleviate the issue of negative density/pressure)
       /*
       if ( v == DENS  ||  v == ENGY  ||  v >= NCOMP_FLUID )
@@ -839,8 +839,8 @@ int AllocateSonPatch( const int FaLv, const int *Cr, const int PScale, const int
 // 3.2.3 check minimum density and pressure
 // --> note that it's unnecessary to check negative passive scalars thanks to the monotonic interpolation
 // --> but we do renormalize passive scalars here
-#  if ( MODEL == HYDRO  ||  MODEL == MHD  ||  MODEL == ELBDM  ||  (defined DENS && NCOMP_PASSIVE>0) )
-#  if ( MODEL == HYDRO  ||  MODEL == MHD )
+#  if ( MODEL == HYDRO  ||  MODEL == MHD || MODEL == SR_HYDRO  ||  MODEL == ELBDM  ||  (defined DENS && NCOMP_PASSIVE>0) )
+#  if ( MODEL == HYDRO  ||  MODEL == MHD || MODEL == SR_HYDRO )
    const real  Gamma_m1 = GAMMA - (real)1.0;
    const real _Gamma_m1 = (real)1.0 / Gamma_m1;
 #  endif
@@ -869,7 +869,7 @@ int AllocateSonPatch( const int FaLv, const int *Cr, const int PScale, const int
          FData_Flu[DENS][k][j][i] = MIN_DENS;
       }
 
-#     if ( MODEL == HYDRO  ||  MODEL == MHD )
+#     if ( MODEL == HYDRO  ||  MODEL == MHD || MODEL == SR_HYDRO )
 #     ifdef DUAL_ENERGY
 //    ensure consistency between pressure, total energy density, and the dual-energy variable
 //    --> here we ALWAYS use the dual-energy variable to correct the total energy density
@@ -889,6 +889,7 @@ int AllocateSonPatch( const int FaLv, const int *Cr, const int PScale, const int
          = CPU_CheckMinPresInEngy( FData_Flu[DENS][k][j][i], FData_Flu[MOMX][k][j][i], FData_Flu[MOMY][k][j][i],
                                    FData_Flu[MOMZ][k][j][i], FData_Flu[ENGY][k][j][i],
                                    Gamma_m1, _Gamma_m1, MIN_PRES );
+
 #     endif // #ifdef DUAL_ENERGY ... else ...
 #     endif // #if ( MODEL == HYDRO  ||  MODEL == MHD )
 

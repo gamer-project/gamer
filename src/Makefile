@@ -33,7 +33,7 @@ COMPILE_VERBOSE := 0
 # physical model: HYDRO/MHD/ELBDM/PAR_ONLY (ELBDM: wave dark matter; PAR_ONLY: particle-only)
 # --> must be set in any cases; PAR_ONLY is not supported yet;
 #     MHD and ELBDM are not publicly available yet but will be released soon
-SIMU_OPTION += -DMODEL=HYDRO
+SIMU_OPTION += -DMODEL=SR_HYDRO
 
 # enable gravity
 #SIMU_OPTION += -DGRAVITY
@@ -79,6 +79,8 @@ SIMU_OPTION += -DNCOMP_PASSIVE_USER=0
 else ifeq "$(filter -DMODEL=MHD, $(SIMU_OPTION))" "-DMODEL=MHD"
 
 
+
+
 # (b-3) ELBDM options
 # ------------------------------------------------------------------------------------
 else ifeq "$(filter -DMODEL=ELBDM, $(SIMU_OPTION))" "-DMODEL=ELBDM"
@@ -95,6 +97,25 @@ SIMU_OPTION += -DLAPLACIAN_4TH
 # number of passively advected scalars
 # --> not supported yet and must be set to 0 (or comment it out)
 SIMU_OPTION += -DNCOMP_PASSIVE_USER=0
+
+# (b-4) sr-hydro options
+# ------------------------------------------------------------------------------------
+else ifeq "$(filter -DMODEL=SR_HYDRO, $(SIMU_OPTION))" "-DMODEL=SR_HYDRO"
+# hydrodynamic scheme: RTVD/WAF/MHM/MHM_RP/CTU
+# --> must be set when MODEL=HYDRO; WAF is deprecated
+SIMU_OPTION += -DFLU_SCHEME=MHM_RP
+
+# scheme of spatial data reconstruction: PLM/PPM (piecewise-linear/piecewise-parabolic)
+# --> useless for RTVD/WAF
+SIMU_OPTION += -DLR_SCHEME=PLM
+
+# Riemann solver: EXACT/ROE/HLLE/HLLC
+# --> all are useless for RTVD; HLLE/HLLC are useless for WAF
+SIMU_OPTION += -DRSOLVER=HLLC
+
+# dual energy formalism: DE_ENPY/DE_EINT (evolve entropy or internal energy)
+# --> DE_EINT is not supported yet; useless for RTVD/WAF
+#SIMU_OPTION += -DDUAL_ENERGY=DE_ENPY
 
 endif # MODEL
 
@@ -156,6 +177,7 @@ SIMU_OPTION += -DGPU_ARCH=KEPLER
 
 # debug mode
 #SIMU_OPTION += -DGAMER_DEBUG
+SIMU_OPTION += -DSR_DEBUG
 
 # bitwise reproducibility
 #SIMU_OPTION += -DBITWISE_REPRODUCIBILITY
@@ -168,7 +190,7 @@ SIMU_OPTION += -DTIMING
 #SIMU_OPTION += -DTIMING_SOLVER
 
 # double precision
-#SIMU_OPTION += -DFLOAT8
+SIMU_OPTION += -DFLOAT8
 
 # serial mode (in which no MPI libraries are required)
 # --> must disable LOAD_BALANCE
@@ -183,7 +205,7 @@ SIMU_OPTION += -DSERIAL
 #SIMU_OPTION += -DOVERLAP_MPI
 
 # enable OpenMP parallelization
-SIMU_OPTION += -DOPENMP
+#SIMU_OPTION += -DOPENMP
 
 # work on the NAOC Laohu GPU cluster
 #SIMU_OPTION += -DLAOHU
@@ -192,7 +214,7 @@ SIMU_OPTION += -DOPENMP
 #SIMU_OPTION += -DSUPPORT_HDF5
 
 # support GNU scientific library
-#SIMU_OPTION += -DSUPPORT_GSL
+SIMU_OPTION += -DSUPPORT_GSL
 
 # support yt inline analysis
 #SIMU_OPTION += -DSUPPORT_LIBYT
@@ -238,7 +260,7 @@ SIMU_OPTION += -DRANDOM_NUMBER=RNG_GNU_EXT
  CXX         = g++                                       # serial compiler
 #CXX         = $(MPI_PATH)/bin/mpicxx                    # MPI compiler
 #CXX         = CC                                        # cray wrapper script
- CXXFLAG     = -g -O3                                    # general flags
+ CXXFLAG     = -pg -O3                                    # general flags
 #CXXFLAG     = -g -O3 -std=c++11
 #CXXFLAG     = -g -Ofast
  CXXFLAG    += -Wall -Wextra                             # warning flags
@@ -278,7 +300,7 @@ FFTW_PATH    :=
 MPI_PATH     :=
 HDF5_PATH    :=
 GRACKLE_PATH :=
-GSL_PATH     :=
+GSL_PATH     := /usr/local/myprog/gsl-2.4
 LIBYT_PATH   :=
 
 # NCSA-bluewaters (only need to specify the path of user-installed packages)
@@ -453,6 +475,19 @@ vpath %.cu     Model_MHD/GPU_MHDGravity
 vpath %.cpp    Model_MHD/CPU_MHDGravity
 endif
 
+# sr-hydrodynamic source files (included only if "MODEL=HYDRO")
+# ------------------------------------------------------------------------------------
+else ifeq "$(filter -DMODEL=SR_HYDRO, $(SIMU_OPTION))" "-DMODEL=SR_HYDRO"
+
+CC_FILE     += CPU_Shared_DataReconstruction.cpp  CPU_Shared_FluUtility.cpp  CPU_Shared_ComputeFlux.cpp \
+               CPU_Shared_FullStepUpdate.cpp CPU_FluidSolver_MHM.cpp \
+               CPU_Shared_RiemannSolver_HLLC.cpp   \
+               CPU_dtSolver_HydroCFL.cpp
+
+CC_FILE     += Hydro_Init_ByFunction_AssignData.cpp  Hydro_Aux_Check_Negative.cpp \
+               Hydro_BoundaryCondition_Reflecting.cpp Hydro_Flag_Vorticity.cpp
+
+vpath %.cpp    Model_SRHydro/CPU_SRHydro Model_SRHydro
 
 # ELBDM source files (included only inf "MODEL=ELBDM")
 # -------------------------------------------------------------------------------
@@ -834,7 +869,7 @@ ifeq "$(COMPILE_VERBOSE)" "1"
 	@printf "\nCompiling GAMER --> Successful!\n\n"; \
 	cp $(EXECUTABLE) ../bin/
 else
-	@$(CXX) -o $@ $^ $(LIB) $(OPENMPFLAG); \
+	@$(CXX) -pg -o $@ $^ $(LIB) $(OPENMPFLAG); \
 	(if [ -e $@ ]; then \
 		printf "\nCompiling GAMER --> Successful!\n\n"; \
 		cp $(EXECUTABLE) ../bin/; \

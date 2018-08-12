@@ -66,6 +66,10 @@ double Mis_GetTimeStep( const int lv, const double dTime_SyncFaLv, const double 
 #  elif ( MODEL == MHD )
 #  warning : WAIT MHD !!!
 
+#  elif   ( MODEL == SR_HYDRO )
+   dTime[NdTime] = dTime_dt * dt_InvokeSolver( DT_FLU_SOLVER, lv ); // definition of Hydro CFL
+   sprintf( dTime_Name[NdTime++], "%s", "Hydro_CFL" );
+
 #  elif ( MODEL == ELBDM )
    dTime[NdTime] = dTime_dt * ELBDM_GetTimeStep_Fluid( lv );
    sprintf( dTime_Name[NdTime++], "%s", "ELBDM_CFL" );
@@ -84,6 +88,10 @@ double Mis_GetTimeStep( const int lv, const double dTime_SyncFaLv, const double 
 
 #  elif ( MODEL == MHD )
 #  warning : WAIT MHD !!!
+
+#  elif   ( MODEL == SR_HYDRO )
+   dTime[NdTime] = dTime_dt * dt_InvokeSolver( DT_GRA_SOLVER, lv );
+   sprintf( dTime_Name[NdTime++], "%s", "Hydro_Acc" );
 
 #  elif ( MODEL == ELBDM )
    dTime[NdTime] = dTime_dt * ELBDM_GetTimeStep_Gravity( lv  );
@@ -117,7 +125,7 @@ double Mis_GetTimeStep( const int lv, const double dTime_SyncFaLv, const double 
 
    if ( DumpByTime )
    {
-      dTime[NdTime] = DumpTime - Time[lv];
+      dTime[NdTime] = DumpTime - Time[lv]; // definition of Data_Dump
 
       if ( dTime[NdTime] <= 0.0 )
       {
@@ -136,7 +144,7 @@ double Mis_GetTimeStep( const int lv, const double dTime_SyncFaLv, const double 
 
 // 1.5 CRITERION FIVE : match the program end time
 // =============================================================================================================
-   dTime[NdTime] = END_T - Time[lv];
+   dTime[NdTime] = END_T - Time[lv]; // definition of End_Time
 
    if ( dTime[NdTime] <= 0.0 )
    {
@@ -209,7 +217,9 @@ double Mis_GetTimeStep( const int lv, const double dTime_SyncFaLv, const double 
          if ( dTime_SyncFaLv <= 0.0 )
             Aux_Error( ERROR_INFO, "dTime_SyncFaLv (%20.14e) <= 0.0, something is wrong !!\n", dTime_SyncFaLv );
 
-         if ( (1.0+DT__SYNC_PARENT_LV)*dTime_min >= dTime_SyncFaLv )    dTime_min = dTime_SyncFaLv;
+         if ( (1.0+DT__SYNC_PARENT_LV)*dTime_min >= dTime_SyncFaLv )    
+         //definition of Sync_FaLv
+         dTime_min = dTime_SyncFaLv; 
       }
 
       dTime[NdTime] = dTime_SyncFaLv;
@@ -230,6 +240,7 @@ double Mis_GetTimeStep( const int lv, const double dTime_SyncFaLv, const double 
       const double dTime_SyncSonLv = ( Try2SyncSon ) ? 2.0*dTime_AllLv[lv+1] : NULL_REAL;
 
       if ( Try2SyncSon  &&  dTime_min > dTime_SyncSonLv  &&  dTime_min*(1.0-DT__SYNC_CHILDREN_LV) < dTime_SyncSonLv )
+         //definition of Sync_SonLv
          dTime_min = dTime_SyncSonLv;
 
       dTime[NdTime] = dTime_SyncSonLv;
@@ -278,9 +289,11 @@ double Mis_GetTimeStep( const int lv, const double dTime_SyncFaLv, const double 
       fprintf( File, "  %13.7e", dTime_dt );
 #     endif
 
-      for (int t=0; t<NdTime; t++)
+//    printf HydroCFL, Data_Dump, End_Time...etc.
+      for (int t=0; t<NdTime; t++){
       fprintf( File, "  %13.7e", dTime[t] );
 
+}
       if ( AUTO_REDUCE_DT )
       fprintf( File, "  %13.7e", AutoReduceDtCoeff );
 

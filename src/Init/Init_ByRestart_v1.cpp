@@ -766,7 +766,7 @@ void Load_Parameter_Before_1200( FILE *File, const int FormatVersion, int &NLv_R
          Aux_Message( stderr, "WARNING : %s : RESTART file (%d) != runtime (%d) !!\n",
                       "OPT__REF_FLU_INT_SCHEME", opt__ref_flu_int_scheme+1, OPT__REF_FLU_INT_SCHEME );
 
-#     if ( MODEL == HYDRO )
+#     if ( MODEL == HYDRO || MODEL == SR_HYDRO )
       if ( gamma != GAMMA )
          Aux_Message( stderr, "WARNING : %s : RESTART file (%14.7e) != runtime (%14.7e) !!\n",
                       "GAMMA", gamma, GAMMA );
@@ -1202,7 +1202,7 @@ void Load_Parameter_After_1200( FILE *File, const int FormatVersion, int &NLv_Re
       CompareVar( "FLU_GHOST_SIZE",          flu_ghost_size,         FLU_GHOST_SIZE,            NonFatal );
       CompareVar( "FLU_BLOCK_SIZE_X",        flu_block_size_x,       FLU_BLOCK_SIZE_X,          NonFatal );
       CompareVar( "FLU_BLOCK_SIZE_Y",        flu_block_size_y,       FLU_BLOCK_SIZE_Y,          NonFatal );
-#     if ( MODEL == HYDRO  ||  MODEL == MHD )
+#     if ( MODEL == HYDRO  ||  MODEL == MHD || MODEL == SR_HYDRO )
       CompareVar( "MIN_PRES",                min_pres,         (real)MIN_PRES,                  NonFatal );
 #     endif
 
@@ -1314,6 +1314,72 @@ void Load_Parameter_After_1200( FILE *File, const int FormatVersion, int &NLv_Re
 #     elif ( MODEL == MHD )
 #     warning : WAIT MHD !!!
 
+//    check in SR-HYDRO
+#     elif ( MODEL == SR_HYDRO )
+
+      CompareVar( "FLU_SCHEME",              flu_scheme,             FLU_SCHEME,                NonFatal );
+
+#     ifdef LR_SCHEME
+      CompareVar( "LR_SCHEME",               lr_scheme,              LR_SCHEME,                 NonFatal );
+#     endif
+
+#     ifdef RSOLVER
+      CompareVar( "RSOLVER",                 rsolver,                RSOLVER,                   NonFatal );
+#     endif
+
+#     ifdef CHECK_INTERMEDIATE
+      CompareVar( "CHECK_INTERMEDIATE",      check_intermediate,     CHECK_INTERMEDIATE,        NonFatal );
+#     endif
+
+#     ifdef MAX_ERROR
+      CompareVar( "MAX_ERROR",               max_error,        (real)MAX_ERROR,                 NonFatal );
+#     endif
+
+      if ( !enforce_positive )
+         Aux_Message( stderr, "WARNING : %s : RESTART file (%s) != runtime (%s) !!\n",
+                      "MIN_DENS/MIN_PRES", "OFF", "ON" );
+
+#     ifdef CHAR_RECONSTRUCTION
+      if ( !char_reconstruction )
+         Aux_Message( stderr, "WARNING : %s : RESTART file (%s) != runtime (%s) !!\n",
+                      "CHAR_RECONSTRUCTION", "OFF", "ON" );
+#     else
+      if (  char_reconstruction )
+         Aux_Message( stderr, "WARNING : %s : RESTART file (%s) != runtime (%s) !!\n",
+                      "CHAR_RECONSTRUCTION", "ON", "OFF" );
+#     endif
+
+#     ifdef HLL_NO_REF_STATE
+      if ( !hll_no_ref_state )
+         Aux_Message( stderr, "WARNING : %s : RESTART file (%s) != runtime (%s) !!\n",
+                      "HLL_NO_REF_STATE", "OFF", "ON" );
+#     else
+      if (  hll_no_ref_state )
+         Aux_Message( stderr, "WARNING : %s : RESTART file (%s) != runtime (%s) !!\n",
+                      "HLL_NO_REF_STATE", "ON", "OFF" );
+#     endif
+
+#     ifdef HLL_INCLUDE_ALL_WAVES
+      if ( !hll_include_all_waves )
+         Aux_Message( stderr, "WARNING : %s : RESTART file (%s) != runtime (%s) !!\n",
+                      "HLL_INCLUDE_ALL_WAVES", "OFF", "ON" );
+#     else
+      if (  hll_include_all_waves )
+         Aux_Message( stderr, "WARNING : %s : RESTART file (%s) != runtime (%s) !!\n",
+                      "HLL_INCLUDE_ALL_WAVES", "ON", "OFF" );
+#     endif
+
+#     ifdef WAF_DISSIPATE
+      if ( !waf_dissipate )
+         Aux_Message( stderr, "WARNING : %s : RESTART file (%s) != runtime (%s) !!\n",
+                      "WAF_DISSIPATE", "OFF", "ON" );
+#     else
+      if (  waf_dissipate )
+         Aux_Message( stderr, "WARNING : %s : RESTART file (%s) != runtime (%s) !!\n",
+                      "WAF_DISSIPATE", "ON", "OFF" );
+#     endif
+
+
 
 //    check in ELBDM
 //    ----------------
@@ -1414,7 +1480,7 @@ void Load_Parameter_After_1200( FILE *File, const int FormatVersion, int &NLv_Re
 #     endif // POT_SCHEME
 #     endif // #ifdef GRAVITY
 
-#     if   ( MODEL == HYDRO )
+#     if   ( MODEL == HYDRO || MODEL == SR_HYDRO )
       CompareVar( "OPT__FLAG_PRES_GRADIENT", opt__flag_pres_gradient,      OPT__FLAG_PRES_GRADIENT,   NonFatal );
       CompareVar( "GAMMA",                   gamma,                  (real)GAMMA,                     NonFatal );
       CompareVar( "MINMOD_COEFF",            minmod_coeff,           (real)MINMOD_COEFF,              NonFatal );

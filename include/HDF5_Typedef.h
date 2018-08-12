@@ -116,7 +116,7 @@ struct Makefile_t
    int UnsplitGravity;
 #  endif
 
-#  if   ( MODEL == HYDRO )
+#  if   ( MODEL == HYDRO || MODEL == SR_HYDRO )
    int FluScheme;
 #  ifdef LR_SCHEME
    int LRScheme;
@@ -249,6 +249,28 @@ struct SymConst_t
    int    Flu_BlockSize_y;
 #  warning : WAIT MHD !!!
 
+#  elif   ( MODEL == SR_HYDRO )
+   int    Flu_BlockSize_x;
+   int    Flu_BlockSize_y;
+   int    CheckNegativeInFluid;
+   int    CharReconstruction;
+   int    CheckIntermediate;
+   int    HLL_NoRefState;
+   int    HLL_IncludeAllWaves;
+   int    WAF_Dissipate;
+
+#  ifdef N_FC_VAR
+   int    N_FC_Var;
+#  endif
+
+#  ifdef N_SLOPE_PPM
+   int    N_Slope_PPM;
+#  endif
+
+#  ifdef MAX_ERROR
+   double MaxError;
+#  endif
+
 
 #  elif  ( MODEL == ELBDM )
    int    Flu_BlockSize_x;
@@ -367,12 +389,16 @@ struct InputPara_t
    int    Opt__Flag_PresGradient;
    int    Opt__Flag_Vorticity;
    int    Opt__Flag_Jeans;
+#  elif ( MODEL == SR_HYDRO )
+   int    Opt__Flag_PresGradient;
+   int    Opt__Flag_Vorticity;
+   int    Opt__Flag_Jeans;
 #  endif
 #  if ( MODEL == ELBDM )
    int    Opt__Flag_EngyDensity;
 #  endif
    int    Opt__Flag_LohnerDens;
-#  if ( MODEL == HYDRO )
+#  if ( MODEL == HYDRO || MODEL == SR_HYDRO )
    int    Opt__Flag_LohnerEngy;
    int    Opt__Flag_LohnerPres;
    int    Opt__Flag_LohnerTemp;
@@ -404,7 +430,7 @@ struct InputPara_t
    int    Opt__MinimizeMPIBarrier;
 
 // fluid solvers in HYDRO
-#  if ( MODEL == HYDRO )
+#  if ( MODEL == HYDRO || MODEL == SR_HYDRO )
    double Gamma;
    double MolecularWeight;
    double MinMod_Coeff;
@@ -438,10 +464,15 @@ struct InputPara_t
    char  *FieldLabel[NCOMP_TOTAL];
    int    Opt__OverlapMPI;
    int    Opt__ResetFluid;
-#  if ( MODEL == HYDRO  ||  MODEL == MHD  ||  MODEL == ELBDM )
+#  if ( MODEL == HYDRO  ||  MODEL == MHD  ||  MODEL == ELBDM || MODEL == SR_HYDRO )
    double MinDens;
 #  endif
 #  if ( MODEL == HYDRO  ||  MODEL == MHD )
+   double MinPres;
+   int    JeansMinPres;
+   int    JeansMinPres_Level;
+   int    JeansMinPres_NCell;
+#  elif ( MODEL == SR_HYDRO )
    double MinPres;
    int    JeansMinPres;
    int    JeansMinPres_Level;
@@ -572,7 +603,7 @@ struct InputPara_t
    int    Opt__Ck_Finite;
    int    Opt__Ck_PatchAllocate;
    int    Opt__Ck_FluxAllocate;
-#  if ( MODEL == HYDRO )
+#  if ( MODEL == HYDRO || MODEL == SR_HYDRO )
    int    Opt__Ck_Negative;
 #  endif
    double Opt__Ck_MemFree;
@@ -586,6 +617,10 @@ struct InputPara_t
    double FlagTable_Lohner      [NLEVEL-1][4];
    double FlagTable_User        [NLEVEL-1];
 #  if   ( MODEL == HYDRO )
+   double FlagTable_PresGradient[NLEVEL-1];
+   double FlagTable_Vorticity   [NLEVEL-1];
+   double FlagTable_Jeans       [NLEVEL-1];
+#  elif   ( MODEL == SR_HYDRO )
    double FlagTable_PresGradient[NLEVEL-1];
    double FlagTable_Vorticity   [NLEVEL-1];
    double FlagTable_Jeans       [NLEVEL-1];

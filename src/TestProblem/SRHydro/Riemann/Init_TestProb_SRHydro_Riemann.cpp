@@ -1,7 +1,10 @@
 #include "GAMER.h"
 #include "TestProb.h"
 
-# if ( MODEL == HYDRO )
+#if ( MODEL == SR_HYDRO )
+
+void CPU_Pri2Con( const real In[], real Out[], const real Gamma);
+void CPU_3Velto4Vel( const real In[], real Out[] );
 
 // problem-specific global variables
 // =======================================================================================
@@ -48,22 +51,9 @@ void Validate()
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Validating test problem %d ...\n", TESTPROB_ID );
 
 
-#  if ( MODEL != HYDRO )
-   Aux_Error( ERROR_INFO, "MODEL != HYDRO !!\n" );
+#  if ( MODEL != SR_HYDRO )
+   Aux_Error( ERROR_INFO, "MODEL != SR_HYDRO !!\n" );
 #  endif
-
-#  ifdef GRAVITY
-   Aux_Error( ERROR_INFO, "GRAVITY must be disabled !!\n" );
-#  endif
-
-#  ifdef COMOVING
-   Aux_Error( ERROR_INFO, "COMOVING must be disabled !!\n" );
-#  endif
-
-#  ifdef PARTICLE
-   Aux_Error( ERROR_INFO, "PARTICLE must be disabled !!\n" );
-#  endif
-
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Validating test problem %d ... done\n", TESTPROB_ID );
 
@@ -71,7 +61,7 @@ void Validate()
 
 
 
-#if ( MODEL == HYDRO )
+#if ( MODEL == SR_HYDRO )
 //-------------------------------------------------------------------------------------------------------
 // Function    :  SetParameter
 // Description :  Load and set the problem-specific runtime parameters
@@ -114,15 +104,14 @@ void SetParameter()
 // (1-2) set the default values
    switch ( Riemann_Prob )
    {
-      case SOD_SHOCK_TUBE : Riemann_RhoL = 1.0;    Riemann_VelL = 0.0;  Riemann_PreL = 1.0;  Riemann_VelL_T = 0.0;
-                            Riemann_RhoR = 0.125;  Riemann_VelR = 0.0;  Riemann_PreR = 0.1;  Riemann_VelR_T = 0.0;
+      case SOD_SHOCK_TUBE : Riemann_RhoL = 10.0;    Riemann_VelL = 0.0;  Riemann_PreL = 8.0;  Riemann_VelL_T = 0.0;
+                            Riemann_RhoR = 5.0;  Riemann_VelR = 0.0;  Riemann_PreR = 2.0;  Riemann_VelR_T = 0.0;
                             Riemann_EndT = 0.1;
                             sprintf( Riemann_Name, "Sod's shock tube" );
                             break;
-
-      case STRONG_SHOCK   : Riemann_RhoL = 1250.0;  Riemann_VelL = 0.0;  Riemann_PreL = 500.0;  Riemann_VelL_T = 0.0;
-                            Riemann_RhoR =  125.0;  Riemann_VelR = 0.0;  Riemann_PreR =   5.0;  Riemann_VelR_T = 0.0;
-                            Riemann_EndT = 0.4;
+      case STRONG_SHOCK   : Riemann_RhoL = 0.9   ;  Riemann_VelL = 0.0;  Riemann_PreL = 5.0e+5;  Riemann_VelL_T = 0.0;
+                            Riemann_RhoR = 1.0;     Riemann_VelR = 0.0;  Riemann_PreR = 1.0e-5;  Riemann_VelR_T = 0.0;
+                            Riemann_EndT = 0.1;
                             sprintf( Riemann_Name, "strong shock" );
                             break;
 
@@ -218,7 +207,7 @@ void SetParameter()
 //                   --> In this case, it should provide the analytical solution at the given "Time"
 //                2. This function will be invoked by multiple OpenMP threads when OPENMP is enabled
 //                   --> Please ensure that everything here is thread-safe
-//                3. Even when DUAL_ENERGY is adopted for HYDRO, one does NOT need to set the dual-energy variable here
+//                3. Even when DUAL_ENERGY is adopted for SR_HYDRO, one does NOT need to set the dual-energy variable here
 //                   --> It will be calculated automatically
 //
 // Parameter   :  fluid    : Fluid field to be initialized
@@ -235,6 +224,33 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 
    const double _Gamma_m1 = 1.0/(GAMMA-1.0);
 
+   real ConVarL[NCOMP_FLUID];
+   real ConVarR[NCOMP_FLUID];
+   real PriVar3L[NCOMP_FLUID]; // 3-velocity is stored
+   real PriVar3R[NCOMP_FLUID];
+   real PriVar4L[NCOMP_FLUID]; // 4-velocity is stored
+   real PriVar4R[NCOMP_FLUID];
+
+// left-state
+   PriVar3L[0]=Riemann_RhoL;
+   PriVar3L[1]=Riemann_VelL;
+   PriVar3L[2]=Riemann_VelL_T;
+   PriVar3L[3]=0.0;
+   PriVar3L[4]=Riemann_PreL;
+   
+   CPU_3Velto4Vel(PriVar3L, PriVar4L);
+   CPU_Pri2Con(PriVar4L, ConVarL, GAMMA);
+
+// right-state
+   PriVar3R[0]=Riemann_RhoR;
+   PriVar3R[1]=Riemann_VelR;
+   PriVar3R[2]=Riemann_VelR_T;
+   PriVar3R[3]=0.0;
+   PriVar3R[4]=Riemann_PreR;
+   
+   CPU_3Velto4Vel(PriVar3R, PriVar4R);
+   CPU_Pri2Con(PriVar4R, ConVarR, GAMMA);
+
    double r, BoxCen;
    int    TVar[NCOMP_FLUID];
 
@@ -248,20 +264,20 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 
    if (  ( Riemann_LR > 0 && r < BoxCen )  ||  ( Riemann_LR < 0 && r > BoxCen )  )
    {
-      fluid[ TVar[0] ] = Riemann_RhoL;
-      fluid[ TVar[1] ] = Riemann_RhoL*Riemann_VelL;
-      fluid[ TVar[2] ] = Riemann_RhoL*Riemann_VelL_T;
-      fluid[ TVar[3] ] = 0.0;
-      fluid[ TVar[4] ] = 0.5*( SQR(fluid[MOMX]) + SQR(fluid[MOMY]) + SQR(fluid[MOMZ]) )/fluid[DENS] + Riemann_PreL*_Gamma_m1;
+      fluid[ TVar[0] ] = ConVarL[0];
+      fluid[ TVar[1] ] = ConVarL[1];
+      fluid[ TVar[2] ] = ConVarL[2];
+      fluid[ TVar[3] ] = ConVarL[3];
+      fluid[ TVar[4] ] = ConVarL[4];
    }
 
    else
    {
-      fluid[ TVar[0] ] = Riemann_RhoR;
-      fluid[ TVar[1] ] = Riemann_RhoR*Riemann_VelR;
-      fluid[ TVar[2] ] = Riemann_RhoR*Riemann_VelR_T;
-      fluid[ TVar[3] ] = 0.0;
-      fluid[ TVar[4] ] = 0.5*( SQR(fluid[MOMX]) + SQR(fluid[MOMY]) + SQR(fluid[MOMZ]) )/fluid[DENS] + Riemann_PreR*_Gamma_m1;
+      fluid[ TVar[0] ] = ConVarR[0];
+      fluid[ TVar[1] ] = ConVarR[1];
+      fluid[ TVar[2] ] = ConVarR[2];
+      fluid[ TVar[3] ] = ConVarR[3];
+      fluid[ TVar[4] ] = ConVarR[4];
    }
 
    if ( Riemann_LR < 0 )
@@ -271,7 +287,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
    }
 
 } // FUNCTION : SetGridIC
-#endif // #if ( MODEL == HYDRO )
+#endif // #if ( MODEL == SR_HYDRO )
 
 
 
@@ -295,7 +311,7 @@ void Init_TestProb_Hydro_Riemann()
    Validate();
 
 
-#  if ( MODEL == HYDRO )
+#  if ( MODEL == SR_HYDRO )
 // set the problem-specific runtime parameters
    SetParameter();
 
@@ -309,7 +325,7 @@ void Init_TestProb_Hydro_Riemann()
    BC_User_Ptr              = NULL;       // example: ELBDM/ExtPot/Init_TestProb_ELBDM_ExtPot.cpp --> BC()
    Flu_ResetByUser_Func_Ptr = NULL;
    End_User_Ptr             = NULL;       // example: Hydro/ClusterMerger_vs_Flash/Init_TestProb_Hydro_ClusterMerger_vs_Flash.cpp --> End_ClusterMerger()
-#  endif // #if ( MODEL == HYDRO )
+#  endif // #if ( MODEL == SR_HYDRO )
 
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", __FUNCTION__ );

@@ -59,6 +59,52 @@ void CPU_FluidSolver_CTU( const real Flu_Array_In[][NCOMP_TOTAL][ FLU_NXT*FLU_NX
 #elif ( MODEL == MHD )
 #warning : WAIT MHD !!!
 
+#elif   ( MODEL == SR_HYDRO )
+#if   ( FLU_SCHEME == RTVD )
+void CPU_FluidSolver_RTVD( real Flu_Array_In [][NCOMP_TOTAL][ FLU_NXT*FLU_NXT*FLU_NXT ],
+                           real Flu_Array_Out[][NCOMP_TOTAL][ PS2*PS2*PS2 ],
+                           real Flux_Array[][9][NCOMP_TOTAL][ PS2*PS2 ],
+                           const double Corner_Array[][3],
+                           const real Pot_Array_USG[][USG_NXT_F][USG_NXT_F][USG_NXT_F],
+                           const int NPatchGroup, const real dt, const real dh, const real Gamma,
+                           const bool StoreFlux, const bool XYZ, const real MinDens, const real MinPres );
+#elif ( FLU_SCHEME == WAF )
+void CPU_FluidSolver_WAF( real Flu_Array_In [][NCOMP_TOTAL][ FLU_NXT*FLU_NXT*FLU_NXT ],
+                          real Flu_Array_Out[][NCOMP_TOTAL][ PS2*PS2*PS2 ],
+                          real Flux_Array[][9][NCOMP_TOTAL][ PS2*PS2 ],
+                          const double Corner_Array[][3],
+                          const real Pot_Array_USG[][USG_NXT_F][USG_NXT_F][USG_NXT_F],
+                          const int NPatchGroup, const real dt, const real dh, const real Gamma,
+                          const bool StoreFlux, const bool XYZ, const WAF_Limiter_t WAF_Limiter,
+                          const real MinDens, const real MinPres );
+#elif ( FLU_SCHEME == MHM  ||  FLU_SCHEME == MHM_RP )
+void CPU_FluidSolver_MHM( const real Flu_Array_In[][NCOMP_TOTAL][ FLU_NXT*FLU_NXT*FLU_NXT ],
+                          real Flu_Array_Out     [][NCOMP_TOTAL][ PS2*PS2*PS2 ],
+                          char DE_Array_Out      [][ PS2*PS2*PS2 ],
+                          real Flux_Array     [][9][NCOMP_TOTAL][ PS2*PS2 ],
+                          const double Corner_Array[][3],
+                          const real Pot_Array_USG[][USG_NXT_F][USG_NXT_F][USG_NXT_F],
+                          const int NPatchGroup, const real dt, const real dh, const real Gamma,
+                          const bool StoreFlux, const LR_Limiter_t LR_Limiter, const real MinMod_Coeff,
+                          const real EP_Coeff, const double Time, const OptGravityType_t GravityType,
+                          const double ExtAcc_AuxArray[], const real MinDens, const real MinPres,
+                          const real DualEnergySwitch, const bool NormPassive, const int NNorm, const int NormIdx[],
+                          const bool JeansMinPres, const real JeansMinPres_Coeff );
+#elif ( FLU_SCHEME == CTU )
+void CPU_FluidSolver_CTU( const real Flu_Array_In[][NCOMP_TOTAL][ FLU_NXT*FLU_NXT*FLU_NXT ],
+                          real Flu_Array_Out     [][NCOMP_TOTAL][ PS2*PS2*PS2 ],
+                          char DE_Array_Out      [][ PS2*PS2*PS2 ],
+                          real Flux_Array     [][9][NCOMP_TOTAL][ PS2*PS2 ],
+                          const double Corner_Array[][3],
+                          const real Pot_Array_USG[][USG_NXT_F][USG_NXT_F][USG_NXT_F],
+                          const int NPatchGroup, const real dt, const real dh, const real Gamma,
+                          const bool StoreFlux, const LR_Limiter_t LR_Limiter, const real MinMod_Coeff,
+                          const real EP_Coeff, const double Time, const OptGravityType_t GravityType,
+                          const double ExtAcc_AuxArray[], const real MinDens, const real MinPres,
+                          const real DualEnergySwitch, const bool NormPassive, const int NNorm, const int NormIdx[],
+                          const bool JeansMinPres, const real JeansMinPres_Coeff );
+#endif // FLU_SCHEME
+
 #elif ( MODEL == ELBDM )
 void CPU_ELBDMSolver( real Flu_Array_In [][FLU_NIN    ][ FLU_NXT*FLU_NXT*FLU_NXT ],
                       real Flu_Array_Out[][FLU_NOUT   ][ PS2*PS2*PS2 ],
@@ -196,6 +242,39 @@ void CPU_FluidSolver( real h_Flu_Array_In [][FLU_NIN    ][ FLU_NXT*FLU_NXT*FLU_N
 
 #  elif ( MODEL == MHD )
 #     warning : WAIT MHD !!!
+
+#  elif   ( MODEL == SR_HYDRO )
+
+#     if   ( FLU_SCHEME == RTVD )
+
+      CPU_FluidSolver_RTVD( h_Flu_Array_In, h_Flu_Array_Out, h_Flux_Array, h_Corner_Array, h_Pot_Array_USG,
+                            NPatchGroup, dt, dh, Gamma, StoreFlux, XYZ, MinDens, MinPres );
+
+#     elif ( FLU_SCHEME == WAF )
+
+      CPU_FluidSolver_WAF ( h_Flu_Array_In, h_Flu_Array_Out, h_Flux_Array, h_Corner_Array, h_Pot_Array_USG,
+                            NPatchGroup, dt, dh, Gamma, StoreFlux, XYZ, WAF_Limiter, MinDens, MinPres );
+
+#     elif ( FLU_SCHEME == MHM  ||  FLU_SCHEME == MHM_RP )
+
+      CPU_FluidSolver_MHM ( h_Flu_Array_In, h_Flu_Array_Out, h_DE_Array_Out, h_Flux_Array, h_Corner_Array, h_Pot_Array_USG,
+                            NPatchGroup, dt, dh, Gamma, StoreFlux, LR_Limiter, MinMod_Coeff, EP_Coeff, Time,
+                            GravityType, ExtAcc_AuxArray, MinDens, MinPres, DualEnergySwitch, NormPassive, NNorm, NormIdx,
+                            JeansMinPres, JeansMinPres_Coeff );
+
+#     elif ( FLU_SCHEME == CTU )
+
+      CPU_FluidSolver_CTU ( h_Flu_Array_In, h_Flu_Array_Out, h_DE_Array_Out, h_Flux_Array, h_Corner_Array, h_Pot_Array_USG,
+                            NPatchGroup, dt, dh, Gamma, StoreFlux, LR_Limiter, MinMod_Coeff, EP_Coeff, Time,
+                            GravityType, ExtAcc_AuxArray, MinDens, MinPres, DualEnergySwitch, NormPassive, NNorm, NormIdx,
+                            JeansMinPres, JeansMinPres_Coeff );
+
+#     else
+
+#     error : unsupported CPU hydro scheme
+
+#     endif
+
 
 
 #  elif ( MODEL == ELBDM )

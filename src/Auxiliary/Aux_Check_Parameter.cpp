@@ -43,6 +43,10 @@ void Aux_Check_Parameter()
 #     error : ERROR : currently UNSPLIT_GRAVITY is only supported in HYDRO !!
 #  endif
 
+#  if ( defined UNSPLIT_GRAVITY  &&  MODEL == SR_HYDRO )
+#     error : ERROR : currently UNSPLIT_GRAVITY is NOT supported in SR_HYDRO !!
+#  endif
+
 #  if ( NCOMP_PASSIVE < 0 )
 #     error : ERROR : incorrect number of NCOMP_PASSIVE !!
 #  endif
@@ -128,6 +132,10 @@ void Aux_Check_Parameter()
 #  elif ( MODEL == ELBDM )
    if (  OPT__FLAG_LOHNER_DENS  &&  Flu_ParaBuf < 2  )
       Aux_Error( ERROR_INFO, "Lohner error estimator does NOT work when Flu_ParaBuf (%d) < 2 !!\n", Flu_ParaBuf );
+#  elif   ( MODEL == SR_HYDRO )
+   if (  ( OPT__FLAG_LOHNER_DENS || OPT__FLAG_LOHNER_ENGY || OPT__FLAG_LOHNER_PRES || OPT__FLAG_LOHNER_TEMP )
+         &&  Flu_ParaBuf < 2  )
+      Aux_Error( ERROR_INFO, "Lohner error estimator does NOT work when Flu_ParaBuf (%d) < 2 !!\n", Flu_ParaBuf );
 #  else
 #  error : ERROR : unsupported MODEL !!
 #  endif
@@ -169,10 +177,10 @@ void Aux_Check_Parameter()
                     "AUTO_REDUCE_DT", "OPT__DT_LEVEL == DT_LEVEL_FLEXIBLE" );
    }
 
-#  if ( MODEL != HYDRO )
+#  if ( ( MODEL != HYDRO ) && ( MODEL != SR_HYDRO )  )
    for (int f=0; f<6; f++)
       if ( OPT__BC_FLU[f] == BC_FLU_REFLECTING )
-         Aux_Error( ERROR_INFO, "reflecting boundary condition (OPT__BC_FLU=3) only works with HYDRO !!\n" );
+         Aux_Error( ERROR_INFO, "reflecting boundary condition (OPT__BC_FLU=3) only works with HYDRO and SR-HYDRO !!\n" );
 #  endif
 
    for (int f=0; f<6; f+=2)
@@ -284,6 +292,14 @@ void Aux_Check_Parameter()
 
    bool Flag = ( OPT__FLAG_RHO  ||  OPT__FLAG_RHO_GRADIENT  ||  OPT__FLAG_LOHNER_DENS  ||  OPT__FLAG_USER );
 #  if ( MODEL == HYDRO )
+   Flag |= OPT__FLAG_PRES_GRADIENT;
+   Flag |= OPT__FLAG_VORTICITY;
+   Flag |= OPT__FLAG_JEANS;
+   Flag |= OPT__FLAG_LOHNER_ENGY;
+   Flag |= OPT__FLAG_LOHNER_PRES;
+   Flag |= OPT__FLAG_LOHNER_TEMP;
+#  endif
+#  if ( MODEL == SR_HYDRO )
    Flag |= OPT__FLAG_PRES_GRADIENT;
    Flag |= OPT__FLAG_VORTICITY;
    Flag |= OPT__FLAG_JEANS;
@@ -455,6 +471,9 @@ void Aux_Check_Parameter()
    if ( fabs(GAMMA-5.0/3.0) > 1.0e-4 )
       Aux_Error( ERROR_INFO, "GAMMA must be equal to 5.0/3.0 in cosmological simuluations !!\n" );
 #  elif ( MODEL == MHD )
+#  elif   ( MODEL == SR_HYDRO )
+   if ( fabs(GAMMA-5.0/3.0) > 1.0e-4 )
+      Aux_Error( ERROR_INFO, "GAMMA must be equal to 5.0/3.0 in cosmological simuluations !!\n" );
 #  warning : WAIT MHD !!!
 #  endif
 
@@ -897,6 +916,255 @@ void Aux_Check_Parameter()
 
    } // if ( MPI_Rank == 0 )
 
+#  elif   ( MODEL == SR_HYDRO )
+
+// errors
+// ------------------------------
+#  if ( NCOMP_FLUID != 5 )
+#     error : ERROR : NCOMP_FLUID != 5 in SR-HYDRO !!
+#  endif
+
+#  if ( NCOMP_TOTAL != NFLUX_TOTAL )
+#     error : ERROR : NCOMP_TOTAL != NFLUX_TOTAL !!
+#  endif
+
+#  if (  NCOMP_PASSIVE != 0  &&  ( FLU_SCHEME == RTVD || FLU_SCHEME == WAF )  )
+#     error : RTVD and WAF schemes do NOT support passive scalars !!
+#  endif
+
+#  if ( FLU_SCHEME != RTVD  &&  FLU_SCHEME != MHM  &&  FLU_SCHEME != MHM_RP  &&  FLU_SCHEME != CTU  &&  \
+        FLU_SCHEME != WAF )
+#     error : ERROR : unsupported hydro scheme in the makefile !!
+#  endif
+
+#  if (  defined UNSPLIT_GRAVITY  &&  ( FLU_SCHEME == RTVD || FLU_SCHEME == WAF )  )
+#     error : ERROR : RTVD and WAF do not support UNSPLIT_GRAVITY !!
+#  endif
+
+#  if ( defined LR_SCHEME  &&  LR_SCHEME != PLM  &&  LR_SCHEME != PPM )
+#     error : ERROR : unsupported data reconstruction scheme (PLM/PPM) !!
+#  endif
+
+#  if ( defined RSOLVER  &&  RSOLVER != EXACT  &&  RSOLVER != ROE  &&  RSOLVER != HLLE  &&  RSOLVER != HLLC )
+#     error : ERROR : unsupported Riemann solver (EXACT/ROE/HLLE/HLLC) !!
+#  endif
+
+#  ifdef DUAL_ENERGY
+#  if ( FLU_SCHEME == RTVD  ||  FLU_SCHEME == WAF )
+#     error : RTVD and WAF schemes do NOT support DUAL_ENERGY !!
+#  endif
+
+#  if ( DUAL_ENERGY != DE_ENPY )
+#     error : ERROR : unsupported dual-energy formalism (DE_ENPY only, DE_EINT is not supported yet) !!
+#  endif
+#  endif // #ifdef DUAL_ENERGY
+
+#  if ( defined CHECK_INTERMEDIATE  &&  CHECK_INTERMEDIATE != EXACT  &&  CHECK_INTERMEDIATE != HLLE  &&  \
+        CHECK_INTERMEDIATE != HLLC )
+#     error : ERROR : unsupported option in CHECK_INTERMEDIATE (EXACT/HLLE/HLLC) !!
+#  endif
+
+   if ( OPT__1ST_FLUX_CORR != FIRST_FLUX_CORR_NONE )
+   {
+      if ( OPT__1ST_FLUX_CORR_SCHEME != RSOLVER_1ST_ROE  &&  OPT__1ST_FLUX_CORR_SCHEME != RSOLVER_1ST_HLLC  &&
+           OPT__1ST_FLUX_CORR_SCHEME != RSOLVER_1ST_HLLE )
+         Aux_Error( ERROR_INFO, "unsupported parameter \"%s = %d\" !!\n", "OPT__1ST_FLUX_CORR_SCHEME", OPT__1ST_FLUX_CORR_SCHEME );
+
+#     if ( FLU_SCHEME == RTVD  ||  FLU_SCHEME == WAF )
+         Aux_Error( ERROR_INFO, "RTVD and WAF fluid schemes do not support \"OPT__1ST_FLUX_CORR\" !!\n" );
+#     endif
+   }
+
+   if ( MIN_DENS == 0.0  &&  MPI_Rank == 0 )
+      Aux_Message( stderr, "WARNING : MIN_DENS == 0.0 could be dangerous and is mainly for debugging only !!\n" );
+   else if ( MPI_Rank == 0 )
+      Aux_Message( stderr, "WARNING : MIN_DENS (%13.7e) is on --> please ensure that this value is reasonable !!\n", MIN_DENS );
+
+   if ( MIN_PRES == 0.0  &&  MPI_Rank == 0 )
+      Aux_Message( stderr, "WARNING : MIN_PRES == 0.0 could be dangerous and is mainly for debugging only !!\n" );
+   else if ( MPI_Rank == 0 )
+      Aux_Message( stderr, "WARNING : MIN_PRES (%13.7e) is on --> please ensure that this value is reasonable !!\n", MIN_PRES );
+
+#  if ( FLU_SCHEME == RTVD  ||  FLU_SCHEME == WAF )
+   if ( JEANS_MIN_PRES )
+      Aux_Error( ERROR_INFO, "RTVD and WAF fluid schemes do not support \"JEANS_MIN_PRES\" !!\n" );
+#  endif
+
+
+// warnings
+// ------------------------------
+   if ( MPI_Rank == 0 ) {
+
+#  if ( defined RSOLVER  &&  RSOLVER == EXACT )
+#     warning : WARNING : exact Riemann solver is not recommended since the vacuum solution has not been implemented
+      Aux_Message( stderr, "WARNING : exact Riemann solver is not recommended since the vacuum solution " );
+      Aux_Message( stderr,           "has not been implemented !!\n" );
+#  endif
+
+#  if ( defined CHAR_RECONSTRUCTION  &&  defined GRAVITY )
+#     warning : WARNING : "CHAR_RECONSTRUCTION" is less robust and can cause negative density/pressure !!
+      Aux_Message( stderr, "WARNING : \"CHAR_RECONSTRUCTION\" is less robust and could cause negative " );
+      Aux_Message( stderr,           "density/pressure !!\n" );
+#  endif
+
+# if ( MODEL == HYDRO )
+   if ( !OPT__FIXUP_FLUX )
+      Aux_Message( stderr, "WARNING : \"%s\" is disabled in HYDRO !!\n", "OPT__FIXUP_FLUX" );
+
+   if ( !OPT__FIXUP_RESTRICT )
+      Aux_Message( stderr, "WARNING : \"%s\" is disabled in HYDRO !!\n", "OPT__FIXUP_RESTRICT" );
+#elif ( MODEL == SR_HYDRO )
+   if ( !OPT__FIXUP_FLUX )
+      Aux_Message( stderr, "WARNING : \"%s\" is disabled in SR-HYDRO !!\n", "OPT__FIXUP_FLUX" );
+
+   if ( !OPT__FIXUP_RESTRICT )
+      Aux_Message( stderr, "WARNING : \"%s\" is disabled in SR-HYDRO !!\n", "OPT__FIXUP_RESTRICT" );
+#endif
+
+   if ( OPT__CK_FLUX_ALLOCATE  &&  !OPT__FIXUP_FLUX )
+      Aux_Message( stderr, "WARNING : %s is useless since %s is off !!\n", "OPT__CK_FLUX_ALLOCATE", "OPT__FIXUP_FLUX" );
+
+   if ( OPT__INIT == INIT_BY_FILE )
+      Aux_Message( stderr, "WARNING : currently we don't check MIN_DENS/PRES for the initial data loaded from UM_IC !!\n" );
+
+   if ( OPT__1ST_FLUX_CORR != FIRST_FLUX_CORR_NONE )
+      Aux_Message( stderr, "REMINDER : OPT__1ST_FLUX_CORR may break the strict conservation of fluid variables\n" );
+
+#  ifdef SUPPORT_GRACKLE
+   if ( GRACKLE_ACTIVATE && OPT__FLAG_LOHNER_TEMP )
+      Aux_Message( stderr, "WARNING : currently we do not use Grackle to calculate temperature for OPT__FLAG_LOHNER_TEMP !!\n" );
+#  endif
+
+   } // if ( MPI_Rank == 0 )
+
+
+// check for MHM/MHM_RP/CTU
+// ------------------------------
+#  if ( FLU_SCHEME == MHM  ||  FLU_SCHEME == MHM_RP  ||  FLU_SCHEME == CTU )
+
+// errors
+// ------------------------------
+#  if ( LR_SCHEME == PPM )
+   if ( OPT__LR_LIMITER == EXTPRE )
+      Aux_Error( ERROR_INFO, "currently the PPM reconstruction does not support the \"%s\" limiter\n",
+                 "extrema-preserving" );
+#  endif
+
+   if ( OPT__LR_LIMITER != VANLEER  &&  OPT__LR_LIMITER != GMINMOD  &&  OPT__LR_LIMITER != ALBADA  &&
+        OPT__LR_LIMITER != EXTPRE   &&  OPT__LR_LIMITER != VL_GMINMOD )
+      Aux_Error( ERROR_INFO, "unsupported data reconstruction limiter (OPT__LR_IMITER = %d) !!\n",
+                 OPT__LR_LIMITER );
+
+
+// warnings
+// ------------------------------
+   if ( MPI_Rank == 0 ) {
+
+   } // if ( MPI_Rank == 0 )
+
+#  endif // #if ( FLU_SCHEME == MHM  ||  FLU_SCHEME == MHM_RP  ||  FLU_SCHEME == CTU )
+
+
+// check for MHM/CTU
+// ------------------------------
+#  if ( FLU_SCHEME == MHM  ||  FLU_SCHEME == CTU )
+
+#  if ( LR_SCHEME == PLM )
+   if ( OPT__LR_LIMITER == EXTPRE  &&  FLU_GHOST_SIZE < 3 )
+      Aux_Error( ERROR_INFO, "please set \"%s\" for \"%s\" !!\n",
+                 "FLU_GHOST_SIZE = 3", "MHM/CTU scheme + PLM reconstruction + EXTPRE limiter" );
+
+   if ( OPT__LR_LIMITER == EXTPRE  &&  FLU_GHOST_SIZE > 3  &&  MPI_Rank == 0 )
+      Aux_Message( stderr, "WARNING : please set \"%s\" in \"%s\" for higher performance !!\n",
+                   "FLU_GHOST_SIZE = 3", "MHM/CTU scheme + PLM reconstruction + EXTPRE limiter" );
+
+   if ( OPT__LR_LIMITER != EXTPRE  &&  FLU_GHOST_SIZE < 2 )
+      Aux_Error( ERROR_INFO, "please set \"%s\" for \"%s\" !!\n",
+                 "FLU_GHOST_SIZE = 2", "MHM/CTU scheme + PLM reconstruction + non-EXTPRE limiter" );
+
+   if ( OPT__LR_LIMITER != EXTPRE  &&  FLU_GHOST_SIZE > 2  &&  MPI_Rank == 0 )
+      Aux_Message( stderr, "WARNING : please set \"%s\" in \"%s\" for higher performance !!\n",
+                   "FLU_GHOST_SIZE = 2", "MHM/CTU scheme + PLM reconstruction + non-EXTPRE limiter" );
+#  endif // #if ( LR_SCHEME == PLM )
+
+#  if ( LR_SCHEME == PPM )
+   if ( FLU_GHOST_SIZE < 3 )
+      Aux_Error( ERROR_INFO, "please set \"%s\" for \"%s\" !!\n",
+                 "FLU_GHOST_SIZE = 3", "MHM/CTU scheme + PPM reconstruction + non-EXTPRE limiter" );
+
+   if ( FLU_GHOST_SIZE > 3  &&  MPI_Rank == 0 )
+      Aux_Message( stderr, "WARNING : please set \"%s\" in \"%s\" for higher performance !!\n",
+                   "FLU_GHOST_SIZE = 3", "MHM/CTU scheme + PPM reconstruction + non-EXTPRE limiter" );
+#  endif // #if ( LR_SCHEME == PPM )
+
+#  endif // #if ( FLU_SCHEME == MHM  ||  FLU_SCHEME == CTU )
+
+
+// check for MHM_RP
+// ------------------------------
+#  if ( FLU_SCHEME == MHM_RP )
+
+#  if ( LR_SCHEME == PLM )
+   if ( OPT__LR_LIMITER == EXTPRE  &&  FLU_GHOST_SIZE < 4 )
+      Aux_Error( ERROR_INFO, "please set \"%s\" for \"%s\" !!\n",
+                 "FLU_GHOST_SIZE = 4", "MHM_RP scheme + PLM reconstruction + EXTPRE limiter" );
+
+   if ( OPT__LR_LIMITER == EXTPRE  &&  FLU_GHOST_SIZE > 4  &&  MPI_Rank == 0 )
+      Aux_Message( stderr, "WARNING : please set \"%s\" in \"%s\" for higher performance !!\n",
+                   "FLU_GHOST_SIZE = 4", "MHM_RP scheme + PLM reconstruction + EXTPRE limiter" );
+
+   if ( OPT__LR_LIMITER != EXTPRE  &&  FLU_GHOST_SIZE < 3 )
+      Aux_Error( ERROR_INFO, "please set \"%s\" for \"%s\" !!\n",
+                 "FLU_GHOST_SIZE = 3", "MHM_RP scheme + PLM reconstruction + non-EXTPRE limiter" );
+
+   if ( OPT__LR_LIMITER != EXTPRE  &&  FLU_GHOST_SIZE > 3  &&  MPI_Rank == 0 )
+      Aux_Message( stderr, "WARNING : please set \"%s\" in \"%s\" for higher performance !!\n",
+                   "FLU_GHOST_SIZE = 3", "MHM_RP scheme + PLM reconstruction + non-EXTPRE limiter" );
+#  endif // #if ( LR_SCHEME == PLM )
+
+#  if ( LR_SCHEME == PPM )
+   if ( FLU_GHOST_SIZE < 4 )
+      Aux_Error( ERROR_INFO, "please set \"%s\" for \"%s\" !!\n",
+                 "FLU_GHOST_SIZE = 4", "MHM_RP scheme + PPM reconstruction + non-EXTPRE limiter" );
+
+   if ( FLU_GHOST_SIZE > 4  &&  MPI_Rank == 0 )
+      Aux_Message( stderr, "WARNING : please set \"%s\" in \"%s\" for higher performance !!\n",
+                   "FLU_GHOST_SIZE = 4", "MHM_RP scheme + PPM reconstruction + non-EXTPRE limiter" );
+#  endif // #if ( LR_SCHEME == PPM )
+
+#  endif // #if ( FLU_SCHEME == MHM_RP )
+
+
+// check for WAF
+// ------------------------------
+#  if ( FLU_SCHEME == WAF )
+
+#  if ( RSOLVER == HLLE  ||  RSOLVER == HLLC )
+#     error : ERROR : currently the WAF scheme does not support HLLE/HLLC Riemann solvers
+#  endif
+
+#  if ( FLU_GHOST_SIZE != 2 )
+#     error : ERROR : please set FLU_GHOST_SIZE = 2 for the WAF scheme !!
+#  endif
+
+   if ( OPT__WAF_LIMITER != WAF_SUPERBEE  &&  OPT__WAF_LIMITER != WAF_VANLEER  &&
+        OPT__WAF_LIMITER != WAF_ALBADA    &&  OPT__WAF_LIMITER != WAF_MINBEE      )
+      Aux_Error( ERROR_INFO, "unsupported WAF flux limiter (%d) !!\n", OPT__WAF_LIMITER );
+#  endif // if ( FLU_SCHEME == WAF )
+
+
+// check for RTVD
+// ------------------------------
+#  if ( FLU_SCHEME == RTVD )
+
+#  if ( FLU_GHOST_SIZE != 3 )
+#     error : ERROR : please set FLU_GHOST_SIZE = 3 for the relaxing TVD scheme !!
+#  endif
+
+#  endif // if ( FLU_SCHEME == RTVD )
+
+
+
 #  else
 #  error : ERROR : unsupported MODEL !!
 #  endif // MODEL
@@ -1065,6 +1333,47 @@ void Aux_Check_Parameter()
 
 // warnings
 // ------------------------------
+
+
+// gravity solver in SR-HYDRO
+// =======================================================================================
+#  elif   ( MODEL == SR_HYDRO )
+
+// errors
+// ------------------------------
+#  if ( GRA_GHOST_SIZE < 1 )
+#     error : ERROR : GRA_GHOST_SIZE must >= 1
+#  endif
+
+   if ( OPT__GRA_P5_GRADIENT  &&  GRA_GHOST_SIZE == 1 )
+      Aux_Error( ERROR_INFO, "\"%s\" requires \"%s\" !!\n",
+                 "OPT__GRA_P5_GRADIENT", "GRA_GHOST_SIZE == 2" );
+
+#  ifdef UNSPLIT_GRAVITY
+   if ( OPT__GRA_P5_GRADIENT &&  USG_GHOST_SIZE == 1 )
+      Aux_Error( ERROR_INFO, "\"%s\" requires \"%s\" for UNSPLIT_GRAVITY !!\n",
+                 "OPT__GRA_P5_GRADIENT", "USG_GHOST_SIZE == 2" );
+#  endif
+
+   if ( OPT__EXTERNAL_POT )   Aux_Error( ERROR_INFO, "OPT__EXTERNAL_POT is NOT supported in SR-HYDRO --> use external gravity !!\n" );
+
+
+// warnings
+// ------------------------------
+   if ( MPI_Rank == 0 ) {
+
+#  ifndef STORE_POT_GHOST
+   if ( !OPT__GRA_P5_GRADIENT  &&  GRA_GHOST_SIZE == 2 )
+   {
+      Aux_Message( stderr, "WARNING : \"%s\" is useless when \"%s\" is disabled !!\n",
+                   "GRA_GHOST_SIZE == 2", "OPT__GRA_P5_GRADIENT" );
+   }
+#  endif
+
+   if ( GRA_GHOST_SIZE > 2 )  Aux_Message( stderr, "WARNING : \"GRA_GHOST_SIZE > 2\" !?\n" );
+
+   } // if ( MPI_Rank == 0 )
+
 
 
 

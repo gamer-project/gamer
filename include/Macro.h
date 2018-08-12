@@ -31,6 +31,7 @@
 #define MHD          2
 #define ELBDM        3
 #define PAR_ONLY     4
+#define SR_HYDRO     5
 
 
 // hydrodynamic schemes
@@ -97,6 +98,10 @@
 #  define NCOMP_FLUID         3
 #  define NFLUX_FLUID         1
 
+#elif   ( MODEL == SR_HYDRO )
+#  define NCOMP_FLUID         5
+#  define NFLUX_FLUID         NCOMP_FLUID
+
 #elif ( MODEL == PAR_ONLY )
 #  define NCOMP_FLUID         0
 #  define NFLUX_FLUID         0
@@ -112,7 +117,7 @@
 #  define NCOMP_PASSIVE_USER  0
 #endif
 // --> including entropy (or internal energy) when the dual energy formalism is adopted
-#if (  ( MODEL == HYDRO || MODEL == MHD )  &&  defined DUAL_ENERGY  )
+#if (  ( MODEL == HYDRO || MODEL == MHD || MODEL == SR_HYDRO )  &&  defined DUAL_ENERGY  )
 #  define NCOMP_PASSIVE       ( NCOMP_PASSIVE_USER + 1 )
 #else
 #  define NCOMP_PASSIVE       ( NCOMP_PASSIVE_USER )
@@ -141,6 +146,10 @@
 #elif ( MODEL == ELBDM )
 #  define FLU_NIN             ( NCOMP_TOTAL - 1 )
 #  define FLU_NOUT            ( NCOMP_TOTAL - 0 )
+
+#elif   ( MODEL == SR_HYDRO )
+#  define FLU_NIN             NCOMP_TOTAL
+#  define FLU_NOUT            NCOMP_TOTAL
 
 #elif ( MODEL == PAR_ONLY )
 #  define FLU_NIN             0
@@ -263,6 +272,89 @@
 // bitwise indices of derived fields
 #  define _DERIVED            0
 #  define NDERIVE             0
+
+#elif   ( MODEL == SR_HYDRO )
+// field indices of fluid[] --> element of [0 ... NCOMP_FLUID-1]
+// --> must NOT modify their values
+// --> in addition, they must be consistent with the order these fields are declared in Init_Field()
+#  define  DENS               0
+#  define  MOMX               1
+#  define  MOMY               2
+#  define  MOMZ               3
+#  define  ENGY               4
+
+// field indices of passive[] --> element of [NCOMP_FLUID ... NCOMP_TOTAL-1]
+#if ( NCOMP_PASSIVE > 0 )
+// always put the dual-energy variable at the END of the field list
+// --> so that ENPY/EINT can be determined during compilation
+// --> convenient (and probably also more efficient) for the fluid solver
+# if   ( DUAL_ENERGY == DE_ENPY )
+#  define  ENPY               ( NCOMP_TOTAL - 1 )
+# elif ( DUAL_ENERGY == DE_EINT )
+#  define  EINT               ( NCOMP_TOTAL - 1 )
+# endif
+#endif
+
+// flux indices of flux[] --> element of [0 ... NFLUX_FLUID-1]
+#  define  FLUX_DENS          0
+#  define  FLUX_MOMX          1
+#  define  FLUX_MOMY          2
+#  define  FLUX_MOMZ          3
+#  define  FLUX_ENGY          4
+
+// flux indices of flux_passive[] --> element of [NFLUX_FLUID ... NFLUX_TOTAL-1]
+#if ( NCOMP_PASSIVE > 0 )
+// always put the dual-energy variable at the END of the list
+# if   ( DUAL_ENERGY == DE_ENPY )
+#  define  FLUX_ENPY          ( NFLUX_TOTAL - 1 )
+# elif ( DUAL_ENERGY == DE_EINT )
+#  define  FLUX_EINT          ( NFLUX_TOTAL - 1 )
+# endif
+#endif
+
+// bitwise field indices
+// --> must have "_VAR_NAME = 1<<VAR_NAME" (e.g., _DENS == 1<<DENS)
+// --> convenient for determining subsets of fields (e.g., _DENS|_ENGY)
+// --> used as function parameters (e.g., Prepare_PatchData(), Flu_FixUp(), Flu_Restrict(), Buf_GetBufferData())
+#  define _DENS               ( 1 << DENS )
+#  define _MOMX               ( 1 << MOMX )
+#  define _MOMY               ( 1 << MOMY )
+#  define _MOMZ               ( 1 << MOMZ )
+#  define _ENGY               ( 1 << ENGY )
+
+#if ( NCOMP_PASSIVE > 0 )
+# if   ( DUAL_ENERGY == DE_ENPY )
+#  define _ENPY               ( 1 << ENPY )
+# elif ( DUAL_ENERGY == DE_EINT )
+#  define _EINT               ( 1 << EINT )
+# endif
+#endif // #if ( NCOMP_PASSIVE > 0 )
+
+// bitwise flux indices
+#  define _FLUX_DENS          ( 1 << FLUX_DENS )
+#  define _FLUX_MOMX          ( 1 << FLUX_MOMX )
+#  define _FLUX_MOMY          ( 1 << FLUX_MOMY )
+#  define _FLUX_MOMZ          ( 1 << FLUX_MOMZ )
+#  define _FLUX_ENGY          ( 1 << FLUX_ENGY )
+
+#if ( NFLUX_PASSIVE > 0 )
+# if   ( DUAL_ENERGY == DE_ENPY )
+#  define _FLUX_ENPY          ( 1 << FLUX_ENPY )
+# elif ( DUAL_ENERGY == DE_EINT )
+#  define _FLUX_EINT          ( 1 << FLUX_EINT )
+# endif
+#endif // #if ( NFLUX_PASSIVE > 0 )
+
+// bitwise indices of derived fields
+// --> start from (1<<NCOMP_TOTAL) to distinguish from the intrinsic fields
+// --> remember to define NDERIVE = total number of derived fields
+#  define _VELX               ( 1 << (NCOMP_TOTAL+0) )
+#  define _VELY               ( 1 << (NCOMP_TOTAL+1) )
+#  define _VELZ               ( 1 << (NCOMP_TOTAL+2) )
+#  define _PRES               ( 1 << (NCOMP_TOTAL+3) )
+#  define _TEMP               ( 1 << (NCOMP_TOTAL+4) )
+#  define _DERIVED            ( _VELX | _VELY | _VELZ | _PRES | _TEMP )
+#  define NDERIVE             5
 
 
 #elif ( MODEL == PAR_ONLY )
@@ -405,6 +497,31 @@
 #        define FLU_GHOST_SIZE      3
 #  endif
 
+#elif   ( MODEL == SR_HYDRO )   // hydro
+#  if   ( FLU_SCHEME == RTVD )
+#        define FLU_GHOST_SIZE      3
+#  elif ( FLU_SCHEME == WAF )
+#        define FLU_GHOST_SIZE      2
+#  elif ( FLU_SCHEME == MHM )
+#     if ( LR_SCHEME == PLM )
+#        define FLU_GHOST_SIZE      2
+#     else // PPM
+#        define FLU_GHOST_SIZE      3
+#     endif
+#  elif ( FLU_SCHEME == MHM_RP )
+#     if ( LR_SCHEME == PLM )
+#        define FLU_GHOST_SIZE      3
+#     else // PPM
+#        define FLU_GHOST_SIZE      4
+#     endif
+#  elif ( FLU_SCHEME == CTU )
+#     if ( LR_SCHEME == PLM )
+#        define FLU_GHOST_SIZE      2
+#     else // PPM
+#        define FLU_GHOST_SIZE      3
+#     endif
+#  endif
+
 #else
 #  error : ERROR : unsupported MODEL !!
 #endif // MODEL
@@ -424,6 +541,9 @@
 // for ELBDM, we do not need to transfer the density component
 #  elif ( MODEL == ELBDM )
 #     define GRA_NIN             ( NCOMP_FLUID - 1 )
+
+#  elif   ( MODEL == SR_HYDRO )
+#     define GRA_NIN             NCOMP_FLUID
 
 #  else
 #     error Error : unsupported MODEL (please edit GRA_NIN in the new MODEL) !!
@@ -458,6 +578,14 @@
 #     define GRA_GHOST_SIZE      0
 #     endif
 
+#  elif   ( MODEL == SR_HYDRO )
+#     ifdef STORE_POT_GHOST
+#     define GRA_GHOST_SIZE      2
+#     else
+#     define GRA_GHOST_SIZE      1
+//#   define GRA_GHOST_SIZE      2
+#     endif
+
 #  elif ( MODEL == PAR_ONLY )
 #     ifdef STORE_POT_GHOST
 #     define GRA_GHOST_SIZE      2
@@ -478,6 +606,8 @@
 #     define USG_GHOST_SIZE      1
 #  elif ( MODEL == ELBDM )
 #     define USG_GHOST_SIZE      0
+#  elif   ( MODEL == SR_HYDRO )
+#     define USG_GHOST_SIZE      1
 #  else
 #     error : ERROR : unsupported MODEL !!
 #  endif // MODEL
@@ -734,7 +864,7 @@
 // ################################
 // ## Remove useless definitions ##
 // ################################
-#if ( MODEL == HYDRO )
+#if ( MODEL == HYDRO || MODEL == SR_HYDRO )
 #  if ( FLU_SCHEME != MHM  &&  FLU_SCHEME != MHM_RP  &&  FLU_SCHEME != CTU )
 #  undef LR_SCHEME
 #  endif
@@ -747,7 +877,7 @@
 #  warning : WAIT MHD !!!
 #endif // MODEL
 
-#if ( MODEL != HYDRO  &&  MODEL != MHD )
+#if ( MODEL != HYDRO  &&  MODEL != MHD && MODEL != SR_HYDRO )
 #  undef FLU_SCHEME
 #  undef LR_SCHEME
 #  undef RSOLVER

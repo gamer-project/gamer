@@ -75,6 +75,21 @@ void Init_ResetParameter()
 #     elif  ( MODEL == MHD )
 #     warning : WAIT MHD !!!
 
+#     elif   ( MODEL == SR_HYDRO )
+#     if   ( FLU_SCHEME == RTVD )
+      DT__FLUID = 0.50;
+#     elif ( FLU_SCHEME == WAF )
+      DT__FLUID = 0.50;
+#     elif ( FLU_SCHEME == MHM )
+      DT__FLUID = 1.00;
+#     elif ( FLU_SCHEME == MHM_RP )
+      DT__FLUID = 1.00;
+#     elif ( FLU_SCHEME == CTU )
+      DT__FLUID = 0.50;
+#     else
+#     error : unsupported CPU hydro scheme
+#     endif
+
 #     elif  ( MODEL == ELBDM )
 #     ifdef GRAVITY
       DT__FLUID = 0.20;                   // 1D k-max mode rotates 0.20*2*PI
@@ -110,6 +125,9 @@ void Init_ResetParameter()
 
 #     elif  ( MODEL == MHD )
 #     warning : WAIT MHD !!!
+
+#     elif   ( MODEL == SR_HYDRO )
+      DT__GRAVITY = 0.50;
 
 #     elif  ( MODEL == ELBDM )
       DT__GRAVITY = 0.125;
@@ -220,6 +238,9 @@ void Init_ResetParameter()
 #  elif ( MODEL == MHD )
 #  warning : WAIT MHD !!!
 
+#  elif   ( MODEL == SR_HYDRO )
+   if ( OPT__FIXUP_FLUX )  amr->WithFlux = true;
+
 #  elif ( MODEL == ELBDM )
    if ( OPT__FIXUP_FLUX )  amr->WithFlux = true;
 
@@ -270,6 +291,21 @@ void Init_ResetParameter()
 
 #  elif ( MODEL == MHD )
 #  warning : WAIT MHD !!!
+
+#  elif   ( MODEL == SR_HYDRO )
+   if ( OPT__FLU_INT_SCHEME == INT_DEFAULT )
+   {
+      OPT__FLU_INT_SCHEME = INT_CQUAD;
+
+      PRINT_WARNING( OPT__FLU_INT_SCHEME, FORMAT_INT, "" );
+   }
+
+   if ( OPT__REF_FLU_INT_SCHEME == INT_DEFAULT )
+   {
+      OPT__REF_FLU_INT_SCHEME = INT_CQUAD;
+
+      PRINT_WARNING( OPT__REF_FLU_INT_SCHEME, FORMAT_INT, "" );
+   }
 
 #  elif ( MODEL == ELBDM )
    if ( OPT__FLU_INT_SCHEME == INT_DEFAULT )
@@ -383,7 +419,7 @@ void Init_ResetParameter()
 
 
 // 1st-order flux correction
-#  if ( MODEL == HYDRO  ||  MODEL == MHD )
+#  if ( MODEL == HYDRO  ||  MODEL == MHD || MODEL == SR_HYDRO )
    if ( OPT__1ST_FLUX_CORR == FIRST_FLUX_CORR_NONE  &&  OPT__1ST_FLUX_CORR_SCHEME != RSOLVER_1ST_NONE )
    {
       OPT__1ST_FLUX_CORR_SCHEME = RSOLVER_1ST_NONE;
@@ -518,20 +554,20 @@ void Init_ResetParameter()
 #  endif
 
 
-// flux operations are useful in HYDRO/MHD/ELBDM only
-#  if ( MODEL != HYDRO  &&  MODEL != MHD  &&  MODEL != ELBDM )
+// flux operations are useful in HYDRO/MHD/ELBDM/SR-HYDRO only
+#  if ( MODEL != HYDRO  &&  MODEL != MHD  &&  MODEL != ELBDM && MODEL != SR_HYDRO )
    if ( OPT__FIXUP_FLUX )
    {
       OPT__FIXUP_FLUX = false;
 
-      PRINT_WARNING( OPT__FIXUP_FLUX, FORMAT_INT, "since it's only supported in HYDRO/MHD/ELBDM" );
+      PRINT_WARNING( OPT__FIXUP_FLUX, FORMAT_INT, "since it's only supported in HYDRO/MHD/ELBDM/SR-HYDRO" );
    }
 
    if ( OPT__CK_FLUX_ALLOCATE )
    {
       OPT__CK_FLUX_ALLOCATE = false;
 
-      PRINT_WARNING( OPT__CK_FLUX_ALLOCATE, FORMAT_INT, "since it's only supported in HYDRO/MHD/ELBDM" );
+      PRINT_WARNING( OPT__CK_FLUX_ALLOCATE, FORMAT_INT, "since it's only supported in HYDRO/MHD/ELBDM/SR-HYDRO" );
    }
 #  endif
 
@@ -562,18 +598,18 @@ void Init_ResetParameter()
 
 
 // conservation check is supported only in HYDRO, MHD, and ELBDM
-#  if ( MODEL != HYDRO  &&  MODEL != MHD  &&  MODEL != ELBDM )
+#  if ( MODEL != HYDRO  &&  MODEL != MHD  &&  MODEL != ELBDM && MODEL != SR_HYDRO )
    if ( OPT__CK_CONSERVATION )
    {
       OPT__CK_CONSERVATION = false;
 
-      PRINT_WARNING( OPT__CK_CONSERVATION, FORMAT_INT, "since it's only supported in HYDRO/MHD/ELBDM" );
+      PRINT_WARNING( OPT__CK_CONSERVATION, FORMAT_INT, "since it's only supported in HYDRO/MHD/ELBDM/SR-HYDRO" );
    }
 #  endif
 
 
 // disable OPT__LR_LIMITER and OPT__WAF_LIMITER if they are useless
-#  if ( MODEL == HYDRO  ||  MODEL == MHD )
+#  if ( MODEL == HYDRO  ||  MODEL == MHD || MODEL == SR_HYDRO )
 #  if ( FLU_SCHEME != MHM  &&  FLU_SCHEME != MHM_RP  &&  FLU_SCHEME != CTU )
    if ( OPT__LR_LIMITER != LR_LIMITER_NONE )
    {
@@ -595,7 +631,7 @@ void Init_ResetParameter()
 
 
 // disable the refinement flag of Jeans length if GRAVITY is disabled
-#  if (  (MODEL == HYDRO || MODEL == MHD )  &&  !defined GRAVITY  )
+#  if (  (MODEL == HYDRO || MODEL == MHD || MODEL == SR_HYDRO )  &&  !defined GRAVITY  )
    if ( OPT__FLAG_JEANS )
    {
       OPT__FLAG_JEANS = false;
@@ -701,7 +737,7 @@ void Init_ResetParameter()
 // OPT__UM_IC_NVAR
    if ( OPT__INIT == INIT_BY_FILE  &&  OPT__UM_IC_NVAR <= 0 )
    {
-#     if (  ( MODEL == HYDRO || MODEL == MHD )  &&  defined DUAL_ENERGY  )
+#     if (  ( MODEL == HYDRO || MODEL == MHD || SR_HYDRO )  &&  defined DUAL_ENERGY  )
       OPT__UM_IC_NVAR = NCOMP_TOTAL - 1;  // do not load the dual-energy field from the disk
 
 #     elif ( MODEL == ELBDM )
@@ -739,7 +775,7 @@ void Init_ResetParameter()
 
 
 // JEANS_MIN_PRES must work with GRAVITY
-#  if ( MODEL == HYDRO  ||  MODEL == MHD )
+#  if ( MODEL == HYDRO  ||  MODEL == MHD || MODEL == SR_HYDRO )
 #  ifndef GRAVITY
    if ( JEANS_MIN_PRES )
    {
