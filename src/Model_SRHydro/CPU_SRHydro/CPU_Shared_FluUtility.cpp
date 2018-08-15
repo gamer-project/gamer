@@ -103,8 +103,8 @@ CPU_Rotate3D (real InOut[], const int XYZ, const bool Forward)
 void
 CPU_Con2Pri (const real In[], real Out[], const real Gamma)
 {
-#ifdef SR_DEBUG
   real In_temp[5] = { In[0], In[1], In[2], In[3], In[4] };
+#ifdef SR_DEBUG
   if ((In[0] < 0) || (In[4] < 0))
     {
       printf ("\n\nerror: D < 0 or E < 0!\n");
