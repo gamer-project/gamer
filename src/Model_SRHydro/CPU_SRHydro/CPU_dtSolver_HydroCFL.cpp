@@ -32,6 +32,7 @@ void CPU_dtSolver_HydroCFL( real dt_Array[], const real Flu_Array[][NCOMP_FLUID]
    const int  NPatch           = 8*NPG;
 
 
+#  pragma omp parallel for schedule( runtime )
    for (int p=0; p<NPatch; p++)
    {
       dt_Array[p] = Safety*dh;
