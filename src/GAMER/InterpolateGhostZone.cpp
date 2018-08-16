@@ -1019,6 +1019,9 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData[], real Int
 //       temporal interpolation
          for (int t=0; t<FSize3D; t++)
          {
+//          must unwrap phase before interpolating it
+            FData_Phas_IntTime[t] = ELBDM_UnwrapPhase( FData_Phas[t], FData_Phas_IntTime[t] );
+
             FData_Dens[t] = FluWeighting     *FData_Dens        [t]
                           + FluWeighting_IntT*FData_Dens_IntTime[t];
             FData_Phas[t] = FluWeighting     *FData_Phas        [t]
