@@ -1,9 +1,9 @@
 #include "GAMER.h"
 
-void InterpolateGhostZone( const int lv, const int PID, real IntData[], const int SibID, const double PrepTime,
-                           const int GhostSize, const IntScheme_t IntScheme, const int NTSib[], int *TSib[],
-                           const int TVar, const int NVar_Tot, const int NVar_Flu, const int TFluVarIdxList[],
-                           const int NVar_Der, const int TDerVarList[], const bool IntPhase,
+void InterpolateGhostZone( const int lv, const int PID, real IntData[], real IntData_IntTime[], const int SibID,
+                           const double PrepTime, const int GhostSize, const IntScheme_t IntScheme,
+                           const int NTSib[], int *TSib[], const int TVar, const int NVar_Tot, const int NVar_Flu,
+                           const int TFluVarIdxList[], const int NVar_Der, const int TDerVarList[], const bool IntPhase,
                            const OptFluBC_t FluBC[], const OptPotBC_t PotBC, const int BC_Face[], const real MinPres,
                            const bool DE_Consistency );
 static void SetTargetSibling( int NTSib[], int *TSib[] );
@@ -293,7 +293,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
 // TFluVarIdxList : List recording the target fluid and passive variable indices ( = [0 ... NCOMP_TOTAL-1] )
    int NTSib[26], *TSib[26], NVar_Flu, NVar_Der, NVar_Tot, TFluVarIdxList[NCOMP_TOTAL];
 
-// set up the target sibling indices for the function "InterpolateGhostZone"
+// set up the target sibling indices for InterpolateGhostZone()
    SetTargetSibling( NTSib, TSib );
 
 // determine the components to be prepared
@@ -627,6 +627,16 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
 
 //    IntData: array to store the interpolation results (allocate with the maximum required size)
       real *IntData = new real [ NVar_Tot*PS2*PS2*GhostSize_Padded ];
+
+//    IntData_IntTime: for temporal interpolation on density and phase in ELBDM
+#     if ( MODEL == ELBDM )
+      real *IntData_IntTime = (  IntPhase  &&  OPT__INT_TIME  &&  lv > 0  &&
+                                !Mis_CompareRealValue( PrepTime, amr->FluSgTime[lv-1][  amr->FluSg[lv-1]], NULL, false )  &&
+                                !Mis_CompareRealValue( PrepTime, amr->FluSgTime[lv-1][1-amr->FluSg[lv-1]], NULL, false )  )
+                              ? new real [ 2*PS2*PS2*GhostSize_Padded ] : NULL;
+#     else
+      real *IntData_IntTime = NULL;
+#     endif
 
 
 //    assign particle mass onto grids
@@ -1163,7 +1173,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
 
 
 //             perform interpolation and store the results in IntData
-               InterpolateGhostZone( lv-1, FaSibPID, IntData, Side, PrepTime, GhostSize, IntScheme, NTSib, TSib,
+               InterpolateGhostZone( lv-1, FaSibPID, IntData, IntData_IntTime, Side, PrepTime, GhostSize, IntScheme, NTSib, TSib,
                                      TVar, NVar_Tot, NVar_Flu, TFluVarIdxList, NVar_Der, TDerVarList, IntPhase,
                                      FluBC, PotBC, BC_Face, MinPres, DE_Consistency );
 
@@ -1588,6 +1598,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
 
       if ( PrepUnit == UNIT_PATCH )    delete [] Array;
       delete [] IntData;
+      delete [] IntData_IntTime;
 
    } // end of OpenMP parallel region
 

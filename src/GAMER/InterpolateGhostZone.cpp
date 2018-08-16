@@ -27,6 +27,8 @@ static int Table_01( const int SibID, const int Side, const char dim, const int 
 // Parameter   :  lv             : Target "coarse-grid" refinement level
 //                PID            : Patch ID at level "lv" used for interpolation
 //                IntData        : Array to store the interpolation result
+//                IntData_IntT   : Array to store the interpolation result when temporal interpolation is required
+//                                 --> Only used for ELBDM with IntPhase
 //                SibID          : Sibling index (0~25) used to determine the interpolation region
 //                PrepTime       : Target physical time to prepare data
 //                GhostSize      : Number of ghost zones
@@ -62,10 +64,10 @@ static int Table_01( const int SibID, const int Side, const char dim, const int 
 //                DE_Consistency : Ensure the consistency between pressure, total energy density, and the dual-energy variable
 //                                 when DUAL_ENERGY is on
 //-------------------------------------------------------------------------------------------------------
-void InterpolateGhostZone( const int lv, const int PID, real IntData[], const int SibID, const double PrepTime,
-                           const int GhostSize, const IntScheme_t IntScheme, const int NTSib[], int *TSib[],
-                           const int TVar, const int NVar_Tot, const int NVar_Flu, const int TFluVarIdxList[],
-                           const int NVar_Der, const int TDerVarList[], const bool IntPhase,
+void InterpolateGhostZone( const int lv, const int PID, real IntData[], real IntData_IntTime[], const int SibID,
+                           const double PrepTime, const int GhostSize, const IntScheme_t IntScheme,
+                           const int NTSib[], int *TSib[], const int TVar, const int NVar_Tot, const int NVar_Flu,
+                           const int TFluVarIdxList[], const int NVar_Der, const int TDerVarList[], const bool IntPhase,
                            const OptFluBC_t FluBC[], const OptPotBC_t PotBC, const int BC_Face[], const real MinPres,
                            const bool DE_Consistency )
 {
@@ -105,7 +107,7 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData[], const in
 #  endif // MODEL
 
 #  ifdef GRAVITY
-   const bool PrepPot      = ( TVar & _POTE     ) ? true : false;
+   const bool PrepPot         = ( TVar & _POTE ) ? true : false;
 #  endif
 
 #  if ( MODEL == HYDRO  ||  MODEL == MHD )
@@ -303,7 +305,13 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData[], const in
 
          CData_Ptr[Idx] = amr->patch[FluSg][lv][PID]->fluid[TFluVarIdx][k1][j1][i1];
 
-         if ( FluIntTime ) // temporal interpolation
+//       temporal interpolation
+//       --> for IntPhase, apply temporal interpolation to density/phase instead of real/imaginary parts for better accuracy
+#        if ( MODEL == ELBDM )
+         if ( FluIntTime  &&  !IntPhase )
+#        else
+         if ( FluIntTime )
+#        endif
          CData_Ptr[Idx] =   FluWeighting     *CData_Ptr[Idx]
                           + FluWeighting_IntT*amr->patch[FluSg_IntT][lv][PID]->fluid[TFluVarIdx][k1][j1][i1];
 
@@ -501,7 +509,13 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData[], const in
 
                CData_Ptr[Idx] = amr->patch[FluSg][lv][SibPID]->fluid[TFluVarIdx][k2][j2][i2];
 
-               if ( FluIntTime ) // temporal interpolation
+//             temporal interpolation
+//             --> for IntPhase, apply temporal interpolation to density/phase instead of real/imaginary parts for better accuracy
+#              if ( MODEL == ELBDM )
+               if ( FluIntTime  &&  !IntPhase )
+#              else
+               if ( FluIntTime )
+#              endif
                CData_Ptr[Idx] =   FluWeighting     *CData_Ptr[Idx]
                                 + FluWeighting_IntT*amr->patch[FluSg_IntT][lv][SibPID]->fluid[TFluVarIdx][k2][j2][i2];
 
@@ -794,17 +808,21 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData[], const in
 
 
 // interpolation
-#  if ( MODEL == ELBDM )
-   real *CData_Dens = NULL;
-   real *CData_Real = NULL;
-   real *CData_Imag = NULL;
-   real *FData_Dens = NULL;
-   real *FData_Real = NULL;
-   real *FData_Imag = NULL;
-
 // c1. interpolation on phase in ELBDM
+#  if ( MODEL == ELBDM )
    if ( IntPhase )
    {
+//    determine the array indices
+      real *CData_Real = NULL;
+      real *CData_Imag = NULL;
+      real *CData_Dens = NULL;
+      real *CData_Phas = NULL;
+
+      real *FData_Real = NULL;
+      real *FData_Imag = NULL;
+      real *FData_Dens = NULL;
+      real *FData_Phas = NULL;
+
       int DensIdx=-1, RealIdx=-1, ImagIdx=-1;
 
       for (int v=0; v<NVar_Flu; v++)
@@ -822,15 +840,20 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData[], const in
          Aux_Error( ERROR_INFO, "real and/or imag parts are not found for phase interpolation in ELBDM !!\n" );
 #     endif
 
-//    determine the array index to store density
-      CData_Dens = CData   + ( (DensIdx==-1) ? ImagIdx : DensIdx )*CSize3D;
+//    store density in the REAL component (if we are not actually preparing the density field) and
+//    store phase   in the IMAG component
       CData_Real = CData   + RealIdx*CSize3D;
       CData_Imag = CData   + ImagIdx*CSize3D;
-      FData_Dens = IntData + ( (DensIdx==-1) ? ImagIdx : DensIdx )*FSize3D;
+      CData_Dens = CData   + ( (DensIdx==-1) ? RealIdx : DensIdx )*CSize3D;
+      CData_Phas = CData_Imag;
+
       FData_Real = IntData + RealIdx*FSize3D;
       FData_Imag = IntData + ImagIdx*FSize3D;
+      FData_Dens = IntData + ( (DensIdx==-1) ? RealIdx : DensIdx )*FSize3D;
+      FData_Phas = FData_Imag;
 
-//    get the wrapped phase (store in the REAL component) and density (store in the IMAG component)
+
+//    get the density and wrapped phase
       real Re, Im;
 
       for (int t=0; t<CSize3D; t++)
@@ -838,67 +861,208 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData[], const in
          Re = CData_Real[t];
          Im = CData_Imag[t];
 
-         CData_Real[t] = ATAN2( Im, Re );
-         if ( DensIdx == -1 )
+         CData_Phas[t] = ATAN2( Im, Re );
+         if ( DensIdx == -1 ) // only need to recalculate density if it's not prepared already
          CData_Dens[t] = Re*Re + Im*Im;
       }
+
 
 //    interpolate density
       Interpolate( CData_Dens, CSize, CStart, CRange, FData_Dens, FSize, FStart, 1, IntScheme,
                    PhaseUnwrapping_No, &EnsureMonotonicity_Yes );
 
 //    interpolate phase
-      Interpolate( CData_Real, CSize, CStart, CRange, FData_Real, FSize, FStart, 1, IntScheme,
+      Interpolate( CData_Phas, CSize, CStart, CRange, FData_Phas, FSize, FStart, 1, IntScheme,
                    PhaseUnwrapping_Yes, &EnsureMonotonicity_No );
+
+
+//    temporal interpolation
+//    --> apply it to density/phase instead of real/imaginary parts for better accuracy
+      if ( FluIntTime )
+      {
+         const int TFluVarIdxList_IntTime[2] = { REAL, IMAG };
+         const int NVar_Flu_IntTime          = 2;
+
+//       a. fill up the central region of CData with the data at FluSg_IntT
+//       ------------------------------------------------------------------------------------------------------------
+         CData_Ptr = CData;
+
+         for (int v=0; v<NVar_Flu_IntTime; v++)
+         {
+            TFluVarIdx = TFluVarIdxList_IntTime[v];
+
+            for (int k=0; k<Loop1[2]; k++)   {  k1 = k + Disp1[2];   k2 = k + Disp2[2];
+            for (int j=0; j<Loop1[1]; j++)   {  j1 = j + Disp1[1];   j2 = j + Disp2[1];
+                                                Idx = IDX321( Disp2[0], j2, k2, CSize[0], CSize[1] );
+            for (i1=Disp1[0]; i1<Disp1[0]+Loop1[0]; i1++)   {
+
+               CData_Ptr[Idx] = amr->patch[FluSg_IntT][lv][PID]->fluid[TFluVarIdx][k1][j1][i1];
+
+               Idx ++;
+            }}}
+
+            CData_Ptr += CSize3D;
+         }
+
+
+//       b. fill up the ghost zone of CData with the data at FluSg_IntT
+//       ------------------------------------------------------------------------------------------------------------
+         for (int CSib=0; CSib<NTSib[SibID]; CSib++)
+         {
+            Side   = TSib[SibID][CSib];
+            SibPID = amr->patch[0][lv][PID]->sibling[Side];
+
+            for (int d=0; d<3; d++)
+            {
+               Loop2[d] = Table_01( SibID, Side, 'x'+d, La, CGhost, CGhost, PATCH_SIZE, CGhost, CGhost, La );
+               Disp3[d] = Table_01( SibID, Side, 'x'+d, 0, La, 0, CGhost, CGhost+PATCH_SIZE, 0, CGhost );
+               Disp4[d] = Table_01( SibID, Side, 'x'+d, PATCH_SIZE-La, 0, PATCH_SIZE-CGhost, 0, 0,
+                                    PATCH_SIZE-CGhost, 0 );
+            }
+
+//          b1. if the target sibling patch exists --> just copy data from the nearby patch at the same level
+            if ( SibPID >= 0 )
+            {
+               CData_Ptr = CData;
+
+               for (int v=0; v<NVar_Flu_IntTime; v++)
+               {
+                  TFluVarIdx = TFluVarIdxList_IntTime[v];
+
+                  for (int k=0; k<Loop2[2]; k++)   {  k1 = k + Disp3[2];   k2 = k + Disp4[2];
+                  for (int j=0; j<Loop2[1]; j++)   {  j1 = j + Disp3[1];   j2 = j + Disp4[1];
+                                                      Idx = IDX321( Disp3[0], j1, k1, CSize[0], CSize[1] );
+                  for (i2=Disp4[0]; i2<Disp4[0]+Loop2[0]; i2++)   {
+
+                     CData_Ptr[Idx] = amr->patch[FluSg_IntT][lv][SibPID]->fluid[TFluVarIdx][k2][j2][i2];
+
+                     Idx ++;
+                  }}}
+
+                  CData_Ptr += CSize3D;
+               }
+            } // if ( SibPID >= 0 )
+
+//          b2. if the target sibling patch does not exist --> something is wrong !!
+            else if ( SibPID == -1 )
+               Aux_Error( ERROR_INFO, "incorrect parameter %s = %d (Rank %d, Lv %d, PID %d, Side %d) !!\n",
+                          "SibPID", SibPID, MPI_Rank, lv, PID, Side );
+
+//          b3. if the target sibling patch lies outside the simulation domain --> apply the specified B.C.
+            else if ( SibPID <= SIB_OFFSET_NONPERIODIC )
+            {
+               CData_Ptr = CData;
+
+               for (int d=0; d<3; d++)
+               {
+                  BC_Idx_Start[d] = Disp3[d];
+                  BC_Idx_End  [d] = Loop2[d] + BC_Idx_Start[d] - 1;
+               }
+
+               BC_Sibling = SIB_OFFSET_NONPERIODIC - SibPID;
+
+               switch ( FluBC[ BC_Face[BC_Sibling] ] )
+               {
+                  case BC_FLU_OUTFLOW:
+                     Flu_BoundaryCondition_Outflow( CData_Ptr, BC_Face[BC_Sibling], NVar_Flu_IntTime, CGhost,
+                                                    CSize[0], CSize[1], CSize[2], BC_Idx_Start, BC_Idx_End );
+                  break;
+
+                  case BC_FLU_USER:
+                     Flu_BoundaryCondition_User   ( CData_Ptr,                      NVar_Flu_IntTime,
+                                                    CSize[0], CSize[1], CSize[2], BC_Idx_Start, BC_Idx_End,
+                                                    TFluVarIdxList_IntTime, PrepTime, dh, xyz, _REAL|_IMAG, lv );
+                  break;
+
+                  default:
+                     Aux_Error( ERROR_INFO, "unsupported fluid B.C. (%d) !!\n", FluBC[ BC_Face[BC_Sibling] ] );
+               } // switch ( FluBC[ BC_Face[BC_Sibling] ] )
+            } // else if ( SibPID <= SIB_OFFSET_NONPERIODIC )
+
+            else
+               Aux_Error( ERROR_INFO, "SibPID == %d (PID %d, Side %d) !!\n", SibPID, PID, Side );
+
+         } // for (int CSib=0; CSib<NTSib[SibID]; CSib++)
+
+
+//       get the density and wrapped phase at FluSg_IntT
+#        ifdef GAMER_DEBUG
+         if ( IntData_IntTime == NULL )   Aux_Error( ERROR_INFO, "IntData_IntTime == NULL !!\n" );
+#        endif
+
+         real *CData_Real_IntTime = CData           + 0*CSize3D;
+         real *CData_Imag_IntTime = CData           + 1*CSize3D;
+         real *CData_Dens_IntTime = CData_Real_IntTime;
+         real *CData_Phas_IntTime = CData_Imag_IntTime;
+
+         real *FData_Dens_IntTime = IntData_IntTime + 0*FSize3D;
+         real *FData_Phas_IntTime = IntData_IntTime + 1*FSize3D;
+
+         for (int t=0; t<CSize3D; t++)
+         {
+            Re = CData_Real_IntTime[t];
+            Im = CData_Imag_IntTime[t];
+
+            CData_Phas_IntTime[t] = ATAN2( Im, Re );
+            CData_Dens_IntTime[t] = Re*Re + Im*Im;
+         }
+
+//       interpolate density
+         Interpolate( CData_Dens_IntTime, CSize, CStart, CRange, FData_Dens_IntTime, FSize, FStart, 1, IntScheme,
+                      PhaseUnwrapping_No, &EnsureMonotonicity_Yes );
+
+//       interpolate phase
+         Interpolate( CData_Phas_IntTime, CSize, CStart, CRange, FData_Phas_IntTime, FSize, FStart, 1, IntScheme,
+                      PhaseUnwrapping_Yes, &EnsureMonotonicity_No );
+
+
+//       temporal interpolation
+         for (int t=0; t<FSize3D; t++)
+         {
+            FData_Dens[t] = FluWeighting     *FData_Dens        [t]
+                          + FluWeighting_IntT*FData_Dens_IntTime[t];
+            FData_Phas[t] = FluWeighting     *FData_Phas        [t]
+                          + FluWeighting_IntT*FData_Phas_IntTime[t];
+         }
+      } // FluIntTime
+
+
+//    density and phase --> real and imaginary parts
+      real Dens, Phase, Amp;
+
+      for (int t=0; t<FSize3D; t++)
+      {
+         Dens  = FData_Dens[t];
+         Phase = FData_Phas[t];
+
+//       be careful about the negative density introduced from the round-off errors
+//       --> note that we check minimum density in the end of Prepare_PatchData()
+         if ( Dens < (real)0.0 )
+         {
+            FData_Dens[t] = (real)0.0;
+            Dens          = (real)0.0;
+         }
+
+         Amp           = SQRT( Dens );
+         FData_Real[t] = Amp*COS( Phase );
+         FData_Imag[t] = Amp*SIN( Phase );
+      }
    } // if ( IntPhase )
 
 
-// c2. interpolation on real/imag parts in ELBDM
+// c2. interpolation on original variables
    else // if ( IntPhase )
+#  endif // if ( MODEL == ELBDM )
    {
       for (int v=0; v<NVar_Flu; v++)
       Interpolate( CData+CSize3D*v, CSize, CStart, CRange, IntData+FSize3D*v, FSize, FStart, 1,
                    IntScheme, PhaseUnwrapping_No, Monotonicity );
    } // if ( IntPhase ) ... else ...
 
-// retrieve real and imaginary parts when phase interpolation is adopted
-   if ( IntPhase )
-   {
-      real Amp, Phase, Rho;
-
-      for (int t=0; t<FSize3D; t++)
-      {
-         Phase = FData_Real[t];
-         Rho   = FData_Dens[t];
-
-//       be careful about the negative density introduced from the round-off errors
-//       --> note that we check minimum density in the end of Prepare_PatchData()
-         if ( Rho < (real)0.0 )
-         {
-            FData_Dens[t] = (real)0.0;
-            Rho           = (real)0.0;
-         }
-
-         Amp           = SQRT( Rho );
-         FData_Real[t] = Amp*COS( Phase );
-         FData_Imag[t] = Amp*SIN( Phase );
-      }
-   }
-
-#  else // #if ( MODEL == ELBDM )
-
-
-// c3. interpolation on original variables for models != ELBDM
-   for (int v=0; v<NVar_Flu; v++)
-      Interpolate( CData+CSize3D*v, CSize, CStart, CRange, IntData+FSize3D*v, FSize, FStart, 1,
-                   IntScheme, PhaseUnwrapping_No, Monotonicity );
-
-#  endif // #if ( MODEL == ELBDM ) ... else ...
-
    NVar_SoFar = NVar_Flu;
 
 
-// c4. derived variables
+// c3. derived variables
 #  if   ( MODEL == HYDRO )
 // we now apply monotonic interpolation to ALL fluid variables
    if ( PrepVx )
@@ -948,7 +1112,7 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData[], const in
 
 
 #  ifdef GRAVITY
-// c5. interpolation on potential
+// c4. interpolation on potential
    if ( PrepPot )
    {
       Interpolate( CData+CSize3D*NVar_SoFar, CSize, CStart, CRange, IntData+FSize3D*NVar_SoFar, FSize, FStart, 1,
