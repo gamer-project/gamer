@@ -1,0 +1,16 @@
+Compilation flags:
+========================================
+Enable : MODEL=ELBDM
+Disable: GRAVITY, PARTICLE
+
+
+Default setup:
+========================================
+1. Evolve vortex pair for one period
+2. Use the analytical solution as the boundary conditions
+
+
+Note:
+========================================
+1. Ref: Tzihong Chiueh et al 2011 J. Phys. B: At. Mol. Opt. Phys. 44 115101,
+        Vortex turbulence in linear Schrödinger wave mechanics
