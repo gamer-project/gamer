@@ -5,10 +5,13 @@
 
 // problem-specific global variables
 // =======================================================================================
-static double VorPairRot_BgAmp;     // psi(R,phi) = BgAmp - J1Amp*J1( sqrt(2*Eta*Omega)*R )*exp( i*(phi-Omega*t+Phase0) )
-static double VorPairRot_J1Amp;
-static double VorPairRot_Omega;
-static double VorPairRot_Phase0;
+static double VorPairLin_BgAmp;     // psi(x,y) = BgAmp + WaveAmp*cos(ky*y)*exp( i*(kx*x-Omega*t+Phase0) )
+static double VorPairLin_WaveAmp;
+static double VorPairLin_Phase0;
+
+static double VorPairLin_kx;
+static double VorPairLin_ky;
+static double VorPairLin_Omega;
 // =======================================================================================
 
 
@@ -80,12 +83,11 @@ void SetParameter()
 // --> note that VARIABLE, DEFAULT, MIN, and MAX must have the same data type
 // --> some handy constants (e.g., Useless_bool, Eps_double, NoMin_int, ...) are defined in "include/ReadPara.h"
 // ********************************************************************************************************************************
-// ReadPara->Add( "KEY_IN_THE_FILE",   &VARIABLE,              DEFAULT,       MIN,              MAX               );
+// ReadPara->Add( "KEY_IN_THE_FILE",    &VARIABLE,              DEFAULT,       MIN,              MAX               );
 // ********************************************************************************************************************************
-   ReadPara->Add( "VorPairRot_BgAmp",  &VorPairRot_BgAmp,     -1.0,           Eps_double,       NoMax_double      );
-   ReadPara->Add( "VorPairRot_J1Amp",  &VorPairRot_J1Amp,     -1.0,           Eps_double,       NoMax_double      );
-   ReadPara->Add( "VorPairRot_Omega",  &VorPairRot_Omega,     -1.0,           Eps_double,       NoMax_double      );
-   ReadPara->Add( "VorPairRot_Phase0", &VorPairRot_Phase0,     0.0,           NoMin_double,     NoMax_double      );
+   ReadPara->Add( "VorPairLin_BgAmp",   &VorPairLin_BgAmp,     -1.0,           Eps_double,       NoMax_double      );
+   ReadPara->Add( "VorPairLin_WaveAmp", &VorPairLin_WaveAmp,   -1.0,           Eps_double,       NoMax_double      );
+   ReadPara->Add( "VorPairLin_Phase0",  &VorPairLin_Phase0,     0.0,           NoMin_double,     NoMax_double      );
 
    ReadPara->Read( FileName );
 
@@ -97,12 +99,15 @@ void SetParameter()
 
 
 // (2) set the problem-specific derived parameters
+   VorPairLin_kx    = 2.0*M_PI/amr->BoxSize[0];   // by default we set wavelength equal to the box size
+   VorPairLin_ky    = 2.0*M_PI/amr->BoxSize[1];
+   VorPairLin_Omega = 0.5/ELBDM_ETA*( SQR(VorPairLin_kx) + SQR(VorPairLin_ky) );
 
 
 // (3) reset other general-purpose parameters
 //     --> a helper macro PRINT_WARNING is defined in TestProb.h
    const long   End_Step_Default = __INT_MAX__;
-   const double End_T_Default    = 1.0*2.0*M_PI/VorPairRot_Omega;    // 1 period
+   const double End_T_Default    = 1.0*2.0*M_PI/VorPairLin_Omega;    // 1 period
 
    if ( END_STEP < 0 ) {
       END_STEP = End_Step_Default;
@@ -119,11 +124,13 @@ void SetParameter()
    if ( MPI_Rank == 0 )
    {
       Aux_Message( stdout, "=============================================================================\n" );
-      Aux_Message( stdout, "  test problem ID   = %d\n",     TESTPROB_ID       );
-      Aux_Message( stdout, "  VorPairRot_BgAmp  = %13.7e\n", VorPairRot_BgAmp  );
-      Aux_Message( stdout, "  VorPairRot_J1Amp  = %13.7e\n", VorPairRot_J1Amp  );
-      Aux_Message( stdout, "  VorPairRot_Omega  = %13.7e\n", VorPairRot_Omega  );
-      Aux_Message( stdout, "  VorPairRot_Phase0 = %13.7e\n", VorPairRot_Phase0 );
+      Aux_Message( stdout, "  test problem ID    = %d\n",     TESTPROB_ID        );
+      Aux_Message( stdout, "  VorPairLin_BgAmp   = %13.7e\n", VorPairLin_BgAmp   );
+      Aux_Message( stdout, "  VorPairLin_WaveAmp = %13.7e\n", VorPairLin_WaveAmp );
+      Aux_Message( stdout, "  VorPairLin_Phase0  = %13.7e\n", VorPairLin_Phase0  );
+      Aux_Message( stdout, "  VorPairLin_kx      = %13.7e\n", VorPairLin_kx      );
+      Aux_Message( stdout, "  VorPairLin_ky      = %13.7e\n", VorPairLin_ky      );
+      Aux_Message( stdout, "  VorPairLin_Omega   = %13.7e\n", VorPairLin_Omega   );
       Aux_Message( stdout, "=============================================================================\n" );
    }
 
@@ -155,14 +162,11 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
                 const int lv, double AuxArray[] )
 {
 
-   const double dx    = x - amr->BoxCenter[0];
-   const double dy    = y - amr->BoxCenter[1];
-   const double phase = atan2( dy, dx ) - VorPairRot_Omega*Time + VorPairRot_Phase0;
-   const double R     = sqrt( SQR(dx) + SQR(dy) );
-   const double J1    = VorPairRot_J1Amp*j1( sqrt(2.0*ELBDM_ETA*VorPairRot_Omega)*R );
+   const double phase = VorPairLin_kx*x - VorPairLin_Omega*Time + VorPairLin_Phase0;
+   const double amp   = VorPairLin_WaveAmp*cos( VorPairLin_ky*y );
 
-   fluid[REAL] = VorPairRot_BgAmp - J1*cos( phase );
-   fluid[IMAG] =                  - J1*sin( phase );
+   fluid[REAL] = VorPairLin_BgAmp + amp*cos( phase );
+   fluid[IMAG] =                  + amp*sin( phase );
    fluid[DENS] = SQR( fluid[REAL] ) + SQR( fluid[IMAG] );
 
 } // FUNCTION : SetGridIC
@@ -171,7 +175,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Init_TestProb_ELBDM_VortexPairRotating
+// Function    :  Init_TestProb_ELBDM_VortexPairLinear
 // Description :  Test problem initializer
 //
 // Note        :  None
@@ -180,7 +184,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 //
 // Return      :  None
 //-------------------------------------------------------------------------------------------------------
-void Init_TestProb_ELBDM_VortexPairRotating()
+void Init_TestProb_ELBDM_VortexPairLinear()
 {
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ...\n", __FUNCTION__ );
@@ -199,7 +203,7 @@ void Init_TestProb_ELBDM_VortexPairRotating()
    Init_Field_User_Ptr         = NULL;
    Flag_User_Ptr               = NULL;
    Mis_GetTimeStep_User_Ptr    = NULL;
-   BC_User_Ptr                 = SetGridIC;
+   BC_User_Ptr                 = NULL;
    Flu_ResetByUser_Func_Ptr    = NULL;
    Output_User_Ptr             = NULL;
    Aux_Record_User_Ptr         = NULL;
@@ -209,4 +213,4 @@ void Init_TestProb_ELBDM_VortexPairRotating()
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", __FUNCTION__ );
 
-} // FUNCTION : Init_TestProb_ELBDM_VortexPairRotating
+} // FUNCTION : Init_TestProb_ELBDM_VortexPairLinear
