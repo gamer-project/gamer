@@ -1,0 +1,4 @@
+# problem-specific runtime parameters
+VorPairLin_BgAmp     1.0   # psi(x,y) = BgAmp + WaveAmp*cos(ky*y)*exp( i*(kx*x-Omega*t+Phase0) )
+VorPairLin_WaveAmp   2.0   #
+VorPairLin_Phase0    0.0   # [0.0]

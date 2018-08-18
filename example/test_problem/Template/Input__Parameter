@@ -44,6 +44,7 @@ TESTPROB_ID                   0           # test problem ID [0]
                                           # 1003: ELBDM soliton merger (+GRAVITY)
                                           # 1004: ELBDM self-similar halo (+GRAVITY, +COMOVING)
                                           # 1005: ELBDM rotating vortex pair
+                                          # 1006: ELBDM vortex pair in linear motion
 
 
 # code units (in cgs)
