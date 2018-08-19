@@ -133,7 +133,11 @@ void Aux_Check_Parameter()
    if (  OPT__FLAG_LOHNER_DENS  &&  Flu_ParaBuf < 2  )
       Aux_Error( ERROR_INFO, "Lohner error estimator does NOT work when Flu_ParaBuf (%d) < 2 !!\n", Flu_ParaBuf );
 #  elif   ( MODEL == SR_HYDRO )
-   if (  ( OPT__FLAG_LOHNER_DENS || OPT__FLAG_LOHNER_ENGY || OPT__FLAG_LOHNER_PRES || OPT__FLAG_LOHNER_TEMP )
+   if (  ( OPT__FLAG_LOHNER_DENS 
+        || OPT__FLAG_LOHNER_ENGY 
+        || OPT__FLAG_LOHNER_PRES 
+        || OPT__FLAG_LOHNER_TEMP 
+        || OPT__FLAG_LOHNER_VEL4)
          &&  Flu_ParaBuf < 2  )
       Aux_Error( ERROR_INFO, "Lohner error estimator does NOT work when Flu_ParaBuf (%d) < 2 !!\n", Flu_ParaBuf );
 #  else
@@ -305,6 +309,7 @@ void Aux_Check_Parameter()
    Flag |= OPT__FLAG_JEANS;
    Flag |= OPT__FLAG_LOHNER_ENGY;
    Flag |= OPT__FLAG_LOHNER_PRES;
+   Flag |= OPT__FLAG_LOHNER_VEL4;
    Flag |= OPT__FLAG_LOHNER_TEMP;
 #  endif
 #  if ( MODEL == ELBDM )

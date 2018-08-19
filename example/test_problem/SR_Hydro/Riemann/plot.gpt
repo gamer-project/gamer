@@ -1,0 +1,49 @@
+reset
+
+
+# target files
+# -----------------------------------------------------------
+FILE_REF        = 'ReferenceSolution/Gamma_1.67/Sod_Shock_Tube'
+FILE_IN_PREFIX  = 'Xline_y0.000_z0.000'
+FILE_IN_SUFFIX  = ''
+FILE_OUT_PREFIX = 'Fig__Riemann_Density'
+DATA_ID         = 10
+
+
+# terminal
+# -----------------------------------------------------------
+#set term x11 enhanced
+ set term png enhanced
+#set term postscript eps enhanced color 'Helvetica' 16
+
+
+# plot style
+# -----------------------------------------------------------
+ set key reverse Left spacing 1.5 right
+ set xlabel "r"
+ set ylabel "Density"
+ set pointsize 1.0
+ set size square
+ set xrange [0.0:1.0]
+ set yrange [0.0:1.1]
+
+
+# set the output file
+# -----------------------------------------------------------
+if      ( GPVAL_TERM eq 'pngcairo'   ) FILE_OUT_EXT='png'; \
+else if ( GPVAL_TERM eq 'png'        ) FILE_OUT_EXT='png'; \
+else if ( GPVAL_TERM eq 'postscript' ) FILE_OUT_EXT='eps'; \
+else if ( GPVAL_TERM ne 'x11'        ) print 'Unkown terminal for settting the output file extension !!'; quit
+
+if ( GPVAL_TERM ne 'x11' ) { set output sprintf( '%s_%06d.%s', FILE_OUT_PREFIX, DATA_ID, FILE_OUT_EXT ) }
+
+
+# plot
+# -----------------------------------------------------------
+FILE_IN = sprintf( '%s_%06d%s', FILE_IN_PREFIX, DATA_ID, FILE_IN_SUFFIX )
+
+plot FILE_IN  u 4:7 w p lc  7 pt 6 tit 'Simulation' \
+    ,FILE_REF u 1:2 w l lc -1      tit 'Analytical'
+
+
+if ( GPVAL_TERM eq 'x11' ) { pause -1 };

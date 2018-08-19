@@ -454,8 +454,7 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData[], const in
       for (i1=Disp1[0]; i1<Disp1[0]+Loop1[0]; i1++)   {
 
 	 real Cons[NCOMP_FLUID];
-	 real Prim1[NCOMP_FLUID]; // 4-velocity
-//	 real Prim2[NCOMP_FLUID]; // 3-velocity
+	 real Prim[NCOMP_FLUID]; // 4-velocity
 
 	 Cons[0]=amr->patch[FluSg][lv][PID]->fluid[DENS][k1][j1][i1];
 	 Cons[1]=amr->patch[FluSg][lv][PID]->fluid[MOMX][k1][j1][i1];
@@ -463,14 +462,23 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData[], const in
 	 Cons[3]=amr->patch[FluSg][lv][PID]->fluid[MOMZ][k1][j1][i1];
 	 Cons[4]=amr->patch[FluSg][lv][PID]->fluid[ENGY][k1][j1][i1];
 
-	 CPU_Con2Pri(Cons, Prim1, (real)GAMMA);
-//	 CPU_4Velto3Vel(Prim1,Prim2);
+	 CPU_Con2Pri(Cons, Prim, (real)GAMMA);
 
-         CData_Ptr[Idx] = Prim1[1];
+         CData_Ptr[Idx] = Prim[1];
 
          if ( FluIntTime ) // temporal interpolation
-         CData_Ptr[Idx] =   FluWeighting     *CData_Ptr[Idx]
-                          + FluWeighting_IntT*Prim1[1];
+	   {
+	      Cons[0]=amr->patch[FluSg_IntT][lv][PID]->fluid[DENS][k1][j1][i1];
+	      Cons[1]=amr->patch[FluSg_IntT][lv][PID]->fluid[MOMX][k1][j1][i1];
+	      Cons[2]=amr->patch[FluSg_IntT][lv][PID]->fluid[MOMY][k1][j1][i1];
+	      Cons[3]=amr->patch[FluSg_IntT][lv][PID]->fluid[MOMZ][k1][j1][i1];
+	      Cons[4]=amr->patch[FluSg_IntT][lv][PID]->fluid[ENGY][k1][j1][i1];
+
+	      CPU_Con2Pri(Cons, Prim, (real)GAMMA);
+
+	      CData_Ptr[Idx] =   FluWeighting     *CData_Ptr[Idx]
+			       + FluWeighting_IntT*Prim[1];
+	   }
          Idx ++;
       }}}
 
@@ -485,8 +493,7 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData[], const in
       for (i1=Disp1[0]; i1<Disp1[0]+Loop1[0]; i1++)   {
 
 	 real Cons[NCOMP_FLUID];
-	 real Prim1[NCOMP_FLUID]; // 4-velocity
-//	 real Prim2[NCOMP_FLUID]; // 3-velocity
+	 real Prim[NCOMP_FLUID]; // 4-velocity
 
 	 Cons[0]=amr->patch[FluSg][lv][PID]->fluid[DENS][k1][j1][i1];
 	 Cons[1]=amr->patch[FluSg][lv][PID]->fluid[MOMX][k1][j1][i1];
@@ -494,14 +501,23 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData[], const in
 	 Cons[3]=amr->patch[FluSg][lv][PID]->fluid[MOMZ][k1][j1][i1];
 	 Cons[4]=amr->patch[FluSg][lv][PID]->fluid[ENGY][k1][j1][i1];
 
-	 CPU_Con2Pri(Cons, Prim1, (real)GAMMA);
-//	 CPU_4Velto3Vel(Prim1,Prim2);
+	 CPU_Con2Pri(Cons, Prim, (real)GAMMA);
 
-         CData_Ptr[Idx] = Prim1[2];
+         CData_Ptr[Idx] = Prim[2];
 
          if ( FluIntTime ) // temporal interpolation
-         CData_Ptr[Idx] =   FluWeighting     *CData_Ptr[Idx]
-                          + FluWeighting_IntT*Prim1[2];
+	   {
+	      Cons[0]=amr->patch[FluSg_IntT][lv][PID]->fluid[DENS][k1][j1][i1];
+	      Cons[1]=amr->patch[FluSg_IntT][lv][PID]->fluid[MOMX][k1][j1][i1];
+	      Cons[2]=amr->patch[FluSg_IntT][lv][PID]->fluid[MOMY][k1][j1][i1];
+	      Cons[3]=amr->patch[FluSg_IntT][lv][PID]->fluid[MOMZ][k1][j1][i1];
+	      Cons[4]=amr->patch[FluSg_IntT][lv][PID]->fluid[ENGY][k1][j1][i1];
+
+	      CPU_Con2Pri(Cons, Prim, (real)GAMMA);
+
+	      CData_Ptr[Idx] =   FluWeighting     *CData_Ptr[Idx]
+			       + FluWeighting_IntT*Prim[2];
+	   }
          Idx ++;
       }}}
 
@@ -516,8 +532,7 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData[], const in
       for (i1=Disp1[0]; i1<Disp1[0]+Loop1[0]; i1++)   {
 
 	 real Cons[NCOMP_FLUID];
-	 real Prim1[NCOMP_FLUID]; // 4-velocity
-//	 real Prim2[NCOMP_FLUID]; // 3-velocity
+	 real Prim[NCOMP_FLUID]; // 4-velocity
 
 	 Cons[0]=amr->patch[FluSg][lv][PID]->fluid[DENS][k1][j1][i1];
 	 Cons[1]=amr->patch[FluSg][lv][PID]->fluid[MOMX][k1][j1][i1];
@@ -525,14 +540,23 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData[], const in
 	 Cons[3]=amr->patch[FluSg][lv][PID]->fluid[MOMZ][k1][j1][i1];
 	 Cons[4]=amr->patch[FluSg][lv][PID]->fluid[ENGY][k1][j1][i1];
 
-	 CPU_Con2Pri(Cons, Prim1, (real)GAMMA);
-//	 CPU_4Velto3Vel(Prim1,Prim2);
+	 CPU_Con2Pri(Cons, Prim, (real)GAMMA);
 
-         CData_Ptr[Idx] = Prim1[3];
+         CData_Ptr[Idx] = Prim[3];
 
          if ( FluIntTime ) // temporal interpolation
-         CData_Ptr[Idx] =   FluWeighting     *CData_Ptr[Idx]
-                          + FluWeighting_IntT* Prim1[3];
+	   {
+	      Cons[0]=amr->patch[FluSg_IntT][lv][PID]->fluid[DENS][k1][j1][i1];
+	      Cons[1]=amr->patch[FluSg_IntT][lv][PID]->fluid[MOMX][k1][j1][i1];
+	      Cons[2]=amr->patch[FluSg_IntT][lv][PID]->fluid[MOMY][k1][j1][i1];
+	      Cons[3]=amr->patch[FluSg_IntT][lv][PID]->fluid[MOMZ][k1][j1][i1];
+	      Cons[4]=amr->patch[FluSg_IntT][lv][PID]->fluid[ENGY][k1][j1][i1];
+
+	      CPU_Con2Pri(Cons, Prim, (real)GAMMA);
+
+	      CData_Ptr[Idx] =   FluWeighting     *CData_Ptr[Idx]
+			       + FluWeighting_IntT*Prim[3];
+	   }
          Idx ++;
       }}}
 
@@ -801,8 +825,7 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData[], const in
             for (i2=Disp4[0]; i2<Disp4[0]+Loop2[0]; i2++)   {
 
 	       real Cons[NCOMP_FLUID];
-	       real Prim1[NCOMP_FLUID]; // 4-velocity
-//	       real Prim2[NCOMP_FLUID]; // 3-velocity
+	       real Prim[NCOMP_FLUID]; // 4-velocity
 
 	       Cons[0]=amr->patch[FluSg][lv][SibPID]->fluid[DENS][k2][j2][i2];
 	       Cons[1]=amr->patch[FluSg][lv][SibPID]->fluid[MOMX][k2][j2][i2];
@@ -810,14 +833,23 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData[], const in
 	       Cons[3]=amr->patch[FluSg][lv][SibPID]->fluid[MOMZ][k2][j2][i2];
 	       Cons[4]=amr->patch[FluSg][lv][SibPID]->fluid[ENGY][k2][j2][i2];
 
-	       CPU_Con2Pri(Cons, Prim1, (real)GAMMA);
-//	       CPU_4Velto3Vel(Prim1,Prim2);
+	       CPU_Con2Pri(Cons, Prim, (real)GAMMA);
 
-	       CData_Ptr[Idx] = Prim1[1];
+	       CData_Ptr[Idx] = Prim[1];
 
                if ( FluIntTime ) // temporal interpolation
-               CData_Ptr[Idx] =   FluWeighting     *CData_Ptr[Idx]
-                                + FluWeighting_IntT*Prim1[1];
+		   {
+		      Cons[0]=amr->patch[FluSg_IntT][lv][SibPID]->fluid[DENS][k2][j2][i2];
+		      Cons[1]=amr->patch[FluSg_IntT][lv][SibPID]->fluid[MOMX][k2][j2][i2];
+		      Cons[2]=amr->patch[FluSg_IntT][lv][SibPID]->fluid[MOMY][k2][j2][i2];
+		      Cons[3]=amr->patch[FluSg_IntT][lv][SibPID]->fluid[MOMZ][k2][j2][i2];
+		      Cons[4]=amr->patch[FluSg_IntT][lv][SibPID]->fluid[ENGY][k2][j2][i2];
+
+		      CPU_Con2Pri(Cons, Prim, (real)GAMMA);
+
+		      CData_Ptr[Idx] =   FluWeighting     *CData_Ptr[Idx]
+				       + FluWeighting_IntT*Prim[1];
+		   }
                Idx ++;
             }}}
 
@@ -832,8 +864,7 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData[], const in
             for (i2=Disp4[0]; i2<Disp4[0]+Loop2[0]; i2++)   {
 
 	       real Cons[NCOMP_FLUID];
-	       real Prim1[NCOMP_FLUID]; // 4-velocity
-//	       real Prim2[NCOMP_FLUID]; // 3-velocity
+	       real Prim[NCOMP_FLUID]; // 4-velocity
 
 	       Cons[0]=amr->patch[FluSg][lv][SibPID]->fluid[DENS][k2][j2][i2];
 	       Cons[1]=amr->patch[FluSg][lv][SibPID]->fluid[MOMX][k2][j2][i2];
@@ -841,14 +872,23 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData[], const in
 	       Cons[3]=amr->patch[FluSg][lv][SibPID]->fluid[MOMZ][k2][j2][i2];
 	       Cons[4]=amr->patch[FluSg][lv][SibPID]->fluid[ENGY][k2][j2][i2];
 
-	       CPU_Con2Pri(Cons, Prim1, (real)GAMMA);
-//	       CPU_4Velto3Vel(Prim1,Prim2);
+	       CPU_Con2Pri(Cons, Prim, (real)GAMMA);
 
-	       CData_Ptr[Idx] = Prim1[2];
+	       CData_Ptr[Idx] = Prim[2];
 
                if ( FluIntTime ) // temporal interpolation
-               CData_Ptr[Idx] =   FluWeighting     *CData_Ptr[Idx]
-                                + FluWeighting_IntT* Prim1[2];
+		   {
+		      Cons[0]=amr->patch[FluSg_IntT][lv][SibPID]->fluid[DENS][k2][j2][i2];
+		      Cons[1]=amr->patch[FluSg_IntT][lv][SibPID]->fluid[MOMX][k2][j2][i2];
+		      Cons[2]=amr->patch[FluSg_IntT][lv][SibPID]->fluid[MOMY][k2][j2][i2];
+		      Cons[3]=amr->patch[FluSg_IntT][lv][SibPID]->fluid[MOMZ][k2][j2][i2];
+		      Cons[4]=amr->patch[FluSg_IntT][lv][SibPID]->fluid[ENGY][k2][j2][i2];
+
+		      CPU_Con2Pri(Cons, Prim, (real)GAMMA);
+
+		      CData_Ptr[Idx] =   FluWeighting     *CData_Ptr[Idx]
+				       + FluWeighting_IntT*Prim[2];
+		   }
                Idx ++;
             }}}
 
@@ -863,8 +903,7 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData[], const in
             for (i2=Disp4[0]; i2<Disp4[0]+Loop2[0]; i2++)   {
 
 	       real Cons[NCOMP_FLUID];
-	       real Prim1[NCOMP_FLUID]; // 4-velocity
-//	       real Prim2[NCOMP_FLUID]; // 3-velocity
+	       real Prim[NCOMP_FLUID]; // 4-velocity
 
 	       Cons[0]=amr->patch[FluSg][lv][SibPID]->fluid[DENS][k2][j2][i2];
 	       Cons[1]=amr->patch[FluSg][lv][SibPID]->fluid[MOMX][k2][j2][i2];
@@ -872,14 +911,23 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData[], const in
 	       Cons[3]=amr->patch[FluSg][lv][SibPID]->fluid[MOMZ][k2][j2][i2];
 	       Cons[4]=amr->patch[FluSg][lv][SibPID]->fluid[ENGY][k2][j2][i2];
 
-	       CPU_Con2Pri(Cons, Prim1, (real)GAMMA);
-//	       CPU_4Velto3Vel(Prim1,Prim2);
+	       CPU_Con2Pri(Cons, Prim, (real)GAMMA);
 
-	       CData_Ptr[Idx] = Prim1[3];
+	       CData_Ptr[Idx] = Prim[3];
 
                if ( FluIntTime ) // temporal interpolation
-               CData_Ptr[Idx] =   FluWeighting     *CData_Ptr[Idx]
-                                + FluWeighting_IntT*Prim1[3];
+		   {
+		      Cons[0]=amr->patch[FluSg_IntT][lv][SibPID]->fluid[DENS][k2][j2][i2];
+		      Cons[1]=amr->patch[FluSg_IntT][lv][SibPID]->fluid[MOMX][k2][j2][i2];
+		      Cons[2]=amr->patch[FluSg_IntT][lv][SibPID]->fluid[MOMY][k2][j2][i2];
+		      Cons[3]=amr->patch[FluSg_IntT][lv][SibPID]->fluid[MOMZ][k2][j2][i2];
+		      Cons[4]=amr->patch[FluSg_IntT][lv][SibPID]->fluid[ENGY][k2][j2][i2];
+
+		      CPU_Con2Pri(Cons, Prim, (real)GAMMA);
+
+		      CData_Ptr[Idx] =   FluWeighting     *CData_Ptr[Idx]
+				       + FluWeighting_IntT*Prim[3];
+		   }
                Idx ++;
             }}}
 

@@ -256,7 +256,7 @@ void WriteFile( FILE *File, const int lv, const int PID, const int i, const int 
 #  elif ( MODEL == MHD )
 #  warning : WAIT MHD !!!
 #  elif ( MODEL == SR_HYDRO )
-   fprintf( File, " %17.6e", 1/SQRT(1-SQR(u[1])+SQR(u[2])+SQR(u[3])) );
+   fprintf( File, " %17.6e", 1/SQRT(1-SQR(u[1])-SQR(u[2])-SQR(u[3])) );
 #  endif // MODEL
 
    fprintf( File, "\n" );

@@ -398,9 +398,14 @@ struct InputPara_t
    int    Opt__Flag_EngyDensity;
 #  endif
    int    Opt__Flag_LohnerDens;
-#  if ( MODEL == HYDRO || MODEL == SR_HYDRO )
+#  if ( MODEL == HYDRO )
    int    Opt__Flag_LohnerEngy;
    int    Opt__Flag_LohnerPres;
+   int    Opt__Flag_LohnerTemp;
+#  elif ( MODEL == SR_HYDRO )
+   int    Opt__Flag_LohnerEngy;
+   int    Opt__Flag_LohnerPres;
+   int    Opt__Flag_LohnerVel4;
    int    Opt__Flag_LohnerTemp;
 #  endif
    int    Opt__Flag_LohnerForm;

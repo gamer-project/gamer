@@ -18,9 +18,7 @@ struct FUN_Q_params
 // some functions in this file need to be defined even when using GPU
 
 static real FUN_Q (real Q, void *ptr);
-
 static real D_FUN_Q (real Q, void *ptr);
-
 static void FDF_FUN_Q (real Q, void *ptr, real * f, real * df);
 
 
@@ -80,7 +78,6 @@ CPU_Rotate3D (real InOut[], const int XYZ, const bool Forward)
 	  break;
 	}
     }
-
 }				// FUNCTION : CPU_Rotate3D
 
 //-------------------------------------------------------------------------------------------------------
@@ -198,6 +195,7 @@ CPU_Con2Pri (const real In[], real Out[], const real Gamma)
       gsl_root_fdfsolver_free (s);
     }
   else if (In[4] >= In[0])
+//  else
     {
       Out[1] = 0.0;
       Out[2] = 0.0;
@@ -205,12 +203,14 @@ CPU_Con2Pri (const real In[], real Out[], const real Gamma)
       Out[0] = In[0];
       Out[4] = Gamma_m1 * (In[4] - In[0]);
     }
+
   else
     {
       printf ("\n\nToo criticle to solve! Somthing went wrong!\n");
       printf ("line:%d, D=%e, Mx=%e, My=%e, Mz=%e, E=%e\n", __LINE__, In_temp[0], In_temp[1], In_temp[2], In_temp[3], In_temp[4]);
       abort ();
     }
+
 }				// FUNCTION : CPU_Con2Pri
 
 
@@ -304,7 +304,6 @@ CPU_Con2Flux (const int XYZ, real Flux[], const real Input[], const real Gamma_m
   real ConVar[NCOMP_FLUID];	// don't need to include passive scalars since they don't have to be rotated1
   real PriVar4[NCOMP_FLUID];	// d, Ux, Uy, Uz, P
   real PriVar3[NCOMP_FLUID];	// d, Vx, Vy, Vz, P
-  real Gamma = Gamma_m1 + (real) 1.0;
   real Pres, Vx;
   real lFactor;
 
@@ -313,21 +312,20 @@ CPU_Con2Flux (const int XYZ, real Flux[], const real Input[], const real Gamma_m
 
   CPU_Rotate3D (ConVar, XYZ, true);
 
-  CPU_Con2Pri (ConVar, PriVar4, Gamma);
+  CPU_Con2Pri (ConVar, PriVar4, GAMMA);
 
   CPU_4Velto3Vel (PriVar4, PriVar3);
 
   Vx = PriVar3[1];
   Pres = PriVar3[4];
 
-  Flux[0] = Input[0] * Vx;
-  Flux[1] = Input[1] * Vx + Pres;
-  Flux[2] = Input[2] * Vx;
-  Flux[3] = Input[3] * Vx;
-  Flux[4] = Input[1];
+  Flux[0] = ConVar[0] * Vx;
+  Flux[1] = ConVar[1] * Vx + Pres;
+  Flux[2] = ConVar[2] * Vx;
+  Flux[3] = ConVar[3] * Vx;
+  Flux[4] = ConVar[1];
 
   CPU_Rotate3D (Flux, XYZ, false);
-
 }				// FUNCTION : CPU_Con2Flux
 
 
@@ -382,13 +380,11 @@ real
 CPU_CheckMinPresInEngy (const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy,
 			const real Gamma_m1, const real _Gamma_m1, const real MinPres)
 {
-
   real Con[5] = { Dens, MomX, MomY, MomZ, Engy };
   real Pri[5] = { 0 };
-  real Gamma = Gamma_m1 + (real)1.0;
   real OutPres;
 
-  CPU_Con2Pri (Con, Pri, Gamma);
+  CPU_Con2Pri (Con, Pri, GAMMA);
 
   OutPres = CPU_CheckMinPres (Pri[4], MinPres);
 
@@ -397,7 +393,7 @@ CPU_CheckMinPresInEngy (const real Dens, const real MomX, const real MomY, const
   else
     {
       Pri[4] = OutPres;
-      CPU_Pri2Con (Pri, Con, Gamma);
+      CPU_Pri2Con (Pri, Con, GAMMA);
       return Con[4];
     }
 
@@ -459,7 +455,6 @@ CPU_GetPressure (const real Dens, const real MomX, const real MomY, const real M
 {
   real In[NCOMP_FLUID];
   real Out[NCOMP_FLUID];
-  real Gamma = Gamma_m1 + (real) 1.0;
   real Pres;
 
   In[0] = Dens;
@@ -468,7 +463,7 @@ CPU_GetPressure (const real Dens, const real MomX, const real MomY, const real M
   In[3] = MomZ;
   In[4] = Engy;
 
-  CPU_Con2Pri (In, Out, Gamma);
+  CPU_Con2Pri (In, Out, GAMMA);
 
   Pres = Out[4];
 

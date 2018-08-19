@@ -38,7 +38,7 @@ void CPU_RiemannSolver_HLLC( const int XYZ,
   real Usl[NCOMP_TOTAL], Usr[NCOMP_TOTAL];
   
   const real Gamma_m1 = Gamma - (real)1.0;
-  double rhl, rhr, csl, csr, cslsq, csrsq, vsql, vsqr, gammasql, gammasqr;
+  double rhl, rhr, cslsq, csrsq, vsql, vsqr, gammasql, gammasqr;
   double ssl, ssr, radl, radr, lmdapl, lmdapr, lmdaml, lmdamr, lmdatlmda;
   double lmdal,lmdar; /* Left and Right wave speeds */
   double lmdas; /* Contact wave speed */
@@ -48,7 +48,6 @@ void CPU_RiemannSolver_HLLC( const int XYZ,
   double lV1, lV2, lV3, rV1, rV2, rV3;
   double lFactor,rFactor; /* Lorentz factor */
 
-
 /* 0. reorder the input conserved variables for different spatial directions */
    for(int v=0;v<NCOMP_TOTAL;v++){
        CL[v]=L_In[v];
@@ -57,7 +56,6 @@ void CPU_RiemannSolver_HLLC( const int XYZ,
 
    CPU_Rotate3D( CL, XYZ, true );
    CPU_Rotate3D( CR, XYZ, true );
-
 /* 1. compute primitive vars. from conserved vars. */
    CPU_Con2Pri (CL, PL, Gamma);
    CPU_Con2Pri (CR, PR, Gamma);
@@ -78,11 +76,8 @@ void CPU_RiemannSolver_HLLC( const int XYZ,
    rhl = PL[0] + PL[4] * Gamma / Gamma_m1; /* Mignone Eq 3.5 */
    rhr = PR[0] + PR[4] * Gamma / Gamma_m1;
 
-   csl = SQRT(Gamma * PL[4] / rhl); /* Mignone Eq 4 */
-   csr = SQRT(Gamma * PR[4] / rhr);
-
-   cslsq = SQR(csl);
-   csrsq = SQR(csr);
+   cslsq = Gamma * PL[4] / rhl; /* Mignone Eq 4 */
+   csrsq = Gamma * PR[4] / rhr;
 
    vsql = SQR(lV1) + SQR(lV2) + SQR(lV3);
    vsqr = SQR(rV1) + SQR(rV2) + SQR(rV3);
@@ -107,19 +102,17 @@ void CPU_RiemannSolver_HLLC( const int XYZ,
 /* 4. compute HLL flux using Mignone Eq 11 (necessary for computing lmdas (Eq 18) 
  *    compute HLL conserved quantities using Mignone eq 9
  * */
-   Fl[0] = CL[0] * lV1;
-   Fl[1] = CL[1] * lV1 + PL[4];
-   Fl[2] = CL[2] * lV1;
-   Fl[3] = CL[3] * lV1;
-   Fl[4] = CL[1];
+     Fl[0] = CL[0] * lV1;
+     Fl[1] = CL[1] * lV1 + PL[4];
+     Fl[2] = CL[2] * lV1;
+     Fl[3] = CL[3] * lV1;
+     Fl[4] = CL[1];
 
-   Fr[0] = CR[0] * rV1;
-   Fr[1] = CR[1] * rV1 + PR[4];
-   Fr[2] = CR[2] * rV1;
-   Fr[3] = CR[3] * rV1;
-   Fr[4] = CR[1];
-
- 
+     Fr[0] = CR[0] * rV1;
+     Fr[1] = CR[1] * rV1 + PR[4];
+     Fr[2] = CR[2] * rV1;
+     Fr[3] = CR[3] * rV1;
+     Fr[4] = CR[1];
 /* 5. Compute HLL flux using Mignone Eq 11 (necessary for computing lmdas (Eq 18)
  *    Compute HLL conserved quantities using Mignone eq 9
  */
@@ -137,12 +130,10 @@ void CPU_RiemannSolver_HLLC( const int XYZ,
   Uhll[2] = (lmdar * CR[2] - lmdal * CL[2] + Fl[2] - Fr[2]) * ovlrmll;
   Uhll[3] = (lmdar * CR[3] - lmdal * CL[3] + Fl[3] - Fr[3]) * ovlrmll;
   Uhll[4] = (lmdar * CR[4] - lmdal * CL[4] + Fl[4] - Fr[4]) * ovlrmll;
-
 /* 6. Compute contact wave speed using larger root from Mignone Eq 18
  *    Physical root is the root with the minus sign
  */
   /* quadratic formCLa calcCLation */
-
   a = Fhll[4];
   b = -(Uhll[4] + Fhll[1]);
   c = Uhll[1];
@@ -159,16 +150,16 @@ void CPU_RiemannSolver_HLLC( const int XYZ,
     Flux_Out[2] = Fl[2];
     Flux_Out[3] = Fl[3];
     Flux_Out[4] = Fl[4];
-   return;
+
+   CPU_Rotate3D( Flux_Out, XYZ, false );
   }
   else if( lmdas >= 0.0){ /* Fls */
 
     /* Mignone 2006 Eq 48 */
-    ps = -Fhll[4]*lmdas + Fhll[1];
 
+    ps = -Fhll[4]*lmdas + Fhll[1];
     /* now calcCLate Usl with Mignone Eq 16 */
     den = 1.0 / (lmdal - lmdas);
-
     Usl[0] =  CL[0] * (lmdal - lV1) * den;
     Usl[1] = (CL[1] * (lmdal - lV1) + ps - PL[4]) * den;
     Usl[2] =  CL[2] * (lmdal - lV1) * den;
@@ -176,36 +167,25 @@ void CPU_RiemannSolver_HLLC( const int XYZ,
     Usl[4] = (CL[4] * (lmdal - lV1) + ps * lmdas - PL[4] * lV1) * den;
 
     /* now calcCLate Fsr using Mignone Eq 14 */
-
     Flux_Out[0] = lmdal*(Usl[0] - CL[0]) + Fl[0];
     Flux_Out[1] = lmdal*(Usl[1] - CL[1]) + Fl[1];
     Flux_Out[2] = lmdal*(Usl[2] - CL[2]) + Fl[2];
     Flux_Out[3] = lmdal*(Usl[3] - CL[3]) + Fl[3];
     Flux_Out[4] = lmdal*(Usl[4] - CL[4]) + Fl[4];
 
+   CPU_Rotate3D( Flux_Out, XYZ, false );
     return;
   }
   else if( lmdar >= 0.0){ /* Frs */
-    int count=0;
-    if(count==1){
-    for(int i=0;i<5;i++)
-    printf("PR[%d]=%f, PL[%d]=%f\n",i,PR[i],i,PL[i]);
-    abort();
-    }
-    count++;
-
     /* Mignone 2006 Eq 48 */
     ps = -Fhll[4]*lmdas + Fhll[1];
-
     /* now calcCLate Usr with Mignone Eq 16 */
     den = 1.0 / (lmdar - lmdas);
-
     Usr[0] =  CR[0] * (lmdar - rV1) * den;
     Usr[1] = (CR[1] * (lmdar - rV1) + ps - PR[4]) * den;
     Usr[2] =  CR[2] * (lmdar - rV1) * den;
     Usr[3] =  CR[3] * (lmdar - rV1) * den;
     Usr[4] = (CR[4] * (lmdar - rV1) + ps * lmdas - PR[4] * rV1) * den;
-
     /* now calcCLate Fsr using Mignone Eq 14 */
     Flux_Out[0] = lmdar*(Usr[0] - CR[0]) + Fr[0];
     Flux_Out[1] = lmdar*(Usr[1] - CR[1]) + Fr[1];
@@ -213,22 +193,21 @@ void CPU_RiemannSolver_HLLC( const int XYZ,
     Flux_Out[3] = lmdar*(Usr[3] - CR[3]) + Fr[3];
     Flux_Out[4] = lmdar*(Usr[4] - CR[4]) + Fr[4];
 
+   CPU_Rotate3D( Flux_Out, XYZ, false );
     return;
   }
   else{ /* Fr */
     /* intercell flux is right flux */
+
     Flux_Out[0] = Fr[0];
     Flux_Out[1] = Fr[1];
     Flux_Out[2] = Fr[2];
     Flux_Out[3] = Fr[3];
     Flux_Out[4] = Fr[4];
 
+   CPU_Rotate3D( Flux_Out, XYZ, false );
     return;
   }
-
-/* 8. restore the correct order */
-   CPU_Rotate3D( Flux_Out, XYZ, false );
-
 
 } // FUNCTION : CPU_RiemannSolver_HLLC
 

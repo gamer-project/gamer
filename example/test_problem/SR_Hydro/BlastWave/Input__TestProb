@@ -1,0 +1,8 @@
+# problem-specific runtime parameters
+Blast_Dens_Bg        1.0e0          # background mass density
+Blast_Engy_Bg        2.5e-5         # background energy density
+Blast_Engy_Exp       1.0e1          # total explosion energy
+Blast_Radius         1.0e-2         # explosion radius
+Blast_Center_X      -1.0            # explosion center x (<0=default) [box center]
+Blast_Center_Y      -1.0            # explosion center y (<0=default) [box center]
+Blast_Center_Z      -1.0            # explosion center z (<0=default) [box center]

@@ -282,6 +282,7 @@
 #  define  MOMY               2
 #  define  MOMZ               3
 #  define  ENGY               4
+#  define  VEL4               5
 
 // field indices of passive[] --> element of [NCOMP_FLUID ... NCOMP_TOTAL-1]
 #if ( NCOMP_PASSIVE > 0 )
@@ -353,6 +354,7 @@
 #  define _VELZ               ( 1 << (NCOMP_TOTAL+2) )
 #  define _PRES               ( 1 << (NCOMP_TOTAL+3) )
 #  define _TEMP               ( 1 << (NCOMP_TOTAL+4) )
+#  define _VEL4               ( 1 << (NCOMP_TOTAL+5) )
 #  define _DERIVED            ( _VELX | _VELY | _VELZ | _PRES | _TEMP )
 #  define NDERIVE             5
 

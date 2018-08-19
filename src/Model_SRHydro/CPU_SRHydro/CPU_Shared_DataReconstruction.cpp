@@ -4,21 +4,11 @@
 #if ( !defined GPU  &&  MODEL == SR_HYDRO  &&  (FLU_SCHEME == MHM || FLU_SCHEME == MHM_RP) )
 
 
-
-extern void CPU_Rotate3D( real InOut[], const int XYZ, const bool Forward );
 extern real CPU_CheckMinPres( const real InPres, const real MinPres );
 
-static void Get_EigenSystem( const real CC_Var[], real EigenVal[][NCOMP_FLUID], real LEigenVec[][NCOMP_FLUID],
-                             real REigenVec[][NCOMP_FLUID], const real Gamma );
 static void LimitSlope( const real L2[], const real L1[], const real C0[], const real R1[], const real R2[],
                         const LR_Limiter_t LR_Limiter, const real MinMod_Coeff, const real EP_Coeff,
                         const real Gamma, const int XYZ, real Slope_Limiter[] );
-#ifdef CHAR_RECONSTRUCTION
-static void Pri2Char( real Var[], const real Gamma, const real Rho, const real Pres, const int XYZ );
-static void Char2Pri( real Var[], const real Gamma, const real Rho, const real Pres, const int XYZ );
-#endif
-
-
 
 
 #if ( LR_SCHEME == PLM )
