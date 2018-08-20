@@ -135,7 +135,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
 //#  ifdef GAMER_DEBUG
 
    int AllVar = ( _TOTAL | _DERIVED );
-#  ifdef SR_HYDRO
+#  if ( MODEL == SR_HYDRO)
    AllVar |= _VEL4;
 #  endif
 #  ifdef GRAVITY

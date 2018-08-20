@@ -1,7 +1,6 @@
 #include "GAMER.h"
 #include "TestProb.h"
 
-# if ( MODEL == HYDRO )
 
 // problem-specific global variables
 // =======================================================================================
@@ -316,4 +315,3 @@ void Init_TestProb_Hydro_Riemann()
 
 } // FUNCTION : Init_TestProb_Hydro_Riemann
 
-#endif

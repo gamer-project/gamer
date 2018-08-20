@@ -1,7 +1,6 @@
 #include "GAMER.h"
 #include "TestProb.h"
 
-#if ( MODEL == SR_HYDRO )
 
 void CPU_Pri2Con( const real In[], real Out[], const real Gamma);
 void CPU_3Velto4Vel( const real In[], real Out[] );
@@ -301,7 +300,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 //
 // Return      :  None
 //-------------------------------------------------------------------------------------------------------
-void Init_TestProb_Hydro_Riemann()
+void Init_TestProb_SRHydro_Riemann()
 {
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ...\n", __FUNCTION__ );
@@ -332,4 +331,3 @@ void Init_TestProb_Hydro_Riemann()
 
 } // FUNCTION : Init_TestProb_Hydro_Riemann
 
-#endif

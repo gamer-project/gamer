@@ -1,8 +1,6 @@
 #include "GAMER.h"
 #include "TestProb.h"
 
-
-
 // problem-specific global variables
 // =======================================================================================
 static double Blast_Dens_Bg;       // background mass density
@@ -226,3 +224,4 @@ void Init_TestProb_Hydro_BlastWave()
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", __FUNCTION__ );
 
 } // FUNCTION : Init_TestProb_Hydro_BlastWave
+

@@ -24,7 +24,7 @@ END_STEP                     -1           # end step (<0=auto -> must be set by 
 
 
 # test problems
-TESTPROB_ID                   9           # test problem ID [0]
+TESTPROB_ID                   12           # test problem ID [0]
                                           #    0: none
                                           #    1: HYDRO blast wave
                                           #    2: HYDRO acoustic wave

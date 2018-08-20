@@ -33,6 +33,7 @@ COMPILE_VERBOSE := 0
 # physical model: HYDRO/MHD/ELBDM/PAR_ONLY (ELBDM: wave dark matter; PAR_ONLY: particle-only)
 # --> must be set in any cases; PAR_ONLY is not supported yet;
 #     MHD and ELBDM are not publicly available yet but will be released soon
+#SIMU_OPTION += -DMODEL=SR_HYDRO
 SIMU_OPTION += -DMODEL=SR_HYDRO
 
 # enable gravity
@@ -205,7 +206,7 @@ SIMU_OPTION += -DSERIAL
 #SIMU_OPTION += -DOVERLAP_MPI
 
 # enable OpenMP parallelization
-#SIMU_OPTION += -DOPENMP
+SIMU_OPTION += -DOPENMP
 
 # work on the NAOC Laohu GPU cluster
 #SIMU_OPTION += -DLAOHU
@@ -449,6 +450,8 @@ CC_FILE     += CPU_FluidSolver_RTVD.cpp  CPU_FluidSolver_WAF.cpp  CPU_FluidSolve
 CC_FILE     += Hydro_Init_ByFunction_AssignData.cpp  Hydro_Aux_Check_Negative.cpp \
                Hydro_BoundaryCondition_Reflecting.cpp  Hydro_Flag_Vorticity.cpp
 
+
+
 vpath %.cu     Model_Hydro/GPU_Hydro
 vpath %.cpp    Model_Hydro/CPU_Hydro  Model_Hydro
 
@@ -497,6 +500,7 @@ CUDA_FILE   += CUFLU_ELBDMSolver.cu
 CC_FILE     += CPU_ELBDMSolver.cpp  ELBDM_Init_ByFunction_AssignData.cpp  ELBDM_Init_ByFile_AssignData.cpp \
                ELBDM_GetTimeStep_Fluid.cpp  ELBDM_Flag_EngyDensity.cpp  ELBDM_UnwrapPhase.cpp \
                ELBDM_GetTimeStep_Phase.cpp  ELBDM_SetTaylor3Coeff.cpp
+
 
 vpath %.cu     Model_ELBDM/GPU_ELBDM
 vpath %.cpp    Model_ELBDM/CPU_ELBDM  Model_ELBDM
@@ -643,6 +647,7 @@ endif # STAR_FORMATION
 # --> note that here we simply compile all .cpp files under TestProblem/*/*/
 # ------------------------------------------------------------------------------------
 CC_FILE     += $(notdir $(wildcard TestProblem/*/*/*.cpp))
+
 
 VPATH := $(dir $(wildcard TestProblem/*/*/))
 

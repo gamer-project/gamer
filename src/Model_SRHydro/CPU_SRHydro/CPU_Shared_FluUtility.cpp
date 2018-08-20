@@ -194,8 +194,11 @@ CPU_Con2Pri (const real In[], real Out[], const real Gamma)
 #endif
       gsl_root_fdfsolver_free (s);
     }
+#ifndef SR_DEBUG
+  else
+#else
   else if (In[4] >= In[0])
-//  else
+#endif
     {
       Out[1] = 0.0;
       Out[2] = 0.0;
@@ -203,14 +206,14 @@ CPU_Con2Pri (const real In[], real Out[], const real Gamma)
       Out[0] = In[0];
       Out[4] = Gamma_m1 * (In[4] - In[0]);
     }
-
+#ifdef SR_DEBUG
   else
     {
       printf ("\n\nToo criticle to solve! Somthing went wrong!\n");
       printf ("line:%d, D=%e, Mx=%e, My=%e, Mz=%e, E=%e\n", __LINE__, In_temp[0], In_temp[1], In_temp[2], In_temp[3], In_temp[4]);
       abort ();
     }
-
+#endif
 }				// FUNCTION : CPU_Con2Pri
 
 

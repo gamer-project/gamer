@@ -5,13 +5,14 @@
 // problem-specific global variables
 // =======================================================================================
 static double Blast_Dens_Bg;       // background mass density
-static double Blast_Engy_Bg;       // background energy density
-static double Blast_Engy_Exp;      // total explosion energy
+static double Blast_Pres_Bg;       // background pressure
+static double Blast_Dens_Ratio;    // density ratio of center to background
+static double Blast_Pres_Ratio;    // pressure ratio of center to background
 static double Blast_Radius;        // explosion radius
 static double Blast_Center[3];     // explosion center
 // =======================================================================================
 
-
+void CPU_Pri2Con( const real In[], real Out[], const real Gamma);
 
 
 //-------------------------------------------------------------------------------------------------------
@@ -89,8 +90,9 @@ void SetParameter()
 // ReadPara->Add( "KEY_IN_THE_FILE",   &VARIABLE_ADDRESS,      DEFAULT,       MIN,              MAX               );
 // ********************************************************************************************************************************
    ReadPara->Add( "Blast_Dens_Bg",     &Blast_Dens_Bg,         -1.0,          Eps_double,       NoMax_double      );
-   ReadPara->Add( "Blast_Engy_Bg",     &Blast_Engy_Bg,         -1.0,          Eps_double,       NoMax_double      );
-   ReadPara->Add( "Blast_Engy_Exp",    &Blast_Engy_Exp,        -1.0,          Eps_double,       NoMax_double      );
+   ReadPara->Add( "Blast_Pres_Bg",     &Blast_Pres_Bg,         -1.0,          Eps_double,       NoMax_double      );
+   ReadPara->Add( "Blast_Dens_Ratio",  &Blast_Dens_Ratio,       -1.0,          Eps_double,       NoMax_double      );
+   ReadPara->Add( "Blast_Pres_Ratio",  &Blast_Pres_Ratio,      -1.0,          Eps_double,       NoMax_double      );
    ReadPara->Add( "Blast_Radius",      &Blast_Radius,          -1.0,          Eps_double,       NoMax_double      );
    ReadPara->Add( "Blast_Center_X",    &Blast_Center[0],       -1.0,          NoMin_double,     amr->BoxSize[0]   );
    ReadPara->Add( "Blast_Center_Y",    &Blast_Center[1],       -1.0,          NoMin_double,     amr->BoxSize[1]   );
@@ -128,14 +130,14 @@ void SetParameter()
    if ( MPI_Rank == 0 )
    {
       Aux_Message( stdout, "=============================================================================\n" );
-      Aux_Message( stdout, "  test problem ID           = %d\n",     TESTPROB_ID );
-      Aux_Message( stdout, "  background mass density   = %13.7e\n", Blast_Dens_Bg );
-      Aux_Message( stdout, "  background energy density = %13.7e\n", Blast_Engy_Bg);
-      Aux_Message( stdout, "  total explosion energy    = %13.7e\n", Blast_Engy_Exp );
-      Aux_Message( stdout, "  explosion energy density  = %13.7e\n", Blast_Engy_Exp/(4.0*M_PI/3.0*CUBE(Blast_Radius) ) );
-      Aux_Message( stdout, "  explosion radius          = %13.7e\n", Blast_Radius );
-      Aux_Message( stdout, "  explosion center          = (%13.7e, %13.7e, %13.7e)\n", Blast_Center[0], Blast_Center[1],
-                                                                                       Blast_Center[2] );
+      Aux_Message( stdout, "  test problem ID                         = %d\n",     TESTPROB_ID );
+      Aux_Message( stdout, "  background mass density                 = %13.7e\n", Blast_Dens_Bg );
+      Aux_Message( stdout, "  background pressure density             = %13.7e\n", Blast_Pres_Bg);
+      Aux_Message( stdout, "  density ratio of center to background   = %13.7e\n", Blast_Dens_Ratio );
+      Aux_Message( stdout, "  pressure ratio of center to background  = %13.7e\n", Blast_Pres_Ratio );
+      Aux_Message( stdout, "  explosion radius                        = %13.7e\n", Blast_Radius );
+      Aux_Message( stdout, "  explosion center                        = (%13.7e, %13.7e, %13.7e)\n",
+                                                          Blast_Center[0], Blast_Center[1], Blast_Center[2] );
       Aux_Message( stdout, "=============================================================================\n" );
    }
 
@@ -168,17 +170,33 @@ void SetParameter()
 void SetGridIC( real fluid[], const double x, const double y, const double z, const double Time,
                 const int lv, double AuxArray[] )
 {
-
-   const double Blast_Engy_Exp_Density = Blast_Engy_Exp/(4.0*M_PI/3.0*Blast_Radius*Blast_Radius*Blast_Radius);
    const double r = SQRT( SQR(x-Blast_Center[0]) + SQR(y-Blast_Center[1]) + SQR(z-Blast_Center[2]) );
 
-   fluid[DENS] = Blast_Dens_Bg;
-   fluid[MOMX] = 0.0;
-   fluid[MOMY] = 0.0;
-   fluid[MOMZ] = 0.0;
+   double Prim_BG[5] = { Blast_Dens_Bg, 0, 0, 0, Blast_Pres_Bg };
+   double Cons_BG[5] = {0};
 
-   if ( r <= Blast_Radius )   fluid[ENGY] = Blast_Engy_Exp_Density;
-   else                       fluid[ENGY] = Blast_Engy_Bg;
+   double Cons_EXP[5] = {0};
+   double Prim_EXP[5] = { Blast_Dens_Bg*Blast_Dens_Ratio, 0, 0, 0, Blast_Pres_Bg*Blast_Pres_Ratio };
+
+   CPU_Pri2Con(Prim_BG, Cons_BG, GAMMA);
+   CPU_Pri2Con(Prim_EXP, Cons_EXP, GAMMA);
+
+   if ( r <= Blast_Radius )
+   {
+     fluid[DENS] = Cons_EXP[0];
+     fluid[MOMX] = Cons_EXP[1];
+     fluid[MOMY] = Cons_EXP[2];
+     fluid[MOMZ] = Cons_EXP[3];
+     fluid[ENGY] = Cons_EXP[4];
+   }
+   else
+   { 
+     fluid[DENS] = Cons_BG[0];
+     fluid[MOMX] = Cons_BG[1];
+     fluid[MOMY] = Cons_BG[2];
+     fluid[MOMZ] = Cons_BG[3];
+     fluid[ENGY] = Cons_BG[4];
+   }
 
 } // FUNCTION : SetGridIC
 #endif // #if ( MODEL == SR_HYDRO )
@@ -195,7 +213,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 //
 // Return      :  None
 //-------------------------------------------------------------------------------------------------------
-void Init_TestProb_Hydro_BlastWave()
+void Init_TestProb_SRHydro_BlastWave()
 {
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ...\n", __FUNCTION__ );
@@ -225,3 +243,4 @@ void Init_TestProb_Hydro_BlastWave()
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", __FUNCTION__ );
 
 } // FUNCTION : Init_TestProb_Hydro_BlastWave
+

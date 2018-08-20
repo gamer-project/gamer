@@ -693,15 +693,10 @@ void Output_DumpData_Total_HDF5( const char *FileName )
 
 // 5. output the simulation grid data (density, momentum, ... etc)
    const int FieldSizeOnePatch = sizeof(real)*CUBE(PS1);
-#  if ( MODEL == HYDRO )
+
    int  NFieldOut;
    char (*FieldName)[MAX_STRING]    = NULL;
    real (*FieldData)[PS1][PS1][PS1] = NULL;
-#  elif ( MODEL == SR_HYDRO )
-   int  NFieldOut;
-   char (*FieldName)[MAX_STRING]    = NULL;
-   real (*FieldData)[PS1][PS1][PS1] = NULL;
-#  endif
 
 // 5-0. determine variable indices
    NFieldOut = NCOMP_TOTAL;
@@ -841,12 +836,9 @@ void Output_DumpData_Total_HDF5( const char *FileName )
             H5_Status = H5Sselect_hyperslab( H5_SpaceID_Field, H5S_SELECT_SET, H5_Offset_Field, NULL, H5_Count_Field, NULL );
             if ( H5_Status < 0 )   Aux_Error( ERROR_INFO, "failed to create a hyperslab for the grid data !!\n" );
 
+
 //          output one field at one level in one rank at a time
-#           if   ( MODEL == HYDRO )
             FieldData = new real [ amr->NPatchComma[lv][1] ][PS1][PS1][PS1];
-#           elif ( MODEL == SR_HYDRO )
-            FieldData = new real [NCOMP_TOTAL][ amr->NPatchComma[lv][1] ][PS1][PS1][PS1];
-#           endif
 
             for (int v=0; v<NFieldOut; v++)
             {
@@ -883,37 +875,9 @@ void Output_DumpData_Total_HDF5( const char *FileName )
 //             c. fluid variables
                {
                   for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
-#              if   ( MODEL == HYDRO )
                      memcpy( FieldData[PID], amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[v], FieldSizeOnePatch );
-#              elif ( MODEL == SR_HYDRO )
-                     memcpy( FieldData[PID][v], amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[v], FieldSizeOnePatch );
-#              endif
                }
 
-#              if ( MODEL == SR_HYDRO )
-
-	} //for (int v=0; v<NFieldOut; v++)
-
-//       convert 4-velocity to 3-velocity
-            real U[3], Factor;
-
-            for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++){
-             for (int i=0;i<PS1;i++){
-	      for (int j=0;j<PS1;j++){
-	       for (int k=0;k<PS1;k++){
-			for (int v=1;v<3;v++) { U[v-1]=FieldData[PID][v][i][j][k]; }
-			Factor=POW(1+SQR(U[0])+SQR(U[1])+SQR(U[2]),-0.5);
-			for (int v=1;v<3;v++) { FieldData[PID][v][i][j][k]=U[v-1]*Factor; }
-	       }
-	      }
-	     }
-	    }
-
-
-            for (int v=0; v<NFieldOut; v++)
-            {
-
-#              endif
 
 //             5-3-4. write data to disk
                H5_SetID_Field = H5Dopen( H5_GroupID_GridData, FieldName[v], H5P_DEFAULT );
@@ -925,13 +889,7 @@ void Output_DumpData_Total_HDF5( const char *FileName )
             } // for (int v=0; v<NFieldOut; v++)
 
 //          free resource
-#           if ( MODEL == HYDRO )
             delete [] FieldData;
-#           elif ( MODEL == SR_HYDRO )
-            for (int v=0;v<NFieldOut;v++){
-               delete  FieldData[v];
-            }
-#           endif
 
             H5_Status = H5Sclose( H5_MemID_Field );
             H5_Status = H5Gclose( H5_GroupID_GridData );
@@ -1464,7 +1422,7 @@ void FillIn_Makefile( Makefile_t &Makefile )
 #  endif
 #  endif
 
-#  if   ( MODEL == HYDRO )
+#  if   ( MODEL == SR_HYDRO )
    Makefile.FluScheme              = FLU_SCHEME;
 #  ifdef LR_SCHEME
    Makefile.LRScheme               = LR_SCHEME;
@@ -1481,21 +1439,6 @@ void FillIn_Makefile( Makefile_t &Makefile )
 
 #  elif ( MODEL == MHD )
 #  warning : WAIT MHD !!!
-
-#  elif   ( MODEL == SR_HYDRO )
-   Makefile.FluScheme              = FLU_SCHEME;
-#  ifdef LR_SCHEME
-   Makefile.LRScheme               = LR_SCHEME;
-#  endif
-#  ifdef RSOLVER
-   Makefile.RSolver                = RSOLVER;
-#  endif
-
-#  ifdef DUAL_ENERGY
-   Makefile.DualEnergy             = DUAL_ENERGY;
-#  else
-   Makefile.DualEnergy             = 0;
-#  endif
 
 #  elif ( MODEL == ELBDM )
 #  ifdef CONSERVE_MASS
@@ -1646,7 +1589,7 @@ void FillIn_SymConst( SymConst_t &SymConst )
 #  endif
 
 
-#  if   ( MODEL == HYDRO )
+#  if   ( MODEL == SR_HYDRO )
    SymConst.Flu_BlockSize_x      = FLU_BLOCK_SIZE_X;
    SymConst.Flu_BlockSize_y      = FLU_BLOCK_SIZE_Y;
 #  ifdef CHECK_NEGATIVE_IN_FLUID
@@ -1697,53 +1640,6 @@ void FillIn_SymConst( SymConst_t &SymConst )
    SymConst.Flu_BlockSize_x      = FLU_BLOCK_SIZE_X;
    SymConst.Flu_BlockSize_y      = FLU_BLOCK_SIZE_Y;
 #  warning : WAIT MHD !!!
-
-#  elif   ( MODEL == SR_HYDRO )
-   SymConst.Flu_BlockSize_x      = FLU_BLOCK_SIZE_X;
-   SymConst.Flu_BlockSize_y      = FLU_BLOCK_SIZE_Y;
-#  ifdef CHECK_NEGATIVE_IN_FLUID
-   SymConst.CheckNegativeInFluid = 1;
-#  else
-   SymConst.CheckNegativeInFluid = 0;
-#  endif
-#  ifdef CHAR_RECONSTRUCTION
-   SymConst.CharReconstruction   = 1;
-#  else
-   SymConst.CharReconstruction   = 0;
-#  endif
-#  ifdef CHECK_INTERMEDIATE
-   SymConst.CheckIntermediate    = CHECK_INTERMEDIATE;
-#  else
-   SymConst.CheckIntermediate    = 0;
-#  endif
-#  ifdef HLL_NO_REF_STATE
-   SymConst.HLL_NoRefState       = 1;
-#  else
-   SymConst.HLL_NoRefState       = 0;
-#  endif
-#  ifdef HLL_INCLUDE_ALL_WAVES
-   SymConst.HLL_IncludeAllWaves  = 1;
-#  else
-   SymConst.HLL_IncludeAllWaves  = 0;
-#  endif
-#  ifdef WAF_DISSIPATE
-   SymConst.WAF_Dissipate        = 1;
-#  else
-   SymConst.WAF_Dissipate        = 0;
-#  endif
-
-#  ifdef N_FC_VAR
-   SymConst.N_FC_Var             = N_FC_VAR;
-#  endif
-
-#  ifdef N_SLOPE_PPM
-   SymConst.N_Slope_PPM          = N_SLOPE_PPM;
-#  endif
-
-#  ifdef MAX_ERROR
-   SymConst.MaxError             = MAX_ERROR;
-#  endif
-
 
 
 #  elif  ( MODEL == ELBDM )
@@ -1873,7 +1769,7 @@ void FillIn_InputPara( InputPara_t &InputPara )
    InputPara.MaxLevel                = MAX_LEVEL;
    InputPara.Opt__Flag_Rho           = OPT__FLAG_RHO;
    InputPara.Opt__Flag_RhoGradient   = OPT__FLAG_RHO_GRADIENT;
-#  if ( MODEL == HYDRO )
+#  if ( MODEL == SR_HYDRO )
    InputPara.Opt__Flag_PresGradient  = OPT__FLAG_PRES_GRADIENT;
    InputPara.Opt__Flag_Vorticity     = OPT__FLAG_VORTICITY;
    InputPara.Opt__Flag_Jeans         = OPT__FLAG_JEANS;
@@ -1881,20 +1777,11 @@ void FillIn_InputPara( InputPara_t &InputPara )
 #  if ( MODEL == ELBDM )
    InputPara.Opt__Flag_EngyDensity   = OPT__FLAG_ENGY_DENSITY;
 #  endif
-#  if ( MODEL == SR_HYDRO  )
-   InputPara.Opt__Flag_PresGradient  = OPT__FLAG_PRES_GRADIENT;
-   InputPara.Opt__Flag_Vorticity     = OPT__FLAG_VORTICITY;
-#  endif
    InputPara.Opt__Flag_LohnerDens    = OPT__FLAG_LOHNER_DENS;
-#  if ( MODEL == HYDRO )
+#  if ( MODEL == SR_HYDRO )
    InputPara.Opt__Flag_LohnerEngy    = OPT__FLAG_LOHNER_ENGY;
    InputPara.Opt__Flag_LohnerPres    = OPT__FLAG_LOHNER_PRES;
    InputPara.Opt__Flag_LohnerTemp    = OPT__FLAG_LOHNER_TEMP;
-#  elif ( MODEL == SR_HYDRO )
-   InputPara.Opt__Flag_LohnerEngy    = OPT__FLAG_LOHNER_ENGY;
-   InputPara.Opt__Flag_LohnerPres    = OPT__FLAG_LOHNER_PRES;
-   InputPara.Opt__Flag_LohnerTemp    = OPT__FLAG_LOHNER_TEMP;
-   InputPara.Opt__Flag_LohnerVel4    = OPT__FLAG_LOHNER_VEL4;
 #  endif
    InputPara.Opt__Flag_LohnerForm    = OPT__FLAG_LOHNER_FORM;
    InputPara.Opt__Flag_User          = OPT__FLAG_USER;
@@ -1922,17 +1809,8 @@ void FillIn_InputPara( InputPara_t &InputPara )
 #  endif
    InputPara.Opt__MinimizeMPIBarrier = OPT__MINIMIZE_MPI_BARRIER;
 
-// fluid solvers in HYDRO
-#  if ( MODEL == HYDRO )
-   InputPara.Gamma                   = GAMMA;
-   InputPara.MolecularWeight         = MOLECULAR_WEIGHT;
-   InputPara.MinMod_Coeff            = MINMOD_COEFF;
-   InputPara.EP_Coeff                = EP_COEFF;
-   InputPara.Opt__LR_Limiter         = OPT__LR_LIMITER;
-   InputPara.Opt__WAF_Limiter        = OPT__WAF_LIMITER;
-   InputPara.Opt__1stFluxCorr        = OPT__1ST_FLUX_CORR;
-   InputPara.Opt__1stFluxCorrScheme  = OPT__1ST_FLUX_CORR_SCHEME;
-#  elif ( MODEL == SR_HYDRO )
+// fluid solvers in SR_HYDRO
+#  if ( MODEL == SR_HYDRO )
    InputPara.Gamma                   = GAMMA;
    InputPara.MolecularWeight         = MOLECULAR_WEIGHT;
    InputPara.MinMod_Coeff            = MINMOD_COEFF;
@@ -1954,7 +1832,7 @@ void FillIn_InputPara( InputPara_t &InputPara )
    InputPara.ELBDM_Taylor3_Auto      = ELBDM_TAYLOR3_AUTO;
 #  endif
 
-// fluid solvers in both HYDRO/MHD/ELBDM
+// fluid solvers in both SR_HYDRO/MHD/ELBDM
    InputPara.Flu_GPU_NPGroup         = FLU_GPU_NPGROUP;
    InputPara.GPU_NStream             = GPU_NSTREAM;
    InputPara.Opt__FixUp_Flux         = OPT__FIXUP_FLUX;
@@ -1972,17 +1850,14 @@ void FillIn_InputPara( InputPara_t &InputPara )
 
    InputPara.Opt__OverlapMPI         = OPT__OVERLAP_MPI;
    InputPara.Opt__ResetFluid         = OPT__RESET_FLUID;
-#  if ( MODEL == HYDRO  ||  MODEL == MHD  ||  MODEL == ELBDM || MODEL == SR_HYDRO )
+#  if ( MODEL == SR_HYDRO  ||  MODEL == MHD  ||  MODEL == ELBDM )
    InputPara.MinDens                 = MIN_DENS;
 #  endif
-#  if ( MODEL == HYDRO  ||  MODEL == MHD )
+#  if ( MODEL == SR_HYDRO  ||  MODEL == MHD )
    InputPara.MinPres                 = MIN_PRES;
    InputPara.JeansMinPres            = JEANS_MIN_PRES;
    InputPara.JeansMinPres_Level      = JEANS_MIN_PRES_LEVEL;
    InputPara.JeansMinPres_NCell      = JEANS_MIN_PRES_NCELL;
-#  endif
-#  if ( MODEL == SR_HYDRO )
-   InputPara.MinPres                 = MIN_PRES;
 #  endif
 #  ifdef DUAL_ENERGY
    InputPara.DualEnergySwitch        = DUAL_ENERGY_SWITCH;
@@ -2109,7 +1984,7 @@ void FillIn_InputPara( InputPara_t &InputPara )
    InputPara.Opt__Ck_Finite          = OPT__CK_FINITE;
    InputPara.Opt__Ck_PatchAllocate   = OPT__CK_PATCH_ALLOCATE;
    InputPara.Opt__Ck_FluxAllocate    = OPT__CK_FLUX_ALLOCATE;
-#  if ( MODEL == HYDRO || MODEL == SR_HYDRO )
+#  if ( MODEL == SR_HYDRO )
    InputPara.Opt__Ck_Negative        = OPT__CK_NEGATIVE;
 #  endif
    InputPara.Opt__Ck_MemFree         = OPT__CK_MEMFREE;
@@ -2118,17 +1993,8 @@ void FillIn_InputPara( InputPara_t &InputPara )
 #  endif
 
 // flag tables
-#  if   ( MODEL == HYDRO  ||  MODEL == MHD )
-   const bool Opt__FlagLohner = ( OPT__FLAG_LOHNER_DENS 
-                               || OPT__FLAG_LOHNER_ENGY 
-                               || OPT__FLAG_LOHNER_PRES 
-                               || OPT__FLAG_LOHNER_TEMP );
-#  elif   ( MODEL == SR_HYDRO )
-   const bool Opt__FlagLohner = ( OPT__FLAG_LOHNER_DENS 
-                               || OPT__FLAG_LOHNER_ENGY 
-                               || OPT__FLAG_LOHNER_PRES 
-                               || OPT__FLAG_LOHNER_VEL4
-                               || OPT__FLAG_LOHNER_TEMP );
+#  if   ( MODEL == SR_HYDRO  ||  MODEL == MHD )
+   const bool Opt__FlagLohner = ( OPT__FLAG_LOHNER_DENS || OPT__FLAG_LOHNER_ENGY || OPT__FLAG_LOHNER_PRES || OPT__FLAG_LOHNER_TEMP );
 #  elif ( MODEL == ELBDM )
    const bool Opt__FlagLohner = OPT__FLAG_LOHNER_DENS;
 #  endif
@@ -2143,15 +2009,11 @@ void FillIn_InputPara( InputPara_t &InputPara )
 
       InputPara.FlagTable_User        [lv]    = FlagTable_User        [lv];
 
-#     if   ( MODEL == HYDRO )
+#     if   ( MODEL == SR_HYDRO )
       InputPara.FlagTable_PresGradient[lv]    = FlagTable_PresGradient[lv];
       InputPara.FlagTable_Vorticity   [lv]    = FlagTable_Vorticity   [lv];
       InputPara.FlagTable_Jeans       [lv]    = FlagTable_Jeans       [lv];
 
-#     elif   ( MODEL == SR_HYDRO )
-      InputPara.FlagTable_PresGradient[lv]    = FlagTable_PresGradient[lv];
-      InputPara.FlagTable_Vorticity   [lv]    = FlagTable_Vorticity   [lv];
-      InputPara.FlagTable_Jeans       [lv]    = FlagTable_Jeans       [lv];
 #     elif ( MODEL == ELBDM )
       for (int t=0; t<2; t++)
       InputPara.FlagTable_EngyDensity [lv][t] = FlagTable_EngyDensity [lv][t];
@@ -2295,7 +2157,7 @@ void GetCompound_Makefile( hid_t &H5_TypeID )
    H5Tinsert( H5_TypeID, "UnsplitGravity",         HOFFSET(Makefile_t,UnsplitGravity         ), H5T_NATIVE_INT );
 #  endif
 
-#  if   ( MODEL == HYDRO )
+#  if   ( MODEL == SR_HYDRO )
    H5Tinsert( H5_TypeID, "FluScheme",              HOFFSET(Makefile_t,FluScheme              ), H5T_NATIVE_INT );
 #  ifdef LR_SCHEME
    H5Tinsert( H5_TypeID, "LRScheme",               HOFFSET(Makefile_t,LRScheme               ), H5T_NATIVE_INT );
@@ -2307,16 +2169,6 @@ void GetCompound_Makefile( hid_t &H5_TypeID )
 
 #  elif ( MODEL == MHD )
 #  warning : WAIT MHD !!!
-
-#  elif   ( MODEL == SR_HYDRO )
-   H5Tinsert( H5_TypeID, "FluScheme",              HOFFSET(Makefile_t,FluScheme              ), H5T_NATIVE_INT );
-#  ifdef LR_SCHEME
-   H5Tinsert( H5_TypeID, "LRScheme",               HOFFSET(Makefile_t,LRScheme               ), H5T_NATIVE_INT );
-#  endif
-#  ifdef RSOLVER
-   H5Tinsert( H5_TypeID, "RSolver",                HOFFSET(Makefile_t,RSolver                ), H5T_NATIVE_INT );
-#  endif
-   H5Tinsert( H5_TypeID, "DualEnergy",             HOFFSET(Makefile_t,DualEnergy             ), H5T_NATIVE_INT );
 
 #  elif ( MODEL == ELBDM )
    H5Tinsert( H5_TypeID, "ConserveMass",           HOFFSET(Makefile_t,ConserveMass           ), H5T_NATIVE_INT );
@@ -2406,7 +2258,7 @@ void GetCompound_SymConst( hid_t &H5_TypeID )
    H5Tinsert( H5_TypeID, "ParList_ReduceFactor", HOFFSET(SymConst_t,ParList_ReduceFactor), H5T_NATIVE_DOUBLE );
 #  endif
 
-#  if   ( MODEL == HYDRO )
+#  if   ( MODEL == SR_HYDRO )
    H5Tinsert( H5_TypeID, "Flu_BlockSize_x",      HOFFSET(SymConst_t,Flu_BlockSize_x     ), H5T_NATIVE_INT    );
    H5Tinsert( H5_TypeID, "Flu_BlockSize_y",      HOFFSET(SymConst_t,Flu_BlockSize_y     ), H5T_NATIVE_INT    );
    H5Tinsert( H5_TypeID, "CheckNegativeInFluid", HOFFSET(SymConst_t,CheckNegativeInFluid), H5T_NATIVE_INT    );
@@ -2429,25 +2281,6 @@ void GetCompound_SymConst( hid_t &H5_TypeID )
    H5Tinsert( H5_TypeID, "Flu_BlockSize_x",      HOFFSET(SymConst_t,Flu_BlockSize_x     ), H5T_NATIVE_INT    );
    H5Tinsert( H5_TypeID, "Flu_BlockSize_y",      HOFFSET(SymConst_t,Flu_BlockSize_y     ), H5T_NATIVE_INT    );
 #  warning : WAIT MHD !!!
-
-#  elif   ( MODEL == SR_HYDRO )
-   H5Tinsert( H5_TypeID, "Flu_BlockSize_x",      HOFFSET(SymConst_t,Flu_BlockSize_x     ), H5T_NATIVE_INT    );
-   H5Tinsert( H5_TypeID, "Flu_BlockSize_y",      HOFFSET(SymConst_t,Flu_BlockSize_y     ), H5T_NATIVE_INT    );
-   H5Tinsert( H5_TypeID, "CheckNegativeInFluid", HOFFSET(SymConst_t,CheckNegativeInFluid), H5T_NATIVE_INT    );
-   H5Tinsert( H5_TypeID, "CharReconstruction",   HOFFSET(SymConst_t,CharReconstruction  ), H5T_NATIVE_INT    );
-   H5Tinsert( H5_TypeID, "CheckIntermediate",    HOFFSET(SymConst_t,CheckIntermediate   ), H5T_NATIVE_INT    );
-   H5Tinsert( H5_TypeID, "HLL_NoRefState",       HOFFSET(SymConst_t,HLL_NoRefState      ), H5T_NATIVE_INT    );
-   H5Tinsert( H5_TypeID, "HLL_IncludeAllWaves",  HOFFSET(SymConst_t,HLL_IncludeAllWaves ), H5T_NATIVE_INT    );
-   H5Tinsert( H5_TypeID, "WAF_Dissipate",        HOFFSET(SymConst_t,WAF_Dissipate       ), H5T_NATIVE_INT    );
-#  ifdef N_FC_VAR
-   H5Tinsert( H5_TypeID, "N_FC_Var",             HOFFSET(SymConst_t,N_FC_Var            ), H5T_NATIVE_INT    );
-#  endif
-#  ifdef N_SLOPE_PPM
-   H5Tinsert( H5_TypeID, "N_Slope_PPM",          HOFFSET(SymConst_t,N_Slope_PPM         ), H5T_NATIVE_INT    );
-#  endif
-#  ifdef MAX_ERROR
-   H5Tinsert( H5_TypeID, "MaxError",             HOFFSET(SymConst_t,MaxError            ), H5T_NATIVE_DOUBLE );
-#  endif
 
 #  elif  ( MODEL == ELBDM )
    H5Tinsert( H5_TypeID, "Flu_BlockSize_x",      HOFFSET(SymConst_t,Flu_BlockSize_x     ), H5T_NATIVE_INT    );
@@ -2617,11 +2450,7 @@ void GetCompound_InputPara( hid_t &H5_TypeID )
    H5Tinsert( H5_TypeID, "MaxLevel",                HOFFSET(InputPara_t,MaxLevel               ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "Opt__Flag_Rho",           HOFFSET(InputPara_t,Opt__Flag_Rho          ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "Opt__Flag_RhoGradient",   HOFFSET(InputPara_t,Opt__Flag_RhoGradient  ), H5T_NATIVE_INT     );
-#  if ( MODEL == HYDRO )
-   H5Tinsert( H5_TypeID, "Opt__Flag_PresGradient",  HOFFSET(InputPara_t,Opt__Flag_PresGradient ), H5T_NATIVE_INT     );
-   H5Tinsert( H5_TypeID, "Opt__Flag_Vorticity",     HOFFSET(InputPara_t,Opt__Flag_Vorticity    ), H5T_NATIVE_INT     );
-   H5Tinsert( H5_TypeID, "Opt__Flag_Jeans",         HOFFSET(InputPara_t,Opt__Flag_Jeans        ), H5T_NATIVE_INT     );
-#  elif ( MODEL == SR_HYDRO )
+#  if ( MODEL == SR_HYDRO )
    H5Tinsert( H5_TypeID, "Opt__Flag_PresGradient",  HOFFSET(InputPara_t,Opt__Flag_PresGradient ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "Opt__Flag_Vorticity",     HOFFSET(InputPara_t,Opt__Flag_Vorticity    ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "Opt__Flag_Jeans",         HOFFSET(InputPara_t,Opt__Flag_Jeans        ), H5T_NATIVE_INT     );
@@ -2630,14 +2459,9 @@ void GetCompound_InputPara( hid_t &H5_TypeID )
    H5Tinsert( H5_TypeID, "Opt__Flag_EngyDensity",   HOFFSET(InputPara_t,Opt__Flag_EngyDensity  ), H5T_NATIVE_INT     );
 #  endif
    H5Tinsert( H5_TypeID, "Opt__Flag_LohnerDens",    HOFFSET(InputPara_t,Opt__Flag_LohnerDens   ), H5T_NATIVE_INT     );
-#  if ( MODEL == HYDRO )
+#  if ( MODEL == SR_HYDRO )
    H5Tinsert( H5_TypeID, "Opt__Flag_LohnerEngy",    HOFFSET(InputPara_t,Opt__Flag_LohnerEngy   ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "Opt__Flag_LohnerPres",    HOFFSET(InputPara_t,Opt__Flag_LohnerPres   ), H5T_NATIVE_INT     );
-   H5Tinsert( H5_TypeID, "Opt__Flag_LohnerTemp",    HOFFSET(InputPara_t,Opt__Flag_LohnerTemp   ), H5T_NATIVE_INT     );
-#  elif ( MODEL == SR_HYDRO )
-   H5Tinsert( H5_TypeID, "Opt__Flag_LohnerEngy",    HOFFSET(InputPara_t,Opt__Flag_LohnerEngy   ), H5T_NATIVE_INT     );
-   H5Tinsert( H5_TypeID, "Opt__Flag_LohnerPres",    HOFFSET(InputPara_t,Opt__Flag_LohnerPres   ), H5T_NATIVE_INT     );
-   H5Tinsert( H5_TypeID, "Opt__Flag_LohnerVel4",    HOFFSET(InputPara_t,Opt__Flag_LohnerVel4   ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "Opt__Flag_LohnerTemp",    HOFFSET(InputPara_t,Opt__Flag_LohnerTemp   ), H5T_NATIVE_INT     );
 #  endif
    H5Tinsert( H5_TypeID, "Opt__Flag_LohnerForm",    HOFFSET(InputPara_t,Opt__Flag_LohnerForm   ), H5T_NATIVE_INT     );
@@ -2666,17 +2490,8 @@ void GetCompound_InputPara( hid_t &H5_TypeID )
 #  endif
    H5Tinsert( H5_TypeID, "Opt__MinimizeMPIBarrier", HOFFSET(InputPara_t,Opt__MinimizeMPIBarrier), H5T_NATIVE_INT     );
 
-// fluid solvers in HYDRO
-#  if ( MODEL == HYDRO )
-   H5Tinsert( H5_TypeID, "Gamma",                   HOFFSET(InputPara_t,Gamma                  ), H5T_NATIVE_DOUBLE  );
-   H5Tinsert( H5_TypeID, "MolecularWeight",         HOFFSET(InputPara_t,MolecularWeight        ), H5T_NATIVE_DOUBLE  );
-   H5Tinsert( H5_TypeID, "MinMod_Coeff",            HOFFSET(InputPara_t,MinMod_Coeff           ), H5T_NATIVE_DOUBLE  );
-   H5Tinsert( H5_TypeID, "EP_Coeff",                HOFFSET(InputPara_t,EP_Coeff               ), H5T_NATIVE_DOUBLE  );
-   H5Tinsert( H5_TypeID, "Opt__LR_Limiter",         HOFFSET(InputPara_t,Opt__LR_Limiter        ), H5T_NATIVE_INT     );
-   H5Tinsert( H5_TypeID, "Opt__WAF_Limiter",        HOFFSET(InputPara_t,Opt__WAF_Limiter       ), H5T_NATIVE_INT     );
-   H5Tinsert( H5_TypeID, "Opt__1stFluxCorr",        HOFFSET(InputPara_t,Opt__1stFluxCorr       ), H5T_NATIVE_INT     );
-   H5Tinsert( H5_TypeID, "Opt__1stFluxCorrScheme",  HOFFSET(InputPara_t,Opt__1stFluxCorrScheme ), H5T_NATIVE_INT     );
-#  elif ( MODEL == SR_HYDRO )
+// fluid solvers in SR_HYDRO
+#  if ( MODEL == SR_HYDRO )
    H5Tinsert( H5_TypeID, "Gamma",                   HOFFSET(InputPara_t,Gamma                  ), H5T_NATIVE_DOUBLE  );
    H5Tinsert( H5_TypeID, "MolecularWeight",         HOFFSET(InputPara_t,MolecularWeight        ), H5T_NATIVE_DOUBLE  );
    H5Tinsert( H5_TypeID, "MinMod_Coeff",            HOFFSET(InputPara_t,MinMod_Coeff           ), H5T_NATIVE_DOUBLE  );
@@ -2698,7 +2513,7 @@ void GetCompound_InputPara( hid_t &H5_TypeID )
    H5Tinsert( H5_TypeID, "ELBDM_Taylor3_Auto",      HOFFSET(InputPara_t,ELBDM_Taylor3_Auto     ), H5T_NATIVE_INT     );
 #  endif
 
-// fluid solvers in both HYDRO/MHD/ELBDM
+// fluid solvers in both SR_HYDRO/MHD/ELBDM
    H5Tinsert( H5_TypeID, "Flu_GPU_NPGroup",         HOFFSET(InputPara_t,Flu_GPU_NPGroup        ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "GPU_NStream",             HOFFSET(InputPara_t,GPU_NStream            ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "Opt__FixUp_Flux",         HOFFSET(InputPara_t,Opt__FixUp_Flux        ), H5T_NATIVE_INT     );
@@ -2722,15 +2537,10 @@ void GetCompound_InputPara( hid_t &H5_TypeID )
 
    H5Tinsert( H5_TypeID, "Opt__OverlapMPI",         HOFFSET(InputPara_t,Opt__OverlapMPI        ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "Opt__ResetFluid",         HOFFSET(InputPara_t,Opt__ResetFluid        ), H5T_NATIVE_INT     );
-#  if ( MODEL == HYDRO  ||  MODEL == MHD  ||  MODEL == ELBDM || MODEL == SR_HYDRO )
+#  if ( MODEL == SR_HYDRO  ||  MODEL == MHD  ||  MODEL == ELBDM )
    H5Tinsert( H5_TypeID, "MinDens",                 HOFFSET(InputPara_t,MinDens                ), H5T_NATIVE_DOUBLE  );
 #  endif
-#  if ( MODEL == HYDRO  ||  MODEL == MHD )
-   H5Tinsert( H5_TypeID, "MinPres",                 HOFFSET(InputPara_t,MinPres                ), H5T_NATIVE_DOUBLE  );
-   H5Tinsert( H5_TypeID, "JeansMinPres",            HOFFSET(InputPara_t,JeansMinPres           ), H5T_NATIVE_INT     );
-   H5Tinsert( H5_TypeID, "JeansMinPres_Level",      HOFFSET(InputPara_t,JeansMinPres_Level     ), H5T_NATIVE_INT     );
-   H5Tinsert( H5_TypeID, "JeansMinPres_NCell",      HOFFSET(InputPara_t,JeansMinPres_NCell     ), H5T_NATIVE_INT     );
-#  elif ( MODEL == SR_HYDRO )
+#  if ( MODEL == SR_HYDRO  ||  MODEL == MHD )
    H5Tinsert( H5_TypeID, "MinPres",                 HOFFSET(InputPara_t,MinPres                ), H5T_NATIVE_DOUBLE  );
    H5Tinsert( H5_TypeID, "JeansMinPres",            HOFFSET(InputPara_t,JeansMinPres           ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "JeansMinPres_Level",      HOFFSET(InputPara_t,JeansMinPres_Level     ), H5T_NATIVE_INT     );
@@ -2861,7 +2671,7 @@ void GetCompound_InputPara( hid_t &H5_TypeID )
    H5Tinsert( H5_TypeID, "Opt__Ck_Finite",          HOFFSET(InputPara_t,Opt__Ck_Finite         ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "Opt__Ck_PatchAllocate",   HOFFSET(InputPara_t,Opt__Ck_PatchAllocate  ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "Opt__Ck_FluxAllocate",    HOFFSET(InputPara_t,Opt__Ck_FluxAllocate   ), H5T_NATIVE_INT     );
-#  if ( MODEL == HYDRO || MODEL == SR_HYDRO )
+#  if ( MODEL == SR_HYDRO )
    H5Tinsert( H5_TypeID, "Opt__Ck_Negative",        HOFFSET(InputPara_t,Opt__Ck_Negative       ), H5T_NATIVE_INT     );
 #  endif
    H5Tinsert( H5_TypeID, "Opt__Ck_MemFree",         HOFFSET(InputPara_t,Opt__Ck_MemFree        ), H5T_NATIVE_DOUBLE  );
@@ -2875,11 +2685,7 @@ void GetCompound_InputPara( hid_t &H5_TypeID )
    H5Tinsert( H5_TypeID, "FlagTable_RhoGradient",  HOFFSET(InputPara_t,FlagTable_RhoGradient   ), H5_TypeID_Arr_NLvM1Double   );
    H5Tinsert( H5_TypeID, "FlagTable_Lohner",       HOFFSET(InputPara_t,FlagTable_Lohner        ), H5_TypeID_Arr_NLvM1_4Double );
    H5Tinsert( H5_TypeID, "FlagTable_User",         HOFFSET(InputPara_t,FlagTable_User          ), H5_TypeID_Arr_NLvM1Double   );
-#  if   ( MODEL == HYDRO )
-   H5Tinsert( H5_TypeID, "FlagTable_PresGradient", HOFFSET(InputPara_t,FlagTable_PresGradient  ), H5_TypeID_Arr_NLvM1Double   );
-   H5Tinsert( H5_TypeID, "FlagTable_Vorticity",    HOFFSET(InputPara_t,FlagTable_Vorticity     ), H5_TypeID_Arr_NLvM1Double   );
-   H5Tinsert( H5_TypeID, "FlagTable_Jeans",        HOFFSET(InputPara_t,FlagTable_Jeans         ), H5_TypeID_Arr_NLvM1Double   );
-#  elif   ( MODEL == SR_HYDRO )
+#  if   ( MODEL == SR_HYDRO )
    H5Tinsert( H5_TypeID, "FlagTable_PresGradient", HOFFSET(InputPara_t,FlagTable_PresGradient  ), H5_TypeID_Arr_NLvM1Double   );
    H5Tinsert( H5_TypeID, "FlagTable_Vorticity",    HOFFSET(InputPara_t,FlagTable_Vorticity     ), H5_TypeID_Arr_NLvM1Double   );
    H5Tinsert( H5_TypeID, "FlagTable_Jeans",        HOFFSET(InputPara_t,FlagTable_Jeans         ), H5_TypeID_Arr_NLvM1Double   );
