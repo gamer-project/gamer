@@ -38,11 +38,11 @@ void Init_Field()
 //    --> must not change the following order of declaration since they must be consistent
 //        with the symbolic constants defined in Macro.h (e.g., DENS)
 #  if   ( MODEL == HYDRO  ||  MODEL == MHD || MODEL == SR_HYDRO )
-   Idx_Dens    = AddField( "Dens[7]",     NORMALIZE_NO );
-   Idx_MomX    = AddField( "MomX[8]",     NORMALIZE_NO );
-   Idx_MomY    = AddField( "MomY[9]",     NORMALIZE_NO );
-   Idx_MomZ    = AddField( "MomZ[10]",    NORMALIZE_NO );
-   Idx_Engy    = AddField( "Engy[11]",    NORMALIZE_NO );
+   Idx_Dens    = AddField( "Dens",     NORMALIZE_NO );
+   Idx_MomX    = AddField( "MomX",     NORMALIZE_NO );
+   Idx_MomY    = AddField( "MomY",     NORMALIZE_NO );
+   Idx_MomZ    = AddField( "MomZ",    NORMALIZE_NO );
+   Idx_Engy    = AddField( "Engy",    NORMALIZE_NO );
 
 #  elif ( MODEL == ELBDM )
 

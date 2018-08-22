@@ -33,8 +33,8 @@ COMPILE_VERBOSE := 0
 # physical model: HYDRO/MHD/ELBDM/PAR_ONLY (ELBDM: wave dark matter; PAR_ONLY: particle-only)
 # --> must be set in any cases; PAR_ONLY is not supported yet;
 #     MHD and ELBDM are not publicly available yet but will be released soon
-#SIMU_OPTION += -DMODEL=SR_HYDRO
 SIMU_OPTION += -DMODEL=SR_HYDRO
+#SIMU_OPTION += -DMODEL=HYDRO
 
 # enable gravity
 #SIMU_OPTION += -DGRAVITY
@@ -178,7 +178,7 @@ SIMU_OPTION += -DMAX_PATCH=1000000
 
 # debug mode
 #SIMU_OPTION += -DGAMER_DEBUG
-#SIMU_OPTION += -DSR_DEBUG
+SIMU_OPTION += -DSR_DEBUG
 
 # bitwise reproducibility
 #SIMU_OPTION += -DBITWISE_REPRODUCIBILITY
@@ -212,7 +212,7 @@ SIMU_OPTION += -DOPENMP
 #SIMU_OPTION += -DLAOHU
 
 # support HDF5 format
-SIMU_OPTION += -DSUPPORT_HDF5
+#SIMU_OPTION += -DSUPPORT_HDF5
 
 # support GNU scientific library
 SIMU_OPTION += -DSUPPORT_GSL
@@ -261,7 +261,7 @@ SIMU_OPTION += -DRANDOM_NUMBER=RNG_GNU_EXT
  CXX         = g++                                       # serial compiler
 #CXX         = $(MPI_PATH)/bin/mpicxx                    # MPI compiler
 #CXX         = CC                                        # cray wrapper script
- CXXFLAG     = -pg -O3                                    # general flags
+ CXXFLAG     = -g -O3                                    # general flags
 #CXXFLAG     = -g -O3 -std=c++11
 #CXXFLAG     = -g -Ofast
  CXXFLAG    += -Wall -Wextra                             # warning flags
@@ -284,7 +284,7 @@ endif
 
 # CUDA
 # -------------------------------------------------------------------------------
- NVCC = $(CUDA_PATH)/bin/nvcc                            # CUDA compiler
+# NVCC = $(CUDA_PATH)/bin/nvcc                            # CUDA compiler
 #NVCC = $(CUDA_PATH)/bin/nvcc -ccbin YOUR_G++            # with a specified host compiler
 #NVCC = nvcc -ccbin CC                                   # for the Cray environment
 
@@ -874,7 +874,7 @@ ifeq "$(COMPILE_VERBOSE)" "1"
 	@printf "\nCompiling GAMER --> Successful!\n\n"; \
 	cp $(EXECUTABLE) ../bin/
 else
-	@$(CXX) -pg -o $@ $^ $(LIB) $(OPENMPFLAG); \
+	@$(CXX)  -o $@ $^ $(LIB) $(OPENMPFLAG); \
 	(if [ -e $@ ]; then \
 		printf "\nCompiling GAMER --> Successful!\n\n"; \
 		cp $(EXECUTABLE) ../bin/; \

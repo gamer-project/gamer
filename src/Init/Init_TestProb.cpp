@@ -17,8 +17,8 @@ void Init_TestProb_Hydro_CollidingJets();
 void Init_TestProb_Hydro_Plummer();
 void Init_TestProb_Hydro_Gravity();
 
-void Init_TestProb_SRHydro_Riemann();
 void Init_TestProb_SRHydro_BlastWave();
+void Init_TestProb_SRHydro_Riemann();
 
 void Init_TestProb_ELBDM_ExtPot();
 
