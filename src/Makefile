@@ -324,13 +324,16 @@ LIBYT_PATH   :=
 
 # NTU-hulk (openmpi-intel-qlc)
 #CUDA_PATH    := /opt/gpu/cuda/4.2
-#FFTW_PATH    := /opt/math/fftw/2.1.5-intel-qlc
+#FFTW_PATH    := /opt/math/fftw/2.1.5-intel-openmpi-1.4.3-qlc
 #MPI_PATH     := /usr/mpi/intel/openmpi-1.4.3-qlc
-#HDF5_PATH    := /opt/hdf5/1.8.9
+#HDF5_PATH    := /opt/hdf5/1.8.20
 #GRACKLE_PATH := /work1/fish/Software/grackle
-#GSL_PATH     := /opt/math/gsl
+#GSL_PATH     := /opt/math/gsl/2.5
 #LIBYT_PATH   := /project/fish/libyt/libyt
-#MPI_PATH     := /opt/mpi/openmpi/1.6.0-intel
+#FFTW_PATH    := /opt/math/fftw/2.1.5-intel-openmpi-1.6.0-qlc
+#MPI_PATH     := /opt/mpi/openmpi/1.6.0-intel-qlc
+#FFTW_PATH    := /opt/math/fftw/2.1.5-intel-openmpi-2.1.5-qlc
+#MPI_PATH     := /opt/mpi/openmpi/2.1.5-intel-qlc
 #CUDA_PATH    := /usr/local/cuda-7.5
 
 # NTU-hulk (openmpi-gcc-qlc)
