@@ -61,6 +61,7 @@ bool                 OPT__CK_RESTRICT, OPT__CK_PATCH_ALLOCATE, OPT__FIXUP_FLUX, 
 bool                 OPT__UM_IC_DOWNGRADE, OPT__UM_IC_REFINE, OPT__TIMING_MPI;
 bool                 OPT__CK_CONSERVATION, OPT__RESET_FLUID, OPT__RECORD_USER, OPT__NORMALIZE_PASSIVE, AUTO_REDUCE_DT;
 bool                 OPT__OPTIMIZE_AGGRESSIVE, OPT__INIT_GRID_WITH_OMP, OPT__NO_FLAG_NEAR_BOUNDARY;
+UM_IC_Format_t       OPT__UM_IC_FORMAT;
 TestProbID_t         TESTPROB_ID;
 OptInit_t            OPT__INIT;
 OptOutputFormat_t    OPT__OUTPUT_TOTAL;
@@ -163,7 +164,7 @@ yt_verbose           YT_VERBOSE;
 
 // (2-7) Grackle
 #ifdef SUPPORT_GRACKLE
-GrackleMode_t        GRACKLE_MODE;
+bool                 GRACKLE_ACTIVATE;
 bool                 GRACKLE_VERBOSE;
 bool                 GRACKLE_COOLING;
 GracklePriChe_t      GRACKLE_PRIMORDIAL;

@@ -68,6 +68,7 @@ extern bool       OPT__UM_IC_DOWNGRADE, OPT__UM_IC_REFINE, OPT__TIMING_MPI;
 extern bool       OPT__CK_CONSERVATION, OPT__RESET_FLUID, OPT__RECORD_USER, OPT__NORMALIZE_PASSIVE, AUTO_REDUCE_DT;
 extern bool       OPT__OPTIMIZE_AGGRESSIVE, OPT__INIT_GRID_WITH_OMP, OPT__NO_FLAG_NEAR_BOUNDARY;
 
+extern UM_IC_Format_t     OPT__UM_IC_FORMAT;
 extern TestProbID_t       TESTPROB_ID;
 extern OptInit_t          OPT__INIT;
 extern IntScheme_t        OPT__FLU_INT_SCHEME, OPT__REF_FLU_INT_SCHEME;
@@ -185,7 +186,7 @@ extern yt_verbose      YT_VERBOSE;
 // (2-7) Grackle
 // ============================================================================================================
 #ifdef SUPPORT_GRACKLE
-extern GrackleMode_t   GRACKLE_MODE;
+extern bool            GRACKLE_ACTIVATE;
 extern bool            GRACKLE_VERBOSE;
 extern bool            GRACKLE_COOLING;
 extern GracklePriChe_t GRACKLE_PRIMORDIAL;

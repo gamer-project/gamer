@@ -448,11 +448,6 @@ void Aux_TakeNote()
 #     ifdef GRAVITY
       fprintf( Note, "#define GRA_NIN                 %d\n",      GRA_NIN             );
 #     endif
-#     ifdef SUPPORT_GRACKLE
-      fprintf( Note, "#define CHE_NPREP               %d\n",      CHE_NPREP           );
-      fprintf( Note, "#define CHE_NIN                 %d\n",      CHE_NIN             );
-      fprintf( Note, "#define CHE_NOUT                %d\n",      CHE_NOUT            );
-#     endif
       fprintf( Note, "#define PATCH_SIZE              %d\n",      PATCH_SIZE          );
       fprintf( Note, "#define MAX_PATCH               %d\n",      MAX_PATCH           );
       fprintf( Note, "#define NLEVEL                  %d\n",      NLEVEL              );
@@ -610,6 +605,8 @@ void Aux_TakeNote()
 #     endif
       fprintf( Note, "Par->NPar_Active_AllRank        %ld\n",     amr->Par->NPar_Active_AllRank );
       fprintf( Note, "Par->Init                       %d\n",      amr->Par->Init                );
+      fprintf( Note, "Par->ParICFormat                %d\n",      amr->Par->ParICFormat         );
+      fprintf( Note, "Par->ParICMass                 %14.7e\n",   amr->Par->ParICMass           );
       fprintf( Note, "Par->Interp                     %d\n",      amr->Par->Interp              );
       fprintf( Note, "Par->Integ                      %d\n",      amr->Par->Integ               );
       fprintf( Note, "Par->GhostSize                  %d\n",      amr->Par->GhostSize           );
@@ -741,8 +738,8 @@ void Aux_TakeNote()
 #     ifdef SUPPORT_GRACKLE
       fprintf( Note, "Parameters of Grackle\n" );
       fprintf( Note, "***********************************************************************************\n" );
-      fprintf( Note, "GRACKLE_MODE                    %d\n",      GRACKLE_MODE            );
-      if ( GRACKLE_MODE != GRACKLE_MODE_NONE ) {
+      fprintf( Note, "GRACKLE_ACTIVATE                %d\n",      GRACKLE_ACTIVATE        );
+      if ( GRACKLE_ACTIVATE ) {
       fprintf( Note, "GRACKLE_VERBOSE                 %d\n",      GRACKLE_VERBOSE         );
       fprintf( Note, "GRACKLE_COOLING                 %d\n",      GRACKLE_COOLING         );
       fprintf( Note, "GRACKLE_PRIMORDIAL              %d\n",      GRACKLE_PRIMORDIAL      );
@@ -932,6 +929,7 @@ void Aux_TakeNote()
       fprintf( Note, "OPT__RESTART_RESET              %d\n",      OPT__RESTART_RESET      );
       fprintf( Note, "OPT__UM_IC_LEVEL                %d\n",      OPT__UM_IC_LEVEL        );
       fprintf( Note, "OPT__UM_IC_NVAR                 %d\n",      OPT__UM_IC_NVAR         );
+      fprintf( Note, "OPT__UM_IC_FORMAT               %d\n",      OPT__UM_IC_FORMAT       );
       fprintf( Note, "OPT__UM_IC_DOWNGRADE            %d\n",      OPT__UM_IC_DOWNGRADE    );
       fprintf( Note, "OPT__UM_IC_REFINE               %d\n",      OPT__UM_IC_REFINE       );
       fprintf( Note, "OPT__UM_IC_LOAD_NRANK           %d\n",      OPT__UM_IC_LOAD_NRANK   );

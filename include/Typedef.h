@@ -58,6 +58,22 @@ const OptInit_t
    INIT_BY_FILE     = 3;
 
 
+// data format for OPT__INIT=INIT_BY_FILE
+typedef int UM_IC_Format_t;
+const UM_IC_Format_t
+   UM_IC_FORMAT_NONE = 0,
+   UM_IC_FORMAT_VZYX = 1,
+   UM_IC_FORMAT_ZYXV = 2;
+
+
+// data format for PAR_INIT=PAR_INIT_BY_FILE
+typedef int ParICFormat_t;
+const ParICFormat_t
+   PAR_IC_FORMAT_NONE   = 0,
+   PAR_IC_FORMAT_ATT_ID = 1,
+   PAR_IC_FORMAT_ID_ATT = 2;
+
+
 // program restart options
 typedef int OptRestartH_t;
 const OptRestartH_t
@@ -328,14 +344,7 @@ typedef int FieldIdx_t;
 
 // Grackle
 #ifdef SUPPORT_GRACKLE
-// original Grackle or the reduced CPU/GPU implementation in GAMER
-typedef int GrackleMode_t;
-const GrackleMode_t
-   GRACKLE_MODE_NONE  = 0,
-   GRACKLE_MODE_ORI   = 1,
-   GRACKLE_MODE_GAMER = 2;
-
-// primordial chemistry
+// map to the "primordial_chemistry" option of Grackle
 typedef int GracklePriChe_t;
 const GracklePriChe_t
    GRACKLE_PRI_CHE_CLOUDY = 0,

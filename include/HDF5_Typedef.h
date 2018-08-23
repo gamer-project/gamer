@@ -311,6 +311,8 @@ struct InputPara_t
 // particle
 #  ifdef PARTICLE
    int    Par_Init;
+   int    Par_ICFormat;
+   double Par_ICMass;
    int    Par_Interp;
    int    Par_Integ;
    int    Par_ImproveAcc;
@@ -470,7 +472,7 @@ struct InputPara_t
 
 // Grackle
 #  ifdef SUPPORT_GRACKLE
-   int    Grackle_Mode;
+   int    Grackle_Activate;
    int    Grackle_Verbose;
    int    Grackle_Cooling;
    int    Grackle_Primordial;
@@ -501,6 +503,7 @@ struct InputPara_t
    int    Opt__RestartReset;
    int    Opt__UM_IC_Level;
    int    Opt__UM_IC_NVar;
+   int    Opt__UM_IC_Format;
    int    Opt__UM_IC_Downgrade;
    int    Opt__UM_IC_Refine;
    int    Opt__UM_IC_LoadNRank;

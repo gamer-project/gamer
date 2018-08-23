@@ -7,22 +7,20 @@
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Grackle_Init_FieldData
-// Description :  Initialize the "Che_FieldData" grackle_field_data objects of Grackle
+// Description :  Initialize the "Che_FieldData" grackle_field_data object of Grackle
 //
-// Note        :  1. Must be called AFTER Init_Load_Parameter()
-//                2. Invoked by Init_MemAllocate()
+// Note        :  1. Invoked by Grackle_Init()
 //                   --> "Che_FieldData" is freed by End_MemFree()
-//                3. Useless if GRACKLE_MODE == GRACKLE_MODE_GAMER
 //
-// Parameter   :  Che_NPG : Number of patch groups to be evaluated at a time
+// Parameter   :  None
 //
 // Return      :  None
 //-------------------------------------------------------------------------------------------------------
-void Grackle_Init_FieldData( const int Che_NPG )
+void Grackle_Init_FieldData()
 {
 
-// nothing to do if we are not using the original Grackle
-   if ( GRACKLE_MODE != GRACKLE_MODE_ORI )   return;
+// nothing to do if Grackle is disabled
+   if ( !GRACKLE_ACTIVATE )   return;
 
 
 // allocate memory
@@ -38,7 +36,7 @@ void Grackle_Init_FieldData( const int Che_NPG )
    Che_FieldData->grid_start              = new int [NDim];
    Che_FieldData->grid_end                = new int [NDim];
 
-// grid_dimension, grid_start, and grid_end are set by CPU_GrackleSolver_Original() since the number
+// grid_dimension, grid_start, and grid_end are set by CPU_GrackleSolver() since the number
 // of patch groups advanced at a time is not a constant
    /*
    for (int d=0; d<NDim; d++)
@@ -53,26 +51,24 @@ void Grackle_Init_FieldData( const int Che_NPG )
    Che_FieldData->density                 = NULL;
    Che_FieldData->internal_energy         = NULL;
    Che_FieldData->grid_dx                 = NULL_REAL;
-
-// fields not supported yet
-   Che_FieldData->x_velocity              = NULL;
-   Che_FieldData->y_velocity              = NULL;
-   Che_FieldData->z_velocity              = NULL;
-   Che_FieldData->metal_density           = NULL;
-
-// fields not supported yet
+   Che_FieldData->e_density               = NULL;
    Che_FieldData->HI_density              = NULL;
    Che_FieldData->HII_density             = NULL;
-   Che_FieldData->HM_density              = NULL;
    Che_FieldData->HeI_density             = NULL;
    Che_FieldData->HeII_density            = NULL;
    Che_FieldData->HeIII_density           = NULL;
+   Che_FieldData->HM_density              = NULL;
    Che_FieldData->H2I_density             = NULL;
    Che_FieldData->H2II_density            = NULL;
    Che_FieldData->DI_density              = NULL;
    Che_FieldData->DII_density             = NULL;
    Che_FieldData->HDI_density             = NULL;
-   Che_FieldData->e_density               = NULL;
+   Che_FieldData->metal_density           = NULL;
+
+// fields not supported yet
+   Che_FieldData->x_velocity              = NULL;
+   Che_FieldData->y_velocity              = NULL;
+   Che_FieldData->z_velocity              = NULL;
    Che_FieldData->volumetric_heating_rate = NULL;
    Che_FieldData->specific_heating_rate   = NULL;
    Che_FieldData->RT_HI_ionization_rate   = NULL;

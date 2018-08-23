@@ -43,6 +43,7 @@ SIMU_OPTION += -DMODEL=HYDRO
 #SIMU_OPTION += -DPARTICLE
 
 # support Grackle, a chemistry and radiative cooling library
+# --> must set NCOMP_PASSIVE_USER according to the primordial chemistry network set by GRACKLE_PRIMORDIAL
 # --> please enable OpenMP when compiling Grackle (by "make omp-on")
 #SIMU_OPTION += -DSUPPORT_GRACKLE
 
@@ -323,13 +324,16 @@ LIBYT_PATH   :=
 
 # NTU-hulk (openmpi-intel-qlc)
 #CUDA_PATH    := /opt/gpu/cuda/4.2
-#FFTW_PATH    := /opt/math/fftw/2.1.5-intel-qlc
+#FFTW_PATH    := /opt/math/fftw/2.1.5-intel-openmpi-1.4.3-qlc
 #MPI_PATH     := /usr/mpi/intel/openmpi-1.4.3-qlc
-#HDF5_PATH    := /opt/hdf5/1.8.9
+#HDF5_PATH    := /opt/hdf5/1.8.20
 #GRACKLE_PATH := /work1/fish/Software/grackle
-#GSL_PATH     := /opt/math/gsl
+#GSL_PATH     := /opt/math/gsl/2.5
 #LIBYT_PATH   := /project/fish/libyt/libyt
-#MPI_PATH     := /opt/mpi/openmpi/1.6.0-intel
+#FFTW_PATH    := /opt/math/fftw/2.1.5-intel-openmpi-1.6.0-qlc
+#MPI_PATH     := /opt/mpi/openmpi/1.6.0-intel-qlc
+#FFTW_PATH    := /opt/math/fftw/2.1.5-intel-openmpi-2.1.5-qlc
+#MPI_PATH     := /opt/mpi/openmpi/2.1.5-intel-qlc
 #CUDA_PATH    := /usr/local/cuda-7.5
 
 # NTU-hulk (openmpi-gcc-qlc)
@@ -585,9 +589,7 @@ endif # SUPPORT_LIBYT
 # Grackle source files (included only if "SUPPORT_GRACKLE" is turned on)
 # ------------------------------------------------------------------------------------
 ifeq "$(filter -DSUPPORT_GRACKLE, $(SIMU_OPTION))" "-DSUPPORT_GRACKLE"
-CUDA_FILE   += CUAPI_MemAllocate_Grackle.cu  CUAPI_MemFree_Grackle.cu
-
-CC_FILE     += CPU_GrackleSolver_Original.cpp
+CC_FILE     += CPU_GrackleSolver.cpp
 
 CC_FILE     += Grackle_Init.cpp  Grackle_End.cpp  Init_MemAllocate_Grackle.cpp  End_MemFree_Grackle.cpp \
                Grackle_Prepare.cpp  Grackle_Close.cpp  Grackle_Init_FieldData.cpp  Grackle_AdvanceDt.cpp

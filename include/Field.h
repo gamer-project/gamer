@@ -17,6 +17,7 @@ const FieldIdx_t Idx_Undefined = -1;   // must be outside the range [0, NCOMP_TO
 // ***********************************************************
 
 #if   ( MODEL == HYDRO  ||  MODEL == MHD )
+// main fields
 SET_GLOBAL( FieldIdx_t Idx_Dens,          Idx_Undefined );
 SET_GLOBAL( FieldIdx_t Idx_MomX,          Idx_Undefined );
 SET_GLOBAL( FieldIdx_t Idx_MomY,          Idx_Undefined );
@@ -27,7 +28,22 @@ SET_GLOBAL( FieldIdx_t Idx_Enpy,          Idx_Undefined );
 #elif ( DUAL_ENERGY == DE_EINT )
 SET_GLOBAL( FieldIdx_t Idx_Eint,          Idx_Undefined );
 #endif
+
+// Grackle fields
+SET_GLOBAL( FieldIdx_t Idx_e,             Idx_Undefined );
+SET_GLOBAL( FieldIdx_t Idx_HI,            Idx_Undefined );
+SET_GLOBAL( FieldIdx_t Idx_HII,           Idx_Undefined );
+SET_GLOBAL( FieldIdx_t Idx_HeI,           Idx_Undefined );
+SET_GLOBAL( FieldIdx_t Idx_HeII,          Idx_Undefined );
+SET_GLOBAL( FieldIdx_t Idx_HeIII,         Idx_Undefined );
+SET_GLOBAL( FieldIdx_t Idx_HM,            Idx_Undefined );
+SET_GLOBAL( FieldIdx_t Idx_H2I,           Idx_Undefined );
+SET_GLOBAL( FieldIdx_t Idx_H2II,          Idx_Undefined );
+SET_GLOBAL( FieldIdx_t Idx_DI,            Idx_Undefined );
+SET_GLOBAL( FieldIdx_t Idx_DII,           Idx_Undefined );
+SET_GLOBAL( FieldIdx_t Idx_HDI,           Idx_Undefined );
 SET_GLOBAL( FieldIdx_t Idx_Metal,         Idx_Undefined );
+
 
 #elif ( MODEL == ELBDM )
 
