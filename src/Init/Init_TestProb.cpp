@@ -13,7 +13,7 @@ void Init_TestProb_Hydro_Caustic();
 void Init_TestProb_Hydro_SphericalCollapse();
 void Init_TestProb_Hydro_KelvinHelmholtzInstability();
 void Init_TestProb_Hydro_Riemann();
-void Init_TestProb_Hydro_CollidingJets();
+void Init_TestProb_Hydro_Jet();
 void Init_TestProb_Hydro_Plummer();
 void Init_TestProb_Hydro_Gravity();
 
@@ -52,7 +52,7 @@ void Init_TestProb()
       case TESTPROB_HYDRO_SPHERICAL_COLLAPSE :           Init_TestProb_Hydro_SphericalCollapse();           break;
       case TESTPROB_HYDRO_KELVIN_HELMHOLTZ_INSTABILITY : Init_TestProb_Hydro_KelvinHelmholtzInstability();  break;
       case TESTPROB_HYDRO_RIEMANN :                      Init_TestProb_Hydro_Riemann();                     break;
-      case TESTPROB_HYDRO_COLLIDING_JETS :               Init_TestProb_Hydro_CollidingJets();               break;
+      case TESTPROB_HYDRO_JET :                          Init_TestProb_Hydro_Jet();                         break;
       case TESTPROB_HYDRO_PLUMMER :                      Init_TestProb_Hydro_Plummer();                     break;
       case TESTPROB_HYDRO_GRAVITY :                      Init_TestProb_Hydro_Gravity();                     break;
 

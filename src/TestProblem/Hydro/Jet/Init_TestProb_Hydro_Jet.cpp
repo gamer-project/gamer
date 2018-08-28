@@ -275,14 +275,14 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  End_CollidingJets
+// Function    :  End_Jet
 // Description :  Free memory before terminating the program
 //
 // Note        :  1. Linked to the function pointer "End_User_Ptr" to replace "End_User()"
 //
 // Parameter   :  None
 //-------------------------------------------------------------------------------------------------------
-void End_CollidingJets()
+void End_Jet()
 {
 
    delete [] Jet_Radius;
@@ -297,12 +297,12 @@ void End_CollidingJets()
    delete [] Jet_WaveK;
    delete [] Jet_MaxDis;
 
-} // FUNCTION : End_CollidingJets
+} // FUNCTION : End_Jet
 
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Flu_ResetByUser_CollidingJets
+// Function    :  Flu_ResetByUser_Jet
 // Description :  Function to reset the fluid field
 //
 // Note        :  1. Invoked by "Flu_ResetByUser_API()" and "Model_Init_ByFunction_AssignData()" using the
@@ -325,7 +325,7 @@ void End_CollidingJets()
 // Return      :  true  : This cell has been reset
 //                false : This cell has not been reset
 //-------------------------------------------------------------------------------------------------------
-bool Flu_ResetByUser_CollidingJets( real fluid[], const double x, const double y, const double z, const double Time,
+bool Flu_ResetByUser_Jet( real fluid[], const double x, const double y, const double z, const double Time,
                                     const int lv, double AuxArray[] )
 {
 
@@ -396,13 +396,13 @@ bool Flu_ResetByUser_CollidingJets( real fluid[], const double x, const double y
 
    return false;
 
-} // FUNCTION : Flu_ResetByUser_CollidingJets
+} // FUNCTION : Flu_ResetByUser_Jet
 #endif // #if ( MODEL == HYDRO )
 
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Init_TestProb_Hydro_CollidingJets
+// Function    :  Init_TestProb_Hydro_Jet
 // Description :  Test problem initializer
 //
 // Note        :  None
@@ -411,7 +411,7 @@ bool Flu_ResetByUser_CollidingJets( real fluid[], const double x, const double y
 //
 // Return      :  None
 //-------------------------------------------------------------------------------------------------------
-void Init_TestProb_Hydro_CollidingJets()
+void Init_TestProb_Hydro_Jet()
 {
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ...\n", __FUNCTION__ );
@@ -430,13 +430,13 @@ void Init_TestProb_Hydro_CollidingJets()
    Flag_User_Ptr            = NULL;
    Mis_GetTimeStep_User_Ptr = NULL;
    BC_User_Ptr              = NULL;
-   Flu_ResetByUser_Func_Ptr = Flu_ResetByUser_CollidingJets;
+   Flu_ResetByUser_Func_Ptr = Flu_ResetByUser_Jet;
    Output_User_Ptr          = NULL;
    Aux_Record_User_Ptr      = NULL;
-   End_User_Ptr             = End_CollidingJets;
+   End_User_Ptr             = End_Jet;
 #  endif // #if ( MODEL == HYDRO )
 
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", __FUNCTION__ );
 
-} // FUNCTION : Init_TestProb_Hydro_CollidingJets
+} // FUNCTION : Init_TestProb_Hydro_Jet

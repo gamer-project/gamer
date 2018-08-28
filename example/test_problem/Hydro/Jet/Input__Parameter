@@ -25,7 +25,7 @@ END_STEP                     -1           # end step (<0=auto -> must be set by 
 
 # test problems
 TESTPROB_ID                   10          # test problem ID [0]
-                                          #   10: HYDRO colliding jets
+                                          #   10: HYDRO jet(s)
 
 
 # code units (in cgs)
