@@ -5,24 +5,31 @@
 
 // problem-specific global variables
 // =======================================================================================
-static int      Jet_NJet;                    // number of jets (1/2)
-static double   Jet_BgDens;                  // ambient density
-static double   Jet_BgTemp;                  // ambient temperature
-static double   Jet_BgVel[3];                // ambient velocity
-static double  *Jet_Radius        = NULL;    // radius of the cylinder-shape jet source
-static double  *Jet_HalfHeight    = NULL;    // half height of the cylinder-shape jet source
-static double  *Jet_SrcVel        = NULL;    // jet velocity
-static double  *Jet_SrcDens       = NULL;    // jet density
-static double  *Jet_SrcTemp       = NULL;    // jet temperature
-static double (*Jet_Vec)[3]       = NULL;    // jet orientation vector (x,y,z) (NOT necessary to be a unit vector)
-static double (*Jet_CenOffset)[3] = NULL;    // jet central coordinates offset
+static int      Jet_NJet;                          // number of jets (1/2)
+static double   Jet_BgDens;                        // ambient density
+static double   Jet_BgTemp;                        // ambient temperature
+static double   Jet_BgVel[3];                      // ambient velocity
+static double  *Jet_Radius        = NULL;          // radius of the cylinder-shape jet source
+static double  *Jet_HalfHeight    = NULL;          // half height of the cylinder-shape jet source
+static double  *Jet_SrcVel        = NULL;          // jet velocity
+static double  *Jet_SrcDens       = NULL;          // jet density
+static double  *Jet_SrcTemp       = NULL;          // jet temperature
+static double (*Jet_Vec)[3]       = NULL;          // jet orientation vector (x,y,z) (NOT necessary to be a unit vector)
+static double (*Jet_CenOffset)[3] = NULL;          // jet central coordinates offset
+static bool     Jet_HSE           = false;         // hydrostatic equilibrium background
+static double   Jet_HSE_D         = NULL_REAL;     // for Jet_HSE: distance between box and cluster centre (assuming along y)
+static double   Jet_HSE_R200      = NULL_REAL;     // for Jet_HSE: cluster virial radius (i.e., R200) assuming NFW
+static double   Jet_HSE_C200      = NULL_REAL;     // for Jet_HSE: cluster concentration parameter assuming NFW
+static char     Jet_HSE_BgTable_File[MAX_STRING];  // for Jet_HSE: filename of the background gas table
 
-static double   Jet_BgEint;                  // ambient internal energy
-static double  *Jet_SrcEint       = NULL;    // jet internal energy
-static double (*Jet_Cen)[3]       = NULL;    // jet central coordinates
-static double  *Jet_WaveK         = NULL;    // jet wavenumber used in the sin() function to have smooth bidirectional jets
-static double  *Jet_MaxDis        = NULL;    // maximum distance between the cylinder-shape jet source and the jet center
-                                             // --> ( Jet_Radius^2 + Jet_HalfHeight^2 )^0.5
+static double   Jet_BgEint;                        // ambient internal energy
+static double  *Jet_SrcEint       = NULL;          // jet internal energy
+static double (*Jet_Cen)[3]       = NULL;          // jet central coordinates
+static double  *Jet_WaveK         = NULL;          // jet wavenumber used in the sin() function to have smooth bidirectional jets
+static double  *Jet_MaxDis        = NULL;          // maximum distance between the cylinder-shape jet source and the jet center
+                                                   // --> ( Jet_Radius^2 + Jet_HalfHeight^2 )^0.5
+static double *Jet_HSE_BgTable_Data = NULL;        // for Jet_HSE: background gas table [radius/density/temperature]
+static int     Jet_HSE_BgTable_NBin;               // for Jet_HSE: number of bins in Jet_HSE_BgTable_Data[]
 // =======================================================================================
 
 
@@ -47,10 +54,6 @@ void Validate()
 // errors
 #  if ( MODEL != HYDRO )
    Aux_Error( ERROR_INFO, "MODEL != HYDRO !!\n" );
-#  endif
-
-#  ifdef GRAVITY
-   Aux_Error( ERROR_INFO, "GRAVITY must be disabled !!\n" );
 #  endif
 
 #  ifdef PARTICLE
@@ -123,44 +126,80 @@ void SetParameter()
    Jet_MaxDis     = new double [Jet_NJet];
 
 // load the input parameters independent of the number of jets
-   ReadPara->Add( "Jet_BgDens",        &Jet_BgDens,           -1.0,           Eps_double,       NoMax_double      );
-   ReadPara->Add( "Jet_BgTemp",        &Jet_BgTemp,           -1.0,           Eps_double,       NoMax_double      );
-   ReadPara->Add( "Jet_BgVel_x",       &Jet_BgVel[0],          0.0,           NoMin_double,     NoMax_double      );
-   ReadPara->Add( "Jet_BgVel_y",       &Jet_BgVel[1],          0.0,           NoMin_double,     NoMax_double      );
-   ReadPara->Add( "Jet_BgVel_z",       &Jet_BgVel[2],          0.0,           NoMin_double,     NoMax_double      );
+   ReadPara->Add( "Jet_BgDens",          &Jet_BgDens,           -1.0,           Eps_double,       NoMax_double      );
+   ReadPara->Add( "Jet_BgTemp",          &Jet_BgTemp,           -1.0,           Eps_double,       NoMax_double      );
+   ReadPara->Add( "Jet_BgVel_x",         &Jet_BgVel[0],          0.0,           NoMin_double,     NoMax_double      );
+   ReadPara->Add( "Jet_BgVel_y",         &Jet_BgVel[1],          0.0,           NoMin_double,     NoMax_double      );
+   ReadPara->Add( "Jet_BgVel_z",         &Jet_BgVel[2],          0.0,           NoMin_double,     NoMax_double      );
+
+// load the input parameters of the hydrostatic equilibrium setup
+   ReadPara->Add( "Jet_HSE",             &Jet_HSE,               false,         Useless_bool,     Useless_bool      );
+   ReadPara->Add( "Jet_HSE_D",           &Jet_HSE_D,             NoDef_double,  Eps_double,       NoMax_double      );
+   ReadPara->Add( "Jet_HSE_R200",        &Jet_HSE_R200,          NoDef_double,  Eps_double,       NoMax_double      );
+   ReadPara->Add( "Jet_HSE_C200",        &Jet_HSE_C200,          NoDef_double,  Eps_double,       NoMax_double      );
+   ReadPara->Add( "Jet_HSE_BgTable_File", Jet_HSE_BgTable_File,  Useless_str,   Useless_str,      Useless_str       );
 
 // load the input parameters of each jet
-   ReadPara->Add( "Jet0_Radius",       &Jet_Radius    [0],    -1.0,           Eps_double,       NoMax_double      );
-   ReadPara->Add( "Jet0_HalfHeight",   &Jet_HalfHeight[0],    -1.0,           Eps_double,       NoMax_double      );
-   ReadPara->Add( "Jet0_SrcVel",       &Jet_SrcVel    [0],    -1.0,           Eps_double,       NoMax_double      );
-   ReadPara->Add( "Jet0_SrcDens",      &Jet_SrcDens   [0],    -1.0,           Eps_double,       NoMax_double      );
-   ReadPara->Add( "Jet0_SrcTemp",      &Jet_SrcTemp   [0],    -1.0,           Eps_double,       NoMax_double      );
-   ReadPara->Add( "Jet0_Vec_x",        &Jet_Vec       [0][0],  NoDef_double,  NoMin_double,     NoMax_double      );
-   ReadPara->Add( "Jet0_Vec_y",        &Jet_Vec       [0][1],  NoDef_double,  NoMin_double,     NoMax_double      );
-   ReadPara->Add( "Jet0_Vec_z",        &Jet_Vec       [0][2],  NoDef_double,  NoMin_double,     NoMax_double      );
-   ReadPara->Add( "Jet0_CenOffset_x",  &Jet_CenOffset [0][0],  NoDef_double,  NoMin_double,     NoMax_double      );
-   ReadPara->Add( "Jet0_CenOffset_y",  &Jet_CenOffset [0][1],  NoDef_double,  NoMin_double,     NoMax_double      );
-   ReadPara->Add( "Jet0_CenOffset_z",  &Jet_CenOffset [0][2],  NoDef_double,  NoMin_double,     NoMax_double      );
+   ReadPara->Add( "Jet0_Radius",         &Jet_Radius    [0],    -1.0,           Eps_double,       NoMax_double      );
+   ReadPara->Add( "Jet0_HalfHeight",     &Jet_HalfHeight[0],    -1.0,           Eps_double,       NoMax_double      );
+   ReadPara->Add( "Jet0_SrcVel",         &Jet_SrcVel    [0],    -1.0,           Eps_double,       NoMax_double      );
+   ReadPara->Add( "Jet0_SrcDens",        &Jet_SrcDens   [0],    -1.0,           Eps_double,       NoMax_double      );
+   ReadPara->Add( "Jet0_SrcTemp",        &Jet_SrcTemp   [0],    -1.0,           Eps_double,       NoMax_double      );
+   ReadPara->Add( "Jet0_Vec_x",          &Jet_Vec       [0][0],  NoDef_double,  NoMin_double,     NoMax_double      );
+   ReadPara->Add( "Jet0_Vec_y",          &Jet_Vec       [0][1],  NoDef_double,  NoMin_double,     NoMax_double      );
+   ReadPara->Add( "Jet0_Vec_z",          &Jet_Vec       [0][2],  NoDef_double,  NoMin_double,     NoMax_double      );
+   ReadPara->Add( "Jet0_CenOffset_x",    &Jet_CenOffset [0][0],  NoDef_double,  NoMin_double,     NoMax_double      );
+   ReadPara->Add( "Jet0_CenOffset_y",    &Jet_CenOffset [0][1],  NoDef_double,  NoMin_double,     NoMax_double      );
+   ReadPara->Add( "Jet0_CenOffset_z",    &Jet_CenOffset [0][2],  NoDef_double,  NoMin_double,     NoMax_double      );
 
    if ( Jet_NJet == 2 ) {
-   ReadPara->Add( "Jet1_Radius",       &Jet_Radius    [1],    -1.0,           Eps_double,       NoMax_double      );
-   ReadPara->Add( "Jet1_HalfHeight",   &Jet_HalfHeight[1],    -1.0,           Eps_double,       NoMax_double      );
-   ReadPara->Add( "Jet1_SrcVel",       &Jet_SrcVel    [1],    -1.0,           Eps_double,       NoMax_double      );
-   ReadPara->Add( "Jet1_SrcDens",      &Jet_SrcDens   [1],    -1.0,           Eps_double,       NoMax_double      );
-   ReadPara->Add( "Jet1_SrcTemp",      &Jet_SrcTemp   [1],    -1.0,           Eps_double,       NoMax_double      );
-   ReadPara->Add( "Jet1_Vec_x",        &Jet_Vec       [1][0],  NoDef_double,  NoMin_double,     NoMax_double      );
-   ReadPara->Add( "Jet1_Vec_y",        &Jet_Vec       [1][1],  NoDef_double,  NoMin_double,     NoMax_double      );
-   ReadPara->Add( "Jet1_Vec_z",        &Jet_Vec       [1][2],  NoDef_double,  NoMin_double,     NoMax_double      );
-   ReadPara->Add( "Jet1_CenOffset_x",  &Jet_CenOffset [1][0],  NoDef_double,  NoMin_double,     NoMax_double      );
-   ReadPara->Add( "Jet1_CenOffset_y",  &Jet_CenOffset [1][1],  NoDef_double,  NoMin_double,     NoMax_double      );
-   ReadPara->Add( "Jet1_CenOffset_z",  &Jet_CenOffset [1][2],  NoDef_double,  NoMin_double,     NoMax_double      );
+   ReadPara->Add( "Jet1_Radius",         &Jet_Radius    [1],    -1.0,           Eps_double,       NoMax_double      );
+   ReadPara->Add( "Jet1_HalfHeight",     &Jet_HalfHeight[1],    -1.0,           Eps_double,       NoMax_double      );
+   ReadPara->Add( "Jet1_SrcVel",         &Jet_SrcVel    [1],    -1.0,           Eps_double,       NoMax_double      );
+   ReadPara->Add( "Jet1_SrcDens",        &Jet_SrcDens   [1],    -1.0,           Eps_double,       NoMax_double      );
+   ReadPara->Add( "Jet1_SrcTemp",        &Jet_SrcTemp   [1],    -1.0,           Eps_double,       NoMax_double      );
+   ReadPara->Add( "Jet1_Vec_x",          &Jet_Vec       [1][0],  NoDef_double,  NoMin_double,     NoMax_double      );
+   ReadPara->Add( "Jet1_Vec_y",          &Jet_Vec       [1][1],  NoDef_double,  NoMin_double,     NoMax_double      );
+   ReadPara->Add( "Jet1_Vec_z",          &Jet_Vec       [1][2],  NoDef_double,  NoMin_double,     NoMax_double      );
+   ReadPara->Add( "Jet1_CenOffset_x",    &Jet_CenOffset [1][0],  NoDef_double,  NoMin_double,     NoMax_double      );
+   ReadPara->Add( "Jet1_CenOffset_y",    &Jet_CenOffset [1][1],  NoDef_double,  NoMin_double,     NoMax_double      );
+   ReadPara->Add( "Jet1_CenOffset_z",    &Jet_CenOffset [1][2],  NoDef_double,  NoMin_double,     NoMax_double      );
    }
 
    ReadPara->Read( FileName );
 
    delete ReadPara;
 
-// (1-2) convert to code units
+// (1-2) check runtime parameters
+   if ( Jet_HSE )
+   {
+#     ifndef GRAVITY
+         Aux_Error( ERROR_INFO, "GRAVITY must be enabled for Jet_HSE !!\n" );
+#     endif
+
+#     ifdef GRAVITY
+      if ( OPT__GRAVITY_TYPE != GRAVITY_EXTERNAL )
+         Aux_Error( ERROR_INFO, "please set OPT__GRAVITY_TYPE = GRAVITY_EXTERNAL for Jet_HSE !!\n" );
+#     endif
+
+      if ( Jet_HSE_D == NoDef_double )
+         Aux_Error( ERROR_INFO, "\"Jet_HSE_D\" is not set for Jet_HSE !!\n" );
+
+      if ( Jet_HSE_R200 == NoDef_double )
+         Aux_Error( ERROR_INFO, "\"Jet_HSE_R200\" is not set for Jet_HSE !!\n" );
+
+      if ( Jet_HSE_C200 == NoDef_double )
+         Aux_Error( ERROR_INFO, "\"Jet_HSE_C200\" is not set for Jet_HSE !!\n" );
+   } // if ( Jet_HSE )
+
+   else
+   {
+#     ifdef GRAVITY
+         Aux_Error( ERROR_INFO, "GRAVITY must be disabled !!\n" );
+#     endif
+   } // if ( Jet_HSE ) ... else ...
+
+// (1-3) convert to code units
    Jet_BgDens           *= 1.0       / UNIT_D;
    Jet_BgTemp           *= Const_keV / UNIT_E;
    for (int d=0; d<3; d++)
@@ -176,18 +215,51 @@ void SetParameter()
    Jet_CenOffset [n][d] *= Const_kpc / UNIT_L;
    }
 
+   if ( Jet_HSE ) {
+   Jet_HSE_D            *= Const_kpc / UNIT_L;
+   Jet_HSE_R200         *= Const_kpc / UNIT_L;
+   }
+
 
 // (2) set the problem-specific derived parameters
-   Jet_BgEint = Jet_BgDens*Jet_BgTemp/(MOLECULAR_WEIGHT*Const_amu/UNIT_M) / ( GAMMA - (real)1.0 );
+   Jet_BgEint = Jet_BgDens*Jet_BgTemp/(MOLECULAR_WEIGHT*Const_amu/UNIT_M) / ( GAMMA - 1.0 );
 
    for (int n=0; n<Jet_NJet; n++)
    {
       Jet_WaveK  [n] = 0.5*M_PI/Jet_HalfHeight[n];
       Jet_MaxDis [n] = sqrt( SQR(Jet_HalfHeight[n]) + SQR(Jet_Radius[n]) );
-      Jet_SrcEint[n] = Jet_SrcDens[n]*Jet_SrcTemp[n]/(MOLECULAR_WEIGHT*Const_amu/UNIT_M) / ( GAMMA - (real)1.0 );
+      Jet_SrcEint[n] = Jet_SrcDens[n]*Jet_SrcTemp[n]/(MOLECULAR_WEIGHT*Const_amu/UNIT_M) / ( GAMMA - 1.0 );
 
       for (int d=0; d<3; d++)    Jet_Cen[n][d] = 0.5*amr->BoxSize[d] + Jet_CenOffset[n][d];
    }
+
+
+// (3) load the hydrostatic equilibrium table
+   if ( Jet_HSE  &&  OPT__INIT != INIT_BY_RESTART )
+   {
+      const bool RowMajor_No  = false;       // load data into the column-major order
+      const bool AllocMem_Yes = true;        // allocate memory for Merger_Prof1/2
+      const int  NCol         = 3;           // total number of columns to load
+      const int  Col[NCol]    = {1, 2, 3};   // target columns: (radius, density, temperature)
+      double *Table_R, *Table_D, *Table_T;
+
+      Jet_HSE_BgTable_NBin = Aux_LoadTable( Jet_HSE_BgTable_Data, Jet_HSE_BgTable_File, NCol, Col, RowMajor_No, AllocMem_Yes );
+
+//    convert to code units
+      const double Coeff_T2Eint = 1.0 / ( (MOLECULAR_WEIGHT*Const_amu/UNIT_M)*(GAMMA-1.0) );
+      Table_R = Jet_HSE_BgTable_Data + 0*Jet_HSE_BgTable_NBin;
+      Table_D = Jet_HSE_BgTable_Data + 1*Jet_HSE_BgTable_NBin;
+      Table_T = Jet_HSE_BgTable_Data + 2*Jet_HSE_BgTable_NBin;
+
+      for (int b=0; b<Jet_HSE_BgTable_NBin; b++)
+      {
+         Table_R[b] *= Const_kpc / UNIT_L;
+         Table_D[b] *= 1.0       / UNIT_D;
+         Table_T[b] *= Const_keV / UNIT_E;
+
+         Table_T[b] *= Coeff_T2Eint*Table_D[b]; // convert temperature to internal energy
+      }
+   } // if ( Jet_HSE  &&  OPT__INIT != INIT_BY_RESTART )
 
 
 // (3) reset other general-purpose parameters
@@ -210,27 +282,33 @@ void SetParameter()
    if ( MPI_Rank == 0 )
    {
       Aux_Message( stdout, "=============================================================================\n" );
-      Aux_Message( stdout, "  test problem ID     = %d\n",             TESTPROB_ID                           );
-      Aux_Message( stdout, "  Jet_BgDens          = % 14.7e g/cm^3\n", Jet_BgDens*UNIT_D                     );
-      Aux_Message( stdout, "  Jet_BgTemp          = % 14.7e keV\n",    Jet_BgTemp*UNIT_E/Const_keV           );
-      Aux_Message( stdout, "  Jet_BgVel[x]        = % 14.7e cm/s\n",   Jet_BgVel[0]*UNIT_V                   );
-      Aux_Message( stdout, "  Jet_BgVel[y]        = % 14.7e cm/s\n",   Jet_BgVel[1]*UNIT_V                   );
-      Aux_Message( stdout, "  Jet_BgVel[z]        = % 14.7e cm/s\n",   Jet_BgVel[2]*UNIT_V                   );
-      Aux_Message( stdout, "  Jet_NJet            = %d\n",             Jet_NJet                              );
+      Aux_Message( stdout, "  test problem ID      = %d\n",             TESTPROB_ID                           );
+      Aux_Message( stdout, "  Jet_BgDens           = % 14.7e g/cm^3\n", Jet_BgDens*UNIT_D                     );
+      Aux_Message( stdout, "  Jet_BgTemp           = % 14.7e keV\n",    Jet_BgTemp*UNIT_E/Const_keV           );
+      Aux_Message( stdout, "  Jet_BgVel[x]         = % 14.7e cm/s\n",   Jet_BgVel[0]*UNIT_V                   );
+      Aux_Message( stdout, "  Jet_BgVel[y]         = % 14.7e cm/s\n",   Jet_BgVel[1]*UNIT_V                   );
+      Aux_Message( stdout, "  Jet_BgVel[z]         = % 14.7e cm/s\n",   Jet_BgVel[2]*UNIT_V                   );
+      Aux_Message( stdout, "  Jet_HSE              = %d\n",             Jet_HSE                               );
+      if ( Jet_HSE ) {
+      Aux_Message( stdout, "  Jet_HSE_D            = % 14.7e kpc\n",    Jet_HSE_D*UNIT_L/Const_kpc            );
+      Aux_Message( stdout, "  Jet_HSE_R200         = % 14.7e kpc\n",    Jet_HSE_R200*UNIT_L/Const_kpc         );
+      Aux_Message( stdout, "  Jet_HSE_C200         = % 14.7e\n",        Jet_HSE_C200                          );
+      Aux_Message( stdout, "  Jet_HSE_BgTable_File = %s\n",             Jet_HSE_BgTable_File                  ); }
+      Aux_Message( stdout, "  Jet_NJet             = %d\n",             Jet_NJet                              );
       for (int n=0; n<Jet_NJet; n++) {
       Aux_Message( stdout, "\n" );
       Aux_Message( stdout, "  Jet # %d:\n", n );
-      Aux_Message( stdout, "     Jet_Radius       = % 14.7e kpc\n",    Jet_Radius    [n]*UNIT_L/Const_kpc    );
-      Aux_Message( stdout, "     Jet_HalfHeight   = % 14.7e kpc\n",    Jet_HalfHeight[n]*UNIT_L/Const_kpc    );
-      Aux_Message( stdout, "     Jet_SrcVel       = % 14.7e cm/s\n",   Jet_SrcVel    [n]*UNIT_V              );
-      Aux_Message( stdout, "     Jet_SrcDens      = % 14.7e g/cm^3\n", Jet_SrcDens   [n]*UNIT_D              );
-      Aux_Message( stdout, "     Jet_SrcTemp      = % 14.7e keV\n",    Jet_SrcTemp   [n]*UNIT_E/Const_keV    );
-      Aux_Message( stdout, "     Jet_Vec[x]       = % 14.7e\n",        Jet_Vec       [n][0]                  );
-      Aux_Message( stdout, "     Jet_Vec[y]       = % 14.7e\n",        Jet_Vec       [n][1]                  );
-      Aux_Message( stdout, "     Jet_Vec[z]       = % 14.7e\n",        Jet_Vec       [n][2]                  );
-      Aux_Message( stdout, "     Jet_CenOffset[x] = % 14.7e kpc\n",    Jet_CenOffset [n][0]*UNIT_L/Const_kpc );
-      Aux_Message( stdout, "     Jet_CenOffset[y] = % 14.7e kpc\n",    Jet_CenOffset [n][1]*UNIT_L/Const_kpc );
-      Aux_Message( stdout, "     Jet_CenOffset[z] = % 14.7e kpc\n",    Jet_CenOffset [n][2]*UNIT_L/Const_kpc ); }
+      Aux_Message( stdout, "     Jet_Radius        = % 14.7e kpc\n",    Jet_Radius    [n]*UNIT_L/Const_kpc    );
+      Aux_Message( stdout, "     Jet_HalfHeight    = % 14.7e kpc\n",    Jet_HalfHeight[n]*UNIT_L/Const_kpc    );
+      Aux_Message( stdout, "     Jet_SrcVel        = % 14.7e cm/s\n",   Jet_SrcVel    [n]*UNIT_V              );
+      Aux_Message( stdout, "     Jet_SrcDens       = % 14.7e g/cm^3\n", Jet_SrcDens   [n]*UNIT_D              );
+      Aux_Message( stdout, "     Jet_SrcTemp       = % 14.7e keV\n",    Jet_SrcTemp   [n]*UNIT_E/Const_keV    );
+      Aux_Message( stdout, "     Jet_Vec[x]        = % 14.7e\n",        Jet_Vec       [n][0]                  );
+      Aux_Message( stdout, "     Jet_Vec[y]        = % 14.7e\n",        Jet_Vec       [n][1]                  );
+      Aux_Message( stdout, "     Jet_Vec[z]        = % 14.7e\n",        Jet_Vec       [n][2]                  );
+      Aux_Message( stdout, "     Jet_CenOffset[x]  = % 14.7e kpc\n",    Jet_CenOffset [n][0]*UNIT_L/Const_kpc );
+      Aux_Message( stdout, "     Jet_CenOffset[y]  = % 14.7e kpc\n",    Jet_CenOffset [n][1]*UNIT_L/Const_kpc );
+      Aux_Message( stdout, "     Jet_CenOffset[z]  = % 14.7e kpc\n",    Jet_CenOffset [n][2]*UNIT_L/Const_kpc ); }
       Aux_Message( stdout, "=============================================================================\n" );
    }
 
@@ -264,11 +342,32 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
                 const int lv, double AuxArray[] )
 {
 
-   fluid[DENS] = Jet_BgDens;
+// variables for Jet_HSE
+   const double *Table_R=NULL, *Table_D=NULL, *Table_E=NULL;
+   double dy;
+
+   if ( Jet_HSE )
+   {
+      Table_R = Jet_HSE_BgTable_Data + 0*Jet_HSE_BgTable_NBin;
+      Table_D = Jet_HSE_BgTable_Data + 1*Jet_HSE_BgTable_NBin;
+      Table_E = Jet_HSE_BgTable_Data + 2*Jet_HSE_BgTable_NBin;
+      dy      = y - amr->BoxCenter[1] + Jet_HSE_D;
+
+      fluid[DENS] = Mis_InterpolateFromTable( Jet_HSE_BgTable_NBin, Table_R, Table_D, dy );
+   }
+
+   else
+      fluid[DENS] = Jet_BgDens;
+
    fluid[MOMX] = fluid[DENS]*Jet_BgVel[0];
    fluid[MOMY] = fluid[DENS]*Jet_BgVel[1];
    fluid[MOMZ] = fluid[DENS]*Jet_BgVel[2];
-   fluid[ENGY] = Jet_BgEint + 0.5*( SQR(fluid[MOMX]) + SQR(fluid[MOMY]) + SQR(fluid[MOMZ]) ) / fluid[DENS];
+   fluid[ENGY] = 0.5*( SQR(fluid[MOMX]) + SQR(fluid[MOMY]) + SQR(fluid[MOMZ]) ) / fluid[DENS];
+
+   if ( Jet_HSE )
+      fluid[ENGY] += Mis_InterpolateFromTable( Jet_HSE_BgTable_NBin, Table_R, Table_E, dy );
+   else
+      fluid[ENGY] += Jet_BgEint;
 
 } // FUNCTION : SetGridIC
 
@@ -296,6 +395,7 @@ void End_Jet()
    delete [] Jet_Cen;
    delete [] Jet_WaveK;
    delete [] Jet_MaxDis;
+   delete [] Jet_HSE_BgTable_Data;
 
 } // FUNCTION : End_Jet
 
