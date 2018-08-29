@@ -9,7 +9,8 @@ Jet_BgVel_z         +0.0         # ambient velocity z (in cgs units) [0.0]
 
 Jet_HSE              1           # hydrostatic equilibrium background
 Jet_HSE_D            1.0e3       # for Jet_HSE: distance between box and cluster centre (in kpc)
-Jet_HSE_R200         2.12e3      # for Jet_HSE: cluster virial radius (i.e., R200) assuming NFW (in kpc)
+Jet_HSE_M200         1.0e15      # for Jet_HSE: cluster virial mass (in Msun)
+Jet_HSE_R200         2.12e3      # for Jet_HSE: cluster virial radius (in kpc)
 Jet_HSE_C200         5.0         # for Jet_HSE: cluster concentration parameter assuming NFW
 Jet_HSE_BgTable_File Input__HydrostaticEquilibrium # for Jet_HSE: filename of the background gas table
 

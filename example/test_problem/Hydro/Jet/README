@@ -12,4 +12,6 @@ Note:
 ========================================
 1. Ref: Molnar, S., Schive, H-Y., et al., 2017, ApJ, 835, 57
         https://arxiv.org/abs/1612.02341
+2. For hydrostatic equilibrium (i.e., with JET_HSE enabled), one must
+   manually copy the file "CUPOT_ExternalAcc.cu" to "src/SelfGravity/GPU_Gravity/"
 

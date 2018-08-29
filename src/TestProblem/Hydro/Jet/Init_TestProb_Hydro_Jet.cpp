@@ -1,5 +1,9 @@
 #include "GAMER.h"
 #include "TestProb.h"
+#ifdef GRAVITY
+#include "CUPOT.h"
+extern double ExtAcc_AuxArray[EXT_ACC_NAUX_MAX];
+#endif
 
 
 
@@ -18,7 +22,8 @@ static double (*Jet_Vec)[3]       = NULL;          // jet orientation vector (x,
 static double (*Jet_CenOffset)[3] = NULL;          // jet central coordinates offset
 static bool     Jet_HSE           = false;         // hydrostatic equilibrium background
 static double   Jet_HSE_D         = NULL_REAL;     // for Jet_HSE: distance between box and cluster centre (assuming along y)
-static double   Jet_HSE_R200      = NULL_REAL;     // for Jet_HSE: cluster virial radius (i.e., R200) assuming NFW
+static double   Jet_HSE_M200      = NULL_REAL;     // for Jet_HSE: cluster virial mass
+static double   Jet_HSE_R200      = NULL_REAL;     // for Jet_HSE: cluster virial radius
 static double   Jet_HSE_C200      = NULL_REAL;     // for Jet_HSE: cluster concentration parameter assuming NFW
 static char     Jet_HSE_BgTable_File[MAX_STRING];  // for Jet_HSE: filename of the background gas table
 
@@ -135,6 +140,7 @@ void SetParameter()
 // load the input parameters of the hydrostatic equilibrium setup
    ReadPara->Add( "Jet_HSE",             &Jet_HSE,               false,         Useless_bool,     Useless_bool      );
    ReadPara->Add( "Jet_HSE_D",           &Jet_HSE_D,             NoDef_double,  Eps_double,       NoMax_double      );
+   ReadPara->Add( "Jet_HSE_M200",        &Jet_HSE_M200,          NoDef_double,  Eps_double,       NoMax_double      );
    ReadPara->Add( "Jet_HSE_R200",        &Jet_HSE_R200,          NoDef_double,  Eps_double,       NoMax_double      );
    ReadPara->Add( "Jet_HSE_C200",        &Jet_HSE_C200,          NoDef_double,  Eps_double,       NoMax_double      );
    ReadPara->Add( "Jet_HSE_BgTable_File", Jet_HSE_BgTable_File,  Useless_str,   Useless_str,      Useless_str       );
@@ -185,6 +191,9 @@ void SetParameter()
       if ( Jet_HSE_D == NoDef_double )
          Aux_Error( ERROR_INFO, "\"Jet_HSE_D\" is not set for Jet_HSE !!\n" );
 
+      if ( Jet_HSE_M200 == NoDef_double )
+         Aux_Error( ERROR_INFO, "\"Jet_HSE_M200\" is not set for Jet_HSE !!\n" );
+
       if ( Jet_HSE_R200 == NoDef_double )
          Aux_Error( ERROR_INFO, "\"Jet_HSE_R200\" is not set for Jet_HSE !!\n" );
 
@@ -200,24 +209,25 @@ void SetParameter()
    } // if ( Jet_HSE ) ... else ...
 
 // (1-3) convert to code units
-   Jet_BgDens           *= 1.0       / UNIT_D;
-   Jet_BgTemp           *= Const_keV / UNIT_E;
+   Jet_BgDens           *= 1.0        / UNIT_D;
+   Jet_BgTemp           *= Const_keV  / UNIT_E;
    for (int d=0; d<3; d++)
-   Jet_BgVel[d]         *= 1.0       / UNIT_V;
+   Jet_BgVel[d]         *= 1.0        / UNIT_V;
 
    for (int n=0; n<Jet_NJet; n++) {
-   Jet_Radius    [n]    *= Const_kpc / UNIT_L;
-   Jet_HalfHeight[n]    *= Const_kpc / UNIT_L;
-   Jet_SrcVel    [n]    *= 1.0       / UNIT_V;
-   Jet_SrcDens   [n]    *= 1.0       / UNIT_D;
-   Jet_SrcTemp   [n]    *= Const_keV / UNIT_E;
+   Jet_Radius    [n]    *= Const_kpc  / UNIT_L;
+   Jet_HalfHeight[n]    *= Const_kpc  / UNIT_L;
+   Jet_SrcVel    [n]    *= 1.0        / UNIT_V;
+   Jet_SrcDens   [n]    *= 1.0        / UNIT_D;
+   Jet_SrcTemp   [n]    *= Const_keV  / UNIT_E;
    for (int d=0; d<3; d++)
-   Jet_CenOffset [n][d] *= Const_kpc / UNIT_L;
+   Jet_CenOffset [n][d] *= Const_kpc  / UNIT_L;
    }
 
    if ( Jet_HSE ) {
-   Jet_HSE_D            *= Const_kpc / UNIT_L;
-   Jet_HSE_R200         *= Const_kpc / UNIT_L;
+   Jet_HSE_D            *= Const_kpc  / UNIT_L;
+   Jet_HSE_M200         *= Const_Msun / UNIT_M;
+   Jet_HSE_R200         *= Const_kpc  / UNIT_L;
    }
 
 
@@ -291,6 +301,7 @@ void SetParameter()
       Aux_Message( stdout, "  Jet_HSE              = %d\n",             Jet_HSE                               );
       if ( Jet_HSE ) {
       Aux_Message( stdout, "  Jet_HSE_D            = % 14.7e kpc\n",    Jet_HSE_D*UNIT_L/Const_kpc            );
+      Aux_Message( stdout, "  Jet_HSE_M200         = % 14.7e Msun\n",   Jet_HSE_M200*UNIT_M/Const_Msun        );
       Aux_Message( stdout, "  Jet_HSE_R200         = % 14.7e kpc\n",    Jet_HSE_R200*UNIT_L/Const_kpc         );
       Aux_Message( stdout, "  Jet_HSE_C200         = % 14.7e\n",        Jet_HSE_C200                          );
       Aux_Message( stdout, "  Jet_HSE_BgTable_File = %s\n",             Jet_HSE_BgTable_File                  ); }
@@ -497,6 +508,35 @@ bool Flu_ResetByUser_Jet( real fluid[], const double x, const double y, const do
    return false;
 
 } // FUNCTION : Flu_ResetByUser_Jet
+
+
+
+#ifdef GRAVITY
+//-------------------------------------------------------------------------------------------------------
+// Function    :  Init_ExternalAcc_Jet
+// Description :  Set the array ExtAcc_AuxArray[] used by the external acceration routines
+//                "CUPOT_ExternalAcc.cu / CPU_ExternalAcc.cpp"
+//
+// Note        :  1. Invoked by "Init_GAMER" using the function pointer "Init_ExternalAcc_Ptr"
+//                   --> The function pointer may be reset by various test problem initializers, in which case
+//                       this funtion will become useless
+//                2. Enabled by the runtime option "OPT__GRAVITY_TYPE == 2/3"
+//
+// Parameter   :  None
+//-------------------------------------------------------------------------------------------------------
+void Init_ExternalAcc_Jet()
+{
+
+   const double c = Jet_HSE_C200;
+
+   ExtAcc_AuxArray[0] = 0.5*amr->BoxSize[0];                               // [0-2]: cluster center
+   ExtAcc_AuxArray[1] = 0.5*amr->BoxSize[1] - Jet_HSE_D;
+   ExtAcc_AuxArray[2] = 0.5*amr->BoxSize[2];
+   ExtAcc_AuxArray[3] = -NEWTON_G*Jet_HSE_M200/( log(1.0+c) - c/(1.0+c) ); // -G*M200/( log(1+c) - c/(1+c) )
+   ExtAcc_AuxArray[4] = Jet_HSE_R200 / c;                                  // scale radius
+
+} // FUNCTION : Init_ExternalAcc_Jet
+#endif // #ifdef GRAVITY
 #endif // #if ( MODEL == HYDRO )
 
 
@@ -529,11 +569,14 @@ void Init_TestProb_Hydro_Jet()
    Init_Function_User_Ptr   = SetGridIC;
    Flag_User_Ptr            = NULL;
    Mis_GetTimeStep_User_Ptr = NULL;
-   BC_User_Ptr              = NULL;
+   BC_User_Ptr              = SetGridIC;
    Flu_ResetByUser_Func_Ptr = Flu_ResetByUser_Jet;
    Output_User_Ptr          = NULL;
    Aux_Record_User_Ptr      = NULL;
    End_User_Ptr             = End_Jet;
+#  ifdef GRAVITY
+   Init_ExternalAcc_Ptr     = Init_ExternalAcc_Jet;
+#  endif
 #  endif // #if ( MODEL == HYDRO )
 
 
