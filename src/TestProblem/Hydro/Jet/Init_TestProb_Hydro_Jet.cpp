@@ -362,7 +362,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
       Table_R = Jet_HSE_BgTable_Data + 0*Jet_HSE_BgTable_NBin;
       Table_D = Jet_HSE_BgTable_Data + 1*Jet_HSE_BgTable_NBin;
       Table_E = Jet_HSE_BgTable_Data + 2*Jet_HSE_BgTable_NBin;
-      dy      = y - amr->BoxCenter[1] + Jet_HSE_D;
+      dy      = y - amr->BoxCenter[1] + Jet_HSE_D - Jet_BgVel[1]*Time;
 
       fluid[DENS] = Mis_InterpolateFromTable( Jet_HSE_BgTable_NBin, Table_R, Table_D, dy );
    }
@@ -529,11 +529,12 @@ void Init_ExternalAcc_Jet()
 
    const double c = Jet_HSE_C200;
 
-   ExtAcc_AuxArray[0] = 0.5*amr->BoxSize[0];                               // [0-2]: cluster center
+   ExtAcc_AuxArray[0] = 0.5*amr->BoxSize[0];                                  // [0-2]: cluster center
    ExtAcc_AuxArray[1] = 0.5*amr->BoxSize[1] - Jet_HSE_D;
    ExtAcc_AuxArray[2] = 0.5*amr->BoxSize[2];
-   ExtAcc_AuxArray[3] = -NEWTON_G*Jet_HSE_M200/( log(1.0+c) - c/(1.0+c) ); // -G*M200/( log(1+c) - c/(1+c) )
-   ExtAcc_AuxArray[4] = Jet_HSE_R200 / c;                                  // scale radius
+   ExtAcc_AuxArray[3] = -NEWTON_G*Jet_HSE_M200/( log(1.0+c) - c/(1.0+c) );    // -G*M200/( log(1+c) - c/(1+c) )
+   ExtAcc_AuxArray[4] = Jet_HSE_R200 / c;                                     // scale radius
+   ExtAcc_AuxArray[5] = Jet_BgVel[1];
 
 } // FUNCTION : Init_ExternalAcc_Jet
 #endif // #ifdef GRAVITY

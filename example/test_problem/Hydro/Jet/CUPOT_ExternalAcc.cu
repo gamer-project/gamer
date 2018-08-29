@@ -48,8 +48,9 @@ void   CPU_ExternalAcc( real Acc[], const double x, const double y, const double
    const double Cen[3]  = { UserArray[0], UserArray[1], UserArray[2] };    // cluster center
    const real   coeff   = (real)UserArray[3];                              // -G*M200/( log(1+c) - c/(1+c) )
    const real   r0      = (real)UserArray[4];                              // scale radius
+   const real   Vy      = (real)UserArray[5];                              // jet infall velocity along y
    const real   dx      = (real)0.0;                                       // do not consider dx for now
-   const real   dy      = (real)(y - Cen[1]);
+   const real   dy      = (real)(y - Cen[1] - Vy*Time);
    const real   dz      = (real)0.0;                                       // do not consider dz for now
    const real   r       = SQRT( dx*dx + dy*dy + dz*dz );
    const real   s       = r/r0;
