@@ -232,13 +232,13 @@ void SetParameter()
 
 
 // (2) set the problem-specific derived parameters
-   Jet_BgEint = Jet_BgDens*Jet_BgTemp/(MOLECULAR_WEIGHT*Const_amu/UNIT_M) / ( GAMMA - 1.0 );
+   Jet_BgEint = Jet_BgDens*Jet_BgTemp/(MOLECULAR_WEIGHT*Const_mH/UNIT_M) / ( GAMMA - 1.0 );
 
    for (int n=0; n<Jet_NJet; n++)
    {
       Jet_WaveK  [n] = 0.5*M_PI/Jet_HalfHeight[n];
       Jet_MaxDis [n] = sqrt( SQR(Jet_HalfHeight[n]) + SQR(Jet_Radius[n]) );
-      Jet_SrcEint[n] = Jet_SrcDens[n]*Jet_SrcTemp[n]/(MOLECULAR_WEIGHT*Const_amu/UNIT_M) / ( GAMMA - 1.0 );
+      Jet_SrcEint[n] = Jet_SrcDens[n]*Jet_SrcTemp[n]/(MOLECULAR_WEIGHT*Const_mH/UNIT_M) / ( GAMMA - 1.0 );
 
       for (int d=0; d<3; d++)    Jet_Cen[n][d] = 0.5*amr->BoxSize[d] + Jet_CenOffset[n][d];
    }
@@ -256,7 +256,7 @@ void SetParameter()
       Jet_HSE_BgTable_NBin = Aux_LoadTable( Jet_HSE_BgTable_Data, Jet_HSE_BgTable_File, NCol, Col, RowMajor_No, AllocMem_Yes );
 
 //    convert to code units
-      const double Coeff_T2Eint = 1.0 / ( (MOLECULAR_WEIGHT*Const_amu/UNIT_M)*(GAMMA-1.0) );
+      const double Coeff_T2Eint = 1.0 / ( (MOLECULAR_WEIGHT*Const_mH/UNIT_M)*(GAMMA-1.0) );
       Table_R = Jet_HSE_BgTable_Data + 0*Jet_HSE_BgTable_NBin;
       Table_D = Jet_HSE_BgTable_Data + 1*Jet_HSE_BgTable_NBin;
       Table_T = Jet_HSE_BgTable_Data + 2*Jet_HSE_BgTable_NBin;
