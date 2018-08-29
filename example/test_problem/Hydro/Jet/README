@@ -1,7 +1,7 @@
 Compilation flags:
 ========================================
-Enable : MODEL=HYDRO
-Disable: GRAVITY, PARTICLE
+Enable : MODEL=HYDRO, GRAVITY (when enabling JET_HSE)
+Disable: GRAVITY (when disabling JET_HSE), PARTICLE
 
 
 Default setup:
@@ -14,4 +14,9 @@ Note:
         https://arxiv.org/abs/1612.02341
 2. For hydrostatic equilibrium (i.e., with JET_HSE enabled), one must
    manually copy the file "CUPOT_ExternalAcc.cu" to "src/SelfGravity/GPU_Gravity/"
+3. Recommended boundary conditions:
+      With JET_HSE and large Jet_BgVel_y: user-defined BC on -y and outflow BC on other faces
+      Without JET_HSET: outflow BC on all faces
+4. Currently it does NOT work with multiple jet sources
+   --> Jet_NJet must be 1
 
