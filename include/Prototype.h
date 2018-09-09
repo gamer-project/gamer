@@ -86,6 +86,8 @@ real CPU_GetTemperature( const real Dens, const real MomX, const real MomY, cons
 double CPU_Temperature2Pressure( const double Dens, const double Temp, const double mu, const double m_H,
                                  const bool CheckMinPres, const double MinPres );
 real CPU_CheckMinPres( const real InPres, const real MinPres );
+real CPU_CheckMinDens( const real InDens, const real MinDens );
+real CPU_ModifyEngy (const real MomX, const real MomY, const real MomZ, const real Engy, const double epsilon);
 void CPU_NormalizePassive( const real GasDens, real Passive[], const int NNorm, const int NormIdx[] );
 #ifdef DUAL_ENERGY
 void CPU_DualEnergyFix( const real Dens, const real MomX, const real MomY, const real MomZ,
@@ -103,11 +105,13 @@ real CPU_CheckMinPresInEngy( const real Dens, const real MomX, const real MomY, 
 int Flu_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, const double dt, const int SaveSg,
                    const bool OverlapMPI, const bool Overlap_Sync );
 void Flu_AllocateFluxArray( const int lv );
+
 void Flu_Close( const int lv, const int SaveSg, real h_Flux_Array[][9][NFLUX_TOTAL][4*PATCH_SIZE*PATCH_SIZE],
                 real h_Flu_Array_F_Out[][FLU_NOUT][8*PATCH_SIZE*PATCH_SIZE*PATCH_SIZE],
                 char h_DE_Array_F_Out[][8*PATCH_SIZE*PATCH_SIZE*PATCH_SIZE],
                 const int NPG, const int *PID0_List, const real h_Flu_Array_F_In[][FLU_NIN][FLU_NXT*FLU_NXT*FLU_NXT],
                 const double dt );
+
 void Flu_FixUp( const int lv );
 void Flu_Prepare( const int lv, const double PrepTime, real h_Flu_Array_F_In[], real h_Pot_Array_USG_F[],
                   double h_Corner_Array_F[][3], const int NPG, const int *PID0_List );
@@ -419,16 +423,15 @@ real   ELBDM_SetTaylor3Coeff( const real dt, const real dh, const real Eta );
 
 // SR_HYDRO model
 #elif    ( MODEL == SR_HYDRO )
-void Hydro_Aux_Check_Negative( const int lv, const int Mode, const char *comment );
+void SRHydro_Aux_Check_Negative( const int lv, const int Mode, const char *comment );
 void Hydro_GetTimeStep_Gravity( double &dt, double &dTime, int &MinDtLv, real &MinDtVar, const double dt_dTime );
 void Hydro_GetMaxAcc( real MaxAcc[] );
-void Hydro_Init_ByFunction_AssignData( const int lv );
+void SRHydro_Init_ByFunction_AssignData( const int lv );
 void Hydro_BoundaryCondition_Reflecting( real *Array, const int BC_Face, const int NVar_Flu, const int GhostSize,
                                          const int ArraySizeX, const int ArraySizeY, const int ArraySizeZ,
                                          const int Idx_Start[], const int Idx_End[], const int TFluVarIdxList[],
                                          const int NVar_Der, const int TDerVarList[] );
 bool Hydro_Flag_Vorticity( const int i, const int j, const int k, const int lv, const int PID, const double Threshold );
-
 
 #else
 #error : ERROR : unsupported MODEL !!

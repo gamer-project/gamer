@@ -47,8 +47,9 @@ const TestProbID_t
    TESTPROB_HYDRO_PLUMMER                      =   11,
    TESTPROB_HYDRO_GRAVITY                      =   12,
 
-   TESTPROB_SRHYDRO_BLAST_WAVE                 =   13,
-   TESTPROB_SRHYDRO_RIEMANN                    =   14,
+   TESTPROB_SRHYDRO_BLAST_WAVE                 =  600,
+   TESTPROB_SRHYDRO_RIEMANN                    =  601,
+   TESTPROB_SRHYDRO_DOUBLE_MACH_REFLECTION     =  602,
 
    TESTPROB_ELBDM_EXTPOT                       = 1000;
 

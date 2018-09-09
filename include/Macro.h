@@ -241,7 +241,7 @@
 #  define _VELZ               ( 1 << (NCOMP_TOTAL+2) )
 #  define _PRES               ( 1 << (NCOMP_TOTAL+3) )
 #  define _TEMP               ( 1 << (NCOMP_TOTAL+4) )
-#  define _DERIVED            ( _VELX | _VELY | _VELZ | _PRES | _TEMP )
+#  define _DERIVED            ( _VELX | _VELY | _VELZ | _PRES | _TEMP ) 
 #  define NDERIVE             5
 
 
@@ -282,7 +282,6 @@
 #  define  MOMY               2
 #  define  MOMZ               3
 #  define  ENGY               4
-#  define  VEL4               5
 
 // field indices of passive[] --> element of [NCOMP_FLUID ... NCOMP_TOTAL-1]
 #if ( NCOMP_PASSIVE > 0 )
@@ -317,11 +316,11 @@
 // --> must have "_VAR_NAME = 1<<VAR_NAME" (e.g., _DENS == 1<<DENS)
 // --> convenient for determining subsets of fields (e.g., _DENS|_ENGY)
 // --> used as function parameters (e.g., Prepare_PatchData(), Flu_FixUp(), Flu_Restrict(), Buf_GetBufferData())
-#  define _DENS               ( 1 << DENS )
-#  define _MOMX               ( 1 << MOMX )
-#  define _MOMY               ( 1 << MOMY )
-#  define _MOMZ               ( 1 << MOMZ )
-#  define _ENGY               ( 1 << ENGY )
+#  define _DENS               ( 1 << DENS ) // 00001
+#  define _MOMX               ( 1 << MOMX ) // 00010
+#  define _MOMY               ( 1 << MOMY ) // 00100
+#  define _MOMZ               ( 1 << MOMZ ) // 01000 
+#  define _ENGY               ( 1 << ENGY ) // 10000
 
 #if ( NCOMP_PASSIVE > 0 )
 # if   ( DUAL_ENERGY == DE_ENPY )
@@ -332,11 +331,11 @@
 #endif // #if ( NCOMP_PASSIVE > 0 )
 
 // bitwise flux indices
-#  define _FLUX_DENS          ( 1 << FLUX_DENS )
-#  define _FLUX_MOMX          ( 1 << FLUX_MOMX )
-#  define _FLUX_MOMY          ( 1 << FLUX_MOMY )
-#  define _FLUX_MOMZ          ( 1 << FLUX_MOMZ )
-#  define _FLUX_ENGY          ( 1 << FLUX_ENGY )
+#  define _FLUX_DENS          ( 1 << FLUX_DENS ) // 00001
+#  define _FLUX_MOMX          ( 1 << FLUX_MOMX ) // 00010
+#  define _FLUX_MOMY          ( 1 << FLUX_MOMY ) // 00100
+#  define _FLUX_MOMZ          ( 1 << FLUX_MOMZ ) // 01000
+#  define _FLUX_ENGY          ( 1 << FLUX_ENGY ) // 10000
 
 #if ( NFLUX_PASSIVE > 0 )
 # if   ( DUAL_ENERGY == DE_ENPY )
@@ -346,17 +345,18 @@
 # endif
 #endif // #if ( NFLUX_PASSIVE > 0 )
 
-// bitwise indices of derived fields
+// bitwise indices of primitive fields
 // --> start from (1<<NCOMP_TOTAL) to distinguish from the intrinsic fields
 // --> remember to define NDERIVE = total number of derived fields
-#  define _VELX               ( 1 << (NCOMP_TOTAL+0) )
-#  define _VELY               ( 1 << (NCOMP_TOTAL+1) )
-#  define _VELZ               ( 1 << (NCOMP_TOTAL+2) )
-#  define _PRES               ( 1 << (NCOMP_TOTAL+3) )
-#  define _TEMP               ( 1 << (NCOMP_TOTAL+4) )
-#  define _VEL4               ( 1 << (NCOMP_TOTAL+5) )
-#  define _DERIVED            ( _VELX | _VELY | _VELZ | _PRES | _TEMP )
-#  define NDERIVE             5
+#  define _VELX               ( 1 << (NCOMP_TOTAL+0) ) // 4-velocity in x-direction          000000100000
+#  define _VELY               ( 1 << (NCOMP_TOTAL+1) ) // 4-velocity in y-direction          000001000000
+#  define _VELZ               ( 1 << (NCOMP_TOTAL+2) ) // 4-velocity in z-direction          000010000000
+#  define _PRES               ( 1 << (NCOMP_TOTAL+3) ) // pressure                           000100000000
+#  define _TEMP               ( 1 << (NCOMP_TOTAL+4) ) // temperature                        001000000000
+#  define _4VEL               ( 1 << (NCOMP_TOTAL+5) ) // magnitude of 4-velocity            010000000000
+#  define _PRIDENS            ( 1 << (NCOMP_TOTAL+6) ) // primitive density                  100000000000
+#  define _DERIVED            ( _VELX | _VELY | _VELZ | _PRES | _TEMP | _PRIDENS | _4VEL ) //111111100000
+#  define NDERIVE             7
 
 
 #elif ( MODEL == PAR_ONLY )
@@ -370,12 +370,13 @@
 
 
 // bitwise field indices used by all models
+// --> sum of geometric sequence
 # ifdef GRAVITY
 #  define _POTE               ( 1 << (NCOMP_TOTAL+NDERIVE) )
 # endif
-#  define _FLUID              (  ( 1 << NCOMP_FLUID ) - 1           )
-#  define _PASSIVE            (  ( 1 << NCOMP_TOTAL ) - 1 - _FLUID  )
-#  define _TOTAL              (  ( 1 << NCOMP_TOTAL ) - 1           )
+#  define _FLUID              (  ( 1 << NCOMP_FLUID ) - 1           )       // 11111
+#  define _PASSIVE            (  ( 1 << NCOMP_TOTAL ) - 1 - _FLUID  ) 
+#  define _TOTAL              (  ( 1 << NCOMP_TOTAL ) - 1           )       // 11111
 
 #  define _FLUX_FLUID         (  ( 1 << NFLUX_FLUID ) - 1                )
 #  define _FLUX_PASSIVE       (  ( 1 << NFLUX_TOTAL ) - 1 - _FLUX_FLUID  )

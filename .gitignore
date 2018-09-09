@@ -1,7 +1,8 @@
 *.o
-
+cscope*
 bin/**
 gamer
-*.swp
+.*.swp
+.*.swo
 *~
 a.out

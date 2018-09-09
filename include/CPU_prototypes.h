@@ -45,5 +45,4 @@ void CPU_Rotate3D( real InOut[], const int XYZ, const bool Forward );
 void CPU_4Velto3Vel( const real In[], real Out[] );
 void CPU_3Velto4Vel( const real In[], real Out[] );
 
-real CPU_CheckMinPresInEngy (const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy,
-                             const real Gamma_m1, const real _Gamma_m1, const real MinPres);
+real CPU_ModifyEngy (const real MomX, const real MomY, const real MomZ, const real Engy, const double epsilon);

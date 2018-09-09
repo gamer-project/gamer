@@ -23,9 +23,11 @@ END_STEP                     -1           # end step (<0=auto -> must be set by 
 
 
 # test problems
-TESTPROB_ID                   13          # test problem ID [0]
+TESTPROB_ID                   600         # test problem ID [0]
                                           # 0: none
-                                          # 13: blast wave in pure sr-hydro
+                                          # 600: blast wave in pure sr-hydro
+                                          # 601: Riemann problem in pure sr-hydro
+                                          # 602: double mach reflection in pure sr-hydro
 
 # code units (in cgs)
 OPT__UNIT                     0           # specify code units -> must set exactly 3 basic units below [0] ##USELESS FOR COMOVING##

@@ -1,0 +1,9 @@
+# problem-specific runtime parameters
+Theta            45         # incline angle of shock
+Height           -1         # vertical shift
+DensUp           0.9        # primitive density in up-stream
+VelyUp           0.1        # magnitude of 3-velocity in up-stream
+PresUp           1.0e-2     # pressure in up-stream
+DensDown         2.0        # primitive density in down-stream
+VelyDown         1.0        # magnitude of 3-velocity in down-stream
+PresDown         1.0e+10    # pressure in down-stream
