@@ -28,35 +28,35 @@ static void CPU_HancockPredict( real FC_Var[][6][NCOMP_TOTAL], const real dt, co
 //                             - A Practical Introduction ~ by Eleuterio F. Toro"
 //                   MHM_RP : Stone & Gardiner, NewA, 14, 139 (2009)
 //
-// Parameter   :  Flu_Array_In       : Array storing the input fluid conserved variables
-//                Flu_Array_Out      : Array to store the output fluid conserved variables
-//                DE_Array_Out       : Array to store the dual-energy status
-//                Flux_Array         : Array to store the output fluxes
-//                Corner_Array       : Array storing the physical corner coordinates of each patch group (for UNSPLIT_GRAVITY)
-//                Pot_Array_USG      : Array storing the input potential for UNSPLIT_GRAVITY
-//                NPatchGroup        : Number of patch groups to be evaluated
-//                dt                 : Time interval to advance solution
-//                dh                 : Grid size
-//                Gamma              : Ratio of specific heats
-//                StoreFlux          : true --> store the coarse-fine fluxes
-//                LR_Limiter         : Slope limiter for the data reconstruction in the MHM/MHM_RP/CTU schemes
-//                                     (0/1/2/3/4) = (vanLeer/generalized MinMod/vanAlbada/
-//                                                    vanLeer + generalized MinMod/extrema-preserving) limiter
-//                MinMod_Coeff       : Coefficient of the generalized MinMod limiter
-//                EP_Coeff           : Coefficient of the extrema-preserving limiter
-//                Time               : Current physical time                                     (for UNSPLIT_GRAVITY only)
-//                GravityType        : Types of gravity --> self-gravity, external gravity, both (for UNSPLIT_GRAVITY only)
-//                ExtAcc_AuxArray    : Auxiliary array for adding external acceleration          (for UNSPLIT_GRAVITY only)
-//                MinDens/Pres       : Minimum allowed density and pressure
-//                DualEnergySwitch   : Use the dual-energy formalism if E_int/E_kin < DualEnergySwitch
-//                NormPassive        : true --> normalize passive scalars so that the sum of their mass density
-//                                              is equal to the gas mass density
-//                NNorm              : Number of passive scalars to be normalized
-//                                     --> Should be set to the global variable "PassiveNorm_NVar"
-//                NormIdx            : Target variable indices to be normalized
-//                                     --> Should be set to the global variable "PassiveNorm_VarIdx"
-//                JeansMinPres       : Apply minimum pressure estimated from the Jeans length
-//                JeansMinPres_Coeff : Coefficient used by JeansMinPres = G*(Jeans_NCell*Jeans_dh)^2/(Gamma*pi);
+// Parameter   : [ 1] Flu_Array_In       : Array storing the input fluid conserved variables
+//               [ 2] Flu_Array_Out      : Array to store the output fluid conserved variables
+//               [ 3] DE_Array_Out       : Array to store the dual-energy status
+//               [ 4] Flux_Array         : Array to store the output fluxes
+//               [ 5] Corner_Array       : Array storing the physical corner coordinates of each patch group (for UNSPLIT_GRAVITY)
+//               [ 6] Pot_Array_USG      : Array storing the input potential for UNSPLIT_GRAVITY
+//               [ 7] NPatchGroup        : Number of patch groups to be evaluated
+//               [ 8] dt                 : Time interval to advance solution
+//               [ 9] dh                 : Grid size
+//               [10] Gamma              : Ratio of specific heats
+//               [11] StoreFlux          : true --> store the coarse-fine fluxes
+//               [12] LR_Limiter         : Slope limiter for the data reconstruction in the MHM/MHM_RP/CTU schemes
+//                                         (0/1/2/3/4) = (vanLeer/generalized MinMod/vanAlbada/
+//                                                        vanLeer + generalized MinMod/extrema-preserving) limiter
+//               [13] MinMod_Coeff       : Coefficient of the generalized MinMod limiter
+//               [14] EP_Coeff           : Coefficient of the extrema-preserving limiter
+//               [15] Time               : Current physical time                                     (for UNSPLIT_GRAVITY only)
+//               [16] GravityType        : Types of gravity --> self-gravity, external gravity, both (for UNSPLIT_GRAVITY only)
+//               [17] ExtAcc_AuxArray    : Auxiliary array for adding external acceleration          (for UNSPLIT_GRAVITY only)
+//            [18/19] MinDens/Pres       : Minimum allowed density and pressure
+//               [20] DualEnergySwitch   : Use the dual-energy formalism if E_int/E_kin < DualEnergySwitch
+//               [21] NormPassive        : true --> normalize passive scalars so that the sum of their mass density
+//                                                  is equal to the gas mass density
+//               [22] NNorm              : Number of passive scalars to be normalized
+//                                         --> Should be set to the global variable "PassiveNorm_NVar"
+//               [23] NormIdx            : Target variable indices to be normalized
+//                                         --> Should be set to the global variable "PassiveNorm_VarIdx"
+//               [24] JeansMinPres       : Apply minimum pressure estimated from the Jeans length
+//               [25] JeansMinPres_Coeff : Coefficient used by JeansMinPres = G*(Jeans_NCell*Jeans_dh)^2/(Gamma*pi);
 //-------------------------------------------------------------------------------------------------------
 void CPU_FluidSolver_MHM( const real Flu_Array_In[][NCOMP_TOTAL][ FLU_NXT*FLU_NXT*FLU_NXT ],
                           real Flu_Array_Out[][NCOMP_TOTAL][ PS2*PS2*PS2 ],
@@ -189,7 +189,6 @@ void CPU_FluidSolver_MHM( const real Flu_Array_In[][NCOMP_TOTAL][ FLU_NXT*FLU_NX
 
 #        endif // #if ( FLU_SCHEME == MHM_RP ) ... else ...
 
-
          CPU_ComputeFlux( FC_Var, FC_Flux, N_FL_FLUX, 1, Gamma, CorrHalfVel_No,  NULL, NULL,
                           NULL_REAL, NULL_REAL, NULL_REAL, GRAVITY_NONE, NULL, MinPres );
 
@@ -264,7 +263,9 @@ void CPU_RiemannPredict_Flux( const real Flu_Array_In[][ FLU_NXT*FLU_NXT*FLU_NXT
 
 //       invoke the Riemann solver
 #        if ( RSOLVER == HLLC )
-         CPU_RiemannSolver_HLLC( d, Half_Flux[ID1][d], ConVar_L, ConVar_R, Gamma, MinPres );
+         CPU_RiemannSolver_HLLC ( d, Half_Flux[ID1][d], ConVar_L, ConVar_R, Gamma, MinPres );
+#        elif ( RSOLVER == HLLE )
+         CPU_RiemannSolver_HLLE ( d, Half_Flux[ID1][d], ConVar_L, ConVar_R, Gamma, MinPres );
 #        else
 #        error : ERROR : unsupported Riemann solver !!
 #        endif
@@ -322,14 +323,6 @@ void CPU_RiemannPredict( const real Flu_Array_In[][ FLU_NXT*FLU_NXT*FLU_NXT ],
 
       for (int v=0; v<NCOMP_TOTAL; v++)
          Half_Var[ID1][v] = Flu_Array_In[v][ID2] - dt_dh2*( dF[0][v] + dF[1][v] + dF[2][v] );
-
-//    ensure positive density and pressure
-
-      Half_Var[ID1][0] = FMAX( Half_Var[ID1][0], MinDens );
-
-      Half_Var[ID1][4] = CPU_CheckMinPresInEngy( Half_Var[ID1][0], Half_Var[ID1][1], Half_Var[ID1][2],
-                                                 Half_Var[ID1][3], Half_Var[ID1][4], Gamma_m1, _Gamma_m1, MinPres );
-
 
    } // i,j,k
 
@@ -401,15 +394,6 @@ void CPU_HancockPredict( real FC_Var[][6][NCOMP_TOTAL], const real dt, const rea
          }
       }
 
-//    ensure positive density and pressure
-
-      for (int f=0; f<6; f++)
-      {
-         FC_Var[ID1][f][0] = FMAX( FC_Var[ID1][f][0], MinDens );
-
-         FC_Var[ID1][f][4] = CPU_CheckMinPresInEngy( FC_Var[ID1][f][0], FC_Var[ID1][f][1], FC_Var[ID1][f][2],
-                                                     FC_Var[ID1][f][3], FC_Var[ID1][f][4], Gamma_m1, _Gamma_m1, MinPres );
-      }
 
    } // i,j,k
 

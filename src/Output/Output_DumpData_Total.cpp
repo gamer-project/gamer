@@ -404,7 +404,7 @@ void Output_DumpData_Total( const char *FileName )
 
       const int    ncomp_fluid           = NCOMP_FLUID;
       const int    patch_size            = PATCH_SIZE;
-#     if ( MODEL == HYDRO  ||  MODEL == MHD )
+#     if ( MODEL == HYDRO  ||  MODEL == MHD || MODEL == SR_HYDRO)
       const double min_pres              = MIN_PRES;
 #     else
       const double min_pres              = NULL_REAL;
@@ -575,10 +575,16 @@ void Output_DumpData_Total( const char *FileName )
 //    convert OPT__1ST_FLUX_CORR to bool to be consistent with the old format where OPT__1ST_FLUX_CORR is bool instead of int
       const bool   opt__1st_flux_corr        = (bool)OPT__1ST_FLUX_CORR;
       const int    opt__1st_flux_corr_scheme = (int)OPT__1ST_FLUX_CORR_SCHEME;
-#     else
-#     if ( MODEL == MHD )
+#     elif ( MODEL == MHD )
 #     warning : WAIT MHD !!!
-#     endif
+#     elif ( MODEL == SR_HYDRO )
+      const int    opt__lr_limiter           = (int)OPT__LR_LIMITER;
+      const int    opt__waf_limiter          = (int)OPT__WAF_LIMITER;
+
+//    convert OPT__1ST_FLUX_CORR to bool to be consistent with the old format where OPT__1ST_FLUX_CORR is bool instead of int
+      const bool   opt__1st_flux_corr        = (bool)OPT__1ST_FLUX_CORR;
+      const int    opt__1st_flux_corr_scheme = (int)OPT__1ST_FLUX_CORR_SCHEME;
+#     else
       const bool   OPT__FLAG_PRES_GRADIENT   = NULL_BOOL;
       const double GAMMA                     = NULL_REAL;
       const double MOLECULAR_WEIGHT          = NULL_REAL;

@@ -141,7 +141,6 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
 
       if ( OPT__VERBOSE  &&  MPI_Rank == 0 )
          Aux_Message( stdout, "   Lv %2d: Flu_AdvanceDt, counter = %8ld ... ", lv, AdvanceCounter[lv] );
-
       if ( false ) {}
       /*
       if ( OPT__OVERLAP_MPI )
@@ -188,10 +187,8 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
       else
       {
          int FluStatus_AllRank;
-
          TIMING_FUNC(   FluStatus_AllRank = Flu_AdvanceDt( lv, TimeNew, TimeOld, dt_SubStep, SaveSg_Flu, false, false ),
                         Timer_Flu_Advance[lv]   );
-
 //       do nothing if AUTO_REDUCE_DT is disabled
          if ( AUTO_REDUCE_DT )
          {

@@ -1,6 +1,6 @@
 #include "GAMER.h"
 
-#if ( MODEL == HYDRO || MODEL == SR_HYDRO )
+#if ( MODEL == SR_HYDRO )
 
 static void BC_Reflecting_xm( real *Array, const int NVar_Flu, const int TFluVarIdxList[], const int NVar_Der,
                               const int TDerVarList[], const int GhostSize, const int ArraySizeX, const int ArraySizeY,
@@ -31,16 +31,16 @@ static void BC_Reflecting_zp( real *Array, const int NVar_Flu, const int TFluVar
 // Note        :  1. Work for the functions "Prepare_PatchData, InterpolateGhostZone, Refine, LB_Refine_AllocateNewPatch"
 //                2. Similar to the outflow (i.e., zero-gradient) B.C. except that the normal vecotor components change sign
 //
-// Parameter   :  Array          : Array to store the prepared data of one patch group (including the ghost-zone data)
-//                BC_Face        : Boundary face (0~5) --> (-x,+x,-y,+y,-z,+z)
-//                NVar_Flu       : Number of fluid variables to be prepared (derived variables is NOT included)
-//                GhostSize      : Number of ghost zones
-//                ArraySizeX/Y/Z : Size of Array including the ghost zones on each side
-//                Idx_Start      : Minimum array indices
-//                Idx_End        : Maximum array indices
-//                TFluVarIdxList : List recording the target fluid variable indices ( = [0 ... NCOMP_TOTAL-1] )
-//                NVar_Der       : Number of derived variables to be prepared
-//                TDerVarList    : List recording the target derived variables
+// Parameter   :  [ 1] Array          : Array to store the prepared data of one patch group (including the ghost-zone data)
+//                [ 2] BC_Face        : Boundary face (0~5) --> (-x,+x,-y,+y,-z,+z)
+//                [ 3] NVar_Flu       : Number of fluid variables to be prepared (derived variables is NOT included)
+//                [ 4] GhostSize      : Number of ghost zones
+//             [5/6/7] ArraySizeX/Y/Z : Size of Array including the ghost zones on each side
+//                [ 8] Idx_Start      : Minimum array indices
+//                [ 9] Idx_End        : Maximum array indices
+//                [10] TFluVarIdxList : List recording the target fluid variable indices ( = [0 ... NCOMP_TOTAL-1] )
+//                [11] NVar_Der       : Number of derived variables to be prepared
+//                [12] TDerVarList    : List recording the target derived variables
 //
 // Return      :  Array
 //-------------------------------------------------------------------------------------------------------
@@ -49,9 +49,6 @@ void Hydro_BoundaryCondition_Reflecting( real *Array, const int BC_Face, const i
                                          const int Idx_Start[], const int Idx_End[], const int TFluVarIdxList[],
                                          const int NVar_Der, const int TDerVarList[] )
 {
-   printf("Please modify %s!\n",__FUNCTION__);
-   abort();
-
 // check the index range
 #  ifdef GAMER_DEBUG
    switch ( BC_Face )
@@ -658,4 +655,4 @@ void BC_Reflecting_zp( real *Array, const int NVar_Flu, const int TFluVarIdxList
 
 
 
-#endif // if ( MODEL == HYDRO )
+#endif // if ( MODEL == SR_HYDRO )

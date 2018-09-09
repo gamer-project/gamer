@@ -1,0 +1,1 @@
+grep -Irnw '.' -e 'MIN_DENS' --exclude-dir=Model_SRHydro --exclude-dir=SelfGravity

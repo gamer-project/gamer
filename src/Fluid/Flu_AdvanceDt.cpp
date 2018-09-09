@@ -40,16 +40,13 @@ extern void (*Flu_ResetByUser_API_Ptr)( const int lv, const int FluSg, const dou
 int Flu_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, const double dt, const int SaveSg,
                    const bool OverlapMPI, const bool Overlap_Sync )
 {
-
 // initialize the flux_tmp arrays for AUTO_REDUCE_DT
    if ( OPT__FIXUP_FLUX  &&  AUTO_REDUCE_DT  &&  lv != 0 )  Flu_InitTempFlux( lv-1 );
 
 
 // invoke the fluid solver
    FluStatus_ThisRank = GAMER_SUCCESS;
-
    InvokeSolver( FLUID_SOLVER, lv, TimeNew, TimeOld, dt, NULL_REAL, SaveSg, NULL_INT, OverlapMPI, Overlap_Sync );
-
 
 // collect the fluid solver status from all ranks (only necessary for AUTO_REDUCE_DT)
    int FluStatus_AllRank;

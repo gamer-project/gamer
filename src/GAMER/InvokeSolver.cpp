@@ -138,7 +138,6 @@ void InvokeSolver( const Solver_t TSolver, const int lv, const double TimeNew, c
             PID0_List = amr->LB->OverlapMPI_FluAsyncPID0[lv];
          }
       }
-
 #     ifdef GRAVITY
       else if ( TSolver == POISSON_SOLVER  ||  TSolver == GRAVITY_SOLVER  ||  TSolver == POISSON_AND_GRAVITY_SOLVER )
       {
@@ -175,18 +174,15 @@ void InvokeSolver( const Solver_t TSolver, const int lv, const double TimeNew, c
 
    NPG[ArrayID] = ( NPG_Max < NTotal ) ? NPG_Max : NTotal;
 
-
 //-------------------------------------------------------------------------------------------------------------
    TIMING_SYNC(   Preparation_Step( TSolver, lv, TimeNew, TimeOld, NPG[ArrayID], PID0_List, ArrayID ),
                   Timer_Pre[lv][TSolver]  );
 //-------------------------------------------------------------------------------------------------------------
 
-
 //-------------------------------------------------------------------------------------------------------------
    TIMING_SYNC(   Solver( TSolver, lv, TimeNew, TimeOld, NPG[ArrayID], ArrayID, dt, Poi_Coeff ),
                   Timer_Sol[lv][TSolver]  );
 //-------------------------------------------------------------------------------------------------------------
-
 
    for (Disp=NPG_Max; Disp<NTotal; Disp+=NPG_Max)
    {
@@ -200,7 +196,6 @@ void InvokeSolver( const Solver_t TSolver, const int lv, const double TimeNew, c
                      Timer_Pre[lv][TSolver]  );
 //-------------------------------------------------------------------------------------------------------------
 
-
 //-------------------------------------------------------------------------------------------------------------
 #     ifdef GPU
       CUAPI_Synchronize();
@@ -213,12 +208,10 @@ void InvokeSolver( const Solver_t TSolver, const int lv, const double TimeNew, c
                      Timer_Sol[lv][TSolver]  );
 //-------------------------------------------------------------------------------------------------------------
 
-
 //-------------------------------------------------------------------------------------------------------------
       TIMING_SYNC(   Closing_Step( TSolver, lv, SaveSg_Flu, SaveSg_Pot, NPG[1-ArrayID], PID0_List+Disp-NPG_Max, 1-ArrayID, dt ),
                      Timer_Clo[lv][TSolver]  );
 //-------------------------------------------------------------------------------------------------------------
-
    } // for (int Disp=NPG_Max; Disp<NTotal; Disp+=NPG_Max)
 
 
@@ -271,7 +264,6 @@ void InvokeSolver( const Solver_t TSolver, const int lv, const double TimeNew, c
 void Preparation_Step( const Solver_t TSolver, const int lv, const double TimeNew, const double TimeOld, const int NPG,
                        const int *PID0_List, const int ArrayID )
 {
-
 #  ifndef UNSPLIT_GRAVITY
    real (*h_Pot_Array_USG_F[2])[USG_NXT_F][USG_NXT_F][USG_NXT_F] = { NULL, NULL };
 #  endif
@@ -426,7 +418,7 @@ void Solver( const Solver_t TSolver, const int lv, const double TimeNew, const d
 #  if ( MODEL != HYDRO  &&  MODEL != MHD  &&  MODEL != ELBDM && MODEL != SR_HYDRO )
    const double MIN_DENS                = NULL_REAL;
 #  endif
-#  if ( MODEL != HYDRO  &&  MODEL != MHD && MODEL != SR_HYDRO )
+#  if ( MODEL != HYDRO  &&  MODEL != MHD && MODEL != SR_HYDRO)
    const double MIN_PRES                = NULL_REAL;
 #  endif
 

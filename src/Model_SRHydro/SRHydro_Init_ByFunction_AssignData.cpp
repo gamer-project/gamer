@@ -1,6 +1,7 @@
 #include "GAMER.h"
+#include "CUFLU.h"
+#include "../../include/CPU_prototypes.h"
 
-#if (  MODEL == SR_HYDRO )
 
 // declare as static so that other functions cannot invoke it directly and must use the function pointer
 static void Init_Function_User( real fluid[], const double x, const double y, const double z, const double Time,
@@ -13,7 +14,8 @@ void (*Init_Function_User_Ptr)( real fluid[], const double x, const double y, co
 extern bool (*Flu_ResetByUser_Func_Ptr)( real fluid[], const double x, const double y, const double z, const double Time,
                                          const int lv, double AuxArray[] );
 
-
+void CPU_Pri2Con( const real In[], real Out[], const real Gamma);
+void CPU_3Velto4Vel( const real In[], real Out[] );
 
 
 //-------------------------------------------------------------------------------------------------------
@@ -28,43 +30,64 @@ extern bool (*Flu_ResetByUser_Func_Ptr)( real fluid[], const double x, const dou
 //                3. Even when DUAL_ENERGY is adopted, one does NOT need to set the dual-energy variable here
 //                   --> It will be set automatically in "Hydro_Init_ByFunction_AssignData()"
 //
-// Parameter   :  fluid    : Fluid field to be initialized
-//                x/y/z    : Target physical coordinates
-//                Time     : Target physical time
-//                lv       : Target refinement level
-//                AuxArray : Auxiliary array
+// Parameter   :  [1] fluid    : Fluid field to be initialized
+//                [2] x/y/z    : Target physical coordinates
+//                [3] Time     : Target physical time
+//                [4] lv       : Target refinement level
+//                [5] AuxArray : Auxiliary array
 //
 // Return      :  fluid
 //-------------------------------------------------------------------------------------------------------
 void Init_Function_User( real fluid[], const double x, const double y, const double z, const double Time,
                          const int lv, double AuxArray[] )
 {
-   printf("\n\nPlease modify %s properly.\n", __FUNCTION__);
-   printf("file: %s\n", __FILE__);
-   printf("line: %d\n", __LINE__);
-   abort();
+   real Prim1[NCOMP_FLUID]; // store 3-velocity
+   real Prim2[NCOMP_FLUID]; // store 4-velocity
 
-   const double Gamma2  = 1.0/GAMMA/(GAMMA-1.0);
-   const double C1[3] = { 0.5*amr->BoxSize[0]+100.0,
-                          0.5*amr->BoxSize[1]+200.0,
-                          0.5*amr->BoxSize[2]+300.0 };
-   const double C2[3] = { 20.0, 40.0, 10.0 };
+// Double Mach Reflection
+   const double pi = 3.14159265;
 
-   const double Cs      =   1.0;
-   const double Height1 = 100.0;
-   const double Height2 = 400.0;
-   const double Width1  = 640.0;
-   const double Width2  = 512.0;
+// initial shock position
+   double Height = 5.0;       // vertical shift
+   double theta = pi/4.0;     // incline angle of shock
 
-// set active variables
-   fluid[DENS] = 1.0 + Height1*exp(  -( SQR(x-C1[0])+ SQR(y-C1[1]) + SQR(z-C1[2]) ) / SQR(Width1)  );
-   fluid[DENS] +=      Height2*exp(  -( SQR(x-C2[0])+ SQR(y-C2[1]) + SQR(z-C2[2]) ) / SQR(Width2)  );
-   fluid[MOMX] = 1.0;
-   fluid[MOMY] = 2.0;
-   fluid[MOMZ] = 3.0;
-   fluid[ENGY] = Cs*Cs*fluid[DENS]*Gamma2 + 0.5*( SQR(fluid[MOMX]) + SQR(fluid[MOMY]) + SQR(fluid[MOMZ]) ) / fluid[DENS];
+// up-stream
+   double dens_up = 0.5;
+   double Vup = 0.1;          // magnitude of 3-velocity in up-stream
+   double pres_up = 1.0;
 
-// set passive scalars
+// down-stream
+   double dens_down = 1.0;
+   double Vdown = 0.1;        // magnitude of 3-velocity in down-stream
+   double pres_down = 1.0e+10;
+
+   double Vup_x = Vup*SIN(theta);
+   double Vup_y = Vup*COS(theta);
+   double Vdown_x = Vdown*SIN(theta);
+   double Vdown_y = Vdown*COS(theta);
+   double slope = tan(theta); // shock slope
+
+   if ( y >= slope*x +  Height) // down-stream
+   {
+      Prim1[0] = dens_down;
+      Prim1[1] = Vdown*SIN(theta);
+      Prim1[2] = Vdown*COS(theta);
+      Prim1[3] = 0.0;
+      Prim1[4] = pres_down;
+
+      CPU_3Velto4Vel (Prim1, Prim2);
+      CPU_Pri2Con (Prim2, fluid, GAMMA);
+   }else{ // up-stream
+      Prim1[0] = dens_up;
+      Prim1[1] = Vup*SIN(theta);
+      Prim1[2] = Vup*COS(theta);
+      Prim1[3] = 0.0;
+      Prim1[4] = pres_up;
+
+      CPU_3Velto4Vel (Prim1, Prim2);
+      CPU_Pri2Con (Prim2, fluid, GAMMA);
+   }
+
 
 } // FUNCTION : Init_Function_User
 
@@ -72,7 +95,7 @@ void Init_Function_User( real fluid[], const double x, const double y, const dou
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Hydro_Init_ByFunction_AssignData
-// Description :  Construct the initial condition in HYDRO
+// Description :  Construct the initial condition in SR_HYDRO
 //
 // Note        :  1. Work for the option "OPT__INIT == INIT_BY_FUNCTION"
 //                2. The function pointer "Init_Function_User_Ptr" points to "Init_Function_User()" by default
@@ -86,7 +109,7 @@ void Init_Function_User( real fluid[], const double x, const double y, const dou
 //
 // Parameter   :  lv : Target refinement level
 //-------------------------------------------------------------------------------------------------------
-void Hydro_Init_ByFunction_AssignData( const int lv )
+void SRHydro_Init_ByFunction_AssignData( const int lv )
 {
 // check
    if ( Init_Function_User_Ptr == NULL )  Aux_Error( ERROR_INFO, "Init_Function_User_Ptr == NULL !!\n" );
@@ -136,11 +159,32 @@ void Hydro_Init_ByFunction_AssignData( const int lv )
          for (int v=0; v<NCOMP_TOTAL; v++)   fluid[v] *= _NSub3;
 
 //       check minimum density and pressure
+#        if ( MODEL == SR_HYDRO )
+#        ifdef CHECK_NEGATIVE_IN_FLUID
+	 if ( CPU_CheckNegative(fluid[0]) 
+	       || !Aux_IsFinite(fluid[1]) 
+	       || !Aux_IsFinite(fluid[2]) 
+	       || !Aux_IsFinite(fluid[3]) 
+	   || CPU_CheckNegative(fluid[4]))
+	 {
+	    Aux_Message (stderr, "file: %s\nfunction: %s\n", __FILE__, __FUNCTION__);
+	    Aux_Message (stderr, "line:%d\nD=%e, Mx=%e, My=%e, Mz=%e, E=%e\n", __LINE__, fluid[0], fluid[1], fluid[2], fluid[3], fluid[4]);
+	 }
+	 real M = SQRT (SQR (fluid[1]) + SQR (fluid[2]) + SQR (fluid[3]));
 
+	 if ( fluid[4] <= M ) 
+	   {   
+	     Aux_Message (stderr, "\n\nerror: |M| > E!\n");
+	     Aux_Message (stderr, "file: %s\nfunction: %s\n", __FILE__, __FUNCTION__);
+	     Aux_Message (stderr, "line:%d\nD=%e, Mx=%e, My=%e, Mz=%e, E=%e\n", __LINE__, fluid[0], fluid[1], fluid[2], fluid[3], fluid[4]);
+	     Aux_Message (stderr, "|M|=%e, E=%e, |M|-E=%e\n\n", M, fluid[4], M - fluid[4]);
+	   }   
+#        endif
+#        else
          fluid[DENS] = FMAX( fluid[DENS], (real)MIN_DENS );
-
          fluid[ENGY] = CPU_CheckMinPresInEngy( fluid[DENS], fluid[MOMX], fluid[MOMY], fluid[MOMZ], fluid[ENGY],
                                                Gamma_m1, _Gamma_m1, MIN_PRES );
+#        endif
 
 
 //       calculate the dual-energy variable (entropy or internal energy)
@@ -179,10 +223,32 @@ void Hydro_Init_ByFunction_AssignData( const int lv )
 
 //       check minimum density and pressure
 
-         fluid[DENS] = FMAX( fluid[DENS], (real)MIN_DENS );
+#        if ( MODEL == SR_HYDRO )
+#        ifdef CHECK_NEGATIVE_IN_FLUID
+	 if ( CPU_CheckNegative(fluid[0]) 
+	       || !Aux_IsFinite(fluid[1]) 
+	       || !Aux_IsFinite(fluid[2]) 
+	       || !Aux_IsFinite(fluid[3]) 
+	   || CPU_CheckNegative(fluid[4]))
+	 {
+	    Aux_Message (stderr, "file: %s\nfunction: %s\n", __FILE__, __FUNCTION__);
+	    Aux_Message (stderr, "line:%d\nD=%e, Mx=%e, My=%e, Mz=%e, E=%e\n", __LINE__, fluid[0], fluid[1], fluid[2], fluid[3], fluid[4]);
+	 }
+	 real M = SQRT (SQR (fluid[1]) + SQR (fluid[2]) + SQR (fluid[3]));
 
+	 if ( fluid[4] <= M ) 
+	   {   
+	     Aux_Message (stderr, "\n\nerror: |M| > E!\n");
+	     Aux_Message (stderr, "file: %s\nfunction: %s\n", __FILE__, __FUNCTION__);
+	     Aux_Message (stderr, "line:%d\nD=%e, Mx=%e, My=%e, Mz=%e, E=%e\n", __LINE__, fluid[0], fluid[1], fluid[2], fluid[3], fluid[4]);
+	     Aux_Message (stderr, "|M|=%e, E=%e, |M|-E=%e\n\n", M, fluid[4], M - fluid[4]);
+	   }   
+#        endif
+#        else
+         fluid[DENS] = FMAX( fluid[DENS], (real)MIN_DENS );
          fluid[ENGY] = CPU_CheckMinPresInEngy( fluid[DENS], fluid[MOMX], fluid[MOMY], fluid[MOMZ], fluid[ENGY],
                                                Gamma_m1, _Gamma_m1, MIN_PRES );
+#        endif
 
 
 //       calculate the dual-energy variable (entropy or internal energy)
@@ -206,7 +272,3 @@ void Hydro_Init_ByFunction_AssignData( const int lv )
    } // if ( NSub > 1 ) ... else ...
 
 } // FUNCTION : Hydro_Init_ByFunction_AssignData
-
-
-
-#endif // #if ( MODEL == HYDRO )

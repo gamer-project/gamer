@@ -15,6 +15,7 @@
 // Return      :  1 : finite
 //                0 : not finite
 //-------------------------------------------------------------------------------------------------------
+# ifndef FLOAT8
 int Aux_IsFinite( const float x )
 {
 
@@ -28,6 +29,7 @@ int Aux_IsFinite( const float x )
 //-------------------------------------------------------------------------------------------------------
 // Function overloading: double precision
 //-------------------------------------------------------------------------------------------------------
+# else
 int Aux_IsFinite( const double x )
 {
 
@@ -35,3 +37,4 @@ int Aux_IsFinite( const double x )
    else                                                        return 1;
 
 } // FUNCTION : Aux_IsFinite
+# endif

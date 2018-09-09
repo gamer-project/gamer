@@ -2,7 +2,6 @@
 
 
 
-
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Aux_Check
 // Description :  Trigger the auxiliary check functions 
@@ -38,6 +37,9 @@ void Aux_Check( )
 #  if ( MODEL == HYDRO )
    if ( OPT__CK_NEGATIVE )       
       for (int lv=0; lv<NLEVEL; lv++)     Hydro_Aux_Check_Negative( lv, OPT__CK_NEGATIVE, "DIAGNOSIS" );
+#  elif ( MODEL == SR_HYDRO )
+   if ( OPT__CK_NEGATIVE )
+      for (int lv=0; lv<NLEVEL; lv++)     SRHydro_Aux_Check_Negative( lv, OPT__CK_NEGATIVE, "DIAGNOSIS" );
 #  endif
 
 #  ifdef PARTICLE

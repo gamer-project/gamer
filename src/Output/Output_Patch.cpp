@@ -123,10 +123,7 @@ void Output_Patch( const int lv, const int PID, const int FluSg, const int PotSg
 
 #  elif   ( MODEL == SR_HYDRO )
    fprintf( File, "%14s", "Pressure" );
-#  ifdef DUAL_ENERGY
-   fprintf( File, "%14s", "DE-status" );
-#  endif
-
+   fprintf( File, "%14s", "|M|-E" );
 #  elif ( MODEL == ELBDM )
 
 #  else
@@ -153,11 +150,23 @@ void Output_Patch( const int lv, const int PID, const int FluSg, const int PotSg
       if ( FluData->fluid != NULL )
       {
 //       output all variables in the fluid array
+#        if ( MODEL == SR_HYDRO )
+         real M = 0.0;
+
          for (int v=0; v<NCOMP_TOTAL; v++)
          {
             u[v] = FluData->fluid[v][k][j][i];
             fprintf( File, " %13.6e", u[v] );
          }
+
+         M = SQRT( SQR(u[MOMX]) + SQR(u[MOMY]) +SQR(u[MOMZ]) );
+#        else
+         for (int v=0; v<NCOMP_TOTAL; v++)
+         {
+            u[v] = FluData->fluid[v][k][j][i];
+            fprintf( File, " %13.6e", u[v] );
+         }
+#        endif
 
 //       output pressure and dual-energy status in HYDRO
 #        if   ( MODEL == HYDRO )
@@ -173,10 +182,9 @@ void Output_Patch( const int lv, const int PID, const int FluSg, const int PotSg
 #        elif   ( MODEL == SR_HYDRO )
          const bool CheckMinPres_No = false;
          fprintf( File, " %13.6e", CPU_GetPressure(u[DENS],u[MOMX],u[MOMY],u[MOMZ],u[ENGY],GAMMA-1.0,CheckMinPres_No,NULL_REAL) );
-#        ifdef DUAL_ENERGY
-         fprintf( File, " %13c", Relation->de_status[k][j][i] );
-#        endif
-
+         if (M >= u[ENGY]){
+           fprintf( File, " %13.6e", M-u[ENGY]);
+          }
 #        elif ( MODEL == ELBDM )
 
 #        else

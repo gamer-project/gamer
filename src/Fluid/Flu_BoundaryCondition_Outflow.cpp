@@ -23,13 +23,13 @@ static void BC_Outflow_zp( real *Array, const int NVar, const int GhostSize, con
 // Note        :  1. Work for Prepare_PatchData(), InterpolateGhostZone(), Refine(), and LB_Refine_AllocateNewPatch()
 //                2. Specifically, the so-called outflow B.C. is actually the **zero-gradient** B.C.
 //
-// Parameter   :  Array          : Array to store the prepared data of one patch group (including the ghost-zone data)
-//                BC_Face        : Boundary face (0~5) --> (-x,+x,-y,+y,-z,+z)
-//                NVar           : Number of fluid and derived variables to be prepared
-//                GhostSize      : Number of ghost zones
-//                ArraySizeX/Y/Z : Size of Array including the ghost zones on each side
-//                Idx_Start      : Minimum array indices
-//                Idx_End        : Maximum array indices
+// Parameter   : [1] Array          : Array to store the prepared data of one patch group (including the ghost-zone data)
+//               [2] BC_Face        : Boundary face (0~5) --> (-x,+x,-y,+y,-z,+z)
+//               [3] NVar           : Number of fluid and derived variables to be prepared
+//               [4] GhostSize      : Number of ghost zones
+//           [5/6/7] ArraySizeX/Y/Z : Size of Array including the ghost zones on each side
+//               [8] Idx_Start      : Minimum array indices
+//               [9] Idx_End        : Maximum array indices
 //
 // Return      :  Array
 //-------------------------------------------------------------------------------------------------------

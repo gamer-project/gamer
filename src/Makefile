@@ -112,7 +112,7 @@ SIMU_OPTION += -DLR_SCHEME=PLM
 
 # Riemann solver: EXACT/ROE/HLLE/HLLC
 # --> all are useless for RTVD; HLLE/HLLC are useless for WAF
-SIMU_OPTION += -DRSOLVER=HLLC
+SIMU_OPTION += -DRSOLVER=HLLE
 
 # dual energy formalism: DE_ENPY/DE_EINT (evolve entropy or internal energy)
 # --> DE_EINT is not supported yet; useless for RTVD/WAF
@@ -177,8 +177,7 @@ SIMU_OPTION += -DMAX_PATCH=1000000
 #SIMU_OPTION += -DGPU_ARCH=KEPLER
 
 # debug mode
-#SIMU_OPTION += -DGAMER_DEBUG
-SIMU_OPTION += -DSR_DEBUG
+SIMU_OPTION += -DGAMER_DEBUG
 
 # bitwise reproducibility
 #SIMU_OPTION += -DBITWISE_REPRODUCIBILITY
@@ -212,7 +211,7 @@ SIMU_OPTION += -DOPENMP
 #SIMU_OPTION += -DLAOHU
 
 # support HDF5 format
-#SIMU_OPTION += -DSUPPORT_HDF5
+SIMU_OPTION += -DSUPPORT_HDF5
 
 # support GNU scientific library
 SIMU_OPTION += -DSUPPORT_GSL
@@ -484,11 +483,11 @@ else ifeq "$(filter -DMODEL=SR_HYDRO, $(SIMU_OPTION))" "-DMODEL=SR_HYDRO"
 
 CC_FILE     += CPU_Shared_DataReconstruction.cpp  CPU_Shared_FluUtility.cpp  CPU_Shared_ComputeFlux.cpp \
                CPU_Shared_FullStepUpdate.cpp CPU_FluidSolver_MHM.cpp \
-               CPU_Shared_RiemannSolver_HLLC.cpp   \
+               CPU_Shared_RiemannSolver_HLLC.cpp  CPU_Shared_RiemannSolver_HLLE.cpp  \
                CPU_dtSolver_HydroCFL.cpp
 
-CC_FILE     += Hydro_Init_ByFunction_AssignData.cpp  Hydro_Aux_Check_Negative.cpp \
-               Hydro_BoundaryCondition_Reflecting.cpp Hydro_Flag_Vorticity.cpp
+CC_FILE     += SRHydro_Init_ByFunction_AssignData.cpp  SRHydro_Aux_Check_Negative.cpp \
+               SRHydro_BoundaryCondition_Reflecting.cpp Hydro_Flag_Vorticity.cpp
 
 vpath %.cpp    Model_SRHydro/CPU_SRHydro Model_SRHydro
 

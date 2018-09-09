@@ -41,8 +41,8 @@ void Init_Field()
    Idx_Dens    = AddField( "Dens",     NORMALIZE_NO );
    Idx_MomX    = AddField( "MomX",     NORMALIZE_NO );
    Idx_MomY    = AddField( "MomY",     NORMALIZE_NO );
-   Idx_MomZ    = AddField( "MomZ",    NORMALIZE_NO );
-   Idx_Engy    = AddField( "Engy",    NORMALIZE_NO );
+   Idx_MomZ    = AddField( "MomZ",     NORMALIZE_NO );
+   Idx_Engy    = AddField( "Engy",     NORMALIZE_NO );
 
 #  elif ( MODEL == ELBDM )
 

@@ -88,7 +88,6 @@ void Int_CQuadratic( real CData[], const int CSize[3], const int CStart[3], cons
       }
 #     endif
 
-
 //    interpolation along x direction
       for (int In_z=CStart[2]-CGhost, Out_z=0;  In_z<CStart[2]+CRange[2]+CGhost;  In_z++, Out_z++)
       for (int In_y=CStart[1]-CGhost, Out_y=0;  In_y<CStart[1]+CRange[1]+CGhost;  In_y++, Out_y++)
@@ -127,7 +126,6 @@ void Int_CQuadratic( real CData[], const int CSize[3], const int CStart[3], cons
          TDataX[ Idx_Out + Tdx ] = CPtr[Idx_InC] + SlopeDh_4;
 
       } // for k,j,i
-
 
 //    unwrap phase along y direction
 #     if ( MODEL == ELBDM )
@@ -182,7 +180,6 @@ void Int_CQuadratic( real CData[], const int CSize[3], const int CStart[3], cons
          TDataY[ Idx_Out + Tdy ] = TDataX[Idx_InC] + SlopeDh_4;
 
       } // for k,j,i
-
 
 //    unwrap phase along z direction
 #     if ( MODEL == ELBDM )
@@ -245,5 +242,4 @@ void Int_CQuadratic( real CData[], const int CSize[3], const int CStart[3], cons
 
    delete [] TDataX;
    delete [] TDataY;
-
 } // FUNCTION : Int_CQuadratic

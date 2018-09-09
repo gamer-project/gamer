@@ -1,8 +1,12 @@
 #include "GAMER.h"
+#include "CUFLU.h"
+
+#if ( MODEL == SR_HYDRO )
+void CPU_Con2Pri (const real In[], real Out[], const real Gamma);
+void CPU_Pri2Con (const real In[], real Out[], const real Gamma);
+#endif
 
 #ifdef LOAD_BALANCE
-
-
 
 void PrepareCData( const int FaLv, const int FaPID, real *const FaData,
                    const int FaSg_Flu, const int FaGhost_Flu, const int NSide_Flu,
@@ -36,20 +40,19 @@ static void DeallocateSonPatch( const int FaLv, const int FaPID, const int NNew_
 //                7. Several alternative functions are invoked here for better performance
 //                   (e.g., LB_AllocateBufferPatch_Sibling() --> LB_Refine_AllocateBufferPatch_Sibling())
 //
-// Parameter   :  FaLv          : Target refinement level to be refined
-//                NNew_Home     : Number of home patches at FaLv to allocate son patches
-//                NewPID_Home   : Patch indices of home patches at FaLv to allocate son patches
-//                NNew_Away     : Number of away patches at FaLv to allocate son patches
-//                NewCr1D_Away  : Padded 1D corner of away patches at FaLv to allocate son patches
-//                NewCData_Away : Coarse-grid data of away patches at FaLv to allocate son patches
-//                NDel_Home     : Number of home patches at FaLv to deallocate son patches
-//                DelPID_Home   : Patch indices of home patches at FaLv to deallocate son patches
-//                NDel_Away     : Number of away patches at FaLv to deallocate son patches
-//                DelCr1D_Away  : Padded 1D corner of away patches at FaLv to deallocate son patches
+// Parameter   : [ 1] FaLv          : Target refinement level to be refined
+//               [ 2] NNew_Home     : Number of home patches at FaLv to allocate son patches
+//               [ 3] NewPID_Home   : Patch indices of home patches at FaLv to allocate son patches
+//               [ 4] NNew_Away     : Number of away patches at FaLv to allocate son patches
+//               [ 5] NewCr1D_Away  : Padded 1D corner of away patches at FaLv to allocate son patches
+//               [ 6] NewCData_Away : Coarse-grid data of away patches at FaLv to allocate son patches
+//               [ 7] NDel_Home     : Number of home patches at FaLv to deallocate son patches
+//               [ 8] DelPID_Home   : Patch indices of home patches at FaLv to deallocate son patches
+//               [ 9] NDel_Away     : Number of away patches at FaLv to deallocate son patches
+//               [10] DelCr1D_Away  : Padded 1D corner of away patches at FaLv to deallocate son patches
 //
-//                PARTICLE-only parameters (call-by-reference)
-//                RefineS2F_Send_NPatchTotal : Total number of patches for exchanging particles from sons to fathers
-//                RefineS2F_Send_PIDList     : Patch indices for exchanging particles from sons to fathers
+//               [11] RefineS2F_Send_NPatchTotal : Total number of patches for exchanging particles from sons to fathers
+//               [12] RefineS2F_Send_PIDList     : Patch indices for exchanging particles from sons to fathers
 //-------------------------------------------------------------------------------------------------------
 void LB_Refine_AllocateNewPatch( const int FaLv, int NNew_Home, int *NewPID_Home, int NNew_Away,
                                  ulong *NewCr1D_Away, real *NewCData_Away, int NDel_Home, int *DelPID_Home,
@@ -638,16 +641,20 @@ void LB_Refine_AllocateNewPatch( const int FaLv, int NNew_Home, int *NewPID_Home
 //
 // Note        :  Just to avoid duplicate code segment
 //
-// Parameter   :  FaLv          : Target refinement level to be refined
-//                Cr            : Corner coordinates of the son patch with LocalID == 0
-//                PScale        : Scale of one patch at SonLv
-//                FaPID         : Father patch index (can be -1 for the away patches)
-//                CData         : Coarse-grid data for assigning data to son patches by spatial interpolation
-//                                (initialize as NULL if father patch is home --> prepare CData here)
-//                BC_Face       : Corresponding boundary faces (0~5) along 26 sibling directions -> for non-periodic B.C. only
-//                FluVarIdxList : List of target fluid variable indices                          -> for non-periodic B.C. only
+// Parameter   : [ 1] FaLv          : Target refinement level to be refined
+//               [ 2] Cr            : Corner coordinates of the son patch with LocalID == 0
+//               [ 3] PScale        : Scale of one patch at SonLv
+//               [ 4] FaPID         : Father patch index (can be -1 for the away patches)
+//               [ 5] CData         : Coarse-grid data for assigning data to son patches by spatial interpolation
+//                                   (initialize as NULL if father patch is home --> prepare CData here)
+//               [ 6] CGhost_Flu    :
+//               [ 7] NSide_Flu     :
+//               [ 8] CGhost_Pot    :
+//               [ 9] NSide_Pot     :
+//               [10] BC_Face       : Corresponding boundary faces (0~5) along 26 sibling directions -> for non-periodic B.C. only
+//               [11] FluVarIdxList : List of target fluid variable indices                          -> for non-periodic B.C. only
 //
-// Return      :  SonPID with LocalID == 0
+// Return      :     SonPID with LocalID == 0
 //-------------------------------------------------------------------------------------------------------
 int AllocateSonPatch( const int FaLv, const int *Cr, const int PScale, const int FaPID, real *CData,
                       const int CGhost_Flu, const int NSide_Flu, const int CGhost_Pot, const int NSide_Pot,
@@ -751,7 +758,7 @@ int AllocateSonPatch( const int FaLv, const int *Cr, const int PScale, const int
 
    for (int v=0; v<NCOMP_TOTAL; v++)
    {
-#     if ( MODEL == HYDRO || MODEL == SR_HYDRO )
+#     if ( MODEL == HYDRO )
 //    we now apply monotonic interpolation to ALL fluid variables (which helps alleviate the issue of negative density/pressure)
       /*
       if ( v == DENS  ||  v == ENGY  ||  v >= NCOMP_FLUID )
@@ -759,9 +766,11 @@ int AllocateSonPatch( const int FaLv, const int *Cr, const int PScale, const int
       else                             Monotonicity[v] = EnsureMonotonicity_No;
       */
                                        Monotonicity[v] = EnsureMonotonicity_Yes;
-
 #     elif ( MODEL == MHD )
 #     warning : WAIT MHD !!!
+
+#     elif ( MODEL == SR_HYDRO )
+       Monotonicity[v] = EnsureMonotonicity_Yes;
 
 #     elif ( MODEL == ELBDM )
       if ( v != REAL  &&  v != IMAG )  Monotonicity[v] = EnsureMonotonicity_Yes;
@@ -819,7 +828,31 @@ int AllocateSonPatch( const int FaLv, const int *Cr, const int PScale, const int
          FData_Flu[IMAG][k][j][i] = Amp*SIN( Phase );
       }
    }
+/*
+#  elif ( MODEL == SR_HYDRO )
+   real Cons[NCOMP_TOTAL], Prim[NCOMP_TOTAL];
 
+// convert conserved quantities into primitive quantities
+   for (int i=0 ;i < CSize_Flu1v; i++){
+      for (int v=0; v<NCOMP_TOTAL; v++)  Cons[v] = *(CData_Flu+v*CSize_Flu1v+i);
+      CPU_Con2Pri ( Cons, Prim, GAMMA);
+      for (int v=0; v<NCOMP_TOTAL; v++)  *(CData_Flu+v*CSize_Flu1v+i) = Prim[v];
+   }
+
+// spatial interpolation
+   for (int v=0; v<NCOMP_TOTAL; v++)
+   Interpolate( CData_Flu+v*CSize_Flu1v, CSize_Flu_Temp, CStart_Flu, CRange, &FData_Flu[v][0][0][0],
+		FSize_Temp, FStart, 1, OPT__REF_FLU_INT_SCHEME, PhaseUnwrapping_No, Monotonicity );
+
+// convert primitive quantities into conserved quantities
+   for (int i=0;i<FSize;i++)
+   for (int j=0;j<FSize;j++)
+   for (int k=0;k<FSize;k++){
+      for (int v=0; v<NCOMP_TOTAL; v++) Prim[v] = FData_Flu[v][i][j][k];
+      CPU_Pri2Con ( Prim, Cons, GAMMA);
+      for (int v=0; v<NCOMP_TOTAL; v++) FData_Flu[v][i][j][k] = Cons[v];
+   }
+*/
 #  else // #if ( MODEL == ELBDM )
 
    for (int v=0; v<NCOMP_TOTAL; v++)
@@ -836,11 +869,43 @@ int AllocateSonPatch( const int FaLv, const int *Cr, const int PScale, const int
                 FSize_Temp, FStart,     1, OPT__REF_POT_INT_SCHEME, PhaseUnwrapping_No, &EnsureMonotonicity_No );
 #  endif
 
+#     if ( MODEL == SR_HYDRO )
+#     ifdef CHECK_NEGATIVE_IN_FLUID
+            for (int k=0; k<FSize; k++)
+            for (int j=0; j<FSize; j++)
+            for (int i=0; i<FSize; i++)
+            {
+	       if ( CPU_CheckNegative(FData_Flu[DENS][k][j][i])
+		 ||     !Aux_IsFinite(FData_Flu[MOMX][k][j][i])
+		 ||     !Aux_IsFinite(FData_Flu[MOMY][k][j][i])
+		 ||     !Aux_IsFinite(FData_Flu[MOMZ][k][j][i])
+		 || CPU_CheckNegative(FData_Flu[ENGY][k][j][i]))
+	       {
+		  Aux_Message (stderr, "\n\nWANNING:\nfile: %s\nfunction: %s\n", __FILE__, __FUNCTION__);
+		  Aux_Message (stderr, "line:%d\nD=%e, Mx=%e, My=%e, Mz=%e, E=%e\n", __LINE__
+			   , FData_Flu[DENS][k][j][i], FData_Flu[MOMX][k][j][i], FData_Flu[MOMY][k][j][i]
+			   , FData_Flu[MOMZ][k][j][i], FData_Flu[ENGY][k][j][i]);
+	       }
+	       real M = SQRT (SQR (FData_Flu[MOMX][k][j][i]) + SQR (FData_Flu[MOMY][k][j][i]) + SQR (FData_Flu[MOMZ][k][j][i]));
+
+	       if ( FData_Flu[ENGY][k][j][i] <= M )
+		 {
+		   Aux_Message (stderr, "\n\nWARNING: |M| > E!\n");
+		   Aux_Message (stderr, "file: %s\nfunction: %s\n", __FILE__, __FUNCTION__);
+		   Aux_Message (stderr, "line:%d\nD=%e, Mx=%e, My=%e, Mz=%e, E=%e\n", __LINE__
+			   , FData_Flu[DENS][k][j][i], FData_Flu[MOMX][k][j][i], FData_Flu[MOMY][k][j][i]
+			   , FData_Flu[MOMZ][k][j][i], FData_Flu[ENGY][k][j][i]);
+		   Aux_Message (stderr, "|M|=%e, E=%e, |M|-E=%e\n\n", M, FData_Flu[ENGY][k][j][i], M - FData_Flu[ENGY][k][j][i]);
+		 }
+            }
+#     endif
+#     endif
+
 // 3.2.3 check minimum density and pressure
 // --> note that it's unnecessary to check negative passive scalars thanks to the monotonic interpolation
 // --> but we do renormalize passive scalars here
-#  if ( MODEL == HYDRO  ||  MODEL == MHD || MODEL == SR_HYDRO  ||  MODEL == ELBDM  ||  (defined DENS && NCOMP_PASSIVE>0) )
-#  if ( MODEL == HYDRO  ||  MODEL == MHD || MODEL == SR_HYDRO )
+#  if ( MODEL == HYDRO  ||  MODEL == MHD ||  MODEL == ELBDM  ||  (defined DENS && NCOMP_PASSIVE>0) )
+#  if ( MODEL == HYDRO  ||  MODEL == MHD )
    const real  Gamma_m1 = GAMMA - (real)1.0;
    const real _Gamma_m1 = (real)1.0 / Gamma_m1;
 #  endif
@@ -869,7 +934,8 @@ int AllocateSonPatch( const int FaLv, const int *Cr, const int PScale, const int
          FData_Flu[DENS][k][j][i] = MIN_DENS;
       }
 
-#     if ( MODEL == HYDRO  ||  MODEL == MHD || MODEL == SR_HYDRO )
+
+#     if ( MODEL == HYDRO  ||  MODEL == MHD )
 #     ifdef DUAL_ENERGY
 //    ensure consistency between pressure, total energy density, and the dual-energy variable
 //    --> here we ALWAYS use the dual-energy variable to correct the total energy density

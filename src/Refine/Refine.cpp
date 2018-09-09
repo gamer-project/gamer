@@ -1,10 +1,15 @@
 #include "GAMER.h"
+#include "CUFLU.h"
+#include "../../include/CPU_prototypes.h"
+
+#if ( MODEL == SR_HYDRO )
+void CPU_Con2Pri (const real In[], real Out[], const real Gamma);
+void CPU_Pri2Con (const real In[], real Out[], const real Gamma);
+#endif
 
 #if ( MODEL == ELBDM  &&  defined GAMER_DEBUG )
 void ELBDM_GetPhase_DebugOnly( real *CData, const int CSize );
 #endif
-
-
 
 
 //-------------------------------------------------------------------------------------------------------
@@ -16,8 +21,8 @@ void ELBDM_GetPhase_DebugOnly( real *CData, const int CSize );
 //                   fine-grid patches by spatial interpolation
 //                3. If LOAD_BALANCE is turned on and UseLBFunc==true, this function will invoke LB_Refine() instead
 //
-// Parameter   :  lv        : Target refinement level to be refined
-//                UseLBFunc : Invoke the load-balance alternative functions for the grid refinement
+// Parameter   : [1] lv        : Target refinement level to be refined
+//               [2] UseLBFunc : Invoke the load-balance alternative functions for the grid refinement
 //                            --> USELB_YES : use the load-balance alternative functions
 //                                USELB_NO  : do not use the load-balance alternative functions
 //-------------------------------------------------------------------------------------------------------
@@ -401,7 +406,8 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
 #           warning : WAIT MHD !!!
 
 #           elif ( MODEL == SR_HYDRO )
-                                             Monotonicity[v] = EnsureMonotonicity_Yes;
+             Monotonicity[v] = EnsureMonotonicity_Yes;
+          
 #           elif ( MODEL == ELBDM )
             if ( v != REAL  &&  v != IMAG )  Monotonicity[v] = EnsureMonotonicity_Yes;
             else                             Monotonicity[v] = EnsureMonotonicity_No;
@@ -468,7 +474,34 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
                Flu_FData[IMAG][k][j][i] = Amp*SIN( Phase );
             }
          }
+/*
+#        elif ( MODEL == SR_HYDRO )
+	 real Cons[NCOMP_TOTAL], Prim[NCOMP_TOTAL];
 
+// convert conserved quantities into primitive quantities
+         for (int i=0;i<CSize_Flu;i++)
+         for (int j=0;j<CSize_Flu;j++)
+         for (int k=0;k<CSize_Flu;k++){
+	    for (int v=0; v<NCOMP_TOTAL; v++) Cons[v] = Flu_CData[v][i][j][k];
+	    CPU_Con2Pri ( Cons, Prim, GAMMA);
+	    for (int v=0; v<NCOMP_TOTAL; v++) Flu_CData[v][i][j][k] = Prim[v];
+         }
+
+// spatial interpolation
+         for (int v=0; v<NCOMP_TOTAL; v++)
+         Interpolate( &Flu_CData[v][0][0][0], CSize_Flu3, CStart_Flu, CRange, &Flu_FData[v][0][0][0],
+                      FSize3, FStart, 1, OPT__REF_FLU_INT_SCHEME, PhaseUnwrapping_No,
+                      Monotonicity );
+
+// convert primitive quantities into conserved quantities
+         for (int i=0;i<FSize;i++)
+         for (int j=0;j<FSize;j++)
+         for (int k=0;k<FSize;k++){
+	    for (int v=0; v<NCOMP_TOTAL; v++) Prim[v] = Flu_FData[v][i][j][k];
+	    CPU_Pri2Con ( Prim, Cons, GAMMA);
+	    for (int v=0; v<NCOMP_TOTAL; v++) Flu_FData[v][i][j][k] = Cons[v];
+         }
+*/
 #        else // #if ( MODEL == ELBDM )
 
          for (int v=0; v<NCOMP_TOTAL; v++)
@@ -488,10 +521,43 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
                       &EnsureMonotonicity_No );
 #        endif
 
+#        if ( MODEL == SR_HYDRO )
+#        ifdef CHECK_NEGATIVE_IN_FLUID
+            for (int k=0; k<FSize; k++)
+            for (int j=0; j<FSize; j++)
+            for (int i=0; i<FSize; i++)
+            {
+		if ( CPU_CheckNegative(Flu_FData[DENS][k][j][i])
+		  ||     !Aux_IsFinite(Flu_FData[MOMX][k][j][i])
+		  ||     !Aux_IsFinite(Flu_FData[MOMY][k][j][i])
+		  ||     !Aux_IsFinite(Flu_FData[MOMZ][k][j][i])
+		  || CPU_CheckNegative(Flu_FData[ENGY][k][j][i]))
+		 {
+		   Aux_Message (stderr, "\n\nWANNING:\nfile: %s\nfunction: %s\n", __FILE__, __FUNCTION__);
+		   Aux_Message (stderr, "line:%d\nD=%e, Mx=%e, My=%e, Mz=%e, E=%e\n", __LINE__
+				, Flu_FData[DENS][k][j][i], Flu_FData[MOMX][k][j][i], Flu_FData[MOMY][k][j][i]
+				, Flu_FData[MOMZ][k][j][i], Flu_FData[ENGY][k][j][i]);
+		 }
+
+		real M = SQRT (SQR (Flu_FData[MOMX][k][j][i]) + SQR (Flu_FData[MOMY][k][j][i]) + SQR (Flu_FData[MOMZ][k][j][i]));
+
+		if ( Flu_FData[ENGY][k][j][i] <= M )
+		  {
+		    Aux_Message (stderr, "\n\nWARNING: |M| > E!\n");
+		    Aux_Message (stderr, "file: %s\nfunction: %s\n", __FILE__, __FUNCTION__);
+		    Aux_Message (stderr, "line:%d\nD=%e, Mx=%e, My=%e, Mz=%e, E=%e\n", __LINE__
+				, Flu_FData[DENS][k][j][i], Flu_FData[MOMX][k][j][i], Flu_FData[MOMY][k][j][i]
+				, Flu_FData[MOMZ][k][j][i], Flu_FData[ENGY][k][j][i]);
+		    Aux_Message (stderr, "|M|=%e, E=%e, |M|-E=%e\n\n", M, Flu_FData[ENGY][k][j][i], M - Flu_FData[ENGY][k][j][i]);
+		  }
+           }
+#        endif
+#        endif
+
 //       (c1.3.3.3) check minimum density and pressure
 //       --> note that it's unnecessary to check negative passive scalars thanks to the monotonic interpolation
 //       --> but we do renormalize passive scalars here
-#        if ( MODEL == HYDRO  ||  MODEL == MHD || MODEL == SR_HYDRO  ||  MODEL == ELBDM  ||  (defined DENS && NCOMP_PASSIVE>0) )
+#        if ( MODEL == HYDRO  ||  MODEL == MHD ||  MODEL == ELBDM  ||  (defined DENS && NCOMP_PASSIVE>0) )
          for (int k=0; k<FSize; k++)
          for (int j=0; j<FSize; j++)
          for (int i=0; i<FSize; i++)
@@ -516,7 +582,7 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
                Flu_FData[DENS][k][j][i] = MIN_DENS;
             }
 
-#           if ( MODEL == HYDRO  ||  MODEL == MHD || MODEL == SR_HYDRO )
+#           if ( MODEL == HYDRO  ||  MODEL == MHD )
 #           ifdef DUAL_ENERGY
 //          ensure consistency between pressure, total energy density, and the dual-energy variable
 //          --> here we ALWAYS use the dual-energy variable to correct the total energy density
@@ -532,7 +598,7 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
 
 #           else
 
-//          check minimum pressure
+//          check minimum pressur
             Flu_FData[ENGY][k][j][i]
                = CPU_CheckMinPresInEngy( Flu_FData[DENS][k][j][i], Flu_FData[MOMX][k][j][i], Flu_FData[MOMY][k][j][i],
                                          Flu_FData[MOMZ][k][j][i], Flu_FData[ENGY][k][j][i],

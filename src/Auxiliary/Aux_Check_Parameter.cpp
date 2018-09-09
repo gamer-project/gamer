@@ -137,7 +137,7 @@ void Aux_Check_Parameter()
         || OPT__FLAG_LOHNER_ENGY 
         || OPT__FLAG_LOHNER_PRES 
         || OPT__FLAG_LOHNER_TEMP 
-        || OPT__FLAG_LOHNER_VEL4)
+        || OPT__FLAG_LOHNER_4VEL)
          &&  Flu_ParaBuf < 2  )
       Aux_Error( ERROR_INFO, "Lohner error estimator does NOT work when Flu_ParaBuf (%d) < 2 !!\n", Flu_ParaBuf );
 #  else
@@ -309,7 +309,7 @@ void Aux_Check_Parameter()
    Flag |= OPT__FLAG_JEANS;
    Flag |= OPT__FLAG_LOHNER_ENGY;
    Flag |= OPT__FLAG_LOHNER_PRES;
-   Flag |= OPT__FLAG_LOHNER_VEL4;
+   Flag |= OPT__FLAG_LOHNER_4VEL;
    Flag |= OPT__FLAG_LOHNER_TEMP;
 #  endif
 #  if ( MODEL == ELBDM )
@@ -612,12 +612,12 @@ void Aux_Check_Parameter()
       Aux_Message( stderr, "WARNING : MIN_DENS == 0.0 could be dangerous and is mainly for debugging only !!\n" );
    else if ( MPI_Rank == 0 )
       Aux_Message( stderr, "WARNING : MIN_DENS (%13.7e) is on --> please ensure that this value is reasonable !!\n", MIN_DENS );
-
+#  if ( MODEL != SR_HYDRO )
    if ( MIN_PRES == 0.0  &&  MPI_Rank == 0 )
       Aux_Message( stderr, "WARNING : MIN_PRES == 0.0 could be dangerous and is mainly for debugging only !!\n" );
    else if ( MPI_Rank == 0 )
       Aux_Message( stderr, "WARNING : MIN_PRES (%13.7e) is on --> please ensure that this value is reasonable !!\n", MIN_PRES );
-
+#  endif
 #  if ( FLU_SCHEME == RTVD  ||  FLU_SCHEME == WAF )
    if ( JEANS_MIN_PRES )
       Aux_Error( ERROR_INFO, "RTVD and WAF fluid schemes do not support \"JEANS_MIN_PRES\" !!\n" );
@@ -984,11 +984,12 @@ void Aux_Check_Parameter()
       Aux_Message( stderr, "WARNING : MIN_DENS == 0.0 could be dangerous and is mainly for debugging only !!\n" );
    else if ( MPI_Rank == 0 )
       Aux_Message( stderr, "WARNING : MIN_DENS (%13.7e) is on --> please ensure that this value is reasonable !!\n", MIN_DENS );
-
+#  if ( MODEL != SR_HYDRO )
    if ( MIN_PRES == 0.0  &&  MPI_Rank == 0 )
       Aux_Message( stderr, "WARNING : MIN_PRES == 0.0 could be dangerous and is mainly for debugging only !!\n" );
    else if ( MPI_Rank == 0 )
       Aux_Message( stderr, "WARNING : MIN_PRES (%13.7e) is on --> please ensure that this value is reasonable !!\n", MIN_PRES );
+#  endif
 
 #  if ( FLU_SCHEME == RTVD  ||  FLU_SCHEME == WAF )
    if ( JEANS_MIN_PRES )

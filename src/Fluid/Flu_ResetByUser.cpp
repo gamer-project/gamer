@@ -1,4 +1,5 @@
 #include "GAMER.h"
+#include "../../include/CPU_prototypes.h"
 
 // declare as static so that other functions cannot invoke them directly and must use the function pointers
 static bool Flu_ResetByUser_Func( real fluid[], const double x, const double y, const double z, const double Time,
@@ -143,9 +144,15 @@ void Flu_ResetByUser_API( const int lv, const int FluSg, const double TTime )
 #           if ( MODEL == HYDRO  ||  MODEL == MHD || MODEL == SR_HYDRO )
 
 //          check minimum density and pressure
-            fluid[DENS] = FMAX( fluid[DENS], (real)MIN_DENS );
+#           if ( MODEL == SR_HYDRO )
+            Aux_Message (stderr, "\nPlease modify here. %s :%d\n", __FUNCTION__, __LINE__);
+            abort();
+            fluid[DENS] = CPU_CheckMinDens( fluid[DENS], (real)MIN_DENS );
+#           else
+            fluid[DENS] = CPU_CheckMinDens( fluid[DENS], (real)MIN_DENS );
             fluid[ENGY] = CPU_CheckMinPresInEngy( fluid[DENS], fluid[MOMX], fluid[MOMY], fluid[MOMZ], fluid[ENGY],
                                                   Gamma_m1, _Gamma_m1, MIN_PRES );
+#           endif
 
 //          calculate the dual-energy variable (entropy or internal energy)
 #           if   ( DUAL_ENERGY == DE_ENPY )

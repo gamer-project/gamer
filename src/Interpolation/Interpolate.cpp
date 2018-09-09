@@ -31,25 +31,26 @@ void Int_Quartic   (       real CData[], const int CSize[3], const int CStart[3]
 //
 // Note        :  Use the input parameter "IntScheme" to determine the adopted interpolation scheme
 //
-// Parameter   :  CData       : Input coarse-grid array
-//                CSize       : Size of the CData array
-//                CStart      : (x,y,z) starting indices to perform interpolation on the CData array
-//                CRange      : Number of grids in each direction to perform interpolation
-//                FData       : Output fine-grid array
-//                FStart      : (x,y,z) starting indcies to store the interpolation results
-//                NComp       : Number of components in the CData and FData array
-//                IntScheme   : Interpolation scheme
-//                              --> currently supported schemes include
-//                                  INT_MINMOD3D : MinMod-3D
-//                                  INT_MINMOD1D : MinMod-1D
-//                                  INT_VANLEER  : vanLeer
-//                                  INT_CQUAD    : conservative quadratic
-//                                  INT_QUAD     : quadratic
-//                                  INT_CQUAR    : conservative quartic
-//                                  INT_QUAR     : quartic
-//                UnwrapPhase : Unwrap phase when OPT__INT_PHASE is on (for ELBDM only)
-//                Monotonic   : Ensure that all interpolation results are monotonic
-//                              --> Useful for interpolating positive-definite variables, such as density, energy, ...
+// Parameter   : [ 1] CData       : Input coarse-grid array
+//               [ 2] CSize       : Size of the CData array
+//               [ 3] CStart      : (x,y,z) starting indices to perform interpolation on the CData array
+//               [ 4] CRange      : Number of grids in each direction to perform interpolation
+//               [ 5] FData       : Output fine-grid array
+//               [ 6] FSize       : Size of the FData array
+//               [ 7] FStart      : (x,y,z) starting indcies to store the interpolation results
+//               [ 8] NComp       : Number of components in the CData and FData array
+//               [ 9] IntScheme   : Interpolation scheme
+//                                  --> currently supported schemes include
+//                                      INT_MINMOD3D : MinMod-3D
+//                                      INT_MINMOD1D : MinMod-1D
+//                                      INT_VANLEER  : vanLeer
+//                                      INT_CQUAD    : conservative quadratic
+//                                      INT_QUAD     : quadratic
+//                                      INT_CQUAR    : conservative quartic
+//                                      INT_QUAR     : quartic
+//               [10] UnwrapPhase : Unwrap phase when OPT__INT_PHASE is on (for ELBDM only)
+//               [11] Monotonic   : Ensure that all interpolation results are monotonic
+//                                  --> Useful for interpolating positive-definite variables, such as density, energy, ...
 //-------------------------------------------------------------------------------------------------------
 void Interpolate( real CData [], const int CSize[3], const int CStart[3], const int CRange[3],
                   real FData [], const int FSize[3], const int FStart[3],

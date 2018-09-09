@@ -1,5 +1,6 @@
 #include "GAMER.h"
-
+#include "CUFLU.h"
+#include "../../include/CPU_prototypes.h"
 
 
 
@@ -186,11 +187,36 @@ void Flu_Restrict( const int FaLv, const int SonFluSg, const int FaFluSg, const 
          }
 #        endif // #ifdef GRAVITY
       } // for (int LocalID=0; LocalID<8; LocalID++)
+/*
+#        if ( MODEL == SR_HYDRO )
+#        ifdef CHECK_NEGATIVE_IN_FLUID
+	   if ( CPU_CheckNegative(Update[DENS][k][j][i])
+	     ||     !Aux_IsFinite(Update[MOMX][k][j][i])
+	     ||     !Aux_IsFinite(Update[MOMY][k][j][i])
+	     ||     !Aux_IsFinite(Update[MOMZ][k][j][i])
+	     || CPU_CheckNegative(Update[ENGY][k][j][i]))
+	   {
+	      Aux_Message (stderr, "\n\nWANNING:\nfile: %s\nfunction: %s\n", __FILE__, __FUNCTION__);
+	      Aux_Message (stderr, "line:%d\nD=%e, Mx=%e, My=%e, Mz=%e, E=%e\n", __LINE__
+		       , Update[DENS][k][j][i], Update[MOMX][k][j][i], Update[MOMY][k][j][i], Update[MOMZ][k][j][i], Update[ENGY][k][j][i]);
+	   }
+	   real M = SQRT (SQR (Update[MOMX][k][j][i]) + SQR (Update[MOMY][k][j][i]) + SQR (Update[MOMZ][k][j][i]));
 
+	   if ( Update[ENGY][k][j][i] <= M )
+	     {
+	       Aux_Message (stderr, "\n\nWANNING: |M| > E!\n");
+	       Aux_Message (stderr, "file: %s\nfunction: %s\n", __FILE__, __FUNCTION__);
+	       Aux_Message (stderr, "line:%d\nD=%e, Mx=%e, My=%e, Mz=%e, E=%e\n", __LINE__
+		       , Update[DENS][k][j][i], Update[MOMX][k][j][i], Update[MOMY][k][j][i], Update[MOMZ][k][j][i], Update[ENGY][k][j][i]);
+	       Aux_Message (stderr, "|M|=%e, E=%e, |M|-E=%e\n\n", M, Update[ENGY][k][j][i], M - Update[ENGY][k][j][i]);
+	     }
+#        endif
+#        endif
+*/
 
 //    check the minimum pressure and, when the dual-energy formalism is adopted, ensure the consistency between
 //    pressure, total energy density, and the dual-energy variable
-#     if ( MODEL == HYDRO  ||  MODEL == MHD || MODEL == SR_HYDRO )
+#     if ( MODEL == HYDRO  ||  MODEL == MHD )
 //    apply this correction only when preparing all fluid variables
       if (  ( TVar & _TOTAL ) == _TOTAL  )
       for (int k=0; k<PATCH_SIZE; k++)
@@ -223,7 +249,6 @@ void Flu_Restrict( const int FaLv, const int SonFluSg, const int FaFluSg, const 
                                       amr->patch[FaFluSg][FaLv][FaPID]->fluid[MOMZ][k][j][i],
                                       amr->patch[FaFluSg][FaLv][FaPID]->fluid[ENGY][k][j][i],
                                       Gamma_m1, _Gamma_m1, MIN_PRES );
-
 #        endif // #ifdef DUAL_ENERGY ... else ...
       } // i,j,k
 #     endif // #if ( MODEL == HYDRO  ||  MODEL == MHD )

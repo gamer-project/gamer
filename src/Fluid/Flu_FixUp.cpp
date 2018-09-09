@@ -6,7 +6,7 @@
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Flu_FixUp
-// Description :  1. Use the corrected coarse-fine boundary fluxes to fix the data at level "lv"
+// Description :  1. Use the corrected coarse-fine boundary fluxes to fix the data at level "lv" (coarse)
 //                2. Use the average data at level "lv+1" to replace the data at level "lv"
 //
 // Note        :  1. Boundary fluxes from the neighboring ranks must be received in advance by invoking
@@ -206,7 +206,7 @@ void Flu_FixUp( const int lv )
 
 
 //                do not apply the flux correction if there are any unphysical results
-#                 if   ( MODEL == HYDRO  ||  MODEL == MHD || MODEL == SR_HYDRO )
+#                 if   ( MODEL == HYDRO  ||  MODEL == MHD )
                   if ( CorrVal[DENS] <= MIN_DENS  ||  Pres <= MIN_PRES  ||  !Aux_IsFinite(Pres)
 #                      if   ( DUAL_ENERGY == DE_ENPY )
                        ||  ( (*DE_StatusPtr1D == DE_UPDATED_BY_DUAL || *DE_StatusPtr1D == DE_UPDATED_BY_MIN_PRES)
@@ -219,6 +219,14 @@ void Flu_FixUp( const int lv )
 
 #                 elif ( MODEL == ELBDM  &&  defined CONSERVE_MASS )
                   if ( CorrVal[DENS] <= MIN_DENS )
+
+#                 elif ( MODEL == SR_HYDRO )
+		    real M = SQRT (SQR(CorrVal[MOMX])+SQR(CorrVal[MOMY])+SQR(CorrVal[MOMZ]));
+
+		    if ( CorrVal[DENS] <= MIN_DENS  
+                     ||  CorrVal[ENGY] <= M  
+                     ||           Pres <= MIN_PRES 
+                     || !Aux_IsFinite(Pres))
 #                 endif
                      continue;
 

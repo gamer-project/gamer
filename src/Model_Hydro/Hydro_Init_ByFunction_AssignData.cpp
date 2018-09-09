@@ -133,7 +133,7 @@ void Hydro_Init_ByFunction_AssignData( const int lv )
          for (int v=0; v<NCOMP_TOTAL; v++)   fluid[v] *= _NSub3;
 
 //       check minimum density and pressure
-         fluid[DENS] = FMAX( fluid[DENS], (real)MIN_DENS );
+         fluid[DENS] = CPU_CheckMinDens ( fluid[DENS], (real)MIN_DENS );
          fluid[ENGY] = CPU_CheckMinPresInEngy( fluid[DENS], fluid[MOMX], fluid[MOMY], fluid[MOMZ], fluid[ENGY],
                                                Gamma_m1, _Gamma_m1, MIN_PRES );
 
@@ -172,7 +172,7 @@ void Hydro_Init_ByFunction_AssignData( const int lv )
             Flu_ResetByUser_Func_Ptr( fluid, x, y, z, Time[lv], lv, NULL );
 
 //       check minimum density and pressure
-         fluid[DENS] = FMAX( fluid[DENS], (real)MIN_DENS );
+         fluid[DENS] = CPU_CheckMinDens ( fluid[DENS], (real)MIN_DENS );
          fluid[ENGY] = CPU_CheckMinPresInEngy( fluid[DENS], fluid[MOMX], fluid[MOMY], fluid[MOMZ], fluid[ENGY],
                                                Gamma_m1, _Gamma_m1, MIN_PRES );
 

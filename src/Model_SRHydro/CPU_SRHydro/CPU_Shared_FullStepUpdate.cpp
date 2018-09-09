@@ -1,33 +1,29 @@
 #include "GAMER.h"
 #include "CUFLU.h"
 
-#if (  !defined GPU  &&  MODEL == SR_HYDRO  &&  \
-       ( FLU_SCHEME == MHM || FLU_SCHEME == MHM_RP || FLU_SCHEME == CTU )  )
-
-
-
+#if (  !defined GPU  &&  MODEL == SR_HYDRO  && ( FLU_SCHEME == MHM || FLU_SCHEME == MHM_RP )  )
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  CPU_FullStepUpdate
 // Description :  Evaluate the full-step solution
 //
-// Parameter   :  Input            : Array storing the input initial data
-//                Output           : Array to store the ouptut updated data
-//                DE_Status        : Array to store the dual-energy status
-//                Flux             : Array storing the input face-centered flux
-//                                   --> Size is assumed to be N_FL_FLUX^3
-//                dt               : Time interval to advance solution
-//                dh               : Grid size
-//                Gamma            : Ratio of specific heats
-//                MinDens          : Minimum allowed density
-//                MinPres          : Minimum allowed pressure
-//                DualEnergySwitch : Use the dual-energy formalism if E_int/E_kin < DualEnergySwitch
-//                NormPassive      : true --> normalize passive scalars so that the sum of their mass density
-//                                            is equal to the gas mass density
-//                NNorm            : Number of passive scalars to be normalized
-//                                   --> Should be set to the global variable "PassiveNorm_NVar"
-//                NormIdx          : Target variable indices to be normalized
-//                                   --> Should be set to the global variable "PassiveNorm_VarIdx"
+// Parameter   :  [ 1] Input            : Array storing the input initial data
+//                [ 2] Output           : Array to store the ouptut updated data
+//                [ 3] DE_Status        : Array to store the dual-energy status
+//                [ 4] Flux             : Array storing the input face-centered flux
+//                                        --> Size is assumed to be N_FL_FLUX^3
+//                [ 5] dt               : Time interval to advance solution
+//                [ 6] dh               : Grid size
+//                [ 7] Gamma            : Ratio of specific heats
+//                [ 8] MinDens          : Minimum allowed density
+//                [ 9] MinPres          : Minimum allowed pressure
+//                [10] DualEnergySwitch : Use the dual-energy formalism if E_int/E_kin < DualEnergySwitch
+//                [11] NormPassive      : true --> normalize passive scalars so that the sum of their mass density
+//                                                 is equal to the gas mass density
+//                [12] NNorm            : Number of passive scalars to be normalized
+//                                        --> Should be set to the global variable "PassiveNorm_NVar"
+//                [13] NormIdx          : Target variable indices to be normalized
+//                                        --> Should be set to the global variable "PassiveNorm_VarIdx"
 //-------------------------------------------------------------------------------------------------------
 void CPU_FullStepUpdate( const real Input[][ FLU_NXT*FLU_NXT*FLU_NXT ], real Output[][ PS2*PS2*PS2 ], char DE_Status[],
                          const real Flux[][3][NCOMP_TOTAL], const real dt, const real dh,
@@ -58,6 +54,31 @@ void CPU_FullStepUpdate( const real Input[][ FLU_NXT*FLU_NXT*FLU_NXT ], real Out
       ID1 = (k1*N_FL_FLUX + j1)*N_FL_FLUX + i1;
       ID2 = (k1*PS2       + j1)*PS2       + i1;
       ID3 = (k2*FLU_NXT   + j2)*FLU_NXT   + i2;
+
+#     ifdef CHECK_NEGATIVE_IN_FLUID
+      if ( CPU_CheckNegative(Input[DENS][ID3]) 
+	||     !Aux_IsFinite(Input[MOMX][ID3]) 
+	||     !Aux_IsFinite(Input[MOMY][ID3]) 
+	||     !Aux_IsFinite(Input[MOMZ][ID3]) 
+	|| CPU_CheckNegative(Input[ENGY][ID3]))
+      {
+	 Aux_Message (stderr,"\n\nWARNING:\nfile: %s\nfunction: %s\n", __FILE__, __FUNCTION__);
+	 Aux_Message (stderr,"line:%d\nD=%e, Mx=%e, My=%e, Mz=%e, E=%e\n", __LINE__,
+		      Input[DENS][ID3], Input[MOMX][ID3], Input[MOMY][ID3], Input[MOMZ][ID3], Input[ENGY][ID3]);
+      }
+
+      real M = SQRT (SQR (Input[MOMX][ID3]) + SQR (Input[MOMY][ID3]) + SQR (Input[MOMZ][ID3]));
+
+      if ( Input[ENGY][ID3] <= M ) 
+	{   
+	  Aux_Message (stderr,"\n\nWARNING: |M| > E!\n");
+	  Aux_Message (stderr,"file: %s\nfunction: %s\n", __FILE__, __FUNCTION__);
+	  Aux_Message (stderr,"line:%d\nD=%e, Mx=%e, My=%e, Mz=%e, E=%e\n", __LINE__, 
+		       Input[DENS][ID3], Input[MOMX][ID3], Input[MOMY][ID3], Input[MOMZ][ID3], Input[ENGY][ID3]);
+
+	  Aux_Message (stderr,"|M|=%e, E=%e, |M|-E=%e\n\n", M, Input[ENGY][ID3], M - Input[ENGY][ID3]);
+	}   
+#     endif
 
       for (int d=0; d<3; d++)
       for (int v=0; v<NCOMP_TOTAL; v++)   dF[d][v] = Flux[ ID1+dID1[d] ][d][v] - Flux[ID1][d][v];
@@ -113,15 +134,64 @@ void CPU_FullStepUpdate( const real Input[][ FLU_NXT*FLU_NXT*FLU_NXT ], real Out
 
 //    check the negative density and energy
 #     ifdef CHECK_NEGATIVE_IN_FLUID
-      if ( CPU_CheckNegative(Output[DENS][ID2]) )
-         Aux_Message( stderr, "WARNING : negative density (%14.7e) at file <%s>, line <%d>, function <%s>\n",
-                      Output[DENS][ID2], __FILE__, __LINE__, __FUNCTION__ );
+      if ( CPU_CheckNegative(Output[DENS][ID2]) 
+	||     !Aux_IsFinite(Output[MOMX][ID2]) 
+	||     !Aux_IsFinite(Output[MOMY][ID2]) 
+	||     !Aux_IsFinite(Output[MOMZ][ID2]) 
+	|| CPU_CheckNegative(Output[ENGY][ID2]))
+      {
+	 Aux_Message (stderr,"\n\nWARNING:\nfile: %s\nfunction: %s\n", __FILE__, __FUNCTION__);
+	 Aux_Message (stderr,"line:%d\nOutput:\nD=%e, Mx=%e, My=%e, Mz=%e, E=%e\n", __LINE__,
+		      Output[DENS][ID2], Output[MOMX][ID2], Output[MOMY][ID2], Output[MOMZ][ID2], Output[ENGY][ID2]);
+	 Aux_Message (stderr,"line:%d\nInput:\nD=%e, Mx=%e, My=%e, Mz=%e, E=%e\n", __LINE__,
+		      Input[DENS][ID3], Input[MOMX][ID3], Input[MOMY][ID3], Input[MOMZ][ID3], Input[ENGY][ID3]);
+      }
+	  M = SQRT (SQR (Output[MOMX][ID2]) + SQR (Output[MOMY][ID2]) + SQR (Output[MOMZ][ID2]));
 
-      if ( CPU_CheckNegative(Output[ENGY][ID2]) )
-         Aux_Message( stderr, "WARNING : negative energy (%14.7e) at file <%s>, line <%d>, function <%s>\n",
-                      Output[ENGY][ID2], __FILE__, __LINE__, __FUNCTION__ );
-#     endif
+      if ( Output[ENGY][ID2] <= M ) 
+	{   
+          Aux_Message (stderr, "\n\ndt = %e, dh = %e, dt/dh = %e\n", dt, dh, dt_dh);
+	  Aux_Message (stderr,"WARNING: |M| > E!\n");
+	  Aux_Message (stderr,"file: %s\nfunction: %s\n", __FILE__, __FUNCTION__);
+	  Aux_Message (stderr,"line:%d\nOutput:\nD=%e, Mx=%e, My=%e, Mz=%e, E=%e\n", __LINE__, 
+		       Output[DENS][ID2], Output[MOMX][ID2], Output[MOMY][ID2], Output[MOMZ][ID2], Output[ENGY][ID2]);
 
+	  Aux_Message (stderr,"|M|=%e, E=%e, |M|-E=%e\n\n", M, Output[ENGY][ID2], M - Output[ENGY][ID2]);
+
+	  Aux_Message (stderr,"line:%d\nInput:\nD=%e, Mx=%e, My=%e, Mz=%e, E=%e\n", __LINE__,
+		       Input[DENS][ID3], Input[MOMX][ID3], Input[MOMY][ID3], Input[MOMZ][ID3], Input[ENGY][ID3]);
+
+	  M = SQRT (SQR (Input[MOMX][ID3]) + SQR (Input[MOMY][ID3]) + SQR (Input[MOMZ][ID3]));
+	  Aux_Message (stderr,"|M|=%e, E=%e, |M|-E=%e\n\n", M, Input[ENGY][ID3], M - Input[ENGY][ID3]);
+	  Aux_Message (stderr,"ID1=%d, ID2=%d, ID3=%d\n\n",ID1,ID2,ID3);
+
+	  for (int d=0; d<3; d++)
+	  for (int v=0; v<NCOMP_TOTAL; v++)  {
+		switch (v) {
+		 case 0:
+		    Aux_Message (stderr,"\nFlux1[%5d][%1d][DENS] = %e\n", ID1+dID1[d], d, Flux[ ID1+dID1[d] ][d][v]);
+		    Aux_Message (stderr,  "Flux2[%5d][%1d][DENS] = %e\n", ID1        , d, Flux[ ID1         ][d][v]);
+		    break;
+		 case 1:
+		    Aux_Message (stderr, "Flux1[%5d][%1d][MOMX] = %e\n", ID1+dID1[d], d, Flux[ ID1+dID1[d] ][d][v]);
+		    Aux_Message (stderr, "Flux2[%5d][%1d][MOMX] = %e\n", ID1        , d, Flux[ ID1         ][d][v]);
+		    break;
+		 case 2:
+		    Aux_Message (stderr, "Flux1[%5d][%1d][MOMY] = %e\n", ID1+dID1[d], d, Flux[ ID1+dID1[d] ][d][v]);
+		    Aux_Message (stderr, "Flux2[%5d][%1d][MOMY] = %e\n", ID1        , d, Flux[ ID1         ][d][v]);
+		    break;
+		 case 3:
+		    Aux_Message (stderr, "Flux1[%5d][%1d][MOMZ] = %e\n", ID1+dID1[d], d, Flux[ ID1+dID1[d] ][d][v]);
+		    Aux_Message (stderr, "Flux2[%5d][%1d][MOMZ] = %e\n", ID1        , d, Flux[ ID1         ][d][v]);
+		    break;
+		 case 4:
+		    Aux_Message (stderr, "Flux1[%5d][%1d][ENGY] = %e\n", ID1+dID1[d], d, Flux[ ID1+dID1[d] ][d][v]);
+		    Aux_Message (stderr, "Flux2[%5d][%1d][ENGY] = %e\n", ID1        , d, Flux[ ID1         ][d][v]);
+		    break;
+		 }
+	    }
+	}   
+#       endif
    } // i,j,k
 
 } // FUNCTION : CPU_FullStepUpdate

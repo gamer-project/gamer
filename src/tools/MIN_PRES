@@ -1,0 +1,5 @@
+grep -Irnw '.' -e 'MIN_PRES' \
+--exclude-dir=Model_Hydro \
+--exclude-dir=GPU_API \
+--exclude-dir=SelfGravity \
+--exclude-dir=TestProblem

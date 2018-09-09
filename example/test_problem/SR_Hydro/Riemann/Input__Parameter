@@ -111,6 +111,7 @@ OPT__CORR_AFTER_ALL_SYNC     -1           # apply various corrections after all 
                                           # (-1=auto, 0=off, 1=every step, 2=before dump) [-1]
 MIN_DENS                      0.0         # minimum mass density (must >= 0.0) [0.0] ##HYDRO, MHD, and ELBDM ONLY##
 MIN_PRES                      0.0         # minimum pressure     (must >= 0.0) [0.0] ##HYDRO and MHD ONLY##
+EPSILON                       1.0e-5
 
 
 # initialization
@@ -165,5 +166,5 @@ OPT__CK_RESTRICT              0           # check the data restriction [0]
 OPT__CK_FINITE                0           # check if all variables are finite [0]
 OPT__CK_PATCH_ALLOCATE        0           # check if all patches are properly allocated [0]
 OPT__CK_FLUX_ALLOCATE         0           # check if all flux arrays are properly allocated ##HYDRO and ELBDM ONLY## [0]
-OPT__CK_NEGATIVE              0           # check the negative values: (0=off, 1=density, 2=pressure and entropy, 3=both) [0] ##HYDRO ONLY##
+OPT__CK_NEGATIVE              0           # check the negative values: (0=off, 1=density, 2=pressure, 3=ratio of momentum to energy, 4=all) [0] ##SR_HYDRO ONLY##
 OPT__CK_MEMFREE               1.0         # check the free memory in GB (0=off, >0=threshold) [1.0]

@@ -1,0 +1,8 @@
+grep -Irnw '.' -e 'MinDens' \
+--exclude-dir=GPU_API \
+--exclude-dir=GPU_Hydro \
+--exclude-dir=Model_SRHydro \
+--exclude=CPU_FluidSolver_WAF.cpp \
+--exclude=CPU_FluidSolver_RTVD.cpp \
+--exclude=CPU_FluidSolver_CTU.cpp \
+--exclude=MIN_DENS

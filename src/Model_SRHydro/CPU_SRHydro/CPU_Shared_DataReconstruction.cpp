@@ -3,13 +3,9 @@
 
 #if ( !defined GPU  &&  MODEL == SR_HYDRO  &&  (FLU_SCHEME == MHM || FLU_SCHEME == MHM_RP) )
 
-
-extern real CPU_CheckMinPres( const real InPres, const real MinPres );
-
 static void LimitSlope( const real L2[], const real L1[], const real C0[], const real R1[], const real R2[],
                         const LR_Limiter_t LR_Limiter, const real MinMod_Coeff, const real EP_Coeff,
                         const real Gamma, const int XYZ, real Slope_Limiter[] );
-
 
 #if ( LR_SCHEME == PLM )
 //-------------------------------------------------------------------------------------------------------
@@ -112,16 +108,83 @@ void CPU_DataReconstruction( const real PriVar[][NCOMP_TOTAL], real FC_Var[][6][
                FC_Var[ID2][dR][v] = ( FC_Var[ID2][dR][v] < Max  ) ? FC_Var[ID2][dR][v] : Max;
                FC_Var[ID2][dL][v] = (real)2.0*PriVar[ID1][v] - FC_Var[ID2][dR][v];
             }
+#  ifdef CHECK_NEGATIVE_IN_FLUID
+	      if ( CPU_CheckNegative(FC_Var[ID2][dL][0]) 
+	        ||     !Aux_IsFinite(FC_Var[ID2][dL][1]) 
+	        ||     !Aux_IsFinite(FC_Var[ID2][dL][2]) 
+	        ||     !Aux_IsFinite(FC_Var[ID2][dL][3]) 
+		|| CPU_CheckNegative(FC_Var[ID2][dL][4]))
+	    {
+	       Aux_Message (stderr, "\n\nWANNING:\nfile: %s\nfunction: %s\n", __FILE__, __FUNCTION__);
+	       Aux_Message (stderr, "line:%d\nd=%e, Ux=%e, Uy=%e, Uz=%e, P=%e\n", __LINE__, 
+                        FC_Var[ID2][dL][0], FC_Var[ID2][dL][1], FC_Var[ID2][dL][2], FC_Var[ID2][dL][3], FC_Var[ID2][dL][4]);
+	    }
+	      if ( CPU_CheckNegative(FC_Var[ID2][dR][0]) 
+	        ||     !Aux_IsFinite(FC_Var[ID2][dR][1]) 
+	        ||     !Aux_IsFinite(FC_Var[ID2][dR][2]) 
+	        ||     !Aux_IsFinite(FC_Var[ID2][dR][3]) 
+		|| CPU_CheckNegative(FC_Var[ID2][dR][4]))
+	    {
+	       Aux_Message (stderr, "\n\nWANNING:\nfile: %s\nfunction: %s\n", __FILE__, __FUNCTION__);
+	       Aux_Message (stderr, "line:%d\nd=%e, Ux=%e, Uy=%e, Uz=%e, P=%e\n", __LINE__, 
+                        FC_Var[ID2][dR][0], FC_Var[ID2][dR][1], FC_Var[ID2][dR][2], FC_Var[ID2][dR][3], FC_Var[ID2][dR][4]);
+	    }
+#  endif
          }
 
          else // for the extrema-preserving limiter --> ensure positive density and pressure
          {
-            FC_Var[ID2][dL][0] = FMAX( FC_Var[ID2][dL][0], MinDens );
-            FC_Var[ID2][dR][0] = FMAX( FC_Var[ID2][dR][0], MinDens );
+#  ifdef CHECK_NEGATIVE_IN_FLUID
+	      if ( CPU_CheckNegative(FC_Var[ID2][dL][0]) 
+	        ||     !Aux_IsFinite(FC_Var[ID2][dL][1]) 
+	        ||     !Aux_IsFinite(FC_Var[ID2][dL][2]) 
+	        ||     !Aux_IsFinite(FC_Var[ID2][dL][3]) 
+		|| CPU_CheckNegative(FC_Var[ID2][dL][4]))
+	    {
+	       Aux_Message (stderr, "\n\nWANNING:\nfile: %s\nfunction: %s\n", __FILE__, __FUNCTION__);
+	       Aux_Message (stderr, "line:%d\nd=%e, Ux=%e, Uy=%e, Uz=%e, P=%e\n", __LINE__, 
+                        FC_Var[ID2][dL][0], FC_Var[ID2][dL][1], FC_Var[ID2][dL][2], FC_Var[ID2][dL][3], FC_Var[ID2][dL][4]);
+	    }
+	      if ( CPU_CheckNegative(FC_Var[ID2][dR][0]) 
+	        ||     !Aux_IsFinite(FC_Var[ID2][dR][1]) 
+	        ||     !Aux_IsFinite(FC_Var[ID2][dR][2]) 
+	        ||     !Aux_IsFinite(FC_Var[ID2][dR][3]) 
+		|| CPU_CheckNegative(FC_Var[ID2][dR][4]))
+	    {
+	       Aux_Message (stderr, "\n\nWANNING:\nfile: %s\nfunction: %s\n", __FILE__, __FUNCTION__);
+	       Aux_Message (stderr, "line:%d\nd=%e, Ux=%e, Uy=%e, Uz=%e, P=%e\n", __LINE__, 
+                        FC_Var[ID2][dR][0], FC_Var[ID2][dR][1], FC_Var[ID2][dR][2], FC_Var[ID2][dR][3], FC_Var[ID2][dR][4]);
+	    }
+#  endif
+            FC_Var[ID2][dL][0] = CPU_CheckMinDens( FC_Var[ID2][dL][0], MinDens );
+            FC_Var[ID2][dR][0] = CPU_CheckMinDens( FC_Var[ID2][dR][0], MinDens );
 
             FC_Var[ID2][dL][4] = CPU_CheckMinPres( FC_Var[ID2][dL][4], MinPres );
             FC_Var[ID2][dR][4] = CPU_CheckMinPres( FC_Var[ID2][dR][4], MinPres );
          }
+
+#  ifdef CHECK_NEGATIVE_IN_FLUID
+	      if ( CPU_CheckNegative(FC_Var[ID2][dL][0]) 
+	        ||     !Aux_IsFinite(FC_Var[ID2][dL][1]) 
+	        ||     !Aux_IsFinite(FC_Var[ID2][dL][2]) 
+	        ||     !Aux_IsFinite(FC_Var[ID2][dL][3]) 
+		|| CPU_CheckNegative(FC_Var[ID2][dL][4]))
+	    {
+	       Aux_Message (stderr, "\n\nWANNING:\nfile: %s\nfunction: %s\n", __FILE__, __FUNCTION__);
+	       Aux_Message (stderr, "line:%d\nd=%e, Ux=%e, Uy=%e, Uz=%e, P=%e\n", __LINE__, 
+                        FC_Var[ID2][dL][0], FC_Var[ID2][dL][1], FC_Var[ID2][dL][2], FC_Var[ID2][dL][3], FC_Var[ID2][dL][4]);
+	    }
+	      if ( CPU_CheckNegative(FC_Var[ID2][dR][0]) 
+	        ||     !Aux_IsFinite(FC_Var[ID2][dR][1]) 
+	        ||     !Aux_IsFinite(FC_Var[ID2][dR][2]) 
+	        ||     !Aux_IsFinite(FC_Var[ID2][dR][3]) 
+		|| CPU_CheckNegative(FC_Var[ID2][dR][4]))
+	    {
+	       Aux_Message (stderr, "\n\nWANNING:\nfile: %s\nfunction: %s\n", __FILE__, __FUNCTION__);
+	       Aux_Message (stderr, "line:%d\nd=%e, Ux=%e, Uy=%e, Uz=%e, P=%e\n", __LINE__, 
+                        FC_Var[ID2][dR][0], FC_Var[ID2][dR][1], FC_Var[ID2][dR][2], FC_Var[ID2][dR][3], FC_Var[ID2][dR][4]);
+	    }
+#  endif
 
       } // for (int d=0; d<3; d++)
    } // k,j,i

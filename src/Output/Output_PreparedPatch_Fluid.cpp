@@ -91,10 +91,13 @@ void Output_PreparedPatch_Fluid( const int TLv, const int TPID,
 
 #     else
       for (int v=0; v<FLU_NIN; v++)    fprintf( File, "%16s", FieldLabel[v] );
-
-#     if ( MODEL == HYDRO || MODEL == SR_HYDRO )
-      fprintf( File, "%16s", "Pressure" );
 #     endif
+
+#     if ( MODEL == HYDRO )
+      fprintf( File, "%16s", "Pressure" );
+#     elif ( MODEL == SR_HYDRO )
+      fprintf( File, "%16s", "Pressure" );
+      fprintf( File, "%16s", "|M|-E");
 #     endif // MODEL
 
       fprintf( File, "\n" );
@@ -118,7 +121,15 @@ void Output_PreparedPatch_Fluid( const int TLv, const int TPID,
          fprintf( File, "(%3d,%3d,%3d )", i, j, k );
 
 //       output all variables in the prepared fluid array
+#        if ( MODEL == SR_HYDRO )
+         real M = 0.0;
+         if ( FLU_NIN == NCOMP_FLUID ){
+	   for (int v=0; v<FLU_NIN; v++)  fprintf( File, "  %14.7e", u[v] );
+	   M = SQRT(SQR(u[MOMX]) + SQR(u[MOMY]) + SQR(u[MOMZ]));
+         }
+#        else
          for (int v=0; v<FLU_NIN; v++)    fprintf( File, "  %14.7e", u[v] );
+#        endif
 
 //       output pressure in HYDRO
 #        if   ( MODEL == HYDRO )
@@ -132,6 +143,9 @@ void Output_PreparedPatch_Fluid( const int TLv, const int TPID,
          const bool CheckMinPres_No = false;
          fprintf( File, "  %14.7e", CPU_GetPressure(u[DENS],u[MOMX],u[MOMY],u[MOMZ],u[ENGY],GAMMA-1.0,CheckMinPres_No,NULL_REAL) );
 
+         if (M >= u[ENGY]){
+           fprintf( File, "%+14.7e", M-u[ENGY]);
+         }
 #        endif // MODEL
 
          fprintf( File, "\n" );

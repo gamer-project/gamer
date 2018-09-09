@@ -27,18 +27,18 @@
 //                                         --> **this array must be deallocated manually**
 //                                == false --> do nothing
 //
-// Parameter   :  SonLv         : Target refinement level of sons
-//                SearchAllSon  : Whether to search over all real patches at SonLv or not
-//                NInput        : Number of target son patches (with LocalID==0) in "TargetSonPID0"
-//                                (useful only if "SearchAllSon == false")
-//                TargetSonPID0 : Lists recording all target son patches (with LocalID==0)
-//                                (useful only if "SearchAllSon == false")
-//                RecordFaPID   : Record the indices of all newly-allocated father-buffer patches
-//                                (with LocalID==0)
-//                NNewFaBuf0    : Pointer recording the number of newly-allocated father-buffer patches
-//                                (useful only if "RecordFaPID == true")
-//                NewFaBufPID0  : Lists recording indices of all newly-allocated father-buffer patches
-//                                with LocalID==0 (useful only if "RecordFaPID == true")
+// Parameter   : [1] SonLv         : Target refinement level of sons
+//               [2] SearchAllSon  : Whether to search over all real patches at SonLv or not
+//               [3] NInput        : Number of target son patches (with LocalID==0) in "TargetSonPID0"
+//                                   (useful only if "SearchAllSon == false")
+//               [4] TargetSonPID0 : Lists recording all target son patches (with LocalID==0)
+//                                   (useful only if "SearchAllSon == false")
+//               [5] RecordFaPID   : Record the indices of all newly-allocated father-buffer patches
+//                                   (with LocalID==0)
+//               [6] NNewFaBuf0    : Pointer recording the number of newly-allocated father-buffer patches
+//                                   (useful only if "RecordFaPID == true")
+//               [7] NewFaBufPID0  : Lists recording indices of all newly-allocated father-buffer patches
+//                                   with LocalID==0 (useful only if "RecordFaPID == true")
 //-------------------------------------------------------------------------------------------------------
 void LB_AllocateBufferPatch_Father( const int SonLv, const bool SearchAllSon, const int NInput, int* TargetSonPID0,
                                     const bool RecordFaPID, int* NNewFaBuf0, int** NewFaBufPID0 )
