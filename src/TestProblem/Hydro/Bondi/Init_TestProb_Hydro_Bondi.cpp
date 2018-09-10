@@ -428,6 +428,13 @@ void HSE_SetDensProfileTable()
    if ( Bondi_HSE_Truncate )
    {
 //    truncation
+      for (int b=0; b<NBin; b++)
+      {
+         if ( Bondi_HSE_DensProf[0][b] < Bondi_HSE_TrunR )
+            Bondi_HSE_DensProf[1][b] = Bondi_HSE_TrunD;
+         else
+            break;
+      }
 
 //    smoothing
       /*
