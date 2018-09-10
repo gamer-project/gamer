@@ -437,11 +437,47 @@ void HSE_SetDensProfileTable()
       }
 
 //    smoothing
-      /*
-      if ( Bondi_HSE_TrunSmoothR > 0.0)
+      if ( Bondi_HSE_TrunSmoothR > 0.0 )
       {
-      }
-      */
+         double r1, r2;
+         long   n;
+
+//       backup the original profile
+         double *DensProf_Ori = new double [Bondi_HSE_Dens_NBin];
+         memcpy( DensProf_Ori, Bondi_HSE_DensProf[1], Bondi_HSE_Dens_NBin*sizeof(double) );
+
+
+         for (int b1=0; b1<NBin; b1++)
+         {
+            r1 = Bondi_HSE_DensProf[0][b1];
+
+//          smooth out density within TrunR-SmoothR<r<TrunR+SmoothR
+            if ( r1 > Bondi_HSE_TrunR-Bondi_HSE_TrunSmoothR  &&  r1 < Bondi_HSE_TrunR+Bondi_HSE_TrunSmoothR )
+            {
+               Bondi_HSE_DensProf[1][b1] = 0.0;
+               n = 0;
+
+               for (int b2=0; b2<NBin; b2++)
+               {
+                  r2 = Bondi_HSE_DensProf[0][b2];
+
+//                we also adopt Bondi_HSE_TrunSmoothR as the smoothing kernel width
+                  if ( fabs(r1-r2) < Bondi_HSE_TrunSmoothR )
+                  {
+                     Bondi_HSE_DensProf[1][b1] += DensProf_Ori[b2];
+                     n++;
+                  }
+               }
+
+               Bondi_HSE_DensProf[1][b1] /= (double)n;
+
+//             do not allow the smoothed out data to exceed the original values
+               Bondi_HSE_DensProf[1][b1] = MIN( Bondi_HSE_DensProf[1][b1], DensProf_Ori[b1] );
+            }
+         } // for (int b1=0; b1<NBin; b1++)
+
+         delete [] DensProf_Ori;
+      } // if ( Bondi_HSE_TrunSmoothR > 0.0 )
    } // Bondi_HSE_Truncate
 
 } // FUNCTION : HSE_SetDensProfileTable

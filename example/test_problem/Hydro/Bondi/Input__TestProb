@@ -18,4 +18,4 @@ Bondi_HSE_Dens_NormD    1.6735328e-24  # see Bondi_HSE_Dens_NormR (in g/cm^3)
 Bondi_HSE_Truncate      1              # truncate density within r<TrunR to density=TrunD [1]
 Bondi_HSE_TrunR        -1.0            # see Bondi_HSE_Truncate (in kpc; <0.0=auto->Bondi radius) [-1]
 Bondi_HSE_TrunD         1.6735328e-24  # see Bondi_HSE_Truncate (in g/cm^3)
-Bondi_HSE_TrunSmoothR  -1.0            # smooth out density within TrunR-SmoothR<r<TrunR+SmoothR (in kpc; <0.0->off) [-1.0]
+Bondi_HSE_TrunSmoothR   5.0e-2         # smooth out density within TrunR-SmoothR<r<TrunR+SmoothR (in kpc; <0.0->off) [-1.0]
