@@ -47,17 +47,24 @@ const double UnitExt_E = Const_keV;
 
 // hydrostatic equilibrium (HSE)
 static bool   Bondi_HSE;            // enable HSE
+static int    Bondi_HSE_Mode;       // initial configuration (1:T=Bondi_T0, 2:rho~1/r)
+static double Bondi_HSE_Dens_NormR; // normalize the density profile to density(r=NormR)=NormD
+static double Bondi_HSE_Dens_NormD; // see Bondi_HSE_Dens_NormR
+
+// parameters for Bondi_HSE_Mode=1
 static int    Bondi_HSE_Dens_NBin;  // number of bins in the density profile table
 static double Bondi_HSE_Dens_MinR;  // minimum radius in the density profile
 static double Bondi_HSE_Dens_MaxR;  // maximum ...
-static double Bondi_HSE_Dens_NormR; // normalize the density profile to density(r=NormR)=NormD
-static double Bondi_HSE_Dens_NormD; // see Bondi_HSE_Dens_NormR
 static bool   Bondi_HSE_Truncate;   // truncate density within r<TrunR to density=TrunD
 static double Bondi_HSE_TrunR;      // see Bondi_HSE_Truncate
 static double Bondi_HSE_TrunD;      // see Bondi_HSE_Truncate
 static double Bondi_HSE_TrunSmoothR;// smooth out density within TrunR-SmoothR<r<TrunR+SmoothR
 
 static double *Bondi_HSE_DensProf[2] = { NULL, NULL };   // density profile table: [0/1] = [radius/density]
+
+// parameters for Bondi_HSE_Mode=2
+static double Bondi_HSE_Dens_NormP1;   // P=P1*r^-2+P2 such that T(r=NormR)=Bondi_T0
+static double Bondi_HSE_Dens_NormP2;
 // =======================================================================================
 
 
@@ -174,6 +181,7 @@ void SetParameter()
    ReadPara->Add( "Bondi_Soften_NCell",   &Bondi_Soften_NCell,       -1.0,          NoMin_double,     NoMax_double      );
 
    ReadPara->Add( "Bondi_HSE",            &Bondi_HSE,                 false,        Useless_bool,     Useless_bool      );
+   ReadPara->Add( "Bondi_HSE_Mode",       &Bondi_HSE_Mode,            1,            1,                2                 );
    ReadPara->Add( "Bondi_HSE_Dens_NBin",  &Bondi_HSE_Dens_NBin,       10000,        2,                NoMax_int         );
    ReadPara->Add( "Bondi_HSE_Dens_MinR",  &Bondi_HSE_Dens_MinR,      -1.0,          NoMin_double,     NoMax_double      );
    ReadPara->Add( "Bondi_HSE_Dens_MaxR",  &Bondi_HSE_Dens_MaxR,      -1.0,          NoMin_double,     NoMax_double      );
@@ -264,7 +272,15 @@ void SetParameter()
       Bondi_HSE_TrunSmoothR *= UnitExt_L/UNIT_L;
 
 //    (3-3) set the density profile table for HSE
-      HSE_SetDensProfileTable();
+      if      ( Bondi_HSE_Mode == 1 )
+         HSE_SetDensProfileTable();
+
+      else if ( Bondi_HSE_Mode == 2 )
+      {
+         Bondi_HSE_Dens_NormP1 = 0.5*NEWTON_G*Bondi_MassBH*Bondi_HSE_Dens_NormD*Bondi_HSE_Dens_NormR;
+         Bondi_HSE_Dens_NormP2 = Bondi_T0*Bondi_HSE_Dens_NormD/(MOLECULAR_WEIGHT*Const_mH/UNIT_M)
+                                 - Bondi_HSE_Dens_NormP1/SQR(Bondi_HSE_Dens_NormR);
+      }
    } // if ( Bondi_HSE )
 
 
@@ -308,6 +324,7 @@ void SetParameter()
 
       Aux_Message( stdout, "  Bondi_HSE             = %s\n",                     (Bondi_HSE)?"YES":"NO"                                        );
       if ( Bondi_HSE ) {
+      Aux_Message( stdout, "  Bondi_HSE_Mode        = %d\n",                     Bondi_HSE_Mode                                                );
       Aux_Message( stdout, "  Bondi_HSE_Dens_NBin   = %d\n",                     Bondi_HSE_Dens_NBin                                           );
       Aux_Message( stdout, "  Bondi_HSE_Dens_MinR   = %13.7e (%13.7e kpc)\n",    Bondi_HSE_Dens_MinR, Bondi_HSE_Dens_MinR*UNIT_L/Const_kpc     );
       Aux_Message( stdout, "  Bondi_HSE_Dens_MaxR   = %13.7e (%13.7e kpc)\n",    Bondi_HSE_Dens_MaxR, Bondi_HSE_Dens_MaxR*UNIT_L/Const_kpc     );
@@ -354,22 +371,36 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 // hydrostatic equilibrium
    if ( Bondi_HSE )
    {
-      const double *Table_R = Bondi_HSE_DensProf[0];
-      const double *Table_D = Bondi_HSE_DensProf[1];
-
       double r, Dens, Pres;
 
-      r    = sqrt( SQR(x-amr->BoxCenter[0]) + SQR(y-amr->BoxCenter[1]) + SQR(z-amr->BoxCenter[2]) );
-      Dens = Mis_InterpolateFromTable( Bondi_HSE_Dens_NBin, Table_R, Table_D, r );
+      r = sqrt( SQR(x-amr->BoxCenter[0]) + SQR(y-amr->BoxCenter[1]) + SQR(z-amr->BoxCenter[2]) );
 
-      if ( Dens == NULL_REAL )
-         Aux_Error( ERROR_INFO, "interpolation failed at radius %13.7e --> reset Bondi_HSE_Dens_MinR/MaxR !!\n", r );
+      if ( Bondi_HSE_Mode == 1 )
+      {
+         const double *Table_R = Bondi_HSE_DensProf[0];
+         const double *Table_D = Bondi_HSE_DensProf[1];
 
-      Pres = Dens*Bondi_T0/(MOLECULAR_WEIGHT*Const_mH/UNIT_M);
+         Dens = Mis_InterpolateFromTable( Bondi_HSE_Dens_NBin, Table_R, Table_D, r );
+
+         if ( Dens == NULL_REAL )
+            Aux_Error( ERROR_INFO, "interpolation failed at radius %13.7e --> reset Bondi_HSE_Dens_MinR/MaxR !!\n", r );
+
+         Pres = Dens*Bondi_T0/(MOLECULAR_WEIGHT*Const_mH/UNIT_M);
+      }
+
+      else if ( Bondi_HSE_Mode == 2 )
+      {
+         Dens = Bondi_HSE_Dens_NormD*Bondi_HSE_Dens_NormR/r;
+         Pres = Bondi_HSE_Dens_NormP1/SQR(r) + Bondi_HSE_Dens_NormP2;
+      }
+
+      else
+         Aux_Error( ERROR_INFO, "unsupported Bondi_HSE_Mode (%d) !!\n", Bondi_HSE_Mode );
 
       fluid[DENS] = Dens;
       fluid[ENGY] = Pres/( GAMMA-1.0 );
-   }
+   } // if ( Bondi_HSE )
+
 
 // uniform background
    else

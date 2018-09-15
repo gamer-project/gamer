@@ -10,6 +10,7 @@ Bondi_InBC_NCell        2.0            # number of finest cells (can be a fracti
 Bondi_Soften_NCell      0.0            # number of finest cells (can be a fractional number) for the soften length (<=0.0 -> disable)
 
 Bondi_HSE               0              # enable HSE [0]
+Bondi_HSE_Mode          1              # initial configuration (1:T=Bondi_T0, 2:rho~1/r) [1]
 Bondi_HSE_Dens_NBin     10000          # number of bins in the density profile table [1e4]
 Bondi_HSE_Dens_MinR    -1.0            # minimum radius in the density profile (in kpc; <0.0=auto->0.1*dh_min) [-1]
 Bondi_HSE_Dens_MaxR    -1.0            # maximum ...                           (in kpc; <0.0=auto->0.5*3^0.5*BoxSize) [-1]
