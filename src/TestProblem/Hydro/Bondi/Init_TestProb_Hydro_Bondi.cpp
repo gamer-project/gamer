@@ -63,8 +63,9 @@ static double Bondi_HSE_TrunSmoothR;// smooth out density within TrunR-SmoothR<r
 static double *Bondi_HSE_DensProf[2] = { NULL, NULL };   // density profile table: [0/1] = [radius/density]
 
 // parameters for Bondi_HSE_Mode=2
-static double Bondi_HSE_Dens_NormP1;   // P=P1*r^-2+P2 such that T(r=NormR)=Bondi_T0
-static double Bondi_HSE_Dens_NormP2;
+static bool   Bondi_HSE_Pres_NormT;    // true --> adjust P2 in the pressure profile such that T(r=NormR)=Bondi_T0
+static double Bondi_HSE_Pres_NormP1;   // P=P1*r^-2+P2 (P2=0 when Bondi_HSE_Pres_NormT=false)
+static double Bondi_HSE_Pres_NormP2;
 // =======================================================================================
 
 
@@ -191,6 +192,7 @@ void SetParameter()
    ReadPara->Add( "Bondi_HSE_TrunR",      &Bondi_HSE_TrunR,          -1.0,          NoMin_double,     NoMax_double      );
    ReadPara->Add( "Bondi_HSE_TrunD",      &Bondi_HSE_TrunD,          -1.0,          Eps_double,       NoMax_double      );
    ReadPara->Add( "Bondi_HSE_TrunSmoothR",&Bondi_HSE_TrunSmoothR,    -1.0,          NoMin_double,     NoMax_double      );
+   ReadPara->Add( "Bondi_HSE_Pres_NormT", &Bondi_HSE_Pres_NormT,      false,        Useless_bool,     Useless_bool      );
 
    ReadPara->Read( FileName );
 
@@ -277,9 +279,11 @@ void SetParameter()
 
       else if ( Bondi_HSE_Mode == 2 )
       {
-         Bondi_HSE_Dens_NormP1 = 0.5*NEWTON_G*Bondi_MassBH*Bondi_HSE_Dens_NormD*Bondi_HSE_Dens_NormR;
-         Bondi_HSE_Dens_NormP2 = Bondi_T0*Bondi_HSE_Dens_NormD/(MOLECULAR_WEIGHT*Const_mH/UNIT_M)
-                                 - Bondi_HSE_Dens_NormP1/SQR(Bondi_HSE_Dens_NormR);
+         Bondi_HSE_Pres_NormP1 = 0.5*NEWTON_G*Bondi_MassBH*Bondi_HSE_Dens_NormD*Bondi_HSE_Dens_NormR;
+         Bondi_HSE_Pres_NormP2 = ( Bondi_HSE_Pres_NormT ) ?
+                                 Bondi_T0*Bondi_HSE_Dens_NormD/(MOLECULAR_WEIGHT*Const_mH/UNIT_M)
+                                 - Bondi_HSE_Pres_NormP1/SQR(Bondi_HSE_Dens_NormR)
+                                 : 0.0;
       }
    } // if ( Bondi_HSE )
 
@@ -333,7 +337,8 @@ void SetParameter()
       Aux_Message( stdout, "  Bondi_HSE_Truncate    = %s\n",                     (Bondi_HSE_Truncate)?"YES":"NO"                               );
       Aux_Message( stdout, "  Bondi_HSE_TrunR       = %13.7e (%13.7e kpc)\n",    Bondi_HSE_TrunR, Bondi_HSE_TrunR*UNIT_L/Const_kpc             );
       Aux_Message( stdout, "  Bondi_HSE_TrunD       = %13.7e (%13.7e g/cm^3)\n", Bondi_HSE_TrunD, Bondi_HSE_TrunD*UNIT_D                       );
-      Aux_Message( stdout, "  Bondi_HSE_TrunSmoothR = %13.7e (%13.7e kpc)\n",    Bondi_HSE_TrunSmoothR, Bondi_HSE_TrunSmoothR*UNIT_L/Const_kpc ); }
+      Aux_Message( stdout, "  Bondi_HSE_TrunSmoothR = %13.7e (%13.7e kpc)\n",    Bondi_HSE_TrunSmoothR, Bondi_HSE_TrunSmoothR*UNIT_L/Const_kpc );
+      Aux_Message( stdout, "  Bondi_HSE_Pres_NormT  = %s\n",                     (Bondi_HSE_Pres_NormT)?"YES":"NO"                             ); }
       Aux_Message( stdout, "=============================================================================\n" );
    } // if ( MPI_Rank == 0 )
 
@@ -391,7 +396,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
       else if ( Bondi_HSE_Mode == 2 )
       {
          Dens = Bondi_HSE_Dens_NormD*Bondi_HSE_Dens_NormR/r;
-         Pres = Bondi_HSE_Dens_NormP1/SQR(r) + Bondi_HSE_Dens_NormP2;
+         Pres = Bondi_HSE_Pres_NormP1/SQR(r) + Bondi_HSE_Pres_NormP2;
       }
 
       else
