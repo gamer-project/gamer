@@ -137,8 +137,7 @@ void SetParameter()
 
 // set the random seed of each MPI rank
    for (int t=0; t<NT; t++) {
-      if ( KH_AllRankSame )   RNG->SetSeed(t, KH_RSeed+t);
-      else                    RNG->SetSeed(t, KH_RSeed+MPI_Rank+t);
+      RNG->SetSeed(t, KH_RSeed+MPI_Rank*1000+t);
    }
 
 // (2) set the problem-specific derived parameters
