@@ -10,6 +10,9 @@
 
 static int get_cpuid();
 
+
+
+
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Aux_TakeNote
 // Description :  Record simulation parameters and the content in the file "Input__Note" to the
@@ -1350,21 +1353,33 @@ void Aux_TakeNote()
 
 } // FUNCTION : Aux_TakeNote
 
+
+
+//-------------------------------------------------------------------------------------------------------
+// Function    :  get_cpuid
+// Description :  Get the CPU ID
+//
+// Note        :  Work on both macOS and Linux systems
+//-------------------------------------------------------------------------------------------------------
 int get_cpuid()
 {
+
 // See https://stackoverflow.com/questions/33745364/sched-getcpu-equivalent-for-os-x
-   int CPU; 
-#ifdef __APPLE__
+   int CPU;
+
+#  ifdef __APPLE__
    uint32_t CPUInfo[4];
    __cpuid_count(1, 0, CPUInfo[0], CPUInfo[1], CPUInfo[2], CPUInfo[3]);
-   if ((CPUInfo[3] & (1 << 9)) == 0) {          
-      CPU = -1;  /* no APIC on chip */            
-   } else {                                        
-      CPU = (unsigned)CPUInfo[1] >> 24;                   
-   }                                             
-   if (CPU < 0) CPU = 0;     
-#else
+   if ((CPUInfo[3] & (1 << 9)) == 0) {
+      CPU = -1;  /* no APIC on chip */
+   } else {
+      CPU = (unsigned)CPUInfo[1] >> 24;
+   }
+   if (CPU < 0) CPU = 0;
+#  else
    CPU = sched_getcpu();
-#endif
+#  endif
+
    return CPU;
-}
+
+} // FUNCTION : get_cpuid

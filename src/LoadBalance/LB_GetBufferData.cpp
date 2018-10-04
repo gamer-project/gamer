@@ -1017,7 +1017,7 @@ void LB_GetBufferData( const int lv, const int FluSg, const int PotSg, const Get
    delete [] Send_NDisp;
    delete [] Recv_NDisp;
    delete [] TFluVarIdxList;
-   
+
 } // FUNCTION : LB_GetBufferData
 
 

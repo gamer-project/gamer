@@ -124,15 +124,15 @@ void SetParameter()
 
 // get the number of OpenMP threads
    int NT;
-#ifdef OPENMP
-#pragma omp parallel
-#pragma omp master
+#  ifdef OPENMP
+#  pragma omp parallel
+#  pragma omp master
    {  NT = omp_get_num_threads();  }
-#else
+#  else
    {  NT = 1;                      }
-#endif
+#  endif
 
-//    allocate RNG
+// allocate RNG
    RNG = new RandomNumber_t( NT );
 
 // set the random seed of each MPI rank
@@ -251,13 +251,13 @@ double RandomNumber(RandomNumber_t *RNG, const double Min, const double Max )
 {
 
 // thread-private variables
- #ifdef OPENMP
+#  ifdef OPENMP
    const int TID = omp_get_thread_num();
- #else
+#  else
    const int TID = 0;
- #endif
+#  endif
 
-   return RNG->GetValue(TID, Min, Max);
+   return RNG->GetValue( TID, Min, Max );
 
 } // FUNCTION : RandomNumber
 
