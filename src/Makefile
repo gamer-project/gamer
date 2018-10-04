@@ -863,7 +863,7 @@ endif
 clean :
 	@rm -f $(OBJ_PATH)/*
 	@rm -f $(EXECUTABLE)
-	@rm -f ./*.linkinfo 
+	@rm -f ./*.linkinfo
 
 
 
