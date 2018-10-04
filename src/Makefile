@@ -353,6 +353,15 @@ LIBYT_PATH   :=
 #MPI_PATH     := /usr/mpi/intel/openmpi-1.3.2-qlc
 #GPUID_PATH   := /ifs/data/hsiyu/Software/gpudevmgr
 
+# A "typical" macOS installation without GPU
+#CUDA_PATH    :=
+#FFTW_PATH    := /usr/local/fftw-2.1.5
+#MPI_PATH     := /usr/local/mpich-3.2
+#HDF5_PATH    := ${HOME}/miniconda3
+#GRACKLE_PATH :=
+#GSL_PATH     := /usr/local/gsl-1.16
+
+
 
 
 
@@ -412,7 +421,7 @@ CC_FILE     += Table_01.cpp  Table_02.cpp  Table_03.cpp  Table_04.cpp  Table_05.
                Table_07.cpp
 
 vpath %.cu     GPU_API
-vpath %.cpp    GAMER  Init  Refine  Fluid  Interpolation  Tables  Output  Miscellaneous  Auxiliary
+vpath %.cpp    Main  Init  Refine  Fluid  Interpolation  Tables  Output  Miscellaneous  Auxiliary
 
 
 # hydrodynamic source files (included only if "MODEL=HYDRO")
@@ -845,7 +854,7 @@ else
 		printf "\nCompiling GAMER --> Failed!\n\n"; \
 	fi)
 endif
-	@rm ./*.linkinfo -f
+	@rm -f ./*.linkinfo
 
 
 # clean
@@ -854,7 +863,7 @@ endif
 clean :
 	@rm -f $(OBJ_PATH)/*
 	@rm -f $(EXECUTABLE)
-	@rm ./*.linkinfo -f
+	@rm -f ./*.linkinfo 
 
 
 
