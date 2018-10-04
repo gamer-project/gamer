@@ -14,6 +14,10 @@
 // ## Symbolic Constants ##
 // ########################
 
+// current version
+#define VERSION      "gamer-2.0.0"
+
+
 // option == NONE --> the option is turned off
 #define NONE         0
 

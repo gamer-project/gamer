@@ -444,6 +444,7 @@ void Aux_TakeNote()
 //    record the symbolic constants
       fprintf( Note, "Symbolic Constants\n" );
       fprintf( Note, "***********************************************************************************\n" );
+      fprintf( Note, "#define VERSION                 %s\n",      VERSION             );
       fprintf( Note, "#define NCOMP_FLUID             %d\n",      NCOMP_FLUID         );
       fprintf( Note, "#define NCOMP_PASSIVE           %d\n",      NCOMP_PASSIVE       );
       fprintf( Note, "#define FLU_NIN                 %d\n",      FLU_NIN             );
