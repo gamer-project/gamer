@@ -47,7 +47,7 @@ const double UnitExt_E = Const_keV;
 
 // hydrostatic equilibrium (HSE)
 static bool   Bondi_HSE;            // enable HSE
-static int    Bondi_HSE_Mode;       // initial configuration (1:T=Bondi_T0, 2:rho~1/r)
+static int    Bondi_HSE_Mode;       // initial configuration (1:T=Bondi_T0, 2:rho~1/r, 3:beta model)
 static double Bondi_HSE_Dens_NormR; // normalize the density profile to density(r=NormR)=NormD
 static double Bondi_HSE_Dens_NormD; // see Bondi_HSE_Dens_NormR
 
@@ -66,6 +66,12 @@ static double *Bondi_HSE_DensProf[2] = { NULL, NULL };   // density profile tabl
 static bool   Bondi_HSE_Pres_NormT;    // true --> adjust P2 in the pressure profile such that T(r=NormR)=Bondi_T0
 static double Bondi_HSE_Pres_NormP1;   // P=P1*r^-2+P2 (P2=0 when Bondi_HSE_Pres_NormT=false)
 static double Bondi_HSE_Pres_NormP2;
+
+// parameters for Bondi_HSE_Mode=3 (beta model)
+const  double Bondi_HSE_Beta = 2.0/3.0;   // beta (must be 2/3 for now)
+static double Bondi_HSE_Beta_Rcore;       // core radius (input parameter)
+static double Bondi_HSE_Beta_Rho0;        // peak density (set by Bondi_HSE_Dens_NormR/D)
+static double Bondi_HSE_Beta_P0;          // pressure coefficient
 // =======================================================================================
 
 
@@ -193,6 +199,7 @@ void SetParameter()
    ReadPara->Add( "Bondi_HSE_TrunD",      &Bondi_HSE_TrunD,          -1.0,          Eps_double,       NoMax_double      );
    ReadPara->Add( "Bondi_HSE_TrunSmoothR",&Bondi_HSE_TrunSmoothR,    -1.0,          NoMin_double,     NoMax_double      );
    ReadPara->Add( "Bondi_HSE_Pres_NormT", &Bondi_HSE_Pres_NormT,      false,        Useless_bool,     Useless_bool      );
+   ReadPara->Add( "Bondi_HSE_Beta_Rcore", &Bondi_HSE_Beta_Rcore,     -1.0,          Eps_double,       NoMax_double      );
 
    ReadPara->Read( FileName );
 
@@ -272,6 +279,7 @@ void SetParameter()
       Bondi_HSE_TrunR       *= UnitExt_L/UNIT_L;
       Bondi_HSE_TrunD       *= UnitExt_D/UNIT_D;
       Bondi_HSE_TrunSmoothR *= UnitExt_L/UNIT_L;
+      Bondi_HSE_Beta_Rcore  *= UnitExt_L/UNIT_L;
 
 //    (3-3) set the density profile table for HSE
       if      ( Bondi_HSE_Mode == 1 )
@@ -284,6 +292,14 @@ void SetParameter()
                                  Bondi_T0*Bondi_HSE_Dens_NormD/(MOLECULAR_WEIGHT*Const_mH/UNIT_M)
                                  - Bondi_HSE_Pres_NormP1/SQR(Bondi_HSE_Dens_NormR)
                                  : 0.0;
+      }
+
+      else if ( Bondi_HSE_Mode == 3 )
+      {
+//       Rho0 is for arbitrary beta, but P0 is for beta=2/3 only
+         Bondi_HSE_Beta_Rho0 = Bondi_HSE_Dens_NormD*
+                               pow( 1.0+SQR(Bondi_HSE_Dens_NormR/Bondi_HSE_Beta_Rcore), 1.5*Bondi_HSE_Beta );
+         Bondi_HSE_Beta_P0   = NEWTON_G*Bondi_MassBH*Bondi_HSE_Beta_Rho0/Bondi_HSE_Beta_Rcore;
       }
    } // if ( Bondi_HSE )
 
@@ -338,7 +354,10 @@ void SetParameter()
       Aux_Message( stdout, "  Bondi_HSE_TrunR       = %13.7e (%13.7e kpc)\n",    Bondi_HSE_TrunR, Bondi_HSE_TrunR*UNIT_L/Const_kpc             );
       Aux_Message( stdout, "  Bondi_HSE_TrunD       = %13.7e (%13.7e g/cm^3)\n", Bondi_HSE_TrunD, Bondi_HSE_TrunD*UNIT_D                       );
       Aux_Message( stdout, "  Bondi_HSE_TrunSmoothR = %13.7e (%13.7e kpc)\n",    Bondi_HSE_TrunSmoothR, Bondi_HSE_TrunSmoothR*UNIT_L/Const_kpc );
-      Aux_Message( stdout, "  Bondi_HSE_Pres_NormT  = %s\n",                     (Bondi_HSE_Pres_NormT)?"YES":"NO"                             ); }
+      Aux_Message( stdout, "  Bondi_HSE_Pres_NormT  = %s\n",                     (Bondi_HSE_Pres_NormT)?"YES":"NO"                             );
+      Aux_Message( stdout, "  Bondi_HSE_Beta        = %13.7e\n",                 Bondi_HSE_Beta                                                );
+      Aux_Message( stdout, "  Bondi_HSE_Beta_Rho0   = %13.7e (%13.7e g/cm^3)\n", Bondi_HSE_Beta_Rho0, Bondi_HSE_Beta_Rho0*UNIT_D               );
+      Aux_Message( stdout, "  Bondi_HSE_Beta_Rcore  = %13.7e (%13.7e kpc)\n",    Bondi_HSE_Beta_Rcore, Bondi_HSE_Beta_Rcore*UNIT_L/Const_kpc   ); }
       Aux_Message( stdout, "=============================================================================\n" );
    } // if ( MPI_Rank == 0 )
 
@@ -397,6 +416,14 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
       {
          Dens = Bondi_HSE_Dens_NormD*Bondi_HSE_Dens_NormR/r;
          Pres = Bondi_HSE_Pres_NormP1/SQR(r) + Bondi_HSE_Pres_NormP2;
+      }
+
+      else if ( Bondi_HSE_Mode == 3 )
+      {
+         const double x = r / Bondi_HSE_Beta_Rcore;
+
+         Dens = Bondi_HSE_Beta_Rho0*pow( 1.0+SQR(x), -1.5*Bondi_HSE_Beta );   // for arbitrary beta
+         Pres = Bondi_HSE_Beta_P0*( 1.0/x + atan(x) );                        // for beta=2/3 only
       }
 
       else
