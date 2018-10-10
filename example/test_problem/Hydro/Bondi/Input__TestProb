@@ -21,4 +21,4 @@ Bondi_HSE_TrunR        -1.0            # see Bondi_HSE_Truncate (in kpc; <0.0=au
 Bondi_HSE_TrunD         1.6735328e-24  # see Bondi_HSE_Truncate (in g/cm^3)
 Bondi_HSE_TrunSmoothR   5.0e-2         # smooth out density within TrunR-SmoothR<r<TrunR+SmoothR (in kpc; <0.0->off) [-1.0]
 Bondi_HSE_Pres_NormT    0              # normalize pressure profile such that T(r=Dens_NormR)=Bondi_T0 [0]
-Bondi_HSE_Beta_Rcore    2.0e2          # core radius in the beta model (in kpc)
+Bondi_HSE_Beta_Rcore    1.0e-1         # core radius in the beta model (in kpc)
