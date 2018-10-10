@@ -71,7 +71,8 @@ static double Bondi_HSE_Pres_NormP2;
 const  double Bondi_HSE_Beta = 2.0/3.0;   // beta (must be 2/3 for now)
 static double Bondi_HSE_Beta_Rcore;       // core radius (input parameter)
 static double Bondi_HSE_Beta_Rho0;        // peak density (set by Bondi_HSE_Dens_NormR/D)
-static double Bondi_HSE_Beta_P0;          // pressure coefficient
+static double Bondi_HSE_Beta_P1;          // P(r) = P1*( 1/x + atan(x) ) + P2 assuming beta=2/3, where x=r/Rcore,
+static double Bondi_HSE_Beta_P2;          // P1=G*MassBH*Rho0/Rcore, and P2 currently fixed to -0.5*pi*P1 so that P(inf)=0
 // =======================================================================================
 
 
@@ -188,7 +189,7 @@ void SetParameter()
    ReadPara->Add( "Bondi_Soften_NCell",   &Bondi_Soften_NCell,       -1.0,          NoMin_double,     NoMax_double      );
 
    ReadPara->Add( "Bondi_HSE",            &Bondi_HSE,                 false,        Useless_bool,     Useless_bool      );
-   ReadPara->Add( "Bondi_HSE_Mode",       &Bondi_HSE_Mode,            1,            1,                2                 );
+   ReadPara->Add( "Bondi_HSE_Mode",       &Bondi_HSE_Mode,            1,            1,                3                 );
    ReadPara->Add( "Bondi_HSE_Dens_NBin",  &Bondi_HSE_Dens_NBin,       10000,        2,                NoMax_int         );
    ReadPara->Add( "Bondi_HSE_Dens_MinR",  &Bondi_HSE_Dens_MinR,      -1.0,          NoMin_double,     NoMax_double      );
    ReadPara->Add( "Bondi_HSE_Dens_MaxR",  &Bondi_HSE_Dens_MaxR,      -1.0,          NoMin_double,     NoMax_double      );
@@ -219,14 +220,14 @@ void SetParameter()
    if ( Bondi_HSE )
    {
       for (int s=0; s<6; s++)
-         if ( OPT__BC_FLU[s] != BC_FLU_USER )
+         if ( OPT__BC_FLU[s] != BC_FLU_USER  &&  MPI_Rank == 0 )
             Aux_Message( stderr, "WARNING : OPT__BC_FLU[%d] != BC_FLU_USER for HSE setup !?\n", s );
    }
 
    else
    {
       for (int s=0; s<6; s++)
-         if ( OPT__BC_FLU[s] != BC_FLU_OUTFLOW )
+         if ( OPT__BC_FLU[s] != BC_FLU_OUTFLOW  &&  MPI_Rank == 0 )
             Aux_Message( stderr, "WARNING : OPT__BC_FLU[%d] != BC_FLU_OUTFLOW for non-HSE setup !?\n", s );
    }
 
@@ -296,10 +297,11 @@ void SetParameter()
 
       else if ( Bondi_HSE_Mode == 3 )
       {
-//       Rho0 is for arbitrary beta, but P0 is for beta=2/3 only
+//       Rho0 is for arbitrary beta, but P1/P2 is for beta=2/3 only
          Bondi_HSE_Beta_Rho0 = Bondi_HSE_Dens_NormD*
                                pow( 1.0+SQR(Bondi_HSE_Dens_NormR/Bondi_HSE_Beta_Rcore), 1.5*Bondi_HSE_Beta );
-         Bondi_HSE_Beta_P0   = NEWTON_G*Bondi_MassBH*Bondi_HSE_Beta_Rho0/Bondi_HSE_Beta_Rcore;
+         Bondi_HSE_Beta_P1   = NEWTON_G*Bondi_MassBH*Bondi_HSE_Beta_Rho0/Bondi_HSE_Beta_Rcore;
+         Bondi_HSE_Beta_P2   = -0.5*M_PI*Bondi_HSE_Beta_P1;    // such that P(inf)=0
       }
    } // if ( Bondi_HSE )
 
@@ -423,7 +425,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
          const double x = r / Bondi_HSE_Beta_Rcore;
 
          Dens = Bondi_HSE_Beta_Rho0*pow( 1.0+SQR(x), -1.5*Bondi_HSE_Beta );   // for arbitrary beta
-         Pres = Bondi_HSE_Beta_P0*( 1.0/x + atan(x) );                        // for beta=2/3 only
+         Pres = Bondi_HSE_Beta_P1*( 1.0/x + atan(x) ) + Bondi_HSE_Beta_P2;    // for beta=2/3 only
       }
 
       else
