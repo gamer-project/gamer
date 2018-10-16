@@ -132,7 +132,7 @@ void SetParameter()
       Aux_Message( stdout, "=============================================================================\n" );
       Aux_Message( stdout, "  test problem ID                         = %d\n",     TESTPROB_ID );
       Aux_Message( stdout, "  background mass density                 = %13.7e\n", Blast_Dens_Bg );
-      Aux_Message( stdout, "  background pressure density             = %13.7e\n", Blast_Pres_Bg);
+      Aux_Message( stdout, "  background pressure                     = %13.7e\n", Blast_Pres_Bg);
       Aux_Message( stdout, "  density ratio of center to background   = %13.7e\n", Blast_Dens_Ratio );
       Aux_Message( stdout, "  pressure ratio of center to background  = %13.7e\n", Blast_Pres_Ratio );
       Aux_Message( stdout, "  explosion radius                        = %13.7e\n", Blast_Radius );

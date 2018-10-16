@@ -4,6 +4,7 @@
 #if ( MODEL == SR_HYDRO )
 void CPU_Con2Pri (const real In[], real Out[], const real Gamma);
 void CPU_Pri2Con (const real In[], real Out[], const real Gamma);
+bool CPU_CheckUnphysical( const real Con[], const real Pri[]);
 #endif
 
 #ifdef LOAD_BALANCE
@@ -869,35 +870,17 @@ int AllocateSonPatch( const int FaLv, const int *Cr, const int PScale, const int
                 FSize_Temp, FStart,     1, OPT__REF_POT_INT_SCHEME, PhaseUnwrapping_No, &EnsureMonotonicity_No );
 #  endif
 
+// check minimum energy
 #     if ( MODEL == SR_HYDRO )
 #     ifdef CHECK_NEGATIVE_IN_FLUID
-            for (int k=0; k<FSize; k++)
-            for (int j=0; j<FSize; j++)
-            for (int i=0; i<FSize; i++)
-            {
-	       if ( CPU_CheckNegative(FData_Flu[DENS][k][j][i])
-		 ||     !Aux_IsFinite(FData_Flu[MOMX][k][j][i])
-		 ||     !Aux_IsFinite(FData_Flu[MOMY][k][j][i])
-		 ||     !Aux_IsFinite(FData_Flu[MOMZ][k][j][i])
-		 || CPU_CheckNegative(FData_Flu[ENGY][k][j][i]))
-	       {
-		  Aux_Message (stderr, "\n\nWANNING:\nfile: %s\nfunction: %s\n", __FILE__, __FUNCTION__);
-		  Aux_Message (stderr, "line:%d\nD=%e, Mx=%e, My=%e, Mz=%e, E=%e\n", __LINE__
-			   , FData_Flu[DENS][k][j][i], FData_Flu[MOMX][k][j][i], FData_Flu[MOMY][k][j][i]
-			   , FData_Flu[MOMZ][k][j][i], FData_Flu[ENGY][k][j][i]);
-	       }
-	       real M = SQRT (SQR (FData_Flu[MOMX][k][j][i]) + SQR (FData_Flu[MOMY][k][j][i]) + SQR (FData_Flu[MOMZ][k][j][i]));
-
-	       if ( FData_Flu[ENGY][k][j][i] <= M )
-		 {
-		   Aux_Message (stderr, "\n\nWARNING: |M| > E!\n");
-		   Aux_Message (stderr, "file: %s\nfunction: %s\n", __FILE__, __FUNCTION__);
-		   Aux_Message (stderr, "line:%d\nD=%e, Mx=%e, My=%e, Mz=%e, E=%e\n", __LINE__
-			   , FData_Flu[DENS][k][j][i], FData_Flu[MOMX][k][j][i], FData_Flu[MOMY][k][j][i]
-			   , FData_Flu[MOMZ][k][j][i], FData_Flu[ENGY][k][j][i]);
-		   Aux_Message (stderr, "|M|=%e, E=%e, |M|-E=%e\n\n", M, FData_Flu[ENGY][k][j][i], M - FData_Flu[ENGY][k][j][i]);
-		 }
-            }
+      for (int k=0; k<FSize; k++)
+      for (int j=0; j<FSize; j++)
+      for (int i=0; i<FSize; i++)
+      {
+	 real Con[NCOMP_FLUID];
+	 for (int v = 0 ; v < NCOMP_FLUID;v++) Con[v] = FData_Flu[v][k][j][i];
+	 if(CPU_CheckUnphysical(Con, NULL)) Aux_Message(stderr,"\nUnphysical varibles!\nfunction: %s: %d\n", __FUNCTION__, __LINE__);
+      }
 #     endif
 #     endif
 

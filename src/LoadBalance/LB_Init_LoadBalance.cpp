@@ -25,26 +25,26 @@ static void LB_RedistributeParticle_End( real **ParAtt_Old );
 //                6. NPatchTotal[] and NPatchComma[] must be prepared in advance
 //                7. Particles will also be redistributed
 //
-// Parameter   :  Redistribute : true  --> Redistribute all real patches according to the load-balance weighting of
-//                                         each patch and initialize all load-balance related set-up
-//                               false --> Initialize all load-balance related set-up, but do NOT invoke LB_SetCutPoint()
-//                                         and LB_RedistributeRealPatch() to redistribute all real patches
-//                                     --> Currently it is used only during the RESTART process since we already call
-//                                         LB_SetCutPoint() and load real patches accordingly when calling Init_ByRestart_*()
-//                ParWeight    : Relative load-balance weighting of particles
-//                               --> Weighting of each patch is estimated as "PATCH_SIZE^3 + NParThisPatch*ParWeight"
-//                               --> <= 0.0 : do not consider particle weighting
-//                                            --> Currently we force ParWeight==0.0 when calling LB_Init_LoadBalance()
-//                                                for the first time during the restart process since we don't have enough
-//                                                information for calculating particle weighting at that time
-//                                            --> For example, Par_LB_CollectParticle2OneLevel() invoked by
-//                                                LB_EstimateWorkload_AllPatchGroup() needs amr->LB->IdxList_Real[], which
-//                                                will be constructed only AFTER calling LB_Init_LoadBalance()
-//                Reset        : Call LB->reset() to reset the load-balance variables on the target level(s)
-//                               --> Note that CutPoint[] will NOT be reset even when "Reset == true"
-//                TLv          : Target refinement level(s)
-//                               --> 0~TOP_LEVEL : only apply to a specific level
-//                                   <0          : apply to all levels
+// Parameter   :  [1] Redistribute : true  --> Redistribute all real patches according to the load-balance weighting of
+//                                             each patch and initialize all load-balance related set-up
+//                                   false --> Initialize all load-balance related set-up, but do NOT invoke LB_SetCutPoint()
+//                                             and LB_RedistributeRealPatch() to redistribute all real patches
+//                                         --> Currently it is used only during the RESTART process since we already call
+//                                             LB_SetCutPoint() and load real patches accordingly when calling Init_ByRestart_*()
+//                [2] ParWeight    : Relative load-balance weighting of particles
+//                                   --> Weighting of each patch is estimated as "PATCH_SIZE^3 + NParThisPatch*ParWeight"
+//                                   --> <= 0.0 : do not consider particle weighting
+//                                                --> Currently we force ParWeight==0.0 when calling LB_Init_LoadBalance()
+//                                                    for the first time during the restart process since we don't have enough
+//                                                    information for calculating particle weighting at that time
+//                                                --> For example, Par_LB_CollectParticle2OneLevel() invoked by
+//                                                    LB_EstimateWorkload_AllPatchGroup() needs amr->LB->IdxList_Real[], which
+//                                                    will be constructed only AFTER calling LB_Init_LoadBalance()
+//                [3] Reset        : Call LB->reset() to reset the load-balance variables on the target level(s)
+//                                   --> Note that CutPoint[] will NOT be reset even when "Reset == true"
+//                [4] TLv          : Target refinement level(s)
+//                                   --> 0~TOP_LEVEL : only apply to a specific level
+//                                       <0          : apply to all levels
 //-------------------------------------------------------------------------------------------------------
 void LB_Init_LoadBalance( const bool Redistribute, const double ParWeight, const bool Reset, const int TLv )
 {

@@ -118,6 +118,10 @@ SIMU_OPTION += -DRSOLVER=HLLE
 # --> DE_EINT is not supported yet; useless for RTVD/WAF
 #SIMU_OPTION += -DDUAL_ENERGY=DE_ENPY
 
+# number of passively advected scalars
+# --> not supported yet and must be set to 0 (or comment it out)
+SIMU_OPTION += -DNCOMP_PASSIVE_USER=1
+
 endif # MODEL
 
 
@@ -177,7 +181,7 @@ SIMU_OPTION += -DMAX_PATCH=1000000
 #SIMU_OPTION += -DGPU_ARCH=KEPLER
 
 # debug mode
-SIMU_OPTION += -DGAMER_DEBUG
+#SIMU_OPTION += -DGAMER_DEBUG
 
 # bitwise reproducibility
 #SIMU_OPTION += -DBITWISE_REPRODUCIBILITY
@@ -211,7 +215,7 @@ SIMU_OPTION += -DOPENMP
 #SIMU_OPTION += -DLAOHU
 
 # support HDF5 format
-SIMU_OPTION += -DSUPPORT_HDF5
+#SIMU_OPTION += -DSUPPORT_HDF5
 
 # support GNU scientific library
 SIMU_OPTION += -DSUPPORT_GSL
@@ -353,7 +357,6 @@ LIBYT_PATH   :=
 #GSL_PATH     := /opt/math/gsl
 #LIBYT_PATH   := /project/fish/libyt/libyt
 #MPI_PATH     := /opt/mpi/openmpi/1.6.0-intel
-#CUDA_PATH    := /usr/local/cuda-7.5
 
 # NTU-hulk (openmpi-gcc-qlc)
 #CUDA_PATH    := /opt/gpu/cuda/4.2
@@ -364,7 +367,6 @@ LIBYT_PATH   :=
 #GSL_PATH     := /opt/math/gsl
 #LIBYT_PATH   := /project/fish/libyt/libyt
 #MPI_PATH     := /opt/mpi/openmpi/1.8.1-gcc-qlc
-#CUDA_PATH    := /usr/local/cuda-7.5
 
 # NAOC-laohu (OpenMPI-1.3.2-intel)
 #CUDA_PATH    := $(CUDA_INSTALL_PATH)
@@ -477,7 +479,7 @@ vpath %.cu     Model_MHD/GPU_MHDGravity
 vpath %.cpp    Model_MHD/CPU_MHDGravity
 endif
 
-# sr-hydrodynamic source files (included only if "MODEL=HYDRO")
+# sr-hydrodynamic source files (included only if "MODEL=SR_HYDRO")
 # ------------------------------------------------------------------------------------
 else ifeq "$(filter -DMODEL=SR_HYDRO, $(SIMU_OPTION))" "-DMODEL=SR_HYDRO"
 

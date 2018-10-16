@@ -3,6 +3,8 @@
 
 #if (  !defined GPU  &&  MODEL == SR_HYDRO  && ( FLU_SCHEME == MHM || FLU_SCHEME == MHM_RP )  )
 
+bool CPU_CheckUnphysical( const real Con[], const real Pri[]);
+
 //-------------------------------------------------------------------------------------------------------
 // Function    :  CPU_FullStepUpdate
 // Description :  Evaluate the full-step solution
@@ -55,30 +57,11 @@ void CPU_FullStepUpdate( const real Input[][ FLU_NXT*FLU_NXT*FLU_NXT ], real Out
       ID2 = (k1*PS2       + j1)*PS2       + i1;
       ID3 = (k2*FLU_NXT   + j2)*FLU_NXT   + i2;
 
-#     ifdef CHECK_NEGATIVE_IN_FLUID
-      if ( CPU_CheckNegative(Input[DENS][ID3]) 
-	||     !Aux_IsFinite(Input[MOMX][ID3]) 
-	||     !Aux_IsFinite(Input[MOMY][ID3]) 
-	||     !Aux_IsFinite(Input[MOMZ][ID3]) 
-	|| CPU_CheckNegative(Input[ENGY][ID3]))
-      {
-	 Aux_Message (stderr,"\n\nWARNING:\nfile: %s\nfunction: %s\n", __FILE__, __FUNCTION__);
-	 Aux_Message (stderr,"line:%d\nD=%e, Mx=%e, My=%e, Mz=%e, E=%e\n", __LINE__,
-		      Input[DENS][ID3], Input[MOMX][ID3], Input[MOMY][ID3], Input[MOMZ][ID3], Input[ENGY][ID3]);
-      }
-
-      real M = SQRT (SQR (Input[MOMX][ID3]) + SQR (Input[MOMY][ID3]) + SQR (Input[MOMZ][ID3]));
-
-      if ( Input[ENGY][ID3] <= M ) 
-	{   
-	  Aux_Message (stderr,"\n\nWARNING: |M| > E!\n");
-	  Aux_Message (stderr,"file: %s\nfunction: %s\n", __FILE__, __FUNCTION__);
-	  Aux_Message (stderr,"line:%d\nD=%e, Mx=%e, My=%e, Mz=%e, E=%e\n", __LINE__, 
-		       Input[DENS][ID3], Input[MOMX][ID3], Input[MOMY][ID3], Input[MOMZ][ID3], Input[ENGY][ID3]);
-
-	  Aux_Message (stderr,"|M|=%e, E=%e, |M|-E=%e\n\n", M, Input[ENGY][ID3], M - Input[ENGY][ID3]);
-	}   
-#     endif
+#  ifdef CHECK_NEGATIVE_IN_FLUID
+      real Con[NCOMP_FLUID];
+      for (int v = 0;v<NCOMP_FLUID;v++) Con[v] = Input[v][ID3];
+      if(CPU_CheckUnphysical(Con, NULL)) Aux_Message(stderr,"\nUnphysical varibles!\nfunction: %s: %d\n", __FUNCTION__, __LINE__);
+#  endif
 
       for (int d=0; d<3; d++)
       for (int v=0; v<NCOMP_TOTAL; v++)   dF[d][v] = Flux[ ID1+dID1[d] ][d][v] - Flux[ID1][d][v];
@@ -99,7 +82,6 @@ void CPU_FullStepUpdate( const real Input[][ FLU_NXT*FLU_NXT*FLU_NXT ], real Out
                                                   Output[ENGY][ID2], Gamma_m1, _Gamma_m1, MinPres );
 */
       
-
 
 //    floor and normalize passive scalars
 #     if ( NCOMP_PASSIVE > 0 )
@@ -131,67 +113,11 @@ void CPU_FullStepUpdate( const real Input[][ FLU_NXT*FLU_NXT*FLU_NXT ], real Out
                          Gamma_m1, _Gamma_m1, CheckMinPres_No, NULL_REAL, DualEnergySwitch );
 #     endif // #ifdef DUAL_ENERGY
 
+#  ifdef CHECK_NEGATIVE_IN_FLUID
+      for (int v = 0;v<NCOMP_FLUID;v++) Con[v] = Output[v][ID2];
+      if(CPU_CheckUnphysical(Con, NULL)) Aux_Message(stderr,"\nUnphysical varibles!\nfunction: %s: %d\n", __FUNCTION__, __LINE__);
+#  endif
 
-//    check the negative density and energy
-#     ifdef CHECK_NEGATIVE_IN_FLUID
-      if ( CPU_CheckNegative(Output[DENS][ID2]) 
-	||     !Aux_IsFinite(Output[MOMX][ID2]) 
-	||     !Aux_IsFinite(Output[MOMY][ID2]) 
-	||     !Aux_IsFinite(Output[MOMZ][ID2]) 
-	|| CPU_CheckNegative(Output[ENGY][ID2]))
-      {
-	 Aux_Message (stderr,"\n\nWARNING:\nfile: %s\nfunction: %s\n", __FILE__, __FUNCTION__);
-	 Aux_Message (stderr,"line:%d\nOutput:\nD=%e, Mx=%e, My=%e, Mz=%e, E=%e\n", __LINE__,
-		      Output[DENS][ID2], Output[MOMX][ID2], Output[MOMY][ID2], Output[MOMZ][ID2], Output[ENGY][ID2]);
-	 Aux_Message (stderr,"line:%d\nInput:\nD=%e, Mx=%e, My=%e, Mz=%e, E=%e\n", __LINE__,
-		      Input[DENS][ID3], Input[MOMX][ID3], Input[MOMY][ID3], Input[MOMZ][ID3], Input[ENGY][ID3]);
-      }
-	  M = SQRT (SQR (Output[MOMX][ID2]) + SQR (Output[MOMY][ID2]) + SQR (Output[MOMZ][ID2]));
-
-      if ( Output[ENGY][ID2] <= M ) 
-	{   
-          Aux_Message (stderr, "\n\ndt = %e, dh = %e, dt/dh = %e\n", dt, dh, dt_dh);
-	  Aux_Message (stderr,"WARNING: |M| > E!\n");
-	  Aux_Message (stderr,"file: %s\nfunction: %s\n", __FILE__, __FUNCTION__);
-	  Aux_Message (stderr,"line:%d\nOutput:\nD=%e, Mx=%e, My=%e, Mz=%e, E=%e\n", __LINE__, 
-		       Output[DENS][ID2], Output[MOMX][ID2], Output[MOMY][ID2], Output[MOMZ][ID2], Output[ENGY][ID2]);
-
-	  Aux_Message (stderr,"|M|=%e, E=%e, |M|-E=%e\n\n", M, Output[ENGY][ID2], M - Output[ENGY][ID2]);
-
-	  Aux_Message (stderr,"line:%d\nInput:\nD=%e, Mx=%e, My=%e, Mz=%e, E=%e\n", __LINE__,
-		       Input[DENS][ID3], Input[MOMX][ID3], Input[MOMY][ID3], Input[MOMZ][ID3], Input[ENGY][ID3]);
-
-	  M = SQRT (SQR (Input[MOMX][ID3]) + SQR (Input[MOMY][ID3]) + SQR (Input[MOMZ][ID3]));
-	  Aux_Message (stderr,"|M|=%e, E=%e, |M|-E=%e\n\n", M, Input[ENGY][ID3], M - Input[ENGY][ID3]);
-	  Aux_Message (stderr,"ID1=%d, ID2=%d, ID3=%d\n\n",ID1,ID2,ID3);
-
-	  for (int d=0; d<3; d++)
-	  for (int v=0; v<NCOMP_TOTAL; v++)  {
-		switch (v) {
-		 case 0:
-		    Aux_Message (stderr,"\nFlux1[%5d][%1d][DENS] = %e\n", ID1+dID1[d], d, Flux[ ID1+dID1[d] ][d][v]);
-		    Aux_Message (stderr,  "Flux2[%5d][%1d][DENS] = %e\n", ID1        , d, Flux[ ID1         ][d][v]);
-		    break;
-		 case 1:
-		    Aux_Message (stderr, "Flux1[%5d][%1d][MOMX] = %e\n", ID1+dID1[d], d, Flux[ ID1+dID1[d] ][d][v]);
-		    Aux_Message (stderr, "Flux2[%5d][%1d][MOMX] = %e\n", ID1        , d, Flux[ ID1         ][d][v]);
-		    break;
-		 case 2:
-		    Aux_Message (stderr, "Flux1[%5d][%1d][MOMY] = %e\n", ID1+dID1[d], d, Flux[ ID1+dID1[d] ][d][v]);
-		    Aux_Message (stderr, "Flux2[%5d][%1d][MOMY] = %e\n", ID1        , d, Flux[ ID1         ][d][v]);
-		    break;
-		 case 3:
-		    Aux_Message (stderr, "Flux1[%5d][%1d][MOMZ] = %e\n", ID1+dID1[d], d, Flux[ ID1+dID1[d] ][d][v]);
-		    Aux_Message (stderr, "Flux2[%5d][%1d][MOMZ] = %e\n", ID1        , d, Flux[ ID1         ][d][v]);
-		    break;
-		 case 4:
-		    Aux_Message (stderr, "Flux1[%5d][%1d][ENGY] = %e\n", ID1+dID1[d], d, Flux[ ID1+dID1[d] ][d][v]);
-		    Aux_Message (stderr, "Flux2[%5d][%1d][ENGY] = %e\n", ID1        , d, Flux[ ID1         ][d][v]);
-		    break;
-		 }
-	    }
-	}   
-#       endif
    } // i,j,k
 
 } // FUNCTION : CPU_FullStepUpdate

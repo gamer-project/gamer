@@ -87,7 +87,7 @@ double CPU_Temperature2Pressure( const double Dens, const double Temp, const dou
                                  const bool CheckMinPres, const double MinPres );
 real CPU_CheckMinPres( const real InPres, const real MinPres );
 real CPU_CheckMinDens( const real InDens, const real MinDens );
-real CPU_ModifyEngy (const real MomX, const real MomY, const real MomZ, const real Engy, const double epsilon);
+real CPU_ModifyEngy (const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy);
 void CPU_NormalizePassive( const real GasDens, real Passive[], const int NNorm, const int NormIdx[] );
 #ifdef DUAL_ENERGY
 void CPU_DualEnergyFix( const real Dens, const real MomX, const real MomY, const real MomZ,

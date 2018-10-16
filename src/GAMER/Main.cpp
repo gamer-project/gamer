@@ -106,7 +106,7 @@ WAF_Limiter_t        OPT__WAF_LIMITER;
 Opt1stFluxCorr_t     OPT__1ST_FLUX_CORR;
 OptRSolver1st_t      OPT__1ST_FLUX_CORR_SCHEME;
 bool                 OPT__FLAG_PRES_GRADIENT, OPT__FLAG_LOHNER_ENGY, OPT__FLAG_LOHNER_PRES, OPT__FLAG_LOHNER_TEMP;
-bool                 OPT__FLAG_VORTICITY, OPT__FLAG_JEANS, JEANS_MIN_PRES, OPT__FLAG_LOHNER_4VEL;
+bool                 OPT__FLAG_VORTICITY, OPT__FLAG_JEANS, JEANS_MIN_PRES, OPT__FLAG_LOHNER_REST;
 int                  OPT__CK_NEGATIVE, JEANS_MIN_PRES_LEVEL, JEANS_MIN_PRES_NCELL;
 double               MIN_DENS, MIN_PRES;
 
@@ -143,6 +143,7 @@ IntScheme_t          OPT__POT_INT_SCHEME, OPT__RHO_INT_SCHEME, OPT__GRA_INT_SCHE
 OptPotBC_t           OPT__BC_POT;
 OptGravityType_t     OPT__GRAVITY_TYPE;
 #endif
+
 
 // (2-3) cosmological simulations
 #ifdef COMOVING

@@ -159,31 +159,8 @@ void SRHydro_Init_ByFunction_AssignData( const int lv )
          for (int v=0; v<NCOMP_TOTAL; v++)   fluid[v] *= _NSub3;
 
 //       check minimum density and pressure
-#        if ( MODEL == SR_HYDRO )
 #        ifdef CHECK_NEGATIVE_IN_FLUID
-	 if ( CPU_CheckNegative(fluid[0]) 
-	       || !Aux_IsFinite(fluid[1]) 
-	       || !Aux_IsFinite(fluid[2]) 
-	       || !Aux_IsFinite(fluid[3]) 
-	   || CPU_CheckNegative(fluid[4]))
-	 {
-	    Aux_Message (stderr, "file: %s\nfunction: %s\n", __FILE__, __FUNCTION__);
-	    Aux_Message (stderr, "line:%d\nD=%e, Mx=%e, My=%e, Mz=%e, E=%e\n", __LINE__, fluid[0], fluid[1], fluid[2], fluid[3], fluid[4]);
-	 }
-	 real M = SQRT (SQR (fluid[1]) + SQR (fluid[2]) + SQR (fluid[3]));
-
-	 if ( fluid[4] <= M ) 
-	   {   
-	     Aux_Message (stderr, "\n\nerror: |M| > E!\n");
-	     Aux_Message (stderr, "file: %s\nfunction: %s\n", __FILE__, __FUNCTION__);
-	     Aux_Message (stderr, "line:%d\nD=%e, Mx=%e, My=%e, Mz=%e, E=%e\n", __LINE__, fluid[0], fluid[1], fluid[2], fluid[3], fluid[4]);
-	     Aux_Message (stderr, "|M|=%e, E=%e, |M|-E=%e\n\n", M, fluid[4], M - fluid[4]);
-	   }   
-#        endif
-#        else
-         fluid[DENS] = FMAX( fluid[DENS], (real)MIN_DENS );
-         fluid[ENGY] = CPU_CheckMinPresInEngy( fluid[DENS], fluid[MOMX], fluid[MOMY], fluid[MOMZ], fluid[ENGY],
-                                               Gamma_m1, _Gamma_m1, MIN_PRES );
+	 if(CPU_CheckUnphysical(fluid, NULL)) Aux_Message(stderr,"\nUnphysical varibles!\nfunction: %s: %d\n", __FUNCTION__, __LINE__);
 #        endif
 
 
@@ -223,31 +200,8 @@ void SRHydro_Init_ByFunction_AssignData( const int lv )
 
 //       check minimum density and pressure
 
-#        if ( MODEL == SR_HYDRO )
 #        ifdef CHECK_NEGATIVE_IN_FLUID
-	 if ( CPU_CheckNegative(fluid[0]) 
-	       || !Aux_IsFinite(fluid[1]) 
-	       || !Aux_IsFinite(fluid[2]) 
-	       || !Aux_IsFinite(fluid[3]) 
-	   || CPU_CheckNegative(fluid[4]))
-	 {
-	    Aux_Message (stderr, "file: %s\nfunction: %s\n", __FILE__, __FUNCTION__);
-	    Aux_Message (stderr, "line:%d\nD=%e, Mx=%e, My=%e, Mz=%e, E=%e\n", __LINE__, fluid[0], fluid[1], fluid[2], fluid[3], fluid[4]);
-	 }
-	 real M = SQRT (SQR (fluid[1]) + SQR (fluid[2]) + SQR (fluid[3]));
-
-	 if ( fluid[4] <= M ) 
-	   {   
-	     Aux_Message (stderr, "\n\nerror: |M| > E!\n");
-	     Aux_Message (stderr, "file: %s\nfunction: %s\n", __FILE__, __FUNCTION__);
-	     Aux_Message (stderr, "line:%d\nD=%e, Mx=%e, My=%e, Mz=%e, E=%e\n", __LINE__, fluid[0], fluid[1], fluid[2], fluid[3], fluid[4]);
-	     Aux_Message (stderr, "|M|=%e, E=%e, |M|-E=%e\n\n", M, fluid[4], M - fluid[4]);
-	   }   
-#        endif
-#        else
-         fluid[DENS] = FMAX( fluid[DENS], (real)MIN_DENS );
-         fluid[ENGY] = CPU_CheckMinPresInEngy( fluid[DENS], fluid[MOMX], fluid[MOMY], fluid[MOMZ], fluid[ENGY],
-                                               Gamma_m1, _Gamma_m1, MIN_PRES );
+	 if(CPU_CheckUnphysical(fluid, NULL)) Aux_Message(stderr,"\nUnphysical varibles!\nfunction: %s: %d\n", __FUNCTION__, __LINE__);
 #        endif
 
 

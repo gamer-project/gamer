@@ -18,25 +18,25 @@
 //                   --> See the description of "InputLBIdx0AndLoad, LBIdx0_AllRank_Input, and
 //                       Load_AllRank_Input" below
 //
-// Parameter   :  lv                   : Target refinement level
-//                NPG_Total            : Total number of patch groups on level "lv"
-//                CutPoint             : Cut point array to be set
-//                InputLBIdx0AndLoad   : Provide both LBIdx0_AllRank_Input[] and Load_AllRank_Input[] directly
-//                                       so that they don't have to be collected from all ranks again
-//                                       --> Useful during RESTART
-//                LBIdx0_AllRank_Input : LBIdx of all patch groups in all ranks
-//                                       --> Useful only when InputLBIdx0AndLoad == true
-//                                       --> Only need the **minimum** LBIdx in each patch group
-//                                       --> Only rank 0 needs to provide this list
-//                                       --> Can be unsorted
-//                Load_AllRank_Input   : Load-balance weighting of all patch groups in all ranks
-//                                       --> Useful only when InputLBIdx0AndLoad == true
-//                                       --> Please provide the **sum** of all patches within each patch group
-//                                       --> Only rank 0 needs to provide this list
-//                                       --> Must be in the same order as LBIdx0_AllRank_Input
-//                ParWeight            : Relative load-balance weighting of particles
-//                                       --> Weighting of each patch is estimated as "PATCH_SIZE^3 + NParThisPatch*ParWeight"
-//                                       --> <= 0.0 : do not consider particle weighting
+// Parameter   :  [1] lv                   : Target refinement level
+//                [2] NPG_Total            : Total number of patch groups on level "lv"
+//                [3] CutPoint             : Cut point array to be set
+//                [4] InputLBIdx0AndLoad   : Provide both LBIdx0_AllRank_Input[] and Load_AllRank_Input[] directly
+//                                           so that they don't have to be collected from all ranks again
+//                                           --> Useful during RESTART
+//                [5] LBIdx0_AllRank_Input : LBIdx of all patch groups in all ranks
+//                                           --> Useful only when InputLBIdx0AndLoad == true
+//                                           --> Only need the **minimum** LBIdx in each patch group
+//                                           --> Only rank 0 needs to provide this list
+//                                           --> Can be unsorted
+//                [6] Load_AllRank_Input   : Load-balance weighting of all patch groups in all ranks
+//                                           --> Useful only when InputLBIdx0AndLoad == true
+//                                           --> Please provide the **sum** of all patches within each patch group
+//                                           --> Only rank 0 needs to provide this list
+//                                           --> Must be in the same order as LBIdx0_AllRank_Input
+//                [7] ParWeight            : Relative load-balance weighting of particles
+//                                           --> Weighting of each patch is estimated as "PATCH_SIZE^3 + NParThisPatch*ParWeight"
+//                                           --> <= 0.0 : do not consider particle weighting
 //
 // Return      :  CutPoint[]
 //-------------------------------------------------------------------------------------------------------

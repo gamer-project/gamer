@@ -1,7 +1,9 @@
 #include "GAMER.h"
 #include "CUFLU.h"
 
-
+#if ( MODEL == SR_HYDRO )
+bool CPU_CheckUnphysical( const real Con[], const real Pri[]);
+#endif
 
 
 //-------------------------------------------------------------------------------------------------------
@@ -221,12 +223,7 @@ void Flu_FixUp( const int lv )
                   if ( CorrVal[DENS] <= MIN_DENS )
 
 #                 elif ( MODEL == SR_HYDRO )
-		    real M = SQRT (SQR(CorrVal[MOMX])+SQR(CorrVal[MOMY])+SQR(CorrVal[MOMZ]));
-
-		    if ( CorrVal[DENS] <= MIN_DENS  
-                     ||  CorrVal[ENGY] <= M  
-                     ||           Pres <= MIN_PRES 
-                     || !Aux_IsFinite(Pres))
+		  if (CPU_CheckUnphysical(CorrVal, NULL))
 #                 endif
                      continue;
 

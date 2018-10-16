@@ -7,6 +7,8 @@ static void LimitSlope( const real L2[], const real L1[], const real C0[], const
                         const LR_Limiter_t LR_Limiter, const real MinMod_Coeff, const real EP_Coeff,
                         const real Gamma, const int XYZ, real Slope_Limiter[] );
 
+bool CPU_CheckUnphysical( const real Con[], const real Pri[]);
+
 #if ( LR_SCHEME == PLM )
 //-------------------------------------------------------------------------------------------------------
 // Function    :  CPU_DataReconstruction
@@ -20,29 +22,28 @@ static void LimitSlope( const real L2[], const real L1[], const real C0[], const
 //                   defining "CHAR_RECONSTRUCTION"
 //                6. This function is shared by MHM, MHM_RP, and CTU schemes
 //
-// Parameter   :  PriVar         : Array storing the input primitive variables
-//                FC_Var         : Array to store the output face-centered primitive variables
-//                NIn            : Size of the input array "PriVar" in one direction
-//                NGhost         : Size of the ghost zone
-//                                  --> "NIn-2*NGhost" cells will be computed along each direction
-//                                  --> The size of the output array "FC_Var" is assumed to be "(NIn-2*NGhost)^3"
-//                                  --> The reconstructed data at cell (i,j,k) will be stored in the
-//                                      array "FC_Var" with the index "(i-NGhost,j-NGhost,k-NGhost)
-//                Gamma          : Ratio of specific heats
-//                LR_Limiter     : Slope limiter for the data reconstruction in the MHM/MHM_RP/CTU schemes
-//                                 (0/1/2/3/4) = (vanLeer/generalized MinMod/vanAlbada/
-//                                                vanLeer + generalized MinMod/extrema-preserving) limiter
-//                MinMod_Coeff   : Coefficient of the generalized MinMod limiter
-//                EP_Coeff       : Coefficient of the extrema-preserving limiter
-//                dt             : Time interval to advance solution (for the CTU scheme)
-//                dh             : Grid size (for the CTU scheme)
-//                MinDens/Pres   : Minimum allowed density and pressure
+// Parameter   : [ 1] PriVar         : Array storing the input primitive variables
+//               [ 2] FC_Var         : Array to store the output face-centered primitive variables
+//               [ 3] NIn            : Size of the input array "PriVar" in one direction
+//               [ 4] NGhost         : Size of the ghost zone
+//                                     --> "NIn-2*NGhost" cells will be computed along each direction
+//                                     --> The size of the output array "FC_Var" is assumed to be "(NIn-2*NGhost)^3"
+//                                     --> The reconstructed data at cell (i,j,k) will be stored in the
+//                                         array "FC_Var" with the index "(i-NGhost,j-NGhost,k-NGhost)
+//               [ 5] Gamma          : Ratio of specific heats
+//               [ 6] LR_Limiter     : Slope limiter for the data reconstruction in the MHM/MHM_RP/CTU schemes
+//                                     (0/1/2/3/4) = (vanLeer/generalized MinMod/vanAlbada/
+//                                                    vanLeer + generalized MinMod/extrema-preserving) limiter
+//               [ 7] MinMod_Coeff   : Coefficient of the generalized MinMod limiter
+//               [ 8] EP_Coeff       : Coefficient of the extrema-preserving limiter
+//               [ 9] dt             : Time interval to advance solution (for the CTU scheme)
+//               [10] dh             : Grid size (for the CTU scheme)
+//            [11/12] MinDens/Pres   : Minimum allowed density and pressure
 //------------------------------------------------------------------------------------------------------
 void CPU_DataReconstruction( const real PriVar[][NCOMP_TOTAL], real FC_Var[][6][NCOMP_TOTAL], const int NIn, const int NGhost,
                              const real Gamma, const LR_Limiter_t LR_Limiter, const real MinMod_Coeff,
                              const real EP_Coeff, const real dt, const real dh, const real MinDens, const real MinPres )
 {
-
    const int dr1[3] = { 1, NIn, NIn*NIn };
    const int NOut   = NIn - 2*NGhost;                    // number of output grids
    int  ID1, ID2, ID1_L, ID1_R, ID1_LL, ID1_RR, dL, dR;
@@ -109,82 +110,25 @@ void CPU_DataReconstruction( const real PriVar[][NCOMP_TOTAL], real FC_Var[][6][
                FC_Var[ID2][dL][v] = (real)2.0*PriVar[ID1][v] - FC_Var[ID2][dR][v];
             }
 #  ifdef CHECK_NEGATIVE_IN_FLUID
-	      if ( CPU_CheckNegative(FC_Var[ID2][dL][0]) 
-	        ||     !Aux_IsFinite(FC_Var[ID2][dL][1]) 
-	        ||     !Aux_IsFinite(FC_Var[ID2][dL][2]) 
-	        ||     !Aux_IsFinite(FC_Var[ID2][dL][3]) 
-		|| CPU_CheckNegative(FC_Var[ID2][dL][4]))
-	    {
-	       Aux_Message (stderr, "\n\nWANNING:\nfile: %s\nfunction: %s\n", __FILE__, __FUNCTION__);
-	       Aux_Message (stderr, "line:%d\nd=%e, Ux=%e, Uy=%e, Uz=%e, P=%e\n", __LINE__, 
-                        FC_Var[ID2][dL][0], FC_Var[ID2][dL][1], FC_Var[ID2][dL][2], FC_Var[ID2][dL][3], FC_Var[ID2][dL][4]);
-	    }
-	      if ( CPU_CheckNegative(FC_Var[ID2][dR][0]) 
-	        ||     !Aux_IsFinite(FC_Var[ID2][dR][1]) 
-	        ||     !Aux_IsFinite(FC_Var[ID2][dR][2]) 
-	        ||     !Aux_IsFinite(FC_Var[ID2][dR][3]) 
-		|| CPU_CheckNegative(FC_Var[ID2][dR][4]))
-	    {
-	       Aux_Message (stderr, "\n\nWANNING:\nfile: %s\nfunction: %s\n", __FILE__, __FUNCTION__);
-	       Aux_Message (stderr, "line:%d\nd=%e, Ux=%e, Uy=%e, Uz=%e, P=%e\n", __LINE__, 
-                        FC_Var[ID2][dR][0], FC_Var[ID2][dR][1], FC_Var[ID2][dR][2], FC_Var[ID2][dR][3], FC_Var[ID2][dR][4]);
-	    }
+	    if(CPU_CheckUnphysical(NULL,FC_Var[ID2][dR])) Aux_Message(stderr,"\nUnphysical varibles!\nfunction: %s: %d\n", __FUNCTION__, __LINE__);
+	    if(CPU_CheckUnphysical(NULL,FC_Var[ID2][dL])) Aux_Message(stderr,"\nUnphysical varibles!\nfunction: %s: %d\n", __FUNCTION__, __LINE__);
 #  endif
          }
-
          else // for the extrema-preserving limiter --> ensure positive density and pressure
          {
-#  ifdef CHECK_NEGATIVE_IN_FLUID
-	      if ( CPU_CheckNegative(FC_Var[ID2][dL][0]) 
-	        ||     !Aux_IsFinite(FC_Var[ID2][dL][1]) 
-	        ||     !Aux_IsFinite(FC_Var[ID2][dL][2]) 
-	        ||     !Aux_IsFinite(FC_Var[ID2][dL][3]) 
-		|| CPU_CheckNegative(FC_Var[ID2][dL][4]))
-	    {
-	       Aux_Message (stderr, "\n\nWANNING:\nfile: %s\nfunction: %s\n", __FILE__, __FUNCTION__);
-	       Aux_Message (stderr, "line:%d\nd=%e, Ux=%e, Uy=%e, Uz=%e, P=%e\n", __LINE__, 
-                        FC_Var[ID2][dL][0], FC_Var[ID2][dL][1], FC_Var[ID2][dL][2], FC_Var[ID2][dL][3], FC_Var[ID2][dL][4]);
-	    }
-	      if ( CPU_CheckNegative(FC_Var[ID2][dR][0]) 
-	        ||     !Aux_IsFinite(FC_Var[ID2][dR][1]) 
-	        ||     !Aux_IsFinite(FC_Var[ID2][dR][2]) 
-	        ||     !Aux_IsFinite(FC_Var[ID2][dR][3]) 
-		|| CPU_CheckNegative(FC_Var[ID2][dR][4]))
-	    {
-	       Aux_Message (stderr, "\n\nWANNING:\nfile: %s\nfunction: %s\n", __FILE__, __FUNCTION__);
-	       Aux_Message (stderr, "line:%d\nd=%e, Ux=%e, Uy=%e, Uz=%e, P=%e\n", __LINE__, 
-                        FC_Var[ID2][dR][0], FC_Var[ID2][dR][1], FC_Var[ID2][dR][2], FC_Var[ID2][dR][3], FC_Var[ID2][dR][4]);
-	    }
-#  endif
+/*
             FC_Var[ID2][dL][0] = CPU_CheckMinDens( FC_Var[ID2][dL][0], MinDens );
             FC_Var[ID2][dR][0] = CPU_CheckMinDens( FC_Var[ID2][dR][0], MinDens );
 
             FC_Var[ID2][dL][4] = CPU_CheckMinPres( FC_Var[ID2][dL][4], MinPres );
             FC_Var[ID2][dR][4] = CPU_CheckMinPres( FC_Var[ID2][dR][4], MinPres );
+*/
+#  ifdef CHECK_NEGATIVE_IN_FLUID
+	    if(CPU_CheckUnphysical(NULL,FC_Var[ID2][dR])) Aux_Message(stderr,"\nUnphysical varibles!\nfunction: %s: %d\n", __FUNCTION__, __LINE__);
+	    if(CPU_CheckUnphysical(NULL,FC_Var[ID2][dL])) Aux_Message(stderr,"\nUnphysical varibles!\nfunction: %s: %d\n", __FUNCTION__, __LINE__);
+#  endif
          }
 
-#  ifdef CHECK_NEGATIVE_IN_FLUID
-	      if ( CPU_CheckNegative(FC_Var[ID2][dL][0]) 
-	        ||     !Aux_IsFinite(FC_Var[ID2][dL][1]) 
-	        ||     !Aux_IsFinite(FC_Var[ID2][dL][2]) 
-	        ||     !Aux_IsFinite(FC_Var[ID2][dL][3]) 
-		|| CPU_CheckNegative(FC_Var[ID2][dL][4]))
-	    {
-	       Aux_Message (stderr, "\n\nWANNING:\nfile: %s\nfunction: %s\n", __FILE__, __FUNCTION__);
-	       Aux_Message (stderr, "line:%d\nd=%e, Ux=%e, Uy=%e, Uz=%e, P=%e\n", __LINE__, 
-                        FC_Var[ID2][dL][0], FC_Var[ID2][dL][1], FC_Var[ID2][dL][2], FC_Var[ID2][dL][3], FC_Var[ID2][dL][4]);
-	    }
-	      if ( CPU_CheckNegative(FC_Var[ID2][dR][0]) 
-	        ||     !Aux_IsFinite(FC_Var[ID2][dR][1]) 
-	        ||     !Aux_IsFinite(FC_Var[ID2][dR][2]) 
-	        ||     !Aux_IsFinite(FC_Var[ID2][dR][3]) 
-		|| CPU_CheckNegative(FC_Var[ID2][dR][4]))
-	    {
-	       Aux_Message (stderr, "\n\nWANNING:\nfile: %s\nfunction: %s\n", __FILE__, __FUNCTION__);
-	       Aux_Message (stderr, "line:%d\nd=%e, Ux=%e, Uy=%e, Uz=%e, P=%e\n", __LINE__, 
-                        FC_Var[ID2][dR][0], FC_Var[ID2][dR][1], FC_Var[ID2][dR][2], FC_Var[ID2][dR][3], FC_Var[ID2][dR][4]);
-	    }
-#  endif
 
       } // for (int d=0; d<3; d++)
    } // k,j,i

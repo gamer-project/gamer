@@ -405,7 +405,7 @@ struct InputPara_t
 #  elif ( MODEL == SR_HYDRO )
    int    Opt__Flag_LohnerEngy;
    int    Opt__Flag_LohnerPres;
-   int    Opt__Flag_LohnerVel4;
+   int    Opt__Flag_LohnerRest;
    int    Opt__Flag_LohnerTemp;
 #  endif
    int    Opt__Flag_LohnerForm;

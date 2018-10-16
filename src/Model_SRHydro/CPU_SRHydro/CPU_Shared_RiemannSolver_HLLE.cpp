@@ -46,72 +46,12 @@ void CPU_RiemannSolver_HLLE( const int XYZ, real Flux_Out[], const real L_In[], 
        CR[v]=R_In[v];
    }
 
-#  ifdef CHECK_NEGATIVE_IN_FLUID
-  if ( CPU_CheckNegative(CL[0])
-    ||     !Aux_IsFinite(CL[1])
-    ||     !Aux_IsFinite(CL[2])
-    ||     !Aux_IsFinite(CL[3])
-    || CPU_CheckNegative(CL[4]))
-  {
-     Aux_Message (stderr,"\n\nWARNING:\nfile: %s\nfunction: %s\n", __FILE__, __FUNCTION__);
-     Aux_Message (stderr,"line:%d\nD=%e, Mx=%e, My=%e, Mz=%e, E=%e\n", __LINE__,
-                   CL[0], CL[1], CL[2], CL[3], CL[4]);
-  }
-    real M = SQRT (SQR (CL[1]) + SQR (CL[2]) + SQR (CL[3]));
-
-  if ( CL[4] <= M )
-    {
-      Aux_Message (stderr,"\n\nWARNING: |M| > E!\n");
-      Aux_Message (stderr,"file: %s\nfunction: %s\n", __FILE__, __FUNCTION__);
-      Aux_Message (stderr,"line:%d\nD=%e, Mx=%e, My=%e, Mz=%e, E=%e\n", __LINE__,
-                   CL[0], CL[1], CL[2], CL[3], CL[4]);
-      Aux_Message (stderr,"|M|=%e, E=%e, |M|-E=%e\n\n", M, CL[4], M - CL[4]);
-    }
-
-  if ( CPU_CheckNegative(CR[0])
-    ||     !Aux_IsFinite(CR[1])
-    ||     !Aux_IsFinite(CR[2])
-    ||     !Aux_IsFinite(CR[3])
-    || CPU_CheckNegative(CR[4]))
-  {
-     Aux_Message (stderr,"\n\nWARNING:\nfile: %s\nfunction: %s\n", __FILE__, __FUNCTION__);
-     Aux_Message (stderr,"line:%d\nD=%e, Mx=%e, My=%e, Mz=%e, E=%e\n", __LINE__,
-                   CR[0], CR[1], CR[2], CR[3], CR[4]);
-  }
-     M = SQRT (SQR (CR[1]) + SQR (CR[2]) + SQR (CR[3]));
-
-  if ( CR[4] <= M )
-    {
-      Aux_Message (stderr,"\n\nWARNING: |M| > E!\n");
-      Aux_Message (stderr,"file: %s\nfunction: %s\n", __FILE__, __FUNCTION__);
-      Aux_Message (stderr,"line:%d\nD=%e, Mx=%e, My=%e, Mz=%e, E=%e\n", __LINE__,
-                   CR[0], CR[1], CR[2], CR[3], CR[4]);
-      Aux_Message (stderr,"|M|=%e, E=%e, |M|-E=%e\n\n", M, CR[4], M - CR[4]);
-    }
-#  endif
 
    CPU_Rotate3D( CL, XYZ, true );
    CPU_Rotate3D( CR, XYZ, true );
 
 /* 0.5 check negative conserved quanties */
 
-#  ifdef CHECK_NEGATIVE_IN_FLUID
-   if ( CPU_CheckNegative(CL[0]) )
-      Aux_Message( stderr, "ERROR : negative conserved mass density (%14.7e) at file <%s>, line <%d>, function <%s>\n",
-                   CL[0], __FILE__, __LINE__, __FUNCTION__ );
-
-   if ( CPU_CheckNegative(CR[0]) )
-      Aux_Message( stderr, "ERROR : negative conserved mass density (%14.7e) at file <%s>, line <%d>, function <%s>\n",
-                   CR[0], __FILE__, __LINE__, __FUNCTION__ );
-
-   if ( CPU_CheckNegative(CL[4]) )
-      Aux_Message( stderr, "ERROR : negative conserved energy density (%14.7e) at file <%s>, line <%d>, function <%s>\n",
-                   CL[4], __FILE__, __LINE__, __FUNCTION__ );
-
-   if ( CPU_CheckNegative(CR[4]) )
-      Aux_Message( stderr, "ERROR : negative conserved energy density (%14.7e) at file <%s>, line <%d>, function <%s>\n",
-                   CR[4], __FILE__, __LINE__, __FUNCTION__ );
-#  endif
 
 /* 1. compute primitive vars. from conserved vars. */
    CPU_Con2Pri (CL, PL, Gamma);
@@ -119,23 +59,6 @@ void CPU_RiemannSolver_HLLE( const int XYZ, real Flux_Out[], const real L_In[], 
 
 /*  1.4 check negative primitive quanties*/
 
-#  ifdef CHECK_NEGATIVE_IN_FLUID
-   if ( CPU_CheckNegative(PL[0]) )
-      Aux_Message( stderr, "ERROR : negative primitive mass density (%14.7e) at file <%s>, line <%d>, function <%s>\n",
-                   PL[0], __FILE__, __LINE__, __FUNCTION__ );
-
-   if ( CPU_CheckNegative(PR[0]) )
-      Aux_Message( stderr, "ERROR : negative primitive mass density (%14.7e) at file <%s>, line <%d>, function <%s>\n",
-                   PR[0], __FILE__, __LINE__, __FUNCTION__ );
-
-   if ( CPU_CheckNegative(PL[4]) )
-      Aux_Message( stderr, "ERROR : negative pressure (%14.7e) at file <%s>, line <%d>, function <%s>\n",
-                   PL[4], __FILE__, __LINE__, __FUNCTION__ );
-
-   if ( CPU_CheckNegative(PR[4]) )
-      Aux_Message( stderr, "ERROR : negative pressure (%14.7e) at file <%s>, line <%d>, function <%s>\n",
-                   PR[4], __FILE__, __LINE__, __FUNCTION__ );
-#  endif
 
 
 /* 2. Transform 4-velocity to 3-velocity */

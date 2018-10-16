@@ -16,12 +16,12 @@ void Prepare_for_Lohner( const OptLohnerForm_t Form, const real *Var1D, real *Av
 //                3. To add new refinement criteria, please edit Flag_Check()
 //                4. Prepare_for_Lohner() is defined in Flag_Lohner.cpp
 //
-// Parameter   :  lv        : Target refinement level to be flagged
-//                UseLBFunc : Use the load-balance alternative functions for the grandson check and exchanging
-//                            the buffer flags (useless if LOAD_BALANCE is off)
-//                            --> USELB_YES : use the load-balance alternative functions
-//                                USELB_NO  : do not use the load-balance alternative functions
-//                                            --> useful for LOAD_BALANCE during the initialization
+// Parameter   :  [1] lv        : Target refinement level to be flagged
+//                [2] UseLBFunc : Use the load-balance alternative functions for the grandson check and exchanging
+//                                the buffer flags (useless if LOAD_BALANCE is off)
+//                                --> USELB_YES : use the load-balance alternative functions
+//                                    USELB_NO  : do not use the load-balance alternative functions
+//                                                --> useful for LOAD_BALANCE during the initialization
 //-------------------------------------------------------------------------------------------------------
 void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
 {
@@ -92,10 +92,11 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
 #  warning : WAIT MHD !!!
 
 #  elif   ( MODEL == SR_HYDRO )
-   if ( OPT__FLAG_LOHNER_DENS )  {  Lohner_NVar++;   Lohner_TVar |= _PRIDENS;   MinDens = MIN_DENS;  }
-   if ( OPT__FLAG_LOHNER_PRES )  {  Lohner_NVar++;   Lohner_TVar |= _PRES;      MinPres = MIN_PRES;  }
-   if ( OPT__FLAG_LOHNER_TEMP )  {  Lohner_NVar++;   Lohner_TVar |= _TEMP;      MinPres = MIN_PRES;  }
-   if ( OPT__FLAG_LOHNER_4VEL )  {  Lohner_NVar++;   Lohner_TVar |= _4VEL; }
+   if ( OPT__FLAG_LOHNER_DENS )  {  Lohner_NVar++;   Lohner_TVar |= _DENS;   MinDens = MIN_DENS;  }
+   if ( OPT__FLAG_LOHNER_ENGY )  {  Lohner_NVar++;   Lohner_TVar |= _ENGY;                        }
+   if ( OPT__FLAG_LOHNER_PRES )  {  Lohner_NVar++;   Lohner_TVar |= _PRES;   MinPres = MIN_PRES;  }
+   if ( OPT__FLAG_LOHNER_TEMP )  {  Lohner_NVar++;   Lohner_TVar |= _TEMP;   MinPres = MIN_PRES;  }
+   if ( OPT__FLAG_LOHNER_REST )  {  Lohner_NVar++;   Lohner_TVar |= _REST; }
 
 
 #  elif ( MODEL == ELBDM )

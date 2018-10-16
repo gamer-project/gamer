@@ -114,8 +114,16 @@ void Output_DumpData_Part( const OptOutputPart_t Part, const bool BaseOnly, cons
             fprintf( File, "#%10s %10s %10s %20s %20s %20s", "i[1]", "j[2]", "k[3]", "x[4]", "y[5]", "z[6]" );
 
 
+#           if ( MODEL == SR_HYDRO )
+            fprintf( File, "%14s", "Dens[7]" );
+            fprintf( File, "%14s", "MomX[8]" );
+            fprintf( File, "%14s", "MomY[9]" );
+            fprintf( File, "%14s", "MomZ[10]" );
+            fprintf( File, "%14s", "Engy[11]" );
+#           else
             for (int v=0; v<NCOMP_TOTAL; v++)
             fprintf( File, "%14s", FieldLabel[v] );
+#           endif
 
 #           ifdef GRAVITY
             if ( OPT__OUTPUT_POT )
@@ -126,7 +134,7 @@ void Output_DumpData_Part( const OptOutputPart_t Part, const bool BaseOnly, cons
 #           if ( MODEL == HYDRO  ||  MODEL == MHD )
             fprintf( File, "%14s", "Pressure[12]" );
 #           elif ( MODEL == SR_HYDRO )
-            fprintf( File, "%14s", "RestDens[12]" );
+            fprintf( File, "%14s", "PrimDens[12]" );
             fprintf( File, "%14s", "Ux[13]" ); // 4-velocity
             fprintf( File, "%14s", "Uy[14]" );
             fprintf( File, "%14s", "Uz[15]" );

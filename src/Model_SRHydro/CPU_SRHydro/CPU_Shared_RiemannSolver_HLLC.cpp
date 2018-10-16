@@ -17,12 +17,12 @@
 //                            18, 1553
 //                3. This function is shared by MHM, MHM_RP, and CTU schemes
 //
-// Parameter   :  XYZ      : Target spatial direction : (0/1/2) --> (x/y/z)
-//                Flux_Out : Array to store the output flux
-//                L_In     : Input left  state (conserved variables)
-//                R_In     : Input right state (conserved variables)
-//                Gamma    : Ratio of specific heats
-//                MinPres  : Minimum allowed pressure
+// Parameter   :  [1] XYZ      : Target spatial direction : (0/1/2) --> (x/y/z)
+//                [2] Flux_Out : Array to store the output flux
+//                [3] L_In     : Input left  state (conserved variables)
+//                [4] R_In     : Input right state (conserved variables)
+//                [5] Gamma    : Ratio of specific heats
+//                [6] MinPres  : Minimum allowed pressure
 //-------------------------------------------------------------------------------------------------------
 void CPU_RiemannSolver_HLLC( const int XYZ,
                              real Flux_Out[],
@@ -54,97 +54,18 @@ void CPU_RiemannSolver_HLLC( const int XYZ,
        CR[v]=R_In[v];
    }
 
-#  ifdef CHECK_NEGATIVE_IN_FLUID
-  if ( CPU_CheckNegative(CL[0])
-    ||     !Aux_IsFinite(CL[1])
-    ||     !Aux_IsFinite(CL[2])
-    ||     !Aux_IsFinite(CL[3])
-    || CPU_CheckNegative(CL[4]))
-  {
-     Aux_Message (stderr,"\n\nWARNING:\nfile: %s\nfunction: %s\n", __FILE__, __FUNCTION__);
-     Aux_Message (stderr,"line:%d\nD=%e, Mx=%e, My=%e, Mz=%e, E=%e\n", __LINE__,
-                   CL[0], CL[1], CL[2], CL[3], CL[4]);
-  }
-    real M = SQRT (SQR (CL[1]) + SQR (CL[2]) + SQR (CL[3]));
-
-  if ( CL[4] <= M )
-    {
-      Aux_Message (stderr,"\n\nWARNING: |M| > E!\n");
-      Aux_Message (stderr,"file: %s\nfunction: %s\n", __FILE__, __FUNCTION__);
-      Aux_Message (stderr,"line:%d\nD=%e, Mx=%e, My=%e, Mz=%e, E=%e\n", __LINE__,
-                   CL[0], CL[1], CL[2], CL[3], CL[4]);
-      Aux_Message (stderr,"|M|=%e, E=%e, |M|-E=%e\n\n", M, CL[4], M - CL[4]);
-    }
-
-  if ( CPU_CheckNegative(CR[0])
-    ||     !Aux_IsFinite(CR[1])
-    ||     !Aux_IsFinite(CR[2])
-    ||     !Aux_IsFinite(CR[3])
-    || CPU_CheckNegative(CR[4]))
-  {
-     Aux_Message (stderr,"\n\nWARNING:\nfile: %s\nfunction: %s\n", __FILE__, __FUNCTION__);
-     Aux_Message (stderr,"line:%d\nD=%e, Mx=%e, My=%e, Mz=%e, E=%e\n", __LINE__,
-                   CR[0], CR[1], CR[2], CR[3], CR[4]);
-  }
-     M = SQRT (SQR (CR[1]) + SQR (CR[2]) + SQR (CR[3]));
-
-  if ( CR[4] <= M )
-    {
-      Aux_Message (stderr,"\n\nWARNING: |M| > E!\n");
-      Aux_Message (stderr,"file: %s\nfunction: %s\n", __FILE__, __FUNCTION__);
-      Aux_Message (stderr,"line:%d\nD=%e, Mx=%e, My=%e, Mz=%e, E=%e\n", __LINE__,
-                   CR[0], CR[1], CR[2], CR[3], CR[4]);
-      Aux_Message (stderr,"|M|=%e, E=%e, |M|-E=%e\n\n", M, CR[4], M - CR[4]);
-    }
-#  endif
-
    CPU_Rotate3D( CL, XYZ, true );
    CPU_Rotate3D( CR, XYZ, true );
 
-/* 0.5 check negative conserved quanties */
-
+/* 0.5 check unphysical conserved quanties */
 #  ifdef CHECK_NEGATIVE_IN_FLUID
-   if ( CPU_CheckNegative(CL[0]) )
-      Aux_Message( stderr, "ERROR : negative conserved mass density (%14.7e) at file <%s>, line <%d>, function <%s>\n",
-                   CL[0], __FILE__, __LINE__, __FUNCTION__ );
-
-   if ( CPU_CheckNegative(CR[0]) )
-      Aux_Message( stderr, "ERROR : negative conserved mass density (%14.7e) at file <%s>, line <%d>, function <%s>\n",
-                   CR[0], __FILE__, __LINE__, __FUNCTION__ );
-
-   if ( CPU_CheckNegative(CL[4]) )
-      Aux_Message( stderr, "ERROR : negative conserved energy density (%14.7e) at file <%s>, line <%d>, function <%s>\n",
-                   CL[4], __FILE__, __LINE__, __FUNCTION__ );
-
-   if ( CPU_CheckNegative(CR[4]) )
-      Aux_Message( stderr, "ERROR : negative conserved energy density (%14.7e) at file <%s>, line <%d>, function <%s>\n",
-                   CR[4], __FILE__, __LINE__, __FUNCTION__ );
+   if(CPU_CheckUnphysical(CL, NULL)) Aux_Message(stderr,"\nUnphysical varibles!\nfunction: %s: %d\n", __FUNCTION__, __LINE__);
+   if(CPU_CheckUnphysical(CR, NULL)) Aux_Message(stderr,"\nUnphysical varibles!\nfunction: %s: %d\n", __FUNCTION__, __LINE__);
 #  endif
 
 /* 1. compute primitive vars. from conserved vars. */
    CPU_Con2Pri (CL, PL, Gamma);
    CPU_Con2Pri (CR, PR, Gamma);
-
-/*  1.4 check negative primitive quanties*/
-
-#  ifdef CHECK_NEGATIVE_IN_FLUID
-   if ( CPU_CheckNegative(PL[0]) )
-      Aux_Message( stderr, "ERROR : negative primitive mass density (%14.7e) at file <%s>, line <%d>, function <%s>\n",
-                   PL[0], __FILE__, __LINE__, __FUNCTION__ );
-
-   if ( CPU_CheckNegative(PR[0]) )
-      Aux_Message( stderr, "ERROR : negative primitive mass density (%14.7e) at file <%s>, line <%d>, function <%s>\n",
-                   PR[0], __FILE__, __LINE__, __FUNCTION__ );
-
-   if ( CPU_CheckNegative(PL[4]) )
-      Aux_Message( stderr, "ERROR : negative pressure (%14.7e) at file <%s>, line <%d>, function <%s>\n",
-                   PL[4], __FILE__, __LINE__, __FUNCTION__ );
-
-   if ( CPU_CheckNegative(PR[4]) )
-      Aux_Message( stderr, "ERROR : negative pressure (%14.7e) at file <%s>, line <%d>, function <%s>\n",
-                   PR[4], __FILE__, __LINE__, __FUNCTION__ );
-#  endif
-
 
 /* 2. Transform 4-velocity to 3-velocity */
    lFactor=1/SQRT(1+SQR(PL[1])+SQR(PL[2])+SQR(PL[3]));
@@ -203,17 +124,17 @@ void CPU_RiemannSolver_HLLC( const int XYZ,
 /* 4. compute HLL flux using Mignone Eq 11 (necessary for computing lmdas (Eq 18) 
  *    compute HLL conserved quantities using Mignone eq 9
  * */
-     Fl[0] = CL[0] * lV1;
-     Fl[1] = CL[1] * lV1 + PL[4];
-     Fl[2] = CL[2] * lV1;
-     Fl[3] = CL[3] * lV1;
-     Fl[4] = CL[1];
+   Fl[0] = CL[0] * lV1;
+   Fl[1] = CL[1] * lV1 + PL[4];
+   Fl[2] = CL[2] * lV1;
+   Fl[3] = CL[3] * lV1;
+   Fl[4] = CL[1];
 
-     Fr[0] = CR[0] * rV1;
-     Fr[1] = CR[1] * rV1 + PR[4];
-     Fr[2] = CR[2] * rV1;
-     Fr[3] = CR[3] * rV1;
-     Fr[4] = CR[1];
+   Fr[0] = CR[0] * rV1;
+   Fr[1] = CR[1] * rV1 + PR[4];
+   Fr[2] = CR[2] * rV1;
+   Fr[3] = CR[3] * rV1;
+   Fr[4] = CR[1];
 /* 5. Compute HLL flux using Mignone Eq 11 (necessary for computing lmdas (Eq 18)
  *    Compute HLL conserved quantities using Mignone eq 9
  */
@@ -260,8 +181,8 @@ void CPU_RiemannSolver_HLLC( const int XYZ,
     Flux_Out[3] = Fl[3];
     Flux_Out[4] = Fl[4];
 
-   CPU_Rotate3D( Flux_Out, XYZ, false );
-   return;
+    CPU_Rotate3D( Flux_Out, XYZ, false );
+    return;
   }
   else if( lmdas >= 0.0){ /* Fls */
 
@@ -284,7 +205,7 @@ void CPU_RiemannSolver_HLLC( const int XYZ,
     Flux_Out[3] = lmdal*(Usl[3] - CL[3]) + Fl[3];
     Flux_Out[4] = lmdal*(Usl[4] - CL[4]) + Fl[4];
 
-   CPU_Rotate3D( Flux_Out, XYZ, false );
+    CPU_Rotate3D( Flux_Out, XYZ, false );
     return;
   }
   else if( lmdar >= 0.0){ /* Frs */
@@ -305,7 +226,7 @@ void CPU_RiemannSolver_HLLC( const int XYZ,
     Flux_Out[3] = lmdar*(Usr[3] - CR[3]) + Fr[3];
     Flux_Out[4] = lmdar*(Usr[4] - CR[4]) + Fr[4];
 
-   CPU_Rotate3D( Flux_Out, XYZ, false );
+    CPU_Rotate3D( Flux_Out, XYZ, false );
     return;
   }
   else{ /* Fr */
@@ -317,12 +238,11 @@ void CPU_RiemannSolver_HLLC( const int XYZ,
     Flux_Out[3] = Fr[3];
     Flux_Out[4] = Fr[4];
 
-   CPU_Rotate3D( Flux_Out, XYZ, false );
+    CPU_Rotate3D( Flux_Out, XYZ, false );
     return;
   }
 
 } // FUNCTION : CPU_RiemannSolver_HLLC
-
 
 
 #endif // #if ( MODEL == SR_HYDRO )

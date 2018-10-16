@@ -15,7 +15,7 @@ static void GetCompound_SymConst ( hid_t &H5_TypeID );
 static void GetCompound_InputPara( hid_t &H5_TypeID );
 
 #if ( MODEL == SR_HYDRO )
-real CPU_Con2Q( const real In[], const real Gamma);
+void CPU_Con2Pri( const real In[], real Out[], const real Gamma);
 #endif
 
 /*======================================================================================================
@@ -700,13 +700,13 @@ void Output_DumpData_Total_HDF5( const char *FileName )
    char (*FieldName)[MAX_STRING]    = NULL;
    real (*FieldData)[PS1][PS1][PS1] = NULL;
 #  if ( MODEL == SR_HYDRO )
-   real (*Dens) [PS1][PS1][PS1] = NULL;
-   real (*MomX) [PS1][PS1][PS1] = NULL;
-   real (*MomY) [PS1][PS1][PS1] = NULL;
-   real (*MomZ) [PS1][PS1][PS1] = NULL;
-   real (*Engy) [PS1][PS1][PS1] = NULL;
-   real (*Q)    [PS1][PS1][PS1] = NULL;
+   real (*Dens)[PS1][PS1][PS1] = NULL;
+   real (*Ux)  [PS1][PS1][PS1] = NULL;
+   real (*Uy)  [PS1][PS1][PS1] = NULL;
+   real (*Uz)  [PS1][PS1][PS1] = NULL;
+   real (*Engy)[PS1][PS1][PS1] = NULL;
    real Cons[NCOMP_FLUID];
+   real Prim[NCOMP_FLUID]; // store 4-velocity
 #  endif
 
 // 5-0. determine variable indices
@@ -722,10 +722,6 @@ void Output_DumpData_Total_HDF5( const char *FileName )
    if ( OPT__OUTPUT_PAR_DENS != PAR_OUTPUT_DENS_NONE )   ParDensDumpIdx = NFieldOut ++;
 #  endif
 
-#  if ( MODEL == SR_HYDRO )
-   int QDumpIdx = -1;
-   QDumpIdx = NFieldOut ++;
-#  endif
 
 // 5-1. set the output field names
    FieldName = new char [NFieldOut][MAX_STRING];
@@ -739,12 +735,6 @@ void Output_DumpData_Total_HDF5( const char *FileName )
 #  ifdef PARTICLE
    if      ( OPT__OUTPUT_PAR_DENS == PAR_OUTPUT_DENS_PAR_ONLY )   sprintf( FieldName[ParDensDumpIdx], "ParDens" );
    else if ( OPT__OUTPUT_PAR_DENS == PAR_OUTPUT_DENS_TOTAL )      sprintf( FieldName[ParDensDumpIdx], "TotalDens" );
-#  endif
-
-
-#  if ( MODEL == SR_HYDRO )
-// Q is root that needed to transform conserved quantities to primitive quantities
-   sprintf( FieldName[QDumpIdx], "Q" );
 #  endif
 
 
@@ -862,11 +852,10 @@ void Output_DumpData_Total_HDF5( const char *FileName )
             FieldData = new real [ amr->NPatchComma[lv][1] ][PS1][PS1][PS1];
 #           if ( MODEL == SR_HYDRO )
             Dens      = new real [ amr->NPatchComma[lv][1] ][PS1][PS1][PS1];
-            MomX      = new real [ amr->NPatchComma[lv][1] ][PS1][PS1][PS1];
-            MomY      = new real [ amr->NPatchComma[lv][1] ][PS1][PS1][PS1];
-            MomZ      = new real [ amr->NPatchComma[lv][1] ][PS1][PS1][PS1];
+            Ux        = new real [ amr->NPatchComma[lv][1] ][PS1][PS1][PS1];
+            Uy        = new real [ amr->NPatchComma[lv][1] ][PS1][PS1][PS1];
+            Uz        = new real [ amr->NPatchComma[lv][1] ][PS1][PS1][PS1];
             Engy      = new real [ amr->NPatchComma[lv][1] ][PS1][PS1][PS1];
-               Q      = new real [ amr->NPatchComma[lv][1] ][PS1][PS1][PS1];
 #           endif
 
             for (int v=0; v<NFieldOut; v++)
@@ -916,15 +905,15 @@ void Output_DumpData_Total_HDF5( const char *FileName )
                            break;
                          case 1:
                            for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
-                             memcpy( MomX[PID], amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[v], FieldSizeOnePatch );
+                             memcpy( Ux[PID], amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[v], FieldSizeOnePatch );
                            break;
                          case 2:
                            for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
-                             memcpy( MomY[PID], amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[v], FieldSizeOnePatch );
+                             memcpy( Uy[PID], amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[v], FieldSizeOnePatch );
                            break;
                          case 3:
                            for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
-                             memcpy( MomZ[PID], amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[v], FieldSizeOnePatch );
+                             memcpy( Uz[PID], amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[v], FieldSizeOnePatch );
                            break;
                          case 4:
                            for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
@@ -940,22 +929,27 @@ void Output_DumpData_Total_HDF5( const char *FileName )
 #           if ( MODEL == SR_HYDRO )
             } // for (int v=0; v<NFieldOut; v++)
 
-//  convert conserved quantities to root Q
+//  convert conserved quantities to primitive quantities
               for ( int PID=0;PID < amr->NPatchComma[lv][1];PID++)
-		 for ( int i=0;i<PS1;i++  )
-		 for ( int j=0;j<PS1;j++  )
-		 for ( int k=0;k<PS1;k++  ){
+              for ( int i=0;i<PS1;i++  )
+              for ( int j=0;j<PS1;j++  )
+	      for ( int k=0;k<PS1;k++  ){
+		 Cons[0] = Dens[PID][i][j][k];
+		 Cons[1] = Ux[PID][i][j][k];
+		 Cons[2] = Uy[PID][i][j][k];
+		 Cons[3] = Uz[PID][i][j][k];
+		 Cons[4] = Engy[PID][i][j][k];
+		 
+		 CPU_Con2Pri( Cons, Prim,(real) GAMMA);
 
-		    Cons[0] = Dens[PID][i][j][k];
-		    Cons[1] = MomX[PID][i][j][k];
-		    Cons[2] = MomY[PID][i][j][k];
-		    Cons[3] = MomZ[PID][i][j][k];
-		    Cons[4] = Engy[PID][i][j][k];
-		    
-		    Q[PID][i][j][k] = CPU_Con2Q( Cons,(real) GAMMA);
-                 }
+		 Dens[PID][i][j][k] = Prim[0];
+		 Ux  [PID][i][j][k] = Prim[1];
+		 Uy  [PID][i][j][k] = Prim[2];
+		 Uz  [PID][i][j][k] = Prim[3];
+		 Engy[PID][i][j][k] = Prim[4];
+               }
 
-//  copy conserved data and root Q into FieldData
+//  copy converted data to FieldData
             for (int v=0; v<NFieldOut; v++) {
 		  switch (v)
 		   {
@@ -965,23 +959,19 @@ void Output_DumpData_Total_HDF5( const char *FileName )
 		      break;
 		    case 1:
 		       for ( int PID=0;PID < amr->NPatchComma[lv][1];PID++)
-		             memcpy( FieldData[PID], MomX[PID], FieldSizeOnePatch );
+		             memcpy( FieldData[PID], Ux[PID], FieldSizeOnePatch );
 		      break;
 		    case 2:
 		       for ( int PID=0;PID < amr->NPatchComma[lv][1];PID++)
-		              memcpy( FieldData[PID], MomY[PID], FieldSizeOnePatch );
+		              memcpy( FieldData[PID], Uy[PID], FieldSizeOnePatch );
 		      break;
 		    case 3:
 		       for ( int PID=0;PID < amr->NPatchComma[lv][1];PID++)
-		              memcpy( FieldData[PID], MomZ[PID], FieldSizeOnePatch );
+		              memcpy( FieldData[PID], Uz[PID], FieldSizeOnePatch );
 		      break;
 		    case 4:
 		       for ( int PID=0;PID < amr->NPatchComma[lv][1];PID++)
 		             memcpy( FieldData[PID], Engy[PID], FieldSizeOnePatch );
-		      break;
-		    case 5:
-		       for ( int PID=0;PID < amr->NPatchComma[lv][1];PID++)
-		             memcpy( FieldData[PID],    Q[PID], FieldSizeOnePatch );
 		      break;
 		    default:
 		      break;
@@ -992,7 +982,7 @@ void Output_DumpData_Total_HDF5( const char *FileName )
                H5_SetID_Field = H5Dopen( H5_GroupID_GridData, FieldName[v], H5P_DEFAULT );
 
                H5_Status = H5Dwrite( H5_SetID_Field, H5T_GAMER_REAL, H5_MemID_Field, H5_SpaceID_Field, H5P_DEFAULT, FieldData );
-               if ( H5_Status < 0 )   Aux_Error( ERROR_INFO, "failed to write a field (lv: %d, v: %d) !!\n", lv, v );
+               if ( H5_Status < 0 )   Aux_Error( ERROR_INFO, "failed to write a field (lv %d, v %d) !!\n", lv, v );
 
                H5_Status = H5Dclose( H5_SetID_Field );
             } // for (int v=0; v<NFieldOut; v++)
@@ -1001,11 +991,10 @@ void Output_DumpData_Total_HDF5( const char *FileName )
             delete [] FieldData;
 #           if ( MODEL == SR_HYDRO )
             delete [] Dens;
-            delete [] MomX;
-            delete [] MomY;
-            delete [] MomZ;
+            delete [] Ux;
+            delete [] Uy;
+            delete [] Uz;
             delete [] Engy;
-            delete []    Q;
 #           endif
 
             H5_Status = H5Sclose( H5_MemID_Field );

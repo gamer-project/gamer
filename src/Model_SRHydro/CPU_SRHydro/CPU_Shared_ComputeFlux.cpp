@@ -105,49 +105,10 @@ CPU_ComputeFlux(const real FC_Var[][6][NCOMP_TOTAL],
 			ConVar_R[v] = FC_Var[ID2 + dID2[d]][dL][v];
 		    }
 
-#ifdef CHECK_NEGATIVE_IN_FLUID
-		    if (CPU_CheckNegative(ConVar_L[0])
-			||  !Aux_IsFinite(ConVar_L[1])
-			||  !Aux_IsFinite(ConVar_L[2])
-			||  !Aux_IsFinite(ConVar_L[3])
-                        || CPU_CheckNegative(ConVar_L[4])) {
-			Aux_Message(stderr, "\n\nWARNING:\nfile: %s\nfunction: %s\n", __FILE__, __FUNCTION__);
-			Aux_Message(stderr,
-				    "line:%d\nD=%e, Mx=%e, My=%e, Mz=%e, E=%e\n",
-				    __LINE__, ConVar_L[0], ConVar_L[1], ConVar_L[2], ConVar_L[3], ConVar_L[4]);
-		    }
-		    real M = SQRT(SQR(ConVar_L[1]) + SQR(ConVar_L[2]) + SQR(ConVar_L[3]));
-
-		    if (ConVar_L[4] <= M) {
-			Aux_Message(stderr, "\n\nWARNING: |M| > E!\n");
-			Aux_Message(stderr, "file: %s\nfunction: %s\n", __FILE__, __FUNCTION__);
-			Aux_Message(stderr,
-				    "line:%d\nD=%e, Mx=%e, My=%e, Mz=%e, E=%e\n",
-				    __LINE__, ConVar_L[0], ConVar_L[1], ConVar_L[2], ConVar_L[3], ConVar_L[4]);
-			Aux_Message(stderr, "|M|=%e, E=%e, |M|-E=%e\n\n", M, ConVar_L[4], M - ConVar_L[4]);
-		    }
-
-		    if (CPU_CheckNegative(ConVar_R[0])
-			|| !Aux_IsFinite(ConVar_R[1])
-			|| !Aux_IsFinite(ConVar_R[2])
-			|| !Aux_IsFinite(ConVar_R[3])
-			|| CPU_CheckNegative(ConVar_R[4])) {
-			Aux_Message(stderr, "\n\nWARNING:\nfile: %s\nfunction: %s\n", __FILE__, __FUNCTION__);
-			Aux_Message(stderr,
-				    "line:%d\nD=%e, Mx=%e, My=%e, Mz=%e, E=%e\n",
-				    __LINE__, ConVar_R[0], ConVar_R[1], ConVar_R[2], ConVar_R[3], ConVar_R[4]);
-		    }
-		    M = SQRT(SQR(ConVar_R[1]) + SQR(ConVar_R[2]) + SQR(ConVar_R[3]));
-
-		    if (ConVar_R[4] <= M) {
-			Aux_Message(stderr, "\n\nWARNING: |M| > E!\n");
-			Aux_Message(stderr, "file: %s\nfunction: %s\n", __FILE__, __FUNCTION__);
-			Aux_Message(stderr,
-				    "line:%d\nD=%e, Mx=%e, My=%e, Mz=%e, E=%e\n",
-				    __LINE__, ConVar_R[0], ConVar_R[1], ConVar_R[2], ConVar_R[3], ConVar_R[4]);
-			Aux_Message(stderr, "|M|=%e, E=%e, |M|-E=%e\n\n", M, ConVar_R[4], M - ConVar_R[4]);
-		    }
-#endif
+#  ifdef CHECK_NEGATIVE_IN_FLUID
+	    if(CPU_CheckUnphysical(ConVar_L, NULL)) Aux_Message(stderr,"\nUnphysical varibles!\nfunction: %s: %d\n", __FUNCTION__, __LINE__);
+	    if(CPU_CheckUnphysical(ConVar_R, NULL)) Aux_Message(stderr,"\nUnphysical varibles!\nfunction: %s: %d\n", __FUNCTION__, __LINE__);
+#  endif
 
 #if ( RSOLVER == HLLC )
 		    CPU_RiemannSolver_HLLC(d, FC_Flux[ID1][d], ConVar_L, ConVar_R, Gamma, MinPres);
@@ -158,80 +119,6 @@ CPU_ComputeFlux(const real FC_Var[][6][NCOMP_TOTAL],
 #endif
 		}		// i,j,k
     }				// for (int d=0; d<3; d++)
-/*
-#ifdef CHECK_NEGATIVE_IN_FLUID
-    const int dID1[3] = { 1, NFlux, NFlux * NFlux };
-//         const int  dID1[3]   = { 1, N_FL_FLUX, N_FL_FLUX*N_FL_FLUX };
-
-    for (int d = 0; d < 3; d++) {
-	dL = 2 * d;
-	dR = dL + 1;
-
-	switch (d) {
-	case 0:
-	    start2[0] = 0;
-	    start2[1] = Gap;
-	    start2[2] = Gap;
-	    end1[0] = N_FC_VAR - 1;
-	    end1[1] = N_FC_VAR - 2 * Gap;
-	    end1[2] = N_FC_VAR - 2 * Gap;
-	    break;
-
-	case 1:
-	    start2[0] = Gap;
-	    start2[1] = 0;
-	    start2[2] = Gap;
-	    end1[0] = N_FC_VAR - 2 * Gap;
-	    end1[1] = N_FC_VAR - 1;
-	    end1[2] = N_FC_VAR - 2 * Gap;
-	    break;
-
-	case 2:
-	    start2[0] = Gap;
-	    start2[1] = Gap;
-	    start2[2] = 0;
-	    end1[0] = N_FC_VAR - 2 * Gap;
-	    end1[1] = N_FC_VAR - 2 * Gap;
-	    end1[2] = N_FC_VAR - 1;
-	    break;
-	}
-
-	for (int k1 = 0, k2 = start2[2]; k1 < end1[2]; k1++, k2++)
-	    for (int j1 = 0, j2 = start2[1]; j1 < end1[1]; j1++, j2++)
-		for (int i1 = 0, i2 = start2[0]; i1 < end1[0]; i1++, i2++) {
-		    ID1 = (k1 * NFlux + j1) * NFlux + i1; // index of flux
-		    ID2 = (k2 * N_FC_VAR + j2) * N_FC_VAR + i2; // index of face-centered variables
-
-		    if (ID1 == 4027) {
-			for (int v = 0; v < NCOMP_TOTAL; v++) {
-			    switch (v) {
-			    case 0:
-				Aux_Message(stderr, "\nFC_Flux1[%5d][%1d][DENS] = %e\n", ID1 + dID1[d], d, FC_Flux[ID1 + dID1[d]][d][v]);
-				Aux_Message(stderr, "FC_Flux2[%5d][%1d][DENS] = %e\n", ID1, d, FC_Flux[ID1][d][v]);
-				break;
-			    case 1:
-				Aux_Message(stderr, "FC_Flux1[%5d][%1d][MOMX] = %e\n", ID1 + dID1[d], d, FC_Flux[ID1 + dID1[d]][d][v]);
-				Aux_Message(stderr, "FC_Flux2[%5d][%1d][MOMX] = %e\n", ID1, d, FC_Flux[ID1][d][v]);
-				break;
-			    case 2:
-				Aux_Message(stderr, "FC_Flux1[%5d][%1d][MOMY] = %e\n", ID1 + dID1[d], d, FC_Flux[ID1 + dID1[d]][d][v]);
-				Aux_Message(stderr, "FC_Flux2[%5d][%1d][MOMY] = %e\n", ID1, d, FC_Flux[ID1][d][v]);
-				break;
-			    case 3:
-				Aux_Message(stderr, "FC_Flux1[%5d][%1d][MOMZ] = %e\n", ID1 + dID1[d], d, FC_Flux[ID1 + dID1[d]][d][v]);
-				Aux_Message(stderr, "FC_Flux2[%5d][%1d][MOMZ] = %e\n", ID1, d, FC_Flux[ID1][d][v]);
-				break;
-			    case 4:
-				Aux_Message(stderr, "FC_Flux1[%5d][%1d][ENGY] = %e\n", ID1 + dID1[d], d, FC_Flux[ID1 + dID1[d]][d][v]);
-				Aux_Message(stderr, "FC_Flux2[%5d][%1d][ENGY] = %e\n", ID1, d, FC_Flux[ID1][d][v]);
-				break;
-			    }
-			}
-		    }
-		}
-    }
-#endif
-*/
 
 }				// FUNCTION : CPU_ComputeFlux
 

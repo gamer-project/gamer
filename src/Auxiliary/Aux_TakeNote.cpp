@@ -432,6 +432,13 @@ void Aux_TakeNote()
       fprintf( Note, "CHECK_NEGATIVE_IN_FLUID         OFF\n" );
 #     endif
 
+#     ifdef MODIFY_ENGY
+      fprintf( Note, "MODIFY_ENGY                     ON\n" );
+#     else
+      fprintf( Note, "MODIFY_ENGY                    OFF\n" );
+#     endif
+
+
 #     ifdef CHAR_RECONSTRUCTION
       fprintf( Note, "CHAR_RECONSTRUCTION             ON\n" );
 #     else
@@ -793,7 +800,7 @@ void Aux_TakeNote()
 #     elif ( MODEL == SR_HYDRO )
       fprintf( Note, "OPT__FLAG_LOHNER_ENGY           %d\n",      OPT__FLAG_LOHNER_ENGY     );
       fprintf( Note, "OPT__FLAG_LOHNER_PRES           %d\n",      OPT__FLAG_LOHNER_PRES     );
-      fprintf( Note, "OPT__FLAG_LOHNER_4VEL           %d\n",      OPT__FLAG_LOHNER_4VEL     );
+      fprintf( Note, "OPT__FLAG_LOHNER_REST           %d\n",      OPT__FLAG_LOHNER_REST     );
       fprintf( Note, "OPT__FLAG_LOHNER_TEMP           %d\n",      OPT__FLAG_LOHNER_TEMP     );
 #     endif
       fprintf( Note, "OPT__FLAG_LOHNER_FORM           %s\n",      (OPT__FLAG_LOHNER_FORM==LOHNER_FLASH1   ) ? "LOHNER_FLASH1"    :
@@ -1330,7 +1337,7 @@ void Aux_TakeNote()
       if ( OPT__FLAG_LOHNER_DENS 
         || OPT__FLAG_LOHNER_ENGY 
         || OPT__FLAG_LOHNER_PRES 
-        || OPT__FLAG_LOHNER_4VEL
+        || OPT__FLAG_LOHNER_REST
         || OPT__FLAG_LOHNER_TEMP )
 #     elif ( MODEL == ELBDM )
       if ( OPT__FLAG_LOHNER_DENS )

@@ -137,7 +137,7 @@ void Aux_Check_Parameter()
         || OPT__FLAG_LOHNER_ENGY 
         || OPT__FLAG_LOHNER_PRES 
         || OPT__FLAG_LOHNER_TEMP 
-        || OPT__FLAG_LOHNER_4VEL)
+        || OPT__FLAG_LOHNER_REST)
          &&  Flu_ParaBuf < 2  )
       Aux_Error( ERROR_INFO, "Lohner error estimator does NOT work when Flu_ParaBuf (%d) < 2 !!\n", Flu_ParaBuf );
 #  else
@@ -294,6 +294,7 @@ void Aux_Check_Parameter()
       Aux_Message( stderr, "WARNING : currently the check \"%s\" only works with \"%s\" !!\n",
                    "OPT__CK_REFINE", "OPT__FLAG_RHO == 1" );
 
+// common refine flag for all model
    bool Flag = ( OPT__FLAG_RHO  ||  OPT__FLAG_RHO_GRADIENT  ||  OPT__FLAG_LOHNER_DENS  ||  OPT__FLAG_USER );
 #  if ( MODEL == HYDRO )
    Flag |= OPT__FLAG_PRES_GRADIENT;
@@ -309,7 +310,7 @@ void Aux_Check_Parameter()
    Flag |= OPT__FLAG_JEANS;
    Flag |= OPT__FLAG_LOHNER_ENGY;
    Flag |= OPT__FLAG_LOHNER_PRES;
-   Flag |= OPT__FLAG_LOHNER_4VEL;
+   Flag |= OPT__FLAG_LOHNER_REST;
    Flag |= OPT__FLAG_LOHNER_TEMP;
 #  endif
 #  if ( MODEL == ELBDM )

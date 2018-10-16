@@ -23,8 +23,8 @@ void ELBDM_GetPhase_DebugOnly( real *CData, const int CSize );
 //
 // Parameter   : [1] lv        : Target refinement level to be refined
 //               [2] UseLBFunc : Invoke the load-balance alternative functions for the grid refinement
-//                            --> USELB_YES : use the load-balance alternative functions
-//                                USELB_NO  : do not use the load-balance alternative functions
+//                               --> USELB_YES : use the load-balance alternative functions
+//                                   USELB_NO  : do not use the load-balance alternative functions
 //-------------------------------------------------------------------------------------------------------
 void Refine( const int lv, const UseLBFunc_t UseLBFunc )
 {
@@ -523,34 +523,15 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
 
 #        if ( MODEL == SR_HYDRO )
 #        ifdef CHECK_NEGATIVE_IN_FLUID
-            for (int k=0; k<FSize; k++)
-            for (int j=0; j<FSize; j++)
-            for (int i=0; i<FSize; i++)
-            {
-		if ( CPU_CheckNegative(Flu_FData[DENS][k][j][i])
-		  ||     !Aux_IsFinite(Flu_FData[MOMX][k][j][i])
-		  ||     !Aux_IsFinite(Flu_FData[MOMY][k][j][i])
-		  ||     !Aux_IsFinite(Flu_FData[MOMZ][k][j][i])
-		  || CPU_CheckNegative(Flu_FData[ENGY][k][j][i]))
-		 {
-		   Aux_Message (stderr, "\n\nWANNING:\nfile: %s\nfunction: %s\n", __FILE__, __FUNCTION__);
-		   Aux_Message (stderr, "line:%d\nD=%e, Mx=%e, My=%e, Mz=%e, E=%e\n", __LINE__
-				, Flu_FData[DENS][k][j][i], Flu_FData[MOMX][k][j][i], Flu_FData[MOMY][k][j][i]
-				, Flu_FData[MOMZ][k][j][i], Flu_FData[ENGY][k][j][i]);
-		 }
+	 real Con[NCOMP_FLUID];
 
-		real M = SQRT (SQR (Flu_FData[MOMX][k][j][i]) + SQR (Flu_FData[MOMY][k][j][i]) + SQR (Flu_FData[MOMZ][k][j][i]));
-
-		if ( Flu_FData[ENGY][k][j][i] <= M )
-		  {
-		    Aux_Message (stderr, "\n\nWARNING: |M| > E!\n");
-		    Aux_Message (stderr, "file: %s\nfunction: %s\n", __FILE__, __FUNCTION__);
-		    Aux_Message (stderr, "line:%d\nD=%e, Mx=%e, My=%e, Mz=%e, E=%e\n", __LINE__
-				, Flu_FData[DENS][k][j][i], Flu_FData[MOMX][k][j][i], Flu_FData[MOMY][k][j][i]
-				, Flu_FData[MOMZ][k][j][i], Flu_FData[ENGY][k][j][i]);
-		    Aux_Message (stderr, "|M|=%e, E=%e, |M|-E=%e\n\n", M, Flu_FData[ENGY][k][j][i], M - Flu_FData[ENGY][k][j][i]);
-		  }
-           }
+	 for (int k=0; k<FSize; k++)
+	 for (int j=0; j<FSize; j++)
+	 for (int i=0; i<FSize; i++)
+	 {
+	   for (int v = 0 ; v < NCOMP_FLUID;v++) Con[v] = Flu_FData[v][k][j][i];
+	   if(CPU_CheckUnphysical(Con, NULL)) Aux_Message(stderr,"\nUnphysical varibles!\nfunction: %s: %d\n", __FUNCTION__, __LINE__);
+         }
 #        endif
 #        endif
 

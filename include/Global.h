@@ -123,7 +123,7 @@ extern WAF_Limiter_t    OPT__WAF_LIMITER;
 extern Opt1stFluxCorr_t OPT__1ST_FLUX_CORR;
 extern OptRSolver1st_t  OPT__1ST_FLUX_CORR_SCHEME;
 extern bool             OPT__FLAG_PRES_GRADIENT, OPT__FLAG_LOHNER_ENGY, OPT__FLAG_LOHNER_PRES, OPT__FLAG_LOHNER_TEMP;
-extern bool             OPT__FLAG_VORTICITY, OPT__FLAG_JEANS, JEANS_MIN_PRES, OPT__FLAG_LOHNER_4VEL;
+extern bool             OPT__FLAG_VORTICITY, OPT__FLAG_JEANS, JEANS_MIN_PRES, OPT__FLAG_LOHNER_REST;
 extern int              OPT__CK_NEGATIVE, JEANS_MIN_PRES_LEVEL, JEANS_MIN_PRES_NCELL;
 extern double           MIN_DENS, MIN_PRES, EPSILON;
 #ifdef DUAL_ENERGY
@@ -190,7 +190,7 @@ extern ParOutputDens_t OPT__OUTPUT_PAR_DENS;
 #endif
 
 
-// (2-6) yt inline analysis
+// (2-7) yt inline analysis
 // ============================================================================================================
 #ifdef SUPPORT_LIBYT
 extern char            YT_SCRIPT[MAX_STRING];
@@ -198,7 +198,7 @@ extern yt_verbose      YT_VERBOSE;
 #endif
 
 
-// (2-7) Grackle
+// (2-8) Grackle
 // ============================================================================================================
 #ifdef SUPPORT_GRACKLE
 extern bool            GRACKLE_ACTIVATE;
@@ -215,7 +215,7 @@ extern int             CHE_GPU_NPGROUP;
 #endif
 
 
-// (2-8) star formation
+// (2-9) star formation
 // ============================================================================================================
 #ifdef STAR_FORMATION
 extern SF_CreateStarScheme_t SF_CREATE_STAR_SCHEME;

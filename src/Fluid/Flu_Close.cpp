@@ -27,7 +27,10 @@ extern void CPU_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L
                                     const real Gamma, const real MinPres );
 extern void CPU_RiemannSolver_HLLE( const int XYZ, real Flux_Out[], const real L_In[], const real R_In[],
                                     const real Gamma, const real MinPres );
-
+#if ( MODEL == SR_HYDRO)
+void CPU_4Velto3Vel (const real In[], real Out[]);
+void CPU_Con2Pri (const real In[], real Out[], const real Gamma);
+#endif
 
 
 
@@ -38,15 +41,15 @@ extern void CPU_RiemannSolver_HLLE( const int XYZ, real Flux_Out[], const real L
 //                3. Copy the data from the "h_Flu_Array_F_Out" and "h_DE_Array_F_Out" arrays to the "amr->patch" pointers
 //                4. Get the minimum time-step information of the fluid solver
 //
-// Parameter   :  lv                : Target refinement level
-//                SaveSg            : Sandglass to store the updated data
-//                h_Flux_Array      : Host array storing the updated flux data
-//                h_Flu_Array_F_Out : Host array storing the updated fluid data
-//                h_DE_Array_F_Out  : Host array storing the dual-energy status
-//                NPG               : Number of patch groups to be evaluated
-//                PID0_List         : List recording the patch indicies with LocalID==0 to be udpated
-//                h_Flu_Array_F_In  : Host array storing the un-updated fluid data
-//                dt                : Evolution time-step
+// Parameter   :  [1] lv                : Target refinement level
+//                [2] SaveSg            : Sandglass to store the updated data
+//                [3] h_Flux_Array      : Host array storing the updated flux data
+//                [4] h_Flu_Array_F_Out : Host array storing the updated fluid data
+//                [5] h_DE_Array_F_Out  : Host array storing the dual-energy status
+//                [6] NPG               : Number of patch groups to be evaluated
+//                [7] PID0_List         : List recording the patch indicies with LocalID==0 to be udpated
+//                [8] h_Flu_Array_F_In  : Host array storing the un-updated fluid data
+//                [9] dt                : Evolution time-step
 //-------------------------------------------------------------------------------------------------------
 void Flu_Close( const int lv, const int SaveSg, real h_Flux_Array[][9][NFLUX_TOTAL][4*PATCH_SIZE*PATCH_SIZE],
                 real h_Flu_Array_F_Out[][FLU_NOUT][8*PATCH_SIZE*PATCH_SIZE*PATCH_SIZE],
@@ -311,25 +314,20 @@ bool Unphysical( const real Fluid[], const real Gamma_m1, const int CheckMinEngy
 // --> otherwise LHS in the comparison will be converted from real to double, which is inconsistent with the assignment
 //     (e.g., "Update[DENS] = CheckMinDens( Update[DENS], (real)MIN_DENS" )
 
+#  if ( MODEL != SR_HYDRO )
 // 0. check NaN, +inf and -inf
    if (  !Aux_IsFinite(Fluid[DENS])  
      ||  !Aux_IsFinite(Fluid[MOMX])  
      ||  !Aux_IsFinite(Fluid[MOMY])  
      ||  !Aux_IsFinite(Fluid[MOMZ])  
-     ||  !Aux_IsFinite(Fluid[ENGY]) ) return true;
+     ||  !Aux_IsFinite(Fluid[ENGY]) ) return true; 
 
 // 1. check density
    if ( Fluid[DENS] < (real)MIN_DENS ) return true;
 
 // 2. check energy
-#  if ( MODEL != SR_HYDRO )
    if ( CheckMinEngyOrPres == CheckMinEngy  &&  Fluid[ENGY] < (real)MIN_PRES )
-#  elif ( MODEL == SR_HYDRO )
-   real M = SQRT(SQR(Fluid[MOMX])+SQR(Fluid[MOMY])+SQR(Fluid[MOMZ]));
-
-   if ( CheckMinEngyOrPres == CheckMinEngy && Fluid[ENGY] <= M )
-      return true;
-#  endif
+   return true;
 
 // 3. check pressure
    if ( CheckMinEngyOrPres == CheckMinPres  &&
@@ -351,6 +349,55 @@ bool Unphysical( const real Fluid[], const real Gamma_m1, const int CheckMinEngy
       )
       return true;
 
+// the following checks are for SR_HYDRO
+// =================================================
+#  elif ( MODEL == SR_HYDRO )
+
+// A. ==== check conserved variables =====
+// A1. check NaN, +inf, -inf
+   if (  !Aux_IsFinite(Fluid[DENS])  
+     ||  !Aux_IsFinite(Fluid[MOMX])  
+     ||  !Aux_IsFinite(Fluid[MOMY])  
+     ||  !Aux_IsFinite(Fluid[MOMZ])  
+     ||  !Aux_IsFinite(Fluid[ENGY]) )          return true;
+// A1. check positivity of proper rest mass density
+   if ( Fluid[DENS] < (real)MIN_DENS )         return true;
+
+
+// A2. check total energy vs. inner product of 4-momentum
+   if ( CheckMinEngyOrPres == CheckMinEngy &&
+          SQR(Fluid[ENGY])  < SQR(Fluid[MOMX]) 
+                            + SQR(Fluid[MOMY]) 
+                            + SQR(Fluid[MOMZ]) 
+                            + SQR(Fluid[DENS])) return true;
+
+   real Pri4Vel[NCOMP_FLUID];
+   real Pri3Vel[NCOMP_FLUID];
+
+   CPU_Con2Pri (Fluid, Pri4Vel, (real)GAMMA);
+   CPU_4Velto3Vel (Pri4Vel, Pri3Vel);
+
+// B. ==== check primitive variables ====
+// B1. NaN, +inf or -inf
+   if (  !Aux_IsFinite(Pri4Vel[0])  
+     ||  !Aux_IsFinite(Pri4Vel[1])  
+     ||  !Aux_IsFinite(Pri4Vel[2])  
+     ||  !Aux_IsFinite(Pri4Vel[3])  
+     ||  !Aux_IsFinite(Pri4Vel[4]) )            return true;
+
+// B2. check positivity of number density in inertial frame
+   if ( Pri4Vel[DENS] < (real)MIN_DENS )        return true;
+
+// B3. check positivity of pressure
+   if ( CheckMinEngyOrPres == CheckMinPres &&
+                Pri4Vel[4]  < (real) MIN_PRES )      return true;
+
+
+// B4. check whether 3-velocity is greater than or equal to speed of light
+   if (SQR(Pri3Vel[1]) + SQR(Pri3Vel[2]) + SQR(Pri3Vel[3]) >= 1.0) return true;
+
+
+#  endif
 
 // if all checks above pass, return false
 // =================================================
@@ -420,7 +467,7 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
 
 // variables private to each OpenMP thread
    real VarL[3][NCOMP_TOTAL], VarC[NCOMP_TOTAL], VarR[3][NCOMP_TOTAL], FluxL[3][NCOMP_TOTAL], FluxR[3][NCOMP_TOTAL];
-   real dF[3][NCOMP_TOTAL], Out[NCOMP_TOTAL], Update[NCOMP_TOTAL];
+   real dF[3][NCOMP_TOTAL], Out[NCOMP_TOTAL], Update[NCOMP_TOTAL], Update1[NCOMP_TOTAL], Update2[NCOMP_TOTAL];
    real FluxL_1D[NCOMP_TOTAL], FluxR_1D[NCOMP_TOTAL];
    int  ijk_out[3];
 
@@ -459,7 +506,7 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
 //       check if the updated values are unphysical
          for (int v=0; v<NCOMP_TOTAL; v++)   Out[v] = h_Flu_Array_F_Out[TID][v][idx_out];
 #        if ( MODEL == SR_HYDRO  )
-         if ( Unphysical(Out, Gamma_m1, CheckMinEngy) )
+         if (  Unphysical(Out, Gamma_m1, CheckMinEngy) || Unphysical(Out, Gamma_m1, CheckMinPres) )
 #        else
          if ( Unphysical(Out, Gamma_m1, CheckMinPres) )
 #        endif
@@ -547,7 +594,7 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
 #              endif
 
 #              if ( MODEL == SR_HYDRO )
-               if ( Unphysical(Update, Gamma_m1, CheckMinEngy) )
+               if ( Unphysical(Update, Gamma_m1, CheckMinEngy) || Unphysical(Out, Gamma_m1, CheckMinPres) )
 #              else
                if ( Unphysical(Update, Gamma_m1, CheckMinPres) )
 #              endif
@@ -639,7 +686,24 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
 //              --> to be consistent with the check in Unphysical()
 //          --> do NOT check the minimum pressure here since we want to apply the dual-energy correction first
 #           ifndef CHECK_NEGATIVE_IN_FLUID
-            if ( !AUTO_REDUCE_DT )  Update[DENS] = CPU_CheckMinDens( Update[DENS], (real)MIN_DENS );
+#           if ( MODEL != SR_HYDRO )
+            if ( !AUTO_REDUCE_DT )
+               Update[DENS] = CPU_CheckMinDens( Update[DENS], (real)MIN_DENS );
+#           elif ( MODEL == SR_HYDRO )
+
+            if ( !AUTO_REDUCE_DT ){
+#           ifdef MODIFY_ENGY
+               Update1[DENS] = CPU_CheckMinDens( Update[DENS], (real)MIN_DENS );
+#           else
+               Update1[DENS] = Update[DENS];
+#           endif
+               Update1[MOMX] = Update[MOMX];
+               Update1[MOMY] = Update[MOMY];
+               Update1[MOMZ] = Update[MOMZ];
+               Update1[ENGY] = Update[ENGY];
+             }
+
+#           endif
 #           endif
 
 
@@ -670,36 +734,25 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
 //              --> otherwise AUTO_REDUCE_DT may not be triggered due to this pressure floor
 #           else
 
+            if ( !AUTO_REDUCE_DT ){
 #           if ( MODEL == SR_HYDRO )
-#           ifdef CHECK_NEGATIVE_IN_FLUID
-	    if ( CPU_CheckNegative(Update[DENS])
-	      ||     !Aux_IsFinite(Update[MOMX])
-	      ||     !Aux_IsFinite(Update[MOMY])
-	      ||     !Aux_IsFinite(Update[MOMZ])
-	      || CPU_CheckNegative(Update[ENGY]))
-	      {
-		 Aux_Message (stderr, "\n\nWARNING:\nfile: %s\nfunction: %s\n", __FILE__, __FUNCTION__);
-		 Aux_Message (stderr, "line:%d\nD=%e, Mx=%e, My=%e, Mz=%e, E=%e\n", __LINE__
-			  , Update[DENS], Update[MOMX], Update[MOMY], Update[MOMZ], Update[ENGY]);
-	      }
-		real M = SQRT (SQR (Update[MOMX]) + SQR (Update[MOMY]) + SQR (Update[MOMZ]));
 
-	    if ( Update[ENGY] <= M )
-	      {
-		Aux_Message (stderr, "\n\nWARNING: |M| > E!\n");
-		Aux_Message (stderr, "file: %s\nfunction: %s\n", __FILE__, __FUNCTION__);
-		Aux_Message (stderr, "line:%d\nD=%e, Mx=%e, My=%e, Mz=%e, E=%e\n", __LINE__
-			, Update[DENS], Update[MOMX], Update[MOMY], Update[MOMZ], Update[ENGY]);
-		Aux_Message (stderr, "|M|=%e, E=%e, |M|-E=%e\n\n", M, Update[ENGY], M - Update[ENGY]);
-	      }
-#           endif
+	    Update2[DENS] = Update1[DENS];
+	    Update2[MOMX] = Update1[MOMX];
+	    Update2[MOMY] = Update1[MOMY];
+	    Update2[MOMZ] = Update1[MOMZ];
+#           ifdef MODIFY_ENGY
+            Update2[ENGY] = CPU_ModifyEngy (Update1[DENS], Update1[MOMX], Update1[MOMY], Update1[MOMZ], Update1[ENGY]);
 #           else
-            if ( !AUTO_REDUCE_DT )
+            Update2[ENGY] = Update1[ENGY];
+#           endif
+
+#           else
             Update[ENGY] = CPU_CheckMinPresInEngy( Update[DENS], Update[MOMX], Update[MOMY], Update[MOMZ], Update[ENGY],
                                                    Gamma_m1, _Gamma_m1, MIN_PRES );
 #           endif // if ( MODEL == SR_HYDRO )
+            } // if ( !AUTO_REDUCE_DT )
 #           endif // ifdef DUAL_ENERGY
-
 
 //          check if the newly updated values are still unphysical
 //          --> note that, when AUTO_REDUCE_DT is disabled, we check **energy** instead of pressure since even after
@@ -708,7 +761,7 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
 //              --> it will not crash the code since we always apply MIN_PRES when calculating pressure
 //          --> when AUTO_REDUCE_DT is enabled, we still check **pressure** instead of energy
 #           if ( MODEL == SR_HYDRO )
-            if ( Unphysical(Update, Gamma_m1, CheckMinEngy) )
+            if ( Unphysical(Update2, Gamma_m1, CheckMinEngy) || Unphysical(Update2, Gamma_m1, CheckMinPres) )
 #           else
             if ( Unphysical(Update, Gamma_m1, (AUTO_REDUCE_DT)?CheckMinPres:CheckMinEngy) )
 #           endif
@@ -735,7 +788,7 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
                   for (int v=0; v<NCOMP_TOTAL; v++)   In[v] = h_Flu_Array_F_In[TID][v][idx_in];
 
 //                output information about the failed cell
-                  fprintf( File, "PID                              = %5d\n", PID_Failed );
+                  fprintf( File, "PID                                            = %5d\n", PID_Failed );
                   fprintf( File, "failed cell's (i,j,k) in the patch             = (%2d,%2d,%2d)\n", ijk_out[0]%PS1, ijk_out[1]%PS1, ijk_out[2]%PS1 );
                   fprintf( File, "failed cell's (i,j,k) in the input fluid array = (%2d,%2d,%2d)\n", ijk_out[0], ijk_out[1], ijk_out[2] );
 #                 ifdef DUAL_ENERGY
@@ -746,9 +799,36 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
                                                                                           "Unknown" );
 #                 endif
                   fprintf( File, "\n" );
+#                 if ( MODEL == SR_HYDRO )
+                  fprintf( File, "\n\n====================== input ======================\n");
+                  fprintf( File, "<input conserved variables>:\n");
+                  fprintf( File, "%14s, %14s, %14s, %14s, %14s, %14s\n",
+                                 "Dens", "MomX", "MomY", "MomZ", "Engy", "E^2-|M|^2-D^2" );
 
+                  fprintf( File, "%14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e\n",
+                           In[DENS], In[MOMX], In[MOMY], In[MOMZ], In[ENGY],
+                           SQR(In[ENGY]) - SQR(In[MOMX]) - SQR(In[MOMY]) - SQR(In[MOMZ]) - SQR(In[DENS]) );
+
+                  fprintf( File, "\n<input primitive variables>:\n");
+                  fprintf( File, "%14s, %14s, %14s, %14s, %14s\n", "RestMassDens", "Ux",  "Uy", "Uz", "Pres");
+
+                  real Pri4Vel[NCOMP_FLUID];
+                  real Pri3Vel[NCOMP_FLUID];
+
+                  CPU_Con2Pri( In, Pri4Vel, (real) GAMMA);
+                  CPU_4Velto3Vel( Pri4Vel, Pri3Vel );
+
+                  real Usqr = SQR(Pri4Vel[1])+SQR(Pri4Vel[2])+SQR(Pri4Vel[3]);
+
+                  fprintf( File, "%14.7e, %14.7e, %14.7e, %14.7e, %14.7e\n",
+                           Pri4Vel[0], Pri4Vel[1],Pri4Vel[2],Pri4Vel[3],Pri4Vel[4]);
+                  fprintf( File, "%14s, %14s, %14s, %14s\n", "Vx", "Vy", "Vz", " |V|");
+                  fprintf( File, "%14.7e, %14.7e, %14.7e, %14.7e",
+                           Pri3Vel[1],Pri3Vel[2],Pri3Vel[3], Usqr / ((real)1.0 + Usqr));
+#                 else
                   fprintf( File, "               (%14s, %14s, %14s, %14s, %14s, %14s",
                            FieldLabel[DENS], FieldLabel[MOMX], FieldLabel[MOMY], FieldLabel[MOMZ], FieldLabel[ENGY], "Pressure" );
+
 #                 if ( DUAL_ENERGY == DE_ENPY )
                   fprintf( File, ", %14s", FieldLabel[ENPY] );
 #                 endif
@@ -758,20 +838,122 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
                            In[DENS], In[MOMX], In[MOMY], In[MOMZ], In[ENGY],
                            CPU_GetPressure(In[DENS], In[MOMX], In[MOMY], In[MOMZ], In[ENGY],
                                            Gamma_m1, CheckMinPres_No, NULL_REAL) );
+
 #                 if ( DUAL_ENERGY == DE_ENPY )
                   fprintf( File, ", %14.7e", In[ENPY] );
 #                 endif
                   fprintf( File, ")\n" );
+#                 endif
 
+//                print data after update, but before correction
+#                 if ( MODEL == SR_HYDRO )
+                  fprintf( File, "\n\n\n===================== output =======================\n");
+                  fprintf( File, "<output conserved variables>:\n");
+                  fprintf( File, "%14s, %14s, %14s, %14s, %14s", "Dens", "MomX", "MomY", "MomZ", "Engy" );
+                  fprintf( File, ", %14s\n", "E^2-|M|^2-D^2" );
+
+                  fprintf( File, "%14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e",
+                           Out[DENS], Out[MOMX], Out[MOMY], Out[MOMZ], Out[ENGY],
+                           SQR(Out[ENGY]) - SQR(Out[MOMX]) - SQR(Out[MOMY]) - SQR(Out[MOMZ]) - SQR(Out[DENS]) );
+
+
+                  CPU_Con2Pri( Out, Pri4Vel, (real) GAMMA );
+                  CPU_4Velto3Vel( Pri4Vel, Pri3Vel );
+
+                  Usqr = SQR(Pri4Vel[1])+SQR(Pri4Vel[2])+SQR(Pri4Vel[3]);
+
+                  fprintf( File, "\n\n<output primitive variables>:\n");
+                  fprintf( File, "%14s, %14s, %14s, %14s, %14s\n", "RestMassDens", "Ux",  "Uy", "Uz", "Pres");
+                  fprintf( File, "%14.7e, %14.7e, %14.7e, %14.7e, %14.7e\n",
+                           Pri4Vel[0], Pri4Vel[1],Pri4Vel[2],Pri4Vel[3],Pri4Vel[4]);
+                  fprintf( File, "%14s, %14s, %14s, %14s\n", "Vx", "Vy", "Vz", "|V|");
+                  fprintf( File, "%14.7e, %14.7e, %14.7e, %14.7e",
+                           Pri3Vel[1],Pri3Vel[2],Pri3Vel[3], Usqr / ((real)1.0 + Usqr));
+#                 else
                   fprintf( File, "ouptut (old) = (%14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e",
                            Out[DENS], Out[MOMX], Out[MOMY], Out[MOMZ], Out[ENGY],
                            CPU_GetPressure(Out[DENS], Out[MOMX], Out[MOMY], Out[MOMZ], Out[ENGY],
                                            Gamma_m1, CheckMinPres_No, NULL_REAL) );
+
 #                 if ( DUAL_ENERGY == DE_ENPY )
                   fprintf( File, ", %14.7e", Out[ENPY] );
 #                 endif
                   fprintf( File, ")\n" );
+#                 endif
 
+//                print data after correction
+#                 if ( MODEL == SR_HYDRO )
+                  if ( OPT__1ST_FLUX_CORR != FIRST_FLUX_CORR_NONE )
+                   {
+		      fprintf( File, "\n\n\n============ 1st-order flux correction ============\n");
+		      fprintf( File, "<conserved variables>:\n");
+		      fprintf( File, "%14s, %14s, %14s, %14s, %14s", "Dens", "MomX", "MomY", "MomZ", "Engy" );
+		      fprintf( File, ", %14s\n", "E^2-|M|^2-D^2" );
+
+		      fprintf( File, "%14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e",
+			       Update[DENS], Update[MOMX], Update[MOMY], Update[MOMZ], Update[ENGY],
+			       SQR(Update[ENGY]) - SQR(Update[MOMX]) - SQR(Update[MOMY]) - SQR(Update[MOMZ]) - SQR(Update[DENS]) );
+
+
+		      CPU_Con2Pri( Update, Pri4Vel, (real) GAMMA );
+		      CPU_4Velto3Vel( Pri4Vel, Pri3Vel );
+
+		      Usqr = SQR(Pri4Vel[1])+SQR(Pri4Vel[2])+SQR(Pri4Vel[3]);
+
+		      fprintf( File, "\n\n<primitive variables>:\n");
+		      fprintf( File, "%14s, %14s, %14s, %14s, %14s\n", "RestMassDens", "Ux",  "Uy", "Uz", "Pres");
+		      fprintf( File, "%14.7e, %14.7e, %14.7e, %14.7e, %14.7e",
+			       Pri4Vel[0], Pri4Vel[1],Pri4Vel[2],Pri4Vel[3],Pri4Vel[4]);
+		      fprintf( File, "\n%14s, %14s, %14s, %14s\n", "Vx", "Vy", "Vz", "|V|");
+		      fprintf( File, "%14.7e, %14.7e, %14.7e, %14.7e",
+			       Pri3Vel[1],Pri3Vel[2],Pri3Vel[3], Usqr / ((real)1.0 + Usqr));
+                   } // if ( OPT__1ST_FLUX_CORR == FIRST_FLUX_CORR_NONE )
+
+                  fprintf( File, "\n\n\n=============== After CheckMinDens =================\n");
+                  fprintf( File, "<conserved variables>:\n");
+                  fprintf( File, "%14s, %14s, %14s, %14s, %14s", "Dens", "MomX", "MomY", "MomZ", "Engy" );
+                  fprintf( File, ", %14s\n", "E^2-|M|^2-D^2" );
+
+                  fprintf( File, "%14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e",
+                           Update1[DENS], Update1[MOMX], Update1[MOMY], Update1[MOMZ], Update1[ENGY],
+                           SQR(Update1[ENGY]) - SQR(Update1[MOMX]) - SQR(Update1[MOMY]) - SQR(Update1[MOMZ]) - SQR(Update1[DENS]) );
+
+
+                  CPU_Con2Pri( Update1, Pri4Vel, (real) GAMMA );
+                  CPU_4Velto3Vel( Pri4Vel, Pri3Vel );
+
+                  Usqr = SQR(Pri4Vel[1])+SQR(Pri4Vel[2])+SQR(Pri4Vel[3]);
+
+                  fprintf( File, "\n\nprimitive variables:\n");
+                  fprintf( File, "%14s, %14s, %14s, %14s, %14s\n", "RestMassDens", "Ux",  "Uy", "Uz", "Pres");
+                  fprintf( File, "%14.7e, %14.7e, %14.7e, %14.7e, %14.7e\n",
+                           Pri4Vel[0], Pri4Vel[1],Pri4Vel[2],Pri4Vel[3],Pri4Vel[4]);
+                  fprintf( File, "%14s, %14s, %14s, %14s\n", "Vx", "Vy", "Vz", "|V|");
+                  fprintf( File, "%14.7e, %14.7e, %14.7e, %14.7e",
+                           Pri3Vel[1],Pri3Vel[2],Pri3Vel[3], Usqr / ((real)1.0 + Usqr));
+                  fprintf( File, "\n\n\n================ After CheckMinEngy ===============\n");
+                  fprintf( File, "conserved variables:\n");
+                  fprintf( File, "%14s, %14s, %14s, %14s, %14s", "Dens", "MomX", "MomY", "MomZ", "Engy" );
+                  fprintf( File, ", %14s\n", "E^2-|M|^2-D^2" );
+
+                  fprintf( File, "%14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e",
+                           Update2[DENS], Update2[MOMX], Update2[MOMY], Update2[MOMZ], Update2[ENGY],
+                           SQR(Update2[ENGY]) - SQR(Update2[MOMX]) - SQR(Update2[MOMY]) - SQR(Update2[MOMZ]) - SQR(Update2[DENS]) );
+
+
+                  CPU_Con2Pri( Update2, Pri4Vel, (real) GAMMA );
+                  CPU_4Velto3Vel( Pri4Vel, Pri3Vel );
+
+                  Usqr = SQR(Pri4Vel[1])+SQR(Pri4Vel[2])+SQR(Pri4Vel[3]);
+
+                  fprintf( File, "\n\nprimitive variables:\n");
+                  fprintf( File, "%14s, %14s, %14s, %14s, %14s\n", "RestMassDens", "Ux",  "Uy", "Uz", "Pres");
+                  fprintf( File, "%14.7e, %14.7e, %14.7e, %14.7e, %14.7e\n",
+                           Pri4Vel[0], Pri4Vel[1],Pri4Vel[2],Pri4Vel[3],Pri4Vel[4]);
+                  fprintf( File, "%14s, %14s, %14s, %14s\n", "Vx", "Vy", "Vz", "|V|");
+                  fprintf( File, "%14.7e, %14.7e, %14.7e, %14.7e\n\n",
+                           Pri3Vel[1],Pri3Vel[2],Pri3Vel[3], Usqr / ((real)1.0 + Usqr));
+#                 else
                   fprintf( File, "output (new) = (%14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e",
                            Update[DENS], Update[MOMX], Update[MOMY], Update[MOMZ], Update[ENGY],
                            CPU_GetPressure(Update[DENS], Update[MOMX], Update[MOMY], Update[MOMZ], Update[ENGY],
@@ -780,6 +962,7 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
                   fprintf( File, ", %14.7e", Update[ENPY] );
 #                 endif
                   fprintf( File, ")\n" );
+#                 endif
 
 //                output all data in the input fluid array (including ghost zones)
                   fprintf( File, "\nFull input array including ghost zones\n" );
@@ -787,7 +970,7 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
                   fprintf( File, "(%2s,%2s,%2s)", "i", "j", "k" );
 #                 if ( MODEL == SR_HYDRO )
                   for (int v=0; v<NCOMP_TOTAL; v++)   fprintf( File, "%14s", FieldLabel[v] );
-                  fprintf( File, "%14s", "|M|-E");
+                  fprintf( File, "%14s\n", " E^2-|M|^2-D^2");
 #                 else
                   for (int v=0; v<NCOMP_TOTAL; v++)   fprintf( File, "%14s", FieldLabel[v] );
                   fprintf( File, "%14s", "Pressure" );
@@ -803,22 +986,13 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
                      {
                         tmp[v] = h_Flu_Array_F_In[TID][v][ ((k*FLU_NXT)+j)*FLU_NXT+i ];
                      }
-                     
-			real M = SQRT(SQR(tmp[MOMX])+SQR(tmp[MOMY])+SQR(tmp[MOMZ]));
-/*
-			if ( CPU_CheckNegative(tmp[DENS]) 
-			  ||     !Aux_IsFinite(tmp[MOMX]) 
-			  ||     !Aux_IsFinite(tmp[MOMY]) 
-			  ||     !Aux_IsFinite(tmp[MOMZ]) 
-			  || CPU_CheckNegative(tmp[ENGY])
-			  || M >= tmp[ENGY] ){
-*/
-			     fprintf( File, "(%2d,%2d,%2d)", i-FLU_GHOST_SIZE, j-FLU_GHOST_SIZE, k-FLU_GHOST_SIZE );
 
-			     for (int v=0; v<NCOMP_TOTAL; v++)  fprintf( File, " %13.6e", tmp[v] );
+			fprintf( File, "(%2d,%2d,%2d)", i-FLU_GHOST_SIZE, j-FLU_GHOST_SIZE, k-FLU_GHOST_SIZE );
 
-			     fprintf( File, " %13.6e\n", M-tmp[ENGY]);
- //                          }
+			for (int v=0; v<NCOMP_TOTAL; v++)  fprintf( File, " %13.6e", tmp[v] );
+
+			fprintf( File, " %13.6e\n",
+                            SQR(tmp[ENGY]) - SQR(tmp[MOMX]) - SQR(tmp[MOMY]) - SQR(tmp[MOMZ]) - SQR(tmp[DENS]));
 #                 else
                      fprintf( File, "(%2d,%2d,%2d)", i-FLU_GHOST_SIZE, j-FLU_GHOST_SIZE, k-FLU_GHOST_SIZE );
 
@@ -828,7 +1002,7 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
                         fprintf( File, " %13.6e", tmp[v] );
                      }
 
-                     fprintf( File, " %13.6e\n", CPU_GetPressure(tmp[0], tmp[1], tmp[2], tmp[3], tmp[4],
+                     fprintf( File, " %13.6e\n", CPU_GetPressure(tmp[DENS], tmp[MOMX], tmp[MOMY], tmp[MOMZ], tmp[ENGY],
                                                                  Gamma_m1, CheckMinPres_No, NULL_REAL) );
 #                 endif
                   }
@@ -847,7 +1021,11 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
             else
             {
 //             store the corrected solution
+#              if ( MODEL == SR_HYDRO )
+               for (int v=0; v<NCOMP_TOTAL; v++)   h_Flu_Array_F_Out[TID][v][idx_out] = Update2[v];
+#              else
                for (int v=0; v<NCOMP_TOTAL; v++)   h_Flu_Array_F_Out[TID][v][idx_out] = Update[v];
+#              endif
 
 
 //             replace the original coarse-fine boundary fluxes with the 1st-order fluxes for the flux fix-up

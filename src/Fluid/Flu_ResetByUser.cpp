@@ -145,9 +145,7 @@ void Flu_ResetByUser_API( const int lv, const int FluSg, const double TTime )
 
 //          check minimum density and pressure
 #           if ( MODEL == SR_HYDRO )
-            Aux_Message (stderr, "\nPlease modify here. %s :%d\n", __FUNCTION__, __LINE__);
-            abort();
-            fluid[DENS] = CPU_CheckMinDens( fluid[DENS], (real)MIN_DENS );
+
 #           else
             fluid[DENS] = CPU_CheckMinDens( fluid[DENS], (real)MIN_DENS );
             fluid[ENGY] = CPU_CheckMinPresInEngy( fluid[DENS], fluid[MOMX], fluid[MOMY], fluid[MOMZ], fluid[ENGY],

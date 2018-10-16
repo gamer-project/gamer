@@ -45,13 +45,15 @@ SET_GLOBAL( FieldIdx_t Idx_HDI,           Idx_Undefined );
 SET_GLOBAL( FieldIdx_t Idx_Metal,         Idx_Undefined );
 
 
-#elif ( MODEL == SR_HYDRO )
-SET_GLOBAL( FieldIdx_t Idx_Dens,          Idx_Undefined );
-SET_GLOBAL( FieldIdx_t Idx_MomX,          Idx_Undefined );
-SET_GLOBAL( FieldIdx_t Idx_MomY,          Idx_Undefined );
-SET_GLOBAL( FieldIdx_t Idx_MomZ,          Idx_Undefined );
-SET_GLOBAL( FieldIdx_t Idx_Engy,          Idx_Undefined );
 #elif ( MODEL == ELBDM )
+
+#elif ( MODEL == SR_HYDRO )
+// main fields
+SET_GLOBAL( FieldIdx_t Idx_Dens_Pri,           Idx_Undefined );
+SET_GLOBAL( FieldIdx_t Idx_Ux,                 Idx_Undefined );
+SET_GLOBAL( FieldIdx_t Idx_Uy,                 Idx_Undefined );
+SET_GLOBAL( FieldIdx_t Idx_Uz,                 Idx_Undefined );
+SET_GLOBAL( FieldIdx_t Idx_Pres,               Idx_Undefined );
 
 #else
 #  error : ERROR : unsupported MODEL !!

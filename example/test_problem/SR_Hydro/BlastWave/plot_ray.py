@@ -2,9 +2,11 @@ import argparse
 import sys
 import yt
 import numpy as np
+import matplotlib
+matplotlib.use('Agg')
+from matplotlib import pyplot as plt
 
 ####################  ON-DISK DATA  ###############################
-
 # define primitive density field
 def _density_pri( field, data):
    return data["Dens_Pri"]*ds.mass_unit/ds.length_unit**3
@@ -125,16 +127,17 @@ prefix      = args.prefix
 
 colormap    = 'arbre'
 
-field       = 'pressure'    # to change the target field, one must modify set_unit() accordingly
-#field       = '4-velocity_x'    # to change the target field, one must modify set_unit() accordingly
-#field       = '4-velocity_y'    # to change the target field, one must modify set_unit() accordingly
-#field       = '4-velocity_z'    # to change the target field, one must modify set_unit() accordingly
-#field       = 'magnitude of 4-velocity'  # to change the target field, one must modify set_unit() accordingly
-#field       = '3-velocity_x'    # to change the target field, one must modify set_unit() accordingly
-#field       = '3-velocity_y'    # to change the target field, one must modify set_unit() accordingly
-#field       = '3-velocity_z'    # to change the target field, one must modify set_unit() accordingly
-#field       = 'magnitude of 3-velocity'  # to change the target field, one must modify set_unit() accordingly
-#field       = 'conservative density'   # to change the target field, one must modify set_unit() accordingly
+field       = 'density'    # to change the target field, one must modify set_unit() accordingly
+#field       = 'Ux'    # to change the target field, one must modify set_unit() accordingly
+#field       = 'Uy'    # to change the target field, one must modify set_unit() accordingly
+#field       = 'Uz'    # to change the target field, one must modify set_unit() accordingly
+#field       = 'Pres'           # to change the target field, one must modify set_unit() accordingly
+#field       = '4velocity_mag'  # to change the target field, one must modify set_unit() accordingly
+#field       = '3velocity_x'    # to change the target field, one must modify set_unit() accordingly
+#field       = '3velocity_y'    # to change the target field, one must modify set_unit() accordingly
+#field       = '3velocity_z'    # to change the target field, one must modify set_unit() accordingly
+#field       = '3velocity_mag'  # to change the target field, one must modify set_unit() accordingly
+#field       = 'density_cons'   # to change the target field, one must modify set_unit() accordingly
 center_mode = 'c'
 dpi         = 150
 
@@ -164,15 +167,12 @@ for ds in ts.piter():
 #   ds.add_field( ("gamer", "momentum_z_sr"), function=_momentum_z_sr, sampling_type="cell", units="code_mass/(code_time*code_length**2)" )
 #   ds.add_field( ("gamer", "energy_cons")  , function=_energy_cons  , sampling_type="cell", units="code_mass/(code_length*code_time**2)" )
 
-   sz = yt.SlicePlot( ds, 'z', field, center_mode  )
-   sz.set_zlim( field, 'min', 'max' )
-   sz.set_log( field, False )
-   sz.set_cmap( field, colormap )
-   sz.set_unit( field, 'code_mass/code_length**3' )
-#   sz.set_unit( field, 'code_length/code_time' )
-#   sz.set_unit( field, 'code_mass/(code_length*code_time**2)' )
-#   sz.set_unit( field, 'code_mass/(code_time*code_length**2)' )
-   sz.set_axes_unit( 'code_length' )
-   sz.annotate_timestamp( time_unit='code_time', corner='upper_right', time_format='t = {time:.4f} {units}' )
-   sz.annotate_grids( periodic=False )
-   sz.save( mpl_kwargs={"dpi":dpi} )
+   my_ray = ds.ray((-0, 0.5, 0.5), (1.0, 0.5, 0.5))
+   srt = np.argsort(my_ray['x'])
+   density = my_ray[field][srt]
+   
+#   plt.semilogy(np.array(my_ray['x'][srt]), np.array(my_ray[field][srt]), 'bo')
+   plt.plot(np.array(my_ray['x'][srt]), np.array(my_ray[field][srt]), 'bo', markersize=2)
+   plt.xlabel('x')
+   plt.ylabel(field)
+   plt.savefig("density_xsweep.png")

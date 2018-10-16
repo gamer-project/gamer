@@ -9,13 +9,13 @@
 //
 // Note        :  Invoke the function "Prepare_PatchData"
 //
-// Parameter   :  lv                   : Target refinement level
-//                PrepTime             : Target physical time to prepare the coarse-grid data
-//                h_Flu_Array_F_In     : Host array to store the prepared fluid data
-//                h_Pot_Array_USG_F    : Host array to store the prepared potential data (for UNSPLIT_GRAVITY only)
-//                h_Corner_Array_USG_F : Host array to store the prepared corner data (for UNSPLIT_GRAVITY only)
-//                NPG                  : Number of patch groups to be prepared at a time
-//                PID0_List            : List recording the patch indicies with LocalID==0 to be udpated
+// Parameter   :  [1] lv                   : Target refinement level
+//                [2] PrepTime             : Target physical time to prepare the coarse-grid data
+//                [3] h_Flu_Array_F_In     : Host array to store the prepared fluid data
+//                [4] h_Pot_Array_USG_F    : Host array to store the prepared potential data (for UNSPLIT_GRAVITY only)
+//                [5] h_Corner_Array_USG_F : Host array to store the prepared corner data (for UNSPLIT_GRAVITY only)
+//                [6] NPG                  : Number of patch groups to be prepared at a time
+//                [7] PID0_List            : List recording the patch indicies with LocalID==0 to be udpated
 //-------------------------------------------------------------------------------------------------------
 void Flu_Prepare( const int lv, const double PrepTime, real h_Flu_Array_F_In[], real h_Pot_Array_USG_F[],
                   double h_Corner_Array_F[][3], const int NPG, const int *PID0_List )

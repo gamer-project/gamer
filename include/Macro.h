@@ -353,9 +353,9 @@
 #  define _VELZ               ( 1 << (NCOMP_TOTAL+2) ) // 4-velocity in z-direction          000010000000
 #  define _PRES               ( 1 << (NCOMP_TOTAL+3) ) // pressure                           000100000000
 #  define _TEMP               ( 1 << (NCOMP_TOTAL+4) ) // temperature                        001000000000
-#  define _4VEL               ( 1 << (NCOMP_TOTAL+5) ) // magnitude of 4-velocity            010000000000
+#  define _REST               ( 1 << (NCOMP_TOTAL+5) ) // rest mass density                  010000000000
 #  define _PRIDENS            ( 1 << (NCOMP_TOTAL+6) ) // primitive density                  100000000000
-#  define _DERIVED            ( _VELX | _VELY | _VELZ | _PRES | _TEMP | _PRIDENS | _4VEL ) //111111100000
+#  define _DERIVED            ( _VELX | _VELY | _VELZ | _PRES | _TEMP | _PRIDENS | _REST ) //111111100000
 #  define NDERIVE             7
 
 

@@ -68,54 +68,54 @@ void CPU_Pri2Con (const real In[], real Out[], const real Gamma);
 //
 // Parameter   :  [ 1] lv             : Target refinement level
 //                [ 2] PrepTime       : Target physical time to prepare data
-//                                     --> Currently it must be equal to either Time[lv] or Time_Prev[lv]
-//                                     --> Temporal interpolation at Lv=lv is NOT supported
+//                                       --> Currently it must be equal to either Time[lv] or Time_Prev[lv]
+//                                       --> Temporal interpolation at Lv=lv is NOT supported
 //                [ 3] h_Input_Array  : Host array to store the prepared data
 //                [ 4] GhostSize      : Number of ghost zones to be prepared
 //                [ 5] NPG            : Number of patch groups prepared at a time
 //                [ 6] PID0_List      : List recording the patch indicies with LocalID==0 to be prepared
 //                [ 7] TVar           : Target variables to be prepared
-//                                     --> Supported variables in different models:
-//                                         HYDRO : _DENS, _MOMX, _MOMY, _MOMZ, _ENGY, _VELX, _VELY, _VELZ, _PRES, _TEMP,
-//                                                 [, _POTE]
-//                                         MHD   :
-//                                         ELBDM : _DENS, _REAL, _IMAG [, _POTE]
-//                                     --> _FLUID, _PASSIVE, _TOTAL, and _DERIVED apply to all models
+//                                       --> Supported variables in different models:
+//                                           HYDRO : _DENS, _MOMX, _MOMY, _MOMZ, _ENGY, _VELX, _VELY, _VELZ, _PRES, _TEMP,
+//                                                   [, _POTE]
+//                                           MHD   :
+//                                           ELBDM : _DENS, _REAL, _IMAG [, _POTE]
+//                                       --> _FLUID, _PASSIVE, _TOTAL, and _DERIVED apply to all models
 //                [ 8] IntScheme      : Interpolation scheme
-//                                     --> currently supported schemes include
-//                                         INT_MINMOD1D : MinMod-1D
-//                                         INT_MINMOD3D : MinMod-3D
-//                                         INT_VANLEER  : vanLeer
-//                                         INT_CQUAD    : conservative quadratic
-//                                         INT_QUAD     : quadratic
-//                                         INT_CQUAR    : conservative quartic
-//                                         INT_QUAR     : quartic
+//                                       --> currently supported schemes include
+//                                           INT_MINMOD1D : MinMod-1D
+//                                           INT_MINMOD3D : MinMod-3D
+//                                           INT_VANLEER  : vanLeer
+//                                           INT_CQUAD    : conservative quadratic
+//                                           INT_QUAD     : quadratic
+//                                           INT_CQUAR    : conservative quartic
+//                                           INT_QUAR     : quartic
 //                [ 9] PrepUnit       : Whether or not to separate the prepared data into individual patches
-//                                     --> UNIT_PATCH      : prepare data "patch by patch"
-//                                         UNIT_PATCHGROUP : prepare data "patch group by patch group"
+//                                       --> UNIT_PATCH      : prepare data "patch by patch"
+//                                           UNIT_PATCHGROUP : prepare data "patch group by patch group"
 //                [10] NSide          : Number of sibling directions to prepare data
-//                                     --> NSIDE_00 (=  0) : do not prepare any sibling direction (equivalent to GhostSize=0)
-//                                         NSIDE_06 (=  6) : prepare only sibling directions 0~5
-//                                         NSIDE_26 (= 26) : prepare all sibling directions 0~25
+//                                       --> NSIDE_00 (=  0) : do not prepare any sibling direction (equivalent to GhostSize=0)
+//                                           NSIDE_06 (=  6) : prepare only sibling directions 0~5
+//                                           NSIDE_26 (= 26) : prepare all sibling directions 0~25
 //                [11] IntPhase       : true --> Perform interpolation on rho/phase instead of real/imag parts in ELBDM
-//                                      --> TVar must contain _REAL and _IMAG
+//                                        --> TVar must contain _REAL and _IMAG
 //                [12] FluBC          : Fluid boundary condition
 //                [13] PotBC          : Gravity boundary condition
 //             [14/15] MinDens/Pres   : Minimum allowed density/pressure in the output array (<0.0 ==> off)
-//                                     --> MinDens can be applied to both _DENS and _TOTAL_DENS but cannot be applied to _PAR_DENS
-//                                     --> Note that when preparing both density and real/imaginary parts for ELBDM, we do NOT
-//                                         rescale wave functions after applying MinDens
-//                                         --> We can have real^2+imag^2 != density in the prepared data!!
-//                                         --> But currently it's not an issue since we never prepare density and wave functions
-//                                         at the same time
-//                                     --> Currently MinDens is applied in Flu_Prepare(), Flag_Real(), and Poi_Prepare_Rho()
-//                                         --> The Guideline is to apply MinDens check only when ghost zones are required
-//                                             (because density field is already stored in each patch and we don't want
-//                                             Prepare_PatchData() to MODIFY the existing data)
-//                                     --> Currently MinPres is applied in Flu_Prepare() and Flag_Real()
-//                                         --> The Guideline is to apply MinPres check whenever _PRES, _TEMP or _FLUID is required
-//                                             (because pressure field is NOT stored explicitly in each patch and thus existing data
-//                                             may still have pressure < MinPres due to round-off errors)
+//                                       --> MinDens can be applied to both _DENS and _TOTAL_DENS but cannot be applied to _PAR_DENS
+//                                       --> Note that when preparing both density and real/imaginary parts for ELBDM, we do NOT
+//                                           rescale wave functions after applying MinDens
+//                                           --> We can have real^2+imag^2 != density in the prepared data!!
+//                                           --> But currently it's not an issue since we never prepare density and wave functions
+//                                           at the same time
+//                                       --> Currently MinDens is applied in Flu_Prepare(), Flag_Real(), and Poi_Prepare_Rho()
+//                                           --> The Guideline is to apply MinDens check only when ghost zones are required
+//                                               (because density field is already stored in each patch and we don't want
+//                                               Prepare_PatchData() to MODIFY the existing data)
+//                                       --> Currently MinPres is applied in Flu_Prepare() and Flag_Real()
+//                                             --> The Guideline is to apply MinPres check whenever _PRES, _TEMP or _FLUID is required
+//                                                 (because pressure field is NOT stored explicitly in each patch and thus existing data
+//                                                 may still have pressure < MinPres due to round-off errors)
 //                [16] DE_Consistency : Ensure the consistency between pressure, total energy density, and the dual-energy variable
 //                                      when DUAL_ENERGY is on
 //                                      --> Only apply to the ghost-zone interpolation on the assumption that the data stored
@@ -157,7 +157,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
          Aux_Error( ERROR_INFO, "MinDens (%13.7e) >= 0.0, but _DENS is not found !!\n", MinDens );
 #     endif
 #     else
-         Aux_Error( ERROR_INFO, "MinDens (%13.7e) >= 0.0 can only be applied to HYDRO/MHD/ELBDM !!\n", MinDens );
+         Aux_Error( ERROR_INFO, "MinDens (%13.7e) >= 0.0 can only be applied to HYDRO/MHD/ELBDM/SR_HYDRO !!\n", MinDens );
 #     endif
 
 #     if ( MODEL == ELBDM )
@@ -267,13 +267,13 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
    const real Gamma_m1         = GAMMA - (real)1.0;
    const real _Gamma_m1        = (real)1.0 / Gamma_m1;
 
-   const bool PrepDens         = ( TVar & _PRIDENS ) ? true : false; // primitive density
+   const bool PrepDens         = ( TVar & _PRIDENS ) ? true : false; // number density in inertial frame
    const bool PrepVx           = ( TVar & _VELX    ) ? true : false; // 4-velocity in x-direction
    const bool PrepVy           = ( TVar & _VELY    ) ? true : false; // 4-velocity in y-direction
    const bool PrepVz           = ( TVar & _VELZ    ) ? true : false; // 4-velocity in z-direction
    const bool PrepPres         = ( TVar & _PRES    ) ? true : false; // pressure
    const bool PrepTemp         = ( TVar & _TEMP    ) ? true : false; // temperature
-   const bool Prep4Vel         = ( TVar & _4VEL    ) ? true : false; // magnitude of 4-velocity
+   const bool PrepRest         = ( TVar & _REST    ) ? true : false; // rest mass density in local rest frame
 
 #  elif ( MODEL == ELBDM )
 // no derived variables yet
@@ -342,7 +342,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
    if ( PrepVz   )   TDerVarList[ NVar_Der ++ ] = _VELZ;
    if ( PrepPres )   TDerVarList[ NVar_Der ++ ] = _PRES;
    if ( PrepTemp )   TDerVarList[ NVar_Der ++ ] = _TEMP;
-   if ( Prep4Vel )   TDerVarList[ NVar_Der ++ ] = _4VEL;
+   if ( PrepRest )   TDerVarList[ NVar_Der ++ ] = _REST;
 
 #  elif ( MODEL == ELBDM )
 // no derived variables yet
@@ -1081,7 +1081,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
                Array_Ptr += PGSize3D;
             }
 
-            if ( Prep4Vel )
+            if ( PrepRest )
             {
                for (int k=0; k<PATCH_SIZE; k++)    {  K    = k + Disp_k;
                for (int j=0; j<PATCH_SIZE; j++)    {  J    = j + Disp_j;
@@ -1089,7 +1089,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
                for (int i=0; i<PATCH_SIZE; i++)    {
 
                   real Cons[NCOMP_FLUID];
-                  real Prim[NCOMP_FLUID]; // 4-velocity
+                  real Prim[NCOMP_FLUID];
 
                   Cons[0]=amr->patch[FluSg][lv][PID]->fluid[DENS][k][j][i];
                   Cons[1]=amr->patch[FluSg][lv][PID]->fluid[MOMX][k][j][i];
@@ -1099,7 +1099,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
 
                   CPU_Con2Pri(Cons, Prim, (real)GAMMA);
 
-                  Array_Ptr[Idx1] = FABS( Prim[1] ) + FABS( Prim[2] ) + FABS( Prim[3] );
+                  Array_Ptr[Idx1] = Prim[0];
 
                   if ( FluIntTime ) // temporal interpolation
                        {
@@ -1112,7 +1112,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
 			  CPU_Con2Pri(Cons, Prim, (real)GAMMA);
 
 			  Array_Ptr[Idx1] =   FluWeighting *Array_Ptr[Idx1] 
-                                            + FluWeighting_IntT*( FABS( Prim[1] ) + FABS( Prim[2] ) + FABS( Prim[3] ) );
+                                            + FluWeighting_IntT*Prim[0];
                        }
                   Idx1 ++;
                }}}
@@ -1535,7 +1535,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
                      Array_Ptr += PGSize3D;
                   }
 
-                  if ( Prep4Vel )
+                  if ( PrepRest )
                   {
                      for (int k=0; k<Loop_k; k++)  {  K = k + Disp_k;   K2 = k + Disp_k2;
                      for (int j=0; j<Loop_j; j++)  {  J = j + Disp_j;   J2 = j + Disp_j2;
@@ -1543,7 +1543,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
                      for (I2=Disp_i2; I2<Disp_i2+Loop_i; I2++) {
 
 			real Cons[NCOMP_FLUID];
-			real Prim[NCOMP_FLUID]; // 4-velocity
+			real Prim[NCOMP_FLUID];
 
                         Cons[0]=amr->patch[FluSg][lv][SibPID]->fluid[DENS][K2][J2][I2];
                         Cons[1]=amr->patch[FluSg][lv][SibPID]->fluid[MOMX][K2][J2][I2];
@@ -1553,7 +1553,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
 
 			CPU_Con2Pri(Cons, Prim, (real)GAMMA);
 
-                        Array_Ptr[Idx1] = FABS(Prim[1]) + FABS(Prim[2]) + FABS(Prim[3]);
+                        Array_Ptr[Idx1] = Prim[0];
 
                         if ( FluIntTime ) // temporal interpolation
 			   {
@@ -1565,7 +1565,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
 
 			      CPU_Con2Pri(Cons, Prim, (real)GAMMA);
 			      Array_Ptr[Idx1] =   FluWeighting     *Array_Ptr[Idx1]
-						+ FluWeighting_IntT*(FABS(Prim[1]) + FABS(Prim[2]) + FABS(Prim[3]));
+						+ FluWeighting_IntT*Prim[0];
 			   }
                         Idx1 ++;
                      }}}
@@ -2008,7 +2008,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
 //       --> note that it's unnecessary to check negative passive scalars thanks to the monotonic interpolation
 // ------------------------------------------------------------------------------------------------------------
 //       (d1) minimum density
-#        if ( MODEL == HYDRO  ||  MODEL == MHD  ||  MODEL == ELBDM || MODEL == SR_HYDRO )
+#        if ( MODEL == HYDRO  ||  MODEL == MHD  ||  MODEL == ELBDM )
          if ( MinDens >= (real)0.0 )
          {
 //          note that _DENS is turned on automatically for _TOTAL_DENS (and total density is stored in DENS)
@@ -2020,13 +2020,14 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
 
 //             apply minimum density
 //             --> note that for ELBDM it will result in dens != real^2 + imag^2
-               for (int t=0; t<PGSize3D; t++) { 
-#ifdef CHECK_NEGATIVE_IN_FLUID
-			 if (   CPU_CheckNegative(ArrayDens[t])
-			     ||     !Aux_IsFinite(ArrayDens[t])){
-			       Aux_Message (stderr, "\n\nWANNING:\nfile: %s\nfunction: %s\nline: %d\n", __FILE__, __FUNCTION__,__LINE__);
-			       Aux_Message (stderr, "ArrayDens[%d] = %+e", t, ArrayDens[t]);
-			  }
+               for (int t=0; t<PGSize3D; t++) 
+                  {
+#ifdef   CHECK_NEGATIVE_IN_FLUID
+		      if (   CPU_CheckNegative(ArrayDens[t])
+			  ||     !Aux_IsFinite(ArrayDens[t]))
+                        {
+			  Aux_Error (ERROR_INFO, "ArrayDens[%d] = %+e", t, ArrayDens[t]);
+		        }
 #endif
                        ArrayDens[t] = CPU_CheckMinDens ( ArrayDens[t], MinDens );
                    }
@@ -2038,7 +2039,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
 //       (d2) minimum pressure
 //            --> note that it should be applied AFTER checking the minimum density since modifying density will also
 //                modify pressure when calculating it from the energy field
-#        if ( MODEL == HYDRO  ||  MODEL == MHD || MODEL == SR_HYDRO )
+#        if ( MODEL == HYDRO  ||  MODEL == MHD )
          if ( MinPres >= (real)0.0 )
          {
 //          (d2-1) pressure as a derived field
@@ -2077,26 +2078,14 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
                 {
 #                 if ( MODEL == SR_HYDRO )
 #                 ifdef CHECK_NEGATIVE_IN_FLUID
-		  if ( CPU_CheckNegative(ArrayDens[t])
-		    ||     !Aux_IsFinite(ArrayMomX[t])
-		    ||     !Aux_IsFinite(ArrayMomY[t])
-		    ||     !Aux_IsFinite(ArrayMomZ[t])
-		    || CPU_CheckNegative(ArrayEngy[t]))
-		       {
-			 Aux_Message (stderr, "\n\nWANNING:\nfile: %s\nfunction: %s\n", __FILE__, __FUNCTION__);
-			 Aux_Message (stderr, "line:%d\nD=%e, Mx=%e, My=%e, Mz=%e, E=%e\n", __LINE__, 
-				      ArrayDens[t], ArrayMomX[t], ArrayMomY[t], ArrayMomZ[t], ArrayEngy[t]);
-		       }
-		  real M = SQRT (SQR (ArrayMomX[t]) + SQR (ArrayMomY[t]) + SQR (ArrayMomZ[t]));
+                  real Con[NCOMP_FLUID];
+                  Con[DENS] = ArrayDens[t];
+                  Con[MOMX] = ArrayMomX[t];
+                  Con[MOMY] = ArrayMomY[t];
+                  Con[MOMZ] = ArrayMomZ[t];
+                  Con[ENGY] = ArrayEngy[t];
 
-		  if ( ArrayEngy[t] <= M )
-		    {
-		      Aux_Message (stderr, "\n\nWARNING: |M| > E!\n");
-		      Aux_Message (stderr, "file: %s\nfunction: %s\n", __FILE__, __FUNCTION__);
-		      Aux_Message (stderr, "line:%d\nD=%e, Mx=%e, My=%e, Mz=%e, E=%e\n", __LINE__, 
-				   ArrayDens[t], ArrayMomX[t], ArrayMomY[t], ArrayMomZ[t], ArrayEngy[t]);
-		      Aux_Message (stderr, "|M|=%e, E=%e, |M|-E=%e\n\n", M, ArrayEngy[t], M - ArrayEngy[t]);
-		    }
+                  if(CPU_CheckUnphysical(Con, NULL)) Aux_Message(stderr,"\nUnphysical varibles!\nfunction: %s: %d\n", __FUNCTION__, __LINE__);
 #                 endif
 #                 else
                   ArrayEngy[t] = CPU_CheckMinPresInEngy( ArrayDens[t], ArrayMomX[t], ArrayMomY[t], ArrayMomZ[t], ArrayEngy[t],
@@ -2108,6 +2097,10 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
          } // if ( MinPres >= (real)0.0 )
 #        endif // #if ( MODEL == HYDRO  ||  MODEL == MHD )
 
+
+#        if ( MODEL == SR_HYDRO )
+
+#        endif
 
 //       e. copy data from Array to h_Input_Array
 // ------------------------------------------------------------------------------------------------------------

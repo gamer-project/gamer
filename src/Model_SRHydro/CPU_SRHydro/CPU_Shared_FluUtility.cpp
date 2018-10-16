@@ -6,22 +6,21 @@
 
 
 #if ( MODEL == SR_HYDRO )
-struct FUN_Q_params
+struct FUN_params
 {
   real d;
   real M1;
   real M2;
   real M3;
   real E;
-  real Gamma;
+//  real Gamma;
 };
 
 // some functions in this file need to be defined even when using GPU
-
-static real FUN_Q (real Q, void *ptr);
-static real D_FUN_Q (real Q, void *ptr);
-static void FDF_FUN_Q (real Q, void *ptr, real * f, real * df);
-
+static real FUN (real Q, void *ptr);
+static real D_FUN (real Q, void *ptr);
+static void FDF_FUN (real Q, void *ptr, real * f, real * df);
+void CPU_4Velto3Vel (const real In[], real Out[]);
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  CPU_Rotate3D
@@ -103,34 +102,15 @@ CPU_Con2Pri (const real In[], real Out[], const real Gamma)
 {
   real In_temp[5] = { In[0], In[1], In[2], In[3], In[4] };
   real Gamma_m1 = Gamma - (real) 1.0;
+  real Msqr = SQR (In_temp[1]) + SQR (In_temp[2]) + SQR (In_temp[3]);
+  real M = SQRT (Msqr); // magnitude of momentum
 
-#  ifdef CHECK_NEGATIVE_IN_FLUID
-  if ( CPU_CheckNegative(In_temp[0]) 
-    ||     !Aux_IsFinite(In_temp[1]) 
-    ||     !Aux_IsFinite(In_temp[2]) 
-    ||     !Aux_IsFinite(In_temp[3]) 
-    || CPU_CheckNegative(In_temp[4]))
-    {
-       Aux_Message (stderr, "\n\nWARNING:\n :file: %s\nfunction: %s\n", __FILE__, __FUNCTION__);
-       Aux_Message (stderr, "line:%d\nD=%e, Mx=%e, My=%e, Mz=%e, E=%e\n", __LINE__, 
-			    In_temp[0], In_temp[1], In_temp[2], In_temp[3], In_temp[4]);
-    }
-#  endif
 
-  real M = SQRT (SQR (In_temp[1]) + SQR (In_temp[2]) + SQR (In_temp[3]));
+//  real abc = SQR(In_temp[4]) -  SQR(In_temp[0]) - Msqr;
 
-#  ifdef CHECK_NEGATIVE_IN_FLUID
-  if ( In_temp[4] <= M )
-    {
-      Aux_Message (stderr,"\n\nWARNING: |M| > E!\n");
-      Aux_Message (stderr,"file: %s\nfunction: %s\n", __FILE__, __FUNCTION__);
-      Aux_Message (stderr,"line:%d\nD=%e, Mx=%e, My=%e, Mz=%e, E=%e\n", __LINE__, 
-                           In_temp[0], In_temp[1], In_temp[2], In_temp[3], In_temp[4]);
-      Aux_Message (stderr,"|M|=%e, E=%e, |M|-E=%e\n\n", M, In_temp[4], M - In_temp[4]);
-    }
-#  endif
-
-  if (fabs (M) > TINY_NUMBER)
+// case 1: flow velocity >> 0 && random velocity >> 0
+//  if ( ( fabs (M) > TINY_NUMBER ) && ( abc > TINY_NUMBER ) )
+  if ( fabs (M) > TINY_NUMBER  )
     {
       int status;
 
@@ -155,11 +135,12 @@ CPU_Con2Pri (const real In[], real Out[], const real Gamma)
 
       gsl_function_fdf F;
 
-      struct FUN_Q_params params = { In_temp[0], In_temp[1], In_temp[2], In_temp[3], In_temp[4], Gamma };
+      //struct FUN_params params = { In_temp[0], In_temp[1], In_temp[2], In_temp[3], In_temp[4], Gamma };
+      struct FUN_params params = { In_temp[0], In_temp[1], In_temp[2], In_temp[3], In_temp[4] };
 
-      F.f = &FUN_Q;
-      F.df = &D_FUN_Q;
-      F.fdf = &FDF_FUN_Q;
+      F.f = &FUN;
+      F.df = &D_FUN;
+      F.fdf = &FDF_FUN;
       F.params = &params;
 
       T = gsl_root_fdfsolver_newton;
@@ -180,73 +161,141 @@ CPU_Con2Pri (const real In[], real Out[], const real Gamma)
       while (status == GSL_CONTINUE && iter < max_iter);
       //printf ("status = %s\n", gsl_strerror (status));
 
-#  ifdef CHECK_NEGATIVE_IN_FLUID
-     if (Q < 0)
-       {
-	 Aux_Message (stderr,"\n\nWARNING: Q = %e < 0!\n", Q);
-	 Aux_Message (stderr,"file: %s\nfunction: %s\n", __FILE__, __FUNCTION__);
-	 Aux_Message (stderr,"line:%d\nD=%e, Mx=%e, My=%e, Mz=%e, E=%e\n", __LINE__, 
-                              In_temp[0], In_temp[1], In_temp[2], In_temp[3], In_temp[4]);
-       }
-#  endif
-
       Out[1] = In_temp[1] / Q;	/*Ux */
       Out[2] = In_temp[2] / Q;	/*Uy */
       Out[3] = In_temp[3] / Q;	/*Uz */
 
       real Factor = SQRT (1 + SQR (Out[1]) + SQR (Out[2]) + SQR (Out[3]));
 
-      Out[0] = In_temp[0] / Factor;	/*primitive density */
+      Out[0] = In_temp[0] / Factor;	/*rest mass density */
       Out[4] = (Gamma_m1 / Gamma) * FABS (Q / Factor - Out[0]);	/*pressure */
 
-#ifdef CHECK_NEGATIVE_IN_FLUID
-      if ((Out[4] < 0) || (Out[0] < 0))
-	{
-	  Aux_Message (stderr,"\n\nWARNING: P < 0 or d < 0!\n");
-	  Aux_Message (stderr,"file: %s\nfunction: %s\nline:%d \n", __FILE__, __FUNCTION__, __LINE__);
-	  Aux_Message (stderr,"Q = %e\n", Q);
-          Aux_Message (stderr,"P = %e, d = %e\n", Out[4], Out[0]);
-	  Aux_Message (stderr,"D=%e, Mx=%e, My=%e, Mz=%e, E=%e\n", In_temp[0], In_temp[1], In_temp[2], In_temp[3], In_temp[4]);
-	}
-#endif
-
       gsl_root_fdfsolver_free (s);
-    } // if (fabs (M) > TINY_NUMBER)
-#ifndef CHECK_NEGATIVE_IN_FLUID
+    }
+// case 2: flow velocity -> 0 && random velocity >> 0
+//  else if ( ( fabs (M) <= TINY_NUMBER ) && ( abc > TINY_NUMBER )  )
   else
-#else
-  else if (In_temp[4] >= In_temp[0])
-#endif
     {
-      Out[1] = 0.0;
-      Out[2] = 0.0;
-      Out[3] = 0.0;
       Out[0] = In_temp[0];
+      Out[1] = TINY_NUMBER;
+      Out[2] = TINY_NUMBER;
+      Out[3] = TINY_NUMBER;
       Out[4] = Gamma_m1 * (In_temp[4] - In_temp[0]);
-
-#ifdef CHECK_NEGATIVE_IN_FLUID
-      if (Out[4] < 0)
-	{
-	  Aux_Message (stderr,"\n\nWARNING: P < 0!\n");
-	  Aux_Message (stderr,"file: %s\nfunction: %s\nline:%d \n", __FILE__, __FUNCTION__, __LINE__);
-          Aux_Message (stderr,"P = %e\n", Out[4]);
-	  Aux_Message (stderr,"D=%e, Mx=%e, My=%e, Mz=%e, E=%e\n", In_temp[0], In_temp[1], In_temp[2], In_temp[3], In_temp[4]);
-	} // if (Out[4] < 0)
-#endif
-
-    } // else if (In_temp[4] >= In_temp[0])
-
-#ifdef CHECK_NEGATIVE_IN_FLUID
+    }
+// case 3: flow velocity -> 0 and random velocity -> 0
+/*
+   else if ( ( fabs (M) <= TINY_NUMBER ) && ( abc <= TINY_NUMBER )  )
+    {
+       Out[0] = In_temp[0];
+       Out[1] = TINY_NUMBER;
+       Out[2] = TINY_NUMBER;
+       Out[3] = TINY_NUMBER;
+       Out[4] = TINY_NUMBER;
+    }
+// case 4: flow velocity >> 0 and random velocity -> 0
+// ( fabs (M) > TINY_NUMBER ) && ( abc <= 1.0 + TINY_NUMBER )
   else
     {
-      Aux_Message (stderr,"\n\nWARNING:\nToo criticle to solve! Somthing went wrong!\n");
-      Aux_Message (stderr,"line:%d, D=%e, Mx=%e, My=%e, Mz=%e, E=%e\n", __LINE__, In_temp[0], In_temp[1], In_temp[2], In_temp[3], In_temp[4]);
-    } // if (fabs (M) > TINY_NUMBER)
-#endif
+#      ifdef CHECK_NEGATIVE_IN_FLUID
+	 if (SQR(In_temp[4]) <= Msqr){
+	   Aux_Error(ERROR_INFO, "E = %e <= %e = |M| !", In_temp[4], Msqr);
+	 }
+#      endif
+       real something = SQRT( SQR(In_temp[4]) - Msqr );
+
+       Out[1] = In_temp[1] / something;
+       Out[2] = In_temp[2] / something;
+       Out[3] = In_temp[3] / something;
+
+       real LorentzFactor_sqr = 1.0 + SQR(Out[1]) + SQR(Out[2]) + SQR(Out[3]);
+       Out[0] = In_temp[4] / LorentzFactor_sqr ;
+
+       Out[4] = TINY_NUMBER;
+    }
+*/
 
 }				// FUNCTION : CPU_Con2Pri
 
 
+//-------------------------------------------------------------------------------------------------------
+// Function    :  CPU_Con2Q
+// Description :  Convert the conserved variables to Q
+//-------------------------------------------------------------------------------------------------------
+
+real CPU_Con2Q (const real In[], const real Gamma)
+{
+  real In_temp[5] = { In[0], In[1], In[2], In[3], In[4] };
+  real Gamma_m1 = Gamma - (real) 1.0;
+  real Msqr = SQR (In_temp[1]) + SQR (In_temp[2]) + SQR (In_temp[3]);
+  real M = SQRT (Msqr); // magnitude of momentum
+
+
+//  real abc = SQR(In_temp[4]) -  SQR(In_temp[0]) - Msqr;
+
+// case 1: flow velocity >> 0 && random velocity >> 0
+//  if ( ( fabs (M) > TINY_NUMBER ) && ( abc > TINY_NUMBER ) )
+  if ( fabs (M) > TINY_NUMBER  )
+    {
+      int status;
+
+      int iter = 0;
+      int max_iter = 200;
+
+      const gsl_root_fdfsolver_type *T;
+
+      gsl_root_fdfsolver *s;
+
+      real Q, Q0;
+
+/* initial guess Q  */
+      if (In_temp[0] > M / Gamma_m1)
+	{
+	  Q = M * (In_temp[4] - M) / ((1 - 1 / Gamma) * In_temp[0]);
+	}
+      else
+	{
+	  Q = In_temp[4] * Gamma;
+	}
+
+      gsl_function_fdf F;
+
+      //struct FUN_params params = { In_temp[0], In_temp[1], In_temp[2], In_temp[3], In_temp[4], Gamma };
+      struct FUN_params params = { In_temp[0], In_temp[1], In_temp[2], In_temp[3], In_temp[4] };
+
+      F.f = &FUN;
+      F.df = &D_FUN;
+      F.fdf = &FDF_FUN;
+      F.params = &params;
+
+      T = gsl_root_fdfsolver_newton;
+      s = gsl_root_fdfsolver_alloc (T);
+      gsl_root_fdfsolver_set (s, &F, Q);
+
+      //printf ("status = %s\n", gsl_strerror (status)); 
+      do
+	{
+	  iter++;
+	  status = gsl_root_fdfsolver_iterate (s);
+	  //printf ("status = %s\n", gsl_strerror (status));
+	  Q0 = Q;
+	  Q = gsl_root_fdfsolver_root (s);
+	  status = gsl_root_test_delta (Q, Q0, 0, 1e-16);
+	  //printf ("status = %s\n", gsl_strerror (status));
+	}
+      while (status == GSL_CONTINUE && iter < max_iter);
+      //printf ("status = %s\n", gsl_strerror (status));
+
+      gsl_root_fdfsolver_free (s);
+
+      return Q;
+    }
+// case 2: flow velocity -> 0 && random velocity >> 0
+//  else if ( ( fabs (M) <= TINY_NUMBER ) && ( abc > TINY_NUMBER )  )
+  else
+    {
+      return 0.0;
+    }
+}
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  CPU_Pri2Con
@@ -258,67 +307,81 @@ CPU_Con2Pri (const real In[], real Out[], const real Gamma)
 //                   when NormPassive is on
 //                   --> See the input parameters "NormPassive, NNorm, NormIdx"
 //
-// Parameter   :  In          : Array storing the input primitive variables
-//                Out         : Array to store the output conserved variables
-//               _Gamma_m1    : 1 / (Gamma - 1)
-//                NormPassive : true --> convert passive scalars to mass fraction
-//                NNorm       : Number of passive scalars for the option "NormPassive"
-//                              --> Should be set to the global variable "PassiveNorm_NVar"
-//                NormIdx     : Target variable indices for the option "NormPassive"
-//                              --> Should be set to the global variable "PassiveNorm_VarIdx"
+// Parameter   : [1] In           : Array storing the input primitive variables
+//               [2] Out          : Array to store the output conserved variables
+//               [3] Gamma        : Adiabatic index
 //-------------------------------------------------------------------------------------------------------
 void
 CPU_Pri2Con (const real In[], real Out[], const real Gamma)
 {
+#ifdef RELATIVISTIC_EOS
+  if ( In[4] > TINY_NUMBER )       real Temperature = In[0]/In[4]; // T = number_density/pressure
+  else if ( In[4] <= TINY_NUMBER ) real Temperature = 0.0;         // pressure = number_density * T
+
+  real Enthalpy = 2.5*Temperature+SQRT(2.25*SQR(Temperature)+1.0); // approximate enthalpy
+  real Factor0 = SQRT(1.0 + SQR (In[1]) + SQR (In[2]) + SQR (In[3])); // Lorentz factor
+  real Factor1 = Out[0] * Enthalpy;
+  
+  Out[0] = In[0] * Factor0; // number density in inertial frame
+  Out[1] = Factor1 * In[1]; // MomX
+  Out[2] = Factor1 * In[2]; // MomX
+  Out[3] = Factor1 * In[3]; // MomX
+# if   ( RELATIVISTIC_EOS ==  VERSION_1 )
+  Out[4] = Factor1 * Factor0 - In[4]; // total_energy
+# elif ( RELATIVISTIC_EOS ==  VERSION_2 )
+  Out[4] = Factor1 * Factor0 - In[4] - Out[0]; // ( total_energy ) - ( rest_mass_energy )
+# endif
+
+#elif def ULTRA_RELATIVISTIC_EOS
   real Gamma_m1 = (real) Gamma - 1.0;
-#ifdef CHECK_NEGATIVE_IN_FLUID
-  if ( CPU_CheckNegative(In[0]) 
-    ||     !Aux_IsFinite(In[1]) 
-    ||     !Aux_IsFinite(In[2]) 
-    ||     !Aux_IsFinite(In[3]) 
-    || CPU_CheckNegative(In[4]))
-     {
-	Aux_Message (stderr,"\n\nWARNING:\nfile: %s\nfunction: %s\n", __FILE__, __FUNCTION__);
-	Aux_Message (stderr,"line:%d\nD=%e, Mx=%e, My=%e, Mz=%e, E=%e\n", __LINE__, In[0], In[1], In[2], In[3], In[4]);
-     }
-#endif
+  real U = SQRT(SQR(In[1])+SQR(In[2])+SQR(In[3]));
 
-  real Factor0 = 1 + SQR (In[1]) + SQR (In[2]) + SQR (In[3]);
-  real Factor1 = SQRT (Factor0);
-  real Factor2 = Gamma / Gamma_m1;
-  real Factor3 = In[0] + Factor2 * In[4]; // enthalpy* rho
-  real Factor4 = Factor3 * Factor1;
+  if ( ( U > TINY_NUMBER ) && ( In[4] > TINY_NUMBER ) ){
+    real Factor0 = 1 + SQR (In[1]) + SQR (In[2]) + SQR (In[3]);
+    real Factor1 = SQRT (Factor0);
+    real Factor2 = Gamma / Gamma_m1;
+    real Factor3 = In[0] + Factor2 * In[4]; // enthalpy * rho
+    real Factor4 = Factor3 * Factor1;
 
-  Out[0] = In[0] * Factor1;
-  Out[1] = Factor4 * In[1];
-  Out[2] = Factor4 * In[2];
-  Out[3] = Factor4 * In[3];
-  Out[4] = Factor3 * Factor0 - In[4];
+    Out[0] = In[0] * Factor1;
+    Out[1] = Factor4 * In[1];
+    Out[2] = Factor4 * In[2];
+    Out[3] = Factor4 * In[3];
+    Out[4] = Factor3 * Factor0 - In[4];
 
-#  ifdef CHECK_NEGATIVE_IN_FLUID
-  if ( CPU_CheckNegative(Out[DENS]) 
-    ||     !Aux_IsFinite(Out[MOMX]) 
-    ||     !Aux_IsFinite(Out[MOMY]) 
-    ||     !Aux_IsFinite(Out[MOMZ]) 
-    || CPU_CheckNegative(Out[ENGY]))
+   }
+   else if ( ( U <= TINY_NUMBER ) && ( In[4] <= TINY_NUMBER ) )
+   {
+    Out[0] = In[0];
+    Out[1] = TINY_NUMBER;
+    Out[2] = TINY_NUMBER;
+    Out[3] = TINY_NUMBER;
+    Out[4] = In[0];
+   }
+  else if ( ( U <= TINY_NUMBER ) && ( In[4] > TINY_NUMBER ) )
+   {
+    real Pri3Vel[NCOMP_FLUID];
+    CPU_4Velto3Vel(In, Pri3Vel);
+
+    Out[0] = In[0];
+    Out[1] = ( In[0] + Gamma * In[4] / Gamma_m1  ) * Pri3Vel[1];
+    Out[2] = ( In[0] + Gamma * In[4] / Gamma_m1  ) * Pri3Vel[2];
+    Out[3] = ( In[0] + Gamma * In[4] / Gamma_m1  ) * Pri3Vel[3];
+    Out[4] = In[0] + In[4] / Gamma_m1;
+   }
+  else// ( ( U > TINY_NUMBER ) && ( In[4] <= TINY_NUMBER ) )
   {
-     Aux_Message (stderr,"\n\nWARNING:\nfile: %s\nfunction: %s\n", __FILE__, __FUNCTION__);
-     Aux_Message (stderr,"line:%d\nD=%e, Mx=%e, My=%e, Mz=%e, E=%e\n", __LINE__,
-                  Out[DENS], Out[MOMX], Out[MOMY], Out[MOMZ], Out[ENGY]);
+    real Factor0 = 1.0 + SQR(In[1]) + SQR(In[2]) + SQR(In[3]);
+    real Factor1 = SQRT(Factor0);
+    Out[0] = In[0] * Factor1;
+    Out[1] = In[0] * Factor1 * In[1];
+    Out[2] = In[0] * Factor1 * In[2];
+    Out[3] = In[0] * Factor1 * In[3];
+    Out[4] = In[0] * Factor0;
   }
-  real  M = SQRT (SQR (Out[MOMX]) + SQR (Out[MOMY]) + SQR (Out[MOMZ]));
-
-  if ( Out[ENGY] <= M ) 
-    {   
-      Aux_Message (stderr,"\n\nWARNING: |M| > E!\n");
-      Aux_Message (stderr,"file: %s\nfunction: %s\n", __FILE__, __FUNCTION__);
-      Aux_Message (stderr,"line:%d\nD=%e, Mx=%e, My=%e, Mz=%e, E=%e\n", __LINE__, 
-                   Out[DENS], Out[MOMX], Out[MOMY], Out[MOMZ], Out[ENGY]);
-      Aux_Message (stderr,"|M|=%e, E=%e, |M|-E=%e\n\n", M, Out[ENGY], M - Out[ENGY]);
-      Aux_Message (stderr,"d=%e, Ux=%e, Uy=%e, Uz=%e, P=%e\n", In[0], In[1], In[2], In[3], In[4]);
-    }   
-#  endif
-
+#else
+#error: unsupported EoS!
+#endif
 }				// FUNCTION : CPU_Pri2Con
 
 
@@ -337,19 +400,6 @@ CPU_4Velto3Vel (const real In[], real Out[])
   Out[2] = In[2] * Factor;
   Out[3] = In[3] * Factor;
   Out[4] = In[4];
-
-#ifdef CHECK_NEGATIVE_IN_FLUID
-  real V = SQRT(SQR(Out[1])+SQR(Out[2])+SQR(Out[3]));
-      if (V >= 1.0)
-	{
-	  Aux_Message (stderr,"\n\nWARNING: |V| >= 1!\n");
-	  Aux_Message (stderr,"file: %s\nfunction: %s\nline:%d \n", __FILE__, __FUNCTION__, __LINE__);
-	  Aux_Message (stderr,"Ux=%e, Uy=%e, Uz=%e\n", In[1], In[2], In[3]);
-	  Aux_Message (stderr,"Vx=%e, Vy=%e, Vz=%e\n", Out[1], Out[2], Out[3]);
-	  Aux_Message (stderr,"|V| = %e\n", V);
-	}
-#endif
-
 }				// FUNCTION : CPU_4Velto3Vel
 
 //-------------------------------------------------------------------------------------------------------
@@ -360,16 +410,6 @@ CPU_4Velto3Vel (const real In[], real Out[])
 void
 CPU_3Velto4Vel (const real In[], real Out[])
 {
-#ifdef CHECK_NEGATIVE_IN_FLUID
-  real V = SQRT( SQR (In[1]) + SQR (In[2]) + SQR (In[3]) );
-  if ( V >= 1.0 )
-    {
-      Aux_Message (stderr,"\n\nWARNING:%s: %d\n", __FUNCTION__, __LINE__);
-      Aux_Message (stderr,"\n\n|V| >= 1!\n");
-      Aux_Message (stderr,"V = %e >= 1.0 \n", V);
-    }
-#endif
-
   real Factor = 1 / SQRT (1 - SQR (In[1]) - SQR (In[2]) - SQR (In[3]));
 
   Out[0] = In[0];
@@ -392,26 +432,6 @@ CPU_3Velto4Vel (const real In[], real Out[])
 void
 CPU_Con2Flux (const int XYZ, real Flux[], const real Input[], const real Gamma_m1, const real MinPres)
 {
-#  ifdef CHECK_NEGATIVE_IN_FLUID
-  if ( CPU_CheckNegative(Input[0]) 
-    ||     !Aux_IsFinite(Input[1]) 
-    ||     !Aux_IsFinite(Input[2]) 
-    ||     !Aux_IsFinite(Input[3]) 
-    || CPU_CheckNegative(Input[4]))
-  {
-     Aux_Message (stderr,"\n\nWARNING:\nfile: %s\nfunction: %s\n", __FILE__, __FUNCTION__);
-     Aux_Message (stderr,"line:%d\nD=%e, Mx=%e, My=%e, Mz=%e, E=%e\n", __LINE__, Input[0], Input[1], Input[2], Input[3], Input[4]);
-  }
-  real M = SQRT (SQR (Input[1]) + SQR (Input[2]) + SQR (Input[3]));
-
-  if ( Input[4] <= M )
-    {
-      Aux_Message (stderr,"\n\nWARNING: |M| > E!\n");
-      Aux_Message (stderr,"file: %s\nfunction: %s\n", __FILE__, __FUNCTION__);
-      Aux_Message (stderr,"line:%d\nD=%e, Mx=%e, My=%e, Mz=%e, E=%e\n", __LINE__, Input[0], Input[1], Input[2], Input[3], Input[4]);
-      Aux_Message (stderr,"|M|=%e, E=%e, |M|-E=%e\n\n", M, Input[4], M - Input[4]);
-    }
-#  endif
   const bool CheckMinPres_Yes = true;
   real ConVar[NCOMP_FLUID];	// don't need to include passive scalars since they don't have to be rotated1
   real PriVar4[NCOMP_FLUID];	// d, Ux, Uy, Uz, P
@@ -426,30 +446,7 @@ CPU_Con2Flux (const int XYZ, real Flux[], const real Input[], const real Gamma_m
 
   CPU_Con2Pri (ConVar, PriVar4, GAMMA);
 
-#ifdef CHECK_NEGATIVE_IN_FLUID
-      if ((PriVar4[4] < 0) || (PriVar4[0] < 0))
-	{
-	  Aux_Message (stderr,"\n\nWARNING: P < 0 or d < 0!\n");
-	  Aux_Message (stderr,"file: %s\nfunction: %s\nline:%d \n", __FILE__, __FUNCTION__, __LINE__);
-          Aux_Message (stderr,"P = %e, d = %e\n", PriVar4[4], PriVar4[0]);
-	  Aux_Message (stderr,"D=%e, Mx=%e, My=%e, Mz=%e, E=%e\n", ConVar[0], ConVar[1], ConVar[2], ConVar[3], ConVar[4]);
-	}
-#endif
-
   CPU_4Velto3Vel (PriVar4, PriVar3);
-
-#ifdef CHECK_NEGATIVE_IN_FLUID
-  real V = SQRT(SQR(PriVar3[1])+SQR(PriVar3[2])+SQR(PriVar3[3]));
-      if (V >= 1.0)
-	{
-	  Aux_Message (stderr,"\n\nWARNING: |V| >= 1!\n");
-	  Aux_Message (stderr,"file: %s\nfunction: %s\nline:%d \n", __FILE__, __FUNCTION__, __LINE__);
-	  Aux_Message (stderr,"Ux=%e, Uy=%e, Uz=%e\n", PriVar4[1], PriVar4[2], PriVar4[3]);
-	  Aux_Message (stderr,"Vx=%e, Vy=%e, Vz=%e\n", PriVar3[1], PriVar3[2], PriVar3[3]);
-	  Aux_Message (stderr,"|V| = %e\n", V);
-	}
-#endif
-
 
   Vx = PriVar3[1];
   Pres = PriVar3[4];
@@ -485,13 +482,6 @@ CPU_Con2Flux (const int XYZ, real Flux[], const real Input[], const real Gamma_m
 real
 CPU_CheckMinPres (const real InPres, const real MinPres)
 {
-#ifdef CHECK_NEGATIVE_IN_FLUID
-  if ( CPU_CheckNegative(InPres))
-    {
-       Aux_Message (stderr,"\n\nWARNING:\nfile: %s\nfunction: %s\n", __FILE__, __FUNCTION__);
-       Aux_Message (stderr,"line:%d\nInPres = %e\n", __LINE__, InPres);
-    }
-#endif
   return FMAX (InPres, MinPres);
 }				// FUNCTION : CPU_CheckMinPres
 
@@ -518,37 +508,145 @@ CPU_CheckMinPres (const real InPres, const real MinPres)
 // Return      :  Total energy with pressure greater than the given threshold
 //-------------------------------------------------------------------------------------------------------
 real
-CPU_ModifyEngy (const real MomX, const real MomY, const real MomZ, const real Engy, const double epsilon)
+CPU_ModifyEngy (const real Dens, 
+                const real MomX, 
+                const real MomY, 
+                const real MomZ, 
+                const real Engy)
 {
-#  ifdef CHECK_NEGATIVE_IN_FLUID
-  if (     !Aux_IsFinite(MomX) 
-    ||     !Aux_IsFinite(MomY)
-    ||     !Aux_IsFinite(MomZ)
-    || CPU_CheckNegative(Engy))
-   {
-      Aux_Message (stderr,"\n\nWARNING:\nfile: %s\nfunction: %s\n", __FILE__, __FUNCTION__);
-      Aux_Message (stderr,"line:%d\nMx=%e, My=%e, Mz=%e, E=%e\n", __LINE__, MomX, MomY, MomZ, Engy);
-   }
-#endif
   real Msqr = SQR (MomX) + SQR (MomY) + SQR (MomZ);
-  real M = SQRT (Msqr);
 
-  if (Engy > M)
+  if (SQR(Engy) > Msqr + SQR(Dens) + TINY_NUMBER)
     {
       return Engy;
     }
   else
     {
-      return M * (1.0 + epsilon);
+      return SQRT( Msqr + SQR(Dens) ) * (1.0 + 1.0e-10);
     }
 }
 
+//-------------------------------------------------------------------------------------------------------
+// Function    :  CPU_CheckMinDens
+//-------------------------------------------------------------------------------------------------------
 real
 CPU_CheckMinDens (const real InDens, const real MinDens)
 {
   return FMAX (InDens, MinDens);
 }				// FUNCTION : CPU_CheckMinDens
 
+
+//-------------------------------------------------------------------------------------------------------
+// Function    : CPU_CheckUnphysical
+//-------------------------------------------------------------------------------------------------------
+bool CPU_CheckUnphysical( const real Con[], const real Pri[])
+{
+   real Msqr;
+
+// only check conserved variables
+    if ( Pri == NULL && Con != NULL){
+// check NaN, +inf and -inf
+      if (  !Aux_IsFinite(Con[DENS])  
+	||  !Aux_IsFinite(Con[MOMX])  
+	||  !Aux_IsFinite(Con[MOMY])  
+	||  !Aux_IsFinite(Con[MOMZ])  
+	||  !Aux_IsFinite(Con[ENGY]) ) {printf("11\n");goto UNPHYSICAL1;}
+
+// check positivity of number density
+      if (Con[DENS] <= 0.0) goto UNPHYSICAL1;
+
+// check total energy vs. inner product of 4-momentum
+      Msqr = SQR(Con[MOMX]) + SQR(Con[MOMY]) + SQR(Con[MOMZ]);
+      if ( SQR(Con[ENGY]) <= Msqr + SQR(Con[DENS]) ) {printf("22\n");goto UNPHYSICAL1;}
+
+      real Pri4Vel[NCOMP_FLUID];
+      real Pri3Vel[NCOMP_FLUID];
+      
+      CPU_Con2Pri(Con, Pri4Vel, (real) GAMMA);
+      CPU_4Velto3Vel(Pri4Vel,Pri3Vel);
+
+// check positivity of rest mass density
+      if (Pri4Vel[0] <= (real)0.0) {printf("33\n");goto UNPHYSICAL1;}
+// check positivity of pressure
+      if (Pri4Vel[4] <= (real)0.0) {printf("44\n");goto UNPHYSICAL1;}
+// check whether 3-velocity is greater or equal to speed of light
+      if (SQR(Pri3Vel[1]) + SQR(Pri3Vel[2]) + SQR(Pri3Vel[3]) >= 1.0) {printf("55\n");goto UNPHYSICAL1;}
+
+// pass all checks 
+      return false;
+// print all variables if goto UNPHYSICAL1
+      UNPHYSICAL1:
+      {
+        Aux_Message(stderr, "\n\nD=%14.7e, Mx=%14.7e, My=%14.7e, Mz=%14.7e, E=%14.7e\n",
+                             Con[DENS], Con[MOMX], Con[MOMY], Con[MOMZ], Con[ENGY]);
+        Aux_Message(stderr, "E^2-|M|^2-D^2=%14.7e\n", SQR(Con[ENGY])-SQR(Con[MOMX])-SQR(Con[MOMY])-SQR(Con[MOMZ])-SQR(Con[DENS]));
+        Aux_Message(stderr, "RestDens=%14.7e, Ux=%14.7e, Uy=%14.7e, Uz=%14.7e, P=%14.7e\n", 
+                             Pri4Vel[0], Pri4Vel[1], Pri4Vel[2], Pri4Vel[3], Pri4Vel[4]);
+        Aux_Message(stderr, "Vx=%14.7e, Vy=%14.7e, Vz=%14.7e, |V|=%14.7e\n",
+                             Pri3Vel[1], Pri3Vel[2], Pri3Vel[3], SQRT(SQR(Pri3Vel[1])+SQR(Pri3Vel[2])+SQR(Pri3Vel[3])));
+        return true;
+      }
+
+   }
+// only check primitive variables
+   else if ( Con == NULL && Pri != NULL){
+      if (  !Aux_IsFinite(Pri[0])  
+	||  !Aux_IsFinite(Pri[1])  
+	||  !Aux_IsFinite(Pri[2])  
+	||  !Aux_IsFinite(Pri[3])  
+	||  !Aux_IsFinite(Pri[4]) ) {printf("66\n");goto UNPHYSICAL2;}
+
+      real Pri3Vel[NCOMP_FLUID];
+
+      CPU_4Velto3Vel(Pri,Pri3Vel);
+
+// check positivity of rest mass density
+      if (Pri[0] <= (real)0.0) {printf("77\n");goto UNPHYSICAL2;}
+// check positivity of pressure
+      if (Pri[4] <= (real)0.0) {printf("88\n");goto UNPHYSICAL2;}
+// check whether 3-velocity is greater or equal to speed of light
+      if (SQR(Pri3Vel[1]) + SQR(Pri3Vel[2]) + SQR(Pri3Vel[3]) >= 1.0) {printf("99\n");goto UNPHYSICAL2;}
+   
+      real ConsVar[NCOMP_FLUID];
+
+      CPU_Pri2Con(Pri, ConsVar, (real) GAMMA);
+// check NaN, +inf and -inf
+      if (  !Aux_IsFinite(ConsVar[DENS])  
+	||  !Aux_IsFinite(ConsVar[MOMX])  
+	||  !Aux_IsFinite(ConsVar[MOMY])  
+	||  !Aux_IsFinite(ConsVar[MOMZ])  
+	||  !Aux_IsFinite(ConsVar[ENGY]) ) {printf("aa\n");goto UNPHYSICAL2;}
+
+// check positivity of number density
+      if (ConsVar[DENS] <= 0.0) {printf("bb\n");goto UNPHYSICAL2;}
+
+// check total energy vs. inner product of 4-momentum
+      Msqr = SQR(ConsVar[MOMX]) + SQR(ConsVar[MOMY]) + SQR(ConsVar[MOMZ]);
+      if ( SQR(ConsVar[ENGY]) <= Msqr + SQR(ConsVar[DENS]) ) {printf("cc\n");goto UNPHYSICAL2;}
+
+// pass all checks 
+      return false;
+// print all variables if goto UNPHYSICAL2
+      UNPHYSICAL2:
+      {
+        Aux_Message(stderr, "\n\nD=%14.7e, Mx=%14.7e, My=%14.7e, Mz=%14.7e, E=%14.7e\n",
+                             ConsVar[DENS], ConsVar[MOMX], ConsVar[MOMY], ConsVar[MOMZ], ConsVar[ENGY]);
+        Aux_Message(stderr, "E^2-|M|^2-D^2=%14.7e\n", SQR(ConsVar[ENGY])-SQR(ConsVar[MOMX])-SQR(ConsVar[MOMY])-SQR(ConsVar[MOMZ])-SQR(ConsVar[DENS]));
+        Aux_Message(stderr, "RestDens=%14.7e, Ux=%14.7e, Uy=%14.7e, Uz=%14.7e, P=%14.7e\n", 
+                             Pri[0], Pri[1], Pri[2], Pri[3], Pri[4]);
+        Aux_Message(stderr, "Vx=%14.7e, Vy=%14.7e, Vz=%14.7e, |V|=%14.7e\n",
+                             Pri3Vel[1], Pri3Vel[2], Pri3Vel[3], SQRT(SQR(Pri3Vel[1])+SQR(Pri3Vel[2])+SQR(Pri3Vel[3])));
+        return true;
+      }
+
+      
+   }
+   else
+   {
+    Aux_Error(ERROR_INFO,"One of Con or Pri must be given in CPU_CheckUnphysical!\n");
+    return true;
+   }
+}
 //-------------------------------------------------------------------------------------------------------
 // Function    :  CPU_CheckNegative
 // Description :  Check whether the input value is <= 0.0 (also check whether it's Inf or NAN)
@@ -618,32 +716,10 @@ CPU_GetPressure (const real Dens, const real MomX, const real MomY, const real M
   In[2] = MomY;
   In[3] = MomZ;
   In[4] = Engy;
-#  ifdef CHECK_NEGATIVE_IN_FLUID
-  if ( CPU_CheckNegative(In[0]) 
-    ||     !Aux_IsFinite(In[1]) 
-    ||     !Aux_IsFinite(In[2]) 
-    ||     !Aux_IsFinite(In[3]) 
-    || CPU_CheckNegative(In[4]))
-  {
-     Aux_Message (stderr,"\n\nWARNING:\nfile: %s\nfunction: %s\n", __FILE__, __FUNCTION__);
-     Aux_Message (stderr,"line:%d\nD=%e, Mx=%e, My=%e, Mz=%e, E=%e\n", __LINE__, In[0], In[1], In[2], In[3], In[4]);
-  }
-  real M = SQRT (SQR (In[1]) + SQR (In[2]) + SQR (In[3]));
-
-  if ( In[4] <= M )
-    {
-      Aux_Message (stderr,"\n\nWARNING: |M| > E!\n");
-      Aux_Message (stderr,"file: %s\nfunction: %s\n", __FILE__, __FUNCTION__);
-      Aux_Message (stderr,"line:%d\nD=%e, Mx=%e, My=%e, Mz=%e, E=%e\n", __LINE__, In[0], In[1], In[2], In[3], In[4]);
-      Aux_Message (stderr,"|M|=%e, E=%e, |M|-E=%e\n\n", M, In[4], M - In[4]);
-    }
-#  endif
 
   CPU_Con2Pri (In, Out, GAMMA);
 
   Pres = Out[4];
-
-  if ( CheckMinPres )   Pres = CPU_CheckMinPres( Pres, MinPres );
 
   return Pres;
 }				// FUNCTION : CPU_GetPressure
@@ -787,16 +863,19 @@ CPU_NormalizePassive (const real GasDens, real Passive[], const int NNorm, const
 }				// FUNCTION : CPU_NormalizePassive
 
 static real
-FUN_Q (real Q, void *ptr)
+FUN (real Q, void *ptr)
 {
-  struct FUN_Q_params *params = (struct FUN_Q_params *) ptr;
+  struct FUN_params *params = (struct FUN_params *) ptr;
 
+#ifdef RELATIVISTIC_EOS
+#elif def ULTRA_RELATIVISTIC_EOS
   real d = (params->d);
   real M1 = (params->M1);
   real M2 = (params->M2);
   real M3 = (params->M3);
   real E = (params->E);
-  real Gamma = (params->Gamma);
+
+  real Gamma = (real)GAMMA;
   real Gamma_m1 = (real) Gamma - 1.0;
 /*4-Velocity*/
   real U1 = M1 / Q;
@@ -813,15 +892,15 @@ FUN_Q (real Q, void *ptr)
 }
 
 static real
-D_FUN_Q (real Q, void *ptr)
+D_FUN (real Q, void *ptr)
 {
-  struct FUN_Q_params *params = (struct FUN_Q_params *) ptr;
+  struct FUN_params *params = (struct FUN_params *) ptr;
 
   real d = (params->d);
   real M1 = (params->M1);
   real M2 = (params->M2);
   real M3 = (params->M3);
-  real Gamma = (params->Gamma);
+  real Gamma = (real) GAMMA;;
   real Gamma_m1 = (real) Gamma - 1.0;
 
   real U1 = M1 / Q;
@@ -843,16 +922,16 @@ D_FUN_Q (real Q, void *ptr)
 }
 
 static void
-FDF_FUN_Q (real Q, void *ptr, real * f, real * df)
+FDF_FUN (real Q, void *ptr, real * f, real * df)
 {
-  struct FUN_Q_params *params = (struct FUN_Q_params *) ptr;
+  struct FUN_params *params = (struct FUN_params *) ptr;
 
   real d = (params->d);
   real M1 = (params->M1);
   real M2 = (params->M2);
   real M3 = (params->M3);
   real E = (params->E);
-  real Gamma = (params->Gamma);
+  real Gamma = (real) GAMMA;
   real Gamma_m1 = (real) Gamma - 1.0;
 
   real U1 = M1 / Q;
@@ -874,5 +953,5 @@ FDF_FUN_Q (real Q, void *ptr, real * f, real * df)
   *f = Q * SQRT (1 + SQR (U1) + SQR (U2) + SQR (U3)) - pres - E;
   *df = SQRT (1 + SQR (U1) + SQR (U2) + SQR (U3)) + Q * (U1 * dU1 + U2 * dU2 + U3 * dU3) / SQRT (1 + SQR (U1) + SQR (U2) + SQR (U3)) - dp;
 }
-
+#endif // #ifdef ULTRA_RELATIVISTIC_EOS
 #endif // #if ( MODEL == SR_HYDRO )

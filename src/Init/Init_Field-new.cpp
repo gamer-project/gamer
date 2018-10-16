@@ -45,11 +45,11 @@ void Init_Field()
    Idx_Engy    = AddField( "Engy",     NORMALIZE_NO );
 
 #  elif ( MODEL == SR_HYDRO )
-   Idx_Dens    = AddField( "Dens",     NORMALIZE_NO );
-   Idx_MomX    = AddField( "MomX",     NORMALIZE_NO );
-   Idx_MomY    = AddField( "MomY",     NORMALIZE_NO );
-   Idx_MomZ    = AddField( "MomZ",     NORMALIZE_NO );
-   Idx_Engy    = AddField( "Engy",     NORMALIZE_NO );
+   Idx_Dens_Pri   = AddField( "Dens_Pri",    NORMALIZE_NO );
+   Idx_Ux         = AddField( "Ux",          NORMALIZE_NO );
+   Idx_Uy         = AddField( "Uy",          NORMALIZE_NO );
+   Idx_Uz         = AddField( "Uz",          NORMALIZE_NO );
+   Idx_Pres       = AddField( "Pres",        NORMALIZE_NO );
 
 #  elif ( MODEL == ELBDM )
 

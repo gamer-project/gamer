@@ -47,11 +47,13 @@ const TestProbID_t
    TESTPROB_HYDRO_PLUMMER                      =   11,
    TESTPROB_HYDRO_GRAVITY                      =   12,
 
-   TESTPROB_SRHYDRO_BLAST_WAVE                 =  600,
-   TESTPROB_SRHYDRO_RIEMANN                    =  601,
-   TESTPROB_SRHYDRO_DOUBLE_MACH_REFLECTION     =  602,
+   TESTPROB_SRHYDRO_BLAST_WAVE                    =  600,
+   TESTPROB_SRHYDRO_RIEMANN                       =  601,
+   TESTPROB_SRHYDRO_DOUBLE_MACH_REFLECTION        =  602,
+   TESTPROB_SRHYDRO_KELVIN_HELMHOLTZ_INSTABILITY  =  603,
+   TESTPROB_SRHYDRO_JETS                           =  604,
 
-   TESTPROB_ELBDM_EXTPOT                       = 1000;
+   TESTPROB_ELBDM_EXTPOT                          = 1000;
 
 
 // program initialization options

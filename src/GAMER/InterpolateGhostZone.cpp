@@ -7,6 +7,7 @@ static int Table_01( const int SibID, const int Side, const char dim, const int 
 #if (MODEL == SR_HYDRO)
 void CPU_Con2Pri (const real In[], real Out[], const real Gamma);
 void CPU_Pri2Con (const real In[], real Out[], const real Gamma);
+bool CPU_CheckUnphysical( const real Con[], const real Pri[]);
 #endif
 
 
@@ -112,7 +113,7 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData[], const in
    const bool PrepVz          = ( TVar & _VELZ    ) ? true : false; // 4-velocity in z-direction
    const bool PrepPres        = ( TVar & _PRES    ) ? true : false; // pressure
    const bool PrepTemp        = ( TVar & _TEMP    ) ? true : false; // temperature
-   const bool Prep4Vel        = ( TVar & _4VEL    ) ? true : false; // magnitude of 4-velocity
+   const bool PrepRest        = ( TVar & _REST    ) ? true : false; // magnitude of 4-velocity
 
 #  elif ( MODEL == ELBDM )
 // no derived variables yet
@@ -611,7 +612,7 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData[], const in
       CData_Ptr += CSize3D;
    }
 
-   if ( Prep4Vel )
+   if ( PrepRest )
    {
       for (int k=0; k<Loop1[2]; k++)   {  k1 = k + Disp1[2];   k2 = k + Disp2[2];
       for (int j=0; j<Loop1[1]; j++)   {  j1 = j + Disp1[1];   j2 = j + Disp2[1];
@@ -623,7 +624,7 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData[], const in
 
 	 CPU_Con2Pri(Cons, Prim, (real)GAMMA);
 
-         CData_Ptr[Idx] = FABS(Prim[1]) + FABS(Prim[2]) + FABS(Prim[3]);
+         CData_Ptr[Idx] = Prim[0];
 
          if ( FluIntTime ) // temporal interpolation
 	   {
@@ -633,7 +634,7 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData[], const in
 	      CPU_Con2Pri(Cons, Prim, (real)GAMMA);
 
 	      CData_Ptr[Idx] =   FluWeighting     *CData_Ptr[Idx]
-			       + FluWeighting_IntT* ( FABS(Prim[1]) + FABS(Prim[2]) + FABS(Prim[3]) );
+			       + FluWeighting_IntT* Prim[0];
 	   }
          Idx ++;
       }}}
@@ -1045,7 +1046,7 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData[], const in
             CData_Ptr += CSize3D;
          }
 
-         if ( Prep4Vel )
+         if ( PrepRest )
          {
             for (int k=0; k<Loop2[2]; k++)   {  k1 = k + Disp3[2];   k2 = k + Disp4[2];
             for (int j=0; j<Loop2[1]; j++)   {  j1 = j + Disp3[1];   j2 = j + Disp4[1];
@@ -1057,7 +1058,7 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData[], const in
 
 	       CPU_Con2Pri(Cons, Prim, (real)GAMMA);
 
-	       CData_Ptr[Idx] = FABS(Prim[1]) + FABS(Prim[2]) + FABS(Prim[3]);
+	       CData_Ptr[Idx] = Prim[0];
 
                if ( FluIntTime ) // temporal interpolation
 		   {
@@ -1067,7 +1068,7 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData[], const in
 		      CPU_Con2Pri(Cons, Prim, (real)GAMMA);
 
 		      CData_Ptr[Idx] =   FluWeighting     *CData_Ptr[Idx]
-				       + FluWeighting_IntT*( FABS(Prim[1]) + FABS(Prim[2]) + FABS(Prim[3]) );
+				       + FluWeighting_IntT*Prim[0];
 		   }
                Idx ++;
             }}}
@@ -1282,7 +1283,7 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData[], const in
       if ( TFluVarIdx != REAL  &&  TFluVarIdx != IMAG )  Monotonicity[v] = EnsureMonotonicity_Yes;
       else                                               Monotonicity[v] = EnsureMonotonicity_No;
 #     elif ( MODEL == SR_HYDRO )
-//    apply monotonic interpolation to primitive density and pressure
+//    apply monotonic interpolation to all quantities
 	   Monotonicity[v] = EnsureMonotonicity_Yes;
 #     else
 #     error : DO YOU WANT TO ENSURE THE POSITIVITY OF INTERPOLATION IN THIS NEW MODEL ??
@@ -1406,7 +1407,7 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData[], const in
    }
 */
 #  else
-// c3. interpolation on original variables for models != ELBDM && SR_HYDRO
+// c3. interpolation on original variables for models != ELBDM
    for (int v=0; v<NVar_Flu; v++)
       Interpolate( CData+CSize3D*v, CSize, CStart, CRange, IntData+FSize3D*v, FSize, FStart, 1,
                    IntScheme, PhaseUnwrapping_No, Monotonicity );
@@ -1415,33 +1416,30 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData[], const in
 
 #  ifdef CHECK_NEGATIVE_IN_FLUID
 #  if ( MODEL == SR_HYDRO )
+   real Con[NCOMP_FLUID];
 
    if (NVar_Flu == NCOMP_FLUID){
+//  check coarse data
+    for ( int i = 0 ;i < CSize3D; i++ ){
+      for (int v = 0 ; v < NCOMP_FLUID ;v++) Con[v] = *(CData+CSize3D*v+i);
+      if(CPU_CheckUnphysical(Con, NULL)) Aux_Message(stderr,"\nUnphysical varibles!\nfunction: %s: %d\n", __FUNCTION__, __LINE__);
+    }
 
-     for ( int i = 0 ;i < FSize3D;i++ ){
-	 if ( CPU_CheckNegative(*(IntData+FSize3D*DENS+i)) 
-	   ||     !Aux_IsFinite(*(IntData+FSize3D*MOMX+i)) 
-	   ||     !Aux_IsFinite(*(IntData+FSize3D*MOMY+i))
-	   ||     !Aux_IsFinite(*(IntData+FSize3D*MOMZ+i))
-	   || CPU_CheckNegative(*(IntData+FSize3D*ENGY+i)))
-	    {   
-	      Aux_Message (stderr,"\n\nWARNING:\nfile: %s\nfunction: %s\n", __FILE__, __FUNCTION__);
-	      Aux_Message (stderr,"line:%d\nOutput:\nD=%e, Mx=%e, My=%e, Mz=%e, E=%e\n", __LINE__,
-			   *(IntData+FSize3D*DENS+i), *(IntData+FSize3D*MOMX+i), *(IntData+FSize3D*MOMY+i), 
-			   *(IntData+FSize3D*MOMZ+i), *(IntData+FSize3D*ENGY+i));
-	    }   
-	    real M = SQRT (SQR (*(IntData+FSize3D*MOMX+i)) + SQR (*(IntData+FSize3D*MOMY+i)) + SQR (*(IntData+FSize3D*MOMZ+i)));
-
-	 if ( *(IntData+FSize3D*ENGY+i) <= M ) 
-	   {
-	      Aux_Message (stderr,"\n\nWARNING: |M| > E!\n");
-	      Aux_Message (stderr,"file: %s\nfunction: %s\n", __FILE__, __FUNCTION__);
-	      Aux_Message (stderr,"line:%d\nOutput:\nD=%e, Mx=%e, My=%e, Mz=%e, E=%e\n", __LINE__, 
-			   *(IntData+FSize3D*DENS+i), *(IntData+FSize3D*MOMX+i), *(IntData+FSize3D*MOMY+i), 
-			   *(IntData+FSize3D*MOMZ+i), *(IntData+FSize3D*ENGY+i));
-	   }
-      }
-}
+//  ckeck fine data
+    for ( int i = 0 ;i < FSize3D; i++ ){
+      for (int v = 0 ; v < NCOMP_FLUID ;v++) Con[v] = *(IntData+FSize3D*v+i);
+      if(CPU_CheckUnphysical(Con, NULL)){
+        Aux_Message(stderr,"\nUnphysical varibles!\nfunction: %s: %d\n", __FUNCTION__, __LINE__);
+        for ( int i = 0 ;i < CSize3D; i++ ){
+          Aux_Message(stderr,"Dens = %14.7e\n",*(CData+CSize3D*DENS+i));
+          Aux_Message(stderr,"MomX = %14.7e\n",*(CData+CSize3D*MOMX+i));
+          Aux_Message(stderr,"MomY = %14.7e\n",*(CData+CSize3D*MOMY+i));
+          Aux_Message(stderr,"MomZ = %14.7e\n",*(CData+CSize3D*MOMZ+i));
+          Aux_Message(stderr,"Engy = %14.7e\n",*(CData+CSize3D*ENGY+i));
+        }
+     }
+    }
+   }
 #  endif
 #  endif
 
@@ -1521,7 +1519,7 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData[], const in
       NVar_SoFar ++;
    }
 
-   if ( Prep4Vel )
+   if ( PrepRest )
    {
       Interpolate( CData+CSize3D*NVar_SoFar, CSize, CStart, CRange, IntData+FSize3D*NVar_SoFar, FSize, FStart, 1,
                    IntScheme, PhaseUnwrapping_No, &EnsureMonotonicity_Yes );
