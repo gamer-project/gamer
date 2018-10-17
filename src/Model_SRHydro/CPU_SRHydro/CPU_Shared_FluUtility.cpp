@@ -8,12 +8,11 @@
 #if ( MODEL == SR_HYDRO )
 struct FUN_params
 {
-  real d;
+  real D;
   real M1;
   real M2;
   real M3;
   real E;
-//  real Gamma;
 };
 
 // some functions in this file need to be defined even when using GPU
@@ -101,17 +100,9 @@ void
 CPU_Con2Pri (const real In[], real Out[], const real Gamma)
 {
   real In_temp[5] = { In[0], In[1], In[2], In[3], In[4] };
-  real Gamma_m1 = Gamma - (real) 1.0;
   real Msqr = SQR (In_temp[1]) + SQR (In_temp[2]) + SQR (In_temp[3]);
   real M = SQRT (Msqr); // magnitude of momentum
 
-
-//  real abc = SQR(In_temp[4]) -  SQR(In_temp[0]) - Msqr;
-
-// case 1: flow velocity >> 0 && random velocity >> 0
-//  if ( ( fabs (M) > TINY_NUMBER ) && ( abc > TINY_NUMBER ) )
-  if ( fabs (M) > TINY_NUMBER  )
-    {
       int status;
 
       int iter = 0;
@@ -122,20 +113,66 @@ CPU_Con2Pri (const real In[], real Out[], const real Gamma)
       gsl_root_fdfsolver *s;
 
       real Q, Q0;
+# ifdef RELATIVISTIC_EOS
+# if   ( CONSERVED_ENERGY == 1 )
+/* initial guess Q  */
+	   real Constant = SQR(In[4]/In[0]) - Msqr/SQR(In[0]) - 1.0;
+
+	   if ( 1.0 - Msqr/(16*In[0]*In[0]) >= 0 )
+             {
+	       if ( Constant > 1.5 ) 
+                 {
+		    Q = SQRT( SQR(In[4]/In[0]) - 0.9375*Msqr/SQR(In[0]) - 1.0 ) / 3.0;
+		 }
+	       else Q = Constant / 3.0;
+	     }
+	   else // 1 - (M/D)**2 < 0
+             {
+	       if ( Constant >  0.5 + SQRT( Msqr/(16*SQR(In[0])) - 3.0/4.0 )) 
+                 {
+	            Q = SQRT( SQR(In[4]/In[0]) - 0.9375*Msqr/SQR(In[0]) - 1.0 ) / 3.0;
+		 }
+	       else Q = Constant / 3.0;
+	     }
+# elif ( CONSERVED_ENERGY == 2 )
+/* initial guess Q  */
+	   real Constant = SQR(In[4]/In[0]) + 2*In[4]/In[0] - Msqr/SQR(In[0]);
+
+	   if ( 1.0 - Msqr/(16*In[0]*In[0]) >= 0 )
+             {
+	       if ( Constant > 1.5 ) 
+                 {
+	            Q = SQRT( SQR(In[4]/In[0]) + 2*In[4]/In[0] - 0.9375*Msqr/SQR(In[0]) - 1.0 ) / 3.0;
+		 }
+	       else Q = Constant / 3.0;
+	     }
+	   else // 1 - (M/D)**2 < 0
+             {
+	       if ( Constant >  0.5 + SQRT( Msqr/(16*SQR(In[0])) - 3.0/4.0 )) 
+                 {
+		    Q = SQRT( SQR(In[4]/In[0]) + 2*In[4]/In[0] - 0.9375*Msqr/SQR(In[0]) - 1.0 ) / 3.0;
+		 }
+	       else Q = Constant / 3.0;
+	     }
+# else
+# error: CONSERVED_ENERGY must be 1 or 2!
+# endif
+
+# elif defined IDEAL_GAS_EOS
+  real Gamma_m1 = Gamma - (real) 1.0;
 
 /* initial guess Q  */
-      if (In_temp[0] > M / Gamma_m1)
-	{
-	  Q = M * (In_temp[4] - M) / ((1 - 1 / Gamma) * In_temp[0]);
-	}
-      else
-	{
-	  Q = In_temp[4] * Gamma;
-	}
-
+    if ( M > TINY_NUMBER ) 
+    {
+	if (In_temp[0] > M / Gamma_m1)  Q = M * (In_temp[4] - M) / ((1 - 1 / Gamma) * In_temp[0]);
+        else                            Q = In_temp[4] * Gamma;
+    } 
+    else                                Q = In_temp[4] * Gamma - In_temp[0] * (Gamma_m1);
+#else
+#error: unsupported EoS!
+#endif
       gsl_function_fdf F;
 
-      //struct FUN_params params = { In_temp[0], In_temp[1], In_temp[2], In_temp[3], In_temp[4], Gamma };
       struct FUN_params params = { In_temp[0], In_temp[1], In_temp[2], In_temp[3], In_temp[4] };
 
       F.f = &FUN;
@@ -155,65 +192,48 @@ CPU_Con2Pri (const real In[], real Out[], const real Gamma)
 	  //printf ("status = %s\n", gsl_strerror (status));
 	  Q0 = Q;
 	  Q = gsl_root_fdfsolver_root (s);
+#         ifdef FLOAT8
 	  status = gsl_root_test_delta (Q, Q0, 0, 1e-16);
+#         else
+	  status = gsl_root_test_delta (Q, Q0, 0, 1e-7);
+#         endif
 	  //printf ("status = %s\n", gsl_strerror (status));
 	}
       while (status == GSL_CONTINUE && iter < max_iter);
       //printf ("status = %s\n", gsl_strerror (status));
+#ifdef RELATIVISTIC_EOS
+      real h = 2.5*Q + SQRT(2.25*Q*Q + 1.0);
 
+      Out[1] = In_temp[1]/(In_temp[0]*h);
+      Out[2] = In_temp[2]/(In_temp[0]*h);
+      Out[3] = In_temp[3]/(In_temp[0]*h);
+
+      real Factor = SQRT(1 + SQR (Out[1]) + SQR (Out[2]) + SQR (Out[3]));
+
+      Out[0] = In_temp[0] / Factor;
+
+#     if     ( CONSERVED_ENERGY == 1 )
+      Out[4] = In_temp[0] * h * Factor - In_temp[4];
+#     elif   ( CONSERVED_ENERGY == 2 )
+      Out[4] = In_temp[0] * h * Factor - In_temp[4] - In_temp[0];
+#     else
+#     error: CONSERVED_ENERGY must be 1 or 2!
+#     endif
+
+#elif defined IDEAL_GAS_EOS 
       Out[1] = In_temp[1] / Q;	/*Ux */
       Out[2] = In_temp[2] / Q;	/*Uy */
       Out[3] = In_temp[3] / Q;	/*Uz */
 
       real Factor = SQRT (1 + SQR (Out[1]) + SQR (Out[2]) + SQR (Out[3]));
 
-      Out[0] = In_temp[0] / Factor;	/*rest mass density */
+      Out[0] = In_temp[0] / Factor;	/*number density in local rest frame*/
       Out[4] = (Gamma_m1 / Gamma) * FABS (Q / Factor - Out[0]);	/*pressure */
 
+#else
+#error: unsupported EoS!
+#endif
       gsl_root_fdfsolver_free (s);
-    }
-// case 2: flow velocity -> 0 && random velocity >> 0
-//  else if ( ( fabs (M) <= TINY_NUMBER ) && ( abc > TINY_NUMBER )  )
-  else
-    {
-      Out[0] = In_temp[0];
-      Out[1] = TINY_NUMBER;
-      Out[2] = TINY_NUMBER;
-      Out[3] = TINY_NUMBER;
-      Out[4] = Gamma_m1 * (In_temp[4] - In_temp[0]);
-    }
-// case 3: flow velocity -> 0 and random velocity -> 0
-/*
-   else if ( ( fabs (M) <= TINY_NUMBER ) && ( abc <= TINY_NUMBER )  )
-    {
-       Out[0] = In_temp[0];
-       Out[1] = TINY_NUMBER;
-       Out[2] = TINY_NUMBER;
-       Out[3] = TINY_NUMBER;
-       Out[4] = TINY_NUMBER;
-    }
-// case 4: flow velocity >> 0 and random velocity -> 0
-// ( fabs (M) > TINY_NUMBER ) && ( abc <= 1.0 + TINY_NUMBER )
-  else
-    {
-#      ifdef CHECK_NEGATIVE_IN_FLUID
-	 if (SQR(In_temp[4]) <= Msqr){
-	   Aux_Error(ERROR_INFO, "E = %e <= %e = |M| !", In_temp[4], Msqr);
-	 }
-#      endif
-       real something = SQRT( SQR(In_temp[4]) - Msqr );
-
-       Out[1] = In_temp[1] / something;
-       Out[2] = In_temp[2] / something;
-       Out[3] = In_temp[3] / something;
-
-       real LorentzFactor_sqr = 1.0 + SQR(Out[1]) + SQR(Out[2]) + SQR(Out[3]);
-       Out[0] = In_temp[4] / LorentzFactor_sqr ;
-
-       Out[4] = TINY_NUMBER;
-    }
-*/
-
 }				// FUNCTION : CPU_Con2Pri
 
 
@@ -225,17 +245,9 @@ CPU_Con2Pri (const real In[], real Out[], const real Gamma)
 real CPU_Con2Q (const real In[], const real Gamma)
 {
   real In_temp[5] = { In[0], In[1], In[2], In[3], In[4] };
-  real Gamma_m1 = Gamma - (real) 1.0;
   real Msqr = SQR (In_temp[1]) + SQR (In_temp[2]) + SQR (In_temp[3]);
   real M = SQRT (Msqr); // magnitude of momentum
 
-
-//  real abc = SQR(In_temp[4]) -  SQR(In_temp[0]) - Msqr;
-
-// case 1: flow velocity >> 0 && random velocity >> 0
-//  if ( ( fabs (M) > TINY_NUMBER ) && ( abc > TINY_NUMBER ) )
-  if ( fabs (M) > TINY_NUMBER  )
-    {
       int status;
 
       int iter = 0;
@@ -246,20 +258,66 @@ real CPU_Con2Q (const real In[], const real Gamma)
       gsl_root_fdfsolver *s;
 
       real Q, Q0;
+# ifdef RELATIVISTIC_EOS
+# if   ( CONSERVED_ENERGY == 1 )
+/* initial guess Q  */
+	   real Constant = SQR(In[4]/In[0]) - Msqr/SQR(In[0]) - 1.0;
+
+	   if ( 1.0 - Msqr/(16*In[0]*In[0]) >= 0 )
+             {
+	       if ( Constant > 1.5 ) 
+                 {
+		    Q = SQRT( SQR(In[4]/In[0]) - 0.9375*Msqr/SQR(In[0]) - 1.0 ) / 3.0;
+		 }
+	       else Q = Constant / 3.0;
+	     }
+	   else // 1 - (M/D)**2 < 0
+             {
+	       if ( Constant >  0.5 + SQRT( Msqr/(16*SQR(In[0])) - 3.0/4.0 )) 
+                 {
+	            Q = SQRT( SQR(In[4]/In[0]) - 0.9375*Msqr/SQR(In[0]) - 1.0 ) / 3.0;
+		 }
+	       else Q = Constant / 3.0;
+	     }
+# elif ( CONSERVED_ENERGY == 2 )
+/* initial guess Q  */
+	   real Constant = SQR(In[4]/In[0]) + 2*In[4]/In[0] - Msqr/SQR(In[0]);
+
+	   if ( 1.0 - Msqr/(16*In[0]*In[0]) >= 0 )
+             {
+	       if ( Constant > 1.5 ) 
+                 {
+	            Q = SQRT( SQR(In[4]/In[0]) + 2*In[4]/In[0] - 0.9375*Msqr/SQR(In[0]) - 1.0 ) / 3.0;
+		 }
+	       else Q = Constant / 3.0;
+	     }
+	   else // 1 - (M/D)**2 < 0
+             {
+	       if ( Constant >  0.5 + SQRT( Msqr/(16*SQR(In[0])) - 3.0/4.0 )) 
+                 {
+		    Q = SQRT( SQR(In[4]/In[0]) + 2*In[4]/In[0] - 0.9375*Msqr/SQR(In[0]) - 1.0 ) / 3.0;
+		 }
+	       else Q = Constant / 3.0;
+	     }
+# else
+# error: CONSERVED_ENERGY must be 1 or 2!
+# endif
+
+# elif defined IDEAL_GAS_EOS
+  real Gamma_m1 = Gamma - (real) 1.0;
 
 /* initial guess Q  */
-      if (In_temp[0] > M / Gamma_m1)
-	{
-	  Q = M * (In_temp[4] - M) / ((1 - 1 / Gamma) * In_temp[0]);
-	}
-      else
-	{
-	  Q = In_temp[4] * Gamma;
-	}
-
+    if ( M > TINY_NUMBER ) 
+    {
+	if (In_temp[0] > M / Gamma_m1)  Q = M * (In_temp[4] - M) / ((1 - 1 / Gamma) * In_temp[0]);
+        else                            Q = In_temp[4] * Gamma;
+    } 
+    else                                Q = In_temp[4] * Gamma - In_temp[0] * (Gamma_m1);
+#else
+#error: unsupported EoS!
+#endif
       gsl_function_fdf F;
 
-      //struct FUN_params params = { In_temp[0], In_temp[1], In_temp[2], In_temp[3], In_temp[4], Gamma };
       struct FUN_params params = { In_temp[0], In_temp[1], In_temp[2], In_temp[3], In_temp[4] };
 
       F.f = &FUN;
@@ -279,22 +337,24 @@ real CPU_Con2Q (const real In[], const real Gamma)
 	  //printf ("status = %s\n", gsl_strerror (status));
 	  Q0 = Q;
 	  Q = gsl_root_fdfsolver_root (s);
+#         ifdef FLOAT8
 	  status = gsl_root_test_delta (Q, Q0, 0, 1e-16);
+#         else
+	  status = gsl_root_test_delta (Q, Q0, 0, 1e-7);
+#         endif
 	  //printf ("status = %s\n", gsl_strerror (status));
 	}
       while (status == GSL_CONTINUE && iter < max_iter);
       //printf ("status = %s\n", gsl_strerror (status));
-
-      gsl_root_fdfsolver_free (s);
-
+#    ifdef  IDEAL_GAS_EOS
       return Q;
-    }
-// case 2: flow velocity -> 0 && random velocity >> 0
-//  else if ( ( fabs (M) <= TINY_NUMBER ) && ( abc > TINY_NUMBER )  )
-  else
-    {
-      return 0.0;
-    }
+#    elif defined RELATIVISTIC_EOS 
+      real h = 2.5*Q + SQRT(2.25*Q*Q + 1.0);
+      return h*In_temp[0];
+#    else
+#    error: unsupported EoS!
+#    endif
+      gsl_root_fdfsolver_free (s);
 }
 
 //-------------------------------------------------------------------------------------------------------
@@ -315,28 +375,34 @@ void
 CPU_Pri2Con (const real In[], real Out[], const real Gamma)
 {
 #ifdef RELATIVISTIC_EOS
-  if ( In[4] > TINY_NUMBER )       real Temperature = In[0]/In[4]; // T = number_density/pressure
-  else if ( In[4] <= TINY_NUMBER ) real Temperature = 0.0;         // pressure = number_density * T
+  real Temperature;
+  if ( In[4] > TINY_NUMBER )  {  
+      Temperature = In[4]/In[0]; // T = number_density/pressure
+   } else {
+      Temperature = 0.0;         // pressure = number_density * T
+   }
 
-  real Enthalpy = 2.5*Temperature+SQRT(2.25*SQR(Temperature)+1.0); // approximate enthalpy
+  real Enthalpy = 2.5*Temperature + SQRT(2.25*SQR(Temperature)+1.0); // approximate enthalpy
   real Factor0 = SQRT(1.0 + SQR (In[1]) + SQR (In[2]) + SQR (In[3])); // Lorentz factor
-  real Factor1 = Out[0] * Enthalpy;
+  real Factor1 = In[0] * Factor0 * Enthalpy;
   
   Out[0] = In[0] * Factor0; // number density in inertial frame
   Out[1] = Factor1 * In[1]; // MomX
   Out[2] = Factor1 * In[2]; // MomX
   Out[3] = Factor1 * In[3]; // MomX
-# if   ( RELATIVISTIC_EOS ==  VERSION_1 )
+# if   ( CONSERVED_ENERGY == 1 )
   Out[4] = Factor1 * Factor0 - In[4]; // total_energy
-# elif ( RELATIVISTIC_EOS ==  VERSION_2 )
+# elif ( CONSERVED_ENERGY == 2 )
   Out[4] = Factor1 * Factor0 - In[4] - Out[0]; // ( total_energy ) - ( rest_mass_energy )
+# else
+# error: CONSERVED_ENERGY must be 1 or 2!
 # endif
 
-#elif def ULTRA_RELATIVISTIC_EOS
+#elif defined IDEAL_GAS_EOS
   real Gamma_m1 = (real) Gamma - 1.0;
   real U = SQRT(SQR(In[1])+SQR(In[2])+SQR(In[3]));
 
-  if ( ( U > TINY_NUMBER ) && ( In[4] > TINY_NUMBER ) ){
+//  if ( ( U > TINY_NUMBER ) && ( In[4] > TINY_NUMBER ) ){
     real Factor0 = 1 + SQR (In[1]) + SQR (In[2]) + SQR (In[3]);
     real Factor1 = SQRT (Factor0);
     real Factor2 = Gamma / Gamma_m1;
@@ -348,7 +414,7 @@ CPU_Pri2Con (const real In[], real Out[], const real Gamma)
     Out[2] = Factor4 * In[2];
     Out[3] = Factor4 * In[3];
     Out[4] = Factor3 * Factor0 - In[4];
-
+/*
    }
    else if ( ( U <= TINY_NUMBER ) && ( In[4] <= TINY_NUMBER ) )
    {
@@ -379,6 +445,7 @@ CPU_Pri2Con (const real In[], real Out[], const real Gamma)
     Out[3] = In[0] * Factor1 * In[3];
     Out[4] = In[0] * Factor0;
   }
+*/
 #else
 #error: unsupported EoS!
 #endif
@@ -434,8 +501,8 @@ CPU_Con2Flux (const int XYZ, real Flux[], const real Input[], const real Gamma_m
 {
   const bool CheckMinPres_Yes = true;
   real ConVar[NCOMP_FLUID];	// don't need to include passive scalars since they don't have to be rotated1
-  real PriVar4[NCOMP_FLUID];	// d, Ux, Uy, Uz, P
-  real PriVar3[NCOMP_FLUID];	// d, Vx, Vy, Vz, P
+  real PriVar4[NCOMP_FLUID];	// D, Ux, Uy, Uz, P
+  real PriVar3[NCOMP_FLUID];	// D, Vx, Vy, Vz, P
   real Pres, Vx;
   real lFactor;
 
@@ -455,7 +522,13 @@ CPU_Con2Flux (const int XYZ, real Flux[], const real Input[], const real Gamma_m
   Flux[1] = ConVar[1] * Vx + Pres;
   Flux[2] = ConVar[2] * Vx;
   Flux[3] = ConVar[3] * Vx;
+# if ( CONSERVED_ENERGY == 1 )
   Flux[4] = ConVar[1];
+# elif ( CONSERVED_ENERGY == 2 )
+  Flux[4] = ConVar[1] - Flux[0];
+# else
+# error: CONSERVED_ENERGY must be 1 or 2!
+# endif
 
   CPU_Rotate3D (Flux, XYZ, false);
 }				// FUNCTION : CPU_Con2Flux
@@ -542,104 +615,115 @@ CPU_CheckMinDens (const real InDens, const real MinDens)
 bool CPU_CheckUnphysical( const real Con[], const real Pri[])
 {
    real Msqr;
+   real ConsVar[NCOMP_FLUID];
+   real Pri4Vel[NCOMP_FLUID];
+   real Pri3Vel[NCOMP_FLUID];
 
-// only check conserved variables
+//--------------------------------------------------------------//
+//------------ only check conserved variables-------------------//
+//--------------------------------------------------------------//
+
     if ( Pri == NULL && Con != NULL){
+      for(int i=0; i< NCOMP_FLUID; i++) ConsVar[i]=Con[i];
 // check NaN, +inf and -inf
-      if (  !Aux_IsFinite(Con[DENS])  
-	||  !Aux_IsFinite(Con[MOMX])  
-	||  !Aux_IsFinite(Con[MOMY])  
-	||  !Aux_IsFinite(Con[MOMZ])  
-	||  !Aux_IsFinite(Con[ENGY]) ) {printf("11\n");goto UNPHYSICAL1;}
+      if (  !Aux_IsFinite(ConsVar[DENS])  
+	||  !Aux_IsFinite(ConsVar[MOMX])  
+	||  !Aux_IsFinite(ConsVar[MOMY])  
+	||  !Aux_IsFinite(ConsVar[MOMZ])  
+	||  !Aux_IsFinite(ConsVar[ENGY]) )                                  goto UNPHYSICAL;
 
-// check positivity of number density
-      if (Con[DENS] <= 0.0) goto UNPHYSICAL1;
-
-// check total energy vs. inner product of 4-momentum
-      Msqr = SQR(Con[MOMX]) + SQR(Con[MOMY]) + SQR(Con[MOMZ]);
-      if ( SQR(Con[ENGY]) <= Msqr + SQR(Con[DENS]) ) {printf("22\n");goto UNPHYSICAL1;}
-
-      real Pri4Vel[NCOMP_FLUID];
-      real Pri3Vel[NCOMP_FLUID];
+// check positivity of number density in inertial frame
+      if (ConsVar[DENS] <= 0.0)                                             goto UNPHYSICAL;
+ 
+// check energy
+      Msqr = SQR(ConsVar[MOMX]) + SQR(ConsVar[MOMY]) + SQR(ConsVar[MOMZ]);
+#     if ( CONSERVED_ENERGY == 1 )
+      if ( SQR(ConsVar[ENGY]) <= Msqr + SQR(ConsVar[DENS]) )                goto UNPHYSICAL;
+#     elif ( CONSERVED_ENERGY == 2 )
+      if ( SQR(ConsVar[ENGY]) + 2*ConsVar[ENGY] - Msqr <= 0 )               goto UNPHYSICAL;
+#     else
+#     error: CONSERVED_ENERGY must be 1 or 2!
+#     endif
       
-      CPU_Con2Pri(Con, Pri4Vel, (real) GAMMA);
+      CPU_Con2Pri(ConsVar, Pri4Vel, (real) GAMMA);
       CPU_4Velto3Vel(Pri4Vel,Pri3Vel);
 
-// check positivity of rest mass density
-      if (Pri4Vel[0] <= (real)0.0) {printf("33\n");goto UNPHYSICAL1;}
+// check NaN, +inf and -inf
+      if (  !Aux_IsFinite(Pri4Vel[0])  
+	||  !Aux_IsFinite(Pri4Vel[1])  
+	||  !Aux_IsFinite(Pri4Vel[2])  
+	||  !Aux_IsFinite(Pri4Vel[3])  
+	||  !Aux_IsFinite(Pri4Vel[4]) )                                     goto UNPHYSICAL;
+
+// check positivity of number density in local rest frame
+      if (Pri4Vel[0] <= (real)0.0)                                          goto UNPHYSICAL;
 // check positivity of pressure
-      if (Pri4Vel[4] <= (real)0.0) {printf("44\n");goto UNPHYSICAL1;}
+      if (Pri4Vel[4] <= (real)0.0)                                          goto UNPHYSICAL;
 // check whether 3-velocity is greater or equal to speed of light
-      if (SQR(Pri3Vel[1]) + SQR(Pri3Vel[2]) + SQR(Pri3Vel[3]) >= 1.0) {printf("55\n");goto UNPHYSICAL1;}
+      if (SQR(Pri3Vel[1]) + SQR(Pri3Vel[2]) + SQR(Pri3Vel[3]) >= 1.0)       goto UNPHYSICAL;
 
 // pass all checks 
       return false;
-// print all variables if goto UNPHYSICAL1
-      UNPHYSICAL1:
+   }
+
+//--------------------------------------------------------------//
+//------------ only check primitive variables-------------------//
+//--------------------------------------------------------------//
+
+   else if ( Con == NULL && Pri != NULL){
+      for(int i=0; i< NCOMP_FLUID; i++) Pri4Vel[i]=Pri[i];
+// check NaN, +inf and -inf
+      if (  !Aux_IsFinite(Pri4Vel[0])  
+	||  !Aux_IsFinite(Pri4Vel[1])  
+	||  !Aux_IsFinite(Pri4Vel[2])  
+	||  !Aux_IsFinite(Pri4Vel[3])  
+	||  !Aux_IsFinite(Pri4Vel[4]) )                                     goto UNPHYSICAL;
+
+      CPU_4Velto3Vel(Pri4Vel,Pri3Vel);
+
+// check positivity of number density in local rest frame
+      if (Pri4Vel[0] <= (real)0.0)                                          goto UNPHYSICAL;
+// check positivity of pressure
+      if (Pri4Vel[4] <= (real)0.0)                                          goto UNPHYSICAL;
+// check whether 3-velocity is greater or equal to speed of light
+      if (SQR(Pri3Vel[1]) + SQR(Pri3Vel[2]) + SQR(Pri3Vel[3]) >= 1.0)       goto UNPHYSICAL;
+   
+
+      CPU_Pri2Con(Pri4Vel, ConsVar, (real) GAMMA);
+// check NaN, +inf and -inf
+      if (  !Aux_IsFinite(ConsVar[DENS])  
+	||  !Aux_IsFinite(ConsVar[MOMX])  
+	||  !Aux_IsFinite(ConsVar[MOMY])  
+	||  !Aux_IsFinite(ConsVar[MOMZ])  
+	||  !Aux_IsFinite(ConsVar[ENGY]) )                                  goto UNPHYSICAL;
+
+// check positivity of number density in inertial frame
+      if (ConsVar[DENS] <= 0.0)                                             goto UNPHYSICAL;
+
+// check energy
+      Msqr = SQR(ConsVar[MOMX]) + SQR(ConsVar[MOMY]) + SQR(ConsVar[MOMZ]);
+#     if ( CONSERVED_ENERGY == 1 )
+      if ( SQR(ConsVar[ENGY]) <= Msqr + SQR(ConsVar[DENS]) )                goto UNPHYSICAL;
+#     elif ( CONSERVED_ENERGY == 2 )
+      if ( SQR(ConsVar[ENGY]) + 2*ConsVar[ENGY] - Msqr <= 0 )               goto UNPHYSICAL;
+#     else
+#     error: CONSERVED_ENERGY must be 1 or 2!
+#     endif      
+
+// pass all checks 
+      return false;
+// print all variables if goto UNPHYSICAL
+      UNPHYSICAL:
       {
         Aux_Message(stderr, "\n\nD=%14.7e, Mx=%14.7e, My=%14.7e, Mz=%14.7e, E=%14.7e\n",
-                             Con[DENS], Con[MOMX], Con[MOMY], Con[MOMZ], Con[ENGY]);
-        Aux_Message(stderr, "E^2-|M|^2-D^2=%14.7e\n", SQR(Con[ENGY])-SQR(Con[MOMX])-SQR(Con[MOMY])-SQR(Con[MOMZ])-SQR(Con[DENS]));
+                             ConsVar[DENS], ConsVar[MOMX], ConsVar[MOMY], ConsVar[MOMZ], ConsVar[ENGY]);
+        Aux_Message(stderr, "E^2-|M|^2-D^2=%14.7e\n", SQR(ConsVar[ENGY])-SQR(ConsVar[MOMX])-SQR(ConsVar[MOMY])-SQR(ConsVar[MOMZ])-SQR(ConsVar[DENS]));
         Aux_Message(stderr, "RestDens=%14.7e, Ux=%14.7e, Uy=%14.7e, Uz=%14.7e, P=%14.7e\n", 
                              Pri4Vel[0], Pri4Vel[1], Pri4Vel[2], Pri4Vel[3], Pri4Vel[4]);
         Aux_Message(stderr, "Vx=%14.7e, Vy=%14.7e, Vz=%14.7e, |V|=%14.7e\n",
                              Pri3Vel[1], Pri3Vel[2], Pri3Vel[3], SQRT(SQR(Pri3Vel[1])+SQR(Pri3Vel[2])+SQR(Pri3Vel[3])));
         return true;
       }
-
-   }
-// only check primitive variables
-   else if ( Con == NULL && Pri != NULL){
-      if (  !Aux_IsFinite(Pri[0])  
-	||  !Aux_IsFinite(Pri[1])  
-	||  !Aux_IsFinite(Pri[2])  
-	||  !Aux_IsFinite(Pri[3])  
-	||  !Aux_IsFinite(Pri[4]) ) {printf("66\n");goto UNPHYSICAL2;}
-
-      real Pri3Vel[NCOMP_FLUID];
-
-      CPU_4Velto3Vel(Pri,Pri3Vel);
-
-// check positivity of rest mass density
-      if (Pri[0] <= (real)0.0) {printf("77\n");goto UNPHYSICAL2;}
-// check positivity of pressure
-      if (Pri[4] <= (real)0.0) {printf("88\n");goto UNPHYSICAL2;}
-// check whether 3-velocity is greater or equal to speed of light
-      if (SQR(Pri3Vel[1]) + SQR(Pri3Vel[2]) + SQR(Pri3Vel[3]) >= 1.0) {printf("99\n");goto UNPHYSICAL2;}
-   
-      real ConsVar[NCOMP_FLUID];
-
-      CPU_Pri2Con(Pri, ConsVar, (real) GAMMA);
-// check NaN, +inf and -inf
-      if (  !Aux_IsFinite(ConsVar[DENS])  
-	||  !Aux_IsFinite(ConsVar[MOMX])  
-	||  !Aux_IsFinite(ConsVar[MOMY])  
-	||  !Aux_IsFinite(ConsVar[MOMZ])  
-	||  !Aux_IsFinite(ConsVar[ENGY]) ) {printf("aa\n");goto UNPHYSICAL2;}
-
-// check positivity of number density
-      if (ConsVar[DENS] <= 0.0) {printf("bb\n");goto UNPHYSICAL2;}
-
-// check total energy vs. inner product of 4-momentum
-      Msqr = SQR(ConsVar[MOMX]) + SQR(ConsVar[MOMY]) + SQR(ConsVar[MOMZ]);
-      if ( SQR(ConsVar[ENGY]) <= Msqr + SQR(ConsVar[DENS]) ) {printf("cc\n");goto UNPHYSICAL2;}
-
-// pass all checks 
-      return false;
-// print all variables if goto UNPHYSICAL2
-      UNPHYSICAL2:
-      {
-        Aux_Message(stderr, "\n\nD=%14.7e, Mx=%14.7e, My=%14.7e, Mz=%14.7e, E=%14.7e\n",
-                             ConsVar[DENS], ConsVar[MOMX], ConsVar[MOMY], ConsVar[MOMZ], ConsVar[ENGY]);
-        Aux_Message(stderr, "E^2-|M|^2-D^2=%14.7e\n", SQR(ConsVar[ENGY])-SQR(ConsVar[MOMX])-SQR(ConsVar[MOMY])-SQR(ConsVar[MOMZ])-SQR(ConsVar[DENS]));
-        Aux_Message(stderr, "RestDens=%14.7e, Ux=%14.7e, Uy=%14.7e, Uz=%14.7e, P=%14.7e\n", 
-                             Pri[0], Pri[1], Pri[2], Pri[3], Pri[4]);
-        Aux_Message(stderr, "Vx=%14.7e, Vy=%14.7e, Vz=%14.7e, |V|=%14.7e\n",
-                             Pri3Vel[1], Pri3Vel[2], Pri3Vel[3], SQRT(SQR(Pri3Vel[1])+SQR(Pri3Vel[2])+SQR(Pri3Vel[3])));
-        return true;
-      }
-
-      
    }
    else
    {
@@ -658,29 +742,14 @@ bool CPU_CheckUnphysical( const real Con[], const real Pri[])
 // Return      :  true  --> Input <= 0.0  ||  >= __FLT_MAX__  ||  != itself (Nan)
 //                false --> otherwise
 //-------------------------------------------------------------------------------------------------------
-#ifndef FLOAT8			// single precession
 bool
 CPU_CheckNegative (const real Input)
 {
-  if (Input < (real) 0.0 || Input >= __FLT_MAX__ || Input != Input)
+  if (Input < (real) 0.0 || Input >= HUGE_NUMBER || Input != Input)
     return true;
   else
     return false;
-
 }				// FUNCTION : CPU_CheckNegative
-#else				// double precession
-bool
-CPU_CheckNegative (const real Input)
-{
-  if (Input < (real) 0.0 || Input >= __DBL_MAX__ || Input != Input)
-    return true;
-  else
-    return false;
-
-}				// FUNCTION : CPU_CheckNegative
-#endif // #ifndef FLOAT8
-
-
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  CPU_GetPressure
@@ -751,11 +820,18 @@ real
 CPU_GetTemperature (const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy,
 		    const real Gamma_m1, const bool CheckMinPres, const real MinPres)
 {
-  Aux_Message (stderr,"\n\nWARNING:\nfile: %s\n", __FILE__);
-  Aux_Message (stderr,"\n\nPlease modify %s properly.\n", __FUNCTION__);
-  abort ();
-  return CPU_GetPressure (Dens, MomX, MomY, MomZ, Engy, Gamma_m1, CheckMinPres, MinPres) / Dens;
+  real In[NCOMP_FLUID];
+  real Out[NCOMP_FLUID];
 
+  In[0] = Dens;
+  In[1] = MomX;
+  In[2] = MomY;
+  In[3] = MomZ;
+  In[4] = Engy;
+
+  CPU_Con2Pri (In, Out, GAMMA);
+
+  return Out[4]/Out[0];
 }				// FUNCTION : CPU_GetTemperature
 
 
@@ -797,9 +873,6 @@ CPU_Temperature2Pressure (const real Dens, const real Temp, const real mu, const
   abort ();
 
   real Pres;
-
-  Pres = Dens * Temp / (mu * m_H);
-
 
   return Pres;
 
@@ -862,18 +935,36 @@ CPU_NormalizePassive (const real GasDens, real Passive[], const int NNorm, const
 
 }				// FUNCTION : CPU_NormalizePassive
 
+
+//-------------------------------------------------------------------------------------------------------
+// Function    :  
+// Description :  
+//-------------------------------------------------------------------------------------------------------
+
 static real
 FUN (real Q, void *ptr)
 {
   struct FUN_params *params = (struct FUN_params *) ptr;
 
-#ifdef RELATIVISTIC_EOS
-#elif def ULTRA_RELATIVISTIC_EOS
-  real d = (params->d);
+  real D  = (params->D);
   real M1 = (params->M1);
   real M2 = (params->M2);
   real M3 = (params->M3);
-  real E = (params->E);
+  real E  = (params->E);
+
+#ifdef RELATIVISTIC_EOS
+  real h = 2.5*Q+SQRT(2.25*SQR(Q)+1.0); // approximate enthalpy
+  real Msqr = SQR(M1) + SQR(M2) + SQR(M3);
+
+#if   (CONSERVED_ENERGY == 1)
+  real Constant = SQR(E/D) - Msqr/(D*D) - 1.0;
+#elif (CONSERVED_ENERGY == 2)
+  real Constant = SQR(E/D) + 2*(E/D) - Msqr/(D*D);
+# else
+# error: CONSERVED_ENERGY must be 1 or 2!
+#endif
+  real f = SQR(h) - 1.0 - 2*h*Q + (SQR(h*Q)) / (SQR(h)+Msqr/SQR(D)) - Constant;
+#elif defined IDEAL_GAS_EOS
 
   real Gamma = (real)GAMMA;
   real Gamma_m1 = (real) Gamma - 1.0;
@@ -882,24 +973,42 @@ FUN (real Q, void *ptr)
   real U2 = M2 / Q;
   real U3 = M3 / Q;
 
-  real rho = d / SQRT (1 + SQR (U1) + SQR (U2) + SQR (U3));
+  real rho = D / SQRT (1 + SQR (U1) + SQR (U2) + SQR (U3));
 
   real pres = (Gamma_m1 / Gamma) * (Q / SQRT (1 + SQR (U1) + SQR (U2) + SQR (U3)) - rho);
 
   real f = Q * SQRT (1 + SQR (U1) + SQR (U2) + SQR (U3)) - pres - E;
+#else
+#error: unsupported EoS!
+#endif // #ifdef RELATIVISTIC_EOS
 
   return f;
 }
+
+//-------------------------------------------------------------------------------------------------------
+// Function    :  
+// Description :  
+//-------------------------------------------------------------------------------------------------------
 
 static real
 D_FUN (real Q, void *ptr)
 {
   struct FUN_params *params = (struct FUN_params *) ptr;
 
-  real d = (params->d);
+  real D  = (params->D);
   real M1 = (params->M1);
   real M2 = (params->M2);
   real M3 = (params->M3);
+
+#ifdef RELATIVISTIC_EOS
+  real h = 2.5*Q+SQRT(2.25*SQR(Q)+1.0); // approximate enthalpy
+  real dh = 2.5 + 9.0*Q / SQRT(36*Q*Q+16);
+  real Msqr = SQR(M1) + SQR(M2) + SQR(M3);
+
+  real df = 2*dh*(h-Q) - 2*h + 2*h*Q*((h*h*h + Msqr*h/(D*D) + Q*dh*Msqr/(D*D)) / SQR(h*h+Msqr/(D*D)) );
+
+#elif defined IDEAL_GAS_EOS
+
   real Gamma = (real) GAMMA;;
   real Gamma_m1 = (real) Gamma - 1.0;
 
@@ -911,26 +1020,51 @@ D_FUN (real Q, void *ptr)
   real dU2 = -M2 / (Q * Q);
   real dU3 = -M3 / (Q * Q);
 
-  real dd = -d * POW (1 + SQR (U1) + SQR (U2) + SQR (U3), -1.5) * (U1 * dU1 + U2 * dU2 + U3 * dU3);
+  real dd = -D * POW (1 + SQR (U1) + SQR (U2) + SQR (U3), -1.5) * (U1 * dU1 + U2 * dU2 + U3 * dU3);
 
   real dp = (Gamma_m1 / Gamma) * (1 / SQRT (1 + SQR (U1) + SQR (U2) + SQR (U3))
 				  - Q * POW (1 + SQR (U1) + SQR (U2) + SQR (U3), -1.5) * (U1 * dU1 + U2 * dU2 + U3 * dU3) - dd);
 
   real df = SQRT (1 + SQR (U1) + SQR (U2) + SQR (U3)) + Q * (U1 * dU1 + U2 * dU2 + U3 * dU3) / SQRT (1 + SQR (U1) + SQR (U2) + SQR (U3)) - dp;
+#else
+#error: unsupported EoS!
+#endif // #ifdef RELATIVISTIC_EOS
 
   return df;
 }
+
+//-------------------------------------------------------------------------------------------------------
+// Function    :  
+// Description :  
+//-------------------------------------------------------------------------------------------------------
 
 static void
 FDF_FUN (real Q, void *ptr, real * f, real * df)
 {
   struct FUN_params *params = (struct FUN_params *) ptr;
 
-  real d = (params->d);
+  real D  = (params->D);
   real M1 = (params->M1);
   real M2 = (params->M2);
   real M3 = (params->M3);
-  real E = (params->E);
+  real E  = (params->E);
+
+#ifdef RELATIVISTIC_EOS
+  real h = 2.5*Q+SQRT(2.25*SQR(Q)+1.0); // approximate enthalpy
+  real dh = 2.5 + 9.0*Q / SQRT(36*Q*Q+16);
+  real Msqr = SQR(M1) + SQR(M2) + SQR(M3);
+#if   (CONSERVED_ENERGY == 1)
+  real Constant = SQR(E/D) - Msqr/(D*D) - 1.0;
+#elif (CONSERVED_ENERGY == 2)
+  real Constant = SQR(E/D) + 2*(E/D) - Msqr/(D*D);
+# else
+# error: CONSERVED_ENERGY must be 1 or 2!
+#endif
+  *f = SQR(h) - 1.0 - 2*h*Q + (SQR(h*Q)) / (SQR(h)+Msqr/SQR(D)) - Constant;
+  *df = 2*dh*(h-Q) - 2*h + 2*h*Q*((h*h*h + Msqr*h/(D*D) + Q*dh*Msqr/(D*D)) / SQR(h*h+Msqr/(D*D)) );
+
+#elif defined IDEAL_GAS_EOS
+
   real Gamma = (real) GAMMA;
   real Gamma_m1 = (real) Gamma - 1.0;
 
@@ -938,20 +1072,22 @@ FDF_FUN (real Q, void *ptr, real * f, real * df)
   real U2 = M2 / Q;
   real U3 = M3 / Q;
 
-  real rho = d / SQRT (1 + SQR (U1) + SQR (U2) + SQR (U3));
+  real rho = D / SQRT (1 + SQR (U1) + SQR (U2) + SQR (U3));
   real pres = (Gamma_m1 / Gamma) * (Q / SQRT (1 + SQR (U1) + SQR (U2) + SQR (U3)) - rho);
 
   real dU1 = -M1 / (Q * Q);
   real dU2 = -M2 / (Q * Q);
   real dU3 = -M3 / (Q * Q);
 
-  real drho = -d * POW (1 + SQR (U1) + SQR (U2) + SQR (U3), -1.5) * (U1 * dU1 + U2 * dU2 + U3 * dU3);
+  real drho = -D * POW (1 + SQR (U1) + SQR (U2) + SQR (U3), -1.5) * (U1 * dU1 + U2 * dU2 + U3 * dU3);
 
   real dp = (Gamma_m1 / Gamma) * (1 / SQRT (1 + SQR (U1) + SQR (U2) + SQR (U3))
 				  - Q * POW (1 + SQR (U1) + SQR (U2) + SQR (U3), -1.5) * (U1 * dU1 + U2 * dU2 + U3 * dU3) - drho);
 
   *f = Q * SQRT (1 + SQR (U1) + SQR (U2) + SQR (U3)) - pres - E;
   *df = SQRT (1 + SQR (U1) + SQR (U2) + SQR (U3)) + Q * (U1 * dU1 + U2 * dU2 + U3 * dU3) / SQRT (1 + SQR (U1) + SQR (U2) + SQR (U3)) - dp;
+#else
+#error: unsupported EoS!
+#endif // #ifdef RELATIVISTIC_EOS
 }
-#endif // #ifdef ULTRA_RELATIVISTIC_EOS
 #endif // #if ( MODEL == SR_HYDRO )

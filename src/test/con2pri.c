@@ -28,9 +28,9 @@ void CPU_Con2Pri (const double In[], double Out[], const double Gamma);
 int
 main ()
 {
-  double Gamma = 1.66666;
+  double Gamma = 1.3333333;
 
-  double Con[5] = { 1.0, -2.0, -50.0, 4.0, 500 };
+  double Con[5] = { 1.0, 0.5, 0.1, 0.8, 5 };
   double Pri[5] = { 0 };
 
   printf ("Initial cons:\n\n D=%e, Mx=%e, My=%e, Mz=%e, E=%e\n\n", Con[0], Con[1], Con[2], Con[3], Con[4]);
@@ -220,6 +220,8 @@ CPU_Con2Pri (const double In[], double Out[], const double Gamma)
 	{
 	  Q = In[4] * Gamma;
 	}
+
+      printf("Q = %14.7e\n", Q);
 
       gsl_function_fdf F;
 

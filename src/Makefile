@@ -106,6 +106,15 @@ else ifeq "$(filter -DMODEL=SR_HYDRO, $(SIMU_OPTION))" "-DMODEL=SR_HYDRO"
 # --> must be set when MODEL=HYDRO; WAF is deprecated
 SIMU_OPTION += -DFLU_SCHEME=MHM_RP
 
+#SIMU_OPTION += -DRELATIVISTIC_EOS
+SIMU_OPTION += -DIDEAL_GAS_EOS
+
+# conserved energy = (total energy)
+#SIMU_OPTION += -DCONSERVED_ENERGY=1
+
+# conserved energy = (total energy) - (rest mass energy)
+SIMU_OPTION += -DCONSERVED_ENERGY=2
+
 # scheme of spatial data reconstruction: PLM/PPM (piecewise-linear/piecewise-parabolic)
 # --> useless for RTVD/WAF
 SIMU_OPTION += -DLR_SCHEME=PLM
