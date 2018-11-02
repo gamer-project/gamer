@@ -21,7 +21,6 @@ bool ParDensArray_Initialized = false;
 
 #if (MODEL == SR_HYDRO)
 void CPU_Con2Pri (const real In[], real Out[], const real Gamma);
-void CPU_Pri2Con (const real In[], real Out[], const real Gamma);
 #endif
 
 
@@ -267,13 +266,12 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
    const real Gamma_m1         = GAMMA - (real)1.0;
    const real _Gamma_m1        = (real)1.0 / Gamma_m1;
 
-   const bool PrepDens         = ( TVar & _PRIDENS ) ? true : false; // number density in inertial frame
+   const bool PrepDens         = ( TVar & _PRON    ) ? true : false; // proper number density
    const bool PrepVx           = ( TVar & _VELX    ) ? true : false; // 4-velocity in x-direction
    const bool PrepVy           = ( TVar & _VELY    ) ? true : false; // 4-velocity in y-direction
    const bool PrepVz           = ( TVar & _VELZ    ) ? true : false; // 4-velocity in z-direction
    const bool PrepPres         = ( TVar & _PRES    ) ? true : false; // pressure
    const bool PrepTemp         = ( TVar & _TEMP    ) ? true : false; // temperature
-   const bool PrepRest         = ( TVar & _REST    ) ? true : false; // rest mass density in local rest frame
 
 #  elif ( MODEL == ELBDM )
 // no derived variables yet
@@ -336,13 +334,12 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
    const int NVar_Der_Max = 7;
    int TDerVarList[NVar_Der_Max];
 
-   if ( PrepDens )   TDerVarList[ NVar_Der ++ ] = _PRIDENS;
+   if ( PrepDens )   TDerVarList[ NVar_Der ++ ] = _PRON;
    if ( PrepVx   )   TDerVarList[ NVar_Der ++ ] = _VELX;
    if ( PrepVy   )   TDerVarList[ NVar_Der ++ ] = _VELY;
    if ( PrepVz   )   TDerVarList[ NVar_Der ++ ] = _VELZ;
    if ( PrepPres )   TDerVarList[ NVar_Der ++ ] = _PRES;
    if ( PrepTemp )   TDerVarList[ NVar_Der ++ ] = _TEMP;
-   if ( PrepRest )   TDerVarList[ NVar_Der ++ ] = _REST;
 
 #  elif ( MODEL == ELBDM )
 // no derived variables yet
@@ -1081,45 +1078,6 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
                Array_Ptr += PGSize3D;
             }
 
-            if ( PrepRest )
-            {
-               for (int k=0; k<PATCH_SIZE; k++)    {  K    = k + Disp_k;
-               for (int j=0; j<PATCH_SIZE; j++)    {  J    = j + Disp_j;
-                                                      Idx1 = IDX321( Disp_i, J, K, PGSize1D, PGSize1D );
-               for (int i=0; i<PATCH_SIZE; i++)    {
-
-                  real Cons[NCOMP_FLUID];
-                  real Prim[NCOMP_FLUID];
-
-                  Cons[0]=amr->patch[FluSg][lv][PID]->fluid[DENS][k][j][i];
-                  Cons[1]=amr->patch[FluSg][lv][PID]->fluid[MOMX][k][j][i];
-                  Cons[2]=amr->patch[FluSg][lv][PID]->fluid[MOMY][k][j][i];
-                  Cons[3]=amr->patch[FluSg][lv][PID]->fluid[MOMZ][k][j][i];
-                  Cons[4]=amr->patch[FluSg][lv][PID]->fluid[ENGY][k][j][i];
-
-                  CPU_Con2Pri(Cons, Prim, (real)GAMMA);
-
-                  Array_Ptr[Idx1] = Prim[0];
-
-                  if ( FluIntTime ) // temporal interpolation
-                       {
-			  Cons[0]=amr->patch[FluSg_IntT][lv][PID]->fluid[DENS][k][j][i];
-			  Cons[1]=amr->patch[FluSg_IntT][lv][PID]->fluid[MOMX][k][j][i];
-			  Cons[2]=amr->patch[FluSg_IntT][lv][PID]->fluid[MOMY][k][j][i];
-			  Cons[3]=amr->patch[FluSg_IntT][lv][PID]->fluid[MOMZ][k][j][i];
-			  Cons[4]=amr->patch[FluSg_IntT][lv][PID]->fluid[ENGY][k][j][i];
-
-			  CPU_Con2Pri(Cons, Prim, (real)GAMMA);
-
-			  Array_Ptr[Idx1] =   FluWeighting *Array_Ptr[Idx1] 
-                                            + FluWeighting_IntT*Prim[0];
-                       }
-                  Idx1 ++;
-               }}}
-
-               Array_Ptr += PGSize3D;
-            }
-
             if ( PrepPres )
             {
                for (int k=0; k<PATCH_SIZE; k++)    {  K    = k + Disp_k;
@@ -1534,45 +1492,6 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
 
                      Array_Ptr += PGSize3D;
                   }
-
-                  if ( PrepRest )
-                  {
-                     for (int k=0; k<Loop_k; k++)  {  K = k + Disp_k;   K2 = k + Disp_k2;
-                     for (int j=0; j<Loop_j; j++)  {  J = j + Disp_j;   J2 = j + Disp_j2;
-                                                      Idx1 = IDX321( Disp_i, J, K, PGSize1D, PGSize1D );
-                     for (I2=Disp_i2; I2<Disp_i2+Loop_i; I2++) {
-
-			real Cons[NCOMP_FLUID];
-			real Prim[NCOMP_FLUID];
-
-                        Cons[0]=amr->patch[FluSg][lv][SibPID]->fluid[DENS][K2][J2][I2];
-                        Cons[1]=amr->patch[FluSg][lv][SibPID]->fluid[MOMX][K2][J2][I2];
-                        Cons[2]=amr->patch[FluSg][lv][SibPID]->fluid[MOMY][K2][J2][I2];
-                        Cons[3]=amr->patch[FluSg][lv][SibPID]->fluid[MOMZ][K2][J2][I2];
-                        Cons[4]=amr->patch[FluSg][lv][SibPID]->fluid[ENGY][K2][J2][I2];
-
-			CPU_Con2Pri(Cons, Prim, (real)GAMMA);
-
-                        Array_Ptr[Idx1] = Prim[0];
-
-                        if ( FluIntTime ) // temporal interpolation
-			   {
-			      Cons[0]=amr->patch[FluSg_IntT][lv][SibPID]->fluid[DENS][K2][J2][I2];
-			      Cons[1]=amr->patch[FluSg_IntT][lv][SibPID]->fluid[MOMX][K2][J2][I2];
-			      Cons[2]=amr->patch[FluSg_IntT][lv][SibPID]->fluid[MOMY][K2][J2][I2];
-			      Cons[3]=amr->patch[FluSg_IntT][lv][SibPID]->fluid[MOMZ][K2][J2][I2];
-			      Cons[4]=amr->patch[FluSg_IntT][lv][SibPID]->fluid[ENGY][K2][J2][I2];
-
-			      CPU_Con2Pri(Cons, Prim, (real)GAMMA);
-			      Array_Ptr[Idx1] =   FluWeighting     *Array_Ptr[Idx1]
-						+ FluWeighting_IntT*Prim[0];
-			   }
-                        Idx1 ++;
-                     }}}
-
-                     Array_Ptr += PGSize3D;
-                  }
-
                   if ( PrepPres )
                   {
                      for (int k=0; k<Loop_k; k++)  {  K = k + Disp_k;   K2 = k + Disp_k2;

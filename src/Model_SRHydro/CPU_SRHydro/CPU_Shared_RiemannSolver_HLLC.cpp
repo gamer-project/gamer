@@ -5,6 +5,8 @@
 #if ( MODEL == SR_HYDRO )
 
 
+static void QudraticSolver (real A, real B, real C, real *x_plus, real *x_minus);
+
 //-------------------------------------------------------------------------------------------------------
 // Function    :  CPU_RiemannSolver_HLLC
 // Description :  Approximate Riemann solver of Harten, Lax, and van Leer.
@@ -36,7 +38,7 @@ void CPU_RiemannSolver_HLLC( const int XYZ,
   real Fl[NCOMP_TOTAL], Fr[NCOMP_TOTAL];
   real Fhll[NCOMP_TOTAL], Uhll[NCOMP_TOTAL];
   real Usl[NCOMP_TOTAL], Usr[NCOMP_TOTAL];
-  
+
   const real Gamma_m1 = Gamma - (real)1.0;
   double rhl, rhr, cslsq, csrsq, vsql, vsqr, gammasql, gammasqr;
   double ssl, ssr, radl, radr, lmdapl, lmdapr, lmdaml, lmdamr, lmdatlmda;
@@ -57,12 +59,6 @@ void CPU_RiemannSolver_HLLC( const int XYZ,
    CPU_Rotate3D( CL, XYZ, true );
    CPU_Rotate3D( CR, XYZ, true );
 
-/* 0.5 check unphysical conserved quanties */
-#  ifdef CHECK_NEGATIVE_IN_FLUID
-   if(CPU_CheckUnphysical(CL, NULL)) Aux_Message(stderr,"\nUnphysical varibles!\nfunction: %s: %d\n", __FUNCTION__, __LINE__);
-   if(CPU_CheckUnphysical(CR, NULL)) Aux_Message(stderr,"\nUnphysical varibles!\nfunction: %s: %d\n", __FUNCTION__, __LINE__);
-#  endif
-
 /* 1. compute primitive vars. from conserved vars. */
    CPU_Con2Pri (CL, PL, Gamma);
    CPU_Con2Pri (CR, PR, Gamma);
@@ -80,43 +76,46 @@ void CPU_RiemannSolver_HLLC( const int XYZ,
    rV3=PR[3]*rFactor;
 
 /* 3. Compute the max and min wave speeds used in Mignone */
+#  if ( EOS == RELATIVISTIC_IDEAL_GAS )
+   real Tl, Tr;
+
+   if ( PL[0] > TINY_NUMBER )  Tl = PL[4]/PL[0];
+   else                        Tl = TINY_NUMBER;
+
+   if ( PR[0] > TINY_NUMBER )  Tr = PR[4]/PR[0];
+   else                        Tr = TINY_NUMBER;
+
+   real hl =  2.5*Tl + SQRT(2.25*Tl*Tl + 1.0);
+   real hr =  2.5*Tr + SQRT(2.25*Tr*Tr + 1.0);
+
+   cslsq = ( Tl*( 5*hl - 8*Tl ) ) / ((3*hl)*( hl - Tl ));
+   csrsq = ( Tr*( 5*hr - 8*Tr ) ) / ((3*hr)*( hr - Tr ));
+#  elif ( EOS ==  IDEAL_GAS)
    rhl = PL[0] + PL[4] * Gamma / Gamma_m1; /* Mignone Eq 3.5 */
    rhr = PR[0] + PR[4] * Gamma / Gamma_m1;
 
    cslsq = Gamma * PL[4] / rhl; /* Mignone Eq 4 */
    csrsq = Gamma * PR[4] / rhr;
+#  endif
 
-   vsql = SQR(lV1) + SQR(lV2) + SQR(lV3);
-   vsqr = SQR(rV1) + SQR(rV2) + SQR(rV3);
+// square of Lorentz factor
+   gammasql = 1.0 + SQR(PL[1]) + SQR(PL[2]) + SQR(PL[3]);
+   gammasqr = 1.0 + SQR(PR[1]) + SQR(PR[2]) + SQR(PR[3]);
 
-   gammasql = 1.0 / (1.0 - vsql);
-   gammasqr = 1.0 / (1.0 - vsqr);
 
    ssl = cslsq / ( gammasql * (1.0 - cslsq) ); /* Mignone Eq 22.5 */
    ssr = csrsq / ( gammasqr * (1.0 - csrsq) );
 
 #  ifdef CHECK_NEGATIVE_IN_FLUID
-   if ((ssl*(1.0-SQR(lV1)+ssl) < 0))
-      {
-	Aux_Message (stderr, "\n\nerror:%s: %d\n",__FUNCTION__,__LINE__);
-	Aux_Message (stderr, "ssl=%e\n",ssl);
-	Aux_Message (stderr, "ssl*(1.0-SQR(lV1)+ssl = %e < 0.\n",ssl*(1.0-SQR(lV1)+ssl));
-      }
-   if ((ssr*(1.0-SQR(rV1)+ssr) < 0))
-      {
-	Aux_Message (stderr, "\n\nerror:%s: %d\n",__FUNCTION__,__LINE__);
-	Aux_Message (stderr, "ssr=%e\n",ssr);
-	Aux_Message (stderr, "ssr*(1.0-SQR(rV1)+ssr = %e < 0.\n",ssr*(1.0-SQR(rV1)+ssr));
-      }
+   if (ssl*(1+ssl-lV1*lV1) < 0 || ssr*(1+ssr-rV1*rV1) < 0 ){
+    Aux_Message(stderr,"%s: %d\n", __FUNCTION__, __LINE__);
+    Aux_Message(stderr,"deltal = %14.7e, Csl*Csl = %14.7e, Vxl = %14.7e", ssl*(1+ssl-lV1*lV1), cslsq, lV1);
+    Aux_Message(stderr,"deltar = %14.7e, Csr*Csr = %14.7e, Vxr = %14.7e", ssr*(1+ssr-rV1*rV1), csrsq, rV1);
+   }
 #  endif
 
-   radl = SQRT( ssl*(1.0-SQR(lV1)+ssl) ); /* Mignone Eq 23 (radical part) */
-   radr = SQRT( ssr*(1.0-SQR(rV1)+ssr) );
-
-   lmdapl = (lV1 + radl) / (1.0 + ssl); /* Mignone Eq 23 */
-   lmdapr = (rV1 + radr) / (1.0 + ssr);
-   lmdaml = (lV1 - radl) / (1.0 + ssl);
-   lmdamr = (rV1 - radr) / (1.0 + ssr);
+   QudraticSolver(1.0 + ssl, -2*lV1, lV1*lV1 - ssl, &lmdapl, &lmdaml);
+   QudraticSolver(1.0 + ssr, -2*rV1, rV1*rV1 - ssr, &lmdapr, &lmdamr);
 
    lmdal = MIN(lmdaml, lmdamr); /* Mignone Eq 21 */
    lmdar = MAX(lmdapl, lmdapr);
@@ -130,11 +129,44 @@ void CPU_RiemannSolver_HLLC( const int XYZ,
    Fl[3] = CL[3] * lV1;
    Fl[4] = CL[1];
 
+  if( lmdal >= 0.0){ /* Fl */
+    /* intercell flux is left flux */
+    Flux_Out[0] = Fl[0];
+    Flux_Out[1] = Fl[1];
+    Flux_Out[2] = Fl[2];
+    Flux_Out[3] = Fl[3];
+#   if ( CONSERVED_ENERGY == 1 )
+    Flux_Out[4] = Fl[4];
+#   elif ( CONSERVED_ENERGY == 2 )
+    Flux_Out[4] = Fl[4] - Fl[0];
+#   endif
+
+    CPU_Rotate3D( Flux_Out, XYZ, false );
+    return;
+  }
+
    Fr[0] = CR[0] * rV1;
    Fr[1] = CR[1] * rV1 + PR[4];
    Fr[2] = CR[2] * rV1;
    Fr[3] = CR[3] * rV1;
    Fr[4] = CR[1];
+
+   if( lmdar <= 0.0 ){ /* Fr */
+    /* intercell flux is right flux */
+    Flux_Out[0] = Fr[0];
+    Flux_Out[1] = Fr[1];
+    Flux_Out[2] = Fr[2];
+    Flux_Out[3] = Fr[3];
+#   if ( CONSERVED_ENERGY == 1 )
+    Flux_Out[4] = Fr[4];
+#   elif ( CONSERVED_ENERGY == 2 )
+    Flux_Out[4] = Fr[4] - Fr[0];
+#   endif
+
+    CPU_Rotate3D( Flux_Out, XYZ, false );
+    return;
+  }
+
 /* 5. Compute HLL flux using Mignone Eq 11 (necessary for computing lmdas (Eq 18)
  *    Compute HLL conserved quantities using Mignone eq 9
  */
@@ -145,13 +177,22 @@ void CPU_RiemannSolver_HLLC( const int XYZ,
   Fhll[1] = (lmdar*Fl[1] - lmdal*Fr[1] + lmdatlmda * (CR[1] - CL[1])) * ovlrmll;
   Fhll[2] = (lmdar*Fl[2] - lmdal*Fr[2] + lmdatlmda * (CR[2] - CL[2])) * ovlrmll;
   Fhll[3] = (lmdar*Fl[3] - lmdal*Fr[3] + lmdatlmda * (CR[3] - CL[3])) * ovlrmll;
+# if ( CONSERVED_ENERGY == 1 )
   Fhll[4] = (lmdar*Fl[4] - lmdal*Fr[4] + lmdatlmda * (CR[4] - CL[4])) * ovlrmll;
+# elif ( CONSERVED_ENERGY == 2 )
+  Fhll[4] = (lmdar*Fl[4] - lmdal*Fr[4] + lmdatlmda * (CR[4] + CR[0] - CL[4] - CL[0])) * ovlrmll;
+# endif
 
   Uhll[0] = (lmdar * CR[0] - lmdal * CL[0] + Fl[0] - Fr[0]) * ovlrmll;
   Uhll[1] = (lmdar * CR[1] - lmdal * CL[1] + Fl[1] - Fr[1]) * ovlrmll;
   Uhll[2] = (lmdar * CR[2] - lmdal * CL[2] + Fl[2] - Fr[2]) * ovlrmll;
   Uhll[3] = (lmdar * CR[3] - lmdal * CL[3] + Fl[3] - Fr[3]) * ovlrmll;
+# if ( CONSERVED_ENERGY == 1 )
   Uhll[4] = (lmdar * CR[4] - lmdal * CL[4] + Fl[4] - Fr[4]) * ovlrmll;
+# elif ( CONSERVED_ENERGY == 2 )
+  Uhll[4] = (lmdar * ( CR[4] + CR[0] ) - lmdal * ( CL[4] + CL[0]) + Fl[4] - Fr[4]) * ovlrmll;
+# endif
+
 /* 6. Compute contact wave speed using larger root from Mignone Eq 18
  *    Physical root is the root with the minus sign
  */
@@ -173,18 +214,7 @@ void CPU_RiemannSolver_HLLC( const int XYZ,
 
  /* 7. Determine intercell flux according to Mignone 13
  */
-  if( lmdal >= 0.0){ /* Fl */
-    /* intercell flux is left flux */
-    Flux_Out[0] = Fl[0];
-    Flux_Out[1] = Fl[1];
-    Flux_Out[2] = Fl[2];
-    Flux_Out[3] = Fl[3];
-    Flux_Out[4] = Fl[4];
-
-    CPU_Rotate3D( Flux_Out, XYZ, false );
-    return;
-  }
-  else if( lmdas >= 0.0){ /* Fls */
+    if( lmdas >= 0.0){ /* Fls */
 
     /* Mignone 2006 Eq 48 */
     ps = -Fhll[4]*lmdas + Fhll[1];
@@ -192,51 +222,61 @@ void CPU_RiemannSolver_HLLC( const int XYZ,
     /* now calcCLate Usl with Mignone Eq 16 */
     den = 1.0 / (lmdal - lmdas);
 
-    Usl[0] =  CL[0] * (lmdal - lV1) * den;
-    Usl[1] = (CL[1] * (lmdal - lV1) + ps - PL[4]) * den;
-    Usl[2] =  CL[2] * (lmdal - lV1) * den;
-    Usl[3] =  CL[3] * (lmdal - lV1) * den;
-    Usl[4] = (CL[4] * (lmdal - lV1) + ps * lmdas - PL[4] * lV1) * den;
+    real factor0 = lmdal - lV1;
+    real factor1 = factor0 * den;
+
+    Usl[0] =  CL[0] * factor1;
+    Usl[1] = (CL[1] * factor0 + ps - PL[4]) * den;
+    Usl[2] =  CL[2] * factor1;
+    Usl[3] =  CL[3] * factor1;
+#   if ( CONSERVED_ENERGY == 1 )
+    Usl[4] = ( CL[4] * factor0 + ps * lmdas - PL[4] * lV1) * den;
+#   elif ( CONSERVED_ENERGY == 2 )
+    Usl[4] = (( CL[4] + CL[0] ) * factor0 + ps * lmdas - PL[4] * lV1) * den;
+#   endif
 
     /* now calcCLate Fsr using Mignone Eq 14 */
     Flux_Out[0] = lmdal*(Usl[0] - CL[0]) + Fl[0];
     Flux_Out[1] = lmdal*(Usl[1] - CL[1]) + Fl[1];
     Flux_Out[2] = lmdal*(Usl[2] - CL[2]) + Fl[2];
     Flux_Out[3] = lmdal*(Usl[3] - CL[3]) + Fl[3];
+#   if ( CONSERVED_ENERGY == 1 )
     Flux_Out[4] = lmdal*(Usl[4] - CL[4]) + Fl[4];
-
+#   elif ( CONSERVED_ENERGY == 2 )
+    Flux_Out[4] = lmdal*(Usl[4] - CL[4] - CL[0]) + Fl[4] - Flux_Out[0];
+#   endif
     CPU_Rotate3D( Flux_Out, XYZ, false );
     return;
   }
-  else if( lmdar >= 0.0){ /* Frs */
+  else{ /* Frs */
     /* Mignone 2006 Eq 48 */
     ps = -Fhll[4]*lmdas + Fhll[1];
     /* now calcCLate Usr with Mignone Eq 16 */
     den = 1.0 / (lmdar - lmdas);
 
-    Usr[0] =  CR[0] * (lmdar - rV1) * den;
-    Usr[1] = (CR[1] * (lmdar - rV1) + ps - PR[4]) * den;
-    Usr[2] =  CR[2] * (lmdar - rV1) * den;
-    Usr[3] =  CR[3] * (lmdar - rV1) * den;
-    Usr[4] = (CR[4] * (lmdar - rV1) + ps * lmdas - PR[4] * rV1) * den;
+    real factor0 = lmdar - rV1;
+    real factor1 = factor0 * den;
+
+    Usr[0] =  CR[0] * factor1;
+    Usr[1] = (CR[1] * factor0 + ps - PR[4]) * den;
+    Usr[2] =  CR[2] * factor1;
+    Usr[3] =  CR[3] * factor1;
+#   if ( CONSERVED_ENERGY == 1 )
+    Usr[4] = (CR[4] * factor0 + ps * lmdas - PR[4] * rV1) * den;
+#   elif ( CONSERVED_ENERGY == 2 )
+    Usr[4] = (( CR[4] + CR[0] ) * factor0 + ps * lmdas - PR[4] * rV1) * den;
+#   endif
+
     /* now calcCLate Fsr using Mignone Eq 14 */
     Flux_Out[0] = lmdar*(Usr[0] - CR[0]) + Fr[0];
     Flux_Out[1] = lmdar*(Usr[1] - CR[1]) + Fr[1];
     Flux_Out[2] = lmdar*(Usr[2] - CR[2]) + Fr[2];
     Flux_Out[3] = lmdar*(Usr[3] - CR[3]) + Fr[3];
+#   if ( CONSERVED_ENERGY == 1 )
     Flux_Out[4] = lmdar*(Usr[4] - CR[4]) + Fr[4];
-
-    CPU_Rotate3D( Flux_Out, XYZ, false );
-    return;
-  }
-  else{ /* Fr */
-    /* intercell flux is right flux */
-
-    Flux_Out[0] = Fr[0];
-    Flux_Out[1] = Fr[1];
-    Flux_Out[2] = Fr[2];
-    Flux_Out[3] = Fr[3];
-    Flux_Out[4] = Fr[4];
+#   elif ( CONSERVED_ENERGY == 2 )
+    Flux_Out[4] = lmdar*(Usr[4] - CR[4] - CR[0]) + Fr[4] - Flux_Out[0];
+#   endif
 
     CPU_Rotate3D( Flux_Out, XYZ, false );
     return;
@@ -244,5 +284,29 @@ void CPU_RiemannSolver_HLLC( const int XYZ,
 
 } // FUNCTION : CPU_RiemannSolver_HLLC
 
+
+//=====================================================
+// Solve A*X^2 + B*x + C = 0
+// factor = sqrt(b*b-4*a*c)
+// x_plus  = ( -b + factor ) / (2*a)
+// x_minus = ( -b - factor ) / (2*a)
+//=====================================================
+static void QudraticSolver (real A, real B, real C, real *x_plus, real *x_minus)
+{
+  if (A != 0.0){
+     real delta = SQRT(B*B-4*A*C);
+     real factor = -0.5*( B + SIGN(B) *  delta);
+
+     if (B>=0.0){
+	*x_plus   = C/factor;
+	*x_minus  = factor/A;
+     }else{
+	*x_plus   = factor/A;
+	*x_minus  = C/factor;
+     }
+  }else{
+     Aux_Message(stderr,"leading term in quadratic eq. can not be vanished!\n");
+  }
+}
 
 #endif // #if ( MODEL == SR_HYDRO )

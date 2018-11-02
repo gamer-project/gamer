@@ -167,6 +167,18 @@ void Aux_TakeNote()
 //    d. options in SR-HYDRO
 #     elif   ( MODEL == SR_HYDRO )
 
+#     if ( EOS == IDEAL_GAS )
+      fprintf( Note, "EOS                             IDEAL_GAS\n" );
+#     elif ( EOS == RELATIVISTIC_IDEAL_GAS )
+      fprintf( Note, "EOS                             RELATIVISTIC_IDEAL_GAS\n" );
+#     endif
+
+#     if ( CONSERVED_ENERGY == 1 )
+      fprintf( Note, "CONSERVED_ENERGY                TOTAL_ENERGY\n" );
+#     elif ( CONSERVED_ENERGY == 2 )
+      fprintf( Note, "CONSERVED_ENERGY                TOTAL_ENERGY - REST_MASS\n" );
+#     endif
+
 #     if   ( FLU_SCHEME == RTVD )
       fprintf( Note, "FLU_SCHEME                      RTVD\n" );
 #     elif ( FLU_SCHEME == MHM )
@@ -435,7 +447,7 @@ void Aux_TakeNote()
 #     ifdef MODIFY_ENGY
       fprintf( Note, "MODIFY_ENGY                     ON\n" );
 #     else
-      fprintf( Note, "MODIFY_ENGY                    OFF\n" );
+      fprintf( Note, "MODIFY_ENGY                     OFF\n" );
 #     endif
 
 

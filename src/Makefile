@@ -94,7 +94,7 @@ SIMU_OPTION += -DLAPLACIAN_4TH
 # include the quartic self-interaction potential
 # --> must turn on GRAVITY; does not support COMOVING
 #SIMU_OPTION += -DQUARTIC_SELF_INTERACTION
-
+i
 # number of passively advected scalars
 # --> not supported yet and must be set to 0 (or comment it out)
 SIMU_OPTION += -DNCOMP_PASSIVE_USER=0
@@ -106,14 +106,14 @@ else ifeq "$(filter -DMODEL=SR_HYDRO, $(SIMU_OPTION))" "-DMODEL=SR_HYDRO"
 # --> must be set when MODEL=HYDRO; WAF is deprecated
 SIMU_OPTION += -DFLU_SCHEME=MHM_RP
 
-#SIMU_OPTION += -DRELATIVISTIC_EOS
-SIMU_OPTION += -DIDEAL_GAS_EOS
+#SIMU_OPTION += -DEOS=RELATIVISTIC_IDEAL_GAS
+SIMU_OPTION += -DEOS=IDEAL_GAS
 
 # conserved energy = (total energy)
-#SIMU_OPTION += -DCONSERVED_ENERGY=1
+SIMU_OPTION += -DCONSERVED_ENERGY=2
 
 # conserved energy = (total energy) - (rest mass energy)
-SIMU_OPTION += -DCONSERVED_ENERGY=2
+#SIMU_OPTION += -DCONSERVED_ENERGY=2
 
 # scheme of spatial data reconstruction: PLM/PPM (piecewise-linear/piecewise-parabolic)
 # --> useless for RTVD/WAF

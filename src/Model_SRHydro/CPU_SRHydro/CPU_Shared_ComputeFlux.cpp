@@ -105,21 +105,21 @@ CPU_ComputeFlux(const real FC_Var[][6][NCOMP_TOTAL],
 			ConVar_R[v] = FC_Var[ID2 + dID2[d]][dL][v];
 		    }
 
-#  ifdef CHECK_NEGATIVE_IN_FLUID
-	    if(CPU_CheckUnphysical(ConVar_L, NULL)) Aux_Message(stderr,"\nUnphysical varibles!\nfunction: %s: %d\n", __FUNCTION__, __LINE__);
-	    if(CPU_CheckUnphysical(ConVar_R, NULL)) Aux_Message(stderr,"\nUnphysical varibles!\nfunction: %s: %d\n", __FUNCTION__, __LINE__);
-#  endif
+#                   ifdef CHECK_NEGATIVE_IN_FLUID
+		    if(CPU_CheckUnphysical(ConVar_L, NULL)) Aux_Message(stderr,"\nUnphysical varibles!\nfunction: %s: %d\n", __FUNCTION__, __LINE__);
+		    if(CPU_CheckUnphysical(ConVar_R, NULL)) Aux_Message(stderr,"\nUnphysical varibles!\nfunction: %s: %d\n", __FUNCTION__, __LINE__);
+#                   endif
 
-#if ( RSOLVER == HLLC )
+#                   if ( RSOLVER == HLLC )
 		    CPU_RiemannSolver_HLLC(d, FC_Flux[ID1][d], ConVar_L, ConVar_R, Gamma, MinPres);
-#elif ( RSOLVER == HLLE )
+#                   elif ( RSOLVER == HLLE )
 		    CPU_RiemannSolver_HLLE(d, FC_Flux[ID1][d], ConVar_L, ConVar_R, Gamma, MinPres);
-#else
-#error : ERROR : unsupported Riemann solver !!
-#endif
-		}		// i,j,k
-    }				// for (int d=0; d<3; d++)
+#                   else
+#                   error : ERROR : unsupported Riemann solver !!
+#                   endif
+		}// i,j,k
+    }// for (int d=0; d<3; d++)
 
-}				// FUNCTION : CPU_ComputeFlux
+}// FUNCTION : CPU_ComputeFlux
 
-#endif				// #if ( !defined GPU  &&  MODEL == SR_HYDRO  &&  (FLU_SCHEME == MHM || MHM_RP || CTU) )
+#                   endif// #if ( !defined GPU  &&  MODEL == SR_HYDRO  &&  (FLU_SCHEME == MHM || MHM_RP || CTU) )

@@ -290,7 +290,7 @@ void CorrectFlux( const int lv, const real h_Flux_Array[][9][NFLUX_TOTAL][4*PATC
 //                   --> It does NOT check if passive scalars are negative
 //                       --> We already apply a floor value in CPU_Shared_FullStepUpdate()
 //                3. If MODEL==SR_HYDRO, we check the following criteria: 
-//                   (a) positivity of conserved mass density,
+//                   (a) positivity of proper number density,
 //                   (b) positivity of pressure,
 //                   (c) energy must be greater than magnitude of momentum.
 //
@@ -349,6 +349,7 @@ bool Unphysical( const real Fluid[], const real Gamma_m1, const int CheckMinEngy
       )
       return true;
 
+// =================================================
 // the following checks are for SR_HYDRO
 // =================================================
 #  elif ( MODEL == SR_HYDRO )
@@ -359,17 +360,20 @@ bool Unphysical( const real Fluid[], const real Gamma_m1, const int CheckMinEngy
      ||  !Aux_IsFinite(Fluid[MOMX])  
      ||  !Aux_IsFinite(Fluid[MOMY])  
      ||  !Aux_IsFinite(Fluid[MOMZ])  
-     ||  !Aux_IsFinite(Fluid[ENGY]) )          return true;
-// A1. check positivity of proper rest mass density
-   if ( Fluid[DENS] < (real)MIN_DENS )         return true;
+     ||  !Aux_IsFinite(Fluid[ENGY]) )                              return true;
+// A1. check positivity of number density in inertail frame
+   if ( Fluid[DENS] < (real)MIN_DENS )                             return true;
 
 
-// A2. check total energy vs. inner product of 4-momentum
+// A2. check total energy
+   real Msqr = SQR(Fluid[MOMX]) + SQR(Fluid[MOMY]) + SQR(Fluid[MOMZ]);
+#  if ( CONSERVED_ENERGY == 1 )
    if ( CheckMinEngyOrPres == CheckMinEngy &&
-          SQR(Fluid[ENGY])  < SQR(Fluid[MOMX]) 
-                            + SQR(Fluid[MOMY]) 
-                            + SQR(Fluid[MOMZ]) 
-                            + SQR(Fluid[DENS])) return true;
+          SQR(Fluid[ENGY]) < Msqr + SQR(Fluid[DENS]))              return true;
+#  elif ( CONSERVED_ENERGY == 2 )
+   if ( CheckMinEngyOrPres == CheckMinEngy &&
+          SQR(Fluid[ENGY]) + 2*Fluid[ENGY]*Fluid[DENS] < Msqr )    return true;
+#  endif
 
    real Pri4Vel[NCOMP_FLUID];
    real Pri3Vel[NCOMP_FLUID];
@@ -383,14 +387,14 @@ bool Unphysical( const real Fluid[], const real Gamma_m1, const int CheckMinEngy
      ||  !Aux_IsFinite(Pri4Vel[1])  
      ||  !Aux_IsFinite(Pri4Vel[2])  
      ||  !Aux_IsFinite(Pri4Vel[3])  
-     ||  !Aux_IsFinite(Pri4Vel[4]) )            return true;
+     ||  !Aux_IsFinite(Pri4Vel[4]) )                               return true;
 
-// B2. check positivity of number density in inertial frame
-   if ( Pri4Vel[DENS] < (real)MIN_DENS )        return true;
+// B2. check positivity of proper number density
+   if ( Pri4Vel[DENS] < (real)MIN_DENS )                           return true;
 
 // B3. check positivity of pressure
    if ( CheckMinEngyOrPres == CheckMinPres &&
-                Pri4Vel[4]  < (real) MIN_PRES )      return true;
+                Pri4Vel[4]  < (real) MIN_PRES )                    return true;
 
 
 // B4. check whether 3-velocity is greater than or equal to speed of light

@@ -33,6 +33,10 @@
 #define PAR_ONLY     4
 #define SR_HYDRO     5
 
+// equation of states
+#define RELATIVISTIC_IDEAL_GAS 1
+#define              IDEAL_GAS 2
+
 
 // hydrodynamic schemes
 #define RTVD         1
@@ -353,10 +357,9 @@
 #  define _VELZ               ( 1 << (NCOMP_TOTAL+2) ) // 4-velocity in z-direction          000010000000
 #  define _PRES               ( 1 << (NCOMP_TOTAL+3) ) // pressure                           000100000000
 #  define _TEMP               ( 1 << (NCOMP_TOTAL+4) ) // temperature                        001000000000
-#  define _REST               ( 1 << (NCOMP_TOTAL+5) ) // rest mass density                  010000000000
-#  define _PRIDENS            ( 1 << (NCOMP_TOTAL+6) ) // primitive density                  100000000000
-#  define _DERIVED            ( _VELX | _VELY | _VELZ | _PRES | _TEMP | _PRIDENS | _REST ) //111111100000
-#  define NDERIVE             7
+#  define _PRON               ( 1 << (NCOMP_TOTAL+5) ) // proper number density              010000000000
+#  define _DERIVED            ( _VELX | _VELY | _VELZ | _PRES | _TEMP | _PRON ) //111111100000
+#  define NDERIVE             6
 
 
 #elif ( MODEL == PAR_ONLY )

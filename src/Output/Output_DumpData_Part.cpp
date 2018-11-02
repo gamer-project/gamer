@@ -126,7 +126,7 @@ void Output_DumpData_Part( const OptOutputPart_t Part, const bool BaseOnly, cons
 #           if ( MODEL == HYDRO  ||  MODEL == MHD )
             fprintf( File, "%14s", "Pressure[12]" );
 #           elif ( MODEL == SR_HYDRO )
-            fprintf( File, "%14s", "RestDens[12]" );
+            fprintf( File, "%14s", "n[12]" );  // proper number density
             fprintf( File, "%14s", "Ux[13]" ); // 4-velocity
             fprintf( File, "%14s", "Uy[14]" );
             fprintf( File, "%14s", "Uz[15]" );
@@ -236,14 +236,22 @@ void WriteFile( FILE *File, const int lv, const int PID, const int i, const int 
             ii, jj, kk, (ii+scale_2)*dh_min, (jj+scale_2)*dh_min, (kk+scale_2)*dh_min );
 
 // output all conserved variables in the fluid or sr-fluid array
+#  ifdef FLOAT8
+   for (int v=0; v<NCOMP_TOTAL; v++)   fprintf( File, " %30.16e", u[v] );
+#  else
    for (int v=0; v<NCOMP_TOTAL; v++)   fprintf( File, " %13.6e", u[v] );
+#  endif
 
 #  if (MODEL == SR_HYDRO)
    real Pri4Vel[NCOMP_FLUID];
    CPU_Con2Pri(u,Pri4Vel,GAMMA);
 
 // output all primitive variables in the sr-fluid array
+#  ifdef FLOAT8
+   for (int v=0; v<NCOMP_TOTAL; v++)   fprintf( File, " %30.16e", Pri4Vel[v] );
+#  else
    for (int v=0; v<NCOMP_TOTAL; v++)   fprintf( File, " %13.6e", Pri4Vel[v] );
+#  endif
 #  endif
 
 // output potential
@@ -260,16 +268,26 @@ void WriteFile( FILE *File, const int lv, const int PID, const int i, const int 
 #  warning : WAIT MHD !!!
 #  elif ( MODEL == SR_HYDRO )
 // output Lorentz factor
+#  ifdef FLOAT8
+   fprintf( File, " %30.16e", SQRT(1+SQR(Pri4Vel[1])+SQR(Pri4Vel[2])+SQR(Pri4Vel[3])) );
+#  else
    fprintf( File, " %17.6e", SQRT(1+SQR(Pri4Vel[1])+SQR(Pri4Vel[2])+SQR(Pri4Vel[3])) );
+#  endif
 
    real Pri3Vel[NCOMP_FLUID];
 
    CPU_4Velto3Vel(Pri4Vel,Pri3Vel);
 
 // output 3-velocity
+#  ifdef FLOAT8
+   fprintf( File, " %30.16e", Pri3Vel[1] );
+   fprintf( File, " %30.16e", Pri3Vel[2] );
+   fprintf( File, " %30.16e", Pri3Vel[3] );
+#  else
    fprintf( File, " %13.6e", Pri3Vel[1] );
    fprintf( File, " %13.6e", Pri3Vel[2] );
    fprintf( File, " %13.6e", Pri3Vel[3] );
+#  endif
 
 #  endif // MODEL
 

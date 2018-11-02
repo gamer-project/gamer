@@ -103,8 +103,8 @@ void SetParameter()
 // (1-2) set the default values
    switch ( Riemann_Prob )
    {
-      case SOD_SHOCK_TUBE : Riemann_RhoL = 10.0;  Riemann_VelL = 0.1;  Riemann_PreL = 8.0;  Riemann_VelL_T = 0.3;
-                            Riemann_RhoR = 5.0;  Riemann_VelR = 0.2;  Riemann_PreR = 10.0;  Riemann_VelR_T = 0.4;
+      case SOD_SHOCK_TUBE : Riemann_RhoL =  5.0;  Riemann_VelL = 0.1;  Riemann_PreL = 10.0;  Riemann_VelL_T = 0.0;
+                            Riemann_RhoR = 10.0;  Riemann_VelR = 0.1;  Riemann_PreR =  8.0;  Riemann_VelR_T = 0.0;
                             Riemann_EndT = 0.1;
                             sprintf( Riemann_Name, "Sod's shock tube" );
                             break;
@@ -220,9 +220,6 @@ void SetParameter()
 void SetGridIC( real fluid[], const double x, const double y, const double z, const double Time,
                 const int lv, double AuxArray[] )
 {
-
-   const double _Gamma_m1 = 1.0/(GAMMA-1.0);
-
    real ConVarL[NCOMP_FLUID];
    real ConVarR[NCOMP_FLUID];
    real PriVar3L[NCOMP_FLUID]; // 3-velocity is stored

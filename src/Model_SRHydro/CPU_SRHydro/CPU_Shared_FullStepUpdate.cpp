@@ -113,10 +113,15 @@ void CPU_FullStepUpdate( const real Input[][ FLU_NXT*FLU_NXT*FLU_NXT ], real Out
                          Gamma_m1, _Gamma_m1, CheckMinPres_No, NULL_REAL, DualEnergySwitch );
 #     endif // #ifdef DUAL_ENERGY
 
-#  ifdef CHECK_NEGATIVE_IN_FLUID
+#     ifdef CHECK_NEGATIVE_IN_FLUID
       for (int v = 0;v<NCOMP_FLUID;v++) Con[v] = Output[v][ID2];
-      if(CPU_CheckUnphysical(Con, NULL)) Aux_Message(stderr,"\nUnphysical varibles!\nfunction: %s: %d\n", __FUNCTION__, __LINE__);
-#  endif
+      if(CPU_CheckUnphysical(Con, NULL)) {
+	 Aux_Message(stderr,"\nUnphysical varibles!\nfunction: %s: %d\n", __FUNCTION__, __LINE__);
+#     ifdef MODIFY_ENGY
+	 Output[ENGY][ID2] = CPU_ModifyEngy(Output[DENS][ID2], Output[MOMX][ID2], Output[MOMY][ID2], Output[MOMZ][ID2], Output[ENGY][ID2]);
+#     endif
+      }
+#     endif
 
    } // i,j,k
 

@@ -2,8 +2,6 @@
 #include "CUFLU.h"
 
 #if ( MODEL == SR_HYDRO )
-void CPU_Con2Pri (const real In[], real Out[], const real Gamma);
-void CPU_Pri2Con (const real In[], real Out[], const real Gamma);
 bool CPU_CheckUnphysical( const real Con[], const real Pri[]);
 #endif
 
@@ -829,31 +827,6 @@ int AllocateSonPatch( const int FaLv, const int *Cr, const int PScale, const int
          FData_Flu[IMAG][k][j][i] = Amp*SIN( Phase );
       }
    }
-/*
-#  elif ( MODEL == SR_HYDRO )
-   real Cons[NCOMP_TOTAL], Prim[NCOMP_TOTAL];
-
-// convert conserved quantities into primitive quantities
-   for (int i=0 ;i < CSize_Flu1v; i++){
-      for (int v=0; v<NCOMP_TOTAL; v++)  Cons[v] = *(CData_Flu+v*CSize_Flu1v+i);
-      CPU_Con2Pri ( Cons, Prim, GAMMA);
-      for (int v=0; v<NCOMP_TOTAL; v++)  *(CData_Flu+v*CSize_Flu1v+i) = Prim[v];
-   }
-
-// spatial interpolation
-   for (int v=0; v<NCOMP_TOTAL; v++)
-   Interpolate( CData_Flu+v*CSize_Flu1v, CSize_Flu_Temp, CStart_Flu, CRange, &FData_Flu[v][0][0][0],
-		FSize_Temp, FStart, 1, OPT__REF_FLU_INT_SCHEME, PhaseUnwrapping_No, Monotonicity );
-
-// convert primitive quantities into conserved quantities
-   for (int i=0;i<FSize;i++)
-   for (int j=0;j<FSize;j++)
-   for (int k=0;k<FSize;k++){
-      for (int v=0; v<NCOMP_TOTAL; v++) Prim[v] = FData_Flu[v][i][j][k];
-      CPU_Pri2Con ( Prim, Cons, GAMMA);
-      for (int v=0; v<NCOMP_TOTAL; v++) FData_Flu[v][i][j][k] = Cons[v];
-   }
-*/
 #  else // #if ( MODEL == ELBDM )
 
    for (int v=0; v<NCOMP_TOTAL; v++)

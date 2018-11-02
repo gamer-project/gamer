@@ -123,7 +123,9 @@ void CPU_FluidSolver_MHM( const real Flu_Array_In[][NCOMP_TOTAL][ FLU_NXT*FLU_NX
             ID1 = (k*N_HF_VAR + j)*N_HF_VAR + i;
 
             for (int v=0; v<NCOMP_TOTAL; v++)   Input[v] = Half_Var[ID1][v];
-
+#           ifdef CHECK_NEGATIVE_IN_FLUID
+            if (CPU_CheckUnphysical(Input, NULL)) Aux_Message(stderr,"\nUnphysical varibles!\nfunction: %s: %d\n", __FUNCTION__, __LINE__);
+#           endif
             CPU_Con2Pri( Input, Half_Var[ID1], Gamma );
          }
 
@@ -159,6 +161,9 @@ void CPU_FluidSolver_MHM( const real Flu_Array_In[][NCOMP_TOTAL][ FLU_NXT*FLU_NX
 
             for (int v=0; v<NCOMP_TOTAL; v++)   Input[v] = Flu_Array_In[P][v][ID1];
 
+#           ifdef CHECK_NEGATIVE_IN_FLUID
+            if (CPU_CheckUnphysical(Input, NULL)) Aux_Message(stderr,"\nUnphysical varibles!\nfunction: %s: %d\n", __FUNCTION__, __LINE__);
+#           endif
             CPU_Con2Pri( Input, PriVar[ID1], Gamma);
          }
 
@@ -260,6 +265,12 @@ void CPU_RiemannPredict_Flux( const real Flu_Array_In[][ FLU_NXT*FLU_NXT*FLU_NXT
             ConVar_L[v] = Flu_Array_In[v][ ID2       ];
             ConVar_R[v] = Flu_Array_In[v][ ID2+dr[d] ];
          }
+
+//       check unphysical cells
+#  ifdef CHECK_NEGATIVE_IN_FLUID
+	 if(CPU_CheckUnphysical(ConVar_L, NULL)) Aux_Message(stderr,"\nUnphysical varibles!\nfunction: %s: %d\n", __FUNCTION__, __LINE__);
+	 if(CPU_CheckUnphysical(ConVar_R, NULL)) Aux_Message(stderr,"\nUnphysical varibles!\nfunction: %s: %d\n", __FUNCTION__, __LINE__);
+#  endif
 
 //       invoke the Riemann solver
 #        if ( RSOLVER == HLLC )

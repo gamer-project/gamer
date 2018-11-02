@@ -95,7 +95,7 @@ void Flu_FixUp( const int lv )
 #     endif // #ifdef GAMER_DEBUG
 
 
-#     if (  ( MODEL == HYDRO || MODEL == MHD || MODEL == SR_HYDRO  )  &&  defined DUAL_ENERGY  )
+#     if (  ( MODEL == HYDRO || MODEL == MHD )  &&  defined DUAL_ENERGY  )
 #     pragma omp parallel for private( CorrVal, FluxPtr, FluidPtr1D0, FluidPtr1D, didx_m, didx_n, \
                                        DE_StatusPtr1D0, DE_StatusPtr1D ) schedule( runtime )
 #     else
@@ -165,9 +165,8 @@ void Flu_FixUp( const int lv )
 //                --> do NOT **store** these results yet since we want to skip the cells with unphysical results
                   for (int v=0; v<NFLUX_TOTAL; v++)   CorrVal[v] = *FluidPtr1D[v] + FluxPtr[v][m][n]*Const[s];
 
-
 //                calculate the pressure
-#                 if ( MODEL == HYDRO  ||  MODEL == MHD || MODEL == SR_HYDRO )
+#                 if ( MODEL == HYDRO  ||  MODEL == MHD )
                   real Pres;
                   real *ForPres = CorrVal;
 
@@ -197,6 +196,8 @@ void Flu_FixUp( const int lv )
                   Pres = CPU_GetPressure( ForPres[DENS], ForPres[MOMX], ForPres[MOMY], ForPres[MOMZ], ForPres[ENGY],
                                           Gamma_m1, CheckMinPres_No, NULL_REAL );
 #                 endif // DUAL_ENERGY
+#                 elif ( MODEL == SR_HYDRO )
+//                 ........ 
 #                 endif // MODEL
 
 
@@ -253,7 +254,11 @@ void Flu_FixUp( const int lv )
 #                 error : DE_EINT is NOT supported yet !!
 #                 endif
 #                 endif // #ifdef DUAL_ENERGY
-#                 endif // HYDRO/MHD
+#                 elif ( MODEL == SR_HYDRO )
+#                 ifdef MODIFY_ENGY
+                  CorrVal[ENGY] = CPU_ModifyEngy(CorrVal[DENS], CorrVal[MOMX], CorrVal[MOMY], CorrVal[MOMZ], CorrVal[ENGY]);
+#                 endif
+#                 endif // HYDRO/MHD/SR_HYDRO
 
 
 //                store the corrected results

@@ -2,11 +2,6 @@
 #include "CUFLU.h"
 #include "../../include/CPU_prototypes.h"
 
-#if ( MODEL == SR_HYDRO )
-void CPU_Con2Pri (const real In[], real Out[], const real Gamma);
-void CPU_Pri2Con (const real In[], real Out[], const real Gamma);
-#endif
-
 #if ( MODEL == ELBDM  &&  defined GAMER_DEBUG )
 void ELBDM_GetPhase_DebugOnly( real *CData, const int CSize );
 #endif
@@ -474,34 +469,6 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
                Flu_FData[IMAG][k][j][i] = Amp*SIN( Phase );
             }
          }
-/*
-#        elif ( MODEL == SR_HYDRO )
-	 real Cons[NCOMP_TOTAL], Prim[NCOMP_TOTAL];
-
-// convert conserved quantities into primitive quantities
-         for (int i=0;i<CSize_Flu;i++)
-         for (int j=0;j<CSize_Flu;j++)
-         for (int k=0;k<CSize_Flu;k++){
-	    for (int v=0; v<NCOMP_TOTAL; v++) Cons[v] = Flu_CData[v][i][j][k];
-	    CPU_Con2Pri ( Cons, Prim, GAMMA);
-	    for (int v=0; v<NCOMP_TOTAL; v++) Flu_CData[v][i][j][k] = Prim[v];
-         }
-
-// spatial interpolation
-         for (int v=0; v<NCOMP_TOTAL; v++)
-         Interpolate( &Flu_CData[v][0][0][0], CSize_Flu3, CStart_Flu, CRange, &Flu_FData[v][0][0][0],
-                      FSize3, FStart, 1, OPT__REF_FLU_INT_SCHEME, PhaseUnwrapping_No,
-                      Monotonicity );
-
-// convert primitive quantities into conserved quantities
-         for (int i=0;i<FSize;i++)
-         for (int j=0;j<FSize;j++)
-         for (int k=0;k<FSize;k++){
-	    for (int v=0; v<NCOMP_TOTAL; v++) Prim[v] = Flu_FData[v][i][j][k];
-	    CPU_Pri2Con ( Prim, Cons, GAMMA);
-	    for (int v=0; v<NCOMP_TOTAL; v++) Flu_FData[v][i][j][k] = Cons[v];
-         }
-*/
 #        else // #if ( MODEL == ELBDM )
 
          for (int v=0; v<NCOMP_TOTAL; v++)

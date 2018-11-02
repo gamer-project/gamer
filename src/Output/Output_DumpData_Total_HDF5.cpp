@@ -705,7 +705,7 @@ void Output_DumpData_Total_HDF5( const char *FileName )
    real (*MomY) [PS1][PS1][PS1] = NULL;
    real (*MomZ) [PS1][PS1][PS1] = NULL;
    real (*Engy) [PS1][PS1][PS1] = NULL;
-   real (*Q)    [PS1][PS1][PS1] = NULL;
+   real (*Temp)    [PS1][PS1][PS1] = NULL;
    real Cons[NCOMP_FLUID];
 #  endif
 
@@ -743,8 +743,8 @@ void Output_DumpData_Total_HDF5( const char *FileName )
 
 
 #  if ( MODEL == SR_HYDRO )
-// Q is root that needed to transform conserved quantities to primitive quantities
-   sprintf( FieldName[QDumpIdx], "Q" );
+// Temparature is root that needed to transform conserved quantities to primitive quantities
+   sprintf( FieldName[QDumpIdx], "Temp" );
 #  endif
 
 
@@ -866,7 +866,7 @@ void Output_DumpData_Total_HDF5( const char *FileName )
             MomY      = new real [ amr->NPatchComma[lv][1] ][PS1][PS1][PS1];
             MomZ      = new real [ amr->NPatchComma[lv][1] ][PS1][PS1][PS1];
             Engy      = new real [ amr->NPatchComma[lv][1] ][PS1][PS1][PS1];
-               Q      = new real [ amr->NPatchComma[lv][1] ][PS1][PS1][PS1];
+            Temp      = new real [ amr->NPatchComma[lv][1] ][PS1][PS1][PS1];
 #           endif
 
             for (int v=0; v<NFieldOut; v++)
@@ -940,7 +940,7 @@ void Output_DumpData_Total_HDF5( const char *FileName )
 #           if ( MODEL == SR_HYDRO )
             } // for (int v=0; v<NFieldOut; v++)
 
-//  convert conserved quantities to root Q
+//  convert conserved quantities to temperature
               for ( int PID=0;PID < amr->NPatchComma[lv][1];PID++)
 		 for ( int i=0;i<PS1;i++  )
 		 for ( int j=0;j<PS1;j++  )
@@ -952,10 +952,10 @@ void Output_DumpData_Total_HDF5( const char *FileName )
 		    Cons[3] = MomZ[PID][i][j][k];
 		    Cons[4] = Engy[PID][i][j][k];
 		    
-		    Q[PID][i][j][k] = CPU_Con2Q( Cons,(real) GAMMA);
+		    Temp[PID][i][j][k] = CPU_Con2Q( Cons,(real) GAMMA);
                  }
 
-//  copy conserved data and root Q into FieldData
+//  copy conserved data and temperature into FieldData
             for (int v=0; v<NFieldOut; v++) {
 		  switch (v)
 		   {
@@ -981,7 +981,7 @@ void Output_DumpData_Total_HDF5( const char *FileName )
 		      break;
 		    case 5:
 		       for ( int PID=0;PID < amr->NPatchComma[lv][1];PID++)
-		             memcpy( FieldData[PID],    Q[PID], FieldSizeOnePatch );
+		             memcpy( FieldData[PID], Temp[PID], FieldSizeOnePatch );
 		      break;
 		    default:
 		      break;
@@ -1005,7 +1005,7 @@ void Output_DumpData_Total_HDF5( const char *FileName )
             delete [] MomY;
             delete [] MomZ;
             delete [] Engy;
-            delete []    Q;
+            delete [] Temp;
 #           endif
 
             H5_Status = H5Sclose( H5_MemID_Field );

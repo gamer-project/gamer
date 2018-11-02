@@ -1,6 +1,0 @@
-#gcc con2pri.c -lm -DSR_DEBUG  -DFLOAT8 \
-#gcc con2pri_v2.c -lm -DIDEAL_GAS_EOS  -DFLOAT8 \
-gcc con2pri_v2.c -lm -DRELATIVISTIC_EOS -DCONSERVED_ENERGY=1 -DFLOAT8 \
--I/usr/local/myprog/gsl-2.4/include \
--L/usr/local/myprog/gsl-2.4/lib/ -lgsl -lgslcblas && \
-./a.out

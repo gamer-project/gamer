@@ -6,3 +6,7 @@ gamer
 .*.swo
 *~
 a.out
+*.dat
+*.png
+log
+src/test/**

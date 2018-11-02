@@ -106,7 +106,6 @@ void Init_Function_User( real fluid[], const double x, const double y, const dou
 //                   --> Useful when Init_Function_User_Ptr() does not support OpenMP parallelization
 //                       (e.g., it may not be thread-safe or may involve a random number generator for which
 //                       all threads would share the same random seed if OpenMP is not disabled)
-//
 // Parameter   :  lv : Target refinement level
 //-------------------------------------------------------------------------------------------------------
 void SRHydro_Init_ByFunction_AssignData( const int lv )

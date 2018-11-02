@@ -122,7 +122,7 @@ void Flu_BoundaryCondition_User( real *Array, const int NVar_Flu, const int Arra
    const bool PrepVz           = ( TVar & _VELZ    ) ? true : false;
    const bool PrepPres         = ( TVar & _PRES    ) ? true : false;
    const bool PrepTemp         = ( TVar & _TEMP    ) ? true : false;
-   const bool PrepDens         = ( TVar & _PRIDENS ) ? true : false;
+   const bool PrepDens         = ( TVar & _PRON    ) ? true : false; // proper number density
 
 #  elif ( MODEL == ELBDM )
 // no derived variables yet
