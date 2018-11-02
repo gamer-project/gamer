@@ -8,7 +8,7 @@ extern void (*Src_User_Ptr)( real fluid[], const double x, const double y, const
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Src_AddSource
+// Function    :  Src_AdvanceDt
 // Description :  Add various local source terms
 //
 // Note        :  1. Invoked by Evolve()
@@ -23,7 +23,7 @@ extern void (*Src_User_Ptr)( real fluid[], const double x, const double y, const
 //
 // Return      : fluid[] in all patches
 //-------------------------------------------------------------------------------------------------------
-void Src_AddSource( const int lv, const double TimeNew, const double TimeOld, const double dt, const int FluSg )
+void Src_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, const double dt, const int FluSg )
 {
 
 // check
@@ -59,4 +59,4 @@ void Src_AddSource( const int lv, const double TimeNew, const double TimeOld, co
       }}} // i,j,k
    } // for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
 
-} // FUNCTION : Src_AddSource
+} // FUNCTION : Src_AdvanceDt

@@ -15,7 +15,7 @@ void (*Src_User_Ptr)( real fluid[], const double x, const double y, const double
 // Function    :  Src_User
 // Description :  User-defined source terms
 //
-// Note        :  1. Invoked by Src_AddSource() using the function pointer "Src_User_Ptr"
+// Note        :  1. Invoked by Src_AdvanceDt() using the function pointer "Src_User_Ptr"
 //                   --> The function pointer may be reset by various test problem initializers, in which case
 //                       this funtion will become useless
 //                2. Enabled by the runtime option "SRC_USER"

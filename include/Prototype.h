@@ -625,7 +625,7 @@ void YT_Inline();
 
 
 // source terms
-void Src_AddSource( const int lv, const double TimeNew, const double TimeOld, const double dt, const int FluSg );
+void Src_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, const double dt, const int FluSg );
 
 
 // Grackle

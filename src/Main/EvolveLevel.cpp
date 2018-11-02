@@ -437,7 +437,7 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
 //    6-1. local source terms
 // *********************************
    const int InOutSg_Src = SaveSg_Flu;    // save in the same FluSg
-   Src_AddSource( lv, TimeNew, TimeOld, dt_SubStep, SaveSg_Flu );
+   Src_AdvanceDt( lv, TimeNew, TimeOld, dt_SubStep, SaveSg_Flu );
 
 
 // *********************************
