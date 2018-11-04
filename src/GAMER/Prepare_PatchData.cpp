@@ -1958,7 +1958,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
 //       (d2) minimum pressure
 //            --> note that it should be applied AFTER checking the minimum density since modifying density will also
 //                modify pressure when calculating it from the energy field
-#        if ( MODEL == HYDRO  ||  MODEL == MHD )
+#        if ( MODEL == HYDRO  ||  MODEL == MHD || MODEL == SR_HYDRO )
          if ( MinPres >= (real)0.0 )
          {
 //          (d2-1) pressure as a derived field

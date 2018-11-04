@@ -852,13 +852,13 @@ static void NewtonRaphsonSolver(void *ptr, real *root, const real guess, const r
      if (df == 0.0) 
       { 
          printf("derivative is zero\n");
-   //      abort();   
+         //abort();   
       }
 
      if ( Aux_IsFinite(f) == 0 )
       {
          printf("function value is not finite\n");
-   //      abort();   
+         //abort();   
       }
      if ( Aux_IsFinite(df) == 0 )
       {

@@ -1865,7 +1865,7 @@ void Check_InputPara( const char *FileName, const int FormatVersion )
    const bool Opt__FlagLohner = ( OPT__FLAG_LOHNER_DENS 
                                || OPT__FLAG_LOHNER_ENGY 
                                || OPT__FLAG_LOHNER_PRES 
-                               || OPT__FLAG_LOHNER_REST
+                               || OPT__FLAG_LOHNER_PRON
                                || OPT__FLAG_LOHNER_TEMP );
 #  elif ( MODEL == ELBDM )
    const bool Opt__FlagLohner = OPT__FLAG_LOHNER_DENS;

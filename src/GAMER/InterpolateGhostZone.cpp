@@ -1266,7 +1266,7 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData[], const in
                    IntScheme, PhaseUnwrapping_No, Monotonicity );
 
 #  endif // #if ( MODEL == ELBDM ) ... else ...
-/*
+
 #  ifdef CHECK_NEGATIVE_IN_FLUID
 #  if ( MODEL == SR_HYDRO )
    real Con[NCOMP_FLUID];
@@ -1283,19 +1283,12 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData[], const in
       for (int v = 0 ; v < NCOMP_FLUID ;v++) Con[v] = *(IntData+FSize3D*v+i);
       if(CPU_CheckUnphysical(Con, NULL)){
         Aux_Message(stderr,"\nUnphysical varibles!\nfunction: %s: %d\n", __FUNCTION__, __LINE__);
-        for ( int i = 0 ;i < CSize3D; i++ ){
-          Aux_Message(stderr,"Dens = %14.7e\n",*(CData+CSize3D*DENS+i));
-          Aux_Message(stderr,"MomX = %14.7e\n",*(CData+CSize3D*MOMX+i));
-          Aux_Message(stderr,"MomY = %14.7e\n",*(CData+CSize3D*MOMY+i));
-          Aux_Message(stderr,"MomZ = %14.7e\n",*(CData+CSize3D*MOMZ+i));
-          Aux_Message(stderr,"Engy = %14.7e\n",*(CData+CSize3D*ENGY+i));
-        }
      }
     }
    }
 #  endif
 #  endif
-*/
+
 
 
    NVar_SoFar = NVar_Flu;

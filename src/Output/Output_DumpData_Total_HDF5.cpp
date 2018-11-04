@@ -1903,7 +1903,7 @@ void FillIn_InputPara( InputPara_t &InputPara )
    InputPara.Opt__Flag_LohnerEngy    = OPT__FLAG_LOHNER_ENGY;
    InputPara.Opt__Flag_LohnerPres    = OPT__FLAG_LOHNER_PRES;
    InputPara.Opt__Flag_LohnerTemp    = OPT__FLAG_LOHNER_TEMP;
-   InputPara.Opt__Flag_LohnerRest    = OPT__FLAG_LOHNER_REST;
+   InputPara.Opt__Flag_LohnerRest    = OPT__FLAG_LOHNER_PRON;
 #  endif
    InputPara.Opt__Flag_LohnerForm    = OPT__FLAG_LOHNER_FORM;
    InputPara.Opt__Flag_User          = OPT__FLAG_USER;
@@ -2127,7 +2127,7 @@ void FillIn_InputPara( InputPara_t &InputPara )
                                || OPT__FLAG_LOHNER_ENGY 
                                || OPT__FLAG_LOHNER_PRES 
                                || OPT__FLAG_LOHNER_TEMP
-                               || OPT__FLAG_LOHNER_REST );
+                               || OPT__FLAG_LOHNER_PRON );
 #  endif
 
    for (int lv=0; lv<NLEVEL-1; lv++)

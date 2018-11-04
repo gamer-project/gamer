@@ -502,7 +502,6 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
          MPI_Barrier( MPI_COMM_WORLD );
          Timer_Lv[lv]->Stop();
 #        endif
-
          EvolveLevel( lv+1, dTime_SubStep );
 
 #        ifdef TIMING
