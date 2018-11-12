@@ -479,7 +479,11 @@ void Solver( const Solver_t TSolver, const int lv, const double TimeNew, const d
                                  h_Flux_Array[ArrayID], h_Corner_Array_F[ArrayID], h_Pot_Array_USG_F[ArrayID],
                                  NPG, dt, dh, GAMMA, OPT__FIXUP_FLUX, Flu_XYZ, OPT__LR_LIMITER, MINMOD_COEFF, EP_COEFF,
                                  OPT__WAF_LIMITER, ELBDM_ETA, ELBDM_TAYLOR3_COEFF, ELBDM_TAYLOR3_AUTO,
+#        if ( MODEL != SR_HYDRO )
                                  TimeOld, OPT__GRAVITY_TYPE, MIN_DENS, MIN_PRES, DUAL_ENERGY_SWITCH,
+#        elif ( MODEL == SR_HYDRO )
+                                 TimeOld, OPT__GRAVITY_TYPE, MIN_DENS, MIN_TEMP, DUAL_ENERGY_SWITCH,
+#        endif
                                  OPT__NORMALIZE_PASSIVE, PassiveNorm_NVar, PassiveNorm_VarIdx, JEANS_MIN_PRES, JeansMinPres_Coeff );
 #        endif
       break;
@@ -605,7 +609,7 @@ void Solver( const Solver_t TSolver, const int lv, const double TimeNew, const d
                               NULL_BOOL, GRAVITY_NONE, NULL_BOOL, NULL_REAL, GPU_NSTREAM );
 #        else
          CPU_dtSolver       ( TSolver, h_dt_Array_T[ArrayID], h_Flu_Array_T[ArrayID], NULL, NULL,
-                              NPG, dh, (Step==0)?DT__FLUID_INIT:DT__FLUID, GAMMA, MIN_PRES,
+                              NPG, dh, (Step==0)?DT__FLUID_INIT:DT__FLUID, GAMMA, MIN_TEMP,
                               NULL_BOOL, GRAVITY_NONE, NULL_BOOL, NULL_REAL );
 #        endif
       break;

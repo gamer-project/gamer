@@ -46,20 +46,12 @@ void CPU_RiemannSolver_HLLE( const int XYZ, real Flux_Out[], const real L_In[], 
        CR[v]=R_In[v];
    }
 
-
    CPU_Rotate3D( CL, XYZ, true );
    CPU_Rotate3D( CR, XYZ, true );
-
-/* 0.5 check negative conserved quanties */
-
 
 /* 1. compute primitive vars. from conserved vars. */
    CPU_Con2Pri (CL, PL, Gamma);
    CPU_Con2Pri (CR, PR, Gamma);
-
-/*  1.4 check negative primitive quanties*/
-
-
 
 /* 2. Transform 4-velocity to 3-velocity */
    lFactor=1/SQRT(1+SQR(PL[1])+SQR(PL[2])+SQR(PL[3]));
@@ -74,17 +66,24 @@ void CPU_RiemannSolver_HLLE( const int XYZ, real Flux_Out[], const real L_In[], 
    rV3=PR[3]*rFactor;
 
 /* 3. Compute the max and min wave speeds used in Mignone */
+#  if ( EOS == RELATIVISTIC_IDEAL_GAS )
+   real nhl =  2.5*PL[4] + SQRT(2.25*SQR(PL[4]) + SQR(PL[0]));
+   real nhr =  2.5*PR[4] + SQRT(2.25*SQR(PR[4]) + SQR(PR[0]));
+
+   cslsq = ( PL[4]*( 5*nhl - 8*PL[4] ) ) / ((3*nhl)*( nhl - PL[4] ));
+   csrsq = ( PR[4]*( 5*nhr - 8*PR[4] ) ) / ((3*nhr)*( nhr - PR[4] ));
+#  elif ( EOS ==  IDEAL_GAS)
    rhl = PL[0] + PL[4] * Gamma / Gamma_m1; /* Mignone Eq 3.5 */
    rhr = PR[0] + PR[4] * Gamma / Gamma_m1;
 
    cslsq = Gamma * PL[4] / rhl; /* Mignone Eq 4 */
    csrsq = Gamma * PR[4] / rhr;
+#  endif
 
-   vsql = SQR(lV1) + SQR(lV2) + SQR(lV3);
-   vsqr = SQR(rV1) + SQR(rV2) + SQR(rV3);
+// square of Lorentz factor
+   gammasql = 1.0 + SQR(PL[1]) + SQR(PL[2]) + SQR(PL[3]);
+   gammasqr = 1.0 + SQR(PR[1]) + SQR(PR[2]) + SQR(PR[3]);
 
-   gammasql = 1.0 / (1.0 - vsql);
-   gammasqr = 1.0 / (1.0 - vsqr);
 
    ssl = cslsq / ( gammasql * (1.0 - cslsq) ); /* Mignone Eq 22.5 */
    ssr = csrsq / ( gammasqr * (1.0 - csrsq) );
@@ -137,7 +136,11 @@ void CPU_RiemannSolver_HLLE( const int XYZ, real Flux_Out[], const real L_In[], 
     Flux_Out[1] = Fl[1];
     Flux_Out[2] = Fl[2];
     Flux_Out[3] = Fl[3];
+#   if ( CONSERVED_ENERGY == 1 )
     Flux_Out[4] = Fl[4];
+#   elif ( CONSERVED_ENERGY == 2 )
+    Flux_Out[4] = Fl[4] - Fl[0];
+#   endif
 
    CPU_Rotate3D( Flux_Out, XYZ, false );
    return;
@@ -153,14 +156,22 @@ void CPU_RiemannSolver_HLLE( const int XYZ, real Flux_Out[], const real L_In[], 
     Fhll[1] = (lmdar*Fl[1] - lmdal*Fr[1] + lmdatlmda * (CR[1] - CL[1])) * ovlrmll;
     Fhll[2] = (lmdar*Fl[2] - lmdal*Fr[2] + lmdatlmda * (CR[2] - CL[2])) * ovlrmll;
     Fhll[3] = (lmdar*Fl[3] - lmdal*Fr[3] + lmdatlmda * (CR[3] - CL[3])) * ovlrmll;
+#   if ( CONSERVED_ENERGY == 1 )
     Fhll[4] = (lmdar*Fl[4] - lmdal*Fr[4] + lmdatlmda * (CR[4] - CL[4])) * ovlrmll;
+#   elif ( CONSERVED_ENERGY == 2 )
+    Fhll[4] = (lmdar*Fl[4] - lmdal*Fr[4] + lmdatlmda * (CR[4] + CR[0] - CL[4] - CL[0])) * ovlrmll;
+#   endif
 
     /* calcULate Fs  */
     Flux_Out[0] = Fhll[0];
     Flux_Out[1] = Fhll[1];
     Flux_Out[2] = Fhll[2];
     Flux_Out[3] = Fhll[3];
+#   if ( CONSERVED_ENERGY == 1 )
     Flux_Out[4] = Fhll[4];
+#   elif ( CONSERVED_ENERGY == 2 )
+    Flux_Out[4] = Fhll[4] - Fhll[0];
+#   endif
 
    CPU_Rotate3D( Flux_Out, XYZ, false );
     return;
@@ -172,7 +183,11 @@ void CPU_RiemannSolver_HLLE( const int XYZ, real Flux_Out[], const real L_In[], 
     Flux_Out[1] = Fr[1];
     Flux_Out[2] = Fr[2];
     Flux_Out[3] = Fr[3];
+#   if ( CONSERVED_ENERGY == 1 )
     Flux_Out[4] = Fr[4];
+#   elif ( CONSERVED_ENERGY == 2 )
+    Flux_Out[4] = Fr[4] - Fr[0];
+#   endif
 
    CPU_Rotate3D( Flux_Out, XYZ, false );
     return;

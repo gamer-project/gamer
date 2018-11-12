@@ -1266,7 +1266,7 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData[], const in
                    IntScheme, PhaseUnwrapping_No, Monotonicity );
 
 #  endif // #if ( MODEL == ELBDM ) ... else ...
-
+/*
 #  ifdef CHECK_NEGATIVE_IN_FLUID
 #  if ( MODEL == SR_HYDRO )
    real Con[NCOMP_FLUID];
@@ -1288,7 +1288,7 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData[], const in
    }
 #  endif
 #  endif
-
+*/
 
 
    NVar_SoFar = NVar_Flu;

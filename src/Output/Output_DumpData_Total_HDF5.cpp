@@ -15,7 +15,8 @@ static void GetCompound_SymConst ( hid_t &H5_TypeID );
 static void GetCompound_InputPara( hid_t &H5_TypeID );
 
 #if ( MODEL == SR_HYDRO )
-real CPU_Con2Q( const real In[], const real Gamma);
+real CPU_GetTemperature( const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy,
+                         const real Gamma_m1, const bool CheckMinPres, const real MinPres );
 #endif
 
 /*======================================================================================================
@@ -952,7 +953,7 @@ void Output_DumpData_Total_HDF5( const char *FileName )
 		    Cons[3] = MomZ[PID][i][j][k];
 		    Cons[4] = Engy[PID][i][j][k];
 		    
-		    Temp[PID][i][j][k] = CPU_Con2Q( Cons,(real) GAMMA);
+                    Temp[PID][i][j][k] =  CPU_GetTemperature( Cons[0], Cons[1], Cons[2], Cons[3], Cons[4], NAN , false, NAN );
                  }
 
 //  copy conserved data and temperature into FieldData

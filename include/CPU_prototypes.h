@@ -45,6 +45,6 @@ void CPU_Rotate3D( real InOut[], const int XYZ, const bool Forward );
 void CPU_4Velto3Vel( const real In[], real Out[] );
 void CPU_3Velto4Vel( const real In[], real Out[] );
 
-real CPU_ModifyEngy (const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy);
+real CPU_CheckMinTempInEngy (const real Con[]);
 
 bool CPU_CheckUnphysical( const real Con[], const real Pri[]);

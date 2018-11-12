@@ -110,10 +110,10 @@ SIMU_OPTION += -DFLU_SCHEME=MHM_RP
 SIMU_OPTION += -DEOS=IDEAL_GAS
 
 # conserved energy = (total energy)
-SIMU_OPTION += -DCONSERVED_ENERGY=2
+#SIMU_OPTION += -DCONSERVED_ENERGY=1
 
 # conserved energy = (total energy) - (rest mass energy)
-#SIMU_OPTION += -DCONSERVED_ENERGY=2
+SIMU_OPTION += -DCONSERVED_ENERGY=2
 
 # scheme of spatial data reconstruction: PLM/PPM (piecewise-linear/piecewise-parabolic)
 # --> useless for RTVD/WAF

@@ -4,6 +4,7 @@
 #if (  !defined GPU  &&  MODEL == SR_HYDRO  && ( FLU_SCHEME == MHM || FLU_SCHEME == MHM_RP )  )
 
 bool CPU_CheckUnphysical( const real Con[], const real Pri[]);
+real CPU_CheckMinTempInEngy (const real Con[]);
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  CPU_FullStepUpdate
@@ -113,15 +114,9 @@ void CPU_FullStepUpdate( const real Input[][ FLU_NXT*FLU_NXT*FLU_NXT ], real Out
                          Gamma_m1, _Gamma_m1, CheckMinPres_No, NULL_REAL, DualEnergySwitch );
 #     endif // #ifdef DUAL_ENERGY
 
-#     ifdef CHECK_NEGATIVE_IN_FLUID
-      for (int v = 0;v<NCOMP_FLUID;v++) Con[v] = Output[v][ID2];
-      if(CPU_CheckUnphysical(Con, NULL)) {
-	 Aux_Message(stderr,"\nUnphysical varibles!\nfunction: %s: %d\n", __FUNCTION__, __LINE__);
-#     ifdef MODIFY_ENGY
-	 Output[ENGY][ID2] = CPU_ModifyEngy(Output[DENS][ID2], Output[MOMX][ID2], Output[MOMY][ID2], Output[MOMZ][ID2], Output[ENGY][ID2]);
-#     endif
-      }
-#     endif
+      real Cons[NCOMP_FLUID];
+      for (int v = 0;v<NCOMP_FLUID;v++) Cons[v] = Output[v][ID2];
+      Output[ENGY][ID2] = CPU_CheckMinTempInEngy( Cons );
 
    } // i,j,k
 

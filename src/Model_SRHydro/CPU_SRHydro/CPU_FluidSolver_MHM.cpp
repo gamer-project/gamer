@@ -335,6 +335,9 @@ void CPU_RiemannPredict( const real Flu_Array_In[][ FLU_NXT*FLU_NXT*FLU_NXT ],
       for (int v=0; v<NCOMP_TOTAL; v++)
          Half_Var[ID1][v] = Flu_Array_In[v][ID2] - dt_dh2*( dF[0][v] + dF[1][v] + dF[2][v] );
 
+//    ensure positive density and pressure
+      Half_Var[ID1][0] = FMAX( Half_Var[ID1][0], MinDens );
+      Half_Var[ID1][4] = CPU_CheckMinTempInEngy( Half_Var[ID1]);
    } // i,j,k
 
 } // FUNCTION : CPU_RiemannPredict
@@ -405,6 +408,12 @@ void CPU_HancockPredict( real FC_Var[][6][NCOMP_TOTAL], const real dt, const rea
          }
       }
 
+//    ensure positive density and pressure
+      for (int f=0; f<6; f++)
+      {
+         FC_Var[ID1][f][0] = FMAX( FC_Var[ID1][f][0], MinDens );
+         FC_Var[ID1][f][4] = CPU_CheckMinTempInEngy( FC_Var[ID1][f]);
+      }
 
    } // i,j,k
 

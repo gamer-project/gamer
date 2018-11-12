@@ -119,7 +119,7 @@ OPT__CORR_AFTER_ALL_SYNC     -1           # apply various corrections after all 
 OPT__OVERLAP_MPI              0           # overlap MPI communication with CPU/GPU computations [0] ##NOT SUPPORTED YET##
 OPT__RESET_FLUID              0           # reset fluid variables after each update -> edit "Flu_ResetByUser.cpp" [0]
 MIN_DENS                      0.0         # minimum number density (must >= 0.0) [0.0] ##SR_HYDRO ONLY##
-MIN_PRES                      0.0         # minimum pressure       (must >= 0.0) [0.0] ##HYDRO, MHD and SR_HYDRO##
+MIN_TEMP                    1.0e-20       # SR_HYDRO only
 
 
 # initialization

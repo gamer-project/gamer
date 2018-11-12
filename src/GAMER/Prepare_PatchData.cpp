@@ -1996,7 +1996,6 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
                for (int t=0; t<PGSize3D; t++)
                 {
 #                 if ( MODEL == SR_HYDRO )
-#                 ifdef CHECK_NEGATIVE_IN_FLUID
                   real Con[NCOMP_FLUID];
                   Con[DENS] = ArrayDens[t];
                   Con[MOMX] = ArrayMomX[t];
@@ -2004,8 +2003,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
                   Con[MOMZ] = ArrayMomZ[t];
                   Con[ENGY] = ArrayEngy[t];
 
-                  if(CPU_CheckUnphysical(Con, NULL)) Aux_Message(stderr,"\nUnphysical varibles!\nfunction: %s: %d\n", __FUNCTION__, __LINE__);
-#                 endif
+                  ArrayEngy[t] = CPU_CheckMinTempInEngy( Con );
 #                 else
                   ArrayEngy[t] = CPU_CheckMinPresInEngy( ArrayDens[t], ArrayMomX[t], ArrayMomY[t], ArrayMomZ[t], ArrayEngy[t],
                                                          Gamma_m1, _Gamma_m1, MinPres );

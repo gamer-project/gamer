@@ -46,7 +46,7 @@ void Flu_FixUp( const int lv )
    real *FluidPtr1D0[NCOMP_TOTAL], *FluidPtr1D[NCOMP_TOTAL];
    int  didx_m, didx_n;
 
-#  if   ( MODEL == HYDRO  ||  MODEL == MHD || MODEL == SR_HYDRO )
+#  if   ( MODEL == HYDRO  ||  MODEL == MHD ||  MODEL == SR_HYDRO )
    const real  Gamma_m1       = GAMMA - (real)1.0;
    const real _Gamma_m1       = (real)1.0 / Gamma_m1;
    const bool CheckMinPres_No = false;
@@ -254,10 +254,9 @@ void Flu_FixUp( const int lv )
 #                 error : DE_EINT is NOT supported yet !!
 #                 endif
 #                 endif // #ifdef DUAL_ENERGY
+
 #                 elif ( MODEL == SR_HYDRO )
-#                 ifdef MODIFY_ENGY
-                  CorrVal[ENGY] = CPU_ModifyEngy(CorrVal[DENS], CorrVal[MOMX], CorrVal[MOMY], CorrVal[MOMZ], CorrVal[ENGY]);
-#                 endif
+
 #                 endif // HYDRO/MHD/SR_HYDRO
 
 

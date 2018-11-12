@@ -15,7 +15,7 @@ static real Fun (real Q, void *ptr);   // function to be solved
 static real DFun (real Q, void *ptr);  // the first derivative of above function
 static void Fun_DFun (real Q, void *ptr, real * f, real * df);
 void CPU_4Velto3Vel (const real In[], real Out[]);
-real CPU_Con2Q (const real In[], const real Gamma); 
+static real CPU_Con2Temperature (const real In[], const real Gamma); 
 bool CPU_CheckUnphysical( const real Con[], const real Pri[]);
 static void NewtonRaphsonSolver(void *ptr, real *root, const real guess, const real epsabs, const real epsrel);
 
@@ -98,55 +98,33 @@ CPU_Rotate3D (real InOut[], const int XYZ, const bool Forward)
 void
 CPU_Con2Pri (const real In[], real Out[], const real Gamma)
 {
-      real Q = CPU_Con2Q ( In, Gamma );
+      real Temp = CPU_GetTemperature (In[0], In[1], In[2], In[3], In[4], NAN, NAN, NAN);
 #if ( EOS == RELATIVISTIC_IDEAL_GAS )
-      real h = 2.5*Q + SQRT(2.25*Q*Q + 1.0);
-
-      Out[1] = In[1]/(In[0]*h);
-      Out[2] = In[2]/(In[0]*h);
-      Out[3] = In[3]/(In[0]*h);
-
-      real Factor = SQRT(1 + SQR (Out[1]) + SQR (Out[2]) + SQR (Out[3]));
-
-      Out[0] = In[0] / Factor;
-#     if     ( CONSERVED_ENERGY == 1 )
-      Out[4] = Out[0] * Q; // P = nkT
-#     elif   ( CONSERVED_ENERGY == 2 )
-      Out[4] = Out[0] * Q; // P = nkT
-#     else
-#     error: CONSERVED_ENERGY must be 1 or 2!
-#     endif
-
+      real h = 2.5*Temp + SQRT(2.25*Temp*Temp + 1.0);
 #elif ( EOS == IDEAL_GAS ) 
-      real h = 1 + Q * GAMMA / (GAMMA-1.0);
-
-      Out[1] = In[1]/(In[0]*h);
-      Out[2] = In[2]/(In[0]*h);
-      Out[3] = In[3]/(In[0]*h);
-
-      real Factor = SQRT(1 + SQR (Out[1]) + SQR (Out[2]) + SQR (Out[3]));
-
-      Out[0] = In[0] / Factor;
-#     if     ( CONSERVED_ENERGY == 1 )
-      Out[4] = Out[0] * Q; // P = nkT
-#     elif   ( CONSERVED_ENERGY == 2 )
-      Out[4] = Out[0] * Q; // P = nkT
-#     else
-#     error: CONSERVED_ENERGY must be 1 or 2!
-#     endif
-
+      real h = 1 + Temp * GAMMA / (GAMMA-1.0);
 #else
 #error: unsupported EoS!
 #endif
-}				// FUNCTION : CPU_Con2Pri
+      real factor = In[0]*h;
+      Out[1] = In[1]/factor;
+      Out[2] = In[2]/factor;
+      Out[3] = In[3]/factor;
+
+      real factor1 = SQRT(1 + SQR (Out[1]) + SQR (Out[2]) + SQR (Out[3]));
+
+      Out[0] = In[0]/factor1;
+      Out[4] = Out[0] * Temp; // P = nkT
+}// FUNCTION : CPU_Con2Pri
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  CPU_Con2Q
+// Function    :  CPU_Con2Temperature
 // Description :  Convert the conserved variables to Q
 //-------------------------------------------------------------------------------------------------------
 
-real CPU_Con2Q (const real In[], const real Gamma)
+static real 
+CPU_Con2Temperature (const real In[], const real Gamma)
 {
   real Msqr = SQR (In[1]) + SQR (In[2]) + SQR (In[3]);
   real M = SQRT (Msqr); // magnitude of momentum
@@ -155,44 +133,48 @@ real CPU_Con2Q (const real In[], const real Gamma)
 # if ( EOS == RELATIVISTIC_IDEAL_GAS )
 # if   ( CONSERVED_ENERGY == 1 )
 /* initial guess  */
-	   real Constant = SQR(In[4]/In[0]) - Msqr/SQR(In[0]);
-
-	   if ( 2.0 - Msqr/(16*In[0]*In[0]) >= 0 )
-             {
-	       if ( Constant > 2.5 ) 
-                 {
-		    guess = SQRT( SQR(In[4]/In[0]) - 0.9375*Msqr/SQR(In[0]) - 2.0 ) / 3.0;
-		 }
-	       else guess = (Constant - 1.0)/ 3.0;
-	     }
-	   else // 1 - (M/D)**2 < 0
-             {
-	       if ( Constant >  1.5 + SQRT( Msqr/(16*SQR(In[0])) - 3.0/4.0 )) 
-                 {
-	            guess = SQRT( SQR(In[4]/In[0]) - 0.9375*Msqr/SQR(In[0]) - 2.0 ) / 3.0;
-		 }
-	       else guess = (Constant - 1.0)/ 3.0;
-	     }
+  real Constant = SQR(In[4]/In[0]) - Msqr/SQR(In[0]);
+  if ( Constant > 1.0 )
+   {
+	if ( 2.0 - Msqr/(16*In[0]*In[0]) >= 0 )
+	  {
+	    if ( Constant > 2.5 ) 
+	      {
+		 guess = SQRT( SQR(In[4]/In[0]) - 0.9375*Msqr/SQR(In[0]) - 2.0 ) / 3.0;
+	      }
+	    else guess = (Constant - 1.0)/ 3.0;
+	  }
+	else // 1 - (M/D)**2 < 0
+	  {
+	    if ( Constant >  1.5 + SQRT( Msqr/(16*SQR(In[0])) - 3.0/4.0 )) 
+	      {
+		 guess = SQRT( SQR(In[4]/In[0]) - 0.9375*Msqr/SQR(In[0]) - 2.0 ) / 3.0;
+	      }
+	    else guess = (Constant - 1.0)/ 3.0;
+	  }
+    } else return NAN;
 # elif ( CONSERVED_ENERGY == 2 )
 /* initial guess  */
-	   real Constant = SQR(In[4]/In[0]) + 2*In[4]/In[0] - Msqr/SQR(In[0]);
-
+   real Constant = SQR(In[4]/In[0]) + 2*In[4]/In[0] - Msqr/SQR(In[0]);
+   if ( Constant > 0.0 )
+    {
 	   if ( 1.0 - Msqr/(16*In[0]*In[0]) >= 0 )
-             {
+	     {
 	       if ( Constant > 1.5 ) 
-                 {
-	            guess = SQRT( SQR(In[4]/In[0]) + 2*In[4]/In[0] - 0.9375*Msqr/SQR(In[0]) - 1.0 ) / 3.0;
-		 }
-	       else guess = Constant / 3.0;
-	     }
-	   else // 1 - (M/D)**2 < 0
-             {
-	       if ( Constant >  0.5 + SQRT( Msqr/(16*SQR(In[0])) - 3.0/4.0 )) 
-                 {
+		 {
 		    guess = SQRT( SQR(In[4]/In[0]) + 2*In[4]/In[0] - 0.9375*Msqr/SQR(In[0]) - 1.0 ) / 3.0;
 		 }
 	       else guess = Constant / 3.0;
 	     }
+	   else // 1 - (M/D)**2 < 0
+	     {
+	       if ( Constant >  0.5 + SQRT( Msqr/(16*SQR(In[0])) - 3.0/4.0 )) 
+		 {
+		    guess = SQRT( SQR(In[4]/In[0]) + 2*In[4]/In[0] - 0.9375*Msqr/SQR(In[0]) - 1.0 ) / 3.0;
+		 }
+	       else guess = Constant / 3.0;
+	     }
+    } else return NAN;
 # else
 # error: CONSERVED_ENERGY must be 1 or 2!
 # endif
@@ -200,31 +182,33 @@ real CPU_Con2Q (const real In[], const real Gamma)
   real Gamma_m1 = Gamma - (real) 1.0;
 /* initial guess */
 # if   ( CONSERVED_ENERGY == 1 )
-/* initial guess  */
-  real Constant = SQR(In[4]/In[0]) - Msqr/SQR(In[0]);
-  if ( Constant > 1.0 + 2* (Gamma_m1 / Gamma ) * (M / In[0]) )
+   real Constant = SQR(In[4]/In[0]) - Msqr/SQR(In[0]);
+   if ( Constant > 1.0 )
     {
-      real A = 1.0/SQR(Gamma_m1);
-      real B = 2.0/Gamma_m1;
-      real C = 1 + ((2*Gamma-1.0)/(Gamma*Gamma))*Msqr/(In[0]*In[0]) - SQR(In[4]/In[0]);
-      real delta = SQRT(B*B-4*A*C);
-      guess = -2.0 *  C / ( B + delta);
-    }
-  else guess = 0.5*Gamma_m1 * ( Constant - 1.0);
-
+	      if ( Constant > 1.0 + 2* (Gamma_m1 / Gamma ) * (M / In[0]) )
+		{
+		  real A = 1.0/SQR(Gamma_m1);
+		  real B = 2.0/Gamma_m1;
+		  real C = 1 + ((2*Gamma-1.0)/(Gamma*Gamma))*Msqr/(In[0]*In[0]) - SQR(In[4]/In[0]);
+		  real delta = SQRT(B*B-4*A*C);
+		  guess = -2.0 *  C / ( B + delta);
+		}
+	     else guess = 0.5*Gamma_m1 * ( Constant - 1.0);
+    } else return NAN;
 # elif ( CONSERVED_ENERGY == 2 )
-/* initial guess  */
-   real Constant = SQR(In[4]/In[0]) + 2*In[4]/In[0] - Msqr/SQR(In[0]);
-  if ( Constant > 2* (Gamma_m1 / Gamma ) * (M / In[0]) )
-    {
-      real A = 1.0/SQR(Gamma_m1);
-      real B = 2.0/Gamma_m1;
-      real C = 1 + ((2*Gamma-1.0)/(Gamma*Gamma))*Msqr/(In[0]*In[0]) - SQR(In[4]/In[0]) - 2*(In[4]/In[0]);
-      real delta = SQRT(B*B-4*A*C);
-      guess = -2.0 *  C / ( B + delta);
-    }
-  else guess = 0.5*Gamma_m1 * Constant;
-
+    real Constant = SQR(In[4]/In[0]) + 2*In[4]/In[0] - Msqr/SQR(In[0]);
+    if ( Constant > 0.0 )
+     {
+	  if ( Constant > 2* (Gamma_m1 / Gamma ) * (M / In[0]) )
+	    {
+	      real A = 1.0/SQR(Gamma_m1);
+	      real B = 2.0/Gamma_m1;
+	      real C = 1 + ((2*Gamma-1.0)/(Gamma*Gamma))*Msqr/(In[0]*In[0]) - SQR(In[4]/In[0]) - 2*(In[4]/In[0]);
+	      real delta = SQRT(B*B-4*A*C);
+	      guess = -2.0 *  C / ( B + delta);
+	    }
+	  else guess = 0.5*Gamma_m1 * Constant;
+     } else return NAN;
 # else
 # error: CONSERVED_ENERGY must be 1 or 2!
 # endif
@@ -232,11 +216,11 @@ real CPU_Con2Q (const real In[], const real Gamma)
 #error: unsupported EoS!
 #endif
 
-      struct Fun_params params = { In[0], In[1], In[2], In[3], In[4] };
-     
-      NewtonRaphsonSolver(&params ,&root, guess, 0.0, 1.0e-14);
+   struct Fun_params params = { In[0], In[1], In[2], In[3], In[4] };
+  
+   NewtonRaphsonSolver(&params ,&root, guess, 0.0, 1.0e-14);
 
-      return root;
+   return root;
 }
 
 //-------------------------------------------------------------------------------------------------------
@@ -257,79 +241,30 @@ void
 CPU_Pri2Con (const real In[], real Out[], const real Gamma)
 {
 #if ( EOS == RELATIVISTIC_IDEAL_GAS )
-  real Temperature;
-  if ( In[4] > TINY_NUMBER )  {  
-      Temperature = In[4]/In[0]; // T = number_density/pressure
-   } else {
-      Temperature = 0.0;         // pressure = number_density * T
-   }
-
-  real Enthalpy = 2.5*Temperature + SQRT(2.25*SQR(Temperature)+1.0); // approximate enthalpy
-  real Factor0 = SQRT(1.0 + SQR (In[1]) + SQR (In[2]) + SQR (In[3])); // Lorentz factor
-  real Factor1 = In[0] * Factor0 * Enthalpy;
-  
-  Out[0] = In[0] * Factor0; // number density in inertial frame
-  Out[1] = Factor1 * In[1]; // MomX
-  Out[2] = Factor1 * In[2]; // MomX
-  Out[3] = Factor1 * In[3]; // MomX
-# if   ( CONSERVED_ENERGY == 1 )
-  Out[4] = Factor1 * Factor0 - In[4]; // total_energy
-# elif ( CONSERVED_ENERGY == 2 )
-  Out[4] = Factor1 * Factor0 - In[4] - Out[0]; // ( total_energy ) - ( rest_mass_energy )
-# else
-# error: CONSERVED_ENERGY must be 1 or 2!
-# endif
-
+  real nh = 2.5*In[4] + SQRT(2.25*SQR(In[4]) + SQR(In[0])); // approximate enthalpy * proper number density
 #elif ( EOS == IDEAL_GAS )
-/*
-  real Temperature;
-  if ( In[4] > TINY_NUMBER )  {  
-      Temperature = In[4]/In[0]; // T = number_density/pressure
-   } else {
-      Temperature = 0.0;         // pressure = number_density * T
-   }
-
-  real Enthalpy = 1.0 + Temperature * GAMMA / (GAMMA-1.0); // approximate enthalpy
-  real Factor0 = SQRT(1.0 + SQR (In[1]) + SQR (In[2]) + SQR (In[3])); // Lorentz factor
-  real Factor1 = In[0] * Factor0 * Enthalpy;
-  
-  Out[0] = In[0] * Factor0; // number density in inertial frame
-  Out[1] = Factor1 * In[1]; // MomX
-  Out[2] = Factor1 * In[2]; // MomX
-  Out[3] = Factor1 * In[3]; // MomX
-# if   ( CONSERVED_ENERGY == 1 )
-  Out[4] = Factor1 * Factor0 - In[4]; // total_energy
-# elif ( CONSERVED_ENERGY == 2 )
-  Out[4] = Factor1 * Factor0 - In[4] - Out[0]; // ( total_energy ) - ( rest_mass_energy )
-# else
-# error: CONSERVED_ENERGY must be 1 or 2!
-# endif
-*/
-
   real Gamma_m1 = (real) Gamma - 1.0;
-
-    real Factor0 = 1 + SQR (In[1]) + SQR (In[2]) + SQR (In[3]);
-    real Factor1 = SQRT (Factor0);
-    real Factor2 = In[0] + ( GAMMA / Gamma_m1) * In[4]; // enthalpy * rho
-    real Factor3 = Factor2 * Factor1;
-
-    Out[0] = In[0] * Factor1;
-    Out[1] = Factor3 * In[1];
-    Out[2] = Factor3 * In[2];
-    Out[3] = Factor3 * In[3];
-
-# if   ( CONSERVED_ENERGY == 1 )
-    Out[4] = Factor2 * Factor0 - In[4];
-# elif ( CONSERVED_ENERGY == 2 )
-    Out[4] = Factor2 * Factor0 - In[4] - Out[0];
-# else
-# error: CONSERVED_ENERGY must be 1 or 2!
-# endif
+  real nh = In[0] + ( GAMMA / Gamma_m1) * In[4]; // enthalpy * proper number density
 #else
 #error: unsupported EoS!
 #endif
-}				// FUNCTION : CPU_Pri2Con
 
+  real Factor0 = 1.0 + SQR (In[1]) + SQR (In[2]) + SQR (In[3]);
+  real Factor1 = SQRT(Factor0); // Lorentz factor
+  real Factor2 = nh * Factor1;
+  
+  Out[0] = In[0] * Factor1; // number density in inertial frame
+  Out[1] = Factor2 * In[1]; // MomX
+  Out[2] = Factor2 * In[2]; // MomX
+  Out[3] = Factor2 * In[3]; // MomX
+# if   ( CONSERVED_ENERGY == 1 )
+  Out[4] = nh * Factor0 - In[4]; // total_energy
+# elif ( CONSERVED_ENERGY == 2 )
+  Out[4] = nh * Factor0 - In[4] - Out[0]; // ( total_energy ) - ( rest_mass_energy )
+# else
+# error: CONSERVED_ENERGY must be 1 or 2!
+# endif
+}				// FUNCTION : CPU_Pri2Con
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  CPU_4Velto3Vel
@@ -385,8 +320,7 @@ CPU_Con2Flux (const int XYZ, real Flux[], const real Input[], const real Gamma_m
   real Pres, Vx;
   real lFactor;
 
-  for (int v = 0; v < NCOMP_FLUID; v++)
-    ConVar[v] = Input[v];
+  for (int v = 0; v < NCOMP_FLUID; v++)   ConVar[v] = Input[v];
 
   CPU_Rotate3D (ConVar, XYZ, true);
 
@@ -437,55 +371,6 @@ CPU_CheckMinPres (const real InPres, const real MinPres)
   return FMAX (InPres, MinPres);
 }				// FUNCTION : CPU_CheckMinPres
 
-
-//-------------------------------------------------------------------------------------------------------
-// Function    :  CPU_CheckMinPresInEngy
-// Description :  Ensure that the pressure in the input total energy is greater than the given threshold
-//
-// Note        :  1. This function is used to correct unphysical (usually negative) pressure caused by
-//                   numerical errors
-//                   --> Usually happen in regions with high mach numbers
-//                   --> Currently it simply sets a minimum allowed value for pressure
-//                       --> Please set MIN_PRES in the runtime parameter file "Input__Parameter"
-//                3. One must input conserved variables instead of primitive variables
-//
-// Parameter   :  Dens     : Mass density
-//                MomX/Y/Z : Momentum density
-//                Engy     : Energy density
-//                Gamma_m1 : Gamma - 1
-//               _Gamma_m1 : 1/(Gamma - 1)
-//                MinPres  : Minimum allowed pressure
-//
-// Return      :  Total energy with pressure greater than the given threshold
-//-------------------------------------------------------------------------------------------------------
-real
-CPU_CheckMinPresInEngy (const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy,
-			const real Gamma_m1, const real _Gamma_m1, const real MinPres)
-{
-printf("%s: %d\n", __FUNCTION__, __LINE__);
-abort();
-/*
-# if ( EOS == IDEAL_GAS ) 
-  real h_min = 1.0 + GAMMA * _Gamma_m1 * T_min;
-# elif ( EOS == RELATIVISTIC_IDEAL_GAS )
-  real h_min = 2.5*T_min + SQRT(2.25*T_min*T_min + 1);
-# endif
-
-  real Factor = SQRT(h_min*h_min + SQR(MomX/Dens) + SQR(MomY/Dens) + SQR(MomZ/Dens));
-  real T_min = MinPres * Factor / ( Dens * h_min );
-
-# if ( CONSERVED_ENERGY == 1 )
-  real E_min = Dens * Factor - MinPres;
-# elif ( CONSERVED_ENERGY == 2 )
-  real E_min = Dens * Factor - MinPres - Dens;
-# endif
-
-  if ( Engy >= E_min) return Engy;
-  else                return E_min;
-*/
-}
-
-				// FUNCTION : CPU_CheckMinPresInEngy
 //-------------------------------------------------------------------------------------------------------
 // Function    :  CPU_CheckMinDens
 //-------------------------------------------------------------------------------------------------------
@@ -493,7 +378,66 @@ real
 CPU_CheckMinDens (const real InDens, const real MinDens)
 {
   return FMAX (InDens, MinDens);
-}				// FUNCTION : CPU_CheckMinDens
+}// FUNCTION : CPU_CheckMinDens
+
+
+//-------------------------------------------------------------------------------------------------------
+// Function    :  CPU_CheckMinDens
+//-------------------------------------------------------------------------------------------------------
+real
+CPU_CheckMinTemp (const real InTemp, const real MinTemp)
+{
+  return FMAX (InTemp, MinTemp);
+}// FUNCTION : CPU_CheckMinDens
+
+
+//-------------------------------------------------------------------------------------------------------
+// Function    :  CPU_CheckMinTempInEngy
+// Description :  Ensure that the Temp in the input total energy is greater than the given threshold
+//
+// Note        :  1. This function is used to correct unphysical (usually negative) temperature caused by
+//                   numerical errors
+//                   --> Usually happen in regions with high mach numbers
+//                   --> Currently it simply sets a minimum allowed value for temerature
+//                       --> Please set MIN_TEMP in the runtime parameter file "Input__Parameter"
+//                3. One must input conserved variables instead of primitive variables
+//
+// Parameter   :  Cons[]      : D, Mx, My, Mz, E
+//                Gamma_Ratio : Gamma / (Gamma - 1)
+//                MinTemp     : Minimum allowed temperature
+//
+// Return      :  Total energy with pressure greater than the given threshold
+//-------------------------------------------------------------------------------------------------------
+real
+CPU_CheckMinTempInEngy (const real Cons[])
+{
+  real T_min = MIN_TEMP;
+# if ( EOS == IDEAL_GAS ) 
+  real h_min = 1.0 + GAMMA * T_min / (GAMMA - 1.0);
+# elif ( EOS == RELATIVISTIC_IDEAL_GAS )
+  real h_min = 2.5*T_min + SQRT(2.25*T_min*T_min + 1);
+# endif
+
+  real D  = Cons[0];
+  real Mx = Cons[1];
+  real My = Cons[2];
+  real Mz = Cons[3];
+  real E  = Cons[4];
+
+  real Msqr = SQR(Mx) + SQR(My) + SQR(Mz);
+  real Dh = D*h_min;
+  real factor = SQRT(Dh*Dh + Msqr);
+
+# if ( CONSERVED_ENERGY == 1 )
+  real E_min = factor - D*Dh*T_min / factor;
+# elif ( CONSERVED_ENERGY == 2 )
+  real E_min = factor - D*Dh*T_min / factor - D;
+# endif
+
+  if ( Cons[4] >= E_min) return Cons[4];
+  else                   return E_min;
+}
+
 
 
 //-------------------------------------------------------------------------------------------------------
@@ -714,22 +658,11 @@ CPU_GetPressure (const real Dens, const real MomX, const real MomY, const real M
 //-------------------------------------------------------------------------------------------------------
 real
 CPU_GetTemperature (const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy,
-		    const real Gamma_m1, const bool CheckMinPres, const real MinPres)
+                    const real Gamma_m1, const bool CheckMinPres, const real MinPres )
 {
       real In[5] = {Dens, MomX, MomY, MomZ, Engy};
-      real Q = CPU_Con2Q ( In, GAMMA );
-      real Temperature;
-#if ( EOS == RELATIVISTIC_IDEAL_GAS )
-      Temperature = Q;
-#elif ( EOS == IDEAL_GAS )
-      abort();
-      real h = 0.0;
-      if ( Dens > TINY_NUMBER )   h = Q/Dens;
-      else                        h = 1.0;   
-      Temperature = Gamma_m1 * (h - 1.0) / GAMMA;
-#else
-#error: unsupported EoS!
-#endif
+      real Temperature = CPU_Con2Temperature ( In, GAMMA );
+
  return Temperature;
 }				// FUNCTION : CPU_GetTemperature
 
@@ -846,31 +779,16 @@ static void NewtonRaphsonSolver(void *ptr, real *root, const real guess, const r
  do
    {
      iter++;
-
      Fun_DFun(*root, ptr, &f, &df);
 
-     if (df == 0.0) 
-      { 
-         printf("derivative is zero\n");
-         //abort();   
-      }
-
-     if ( Aux_IsFinite(f) == 0 )
-      {
-         printf("function value is not finite\n");
-         //abort();   
-      }
-     if ( Aux_IsFinite(df) == 0 )
-      {
-         printf("derivative value is not finite\n");
-    //     abort();   
-      }
+     if (df == 0.0)                printf("derivative is zero\n");
+     if ( Aux_IsFinite(f) == 0 )   printf("function value is not finite\n");
+     if ( Aux_IsFinite(df) == 0 )  printf("derivative value not finite\n");
      
       root_old = *root;
       *root = *root - ( f / df );
       tolerance = epsabs + epsrel * FABS(*root);
    }while ( fabs(root_old - *root) >= tolerance && iter < max_iter );
- 
 }
 
 

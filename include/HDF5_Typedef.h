@@ -405,7 +405,7 @@ struct InputPara_t
 #  elif ( MODEL == SR_HYDRO )
    int    Opt__Flag_LohnerEngy;
    int    Opt__Flag_LohnerPres;
-   int    Opt__Flag_LohnerRest;
+   int    Opt__Flag_LohnerPron;
    int    Opt__Flag_LohnerTemp;
 #  endif
    int    Opt__Flag_LohnerForm;
@@ -478,7 +478,7 @@ struct InputPara_t
    int    JeansMinPres_Level;
    int    JeansMinPres_NCell;
 #  elif ( MODEL == SR_HYDRO )
-   double MinPres;
+   double MIN_TEMP;
    int    JeansMinPres;
    int    JeansMinPres_Level;
    int    JeansMinPres_NCell;

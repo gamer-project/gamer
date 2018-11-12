@@ -14,18 +14,18 @@
 
 
 # simulation scale
-BOX_SIZE                      100.0       # box size along the longest side (in Mpc/h if COMOVING is adopted)
-NX0_TOT_X                     32         # number of base-level cells along x
-NX0_TOT_Y                     32         # number of base-level cells along y
-NX0_TOT_Z                     160          # number of base-level cells along z
-OMP_NTHREAD                   3           # number of OpenMP threads (<=0=auto -> omp_get_max_threads) [-1] ##OPENMP ONLY##
-END_T                         1.5e1       # end physical time (<0=auto -> must be set by test problems or restart) [-1.0]
-END_STEP                     -1           # end step (<0=auto -> must be set by test problems or restart) [-1]
+BOX_SIZE                      100.0           # box size along the longest side (in Mpc/h if COMOVING is adopted)
+NX0_TOT_X                     160              # number of base-level cells along x
+NX0_TOT_Y                     64              # number of base-level cells along y
+NX0_TOT_Z                     64             # number of base-level cells along z
+OMP_NTHREAD                   3               # number of OpenMP threads (<=0=auto -> omp_get_max_threads) [-1] ##OPENMP ONLY##
+END_T                         1.5e1           # end physical time (<0=auto -> must be set by test problems or restart) [-1.0]
+END_STEP                     -1               # end step (<0=auto -> must be set by test problems or restart) [-1]
 
 
 # test problems
-TESTPROB_ID                   604          # test problem ID [0]
-                                           # 604: relativistic jets
+TESTPROB_ID                   604              # test problem ID [0]
+                                               # 604: relativistic jets
 
 
 # code units (in cgs)
@@ -120,6 +120,7 @@ OPT__OVERLAP_MPI              0           # overlap MPI communication with CPU/G
 OPT__RESET_FLUID              1           # reset fluid variables after each update -> edit "Flu_ResetByUser.cpp" [0]
 MIN_DENS                      0.0         # minimum number density (must >= 0.0) [0.0] ##SR_HYDRO ONLY##
 MIN_PRES                      0.0         # minimum pressure       (must >= 0.0) [0.0] ##HYDRO, MHD and SR_HYDRO##
+MIN_TEMP                      0.0       # SR_HYDRO only
 
 
 # initialization
@@ -134,8 +135,8 @@ INIT_SUBSAMPLING_NCELL        2           # perform sub-sampling during initiali
 
 # interpolation schemes: (-1=auto, 1=MinMod-3D, 2=MinMod-1D, 3=vanLeer, 4=CQuad, 5=Quad, 6=CQuar, 7=Quar)
 OPT__INT_TIME                 1           # perform "temporal" interpolation for OPT__DT_LEVEL == 2/3 [1]
-OPT__FLU_INT_SCHEME          -1           # ghost-zone fluid variables for the fluid solver [-1]
-OPT__REF_FLU_INT_SCHEME      -1           # newly allocated fluid variables during grid refinement [-1]
+OPT__FLU_INT_SCHEME           1           # ghost-zone fluid variables for the fluid solver [-1]
+OPT__REF_FLU_INT_SCHEME       1           # newly allocated fluid variables during grid refinement [-1]
 INT_MONO_COEFF                2.0         # coefficient for ensuring the interpolation monotonicity (1.0~4.0) [2.0]
 
 
@@ -144,8 +145,7 @@ OPT__OUTPUT_TOTAL             1           # output the simulation snapshot: (0=o
 OPT__OUTPUT_PART              0           # output a single line or slice: (0=off, 1=xy, 2=yz, 3=xz, 4=x, 5=y, 6=z, 7=diag) [0]
 OPT__OUTPUT_USER              0           # output the user-specified data -> edit "Output_User.cpp" [0]
 OPT__OUTPUT_BASE              0           # only output the base-level data [0] ##OPT__OUTPUT_PART ONLY##
-OPT__OUTPUT_MODE              2           # (1=const step, 2=const dt, 3=dump table) -> edit "Input__DumpTable" for 3
-OPT__OUTPUT_Q                 1
+OPT__OUTPUT_MODE              1           # (1=const step, 2=const dt, 3=dump table) -> edit "Input__DumpTable" for 3
 OUTPUT_STEP                   5           # output data every OUTPUT_STEP step ##OPT__OUTPUT_MODE==1 ONLY##
 OUTPUT_DT                     1.0         # output data every OUTPUT_DT time interval ##OPT__OUTPUT_MODE==2 ONLY##
 OUTPUT_PART_X                -1.0         # x coordinate for OPT__OUTPUT_PART [-1.0]

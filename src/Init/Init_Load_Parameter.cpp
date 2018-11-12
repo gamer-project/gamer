@@ -268,11 +268,14 @@ void Init_Load_Parameter()
 #  if ( MODEL == HYDRO  ||  MODEL == MHD  ||  MODEL == ELBDM || MODEL == SR_HYDRO )
    ReadPara->Add( "MIN_DENS",                   &MIN_DENS,                        0.0,             0.0,           NoMax_double   );
 #  endif
-#  if ( MODEL == HYDRO  ||  MODEL == MHD || MODEL == SR_HYDRO )
+#  if ( MODEL == HYDRO  ||  MODEL == MHD )
    ReadPara->Add( "MIN_PRES",                   &MIN_PRES,                        0.0,             0.0,           NoMax_double   );
    ReadPara->Add( "JEANS_MIN_PRES",             &JEANS_MIN_PRES,                  false,           Useless_bool,  Useless_bool   );
    ReadPara->Add( "JEANS_MIN_PRES_LEVEL",       &JEANS_MIN_PRES_LEVEL,           -1,               NoMin_int,     NLEVEL-1       );
    ReadPara->Add( "JEANS_MIN_PRES_NCELL",       &JEANS_MIN_PRES_NCELL,            4,               1,             NoMax_int      );
+#  elif ( MODEL == SR_HYDRO )
+   ReadPara->Add( "MIN_TEMP",                   &MIN_TEMP,                        0.0,             0.0,           NoMax_double   );
+   ReadPara->Add( "MIN_PRES",                   &MIN_PRES,                        0.0,             0.0,           NoMax_double   );
 #  endif
 
 

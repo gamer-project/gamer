@@ -77,6 +77,12 @@ void CPU_RiemannSolver_HLLC( const int XYZ,
 
 /* 3. Compute the max and min wave speeds used in Mignone */
 #  if ( EOS == RELATIVISTIC_IDEAL_GAS )
+   real nhl =  2.5*PL[4] + SQRT(2.25*SQR(PL[4]) + SQR(PL[0]));
+   real nhr =  2.5*PR[4] + SQRT(2.25*SQR(PR[4]) + SQR(PR[0]));
+
+   cslsq = ( PL[4]*( 5*nhl - 8*PL[4] ) ) / ((3*nhl)*( nhl - PL[4] ));
+   csrsq = ( PR[4]*( 5*nhr - 8*PR[4] ) ) / ((3*nhr)*( nhr - PR[4] ));
+/*
    real Tl, Tr;
 
    if ( PL[0] > TINY_NUMBER )  Tl = PL[4]/PL[0];
@@ -90,6 +96,7 @@ void CPU_RiemannSolver_HLLC( const int XYZ,
 
    cslsq = ( Tl*( 5*hl - 8*Tl ) ) / ((3*hl)*( hl - Tl ));
    csrsq = ( Tr*( 5*hr - 8*Tr ) ) / ((3*hr)*( hr - Tr ));
+*/
 #  elif ( EOS ==  IDEAL_GAS)
    rhl = PL[0] + PL[4] * Gamma / Gamma_m1; /* Mignone Eq 3.5 */
    rhr = PR[0] + PR[4] * Gamma / Gamma_m1;

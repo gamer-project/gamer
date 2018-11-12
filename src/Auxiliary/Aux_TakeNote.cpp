@@ -444,13 +444,6 @@ void Aux_TakeNote()
       fprintf( Note, "CHECK_NEGATIVE_IN_FLUID         OFF\n" );
 #     endif
 
-#     ifdef MODIFY_ENGY
-      fprintf( Note, "MODIFY_ENGY                     ON\n" );
-#     else
-      fprintf( Note, "MODIFY_ENGY                     OFF\n" );
-#     endif
-
-
 #     ifdef CHAR_RECONSTRUCTION
       fprintf( Note, "CHAR_RECONSTRUCTION             ON\n" );
 #     else
@@ -1027,11 +1020,8 @@ void Aux_TakeNote()
       fprintf( Note, "JEANS_MIN_PRES_LEVEL            %d\n",      JEANS_MIN_PRES_LEVEL     );
       fprintf( Note, "JEANS_MIN_PRES_NCELL            %d\n",      JEANS_MIN_PRES_NCELL     ); }
 #     elif ( MODEL == SR_HYDRO )
-//      fprintf( Note, "MIN_PRES                        %13.7e\n",  MIN_PRES                 );
-//      fprintf( Note, "JEANS_MIN_PRES                  %d\n",      JEANS_MIN_PRES           );
-//    if ( JEANS_MIN_PRES ) {
-//      fprintf( Note, "JEANS_MIN_PRES_LEVEL            %d\n",      JEANS_MIN_PRES_LEVEL     );
-//      fprintf( Note, "JEANS_MIN_PRES_NCELL            %d\n",      JEANS_MIN_PRES_NCELL     ); }
+      fprintf( Note, "MIN_TEMP                        %13.7e\n",  MIN_TEMP                 );
+      fprintf( Note, "MIN_PRES                        %13.7e\n",  MIN_PRES                 );
 #     endif
 #     ifdef DUAL_ENERGY
       fprintf( Note, "DUAL_ENERGY_SWITCH              %13.7e\n",  DUAL_ENERGY_SWITCH       );
