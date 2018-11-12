@@ -1597,6 +1597,11 @@ void FillIn_Makefile( Makefile_t &Makefile )
    Makefile.Par_NAttUser           = PAR_NATT_USER;
 #  endif
 
+#  if ( MODEL == SR_HYDRO )
+   Makefile.EoS                    = EOS;
+   Makefile.Conserved_Engy         = CONSERVED_ENERGY;
+#  endif
+
 } // FUNCTION : FillIn_Makefile
 
 
@@ -1904,7 +1909,7 @@ void FillIn_InputPara( InputPara_t &InputPara )
    InputPara.Opt__Flag_LohnerEngy    = OPT__FLAG_LOHNER_ENGY;
    InputPara.Opt__Flag_LohnerPres    = OPT__FLAG_LOHNER_PRES;
    InputPara.Opt__Flag_LohnerTemp    = OPT__FLAG_LOHNER_TEMP;
-   InputPara.Opt__Flag_LohnerRest    = OPT__FLAG_LOHNER_PRON;
+   InputPara.Opt__Flag_LohnerPron    = OPT__FLAG_LOHNER_PRON;
 #  endif
    InputPara.Opt__Flag_LohnerForm    = OPT__FLAG_LOHNER_FORM;
    InputPara.Opt__Flag_User          = OPT__FLAG_USER;
@@ -1976,8 +1981,13 @@ void FillIn_InputPara( InputPara_t &InputPara )
 #  if ( MODEL == HYDRO  ||  MODEL == MHD  ||  MODEL == ELBDM ||  MODEL == SR_HYDRO  )
    InputPara.MinDens                 = MIN_DENS;
 #  endif
-#  if ( MODEL == HYDRO  ||  MODEL == MHD || MODEL == SR_HYDRO  )
+#  if ( MODEL == HYDRO  ||  MODEL == MHD )
    InputPara.MinPres                 = MIN_PRES;
+   InputPara.JeansMinPres            = JEANS_MIN_PRES;
+   InputPara.JeansMinPres_Level      = JEANS_MIN_PRES_LEVEL;
+   InputPara.JeansMinPres_NCell      = JEANS_MIN_PRES_NCELL;
+#  elif ( MODEL == SR_HYDRO )
+   InputPara.MinTemp                 = MIN_TEMP;
    InputPara.JeansMinPres            = JEANS_MIN_PRES;
    InputPara.JeansMinPres_Level      = JEANS_MIN_PRES_LEVEL;
    InputPara.JeansMinPres_NCell      = JEANS_MIN_PRES_NCELL;
@@ -2317,6 +2327,11 @@ void GetCompound_Makefile( hid_t &H5_TypeID )
    H5Tinsert( H5_TypeID, "Par_NAttUser",           HOFFSET(Makefile_t,Par_NAttUser           ), H5T_NATIVE_INT );
 #  endif
 
+#  if ( MODEL == SR_HYDRO )
+   H5Tinsert( H5_TypeID, "EoS",                    HOFFSET(Makefile_t,EoS                    ), H5T_NATIVE_INT );
+   H5Tinsert( H5_TypeID, "Conserved_Engy",         HOFFSET(Makefile_t,Conserved_Engy         ), H5T_NATIVE_INT );
+#  endif
+
 } // FUNCTION : GetCompound_Makefile
 
 
@@ -2599,7 +2614,7 @@ void GetCompound_InputPara( hid_t &H5_TypeID )
    H5Tinsert( H5_TypeID, "Opt__Flag_LohnerEngy",    HOFFSET(InputPara_t,Opt__Flag_LohnerEngy   ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "Opt__Flag_LohnerPres",    HOFFSET(InputPara_t,Opt__Flag_LohnerPres   ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "Opt__Flag_LohnerTemp",    HOFFSET(InputPara_t,Opt__Flag_LohnerTemp   ), H5T_NATIVE_INT     );
-   H5Tinsert( H5_TypeID, "Opt__Flag_LohnerRest",    HOFFSET(InputPara_t,Opt__Flag_LohnerRest   ), H5T_NATIVE_INT     );
+   H5Tinsert( H5_TypeID, "Opt__Flag_LohnerPron",    HOFFSET(InputPara_t,Opt__Flag_LohnerPron   ), H5T_NATIVE_INT     );
 #  endif
    H5Tinsert( H5_TypeID, "Opt__Flag_LohnerForm",    HOFFSET(InputPara_t,Opt__Flag_LohnerForm   ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "Opt__Flag_User",          HOFFSET(InputPara_t,Opt__Flag_User         ), H5T_NATIVE_INT     );
@@ -2677,8 +2692,14 @@ void GetCompound_InputPara( hid_t &H5_TypeID )
 #  if ( MODEL == HYDRO  ||  MODEL == MHD  ||  MODEL == ELBDM || MODEL == SR_HYDRO )
    H5Tinsert( H5_TypeID, "MinDens",                 HOFFSET(InputPara_t,MinDens                ), H5T_NATIVE_DOUBLE  );
 #  endif
-#  if ( MODEL == HYDRO  ||  MODEL == MHD || MODEL == SR_HYDRO )
+#  if ( MODEL == HYDRO  ||  MODEL == MHD )
    H5Tinsert( H5_TypeID, "MinPres",                 HOFFSET(InputPara_t,MinPres                ), H5T_NATIVE_DOUBLE  );
+   H5Tinsert( H5_TypeID, "JeansMinPres",            HOFFSET(InputPara_t,JeansMinPres           ), H5T_NATIVE_INT     );
+   H5Tinsert( H5_TypeID, "JeansMinPres_Level",      HOFFSET(InputPara_t,JeansMinPres_Level     ), H5T_NATIVE_INT     );
+   H5Tinsert( H5_TypeID, "JeansMinPres_NCell",      HOFFSET(InputPara_t,JeansMinPres_NCell     ), H5T_NATIVE_INT     );
+#  endif
+#  if ( MODEL == SR_HYDRO )
+   H5Tinsert( H5_TypeID, "MinTemp",                 HOFFSET(InputPara_t,MinTemp                ), H5T_NATIVE_DOUBLE  );
    H5Tinsert( H5_TypeID, "JeansMinPres",            HOFFSET(InputPara_t,JeansMinPres           ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "JeansMinPres_Level",      HOFFSET(InputPara_t,JeansMinPres_Level     ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "JeansMinPres_NCell",      HOFFSET(InputPara_t,JeansMinPres_NCell     ), H5T_NATIVE_INT     );

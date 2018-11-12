@@ -144,6 +144,11 @@ struct Makefile_t
    int Par_NAttUser;
 #  endif
 
+#  if ( MODEL == SR_HYDRO )
+   int EoS;
+   int Conserved_Engy;
+#  endif
+
 }; // struct Makefile_t
 
 
@@ -478,7 +483,7 @@ struct InputPara_t
    int    JeansMinPres_Level;
    int    JeansMinPres_NCell;
 #  elif ( MODEL == SR_HYDRO )
-   double MIN_TEMP;
+   double MinTemp;
    int    JeansMinPres;
    int    JeansMinPres_Level;
    int    JeansMinPres_NCell;
