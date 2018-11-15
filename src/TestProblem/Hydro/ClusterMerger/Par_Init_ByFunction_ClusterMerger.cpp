@@ -6,6 +6,8 @@
 #include "hdf5.h"
 #endif
 
+#include <string>
+
 // floating-point type in the input particle file
 typedef double real_par_in;
 //typedef float  real_par_in;
@@ -22,8 +24,8 @@ extern double  Merger_Coll_VelY1;
 extern double  Merger_Coll_VelX2;
 extern double  Merger_Coll_VelY2;
 
-long Read_Particle_Number_ClusterMerger(string filename);
-void Read_Particles_ClusterMerger(string filename, long offset, long num,
+long Read_Particle_Number_ClusterMerger(std::string filename);
+void Read_Particles_ClusterMerger(std::string filename, long offset, long num,
                                   real_par_in mass[], real_par_in xpos[], 
                                   real_par_in ypos[], real_par_in zpos[], 
                                   real_par_in xvel[], real_par_in yvel[], 
@@ -83,8 +85,8 @@ void Par_Init_ByFunction_ClusterMerger( const long NPar_ThisRank, const long NPa
    if ( Merger_Coll  &&  !Aux_CheckFileExist(Merger_File_Par2) )
       Aux_Error( ERROR_INFO, "file \"%s\" does not exist !!\n", Merger_File_Par2 );
 
-   const string filename1(Merger_File_Par1);
-   const string filename2(Merger_File_Par2);
+   const std::string filename1(Merger_File_Par1);
+   const std::string filename2(Merger_File_Par2);
 
 // check file size
    long NPar_EachCluster[2] = {0,0};
@@ -164,7 +166,7 @@ void Par_Init_ByFunction_ClusterMerger( const long NPar_ThisRank, const long NPa
       real_par_in *yvel = new real_par_in [NPar_ThisRank_EachCluster[c]];
       real_par_in *zvel = new real_par_in [NPar_ThisRank_EachCluster[c]];
 
-      const string filename((c==0)? Merger_File_Par1:Merger_File_Par2);
+      const std::string filename((c==0)? Merger_File_Par1:Merger_File_Par2);
 
       Read_Particles_ClusterMerger(filename, Offset[c], NPar_ThisRank_EachCluster[c],
                                    xpos, ypos, zpos, xvel, yvel, zvel, mass);
@@ -260,7 +262,7 @@ void Par_Init_ByFunction_ClusterMerger( const long NPar_ThisRank, const long NPa
 
 #ifdef SUPPORT_HDF5
 
-long Read_Particle_Number_ClusterMerger(string filename)
+long Read_Particle_Number_ClusterMerger(std::string filename)
 {
 
   hid_t   file_id, dataset, dataspace;
@@ -281,7 +283,7 @@ long Read_Particle_Number_ClusterMerger(string filename)
 
 } // FUNCTION : Read_Particle_Number_ClusterMerger
 
-void Read_Particles_ClusterMerger(string filename, long offset, long num, 
+void Read_Particles_ClusterMerger(std::string filename, long offset, long num, 
                                   real_par_in xpos[], real_par_in ypos[], 
                                   real_par_in zpos[], real_par_in xvel[], 
                                   real_par_in yvel[], real_par_in zvel[], 
