@@ -1,7 +1,6 @@
 #include "GAMER.h"
 #include "TestProb.h"
 
-//void CPU_3Velto4Vel( const real In[], real Out[] );
 void CPU_Pri2Con( const real In[], real Out[], const real Gamma);
 
 // problem-specific global variables
@@ -260,11 +259,6 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 {
 // 4-velocity
    double Pri4Vel[NCOMP_FLUID] = { Jet_BgDens, Jet_BgVel[0], Jet_BgVel[1], Jet_BgVel[2], Jet_BgPres};
-
-// 4-velocity
-//   double Pri4Vel[NCOMP_FLUID] = {0};
-
-//   CPU_3Velto4Vel (Pri3Vel, Pri4Vel);
 
    CPU_Pri2Con(Pri4Vel, fluid, GAMMA);
 

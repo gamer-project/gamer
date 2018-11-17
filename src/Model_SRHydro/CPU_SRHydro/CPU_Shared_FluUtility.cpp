@@ -3,11 +3,8 @@
 
 struct Fun_params
 {
-  real D;
-  real M1;
-  real M2;
-  real M3;
-  real E;
+  real M_Dsqr;
+  real E_D;
 };
 
 // some functions in this file need to be defined even when using GPU
@@ -126,55 +123,61 @@ CPU_Con2Pri (const real In[], real Out[], const real Gamma)
 static real 
 CPU_Con2Temperature (const real In[], const real Gamma)
 {
+  real guess, root;
+
   real Msqr = SQR (In[1]) + SQR (In[2]) + SQR (In[3]);
   real M = SQRT (Msqr); // magnitude of momentum
+  real Dsqr = SQR(In[0]);
+  real abc = 1.0 / Dsqr;
+  real E_D = In[4] / In[0];
+  real E_Dsqr = abc * SQR(In[4]);
+  real M_Dsqr = abc * Msqr;
 
-  real guess, root;
 # if ( EOS == RELATIVISTIC_IDEAL_GAS )
 # if   ( CONSERVED_ENERGY == 1 )
 /* initial guess  */
-  real Constant = SQR(In[4]/In[0]) - Msqr/SQR(In[0]);
+  real Constant = E_Dsqr - M_Dsqr;
   if ( Constant > 1.0 )
    {
-	if ( 2.0 - Msqr/(16*In[0]*In[0]) >= 0 )
+	if ( Dsqr - 0.0625 * Msqr >= 0 )
 	  {
 	    if ( Constant > 2.5 ) 
 	      {
-		 guess = SQRT( SQR(In[4]/In[0]) - 0.9375*Msqr/SQR(In[0]) - 2.0 ) / 3.0;
+		 guess = SQRT( 0.1111111 * E_Dsqr - 0.1041667 * M_Dsqr - 0.2222222 );
 	      }
-	    else guess = (Constant - 1.0)/ 3.0;
+	    else guess = (Constant - 1.0) * 0.3333333;
 	  }
 	else // 1 - (M/D)**2 < 0
 	  {
-	    if ( Constant >  1.5 + SQRT( Msqr/(16*SQR(In[0])) - 3.0/4.0 )) 
+	    if ( Constant >  1.5 + SQRT( 0.0625 * M_Dsqr - 0.75 )) 
 	      {
-		 guess = SQRT( SQR(In[4]/In[0]) - 0.9375*Msqr/SQR(In[0]) - 2.0 ) / 3.0;
+		 guess = SQRT( 0.1111111 * E_Dsqr - 0.1041667 * M_Dsqr - 0.2222222 );
 	      }
-	    else guess = (Constant - 1.0)/ 3.0;
+	    else guess = (Constant - 1.0) * 0.3333333;
 	  }
-    } else return NAN;
+    } else return MIN_TEMP;
 # elif ( CONSERVED_ENERGY == 2 )
 /* initial guess  */
-   real Constant = SQR(In[4]/In[0]) + 2*In[4]/In[0] - Msqr/SQR(In[0]);
+   real Constant = E_Dsqr - M_Dsqr + 2 * E_D;
    if ( Constant > 0.0 )
     {
-	   if ( 1.0 - Msqr/(16*In[0]*In[0]) >= 0 )
+	   if ( Dsqr - 0.0625 * Msqr >= 0 )
 	     {
 	       if ( Constant > 1.5 ) 
 		 {
-		    guess = SQRT( SQR(In[4]/In[0]) + 2*In[4]/In[0] - 0.9375*Msqr/SQR(In[0]) - 1.0 ) / 3.0;
+		    guess = SQRT( 0.1111111 * E_Dsqr + 0.2222222 * E_D - 0.1041667 * M_Dsqr - 0.1111111 );
 		 }
-	       else guess = Constant / 3.0;
+	       else guess = Constant * 0.3333333;
 	     }
 	   else // 1 - (M/D)**2 < 0
 	     {
-	       if ( Constant >  0.5 + SQRT( Msqr/(16*SQR(In[0])) - 3.0/4.0 )) 
+	       if ( Constant >  0.5 + SQRT( 0.0625 * M_Dsqr - 0.75 )) 
 		 {
-		    guess = SQRT( SQR(In[4]/In[0]) + 2*In[4]/In[0] - 0.9375*Msqr/SQR(In[0]) - 1.0 ) / 3.0;
+		    guess = SQRT( 0.1111111 * E_Dsqr + 0.2222222 * E_D - 0.1041667 * M_Dsqr - 0.1111111 );
 		 }
-	       else guess = Constant / 3.0;
+	       else guess = Constant * 0.3333333;
 	     }
-    } else return NAN;
+    } else return MIN_TEMP;
 # else
 # error: CONSERVED_ENERGY must be 1 or 2!
 # endif
@@ -182,33 +185,33 @@ CPU_Con2Temperature (const real In[], const real Gamma)
   real Gamma_m1 = Gamma - (real) 1.0;
 /* initial guess */
 # if   ( CONSERVED_ENERGY == 1 )
-   real Constant = SQR(In[4]/In[0]) - Msqr/SQR(In[0]);
+   real Constant = E_Dsqr - M_Dsqr;
    if ( Constant > 1.0 )
     {
 	      if ( Constant > 1.0 + 2* (Gamma_m1 / Gamma ) * (M / In[0]) )
 		{
-		  real A = 1.0/SQR(Gamma_m1);
-		  real B = 2.0/Gamma_m1;
-		  real C = 1 + ((2*Gamma-1.0)/(Gamma*Gamma))*Msqr/(In[0]*In[0]) - SQR(In[4]/In[0]);
-		  real delta = SQRT(B*B-4*A*C);
+		  real A = 1.0 / SQR(Gamma_m1);
+		  real B = 2.0 /Gamma_m1;
+		  real C = ((2*Gamma-1.0)/(Gamma*Gamma)) * M_Dsqr - E_Dsqr;
+		  real delta = SQRT( B * B - 4 * A * C );
 		  guess = -2.0 *  C / ( B + delta);
 		}
 	     else guess = 0.5*Gamma_m1 * ( Constant - 1.0);
-    } else return NAN;
+    } else return MIN_TEMP;
 # elif ( CONSERVED_ENERGY == 2 )
-    real Constant = SQR(In[4]/In[0]) + 2*In[4]/In[0] - Msqr/SQR(In[0]);
+    real Constant = E_Dsqr - M_Dsqr + 2 * E_D;
     if ( Constant > 0.0 )
      {
 	  if ( Constant > 2* (Gamma_m1 / Gamma ) * (M / In[0]) )
 	    {
-	      real A = 1.0/SQR(Gamma_m1);
-	      real B = 2.0/Gamma_m1;
-	      real C = 1 + ((2*Gamma-1.0)/(Gamma*Gamma))*Msqr/(In[0]*In[0]) - SQR(In[4]/In[0]) - 2*(In[4]/In[0]);
-	      real delta = SQRT(B*B-4*A*C);
+	      real A = 1.0 / SQR(Gamma_m1);
+	      real B = 2.0 /Gamma_m1;
+	      real C = ((2*Gamma-1.0)/(Gamma*Gamma)) * M_Dsqr - E_Dsqr - 2 * E_D;
+	      real delta = SQRT( B * B - 4 * A * C );
 	      guess = -2.0 *  C / ( B + delta);
 	    }
 	  else guess = 0.5*Gamma_m1 * Constant;
-     } else return NAN;
+     } else return MIN_TEMP;
 # else
 # error: CONSERVED_ENERGY must be 1 or 2!
 # endif
@@ -216,10 +219,24 @@ CPU_Con2Temperature (const real In[], const real Gamma)
 #error: unsupported EoS!
 #endif
 
-   struct Fun_params params = { In[0], In[1], In[2], In[3], In[4] };
-  
-   NewtonRaphsonSolver(&params ,&root, guess, 0.0, 1.0e-14);
+   struct Fun_params params = { M_Dsqr, E_D };
 
+#ifdef CHECK_NEGATIVE_IN_FLUID
+   if ( guess <= 0.0 || guess != guess ){ 
+     Aux_Message(stderr, "guess root = %14.7e < 0\n", guess);
+     Aux_Message(stderr, "D=%14.7e, Mx=%14.7e, My=%14.7e, Mz=%14.7e, E=%14.7e\n", In[0], In[1], In[2], In[3], In[4]);
+   }
+#endif 
+
+#  ifdef FLOAT8
+real epsabs = 0.0;
+real epsrel = 1.0e-15;
+#  else
+real epsabs = 0.0;
+real epsrel = 1.0e-6;
+#  endif
+
+   NewtonRaphsonSolver(&params ,&root, guess, epsabs, epsrel);
    return root;
 }
 
@@ -798,57 +815,47 @@ static void NewtonRaphsonSolver(void *ptr, real *root, const real guess, const r
 //-------------------------------------------------------------------------------------------------------
 
 static void
-Fun_DFun (real Q, void *ptr, real * f, real * df)
+Fun_DFun (real Temp, void *ptr, real * f, real * df)
 {
   struct Fun_params *params = (struct Fun_params *) ptr;
 
-  real D  = (params->D);
-  real M1 = (params->M1);
-  real M2 = (params->M2);
-  real M3 = (params->M3);
-  real E  = (params->E);
+  real M_Dsqr = (params->M_Dsqr);
+  real E_D    = (params->E_D);
+  real Tsqr = Temp * Temp;
 
 #if ( EOS == RELATIVISTIC_IDEAL_GAS )
-  real h = 2.5*Q+SQRT(2.25*SQR(Q)+1.0); // approximate enthalpy
-  real dh = 2.5 + 9.0*Q / SQRT(36*Q*Q+16);
-  real Msqr = SQR(M1) + SQR(M2) + SQR(M3);
-  real Factor = Msqr / (D*D);
+  real abc = SQRT(9 * Tsqr + 4);
+  real h = 2.5 * Temp + SQRT(2.25 * Tsqr + 1.0); // approximate enthalpy
+  real dh = 2.5 + 9.0 * Temp / SQRT(36 * Tsqr + 16);
   real hsqr = SQR(h);
-  real hQ = h * Q;
 #if   (CONSERVED_ENERGY == 1)
-  real Constant = SQR(E/D) - Factor;
-  //*f = hsqr- 2*hQ + (SQR(hQ)) / (hsqr + Factor) - Constant;
-  *f = 3.5 * Q * Q + 1.5 * Q * SQRT(9*Q*Q+4) + SQR(hQ) / (hsqr + Factor) + 1.0 - Constant;
+  real Constant = SQR(E_D) - M_Dsqr;
+  *f = 3.5 * Tsqr + 1.5 * Temp * abc + hsqr * Tsqr / (hsqr + M_Dsqr) + 1.0 - Constant;
 #elif (CONSERVED_ENERGY == 2)
-  real Constant = SQR(E/D) + 2*(E/D) - Factor;
-  //*f = hsqr - 1.0 - 2*hQ + (SQR(hQ)) / (hsqr + Factor) - Constant;
-  *f = 3.5 * Q * Q + 1.5 * Q * SQRT(9*Q*Q+4) + SQR(hQ) / (hsqr + Factor) - Constant;
+  real Constant = SQR(E_D) + 2*(E_D) - M_Dsqr;
+  *f = 3.5 * Tsqr + 1.5 * Temp * abc + hsqr * Tsqr / (hsqr + M_Dsqr) - Constant;
 # else
 # error: CONSERVED_ENERGY must be 1 or 2!
 #endif
-  real abc = SQRT(9*Q*Q+4);
-  //*df = 2*dh*(h-Q) - 2*h + 2*hQ*((hsqr*h + h * Factor + Q*dh*Factor) / SQR(hsqr + Factor) );
-  *df = 7*Q + 1.5 * abc + 13.5*Q*Q/abc + 2*h*Q*((h*hsqr + Factor*h + Q*dh*Factor) / SQR( hsqr + Factor) );
+  *df = 7*Temp + 1.5 * abc + 13.5 * Tsqr / abc + 2*h*Temp*((h*hsqr + M_Dsqr*h + Temp*dh*M_Dsqr) / SQR( hsqr + M_Dsqr) );
 
 #elif ( EOS == IDEAL_GAS )
-  real alpha = GAMMA / (GAMMA - 1.0);
-  real h = 1 + alpha * Q;
+  real zeta = 1.0 / ( GAMMA - 1.0 );
+  real alpha = GAMMA * zeta;
+  real h = 1 + alpha * Temp;
   real hsqr = SQR(h);
-  real Msqr = SQR(M1) + SQR(M2) + SQR(M3);
-  real Factor = Msqr / (D*D);
-  real beta = (GAMMA * (2-GAMMA)) / ((GAMMA-1.0)*(GAMMA-1.0));
-  real hQ = h * Q;
+  real beta = (2 - GAMMA) * zeta * alpha;
+  real theta = 2 * zeta;
 
 #if   (CONSERVED_ENERGY == 1)
-  real Constant = SQR(E/D) - Factor;
-  *f = 1.0 + beta * SQR(Q) + 2 * Q / (GAMMA - 1.0) + SQR(hQ) / (hsqr + Factor) - Constant; 
+  real Constant = SQR(E_D) - M_Dsqr;
+  *f = 1.0 + beta * Tsqr + theta * Temp + hsqr * Tsqr / (hsqr + M_Dsqr) - Constant; 
 #elif (CONSERVED_ENERGY == 2)
-  real Constant = SQR(E/D) + 2*(E/D) - Factor;
-  *f = beta * SQR(Q) + 2 * Q / (GAMMA - 1.0) + SQR(hQ) / (hsqr + Factor) - Constant; 
-  //*f = h*h-1-2*h*Q + SQR(hQ) / (hsqr + Factor) - Constant; 
+  real Constant = SQR(E_D) + 2*(E_D) - M_Dsqr;
+  *f = beta * Tsqr + theta * Temp + hsqr * Tsqr / (hsqr + M_Dsqr) - Constant; 
 #endif
   real dh = alpha;
-  *df = 2 * beta * Q + 2/(GAMMA-1.0) + 2*h*Q*((h*hsqr + Factor*h + Q*dh*Factor) / SQR( hsqr + Factor) );
+  *df = 2 * beta * Temp + theta + 2*h*Temp*((h*hsqr + M_Dsqr*h + Temp*dh*M_Dsqr) / SQR( hsqr + M_Dsqr) );
 #else
 #error: unsupported EoS!
 #endif // #if ( EOS == RELATIVISTIC_IDEAL_GAS )
