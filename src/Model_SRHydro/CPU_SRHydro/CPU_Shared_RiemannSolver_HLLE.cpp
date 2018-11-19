@@ -4,6 +4,7 @@
 
 #if ( MODEL == SR_HYDRO )
 
+static void QuadraticSolver (real A, real B, real C, real *x_plus, real *x_minus);
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  CPU_RiemannSolver_HLLE
@@ -84,32 +85,11 @@ void CPU_RiemannSolver_HLLE( const int XYZ, real Flux_Out[], const real L_In[], 
    gammasql = 1.0 + SQR(PL[1]) + SQR(PL[2]) + SQR(PL[3]);
    gammasqr = 1.0 + SQR(PR[1]) + SQR(PR[2]) + SQR(PR[3]);
 
-
    ssl = cslsq / ( gammasql * (1.0 - cslsq) ); /* Mignone Eq 22.5 */
    ssr = csrsq / ( gammasqr * (1.0 - csrsq) );
 
-#  ifdef CHECK_NEGATIVE_IN_FLUID
-   if ((ssl*(1.0-SQR(lV1)+ssl) < 0))
-      {
-	Aux_Message (stderr, "\n\nerror:%s: %d\n",__FUNCTION__,__LINE__);
-	Aux_Message (stderr, "ssl=%e\n",ssl);
-	Aux_Message (stderr, "ssl*(1.0-SQR(lV1)+ssl = %e < 0.\n",ssl*(1.0-SQR(lV1)+ssl));
-      }
-   if ((ssr*(1.0-SQR(rV1)+ssr) < 0))
-      {
-	Aux_Message (stderr, "\n\nerror:%s: %d\n",__FUNCTION__,__LINE__);
-	Aux_Message (stderr, "ssr=%e\n",ssr);
-	Aux_Message (stderr, "ssr*(1.0-SQR(rV1)+ssr = %e < 0.\n",ssr*(1.0-SQR(rV1)+ssr));
-      }
-#  endif
-
-   radl = SQRT( ssl*(1.0-SQR(lV1)+ssl) ); /* Mignone Eq 23 (radical part) */
-   radr = SQRT( ssr*(1.0-SQR(rV1)+ssr) );
-
-   lmdapl = (lV1 + radl) / (1.0 + ssl); /* Mignone Eq 23 */
-   lmdapr = (rV1 + radr) / (1.0 + ssr);
-   lmdaml = (lV1 - radl) / (1.0 + ssl);
-   lmdamr = (rV1 - radr) / (1.0 + ssr);
+   QuadraticSolver(1.0 + ssl, -2*lV1, lV1*lV1 - ssl, &lmdapl, &lmdaml);
+   QuadraticSolver(1.0 + ssr, -2*rV1, rV1*rV1 - ssr, &lmdapr, &lmdamr);
 
    lmdal = MIN(lmdaml, lmdamr); /* Mignone Eq 21 */
    lmdar = MAX(lmdapl, lmdapr);
@@ -196,5 +176,58 @@ void CPU_RiemannSolver_HLLE( const int XYZ, real Flux_Out[], const real L_In[], 
 } // FUNCTION : CPU_RiemannSolver_HLLE
 
 
+//=====================================================
+// Solve A*X^2 + B*x + C = 0
+// delta = sqrt(B*B-4*A*C)
+// x_plus  = ( -B + delta ) / (2*A)
+// x_minus = ( -B - delta ) / (2*A)
+//=====================================================
+static void QuadraticSolver (real A, real B, real C, real *x_plus, real *x_minus)
+{
+  real delta = B*B-4*A*C;
+
+  if (A != 0.0){
+           if ( delta > 0.0 ) {
+
+           real factor = -0.5*( B + SIGN(B) *  SQRT(delta) );
+     
+           if  ( B > 0.0 && C != 0.0 ){
+             *x_plus   = C/factor;
+     	     *x_minus  = factor/A;             return;
+          }else if  ( B < 0.0 && C != 0.0 ){
+     	     *x_plus   = factor/A;
+     	     *x_minus  = C/factor;             return;
+          }else if ( B == 0.0 && C < 0.0 ){
+             *x_plus = SQRT(-C/A);
+             *x_minus = -SQRT(-C/A);           return;
+          }else if ( B > 0.0 && C == 0.0 ){
+             *x_plus = 0.0;
+             *x_minus = -B/A;                  return;
+          }else if ( B < 0.0 && C == 0.0 ){
+             *x_plus = -B/A;
+             *x_minus = 0.0;                   return;
+          }else if ( B == 0.0 && C == 0.0 ){
+             *x_plus  = 0.0;
+             *x_minus = 0.0;                   return;
+          }else                                goto NO_REAL_SOLUTIONS;
+
+     }else if ( delta == 0.0 ){
+             *x_plus  = -0.5*B/A;
+             *x_minus = -0.5*B/A;               return;
+     }else                                      goto NO_REAL_SOLUTIONS;
+  }else{ // if ( A == 0.0 )
+        if ( B != 0.0 ){
+	   *x_plus  = -C/B;
+	   *x_minus = -C/B;                     return;
+         }else                                  goto NO_REAL_SOLUTIONS;
+  }
+
+     NO_REAL_SOLUTIONS:
+     {
+        Aux_Message(stderr, "No real solution in Quadratic Solver!\n");
+        Aux_Message(stderr, "A=%14.7e, B=%14.7e, C=%14.7e\n", A, B, C);
+        Aux_Message(stderr, "B*B-4*A*C=%14.7e\n", B*B-4*A*C);  return;
+     }
+}
 
 #endif // #if ( MODEL == SR_HYDRO )

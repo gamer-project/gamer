@@ -375,9 +375,9 @@ bool Unphysical( const real Fluid[] )
 // A2. check total energy
    real Msqr = SQR(Fluid[MOMX]) + SQR(Fluid[MOMY]) + SQR(Fluid[MOMZ]);
 #  if ( CONSERVED_ENERGY == 1 )
-   if( SQR(Fluid[ENGY]) < Msqr + SQR(Fluid[DENS]))                 return true;
+   if( SQR(Fluid[ENGY]) - Msqr - SQR(Fluid[DENS]) < 0.0 )                 return true;
 #  elif ( CONSERVED_ENERGY == 2 )
-   if ( SQR(Fluid[ENGY]) + 2*Fluid[ENGY]*Fluid[DENS] < Msqr )      return true;
+   if ( SQR(Fluid[ENGY]) + 2*Fluid[ENGY]*Fluid[DENS] - Msqr < 0.0 )      return true;
 #  endif
 /*
    real Pri4Vel[NCOMP_FLUID];
@@ -693,10 +693,10 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
 //          --> note that MIN_DENS is declared as double and must be converted to **real** before the comparison
 //              --> to be consistent with the check in Unphysical()
 //          --> do NOT check the minimum pressure here since we want to apply the dual-energy correction first
-#           ifndef CHECK_NEGATIVE_IN_FLUID
-            if ( !AUTO_REDUCE_DT )
-               Update[DENS] = CPU_CheckMinDens( Update[DENS], (real)MIN_DENS );
-#           endif
+            if ( !AUTO_REDUCE_DT ) {
+               for (int v=0; v<NCOMP_TOTAL; v++)   Update1[v] = Update[v];
+               Update1[DENS] = CPU_CheckMinDens( Update[DENS], (real)MIN_DENS );
+            }
 
 
 //          floor and normalize passive scalars
@@ -728,7 +728,8 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
 
             if ( !AUTO_REDUCE_DT ){
 #           if ( MODEL == SR_HYDRO )
-            Update[ENGY] = CPU_CheckMinTempInEngy(Update);
+            for (int v=0; v<NCOMP_TOTAL; v++)   Update2[v] = Update1[v];
+            Update2[ENGY] = CPU_CheckMinTempInEngy(Update1);
 #           else
             Update[ENGY] = CPU_CheckMinPresInEngy( Update[DENS], Update[MOMX], Update[MOMY], Update[MOMZ], Update[ENGY],
                                                    Gamma_m1, _Gamma_m1, MIN_PRES );

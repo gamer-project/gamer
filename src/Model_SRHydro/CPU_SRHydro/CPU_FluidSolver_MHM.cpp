@@ -266,11 +266,14 @@ void CPU_RiemannPredict_Flux( const real Flu_Array_In[][ FLU_NXT*FLU_NXT*FLU_NXT
             ConVar_R[v] = Flu_Array_In[v][ ID2+dr[d] ];
          }
 
+         ConVar_L[4] = CPU_CheckMinTempInEngy(ConVar_L);
+         ConVar_R[4] = CPU_CheckMinTempInEngy(ConVar_R);
+
 //       check unphysical cells
-#  ifdef CHECK_NEGATIVE_IN_FLUID
+#        ifdef CHECK_NEGATIVE_IN_FLUID
 	 if(CPU_CheckUnphysical(ConVar_L, NULL)) Aux_Message(stderr,"\nUnphysical varibles!\nfunction: %s: %d\n", __FUNCTION__, __LINE__);
 	 if(CPU_CheckUnphysical(ConVar_R, NULL)) Aux_Message(stderr,"\nUnphysical varibles!\nfunction: %s: %d\n", __FUNCTION__, __LINE__);
-#  endif
+#        endif
 
 //       invoke the Riemann solver
 #        if ( RSOLVER == HLLC )

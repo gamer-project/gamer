@@ -462,6 +462,7 @@ CPU_CheckMinTempInEngy (const real Cons[])
 //-------------------------------------------------------------------------------------------------------
 bool CPU_CheckUnphysical( const real Con[], const real Pri[])
 {
+   real discriminant;
    real Msqr;
    real ConsVar[NCOMP_FLUID];
    real Pri4Vel[NCOMP_FLUID];
@@ -489,9 +490,11 @@ bool CPU_CheckUnphysical( const real Con[], const real Pri[])
 // check energy
       Msqr = SQR(ConsVar[MOMX]) + SQR(ConsVar[MOMY]) + SQR(ConsVar[MOMZ]);
 #     if ( CONSERVED_ENERGY == 1 )
-      if ( SQR(ConsVar[ENGY]) <= Msqr + SQR(ConsVar[DENS]) )                 goto UNPHYSICAL;
+      discriminant = SQR(ConsVar[ENGY]) - Msqr - SQR(ConsVar[DENS]);
+      if ( discriminant <= 0.0 )                                                 goto UNPHYSICAL;
 #     elif ( CONSERVED_ENERGY == 2 )
-      if ( SQR(ConsVar[ENGY]) + 2*ConsVar[ENGY]*ConsVar[DENS] - Msqr <= 0 )  goto UNPHYSICAL;
+      discriminant = SQR(ConsVar[ENGY]) + 2*ConsVar[ENGY]*ConsVar[DENS] - Msqr;
+      if ( discriminant <= 0.0 )                                                 goto UNPHYSICAL;
 #     else
 #     error: CONSERVED_ENERGY must be 1 or 2!
 #     endif
@@ -556,24 +559,33 @@ bool CPU_CheckUnphysical( const real Con[], const real Pri[])
 // check energy
       Msqr = SQR(ConsVar[MOMX]) + SQR(ConsVar[MOMY]) + SQR(ConsVar[MOMZ]);
 #     if ( CONSERVED_ENERGY == 1 )
-      if ( SQR(ConsVar[ENGY]) <= Msqr + SQR(ConsVar[DENS]) )                             goto UNPHYSICAL;
+      discriminant = SQR(ConsVar[ENGY]) - Msqr - SQR(ConsVar[DENS]);
+      if ( discriminant <= 0.0 )                                                         goto UNPHYSICAL;
 #     elif ( CONSERVED_ENERGY == 2 )
-      if ( SQR(ConsVar[ENGY]) + 2*ConsVar[ENGY]*ConsVar[DENS] - Msqr <= 0 )              goto UNPHYSICAL;
+      discriminant = SQR(ConsVar[ENGY]) + 2*ConsVar[ENGY]*ConsVar[DENS] - Msqr;
+      if ( discriminant <= 0.0 )                                                         goto UNPHYSICAL;
 #     else
 #     error: CONSERVED_ENERGY must be 1 or 2!
 #     endif      
 
 // pass all checks 
       return false;
+   }
+   else
+   {
+    Aux_Error(ERROR_INFO,"One of Con or Pri must be given in CPU_CheckUnphysical!\n");
+    return true;
+   }
+
 // print all variables if goto UNPHYSICAL
       UNPHYSICAL:
       {
         Aux_Message(stderr, "\n\nD=%14.7e, Mx=%14.7e, My=%14.7e, Mz=%14.7e, E=%14.7e\n",
                              ConsVar[DENS], ConsVar[MOMX], ConsVar[MOMY], ConsVar[MOMZ], ConsVar[ENGY]);
 #       if ( CONSERVED_ENERGY == 1 )
-        Aux_Message(stderr, "E^2-|M|^2-D^2=%14.7e\n", SQR(ConsVar[ENGY])-Msqr-SQR(ConsVar[DENS]));
+        Aux_Message(stderr, "E^2-|M|^2-D^2=%14.7e\n", discriminant );
 #       elif ( CONSERVED_ENERGY == 2 )
-        Aux_Message(stderr, "E^2+2*E*D-|M|^2=%14.7e\n", SQR(ConsVar[ENGY]) + 2*ConsVar[ENGY]*ConsVar[DENS] - Msqr);
+        Aux_Message(stderr, "E^2+2*E*D-|M|^2=%14.7e\n", discriminant );
 #       endif
         Aux_Message(stderr, "n=%14.7e, Ux=%14.7e, Uy=%14.7e, Uz=%14.7e, P=%14.7e\n", 
                              Pri4Vel[0], Pri4Vel[1], Pri4Vel[2], Pri4Vel[3], Pri4Vel[4]);
@@ -581,12 +593,6 @@ bool CPU_CheckUnphysical( const real Con[], const real Pri[])
                              Pri3Vel[1], Pri3Vel[2], Pri3Vel[3], SQRT(SQR(Pri3Vel[1])+SQR(Pri3Vel[2])+SQR(Pri3Vel[3])));
         return true;
       }
-   }
-   else
-   {
-    Aux_Error(ERROR_INFO,"One of Con or Pri must be given in CPU_CheckUnphysical!\n");
-    return true;
-   }
 }
 //-------------------------------------------------------------------------------------------------------
 // Function    :  CPU_CheckNegative
