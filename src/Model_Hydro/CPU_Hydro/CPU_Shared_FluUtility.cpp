@@ -53,7 +53,7 @@ void CPU_Rotate3D( real InOut[], const int XYZ, const bool Forward )
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  CPU_Con2Pri
-// Description :  Convert the conserved variables to the primitive variables
+// Description :  Convert conserved variables to primitive variables
 //
 // Note        :  1. This function always check if the pressure to be returned is greater than the
 //                   given minimum threshold
@@ -63,8 +63,8 @@ void CPU_Rotate3D( real InOut[], const int XYZ, const bool Forward )
 //                   --> But note that here we do NOT ensure "sum(mass fraction) == 1.0"
 //                       --> It is done by calling CPU_NormalizePassive() in CPU_Shared_FullStepUpdate()
 //
-// Parameter   :  In                 : Array storing the input conserved variables
-//                Out                : Array to store the output primitive variables
+// Parameter   :  In                 : Input conserved variables
+//                Out                : Output primitive variables
 //                Gamma_m1           : Gamma - 1
 //                MinPres            : Minimum allowed pressure
 //                NormPassive        : true --> convert passive scalars to mass fraction
@@ -105,6 +105,57 @@ void CPU_Con2Pri( const real In[], real Out[], const real Gamma_m1, const real M
 #  endif
 
 } // FUNCTION : CPU_Con2Pri
+
+
+
+//-------------------------------------------------------------------------------------------------------
+// Function    :  CPU_Con2Pri_AllPatch
+// Description :  Conserved variables --> primitive variables for all patches
+//
+// Parameter   :  ConVar             : Input conserved variables
+//                PriVar             : Output primitive variables
+//                Gamma_m1           : Gamma - 1
+//                MinPres            : Minimum allowed pressure
+//                NormPassive        : true --> convert passive scalars to mass fraction
+//                NNorm              : Number of passive scalars for the option "NormPassive"
+//                                     --> Should be set to the global variable "PassiveNorm_NVar"
+//                NormIdx            : Target variable indices for the option "NormPassive"
+//                                     --> Should be set to the global variable "PassiveNorm_VarIdx"
+//                JeansMinPres       : Apply minimum pressure estimated from the Jeans length
+//                JeansMinPres_Coeff : Coefficient used by JeansMinPres = G*(Jeans_NCell*Jeans_dh)^2/(Gamma*pi);
+//-------------------------------------------------------------------------------------------------------
+#ifdef __CUDACC__
+__forceinline__ __device__
+#endif
+void CPU_Con2Pri_AllPatch( const real ConVar[][ FLU_NXT*FLU_NXT*FLU_NXT ],
+                                 real PriVar[][ FLU_NXT*FLU_NXT*FLU_NXT ],
+                           const real Gamma_m1, const real MinPres,
+                           const bool NormPassive, const int NNorm, const int NormIdx[],
+                           const bool JeansMinPres, const real JeansMinPres_Coeff )
+{
+
+   real ConVar_1Cell[NCOMP_TOTAL], PriVar_1Cell[NCOMP_TOTAL];
+
+#  ifdef __CUDACC__
+   for (int idx=threadIdx.x; idx<FLU_NXT*FLU_NXT*FLU_NXT; idx+=blockDim.x)
+   {
+#  else
+   for (int k=0; k<FLU_NXT; k++)
+   for (int j=0; j<FLU_NXT; j++)
+   for (int i=0; i<FLU_NXT; i++)
+   {
+      const int idx = IDX321( i, j, k, FLU_NXT, FLU_NXT );
+#  endif
+
+      for (int v=0; v<NCOMP_TOTAL; v++)   ConVar_1Cell[v] = ConVar[v][idx];
+
+      Con2Pri( ConVar_1Cell, PriVar_1Cell, Gamma_m1, MinPres, NormPassive, NNorm, NormIdx,
+               JeansMinPres, JeansMinPres_Coeff );
+
+      for (int v=0; v<NCOMP_TOTAL; v++)   PriVar[v][idx] = PriVar_1Cell[v];
+   }
+
+} // FUNCTION : CPU_Con2Pri_AllPatch
 
 
 

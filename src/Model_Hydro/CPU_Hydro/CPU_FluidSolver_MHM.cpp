@@ -1,7 +1,7 @@
 #include "GAMER.h"
 #include "CUFLU.h"
 
-#if (  !defined GPU  &&  MODEL == HYDRO  &&  ( FLU_SCHEME == MHM || FLU_SCHEME == MHM_RP )  )
+#if (  MODEL == HYDRO  &&  ( FLU_SCHEME == MHM || FLU_SCHEME == MHM_RP )  )
 
 
 
@@ -9,6 +9,11 @@ extern void CPU_DataReconstruction( const real PriVar[][NCOMP_TOTAL], real FC_Va
                                     const real Gamma, const LR_Limiter_t LR_Limiter, const real MinMod_Coeff,
                                     const real EP_Coeff, const real dt, const real dh, const real MinDens, const real MinPres );
 extern void CPU_Con2Flux( const int XYZ, real Flux[], const real Input[], const real Gamma_m1, const real MinPres );
+extern void CPU_Con2Pri_AllPatch( const real ConVar[][ FLU_NXT*FLU_NXT*FLU_NXT ],
+                                        real PriVar[][ FLU_NXT*FLU_NXT*FLU_NXT ],
+                                  const real Gamma_m1, const real MinPres,
+                                  const bool NormPassive, const int NNorm, const int NormIdx[],
+                                  const bool JeansMinPres, const real JeansMinPres_Coeff );
 extern void CPU_Con2Pri( const real In[], real Out[], const real Gamma_m1, const real MinPres,
                          const bool NormPassive, const int NNorm, const int NormIdx[],
                          const bool JeansMinPres, const real JeansMinPres_Coeff );
@@ -53,8 +58,8 @@ static void CPU_HancockPredict( real FC_Var[][6][NCOMP_TOTAL], const real dt, co
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  CPU_FluidSolver_MHM
-// Description :  CPU fluid solver based on the MUSCL-Hancock scheme
+// Function    :  CPU/GPU_FluidSolver_MHM
+// Description :  CPU/GPU fluid solver based on the MUSCL-Hancock scheme
 //
 // Note        :  1. The three-dimensional evolution is achieved by using the unsplit method
 //                2. Two half-step prediction schemes are supported, including "MHM" and "MHM_RP"
@@ -95,29 +100,45 @@ static void CPU_HancockPredict( real FC_Var[][6][NCOMP_TOTAL], const real dt, co
 //                JeansMinPres       : Apply minimum pressure estimated from the Jeans length
 //                JeansMinPres_Coeff : Coefficient used by JeansMinPres = G*(Jeans_NCell*Jeans_dh)^2/(Gamma*pi);
 //-------------------------------------------------------------------------------------------------------
-void CPU_FluidSolver_MHM( const real Flu_Array_In[][NCOMP_TOTAL][ FLU_NXT*FLU_NXT*FLU_NXT ],
-                          real Flu_Array_Out[][NCOMP_TOTAL][ PS2*PS2*PS2 ],
-                          char DE_Array_Out[][ PS2*PS2*PS2 ],
-                          real Flux_Array[][9][NCOMP_TOTAL][ PS2*PS2 ],
-                          const double Corner_Array[][3],
-                          const real Pot_Array_USG[][USG_NXT_F][USG_NXT_F][USG_NXT_F],
-                          const int NPatchGroup, const real dt, const real dh, const real Gamma,
-                          const bool StoreFlux, const LR_Limiter_t LR_Limiter, const real MinMod_Coeff,
-                          const real EP_Coeff, const double Time, const OptGravityType_t GravityType,
-                          const double ExtAcc_AuxArray[], const real MinDens, const real MinPres,
-                          const real DualEnergySwitch, const bool NormPassive, const int NNorm, const int NormIdx[],
-                          const bool JeansMinPres, const real JeansMinPres_Coeff )
+#ifdef __CUDACC__
+__global__ void GPU_FluidSolver_MHM(
+   const real   Flu_Array_In []   [NCOMP_TOTAL][ FLU_NXT*FLU_NXT*FLU_NXT ],
+         real   Flu_Array_Out[]   [NCOMP_TOTAL][ PS2*PS2*PS2 ],
+         char   DE_Array_Out []                [ PS2*PS2*PS2 ],
+         real   Flux_Array   [][9][NCOMP_TOTAL][ PS2*PS2 ],
+   const double Corner_Array [][3],
+   const real   Pot_Array_USG[]                [ USG_NXT_F*USG_NXT_F*USG_NXT_F ],
+   real PriVar   []   [NCOMP_TOTAL][ FLU_NXT*FLU_NXT*FLU_NXT ],
+   real Slope_PPM[][3][NCOMP_TOTAL][ N_SLOPE_PPM*N_SLOPE_PPM*N_SLOPE_PPM],
+   real FC_Var   [][6][NCOMP_TOTAL][ N_FC_VAR*N_FC_VAR*N_FC_VAR ],
+   real FC_Flux  [][3][NCOMP_TOTAL][ N_FC_FLUX*N_FC_FLUX*N_FC_FLUX ],
+   const real dt, const real _dh, const real Gamma, const bool StoreFlux,
+   const LR_Limiter_t LR_Limiter, const real MinMod_Coeff,
+   const real EP_Coeff, const double Time, const OptGravityType_t GravityType,
+   const real MinDens, const real MinPres, const real DualEnergySwitch,
+   const bool NormPassive, const int NNorm,
+   const bool JeansMinPres, const real JeansMinPres_Coeff )
+#else
+void CPU_FluidSolver_MHM(
+   const real   Flu_Array_In []   [NCOMP_TOTAL][ FLU_NXT*FLU_NXT*FLU_NXT ],
+         real   Flu_Array_Out[]   [NCOMP_TOTAL][ PS2*PS2*PS2 ],
+         char   DE_Array_Out []                [ PS2*PS2*PS2 ],
+         real   Flux_Array   [][9][NCOMP_TOTAL][ PS2*PS2 ],
+   const double Corner_Array [][3],
+   const real   Pot_Array_USG[]                [ USG_NXT_F*USG_NXT_F*USG_NXT_F ],
+   const int NPatchGroup, const real dt, const real dh, const real Gamma,
+   const bool StoreFlux, const LR_Limiter_t LR_Limiter, const real MinMod_Coeff,
+   const real EP_Coeff, const double Time, const OptGravityType_t GravityType,
+   const double ExtAcc_AuxArray[], const real MinDens, const real MinPres,
+   const real DualEnergySwitch, const bool NormPassive, const int NNorm, const int NormIdx[],
+   const bool JeansMinPres, const real JeansMinPres_Coeff )
+#endif // #ifdef __CUDACC__ ... else ...
 {
 
-// check
-#  ifdef GAMER_DEBUG
-   if ( LR_Limiter != VANLEER  &&  LR_Limiter != GMINMOD  &&  LR_Limiter != ALBADA  &&  LR_Limiter != EXTPRE  &&
-        LR_Limiter != VL_GMINMOD )
-      Aux_Error( ERROR_INFO, "unsupported reconstruction limiter (%d) !!\n", LR_Limiter );
-#  endif
-
-
+// openmp pragma for the CPU solver
+#  ifndef __CUDACC__
 #  pragma omp parallel
+#  endif
    {
       const real  Gamma_m1       = Gamma - (real)1.0;
       const real _Gamma_m1       = (real)1.0 / Gamma_m1;
@@ -127,37 +148,50 @@ void CPU_FluidSolver_MHM( const real Flu_Array_In[][NCOMP_TOTAL][ FLU_NXT*FLU_NX
       const bool CorrHalfVel_No  = false;
 #     endif
 
-      real Input[NCOMP_TOTAL];
-      int ID1;
-
 //    FC: Face-Centered variables/fluxes
-      real (*FC_Var )[6][NCOMP_TOTAL] = new real [ N_FC_VAR*N_FC_VAR*N_FC_VAR    ][6][NCOMP_TOTAL];
-      real (*FC_Flux)[3][NCOMP_TOTAL] = new real [ N_FC_FLUX*N_FC_FLUX*N_FC_FLUX ][3][NCOMP_TOTAL];   // also used by "Half_Flux"
-      real (*PriVar)    [NCOMP_TOTAL] = new real [ FLU_NXT*FLU_NXT*FLU_NXT       ]   [NCOMP_TOTAL];   // also used by "Half_Var"
+//    --> CPU solver: allocate data
+//        GPU solver: link to the input global memory array
+#     ifdef __CUDACC__
+      real (*FC_Var_1PG )[NCOMP_TOTAL][ N_FC_VAR*N_FC_VAR*N_FC_VAR    ] = FC_Var [blockIdx.x];
+      real (*FC_Flux_1PG)[NCOMP_TOTAL][ N_FC_FLUX*N_FC_FLUX*N_FC_FLUX ] = FC_Flux[blockIdx.x];
+      real (*PriVar_1PG )             [ FLU_NXT*FLU_NXT*FLU_NXT       ] = PriVar [blockIdx.x];
+#     else
+      real (*FC_Var_1PG )[NCOMP_TOTAL][ N_FC_VAR*N_FC_VAR*N_FC_VAR    ] = new real [6][NCOMP_TOTAL][ N_FC_VAR*N_FC_VAR*N_FC_VAR    ];
+      real (*FC_Flux_1PG)[NCOMP_TOTAL][ N_FC_FLUX*N_FC_FLUX*N_FC_FLUX ] = new real [3][NCOMP_TOTAL][ N_FC_FLUX*N_FC_FLUX*N_FC_FLUX ];   // also used by "Half_Flux"
+      real (*PriVar_1PG )             [ FLU_NXT*FLU_NXT*FLU_NXT       ] = new real    [NCOMP_TOTAL][ FLU_NXT*FLU_NXT*FLU_NXT       ];   // also used by "Half_Var"
 
 #     if ( FLU_SCHEME == MHM_RP )
-      real (*const Half_Flux)[3][NCOMP_TOTAL] = FC_Flux;
-      real (*const Half_Var)    [NCOMP_TOTAL] = PriVar;
+      real (*const Half_Flux_1PG)[NCOMP_TOTAL][ N_FC_FLUX*N_FC_FLUX*N_FC_FLUX ] = FC_Flux_1PG;
+      real (*const Half_Var_1PG)              [ N_FC_FLUX*N_FC_FLUX*N_FC_FLUX ] = PriVar_1PG;
 #     endif
+#     endif // #ifdef __CUDACC__ ... else ...
 
 
 //    loop over all patch groups
+//    --> CPU solver: use different OpenMP threads    to work on different patch groups
+//        GPU solver: ...           CUDA thread block ...
+#     ifdef __CUDACC__
+      const int P = blockIdx.x;
+#     else
 #     pragma omp for schedule( runtime )
       for (int P=0; P<NPatchGroup; P++)
+#     endif
       {
 
 //       1. half-step prediction
-#        if ( FLU_SCHEME == MHM_RP ) // a. use Riemann solver to calculate the half-step fluxes
+//       (1-a) MHM_RP: use Riemann solver to calculate the half-step fluxes
+#        if ( FLU_SCHEME == MHM_RP )
 
-//       (1.a-1) evaluate the half-step first-order fluxes by Riemann solver
+         /*
+//       (1-a-1) evaluate the half-step first-order fluxes by Riemann solver
          CPU_RiemannPredict_Flux( Flu_Array_In[P], Half_Flux, Gamma, MinPres );
 
 
-//       (1.a-2) evaluate the half-step solutions
+//       (1-a-2) evaluate the half-step solutions
          CPU_RiemannPredict( Flu_Array_In[P], Half_Flux, Half_Var, dt, dh, Gamma, MinDens, MinPres );
 
 
-//       (1.a-3) conserved variables --> primitive variables
+//       (1-a-3) conserved variables --> primitive variables
          for (int k=0; k<N_HF_VAR; k++)
          for (int j=0; j<N_HF_VAR; j++)
          for (int i=0; i<N_HF_VAR; i++)
@@ -171,12 +205,12 @@ void CPU_FluidSolver_MHM( const real Flu_Array_In[][NCOMP_TOTAL][ FLU_NXT*FLU_NX
          }
 
 
-//       (1.a-4) evaluate the face-centered values by data reconstruction
+//       (1-a-4) evaluate the face-centered values by data reconstruction
          CPU_DataReconstruction( Half_Var, FC_Var, N_HF_VAR, FLU_GHOST_SIZE-2, Gamma, LR_Limiter,
                                  MinMod_Coeff, EP_Coeff, NULL_REAL, NULL_INT, MinDens, MinPres );
 
 
-//       (1.a-5) primitive face-centered variables --> conserved face-centered variables
+//       (1-a-5) primitive face-centered variables --> conserved face-centered variables
          for (int k=0; k<N_FC_VAR; k++)
          for (int j=0; j<N_FC_VAR; j++)
          for (int i=0; i<N_FC_VAR; i++)
@@ -190,29 +224,23 @@ void CPU_FluidSolver_MHM( const real Flu_Array_In[][NCOMP_TOTAL][ FLU_NXT*FLU_NX
                CPU_Pri2Con( Input, FC_Var[ID1][f], _Gamma_m1, NormPassive, NNorm, NormIdx );
             }
          }
-
-#        elif ( FLU_SCHEME == MHM ) // b. use interpolated face-centered values to calculate the half-step fluxes
-
-//       (1.b-1) conserved variables --> primitive variables
-         for (int k=0; k<FLU_NXT; k++)
-         for (int j=0; j<FLU_NXT; j++)
-         for (int i=0; i<FLU_NXT; i++)
-         {
-            ID1 = (k*FLU_NXT + j)*FLU_NXT + i;
-
-            for (int v=0; v<NCOMP_TOTAL; v++)   Input[v] = Flu_Array_In[P][v][ID1];
-
-            CPU_Con2Pri( Input, PriVar[ID1], Gamma_m1, MinPres, NormPassive, NNorm, NormIdx,
-                         JeansMinPres, JeansMinPres_Coeff );
-         }
+         */
 
 
-//       (1.b-2) evaluate the face-centered values by data reconstruction
+//       (1-b) MHM: use interpolated face-centered values to calculate the half-step fluxes
+#        elif ( FLU_SCHEME == MHM )
+
+//       (1-b-1) conserved variables --> primitive variables
+         CPU_Con2Pri_AllPatch( Flu_Array_In[P], PriVar_1PG, Gamma_m1, MinPres, NormPassive, NNorm, NormIdx,
+                               JeansMinPres, JeansMinPres_Coeff );
+
+
+//       (1-b-2) evaluate the face-centered values by data reconstruction
          CPU_DataReconstruction( PriVar, FC_Var, FLU_NXT, FLU_GHOST_SIZE-1, Gamma, LR_Limiter,
                                  MinMod_Coeff, EP_Coeff, NULL_REAL, NULL_INT, MinDens, MinPres );
 
 
-//       (1.b-3) primitive face-centered variables --> conserved face-centered variables
+//       (1-b-3) primitive face-centered variables --> conserved face-centered variables
          for (int k=0; k<N_FC_VAR; k++)
          for (int j=0; j<N_FC_VAR; j++)
          for (int i=0; i<N_FC_VAR; i++)
@@ -228,7 +256,7 @@ void CPU_FluidSolver_MHM( const real Flu_Array_In[][NCOMP_TOTAL][ FLU_NXT*FLU_NX
          }
 
 
-//       (1.b-4) evaluate the half-step solutions
+//       (1-b-4) evaluate the half-step solutions
          CPU_HancockPredict( FC_Var, dt, dh, Gamma, Flu_Array_In[P], MinDens, MinPres );
 
 #        endif // #if ( FLU_SCHEME == MHM_RP ) ... else ...
