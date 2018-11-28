@@ -53,7 +53,7 @@ void CPU_Rotate3D( real InOut[], const int XYZ, const bool Forward )
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  CPU_Con2Pri
-// Description :  Convert conserved variables to primitive variables
+// Description :  Conserved variables --> primitive variables
 //
 // Note        :  1. This function always check if the pressure to be returned is greater than the
 //                   given minimum threshold
@@ -62,6 +62,7 @@ void CPU_Rotate3D( real InOut[], const int XYZ, const bool Forward )
 //                   --> See the input parameters "NormPassive, NNorm, NormIdx"
 //                   --> But note that here we do NOT ensure "sum(mass fraction) == 1.0"
 //                       --> It is done by calling CPU_NormalizePassive() in CPU_Shared_FullStepUpdate()
+//                3. In[] and Out[] must NOT point to the same array
 //
 // Parameter   :  In                 : Input conserved variables
 //                Out                : Output primitive variables
@@ -161,13 +162,13 @@ void CPU_Con2Pri_AllPatch( const real ConVar[][ FLU_NXT*FLU_NXT*FLU_NXT ],
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  CPU_Pri2Con
-// Description :  Convert the primitive variables to the conserved variables
+// Description :  Primitive variables --> conserved variables
 //
-// Note        :  1. This function does NOT check if the input pressure is greater than the
-//                   given minimum threshold
+// Note        :  1. Does NOT check if the input pressure is greater than the given minimum threshold
 //                2. For passive scalars, we store their mass fraction as the primitive variables
 //                   when NormPassive is on
 //                   --> See the input parameters "NormPassive, NNorm, NormIdx"
+//                3. In[] and Out[] must NOT point to the same array
 //
 // Parameter   :  In          : Array storing the input primitive variables
 //                Out         : Array to store the output conserved variables

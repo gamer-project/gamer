@@ -5,10 +5,14 @@
 
 
 
-extern void CPU_DataReconstruction( const real PriVar[][NCOMP_TOTAL], real FC_Var[][6][NCOMP_TOTAL], const int NIn, const int NGhost,
-                                    const real Gamma, const LR_Limiter_t LR_Limiter, const real MinMod_Coeff,
-                                    const real EP_Coeff, const real dt, const real dh, const real MinDens, const real MinPres );
-extern void CPU_Con2Flux( const int XYZ, real Flux[], const real Input[], const real Gamma_m1, const real MinPres );
+extern void CPU_DataReconstruction( const real PriVar[]   [ FLU_NXT*FLU_NXT*FLU_NXT    ],
+                                    const real ConVar[]   [ FLU_NXT*FLU_NXT*FLU_NXT    ],
+                                          real FC_Var[][6][ N_FC_VAR*N_FC_VAR*N_FC_VAR ],
+                                    const int NIn, const int NGhost, const real Gamma,
+                                    const LR_Limiter_t LR_Limiter, const real MinMod_Coeff,
+                                    const real EP_Coeff, const real dt, const real dh,
+                                    const real MinDens, const real MinPres,
+                                    const bool NormPassive, const int NNorm, const int NormIdx[] );
 extern void CPU_Con2Pri_AllPatch( const real ConVar[][ FLU_NXT*FLU_NXT*FLU_NXT ],
                                         real PriVar[][ FLU_NXT*FLU_NXT*FLU_NXT ],
                                   const real Gamma_m1, const real MinPres,
@@ -17,8 +21,6 @@ extern void CPU_Con2Pri_AllPatch( const real ConVar[][ FLU_NXT*FLU_NXT*FLU_NXT ]
 extern void CPU_Con2Pri( const real In[], real Out[], const real Gamma_m1, const real MinPres,
                          const bool NormPassive, const int NNorm, const int NormIdx[],
                          const bool JeansMinPres, const real JeansMinPres_Coeff );
-extern void CPU_Pri2Con( const real In[], real Out[], const real _Gamma_m1,
-                         const bool NormPassive, const int NNorm, const int NormIdx[] );
 extern void CPU_ComputeFlux( const real FC_Var[][6][NCOMP_TOTAL], real FC_Flux[][3][NCOMP_TOTAL], const int NFlux, const int Gap,
                              const real Gamma, const bool CorrHalfVel, const real Pot_USG[], const double Corner[],
                              const real dt, const real dh, const double Time, const OptGravityType_t GravityType,
@@ -49,9 +51,6 @@ static void CPU_RiemannPredict( const real Flu_Array_In[][ FLU_NXT*FLU_NXT*FLU_N
                                 const real dh, const real Gamma, const real MinDens, const real MinPres );
 static void CPU_RiemannPredict_Flux( const real Flu_Array_In[][ FLU_NXT*FLU_NXT*FLU_NXT ], real Half_Flux[][3][NCOMP_TOTAL],
                                      const real Gamma, const real MinPres );
-#elif ( FLU_SCHEME == MHM )
-static void CPU_HancockPredict( real FC_Var[][6][NCOMP_TOTAL], const real dt, const real dh, const real Gamma,
-                                const real C_Var[][ FLU_NXT*FLU_NXT*FLU_NXT ], const real MinDens, const real MinPres );
 #endif
 
 
@@ -208,22 +207,6 @@ void CPU_FluidSolver_MHM(
 //       (1-a-4) evaluate the face-centered values by data reconstruction
          CPU_DataReconstruction( Half_Var, FC_Var, N_HF_VAR, FLU_GHOST_SIZE-2, Gamma, LR_Limiter,
                                  MinMod_Coeff, EP_Coeff, NULL_REAL, NULL_INT, MinDens, MinPres );
-
-
-//       (1-a-5) primitive face-centered variables --> conserved face-centered variables
-         for (int k=0; k<N_FC_VAR; k++)
-         for (int j=0; j<N_FC_VAR; j++)
-         for (int i=0; i<N_FC_VAR; i++)
-         {
-            ID1 = (k*N_FC_VAR + j)*N_FC_VAR + i;
-
-            for (int f=0; f<6; f++)
-            {
-               for (int v=0; v<NCOMP_TOTAL; v++)   Input[v] = FC_Var[ID1][f][v];
-
-               CPU_Pri2Con( Input, FC_Var[ID1][f], _Gamma_m1, NormPassive, NNorm, NormIdx );
-            }
-         }
          */
 
 
@@ -236,28 +219,9 @@ void CPU_FluidSolver_MHM(
 
 
 //       (1-b-2) evaluate the face-centered values by data reconstruction
-         CPU_DataReconstruction( PriVar, FC_Var, FLU_NXT, FLU_GHOST_SIZE-1, Gamma, LR_Limiter,
-                                 MinMod_Coeff, EP_Coeff, NULL_REAL, NULL_INT, MinDens, MinPres );
-
-
-//       (1-b-3) primitive face-centered variables --> conserved face-centered variables
-         for (int k=0; k<N_FC_VAR; k++)
-         for (int j=0; j<N_FC_VAR; j++)
-         for (int i=0; i<N_FC_VAR; i++)
-         {
-            ID1 = (k*N_FC_VAR + j)*N_FC_VAR + i;
-
-            for (int f=0; f<6; f++)
-            {
-               for (int v=0; v<NCOMP_TOTAL; v++)   Input[v] = FC_Var[ID1][f][v];
-
-               CPU_Pri2Con( Input, FC_Var[ID1][f], _Gamma_m1, NormPassive, NNorm, NormIdx );
-            }
-         }
-
-
-//       (1-b-4) evaluate the half-step solutions
-         CPU_HancockPredict( FC_Var, dt, dh, Gamma, Flu_Array_In[P], MinDens, MinPres );
+         CPU_DataReconstruction( PriVar_1PG, Flu_Array_In[P], FC_Var_1PG, FLU_NXT, FLU_GHOST_SIZE-1,
+                                 Gamma, LR_Limiter, MinMod_Coeff, EP_Coeff, NULL_REAL, NULL_INT,
+                                 MinDens, MinPres );
 
 #        endif // #if ( FLU_SCHEME == MHM_RP ) ... else ...
 
@@ -427,87 +391,6 @@ void CPU_RiemannPredict( const real Flu_Array_In[][ FLU_NXT*FLU_NXT*FLU_NXT ], c
 
 } // FUNCTION : CPU_RiemannPredict
 #endif // #if ( FLU_SCHEME == MHM_RP )
-
-
-
-#if ( FLU_SCHEME == MHM )
-//-------------------------------------------------------------------------------------------------------
-// Function    :  CPU_HancockPredict
-// Description :  Evolve the face-centered variables by half time-step by calculating the face-centered fluxes
-//                (no Riemann solver is required)
-//
-// Note        :  1. Work for the MHM scheme
-//                2. Do NOT require data in the neighboring cells
-//
-// Parameter   :  FC_Var       : Face-centered conserved variables
-//                               --> The size is assumed to be N_FC_VAR^3
-//                dt           : Time interval to advance solution
-//                dh           : Grid size
-//                Gamma        : Ratio of specific heats
-//                C_Var        : Array storing the conservative variables
-//                               --> For checking negative density and pressure
-//                MinDens/Pres : Minimum allowed density and pressure
-//-------------------------------------------------------------------------------------------------------
-void CPU_HancockPredict( real FC_Var[][6][NCOMP_TOTAL], const real dt, const real dh, const real Gamma,
-                         const real C_Var[][ FLU_NXT*FLU_NXT*FLU_NXT ], const real MinDens, const real MinPres )
-{
-
-   const real  Gamma_m1 = Gamma - (real)1.0;
-   const real _Gamma_m1 = (real)1.0 / Gamma_m1;
-   const real dt_dh2    = (real)0.5*dt/dh;
-   const int  NGhost    = FLU_GHOST_SIZE - 1;
-
-   real Flux[6][NCOMP_TOTAL], dFlux[NCOMP_TOTAL];
-   int ID1, ID2;
-
-
-   for (int k1=0, k2=NGhost;  k1<N_FC_VAR;  k1++, k2++)
-   for (int j1=0, j2=NGhost;  j1<N_FC_VAR;  j1++, j2++)
-   for (int i1=0, i2=NGhost;  i1<N_FC_VAR;  i1++, i2++)
-   {
-      ID1 = (k1*N_FC_VAR + j1)*N_FC_VAR + i1;
-      ID2 = (k2*FLU_NXT  + j2)*FLU_NXT  + i2;
-
-      for (int f=0; f<6; f++)    CPU_Con2Flux( f/2, Flux[f], FC_Var[ID1][f], Gamma_m1, MinPres );
-
-      for (int v=0; v<NCOMP_TOTAL; v++)
-      {
-         dFlux[v] = dt_dh2 * ( Flux[1][v] - Flux[0][v] + Flux[3][v] - Flux[2][v] + Flux[5][v] - Flux[4][v] );
-
-         for (int f=0; f<6; f++)    FC_Var[ID1][f][v] -= dFlux[v];
-      }
-
-//    check the negative density and energy
-      for (int f=0; f<6; f++)
-      {
-         if ( FC_Var[ID1][f][0] <= (real)0.0  ||  FC_Var[ID1][f][4] <= (real)0.0 )
-         {
-//          set to the values before update
-            for (int v=0; v<NCOMP_TOTAL; v++)
-            {
-               FC_Var[ID1][0][v] = FC_Var[ID1][1][v] = FC_Var[ID1][2][v] = FC_Var[ID1][3][v] =
-               FC_Var[ID1][4][v] = FC_Var[ID1][5][v] = C_Var[v][ID2];
-            }
-
-            break;
-         }
-      }
-
-//    ensure positive density and pressure
-      for (int f=0; f<6; f++)
-      {
-         FC_Var[ID1][f][0] = FMAX( FC_Var[ID1][f][0], MinDens );
-         FC_Var[ID1][f][4] = CPU_CheckMinPresInEngy( FC_Var[ID1][f][0], FC_Var[ID1][f][1], FC_Var[ID1][f][2],
-                                                     FC_Var[ID1][f][3], FC_Var[ID1][f][4], Gamma_m1, _Gamma_m1, MinPres );
-#        if ( NCOMP_PASSIVE > 0 )
-         for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)
-         FC_Var[ID1][f][v] = FMAX( FC_Var[ID1][f][v], TINY_NUMBER );
-#        endif
-      }
-   } // i,j,k
-
-} // FUNCTION : CPU_HancockPredict
-#endif // #if ( FLU_SCHEME == MHM )
 
 
 
