@@ -74,7 +74,7 @@ void Grackle_Close( const int lv, const int SaveSg, const real h_Che_Array[], co
 // thread-private variables
    int  idx_pg, PID, PID0, offset;  // idx_pg: array indices within a patch group
    real Dens, Pres;
-   real (*fluid)[PS1][PS1][PS1]=NULL;;
+   real (*fluid)[PS1][PS1][PS1]=NULL;
 
    const real *Ptr_Dens=NULL, *Ptr_sEint=NULL, *Ptr_Ek=NULL, *Ptr_e=NULL, *Ptr_HI=NULL, *Ptr_HII=NULL;
    const real *Ptr_HeI=NULL, *Ptr_HeII=NULL, *Ptr_HeIII=NULL, *Ptr_HM=NULL, *Ptr_H2I=NULL, *Ptr_H2II=NULL;

@@ -18,7 +18,7 @@ extern void CPU_ComputeFlux( const real FC_Var [][6][ N_FC_VAR*N_FC_VAR*N_FC_VAR
                              const int Gap, const real Gamma, const bool CorrHalfVel, const real Pot_USG[],
                              const double Corner[], const real dt, const real dh, const double Time,
                              const OptGravityType_t GravityType, const double ExtAcc_AuxArray[], const real MinPres,
-                             const bool DumpIntFlux, real IntFlux[][NCOMP_TOTAL][ PS2*PS2 ] );;
+                             const bool DumpIntFlux, real IntFlux[][NCOMP_TOTAL][ PS2*PS2 ] );
 extern void CPU_FullStepUpdate( const real Input[][ FLU_NXT*FLU_NXT*FLU_NXT ], real Output[][ PS2*PS2*PS2 ], char DE_Status[],
                                 const real Flux[][NCOMP_TOTAL][ N_FC_FLUX*N_FC_FLUX*N_FC_FLUX ], const real dt, const real dh,
                                 const real Gamma_m1, const real _Gamma_m1, const real MinDens, const real MinPres, const real DualEnergySwitch,
