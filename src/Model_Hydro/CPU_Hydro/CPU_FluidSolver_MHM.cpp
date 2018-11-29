@@ -21,10 +21,12 @@ extern void CPU_Con2Pri_AllPatch( const real ConVar[][ FLU_NXT*FLU_NXT*FLU_NXT ]
 extern void CPU_Con2Pri( const real In[], real Out[], const real Gamma_m1, const real MinPres,
                          const bool NormPassive, const int NNorm, const int NormIdx[],
                          const bool JeansMinPres, const real JeansMinPres_Coeff );
-extern void CPU_ComputeFlux( const real FC_Var[][6][NCOMP_TOTAL], real FC_Flux[][3][NCOMP_TOTAL], const int NFlux, const int Gap,
-                             const real Gamma, const bool CorrHalfVel, const real Pot_USG[], const double Corner[],
-                             const real dt, const real dh, const double Time, const OptGravityType_t GravityType,
-                             const double ExtAcc_AuxArray[], const real MinPres );
+extern void CPU_ComputeFlux( const real FC_Var [][6][ N_FC_VAR*N_FC_VAR*N_FC_VAR ],
+                                   real FC_Flux[][3][ N_FC_FLUX*N_FC_FLUX*N_FC_FLUX ],
+                             const int Gap, const real Gamma, const bool CorrHalfVel, const real Pot_USG[],
+                             const double Corner[], const real dt, const real dh, const double Time,
+                             const OptGravityType_t GravityType, const double ExtAcc_AuxArray[], const real MinPres,
+                             const bool DumpFlux, real IntFlux[][NCOMP_TOTAL][ PS2*PS2 ] );
 extern void CPU_FullStepUpdate( const real Input[][ FLU_NXT*FLU_NXT*FLU_NXT ], real Output[][ PS2*PS2*PS2 ], char DE_Status[],
                                 const real Flux[][3][NCOMP_TOTAL], const real dt, const real dh,
                                 const real Gamma, const real MinDens, const real MinPres, const real DualEnergySwitch,
@@ -134,19 +136,20 @@ void CPU_FluidSolver_MHM(
 #endif // #ifdef __CUDACC__ ... else ...
 {
 
+   const real  Gamma_m1       = Gamma - (real)1.0;
+   const real _Gamma_m1       = (real)1.0 / Gamma_m1;
+#  ifdef UNSPLIT_GRAVITY
+   const bool CorrHalfVel_Yes = true;
+#  else
+   const bool CorrHalfVel_No  = false;
+#  endif
+
+
 // openmp pragma for the CPU solver
 #  ifndef __CUDACC__
 #  pragma omp parallel
 #  endif
    {
-      const real  Gamma_m1       = Gamma - (real)1.0;
-      const real _Gamma_m1       = (real)1.0 / Gamma_m1;
-#     ifdef UNSPLIT_GRAVITY
-      const bool CorrHalfVel_Yes = true;
-#     else
-      const bool CorrHalfVel_No  = false;
-#     endif
-
 //    FC: Face-Centered variables/fluxes
 //    --> CPU solver: allocate data
 //        GPU solver: link to the input global memory array
@@ -228,11 +231,15 @@ void CPU_FluidSolver_MHM(
 
 //       2. evaluate the full-step fluxes
 #        ifdef UNSPLIT_GRAVITY
-         CPU_ComputeFlux( FC_Var, FC_Flux, N_FL_FLUX, 1, Gamma, CorrHalfVel_Yes, Pot_Array_USG[P][0][0], Corner_Array[P],
-                          dt, dh, Time, GravityType, ExtAcc_AuxArray, MinPres );
+         CPU_ComputeFlux( FC_Var_1PG, FC_Flux_1PG, 1, Gamma, CorrHalfVel_Yes,
+                          Pot_Array_USG[P][0][0], Corner_Array[P],
+                          dt, dh, Time, GravityType, ExtAcc_AuxArray, MinPres,
+                          StoreFlux, Flux_Array[P] );
 #        else
-         CPU_ComputeFlux( FC_Var, FC_Flux, N_FL_FLUX, 1, Gamma, CorrHalfVel_No,  NULL, NULL,
-                          NULL_REAL, NULL_REAL, NULL_REAL, GRAVITY_NONE, NULL, MinPres );
+         CPU_ComputeFlux( FC_Var_1PG, FC_Flux_1PG, 1, Gamma, CorrHalfVel_No,
+                          NULL, NULL,
+                          NULL_REAL, NULL_REAL, NULL_REAL, GRAVITY_NONE, NULL, MinPres,
+                          StoreFlux, Flux_Array[P] );
 #        endif
 
 
@@ -241,16 +248,13 @@ void CPU_FluidSolver_MHM(
                              FC_Flux, dt, dh, Gamma, MinDens, MinPres, DualEnergySwitch,
                              NormPassive, NNorm, NormIdx );
 
+      } // loop over all patch groups
 
-//       4. store the inter-patch fluxes
-         if ( StoreFlux )
-         CPU_StoreFlux( Flux_Array[P], FC_Flux );
-
-      } // for (int P=0; P<NPatchGroup; P++)
-
+#     ifndef __CUDACC__
       delete [] FC_Var;
       delete [] FC_Flux;
       delete [] PriVar;
+#     endif
 
    } // OpenMP parallel region
 
