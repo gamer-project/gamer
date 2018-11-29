@@ -18,7 +18,7 @@ extern void CPU_ComputeFlux( const real FC_Var [][6][ N_FC_VAR*N_FC_VAR*N_FC_VAR
                              const int Gap, const real Gamma, const bool CorrHalfVel, const real Pot_USG[],
                              const double Corner[], const real dt, const real dh, const double Time,
                              const OptGravityType_t GravityType, const double ExtAcc_AuxArray[], const real MinPres,
-                             const bool DumpFlux, real IntFlux[][NCOMP_TOTAL][ PS2*PS2 ] );;
+                             const bool DumpIntFlux, real IntFlux[][NCOMP_TOTAL][ PS2*PS2 ] );;
 extern void CPU_FullStepUpdate( const real Input[][ FLU_NXT*FLU_NXT*FLU_NXT ], real Output[][ PS2*PS2*PS2 ], char DE_Status[],
                                 const real Flux[][NCOMP_TOTAL][ N_FC_FLUX*N_FC_FLUX*N_FC_FLUX ], const real dt, const real dh,
                                 const real Gamma_m1, const real _Gamma_m1, const real MinDens, const real MinPres, const real DualEnergySwitch,
@@ -73,7 +73,7 @@ void CPU_FluidSolver_CTU( const real Flu_Array_In[][NCOMP_TOTAL][ FLU_NXT*FLU_NX
                           char DE_Array_Out[][ PS2*PS2*PS2 ],
                           real Flux_Array[][9][NCOMP_TOTAL][ PS2*PS2 ],
                           const double Corner_Array[][3],
-                          const real Pot_Array_USG[][USG_NXT_F][USG_NXT_F][USG_NXT_F],
+                          const real Pot_Array_USG[][ USG_NXT_F*USG_NXT_F*USG_NXT_F ],
                           const int NPatchGroup, const real dt, const real dh, const real Gamma,
                           const bool StoreFlux, const LR_Limiter_t LR_Limiter, const real MinMod_Coeff,
                           const real EP_Coeff, const double Time, const OptGravityType_t GravityType,
@@ -163,7 +163,7 @@ void CPU_FluidSolver_CTU( const real Flu_Array_In[][NCOMP_TOTAL][ FLU_NXT*FLU_NX
 //       6. evaluate the face-centered full-step fluxes by solving the Riemann problem with the corrected data
 #        ifdef UNSPLIT_GRAVITY
          CPU_ComputeFlux( FC_Var, FC_Flux, 1, Gamma, CorrHalfVel_Yes,
-                          Pot_Array_USG[P][0][0], Corner_Array[P],
+                          Pot_Array_USG[P], Corner_Array[P],
                           dt, dh, Time, GravityType, ExtAcc_AuxArray, MinPres,
                           StoreFlux, Flux_Array[P] );
 #        else

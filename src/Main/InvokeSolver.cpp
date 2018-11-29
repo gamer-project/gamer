@@ -273,7 +273,7 @@ void Preparation_Step( const Solver_t TSolver, const int lv, const double TimeNe
 {
 
 #  ifndef UNSPLIT_GRAVITY
-   real (*h_Pot_Array_USG_F[2])[USG_NXT_F][USG_NXT_F][USG_NXT_F] = { NULL, NULL };
+   real (*h_Pot_Array_USG_F[2])[ USG_NXT_F*USG_NXT_F*USG_NXT_F ] = { NULL, NULL };
 #  endif
 #  if ( defined GRAVITY  &&  !defined DUAL_ENERGY )
    char (*h_DE_Array_G     [2])[PS1][PS1][PS1]                   = { NULL, NULL };
@@ -283,7 +283,7 @@ void Preparation_Step( const Solver_t TSolver, const int lv, const double TimeNe
    switch ( TSolver )
    {
       case FLUID_SOLVER :
-         Flu_Prepare( lv, TimeOld, h_Flu_Array_F_In[ArrayID][0][0], h_Pot_Array_USG_F[ArrayID][0][0][0],
+         Flu_Prepare( lv, TimeOld, h_Flu_Array_F_In[ArrayID][0][0], h_Pot_Array_USG_F[ArrayID][0],
                       h_Corner_Array_F[ArrayID], NPG, PID0_List );
       break;
 
@@ -439,7 +439,7 @@ void Solver( const Solver_t TSolver, const int lv, const double TimeNew, const d
 #  endif
 
 #  ifndef UNSPLIT_GRAVITY
-   real (*h_Pot_Array_USG_F[2])[USG_NXT_F ][USG_NXT_F ][USG_NXT_F ] = { NULL, NULL };
+   real (*h_Pot_Array_USG_F[2])[ CUBE(USG_NXT_F) ]                  = { NULL, NULL };
 #  ifdef GRAVITY
    real (*h_Pot_Array_USG_G[2])[USG_NXT_G ][USG_NXT_G ][USG_NXT_G ] = { NULL, NULL };
    real (*h_Flu_Array_USG_G[2])[GRA_NIN-1][PS1][PS1][PS1]           = { NULL, NULL };
@@ -447,9 +447,9 @@ void Solver( const Solver_t TSolver, const int lv, const double TimeNew, const d
 #  endif
 
 #  ifndef DUAL_ENERGY
-   char (*h_DE_Array_F_Out[2])[8*PATCH_SIZE*PATCH_SIZE*PATCH_SIZE] = { NULL, NULL };
+   char (*h_DE_Array_F_Out[2])[ CUBE(PS2) ]                         = { NULL, NULL };
 #  ifdef GRAVITY
-   char (*h_DE_Array_G    [2])[PS1][PS1][PS1]                      = { NULL, NULL };
+   char (*h_DE_Array_G    [2])[PS1][PS1][PS1]                       = { NULL, NULL };
 #  endif
 #  endif
 

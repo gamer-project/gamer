@@ -13,7 +13,10 @@ static void Get_EigenSystem( const real CC_Var[], real EigenVal[][NCOMP_FLUID], 
 static void LimitSlope( const real L2[], const real L1[], const real C0[], const real R1[], const real R2[],
                         const LR_Limiter_t LR_Limiter, const real MinMod_Coeff, const real EP_Coeff,
                         const real Gamma, const int XYZ, real Slope_Limiter[] );
+extern void CPU_Pri2Con( const real In[], real Out[], const real _Gamma_m1,
+                         const bool NormPassive, const int NNorm, const int NormIdx[] );
 #if ( FLU_SCHEME == MHM )
+extern void CPU_Con2Flux( const int XYZ, real Flux[], const real Input[], const real Gamma_m1, const real MinPres );
 static void CPU_HancockPredict( real fc[][NCOMP_TOTAL], const real dt, const real dh,
                                 const real Gamma_m1, const real _Gamma_m1,
                                 const real cc_array[][ FLU_NXT*FLU_NXT*FLU_NXT ], const int cc_idx,
@@ -68,9 +71,9 @@ static void Char2Pri( real Var[], const real Gamma, const real Rho, const real P
 //                NormIdx        : Target variable indices for the option "NormPassive"
 //                                 --> Should be set to the global variable "PassiveNorm_VarIdx"
 //------------------------------------------------------------------------------------------------------
-void CPU_DataReconstruction( const real PriVar[]   [ FLU_NXT*FLU_NXT*FLU_NXT    ],
-                             const real ConVar[]   [ FLU_NXT*FLU_NXT*FLU_NXT    ],
-                                   real FC_Var[][6][ N_FC_VAR*N_FC_VAR*N_FC_VAR ],
+void CPU_DataReconstruction( const real PriVar[][ FLU_NXT*FLU_NXT*FLU_NXT    ],
+                             const real ConVar[][ FLU_NXT*FLU_NXT*FLU_NXT    ],
+                                   real FC_Var[][NCOMP_TOTAL][ N_FC_VAR*N_FC_VAR*N_FC_VAR ],
                              const int NIn, const int NGhost, const real Gamma,
                              const LR_Limiter_t LR_Limiter, const real MinMod_Coeff,
                              const real EP_Coeff, const real dt, const real dh,
@@ -356,7 +359,7 @@ void CPU_DataReconstruction( const real PriVar[]   [ FLU_NXT*FLU_NXT*FLU_NXT    
 //    7. store the face-centered values to the output array
       for (int f=0; f<6; f++)
       for (int v=0; v<NCOMP_TOTAL; v++)
-         FC_Var[v][f][idx_fc] = fc[f][v];
+         FC_Var[f][v][idx_fc] = fc[f][v];
 
    } // k,j,i
 
@@ -1041,9 +1044,7 @@ void CPU_HancockPredict( real fc[][NCOMP_TOTAL], const real dt, const real dh,
                          const real MinDens, const real MinPres )
 {
 
-   const real  Gamma_m1 = Gamma - (real)1.0;
-   const real _Gamma_m1 = (real)1.0 / Gamma_m1;
-   const real dt_dh2    = (real)0.5*dt/dh;
+   const real dt_dh2 = (real)0.5*dt/dh;
 
    real Flux[6][NCOMP_TOTAL], dFlux[NCOMP_TOTAL];
 

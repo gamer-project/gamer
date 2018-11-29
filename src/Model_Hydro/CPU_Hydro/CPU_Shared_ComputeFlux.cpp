@@ -62,12 +62,12 @@ extern void CPU_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L
 //                DumpIntFlux     : true --> store the inter-patch fluxes in IntFlux[]
 //                IntFlux         : Array for DumpIntFlux
 //-------------------------------------------------------------------------------------------------------
-void CPU_ComputeFlux( const real FC_Var [][6][ N_FC_VAR *N_FC_VAR *N_FC_VAR  ],
-                            real FC_Flux[][3][ N_FC_FLUX*N_FC_FLUX*N_FC_FLUX ],
+void CPU_ComputeFlux( const real FC_Var [][NCOMP_TOTAL][ N_FC_VAR *N_FC_VAR *N_FC_VAR  ],
+                            real FC_Flux[][NCOMP_TOTAL][ N_FC_FLUX*N_FC_FLUX*N_FC_FLUX ],
                       const int Gap, const real Gamma, const bool CorrHalfVel, const real Pot_USG[],
                       const double Corner[], const real dt, const real dh, const double Time,
                       const OptGravityType_t GravityType, const double ExtAcc_AuxArray[], const real MinPres,
-                      const bool DumpFlux, real IntFlux[][NCOMP_TOTAL][ PS2*PS2 ] )
+                      const bool DumpIntFlux, real IntFlux[][NCOMP_TOTAL][ PS2*PS2 ] )
 {
 
 // check
@@ -168,8 +168,8 @@ void CPU_ComputeFlux( const real FC_Var [][6][ N_FC_VAR *N_FC_VAR *N_FC_VAR  ],
 
          for (int v=0; v<NCOMP_TOTAL; v++)
          {
-            ConVar_L[v] = FC_Var[v][faceR][ idx_fc            ];
-            ConVar_R[v] = FC_Var[v][faceL][ idx_fc+didx_fc[d] ];
+            ConVar_L[v] = FC_Var[faceR][v][ idx_fc            ];
+            ConVar_R[v] = FC_Var[faceL][v][ idx_fc+didx_fc[d] ];
          }
 
 
@@ -249,7 +249,7 @@ void CPU_ComputeFlux( const real FC_Var [][6][ N_FC_VAR *N_FC_VAR *N_FC_VAR  ],
 
 //       3. store results
 //       store the fluxes of all cells in FC_Flux[]
-         for (int v=0; v<NCOMP_TOTAL; v++)   FC_Flux[v][d][idx_flux] = Flux_1Face[v];
+         for (int v=0; v<NCOMP_TOTAL; v++)   FC_Flux[d][v][idx_flux] = Flux_1Face[v];
 
 //       store the inter-patch fluxes in IntFlux[]
          if ( DumpIntFlux )

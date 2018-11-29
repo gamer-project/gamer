@@ -47,7 +47,7 @@ void CPU_FluidSolver_RTVD( real Flu_Array_In [][NCOMP_TOTAL][ FLU_NXT*FLU_NXT*FL
                            real Flu_Array_Out[][NCOMP_TOTAL][ PS2*PS2*PS2 ],
                            real Flux_Array[][9][NCOMP_TOTAL][ PS2*PS2 ],
                            const double Corner_Array[][3],
-                           const real Pot_Array_USG[][USG_NXT_F][USG_NXT_F][USG_NXT_F],
+                           const real Pot_Array_USG[][ USG_NXT_F*USG_NXT_F*USG_NXT_F ],
                            const int NPatchGroup, const real dt, const real dh, const real Gamma,
                            const bool StoreFlux, const bool XYZ, const real MinDens, const real MinPres )
 {

@@ -1,7 +1,6 @@
 #include "GAMER.h"
 #include "CUFLU.h"
 
-// some functions in this file need to be defined even when using GPU
 #if ( MODEL == HYDRO )
 
 
@@ -150,8 +149,8 @@ void CPU_Con2Pri_AllPatch( const real ConVar[][ FLU_NXT*FLU_NXT*FLU_NXT ],
 
       for (int v=0; v<NCOMP_TOTAL; v++)   ConVar_1Cell[v] = ConVar[v][idx];
 
-      Con2Pri( ConVar_1Cell, PriVar_1Cell, Gamma_m1, MinPres, NormPassive, NNorm, NormIdx,
-               JeansMinPres, JeansMinPres_Coeff );
+      CPU_Con2Pri( ConVar_1Cell, PriVar_1Cell, Gamma_m1, MinPres, NormPassive, NNorm, NormIdx,
+                   JeansMinPres, JeansMinPres_Coeff );
 
       for (int v=0; v<NCOMP_TOTAL; v++)   PriVar[v][idx] = PriVar_1Cell[v];
    }
