@@ -108,7 +108,12 @@ void CPU_DataReconstruction( const real PriVar[]   [ FLU_NXT*FLU_NXT*FLU_NXT    
 
 
 #  ifdef __CUDACC__
-   ...
+   for (int idx_fc=threadIdx.x; idx_fc<CUBE(NOut); idx_fc+=blockDim.x)
+   {
+      const int size_ij = SQR(NOut);
+      const int i_cc    = NGhost + idx_fc%NOut;
+      const int j_cc    = NGhost + idx_fc%size_ij/NOut;
+      const int k_cc    = NGhost + idx_fc/size_ij;
 #  else
    for (int k_cc=NGhost, k_fc=0;  k_cc<NGhost+NOut;  k_cc++, k_fc++)
    for (int j_cc=NGhost, j_fc=0;  j_cc<NGhost+NOut;  j_cc++, j_fc++)

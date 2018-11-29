@@ -151,7 +151,7 @@ void CPU_ComputeFlux( const real FC_Var [][6][ N_FC_VAR *N_FC_VAR *N_FC_VAR  ],
       {
          const int size_ij = idx_flux_e[0]*idx_flux_e[1];
          const int i_flux  = idx % idx_flux_e[0];
-         const int j_flux  = idx % size_ij / idx_flux_e[0]
+         const int j_flux  = idx % size_ij / idx_flux_e[0];
          const int k_flux  = idx / size_ij;
          const int i_fc    = i_flux + idx_fc_s[0];
          const int j_fc    = j_flux + idx_fc_s[1];
