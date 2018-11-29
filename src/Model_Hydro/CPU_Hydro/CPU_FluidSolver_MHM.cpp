@@ -18,9 +18,6 @@ extern void CPU_Con2Pri_AllPatch( const real ConVar[][ FLU_NXT*FLU_NXT*FLU_NXT ]
                                   const real Gamma_m1, const real MinPres,
                                   const bool NormPassive, const int NNorm, const int NormIdx[],
                                   const bool JeansMinPres, const real JeansMinPres_Coeff );
-extern void CPU_Con2Pri( const real In[], real Out[], const real Gamma_m1, const real MinPres,
-                         const bool NormPassive, const int NNorm, const int NormIdx[],
-                         const bool JeansMinPres, const real JeansMinPres_Coeff );
 extern void CPU_ComputeFlux( const real FC_Var [][6][ N_FC_VAR*N_FC_VAR*N_FC_VAR ],
                                    real FC_Flux[][3][ N_FC_FLUX*N_FC_FLUX*N_FC_FLUX ],
                              const int Gap, const real Gamma, const bool CorrHalfVel, const real Pot_USG[],
@@ -28,10 +25,9 @@ extern void CPU_ComputeFlux( const real FC_Var [][6][ N_FC_VAR*N_FC_VAR*N_FC_VAR
                              const OptGravityType_t GravityType, const double ExtAcc_AuxArray[], const real MinPres,
                              const bool DumpFlux, real IntFlux[][NCOMP_TOTAL][ PS2*PS2 ] );
 extern void CPU_FullStepUpdate( const real Input[][ FLU_NXT*FLU_NXT*FLU_NXT ], real Output[][ PS2*PS2*PS2 ], char DE_Status[],
-                                const real Flux[][3][NCOMP_TOTAL], const real dt, const real dh,
-                                const real Gamma, const real MinDens, const real MinPres, const real DualEnergySwitch,
+                                const real Flux[][NCOMP_TOTAL][ N_FC_FLUX*N_FC_FLUX*N_FC_FLUX ], const real dt, const real dh,
+                                const real Gamma_m1, const real _Gamma_m1, const real MinDens, const real MinPres, const real DualEnergySwitch,
                                 const bool NormPassive, const int NNorm, const int NormIdx[] );
-extern void CPU_StoreFlux( real Flux_Array[][NCOMP_TOTAL][ PS2*PS2 ], const real FC_Flux[][3][NCOMP_TOTAL] );
 #if   ( RSOLVER == EXACT )
 extern void CPU_RiemannSolver_Exact( const int XYZ, real eival_out[], real L_star_out[], real R_star_out[],
                                      real Flux_Out[], const real L_In[], const real R_In[], const real Gamma );
@@ -48,6 +44,9 @@ extern void CPU_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L
 extern real CPU_CheckMinPres( const real InPres, const real MinPres );
 
 #if   ( FLU_SCHEME == MHM_RP )
+extern void CPU_Con2Pri( const real In[], real Out[], const real Gamma_m1, const real MinPres,
+                         const bool NormPassive, const int NNorm, const int NormIdx[],
+                         const bool JeansMinPres, const real JeansMinPres_Coeff );
 static void CPU_RiemannPredict( const real Flu_Array_In[][ FLU_NXT*FLU_NXT*FLU_NXT ],
                                 const real Half_Flux[][3][NCOMP_TOTAL], real Half_Var[][NCOMP_TOTAL], const real dt,
                                 const real dh, const real Gamma, const real MinDens, const real MinPres );
@@ -255,7 +254,7 @@ void CPU_FluidSolver_MHM(
 
 //       3. full-step evolution
          CPU_FullStepUpdate( Flu_Array_In[P], Flu_Array_Out[P], DE_Array_Out[P],
-                             FC_Flux, dt, dh, Gamma, MinDens, MinPres, DualEnergySwitch,
+                             FC_Flux_1PG, dt, dh, Gamma_m1, _Gamma_m1, MinDens, MinPres, DualEnergySwitch,
                              NormPassive, NNorm, NormIdx );
 
       } // loop over all patch groups
