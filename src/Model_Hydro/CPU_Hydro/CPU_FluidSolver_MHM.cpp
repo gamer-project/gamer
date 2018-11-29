@@ -219,12 +219,18 @@ void CPU_FluidSolver_MHM(
 //       (1-b-1) conserved variables --> primitive variables
          CPU_Con2Pri_AllPatch( Flu_Array_In[P], PriVar_1PG, Gamma_m1, MinPres, NormPassive, NNorm, NormIdx,
                                JeansMinPres, JeansMinPres_Coeff );
+#        ifdef __CUDACC__
+         __syncthreads();
+#        endif
 
 
 //       (1-b-2) evaluate the face-centered values by data reconstruction
          CPU_DataReconstruction( PriVar_1PG, Flu_Array_In[P], FC_Var_1PG, FLU_NXT, FLU_GHOST_SIZE-1,
                                  Gamma, LR_Limiter, MinMod_Coeff, EP_Coeff, NULL_REAL, NULL_INT,
                                  MinDens, MinPres );
+#        ifdef __CUDACC__
+         __syncthreads();
+#        endif
 
 #        endif // #if ( FLU_SCHEME == MHM_RP ) ... else ...
 
@@ -240,6 +246,10 @@ void CPU_FluidSolver_MHM(
                           NULL, NULL,
                           NULL_REAL, NULL_REAL, NULL_REAL, GRAVITY_NONE, NULL, MinPres,
                           StoreFlux, Flux_Array[P] );
+#        endif
+
+#        ifdef __CUDACC__
+         __syncthreads();
 #        endif
 
 
