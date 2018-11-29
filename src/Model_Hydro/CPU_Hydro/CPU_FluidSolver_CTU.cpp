@@ -13,10 +13,12 @@ extern void CPU_Con2Pri( const real In[], real Out[], const real Gamma_m1, const
                          const bool JeansMinPres, const real JeansMinPres_Coeff );
 extern void CPU_Pri2Con( const real In[], real Out[], const real _Gamma_m1,
                          const bool NormPassive, const int NNorm, const int NormIdx[] );
-extern void CPU_ComputeFlux( const real FC_Var[][6][NCOMP_TOTAL], real FC_Flux[][3][NCOMP_TOTAL], const int NFlux, const int Gap,
-                             const real Gamma, const bool CorrHalfVel, const real Pot_USG[], const double Corner[],
-                             const real dt, const real dh, const double Time, const OptGravityType_t GravityType,
-                             const double ExtAcc_AuxArray[], const real MinPres );
+extern void CPU_ComputeFlux( const real FC_Var [][6][ N_FC_VAR*N_FC_VAR*N_FC_VAR ],
+                                   real FC_Flux[][3][ N_FC_FLUX*N_FC_FLUX*N_FC_FLUX ],
+                             const int Gap, const real Gamma, const bool CorrHalfVel, const real Pot_USG[],
+                             const double Corner[], const real dt, const real dh, const double Time,
+                             const OptGravityType_t GravityType, const double ExtAcc_AuxArray[], const real MinPres,
+                             const bool DumpFlux, real IntFlux[][NCOMP_TOTAL][ PS2*PS2 ] );;
 extern void CPU_FullStepUpdate( const real Input[][ FLU_NXT*FLU_NXT*FLU_NXT ], real Output[][ PS2*PS2*PS2 ], char DE_Status[],
                                 const real Flux[][3][NCOMP_TOTAL], const real dt, const real dh,
                                 const real Gamma, const real MinDens, const real MinPres, const real DualEnergySwitch,
@@ -88,15 +90,17 @@ void CPU_FluidSolver_CTU( const real Flu_Array_In[][NCOMP_TOTAL][ FLU_NXT*FLU_NX
 #  endif
 
 
+   const real  Gamma_m1       = Gamma - (real)1.0;
+   const real _Gamma_m1       = (real)1.0 / Gamma_m1;
+#  ifdef UNSPLIT_GRAVITY
+   const bool CorrHalfVel_Yes = true;
+#  endif
+   const bool CorrHalfVel_No  = false;
+   const bool StoreFlux_No    = false;
+
+
 #  pragma omp parallel
    {
-      const real  Gamma_m1       = Gamma - (real)1.0;
-      const real _Gamma_m1       = (real)1.0 / Gamma_m1;
-#     ifdef UNSPLIT_GRAVITY
-      const bool CorrHalfVel_Yes = true;
-#     endif
-      const bool CorrHalfVel_No  = false;
-
       real Input[NCOMP_TOTAL];
       int ID1;
 
@@ -147,8 +151,9 @@ void CPU_FluidSolver_CTU( const real Flu_Array_In[][NCOMP_TOTAL][ FLU_NXT*FLU_NX
 
 
 //       4. evaluate the face-centered half-step fluxes by solving the Riemann problem
-         CPU_ComputeFlux( FC_Var, FC_Flux, N_HF_FLUX, 0, Gamma, CorrHalfVel_No, NULL, NULL,
-                          NULL_REAL, NULL_REAL, NULL_REAL, GRAVITY_NONE, NULL, MinPres );
+         CPU_ComputeFlux( FC_Var, FC_Flux, 0, Gamma, CorrHalfVel_No, NULL, NULL,
+                          NULL_REAL, NULL_REAL, NULL_REAL, GRAVITY_NONE, NULL, MinPres,
+                          StoreFlux_No, NULL );
 
 
 //       5. correct the face-centered variables by the transverse flux gradients
@@ -157,11 +162,15 @@ void CPU_FluidSolver_CTU( const real Flu_Array_In[][NCOMP_TOTAL][ FLU_NXT*FLU_NX
 
 //       6. evaluate the face-centered full-step fluxes by solving the Riemann problem with the corrected data
 #        ifdef UNSPLIT_GRAVITY
-         CPU_ComputeFlux( FC_Var, FC_Flux, N_FL_FLUX, 1, Gamma, CorrHalfVel_Yes, Pot_Array_USG[P][0][0], Corner_Array[P],
-                          dt, dh, Time, GravityType, ExtAcc_AuxArray, MinPres );
+         CPU_ComputeFlux( FC_Var, FC_Flux, 1, Gamma, CorrHalfVel_Yes,
+                          Pot_Array_USG[P][0][0], Corner_Array[P],
+                          dt, dh, Time, GravityType, ExtAcc_AuxArray, MinPres,
+                          StoreFlux, Flux_Array[P] );
 #        else
-         CPU_ComputeFlux( FC_Var, FC_Flux, N_FL_FLUX, 1, Gamma, CorrHalfVel_No,  NULL, NULL,
-                          NULL_REAL, NULL_REAL, NULL_REAL, GRAVITY_NONE, NULL, MinPres );
+         CPU_ComputeFlux( FC_Var, FC_Flux, 1, Gamma, CorrHalfVel_No,
+                          NULL, NULL,
+                          NULL_REAL, NULL_REAL, NULL_REAL, GRAVITY_NONE, NULL, MinPres,
+                          StoreFlux, Flux_Array[P] );
 #        endif
 
 
@@ -171,9 +180,11 @@ void CPU_FluidSolver_CTU( const real Flu_Array_In[][NCOMP_TOTAL][ FLU_NXT*FLU_NX
                              NormPassive, NNorm, NormIdx );
 
 
+         /*
 //       8. store the inter-patch fluxes
          if ( StoreFlux )
          CPU_StoreFlux( Flux_Array[P], FC_Flux );
+         */
 
       } // for (int P=0; P<NPatchGroup; P++)
 
