@@ -5,9 +5,9 @@
 
 
 
-extern void CPU_DataReconstruction( const real PriVar[]   [ FLU_NXT*FLU_NXT*FLU_NXT    ],
-                                    const real ConVar[]   [ FLU_NXT*FLU_NXT*FLU_NXT    ],
-                                          real FC_Var[][6][ N_FC_VAR*N_FC_VAR*N_FC_VAR ],
+extern void CPU_DataReconstruction( const real PriVar[][ FLU_NXT*FLU_NXT*FLU_NXT    ],
+                                    const real ConVar[][ FLU_NXT*FLU_NXT*FLU_NXT    ],
+                                          real FC_Var[][NCOMP_TOTAL][ N_FC_VAR*N_FC_VAR*N_FC_VAR ],
                                     const int NIn, const int NGhost, const real Gamma,
                                     const LR_Limiter_t LR_Limiter, const real MinMod_Coeff,
                                     const real EP_Coeff, const real dt, const real dh,
@@ -18,12 +18,12 @@ extern void CPU_Con2Pri_AllPatch( const real ConVar[][ FLU_NXT*FLU_NXT*FLU_NXT ]
                                   const real Gamma_m1, const real MinPres,
                                   const bool NormPassive, const int NNorm, const int NormIdx[],
                                   const bool JeansMinPres, const real JeansMinPres_Coeff );
-extern void CPU_ComputeFlux( const real FC_Var [][6][ N_FC_VAR*N_FC_VAR*N_FC_VAR ],
-                                   real FC_Flux[][3][ N_FC_FLUX*N_FC_FLUX*N_FC_FLUX ],
+extern void CPU_ComputeFlux( const real FC_Var [][NCOMP_TOTAL][ N_FC_VAR *N_FC_VAR *N_FC_VAR  ],
+                                   real FC_Flux[][NCOMP_TOTAL][ N_FC_FLUX*N_FC_FLUX*N_FC_FLUX ],
                              const int Gap, const real Gamma, const bool CorrHalfVel, const real Pot_USG[],
                              const double Corner[], const real dt, const real dh, const double Time,
                              const OptGravityType_t GravityType, const double ExtAcc_AuxArray[], const real MinPres,
-                             const bool DumpFlux, real IntFlux[][NCOMP_TOTAL][ PS2*PS2 ] );
+                             const bool DumpIntFlux, real IntFlux[][NCOMP_TOTAL][ PS2*PS2 ] );
 extern void CPU_FullStepUpdate( const real Input[][ FLU_NXT*FLU_NXT*FLU_NXT ], real Output[][ PS2*PS2*PS2 ], char DE_Status[],
                                 const real Flux[][NCOMP_TOTAL][ N_FC_FLUX*N_FC_FLUX*N_FC_FLUX ], const real dt, const real dh,
                                 const real Gamma_m1, const real _Gamma_m1, const real MinDens, const real MinPres, const real DualEnergySwitch,
@@ -226,7 +226,7 @@ void CPU_FluidSolver_MHM(
 //       (1-b-2) evaluate the face-centered values by data reconstruction
          CPU_DataReconstruction( PriVar_1PG, Flu_Array_In[P], FC_Var_1PG, FLU_NXT, FLU_GHOST_SIZE-1,
                                  Gamma, LR_Limiter, MinMod_Coeff, EP_Coeff, NULL_REAL, NULL_INT,
-                                 MinDens, MinPres );
+                                 MinDens, MinPres, NormPassive, NNorm, NormIdx );
 #        ifdef __CUDACC__
          __syncthreads();
 #        endif
@@ -237,7 +237,7 @@ void CPU_FluidSolver_MHM(
 //       2. evaluate the full-step fluxes
 #        ifdef UNSPLIT_GRAVITY
          CPU_ComputeFlux( FC_Var_1PG, FC_Flux_1PG, 1, Gamma, CorrHalfVel_Yes,
-                          Pot_Array_USG[P][0][0], Corner_Array[P],
+                          Pot_Array_USG[P], Corner_Array[P],
                           dt, dh, Time, GravityType, ExtAcc_AuxArray, MinPres,
                           StoreFlux, Flux_Array[P] );
 #        else
@@ -260,9 +260,9 @@ void CPU_FluidSolver_MHM(
       } // loop over all patch groups
 
 #     ifndef __CUDACC__
-      delete [] FC_Var;
-      delete [] FC_Flux;
-      delete [] PriVar;
+      delete [] FC_Var_1PG;
+      delete [] FC_Flux_1PG;
+      delete [] PriVar_1PG;
 #     endif
 
    } // OpenMP parallel region

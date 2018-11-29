@@ -206,7 +206,7 @@ void CUAPI_Asyn_FluidSolver( real h_Flu_Array_In [][FLU_NIN    ][ FLU_NXT*FLU_NX
                              char h_DE_Array_Out[][ PS2*PS2*PS2 ],
                              real h_Flux_Array[][9][NFLUX_TOTAL][ PS2*PS2 ],
                              const double h_Corner_Array[][3],
-                             real h_Pot_Array_USG[][USG_NXT_F][USG_NXT_F][USG_NXT_F],
+                             real h_Pot_Array_USG[][ USG_NXT_F*USG_NXT_F*USG_NXT_F ],
                              const int NPatchGroup, const real dt, const real dh, const real Gamma, const bool StoreFlux,
                              const bool XYZ, const LR_Limiter_t LR_Limiter, const real MinMod_Coeff, const real EP_Coeff,
                              const WAF_Limiter_t WAF_Limiter, const real ELBDM_Eta, real ELBDM_Taylor3_Coeff,

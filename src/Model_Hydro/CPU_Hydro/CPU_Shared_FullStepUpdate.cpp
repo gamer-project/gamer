@@ -63,7 +63,7 @@ void CPU_FullStepUpdate( const real Input[][ FLU_NXT*FLU_NXT*FLU_NXT ], real Out
 #  endif
 
       const int idx_in   = IDX321( i_in,  j_in,  k_in,  FLU_NXT,   FLU_NXT   );
-      const int idx_flux = IDX321( i_out, J_out, k_out, N_FL_FLUX, N_FL_FLUX );
+      const int idx_flux = IDX321( i_out, j_out, k_out, N_FL_FLUX, N_FL_FLUX );
 
 
 //    1. calculate flux difference to update the fluid data
