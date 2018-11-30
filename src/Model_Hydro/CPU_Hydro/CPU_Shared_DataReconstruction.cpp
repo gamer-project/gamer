@@ -1,30 +1,49 @@
 #include "GAMER.h"
 #include "CUFLU.h"
 
-#if ( MODEL == HYDRO  &&  (FLU_SCHEME == MHM || FLU_SCHEME == MHM_RP || FLU_SCHEME == CTU) )
+#if (  MODEL == HYDRO  &&  ( FLU_SCHEME == MHM || FLU_SCHEME == MHM_RP || FLU_SCHEME == CTU )  )
 
 
+
+// external functions
+#ifdef __CUDACC__
+
+#include "CUFLU_Shared_FluUtility.cu"
+
+#else
 
 extern void CPU_Rotate3D( real InOut[], const int XYZ, const bool Forward );
 extern real CPU_CheckMinPres( const real InPres, const real MinPres );
-
-static void Get_EigenSystem( const real CC_Var[], real EigenVal[][NCOMP_FLUID], real LEigenVec[][NCOMP_FLUID],
-                             real REigenVec[][NCOMP_FLUID], const real Gamma );
-static void LimitSlope( const real L2[], const real L1[], const real C0[], const real R1[], const real R2[],
-                        const LR_Limiter_t LR_Limiter, const real MinMod_Coeff, const real EP_Coeff,
-                        const real Gamma, const int XYZ, real Slope_Limiter[] );
 extern void CPU_Pri2Con( const real In[], real Out[], const real _Gamma_m1,
                          const bool NormPassive, const int NNorm, const int NormIdx[] );
 #if ( FLU_SCHEME == MHM )
 extern void CPU_Con2Flux( const int XYZ, real Flux[], const real Input[], const real Gamma_m1, const real MinPres );
-static void CPU_HancockPredict( real fc[][NCOMP_TOTAL], const real dt, const real dh,
-                                const real Gamma_m1, const real _Gamma_m1,
-                                const real cc_array[][ FLU_NXT*FLU_NXT*FLU_NXT ], const int cc_idx,
-                                const real MinDens, const real MinPres );
+#endif
+
+#endif // #ifdef __CUDACC__ ... else ...
+
+
+// internal functions
+#ifdef __CUDACC__
+# define GPU_SPEC __device__
+#else
+# define GPU_SPEC
+#endif
+
+GPU_SPEC static void Get_EigenSystem( const real CC_Var[], real EigenVal[][NCOMP_FLUID], real LEigenVec[][NCOMP_FLUID],
+                                      real REigenVec[][NCOMP_FLUID], const real Gamma );
+GPU_SPEC static void LimitSlope( const real L2[], const real L1[], const real C0[], const real R1[], const real R2[],
+                                 const LR_Limiter_t LR_Limiter, const real MinMod_Coeff, const real EP_Coeff,
+                                 const real Gamma, const int XYZ, real Slope_Limiter[] );
+#if ( FLU_SCHEME == MHM )
+GPU_SPEC static void CPU_HancockPredict( real fc[][NCOMP_TOTAL], const real dt, const real dh,
+                                         const real Gamma_m1, const real _Gamma_m1,
+                                         const real cc_array[][ FLU_NXT*FLU_NXT*FLU_NXT ], const int cc_idx,
+                                         const real MinDens, const real MinPres );
 #endif
 #ifdef CHAR_RECONSTRUCTION
-static void Pri2Char( real Var[], const real Gamma, const real Rho, const real Pres, const int XYZ );
-static void Char2Pri( real Var[], const real Gamma, const real Rho, const real Pres, const int XYZ );
+GPU_SPEC static void Pri2Char( real Var[], const real Gamma, const real Rho, const real Pres, const int XYZ );
+GPU_SPEC static void Char2Pri( real Var[], const real Gamma, const real Rho, const real Pres, const int XYZ );
 #endif
 
 
@@ -71,6 +90,9 @@ static void Char2Pri( real Var[], const real Gamma, const real Rho, const real P
 //                NormIdx        : Target variable indices for the option "NormPassive"
 //                                 --> Should be set to the global variable "PassiveNorm_VarIdx"
 //------------------------------------------------------------------------------------------------------
+# ifdef __CUDACC__
+__forceinline__ __device__
+#endif
 void CPU_DataReconstruction( const real PriVar[][ FLU_NXT*FLU_NXT*FLU_NXT    ],
                              const real ConVar[][ FLU_NXT*FLU_NXT*FLU_NXT    ],
                                    real FC_Var[][NCOMP_TOTAL][ N_FC_VAR*N_FC_VAR*N_FC_VAR ],
@@ -122,9 +144,10 @@ void CPU_DataReconstruction( const real PriVar[][ FLU_NXT*FLU_NXT*FLU_NXT    ],
    for (int j_cc=NGhost, j_fc=0;  j_cc<NGhost+NOut;  j_cc++, j_fc++)
    for (int i_cc=NGhost, i_fc=0;  i_cc<NGhost+NOut;  i_cc++, i_fc++)
    {
-      const int idx_cc = IDX321( i_cc, j_cc, k_cc, NIn,  NIn  );
       const int idx_fc = IDX321( i_fc, j_fc, k_fc, NOut, NOut );
 #  endif
+
+      const int idx_cc = IDX321( i_cc, j_cc, k_cc, NIn,  NIn  );
 
       real cc_C[NCOMP_TOTAL], cc_L[NCOMP_TOTAL], cc_R[NCOMP_TOTAL];  // cell-centered variables of the Central/Left/Right cells
       real fc[6][NCOMP_TOTAL];                                       // face-centered variables of the central cell
@@ -997,7 +1020,8 @@ void LimitSlope( const real L2[], const real L1[], const real C0[], const real R
                break;
 
             default :
-               Aux_Error( ERROR_INFO, "incorrect parameter %s = %d !!\n", "LR_Limiter", LR_Limiter );
+               printf( "ERROR : incorrect parameter %s = %d !!\n", "LR_Limiter", LR_Limiter );
+               return;
          }
       } // if ( Slope_LR > (real)0.0 )
 

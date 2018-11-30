@@ -239,28 +239,19 @@ real (*h_Pot_Array_T[2])[ CUBE(GRA_NXT) ]                         = { NULL, NULL
 // =======================================================================================================
 #ifdef GPU
 // (4-1) fluid solver
-real (*d_Flu_Array_F_In )[FLU_NIN ][ FLU_NXT*FLU_NXT*FLU_NXT ]            = NULL;
-real (*d_Flu_Array_F_Out)[FLU_NOUT][ PS2*PS2*PS2 ]                        = NULL;
-real (*d_Flux_Array)[9][NFLUX_TOTAL][ PS2*PS2 ]                           = NULL;
-double (*d_Corner_Array_F)[3]                                             = NULL;
+real (*d_Flu_Array_F_In )[FLU_NIN ][ FLU_NXT*FLU_NXT*FLU_NXT ]             = NULL;
+real (*d_Flu_Array_F_Out)[FLU_NOUT][ PS2*PS2*PS2 ]                         = NULL;
+real (*d_Flux_Array)[9][NFLUX_TOTAL][ PS2*PS2 ]                            = NULL;
+double (*d_Corner_Array_F)[3]                                              = NULL;
 #ifdef DUAL_ENERGY
-char (*d_DE_Array_F_Out)[ PS2*PS2*PS2 ]                                   = NULL;
+char (*d_DE_Array_F_Out)[ PS2*PS2*PS2 ]                                    = NULL;
 #endif
 #if ( MODEL == HYDRO )
 #if ( FLU_SCHEME == MHM  ||  FLU_SCHEME == MHM_RP  ||  FLU_SCHEME == CTU )
-real (*d_PriVar)     [NCOMP_TOTAL][ FLU_NXT*FLU_NXT*FLU_NXT ]             = NULL;
-real (*d_Slope_PPM_x)[NCOMP_TOTAL][ N_SLOPE_PPM*N_SLOPE_PPM*N_SLOPE_PPM ] = NULL;
-real (*d_Slope_PPM_y)[NCOMP_TOTAL][ N_SLOPE_PPM*N_SLOPE_PPM*N_SLOPE_PPM ] = NULL;
-real (*d_Slope_PPM_z)[NCOMP_TOTAL][ N_SLOPE_PPM*N_SLOPE_PPM*N_SLOPE_PPM ] = NULL;
-real (*d_FC_Var_xL)  [NCOMP_TOTAL][ N_FC_VAR*N_FC_VAR*N_FC_VAR ]          = NULL;
-real (*d_FC_Var_xR)  [NCOMP_TOTAL][ N_FC_VAR*N_FC_VAR*N_FC_VAR ]          = NULL;
-real (*d_FC_Var_yL)  [NCOMP_TOTAL][ N_FC_VAR*N_FC_VAR*N_FC_VAR ]          = NULL;
-real (*d_FC_Var_yR)  [NCOMP_TOTAL][ N_FC_VAR*N_FC_VAR*N_FC_VAR ]          = NULL;
-real (*d_FC_Var_zL)  [NCOMP_TOTAL][ N_FC_VAR*N_FC_VAR*N_FC_VAR ]          = NULL;
-real (*d_FC_Var_zR)  [NCOMP_TOTAL][ N_FC_VAR*N_FC_VAR*N_FC_VAR ]          = NULL;
-real (*d_FC_Flux_x)  [NCOMP_TOTAL][ N_FC_FLUX*N_FC_FLUX*N_FC_FLUX ]       = NULL;
-real (*d_FC_Flux_y)  [NCOMP_TOTAL][ N_FC_FLUX*N_FC_FLUX*N_FC_FLUX ]       = NULL;
-real (*d_FC_Flux_z)  [NCOMP_TOTAL][ N_FC_FLUX*N_FC_FLUX*N_FC_FLUX ]       = NULL;
+real (*d_PriVar)      [NCOMP_TOTAL][ FLU_NXT*FLU_NXT*FLU_NXT ]             = NULL;
+real (*d_Slope_PPM)[3][NCOMP_TOTAL][ N_SLOPE_PPM*N_SLOPE_PPM*N_SLOPE_PPM ] = NULL;
+real (*d_FC_Var)   [6][NCOMP_TOTAL][ N_FC_VAR*N_FC_VAR*N_FC_VAR ]          = NULL;
+real (*d_FC_Flux)  [3][NCOMP_TOTAL][ N_FC_FLUX*N_FC_FLUX*N_FC_FLUX ]       = NULL;
 #endif // FLU_SCHEME
 #elif ( MODEL == MHD )
 #warning : WAIT MHD !!!
@@ -268,20 +259,20 @@ real (*d_FC_Flux_z)  [NCOMP_TOTAL][ N_FC_FLUX*N_FC_FLUX*N_FC_FLUX ]       = NULL
 
 #ifdef GRAVITY
 // (4-2) gravity solver
-real (*d_Rho_Array_P    )[ RHO_NXT*RHO_NXT*RHO_NXT ]                      = NULL;
-real (*d_Pot_Array_P_In )[ POT_NXT*POT_NXT*POT_NXT ]                      = NULL;
-real (*d_Pot_Array_P_Out)[ GRA_NXT*GRA_NXT*GRA_NXT ]                      = NULL;
-real (*d_Flu_Array_G    )[GRA_NIN][ PS1*PS1*PS1 ]                         = NULL;
-double (*d_Corner_Array_G )[3]                                            = NULL;
+real (*d_Rho_Array_P    )[ RHO_NXT*RHO_NXT*RHO_NXT ]                       = NULL;
+real (*d_Pot_Array_P_In )[ POT_NXT*POT_NXT*POT_NXT ]                       = NULL;
+real (*d_Pot_Array_P_Out)[ GRA_NXT*GRA_NXT*GRA_NXT ]                       = NULL;
+real (*d_Flu_Array_G    )[GRA_NIN][ PS1*PS1*PS1 ]                          = NULL;
+double (*d_Corner_Array_G )[3]                                             = NULL;
 #ifdef DUAL_ENERGY
-char (*d_DE_Array_G     )[ PS1*PS1*PS1 ]                                  = NULL;
+char (*d_DE_Array_G     )[ PS1*PS1*PS1 ]                                   = NULL;
 #endif
 
 // (4-3) unsplit gravity correction
 #ifdef UNSPLIT_GRAVITY
-real (*d_Pot_Array_USG_F)[ USG_NXT_F*USG_NXT_F*USG_NXT_F ]                = NULL;
-real (*d_Pot_Array_USG_G)[ USG_NXT_G*USG_NXT_G*USG_NXT_G ]                = NULL;
-real (*d_Flu_Array_USG_G)[GRA_NIN-1][ PS1*PS1*PS1        ]                = NULL;
+real (*d_Pot_Array_USG_F)[ USG_NXT_F*USG_NXT_F*USG_NXT_F ]                 = NULL;
+real (*d_Pot_Array_USG_G)[ USG_NXT_G*USG_NXT_G*USG_NXT_G ]                 = NULL;
+real (*d_Flu_Array_USG_G)[GRA_NIN-1][ PS1*PS1*PS1        ]                 = NULL;
 #endif
 #endif
 

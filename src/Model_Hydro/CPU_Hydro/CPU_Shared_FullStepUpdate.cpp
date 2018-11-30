@@ -1,8 +1,19 @@
 #include "GAMER.h"
 #include "CUFLU.h"
 
-#if (  !defined GPU  &&  MODEL == HYDRO  &&  \
-       ( FLU_SCHEME == MHM || FLU_SCHEME == MHM_RP || FLU_SCHEME == CTU )  )
+#if (  MODEL == HYDRO  &&  ( FLU_SCHEME == MHM || FLU_SCHEME == MHM_RP || FLU_SCHEME == CTU )  )
+
+#ifdef __CUDACC__
+
+#if ( NCOMP_PASSIVE > 0 )
+# include "CUFLU_Shared_FluUtility.cu"
+#endif
+
+#ifdef DUAL_ENERGY
+# include "CUFLU_Shared_DualEnergy.cu"
+#endif
+
+#endif // #ifdef __CUDACC__
 
 
 
@@ -32,6 +43,9 @@
 //                NormIdx          : Target variable indices to be normalized
 //                                   --> Should be set to the global variable "PassiveNorm_VarIdx"
 //-------------------------------------------------------------------------------------------------------
+# ifdef __CUDACC__
+__forceinline__ __device__
+#endif
 void CPU_FullStepUpdate( const real Input[][ FLU_NXT*FLU_NXT*FLU_NXT ], real Output[][ PS2*PS2*PS2 ], char DE_Status[],
                          const real Flux[][NCOMP_TOTAL][ N_FC_FLUX*N_FC_FLUX*N_FC_FLUX ], const real dt, const real dh,
                          const real Gamma_m1, const real _Gamma_m1, const real MinDens, const real MinPres, const real DualEnergySwitch,

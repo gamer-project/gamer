@@ -1,9 +1,28 @@
+#ifndef __CUFLU_RIEMANNSOLVER_ROE__
+#define __CUFLU_RIEMANNSOLVER_ROE__
+
+
+
 #include "GAMER.h"
 #include "CUFLU.h"
 
 #if ( MODEL == HYDRO )
 
 
+
+#ifdef __CUDACC__
+
+#include "CUFLU_Shared_FluUtility.cu"
+
+#if   ( CHECK_INTERMEDIATE == EXACT )
+# include "CUFLU_Shared_RiemannSolver_Exact.cu"
+#elif ( CHECK_INTERMEDIATE == HLLE )
+# include "CUFLU_Shared_RiemannSolver_HLLE.cu"
+#elif ( CHECK_INTERMEDIATE == HLLC )
+# include "CUFLU_Shared_RiemannSolver_HLLC.cu"
+#endif
+
+#else // #ifdef __CUDACC__
 
 extern void CPU_Rotate3D( real InOut[], const int XYZ, const bool Forward );
 extern void CPU_Con2Flux( const int XYZ, real Flux[], const real Input[], const real Gamma_m1, const real MinPres );
@@ -21,6 +40,8 @@ extern void CPU_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L
                                     const real Gamma, const real MinPres );
 #endif
 extern real CPU_CheckMinPres( const real InPres, const real MinPres );
+
+#endif // #ifdef __CUDACC__ ... else ...
 
 
 
@@ -41,6 +62,9 @@ extern real CPU_CheckMinPres( const real InPres, const real MinPres );
 //                Gamma       : Ratio of specific heats
 //                MinPres     : Minimum allowed pressure
 //-------------------------------------------------------------------------------------------------------
+# ifdef __CUDACC__
+__forceinline__ __device__
+#endif
 void CPU_RiemannSolver_Roe( const int XYZ, real Flux_Out[], const real L_In[], const real R_In[],
                             const real Gamma, const real MinPres )
 {
@@ -72,11 +96,11 @@ void CPU_RiemannSolver_Roe( const int XYZ, real Flux_Out[], const real L_In[], c
 
 #  ifdef CHECK_NEGATIVE_IN_FLUID
    if ( CPU_CheckNegative(L[0]) )
-      Aux_Message( stderr, "ERROR : negative density (%14.7e) at file <%s>, line <%d>, function <%s>\n",
+      fprintf( stderr, "ERROR : negative density (%14.7e) at file <%s>, line <%d>, function <%s>\n",
                    L[0], __FILE__, __LINE__, __FUNCTION__ );
 
    if ( CPU_CheckNegative(R[0]) )
-      Aux_Message( stderr, "ERROR : negative density (%14.7e) at file <%s>, line <%d>, function <%s>\n",
+      fprintf( stderr, "ERROR : negative density (%14.7e) at file <%s>, line <%d>, function <%s>\n",
                    R[0], __FILE__, __LINE__, __FUNCTION__ );
 #  endif
 
@@ -99,8 +123,8 @@ void CPU_RiemannSolver_Roe( const int XYZ, real Flux_Out[], const real L_In[], c
 
 #  ifdef CHECK_NEGATIVE_IN_FLUID
    if ( CPU_CheckNegative(GammaP_Rho) )
-      Aux_Message( stderr, "ERROR : negative GammaP_Rho (%14.7e) at file <%s>, line <%d>, function <%s>\n",
-                   GammaP_Rho, __FILE__, __LINE__, __FUNCTION__ );
+      fprintf( stderr, "ERROR : negative GammaP_Rho (%14.7e) at file <%s>, line <%d>, function <%s>\n",
+               GammaP_Rho, __FILE__, __LINE__, __FUNCTION__ );
 #  endif
 
    Cs = SQRT( GammaP_Rho );
@@ -180,7 +204,7 @@ void CPU_RiemannSolver_Roe( const int XYZ, real Flux_Out[], const real L_In[], c
          if ( I_States[0] <= (real)0.0  ||  I_Pres <= (real)0.0 )
          {
 #           ifdef GAMER_DEBUG
-            Aux_Message( stderr, "WARNING : intermediate states check failed !!\n" );
+            fprintf( stderr, "WARNING : intermediate states check failed !!\n" );
 #           endif
 
 #           if   ( CHECK_INTERMEDIATE == EXACT )   // recalculate fluxes by exact solver
@@ -252,3 +276,7 @@ void CPU_RiemannSolver_Roe( const int XYZ, real Flux_Out[], const real L_In[], c
 
 
 #endif // #if ( MODEL == HYDRO )
+
+
+
+#endif // #ifndef __CUFLU_RIEMANNSOLVER_ROE__
