@@ -1,0 +1,10 @@
+Compilation flags:
+========================================
+Enable : MODEL=SR_HYDRO
+Disable: GRAVITY, PARTICLE, HYDRO
+
+
+Default setup:
+========================================
+
+

@@ -2002,8 +2002,9 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
                   Con[MOMY] = ArrayMomY[t];
                   Con[MOMZ] = ArrayMomZ[t];
                   Con[ENGY] = ArrayEngy[t];
-
+#                 ifdef CHECK_MIN_TEMP
                   ArrayEngy[t] = CPU_CheckMinTempInEngy( Con );
+#                 endif
 #                 else
                   ArrayEngy[t] = CPU_CheckMinPresInEngy( ArrayDens[t], ArrayMomX[t], ArrayMomY[t], ArrayMomZ[t], ArrayEngy[t],
                                                          Gamma_m1, _Gamma_m1, MinPres );

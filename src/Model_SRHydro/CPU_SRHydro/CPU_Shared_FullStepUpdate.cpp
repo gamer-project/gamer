@@ -116,7 +116,9 @@ void CPU_FullStepUpdate( const real Input[][ FLU_NXT*FLU_NXT*FLU_NXT ], real Out
 
       real Cons[NCOMP_FLUID];
       for (int v = 0;v<NCOMP_FLUID;v++) Cons[v] = Output[v][ID2];
+#     ifdef CHECK_MIN_TEMP
       Output[ENGY][ID2] = CPU_CheckMinTempInEngy( Cons );
+#     endif
 
    } // i,j,k
 

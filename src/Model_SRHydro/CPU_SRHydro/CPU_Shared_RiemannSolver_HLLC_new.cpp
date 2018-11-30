@@ -271,33 +271,25 @@ void CPU_RiemannSolver_HLLC( const int XYZ,
 //=====================================================
 void QuadraticSolver (real A, real B, real C, real *x_plus, real *x_minus)
 {
-  real delta = B*B-4*A*C;
+
+  // printf("A=%20.17e, B=%20.17e, C=%20.17e, dis=%20.17e\n",A,B,C, A*A-4*B*C);
 
   if (A != 0.0){
-           if ( delta > 0.0 ) {
+  real delta = B*B-4*A*C;
 
-           real factor = -0.5*( B + SIGN(B) *  SQRT(delta) );
+     if ( delta > 0.0 ) {
+
+         real factor = -0.5*( B + SIGN(B) *  SQRT(delta) );
      
-           if  ( B > 0.0 && C != 0.0 ){
-             *x_plus   = C/factor;
-     	     *x_minus  = factor/A;             return;
-          }else if  ( B < 0.0 && C != 0.0 ){
-     	     *x_plus   = factor/A;
-     	     *x_minus  = C/factor;             return;
-          }else if ( B == 0.0 && C < 0.0 ){
-             *x_plus = SQRT(-C/A);
-             *x_minus = -SQRT(-C/A);           return;
-          }else if ( B > 0.0 && C == 0.0 ){
-             *x_plus = 0.0;
-             *x_minus = -B/A;                  return;
-          }else if ( B < 0.0 && C == 0.0 ){
-             *x_plus = -B/A;
-             *x_minus = 0.0;                   return;
-          }else if ( B == 0.0 && C == 0.0 ){
-             *x_plus  = 0.0;
-             *x_minus = 0.0;                   return;
-          }else                                goto NO_REAL_SOLUTIONS;
-
+         if  ( B > 0.0 ){
+           *x_plus   = C/factor;
+           *x_minus  = factor/A;              return;
+         }
+         else
+         {
+            *x_plus   = factor/A;
+            *x_minus  = C/factor;             return;
+         }
      }else if ( delta == 0.0 ){
              *x_plus  = -0.5*B/A;
              *x_minus = -0.5*B/A;               return;
@@ -305,17 +297,15 @@ void QuadraticSolver (real A, real B, real C, real *x_plus, real *x_minus)
   }else{ // if ( A == 0.0 )
         if ( B != 0.0 ){
 	   *x_plus  = -C/B;
-	   *x_minus = -C/B;                     return;
+	   *x_minus = -B/A;                     return;
          }else                                  goto NO_REAL_SOLUTIONS;
   }
 
      NO_REAL_SOLUTIONS:
      {
-#       ifdef CHECK_NEGATIVE_IN_FLUID
         Aux_Message(stderr, "No real solution in Quadratic Solver!\n");
         Aux_Message(stderr, "A=%14.7e, B=%14.7e, C=%14.7e\n", A, B, C);
         Aux_Message(stderr, "B*B-4*A*C=%14.7e\n", B*B-4*A*C);  return;
-#       endif
      }
 }
 

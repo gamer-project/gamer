@@ -265,9 +265,10 @@ void CPU_RiemannPredict_Flux( const real Flu_Array_In[][ FLU_NXT*FLU_NXT*FLU_NXT
             ConVar_L[v] = Flu_Array_In[v][ ID2       ];
             ConVar_R[v] = Flu_Array_In[v][ ID2+dr[d] ];
          }
-
+#        ifdef CHECK_MIN_TEMP
          ConVar_L[4] = CPU_CheckMinTempInEngy(ConVar_L);
          ConVar_R[4] = CPU_CheckMinTempInEngy(ConVar_R);
+#        endif
 
 //       check unphysical cells
 #        ifdef CHECK_NEGATIVE_IN_FLUID
@@ -340,7 +341,9 @@ void CPU_RiemannPredict( const real Flu_Array_In[][ FLU_NXT*FLU_NXT*FLU_NXT ],
 
 //    ensure positive density and pressure
       Half_Var[ID1][0] = FMAX( Half_Var[ID1][0], MinDens );
+#     ifdef CHECK_MIN_TEMP
       Half_Var[ID1][4] = CPU_CheckMinTempInEngy( Half_Var[ID1]);
+#     endif
    } // i,j,k
 
 } // FUNCTION : CPU_RiemannPredict
@@ -415,7 +418,9 @@ void CPU_HancockPredict( real FC_Var[][6][NCOMP_TOTAL], const real dt, const rea
       for (int f=0; f<6; f++)
       {
          FC_Var[ID1][f][0] = FMAX( FC_Var[ID1][f][0], MinDens );
+#        ifdef CHECK_MIN_TEMP
          FC_Var[ID1][f][4] = CPU_CheckMinTempInEngy( FC_Var[ID1][f]);
+#        endif
       }
 
    } // i,j,k

@@ -729,7 +729,9 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
             if ( !AUTO_REDUCE_DT ){
 #           if ( MODEL == SR_HYDRO )
             for (int v=0; v<NCOMP_TOTAL; v++)   Update2[v] = Update1[v];
+#           ifdef CHECK_MIN_TEMP
             Update2[ENGY] = CPU_CheckMinTempInEngy(Update1);
+#           endif
 #           else
             Update[ENGY] = CPU_CheckMinPresInEngy( Update[DENS], Update[MOMX], Update[MOMY], Update[MOMZ], Update[ENGY],
                                                    Gamma_m1, _Gamma_m1, MIN_PRES );

@@ -810,8 +810,12 @@ static void NewtonRaphsonSolver(void *ptr, real *root, const real guess, const r
      
       root_old = *root;
       *root = *root - ( f / df );
+      //printf("df = %20.17e\n", df);
+      //printf("f  = %20.17e\n", f);
       tolerance = epsabs + epsrel * FABS(*root);
    }while ( fabs(root_old - *root) >= tolerance && iter < max_iter );
+
+//if (iter >= 10) printf("iter=%d\n", iter);
 }
 
 

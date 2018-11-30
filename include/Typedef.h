@@ -51,7 +51,8 @@ const TestProbID_t
    TESTPROB_SRHYDRO_RIEMANN                       =  601,
    TESTPROB_SRHYDRO_DOUBLE_MACH_REFLECTION        =  602,
    TESTPROB_SRHYDRO_KELVIN_HELMHOLTZ_INSTABILITY  =  603,
-   TESTPROB_SRHYDRO_JETS                           =  604,
+   TESTPROB_SRHYDRO_JETS                          =  604,
+   TESTPROB_SRHYDRO_TWISTED_JET                   =  605,
 
    TESTPROB_ELBDM_EXTPOT                          = 1000;
 
