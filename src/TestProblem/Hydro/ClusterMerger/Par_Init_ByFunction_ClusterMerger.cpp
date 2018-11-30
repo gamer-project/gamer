@@ -324,6 +324,10 @@ void Read_Particles_ClusterMerger(std::string filename, long offset, long num,
   status = H5Dread(dataset, H5T_NATIVE_DOUBLE, memspace, dataspace,
                    H5P_DEFAULT, xpos);
 
+  if (status < 0) {
+     Aux_Message(stderr, "Could not read particle x-position!!")
+  } 
+
   H5Sclose(memspace);
   H5Sclose(dataspace);
 
@@ -337,6 +341,10 @@ void Read_Particles_ClusterMerger(std::string filename, long offset, long num,
   status = H5Dread(dataset, H5T_NATIVE_DOUBLE, memspace, dataspace,
                    H5P_DEFAULT, ypos);
   
+  if (status < 0) {
+     Aux_Message(stderr, "Could not read particle y-position!!")
+  } 
+
   H5Sclose(memspace);
   H5Sclose(dataspace);
 
@@ -350,6 +358,10 @@ void Read_Particles_ClusterMerger(std::string filename, long offset, long num,
   status = H5Dread(dataset, H5T_NATIVE_DOUBLE, memspace, dataspace,
                    H5P_DEFAULT, zpos);
   
+  if (status < 0) {
+     Aux_Message(stderr, "Could not read particle z-position!!")
+  } 
+
   H5Sclose(memspace);
   H5Sclose(dataspace);
 
@@ -367,6 +379,10 @@ void Read_Particles_ClusterMerger(std::string filename, long offset, long num,
   status = H5Dread(dataset, H5T_NATIVE_DOUBLE, memspace, dataspace,
                    H5P_DEFAULT, xvel);
 
+  if (status < 0) {
+     Aux_Message(stderr, "Could not read particle x-velocity!!")
+  } 
+
   H5Sclose(memspace);
   H5Sclose(dataspace);
 
@@ -380,6 +396,10 @@ void Read_Particles_ClusterMerger(std::string filename, long offset, long num,
   status = H5Dread(dataset, H5T_NATIVE_DOUBLE, memspace, dataspace,
                    H5P_DEFAULT, yvel);
 
+  if (status < 0) {
+     Aux_Message(stderr, "Could not read particle y-velocity!!")
+  } 
+
   H5Sclose(memspace);
   H5Sclose(dataspace);
 
@@ -392,6 +412,10 @@ void Read_Particles_ClusterMerger(std::string filename, long offset, long num,
   memspace = H5Screate_simple(rank, dims, NULL);
   status = H5Dread(dataset, H5T_NATIVE_DOUBLE, memspace, dataspace,
                    H5P_DEFAULT, zvel);
+
+  if (status < 0) {
+     Aux_Message(stderr, "Could not read particle z-velocity!!")
+  } 
 
   H5Sclose(memspace);
   H5Sclose(dataspace);
@@ -412,6 +436,10 @@ void Read_Particles_ClusterMerger(std::string filename, long offset, long num,
   memspace = H5Screate_simple(rank, dims1d, NULL);
   status = H5Dread(dataset, H5T_NATIVE_DOUBLE, memspace, dataspace,
                    H5P_DEFAULT, mass);
+
+  if (status < 0) {
+     Aux_Message( stderr, "Could not read particle masses!!")
+  } 
 
   H5Sclose(memspace);
   H5Sclose(dataspace);
