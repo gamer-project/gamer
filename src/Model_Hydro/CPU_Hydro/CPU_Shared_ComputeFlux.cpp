@@ -5,6 +5,24 @@
 
 
 
+#ifdef __CUDACC__
+
+#if   ( RSOLVER == EXACT )
+# include "CUFLU_Shared_RiemannSolver_Exact.cu"
+#elif ( RSOLVER == ROE )
+# include "CUFLU_Shared_RiemannSolver_Roe.cu"
+#elif ( RSOLVER == HLLE )
+# include "CUFLU_Shared_RiemannSolver_HLLE.cu"
+#elif ( RSOLVER == HLLC )
+# include "CUFLU_Shared_RiemannSolver_HLLC.cu"
+#endif
+
+#ifdef UNSPLIT_GRAVITY
+# include "../../SelfGravity/GPU_Gravity/CUPOT_ExternalAcc.cu"
+#endif
+
+#else // #ifdef __CUDACC__
+
 #if   ( RSOLVER == EXACT )
 extern void CPU_Con2Pri( const real In[], real Out[], const real Gamma_m1, const real MinPres,
                          const bool NormPassive, const int NNorm, const int NormIdx[],
@@ -21,6 +39,8 @@ extern void CPU_RiemannSolver_HLLE( const int XYZ, real Flux_Out[], const real L
 extern void CPU_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In[], const real R_In[],
                                     const real Gamma, const real MinPres );
 #endif
+
+#endif // #ifdef __CUDACC__ ... else ...
 
 
 
@@ -62,6 +82,9 @@ extern void CPU_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L
 //                DumpIntFlux     : true --> store the inter-patch fluxes in IntFlux[]
 //                IntFlux         : Array for DumpIntFlux
 //-------------------------------------------------------------------------------------------------------
+#ifdef __CUDACC__
+__forceinline__ __device__
+#endif
 void CPU_ComputeFlux( const real FC_Var [][NCOMP_TOTAL][ N_FC_VAR *N_FC_VAR *N_FC_VAR  ],
                             real FC_Flux[][NCOMP_TOTAL][ N_FC_FLUX*N_FC_FLUX*N_FC_FLUX ],
                       const int Gap, const real Gamma, const bool CorrHalfVel, const real Pot_USG[],

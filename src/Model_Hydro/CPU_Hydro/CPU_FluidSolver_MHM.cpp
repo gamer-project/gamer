@@ -5,6 +5,26 @@
 
 
 
+// external functions
+#ifdef __CUDACC__
+
+#include "CUFLU_Shared_FluUtility.cu"
+#include "CUFLU_Shared_DataReconstruction.cu"
+#include "CUFLU_Shared_ComputeFlux.cu"
+#include "CUFLU_Shared_FullStepUpdate.cu"
+
+#if   ( RSOLVER == EXACT )
+# include "CUFLU_Shared_RiemannSolver_Exact.cu"
+#elif ( RSOLVER == ROE )
+# include "CUFLU_Shared_RiemannSolver_Roe.cu"
+#elif ( RSOLVER == HLLE )
+# include "CUFLU_Shared_RiemannSolver_HLLE.cu"
+#elif ( RSOLVER == HLLC )
+# include "CUFLU_Shared_RiemannSolver_HLLC.cu"
+#endif
+
+#else // #ifdef __CUDACC__
+
 extern void CPU_DataReconstruction( const real PriVar[][ FLU_NXT*FLU_NXT*FLU_NXT    ],
                                     const real ConVar[][ FLU_NXT*FLU_NXT*FLU_NXT    ],
                                           real FC_Var[][NCOMP_TOTAL][ N_FC_VAR*N_FC_VAR*N_FC_VAR ],
@@ -47,6 +67,13 @@ extern real CPU_CheckMinPres( const real InPres, const real MinPres );
 extern void CPU_Con2Pri( const real In[], real Out[], const real Gamma_m1, const real MinPres,
                          const bool NormPassive, const int NNorm, const int NormIdx[],
                          const bool JeansMinPres, const real JeansMinPres_Coeff );
+#endif
+
+#endif // #ifdef __CUDACC__ ... else ...
+
+
+// internal functions
+#if   ( FLU_SCHEME == MHM_RP )
 static void CPU_RiemannPredict( const real Flu_Array_In[][ FLU_NXT*FLU_NXT*FLU_NXT ],
                                 const real Half_Flux[][3][NCOMP_TOTAL], real Half_Var[][NCOMP_TOTAL], const real dt,
                                 const real dh, const real Gamma, const real MinDens, const real MinPres );
@@ -56,9 +83,73 @@ static void CPU_RiemannPredict_Flux( const real Flu_Array_In[][ FLU_NXT*FLU_NXT*
 
 
 
+#ifdef __CUDACC__
+
+#ifdef UNSPLIT_GRAVITY
+#include "CUPOT.h"
+__constant__ double ExtAcc_AuxArray_d_Flu[EXT_ACC_NAUX_MAX];
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  CPU/GPU_FluidSolver_MHM
+// Function    :  CUFLU_FluidSolver_SetConstMem_ExtAcc
+// Description :  Set the constant memory of ExtAcc_AuxArray_d_Flu used by CUFLU_FluidSolver_CTU/MHM
+//
+// Note        :  Adopt the suggested approach for CUDA version >= 5.0
+//
+// Parameter   :  None
+//
+// Return      :  0/-1 : successful/failed
+//---------------------------------------------------------------------------------------------------
+int CUFLU_FluidSolver_SetConstMem_ExtAcc( double ExtAcc_AuxArray_h[] )
+{
+
+   if (  cudaSuccess != cudaMemcpyToSymbol( ExtAcc_AuxArray_d_Flu, ExtAcc_AuxArray_h, EXT_ACC_NAUX_MAX*sizeof(double),
+                                            0, cudaMemcpyHostToDevice)  )
+      return -1;
+
+   else
+      return 0;
+
+} // FUNCTION : CUFLU_FluidSolver_SetConstMem_ExtAcc
+#endif // #ifdef UNSPLIT_GRAVITY
+
+
+#if ( NCOMP_PASSIVE > 0 )
+__constant__ int NormIdx[NCOMP_PASSIVE];
+
+//-------------------------------------------------------------------------------------------------------
+// Function    :  CUFLU_FluidSolver_SetConstMem_NormIdx
+// Description :  Set the constant memory of NormIdx[] used by CUFLU_FluidSolver_CTU/MHM
+//
+// Note        :  Adopt the suggested approach for CUDA version >= 5.0
+//
+// Parameter   :  None
+//
+// Return      :  0/-1 : successful/failed
+//---------------------------------------------------------------------------------------------------
+int CUFLU_FluidSolver_SetConstMem_NormIdx( int NormIdx_h[] )
+{
+
+   if (  cudaSuccess != cudaMemcpyToSymbol( NormIdx, NormIdx_h, NCOMP_PASSIVE*sizeof(int),
+                                            0, cudaMemcpyHostToDevice)  )
+      return -1;
+
+   else
+      return 0;
+
+} // FUNCTION : CUFLU_FluidSolver_SetConstMem_NormIdx
+
+#else
+__constant__ int *NormIdx = NULL;
+
+#endif // #if ( NCOMP_PASSIVE > 0 ) ... else ...
+
+#endif // #ifdef __CUDACC__
+
+
+
+
+//-------------------------------------------------------------------------------------------------------
+// Function    :  CPU/CUFLU_FluidSolver_MHM
 // Description :  CPU/GPU fluid solver based on the MUSCL-Hancock scheme
 //
 // Note        :  1. The three-dimensional evolution is achieved by using the unsplit method
@@ -101,7 +192,7 @@ static void CPU_RiemannPredict_Flux( const real Flu_Array_In[][ FLU_NXT*FLU_NXT*
 //                JeansMinPres_Coeff : Coefficient used by JeansMinPres = G*(Jeans_NCell*Jeans_dh)^2/(Gamma*pi);
 //-------------------------------------------------------------------------------------------------------
 #ifdef __CUDACC__
-__global__ void GPU_FluidSolver_MHM(
+__global__ void CUFLU_FluidSolver_MHM(
    const real   Flu_Array_In []   [NCOMP_TOTAL][ FLU_NXT*FLU_NXT*FLU_NXT ],
          real   Flu_Array_Out[]   [NCOMP_TOTAL][ PS2*PS2*PS2 ],
          char   DE_Array_Out []                [ PS2*PS2*PS2 ],
@@ -112,7 +203,7 @@ __global__ void GPU_FluidSolver_MHM(
    real Slope_PPM[][3][NCOMP_TOTAL][ N_SLOPE_PPM*N_SLOPE_PPM*N_SLOPE_PPM],
    real FC_Var   [][6][NCOMP_TOTAL][ N_FC_VAR*N_FC_VAR*N_FC_VAR ],
    real FC_Flux  [][3][NCOMP_TOTAL][ N_FC_FLUX*N_FC_FLUX*N_FC_FLUX ],
-   const real dt, const real _dh, const real Gamma, const bool StoreFlux,
+   const real dt, const real dh, const real Gamma, const bool StoreFlux,
    const LR_Limiter_t LR_Limiter, const real MinMod_Coeff,
    const real EP_Coeff, const double Time, const OptGravityType_t GravityType,
    const real MinDens, const real MinPres, const real DualEnergySwitch,

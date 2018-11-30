@@ -1,3 +1,8 @@
+#ifndef __CUFLU_FLUUTILITY__
+#define __CUFLU_FLUUTILITY__
+
+
+
 #include "GAMER.h"
 #include "CUFLU.h"
 
@@ -19,6 +24,9 @@
 //                XYZ      : Target spatial direction : (0/1/2) --> (x/y/z)
 //                Forward  : (true/false) <--> (forward/backward)
 //-------------------------------------------------------------------------------------------------------
+#ifdef __CUDACC__
+__forceinline__ __device__
+#endif
 void CPU_Rotate3D( real InOut[], const int XYZ, const bool Forward )
 {
 
@@ -75,6 +83,9 @@ void CPU_Rotate3D( real InOut[], const int XYZ, const bool Forward )
 //                JeansMinPres       : Apply minimum pressure estimated from the Jeans length
 //                JeansMinPres_Coeff : Coefficient used by JeansMinPres = G*(Jeans_NCell*Jeans_dh)^2/(Gamma*pi);
 //-------------------------------------------------------------------------------------------------------
+#ifdef __CUDACC__
+__forceinline__ __device__
+#endif
 void CPU_Con2Pri( const real In[], real Out[], const real Gamma_m1, const real MinPres,
                   const bool NormPassive, const int NNorm, const int NormIdx[],
                   const bool JeansMinPres, const real JeansMinPres_Coeff )
@@ -178,6 +189,9 @@ void CPU_Con2Pri_AllPatch( const real ConVar[][ FLU_NXT*FLU_NXT*FLU_NXT ],
 //                NormIdx     : Target variable indices for the option "NormPassive"
 //                              --> Should be set to the global variable "PassiveNorm_VarIdx"
 //-------------------------------------------------------------------------------------------------------
+#ifdef __CUDACC__
+__forceinline__ __device__
+#endif
 void CPU_Pri2Con( const real In[], real Out[], const real _Gamma_m1,
                   const bool NormPassive, const int NNorm, const int NormIdx[] )
 {
@@ -212,6 +226,9 @@ void CPU_Pri2Con( const real In[], real Out[], const real _Gamma_m1,
 //                Gamma_m1 : Gamma - 1
 //                MinPres  : Minimum allowed pressure
 //-------------------------------------------------------------------------------------------------------
+#ifdef __CUDACC__
+__forceinline__ __device__
+#endif
 void CPU_Con2Flux( const int XYZ, real Flux[], const real Input[], const real Gamma_m1, const real MinPres )
 {
 
@@ -260,6 +277,9 @@ void CPU_Con2Flux( const int XYZ, real Flux[], const real Input[], const real Ga
 //
 // Return      :  max( InPres, MinPres )
 //-------------------------------------------------------------------------------------------------------
+#ifdef __CUDACC__
+__forceinline__ __device__
+#endif
 real CPU_CheckMinPres( const real InPres, const real MinPres )
 {
 
@@ -289,6 +309,9 @@ real CPU_CheckMinPres( const real InPres, const real MinPres )
 //
 // Return      :  Total energy with pressure greater than the given threshold
 //-------------------------------------------------------------------------------------------------------
+#ifdef __CUDACC__
+__forceinline__ __device__
+#endif
 real CPU_CheckMinPresInEngy( const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy,
                              const real Gamma_m1, const real _Gamma_m1, const real MinPres )
 {
@@ -321,6 +344,9 @@ real CPU_CheckMinPresInEngy( const real Dens, const real MomX, const real MomY, 
 // Return      :  true  --> Input <= 0.0  ||  >= __FLT_MAX__  ||  != itself (Nan)
 //                false --> otherwise
 //-------------------------------------------------------------------------------------------------------
+#ifdef __CUDACC__
+__forceinline__ __device__
+#endif
 bool CPU_CheckNegative( const real Input )
 {
 
@@ -353,6 +379,9 @@ bool CPU_CheckNegative( const real Input )
 //
 // Return      :  Pressure
 //-------------------------------------------------------------------------------------------------------
+#ifdef __CUDACC__
+__forceinline__ __device__
+#endif
 real CPU_GetPressure( const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy,
                       const real Gamma_m1, const bool CheckMinPres, const real MinPres )
 {
@@ -391,6 +420,9 @@ real CPU_GetPressure( const real Dens, const real MomX, const real MomY, const r
 //
 // Return      :  Temperature
 //-------------------------------------------------------------------------------------------------------
+#ifdef __CUDACC__
+__forceinline__ __device__
+#endif
 real CPU_GetTemperature( const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy,
                          const real Gamma_m1, const bool CheckMinPres, const real MinPres )
 {
@@ -430,6 +462,9 @@ real CPU_GetTemperature( const real Dens, const real MomX, const real MomY, cons
 //
 // Return      :  Gas pressure
 //-------------------------------------------------------------------------------------------------------
+#ifdef __CUDACC__
+__forceinline__ __device__
+#endif
 double CPU_Temperature2Pressure( const double Dens, const double Temp, const double mu, const double m_H,
                                  const bool CheckMinPres, const double MinPres )
 {
@@ -464,11 +499,14 @@ double CPU_Temperature2Pressure( const double Dens, const double Temp, const dou
 //
 // Return      :  Passive
 //-------------------------------------------------------------------------------------------------------
+#ifdef __CUDACC__
+__forceinline__ __device__
+#endif
 void CPU_NormalizePassive( const real GasDens, real Passive[], const int NNorm, const int NormIdx[] )
 {
 
 // validate the target variable indices
-#  ifdef GAMER_DEBUG
+#  if ( defined GAMER_DEBUG  &&  !defined __CUDACC__ )
    const int MinIdx = 0;
    const int MaxIdx = NCOMP_PASSIVE - 1;
 
@@ -478,7 +516,7 @@ void CPU_NormalizePassive( const real GasDens, real Passive[], const int NNorm, 
          Aux_Error( ERROR_INFO, "NormIdx[%d] = %d is not within the correct range ([%d <= idx <= %d]) !!\n",
                     v, NormIdx[v], MinIdx, MaxIdx );
    }
-#  endif // #ifdef GAMER_DEBUG
+#  endif
 
 
    real Norm, PassiveDens_Sum=(real)0.0;
@@ -494,3 +532,7 @@ void CPU_NormalizePassive( const real GasDens, real Passive[], const int NNorm, 
 
 
 #endif // #if ( MODEL == HYDRO )
+
+
+
+#endif // #ifndef __CUFLU_FLUUTILITY__
