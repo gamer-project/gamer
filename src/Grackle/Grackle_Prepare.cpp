@@ -173,7 +173,7 @@ void Grackle_Prepare( const int lv, real h_Che_Array[], const int NPG, const int
 #           ifdef DUAL_ENERGY
 
 #           if   ( DUAL_ENERGY == DE_ENPY )
-            sEint = CPU_DensEntropy2Pres( Dens, *(fluid[ENPY][0][0]+idx_p), Gamma_m1, CheckMinPres_No, NULL_REAL )
+            sEint = Hydro_DensEntropy2Pres( Dens, *(fluid[ENPY][0][0]+idx_p), Gamma_m1, CheckMinPres_No, NULL_REAL )
                     *_Dens*_Gamma_m1;
 #           elif ( DUAL_ENERGY == DE_EINT )
 #           error : DE_EINT is NOT supported yet !!

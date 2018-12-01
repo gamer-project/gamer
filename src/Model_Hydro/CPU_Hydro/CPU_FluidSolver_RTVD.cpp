@@ -12,7 +12,7 @@
 
 #define to1D(z,y,x) ( z*FLU_NXT*FLU_NXT + y*FLU_NXT + x )
 
-extern real CPU_CheckMinPres( const real InPres, const real MinPres );
+extern real Hydro_CheckMinPres( const real InPres, const real MinPres );
 
 static void CPU_AdvanceX( real u[][ FLU_NXT*FLU_NXT*FLU_NXT ], const real dt, const real dx, const real Gamma,
                           const bool StoreFlux, const int j_gap, const int k_gap, const real MinDens, const real MinPres );
@@ -220,14 +220,14 @@ void CPU_AdvanceX( real u[][ FLU_NXT*FLU_NXT*FLU_NXT ], const real dt, const rea
          vx   = _rho * ux[1][i];
          p    = Gamma_m1 * ( ux[4][i] - (real)0.5*_rho*( ux[1][i]*ux[1][i] + ux[2][i]*ux[2][i] +
                                                          ux[3][i]*ux[3][i] ) );
-         p    = CPU_CheckMinPres( p, MinPres );
+         p    = Hydro_CheckMinPres( p, MinPres );
 
 #        ifdef CHECK_NEGATIVE_IN_FLUID
-         if ( CPU_CheckNegative(p) )
+         if ( Hydro_CheckNegative(p) )
             Aux_Message( stderr, "ERROR : negative pressure (%14.7e) at file <%s>, line <%d>, function <%s>\n",
                          p, __FILE__, __LINE__, __FUNCTION__ );
 
-         if ( CPU_CheckNegative(ux[0][i]) )
+         if ( Hydro_CheckNegative(ux[0][i]) )
             Aux_Message( stderr, "ERROR : negative density (%14.7e) at file <%s>, line <%d>, function <%s>\n",
                          ux[0][i], __FILE__, __LINE__, __FUNCTION__ );
 #        endif
@@ -270,8 +270,8 @@ void CPU_AdvanceX( real u[][ FLU_NXT*FLU_NXT*FLU_NXT ], const real dt, const rea
       for (int i=1; i<FLU_NXT-1; i++)
       {
          u_half[0][i] = FMAX( u_half[0][i], MinDens );
-         u_half[4][i] = CPU_CheckMinPresInEngy( u_half[0][i], u_half[1][i], u_half[2][i], u_half[3][i], u_half[4][i],
-                                                Gamma_m1, _Gamma_m1, MinPres );
+         u_half[4][i] = Hydro_CheckMinPresInEngy( u_half[0][i], u_half[1][i], u_half[2][i], u_half[3][i], u_half[4][i],
+                                                  Gamma_m1, _Gamma_m1, MinPres );
       }
 
 
@@ -287,14 +287,14 @@ void CPU_AdvanceX( real u[][ FLU_NXT*FLU_NXT*FLU_NXT ], const real dt, const rea
          p    = Gamma_m1 * (  u_half[4][i] - (real)0.5*_rho*(  u_half[1][i]*u_half[1][i] +
                                                                u_half[2][i]*u_half[2][i] +
                                                                u_half[3][i]*u_half[3][i] )  );
-         p    = CPU_CheckMinPres( p, MinPres );
+         p    = Hydro_CheckMinPres( p, MinPres );
 
 #        ifdef CHECK_NEGATIVE_IN_FLUID
-         if ( CPU_CheckNegative(p) )
+         if ( Hydro_CheckNegative(p) )
             Aux_Message( stderr, "ERROR : negative pressure (%14.7e) at file <%s>, line <%d>, function <%s>\n",
                          p, __FILE__, __LINE__, __FUNCTION__ );
 
-         if ( CPU_CheckNegative(u_half[0][i]) )
+         if ( Hydro_CheckNegative(u_half[0][i]) )
             Aux_Message( stderr, "ERROR : negative density (%14.7e) at file <%s>, line <%d>, function <%s>\n",
                          u_half[0][i], __FILE__, __LINE__, __FUNCTION__ );
 #        endif
@@ -369,7 +369,7 @@ void CPU_AdvanceX( real u[][ FLU_NXT*FLU_NXT*FLU_NXT ], const real dt, const rea
       for (int i=3; i<FLU_NXT-3; i++)
       {
          ux[0][i] = FMAX( ux[0][i], MinDens );
-         ux[4][i] = CPU_CheckMinPresInEngy( ux[0][i], ux[1][i], ux[2][i], ux[3][i], ux[4][i], Gamma_m1, _Gamma_m1, MinPres );
+         ux[4][i] = Hydro_CheckMinPresInEngy( ux[0][i], ux[1][i], ux[2][i], ux[3][i], ux[4][i], Gamma_m1, _Gamma_m1, MinPres );
       }
 
 
@@ -377,11 +377,11 @@ void CPU_AdvanceX( real u[][ FLU_NXT*FLU_NXT*FLU_NXT ], const real dt, const rea
 #     ifdef CHECK_NEGATIVE_IN_FLUID
       for (int i=3; i<FLU_NXT-3; i++)
       {
-         if ( CPU_CheckNegative(ux[0][i]) )
+         if ( Hydro_CheckNegative(ux[0][i]) )
             Aux_Message( stderr, "ERROR : negative density (%14.7e) at file <%s>, line <%d>, function <%s>\n",
                          ux[0][i], __FILE__, __LINE__, __FUNCTION__ );
 
-         if ( CPU_CheckNegative(ux[4][i]) )
+         if ( Hydro_CheckNegative(ux[4][i]) )
             Aux_Message( stderr, "ERROR : negative energy (%14.7e) at file <%s>, line <%d>, function <%s>\n",
                          ux[4][i], __FILE__, __LINE__, __FUNCTION__ );
       }

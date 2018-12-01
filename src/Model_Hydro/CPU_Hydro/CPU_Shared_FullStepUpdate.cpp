@@ -19,7 +19,7 @@
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  CPU_FullStepUpdate
+// Function    :  Hydro_FullStepUpdate
 // Description :  Evaluate the full-step solution
 //
 // Note        :  1. This function is shared by MHM, MHM_RP, and CTU schemes
@@ -46,10 +46,10 @@
 # ifdef __CUDACC__
 __forceinline__ __device__
 #endif
-void CPU_FullStepUpdate( const real Input[][ FLU_NXT*FLU_NXT*FLU_NXT ], real Output[][ PS2*PS2*PS2 ], char DE_Status[],
-                         const real Flux[][NCOMP_TOTAL][ N_FC_FLUX*N_FC_FLUX*N_FC_FLUX ], const real dt, const real dh,
-                         const real Gamma_m1, const real _Gamma_m1, const real MinDens, const real MinPres, const real DualEnergySwitch,
-                         const bool NormPassive, const int NNorm, const int NormIdx[] )
+void Hydro_FullStepUpdate( const real Input[][ FLU_NXT*FLU_NXT*FLU_NXT ], real Output[][ PS2*PS2*PS2 ], char DE_Status[],
+                           const real Flux[][NCOMP_TOTAL][ N_FC_FLUX*N_FC_FLUX*N_FC_FLUX ], const real dt, const real dh,
+                           const real Gamma_m1, const real _Gamma_m1, const real MinDens, const real MinPres, const real DualEnergySwitch,
+                           const bool NormPassive, const int NNorm, const int NormIdx[] )
 {
 
    const int  didx_flux[3] = { 1, N_FL_FLUX, N_FL_FLUX*N_FL_FLUX };
@@ -96,9 +96,9 @@ void CPU_FullStepUpdate( const real Input[][ FLU_NXT*FLU_NXT*FLU_NXT ], real Out
 //        even when DUAL_ENERGY is on, we still want to try the 1st-order-flux correction before setting a floor value)
       /*
       Output_1Cell[DENS] = FMAX( Output_1Cell[DENS], MinDens );
-      Output_1Cell[ENGY] = CPU_CheckMinPresInEngy( Output_1Cell[DENS], Output_1Cell[MOMX],
-                                                   Output_1Cell[MOMY], Output_1Cell[MOMZ],
-                                                   Output_1Cell[ENGY], Gamma_m1, _Gamma_m1, MinPres );
+      Output_1Cell[ENGY] = Hydro_CheckMinPresInEngy( Output_1Cell[DENS], Output_1Cell[MOMX],
+                                                     Output_1Cell[MOMY], Output_1Cell[MOMZ],
+                                                     Output_1Cell[ENGY], Gamma_m1, _Gamma_m1, MinPres );
       */
 
 
@@ -107,13 +107,13 @@ void CPU_FullStepUpdate( const real Input[][ FLU_NXT*FLU_NXT*FLU_NXT ], real Out
       for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)  Output_1Cell[v] = FMAX( Output_1Cell[v], TINY_NUMBER );
 
       if ( NormPassive )
-         CPU_NormalizePassive( Output_1Cell[DENS], Output_1Cell[NCOMP_FLUID], NNorm, NormIdx );
+         Hydro_NormalizePassive( Output_1Cell[DENS], Output_1Cell[NCOMP_FLUID], NNorm, NormIdx );
 #     endif
 
 
 //    3. apply the dual-energy formalism to correct the internal energy
 //    --> currently, even when UNSPLIT_GRAVITY is on (which would update the internal energy), we still invoke
-//        CPU_DualEnergyFix() here and will fix the internal energy in the gravity solver for cells updated
+//        Hydro_DualEnergyFix() here and will fix the internal energy in the gravity solver for cells updated
 //        by the dual-energy formalism (i.e., for cells with their dual-energy status marked as DE_UPDATED_BY_DUAL)
 //    --> this feature might be modified in the future
 #     ifdef DUAL_ENERGY
@@ -121,9 +121,9 @@ void CPU_FullStepUpdate( const real Input[][ FLU_NXT*FLU_NXT*FLU_NXT ], real Out
       const bool CheckMinPres_No = false;
 //    Output_1Cell[DENS] = FMAX( Output_1Cell[DENS], MinDens );
 
-      CPU_DualEnergyFix( Output_1Cell[DENS], Output_1Cell[MOMX], Output_1Cell[MOMY], Output_1Cell[MOMZ],
-                         Output_1Cell[ENGY], Output_1Cell[ENPY], DE_Status,
-                         Gamma_m1, _Gamma_m1, CheckMinPres_No, NULL_REAL, DualEnergySwitch );
+      Hydro_DualEnergyFix( Output_1Cell[DENS], Output_1Cell[MOMX], Output_1Cell[MOMY], Output_1Cell[MOMZ],
+                           Output_1Cell[ENGY], Output_1Cell[ENPY], DE_Status,
+                           Gamma_m1, _Gamma_m1, CheckMinPres_No, NULL_REAL, DualEnergySwitch );
 #     endif // #ifdef DUAL_ENERGY
 
 
@@ -133,18 +133,18 @@ void CPU_FullStepUpdate( const real Input[][ FLU_NXT*FLU_NXT*FLU_NXT ], real Out
 
 //    5. check the negative density and energy
 #     ifdef CHECK_NEGATIVE_IN_FLUID
-      if ( CPU_CheckNegative(Output_1Cell[DENS]) )
+      if ( Hydro_CheckNegative(Output_1Cell[DENS]) )
          fprintf( stderr, "WARNING : negative density (%14.7e) at file <%s>, line <%d>, function <%s>\n",
                   Output_1Cell[DENS], __FILE__, __LINE__, __FUNCTION__ );
 
-      if ( CPU_CheckNegative(Output_1Cell[ENGY]) )
+      if ( Hydro_CheckNegative(Output_1Cell[ENGY]) )
          fprintf( stderr, "WARNING : negative energy (%14.7e) at file <%s>, line <%d>, function <%s>\n",
                   Output_1Cell[ENGY], __FILE__, __LINE__, __FUNCTION__ );
 #     endif
 
    } // i,j,k
 
-} // FUNCTION : CPU_FullStepUpdate
+} // FUNCTION : Hydro_FullStepUpdate
 
 
 

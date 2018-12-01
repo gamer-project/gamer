@@ -113,7 +113,7 @@ void Grackle_Close( const int lv, const int SaveSg, const real h_Che_Array[], co
 //          apply the minimum pressure check
             Dens = Ptr_Dens [idx_pg];
             Pres = Ptr_sEint[idx_pg]*Dens*Gamma_m1;
-            Pres = CPU_CheckMinPres( Pres, MIN_PRES );
+            Pres = Hydro_CheckMinPres( Pres, MIN_PRES );
 
 //          update the total energy density
             *( fluid[ENGY     ][0][0] + idx_p ) = Pres*_Gamma_m1 + Ptr_Ek[idx_pg];
@@ -121,7 +121,7 @@ void Grackle_Close( const int lv, const int SaveSg, const real h_Che_Array[], co
 //          update the dual-energy variable to be consistent with the updated pressure
 #           ifdef DUAL_ENERGY
 #           if   ( DUAL_ENERGY == DE_ENPY )
-            *( fluid[ENPY     ][0][0] + idx_p ) = CPU_DensPres2Entropy( Dens, Pres, Gamma_m1 );
+            *( fluid[ENPY     ][0][0] + idx_p ) = Hydro_DensPres2Entropy( Dens, Pres, Gamma_m1 );
 
 #           elif ( DUAL_ENERGY == DE_EINT )
 #           error : DE_EINT is NOT supported yet !!

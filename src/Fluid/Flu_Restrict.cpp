@@ -206,23 +206,23 @@ void Flu_Restrict( const int FaLv, const int SonFluSg, const int FaFluSg, const 
          const real UseEnpy2FixEngy  = HUGE_NUMBER;
          char dummy;    // we do not record the dual-energy status here
 
-         CPU_DualEnergyFix( amr->patch[FaFluSg][FaLv][FaPID]->fluid[DENS][k][j][i],
-                            amr->patch[FaFluSg][FaLv][FaPID]->fluid[MOMX][k][j][i],
-                            amr->patch[FaFluSg][FaLv][FaPID]->fluid[MOMY][k][j][i],
-                            amr->patch[FaFluSg][FaLv][FaPID]->fluid[MOMZ][k][j][i],
-                            amr->patch[FaFluSg][FaLv][FaPID]->fluid[ENGY][k][j][i],
-                            amr->patch[FaFluSg][FaLv][FaPID]->fluid[ENPY][k][j][i],
-                            dummy, Gamma_m1, _Gamma_m1, CheckMinPres_Yes, MIN_PRES, UseEnpy2FixEngy );
+         Hydro_DualEnergyFix( amr->patch[FaFluSg][FaLv][FaPID]->fluid[DENS][k][j][i],
+                              amr->patch[FaFluSg][FaLv][FaPID]->fluid[MOMX][k][j][i],
+                              amr->patch[FaFluSg][FaLv][FaPID]->fluid[MOMY][k][j][i],
+                              amr->patch[FaFluSg][FaLv][FaPID]->fluid[MOMZ][k][j][i],
+                              amr->patch[FaFluSg][FaLv][FaPID]->fluid[ENGY][k][j][i],
+                              amr->patch[FaFluSg][FaLv][FaPID]->fluid[ENPY][k][j][i],
+                              dummy, Gamma_m1, _Gamma_m1, CheckMinPres_Yes, MIN_PRES, UseEnpy2FixEngy );
 
 #        else
 //       actually it might not be necessary to check the minimum pressure here
          amr->patch[FaFluSg][FaLv][FaPID]->fluid[ENGY][k][j][i]
-            = CPU_CheckMinPresInEngy( amr->patch[FaFluSg][FaLv][FaPID]->fluid[DENS][k][j][i],
-                                      amr->patch[FaFluSg][FaLv][FaPID]->fluid[MOMX][k][j][i],
-                                      amr->patch[FaFluSg][FaLv][FaPID]->fluid[MOMY][k][j][i],
-                                      amr->patch[FaFluSg][FaLv][FaPID]->fluid[MOMZ][k][j][i],
-                                      amr->patch[FaFluSg][FaLv][FaPID]->fluid[ENGY][k][j][i],
-                                      Gamma_m1, _Gamma_m1, MIN_PRES );
+            = Hydro_CheckMinPresInEngy( amr->patch[FaFluSg][FaLv][FaPID]->fluid[DENS][k][j][i],
+                                        amr->patch[FaFluSg][FaLv][FaPID]->fluid[MOMX][k][j][i],
+                                        amr->patch[FaFluSg][FaLv][FaPID]->fluid[MOMY][k][j][i],
+                                        amr->patch[FaFluSg][FaLv][FaPID]->fluid[MOMZ][k][j][i],
+                                        amr->patch[FaFluSg][FaLv][FaPID]->fluid[ENGY][k][j][i],
+                                        Gamma_m1, _Gamma_m1, MIN_PRES );
 #        endif // #ifdef DUAL_ENERGY ... else ...
       } // i,j,k
 #     endif // #if ( MODEL == HYDRO  ||  MODEL == MHD )

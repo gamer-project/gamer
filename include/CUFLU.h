@@ -355,6 +355,13 @@ struct FluVar5 { real Rho, Px, Py, Pz, Egy; };
 extern bool CPU_CheckNegative( const real Input );
 #endif
 
+// GPU device function specifier
+#ifdef __CUDACC__
+# define GPU_DEVICE __device__
+#else
+# define GPU_DEVICE
+#endif
+
 
 
 #endif // #ifndef __CUFLU_H__

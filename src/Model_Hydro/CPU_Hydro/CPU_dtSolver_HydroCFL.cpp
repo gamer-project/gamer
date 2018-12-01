@@ -51,8 +51,8 @@ void CPU_dtSolver_HydroCFL( real dt_Array[], const real Flu_Array[][NCOMP_FLUID]
          Vx   = FABS( fluid[MOMX] )*_Rho;
          Vy   = FABS( fluid[MOMY] )*_Rho;
          Vz   = FABS( fluid[MOMZ] )*_Rho;
-         Pres = CPU_GetPressure( fluid[DENS], fluid[MOMX], fluid[MOMY], fluid[MOMZ], fluid[ENGY],
-                                 Gamma_m1, CheckMinPres_Yes, MinPres );
+         Pres = Hydro_GetPressure( fluid[DENS], fluid[MOMX], fluid[MOMY], fluid[MOMZ], fluid[ENGY],
+                                   Gamma_m1, CheckMinPres_Yes, MinPres );
          Cs   = SQRT( Gamma*Pres*_Rho );
 
 #        if   ( FLU_SCHEME == RTVD  ||  FLU_SCHEME == CTU  ||  FLU_SCHEME == WAF )
