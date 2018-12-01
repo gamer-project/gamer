@@ -734,14 +734,14 @@ void Hydro_DataReconstruction( const real PriVar[]   [ FLU_NXT*FLU_NXT*FLU_NXT  
 
 
 
-/*
 #ifdef CHAR_RECONSTRUCTION
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Hydro_Pri2Char
-// Description :  Convert the primitive variables to the characteristic variables
+// Description :  Primitive variables --> characteristic variables
 //
 // Note           1. Passive scalars require no conversion
 //                   --> Their eigenmatrices are just identity matrix
+//                2. Input and output share the same array
 //
 // Parameter   :  InOut : Array storing both the input primitive variables and output characteristic variables
 //                Gamma : Ratio of specific heats
@@ -754,12 +754,12 @@ void Hydro_Pri2Char( real InOut[], const real Gamma, const real Rho, const real 
 
 #  ifdef CHECK_NEGATIVE_IN_FLUID
    if ( Hydro_CheckNegative(Pres) )
-      Aux_Message( stderr, "ERROR : negative pressure (%14.7e) at file <%s>, line <%d>, function <%s>\n",
-                   Pres, __FILE__, __LINE__, __FUNCTION__ );
+      printf( "ERROR : negative pressure (%14.7e) at file <%s>, line <%d>, function <%s>\n",
+              Pres, __FILE__, __LINE__, __FUNCTION__ );
 
    if ( Hydro_CheckNegative(Rho) )
-      Aux_Message( stderr, "ERROR : negative density (%14.7e) at file <%s>, line <%d>, function <%s>\n",
-                   Rho,  __FILE__, __LINE__, __FUNCTION__ );
+      printf( "ERROR : negative density (%14.7e) at file <%s>, line <%d>, function <%s>\n",
+              Rho,  __FILE__, __LINE__, __FUNCTION__ );
 #  endif
 
    const real _Cs2 = (real)1.0 / ( Gamma*Pres/Rho );
@@ -782,10 +782,11 @@ void Hydro_Pri2Char( real InOut[], const real Gamma, const real Rho, const real 
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Hydro_Char2Pri
-// Description :  Convert the characteristic variables to the primitive variables
+// Description :  Characteristic variables --> primitive variables
 //
 // Note           1. Passive scalars require no conversion
 //                   --> Their eigenmatrices are just identity matrix
+//                2. Input and output share the same array
 //
 // Parameter   :  InOut : Array storing both the input characteristic variables and output primitive variables
 //                Gamma : Ratio of specific heats
@@ -798,12 +799,12 @@ void Hydro_Char2Pri( real InOut[], const real Gamma, const real Rho, const real 
 
 #  ifdef CHECK_NEGATIVE_IN_FLUID
    if ( Hydro_CheckNegative(Pres) )
-      Aux_Message( stderr, "ERROR : negative pressure (%14.7e) at file <%s>, line <%d>, function <%s>\n",
-                   Pres, __FILE__, __LINE__, __FUNCTION__ );
+      printf( stderr, "ERROR : negative pressure (%14.7e) at file <%s>, line <%d>, function <%s>\n",
+              Pres, __FILE__, __LINE__, __FUNCTION__ );
 
    if ( Hydro_CheckNegative(Rho) )
-      Aux_Message( stderr, "ERROR : negative density (%14.7e) at file <%s>, line <%d>, function <%s>\n",
-                   Rho,  __FILE__, __LINE__, __FUNCTION__ );
+      printf( stderr, "ERROR : negative density (%14.7e) at file <%s>, line <%d>, function <%s>\n",
+              Rho,  __FILE__, __LINE__, __FUNCTION__ );
 #  endif
 
    const real _Rho = (real)1.0 / Rho;
@@ -823,7 +824,6 @@ void Hydro_Char2Pri( real InOut[], const real Gamma, const real Rho, const real 
 
 } // FUNCTION : Hydro_Char2Pri
 #endif
-*/
 
 
 
