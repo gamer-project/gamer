@@ -299,7 +299,7 @@ void CPU_FluidSolver_MHM(
 
 //       (1-a-4) evaluate the face-centered values by data reconstruction
          Hydro_DataReconstruction( Half_Var, FC_Var, N_HF_VAR, FLU_GHOST_SIZE-2, Gamma, LR_Limiter,
-                                   MinMod_Coeff, EP_Coeff, NULL_REAL, NULL_INT, MinDens, MinPres );
+                                   MinMod_Coeff, EP_Coeff, dt, dh, MinDens, MinPres );
          */
 
 
@@ -316,7 +316,7 @@ void CPU_FluidSolver_MHM(
 
 //       (1-b-2) evaluate the face-centered values by data reconstruction
          Hydro_DataReconstruction( PriVar_1PG, Flu_Array_In[P], FC_Var_1PG, FLU_NXT, FLU_GHOST_SIZE-1,
-                                   Gamma, LR_Limiter, MinMod_Coeff, EP_Coeff, NULL_REAL, NULL_INT,
+                                   Gamma, LR_Limiter, MinMod_Coeff, EP_Coeff, dt, dh,
                                    MinDens, MinPres, NormPassive, NNorm, NormIdx );
 #        ifdef __CUDACC__
          __syncthreads();
