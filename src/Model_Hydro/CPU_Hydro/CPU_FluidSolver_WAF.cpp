@@ -12,7 +12,7 @@
 
 #define to1D(z,y,x) ( z*FLU_NXT*FLU_NXT + y*FLU_NXT + x )
 
-extern real CPU_CheckMinPres( const real InPres, const real MinPres );
+extern real Hydro_CheckMinPres( const real InPres, const real MinPres );
 
 static real set_limit( const real r, const real c, const WAF_Limiter_t WAF_Limiter );
 static void CPU_AdvanceX( real u[][ FLU_NXT*FLU_NXT*FLU_NXT ], real fc[PS2*PS2][3][5], const real dt,
@@ -38,8 +38,8 @@ static void Undis_Stru( real flux[5], const real L[5], const real R[5], const re
                         const real R_star[5], const real limit[5], const real theta[5], const real Gamma );
 #endif
 #if   ( RSOLVER == EXACT )
-extern void CPU_RiemannSolver_Exact( const int XYZ, real eival_out[], real L_star_out[], real R_star_out[],
-                                     real Flux_Out[], const real L_In[], const real R_In[], const real Gamma );
+extern void Hydro_RiemannSolver_Exact( const int XYZ, real eival_out[], real L_star_out[], real R_star_out[],
+                                       real Flux_Out[], const real L_In[], const real R_In[], const real Gamma );
 #elif ( RSOLVER == ROE )
 static void Solve_StarRoe( real eival[5], real L_star[5], real R_star[5], const real L[5], const real R[5],
                            const real Gamma, const real MinPres );
@@ -273,7 +273,7 @@ void CPU_AdvanceX( real u[][ FLU_NXT*FLU_NXT*FLU_NXT ], real fc[PS2*PS2][3][5], 
          Change_variable( c_R, ux[i+1], Gamma, MinPres );
 
 #        if   ( RSOLVER == EXACT )
-         CPU_RiemannSolver_Exact( 0, eval[i], L_st[i], R_st[i], NULL, c_L, c_R, Gamma );
+         Hydro_RiemannSolver_Exact( 0, eval[i], L_st[i], R_st[i], NULL, c_L, c_R, Gamma );
 #        elif ( RSOLVER == ROE )
          Solve_StarRoe( eval[i], L_st[i], R_st[i], c_L, c_R, Gamma, MinPres );
 #        else
@@ -345,15 +345,15 @@ void CPU_AdvanceX( real u[][ FLU_NXT*FLU_NXT*FLU_NXT ], real fc[PS2*PS2][3][5], 
 
 //       enforce positive density and pressure
          ux[i][0] = FMAX( ux[i][0], MinDens );
-         ux[i][4] = CPU_CheckMinPresInEngy( ux[i][0], ux[i][1], ux[i][2], ux[i][3], ux[i][4], Gamma_m1, _Gamma_m1, MinPres );
+         ux[i][4] = Hydro_CheckMinPresInEngy( ux[i][0], ux[i][1], ux[i][2], ux[i][3], ux[i][4], Gamma_m1, _Gamma_m1, MinPres );
 
 //       check negative density and energy
 #        ifdef CHECK_NEGATIVE_IN_FLUID
-         if ( CPU_CheckNegative(ux[i][0]) )
+         if ( Hydro_CheckNegative(ux[i][0]) )
             Aux_Message( stderr, "ERROR : negative density (%14.7e) at file <%s>, line <%d>, function <%s>\n",
                          ux[i][0], __FILE__, __LINE__, __FUNCTION__ );
 
-         if ( CPU_CheckNegative(ux[i][4]) )
+         if ( Hydro_CheckNegative(ux[i][4]) )
             Aux_Message( stderr, "ERROR : negative energy (%14.7e) at file <%s>, line <%d>, function <%s>\n",
                          ux[i][4], __FILE__, __LINE__, __FUNCTION__ );
 #        endif
@@ -607,7 +607,7 @@ void Change_variable( real pval[5], const real cval[5], const real Gamma, const 
    pval[4] = Gamma_m1*( cval[4] - (real)0.5*( cval[1]*cval[1] + cval[2]*cval[2] + cval[3]*cval[3] ) / cval[0] );
 
 // ensure a positive pressure
-   pval[4] = CPU_CheckMinPres( pval[4], MinPres );
+   pval[4] = Hydro_CheckMinPres( pval[4], MinPres );
 
 } // FUNCTION : Change_variable
 
@@ -893,10 +893,10 @@ void Solve_StarRoe( real eival[5], real L_star[5], real R_star[5], const real L[
 // solve Roe's average
    {
 #     ifdef CHECK_NEGATIVE_IN_FLUID
-      if ( CPU_CheckNegative(L[0]) )
+      if ( Hydro_CheckNegative(L[0]) )
          Aux_Message( stderr, "ERROR : negative density (%14.7e) at file <%s>, line <%d>, function <%s>\n",
                       L[0], __FILE__, __LINE__, __FUNCTION__ );
-      if ( CPU_CheckNegative(R[0]) )
+      if ( Hydro_CheckNegative(R[0]) )
          Aux_Message( stderr, "ERROR : negative density (%14.7e) at file <%s>, line <%d>, function <%s>\n",
                       R[0], __FILE__, __LINE__, __FUNCTION__ );
 #     endif
@@ -918,11 +918,11 @@ void Solve_StarRoe( real eival[5], real L_star[5], real R_star[5], const real L[
       TempRho    = (real)0.5*( L[0] + R[0] );
       _TempRho   = (real)1.0/TempRho;
       TempPres   = GammaP_Rho*TempRho/Gamma;
-      TempPres   = CPU_CheckMinPres( TempPres, MinPres );
+      TempPres   = Hydro_CheckMinPres( TempPres, MinPres );
       GammaP_Rho = Gamma*TempPres*_TempRho;
 
 #     ifdef CHECK_NEGATIVE_IN_FLUID
-      if ( CPU_CheckNegative(GammaP_Rho) )
+      if ( Hydro_CheckNegative(GammaP_Rho) )
          Aux_Message( stderr, "ERROR : negative GammaP_Rho (%14.7e) at file <%s>, line <%d>, function <%s>\n",
                       GammaP_Rho, __FILE__, __LINE__, __FUNCTION__ );
 #     endif
@@ -968,7 +968,7 @@ void Solve_StarRoe( real eival[5], real L_star[5], real R_star[5], const real L[
       real e_R_star = (real)0.5*R_star[0]*( R_star[1]*R_star[1] + R_star[2]*R_star[2] + R_star[3]*R_star[3] );
       L_star[4] = (real)0.5*Gamma_m1*(  ( E_L - e_L_star + L[4]/Gamma_m1 + coef[0]*(h_bar - u_bar*a_bar) ) +
                                         ( E_R - e_R_star + R[4]/Gamma_m1 - coef[4]*(h_bar + u_bar*a_bar) )   );
-      L_star[4] = CPU_CheckMinPres( L_star[4], MinPres );
+      L_star[4] = Hydro_CheckMinPres( L_star[4], MinPres );
       R_star[4] = L_star[4];
    }
 
@@ -981,29 +981,29 @@ void Solve_StarRoe( real eival[5], real L_star[5], real R_star[5], const real L[
       eival[3] = L_star[1];
 
 #     ifdef CHECK_NEGATIVE_IN_FLUID
-      if ( CPU_CheckNegative(L[4]) )
+      if ( Hydro_CheckNegative(L[4]) )
          Aux_Message( stderr, "ERROR : negative pressure (%14.7e) at file <%s>, line <%d>, function <%s>\n",
                       L[4],      __FILE__, __LINE__, __FUNCTION__ );
-      if ( CPU_CheckNegative(L[0]) )
+      if ( Hydro_CheckNegative(L[0]) )
          Aux_Message( stderr, "ERROR : negative density (%14.7e) at file <%s>, line <%d>, function <%s>\n",
                       L[0],      __FILE__, __LINE__, __FUNCTION__ );
-      if ( CPU_CheckNegative(L_star[4]) )
+      if ( Hydro_CheckNegative(L_star[4]) )
          Aux_Message( stderr, "ERROR : negative pressure (%14.7e) at file <%s>, line <%d>, function <%s>\n",
                       L_star[4], __FILE__, __LINE__, __FUNCTION__ );
-      if ( CPU_CheckNegative(L_star[0]) )
+      if ( Hydro_CheckNegative(L_star[0]) )
          Aux_Message( stderr, "ERROR : negative density(%14.7e) at file <%s>, line <%d>, function <%s>\n",
                       L_star[0], __FILE__, __LINE__, __FUNCTION__ );
 
-      if ( CPU_CheckNegative(R[4]) )
+      if ( Hydro_CheckNegative(R[4]) )
          Aux_Message( stderr, "ERROR : negative pressure (%14.7e) at file <%s>, line <%d>, function <%s>\n",
                       R[4],      __FILE__, __LINE__, __FUNCTION__ );
-      if ( CPU_CheckNegative(R[0]) )
+      if ( Hydro_CheckNegative(R[0]) )
          Aux_Message( stderr, "ERROR : negative density (%14.7e) at file <%s>, line <%d>, function <%s>\n",
                       R[0],      __FILE__, __LINE__, __FUNCTION__ );
-      if ( CPU_CheckNegative(R_star[4]) )
+      if ( Hydro_CheckNegative(R_star[4]) )
          Aux_Message( stderr, "ERROR : negative pressure (%14.7e) at file <%s>, line <%d>, function <%s>\n",
                       R_star[4], __FILE__, __LINE__, __FUNCTION__ );
-      if ( CPU_CheckNegative(R_star[0]) )
+      if ( Hydro_CheckNegative(R_star[0]) )
          Aux_Message( stderr, "ERROR : negative density(%14.7e) at file <%s>, line <%d>, function <%s>\n",
                       R_star[0], __FILE__, __LINE__, __FUNCTION__ );
 #     endif

@@ -5,29 +5,29 @@
 
 
 
-extern void CPU_DataReconstruction( const real PriVar[][NCOMP_TOTAL], real FC_Var[][6][NCOMP_TOTAL], const int NIn, const int NGhost,
-                                    const real Gamma, const LR_Limiter_t LR_Limiter, const real MinMod_Coeff,
-                                    const real EP_Coeff, const real dt, const real dh, const real MinDens, const real MinPres );
-extern void CPU_Con2Pri( const real In[], real Out[], const real Gamma_m1, const real MinPres,
-                         const bool NormPassive, const int NNorm, const int NormIdx[],
-                         const bool JeansMinPres, const real JeansMinPres_Coeff );
-extern void CPU_Pri2Con( const real In[], real Out[], const real _Gamma_m1,
-                         const bool NormPassive, const int NNorm, const int NormIdx[] );
-extern void CPU_ComputeFlux( const real FC_Var [][6][ N_FC_VAR*N_FC_VAR*N_FC_VAR ],
-                                   real FC_Flux[][3][ N_FC_FLUX*N_FC_FLUX*N_FC_FLUX ],
-                             const int Gap, const real Gamma, const bool CorrHalfVel, const real Pot_USG[],
-                             const double Corner[], const real dt, const real dh, const double Time,
-                             const OptGravityType_t GravityType, const double ExtAcc_AuxArray[], const real MinPres,
-                             const bool DumpIntFlux, real IntFlux[][NCOMP_TOTAL][ PS2*PS2 ] );
-extern void CPU_FullStepUpdate( const real Input[][ FLU_NXT*FLU_NXT*FLU_NXT ], real Output[][ PS2*PS2*PS2 ], char DE_Status[],
-                                const real Flux[][NCOMP_TOTAL][ N_FC_FLUX*N_FC_FLUX*N_FC_FLUX ], const real dt, const real dh,
-                                const real Gamma_m1, const real _Gamma_m1, const real MinDens, const real MinPres, const real DualEnergySwitch,
-                                const bool NormPassive, const int NNorm, const int NormIdx[] );
-extern void CPU_StoreFlux( real Flux_Array[][NCOMP_TOTAL][ PS2*PS2 ], const real FC_Flux[][3][NCOMP_TOTAL] );
-extern real CPU_CheckMinPres( const real InPres, const real MinPres );
+extern void Hydro_DataReconstruction( const real PriVar[][NCOMP_TOTAL], real FC_Var[][6][NCOMP_TOTAL], const int NIn, const int NGhost,
+                                      const real Gamma, const LR_Limiter_t LR_Limiter, const real MinMod_Coeff,
+                                      const real EP_Coeff, const real dt, const real dh, const real MinDens, const real MinPres );
+extern void Hydro_Con2Pri( const real In[], real Out[], const real Gamma_m1, const real MinPres,
+                           const bool NormPassive, const int NNorm, const int NormIdx[],
+                           const bool JeansMinPres, const real JeansMinPres_Coeff );
+extern void Hydro_Pri2Con( const real In[], real Out[], const real _Gamma_m1,
+                           const bool NormPassive, const int NNorm, const int NormIdx[] );
+extern void Hydro_ComputeFlux( const real FC_Var [][6][ N_FC_VAR*N_FC_VAR*N_FC_VAR ],
+                                     real FC_Flux[][3][ N_FC_FLUX*N_FC_FLUX*N_FC_FLUX ],
+                               const int Gap, const real Gamma, const bool CorrHalfVel, const real Pot_USG[],
+                               const double Corner[], const real dt, const real dh, const double Time,
+                               const OptGravityType_t GravityType, const double ExtAcc_AuxArray[], const real MinPres,
+                               const bool DumpIntFlux, real IntFlux[][NCOMP_TOTAL][ PS2*PS2 ] );
+extern void Hydro_FullStepUpdate( const real Input[][ FLU_NXT*FLU_NXT*FLU_NXT ], real Output[][ PS2*PS2*PS2 ], char DE_Status[],
+                                  const real Flux[][NCOMP_TOTAL][ N_FC_FLUX*N_FC_FLUX*N_FC_FLUX ], const real dt, const real dh,
+                                  const real Gamma_m1, const real _Gamma_m1, const real MinDens, const real MinPres, const real DualEnergySwitch,
+                                  const bool NormPassive, const int NNorm, const int NormIdx[] );
+extern void Hydro_StoreFlux( real Flux_Array[][NCOMP_TOTAL][ PS2*PS2 ], const real FC_Flux[][3][NCOMP_TOTAL] );
+extern real Hydro_CheckMinPres( const real InPres, const real MinPres );
 
-static void TGradient_Correction( real FC_Var[][6][NCOMP_TOTAL], const real FC_Flux[][3][NCOMP_TOTAL], const real dt, const real dh,
-                                  const real Gamma_m1, const real _Gamma_m1, const real MinDens, const real MinPres );
+static void Hydro_TGradient_Correction( real FC_Var[][6][NCOMP_TOTAL], const real FC_Flux[][3][NCOMP_TOTAL], const real dt, const real dh,
+                                    const real Gamma_m1, const real _Gamma_m1, const real MinDens, const real MinPres );
 
 
 
@@ -124,14 +124,14 @@ void CPU_FluidSolver_CTU( const real Flu_Array_In[][NCOMP_TOTAL][ FLU_NXT*FLU_NX
 
             for (int v=0; v<NCOMP_TOTAL; v++)   Input[v] = Flu_Array_In[P][v][ID1];
 
-            CPU_Con2Pri( Input, PriVar[ID1], Gamma_m1, MinPres, NormPassive, NNorm, NormIdx,
-                         JeansMinPres, JeansMinPres_Coeff );
+            Hydro_Con2Pri( Input, PriVar[ID1], Gamma_m1, MinPres, NormPassive, NNorm, NormIdx,
+                           JeansMinPres, JeansMinPres_Coeff );
          }
 
 
 //       2. evaluate the face-centered values at the half time-step
-         CPU_DataReconstruction( PriVar, FC_Var, FLU_NXT, FLU_GHOST_SIZE-1, Gamma, LR_Limiter,
-                                 MinMod_Coeff, EP_Coeff, dt, dh, MinDens, MinPres );
+         Hydro_DataReconstruction( PriVar, FC_Var, FLU_NXT, FLU_GHOST_SIZE-1, Gamma, LR_Limiter,
+                                   MinMod_Coeff, EP_Coeff, dt, dh, MinDens, MinPres );
 
 
 //       3. primitive face-centered variables --> conserved face-centered variables
@@ -145,45 +145,45 @@ void CPU_FluidSolver_CTU( const real Flu_Array_In[][NCOMP_TOTAL][ FLU_NXT*FLU_NX
             {
                for (int v=0; v<NCOMP_TOTAL; v++)   Input[v] = FC_Var[ID1][f][v];
 
-               CPU_Pri2Con( Input, FC_Var[ID1][f], _Gamma_m1, NormPassive, NNorm, NormIdx );
+               Hydro_Pri2Con( Input, FC_Var[ID1][f], _Gamma_m1, NormPassive, NNorm, NormIdx );
             }
          }
 
 
 //       4. evaluate the face-centered half-step fluxes by solving the Riemann problem
-         CPU_ComputeFlux( FC_Var, FC_Flux, 0, Gamma, CorrHalfVel_No, NULL, NULL,
-                          NULL_REAL, NULL_REAL, NULL_REAL, GRAVITY_NONE, NULL, MinPres,
-                          StoreFlux_No, NULL );
+         Hydro_ComputeFlux( FC_Var, FC_Flux, 0, Gamma, CorrHalfVel_No, NULL, NULL,
+                            NULL_REAL, NULL_REAL, NULL_REAL, GRAVITY_NONE, NULL, MinPres,
+                            StoreFlux_No, NULL );
 
 
 //       5. correct the face-centered variables by the transverse flux gradients
-         TGradient_Correction( FC_Var, FC_Flux, dt, dh, Gamma_m1, _Gamma_m1, MinDens, MinPres );
+         Hydro_TGradient_Correction( FC_Var, FC_Flux, dt, dh, Gamma_m1, _Gamma_m1, MinDens, MinPres );
 
 
 //       6. evaluate the face-centered full-step fluxes by solving the Riemann problem with the corrected data
 #        ifdef UNSPLIT_GRAVITY
-         CPU_ComputeFlux( FC_Var, FC_Flux, 1, Gamma, CorrHalfVel_Yes,
-                          Pot_Array_USG[P], Corner_Array[P],
-                          dt, dh, Time, GravityType, ExtAcc_AuxArray, MinPres,
-                          StoreFlux, Flux_Array[P] );
+         Hydro_ComputeFlux( FC_Var, FC_Flux, 1, Gamma, CorrHalfVel_Yes,
+                            Pot_Array_USG[P], Corner_Array[P],
+                            dt, dh, Time, GravityType, ExtAcc_AuxArray, MinPres,
+                            StoreFlux, Flux_Array[P] );
 #        else
-         CPU_ComputeFlux( FC_Var, FC_Flux, 1, Gamma, CorrHalfVel_No,
-                          NULL, NULL,
-                          NULL_REAL, NULL_REAL, NULL_REAL, GRAVITY_NONE, NULL, MinPres,
-                          StoreFlux, Flux_Array[P] );
+         Hydro_ComputeFlux( FC_Var, FC_Flux, 1, Gamma, CorrHalfVel_No,
+                            NULL, NULL,
+                            NULL_REAL, NULL_REAL, NULL_REAL, GRAVITY_NONE, NULL, MinPres,
+                            StoreFlux, Flux_Array[P] );
 #        endif
 
 
 //       7. full-step evolution
-         CPU_FullStepUpdate( Flu_Array_In[P], Flu_Array_Out[P], DE_Array_Out[P],
-                             FC_Flux, dt, dh, Gamma_m1, _Gamma_m1, MinDens, MinPres, DualEnergySwitch,
-                             NormPassive, NNorm, NormIdx );
+         Hydro_FullStepUpdate( Flu_Array_In[P], Flu_Array_Out[P], DE_Array_Out[P],
+                               FC_Flux, dt, dh, Gamma_m1, _Gamma_m1, MinDens, MinPres, DualEnergySwitch,
+                               NormPassive, NNorm, NormIdx );
 
 
          /*
 //       8. store the inter-patch fluxes
          if ( StoreFlux )
-         CPU_StoreFlux( Flux_Array[P], FC_Flux );
+         Hydro_StoreFlux( Flux_Array[P], FC_Flux );
          */
 
       } // for (int P=0; P<NPatchGroup; P++)
@@ -199,7 +199,7 @@ void CPU_FluidSolver_CTU( const real Flu_Array_In[][NCOMP_TOTAL][ FLU_NXT*FLU_NX
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  TGradient_Correction
+// Function    :  Hydro_TGradient_Correction
 // Description :  1. Correct the face-centered variables by the transverse flux gradients
 //                2. This function assumes that "N_FC_VAR == N_FC_FLUX == NGrid"
 //
@@ -213,8 +213,8 @@ void CPU_FluidSolver_CTU( const real Flu_Array_In[][NCOMP_TOTAL][ FLU_NXT*FLU_NX
 //                _Gamma_m1    : 1/(Gamma - 1)
 //                MinDens/Pres : Minimum allowed density and pressure
 //-------------------------------------------------------------------------------------------------------
-void TGradient_Correction( real FC_Var[][6][NCOMP_TOTAL], const real FC_Flux[][3][NCOMP_TOTAL], const real dt, const real dh,
-                           const real Gamma_m1, const real _Gamma_m1, const real MinDens, const real MinPres )
+void Hydro_TGradient_Correction( real FC_Var[][6][NCOMP_TOTAL], const real FC_Flux[][3][NCOMP_TOTAL], const real dt, const real dh,
+                                 const real Gamma_m1, const real _Gamma_m1, const real MinDens, const real MinPres )
 {
 
    const int  NGrid  = N_FC_VAR;    // size of the arrays FC_Var and FC_Flux in each direction
@@ -263,10 +263,10 @@ void TGradient_Correction( real FC_Var[][6][NCOMP_TOTAL], const real FC_Flux[][3
          FC_Var[ID][dL][0] = FMAX( FC_Var[ID][dL][0], MinDens );
          FC_Var[ID][dR][0] = FMAX( FC_Var[ID][dR][0], MinDens );
 
-         FC_Var[ID][dL][4] = CPU_CheckMinPresInEngy( FC_Var[ID][dL][0], FC_Var[ID][dL][1], FC_Var[ID][dL][2],
-                                                     FC_Var[ID][dL][3], FC_Var[ID][dL][4], Gamma_m1, _Gamma_m1, MinPres );
-         FC_Var[ID][dR][4] = CPU_CheckMinPresInEngy( FC_Var[ID][dR][0], FC_Var[ID][dR][1], FC_Var[ID][dR][2],
-                                                     FC_Var[ID][dR][3], FC_Var[ID][dR][4], Gamma_m1, _Gamma_m1, MinPres );
+         FC_Var[ID][dL][4] = Hydro_CheckMinPresInEngy( FC_Var[ID][dL][0], FC_Var[ID][dL][1], FC_Var[ID][dL][2],
+                                                       FC_Var[ID][dL][3], FC_Var[ID][dL][4], Gamma_m1, _Gamma_m1, MinPres );
+         FC_Var[ID][dR][4] = Hydro_CheckMinPresInEngy( FC_Var[ID][dR][0], FC_Var[ID][dR][1], FC_Var[ID][dR][2],
+                                                       FC_Var[ID][dR][3], FC_Var[ID][dR][4], Gamma_m1, _Gamma_m1, MinPres );
 
 #        if ( NCOMP_PASSIVE > 0 )
          for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++) {
@@ -276,7 +276,7 @@ void TGradient_Correction( real FC_Var[][6][NCOMP_TOTAL], const real FC_Flux[][3
       } // i,j,k
    } // for (int d=0; d<3; d++)
 
-} // FUNCTION : TGradient_Correction
+} // FUNCTION : Hydro_TGradient_Correction
 
 
 

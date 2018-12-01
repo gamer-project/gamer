@@ -156,7 +156,7 @@ void Output_Patch( const int lv, const int PID, const int FluSg, const int PotSg
 //       output pressure and dual-energy status in HYDRO
 #        if   ( MODEL == HYDRO )
          const bool CheckMinPres_No = false;
-         fprintf( File, " %13.6e", CPU_GetPressure(u[DENS],u[MOMX],u[MOMY],u[MOMZ],u[ENGY],GAMMA-1.0,CheckMinPres_No,NULL_REAL) );
+         fprintf( File, " %13.6e", Hydro_GetPressure(u[DENS],u[MOMX],u[MOMY],u[MOMZ],u[ENGY],GAMMA-1.0,CheckMinPres_No,NULL_REAL) );
 #        ifdef DUAL_ENERGY
          fprintf( File, " %13c", Relation->de_status[k][j][i] );
 #        endif

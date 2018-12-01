@@ -234,7 +234,7 @@ void WriteFile( FILE *File, const int lv, const int PID, const int i, const int 
 // output other derived fields
 #  if   ( MODEL == HYDRO )
    const bool CheckMinPres_Yes = true;
-   fprintf( File, " %13.6e", CPU_GetPressure(u[DENS], u[MOMX], u[MOMY], u[MOMZ], u[ENGY], GAMMA-1.0, CheckMinPres_Yes, MIN_PRES) );
+   fprintf( File, " %13.6e", Hydro_GetPressure(u[DENS], u[MOMX], u[MOMY], u[MOMZ], u[ENGY], GAMMA-1.0, CheckMinPres_Yes, MIN_PRES) );
 #  elif ( MODEL == MHD )
 #  warning : WAIT MHD !!!
 #  endif // MODEL

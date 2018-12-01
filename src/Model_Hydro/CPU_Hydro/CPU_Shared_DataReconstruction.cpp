@@ -12,38 +12,32 @@
 
 #else
 
-extern void CPU_Rotate3D( real InOut[], const int XYZ, const bool Forward );
-extern real CPU_CheckMinPres( const real InPres, const real MinPres );
-extern void CPU_Pri2Con( const real In[], real Out[], const real _Gamma_m1,
-                         const bool NormPassive, const int NNorm, const int NormIdx[] );
+extern void Hydro_Rotate3D( real InOut[], const int XYZ, const bool Forward );
+extern real Hydro_CheckMinPres( const real InPres, const real MinPres );
+extern void Hydro_Pri2Con( const real In[], real Out[], const real _Gamma_m1,
+                           const bool NormPassive, const int NNorm, const int NormIdx[] );
 #if ( FLU_SCHEME == MHM )
-extern void CPU_Con2Flux( const int XYZ, real Flux[], const real Input[], const real Gamma_m1, const real MinPres );
+extern void Hydro_Con2Flux( const int XYZ, real Flux[], const real Input[], const real Gamma_m1, const real MinPres );
 #endif
 
 #endif // #ifdef __CUDACC__ ... else ...
 
 
-// internal functions
-#ifdef __CUDACC__
-# define GPU_SPEC __device__
-#else
-# define GPU_SPEC
-#endif
-
-GPU_SPEC static void Get_EigenSystem( const real CC_Var[], real EigenVal[][NCOMP_FLUID], real LEigenVec[][NCOMP_FLUID],
-                                      real REigenVec[][NCOMP_FLUID], const real Gamma );
-GPU_SPEC static void LimitSlope( const real L2[], const real L1[], const real C0[], const real R1[], const real R2[],
-                                 const LR_Limiter_t LR_Limiter, const real MinMod_Coeff, const real EP_Coeff,
-                                 const real Gamma, const int XYZ, real Slope_Limiter[] );
+// internal functions (GPU_DEVICE is defined in CUFLU.h)
+GPU_DEVICE static void Hydro_GetEigenSystem( const real CC_Var[], real EigenVal[][NCOMP_FLUID], real LEigenVec[][NCOMP_FLUID],
+                                             real REigenVec[][NCOMP_FLUID], const real Gamma );
+GPU_DEVICE static void Hydro_LimitSlope( const real L2[], const real L1[], const real C0[], const real R1[], const real R2[],
+                                         const LR_Limiter_t LR_Limiter, const real MinMod_Coeff, const real EP_Coeff,
+                                         const real Gamma, const int XYZ, real Slope_Limiter[] );
 #if ( FLU_SCHEME == MHM )
-GPU_SPEC static void CPU_HancockPredict( real fc[][NCOMP_TOTAL], const real dt, const real dh,
-                                         const real Gamma_m1, const real _Gamma_m1,
-                                         const real cc_array[][ FLU_NXT*FLU_NXT*FLU_NXT ], const int cc_idx,
-                                         const real MinDens, const real MinPres );
+GPU_DEVICE static void Hydro_HancockPredict( real fc[][NCOMP_TOTAL], const real dt, const real dh,
+                                             const real Gamma_m1, const real _Gamma_m1,
+                                             const real cc_array[][ FLU_NXT*FLU_NXT*FLU_NXT ], const int cc_idx,
+                                             const real MinDens, const real MinPres );
 #endif
 #ifdef CHAR_RECONSTRUCTION
-GPU_SPEC static void Pri2Char( real Var[], const real Gamma, const real Rho, const real Pres, const int XYZ );
-GPU_SPEC static void Char2Pri( real Var[], const real Gamma, const real Rho, const real Pres, const int XYZ );
+GPU_DEVICE static void Hydro_Pri2Char( real Var[], const real Gamma, const real Rho, const real Pres, const int XYZ );
+GPU_DEVICE static void Hydro_Char2Pri( real Var[], const real Gamma, const real Rho, const real Pres, const int XYZ );
 #endif
 
 
@@ -51,12 +45,12 @@ GPU_SPEC static void Char2Pri( real Var[], const real Gamma, const real Rho, con
 
 #if ( LR_SCHEME == PLM )
 //-------------------------------------------------------------------------------------------------------
-// Function    :  CPU_DataReconstruction
+// Function    :  Hydro_DataReconstruction
 // Description :  Reconstruct the face-centered variables by the piecewise-linear method (PLM)
 //
 // Note        :  1. Use the parameter "LR_Limiter" to choose different slope limiters
 //                2. Input data are primitive variables while output data are conserved variables
-//                   --> The latter is because CPU_HancockPredict() works with conserved variables
+//                   --> The latter is because Hydro_HancockPredict() works with conserved variables
 //                3. PLM and PPM data reconstruction functions share the same function name
 //                4. Face-centered variables will be advanced by half time-step for the MHM and CTU schemes
 //                5. Data reconstruction can be applied to characteristic variables by
@@ -66,7 +60,7 @@ GPU_SPEC static void Char2Pri( real Var[], const real Gamma, const real Rho, con
 //
 // Parameter   :  PriVar         : Array storing the input cell-centered primitive variables
 //                ConVar         : Array storing the input cell-centered conserved variables
-//                                 --> Only for checking negative density and pressure in CPU_HancockPredict()
+//                                 --> Only for checking negative density and pressure in Hydro_HancockPredict()
 //                FC_Var         : Array to store the output face-centered primitive variables
 //                NIn            : Size of PriVar[] along each direction
 //                                 --> Can be smaller than FLU_NXT
@@ -93,14 +87,14 @@ GPU_SPEC static void Char2Pri( real Var[], const real Gamma, const real Rho, con
 # ifdef __CUDACC__
 __forceinline__ __device__
 #endif
-void CPU_DataReconstruction( const real PriVar[][ FLU_NXT*FLU_NXT*FLU_NXT    ],
-                             const real ConVar[][ FLU_NXT*FLU_NXT*FLU_NXT    ],
-                                   real FC_Var[][NCOMP_TOTAL][ N_FC_VAR*N_FC_VAR*N_FC_VAR ],
-                             const int NIn, const int NGhost, const real Gamma,
-                             const LR_Limiter_t LR_Limiter, const real MinMod_Coeff,
-                             const real EP_Coeff, const real dt, const real dh,
-                             const real MinDens, const real MinPres,
-                             const bool NormPassive, const int NNorm, const int NormIdx[] )
+void Hydro_DataReconstruction( const real PriVar[][ FLU_NXT*FLU_NXT*FLU_NXT    ],
+                               const real ConVar[][ FLU_NXT*FLU_NXT*FLU_NXT    ],
+                                     real FC_Var[][NCOMP_TOTAL][ N_FC_VAR*N_FC_VAR*N_FC_VAR ],
+                               const int NIn, const int NGhost, const real Gamma,
+                               const LR_Limiter_t LR_Limiter, const real MinMod_Coeff,
+                               const real EP_Coeff, const real dt, const real dh,
+                               const real MinDens, const real MinPres,
+                               const bool NormPassive, const int NNorm, const int NormIdx[] )
 {
 
    const int  didx_cc[3] = { 1, NIn, NIn*NIn };
@@ -158,7 +152,7 @@ void CPU_DataReconstruction( const real PriVar[][ FLU_NXT*FLU_NXT*FLU_NXT    ],
 
 //    1. evaluate the eigenvalues and eigenvectors for the CTU integrator
 #     if ( FLU_SCHEME == CTU )
-      Get_EigenSystem( cc_C, EigenVal, LEigenVec, REigenVec, Gamma );
+      Hydro_GetEigenSystem( cc_C, EigenVal, LEigenVec, REigenVec, Gamma );
 #     endif
 
 
@@ -177,7 +171,7 @@ void CPU_DataReconstruction( const real PriVar[][ FLU_NXT*FLU_NXT*FLU_NXT    ],
             cc_R[v] = PriVar[v][idx_ccR];
          }
 
-         LimitSlope( NULL, cc_L, cc_C, cc_R, NULL, LR_Limiter, MinMod_Coeff, NULL_REAL, Gamma, d, Slope_Limiter );
+         Hydro_LimitSlope( NULL, cc_L, cc_C, cc_R, NULL, LR_Limiter, MinMod_Coeff, NULL_REAL, Gamma, d, Slope_Limiter );
 
 
 //       3. get the face-centered primitive variables
@@ -215,7 +209,7 @@ void CPU_DataReconstruction( const real PriVar[][ FLU_NXT*FLU_NXT*FLU_NXT    ],
 
 
 //       4-2. re-order variables for the y/z directions
-         CPU_Rotate3D( dFC, d, true );
+         Hydro_Rotate3D( dFC, d, true );
 
 
 //       =====================================================================================
@@ -334,8 +328,8 @@ void CPU_DataReconstruction( const real PriVar[][ FLU_NXT*FLU_NXT*FLU_NXT    ],
 
 
 //       4-2-b4. evaluate the face-centered variables at the half time-step
-         CPU_Rotate3D( Correct_L, d, false );
-         CPU_Rotate3D( Correct_R, d, false );
+         Hydro_Rotate3D( Correct_L, d, false );
+         Hydro_Rotate3D( Correct_R, d, false );
 
          for (int v=0; v<NCOMP_TOTAL; v++)
          {
@@ -347,8 +341,8 @@ void CPU_DataReconstruction( const real PriVar[][ FLU_NXT*FLU_NXT*FLU_NXT    ],
          fc[faceL][0] = FMAX( fc[faceL][0], MinDens );
          fc[faceR][0] = FMAX( fc[faceR][0], MinDens );
 
-         fc[faceL][4] = CPU_CheckMinPres( fc[faceL][4], MinPres );
-         fc[faceR][4] = CPU_CheckMinPres( fc[faceR][4], MinPres );
+         fc[faceL][4] = Hydro_CheckMinPres( fc[faceL][4], MinPres );
+         fc[faceR][4] = Hydro_CheckMinPres( fc[faceR][4], MinPres );
 
 #        if ( NCOMP_PASSIVE > 0 )
          for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++) {
@@ -364,10 +358,10 @@ void CPU_DataReconstruction( const real PriVar[][ FLU_NXT*FLU_NXT*FLU_NXT    ],
          real tmp[NCOMP_TOTAL];  // input and output arrays must not overlap for Pri2Con()
 
          for (int v=0; v<NCOMP_TOTAL; v++)   tmp[v] = fc[faceL][v];
-         CPU_Pri2Con( tmp, fc[faceL], _Gamma_m1, NormPassive, NNorm, NormIdx );
+         Hydro_Pri2Con( tmp, fc[faceL], _Gamma_m1, NormPassive, NNorm, NormIdx );
 
          for (int v=0; v<NCOMP_TOTAL; v++)   tmp[v] = fc[faceR][v];
-         CPU_Pri2Con( tmp, fc[faceR], _Gamma_m1, NormPassive, NNorm, NormIdx );
+         Hydro_Pri2Con( tmp, fc[faceR], _Gamma_m1, NormPassive, NNorm, NormIdx );
 
       } // for (int d=0; d<3; d++)
 
@@ -375,7 +369,7 @@ void CPU_DataReconstruction( const real PriVar[][ FLU_NXT*FLU_NXT*FLU_NXT    ],
 #     if ( FLU_SCHEME == MHM )
 //    6. advance the face-centered variables by half time-step for the MHM integrator
 //       --> here we have assumed that ConVar[]
-      CPU_HancockPredict( fc, dt, dh, Gamma_m1, _Gamma_m1, ConVar, idx_cc, MinDens, MinPres );
+      Hydro_HancockPredict( fc, dt, dh, Gamma_m1, _Gamma_m1, ConVar, idx_cc, MinDens, MinPres );
 #     endif
 
 
@@ -386,19 +380,19 @@ void CPU_DataReconstruction( const real PriVar[][ FLU_NXT*FLU_NXT*FLU_NXT    ],
 
    } // k,j,i
 
-} // FUNCTION : CPU_DataReconstruction (PLM)
+} // FUNCTION : Hydro_DataReconstruction (PLM)
 #endif // #if ( LR_SCHEME == PLM )
 
 
 
 #if ( LR_SCHEME == PPM )
 //-------------------------------------------------------------------------------------------------------
-// Function    :  CPU_DataReconstruction
+// Function    :  Hydro_DataReconstruction
 // Description :  Reconstruct the face-centered variables by the piecewise-parabolic method (PPM)
 //
 // Note        :  1. Use the parameter "LR_Limiter" to choose different slope limiters
 //                2. Input data are primitive variables while output data are conserved variables
-//                   --> The latter is because CPU_HancockPredict() works with conserved variables
+//                   --> The latter is because Hydro_HancockPredict() works with conserved variables
 //                3. PLM and PPM data reconstruction functions share the same function name
 //                4. Face-centered variables will be advanced by half time-step for the MHM and CTU schemes
 //                5. Data reconstruction can be applied to characteristic variables by
@@ -428,13 +422,13 @@ void CPU_DataReconstruction( const real PriVar[][ FLU_NXT*FLU_NXT*FLU_NXT    ],
 //                NormIdx        : Target variable indices for the option "NormPassive"
 //                                 --> Should be set to the global variable "PassiveNorm_VarIdx"
 //------------------------------------------------------------------------------------------------------
-void CPU_DataReconstruction( const real PriVar[]   [ FLU_NXT*FLU_NXT*FLU_NXT    ],
-                                   real FC_Var[][6][ N_FC_VAR*N_FC_VAR*N_FC_VAR ],
-                             const int NIn, const int NGhost, const real Gamma,
-                             const LR_Limiter_t LR_Limiter, const real MinMod_Coeff,
-                             const real EP_Coeff, const real dt, const real dh,
-                             const real MinDens, const real MinPres,
-                             const bool NormPassive, const int NNorm, const int NormIdx[] )
+void Hydro_DataReconstruction( const real PriVar[]   [ FLU_NXT*FLU_NXT*FLU_NXT    ],
+                                     real FC_Var[][6][ N_FC_VAR*N_FC_VAR*N_FC_VAR ],
+                               const int NIn, const int NGhost, const real Gamma,
+                               const LR_Limiter_t LR_Limiter, const real MinMod_Coeff,
+                               const real EP_Coeff, const real dt, const real dh,
+                               const real MinDens, const real MinPres,
+                               const bool NormPassive, const int NNorm, const int NormIdx[] )
 {
 
    const int NOut   = NIn - 2*NGhost;                    // number of output cells
@@ -493,8 +487,8 @@ void CPU_DataReconstruction( const real PriVar[]   [ FLU_NXT*FLU_NXT*FLU_NXT    
          ID1_L = ID1 - didx_cc[d];
          ID1_R = ID1 + didx_cc[d];
 
-         LimitSlope( NULL, PriVar[ID1_L], PriVar[ID1], PriVar[ID1_R], NULL, LR_Limiter,
-                     MinMod_Coeff, NULL_REAL, Gamma, d, Slope_Limiter );
+         Hydro_LimitSlope( NULL, PriVar[ID1_L], PriVar[ID1], PriVar[ID1_R], NULL, LR_Limiter,
+                           MinMod_Coeff, NULL_REAL, Gamma, d, Slope_Limiter );
 
 //       store the slope to the array "Slope_PPM"
          for (int v=0; v<NCOMP_TOTAL; v++)   Slope_PPM[ID2][d][v] = Slope_Limiter[v];
@@ -514,7 +508,7 @@ void CPU_DataReconstruction( const real PriVar[]   [ FLU_NXT*FLU_NXT*FLU_NXT    
 
 //    (2-2) evaluate the eigenvalues and eigenvectors for the CTU integrator
 #     if ( FLU_SCHEME == CTU )
-      Get_EigenSystem( PriVar[ID1], EigenVal, LEigenVec, REigenVec, Gamma );
+      Hydro_GetEigenSystem( PriVar[ID1], EigenVal, LEigenVec, REigenVec, Gamma );
 #     endif
 
 
@@ -588,8 +582,8 @@ void CPU_DataReconstruction( const real PriVar[]   [ FLU_NXT*FLU_NXT*FLU_NXT    
          }
 
 //       (2-4-2) re-order variables for the y/z directions
-         CPU_Rotate3D( dFC,  d, true );
-         CPU_Rotate3D( dFC6, d, true );
+         Hydro_Rotate3D( dFC,  d, true );
+         Hydro_Rotate3D( dFC6, d, true );
 
 
 //       =====================================================================================
@@ -702,8 +696,8 @@ void CPU_DataReconstruction( const real PriVar[]   [ FLU_NXT*FLU_NXT*FLU_NXT    
 
 
 //       (2-4-4) evaluate the face-centered variables at the half time-step
-         CPU_Rotate3D( Correct_L, d, false );
-         CPU_Rotate3D( Correct_R, d, false );
+         Hydro_Rotate3D( Correct_L, d, false );
+         Hydro_Rotate3D( Correct_R, d, false );
 
          for (int v=0; v<NCOMP_TOTAL; v++)
          {
@@ -715,8 +709,8 @@ void CPU_DataReconstruction( const real PriVar[]   [ FLU_NXT*FLU_NXT*FLU_NXT    
          FC_Var[ID2][dL][0] = FMAX( FC_Var[ID2][dL][0], MinDens );
          FC_Var[ID2][dR][0] = FMAX( FC_Var[ID2][dR][0], MinDens );
 
-         FC_Var[ID2][dL][4] = CPU_CheckMinPres( FC_Var[ID2][dL][4], MinPres );
-         FC_Var[ID2][dR][4] = CPU_CheckMinPres( FC_Var[ID2][dR][4], MinPres );
+         FC_Var[ID2][dL][4] = Hydro_CheckMinPres( FC_Var[ID2][dL][4], MinPres );
+         FC_Var[ID2][dR][4] = Hydro_CheckMinPres( FC_Var[ID2][dR][4], MinPres );
 
 #        if ( NCOMP_PASSIVE > 0 )
          for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++) {
@@ -735,7 +729,7 @@ void CPU_DataReconstruction( const real PriVar[]   [ FLU_NXT*FLU_NXT*FLU_NXT    
    CONSERVE --> PREMITIVE
 
 
-} // FUNCTION : CPU_DataReconstruction (PPM)
+} // FUNCTION : Hydro_DataReconstruction (PPM)
 #endif // #if ( LR_SCHEME == PPM )
 
 
@@ -743,7 +737,7 @@ void CPU_DataReconstruction( const real PriVar[]   [ FLU_NXT*FLU_NXT*FLU_NXT    
 /*
 #ifdef CHAR_RECONSTRUCTION
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Pri2Char
+// Function    :  Hydro_Pri2Char
 // Description :  Convert the primitive variables to the characteristic variables
 //
 // Note           1. Passive scalars require no conversion
@@ -755,15 +749,15 @@ void CPU_DataReconstruction( const real PriVar[]   [ FLU_NXT*FLU_NXT*FLU_NXT    
 //                Pres  : Pressure
 //                XYZ   : Target spatial direction : (0/1/2) --> (x/y/z)
 //-------------------------------------------------------------------------------------------------------
-void Pri2Char( real InOut[], const real Gamma, const real Rho, const real Pres, const int XYZ )
+void Hydro_Pri2Char( real InOut[], const real Gamma, const real Rho, const real Pres, const int XYZ )
 {
 
 #  ifdef CHECK_NEGATIVE_IN_FLUID
-   if ( CPU_CheckNegative(Pres) )
+   if ( Hydro_CheckNegative(Pres) )
       Aux_Message( stderr, "ERROR : negative pressure (%14.7e) at file <%s>, line <%d>, function <%s>\n",
                    Pres, __FILE__, __LINE__, __FUNCTION__ );
 
-   if ( CPU_CheckNegative(Rho) )
+   if ( Hydro_CheckNegative(Rho) )
       Aux_Message( stderr, "ERROR : negative density (%14.7e) at file <%s>, line <%d>, function <%s>\n",
                    Rho,  __FILE__, __LINE__, __FUNCTION__ );
 #  endif
@@ -774,7 +768,7 @@ void Pri2Char( real InOut[], const real Gamma, const real Rho, const real Pres, 
 
    for (int v=0; v<NCOMP_FLUID; v++)   Temp[v] = InOut[v];
 
-   CPU_Rotate3D( Temp, XYZ, true );
+   Hydro_Rotate3D( Temp, XYZ, true );
 
    InOut[0] = -(real)0.5*Rho*_Cs*Temp[1] + (real)0.5*_Cs2*Temp[4];
    InOut[1] = Temp[0] - _Cs2*Temp[4];
@@ -782,12 +776,12 @@ void Pri2Char( real InOut[], const real Gamma, const real Rho, const real Pres, 
    InOut[3] = Temp[3];
    InOut[4] = +(real)0.5*Rho*_Cs*Temp[1] + (real)0.5*_Cs2*Temp[4];
 
-} // FUNCTION : Pri2Char
+} // FUNCTION : Hydro_Pri2Char
 
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Char2Pri
+// Function    :  Hydro_Char2Pri
 // Description :  Convert the characteristic variables to the primitive variables
 //
 // Note           1. Passive scalars require no conversion
@@ -799,15 +793,15 @@ void Pri2Char( real InOut[], const real Gamma, const real Rho, const real Pres, 
 //                Pres  : Pressure
 //                XYZ   : Target spatial direction : (0/1/2) --> (x/y/z)
 //-------------------------------------------------------------------------------------------------------
-void Char2Pri( real InOut[], const real Gamma, const real Rho, const real Pres, const int XYZ )
+void Hydro_Char2Pri( real InOut[], const real Gamma, const real Rho, const real Pres, const int XYZ )
 {
 
 #  ifdef CHECK_NEGATIVE_IN_FLUID
-   if ( CPU_CheckNegative(Pres) )
+   if ( Hydro_CheckNegative(Pres) )
       Aux_Message( stderr, "ERROR : negative pressure (%14.7e) at file <%s>, line <%d>, function <%s>\n",
                    Pres, __FILE__, __LINE__, __FUNCTION__ );
 
-   if ( CPU_CheckNegative(Rho) )
+   if ( Hydro_CheckNegative(Rho) )
       Aux_Message( stderr, "ERROR : negative density (%14.7e) at file <%s>, line <%d>, function <%s>\n",
                    Rho,  __FILE__, __LINE__, __FUNCTION__ );
 #  endif
@@ -823,11 +817,11 @@ void Char2Pri( real InOut[], const real Gamma, const real Rho, const real Pres, 
    Temp[3] = InOut[3];
    Temp[4] = Cs2*( InOut[0] + InOut[4] );
 
-   CPU_Rotate3D( Temp, XYZ, false );
+   Hydro_Rotate3D( Temp, XYZ, false );
 
    for (int v=0; v<NCOMP_FLUID; v++)   InOut[v] = Temp[v];
 
-} // FUNCTION : Char2Pri
+} // FUNCTION : Hydro_Char2Pri
 #endif
 */
 
@@ -836,7 +830,7 @@ void Char2Pri( real InOut[], const real Gamma, const real Rho, const real Pres, 
 /*
 #if ( FLU_SCHEME == CTU )
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Get_EigenSystem
+// Function    :  Hydro_GetEigenSystem
 // Description :  Evaluate the eigenvalues and left/right eigenvectors
 //
 // Note        :  1. The input data should be primitive variables
@@ -851,16 +845,16 @@ void Char2Pri( real InOut[], const real Gamma, const real Rho, const real Pres, 
 //                REigenVec   : Array to store the output right eigenvectors
 //                Gamma       : Ratio of specific heats
 //-------------------------------------------------------------------------------------------------------
-void Get_EigenSystem( const real CC_Var[], real EigenVal[][NCOMP_FLUID], real LEigenVec[][NCOMP_FLUID],
-                      real REigenVec[][NCOMP_FLUID], const real Gamma )
+void Hydro_GetEigenSystem( const real CC_Var[], real EigenVal[][NCOMP_FLUID], real LEigenVec[][NCOMP_FLUID],
+                           real REigenVec[][NCOMP_FLUID], const real Gamma )
 {
 
 #  ifdef CHECK_NEGATIVE_IN_FLUID
-   if ( CPU_CheckNegative(CC_Var[4]) )
+   if ( Hydro_CheckNegative(CC_Var[4]) )
       Aux_Message( stderr, "ERROR : negative pressure (%14.7e) at file <%s>, line <%d>, function <%s>\n",
                    CC_Var[4], __FILE__, __LINE__, __FUNCTION__ );
 
-   if ( CPU_CheckNegative(CC_Var[0]) )
+   if ( Hydro_CheckNegative(CC_Var[0]) )
       Aux_Message( stderr, "ERROR : negative density (%14.7e) at file <%s>, line <%d>, function <%s>\n",
                    CC_Var[0], __FILE__, __LINE__, __FUNCTION__ );
 #  endif
@@ -911,14 +905,14 @@ void Get_EigenSystem( const real CC_Var[], real EigenVal[][NCOMP_FLUID], real LE
    REigenVec[4][1] = -REigenVec[0][1];
    REigenVec[4][4] = Cs2;
 
-} // FUNCTION : Get_EigenSystem
+} // FUNCTION : Hydro_GetEigenSystem
 #endif // #if ( FLU_SCHEME == CTU )
 */
 
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  LimitSlope
+// Function    :  Hydro_LimitSlope
 // Description :  Evaluate the monotonic slope by applying slope limiters
 //
 // Note        :  1. The input data should be primitive variables
@@ -940,9 +934,9 @@ void Get_EigenSystem( const real CC_Var[], real EigenVal[][NCOMP_FLUID], real LE
 //                                 --> Useful only if the option "CHAR_RECONSTRUCTION" is turned on
 //                Slope_Limiter  : Array to store the output monotonic slope
 //-------------------------------------------------------------------------------------------------------
-void LimitSlope( const real L2[], const real L1[], const real C0[], const real R1[], const real R2[],
-                 const LR_Limiter_t LR_Limiter, const real MinMod_Coeff, const real EP_Coeff,
-                 const real Gamma, const int XYZ, real Slope_Limiter[] )
+void Hydro_LimitSlope( const real L2[], const real L1[], const real C0[], const real R1[], const real R2[],
+                       const LR_Limiter_t LR_Limiter, const real MinMod_Coeff, const real EP_Coeff,
+                       const real Gamma, const int XYZ, real Slope_Limiter[] )
 {
 
 #  ifdef CHAR_RECONSTRUCTION
@@ -975,12 +969,12 @@ void LimitSlope( const real L2[], const real L1[], const real C0[], const real R
 
 // primitive variables --> characteristic variables
 #  ifdef CHAR_RECONSTRUCTION
-   Pri2Char( Slope_L, Gamma, Rho, Pres, XYZ );
-   Pri2Char( Slope_R, Gamma, Rho, Pres, XYZ );
-   Pri2Char( Slope_C, Gamma, Rho, Pres, XYZ );
+   Hydro_Pri2Char( Slope_L, Gamma, Rho, Pres, XYZ );
+   Hydro_Pri2Char( Slope_R, Gamma, Rho, Pres, XYZ );
+   Hydro_Pri2Char( Slope_C, Gamma, Rho, Pres, XYZ );
 
    if ( LR_Limiter == VL_GMINMOD )
-      Pri2Char( Slope_A, Gamma, Rho, Pres, XYZ );
+      Hydro_Pri2Char( Slope_A, Gamma, Rho, Pres, XYZ );
 #  endif
 
 
@@ -1034,16 +1028,16 @@ void LimitSlope( const real L2[], const real L1[], const real C0[], const real R
 
 // characteristic variables --> primitive variables
 #  ifdef CHAR_RECONSTRUCTION
-   Char2Pri( Slope_Limiter, Gamma, Rho, Pres, XYZ );
+   Hydro_Char2Pri( Slope_Limiter, Gamma, Rho, Pres, XYZ );
 #  endif
 
-} // FUNCTION : LimitSlope
+} // FUNCTION : Hydro_LimitSlope
 
 
 
 #if ( FLU_SCHEME == MHM )
 //-------------------------------------------------------------------------------------------------------
-// Function    :  CPU_HancockPredict
+// Function    :  Hydro_HancockPredict
 // Description :  Evolve the face-centered variables by half time-step by calculating the face-centered fluxes
 //                (no Riemann solver is required)
 //
@@ -1062,10 +1056,10 @@ void LimitSlope( const real L2[], const real L1[], const real C0[], const real R
 //                cc_idx       : Index for accessing cc_array[]
 //                MinDens/Pres : Minimum allowed density and pressure
 //-------------------------------------------------------------------------------------------------------
-void CPU_HancockPredict( real fc[][NCOMP_TOTAL], const real dt, const real dh,
-                         const real Gamma_m1, const real _Gamma_m1,
-                         const real cc_array[][ FLU_NXT*FLU_NXT*FLU_NXT ], const int cc_idx,
-                         const real MinDens, const real MinPres )
+void Hydro_HancockPredict( real fc[][NCOMP_TOTAL], const real dt, const real dh,
+                           const real Gamma_m1, const real _Gamma_m1,
+                           const real cc_array[][ FLU_NXT*FLU_NXT*FLU_NXT ], const int cc_idx,
+                           const real MinDens, const real MinPres )
 {
 
    const real dt_dh2 = (real)0.5*dt/dh;
@@ -1074,7 +1068,7 @@ void CPU_HancockPredict( real fc[][NCOMP_TOTAL], const real dt, const real dh,
 
 
 // calculate flux
-   for (int f=0; f<6; f++)    CPU_Con2Flux( f/2, Flux[f], fc[f], Gamma_m1, MinPres );
+   for (int f=0; f<6; f++)    Hydro_Con2Flux( f/2, Flux[f], fc[f], Gamma_m1, MinPres );
 
 // update the face-centered variables
    for (int v=0; v<NCOMP_TOTAL; v++)
@@ -1102,15 +1096,15 @@ void CPU_HancockPredict( real fc[][NCOMP_TOTAL], const real dt, const real dh,
    for (int f=0; f<6; f++)
    {
       fc[f][0] = FMAX( fc[f][0], MinDens );
-      fc[f][4] = CPU_CheckMinPresInEngy( fc[f][0], fc[f][1], fc[f][2], fc[f][3], fc[f][4],
-                                         Gamma_m1, _Gamma_m1, MinPres );
+      fc[f][4] = Hydro_CheckMinPresInEngy( fc[f][0], fc[f][1], fc[f][2], fc[f][3], fc[f][4],
+                                           Gamma_m1, _Gamma_m1, MinPres );
 #     if ( NCOMP_PASSIVE > 0 )
       for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)
       fc[f][v] = FMAX( fc[f][v], TINY_NUMBER );
 #     endif
    }
 
-} // FUNCTION : CPU_HancockPredict
+} // FUNCTION : Hydro_HancockPredict
 #endif // #if ( FLU_SCHEME == MHM )
 
 

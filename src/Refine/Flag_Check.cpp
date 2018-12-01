@@ -123,14 +123,14 @@ bool Flag_Check( const int lv, const int PID, const int i, const int j, const in
 
 #     ifdef DUAL_ENERGY
 #     if   ( DUAL_ENERGY == DE_ENPY )
-      const real Pres = CPU_DensEntropy2Pres( Dens, Fluid[ENPY][k][j][i], Gamma_m1, CheckMinPres_Yes, MIN_PRES );
+      const real Pres = Hydro_DensEntropy2Pres( Dens, Fluid[ENPY][k][j][i], Gamma_m1, CheckMinPres_Yes, MIN_PRES );
 #     elif ( DUAL_ENERGY == DE_EINT )
 #     error : DE_EINT is NOT supported yet !!
 #     endif
 
 #     else
-      const real Pres = CPU_GetPressure( Dens, Fluid[MOMX][k][j][i], Fluid[MOMY][k][j][i], Fluid[MOMZ][k][j][i],
-                                         Fluid[ENGY][k][j][i], Gamma_m1, CheckMinPres_Yes, MIN_PRES );
+      const real Pres = Hydro_GetPressure( Dens, Fluid[MOMX][k][j][i], Fluid[MOMY][k][j][i], Fluid[MOMZ][k][j][i],
+                                           Fluid[ENGY][k][j][i], Gamma_m1, CheckMinPres_Yes, MIN_PRES );
 #     endif // #ifdef DUAL_ENERGY ... else ...
 
       Flag |= ( SQR(amr->dh[lv]) > JeansCoeff*Pres/SQR(Dens) );

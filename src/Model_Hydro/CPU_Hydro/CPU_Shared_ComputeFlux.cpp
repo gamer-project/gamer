@@ -24,20 +24,20 @@
 #else // #ifdef __CUDACC__
 
 #if   ( RSOLVER == EXACT )
-extern void CPU_Con2Pri( const real In[], real Out[], const real Gamma_m1, const real MinPres,
-                         const bool NormPassive, const int NNorm, const int NormIdx[],
-                         const bool JeansMinPres, const real JeansMinPres_Coeff );
-extern void CPU_RiemannSolver_Exact( const int XYZ, real eival_out[], real L_star_out[], real R_star_out[],
-                                     real Flux_Out[], const real L_In[], const real R_In[], const real Gamma );
+extern void Hydro_Con2Pri( const real In[], real Out[], const real Gamma_m1, const real MinPres,
+                           const bool NormPassive, const int NNorm, const int NormIdx[],
+                           const bool JeansMinPres, const real JeansMinPres_Coeff );
+extern void Hydro_RiemannSolver_Exact( const int XYZ, real eival_out[], real L_star_out[], real R_star_out[],
+                                       real Flux_Out[], const real L_In[], const real R_In[], const real Gamma );
 #elif ( RSOLVER == ROE )
-extern void CPU_RiemannSolver_Roe( const int XYZ, real Flux_Out[], const real L_In[], const real R_In[],
-                                   const real Gamma, const real MinPres );
+extern void Hydro_RiemannSolver_Roe( const int XYZ, real Flux_Out[], const real L_In[], const real R_In[],
+                                     const real Gamma, const real MinPres );
 #elif ( RSOLVER == HLLE )
-extern void CPU_RiemannSolver_HLLE( const int XYZ, real Flux_Out[], const real L_In[], const real R_In[],
-                                    const real Gamma, const real MinPres );
+extern void Hydro_RiemannSolver_HLLE( const int XYZ, real Flux_Out[], const real L_In[], const real R_In[],
+                                      const real Gamma, const real MinPres );
 #elif ( RSOLVER == HLLC )
-extern void CPU_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In[], const real R_In[],
-                                    const real Gamma, const real MinPres );
+extern void Hydro_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In[], const real R_In[],
+                                      const real Gamma, const real MinPres );
 #endif
 
 #endif // #ifdef __CUDACC__ ... else ...
@@ -46,7 +46,7 @@ extern void CPU_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  CPU_ComputeFlux
+// Function    :  Hydro_ComputeFlux
 // Description :  Compute the face-centered fluxes by Riemann solver
 //
 // Note        :  1. Currently support the exact, HLLC, HLLE, and Roe solvers
@@ -85,12 +85,12 @@ extern void CPU_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L
 #ifdef __CUDACC__
 __forceinline__ __device__
 #endif
-void CPU_ComputeFlux( const real FC_Var [][NCOMP_TOTAL][ N_FC_VAR *N_FC_VAR *N_FC_VAR  ],
-                            real FC_Flux[][NCOMP_TOTAL][ N_FC_FLUX*N_FC_FLUX*N_FC_FLUX ],
-                      const int Gap, const real Gamma, const bool CorrHalfVel, const real Pot_USG[],
-                      const double Corner[], const real dt, const real dh, const double Time,
-                      const OptGravityType_t GravityType, const double ExtAcc_AuxArray[], const real MinPres,
-                      const bool DumpIntFlux, real IntFlux[][NCOMP_TOTAL][ PS2*PS2 ] )
+void Hydro_ComputeFlux( const real FC_Var [][NCOMP_TOTAL][ N_FC_VAR *N_FC_VAR *N_FC_VAR  ],
+                              real FC_Flux[][NCOMP_TOTAL][ N_FC_FLUX*N_FC_FLUX*N_FC_FLUX ],
+                        const int Gap, const real Gamma, const bool CorrHalfVel, const real Pot_USG[],
+                        const double Corner[], const real dt, const real dh, const double Time,
+                        const OptGravityType_t GravityType, const double ExtAcc_AuxArray[], const real MinPres,
+                        const bool DumpIntFlux, real IntFlux[][NCOMP_TOTAL][ PS2*PS2 ] )
 {
 
 // check
@@ -255,16 +255,16 @@ void CPU_ComputeFlux( const real FC_Var [][NCOMP_TOTAL][ N_FC_VAR *N_FC_VAR *N_F
          const bool NormPassive_No  = false; // do NOT convert any passive variable to mass fraction for the Riemann solvers
          const bool JeansMinPres_No = false;
 
-         CPU_Con2Pri( ConVar_L, PriVar_L, Gamma_m1, MinPres, NormPassive_No, NULL_INT, NULL, JeansMinPres_No, NULL_REAL );
-         CPU_Con2Pri( ConVar_R, PriVar_R, Gamma_m1, MinPres, NormPassive_No, NULL_INT, NULL, JeansMinPres_No, NULL_REAL );
+         Hydro_Con2Pri( ConVar_L, PriVar_L, Gamma_m1, MinPres, NormPassive_No, NULL_INT, NULL, JeansMinPres_No, NULL_REAL );
+         Hydro_Con2Pri( ConVar_R, PriVar_R, Gamma_m1, MinPres, NormPassive_No, NULL_INT, NULL, JeansMinPres_No, NULL_REAL );
 
-         CPU_RiemannSolver_Exact( d, NULL, NULL, NULL, Flux_1Face, PriVar_L, PriVar_R, Gamma );
+         Hydro_RiemannSolver_Exact( d, NULL, NULL, NULL, Flux_1Face, PriVar_L, PriVar_R, Gamma );
 #        elif ( RSOLVER == ROE )
-         CPU_RiemannSolver_Roe  ( d, Flux_1Face, ConVar_L, ConVar_R, Gamma, MinPres );
+         Hydro_RiemannSolver_Roe  ( d, Flux_1Face, ConVar_L, ConVar_R, Gamma, MinPres );
 #        elif ( RSOLVER == HLLE )
-         CPU_RiemannSolver_HLLE ( d, Flux_1Face, ConVar_L, ConVar_R, Gamma, MinPres );
+         Hydro_RiemannSolver_HLLE ( d, Flux_1Face, ConVar_L, ConVar_R, Gamma, MinPres );
 #        elif ( RSOLVER == HLLC )
-         CPU_RiemannSolver_HLLC ( d, Flux_1Face, ConVar_L, ConVar_R, Gamma, MinPres );
+         Hydro_RiemannSolver_HLLC ( d, Flux_1Face, ConVar_L, ConVar_R, Gamma, MinPres );
 #        else
 #        error : ERROR : unsupported Riemann solver (EXACT/ROE) !!
 #        endif
@@ -304,8 +304,8 @@ void CPU_ComputeFlux( const real FC_Var [][NCOMP_TOTAL][ N_FC_VAR *N_FC_VAR *N_F
       } // i,j,k
    } // for (int d=0; d<3; d++)
 
-} // FUNCTION : CPU_ComputeFlux
+} // FUNCTION : Hydro_ComputeFlux
 
 
 
-#endif // #if ( !defined GPU  &&  MODEL == HYDRO  &&  (FLU_SCHEME == MHM || MHM_RP || CTU) )
+#endif // #if ( MODEL == HYDRO  &&  (FLU_SCHEME == MHM || FLU_SCHEME == MHM_RP || FLU_SCHEME == CTU) )

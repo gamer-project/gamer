@@ -25,48 +25,48 @@
 
 #else // #ifdef __CUDACC__
 
-extern void CPU_DataReconstruction( const real PriVar[][ FLU_NXT*FLU_NXT*FLU_NXT    ],
-                                    const real ConVar[][ FLU_NXT*FLU_NXT*FLU_NXT    ],
-                                          real FC_Var[][NCOMP_TOTAL][ N_FC_VAR*N_FC_VAR*N_FC_VAR ],
-                                    const int NIn, const int NGhost, const real Gamma,
-                                    const LR_Limiter_t LR_Limiter, const real MinMod_Coeff,
-                                    const real EP_Coeff, const real dt, const real dh,
-                                    const real MinDens, const real MinPres,
-                                    const bool NormPassive, const int NNorm, const int NormIdx[] );
-extern void CPU_Con2Pri_AllPatch( const real ConVar[][ FLU_NXT*FLU_NXT*FLU_NXT ],
-                                        real PriVar[][ FLU_NXT*FLU_NXT*FLU_NXT ],
-                                  const real Gamma_m1, const real MinPres,
-                                  const bool NormPassive, const int NNorm, const int NormIdx[],
-                                  const bool JeansMinPres, const real JeansMinPres_Coeff );
-extern void CPU_ComputeFlux( const real FC_Var [][NCOMP_TOTAL][ N_FC_VAR *N_FC_VAR *N_FC_VAR  ],
-                                   real FC_Flux[][NCOMP_TOTAL][ N_FC_FLUX*N_FC_FLUX*N_FC_FLUX ],
-                             const int Gap, const real Gamma, const bool CorrHalfVel, const real Pot_USG[],
-                             const double Corner[], const real dt, const real dh, const double Time,
-                             const OptGravityType_t GravityType, const double ExtAcc_AuxArray[], const real MinPres,
-                             const bool DumpIntFlux, real IntFlux[][NCOMP_TOTAL][ PS2*PS2 ] );
-extern void CPU_FullStepUpdate( const real Input[][ FLU_NXT*FLU_NXT*FLU_NXT ], real Output[][ PS2*PS2*PS2 ], char DE_Status[],
-                                const real Flux[][NCOMP_TOTAL][ N_FC_FLUX*N_FC_FLUX*N_FC_FLUX ], const real dt, const real dh,
-                                const real Gamma_m1, const real _Gamma_m1, const real MinDens, const real MinPres, const real DualEnergySwitch,
-                                const bool NormPassive, const int NNorm, const int NormIdx[] );
+extern void Hydro_DataReconstruction( const real PriVar[][ FLU_NXT*FLU_NXT*FLU_NXT    ],
+                                      const real ConVar[][ FLU_NXT*FLU_NXT*FLU_NXT    ],
+                                            real FC_Var[][NCOMP_TOTAL][ N_FC_VAR*N_FC_VAR*N_FC_VAR ],
+                                      const int NIn, const int NGhost, const real Gamma,
+                                      const LR_Limiter_t LR_Limiter, const real MinMod_Coeff,
+                                      const real EP_Coeff, const real dt, const real dh,
+                                      const real MinDens, const real MinPres,
+                                      const bool NormPassive, const int NNorm, const int NormIdx[] );
+extern void Hydro_Con2Pri_AllPatch( const real ConVar[][ FLU_NXT*FLU_NXT*FLU_NXT ],
+                                          real PriVar[][ FLU_NXT*FLU_NXT*FLU_NXT ],
+                                    const real Gamma_m1, const real MinPres,
+                                    const bool NormPassive, const int NNorm, const int NormIdx[],
+                                    const bool JeansMinPres, const real JeansMinPres_Coeff );
+extern void Hydro_ComputeFlux( const real FC_Var [][NCOMP_TOTAL][ N_FC_VAR *N_FC_VAR *N_FC_VAR  ],
+                                     real FC_Flux[][NCOMP_TOTAL][ N_FC_FLUX*N_FC_FLUX*N_FC_FLUX ],
+                               const int Gap, const real Gamma, const bool CorrHalfVel, const real Pot_USG[],
+                               const double Corner[], const real dt, const real dh, const double Time,
+                               const OptGravityType_t GravityType, const double ExtAcc_AuxArray[], const real MinPres,
+                               const bool DumpIntFlux, real IntFlux[][NCOMP_TOTAL][ PS2*PS2 ] );
+extern void Hydro_FullStepUpdate( const real Input[][ FLU_NXT*FLU_NXT*FLU_NXT ], real Output[][ PS2*PS2*PS2 ], char DE_Status[],
+                                  const real Flux[][NCOMP_TOTAL][ N_FC_FLUX*N_FC_FLUX*N_FC_FLUX ], const real dt, const real dh,
+                                  const real Gamma_m1, const real _Gamma_m1, const real MinDens, const real MinPres, const real DualEnergySwitch,
+                                  const bool NormPassive, const int NNorm, const int NormIdx[] );
 #if   ( RSOLVER == EXACT )
-extern void CPU_RiemannSolver_Exact( const int XYZ, real eival_out[], real L_star_out[], real R_star_out[],
-                                     real Flux_Out[], const real L_In[], const real R_In[], const real Gamma );
+extern void Hydro_RiemannSolver_Exact( const int XYZ, real eival_out[], real L_star_out[], real R_star_out[],
+                                       real Flux_Out[], const real L_In[], const real R_In[], const real Gamma );
 #elif ( RSOLVER == ROE )
-extern void CPU_RiemannSolver_Roe( const int XYZ, real Flux_Out[], const real L_In[], const real R_In[],
-                                   const real Gamma, const real MinPres );
+extern void Hydro_RiemannSolver_Roe( const int XYZ, real Flux_Out[], const real L_In[], const real R_In[],
+                                     const real Gamma, const real MinPres );
 #elif ( RSOLVER == HLLE )
-extern void CPU_RiemannSolver_HLLE( const int XYZ, real Flux_Out[], const real L_In[], const real R_In[],
-                                    const real Gamma, const real MinPres );
+extern void Hydro_RiemannSolver_HLLE( const int XYZ, real Flux_Out[], const real L_In[], const real R_In[],
+                                      const real Gamma, const real MinPres );
 #elif ( RSOLVER == HLLC )
-extern void CPU_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In[], const real R_In[],
-                                    const real Gamma, const real MinPres );
+extern void Hydro_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In[], const real R_In[],
+                                      const real Gamma, const real MinPres );
 #endif
-extern real CPU_CheckMinPres( const real InPres, const real MinPres );
+extern real Hydro_CheckMinPres( const real InPres, const real MinPres );
 
 #if   ( FLU_SCHEME == MHM_RP )
-extern void CPU_Con2Pri( const real In[], real Out[], const real Gamma_m1, const real MinPres,
-                         const bool NormPassive, const int NNorm, const int NormIdx[],
-                         const bool JeansMinPres, const real JeansMinPres_Coeff );
+extern void Hydro_Con2Pri( const real In[], real Out[], const real Gamma_m1, const real MinPres,
+                           const bool NormPassive, const int NNorm, const int NormIdx[],
+                           const bool JeansMinPres, const real JeansMinPres_Coeff );
 #endif
 
 #endif // #ifdef __CUDACC__ ... else ...
@@ -74,11 +74,11 @@ extern void CPU_Con2Pri( const real In[], real Out[], const real Gamma_m1, const
 
 // internal functions
 #if   ( FLU_SCHEME == MHM_RP )
-static void CPU_RiemannPredict( const real Flu_Array_In[][ FLU_NXT*FLU_NXT*FLU_NXT ],
-                                const real Half_Flux[][3][NCOMP_TOTAL], real Half_Var[][NCOMP_TOTAL], const real dt,
+static void Hydro_RiemannPredict( const real Flu_Array_In[][ FLU_NXT*FLU_NXT*FLU_NXT ],
+                                  const real Half_Flux[][3][NCOMP_TOTAL], real Half_Var[][NCOMP_TOTAL], const real dt,
                                 const real dh, const real Gamma, const real MinDens, const real MinPres );
-static void CPU_RiemannPredict_Flux( const real Flu_Array_In[][ FLU_NXT*FLU_NXT*FLU_NXT ], real Half_Flux[][3][NCOMP_TOTAL],
-                                     const real Gamma, const real MinPres );
+static void Hydro_RiemannPredict_Flux( const real Flu_Array_In[][ FLU_NXT*FLU_NXT*FLU_NXT ], real Half_Flux[][3][NCOMP_TOTAL],
+                                       const real Gamma, const real MinPres );
 #endif
 
 
@@ -276,11 +276,11 @@ void CPU_FluidSolver_MHM(
 
          /*
 //       (1-a-1) evaluate the half-step first-order fluxes by Riemann solver
-         CPU_RiemannPredict_Flux( Flu_Array_In[P], Half_Flux, Gamma, MinPres );
+         Hydro_RiemannPredict_Flux( Flu_Array_In[P], Half_Flux, Gamma, MinPres );
 
 
 //       (1-a-2) evaluate the half-step solutions
-         CPU_RiemannPredict( Flu_Array_In[P], Half_Flux, Half_Var, dt, dh, Gamma, MinDens, MinPres );
+         Hydro_RiemannPredict( Flu_Array_In[P], Half_Flux, Half_Var, dt, dh, Gamma, MinDens, MinPres );
 
 
 //       (1-a-3) conserved variables --> primitive variables
@@ -292,14 +292,14 @@ void CPU_FluidSolver_MHM(
 
             for (int v=0; v<NCOMP_TOTAL; v++)   Input[v] = Half_Var[ID1][v];
 
-            CPU_Con2Pri( Input, Half_Var[ID1], Gamma_m1, MinPres, NormPassive, NNorm, NormIdx,
-                         JeansMinPres, JeansMinPres_Coeff );
+            Hydro_Con2Pri( Input, Half_Var[ID1], Gamma_m1, MinPres, NormPassive, NNorm, NormIdx,
+                           JeansMinPres, JeansMinPres_Coeff );
          }
 
 
 //       (1-a-4) evaluate the face-centered values by data reconstruction
-         CPU_DataReconstruction( Half_Var, FC_Var, N_HF_VAR, FLU_GHOST_SIZE-2, Gamma, LR_Limiter,
-                                 MinMod_Coeff, EP_Coeff, NULL_REAL, NULL_INT, MinDens, MinPres );
+         Hydro_DataReconstruction( Half_Var, FC_Var, N_HF_VAR, FLU_GHOST_SIZE-2, Gamma, LR_Limiter,
+                                   MinMod_Coeff, EP_Coeff, NULL_REAL, NULL_INT, MinDens, MinPres );
          */
 
 
@@ -307,17 +307,17 @@ void CPU_FluidSolver_MHM(
 #        elif ( FLU_SCHEME == MHM )
 
 //       (1-b-1) conserved variables --> primitive variables
-         CPU_Con2Pri_AllPatch( Flu_Array_In[P], PriVar_1PG, Gamma_m1, MinPres, NormPassive, NNorm, NormIdx,
-                               JeansMinPres, JeansMinPres_Coeff );
+         Hydro_Con2Pri_AllPatch( Flu_Array_In[P], PriVar_1PG, Gamma_m1, MinPres, NormPassive, NNorm, NormIdx,
+                                 JeansMinPres, JeansMinPres_Coeff );
 #        ifdef __CUDACC__
          __syncthreads();
 #        endif
 
 
 //       (1-b-2) evaluate the face-centered values by data reconstruction
-         CPU_DataReconstruction( PriVar_1PG, Flu_Array_In[P], FC_Var_1PG, FLU_NXT, FLU_GHOST_SIZE-1,
-                                 Gamma, LR_Limiter, MinMod_Coeff, EP_Coeff, NULL_REAL, NULL_INT,
-                                 MinDens, MinPres, NormPassive, NNorm, NormIdx );
+         Hydro_DataReconstruction( PriVar_1PG, Flu_Array_In[P], FC_Var_1PG, FLU_NXT, FLU_GHOST_SIZE-1,
+                                   Gamma, LR_Limiter, MinMod_Coeff, EP_Coeff, NULL_REAL, NULL_INT,
+                                   MinDens, MinPres, NormPassive, NNorm, NormIdx );
 #        ifdef __CUDACC__
          __syncthreads();
 #        endif
@@ -327,15 +327,15 @@ void CPU_FluidSolver_MHM(
 
 //       2. evaluate the full-step fluxes
 #        ifdef UNSPLIT_GRAVITY
-         CPU_ComputeFlux( FC_Var_1PG, FC_Flux_1PG, 1, Gamma, CorrHalfVel_Yes,
-                          Pot_Array_USG[P], Corner_Array[P],
-                          dt, dh, Time, GravityType, ExtAcc_AuxArray, MinPres,
-                          StoreFlux, Flux_Array[P] );
+         Hydro_ComputeFlux( FC_Var_1PG, FC_Flux_1PG, 1, Gamma, CorrHalfVel_Yes,
+                            Pot_Array_USG[P], Corner_Array[P],
+                            dt, dh, Time, GravityType, ExtAcc_AuxArray, MinPres,
+                            StoreFlux, Flux_Array[P] );
 #        else
-         CPU_ComputeFlux( FC_Var_1PG, FC_Flux_1PG, 1, Gamma, CorrHalfVel_No,
-                          NULL, NULL,
-                          NULL_REAL, NULL_REAL, NULL_REAL, GRAVITY_NONE, NULL, MinPres,
-                          StoreFlux, Flux_Array[P] );
+         Hydro_ComputeFlux( FC_Var_1PG, FC_Flux_1PG, 1, Gamma, CorrHalfVel_No,
+                            NULL, NULL,
+                            NULL_REAL, NULL_REAL, NULL_REAL, GRAVITY_NONE, NULL, MinPres,
+                            StoreFlux, Flux_Array[P] );
 #        endif
 
 #        ifdef __CUDACC__
@@ -344,9 +344,9 @@ void CPU_FluidSolver_MHM(
 
 
 //       3. full-step evolution
-         CPU_FullStepUpdate( Flu_Array_In[P], Flu_Array_Out[P], DE_Array_Out[P],
-                             FC_Flux_1PG, dt, dh, Gamma_m1, _Gamma_m1, MinDens, MinPres, DualEnergySwitch,
-                             NormPassive, NNorm, NormIdx );
+         Hydro_FullStepUpdate( Flu_Array_In[P], Flu_Array_Out[P], DE_Array_Out[P],
+                               FC_Flux_1PG, dt, dh, Gamma_m1, _Gamma_m1, MinDens, MinPres, DualEnergySwitch,
+                               NormPassive, NNorm, NormIdx );
 
       } // loop over all patch groups
 
@@ -364,7 +364,7 @@ void CPU_FluidSolver_MHM(
 
 #if ( FLU_SCHEME == MHM_RP )
 //-------------------------------------------------------------------------------------------------------
-// Function    :  CPU_RiemannPredict_Flux
+// Function    :  Hydro_RiemannPredict_Flux
 // Description :  Evaluate the half-step face-centered fluxes by Riemann solver
 //
 // Note        :  1. Work for the MUSCL-Hancock method + Riemann-prediction (MHM_RP)
@@ -376,8 +376,8 @@ void CPU_FluidSolver_MHM(
 //                Gamma        : Ratio of specific heats
 //                MinPres      : Minimum allowed pressure
 //-------------------------------------------------------------------------------------------------------
-void CPU_RiemannPredict_Flux( const real Flu_Array_In[][ FLU_NXT*FLU_NXT*FLU_NXT ], real Half_Flux[][3][NCOMP_TOTAL],
-                              const real Gamma, const real MinPres )
+void Hydro_RiemannPredict_Flux( const real Flu_Array_In[][ FLU_NXT*FLU_NXT*FLU_NXT ], real Half_Flux[][3][NCOMP_TOTAL],
+                                const real Gamma, const real MinPres )
 {
 
    const int dr[3] = { 1, FLU_NXT, FLU_NXT*FLU_NXT };
@@ -419,28 +419,28 @@ void CPU_RiemannPredict_Flux( const real Flu_Array_In[][ FLU_NXT*FLU_NXT*FLU_NXT
          const bool NormPassive_No  = false;  // do NOT convert any passive variable to mass fraction for the Riemann solvers
          const bool JeansMinPres_No = false;
 
-         CPU_Con2Pri( ConVar_L, PriVar_L, Gamma_m1, MinPres, NormPassive_No, NULL_INT, NULL, JeansMinPres_No, NULL_REAL );
-         CPU_Con2Pri( ConVar_R, PriVar_R, Gamma_m1, MinPres, NormPassive_No, NULL_INT, NULL, JeansMinPres_No, NULL_REAL );
+         Hydro_Con2Pri( ConVar_L, PriVar_L, Gamma_m1, MinPres, NormPassive_No, NULL_INT, NULL, JeansMinPres_No, NULL_REAL );
+         Hydro_Con2Pri( ConVar_R, PriVar_R, Gamma_m1, MinPres, NormPassive_No, NULL_INT, NULL, JeansMinPres_No, NULL_REAL );
 
-         CPU_RiemannSolver_Exact( d, NULL, NULL, NULL, Half_Flux[ID1][d], PriVar_L, PriVar_R, Gamma );
+         Hydro_RiemannSolver_Exact( d, NULL, NULL, NULL, Half_Flux[ID1][d], PriVar_L, PriVar_R, Gamma );
 #        elif ( RSOLVER == ROE )
-         CPU_RiemannSolver_Roe ( d, Half_Flux[ID1][d], ConVar_L, ConVar_R, Gamma, MinPres );
+         Hydro_RiemannSolver_Roe ( d, Half_Flux[ID1][d], ConVar_L, ConVar_R, Gamma, MinPres );
 #        elif ( RSOLVER == HLLE )
-         CPU_RiemannSolver_HLLE( d, Half_Flux[ID1][d], ConVar_L, ConVar_R, Gamma, MinPres );
+         Hydro_RiemannSolver_HLLE( d, Half_Flux[ID1][d], ConVar_L, ConVar_R, Gamma, MinPres );
 #        elif ( RSOLVER == HLLC )
-         CPU_RiemannSolver_HLLC( d, Half_Flux[ID1][d], ConVar_L, ConVar_R, Gamma, MinPres );
+         Hydro_RiemannSolver_HLLC( d, Half_Flux[ID1][d], ConVar_L, ConVar_R, Gamma, MinPres );
 #        else
 #        error : ERROR : unsupported Riemann solver (EXACT/ROE) !!
 #        endif
       }
    } // for (int d=0; d<3; d++)
 
-} // FUNCTION : CPU_RiemannPredict_Flux
+} // FUNCTION : Hydro_RiemannPredict_Flux
 
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  CPU_RiemannPredict
+// Function    :  Hydro_RiemannPredict
 // Description :  Evolve the cell-centered variables by half time-step by using the Riemann solvers
 //
 // Note        :  Work for the MUSCL-Hancock method + Riemann-prediction (MHM_RP)
@@ -455,9 +455,9 @@ void CPU_RiemannPredict_Flux( const real Flu_Array_In[][ FLU_NXT*FLU_NXT*FLU_NXT
 //                Gamma        : Ratio of specific heats
 //                MinDens/Pres : Minimum allowed density and pressure
 //-------------------------------------------------------------------------------------------------------
-void CPU_RiemannPredict( const real Flu_Array_In[][ FLU_NXT*FLU_NXT*FLU_NXT ], const real Half_Flux[][3][NCOMP_TOTAL],
-                         real Half_Var[][NCOMP_TOTAL], const real dt, const real dh, const real Gamma,
-                         const real MinDens, const real MinPres )
+void Hydro_RiemannPredict( const real Flu_Array_In[][ FLU_NXT*FLU_NXT*FLU_NXT ], const real Half_Flux[][3][NCOMP_TOTAL],
+                           real Half_Var[][NCOMP_TOTAL], const real dt, const real dh, const real Gamma,
+                           const real MinDens, const real MinPres )
 {
 
    const int  dID3[3]   = { 1, N_HF_FLUX, N_HF_FLUX*N_HF_FLUX };
@@ -485,17 +485,17 @@ void CPU_RiemannPredict( const real Flu_Array_In[][ FLU_NXT*FLU_NXT*FLU_NXT ], c
 
 //    ensure positive density and pressure
       Half_Var[ID1][0] = FMAX( Half_Var[ID1][0], MinDens );
-      Half_Var[ID1][4] = CPU_CheckMinPresInEngy( Half_Var[ID1][0], Half_Var[ID1][1], Half_Var[ID1][2],
-                                                 Half_Var[ID1][3], Half_Var[ID1][4], Gamma_m1, _Gamma_m1, MinPres );
+      Half_Var[ID1][4] = Hydro_CheckMinPresInEngy( Half_Var[ID1][0], Half_Var[ID1][1], Half_Var[ID1][2],
+                                                   Half_Var[ID1][3], Half_Var[ID1][4], Gamma_m1, _Gamma_m1, MinPres );
 #     if ( NCOMP_PASSIVE > 0 )
       for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)
       Half_Var[ID1][v] = FMAX( Half_Var[ID1][v], TINY_NUMBER );
 #     endif
    } // i,j,k
 
-} // FUNCTION : CPU_RiemannPredict
+} // FUNCTION : Hydro_RiemannPredict
 #endif // #if ( FLU_SCHEME == MHM_RP )
 
 
 
-#endif // #if (  !defined GPU  &&  MODEL == HYDRO  &&  ( FLU_SCHEME == MHM || FLU_SCHEME == MHM_RP )  )
+#endif // #if (  MODEL == HYDRO  &&  ( FLU_SCHEME == MHM || FLU_SCHEME == MHM_RP )  )
