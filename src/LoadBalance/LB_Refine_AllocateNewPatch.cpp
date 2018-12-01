@@ -2,7 +2,7 @@
 #include "CUFLU.h"
 
 #if ( MODEL == SR_HYDRO )
-bool CPU_CheckUnphysical( const real Con[], const real Pri[]);
+bool CPU_CheckUnphysical( const real Con[], const real Pri[], const char s[], const int line);
 #endif
 
 #ifdef LOAD_BALANCE
@@ -18,7 +18,7 @@ static int AllocateSonPatch( const int FaLv, const int *Cr, const int PScale, co
 static void DeallocateSonPatch( const int FaLv, const int FaPID, const int NNew_Real0, int NewSonPID0_Real[],
                                 int SwitchIdx, int &RefineS2F_Send_NPatchTotal, int *&RefineS2F_Send_PIDList );
 
-
+static bool boolean;
 
 
 //-------------------------------------------------------------------------------------------------------
@@ -852,7 +852,7 @@ int AllocateSonPatch( const int FaLv, const int *Cr, const int PScale, const int
       {
 	 real Con[NCOMP_FLUID];
 	 for (int v = 0 ; v < NCOMP_FLUID;v++) Con[v] = FData_Flu[v][k][j][i];
-	 if(CPU_CheckUnphysical(Con, NULL)) Aux_Message(stderr,"\nUnphysical varibles!\nfunction: %s: %d\n", __FUNCTION__, __LINE__);
+	 boolean = CPU_CheckUnphysical(Con, NULL, __FUNCTION__, __LINE__);
       }
 #     endif
 #     endif

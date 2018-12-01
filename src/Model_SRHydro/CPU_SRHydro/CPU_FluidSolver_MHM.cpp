@@ -15,6 +15,8 @@ static void CPU_HancockPredict( real FC_Var[][6][NCOMP_TOTAL], const real dt, co
                                 const real C_Var[][ FLU_NXT*FLU_NXT*FLU_NXT ], const real MinDens, const real MinPres );
 #endif
 
+static bool boolean;
+
 //-------------------------------------------------------------------------------------------------------
 // Function    :  CPU_FluidSolver_MHM
 // Description :  CPU fluid solver based on the MUSCL-Hancock scheme
@@ -74,6 +76,7 @@ void CPU_FluidSolver_MHM( const real Flu_Array_In[][NCOMP_TOTAL][ FLU_NXT*FLU_NX
                           const real DualEnergySwitch, const bool NormPassive, const int NNorm, const int NormIdx[],
                           const bool JeansMinPres, const real JeansMinPres_Coeff )
 {
+
 // check
 #  ifdef GAMER_DEBUG
    if ( LR_Limiter != VANLEER  &&  LR_Limiter != GMINMOD  &&  LR_Limiter != ALBADA  &&  LR_Limiter != EXTPRE  &&
@@ -124,7 +127,7 @@ void CPU_FluidSolver_MHM( const real Flu_Array_In[][NCOMP_TOTAL][ FLU_NXT*FLU_NX
 
             for (int v=0; v<NCOMP_TOTAL; v++)   Input[v] = Half_Var[ID1][v];
 #           ifdef CHECK_NEGATIVE_IN_FLUID
-            if (CPU_CheckUnphysical(Input, NULL)) Aux_Message(stderr,"\nUnphysical varibles!\nfunction: %s: %d\n", __FUNCTION__, __LINE__);
+            boolean = CPU_CheckUnphysical(Input, NULL, __FUNCTION__, __LINE__);
 #           endif
             CPU_Con2Pri( Input, Half_Var[ID1], Gamma );
          }
@@ -162,7 +165,7 @@ void CPU_FluidSolver_MHM( const real Flu_Array_In[][NCOMP_TOTAL][ FLU_NXT*FLU_NX
             for (int v=0; v<NCOMP_TOTAL; v++)   Input[v] = Flu_Array_In[P][v][ID1];
 
 #           ifdef CHECK_NEGATIVE_IN_FLUID
-            if (CPU_CheckUnphysical(Input, NULL)) Aux_Message(stderr,"\nUnphysical varibles!\nfunction: %s: %d\n", __FUNCTION__, __LINE__);
+            boolean = CPU_CheckUnphysical(Input, NULL, __FUNCTION__, __LINE__);
 #           endif
             CPU_Con2Pri( Input, PriVar[ID1], Gamma);
          }
@@ -272,8 +275,8 @@ void CPU_RiemannPredict_Flux( const real Flu_Array_In[][ FLU_NXT*FLU_NXT*FLU_NXT
 
 //       check unphysical cells
 #        ifdef CHECK_NEGATIVE_IN_FLUID
-	 if(CPU_CheckUnphysical(ConVar_L, NULL)) Aux_Message(stderr,"\nUnphysical varibles!\nfunction: %s: %d\n", __FUNCTION__, __LINE__);
-	 if(CPU_CheckUnphysical(ConVar_R, NULL)) Aux_Message(stderr,"\nUnphysical varibles!\nfunction: %s: %d\n", __FUNCTION__, __LINE__);
+         boolean = CPU_CheckUnphysical(ConVar_L, NULL, __FUNCTION__, __LINE__);
+         boolean = CPU_CheckUnphysical(ConVar_R, NULL, __FUNCTION__, __LINE__);
 #        endif
 
 //       invoke the Riemann solver
@@ -339,6 +342,10 @@ void CPU_RiemannPredict( const real Flu_Array_In[][ FLU_NXT*FLU_NXT*FLU_NXT ],
       for (int v=0; v<NCOMP_TOTAL; v++)
          Half_Var[ID1][v] = Flu_Array_In[v][ID2] - dt_dh2*( dF[0][v] + dF[1][v] + dF[2][v] );
 
+#     ifdef CHECK_NEGATIVE_IN_FLUID
+      boolean = CPU_CheckUnphysical(Half_Var[ID1], NULL, __FUNCTION__, __LINE__);
+#     endif
+
 //    ensure positive density and pressure
       Half_Var[ID1][0] = FMAX( Half_Var[ID1][0], MinDens );
 #     ifdef CHECK_MIN_TEMP
@@ -401,7 +408,7 @@ void CPU_HancockPredict( real FC_Var[][6][NCOMP_TOTAL], const real dt, const rea
 //    check the negative density and energy
       for (int f=0; f<6; f++)
       {
-         if ( FC_Var[ID1][f][0] <= (real)0.0  ||  FC_Var[ID1][f][4] <= (real)0.0 )
+         if ( CPU_CheckUnphysical(FC_Var[ID1][f], NULL, __FUNCTION__, __LINE__) )
          {
 //          set to the values before update
             for (int v=0; v<NCOMP_TOTAL; v++)
@@ -412,16 +419,19 @@ void CPU_HancockPredict( real FC_Var[][6][NCOMP_TOTAL], const real dt, const rea
 
             break;
          }
+#     ifdef CHECK_NEGATIVE_IN_FLUID
+      boolean = CPU_CheckUnphysical(FC_Var[ID1][f], NULL, __FUNCTION__, __LINE__);
+#     endif
       }
 
+
 //    ensure positive density and pressure
+#     ifdef CHECK_MIN_TEMP
       for (int f=0; f<6; f++)
       {
-         FC_Var[ID1][f][0] = FMAX( FC_Var[ID1][f][0], MinDens );
-#        ifdef CHECK_MIN_TEMP
          FC_Var[ID1][f][4] = CPU_CheckMinTempInEngy( FC_Var[ID1][f]);
-#        endif
       }
+#     endif
 
    } // i,j,k
 

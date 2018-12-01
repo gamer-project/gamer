@@ -6,7 +6,7 @@ static int Table_01( const int SibID, const int Side, const char dim, const int 
 
 #if (MODEL == SR_HYDRO)
 void CPU_Con2Pri (const real In[], real Out[], const real Gamma);
-bool CPU_CheckUnphysical( const real Con[], const real Pri[]);
+bool CPU_CheckUnphysical( const real Con[], const real Pri[], const char s[], const int line);
 #endif
 
 
@@ -1275,15 +1275,13 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData[], const in
 //  check coarse data
     for ( int i = 0 ;i < CSize3D; i++ ){
       for (int v = 0 ; v < NCOMP_FLUID ;v++) Con[v] = *(CData+CSize3D*v+i);
-      if(CPU_CheckUnphysical(Con, NULL)) Aux_Message(stderr,"\nUnphysical varibles!\nfunction: %s: %d\n", __FUNCTION__, __LINE__);
+      boolean = CPU_CheckUnphysical(Con, NULL, __FUNCTION__, __LINE__);
     }
 
 //  ckeck fine data
     for ( int i = 0 ;i < FSize3D; i++ ){
       for (int v = 0 ; v < NCOMP_FLUID ;v++) Con[v] = *(IntData+FSize3D*v+i);
-      if(CPU_CheckUnphysical(Con, NULL)){
-        Aux_Message(stderr,"\nUnphysical varibles!\nfunction: %s: %d\n", __FUNCTION__, __LINE__);
-     }
+      boolean = CPU_CheckUnphysical(Con, NULL, __FUNCTION__, __LINE__);
     }
    }
 #  endif

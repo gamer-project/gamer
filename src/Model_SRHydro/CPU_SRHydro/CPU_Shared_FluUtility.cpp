@@ -460,7 +460,7 @@ CPU_CheckMinTempInEngy (const real Cons[])
 //-------------------------------------------------------------------------------------------------------
 // Function    : CPU_CheckUnphysical
 //-------------------------------------------------------------------------------------------------------
-bool CPU_CheckUnphysical( const real Con[], const real Pri[])
+bool CPU_CheckUnphysical( const real Con[], const real Pri[], const char s[], const int line)
 {
    real discriminant;
    real Msqr;
@@ -580,6 +580,9 @@ bool CPU_CheckUnphysical( const real Con[], const real Pri[])
 // print all variables if goto UNPHYSICAL
       UNPHYSICAL:
       {
+        if ( strcmp(s,"CPU_HancockPredict") != 0 ) {
+        Aux_Message(stderr,"function: %s: %d\n", s, line);
+ 
         Aux_Message(stderr, "\n\nD=%14.7e, Mx=%14.7e, My=%14.7e, Mz=%14.7e, E=%14.7e\n",
                              ConsVar[DENS], ConsVar[MOMX], ConsVar[MOMY], ConsVar[MOMZ], ConsVar[ENGY]);
 #       if ( CONSERVED_ENERGY == 1 )
@@ -592,6 +595,7 @@ bool CPU_CheckUnphysical( const real Con[], const real Pri[])
         Aux_Message(stderr, "Vx=%14.7e, Vy=%14.7e, Vz=%14.7e, |V|=%14.7e\n",
                              Pri3Vel[1], Pri3Vel[2], Pri3Vel[3], SQRT(SQR(Pri3Vel[1])+SQR(Pri3Vel[2])+SQR(Pri3Vel[3])));
         return true;
+          }
       }
 }
 //-------------------------------------------------------------------------------------------------------

@@ -5,7 +5,7 @@
 #if ( MODEL == ELBDM  &&  defined GAMER_DEBUG )
 void ELBDM_GetPhase_DebugOnly( real *CData, const int CSize );
 #endif
-
+static bool boolean;
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Refine
@@ -497,7 +497,7 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
 	 for (int i=0; i<FSize; i++)
 	 {
 	   for (int v = 0 ; v < NCOMP_FLUID;v++) Con[v] = Flu_FData[v][k][j][i];
-	   if(CPU_CheckUnphysical(Con, NULL)) Aux_Message(stderr,"\nUnphysical varibles!\nfunction: %s: %d\n", __FUNCTION__, __LINE__);
+	   boolean = CPU_CheckUnphysical(Con, NULL, __FUNCTION__, __LINE__);
          }
 #        endif
 #        endif

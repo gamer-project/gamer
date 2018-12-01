@@ -3,7 +3,7 @@
 #include "../../../include/CPU_prototypes.h"
 
 #if ( !defined GPU  &&  MODEL == SR_HYDRO  &&  (FLU_SCHEME == MHM || FLU_SCHEME == MHM_RP) )
-
+static bool boolean;
 //-------------------------------------------------------------------------------------------------------
 // Function    :  CPU_ComputeFlux
 // Description :  Compute the face-centered fluxes by Riemann solver
@@ -106,8 +106,8 @@ CPU_ComputeFlux(const real FC_Var[][6][NCOMP_TOTAL],
 		    }
 
 #                   ifdef CHECK_NEGATIVE_IN_FLUID
-		    if(CPU_CheckUnphysical(ConVar_L, NULL)) Aux_Message(stderr,"\nUnphysical varibles!\nfunction: %s: %d\n", __FUNCTION__, __LINE__);
-		    if(CPU_CheckUnphysical(ConVar_R, NULL)) Aux_Message(stderr,"\nUnphysical varibles!\nfunction: %s: %d\n", __FUNCTION__, __LINE__);
+		    boolean = CPU_CheckUnphysical(ConVar_L, NULL, __FUNCTION__, __LINE__);
+		    boolean = CPU_CheckUnphysical(ConVar_R, NULL, __FUNCTION__, __LINE__);
 #                   endif
 
 #                   if ( RSOLVER == HLLC )

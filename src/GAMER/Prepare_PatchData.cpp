@@ -21,6 +21,7 @@ bool ParDensArray_Initialized = false;
 
 #if (MODEL == SR_HYDRO)
 void CPU_Con2Pri (const real In[], real Out[], const real Gamma);
+static bool boolean;
 #endif
 
 
@@ -1973,7 +1974,14 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
                real *ArrayPres = Array + PresIdx*PGSize3D;
 
 //             apply minimum pressure
+#              if ( MODEL == HYDRO  ||  MODEL == MHD )
                for (int t=0; t<PGSize3D; t++)   ArrayPres[t] = FMAX( ArrayPres[t], MinPres );
+#              elif ( MODEL == SR_HYDRO )
+               for (int t=0; t<PGSize3D; t++){
+                   if ( ArrayPres[t] <= 0.0 ) 
+                   Aux_Message(stderr,"function: %s: %d: Pres=%10.7e\n", __FUNCTION__, __LINE__, ArrayPres[t]);
+               }
+#              endif
             }
 
 //          (d2-2) pressure in the energy field --> work only when ALL active fluid fields are prepared
@@ -2002,6 +2010,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
                   Con[MOMY] = ArrayMomY[t];
                   Con[MOMZ] = ArrayMomZ[t];
                   Con[ENGY] = ArrayEngy[t];
+                  boolean = CPU_CheckUnphysical(Con, NULL, __FUNCTION__, __LINE__);
 #                 ifdef CHECK_MIN_TEMP
                   ArrayEngy[t] = CPU_CheckMinTempInEngy( Con );
 #                 endif

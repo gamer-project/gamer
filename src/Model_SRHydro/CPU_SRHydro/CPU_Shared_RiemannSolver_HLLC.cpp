@@ -4,8 +4,8 @@
 
 #if ( MODEL == SR_HYDRO )
 
-
 void QuadraticSolver (real A, real B, real C, real *x_plus, real *x_minus);
+static bool boolean;
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  CPU_RiemannSolver_HLLC
@@ -75,6 +75,20 @@ void CPU_RiemannSolver_HLLC( const int XYZ,
    rV2=PR[2]*rFactor;
    rV3=PR[3]*rFactor;
 
+#  ifdef CHECK_NEGATIVE_IN_FLUID
+   real lV, rV;
+   lV = SQRT(lV1*lV1 + lV2*lV2 + lV3*lV3);
+   rV = SQRT(rV1*rV1 + rV2*rV2 + rV3*rV3);
+  
+   if ( lV >= 1.0 || rV >= 1.0 ) {
+     Aux_Message(stderr, "function: %s: %d\n", __FUNCTION__, __LINE__);
+     Aux_Message(stderr, "lV = %20.17e, rV = %20.17e\n", lV, rV);
+     Aux_Message(stderr, "lUx = %20.17e, lUy = %20.17e, lUz = %20.17e\n", PL[1], PL[2], PL[3]);
+     Aux_Message(stderr, "rUx = %20.17e, rUy = %20.17e, rUz = %20.17e\n", PR[1], PR[2], PR[3]);
+   }
+#  endif
+
+
 /* 3. Compute the max and min wave speeds used in Mignone */
 #  if ( EOS == RELATIVISTIC_IDEAL_GAS )
    real nhl =  2.5*PL[4] + SQRT(2.25*SQR(PL[4]) + SQR(PL[0]));
@@ -91,10 +105,14 @@ void CPU_RiemannSolver_HLLC( const int XYZ,
    csrsq = Gamma * PR[4] / rhr;
 #  endif
 
+#  ifdef CHECK_NEGATIVE_IN_FLUID
+   if ( cslsq >= 1.0 || csrsq >= 1.0  ) Aux_Message(stderr, "cslsq=%10.7e, cslrq=%10.7e\n", cslsq, csrsq);
+#  endif
+
+
 // square of Lorentz factor
    gammasql = 1.0 + SQR(PL[1]) + SQR(PL[2]) + SQR(PL[3]);
    gammasqr = 1.0 + SQR(PR[1]) + SQR(PR[2]) + SQR(PR[3]);
-
 
    ssl = cslsq / ( gammasql * (1.0 - cslsq) ); /* Mignone Eq 22.5 */
    ssr = csrsq / ( gammasqr * (1.0 - csrsq) );
@@ -104,6 +122,7 @@ void CPU_RiemannSolver_HLLC( const int XYZ,
 
    lmdal = MIN(lmdaml, lmdamr); /* Mignone Eq 21 */
    lmdar = MAX(lmdapl, lmdapr);
+
     
 /* 4. compute HLL flux using Mignone Eq 11 (necessary for computing lmdas (Eq 18) 
  *    compute HLL conserved quantities using Mignone eq 9
@@ -178,6 +197,10 @@ void CPU_RiemannSolver_HLLC( const int XYZ,
   Uhll[4] = (lmdar * ( CR[4] + CR[0] ) - lmdal * ( CL[4] + CL[0]) + Fl[4] - Fr[4]) * ovlrmll;
 # endif
 
+# ifdef CHECK_NEGATIVE_IN_FLUID
+  boolean = CPU_CheckUnphysical(Uhll, NULL, __FUNCTION__, __LINE__);
+# endif
+
 /* 6. Compute contact wave speed using larger root from Mignone Eq 18
  *    Physical root is the root with the minus sign
  */
@@ -189,6 +212,7 @@ void CPU_RiemannSolver_HLLC( const int XYZ,
   real temp;
 
   QuadraticSolver(a, b ,c, &temp, &lmdas);
+
 
  /* 7. Determine intercell flux according to Mignone 13
  */
@@ -211,6 +235,10 @@ void CPU_RiemannSolver_HLLC( const int XYZ,
     Usl[4] = ( CL[4] * factor0 + ps * lmdas - PL[4] * lV1) * den;
 #   elif ( CONSERVED_ENERGY == 2 )
     Usl[4] = (( CL[4] + CL[0] ) * factor0 + ps * lmdas - PL[4] * lV1) * den;
+#   endif
+
+#   ifdef CHECK_NEGATIVE_IN_FLUID
+    boolean = CPU_CheckUnphysical(Usl, NULL, __FUNCTION__, __LINE__); 
 #   endif
 
     /* now calcCLate Fsr using Mignone Eq 14 */
@@ -243,6 +271,9 @@ void CPU_RiemannSolver_HLLC( const int XYZ,
     Usr[4] = (CR[4] * factor0 + ps * lmdas - PR[4] * rV1) * den;
 #   elif ( CONSERVED_ENERGY == 2 )
     Usr[4] = (( CR[4] + CR[0] ) * factor0 + ps * lmdas - PR[4] * rV1) * den;
+#   endif
+#   ifdef CHECK_NEGATIVE_IN_FLUID
+    boolean = CPU_CheckUnphysical(Usr, NULL, __FUNCTION__, __LINE__);
 #   endif
 
     /* now calcCLate Fsr using Mignone Eq 14 */

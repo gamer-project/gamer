@@ -47,4 +47,4 @@ void CPU_3Velto4Vel( const real In[], real Out[] );
 
 real CPU_CheckMinTempInEngy (const real Con[]);
 
-bool CPU_CheckUnphysical( const real Con[], const real Pri[]);
+bool CPU_CheckUnphysical( const real Con[], const real Pri[], const char s[], const int line);

@@ -7,8 +7,8 @@ static void LimitSlope( const real L2[], const real L1[], const real C0[], const
                         const LR_Limiter_t LR_Limiter, const real MinMod_Coeff, const real EP_Coeff,
                         const real Gamma, const int XYZ, real Slope_Limiter[] );
 
-bool CPU_CheckUnphysical( const real Con[], const real Pri[]);
-
+bool CPU_CheckUnphysical( const real Con[], const real Pri[], const char s[], const int line);
+static bool boolean;
 #if ( LR_SCHEME == PLM )
 //-------------------------------------------------------------------------------------------------------
 // Function    :  CPU_DataReconstruction
@@ -110,8 +110,8 @@ void CPU_DataReconstruction( const real PriVar[][NCOMP_TOTAL], real FC_Var[][6][
                FC_Var[ID2][dL][v] = (real)2.0*PriVar[ID1][v] - FC_Var[ID2][dR][v];
             }
 #  ifdef CHECK_NEGATIVE_IN_FLUID
-	    if(CPU_CheckUnphysical(NULL,FC_Var[ID2][dR])) Aux_Message(stderr,"\nUnphysical varibles!\nfunction: %s: %d\n", __FUNCTION__, __LINE__);
-	    if(CPU_CheckUnphysical(NULL,FC_Var[ID2][dL])) Aux_Message(stderr,"\nUnphysical varibles!\nfunction: %s: %d\n", __FUNCTION__, __LINE__);
+	    boolean = CPU_CheckUnphysical(NULL,FC_Var[ID2][dR], __FUNCTION__, __LINE__);
+	    boolean = CPU_CheckUnphysical(NULL,FC_Var[ID2][dL], __FUNCTION__, __LINE__);
 #  endif
          }
          else // for the extrema-preserving limiter --> ensure positive density and pressure
@@ -124,8 +124,8 @@ void CPU_DataReconstruction( const real PriVar[][NCOMP_TOTAL], real FC_Var[][6][
             FC_Var[ID2][dR][4] = CPU_CheckMinPres( FC_Var[ID2][dR][4], MinPres );
 */
 #  ifdef CHECK_NEGATIVE_IN_FLUID
-	    if(CPU_CheckUnphysical(NULL,FC_Var[ID2][dR])) Aux_Message(stderr,"\nUnphysical varibles!\nfunction: %s: %d\n", __FUNCTION__, __LINE__);
-	    if(CPU_CheckUnphysical(NULL,FC_Var[ID2][dL])) Aux_Message(stderr,"\nUnphysical varibles!\nfunction: %s: %d\n", __FUNCTION__, __LINE__);
+	    boolean = CPU_CheckUnphysical(NULL,FC_Var[ID2][dR], __FUNCTION__, __LINE__);
+	    boolean = CPU_CheckUnphysical(NULL,FC_Var[ID2][dL], __FUNCTION__, __LINE__);
 #  endif
          }
 

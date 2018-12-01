@@ -16,7 +16,7 @@ extern bool (*Flu_ResetByUser_Func_Ptr)( real fluid[], const double x, const dou
 
 void CPU_Pri2Con( const real In[], real Out[], const real Gamma);
 void CPU_3Velto4Vel( const real In[], real Out[] );
-
+static bool boolean;
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Init_Function_User
@@ -159,7 +159,7 @@ void SRHydro_Init_ByFunction_AssignData( const int lv )
 
 //       check minimum density and pressure
 #        ifdef CHECK_NEGATIVE_IN_FLUID
-	 if(CPU_CheckUnphysical(fluid, NULL)) Aux_Message(stderr,"\nUnphysical varibles!\nfunction: %s: %d\n", __FUNCTION__, __LINE__);
+	 boolean = CPU_CheckUnphysical(fluid, NULL, __FUNCTION__, __LINE__);
 #        endif
 
 
@@ -200,7 +200,7 @@ void SRHydro_Init_ByFunction_AssignData( const int lv )
 //       check minimum density and pressure
 
 #        ifdef CHECK_NEGATIVE_IN_FLUID
-	 if(CPU_CheckUnphysical(fluid, NULL)) Aux_Message(stderr,"\nUnphysical varibles!\nfunction: %s: %d\n", __FUNCTION__, __LINE__);
+	 boolean = CPU_CheckUnphysical(fluid, NULL, __FUNCTION__, __LINE__);
 #        endif
 
 

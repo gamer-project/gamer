@@ -2,7 +2,7 @@
 #include "CUFLU.h"
 #include "../../include/CPU_prototypes.h"
 
-
+static bool boolean;
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Flu_Restrict
@@ -228,7 +228,7 @@ void Flu_Restrict( const int FaLv, const int SonFluSg, const int FaFluSg, const 
 #        elif ( MODEL == SR_HYDRO )
 	 real Con[NCOMP_FLUID];
 	 for(int v=0;v<NCOMP_FLUID;v++) Con[v]=amr->patch[FaFluSg][FaLv][FaPID]->fluid[v][k][j][i];
-	 if(CPU_CheckUnphysical(Con, NULL)) Aux_Message(stderr,"\nUnphysical varibles!\nfunction: %s: %d\n", __FUNCTION__, __LINE__);
+	 boolean = CPU_CheckUnphysical(Con, NULL, __FUNCTION__, __LINE__);
 #        endif // #ifdef DUAL_ENERGY ... else ...
       } // i,j,k
 #     endif // #if ( MODEL == HYDRO  ||  MODEL == MHD )
