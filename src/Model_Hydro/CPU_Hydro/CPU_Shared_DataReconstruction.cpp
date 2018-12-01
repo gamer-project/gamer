@@ -1064,7 +1064,7 @@ void Hydro_HancockPredict( real fc[][NCOMP_TOTAL], const real dt, const real dh,
 
    const real dt_dh2 = (real)0.5*dt/dh;
 
-   real Flux[6][NCOMP_TOTAL], dFlux[NCOMP_TOTAL];
+   real Flux[6][NCOMP_TOTAL], dFlux;
 
 
 // calculate flux
@@ -1073,9 +1073,9 @@ void Hydro_HancockPredict( real fc[][NCOMP_TOTAL], const real dt, const real dh,
 // update the face-centered variables
    for (int v=0; v<NCOMP_TOTAL; v++)
    {
-      dFlux[v] = dt_dh2*( Flux[1][v] - Flux[0][v] + Flux[3][v] - Flux[2][v] + Flux[5][v] - Flux[4][v] );
+      dFlux = dt_dh2*( Flux[1][v] - Flux[0][v] + Flux[3][v] - Flux[2][v] + Flux[5][v] - Flux[4][v] );
 
-      for (int f=0; f<6; f++)    fc[f][v] -= dFlux[v];
+      for (int f=0; f<6; f++)    fc[f][v] -= dFlux;
    }
 
 // check the negative density and energy
