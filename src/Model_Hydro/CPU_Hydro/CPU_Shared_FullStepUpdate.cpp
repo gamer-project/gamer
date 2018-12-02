@@ -58,26 +58,19 @@ void Hydro_FullStepUpdate( const real Input[][ FLU_NXT*FLU_NXT*FLU_NXT ], real O
    real dFlux[3][NCOMP_TOTAL], Output_1Cell[NCOMP_TOTAL];
 
 
-#  ifdef __CUDACC__
-   for (int idx_out=threadIdx.x; idx_out<CUBE(PS2); idx_out+=blockDim.x)
+   CGPU_LOOP( idx_out, CUBE(PS2) )
    {
-      const int size_ij = SQR(PS2);
-      const int i_out   = idx_out % PS2;
-      const int j_out   = idx_out % size_ij / PS2;
-      const int k_out   = idx_out / size_ij;
-      const int i_in    = i_out + FLU_GHOST_SIZE;
-      const int j_in    = j_out + FLU_GHOST_SIZE;
-      const int k_in    = k_out + FLU_GHOST_SIZE;
-#  else
-   for (int k_out=0, k_in=FLU_GHOST_SIZE;  k_out<PS2;  k_out++, k_in++)
-   for (int j_out=0, j_in=FLU_GHOST_SIZE;  j_out<PS2;  j_out++, j_in++)
-   for (int i_out=0, i_in=FLU_GHOST_SIZE;  i_out<PS2;  i_out++, i_in++)
-   {
-      const int idx_out  = IDX321( i_out, j_out, k_out, PS2,       PS2       );
-#  endif
+      const int size_ij  = SQR(PS2);
 
-      const int idx_in   = IDX321( i_in,  j_in,  k_in,  FLU_NXT,   FLU_NXT   );
+      const int i_out    = idx_out % PS2;
+      const int j_out    = idx_out % size_ij / PS2;
+      const int k_out    = idx_out / size_ij;
       const int idx_flux = IDX321( i_out, j_out, k_out, N_FL_FLUX, N_FL_FLUX );
+
+      const int i_in     = i_out + FLU_GHOST_SIZE;
+      const int j_in     = j_out + FLU_GHOST_SIZE;
+      const int k_in     = k_out + FLU_GHOST_SIZE;
+      const int idx_in   = IDX321( i_in, j_in, k_in, FLU_NXT, FLU_NXT );
 
 
 //    1. calculate flux difference to update the fluid data
