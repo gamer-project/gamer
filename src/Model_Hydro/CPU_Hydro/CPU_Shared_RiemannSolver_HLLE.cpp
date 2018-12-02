@@ -42,9 +42,7 @@ extern real Hydro_CheckMinPres( const real InPres, const real MinPres );
 //                Gamma    : Ratio of specific heats
 //                MinPres  : Minimum allowed pressure
 //-------------------------------------------------------------------------------------------------------
-# ifdef __CUDACC__
-__forceinline__ __device__
-#endif
+GPU_DEVICE
 void Hydro_RiemannSolver_HLLE( const int XYZ, real Flux_Out[], const real L_In[], const real R_In[],
                                const real Gamma, const real MinPres )
 {

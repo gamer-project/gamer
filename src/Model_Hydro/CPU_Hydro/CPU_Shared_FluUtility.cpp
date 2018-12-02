@@ -24,9 +24,7 @@
 //                XYZ      : Target spatial direction : (0/1/2) --> (x/y/z)
 //                Forward  : (true/false) <--> (forward/backward)
 //-------------------------------------------------------------------------------------------------------
-#ifdef __CUDACC__
-__forceinline__ __device__
-#endif
+GPU_DEVICE
 void Hydro_Rotate3D( real InOut[], const int XYZ, const bool Forward )
 {
 
@@ -83,9 +81,7 @@ void Hydro_Rotate3D( real InOut[], const int XYZ, const bool Forward )
 //                JeansMinPres       : Apply minimum pressure estimated from the Jeans length
 //                JeansMinPres_Coeff : Coefficient used by JeansMinPres = G*(Jeans_NCell*Jeans_dh)^2/(Gamma*pi);
 //-------------------------------------------------------------------------------------------------------
-#ifdef __CUDACC__
-__forceinline__ __device__
-#endif
+GPU_DEVICE
 void Hydro_Con2Pri( const real In[], real Out[], const real Gamma_m1, const real MinPres,
                     const bool NormPassive, const int NNorm, const int NormIdx[],
                     const bool JeansMinPres, const real JeansMinPres_Coeff )
@@ -135,9 +131,7 @@ void Hydro_Con2Pri( const real In[], real Out[], const real Gamma_m1, const real
 //                JeansMinPres       : Apply minimum pressure estimated from the Jeans length
 //                JeansMinPres_Coeff : Coefficient used by JeansMinPres = G*(Jeans_NCell*Jeans_dh)^2/(Gamma*pi);
 //-------------------------------------------------------------------------------------------------------
-#ifdef __CUDACC__
-__forceinline__ __device__
-#endif
+GPU_DEVICE
 void Hydro_Con2Pri_AllPatch( const real ConVar[][ FLU_NXT*FLU_NXT*FLU_NXT ],
                                    real PriVar[][ FLU_NXT*FLU_NXT*FLU_NXT ],
                              const real Gamma_m1, const real MinPres,
@@ -189,9 +183,7 @@ void Hydro_Con2Pri_AllPatch( const real ConVar[][ FLU_NXT*FLU_NXT*FLU_NXT ],
 //                NormIdx     : Target variable indices for the option "NormPassive"
 //                              --> Should be set to the global variable "PassiveNorm_VarIdx"
 //-------------------------------------------------------------------------------------------------------
-#ifdef __CUDACC__
-__forceinline__ __device__
-#endif
+GPU_DEVICE
 void Hydro_Pri2Con( const real In[], real Out[], const real _Gamma_m1,
                     const bool NormPassive, const int NNorm, const int NormIdx[] )
 {
@@ -226,9 +218,7 @@ void Hydro_Pri2Con( const real In[], real Out[], const real _Gamma_m1,
 //                Gamma_m1 : Gamma - 1
 //                MinPres  : Minimum allowed pressure
 //-------------------------------------------------------------------------------------------------------
-#ifdef __CUDACC__
-__forceinline__ __device__
-#endif
+GPU_DEVICE
 void Hydro_Con2Flux( const int XYZ, real Flux[], const real Input[], const real Gamma_m1, const real MinPres )
 {
 
@@ -277,9 +267,7 @@ void Hydro_Con2Flux( const int XYZ, real Flux[], const real Input[], const real 
 //
 // Return      :  max( InPres, MinPres )
 //-------------------------------------------------------------------------------------------------------
-#ifdef __CUDACC__
-__forceinline__ __device__
-#endif
+GPU_DEVICE
 real Hydro_CheckMinPres( const real InPres, const real MinPres )
 {
 
@@ -309,16 +297,14 @@ real Hydro_CheckMinPres( const real InPres, const real MinPres )
 //
 // Return      :  Total energy with pressure greater than the given threshold
 //-------------------------------------------------------------------------------------------------------
-#ifdef __CUDACC__
-__forceinline__ __device__
-#endif
+GPU_DEVICE
 real Hydro_CheckMinPresInEngy( const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy,
                                const real Gamma_m1, const real _Gamma_m1, const real MinPres )
 {
 
    real InPres, OutPres, Ek, _Dens;
 
-// we didn't use Hydro_GetPressure() here to void calculating kinematic energy (Ek) twice
+// we didn't use Hydro_GetPressure() here to avoid calculating kinematic energy (Ek) twice
    _Dens   = (real)1.0 / Dens;
    Ek      = (real)0.5*( SQR(MomX) + SQR(MomY) + SQR(MomZ) ) * _Dens;
    InPres  = Gamma_m1*( Engy - Ek );
@@ -344,9 +330,7 @@ real Hydro_CheckMinPresInEngy( const real Dens, const real MomX, const real MomY
 // Return      :  true  --> Input <= 0.0  ||  >= __FLT_MAX__  ||  != itself (Nan)
 //                false --> otherwise
 //-------------------------------------------------------------------------------------------------------
-#ifdef __CUDACC__
-__forceinline__ __device__
-#endif
+GPU_DEVICE
 bool Hydro_CheckNegative( const real Input )
 {
 
@@ -379,9 +363,7 @@ bool Hydro_CheckNegative( const real Input )
 //
 // Return      :  Pressure
 //-------------------------------------------------------------------------------------------------------
-#ifdef __CUDACC__
-__forceinline__ __device__
-#endif
+GPU_DEVICE
 real Hydro_GetPressure( const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy,
                         const real Gamma_m1, const bool CheckMinPres, const real MinPres )
 {
@@ -420,9 +402,7 @@ real Hydro_GetPressure( const real Dens, const real MomX, const real MomY, const
 //
 // Return      :  Temperature
 //-------------------------------------------------------------------------------------------------------
-#ifdef __CUDACC__
-__forceinline__ __device__
-#endif
+GPU_DEVICE
 real Hydro_GetTemperature( const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy,
                            const real Gamma_m1, const bool CheckMinPres, const real MinPres )
 {
@@ -462,9 +442,7 @@ real Hydro_GetTemperature( const real Dens, const real MomX, const real MomY, co
 //
 // Return      :  Gas pressure
 //-------------------------------------------------------------------------------------------------------
-#ifdef __CUDACC__
-__forceinline__ __device__
-#endif
+GPU_DEVICE
 double Hydro_Temperature2Pressure( const double Dens, const double Temp, const double mu, const double m_H,
                                    const bool CheckMinPres, const double MinPres )
 {
@@ -499,9 +477,7 @@ double Hydro_Temperature2Pressure( const double Dens, const double Temp, const d
 //
 // Return      :  Passive
 //-------------------------------------------------------------------------------------------------------
-#ifdef __CUDACC__
-__forceinline__ __device__
-#endif
+GPU_DEVICE
 void Hydro_NormalizePassive( const real GasDens, real Passive[], const int NNorm, const int NormIdx[] )
 {
 

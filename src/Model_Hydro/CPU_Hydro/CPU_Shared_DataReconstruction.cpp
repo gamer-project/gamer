@@ -84,9 +84,7 @@ GPU_DEVICE static void Hydro_Char2Pri( real Var[], const real Gamma, const real 
 //                NormIdx        : Target variable indices for the option "NormPassive"
 //                                 --> Should be set to the global variable "PassiveNorm_VarIdx"
 //------------------------------------------------------------------------------------------------------
-# ifdef __CUDACC__
-__forceinline__ __device__
-#endif
+GPU_DEVICE
 void Hydro_DataReconstruction( const real PriVar[][ FLU_NXT*FLU_NXT*FLU_NXT    ],
                                const real ConVar[][ FLU_NXT*FLU_NXT*FLU_NXT    ],
                                      real FC_Var[][NCOMP_TOTAL][ N_FC_VAR*N_FC_VAR*N_FC_VAR ],
@@ -422,6 +420,7 @@ void Hydro_DataReconstruction( const real PriVar[][ FLU_NXT*FLU_NXT*FLU_NXT    ]
 //                NormIdx        : Target variable indices for the option "NormPassive"
 //                                 --> Should be set to the global variable "PassiveNorm_VarIdx"
 //------------------------------------------------------------------------------------------------------
+GPU_DEVICE
 void Hydro_DataReconstruction( const real PriVar[]   [ FLU_NXT*FLU_NXT*FLU_NXT    ],
                                      real FC_Var[][6][ N_FC_VAR*N_FC_VAR*N_FC_VAR ],
                                const int NIn, const int NGhost, const real Gamma,
@@ -749,6 +748,7 @@ void Hydro_DataReconstruction( const real PriVar[]   [ FLU_NXT*FLU_NXT*FLU_NXT  
 //                Pres  : Pressure
 //                XYZ   : Target spatial direction : (0/1/2) --> (x/y/z)
 //-------------------------------------------------------------------------------------------------------
+GPU_DEVICE
 void Hydro_Pri2Char( real InOut[], const real Gamma, const real Rho, const real Pres, const int XYZ )
 {
 
@@ -794,6 +794,7 @@ void Hydro_Pri2Char( real InOut[], const real Gamma, const real Rho, const real 
 //                Pres  : Pressure
 //                XYZ   : Target spatial direction : (0/1/2) --> (x/y/z)
 //-------------------------------------------------------------------------------------------------------
+GPU_DEVICE
 void Hydro_Char2Pri( real InOut[], const real Gamma, const real Rho, const real Pres, const int XYZ )
 {
 
@@ -845,6 +846,7 @@ void Hydro_Char2Pri( real InOut[], const real Gamma, const real Rho, const real 
 //                REigenVec   : Array to store the output right eigenvectors
 //                Gamma       : Ratio of specific heats
 //-------------------------------------------------------------------------------------------------------
+GPU_DEVICE
 void Hydro_GetEigenSystem( const real CC_Var[], real EigenVal[][NCOMP_FLUID], real LEigenVec[][NCOMP_FLUID],
                            real REigenVec[][NCOMP_FLUID], const real Gamma )
 {
@@ -934,6 +936,7 @@ void Hydro_GetEigenSystem( const real CC_Var[], real EigenVal[][NCOMP_FLUID], re
 //                                 --> Useful only if the option "CHAR_RECONSTRUCTION" is turned on
 //                Slope_Limiter  : Array to store the output monotonic slope
 //-------------------------------------------------------------------------------------------------------
+GPU_DEVICE
 void Hydro_LimitSlope( const real L2[], const real L1[], const real C0[], const real R1[], const real R2[],
                        const LR_Limiter_t LR_Limiter, const real MinMod_Coeff, const real EP_Coeff,
                        const real Gamma, const int XYZ, real Slope_Limiter[] )
@@ -1056,6 +1059,7 @@ void Hydro_LimitSlope( const real L2[], const real L1[], const real C0[], const 
 //                cc_idx       : Index for accessing cc_array[]
 //                MinDens/Pres : Minimum allowed density and pressure
 //-------------------------------------------------------------------------------------------------------
+GPU_DEVICE
 void Hydro_HancockPredict( real fc[][NCOMP_TOTAL], const real dt, const real dh,
                            const real Gamma_m1, const real _Gamma_m1,
                            const real cc_array[][ FLU_NXT*FLU_NXT*FLU_NXT ], const int cc_idx,

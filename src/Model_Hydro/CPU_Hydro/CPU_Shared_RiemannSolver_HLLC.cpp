@@ -1,3 +1,8 @@
+#ifndef __CUFLU_RIEMANNSOLVER_HLLC__
+#define __CUFLU_RIEMANNSOLVER_HLLC__
+
+
+
 #include "GAMER.h"
 #include "CUFLU.h"
 
@@ -5,10 +10,17 @@
 
 
 
+#ifdef __CUDACC__
+
+#include "CUFLU_Shared_FluUtility.cu"
+
+#else // #ifdef __CUDACC__
+
 extern void Hydro_Rotate3D( real InOut[], const int XYZ, const bool Forward );
 extern void Hydro_Con2Flux( const int XYZ, real Flux[], const real Input[], const real Gamma_m1, const real MinPres );
 extern real Hydro_CheckMinPres( const real InPres, const real MinPres );
 
+#endif // #ifdef __CUDACC__ ... else ...
 
 
 
@@ -31,6 +43,7 @@ extern real Hydro_CheckMinPres( const real InPres, const real MinPres );
 //                Gamma    : Ratio of specific heats
 //                MinPres  : Minimum allowed pressure
 //-------------------------------------------------------------------------------------------------------
+GPU_DEVICE
 void Hydro_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In[], const real R_In[],
                                const real Gamma, const real MinPres )
 {
@@ -206,3 +219,7 @@ void Hydro_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In[]
 
 
 #endif // #if ( MODEL == HYDRO )
+
+
+
+#endif // #ifndef __CUFLU_RIEMANNSOLVER_HLLC__

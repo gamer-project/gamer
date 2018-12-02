@@ -82,9 +82,7 @@ extern void Hydro_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real
 //                DumpIntFlux     : true --> store the inter-patch fluxes in IntFlux[]
 //                IntFlux         : Array for DumpIntFlux
 //-------------------------------------------------------------------------------------------------------
-#ifdef __CUDACC__
-__forceinline__ __device__
-#endif
+GPU_DEVICE
 void Hydro_ComputeFlux( const real FC_Var [][NCOMP_TOTAL][ N_FC_VAR *N_FC_VAR *N_FC_VAR  ],
                               real FC_Flux[][NCOMP_TOTAL][ N_FC_FLUX*N_FC_FLUX*N_FC_FLUX ],
                         const int Gap, const real Gamma, const bool CorrHalfVel, const real Pot_USG[],

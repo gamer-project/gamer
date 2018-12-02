@@ -1,3 +1,8 @@
+#ifndef __CUFLU_RIEMANNSOLVER_EXACT__
+#define __CUFLU_RIEMANNSOLVER_EXACT__
+
+
+
 #include "GAMER.h"
 #include "CUFLU.h"
 
@@ -7,11 +12,19 @@
 
 
 
+#ifdef __CUDACC__
+
+#include "CUFLU_Shared_FluUtility.cu"
+
+#else // #ifdef __CUDACC__
+
 extern void Hydro_Rotate3D( real InOut[], const int XYZ, const bool Forward );
 
-static real Solve_f( const real rho,const real p,const real p_star,const real Gamma );
+#endif // #ifdef __CUDACC__ ... else ...
+
+GPU_DEVICE static real Solve_f( const real rho,const real p,const real p_star,const real Gamma );
 #if ( FLU_SCHEME == MHM  ||  FLU_SCHEME == MHM_RP  ||  FLU_SCHEME == CTU )
-static void Set_Flux( real flux[], const real val[], const real Gamma );
+GPU_DEVICE static void Set_Flux( real flux[], const real val[], const real Gamma );
 #endif
 
 
@@ -36,6 +49,7 @@ static void Set_Flux( real flux[], const real val[], const real Gamma );
 //                              --> But note that the input passive scalars should be mass density instead of mass fraction
 //                Gamma       : Ratio of specific heats
 //------------------------------------------------------------------------------------------------------
+GPU_DEVICE
 void Hydro_RiemannSolver_Exact( const int XYZ, real eival_out[], real L_star_out[], real R_star_out[],
                               real Flux_Out[], const real L_In[], const real R_In[], const real Gamma )
 {
@@ -352,6 +366,7 @@ void Hydro_RiemannSolver_Exact( const int XYZ, real eival_out[], real L_star_out
 //                p_star   : Pressure in star region
 //                Gamma    : Ratio of specific heats
 //-------------------------------------------------------------------------------------------------------
+GPU_DEVICE
 real Solve_f( const real rho, const real p, const real p_star, const real Gamma )
 {
 
@@ -407,6 +422,7 @@ real Solve_f( const real rho, const real p, const real p_star, const real Gamma 
 //                val   : Input primitive variables
 //                Gamma : Ratio of specific heats
 //-------------------------------------------------------------------------------------------------------
+GPU_DEVICE
 void Set_Flux( real flux[], const real val[], const real Gamma )
 {
 
@@ -426,3 +442,7 @@ void Set_Flux( real flux[], const real val[], const real Gamma )
 
 
 #endif // #if ( MODEL == HYDRO  &&  ( RSOLVER == EXACT || CHECK_INTE == EXACT ) && ( SCHEME == MHM/MHM_RP/CTU/WAF ) )
+
+
+
+#endif // #ifndef __CUFLU_RIEMANNSOLVER_EXACT__
