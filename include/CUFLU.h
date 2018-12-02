@@ -362,6 +362,13 @@ extern bool CPU_CheckNegative( const real Input );
 # define GPU_DEVICE
 #endif
 
+// unified CPU/GPU loop
+#ifdef __CUDACC__
+# define CGPU_LOOP( var, niter )    for (int (var)=threadIdx.x; (var)<(niter); (var)+=blockDim.x)
+#else
+# define CGPU_LOOP( var, niter )    for (int (var)=0;           (var)<(niter); (var)++          )
+#endif
+
 
 
 #endif // #ifndef __CUFLU_H__

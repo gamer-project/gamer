@@ -141,17 +141,8 @@ void Hydro_Con2Pri_AllPatch( const real ConVar[][ FLU_NXT*FLU_NXT*FLU_NXT ],
 
    real ConVar_1Cell[NCOMP_TOTAL], PriVar_1Cell[NCOMP_TOTAL];
 
-#  ifdef __CUDACC__
-   for (int idx=threadIdx.x; idx<FLU_NXT*FLU_NXT*FLU_NXT; idx+=blockDim.x)
+   CGPU_LOOP( idx, CUBE(FLU_NXT) )
    {
-#  else
-   for (int k=0; k<FLU_NXT; k++)
-   for (int j=0; j<FLU_NXT; j++)
-   for (int i=0; i<FLU_NXT; i++)
-   {
-      const int idx = IDX321( i, j, k, FLU_NXT, FLU_NXT );
-#  endif
-
       for (int v=0; v<NCOMP_TOTAL; v++)   ConVar_1Cell[v] = ConVar[v][idx];
 
       Hydro_Con2Pri( ConVar_1Cell, PriVar_1Cell, Gamma_m1, MinPres, NormPassive, NNorm, NormIdx,

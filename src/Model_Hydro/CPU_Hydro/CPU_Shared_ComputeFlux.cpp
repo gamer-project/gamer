@@ -167,25 +167,19 @@ void Hydro_ComputeFlux( const real FC_Var [][NCOMP_TOTAL][ N_FC_VAR *N_FC_VAR *N
                   idx_flux_e[0] = N_FC_VAR-2*Gap; idx_flux_e[1] = N_FC_VAR-2*Gap; idx_flux_e[2] = N_FC_VAR-1;     break;
       }
 
-#     ifdef __CUDACC__
-      for (int idx=threadIdx.x; idx<idx_flux_e[0]*idx_flux_e[1]*idx_flux_e[2]; idx+=blockDim.x)
+      CGPU_LOOP( idx, idx_flux_e[0]*idx_flux_e[1]*idx_flux_e[2] )
       {
-         const int size_ij = idx_flux_e[0]*idx_flux_e[1];
-         const int i_flux  = idx % idx_flux_e[0];
-         const int j_flux  = idx % size_ij / idx_flux_e[0];
-         const int k_flux  = idx / size_ij;
-         const int i_fc    = i_flux + idx_fc_s[0];
-         const int j_fc    = j_flux + idx_fc_s[1];
-         const int k_fc    = k_flux + idx_fc_s[2];
-#     else
-      for (int k_flux=0, k_fc=idx_fc_s[2];  k_flux<idx_flux_e[2];  k_flux++, k_fc++)
-      for (int j_flux=0, j_fc=idx_fc_s[1];  j_flux<idx_flux_e[1];  j_flux++, j_fc++)
-      for (int i_flux=0, i_fc=idx_fc_s[0];  i_flux<idx_flux_e[0];  i_flux++, i_fc++)
-      {
-#     endif
+         const int size_ij  = idx_flux_e[0]*idx_flux_e[1];
 
+         const int i_flux   = idx % idx_flux_e[0];
+         const int j_flux   = idx % size_ij / idx_flux_e[0];
+         const int k_flux   = idx / size_ij;
          const int idx_flux = IDX321( i_flux, j_flux, k_flux, N_FL_FLUX, N_FL_FLUX );
-         const int idx_fc   = IDX321( i_fc,   j_fc,   k_fc,   N_FC_VAR,  N_FC_VAR  );
+
+         const int i_fc     = i_flux + idx_fc_s[0];
+         const int j_fc     = j_flux + idx_fc_s[1];
+         const int k_fc     = k_flux + idx_fc_s[2];
+         const int idx_fc   = IDX321( i_fc, j_fc, k_fc, N_FC_VAR, N_FC_VAR );
 
          for (int v=0; v<NCOMP_TOTAL; v++)
          {

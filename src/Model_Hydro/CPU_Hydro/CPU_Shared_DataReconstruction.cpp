@@ -124,21 +124,12 @@ void Hydro_DataReconstruction( const real PriVar[][ FLU_NXT*FLU_NXT*FLU_NXT    ]
    */
 
 
-#  ifdef __CUDACC__
-   for (int idx_fc=threadIdx.x; idx_fc<CUBE(NOut); idx_fc+=blockDim.x)
+   CGPU_LOOP( idx_fc, CUBE(NOut) )
    {
       const int size_ij = SQR(NOut);
       const int i_cc    = NGhost + idx_fc%NOut;
       const int j_cc    = NGhost + idx_fc%size_ij/NOut;
       const int k_cc    = NGhost + idx_fc/size_ij;
-#  else
-   for (int k_cc=NGhost, k_fc=0;  k_cc<NGhost+NOut;  k_cc++, k_fc++)
-   for (int j_cc=NGhost, j_fc=0;  j_cc<NGhost+NOut;  j_cc++, j_fc++)
-   for (int i_cc=NGhost, i_fc=0;  i_cc<NGhost+NOut;  i_cc++, i_fc++)
-   {
-      const int idx_fc = IDX321( i_fc, j_fc, k_fc, NOut, NOut );
-#  endif
-
       const int idx_cc = IDX321( i_cc, j_cc, k_cc, NIn,  NIn  );
 
       real cc_C[NCOMP_TOTAL], cc_L[NCOMP_TOTAL], cc_R[NCOMP_TOTAL];  // cell-centered variables of the Central/Left/Right cells
