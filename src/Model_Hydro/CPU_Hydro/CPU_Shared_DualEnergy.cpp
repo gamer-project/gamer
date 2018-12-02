@@ -9,8 +9,8 @@
 #if ( MODEL == HYDRO  &&  defined DUAL_ENERGY )
 
 #if ( DUAL_ENERGY == DE_ENPY  &&  defined __CUDACC__ )
-static __device__ real Hydro_DensPres2Entropy( const real Dens, const real Pres, const real Gamma_m1 );
-static __device__ real Hydro_DensEntropy2Pres( const real Dens, const real Enpy, const real Gamma_m1,
+GPU_DEVICE static real Hydro_DensPres2Entropy( const real Dens, const real Pres, const real Gamma_m1 );
+GPU_DEVICE static real Hydro_DensEntropy2Pres( const real Dens, const real Enpy, const real Gamma_m1,
                                                const bool CheckMinPres, const real MinPres );
 #endif
 
@@ -50,9 +50,7 @@ static __device__ real Hydro_DensEntropy2Pres( const real Dens, const real Enpy,
 //
 // Return      :  Etot, Enpy, DE_Status
 //-------------------------------------------------------------------------------------------------------
-#ifdef __CUDACC__
-__forceinline__ __device__
-#endif
+GPU_DEVICE
 void Hydro_DualEnergyFix( const real Dens, const real MomX, const real MomY, const real MomZ,
                           real &Etot, real &Enpy, char &DE_Status, const real Gamma_m1, const real _Gamma_m1,
                           const bool CheckMinPres, const real MinPres, const real DualEnergySwitch )
@@ -169,9 +167,7 @@ real Hydro_Fluid2Entropy( const real Dens, const real MomX, const real MomY, con
 //
 // Return      :  Enpy
 //-------------------------------------------------------------------------------------------------------
-#ifdef __CUDACC__
-__forceinline__ __device__
-#endif
+GPU_DEVICE
 real Hydro_DensPres2Entropy( const real Dens, const real Pres, const real Gamma_m1 )
 {
 
@@ -209,9 +205,7 @@ real Hydro_DensPres2Entropy( const real Dens, const real Pres, const real Gamma_
 //
 // Return      :  Pres
 //-------------------------------------------------------------------------------------------------------
-#ifdef __CUDACC__
-__forceinline__ __device__
-#endif
+GPU_DEVICE
 real Hydro_DensEntropy2Pres( const real Dens, const real Enpy, const real Gamma_m1,
                              const bool CheckMinPres, const real MinPres )
 {

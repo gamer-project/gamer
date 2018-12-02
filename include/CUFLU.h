@@ -357,7 +357,7 @@ extern bool CPU_CheckNegative( const real Input );
 
 // GPU device function specifier
 #ifdef __CUDACC__
-# define GPU_DEVICE __device__
+# define GPU_DEVICE __forceinline__ __device__
 #else
 # define GPU_DEVICE
 #endif
