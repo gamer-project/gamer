@@ -26,10 +26,10 @@ extern double  Merger_Coll_VelY2;
 
 long Read_Particle_Number_ClusterMerger(std::string filename);
 void Read_Particles_ClusterMerger(std::string filename, long offset, long num,
-                                  real_par_in mass[], real_par_in xpos[], 
-                                  real_par_in ypos[], real_par_in zpos[], 
-                                  real_par_in xvel[], real_par_in yvel[], 
-                                  real_par_in zvel[]);
+                                  real_par_in xpos[], real_par_in ypos[], 
+				  real_par_in zpos[], real_par_in xvel[], 
+				  real_par_in yvel[], real_par_in zvel[],
+				  real_par_in mass[]);
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Par_Init_ByFunction_ClusterMerger
