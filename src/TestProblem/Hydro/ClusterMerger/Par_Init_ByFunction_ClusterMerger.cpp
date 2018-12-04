@@ -277,6 +277,8 @@ long Read_Particle_Number_ClusterMerger(std::string filename)
   dataspace = H5Dget_space(dataset);
   rank      = H5Sget_simple_extent_dims(dataspace, dims, maxdims);
 
+  H5Sclose(dataspace);
+  H5Dclose(dataset);
   H5Fclose(file_id);
 
   return (long)dims[0];
@@ -294,7 +296,8 @@ void Read_Particles_ClusterMerger(std::string filename, long offset, long num,
   herr_t  status;
 
   hsize_t start[2], stride[2], count[2], dims[2], maxdims[2];
-  hsize_t start1d[1], stride1d[1], count1d[1], dims1d[1];
+  hsize_t start1d[1], stride1d[1], count1d[1], dims1d[1], maxdims1d[1];
+  hsize_t start0[1];
 
   int rank;
 
@@ -315,56 +318,64 @@ void Read_Particles_ClusterMerger(std::string filename, long offset, long num,
 
   dims[0] = count[0];
   dims[1] = 1;
+
+  count1d[0] = (hsize_t)num;
+  dims1d[0] = count1d[0];
+  stride1d[0] = 1;
+  start1d[0] = 0;
  
   start[1] = 0;
 
   status = H5Sselect_hyperslab(dataspace, H5S_SELECT_SET, start,
                                stride, count, NULL);
-  memspace = H5Screate_simple(rank, dims, NULL);
+  memspace = H5Screate_simple(1, dims1d, NULL);
+  status = H5Sselect_hyperslab(memspace, H5S_SELECT_SET, start1d,
+                               stride1d, count1d, NULL);
   status = H5Dread(dataset, H5T_NATIVE_DOUBLE, memspace, dataspace,
                    H5P_DEFAULT, xpos);
 
   if (status < 0) {
-     Aux_Message(stderr, "Could not read particle x-position!!")
+    Aux_Message(stderr, "Could not read particle x-position!!\n");
   } 
 
   H5Sclose(memspace);
   H5Sclose(dataspace);
-
   dataspace = H5Dget_space(dataset);
 
   start[1] = 1;
 
   status = H5Sselect_hyperslab(dataspace, H5S_SELECT_SET, start,
                                stride, count, NULL);
-  memspace = H5Screate_simple(rank, dims, NULL);
+  memspace = H5Screate_simple(1, dims1d, NULL);
+  status = H5Sselect_hyperslab(memspace, H5S_SELECT_SET, start1d,
+                               stride1d, count1d, NULL);
   status = H5Dread(dataset, H5T_NATIVE_DOUBLE, memspace, dataspace,
                    H5P_DEFAULT, ypos);
   
   if (status < 0) {
-     Aux_Message(stderr, "Could not read particle y-position!!")
+    Aux_Message(stderr, "Could not read particle y-position!!\n");
   } 
 
   H5Sclose(memspace);
   H5Sclose(dataspace);
-
   dataspace = H5Dget_space(dataset);
 
   start[1] = 2;
 
   status = H5Sselect_hyperslab(dataspace, H5S_SELECT_SET, start,
                                stride, count, NULL);
-  memspace = H5Screate_simple(rank, dims, NULL);
+  memspace = H5Screate_simple(1, dims1d, NULL);
+  status = H5Sselect_hyperslab(memspace, H5S_SELECT_SET, start1d,
+                               stride1d, count1d, NULL);
   status = H5Dread(dataset, H5T_NATIVE_DOUBLE, memspace, dataspace,
                    H5P_DEFAULT, zpos);
   
   if (status < 0) {
-     Aux_Message(stderr, "Could not read particle z-position!!")
+    Aux_Message(stderr, "Could not read particle z-position!!\n");
   } 
 
   H5Sclose(memspace);
   H5Sclose(dataspace);
-
   H5Dclose(dataset);
 
   dataset   = H5Dopen(file_id, "/dm/particle_velocity", H5P_DEFAULT);
@@ -375,12 +386,14 @@ void Read_Particles_ClusterMerger(std::string filename, long offset, long num,
 
   status = H5Sselect_hyperslab(dataspace, H5S_SELECT_SET, start,
                                stride, count, NULL);
-  memspace = H5Screate_simple(rank, dims, NULL);
+  memspace = H5Screate_simple(1, dims1d, NULL);
+  status = H5Sselect_hyperslab(memspace, H5S_SELECT_SET, start1d,
+                               stride1d, count1d, NULL);
   status = H5Dread(dataset, H5T_NATIVE_DOUBLE, memspace, dataspace,
                    H5P_DEFAULT, xvel);
 
   if (status < 0) {
-     Aux_Message(stderr, "Could not read particle x-velocity!!")
+    Aux_Message(stderr, "Could not read particle x-velocity!!\n");
   } 
 
   H5Sclose(memspace);
@@ -392,12 +405,14 @@ void Read_Particles_ClusterMerger(std::string filename, long offset, long num,
 
   status = H5Sselect_hyperslab(dataspace, H5S_SELECT_SET, start,
                                stride, count, NULL);
-  memspace = H5Screate_simple(rank, dims, NULL);
+  memspace = H5Screate_simple(1, dims1d, NULL);
+  status = H5Sselect_hyperslab(memspace, H5S_SELECT_SET, start1d,
+                               stride1d, count1d, NULL);
   status = H5Dread(dataset, H5T_NATIVE_DOUBLE, memspace, dataspace,
                    H5P_DEFAULT, yvel);
 
   if (status < 0) {
-     Aux_Message(stderr, "Could not read particle y-velocity!!")
+    Aux_Message(stderr, "Could not read particle y-velocity!!\n");
   } 
 
   H5Sclose(memspace);
@@ -409,36 +424,38 @@ void Read_Particles_ClusterMerger(std::string filename, long offset, long num,
 
   status = H5Sselect_hyperslab(dataspace, H5S_SELECT_SET, start,
                                stride, count, NULL);
-  memspace = H5Screate_simple(rank, dims, NULL);
+  memspace = H5Screate_simple(1, dims1d, NULL);
+  status = H5Sselect_hyperslab(memspace, H5S_SELECT_SET, start1d,
+                               stride1d, count1d, NULL);
   status = H5Dread(dataset, H5T_NATIVE_DOUBLE, memspace, dataspace,
                    H5P_DEFAULT, zvel);
 
   if (status < 0) {
-     Aux_Message(stderr, "Could not read particle z-velocity!!")
+    Aux_Message(stderr, "Could not read particle z-velocity!!\n");
   } 
 
   H5Sclose(memspace);
   H5Sclose(dataspace);
-
   H5Dclose(dataset);
 
   dataset   = H5Dopen(file_id, "/dm/particle_mass", H5P_DEFAULT);
 
   dataspace = H5Dget_space(dataset);
 
-  count1d[0] = (hsize_t)num;
-  dims1d[0] = (hsize_t)num;
-  stride1d[0] = 1;
   start1d[0] = (hsize_t)offset;
+  start0[0] = 0;
 
   status = H5Sselect_hyperslab(dataspace, H5S_SELECT_SET, start1d,
                                stride1d, count1d, NULL);
-  memspace = H5Screate_simple(rank, dims1d, NULL);
+  rank      = H5Sget_simple_extent_dims(dataspace, dims1d, maxdims1d);
+  memspace = H5Screate_simple(1, dims1d, NULL);
+  status = H5Sselect_hyperslab(memspace, H5S_SELECT_SET, start0,
+                               stride1d, count1d, NULL);
   status = H5Dread(dataset, H5T_NATIVE_DOUBLE, memspace, dataspace,
                    H5P_DEFAULT, mass);
 
   if (status < 0) {
-     Aux_Message( stderr, "Could not read particle masses!!")
+    Aux_Message( stderr, "Could not read particle mass!!\n");
   } 
 
   H5Sclose(memspace);
