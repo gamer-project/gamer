@@ -14,6 +14,9 @@
 
 extern void Hydro_Rotate3D( real InOut[], const int XYZ, const bool Forward );
 extern real Hydro_CheckMinPres( const real InPres, const real MinPres );
+extern void Hydro_Con2Pri( const real In[], real Out[], const real Gamma_m1, const real MinPres,
+                           const bool NormPassive, const int NNorm, const int NormIdx[],
+                           const bool JeansMinPres, const real JeansMinPres_Coeff );
 extern void Hydro_Pri2Con( const real In[], real Out[], const real _Gamma_m1,
                            const bool NormPassive, const int NNorm, const int NormIdx[] );
 #if ( FLU_SCHEME == MHM )
@@ -49,8 +52,8 @@ GPU_DEVICE static void Hydro_Char2Pri( real Var[], const real Gamma, const real 
 // Description :  Reconstruct the face-centered variables by the piecewise-linear method (PLM)
 //
 // Note        :  1. Use the parameter "LR_Limiter" to choose different slope limiters
-//                2. Input data are primitive variables while output data are conserved variables
-//                   --> The latter is because Hydro_HancockPredict() works with conserved variables
+//                2. Both the input and output data are conserved variables
+//                   --> Note that Hydro_HancockPredict() only works with conserved variables
 //                3. PLM and PPM data reconstruction functions share the same function name
 //                4. Face-centered variables will be advanced by half time-step for the MHM and CTU schemes
 //                5. Data reconstruction can be applied to characteristic variables by
@@ -58,41 +61,44 @@ GPU_DEVICE static void Hydro_Char2Pri( real Var[], const real Gamma, const real 
 //                6. This function is shared by MHM, MHM_RP, and CTU schemes
 //
 //
-// Parameter   :  PriVar         : Array storing the input cell-centered primitive variables
-//                ConVar         : Array storing the input cell-centered conserved variables
-//                                 --> Only for checking negative density and pressure in Hydro_HancockPredict()
-//                FC_Var         : Array to store the output face-centered primitive variables
-//                NIn            : Size of PriVar[] along each direction
-//                                 --> Can be smaller than FLU_NXT
-//                NGhost         : Number of ghost zones
-//                                  --> "NIn-2*NGhost" cells will be computed along each direction
-//                                  --> Size of FC_Var[] is assumed to be "(NIn-2*NGhost)^3"
-//                                  --> The reconstructed data at cell (i,j,k) will be stored in the
-//                                      array "FC_Var" with the index "(i-NGhost,j-NGhost,k-NGhost)
-//                Gamma          : Ratio of specific heats
-//                LR_Limiter     : Slope limiter for the data reconstruction in the MHM/MHM_RP/CTU schemes
-//                                 (0/1/2/3/4) = (vanLeer/generalized MinMod/vanAlbada/
-//                                                vanLeer + generalized MinMod/extrema-preserving) limiter
-//                MinMod_Coeff   : Coefficient of the generalized MinMod limiter
-//                EP_Coeff       : Coefficient of the extrema-preserving limiter
-//                dt             : Time interval to advance solution (for the CTU scheme)
-//                dh             : Cell size
-//                MinDens/Pres   : Minimum allowed density and pressure
-//                NormPassive    : true --> convert passive scalars to mass fraction
-//                NNorm          : Number of passive scalars for the option "NormPassive"
-//                                 --> Should be set to the global variable "PassiveNorm_NVar"
-//                NormIdx        : Target variable indices for the option "NormPassive"
-//                                 --> Should be set to the global variable "PassiveNorm_VarIdx"
+// Parameter   :  ConVar             : Array storing the input cell-centered conserved variables
+//                PriVar             : Array to store the cell-centered primitive variables converted from ConVar[]
+//                                     --> Note that for MHM_RP, ConVar[] and PriVar[] point to the same array
+//                FC_Var             : Array to store the output face-centered primitive variables
+//                NIn                : Size of PriVar[] along each direction
+//                                     --> Can be smaller than FLU_NXT
+//                NGhost             : Number of ghost zones
+//                                      --> "NIn-2*NGhost" cells will be computed along each direction
+//                                      --> Size of FC_Var[] is assumed to be "(NIn-2*NGhost)^3"
+//                                      --> The reconstructed data at cell (i,j,k) will be stored in the
+//                                          array "FC_Var" with the index "(i-NGhost,j-NGhost,k-NGhost)
+//                Gamma              : Ratio of specific heats
+//                LR_Limiter         : Slope limiter for the data reconstruction in the MHM/MHM_RP/CTU schemes
+//                                     (0/1/2/3/4) = (vanLeer/generalized MinMod/vanAlbada/
+//                                                    vanLeer + generalized MinMod/extrema-preserving) limiter
+//                MinMod_Coeff       : Coefficient of the generalized MinMod limiter
+//                EP_Coeff           : Coefficient of the extrema-preserving limiter
+//                dt                 : Time interval to advance solution (for the CTU scheme)
+//                dh                 : Cell size
+//                MinDens/Pres       : Minimum allowed density and pressure
+//                NormPassive        : true --> convert passive scalars to mass fraction
+//                NNorm              : Number of passive scalars for the option "NormPassive"
+//                                     --> Should be set to the global variable "PassiveNorm_NVar"
+//                NormIdx            : Target variable indices for the option "NormPassive"
+//                                     --> Should be set to the global variable "PassiveNorm_VarIdx"
+//                JeansMinPres       : Apply minimum pressure estimated from the Jeans length
+//                JeansMinPres_Coeff : Coefficient used by JeansMinPres = G*(Jeans_NCell*Jeans_dh)^2/(Gamma*pi);
 //------------------------------------------------------------------------------------------------------
 GPU_DEVICE
-void Hydro_DataReconstruction( const real PriVar[][ FLU_NXT*FLU_NXT*FLU_NXT    ],
-                               const real ConVar[][ FLU_NXT*FLU_NXT*FLU_NXT    ],
+void Hydro_DataReconstruction( const real ConVar[][ FLU_NXT*FLU_NXT*FLU_NXT ],
+                                     real PriVar[][ FLU_NXT*FLU_NXT*FLU_NXT ],
                                      real FC_Var[][NCOMP_TOTAL][ N_FC_VAR*N_FC_VAR*N_FC_VAR ],
                                const int NIn, const int NGhost, const real Gamma,
                                const LR_Limiter_t LR_Limiter, const real MinMod_Coeff,
                                const real EP_Coeff, const real dt, const real dh,
                                const real MinDens, const real MinPres,
-                               const bool NormPassive, const int NNorm, const int NormIdx[] )
+                               const bool NormPassive, const int NNorm, const int NormIdx[],
+                               const bool JeansMinPres, const real JeansMinPres_Coeff )
 {
 
    const int  didx_cc[3] = { 1, NIn, NIn*NIn };
@@ -124,6 +130,25 @@ void Hydro_DataReconstruction( const real PriVar[][ FLU_NXT*FLU_NXT*FLU_NXT    ]
    */
 
 
+// 0. conserved --> primitive variables
+   real ConVar_1Cell[NCOMP_TOTAL], PriVar_1Cell[NCOMP_TOTAL];
+
+   CGPU_LOOP( idx, CUBE(NIn) )
+   {
+      for (int v=0; v<NCOMP_TOTAL; v++)   ConVar_1Cell[v] = ConVar[v][idx];
+
+      Hydro_Con2Pri( ConVar_1Cell, PriVar_1Cell, Gamma_m1, MinPres, NormPassive, NNorm, NormIdx,
+                     JeansMinPres, JeansMinPres_Coeff );
+
+      for (int v=0; v<NCOMP_TOTAL; v++)   PriVar[v][idx] = PriVar_1Cell[v];
+   }
+
+#  ifdef __CUDACC__
+   __syncthreads();
+#  endif
+
+
+// data reconstruction
    CGPU_LOOP( idx_fc, CUBE(NOut) )
    {
       const int size_ij = SQR(NOut);
@@ -368,6 +393,11 @@ void Hydro_DataReconstruction( const real PriVar[][ FLU_NXT*FLU_NXT*FLU_NXT    ]
          FC_Var[f][v][idx_fc] = fc[f][v];
 
    } // k,j,i
+
+
+#  ifdef __CUDACC__
+   __syncthreads();
+#  endif
 
 } // FUNCTION : Hydro_DataReconstruction (PLM)
 #endif // #if ( LR_SCHEME == PLM )
@@ -718,6 +748,10 @@ void Hydro_DataReconstruction( const real PriVar[]   [ FLU_NXT*FLU_NXT*FLU_NXT  
 
    CONSERVE --> PREMITIVE
 
+
+#  ifdef __CUDACC__
+   __syncthreads();
+#  endif
 
 } // FUNCTION : Hydro_DataReconstruction (PPM)
 #endif // #if ( LR_SCHEME == PPM )

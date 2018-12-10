@@ -25,19 +25,15 @@
 
 #else // #ifdef __CUDACC__
 
-extern void Hydro_DataReconstruction( const real PriVar[][ FLU_NXT*FLU_NXT*FLU_NXT    ],
-                                      const real ConVar[][ FLU_NXT*FLU_NXT*FLU_NXT    ],
+extern void Hydro_DataReconstruction( const real ConVar[][ FLU_NXT*FLU_NXT*FLU_NXT ],
+                                            real PriVar[][ FLU_NXT*FLU_NXT*FLU_NXT ],
                                             real FC_Var[][NCOMP_TOTAL][ N_FC_VAR*N_FC_VAR*N_FC_VAR ],
                                       const int NIn, const int NGhost, const real Gamma,
                                       const LR_Limiter_t LR_Limiter, const real MinMod_Coeff,
                                       const real EP_Coeff, const real dt, const real dh,
                                       const real MinDens, const real MinPres,
-                                      const bool NormPassive, const int NNorm, const int NormIdx[] );
-extern void Hydro_Con2Pri_AllPatch( const real ConVar[][ FLU_NXT*FLU_NXT*FLU_NXT ],
-                                          real PriVar[][ FLU_NXT*FLU_NXT*FLU_NXT ],
-                                    const real Gamma_m1, const real MinPres,
-                                    const bool NormPassive, const int NNorm, const int NormIdx[],
-                                    const bool JeansMinPres, const real JeansMinPres_Coeff );
+                                      const bool NormPassive, const int NNorm, const int NormIdx[],
+                                      const bool JeansMinPres, const real JeansMinPres_Coeff );
 extern void Hydro_ComputeFlux( const real FC_Var [][NCOMP_TOTAL][ N_FC_VAR *N_FC_VAR *N_FC_VAR  ],
                                      real FC_Flux[][NCOMP_TOTAL][ N_FC_FLUX*N_FC_FLUX*N_FC_FLUX ],
                                const int Gap, const real Gamma, const bool CorrHalfVel, const real Pot_USG[],
@@ -192,7 +188,8 @@ __constant__ int *NormIdx = NULL;
 //                JeansMinPres_Coeff : Coefficient used by JeansMinPres = G*(Jeans_NCell*Jeans_dh)^2/(Gamma*pi);
 //-------------------------------------------------------------------------------------------------------
 #ifdef __CUDACC__
-__global__ void CUFLU_FluidSolver_MHM(
+__global__
+void CUFLU_FluidSolver_MHM(
    const real   Flu_Array_In []   [NCOMP_TOTAL][ FLU_NXT*FLU_NXT*FLU_NXT ],
          real   Flu_Array_Out[]   [NCOMP_TOTAL][ PS2*PS2*PS2 ],
          char   DE_Array_Out []                [ PS2*PS2*PS2 ],
@@ -306,22 +303,10 @@ void CPU_FluidSolver_MHM(
 //       (1-b) MHM: use interpolated face-centered values to calculate the half-step fluxes
 #        elif ( FLU_SCHEME == MHM )
 
-//       (1-b-1) conserved variables --> primitive variables
-         Hydro_Con2Pri_AllPatch( Flu_Array_In[P], PriVar_1PG, Gamma_m1, MinPres, NormPassive, NNorm, NormIdx,
-                                 JeansMinPres, JeansMinPres_Coeff );
-#        ifdef __CUDACC__
-         __syncthreads();
-#        endif
-
-
-//       (1-b-2) evaluate the face-centered values by data reconstruction
-         Hydro_DataReconstruction( PriVar_1PG, Flu_Array_In[P], FC_Var_1PG, FLU_NXT, FLU_GHOST_SIZE-1,
-                                   Gamma, LR_Limiter, MinMod_Coeff, EP_Coeff, dt, dh,
-                                   MinDens, MinPres, NormPassive, NNorm, NormIdx );
-#        ifdef __CUDACC__
-         __syncthreads();
-#        endif
-
+//       evaluate the face-centered values by data reconstruction
+         Hydro_DataReconstruction( Flu_Array_In[P], PriVar_1PG, FC_Var_1PG, FLU_NXT, FLU_GHOST_SIZE-1,
+                                   Gamma, LR_Limiter, MinMod_Coeff, EP_Coeff, dt, dh, MinDens, MinPres,
+                                   NormPassive, NNorm, NormIdx, JeansMinPres, JeansMinPres_Coeff );
 #        endif // #if ( FLU_SCHEME == MHM_RP ) ... else ...
 
 

@@ -116,46 +116,6 @@ void Hydro_Con2Pri( const real In[], real Out[], const real Gamma_m1, const real
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Hydro_Con2Pri_AllPatch
-// Description :  Conserved variables --> primitive variables for all patches
-//
-// Parameter   :  ConVar             : Input conserved variables
-//                PriVar             : Output primitive variables
-//                Gamma_m1           : Gamma - 1
-//                MinPres            : Minimum allowed pressure
-//                NormPassive        : true --> convert passive scalars to mass fraction
-//                NNorm              : Number of passive scalars for the option "NormPassive"
-//                                     --> Should be set to the global variable "PassiveNorm_NVar"
-//                NormIdx            : Target variable indices for the option "NormPassive"
-//                                     --> Should be set to the global variable "PassiveNorm_VarIdx"
-//                JeansMinPres       : Apply minimum pressure estimated from the Jeans length
-//                JeansMinPres_Coeff : Coefficient used by JeansMinPres = G*(Jeans_NCell*Jeans_dh)^2/(Gamma*pi);
-//-------------------------------------------------------------------------------------------------------
-GPU_DEVICE
-void Hydro_Con2Pri_AllPatch( const real ConVar[][ FLU_NXT*FLU_NXT*FLU_NXT ],
-                                   real PriVar[][ FLU_NXT*FLU_NXT*FLU_NXT ],
-                             const real Gamma_m1, const real MinPres,
-                             const bool NormPassive, const int NNorm, const int NormIdx[],
-                             const bool JeansMinPres, const real JeansMinPres_Coeff )
-{
-
-   real ConVar_1Cell[NCOMP_TOTAL], PriVar_1Cell[NCOMP_TOTAL];
-
-   CGPU_LOOP( idx, CUBE(FLU_NXT) )
-   {
-      for (int v=0; v<NCOMP_TOTAL; v++)   ConVar_1Cell[v] = ConVar[v][idx];
-
-      Hydro_Con2Pri( ConVar_1Cell, PriVar_1Cell, Gamma_m1, MinPres, NormPassive, NNorm, NormIdx,
-                     JeansMinPres, JeansMinPres_Coeff );
-
-      for (int v=0; v<NCOMP_TOTAL; v++)   PriVar[v][idx] = PriVar_1Cell[v];
-   }
-
-} // FUNCTION : Hydro_Con2Pri_AllPatch
-
-
-
-//-------------------------------------------------------------------------------------------------------
 // Function    :  Hydro_Pri2Con
 // Description :  Primitive variables --> conserved variables
 //
