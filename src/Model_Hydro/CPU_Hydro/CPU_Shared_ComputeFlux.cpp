@@ -296,6 +296,11 @@ void Hydro_ComputeFlux( const real FC_Var [][NCOMP_TOTAL][ N_FC_VAR *N_FC_VAR *N
       } // i,j,k
    } // for (int d=0; d<3; d++)
 
+
+#  ifdef __CUDACC__
+   __syncthreads();
+#  endif
+
 } // FUNCTION : Hydro_ComputeFlux
 
 

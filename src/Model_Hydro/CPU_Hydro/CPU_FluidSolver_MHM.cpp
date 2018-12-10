@@ -323,10 +323,6 @@ void CPU_FluidSolver_MHM(
                             StoreFlux, Flux_Array[P] );
 #        endif
 
-#        ifdef __CUDACC__
-         __syncthreads();
-#        endif
-
 
 //       3. full-step evolution
          Hydro_FullStepUpdate( Flu_Array_In[P], Flu_Array_Out[P], DE_Array_Out[P],
