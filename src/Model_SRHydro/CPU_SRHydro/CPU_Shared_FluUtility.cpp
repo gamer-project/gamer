@@ -594,8 +594,8 @@ bool CPU_CheckUnphysical( const real Con[], const real Pri[], const char s[], co
                              Pri4Vel[0], Pri4Vel[1], Pri4Vel[2], Pri4Vel[3], Pri4Vel[4]);
         Aux_Message(stderr, "Vx=%14.7e, Vy=%14.7e, Vz=%14.7e, |V|=%14.7e\n",
                              Pri3Vel[1], Pri3Vel[2], Pri3Vel[3], SQRT(SQR(Pri3Vel[1])+SQR(Pri3Vel[2])+SQR(Pri3Vel[3])));
-        return true;
           }
+        return true;
       }
 }
 //-------------------------------------------------------------------------------------------------------

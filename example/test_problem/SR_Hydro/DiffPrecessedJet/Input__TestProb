@@ -1,0 +1,22 @@
+# problem-specific runtime parameters
+Jet_BgDens                           1.00                   # ambient density
+Jet_BgPres                           1.00                   # ambient temperature
+Jet_BgVel_x                          +0.0                   # ambient velocity x [0.0]
+Jet_BgVel_y                          +0.0                   # ambient velocity y [0.0]
+Jet_BgVel_z                          +0.0                   # ambient velocity z [0.0]
+
+Jet_Radius                           0.5                    # radius of the cylinder-shape jet source
+Jet_HalfHeight                       0.5                    # half height of the cylinder-shape jet source
+Jet_SrcVel                           120                    # jet velocity
+Jet_SrcDens                          0.01                   # jet density
+Jet_SrcPres                          1.00                   # jet temperature
+Jet_Cone_Vec_x                       1.0                    # precession direction x
+Jet_Cone_Vec_y                       0.0                    # precession direction y
+Jet_Cone_Vec_z                       0.0                    # precession direction z
+Jet_CenOffset_x                     +0.0                    # jet central coordinates offset x
+Jet_CenOffset_y                     +0.0                    # jet central coordinates offset y
+Jet_CenOffset_z                     +0.0                    # jet central coordinates offset z
+Jet_Angular_Velocity                +30.0                   # precession angular velocity at Schwarzschild radius (degree per code_time)
+Jet_Angle                             30                    # precession angle in degree
+Jet_NumShell                          4
+BH_Radius                             1.0

@@ -235,7 +235,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Flu_ResetByUser_TwistedJet
+// Function    :  Flu_ResetByUser_PrecessedJet
 // Description :  Function to reset the fluid field
 //
 // Note        :  1. Invoked by "Flu_ResetByUser_API()" and "Model_Init_ByFunction_AssignData()" using the
@@ -258,7 +258,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 // Return      :  true  : This cell has been reset
 //                false : This cell has not been reset
 //-------------------------------------------------------------------------------------------------------
-bool Flu_ResetByUser_TwistedJet( real fluid[], const double x, const double y, const double z, const double Time,
+bool Flu_ResetByUser_PrecessedJet( real fluid[], const double x, const double y, const double z, const double Time,
                                     const int lv, double AuxArray[] )
 {
 
@@ -270,6 +270,13 @@ bool Flu_ResetByUser_TwistedJet( real fluid[], const double x, const double y, c
    double Cos_Phi, Sin_Phi, Sin_Angle, Cos_Angle, Sin_Omega, Cos_Omega;
    double Angle, Omega_t;
    real   MomSin;
+
+// distance: jet center to mesh
+   for (int d=0; d<3; d++)    Vec_c2m[d] = r[d] - Jet_Cen[d];
+   Dis_c2m = sqrt( SQR(Vec_c2m[0]) + SQR(Vec_c2m[1]) + SQR(Vec_c2m[2]) );
+
+// exclude cells far away from the jet source
+   if ( Dis_c2m > Jet_MaxDis )   return false;
 
    Dis_Cone_Vec_2 = sqrt(SQR(Jet_Cone_Vec[0]) + SQR(Jet_Cone_Vec[1])); 
    Dis_Cone_Vec   = sqrt(SQR(Jet_Cone_Vec[0]) + SQR(Jet_Cone_Vec[1]) + SQR(Jet_Cone_Vec[2]));
@@ -308,12 +315,6 @@ bool Flu_ResetByUser_TwistedJet( real fluid[], const double x, const double y, c
       Jet_Vec[2] = Dis_Cone_Vec * Cos_Angle;
    }
 
-//  distance: jet center to mesh
-    for (int d=0; d<3; d++)    Vec_c2m[d] = r[d] - Jet_Cen[d];
-    Dis_c2m = sqrt( SQR(Vec_c2m[0]) + SQR(Vec_c2m[1]) + SQR(Vec_c2m[2]) );
-
-//  exclude cells far away from the jet source
-    if ( Dis_c2m > Jet_MaxDis )   return false;
 
 //  distance: jet center to temporary vector
     Dis_c2v = sqrt( SQR(Jet_Vec[0]) + SQR(Jet_Vec[1]) + SQR(Jet_Vec[2]) );
@@ -358,7 +359,7 @@ bool Flu_ResetByUser_TwistedJet( real fluid[], const double x, const double y, c
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Init_TestProb_SRHydro_TwistedJet
+// Function    :  Init_TestProb_SRHydro_PrecessedJet
 // Description :  Test problem initializer
 //
 // Note        :  None
@@ -367,7 +368,7 @@ bool Flu_ResetByUser_TwistedJet( real fluid[], const double x, const double y, c
 //
 // Return      :  None
 //-------------------------------------------------------------------------------------------------------
-void Init_TestProb_SRHydro_TwistedJet()
+void Init_TestProb_SRHydro_PrecessedJet()
 {
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ...\n", __FUNCTION__ );
@@ -382,7 +383,7 @@ void Init_TestProb_SRHydro_TwistedJet()
    Flag_User_Ptr            = NULL;
    Mis_GetTimeStep_User_Ptr = NULL;
    BC_User_Ptr              = NULL;
-   Flu_ResetByUser_Func_Ptr = Flu_ResetByUser_TwistedJet;
+   Flu_ResetByUser_Func_Ptr = Flu_ResetByUser_PrecessedJet;
    Output_User_Ptr          = NULL;
    Aux_Record_User_Ptr      = NULL;
    End_User_Ptr             = NULL;
