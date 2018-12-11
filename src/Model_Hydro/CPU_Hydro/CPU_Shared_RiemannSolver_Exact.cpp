@@ -183,17 +183,17 @@ void Hydro_RiemannSolver_Exact( const int XYZ, real eival_out[], real L_star_out
 
 #     ifdef CHECK_NEGATIVE_IN_FLUID
       if ( Hydro_CheckNegative(L[4]) )
-         Aux_Message( stderr, "ERROR : negative pressure (%14.7e) at file <%s>, line <%d>, function <%s>\n",
-                      L[4],      __FILE__, __LINE__, __FUNCTION__ );
+         printf( "ERROR : negative pressure (%14.7e) at file <%s>, line <%d>, function <%s>\n",
+                 L[4],      __FILE__, __LINE__, __FUNCTION__ );
       if ( Hydro_CheckNegative(L[0]) )
-         Aux_Message( stderr, "ERROR : negative density (%14.7e) at file <%s>, line <%d>, function <%s>\n",
-                      L[0],      __FILE__, __LINE__, __FUNCTION__ );
+         printf( "ERROR : negative density (%14.7e) at file <%s>, line <%d>, function <%s>\n",
+                 L[0],      __FILE__, __LINE__, __FUNCTION__ );
       if ( Hydro_CheckNegative(L_star[4]) )
-         Aux_Message( stderr, "ERROR : negative pressure (%14.7e) at file <%s>, line <%d>, function <%s>\n",
-                      L_star[4], __FILE__, __LINE__, __FUNCTION__ );
+         printf( "ERROR : negative pressure (%14.7e) at file <%s>, line <%d>, function <%s>\n",
+                 L_star[4], __FILE__, __LINE__, __FUNCTION__ );
       if ( Hydro_CheckNegative(L_star[0]) )
-         Aux_Message( stderr, "ERROR : negative density(%14.7e) at file <%s>, line <%d>, function <%s>\n",
-                      L_star[0], __FILE__, __LINE__, __FUNCTION__ );
+         printf( "ERROR : negative density(%14.7e) at file <%s>, line <%d>, function <%s>\n",
+                 L_star[0], __FILE__, __LINE__, __FUNCTION__ );
 #     endif
 
       real a_L    = SQRT( Gamma * L[4] / L[0] );                  // sound speed of left region
@@ -220,17 +220,17 @@ void Hydro_RiemannSolver_Exact( const int XYZ, real eival_out[], real L_star_out
 
 #     ifdef CHECK_NEGATIVE_IN_FLUID
       if ( Hydro_CheckNegative(R[4]) )
-         Aux_Message( stderr, "ERROR : negative pressure (%14.7e) at file <%s>, line <%d>, function <%s>\n",
-                      R[4],      __FILE__, __LINE__, __FUNCTION__ );
+         printf( "ERROR : negative pressure (%14.7e) at file <%s>, line <%d>, function <%s>\n",
+                 R[4],      __FILE__, __LINE__, __FUNCTION__ );
       if ( Hydro_CheckNegative(R[0]) )
-         Aux_Message( stderr, "ERROR : negative density (%14.7e) at file <%s>, line <%d>, function <%s>\n",
-                      R[0],      __FILE__, __LINE__, __FUNCTION__ );
+         printf( "ERROR : negative density (%14.7e) at file <%s>, line <%d>, function <%s>\n",
+                 R[0],      __FILE__, __LINE__, __FUNCTION__ );
       if ( Hydro_CheckNegative(R_star[4]) )
-         Aux_Message( stderr, "ERROR : negative pressure (%14.7e) at file <%s>, line <%d>, function <%s>\n",
-                      R_star[4], __FILE__, __LINE__, __FUNCTION__ );
+         printf( "ERROR : negative pressure (%14.7e) at file <%s>, line <%d>, function <%s>\n",
+                 R_star[4], __FILE__, __LINE__, __FUNCTION__ );
       if ( Hydro_CheckNegative(R_star[0]) )
-         Aux_Message( stderr, "ERROR : negative density(%14.7e) at file <%s>, line <%d>, function <%s>\n",
-                      R_star[0], __FILE__, __LINE__, __FUNCTION__ );
+         printf( "ERROR : negative density(%14.7e) at file <%s>, line <%d>, function <%s>\n",
+                 R_star[0], __FILE__, __LINE__, __FUNCTION__ );
 #     endif
 
       real a_R    = SQRT( Gamma * R[4] / R[0] ); // sound speed of right region
@@ -251,17 +251,17 @@ void Hydro_RiemannSolver_Exact( const int XYZ, real eival_out[], real L_star_out
 
 #  ifdef CHECK_NEGATIVE_IN_FLUID
    if ( Hydro_CheckNegative( R[4]) )
-      Aux_Message( stderr, "ERROR : negative pressure (%14.7e) at file <%s>, line <%d>, function <%s>\n",
-                   R[4], __FILE__, __LINE__, __FUNCTION__ );
+      printf( "ERROR : negative pressure (%14.7e) at file <%s>, line <%d>, function <%s>\n",
+              R[4], __FILE__, __LINE__, __FUNCTION__ );
    if ( Hydro_CheckNegative(R[0]) )
-      Aux_Message( stderr, "ERROR : negative density (%14.7e) at file <%s>, line <%d>, function <%s>\n",
-                   R[0], __FILE__, __LINE__, __FUNCTION__ );
+      printf( "ERROR : negative density (%14.7e) at file <%s>, line <%d>, function <%s>\n",
+              R[0], __FILE__, __LINE__, __FUNCTION__ );
    if ( Hydro_CheckNegative(L[4]) )
-      Aux_Message( stderr, "ERROR : negative pressure (%14.7e) at file <%s>, line <%d>, function <%s>\n",
-                   L[4], __FILE__, __LINE__, __FUNCTION__ );
+      printf( "ERROR : negative pressure (%14.7e) at file <%s>, line <%d>, function <%s>\n",
+              L[4], __FILE__, __LINE__, __FUNCTION__ );
    if ( Hydro_CheckNegative(L[0]) )
-      Aux_Message( stderr, "ERROR : negative density (%14.7e) at file <%s>, line <%d>, function <%s>\n",
-                   L[0], __FILE__, __LINE__, __FUNCTION__ );
+      printf( "ERROR : negative density (%14.7e) at file <%s>, line <%d>, function <%s>\n",
+              L[0], __FILE__, __LINE__, __FUNCTION__ );
 #  endif
 
    if ( L[4] < L_star[4] ) // left shock
@@ -270,8 +270,8 @@ void Hydro_RiemannSolver_Exact( const int XYZ, real eival_out[], real L_star_out
 
 #     ifdef CHECK_NEGATIVE_IN_FLUID
       if ( Hydro_CheckNegative(Temp) )
-         Aux_Message( stderr, "ERROR : negative value (%14.7e) at file <%s>, line <%d>, function <%s>\n",
-                      Temp, __FILE__, __LINE__, __FUNCTION__ );
+         printf( "ERROR : negative value (%14.7e) at file <%s>, line <%d>, function <%s>\n",
+                 Temp, __FILE__, __LINE__, __FUNCTION__ );
 #     endif
 
       eival[0] = L[1] - SQRT( Gamma*L[4]/L[0] )*SQRT( Temp );
@@ -285,8 +285,8 @@ void Hydro_RiemannSolver_Exact( const int XYZ, real eival_out[], real L_star_out
 
 #     ifdef CHECK_NEGATIVE_IN_FLUID
       if ( Hydro_CheckNegative(Temp) )
-         Aux_Message( stderr, "ERROR : negative value (%14.7e) at file <%s>, line <%d>, function <%s>\n",
-                      Temp, __FILE__, __LINE__, __FUNCTION__ );
+         printf( "ERROR : negative value (%14.7e) at file <%s>, line <%d>, function <%s>\n",
+                 Temp, __FILE__, __LINE__, __FUNCTION__ );
 #     endif
 
       eival[4] = R[1] + SQRT( Gamma*R[4]/R[0] )*SQRT( Temp );
@@ -383,8 +383,8 @@ real Solve_f( const real rho, const real p, const real p_star, const real Gamma 
 
 #     ifdef CHECK_NEGATIVE_IN_FLUID
       if ( Hydro_CheckNegative(Temp) )
-         Aux_Message( stderr, "ERROR : negative value (%14.7e) at file <%s>, line <%d>, function <%s>\n",
-                      Temp, __FILE__, __LINE__, __FUNCTION__ );
+         printf( "ERROR : negative value (%14.7e) at file <%s>, line <%d>, function <%s>\n",
+                 Temp, __FILE__, __LINE__, __FUNCTION__ );
 #     endif
 
       f = (p_star-p)*SQRT( Temp );
@@ -394,12 +394,12 @@ real Solve_f( const real rho, const real p, const real p_star, const real Gamma 
    {
 #     ifdef CHECK_NEGATIVE_IN_FLUID
       if ( Hydro_CheckNegative(p) )
-         Aux_Message( stderr, "ERROR : negative pressure (%14.7e) at file <%s>, line <%d>, function <%s>\n",
-                      p, __FILE__, __LINE__, __FUNCTION__ );
+         printf( "ERROR : negative pressure (%14.7e) at file <%s>, line <%d>, function <%s>\n",
+                 p, __FILE__, __LINE__, __FUNCTION__ );
 
       if ( Hydro_CheckNegative(rho) )
-         Aux_Message( stderr, "ERROR : negative density (%14.7e) at file <%s>, line <%d>, function <%s>\n",
-                      rho, __FILE__, __LINE__, __FUNCTION__ );
+         printf( "ERROR : negative density (%14.7e) at file <%s>, line <%d>, function <%s>\n",
+                 rho, __FILE__, __LINE__, __FUNCTION__ );
 #     endif
 
       real a = SQRT( Gamma*p/rho );

@@ -80,12 +80,12 @@ void Hydro_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In[]
 
 #  ifdef CHECK_NEGATIVE_IN_FLUID
    if ( Hydro_CheckNegative(L[0]) )
-      Aux_Message( stderr, "ERROR : negative density (%14.7e) at file <%s>, line <%d>, function <%s>\n",
-                   L[0], __FILE__, __LINE__, __FUNCTION__ );
+      printf( "ERROR : negative density (%14.7e) at file <%s>, line <%d>, function <%s>\n",
+              L[0], __FILE__, __LINE__, __FUNCTION__ );
 
    if ( Hydro_CheckNegative(R[0]) )
-      Aux_Message( stderr, "ERROR : negative density (%14.7e) at file <%s>, line <%d>, function <%s>\n",
-                   R[0], __FILE__, __LINE__, __FUNCTION__ );
+      printf( "ERROR : negative density (%14.7e) at file <%s>, line <%d>, function <%s>\n",
+              R[0], __FILE__, __LINE__, __FUNCTION__ );
 #  endif
 
    RhoL_sqrt       = SQRT( L[0] );
@@ -107,8 +107,8 @@ void Hydro_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In[]
 
 #  ifdef CHECK_NEGATIVE_IN_FLUID
    if ( Hydro_CheckNegative(GammaP_Rho) )
-      Aux_Message( stderr, "ERROR : negative GammaP_Rho (%14.7e) at file <%s>, line <%d>, function <%s>\n",
-                   GammaP_Rho, __FILE__, __LINE__, __FUNCTION__ );
+      printf( "ERROR : negative GammaP_Rho (%14.7e) at file <%s>, line <%d>, function <%s>\n",
+              GammaP_Rho, __FILE__, __LINE__, __FUNCTION__ );
 #  endif
 
    Cs = SQRT( GammaP_Rho );
@@ -123,12 +123,12 @@ void Hydro_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In[]
 
 #  ifdef CHECK_NEGATIVE_IN_FLUID
    if ( Hydro_CheckNegative(P_L) )
-      Aux_Message( stderr, "ERROR : negative pressure (%14.7e) at file <%s>, line <%d>, function <%s>\n",
-                   P_L, __FILE__, __LINE__, __FUNCTION__ );
+      printf( "ERROR : negative pressure (%14.7e) at file <%s>, line <%d>, function <%s>\n",
+              P_L, __FILE__, __LINE__, __FUNCTION__ );
 
    if ( Hydro_CheckNegative(P_R) )
-      Aux_Message( stderr, "ERROR : negative pressure (%14.7e) at file <%s>, line <%d>, function <%s>\n",
-                   P_R, __FILE__, __LINE__, __FUNCTION__ );
+      printf( "ERROR : negative pressure (%14.7e) at file <%s>, line <%d>, function <%s>\n",
+              P_R, __FILE__, __LINE__, __FUNCTION__ );
 #  endif
 
    Cs_L   = SQRT( Gamma*P_L*_RhoL );
