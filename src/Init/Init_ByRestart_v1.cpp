@@ -1418,7 +1418,6 @@ void Load_Parameter_After_1200( FILE *File, const int FormatVersion, int &NLv_Re
       CompareVar( "OPT__FLAG_PRES_GRADIENT", opt__flag_pres_gradient,      OPT__FLAG_PRES_GRADIENT,   NonFatal );
       CompareVar( "GAMMA",                   gamma,                  (real)GAMMA,                     NonFatal );
       CompareVar( "MINMOD_COEFF",            minmod_coeff,           (real)MINMOD_COEFF,              NonFatal );
-      CompareVar( "EP_COEFF",                ep_coeff,               (real)EP_COEFF,                  NonFatal );
       CompareVar( "OPT__LR_LIMITER",         opt__lr_limiter,         (int)OPT__LR_LIMITER,           NonFatal );
       CompareVar( "OPT__WAF_LIMITER",        opt__waf_limiter,        (int)OPT__WAF_LIMITER,          NonFatal );
 

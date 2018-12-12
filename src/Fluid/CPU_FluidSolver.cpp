@@ -30,15 +30,15 @@ void CPU_FluidSolver_WAF( real Flu_Array_In [][NCOMP_TOTAL][ FLU_NXT*FLU_NXT*FLU
                           const real MinDens, const real MinPres );
 #elif ( FLU_SCHEME == MHM  ||  FLU_SCHEME == MHM_RP )
 void CPU_FluidSolver_MHM(
-   const real   Flu_Array_In []   [NCOMP_TOTAL][ FLU_NXT*FLU_NXT*FLU_NXT ],
-         real   Flu_Array_Out[]   [NCOMP_TOTAL][ PS2*PS2*PS2 ],
-         char   DE_Array_Out []                [ PS2*PS2*PS2 ],
-         real   Flux_Array   [][9][NCOMP_TOTAL][ PS2*PS2 ],
+   const real   Flu_Array_In [][NCOMP_TOTAL][ CUBE(FLU_NXT) ],
+         real   Flu_Array_Out[][NCOMP_TOTAL][ CUBE(PS2) ],
+         char   DE_Array_Out [][ CUBE(PS2) ],
+         real   Flux_Array   [][9][NCOMP_TOTAL][ SQR(PS2) ],
    const double Corner_Array [][3],
-   const real   Pot_Array_USG[]                [ USG_NXT_F*USG_NXT_F*USG_NXT_F ],
+   const real   Pot_Array_USG[][ CUBE(USG_NXT_F) ],
    const int NPatchGroup, const real dt, const real dh, const real Gamma,
    const bool StoreFlux, const LR_Limiter_t LR_Limiter, const real MinMod_Coeff,
-   const real EP_Coeff, const double Time, const OptGravityType_t GravityType,
+   const double Time, const OptGravityType_t GravityType,
    const double ExtAcc_AuxArray[], const real MinDens, const real MinPres,
    const real DualEnergySwitch, const bool NormPassive, const int NNorm, const int NormIdx[],
    const bool JeansMinPres, const real JeansMinPres_Coeff );
@@ -105,7 +105,6 @@ void CPU_ELBDMSolver( real Flu_Array_In [][FLU_NIN    ][ FLU_NXT*FLU_NXT*FLU_NXT
 //                                       (0/1/2/3/4) = (vanLeer/generalized MinMod/vanAlbada/
 //                                                      vanLeer + generalized MinMod/extrema-preserving) limiter
 //                MinMod_Coeff         : Coefficient of the generalized MinMod limiter
-//                EP_Coeff             : Coefficient of the extrema-preserving limiter
 //                WAF_Limiter          : Flux limiter for the WAF scheme
 //                                       (0/1/2/3) = (SuperBee/vanLeer/vanAlbada/MinBee)
 //                ELBDM_Eta            : Particle mass / Planck constant
@@ -126,7 +125,7 @@ void CPU_ELBDMSolver( real Flu_Array_In [][FLU_NIN    ][ FLU_NXT*FLU_NXT*FLU_NXT
 //                JeansMinPres_Coeff   : Coefficient used by JeansMinPres = G*(Jeans_NCell*Jeans_dh)^2/(Gamma*pi);
 //
 // Useless parameters in HYDRO : ELBDM_Eta, ELBDM_Taylor3_Coeff, ELBDM_Taylor3_Auto
-// Useless parameters in ELBDM : Gamma, LR_Limiter, MinMod_Coeff, EP_Coeff, WAF_Limiter, MinPres
+// Useless parameters in ELBDM : Gamma, LR_Limiter, MinMod_Coeff, WAF_Limiter, MinPres
 //-------------------------------------------------------------------------------------------------------
 void CPU_FluidSolver( real h_Flu_Array_In [][FLU_NIN    ][ FLU_NXT*FLU_NXT*FLU_NXT ],
                       real h_Flu_Array_Out[][FLU_NOUT   ][ PS2*PS2*PS2 ],
@@ -135,7 +134,7 @@ void CPU_FluidSolver( real h_Flu_Array_In [][FLU_NIN    ][ FLU_NXT*FLU_NXT*FLU_N
                       const double h_Corner_Array[][3],
                       const real h_Pot_Array_USG[][ USG_NXT_F*USG_NXT_F*USG_NXT_F ],
                       const int NPatchGroup, const real dt, const real dh, const real Gamma, const bool StoreFlux,
-                      const bool XYZ, const LR_Limiter_t LR_Limiter, const real MinMod_Coeff, const real EP_Coeff,
+                      const bool XYZ, const LR_Limiter_t LR_Limiter, const real MinMod_Coeff,
                       const WAF_Limiter_t WAF_Limiter, const real ELBDM_Eta, real ELBDM_Taylor3_Coeff,
                       const bool ELBDM_Taylor3_Auto, const double Time, const OptGravityType_t GravityType,
                       const real MinDens, const real MinPres, const real DualEnergySwitch,
@@ -177,14 +176,14 @@ void CPU_FluidSolver( real h_Flu_Array_In [][FLU_NIN    ][ FLU_NXT*FLU_NXT*FLU_N
 #     elif ( FLU_SCHEME == MHM  ||  FLU_SCHEME == MHM_RP )
 
       CPU_FluidSolver_MHM ( h_Flu_Array_In, h_Flu_Array_Out, h_DE_Array_Out, h_Flux_Array, h_Corner_Array, h_Pot_Array_USG,
-                            NPatchGroup, dt, dh, Gamma, StoreFlux, LR_Limiter, MinMod_Coeff, EP_Coeff, Time,
+                            NPatchGroup, dt, dh, Gamma, StoreFlux, LR_Limiter, MinMod_Coeff, Time,
                             GravityType, ExtAcc_AuxArray, MinDens, MinPres, DualEnergySwitch, NormPassive, NNorm, NormIdx,
                             JeansMinPres, JeansMinPres_Coeff );
 
 #     elif ( FLU_SCHEME == CTU )
 
       CPU_FluidSolver_CTU ( h_Flu_Array_In, h_Flu_Array_Out, h_DE_Array_Out, h_Flux_Array, h_Corner_Array, h_Pot_Array_USG,
-                            NPatchGroup, dt, dh, Gamma, StoreFlux, LR_Limiter, MinMod_Coeff, EP_Coeff, Time,
+                            NPatchGroup, dt, dh, Gamma, StoreFlux, LR_Limiter, MinMod_Coeff, Time,
                             GravityType, ExtAcc_AuxArray, MinDens, MinPres, DualEnergySwitch, NormPassive, NNorm, NormIdx,
                             JeansMinPres, JeansMinPres_Coeff );
 

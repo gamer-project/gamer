@@ -408,7 +408,6 @@ struct InputPara_t
    double Gamma;
    double MolecularWeight;
    double MinMod_Coeff;
-   double EP_Coeff;
    int    Opt__LR_Limiter;
    int    Opt__WAF_Limiter;
    int    Opt__1stFluxCorr;

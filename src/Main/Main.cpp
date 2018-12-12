@@ -78,7 +78,7 @@ OptTimeStepLevel_t   OPT__DT_LEVEL;
 // (2-1) fluid solver in different models
 #if   ( MODEL == HYDRO )
 double               FlagTable_PresGradient[NLEVEL-1], FlagTable_Vorticity[NLEVEL-1], FlagTable_Jeans[NLEVEL-1];
-double               GAMMA, MINMOD_COEFF, EP_COEFF, MOLECULAR_WEIGHT;
+double               GAMMA, MINMOD_COEFF, MOLECULAR_WEIGHT;
 LR_Limiter_t         OPT__LR_LIMITER;
 WAF_Limiter_t        OPT__WAF_LIMITER;
 Opt1stFluxCorr_t     OPT__1ST_FLUX_CORR;

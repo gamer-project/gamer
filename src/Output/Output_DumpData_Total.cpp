@@ -16,7 +16,7 @@ Procedure for outputting new variables:
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Output_DumpData_Total (FormatVersion = 2200)
+// Function    :  Output_DumpData_Total (FormatVersion = 2201)
 // Description :  Output all simulation data in the binary form, which can be used as a restart file
 //
 // Note        :  1. This output format is deprecated and is mainly used for debugging only
@@ -33,6 +33,7 @@ Procedure for outputting new variables:
 //                                      particle attributes
 //                                      --> imcompatible with version 2131 for the data with user-defined particle
 //                                          attributes as the order of their indices may be different
+//                2201 : 2018/12/12 --> always set EP_COEFF=NULL_REAL since this variable no longer exists
 //-------------------------------------------------------------------------------------------------------
 void Output_DumpData_Total( const char *FileName )
 {
@@ -568,6 +569,8 @@ void Output_DumpData_Total( const char *FileName )
       const double lb_wli_max                = NULL_REAL;
 #     endif
 
+      const double EP_COEFF                  = NULL_REAL;   // this variable no longer exists
+
 #     if ( MODEL == HYDRO )
       const int    opt__lr_limiter           = (int)OPT__LR_LIMITER;
       const int    opt__waf_limiter          = (int)OPT__WAF_LIMITER;
@@ -583,7 +586,6 @@ void Output_DumpData_Total( const char *FileName )
       const double GAMMA                     = NULL_REAL;
       const double MOLECULAR_WEIGHT          = NULL_REAL;
       const double MINMOD_COEFF              = NULL_REAL;
-      const double EP_COEFF                  = NULL_REAL;
       const int    opt__lr_limiter           = NULL_INT;
       const int    opt__waf_limiter          = NULL_INT;
       const bool   opt__1st_flux_corr        = NULL_BOOL;
