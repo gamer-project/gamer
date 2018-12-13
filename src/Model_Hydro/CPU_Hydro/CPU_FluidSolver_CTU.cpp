@@ -37,6 +37,8 @@ static void Hydro_TGradient_Correction( real FC_Var[][6][NCOMP_TOTAL], const rea
 // Description :  CPU fluid solver based on the Corner-Transport-Upwind (CTU) scheme
 //
 // Note        :  Ref : Stone et al., ApJS, 178, 137 (2008)
+//                4. See include/CUFLU.h for the values and description of different symbolic constants
+//                   such as N_FC_VAR, N_FC_FLUX, N_SLOPE_PPM, N_FL_FLUX, N_HF_VAR
 //
 // Parameter   :  Flu_Array_In       : Array storing the input fluid variables
 //                Flu_Array_Out      : Array to store the output fluid variables

@@ -164,12 +164,12 @@ void Hydro_DataReconstruction( const real ConVar   [][ CUBE(FLU_NXT) ],
 
 
 // data reconstruction
-   const int size_ij = SQR(NOut);
+   const int NOut2 = SQR(NOut);
    CGPU_LOOP( idx_fc, CUBE(NOut) )
    {
       const int i_cc   = NGhost + idx_fc%NOut;
-      const int j_cc   = NGhost + idx_fc%size_ij/NOut;
-      const int k_cc   = NGhost + idx_fc/size_ij;
+      const int j_cc   = NGhost + idx_fc%NOut2/NOut;
+      const int k_cc   = NGhost + idx_fc/NOut2;
       const int idx_cc = IDX321( i_cc, j_cc, k_cc, NIn, NIn );
 
       real cc_C[NCOMP_TOTAL], cc_L[NCOMP_TOTAL], cc_R[NCOMP_TOTAL];  // cell-centered variables of the Central/Left/Right cells
@@ -502,12 +502,12 @@ void Hydro_DataReconstruction( const real ConVar   [][ CUBE(FLU_NXT) ],
 
 
 // 1. evaluate the monotonic slope of all cells
-   const int size_ij = SQR(NSlope);
+   const int NSlope2 = SQR(NSlope);
    CGPU_LOOP( idx_slope, CUBE(NSlope) )
    {
       const int i_cc   = NGhost - 1 + idx_slope%NSlope;
-      const int j_cc   = NGhost - 1 + idx_slope%size_ij/NSlope;
-      const int k_cc   = NGhost - 1 + idx_slope/size_ij;
+      const int j_cc   = NGhost - 1 + idx_slope%NSlope2/NSlope;
+      const int k_cc   = NGhost - 1 + idx_slope/NSlope2;
       const int idx_cc = IDX321( i_cc, j_cc, k_cc, NIn, NIn );
 
       real cc_C[NCOMP_TOTAL], cc_L[NCOMP_TOTAL], cc_R[NCOMP_TOTAL];  // cell-centered variables of the Central/Left/Right cells
@@ -537,12 +537,12 @@ void Hydro_DataReconstruction( const real ConVar   [][ CUBE(FLU_NXT) ],
 
 
 // data reconstruction
-   const int size_ij = SQR(NOut);
+   const int NOut2 = SQR(NOut);
    CGPU_LOOP( idx_fc, CUBE(NOut) )
    {
       const int i_fc      = idx_fc%NOut;
-      const int j_fc      = idx_fc%size_ij/NOut;
-      const int k_fc      = idx_fc/size_ij;
+      const int j_fc      = idx_fc%NOut2/NOut;
+      const int k_fc      = idx_fc/NOut2;
 
       const int i_cc      = i_fc + NGhost;
       const int j_cc      = j_fc + NGhost;
