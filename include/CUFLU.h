@@ -44,6 +44,19 @@ struct FluVar5 { real Rho, Px, Py, Pz, Egy; };
 // size of different arrays
 #if ( FLU_SCHEME == MHM  ||  FLU_SCHEME == MHM_RP  ||  FLU_SCHEME == CTU )
 
+// ** to reduce the GPU memory consumption, large arrays in the fluid solvers are reused as much as possible
+// ** --> the strides of arrays can change when accessed by different routines for different purposes
+
+// N_SLOPE_PPM : size of Slope_PPM[]
+// N_FC_VAR    : size of FC_Var[]
+// N_FC_FLUX   : size of FC_Flux[]
+// N_FL_FLUX   : for accessing FC_Flux[] in CPU_Shared_ComputeFlux() and CPU_Shared_FullStepUpdate()
+//               --> different from N_FC_FLUX in MHM_RP since for which FC_Flux[] is also linked
+//                   to Half_Flux[] used by Hydro_RiemannPredict_Flux() and Hydro_RiemannPredict()
+//               --> for the latter two routines, Half_Flux[] is accessed with N_FC_FLUX
+// N_HF_VAR    : for accessing Half_Var[], which is linked to PriVar[] with the size FLU_NXT^3
+//               --> used by MHM_RP only
+
 #  define N_FC_VAR        ( PS2 + 2      )
 #  define N_SLOPE_PPM     ( N_FC_VAR + 2 )
 
@@ -56,14 +69,12 @@ struct FluVar5 { real Rho, Px, Py, Pz, Egy; };
 
 #     define N_FL_FLUX    ( PS2 + 1      )
 #     define N_HF_VAR     ( FLU_NXT - 2  )
-#     define N_HF_FLUX    ( FLU_NXT - 1  )
-#     define N_FC_FLUX    ( N_HF_FLUX    )
+#     define N_FC_FLUX    ( FLU_NXT - 1  )
 
 #  elif ( FLU_SCHEME == CTU )
 
 #     define N_FL_FLUX    ( N_FC_VAR     )
-#     define N_HF_FLUX    ( N_FC_VAR     )
-#     define N_FC_FLUX    ( N_FC_VAR     )
+#     define N_FC_FLUX    ( N_FL_FLUX    )
 
 #  endif
 

@@ -31,7 +31,8 @@
 //                Output           : Array to store the updated fluid data
 //                DE_Status        : Array to store the dual-energy status
 //                Flux             : Array storing the input face-centered fluxes
-//                                   --> Size is assumed to be N_FL_FLUX^3
+//                                   --> Accessed with the array stride N_FL_FLUX even thought its actually
+//                                       allocated size is N_FC_FLUX^3
 //                dt               : Time interval to advance solution
 //                dh               : Cell size
 //                Gamma            : Ratio of specific heats
