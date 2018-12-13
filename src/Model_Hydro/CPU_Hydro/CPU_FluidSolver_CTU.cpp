@@ -5,26 +5,26 @@
 
 
 
-extern void Hydro_DataReconstruction( const real PriVar[][NCOMP_TOTAL], real FC_Var[][6][NCOMP_TOTAL], const int NIn, const int NGhost,
-                                      const real Gamma, const LR_Limiter_t LR_Limiter, const real MinMod_Coeff,
-                                      const real EP_Coeff, const real dt, const real dh, const real MinDens, const real MinPres );
-extern void Hydro_Con2Pri( const real In[], real Out[], const real Gamma_m1, const real MinPres,
-                           const bool NormPassive, const int NNorm, const int NormIdx[],
-                           const bool JeansMinPres, const real JeansMinPres_Coeff );
-extern void Hydro_Pri2Con( const real In[], real Out[], const real _Gamma_m1,
+void Hydro_DataReconstruction( const real PriVar[][NCOMP_TOTAL], real FC_Var[][6][NCOMP_TOTAL], const int NIn, const int NGhost,
+                               const real Gamma, const LR_Limiter_t LR_Limiter, const real MinMod_Coeff,
+                               const real EP_Coeff, const real dt, const real dh, const real MinDens, const real MinPres );
+void Hydro_Con2Pri( const real In[], real Out[], const real Gamma_m1, const real MinPres,
+                    const bool NormPassive, const int NNorm, const int NormIdx[],
+                    const bool JeansMinPres, const real JeansMinPres_Coeff );
+void Hydro_Pri2Con( const real In[], real Out[], const real _Gamma_m1,
+                    const bool NormPassive, const int NNorm, const int NormIdx[] );
+void Hydro_ComputeFlux( const real FC_Var [][6][ N_FC_VAR*N_FC_VAR*N_FC_VAR ],
+                              real FC_Flux[][3][ N_FC_FLUX*N_FC_FLUX*N_FC_FLUX ],
+                        const int Gap, const real Gamma, const bool CorrHalfVel, const real Pot_USG[],
+                        const double Corner[], const real dt, const real dh, const double Time,
+                        const OptGravityType_t GravityType, const double ExtAcc_AuxArray[], const real MinPres,
+                        const bool DumpIntFlux, real IntFlux[][NCOMP_TOTAL][ PS2*PS2 ] );
+void Hydro_FullStepUpdate( const real Input[][ FLU_NXT*FLU_NXT*FLU_NXT ], real Output[][ PS2*PS2*PS2 ], char DE_Status[],
+                           const real Flux[][NCOMP_TOTAL][ N_FC_FLUX*N_FC_FLUX*N_FC_FLUX ], const real dt, const real dh,
+                           const real Gamma_m1, const real _Gamma_m1, const real MinDens, const real MinPres, const real DualEnergySwitch,
                            const bool NormPassive, const int NNorm, const int NormIdx[] );
-extern void Hydro_ComputeFlux( const real FC_Var [][6][ N_FC_VAR*N_FC_VAR*N_FC_VAR ],
-                                     real FC_Flux[][3][ N_FC_FLUX*N_FC_FLUX*N_FC_FLUX ],
-                               const int Gap, const real Gamma, const bool CorrHalfVel, const real Pot_USG[],
-                               const double Corner[], const real dt, const real dh, const double Time,
-                               const OptGravityType_t GravityType, const double ExtAcc_AuxArray[], const real MinPres,
-                               const bool DumpIntFlux, real IntFlux[][NCOMP_TOTAL][ PS2*PS2 ] );
-extern void Hydro_FullStepUpdate( const real Input[][ FLU_NXT*FLU_NXT*FLU_NXT ], real Output[][ PS2*PS2*PS2 ], char DE_Status[],
-                                  const real Flux[][NCOMP_TOTAL][ N_FC_FLUX*N_FC_FLUX*N_FC_FLUX ], const real dt, const real dh,
-                                  const real Gamma_m1, const real _Gamma_m1, const real MinDens, const real MinPres, const real DualEnergySwitch,
-                                  const bool NormPassive, const int NNorm, const int NormIdx[] );
-extern void Hydro_StoreFlux( real Flux_Array[][NCOMP_TOTAL][ PS2*PS2 ], const real FC_Flux[][3][NCOMP_TOTAL] );
-extern real Hydro_CheckMinPres( const real InPres, const real MinPres );
+void Hydro_StoreFlux( real Flux_Array[][NCOMP_TOTAL][ PS2*PS2 ], const real FC_Flux[][3][NCOMP_TOTAL] );
+real Hydro_CheckMinPres( const real InPres, const real MinPres );
 
 static void Hydro_TGradient_Correction( real FC_Var[][6][NCOMP_TOTAL], const real FC_Flux[][3][NCOMP_TOTAL], const real dt, const real dh,
                                     const real Gamma_m1, const real _Gamma_m1, const real MinDens, const real MinPres );

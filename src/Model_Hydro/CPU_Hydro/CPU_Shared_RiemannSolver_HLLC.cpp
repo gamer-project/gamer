@@ -16,9 +16,9 @@
 
 #else // #ifdef __CUDACC__
 
-extern void Hydro_Rotate3D( real InOut[], const int XYZ, const bool Forward );
-extern void Hydro_Con2Flux( const int XYZ, real Flux[], const real Input[], const real Gamma_m1, const real MinPres );
-extern real Hydro_CheckMinPres( const real InPres, const real MinPres );
+void Hydro_Rotate3D( real InOut[], const int XYZ, const bool Forward );
+void Hydro_Con2Flux( const int XYZ, real Flux[], const real Input[], const real Gamma_m1, const real MinPres );
+real Hydro_CheckMinPres( const real InPres, const real MinPres );
 
 #endif // #ifdef __CUDACC__ ... else ...
 

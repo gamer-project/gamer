@@ -24,20 +24,20 @@
 #else // #ifdef __CUDACC__
 
 #if   ( RSOLVER == EXACT )
-extern void Hydro_Con2Pri( const real In[], real Out[], const real Gamma_m1, const real MinPres,
-                           const bool NormPassive, const int NNorm, const int NormIdx[],
-                           const bool JeansMinPres, const real JeansMinPres_Coeff );
-extern void Hydro_RiemannSolver_Exact( const int XYZ, real eival_out[], real L_star_out[], real R_star_out[],
-                                       real Flux_Out[], const real L_In[], const real R_In[], const real Gamma );
+void Hydro_Con2Pri( const real In[], real Out[], const real Gamma_m1, const real MinPres,
+                    const bool NormPassive, const int NNorm, const int NormIdx[],
+                    const bool JeansMinPres, const real JeansMinPres_Coeff );
+void Hydro_RiemannSolver_Exact( const int XYZ, real eival_out[], real L_star_out[], real R_star_out[],
+                                real Flux_Out[], const real L_In[], const real R_In[], const real Gamma );
 #elif ( RSOLVER == ROE )
-extern void Hydro_RiemannSolver_Roe( const int XYZ, real Flux_Out[], const real L_In[], const real R_In[],
-                                     const real Gamma, const real MinPres );
+void Hydro_RiemannSolver_Roe( const int XYZ, real Flux_Out[], const real L_In[], const real R_In[],
+                              const real Gamma, const real MinPres );
 #elif ( RSOLVER == HLLE )
-extern void Hydro_RiemannSolver_HLLE( const int XYZ, real Flux_Out[], const real L_In[], const real R_In[],
-                                      const real Gamma, const real MinPres );
+void Hydro_RiemannSolver_HLLE( const int XYZ, real Flux_Out[], const real L_In[], const real R_In[],
+                               const real Gamma, const real MinPres );
 #elif ( RSOLVER == HLLC )
-extern void Hydro_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In[], const real R_In[],
-                                      const real Gamma, const real MinPres );
+void Hydro_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In[], const real R_In[],
+                               const real Gamma, const real MinPres );
 #endif
 
 #endif // #ifdef __CUDACC__ ... else ...

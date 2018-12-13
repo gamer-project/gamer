@@ -18,7 +18,7 @@
 
 #else // #ifdef __CUDACC__
 
-extern void Hydro_Rotate3D( real InOut[], const int XYZ, const bool Forward );
+void Hydro_Rotate3D( real InOut[], const int XYZ, const bool Forward );
 
 #endif // #ifdef __CUDACC__ ... else ...
 
