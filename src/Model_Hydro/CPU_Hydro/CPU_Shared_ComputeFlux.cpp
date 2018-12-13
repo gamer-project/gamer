@@ -83,32 +83,33 @@ void Hydro_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In[]
 //                IntFlux         : Array for DumpIntFlux
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE
-void Hydro_ComputeFlux( const real FC_Var [][NCOMP_TOTAL][ N_FC_VAR *N_FC_VAR *N_FC_VAR  ],
-                              real FC_Flux[][NCOMP_TOTAL][ N_FC_FLUX*N_FC_FLUX*N_FC_FLUX ],
+void Hydro_ComputeFlux( const real FC_Var [][NCOMP_TOTAL][ CUBE(N_FC_VAR) ],
+                              real FC_Flux[][NCOMP_TOTAL][ CUBE(N_FC_FLUX) ],
                         const int Gap, const real Gamma, const bool CorrHalfVel, const real Pot_USG[],
                         const double Corner[], const real dt, const real dh, const double Time,
                         const OptGravityType_t GravityType, const double ExtAcc_AuxArray[], const real MinPres,
-                        const bool DumpIntFlux, real IntFlux[][NCOMP_TOTAL][ PS2*PS2 ] )
+                        const bool DumpIntFlux, real IntFlux[][NCOMP_TOTAL][ SQR(PS2) ] )
 {
 
 // check
-#  if ( defined GAMER_DEBUG  &&  !defined __CUDACC__ )
+#  ifdef GAMER_DEBUG
 #  ifdef UNSPLIT_GRAVITY
    if ( CorrHalfVel )
    {
       if (  ( GravityType == GRAVITY_SELF || GravityType == GRAVITY_BOTH )  &&  ( Pot_USG == NULL )  )
-         Aux_Error( ERROR_INFO, "Pot_USG == NULL !!\n" );
+         printf( "ERROR : Pot_USG == NULL !!\n" );
 
       if (  ( GravityType == GRAVITY_EXTERNAL || GravityType == GRAVITY_BOTH )  &&  ( Corner == NULL )  )
-         Aux_Error( ERROR_INFO, "Corner == NULL !!\n" );
+         printf( "ERROR : Corner == NULL !!\n" );
 
       if ( N_FC_VAR != PS2+2 )
-         Aux_Error( ERROR_INFO, "N_FC_VAR (%d) != PS2+2 (%d) !!\n", N_FC_VAR, PS2+2 );
+         printf( "ERROR : N_FC_VAR (%d) != PS2+2 (%d) !!\n", N_FC_VAR, PS2+2 );
    }
 #  else
-   if ( CorrHalfVel )   Aux_Error( ERROR_INFO, "CorrHalfVel is NOT supported when UNSPLIT_GRAVITY is off !!\n" );
+   if ( CorrHalfVel )
+      printf( "ERROR : CorrHalfVel is NOT supported when UNSPLIT_GRAVITY is off !!\n" );
 #  endif
-#  endif // if ( defined GAMER_DEBUG  &&  !defined __CUDACC__ )
+#  endif // #ifdef GAMER_DEBUG
 
 
    const int didx_fc[3] = { 1, N_FC_VAR, N_FC_VAR*N_FC_VAR };
@@ -167,10 +168,9 @@ void Hydro_ComputeFlux( const real FC_Var [][NCOMP_TOTAL][ N_FC_VAR *N_FC_VAR *N
                   idx_flux_e[0] = N_FC_VAR-2*Gap; idx_flux_e[1] = N_FC_VAR-2*Gap; idx_flux_e[2] = N_FC_VAR-1;     break;
       }
 
+      const int size_ij = idx_flux_e[0]*idx_flux_e[1];
       CGPU_LOOP( idx, idx_flux_e[0]*idx_flux_e[1]*idx_flux_e[2] )
       {
-         const int size_ij  = idx_flux_e[0]*idx_flux_e[1];
-
          const int i_flux   = idx % idx_flux_e[0];
          const int j_flux   = idx % size_ij / idx_flux_e[0];
          const int k_flux   = idx / size_ij;
