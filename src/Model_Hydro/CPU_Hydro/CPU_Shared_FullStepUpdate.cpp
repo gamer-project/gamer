@@ -46,8 +46,8 @@
 //                                   --> Should be set to the global variable "PassiveNorm_VarIdx"
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE
-void Hydro_FullStepUpdate( const real Input[][ FLU_NXT*FLU_NXT*FLU_NXT ], real Output[][ PS2*PS2*PS2 ], char DE_Status[],
-                           const real Flux[][NCOMP_TOTAL][ N_FC_FLUX*N_FC_FLUX*N_FC_FLUX ], const real dt, const real dh,
+void Hydro_FullStepUpdate( const real Input[][ CUBE(FLU_NXT) ], real Output[][ CUBE(PS2) ], char DE_Status[],
+                           const real Flux[][NCOMP_TOTAL][ CUBE(N_FC_FLUX) ], const real dt, const real dh,
                            const real Gamma_m1, const real _Gamma_m1, const real MinDens, const real MinPres, const real DualEnergySwitch,
                            const bool NormPassive, const int NNorm, const int NormIdx[] )
 {
@@ -58,10 +58,9 @@ void Hydro_FullStepUpdate( const real Input[][ FLU_NXT*FLU_NXT*FLU_NXT ], real O
    real dFlux[3][NCOMP_TOTAL], Output_1Cell[NCOMP_TOTAL];
 
 
+   const int size_ij = SQR(PS2);
    CGPU_LOOP( idx_out, CUBE(PS2) )
    {
-      const int size_ij  = SQR(PS2);
-
       const int i_out    = idx_out % PS2;
       const int j_out    = idx_out % size_ij / PS2;
       const int k_out    = idx_out / size_ij;
@@ -127,12 +126,12 @@ void Hydro_FullStepUpdate( const real Input[][ FLU_NXT*FLU_NXT*FLU_NXT ], real O
 //    5. check the negative density and energy
 #     ifdef CHECK_NEGATIVE_IN_FLUID
       if ( Hydro_CheckNegative(Output_1Cell[DENS]) )
-         fprintf( stderr, "WARNING : negative density (%14.7e) at file <%s>, line <%d>, function <%s>\n",
-                  Output_1Cell[DENS], __FILE__, __LINE__, __FUNCTION__ );
+         printf( "WARNING : negative density (%14.7e) at file <%s>, line <%d>, function <%s>\n",
+                 Output_1Cell[DENS], __FILE__, __LINE__, __FUNCTION__ );
 
       if ( Hydro_CheckNegative(Output_1Cell[ENGY]) )
-         fprintf( stderr, "WARNING : negative energy (%14.7e) at file <%s>, line <%d>, function <%s>\n",
-                  Output_1Cell[ENGY], __FILE__, __LINE__, __FUNCTION__ );
+         printf( "WARNING : negative energy (%14.7e) at file <%s>, line <%d>, function <%s>\n",
+                 Output_1Cell[ENGY], __FILE__, __LINE__, __FUNCTION__ );
 #     endif
 
    } // i,j,k
