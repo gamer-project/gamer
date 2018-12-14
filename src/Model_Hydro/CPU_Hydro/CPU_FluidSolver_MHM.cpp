@@ -1,4 +1,3 @@
-#include "GAMER.h"
 #include "CUFLU.h"
 
 #if (  MODEL == HYDRO  &&  ( FLU_SCHEME == MHM || FLU_SCHEME == MHM_RP )  )
@@ -44,8 +43,8 @@ void Hydro_ComputeFlux( const real FC_Var [][NCOMP_TOTAL][ CUBE(N_FC_VAR)],
                         const bool DumpIntFlux, real IntFlux[][NCOMP_TOTAL][ SQR(PS2) ] );
 void Hydro_FullStepUpdate( const real Input[][ CUBE(FLU_NXT) ], real Output[][ CUBE(PS2) ], char DE_Status[],
                            const real Flux[][NCOMP_TOTAL][ CUBE(N_FC_FLUX) ], const real dt, const real dh,
-                           const real Gamma_m1, const real _Gamma_m1, const real MinDens, const real MinPres, const real DualEnergySwitch,
-                           const bool NormPassive, const int NNorm, const int NormIdx[] );
+                           const real Gamma_m1, const real _Gamma_m1, const real MinDens, const real MinPres,
+                           const real DualEnergySwitch, const bool NormPassive, const int NNorm, const int NormIdx[] );
 #if   ( RSOLVER == EXACT )
 void Hydro_RiemannSolver_Exact( const int XYZ, real eival_out[], real L_star_out[], real R_star_out[],
                                 real Flux_Out[], const real L_In[], const real R_In[], const real Gamma );
@@ -63,6 +62,8 @@ void Hydro_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In[]
 void Hydro_Con2Pri( const real In[], real Out[], const real Gamma_m1, const real MinPres,
                     const bool NormPassive, const int NNorm, const int NormIdx[],
                     const bool JeansMinPres, const real JeansMinPres_Coeff );
+real Hydro_CheckMinPresInEngy( const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy,
+                               const real Gamma_m1, const real _Gamma_m1, const real MinPres );
 #endif
 
 #endif // #ifdef __CUDACC__ ... else ...

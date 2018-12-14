@@ -1,4 +1,8 @@
-#include "GAMER.h"
+#ifndef __CUFLU_FULLSTEPUPDATE__
+#define __CUFLU_FULLSTEPUPDATE__
+
+
+
 #include "CUFLU.h"
 
 #if (  MODEL == HYDRO  &&  ( FLU_SCHEME == MHM || FLU_SCHEME == MHM_RP || FLU_SCHEME == CTU )  )
@@ -49,8 +53,8 @@
 GPU_DEVICE
 void Hydro_FullStepUpdate( const real Input[][ CUBE(FLU_NXT) ], real Output[][ CUBE(PS2) ], char DE_Status[],
                            const real Flux[][NCOMP_TOTAL][ CUBE(N_FC_FLUX) ], const real dt, const real dh,
-                           const real Gamma_m1, const real _Gamma_m1, const real MinDens, const real MinPres, const real DualEnergySwitch,
-                           const bool NormPassive, const int NNorm, const int NormIdx[] )
+                           const real Gamma_m1, const real _Gamma_m1, const real MinDens, const real MinPres,
+                           const real DualEnergySwitch, const bool NormPassive, const int NNorm, const int NormIdx[] )
 {
 
    const int  didx_flux[3] = { 1, N_FL_FLUX, N_FL_FLUX*N_FL_FLUX };
@@ -143,3 +147,6 @@ void Hydro_FullStepUpdate( const real Input[][ CUBE(FLU_NXT) ], real Output[][ C
 
 #endif // #if ( FLU_SCHEME == MHM  ||  FLU_SCHEME == MHM_RP  ||  FLU_SCHEME == CTU )
 
+
+
+#endif // #ifndef __CUFLU_FULLSTEPUPDATE__

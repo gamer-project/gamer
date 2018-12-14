@@ -1,4 +1,3 @@
-#include "GAMER.h"
 #include "CUFLU.h"
 
 #if ( MODEL == HYDRO  &&  FLU_SCHEME == CTU )
@@ -33,8 +32,10 @@ void Hydro_ComputeFlux( const real FC_Var [][NCOMP_TOTAL][ CUBE(N_FC_VAR)],
                         const bool DumpIntFlux, real IntFlux[][NCOMP_TOTAL][ SQR(PS2) ] );
 void Hydro_FullStepUpdate( const real Input[][ CUBE(FLU_NXT) ], real Output[][ CUBE(PS2) ], char DE_Status[],
                            const real Flux[][NCOMP_TOTAL][ CUBE(N_FC_FLUX) ], const real dt, const real dh,
-                           const real Gamma_m1, const real _Gamma_m1, const real MinDens, const real MinPres, const real DualEnergySwitch,
-                           const bool NormPassive, const int NNorm, const int NormIdx[] );
+                           const real Gamma_m1, const real _Gamma_m1, const real MinDens, const real MinPres,
+                           const real DualEnergySwitch, const bool NormPassive, const int NNorm, const int NormIdx[] );
+real Hydro_CheckMinPresInEngy( const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy,
+                               const real Gamma_m1, const real _Gamma_m1, const real MinPres );
 
 #endif // #ifdef __CUDACC__ ... else ...
 
