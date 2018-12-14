@@ -1,43 +1,60 @@
 #include "GAMER.h"
 #include "CUFLU.h"
 
-#if ( !defined GPU  &&  MODEL == HYDRO  &&  FLU_SCHEME == CTU )
+#if ( MODEL == HYDRO  &&  FLU_SCHEME == CTU )
 
 
 
-void Hydro_DataReconstruction( const real PriVar[][NCOMP_TOTAL], real FC_Var[][6][NCOMP_TOTAL], const int NIn, const int NGhost,
-                               const real Gamma, const LR_Limiter_t LR_Limiter, const real MinMod_Coeff,
-                               const real EP_Coeff, const real dt, const real dh, const real MinDens, const real MinPres );
-void Hydro_Con2Pri( const real In[], real Out[], const real Gamma_m1, const real MinPres,
-                    const bool NormPassive, const int NNorm, const int NormIdx[],
-                    const bool JeansMinPres, const real JeansMinPres_Coeff );
-void Hydro_Pri2Con( const real In[], real Out[], const real _Gamma_m1,
-                    const bool NormPassive, const int NNorm, const int NormIdx[] );
-void Hydro_ComputeFlux( const real FC_Var [][6][ N_FC_VAR*N_FC_VAR*N_FC_VAR ],
-                              real FC_Flux[][3][ N_FC_FLUX*N_FC_FLUX*N_FC_FLUX ],
+// external functions
+#ifdef __CUDACC__
+
+#include "CUFLU_Shared_FluUtility.cu"
+#include "CUFLU_Shared_DataReconstruction.cu"
+#include "CUFLU_Shared_ComputeFlux.cu"
+#include "CUFLU_Shared_FullStepUpdate.cu"
+#include "CUFLU_FluidSolver_SetConstMem.cu"
+
+#else // #ifdef __CUDACC__
+
+void Hydro_DataReconstruction( const real ConVar   [][ CUBE(FLU_NXT) ],
+                                     real PriVar   [][ CUBE(FLU_NXT) ],
+                                     real FC_Var   [][NCOMP_TOTAL][ CUBE(N_FC_VAR) ],
+                                     real Slope_PPM[][NCOMP_TOTAL][ CUBE(N_SLOPE_PPM) ],
+                               const bool Con2Pri, const int NIn, const int NGhost, const real Gamma,
+                               const LR_Limiter_t LR_Limiter, const real MinMod_Coeff,
+                               const real dt, const real dh, const real MinDens, const real MinPres,
+                               const bool NormPassive, const int NNorm, const int NormIdx[],
+                               const bool JeansMinPres, const real JeansMinPres_Coeff );
+void Hydro_ComputeFlux( const real FC_Var [][NCOMP_TOTAL][ CUBE(N_FC_VAR)],
+                              real FC_Flux[][NCOMP_TOTAL][ CUBE(N_FC_FLUX) ],
                         const int Gap, const real Gamma, const bool CorrHalfVel, const real Pot_USG[],
                         const double Corner[], const real dt, const real dh, const double Time,
                         const OptGravityType_t GravityType, const double ExtAcc_AuxArray[], const real MinPres,
-                        const bool DumpIntFlux, real IntFlux[][NCOMP_TOTAL][ PS2*PS2 ] );
-void Hydro_FullStepUpdate( const real Input[][ FLU_NXT*FLU_NXT*FLU_NXT ], real Output[][ PS2*PS2*PS2 ], char DE_Status[],
-                           const real Flux[][NCOMP_TOTAL][ N_FC_FLUX*N_FC_FLUX*N_FC_FLUX ], const real dt, const real dh,
+                        const bool DumpIntFlux, real IntFlux[][NCOMP_TOTAL][ SQR(PS2) ] );
+void Hydro_FullStepUpdate( const real Input[][ CUBE(FLU_NXT) ], real Output[][ CUBE(PS2) ], char DE_Status[],
+                           const real Flux[][NCOMP_TOTAL][ CUBE(N_FC_FLUX) ], const real dt, const real dh,
                            const real Gamma_m1, const real _Gamma_m1, const real MinDens, const real MinPres, const real DualEnergySwitch,
                            const bool NormPassive, const int NNorm, const int NormIdx[] );
-void Hydro_StoreFlux( real Flux_Array[][NCOMP_TOTAL][ PS2*PS2 ], const real FC_Flux[][3][NCOMP_TOTAL] );
-real Hydro_CheckMinPres( const real InPres, const real MinPres );
 
-static void Hydro_TGradient_Correction( real FC_Var[][6][NCOMP_TOTAL], const real FC_Flux[][3][NCOMP_TOTAL], const real dt, const real dh,
-                                    const real Gamma_m1, const real _Gamma_m1, const real MinDens, const real MinPres );
+#endif // #ifdef __CUDACC__ ... else ...
+
+
+// internal functions
+GPU_DEVICE
+static void Hydro_TGradient_Correction(       real FC_Var [][NCOMP_TOTAL][ CUBE(N_FC_VAR)  ],
+                                        const real FC_Flux[][NCOMP_TOTAL][ CUBE(N_FC_FLUX) ],
+                                        const real dt, const real dh, const real Gamma_m1, const real _Gamma_m1,
+                                        const real MinDens, const real MinPres );
 
 
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  CPU_FluidSolver_CTU
-// Description :  CPU fluid solver based on the Corner-Transport-Upwind (CTU) scheme
+// Function    :  CPU/CUFLU_FluidSolver_CTU
+// Description :  CPU/GPU fluid solver based on the Corner-Transport-Upwind (CTU) scheme
 //
-// Note        :  Ref : Stone et al., ApJS, 178, 137 (2008)
-//                4. See include/CUFLU.h for the values and description of different symbolic constants
+// Note        :  1. Ref: Stone et al., ApJS, 178, 137 (2008)
+//                2. See include/CUFLU.h for the values and description of different symbolic constants
 //                   such as N_FC_VAR, N_FC_FLUX, N_SLOPE_PPM, N_FL_FLUX, N_HF_VAR
 //
 // Parameter   :  Flu_Array_In       : Array storing the input fluid variables
@@ -48,14 +65,13 @@ static void Hydro_TGradient_Correction( real FC_Var[][6][NCOMP_TOTAL], const rea
 //                Pot_Array_USG      : Array storing the input potential for UNSPLIT_GRAVITY
 //                NPatchGroup        : Number of patch groups to be evaluated
 //                dt                 : Time interval to advance solution
-//                dh                 : Grid size
+//                dh                 : Cell size
 //                Gamma              : Ratio of specific heats
 //                StoreFlux          : true --> store the coarse-fine fluxes
 //                LR_Limiter         : Slope limiter for the data reconstruction in the MHM/MHM_RP/CTU schemes
 //                                     (0/1/2/3/4) = (vanLeer/generalized MinMod/vanAlbada/
 //                                                    vanLeer + generalized MinMod/extrema-preserving) limiter
 //                MinMod_Coeff       : Coefficient of the generalized MinMod limiter
-//                EP_Coeff           : Coefficient of the extrema-preserving limiter
 //                Time               : Current physical time                                     (for UNSPLIT_GRAVITY only)
 //                GravityType        : Types of gravity --> self-gravity, external gravity, both (for UNSPLIT_GRAVITY only)
 //                ExtAcc_AuxArray    : Auxiliary array for adding external acceleration          (for UNSPLIT_GRAVITY only)
@@ -70,27 +86,41 @@ static void Hydro_TGradient_Correction( real FC_Var[][6][NCOMP_TOTAL], const rea
 //                JeansMinPres       : Apply minimum pressure estimated from the Jeans length
 //                JeansMinPres_Coeff : Coefficient used by JeansMinPres = G*(Jeans_NCell*Jeans_dh)^2/(Gamma*pi);
 //-------------------------------------------------------------------------------------------------------
-void CPU_FluidSolver_CTU( const real Flu_Array_In[][NCOMP_TOTAL][ FLU_NXT*FLU_NXT*FLU_NXT ],
-                          real Flu_Array_Out[][NCOMP_TOTAL][ PS2*PS2*PS2 ],
-                          char DE_Array_Out[][ PS2*PS2*PS2 ],
-                          real Flux_Array[][9][NCOMP_TOTAL][ PS2*PS2 ],
-                          const double Corner_Array[][3],
-                          const real Pot_Array_USG[][ USG_NXT_F*USG_NXT_F*USG_NXT_F ],
-                          const int NPatchGroup, const real dt, const real dh, const real Gamma,
-                          const bool StoreFlux, const LR_Limiter_t LR_Limiter, const real MinMod_Coeff,
-                          const real EP_Coeff, const double Time, const OptGravityType_t GravityType,
-                          const double ExtAcc_AuxArray[], const real MinDens, const real MinPres,
-                          const real DualEnergySwitch, const bool NormPassive, const int NNorm, const int NormIdx[],
-                          const bool JeansMinPres, const real JeansMinPres_Coeff )
+#ifdef __CUDACC__
+__global__
+void CUFLU_FluidSolver_CTU(
+   const real   Flu_Array_In [][NCOMP_TOTAL][ CUBE(FLU_NXT) ],
+         real   Flu_Array_Out[][NCOMP_TOTAL][ CUBE(PS2) ],
+         char   DE_Array_Out [][ CUBE(PS2) ],
+         real   Flux_Array   [][9][NCOMP_TOTAL][ SQR(PS2) ],
+   const double Corner_Array [][3],
+   const real   Pot_Array_USG[][ CUBE(USG_NXT_F) ],
+         real   PriVar       [][NCOMP_TOTAL][ CUBE(FLU_NXT) ],
+         real   Slope_PPM    [][3][NCOMP_TOTAL][ CUBE(N_SLOPE_PPM) ],
+         real   FC_Var       [][6][NCOMP_TOTAL][ CUBE(N_FC_VAR) ],
+         real   FC_Flux      [][3][NCOMP_TOTAL][ CUBE(N_FC_FLUX) ],
+   const real dt, const real dh, const real Gamma, const bool StoreFlux,
+   const LR_Limiter_t LR_Limiter, const real MinMod_Coeff,
+   const double Time, const OptGravityType_t GravityType,
+   const real MinDens, const real MinPres, const real DualEnergySwitch,
+   const bool NormPassive, const int NNorm,
+   const bool JeansMinPres, const real JeansMinPres_Coeff )
+#else
+void CPU_FluidSolver_CTU(
+   const real   Flu_Array_In [][NCOMP_TOTAL][ CUBE(FLU_NXT) ],
+         real   Flu_Array_Out[][NCOMP_TOTAL][ CUBE(PS2) ],
+         char   DE_Array_Out [][ CUBE(PS2) ],
+         real   Flux_Array   [][9][NCOMP_TOTAL][ SQR(PS2) ],
+   const double Corner_Array [][3],
+   const real   Pot_Array_USG[][ CUBE(USG_NXT_F) ],
+   const int NPatchGroup, const real dt, const real dh, const real Gamma,
+   const bool StoreFlux, const LR_Limiter_t LR_Limiter, const real MinMod_Coeff,
+   const double Time, const OptGravityType_t GravityType,
+   const double ExtAcc_AuxArray[], const real MinDens, const real MinPres,
+   const real DualEnergySwitch, const bool NormPassive, const int NNorm, const int NormIdx[],
+   const bool JeansMinPres, const real JeansMinPres_Coeff )
+#endif // #ifdef __CUDACC__ ... else ...
 {
-
-// check
-#  ifdef GAMER_DEBUG
-   if ( LR_Limiter != VANLEER  &&  LR_Limiter != GMINMOD  &&  LR_Limiter != ALBADA  &&  LR_Limiter != EXTPRE  &&
-        LR_Limiter != VL_GMINMOD )
-      Aux_Error( ERROR_INFO, "unsupported reconstruction limiter (%d) !!\n", LR_Limiter );
-#  endif
-
 
    const real  Gamma_m1       = Gamma - (real)1.0;
    const real _Gamma_m1       = (real)1.0 / Gamma_m1;
@@ -99,100 +129,94 @@ void CPU_FluidSolver_CTU( const real Flu_Array_In[][NCOMP_TOTAL][ FLU_NXT*FLU_NX
 #  endif
    const bool CorrHalfVel_No  = false;
    const bool StoreFlux_No    = false;
+   const bool Con2Pri_Yes     = true;
 
 
+// openmp pragma for the CPU solver
+#  ifndef __CUDACC__
 #  pragma omp parallel
+#  endif
    {
-      real Input[NCOMP_TOTAL];
-      int ID1;
-
 //    FC: Face-Centered variables/fluxes
-      real (*FC_Var )[6][NCOMP_TOTAL] = new real [ N_FC_VAR*N_FC_VAR*N_FC_VAR    ][6][NCOMP_TOTAL];
-      real (*FC_Flux)[3][NCOMP_TOTAL] = new real [ N_FC_FLUX*N_FC_FLUX*N_FC_FLUX ][3][NCOMP_TOTAL];
-      real (*PriVar)    [NCOMP_TOTAL] = new real [ FLU_NXT*FLU_NXT*FLU_NXT       ]   [NCOMP_TOTAL];
+//    --> CPU solver: allocate data
+//        GPU solver: link to the input global memory array
+#     ifdef __CUDACC__
+      real (*FC_Var_1PG   )[NCOMP_TOTAL][ CUBE(N_FC_VAR)    ] = FC_Var   [blockIdx.x];
+      real (*FC_Flux_1PG  )[NCOMP_TOTAL][ CUBE(N_FC_FLUX)   ] = FC_Flux  [blockIdx.x];
+      real (*PriVar_1PG   )             [ CUBE(FLU_NXT)     ] = PriVar   [blockIdx.x];
+#     if ( LR_SCHEME == PPM )
+      real (*Slope_PPM_1PG)[NCOMP_TOTAL][ CUBE(N_SLOPE_PPM) ] = Slope_PPM[blockIdx.x];
+#     else
+      real (*Slope_PPM_1PG)[NCOMP_TOTAL][ CUBE(N_SLOPE_PPM) ] = NULL;
+#     endif
+
+#     else // #ifdef __CUDACC__
+
+      real (*FC_Var_1PG   )[NCOMP_TOTAL][ CUBE(N_FC_VAR)    ] = new real [6][NCOMP_TOTAL][ CUBE(N_FC_VAR)    ];
+      real (*FC_Flux_1PG  )[NCOMP_TOTAL][ CUBE(N_FC_FLUX)   ] = new real [3][NCOMP_TOTAL][ CUBE(N_FC_FLUX)   ];   // also used by "Half_Flux"
+      real (*PriVar_1PG   )             [ CUBE(FLU_NXT)     ] = new real    [NCOMP_TOTAL][ CUBE(FLU_NXT)     ];   // also used by "Half_Var"
+#     if ( LR_SCHEME == PPM )
+      real (*Slope_PPM_1PG)[NCOMP_TOTAL][ CUBE(N_SLOPE_PPM) ] = new real [3][NCOMP_TOTAL][ CUBE(N_SLOPE_PPM) ];
+#     else
+      real (*Slope_PPM_1PG)[NCOMP_TOTAL][ CUBE(N_SLOPE_PPM) ] = NULL;
+#     endif
+#     endif // #ifdef __CUDACC__ ... else ...
 
 
 //    loop over all patch groups
+//    --> CPU solver: use different OpenMP threads    to work on different patch groups
+//        GPU solver: ...           CUDA thread block ...
+#     ifdef __CUDACC__
+      const int P = blockIdx.x;
+#     else
 #     pragma omp for schedule( runtime )
       for (int P=0; P<NPatchGroup; P++)
+#     endif
       {
-
-//       1. conserved variables --> primitive variables
-         for (int k=0; k<FLU_NXT; k++)
-         for (int j=0; j<FLU_NXT; j++)
-         for (int i=0; i<FLU_NXT; i++)
-         {
-            ID1 = (k*FLU_NXT + j)*FLU_NXT + i;
-
-            for (int v=0; v<NCOMP_TOTAL; v++)   Input[v] = Flu_Array_In[P][v][ID1];
-
-            Hydro_Con2Pri( Input, PriVar[ID1], Gamma_m1, MinPres, NormPassive, NNorm, NormIdx,
-                           JeansMinPres, JeansMinPres_Coeff );
-         }
+//       1. evaluate the face-centered values at the half time-step
+         Hydro_DataReconstruction( Flu_Array_In[P], PriVar_1PG, FC_Var_1PG, Slope_PPM_1PG,
+                                   Con2Pri_Yes, FLU_NXT, FLU_GHOST_SIZE-1,
+                                   Gamma, LR_Limiter, MinMod_Coeff, dt, dh, MinDens, MinPres,
+                                   NormPassive, NNorm, NormIdx, JeansMinPres, JeansMinPres_Coeff );
 
 
-//       2. evaluate the face-centered values at the half time-step
-         Hydro_DataReconstruction( PriVar, FC_Var, FLU_NXT, FLU_GHOST_SIZE-1, Gamma, LR_Limiter,
-                                   MinMod_Coeff, EP_Coeff, dt, dh, MinDens, MinPres );
-
-
-//       3. primitive face-centered variables --> conserved face-centered variables
-         for (int k=0; k<N_FC_VAR; k++)
-         for (int j=0; j<N_FC_VAR; j++)
-         for (int i=0; i<N_FC_VAR; i++)
-         {
-            ID1 = (k*N_FC_VAR + j)*N_FC_VAR + i;
-
-            for (int f=0; f<6; f++)
-            {
-               for (int v=0; v<NCOMP_TOTAL; v++)   Input[v] = FC_Var[ID1][f][v];
-
-               Hydro_Pri2Con( Input, FC_Var[ID1][f], _Gamma_m1, NormPassive, NNorm, NormIdx );
-            }
-         }
-
-
-//       4. evaluate the face-centered half-step fluxes by solving the Riemann problem
-         Hydro_ComputeFlux( FC_Var, FC_Flux, 0, Gamma, CorrHalfVel_No, NULL, NULL,
+//       2. evaluate the face-centered half-step fluxes by solving the Riemann problem
+         Hydro_ComputeFlux( FC_Var_1PG, FC_Flux_1PG, 0, Gamma, CorrHalfVel_No, NULL, NULL,
                             NULL_REAL, NULL_REAL, NULL_REAL, GRAVITY_NONE, NULL, MinPres,
                             StoreFlux_No, NULL );
 
 
-//       5. correct the face-centered variables by the transverse flux gradients
-         Hydro_TGradient_Correction( FC_Var, FC_Flux, dt, dh, Gamma_m1, _Gamma_m1, MinDens, MinPres );
+//       3. correct the face-centered variables by the transverse flux gradients
+         Hydro_TGradient_Correction( FC_Var_1PG, FC_Flux_1PG, dt, dh, Gamma_m1, _Gamma_m1, MinDens, MinPres );
 
 
-//       6. evaluate the face-centered full-step fluxes by solving the Riemann problem with the corrected data
+//       4. evaluate the face-centered full-step fluxes by solving the Riemann problem with the corrected data
 #        ifdef UNSPLIT_GRAVITY
-         Hydro_ComputeFlux( FC_Var, FC_Flux, 1, Gamma, CorrHalfVel_Yes,
+         Hydro_ComputeFlux( FC_Var_1PG, FC_Flux_1PG, 1, Gamma, CorrHalfVel_Yes,
                             Pot_Array_USG[P], Corner_Array[P],
                             dt, dh, Time, GravityType, ExtAcc_AuxArray, MinPres,
                             StoreFlux, Flux_Array[P] );
 #        else
-         Hydro_ComputeFlux( FC_Var, FC_Flux, 1, Gamma, CorrHalfVel_No,
+         Hydro_ComputeFlux( FC_Var_1PG, FC_Flux_1PG, 1, Gamma, CorrHalfVel_No,
                             NULL, NULL,
                             NULL_REAL, NULL_REAL, NULL_REAL, GRAVITY_NONE, NULL, MinPres,
                             StoreFlux, Flux_Array[P] );
 #        endif
 
 
-//       7. full-step evolution
+//       5. full-step evolution
          Hydro_FullStepUpdate( Flu_Array_In[P], Flu_Array_Out[P], DE_Array_Out[P],
-                               FC_Flux, dt, dh, Gamma_m1, _Gamma_m1, MinDens, MinPres, DualEnergySwitch,
+                               FC_Flux_1PG, dt, dh, Gamma_m1, _Gamma_m1, MinDens, MinPres, DualEnergySwitch,
                                NormPassive, NNorm, NormIdx );
 
+      } // loop over all patch groups
 
-         /*
-//       8. store the inter-patch fluxes
-         if ( StoreFlux )
-         Hydro_StoreFlux( Flux_Array[P], FC_Flux );
-         */
-
-      } // for (int P=0; P<NPatchGroup; P++)
-
-      delete [] FC_Var;
-      delete [] FC_Flux;
-      delete [] PriVar;
+#     ifndef __CUDACC__
+      delete [] FC_Var_1PG;
+      delete [] FC_Flux_1PG;
+      delete [] PriVar_1PG;
+      delete [] Slope_PPM_1PG;
+#     endif
 
    } // OpenMP parallel region
 
@@ -203,80 +227,107 @@ void CPU_FluidSolver_CTU( const real Flu_Array_In[][NCOMP_TOTAL][ FLU_NXT*FLU_NX
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Hydro_TGradient_Correction
 // Description :  1. Correct the face-centered variables by the transverse flux gradients
-//                2. This function assumes that "N_FC_VAR == N_FC_FLUX == NGrid"
+//                2. Assuming "N_FC_VAR == N_FC_FLUX"
 //
 // Parameter   :  FC_Var       : Array to store the input and output face-centered conserved variables
-//                               --> Size is assumed to be N_FC_VAR
+//                               --> Accessed with the stride N_FC_VAR
 //                FC_Flux      : Array storing the input face-centered fluxes
-//                               --> Size is assumed to be N_FC_FLUX
+//                               --> Accessed with the stride N_FC_FLUX
 //                dt           : Time interval to advance solution
-//                dh           : Grid size
+//                dh           : Cell size
 //                Gamma_m1     : Gamma - 1
 //                _Gamma_m1    : 1/(Gamma - 1)
 //                MinDens/Pres : Minimum allowed density and pressure
 //-------------------------------------------------------------------------------------------------------
-void Hydro_TGradient_Correction( real FC_Var[][6][NCOMP_TOTAL], const real FC_Flux[][3][NCOMP_TOTAL], const real dt, const real dh,
-                                 const real Gamma_m1, const real _Gamma_m1, const real MinDens, const real MinPres )
+GPU_DEVICE
+void Hydro_TGradient_Correction(       real FC_Var [][NCOMP_TOTAL][ CUBE(N_FC_VAR)  ],
+                                 const real FC_Flux[][NCOMP_TOTAL][ CUBE(N_FC_FLUX) ],
+                                 const real dt, const real dh, const real Gamma_m1, const real _Gamma_m1,
+                                 const real MinDens, const real MinPres )
 {
 
-   const int  NGrid  = N_FC_VAR;    // size of the arrays FC_Var and FC_Flux in each direction
-   const int  dID[3] = { 1, NGrid, NGrid*NGrid };
-   const real dt_dh2 = (real)0.5*dt/dh;
-
-   real Correct, TGrad1, TGrad2;
-   int dL, dR, ID, ID_L1, ID_L2, ID_R, TDir1, TDir2, Gap[3]={0};
-
+   const int  NCell   = N_FC_VAR;    // size of FC_Var[] and FC_Flux[] in each direction
+   const int  didx[3] = { 1, NCell, SQR(NCell) };
+   const real dt_dh2  = (real)0.5*dt/dh;
 
 // loop over different spatial directions
    for (int d=0; d<3; d++)
    {
-      dL    = 2*d;
-      dR    = dL+1;
-      TDir1 = (d+1)%3;  // transverse direction ONE
-      TDir2 = (d+2)%3;  // transverse direction TWO
+      const int faceL = 2*d;
+      const int faceR = faceL+1;
+      const int TDir1 = (d+1)%3;    // transverse direction 1
+      const int TDir2 = (d+2)%3;    // transverse direction 2
+
+      real fc_var[2][NCOMP_TOTAL];  // 0/1 = left/right faces
+      int  gap[3];
 
       switch ( d )
       {
-         case 0 : Gap[0] = 0;   Gap[1] = 1;   Gap[2] = 1;   break;
-         case 1 : Gap[0] = 1;   Gap[1] = 0;   Gap[2] = 1;   break;
-         case 2 : Gap[0] = 1;   Gap[1] = 1;   Gap[2] = 0;   break;
+         case 0 : gap[0] = 0;   gap[1] = 1;   gap[2] = 1;   break;
+         case 1 : gap[0] = 1;   gap[1] = 0;   gap[2] = 1;   break;
+         case 2 : gap[0] = 1;   gap[1] = 1;   gap[2] = 0;   break;
       }
 
-      for (int k=Gap[2]; k<NGrid-Gap[2]; k++)
-      for (int j=Gap[1]; j<NGrid-Gap[1]; j++)
-      for (int i=Gap[0]; i<NGrid-Gap[0]; i++)
-      {
-         ID    = (k*NGrid + j)*NGrid + i;
-         ID_R  = ID;
-         ID_L1 = ID_R - dID[TDir1];
-         ID_L2 = ID_R - dID[TDir2];
+      const int size_i  = ( NCell - 2*gap[0] );
+      const int size_ij = ( NCell - 2*gap[1] )*size_i;
 
+      CGPU_LOOP( idx, NCell*SQR(NCell-2) )
+      {
+         const int i_var   = gap[0] + idx % size_i;
+         const int j_var   = gap[1] + idx % size_ij / size_i;
+         const int k_var   = gap[2] + idx / size_ij;
+         const int idx_var = IDX321( i_var, j_var, k_var, NCell, NCell );
+
+         const int idx_fluxR  = idx_var;
+         const int idx_fluxL1 = idx_fluxR - didx[TDir1];
+         const int idx_fluxL2 = idx_fluxR - didx[TDir2];
+
+//       load FC_Var[] to a local variable fc[] to reduce the GPU global memory access
          for (int v=0; v<NCOMP_TOTAL; v++)
          {
-            TGrad1  = FC_Flux[ID_R][TDir1][v] - FC_Flux[ID_L1][TDir1][v];
-            TGrad2  = FC_Flux[ID_R][TDir2][v] - FC_Flux[ID_L2][TDir2][v];
+            fc_var[0][v] = FC_Var[faceL][v][idx_var];
+            fc_var[1][v] = FC_Var[faceR][v][idx_var];
+         }
+
+//       calculate the transverse flux gradients and update the corresponding face-centered variables
+         for (int v=0; v<NCOMP_TOTAL; v++)
+         {
+            real Correct, TGrad1, TGrad2;
+
+            TGrad1  = FC_Flux[TDir1][v][idx_fluxR] - FC_Flux[TDir1][v][idx_fluxL1];
+            TGrad2  = FC_Flux[TDir2][v][idx_fluxR] - FC_Flux[TDir2][v][idx_fluxL2];
             Correct = -dt_dh2*( TGrad1 + TGrad2 );
 
-            FC_Var[ID][dL][v] += Correct;
-            FC_Var[ID][dR][v] += Correct;
+            fc_var[0][v] += Correct;
+            fc_var[1][v] += Correct;
          }
 
 //       ensure positive density and pressure
-         FC_Var[ID][dL][0] = FMAX( FC_Var[ID][dL][0], MinDens );
-         FC_Var[ID][dR][0] = FMAX( FC_Var[ID][dR][0], MinDens );
+         for (int f=0; f<2; f++)
+         {
+            fc_var[f][0] = FMAX( fc_var[f][0], MinDens );
+            fc_var[f][4] = Hydro_CheckMinPresInEngy( fc_var[f][0], fc_var[f][1], fc_var[f][2], fc_var[f][3], fc_var[f][4],
+                                                     Gamma_m1, _Gamma_m1, MinPres );
+#           if ( NCOMP_PASSIVE > 0 )
+            for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)
+            fc_var[f][v] = FMAX( fc_var[f][v], TINY_NUMBER );
+#           endif
+         }
 
-         FC_Var[ID][dL][4] = Hydro_CheckMinPresInEngy( FC_Var[ID][dL][0], FC_Var[ID][dL][1], FC_Var[ID][dL][2],
-                                                       FC_Var[ID][dL][3], FC_Var[ID][dL][4], Gamma_m1, _Gamma_m1, MinPres );
-         FC_Var[ID][dR][4] = Hydro_CheckMinPresInEngy( FC_Var[ID][dR][0], FC_Var[ID][dR][1], FC_Var[ID][dR][2],
-                                                       FC_Var[ID][dR][3], FC_Var[ID][dR][4], Gamma_m1, _Gamma_m1, MinPres );
+//       store the results to FC_Var[]
+         for (int v=0; v<NCOMP_TOTAL; v++)
+         {
+            FC_Var[faceL][v][idx_var] = fc_var[0][v];
+            FC_Var[faceR][v][idx_var] = fc_var[1][v];
+         }
 
-#        if ( NCOMP_PASSIVE > 0 )
-         for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++) {
-         FC_Var[ID][dL][v] = FMAX( FC_Var[ID][dL][v], TINY_NUMBER );
-         FC_Var[ID][dR][v] = FMAX( FC_Var[ID][dR][v], TINY_NUMBER ); }
-#        endif
-      } // i,j,k
+      } // CGPU_LOOP( idx, NCell*SQR(NCell-2) )
    } // for (int d=0; d<3; d++)
+
+
+#  ifdef __CUDACC__
+   __syncthreads();
+#  endif
 
 } // FUNCTION : Hydro_TGradient_Correction
 
