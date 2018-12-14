@@ -43,13 +43,14 @@ static void TransposeXZ( real u[][ FLU_NXT*FLU_NXT*FLU_NXT ] );
 //                                 false : z->y->x (backward sweep)
 //                MinDens/Pres   : Minimum allowed density and pressure
 //-------------------------------------------------------------------------------------------------------
-void CPU_FluidSolver_RTVD( real Flu_Array_In [][NCOMP_TOTAL][ FLU_NXT*FLU_NXT*FLU_NXT ],
-                           real Flu_Array_Out[][NCOMP_TOTAL][ PS2*PS2*PS2 ],
-                           real Flux_Array[][9][NCOMP_TOTAL][ PS2*PS2 ],
-                           const double Corner_Array[][3],
-                           const real Pot_Array_USG[][ USG_NXT_F*USG_NXT_F*USG_NXT_F ],
-                           const int NPatchGroup, const real dt, const real dh, const real Gamma,
-                           const bool StoreFlux, const bool XYZ, const real MinDens, const real MinPres )
+void CPU_FluidSolver_RTVD(
+   real Flu_Array_In [][NCOMP_TOTAL][ CUBE(FLU_NXT) ],
+   real Flu_Array_Out[][NCOMP_TOTAL][ CUBE(PS2) ],
+   real Flux_Array   [][9][NCOMP_TOTAL][ SQR(PS2) ],
+   const double Corner_Array[][3],
+   const real Pot_Array_USG[][ CUBE(USG_NXT_F) ],
+   const int NPatchGroup, const real dt, const real dh, const real Gamma,
+   const bool StoreFlux, const bool XYZ, const real MinDens, const real MinPres )
 {
 
    if ( XYZ )
@@ -174,7 +175,7 @@ void CPU_FluidSolver_RTVD( real Flu_Array_In [][NCOMP_TOTAL][ FLU_NXT*FLU_NXT*FL
 //                k_gap        : Number of cells that can be skipped on each side in the z direction
 //                MinDens/Pres : Minimum allowed density and pressure
 //-------------------------------------------------------------------------------------------------------
-void CPU_AdvanceX( real u[][ FLU_NXT*FLU_NXT*FLU_NXT ], const real dt, const real dx, const real Gamma,
+void CPU_AdvanceX( real u[][ CUBE(FLU_NXT) ], const real dt, const real dx, const real Gamma,
                    const bool StoreFlux, const int j_gap, const int k_gap, const real MinDens, const real MinPres )
 {
 
@@ -420,7 +421,7 @@ void CPU_AdvanceX( real u[][ FLU_NXT*FLU_NXT*FLU_NXT ], const real dt, const rea
 //
 // Parameter   :  u : Input fluid array
 //-------------------------------------------------------------------------------------------------------
-void TransposeXY( real u[][ FLU_NXT*FLU_NXT*FLU_NXT ] )
+void TransposeXY( real u[][ CUBE(FLU_NXT) ] )
 {
 
    real (*u_xy)[FLU_NXT*FLU_NXT] = new real [5][FLU_NXT*FLU_NXT];
@@ -455,7 +456,7 @@ void TransposeXY( real u[][ FLU_NXT*FLU_NXT*FLU_NXT ] )
 //
 // Parameter   :  u : Input fluid array
 //-------------------------------------------------------------------------------------------------------
-void TransposeXZ( real u[][ FLU_NXT*FLU_NXT*FLU_NXT ] )
+void TransposeXZ( real u[][ CUBE(FLU_NXT) ] )
 {
 
    real u_temp[5];
