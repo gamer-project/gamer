@@ -343,7 +343,7 @@ void Hydro_DataReconstruction( const real ConVar   [][ CUBE(FLU_NXT) ],
             }
          } // for (int Mode=0; Mode<NCOMP_FLUID; Mode++)
 
-#        endif // if (  ( RSOLVER == HLLE  ||  RSOLVER == HLLC )  &&  defined HLL_NO_REF_STATE  ) ... else ...
+#        endif // if (  ( RSOLVER == HLLE || RSOLVER == HLLC )  &&  defined HLL_NO_REF_STATE  ) ... else ...
 
 
 //       4-2-b3. evaluate the corrections to the left and right face-centered passive scalars
@@ -454,13 +454,13 @@ void Hydro_DataReconstruction( const real ConVar   [][ CUBE(FLU_NXT) ],
    const real dt_dh2 = (real)0.5*dt/dh;
 
 // include waves both from left and right directions during the data reconstruction, as suggested in ATHENA
-#  if (  ( RSOLVER == HLLE  ||  RSOLVER == HLLC )  &&  defined HLL_NO_REF_STATE  )
+#  if (  ( RSOLVER == HLLE || RSOLVER == HLLC )  &&  defined HLL_NO_REF_STATE  )
 #  ifdef HLL_INCLUDE_ALL_WAVES
    const bool HLL_Include_All_Waves = true;
 #  else
    const bool HLL_Include_All_Waves = false;
 #  endif
-#  endif // if (  ( RSOLVER == HLLE  ||  RSOLVER == HLLC )  &&  defined HLL_NO_REF_STATE  )
+#  endif // if (  ( RSOLVER == HLLE || RSOLVER == HLLC )  &&  defined HLL_NO_REF_STATE  )
 
 // constant components of the left and right eigenvector matrices must be initialized
    real LEigenVec[NCOMP_FLUID][NCOMP_FLUID] = { { 0.0, NULL_REAL, 0.0, 0.0, NULL_REAL },
@@ -687,7 +687,7 @@ void Hydro_DataReconstruction( const real ConVar   [][ CUBE(FLU_NXT) ],
 //       =====================================================================================
 //       b. for the Roe's and exact solvers
 //       =====================================================================================
-#        else // ( RSOLVER == ROE/EXACT && ifndef HLL_NO_REF_STATE )
+#        else // ( RSOLVER == ROE/EXACT || ifndef HLL_NO_REF_STATE )
 
 //       4-2-b1. evaluate the reference states
          Coeff_L = -dt_dh2*FMIN( EigenVal[d][0], (real)0.0 );
@@ -735,7 +735,7 @@ void Hydro_DataReconstruction( const real ConVar   [][ CUBE(FLU_NXT) ],
             }
          } // for (int Mode=0; Mode<NCOMP_FLUID; Mode++)
 
-#        endif // if (  ( RSOLVER == HLLE  ||  RSOLVER == HLLC )  &&  defined HLL_NO_REF_STATE  ) ... else ...
+#        endif // if (  ( RSOLVER == HLLE || RSOLVER == HLLC )  &&  defined HLL_NO_REF_STATE  ) ... else ...
 
 
 //       4-3. evaluate the corrections to the left and right face-centered passive scalars
