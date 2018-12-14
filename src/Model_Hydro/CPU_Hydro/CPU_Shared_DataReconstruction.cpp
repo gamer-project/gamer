@@ -27,19 +27,26 @@ void Hydro_Con2Flux( const int XYZ, real Flux[], const real Input[], const real 
 
 
 // internal functions (GPU_DEVICE is defined in CUFLU.h)
-GPU_DEVICE static void Hydro_GetEigenSystem( const real CC_Var[], real EigenVal[][NCOMP_FLUID], real LEigenVec[][NCOMP_FLUID],
-                                             real REigenVec[][NCOMP_FLUID], const real Gamma );
-GPU_DEVICE static void Hydro_LimitSlope( const real L1[], const real C0[], const real R1[], const LR_Limiter_t LR_Limiter,
-                                         const real MinMod_Coeff, const real Gamma, const int XYZ, real Slope_Limiter[] );
+GPU_DEVICE
+static void Hydro_LimitSlope( const real L1[], const real C0[], const real R1[], const LR_Limiter_t LR_Limiter,
+                              const real MinMod_Coeff, const real Gamma, const int XYZ, real Slope_Limiter[] );
+#if ( FLU_SCHEME == CTU )
+GPU_DEVICE
+static void Hydro_GetEigenSystem( const real CC_Var[], real EigenVal[][NCOMP_FLUID], real LEigenVec[][NCOMP_FLUID],
+                                  real REigenVec[][NCOMP_FLUID], const real Gamma );
+#endif
 #if ( FLU_SCHEME == MHM )
-GPU_DEVICE static void Hydro_HancockPredict( real fc[][NCOMP_TOTAL], const real dt, const real dh,
-                                             const real Gamma_m1, const real _Gamma_m1,
-                                             const real cc_array[][ CUBE(FLU_NXT) ], const int cc_idx,
-                                             const real MinDens, const real MinPres );
+GPU_DEVICE
+static void Hydro_HancockPredict( real fc[][NCOMP_TOTAL], const real dt, const real dh,
+                                  const real Gamma_m1, const real _Gamma_m1,
+                                  const real cc_array[][ CUBE(FLU_NXT) ], const int cc_idx,
+                                  const real MinDens, const real MinPres );
 #endif
 #ifdef CHAR_RECONSTRUCTION
-GPU_DEVICE static void Hydro_Pri2Char( real Var[], const real Gamma, const real Rho, const real Pres, const int XYZ );
-GPU_DEVICE static void Hydro_Char2Pri( real Var[], const real Gamma, const real Rho, const real Pres, const int XYZ );
+GPU_DEVICE
+static void Hydro_Pri2Char( real Var[], const real Gamma, const real Rho, const real Pres, const int XYZ );
+GPU_DEVICE
+static void Hydro_Char2Pri( real Var[], const real Gamma, const real Rho, const real Pres, const int XYZ );
 #endif
 
 
@@ -118,15 +125,10 @@ void Hydro_DataReconstruction( const real ConVar   [][ CUBE(FLU_NXT) ],
    const real  Gamma_m1  = Gamma - (real)1.0;
    const real _Gamma_m1  = (real)1.0 / Gamma_m1;
 
-// variables for the CTU scheme
-   /*
 #  if ( FLU_SCHEME == CTU )
    const real dt_dh2 = (real)0.5*dt/dh;
 
-   real EigenVal[3][NCOMP_FLUID], Correct_L[NCOMP_TOTAL], Correct_R[NCOMP_TOTAL], dFC[NCOMP_TOTAL];
-   real Coeff_L, Coeff_R;
-
-// initialize the constant components of the matrices of the left and right eigenvectors
+// constant components of the left and right eigenvector matrices must be initialized
    real LEigenVec[NCOMP_FLUID][NCOMP_FLUID] = { { 0.0, NULL_REAL, 0.0, 0.0, NULL_REAL },
                                                 { 1.0,       0.0, 0.0, 0.0, NULL_REAL },
                                                 { 0.0,       0.0, 1.0, 0.0,       0.0 },
@@ -139,7 +141,6 @@ void Hydro_DataReconstruction( const real ConVar   [][ CUBE(FLU_NXT) ],
                                                 { 0.0,       0.0, 0.0, 1.0,       0.0 },
                                                 { 1.0, NULL_REAL, 0.0, 0.0, NULL_REAL } };
 #  endif // #if ( FLU_SCHEME ==  CTU )
-   */
 
 
 // 0. conserved --> primitive variables
@@ -175,6 +176,10 @@ void Hydro_DataReconstruction( const real ConVar   [][ CUBE(FLU_NXT) ],
       real cc_C[NCOMP_TOTAL], cc_L[NCOMP_TOTAL], cc_R[NCOMP_TOTAL];  // cell-centered variables of the Central/Left/Right cells
       real fc[6][NCOMP_TOTAL];                                       // face-centered variables of the central cell
       real Slope_Limiter[NCOMP_TOTAL];
+#     if ( FLU_SCHEME == CTU )
+      real EigenVal[3][NCOMP_FLUID], Correct_L[NCOMP_TOTAL], Correct_R[NCOMP_TOTAL], dfc[NCOMP_TOTAL];
+      real Coeff_L, Coeff_R;
+#     endif
 
       for (int v=0; v<NCOMP_TOTAL; v++)   cc_C[v] = PriVar[v][idx_cc];
 
@@ -230,21 +235,20 @@ void Hydro_DataReconstruction( const real ConVar   [][ CUBE(FLU_NXT) ],
 
 
 //       4. advance the face-centered variables by half time-step for the CTU integrator
-         /*
 #        if ( FLU_SCHEME == CTU )
 
 //       4-1. evaluate the slope (for passive scalars as well)
-         for (int v=0; v<NCOMP_TOTAL; v++)   dFC[v] = fc[faceR][v] - fc[faceL][v];
+         for (int v=0; v<NCOMP_TOTAL; v++)   dfc[v] = fc[faceR][v] - fc[faceL][v];
 
 
 //       4-2. re-order variables for the y/z directions
-         Hydro_Rotate3D( dFC, d, true );
+         Hydro_Rotate3D( dfc, d, true );
 
 
 //       =====================================================================================
 //       a. for the HLL solvers (HLLE/HLLC)
 //       =====================================================================================
-#        if (  ( RSOLVER == HLLE  ||  RSOLVER == HLLC )  &&  defined HLL_NO_REF_STATE  )
+#        if (  ( RSOLVER == HLLE || RSOLVER == HLLC )  &&  defined HLL_NO_REF_STATE  )
 
 //       4-2-a1. evaluate the corrections to the left and right face-centered variables
 
@@ -260,7 +264,7 @@ void Hydro_DataReconstruction( const real ConVar   [][ CUBE(FLU_NXT) ],
          {
             Coeff_L = (real)0.0;
 
-            for (int v=0; v<NCOMP_FLUID; v++)   Coeff_L += LEigenVec[Mode][v]*dFC[v];
+            for (int v=0; v<NCOMP_FLUID; v++)   Coeff_L += LEigenVec[Mode][v]*dfc[v];
 
             Coeff_L *= -dt_dh2*EigenVal[d][Mode];
 
@@ -269,7 +273,7 @@ void Hydro_DataReconstruction( const real ConVar   [][ CUBE(FLU_NXT) ],
 
          for (int v=0; v<NCOMP_FLUID; v++)   Correct_R[v] = Correct_L[v];
 
-#        else // ifndef HLL_INCLUDE_ALL_WAVES
+#        else // #ifdef HLL_INCLUDE_ALL_WAVES
 
          for (int Mode=0; Mode<NCOMP_FLUID; Mode++)
          {
@@ -278,7 +282,7 @@ void Hydro_DataReconstruction( const real ConVar   [][ CUBE(FLU_NXT) ],
 
             if ( EigenVal[d][Mode] <= (real)0.0 )
             {
-               for (int v=0; v<NCOMP_FLUID; v++)   Coeff_L += LEigenVec[Mode][v]*dFC[v];
+               for (int v=0; v<NCOMP_FLUID; v++)   Coeff_L += LEigenVec[Mode][v]*dfc[v];
 
                Coeff_L *= -dt_dh2*EigenVal[d][Mode];
 
@@ -287,7 +291,7 @@ void Hydro_DataReconstruction( const real ConVar   [][ CUBE(FLU_NXT) ],
 
             if ( EigenVal[d][Mode] >= (real)0.0 )
             {
-               for (int v=0; v<NCOMP_FLUID; v++)   Coeff_R += LEigenVec[Mode][v]*dFC[v];
+               for (int v=0; v<NCOMP_FLUID; v++)   Coeff_R += LEigenVec[Mode][v]*dfc[v];
 
                Coeff_R *= -dt_dh2*EigenVal[d][Mode];
 
@@ -295,7 +299,7 @@ void Hydro_DataReconstruction( const real ConVar   [][ CUBE(FLU_NXT) ],
             }
          } // for (int Mode=0; Mode<NCOMP_FLUID; Mode++)
 
-#        endif // ifdef HLL_INCLUDE_ALL_WAVES ... else ...
+#        endif // #ifdef HLL_INCLUDE_ALL_WAVES ... else ...
 
 
 //       =====================================================================================
@@ -309,8 +313,8 @@ void Hydro_DataReconstruction( const real ConVar   [][ CUBE(FLU_NXT) ],
 
          for (int v=0; v<NCOMP_FLUID; v++)
          {
-            Correct_L[v] = Coeff_L*dFC[v];
-            Correct_R[v] = Coeff_R*dFC[v];
+            Correct_L[v] = Coeff_L*dfc[v];
+            Correct_R[v] = Coeff_R*dfc[v];
          }
 
 
@@ -322,7 +326,7 @@ void Hydro_DataReconstruction( const real ConVar   [][ CUBE(FLU_NXT) ],
 
             if ( EigenVal[d][Mode] <= (real)0.0 )
             {
-               for (int v=0; v<NCOMP_FLUID; v++)   Coeff_L += LEigenVec[Mode][v]*dFC[v];
+               for (int v=0; v<NCOMP_FLUID; v++)   Coeff_L += LEigenVec[Mode][v]*dfc[v];
 
                Coeff_L *= dt_dh2*( EigenVal[d][0] - EigenVal[d][Mode] );
 
@@ -331,7 +335,7 @@ void Hydro_DataReconstruction( const real ConVar   [][ CUBE(FLU_NXT) ],
 
             if ( EigenVal[d][Mode] >= (real)0.0 )
             {
-               for (int v=0; v<NCOMP_FLUID; v++)   Coeff_R += LEigenVec[Mode][v]*dFC[v];
+               for (int v=0; v<NCOMP_FLUID; v++)   Coeff_R += LEigenVec[Mode][v]*dfc[v];
 
                Coeff_R *= dt_dh2*( EigenVal[d][4] - EigenVal[d][Mode] );
 
@@ -350,8 +354,8 @@ void Hydro_DataReconstruction( const real ConVar   [][ CUBE(FLU_NXT) ],
 
          for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)
          {
-            Correct_L[v] = Coeff_L*dFC[v];
-            Correct_R[v] = Coeff_R*dFC[v];
+            Correct_L[v] = Coeff_L*dfc[v];
+            Correct_R[v] = Coeff_R*dfc[v];
          }
 #        endif
 
@@ -380,7 +384,6 @@ void Hydro_DataReconstruction( const real ConVar   [][ CUBE(FLU_NXT) ],
 #        endif
 
 #        endif // #if ( FLU_SCHEME == CTU )
-         */
 
 
 //       5. primitive variables --> conserved variables
@@ -909,22 +912,20 @@ void Hydro_Char2Pri( real InOut[], const real Gamma, const real Rho, const real 
 
 
 
-/*
 #if ( FLU_SCHEME == CTU )
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Hydro_GetEigenSystem
 // Description :  Evaluate the eigenvalues and left/right eigenvectors
 //
-// Note        :  1. The input data should be primitive variables
-//                2. The constant components of eigenvectors should be initialized in advance
+// Note        :  1. Input data must be primitive variables
+//                2. Constant components of eigenvectors must be set in advance
 //                3. Work for the CTU scheme
 //                4. Do not need to consider passive scalars
 //                   --> Their eigenmatrices are just identity matrix
 //
 // Parameter   :  CC_Var      : Array storing the input cell-centered primitive variables
 //                EigenVal    : Array to store the output eigenvalues (in three spatial directions)
-//                LEigenVec   : Array to store the output left eigenvectors
-//                REigenVec   : Array to store the output right eigenvectors
+//                L/REigenVec : Array to store the output left/right eigenvectors
 //                Gamma       : Ratio of specific heats
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE
@@ -934,12 +935,12 @@ void Hydro_GetEigenSystem( const real CC_Var[], real EigenVal[][NCOMP_FLUID], re
 
 #  ifdef CHECK_NEGATIVE_IN_FLUID
    if ( Hydro_CheckNegative(CC_Var[4]) )
-      Aux_Message( stderr, "ERROR : negative pressure (%14.7e) at file <%s>, line <%d>, function <%s>\n",
-                   CC_Var[4], __FILE__, __LINE__, __FUNCTION__ );
+      printf( "ERROR : negative pressure (%14.7e) at file <%s>, line <%d>, function <%s>\n",
+              CC_Var[4], __FILE__, __LINE__, __FUNCTION__ );
 
    if ( Hydro_CheckNegative(CC_Var[0]) )
-      Aux_Message( stderr, "ERROR : negative density (%14.7e) at file <%s>, line <%d>, function <%s>\n",
-                   CC_Var[0], __FILE__, __LINE__, __FUNCTION__ );
+      printf( "ERROR : negative density (%14.7e) at file <%s>, line <%d>, function <%s>\n",
+              CC_Var[0], __FILE__, __LINE__, __FUNCTION__ );
 #  endif
 
    const real  Rho = CC_Var[0];
@@ -990,7 +991,6 @@ void Hydro_GetEigenSystem( const real CC_Var[], real EigenVal[][NCOMP_FLUID], re
 
 } // FUNCTION : Hydro_GetEigenSystem
 #endif // #if ( FLU_SCHEME == CTU )
-*/
 
 
 

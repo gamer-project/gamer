@@ -361,28 +361,19 @@ void CUAPI_Asyn_FluidSolver( real h_Flu_Array_In [][FLU_NIN    ][ FLU_NXT*FLU_NX
 #        elif ( FLU_SCHEME == CTU )
 
          CUFLU_FluidSolver_CTU <<< NPatch_per_Stream[s], BlockDim_FluidSolver, 0, Stream[s] >>>
-                               ( d_Flu_Array_F_In  + UsedPatch[s],
-                                 d_Flu_Array_F_Out + UsedPatch[s],
-                                 d_DE_Array_F_Out  + UsedPatch[s],
-                                 d_Flux_Array      + UsedPatch[s],
-                                 d_Corner_Array_F  + UsedPatch[s],
-                                 d_Pot_Array_USG_F + UsedPatch[s],
-                                 d_PriVar          + UsedPatch[s],
-                                 d_Slope_PPM_x     + UsedPatch[s],
-                                 d_Slope_PPM_y     + UsedPatch[s],
-                                 d_Slope_PPM_z     + UsedPatch[s],
-                                 d_FC_Var_xL       + UsedPatch[s],
-                                 d_FC_Var_xR       + UsedPatch[s],
-                                 d_FC_Var_yL       + UsedPatch[s],
-                                 d_FC_Var_yR       + UsedPatch[s],
-                                 d_FC_Var_zL       + UsedPatch[s],
-                                 d_FC_Var_zR       + UsedPatch[s],
-                                 d_FC_Flux_x       + UsedPatch[s],
-                                 d_FC_Flux_y       + UsedPatch[s],
-                                 d_FC_Flux_z       + UsedPatch[s],
-                                 dt, _dh, Gamma, StoreFlux, LR_Limiter, MinMod_Coeff,
-                                 Time, GravityType, MinDens, MinPres, DualEnergySwitch, NormPassive, NNorm,
-                                 JeansMinPres, JeansMinPres_Coeff );
+                             ( d_Flu_Array_F_In  + UsedPatch[s],
+                               d_Flu_Array_F_Out + UsedPatch[s],
+                               d_DE_Array_F_Out  + UsedPatch[s],
+                               d_Flux_Array      + UsedPatch[s],
+                               d_Corner_Array_F  + UsedPatch[s],
+                               d_Pot_Array_USG_F + UsedPatch[s],
+                               d_PriVar          + UsedPatch[s],
+                               d_Slope_PPM       + UsedPatch[s],
+                               d_FC_Var          + UsedPatch[s],
+                               d_FC_Flux         + UsedPatch[s],
+                               dt, dh, Gamma, StoreFlux, LR_Limiter, MinMod_Coeff,
+                               Time, GravityType, MinDens, MinPres, DualEnergySwitch, NormPassive, NNorm,
+                               JeansMinPres, JeansMinPres_Coeff );
 
 #        else
 
