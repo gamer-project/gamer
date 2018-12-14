@@ -1,17 +1,20 @@
-#ifdef __CUDACC__
-#include "Macro.h"
-#else
-#include "GAMER.h"
-#endif
+#ifndef __CUFLU_DUALENERGY__
+#define __CUFLU_DUALENERGY__
+
+
+
 #include "CUFLU.h"
 
-// some functions in this file need to be defined even when using GPU
 #if ( MODEL == HYDRO  &&  defined DUAL_ENERGY )
 
+
+
 #if ( DUAL_ENERGY == DE_ENPY  &&  defined __CUDACC__ )
-GPU_DEVICE static real Hydro_DensPres2Entropy( const real Dens, const real Pres, const real Gamma_m1 );
-GPU_DEVICE static real Hydro_DensEntropy2Pres( const real Dens, const real Enpy, const real Gamma_m1,
-                                               const bool CheckMinPres, const real MinPres );
+GPU_DEVICE
+static real Hydro_DensPres2Entropy( const real Dens, const real Pres, const real Gamma_m1 );
+GPU_DEVICE
+static real Hydro_DensEntropy2Pres( const real Dens, const real Enpy, const real Gamma_m1,
+                                    const bool CheckMinPres, const real MinPres );
 #endif
 
 
@@ -22,11 +25,10 @@ GPU_DEVICE static real Hydro_DensEntropy2Pres( const real Dens, const real Enpy,
 // Description :  Correct the internal and total energies using the dual-energy formalism
 //
 // Note        :  1. Invoked by Hydro_FullStepUpdate()
-//                   --> This function is invoked by both CPU and GPU codes
 //                2. A floor value "MinPres" is applied to the corrected pressure if CheckMinPres is on
-//                3  A floor value "TINY_NUMBER" is applied to the inputted entropy as well
+//                3  A floor value "TINY_NUMBER" is applied to the input entropy as well
 //                4. Call-by-reference for "Etot, Enpy, and DE_Status"
-//                5. This function always ensures that the returned fluid variables are consistent with each other
+//                5. Fluid variables returned by this function are guaranteed to be consistent with each other
 //                   --> They must satisfy "entropy = pressure / density^(Gamma-1)", where pressure is calculated
 //                       by (Etot - Ekin)*(Gamma-1.0)
 //                   --> It doesn't matter we use entropy to correct Eint or vice versa, and it also holds even when
@@ -113,7 +115,7 @@ void Hydro_DualEnergyFix( const real Dens, const real MomX, const real MomY, con
 
 #if ( DUAL_ENERGY == DE_ENPY )
 
-// Hydro_Fluid2Entropy() does not need to have the GPU version
+// Hydro_Fluid2Entropy() is used by CPU only
 #ifndef __CUDACC__
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Hydro_Fluid2Entropy
@@ -121,7 +123,7 @@ void Hydro_DualEnergyFix( const real Dens, const real MomX, const real MomY, con
 //                --> Here entropy is defined as "pressure / density^(Gamma-1)" (i.e., entropy per volume)
 //
 // Note        :  1. Used by the dual-energy formalism
-//                2. Invoked by the functions "Hydro_Init_ByFunction_AssignData, Gra_Close"
+//                2. Invoked by the CPU functions Hydro_Init_ByFunction_AssignData() and Gra_Close()
 //                3. Currently this function does NOT apply the minimum pressure check when calling Hydro_GetPressure()
 //                   --> However, note that Hydro_DensPres2Entropy() does apply a floor value (TINY_NUMBER) for entropy
 //
@@ -227,3 +229,7 @@ real Hydro_DensEntropy2Pres( const real Dens, const real Enpy, const real Gamma_
 
 
 #endif // #if ( MODEL == HYDRO  &&  defined DUAL_ENERGY )
+
+
+
+#endif // #ifndef __CUFLU_DUALENERGY__
