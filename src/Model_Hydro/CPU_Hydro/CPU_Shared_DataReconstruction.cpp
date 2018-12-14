@@ -1092,7 +1092,9 @@ void Hydro_LimitSlope( const real L1[], const real C0[], const real R1[], const 
                break;
 
             default :
+#              ifdef GAMER_DEBUG
                printf( "ERROR : incorrect parameter %s = %d !!\n", "LR_Limiter", LR_Limiter );
+#              endif
                return;
          }
       } // if ( Slope_LR > (real)0.0 )
