@@ -12,7 +12,7 @@
 
 #define to1D(z,y,x) ( z*FLU_NXT*FLU_NXT + y*FLU_NXT + x )
 
-extern real Hydro_CheckMinPres( const real InPres, const real MinPres );
+real Hydro_CheckMinPres( const real InPres, const real MinPres );
 
 static real set_limit( const real r, const real c, const WAF_Limiter_t WAF_Limiter );
 static void CPU_AdvanceX( real u[][ FLU_NXT*FLU_NXT*FLU_NXT ], real fc[PS2*PS2][3][5], const real dt,
@@ -55,33 +55,34 @@ static void Solve_StarRoe( real eival[5], real L_star[5], real R_star[5], const 
 // Note        :  The three-dimensional evolution is achieved by using the dimensional-split method
 //                --> Use the input pamameter "XYZ" to control the order of update
 //
-// Parameter   :  Flu_Array_In   : Array to store the input fluid variables
-//                Flu_Array_Out  : Array to store the output fluid variables
-//                Flux_Array     : Array to store the output flux
-//                Corner_Array   : Array storing the physical corner coordinates of each patch group (USELESS CURRENTLY)
-//                Pot_Array_USG  : Array storing the input potential for UNSPLIT_GRAVITY (NOT SUPPORTED in WAF)
-//                NPatchGroup    : Number of patch groups to be evaluated
-//                dt             : Time interval to advance solution
-//                dh             : Grid size
-//                Gamma          : Ratio of specific heats
-//                StoreFlux      : true --> store the coarse-fine fluxes
-//                XYZ            : true  : x->y->z ( forward sweep)
-//                                 false : z->y->x (backward sweep)
-//                WAF_Limiter    : Selection of the limit function
-//                                    0 : superbee
-//                                    1 : van-Leer
-//                                    2 : van-Albada
-//                                    3 : minbee
-//                MinDens/Pres   : Minimum allowed density and pressure
+// Parameter   :  Flu_Array_In  : Array to store the input fluid variables
+//                Flu_Array_Out : Array to store the output fluid variables
+//                Flux_Array    : Array to store the output flux
+//                Corner_Array  : Array storing the physical corner coordinates of each patch group (USELESS CURRENTLY)
+//                Pot_Array_USG : Array storing the input potential for UNSPLIT_GRAVITY (NOT SUPPORTED in WAF)
+//                NPatchGroup   : Number of patch groups to be evaluated
+//                dt            : Time interval to advance solution
+//                dh            : Grid size
+//                Gamma         : Ratio of specific heats
+//                StoreFlux     : true --> store the coarse-fine fluxes
+//                XYZ           : true  : x->y->z ( forward sweep)
+//                                false : z->y->x (backward sweep)
+//                WAF_Limiter   : Selection of the limit function
+//                                   0 : superbee
+//                                   1 : van-Leer
+//                                   2 : van-Albada
+//                                   3 : minbee
+//                MinDens/Pres  : Minimum allowed density and pressure
 //-------------------------------------------------------------------------------------------------------
-void CPU_FluidSolver_WAF( real Flu_Array_In [][NCOMP_TOTAL][ FLU_NXT*FLU_NXT*FLU_NXT ],
-                          real Flu_Array_Out[][NCOMP_TOTAL][ PS2*PS2*PS2 ],
-                          real Flux_Array[][9][NCOMP_TOTAL][ PS2*PS2 ],
-                          const double Corner_Array[][3],
-                          const real Pot_Array_USG[][ USG_NXT_F*USG_NXT_F*USG_NXT_F ],
-                          const int NPatchGroup, const real dt, const real dh, const real Gamma,
-                          const bool StoreFlux, const bool XYZ, const WAF_Limiter_t WAF_Limiter,
-                          const real MinDens, const real MinPres )
+void CPU_FluidSolver_WAF(
+   real Flu_Array_In[][NCOMP_TOTAL][ CUBE(FLU_NXT) ],
+   real Flu_Array_Out[][NCOMP_TOTAL][ CUBE(PS2) ],
+   real Flux_Array[][9][NCOMP_TOTAL][ SQR(PS2) ],
+   const double Corner_Array[][3],
+   const real Pot_Array_USG[][ CUBE(USG_NXT_F) ],
+   const int NPatchGroup, const real dt, const real dh, const real Gamma,
+   const bool StoreFlux, const bool XYZ, const WAF_Limiter_t WAF_Limiter,
+   const real MinDens, const real MinPres )
 {
 
 #  pragma omp parallel

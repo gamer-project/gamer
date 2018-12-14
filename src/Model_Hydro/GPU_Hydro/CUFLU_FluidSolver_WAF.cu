@@ -74,14 +74,15 @@ static __device__ real set_limit( const real r, const real c, const WAF_Limiter_
 //                                 3 : minbee
 //                MinDens/Pres : Minimum allowed density and pressure
 //-------------------------------------------------------------------------------------------------------
-__global__ void CUFLU_FluidSolver_WAF( real g_Fluid_In []   [NCOMP_TOTAL][ FLU_NXT*FLU_NXT*FLU_NXT ],
-                                       real g_Fluid_Out[]   [NCOMP_TOTAL][ PS2*PS2*PS2 ],
-                                       real g_Flux     [][9][NCOMP_TOTAL][ PS2*PS2 ],
-                                       const double g_Corner[][3],
-                                       const real g_Pot_USG[][ USG_NXT_F*USG_NXT_F*USG_NXT_F ],
-                                       const real dt, const real _dh, const real Gamma, const bool StoreFlux,
-                                       const bool XYZ, const WAF_Limiter_t WAF_Limiter,
-                                       const real MinDens, const real MinPres )
+__global__ void CUFLU_FluidSolver_WAF(
+   real g_Fluid_In[][NCOMP_TOTAL][ CUBE(FLU_NXT) ],
+   real g_Fluid_Out[][NCOMP_TOTAL][ CUBE(PS2) ],
+   real g_Flux[][9][NCOMP_TOTAL][ SQR(PS2) ],
+   const double g_Corner[][3],
+   const real g_Pot_USG[][ CUBE(USG_NXT_F) ],
+   const real dt, const real _dh, const real Gamma, const bool StoreFlux,
+   const bool XYZ, const WAF_Limiter_t WAF_Limiter,
+   const real MinDens, const real MinPres )
 {
 
    __shared__ real s_u     [FLU_BLOCK_SIZE_Y][FLU_NXT][5];
@@ -180,7 +181,6 @@ __device__ void CUFLU_Advance( real g_Fluid_In [][5][ FLU_NXT*FLU_NXT*FLU_NXT ],
 
    real   Fluid[5], eval[5];
    int    ID1, ID2, ID3, ii, delta_k, Comp[5];
-   FluVar ConVar;
 
 
 // set the order of component for update in different directions
@@ -215,7 +215,7 @@ __device__ void CUFLU_Advance( real g_Fluid_In [][5][ FLU_NXT*FLU_NXT*FLU_NXT ],
       s_u[ty][i][3] = Fluid[3] / Fluid[0];
       s_u[ty][i][4] = Gamma_m1*( Fluid[4] - (real)0.5*( Fluid[1]*Fluid[1] + Fluid[2]*Fluid[2] +
                                                         Fluid[3]*Fluid[3] ) / Fluid[0] );
-      s_u[ty][i][4] = CUFLU_CheckMinPres( s_u[ty][i][4], MinPres );
+      s_u[ty][i][4] = Hydro_CheckMinPres( s_u[ty][i][4], MinPres );
 
       __syncthreads();
 
@@ -293,24 +293,18 @@ __device__ void CUFLU_Advance( real g_Fluid_In [][5][ FLU_NXT*FLU_NXT*FLU_NXT ],
          for (int v=0; v<5; v++)    Fluid[v] += ratio*( s_flux[ty][ii][v] - s_flux[ty][ii+1][v] );
 
 //       enforce positive density and pressure
-         ConVar.Rho = Fluid[0];
-         ConVar.Px  = Fluid[1];
-         ConVar.Py  = Fluid[2];
-         ConVar.Pz  = Fluid[3];
-         ConVar.Egy = Fluid[4];
-
-         ConVar.Rho = FMAX( ConVar.Rho, MinDens );
-         Fluid[0]   = ConVar.Rho;
-         Fluid[4]   = CUFLU_CheckMinPresInEngy( ConVar, Gamma_m1, _Gamma_m1, MinPres );
+         Fluid[0] = FMAX( Fluid[0], MinDens );
+         Fluid[4] = Hydro_CheckMinPresInEngy( Fluid[0], Fluid[1], Fluid[2], Fluid[3], Fluid[4],
+                                              Gamma_m1, _Gamma_m1, MinPres );
 
 
 //       check negative density and energy
 #        ifdef CHECK_NEGATIVE_IN_FLUID
-         if ( CUFLU_CheckNegative(Fluid[0]) )
+         if ( Hydro_CheckNegative(Fluid[0]) )
             printf( "ERROR : negative density (%14.7e) at file <%s>, line <%d>, function <%s>\n",
                     Fluid[0], __FILE__, __LINE__, __FUNCTION__ );
 
-         if ( CUFLU_CheckNegative(Fluid[4]) )
+         if ( Hydro_CheckNegative(Fluid[4]) )
             printf( "ERROR : negative energy (%14.7e) at file <%s>, line <%d>, function <%s>\n",
                     Fluid[4], __FILE__, __LINE__, __FUNCTION__ );
 #        endif
@@ -847,10 +841,10 @@ __device__ void Solve_StarRoe( real eival[5], real L_star[5], real R_star[5], co
 // solve Roe's average
    {
 #     ifdef CHECK_NEGATIVE_IN_FLUID
-      if ( CUFLU_CheckNegative(L[0]) )
+      if ( Hydro_CheckNegative(L[0]) )
          printf( "ERROR : negative density (%14.7e) at file <%s>, line <%d>, function <%s>\n",
                  L[0], __FILE__, __LINE__, __FUNCTION__ );
-      if ( CUFLU_CheckNegative(R[0]) )
+      if ( Hydro_CheckNegative(R[0]) )
          printf( "ERROR : negative density (%14.7e) at file <%s>, line <%d>, function <%s>\n",
                  R[0], __FILE__, __LINE__, __FUNCTION__ );
 #     endif
@@ -871,11 +865,11 @@ __device__ void Solve_StarRoe( real eival[5], real L_star[5], real R_star[5], co
       TempRho    = (real)0.5*( L[0] + R[0] );
       _TempRho   = (real)1.0/TempRho;
       TempPres   = GammaP_Rho*TempRho/Gamma;
-      TempPres   = CUFLU_CheckMinPres( TempPres, MinPres );
+      TempPres   = Hydro_CheckMinPres( TempPres, MinPres );
       GammaP_Rho = Gamma*TempPres*_TempRho;
 
 #     ifdef CHECK_NEGATIVE_IN_FLUID
-      if ( CUFLU_CheckNegative(GammaP_Rho) )
+      if ( Hydro_CheckNegative(GammaP_Rho) )
          printf( "ERROR : negative GammaP_Rho (%14.7e) at file <%s>, line <%d>, function <%s>\n",
                  GammaP_Rho, __FILE__, __LINE__, __FUNCTION__ );
 #     endif
@@ -921,7 +915,7 @@ __device__ void Solve_StarRoe( real eival[5], real L_star[5], real R_star[5], co
       real e_R_star = (real)0.5*R_star[0]*( R_star[1]*R_star[1] + R_star[2]*R_star[2] + R_star[3]*R_star[3] );
       L_star[4] = (real)0.5*Gamma_m1*(  E_L - e_L_star + L[4]/Gamma_m1 + coef[0]*( h_bar - u_bar*a_bar )
                                       + E_R - e_R_star + R[4]/Gamma_m1 - coef[4]*( h_bar + u_bar*a_bar )  );
-      L_star[4] = CUFLU_CheckMinPres( L_star[4], MinPres );
+      L_star[4] = Hydro_CheckMinPres( L_star[4], MinPres );
       R_star[4] = L_star[4];
    }
 
@@ -933,29 +927,29 @@ __device__ void Solve_StarRoe( real eival[5], real L_star[5], real R_star[5], co
       eival[3] = L_star[1];
 
 #     ifdef CHECK_NEGATIVE_IN_FLUID
-      if ( CUFLU_CheckNegative(L[4]) )
+      if ( Hydro_CheckNegative(L[4]) )
          printf( "ERROR : negative pressure (%14.7e) at file <%s>, line <%d>, function <%s>\n",
                  L[4],      __FILE__, __LINE__, __FUNCTION__ );
-      if ( CUFLU_CheckNegative(L[0]) )
+      if ( Hydro_CheckNegative(L[0]) )
          printf( "ERROR : negative density (%14.7e) at file <%s>, line <%d>, function <%s>\n",
                  L[0],      __FILE__, __LINE__, __FUNCTION__ );
-      if ( CUFLU_CheckNegative(L_star[4]) )
+      if ( Hydro_CheckNegative(L_star[4]) )
          printf( "ERROR : negative pressure (%14.7e) at file <%s>, line <%d>, function <%s>\n",
                  L_star[4], __FILE__, __LINE__, __FUNCTION__ );
-      if ( CUFLU_CheckNegative(L_star[0]) )
+      if ( Hydro_CheckNegative(L_star[0]) )
          printf( "ERROR : negative density(%14.7e) at file <%s>, line <%d>, function <%s>\n",
                  L_star[0], __FILE__, __LINE__, __FUNCTION__ );
 
-      if ( CUFLU_CheckNegative(R[4]) )
+      if ( Hydro_CheckNegative(R[4]) )
          printf( "ERROR : negative pressure (%14.7e) at file <%s>, line <%d>, function <%s>\n",
                  R[4],      __FILE__, __LINE__, __FUNCTION__ );
-      if ( CUFLU_CheckNegative(R[0]) )
+      if ( Hydro_CheckNegative(R[0]) )
          printf( "ERROR : negative density (%14.7e) at file <%s>, line <%d>, function <%s>\n",
                  R[0],      __FILE__, __LINE__, __FUNCTION__ );
-      if ( CUFLU_CheckNegative(R_star[4]) )
+      if ( Hydro_CheckNegative(R_star[4]) )
          printf( "ERROR : negative pressure (%14.7e) at file <%s>, line <%d>, function <%s>\n",
                  R_star[4], __FILE__, __LINE__, __FUNCTION__ );
-      if ( CUFLU_CheckNegative(R_star[0]) )
+      if ( Hydro_CheckNegative(R_star[0]) )
          printf( "ERROR : negative density(%14.7e) at file <%s>, line <%d>, function <%s>\n",
                  R_star[0], __FILE__, __LINE__, __FUNCTION__ );
 #     endif
