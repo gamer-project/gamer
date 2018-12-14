@@ -450,8 +450,6 @@ void Hydro_DataReconstruction( const real ConVar   [][ CUBE(FLU_NXT) ],
    const real _Gamma_m1  = (real)1.0 / Gamma_m1;
 
 
-// variables for the CTU scheme
-   /*
 #  if ( FLU_SCHEME == CTU )
    const real dt_dh2 = (real)0.5*dt/dh;
 
@@ -464,10 +462,7 @@ void Hydro_DataReconstruction( const real ConVar   [][ CUBE(FLU_NXT) ],
 #  endif
 #  endif // if (  ( RSOLVER == HLLE  ||  RSOLVER == HLLC )  &&  defined HLL_NO_REF_STATE  )
 
-   real EigenVal[3][NCOMP_FLUID], Correct_L[NCOMP_TOTAL], Correct_R[NCOMP_TOTAL];
-   real Coeff_A, Coeff_B, Coeff_C, Coeff_D, Coeff_L, Coeff_R;
-
-// initialize the constant components of the matrices of the left and right eigenvectors
+// constant components of the left and right eigenvector matrices must be initialized
    real LEigenVec[NCOMP_FLUID][NCOMP_FLUID] = { { 0.0, NULL_REAL, 0.0, 0.0, NULL_REAL },
                                                 { 1.0,       0.0, 0.0, 0.0, NULL_REAL },
                                                 { 0.0,       0.0, 1.0, 0.0,       0.0 },
@@ -480,7 +475,6 @@ void Hydro_DataReconstruction( const real ConVar   [][ CUBE(FLU_NXT) ],
                                                 { 0.0,       0.0, 0.0, 1.0,       0.0 },
                                                 { 1.0, NULL_REAL, 0.0, 0.0, NULL_REAL } };
 #  endif // #if ( FLU_SCHEME == CTU )
-   */
 
 
 // 0. conserved --> primitive variables
@@ -559,6 +553,10 @@ void Hydro_DataReconstruction( const real ConVar   [][ CUBE(FLU_NXT) ],
 
  //   cc/fc: cell/face-centered variables; _C_ncomp: central cell with all NCOMP_TOTAL variables
       real cc_C_ncomp[NCOMP_TOTAL], fc[6][NCOMP_TOTAL], dfc[NCOMP_TOTAL], dfc6[NCOMP_TOTAL];
+#     if ( FLU_SCHEME == CTU )
+      real EigenVal[3][NCOMP_FLUID], Correct_L[NCOMP_TOTAL], Correct_R[NCOMP_TOTAL];
+      real Coeff_L, Coeff_R;
+#     endif
 
       for (int v=0; v<NCOMP_TOTAL; v++)   cc_C_ncomp[v] = PriVar[v][idx_cc];
 
@@ -631,7 +629,6 @@ void Hydro_DataReconstruction( const real ConVar   [][ CUBE(FLU_NXT) ],
 
 
 //       4. advance the face-centered variables by half time-step for the CTU integrator
-         /*
 #        if ( FLU_SCHEME == CTU )
 
 //       4-1. compute the PPM coefficient (for the passive scalars as well)
@@ -649,7 +646,7 @@ void Hydro_DataReconstruction( const real ConVar   [][ CUBE(FLU_NXT) ],
 //       =====================================================================================
 //       a. for the HLL solvers (HLLE/HLLC)
 //       =====================================================================================
-#        if (  ( RSOLVER == HLLE  ||  RSOLVER == HLLC )  &&  defined HLL_NO_REF_STATE  )
+#        if (  ( RSOLVER == HLLE || RSOLVER == HLLC )  &&  defined HLL_NO_REF_STATE  )
 
 //       4-2-a1. evaluate the corrections to the left and right face-centered variables
          for (int v=0; v<NCOMP_FLUID; v++)
@@ -665,8 +662,8 @@ void Hydro_DataReconstruction( const real ConVar   [][ CUBE(FLU_NXT) ],
 
             if ( HLL_Include_All_Waves  ||  EigenVal[d][Mode] <= (real)0.0 )
             {
-               Coeff_C = -dt_dh2*EigenVal[d][Mode];
-               Coeff_D = real(-4.0/3.0)*SQR(Coeff_C);
+               const real Coeff_C = -dt_dh2*EigenVal[d][Mode];
+               const real Coeff_D = real(-4.0/3.0)*SQR(Coeff_C);
 
                for (int v=0; v<NCOMP_FLUID; v++)   Coeff_L += LEigenVec[Mode][v]*(  Coeff_C*( dfc[v] + dfc6[v] ) +
                                                                                     Coeff_D*( dfc6[v]          )   );
@@ -676,8 +673,8 @@ void Hydro_DataReconstruction( const real ConVar   [][ CUBE(FLU_NXT) ],
 
             if ( HLL_Include_All_Waves  ||  EigenVal[d][Mode] >= (real)0.0 )
             {
-               Coeff_A = -dt_dh2*EigenVal[d][Mode];
-               Coeff_B = real(-4.0/3.0)*SQR(Coeff_A);
+               const real Coeff_A = -dt_dh2*EigenVal[d][Mode];
+               const real Coeff_B = real(-4.0/3.0)*SQR(Coeff_A);
 
                for (int v=0; v<NCOMP_FLUID; v++)   Coeff_R += LEigenVec[Mode][v]*(  Coeff_A*( dfc[v] - dfc6[v] ) +
                                                                                     Coeff_B*( dfc6[v]          )   );
@@ -711,11 +708,11 @@ void Hydro_DataReconstruction( const real ConVar   [][ CUBE(FLU_NXT) ],
 
             if ( EigenVal[d][Mode] <= (real)0.0 )
             {
-               Coeff_C = dt_dh2*( EigenVal[d][0] - EigenVal[d][Mode] );
+               const real Coeff_C = dt_dh2*( EigenVal[d][0] - EigenVal[d][Mode] );
 //             write as (a-b)*(a+b) instead of a^2-b^2 to ensure that Coeff_D=0 when Coeff_C=0
 //             Coeff_D = real(4.0/3.0)*dt_dh2*dt_dh2* ( EigenVal[d][   0]*EigenVal[d][   0] -
 //                                                      EigenVal[d][Mode]*EigenVal[d][Mode]   );
-               Coeff_D = real(4.0/3.0)*dt_dh2*Coeff_C*( EigenVal[d][0] + EigenVal[d][Mode] );
+               const real Coeff_D = real(4.0/3.0)*dt_dh2*Coeff_C*( EigenVal[d][0] + EigenVal[d][Mode] );
 
                for (int v=0; v<NCOMP_FLUID; v++)   Coeff_L += LEigenVec[Mode][v]*(  Coeff_C*( dfc[v] + dfc6[v] ) +
                                                                                     Coeff_D*( dfc6[v]          )   );
@@ -725,11 +722,11 @@ void Hydro_DataReconstruction( const real ConVar   [][ CUBE(FLU_NXT) ],
 
             if ( EigenVal[d][Mode] >= (real)0.0 )
             {
-               Coeff_A = dt_dh2*( EigenVal[d][4] - EigenVal[d][Mode] );
+               const real Coeff_A = dt_dh2*( EigenVal[d][4] - EigenVal[d][Mode] );
 //             write as (a-b)*(a+b) instead of a^2-b^2 to ensure that Coeff_B=0 when Coeff_A=0
 //             Coeff_B = real(4.0/3.0)*dt_dh2*dt_dh2* ( EigenVal[d][   4]*EigenVal[d][   4] -
 //                                                      EigenVal[d][Mode]*EigenVal[d][Mode]   );
-               Coeff_B = real(4.0/3.0)*dt_dh2*Coeff_A*( EigenVal[d][4] + EigenVal[d][Mode] );
+               const real Coeff_B = real(4.0/3.0)*dt_dh2*Coeff_A*( EigenVal[d][4] + EigenVal[d][Mode] );
 
                for (int v=0; v<NCOMP_FLUID; v++)   Coeff_R += LEigenVec[Mode][v]*(  Coeff_A*( dfc[v] - dfc6[v] ) +
                                                                                     Coeff_B*( dfc6[v]          )   );
@@ -779,7 +776,6 @@ void Hydro_DataReconstruction( const real ConVar   [][ CUBE(FLU_NXT) ],
 #        endif
 
 #        endif // #if ( FLU_SCHEME == CTU )
-         */
 
 
 //       5. primitive variables --> conserved variables
