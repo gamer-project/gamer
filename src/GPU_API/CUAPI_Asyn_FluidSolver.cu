@@ -7,13 +7,14 @@
 
 #if   ( MODEL == HYDRO )
 #if   ( FLU_SCHEME == RTVD )
-__global__ void CUFLU_FluidSolver_RTVD( real g_Fluid_In []   [NCOMP_TOTAL][ FLU_NXT*FLU_NXT*FLU_NXT ],
-                                        real g_Fluid_Out[]   [NCOMP_TOTAL][ PS2*PS2*PS2 ],
-                                        real g_Flux     [][9][NCOMP_TOTAL][ PS2*PS2 ],
-                                        const double g_Corner[][3],
-                                        const real g_Pot_USG[][ USG_NXT_F*USG_NXT_F*USG_NXT_F ],
-                                        const real dt, const real _dh, const real Gamma, const bool StoreFlux,
-                                        const bool XYZ, const real MinDens, const real MinPres );
+__global__ void CUFLU_FluidSolver_RTVD(
+   real g_Fluid_In [][NCOMP_TOTAL][ CUBE(FLU_NXT) ],
+   real g_Fluid_Out[][NCOMP_TOTAL][ CUBE(PS2) ],
+   real g_Flux     [][9][NCOMP_TOTAL][ SQR(PS2) ],
+   const double g_Corner[][3],
+   const real g_Pot_USG[][ CUBE(USG_NXT_F) ],
+   const real dt, const real _dh, const real Gamma, const bool StoreFlux,
+   const bool XYZ, const real MinDens, const real MinPres );
 #elif ( FLU_SCHEME == WAF )
 __global__ void CUFLU_FluidSolver_WAF( real g_Fluid_In []   [NCOMP_TOTAL][ FLU_NXT*FLU_NXT*FLU_NXT ],
                                        real g_Fluid_Out[]   [NCOMP_TOTAL][ PS2*PS2*PS2 ],
@@ -324,56 +325,56 @@ void CUAPI_Asyn_FluidSolver( real h_Flu_Array_In [][FLU_NIN    ][ FLU_NXT*FLU_NX
 #        if   ( FLU_SCHEME == RTVD )
 
          CUFLU_FluidSolver_RTVD <<< NPatch_per_Stream[s], BlockDim_FluidSolver, 0, Stream[s] >>>
-                                ( d_Flu_Array_F_In  + UsedPatch[s],
-                                  d_Flu_Array_F_Out + UsedPatch[s],
-                                  d_Flux_Array      + UsedPatch[s],
-                                  d_Corner_Array_F  + UsedPatch[s],
-                                  d_Pot_Array_USG_F + UsedPatch[s],
-                                  dt, _dh, Gamma, StoreFlux, XYZ, MinDens, MinPres );
+            ( d_Flu_Array_F_In  + UsedPatch[s],
+              d_Flu_Array_F_Out + UsedPatch[s],
+              d_Flux_Array      + UsedPatch[s],
+              d_Corner_Array_F  + UsedPatch[s],
+              d_Pot_Array_USG_F + UsedPatch[s],
+              dt, _dh, Gamma, StoreFlux, XYZ, MinDens, MinPres );
 
 #        elif ( FLU_SCHEME == WAF )
 
          CUFLU_FluidSolver_WAF <<< NPatch_per_Stream[s], BlockDim_FluidSolver, 0, Stream[s] >>>
-                               ( d_Flu_Array_F_In  + UsedPatch[s],
-                                 d_Flu_Array_F_Out + UsedPatch[s],
-                                 d_Flux_Array      + UsedPatch[s],
-                                 d_Corner_Array_F  + UsedPatch[s],
-                                 d_Pot_Array_USG_F + UsedPatch[s],
-                                 dt, _dh, Gamma, StoreFlux, XYZ, WAF_Limiter, MinDens, MinPres );
+            ( d_Flu_Array_F_In  + UsedPatch[s],
+              d_Flu_Array_F_Out + UsedPatch[s],
+              d_Flux_Array      + UsedPatch[s],
+              d_Corner_Array_F  + UsedPatch[s],
+              d_Pot_Array_USG_F + UsedPatch[s],
+              dt, _dh, Gamma, StoreFlux, XYZ, WAF_Limiter, MinDens, MinPres );
 
 #        elif ( FLU_SCHEME == MHM  ||  FLU_SCHEME == MHM_RP )
 
          CUFLU_FluidSolver_MHM <<< NPatch_per_Stream[s], BlockDim_FluidSolver, 0, Stream[s] >>>
-                             ( d_Flu_Array_F_In  + UsedPatch[s],
-                               d_Flu_Array_F_Out + UsedPatch[s],
-                               d_DE_Array_F_Out  + UsedPatch[s],
-                               d_Flux_Array      + UsedPatch[s],
-                               d_Corner_Array_F  + UsedPatch[s],
-                               d_Pot_Array_USG_F + UsedPatch[s],
-                               d_PriVar          + UsedPatch[s],
-                               d_Slope_PPM       + UsedPatch[s],
-                               d_FC_Var          + UsedPatch[s],
-                               d_FC_Flux         + UsedPatch[s],
-                               dt, dh, Gamma, StoreFlux, LR_Limiter, MinMod_Coeff,
-                               Time, GravityType, MinDens, MinPres, DualEnergySwitch, NormPassive, NNorm,
-                               JeansMinPres, JeansMinPres_Coeff );
+            ( d_Flu_Array_F_In  + UsedPatch[s],
+              d_Flu_Array_F_Out + UsedPatch[s],
+              d_DE_Array_F_Out  + UsedPatch[s],
+              d_Flux_Array      + UsedPatch[s],
+              d_Corner_Array_F  + UsedPatch[s],
+              d_Pot_Array_USG_F + UsedPatch[s],
+              d_PriVar          + UsedPatch[s],
+              d_Slope_PPM       + UsedPatch[s],
+              d_FC_Var          + UsedPatch[s],
+              d_FC_Flux         + UsedPatch[s],
+              dt, dh, Gamma, StoreFlux, LR_Limiter, MinMod_Coeff,
+              Time, GravityType, MinDens, MinPres, DualEnergySwitch, NormPassive, NNorm,
+              JeansMinPres, JeansMinPres_Coeff );
 
 #        elif ( FLU_SCHEME == CTU )
 
          CUFLU_FluidSolver_CTU <<< NPatch_per_Stream[s], BlockDim_FluidSolver, 0, Stream[s] >>>
-                             ( d_Flu_Array_F_In  + UsedPatch[s],
-                               d_Flu_Array_F_Out + UsedPatch[s],
-                               d_DE_Array_F_Out  + UsedPatch[s],
-                               d_Flux_Array      + UsedPatch[s],
-                               d_Corner_Array_F  + UsedPatch[s],
-                               d_Pot_Array_USG_F + UsedPatch[s],
-                               d_PriVar          + UsedPatch[s],
-                               d_Slope_PPM       + UsedPatch[s],
-                               d_FC_Var          + UsedPatch[s],
-                               d_FC_Flux         + UsedPatch[s],
-                               dt, dh, Gamma, StoreFlux, LR_Limiter, MinMod_Coeff,
-                               Time, GravityType, MinDens, MinPres, DualEnergySwitch, NormPassive, NNorm,
-                               JeansMinPres, JeansMinPres_Coeff );
+            ( d_Flu_Array_F_In  + UsedPatch[s],
+              d_Flu_Array_F_Out + UsedPatch[s],
+              d_DE_Array_F_Out  + UsedPatch[s],
+              d_Flux_Array      + UsedPatch[s],
+              d_Corner_Array_F  + UsedPatch[s],
+              d_Pot_Array_USG_F + UsedPatch[s],
+              d_PriVar          + UsedPatch[s],
+              d_Slope_PPM       + UsedPatch[s],
+              d_FC_Var          + UsedPatch[s],
+              d_FC_Flux         + UsedPatch[s],
+              dt, dh, Gamma, StoreFlux, LR_Limiter, MinMod_Coeff,
+              Time, GravityType, MinDens, MinPres, DualEnergySwitch, NormPassive, NNorm,
+              JeansMinPres, JeansMinPres_Coeff );
 
 #        else
 
@@ -387,10 +388,10 @@ void CUAPI_Asyn_FluidSolver( real h_Flu_Array_In [][FLU_NIN    ][ FLU_NXT*FLU_NX
 #     elif ( MODEL == ELBDM )
 
          CUFLU_ELBDMSolver <<< NPatch_per_Stream[s], BlockDim_FluidSolver, 0, Stream[s] >>>
-                               ( d_Flu_Array_F_In  + UsedPatch[s],
-                                 d_Flu_Array_F_Out + UsedPatch[s],
-                                 d_Flux_Array      + UsedPatch[s],
-                                 dt, _dh, ELBDM_Eta, StoreFlux, ELBDM_Taylor3_Coeff, XYZ, MinDens );
+            ( d_Flu_Array_F_In  + UsedPatch[s],
+              d_Flu_Array_F_Out + UsedPatch[s],
+              d_Flux_Array      + UsedPatch[s],
+              dt, _dh, ELBDM_Eta, StoreFlux, ELBDM_Taylor3_Coeff, XYZ, MinDens );
 
 #     else
 
