@@ -100,7 +100,7 @@ void Hydro_FullStepUpdate( const real Input[][ CUBE(FLU_NXT) ], real Output[][ C
       for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)  Output_1Cell[v] = FMAX( Output_1Cell[v], TINY_NUMBER );
 
       if ( NormPassive )
-         Hydro_NormalizePassive( Output_1Cell[DENS], Output_1Cell[NCOMP_FLUID], NNorm, NormIdx );
+         Hydro_NormalizePassive( Output_1Cell[DENS], Output_1Cell+NCOMP_FLUID, NNorm, NormIdx );
 #     endif
 
 
