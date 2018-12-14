@@ -16,13 +16,15 @@ __global__ void CUFLU_FluidSolver_RTVD(
    const real dt, const real _dh, const real Gamma, const bool StoreFlux,
    const bool XYZ, const real MinDens, const real MinPres );
 #elif ( FLU_SCHEME == WAF )
-__global__ void CUFLU_FluidSolver_WAF( real g_Fluid_In []   [NCOMP_TOTAL][ FLU_NXT*FLU_NXT*FLU_NXT ],
-                                       real g_Fluid_Out[]   [NCOMP_TOTAL][ PS2*PS2*PS2 ],
-                                       real g_Flux     [][9][NCOMP_TOTAL][ PS2*PS2 ],
-                                       const double g_Corner[][3],
-                                       const real g_Pot_USG[][ USG_NXT_F*USG_NXT_F*USG_NXT_F ],
-                                       const real dt, const real _dh, const real Gamma, const bool StoreFlux,
-                                       const bool XYZ, const WAF_Limiter_t WAF_Limiter, const real MinDens, const real MinPres );
+__global__ void CUFLU_FluidSolver_WAF(
+   real g_Fluid_In[][NCOMP_TOTAL][ CUBE(FLU_NXT) ],
+   real g_Fluid_Out[][NCOMP_TOTAL][ CUBE(PS2) ],
+   real g_Flux[][9][NCOMP_TOTAL][ SQR(PS2) ],
+   const double g_Corner[][3],
+   const real g_Pot_USG[][ CUBE(USG_NXT_F) ],
+   const real dt, const real _dh, const real Gamma, const bool StoreFlux,
+   const bool XYZ, const WAF_Limiter_t WAF_Limiter,
+   const real MinDens, const real MinPres );
 #elif ( FLU_SCHEME == MHM  ||  FLU_SCHEME == MHM_RP )
 __global__
 void CUFLU_FluidSolver_MHM(
