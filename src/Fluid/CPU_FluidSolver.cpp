@@ -43,18 +43,19 @@ void CPU_FluidSolver_MHM(
    const real DualEnergySwitch, const bool NormPassive, const int NNorm, const int NormIdx[],
    const bool JeansMinPres, const real JeansMinPres_Coeff );
 #elif ( FLU_SCHEME == CTU )
-void CPU_FluidSolver_CTU( const real Flu_Array_In[][NCOMP_TOTAL][ FLU_NXT*FLU_NXT*FLU_NXT ],
-                          real Flu_Array_Out     [][NCOMP_TOTAL][ PS2*PS2*PS2 ],
-                          char DE_Array_Out      [][ PS2*PS2*PS2 ],
-                          real Flux_Array     [][9][NCOMP_TOTAL][ PS2*PS2 ],
-                          const double Corner_Array[][3],
-                          const real Pot_Array_USG[][ USG_NXT_F*USG_NXT_F*USG_NXT_F ],
-                          const int NPatchGroup, const real dt, const real dh, const real Gamma,
-                          const bool StoreFlux, const LR_Limiter_t LR_Limiter, const real MinMod_Coeff,
-                          const real EP_Coeff, const double Time, const OptGravityType_t GravityType,
-                          const double ExtAcc_AuxArray[], const real MinDens, const real MinPres,
-                          const real DualEnergySwitch, const bool NormPassive, const int NNorm, const int NormIdx[],
-                          const bool JeansMinPres, const real JeansMinPres_Coeff );
+void CPU_FluidSolver_CTU(
+   const real   Flu_Array_In [][NCOMP_TOTAL][ CUBE(FLU_NXT) ],
+         real   Flu_Array_Out[][NCOMP_TOTAL][ CUBE(PS2) ],
+         char   DE_Array_Out [][ CUBE(PS2) ],
+         real   Flux_Array   [][9][NCOMP_TOTAL][ SQR(PS2) ],
+   const double Corner_Array [][3],
+   const real   Pot_Array_USG[][ CUBE(USG_NXT_F) ],
+   const int NPatchGroup, const real dt, const real dh, const real Gamma,
+   const bool StoreFlux, const LR_Limiter_t LR_Limiter, const real MinMod_Coeff,
+   const double Time, const OptGravityType_t GravityType,
+   const double ExtAcc_AuxArray[], const real MinDens, const real MinPres,
+   const real DualEnergySwitch, const bool NormPassive, const int NNorm, const int NormIdx[],
+   const bool JeansMinPres, const real JeansMinPres_Coeff );
 #endif // FLU_SCHEME
 
 #elif ( MODEL == MHD )
