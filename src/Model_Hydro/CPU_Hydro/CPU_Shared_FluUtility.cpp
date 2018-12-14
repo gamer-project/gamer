@@ -9,6 +9,16 @@
 
 
 
+#ifdef __CUDACC__
+GPU_DEVICE
+static real Hydro_GetPressure( const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy,
+                               const real Gamma_m1, const bool CheckMinPres, const real MinPres );
+GPU_DEVICE
+static real Hydro_CheckMinPres( const real InPres, const real MinPres );
+#endif
+
+
+
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Hydro_Rotate3D
