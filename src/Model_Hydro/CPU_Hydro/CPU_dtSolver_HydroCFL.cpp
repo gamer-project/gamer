@@ -1,4 +1,4 @@
-#include "GAMER.h"
+#include "CUFLU.h"
 
 #if ( !defined GPU  &&  MODEL == HYDRO )
 

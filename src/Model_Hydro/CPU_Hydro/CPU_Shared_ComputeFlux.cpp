@@ -1,4 +1,8 @@
-#include "GAMER.h"
+#ifndef __CUFLU_COMPUTEFLUX__
+#define __CUFLU_COMPUTEFLUX__
+
+
+
 #include "CUFLU.h"
 
 #if ( MODEL == HYDRO  &&  (FLU_SCHEME == MHM || FLU_SCHEME == MHM_RP || FLU_SCHEME == CTU) )
@@ -306,3 +310,7 @@ void Hydro_ComputeFlux( const real FC_Var [][NCOMP_TOTAL][ CUBE(N_FC_VAR) ],
 
 
 #endif // #if ( MODEL == HYDRO  &&  (FLU_SCHEME == MHM || FLU_SCHEME == MHM_RP || FLU_SCHEME == CTU) )
+
+
+
+#endif // #ifndef __CUFLU_COMPUTEFLUX__

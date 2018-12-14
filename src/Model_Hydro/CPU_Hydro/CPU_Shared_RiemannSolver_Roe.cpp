@@ -3,7 +3,6 @@
 
 
 
-#include "GAMER.h"
 #include "CUFLU.h"
 
 #if ( MODEL == HYDRO )

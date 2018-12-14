@@ -1,4 +1,8 @@
-#include "GAMER.h"
+#ifndef __CUFLU_DATARECONSTRUCTION__
+#define __CUFLU_DATARECONSTRUCTION__
+
+
+
 #include "CUFLU.h"
 
 #if (  MODEL == HYDRO  &&  ( FLU_SCHEME == MHM || FLU_SCHEME == MHM_RP || FLU_SCHEME == CTU )  )
@@ -1185,3 +1189,7 @@ void Hydro_HancockPredict( real fc[][NCOMP_TOTAL], const real dt, const real dh,
 
 
 #endif // #if ( !defined GPU  &&  MODEL == HYDRO  &&  (FLU_SCHEME == MHM || MHM_RP || CTU) )
+
+
+
+#endif // #ifndef __CUFLU_DATARECONSTRUCTION__

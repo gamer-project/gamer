@@ -1,7 +1,7 @@
-#include "GAMER.h"
 #include "CUFLU.h"
 
 #if ( !defined GPU  &&  MODEL == HYDRO  &&  FLU_SCHEME == RTVD )
+
 
 
 // check before compiling anything else
@@ -12,7 +12,9 @@
 
 #define to1D(z,y,x) ( z*FLU_NXT*FLU_NXT + y*FLU_NXT + x )
 
-extern real Hydro_CheckMinPres( const real InPres, const real MinPres );
+real Hydro_CheckMinPres( const real InPres, const real MinPres );
+real Hydro_CheckMinPresInEngy( const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy,
+                               const real Gamma_m1, const real _Gamma_m1, const real MinPres );
 
 static void CPU_AdvanceX( real u[][ FLU_NXT*FLU_NXT*FLU_NXT ], const real dt, const real dx, const real Gamma,
                           const bool StoreFlux, const int j_gap, const int k_gap, const real MinDens, const real MinPres );

@@ -9,8 +9,12 @@
 
 
 // include "Macro" and "Typedef" here since the header "GAMER.h" is NOT included in GPU solvers
-#include "Macro.h"
-#include "Typedef.h"
+#ifdef __CUDACC__
+# include "Macro.h"
+# include "Typedef.h"
+#else
+# include "GAMER.h"
+#endif
 
 
 // allow GPU to output messages in the debug mode

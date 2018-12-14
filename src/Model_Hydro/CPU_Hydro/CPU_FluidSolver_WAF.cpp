@@ -1,7 +1,7 @@
-#include "GAMER.h"
 #include "CUFLU.h"
 
 #if ( !defined GPU  &&  MODEL == HYDRO  &&  FLU_SCHEME == WAF )
+
 
 
 // check before compiling anything else
@@ -13,6 +13,8 @@
 #define to1D(z,y,x) ( z*FLU_NXT*FLU_NXT + y*FLU_NXT + x )
 
 real Hydro_CheckMinPres( const real InPres, const real MinPres );
+real Hydro_CheckMinPresInEngy( const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy,
+                               const real Gamma_m1, const real _Gamma_m1, const real MinPres );
 
 static real set_limit( const real r, const real c, const WAF_Limiter_t WAF_Limiter );
 static void CPU_AdvanceX( real u[][ FLU_NXT*FLU_NXT*FLU_NXT ], real fc[PS2*PS2][3][5], const real dt,
