@@ -15,16 +15,6 @@ __global__ void CUFLU_FluidSolver_RTVD(
    const real g_Pot_USG[][ CUBE(USG_NXT_F) ],
    const real dt, const real _dh, const real Gamma, const bool StoreFlux,
    const bool XYZ, const real MinDens, const real MinPres );
-#elif ( FLU_SCHEME == WAF )
-__global__ void CUFLU_FluidSolver_WAF(
-   real g_Fluid_In[][NCOMP_TOTAL][ CUBE(FLU_NXT) ],
-   real g_Fluid_Out[][NCOMP_TOTAL][ CUBE(PS2) ],
-   real g_Flux[][9][NCOMP_TOTAL][ SQR(PS2) ],
-   const double g_Corner[][3],
-   const real g_Pot_USG[][ CUBE(USG_NXT_F) ],
-   const real dt, const real _dh, const real Gamma, const bool StoreFlux,
-   const bool XYZ, const WAF_Limiter_t WAF_Limiter,
-   const real MinDens, const real MinPres );
 #elif ( FLU_SCHEME == MHM  ||  FLU_SCHEME == MHM_RP )
 __global__
 void CUFLU_FluidSolver_MHM(
@@ -133,13 +123,12 @@ extern cudaStream_t *Stream;
 //                2. Prefix "d" : for pointers pointing to the "Device" memory space
 //                   Prefix "h" : for pointers pointing to the "Host"   memory space
 //                3. Use the input pamameter "XYZ" to control the order of update for dimensional-splitting
-//                   methods (RTVD/WAF)
+//                   method (currently only RTVD)
 //                4. Currently five hydro schemes are supported :
 //                   1. Relaxing TVD scheme                            (RTVD  ) -->   split
-//                   2. Weighted-Average-Flux scheme                   (WAF   ) -->   split
-//                   3. MUSCL-Hancock scheme                           (MHM   ) --> unsplit
-//                   4. MUSCL-Hancock scheme with Riemann prediction   (MHM_RP) --> unsplit
-//                   5. Corner-Transport-Upwind scheme                 (CTU   ) --> unsplit
+//                   2. MUSCL-Hancock scheme                           (MHM   ) --> unsplit
+//                   3. MUSCL-Hancock scheme with Riemann prediction   (MHM_RP) --> unsplit
+//                   4. Corner-Transport-Upwind scheme                 (CTU   ) --> unsplit
 //
 // Parameter   :  h_Flu_Array_In       : Host array to store the input fluid variables
 //                h_Flu_Array_Out      : Host array to store the output fluid variables
@@ -159,8 +148,6 @@ extern cudaStream_t *Stream;
 //                                       (0/1/2/3/4) = (vanLeer/generalized MinMod/vanAlbada/
 //                                                      vanLeer + generalized MinMod/extrema-preserving) limiter
 //                MinMod_Coeff         : Coefficient of the generalized MinMod limiter
-//                WAF_Limiter          : Flux limiter for the WAF scheme
-//                                       (0/1/2/3) = (SuperBee/vanLeer/vanAlbada/MinBee)
 //                ELBDM_Eta            : Particle mass / Planck constant
 //                ELBDM_Taylor3_Coeff  : Coefficient in front of the third term in the Taylor expansion for ELBDM
 //                ELBDM_Taylor3_Auto   : true --> Determine ELBDM_Taylor3_Coeff automatically by invoking the
@@ -178,7 +165,7 @@ extern cudaStream_t *Stream;
 //                JeansMinPres_Coeff   : Coefficient used by JeansMinPres = G*(Jeans_NCell*Jeans_dh)^2/(Gamma*pi);
 //
 // Useless parameters in HYDRO : ELBDM_Eta
-// Useless parameters in ELBDM : h_Flux_Array, Gamma, LR_Limiter, MinMod_Coeff, WAF_Limite, MinPres
+// Useless parameters in ELBDM : h_Flux_Array, Gamma, LR_Limiter, MinMod_Coeff, MinPres
 //-------------------------------------------------------------------------------------------------------
 void CUAPI_Asyn_FluidSolver( real h_Flu_Array_In [][FLU_NIN    ][ FLU_NXT*FLU_NXT*FLU_NXT ],
                              real h_Flu_Array_Out[][FLU_NOUT   ][ PS2*PS2*PS2 ],
@@ -188,8 +175,8 @@ void CUAPI_Asyn_FluidSolver( real h_Flu_Array_In [][FLU_NIN    ][ FLU_NXT*FLU_NX
                              real h_Pot_Array_USG[][ USG_NXT_F*USG_NXT_F*USG_NXT_F ],
                              const int NPatchGroup, const real dt, const real dh, const real Gamma, const bool StoreFlux,
                              const bool XYZ, const LR_Limiter_t LR_Limiter, const real MinMod_Coeff,
-                             const WAF_Limiter_t WAF_Limiter, const real ELBDM_Eta, real ELBDM_Taylor3_Coeff,
-                             const bool ELBDM_Taylor3_Auto, const double Time, const OptGravityType_t GravityType,
+                             const real ELBDM_Eta, real ELBDM_Taylor3_Coeff, const bool ELBDM_Taylor3_Auto,
+                             const double Time, const OptGravityType_t GravityType,
                              const int GPU_NStream, const real MinDens, const real MinPres, const real DualEnergySwitch,
                              const bool NormPassive, const int NNorm,
                              const bool JeansMinPres, const real JeansMinPres_Coeff )
@@ -333,16 +320,6 @@ void CUAPI_Asyn_FluidSolver( real h_Flu_Array_In [][FLU_NIN    ][ FLU_NXT*FLU_NX
               d_Corner_Array_F  + UsedPatch[s],
               d_Pot_Array_USG_F + UsedPatch[s],
               dt, _dh, Gamma, StoreFlux, XYZ, MinDens, MinPres );
-
-#        elif ( FLU_SCHEME == WAF )
-
-         CUFLU_FluidSolver_WAF <<< NPatch_per_Stream[s], BlockDim_FluidSolver, 0, Stream[s] >>>
-            ( d_Flu_Array_F_In  + UsedPatch[s],
-              d_Flu_Array_F_Out + UsedPatch[s],
-              d_Flux_Array      + UsedPatch[s],
-              d_Corner_Array_F  + UsedPatch[s],
-              d_Pot_Array_USG_F + UsedPatch[s],
-              dt, _dh, Gamma, StoreFlux, XYZ, WAF_Limiter, MinDens, MinPres );
 
 #        elif ( FLU_SCHEME == MHM  ||  FLU_SCHEME == MHM_RP )
 

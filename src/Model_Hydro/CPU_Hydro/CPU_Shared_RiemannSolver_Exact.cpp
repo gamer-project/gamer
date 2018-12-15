@@ -7,7 +7,7 @@
 
 #if (  MODEL == HYDRO  &&  \
        ( RSOLVER == EXACT || CHECK_INTERMEDIATE == EXACT )  &&  \
-       ( FLU_SCHEME == MHM || FLU_SCHEME == MHM_RP || FLU_SCHEME == CTU || FLU_SCHEME == WAF )  )
+       ( FLU_SCHEME == MHM || FLU_SCHEME == MHM_RP || FLU_SCHEME == CTU )  )
 
 
 
@@ -34,7 +34,7 @@ GPU_DEVICE static void Set_Flux( real flux[], const real val[], const real Gamma
 // Description :  Exact Riemann solver
 //
 // Note        :  1. The input data should be primitive variables
-//                2. This function is shared by WAF, MHM, MHM_RP, and CTU schemes
+//                2. This function is shared by MHM, MHM_RP, and CTU schemes
 //                3. Currently it does NOT check the minimum density and pressure criteria
 //
 // Parameter   :  XYZ         : Target spatial direction : (0/1/2) --> (x/y/z)
@@ -295,8 +295,6 @@ void Hydro_RiemannSolver_Exact( const int XYZ, real eival_out[], real L_star_out
 
 
 // evaluate the average fluxes along the t axis
-#  if ( FLU_SCHEME == MHM  ||  FLU_SCHEME == MHM_RP  ||  FLU_SCHEME == CTU )
-
    if (  FABS( eival[1] ) < MAX_ERROR  ) // contact wave is zero
    {
       Flux_Out[0] = (real)0.0;
@@ -343,14 +341,6 @@ void Hydro_RiemannSolver_Exact( const int XYZ, real eival_out[], real L_star_out
 
 // restore the correct order
    Hydro_Rotate3D( Flux_Out, XYZ, false );
-
-#  elif ( FLU_SCHEME == WAF )
-
-   memcpy(  eival_out,  eival,  5*sizeof(real)  );
-   memcpy(  L_star_out, L_star, 5*sizeof(real)  );
-   memcpy(  R_star_out, R_star, 5*sizeof(real)  );
-
-#  endif // #if ( FLU_SCHEME == MHM  ||  FLU_SCHEME == MHM_RP  ||  FLU_SCHEME == CTU ) ... else ...
 
 } // FUNCTION : Hydro_RiemannSolve_Exact
 
@@ -440,7 +430,7 @@ void Set_Flux( real flux[], const real val[], const real Gamma )
 
 
 
-#endif // #if ( MODEL == HYDRO  &&  ( RSOLVER == EXACT || CHECK_INTE == EXACT ) && ( SCHEME == MHM/MHM_RP/CTU/WAF ) )
+#endif // #if ( MODEL == HYDRO  &&  ( RSOLVER == EXACT || CHECK_INTE == EXACT ) && ( SCHEME == MHM/MHM_RP/CTU ) )
 
 
 

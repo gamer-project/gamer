@@ -455,7 +455,7 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
                for (int v=0; v<NCOMP_TOTAL; v++)
                {
 //                here we have assumed that the fluid solver does NOT modify the input fluid array
-//                --> not applicable to RTVD and WAF
+//                --> not applicable to RTVD
                   VarC[v] = h_Flu_Array_F_In[TID][v][idx_in];
 
                   for (int d=0; d<3; d++)
@@ -532,7 +532,7 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
                   for (int i=0; i<Corr1D_NCell; i++)  { Corr1D_didx2[0] = (i-Corr1D_NBuf)*didx[0];
 
 //                   here we have assumed that the fluid solver does NOT modify the input fluid array
-//                   --> not applicable to RTVD and WAF
+//                   --> not applicable to RTVD
                      for (int v=0; v<NCOMP_TOTAL; v++)
                         Corr1D_InOut[k][j][i][v] = h_Flu_Array_F_In[TID][v][ idx_in + Corr1D_didx2[0] + Corr1D_didx2[1] + Corr1D_didx2[2] ];
                   }}}

@@ -124,14 +124,8 @@ struct FluVar5 { real Rho, Px, Py, Pz, Egy; };
 #endif
 
 
-// use the dissipative structure for the WAF scheme
-#if ( FLU_SCHEME == WAF )
-// #define WAF_DISSIPATE
-#endif
-
-
-// maximum allowed error for the exact Riemann solver and the WAF scheme
-#if ( FLU_SCHEME == WAF  ||  ( FLU_SCHEME != RTVD && RSOLVER == EXACT )  ||  CHECK_INTERMEDIATE == EXACT )
+// maximum allowed error for the exact Riemann solver
+#if ( ( FLU_SCHEME != RTVD && RSOLVER == EXACT )  ||  CHECK_INTERMEDIATE == EXACT )
 #  ifdef FLOAT8
 #     define MAX_ERROR    1.e-15
 #  else
@@ -172,16 +166,6 @@ struct FluVar5 { real Rho, Px, Py, Pz, Egy; };
 //=========================================================================================
 #if ( MODEL == HYDRO )
 #if   ( FLU_SCHEME == RTVD )
-
-#     define FLU_BLOCK_SIZE_X       FLU_NXT
-
-#  ifdef FLOAT8
-#     define FLU_BLOCK_SIZE_Y       4
-#  else
-#     define FLU_BLOCK_SIZE_Y       8
-#  endif
-
-#elif ( FLU_SCHEME == WAF )
 
 #     define FLU_BLOCK_SIZE_X       FLU_NXT
 
