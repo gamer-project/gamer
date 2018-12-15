@@ -55,7 +55,7 @@ void CPU_dtSolver_HydroCFL( real dt_Array[], const real Flu_Array[][NCOMP_FLUID]
                                    Gamma_m1, CheckMinPres_Yes, MinPres );
          Cs   = SQRT( Gamma*Pres*_Rho );
 
-#        if   ( FLU_SCHEME == RTVD  ||  FLU_SCHEME == CTU  ||  FLU_SCHEME == WAF )
+#        if   ( FLU_SCHEME == RTVD  ||  FLU_SCHEME == CTU )
          MaxV   = FMAX( Vx, Vy );
          MaxV   = FMAX( Vz, MaxV );
          MaxCFL = FMAX( MaxV+Cs, MaxCFL );

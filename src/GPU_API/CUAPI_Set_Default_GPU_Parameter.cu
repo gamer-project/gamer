@@ -19,16 +19,6 @@ __global__ void CUFLU_FluidSolver_RTVD(
    const real g_Pot_USG[][ CUBE(USG_NXT_F) ],
    const real dt, const real _dh, const real Gamma, const bool StoreFlux,
    const bool XYZ, const real MinDens, const real MinPres );
-#elif ( FLU_SCHEME == WAF )
-__global__ void CUFLU_FluidSolver_WAF(
-   real g_Fluid_In[][NCOMP_TOTAL][ CUBE(FLU_NXT) ],
-   real g_Fluid_Out[][NCOMP_TOTAL][ CUBE(PS2) ],
-   real g_Flux[][9][NCOMP_TOTAL][ SQR(PS2) ],
-   const double g_Corner[][3],
-   const real g_Pot_USG[][ CUBE(USG_NXT_F) ],
-   const real dt, const real _dh, const real Gamma, const bool StoreFlux,
-   const bool XYZ, const WAF_Limiter_t WAF_Limiter,
-   const real MinDens, const real MinPres );
 #elif ( FLU_SCHEME == MHM  ||  FLU_SCHEME == MHM_RP )
 __global__
 void CUFLU_FluidSolver_MHM(
@@ -333,8 +323,6 @@ void CUAPI_Set_Default_GPU_Parameter( int &GPU_NStream, int &Flu_GPU_NPGroup, in
 #  if   ( MODEL == HYDRO )
 #  if   ( FLU_SCHEME == RTVD )
    CUDA_CHECK_ERROR(  cudaFuncSetCacheConfig( CUFLU_FluidSolver_RTVD,      cudaFuncCachePreferShared )  );
-#  elif ( FLU_SCHEME == WAF )
-   CUDA_CHECK_ERROR(  cudaFuncSetCacheConfig( CUFLU_FluidSolver_WAF,       cudaFuncCachePreferShared )  );
 #  elif ( FLU_SCHEME == MHM )
    CUDA_CHECK_ERROR(  cudaFuncSetCacheConfig( CUFLU_FluidSolver_MHM,       cudaFuncCachePreferL1     )  );
 #  elif ( FLU_SCHEME == MHM_RP )

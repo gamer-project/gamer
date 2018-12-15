@@ -414,7 +414,6 @@ void Solver( const Solver_t TSolver, const int lv, const double TimeNew, const d
 
 #  if ( MODEL != HYDRO )
    const LR_Limiter_t  OPT__LR_LIMITER  = LR_LIMITER_NONE;
-   const WAF_Limiter_t OPT__WAF_LIMITER = WAF_LIMITER_NONE;
    const bool   Flu_XYZ                 = true;
    const double GAMMA                   = NULL_REAL;
    const double MINMOD_COEFF            = NULL_REAL;
@@ -475,14 +474,14 @@ void Solver( const Solver_t TSolver, const int lv, const double TimeNew, const d
          CUAPI_Asyn_FluidSolver( h_Flu_Array_F_In[ArrayID], h_Flu_Array_F_Out[ArrayID], h_DE_Array_F_Out[ArrayID],
                                  h_Flux_Array[ArrayID], h_Corner_Array_F[ArrayID], h_Pot_Array_USG_F[ArrayID],
                                  NPG, dt, dh, GAMMA, OPT__FIXUP_FLUX, Flu_XYZ, OPT__LR_LIMITER, MINMOD_COEFF,
-                                 OPT__WAF_LIMITER, ELBDM_ETA, ELBDM_TAYLOR3_COEFF, ELBDM_TAYLOR3_AUTO,
+                                 ELBDM_ETA, ELBDM_TAYLOR3_COEFF, ELBDM_TAYLOR3_AUTO,
                                  TimeOld, OPT__GRAVITY_TYPE, GPU_NSTREAM, MIN_DENS, MIN_PRES, DUAL_ENERGY_SWITCH,
                                  OPT__NORMALIZE_PASSIVE, PassiveNorm_NVar, JEANS_MIN_PRES, JeansMinPres_Coeff );
 #        else
          CPU_FluidSolver       ( h_Flu_Array_F_In[ArrayID], h_Flu_Array_F_Out[ArrayID], h_DE_Array_F_Out[ArrayID],
                                  h_Flux_Array[ArrayID], h_Corner_Array_F[ArrayID], h_Pot_Array_USG_F[ArrayID],
                                  NPG, dt, dh, GAMMA, OPT__FIXUP_FLUX, Flu_XYZ, OPT__LR_LIMITER, MINMOD_COEFF,
-                                 OPT__WAF_LIMITER, ELBDM_ETA, ELBDM_TAYLOR3_COEFF, ELBDM_TAYLOR3_AUTO,
+                                 ELBDM_ETA, ELBDM_TAYLOR3_COEFF, ELBDM_TAYLOR3_AUTO,
                                  TimeOld, OPT__GRAVITY_TYPE, MIN_DENS, MIN_PRES, DUAL_ENERGY_SWITCH,
                                  OPT__NORMALIZE_PASSIVE, PassiveNorm_NVar, PassiveNorm_VarIdx, JEANS_MIN_PRES, JeansMinPres_Coeff );
 #        endif

@@ -1457,7 +1457,6 @@ void Check_SymConst( const char *FileName, const int FormatVersion )
    LoadField( "CheckIntermediate",    &RS.CheckIntermediate,    SID, TID, NonFatal, &RT.CheckIntermediate,     1, NonFatal );
    LoadField( "HLL_NoRefState",       &RS.HLL_NoRefState,       SID, TID, NonFatal, &RT.HLL_NoRefState,        1, NonFatal );
    LoadField( "HLL_IncludeAllWaves",  &RS.HLL_IncludeAllWaves,  SID, TID, NonFatal, &RT.HLL_IncludeAllWaves,   1, NonFatal );
-   LoadField( "WAF_Dissipate",        &RS.WAF_Dissipate,        SID, TID, NonFatal, &RT.WAF_Dissipate,         1, NonFatal );
 #  ifdef N_FC_VAR
    LoadField( "N_FC_Var",             &RS.N_FC_Var,             SID, TID, NonFatal, &RT.N_FC_Var,              1, NonFatal );
 #  endif
@@ -1674,7 +1673,6 @@ void Check_InputPara( const char *FileName, const int FormatVersion )
    LoadField( "MolecularWeight",         &RS.MolecularWeight,         SID, TID, NonFatal, &RT.MolecularWeight,          1, NonFatal );
    LoadField( "MinMod_Coeff",            &RS.MinMod_Coeff,            SID, TID, NonFatal, &RT.MinMod_Coeff,             1, NonFatal );
    LoadField( "Opt__LR_Limiter",         &RS.Opt__LR_Limiter,         SID, TID, NonFatal, &RT.Opt__LR_Limiter,          1, NonFatal );
-   LoadField( "Opt__WAF_Limiter",        &RS.Opt__WAF_Limiter,        SID, TID, NonFatal, &RT.Opt__WAF_Limiter,         1, NonFatal );
    LoadField( "Opt__1stFluxCorr",        &RS.Opt__1stFluxCorr,        SID, TID, NonFatal, &RT.Opt__1stFluxCorr,         1, NonFatal );
    LoadField( "Opt__1stFluxCorrScheme",  &RS.Opt__1stFluxCorrScheme,  SID, TID, NonFatal, &RT.Opt__1stFluxCorrScheme,   1, NonFatal );
 #  endif

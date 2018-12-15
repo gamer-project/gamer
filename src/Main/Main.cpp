@@ -80,7 +80,6 @@ OptTimeStepLevel_t   OPT__DT_LEVEL;
 double               FlagTable_PresGradient[NLEVEL-1], FlagTable_Vorticity[NLEVEL-1], FlagTable_Jeans[NLEVEL-1];
 double               GAMMA, MINMOD_COEFF, MOLECULAR_WEIGHT;
 LR_Limiter_t         OPT__LR_LIMITER;
-WAF_Limiter_t        OPT__WAF_LIMITER;
 Opt1stFluxCorr_t     OPT__1ST_FLUX_CORR;
 OptRSolver1st_t      OPT__1ST_FLUX_CORR_SCHEME;
 bool                 OPT__FLAG_PRES_GRADIENT, OPT__FLAG_LOHNER_ENGY, OPT__FLAG_LOHNER_PRES, OPT__FLAG_LOHNER_TEMP;

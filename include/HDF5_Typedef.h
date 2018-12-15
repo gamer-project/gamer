@@ -230,7 +230,6 @@ struct SymConst_t
    int    CheckIntermediate;
    int    HLL_NoRefState;
    int    HLL_IncludeAllWaves;
-   int    WAF_Dissipate;
 
 #  ifdef N_FC_VAR
    int    N_FC_Var;
@@ -409,7 +408,6 @@ struct InputPara_t
    double MolecularWeight;
    double MinMod_Coeff;
    int    Opt__LR_Limiter;
-   int    Opt__WAF_Limiter;
    int    Opt__1stFluxCorr;
    int    Opt__1stFluxCorrScheme;
 #  endif
