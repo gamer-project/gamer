@@ -29,8 +29,7 @@ void Hydro_Con2Flux( const int XYZ, real Flux[], const real Input[], const real 
 void Hydro_Con2Pri( const real In[], real Out[], const real Gamma_m1, const real MinPres,
                     const bool NormPassive, const int NNorm, const int NormIdx[],
                     const bool JeansMinPres, const real JeansMinPres_Coeff );
-void Hydro_RiemannSolver_Exact( const int XYZ, real eival_out[], real L_star_out[], real R_star_out[],
-                                real Flux_Out[], const real L_In[], const real R_In[], const real Gamma );
+void Hydro_RiemannSolver_Exact( const int XYZ, real Flux_Out[], const real L_In[], const real R_In[], const real Gamma );
 #elif ( CHECK_INTERMEDIATE == HLLE )
 void Hydro_RiemannSolver_HLLE( const int XYZ, real Flux_Out[], const real L_In[], const real R_In[],
                                const real Gamma, const real MinPres );
@@ -212,15 +211,15 @@ void Hydro_RiemannSolver_Roe( const int XYZ, real Flux_Out[], const real L_In[],
             Hydro_Con2Pri( L, PriVar_L, Gamma_m1, MinPres, NormPassive_No, NULL_INT, NULL, JeansMinPres_No, NULL_REAL );
             Hydro_Con2Pri( R, PriVar_R, Gamma_m1, MinPres, NormPassive_No, NULL_INT, NULL, JeansMinPres_No, NULL_REAL );
 
-            Hydro_RiemannSolver_Exact( 0, NULL, NULL, NULL, Flux_Out, PriVar_L, PriVar_R, Gamma );
+            Hydro_RiemannSolver_Exact( 0, Flux_Out, PriVar_L, PriVar_R, Gamma );
 
 #           elif ( CHECK_INTERMEDIATE == HLLE )    // recalculate fluxes by HLLE solver
 
-            Hydro_RiemannSolver_HLLE( 0, Flux_Out, L, R, Gamma, MinPres );
+            Hydro_RiemannSolver_HLLE ( 0, Flux_Out, L, R, Gamma, MinPres );
 
 #           elif ( CHECK_INTERMEDIATE == HLLC )    // recalculate fluxes by HLLC solver
 
-            Hydro_RiemannSolver_HLLC( 0, Flux_Out, L, R, Gamma, MinPres );
+            Hydro_RiemannSolver_HLLC ( 0, Flux_Out, L, R, Gamma, MinPres );
 
 #           else
 

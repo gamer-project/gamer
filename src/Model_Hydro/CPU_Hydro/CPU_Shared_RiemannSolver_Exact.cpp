@@ -38,9 +38,6 @@ GPU_DEVICE static void Set_Flux( real flux[], const real val[], const real Gamma
 //                3. Currently it does NOT check the minimum density and pressure criteria
 //
 // Parameter   :  XYZ         : Target spatial direction : (0/1/2) --> (x/y/z)
-//                eival_out   : Output array to store the speed of waves
-//                L_star_out  : Output array to store the primitive variables in the left star region
-//                R_star_out  : Output array to store the primitive variables in the right star region
 //                Flux_Out    : Output array to store the average flux along t axis
 //                L_In        : Input **primitive** variables in the left region
 //                              --> But note that the input passive scalars should be mass density instead of mass fraction
@@ -49,8 +46,7 @@ GPU_DEVICE static void Set_Flux( real flux[], const real val[], const real Gamma
 //                Gamma       : Ratio of specific heats
 //------------------------------------------------------------------------------------------------------
 GPU_DEVICE
-void Hydro_RiemannSolver_Exact( const int XYZ, real eival_out[], real L_star_out[], real R_star_out[],
-                              real Flux_Out[], const real L_In[], const real R_In[], const real Gamma )
+void Hydro_RiemannSolver_Exact( const int XYZ, real Flux_Out[], const real L_In[], const real R_In[], const real Gamma )
 {
 
    const real Gamma_p1 = Gamma + (real)1.0;
