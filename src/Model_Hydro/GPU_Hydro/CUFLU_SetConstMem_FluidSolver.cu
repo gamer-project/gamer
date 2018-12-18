@@ -7,11 +7,11 @@
 
 #ifdef UNSPLIT_GRAVITY
 #include "CUPOT.h"
-__constant__ double ExtAcc_AuxArray_d_Flu[EXT_ACC_NAUX_MAX];
+__constant__ double c_ExtAcc_AuxArray[EXT_ACC_NAUX_MAX];
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  CUFLU_SetConstMem_FluidSolver_ExtAcc
-// Description :  Set the constant memory of ExtAcc_AuxArray_d_Flu used by CUFLU_FluidSolver_CTU/MHM
+// Description :  Set the constant memory of c_ExtAcc_AuxArray[] used by CUFLU_FluidSolver_CTU/MHM
 //
 // Note        :  1. Adopt the suggested approach for CUDA version >= 5.0
 //                2. Invoked by CUAPI_Init_ExternalAccPot()
@@ -21,10 +21,10 @@ __constant__ double ExtAcc_AuxArray_d_Flu[EXT_ACC_NAUX_MAX];
 // Return      :  0/-1 : successful/failed
 //---------------------------------------------------------------------------------------------------
 __host__
-int CUFLU_SetConstMem_FluidSolver_ExtAcc( double ExtAcc_AuxArray_h[] )
+int CUFLU_SetConstMem_FluidSolver_ExtAcc( double h_ExtAcc_AuxArray[] )
 {
 
-   if (  cudaSuccess != cudaMemcpyToSymbol( ExtAcc_AuxArray_d_Flu, ExtAcc_AuxArray_h, EXT_ACC_NAUX_MAX*sizeof(double),
+   if (  cudaSuccess != cudaMemcpyToSymbol( c_ExtAcc_AuxArray, h_ExtAcc_AuxArray, EXT_ACC_NAUX_MAX*sizeof(double),
                                             0, cudaMemcpyHostToDevice)  )
       return -1;
 
@@ -36,11 +36,11 @@ int CUFLU_SetConstMem_FluidSolver_ExtAcc( double ExtAcc_AuxArray_h[] )
 
 
 #if ( NCOMP_PASSIVE > 0 )
-__constant__ int NormIdx[NCOMP_PASSIVE];
+__constant__ int c_NormIdx[NCOMP_PASSIVE];
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  CUFLU_SetConstMem_FluidSolver_NormIdx
-// Description :  Set the constant memory of NormIdx[] used by CUFLU_FluidSolver_CTU/MHM
+// Description :  Set the constant memory of c_NormIdx[] used by CUFLU_FluidSolver_CTU/MHM
 //
 // Note        :  1. Adopt the suggested approach for CUDA version >= 5.0
 //                2. Invoked by CUAPI_Set_Default_GPU_Parameter()
@@ -50,10 +50,10 @@ __constant__ int NormIdx[NCOMP_PASSIVE];
 // Return      :  0/-1 : successful/failed
 //---------------------------------------------------------------------------------------------------
 __host__
-int CUFLU_SetConstMem_FluidSolver_NormIdx( int NormIdx_h[] )
+int CUFLU_SetConstMem_FluidSolver_NormIdx( int h_NormIdx[] )
 {
 
-   if (  cudaSuccess != cudaMemcpyToSymbol( NormIdx, NormIdx_h, NCOMP_PASSIVE*sizeof(int),
+   if (  cudaSuccess != cudaMemcpyToSymbol( c_NormIdx, h_NormIdx, NCOMP_PASSIVE*sizeof(int),
                                             0, cudaMemcpyHostToDevice)  )
       return -1;
 
@@ -63,7 +63,7 @@ int CUFLU_SetConstMem_FluidSolver_NormIdx( int NormIdx_h[] )
 } // FUNCTION : CUFLU_SetConstMem_FluidSolver_NormIdx
 
 #else // #if ( NCOMP_PASSIVE > 0 )
-__constant__ int *NormIdx = NULL;
+__constant__ int *c_NormIdx = NULL;
 
 #endif // #if ( NCOMP_PASSIVE > 0 ) ... else ...
 

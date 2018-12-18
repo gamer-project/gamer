@@ -9,7 +9,7 @@
 #define GRA_NTHREAD  ( PATCH_SIZE*PATCH_SIZE*GRA_BLOCK_SIZE_Z )
 
 // variables reside in constant memory
-__constant__ double ExtAcc_AuxArray_d[EXT_ACC_NAUX_MAX];
+__constant__ double c_ExtAcc_AuxArray[EXT_ACC_NAUX_MAX];
 
 
 
@@ -26,10 +26,10 @@ __constant__ double ExtAcc_AuxArray_d[EXT_ACC_NAUX_MAX];
 // Return      :  0/-1 : successful/failed
 //---------------------------------------------------------------------------------------------------
 __host__
-int CUPOT_SetConstMem_HydroGravitySolver( double ExtAcc_AuxArray_h[] )
+int CUPOT_SetConstMem_HydroGravitySolver( double h_ExtAcc_AuxArray[] )
 {
 
-   if (  cudaSuccess != cudaMemcpyToSymbol( ExtAcc_AuxArray_d, ExtAcc_AuxArray_h, EXT_ACC_NAUX_MAX*sizeof(double),
+   if (  cudaSuccess != cudaMemcpyToSymbol( c_ExtAcc_AuxArray, h_ExtAcc_AuxArray, EXT_ACC_NAUX_MAX*sizeof(double),
                                             0, cudaMemcpyHostToDevice)  )
       return -1;
 
@@ -187,11 +187,11 @@ __global__ void CUPOT_HydroGravitySolver(       real g_Flu_Array_New[][GRA_NIN][
 //    1.1 external gravity
       if ( GravityType == GRAVITY_EXTERNAL  ||  GravityType == GRAVITY_BOTH )
       {
-         CUPOT_ExternalAcc( Acc_new, x, y, z, TimeNew, ExtAcc_AuxArray_d );
+         CUPOT_ExternalAcc( Acc_new, x, y, z, TimeNew, c_ExtAcc_AuxArray );
          for (int d=0; d<3; d++)    Acc_new[d] *= dt;
 
 #        ifdef UNSPLIT_GRAVITY
-         CUPOT_ExternalAcc( Acc_old, x, y, z, TimeOld, ExtAcc_AuxArray_d );
+         CUPOT_ExternalAcc( Acc_old, x, y, z, TimeOld, c_ExtAcc_AuxArray );
          for (int d=0; d<3; d++)    Acc_old[d] *= dt;
 #        endif
       }

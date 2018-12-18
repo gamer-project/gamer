@@ -4,8 +4,8 @@
 #if ( defined GRAVITY  &&  defined GPU )
 
 
-__constant__ real Mp[3];
-__constant__ real Mm[3];
+__constant__ real c_Mp[3];
+__constant__ real c_Mm[3];
 
 
 
@@ -25,13 +25,13 @@ __host__
 int CUPOT_SetConstMem_PoissonSolver()
 {
 
-   const real Mp_h[3] = { -3.0/32.0, +30.0/32.0, +5.0/32.0 };
-   const real Mm_h[3] = { +5.0/32.0, +30.0/32.0, -3.0/32.0 };
+   const real h_Mp[3] = { -3.0/32.0, +30.0/32.0, +5.0/32.0 };
+   const real h_Mm[3] = { +5.0/32.0, +30.0/32.0, -3.0/32.0 };
 
-   if (  cudaSuccess != cudaMemcpyToSymbol( Mp, Mp_h, 3*sizeof(real), 0, cudaMemcpyHostToDevice)  )
+   if (  cudaSuccess != cudaMemcpyToSymbol( c_Mp, h_Mp, 3*sizeof(real), 0, cudaMemcpyHostToDevice)  )
    return -1;
 
-   if (  cudaSuccess != cudaMemcpyToSymbol( Mm, Mm_h, 3*sizeof(real), 0, cudaMemcpyHostToDevice)  )
+   if (  cudaSuccess != cudaMemcpyToSymbol( c_Mm, h_Mm, 3*sizeof(real), 0, cudaMemcpyHostToDevice)  )
    return -1;
 
    return 0;

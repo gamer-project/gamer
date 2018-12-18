@@ -31,8 +31,8 @@ void CPU_FluidSolver_MHM(
    const int NPatchGroup, const real dt, const real dh, const real Gamma,
    const bool StoreFlux, const LR_Limiter_t LR_Limiter, const real MinMod_Coeff,
    const double Time, const OptGravityType_t GravityType,
-   const double ExtAcc_AuxArray[], const real MinDens, const real MinPres,
-   const real DualEnergySwitch, const bool NormPassive, const int NNorm, const int NormIdx[],
+   const double c_ExtAcc_AuxArray[], const real MinDens, const real MinPres,
+   const real DualEnergySwitch, const bool NormPassive, const int NNorm, const int c_NormIdx[],
    const bool JeansMinPres, const real JeansMinPres_Coeff );
 #elif ( FLU_SCHEME == CTU )
 void CPU_FluidSolver_CTU(
@@ -45,8 +45,8 @@ void CPU_FluidSolver_CTU(
    const int NPatchGroup, const real dt, const real dh, const real Gamma,
    const bool StoreFlux, const LR_Limiter_t LR_Limiter, const real MinMod_Coeff,
    const double Time, const OptGravityType_t GravityType,
-   const double ExtAcc_AuxArray[], const real MinDens, const real MinPres,
-   const real DualEnergySwitch, const bool NormPassive, const int NNorm, const int NormIdx[],
+   const double c_ExtAcc_AuxArray[], const real MinDens, const real MinPres,
+   const real DualEnergySwitch, const bool NormPassive, const int NNorm, const int c_NormIdx[],
    const bool JeansMinPres, const real JeansMinPres_Coeff );
 #endif // FLU_SCHEME
 

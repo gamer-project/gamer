@@ -117,15 +117,23 @@ static void Hydro_RiemannPredict( const real ConVar_In[][ CUBE(FLU_NXT) ],
 //                MinMod_Coeff       : Coefficient of the generalized MinMod limiter
 //                Time               : Current physical time                                     (for UNSPLIT_GRAVITY only)
 //                GravityType        : Types of gravity --> self-gravity, external gravity, both (for UNSPLIT_GRAVITY only)
-//                ExtAcc_AuxArray    : Auxiliary array for adding external acceleration          (for UNSPLIT_GRAVITY only)
+//                c_ExtAcc_AuxArray  : Auxiliary array for adding external acceleration          (for UNSPLIT_GRAVITY only)
+//                                     --> When using GPU, this array is stored in the constant memory and does
+//                                         not need to be passed as a function argument
+//                                         --> Declared in CUFLU_SetConstMem_FluidSolver.cu with the prefix "c_" to
+//                                             highlight that this is a constant variable on GPU
 //                MinDens/Pres       : Minimum allowed density and pressure
 //                DualEnergySwitch   : Use the dual-energy formalism if E_int/E_kin < DualEnergySwitch
 //                NormPassive        : true --> normalize passive scalars so that the sum of their mass density
 //                                              is equal to the gas mass density
 //                NNorm              : Number of passive scalars to be normalized
 //                                     --> Should be set to the global variable "PassiveNorm_NVar"
-//                NormIdx            : Target variable indices to be normalized
+//                c_NormIdx          : Target variable indices to be normalized
 //                                     --> Should be set to the global variable "PassiveNorm_VarIdx"
+//                                     --> When using GPU, this array is stored in the constant memory and does
+//                                         not need to be passed as a function argument
+//                                         --> Declared in CUFLU_SetConstMem_FluidSolver.cu with the prefix "c_" to
+//                                             highlight that this is a constant variable on GPU
 //                JeansMinPres       : Apply minimum pressure estimated from the Jeans length
 //                JeansMinPres_Coeff : Coefficient used by JeansMinPres = G*(Jeans_NCell*Jeans_dh)^2/(Gamma*pi);
 //-------------------------------------------------------------------------------------------------------
@@ -159,8 +167,8 @@ void CPU_FluidSolver_MHM(
    const int NPatchGroup, const real dt, const real dh, const real Gamma,
    const bool StoreFlux, const LR_Limiter_t LR_Limiter, const real MinMod_Coeff,
    const double Time, const OptGravityType_t GravityType,
-   const double ExtAcc_AuxArray[], const real MinDens, const real MinPres,
-   const real DualEnergySwitch, const bool NormPassive, const int NNorm, const int NormIdx[],
+   const double c_ExtAcc_AuxArray[], const real MinDens, const real MinPres,
+   const real DualEnergySwitch, const bool NormPassive, const int NNorm, const int c_NormIdx[],
    const bool JeansMinPres, const real JeansMinPres_Coeff )
 #endif // #ifdef __CUDACC__ ... else ...
 {
@@ -236,7 +244,7 @@ void CPU_FluidSolver_MHM(
 
 //       1-a-2. evaluate the half-step solutions
          Hydro_RiemannPredict( Flu_Array_In[P], Half_Flux_1PG, Half_Var_1PG, dt, dh, Gamma, MinDens, MinPres,
-                               NormPassive, NNorm, NormIdx, JeansMinPres, JeansMinPres_Coeff );
+                               NormPassive, NNorm, c_NormIdx, JeansMinPres, JeansMinPres_Coeff );
 
 
 //       1-a-3. evaluate the face-centered values by data reconstruction
@@ -244,7 +252,7 @@ void CPU_FluidSolver_MHM(
          Hydro_DataReconstruction( NULL, Half_Var_1PG, FC_Var_1PG, Slope_PPM_1PG,
                                    Con2Pri_No, N_HF_VAR, FLU_GHOST_SIZE-2,
                                    Gamma, LR_Limiter, MinMod_Coeff, dt, dh, MinDens, MinPres,
-                                   NormPassive, NNorm, NormIdx, JeansMinPres, JeansMinPres_Coeff );
+                                   NormPassive, NNorm, c_NormIdx, JeansMinPres, JeansMinPres_Coeff );
 
 
 //       1-b. MHM: use interpolated face-centered values to calculate the half-step fluxes
@@ -254,7 +262,7 @@ void CPU_FluidSolver_MHM(
          Hydro_DataReconstruction( Flu_Array_In[P], PriVar_1PG, FC_Var_1PG, Slope_PPM_1PG,
                                    Con2Pri_Yes, FLU_NXT, FLU_GHOST_SIZE-1,
                                    Gamma, LR_Limiter, MinMod_Coeff, dt, dh, MinDens, MinPres,
-                                   NormPassive, NNorm, NormIdx, JeansMinPres, JeansMinPres_Coeff );
+                                   NormPassive, NNorm, c_NormIdx, JeansMinPres, JeansMinPres_Coeff );
 #        endif // #if ( FLU_SCHEME == MHM_RP ) ... else ...
 
 
@@ -262,7 +270,7 @@ void CPU_FluidSolver_MHM(
 #        ifdef UNSPLIT_GRAVITY
          Hydro_ComputeFlux( FC_Var_1PG, FC_Flux_1PG, 1, Gamma, CorrHalfVel_Yes,
                             Pot_Array_USG[P], Corner_Array[P],
-                            dt, dh, Time, GravityType, ExtAcc_AuxArray, MinPres,
+                            dt, dh, Time, GravityType, c_ExtAcc_AuxArray, MinPres,
                             StoreFlux, Flux_Array[P] );
 #        else
          Hydro_ComputeFlux( FC_Var_1PG, FC_Flux_1PG, 1, Gamma, CorrHalfVel_No,
@@ -275,7 +283,7 @@ void CPU_FluidSolver_MHM(
 //       3. full-step evolution
          Hydro_FullStepUpdate( Flu_Array_In[P], Flu_Array_Out[P], DE_Array_Out[P],
                                FC_Flux_1PG, dt, dh, Gamma_m1, _Gamma_m1, MinDens, MinPres, DualEnergySwitch,
-                               NormPassive, NNorm, NormIdx );
+                               NormPassive, NNorm, c_NormIdx );
 
       } // loop over all patch groups
 
