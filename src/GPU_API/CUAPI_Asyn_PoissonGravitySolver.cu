@@ -57,23 +57,23 @@ __global__ void CUPOT_ELBDMGravitySolver(       real g_Flu_Array[][GRA_NIN][ PS1
 
 
 // declare all device pointers
-extern real (*d_Rho_Array_P    )[ RHO_NXT*RHO_NXT*RHO_NXT ];
-extern real (*d_Pot_Array_P_In )[ POT_NXT*POT_NXT*POT_NXT ];
-extern real (*d_Pot_Array_P_Out)[ GRA_NXT*GRA_NXT*GRA_NXT ];
-extern real (*d_Flu_Array_G    )[GRA_NIN][ PS1*PS1*PS1 ];
+extern real (*d_Rho_Array_P    )[ CUBE(RHO_NXT) ];
+extern real (*d_Pot_Array_P_In )[ CUBE(POT_NXT) ];
+extern real (*d_Pot_Array_P_Out)[ CUBE(GRA_NXT) ];
+extern real (*d_Flu_Array_G    )[GRA_NIN][ CUBE(PS1)];
 extern double (*d_Corner_Array_G)[3];
 #if ( MODEL == HYDRO  ||  MODEL == MHD )
 #ifdef UNSPLIT_GRAVITY
-extern real (*d_Pot_Array_USG_G)[ USG_NXT_G*USG_NXT_G*USG_NXT_G ];
-extern real (*d_Flu_Array_USG_G)[GRA_NIN-1][ PS1*PS1*PS1        ];
+extern real (*d_Pot_Array_USG_G)[ CUBE(USG_NXT_G) ];
+extern real (*d_Flu_Array_USG_G)[GRA_NIN-1][ CUBE(PS1) ];
 #else
-static real (*d_Pot_Array_USG_G)[ USG_NXT_G*USG_NXT_G*USG_NXT_G ] = NULL;
-static real (*d_Flu_Array_USG_G)[GRA_NIN-1][ PS1*PS1*PS1        ] = NULL;
+static real (*d_Pot_Array_USG_G)[ CUBE(USG_NXT_G) ] = NULL;
+static real (*d_Flu_Array_USG_G)[GRA_NIN-1][ CUBE(PS1) ] = NULL;
 #endif
 #ifdef DUAL_ENERGY
-extern char (*d_DE_Array_G)[ PS1*PS1*PS1 ];
+extern char (*d_DE_Array_G)[ CUBE(PS1) ];
 #else
-static char (*d_DE_Array_G)[ PS1*PS1*PS1 ] = NULL;
+static char (*d_DE_Array_G)[ CUBE(PS1) ] = NULL;
 #endif
 #endif // #if ( MODEL == HYDRO  ||  MODEL == MHD )
 
