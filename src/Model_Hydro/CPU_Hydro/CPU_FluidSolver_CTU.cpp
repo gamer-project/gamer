@@ -11,7 +11,7 @@
 #include "CUFLU_Shared_DataReconstruction.cu"
 #include "CUFLU_Shared_ComputeFlux.cu"
 #include "CUFLU_Shared_FullStepUpdate.cu"
-#include "CUFLU_FluidSolver_SetConstMem.cu"
+#include "CUFLU_SetConstMem_FluidSolver.cu"
 
 #else // #ifdef __CUDACC__
 

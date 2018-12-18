@@ -15,16 +15,18 @@ __constant__ double ExtAcc_AuxArray_d[EXT_ACC_NAUX_MAX];
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  CUPOT_HydroGravitySolver_SetConstMem
+// Function    :  CUPOT_SetConstMem_HydroGravitySolver
 // Description :  Set the constant memory used by CUPOT_HydroGravitySolver
 //
-// Note        :  Adopt the suggested approach for CUDA version >= 5.0
+// Note        :  1. Adopt the suggested approach for CUDA version >= 5.0
+//                2. Invoked by CUAPI_Init_ExternalAccPot()
 //
 // Parameter   :  None
 //
 // Return      :  0/-1 : successful/failed
 //---------------------------------------------------------------------------------------------------
-int CUPOT_HydroGravitySolver_SetConstMem( double ExtAcc_AuxArray_h[] )
+__host__
+int CUPOT_SetConstMem_HydroGravitySolver( double ExtAcc_AuxArray_h[] )
 {
 
    if (  cudaSuccess != cudaMemcpyToSymbol( ExtAcc_AuxArray_d, ExtAcc_AuxArray_h, EXT_ACC_NAUX_MAX*sizeof(double),
@@ -34,7 +36,7 @@ int CUPOT_HydroGravitySolver_SetConstMem( double ExtAcc_AuxArray_h[] )
    else
       return 0;
 
-} // FUNCTION : CUPOT_HydroGravitySolver_SetConstMem
+} // FUNCTION : CUPOT_SetConstMem_HydroGravitySolver
 
 
 

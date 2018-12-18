@@ -11,16 +11,18 @@ __constant__ real Mm[3];
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  CUPOT_PoissonSolver_SetConstMem
+// Function    :  CUPOT_SetConstMem_PoissonSolver
 // Description :  Set the constant memory used by CUPOT_PoissonSolver_SOR_10to14cube
 //
-// Note        :  Adopt the suggested approach for CUDA version >= 5.0
+// Note        :  1. Adopt the suggested approach for CUDA version >= 5.0
+//                2. Invoked by CUAPI_Set_Default_GPU_Parameter()
 //
 // Parameter   :  None
 //
 // Return      :  0/-1 : successful/failed
 //---------------------------------------------------------------------------------------------------
-int CUPOT_PoissonSolver_SetConstMem()
+__host__
+int CUPOT_SetConstMem_PoissonSolver()
 {
 
    const real Mp_h[3] = { -3.0/32.0, +30.0/32.0, +5.0/32.0 };
@@ -34,7 +36,7 @@ int CUPOT_PoissonSolver_SetConstMem()
 
    return 0;
 
-} // FUNCTION : CUPOT_PoissonSolver_SetConstMem
+} // FUNCTION : CUPOT_SetConstMem_PoissonSolver
 
 
 

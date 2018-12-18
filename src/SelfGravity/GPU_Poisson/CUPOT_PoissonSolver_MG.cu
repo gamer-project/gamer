@@ -53,7 +53,7 @@
 #endif
 
 // variables reside in constant memory
-#include "CUPOT_PoissonSolver_SetConstMem.cu"
+#include "CUPOT_SetConstMem_PoissonSolver.cu"
 
 // prototype
 static __device__ void LoadRho( const real *g_Rho, real *s_Rho, const real Poi_Coeff, const uint g_Idx0 );

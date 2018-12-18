@@ -22,7 +22,7 @@
 # include "CUFLU_Shared_RiemannSolver_HLLC.cu"
 #endif
 
-#include "CUFLU_FluidSolver_SetConstMem.cu"
+#include "CUFLU_SetConstMem_FluidSolver.cu"
 
 #else // #ifdef __CUDACC__
 

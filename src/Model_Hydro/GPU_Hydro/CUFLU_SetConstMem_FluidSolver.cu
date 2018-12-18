@@ -10,16 +10,18 @@
 __constant__ double ExtAcc_AuxArray_d_Flu[EXT_ACC_NAUX_MAX];
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  CUFLU_FluidSolver_SetConstMem_ExtAcc
+// Function    :  CUFLU_SetConstMem_FluidSolver_ExtAcc
 // Description :  Set the constant memory of ExtAcc_AuxArray_d_Flu used by CUFLU_FluidSolver_CTU/MHM
 //
-// Note        :  Adopt the suggested approach for CUDA version >= 5.0
+// Note        :  1. Adopt the suggested approach for CUDA version >= 5.0
+//                2. Invoked by CUAPI_Init_ExternalAccPot()
 //
 // Parameter   :  None
 //
 // Return      :  0/-1 : successful/failed
 //---------------------------------------------------------------------------------------------------
-int CUFLU_FluidSolver_SetConstMem_ExtAcc( double ExtAcc_AuxArray_h[] )
+__host__
+int CUFLU_SetConstMem_FluidSolver_ExtAcc( double ExtAcc_AuxArray_h[] )
 {
 
    if (  cudaSuccess != cudaMemcpyToSymbol( ExtAcc_AuxArray_d_Flu, ExtAcc_AuxArray_h, EXT_ACC_NAUX_MAX*sizeof(double),
@@ -29,7 +31,7 @@ int CUFLU_FluidSolver_SetConstMem_ExtAcc( double ExtAcc_AuxArray_h[] )
    else
       return 0;
 
-} // FUNCTION : CUFLU_FluidSolver_SetConstMem_ExtAcc
+} // FUNCTION : CUFLU_SetConstMem_FluidSolver_ExtAcc
 #endif // #ifdef UNSPLIT_GRAVITY
 
 
@@ -37,16 +39,18 @@ int CUFLU_FluidSolver_SetConstMem_ExtAcc( double ExtAcc_AuxArray_h[] )
 __constant__ int NormIdx[NCOMP_PASSIVE];
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  CUFLU_FluidSolver_SetConstMem_NormIdx
+// Function    :  CUFLU_SetConstMem_FluidSolver_NormIdx
 // Description :  Set the constant memory of NormIdx[] used by CUFLU_FluidSolver_CTU/MHM
 //
-// Note        :  Adopt the suggested approach for CUDA version >= 5.0
+// Note        :  1. Adopt the suggested approach for CUDA version >= 5.0
+//                2. Invoked by CUAPI_Set_Default_GPU_Parameter()
 //
 // Parameter   :  None
 //
 // Return      :  0/-1 : successful/failed
 //---------------------------------------------------------------------------------------------------
-int CUFLU_FluidSolver_SetConstMem_NormIdx( int NormIdx_h[] )
+__host__
+int CUFLU_SetConstMem_FluidSolver_NormIdx( int NormIdx_h[] )
 {
 
    if (  cudaSuccess != cudaMemcpyToSymbol( NormIdx, NormIdx_h, NCOMP_PASSIVE*sizeof(int),
@@ -56,7 +60,7 @@ int CUFLU_FluidSolver_SetConstMem_NormIdx( int NormIdx_h[] )
    else
       return 0;
 
-} // FUNCTION : CUFLU_FluidSolver_SetConstMem_NormIdx
+} // FUNCTION : CUFLU_SetConstMem_FluidSolver_NormIdx
 
 #else // #if ( NCOMP_PASSIVE > 0 )
 __constant__ int *NormIdx = NULL;
