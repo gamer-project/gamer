@@ -46,8 +46,7 @@ void Hydro_FullStepUpdate( const real Input[][ CUBE(FLU_NXT) ], real Output[][ C
                            const real Gamma_m1, const real _Gamma_m1, const real MinDens, const real MinPres,
                            const real DualEnergySwitch, const bool NormPassive, const int NNorm, const int NormIdx[] );
 #if   ( RSOLVER == EXACT )
-void Hydro_RiemannSolver_Exact( const int XYZ, real eival_out[], real L_star_out[], real R_star_out[],
-                                real Flux_Out[], const real L_In[], const real R_In[], const real Gamma );
+void Hydro_RiemannSolver_Exact( const int XYZ, real Flux_Out[], const real L_In[], const real R_In[], const real Gamma );
 #elif ( RSOLVER == ROE )
 void Hydro_RiemannSolver_Roe( const int XYZ, real Flux_Out[], const real L_In[], const real R_In[],
                               const real Gamma, const real MinPres );
@@ -365,7 +364,7 @@ void Hydro_RiemannPredict_Flux( const real ConVar[][ CUBE(FLU_NXT) ], real Half_
          Hydro_Con2Pri( ConVar_L, PriVar_L, Gamma_m1, MinPres, NormPassive_No, NULL_INT, NULL, JeansMinPres_No, NULL_REAL );
          Hydro_Con2Pri( ConVar_R, PriVar_R, Gamma_m1, MinPres, NormPassive_No, NULL_INT, NULL, JeansMinPres_No, NULL_REAL );
 
-         Hydro_RiemannSolver_Exact( d, NULL, NULL, NULL, Flux_1Face, PriVar_L, PriVar_R, Gamma );
+         Hydro_RiemannSolver_Exact( d, Flux_1Face, PriVar_L, PriVar_R, Gamma );
 #        elif ( RSOLVER == ROE )
          Hydro_RiemannSolver_Roe  ( d, Flux_1Face, ConVar_L, ConVar_R, Gamma, MinPres );
 #        elif ( RSOLVER == HLLE )
