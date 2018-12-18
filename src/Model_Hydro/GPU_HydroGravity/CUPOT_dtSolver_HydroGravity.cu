@@ -20,7 +20,7 @@
 
 
 // variables reside in constant memory
-__constant__ double ExtAcc_AuxArray_d[EXT_ACC_NAUX_MAX];
+__constant__ double c_ExtAcc_AuxArray[EXT_ACC_NAUX_MAX];
 
 
 
@@ -37,10 +37,10 @@ __constant__ double ExtAcc_AuxArray_d[EXT_ACC_NAUX_MAX];
 // Return      :  0/-1 : successful/failed
 //---------------------------------------------------------------------------------------------------
 __host__
-int CUPOT_SetConstMem_dtSolver_HydroGravity( double ExtAcc_AuxArray_h[] )
+int CUPOT_SetConstMem_dtSolver_HydroGravity( double h_ExtAcc_AuxArray[] )
 {
 
-   if (  cudaSuccess != cudaMemcpyToSymbol( ExtAcc_AuxArray_d, ExtAcc_AuxArray_h, EXT_ACC_NAUX_MAX*sizeof(double),
+   if (  cudaSuccess != cudaMemcpyToSymbol( c_ExtAcc_AuxArray, h_ExtAcc_AuxArray, EXT_ACC_NAUX_MAX*sizeof(double),
                                             0, cudaMemcpyHostToDevice)  )
       return -1;
 
@@ -152,7 +152,7 @@ __global__ void CUPOT_dtSolver_HydroGravity( real g_dt_Array[],
 
 //    1.1 external gravity
       if ( GravityType == GRAVITY_EXTERNAL  ||  GravityType == GRAVITY_BOTH )
-         CUPOT_ExternalAcc( Acc, x, y, z, ExtAcc_Time, ExtAcc_AuxArray_d );
+         CUPOT_ExternalAcc( Acc, x, y, z, ExtAcc_Time, c_ExtAcc_AuxArray );
 
 //    1.2 self-gravity
       if ( GravityType == GRAVITY_SELF  ||  GravityType == GRAVITY_BOTH )
