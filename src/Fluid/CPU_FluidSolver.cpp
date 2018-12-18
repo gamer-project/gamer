@@ -117,12 +117,12 @@ void CPU_ELBDMSolver( real Flu_Array_In [][FLU_NIN    ][ FLU_NXT*FLU_NXT*FLU_NXT
 // Useless parameters in HYDRO : ELBDM_Eta, ELBDM_Taylor3_Coeff, ELBDM_Taylor3_Auto
 // Useless parameters in ELBDM : Gamma, LR_Limiter, MinMod_Coeff, MinPres
 //-------------------------------------------------------------------------------------------------------
-void CPU_FluidSolver( real h_Flu_Array_In [][FLU_NIN    ][ FLU_NXT*FLU_NXT*FLU_NXT ],
-                      real h_Flu_Array_Out[][FLU_NOUT   ][ PS2*PS2*PS2 ],
-                      char h_DE_Array_Out[][ PS2*PS2*PS2 ],
-                      real h_Flux_Array[][9][NFLUX_TOTAL][ PS2*PS2 ],
+void CPU_FluidSolver( real h_Flu_Array_In[][FLU_NIN][ CUBE(FLU_NXT) ],
+                      real h_Flu_Array_Out[][FLU_NOUT][ CUBE(PS2) ],
+                      char h_DE_Array_Out[][ CUBE(PS2) ],
+                      real h_Flux_Array[][9][NFLUX_TOTAL][ SQR(PS2) ],
                       const double h_Corner_Array[][3],
-                      const real h_Pot_Array_USG[][ USG_NXT_F*USG_NXT_F*USG_NXT_F ],
+                      const real h_Pot_Array_USG[][ CUBE(USG_NXT_F) ],
                       const int NPatchGroup, const real dt, const real dh, const real Gamma, const bool StoreFlux,
                       const bool XYZ, const LR_Limiter_t LR_Limiter, const real MinMod_Coeff,
                       const real ELBDM_Eta, real ELBDM_Taylor3_Coeff, const bool ELBDM_Taylor3_Auto,

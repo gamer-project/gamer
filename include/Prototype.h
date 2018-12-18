@@ -66,12 +66,12 @@ void Buf_SortBoundaryPatch( const int NPatch, int *IDList, int *PosList );
 
 
 // Hydrodynamics
-void CPU_FluidSolver( real h_Flu_Array_In [][FLU_NIN    ][ FLU_NXT*FLU_NXT*FLU_NXT ],
-                      real h_Flu_Array_Out[][FLU_NOUT   ][ PS2*PS2*PS2 ],
-                      char h_DE_Array_Out[][ PS2*PS2*PS2 ],
-                      real h_Flux_Array[][9][NFLUX_TOTAL][ PS2*PS2 ],
+void CPU_FluidSolver( real h_Flu_Array_In[][FLU_NIN][ CUBE(FLU_NXT) ],
+                      real h_Flu_Array_Out[][FLU_NOUT][ CUBE(PS2) ],
+                      char h_DE_Array_Out[][ CUBE(PS2) ],
+                      real h_Flux_Array[][9][NFLUX_TOTAL][ SQR(PS2) ],
                       const double h_Corner_Array[][3],
-                      const real h_Pot_Array_USG[][ USG_NXT_F*USG_NXT_F*USG_NXT_F ],
+                      const real h_Pot_Array_USG[][ CUBE(USG_NXT_F) ],
                       const int NPatchGroup, const real dt, const real dh, const real Gamma, const bool StoreFlux,
                       const bool XYZ, const LR_Limiter_t LR_Limiter, const real MinMod_Coeff,
                       const real ELBDM_Eta, real ELBDM_Taylor3_Coeff, const bool ELBDM_Taylor3_Auto,
@@ -103,10 +103,9 @@ real Hydro_CheckMinPresInEngy( const real Dens, const real MomX, const real MomY
 int Flu_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, const double dt, const int SaveSg,
                    const bool OverlapMPI, const bool Overlap_Sync );
 void Flu_AllocateFluxArray( const int lv );
-void Flu_Close( const int lv, const int SaveSg, real h_Flux_Array[][9][NFLUX_TOTAL][4*PATCH_SIZE*PATCH_SIZE],
-                real h_Flu_Array_F_Out[][FLU_NOUT][8*PATCH_SIZE*PATCH_SIZE*PATCH_SIZE],
-                char h_DE_Array_F_Out[][8*PATCH_SIZE*PATCH_SIZE*PATCH_SIZE],
-                const int NPG, const int *PID0_List, const real h_Flu_Array_F_In[][FLU_NIN][FLU_NXT*FLU_NXT*FLU_NXT],
+void Flu_Close( const int lv, const int SaveSg, real h_Flux_Array[][9][NFLUX_TOTAL][ SQR(PS2) ],
+                real h_Flu_Array_F_Out[][FLU_NOUT][ CUBE(PS2) ], char h_DE_Array_F_Out[][ CUBE(PS2) ],
+                const int NPG, const int *PID0_List, const real h_Flu_Array_F_In[][FLU_NIN][ CUBE(FLU_NXT) ],
                 const double dt );
 void Flu_FixUp( const int lv );
 void Flu_Prepare( const int lv, const double PrepTime, real h_Flu_Array_F_In[], real h_Pot_Array_USG_F[],
@@ -425,12 +424,12 @@ real   ELBDM_SetTaylor3Coeff( const real dt, const real dh, const real Eta );
 
 // GPU API
 #ifdef GPU
-void CUAPI_Asyn_FluidSolver( real h_Flu_Array_In [][FLU_NIN    ][ FLU_NXT*FLU_NXT*FLU_NXT ],
-                             real h_Flu_Array_Out[][FLU_NOUT   ][ PS2*PS2*PS2 ],
-                             char h_DE_Array_Out[][ PS2*PS2*PS2 ],
-                             real h_Flux_Array[][9][NFLUX_TOTAL][ PS2*PS2 ],
+void CUAPI_Asyn_FluidSolver( real h_Flu_Array_In[][FLU_NIN ][ CUBE(FLU_NXT) ],
+                             real h_Flu_Array_Out[][FLU_NOUT][ CUBE(PS2) ],
+                             char h_DE_Array_Out[][ CUBE(PS2) ],
+                             real h_Flux_Array[][9][NFLUX_TOTAL][ SQR(PS2) ],
                              const double h_Corner_Array[][3],
-                             real h_Pot_Array_USG[][ USG_NXT_F*USG_NXT_F*USG_NXT_F ],
+                             real h_Pot_Array_USG[][ CUBE(USG_NXT_F) ],
                              const int NPatchGroup, const real dt, const real dh, const real Gamma, const bool StoreFlux,
                              const bool XYZ, const LR_Limiter_t LR_Limiter, const real MinMod_Coeff,
                              const real ELBDM_Eta, real ELBDM_Taylor3_Coeff, const bool ELBDM_Taylor3_Auto,

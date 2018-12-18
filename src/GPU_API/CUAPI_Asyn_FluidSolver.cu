@@ -71,33 +71,33 @@ __global__ void CUFLU_ELBDMSolver( real g_Fluid_In [][FLU_NIN ][ FLU_NXT*FLU_NXT
 
 
 // device pointers
-extern real (*d_Flu_Array_F_In )[FLU_NIN ][ FLU_NXT*FLU_NXT*FLU_NXT ];
-extern real (*d_Flu_Array_F_Out)[FLU_NOUT][ PS2*PS2*PS2 ];
-extern real (*d_Flux_Array)[9][NFLUX_TOTAL][ PS2*PS2 ];
+extern real (*d_Flu_Array_F_In )[FLU_NIN ][ CUBE(FLU_NXT) ];
+extern real (*d_Flu_Array_F_Out)[FLU_NOUT][ CUBE(PS2) ];
+extern real (*d_Flux_Array)[9][NFLUX_TOTAL][ SQR(PS2) ];
 extern double (*d_Corner_Array_F)[3];
 #if ( MODEL == HYDRO  ||  MODEL == MHD )
 #ifdef DUAL_ENERGY
-extern char (*d_DE_Array_F_Out)[ PS2*PS2*PS2 ];
+extern char (*d_DE_Array_F_Out)[ CUBE(PS2) ];
 #else
-static char (*d_DE_Array_F_Out)[ PS2*PS2*PS2 ] = NULL;
+static char (*d_DE_Array_F_Out)[ CUBE(PS2) ] = NULL;
 #endif
 #endif
 #if ( MODEL == HYDRO )
 #if ( FLU_SCHEME == MHM  ||  FLU_SCHEME == MHM_RP  ||  FLU_SCHEME == CTU )
-extern real (*d_PriVar)      [NCOMP_TOTAL][ FLU_NXT*FLU_NXT*FLU_NXT ];
-extern real (*d_Slope_PPM)[3][NCOMP_TOTAL][ N_SLOPE_PPM*N_SLOPE_PPM*N_SLOPE_PPM ];
-extern real (*d_FC_Var)   [6][NCOMP_TOTAL][ N_FC_VAR*N_FC_VAR*N_FC_VAR ];
-extern real (*d_FC_Flux)  [3][NCOMP_TOTAL][ N_FC_FLUX*N_FC_FLUX*N_FC_FLUX ];
+extern real (*d_PriVar)      [NCOMP_TOTAL][ CUBE(FLU_NXT) ];
+extern real (*d_Slope_PPM)[3][NCOMP_TOTAL][ CUBE(N_SLOPE_PPM) ];
+extern real (*d_FC_Var)   [6][NCOMP_TOTAL][ CUBE(N_FC_VAR) ];
+extern real (*d_FC_Flux)  [3][NCOMP_TOTAL][ CUBE(N_FC_FLUX) ];
 #endif // FLU_SCHEME
 #elif ( MODEL == MHD )
 #warning : WAIT MHD !!!
 #endif // MODEL
 
 #ifdef UNSPLIT_GRAVITY
-extern real (*d_Pot_Array_USG_F)[ USG_NXT_F*USG_NXT_F*USG_NXT_F ];
+extern real (*d_Pot_Array_USG_F)[ CUBE(USG_NXT_F) ];
 #else
 #if ( MODEL == HYDRO  ||  MODEL == MHD )
-static real (*d_Pot_Array_USG_F)[ USG_NXT_F*USG_NXT_F*USG_NXT_F ] = NULL;
+static real (*d_Pot_Array_USG_F)[ CUBE(USG_NXT_F) ] = NULL;
 #endif
 #endif // #ifdef UNSPLIT_GRAVITY ... else ...
 
@@ -167,12 +167,12 @@ extern cudaStream_t *Stream;
 // Useless parameters in HYDRO : ELBDM_Eta
 // Useless parameters in ELBDM : h_Flux_Array, Gamma, LR_Limiter, MinMod_Coeff, MinPres
 //-------------------------------------------------------------------------------------------------------
-void CUAPI_Asyn_FluidSolver( real h_Flu_Array_In [][FLU_NIN    ][ FLU_NXT*FLU_NXT*FLU_NXT ],
-                             real h_Flu_Array_Out[][FLU_NOUT   ][ PS2*PS2*PS2 ],
-                             char h_DE_Array_Out[][ PS2*PS2*PS2 ],
-                             real h_Flux_Array[][9][NFLUX_TOTAL][ PS2*PS2 ],
+void CUAPI_Asyn_FluidSolver( real h_Flu_Array_In[][FLU_NIN ][ CUBE(FLU_NXT) ],
+                             real h_Flu_Array_Out[][FLU_NOUT][ CUBE(PS2) ],
+                             char h_DE_Array_Out[][ CUBE(PS2) ],
+                             real h_Flux_Array[][9][NFLUX_TOTAL][ SQR(PS2) ],
                              const double h_Corner_Array[][3],
-                             real h_Pot_Array_USG[][ USG_NXT_F*USG_NXT_F*USG_NXT_F ],
+                             real h_Pot_Array_USG[][ CUBE(USG_NXT_F) ],
                              const int NPatchGroup, const real dt, const real dh, const real Gamma, const bool StoreFlux,
                              const bool XYZ, const LR_Limiter_t LR_Limiter, const real MinMod_Coeff,
                              const real ELBDM_Eta, real ELBDM_Taylor3_Coeff, const bool ELBDM_Taylor3_Auto,

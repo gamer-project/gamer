@@ -216,12 +216,12 @@ extern double                SF_CREATE_STAR_MAX_STAR_MFRAC;
 
 // 3. CPU (host) arrays for transferring data between CPU and GPU
 // ============================================================================================================
-extern real       (*h_Flu_Array_F_In [2])[FLU_NIN ][  FLU_NXT   *FLU_NXT   *FLU_NXT   ];
-extern real       (*h_Flu_Array_F_Out[2])[FLU_NOUT][8*PATCH_SIZE*PATCH_SIZE*PATCH_SIZE];
-extern real       (*h_Flux_Array[2])[9][NFLUX_TOTAL][4*PATCH_SIZE*PATCH_SIZE];
+extern real       (*h_Flu_Array_F_In [2])[FLU_NIN ][ CUBE(FLU_NXT) ];
+extern real       (*h_Flu_Array_F_Out[2])[FLU_NOUT][ CUBE(PS2) ];
+extern real       (*h_Flux_Array[2])[9][NFLUX_TOTAL][ SQR(PS2) ];
 extern double     (*h_Corner_Array_F [2])[3];
 #ifdef DUAL_ENERGY
-extern char       (*h_DE_Array_F_Out [2])[8*PATCH_SIZE*PATCH_SIZE*PATCH_SIZE];
+extern char       (*h_DE_Array_F_Out [2])[ CUBE(PS2) ];
 #endif
 
 #ifdef GRAVITY
@@ -235,7 +235,7 @@ extern char       (*h_DE_Array_G     [2])[PATCH_SIZE][PATCH_SIZE][PATCH_SIZE];
 #endif
 
 #ifdef UNSPLIT_GRAVITY
-extern real       (*h_Pot_Array_USG_F[2])[ USG_NXT_F*USG_NXT_F*USG_NXT_F ];
+extern real       (*h_Pot_Array_USG_F[2])[ CUBE(USG_NXT_F) ];
 extern real       (*h_Pot_Array_USG_G[2])[USG_NXT_G ][USG_NXT_G ][USG_NXT_G ];
 extern real       (*h_Flu_Array_USG_G[2])[GRA_NIN-1][PS1][PS1][PS1];
 #endif
