@@ -17,7 +17,7 @@
 
 
 // variables reside in constant memory
-#include "CUPOT_PoissonSolver_SetConstMem.cu"
+#include "CUPOT_SetConstMem_PoissonSolver.cu"
 
 
 // parallel reduction routine

@@ -39,7 +39,7 @@ void CUFLU_FluidSolver_MHM(
    const bool NormPassive, const int NNorm,
    const bool JeansMinPres, const real JeansMinPres_Coeff );
 #if ( NCOMP_PASSIVE > 0 )
-int CUFLU_FluidSolver_SetConstMem_NormIdx( int NormIdx_h[] );
+int CUFLU_SetConstMem_FluidSolver_NormIdx( int NormIdx_h[] );
 #endif
 #elif ( FLU_SCHEME == CTU )
 __global__
@@ -61,7 +61,7 @@ void CUFLU_FluidSolver_CTU(
    const bool NormPassive, const int NNorm,
    const bool JeansMinPres, const real JeansMinPres_Coeff );
 #if ( NCOMP_PASSIVE > 0 )
-int CUFLU_FluidSolver_SetConstMem_NormIdx( int NormIdx_h[] );
+int CUFLU_SetConstMem_FluidSolver_NormIdx( int NormIdx_h[] );
 #endif
 #endif // FLU_SCHEME
 __global__ void CUFLU_dtSolver_HydroCFL( real g_dt_Array[], const real g_Flu_Array[][NCOMP_FLUID][ CUBE(PS1) ],
@@ -140,7 +140,7 @@ __global__ void CUPOT_ELBDMGravitySolver(       real g_Flu_Array[][GRA_NIN][ PS1
 #error : ERROR : unsupported MODEL !!
 #endif // MODEL
 
-int CUPOT_PoissonSolver_SetConstMem();
+int CUPOT_SetConstMem_PoissonSolver();
 
 #endif // GRAVITY
 
@@ -383,8 +383,8 @@ void CUAPI_Set_Default_GPU_Parameter( int &GPU_NStream, int &Flu_GPU_NPGroup, in
    if  ( OPT__NORMALIZE_PASSIVE )
    {
 #     if ( MODEL == HYDRO  &&  ( FLU_SCHEME == MHM || FLU_SCHEME == MHM_RP || FLU_SCHEME == CTU )  )
-      if ( CUFLU_FluidSolver_SetConstMem_NormIdx(PassiveNorm_VarIdx) != 0  )
-         Aux_Error( ERROR_INFO, "CUFLU_FluidSolver_SetConstMem_NormIdx failed ...\n" );
+      if ( CUFLU_SetConstMem_FluidSolver_NormIdx(PassiveNorm_VarIdx) != 0  )
+         Aux_Error( ERROR_INFO, "CUFLU_SetConstMem_FluidSolver_NormIdx failed ...\n" );
 
 #     elif ( MODEL == MHD )
 #     warning : WAIT MHD !!!
@@ -394,8 +394,8 @@ void CUAPI_Set_Default_GPU_Parameter( int &GPU_NStream, int &Flu_GPU_NPGroup, in
 #  endif // #if ( NCOMP_PASSIVE > 0 )
 
 #  ifdef GRAVITY
-   if ( CUPOT_PoissonSolver_SetConstMem() != 0 )
-      Aux_Error( ERROR_INFO, "CUPOT_PoissonSolver_SetConstMem failed ...\n" );
+   if ( CUPOT_SetConstMem_PoissonSolver() != 0 )
+      Aux_Error( ERROR_INFO, "CUPOT_SetConstMem_PoissonSolver failed ...\n" );
 #  endif // #ifdef GRAVITY
 
 
