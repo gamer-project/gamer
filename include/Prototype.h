@@ -271,8 +271,8 @@ void Refine_Buffer( const int lv, const int *SonTable, const int *GrandTable );
 
 // SelfGravity
 #ifdef GRAVITY
-void CPU_ExternalAcc( real Acc[], const double x, const double y, const double z, const double Time, const double UserArray[] );
-real CPU_ExternalPot( const double x, const double y, const double z, const double Time, const double UserArray[] );
+void ExternalAcc( real Acc[], const double x, const double y, const double z, const double Time, const double UserArray[] );
+real ExternalPot( const double x, const double y, const double z, const double Time, const double UserArray[] );
 void CPU_PoissonGravitySolver( const real h_Rho_Array    [][RHO_NXT][RHO_NXT][RHO_NXT],
                                const real h_Pot_Array_In [][POT_NXT][POT_NXT][POT_NXT],
                                      real h_Pot_Array_Out[][GRA_NXT][GRA_NXT][GRA_NXT],

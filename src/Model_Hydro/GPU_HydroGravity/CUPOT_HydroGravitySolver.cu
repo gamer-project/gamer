@@ -16,7 +16,7 @@ __constant__ double c_ExtAcc_AuxArray[EXT_ACC_NAUX_MAX];
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  CUPOT_SetConstMem_HydroGravitySolver
-// Description :  Set the constant memory used by CUPOT_HydroGravitySolver
+// Description :  Set the constant memory used by CUPOT_HydroGravitySolver()
 //
 // Note        :  1. Adopt the suggested approach for CUDA version >= 5.0
 //                2. Invoked by CUAPI_Init_ExternalAccPot()
@@ -187,11 +187,11 @@ __global__ void CUPOT_HydroGravitySolver(       real g_Flu_Array_New[][GRA_NIN][
 //    1.1 external gravity
       if ( GravityType == GRAVITY_EXTERNAL  ||  GravityType == GRAVITY_BOTH )
       {
-         CUPOT_ExternalAcc( Acc_new, x, y, z, TimeNew, c_ExtAcc_AuxArray );
+         ExternalAcc( Acc_new, x, y, z, TimeNew, c_ExtAcc_AuxArray );
          for (int d=0; d<3; d++)    Acc_new[d] *= dt;
 
 #        ifdef UNSPLIT_GRAVITY
-         CUPOT_ExternalAcc( Acc_old, x, y, z, TimeOld, c_ExtAcc_AuxArray );
+         ExternalAcc( Acc_old, x, y, z, TimeOld, c_ExtAcc_AuxArray );
          for (int d=0; d<3; d++)    Acc_old[d] *= dt;
 #        endif
       }

@@ -118,11 +118,11 @@ void CPU_HydroGravitySolver(       real Flu_Array_New[][GRA_NIN][PS1][PS1][PS1],
             y = Corner_Array[P][1] + (double)(jj*dh);
             x = Corner_Array[P][0] + (double)(ii*dh);
 
-            CPU_ExternalAcc( AccNew, x, y, z, TimeNew, ExtAcc_AuxArray );
+            ExternalAcc( AccNew, x, y, z, TimeNew, ExtAcc_AuxArray );
             for (int d=0; d<3; d++)    AccNew[d] *= dt;
 
 #           ifdef UNSPLIT_GRAVITY
-            CPU_ExternalAcc( AccOld, x, y, z, TimeOld, ExtAcc_AuxArray );
+            ExternalAcc( AccOld, x, y, z, TimeOld, ExtAcc_AuxArray );
             for (int d=0; d<3; d++)    AccOld[d] *= dt;
 #           endif
          }

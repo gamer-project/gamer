@@ -152,7 +152,7 @@ __global__ void CUPOT_dtSolver_HydroGravity( real g_dt_Array[],
 
 //    1.1 external gravity
       if ( GravityType == GRAVITY_EXTERNAL  ||  GravityType == GRAVITY_BOTH )
-         CUPOT_ExternalAcc( Acc, x, y, z, ExtAcc_Time, c_ExtAcc_AuxArray );
+         ExternalAcc( Acc, x, y, z, ExtAcc_Time, c_ExtAcc_AuxArray );
 
 //    1.2 self-gravity
       if ( GravityType == GRAVITY_SELF  ||  GravityType == GRAVITY_BOTH )

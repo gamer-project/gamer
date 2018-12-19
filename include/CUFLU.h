@@ -8,7 +8,7 @@
 // *********************************************************************
 
 
-// include "Macro" and "Typedef" here since the header "GAMER.h" is NOT included in GPU solvers
+// include "Macro.h" and "Typedef.h" here since the header "GAMER.h" is NOT included in GPU solvers
 #ifdef __CUDACC__
 # include "Macro.h"
 # include "Typedef.h"
@@ -353,6 +353,12 @@ struct FluVar5 { real Rho, Px, Py, Pz, Egy; };
 #if (  ( MODEL == HYDRO || MODEL == MHD )  &&  defined CHECK_NEGATIVE_IN_FLUID  )
 extern bool CPU_CheckNegative( const real Input );
 #endif
+
+
+
+// #########################
+// ## CPU/GPU integration ##
+// #########################
 
 // GPU device function specifier
 #ifdef __CUDACC__
