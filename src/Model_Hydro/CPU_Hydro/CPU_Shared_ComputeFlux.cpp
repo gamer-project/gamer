@@ -42,6 +42,9 @@ void Hydro_RiemannSolver_HLLE( const int XYZ, real Flux_Out[], const real L_In[]
 void Hydro_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In[], const real R_In[],
                                const real Gamma, const real MinPres );
 #endif
+#ifdef UNSPLIT_GRAVITY
+void ExternalAcc( real Acc[], const double x, const double y, const double z, const double Time, const double UserArray[] );
+#endif
 
 #endif // #ifdef __CUDACC__ ... else ...
 
@@ -99,10 +102,10 @@ void Hydro_ComputeFlux( const real FC_Var [][NCOMP_TOTAL][ CUBE(N_FC_VAR) ],
 #  ifdef UNSPLIT_GRAVITY
    if ( CorrHalfVel )
    {
-      if (  ( GravityType == GRAVITY_SELF || GravityType == GRAVITY_BOTH )  &&  ( Pot_USG == NULL )  )
+      if (  ( GravityType == GRAVITY_SELF || GravityType == GRAVITY_BOTH )  &&  Pot_USG == NULL  )
          printf( "ERROR : Pot_USG == NULL !!\n" );
 
-      if (  ( GravityType == GRAVITY_EXTERNAL || GravityType == GRAVITY_BOTH )  &&  ( Corner == NULL )  )
+      if (  ( GravityType == GRAVITY_EXTERNAL || GravityType == GRAVITY_BOTH )  &&  Corner == NULL  )
          printf( "ERROR : Corner == NULL !!\n" );
 
       if ( N_FC_VAR != PS2+2 )
@@ -126,9 +129,9 @@ void Hydro_ComputeFlux( const real FC_Var [][NCOMP_TOTAL][ CUBE(N_FC_VAR) ],
 
 #  ifdef UNSPLIT_GRAVITY
    const real   GraConst    = -(real)0.5*dt/dh;
-   const int    didx_usg[3] = { 1, USG_NXT_F, USG_NXT_F*USG_NXT_F };
+   const int    didx_usg[3] = { 1, USG_NXT_F, SQR(USG_NXT_F) };
    const int    didx        = USG_GHOST_SIZE - 1;  // assuming FC_Var[] has one ghost zone on each side
-   const double dh_half     = 0.5*(double)dh;
+   const double dh_half     = 0.5*(double)dh;      // always use double precision to calculate the cell position
    const real   dt_half     = (real)0.5*dt;
 
    double CrShift[3];
@@ -205,12 +208,12 @@ void Hydro_ComputeFlux( const real FC_Var [][NCOMP_TOTAL][ CUBE(N_FC_VAR) ],
 //          external gravity
             if ( GravityType == GRAVITY_EXTERNAL  ||  GravityType == GRAVITY_BOTH )
             {
-               xyz[0]  = CrShift[0] + (double)(i2*dh);
-               xyz[1]  = CrShift[1] + (double)(j2*dh);
-               xyz[2]  = CrShift[2] + (double)(k2*dh);
+               xyz[0]  = CrShift[0] + (double)(i_fc*dh);
+               xyz[1]  = CrShift[1] + (double)(j_fc*dh);
+               xyz[2]  = CrShift[2] + (double)(k_fc*dh);
                xyz[d] += dh_half;
 
-               CPU_ExternalAcc( Acc, xyz[0], xyz[1], xyz[2], Time, ExtAcc_AuxArray );
+               ExternalAcc( Acc, xyz[0], xyz[1], xyz[2], Time, ExtAcc_AuxArray );
 
                for (int d=0; d<3; d++)    Acc[d] *= dt_half;
             }

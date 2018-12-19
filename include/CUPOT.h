@@ -12,9 +12,13 @@
 // *****************************************************************
 
 
-// include "Macro.h" and "Typedef" here since the header "GAMER.h" is NOT included in GPU solvers
-#include "Macro.h"
-#include "Typedef.h"
+// include "Macro.h" and "Typedef.h" here since the header "GAMER.h" is NOT included in GPU solvers
+#ifdef __CUDACC__
+# include "Macro.h"
+# include "Typedef.h"
+#else
+# include "GAMER.h"
+#endif
 
 
 // allow GPU to output messages in the debug mode
@@ -189,6 +193,26 @@
 #  error : UNKNOWN GPU_ARCH !!
 #endif
 #endif // #ifdef __CUDACC__
+
+
+
+// #########################
+// ## CPU/GPU integration ##
+// #########################
+
+// GPU device function specifier
+#ifdef __CUDACC__
+# define GPU_DEVICE __forceinline__ __device__
+#else
+# define GPU_DEVICE
+#endif
+
+// unified CPU/GPU loop
+#ifdef __CUDACC__
+# define CGPU_LOOP( var, niter )    for (int (var)=threadIdx.x; (var)<(niter); (var)+=blockDim.x)
+#else
+# define CGPU_LOOP( var, niter )    for (int (var)=0;           (var)<(niter); (var)++          )
+#endif
 
 
 

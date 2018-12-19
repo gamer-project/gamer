@@ -1,8 +1,8 @@
-#ifdef __CUDACC__
-#include "Macro.h"
-#else
-#include "GAMER.h"
-#endif
+#ifndef __EXTERNALPOT__
+#define __EXTERNALPOT__
+
+
+
 #include "CUPOT.h"
 
 #ifdef GRAVITY
@@ -11,29 +11,25 @@
 
 
 //-----------------------------------------------------------------------------------------
-// Function    :  CUPOT_ExternalPot / CPU_ExternalPot
+// Function    :  ExternalPot
 // Description :  Calculate the external potential at the given coordinates and time
 //
-// Note        :  1. This function will be invoked by both CPU and GPU
-//                2. The auxiliary array "UserArray" is set by "Init_ExternalPot_Ptr", which
-//                   points to "Init_ExternalPot()" by default but may be overwritten by various
+// Note        :  1. This function is shared by CPU and GPU
+//                2. Auxiliary array UserArray[] is set by "Init_ExternalPot_Ptr", which
+//                   points to Init_ExternalPot() by default but may be overwritten by various
 //                   test problem initializers
 //                3. By default we assume
 //                     UserArray[0] = x coordinate of the external acceleration center
 //                     UserArray[1] = y ...
 //                     UserArray[2] = z ..
 //                     UserArray[3] = gravitational_constant*point_source_mass
-//                   --> but one can easily modify this file to change the default behavior
+//                   --> But one can easily modify this file to change the default behavior
 //                4. Currently it does not support the soften length
 //
 // Return      :  External potential
 //-----------------------------------------------------------------------------------------
-#ifdef __CUDACC__
-__device__
-real CUPOT_ExternalPot( const double x, const double y, const double z, const double Time, const double UserArray[] )
-#else
-real   CPU_ExternalPot( const double x, const double y, const double z, const double Time, const double UserArray[] )
-#endif
+GPU_DEVICE
+real ExternalPot( const double x, const double y, const double z, const double Time, const double UserArray[] )
 {
 
    const double Cen[3] = { UserArray[0], UserArray[1], UserArray[2] };
@@ -45,8 +41,12 @@ real   CPU_ExternalPot( const double x, const double y, const double z, const do
 
    return -GM*_r;
 
-} // FUNCTION : CUPOT_ExternalPot // CPU_ExternalPot
+} // FUNCTION : ExternalPot
 
 
 
 #endif // #ifdef GRAVITY
+
+
+
+#endif // #ifndef __EXTERNALPOT__

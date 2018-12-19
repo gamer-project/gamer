@@ -78,7 +78,7 @@ void CPU_dtSolver_HydroGravity( real dt_Array[],
             y = Corner_Array[P][1] + (double)jj*dh;
             z = Corner_Array[P][2] + (double)kk*dh;
 
-            CPU_ExternalAcc( Acc, x, y, z, ExtAcc_Time, ExtAcc_AuxArray );
+            ExternalAcc( Acc, x, y, z, ExtAcc_Time, ExtAcc_AuxArray );
          }
 
 //       self-gravity
