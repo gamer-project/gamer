@@ -117,7 +117,7 @@ void CPU_dtSolver_HydroCFL  ( real dt_Array[], const real Flu_Array[][NCOMP_FLUI
 
    } // for (int p=0; p<8*NPG; p++)
 
-} // FUNCTION : CPU_dtSolver_HydroCFL
+} // FUNCTION : CPU/CUFLU_dtSolver_HydroCFL
 
 
 

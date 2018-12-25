@@ -488,7 +488,7 @@ void Aux_TakeNote()
 #     endif // #ifdef GRAVITY
       fprintf( Note, "#define DT_FLU_BLOCK_SIZE       %d\n",      DT_FLU_BLOCK_SIZE   );
 #     ifdef GRAVITY
-      fprintf( Note, "#define DT_GRA_BLOCK_SIZE_ Z    %d\n",      DT_GRA_BLOCK_SIZE_Z );
+      fprintf( Note, "#define DT_GRA_BLOCK_SIZE       %d\n",      DT_GRA_BLOCK_SIZE   );
 #     endif
 #     endif // #ifdef GPU
 #     ifdef PARTICLE
