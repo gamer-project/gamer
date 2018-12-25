@@ -12,7 +12,7 @@ __constant__ real c_Mm[3];
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  CUPOT_SetConstMem_PoissonSolver
-// Description :  Set the constant memory used by CUPOT_PoissonSolver_SOR_10to14cube
+// Description :  Set the constant memory used by CUPOT_PoissonSolver_SOR_10to14cube()
 //
 // Note        :  1. Adopt the suggested approach for CUDA version >= 5.0
 //                2. Invoked by CUAPI_Set_Default_GPU_Parameter()

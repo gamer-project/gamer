@@ -11,7 +11,7 @@ __constant__ double c_ExtAcc_AuxArray[EXT_ACC_NAUX_MAX];
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  CUFLU_SetConstMem_FluidSolver_ExtAcc
-// Description :  Set the constant memory of c_ExtAcc_AuxArray[] used by CUFLU_FluidSolver_CTU/MHM
+// Description :  Set the constant memory of c_ExtAcc_AuxArray[] used by CUFLU_FluidSolver_CTU/MHM()
 //
 // Note        :  1. Adopt the suggested approach for CUDA version >= 5.0
 //                2. Invoked by CUAPI_Init_ExternalAccPot()
@@ -40,7 +40,7 @@ __constant__ int c_NormIdx[NCOMP_PASSIVE];
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  CUFLU_SetConstMem_FluidSolver_NormIdx
-// Description :  Set the constant memory of c_NormIdx[] used by CUFLU_FluidSolver_CTU/MHM
+// Description :  Set the constant memory of c_NormIdx[] used by CUFLU_FluidSolver_CTU/MHM()
 //
 // Note        :  1. Adopt the suggested approach for CUDA version >= 5.0
 //                2. Invoked by CUAPI_Set_Default_GPU_Parameter()

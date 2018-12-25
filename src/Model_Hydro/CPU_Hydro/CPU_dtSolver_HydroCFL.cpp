@@ -4,7 +4,7 @@
 
 
 
-// external functions
+// external functions and GPU-related set-up
 #ifdef __CUDACC__
 
 #include "CUFLU_Shared_FluUtility.cu"
@@ -66,22 +66,22 @@ void CPU_dtSolver_HydroCFL  ( real dt_Array[], const real Flu_Array[][NCOMP_FLUI
    const real Gamma_m1         = Gamma - (real)1.0;
    const real dhSafety         = Safety*dh;
 
-   real fluid[NCOMP_FLUID], _Rho, Vx, Vy, Vz, Pres, Cs, MaxV, MaxCFL;
-
 // loop over all patches
-// --> CPU/GPU solver: use different (OpenMP threads) / (CUDA thread block)
+// --> CPU/GPU solver: use different (OpenMP threads) / (CUDA thread blocks)
 //                     to work on different patches
 #  ifdef __CUDACC__
    const int p = blockIdx.x;
 #  else
-#  pragma omp parallel for private( fluid, _Rho, Vx, Vy, Vz, Pres, Cs, MaxV, MaxCFL ) schedule( runtime )
+#  pragma omp parallel for schedule( runtime )
    for (int p=0; p<8*NPG; p++)
 #  endif
    {
-      MaxCFL = (real)0.0;
+      real MaxCFL=(real)0.0;
 
       CGPU_LOOP( t, CUBE(PS1) )
       {
+         real fluid[NCOMP_FLUID], _Rho, Vx, Vy, Vz, Pres, Cs, MaxV;
+
          for (int v=0; v<NCOMP_FLUID; v++)   fluid[v] = Flu_Array[p][v][t];
 
         _Rho  = (real)1.0 / fluid[DENS];
