@@ -173,8 +173,8 @@ void CPU_FluidSolver_CTU(
 
 
 //    loop over all patch groups
-//    --> CPU solver: use different OpenMP threads    to work on different patch groups
-//        GPU solver: ...           CUDA thread block ...
+//    --> CPU/GPU solver: use different (OpenMP threads) / (CUDA thread blocks)
+//                        to work on different patch groups
 #     ifdef __CUDACC__
       const int P = blockIdx.x;
 #     else
