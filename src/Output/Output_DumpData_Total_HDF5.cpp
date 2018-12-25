@@ -69,7 +69,7 @@ Procedure for outputting new variables:
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2305)
+// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2306)
 // Description :  Output all simulation data in the HDF5 format, which can be used as a restart file
 //                or loaded by YT
 //
@@ -162,6 +162,7 @@ Procedure for outputting new variables:
 //                2303 : 2018/10/04 --> Set "CodeVersion" to VERSION defined in Macro.h
 //                2304 : 2018/12/10 --> Remove EP_Coeff that no longer exists
 //                2305 : 2018/12/15 --> Remove variables related to the WAF scheme
+//                2306 : 2018/12/25 --> Replace DT_GRA_BLOCK_SIZE_Z by DT_GRA_BLOCK_SIZE
 //-------------------------------------------------------------------------------------------------------
 void Output_DumpData_Total_HDF5( const char *FileName )
 {
@@ -1226,7 +1227,7 @@ void FillIn_KeyInfo( KeyInfo_t &KeyInfo )
 
    const time_t CalTime   = time( NULL );    // calendar time
 
-   KeyInfo.FormatVersion  = 2305;
+   KeyInfo.FormatVersion  = 2306;
    KeyInfo.Model          = MODEL;
    KeyInfo.NLevel         = NLEVEL;
    KeyInfo.NCompFluid     = NCOMP_FLUID;
@@ -1655,7 +1656,7 @@ void FillIn_SymConst( SymConst_t &SymConst )
    SymConst.dt_Flu_UseShuffle    = 0;
 #  endif
 #  ifdef GRAVITY
-   SymConst.dt_Gra_BlockSize_z   = DT_GRA_BLOCK_SIZE_Z;
+   SymConst.dt_Gra_BlockSize     = DT_GRA_BLOCK_SIZE;
 #  ifdef DT_GRA_USE_SHUFFLE
    SymConst.dt_Gra_UseShuffle    = 1;
 #  else
@@ -2288,7 +2289,7 @@ void GetCompound_SymConst( hid_t &H5_TypeID )
    H5Tinsert( H5_TypeID, "dt_Flu_BlockSize",     HOFFSET(SymConst_t,dt_Flu_BlockSize    ), H5T_NATIVE_INT    );
    H5Tinsert( H5_TypeID, "dt_Flu_UseShuffle",    HOFFSET(SymConst_t,dt_Flu_UseShuffle   ), H5T_NATIVE_INT    );
 #  ifdef GRAVITY
-   H5Tinsert( H5_TypeID, "dt_Gra_BlockSize_z",   HOFFSET(SymConst_t,dt_Gra_BlockSize_z  ), H5T_NATIVE_INT    );
+   H5Tinsert( H5_TypeID, "dt_Gra_BlockSize",     HOFFSET(SymConst_t,dt_Gra_BlockSize    ), H5T_NATIVE_INT    );
    H5Tinsert( H5_TypeID, "dt_Gra_UseShuffle",    HOFFSET(SymConst_t,dt_Gra_UseShuffle   ), H5T_NATIVE_INT    );
 #  endif
 
