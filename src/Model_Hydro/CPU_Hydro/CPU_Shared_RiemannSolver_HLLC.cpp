@@ -19,9 +19,6 @@
 void Hydro_Rotate3D( real InOut[], const int XYZ, const bool Forward );
 void Hydro_Con2Flux( const int XYZ, real Flux[], const real Input[], const real Gamma_m1, const real MinPres );
 real Hydro_CheckMinPres( const real InPres, const real MinPres );
-#ifdef CHECK_NEGATIVE_IN_FLUID
-bool Hydro_CheckNegative( const real Input );
-#endif
 
 #endif // #ifdef __CUDACC__ ... else ...
 

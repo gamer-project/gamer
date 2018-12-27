@@ -19,9 +19,6 @@
 #else // #ifdef __CUDACC__
 
 void Hydro_Rotate3D( real InOut[], const int XYZ, const bool Forward );
-#ifdef CHECK_NEGATIVE_IN_FLUID
-bool Hydro_CheckNegative( const real Input );
-#endif
 
 #endif // #ifdef __CUDACC__ ... else ...
 

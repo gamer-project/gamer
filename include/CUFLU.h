@@ -78,13 +78,14 @@
 #endif // #if ( FLU_SCHEME == MHM  ||  FLU_SCHEME == MHM_RP  ||  FLU_SCHEME == CTU )
 
 
-// check the non-physical negative values (e.g., negative density) inside the fluid solver
-#ifdef GAMER_DEBUG
+// check non-physical negative values (e.g., negative density) for the fluid solver
+#if (  defined GAMER_DEBUG  &&  ( MODEL == HYDRO || MODEL == MHD )  )
 #  define CHECK_NEGATIVE_IN_FLUID
 #endif
 
 #ifdef CHECK_NEGATIVE_IN_FLUID
 #  include "stdio.h"
+   bool Hydro_CheckNegative( const real Input );
 #endif
 
 
@@ -336,16 +337,6 @@
 #  error : UNKNOWN GPU_ARCH !!
 #endif
 #endif // #ifdef __CUDACC__
-
-
-
-// ##########################
-// ## function prototypes  ##
-// ##########################
-
-#if (  ( MODEL == HYDRO || MODEL == MHD )  &&  defined CHECK_NEGATIVE_IN_FLUID  )
-extern bool CPU_CheckNegative( const real Input );
-#endif
 
 
 

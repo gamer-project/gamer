@@ -116,7 +116,7 @@ void CPU_HydroGravitySolver(
 
    if ( GravityType == GRAVITY_EXTERNAL  ||  GravityType == GRAVITY_BOTH )
    if ( TimeOld >= TimeNew  ||  TimeOld < 0.0 )
-      printf( "ERROR : incorrect time (TimeOld %14.7e, TimeNew = %14.7d) !!\n", TimeOld, TimeNew );
+      printf( "ERROR : incorrect time (TimeOld %14.7e, TimeNew = %14.7e) !!\n", TimeOld, TimeNew );
 #  endif
 
 #  ifdef DUAL_ENERGY

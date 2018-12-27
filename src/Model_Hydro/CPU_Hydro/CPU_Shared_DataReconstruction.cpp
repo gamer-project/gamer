@@ -26,9 +26,6 @@ void Hydro_Pri2Con( const real In[], real Out[], const real _Gamma_m1,
 #if ( FLU_SCHEME == MHM )
 void Hydro_Con2Flux( const int XYZ, real Flux[], const real Input[], const real Gamma_m1, const real MinPres );
 #endif
-#ifdef CHECK_NEGATIVE_IN_FLUID
-bool Hydro_CheckNegative( const real Input );
-#endif
 
 #endif // #ifdef __CUDACC__ ... else ...
 
