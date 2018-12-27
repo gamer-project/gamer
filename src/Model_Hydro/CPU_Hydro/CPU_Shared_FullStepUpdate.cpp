@@ -9,6 +9,7 @@
 
 
 
+// external functions
 #ifdef __CUDACC__
 
 #if ( NCOMP_PASSIVE > 0 )
@@ -19,7 +20,13 @@
 # include "CUFLU_Shared_DualEnergy.cu"
 #endif
 
-#endif // #ifdef __CUDACC__
+#else // #ifdef __CUDACC__
+
+#ifdef CHECK_NEGATIVE_IN_FLUID
+bool Hydro_CheckNegative( const real Input );
+#endif
+
+#endif // #ifdef __CUDACC__ ... else ...
 
 
 

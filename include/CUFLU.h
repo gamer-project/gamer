@@ -37,13 +37,6 @@
 // 1. hydro macro
 //=========================================================================================
 #if   ( MODEL == HYDRO )
-// structure data type for the GPU hydro kernels
-// --> note that for FluVar we must define Passive[] even when NCOMP_PASSIVE == 0
-// --> FluVar5 is used for variables which do not need to consider passive scalars even when NCOMP_PASSIVE > 0
-//     (e.g., eigenvectors/eigenvalues in CUFLU_Shared_RiemannSolver_Roe() )
-struct FluVar  { real Rho, Px, Py, Pz, Egy, Passive[NCOMP_PASSIVE]; };
-struct FluVar5 { real Rho, Px, Py, Pz, Egy; };
-
 
 // size of different arrays
 #if ( FLU_SCHEME == MHM  ||  FLU_SCHEME == MHM_RP  ||  FLU_SCHEME == CTU )

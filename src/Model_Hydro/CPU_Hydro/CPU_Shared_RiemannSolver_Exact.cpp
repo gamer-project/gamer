@@ -11,6 +11,7 @@
 
 
 
+// external functions
 #ifdef __CUDACC__
 
 #include "CUFLU_Shared_FluUtility.cu"
@@ -18,9 +19,14 @@
 #else // #ifdef __CUDACC__
 
 void Hydro_Rotate3D( real InOut[], const int XYZ, const bool Forward );
+#ifdef CHECK_NEGATIVE_IN_FLUID
+bool Hydro_CheckNegative( const real Input );
+#endif
 
 #endif // #ifdef __CUDACC__ ... else ...
 
+
+// internal functions (GPU_DEVICE is defined in CUFLU.h)
 GPU_DEVICE static real Solve_f( const real rho,const real p,const real p_star,const real Gamma );
 #if ( FLU_SCHEME == MHM  ||  FLU_SCHEME == MHM_RP  ||  FLU_SCHEME == CTU )
 GPU_DEVICE static void Set_Flux( real flux[], const real val[], const real Gamma );
