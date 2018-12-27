@@ -9,6 +9,8 @@
 
 
 
+// internal function prototypes
+// --> only necessary for GPU since they are included in Prototype.h for the CPU codes
 #ifdef __CUDACC__
 GPU_DEVICE
 static real Hydro_GetPressure( const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy,
@@ -307,8 +309,8 @@ bool Hydro_CheckNegative( const real Input )
 // Description :  Evaluate the fluid pressure
 //
 // Note        :  1. Currently only work with the adiabatic EOS
-//                2. Invoked by the functions "Hydro_GetTimeStep_Fluid", "Prepare_PatchData", "InterpolateGhostZone",
-//                   "Hydro_Aux_Check_Negative" ...
+//                2. Invoked by Hydro_GetTimeStep_Fluid(), Prepare_PatchData(), InterpolateGhostZone(),
+//                   Hydro_Aux_Check_Negative() ...
 //                3. One must input conserved variables instead of primitive variables
 //
 // Parameter   :  Dens         : Mass density
@@ -442,15 +444,15 @@ void Hydro_NormalizePassive( const real GasDens, real Passive[], const int NNorm
 {
 
 // validate the target variable indices
-#  if ( defined GAMER_DEBUG  &&  !defined __CUDACC__ )
+#  ifdef GAMER_DEBUG
    const int MinIdx = 0;
    const int MaxIdx = NCOMP_PASSIVE - 1;
 
    for (int v=0; v<NNorm; v++)
    {
       if ( NormIdx[v] < MinIdx  ||  NormIdx[v] > MaxIdx )
-         Aux_Error( ERROR_INFO, "NormIdx[%d] = %d is not within the correct range ([%d <= idx <= %d]) !!\n",
-                    v, NormIdx[v], MinIdx, MaxIdx );
+         printf( "ERROR : NormIdx[%d] = %d is not within the correct range ([%d <= idx <= %d]) !!\n",
+                 v, NormIdx[v], MinIdx, MaxIdx );
    }
 #  endif
 

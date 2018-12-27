@@ -26,6 +26,9 @@ void Hydro_Pri2Con( const real In[], real Out[], const real _Gamma_m1,
 #if ( FLU_SCHEME == MHM )
 void Hydro_Con2Flux( const int XYZ, real Flux[], const real Input[], const real Gamma_m1, const real MinPres );
 #endif
+#ifdef CHECK_NEGATIVE_IN_FLUID
+bool Hydro_CheckNegative( const real Input );
+#endif
 
 #endif // #ifdef __CUDACC__ ... else ...
 
@@ -884,11 +887,11 @@ void Hydro_Char2Pri( real InOut[], const real Gamma, const real Rho, const real 
 
 #  ifdef CHECK_NEGATIVE_IN_FLUID
    if ( Hydro_CheckNegative(Pres) )
-      printf( stderr, "ERROR : negative pressure (%14.7e) at file <%s>, line <%d>, function <%s>\n",
+      printf( "ERROR : negative pressure (%14.7e) at file <%s>, line <%d>, function <%s>\n",
               Pres, __FILE__, __LINE__, __FUNCTION__ );
 
    if ( Hydro_CheckNegative(Rho) )
-      printf( stderr, "ERROR : negative density (%14.7e) at file <%s>, line <%d>, function <%s>\n",
+      printf( "ERROR : negative density (%14.7e) at file <%s>, line <%d>, function <%s>\n",
               Rho,  __FILE__, __LINE__, __FUNCTION__ );
 #  endif
 

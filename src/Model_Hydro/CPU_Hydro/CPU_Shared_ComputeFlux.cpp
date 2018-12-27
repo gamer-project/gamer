@@ -9,6 +9,7 @@
 
 
 
+// external functions
 #ifdef __CUDACC__
 
 #if   ( RSOLVER == EXACT )

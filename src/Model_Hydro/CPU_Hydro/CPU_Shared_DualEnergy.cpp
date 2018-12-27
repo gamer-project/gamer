@@ -9,6 +9,7 @@
 
 
 
+// internal functions
 #if ( DUAL_ENERGY == DE_ENPY  &&  defined __CUDACC__ )
 GPU_DEVICE
 static real Hydro_DensPres2Entropy( const real Dens, const real Pres, const real Gamma_m1 );
