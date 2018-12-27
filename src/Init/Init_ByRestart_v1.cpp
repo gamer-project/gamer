@@ -906,7 +906,7 @@ void Load_Parameter_After_1200( FILE *File, const int FormatVersion, int &NLv_Re
    bool enforce_positive, char_reconstruction, hll_no_ref_state, hll_include_all_waves, waf_dissipate_useless;
    bool use_psolver_10to14;
    int  ncomp_fluid, patch_size, flu_ghost_size, pot_ghost_size, gra_ghost_size, check_intermediate;
-   int  flu_block_size_x, flu_block_size_y, pot_block_size_x, pot_block_size_z, gra_block_size_z;
+   int  flu_block_size_x, flu_block_size_y, pot_block_size_x, pot_block_size_z, gra_block_size;
    real min_pres, max_error;
 
    fread( &ncomp_fluid,                sizeof(int),                     1,             File );
@@ -927,7 +927,7 @@ void Load_Parameter_After_1200( FILE *File, const int FormatVersion, int &NLv_Re
    fread( &use_psolver_10to14,         sizeof(bool),                    1,             File );
    fread( &pot_block_size_x,           sizeof(int),                     1,             File );
    fread( &pot_block_size_z,           sizeof(int),                     1,             File );
-   fread( &gra_block_size_z,           sizeof(int),                     1,             File );
+   fread( &gra_block_size,             sizeof(int),                     1,             File );
 
 // skip the buffer space
    fseek( File, NBuf_Constant, SEEK_CUR );
@@ -1223,8 +1223,8 @@ void Load_Parameter_After_1200( FILE *File, const int FormatVersion, int &NLv_Re
       CompareVar( "POT_BLOCK_SIZE_Z",        pot_block_size_z,       POT_BLOCK_SIZE_Z,          NonFatal );
 #     endif
 
-#     ifdef GRA_BLOCK_SIZE_Z
-      CompareVar( "GRA_BLOCK_SIZE_Z",        gra_block_size_z,       GRA_BLOCK_SIZE_Z,          NonFatal );
+#     ifdef GRA_BLOCK_SIZE
+      CompareVar( "GRA_BLOCK_SIZE",          gra_block_size,         GRA_BLOCK_SIZE,            NonFatal );
 #     endif
 
 #     if ( POT_SCHEME == SOR )

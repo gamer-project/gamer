@@ -1422,7 +1422,7 @@ void Check_SymConst( const char *FileName, const int FormatVersion )
    LoadField( "USG_NxtF",             &RS.USG_NxtF,             SID, TID, NonFatal, &RT.USG_NxtF,              1, NonFatal );
    LoadField( "USG_NxtG",             &RS.USG_NxtG,             SID, TID, NonFatal, &RT.USG_NxtG,              1, NonFatal );
 #  endif
-   LoadField( "Gra_BlockSize_z",      &RS.Gra_BlockSize_z,      SID, TID, NonFatal, &RT.Gra_BlockSize_z,       1, NonFatal );
+   LoadField( "Gra_BlockSize",        &RS.Gra_BlockSize,        SID, TID, NonFatal, &RT.Gra_BlockSize,         1, NonFatal );
    LoadField( "ExtPotNAuxMax",        &RS.ExtPotNAuxMax,        SID, TID, NonFatal, &RT.ExtPotNAuxMax,         1, NonFatal );
    LoadField( "ExtAccNAuxMax",        &RS.ExtAccNAuxMax,        SID, TID, NonFatal, &RT.ExtAccNAuxMax,         1, NonFatal );
 #  if   ( POT_SCHEME == SOR )

@@ -73,7 +73,7 @@ int CUPOT_SetConstMem_dtSolver_HydroGravity( double h_ExtAcc_AuxArray[] )
 //                Safety            : dt safety factor
 //                P5_Gradient       : Use 5-point stencil to evaluate the potential gradient
 //                GravityType       : Types of gravity --> self-gravity, external gravity, both
-//                c_ExtAcc_AuxArray : Auxiliary array for adding external acceleration
+//                c_ExtAcc_AuxArray : Auxiliary array for adding external acceleration (for CPU only)
 //                                    --> When using GPU, this array is stored in the constant memory and does
 //                                        not need to be passed as a function argument
 //                                        --> Declared on top of this file with the prefix "c_" to
@@ -127,7 +127,7 @@ void CPU_dtSolver_HydroGravity  ( real dt_Array[], const real Pot_Array[][ CUBE(
 
 // loop over all patches
 // --> CPU/GPU solver: use different (OpenMP threads) / (CUDA thread blocks)
-//                     to work on different patches
+//     to work on different patches
 #  ifdef __CUDACC__
    const int P = blockIdx.x;
 #  else
