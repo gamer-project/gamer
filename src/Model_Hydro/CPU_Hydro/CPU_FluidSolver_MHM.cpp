@@ -225,7 +225,7 @@ void CPU_FluidSolver_MHM(
 
 //    loop over all patch groups
 //    --> CPU/GPU solver: use different (OpenMP threads) / (CUDA thread blocks)
-//                        to work on different patch groups
+//        to work on different patch groups
 #     ifdef __CUDACC__
       const int P = blockIdx.x;
 #     else

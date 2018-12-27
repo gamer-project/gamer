@@ -33,14 +33,17 @@ __global__ void CUPOT_PoissonSolver_MG( const real g_Rho_Array    [][ RHO_NXT*RH
 
 // Gravity solver prototypes
 #if   ( MODEL == HYDRO )
-__global__ void CUPOT_HydroGravitySolver(       real g_Flu_Array_New[][GRA_NIN][ PS1*PS1*PS1 ],
-                                          const real g_Pot_Array_New[][ GRA_NXT*GRA_NXT*GRA_NXT ],
-                                          const double g_Corner_Array[][3],
-                                          const real g_Pot_Array_USG[][ USG_NXT_G*USG_NXT_G*USG_NXT_G ],
-                                          const real g_Flu_Array_USG[][GRA_NIN-1][ PS1*PS1*PS1 ],
-                                                char g_DE_Array[][ PS1*PS1*PS1 ],
-                                          const real Gra_Const, const bool P5_Gradient, const OptGravityType_t GravityType,
-                                          const double TimeNew, const double TimeOld, const real dt, const real dh, const real MinEint );
+__global__
+void CUPOT_HydroGravitySolver(
+         real   Flu_Array_New[][GRA_NIN][ CUBE(PS1) ],
+   const real   Pot_Array_New[][ CUBE(GRA_NXT) ],
+   const double Corner_Array [][3],
+   const real   Pot_Array_USG[][ CUBE(USG_NXT_G) ],
+   const real   Flu_Array_USG[][GRA_NIN-1][ CUBE(PS1) ],
+         char   DE_Array     [][ CUBE(PS1) ],
+   const real dt, const real dh, const bool P5_Gradient,
+   const OptGravityType_t GravityType,
+   const double TimeNew, const double TimeOld, const real MinEint );
 #elif ( MODEL == MHD )
 #warning : WAIT MHD !!!
 
@@ -160,7 +163,7 @@ void CUAPI_Asyn_PoissonGravitySolver( const real h_Rho_Array    [][RHO_NXT][RHO_
 #  elif ( POT_SCHEME == MG )
    const dim3 Poi_Block_Dim( POT_BLOCK_SIZE_X, 1, 1 );
 #  endif
-   const dim3 Gra_Block_Dim( PATCH_SIZE, PATCH_SIZE, GRA_BLOCK_SIZE_Z );
+   const dim3 Gra_Block_Dim( GRA_BLOCK_SIZE );
    const int  NPatch      = NPatchGroup*8;
 #  if   ( POT_SCHEME == SOR )
    const real Poi_Const   = Poi_Coeff*dh*dh;
@@ -169,7 +172,6 @@ void CUAPI_Asyn_PoissonGravitySolver( const real h_Rho_Array    [][RHO_NXT][RHO_
 
 // model-dependent constants
 #  if   ( MODEL == HYDRO )
-   const real Gra_Const   = ( P5_Gradient ) ? -dt/(12.0*dh) : -dt/( 2.0*dh);
 
 #  elif ( MODEL == MHD )
 #  warning : WAIT MHD !!!
@@ -385,8 +387,8 @@ void CUAPI_Asyn_PoissonGravitySolver( const real h_Rho_Array    [][RHO_NXT][RHO_
                                     d_Pot_Array_USG_G + UsedPatch[s],
                                     d_Flu_Array_USG_G + UsedPatch[s],
                                     d_DE_Array_G      + UsedPatch[s],
-                                    Gra_Const, P5_Gradient, GravityType,
-                                    TimeNew, TimeOld, dt, dh, MinEint );
+                                    dt, dh, P5_Gradient, GravityType, TimeNew, TimeOld, MinEint );
+
 #        elif ( MODEL == MHD )
 #        warning : WAITH MHD !!!
 

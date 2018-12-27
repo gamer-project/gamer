@@ -117,14 +117,17 @@ __global__ void CUPOT_PoissonSolver_MG( const real g_Rho_Array    [][ RHO_NXT*RH
 
 // Gravity solver prototypes in different models
 #if   ( MODEL == HYDRO )
-__global__ void CUPOT_HydroGravitySolver(       real g_Flu_Array_New[][GRA_NIN][ PS1*PS1*PS1 ],
-                                          const real g_Pot_Array_New[][ GRA_NXT*GRA_NXT*GRA_NXT ],
-                                          const double g_Corner_Array[][3],
-                                          const real g_Pot_Array_USG[][ USG_NXT_G*USG_NXT_G*USG_NXT_G ],
-                                          const real g_Flu_Array_USG[][GRA_NIN-1][ PS1*PS1*PS1 ],
-                                                char g_DE_Array[][ PS1*PS1*PS1 ],
-                                          const real Gra_Const, const bool P5_Gradient, const OptGravityType_t GravityType,
-                                          const double TimeNew, const double TimeOld, const real dt, const real dh, const real MinEint );
+__global__
+void CUPOT_HydroGravitySolver(
+         real   Flu_Array_New[][GRA_NIN][ CUBE(PS1) ],
+   const real   Pot_Array_New[][ CUBE(GRA_NXT) ],
+   const double Corner_Array [][3],
+   const real   Pot_Array_USG[][ CUBE(USG_NXT_G) ],
+   const real   Flu_Array_USG[][GRA_NIN-1][ CUBE(PS1) ],
+         char   DE_Array     [][ CUBE(PS1) ],
+   const real dt, const real dh, const bool P5_Gradient,
+   const OptGravityType_t GravityType,
+   const double TimeNew, const double TimeOld, const real MinEint );
 
 #elif ( MODEL == MHD )
 #warning :: WAIT MHD !!!

@@ -192,7 +192,7 @@ struct SymConst_t
    int    USG_NxtG;
 #  endif
 
-   int    Gra_BlockSize_z;
+   int    Gra_BlockSize;
    int    ExtPotNAuxMax;
    int    ExtAccNAuxMax;
 

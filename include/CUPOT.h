@@ -163,7 +163,7 @@
 
 
 // blockDim.z for the GPU Gravity solver
-#define GRA_BLOCK_SIZE_Z            4
+#define GRA_BLOCK_SIZE              256
 
 
 // dt solver for gravity

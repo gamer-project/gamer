@@ -69,7 +69,7 @@ Procedure for outputting new variables:
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2306)
+// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2307)
 // Description :  Output all simulation data in the HDF5 format, which can be used as a restart file
 //                or loaded by YT
 //
@@ -163,6 +163,7 @@ Procedure for outputting new variables:
 //                2304 : 2018/12/10 --> Remove EP_Coeff that no longer exists
 //                2305 : 2018/12/15 --> Remove variables related to the WAF scheme
 //                2306 : 2018/12/25 --> Replace DT_GRA_BLOCK_SIZE_Z by DT_GRA_BLOCK_SIZE
+//                2307 : 2018/12/27 --> Replace GRA_BLOCK_SIZE_Z by GRA_BLOCK_SIZE
 //-------------------------------------------------------------------------------------------------------
 void Output_DumpData_Total_HDF5( const char *FileName )
 {
@@ -1227,7 +1228,7 @@ void FillIn_KeyInfo( KeyInfo_t &KeyInfo )
 
    const time_t CalTime   = time( NULL );    // calendar time
 
-   KeyInfo.FormatVersion  = 2306;
+   KeyInfo.FormatVersion  = 2307;
    KeyInfo.Model          = MODEL;
    KeyInfo.NLevel         = NLEVEL;
    KeyInfo.NCompFluid     = NCOMP_FLUID;
@@ -1539,7 +1540,7 @@ void FillIn_SymConst( SymConst_t &SymConst )
    SymConst.USG_NxtG             = USG_NXT_G;
 #  endif
 
-   SymConst.Gra_BlockSize_z      = GRA_BLOCK_SIZE_Z;
+   SymConst.Gra_BlockSize        = GRA_BLOCK_SIZE;
    SymConst.ExtPotNAuxMax        = EXT_POT_NAUX_MAX;
    SymConst.ExtAccNAuxMax        = EXT_ACC_NAUX_MAX;
 
@@ -2231,7 +2232,7 @@ void GetCompound_SymConst( hid_t &H5_TypeID )
    H5Tinsert( H5_TypeID, "USG_NxtF",             HOFFSET(SymConst_t,USG_NxtF            ), H5T_NATIVE_INT    );
    H5Tinsert( H5_TypeID, "USG_NxtG",             HOFFSET(SymConst_t,USG_NxtG            ), H5T_NATIVE_INT    );
 #  endif
-   H5Tinsert( H5_TypeID, "Gra_BlockSize_z",      HOFFSET(SymConst_t,Gra_BlockSize_z     ), H5T_NATIVE_INT    );
+   H5Tinsert( H5_TypeID, "Gra_BlockSize",        HOFFSET(SymConst_t,Gra_BlockSize       ), H5T_NATIVE_INT    );
    H5Tinsert( H5_TypeID, "ExtPotNAuxMax",        HOFFSET(SymConst_t,ExtPotNAuxMax       ), H5T_NATIVE_INT    );
    H5Tinsert( H5_TypeID, "ExtAccNAuxMax",        HOFFSET(SymConst_t,ExtAccNAuxMax       ), H5T_NATIVE_INT    );
 #  if   ( POT_SCHEME == SOR )

@@ -16,7 +16,7 @@ Procedure for outputting new variables:
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Output_DumpData_Total (FormatVersion = 2202)
+// Function    :  Output_DumpData_Total (FormatVersion = 2203)
 // Description :  Output all simulation data in the binary form, which can be used as a restart file
 //
 // Note        :  1. This output format is deprecated and is mainly used for debugging only
@@ -35,6 +35,7 @@ Procedure for outputting new variables:
 //                                          attributes as the order of their indices may be different
 //                2201 : 2018/12/12 --> always set EP_COEFF=NULL_REAL since this variable no longer exists
 //                2202 : 2018/12/15 --> set WAF-related variables to arbitrary values since they no longer exist
+//                2203 : 2018/12/27 --> replace GRA_BLOCK_SIZE_Z by GRA_BLOCK_SIZE
 //-------------------------------------------------------------------------------------------------------
 void Output_DumpData_Total( const char *FileName )
 {
@@ -173,7 +174,7 @@ void Output_DumpData_Total( const char *FileName )
 
 //    a. output the information of data format
 //    =================================================================================================
-      const long FormatVersion = 2202;
+      const long FormatVersion = 2203;
       const long CheckCode     = 123456789;
 
       fseek( File, HeaderOffset_Format, SEEK_SET );
@@ -476,10 +477,10 @@ void Output_DumpData_Total( const char *FileName )
       const int   pot_block_size_z       = NULL_INT;
 #     endif
 
-#     ifdef GRA_BLOCK_SIZE_Z
-      const int   gra_block_size_z       = GRA_BLOCK_SIZE_Z;
+#     ifdef GRA_BLOCK_SIZE
+      const int   gra_block_size         = GRA_BLOCK_SIZE;
 #     else
-      const int   gra_block_size_z       = NULL_INT;
+      const int   gra_block_size         = NULL_INT;
 #     endif
 
 #     ifdef PARTICLE
@@ -508,7 +509,7 @@ void Output_DumpData_Total( const char *FileName )
       fwrite( &use_psolver_10to14,        sizeof(bool),                    1,             File );
       fwrite( &pot_block_size_x,          sizeof(int),                     1,             File );
       fwrite( &pot_block_size_z,          sizeof(int),                     1,             File );
-      fwrite( &gra_block_size_z,          sizeof(int),                     1,             File );
+      fwrite( &gra_block_size,            sizeof(int),                     1,             File );
       fwrite( &par_natt_stored,           sizeof(int),                     1,             File );
       fwrite( &par_natt_user,             sizeof(int),                     1,             File );
 
