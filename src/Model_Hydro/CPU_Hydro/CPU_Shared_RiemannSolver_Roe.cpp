@@ -39,9 +39,6 @@ void Hydro_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In[]
                                const real Gamma, const real MinPres );
 #endif
 real Hydro_CheckMinPres( const real InPres, const real MinPres );
-#ifdef CHECK_NEGATIVE_IN_FLUID
-bool Hydro_CheckNegative( const real Input );
-#endif
 
 #endif // #ifdef __CUDACC__ ... else ...
 

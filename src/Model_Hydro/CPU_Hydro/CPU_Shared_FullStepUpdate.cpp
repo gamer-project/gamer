@@ -20,13 +20,7 @@
 # include "CUFLU_Shared_DualEnergy.cu"
 #endif
 
-#else // #ifdef __CUDACC__
-
-#ifdef CHECK_NEGATIVE_IN_FLUID
-bool Hydro_CheckNegative( const real Input );
-#endif
-
-#endif // #ifdef __CUDACC__ ... else ...
+#endif // #ifdef __CUDACC__
 
 
 
