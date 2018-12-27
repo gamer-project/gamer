@@ -1,6 +1,16 @@
 #ifndef GPU
 
 #include "GAMER.h"
+#include "CUFLU.h"
+
+
+#if ( FLU_SCHEME == MHM  ||  FLU_SCHEME == MHM_RP  ||  FLU_SCHEME == CTU )
+extern real (*h_PriVar)      [NCOMP_TOTAL][ CUBE(FLU_NXT)     ];
+extern real (*h_Slope_PPM)[3][NCOMP_TOTAL][ CUBE(N_SLOPE_PPM) ];
+extern real (*h_FC_Var)   [6][NCOMP_TOTAL][ CUBE(N_FC_VAR)    ];
+extern real (*h_FC_Flux)  [3][NCOMP_TOTAL][ CUBE(N_FC_FLUX)   ];
+#endif
+
 
 
 
@@ -42,7 +52,17 @@ void Init_MemAllocate_Fluid( const int Flu_NPatchGroup, const int Pot_NPatchGrou
 #     ifdef DUAL_ENERGY
       h_DE_Array_F_Out [t] = new char [Flu_NPatchGroup][ CUBE(PS2) ];
 #     endif
-   }
+   } // for (int t=0; t<2; t++)
+
+
+#  if ( FLU_SCHEME == MHM  ||  FLU_SCHEME == MHM_RP  ||  FLU_SCHEME == CTU )
+   h_FC_Var    = new real [Flu_NPatchGroup][6][NCOMP_TOTAL][ CUBE(N_FC_VAR)    ];
+   h_FC_Flux   = new real [Flu_NPatchGroup][3][NCOMP_TOTAL][ CUBE(N_FC_FLUX)   ];
+   h_PriVar    = new real [Flu_NPatchGroup]   [NCOMP_TOTAL][ CUBE(FLU_NXT)     ];
+#  if ( LR_SCHEME == PPM )
+   h_Slope_PPM = new real [Flu_NPatchGroup][3][NCOMP_TOTAL][ CUBE(N_SLOPE_PPM) ];
+#  endif
+#  endif // FLU_SCHEME
 
 } // FUNCTION : Init_MemAllocate_Fluid
 

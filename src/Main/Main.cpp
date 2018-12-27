@@ -210,6 +210,12 @@ double (*h_Corner_Array_G[2])[3]                                  = { NULL, NULL
 #ifdef DUAL_ENERGY
 char (*h_DE_Array_G    [2])[PS1][PS1][PS1]                        = { NULL, NULL };
 #endif
+#if ( FLU_SCHEME == MHM  ||  FLU_SCHEME == MHM_RP  ||  FLU_SCHEME == CTU )
+real (*h_PriVar)      [NCOMP_TOTAL][ CUBE(FLU_NXT)     ]          = NULL;
+real (*h_Slope_PPM)[3][NCOMP_TOTAL][ CUBE(N_SLOPE_PPM) ]          = NULL;
+real (*h_FC_Var)   [6][NCOMP_TOTAL][ CUBE(N_FC_VAR)    ]          = NULL;
+real (*h_FC_Flux)  [3][NCOMP_TOTAL][ CUBE(N_FC_FLUX)   ]          = NULL;
+#endif // FLU_SCHEME
 
 // (3-3) unsplit gravity correction
 #ifdef UNSPLIT_GRAVITY

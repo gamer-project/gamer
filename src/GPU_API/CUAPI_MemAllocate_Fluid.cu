@@ -11,15 +11,15 @@ cudaStream_t *Stream;
 // *******************************************
 
 
-extern real (*d_Flu_Array_F_In )[FLU_NIN ][ FLU_NXT*FLU_NXT*FLU_NXT ];
-extern real (*d_Flu_Array_F_Out)[FLU_NOUT][ PS2*PS2*PS2 ];
-extern real (*d_Flux_Array)[9][NFLUX_TOTAL][ PS2*PS2 ];
+extern real (*d_Flu_Array_F_In )[FLU_NIN ][ CUBE(FLU_NXT) ];
+extern real (*d_Flu_Array_F_Out)[FLU_NOUT][ CUBE(PS2) ];
+extern real (*d_Flux_Array)[9][NFLUX_TOTAL][ SQR(PS2) ];
 #ifdef UNSPLIT_GRAVITY
-extern real (*d_Pot_Array_USG_F)[ USG_NXT_F*USG_NXT_F*USG_NXT_F ];
+extern real (*d_Pot_Array_USG_F)[ CUBE(USG_NXT_F) ];
 extern double (*d_Corner_Array_F)[3];
 #endif
 #ifdef DUAL_ENERGY
-extern char (*d_DE_Array_F_Out)[ PS2*PS2*PS2 ];
+extern char (*d_DE_Array_F_Out)[ CUBE(PS2) ];
 #endif
 extern real *d_dt_Array_T;
 extern real (*d_Flu_Array_T)[NCOMP_FLUID][ CUBE(PS1) ];
@@ -27,10 +27,10 @@ extern real (*d_Flu_Array_T)[NCOMP_FLUID][ CUBE(PS1) ];
 // global memory arrays in different models
 #if ( MODEL == HYDRO )
 #if ( FLU_SCHEME == MHM  ||  FLU_SCHEME == MHM_RP  ||  FLU_SCHEME == CTU )
-extern real (*d_PriVar)      [NCOMP_TOTAL][ FLU_NXT*FLU_NXT*FLU_NXT ];
-extern real (*d_Slope_PPM)[3][NCOMP_TOTAL][ N_SLOPE_PPM*N_SLOPE_PPM*N_SLOPE_PPM ];
-extern real (*d_FC_Var)   [6][NCOMP_TOTAL][ N_FC_VAR*N_FC_VAR*N_FC_VAR ];
-extern real (*d_FC_Flux)  [3][NCOMP_TOTAL][ N_FC_FLUX*N_FC_FLUX*N_FC_FLUX ];
+extern real (*d_PriVar)      [NCOMP_TOTAL][ CUBE(FLU_NXT)     ];
+extern real (*d_Slope_PPM)[3][NCOMP_TOTAL][ CUBE(N_SLOPE_PPM) ];
+extern real (*d_FC_Var)   [6][NCOMP_TOTAL][ CUBE(N_FC_VAR)    ];
+extern real (*d_FC_Flux)  [3][NCOMP_TOTAL][ CUBE(N_FC_FLUX)   ];
 #endif // #if ( FLU_SCHEME == MHM  ||  FLU_SCHEME == MHM_RP  ||  FLU_SCHEME == CTU )
 
 #elif ( MODEL == MHD )
@@ -150,26 +150,26 @@ void CUAPI_MemAllocate_Fluid( const int Flu_NPG, const int Pot_NPG, const int GP
    CUDA_CHECK_ERROR(  cudaMalloc( (void**) &d_Corner_Array_F,        Corner_MemSize          )  );
 #  endif
 
-#  ifdef DUAL_ENERGY
-   CUDA_CHECK_ERROR(  cudaMalloc( (void**) &d_DE_Array_F_Out,        DE_MemSize_F_Out        )  );
-#  endif
-
    CUDA_CHECK_ERROR(  cudaMalloc( (void**) &d_dt_Array_T,            dt_MemSize_T            )  );
    CUDA_CHECK_ERROR(  cudaMalloc( (void**) &d_Flu_Array_T,           Flu_MemSize_T           )  );
 
 
 // allocate the device memory (in different models)
 #  if   ( MODEL == HYDRO )
-#  if ( FLU_SCHEME == MHM  ||  FLU_SCHEME == MHM_RP  ||  FLU_SCHEME == CTU )
-   CUDA_CHECK_ERROR(  cudaMalloc( (void**) &d_PriVar,    PriVar_MemSize )  );
-
-#  if ( LR_SCHEME == PPM )
-   CUDA_CHECK_ERROR(  cudaMalloc( (void**) &d_Slope_PPM, Slope_PPM_MemSize )  );
+#  ifdef DUAL_ENERGY
+   CUDA_CHECK_ERROR(  cudaMalloc( (void**) &d_DE_Array_F_Out,        DE_MemSize_F_Out        )  );
 #  endif
 
-   CUDA_CHECK_ERROR(  cudaMalloc( (void**) &d_FC_Var,    FC_Var_MemSize )  );
+#  if ( FLU_SCHEME == MHM  ||  FLU_SCHEME == MHM_RP  ||  FLU_SCHEME == CTU )
+   CUDA_CHECK_ERROR(  cudaMalloc( (void**) &d_FC_Var,                FC_Var_MemSize          )  );
 
-   CUDA_CHECK_ERROR(  cudaMalloc( (void**) &d_FC_Flux,   FC_Flux_MemSize )  );
+   CUDA_CHECK_ERROR(  cudaMalloc( (void**) &d_FC_Flux,               FC_Flux_MemSize         )  );
+
+   CUDA_CHECK_ERROR(  cudaMalloc( (void**) &d_PriVar,                PriVar_MemSize          )  );
+
+#  if ( LR_SCHEME == PPM )
+   CUDA_CHECK_ERROR(  cudaMalloc( (void**) &d_Slope_PPM,             Slope_PPM_MemSize       )  );
+#  endif
 #  endif // #if ( FLU_SCHEME == MHM  ||  FLU_SCHEME == MHM_RP  ||  FLU_SCHEME == CTU )
 
 #  elif ( MODEL == MHD )

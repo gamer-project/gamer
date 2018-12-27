@@ -64,6 +64,10 @@ static void Hydro_TGradient_Correction(       real FC_Var [][NCOMP_TOTAL][ CUBE(
 //                Flux_Array         : Array to store the output fluxes
 //                Corner_Array       : Array storing the physical corner coordinates of each patch group (for UNSPLIT_GRAVITY)
 //                Pot_Array_USG      : Array storing the input potential for UNSPLIT_GRAVITY
+//                PriVar             : Array to store the primitive variables
+//                Slope_PPM          : Array to store the slope for the PPM reconstruction
+//                FC_Var             : Array to store the half-step variables
+//                FC_Flux            : Array to store the face-centered fluxes
 //                NPatchGroup        : Number of patch groups to be evaluated
 //                dt                 : Time interval to advance solution
 //                dh                 : Cell size
@@ -122,6 +126,10 @@ void CPU_FluidSolver_CTU(
          real   Flux_Array   [][9][NCOMP_TOTAL][ SQR(PS2) ],
    const double Corner_Array [][3],
    const real   Pot_Array_USG[][ CUBE(USG_NXT_F) ],
+         real   PriVar       [][NCOMP_TOTAL][ CUBE(FLU_NXT) ],
+         real   Slope_PPM    [][3][NCOMP_TOTAL][ CUBE(N_SLOPE_PPM) ],
+         real   FC_Var       [][6][NCOMP_TOTAL][ CUBE(N_FC_VAR) ],
+         real   FC_Flux      [][3][NCOMP_TOTAL][ CUBE(N_FC_FLUX) ],
    const int NPatchGroup, const real dt, const real dh, const real Gamma,
    const bool StoreFlux, const LR_Limiter_t LR_Limiter, const real MinMod_Coeff,
    const double Time, const OptGravityType_t GravityType,
@@ -146,30 +154,21 @@ void CPU_FluidSolver_CTU(
 #  pragma omp parallel
 #  endif
    {
-//    FC: Face-Centered variables/fluxes
-//    --> CPU solver: allocate data
-//        GPU solver: link to the input global memory array
+//    point to the arrays associated with different OpenMP threads (for CPU) or CUDA thread blocks (for GPU)
 #     ifdef __CUDACC__
-      real (*FC_Var_1PG   )[NCOMP_TOTAL][ CUBE(N_FC_VAR)    ] = FC_Var   [blockIdx.x];
-      real (*FC_Flux_1PG  )[NCOMP_TOTAL][ CUBE(N_FC_FLUX)   ] = FC_Flux  [blockIdx.x];
-      real (*PriVar_1PG   )             [ CUBE(FLU_NXT)     ] = PriVar   [blockIdx.x];
-#     if ( LR_SCHEME == PPM )
-      real (*Slope_PPM_1PG)[NCOMP_TOTAL][ CUBE(N_SLOPE_PPM) ] = Slope_PPM[blockIdx.x];
+      const int array_idx = blockIdx.x;
 #     else
-      real (*Slope_PPM_1PG)[NCOMP_TOTAL][ CUBE(N_SLOPE_PPM) ] = NULL;
-#     endif
-
-#     else // #ifdef __CUDACC__
-
-      real (*FC_Var_1PG   )[NCOMP_TOTAL][ CUBE(N_FC_VAR)    ] = new real [6][NCOMP_TOTAL][ CUBE(N_FC_VAR)    ];
-      real (*FC_Flux_1PG  )[NCOMP_TOTAL][ CUBE(N_FC_FLUX)   ] = new real [3][NCOMP_TOTAL][ CUBE(N_FC_FLUX)   ];   // also used by "Half_Flux"
-      real (*PriVar_1PG   )             [ CUBE(FLU_NXT)     ] = new real    [NCOMP_TOTAL][ CUBE(FLU_NXT)     ];   // also used by "Half_Var"
-#     if ( LR_SCHEME == PPM )
-      real (*Slope_PPM_1PG)[NCOMP_TOTAL][ CUBE(N_SLOPE_PPM) ] = new real [3][NCOMP_TOTAL][ CUBE(N_SLOPE_PPM) ];
+#     ifdef OPENMP
+      const int array_idx = omp_get_thread_num();
 #     else
-      real (*Slope_PPM_1PG)[NCOMP_TOTAL][ CUBE(N_SLOPE_PPM) ] = NULL;
+      const int array_idx = 0;
 #     endif
 #     endif // #ifdef __CUDACC__ ... else ...
+
+      real (*const FC_Var_1PG   )[NCOMP_TOTAL][ CUBE(N_FC_VAR)    ] = FC_Var   [array_idx];
+      real (*const FC_Flux_1PG  )[NCOMP_TOTAL][ CUBE(N_FC_FLUX)   ] = FC_Flux  [array_idx];
+      real (*const PriVar_1PG   )             [ CUBE(FLU_NXT)     ] = PriVar   [array_idx];
+      real (*const Slope_PPM_1PG)[NCOMP_TOTAL][ CUBE(N_SLOPE_PPM) ] = Slope_PPM[array_idx];
 
 
 //    loop over all patch groups
@@ -219,14 +218,6 @@ void CPU_FluidSolver_CTU(
                                NormPassive, NNorm, c_NormIdx );
 
       } // loop over all patch groups
-
-#     ifndef __CUDACC__
-      delete [] FC_Var_1PG;
-      delete [] FC_Flux_1PG;
-      delete [] PriVar_1PG;
-      delete [] Slope_PPM_1PG;
-#     endif
-
    } // OpenMP parallel region
 
 } // FUNCTION : CPU_FluidSolver_CTU
