@@ -83,32 +83,32 @@ void CUAPI_DiagnoseDevice()
 
          fprintf( Note, "\n" );
          fprintf( Note, "GPU Info :\n" );
-         fprintf( Note, "Number of GPUs                    : %d\n"    , DeviceCount );
-         fprintf( Note, "GPU ID                            : %d\n"    , GetDeviceID );
-         fprintf( Note, "GPU Name                          : %s\n"    , DeviceProp.name );
-         fprintf( Note, "CUDA Driver Version               : %d.%d\n" , DriverVersion/1000, DriverVersion%100 );
-         fprintf( Note, "CUDA Runtime Version              : %d.%d\n" , RuntimeVersion/1000, RuntimeVersion%100 );
-         fprintf( Note, "CUDA Major Revision Number        : %d\n"    , DeviceProp.major );
-         fprintf( Note, "CUDA Minor Revision Number        : %d\n"    , DeviceProp.minor );
-         fprintf( Note, "Clock Rate                        : %f GHz\n", DeviceProp.clockRate/1.0e6 );
-         fprintf( Note, "Global Memory Size                : %d MB\n" , (long)DeviceProp.totalGlobalMem/1024/1024 );
-         fprintf( Note, "Constant Memory Size              : %d KB\n" , (long)DeviceProp.totalConstMem/1024 );
-         fprintf( Note, "Shared Memory Size per Block      : %d KB\n" , (long)DeviceProp.sharedMemPerBlock/1024 );
-         fprintf( Note, "Number of Registers per Block     : %d\n"    , DeviceProp.regsPerBlock );
-         fprintf( Note, "Warp Size                         : %d\n"    , DeviceProp.warpSize );
-         fprintf( Note, "Number of Multiprocessors:        : %d\n"    , DeviceProp.multiProcessorCount );
-         fprintf( Note, "Number of Cores per Multiprocessor: %d\n"    , NCorePerMP );
-         fprintf( Note, "Total Number of Cores:            : %d\n"    , DeviceProp.multiProcessorCount * NCorePerMP );
-         fprintf( Note, "Max Number of Threads per Block   : %d\n"    , DeviceProp.maxThreadsPerBlock );
-         fprintf( Note, "Max Size of the Block X-Dimension : %d\n"    , DeviceProp.maxThreadsDim[0] );
-         fprintf( Note, "Max Size of the Grid X-Dimension  : %d\n"    , DeviceProp.maxGridSize[0] );
-         fprintf( Note, "Concurrent Copy and Execution     : %s\n"    , DeviceProp.asyncEngineCount>0  ? "Yes" : "No" );
-         fprintf( Note, "Concurrent Up/Downstream Copies   : %s\n"    , DeviceProp.asyncEngineCount==2 ? "Yes" : "No" );
+         fprintf( Note, "Number of GPUs                    : %d\n"     , DeviceCount );
+         fprintf( Note, "GPU ID                            : %d\n"     , GetDeviceID );
+         fprintf( Note, "GPU Name                          : %s\n"     , DeviceProp.name );
+         fprintf( Note, "CUDA Driver Version               : %d.%d\n"  , DriverVersion/1000, DriverVersion%100 );
+         fprintf( Note, "CUDA Runtime Version              : %d.%d\n"  , RuntimeVersion/1000, RuntimeVersion%100 );
+         fprintf( Note, "CUDA Major Revision Number        : %d\n"     , DeviceProp.major );
+         fprintf( Note, "CUDA Minor Revision Number        : %d\n"     , DeviceProp.minor );
+         fprintf( Note, "Clock Rate                        : %f GHz\n" , DeviceProp.clockRate/1.0e6 );
+         fprintf( Note, "Global Memory Size                : %ld MB\n" , (long)DeviceProp.totalGlobalMem/1024/1024 );
+         fprintf( Note, "Constant Memory Size              : %ld KB\n" , (long)DeviceProp.totalConstMem/1024 );
+         fprintf( Note, "Shared Memory Size per Block      : %ld KB\n" , (long)DeviceProp.sharedMemPerBlock/1024 );
+         fprintf( Note, "Number of Registers per Block     : %d\n"     , DeviceProp.regsPerBlock );
+         fprintf( Note, "Warp Size                         : %d\n"     , DeviceProp.warpSize );
+         fprintf( Note, "Number of Multiprocessors:        : %d\n"     , DeviceProp.multiProcessorCount );
+         fprintf( Note, "Number of Cores per Multiprocessor: %d\n"     , NCorePerMP );
+         fprintf( Note, "Total Number of Cores:            : %d\n"     , DeviceProp.multiProcessorCount * NCorePerMP );
+         fprintf( Note, "Max Number of Threads per Block   : %d\n"     , DeviceProp.maxThreadsPerBlock );
+         fprintf( Note, "Max Size of the Block X-Dimension : %d\n"     , DeviceProp.maxThreadsDim[0] );
+         fprintf( Note, "Max Size of the Grid X-Dimension  : %d\n"     , DeviceProp.maxGridSize[0] );
+         fprintf( Note, "Concurrent Copy and Execution     : %s\n"     , DeviceProp.asyncEngineCount>0  ? "Yes" : "No" );
+         fprintf( Note, "Concurrent Up/Downstream Copies   : %s\n"     , DeviceProp.asyncEngineCount==2 ? "Yes" : "No" );
 #        if ( CUDART_VERSION >= 3000 )
-         fprintf( Note, "Concurrent Kernel Execution       : %s\n"    , DeviceProp.concurrentKernels ? "Yes" : "No" );
+         fprintf( Note, "Concurrent Kernel Execution       : %s\n"     , DeviceProp.concurrentKernels ? "Yes" : "No" );
 #        endif
 #        if ( CUDART_VERSION >= 3010 )
-         fprintf( Note, "GPU has ECC Support Enabled       : %s\n"    , DeviceProp.ECCEnabled ? "Yes" : "No" );
+         fprintf( Note, "GPU has ECC Support Enabled       : %s\n"     , DeviceProp.ECCEnabled ? "Yes" : "No" );
 #        endif
 
          fclose( Note );
