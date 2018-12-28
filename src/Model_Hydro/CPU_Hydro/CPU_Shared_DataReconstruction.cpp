@@ -536,6 +536,10 @@ void Hydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
       } // for (int d=0; d<3; d++)
    } // CGPU_LOOP( idx_slope, CUBE(NSlope) )
 
+#  ifdef __CUDACC__
+   __syncthreads();
+#  endif
+
 
 // data reconstruction
    const int NOut2 = SQR(NOut);
@@ -1190,7 +1194,7 @@ void Hydro_HancockPredict( real fc[][NCOMP_TOTAL], const real dt, const real dh,
 
 
 
-#endif // #if ( !defined GPU  &&  MODEL == HYDRO  &&  (FLU_SCHEME == MHM || MHM_RP || CTU) )
+#endif // #if (  MODEL == HYDRO  &&  ( FLU_SCHEME == MHM || FLU_SCHEME == MHM_RP || FLU_SCHEME == CTU )  )
 
 
 
