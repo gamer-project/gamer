@@ -52,14 +52,15 @@ int CUPOT_SetConstMem_HydroGravitySolver( double h_ExtAcc_AuxArray[] )
 //                   --> This consistency breaks only for cells with the dual-energy status labelled
 //                       as DE_UPDATED_BY_ETOT_GRA
 //                   --> We restore this consistency in Gra_Close()
+//                2. Arrays with a prefix "g_" are stored in the global memory of GPU
 //
-// Parameter   :  Flu_Array_New     : Array to store the input and output fluid variables
-//                Pot_Array_New     : Array storing the input potential (at the current step)
-//                                    --> _New: to be distinguishable from Pot_Array_USG[], which is defined at the previous step
-//                Corner_Array      : Array storing the physical corner coordinates of each patch
-//                Pot_Array_USG     : Array storing the input potential          for UNSPLIT_GRAVITY (at the previous step)
-//                Flu_Array_USG     : Array storing the input density + momentum for UNSPLIT_GRAVITY (at the previous step)
-//                DE_Array          : Array storing the dual-energy status (for both input and output)
+// Parameter   :  g_Flu_Array_New   : Array to store the input and output fluid variables
+//                g_Pot_Array_New   : Array storing the input potential (at the current step)
+//                                    --> _New: to be distinguishable from g_Pot_Array_USG[], which is defined at the previous step
+//                g_Corner_Array    : Array storing the physical corner coordinates of each patch
+//                g_Pot_Array_USG   : Array storing the input potential          for UNSPLIT_GRAVITY (at the previous step)
+//                g_Flu_Array_USG   : Array storing the input density + momentum for UNSPLIT_GRAVITY (at the previous step)
+//                g_DE_Array        : Array storing the dual-energy status (for both input and output)
 //                NPatchGroup       : Number of input patch groups (for CPU only)
 //                dt                : Time interval to advance solution
 //                dh                : Cell size
@@ -74,28 +75,28 @@ int CUPOT_SetConstMem_HydroGravitySolver( double h_ExtAcc_AuxArray[] )
 //                TimeOld           : Physical time at the previous step (for the external gravity solver in UNSPLIT_GRAVITY)
 //                MinEint           : Minimum allowed internal energy (== MIN_PRES / (GAMMA-1))
 //
-// Return      :  Flu_Array_New, DE_Array
+// Return      :  g_Flu_Array_New, g_DE_Array
 //-----------------------------------------------------------------------------------------
 #ifdef __CUDACC__
 __global__
 void CUPOT_HydroGravitySolver(
-         real   Flu_Array_New[][GRA_NIN][ CUBE(PS1) ],
-   const real   Pot_Array_New[][ CUBE(GRA_NXT) ],
-   const double Corner_Array [][3],
-   const real   Pot_Array_USG[][ CUBE(USG_NXT_G) ],
-   const real   Flu_Array_USG[][GRA_NIN-1][ CUBE(PS1) ],
-         char   DE_Array     [][ CUBE(PS1) ],
+         real   g_Flu_Array_New[][GRA_NIN][ CUBE(PS1) ],
+   const real   g_Pot_Array_New[][ CUBE(GRA_NXT) ],
+   const double g_Corner_Array [][3],
+   const real   g_Pot_Array_USG[][ CUBE(USG_NXT_G) ],
+   const real   g_Flu_Array_USG[][GRA_NIN-1][ CUBE(PS1) ],
+         char   g_DE_Array     [][ CUBE(PS1) ],
    const real dt, const real dh, const bool P5_Gradient,
    const OptGravityType_t GravityType,
    const double TimeNew, const double TimeOld, const real MinEint )
 #else
 void CPU_HydroGravitySolver(
-         real   Flu_Array_New[][GRA_NIN][ CUBE(PS1) ],
-   const real   Pot_Array_New[][ CUBE(GRA_NXT) ],
-   const double Corner_Array [][3],
-   const real   Pot_Array_USG[][ CUBE(USG_NXT_G) ],
-   const real   Flu_Array_USG[][GRA_NIN-1][ CUBE(PS1) ],
-         char   DE_Array     [][ CUBE(PS1) ],
+         real   g_Flu_Array_New[][GRA_NIN][ CUBE(PS1) ],
+   const real   g_Pot_Array_New[][ CUBE(GRA_NXT) ],
+   const double g_Corner_Array [][3],
+   const real   g_Pot_Array_USG[][ CUBE(USG_NXT_G) ],
+   const real   g_Flu_Array_USG[][GRA_NIN-1][ CUBE(PS1) ],
+         char   g_DE_Array     [][ CUBE(PS1) ],
    const int NPatchGroup,
    const real dt, const real dh, const bool P5_Gradient,
    const OptGravityType_t GravityType, const double c_ExtAcc_AuxArray[],
@@ -111,8 +112,8 @@ void CPU_HydroGravitySolver(
 
 #  ifdef UNSPLIT_GRAVITY
    if ( GravityType == GRAVITY_SELF  ||  GravityType == GRAVITY_BOTH )
-   if ( Pot_Array_USG == NULL  ||  Flu_Array_USG == NULL )
-      printf( "ERROR : Pot_Array_USG == NULL  ||  Flu_Array_USG == NULL !!\n" );
+   if ( g_Pot_Array_USG == NULL  ||  g_Flu_Array_USG == NULL )
+      printf( "ERROR : g_Pot_Array_USG == NULL  ||  g_Flu_Array_USG == NULL !!\n" );
 
    if ( GravityType == GRAVITY_EXTERNAL  ||  GravityType == GRAVITY_BOTH )
    if ( TimeOld >= TimeNew  ||  TimeOld < 0.0 )
@@ -120,8 +121,8 @@ void CPU_HydroGravitySolver(
 #  endif
 
 #  ifdef DUAL_ENERGY
-   if ( DE_Array == NULL )
-      printf( "ERROR : DE_Array == NULL !!\n" );
+   if ( g_DE_Array == NULL )
+      printf( "ERROR : g_DE_Array == NULL !!\n" );
 #  endif
 #  endif // #ifdef GAMER_DEBUG
 
@@ -144,11 +145,11 @@ void CPU_HydroGravitySolver(
    if ( GravityType == GRAVITY_SELF  ||  GravityType == GRAVITY_BOTH )
    {
       for (int t=threadIdx.x; t<CUBE(GRA_NXT); t+=GRA_BLOCK_SIZE)
-         s_pot_new[t] = Pot_Array_New[blockIdx.x][t];
+         s_pot_new[t] = g_Pot_Array_New[blockIdx.x][t];
 
 #     ifdef UNSPLIT_GRAVITY
       for (int t=threadIdx.x; t<CUBE(USG_NXT_G); t+=GRA_BLOCK_SIZE)
-         s_pot_old[t] = Pot_Array_USG[blockIdx.x][t];
+         s_pot_old[t] = g_Pot_Array_USG[blockIdx.x][t];
 #     endif
    }
 
@@ -173,9 +174,9 @@ void CPU_HydroGravitySolver(
       const real *const pot_old = s_pot_old;
 #     endif
 #     else // #ifdef __CUDACC__
-      const real *const pot_new = Pot_Array_New[P];
+      const real *const pot_new = g_Pot_Array_New[P];
 #     ifdef UNSPLIT_GRAVITY
-      const real *const pot_old = Pot_Array_USG[P];
+      const real *const pot_old = g_Pot_Array_USG[P];
 #     endif
 #     endif // #ifdef __CUDACC__ ... else ...
 
@@ -211,9 +212,9 @@ void CPU_HydroGravitySolver(
          {
             double x, y, z;
 
-            x = Corner_Array[P][0] + (double)(i_g0*dh);
-            y = Corner_Array[P][1] + (double)(j_g0*dh);
-            z = Corner_Array[P][2] + (double)(k_g0*dh);
+            x = g_Corner_Array[P][0] + (double)(i_g0*dh);
+            y = g_Corner_Array[P][1] + (double)(j_g0*dh);
+            z = g_Corner_Array[P][2] + (double)(k_g0*dh);
 
             ExternalAcc( acc_new, x, y, z, TimeNew, c_ExtAcc_AuxArray );
             for (int d=0; d<3; d++)    acc_new[d] *= dt;
@@ -293,18 +294,18 @@ void CPU_HydroGravitySolver(
 //       advance fluid
 #        ifdef UNSPLIT_GRAVITY
 
-         rho_new = Flu_Array_New[P][DENS][idx_g0];
-         rho_old = Flu_Array_USG[P][DENS][idx_g0];
-         px_new  = Flu_Array_New[P][MOMX][idx_g0];
-         px_old  = Flu_Array_USG[P][MOMX][idx_g0];
-         py_new  = Flu_Array_New[P][MOMY][idx_g0];
-         py_old  = Flu_Array_USG[P][MOMY][idx_g0];
-         pz_new  = Flu_Array_New[P][MOMZ][idx_g0];
-         pz_old  = Flu_Array_USG[P][MOMZ][idx_g0];
+         rho_new = g_Flu_Array_New[P][DENS][idx_g0];
+         rho_old = g_Flu_Array_USG[P][DENS][idx_g0];
+         px_new  = g_Flu_Array_New[P][MOMX][idx_g0];
+         px_old  = g_Flu_Array_USG[P][MOMX][idx_g0];
+         py_new  = g_Flu_Array_New[P][MOMY][idx_g0];
+         py_old  = g_Flu_Array_USG[P][MOMY][idx_g0];
+         pz_new  = g_Flu_Array_New[P][MOMZ][idx_g0];
+         pz_old  = g_Flu_Array_USG[P][MOMZ][idx_g0];
 
 //       backup the original internal energy so that we can restore it later if necessary
          _rho2   = (real)0.5/rho_new;
-         Etot_in = Flu_Array_New[P][ENGY][idx_g0];
+         Etot_in = g_Flu_Array_New[P][ENGY][idx_g0];
          Eint_in = Etot_in - _rho2*( SQR(px_new) + SQR(py_new) + SQR(pz_new) );
 
 //       update the momentum density
@@ -312,9 +313,9 @@ void CPU_HydroGravitySolver(
          py_new += (real)0.5*( rho_old*acc_old[1] + rho_new*acc_new[1] );
          pz_new += (real)0.5*( rho_old*acc_old[2] + rho_new*acc_new[2] );
 
-         Flu_Array_New[P][MOMX][idx_g0] = px_new;
-         Flu_Array_New[P][MOMY][idx_g0] = py_new;
-         Flu_Array_New[P][MOMZ][idx_g0] = pz_new;
+         g_Flu_Array_New[P][MOMX][idx_g0] = px_new;
+         g_Flu_Array_New[P][MOMY][idx_g0] = py_new;
+         g_Flu_Array_New[P][MOMZ][idx_g0] = pz_new;
 
 //       record the updated kinematic energy density
          Ek_out = _rho2*( SQR(px_new) + SQR(py_new) + SQR(pz_new) );
@@ -328,7 +329,7 @@ void CPU_HydroGravitySolver(
 //               (b) DE_UPDATED_BY_MIN_PRES --> Eint has been set to the minimum threshold
 //       --> currently for (b) we still update the total energy density
 
-         if ( DE_Array[P][idx_g0] == DE_UPDATED_BY_DUAL )
+         if ( g_DE_Array[P][idx_g0] == DE_UPDATED_BY_DUAL )
          {
 //          fix the internal energy and the dual-energy variable
             Etot_out = Eint_in + Ek_out;
@@ -343,7 +344,7 @@ void CPU_HydroGravitySolver(
 //          check the minimum internal energy
 //          (a) if the updated internal energy is greater than the threshold, set the dual-energy status == DE_UPDATED_BY_ETOT_GRA
             if ( Etot_out - Ek_out >= MinEint )
-               DE_Array[P][idx_g0] = DE_UPDATED_BY_ETOT_GRA;
+               g_DE_Array[P][idx_g0] = DE_UPDATED_BY_ETOT_GRA;
 
 //          (b) otherwise restore the original internal energy and keep the original dual-energy status
             else
@@ -369,14 +370,14 @@ void CPU_HydroGravitySolver(
 
 #        else  // #ifdef UNSPLIT_GRAVITY
 
-         rho_new = Flu_Array_New[P][DENS][idx_g0];
-         px_new  = Flu_Array_New[P][MOMX][idx_g0];
-         py_new  = Flu_Array_New[P][MOMY][idx_g0];
-         pz_new  = Flu_Array_New[P][MOMZ][idx_g0];
+         rho_new = g_Flu_Array_New[P][DENS][idx_g0];
+         px_new  = g_Flu_Array_New[P][MOMX][idx_g0];
+         py_new  = g_Flu_Array_New[P][MOMY][idx_g0];
+         pz_new  = g_Flu_Array_New[P][MOMZ][idx_g0];
 
 //       backup the original internal energy so that we can restore it later if necessary
          _rho2   = (real)0.5/rho_new;
-         Etot_in = Flu_Array_New[P][ENGY][idx_g0];
+         Etot_in = g_Flu_Array_New[P][ENGY][idx_g0];
          Eint_in = Etot_in - _rho2*( SQR(px_new) + SQR(py_new) + SQR(pz_new) );
 
 //       update the momentum density
@@ -384,9 +385,9 @@ void CPU_HydroGravitySolver(
          py_new += rho_new*acc_new[1];
          pz_new += rho_new*acc_new[2];
 
-         Flu_Array_New[P][MOMX][idx_g0] = px_new;
-         Flu_Array_New[P][MOMY][idx_g0] = py_new;
-         Flu_Array_New[P][MOMZ][idx_g0] = pz_new;
+         g_Flu_Array_New[P][MOMX][idx_g0] = px_new;
+         g_Flu_Array_New[P][MOMY][idx_g0] = py_new;
+         g_Flu_Array_New[P][MOMZ][idx_g0] = pz_new;
 
 //       for the splitting method, we ensure that the internal energy is unchanged
          Ek_out   = _rho2*( SQR(px_new) + SQR(py_new) + SQR(pz_new) );
@@ -396,7 +397,7 @@ void CPU_HydroGravitySolver(
 
 
 //       store the updated total energy density to the output array
-         Flu_Array_New[P][ENGY][idx_g0] = Etot_out;
+         g_Flu_Array_New[P][ENGY][idx_g0] = Etot_out;
 
       } // CGPU_LOOP( idx_g0, CUBE(PS1) )
    } // for (int P=0; P<NPatchGroup*8; P++)

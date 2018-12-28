@@ -32,10 +32,10 @@
 // Note        :  1. This function is shared by MHM, MHM_RP, and CTU schemes
 //                2. Invoke dual-energy check if DualEnergySwitch is on
 //
-// Parameter   :  Input            : Array storing the input fluid data
-//                Output           : Array to store the updated fluid data
-//                DE_Status        : Array to store the dual-energy status
-//                Flux             : Array storing the input face-centered fluxes
+// Parameter   :  g_Input          : Array storing the input fluid data
+//                g_Output         : Array to store the updated fluid data
+//                g_DE_Status      : Array to store the dual-energy status
+//                g_Flux           : Array storing the input face-centered fluxes
 //                                   --> Accessed with the array stride N_FL_FLUX even thought its actually
 //                                       allocated size is N_FC_FLUX^3
 //                dt               : Time interval to advance solution
@@ -52,8 +52,8 @@
 //                                   --> Should be set to the global variable "PassiveNorm_VarIdx"
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE
-void Hydro_FullStepUpdate( const real Input[][ CUBE(FLU_NXT) ], real Output[][ CUBE(PS2) ], char DE_Status[],
-                           const real Flux[][NCOMP_TOTAL][ CUBE(N_FC_FLUX) ], const real dt, const real dh,
+void Hydro_FullStepUpdate( const real g_Input[][ CUBE(FLU_NXT) ], real g_Output[][ CUBE(PS2) ], char g_DE_Status[],
+                           const real g_Flux[][NCOMP_TOTAL][ CUBE(N_FC_FLUX) ], const real dt, const real dh,
                            const real Gamma_m1, const real _Gamma_m1, const real MinDens, const real MinPres,
                            const real DualEnergySwitch, const bool NormPassive, const int NNorm, const int NormIdx[] )
 {
@@ -81,10 +81,10 @@ void Hydro_FullStepUpdate( const real Input[][ CUBE(FLU_NXT) ], real Output[][ C
 //    1. calculate flux difference to update the fluid data
       for (int d=0; d<3; d++)
       for (int v=0; v<NCOMP_TOTAL; v++)
-         dFlux[d][v] = Flux[d][v][ idx_flux+didx_flux[d] ] - Flux[d][v][idx_flux];
+         dFlux[d][v] = g_Flux[d][v][ idx_flux+didx_flux[d] ] - g_Flux[d][v][idx_flux];
 
       for (int v=0; v<NCOMP_TOTAL; v++)
-         Output_1Cell[v] = Input[v][idx_in] - dt_dh*( dFlux[0][v] + dFlux[1][v] + dFlux[2][v] );
+         Output_1Cell[v] = g_Input[v][idx_in] - dt_dh*( dFlux[0][v] + dFlux[1][v] + dFlux[2][v] );
 
 
 //    we no longer ensure positive density and pressure here
@@ -120,13 +120,13 @@ void Hydro_FullStepUpdate( const real Input[][ CUBE(FLU_NXT) ], real Output[][ C
 //    Output_1Cell[DENS] = FMAX( Output_1Cell[DENS], MinDens );
 
       Hydro_DualEnergyFix( Output_1Cell[DENS], Output_1Cell[MOMX], Output_1Cell[MOMY], Output_1Cell[MOMZ],
-                           Output_1Cell[ENGY], Output_1Cell[ENPY], DE_Status[idx_out],
+                           Output_1Cell[ENGY], Output_1Cell[ENPY], g_DE_Status[idx_out],
                            Gamma_m1, _Gamma_m1, CheckMinPres_No, NULL_REAL, DualEnergySwitch );
 #     endif // #ifdef DUAL_ENERGY
 
 
 //    4. store results to the output array
-      for (int v=0; v<NCOMP_TOTAL; v++)   Output[v][idx_out] = Output_1Cell[v];
+      for (int v=0; v<NCOMP_TOTAL; v++)   g_Output[v][idx_out] = Output_1Cell[v];
 
 
 //    5. check the negative density and energy
