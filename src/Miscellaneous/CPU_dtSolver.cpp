@@ -11,12 +11,12 @@ extern double ExtAcc_AuxArray[EXT_ACC_NAUX_MAX];
 
 
 #if   ( MODEL == HYDRO )
-void CPU_dtSolver_HydroCFL( real dt_Array[], const real Flu_Array[][NCOMP_FLUID][ CUBE(PS1) ],
+void CPU_dtSolver_HydroCFL( real g_dt_Array[], const real g_Flu_Array[][NCOMP_FLUID][ CUBE(PS1) ],
                             const int NPG, const real dh, const real Safety, const real Gamma, const real MinPres );
 #ifdef GRAVITY
-void CPU_dtSolver_HydroGravity( real dt_Array[],
-                                const real Pot_Array[][ CUBE(GRA_NXT) ],
-                                const double Corner_Array[][3],
+void CPU_dtSolver_HydroGravity( real g_dt_Array[],
+                                const real g_Pot_Array[][ CUBE(GRA_NXT) ],
+                                const double g_Corner_Array[][3],
                                 const int NPatchGroup, const real dh, const real Safety, const bool P5_Gradient,
                                 const OptGravityType_t GravityType, const double c_ExtAcc_AuxArray[],
                                 const double ExtAcc_Time );

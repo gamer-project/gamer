@@ -26,23 +26,23 @@
 
 #else // #ifdef __CUDACC__
 
-void Hydro_DataReconstruction( const real ConVar   [][ CUBE(FLU_NXT) ],
-                                     real PriVar   [][ CUBE(FLU_NXT) ],
-                                     real FC_Var   [][NCOMP_TOTAL][ CUBE(N_FC_VAR) ],
-                                     real Slope_PPM[][NCOMP_TOTAL][ CUBE(N_SLOPE_PPM) ],
+void Hydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
+                                     real g_PriVar   [][ CUBE(FLU_NXT) ],
+                                     real g_FC_Var   [][NCOMP_TOTAL][ CUBE(N_FC_VAR) ],
+                                     real g_Slope_PPM[][NCOMP_TOTAL][ CUBE(N_SLOPE_PPM) ],
                                const bool Con2Pri, const int NIn, const int NGhost, const real Gamma,
                                const LR_Limiter_t LR_Limiter, const real MinMod_Coeff,
                                const real dt, const real dh, const real MinDens, const real MinPres,
                                const bool NormPassive, const int NNorm, const int NormIdx[],
                                const bool JeansMinPres, const real JeansMinPres_Coeff );
-void Hydro_ComputeFlux( const real FC_Var [][NCOMP_TOTAL][ CUBE(N_FC_VAR)],
-                              real FC_Flux[][NCOMP_TOTAL][ CUBE(N_FC_FLUX) ],
-                        const int Gap, const real Gamma, const bool CorrHalfVel, const real Pot_USG[],
-                        const double Corner[], const real dt, const real dh, const double Time,
+void Hydro_ComputeFlux( const real g_FC_Var [][NCOMP_TOTAL][ CUBE(N_FC_VAR) ],
+                              real g_FC_Flux[][NCOMP_TOTAL][ CUBE(N_FC_FLUX) ],
+                        const int Gap, const real Gamma, const bool CorrHalfVel, const real g_Pot_USG[],
+                        const double g_Corner[], const real dt, const real dh, const double Time,
                         const OptGravityType_t GravityType, const double ExtAcc_AuxArray[], const real MinPres,
-                        const bool DumpIntFlux, real IntFlux[][NCOMP_TOTAL][ SQR(PS2) ] );
-void Hydro_FullStepUpdate( const real Input[][ CUBE(FLU_NXT) ], real Output[][ CUBE(PS2) ], char DE_Status[],
-                           const real Flux[][NCOMP_TOTAL][ CUBE(N_FC_FLUX) ], const real dt, const real dh,
+                        const bool DumpIntFlux, real g_IntFlux[][NCOMP_TOTAL][ SQR(PS2) ] );
+void Hydro_FullStepUpdate( const real g_Input[][ CUBE(FLU_NXT) ], real g_Output[][ CUBE(PS2) ], char g_DE_Status[],
+                           const real g_Flux[][NCOMP_TOTAL][ CUBE(N_FC_FLUX) ], const real dt, const real dh,
                            const real Gamma_m1, const real _Gamma_m1, const real MinDens, const real MinPres,
                            const real DualEnergySwitch, const bool NormPassive, const int NNorm, const int NormIdx[] );
 #if   ( RSOLVER == EXACT )
@@ -71,12 +71,13 @@ real Hydro_CheckMinPresInEngy( const real Dens, const real MomX, const real MomY
 // internal functions
 #if ( FLU_SCHEME == MHM_RP )
 GPU_DEVICE
-static void Hydro_RiemannPredict_Flux( const real ConVar[][ CUBE(FLU_NXT) ], real Half_Flux[][NCOMP_TOTAL][ CUBE(N_FC_FLUX) ],
+static void Hydro_RiemannPredict_Flux( const real g_ConVar[][ CUBE(FLU_NXT) ],
+                                             real g_Half_Flux[][NCOMP_TOTAL][ CUBE(N_FC_FLUX) ],
                                        const real Gamma, const real MinPres );
 GPU_DEVICE
-static void Hydro_RiemannPredict( const real ConVar_In[][ CUBE(FLU_NXT) ],
-                                  const real Half_Flux[][NCOMP_TOTAL][ CUBE(N_FC_FLUX) ],
-                                        real Half_Var [][ CUBE(FLU_NXT) ],
+static void Hydro_RiemannPredict( const real g_ConVar_In[][ CUBE(FLU_NXT) ],
+                                  const real g_Half_Flux[][NCOMP_TOTAL][ CUBE(N_FC_FLUX) ],
+                                        real g_Half_Var [][ CUBE(FLU_NXT) ],
                                   const real dt, const real dh, const real Gamma, const real MinDens, const real MinPres,
                                   const bool NormPassive, const int NNorm, const int NormIdx[],
                                   const bool JeansMinPres, const real JeansMinPres_Coeff );
@@ -99,17 +100,18 @@ static void Hydro_RiemannPredict( const real ConVar_In[][ CUBE(FLU_NXT) ],
 //                   MHM_RP : Stone & Gardiner, NewA, 14, 139 (2009)
 //                4. See include/CUFLU.h for the values and description of different symbolic constants
 //                   such as N_FC_VAR, N_FC_FLUX, N_SLOPE_PPM, N_FL_FLUX, N_HF_VAR
+//                5. Arrays with a prefix "g_" are stored in the global memory of GPU
 //
-// Parameter   :  Flu_Array_In       : Array storing the input fluid variables
-//                Flu_Array_Out      : Array to store the output fluid variables
-//                DE_Array_Out       : Array to store the dual-energy status
-//                Flux_Array         : Array to store the output fluxes
-//                Corner_Array       : Array storing the physical corner coordinates of each patch group (for UNSPLIT_GRAVITY)
-//                Pot_Array_USG      : Array storing the input potential for UNSPLIT_GRAVITY
-//                PriVar             : Array to store the primitive variables
-//                Slope_PPM          : Array to store the slope for the PPM reconstruction
-//                FC_Var             : Array to store the half-step variables
-//                FC_Flux            : Array to store the face-centered fluxes
+// Parameter   :  g_Flu_Array_In     : Array storing the input fluid variables
+//                g_Flu_Array_Out    : Array to store the output fluid variables
+//                g_DE_Array_Out     : Array to store the dual-energy status
+//                g_Flux_Array       : Array to store the output fluxes
+//                g_Corner_Array     : Array storing the physical corner coordinates of each patch group (for UNSPLIT_GRAVITY)
+//                g_Pot_Array_USG    : Array storing the input potential for UNSPLIT_GRAVITY
+//                g_PriVar           : Array to store the primitive variables
+//                g_Slope_PPM        : Array to store the slope for the PPM reconstruction
+//                g_FC_Var           : Array to store the half-step variables
+//                g_FC_Flux          : Array to store the face-centered fluxes
 //                NPatchGroup        : Number of patch groups to be evaluated
 //                dt                 : Time interval to advance solution
 //                dh                 : Cell size
@@ -144,16 +146,16 @@ static void Hydro_RiemannPredict( const real ConVar_In[][ CUBE(FLU_NXT) ],
 #ifdef __CUDACC__
 __global__
 void CUFLU_FluidSolver_MHM(
-   const real   Flu_Array_In [][NCOMP_TOTAL][ CUBE(FLU_NXT) ],
-         real   Flu_Array_Out[][NCOMP_TOTAL][ CUBE(PS2) ],
-         char   DE_Array_Out [][ CUBE(PS2) ],
-         real   Flux_Array   [][9][NCOMP_TOTAL][ SQR(PS2) ],
-   const double Corner_Array [][3],
-   const real   Pot_Array_USG[][ CUBE(USG_NXT_F) ],
-         real   PriVar       [][NCOMP_TOTAL][ CUBE(FLU_NXT) ],
-         real   Slope_PPM    [][3][NCOMP_TOTAL][ CUBE(N_SLOPE_PPM) ],
-         real   FC_Var       [][6][NCOMP_TOTAL][ CUBE(N_FC_VAR) ],
-         real   FC_Flux      [][3][NCOMP_TOTAL][ CUBE(N_FC_FLUX) ],
+   const real   g_Flu_Array_In [][NCOMP_TOTAL][ CUBE(FLU_NXT) ],
+         real   g_Flu_Array_Out[][NCOMP_TOTAL][ CUBE(PS2) ],
+         char   g_DE_Array_Out [][ CUBE(PS2) ],
+         real   g_Flux_Array   [][9][NCOMP_TOTAL][ SQR(PS2) ],
+   const double g_Corner_Array [][3],
+   const real   g_Pot_Array_USG[][ CUBE(USG_NXT_F) ],
+         real   g_PriVar       [][NCOMP_TOTAL][ CUBE(FLU_NXT) ],
+         real   g_Slope_PPM    [][3][NCOMP_TOTAL][ CUBE(N_SLOPE_PPM) ],
+         real   g_FC_Var       [][6][NCOMP_TOTAL][ CUBE(N_FC_VAR) ],
+         real   g_FC_Flux      [][3][NCOMP_TOTAL][ CUBE(N_FC_FLUX) ],
    const real dt, const real dh, const real Gamma, const bool StoreFlux,
    const LR_Limiter_t LR_Limiter, const real MinMod_Coeff,
    const double Time, const OptGravityType_t GravityType,
@@ -162,16 +164,16 @@ void CUFLU_FluidSolver_MHM(
    const bool JeansMinPres, const real JeansMinPres_Coeff )
 #else
 void CPU_FluidSolver_MHM(
-   const real   Flu_Array_In [][NCOMP_TOTAL][ CUBE(FLU_NXT) ],
-         real   Flu_Array_Out[][NCOMP_TOTAL][ CUBE(PS2) ],
-         char   DE_Array_Out [][ CUBE(PS2) ],
-         real   Flux_Array   [][9][NCOMP_TOTAL][ SQR(PS2) ],
-   const double Corner_Array [][3],
-   const real   Pot_Array_USG[][ CUBE(USG_NXT_F) ],
-         real   PriVar       [][NCOMP_TOTAL][ CUBE(FLU_NXT) ],
-         real   Slope_PPM    [][3][NCOMP_TOTAL][ CUBE(N_SLOPE_PPM) ],
-         real   FC_Var       [][6][NCOMP_TOTAL][ CUBE(N_FC_VAR) ],
-         real   FC_Flux      [][3][NCOMP_TOTAL][ CUBE(N_FC_FLUX) ],
+   const real   g_Flu_Array_In [][NCOMP_TOTAL][ CUBE(FLU_NXT) ],
+         real   g_Flu_Array_Out[][NCOMP_TOTAL][ CUBE(PS2) ],
+         char   g_DE_Array_Out [][ CUBE(PS2) ],
+         real   g_Flux_Array   [][9][NCOMP_TOTAL][ SQR(PS2) ],
+   const double g_Corner_Array [][3],
+   const real   g_Pot_Array_USG[][ CUBE(USG_NXT_F) ],
+         real   g_PriVar       [][NCOMP_TOTAL][ CUBE(FLU_NXT) ],
+         real   g_Slope_PPM    [][3][NCOMP_TOTAL][ CUBE(N_SLOPE_PPM) ],
+         real   g_FC_Var       [][6][NCOMP_TOTAL][ CUBE(N_FC_VAR) ],
+         real   g_FC_Flux      [][3][NCOMP_TOTAL][ CUBE(N_FC_FLUX) ],
    const int NPatchGroup, const real dt, const real dh, const real Gamma,
    const bool StoreFlux, const LR_Limiter_t LR_Limiter, const real MinMod_Coeff,
    const double Time, const OptGravityType_t GravityType,
@@ -211,14 +213,14 @@ void CPU_FluidSolver_MHM(
 #     endif
 #     endif // #ifdef __CUDACC__ ... else ...
 
-      real (*const FC_Var_1PG   )[NCOMP_TOTAL][ CUBE(N_FC_VAR)    ] = FC_Var   [array_idx];
-      real (*const FC_Flux_1PG  )[NCOMP_TOTAL][ CUBE(N_FC_FLUX)   ] = FC_Flux  [array_idx];
-      real (*const PriVar_1PG   )             [ CUBE(FLU_NXT)     ] = PriVar   [array_idx];
-      real (*const Slope_PPM_1PG)[NCOMP_TOTAL][ CUBE(N_SLOPE_PPM) ] = Slope_PPM[array_idx];
+      real (*const g_FC_Var_1PG   )[NCOMP_TOTAL][ CUBE(N_FC_VAR)    ] = g_FC_Var   [array_idx];
+      real (*const g_FC_Flux_1PG  )[NCOMP_TOTAL][ CUBE(N_FC_FLUX)   ] = g_FC_Flux  [array_idx];
+      real (*const g_PriVar_1PG   )             [ CUBE(FLU_NXT)     ] = g_PriVar   [array_idx];
+      real (*const g_Slope_PPM_1PG)[NCOMP_TOTAL][ CUBE(N_SLOPE_PPM) ] = g_Slope_PPM[array_idx];
 
 #     if ( FLU_SCHEME == MHM_RP )
-      real (*const Half_Flux_1PG)[NCOMP_TOTAL][ CUBE(N_FC_FLUX) ] = FC_Flux_1PG;
-      real (*const Half_Var_1PG )             [ CUBE(FLU_NXT)   ] = PriVar_1PG;
+      real (*const g_Half_Flux_1PG)[NCOMP_TOTAL][ CUBE(N_FC_FLUX) ] = g_FC_Flux_1PG;
+      real (*const g_Half_Var_1PG )             [ CUBE(FLU_NXT)   ] = g_PriVar_1PG;
 #     endif
 
 
@@ -238,17 +240,17 @@ void CPU_FluidSolver_MHM(
 #        if ( FLU_SCHEME == MHM_RP )
 
 //       1-a-1. evaluate the half-step first-order fluxes by Riemann solver
-         Hydro_RiemannPredict_Flux( Flu_Array_In[P], Half_Flux_1PG, Gamma, MinPres );
+         Hydro_RiemannPredict_Flux( g_Flu_Array_In[P], g_Half_Flux_1PG, Gamma, MinPres );
 
 
 //       1-a-2. evaluate the half-step solutions
-         Hydro_RiemannPredict( Flu_Array_In[P], Half_Flux_1PG, Half_Var_1PG, dt, dh, Gamma, MinDens, MinPres,
+         Hydro_RiemannPredict( g_Flu_Array_In[P], g_Half_Flux_1PG, g_Half_Var_1PG, dt, dh, Gamma, MinDens, MinPres,
                                NormPassive, NNorm, c_NormIdx, JeansMinPres, JeansMinPres_Coeff );
 
 
 //       1-a-3. evaluate the face-centered values by data reconstruction
-//              --> note that Half_Var_1PG[] returned by Hydro_RiemannPredict() stores the primitive variables
-         Hydro_DataReconstruction( NULL, Half_Var_1PG, FC_Var_1PG, Slope_PPM_1PG,
+//              --> note that g_Half_Var_1PG[] returned by Hydro_RiemannPredict() stores the primitive variables
+         Hydro_DataReconstruction( NULL, g_Half_Var_1PG, g_FC_Var_1PG, g_Slope_PPM_1PG,
                                    Con2Pri_No, N_HF_VAR, FLU_GHOST_SIZE-2,
                                    Gamma, LR_Limiter, MinMod_Coeff, dt, dh, MinDens, MinPres,
                                    NormPassive, NNorm, c_NormIdx, JeansMinPres, JeansMinPres_Coeff );
@@ -258,7 +260,7 @@ void CPU_FluidSolver_MHM(
 #        elif ( FLU_SCHEME == MHM )
 
 //       evaluate the face-centered values by data reconstruction
-         Hydro_DataReconstruction( Flu_Array_In[P], PriVar_1PG, FC_Var_1PG, Slope_PPM_1PG,
+         Hydro_DataReconstruction( g_Flu_Array_In[P], g_PriVar_1PG, g_FC_Var_1PG, g_Slope_PPM_1PG,
                                    Con2Pri_Yes, FLU_NXT, FLU_GHOST_SIZE-1,
                                    Gamma, LR_Limiter, MinMod_Coeff, dt, dh, MinDens, MinPres,
                                    NormPassive, NNorm, c_NormIdx, JeansMinPres, JeansMinPres_Coeff );
@@ -267,21 +269,21 @@ void CPU_FluidSolver_MHM(
 
 //       2. evaluate the full-step fluxes
 #        ifdef UNSPLIT_GRAVITY
-         Hydro_ComputeFlux( FC_Var_1PG, FC_Flux_1PG, 1, Gamma, CorrHalfVel_Yes,
-                            Pot_Array_USG[P], Corner_Array[P],
+         Hydro_ComputeFlux( g_FC_Var_1PG, g_FC_Flux_1PG, 1, Gamma, CorrHalfVel_Yes,
+                            g_Pot_Array_USG[P], g_Corner_Array[P],
                             dt, dh, Time, GravityType, c_ExtAcc_AuxArray, MinPres,
-                            StoreFlux, Flux_Array[P] );
+                            StoreFlux, g_Flux_Array[P] );
 #        else
-         Hydro_ComputeFlux( FC_Var_1PG, FC_Flux_1PG, 1, Gamma, CorrHalfVel_No,
+         Hydro_ComputeFlux( g_FC_Var_1PG, g_FC_Flux_1PG, 1, Gamma, CorrHalfVel_No,
                             NULL, NULL,
                             NULL_REAL, NULL_REAL, NULL_REAL, GRAVITY_NONE, NULL, MinPres,
-                            StoreFlux, Flux_Array[P] );
+                            StoreFlux, g_Flux_Array[P] );
 #        endif
 
 
 //       3. full-step evolution
-         Hydro_FullStepUpdate( Flu_Array_In[P], Flu_Array_Out[P], DE_Array_Out[P],
-                               FC_Flux_1PG, dt, dh, Gamma_m1, _Gamma_m1, MinDens, MinPres, DualEnergySwitch,
+         Hydro_FullStepUpdate( g_Flu_Array_In[P], g_Flu_Array_Out[P], g_DE_Array_Out[P],
+                               g_FC_Flux_1PG, dt, dh, Gamma_m1, _Gamma_m1, MinDens, MinPres, DualEnergySwitch,
                                NormPassive, NNorm, c_NormIdx );
 
       } // loop over all patch groups
@@ -298,17 +300,18 @@ void CPU_FluidSolver_MHM(
 //
 // Note        :  1. Work for the MHM_RP scheme
 //                2. Currently support the exact, Roe, HLLE, and HLLC solvers
-//                3. Half_Flux[] is accessed with the stride N_FC_FLUX
-//                   --> Fluxes on the **left** face of the (i+1,j+1,k+1) element in ConVar[] will
-//                       be stored in the (i,j,k) element of Half_Flux[]
+//                3. g_Half_Flux[] is accessed with the stride N_FC_FLUX
+//                   --> Fluxes on the **left** face of the (i+1,j+1,k+1) element in g_ConVar[] will
+//                       be stored in the (i,j,k) element of g_Half_Flux[]
 //
-// Parameter   :  ConVar    : Array storing the input conserved variables
-//                Half_Flux : Array to store the output face-centered fluxes
-//                Gamma     : Ratio of specific heats
-//                MinPres   : Minimum allowed pressure
+// Parameter   :  g_ConVar    : Array storing the input conserved variables
+//                g_Half_Flux : Array to store the output face-centered fluxes
+//                Gamma       : Ratio of specific heats
+//                MinPres     : Minimum allowed pressure
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE
-void Hydro_RiemannPredict_Flux( const real ConVar[][ CUBE(FLU_NXT) ], real Half_Flux[][NCOMP_TOTAL][ CUBE(N_FC_FLUX) ],
+void Hydro_RiemannPredict_Flux( const real g_ConVar[][ CUBE(FLU_NXT) ],
+                                      real g_Half_Flux[][NCOMP_TOTAL][ CUBE(N_FC_FLUX) ],
                                 const real Gamma, const real MinPres )
 {
 
@@ -351,8 +354,8 @@ void Hydro_RiemannPredict_Flux( const real ConVar[][ CUBE(FLU_NXT) ], real Half_
 //       get the left and right states
          for (int v=0; v<NCOMP_TOTAL; v++)
          {
-            ConVar_L[v] = ConVar[v][ idx_cvar              ];
-            ConVar_R[v] = ConVar[v][ idx_cvar+didx_cvar[d] ];
+            ConVar_L[v] = g_ConVar[v][ idx_cvar              ];
+            ConVar_R[v] = g_ConVar[v][ idx_cvar+didx_cvar[d] ];
          }
 
 //       invoke the Riemann solver
@@ -374,8 +377,8 @@ void Hydro_RiemannPredict_Flux( const real ConVar[][ CUBE(FLU_NXT) ], real Half_
 #        error : ERROR : unsupported Riemann solver (EXACT/ROE) !!
 #        endif
 
-//       store the results in Half_Flux[]
-         for (int v=0; v<NCOMP_TOTAL; v++)   Half_Flux[d][v][idx_flux] = Flux_1Face[v];
+//       store the results in g_Half_Flux[]
+         for (int v=0; v<NCOMP_TOTAL; v++)   g_Half_Flux[d][v][idx_flux] = Flux_1Face[v];
       } // CGPU_LOOP( idx, N_FC_FLUX*SQR(N_FC_FLUX-1) )
    } // for (int d=0; d<3; d++)
 
@@ -397,12 +400,12 @@ void Hydro_RiemannPredict_Flux( const real ConVar[][ CUBE(FLU_NXT) ], real Half_
 //                2. For the performance consideration, the output data are converted to primitive variables
 //                   --> Reducing the global memory access on GPU
 //
-// Parameter   :  ConVar_In          : Array storing the input conserved variables
-//                Half_Flux          : Array storing the input face-centered fluxes
+// Parameter   :  g_ConVar_In        : Array storing the input conserved variables
+//                g_Half_Flux        : Array storing the input face-centered fluxes
 //                                     --> Accessed with the stride N_FC_FLUX
-//                Half_Var           : Array to store the output primitive variables
+//                g_Half_Var         : Array to store the output primitive variables
 //                                     --> Accessed with the stride N_HF_VAR
-//                                     --> Although its actually allocated size is FLU_NXT^3 since it points to PriVar_1PG[]
+//                                     --> Although its actually allocated size is FLU_NXT^3 since it points to g_PriVar_1PG[]
 //                dt                 : Time interval to advance solution
 //                dh                 : Cell size
 //                Gamma              : Ratio of specific heats
@@ -416,9 +419,9 @@ void Hydro_RiemannPredict_Flux( const real ConVar[][ CUBE(FLU_NXT) ], real Half_
 //                JeansMinPres_Coeff : Coefficient used by JeansMinPres = G*(Jeans_NCell*Jeans_dh)^2/(Gamma*pi);
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE
-void Hydro_RiemannPredict( const real ConVar_In[][ CUBE(FLU_NXT) ],
-                           const real Half_Flux[][NCOMP_TOTAL][ CUBE(N_FC_FLUX) ],
-                                 real Half_Var [][ CUBE(FLU_NXT) ],
+void Hydro_RiemannPredict( const real g_ConVar_In[][ CUBE(FLU_NXT) ],
+                           const real g_Half_Flux[][NCOMP_TOTAL][ CUBE(N_FC_FLUX) ],
+                                 real g_Half_Var [][ CUBE(FLU_NXT) ],
                            const real dt, const real dh, const real Gamma, const real MinDens, const real MinPres,
                            const bool NormPassive, const int NNorm, const int NormIdx[],
                            const bool JeansMinPres, const real JeansMinPres_Coeff )
@@ -446,11 +449,11 @@ void Hydro_RiemannPredict( const real ConVar_In[][ CUBE(FLU_NXT) ],
 
 //    calculate the flux differences
       for (int d=0; d<3; d++)
-      for (int v=0; v<NCOMP_TOTAL; v++)    dflux[d][v] = Half_Flux[d][v][ idx_flux+didx_flux[d] ] - Half_Flux[d][v][idx_flux];
+      for (int v=0; v<NCOMP_TOTAL; v++)    dflux[d][v] = g_Half_Flux[d][v][ idx_flux+didx_flux[d] ] - g_Half_Flux[d][v][idx_flux];
 
 //    update the input cell-centered conserved variables with the flux differences
       for (int v=0; v<NCOMP_TOTAL; v++)
-         out_con[v] = ConVar_In[v][idx_in] - dt_dh2*( dflux[0][v] + dflux[1][v] + dflux[2][v] );
+         out_con[v] = g_ConVar_In[v][idx_in] - dt_dh2*( dflux[0][v] + dflux[1][v] + dflux[2][v] );
 
 //    ensure positive density and pressure
       out_con[0] = FMAX( out_con[0], MinDens );
@@ -463,8 +466,8 @@ void Hydro_RiemannPredict( const real ConVar_In[][ CUBE(FLU_NXT) ],
 //    conserved --> primitive variables
       Hydro_Con2Pri( out_con, out_pri, Gamma_m1, MinPres, NormPassive, NNorm, NormIdx, JeansMinPres, JeansMinPres_Coeff );
 
-//    store the results to Half_Var[]
-      for (int v=0; v<NCOMP_TOTAL; v++)   Half_Var[v][idx_out] = out_pri[v];
+//    store the results to g_Half_Var[]
+      for (int v=0; v<NCOMP_TOTAL; v++)   g_Half_Var[v][idx_out] = out_pri[v];
    } // i,j,k
 
 

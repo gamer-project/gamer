@@ -43,7 +43,7 @@ static void Hydro_GetEigenSystem( const real CC_Var[], real EigenVal[][NCOMP_FLU
 GPU_DEVICE
 static void Hydro_HancockPredict( real fc[][NCOMP_TOTAL], const real dt, const real dh,
                                   const real Gamma_m1, const real _Gamma_m1,
-                                  const real cc_array[][ CUBE(FLU_NXT) ], const int cc_idx,
+                                  const real g_cc_array[][ CUBE(FLU_NXT) ], const int cc_idx,
                                   const real MinDens, const real MinPres );
 #endif
 #ifdef CHAR_RECONSTRUCTION
@@ -63,13 +63,13 @@ static void Hydro_Char2Pri( real Var[], const real Gamma, const real Rho, const 
 //
 // Note        :  1. Use the parameter "LR_Limiter" to choose different slope limiters
 //                2. Input data can be either conserved or primitive variables
-//                   --> If the input data are conserved variables, one must provide ConVar[] and enable "Con2Pri"
-//                       --> Primitive variables will be calculated by this function and stored in PriVar[]
-//                       --> PriVar[] must be allocated in advance but it doesn't need to be initialized
+//                   --> If the input data are conserved variables, one must provide g_ConVar[] and enable "Con2Pri"
+//                       --> Primitive variables will be calculated by this function and stored in g_PriVar[]
+//                       --> g_PriVar[] must be allocated in advance but it doesn't need to be initialized
 //                       --> Adopted by MHM and CTU
-//                   --> If the input data are primitive variables, one must provide PriVar[] and disable "Con2Pri"
-//                       --> ConVar[] is useless here
-//                           --> Although Hydro_HancockPredict() still needs ConVar(), MHM provides conserved instead
+//                   --> If the input data are primitive variables, one must provide g_PriVar[] and disable "Con2Pri"
+//                       --> g_ConVar[] is useless here
+//                           --> Although Hydro_HancockPredict() still needs g_ConVar(), MHM provides conserved instead
 //                               of primitive variables. So it's fine.
 //                       --> Adopted by MHM_RP, where Hydro_RiemannPredict() already returns primitive variables
 //                3. Output data are always conserved variables
@@ -81,22 +81,22 @@ static void Hydro_Char2Pri( real Var[], const real Gamma, const real Rho, const 
 //                7. This function is shared by MHM, MHM_RP, and CTU schemes
 //
 //
-// Parameter   :  ConVar             : Array storing the input cell-centered conserved variables
-//                PriVar             : Array storing/to store the cell-centered primitive variables
-//                                     --> For MHM, ConVar[] and PriVar[] must point to different arrays since
-//                                         Hydro_HancockPredict() requires the original ConVar[]
-//                FC_Var             : Array to store the output face-centered primitive variables
-//                Slope_PPM          : Array to store the x/y/z slopes for the PPM reconstruction
+// Parameter   :  g_ConVar           : Array storing the input cell-centered conserved variables
+//                g_PriVar           : Array storing/to store the cell-centered primitive variables
+//                                     --> For MHM, g_ConVar[] and g_PriVar[] must point to different arrays since
+//                                         Hydro_HancockPredict() requires the original g_ConVar[]
+//                g_FC_Var           : Array to store the output face-centered primitive variables
+//                g_Slope_PPM        : Array to store the x/y/z slopes for the PPM reconstruction
 //                                     --> Useless for PLM
-//                Con2Pri            : Convert conserved variables in ConVar[] to primitive variables and
-//                                     store the results in PriVar[]
-//                NIn                : Size of PriVar[] along each direction
+//                Con2Pri            : Convert conserved variables in g_ConVar[] to primitive variables and
+//                                     store the results in g_PriVar[]
+//                NIn                : Size of g_PriVar[] along each direction
 //                                     --> Can be smaller than FLU_NXT
 //                NGhost             : Number of ghost zones
 //                                      --> "NIn-2*NGhost" cells will be computed along each direction
-//                                      --> Size of FC_Var[] is assumed to be "(NIn-2*NGhost)^3"
-//                                      --> The reconstructed data at cell (i,j,k) will be stored in the
-//                                          array "FC_Var" with the index "(i-NGhost,j-NGhost,k-NGhost)
+//                                      --> Size of g_FC_Var[] is assumed to be "(NIn-2*NGhost)^3"
+//                                      --> The reconstructed data at cell (i,j,k) will be stored in g_FC_Var[]
+//                                          with the index "(i-NGhost,j-NGhost,k-NGhost)"
 //                Gamma              : Ratio of specific heats
 //                LR_Limiter         : Slope limiter for the data reconstruction in the MHM/MHM_RP/CTU schemes
 //                                     (0/1/2/3) = (vanLeer/generalized MinMod/vanAlbada/vanLeer+generalized MinMod) limiter
@@ -113,10 +113,10 @@ static void Hydro_Char2Pri( real Var[], const real Gamma, const real Rho, const 
 //                JeansMinPres_Coeff : Coefficient used by JeansMinPres = G*(Jeans_NCell*Jeans_dh)^2/(Gamma*pi);
 //------------------------------------------------------------------------------------------------------
 GPU_DEVICE
-void Hydro_DataReconstruction( const real ConVar   [][ CUBE(FLU_NXT) ],
-                                     real PriVar   [][ CUBE(FLU_NXT) ],
-                                     real FC_Var   [][NCOMP_TOTAL][ CUBE(N_FC_VAR) ],
-                                     real Slope_PPM[][NCOMP_TOTAL][ CUBE(N_SLOPE_PPM) ],
+void Hydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
+                                     real g_PriVar   [][ CUBE(FLU_NXT) ],
+                                     real g_FC_Var   [][NCOMP_TOTAL][ CUBE(N_FC_VAR) ],
+                                     real g_Slope_PPM[][NCOMP_TOTAL][ CUBE(N_SLOPE_PPM) ],
                                const bool Con2Pri, const int NIn, const int NGhost, const real Gamma,
                                const LR_Limiter_t LR_Limiter, const real MinMod_Coeff,
                                const real dt, const real dh, const real MinDens, const real MinPres,
@@ -154,12 +154,12 @@ void Hydro_DataReconstruction( const real ConVar   [][ CUBE(FLU_NXT) ],
 
       CGPU_LOOP( idx, CUBE(NIn) )
       {
-         for (int v=0; v<NCOMP_TOTAL; v++)   ConVar_1Cell[v] = ConVar[v][idx];
+         for (int v=0; v<NCOMP_TOTAL; v++)   ConVar_1Cell[v] = g_ConVar[v][idx];
 
          Hydro_Con2Pri( ConVar_1Cell, PriVar_1Cell, Gamma_m1, MinPres, NormPassive, NNorm, NormIdx,
                         JeansMinPres, JeansMinPres_Coeff );
 
-         for (int v=0; v<NCOMP_TOTAL; v++)   PriVar[v][idx] = PriVar_1Cell[v];
+         for (int v=0; v<NCOMP_TOTAL; v++)   g_PriVar[v][idx] = PriVar_1Cell[v];
       }
 
 #     ifdef __CUDACC__
@@ -185,7 +185,7 @@ void Hydro_DataReconstruction( const real ConVar   [][ CUBE(FLU_NXT) ],
       real Coeff_L, Coeff_R;
 #     endif
 
-      for (int v=0; v<NCOMP_TOTAL; v++)   cc_C[v] = PriVar[v][idx_cc];
+      for (int v=0; v<NCOMP_TOTAL; v++)   cc_C[v] = g_PriVar[v][idx_cc];
 
 
 //    1. evaluate the eigenvalues and eigenvectors for the CTU integrator
@@ -205,8 +205,8 @@ void Hydro_DataReconstruction( const real ConVar   [][ CUBE(FLU_NXT) ],
 
          for (int v=0; v<NCOMP_TOTAL; v++)
          {
-            cc_L[v] = PriVar[v][idx_ccL];
-            cc_R[v] = PriVar[v][idx_ccR];
+            cc_L[v] = g_PriVar[v][idx_ccL];
+            cc_R[v] = g_PriVar[v][idx_ccR];
          }
 
          Hydro_LimitSlope( cc_L, cc_C, cc_R, LR_Limiter, MinMod_Coeff, Gamma, d, Slope_Limiter );
@@ -404,14 +404,14 @@ void Hydro_DataReconstruction( const real ConVar   [][ CUBE(FLU_NXT) ],
 
 #     if ( FLU_SCHEME == MHM )
 //    6. advance the face-centered variables by half time-step for the MHM integrator
-      Hydro_HancockPredict( fc, dt, dh, Gamma_m1, _Gamma_m1, ConVar, idx_cc, MinDens, MinPres );
+      Hydro_HancockPredict( fc, dt, dh, Gamma_m1, _Gamma_m1, g_ConVar, idx_cc, MinDens, MinPres );
 #     endif
 
 
 //    7. store the face-centered values to the output array
       for (int f=0; f<6; f++)
       for (int v=0; v<NCOMP_TOTAL; v++)
-         FC_Var[f][v][idx_fc] = fc[f][v];
+         g_FC_Var[f][v][idx_fc] = fc[f][v];
 
    } // CGPU_LOOP( idx_fc, CUBE(NOut) )
 
@@ -435,10 +435,10 @@ void Hydro_DataReconstruction( const real ConVar   [][ CUBE(FLU_NXT) ],
 // Parameter   :  See the PLM routine
 //------------------------------------------------------------------------------------------------------
 GPU_DEVICE
-void Hydro_DataReconstruction( const real ConVar   [][ CUBE(FLU_NXT) ],
-                                     real PriVar   [][ CUBE(FLU_NXT) ],
-                                     real FC_Var   [][NCOMP_TOTAL][ CUBE(N_FC_VAR) ],
-                                     real Slope_PPM[][NCOMP_TOTAL][ CUBE(N_SLOPE_PPM) ],
+void Hydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
+                                     real g_PriVar   [][ CUBE(FLU_NXT) ],
+                                     real g_FC_Var   [][NCOMP_TOTAL][ CUBE(N_FC_VAR) ],
+                                     real g_Slope_PPM[][NCOMP_TOTAL][ CUBE(N_SLOPE_PPM) ],
                                const bool Con2Pri, const int NIn, const int NGhost, const real Gamma,
                                const LR_Limiter_t LR_Limiter, const real MinMod_Coeff,
                                const real dt, const real dh, const real MinDens, const real MinPres,
@@ -449,7 +449,7 @@ void Hydro_DataReconstruction( const real ConVar   [][ CUBE(FLU_NXT) ],
    const int  didx_cc   [3] = { 1, NIn, SQR(NIn) };
    const int  didx_slope[3] = { 1, N_SLOPE_PPM, SQR(N_SLOPE_PPM) };
    const int  NOut       = NIn - 2*NGhost;      // number of output cells
-   const int  NSlope     = N_SLOPE_PPM;         // size of Slope_PPM[] (which must be equal to NOut + 2)
+   const int  NSlope     = N_SLOPE_PPM;         // size of g_Slope_PPM[] (which must be equal to NOut + 2)
    const real  Gamma_m1  = Gamma - (real)1.0;
    const real _Gamma_m1  = (real)1.0 / Gamma_m1;
 
@@ -488,12 +488,12 @@ void Hydro_DataReconstruction( const real ConVar   [][ CUBE(FLU_NXT) ],
 
       CGPU_LOOP( idx, CUBE(NIn) )
       {
-         for (int v=0; v<NCOMP_TOTAL; v++)   ConVar_1Cell[v] = ConVar[v][idx];
+         for (int v=0; v<NCOMP_TOTAL; v++)   ConVar_1Cell[v] = g_ConVar[v][idx];
 
          Hydro_Con2Pri( ConVar_1Cell, PriVar_1Cell, Gamma_m1, MinPres, NormPassive, NNorm, NormIdx,
                         JeansMinPres, JeansMinPres_Coeff );
 
-         for (int v=0; v<NCOMP_TOTAL; v++)   PriVar[v][idx] = PriVar_1Cell[v];
+         for (int v=0; v<NCOMP_TOTAL; v++)   g_PriVar[v][idx] = PriVar_1Cell[v];
       }
 
 #     ifdef __CUDACC__
@@ -514,7 +514,7 @@ void Hydro_DataReconstruction( const real ConVar   [][ CUBE(FLU_NXT) ],
       real cc_C[NCOMP_TOTAL], cc_L[NCOMP_TOTAL], cc_R[NCOMP_TOTAL];  // cell-centered variables of the Central/Left/Right cells
       real Slope_Limiter[NCOMP_TOTAL];
 
-      for (int v=0; v<NCOMP_TOTAL; v++)   cc_C[v] = PriVar[v][idx_cc];
+      for (int v=0; v<NCOMP_TOTAL; v++)   cc_C[v] = g_PriVar[v][idx_cc];
 
 //    loop over different spatial directions
       for (int d=0; d<3; d++)
@@ -524,14 +524,14 @@ void Hydro_DataReconstruction( const real ConVar   [][ CUBE(FLU_NXT) ],
 
          for (int v=0; v<NCOMP_TOTAL; v++)
          {
-            cc_L[v] = PriVar[v][idx_ccL];
-            cc_R[v] = PriVar[v][idx_ccR];
+            cc_L[v] = g_PriVar[v][idx_ccL];
+            cc_R[v] = g_PriVar[v][idx_ccR];
          }
 
          Hydro_LimitSlope( cc_L, cc_C, cc_R, LR_Limiter, MinMod_Coeff, Gamma, d, Slope_Limiter );
 
-//       store the results to Slope_PPM[]
-         for (int v=0; v<NCOMP_TOTAL; v++)   Slope_PPM[d][v][idx_slope] = Slope_Limiter[v];
+//       store the results to g_Slope_PPM[]
+         for (int v=0; v<NCOMP_TOTAL; v++)   g_Slope_PPM[d][v][idx_slope] = Slope_Limiter[v];
 
       } // for (int d=0; d<3; d++)
    } // CGPU_LOOP( idx_slope, CUBE(NSlope) )
@@ -562,7 +562,7 @@ void Hydro_DataReconstruction( const real ConVar   [][ CUBE(FLU_NXT) ],
       real Coeff_L, Coeff_R;
 #     endif
 
-      for (int v=0; v<NCOMP_TOTAL; v++)   cc_C_ncomp[v] = PriVar[v][idx_cc];
+      for (int v=0; v<NCOMP_TOTAL; v++)   cc_C_ncomp[v] = g_PriVar[v][idx_cc];
 
 
 //    2. evaluate the eigenvalues and eigenvectors for the CTU integrator
@@ -588,13 +588,13 @@ void Hydro_DataReconstruction( const real ConVar   [][ CUBE(FLU_NXT) ],
             real cc_C, cc_L, cc_R, dcc_L, dcc_R, dcc_C, fc_L, fc_R, Max, Min;
 
 //          3-1. parabolic interpolation
-            cc_L  = PriVar[v][idx_ccL];
-            cc_R  = PriVar[v][idx_ccR];
+            cc_L  = g_PriVar[v][idx_ccL];
+            cc_R  = g_PriVar[v][idx_ccR];
             cc_C  = cc_C_ncomp[v];
 
-            dcc_L = Slope_PPM[d][v][idx_slopeL];
-            dcc_R = Slope_PPM[d][v][idx_slopeR];
-            dcc_C = Slope_PPM[d][v][idx_slope ];
+            dcc_L = g_Slope_PPM[d][v][idx_slopeL];
+            dcc_R = g_Slope_PPM[d][v][idx_slopeR];
+            dcc_C = g_Slope_PPM[d][v][idx_slope ];
 
             fc_L  = (real)0.5*( cc_C + cc_L ) - (real)1.0/(real)6.0*( dcc_C - dcc_L );
             fc_R  = (real)0.5*( cc_C + cc_R ) - (real)1.0/(real)6.0*( dcc_R - dcc_C );
@@ -796,14 +796,14 @@ void Hydro_DataReconstruction( const real ConVar   [][ CUBE(FLU_NXT) ],
 
 #     if ( FLU_SCHEME == MHM )
 //    6. advance the face-centered variables by half time-step for the MHM integrator
-      Hydro_HancockPredict( fc, dt, dh, Gamma_m1, _Gamma_m1, ConVar, idx_cc, MinDens, MinPres );
+      Hydro_HancockPredict( fc, dt, dh, Gamma_m1, _Gamma_m1, g_ConVar, idx_cc, MinDens, MinPres );
 #     endif
 
 
 //    7. store the face-centered values to the output array
       for (int f=0; f<6; f++)
       for (int v=0; v<NCOMP_TOTAL; v++)
-         FC_Var[f][v][idx_fc] = fc[f][v];
+         g_FC_Var[f][v][idx_fc] = fc[f][v];
 
    } // CGPU_LOOP( idx_fc, CUBE(NOut) )
 
@@ -1130,16 +1130,16 @@ void Hydro_LimitSlope( const real L1[], const real C0[], const real R1[], const 
 //                dh           : Cell size
 //                Gamma_m1     : Gamma - 1
 //                _Gamma_m1    : 1 / (Gamma - 1)
-//                cc_array     : Array storing the cell-centered conserved variables for checking
+//                g_cc_array   : Array storing the cell-centered conserved variables for checking
 //                               negative density and pressure
 //                               --> It is just the input array Flu_Array_In[]
-//                cc_idx       : Index for accessing cc_array[]
+//                cc_idx       : Index for accessing g_cc_array[]
 //                MinDens/Pres : Minimum allowed density and pressure
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE
 void Hydro_HancockPredict( real fc[][NCOMP_TOTAL], const real dt, const real dh,
                            const real Gamma_m1, const real _Gamma_m1,
-                           const real cc_array[][ CUBE(FLU_NXT) ], const int cc_idx,
+                           const real g_cc_array[][ CUBE(FLU_NXT) ], const int cc_idx,
                            const real MinDens, const real MinPres )
 {
 
@@ -1167,7 +1167,7 @@ void Hydro_HancockPredict( real fc[][NCOMP_TOTAL], const real dt, const real dh,
 //       set to the cell-centered values before update
          for (int f=0; f<6; f++)
          for (int v=0; v<NCOMP_TOTAL; v++)
-            fc[f][v] = cc_array[v][cc_idx];
+            fc[f][v] = g_cc_array[v][cc_idx];
 
          break;
       }

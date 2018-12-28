@@ -41,23 +41,24 @@ real Hydro_GetPressure( const real Dens, const real MomX, const real MomY, const
 //                       in the comoving coordinates, in Mis_GetTimeStep()
 //                2. time-step is estimated by the stability criterion from the von Neumann stability analysis
 //                   --> CFL condition
+//                3. Arrays with a prefix "g_" are stored in the global memory of GPU
 //
-// Parameter   :  dt_Array  : Array to store the minimum dt in each target patch
-//                Flu_Array : Array storing the prepared fluid data of each target patch
-//                NPG       : Number of target patch groups (for CPU only)
-//                dh        : Cell size
-//                Safety    : dt safety factor
-//                Gamma     : Ratio of specific heats
-//                MinPres   : Minimum allowed pressure
+// Parameter   :  g_dt_Array  : Array to store the minimum dt in each target patch
+//                g_Flu_Array : Array storing the prepared fluid data of each target patch
+//                NPG         : Number of target patch groups (for CPU only)
+//                dh          : Cell size
+//                Safety      : dt safety factor
+//                Gamma       : Ratio of specific heats
+//                MinPres     : Minimum allowed pressure
 //
-// Return      :  dt_Array
+// Return      :  g_dt_Array
 //-----------------------------------------------------------------------------------------
 #ifdef __CUDACC__
 __global__
-void CUFLU_dtSolver_HydroCFL( real dt_Array[], const real Flu_Array[][NCOMP_FLUID][ CUBE(PS1) ],
+void CUFLU_dtSolver_HydroCFL( real g_dt_Array[], const real g_Flu_Array[][NCOMP_FLUID][ CUBE(PS1) ],
                               const real dh, const real Safety, const real Gamma, const real MinPres )
 #else
-void CPU_dtSolver_HydroCFL  ( real dt_Array[], const real Flu_Array[][NCOMP_FLUID][ CUBE(PS1) ], const int NPG,
+void CPU_dtSolver_HydroCFL  ( real g_dt_Array[], const real g_Flu_Array[][NCOMP_FLUID][ CUBE(PS1) ], const int NPG,
                               const real dh, const real Safety, const real Gamma, const real MinPres )
 #endif
 {
@@ -82,7 +83,7 @@ void CPU_dtSolver_HydroCFL  ( real dt_Array[], const real Flu_Array[][NCOMP_FLUI
       {
          real fluid[NCOMP_FLUID], _Rho, Vx, Vy, Vz, Pres, Cs, MaxV;
 
-         for (int v=0; v<NCOMP_FLUID; v++)   fluid[v] = Flu_Array[p][v][t];
+         for (int v=0; v<NCOMP_FLUID; v++)   fluid[v] = g_Flu_Array[p][v][t];
 
         _Rho  = (real)1.0 / fluid[DENS];
          Vx   = FABS( fluid[MOMX] )*_Rho;
@@ -113,7 +114,7 @@ void CPU_dtSolver_HydroCFL  ( real dt_Array[], const real Flu_Array[][NCOMP_FLUI
 #     endif
       if ( threadIdx.x == 0 )
 #     endif // #ifdef __CUDACC__
-      dt_Array[p] = dhSafety/MaxCFL;
+      g_dt_Array[p] = dhSafety/MaxCFL;
 
    } // for (int p=0; p<8*NPG; p++)
 
