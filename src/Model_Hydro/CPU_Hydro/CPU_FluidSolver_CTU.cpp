@@ -32,8 +32,8 @@ void Hydro_ComputeFlux( const real g_FC_Var [][NCOMP_TOTAL][ CUBE(N_FC_VAR) ],
                         const bool DumpIntFlux, real g_IntFlux[][NCOMP_TOTAL][ SQR(PS2) ] );
 void Hydro_FullStepUpdate( const real g_Input[][ CUBE(FLU_NXT) ], real g_Output[][ CUBE(PS2) ], char g_DE_Status[],
                            const real g_Flux[][NCOMP_TOTAL][ CUBE(N_FC_FLUX) ], const real dt, const real dh,
-                           const real Gamma_m1, const real _Gamma_m1, const real MinDens, const real MinPres,
-                           const real DualEnergySwitch, const bool NormPassive, const int NNorm, const int NormIdx[] );
+                           const real Gamma, const real MinDens, const real MinPres, const real DualEnergySwitch,
+                           const bool NormPassive, const int NNorm, const int NormIdx[] );
 real Hydro_CheckMinPresInEngy( const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy,
                                const real Gamma_m1, const real _Gamma_m1, const real MinPres );
 
@@ -44,7 +44,7 @@ real Hydro_CheckMinPresInEngy( const real Dens, const real MomX, const real MomY
 GPU_DEVICE
 static void Hydro_TGradient_Correction(       real g_FC_Var [][NCOMP_TOTAL][ CUBE(N_FC_VAR)  ],
                                         const real g_FC_Flux[][NCOMP_TOTAL][ CUBE(N_FC_FLUX) ],
-                                        const real dt, const real dh, const real Gamma_m1, const real _Gamma_m1,
+                                        const real dt, const real dh, const real Gamma,
                                         const real MinDens, const real MinPres );
 
 
@@ -140,8 +140,6 @@ void CPU_FluidSolver_CTU(
 #endif // #ifdef __CUDACC__ ... else ...
 {
 
-   const real  Gamma_m1       = Gamma - (real)1.0;
-   const real _Gamma_m1       = (real)1.0 / Gamma_m1;
 #  ifdef UNSPLIT_GRAVITY
    const bool CorrHalfVel_Yes = true;
 #  endif
@@ -196,7 +194,7 @@ void CPU_FluidSolver_CTU(
 
 
 //       3. correct the face-centered variables by the transverse flux gradients
-         Hydro_TGradient_Correction( g_FC_Var_1PG, g_FC_Flux_1PG, dt, dh, Gamma_m1, _Gamma_m1, MinDens, MinPres );
+         Hydro_TGradient_Correction( g_FC_Var_1PG, g_FC_Flux_1PG, dt, dh, Gamma, MinDens, MinPres );
 
 
 //       4. evaluate the face-centered full-step fluxes by solving the Riemann problem with the corrected data
@@ -215,7 +213,7 @@ void CPU_FluidSolver_CTU(
 
 //       5. full-step evolution
          Hydro_FullStepUpdate( g_Flu_Array_In[P], g_Flu_Array_Out[P], g_DE_Array_Out[P],
-                               g_FC_Flux_1PG, dt, dh, Gamma_m1, _Gamma_m1, MinDens, MinPres, DualEnergySwitch,
+                               g_FC_Flux_1PG, dt, dh, Gamma, MinDens, MinPres, DualEnergySwitch,
                                NormPassive, NNorm, c_NormIdx );
 
       } // loop over all patch groups
@@ -236,20 +234,21 @@ void CPU_FluidSolver_CTU(
 //                               --> Accessed with the stride N_FC_FLUX
 //                dt           : Time interval to advance solution
 //                dh           : Cell size
-//                Gamma_m1     : Gamma - 1
-//                _Gamma_m1    : 1/(Gamma - 1)
+//                Gamma        : Ratio of specific heats
 //                MinDens/Pres : Minimum allowed density and pressure
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE
 void Hydro_TGradient_Correction(       real g_FC_Var [][NCOMP_TOTAL][ CUBE(N_FC_VAR)  ],
                                  const real g_FC_Flux[][NCOMP_TOTAL][ CUBE(N_FC_FLUX) ],
-                                 const real dt, const real dh, const real Gamma_m1, const real _Gamma_m1,
+                                 const real dt, const real dh, const real Gamma,
                                  const real MinDens, const real MinPres )
 {
 
-   const int  NCell   = N_FC_VAR;    // size of g_FC_Var[] and g_FC_Flux[] in each direction
-   const int  didx[3] = { 1, NCell, SQR(NCell) };
-   const real dt_dh2  = (real)0.5*dt/dh;
+   const int  NCell     = N_FC_VAR;    // size of g_FC_Var[] and g_FC_Flux[] in each direction
+   const int  didx[3]   = { 1, NCell, SQR(NCell) };
+   const real dt_dh2    = (real)0.5*dt/dh;
+   const real  Gamma_m1 = Gamma - (real)1.0;
+   const real _Gamma_m1 = (real)1.0 / Gamma_m1;
 
 // loop over different spatial directions
    for (int d=0; d<3; d++)
