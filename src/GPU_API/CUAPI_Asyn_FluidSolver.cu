@@ -220,7 +220,6 @@ void CUAPI_Asyn_FluidSolver( real h_Flu_Array_In[][FLU_NIN ][ CUBE(FLU_NXT) ],
 #  endif // #ifdef GAMER_DEBUG
 
 
-   const real _dh = (real)1.0/dh;
    const dim3 BlockDim_FluidSolver ( FLU_BLOCK_SIZE_X, FLU_BLOCK_SIZE_Y, 1 ); // for the fluidsolvers
 
 // model-dependent operations
@@ -319,7 +318,7 @@ void CUAPI_Asyn_FluidSolver( real h_Flu_Array_In[][FLU_NIN ][ CUBE(FLU_NXT) ],
               d_Flux_Array      + UsedPatch[s],
               d_Corner_Array_F  + UsedPatch[s],
               d_Pot_Array_USG_F + UsedPatch[s],
-              dt, _dh, Gamma, StoreFlux, XYZ, MinDens, MinPres );
+              dt, 1.0/dh, Gamma, StoreFlux, XYZ, MinDens, MinPres );
 
 #        elif ( FLU_SCHEME == MHM  ||  FLU_SCHEME == MHM_RP )
 
@@ -370,7 +369,7 @@ void CUAPI_Asyn_FluidSolver( real h_Flu_Array_In[][FLU_NIN ][ CUBE(FLU_NXT) ],
             ( d_Flu_Array_F_In  + UsedPatch[s],
               d_Flu_Array_F_Out + UsedPatch[s],
               d_Flux_Array      + UsedPatch[s],
-              dt, _dh, ELBDM_Eta, StoreFlux, ELBDM_Taylor3_Coeff, XYZ, MinDens );
+              dt, 1.0/dh, ELBDM_Eta, StoreFlux, ELBDM_Taylor3_Coeff, XYZ, MinDens );
 
 #     else
 
