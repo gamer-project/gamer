@@ -43,8 +43,8 @@ void Hydro_ComputeFlux( const real g_FC_Var [][NCOMP_TOTAL][ CUBE(N_FC_VAR) ],
                         const bool DumpIntFlux, real g_IntFlux[][NCOMP_TOTAL][ SQR(PS2) ] );
 void Hydro_FullStepUpdate( const real g_Input[][ CUBE(FLU_NXT) ], real g_Output[][ CUBE(PS2) ], char g_DE_Status[],
                            const real g_Flux[][NCOMP_TOTAL][ CUBE(N_FC_FLUX) ], const real dt, const real dh,
-                           const real Gamma_m1, const real _Gamma_m1, const real MinDens, const real MinPres,
-                           const real DualEnergySwitch, const bool NormPassive, const int NNorm, const int NormIdx[] );
+                           const real Gamma, const real MinDens, const real MinPres, const real DualEnergySwitch,
+                           const bool NormPassive, const int NNorm, const int NormIdx[] );
 #if   ( RSOLVER == EXACT )
 void Hydro_RiemannSolver_Exact( const int XYZ, real Flux_Out[], const real L_In[], const real R_In[], const real Gamma );
 #elif ( RSOLVER == ROE )
@@ -183,8 +183,6 @@ void CPU_FluidSolver_MHM(
 #endif // #ifdef __CUDACC__ ... else ...
 {
 
-   const real  Gamma_m1       = Gamma - (real)1.0;
-   const real _Gamma_m1       = (real)1.0 / Gamma_m1;
 #  ifdef UNSPLIT_GRAVITY
    const bool CorrHalfVel_Yes = true;
 #  else
@@ -283,7 +281,7 @@ void CPU_FluidSolver_MHM(
 
 //       3. full-step evolution
          Hydro_FullStepUpdate( g_Flu_Array_In[P], g_Flu_Array_Out[P], g_DE_Array_Out[P],
-                               g_FC_Flux_1PG, dt, dh, Gamma_m1, _Gamma_m1, MinDens, MinPres, DualEnergySwitch,
+                               g_FC_Flux_1PG, dt, dh, Gamma, MinDens, MinPres, DualEnergySwitch,
                                NormPassive, NNorm, c_NormIdx );
 
       } // loop over all patch groups
