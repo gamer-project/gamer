@@ -1,7 +1,7 @@
 #include "GAMER.h"
 
-#define COMMENT_SYM     '#'   // comment symbol
-#define DELIMITER       " "   // delimiter characters used by strtok()
+#define COMMENT_SYM     '#'      // comment symbol
+#define DELIMITER       " \t"    // delimiter characters used by strtok()
 
 
 

@@ -4,6 +4,11 @@
 #include "CUPOT.h"
 #endif
 #include <sched.h>
+#ifdef __APPLE__
+#include <cpuid.h>
+#endif
+
+static int get_cpuid();
 
 
 
@@ -549,6 +554,7 @@ void Aux_TakeNote()
 //    record the symbolic constants
       fprintf( Note, "Symbolic Constants\n" );
       fprintf( Note, "***********************************************************************************\n" );
+      fprintf( Note, "#define VERSION                 %s\n",      VERSION             );
       fprintf( Note, "#define NCOMP_FLUID             %d\n",      NCOMP_FLUID         );
       fprintf( Note, "#define NCOMP_PASSIVE           %d\n",      NCOMP_PASSIVE       );
       fprintf( Note, "#define FLU_NIN                 %d\n",      FLU_NIN             );
@@ -1499,7 +1505,7 @@ void Aux_TakeNote()
    int *omp_core_id = new int [omp_nthread];
 
 #  pragma omp parallel
-   { omp_core_id[ omp_get_thread_num() ] = sched_getcpu(); }
+   { omp_core_id[ omp_get_thread_num() ] = get_cpuid(); }
 
    for (int YourTurn=0; YourTurn<MPI_NRank; YourTurn++)
    {
@@ -1534,3 +1540,34 @@ void Aux_TakeNote()
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "Aux_TakeNote ... done\n" );
 
 } // FUNCTION : Aux_TakeNote
+
+
+
+//-------------------------------------------------------------------------------------------------------
+// Function    :  get_cpuid
+// Description :  Get the CPU ID
+//
+// Note        :  Work on both macOS and Linux systems
+//-------------------------------------------------------------------------------------------------------
+int get_cpuid()
+{
+
+// See https://stackoverflow.com/questions/33745364/sched-getcpu-equivalent-for-os-x
+   int CPU;
+
+#  ifdef __APPLE__
+   uint32_t CPUInfo[4];
+   __cpuid_count(1, 0, CPUInfo[0], CPUInfo[1], CPUInfo[2], CPUInfo[3]);
+   if ((CPUInfo[3] & (1 << 9)) == 0) {
+      CPU = -1;  /* no APIC on chip */
+   } else {
+      CPU = (unsigned)CPUInfo[1] >> 24;
+   }
+   if (CPU < 0) CPU = 0;
+#  else
+   CPU = sched_getcpu();
+#  endif
+
+   return CPU;
+
+} // FUNCTION : get_cpuid

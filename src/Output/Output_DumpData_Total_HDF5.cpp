@@ -72,7 +72,7 @@ Procedure for outputting new variables:
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2302)
+// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2303)
 // Description :  Output all simulation data in the HDF5 format, which can be used as a restart file
 //                or loaded by YT
 //
@@ -162,6 +162,7 @@ Procedure for outputting new variables:
 //                                          and particle attributes as their labels may have changed
 //                2301 : 2018/07/24 --> add OPT__UM_IC_FORMAT, PAR_IC_FORMAT, and PAR_IC_MASS
 //                2302 : 2018/07/24 --> Replace GRACKLE_MODE by GRACKLE_ACTIVATE
+//                2303 : 2018/10/04 --> Set "CodeVersion" to VERSION defined in Macro.h
 //-------------------------------------------------------------------------------------------------------
 void Output_DumpData_Total_HDF5( const char *FileName )
 {
@@ -1341,7 +1342,7 @@ void FillIn_KeyInfo( KeyInfo_t &KeyInfo )
 
    const time_t CalTime   = time( NULL );    // calendar time
 
-   KeyInfo.FormatVersion  = 2302;
+   KeyInfo.FormatVersion  = 2303;
    KeyInfo.Model          = MODEL;
    KeyInfo.NLevel         = NLEVEL;
    KeyInfo.NCompFluid     = NCOMP_FLUID;
@@ -1387,7 +1388,7 @@ void FillIn_KeyInfo( KeyInfo_t &KeyInfo )
       KeyInfo.dTime_AllLv   [lv] = dTime_AllLv   [lv];
    }
 
-   KeyInfo.CodeVersion  = (char*)"gamer";
+   KeyInfo.CodeVersion  = (char*)VERSION;
    KeyInfo.DumpWallTime = ctime( &CalTime );
    KeyInfo.DumpWallTime[ strlen(KeyInfo.DumpWallTime)-1 ] = '\0';  // remove the last character '\n'
 

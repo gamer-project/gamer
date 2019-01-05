@@ -359,13 +359,17 @@ LIBYT_PATH   :=
 
 # NTU-hulk (openmpi-intel-qlc)
 #CUDA_PATH    := /opt/gpu/cuda/4.2
-#FFTW_PATH    := /opt/math/fftw/2.1.5-intel-qlc
+#FFTW_PATH    := /opt/math/fftw/2.1.5-intel-openmpi-1.4.3-qlc
 #MPI_PATH     := /usr/mpi/intel/openmpi-1.4.3-qlc
-#HDF5_PATH    := /opt/hdf5/1.8.9
+#HDF5_PATH    := /opt/hdf5/1.8.20
 #GRACKLE_PATH := /work1/fish/Software/grackle
-#GSL_PATH     := /opt/math/gsl
+#GSL_PATH     := /opt/math/gsl/2.5
 #LIBYT_PATH   := /project/fish/libyt/libyt
-#MPI_PATH     := /opt/mpi/openmpi/1.6.0-intel
+#FFTW_PATH    := /opt/math/fftw/2.1.5-intel-openmpi-1.6.0-qlc
+#MPI_PATH     := /opt/mpi/openmpi/1.6.0-intel-qlc
+#FFTW_PATH    := /opt/math/fftw/2.1.5-intel-openmpi-2.1.5-qlc
+#MPI_PATH     := /opt/mpi/openmpi/2.1.5-intel-qlc
+#CUDA_PATH    := /usr/local/cuda-7.5
 
 # NTU-hulk (openmpi-gcc-qlc)
 #CUDA_PATH    := /opt/gpu/cuda/4.2
@@ -382,6 +386,15 @@ LIBYT_PATH   :=
 #FFTW_PATH    := /ifs/data/hsiyu/Software/fftw/2.1.5-openmpi-1.3.2-intel
 #MPI_PATH     := /usr/mpi/intel/openmpi-1.3.2-qlc
 #GPUID_PATH   := /ifs/data/hsiyu/Software/gpudevmgr
+
+# A "typical" macOS installation without GPU
+#CUDA_PATH    :=
+#FFTW_PATH    := /usr/local/fftw-2.1.5
+#MPI_PATH     := /usr/local/mpich-3.2
+#HDF5_PATH    := ${HOME}/miniconda3
+#GRACKLE_PATH :=
+#GSL_PATH     := /usr/local/gsl-1.16
+
 
 
 
@@ -442,7 +455,7 @@ CC_FILE     += Table_01.cpp  Table_02.cpp  Table_03.cpp  Table_04.cpp  Table_05.
                Table_07.cpp
 
 vpath %.cu     GPU_API
-vpath %.cpp    GAMER  Init  Refine  Fluid  Interpolation  Tables  Output  Miscellaneous  Auxiliary
+vpath %.cpp    Main  Init  Refine  Fluid  Interpolation  Tables  Output  Miscellaneous  Auxiliary
 
 
 # hydrodynamic source files (included only if "MODEL=HYDRO")
@@ -892,7 +905,7 @@ else
 		printf "\nCompiling GAMER --> Failed!\n\n"; \
 	fi)
 endif
-	@rm ./*.linkinfo -f
+	@rm -f ./*.linkinfo
 
 
 # clean
@@ -901,7 +914,7 @@ endif
 clean :
 	@rm -f $(OBJ_PATH)/*
 	@rm -f $(EXECUTABLE)
-	@rm ./*.linkinfo -f
+	@rm -f ./*.linkinfo
 
 
 

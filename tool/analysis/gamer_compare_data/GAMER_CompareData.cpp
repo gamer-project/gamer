@@ -389,7 +389,7 @@ void CompareParticleData()
       Data2  = ParData2[v][ParID2];
 
       AbsErr = Data1 - Data2;
-      RelErr = AbsErr / Data2;
+      RelErr = AbsErr / ( 0.5*(Data1+Data2) );
 
       if ( Data1 == 0.0  &&  Data2 == 0.0 )  continue;
 
