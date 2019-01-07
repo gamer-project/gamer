@@ -40,7 +40,7 @@ void CPU_RiemannSolver_HLLC( const int XYZ,
   real Usl[NCOMP_TOTAL], Usr[NCOMP_TOTAL];
 
   const real Gamma_m1 = Gamma - (real)1.0;
-  real rhl, rhr, cslsq, csrsq, vsql, vsqr, gammasql, gammasqr;
+  real rhl, rhr, cslsq, csrsq, gammasql, gammasqr;
   real ssl, ssr, radl, radr, lmdapl, lmdapr, lmdaml, lmdamr, lmdatlmda;
   real lmdal,lmdar; /* Left and Right wave speeds */
   real lmdas; /* Contact wave speed */

@@ -94,7 +94,7 @@ SIMU_OPTION += -DLAPLACIAN_4TH
 # include the quartic self-interaction potential
 # --> must turn on GRAVITY; does not support COMOVING
 #SIMU_OPTION += -DQUARTIC_SELF_INTERACTION
-i
+
 # number of passively advected scalars
 # --> not supported yet and must be set to 0 (or comment it out)
 SIMU_OPTION += -DNCOMP_PASSIVE_USER=0
@@ -111,6 +111,8 @@ SIMU_OPTION += -DEOS=IDEAL_GAS
 
 # conserved energy = (total energy)
 #SIMU_OPTION += -DCONSERVED_ENERGY=1
+
+SIMU_OPTION += -DCHECK_MIN_TEMP
 
 # conserved energy = (total energy) - (rest mass energy)
 SIMU_OPTION += -DCONSERVED_ENERGY=2
@@ -129,7 +131,7 @@ SIMU_OPTION += -DRSOLVER=HLLE
 
 # number of passively advected scalars
 # --> not supported yet and must be set to 0 (or comment it out)
-SIMU_OPTION += -DNCOMP_PASSIVE_USER=1
+SIMU_OPTION += -DNCOMP_PASSIVE_USER=0
 
 endif # MODEL
 

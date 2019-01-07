@@ -178,6 +178,12 @@ void Aux_TakeNote()
       fprintf( Note, "EOS                             RELATIVISTIC_IDEAL_GAS\n" );
 #     endif
 
+#     ifdef CHECK_MIN_TEMP
+      fprintf( Note, "CHECK_MIN_TEMP                  ON\n" );
+#     else
+      fprintf( Note, "CHECK_MIN_TEMP                  OFF\n" );
+#     endif
+
 #     if ( CONSERVED_ENERGY == 1 )
       fprintf( Note, "CONSERVED_ENERGY                TOTAL_ENERGY\n" );
 #     elif ( CONSERVED_ENERGY == 2 )

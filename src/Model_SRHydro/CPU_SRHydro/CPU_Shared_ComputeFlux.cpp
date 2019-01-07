@@ -105,6 +105,11 @@ CPU_ComputeFlux(const real FC_Var[][6][NCOMP_TOTAL],
 			ConVar_R[v] = FC_Var[ID2 + dID2[d]][dL][v];
 		    }
 
+#                   ifdef CHECK_MIN_TEMP
+                    ConVar_L[4] = CPU_CheckMinTempInEngy(ConVar_L);
+                    ConVar_R[4] = CPU_CheckMinTempInEngy(ConVar_R);
+#                   endif
+
 #                   ifdef CHECK_NEGATIVE_IN_FLUID
 		    boolean = CPU_CheckUnphysical(ConVar_L, NULL, __FUNCTION__, __LINE__);
 		    boolean = CPU_CheckUnphysical(ConVar_R, NULL, __FUNCTION__, __LINE__);

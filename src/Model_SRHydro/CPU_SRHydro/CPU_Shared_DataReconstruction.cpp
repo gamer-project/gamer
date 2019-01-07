@@ -109,10 +109,10 @@ void CPU_DataReconstruction( const real PriVar[][NCOMP_TOTAL], real FC_Var[][6][
                FC_Var[ID2][dR][v] = ( FC_Var[ID2][dR][v] < Max  ) ? FC_Var[ID2][dR][v] : Max;
                FC_Var[ID2][dL][v] = (real)2.0*PriVar[ID1][v] - FC_Var[ID2][dR][v];
             }
-#  ifdef CHECK_NEGATIVE_IN_FLUID
+#           ifdef CHECK_NEGATIVE_IN_FLUID
 	    boolean = CPU_CheckUnphysical(NULL,FC_Var[ID2][dR], __FUNCTION__, __LINE__);
 	    boolean = CPU_CheckUnphysical(NULL,FC_Var[ID2][dL], __FUNCTION__, __LINE__);
-#  endif
+#           endif
          }
          else // for the extrema-preserving limiter --> ensure positive density and pressure
          {

@@ -2010,9 +2010,11 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
                   Con[MOMY] = ArrayMomY[t];
                   Con[MOMZ] = ArrayMomZ[t];
                   Con[ENGY] = ArrayEngy[t];
-                  boolean = CPU_CheckUnphysical(Con, NULL, __FUNCTION__, __LINE__);
 #                 ifdef CHECK_MIN_TEMP
                   ArrayEngy[t] = CPU_CheckMinTempInEngy( Con );
+#                 endif
+#                 ifdef CHECK_NEGATIVE_IN_FLUID
+                  boolean = CPU_CheckUnphysical(Con, NULL, __FUNCTION__, __LINE__);
 #                 endif
 #                 else
                   ArrayEngy[t] = CPU_CheckMinPresInEngy( ArrayDens[t], ArrayMomX[t], ArrayMomY[t], ArrayMomZ[t], ArrayEngy[t],

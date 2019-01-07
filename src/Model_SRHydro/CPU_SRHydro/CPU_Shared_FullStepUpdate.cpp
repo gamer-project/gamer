@@ -58,11 +58,11 @@ void CPU_FullStepUpdate( const real Input[][ FLU_NXT*FLU_NXT*FLU_NXT ], real Out
       ID2 = (k1*PS2       + j1)*PS2       + i1;
       ID3 = (k2*FLU_NXT   + j2)*FLU_NXT   + i2;
 
-#  ifdef CHECK_NEGATIVE_IN_FLUID
+#     ifdef CHECK_NEGATIVE_IN_FLUID
       real Con[NCOMP_FLUID];
       for (int v = 0;v<NCOMP_FLUID;v++) Con[v] = Input[v][ID3];
       boolean = CPU_CheckUnphysical(Con, NULL, __FUNCTION__, __LINE__);
-#  endif
+#     endif
 
       for (int d=0; d<3; d++)
       for (int v=0; v<NCOMP_TOTAL; v++)   dF[d][v] = Flux[ ID1+dID1[d] ][d][v] - Flux[ID1][d][v];
@@ -114,14 +114,15 @@ void CPU_FullStepUpdate( const real Input[][ FLU_NXT*FLU_NXT*FLU_NXT ], real Out
                          Gamma_m1, _Gamma_m1, CheckMinPres_No, NULL_REAL, DualEnergySwitch );
 #     endif // #ifdef DUAL_ENERGY
 
-
-#     ifdef CHECK_NEGATIVE_IN_FLUID
       real Cons[NCOMP_FLUID];
       for (int v = 0;v<NCOMP_FLUID;v++) Cons[v] = Output[v][ID2];
-      boolean = CPU_CheckUnphysical(Cons, NULL, __FUNCTION__, __LINE__);
 #     ifdef CHECK_MIN_TEMP
       Output[ENGY][ID2] = CPU_CheckMinTempInEngy( Cons );
+      Cons[ENGY] = Output[ENGY][ID2];
 #     endif
+
+#     ifdef CHECK_NEGATIVE_IN_FLUID
+      boolean = CPU_CheckUnphysical(Cons, NULL, __FUNCTION__, __LINE__);
 #     endif
 
    } // i,j,k

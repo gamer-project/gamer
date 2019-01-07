@@ -342,14 +342,14 @@ void CPU_RiemannPredict( const real Flu_Array_In[][ FLU_NXT*FLU_NXT*FLU_NXT ],
       for (int v=0; v<NCOMP_TOTAL; v++)
          Half_Var[ID1][v] = Flu_Array_In[v][ID2] - dt_dh2*( dF[0][v] + dF[1][v] + dF[2][v] );
 
-#     ifdef CHECK_NEGATIVE_IN_FLUID
-      boolean = CPU_CheckUnphysical(Half_Var[ID1], NULL, __FUNCTION__, __LINE__);
-#     endif
-
 //    ensure positive density and pressure
       Half_Var[ID1][0] = FMAX( Half_Var[ID1][0], MinDens );
 #     ifdef CHECK_MIN_TEMP
       Half_Var[ID1][4] = CPU_CheckMinTempInEngy( Half_Var[ID1]);
+#     endif
+
+#     ifdef CHECK_NEGATIVE_IN_FLUID
+      boolean = CPU_CheckUnphysical(Half_Var[ID1], NULL, __FUNCTION__, __LINE__);
 #     endif
    } // i,j,k
 
@@ -405,7 +405,7 @@ void CPU_HancockPredict( real FC_Var[][6][NCOMP_TOTAL], const real dt, const rea
          for (int f=0; f<6; f++)    FC_Var[ID1][f][v] -= dFlux[v];
       }
 
-//    check the negative density and energy
+//    check unphyscial results
       for (int f=0; f<6; f++)
       {
          if ( CPU_CheckUnphysical(FC_Var[ID1][f], NULL, __FUNCTION__, __LINE__) )
@@ -419,19 +419,15 @@ void CPU_HancockPredict( real FC_Var[][6][NCOMP_TOTAL], const real dt, const rea
 
             break;
          }
+
+//    ensure positive density and pressure
+#     ifdef CHECK_MIN_TEMP
+      FC_Var[ID1][f][4] = CPU_CheckMinTempInEngy( FC_Var[ID1][f]);
+#     endif
 #     ifdef CHECK_NEGATIVE_IN_FLUID
       boolean = CPU_CheckUnphysical(FC_Var[ID1][f], NULL, __FUNCTION__, __LINE__);
 #     endif
       }
-
-
-//    ensure positive density and pressure
-#     ifdef CHECK_MIN_TEMP
-      for (int f=0; f<6; f++)
-      {
-         FC_Var[ID1][f][4] = CPU_CheckMinTempInEngy( FC_Var[ID1][f]);
-      }
-#     endif
 
    } // i,j,k
 

@@ -266,7 +266,7 @@ bool Flu_ResetByUser_DiffPrecessedJet( real fluid[], const double x, const doubl
    double Cos_Phi, Sin_Phi, Sin_Angle, Cos_Angle, Sin_Omega, Cos_Omega;
    double Angle, Omega_t, ShellOmega, ShellRadius, ShellThick;
    real   MomSin;
-   int state = 0;
+   int num_shell = 0;
 
 // distance: jet center to mesh
    for (int d=0; d<3; d++)    Vec_c2m[d] = r[d] - Jet_Cen[d];
@@ -346,22 +346,54 @@ bool Flu_ResetByUser_DiffPrecessedJet( real fluid[], const double x, const doubl
 //        use a sine function to make the velocity smooth within the jet from +Jet_SrcVel to -Jet_SrcVel
           MomSin      = sin( Jet_WaveK*Jet_dh );
           MomSin     *= SIGN( Vec_c2m[0]*Jet_Vec[0] + Vec_c2m[1]*Jet_Vec[1] + Vec_c2m[2]*Jet_Vec[2] );
+         
+          double Pri4Vel[NCOMP_FLUID] = {0};
 
-          double Pri4Vel[NCOMP_FLUID]
-                = { Jet_SrcDens, Jet_SrcVel_xyz[0]*MomSin, Jet_SrcVel_xyz[1]*MomSin, Jet_SrcVel_xyz[2]*MomSin, Jet_SrcPres };
- 
+//          if ( num_shell % 2 == 0 )
+//          {
+	     Pri4Vel[0] = Jet_SrcDens;
+	     Pri4Vel[1] = Jet_SrcVel_xyz[0]*MomSin;
+	     Pri4Vel[2] = Jet_SrcVel_xyz[1]*MomSin;
+	     Pri4Vel[3] = Jet_SrcVel_xyz[2]*MomSin;
+	     Pri4Vel[4] = Jet_SrcPres;
+//          }else{
+//	     Pri4Vel[0] = Jet_BgDens; 
+//	     Pri4Vel[1] = Jet_BgVel[0]; 
+//	     Pri4Vel[2] = Jet_BgVel[1];
+//	     Pri4Vel[3] = Jet_BgVel[2];
+//	     Pri4Vel[4] = Jet_BgPres;
+//          }
+
           CPU_Pri2Con(Pri4Vel, fluid, GAMMA);
    
-          state++;
+          num_shell++;
        } // if (  Jet_dh <= Jet_HalfHeight  &&  Jet_dr <= Jet_Radius )
 
    }
 
-   if ( state > 0 ) return true;
-   else             return false;
+   if ( num_shell > 0 ) return true;
+   else                 return false;
 
 } // FUNCTION : Flu_ResetByUser_Jets
 
+
+bool Flag_User( const int i, const int j, const int k, const int lv, const int PID, const double Threshold )
+{
+
+ const double dh     = amr->dh[lv];                                                  // grid size
+ const double Pos[3] = { amr->patch[0][lv][PID]->EdgeL[0] + (i+0.5)*dh,              // x,y,z position
+                         amr->patch[0][lv][PID]->EdgeL[1] + (j+0.5)*dh,
+                         amr->patch[0][lv][PID]->EdgeL[2] + (k+0.5)*dh  };
+
+ const double Center[3] = { 0.5*amr->BoxSize[0], 0.5*amr->BoxSize[1], 0.5*amr->BoxSize[2] };
+
+
+ if ( fabs( Pos[0]-Center[0] ) <= 0.5*Threshold  &&
+      fabs( Pos[1]-Center[1] ) <= 0.5*Threshold  && 
+      fabs( Pos[2]-Center[2] ) <= 0.5*Threshold )  return true;
+ else                                              return false;
+
+}
 
 
 //-------------------------------------------------------------------------------------------------------
@@ -386,7 +418,7 @@ void Init_TestProb_SRHydro_DiffPrecessedJet()
    SetParameter();
 
    Init_Function_User_Ptr   = SetGridIC;
-   Flag_User_Ptr            = NULL;
+   Flag_User_Ptr            = Flag_User;
    Mis_GetTimeStep_User_Ptr = NULL;
    BC_User_Ptr              = NULL;
    Flu_ResetByUser_Func_Ptr = Flu_ResetByUser_DiffPrecessedJet;

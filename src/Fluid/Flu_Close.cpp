@@ -379,7 +379,7 @@ bool Unphysical( const real Fluid[] )
 #  elif ( CONSERVED_ENERGY == 2 )
    if ( SQR(Fluid[ENGY]) + 2*Fluid[ENGY]*Fluid[DENS] - Msqr < 0.0 )      return true;
 #  endif
-/*
+
    real Pri4Vel[NCOMP_FLUID];
    real Pri3Vel[NCOMP_FLUID];
 
@@ -403,7 +403,7 @@ bool Unphysical( const real Fluid[] )
 
 // B4. check whether 3-velocity is greater than or equal to speed of light
    if (SQR(Pri3Vel[1]) + SQR(Pri3Vel[2]) + SQR(Pri3Vel[3]) >= 1.0) return true;
-*/
+
 
 #  endif
 
