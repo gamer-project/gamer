@@ -109,10 +109,10 @@ void CPU_DataReconstruction( const real PriVar[][NCOMP_TOTAL], real FC_Var[][6][
                FC_Var[ID2][dR][v] = ( FC_Var[ID2][dR][v] < Max  ) ? FC_Var[ID2][dR][v] : Max;
                FC_Var[ID2][dL][v] = (real)2.0*PriVar[ID1][v] - FC_Var[ID2][dR][v];
             }
-#           ifdef CHECK_NEGATIVE_IN_FLUID
-	    boolean = CPU_CheckUnphysical(NULL,FC_Var[ID2][dR], __FUNCTION__, __LINE__);
-	    boolean = CPU_CheckUnphysical(NULL,FC_Var[ID2][dL], __FUNCTION__, __LINE__);
-#           endif
+#          ifdef CHECK_NEGATIVE_IN_FLUID
+           boolean = CPU_CheckUnphysical(NULL,FC_Var[ID2][dR], __FUNCTION__, __LINE__);
+           boolean = CPU_CheckUnphysical(NULL,FC_Var[ID2][dL], __FUNCTION__, __LINE__);
+#          endif
          }
          else // for the extrema-preserving limiter --> ensure positive density and pressure
          {
@@ -124,8 +124,8 @@ void CPU_DataReconstruction( const real PriVar[][NCOMP_TOTAL], real FC_Var[][6][
             FC_Var[ID2][dR][4] = CPU_CheckMinPres( FC_Var[ID2][dR][4], MinPres );
 */
 #  ifdef CHECK_NEGATIVE_IN_FLUID
-	    boolean = CPU_CheckUnphysical(NULL,FC_Var[ID2][dR], __FUNCTION__, __LINE__);
-	    boolean = CPU_CheckUnphysical(NULL,FC_Var[ID2][dL], __FUNCTION__, __LINE__);
+           boolean = CPU_CheckUnphysical(NULL,FC_Var[ID2][dR], __FUNCTION__, __LINE__);
+           boolean = CPU_CheckUnphysical(NULL,FC_Var[ID2][dL], __FUNCTION__, __LINE__);
 #  endif
          }
 
@@ -352,102 +352,181 @@ void LimitSlope( const real L2[], const real L1[], const real C0[], const real R
    real Slope_L[NCOMP_TOTAL], Slope_R[NCOMP_TOTAL], Slope_C[NCOMP_TOTAL], Slope_A[NCOMP_TOTAL];
    real Slope_LL[NCOMP_TOTAL], Slope_RR[NCOMP_TOTAL], Slope_LR;
    real D2_L, D2_R, D2_C, D2_Sign, D2_Limiter, Slope_Sign;  // variables for the extrema-preserving limiter
+   real omega, beta_L, beta_R, Xi_L, Xi_R, delta[NCOMP_TOTAL];
 
-
-// evaluate different slopes
    for (int v=0; v<NCOMP_TOTAL; v++)
    {
       Slope_L[v] = C0[v] - L1[v];
       Slope_R[v] = R1[v] - C0[v];
-      Slope_C[v] = (real)0.5*( Slope_L[v] + Slope_R[v] );
-   }
 
-   if ( LR_Limiter == VL_GMINMOD )
-   {
-      for (int v=0; v<NCOMP_TOTAL; v++)
+//    evaluate different slopes
+      switch ( LR_Limiter )
       {
-         if ( Slope_L[v]*Slope_R[v] > (real)0.0 )
-            Slope_A[v] = (real)2.0*Slope_L[v]*Slope_R[v]/( Slope_L[v] + Slope_R[v] );
-         else
-            Slope_A[v] = (real)0.0;
+//       generalized MinMod
+         case GMINMOD: 
+           if (  Slope_L[v]*Slope_R[v] > (real)0.0  &&  Slope_LL[v]*Slope_RR[v] > (real)0.0  )
+           {
+             Slope_L[v] *= MinMod_Coeff;
+             Slope_R[v] *= MinMod_Coeff;
+             Slope_Limiter[v]  = FMIN(  FABS( Slope_L[v] ), FABS( Slope_R[v] )  );
+             Slope_Limiter[v]  = FMIN(  FABS( Slope_C[v] ), Slope_Limiter[v]  );
+             Slope_Limiter[v] *= SIGN( Slope_C[v] );
+           } else Slope_Limiter[v] = (real)0.0;
+         break;
+
+//       van-Leer + generalized MinMod
+         case VL_GMINMOD:           
+           if (  Slope_L[v]*Slope_R[v] > (real)0.0  &&  Slope_LL[v]*Slope_RR[v] > (real)0.0  )
+              Slope_A[v] = (real)2.0*Slope_L[v]*Slope_R[v]/( Slope_L[v] + Slope_R[v] );
+           else
+              Slope_A[v] = (real)0.0;
+
+           if (  Slope_L[v]*Slope_R[v] > (real)0.0  &&  Slope_LL[v]*Slope_RR[v] > (real)0.0  )
+           {
+             Slope_L[v] *= MinMod_Coeff;
+             Slope_R[v] *= MinMod_Coeff;
+             Slope_Limiter[v]  = FMIN(  FABS( Slope_L[v] ), FABS( Slope_R[v] )  );
+             Slope_Limiter[v]  = FMIN(  FABS( Slope_C[v] ), Slope_Limiter[v]  );
+             Slope_Limiter[v]  = FMIN(  FABS( Slope_A[v] ), Slope_Limiter[v]  );
+             Slope_Limiter[v] *= SIGN( Slope_C[v] );
+           } else Slope_Limiter[v] = (real)0.0;
+         break;
+
+//       extrema-preserving
+         case EXTPRE:
+           Slope_LL[v] = L1[v] - L2[v];
+           Slope_RR[v] = R2[v] - R1[v];
+
+           if (  Slope_L[v]*Slope_R[v] > (real)0.0  &&  Slope_LL[v]*Slope_RR[v] > (real)0.0  )
+           {
+             Slope_L[v] *= MinMod_Coeff;
+             Slope_R[v] *= MinMod_Coeff;
+             Slope_Limiter[v]  = FMIN(  FABS( Slope_L[v] ), FABS( Slope_R[v] )  );
+             Slope_Limiter[v]  = FMIN(  FABS( Slope_C[v] ), Slope_Limiter[v]  );
+             Slope_Limiter[v] *= SIGN( Slope_C[v] );
+           }
+           else
+           {
+             D2_L = Slope_L [v] - Slope_LL[v];
+             D2_R = Slope_RR[v] - Slope_R [v];
+             D2_C = Slope_R [v] - Slope_L [v];
+
+             D2_Sign    = SIGN( D2_C );
+             Slope_Sign = SIGN( Slope_C[v] );
+
+             D2_Limiter = FMIN(  FABS(D2_C), FMIN( FMAX(D2_Sign*D2_L, (real)0.0), FMAX(D2_Sign*D2_R, (real)0.0) )  );
+
+             if ( D2_Sign*Slope_Sign < (real)0.0 )
+                   Slope_Limiter[v] = FMIN( (real)1.5*EP_Coeff*D2_Limiter, MinMod_Coeff*FABS(Slope_L[v]) );
+             else  Slope_Limiter[v] = FMIN( (real)1.5*EP_Coeff*D2_Limiter, MinMod_Coeff*FABS(Slope_R[v]) );
+
+             Slope_Limiter[v] = Slope_Sign * FMIN( FABS(Slope_C[v]), Slope_Limiter[v] );
+           }
+         break;
+
+//       van-Leer, Ref: eq.(14.54) in Toro
+         case VANLEER:              
+           if (  Slope_L[v]*Slope_R[v] > (real)0.0 )
+           {
+              omega = 0.0; // -1 <= omega <= +1
+      
+              beta_L = 2.0 / (1 + DT__FLUID);
+              beta_R = 2.0 / (1 - DT__FLUID);
+                 
+              delta[v] = 0.5*( (1-omega)*Slope_R[v] + (1+omega)*Slope_L[v] );
+      
+              Xi_L = beta_L * Slope_L[v] / delta[v];
+              Xi_R = beta_R * Slope_R[v] / delta[v];
+  
+              Slope_Limiter[v] = (real)2.0*Slope_L[v]/( Slope_L[v] + Slope_R[v] );
+              Slope_Limiter[v] = FMIN( Slope_Limiter[v], Xi_R );
+              Slope_Limiter[v] = Slope_Limiter[v] * delta[v];
+            } else Slope_Limiter[v] = 0.0;
+            break;
+
+//       van-Leer Albada 1, Ref: eq.(14.55) in Toro
+         case ALBADA:               
+           Slope_LR = Slope_L[v]*Slope_R[v];
+           if (  Slope_LR > (real)0.0 )
+           {
+              omega = 0.0; // -1 <= omega <= +1
+      
+              beta_L = 2.0 / (1 + DT__FLUID);
+              beta_R = 2.0 / (1 - DT__FLUID);
+                 
+              delta[v] = 0.5*( (1-omega)*Slope_R[v] + (1+omega)*Slope_L[v] );
+      
+              Xi_L = beta_L * Slope_L[v] / delta[v];
+              Xi_R = beta_R * Slope_R[v] / delta[v];
+  
+              Slope_Limiter[v] = ( Slope_LR + Slope_L[v]*Slope_L[v] ) / ( Slope_L[v]*Slope_L[v] + Slope_R[v]*Slope_R[v] );
+              Slope_Limiter[v] = FMIN( Slope_Limiter[v], Xi_R );
+              Slope_Limiter[v] = Slope_Limiter[v] * delta[v];
+            } else Slope_Limiter[v] = 0.0;
+            break;
+
+//       van-Leer Albada 2, Ref: Flux limiter in Wikipedia
+         case ALBADA_2:              
+           Slope_LR = Slope_L[v]*Slope_R[v];
+           if (  Slope_LR > (real)0.0 )
+           {
+              omega = 0.0; // -1 <= omega <= +1
+      
+              beta_L = 2.0 / (1 + DT__FLUID);
+              beta_R = 2.0 / (1 - DT__FLUID);
+                 
+              delta[v] = 0.5*( (1-omega)*Slope_R[v] + (1+omega)*Slope_L[v] );
+      
+              Xi_L = beta_L * Slope_L[v] / delta[v];
+              Xi_R = beta_R * Slope_R[v] / delta[v];
+  
+              Slope_Limiter[v] = (real)2.0*Slope_LR/( Slope_L[v]*Slope_L[v] + Slope_R[v]*Slope_R[v] );
+              Slope_Limiter[v] = FMIN( Slope_Limiter[v], Xi_R );
+              Slope_Limiter[v] = Slope_Limiter[v] * delta[v];
+            } else Slope_Limiter[v] = 0.0;
+            break;
+
+//       minbee, Ref: eq.(14.44) in Toro
+         case MINBEE:
+           if ( Slope_R[v] > (real)0.0 )
+           {
+             Slope_Limiter[v] = FMIN( Slope_L[v], Slope_R[v] );
+             Slope_Limiter[v] = FMAX(    0, Slope_Limiter[v] );
+           }
+           else
+           {
+             Slope_Limiter[v] = FMAX( Slope_L[v], Slope_R[v] );
+             Slope_Limiter[v] = FMIN(    0, Slope_Limiter[v] );
+           }
+           break;
+      
+//       superbee, Ref: eq.(14.44) in Toro
+         case SUPERBEE:
+           real a, b;
+           if ( Slope_R[v] > (real)0.0 )
+           {
+             a = FMIN(     Slope_L[v], 2.0*Slope_R[v] );
+             b = FMIN( 2.0*Slope_L[v],     Slope_R[v] );
+             Slope_Limiter[v] = FMAX( a, b );
+             Slope_Limiter[v] = FMAX( 0.0, Slope_Limiter[v] );
+           }
+           else
+           {
+             a = FMAX(     Slope_L[v], 2.0*Slope_R[v] );
+             b = FMAX( 2.0*Slope_L[v],     Slope_R[v] );
+             Slope_Limiter[v] = FMIN( a, b );
+             Slope_Limiter[v] = FMIN( 0.0, Slope_Limiter[v] );
+           }
+           break;
+
+//       piece-wise constant
+         case CONSTANT: 
+           Slope_Limiter[v] = 0.0;
+           break;
+
+         default :
+            Aux_Error( ERROR_INFO, "incorrect parameter %s = %d !!\n", "LR_Limiter", LR_Limiter );
       }
-   }
-
-   if ( LR_Limiter == EXTPRE )
-   {
-      for (int v=0; v<NCOMP_TOTAL; v++)
-      {
-         Slope_LL[v] = L1[v] - L2[v];
-         Slope_RR[v] = R2[v] - R1[v];
-      }
-   }
-
-
-// apply the slope limiter
-   for (int v=0; v<NCOMP_TOTAL; v++)
-   {
-      Slope_LR = Slope_L[v]*Slope_R[v];
-
-      if (  Slope_LR > (real)0.0  &&  ( LR_Limiter != EXTPRE || Slope_LL[v]*Slope_RR[v] > (real)0.0 )  )
-      {
-         switch ( LR_Limiter )
-         {
-            case VANLEER:              // van-Leer
-               Slope_Limiter[v] = (real)2.0*Slope_LR/( Slope_L[v] + Slope_R[v] );
-               break;
-
-            case GMINMOD: case EXTPRE: // generalized MinMod & extrema-preserving
-               Slope_L[v] *= MinMod_Coeff;
-               Slope_R[v] *= MinMod_Coeff;
-               Slope_Limiter[v]  = FMIN(  FABS( Slope_L[v] ), FABS( Slope_R[v] )  );
-               Slope_Limiter[v]  = FMIN(  FABS( Slope_C[v] ), Slope_Limiter[v]  );
-               Slope_Limiter[v] *= SIGN( Slope_C[v] );
-               break;
-
-            case ALBADA:               // van-Albada
-               Slope_Limiter[v] = Slope_LR*( Slope_L[v] + Slope_R[v] ) /
-                                  ( Slope_L[v]*Slope_L[v] + Slope_R[v]*Slope_R[v] );
-               break;
-
-            case VL_GMINMOD:           // van-Leer + generalized MinMod
-               Slope_L[v] *= MinMod_Coeff;
-               Slope_R[v] *= MinMod_Coeff;
-               Slope_Limiter[v]  = FMIN(  FABS( Slope_L[v] ), FABS( Slope_R[v] )  );
-               Slope_Limiter[v]  = FMIN(  FABS( Slope_C[v] ), Slope_Limiter[v]  );
-               Slope_Limiter[v]  = FMIN(  FABS( Slope_A[v] ), Slope_Limiter[v]  );
-               Slope_Limiter[v] *= SIGN( Slope_C[v] );
-               break;
-
-            default :
-               Aux_Error( ERROR_INFO, "incorrect parameter %s = %d !!\n", "LR_Limiter", LR_Limiter );
-         }
-      } // if (  Slope_LR > (real)0.0  &&  ( LR_Limiter != EXTPRE || Slope_LL[v]*Slope_RR[v] > (real)0.0 )  )
-
-      else
-      {
-         if ( LR_Limiter == EXTPRE )   // extrema-preserving
-         {
-            D2_L = Slope_L [v] - Slope_LL[v];
-            D2_R = Slope_RR[v] - Slope_R [v];
-            D2_C = Slope_R [v] - Slope_L [v];
-
-            D2_Sign    = SIGN( D2_C );
-            Slope_Sign = SIGN( Slope_C[v] );
-
-            D2_Limiter = FMIN(  FABS(D2_C), FMIN( FMAX(D2_Sign*D2_L, (real)0.0),
-                                                  FMAX(D2_Sign*D2_R, (real)0.0) )  );
-
-            if ( D2_Sign*Slope_Sign < (real)0.0 )
-               Slope_Limiter[v] = FMIN( (real)1.5*EP_Coeff*D2_Limiter, MinMod_Coeff*FABS(Slope_L[v]) );
-            else
-               Slope_Limiter[v] = FMIN( (real)1.5*EP_Coeff*D2_Limiter, MinMod_Coeff*FABS(Slope_R[v]) );
-
-            Slope_Limiter[v] = Slope_Sign * FMIN( FABS(Slope_C[v]), Slope_Limiter[v] );
-         }
-         else
-            Slope_Limiter[v] = (real)0.0;
-
-      } // if ( Slope_LR > (real)0.0 && ( LR_Limiter != EXTPRE || Slope_LL[v]*Slope_RR[v] > (real)0.0 ) ) .else.
    } // for (int v=0; v<NCOMP_TOTAL; v++)
 
 } // FUNCTION : LimitSlope

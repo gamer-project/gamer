@@ -613,12 +613,10 @@ void Aux_Check_Parameter()
       Aux_Message( stderr, "WARNING : MIN_DENS == 0.0 could be dangerous and is mainly for debugging only !!\n" );
    else if ( MPI_Rank == 0 )
       Aux_Message( stderr, "WARNING : MIN_DENS (%13.7e) is on --> please ensure that this value is reasonable !!\n", MIN_DENS );
-#  if ( MODEL != SR_HYDRO )
    if ( MIN_PRES == 0.0  &&  MPI_Rank == 0 )
       Aux_Message( stderr, "WARNING : MIN_PRES == 0.0 could be dangerous and is mainly for debugging only !!\n" );
    else if ( MPI_Rank == 0 )
       Aux_Message( stderr, "WARNING : MIN_PRES (%13.7e) is on --> please ensure that this value is reasonable !!\n", MIN_PRES );
-#  endif
 #  if ( FLU_SCHEME == RTVD  ||  FLU_SCHEME == WAF )
    if ( JEANS_MIN_PRES )
       Aux_Error( ERROR_INFO, "RTVD and WAF fluid schemes do not support \"JEANS_MIN_PRES\" !!\n" );
@@ -1058,7 +1056,8 @@ void Aux_Check_Parameter()
 #  endif
 
    if ( OPT__LR_LIMITER != VANLEER  &&  OPT__LR_LIMITER != GMINMOD  &&  OPT__LR_LIMITER != ALBADA  &&
-        OPT__LR_LIMITER != EXTPRE   &&  OPT__LR_LIMITER != VL_GMINMOD )
+        OPT__LR_LIMITER != EXTPRE   &&  OPT__LR_LIMITER != VL_GMINMOD && OPT__LR_LIMITER != SUPERBEE &&
+        OPT__LR_LIMITER != MINBEE   &&  OPT__LR_LIMITER != ALBADA_2 && OPT__LR_LIMITER != CONSTANT )
       Aux_Error( ERROR_INFO, "unsupported data reconstruction limiter (OPT__LR_IMITER = %d) !!\n",
                  OPT__LR_LIMITER );
 

@@ -947,8 +947,12 @@ void Aux_TakeNote()
       fprintf( Note, "OPT__LR_LIMITER                 %s\n",      ( OPT__LR_LIMITER == VANLEER           ) ? "VANLEER"    :
                                                                   ( OPT__LR_LIMITER == GMINMOD           ) ? "GMINMOD"    :
                                                                   ( OPT__LR_LIMITER == ALBADA            ) ? "ALBADA"     :
+                                                                  ( OPT__LR_LIMITER == ALBADA_2          ) ? "ALBADA_2"   :
                                                                   ( OPT__LR_LIMITER == VL_GMINMOD        ) ? "VL_GMINMOD" :
                                                                   ( OPT__LR_LIMITER == EXTPRE            ) ? "EXTPRE"     :
+                                                                  ( OPT__LR_LIMITER == MINBEE            ) ? "MINBEE"     :
+                                                                  ( OPT__LR_LIMITER == SUPERBEE          ) ? "SUPERBEE"   :
+                                                                  ( OPT__LR_LIMITER == CONSTANT          ) ? "CONSTANT"   :
                                                                   ( OPT__LR_LIMITER == LR_LIMITER_NONE   ) ? "NONE"       :
                                                                                                              "UNKNOWN" );
       fprintf( Note, "OPT__WAF_LIMITER                %s\n",      ( OPT__WAF_LIMITER == WAF_SUPERBEE     ) ? "WAF_SUPERBEE":

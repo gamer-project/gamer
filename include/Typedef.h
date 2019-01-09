@@ -110,8 +110,12 @@ const LR_Limiter_t
    VANLEER         = 1,
    GMINMOD         = 2,
    ALBADA          = 3,
-   VL_GMINMOD      = 4,
-   EXTPRE          = 5;
+   ALBADA_2        = 4,
+   VL_GMINMOD      = 5,
+   EXTPRE          = 6,
+   MINBEE          = 7,
+   SUPERBEE        = 8,
+   CONSTANT        = 9;
 
 
 // TVD limiters for the WAF scheme
