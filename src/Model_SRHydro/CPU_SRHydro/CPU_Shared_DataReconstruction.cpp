@@ -352,7 +352,7 @@ void LimitSlope( const real L2[], const real L1[], const real C0[], const real R
    real Slope_L[NCOMP_TOTAL], Slope_R[NCOMP_TOTAL], Slope_C[NCOMP_TOTAL], Slope_A[NCOMP_TOTAL];
    real Slope_LL[NCOMP_TOTAL], Slope_RR[NCOMP_TOTAL], Slope_LR;
    real D2_L, D2_R, D2_C, D2_Sign, D2_Limiter, Slope_Sign;  // variables for the extrema-preserving limiter
-   real omega, beta_L, beta_R, Xi_L, Xi_R, delta[NCOMP_TOTAL];
+   real beta_L, beta_R, Xi_L, Xi_R, delta[NCOMP_TOTAL];
 
    for (int v=0; v<NCOMP_TOTAL; v++)
    {
@@ -428,12 +428,10 @@ void LimitSlope( const real L2[], const real L1[], const real C0[], const real R
          case VANLEER:              
            if (  Slope_L[v]*Slope_R[v] > (real)0.0 )
            {
-              omega = 0.0; // -1 <= omega <= +1
-      
               beta_L = 2.0 / (1 + DT__FLUID);
               beta_R = 2.0 / (1 - DT__FLUID);
                  
-              delta[v] = 0.5*( (1-omega)*Slope_R[v] + (1+omega)*Slope_L[v] );
+              delta[v] = 0.5*( (1-MinMod_Coeff)*Slope_R[v] + (1+MinMod_Coeff)*Slope_L[v] );
       
               Xi_L = beta_L * Slope_L[v] / delta[v];
               Xi_R = beta_R * Slope_R[v] / delta[v];
@@ -449,12 +447,10 @@ void LimitSlope( const real L2[], const real L1[], const real C0[], const real R
            Slope_LR = Slope_L[v]*Slope_R[v];
            if (  Slope_LR > (real)0.0 )
            {
-              omega = 0.0; // -1 <= omega <= +1
-      
               beta_L = 2.0 / (1 + DT__FLUID);
               beta_R = 2.0 / (1 - DT__FLUID);
                  
-              delta[v] = 0.5*( (1-omega)*Slope_R[v] + (1+omega)*Slope_L[v] );
+              delta[v] = 0.5*( (1-MinMod_Coeff)*Slope_R[v] + (1+MinMod_Coeff)*Slope_L[v] );
       
               Xi_L = beta_L * Slope_L[v] / delta[v];
               Xi_R = beta_R * Slope_R[v] / delta[v];
@@ -470,12 +466,10 @@ void LimitSlope( const real L2[], const real L1[], const real C0[], const real R
            Slope_LR = Slope_L[v]*Slope_R[v];
            if (  Slope_LR > (real)0.0 )
            {
-              omega = 0.0; // -1 <= omega <= +1
-      
               beta_L = 2.0 / (1 + DT__FLUID);
               beta_R = 2.0 / (1 - DT__FLUID);
                  
-              delta[v] = 0.5*( (1-omega)*Slope_R[v] + (1+omega)*Slope_L[v] );
+              delta[v] = 0.5*( (1-MinMod_Coeff)*Slope_R[v] + (1+MinMod_Coeff)*Slope_L[v] );
       
               Xi_L = beta_L * Slope_L[v] / delta[v];
               Xi_R = beta_R * Slope_R[v] / delta[v];
