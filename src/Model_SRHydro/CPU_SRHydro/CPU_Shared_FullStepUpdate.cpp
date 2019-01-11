@@ -33,21 +33,11 @@ void CPU_FullStepUpdate( const real Input[][ FLU_NXT*FLU_NXT*FLU_NXT ], real Out
                          const real Gamma, const real MinDens, const real MinPres, const real DualEnergySwitch,
                          const bool NormPassive, const int NNorm, const int NormIdx[] )
 {
-
-#  ifdef DUAL_ENERGY
-   const real  Gamma_m1 = Gamma - (real)1.0;
-   const real _Gamma_m1 = (real)1.0 / Gamma_m1;
-#  endif
    const int  dID1[3]   = { 1, N_FL_FLUX, N_FL_FLUX*N_FL_FLUX };
    const real dt_dh     = dt/dh;
 
    int  ID1, ID2, ID3;
    real dF[3][NCOMP_TOTAL];
-
-#  if ( NCOMP_PASSIVE > 0 )
-   real Passive[NCOMP_PASSIVE];
-#  endif
-
 
    for (int k1=0, k2=FLU_GHOST_SIZE;  k1<PS2;  k1++, k2++)
    for (int j1=0, j2=FLU_GHOST_SIZE;  j1<PS2;  j1++, j2++)
@@ -65,54 +55,11 @@ void CPU_FullStepUpdate( const real Input[][ FLU_NXT*FLU_NXT*FLU_NXT ], real Out
 #     endif
 
       for (int d=0; d<3; d++)
-      for (int v=0; v<NCOMP_TOTAL; v++)   dF[d][v] = Flux[ ID1+dID1[d] ][d][v] - Flux[ID1][d][v];
+      for (int v=0; v<NCOMP_TOTAL; v++)   
+         dF[d][v] = Flux[ ID1+dID1[d] ][d][v] - Flux[ID1][d][v];
 
       for (int v=0; v<NCOMP_TOTAL; v++)
          Output[v][ID2] = Input[v][ID3] - dt_dh*( dF[0][v] + dF[1][v] + dF[2][v] );
-
-
-//    we no longer ensure positive density and pressure here
-//    --> these checks have been moved to Flu_Close()->CorrectUnphysical()
-//        because we want to apply 1st-order-flux correction BEFORE setting a minimum density and pressure
-//    --> this consideration holds even when DUAL_ENERGY is adopted (e.g., when density is negative, even when DUAL_ENERGY is on,
-//        we still want to try the 1st-order-flux correction before setting a floor value)
-/*      
-      Output[DENS][ID2] = FMAX( Output[DENS][ID2], MinDens );
-
-      Output[ENGY][ID2] = CPU_CheckMinPresInEngy( Output[DENS][ID2], Output[MOMX][ID2], Output[MOMY][ID2], Output[MOMZ][ID2],
-                                                  Output[ENGY][ID2], Gamma_m1, _Gamma_m1, MinPres );
-*/
-      
-
-//    floor and normalize passive scalars
-#     if ( NCOMP_PASSIVE > 0 )
-      for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)  Output[v][ID2] = FMAX( Output[v][ID2], TINY_NUMBER );
-
-      if ( NormPassive )
-      {
-         for (int v=0; v<NCOMP_PASSIVE; v++)    Passive[v] = Output[ NCOMP_FLUID + v ][ID2];
-
-         CPU_NormalizePassive( Output[DENS][ID2], Passive, NNorm, NormIdx );
-
-         for (int v=0; v<NCOMP_PASSIVE; v++)    Output[ NCOMP_FLUID + v ][ID2] = Passive[v];
-      }
-#     endif
-
-
-//    apply the dual-energy formalism to correct the internal energy
-//    --> currently, even when UNSPLIT_GRAVITY is on (which would update the internal energy), we still invoke
-//        CPU_DualEnergyFix() here and will fix the internal energy in the gravity solver for cells updated
-//        by the dual-energy formalism (i.e., for cells with their dual-energy status marked as DE_UPDATED_BY_DUAL)
-//    --> this feature might be modified in the future
-#     ifdef DUAL_ENERGY
-//    we no longer apply the minimum density and pressure checks here since we want to enable 1st-order-flux correction for that
-      const bool CheckMinPres_No = false;
-//    Output[DENS][ID2] = FMAX( Output[DENS][ID2], MinDens );
-
-      CPU_DualEnergyFix( Output[DENS][ID2], Output[MOMX][ID2], Output[MOMY][ID2], Output[MOMZ][ID2],
-                         Output[ENGY][ID2], Output[ENPY][ID2], DE_Status[ID2],
-                         Gamma_m1, _Gamma_m1, CheckMinPres_No, NULL_REAL, DualEnergySwitch );
-#     endif // #ifdef DUAL_ENERGY
 
 #     if ( defined CHECK_MIN_TEMP ) || (defined CHECK_NEGATIVE_IN_FLUID )
       real Cons[NCOMP_FLUID];
@@ -121,7 +68,6 @@ void CPU_FullStepUpdate( const real Input[][ FLU_NXT*FLU_NXT*FLU_NXT ], real Out
       Output[ENGY][ID2] = CPU_CheckMinTempInEngy( Cons );
       Cons[ENGY] = Output[ENGY][ID2];
 #     endif
-
 #     ifdef CHECK_NEGATIVE_IN_FLUID
       boolean = CPU_CheckUnphysical(Cons, NULL, __FUNCTION__, __LINE__);
 #     endif

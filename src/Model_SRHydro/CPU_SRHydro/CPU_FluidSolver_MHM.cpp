@@ -460,7 +460,7 @@ void CPU_HancockPredict( real FC_Var[][6][NCOMP_TOTAL], const real dt, const rea
             break;
          }
 
-//    ensure positive density and pressure
+//    ensure positive temperature
 #     ifdef CHECK_MIN_TEMP
       FC_Var[ID1][f][4] = CPU_CheckMinTempInEngy( FC_Var[ID1][f]);
 #     endif
