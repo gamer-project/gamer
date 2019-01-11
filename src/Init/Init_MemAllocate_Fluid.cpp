@@ -21,6 +21,7 @@ void Init_MemAllocate_Fluid( const int Flu_NPatchGroup, const int Pot_NPatchGrou
    const int dt_NPatch  = Flu_NPatch;
 #  endif
 
+// array index to load and store data ( 0 or 1 )
    for (int t=0; t<2; t++)
    {
       h_Flu_Array_F_In [t] = new real [Flu_NPatchGroup][FLU_NIN ][   FLU_NXT   *FLU_NXT   *FLU_NXT    ];

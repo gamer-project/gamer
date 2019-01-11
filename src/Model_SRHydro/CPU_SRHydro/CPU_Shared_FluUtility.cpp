@@ -581,9 +581,9 @@ bool CPU_CheckUnphysical( const real Con[], const real Pri[], const char s[], co
       UNPHYSICAL:
       {
         if ( strcmp(s,"CPU_HancockPredict") != 0 ) {
-        Aux_Message(stderr,"function: %s: %d\n", s, line);
+        Aux_Message(stderr,"\n\nfunction: %s: %d\n", s, line);
  
-        Aux_Message(stderr, "\n\nD=%14.7e, Mx=%14.7e, My=%14.7e, Mz=%14.7e, E=%14.7e\n",
+        Aux_Message(stderr, "D=%14.7e, Mx=%14.7e, My=%14.7e, Mz=%14.7e, E=%14.7e\n",
                              ConsVar[DENS], ConsVar[MOMX], ConsVar[MOMY], ConsVar[MOMZ], ConsVar[ENGY]);
 #       if ( CONSERVED_ENERGY == 1 )
         Aux_Message(stderr, "E^2-|M|^2-D^2=%14.7e\n", discriminant );

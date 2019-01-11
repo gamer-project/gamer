@@ -119,19 +119,32 @@ void CPU_FluidSolver_MHM( const real Flu_Array_In[][NCOMP_TOTAL][ FLU_NXT*FLU_NX
 
 
 //       (1.a-3) conserved variables --> primitive variables
+#        if  ( EXTRAPOLATE != CONSERVED_QUANTITIES ||  defined(CHECK_NEGATIVE_IN_FLUID) )
          for (int k=0; k<N_HF_VAR; k++)
          for (int j=0; j<N_HF_VAR; j++)
          for (int i=0; i<N_HF_VAR; i++)
          {
             ID1 = (k*N_HF_VAR + j)*N_HF_VAR + i;
 
+#           if  ( EXTRAPOLATE == FOUR_VELOCITY )
             for (int v=0; v<NCOMP_TOTAL; v++)   Input[v] = Half_Var[ID1][v];
 #           ifdef CHECK_NEGATIVE_IN_FLUID
             boolean = CPU_CheckUnphysical(Input, NULL, __FUNCTION__, __LINE__);
 #           endif
-            CPU_Con2Pri( Input, Half_Var[ID1], Gamma );
-         }
+            CPU_Con2Pri(Input, Half_Var[ID1], Gamma);
 
+#           elif ( EXTRAPOLATE == THREE_VELOCITY )
+#           ifdef CHECK_NEGATIVE_IN_FLUID
+            boolean = CPU_CheckUnphysical(Half_Var[ID1], NULL, __FUNCTION__, __LINE__);
+#           endif
+            CPU_Con2Pri(Half_Var[ID1], Input, Gamma);
+            CPU_4Velto3Vel(Input, Half_Var[ID1]);
+
+#           elif ( EXTRAPOLATE == CONSERVED_QUANTITIES )
+            boolean = CPU_CheckUnphysical(Half_Var[ID1], NULL, __FUNCTION__, __LINE__);
+#           endif
+         }
+#        endif
 
 //       (1.a-4) evaluate the face-centered values by data reconstruction
          CPU_DataReconstruction( Half_Var, FC_Var, N_HF_VAR, FLU_GHOST_SIZE-2, Gamma, LR_Limiter,
@@ -139,6 +152,7 @@ void CPU_FluidSolver_MHM( const real Flu_Array_In[][NCOMP_TOTAL][ FLU_NXT*FLU_NX
 
 
 //       (1.a-5) primitive face-centered variables --> conserved face-centered variables
+#        if ( EXTRAPOLATE != CONSERVED_QUANTITIES )
          for (int k=0; k<N_FC_VAR; k++)
          for (int j=0; j<N_FC_VAR; j++)
          for (int i=0; i<N_FC_VAR; i++)
@@ -147,36 +161,56 @@ void CPU_FluidSolver_MHM( const real Flu_Array_In[][NCOMP_TOTAL][ FLU_NXT*FLU_NX
 
             for (int f=0; f<6; f++)
             {
+#              if  ( EXTRAPOLATE == FOUR_VELOCITY )
                for (int v=0; v<NCOMP_TOTAL; v++)   Input[v] = FC_Var[ID1][f][v];
+               CPU_Pri2Con( Input, FC_Var[ID1][f], Gamma);
 
-               CPU_Pri2Con( Input, FC_Var[ID1][f], Gamma );
+#              elif ( EXTRAPOLATE == THREE_VELOCITY )
+               CPU_3Velto4Vel(FC_Var[ID1][f], Input);
+               CPU_Pri2Con( Input, FC_Var[ID1][f], Gamma);
+#              endif
             }
          }
+#        endif
 
 #        elif ( FLU_SCHEME == MHM ) // b. use interpolated face-centered values to calculate the half-step fluxes
 
 //       (1.b-1) conserved variables --> primitive variables
+#        if  ( EXTRAPOLATE != CONSERVED_QUANTITIES ||  defined(CHECK_NEGATIVE_IN_FLUID) )
          for (int k=0; k<FLU_NXT; k++)
          for (int j=0; j<FLU_NXT; j++)
          for (int i=0; i<FLU_NXT; i++)
          {
             ID1 = (k*FLU_NXT + j)*FLU_NXT + i;
 
+#           if  ( EXTRAPOLATE == FOUR_VELOCITY )
             for (int v=0; v<NCOMP_TOTAL; v++)   Input[v] = Flu_Array_In[P][v][ID1];
-
 #           ifdef CHECK_NEGATIVE_IN_FLUID
             boolean = CPU_CheckUnphysical(Input, NULL, __FUNCTION__, __LINE__);
 #           endif
-            CPU_Con2Pri( Input, PriVar[ID1], Gamma);
-         }
+            CPU_Con2Pri(Input, PriVar[ID1], Gamma);
 
+#           elif ( EXTRAPOLATE == THREE_VELOCITY )
+            for (int v=0; v<NCOMP_TOTAL; v++)   PriVar[ID1][v] = Flu_Array_In[P][v][ID1];
+#           ifdef CHECK_NEGATIVE_IN_FLUID
+            boolean = CPU_CheckUnphysical(PriVar[ID1], NULL, __FUNCTION__, __LINE__);
+#           endif
+            CPU_Con2Pri(PriVar[ID1], Input, Gamma);
+            CPU_4Velto3Vel(Input, PriVar[ID1]);
+
+#           elif ( EXTRAPOLATE == CONSERVED_QUANTITIES )
+            for (int v=0; v<NCOMP_TOTAL; v++)   PriVar[ID1][v] = Flu_Array_In[P][v][ID1];
+            boolean = CPU_CheckUnphysical(PriVar[ID1], NULL, __FUNCTION__, __LINE__);
+#           endif
+         }
+#           endif
 
 //       (1.b-2) evaluate the face-centered values by data reconstruction
          CPU_DataReconstruction( PriVar, FC_Var, FLU_NXT, FLU_GHOST_SIZE-1, Gamma, LR_Limiter,
                                  MinMod_Coeff, EP_Coeff, NULL_REAL, NULL_INT, MinDens, MinPres );
 
-
 //       (1.b-3) primitive face-centered variables --> conserved face-centered variables
+#        if ( EXTRAPOLATE != CONSERVED_QUANTITIES )
          for (int k=0; k<N_FC_VAR; k++)
          for (int j=0; j<N_FC_VAR; j++)
          for (int i=0; i<N_FC_VAR; i++)
@@ -185,11 +219,17 @@ void CPU_FluidSolver_MHM( const real Flu_Array_In[][NCOMP_TOTAL][ FLU_NXT*FLU_NX
 
             for (int f=0; f<6; f++)
             {
+#              if  ( EXTRAPOLATE == FOUR_VELOCITY )
                for (int v=0; v<NCOMP_TOTAL; v++)   Input[v] = FC_Var[ID1][f][v];
-
                CPU_Pri2Con( Input, FC_Var[ID1][f], Gamma);
+
+#              elif ( EXTRAPOLATE == THREE_VELOCITY )
+               CPU_3Velto4Vel(FC_Var[ID1][f], Input);
+               CPU_Pri2Con( Input, FC_Var[ID1][f], Gamma);
+#              endif
             }
          }
+#        endif
 
 
 //       (1.b-4) evaluate the half-step solutions

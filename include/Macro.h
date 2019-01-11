@@ -49,6 +49,10 @@
 #define MHM_RP       4
 #define CTU          5
 
+// apply extrapolation on quantities listed below when perform data reconstruction
+#define THREE_VELOCITY       0
+#define FOUR_VELOCITY        1
+#define CONSERVED_QUANTITIES 2
 
 // data reconstruction schemes
 #define PLM          1

@@ -114,6 +114,7 @@ void CPU_FullStepUpdate( const real Input[][ FLU_NXT*FLU_NXT*FLU_NXT ], real Out
                          Gamma_m1, _Gamma_m1, CheckMinPres_No, NULL_REAL, DualEnergySwitch );
 #     endif // #ifdef DUAL_ENERGY
 
+#     if ( defined CHECK_MIN_TEMP ) || (defined CHECK_NEGATIVE_IN_FLUID )
       real Cons[NCOMP_FLUID];
       for (int v = 0;v<NCOMP_FLUID;v++) Cons[v] = Output[v][ID2];
 #     ifdef CHECK_MIN_TEMP
@@ -125,6 +126,7 @@ void CPU_FullStepUpdate( const real Input[][ FLU_NXT*FLU_NXT*FLU_NXT ], real Out
       boolean = CPU_CheckUnphysical(Cons, NULL, __FUNCTION__, __LINE__);
 #     endif
 
+#     endif
    } // i,j,k
 
 } // FUNCTION : CPU_FullStepUpdate
