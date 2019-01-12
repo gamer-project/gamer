@@ -5,7 +5,7 @@
 
 static void LimitSlope( const real L2[], const real L1[], const real C0[], const real R1[], const real R2[],
                         const LR_Limiter_t LR_Limiter, const real MinMod_Coeff, const real EP_Coeff,
-                        const real Gamma, const int XYZ, real Slope_Limiter[] );
+                        const real Gamma, const int XYZ, real LimitedSlope[] );
 
 bool CPU_CheckUnphysical( const real Con[], const real Pri[], const char s[], const int line, bool show);
 static bool boolean;
@@ -48,7 +48,7 @@ void CPU_DataReconstruction( const real PriVar[][NCOMP_TOTAL], real FC_Var[][6][
    const int NOut   = NIn - 2*NGhost;                    // number of output grids
    int  ID1, ID2, ID1_L, ID1_R, ID1_LL, ID1_RR, dL, dR;
    real Min, Max;
-   real Slope_Limiter[NCOMP_TOTAL] = { (real)0.0 };
+   real LimitedSlope[NCOMP_TOTAL] = { (real)0.0 };
 
 
    for (int k1=NGhost, k2=0;  k1<NGhost+NOut;  k1++, k2++)
@@ -74,21 +74,21 @@ void CPU_DataReconstruction( const real PriVar[][NCOMP_TOTAL], real FC_Var[][6][
             ID1_RR = ID1 + 2*dr1[d];
 
             LimitSlope( PriVar[ID1_LL], PriVar[ID1_L], PriVar[ID1], PriVar[ID1_R], PriVar[ID1_RR], LR_Limiter,
-                        MinMod_Coeff, EP_Coeff, Gamma, d, Slope_Limiter );
+                        MinMod_Coeff, EP_Coeff, Gamma, d, LimitedSlope );
          }
 
          else
          {
             LimitSlope( NULL, PriVar[ID1_L], PriVar[ID1], PriVar[ID1_R], NULL, LR_Limiter,
-                        MinMod_Coeff, NULL_REAL, Gamma, d, Slope_Limiter );
+                        MinMod_Coeff, NULL_REAL, Gamma, d, LimitedSlope );
          }
 
 
 //       (2-2) get the face-centered primitive variables
          for (int v=0; v<NCOMP_TOTAL; v++)
          {
-            FC_Var[ID2][dL][v] = PriVar[ID1][v] - (real)0.5*Slope_Limiter[v];
-            FC_Var[ID2][dR][v] = PriVar[ID1][v] + (real)0.5*Slope_Limiter[v];
+            FC_Var[ID2][dL][v] = PriVar[ID1][v] - (real)0.5*LimitedSlope[v];
+            FC_Var[ID2][dR][v] = PriVar[ID1][v] + (real)0.5*LimitedSlope[v];
          }
 
 
@@ -194,7 +194,7 @@ void CPU_DataReconstruction( const real PriVar[][NCOMP_TOTAL], real FC_Var[][6][
    const int dr3[3] = { 1, NSlope, NSlope*NSlope };
 
    int ID1, ID2, ID3, ID1_L, ID1_R, ID3_L, ID3_R, dL, dR;
-   real Slope_Limiter[NCOMP_TOTAL] = { (real)0.0 };
+   real LimitedSlope[NCOMP_TOTAL] = { (real)0.0 };
    real CC_L, CC_R, CC_C, dCC_L, dCC_R, dCC_C, FC_L, FC_R, dFC[NCOMP_TOTAL], dFC6[NCOMP_TOTAL], Max, Min;
 
    real (*Slope_PPM)[3][NCOMP_TOTAL] = new real [ NSlope*NSlope*NSlope ][3][NCOMP_TOTAL];
@@ -224,19 +224,19 @@ void CPU_DataReconstruction( const real PriVar[][NCOMP_TOTAL], real FC_Var[][6][
             ID1_RR = ID1 + 2*dr1[d];
 
             LimitSlope( PriVar[ID1_LL], PriVar[ID1_L], PriVar[ID1], PriVar[ID1_R], PriVar[ID1_RR], LR_Limiter,
-                        MinMod_Coeff, EP_Coeff, Gamma, d, Slope_Limiter );
+                        MinMod_Coeff, EP_Coeff, Gamma, d, LimitedSlope );
             */
          }
 
          else
          {
             LimitSlope( NULL, PriVar[ID1_L], PriVar[ID1], PriVar[ID1_R], NULL, LR_Limiter,
-                        MinMod_Coeff, NULL_REAL, Gamma, d, Slope_Limiter );
+                        MinMod_Coeff, NULL_REAL, Gamma, d, LimitedSlope );
          }
 
 
 //       store the slope to the array "Slope_PPM"
-         for (int v=0; v<NCOMP_TOTAL; v++)   Slope_PPM[ID2][d][v] = Slope_Limiter[v];
+         for (int v=0; v<NCOMP_TOTAL; v++)   Slope_PPM[ID2][d][v] = LimitedSlope[v];
 
       } // for (int d=0; d<3; d++)
    } // k,j,i
@@ -341,11 +341,11 @@ void CPU_DataReconstruction( const real PriVar[][NCOMP_TOTAL], real FC_Var[][6][
 //                                 --> Useful only if the option "CHAR_RECONSTRUCTION" is turned on
 //                XYZ            : Target spatial direction : (0/1/2) --> (x/y/z)
 //                                 --> Useful only if the option "CHAR_RECONSTRUCTION" is turned on
-//                Slope_Limiter  : Array to store the output monotonic slope
+//                LimitedSlope  : Array to store the output monotonic slope
 //-------------------------------------------------------------------------------------------------------
 void LimitSlope( const real L2[], const real L1[], const real C0[], const real R1[], const real R2[],
                  const LR_Limiter_t LR_Limiter, const real MinMod_Coeff, const real EP_Coeff,
-                 const real Gamma, const int XYZ, real Slope_Limiter[] )
+                 const real Gamma, const int XYZ, real LimitedSlope[] )
 {
 
 // check
@@ -375,10 +375,10 @@ void LimitSlope( const real L2[], const real L1[], const real C0[], const real R
            {
              Slope_L[v] *= MinMod_Coeff;
              Slope_R[v] *= MinMod_Coeff;
-             Slope_Limiter[v]  = FMIN(  FABS( Slope_L[v] ), FABS( Slope_R[v] )  );
-             Slope_Limiter[v]  = FMIN(  FABS( Slope_C[v] ), Slope_Limiter[v]  );
-             Slope_Limiter[v] *= SIGN( Slope_C[v] );
-           } else Slope_Limiter[v] = (real)0.0;
+             LimitedSlope[v]  = FMIN(  FABS( Slope_L[v] ), FABS( Slope_R[v] )  );
+             LimitedSlope[v]  = FMIN(  FABS( Slope_C[v] ), LimitedSlope[v]  );
+             LimitedSlope[v] *= SIGN( Slope_C[v] );
+           } else LimitedSlope[v] = (real)0.0;
          break;
 
 //       van-Leer + generalized MinMod
@@ -392,11 +392,11 @@ void LimitSlope( const real L2[], const real L1[], const real C0[], const real R
            {
              Slope_L[v] *= MinMod_Coeff;
              Slope_R[v] *= MinMod_Coeff;
-             Slope_Limiter[v]  = FMIN(  FABS( Slope_L[v] ), FABS( Slope_R[v] )  );
-             Slope_Limiter[v]  = FMIN(  FABS( Slope_C[v] ), Slope_Limiter[v]  );
-             Slope_Limiter[v]  = FMIN(  FABS( Slope_A[v] ), Slope_Limiter[v]  );
-             Slope_Limiter[v] *= SIGN( Slope_C[v] );
-           } else Slope_Limiter[v] = (real)0.0;
+             LimitedSlope[v]  = FMIN(  FABS( Slope_L[v] ), FABS( Slope_R[v] )  );
+             LimitedSlope[v]  = FMIN(  FABS( Slope_C[v] ), LimitedSlope[v]  );
+             LimitedSlope[v]  = FMIN(  FABS( Slope_A[v] ), LimitedSlope[v]  );
+             LimitedSlope[v] *= SIGN( Slope_C[v] );
+           } else LimitedSlope[v] = (real)0.0;
          break;
 
 //       extrema-preserving
@@ -408,9 +408,9 @@ void LimitSlope( const real L2[], const real L1[], const real C0[], const real R
            {
              Slope_L[v] *= MinMod_Coeff;
              Slope_R[v] *= MinMod_Coeff;
-             Slope_Limiter[v]  = FMIN(  FABS( Slope_L[v] ), FABS( Slope_R[v] )  );
-             Slope_Limiter[v]  = FMIN(  FABS( Slope_C[v] ), Slope_Limiter[v]  );
-             Slope_Limiter[v] *= SIGN( Slope_C[v] );
+             LimitedSlope[v]  = FMIN(  FABS( Slope_L[v] ), FABS( Slope_R[v] )  );
+             LimitedSlope[v]  = FMIN(  FABS( Slope_C[v] ), LimitedSlope[v]  );
+             LimitedSlope[v] *= SIGN( Slope_C[v] );
            }
            else
            {
@@ -424,10 +424,10 @@ void LimitSlope( const real L2[], const real L1[], const real C0[], const real R
              D2_Limiter = FMIN(  FABS(D2_C), FMIN( FMAX(D2_Sign*D2_L, (real)0.0), FMAX(D2_Sign*D2_R, (real)0.0) )  );
 
              if ( D2_Sign*Slope_Sign < (real)0.0 )
-                   Slope_Limiter[v] = FMIN( (real)1.5*EP_Coeff*D2_Limiter, MinMod_Coeff*FABS(Slope_L[v]) );
-             else  Slope_Limiter[v] = FMIN( (real)1.5*EP_Coeff*D2_Limiter, MinMod_Coeff*FABS(Slope_R[v]) );
+                   LimitedSlope[v] = FMIN( (real)1.5*EP_Coeff*D2_Limiter, MinMod_Coeff*FABS(Slope_L[v]) );
+             else  LimitedSlope[v] = FMIN( (real)1.5*EP_Coeff*D2_Limiter, MinMod_Coeff*FABS(Slope_R[v]) );
 
-             Slope_Limiter[v] = Slope_Sign * FMIN( FABS(Slope_C[v]), Slope_Limiter[v] );
+             LimitedSlope[v] = Slope_Sign * FMIN( FABS(Slope_C[v]), LimitedSlope[v] );
            }
          break;
 
@@ -443,10 +443,10 @@ void LimitSlope( const real L2[], const real L1[], const real C0[], const real R
               Xi_L = beta_L * Slope_L[v] / delta[v];
               Xi_R = beta_R * Slope_R[v] / delta[v];
   
-              Slope_Limiter[v] = (real)2.0*Slope_L[v]/( Slope_L[v] + Slope_R[v] );
-              Slope_Limiter[v] = FMIN( Slope_Limiter[v], Xi_R );
-              Slope_Limiter[v] = Slope_Limiter[v] * delta[v];
-            } else Slope_Limiter[v] = 0.0;
+              LimitedSlope[v] = (real)2.0*Slope_L[v]/( Slope_L[v] + Slope_R[v] );
+              LimitedSlope[v] = FMIN( LimitedSlope[v], Xi_R );
+              LimitedSlope[v] = LimitedSlope[v] * delta[v];
+            } else LimitedSlope[v] = 0.0;
             break;
 
 //       van-Leer Albada 1, Ref: eq.(14.55) in Toro
@@ -462,10 +462,10 @@ void LimitSlope( const real L2[], const real L1[], const real C0[], const real R
               Xi_L = beta_L * Slope_L[v] / delta[v];
               Xi_R = beta_R * Slope_R[v] / delta[v];
   
-              Slope_Limiter[v] = ( Slope_LR + Slope_L[v]*Slope_L[v] ) / ( Slope_L[v]*Slope_L[v] + Slope_R[v]*Slope_R[v] );
-              Slope_Limiter[v] = FMIN( Slope_Limiter[v], Xi_R );
-              Slope_Limiter[v] = Slope_Limiter[v] * delta[v];
-            } else Slope_Limiter[v] = 0.0;
+              LimitedSlope[v] = ( Slope_LR + Slope_L[v]*Slope_L[v] ) / ( Slope_L[v]*Slope_L[v] + Slope_R[v]*Slope_R[v] );
+              LimitedSlope[v] = FMIN( LimitedSlope[v], Xi_R );
+              LimitedSlope[v] = LimitedSlope[v] * delta[v];
+            } else LimitedSlope[v] = 0.0;
             break;
 
 //       van-Leer Albada 2, Ref: Flux limiter in Wikipedia
@@ -481,23 +481,23 @@ void LimitSlope( const real L2[], const real L1[], const real C0[], const real R
               Xi_L = beta_L * Slope_L[v] / delta[v];
               Xi_R = beta_R * Slope_R[v] / delta[v];
   
-              Slope_Limiter[v] = (real)2.0*Slope_LR/( Slope_L[v]*Slope_L[v] + Slope_R[v]*Slope_R[v] );
-              Slope_Limiter[v] = FMIN( Slope_Limiter[v], Xi_R );
-              Slope_Limiter[v] = Slope_Limiter[v] * delta[v];
-            } else Slope_Limiter[v] = 0.0;
+              LimitedSlope[v] = (real)2.0*Slope_LR/( Slope_L[v]*Slope_L[v] + Slope_R[v]*Slope_R[v] );
+              LimitedSlope[v] = FMIN( LimitedSlope[v], Xi_R );
+              LimitedSlope[v] = LimitedSlope[v] * delta[v];
+            } else LimitedSlope[v] = 0.0;
             break;
 
 //       minbee, Ref: eq.(14.44) in Toro
          case MINBEE:
            if ( Slope_R[v] > (real)0.0 )
            {
-             Slope_Limiter[v] = FMIN( Slope_L[v], Slope_R[v] );
-             Slope_Limiter[v] = FMAX(    0, Slope_Limiter[v] );
+             LimitedSlope[v] = FMIN( Slope_L[v],      Slope_R[v] );
+             LimitedSlope[v] = FMAX(          0, LimitedSlope[v] );
            }
            else
            {
-             Slope_Limiter[v] = FMAX( Slope_L[v], Slope_R[v] );
-             Slope_Limiter[v] = FMIN(    0, Slope_Limiter[v] );
+             LimitedSlope[v] = FMAX( Slope_L[v],      Slope_R[v] );
+             LimitedSlope[v] = FMIN(          0, LimitedSlope[v] );
            }
            break;
       
@@ -508,21 +508,21 @@ void LimitSlope( const real L2[], const real L1[], const real C0[], const real R
            {
              a = FMIN(     Slope_L[v], 2.0*Slope_R[v] );
              b = FMIN( 2.0*Slope_L[v],     Slope_R[v] );
-             Slope_Limiter[v] = FMAX( a, b );
-             Slope_Limiter[v] = FMAX( 0.0, Slope_Limiter[v] );
+             LimitedSlope[v] = FMAX(   a,               b );
+             LimitedSlope[v] = FMAX( 0.0, LimitedSlope[v] );
            }
            else
            {
              a = FMAX(     Slope_L[v], 2.0*Slope_R[v] );
              b = FMAX( 2.0*Slope_L[v],     Slope_R[v] );
-             Slope_Limiter[v] = FMIN( a, b );
-             Slope_Limiter[v] = FMIN( 0.0, Slope_Limiter[v] );
+             LimitedSlope[v] = FMIN(   a,               b );
+             LimitedSlope[v] = FMIN( 0.0, LimitedSlope[v] );
            }
            break;
 
 //       piece-wise constant
          case CONSTANT: 
-           Slope_Limiter[v] = 0.0;
+           LimitedSlope[v] = 0.0;
            break;
 
          default :
