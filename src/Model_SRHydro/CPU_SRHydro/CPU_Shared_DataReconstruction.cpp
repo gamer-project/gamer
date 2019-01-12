@@ -364,13 +364,13 @@ void LimitSlope( const real L2[], const real L1[], const real C0[], const real R
    {
       Slope_L[v] = C0[v] - L1[v];
       Slope_R[v] = R1[v] - C0[v];
-      Slope_C[v] = (real)0.5*( Slope_L[v] + Slope_R[v] );
 
 //    evaluate different slopes
       switch ( LR_Limiter )
       {
 //       generalized MinMod
          case GMINMOD: 
+         Slope_C[v] = (real)0.5*( Slope_L[v] + Slope_R[v] );
            if (  Slope_L[v]*Slope_R[v] > (real)0.0  )
            {
              Slope_L[v] *= MinMod_Coeff;
@@ -383,6 +383,7 @@ void LimitSlope( const real L2[], const real L1[], const real C0[], const real R
 
 //       van-Leer + generalized MinMod
          case VL_GMINMOD:           
+         Slope_C[v] = (real)0.5*( Slope_L[v] + Slope_R[v] );
            if (  Slope_L[v]*Slope_R[v] > (real)0.0 )
               Slope_A[v] = (real)2.0*Slope_L[v]*Slope_R[v]/( Slope_L[v] + Slope_R[v] );
            else
@@ -401,6 +402,7 @@ void LimitSlope( const real L2[], const real L1[], const real C0[], const real R
 
 //       extrema-preserving
          case EXTPRE:
+         Slope_C[v] = (real)0.5*( Slope_L[v] + Slope_R[v] );
            Slope_LL[v] = L1[v] - L2[v];
            Slope_RR[v] = R2[v] - R1[v];
 
