@@ -111,15 +111,17 @@ void CPU_FluidSolver_MHM( const real Flu_Array_In[][NCOMP_TOTAL][ FLU_NXT*FLU_NX
 #        if ( FLU_SCHEME == MHM_RP ) // a. use Riemann solver to calculate the half-step fluxes
 
 //       (1.a-1) evaluate the half-step first-order fluxes by Riemann solver
+//       check unphysical cell before computing flux
          CPU_RiemannPredict_Flux( Flu_Array_In[P], Half_Flux, Gamma, MinPres );
 
 
 //       (1.a-2) evaluate the half-step solutions
          CPU_RiemannPredict( Flu_Array_In[P], Half_Flux, Half_Var, dt, dh, Gamma, MinDens, MinPres );
+//       check unphysical cell after prediction
 
 
 //       (1.a-3) conserved variables --> primitive variables
-#        if  ( EXTRAPOLATE != CONSERVED_QUANTITIES ||  defined(CHECK_NEGATIVE_IN_FLUID) )
+#        if  ( EXTRAPOLATE != CONSERVED_QUANTITIES )
          for (int k=0; k<N_HF_VAR; k++)
          for (int j=0; j<N_HF_VAR; j++)
          for (int i=0; i<N_HF_VAR; i++)
@@ -128,20 +130,11 @@ void CPU_FluidSolver_MHM( const real Flu_Array_In[][NCOMP_TOTAL][ FLU_NXT*FLU_NX
 
 #           if  ( EXTRAPOLATE == FOUR_VELOCITY )
             for (int v=0; v<NCOMP_TOTAL; v++)   Input[v] = Half_Var[ID1][v];
-#           ifdef CHECK_NEGATIVE_IN_FLUID
-            boolean = CPU_CheckUnphysical(Input, NULL, __FUNCTION__, __LINE__);
-#           endif
             CPU_Con2Pri(Input, Half_Var[ID1], Gamma);
 
 #           elif ( EXTRAPOLATE == THREE_VELOCITY )
-#           ifdef CHECK_NEGATIVE_IN_FLUID
-            boolean = CPU_CheckUnphysical(Half_Var[ID1], NULL, __FUNCTION__, __LINE__);
-#           endif
             CPU_Con2Pri(Half_Var[ID1], Input, Gamma);
             CPU_4Velto3Vel(Input, Half_Var[ID1]);
-
-#           elif ( EXTRAPOLATE == CONSERVED_QUANTITIES )
-            boolean = CPU_CheckUnphysical(Half_Var[ID1], NULL, __FUNCTION__, __LINE__);
 #           endif
          }
 #        endif
@@ -149,6 +142,7 @@ void CPU_FluidSolver_MHM( const real Flu_Array_In[][NCOMP_TOTAL][ FLU_NXT*FLU_NX
 //       (1.a-4) evaluate the face-centered values by data reconstruction
          CPU_DataReconstruction( Half_Var, FC_Var, N_HF_VAR, FLU_GHOST_SIZE-2, Gamma, LR_Limiter,
                                  MinMod_Coeff, EP_Coeff, NULL_REAL, NULL_INT, MinDens, MinPres );
+//       check unphysical cell after data reconstruction
 
 
 //       (1.a-5) primitive face-centered variables --> conserved face-centered variables
@@ -208,6 +202,7 @@ void CPU_FluidSolver_MHM( const real Flu_Array_In[][NCOMP_TOTAL][ FLU_NXT*FLU_NX
 //       (1.b-2) evaluate the face-centered values by data reconstruction
          CPU_DataReconstruction( PriVar, FC_Var, FLU_NXT, FLU_GHOST_SIZE-1, Gamma, LR_Limiter,
                                  MinMod_Coeff, EP_Coeff, NULL_REAL, NULL_INT, MinDens, MinPres );
+//       check unphysical cell after data reconstruction
 
 //       (1.b-3) primitive face-centered variables --> conserved face-centered variables
 #        if ( EXTRAPOLATE != CONSERVED_QUANTITIES )
@@ -234,6 +229,7 @@ void CPU_FluidSolver_MHM( const real Flu_Array_In[][NCOMP_TOTAL][ FLU_NXT*FLU_NX
 
 //       (1.b-4) evaluate the half-step solutions
          CPU_HancockPredict( FC_Var, dt, dh, Gamma, Flu_Array_In[P], MinDens, MinPres );
+//       check unphysical cell after prediction
 
 #        endif // #if ( FLU_SCHEME == MHM_RP ) ... else ...
 
