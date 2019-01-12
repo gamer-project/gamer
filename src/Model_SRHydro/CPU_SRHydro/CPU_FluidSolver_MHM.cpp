@@ -88,6 +88,9 @@ void CPU_FluidSolver_MHM( const real Flu_Array_In[][NCOMP_TOTAL][ FLU_NXT*FLU_NX
    {
       const real  Gamma_m1       = Gamma - (real)1.0;
       const bool CorrHalfVel_No  = false;
+      int Max = 0;
+      int iteration;
+      bool state;
 
       real Input[NCOMP_TOTAL];
       int ID1;
@@ -139,6 +142,8 @@ void CPU_FluidSolver_MHM( const real Flu_Array_In[][NCOMP_TOTAL][ FLU_NXT*FLU_NX
          }
 #        endif
 
+         do {
+         iteration = 0;
 //       (1.a-4) evaluate the face-centered values by data reconstruction
          CPU_DataReconstruction( Half_Var, FC_Var, N_HF_VAR, FLU_GHOST_SIZE-2, Gamma, LR_Limiter,
                                  MinMod_Coeff, EP_Coeff, NULL_REAL, NULL_INT, MinDens, MinPres );
@@ -199,6 +204,8 @@ void CPU_FluidSolver_MHM( const real Flu_Array_In[][NCOMP_TOTAL][ FLU_NXT*FLU_NX
          }
 #           endif
 
+         do {
+         iteration = 0;
 //       (1.b-2) evaluate the face-centered values by data reconstruction
          CPU_DataReconstruction( PriVar, FC_Var, FLU_NXT, FLU_GHOST_SIZE-1, Gamma, LR_Limiter,
                                  MinMod_Coeff, EP_Coeff, NULL_REAL, NULL_INT, MinDens, MinPres );
@@ -236,10 +243,13 @@ void CPU_FluidSolver_MHM( const real Flu_Array_In[][NCOMP_TOTAL][ FLU_NXT*FLU_NX
          CPU_ComputeFlux( FC_Var, FC_Flux, N_FL_FLUX, 1, Gamma, CorrHalfVel_No,  NULL, NULL,
                           NULL_REAL, NULL_REAL, NULL_REAL, GRAVITY_NONE, NULL, MinPres );
 
+         iteration++;
 //       3. full-step evolution
          CPU_FullStepUpdate( Flu_Array_In[P], Flu_Array_Out[P], DE_Array_Out[P],
-                             FC_Flux, dt, dh, Gamma, MinDens, MinPres, DualEnergySwitch,
-                             NormPassive, NNorm, NormIdx );
+                FC_Flux, dt, dh, Gamma, MinDens, MinPres, DualEnergySwitch, NormPassive, NNorm, NormIdx, &state);
+
+
+         }while( state && iteration > Max );
 
 
 //       4. store the inter-patch fluxes

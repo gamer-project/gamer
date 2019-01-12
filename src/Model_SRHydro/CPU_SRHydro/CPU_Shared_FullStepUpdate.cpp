@@ -31,7 +31,7 @@ static bool boolean;
 void CPU_FullStepUpdate( const real Input[][ FLU_NXT*FLU_NXT*FLU_NXT ], real Output[][ PS2*PS2*PS2 ], char DE_Status[],
                          const real Flux[][3][NCOMP_TOTAL], const real dt, const real dh,
                          const real Gamma, const real MinDens, const real MinPres, const real DualEnergySwitch,
-                         const bool NormPassive, const int NNorm, const int NormIdx[] )
+                         const bool NormPassive, const int NNorm, const int NormIdx[], bool state )
 {
    const int  dID1[3]   = { 1, N_FL_FLUX, N_FL_FLUX*N_FL_FLUX };
    const real dt_dh     = dt/dh;
@@ -69,9 +69,10 @@ void CPU_FullStepUpdate( const real Input[][ FLU_NXT*FLU_NXT*FLU_NXT ], real Out
       Cons[ENGY] = Output[ENGY][ID2];
 #     endif
 #     ifdef CHECK_NEGATIVE_IN_FLUID
-      boolean = CPU_CheckUnphysical(Cons, NULL, __FUNCTION__, __LINE__, true);
+      state = CPU_CheckUnphysical(Cons, NULL, __FUNCTION__, __LINE__, true);
 #     endif
-
+#     else
+      state = CPU_CheckUnphysical(Cons, NULL, __FUNCTION__, __LINE__, false);
 #     endif
    } // i,j,k
 
