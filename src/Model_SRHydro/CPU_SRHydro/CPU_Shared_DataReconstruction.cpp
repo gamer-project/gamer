@@ -364,6 +364,7 @@ void LimitSlope( const real L2[], const real L1[], const real C0[], const real R
    {
       Slope_L[v] = C0[v] - L1[v];
       Slope_R[v] = R1[v] - C0[v];
+      Slope_C[v] = (real)0.5*( Slope_L[v] + Slope_R[v] );
 
 //    evaluate different slopes
       switch ( LR_Limiter )
