@@ -13,7 +13,7 @@ static real DFun (real Q, void *ptr);  // the first derivative of above function
 static void Fun_DFun (real Q, void *ptr, real * f, real * df);
 void CPU_4Velto3Vel (const real In[], real Out[]);
 static real CPU_Con2Temperature (const real In[], const real Gamma); 
-bool CPU_CheckUnphysical( const real Con[], const real Pri[]);
+bool CPU_CheckUnphysical( const real Con[], const real Pri[], bool show);
 static void NewtonRaphsonSolver(void *ptr, real *root, const real guess, const real epsabs, const real epsrel);
 
 
@@ -460,7 +460,7 @@ CPU_CheckMinTempInEngy (const real Cons[])
 //-------------------------------------------------------------------------------------------------------
 // Function    : CPU_CheckUnphysical
 //-------------------------------------------------------------------------------------------------------
-bool CPU_CheckUnphysical( const real Con[], const real Pri[], const char s[], const int line)
+bool CPU_CheckUnphysical( const real Con[], const real Pri[], const char s[], const int line, bool show)
 {
    real discriminant;
    real Msqr;
@@ -580,7 +580,7 @@ bool CPU_CheckUnphysical( const real Con[], const real Pri[], const char s[], co
 // print all variables if goto UNPHYSICAL
       UNPHYSICAL:
       {
-        if ( strcmp(s,"CPU_HancockPredict") != 0 ) {
+        if ( show == true ) {
         Aux_Message(stderr,"\n\nfunction: %s: %d\n", s, line);
  
         Aux_Message(stderr, "D=%14.7e, Mx=%14.7e, My=%14.7e, Mz=%14.7e, E=%14.7e\n",

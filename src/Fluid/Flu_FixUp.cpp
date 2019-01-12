@@ -2,7 +2,7 @@
 #include "CUFLU.h"
 
 #if ( MODEL == SR_HYDRO )
-bool CPU_CheckUnphysical( const real Con[], const real Pri[], const char s[], const int line);
+bool CPU_CheckUnphysical( const real Con[], const real Pri[], const char s[], const int line, bool show);
 #endif
 
 
@@ -224,7 +224,7 @@ void Flu_FixUp( const int lv )
                   if ( CorrVal[DENS] <= MIN_DENS )
 
 #                 elif ( MODEL == SR_HYDRO )
-		  if (CPU_CheckUnphysical(CorrVal, NULL, __FUNCTION__, __LINE__))
+		  if (CPU_CheckUnphysical(CorrVal, NULL, __FUNCTION__, __LINE__, true))
 #                 endif
                      continue;
 

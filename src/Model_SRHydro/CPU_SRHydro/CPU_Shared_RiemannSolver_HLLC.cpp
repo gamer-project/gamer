@@ -198,7 +198,7 @@ void CPU_RiemannSolver_HLLC( const int XYZ,
 # endif
 
 # ifdef CHECK_NEGATIVE_IN_FLUID
-  boolean = CPU_CheckUnphysical(Uhll, NULL, __FUNCTION__, __LINE__);
+  boolean = CPU_CheckUnphysical(Uhll, NULL, __FUNCTION__, __LINE__, true);
 # endif
 
 /* 6. Compute contact wave speed using larger root from Mignone Eq 18
@@ -238,7 +238,7 @@ void CPU_RiemannSolver_HLLC( const int XYZ,
 #   endif
 
 #   ifdef CHECK_NEGATIVE_IN_FLUID
-    boolean = CPU_CheckUnphysical(Usl, NULL, __FUNCTION__, __LINE__); 
+    boolean = CPU_CheckUnphysical(Usl, NULL, __FUNCTION__, __LINE__, true); 
 #   endif
 
     /* now calcCLate Fsr using Mignone Eq 14 */
@@ -273,7 +273,7 @@ void CPU_RiemannSolver_HLLC( const int XYZ,
     Usr[4] = (( CR[4] + CR[0] ) * factor0 + ps * lmdas - PR[4] * rV1) * den;
 #   endif
 #   ifdef CHECK_NEGATIVE_IN_FLUID
-    boolean = CPU_CheckUnphysical(Usr, NULL, __FUNCTION__, __LINE__);
+    boolean = CPU_CheckUnphysical(Usr, NULL, __FUNCTION__, __LINE__, true);
 #   endif
 
     /* now calcCLate Fsr using Mignone Eq 14 */

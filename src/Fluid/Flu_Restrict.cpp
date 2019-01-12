@@ -229,7 +229,7 @@ void Flu_Restrict( const int FaLv, const int SonFluSg, const int FaFluSg, const 
 #        ifdef CHECK_NEGATIVE_IN_FLUID
 	 real Con[NCOMP_FLUID];
 	 for(int v=0;v<NCOMP_FLUID;v++) Con[v]=amr->patch[FaFluSg][FaLv][FaPID]->fluid[v][k][j][i];
-	 boolean = CPU_CheckUnphysical(Con, NULL, __FUNCTION__, __LINE__);
+	 boolean = CPU_CheckUnphysical(Con, NULL, __FUNCTION__, __LINE__, true);
 #        endif
 #        endif // #ifdef DUAL_ENERGY ... else ...
       } // i,j,k

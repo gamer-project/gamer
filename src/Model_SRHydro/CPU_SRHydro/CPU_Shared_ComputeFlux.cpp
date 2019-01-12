@@ -111,8 +111,8 @@ CPU_ComputeFlux(const real FC_Var[][6][NCOMP_TOTAL],
 #                   endif
 
 #                   ifdef CHECK_NEGATIVE_IN_FLUID
-		    boolean = CPU_CheckUnphysical(ConVar_L, NULL, __FUNCTION__, __LINE__);
-		    boolean = CPU_CheckUnphysical(ConVar_R, NULL, __FUNCTION__, __LINE__);
+		    boolean = CPU_CheckUnphysical(ConVar_L, NULL, __FUNCTION__, __LINE__, true);
+		    boolean = CPU_CheckUnphysical(ConVar_R, NULL, __FUNCTION__, __LINE__, true);
 #                   endif
 
 #                   if ( RSOLVER == HLLC )

@@ -3,7 +3,7 @@
 
 #if (  !defined GPU  &&  MODEL == SR_HYDRO  && ( FLU_SCHEME == MHM || FLU_SCHEME == MHM_RP )  )
 
-bool CPU_CheckUnphysical( const real Con[], const real Pri[], const char s[], const int line);
+bool CPU_CheckUnphysical( const real Con[], const real Pri[], const char s[], const int line, bool show);
 real CPU_CheckMinTempInEngy (const real Con[]);
 static bool boolean;
 //-------------------------------------------------------------------------------------------------------
@@ -51,7 +51,7 @@ void CPU_FullStepUpdate( const real Input[][ FLU_NXT*FLU_NXT*FLU_NXT ], real Out
 #     ifdef CHECK_NEGATIVE_IN_FLUID
       real Con[NCOMP_FLUID];
       for (int v = 0;v<NCOMP_FLUID;v++) Con[v] = Input[v][ID3];
-      boolean = CPU_CheckUnphysical(Con, NULL, __FUNCTION__, __LINE__);
+      boolean = CPU_CheckUnphysical(Con, NULL, __FUNCTION__, __LINE__, true);
 #     endif
 
       for (int d=0; d<3; d++)
@@ -69,7 +69,7 @@ void CPU_FullStepUpdate( const real Input[][ FLU_NXT*FLU_NXT*FLU_NXT ], real Out
       Cons[ENGY] = Output[ENGY][ID2];
 #     endif
 #     ifdef CHECK_NEGATIVE_IN_FLUID
-      boolean = CPU_CheckUnphysical(Cons, NULL, __FUNCTION__, __LINE__);
+      boolean = CPU_CheckUnphysical(Cons, NULL, __FUNCTION__, __LINE__, true);
 #     endif
 
 #     endif
