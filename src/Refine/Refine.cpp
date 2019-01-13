@@ -488,8 +488,7 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
                       &EnsureMonotonicity_No );
 #        endif
 
-#        if ( MODEL == SR_HYDRO )
-#        ifdef CHECK_NEGATIVE_IN_FLUID
+#        if ( MODEL == SR_HYDRO && defined (CHECK_NEGATIVE_IN_FLUID) )
 	 real Con[NCOMP_FLUID];
 
 	 for (int k=0; k<FSize; k++)
@@ -499,7 +498,6 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
 	   for (int v = 0 ; v < NCOMP_FLUID;v++) Con[v] = Flu_FData[v][k][j][i];
 	   boolean = CPU_CheckUnphysical(Con, NULL, __FUNCTION__, __LINE__, true);
          }
-#        endif
 #        endif
 
 //       (c1.3.3.3) check minimum density and pressure

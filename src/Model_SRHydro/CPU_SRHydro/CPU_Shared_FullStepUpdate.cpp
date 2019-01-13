@@ -35,6 +35,7 @@ bool CPU_FullStepUpdate( const real Input[][ FLU_NXT*FLU_NXT*FLU_NXT ], real Out
 {
    const int  dID1[3]   = { 1, N_FL_FLUX, N_FL_FLUX*N_FL_FLUX };
    const real dt_dh     = dt/dh;
+   real Cons[NCOMP_FLUID];
 
    int  ID1, ID2, ID3;
    real dF[3][NCOMP_TOTAL];
@@ -49,9 +50,8 @@ bool CPU_FullStepUpdate( const real Input[][ FLU_NXT*FLU_NXT*FLU_NXT ], real Out
       ID3 = (k2*FLU_NXT   + j2)*FLU_NXT   + i2;
 
 #     ifdef CHECK_NEGATIVE_IN_FLUID
-      real Con[NCOMP_FLUID];
-      for (int v = 0;v<NCOMP_FLUID;v++) Con[v] = Input[v][ID3];
-      boolean = CPU_CheckUnphysical(Con, NULL, __FUNCTION__, __LINE__, true);
+      for (int v = 0;v<NCOMP_FLUID;v++) Cons[v] = Input[v][ID3];
+      boolean = CPU_CheckUnphysical(Cons, NULL, __FUNCTION__, __LINE__, true);
 #     endif
 
       for (int d=0; d<3; d++)
@@ -61,7 +61,6 @@ bool CPU_FullStepUpdate( const real Input[][ FLU_NXT*FLU_NXT*FLU_NXT ], real Out
       for (int v=0; v<NCOMP_TOTAL; v++)
          Output[v][ID2] = Input[v][ID3] - dt_dh*( dF[0][v] + dF[1][v] + dF[2][v] );
 
-      real Cons[NCOMP_FLUID];
       for (int v = 0;v<NCOMP_FLUID;v++) Cons[v] = Output[v][ID2];
 
 #     ifdef CHECK_MIN_TEMP

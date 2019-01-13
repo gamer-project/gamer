@@ -844,8 +844,7 @@ int AllocateSonPatch( const int FaLv, const int *Cr, const int PScale, const int
 #  endif
 
 // check minimum energy
-#     if ( MODEL == SR_HYDRO )
-#     ifdef CHECK_NEGATIVE_IN_FLUID
+#     if ( MODEL == SR_HYDRO && defined (CHECK_NEGATIVE_IN_FLUID))
       for (int k=0; k<FSize; k++)
       for (int j=0; j<FSize; j++)
       for (int i=0; i<FSize; i++)
@@ -854,7 +853,6 @@ int AllocateSonPatch( const int FaLv, const int *Cr, const int PScale, const int
 	 for (int v = 0 ; v < NCOMP_FLUID;v++) Con[v] = FData_Flu[v][k][j][i];
 	 boolean = CPU_CheckUnphysical(Con, NULL, __FUNCTION__, __LINE__, true);
       }
-#     endif
 #     endif
 
 // 3.2.3 check minimum density and pressure
