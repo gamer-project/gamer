@@ -148,7 +148,7 @@ void CPU_FluidSolver_MHM( const real Flu_Array_In[][NCOMP_TOTAL][ FLU_NXT*FLU_NX
               MinMod_Coeff_temp = ( Max - iteration ) * ( MinMod_Coeff / (real) Max );
 //           (1.a-4) evaluate the face-centered values by data reconstruction
              CPU_DataReconstruction( Half_Var, FC_Var, N_HF_VAR, FLU_GHOST_SIZE-2, Gamma, LR_Limiter,
-                                     MinMod_Coeff_temp, EP_Coeff, NULL_REAL, NULL_INT, MinDens, MinPres );
+                                     MinMod_Coeff_temp, EP_Coeff, NULL_REAL, NULL_INT, MinDens, MinPres, iteration );
 //           check unphysical cell after data reconstruction
 
 
@@ -211,7 +211,7 @@ void CPU_FluidSolver_MHM( const real Flu_Array_In[][NCOMP_TOTAL][ FLU_NXT*FLU_NX
 
 //            (1.b-2) evaluate the face-centered values by data reconstruction
               CPU_DataReconstruction( PriVar, FC_Var, FLU_NXT, FLU_GHOST_SIZE-1, Gamma, LR_Limiter,
-                                      MinMod_Coeff_temp, EP_Coeff, NULL_REAL, NULL_INT, MinDens, MinPres );
+                                      MinMod_Coeff_temp, EP_Coeff, NULL_REAL, NULL_INT, MinDens, MinPres, iteration );
 //            check unphysical cell after data reconstruction
 
 //            (1.b-3) primitive face-centered variables --> conserved face-centered variables
@@ -239,7 +239,6 @@ void CPU_FluidSolver_MHM( const real Flu_Array_In[][NCOMP_TOTAL][ FLU_NXT*FLU_NX
 
 //            (1.b-4) evaluate the half-step solutions
               CPU_HancockPredict( FC_Var, dt, dh, Gamma, Flu_Array_In[P], MinDens, MinPres );
-//            check unphysical cell after prediction
 
 #             endif // #if ( FLU_SCHEME == MHM_RP ) ... else ...
 
@@ -475,14 +474,6 @@ void CPU_HancockPredict( real FC_Var[][6][NCOMP_TOTAL], const real dt, const rea
 
             break;
          }
-
-//    ensure positive temperature
-#     ifdef CHECK_MIN_TEMP
-      FC_Var[ID1][f][4] = CPU_CheckMinTempInEngy( FC_Var[ID1][f]);
-#     endif
-#     ifdef CHECK_NEGATIVE_IN_FLUID
-      boolean = CPU_CheckUnphysical(FC_Var[ID1][f], NULL, __FUNCTION__, __LINE__, true);
-#     endif
       }
 
    } // i,j,k

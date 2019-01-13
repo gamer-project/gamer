@@ -5,7 +5,7 @@
 
 static void LimitSlope( const real L2[], const real L1[], const real C0[], const real R1[], const real R2[],
                         const LR_Limiter_t LR_Limiter, const real MinMod_Coeff, const real EP_Coeff,
-                        const real Gamma, const int XYZ, real LimitedSlope[] );
+                        const real Gamma, const int XYZ, real LimitedSlope[], int iteration );
 
 bool CPU_CheckUnphysical( const real Con[], const real Pri[], const char s[], const int line, bool show);
 static bool boolean;
@@ -39,10 +39,11 @@ static bool boolean;
 //               [ 9] dt             : Time interval to advance solution (for the CTU scheme)
 //               [10] dh             : Grid size (for the CTU scheme)
 //            [11/12] MinDens/Pres   : Minimum allowed density and pressure
+//               [13] iteration      :
 //------------------------------------------------------------------------------------------------------
 void CPU_DataReconstruction( const real PriVar[][NCOMP_TOTAL], real FC_Var[][6][NCOMP_TOTAL], const int NIn, const int NGhost,
                              const real Gamma, const LR_Limiter_t LR_Limiter, const real MinMod_Coeff,
-                             const real EP_Coeff, const real dt, const real dh, const real MinDens, const real MinPres )
+                             const real EP_Coeff, const real dt, const real dh, const real MinDens, const real MinPres, int iteration )
 {
    const int dr1[3] = { 1, NIn, NIn*NIn };
    const int NOut   = NIn - 2*NGhost;                    // number of output grids
@@ -74,13 +75,13 @@ void CPU_DataReconstruction( const real PriVar[][NCOMP_TOTAL], real FC_Var[][6][
             ID1_RR = ID1 + 2*dr1[d];
 
             LimitSlope( PriVar[ID1_LL], PriVar[ID1_L], PriVar[ID1], PriVar[ID1_R], PriVar[ID1_RR], LR_Limiter,
-                        MinMod_Coeff, EP_Coeff, Gamma, d, LimitedSlope );
+                        MinMod_Coeff, EP_Coeff, Gamma, d, LimitedSlope, iteration );
          }
 
          else
          {
             LimitSlope( NULL, PriVar[ID1_L], PriVar[ID1], PriVar[ID1_R], NULL, LR_Limiter,
-                        MinMod_Coeff, NULL_REAL, Gamma, d, LimitedSlope );
+                        MinMod_Coeff, NULL_REAL, Gamma, d, LimitedSlope, iteration );
          }
 
 
@@ -178,7 +179,7 @@ void CPU_DataReconstruction( const real PriVar[][NCOMP_TOTAL], real FC_Var[][6][
 //------------------------------------------------------------------------------------------------------
 void CPU_DataReconstruction( const real PriVar[][NCOMP_TOTAL], real FC_Var[][6][NCOMP_TOTAL], const int NIn, const int NGhost,
                              const real Gamma, const LR_Limiter_t LR_Limiter, const real MinMod_Coeff,
-                             const real EP_Coeff, const real dt, const real dh, const real MinDens, const real MinPres )
+                             const real EP_Coeff, const real dt, const real dh, const real MinDens, const real MinPres, int iteration  )
 {
 
 // check
@@ -224,14 +225,14 @@ void CPU_DataReconstruction( const real PriVar[][NCOMP_TOTAL], real FC_Var[][6][
             ID1_RR = ID1 + 2*dr1[d];
 
             LimitSlope( PriVar[ID1_LL], PriVar[ID1_L], PriVar[ID1], PriVar[ID1_R], PriVar[ID1_RR], LR_Limiter,
-                        MinMod_Coeff, EP_Coeff, Gamma, d, LimitedSlope );
+                        MinMod_Coeff, EP_Coeff, Gamma, d, LimitedSlope, iteration );
             */
          }
 
          else
          {
             LimitSlope( NULL, PriVar[ID1_L], PriVar[ID1], PriVar[ID1_R], NULL, LR_Limiter,
-                        MinMod_Coeff, NULL_REAL, Gamma, d, LimitedSlope );
+                        MinMod_Coeff, NULL_REAL, Gamma, d, LimitedSlope, iteration );
          }
 
 
@@ -345,7 +346,7 @@ void CPU_DataReconstruction( const real PriVar[][NCOMP_TOTAL], real FC_Var[][6][
 //-------------------------------------------------------------------------------------------------------
 void LimitSlope( const real L2[], const real L1[], const real C0[], const real R1[], const real R2[],
                  const LR_Limiter_t LR_Limiter, const real MinMod_Coeff, const real EP_Coeff,
-                 const real Gamma, const int XYZ, real LimitedSlope[] )
+                 const real Gamma, const int XYZ, real LimitedSlope[], int iteration )
 {
 
 // check
@@ -359,8 +360,20 @@ void LimitSlope( const real L2[], const real L1[], const real C0[], const real R
    real Slope_LL[NCOMP_TOTAL], Slope_RR[NCOMP_TOTAL], Slope_LR;
    real D2_L, D2_R, D2_C, D2_Sign, D2_Limiter, Slope_Sign;  // variables for the extrema-preserving limiter
    real beta_L, beta_R, Xi_L, Xi_R, delta[NCOMP_TOTAL];
+   int v_min, v_max;
 
-   for (int v=0; v<NCOMP_TOTAL; v++)
+//   if( iteration ) 
+//    {
+//      v_min = MOMX;
+//      v_max = ENGY;
+//    }
+//     else
+//    {
+      v_min = 0;
+      v_max = NCOMP_TOTAL;
+//    }
+
+   for (int v=v_min; v<v_max; v++)
    {
       Slope_L[v] = C0[v] - L1[v];
       Slope_R[v] = R1[v] - C0[v];
@@ -441,7 +454,7 @@ void LimitSlope( const real L2[], const real L1[], const real C0[], const real R
 
            if (  Slope_L[v]*Slope_R[v] > (real)0.0 )
             {
-              Slope_Limiter[v] = (real)2.0*Slope_LR/( Slope_L[v] + Slope_R[v] );
+              LimitedSlope[v] = (real)2.0*Slope_LR/( Slope_L[v] + Slope_R[v] );
               LimitedSlope[v] *= MinMod_Coeff;
             } else LimitedSlope[v] = 0.0;
             break;
@@ -452,7 +465,7 @@ void LimitSlope( const real L2[], const real L1[], const real C0[], const real R
            Slope_LR = Slope_L[v]*Slope_R[v];
            if (  Slope_LR > (real)0.0 )
             {
-              Slope_Limiter[v] = Slope_LR*( Slope_L[v] + Slope_R[v] ) /
+              LimitedSlope[v] = Slope_LR*( Slope_L[v] + Slope_R[v] ) /
               ( Slope_L[v]*Slope_L[v] + Slope_R[v]*Slope_R[v] );
              
               LimitedSlope[v] *= MinMod_Coeff;

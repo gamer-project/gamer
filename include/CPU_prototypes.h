@@ -2,9 +2,11 @@
 #define CPU_PROTOOTYPES_H
 
 
- void CPU_DataReconstruction( const real PriVar[][NCOMP_TOTAL], real FC_Var[][6][NCOMP_TOTAL], const int NIn, const int NGhost,
-                                    const real Gamma, const LR_Limiter_t LR_Limiter, const real MinMod_Coeff,
-                                    const real EP_Coeff, const real dt, const real dh, const real MinDens, const real MinPres );
+ void CPU_DataReconstruction( const real PriVar[][NCOMP_TOTAL], real FC_Var[][6][NCOMP_TOTAL],
+                              const int NIn, const int NGhost,
+			      const real Gamma, const LR_Limiter_t LR_Limiter, const real MinMod_Coeff,
+			      const real EP_Coeff, const real dt, const real dh, const real MinDens,
+                              const real MinPres, int iteration );
 
  void CPU_Con2Flux( const int XYZ, real Flux[], const real Input[], const real Gamma_m1, const real MinPres );
 
