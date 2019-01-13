@@ -371,6 +371,7 @@ void LimitSlope( const real L2[], const real L1[], const real C0[], const real R
 //       generalized MinMod
          case GMINMOD: 
          Slope_C[v] = (real)0.5*( Slope_L[v] + Slope_R[v] );
+
            if (  Slope_L[v]*Slope_R[v] > (real)0.0  )
            {
              Slope_L[v] *= MinMod_Coeff;
@@ -384,6 +385,7 @@ void LimitSlope( const real L2[], const real L1[], const real C0[], const real R
 //       van-Leer + generalized MinMod
          case VL_GMINMOD:           
          Slope_C[v] = (real)0.5*( Slope_L[v] + Slope_R[v] );
+
            if (  Slope_L[v]*Slope_R[v] > (real)0.0 )
               Slope_A[v] = (real)2.0*Slope_L[v]*Slope_R[v]/( Slope_L[v] + Slope_R[v] );
            else
@@ -403,6 +405,7 @@ void LimitSlope( const real L2[], const real L1[], const real C0[], const real R
 //       extrema-preserving
          case EXTPRE:
          Slope_C[v] = (real)0.5*( Slope_L[v] + Slope_R[v] );
+
            Slope_LL[v] = L1[v] - L2[v];
            Slope_RR[v] = R2[v] - R1[v];
 
@@ -435,6 +438,7 @@ void LimitSlope( const real L2[], const real L1[], const real C0[], const real R
 
 //       van-Leer, Ref: eq.(14.54) in Toro
          case VANLEER:              
+
            if (  Slope_L[v]*Slope_R[v] > (real)0.0 )
            {
               beta_L = 2.0 / (1 + DT__FLUID);
@@ -453,6 +457,7 @@ void LimitSlope( const real L2[], const real L1[], const real C0[], const real R
 
 //       van-Leer Albada 1, Ref: eq.(14.55) in Toro
          case ALBADA:               
+
            Slope_LR = Slope_L[v]*Slope_R[v];
            if (  Slope_LR > (real)0.0 )
            {
@@ -470,27 +475,9 @@ void LimitSlope( const real L2[], const real L1[], const real C0[], const real R
             } else LimitedSlope[v] = 0.0;
             break;
 
-//       van-Leer Albada 2, Ref: Flux limiter in Wikipedia
-         case ALBADA_2:              
-           Slope_LR = Slope_L[v]*Slope_R[v];
-           if (  Slope_LR > (real)0.0 )
-           {
-              beta_L = 2.0 / (1 + DT__FLUID);
-              beta_R = 2.0 / (1 - DT__FLUID);
-                 
-              delta[v] = 0.5*( (1-MinMod_Coeff)*Slope_R[v] + (1+MinMod_Coeff)*Slope_L[v] );
-      
-              Xi_L = beta_L * Slope_L[v] / delta[v];
-              Xi_R = beta_R * Slope_R[v] / delta[v];
-  
-              LimitedSlope[v] = (real)2.0*Slope_LR/( Slope_L[v]*Slope_L[v] + Slope_R[v]*Slope_R[v] );
-              LimitedSlope[v] = FMIN( LimitedSlope[v], Xi_R );
-              LimitedSlope[v] = LimitedSlope[v] * delta[v];
-            } else LimitedSlope[v] = 0.0;
-            break;
-
 //       minbee, Ref: eq.(14.44) in Toro
          case MINBEE:
+
            if ( Slope_R[v] > (real)0.0 )
            {
              LimitedSlope[v] = FMIN( Slope_L[v],      Slope_R[v] );
@@ -507,6 +494,7 @@ void LimitSlope( const real L2[], const real L1[], const real C0[], const real R
       
 //       superbee, Ref: eq.(14.44) in Toro
          case SUPERBEE:
+
            real a, b;
            if ( Slope_R[v] > (real)0.0 )
            {
@@ -514,6 +502,7 @@ void LimitSlope( const real L2[], const real L1[], const real C0[], const real R
              b = FMIN( 2.0*Slope_L[v],     Slope_R[v] );
              LimitedSlope[v] = FMAX(   a,               b );
              LimitedSlope[v] = FMAX( 0.0, LimitedSlope[v] );
+             LimitedSlope[v] *= MinMod_Coeff;
            }
            else
            {
@@ -521,6 +510,7 @@ void LimitSlope( const real L2[], const real L1[], const real C0[], const real R
              b = FMAX( 2.0*Slope_L[v],     Slope_R[v] );
              LimitedSlope[v] = FMIN(   a,               b );
              LimitedSlope[v] = FMIN( 0.0, LimitedSlope[v] );
+             LimitedSlope[v] *= MinMod_Coeff;
            }
            break;
 

@@ -955,7 +955,6 @@ void Aux_TakeNote()
       fprintf( Note, "OPT__LR_LIMITER                 %s\n",      ( OPT__LR_LIMITER == VANLEER           ) ? "VANLEER"    :
                                                                   ( OPT__LR_LIMITER == GMINMOD           ) ? "GMINMOD"    :
                                                                   ( OPT__LR_LIMITER == ALBADA            ) ? "ALBADA"     :
-                                                                  ( OPT__LR_LIMITER == ALBADA_2          ) ? "ALBADA_2"   :
                                                                   ( OPT__LR_LIMITER == VL_GMINMOD        ) ? "VL_GMINMOD" :
                                                                   ( OPT__LR_LIMITER == EXTPRE            ) ? "EXTPRE"     :
                                                                   ( OPT__LR_LIMITER == MINBEE            ) ? "MINBEE"     :

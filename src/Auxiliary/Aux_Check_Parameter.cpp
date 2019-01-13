@@ -1057,7 +1057,7 @@ void Aux_Check_Parameter()
 
    if ( OPT__LR_LIMITER != VANLEER  &&  OPT__LR_LIMITER != GMINMOD  &&  OPT__LR_LIMITER != ALBADA  &&
         OPT__LR_LIMITER != EXTPRE   &&  OPT__LR_LIMITER != VL_GMINMOD && OPT__LR_LIMITER != SUPERBEE &&
-        OPT__LR_LIMITER != MINBEE   &&  OPT__LR_LIMITER != ALBADA_2 && OPT__LR_LIMITER != CONSTANT )
+        OPT__LR_LIMITER != MINBEE   &&  OPT__LR_LIMITER != CONSTANT )
       Aux_Error( ERROR_INFO, "unsupported data reconstruction limiter (OPT__LR_IMITER = %d) !!\n",
                  OPT__LR_LIMITER );
 
