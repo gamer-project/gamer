@@ -15,7 +15,6 @@ static void CPU_HancockPredict( real FC_Var[][6][NCOMP_TOTAL], const real dt, co
                                 const real C_Var[][ FLU_NXT*FLU_NXT*FLU_NXT ], const real MinDens, const real MinPres );
 #endif
 
-static bool boolean;
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  CPU_FluidSolver_MHM
@@ -187,21 +186,21 @@ void CPU_FluidSolver_MHM( const real Flu_Array_In[][NCOMP_TOTAL][ FLU_NXT*FLU_NX
 #               if  ( EXTRAPOLATE == FOUR_VELOCITY )
                 for (int v=0; v<NCOMP_TOTAL; v++)   Input[v] = Flu_Array_In[P][v][ID1];
 #               ifdef CHECK_NEGATIVE_IN_FLUID
-                boolean = CPU_CheckUnphysical(Input, NULL, __FUNCTION__, __LINE__, true);
+                CPU_CheckUnphysical(Input, NULL, __FUNCTION__, __LINE__, true);
 #               endif
                 CPU_Con2Pri(Input, PriVar[ID1], Gamma);
 
 #               elif ( EXTRAPOLATE == THREE_VELOCITY )
                 for (int v=0; v<NCOMP_TOTAL; v++)   PriVar[ID1][v] = Flu_Array_In[P][v][ID1];
 #               ifdef CHECK_NEGATIVE_IN_FLUID
-                boolean = CPU_CheckUnphysical(PriVar[ID1], NULL, __FUNCTION__, __LINE__, true);
+                CPU_CheckUnphysical(PriVar[ID1], NULL, __FUNCTION__, __LINE__, true);
 #               endif
                 CPU_Con2Pri(PriVar[ID1], Input, Gamma);
                 CPU_4Velto3Vel(Input, PriVar[ID1]);
 
 #               elif ( EXTRAPOLATE == CONSERVED_QUANTITIES )
                 for (int v=0; v<NCOMP_TOTAL; v++)   PriVar[ID1][v] = Flu_Array_In[P][v][ID1];
-                boolean = CPU_CheckUnphysical(PriVar[ID1], NULL, __FUNCTION__, __LINE__, true);
+                CPU_CheckUnphysical(PriVar[ID1], NULL, __FUNCTION__, __LINE__, true);
 #               endif
              }
 #           endif
@@ -330,8 +329,8 @@ void CPU_RiemannPredict_Flux( const real Flu_Array_In[][ FLU_NXT*FLU_NXT*FLU_NXT
 
 //       check unphysical cells
 #        ifdef CHECK_NEGATIVE_IN_FLUID
-         boolean = CPU_CheckUnphysical(ConVar_L, NULL, __FUNCTION__, __LINE__, true);
-         boolean = CPU_CheckUnphysical(ConVar_R, NULL, __FUNCTION__, __LINE__, true);
+         CPU_CheckUnphysical(ConVar_L, NULL, __FUNCTION__, __LINE__, true);
+         CPU_CheckUnphysical(ConVar_R, NULL, __FUNCTION__, __LINE__, true);
 #        endif
 
 //       invoke the Riemann solver
@@ -404,7 +403,7 @@ void CPU_RiemannPredict( const real Flu_Array_In[][ FLU_NXT*FLU_NXT*FLU_NXT ],
 #     endif
 
 #     ifdef CHECK_NEGATIVE_IN_FLUID
-      boolean = CPU_CheckUnphysical(Half_Var[ID1], NULL, __FUNCTION__, __LINE__, true);
+      CPU_CheckUnphysical(Half_Var[ID1], NULL, __FUNCTION__, __LINE__, true);
 #     endif
    } // i,j,k
 

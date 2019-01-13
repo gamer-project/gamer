@@ -5,7 +5,6 @@
 
 bool CPU_CheckUnphysical( const real Con[], const real Pri[], const char s[], const int line, bool show);
 real CPU_CheckMinTempInEngy (const real Con[]);
-static bool boolean;
 //-------------------------------------------------------------------------------------------------------
 // Function    :  CPU_FullStepUpdate
 // Description :  Evaluate the full-step solution
@@ -51,7 +50,7 @@ bool CPU_FullStepUpdate( const real Input[][ FLU_NXT*FLU_NXT*FLU_NXT ], real Out
 
 #     ifdef CHECK_NEGATIVE_IN_FLUID
       for (int v = 0;v<NCOMP_FLUID;v++) Cons[v] = Input[v][ID3];
-      boolean = CPU_CheckUnphysical(Cons, NULL, __FUNCTION__, __LINE__, true);
+      CPU_CheckUnphysical(Cons, NULL, __FUNCTION__, __LINE__, true);
 #     endif
 
       for (int d=0; d<3; d++)

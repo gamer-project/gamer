@@ -18,8 +18,6 @@ static int AllocateSonPatch( const int FaLv, const int *Cr, const int PScale, co
 static void DeallocateSonPatch( const int FaLv, const int FaPID, const int NNew_Real0, int NewSonPID0_Real[],
                                 int SwitchIdx, int &RefineS2F_Send_NPatchTotal, int *&RefineS2F_Send_PIDList );
 
-static bool boolean;
-
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  LB_Refine_AllocateNewPatch
@@ -851,7 +849,7 @@ int AllocateSonPatch( const int FaLv, const int *Cr, const int PScale, const int
       {
 	 real Con[NCOMP_FLUID];
 	 for (int v = 0 ; v < NCOMP_FLUID;v++) Con[v] = FData_Flu[v][k][j][i];
-	 boolean = CPU_CheckUnphysical(Con, NULL, __FUNCTION__, __LINE__, true);
+	 CPU_CheckUnphysical(Con, NULL, __FUNCTION__, __LINE__, true);
       }
 #     endif
 

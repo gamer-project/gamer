@@ -1266,27 +1266,28 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData[], const in
                    IntScheme, PhaseUnwrapping_No, Monotonicity );
 
 #  endif // #if ( MODEL == ELBDM ) ... else ...
-/*
-#  ifdef CHECK_NEGATIVE_IN_FLUID
-#  if ( MODEL == SR_HYDRO )
+
+#  if ( MODEL == SR_HYDRO && defined (CHECK_NEGATIVE_IN_FLUID))
    real Con[NCOMP_FLUID];
 
-   if (NVar_Flu == NCOMP_FLUID){
-//  check coarse data
-    for ( int i = 0 ;i < CSize3D; i++ ){
-      for (int v = 0 ; v < NCOMP_FLUID ;v++) Con[v] = *(CData+CSize3D*v+i);
-      boolean = CPU_CheckUnphysical(Con, NULL, __FUNCTION__, __LINE__, true);
-    }
+   if (NVar_Flu == NCOMP_FLUID)
+    {
+//    check coarse data
+      for ( int i = 0 ;i < CSize3D; i++ )
+       {
+         for (int v = 0 ; v < NCOMP_FLUID ;v++) Con[v] = *(CData+CSize3D*v+i);
+         CPU_CheckUnphysical(Con, NULL, __FUNCTION__, __LINE__, true);
+       }
 
-//  ckeck fine data
-    for ( int i = 0 ;i < FSize3D; i++ ){
-      for (int v = 0 ; v < NCOMP_FLUID ;v++) Con[v] = *(IntData+FSize3D*v+i);
-      boolean = CPU_CheckUnphysical(Con, NULL, __FUNCTION__, __LINE__, true);
+//    ckeck fine data
+      for ( int i = 0 ;i < FSize3D; i++ )
+       {
+         for (int v = 0 ; v < NCOMP_FLUID ;v++) Con[v] = *(IntData+FSize3D*v+i);
+         CPU_CheckUnphysical(Con, NULL, __FUNCTION__, __LINE__, true);
+       }
     }
-   }
 #  endif
-#  endif
-*/
+
 
 
    NVar_SoFar = NVar_Flu;

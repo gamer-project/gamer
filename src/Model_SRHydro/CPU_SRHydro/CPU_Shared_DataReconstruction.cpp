@@ -8,7 +8,6 @@ static void LimitSlope( const real L2[], const real L1[], const real C0[], const
                         const real Gamma, const int XYZ, real LimitedSlope[], int iteration );
 
 bool CPU_CheckUnphysical( const real Con[], const real Pri[], const char s[], const int line, bool show);
-static bool boolean;
 #if ( LR_SCHEME == PLM )
 //-------------------------------------------------------------------------------------------------------
 // Function    :  CPU_DataReconstruction
@@ -111,11 +110,11 @@ void CPU_DataReconstruction( const real PriVar[][NCOMP_TOTAL], real FC_Var[][6][
                FC_Var[ID2][dL][v] = (real)2.0*PriVar[ID1][v] - FC_Var[ID2][dR][v];
             }
 #          if ( defined ( CHECK_NEGATIVE_IN_FLUID ) &&  EXTRAPOLATE != CONSERVED_QUANTITIES )
-           boolean = CPU_CheckUnphysical(NULL,FC_Var[ID2][dR], __FUNCTION__, __LINE__, true);
-           boolean = CPU_CheckUnphysical(NULL,FC_Var[ID2][dL], __FUNCTION__, __LINE__, true);
+           CPU_CheckUnphysical(NULL,FC_Var[ID2][dR], __FUNCTION__, __LINE__, true);
+           CPU_CheckUnphysical(NULL,FC_Var[ID2][dL], __FUNCTION__, __LINE__, true);
 #          elif ( defined ( CHECK_NEGATIVE_IN_FLUID ) &&  EXTRAPOLATE == CONSERVED_QUANTITIES )
-           boolean = CPU_CheckUnphysical(FC_Var[ID2][dR], NULL, __FUNCTION__, __LINE__, true);
-           boolean = CPU_CheckUnphysical(FC_Var[ID2][dL], NULL, __FUNCTION__, __LINE__, true);
+           CPU_CheckUnphysical(FC_Var[ID2][dR], NULL, __FUNCTION__, __LINE__, true);
+           CPU_CheckUnphysical(FC_Var[ID2][dL], NULL, __FUNCTION__, __LINE__, true);
 #          endif
          }
          else // for the extrema-preserving limiter --> ensure positive density and pressure
@@ -128,11 +127,11 @@ void CPU_DataReconstruction( const real PriVar[][NCOMP_TOTAL], real FC_Var[][6][
             FC_Var[ID2][dR][4] = CPU_CheckMinPres( FC_Var[ID2][dR][4], MinPres );
 */
 #          if ( defined ( CHECK_NEGATIVE_IN_FLUID ) &&  EXTRAPOLATE != CONSERVED_QUANTITIES )
-           boolean = CPU_CheckUnphysical(NULL,FC_Var[ID2][dR], __FUNCTION__, __LINE__, true);
-           boolean = CPU_CheckUnphysical(NULL,FC_Var[ID2][dL], __FUNCTION__, __LINE__, true);
+           CPU_CheckUnphysical(NULL,FC_Var[ID2][dR], __FUNCTION__, __LINE__, true);
+           CPU_CheckUnphysical(NULL,FC_Var[ID2][dL], __FUNCTION__, __LINE__, true);
 #          elif ( defined ( CHECK_NEGATIVE_IN_FLUID ) && ( EXTRAPOLATE == CONSERVED_QUANTITIES ) )
-           boolean = CPU_CheckUnphysical(FC_Var[ID2][dR], NULL, __FUNCTION__, __LINE__, true);
-           boolean = CPU_CheckUnphysical(FC_Var[ID2][dL], NULL, __FUNCTION__, __LINE__, true);
+           CPU_CheckUnphysical(FC_Var[ID2][dR], NULL, __FUNCTION__, __LINE__, true);
+           CPU_CheckUnphysical(FC_Var[ID2][dL], NULL, __FUNCTION__, __LINE__, true);
 #          endif
          }
 
