@@ -254,7 +254,12 @@ void CPU_FluidSolver_MHM( const real Flu_Array_In[][NCOMP_TOTAL][ FLU_NXT*FLU_NX
               iteration++;
 //              if (iteration >= 2) printf("%f\n",MinMod_Coeff_temp);
 
+//       perform CPU_FullStepUpdate again if cell is unphysical and iteration < MAX
          }while( state && iteration <= Max );
+
+#        ifdef CHECK_NEGATIVE_IN_FLUID
+         if(state) printf("Adaptive MinMod_Coeff is fail!\n") ;
+#        endif
 
 
 //       4. store the inter-patch fluxes

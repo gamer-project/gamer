@@ -495,11 +495,13 @@ void LimitSlope( const real L2[], const real L1[], const real C0[], const real R
            {
              LimitedSlope[v] = FMIN( Slope_L[v],      Slope_R[v] );
              LimitedSlope[v] = FMAX(          0, LimitedSlope[v] );
+             LimitedSlope[v] *= MinMod_Coeff;
            }
            else
            {
              LimitedSlope[v] = FMAX( Slope_L[v],      Slope_R[v] );
              LimitedSlope[v] = FMIN(          0, LimitedSlope[v] );
+             LimitedSlope[v] *= MinMod_Coeff;
            }
            break;
       
