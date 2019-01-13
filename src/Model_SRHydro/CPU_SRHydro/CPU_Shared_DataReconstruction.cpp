@@ -440,18 +440,9 @@ void LimitSlope( const real L2[], const real L1[], const real C0[], const real R
          case VANLEER:              
 
            if (  Slope_L[v]*Slope_R[v] > (real)0.0 )
-           {
-              beta_L = 2.0 / (1 + DT__FLUID);
-              beta_R = 2.0 / (1 - DT__FLUID);
-                 
-              delta[v] = 0.5*( (1-MinMod_Coeff)*Slope_R[v] + (1+MinMod_Coeff)*Slope_L[v] );
-      
-              Xi_L = beta_L * Slope_L[v] / delta[v];
-              Xi_R = beta_R * Slope_R[v] / delta[v];
-  
-              LimitedSlope[v] = (real)2.0*Slope_L[v]/( Slope_L[v] + Slope_R[v] );
-              LimitedSlope[v] = FMIN( LimitedSlope[v], Xi_R );
-              LimitedSlope[v] = LimitedSlope[v] * delta[v];
+            {
+              Slope_Limiter[v] = (real)2.0*Slope_LR/( Slope_L[v] + Slope_R[v] );
+              LimitedSlope[v] *= MinMod_Coeff;
             } else LimitedSlope[v] = 0.0;
             break;
 
@@ -464,7 +455,7 @@ void LimitSlope( const real L2[], const real L1[], const real C0[], const real R
               Slope_Limiter[v] = Slope_LR*( Slope_L[v] + Slope_R[v] ) /
               ( Slope_L[v]*Slope_L[v] + Slope_R[v]*Slope_R[v] );
              
-              SLimitedSlope[v] *= MinMod_Coeff;
+              LimitedSlope[v] *= MinMod_Coeff;
 
             } else LimitedSlope[v] = 0.0;
             break;

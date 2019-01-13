@@ -258,7 +258,7 @@ void CPU_FluidSolver_MHM( const real Flu_Array_In[][NCOMP_TOTAL][ FLU_NXT*FLU_NX
          }while( state && iteration <= Max );
 
 #        ifdef CHECK_NEGATIVE_IN_FLUID
-         if(state) printf("Adaptive MinMod_Coeff is fail!\n") ;
+         if(state) printf("Adaptive MinMod_Coeff is fail! %s: %d\n",__FUNCTION__, __LINE__) ;
 #        endif
 
 
