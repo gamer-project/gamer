@@ -1941,13 +1941,13 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
 //             --> note that for ELBDM it will result in dens != real^2 + imag^2
                for (int t=0; t<PGSize3D; t++) 
                   {
-#ifdef   CHECK_NEGATIVE_IN_FLUID
+#                     ifdef CHECK_NEGATIVE_IN_FLUID
 		      if (   CPU_CheckNegative(ArrayDens[t])
 			  ||     !Aux_IsFinite(ArrayDens[t]))
                         {
 			  Aux_Error (ERROR_INFO, "ArrayDens[%d] = %+e", t, ArrayDens[t]);
 		        }
-#endif
+#                     endif
                        ArrayDens[t] = CPU_CheckMinDens ( ArrayDens[t], MinDens );
                    }
             }
