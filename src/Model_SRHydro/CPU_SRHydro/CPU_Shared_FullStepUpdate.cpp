@@ -28,10 +28,10 @@ static bool boolean;
 //                [13] NormIdx          : Target variable indices to be normalized
 //                                        --> Should be set to the global variable "PassiveNorm_VarIdx"
 //-------------------------------------------------------------------------------------------------------
-void CPU_FullStepUpdate( const real Input[][ FLU_NXT*FLU_NXT*FLU_NXT ], real Output[][ PS2*PS2*PS2 ], char DE_Status[],
+bool CPU_FullStepUpdate( const real Input[][ FLU_NXT*FLU_NXT*FLU_NXT ], real Output[][ PS2*PS2*PS2 ], char DE_Status[],
                          const real Flux[][3][NCOMP_TOTAL], const real dt, const real dh,
                          const real Gamma, const real MinDens, const real MinPres, const real DualEnergySwitch,
-                         const bool NormPassive, const int NNorm, const int NormIdx[], bool *state )
+                         const bool NormPassive, const int NNorm, const int NormIdx[] )
 {
    const int  dID1[3]   = { 1, N_FL_FLUX, N_FL_FLUX*N_FL_FLUX };
    const real dt_dh     = dt/dh;
@@ -63,19 +63,17 @@ void CPU_FullStepUpdate( const real Input[][ FLU_NXT*FLU_NXT*FLU_NXT ], real Out
 
       real Cons[NCOMP_FLUID];
       for (int v = 0;v<NCOMP_FLUID;v++) Cons[v] = Output[v][ID2];
-#     if ( defined CHECK_MIN_TEMP ) || (defined CHECK_NEGATIVE_IN_FLUID )
+
 #     ifdef CHECK_MIN_TEMP
       Output[ENGY][ID2] = CPU_CheckMinTempInEngy( Cons );
       Cons[ENGY] = Output[ENGY][ID2];
 #     endif
-#     ifdef CHECK_NEGATIVE_IN_FLUID
-      CPU_CheckUnphysical(Cons, NULL, __FUNCTION__, __LINE__,  true) ? *state *= false : *state *= true;
-#     endif
-#     else
-      CPU_CheckUnphysical(Cons, NULL, __FUNCTION__, __LINE__, false) ? *state *= false : *state *= true;
-#     endif
+
+      if(CPU_CheckUnphysical(Cons, NULL, __FUNCTION__, __LINE__, false)) return true;
    } // i,j,k
 
+   // pass 
+   return false;
 } // FUNCTION : CPU_FullStepUpdate
 
 

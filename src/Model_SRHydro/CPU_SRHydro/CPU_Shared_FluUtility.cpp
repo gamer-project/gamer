@@ -580,20 +580,21 @@ bool CPU_CheckUnphysical( const real Con[], const real Pri[], const char s[], co
 // print all variables if goto UNPHYSICAL
       UNPHYSICAL:
       {
-        if ( show == true ) {
-        Aux_Message(stderr,"\n\nfunction: %s: %d\n", s, line);
+        if ( show ) 
+         {
+            Aux_Message(stderr,"\n\nfunction: %s: %d\n", s, line);
  
-        Aux_Message(stderr, "D=%14.7e, Mx=%14.7e, My=%14.7e, Mz=%14.7e, E=%14.7e\n",
-                             ConsVar[DENS], ConsVar[MOMX], ConsVar[MOMY], ConsVar[MOMZ], ConsVar[ENGY]);
-#       if ( CONSERVED_ENERGY == 1 )
-        Aux_Message(stderr, "E^2-|M|^2-D^2=%14.7e\n", discriminant );
-#       elif ( CONSERVED_ENERGY == 2 )
-        Aux_Message(stderr, "E^2+2*E*D-|M|^2=%14.7e\n", discriminant );
-#       endif
-        Aux_Message(stderr, "n=%14.7e, Ux=%14.7e, Uy=%14.7e, Uz=%14.7e, P=%14.7e\n", 
-                             Pri4Vel[0], Pri4Vel[1], Pri4Vel[2], Pri4Vel[3], Pri4Vel[4]);
-        Aux_Message(stderr, "Vx=%14.7e, Vy=%14.7e, Vz=%14.7e, |V|=%14.7e\n",
-                             Pri3Vel[1], Pri3Vel[2], Pri3Vel[3], SQRT(SQR(Pri3Vel[1])+SQR(Pri3Vel[2])+SQR(Pri3Vel[3])));
+            Aux_Message(stderr, "D=%14.7e, Mx=%14.7e, My=%14.7e, Mz=%14.7e, E=%14.7e\n",
+                                 ConsVar[DENS], ConsVar[MOMX], ConsVar[MOMY], ConsVar[MOMZ], ConsVar[ENGY]);
+#           if ( CONSERVED_ENERGY == 1 )
+            Aux_Message(stderr, "E^2-|M|^2-D^2=%14.7e\n", discriminant );
+#           elif ( CONSERVED_ENERGY == 2 )
+            Aux_Message(stderr, "E^2+2*E*D-|M|^2=%14.7e\n", discriminant );
+#           endif
+            Aux_Message(stderr, "n=%14.7e, Ux=%14.7e, Uy=%14.7e, Uz=%14.7e, P=%14.7e\n", 
+                                 Pri4Vel[0], Pri4Vel[1], Pri4Vel[2], Pri4Vel[3], Pri4Vel[4]);
+            Aux_Message(stderr, "Vx=%14.7e, Vy=%14.7e, Vz=%14.7e, |V|=%14.7e\n",
+                                 Pri3Vel[1], Pri3Vel[2], Pri3Vel[3], SQRT(SQR(Pri3Vel[1])+SQR(Pri3Vel[2])+SQR(Pri3Vel[3])));
           }
         return true;
       }

@@ -88,7 +88,7 @@ void CPU_FluidSolver_MHM( const real Flu_Array_In[][NCOMP_TOTAL][ FLU_NXT*FLU_NX
    {
       const real  Gamma_m1       = Gamma - (real)1.0;
       const bool CorrHalfVel_No  = false;
-      const int Max = 5;
+      const int Max = 2;
       int iteration;
       bool state;
       real MinMod_Coeff_temp;
@@ -247,15 +247,14 @@ void CPU_FluidSolver_MHM( const real Flu_Array_In[][NCOMP_TOTAL][ FLU_NXT*FLU_NX
                                NULL_REAL, NULL_REAL, NULL_REAL, GRAVITY_NONE, NULL, MinPres );
 
 //            3. full-step evolution
-              state = true;
-              CPU_FullStepUpdate( Flu_Array_In[P], Flu_Array_Out[P], DE_Array_Out[P],
-                                  FC_Flux, dt, dh, Gamma, MinDens, MinPres, DualEnergySwitch, 
-                                  NormPassive, NNorm, NormIdx, &state);
+              state = CPU_FullStepUpdate( Flu_Array_In[P], Flu_Array_Out[P], DE_Array_Out[P],
+					  FC_Flux, dt, dh, Gamma, MinDens, MinPres, DualEnergySwitch, 
+					  NormPassive, NNorm, NormIdx);
 
               iteration++;
-              if(!state) printf("MinMmod_Coeff = %f\n",MinMod_Coeff_temp );
+//              if (iteration >= 2) printf("%f\n",MinMod_Coeff_temp);
 
-         }while( !state && iteration <= Max );
+         }while( state && iteration <= Max );
 
 
 //       4. store the inter-patch fluxes
