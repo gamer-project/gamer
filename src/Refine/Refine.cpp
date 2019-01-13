@@ -468,7 +468,7 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
                Flu_FData[IMAG][k][j][i] = Amp*SIN( Phase );
             }
          }
-#        else // #if ( MODEL == ELBDM )
+#        elif ( MODEL != ELBDM && MODEL != SR_HYDRO ) // #if ( MODEL == ELBDM )
 
          for (int v=0; v<NCOMP_TOTAL; v++)
          Interpolate( &Flu_CData[v][0][0][0], CSize_Flu3, CStart_Flu, CRange, &Flu_FData[v][0][0][0],
@@ -487,7 +487,13 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
                       &EnsureMonotonicity_No );
 #        endif
 
-#        if ( MODEL == SR_HYDRO && defined (CHECK_NEGATIVE_IN_FLUID) )
+#        if ( MODEL == SR_HYDRO )
+         for (int v=0; v<NCOMP_TOTAL; v++)
+         Interpolate( &Flu_CData[v][0][0][0], CSize_Flu3, CStart_Flu, CRange, &Flu_FData[v][0][0][0],
+                      FSize3, FStart, 1, OPT__REF_FLU_INT_SCHEME, PhaseUnwrapping_No,
+                      Monotonicity, INT_MONO_COEFF );
+
+#        elif ( MODEL == SR_HYDRO && defined (CHECK_NEGATIVE_IN_FLUID) )
 	 real Con[NCOMP_FLUID];
 
 	 for (int k=0; k<FSize; k++)

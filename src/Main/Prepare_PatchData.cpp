@@ -1942,10 +1942,10 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
                for (int t=0; t<PGSize3D; t++) 
                   {
 #                     ifdef CHECK_NEGATIVE_IN_FLUID
-		      if (  CPU_CheckNegative(ArrayDens[t]) || !Aux_IsFinite(ArrayDens[t]))
-			    Aux_Error (ERROR_INFO, "ArrayDens[%d] = %+e", t, ArrayDens[t]);
+		      if (   CPU_CheckNegative(ArrayDens[t]) || !Aux_IsFinite(ArrayDens[t]))
+			  Aux_Error (ERROR_INFO, "ArrayDens[%d] = %+e", t, ArrayDens[t]);
 #                     endif
-                      ArrayDens[t] = CPU_CheckMinDens ( ArrayDens[t], MinDens );
+                       ArrayDens[t] = CPU_CheckMinDens ( ArrayDens[t], MinDens );
                    }
             }
          } // if ( MinDens >= (real)0.0 )
@@ -1980,9 +1980,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
                 }
 #              endif
             }
-#           endif
 
-#           if ( MODEL == HYDRO  ||  MODEL == MHD )
 //          (d2-2) pressure in the energy field --> work only when ALL active fluid fields are prepared
             if ( (TVar & _FLUID) == _FLUID )
             {
@@ -1998,17 +1996,18 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
                real *ArrayMomY = Array + MomYIdx*PGSize3D;
                real *ArrayMomZ = Array + MomZIdx*PGSize3D;
                real *ArrayEngy = Array + EngyIdx*PGSize3D;
-
+#              if ( MODEL != SR_HYDRO )
 //             apply minimum pressure to the energy field
                for (int t=0; t<PGSize3D; t++)
                 {
                   ArrayEngy[t] = CPU_CheckMinPresInEngy( ArrayDens[t], ArrayMomX[t], ArrayMomY[t], ArrayMomZ[t], ArrayEngy[t],
                                                          Gamma_m1, _Gamma_m1, MinPres );
-               } // for (int t=0; t<PGSize3D; t++)
-
+                } // for (int t=0; t<PGSize3D; t++)
+#               endif
             } // if ( (TVar & _FLUID) == _FLUID )
          } // if ( MinPres >= (real)0.0 )
 #        endif // #if ( MODEL == HYDRO  ||  MODEL == MHD )
+
 
 //       e. copy data from Array to h_Input_Array
 // ------------------------------------------------------------------------------------------------------------

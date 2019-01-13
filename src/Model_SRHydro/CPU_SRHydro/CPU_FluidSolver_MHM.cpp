@@ -253,10 +253,10 @@ void CPU_FluidSolver_MHM( const real Flu_Array_In[][NCOMP_TOTAL][ FLU_NXT*FLU_NX
 //              if (iteration >= 2) printf("%f\n",MinMod_Coeff_temp);
 
 //       perform CPU_FullStepUpdate again if cell is unphysical and iteration < MAX
-         }while( state && iteration <= Max );
+         } while( state && iteration <= Max );
 
 #        ifdef CHECK_NEGATIVE_IN_FLUID
-         if(state) printf("Adaptive MinMod_Coeff is fail! %s: %d\n",__FUNCTION__, __LINE__) ;
+         if(state) printf("Adaptive MinMod_Coeff is fail! coeff = %f, %s: %d\n",MinMod_Coeff_temp, __FUNCTION__, __LINE__) ;
 #        endif
 
 
