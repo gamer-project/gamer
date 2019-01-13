@@ -112,6 +112,7 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData[], const in
    const bool PrepVz          = ( TVar & _VELZ    ) ? true : false; // 4-velocity in z-direction
    const bool PrepPres        = ( TVar & _PRES    ) ? true : false; // pressure
    const bool PrepTemp        = ( TVar & _TEMP    ) ? true : false; // temperature
+   real Con[NCOMP_FLUID];
 
 #  elif ( MODEL == ELBDM )
 // no derived variables yet
@@ -1167,6 +1168,14 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData[], const in
 #     endif // MODEL
    }
 
+// check coarse data before interpolation
+#  if ( MODEL == SR_HYDRO && defined CHECK_NEGATIVE_IN_FLUID )
+   for ( int i = 0 ;i < CSize3D; i++ )
+    {
+      for (int v = 0 ; v < NVar_Flu ;v++) Con[v] = *(CData+CSize3D*v+i);
+      CPU_CheckUnphysical(Con, NULL, __FUNCTION__, __LINE__, true);
+    }
+#  endif
 
 // interpolation
 #  if ( MODEL == ELBDM )
@@ -1267,28 +1276,14 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData[], const in
 
 #  endif // #if ( MODEL == ELBDM ) ... else ...
 
+//    ckeck fined data
 #  if ( MODEL == SR_HYDRO && defined CHECK_NEGATIVE_IN_FLUID )
-   real Con[NCOMP_FLUID];
-
-   if (NVar_Flu == NCOMP_FLUID)
-    {
-//    check coarse data
-      for ( int i = 0 ;i < CSize3D; i++ )
-       {
-         for (int v = 0 ; v < NCOMP_FLUID ;v++) Con[v] = *(CData+CSize3D*v+i);
-         CPU_CheckUnphysical(Con, NULL, __FUNCTION__, __LINE__, true);
-       }
-
-//    ckeck fine data
       for ( int i = 0 ;i < FSize3D; i++ )
        {
-         for (int v = 0 ; v < NCOMP_FLUID ;v++) Con[v] = *(IntData+FSize3D*v+i);
+         for (int v = 0 ; v < NVar_Flu ;v++) Con[v] = *(IntData+FSize3D*v+i);
          CPU_CheckUnphysical(Con, NULL, __FUNCTION__, __LINE__, true);
        }
-    }
 #  endif
-
-
 
    NVar_SoFar = NVar_Flu;
 
