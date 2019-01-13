@@ -88,9 +88,10 @@ void CPU_FluidSolver_MHM( const real Flu_Array_In[][NCOMP_TOTAL][ FLU_NXT*FLU_NX
    {
       const real  Gamma_m1       = Gamma - (real)1.0;
       const bool CorrHalfVel_No  = false;
-      int Max = 0;
+      const int Max = 5;
       int iteration;
       bool state;
+      real MinMod_Coeff_temp;
 
       real Input[NCOMP_TOTAL];
       int ID1;
@@ -110,6 +111,7 @@ void CPU_FluidSolver_MHM( const real Flu_Array_In[][NCOMP_TOTAL][ FLU_NXT*FLU_NX
 #     pragma omp for schedule( runtime )
       for (int P=0; P<NPatchGroup; P++)
       {
+         iteration = 0;
 //       1. half-step prediction
 #        if ( FLU_SCHEME == MHM_RP ) // a. use Riemann solver to calculate the half-step fluxes
 
@@ -143,113 +145,117 @@ void CPU_FluidSolver_MHM( const real Flu_Array_In[][NCOMP_TOTAL][ FLU_NXT*FLU_NX
 #        endif
 
          do {
-         iteration = 0;
-//       (1.a-4) evaluate the face-centered values by data reconstruction
-         CPU_DataReconstruction( Half_Var, FC_Var, N_HF_VAR, FLU_GHOST_SIZE-2, Gamma, LR_Limiter,
-                                 MinMod_Coeff, EP_Coeff, NULL_REAL, NULL_INT, MinDens, MinPres );
-//       check unphysical cell after data reconstruction
+              MinMod_Coeff_temp = ( Max - iteration ) * ( MinMod_Coeff / (real) Max );
+//           (1.a-4) evaluate the face-centered values by data reconstruction
+             CPU_DataReconstruction( Half_Var, FC_Var, N_HF_VAR, FLU_GHOST_SIZE-2, Gamma, LR_Limiter,
+                                     MinMod_Coeff_temp, EP_Coeff, NULL_REAL, NULL_INT, MinDens, MinPres );
+//           check unphysical cell after data reconstruction
 
 
-//       (1.a-5) primitive face-centered variables --> conserved face-centered variables
-#        if ( EXTRAPOLATE != CONSERVED_QUANTITIES )
-         for (int k=0; k<N_FC_VAR; k++)
-         for (int j=0; j<N_FC_VAR; j++)
-         for (int i=0; i<N_FC_VAR; i++)
-         {
-            ID1 = (k*N_FC_VAR + j)*N_FC_VAR + i;
+//           (1.a-5) primitive face-centered variables --> conserved face-centered variables
+#            if ( EXTRAPOLATE != CONSERVED_QUANTITIES )
+             for (int k=0; k<N_FC_VAR; k++)
+             for (int j=0; j<N_FC_VAR; j++)
+             for (int i=0; i<N_FC_VAR; i++)
+             {
+                ID1 = (k*N_FC_VAR + j)*N_FC_VAR + i;
 
-            for (int f=0; f<6; f++)
-            {
-#              if  ( EXTRAPOLATE == FOUR_VELOCITY )
-               for (int v=0; v<NCOMP_TOTAL; v++)   Input[v] = FC_Var[ID1][f][v];
-               CPU_Pri2Con( Input, FC_Var[ID1][f], Gamma);
+                for (int f=0; f<6; f++)
+                {
+#                  if  ( EXTRAPOLATE == FOUR_VELOCITY )
+                   for (int v=0; v<NCOMP_TOTAL; v++)   Input[v] = FC_Var[ID1][f][v];
+                   CPU_Pri2Con( Input, FC_Var[ID1][f], Gamma);
 
-#              elif ( EXTRAPOLATE == THREE_VELOCITY )
-               CPU_3Velto4Vel(FC_Var[ID1][f], Input);
-               CPU_Pri2Con( Input, FC_Var[ID1][f], Gamma);
-#              endif
-            }
-         }
-#        endif
+#                  elif ( EXTRAPOLATE == THREE_VELOCITY )
+                   CPU_3Velto4Vel(FC_Var[ID1][f], Input);
+                   CPU_Pri2Con( Input, FC_Var[ID1][f], Gamma);
+#                  endif
+                }
+             }
+#            endif
 
-#        elif ( FLU_SCHEME == MHM ) // b. use interpolated face-centered values to calculate the half-step fluxes
+#            elif ( FLU_SCHEME == MHM ) // b. use interpolated face-centered values to calculate the half-step fluxes
 
-//       (1.b-1) conserved variables --> primitive variables
-#        if  ( EXTRAPOLATE != CONSERVED_QUANTITIES ||  defined(CHECK_NEGATIVE_IN_FLUID) )
-         for (int k=0; k<FLU_NXT; k++)
-         for (int j=0; j<FLU_NXT; j++)
-         for (int i=0; i<FLU_NXT; i++)
-         {
-            ID1 = (k*FLU_NXT + j)*FLU_NXT + i;
+//           (1.b-1) conserved variables --> primitive variables
+#            if  ( EXTRAPOLATE != CONSERVED_QUANTITIES ||  defined(CHECK_NEGATIVE_IN_FLUID) )
+             for (int k=0; k<FLU_NXT; k++)
+             for (int j=0; j<FLU_NXT; j++)
+             for (int i=0; i<FLU_NXT; i++)
+             {
+                ID1 = (k*FLU_NXT + j)*FLU_NXT + i;
 
-#           if  ( EXTRAPOLATE == FOUR_VELOCITY )
-            for (int v=0; v<NCOMP_TOTAL; v++)   Input[v] = Flu_Array_In[P][v][ID1];
-#           ifdef CHECK_NEGATIVE_IN_FLUID
-            boolean = CPU_CheckUnphysical(Input, NULL, __FUNCTION__, __LINE__, true);
-#           endif
-            CPU_Con2Pri(Input, PriVar[ID1], Gamma);
+#               if  ( EXTRAPOLATE == FOUR_VELOCITY )
+                for (int v=0; v<NCOMP_TOTAL; v++)   Input[v] = Flu_Array_In[P][v][ID1];
+#               ifdef CHECK_NEGATIVE_IN_FLUID
+                boolean = CPU_CheckUnphysical(Input, NULL, __FUNCTION__, __LINE__, true);
+#               endif
+                CPU_Con2Pri(Input, PriVar[ID1], Gamma);
 
-#           elif ( EXTRAPOLATE == THREE_VELOCITY )
-            for (int v=0; v<NCOMP_TOTAL; v++)   PriVar[ID1][v] = Flu_Array_In[P][v][ID1];
-#           ifdef CHECK_NEGATIVE_IN_FLUID
-            boolean = CPU_CheckUnphysical(PriVar[ID1], NULL, __FUNCTION__, __LINE__, true);
-#           endif
-            CPU_Con2Pri(PriVar[ID1], Input, Gamma);
-            CPU_4Velto3Vel(Input, PriVar[ID1]);
+#               elif ( EXTRAPOLATE == THREE_VELOCITY )
+                for (int v=0; v<NCOMP_TOTAL; v++)   PriVar[ID1][v] = Flu_Array_In[P][v][ID1];
+#               ifdef CHECK_NEGATIVE_IN_FLUID
+                boolean = CPU_CheckUnphysical(PriVar[ID1], NULL, __FUNCTION__, __LINE__, true);
+#               endif
+                CPU_Con2Pri(PriVar[ID1], Input, Gamma);
+                CPU_4Velto3Vel(Input, PriVar[ID1]);
 
-#           elif ( EXTRAPOLATE == CONSERVED_QUANTITIES )
-            for (int v=0; v<NCOMP_TOTAL; v++)   PriVar[ID1][v] = Flu_Array_In[P][v][ID1];
-            boolean = CPU_CheckUnphysical(PriVar[ID1], NULL, __FUNCTION__, __LINE__, true);
-#           endif
-         }
+#               elif ( EXTRAPOLATE == CONSERVED_QUANTITIES )
+                for (int v=0; v<NCOMP_TOTAL; v++)   PriVar[ID1][v] = Flu_Array_In[P][v][ID1];
+                boolean = CPU_CheckUnphysical(PriVar[ID1], NULL, __FUNCTION__, __LINE__, true);
+#               endif
+             }
 #           endif
 
          do {
-         iteration = 0;
-//       (1.b-2) evaluate the face-centered values by data reconstruction
-         CPU_DataReconstruction( PriVar, FC_Var, FLU_NXT, FLU_GHOST_SIZE-1, Gamma, LR_Limiter,
-                                 MinMod_Coeff, EP_Coeff, NULL_REAL, NULL_INT, MinDens, MinPres );
-//       check unphysical cell after data reconstruction
+              MinMod_Coeff_temp = ( Max - iteration ) * ( MinMod_Coeff / (real) Max );
 
-//       (1.b-3) primitive face-centered variables --> conserved face-centered variables
-#        if ( EXTRAPOLATE != CONSERVED_QUANTITIES )
-         for (int k=0; k<N_FC_VAR; k++)
-         for (int j=0; j<N_FC_VAR; j++)
-         for (int i=0; i<N_FC_VAR; i++)
-         {
-            ID1 = (k*N_FC_VAR + j)*N_FC_VAR + i;
+//            (1.b-2) evaluate the face-centered values by data reconstruction
+              CPU_DataReconstruction( PriVar, FC_Var, FLU_NXT, FLU_GHOST_SIZE-1, Gamma, LR_Limiter,
+                                      MinMod_Coeff_temp, EP_Coeff, NULL_REAL, NULL_INT, MinDens, MinPres );
+//            check unphysical cell after data reconstruction
 
-            for (int f=0; f<6; f++)
-            {
-#              if  ( EXTRAPOLATE == FOUR_VELOCITY )
-               for (int v=0; v<NCOMP_TOTAL; v++)   Input[v] = FC_Var[ID1][f][v];
-               CPU_Pri2Con( Input, FC_Var[ID1][f], Gamma);
+//            (1.b-3) primitive face-centered variables --> conserved face-centered variables
+#             if ( EXTRAPOLATE != CONSERVED_QUANTITIES )
+              for (int k=0; k<N_FC_VAR; k++)
+              for (int j=0; j<N_FC_VAR; j++)
+              for (int i=0; i<N_FC_VAR; i++)
+              {
+                 ID1 = (k*N_FC_VAR + j)*N_FC_VAR + i;
 
-#              elif ( EXTRAPOLATE == THREE_VELOCITY )
-               CPU_3Velto4Vel(FC_Var[ID1][f], Input);
-               CPU_Pri2Con( Input, FC_Var[ID1][f], Gamma);
-#              endif
-            }
-         }
-#        endif
+                 for (int f=0; f<6; f++)
+                 {
+#                   if  ( EXTRAPOLATE == FOUR_VELOCITY )
+                    for (int v=0; v<NCOMP_TOTAL; v++)   Input[v] = FC_Var[ID1][f][v];
+                    CPU_Pri2Con( Input, FC_Var[ID1][f], Gamma);
 
-
-//       (1.b-4) evaluate the half-step solutions
-         CPU_HancockPredict( FC_Var, dt, dh, Gamma, Flu_Array_In[P], MinDens, MinPres );
-//       check unphysical cell after prediction
-
-#        endif // #if ( FLU_SCHEME == MHM_RP ) ... else ...
-
-         CPU_ComputeFlux( FC_Var, FC_Flux, N_FL_FLUX, 1, Gamma, CorrHalfVel_No,  NULL, NULL,
-                          NULL_REAL, NULL_REAL, NULL_REAL, GRAVITY_NONE, NULL, MinPres );
-
-         iteration++;
-//       3. full-step evolution
-         CPU_FullStepUpdate( Flu_Array_In[P], Flu_Array_Out[P], DE_Array_Out[P],
-                FC_Flux, dt, dh, Gamma, MinDens, MinPres, DualEnergySwitch, NormPassive, NNorm, NormIdx, &state);
+#                   elif ( EXTRAPOLATE == THREE_VELOCITY )
+                    CPU_3Velto4Vel(FC_Var[ID1][f], Input);
+                    CPU_Pri2Con( Input, FC_Var[ID1][f], Gamma);
+#                   endif
+                 }
+              }
+#             endif
 
 
-         }while( state && iteration > Max );
+//            (1.b-4) evaluate the half-step solutions
+              CPU_HancockPredict( FC_Var, dt, dh, Gamma, Flu_Array_In[P], MinDens, MinPres );
+//            check unphysical cell after prediction
+
+#             endif // #if ( FLU_SCHEME == MHM_RP ) ... else ...
+
+              CPU_ComputeFlux( FC_Var, FC_Flux, N_FL_FLUX, 1, Gamma, CorrHalfVel_No,  NULL, NULL,
+                               NULL_REAL, NULL_REAL, NULL_REAL, GRAVITY_NONE, NULL, MinPres );
+
+//            3. full-step evolution
+              state = true;
+              CPU_FullStepUpdate( Flu_Array_In[P], Flu_Array_Out[P], DE_Array_Out[P],
+                                  FC_Flux, dt, dh, Gamma, MinDens, MinPres, DualEnergySwitch, 
+                                  NormPassive, NNorm, NormIdx, &state);
+
+              iteration++;
+              if(!state) printf("MinMmod_Coeff = %f\n",MinMod_Coeff_temp );
+
+         }while( !state && iteration <= Max );
 
 
 //       4. store the inter-patch fluxes

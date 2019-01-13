@@ -20,7 +20,7 @@
  void CPU_FullStepUpdate( const real Input[][ FLU_NXT*FLU_NXT*FLU_NXT ], real Output[][ PS2*PS2*PS2 ], char DE_Status[],
                                 const real Flux[][3][NCOMP_TOTAL], const real dt, const real dh,
                                 const real Gamma, const real MinDens, const real MinPres, const real DualEnergySwitch,
-                                const bool NormPassive, const int NNorm, const int NormIdx[], bool state );
+                                const bool NormPassive, const int NNorm, const int NormIdx[], bool *state );
 
  void CPU_StoreFlux( real Flux_Array[][NCOMP_TOTAL][ PS2*PS2 ], const real FC_Flux[][3][NCOMP_TOTAL] );
 #if   ( RSOLVER == EXACT )

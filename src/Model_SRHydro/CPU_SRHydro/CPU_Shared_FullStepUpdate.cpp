@@ -31,7 +31,7 @@ static bool boolean;
 void CPU_FullStepUpdate( const real Input[][ FLU_NXT*FLU_NXT*FLU_NXT ], real Output[][ PS2*PS2*PS2 ], char DE_Status[],
                          const real Flux[][3][NCOMP_TOTAL], const real dt, const real dh,
                          const real Gamma, const real MinDens, const real MinPres, const real DualEnergySwitch,
-                         const bool NormPassive, const int NNorm, const int NormIdx[], bool state )
+                         const bool NormPassive, const int NNorm, const int NormIdx[], bool *state )
 {
    const int  dID1[3]   = { 1, N_FL_FLUX, N_FL_FLUX*N_FL_FLUX };
    const real dt_dh     = dt/dh;
@@ -61,18 +61,18 @@ void CPU_FullStepUpdate( const real Input[][ FLU_NXT*FLU_NXT*FLU_NXT ], real Out
       for (int v=0; v<NCOMP_TOTAL; v++)
          Output[v][ID2] = Input[v][ID3] - dt_dh*( dF[0][v] + dF[1][v] + dF[2][v] );
 
-#     if ( defined CHECK_MIN_TEMP ) || (defined CHECK_NEGATIVE_IN_FLUID )
       real Cons[NCOMP_FLUID];
       for (int v = 0;v<NCOMP_FLUID;v++) Cons[v] = Output[v][ID2];
+#     if ( defined CHECK_MIN_TEMP ) || (defined CHECK_NEGATIVE_IN_FLUID )
 #     ifdef CHECK_MIN_TEMP
       Output[ENGY][ID2] = CPU_CheckMinTempInEngy( Cons );
       Cons[ENGY] = Output[ENGY][ID2];
 #     endif
 #     ifdef CHECK_NEGATIVE_IN_FLUID
-      state = CPU_CheckUnphysical(Cons, NULL, __FUNCTION__, __LINE__, true);
+      CPU_CheckUnphysical(Cons, NULL, __FUNCTION__, __LINE__,  true) ? *state *= false : *state *= true;
 #     endif
 #     else
-      state = CPU_CheckUnphysical(Cons, NULL, __FUNCTION__, __LINE__, false);
+      CPU_CheckUnphysical(Cons, NULL, __FUNCTION__, __LINE__, false) ? *state *= false : *state *= true;
 #     endif
    } // i,j,k
 
