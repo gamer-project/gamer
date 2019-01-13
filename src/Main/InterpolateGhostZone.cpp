@@ -1267,7 +1267,7 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData[], const in
 
 #  endif // #if ( MODEL == ELBDM ) ... else ...
 
-#  if ( MODEL == SR_HYDRO && defined (CHECK_NEGATIVE_IN_FLUID))
+#  if ( MODEL == SR_HYDRO && defined CHECK_NEGATIVE_IN_FLUID )
    real Con[NCOMP_FLUID];
 
    if (NVar_Flu == NCOMP_FLUID)

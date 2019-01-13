@@ -1942,13 +1942,10 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
                for (int t=0; t<PGSize3D; t++) 
                   {
 #                     ifdef CHECK_NEGATIVE_IN_FLUID
-		      if (   CPU_CheckNegative(ArrayDens[t])
-			  ||     !Aux_IsFinite(ArrayDens[t]))
-                        {
-			  Aux_Error (ERROR_INFO, "ArrayDens[%d] = %+e", t, ArrayDens[t]);
-		        }
+		      if (  CPU_CheckNegative(ArrayDens[t]) || !Aux_IsFinite(ArrayDens[t]))
+			    Aux_Error (ERROR_INFO, "ArrayDens[%d] = %+e", t, ArrayDens[t]);
 #                     endif
-                       ArrayDens[t] = CPU_CheckMinDens ( ArrayDens[t], MinDens );
+                      ArrayDens[t] = CPU_CheckMinDens ( ArrayDens[t], MinDens );
                    }
             }
          } // if ( MinDens >= (real)0.0 )
@@ -1976,13 +1973,16 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
 #              if ( MODEL == HYDRO  ||  MODEL == MHD )
                for (int t=0; t<PGSize3D; t++)   ArrayPres[t] = FMAX( ArrayPres[t], MinPres );
 #              elif ( MODEL == SR_HYDRO )
-               for (int t=0; t<PGSize3D; t++){
+               for (int t=0; t<PGSize3D; t++)
+                {
                    if ( ArrayPres[t] <= 0.0 ) 
                    Aux_Message(stderr,"function: %s: %d: Pres=%10.7e\n", __FUNCTION__, __LINE__, ArrayPres[t]);
-               }
+                }
 #              endif
             }
+#           endif
 
+#           if ( MODEL == HYDRO  ||  MODEL == MHD )
 //          (d2-2) pressure in the energy field --> work only when ALL active fluid fields are prepared
             if ( (TVar & _FLUID) == _FLUID )
             {
@@ -2002,33 +2002,13 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
 //             apply minimum pressure to the energy field
                for (int t=0; t<PGSize3D; t++)
                 {
-#                 if ( MODEL == SR_HYDRO )
-                  real Con[NCOMP_FLUID];
-                  Con[DENS] = ArrayDens[t];
-                  Con[MOMX] = ArrayMomX[t];
-                  Con[MOMY] = ArrayMomY[t];
-                  Con[MOMZ] = ArrayMomZ[t];
-                  Con[ENGY] = ArrayEngy[t];
-#                 ifdef CHECK_MIN_TEMP
-                  ArrayEngy[t] = CPU_CheckMinTempInEngy( Con );
-#                 endif
-#                 ifdef CHECK_NEGATIVE_IN_FLUID
-                  CPU_CheckUnphysical(Con, NULL, __FUNCTION__, __LINE__, true);
-#                 endif
-#                 else
                   ArrayEngy[t] = CPU_CheckMinPresInEngy( ArrayDens[t], ArrayMomX[t], ArrayMomY[t], ArrayMomZ[t], ArrayEngy[t],
                                                          Gamma_m1, _Gamma_m1, MinPres );
-#                 endif
                } // for (int t=0; t<PGSize3D; t++)
 
             } // if ( (TVar & _FLUID) == _FLUID )
          } // if ( MinPres >= (real)0.0 )
 #        endif // #if ( MODEL == HYDRO  ||  MODEL == MHD )
-
-
-#        if ( MODEL == SR_HYDRO )
-
-#        endif
 
 //       e. copy data from Array to h_Input_Array
 // ------------------------------------------------------------------------------------------------------------
