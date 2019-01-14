@@ -1309,13 +1309,13 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData[], const in
              {
                if (CPU_CheckUnphysical(Con, NULL, __FUNCTION__, __LINE__, false))
                {
-                   for ( int i = 0 ;i < FSize3D; i++ )
+                   for ( int i = 0 ;i < CSize3D; i++ )
                    {
-                     for (int v = 0 ; v < NVar_Flu ;v++) Con[v] = *(IntData+FSize3D*v+i);
+                     for (int v = 0 ; v < NVar_Flu ;v++) Con[v] = *(CData+CSize3D*v+i);
 
                      CPU_Con2Pri(Con, Pri, GAMMA);
 
-                     for (int v = 0 ; v < NVar_Flu ;v++) *(IntData+FSize3D*v+i) = Pri[v];
+                     for (int v = 0 ; v < NVar_Flu ;v++) *(CData+CSize3D*v+i) = Pri[v];
                    }
 
                state = true;
@@ -1325,7 +1325,7 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData[], const in
              } 
             else if (iteration == 1)
              {
-               if (CPU_CheckUnphysical(NULL, Con, __FUNCTION__, __LINE__, true))
+               if (CPU_CheckUnphysical(NULL, Con, __FUNCTION__, __LINE__, false))
                state = true;
                break;
              } else  state = false;
