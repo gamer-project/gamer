@@ -176,7 +176,7 @@ void CPU_FluidSolver_MHM( const real Flu_Array_In[][NCOMP_TOTAL][ FLU_NXT*FLU_NX
 #            elif ( FLU_SCHEME == MHM ) // b. use interpolated face-centered values to calculate the half-step fluxes
 
 //           (1.b-1) conserved variables --> primitive variables
-#            if  ( EXTRAPOLATE != CONSERVED_QUANTITIES ||  defined(CHECK_NEGATIVE_IN_FLUID) )
+#            if  ( EXTRAPOLATE != CONSERVED_QUANTITIES ||  defined CHECK_NEGATIVE_IN_FLUID )
              for (int k=0; k<FLU_NXT; k++)
              for (int j=0; j<FLU_NXT; j++)
              for (int i=0; i<FLU_NXT; i++)

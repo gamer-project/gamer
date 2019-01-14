@@ -2003,6 +2003,19 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
                   ArrayEngy[t] = CPU_CheckMinPresInEngy( ArrayDens[t], ArrayMomX[t], ArrayMomY[t], ArrayMomZ[t], ArrayEngy[t],
                                                          Gamma_m1, _Gamma_m1, MinPres );
                 } // for (int t=0; t<PGSize3D; t++)
+#              elif ( MODEL == SR_HYDRO && defined CHECK_NEGATIVE_IN_FLUID )
+               for (int t=0; t<PGSize3D; t++)
+                {
+                  real Cons[NCOMP_TOTAL];
+
+                  Cons[DENS] = ArrayDens[t];
+                  Cons[MOMX] = ArrayMomX[t];
+                  Cons[MOMY] = ArrayMomY[t];
+                  Cons[MOMZ] = ArrayMomZ[t];
+                  Cons[ENGY] = ArrayEngy[t];
+
+                  CPU_CheckUnphysical(Cons, NULL, __FUNCTION__, __LINE__, true);
+                }
 #               endif
             } // if ( (TVar & _FLUID) == _FLUID )
          } // if ( MinPres >= (real)0.0 )

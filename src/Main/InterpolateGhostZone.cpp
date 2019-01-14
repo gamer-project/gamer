@@ -6,6 +6,7 @@ static int Table_01( const int SibID, const int Side, const char dim, const int 
 
 #if (MODEL == SR_HYDRO)
 void CPU_Con2Pri (const real In[], real Out[], const real Gamma);
+void CPU_Pri2Con (const real In[], real Out[], const real Gamma);
 bool CPU_CheckUnphysical( const real Con[], const real Pri[], const char s[], const int line, bool show);
 #endif
 
@@ -114,10 +115,11 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData[], const in
    const bool PrepTemp        = ( TVar & _TEMP    ) ? true : false; // temperature
 
    real Con[NCOMP_FLUID];
+   real Pri[NCOMP_FLUID];
    int iteration;
    bool state;
-   const int Max = 3;
-   real IntMonoCoeff;
+   const int Max = 2;
+   real IntMonoCoeff = INT_MONO_COEFF;
 
 #  elif ( MODEL == ELBDM )
 // no derived variables yet
@@ -1288,11 +1290,11 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData[], const in
 
    iteration = 0;
 
-   const real Mono_Max = 4.0;
-   const real Mono_Min = 0.0;
+//   const real Mono_Max = 4.0;
+//   const real Mono_Min = 1.0;
 
    do {
-         IntMonoCoeff = Mono_Max - iteration * ( Mono_Max - Mono_Min ) / (real) Max ;
+//         IntMonoCoeff = Mono_Max - iteration * ( Mono_Max - Mono_Min ) / (real) Max ;
 
          for (int v=0; v<NVar_Flu; v++)
             Interpolate( CData+CSize3D*v, CSize, CStart, CRange, IntData+FSize3D*v, FSize, FStart, 1,
@@ -1302,11 +1304,31 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData[], const in
          for ( int i = 0 ;i < FSize3D; i++ )
           {
             for (int v = 0 ; v < NVar_Flu ;v++) Con[v] = *(IntData+FSize3D*v+i);
-            if(CPU_CheckUnphysical(Con, NULL, __FUNCTION__, __LINE__, false))
+
+            if(iteration == 0)
              {
-              state = true;
-              break;
-             } else state = false;
+               if (CPU_CheckUnphysical(Con, NULL, __FUNCTION__, __LINE__, false))
+               {
+                   for ( int i = 0 ;i < FSize3D; i++ )
+                   {
+                     for (int v = 0 ; v < NVar_Flu ;v++) Con[v] = *(IntData+FSize3D*v+i);
+
+                     CPU_Con2Pri(Con, Pri, GAMMA);
+
+                     for (int v = 0 ; v < NVar_Flu ;v++) *(IntData+FSize3D*v+i) = Pri[v];
+                   }
+
+               state = true;
+
+               break;
+               } else state = false;
+             } 
+            else if (iteration == 1)
+             {
+               if (CPU_CheckUnphysical(NULL, Con, __FUNCTION__, __LINE__, true))
+               state = true;
+               break;
+             } else  state = false;
           }
    
       iteration++;
@@ -1315,12 +1337,25 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData[], const in
    
      } while(state && iteration <= Max);
 
+
+//   conserved quantities -> primitive quantities
+     if ( iteration == 2 )
+     {
+       for ( int i = 0 ;i < FSize3D; i++ )
+       {
+         for (int v = 0 ; v < NVar_Flu ;v++) Pri[v] = *(IntData+FSize3D*v+i);
+  
+         CPU_Pri2Con(Pri, Con, GAMMA);
+  
+         for (int v = 0 ; v < NVar_Flu ;v++) *(IntData+FSize3D*v+i) = Con[v];
+       }
+     }
+
+
 #  ifdef CHECK_NEGATIVE_IN_FLUID
    if(state) printf("Adaptive IntMonoCoeff is fail!\n");
 #  endif
 #  endif
-
-
 
    NVar_SoFar = NVar_Flu;
 
