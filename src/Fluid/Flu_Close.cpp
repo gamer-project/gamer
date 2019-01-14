@@ -364,62 +364,9 @@ bool Unphysical( const real Fluid[] )
 // the following checks are for SR_HYDRO
 // =================================================
 #  elif ( MODEL == SR_HYDRO )
-real Pri4Vel[NCOMP_FLUID];
 
-bool state1, state2;
-
-state1 = CPU_CheckUnphysical(Fluid,   NULL, __FUNCTION__, __LINE__, true);
-
-CPU_Con2Pri (Fluid, Pri4Vel, (real)GAMMA);
-
-state2 = CPU_CheckUnphysical(NULL, Pri4Vel, __FUNCTION__, __LINE__, true);
-
-if(state1 || state2) return true; 
-else                 return false;
-
-//// A. ==== check conserved variables =====
-//// A1. check NaN, +inf, -inf
-//   if (  !Aux_IsFinite(Fluid[DENS])  
-//     ||  !Aux_IsFinite(Fluid[MOMX])  
-//     ||  !Aux_IsFinite(Fluid[MOMY])  
-//     ||  !Aux_IsFinite(Fluid[MOMZ])  
-//     ||  !Aux_IsFinite(Fluid[ENGY]) )                              return true;
-//// A1. check positivity of number density in inertail frame
-//   if ( Fluid[DENS] < (real)MIN_DENS )                             return true;
-//
-//
-//// A2. check total energy
-//   real Msqr = SQR(Fluid[MOMX]) + SQR(Fluid[MOMY]) + SQR(Fluid[MOMZ]);
-//#  if ( CONSERVED_ENERGY == 1 )
-//   if( SQR(Fluid[ENGY]) - Msqr - SQR(Fluid[DENS]) < 0.0 )                 return true;
-//#  elif ( CONSERVED_ENERGY == 2 )
-//   if ( SQR(Fluid[ENGY]) + 2*Fluid[ENGY]*Fluid[DENS] - Msqr < 0.0 )      return true;
-//#  endif
-//
-//   real Pri4Vel[NCOMP_FLUID];
-//   real Pri3Vel[NCOMP_FLUID];
-//
-//   CPU_Con2Pri (Fluid, Pri4Vel, (real)GAMMA);
-//   CPU_4Velto3Vel (Pri4Vel, Pri3Vel);
-//
-//// B. ==== check primitive variables ====
-//// B1. NaN, +inf or -inf
-//   if (  !Aux_IsFinite(Pri4Vel[0])  
-//     ||  !Aux_IsFinite(Pri4Vel[1])  
-//     ||  !Aux_IsFinite(Pri4Vel[2])  
-//     ||  !Aux_IsFinite(Pri4Vel[3])  
-//     ||  !Aux_IsFinite(Pri4Vel[4]) )                               return true;
-//
-//// B2. check positivity of proper number density
-//   if ( Pri4Vel[DENS] < (real)MIN_DENS )                           return true;
-//
-//// B3. check positivity of pressure
-//   if ( Pri4Vel[4]  < (real) MIN_PRES )                            return true;
-//
-//
-//// B4. check whether 3-velocity is greater than or equal to speed of light
-//   if (SQR(Pri3Vel[1]) + SQR(Pri3Vel[2]) + SQR(Pri3Vel[3]) >= 1.0) return true;
-
+if(CPU_CheckUnphysical(Fluid, NULL, __FUNCTION__, __LINE__, true)) return true;
+else                                                               return false;
 
 #  endif
 
