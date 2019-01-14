@@ -1,19 +1,31 @@
-#include "GAMER.h"
+#ifndef __CUFLU_RIEMANNSOLVER_HLLE__
+#define __CUFLU_RIEMANNSOLVER_HLLE__
+
+
+
 #include "CUFLU.h"
 
 #if ( MODEL == HYDRO )
 
 
 
-extern void CPU_Rotate3D( real InOut[], const int XYZ, const bool Forward );
-extern void CPU_Con2Flux( const int XYZ, real Flux[], const real Input[], const real Gamma_m1, const real MinPres );
-extern real CPU_CheckMinPres( const real InPres, const real MinPres );
+// external functions
+#ifdef __CUDACC__
 
+#include "CUFLU_Shared_FluUtility.cu"
+
+#else // #ifdef __CUDACC__
+
+void Hydro_Rotate3D( real InOut[], const int XYZ, const bool Forward );
+void Hydro_Con2Flux( const int XYZ, real Flux[], const real Input[], const real Gamma_m1, const real MinPres );
+real Hydro_CheckMinPres( const real InPres, const real MinPres );
+
+#endif // #ifdef __CUDACC__ ... else ...
 
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  CPU_RiemannSolver_HLLE
+// Function    :  Hydro_RiemannSolver_HLLE
 // Description :  Approximate Riemann solver of Harten, Lax, and van Leer.
 //                Estimate the wave speed by Einfeldt et al. (1991).
 //
@@ -30,8 +42,9 @@ extern real CPU_CheckMinPres( const real InPres, const real MinPres );
 //                Gamma    : Ratio of specific heats
 //                MinPres  : Minimum allowed pressure
 //-------------------------------------------------------------------------------------------------------
-void CPU_RiemannSolver_HLLE( const int XYZ, real Flux_Out[], const real L_In[], const real R_In[],
-                             const real Gamma, const real MinPres )
+GPU_DEVICE
+void Hydro_RiemannSolver_HLLE( const int XYZ, real Flux_Out[], const real L_In[], const real R_In[],
+                               const real Gamma, const real MinPres )
 {
 
 // 1. reorder the input variables for different spatial directions
@@ -43,8 +56,8 @@ void CPU_RiemannSolver_HLLE( const int XYZ, real Flux_Out[], const real L_In[], 
       R[v] = R_In[v];
    }
 
-   CPU_Rotate3D( L, XYZ, true );
-   CPU_Rotate3D( R, XYZ, true );
+   Hydro_Rotate3D( L, XYZ, true );
+   Hydro_Rotate3D( R, XYZ, true );
 
 
 // 2. evaluate the Roe's average values
@@ -59,19 +72,19 @@ void CPU_RiemannSolver_HLLE( const int XYZ, real Flux_Out[], const real L_In[], 
    _RhoR = (real)1.0 / R[0];
    P_L   = Gamma_m1*(  L[4] - (real)0.5*( L[1]*L[1] + L[2]*L[2] + L[3]*L[3] )*_RhoL  );
    P_R   = Gamma_m1*(  R[4] - (real)0.5*( R[1]*R[1] + R[2]*R[2] + R[3]*R[3] )*_RhoR  );
-   P_L   = CPU_CheckMinPres( P_L, MinPres );
-   P_R   = CPU_CheckMinPres( P_R, MinPres );
+   P_L   = Hydro_CheckMinPres( P_L, MinPres );
+   P_R   = Hydro_CheckMinPres( P_R, MinPres );
    H_L   = ( L[4] + P_L )*_RhoL;
    H_R   = ( R[4] + P_R )*_RhoR;
 
 #  ifdef CHECK_NEGATIVE_IN_FLUID
-   if ( CPU_CheckNegative(L[0]) )
-      Aux_Message( stderr, "ERROR : negative density (%14.7e) at file <%s>, line <%d>, function <%s>\n",
-                   L[0], __FILE__, __LINE__, __FUNCTION__ );
+   if ( Hydro_CheckNegative(L[0]) )
+      printf( "ERROR : negative density (%14.7e) at file <%s>, line <%d>, function <%s>\n",
+              L[0], __FILE__, __LINE__, __FUNCTION__ );
 
-   if ( CPU_CheckNegative(R[0]) )
-      Aux_Message( stderr, "ERROR : negative density (%14.7e) at file <%s>, line <%d>, function <%s>\n",
-                   R[0], __FILE__, __LINE__, __FUNCTION__ );
+   if ( Hydro_CheckNegative(R[0]) )
+      printf( "ERROR : negative density (%14.7e) at file <%s>, line <%d>, function <%s>\n",
+              R[0], __FILE__, __LINE__, __FUNCTION__ );
 #  endif
 
    RhoL_sqrt       = SQRT( L[0] );
@@ -88,13 +101,13 @@ void CPU_RiemannSolver_HLLE( const int XYZ, real Flux_Out[], const real L_In[], 
 
    GammaP_Rho = Gamma_m1*( H - (real)0.5*V2 );
    TempPres   = GammaP_Rho*TempRho/Gamma;
-   TempPres   = CPU_CheckMinPres( TempPres, MinPres );
+   TempPres   = Hydro_CheckMinPres( TempPres, MinPres );
    GammaP_Rho = Gamma*TempPres*_TempRho;
 
 #  ifdef CHECK_NEGATIVE_IN_FLUID
-   if ( CPU_CheckNegative(GammaP_Rho) )
-      Aux_Message( stderr, "ERROR : negative GammaP_Rho (%14.7e) at file <%s>, line <%d>, function <%s>\n",
-                   GammaP_Rho, __FILE__, __LINE__, __FUNCTION__ );
+   if ( Hydro_CheckNegative(GammaP_Rho) )
+      printf( "ERROR : negative GammaP_Rho (%14.7e) at file <%s>, line <%d>, function <%s>\n",
+              GammaP_Rho, __FILE__, __LINE__, __FUNCTION__ );
 #  endif
 
    Cs = SQRT( GammaP_Rho );
@@ -108,13 +121,13 @@ void CPU_RiemannSolver_HLLE( const int XYZ, real Flux_Out[], const real L_In[], 
    u_R = _RhoR*R[1];
 
 #  ifdef CHECK_NEGATIVE_IN_FLUID
-   if ( CPU_CheckNegative(P_L) )
-      Aux_Message( stderr, "ERROR : negative pressure (%14.7e) at file <%s>, line <%d>, function <%s>\n",
-                   P_L, __FILE__, __LINE__, __FUNCTION__ );
+   if ( Hydro_CheckNegative(P_L) )
+      printf( "ERROR : negative pressure (%14.7e) at file <%s>, line <%d>, function <%s>\n",
+              P_L, __FILE__, __LINE__, __FUNCTION__ );
 
-   if ( CPU_CheckNegative(P_R) )
-      Aux_Message( stderr, "ERROR : negative pressure (%14.7e) at file <%s>, line <%d>, function <%s>\n",
-                   P_R, __FILE__, __LINE__, __FUNCTION__ );
+   if ( Hydro_CheckNegative(P_R) )
+      printf( "ERROR : negative pressure (%14.7e) at file <%s>, line <%d>, function <%s>\n",
+              P_R, __FILE__, __LINE__, __FUNCTION__ );
 #  endif
 
    Cs_L   = SQRT( Gamma*P_L*_RhoL );
@@ -126,10 +139,10 @@ void CPU_RiemannSolver_HLLE( const int XYZ, real Flux_Out[], const real L_In[], 
 
 
 // 4. evaluate the left and right fluxes along the maximum wave speeds
-   real Flux_L[NCOMP_TOTAL], Flux_R[NCOMP_TOTAL];  // use NCOMP_TOTAL for Flux_L/R since they will be passed to CPU_Con2Flux()
+   real Flux_L[NCOMP_TOTAL], Flux_R[NCOMP_TOTAL];  // use NCOMP_TOTAL for Flux_L/R since they will be passed to Hydro_Con2Flux()
 
-   CPU_Con2Flux( 0, Flux_L, L, Gamma_m1, MinPres );
-   CPU_Con2Flux( 0, Flux_R, R, Gamma_m1, MinPres );
+   Hydro_Con2Flux( 0, Flux_L, L, Gamma_m1, MinPres );
+   Hydro_Con2Flux( 0, Flux_R, R, Gamma_m1, MinPres );
 
    for (int v=0; v<NCOMP_FLUID; v++)
    {
@@ -163,10 +176,14 @@ void CPU_RiemannSolver_HLLE( const int XYZ, real Flux_Out[], const real L_In[], 
 
 
 // 7. restore the correct order
-   CPU_Rotate3D( Flux_Out, XYZ, false );
+   Hydro_Rotate3D( Flux_Out, XYZ, false );
 
-} // FUNCTION : CPU_RiemannSolver_HLLE
+} // FUNCTION : Hydro_RiemannSolver_HLLE
 
 
 
 #endif // #if ( MODEL == HYDRO )
+
+
+
+#endif // #ifndef __CUFLU_RIEMANNSOLVER_HLLE__

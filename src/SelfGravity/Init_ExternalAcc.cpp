@@ -17,10 +17,9 @@ void (*Init_ExternalAcc_Ptr)() = Init_ExternalAcc;
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Init_ExternalAcc
-// Description :  Set the array "ExtAcc_AuxArray" used by the external acceration routines
-//                "CUPOT_ExternalAcc.cu / CPU_ExternalAcc.cpp"
+// Description :  Set ExtAcc_AuxArray[] used by the external acceration routine ExternalAcc()
 //
-// Note        :  1. Invoked by "Init_GAMER" using the function pointer "Init_ExternalAcc_Ptr"
+// Note        :  1. Invoked by Init_GAMER() using the function pointer "Init_ExternalAcc_Ptr"
 //                   --> The function pointer may be reset by various test problem initializers, in which case
 //                       this funtion will become useless
 //                2. Enabled by the runtime option "OPT__GRAVITY_TYPE == 2/3"

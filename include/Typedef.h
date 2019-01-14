@@ -106,16 +106,6 @@ const LR_Limiter_t
    EXTPRE          = 5;
 
 
-// TVD limiters for the WAF scheme
-typedef int WAF_Limiter_t;
-const WAF_Limiter_t
-   WAF_LIMITER_NONE = 0,
-   WAF_SUPERBEE     = 1,
-   WAF_VANLEER      = 2,
-   WAF_ALBADA       = 3,
-   WAF_MINBEE       = 4;
-
-
 // data output formats
 typedef int OptOutputFormat_t;
 const OptOutputFormat_t
