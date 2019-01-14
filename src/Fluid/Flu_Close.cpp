@@ -356,20 +356,18 @@ bool Unphysical( const real Fluid[] )
       )
       return true;
 
-// if all checks above pass, return false
-// =================================================
-      return false;
-
 // =================================================
 // the following checks are for SR_HYDRO
 // =================================================
 #  elif ( MODEL == SR_HYDRO )
 
 if(CPU_CheckUnphysical(Fluid, NULL, __FUNCTION__, __LINE__, true)) return true;
-else                                                               return false;
+else
 
 #  endif
-
+// if all checks above pass, return false
+// =================================================
+      return false;
 
 } // FUNCTION : Unphysical
 
