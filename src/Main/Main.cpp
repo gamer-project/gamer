@@ -197,8 +197,14 @@ real (*h_Flu_Array_F_Out[2])[FLU_NOUT][ CUBE(PS2) ]               = { NULL, NULL
 real (*h_Flux_Array[2])[9][NFLUX_TOTAL][ SQR(PS2) ]               = { NULL, NULL };
 double (*h_Corner_Array_F[2])[3]                                  = { NULL, NULL };
 #ifdef DUAL_ENERGY
-char (*h_DE_Array_F_Out[2])[ PS2*PS2*PS2 ]                        = { NULL, NULL };
+char (*h_DE_Array_F_Out[2])[ CUBE(PS2) ]                          = { NULL, NULL };
 #endif
+#if ( FLU_SCHEME == MHM  ||  FLU_SCHEME == MHM_RP  ||  FLU_SCHEME == CTU )
+real (*h_PriVar)      [NCOMP_TOTAL][ CUBE(FLU_NXT)     ]          = NULL;
+real (*h_Slope_PPM)[3][NCOMP_TOTAL][ CUBE(N_SLOPE_PPM) ]          = NULL;
+real (*h_FC_Var)   [6][NCOMP_TOTAL][ CUBE(N_FC_VAR)    ]          = NULL;
+real (*h_FC_Flux)  [3][NCOMP_TOTAL][ CUBE(N_FC_FLUX)   ]          = NULL;
+#endif // FLU_SCHEME
 
 #ifdef GRAVITY
 // (3-2) gravity solver
@@ -210,12 +216,6 @@ double (*h_Corner_Array_G[2])[3]                                  = { NULL, NULL
 #ifdef DUAL_ENERGY
 char (*h_DE_Array_G    [2])[PS1][PS1][PS1]                        = { NULL, NULL };
 #endif
-#if ( FLU_SCHEME == MHM  ||  FLU_SCHEME == MHM_RP  ||  FLU_SCHEME == CTU )
-real (*h_PriVar)      [NCOMP_TOTAL][ CUBE(FLU_NXT)     ]          = NULL;
-real (*h_Slope_PPM)[3][NCOMP_TOTAL][ CUBE(N_SLOPE_PPM) ]          = NULL;
-real (*h_FC_Var)   [6][NCOMP_TOTAL][ CUBE(N_FC_VAR)    ]          = NULL;
-real (*h_FC_Flux)  [3][NCOMP_TOTAL][ CUBE(N_FC_FLUX)   ]          = NULL;
-#endif // FLU_SCHEME
 
 // (3-3) unsplit gravity correction
 #ifdef UNSPLIT_GRAVITY
