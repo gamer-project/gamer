@@ -361,8 +361,8 @@ bool Unphysical( const real Fluid[] )
 // =================================================
 #  elif ( MODEL == SR_HYDRO )
 
-if(CPU_CheckUnphysical(Fluid, NULL, __FUNCTION__, __LINE__, true)) return true;
-else
+       if(CPU_CheckUnphysical(Fluid, NULL, __FUNCTION__, __LINE__, true)) return true;
+       else
 
 #  endif
 // if all checks above pass, return false
@@ -592,12 +592,12 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
 //                      (note that the recalculated flux does NOT include gravity even for UNSPLIT_GRAVITY --> reduce to 1st-order accuracy)
                         switch ( OPT__1ST_FLUX_CORR_SCHEME )
                         {
-#                 if ( MODEL != SR_HYDRO )
+#                          if ( MODEL != SR_HYDRO )
                            case RSOLVER_1ST_ROE:
                               CPU_RiemannSolver_Roe ( d, FluxL_1D, Corr1D_InOut_PtrL, Corr1D_InOut_PtrC, GAMMA, MIN_PRES );
                               CPU_RiemannSolver_Roe ( d, FluxR_1D, Corr1D_InOut_PtrC, Corr1D_InOut_PtrR, GAMMA, MIN_PRES );
                            break;
-#                 endif
+#                          endif
                            case RSOLVER_1ST_HLLC:
                               CPU_RiemannSolver_HLLC( d, FluxL_1D, Corr1D_InOut_PtrL, Corr1D_InOut_PtrC, GAMMA, MIN_PRES );
                               CPU_RiemannSolver_HLLC( d, FluxR_1D, Corr1D_InOut_PtrC, Corr1D_InOut_PtrR, GAMMA, MIN_PRES );

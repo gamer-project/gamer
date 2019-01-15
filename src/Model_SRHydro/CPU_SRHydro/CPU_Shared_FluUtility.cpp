@@ -460,7 +460,7 @@ CPU_CheckMinTempInEngy (const real Cons[])
 //-------------------------------------------------------------------------------------------------------
 // Function    : CPU_CheckUnphysical
 //-------------------------------------------------------------------------------------------------------
-bool CPU_CheckUnphysical( const real Con[], const real Pri[], const char s[], const int line, bool show)
+bool CPU_CheckUnphysical( const real Con[], const real Pri[], const char s[], const int line, bool show )
 {
    real discriminant;
    real Msqr;

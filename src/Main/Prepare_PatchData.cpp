@@ -2016,7 +2016,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
 
                   CPU_CheckUnphysical(Cons, NULL, __FUNCTION__, __LINE__, true);
                 }
-#               endif
+#              endif
             } // if ( (TVar & _FLUID) == _FLUID )
          } // if ( MinPres >= (real)0.0 )
 #        endif // #if ( MODEL == HYDRO  ||  MODEL == MHD )

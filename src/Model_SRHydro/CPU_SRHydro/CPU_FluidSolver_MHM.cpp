@@ -105,6 +105,7 @@ void CPU_FluidSolver_MHM( const real Flu_Array_In[][NCOMP_TOTAL][ FLU_NXT*FLU_NX
       real (*const Half_Var)    [NCOMP_TOTAL] = PriVar;
 #     endif
 
+      real Cons[NCOMP_TOTAL];
 
 //    loop over all patch groups
 #     pragma omp for schedule( runtime )
@@ -256,7 +257,16 @@ void CPU_FluidSolver_MHM( const real Flu_Array_In[][NCOMP_TOTAL][ FLU_NXT*FLU_NX
          } while( state && iteration <= Max );
 
 #        ifdef CHECK_NEGATIVE_IN_FLUID
-         if(state) printf("Adaptive MinMod_Coeff is fail! coeff = %f, %s: %d\n",MinMod_Coeff_temp, __FUNCTION__, __LINE__) ;
+         for (int k1=0, k2=FLU_GHOST_SIZE;  k1<PS2;  k1++, k2++)
+         for (int j1=0, j2=FLU_GHOST_SIZE;  j1<PS2;  j1++, j2++)
+         for (int i1=0, i2=FLU_GHOST_SIZE;  i1<PS2;  i1++, i2++)
+         { 
+           int ID2 = (k1*PS2 + j1)*PS2 + i1;
+           for (int v = 0;v<NCOMP_FLUID;v++) Cons[v] = Flu_Array_Out[P][v][ID2];
+           CPU_CheckUnphysical(Cons, NULL, __FUNCTION__, __LINE__, true);
+         }
+
+//         if(state) printf("Adaptive MinMod_Coeff is fail! function:%s %d\n",__FUNCTION__, __LINE__);
 #        endif
 
 

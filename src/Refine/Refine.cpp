@@ -56,6 +56,11 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
 #  if ( MODEL == HYDRO  ||  MODEL == MHD || MODEL == SR_HYDRO )
    const real  Gamma_m1   = GAMMA - (real)1.0;
    const real _Gamma_m1   = (real)1.0 / Gamma_m1;
+   int iteration;
+   real IntMonoCoeff;
+   const int Max = 3;
+   bool state;
+   real Con[NCOMP_TOTAL];
 #  endif
 
    int *Cr            = NULL;    // corner coordinates
@@ -488,22 +493,49 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
 #        endif
 
 #        if ( MODEL == SR_HYDRO )
-         for (int v=0; v<NCOMP_TOTAL; v++)
-         Interpolate( &Flu_CData[v][0][0][0], CSize_Flu3, CStart_Flu, CRange, &Flu_FData[v][0][0][0],
-                      FSize3, FStart, 1, OPT__REF_FLU_INT_SCHEME, PhaseUnwrapping_No,
-                      Monotonicity, INT_MONO_COEFF );
 
-#        elif ( MODEL == SR_HYDRO && defined (CHECK_NEGATIVE_IN_FLUID) )
-	 real Con[NCOMP_FLUID];
+         const real Mono_Max = INT_MONO_COEFF;
+         const real Mono_Min = 0.0;
+         iteration = 0;
 
-	 for (int k=0; k<FSize; k++)
-	 for (int j=0; j<FSize; j++)
-	 for (int i=0; i<FSize; i++)
-	 {
-	   for (int v = 0 ; v < NCOMP_FLUID;v++) Con[v] = Flu_FData[v][k][j][i];
-	   CPU_CheckUnphysical(Con, NULL, __FUNCTION__, __LINE__, true);
+         do {
+//         adaptive IntMonoCoeff
+           IntMonoCoeff = Mono_Max - iteration * ( Mono_Max - Mono_Min ) / (real) Max ;
+ 
+//         interpolation
+           for (int v=0; v<NCOMP_TOTAL; v++)
+           Interpolate( &Flu_CData[v][0][0][0], CSize_Flu3, CStart_Flu, CRange, &Flu_FData[v][0][0][0],
+                        FSize3, FStart, 1, OPT__REF_FLU_INT_SCHEME, PhaseUnwrapping_No,
+                        Monotonicity, IntMonoCoeff );
+
+	   for (int k=0; k<FSize; k++)
+	   for (int j=0; j<FSize; j++)
+	   for (int i=0; i<FSize; i++)
+	   {
+	     for (int v = 0 ; v < NCOMP_FLUID;v++) Con[v] = Flu_FData[v][k][j][i];
+	     if(CPU_CheckUnphysical(Con, NULL, __FUNCTION__, __LINE__, false))
+              {
+               i = j = k = FSize; // break nested loop
+               state = true;
+               break;
+              }else state = false;
+           }
+
+           iteration++;
+
+         } while (state && iteration <= Max );
+
+#        ifdef CHECK_NEGATIVE_IN_FLUID
+         for (int k=0; k<FSize; k++)
+         for (int j=0; j<FSize; j++)
+         for (int i=0; i<FSize; i++)
+         {
+           for (int v=0;v<NCOMP_TOTAL;v++)Con[v] = Flu_FData[v][k][j][i];
+           CPU_CheckUnphysical(Con, NULL, __FUNCTION__, __LINE__, true);
          }
 #        endif
+#        endif
+
 
 //       (c1.3.3.3) check minimum density and pressure
 //       --> note that it's unnecessary to check negative passive scalars thanks to the monotonic interpolation
