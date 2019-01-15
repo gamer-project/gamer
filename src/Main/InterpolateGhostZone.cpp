@@ -1311,14 +1311,14 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData[], const in
      for ( int i = 0 ;i < CSize3D; i++ )
      {
        for (int v = 0 ; v < NCOMP_FLUID ;v++) Cons[v] = *(CData+CSize3D*v+i);
-       CPU_CheckUnphysical(Cons, NULL, __FUNCTION__, __LINE__, true);
+       if(CPU_CheckUnphysical(Cons, NULL, __FUNCTION__, __LINE__, true)) exit(EXIT_FAILURE);
      }
 
 //   check fine data after interpolation
      for ( int i = 0 ;i < FSize3D; i++ )
      {
        for (int v = 0 ; v < NCOMP_FLUID ;v++) Cons[v] = *(IntData+FSize3D*v+i);
-       CPU_CheckUnphysical(Cons, NULL, __FUNCTION__, __LINE__, true);
+       if(CPU_CheckUnphysical(Cons, NULL, __FUNCTION__, __LINE__, true)) exit(EXIT_FAILURE);
      }
 #    endif
    }

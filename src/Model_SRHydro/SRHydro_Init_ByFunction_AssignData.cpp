@@ -158,7 +158,7 @@ void SRHydro_Init_ByFunction_AssignData( const int lv )
 
 //       check minimum density and pressure
 #        ifdef CHECK_NEGATIVE_IN_FLUID
-	 CPU_CheckUnphysical(fluid, NULL, __FUNCTION__, __LINE__, true);
+	 if(CPU_CheckUnphysical(fluid, NULL, __FUNCTION__, __LINE__, true)) exit(EXIT_FAILURE);
 #        endif
 
 
@@ -197,9 +197,8 @@ void SRHydro_Init_ByFunction_AssignData( const int lv )
             Flu_ResetByUser_Func_Ptr( fluid, x, y, z, Time[lv], lv, NULL );
 
 //       check minimum density and pressure
-
 #        ifdef CHECK_NEGATIVE_IN_FLUID
-	 CPU_CheckUnphysical(fluid, NULL, __FUNCTION__, __LINE__, true);
+	 if(CPU_CheckUnphysical(fluid, NULL, __FUNCTION__, __LINE__, true)) exit(EXIT_FAILURE);
 #        endif
 
 

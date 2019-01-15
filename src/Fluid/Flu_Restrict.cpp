@@ -227,7 +227,7 @@ void Flu_Restrict( const int FaLv, const int SonFluSg, const int FaFluSg, const 
 #        elif ( MODEL == SR_HYDRO && defined(CHECK_NEGATIVE_IN_FLUID) )
 	 real Con[NCOMP_FLUID];
 	 for(int v=0;v<NCOMP_FLUID;v++) Con[v]=amr->patch[FaFluSg][FaLv][FaPID]->fluid[v][k][j][i];
-	 CPU_CheckUnphysical(Con, NULL, __FUNCTION__, __LINE__, true);
+	 if(CPU_CheckUnphysical(Con, NULL, __FUNCTION__, __LINE__, true)) exit(EXIT_FAILURE);
 #        endif // #ifdef DUAL_ENERGY ... else ...
       } // i,j,k
 #     endif // #if ( MODEL == HYDRO  ||  MODEL == MHD )

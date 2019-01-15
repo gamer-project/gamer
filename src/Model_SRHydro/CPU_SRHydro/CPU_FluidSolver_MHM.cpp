@@ -119,11 +119,9 @@ void CPU_FluidSolver_MHM( const real Flu_Array_In[][NCOMP_TOTAL][ FLU_NXT*FLU_NX
 //       check unphysical cell before computing flux
          CPU_RiemannPredict_Flux( Flu_Array_In[P], Half_Flux, Gamma, MinPres );
 
-
 //       (1.a-2) evaluate the half-step solutions
          CPU_RiemannPredict( Flu_Array_In[P], Half_Flux, Half_Var, dt, dh, Gamma, MinDens, MinPres );
 //       check unphysical cell after prediction
-
 
 //       (1.a-3) conserved variables --> primitive variables
 #        if  ( EXTRAPOLATE != CONSERVED_QUANTITIES )
@@ -145,7 +143,9 @@ void CPU_FluidSolver_MHM( const real Flu_Array_In[][NCOMP_TOTAL][ FLU_NXT*FLU_NX
 #        endif
 
          do {
-              MinMod_Coeff_temp = ( Max - iteration ) * ( MinMod_Coeff / (real) Max );
+//           adaptive minmod coefficient         
+             MinMod_Coeff_temp = ( Max - iteration ) * ( MinMod_Coeff / (real) Max );
+
 //           (1.a-4) evaluate the face-centered values by data reconstruction
              CPU_DataReconstruction( Half_Var, FC_Var, N_HF_VAR, FLU_GHOST_SIZE-2, Gamma, LR_Limiter,
                                      MinMod_Coeff_temp, EP_Coeff, NULL_REAL, NULL_INT, MinDens, MinPres, iteration );
@@ -187,21 +187,21 @@ void CPU_FluidSolver_MHM( const real Flu_Array_In[][NCOMP_TOTAL][ FLU_NXT*FLU_NX
 #               if  ( EXTRAPOLATE == FOUR_VELOCITY )
                 for (int v=0; v<NCOMP_TOTAL; v++)   Input[v] = Flu_Array_In[P][v][ID1];
 #               ifdef CHECK_NEGATIVE_IN_FLUID
-                CPU_CheckUnphysical(Input, NULL, __FUNCTION__, __LINE__, true);
+                if(CPU_CheckUnphysical(Input, NULL, __FUNCTION__, __LINE__, true)) exit(EXIT_FAILURE);
 #               endif
                 CPU_Con2Pri(Input, PriVar[ID1], Gamma);
 
 #               elif ( EXTRAPOLATE == THREE_VELOCITY )
                 for (int v=0; v<NCOMP_TOTAL; v++)   PriVar[ID1][v] = Flu_Array_In[P][v][ID1];
 #               ifdef CHECK_NEGATIVE_IN_FLUID
-                CPU_CheckUnphysical(PriVar[ID1], NULL, __FUNCTION__, __LINE__, true);
+                if(CPU_CheckUnphysical(PriVar[ID1], NULL, __FUNCTION__, __LINE__, true)) exit(EXIT_FAILURE);
 #               endif
                 CPU_Con2Pri(PriVar[ID1], Input, Gamma);
                 CPU_4Velto3Vel(Input, PriVar[ID1]);
 
 #               elif ( EXTRAPOLATE == CONSERVED_QUANTITIES )
                 for (int v=0; v<NCOMP_TOTAL; v++)   PriVar[ID1][v] = Flu_Array_In[P][v][ID1];
-                CPU_CheckUnphysical(PriVar[ID1], NULL, __FUNCTION__, __LINE__, true);
+                if(CPU_CheckUnphysical(PriVar[ID1], NULL, __FUNCTION__, __LINE__, true)) exit(EXIT_FAILURE);
 #               endif
              }
 #           endif
@@ -251,11 +251,11 @@ void CPU_FluidSolver_MHM( const real Flu_Array_In[][NCOMP_TOTAL][ FLU_NXT*FLU_NX
 					  NormPassive, NNorm, NormIdx);
 
               iteration++;
-//              if (iteration >= 2) printf("%f\n",MinMod_Coeff_temp);
 
 //       perform CPU_FullStepUpdate again if cell is unphysical and iteration < MAX
          } while( state && iteration <= Max );
 
+//       check after full update
 #        ifdef CHECK_NEGATIVE_IN_FLUID
          for (int k1=0, k2=FLU_GHOST_SIZE;  k1<PS2;  k1++, k2++)
          for (int j1=0, j2=FLU_GHOST_SIZE;  j1<PS2;  j1++, j2++)
@@ -263,12 +263,9 @@ void CPU_FluidSolver_MHM( const real Flu_Array_In[][NCOMP_TOTAL][ FLU_NXT*FLU_NX
          { 
            int ID2 = (k1*PS2 + j1)*PS2 + i1;
            for (int v = 0;v<NCOMP_FLUID;v++) Cons[v] = Flu_Array_Out[P][v][ID2];
-           CPU_CheckUnphysical(Cons, NULL, __FUNCTION__, __LINE__, true);
+           if(CPU_CheckUnphysical(Cons, NULL, __FUNCTION__, __LINE__, true)) exit(EXIT_FAILURE);
          }
-
-//         if(state) printf("Adaptive MinMod_Coeff is fail! function:%s %d\n",__FUNCTION__, __LINE__);
 #        endif
-
 
 //       4. store the inter-patch fluxes
          if ( StoreFlux )
@@ -337,10 +334,10 @@ void CPU_RiemannPredict_Flux( const real Flu_Array_In[][ FLU_NXT*FLU_NXT*FLU_NXT
          ConVar_R[4] = CPU_CheckMinTempInEngy(ConVar_R);
 #        endif
 
-//       check unphysical cells
+//       check unphysical cells before computing flux
 #        ifdef CHECK_NEGATIVE_IN_FLUID
-         CPU_CheckUnphysical(ConVar_L, NULL, __FUNCTION__, __LINE__, true);
-         CPU_CheckUnphysical(ConVar_R, NULL, __FUNCTION__, __LINE__, true);
+         if(CPU_CheckUnphysical(ConVar_L, NULL, __FUNCTION__, __LINE__, true)
+         || CPU_CheckUnphysical(ConVar_R, NULL, __FUNCTION__, __LINE__, true)) exit(EXIT_FAILURE);
 #        endif
 
 //       invoke the Riemann solver
@@ -413,7 +410,7 @@ void CPU_RiemannPredict( const real Flu_Array_In[][ FLU_NXT*FLU_NXT*FLU_NXT ],
 #     endif
 
 #     ifdef CHECK_NEGATIVE_IN_FLUID
-      CPU_CheckUnphysical(Half_Var[ID1], NULL, __FUNCTION__, __LINE__, true);
+      if(CPU_CheckUnphysical(Half_Var[ID1], NULL, __FUNCTION__, __LINE__, true)) exit(EXIT_FAILURE);
 #     endif
    } // i,j,k
 
@@ -469,7 +466,7 @@ void CPU_HancockPredict( real FC_Var[][6][NCOMP_TOTAL], const real dt, const rea
          for (int f=0; f<6; f++)    FC_Var[ID1][f][v] -= dFlux[v];
       }
 
-//    check unphyscial results
+//    check unphyscial cells after prediction
       for (int f=0; f<6; f++)
       {
          if ( CPU_CheckUnphysical(FC_Var[ID1][f], NULL, __FUNCTION__, __LINE__, false) )

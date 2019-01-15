@@ -955,7 +955,7 @@ void Output_DumpData_Total_HDF5( const char *FileName )
 		    Cons[3] = MomZ[PID][i][j][k];
 		    Cons[4] = Engy[PID][i][j][k];
 #                   ifdef CHECK_NEGATIVE_IN_FLUID
-		    CPU_CheckUnphysical(Cons, NULL, __FUNCTION__, __LINE__, true); 
+		    if(CPU_CheckUnphysical(Cons, NULL, __FUNCTION__, __LINE__, true)) exit(EXIT_FAILURE);
 #                   endif
                     Temp[PID][i][j][k] =  CPU_GetTemperature( Cons[0], Cons[1], Cons[2], Cons[3], Cons[4], NAN , false, NAN );
                  }

@@ -109,9 +109,10 @@ CPU_ComputeFlux(const real FC_Var[][6][NCOMP_TOTAL],
                     ConVar_R[4] = CPU_CheckMinTempInEngy(ConVar_R);
 #                   endif
 
+//                  check before computing flux
 #                   ifdef CHECK_NEGATIVE_IN_FLUID
-		    CPU_CheckUnphysical(ConVar_L, NULL, __FUNCTION__, __LINE__, true);
-		    CPU_CheckUnphysical(ConVar_R, NULL, __FUNCTION__, __LINE__, true);
+		    if(CPU_CheckUnphysical(ConVar_L, NULL, __FUNCTION__, __LINE__, true)
+		    || CPU_CheckUnphysical(ConVar_R, NULL, __FUNCTION__, __LINE__, true)) exit(EXIT_FAILURE);
 #                   endif
 
 #                   if ( RSOLVER == HLLC )

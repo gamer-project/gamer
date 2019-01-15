@@ -2014,7 +2014,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
                   Cons[MOMZ] = ArrayMomZ[t];
                   Cons[ENGY] = ArrayEngy[t];
 
-                  CPU_CheckUnphysical(Cons, NULL, __FUNCTION__, __LINE__, true);
+                  if(CPU_CheckUnphysical(Cons, NULL, __FUNCTION__, __LINE__, true)) exit(EXIT_FAILURE);
                 }
 #              endif
             } // if ( (TVar & _FLUID) == _FLUID )
