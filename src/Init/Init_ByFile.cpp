@@ -466,7 +466,7 @@ void Init_ByFile_Default( real fluid_out[], const real fluid_in[], const int nva
 // calculate the dual-energy field for HYDRO/MHD
 #  if ( MODEL == HYDRO  ||  MODEL == MHD )
 #  if   ( DUAL_ENERGY == DE_ENPY )
-   fluid_out[ENPY] = CPU_Fluid2Entropy( fluid_in[DENS], fluid_in[MOMX], fluid_in[MOMY], fluid_in[MOMZ], fluid_in[ENGY], GAMMA-1.0 );
+   fluid_out[ENPY] = Hydro_Fluid2Entropy( fluid_in[DENS], fluid_in[MOMX], fluid_in[MOMY], fluid_in[MOMZ], fluid_in[ENGY], GAMMA-1.0 );
 #  elif ( DUAL_ENERGY == DE_EINT )
 #  error : DE_EINT is NOT supported yet !!
 #  endif

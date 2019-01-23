@@ -29,15 +29,17 @@ void CPU_PoissonSolver_MG( const real Rho_Array    [][RHO_NXT][RHO_NXT][RHO_NXT]
 
 // Gravity solver prototypes
 #if   ( MODEL == HYDRO )
-void CPU_HydroGravitySolver(       real Flu_Array_New[][GRA_NIN][PS1][PS1][PS1],
-                             const real Pot_Array_New[][GRA_NXT][GRA_NXT][GRA_NXT],
-                             const double Corner_Array[][3],
-                             const real Pot_Array_USG[][USG_NXT_G][USG_NXT_G][USG_NXT_G],
-                             const real Flu_Array_USG[][GRA_NIN-1][PS1][PS1][PS1],
-                                   char DE_Array[][PS1][PS1][PS1],
-                             const int NPatchGroup, const real dt, const real dh, const bool P5_Gradient,
-                             const OptGravityType_t GravityType, const double ExtAcc_AuxArray[],
-                             const double TimeNew, const double TimeOld, const real MinEint );
+void CPU_HydroGravitySolver(
+         real   g_Flu_Array_New[][GRA_NIN][ CUBE(PS1) ],
+   const real   g_Pot_Array_New[][ CUBE(GRA_NXT) ],
+   const double g_Corner_Array [][3],
+   const real   g_Pot_Array_USG[][ CUBE(USG_NXT_G) ],
+   const real   g_Flu_Array_USG[][GRA_NIN-1][ CUBE(PS1) ],
+         char   g_DE_Array     [][ CUBE(PS1) ],
+   const int NPatchGroup,
+   const real dt, const real dh, const bool P5_Gradient,
+   const OptGravityType_t GravityType, const double c_ExtAcc_AuxArray[],
+   const double TimeNew, const double TimeOld, const real MinEint );
 
 #elif ( MODEL == MHD )
 #warning : WAIT MHD !!!
@@ -71,7 +73,7 @@ void CPU_ELBDMGravitySolver(       real Flu_Array[][GRA_NIN][PATCH_SIZE][PATCH_S
 //                h_DE_Array           : Host array storing the dual-energy status (for both input and output)
 //                NPatchGroup          : Number of patch groups evaluated simultaneously by GPU
 //                dt                   : Time interval to advance solution
-//                dh                   : Grid size
+//                dh                   : Cell size
 //                SOR_Min_Iter         : Minimum number of iterations for SOR
 //                SOR_Max_Iter         : Maximum number of iterations for SOR
 //                SOR_Omega            : Over-relaxation parameter
@@ -170,8 +172,14 @@ void CPU_PoissonGravitySolver( const real h_Rho_Array    [][RHO_NXT][RHO_NXT][RH
    if ( GraAcc )
    {
 #     if   ( MODEL == HYDRO )
-      CPU_HydroGravitySolver( h_Flu_Array, h_Pot_Array_Out, h_Corner_Array, h_Pot_Array_USG, h_Flu_Array_USG, h_DE_Array,
-                              NPatchGroup, dt, dh, P5_Gradient, GravityType, ExtAcc_AuxArray, TimeNew, TimeOld, MinEint );
+      CPU_HydroGravitySolver( (real(*)[GRA_NIN][ CUBE(PS1) ])   h_Flu_Array,
+                              (real(*)[ CUBE(GRA_NXT) ])        h_Pot_Array_Out,
+                                                                h_Corner_Array,
+                              (real(*)[ CUBE(USG_NXT_G) ])      h_Pot_Array_USG,
+                              (real(*)[GRA_NIN-1][ CUBE(PS1) ]) h_Flu_Array_USG,
+                              (char(*)[ CUBE(PS1) ])            h_DE_Array,
+                              NPatchGroup, dt, dh, P5_Gradient, GravityType,
+                              ExtAcc_AuxArray, TimeNew, TimeOld, MinEint );
 
 #     elif ( MODEL == MHD )
 #     error : WAIT MHD !!!

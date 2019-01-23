@@ -9,14 +9,16 @@
 
 
 #if   ( MODEL == HYDRO )
-__global__ void CUFLU_dtSolver_HydroCFL( real g_dt_Array[], const real g_Flu_Array[][NCOMP_FLUID][ CUBE(PS1) ],
-                                         const real dh, const real Safety, const real Gamma, const real MinPres );
+__global__
+void CUFLU_dtSolver_HydroCFL( real g_dt_Array[], const real g_Flu_Array[][NCOMP_FLUID][ CUBE(PS1) ],
+                              const real dh, const real Safety, const real Gamma, const real MinPres );
 #ifdef GRAVITY
-__global__ void CUPOT_dtSolver_HydroGravity( real g_dt_Array[],
-                                             const real g_Pot_Array[][ CUBE(GRA_NXT) ],
-                                             const double g_Corner_Array[][3],
-                                             const real dh, const real Safety, const bool P5_Gradient,
-                                             const OptGravityType_t GravityType, const double ExtAcc_Time );
+__global__
+void CUPOT_dtSolver_HydroGravity( real g_dt_Array[], const real g_Pot_Array[][ CUBE(GRA_NXT) ],
+                                  const double g_Corner_Array[][3],
+                                  const real dh, const real Safety, const bool P5_Gradient,
+                                  const OptGravityType_t GravityType,
+                                  const double ExtAcc_Time );
 #endif
 #elif ( MODEL == MHD )
 #warning : WAIT MHD !!!
@@ -124,9 +126,7 @@ void CUAPI_Asyn_dtSolver( const Solver_t TSolver, real h_dt_Array[], const real 
 
 #     ifdef GRAVITY
       case DT_GRA_SOLVER:
-         BlockDim_dtSolver.x = PS1;
-         BlockDim_dtSolver.y = PS1;
-         BlockDim_dtSolver.z = DT_GRA_BLOCK_SIZE_Z;
+         BlockDim_dtSolver.x = DT_GRA_BLOCK_SIZE;
       break;
 #     endif
 

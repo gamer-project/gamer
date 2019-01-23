@@ -25,7 +25,7 @@
 #endif
 
 // variables reside in constant memory
-#include "CUPOT_PoissonSolver_SetConstMem.cu"
+#include "CUPOT_SetConstMem_PoissonSolver.cu"
 
 
 
@@ -252,33 +252,33 @@ __global__ void CUPOT_PoissonSolver_SOR_16to18cube( const real g_Rho_Array    []
 
 #if ( POT_GHOST_SIZE == 4 )   // lower plane
 
-               s_IntPot[FID        ] += s_CPot_z1[CID+jj+ii] * Mm[0] * Mm[Idy] * Mm[Idx];
-               s_IntPot[FID        ] += s_CPot_z2[CID+jj+ii] * Mm[1] * Mm[Idy] * Mm[Idx];
-               s_IntPot[FID        ] += s_CPot_z3[CID+jj+ii] * Mm[2] * Mm[Idy] * Mm[Idx];
-               s_IntPot[FID+Fdx    ] += s_CPot_z1[CID+jj+ii] * Mm[0] * Mm[Idy] * Mp[Idx];
-               s_IntPot[FID+Fdx    ] += s_CPot_z2[CID+jj+ii] * Mm[1] * Mm[Idy] * Mp[Idx];
-               s_IntPot[FID+Fdx    ] += s_CPot_z3[CID+jj+ii] * Mm[2] * Mm[Idy] * Mp[Idx];
-               s_IntPot[FID    +Fdy] += s_CPot_z1[CID+jj+ii] * Mm[0] * Mp[Idy] * Mm[Idx];
-               s_IntPot[FID    +Fdy] += s_CPot_z2[CID+jj+ii] * Mm[1] * Mp[Idy] * Mm[Idx];
-               s_IntPot[FID    +Fdy] += s_CPot_z3[CID+jj+ii] * Mm[2] * Mp[Idy] * Mm[Idx];
-               s_IntPot[FID+Fdx+Fdy] += s_CPot_z1[CID+jj+ii] * Mm[0] * Mp[Idy] * Mp[Idx];
-               s_IntPot[FID+Fdx+Fdy] += s_CPot_z2[CID+jj+ii] * Mm[1] * Mp[Idy] * Mp[Idx];
-               s_IntPot[FID+Fdx+Fdy] += s_CPot_z3[CID+jj+ii] * Mm[2] * Mp[Idy] * Mp[Idx];
+               s_IntPot[FID        ] += s_CPot_z1[CID+jj+ii] * c_Mm[0] * c_Mm[Idy] * c_Mm[Idx];
+               s_IntPot[FID        ] += s_CPot_z2[CID+jj+ii] * c_Mm[1] * c_Mm[Idy] * c_Mm[Idx];
+               s_IntPot[FID        ] += s_CPot_z3[CID+jj+ii] * c_Mm[2] * c_Mm[Idy] * c_Mm[Idx];
+               s_IntPot[FID+Fdx    ] += s_CPot_z1[CID+jj+ii] * c_Mm[0] * c_Mm[Idy] * c_Mp[Idx];
+               s_IntPot[FID+Fdx    ] += s_CPot_z2[CID+jj+ii] * c_Mm[1] * c_Mm[Idy] * c_Mp[Idx];
+               s_IntPot[FID+Fdx    ] += s_CPot_z3[CID+jj+ii] * c_Mm[2] * c_Mm[Idy] * c_Mp[Idx];
+               s_IntPot[FID    +Fdy] += s_CPot_z1[CID+jj+ii] * c_Mm[0] * c_Mp[Idy] * c_Mm[Idx];
+               s_IntPot[FID    +Fdy] += s_CPot_z2[CID+jj+ii] * c_Mm[1] * c_Mp[Idy] * c_Mm[Idx];
+               s_IntPot[FID    +Fdy] += s_CPot_z3[CID+jj+ii] * c_Mm[2] * c_Mp[Idy] * c_Mm[Idx];
+               s_IntPot[FID+Fdx+Fdy] += s_CPot_z1[CID+jj+ii] * c_Mm[0] * c_Mp[Idy] * c_Mp[Idx];
+               s_IntPot[FID+Fdx+Fdy] += s_CPot_z2[CID+jj+ii] * c_Mm[1] * c_Mp[Idy] * c_Mp[Idx];
+               s_IntPot[FID+Fdx+Fdy] += s_CPot_z3[CID+jj+ii] * c_Mm[2] * c_Mp[Idy] * c_Mp[Idx];
 
 #else                         // upper plane
 
-               s_IntPot[FID        ] += s_CPot_z1[CID+jj+ii] * Mp[0] * Mm[Idy] * Mm[Idx];
-               s_IntPot[FID        ] += s_CPot_z2[CID+jj+ii] * Mp[1] * Mm[Idy] * Mm[Idx];
-               s_IntPot[FID        ] += s_CPot_z3[CID+jj+ii] * Mp[2] * Mm[Idy] * Mm[Idx];
-               s_IntPot[FID+Fdx    ] += s_CPot_z1[CID+jj+ii] * Mp[0] * Mm[Idy] * Mp[Idx];
-               s_IntPot[FID+Fdx    ] += s_CPot_z2[CID+jj+ii] * Mp[1] * Mm[Idy] * Mp[Idx];
-               s_IntPot[FID+Fdx    ] += s_CPot_z3[CID+jj+ii] * Mp[2] * Mm[Idy] * Mp[Idx];
-               s_IntPot[FID    +Fdy] += s_CPot_z1[CID+jj+ii] * Mp[0] * Mp[Idy] * Mm[Idx];
-               s_IntPot[FID    +Fdy] += s_CPot_z2[CID+jj+ii] * Mp[1] * Mp[Idy] * Mm[Idx];
-               s_IntPot[FID    +Fdy] += s_CPot_z3[CID+jj+ii] * Mp[2] * Mp[Idy] * Mm[Idx];
-               s_IntPot[FID+Fdx+Fdy] += s_CPot_z1[CID+jj+ii] * Mp[0] * Mp[Idy] * Mp[Idx];
-               s_IntPot[FID+Fdx+Fdy] += s_CPot_z2[CID+jj+ii] * Mp[1] * Mp[Idy] * Mp[Idx];
-               s_IntPot[FID+Fdx+Fdy] += s_CPot_z3[CID+jj+ii] * Mp[2] * Mp[Idy] * Mp[Idx];
+               s_IntPot[FID        ] += s_CPot_z1[CID+jj+ii] * c_Mp[0] * c_Mm[Idy] * c_Mm[Idx];
+               s_IntPot[FID        ] += s_CPot_z2[CID+jj+ii] * c_Mp[1] * c_Mm[Idy] * c_Mm[Idx];
+               s_IntPot[FID        ] += s_CPot_z3[CID+jj+ii] * c_Mp[2] * c_Mm[Idy] * c_Mm[Idx];
+               s_IntPot[FID+Fdx    ] += s_CPot_z1[CID+jj+ii] * c_Mp[0] * c_Mm[Idy] * c_Mp[Idx];
+               s_IntPot[FID+Fdx    ] += s_CPot_z2[CID+jj+ii] * c_Mp[1] * c_Mm[Idy] * c_Mp[Idx];
+               s_IntPot[FID+Fdx    ] += s_CPot_z3[CID+jj+ii] * c_Mp[2] * c_Mm[Idy] * c_Mp[Idx];
+               s_IntPot[FID    +Fdy] += s_CPot_z1[CID+jj+ii] * c_Mp[0] * c_Mp[Idy] * c_Mm[Idx];
+               s_IntPot[FID    +Fdy] += s_CPot_z2[CID+jj+ii] * c_Mp[1] * c_Mp[Idy] * c_Mm[Idx];
+               s_IntPot[FID    +Fdy] += s_CPot_z3[CID+jj+ii] * c_Mp[2] * c_Mp[Idy] * c_Mm[Idx];
+               s_IntPot[FID+Fdx+Fdy] += s_CPot_z1[CID+jj+ii] * c_Mp[0] * c_Mp[Idy] * c_Mp[Idx];
+               s_IntPot[FID+Fdx+Fdy] += s_CPot_z2[CID+jj+ii] * c_Mp[1] * c_Mp[Idy] * c_Mp[Idx];
+               s_IntPot[FID+Fdx+Fdy] += s_CPot_z3[CID+jj+ii] * c_Mp[2] * c_Mp[Idy] * c_Mp[Idx];
 
 #endif
             }} // for di,dj
@@ -354,18 +354,18 @@ __global__ void CUPOT_PoissonSolver_SOR_16to18cube( const real g_Rho_Array    []
             for (int dj=-1; dj<=1; dj++)  {  Idy = dj+1;    jj = __mul24( dj, Cdy );
             for (int di=-1; di<=1; di++)  {  Idx = di+1;    ii = __mul24( di, Cdx );
 
-               s_IntPot[FID        ] += s_CPot_z1[CID+jj+ii] * Mp[0] * Mm[Idy] * Mm[Idx];
-               s_IntPot[FID        ] += s_CPot_z2[CID+jj+ii] * Mp[1] * Mm[Idy] * Mm[Idx];
-               s_IntPot[FID        ] += s_CPot_z3[CID+jj+ii] * Mp[2] * Mm[Idy] * Mm[Idx];
-               s_IntPot[FID+Fdx    ] += s_CPot_z1[CID+jj+ii] * Mp[0] * Mm[Idy] * Mp[Idx];
-               s_IntPot[FID+Fdx    ] += s_CPot_z2[CID+jj+ii] * Mp[1] * Mm[Idy] * Mp[Idx];
-               s_IntPot[FID+Fdx    ] += s_CPot_z3[CID+jj+ii] * Mp[2] * Mm[Idy] * Mp[Idx];
-               s_IntPot[FID    +Fdy] += s_CPot_z1[CID+jj+ii] * Mp[0] * Mp[Idy] * Mm[Idx];
-               s_IntPot[FID    +Fdy] += s_CPot_z2[CID+jj+ii] * Mp[1] * Mp[Idy] * Mm[Idx];
-               s_IntPot[FID    +Fdy] += s_CPot_z3[CID+jj+ii] * Mp[2] * Mp[Idy] * Mm[Idx];
-               s_IntPot[FID+Fdx+Fdy] += s_CPot_z1[CID+jj+ii] * Mp[0] * Mp[Idy] * Mp[Idx];
-               s_IntPot[FID+Fdx+Fdy] += s_CPot_z2[CID+jj+ii] * Mp[1] * Mp[Idy] * Mp[Idx];
-               s_IntPot[FID+Fdx+Fdy] += s_CPot_z3[CID+jj+ii] * Mp[2] * Mp[Idy] * Mp[Idx];
+               s_IntPot[FID        ] += s_CPot_z1[CID+jj+ii] * c_Mp[0] * c_Mm[Idy] * c_Mm[Idx];
+               s_IntPot[FID        ] += s_CPot_z2[CID+jj+ii] * c_Mp[1] * c_Mm[Idy] * c_Mm[Idx];
+               s_IntPot[FID        ] += s_CPot_z3[CID+jj+ii] * c_Mp[2] * c_Mm[Idy] * c_Mm[Idx];
+               s_IntPot[FID+Fdx    ] += s_CPot_z1[CID+jj+ii] * c_Mp[0] * c_Mm[Idy] * c_Mp[Idx];
+               s_IntPot[FID+Fdx    ] += s_CPot_z2[CID+jj+ii] * c_Mp[1] * c_Mm[Idy] * c_Mp[Idx];
+               s_IntPot[FID+Fdx    ] += s_CPot_z3[CID+jj+ii] * c_Mp[2] * c_Mm[Idy] * c_Mp[Idx];
+               s_IntPot[FID    +Fdy] += s_CPot_z1[CID+jj+ii] * c_Mp[0] * c_Mp[Idy] * c_Mm[Idx];
+               s_IntPot[FID    +Fdy] += s_CPot_z2[CID+jj+ii] * c_Mp[1] * c_Mp[Idy] * c_Mm[Idx];
+               s_IntPot[FID    +Fdy] += s_CPot_z3[CID+jj+ii] * c_Mp[2] * c_Mp[Idy] * c_Mm[Idx];
+               s_IntPot[FID+Fdx+Fdy] += s_CPot_z1[CID+jj+ii] * c_Mp[0] * c_Mp[Idy] * c_Mp[Idx];
+               s_IntPot[FID+Fdx+Fdy] += s_CPot_z2[CID+jj+ii] * c_Mp[1] * c_Mp[Idy] * c_Mp[Idx];
+               s_IntPot[FID+Fdx+Fdy] += s_CPot_z3[CID+jj+ii] * c_Mp[2] * c_Mp[Idy] * c_Mp[Idx];
 
             }} // for di,dj
          }
@@ -560,18 +560,18 @@ __global__ void CUPOT_PoissonSolver_SOR_16to18cube( const real g_Rho_Array    []
                      for (int dj=-1; dj<=1; dj++)  {  Idy = dj+1;    jj = __mul24( dj, Cdy );
                      for (int di=-1; di<=1; di++)  {  Idx = di+1;    ii = __mul24( di, Cdx );
 
-                        s_IntPot[FID        ] += s_CPot_z1[CID+jj+ii] * Mm[0] * Mm[Idy] * Mm[Idx];
-                        s_IntPot[FID        ] += s_CPot_z2[CID+jj+ii] * Mm[1] * Mm[Idy] * Mm[Idx];
-                        s_IntPot[FID        ] += s_CPot_z3[CID+jj+ii] * Mm[2] * Mm[Idy] * Mm[Idx];
-                        s_IntPot[FID+Fdx    ] += s_CPot_z1[CID+jj+ii] * Mm[0] * Mm[Idy] * Mp[Idx];
-                        s_IntPot[FID+Fdx    ] += s_CPot_z2[CID+jj+ii] * Mm[1] * Mm[Idy] * Mp[Idx];
-                        s_IntPot[FID+Fdx    ] += s_CPot_z3[CID+jj+ii] * Mm[2] * Mm[Idy] * Mp[Idx];
-                        s_IntPot[FID    +Fdy] += s_CPot_z1[CID+jj+ii] * Mm[0] * Mp[Idy] * Mm[Idx];
-                        s_IntPot[FID    +Fdy] += s_CPot_z2[CID+jj+ii] * Mm[1] * Mp[Idy] * Mm[Idx];
-                        s_IntPot[FID    +Fdy] += s_CPot_z3[CID+jj+ii] * Mm[2] * Mp[Idy] * Mm[Idx];
-                        s_IntPot[FID+Fdx+Fdy] += s_CPot_z1[CID+jj+ii] * Mm[0] * Mp[Idy] * Mp[Idx];
-                        s_IntPot[FID+Fdx+Fdy] += s_CPot_z2[CID+jj+ii] * Mm[1] * Mp[Idy] * Mp[Idx];
-                        s_IntPot[FID+Fdx+Fdy] += s_CPot_z3[CID+jj+ii] * Mm[2] * Mp[Idy] * Mp[Idx];
+                        s_IntPot[FID        ] += s_CPot_z1[CID+jj+ii] * c_Mm[0] * c_Mm[Idy] * c_Mm[Idx];
+                        s_IntPot[FID        ] += s_CPot_z2[CID+jj+ii] * c_Mm[1] * c_Mm[Idy] * c_Mm[Idx];
+                        s_IntPot[FID        ] += s_CPot_z3[CID+jj+ii] * c_Mm[2] * c_Mm[Idy] * c_Mm[Idx];
+                        s_IntPot[FID+Fdx    ] += s_CPot_z1[CID+jj+ii] * c_Mm[0] * c_Mm[Idy] * c_Mp[Idx];
+                        s_IntPot[FID+Fdx    ] += s_CPot_z2[CID+jj+ii] * c_Mm[1] * c_Mm[Idy] * c_Mp[Idx];
+                        s_IntPot[FID+Fdx    ] += s_CPot_z3[CID+jj+ii] * c_Mm[2] * c_Mm[Idy] * c_Mp[Idx];
+                        s_IntPot[FID    +Fdy] += s_CPot_z1[CID+jj+ii] * c_Mm[0] * c_Mp[Idy] * c_Mm[Idx];
+                        s_IntPot[FID    +Fdy] += s_CPot_z2[CID+jj+ii] * c_Mm[1] * c_Mp[Idy] * c_Mm[Idx];
+                        s_IntPot[FID    +Fdy] += s_CPot_z3[CID+jj+ii] * c_Mm[2] * c_Mp[Idy] * c_Mm[Idx];
+                        s_IntPot[FID+Fdx+Fdy] += s_CPot_z1[CID+jj+ii] * c_Mm[0] * c_Mp[Idy] * c_Mp[Idx];
+                        s_IntPot[FID+Fdx+Fdy] += s_CPot_z2[CID+jj+ii] * c_Mm[1] * c_Mp[Idy] * c_Mp[Idx];
+                        s_IntPot[FID+Fdx+Fdy] += s_CPot_z3[CID+jj+ii] * c_Mm[2] * c_Mp[Idy] * c_Mp[Idx];
 
                      }} // for di,dj
                   } // if ( UpDown == 0 )
@@ -581,18 +581,18 @@ __global__ void CUPOT_PoissonSolver_SOR_16to18cube( const real g_Rho_Array    []
                      for (int dj=-1; dj<=1; dj++)  {  Idy = dj+1;    jj = __mul24( dj, Cdy );
                      for (int di=-1; di<=1; di++)  {  Idx = di+1;    ii = __mul24( di, Cdx );
 
-                        s_IntPot[FID        ] += s_CPot_z1[CID+jj+ii] * Mp[0] * Mm[Idy] * Mm[Idx];
-                        s_IntPot[FID        ] += s_CPot_z2[CID+jj+ii] * Mp[1] * Mm[Idy] * Mm[Idx];
-                        s_IntPot[FID        ] += s_CPot_z3[CID+jj+ii] * Mp[2] * Mm[Idy] * Mm[Idx];
-                        s_IntPot[FID+Fdx    ] += s_CPot_z1[CID+jj+ii] * Mp[0] * Mm[Idy] * Mp[Idx];
-                        s_IntPot[FID+Fdx    ] += s_CPot_z2[CID+jj+ii] * Mp[1] * Mm[Idy] * Mp[Idx];
-                        s_IntPot[FID+Fdx    ] += s_CPot_z3[CID+jj+ii] * Mp[2] * Mm[Idy] * Mp[Idx];
-                        s_IntPot[FID    +Fdy] += s_CPot_z1[CID+jj+ii] * Mp[0] * Mp[Idy] * Mm[Idx];
-                        s_IntPot[FID    +Fdy] += s_CPot_z2[CID+jj+ii] * Mp[1] * Mp[Idy] * Mm[Idx];
-                        s_IntPot[FID    +Fdy] += s_CPot_z3[CID+jj+ii] * Mp[2] * Mp[Idy] * Mm[Idx];
-                        s_IntPot[FID+Fdx+Fdy] += s_CPot_z1[CID+jj+ii] * Mp[0] * Mp[Idy] * Mp[Idx];
-                        s_IntPot[FID+Fdx+Fdy] += s_CPot_z2[CID+jj+ii] * Mp[1] * Mp[Idy] * Mp[Idx];
-                        s_IntPot[FID+Fdx+Fdy] += s_CPot_z3[CID+jj+ii] * Mp[2] * Mp[Idy] * Mp[Idx];
+                        s_IntPot[FID        ] += s_CPot_z1[CID+jj+ii] * c_Mp[0] * c_Mm[Idy] * c_Mm[Idx];
+                        s_IntPot[FID        ] += s_CPot_z2[CID+jj+ii] * c_Mp[1] * c_Mm[Idy] * c_Mm[Idx];
+                        s_IntPot[FID        ] += s_CPot_z3[CID+jj+ii] * c_Mp[2] * c_Mm[Idy] * c_Mm[Idx];
+                        s_IntPot[FID+Fdx    ] += s_CPot_z1[CID+jj+ii] * c_Mp[0] * c_Mm[Idy] * c_Mp[Idx];
+                        s_IntPot[FID+Fdx    ] += s_CPot_z2[CID+jj+ii] * c_Mp[1] * c_Mm[Idy] * c_Mp[Idx];
+                        s_IntPot[FID+Fdx    ] += s_CPot_z3[CID+jj+ii] * c_Mp[2] * c_Mm[Idy] * c_Mp[Idx];
+                        s_IntPot[FID    +Fdy] += s_CPot_z1[CID+jj+ii] * c_Mp[0] * c_Mp[Idy] * c_Mm[Idx];
+                        s_IntPot[FID    +Fdy] += s_CPot_z2[CID+jj+ii] * c_Mp[1] * c_Mp[Idy] * c_Mm[Idx];
+                        s_IntPot[FID    +Fdy] += s_CPot_z3[CID+jj+ii] * c_Mp[2] * c_Mp[Idy] * c_Mm[Idx];
+                        s_IntPot[FID+Fdx+Fdy] += s_CPot_z1[CID+jj+ii] * c_Mp[0] * c_Mp[Idy] * c_Mp[Idx];
+                        s_IntPot[FID+Fdx+Fdy] += s_CPot_z2[CID+jj+ii] * c_Mp[1] * c_Mp[Idy] * c_Mp[Idx];
+                        s_IntPot[FID+Fdx+Fdy] += s_CPot_z3[CID+jj+ii] * c_Mp[2] * c_Mp[Idy] * c_Mp[Idx];
 
                      }} // for di,dj
                   } // if ( UpDown == 0 ) ... else ...
@@ -861,33 +861,33 @@ __global__ void CUPOT_PoissonSolver_SOR_16to18cube( const real g_Rho_Array    []
 
 #if ( POT_GHOST_SIZE == 4 )   // upper plane
 
-               s_IntPot[FID        ] += s_CPot_z1[CID+jj+ii] * Mp[0] * Mm[Idy] * Mm[Idx];
-               s_IntPot[FID        ] += s_CPot_z2[CID+jj+ii] * Mp[1] * Mm[Idy] * Mm[Idx];
-               s_IntPot[FID        ] += s_CPot_z3[CID+jj+ii] * Mp[2] * Mm[Idy] * Mm[Idx];
-               s_IntPot[FID+Fdx    ] += s_CPot_z1[CID+jj+ii] * Mp[0] * Mm[Idy] * Mp[Idx];
-               s_IntPot[FID+Fdx    ] += s_CPot_z2[CID+jj+ii] * Mp[1] * Mm[Idy] * Mp[Idx];
-               s_IntPot[FID+Fdx    ] += s_CPot_z3[CID+jj+ii] * Mp[2] * Mm[Idy] * Mp[Idx];
-               s_IntPot[FID    +Fdy] += s_CPot_z1[CID+jj+ii] * Mp[0] * Mp[Idy] * Mm[Idx];
-               s_IntPot[FID    +Fdy] += s_CPot_z2[CID+jj+ii] * Mp[1] * Mp[Idy] * Mm[Idx];
-               s_IntPot[FID    +Fdy] += s_CPot_z3[CID+jj+ii] * Mp[2] * Mp[Idy] * Mm[Idx];
-               s_IntPot[FID+Fdx+Fdy] += s_CPot_z1[CID+jj+ii] * Mp[0] * Mp[Idy] * Mp[Idx];
-               s_IntPot[FID+Fdx+Fdy] += s_CPot_z2[CID+jj+ii] * Mp[1] * Mp[Idy] * Mp[Idx];
-               s_IntPot[FID+Fdx+Fdy] += s_CPot_z3[CID+jj+ii] * Mp[2] * Mp[Idy] * Mp[Idx];
+               s_IntPot[FID        ] += s_CPot_z1[CID+jj+ii] * c_Mp[0] * c_Mm[Idy] * c_Mm[Idx];
+               s_IntPot[FID        ] += s_CPot_z2[CID+jj+ii] * c_Mp[1] * c_Mm[Idy] * c_Mm[Idx];
+               s_IntPot[FID        ] += s_CPot_z3[CID+jj+ii] * c_Mp[2] * c_Mm[Idy] * c_Mm[Idx];
+               s_IntPot[FID+Fdx    ] += s_CPot_z1[CID+jj+ii] * c_Mp[0] * c_Mm[Idy] * c_Mp[Idx];
+               s_IntPot[FID+Fdx    ] += s_CPot_z2[CID+jj+ii] * c_Mp[1] * c_Mm[Idy] * c_Mp[Idx];
+               s_IntPot[FID+Fdx    ] += s_CPot_z3[CID+jj+ii] * c_Mp[2] * c_Mm[Idy] * c_Mp[Idx];
+               s_IntPot[FID    +Fdy] += s_CPot_z1[CID+jj+ii] * c_Mp[0] * c_Mp[Idy] * c_Mm[Idx];
+               s_IntPot[FID    +Fdy] += s_CPot_z2[CID+jj+ii] * c_Mp[1] * c_Mp[Idy] * c_Mm[Idx];
+               s_IntPot[FID    +Fdy] += s_CPot_z3[CID+jj+ii] * c_Mp[2] * c_Mp[Idy] * c_Mm[Idx];
+               s_IntPot[FID+Fdx+Fdy] += s_CPot_z1[CID+jj+ii] * c_Mp[0] * c_Mp[Idy] * c_Mp[Idx];
+               s_IntPot[FID+Fdx+Fdy] += s_CPot_z2[CID+jj+ii] * c_Mp[1] * c_Mp[Idy] * c_Mp[Idx];
+               s_IntPot[FID+Fdx+Fdy] += s_CPot_z3[CID+jj+ii] * c_Mp[2] * c_Mp[Idy] * c_Mp[Idx];
 
 #else                         // lower plane
 
-               s_IntPot[FID        ] += s_CPot_z1[CID+jj+ii] * Mm[0] * Mm[Idy] * Mm[Idx];
-               s_IntPot[FID        ] += s_CPot_z2[CID+jj+ii] * Mm[1] * Mm[Idy] * Mm[Idx];
-               s_IntPot[FID        ] += s_CPot_z3[CID+jj+ii] * Mm[2] * Mm[Idy] * Mm[Idx];
-               s_IntPot[FID+Fdx    ] += s_CPot_z1[CID+jj+ii] * Mm[0] * Mm[Idy] * Mp[Idx];
-               s_IntPot[FID+Fdx    ] += s_CPot_z2[CID+jj+ii] * Mm[1] * Mm[Idy] * Mp[Idx];
-               s_IntPot[FID+Fdx    ] += s_CPot_z3[CID+jj+ii] * Mm[2] * Mm[Idy] * Mp[Idx];
-               s_IntPot[FID    +Fdy] += s_CPot_z1[CID+jj+ii] * Mm[0] * Mp[Idy] * Mm[Idx];
-               s_IntPot[FID    +Fdy] += s_CPot_z2[CID+jj+ii] * Mm[1] * Mp[Idy] * Mm[Idx];
-               s_IntPot[FID    +Fdy] += s_CPot_z3[CID+jj+ii] * Mm[2] * Mp[Idy] * Mm[Idx];
-               s_IntPot[FID+Fdx+Fdy] += s_CPot_z1[CID+jj+ii] * Mm[0] * Mp[Idy] * Mp[Idx];
-               s_IntPot[FID+Fdx+Fdy] += s_CPot_z2[CID+jj+ii] * Mm[1] * Mp[Idy] * Mp[Idx];
-               s_IntPot[FID+Fdx+Fdy] += s_CPot_z3[CID+jj+ii] * Mm[2] * Mp[Idy] * Mp[Idx];
+               s_IntPot[FID        ] += s_CPot_z1[CID+jj+ii] * c_Mm[0] * c_Mm[Idy] * c_Mm[Idx];
+               s_IntPot[FID        ] += s_CPot_z2[CID+jj+ii] * c_Mm[1] * c_Mm[Idy] * c_Mm[Idx];
+               s_IntPot[FID        ] += s_CPot_z3[CID+jj+ii] * c_Mm[2] * c_Mm[Idy] * c_Mm[Idx];
+               s_IntPot[FID+Fdx    ] += s_CPot_z1[CID+jj+ii] * c_Mm[0] * c_Mm[Idy] * c_Mp[Idx];
+               s_IntPot[FID+Fdx    ] += s_CPot_z2[CID+jj+ii] * c_Mm[1] * c_Mm[Idy] * c_Mp[Idx];
+               s_IntPot[FID+Fdx    ] += s_CPot_z3[CID+jj+ii] * c_Mm[2] * c_Mm[Idy] * c_Mp[Idx];
+               s_IntPot[FID    +Fdy] += s_CPot_z1[CID+jj+ii] * c_Mm[0] * c_Mp[Idy] * c_Mm[Idx];
+               s_IntPot[FID    +Fdy] += s_CPot_z2[CID+jj+ii] * c_Mm[1] * c_Mp[Idy] * c_Mm[Idx];
+               s_IntPot[FID    +Fdy] += s_CPot_z3[CID+jj+ii] * c_Mm[2] * c_Mp[Idy] * c_Mm[Idx];
+               s_IntPot[FID+Fdx+Fdy] += s_CPot_z1[CID+jj+ii] * c_Mm[0] * c_Mp[Idy] * c_Mp[Idx];
+               s_IntPot[FID+Fdx+Fdy] += s_CPot_z2[CID+jj+ii] * c_Mm[1] * c_Mp[Idy] * c_Mp[Idx];
+               s_IntPot[FID+Fdx+Fdy] += s_CPot_z3[CID+jj+ii] * c_Mm[2] * c_Mp[Idy] * c_Mp[Idx];
 
 #endif
             }} // for di,dj
@@ -963,18 +963,18 @@ __global__ void CUPOT_PoissonSolver_SOR_16to18cube( const real g_Rho_Array    []
             for (int dj=-1; dj<=1; dj++)  {  Idy = dj+1;    jj = __mul24( dj, Cdy );
             for (int di=-1; di<=1; di++)  {  Idx = di+1;    ii = __mul24( di, Cdx );
 
-               s_IntPot[FID        ] += s_CPot_z1[CID+jj+ii] * Mm[0] * Mm[Idy] * Mm[Idx];
-               s_IntPot[FID        ] += s_CPot_z2[CID+jj+ii] * Mm[1] * Mm[Idy] * Mm[Idx];
-               s_IntPot[FID        ] += s_CPot_z3[CID+jj+ii] * Mm[2] * Mm[Idy] * Mm[Idx];
-               s_IntPot[FID+Fdx    ] += s_CPot_z1[CID+jj+ii] * Mm[0] * Mm[Idy] * Mp[Idx];
-               s_IntPot[FID+Fdx    ] += s_CPot_z2[CID+jj+ii] * Mm[1] * Mm[Idy] * Mp[Idx];
-               s_IntPot[FID+Fdx    ] += s_CPot_z3[CID+jj+ii] * Mm[2] * Mm[Idy] * Mp[Idx];
-               s_IntPot[FID    +Fdy] += s_CPot_z1[CID+jj+ii] * Mm[0] * Mp[Idy] * Mm[Idx];
-               s_IntPot[FID    +Fdy] += s_CPot_z2[CID+jj+ii] * Mm[1] * Mp[Idy] * Mm[Idx];
-               s_IntPot[FID    +Fdy] += s_CPot_z3[CID+jj+ii] * Mm[2] * Mp[Idy] * Mm[Idx];
-               s_IntPot[FID+Fdx+Fdy] += s_CPot_z1[CID+jj+ii] * Mm[0] * Mp[Idy] * Mp[Idx];
-               s_IntPot[FID+Fdx+Fdy] += s_CPot_z2[CID+jj+ii] * Mm[1] * Mp[Idy] * Mp[Idx];
-               s_IntPot[FID+Fdx+Fdy] += s_CPot_z3[CID+jj+ii] * Mm[2] * Mp[Idy] * Mp[Idx];
+               s_IntPot[FID        ] += s_CPot_z1[CID+jj+ii] * c_Mm[0] * c_Mm[Idy] * c_Mm[Idx];
+               s_IntPot[FID        ] += s_CPot_z2[CID+jj+ii] * c_Mm[1] * c_Mm[Idy] * c_Mm[Idx];
+               s_IntPot[FID        ] += s_CPot_z3[CID+jj+ii] * c_Mm[2] * c_Mm[Idy] * c_Mm[Idx];
+               s_IntPot[FID+Fdx    ] += s_CPot_z1[CID+jj+ii] * c_Mm[0] * c_Mm[Idy] * c_Mp[Idx];
+               s_IntPot[FID+Fdx    ] += s_CPot_z2[CID+jj+ii] * c_Mm[1] * c_Mm[Idy] * c_Mp[Idx];
+               s_IntPot[FID+Fdx    ] += s_CPot_z3[CID+jj+ii] * c_Mm[2] * c_Mm[Idy] * c_Mp[Idx];
+               s_IntPot[FID    +Fdy] += s_CPot_z1[CID+jj+ii] * c_Mm[0] * c_Mp[Idy] * c_Mm[Idx];
+               s_IntPot[FID    +Fdy] += s_CPot_z2[CID+jj+ii] * c_Mm[1] * c_Mp[Idy] * c_Mm[Idx];
+               s_IntPot[FID    +Fdy] += s_CPot_z3[CID+jj+ii] * c_Mm[2] * c_Mp[Idy] * c_Mm[Idx];
+               s_IntPot[FID+Fdx+Fdy] += s_CPot_z1[CID+jj+ii] * c_Mm[0] * c_Mp[Idy] * c_Mp[Idx];
+               s_IntPot[FID+Fdx+Fdy] += s_CPot_z2[CID+jj+ii] * c_Mm[1] * c_Mp[Idy] * c_Mp[Idx];
+               s_IntPot[FID+Fdx+Fdy] += s_CPot_z3[CID+jj+ii] * c_Mm[2] * c_Mp[Idy] * c_Mp[Idx];
 
             }} // for di,dj
          }

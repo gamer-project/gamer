@@ -66,47 +66,46 @@ void Buf_SortBoundaryPatch( const int NPatch, int *IDList, int *PosList );
 
 
 // Hydrodynamics
-void CPU_FluidSolver( real h_Flu_Array_In [][FLU_NIN    ][ FLU_NXT*FLU_NXT*FLU_NXT ],
-                      real h_Flu_Array_Out[][FLU_NOUT   ][ PS2*PS2*PS2 ],
-                      char h_DE_Array_Out[][ PS2*PS2*PS2 ],
-                      real h_Flux_Array[][9][NFLUX_TOTAL][ PS2*PS2 ],
+void CPU_FluidSolver( real h_Flu_Array_In[][FLU_NIN][ CUBE(FLU_NXT) ],
+                      real h_Flu_Array_Out[][FLU_NOUT][ CUBE(PS2) ],
+                      char h_DE_Array_Out[][ CUBE(PS2) ],
+                      real h_Flux_Array[][9][NFLUX_TOTAL][ SQR(PS2) ],
                       const double h_Corner_Array[][3],
-                      const real h_Pot_Array_USG[][USG_NXT_F][USG_NXT_F][USG_NXT_F],
+                      const real h_Pot_Array_USG[][ CUBE(USG_NXT_F) ],
                       const int NPatchGroup, const real dt, const real dh, const real Gamma, const bool StoreFlux,
-                      const bool XYZ, const LR_Limiter_t LR_Limiter, const real MinMod_Coeff, const real EP_Coeff,
-                      const WAF_Limiter_t WAF_Limiter, const real ELBDM_Eta, real ELBDM_Taylor3_Coeff,
-                      const bool ELBDM_Taylor3_Auto, const double Time, const OptGravityType_t GravityType,
+                      const bool XYZ, const LR_Limiter_t LR_Limiter, const real MinMod_Coeff,
+                      const real ELBDM_Eta, real ELBDM_Taylor3_Coeff, const bool ELBDM_Taylor3_Auto,
+                      const double Time, const OptGravityType_t GravityType,
                       const real MinDens, const real MinPres, const real DualEnergySwitch,
                       const bool NormPassive, const int NNorm, const int NormIdx[],
                       const bool JeansMinPres, const real JeansMinPres_Coeff );
-real CPU_GetPressure( const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy,
-                      const real Gamma_m1, const bool CheckMinPres, const real MinPres );
-real CPU_GetTemperature( const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy,
-                         const real Gamma_m1, const bool CheckMinPres, const real MinPres );
-double CPU_Temperature2Pressure( const double Dens, const double Temp, const double mu, const double m_H,
-                                 const bool CheckMinPres, const double MinPres );
-real CPU_CheckMinPres( const real InPres, const real MinPres );
-void CPU_NormalizePassive( const real GasDens, real Passive[], const int NNorm, const int NormIdx[] );
+real Hydro_GetPressure( const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy,
+                        const real Gamma_m1, const bool CheckMinPres, const real MinPres );
+real Hydro_GetTemperature( const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy,
+                           const real Gamma_m1, const bool CheckMinPres, const real MinPres );
+double Hydro_Temperature2Pressure( const double Dens, const double Temp, const double mu, const double m_H,
+                                   const bool CheckMinPres, const double MinPres );
+real Hydro_CheckMinPres( const real InPres, const real MinPres );
+void Hydro_NormalizePassive( const real GasDens, real Passive[], const int NNorm, const int NormIdx[] );
 #ifdef DUAL_ENERGY
-void CPU_DualEnergyFix( const real Dens, const real MomX, const real MomY, const real MomZ,
-                        real &Etot, real &Enpy, char &DE_Status, const real Gamma_m1, const real _Gamma_m1,
-                        const bool CheckMinPres, const real MinPres, const real DualEnergySwitch );
+void Hydro_DualEnergyFix( const real Dens, const real MomX, const real MomY, const real MomZ,
+                          real &Etot, real &Enpy, char &DE_Status, const real Gamma_m1, const real _Gamma_m1,
+                          const bool CheckMinPres, const real MinPres, const real DualEnergySwitch );
 #if ( DUAL_ENERGY == DE_ENPY )
-real CPU_Fluid2Entropy( const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy, const real Gamma_m1 );
-real CPU_DensPres2Entropy( const real Dens, const real Pres, const real Gamma_m1 );
-real CPU_DensEntropy2Pres( const real Dens, const real Enpy, const real Gamma_m1,
-                           const bool CheckMinPres, const real MinPres );
+real Hydro_Fluid2Entropy( const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy, const real Gamma_m1 );
+real Hydro_DensPres2Entropy( const real Dens, const real Pres, const real Gamma_m1 );
+real Hydro_DensEntropy2Pres( const real Dens, const real Enpy, const real Gamma_m1,
+                             const bool CheckMinPres, const real MinPres );
 #endif
 #endif
-real CPU_CheckMinPresInEngy( const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy,
-                             const real Gamma_m1, const real _Gamma_m1, const real MinPres );
+real Hydro_CheckMinPresInEngy( const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy,
+                               const real Gamma_m1, const real _Gamma_m1, const real MinPres );
 int Flu_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, const double dt, const int SaveSg,
                    const bool OverlapMPI, const bool Overlap_Sync );
 void Flu_AllocateFluxArray( const int lv );
-void Flu_Close( const int lv, const int SaveSg, real h_Flux_Array[][9][NFLUX_TOTAL][4*PATCH_SIZE*PATCH_SIZE],
-                real h_Flu_Array_F_Out[][FLU_NOUT][8*PATCH_SIZE*PATCH_SIZE*PATCH_SIZE],
-                char h_DE_Array_F_Out[][8*PATCH_SIZE*PATCH_SIZE*PATCH_SIZE],
-                const int NPG, const int *PID0_List, const real h_Flu_Array_F_In[][FLU_NIN][FLU_NXT*FLU_NXT*FLU_NXT],
+void Flu_Close( const int lv, const int SaveSg, real h_Flux_Array[][9][NFLUX_TOTAL][ SQR(PS2) ],
+                real h_Flu_Array_F_Out[][FLU_NOUT][ CUBE(PS2) ], char h_DE_Array_F_Out[][ CUBE(PS2) ],
+                const int NPG, const int *PID0_List, const real h_Flu_Array_F_In[][FLU_NIN][ CUBE(FLU_NXT) ],
                 const double dt );
 void Flu_FixUp( const int lv );
 void Flu_Prepare( const int lv, const double PrepTime, real h_Flu_Array_F_In[], real h_Pot_Array_USG_F[],
@@ -272,8 +271,8 @@ void Refine_Buffer( const int lv, const int *SonTable, const int *GrandTable );
 
 // SelfGravity
 #ifdef GRAVITY
-void CPU_ExternalAcc( real Acc[], const double x, const double y, const double z, const double Time, const double UserArray[] );
-real CPU_ExternalPot( const double x, const double y, const double z, const double Time, const double UserArray[] );
+void ExternalAcc( real Acc[], const double x, const double y, const double z, const double Time, const double UserArray[] );
+real ExternalPot( const double x, const double y, const double z, const double Time, const double UserArray[] );
 void CPU_PoissonGravitySolver( const real h_Rho_Array    [][RHO_NXT][RHO_NXT][RHO_NXT],
                                const real h_Pot_Array_In [][POT_NXT][POT_NXT][POT_NXT],
                                      real h_Pot_Array_Out[][GRA_NXT][GRA_NXT][GRA_NXT],
@@ -424,16 +423,16 @@ real   ELBDM_SetTaylor3Coeff( const real dt, const real dh, const real Eta );
 
 // GPU API
 #ifdef GPU
-void CUAPI_Asyn_FluidSolver( real h_Flu_Array_In [][FLU_NIN    ][ FLU_NXT*FLU_NXT*FLU_NXT ],
-                             real h_Flu_Array_Out[][FLU_NOUT   ][ PS2*PS2*PS2 ],
-                             char h_DE_Array_Out[][ PS2*PS2*PS2 ],
-                             real h_Flux_Array[][9][NFLUX_TOTAL][ PS2*PS2 ],
+void CUAPI_Asyn_FluidSolver( real h_Flu_Array_In[][FLU_NIN ][ CUBE(FLU_NXT) ],
+                             real h_Flu_Array_Out[][FLU_NOUT][ CUBE(PS2) ],
+                             char h_DE_Array_Out[][ CUBE(PS2) ],
+                             real h_Flux_Array[][9][NFLUX_TOTAL][ SQR(PS2) ],
                              const double h_Corner_Array[][3],
-                             real h_Pot_Array_USG[][USG_NXT_F][USG_NXT_F][USG_NXT_F],
+                             real h_Pot_Array_USG[][ CUBE(USG_NXT_F) ],
                              const int NPatchGroup, const real dt, const real dh, const real Gamma, const bool StoreFlux,
-                             const bool XYZ, const LR_Limiter_t LR_Limiter, const real MinMod_Coeff, const real EP_Coeff,
-                             const WAF_Limiter_t WAF_Limiter, const real ELBDM_Eta, real ELBDM_Taylor3_Coeff,
-                             const bool ELBDM_Taylor3_Auto, const double Time, const OptGravityType_t GravityType,
+                             const bool XYZ, const LR_Limiter_t LR_Limiter, const real MinMod_Coeff,
+                             const real ELBDM_Eta, real ELBDM_Taylor3_Coeff, const bool ELBDM_Taylor3_Auto,
+                             const double Time, const OptGravityType_t GravityType,
                              const int GPU_NStream, const real MinDens, const real MinPres, const real DualEnergySwitch,
                              const bool NormPassive, const int NNorm,
                              const bool JeansMinPres, const real JeansMinPres_Coeff );

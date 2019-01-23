@@ -124,7 +124,7 @@ void Grackle_Prepare( const int lv, real h_Che_Array[], const int NPG, const int
 // thread-private variables
    int  idx_pg, PID, PID0, offset;  // idx_pg: array indices within a patch group
    real Dens, Px, Py, Pz, Etot, _Dens, Ek, sEint;
-   real (*fluid)[PS1][PS1][PS1]=NULL;;
+   real (*fluid)[PS1][PS1][PS1]=NULL;
 
    real *Ptr_Dens=NULL, *Ptr_sEint=NULL, *Ptr_Ek=NULL, *Ptr_e=NULL, *Ptr_HI=NULL, *Ptr_HII=NULL;
    real *Ptr_HeI=NULL, *Ptr_HeII=NULL, *Ptr_HeIII=NULL, *Ptr_HM=NULL, *Ptr_H2I=NULL, *Ptr_H2II=NULL;
@@ -173,7 +173,7 @@ void Grackle_Prepare( const int lv, real h_Che_Array[], const int NPG, const int
 #           ifdef DUAL_ENERGY
 
 #           if   ( DUAL_ENERGY == DE_ENPY )
-            sEint = CPU_DensEntropy2Pres( Dens, *(fluid[ENPY][0][0]+idx_p), Gamma_m1, CheckMinPres_No, NULL_REAL )
+            sEint = Hydro_DensEntropy2Pres( Dens, *(fluid[ENPY][0][0]+idx_p), Gamma_m1, CheckMinPres_No, NULL_REAL )
                     *_Dens*_Gamma_m1;
 #           elif ( DUAL_ENERGY == DE_EINT )
 #           error : DE_EINT is NOT supported yet !!

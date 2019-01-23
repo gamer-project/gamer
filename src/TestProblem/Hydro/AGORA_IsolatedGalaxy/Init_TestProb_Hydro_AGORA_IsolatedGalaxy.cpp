@@ -227,8 +227,8 @@ void SetParameter()
    const bool CheckMinPres_Yes = true;
    AGORA_DiskGasDens0 = AGORA_DiskTotalMass*AGORA_DiskGasMassFrac / ( 4.0*M_PI*SQR(AGORA_DiskScaleLength)*AGORA_DiskScaleHeight );
    AGORA_HaloGasDens  = AGORA_HaloGasNumDensH*Const_mH/UNIT_M;
-   AGORA_HaloGasPres  = CPU_Temperature2Pressure( AGORA_HaloGasDens, AGORA_HaloGasTemp, MOLECULAR_WEIGHT, Const_mH/UNIT_M,
-                                                  CheckMinPres_Yes, MIN_PRES );
+   AGORA_HaloGasPres  = Hydro_Temperature2Pressure( AGORA_HaloGasDens, AGORA_HaloGasTemp, MOLECULAR_WEIGHT, Const_mH/UNIT_M,
+                                                    CheckMinPres_Yes, MIN_PRES );
 
 
 // (3) reset other general-purpose parameters
@@ -318,8 +318,8 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 // --> we don't want to use the sub-sampling for that purpose since it will break the initial uniform temperature
 // DiskGasDens = AGORA_DiskGasDens0 * exp( -r/AGORA_DiskScaleLength ) * exp( -h/AGORA_DiskScaleHeight );
    DiskGasDens = GaussianQuadratureIntegrate( dx, dy, dz, amr->dh[lv] );
-   DiskGasPres = CPU_Temperature2Pressure( DiskGasDens, AGORA_DiskGasTemp, MOLECULAR_WEIGHT, Const_mH/UNIT_M,
-                                           CheckMinPres_Yes, MIN_PRES );
+   DiskGasPres = Hydro_Temperature2Pressure( DiskGasDens, AGORA_DiskGasTemp, MOLECULAR_WEIGHT, Const_mH/UNIT_M,
+                                             CheckMinPres_Yes, MIN_PRES );
 
 // disk component
    if ( DiskGasPres > AGORA_HaloGasPres )
