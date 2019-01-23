@@ -16,7 +16,7 @@ Procedure for outputting new variables:
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Output_DumpData_Total (FormatVersion = 2200)
+// Function    :  Output_DumpData_Total (FormatVersion = 2203)
 // Description :  Output all simulation data in the binary form, which can be used as a restart file
 //
 // Note        :  1. This output format is deprecated and is mainly used for debugging only
@@ -33,6 +33,9 @@ Procedure for outputting new variables:
 //                                      particle attributes
 //                                      --> imcompatible with version 2131 for the data with user-defined particle
 //                                          attributes as the order of their indices may be different
+//                2201 : 2018/12/12 --> always set EP_COEFF=NULL_REAL since this variable no longer exists
+//                2202 : 2018/12/15 --> set WAF-related variables to arbitrary values since they no longer exist
+//                2203 : 2018/12/27 --> replace GRA_BLOCK_SIZE_Z by GRA_BLOCK_SIZE
 //-------------------------------------------------------------------------------------------------------
 void Output_DumpData_Total( const char *FileName )
 {
@@ -171,7 +174,7 @@ void Output_DumpData_Total( const char *FileName )
 
 //    a. output the information of data format
 //    =================================================================================================
-      const long FormatVersion = 2200;
+      const long FormatVersion = 2203;
       const long CheckCode     = 123456789;
 
       fseek( File, HeaderOffset_Format, SEEK_SET );
@@ -445,11 +448,7 @@ void Output_DumpData_Total( const char *FileName )
       const bool   hll_include_all_waves = false;
 #     endif
 
-#     ifdef WAF_DISSIPATE
-      const bool   waf_dissipate         = true;
-#     else
-      const bool   waf_dissipate         = false;
-#     endif
+      const bool   waf_dissipate_uesless = NULL_BOOL;    // this variable no longer exists
 
 #     ifdef MAX_ERROR
       const double max_error             = MAX_ERROR;
@@ -478,10 +477,10 @@ void Output_DumpData_Total( const char *FileName )
       const int   pot_block_size_z       = NULL_INT;
 #     endif
 
-#     ifdef GRA_BLOCK_SIZE_Z
-      const int   gra_block_size_z       = GRA_BLOCK_SIZE_Z;
+#     ifdef GRA_BLOCK_SIZE
+      const int   gra_block_size         = GRA_BLOCK_SIZE;
 #     else
-      const int   gra_block_size_z       = NULL_INT;
+      const int   gra_block_size         = NULL_INT;
 #     endif
 
 #     ifdef PARTICLE
@@ -503,14 +502,14 @@ void Output_DumpData_Total( const char *FileName )
       fwrite( &check_intermediate,        sizeof(int),                     1,             File );
       fwrite( &hll_no_ref_state,          sizeof(bool),                    1,             File );
       fwrite( &hll_include_all_waves,     sizeof(bool),                    1,             File );
-      fwrite( &waf_dissipate,             sizeof(bool),                    1,             File );
+      fwrite( &waf_dissipate_uesless,     sizeof(bool),                    1,             File );
       fwrite( &max_error,                 sizeof(double),                  1,             File );
       fwrite( &flu_block_size_x,          sizeof(int),                     1,             File );
       fwrite( &flu_block_size_y,          sizeof(int),                     1,             File );
       fwrite( &use_psolver_10to14,        sizeof(bool),                    1,             File );
       fwrite( &pot_block_size_x,          sizeof(int),                     1,             File );
       fwrite( &pot_block_size_z,          sizeof(int),                     1,             File );
-      fwrite( &gra_block_size_z,          sizeof(int),                     1,             File );
+      fwrite( &gra_block_size,            sizeof(int),                     1,             File );
       fwrite( &par_natt_stored,           sizeof(int),                     1,             File );
       fwrite( &par_natt_user,             sizeof(int),                     1,             File );
 
@@ -568,9 +567,11 @@ void Output_DumpData_Total( const char *FileName )
       const double lb_wli_max                = NULL_REAL;
 #     endif
 
+      const double EP_COEFF_useless          = NULL_REAL;   // this variable no longer exists
+      const int    opt__waf_limiter_useless  = NULL_INT;    // this variable no longer exists
+
 #     if ( MODEL == HYDRO )
       const int    opt__lr_limiter           = (int)OPT__LR_LIMITER;
-      const int    opt__waf_limiter          = (int)OPT__WAF_LIMITER;
 
 //    convert OPT__1ST_FLUX_CORR to bool to be consistent with the old format where OPT__1ST_FLUX_CORR is bool instead of int
       const bool   opt__1st_flux_corr        = (bool)OPT__1ST_FLUX_CORR;
@@ -583,9 +584,7 @@ void Output_DumpData_Total( const char *FileName )
       const double GAMMA                     = NULL_REAL;
       const double MOLECULAR_WEIGHT          = NULL_REAL;
       const double MINMOD_COEFF              = NULL_REAL;
-      const double EP_COEFF                  = NULL_REAL;
       const int    opt__lr_limiter           = NULL_INT;
-      const int    opt__waf_limiter          = NULL_INT;
       const bool   opt__1st_flux_corr        = NULL_BOOL;
       const int    opt__1st_flux_corr_scheme = NULL_INT;
 #     endif
@@ -631,9 +630,9 @@ void Output_DumpData_Total( const char *FileName )
       fwrite( &lb_wli_max,                sizeof(double),                  1,             File );
       fwrite( &GAMMA,                     sizeof(double),                  1,             File );
       fwrite( &MINMOD_COEFF,              sizeof(double),                  1,             File );
-      fwrite( &EP_COEFF,                  sizeof(double),                  1,             File );
+      fwrite( &EP_COEFF_useless,          sizeof(double),                  1,             File );
       fwrite( &opt__lr_limiter,           sizeof(int),                     1,             File );
-      fwrite( &opt__waf_limiter,          sizeof(int),                     1,             File );
+      fwrite( &opt__waf_limiter_useless,  sizeof(int),                     1,             File );
       fwrite( &ELBDM_MASS,                sizeof(double),                  1,             File );
       fwrite( &ELBDM_PLANCK_CONST,        sizeof(double),                  1,             File );
       fwrite( &FLU_GPU_NPGROUP,           sizeof(int),                     1,             File );

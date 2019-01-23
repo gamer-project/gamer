@@ -1,7 +1,7 @@
 #include "GAMER.h"
 #include "TestProb.h"
 
-static double RandomNumber( struct drand48_data *Buf, const double Min, const double Max );
+static double RandomNumber(RandomNumber_t *RNG, const double Min, const double Max );
 
 
 
@@ -19,7 +19,7 @@ static double KH_Rho2;              // mass density in the lower region
        int    KH_RefineShearMaxLv;  // refine the regions around the shear plane to this level
        int    KH_PeriodicZFactor;   // decompose the simulation domain further into N periodic subdomains along the z axis
 
-static struct drand48_data drand_buf;
+static RandomNumber_t *RNG = NULL;
 // =======================================================================================
 
 // problem-specific function prototypes
@@ -122,9 +122,23 @@ void SetParameter()
 
    delete ReadPara;
 
-// set the random seed of each MPI rank
-   srand48_r( KH_RSeed+MPI_Rank, &drand_buf );
+// get the number of OpenMP threads
+   int NT;
+#  ifdef OPENMP
+#  pragma omp parallel
+#  pragma omp master
+   {  NT = omp_get_num_threads();  }
+#  else
+   {  NT = 1;                      }
+#  endif
 
+// allocate RNG
+   RNG = new RandomNumber_t( NT );
+
+// set the random seed of each MPI rank
+   for (int t=0; t<NT; t++) {
+      RNG->SetSeed(t, KH_RSeed+MPI_Rank*1000+t);
+   }
 
 // (2) set the problem-specific derived parameters
 
@@ -202,18 +216,18 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
    if ( z_periodic >= z_shear )
    {
       fluid[DENS] = KH_Rho1;
-      fluid[MOMX] = KH_Rho1*( KH_Vx1 + RandomNumber(&drand_buf,-KH_RAmp,KH_RAmp) );
-      fluid[MOMY] = KH_Rho1*( KH_Vy1 + RandomNumber(&drand_buf,-KH_RAmp,KH_RAmp) );
-      fluid[MOMZ] = KH_Rho1*(    0.0 + RandomNumber(&drand_buf,-KH_RAmp,KH_RAmp) );
+      fluid[MOMX] = KH_Rho1*( KH_Vx1 + RandomNumber(RNG,-KH_RAmp,KH_RAmp) );
+      fluid[MOMY] = KH_Rho1*( KH_Vy1 + RandomNumber(RNG,-KH_RAmp,KH_RAmp) );
+      fluid[MOMZ] = KH_Rho1*(    0.0 + RandomNumber(RNG,-KH_RAmp,KH_RAmp) );
    }
 
 // region 2
    else
    {
       fluid[DENS] = KH_Rho2;
-      fluid[MOMX] = KH_Rho2*( KH_Vx2 + RandomNumber(&drand_buf,-KH_RAmp,KH_RAmp) );
-      fluid[MOMY] = KH_Rho2*( KH_Vy2 + RandomNumber(&drand_buf,-KH_RAmp,KH_RAmp) );
-      fluid[MOMZ] = KH_Rho2*(    0.0 + RandomNumber(&drand_buf,-KH_RAmp,KH_RAmp) );
+      fluid[MOMX] = KH_Rho2*( KH_Vx2 + RandomNumber(RNG,-KH_RAmp,KH_RAmp) );
+      fluid[MOMY] = KH_Rho2*( KH_Vy2 + RandomNumber(RNG,-KH_RAmp,KH_RAmp) );
+      fluid[MOMZ] = KH_Rho2*(    0.0 + RandomNumber(RNG,-KH_RAmp,KH_RAmp) );
    }
 
    fluid[ENGY] = KH_Pres/(GAMMA-1.0) + 0.5*( SQR(fluid[MOMX]) + SQR(fluid[MOMY]) + SQR(fluid[MOMZ]) ) / fluid[DENS];
@@ -227,26 +241,23 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 // Function    :  RandomNumber
 // Description :  Generate a single random number
 //
-// Note        :  1. Use drand48_r() instead of rand(). The latter (i) is not thread-safe and (ii) doesn't
-//                   seem to work well with MPI even with a single thread (the generated random numbers are
-//                   found to be irreproducible with MPI + AMR)
-//                2. Must call srand48_r() in advance to set the random seed
-//
-// Parameter   :  Buf : Buffer used by drand48_r() for generating a random number
+// Parameter   :  RNG : Random number generator
 //                Min : Lower limit of the random number
 //                Max : Upper limit of the random number
 //
 // Return      :  Random number
 //-------------------------------------------------------------------------------------------------------
-double RandomNumber( struct drand48_data *Buf, const double Min, const double Max )
+double RandomNumber(RandomNumber_t *RNG, const double Min, const double Max )
 {
 
-   double RVal;
+// thread-private variables
+#  ifdef OPENMP
+   const int TID = omp_get_thread_num();
+#  else
+   const int TID = 0;
+#  endif
 
-   drand48_r( Buf, &RVal );
-
-// drand48_r returns [0.0, 1.0)
-   return RVal*(Max-Min) + Min;
+   return RNG->GetValue( TID, Min, Max );
 
 } // FUNCTION : RandomNumber
 

@@ -4,6 +4,11 @@
 #include "CUPOT.h"
 #endif
 #include <sched.h>
+#ifdef __APPLE__
+#include <cpuid.h>
+#endif
+
+static int get_cpuid();
 
 
 
@@ -116,8 +121,6 @@ void Aux_TakeNote()
       fprintf( Note, "FLU_SCHEME                      MHM with Riemann prediction\n" );
 #     elif ( FLU_SCHEME == CTU )
       fprintf( Note, "FLU_SCHEME                      CTU\n" );
-#     elif ( FLU_SCHEME == WAF )
-      fprintf( Note, "FLU_SCHEME                      WAF\n" );
 #     elif ( FLU_SCHEME == NONE )
       fprintf( Note, "FLU_SCHEME                      NONE\n" );
 #     else
@@ -361,12 +364,6 @@ void Aux_TakeNote()
       fprintf( Note, "HLL_INCLUDE_ALL_WAVES           OFF\n" );
 #     endif
 
-#     ifdef WAF_DISSIPATE
-      fprintf( Note, "WAF_DISSIPATE                   ON\n" );
-#     else
-      fprintf( Note, "WAF_DISSIPATE                   OFF\n" );
-#     endif
-
 #     elif ( MODEL == MHD )
 #     warning : WAIT MHD !!!
 
@@ -439,6 +436,7 @@ void Aux_TakeNote()
 //    record the symbolic constants
       fprintf( Note, "Symbolic Constants\n" );
       fprintf( Note, "***********************************************************************************\n" );
+      fprintf( Note, "#define VERSION                 %s\n",      VERSION             );
       fprintf( Note, "#define NCOMP_FLUID             %d\n",      NCOMP_FLUID         );
       fprintf( Note, "#define NCOMP_PASSIVE           %d\n",      NCOMP_PASSIVE       );
       fprintf( Note, "#define FLU_NIN                 %d\n",      FLU_NIN             );
@@ -486,11 +484,11 @@ void Aux_TakeNote()
 #     elif ( POT_SCHEME == MG )
       fprintf( Note, "#define POT_BLOCK_SIZE_X        %d\n",      POT_BLOCK_SIZE_X    );
 #     endif
-      fprintf( Note, "#define GRA_BLOCK_SIZE_Z        %d\n",      GRA_BLOCK_SIZE_Z    );
+      fprintf( Note, "#define GRA_BLOCK_SIZE          %d\n",      GRA_BLOCK_SIZE      );
 #     endif // #ifdef GRAVITY
       fprintf( Note, "#define DT_FLU_BLOCK_SIZE       %d\n",      DT_FLU_BLOCK_SIZE   );
 #     ifdef GRAVITY
-      fprintf( Note, "#define DT_GRA_BLOCK_SIZE_ Z    %d\n",      DT_GRA_BLOCK_SIZE_Z );
+      fprintf( Note, "#define DT_GRA_BLOCK_SIZE       %d\n",      DT_GRA_BLOCK_SIZE   );
 #     endif
 #     endif // #ifdef GPU
 #     ifdef PARTICLE
@@ -782,19 +780,12 @@ void Aux_TakeNote()
       fprintf( Note, "GAMMA                           %13.7e\n",  GAMMA                   );
       fprintf( Note, "MOLECULAR_WEIGHT                %13.7e\n",  MOLECULAR_WEIGHT        );
       fprintf( Note, "MINMOD_COEFF                    %13.7e\n",  MINMOD_COEFF            );
-      fprintf( Note, "EP_COEFF                        %13.7e\n",  EP_COEFF                );
       fprintf( Note, "OPT__LR_LIMITER                 %s\n",      ( OPT__LR_LIMITER == VANLEER           ) ? "VANLEER"    :
                                                                   ( OPT__LR_LIMITER == GMINMOD           ) ? "GMINMOD"    :
                                                                   ( OPT__LR_LIMITER == ALBADA            ) ? "ALBADA"     :
                                                                   ( OPT__LR_LIMITER == VL_GMINMOD        ) ? "VL_GMINMOD" :
                                                                   ( OPT__LR_LIMITER == EXTPRE            ) ? "EXTPRE"     :
                                                                   ( OPT__LR_LIMITER == LR_LIMITER_NONE   ) ? "NONE"       :
-                                                                                                             "UNKNOWN" );
-      fprintf( Note, "OPT__WAF_LIMITER                %s\n",      ( OPT__WAF_LIMITER == WAF_SUPERBEE     ) ? "WAF_SUPERBEE":
-                                                                  ( OPT__WAF_LIMITER == WAF_VANLEER      ) ? "WAF_VANLEER" :
-                                                                  ( OPT__WAF_LIMITER == WAF_ALBADA       ) ? "WAF_ALBADA"  :
-                                                                  ( OPT__WAF_LIMITER == WAF_MINBEE       ) ? "WAF_MINBEE"  :
-                                                                  ( OPT__WAF_LIMITER == WAF_LIMITER_NONE ) ? "NONE"        :
                                                                                                              "UNKNOWN" );
       fprintf( Note, "OPT__1ST_FLUX_CORR              %s\n",      ( OPT__1ST_FLUX_CORR == FIRST_FLUX_CORR_3D   ) ? "3D"   :
                                                                   ( OPT__1ST_FLUX_CORR == FIRST_FLUX_CORR_3D1D ) ? "3D1D" :
@@ -1312,7 +1303,7 @@ void Aux_TakeNote()
    int *omp_core_id = new int [omp_nthread];
 
 #  pragma omp parallel
-   { omp_core_id[ omp_get_thread_num() ] = sched_getcpu(); }
+   { omp_core_id[ omp_get_thread_num() ] = get_cpuid(); }
 
    for (int YourTurn=0; YourTurn<MPI_NRank; YourTurn++)
    {
@@ -1347,3 +1338,34 @@ void Aux_TakeNote()
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "Aux_TakeNote ... done\n" );
 
 } // FUNCTION : Aux_TakeNote
+
+
+
+//-------------------------------------------------------------------------------------------------------
+// Function    :  get_cpuid
+// Description :  Get the CPU ID
+//
+// Note        :  Work on both macOS and Linux systems
+//-------------------------------------------------------------------------------------------------------
+int get_cpuid()
+{
+
+// See https://stackoverflow.com/questions/33745364/sched-getcpu-equivalent-for-os-x
+   int CPU;
+
+#  ifdef __APPLE__
+   uint32_t CPUInfo[4];
+   __cpuid_count(1, 0, CPUInfo[0], CPUInfo[1], CPUInfo[2], CPUInfo[3]);
+   if ((CPUInfo[3] & (1 << 9)) == 0) {
+      CPU = -1;  /* no APIC on chip */
+   } else {
+      CPU = (unsigned)CPUInfo[1] >> 24;
+   }
+   if (CPU < 0) CPU = 0;
+#  else
+   CPU = sched_getcpu();
+#  endif
+
+   return CPU;
+
+} // FUNCTION : get_cpuid
