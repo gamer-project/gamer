@@ -20,11 +20,11 @@
 #endif
 
 
-static void CPU_AdvanceX( real u[][ FLU_NXT*FLU_NXT*FLU_NXT ], real Flux_Array[][NFLUX_TOTAL][ PS2*PS2 ],
+static void CPU_AdvanceX( real u[][ CUBE(FLU_NXT) ], real Flux_Array[][NFLUX_TOTAL][ SQR(PS2) ],
                           const real dt, const real dh, const real Eta, const bool StoreFlux, const real Taylor3_Coeff,
                           const int j_gap, const int k_gap, const int Flux_XYZ );
-static void TransposeXY( real u[][ FLU_NXT*FLU_NXT*FLU_NXT ] );
-static void TransposeXZ( real u[][ FLU_NXT*FLU_NXT*FLU_NXT ] );
+static void TransposeXY( real u[][ CUBE(FLU_NXT) ] );
+static void TransposeXZ( real u[][ CUBE(FLU_NXT) ] );
 
 
 
@@ -57,9 +57,9 @@ static void TransposeXZ( real u[][ FLU_NXT*FLU_NXT*FLU_NXT ] );
 //                                     are broken ...
 //                MinDens        : Minimum allowed density
 //-------------------------------------------------------------------------------------------------------
-void CPU_ELBDMSolver( real Flu_Array_In [][FLU_NIN ][ FLU_NXT*FLU_NXT*FLU_NXT ],
-                      real Flu_Array_Out[][FLU_NOUT][ PS2*PS2*PS2 ],
-                      real Flux_Array[][9][NFLUX_TOTAL][ PS2*PS2 ],
+void CPU_ELBDMSolver( real Flu_Array_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
+                      real Flu_Array_Out[][FLU_NOUT][ CUBE(PS2) ],
+                      real Flux_Array[][9][NFLUX_TOTAL][ SQR(PS2) ],
                       const int NPatchGroup, const real dt, const real dh, const real Eta, const bool StoreFlux,
                       const real Taylor3_Coeff, const bool XYZ, const real MinDens )
 {
@@ -135,7 +135,7 @@ void CPU_ELBDMSolver( real Flu_Array_In [][FLU_NIN ][ FLU_NXT*FLU_NXT*FLU_NXT ],
       }
 
 //    evaluate the new density (and apply the minimum density check)
-      for (int t=0; t<PS2*PS2*PS2; t++)
+      for (int t=0; t<CUBE(PS2); t++)
       {
          Amp = SQR( Flu_Array_Out[P][1][t] ) + SQR( Flu_Array_Out[P][2][t] );
 
@@ -175,7 +175,7 @@ void CPU_ELBDMSolver( real Flu_Array_In [][FLU_NIN ][ FLU_NXT*FLU_NXT*FLU_NXT ],
 //                                 --> (0,3,6) <-> (x/y/z) fluxes
 //                                 --> useful only if CONSERVE_MASS is defined
 //-------------------------------------------------------------------------------------------------------
-void CPU_AdvanceX( real u[][ FLU_NXT*FLU_NXT*FLU_NXT ], real Flux_Array[][NFLUX_TOTAL][ PS2*PS2 ],
+void CPU_AdvanceX( real u[][ CUBE(FLU_NXT) ], real Flux_Array[][NFLUX_TOTAL][ SQR(PS2) ],
                    const real dt, const real dh, const real Eta, const bool StoreFlux, const real Taylor3_Coeff,
                    const int j_gap, const int k_gap, const int Flux_XYZ )
 {
@@ -311,10 +311,10 @@ void CPU_AdvanceX( real u[][ FLU_NXT*FLU_NXT*FLU_NXT ], real Flux_Array[][NFLUX_
 //
 // Parameter   :  u : Input wave function (density, real, imaginary)
 //-------------------------------------------------------------------------------------------------------
-void TransposeXY( real u[][ FLU_NXT*FLU_NXT*FLU_NXT ] )
+void TransposeXY( real u[][ CUBE(FLU_NXT) ] )
 {
 
-   real (*u_xy)[FLU_NXT*FLU_NXT] = new real [FLU_NIN][FLU_NXT*FLU_NXT];
+   real (*u_xy)[ SQR(FLU_NXT) ] = new real [FLU_NIN][ SQR(FLU_NXT) ];
    int Idx1, Idx2;
 
    for (int k=0; k<FLU_NXT; k++)
@@ -329,7 +329,7 @@ void TransposeXY( real u[][ FLU_NXT*FLU_NXT*FLU_NXT ] )
          u_xy[1][Idx2] = u[1][Idx1];
       }
 
-      for (int v=0; v<FLU_NIN; v++)    memcpy( &u[v][to1D(k,0,0)], u_xy[v], FLU_NXT*FLU_NXT*sizeof(real) );
+      for (int v=0; v<FLU_NIN; v++)    memcpy( &u[v][to1D(k,0,0)], u_xy[v], SQR(FLU_NXT)*sizeof(real) );
    }
 
    delete [] u_xy;
@@ -344,7 +344,7 @@ void TransposeXY( real u[][ FLU_NXT*FLU_NXT*FLU_NXT ] )
 //
 // Parameter   :  u : Input wave function (density, real, imaginary)
 //-------------------------------------------------------------------------------------------------------
-void TransposeXZ( real u[][ FLU_NXT*FLU_NXT*FLU_NXT ] )
+void TransposeXZ( real u[][ CUBE(FLU_NXT) ] )
 {
 
    real u_temp[FLU_NIN];

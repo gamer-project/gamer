@@ -60,15 +60,15 @@ void CUAPI_MemAllocate_Fluid( const int Flu_NPG, const int Pot_NPG, const int GP
 #  ifdef GRAVITY
    const int  Pot_NP            = 8*Pot_NPG;
 #  endif
-   const long Flu_MemSize_F_In  = sizeof(real  )*Flu_NPG*FLU_NIN *FLU_NXT*FLU_NXT*FLU_NXT;
-   const long Flu_MemSize_F_Out = sizeof(real  )*Flu_NPG*FLU_NOUT*PS2*PS2*PS2;
-   const long Flux_MemSize      = sizeof(real  )*Flu_NPG*9*NFLUX_TOTAL*PS2*PS2;
+   const long Flu_MemSize_F_In  = sizeof(real  )*Flu_NPG*FLU_NIN *CUBE(FLU_NXT);
+   const long Flu_MemSize_F_Out = sizeof(real  )*Flu_NPG*FLU_NOUT*CUBE(PS2);
+   const long Flux_MemSize      = sizeof(real  )*Flu_NPG*9*NFLUX_TOTAL*SQR(PS2);
 #  ifdef UNSPLIT_GRAVITY
-   const long Pot_MemSize_USG_F = sizeof(real  )*Flu_NPG*USG_NXT_F*USG_NXT_F*USG_NXT_F;
+   const long Pot_MemSize_USG_F = sizeof(real  )*Flu_NPG*CUBE(USG_NXT_F);
    const long Corner_MemSize    = sizeof(double)*Flu_NPG*3;
 #  endif
 #  ifdef DUAL_ENERGY
-   const long DE_MemSize_F_Out  = sizeof(char  )*Flu_NPG*PS2*PS2*PS2;
+   const long DE_MemSize_F_Out  = sizeof(char  )*Flu_NPG*CUBE(PS2);
 #  endif
 #  ifdef GRAVITY
    const long dt_MemSize_T      = sizeof(real  )*MAX( Flu_NP, Pot_NP ); // dt_Array_T is used for both DT_FLU_SOLVER and DT_GRA_SOLVER

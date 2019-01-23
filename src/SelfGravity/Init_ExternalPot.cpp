@@ -17,10 +17,9 @@ void (*Init_ExternalPot_Ptr)() = Init_ExternalPot;
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Init_ExternalPot
-// Description :  Set the array "ExtPot_AuxArray" used by the external potential routines
-//                "CUPOT_ExternalPot.cu / CPU_ExternalPot.cpp"
+// Description :  Set ExtPot_AuxArray[] used by the external potential routine ExternalPot()
 //
-// Note        :  1. Invoked by "Init_GAMER" using the function pointer "Init_ExternalPot_Ptr"
+// Note        :  1. Invoked by Init_GAMER() using the function pointer "Init_ExternalPot_Ptr"
 //                   --> The function pointer may be reset by various test problem initializers, in which case
 //                       this funtion will become useless
 //                2. Enabled by the runtime option "OPT__EXTERNAL_POT"
@@ -36,7 +35,7 @@ void Init_ExternalPot()
 //        ExtPot_AuxArray[1] = y ...
 //        ExtPot_AuxArray[2] = z ...
 //        ExtPot_AuxArray[3] = gravitational_constant*point_source_mass
-// --> to change the this default behavior, please edit "GPU_Poisson/CUPOT_ExternalPot.cu"
+// --> to change the this default behavior, please edit "CPU_Poisson/CPU_ExternalPot.cu"
 
    /*
    const double M  = 1.0;

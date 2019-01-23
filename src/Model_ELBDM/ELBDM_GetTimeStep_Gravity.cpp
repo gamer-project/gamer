@@ -117,7 +117,7 @@ real GetMaxPot( const int lv )
 #        else
          PotS   = (real)0.0;
 #        endif
-         PotE   = ( OPT__EXTERNAL_POT ) ? CPU_ExternalPot( x, y, z, Time[lv], ExtPot_AuxArray ) : (real)0.0;
+         PotE   = ( OPT__EXTERNAL_POT ) ? ExternalPot( x, y, z, Time[lv], ExtPot_AuxArray ) : (real)0.0;
 
          Pot    = FABS( PotG + PotS + PotE );  // remember to take the absolute value
          MaxPot = MAX( MaxPot, Pot );
