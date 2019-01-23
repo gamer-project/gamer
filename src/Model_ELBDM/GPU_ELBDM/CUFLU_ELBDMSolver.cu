@@ -37,9 +37,9 @@
 #endif // #ifdef LAPLACIAN_4TH ... else ...
 
 
-static __device__ void CUFLU_Advance( real g_Fluid_In [][FLU_NIN ][ FLU_NXT*FLU_NXT*FLU_NXT ],
-                                      real g_Fluid_Out[][FLU_NOUT][ PS2*PS2*PS2 ],
-                                      real g_Flux     [][9][NFLUX_TOTAL][ PS2*PS2 ],
+static __device__ void CUFLU_Advance( real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
+                                      real g_Fluid_Out[][FLU_NOUT][ CUBE(PS2) ],
+                                      real g_Flux     [][9][NFLUX_TOTAL][ SQR(PS2) ],
                                       const real dt, const real _dh, const real Eta, const bool StoreFlux,
                                       const real Taylor3_Coeff, const uint j_gap, const uint k_gap,
                                       real s_In[][FLU_BLOCK_SIZE_Y][FLU_NXT], real s_Half[][FLU_BLOCK_SIZE_Y][FLU_NXT],
@@ -77,9 +77,9 @@ static __device__ void CUFLU_Advance( real g_Fluid_In [][FLU_NIN ][ FLU_NXT*FLU_
 //                                     are broken ...
 //                MinDens        : Minimum allowed density
 //-------------------------------------------------------------------------------------------------------
-__global__ void CUFLU_ELBDMSolver( real g_Fluid_In [][FLU_NIN ][ FLU_NXT*FLU_NXT*FLU_NXT ],
-                                   real g_Fluid_Out[][FLU_NOUT][ PS2*PS2*PS2 ],
-                                   real g_Flux     [][9][NFLUX_TOTAL][ PS2*PS2 ],
+__global__ void CUFLU_ELBDMSolver( real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
+                                   real g_Fluid_Out[][FLU_NOUT][ CUBE(PS2) ],
+                                   real g_Flux     [][9][NFLUX_TOTAL][ SQR(PS2) ],
                                    const real dt, const real _dh, const real Eta, const bool StoreFlux,
                                    const real Taylor3_Coeff, const bool XYZ, const real MinDens )
 {
@@ -147,9 +147,9 @@ __global__ void CUFLU_ELBDMSolver( real g_Fluid_In [][FLU_NIN ][ FLU_NXT*FLU_NXT
 //                                 --> This parameter is also used to determine the place to store the output fluxes
 //                MinDens        : Minimum allowed density
 //-------------------------------------------------------------------------------------------------------
-__device__ void CUFLU_Advance( real g_Fluid_In [][FLU_NIN ][ FLU_NXT*FLU_NXT*FLU_NXT ],
-                               real g_Fluid_Out[][FLU_NOUT][ PS2*PS2*PS2 ],
-                               real g_Flux     [][9][NFLUX_TOTAL][ PS2*PS2 ],
+__device__ void CUFLU_Advance( real g_Fluid_In [][FLU_NIN ][ CUBE(FLU_NXT) ],
+                               real g_Fluid_Out[][FLU_NOUT][ CUBE(PS2) ],
+                               real g_Flux     [][9][NFLUX_TOTAL][ SQR(PS2) ],
                                const real dt, const real _dh, const real Eta, const bool StoreFlux, const real Taylor3_Coeff,
                                const uint j_gap, const uint k_gap, real s_In[][FLU_BLOCK_SIZE_Y][FLU_NXT],
                                real s_Half[][FLU_BLOCK_SIZE_Y][FLU_NXT], real s_Flux[][PS2+1], const bool FinalOut,

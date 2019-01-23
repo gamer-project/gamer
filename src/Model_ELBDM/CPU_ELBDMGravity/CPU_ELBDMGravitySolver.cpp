@@ -26,7 +26,7 @@
 //                dh             : cell size
 //                Lambda         : Quartic self-interaction coefficient in ELBDM
 //                ExtPot         : Add the external potential
-//                Time           : Physical time (may be used by CPU_ExternalPot)
+//                Time           : Physical time (may be used by ExternalPot())
 //                ExtPot_AuxArray: Auxiliary array for adding external potential
 //-----------------------------------------------------------------------------------------
 void CPU_ELBDMGravitySolver(       real Flu_Array[][GRA_NIN][PATCH_SIZE][PATCH_SIZE][PATCH_SIZE],
@@ -68,7 +68,7 @@ void CPU_ELBDMGravitySolver(       real Flu_Array[][GRA_NIN][PATCH_SIZE][PATCH_S
          x         = Corner_Array[P][0] + (double)(i*dh);
          y         = Corner_Array[P][1] + (double)(j*dh);
          z         = Corner_Array[P][2] + (double)(k*dh);
-         Pot      += CPU_ExternalPot( x, y, z, Time, ExtPot_AuxArray ); }
+         Pot      += ExternalPot( x, y, z, Time, ExtPot_AuxArray ); }
 
          Phase     = EtaDt * Pot;
          Cos_Phase = COS( Phase );

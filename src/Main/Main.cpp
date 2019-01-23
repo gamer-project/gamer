@@ -249,7 +249,7 @@ real (*d_Flu_Array_F_Out)[FLU_NOUT][ CUBE(PS2) ]                  = NULL;
 real (*d_Flux_Array)[9][NFLUX_TOTAL][ SQR(PS2) ]                  = NULL;
 double (*d_Corner_Array_F)[3]                                     = NULL;
 #ifdef DUAL_ENERGY
-char (*d_DE_Array_F_Out)[ PS2*PS2*PS2 ]                           = NULL;
+char (*d_DE_Array_F_Out)[ CUBE(PS2) ]                             = NULL;
 #endif
 #if ( MODEL == HYDRO )
 #if ( FLU_SCHEME == MHM  ||  FLU_SCHEME == MHM_RP  ||  FLU_SCHEME == CTU )

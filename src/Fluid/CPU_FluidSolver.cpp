@@ -63,9 +63,9 @@ void CPU_FluidSolver_CTU(
 #warning : WAIT MHD !!!
 
 #elif ( MODEL == ELBDM )
-void CPU_ELBDMSolver( real Flu_Array_In [][FLU_NIN    ][ FLU_NXT*FLU_NXT*FLU_NXT ],
-                      real Flu_Array_Out[][FLU_NOUT   ][ PS2*PS2*PS2 ],
-                      real Flux_Array[][9][NFLUX_TOTAL][ PS2*PS2 ],
+void CPU_ELBDMSolver( real Flu_Array_In [][FLU_NIN    ][ CUBE(FLU_NXT) ],
+                      real Flu_Array_Out[][FLU_NOUT   ][ CUBE(PS2) ],
+                      real Flux_Array[][9][NFLUX_TOTAL][ SQR(PS2) ],
                       const int NPatchGroup, const real dt, const real dh, const real Eta, const bool StoreFlux,
                       const real Taylor3_Coeff, const bool XYZ, const real MinDens );
 
