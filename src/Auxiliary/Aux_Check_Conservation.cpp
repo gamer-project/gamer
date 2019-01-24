@@ -5,6 +5,13 @@
 #endif
 
 
+// global variable to store the ELBDM center-of-mass velocity
+// --> declared in "Model_ELBDM/ELBDM_RemoveMotionCM.cpp"
+#if ( MODEL == ELBDM )
+extern double ELBDM_Vcm[3];
+#endif
+
+
 
 
 //-------------------------------------------------------------------------------------------------------
@@ -494,6 +501,23 @@ void Aux_Check_Conservation( const char *comment )
 
 #  if ( MODEL == ELBDM )
    delete [] Flu_ELBDM;
+#  endif
+
+
+// calculate the ELBDM center-of-mass velocity for ELBDM_RemoveMotionCM()
+#  if ( MODEL == ELBDM )
+   if ( ELBDM_REMOVE_MOTION_CM != ELBDM_REMOVE_MOTION_CM_NONE )
+   {
+//    momentum --> velocity
+      if ( MPI_Rank == 0 )
+      {
+         for (int d=0; d<3; d++)
+            ELBDM_Vcm[d] = Fluid_AllRank[d+1]/Fluid_AllRank[0];
+      }
+
+//    broadcast
+      MPI_Bcast( ELBDM_Vcm, 3, MPI_DOUBLE, 0, MPI_COMM_WORLD );
+   }
 #  endif
 
 } // FUNCTION : Aux_Check_Conservation

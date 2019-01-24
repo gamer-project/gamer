@@ -472,7 +472,7 @@ CUDA_FILE   += CUFLU_ELBDMSolver.cu
 
 CC_FILE     += CPU_ELBDMSolver.cpp  ELBDM_Init_ByFunction_AssignData.cpp \
                ELBDM_GetTimeStep_Fluid.cpp  ELBDM_Flag_EngyDensity.cpp  ELBDM_UnwrapPhase.cpp \
-               ELBDM_GetTimeStep_Phase.cpp  ELBDM_SetTaylor3Coeff.cpp
+               ELBDM_GetTimeStep_Phase.cpp  ELBDM_SetTaylor3Coeff.cpp  ELBDM_RemoveMotionCM.cpp
 
 vpath %.cu     Model_ELBDM/GPU_ELBDM
 vpath %.cpp    Model_ELBDM/CPU_ELBDM  Model_ELBDM
