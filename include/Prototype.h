@@ -414,6 +414,7 @@ bool   ELBDM_Flag_EngyDensity( const int i, const int j, const int k, const real
                                const real Imag_Array[], const double Angle_2pi, const double Eps );
 real   ELBDM_UnwrapPhase( const real Phase_Ref, const real Phase_Wrapped );
 real   ELBDM_SetTaylor3Coeff( const real dt, const real dh, const real Eta );
+void   ELBDM_RemoveMotionCM();
 
 
 #else
