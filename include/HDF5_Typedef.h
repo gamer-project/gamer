@@ -421,6 +421,7 @@ struct InputPara_t
 #  endif
    double ELBDM_Taylor3_Coeff;
    int    ELBDM_Taylor3_Auto;
+   int    ELBDM_RemoveMotionCM;
 #  endif
 
 // fluid solvers in both HYDRO/MHD/ELBDM

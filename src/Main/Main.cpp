@@ -106,6 +106,7 @@ double               ELBDM_MASS, ELBDM_PLANCK_CONST, ELBDM_ETA, MIN_DENS;
 #ifdef QUARTIC_SELF_INTERACTION
 double               ELBDM_LAMBDA;
 #endif
+ELBDMRemoveMotionCM_t ELBDM_REMOVE_MOTION_CM;
 
 #else
 #error : unsupported MODEL !!

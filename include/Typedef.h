@@ -141,7 +141,7 @@ const OptOutputPart_t
    OUTPUT_DIAG      = 7;
 
 
-// options in "Prepare_PatchData"
+// options in Prepare_PatchData()
 typedef int PrepUnit_t;
 const PrepUnit_t
    UNIT_PATCH      = 1,
@@ -154,7 +154,7 @@ const NSide_t
    NSIDE_26 = 26;
 
 
-// use the load-balance alternative function in "Buf_GetBufferData" and "Flag_Real"
+// use the load-balance alternative function in Buf_GetBufferData() and Flag_Real()
 typedef int UseLBFunc_t;
 const UseLBFunc_t
    USELB_NO  = 0,
@@ -168,7 +168,7 @@ const Check_t
    CHECK_ON  = 1;
 
 
-// target solver in "InvokeSolvers"
+// target solver in InvokeSolvers()
 // --> must start from 0 because of the current TIMING_SOLVER implementation
 // --> when adding new solvers, please modify the NSOLVER constant accordingly
 const int NSOLVER = 7;
@@ -191,7 +191,7 @@ const Solver_t
   ;
 
 
-// target mode in "Buf_GetBufferData and LB_GetBufferData"
+// target mode in Buf_GetBufferData() and LB_GetBufferData()
 typedef int GetBufMode_t;
 const GetBufMode_t
 #ifdef GRAVITY
@@ -221,7 +221,7 @@ const OptFluBC_t
    BC_FLU_USER       = 4;
 
 
-// the gravity boundary conditions
+// gravity boundary conditions
 typedef int OptPotBC_t;
 const OptPotBC_t
 #ifdef GRAVITY
@@ -275,7 +275,7 @@ const ParOutputDens_t
 #endif // #ifdef PARTICLE
 
 
-// the gravity types (this type needs to be defined for the Fluid solver even when GRAVITY is off)
+// gravity types (this type needs to be defined for the Fluid solver even when GRAVITY is off)
 typedef int OptGravityType_t;
 const OptGravityType_t
    GRAVITY_NONE     = 0,
@@ -327,7 +327,7 @@ const OptTimeStepLevel_t
    DT_LEVEL_FLEXIBLE  = 3;
 
 
-// AddField() option
+// AddField() options
 typedef int NormPassive_t;
 const NormPassive_t
    NORMALIZE_NO  = 0,
@@ -357,6 +357,16 @@ typedef int SF_CreateStarScheme_t;
 const SF_CreateStarScheme_t
    SF_CREATE_STAR_SCHEME_NONE  = 0,
    SF_CREATE_STAR_SCHEME_AGORA = 1;
+#endif
+
+
+// ELBDM_REMOVE_MOTION_CM options
+#if ( MODEL == ELBDM )
+typedef int ELBDMRemoveMotionCM_t;
+const ELBDMRemoveMotionCM_t
+   ELBDM_REMOVE_MOTION_CM_NONE       = 0,
+   ELBDM_REMOVE_MOTION_CM_INIT       = 1,
+   ELBDM_REMOVE_MOTION_CM_EVERY_STEP = 2;
 #endif
 
 
