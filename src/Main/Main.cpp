@@ -207,7 +207,7 @@ real (*h_FC_Flux)  [3][NCOMP_TOTAL][ CUBE(N_FC_FLUX)   ]          = NULL;
 #endif // FLU_SCHEME
 
 #ifdef GRAVITY
-// (3-2) gravity solver
+// (3-2) poisson and gravity solvers
 real (*h_Rho_Array_P    [2])[RHO_NXT][RHO_NXT][RHO_NXT]           = { NULL, NULL };
 real (*h_Pot_Array_P_In [2])[POT_NXT][POT_NXT][POT_NXT]           = { NULL, NULL };
 real (*h_Pot_Array_P_Out[2])[GRA_NXT][GRA_NXT][GRA_NXT]           = { NULL, NULL };
