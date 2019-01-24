@@ -69,7 +69,7 @@ Procedure for outputting new variables:
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2307)
+// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2308)
 // Description :  Output all simulation data in the HDF5 format, which can be used as a restart file
 //                or loaded by YT
 //
@@ -164,6 +164,7 @@ Procedure for outputting new variables:
 //                2305 : 2018/12/15 --> Remove variables related to the WAF scheme
 //                2306 : 2018/12/25 --> Replace DT_GRA_BLOCK_SIZE_Z by DT_GRA_BLOCK_SIZE
 //                2307 : 2018/12/27 --> Replace GRA_BLOCK_SIZE_Z by GRA_BLOCK_SIZE
+//                2308 : 2019/01/24 --> Add ELBDM_REMOVE_MOTION_CM
 //-------------------------------------------------------------------------------------------------------
 void Output_DumpData_Total_HDF5( const char *FileName )
 {
@@ -1228,7 +1229,7 @@ void FillIn_KeyInfo( KeyInfo_t &KeyInfo )
 
    const time_t CalTime   = time( NULL );    // calendar time
 
-   KeyInfo.FormatVersion  = 2307;
+   KeyInfo.FormatVersion  = 2308;
    KeyInfo.Model          = MODEL;
    KeyInfo.NLevel         = NLEVEL;
    KeyInfo.NCompFluid     = NCOMP_FLUID;
@@ -1828,6 +1829,7 @@ void FillIn_InputPara( InputPara_t &InputPara )
 #  endif
    InputPara.ELBDM_Taylor3_Coeff     = ELBDM_TAYLOR3_COEFF;
    InputPara.ELBDM_Taylor3_Auto      = ELBDM_TAYLOR3_AUTO;
+   InputPara.ELBDM_RemoveMotionCM    = ELBDM_REMOVE_MOTION_CM;
 #  endif
 
 // fluid solvers in both HYDRO/MHD/ELBDM
@@ -2506,6 +2508,7 @@ void GetCompound_InputPara( hid_t &H5_TypeID )
 #  endif
    H5Tinsert( H5_TypeID, "ELBDM_Taylor3_Coeff",     HOFFSET(InputPara_t,ELBDM_Taylor3_Coeff    ), H5T_NATIVE_DOUBLE  );
    H5Tinsert( H5_TypeID, "ELBDM_Taylor3_Auto",      HOFFSET(InputPara_t,ELBDM_Taylor3_Auto     ), H5T_NATIVE_INT     );
+   H5Tinsert( H5_TypeID, "ELBDM_RemoveMotionCM",    HOFFSET(InputPara_t,ELBDM_RemoveMotionCM   ), H5T_NATIVE_INT     );
 #  endif
 
 // fluid solvers in both HYDRO/MHD/ELBDM

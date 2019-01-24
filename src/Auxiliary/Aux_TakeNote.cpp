@@ -819,14 +819,15 @@ void Aux_TakeNote()
 #     endif
       }
       else
-      fprintf( Note, "ELBDM_MASS                      %13.7e\n",     ELBDM_MASS           );
-      fprintf( Note, "ELBDM_PLANCK_CONST              %13.7e\n",     ELBDM_PLANCK_CONST   );
-      fprintf( Note, "ELBDM_ETA                       %13.7e\n",     ELBDM_ETA            );
+      fprintf( Note, "ELBDM_MASS                      %13.7e\n",     ELBDM_MASS             );
+      fprintf( Note, "ELBDM_PLANCK_CONST              %13.7e\n",     ELBDM_PLANCK_CONST     );
+      fprintf( Note, "ELBDM_ETA                       %13.7e\n",     ELBDM_ETA              );
 #     ifdef QUARTIC_SELF_INTERACTION
-      fprintf( Note, "ELBDM_LAMBDA                    %13.7e\n",     ELBDM_LAMBDA         );
+      fprintf( Note, "ELBDM_LAMBDA                    %13.7e\n",     ELBDM_LAMBDA           );
 #     endif
-      fprintf( Note, "ELBDM_TAYLOR3_COEFF             %13.7e\n",     ELBDM_TAYLOR3_COEFF  );
-      fprintf( Note, "ELBDM_TAYLOR3_AUTO              %d\n",         ELBDM_TAYLOR3_AUTO   );
+      fprintf( Note, "ELBDM_TAYLOR3_COEFF             %13.7e\n",     ELBDM_TAYLOR3_COEFF    );
+      fprintf( Note, "ELBDM_TAYLOR3_AUTO              %d\n",         ELBDM_TAYLOR3_AUTO     );
+      fprintf( Note, "ELBDM_REMOVE_MOTION_CM          %d\n",         ELBDM_REMOVE_MOTION_CM );
 
 #     else
 #     error : ERROR : unsupported MODEL !!

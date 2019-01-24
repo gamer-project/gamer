@@ -113,6 +113,7 @@ extern double           ELBDM_TAYLOR3_COEFF, ELBDM_MASS, ELBDM_PLANCK_CONST, ELB
 #ifdef QUARTIC_SELF_INTERACTION
 extern double           ELBDM_LAMBDA;
 #endif
+extern ELBDMRemoveMotionCM_t ELBDM_REMOVE_MOTION_CM;
 
 #else
 #  error : ERROR : unsupported MODEL !!
