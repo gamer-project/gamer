@@ -20,7 +20,7 @@ double ELBDM_Vcm[3] = { NULL_REAL, NULL_REAL, NULL_REAL };
 //
 // Parameter   :  None
 //
-// Return      :  amr->fluid[]
+// Return      :  amr->fluid[REAL/IMAG]
 //-------------------------------------------------------------------------------------------------------
 void ELBDM_RemoveMotionCM()
 {
@@ -60,6 +60,9 @@ void ELBDM_RemoveMotionCM()
             fluid[IMAG][k][j][i] = -R*SIN(S) + I*COS(S);
          }}}
       } // for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
+
+//    update the data on MPI buffer patches
+      Buf_GetBufferData( lv, amr->FluSg[lv], NULL_INT, DATA_GENERAL, _REAL|_IMAG, Flu_ParaBuf, USELB_YES );
    } // for (int lv=0; lv<NLEVEL; lv++)
 
 
