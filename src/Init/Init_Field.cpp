@@ -242,6 +242,6 @@ void Init_Field_User()
 {
 
 // example
-// Idx_NewField = AddField( "NewFieldLabel" );
+// Idx_NewField = AddField( "NewFieldLabel", NORMALIZE_YES );
 
 } // FUNCTION : Init_Field_User
