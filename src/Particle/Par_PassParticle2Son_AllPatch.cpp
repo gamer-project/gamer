@@ -20,7 +20,9 @@ extern Timer_t *Timer_Par_MPI[NLEVEL][6];
 //                       by calling Par_LB_ExchangeParticleBetweenPatch(), and then pass
 //                       these particles to the real son patches in the same rank by calling
 //                       Par_PassParticle2Son() again
-//                2. It is invoked by EvolveLevel() after the velocity correction in KDK
+//                2. Invoked by
+//                   (1) EvolveLevel() after the velocity correction in KDK and
+//                   (2) Par_AddParticleAfterInit()
 //
 // Parameter   :  FaLv          : Father's refinement level
 //                TimingSendPar : Measure the elapsed time of Par_LB_SendParticleData(), which is

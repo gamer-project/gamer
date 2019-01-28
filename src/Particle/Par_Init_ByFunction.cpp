@@ -73,7 +73,7 @@ void Par_Init_ByFunction( const long NPar_ThisRank, const long NPar_AllRank,
    real *ParPos[3] = { ParPosX, ParPosY, ParPosZ };
    real *ParVel[3] = { ParVelX, ParVelY, ParVelZ };
 
-// exmaple : randomly initialize
+// example : randomly initialize
    /*
    const uint RSeed     = 2;                                         // random seed
    const real MassMin   = 1.0e-2;                                    // minimum value of particle mass

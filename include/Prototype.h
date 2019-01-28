@@ -506,6 +506,7 @@ void Prepare_PatchData_FreeParticleDensityArray( const int lv );
 void Par_PredictPos( const long NPar, const long *ParList, real *ParPosX, real *ParPosY, real *ParPosZ,
                      const double TargetTime );
 void Par_Init_Attribute();
+void Par_AddParticleAfterInit( const long NNewPar, real *NewParAtt[PAR_NATT_TOTAL] );
 FieldIdx_t AddParticleAttribute( char *InputLabel );
 FieldIdx_t GetParticleAttributeIndex( char *InputLabel, const Check_t Check );
 #ifdef LOAD_BALANCE
