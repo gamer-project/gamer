@@ -15,7 +15,7 @@ static void SendParticle2HomeRank( const int lv, const bool OldParOnly,
 //
 // Note        :  1. The target level must be fully occupied by patches
 //                   --> So either "lv=0" or "lv-1 is fully refined"
-//                2. Invoked by Init_UniformGrid(), Init_BaseLevel(), and Par_AddParticle()
+//                2. Invoked by Init_UniformGrid(), Init_BaseLevel(), and Par_AddParticleAfterInit()
 //                3. After calling this function, the amr->Par structure will be reconstructed and
 //                   all particles will be associated with their home patches on lv
 //
@@ -30,7 +30,7 @@ static void SendParticle2HomeRank( const int lv, const bool OldParOnly,
 //                             --> Must be deallocated manually after invoking this function
 //
 // Return      :  1. amr->Par
-//                2. NPar, ParListSize and ParList[] of all real patches on lv
+//                2. NPar, ParListSize, and ParList[] of all real patches on lv
 //-------------------------------------------------------------------------------------------------------
 void Par_FindHomePatch_UniformGrid( const int lv, const bool OldParOnly,
                                     const long NNewPar, real *NewParAtt[PAR_NATT_TOTAL] )
@@ -52,7 +52,7 @@ void Par_FindHomePatch_UniformGrid( const int lv, const bool OldParOnly,
 #  endif
 
 
-// record the number of existing particles before it is overwritten by SendParticle2HomeRank()
+// record the number of old particles before it is overwritten by SendParticle2HomeRank()
    const long NOldPar = ( OldParOnly ) ? 0 : amr->Par->NPar_AcPlusInac;
 
 
@@ -62,7 +62,7 @@ void Par_FindHomePatch_UniformGrid( const int lv, const bool OldParOnly,
 
 // 2. find the home patch
    const long  NewParID0 = NOldPar;
-   const long  NTarPar   = ( OldParOnly ) ? amr->Par->NPar_AcPlusInac : NNewPar;
+   const long  NTarPar   = amr->Par->NPar_AcPlusInac - NOldPar;
    const real *Pos[3]    = { amr->Par->PosX, amr->Par->PosY, amr->Par->PosZ };
    const int   NReal     = amr->NPatchComma[lv][1];
 
@@ -342,6 +342,9 @@ void SendParticle2HomeRank( const int lv, const bool OldParOnly,
       amr->Par->NPar_AcPlusInac    += (long)Recv_Count_Sum;
       amr->Par->NPar_Active        += (long)Recv_Count_Sum;
       amr->Par->ParListSize         = UpdatedParListSize;
+
+//    update the total number of active particles in all MPI ranks
+      MPI_Allreduce( &amr->Par->NPar_Active, &amr->Par->NPar_Active_AllRank, 1, MPI_LONG, MPI_SUM, MPI_COMM_WORLD );
    } // if ( OldParOnly ) ... else ...
 
 
