@@ -22,7 +22,7 @@
 //                RefineF2S_Send_NPatchTotal : Total number of real patches at FaLv for sending particles
 //                RefineF2S_Send_PIDList     : Patch indices at FaLv for sending particles
 //                RefineF2S_Send_LBIdxList   : Load-balance indices of the sons of patches in RefineF2S_Send_PIDList
-//                                             --> Used by Par_LB_MapBuffer2RealPatch to find the rank of these sons
+//                                             --> Used by Par_LB_MapBuffer2RealPatch() to find the rank of these sons
 //
 // Return      :  None
 //-------------------------------------------------------------------------------------------------------
