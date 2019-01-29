@@ -26,8 +26,8 @@
 //                Recv_NPatchTotal    : Total number of patches in Recv_PIDList
 //                Recv_PIDList        : Patch indices to receive particles
 //                Recv_NPatchEachRank : Number of patches to receive particles from each rank
-//                Timer               : Timer used by "Par_LB_SendParticleData"
-//                Timer_Comment       : String used by "Par_LB_SendParticleData"
+//                Timer               : Timer used by Par_LB_SendParticleData()
+//                Timer_Comment       : String used by Par_LB_SendParticleData()
 //
 // Return      :  New particles will be added to the particle repository of this rank and linked to the
 //                target recv patches
@@ -185,8 +185,8 @@ void Par_LB_ExchangeParticleBetweenPatch( const int lv,
    int  *SendBuf_NPatchEachRank   = Send_NPatchEachRank;
    int  *RecvBuf_NPatchEachRank   = Recv_NPatchEachRank;
    int  *RecvBuf_NParEachPatch    = NULL;    // will be allocated by Par_LB_SendParticleData and must be free'd later
-   real *RecvBuf_ParDataEachPatch = NULL;   // a pointer to the MPI recv buffer declared in LB_GetBufferData
-                                            // --> don't have to be free'd here
+   real *RecvBuf_ParDataEachPatch = NULL;    // a pointer to the MPI recv buffer declared in LB_GetBufferData
+                                             // --> don't have to be free'd here
 
    long *SendBuf_LBIdxEachRank    = NULL;    // useless and does not need to be allocated
    long *RecvBuf_LBIdxEachRank    = NULL;    // useless and will not be allocated by Par_LB_SendParticleData
