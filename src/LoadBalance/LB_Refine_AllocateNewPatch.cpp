@@ -973,9 +973,9 @@ int AllocateSonPatch( const int FaLv, const int *Cr, const int PScale, const int
 
 // 4. pass particles from father to son if they are in the same rank
 //    --> otherwise these particles will be transferred to the real son patches by calling
-//        Par_LB_Refine_SendParticle2Son() in LB_Refine()
+//        Par_PassParticle2Son_MultiPatch() in LB_Refine()
 #  ifdef PARTICLE
-   if ( FaPID >= 0  &&  FaPID < amr->NPatchComma[FaLv][1] )    Par_PassParticle2Son( FaLv, FaPID );
+   if ( FaPID >= 0  &&  FaPID < amr->NPatchComma[FaLv][1] )    Par_PassParticle2Son_SinglePatch( FaLv, FaPID );
 #  endif
 
 

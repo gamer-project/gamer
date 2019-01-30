@@ -16,8 +16,8 @@
 //                2. All Target patches (those in Send_PIDList[] and Recv_PIDList[]) must be patches at the same level "lv"
 //                3. Currently this function exchanges ALL particle attributes
 //                   --> But it can be generalized to work with arbitrary particle attributes
-//                4. This function is called by Par_PassParticle2Sibling(), Par_PassParticle2Son_AllPatch(),
-//                   Par_LB_Refine_SendParticle2Son(), and Par_LB_Refine_SendParticle2Father()
+//                4. This function is called by Par_PassParticle2Sibling(), Par_PassParticle2Son_MultiPatch(),
+//                   and Par_LB_Refine_SendParticle2Father()
 //
 // Parameter   :  lv                  : Target refinement level
 //                Send_NPatchTotal    : Total number of patches in Send_PIDList

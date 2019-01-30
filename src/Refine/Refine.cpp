@@ -619,7 +619,7 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
 
 //       (c1.4) pass particles from father to son
 #        ifdef PARTICLE
-         Par_PassParticle2Son( lv, PID );
+         Par_PassParticle2Son_SinglePatch( lv, PID );
 #        endif
 
       } // if ( Pedigree->flag  &&  Pedigree->son == -1 )
