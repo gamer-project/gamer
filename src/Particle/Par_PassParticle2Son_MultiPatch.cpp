@@ -63,9 +63,8 @@ void Par_PassParticle2Son_MultiPatch( const int FaLv, const ParPass2Son_t Mode, 
    const int SonLv = FaLv + 1;
 
 
-// nothing to do if there is no patch at FaLv+1 or there is no target patch at FaLv
-   if ( FaLv == TOP_LEVEL  ||  NPatchTotal[SonLv] == 0  ||  ( Mode == PAR_PASS2SON_GENERAL && NFaPatch == 0 )  )
-      return;
+// nothing to do if there is no patch at FaLv+1
+   if ( FaLv == TOP_LEVEL  ||  NPatchTotal[SonLv] == 0 )    return;
 
 
 #  ifdef DEBUG_PARTICLE
