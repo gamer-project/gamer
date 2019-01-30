@@ -33,7 +33,7 @@ void Par_AddParticleAfterInit( const long NNewPar, real *NewParAtt[PAR_NATT_TOTA
    Par_FindHomePatch_UniformGrid( 0, OldParOnly_No, NNewPar, NewParAtt );
 
 // send particles to their home leaf patches
-   for (int lv=0; lv<TOP_LEVEL; lv++)  Par_PassParticle2Son_AllPatch( lv, TimingSendPar_No );
+// for (int lv=0; lv<TOP_LEVEL; lv++)  Par_PassParticle2Son_AllPatch( lv, TimingSendPar_No );
 
 } // FUNCTION : Par_AddParticleAfterInit
 

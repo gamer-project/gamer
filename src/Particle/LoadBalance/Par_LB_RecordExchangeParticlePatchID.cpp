@@ -40,7 +40,7 @@ extern void SetTargetSibPID0( const int lv, const int PID0, int SibPID0_List[] )
 //
 //                3. F2S : send particles from fathers (at MainLv-1) to sons (at MainLv)
 //                   3-1. Exact procedure is to send particles from real father patches at MainLv-1 to the
-//                        corresponding father-buffer patches first, and then call Par_PassParticle2Son() to transfer
+//                        corresponding father-buffer patches first, and then call Par_PassParticle2Son_MultiPatch() to transfer
 //                        particles from father-buffer patches to their real son patches at MainLv in the same rank
 //                        --> This function only records the real father patches at MainLv-1 (those to send particles)
 //                            and the corresponding father-buffer patches at MainLv-1 (those to receive particles)
