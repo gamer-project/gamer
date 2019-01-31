@@ -32,8 +32,19 @@ void Par_AddParticleAfterInit( const long NNewPar, real *NewParAtt[PAR_NATT_TOTA
 // add new particles to the base level first
    Par_FindHomePatch_UniformGrid( 0, OldParOnly_No, NNewPar, NewParAtt );
 
+
 // send particles to their home leaf patches
-// for (int lv=0; lv<TOP_LEVEL; lv++)  Par_PassParticle2Son_AllPatch( lv, TimingSendPar_No );
+   for (int FaLv=0; FaLv<TOP_LEVEL; FaLv++)
+   {
+      const int NFaPatch = amr->NPatchComma[FaLv][1];
+
+      int *FaPIDList = new int [NFaPatch];
+      for (int t=0; t<NFaPatch; t++)   FaPIDList[t] = t;
+
+      Par_PassParticle2Son_MultiPatch( FaLv, PAR_PASS2SON_GENERAL, TimingSendPar_No, NFaPatch, FaPIDList );
+
+      delete [] FaPIDList;
+   }
 
 } // FUNCTION : Par_AddParticleAfterInit
 
