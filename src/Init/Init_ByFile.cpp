@@ -276,9 +276,9 @@ void Init_ByFile()
 
 #     ifdef LOAD_BALANCE
       LB_GetBufferData( lv, amr->FluSg[lv], NULL_INT, DATA_RESTRICT, _TOTAL, NULL_INT );
-#     endif
 
       Buf_GetBufferData( lv, amr->FluSg[lv], NULL_INT, DATA_AFTER_FIXUP, _TOTAL, Flu_ParaBuf, USELB_YES );
+#     endif
 
       if ( MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );
    }
