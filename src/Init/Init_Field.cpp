@@ -1,7 +1,7 @@
 #include "GAMER.h"
 
 // declare as static so that other functions cannot invoke it directly and must use the function pointer
-void Init_Field_User();
+static void Init_Field_User();
 
 // this function pointer may be overwritten by various test problem initializers
 void (*Init_Field_User_Ptr)() = Init_Field_User;

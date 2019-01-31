@@ -1,5 +1,6 @@
 #include "GAMER.h"
 
+extern void (*Init_User_Ptr)();
 #ifdef PARTICLE
 extern void (*Par_Init_ByFunction_Ptr)( const long NPar_ThisRank, const long NPar_AllRank,
                                         real *ParMass, real *ParPosX, real *ParPosY, real *ParPosZ,
@@ -182,6 +183,10 @@ void Init_GAMER( int *argc, char ***argv )
 
       default : Aux_Error( ERROR_INFO, "incorrect parameter %s = %d !!\n", "OPT__INIT", OPT__INIT );
    }
+
+
+// user-defined initialization
+   if ( Init_User_Ptr != NULL )  Init_User_Ptr();
 
 
 // record the initial weighted load-imbalance factor
