@@ -27,7 +27,13 @@ void ELBDM_RemoveMotionCM()
 
 // check
    for (int d=0; d<3; d++)
-      if ( ELBDM_Vcm[d] == NULL_REAL )    Aux_Error( ERROR_INFO, "ELBDM_Vcm[%d] == NULL_REAL !!\n", d );
+   {
+      if ( ELBDM_Vcm[d] == NULL_REAL )
+         Aux_Error( ERROR_INFO, "ELBDM_Vcm[%d] == NULL_REAL !!\n", d );
+
+      if ( ! Aux_IsFinite(ELBDM_Vcm[d]) )
+         Aux_Error( ERROR_INFO, "ELBDM_Vcm[%d] = %14.7e !!\n", d, ELBDM_Vcm[d] );
+   }
 
 
 // remove the CM velocity
