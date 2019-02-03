@@ -257,7 +257,7 @@ void Par_PassParticle2Sibling( const int lv, const bool TimingSendPar )
 //       5. for patches with sons, pass particles to their sons (coarse --> fine)
 //       *** we now do this after the correction step of KDK so that particles just travel from lv to lv+1
 //       *** can have their velocity corrected at lv first (because we don't have potential at lv+1 at this point)
-//       if ( amr->patch[0][lv][PID]->son != -1 )  Par_PassParticle2Son( lv, PID );
+//       if ( amr->patch[0][lv][PID]->son != -1 )  Par_PassParticle2Son_SinglePatch( lv, PID );
       } // for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
 
 
@@ -323,7 +323,7 @@ void Par_PassParticle2Sibling( const int lv, const bool TimingSendPar )
 // 7. send particles from buffer patches to the corresponding real patches
 //    --> note that after calling the following rourtines, some particles may reside in **non-leaf** real patches
 //    --> they will be sent again to leaf real patches after the velocity correction operation
-//        --> by Par_PassParticle2Son_AllPatch()
+//        --> by Par_PassParticle2Son_MultiPatch()
 #  ifdef LOAD_BALANCE
 
    Timer_t *Timer[2] = { NULL, NULL };

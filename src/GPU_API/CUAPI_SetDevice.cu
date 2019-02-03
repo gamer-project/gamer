@@ -192,15 +192,6 @@ void CUAPI_SetDevice( const int Mode )
 // (6) some options are not supported
 // (6-1) fluid solver
 #  if ( MODEL == HYDRO )
-#  if ( FLU_SCHEME == WAF  &&  defined FLOAT8 )
-   if ( RuntimeVersion < 3020 )
-      Aux_Error( ERROR_INFO, "double-precision WAF scheme is not supported in CUDA version < 3.2 !!\n" );
-#  endif
-
-#  if ( FLU_SCHEME == WAF  &&  RSOLVER == EXACT )
-#     error : ERROR : Currently WAF scheme does not support the exact Riemann solver !!;
-#  endif
-
 #  if (  defined FLOAT8  &&  CHECK_INTERMEDIATE == EXACT  && \
          ( FLU_SCHEME == MHM || FLU_SCHEME == MHM_RP || FLU_SCHEME == CTU )  )
       if ( RuntimeVersion < 3020 )

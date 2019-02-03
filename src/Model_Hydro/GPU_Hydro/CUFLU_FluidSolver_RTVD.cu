@@ -15,9 +15,9 @@
 #define to1D1(z,y,x) ( __umul24(z, FLU_NXT*FLU_NXT) + __umul24(y, FLU_NXT) + x )
 #define to1D2(z,y,x) ( __umul24(z-FLU_GHOST_SIZE, PS2*PS2) + __umul24(y-FLU_GHOST_SIZE, PS2) + x-FLU_GHOST_SIZE )
 
-static __device__ void CUFLU_Advance( real g_Fluid_In [][5][ FLU_NXT*FLU_NXT*FLU_NXT ],
-                                      real g_Fluid_Out[][5][ PS2*PS2*PS2 ],
-                                      real g_Flux[][9][5][ PS2*PS2 ],
+static __device__ void CUFLU_Advance( real g_Fluid_In [][5][ CUBE(FLU_NXT) ],
+                                      real g_Fluid_Out[][5][ CUBE(PS2) ],
+                                      real g_Flux[][9][5][ SQR(PS2) ],
                                       const real dt, const real _dh, const real Gamma, const bool StoreFlux,
                                       const int j_gap, const int k_gap, real s_cu[][5][FLU_NXT],
                                       real s_cw[][5][FLU_NXT], real s_flux[][5][FLU_NXT],
@@ -48,13 +48,14 @@ static __device__ void CUFLU_Advance( real g_Fluid_In [][5][ FLU_NXT*FLU_NXT*FLU
 //                               false : z->y->x (backward sweep)
 //                MinDens/Pres : Minimum allowed density and pressure
 //-------------------------------------------------------------------------------------------------------
-__global__ void CUFLU_FluidSolver_RTVD( real g_Fluid_In []   [NCOMP_TOTAL][ FLU_NXT*FLU_NXT*FLU_NXT ],
-                                        real g_Fluid_Out[]   [NCOMP_TOTAL][ PS2*PS2*PS2 ],
-                                        real g_Flux     [][9][NCOMP_TOTAL][ PS2*PS2 ],
-                                        const double g_Corner[][3],
-                                        const real g_Pot_USG[][ USG_NXT_F*USG_NXT_F*USG_NXT_F ],
-                                        const real dt, const real _dh, const real Gamma, const bool StoreFlux,
-                                        const bool XYZ, const real MinDens, const real MinPres )
+__global__ void CUFLU_FluidSolver_RTVD(
+   real g_Fluid_In [][NCOMP_TOTAL][ CUBE(FLU_NXT) ],
+   real g_Fluid_Out[][NCOMP_TOTAL][ CUBE(PS2) ],
+   real g_Flux     [][9][NCOMP_TOTAL][ SQR(PS2) ],
+   const double g_Corner[][3],
+   const real g_Pot_USG[][ CUBE(USG_NXT_F) ],
+   const real dt, const real _dh, const real Gamma, const bool StoreFlux,
+   const bool XYZ, const real MinDens, const real MinPres )
 {
 
    __shared__ real s_cu    [FLU_BLOCK_SIZE_Y][5][FLU_NXT];
@@ -117,9 +118,9 @@ __global__ void CUFLU_FluidSolver_RTVD( real g_Fluid_In []   [NCOMP_TOTAL][ FLU_
 //                               --> This parameter is also used to determine the place to store the output fluxes
 //                MinDens/Pres : Minimum allowed density and pressure
 //-------------------------------------------------------------------------------------------------------
-__device__ void CUFLU_Advance( real g_Fluid_In [][5][ FLU_NXT*FLU_NXT*FLU_NXT ],
-                               real g_Fluid_Out[][5][ PS2*PS2*PS2 ],
-                               real g_Flux[][9][5][ PS2*PS2 ],
+__device__ void CUFLU_Advance( real g_Fluid_In [][5][ CUBE(FLU_NXT) ],
+                               real g_Fluid_Out[][5][ CUBE(PS2) ],
+                               real g_Flux[][9][5][ SQR(PS2) ],
                                const real dt, const real _dh, const real Gamma, const bool StoreFlux,
                                const int j_gap, const int k_gap, real s_cu[][5][FLU_NXT],
                                real s_cw[][5][FLU_NXT], real s_flux[][5][FLU_NXT], real s_RLflux[][5][FLU_NXT],
@@ -148,7 +149,6 @@ __device__ void CUFLU_Advance( real g_Fluid_In [][5][ FLU_NXT*FLU_NXT*FLU_NXT ],
 
    real   _rho, vx, p, c, Temp, Fluid[5], Fluid_half[5];
    int    ID1, ID2, ID3, Comp[5], delta_k;
-   FluVar ConVar;
 
 
 // set the order of component for update in different directions
@@ -184,14 +184,14 @@ __device__ void CUFLU_Advance( real g_Fluid_In [][5][ FLU_NXT*FLU_NXT*FLU_NXT ],
       _rho = (real)1.0 / Fluid[0];
       vx   = _rho * Fluid[1];
       p    = Gamma_m1*(  Fluid[4] - (real)0.5*_rho*( Fluid[1]*Fluid[1]+Fluid[2]*Fluid[2]+Fluid[3]*Fluid[3] )  );
-      p    = CUFLU_CheckMinPres( p, MinPres );
+      p    = Hydro_CheckMinPres( p, MinPres );
 
 #     ifdef CHECK_NEGATIVE_IN_FLUID
-      if ( CUFLU_CheckNegative(p) )
+      if ( Hydro_CheckNegative(p) )
          printf( "ERROR : negative pressure (%14.7e) at file <%s>, line <%d>, function <%s>\n",
                  p, __FILE__, __LINE__, __FUNCTION__ );
 
-      if ( CUFLU_CheckNegative(Fluid[0]) )
+      if ( Hydro_CheckNegative(Fluid[0]) )
          printf( "ERROR : negative density (%14.7e) at file <%s>, line <%d>, function <%s>\n",
                  Fluid[0], __FILE__, __LINE__, __FUNCTION__ );
 #     endif
@@ -230,15 +230,9 @@ __device__ void CUFLU_Advance( real g_Fluid_In [][5][ FLU_NXT*FLU_NXT*FLU_NXT ],
          for (int v=0; v<5; v++)    Fluid_half[v] = Fluid[v] - _dh*dt_half*( s_flux[ty][v][i] - s_flux[ty][v][im] ) ;
 
 //       enforce positive density and pressure
-         ConVar.Rho = Fluid_half[0];
-         ConVar.Px  = Fluid_half[1];
-         ConVar.Py  = Fluid_half[2];
-         ConVar.Pz  = Fluid_half[3];
-         ConVar.Egy = Fluid_half[4];
-
-         ConVar.Rho    = FMAX( ConVar.Rho, MinDens );
-         Fluid_half[0] = ConVar.Rho;
-         Fluid_half[4] = CUFLU_CheckMinPresInEngy( ConVar, Gamma_m1, _Gamma_m1, MinPres );
+         Fluid_half[0] = FMAX( Fluid_half[0], MinDens );
+         Fluid_half[4] = Hydro_CheckMinPresInEngy( Fluid_half[0], Fluid_half[1], Fluid_half[2], Fluid_half[3], Fluid_half[4],
+                                                   Gamma_m1, _Gamma_m1, MinPres );
       }
 
 
@@ -254,14 +248,14 @@ __device__ void CUFLU_Advance( real g_Fluid_In [][5][ FLU_NXT*FLU_NXT*FLU_NXT ],
          p    = Gamma_m1*(  Fluid_half[4]
                            - (real)0.5*_rho*( Fluid_half[1]*Fluid_half[1] + Fluid_half[2]*Fluid_half[2] +
                                               Fluid_half[3]*Fluid_half[3] )  );
-         p    = CUFLU_CheckMinPres( p, MinPres );
+         p    = Hydro_CheckMinPres( p, MinPres );
 
 #        ifdef CHECK_NEGATIVE_IN_FLUID
-         if ( CUFLU_CheckNegative(p) )
+         if ( Hydro_CheckNegative(p) )
             printf( "ERROR : negative pressure (%14.7e) at file <%s>, line <%d>, function <%s>\n",
                     p, __FILE__, __LINE__, __FUNCTION__ );
 
-         if ( CUFLU_CheckNegative(Fluid_half[0]) )
+         if ( Hydro_CheckNegative(Fluid_half[0]) )
             printf( "ERROR : negative density (%14.7e) at file <%s>, line <%d>, function <%s>\n",
                     Fluid_half[0], __FILE__, __LINE__, __FUNCTION__ );
 #        endif
@@ -343,24 +337,18 @@ __device__ void CUFLU_Advance( real g_Fluid_In [][5][ FLU_NXT*FLU_NXT*FLU_NXT ],
          for (int v=0; v<5; v++)    Fluid[v] -= _dh*dt*( s_flux[ty][v][i] - s_flux[ty][v][im] ) ;
 
 //       enforce positive density and pressure
-         ConVar.Rho = Fluid[0];
-         ConVar.Px  = Fluid[1];
-         ConVar.Py  = Fluid[2];
-         ConVar.Pz  = Fluid[3];
-         ConVar.Egy = Fluid[4];
-
-         ConVar.Rho = FMAX( ConVar.Rho, MinDens );
-         Fluid[0]   = ConVar.Rho;
-         Fluid[4]   = CUFLU_CheckMinPresInEngy( ConVar, Gamma_m1, _Gamma_m1, MinPres );
+         Fluid[0] = FMAX( Fluid[0], MinDens );
+         Fluid[4] = Hydro_CheckMinPresInEngy( Fluid[0], Fluid[1], Fluid[2], Fluid[3], Fluid[4],
+                                              Gamma_m1, _Gamma_m1, MinPres );
 
 
 //       check negative density and energy
 #        ifdef CHECK_NEGATIVE_IN_FLUID
-         if ( CUFLU_CheckNegative(Fluid[0]) )
+         if ( Hydro_CheckNegative(Fluid[0]) )
             printf( "ERROR : negative density (%14.7e) at file <%s>, line <%d>, function <%s>\n",
                     Fluid[0], __FILE__, __LINE__, __FUNCTION__ );
 
-         if ( CUFLU_CheckNegative(Fluid[4]) )
+         if ( Hydro_CheckNegative(Fluid[4]) )
             printf( "ERROR : negative energy (%14.7e) at file <%s>, line <%d>, function <%s>\n",
                     Fluid[4], __FILE__, __LINE__, __FUNCTION__ );
 #        endif

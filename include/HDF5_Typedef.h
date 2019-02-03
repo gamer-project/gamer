@@ -197,7 +197,7 @@ struct SymConst_t
    int    USG_NxtG;
 #  endif
 
-   int    Gra_BlockSize_z;
+   int    Gra_BlockSize;
    int    ExtPotNAuxMax;
    int    ExtAccNAuxMax;
 
@@ -235,7 +235,6 @@ struct SymConst_t
    int    CheckIntermediate;
    int    HLL_NoRefState;
    int    HLL_IncludeAllWaves;
-   int    WAF_Dissipate;
 
 #  ifdef N_FC_VAR
    int    N_FC_Var;
@@ -288,7 +287,7 @@ struct SymConst_t
    int    dt_Flu_BlockSize;
    int    dt_Flu_UseShuffle;
 #  ifdef GRAVITY
-   int    dt_Gra_BlockSize_z;
+   int    dt_Gra_BlockSize;
    int    dt_Gra_UseShuffle;
 #  endif
 
@@ -444,9 +443,7 @@ struct InputPara_t
    double Gamma;
    double MolecularWeight;
    double MinMod_Coeff;
-   double EP_Coeff;
    int    Opt__LR_Limiter;
-   int    Opt__WAF_Limiter;
    int    Opt__1stFluxCorr;
    int    Opt__1stFluxCorrScheme;
 #  endif
