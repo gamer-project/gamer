@@ -371,7 +371,7 @@ int main( int argc, char *argv[] )
    Aux_Check();
 
 #  if ( MODEL == ELBDM )
-   if (  ( ELBDM_REMOVE_MOTION_CM == ELBDM_REMOVE_MOTION_CM_INIT && OPT__INIT != INIT_BY_RESTART )  ||
+   if (  ( ELBDM_REMOVE_MOTION_CM == ELBDM_REMOVE_MOTION_CM_INIT && (OPT__INIT != INIT_BY_RESTART || OPT__RESTART_RESET) )  ||
            ELBDM_REMOVE_MOTION_CM == ELBDM_REMOVE_MOTION_CM_EVERY_STEP  )
       ELBDM_RemoveMotionCM();
 #  endif
