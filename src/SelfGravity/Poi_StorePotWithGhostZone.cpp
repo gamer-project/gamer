@@ -11,7 +11,7 @@
 //
 // Note        :  1. Called by Gra_AdvancedDt() after the base-level FFT solver, EvolveLevel() after grid
 //                   refinement, and Flu_CorrAfterAllSync() when OPT__CORR_AFTER_ALL_SYNC is enabled
-//                2. For potential at lv>0, pot_ext[] is filled by "Poi_Close" directly (except after grid
+//                2. For potential at lv>0, pot_ext[] is filled by Poi_Close() directly (except after grid
 //                   refinement), and thus NO need to call this function for that.
 //                3. After grid refinement, only newly-allocated patches need to set pot_ext[]
 //                   --> We set pot_ext[0][0][0] == POT_EXT_NEED_INIT for newly-allocated patches

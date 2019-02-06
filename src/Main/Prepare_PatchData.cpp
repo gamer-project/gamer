@@ -868,8 +868,8 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
 #                 else
                   const real EngyB = NULL_REAL;
 #                 endif
-                  Data1PG_CC_Ptr[Idx1] = CPU_GetPressure( Fluid[DENS], Fluid[MOMX], Fluid[MOMY], Fluid[MOMZ], Fluid[ENGY],
-                                                          Gamma_m1, (MinPres>=(real)0.0), MinPres, EngyB );
+                  Data1PG_CC_Ptr[Idx1] = Hydro_GetPressure( Fluid[DENS], Fluid[MOMX], Fluid[MOMY], Fluid[MOMZ], Fluid[ENGY],
+                                                            Gamma_m1, (MinPres>=(real)0.0), MinPres, EngyB );
 
                   if ( FluIntTime ) // temporal interpolation
                   {
@@ -882,8 +882,8 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
 #                    endif
                      Data1PG_CC_Ptr[Idx1] =
                         FluWeighting     *Data1PG_CC_Ptr[Idx1]
-                      + FluWeighting_IntT*CPU_GetPressure( Fluid[DENS], Fluid[MOMX], Fluid[MOMY], Fluid[MOMZ], Fluid[ENGY],
-                                                           Gamma_m1, (MinPres>=(real)0.0), MinPres, EngyB );
+                      + FluWeighting_IntT*Hydro_GetPressure( Fluid[DENS], Fluid[MOMX], Fluid[MOMY], Fluid[MOMZ], Fluid[ENGY],
+                                                             Gamma_m1, (MinPres>=(real)0.0), MinPres, EngyB );
                   }
 
                   Idx1 ++;
@@ -906,8 +906,8 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
 #                 else
                   const real EngyB = NULL_REAL;
 #                 endif
-                  Data1PG_CC_Ptr[Idx1] = CPU_GetTemperature( Fluid[DENS], Fluid[MOMX], Fluid[MOMY], Fluid[MOMZ], Fluid[ENGY],
-                                                             Gamma_m1, (MinPres>=(real)0.0), MinPres, EngyB );
+                  Data1PG_CC_Ptr[Idx1] = Hydro_GetTemperature( Fluid[DENS], Fluid[MOMX], Fluid[MOMY], Fluid[MOMZ], Fluid[ENGY],
+                                                               Gamma_m1, (MinPres>=(real)0.0), MinPres, EngyB );
 
                   if ( FluIntTime ) // temporal interpolation
                   {
@@ -920,8 +920,8 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
 #                    endif
                      Data1PG_CC_Ptr[Idx1] =
                         FluWeighting     *Data1PG_CC_Ptr[Idx1]
-                      + FluWeighting_IntT*CPU_GetTemperature( Fluid[DENS], Fluid[MOMX], Fluid[MOMY], Fluid[MOMZ], Fluid[ENGY],
-                                                              Gamma_m1, (MinPres>=(real)0.0), MinPres, EngyB );
+                      + FluWeighting_IntT*Hydro_GetTemperature( Fluid[DENS], Fluid[MOMX], Fluid[MOMY], Fluid[MOMZ], Fluid[ENGY],
+                                                                Gamma_m1, (MinPres>=(real)0.0), MinPres, EngyB );
                   }
 
                   Idx1 ++;
@@ -1154,8 +1154,8 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
 #                       else
                         const real EngyB = NULL_REAL;
 #                       endif
-                        Data1PG_CC_Ptr[Idx1] = CPU_GetPressure( Fluid[DENS], Fluid[MOMX], Fluid[MOMY], Fluid[MOMZ], Fluid[ENGY],
-                                                                Gamma_m1, (MinPres>=(real)0.0), MinPres, EngyB );
+                        Data1PG_CC_Ptr[Idx1] = Hydro_GetPressure( Fluid[DENS], Fluid[MOMX], Fluid[MOMY], Fluid[MOMZ], Fluid[ENGY],
+                                                                  Gamma_m1, (MinPres>=(real)0.0), MinPres, EngyB );
 
                         if ( FluIntTime ) // temporal interpolation
                         {
@@ -1168,8 +1168,8 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
 #                          endif
                            Data1PG_CC_Ptr[Idx1] =
                               FluWeighting     *Data1PG_CC_Ptr[Idx1]
-                            + FluWeighting_IntT*CPU_GetPressure( Fluid[DENS], Fluid[MOMX], Fluid[MOMY], Fluid[MOMZ], Fluid[ENGY],
-                                                                 Gamma_m1, (MinPres>=(real)0.0), MinPres, EngyB );
+                            + FluWeighting_IntT*Hydro_GetPressure( Fluid[DENS], Fluid[MOMX], Fluid[MOMY], Fluid[MOMZ], Fluid[ENGY],
+                                                                   Gamma_m1, (MinPres>=(real)0.0), MinPres, EngyB );
                         }
 
                         Idx1 ++;
@@ -1192,8 +1192,8 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
 #                       else
                         const real EngyB = NULL_REAL;
 #                       endif
-                        Data1PG_CC_Ptr[Idx1] = CPU_GetTemperature( Fluid[DENS], Fluid[MOMX], Fluid[MOMY], Fluid[MOMZ], Fluid[ENGY],
-                                                                   Gamma_m1, (MinPres>=(real)0.0), MinPres, EngyB );
+                        Data1PG_CC_Ptr[Idx1] = Hydro_GetTemperature( Fluid[DENS], Fluid[MOMX], Fluid[MOMY], Fluid[MOMZ], Fluid[ENGY],
+                                                                     Gamma_m1, (MinPres>=(real)0.0), MinPres, EngyB );
 
                         if ( FluIntTime ) // temporal interpolation
                         {
@@ -1206,8 +1206,8 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
 #                          endif
                            Data1PG_CC_Ptr[Idx1] =
                               FluWeighting     *Data1PG_CC_Ptr[Idx1]
-                            + FluWeighting_IntT*CPU_GetTemperature( Fluid[DENS], Fluid[MOMX], Fluid[MOMY], Fluid[MOMZ], Fluid[ENGY],
-                                                                    Gamma_m1, (MinPres>=(real)0.0), MinPres, EngyB );
+                            + FluWeighting_IntT*Hydro_GetTemperature( Fluid[DENS], Fluid[MOMX], Fluid[MOMY], Fluid[MOMZ], Fluid[ENGY],
+                                                                      Gamma_m1, (MinPres>=(real)0.0), MinPres, EngyB );
                         }
 
                         Idx1 ++;

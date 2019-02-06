@@ -60,8 +60,6 @@ void Init_ResetParameter()
 #     if   ( MODEL == HYDRO )
 #     if   ( FLU_SCHEME == RTVD )
       DT__FLUID = 0.50;
-#     elif ( FLU_SCHEME == WAF )
-      DT__FLUID = 0.50;
 #     elif ( FLU_SCHEME == MHM )
       DT__FLUID = 1.00;
 #     elif ( FLU_SCHEME == MHM_RP )
@@ -566,9 +564,8 @@ void Init_ResetParameter()
 #  endif
 
 
-// disable OPT__LR_LIMITER and OPT__WAF_LIMITER if they are useless
-#  if ( MODEL == HYDRO )
-#  if ( FLU_SCHEME != MHM  &&  FLU_SCHEME != MHM_RP  &&  FLU_SCHEME != CTU )
+// disable OPT__LR_LIMITER if it is useless
+#  if ( MODEL == HYDRO  &&  FLU_SCHEME != MHM  &&  FLU_SCHEME != MHM_RP  &&  FLU_SCHEME != CTU )
    if ( OPT__LR_LIMITER != LR_LIMITER_NONE )
    {
       OPT__LR_LIMITER = LR_LIMITER_NONE;
@@ -576,16 +573,6 @@ void Init_ResetParameter()
       PRINT_WARNING( OPT__LR_LIMITER, FORMAT_INT, "since it's only useful for the MHM/MHM_RP/CTU schemes" );
    }
 #  endif
-
-#  if ( FLU_SCHEME != WAF )
-   if ( OPT__WAF_LIMITER != WAF_LIMITER_NONE )
-   {
-      OPT__WAF_LIMITER = WAF_LIMITER_NONE;
-
-      PRINT_WARNING( OPT__WAF_LIMITER, FORMAT_INT, "since it's only useful for the WAF scheme" );
-   }
-#  endif
-#  endif // #if ( MODEL == HYDRO )
 
 
 // disable the refinement flag of Jeans length if GRAVITY is disabled
@@ -695,7 +682,15 @@ void Init_ResetParameter()
 // OPT__UM_IC_NVAR
    if ( OPT__INIT == INIT_BY_FILE  &&  OPT__UM_IC_NVAR <= 0 )
    {
-      OPT__UM_IC_NVAR = NCOMP_TOTAL;
+#     if (  ( MODEL == HYDRO || MODEL == MHD )  &&  defined DUAL_ENERGY  )
+      OPT__UM_IC_NVAR = NCOMP_TOTAL - 1;  // do not load the dual-energy field from the disk
+
+#     elif ( MODEL == ELBDM )
+      OPT__UM_IC_NVAR = NCOMP_TOTAL - 1;  // do not load the density field from the disk
+
+#     else
+      OPT__UM_IC_NVAR = NCOMP_TOTAL;      // load all fields
+#     endif
 
       PRINT_WARNING( OPT__UM_IC_NVAR, FORMAT_INT, "" );
    }
@@ -720,28 +715,6 @@ void Init_ResetParameter()
 
       const ParInit_t PAR_INIT = amr->Par->Init;
       PRINT_WARNING( PAR_INIT, FORMAT_INT, "for restart" );
-   }
-#  endif
-
-
-// turn off OPT__NORMALIZE_PASSIVE if there are no passive scalars
-#  if (  NCOMP_PASSIVE <= 0  ||  ( defined DUAL_ENERGY && NCOMP_PASSIVE == 1 )  )
-   if ( OPT__NORMALIZE_PASSIVE )
-   {
-      OPT__NORMALIZE_PASSIVE = false;
-
-      PRINT_WARNING( OPT__NORMALIZE_PASSIVE, FORMAT_INT, "since there are no passive scalars" );
-   }
-#  endif
-
-
-// OPT__CK_NORMALIZE_PASSIVE must work with OPT__NORMALIZE_PASSIVE
-#  if ( NCOMP_PASSIVE > 0 )
-   if ( OPT__CK_NORMALIZE_PASSIVE  &&  !OPT__NORMALIZE_PASSIVE )
-   {
-      OPT__CK_NORMALIZE_PASSIVE = false;
-
-      PRINT_WARNING( OPT__CK_NORMALIZE_PASSIVE, FORMAT_INT, "since OPT__NORMALIZE_PASSIVE is disabled" );
    }
 #  endif
 

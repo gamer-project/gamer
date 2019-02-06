@@ -60,17 +60,13 @@ void End_MemFree()
 #  endif
 
 #  ifdef SUPPORT_GRACKLE
-   if ( GRACKLE_MODE != GRACKLE_MODE_NONE )
+   if ( GRACKLE_ACTIVATE )
    {
-#     ifdef GPU
-      CUAPI_MemFree_Grackle();
-#     else
       End_MemFree_Grackle();
-#     endif
 
       if ( Che_FieldData != NULL )
       {
-         delete [] Che_FieldData;
+         delete Che_FieldData;
          Che_FieldData = NULL;
       }
    }
@@ -91,11 +87,7 @@ void End_MemFree()
 #  endif
 
 
-// 6. string arrays for the passive variables
-   End_MemFree_PassiveFieldName();
-
-
-// 7. star formation random number generator
+// 6. star formation random number generator
 #  ifdef STAR_FORMATION
    SF_FreeRNG();
 #  endif

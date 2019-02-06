@@ -291,8 +291,8 @@ void WriteFile( void (*AnalFunc)( real fluid[], const double x, const double y, 
    const real   EngyB           = NULL_REAL;
 #  endif
 
-   fluid[ENGY] = CPU_GetPressure( fluid[DENS], fluid[MOMX], fluid[MOMY], fluid[MOMZ], fluid[ENGY],
-                                  Gamma_m1, CheckMinPres_No, NULL_REAL, EngyB );
+   fluid[ENGY] = Hydro_GetPressure( fluid[DENS], fluid[MOMX], fluid[MOMY], fluid[MOMZ], fluid[ENGY],
+                                    Gamma_m1, CheckMinPres_No, NULL_REAL, EngyB );
 #  endif
 
 
@@ -313,8 +313,8 @@ void WriteFile( void (*AnalFunc)( real fluid[], const double x, const double y, 
 #  else
    const real EngyB_Anal = NULL_REAL;
 #  endif
-   Anal[ENGY] = CPU_GetPressure( Anal[DENS], Anal[MOMX], Anal[MOMY], Anal[MOMZ], Anal[ENGY],
-                                 Gamma_m1, CheckMinPres_No, NULL_REAL, EngyB_Anal );
+   Anal[ENGY] = Hydro_GetPressure( Anal[DENS], Anal[MOMX], Anal[MOMY], Anal[MOMZ], Anal[ENGY],
+                                   Gamma_m1, CheckMinPres_No, NULL_REAL, EngyB_Anal );
 #  endif
 
 

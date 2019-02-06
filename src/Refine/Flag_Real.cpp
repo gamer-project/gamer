@@ -224,8 +224,8 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
 #                    ifdef DUAL_ENERGY
 
 #                    if   ( DUAL_ENERGY == DE_ENPY )
-                     Pres[k][j][i] = CPU_DensEntropy2Pres( Fluid[DENS][k][j][i], Fluid[ENPY][k][j][i],
-                                                           Gamma_m1, CheckMinPres_Yes, MIN_PRES );
+                     Pres[k][j][i] = Hydro_DensEntropy2Pres( Fluid[DENS][k][j][i], Fluid[ENPY][k][j][i],
+                                                             Gamma_m1, CheckMinPres_Yes, MIN_PRES );
 #                    elif ( DUAL_ENERGY == DE_EINT )
 #                    error : DE_EINT is NOT supported yet !!
 #                    endif
@@ -237,10 +237,9 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
 #                    else
                      const real EngyB = NULL_REAL;
 #                    endif
-                     Pres[k][j][i] = CPU_GetPressure( Fluid[DENS][k][j][i], Fluid[MOMX][k][j][i], Fluid[MOMY][k][j][i],
-                                                      Fluid[MOMZ][k][j][i], Fluid[ENGY][k][j][i],
-                                                      Gamma_m1, CheckMinPres_Yes, MIN_PRES, EngyB );
-
+                     Pres[k][j][i] = Hydro_GetPressure( Fluid[DENS][k][j][i], Fluid[MOMX][k][j][i], Fluid[MOMY][k][j][i],
+                                                        Fluid[MOMZ][k][j][i], Fluid[ENGY][k][j][i],
+                                                        Gamma_m1, CheckMinPres_Yes, MIN_PRES, EngyB );
 #                    endif // #ifdef DUAL_ENERGY ... else ...
                   } // k,j,i
                } // if ( OPT__FLAG_PRES_GRADIENT )

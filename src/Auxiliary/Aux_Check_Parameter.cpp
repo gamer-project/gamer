@@ -538,17 +538,16 @@ void Aux_Check_Parameter()
 #     error : ERROR : NCOMP_TOTAL != NFLUX_TOTAL !!
 #  endif
 
-#  if (  NCOMP_PASSIVE != 0  &&  ( FLU_SCHEME == RTVD || FLU_SCHEME == WAF )  )
-#     error : RTVD and WAF schemes do NOT support passive scalars !!
+#  if ( NCOMP_PASSIVE != 0  &&  FLU_SCHEME == RTVD )
+#     error : RTVD does NOT support passive scalars !!
 #  endif
 
-#  if ( FLU_SCHEME != RTVD  &&  FLU_SCHEME != MHM  &&  FLU_SCHEME != MHM_RP  &&  FLU_SCHEME != CTU  &&  \
-        FLU_SCHEME != WAF )
+#  if ( FLU_SCHEME != RTVD  &&  FLU_SCHEME != MHM  &&  FLU_SCHEME != MHM_RP  &&  FLU_SCHEME != CTU )
 #     error : ERROR : unsupported hydro scheme in the makefile !!
 #  endif
 
-#  if (  defined UNSPLIT_GRAVITY  &&  ( FLU_SCHEME == RTVD || FLU_SCHEME == WAF )  )
-#     error : ERROR : RTVD and WAF do not support UNSPLIT_GRAVITY !!
+#  if ( defined UNSPLIT_GRAVITY  &&  FLU_SCHEME == RTVD )
+#     error : ERROR : RTVD does not support UNSPLIT_GRAVITY !!
 #  endif
 
 #  if ( defined LR_SCHEME  &&  LR_SCHEME != PLM  &&  LR_SCHEME != PPM )
@@ -560,8 +559,8 @@ void Aux_Check_Parameter()
 #  endif
 
 #  ifdef DUAL_ENERGY
-#  if ( FLU_SCHEME == RTVD  ||  FLU_SCHEME == WAF )
-#     error : RTVD and WAF schemes do NOT support DUAL_ENERGY !!
+#  if ( FLU_SCHEME == RTVD )
+#     error : RTVD does NOT support DUAL_ENERGY !!
 #  endif
 
 #  if ( DUAL_ENERGY != DE_ENPY )
@@ -580,8 +579,8 @@ void Aux_Check_Parameter()
            OPT__1ST_FLUX_CORR_SCHEME != RSOLVER_1ST_HLLE )
          Aux_Error( ERROR_INFO, "unsupported parameter \"%s = %d\" !!\n", "OPT__1ST_FLUX_CORR_SCHEME", OPT__1ST_FLUX_CORR_SCHEME );
 
-#     if ( FLU_SCHEME == RTVD  ||  FLU_SCHEME == WAF )
-         Aux_Error( ERROR_INFO, "RTVD and WAF fluid schemes do not support \"OPT__1ST_FLUX_CORR\" !!\n" );
+#     if ( FLU_SCHEME == RTVD )
+         Aux_Error( ERROR_INFO, "RTVD does not support \"OPT__1ST_FLUX_CORR\" !!\n" );
 #     endif
    }
 
@@ -595,9 +594,9 @@ void Aux_Check_Parameter()
    else if ( MPI_Rank == 0 )
       Aux_Message( stderr, "WARNING : MIN_PRES (%13.7e) is on --> please ensure that this value is reasonable !!\n", MIN_PRES );
 
-#  if ( FLU_SCHEME == RTVD  ||  FLU_SCHEME == WAF )
+#  if ( FLU_SCHEME == RTVD )
    if ( JEANS_MIN_PRES )
-      Aux_Error( ERROR_INFO, "RTVD and WAF fluid schemes do not support \"JEANS_MIN_PRES\" !!\n" );
+      Aux_Error( ERROR_INFO, "RTVD does not support \"JEANS_MIN_PRES\" !!\n" );
 #  endif
 
 
@@ -627,20 +626,13 @@ void Aux_Check_Parameter()
       Aux_Message( stderr, "WARNING : %s is useless since %s is off !!\n", "OPT__CK_FLUX_ALLOCATE", "OPT__FIXUP_FLUX" );
 
    if ( OPT__INIT == INIT_BY_FILE )
-   {
       Aux_Message( stderr, "WARNING : currently we don't check MIN_DENS/PRES for the initial data loaded from UM_IC !!\n" );
-
-#     ifdef DUAL_ENERGY
-      Aux_Message( stderr, "REMINDER : when adopting DUAL_ENERGY and OPT__INIT=3, store the gas entropy\n"
-                           "           as the last variable in the file \"UM_IC\"\n" );
-#     endif
-   }
 
    if ( OPT__1ST_FLUX_CORR != FIRST_FLUX_CORR_NONE )
       Aux_Message( stderr, "REMINDER : OPT__1ST_FLUX_CORR may break the strict conservation of fluid variables\n" );
 
 #  ifdef SUPPORT_GRACKLE
-   if (  GRACKLE_MODE != GRACKLE_MODE_NONE  &&  OPT__FLAG_LOHNER_TEMP )
+   if ( GRACKLE_ACTIVATE && OPT__FLAG_LOHNER_TEMP )
       Aux_Message( stderr, "WARNING : currently we do not use Grackle to calculate temperature for OPT__FLAG_LOHNER_TEMP !!\n" );
 #  endif
 
@@ -744,24 +736,6 @@ void Aux_Check_Parameter()
 #  endif // #if ( FLU_SCHEME == MHM_RP )
 
 
-// check for WAF
-// ------------------------------
-#  if ( FLU_SCHEME == WAF )
-
-#  if ( RSOLVER == HLLE  ||  RSOLVER == HLLC )
-#     error : ERROR : currently the WAF scheme does not support HLLE/HLLC Riemann solvers
-#  endif
-
-#  if ( FLU_GHOST_SIZE != 2 )
-#     error : ERROR : please set FLU_GHOST_SIZE = 2 for the WAF scheme !!
-#  endif
-
-   if ( OPT__WAF_LIMITER != WAF_SUPERBEE  &&  OPT__WAF_LIMITER != WAF_VANLEER  &&
-        OPT__WAF_LIMITER != WAF_ALBADA    &&  OPT__WAF_LIMITER != WAF_MINBEE      )
-      Aux_Error( ERROR_INFO, "unsupported WAF flux limiter (%d) !!\n", OPT__WAF_LIMITER );
-#  endif // if ( FLU_SCHEME == WAF )
-
-
 // check for RTVD
 // ------------------------------
 #  if ( FLU_SCHEME == RTVD )
@@ -776,6 +750,14 @@ void Aux_Check_Parameter()
 // check for MHD
 // ------------------------------
 #  ifdef MHD
+
+#  if ( FLU_SCHEME != MHM_RP  &&  FLU_SCHEME != CTU )
+#     error : ERROR : unsupported hydro scheme in the makefile (MHM_RP/CTU) !!
+#  endif
+
+#  if ( defined RSOLVER  &&  RSOLVER != ROE  &&  RSOLVER != HLLD )
+#     error : ERROR : unsupported Riemann solver for MHD (ROE/HLLD) !!
+#  endif
 
    if ( OPT__MAG_INT_SCHEME != INT_MINMOD1D  &&  OPT__MAG_INT_SCHEME != INT_VANLEER  &&
         OPT__MAG_INT_SCHEME != INT_CQUAD  &&  OPT__MAG_INT_SCHEME != INT_CQUAR )

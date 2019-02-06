@@ -1481,7 +1481,7 @@ void Init_MPI( int *argc, char ***argv )
       exit( 1 );
    }
 
-   if ( MyRank == 0 )   cout << "Init_MPI ... done" << endl;;
+   if ( MyRank == 0 )   cout << "Init_MPI ... done" << endl;
 
 } // FUNCTION : Init_MPI
 #endif
