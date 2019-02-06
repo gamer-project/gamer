@@ -27,7 +27,7 @@ static int     Merger_NBin2;              // number of radial bins of cluster 2
 void Par_Init_ByFunction_Merger( const long NPar_ThisRank, const long NPar_AllRank,
                                  real *ParMass, real *ParPosX, real *ParPosY, real *ParPosZ,
                                  real *ParVelX, real *ParVelY, real *ParVelZ, real *ParTime,
-                                 real *ParPassive[PAR_NPASSIVE] );
+                                 real *AllAttribute[PAR_NATT_TOTAL] );
 #endif
 
 

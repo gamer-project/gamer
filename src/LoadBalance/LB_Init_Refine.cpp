@@ -58,7 +58,7 @@ void LB_Init_Refine( const int FaLv )
 
 //       pass particles from father to sons
 #        ifdef PARTICLE
-         Par_PassParticle2Son( FaLv, FaPID );
+         Par_PassParticle2Son_SinglePatch( FaLv, FaPID );
 #        endif
 
       } // if ( amr->patch[0][FaLv][FaPID]->flag )

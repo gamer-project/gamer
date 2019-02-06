@@ -273,7 +273,7 @@ void Preparation_Step( const Solver_t TSolver, const int lv, const double TimeNe
 {
 
 #  ifndef UNSPLIT_GRAVITY
-   real (*h_Pot_Array_USG_F[2])[USG_NXT_F][USG_NXT_F][USG_NXT_F] = { NULL, NULL };
+   real (*h_Pot_Array_USG_F[2])[ USG_NXT_F*USG_NXT_F*USG_NXT_F ] = { NULL, NULL };
 #  endif
 #  if ( defined GRAVITY  &&  !defined DUAL_ENERGY )
    char (*h_DE_Array_G     [2])[PS1][PS1][PS1]                   = { NULL, NULL };
@@ -283,7 +283,7 @@ void Preparation_Step( const Solver_t TSolver, const int lv, const double TimeNe
    switch ( TSolver )
    {
       case FLUID_SOLVER :
-         Flu_Prepare( lv, TimeOld, h_Flu_Array_F_In[ArrayID][0][0], h_Pot_Array_USG_F[ArrayID][0][0][0],
+         Flu_Prepare( lv, TimeOld, h_Flu_Array_F_In[ArrayID][0][0], h_Pot_Array_USG_F[ArrayID][0],
                       h_Corner_Array_F[ArrayID], NPG, PID0_List );
       break;
 
@@ -414,11 +414,9 @@ void Solver( const Solver_t TSolver, const int lv, const double TimeNew, const d
 
 #  if ( MODEL != HYDRO )
    const LR_Limiter_t  OPT__LR_LIMITER  = LR_LIMITER_NONE;
-   const WAF_Limiter_t OPT__WAF_LIMITER = WAF_LIMITER_NONE;
    const bool   Flu_XYZ                 = true;
    const double GAMMA                   = NULL_REAL;
    const double MINMOD_COEFF            = NULL_REAL;
-   const double EP_COEFF                = NULL_REAL;
 #  else
    const bool   Flu_XYZ                 = 1 - ( AdvanceCounter[lv]%2 );    // forward/backward sweep
 #  endif
@@ -439,7 +437,7 @@ void Solver( const Solver_t TSolver, const int lv, const double TimeNew, const d
 #  endif
 
 #  ifndef UNSPLIT_GRAVITY
-   real (*h_Pot_Array_USG_F[2])[USG_NXT_F ][USG_NXT_F ][USG_NXT_F ] = { NULL, NULL };
+   real (*h_Pot_Array_USG_F[2])[ CUBE(USG_NXT_F) ]                  = { NULL, NULL };
 #  ifdef GRAVITY
    real (*h_Pot_Array_USG_G[2])[USG_NXT_G ][USG_NXT_G ][USG_NXT_G ] = { NULL, NULL };
    real (*h_Flu_Array_USG_G[2])[GRA_NIN-1][PS1][PS1][PS1]           = { NULL, NULL };
@@ -447,9 +445,9 @@ void Solver( const Solver_t TSolver, const int lv, const double TimeNew, const d
 #  endif
 
 #  ifndef DUAL_ENERGY
-   char (*h_DE_Array_F_Out[2])[8*PATCH_SIZE*PATCH_SIZE*PATCH_SIZE] = { NULL, NULL };
+   char (*h_DE_Array_F_Out[2])[ CUBE(PS2) ]                         = { NULL, NULL };
 #  ifdef GRAVITY
-   char (*h_DE_Array_G    [2])[PS1][PS1][PS1]                      = { NULL, NULL };
+   char (*h_DE_Array_G    [2])[PS1][PS1][PS1]                       = { NULL, NULL };
 #  endif
 #  endif
 
@@ -475,15 +473,15 @@ void Solver( const Solver_t TSolver, const int lv, const double TimeNew, const d
 #        ifdef GPU
          CUAPI_Asyn_FluidSolver( h_Flu_Array_F_In[ArrayID], h_Flu_Array_F_Out[ArrayID], h_DE_Array_F_Out[ArrayID],
                                  h_Flux_Array[ArrayID], h_Corner_Array_F[ArrayID], h_Pot_Array_USG_F[ArrayID],
-                                 NPG, dt, dh, GAMMA, OPT__FIXUP_FLUX, Flu_XYZ, OPT__LR_LIMITER, MINMOD_COEFF, EP_COEFF,
-                                 OPT__WAF_LIMITER, ELBDM_ETA, ELBDM_TAYLOR3_COEFF, ELBDM_TAYLOR3_AUTO,
+                                 NPG, dt, dh, GAMMA, OPT__FIXUP_FLUX, Flu_XYZ, OPT__LR_LIMITER, MINMOD_COEFF,
+                                 ELBDM_ETA, ELBDM_TAYLOR3_COEFF, ELBDM_TAYLOR3_AUTO,
                                  TimeOld, OPT__GRAVITY_TYPE, GPU_NSTREAM, MIN_DENS, MIN_PRES, DUAL_ENERGY_SWITCH,
                                  OPT__NORMALIZE_PASSIVE, PassiveNorm_NVar, JEANS_MIN_PRES, JeansMinPres_Coeff );
 #        else
          CPU_FluidSolver       ( h_Flu_Array_F_In[ArrayID], h_Flu_Array_F_Out[ArrayID], h_DE_Array_F_Out[ArrayID],
                                  h_Flux_Array[ArrayID], h_Corner_Array_F[ArrayID], h_Pot_Array_USG_F[ArrayID],
-                                 NPG, dt, dh, GAMMA, OPT__FIXUP_FLUX, Flu_XYZ, OPT__LR_LIMITER, MINMOD_COEFF, EP_COEFF,
-                                 OPT__WAF_LIMITER, ELBDM_ETA, ELBDM_TAYLOR3_COEFF, ELBDM_TAYLOR3_AUTO,
+                                 NPG, dt, dh, GAMMA, OPT__FIXUP_FLUX, Flu_XYZ, OPT__LR_LIMITER, MINMOD_COEFF,
+                                 ELBDM_ETA, ELBDM_TAYLOR3_COEFF, ELBDM_TAYLOR3_AUTO,
                                  TimeOld, OPT__GRAVITY_TYPE, MIN_DENS, MIN_PRES, DUAL_ENERGY_SWITCH,
                                  OPT__NORMALIZE_PASSIVE, PassiveNorm_NVar, PassiveNorm_VarIdx, JEANS_MIN_PRES, JeansMinPres_Coeff );
 #        endif
@@ -566,22 +564,7 @@ void Solver( const Solver_t TSolver, const int lv, const double TimeNew, const d
 
 #     ifdef SUPPORT_GRACKLE
       case GRACKLE_SOLVER :
-
-         if ( GRACKLE_MODE == GRACKLE_MODE_GAMER ) {
-#           ifdef GPU
-            Aux_Error( ERROR_INFO, "GRACKLE_MODE_GAMER - GPU IS NOT SUPPORTED YET !!\n" );
-#           else
-            Aux_Error( ERROR_INFO, "GRACKLE_MODE_GAMER - CPU IS NOT SUPPORTED YET !!\n" );
-#           endif
-         }
-
-         else if ( GRACKLE_MODE == GRACKLE_MODE_ORI ) {
-            CPU_GrackleSolver_Original( Che_FieldData, Che_Units, NPG, dt );
-         }
-
-         else {
-            Aux_Error( ERROR_INFO, "you shouldn't be here (GRACKLE_MODE = %d) !!\n", GRACKLE_MODE );
-         }
+         CPU_GrackleSolver( Che_FieldData, Che_Units, NPG, dt );
 
       break;
 #     endif // #ifdef SUPPORT_GRACKLE

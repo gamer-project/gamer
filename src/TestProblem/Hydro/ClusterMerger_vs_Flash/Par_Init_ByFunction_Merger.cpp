@@ -48,20 +48,23 @@ extern double  Merger_Coll_BulkVel2;
 //                ParPosX/Y/Z   : Particle position array with the size of NPar_ThisRank
 //                ParVelX/Y/Z   : Particle velocity array with the size of NPar_ThisRank
 //                ParTime       : Particle time     array with the size of NPar_ThisRank
-//                ParPassive    : Particle passive attributes pointer array with the size [PAR_NPASSIVE][NPar_ThisRank]
+//                AllAttribute  : Pointer array for all particle attributes
+//                                --> Dimension = [PAR_NATT_TOTAL][NPar_ThisRank]
+//                                --> Use the attribute indices defined in Field.h (e.g., Idx_ParCreTime)
+//                                    to access the data
 //
-// Return      :  ParMass, ParPosX/Y/Z, ParVelX/Y/Z, ParTime, ParPassive
+// Return      :  ParMass, ParPosX/Y/Z, ParVelX/Y/Z, ParTime, AllAttribute
 //-------------------------------------------------------------------------------------------------------
 void Par_Init_ByFunction_Merger( const long NPar_ThisRank, const long NPar_AllRank,
                                  real *ParMass, real *ParPosX, real *ParPosY, real *ParPosZ,
                                  real *ParVelX, real *ParVelY, real *ParVelZ, real *ParTime,
-                                 real *ParPassive[PAR_NPASSIVE] )
+                                 real *AllAttribute[PAR_NATT_TOTAL] )
 {
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ...\n", __FUNCTION__ );
 
 
-   const long NParVar = 7;   // mass, pos*3, vel*3
+   const long NParAtt = 7;   // mass, pos*3, vel*3
 
 // check file existence
    if ( !Aux_CheckFileExist(Merger_File_Par1) )
@@ -77,14 +80,14 @@ void Par_Init_ByFunction_Merger( const long NPar_ThisRank, const long NPar_AllRa
 
    File  = fopen( Merger_File_Par1, "rb" );
    fseek( File, 0, SEEK_END );
-   NPar_EachCluster[0] = ftell( File ) / ( NParVar*sizeof(real_par_in) );
+   NPar_EachCluster[0] = ftell( File ) / ( NParAtt*sizeof(real_par_in) );
    fclose( File );
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Number of particles in cluster 1 = %ld\n", NPar_EachCluster[0] );
 
    if ( Merger_Coll ) {
    File  = fopen( Merger_File_Par2, "rb" );
    fseek( File, 0, SEEK_END );
-   NPar_EachCluster[1] = ftell( File ) / ( NParVar*sizeof(real_par_in) );
+   NPar_EachCluster[1] = ftell( File ) / ( NParAtt*sizeof(real_par_in) );
    fclose( File );
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Number of particles in cluster 2 = %ld\n", NPar_EachCluster[1] );
    }
@@ -123,14 +126,14 @@ void Par_Init_ByFunction_Merger( const long NPar_ThisRank, const long NPar_AllRa
 
 //    set the file offset for this rank
       FileOffset[c] = 0;
-      for (int r=0; r<MPI_Rank; r++)   FileOffset[c] = FileOffset[c] + NPar_ThisCluster_EachRank[r]*NParVar*sizeof(real_par_in);
+      for (int r=0; r<MPI_Rank; r++)   FileOffset[c] = FileOffset[c] + NPar_ThisCluster_EachRank[r]*NParAtt*sizeof(real_par_in);
    }
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );
 
 
 // load data to the particle repository
-   real_par_in (*ParData_ThisRank)[NParVar] = new real_par_in [ MAX(NPar_ThisRank_EachCluster[0], NPar_ThisRank_EachCluster[1]) ][NParVar];
+   real_par_in (*ParData_ThisRank)[NParAtt] = new real_par_in [ MAX(NPar_ThisRank_EachCluster[0], NPar_ThisRank_EachCluster[1]) ][NParAtt];
 
    for (int c=0; c<NCluster; c++)
    {
@@ -141,7 +144,7 @@ void Par_Init_ByFunction_Merger( const long NPar_ThisRank, const long NPar_AllRa
       FILE *File = fopen( (c==0)?Merger_File_Par1:Merger_File_Par2, "rb" );
 
       fseek( File, FileOffset[c], SEEK_SET );
-      fread( ParData_ThisRank, sizeof(real_par_in), NPar_ThisRank_EachCluster[c]*NParVar, File );
+      fread( ParData_ThisRank, sizeof(real_par_in), NPar_ThisRank_EachCluster[c]*NParAtt, File );
       fclose( File );
 
       if ( MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );

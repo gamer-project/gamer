@@ -15,7 +15,9 @@
 #include <cstdlib>
 #include <cassert>
 #include <math.h>
+#ifndef __APPLE__
 #include <malloc.h>
+#endif
 #include <stdio.h>
 #include <unistd.h>
 
@@ -61,6 +63,7 @@ extern "C" {
 #include "Timer.h"
 #include "RandomNumber.h"
 #include "Global.h"
+#include "Field.h"
 #include "Prototype.h"
 #include "PhysicalConstant.h"
 

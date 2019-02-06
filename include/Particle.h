@@ -36,6 +36,8 @@ void Aux_Error( const char *File, const int Line, const char *Func, const char *
 //                NPar_Inactive           : Total number of inactive particles in this MPI rank
 //                NPar_Lv                 : Total number of active particles at each level in this MPI rank
 //                Init                    : Initialization methods (1/2/3 --> call function/restart/load from file)
+//                ParICFormat             : Data format of the particle initialization file (1=[att][id], 2=[id][att])
+//                ParICMass               : Assign this mass to all particles for Init=3
 //                Interp                  : Mass/acceleration interpolation scheme (NGP,CIC,TSC)
 //                Integ                   : Integration scheme (PAR_INTEG_EULER, PAR_INTEG_KDK)
 //                ImproveAcc              : Improve force accuracy around the patch boundaries
@@ -45,8 +47,7 @@ void Aux_Error( const char *File, const int Line, const char *Func, const char *
 //                RemoveCell              : remove particles RemoveCell-base-level-cells away from the boundary
 //                                          (for non-periodic BC only)
 //                GhostSize               : Number of ghost zones required for interpolation scheme
-//                ParVar                  : Pointer arrays to different particle variables (Mass, Pos, Vel, ...)
-//                Passive                 : Pointer arrays to different passive variables (e.g., metalicity)
+//                Attribute               : Pointer arrays to different particle attributes (Mass, Pos, Vel, ...)
 //                InactiveParList         : List of inactive particle IDs
 //                R2B_Real_NPatchTotal    : see R2B_Buff_NPatchTotal
 //                R2B_Real_NPatchEachRank : see R2B_Buff_NPatchEachRank
@@ -101,59 +102,60 @@ struct Particle_t
 
 // data members
 // ===================================================================================
-   long        ParListSize;
-   long        InactiveParListSize;
-   long        NPar_Active_AllRank;
-   long        NPar_AcPlusInac;
-   long        NPar_Active;
-   long        NPar_Inactive;
-   long        NPar_Lv[NLEVEL];
-   ParInit_t   Init;
-   ParInterp_t Interp;
-   ParInteg_t  Integ;
-   bool        ImproveAcc;
-   bool        PredictPos;
-   double      RemoveCell;
-   int         GhostSize;
-   real       *ParVar [PAR_NVAR    ];
-   real       *Passive[PAR_NPASSIVE];
-   long       *InactiveParList;
+   long          ParListSize;
+   long          InactiveParListSize;
+   long          NPar_Active_AllRank;
+   long          NPar_AcPlusInac;
+   long          NPar_Active;
+   long          NPar_Inactive;
+   long          NPar_Lv[NLEVEL];
+   ParInit_t     Init;
+   ParICFormat_t ParICFormat;
+   double        ParICMass;
+   ParInterp_t   Interp;
+   ParInteg_t    Integ;
+   bool          ImproveAcc;
+   bool          PredictPos;
+   double        RemoveCell;
+   int           GhostSize;
+   real         *Attribute[PAR_NATT_TOTAL];
+   long         *InactiveParList;
 
 #  ifdef LOAD_BALANCE
-   int         R2B_Real_NPatchTotal   [NLEVEL][2];
-   int        *R2B_Real_NPatchEachRank[NLEVEL][2];
-   int        *R2B_Real_PIDList       [NLEVEL][2];
-   int         R2B_Buff_NPatchTotal   [NLEVEL][2];
-   int        *R2B_Buff_NPatchEachRank[NLEVEL][2];
-   int        *R2B_Buff_PIDList       [NLEVEL][2];
+   int           R2B_Real_NPatchTotal   [NLEVEL][2];
+   int          *R2B_Real_NPatchEachRank[NLEVEL][2];
+   int          *R2B_Real_PIDList       [NLEVEL][2];
+   int           R2B_Buff_NPatchTotal   [NLEVEL][2];
+   int          *R2B_Buff_NPatchEachRank[NLEVEL][2];
+   int          *R2B_Buff_PIDList       [NLEVEL][2];
 
-   int         B2R_Real_NPatchTotal   [NLEVEL][2];
-   int        *B2R_Real_NPatchEachRank[NLEVEL][2];
-   int        *B2R_Real_PIDList       [NLEVEL][2];
-   int         B2R_Buff_NPatchTotal   [NLEVEL][2];
-   int        *B2R_Buff_NPatchEachRank[NLEVEL][2];
-   int        *B2R_Buff_PIDList       [NLEVEL][2];
+   int           B2R_Real_NPatchTotal   [NLEVEL][2];
+   int          *B2R_Real_NPatchEachRank[NLEVEL][2];
+   int          *B2R_Real_PIDList       [NLEVEL][2];
+   int           B2R_Buff_NPatchTotal   [NLEVEL][2];
+   int          *B2R_Buff_NPatchEachRank[NLEVEL][2];
+   int          *B2R_Buff_PIDList       [NLEVEL][2];
 
-   int         F2S_Send_NPatchTotal   [NLEVEL];
-   int        *F2S_Send_NPatchEachRank[NLEVEL];
-   int        *F2S_Send_PIDList       [NLEVEL];
-   int         F2S_Recv_NPatchTotal   [NLEVEL];
-   int        *F2S_Recv_NPatchEachRank[NLEVEL];
-   int        *F2S_Recv_PIDList       [NLEVEL];
+   int           F2S_Send_NPatchTotal   [NLEVEL];
+   int          *F2S_Send_NPatchEachRank[NLEVEL];
+   int          *F2S_Send_PIDList       [NLEVEL];
+   int           F2S_Recv_NPatchTotal   [NLEVEL];
+   int          *F2S_Recv_NPatchEachRank[NLEVEL];
+   int          *F2S_Recv_PIDList       [NLEVEL];
 #  endif // #ifdef LOAD_BALANCE
 
-   real       *Mass;
-   real       *PosX;
-   real       *PosY;
-   real       *PosZ;
-   real       *VelX;
-   real       *VelY;
-   real       *VelZ;
-   real       *Time;
+   real         *Mass;
+   real         *PosX;
+   real         *PosY;
+   real         *PosZ;
+   real         *VelX;
+   real         *VelY;
+   real         *VelZ;
+   real         *Time;
 #  ifdef STORE_PAR_ACC
-   real       *AccX;
-   real       *AccY;
-   real       *AccZ;
+   real         *AccX;
+   real         *AccY;
+   real         *AccZ;
 #  endif
 
 
@@ -171,6 +173,8 @@ struct Particle_t
       NPar_Active_AllRank = -1;
       NPar_AcPlusInac     = -1;
       Init                = PAR_INIT_NONE;
+      ParICFormat         = PAR_IC_FORMAT_NONE;
+      ParICMass           = -1.0;
       Interp              = PAR_INTERP_NONE;
       Integ               = PAR_INTEG_NONE;
       ImproveAcc          = true;
@@ -180,8 +184,7 @@ struct Particle_t
 
       for (int lv=0; lv<NLEVEL; lv++)  NPar_Lv[lv] = 0;
 
-      for (int v=0; v<PAR_NVAR;     v++)  ParVar [v] = NULL;
-      for (int v=0; v<PAR_NPASSIVE; v++)  Passive[v] = NULL;
+      for (int v=0; v<PAR_NATT_TOTAL; v++)   Attribute[v] = NULL;
 
       InactiveParList = NULL;
 
@@ -240,11 +243,8 @@ struct Particle_t
    ~Particle_t()
    {
 
-      for (int v=0; v<PAR_NVAR; v++)
-         if ( ParVar[v] != NULL )      free( ParVar[v] );
-
-      for (int v=0; v<PAR_NPASSIVE; v++)
-         if ( Passive[v] != NULL )     free( Passive[v] );
+      for (int v=0; v<PAR_NATT_TOTAL; v++)
+         if ( Attribute[v] != NULL )   free( Attribute[v] );
 
       if ( InactiveParList != NULL )   free( InactiveParList );
 
@@ -302,16 +302,10 @@ struct Particle_t
 
 //    allocate arrays (use malloc so that realloc can be used later to resize the array)
 //    --> free memory first since other functions (e.g., LB_Init_LoadBalance()) will call InitRepo() again
-      for (int v=0; v<PAR_NVAR; v++)
+      for (int v=0; v<PAR_NATT_TOTAL; v++)
       {
-         if ( ParVar[v] != NULL )   free( ParVar[v] );
-         ParVar[v] = (real*)malloc( ParListSize*sizeof(real) );
-      }
-
-      for (int v=0; v<PAR_NPASSIVE; v++)
-      {
-         if ( Passive[v] != NULL )  free( Passive[v] );
-         Passive[v] = (real*)malloc( ParListSize*sizeof(real) );
+         if ( Attribute[v] != NULL )   free( Attribute[v] );
+         Attribute[v] = (real*)malloc( ParListSize*sizeof(real) );
       }
 
       if ( InactiveParList != NULL )   free( InactiveParList );
@@ -354,18 +348,18 @@ struct Particle_t
 #     endif // #ifdef LOAD_BALANCE
 
 //    set pointers
-      Mass = ParVar[PAR_MASS];
-      PosX = ParVar[PAR_POSX];
-      PosY = ParVar[PAR_POSY];
-      PosZ = ParVar[PAR_POSZ];
-      VelX = ParVar[PAR_VELX];
-      VelY = ParVar[PAR_VELY];
-      VelZ = ParVar[PAR_VELZ];
-      Time = ParVar[PAR_TIME];
+      Mass = Attribute[PAR_MASS];
+      PosX = Attribute[PAR_POSX];
+      PosY = Attribute[PAR_POSY];
+      PosZ = Attribute[PAR_POSZ];
+      VelX = Attribute[PAR_VELX];
+      VelY = Attribute[PAR_VELY];
+      VelZ = Attribute[PAR_VELZ];
+      Time = Attribute[PAR_TIME];
 #     ifdef STORE_PAR_ACC
-      AccX = ParVar[PAR_ACCX];
-      AccY = ParVar[PAR_ACCY];
-      AccZ = ParVar[PAR_ACCZ];
+      AccX = Attribute[PAR_ACCX];
+      AccY = Attribute[PAR_ACCY];
+      AccZ = Attribute[PAR_ACCZ];
 #     endif
 
    } // METHOD : InitRepo
@@ -385,28 +379,27 @@ struct Particle_t
    //                4. Note that the global variable "AveDensity_Init" will NOT be recalculated
    //                   automatically here
    //
-   // Parameter   :  NewVar     : Array storing the         variables of new particles
-   //                NewPassive : Array storing the passive variables of new particles
+   // Parameter   :  NewAtt : Array storing the attributes of new particles
    //
    // Return      :  Index of the new particle (ParID)
    //===================================================================================
-   long AddOneParticle( const real *NewVar, const real *NewPassive )
+   long AddOneParticle( const real *NewAtt )
    {
 
 //    check
 #     ifdef DEBUG_PARTICLE
       if ( NPar_AcPlusInac < 0 ) Aux_Error( ERROR_INFO, "NPar_AcPlusInac (%ld) < 0 !!\n", NPar_AcPlusInac );
-      if ( NewVar     == NULL )  Aux_Error( ERROR_INFO, "NewVar == NULL !!\n" );
-#     if ( PAR_NPASSIVE > 0 )
-      if ( NewPassive == NULL )  Aux_Error( ERROR_INFO, "NewVar == NULL !!\n" );
-#     endif
-      if ( NewVar[PAR_MASS] < (real)0.0 )
-         Aux_Error( ERROR_INFO, "Adding an inactive particle (mass = %21.14e) !!\n", NewVar[PAR_MASS] );
-      if ( NewVar[PAR_POSX] != NewVar[PAR_POSX] ||
-           NewVar[PAR_POSY] != NewVar[PAR_POSY] ||
-           NewVar[PAR_POSZ] != NewVar[PAR_POSZ]   )
+
+      if ( NewAtt == NULL )   Aux_Error( ERROR_INFO, "NewAtt == NULL !!\n" );
+
+      if ( NewAtt[PAR_MASS] < (real)0.0 )
+         Aux_Error( ERROR_INFO, "Adding an inactive particle (mass = %21.14e) !!\n", NewAtt[PAR_MASS] );
+
+      if ( NewAtt[PAR_POSX] != NewAtt[PAR_POSX] ||
+           NewAtt[PAR_POSY] != NewAtt[PAR_POSY] ||
+           NewAtt[PAR_POSZ] != NewAtt[PAR_POSZ]   )
          Aux_Error( ERROR_INFO, "Adding a particle with strange position (%21.14e, %21.14e, %21.14e) !!\n",
-                    NewVar[PAR_POSX], NewVar[PAR_POSY], NewVar[PAR_POSZ] );
+                    NewAtt[PAR_POSX], NewAtt[PAR_POSY], NewAtt[PAR_POSZ] );
 #     endif
 
 
@@ -433,21 +426,20 @@ struct Particle_t
          {
             ParListSize = (int)ceil( PARLIST_GROWTH_FACTOR*(ParListSize+1) );
 
-            for (int v=0; v<PAR_NVAR;     v++)  ParVar [v] = (real*)realloc( ParVar [v], ParListSize*sizeof(real) );
-            for (int v=0; v<PAR_NPASSIVE; v++)  Passive[v] = (real*)realloc( Passive[v], ParListSize*sizeof(real) );
+            for (int v=0; v<PAR_NATT_TOTAL; v++)   Attribute[v] = (real*)realloc( Attribute[v], ParListSize*sizeof(real) );
 
-            Mass = ParVar[PAR_MASS];
-            PosX = ParVar[PAR_POSX];
-            PosY = ParVar[PAR_POSY];
-            PosZ = ParVar[PAR_POSZ];
-            VelX = ParVar[PAR_VELX];
-            VelY = ParVar[PAR_VELY];
-            VelZ = ParVar[PAR_VELZ];
-            Time = ParVar[PAR_TIME];
+            Mass = Attribute[PAR_MASS];
+            PosX = Attribute[PAR_POSX];
+            PosY = Attribute[PAR_POSY];
+            PosZ = Attribute[PAR_POSZ];
+            VelX = Attribute[PAR_VELX];
+            VelY = Attribute[PAR_VELY];
+            VelZ = Attribute[PAR_VELZ];
+            Time = Attribute[PAR_TIME];
 #           ifdef STORE_PAR_ACC
-            AccX = ParVar[PAR_ACCX];
-            AccY = ParVar[PAR_ACCY];
-            AccZ = ParVar[PAR_ACCZ];
+            AccX = Attribute[PAR_ACCX];
+            AccY = Attribute[PAR_ACCY];
+            AccZ = Attribute[PAR_ACCZ];
 #           endif
          }
 
@@ -457,8 +449,7 @@ struct Particle_t
 
 
 //    2. record the data of new particles
-      for (int v=0; v<PAR_NVAR;     v++)  ParVar [v][ParID] = NewVar    [v];
-      for (int v=0; v<PAR_NPASSIVE; v++)  Passive[v][ParID] = NewPassive[v];
+      for (int v=0; v<PAR_NATT_TOTAL; v++)   Attribute[v][ParID] = NewAtt[v];
 
 
 //    3. update the total number of active particles (assuming all new particles are active)

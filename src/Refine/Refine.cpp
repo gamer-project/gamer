@@ -518,9 +518,9 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
             const real UseEnpy2FixEngy  = HUGE_NUMBER;
             char dummy;    // we do not record the dual-energy status here
 
-            CPU_DualEnergyFix( Flu_FData[DENS][k][j][i], Flu_FData[MOMX][k][j][i], Flu_FData[MOMY][k][j][i],
-                               Flu_FData[MOMZ][k][j][i], Flu_FData[ENGY][k][j][i], Flu_FData[ENPY][k][j][i],
-                               dummy, Gamma_m1, _Gamma_m1, CheckMinPres_Yes, MIN_PRES, UseEnpy2FixEngy );
+            Hydro_DualEnergyFix( Flu_FData[DENS][k][j][i], Flu_FData[MOMX][k][j][i], Flu_FData[MOMY][k][j][i],
+                                 Flu_FData[MOMZ][k][j][i], Flu_FData[ENGY][k][j][i], Flu_FData[ENPY][k][j][i],
+                                 dummy, Gamma_m1, _Gamma_m1, CheckMinPres_Yes, MIN_PRES, UseEnpy2FixEngy );
 
 #           else // #ifdef DUAL_ENERGY
 
@@ -532,9 +532,9 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
             const real EngyB = NULL_REAL;
 #           endif
             Flu_FData[ENGY][k][j][i]
-               = CPU_CheckMinPresInEngy( Flu_FData[DENS][k][j][i], Flu_FData[MOMX][k][j][i], Flu_FData[MOMY][k][j][i],
-                                         Flu_FData[MOMZ][k][j][i], Flu_FData[ENGY][k][j][i],
-                                         Gamma_m1, _Gamma_m1, MIN_PRES, EngyB );
+               = Hydro_CheckMinPresInEngy( Flu_FData[DENS][k][j][i], Flu_FData[MOMX][k][j][i], Flu_FData[MOMY][k][j][i],
+                                           Flu_FData[MOMZ][k][j][i], Flu_FData[ENGY][k][j][i],
+                                           Gamma_m1, _Gamma_m1, MIN_PRES, EngyB );
 #           endif // #ifdef DUAL_ENERGY ... else ...
 #           endif // #if ( MODEL == HYDRO )
 
@@ -546,7 +546,7 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
 
                for (int v=0; v<NCOMP_PASSIVE; v++)    Passive[v] = Flu_FData[ NCOMP_FLUID + v ][k][j][i];
 
-               CPU_NormalizePassive( Flu_FData[DENS][k][j][i], Passive, PassiveNorm_NVar, PassiveNorm_VarIdx );
+               Hydro_NormalizePassive( Flu_FData[DENS][k][j][i], Passive, PassiveNorm_NVar, PassiveNorm_VarIdx );
 
                for (int v=0; v<NCOMP_PASSIVE; v++)    Flu_FData[ NCOMP_FLUID + v ][k][j][i] = Passive[v];
             }
@@ -620,7 +620,7 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
 
 //       (c1.4) pass particles from father to son
 #        ifdef PARTICLE
-         Par_PassParticle2Son( lv, PID );
+         Par_PassParticle2Son_SinglePatch( lv, PID );
 #        endif
 
       } // if ( Pedigree->flag  &&  Pedigree->son == -1 )

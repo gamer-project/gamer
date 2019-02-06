@@ -58,8 +58,8 @@ void Flu_CorrAfterAllSync()
 
    for (int lv=0; lv<NLEVEL; lv++)
    {
-      Par_PassParticle2Sibling     ( lv, TimingSendPar_No );
-      Par_PassParticle2Son_AllPatch( lv, TimingSendPar_No );
+      Par_PassParticle2Sibling( lv, TimingSendPar_No );
+      Par_PassParticle2Son_MultiPatch( lv, PAR_PASS2SON_EVOLVE, TimingSendPar_No, NULL_INT, NULL );
    }
 
    if ( OPT__VERBOSE  &&  MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );

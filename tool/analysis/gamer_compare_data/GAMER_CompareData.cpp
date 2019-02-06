@@ -244,7 +244,7 @@ void CompareGridData()
                   Data1  = patch1.ptr[lv][PID1]->fluid[v][k][j][i];
                   Data2  = patch2.ptr[lv][PID2]->fluid[v][k][j][i];
                   AbsErr = Data1 - Data2;
-                  RelErr = AbsErr / Data2;
+                  RelErr = AbsErr / ( 0.5*(Data1+Data2) );
 
                   if ( Data1 == 0.0  &&  Data2 == 0.0 )  continue;
 
@@ -259,7 +259,7 @@ void CompareGridData()
                   Data1  = patch1.ptr[lv][PID1]->pot[k][j][i];
                   Data2  = patch2.ptr[lv][PID2]->pot[k][j][i];
                   AbsErr = Data1 - Data2;
-                  RelErr = AbsErr / Data2;
+                  RelErr = AbsErr / ( 0.5*(Data1+Data2) );
 
                   if ( Data1 == 0.0  &&  Data2 == 0.0 )  continue;
 
@@ -274,7 +274,7 @@ void CompareGridData()
                   Data1  = patch1.ptr[lv][PID1]->par_dens[k][j][i];
                   Data2  = patch2.ptr[lv][PID2]->par_dens[k][j][i];
                   AbsErr = Data1 - Data2;
-                  RelErr = AbsErr / Data2;
+                  RelErr = AbsErr / ( 0.5*(Data1+Data2) );
 
                   if ( Data1 == 0.0  &&  Data2 == 0.0 )  continue;
 
@@ -389,7 +389,7 @@ void CompareParticleData()
       Data2  = ParData2[v][ParID2];
 
       AbsErr = Data1 - Data2;
-      RelErr = AbsErr / Data2;
+      RelErr = AbsErr / ( 0.5*(Data1+Data2) );
 
       if ( Data1 == 0.0  &&  Data2 == 0.0 )  continue;
 
@@ -1060,8 +1060,13 @@ void Load_Parameter_After_2000( FILE *File, const int FormatVersion, bool &WithP
 
    WithParDens = opt__output_par_dens;
    WithPar     = particle;
-   if ( WithPar )    NParVarOut = 7 + par_npassive;   // mass, position x/y/z, velocity x/y/z, and passive variables
-   else              NParVarOut = -1;
+   if ( WithPar )
+   {
+      if ( FormatVersion > 2131 )   NParVarOut = par_nvar;           // after version 2131, par_nvar = PAR_NATT_STORED
+      else                          NParVarOut = 7 + par_npassive;   // mass, position x/y/z, velocity x/y/z, and passive variables
+   }
+   else
+                                    NParVarOut = -1;
 
 } // FUNCTION : Load_Parameter_After_2000
 

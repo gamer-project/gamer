@@ -5,6 +5,9 @@
 
 #include "Macro.h"
 #include "AMR.h"
+#ifdef SUPPORT_LIBYT
+#include <libyt.h>
+#endif
 
 
 // **********************************************************************************************************
@@ -42,7 +45,6 @@ extern int       *BaseP;                              // table recording the IDs
 extern int        Flu_ParaBuf;                        // number of parallel buffers to exchange all fluid
                                                       // variables for the fluid solver and fluid refinement
 
-extern char      *PassiveFieldName_Grid[NCOMP_PASSIVE];
 extern int        PassiveNorm_NVar;
 extern int        PassiveNorm_VarIdx[NCOMP_PASSIVE];
 
@@ -66,6 +68,7 @@ extern bool       OPT__UM_IC_DOWNGRADE, OPT__UM_IC_REFINE, OPT__TIMING_MPI;
 extern bool       OPT__CK_CONSERVATION, OPT__RESET_FLUID, OPT__RECORD_USER, OPT__NORMALIZE_PASSIVE, AUTO_REDUCE_DT;
 extern bool       OPT__OPTIMIZE_AGGRESSIVE, OPT__INIT_GRID_WITH_OMP, OPT__NO_FLAG_NEAR_BOUNDARY;
 
+extern UM_IC_Format_t     OPT__UM_IC_FORMAT;
 extern TestProbID_t       TESTPROB_ID;
 extern OptInit_t          OPT__INIT;
 extern IntScheme_t        OPT__FLU_INT_SCHEME, OPT__REF_FLU_INT_SCHEME;
@@ -84,9 +87,8 @@ extern OptTimeStepLevel_t OPT__DT_LEVEL;
 // (2-1) fluid solver in different models
 #if   ( MODEL == HYDRO )
 extern double           FlagTable_PresGradient[NLEVEL-1], FlagTable_Vorticity[NLEVEL-1], FlagTable_Jeans[NLEVEL-1];
-extern double           GAMMA, MINMOD_COEFF, EP_COEFF, MOLECULAR_WEIGHT;
+extern double           GAMMA, MINMOD_COEFF, MOLECULAR_WEIGHT;
 extern LR_Limiter_t     OPT__LR_LIMITER;
-extern WAF_Limiter_t    OPT__WAF_LIMITER;
 extern Opt1stFluxCorr_t OPT__1ST_FLUX_CORR;
 extern OptRSolver1st_t  OPT__1ST_FLUX_CORR_SCHEME;
 extern bool             OPT__FLAG_PRES_GRADIENT, OPT__FLAG_LOHNER_ENGY, OPT__FLAG_LOHNER_PRES, OPT__FLAG_LOHNER_TEMP;
@@ -165,7 +167,6 @@ extern bool            OPT__OUTPUT_PAR_TEXT, OPT__CK_PARTICLE, OPT__FLAG_NPAR_CE
 extern int             OPT__PARTICLE_COUNT, OPT__FLAG_NPAR_PATCH, FlagTable_NParPatch[NLEVEL-1], FlagTable_NParCell[NLEVEL-1];
 extern double          FlagTable_ParMassCell[NLEVEL-1];
 extern ParOutputDens_t OPT__OUTPUT_PAR_DENS;
-extern char           *PassiveFieldName_Par[PAR_NPASSIVE];
 #endif
 
 
@@ -180,7 +181,7 @@ extern yt_verbose      YT_VERBOSE;
 // (2-7) Grackle
 // ============================================================================================================
 #ifdef SUPPORT_GRACKLE
-extern GrackleMode_t   GRACKLE_MODE;
+extern bool            GRACKLE_ACTIVATE;
 extern bool            GRACKLE_VERBOSE;
 extern bool            GRACKLE_COOLING;
 extern GracklePriChe_t GRACKLE_PRIMORDIAL;
@@ -211,12 +212,12 @@ extern double                SF_CREATE_STAR_MAX_STAR_MFRAC;
 
 // 3. CPU (host) arrays for transferring data between CPU and GPU
 // ============================================================================================================
-extern real       (*h_Flu_Array_F_In [2])[FLU_NIN ][  FLU_NXT   *FLU_NXT   *FLU_NXT   ];
-extern real       (*h_Flu_Array_F_Out[2])[FLU_NOUT][8*PATCH_SIZE*PATCH_SIZE*PATCH_SIZE];
-extern real       (*h_Flux_Array[2])[9][NFLUX_TOTAL][4*PATCH_SIZE*PATCH_SIZE];
+extern real       (*h_Flu_Array_F_In [2])[FLU_NIN ][ CUBE(FLU_NXT) ];
+extern real       (*h_Flu_Array_F_Out[2])[FLU_NOUT][ CUBE(PS2) ];
+extern real       (*h_Flux_Array[2])[9][NFLUX_TOTAL][ SQR(PS2) ];
 extern double     (*h_Corner_Array_F [2])[3];
 #ifdef DUAL_ENERGY
-extern char       (*h_DE_Array_F_Out [2])[8*PATCH_SIZE*PATCH_SIZE*PATCH_SIZE];
+extern char       (*h_DE_Array_F_Out [2])[ CUBE(PS2) ];
 #endif
 
 #ifdef GRAVITY
@@ -230,7 +231,7 @@ extern char       (*h_DE_Array_G     [2])[PATCH_SIZE][PATCH_SIZE][PATCH_SIZE];
 #endif
 
 #ifdef UNSPLIT_GRAVITY
-extern real       (*h_Pot_Array_USG_F[2])[USG_NXT_F ][USG_NXT_F ][USG_NXT_F ];
+extern real       (*h_Pot_Array_USG_F[2])[ CUBE(USG_NXT_F) ];
 extern real       (*h_Pot_Array_USG_G[2])[USG_NXT_G ][USG_NXT_G ][USG_NXT_G ];
 extern real       (*h_Flu_Array_USG_G[2])[GRA_NIN-1][PS1][PS1][PS1];
 #endif
@@ -257,6 +258,12 @@ extern real       (*h_Pot_Array_T[2])[ CUBE(GRA_NXT) ];
 // ============================================================================================================
 /*** These global variables are NOT included here. Instead, they are included by individual files
      only if necessary. ***/
+
+
+
+// 5. global variables related to different fields
+// ============================================================================================================
+/*** Defined in Field.h ***/
 
 
 

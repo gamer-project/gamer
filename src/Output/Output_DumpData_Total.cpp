@@ -16,7 +16,7 @@ Procedure for outputting new variables:
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Output_DumpData_Total (FormatVersion = 2131)
+// Function    :  Output_DumpData_Total (FormatVersion = 2203)
 // Description :  Output all simulation data in the binary form, which can be used as a restart file
 //
 // Note        :  1. This output format is deprecated and is mainly used for debugging only
@@ -28,6 +28,14 @@ Procedure for outputting new variables:
 //                2120 : 2017/02/14 --> output passive grid and particle variables
 //                2130 : 2017/08/09 --> output dTime_AllLv
 //                2131 : 2017/12/05 --> no longer define INTEL
+//                2200 : 2018/07/15 --> replace PAR_NVAR and PAR_NPASSIVE by PAR_NATT_STORED and PAR_NATT_USER;
+//                                      use the new infrastructure for adding user-defined grid fields and
+//                                      particle attributes
+//                                      --> imcompatible with version 2131 for the data with user-defined particle
+//                                          attributes as the order of their indices may be different
+//                2201 : 2018/12/12 --> always set EP_COEFF=NULL_REAL since this variable no longer exists
+//                2202 : 2018/12/15 --> set WAF-related variables to arbitrary values since they no longer exist
+//                2203 : 2018/12/27 --> replace GRA_BLOCK_SIZE_Z by GRA_BLOCK_SIZE
 //-------------------------------------------------------------------------------------------------------
 void Output_DumpData_Total( const char *FileName )
 {
@@ -70,7 +78,6 @@ void Output_DumpData_Total( const char *FileName )
 
 // get the number of partices in each rank and the corresponding global particle index offset
 #  ifdef PARTICLE
-   const int NParVar  = 7 + PAR_NPASSIVE;    // particle mass, position x/y/z, velocity x/y/z, and passive variables
    long GParID_Offset = 0;                   // GParID = global particle index (==> unique for each particle)
    long NPar_EachRank[MPI_NRank];
 
@@ -161,13 +168,13 @@ void Output_DumpData_Total( const char *FileName )
 
       FileOffset_Particle = ExpectFileSize;  // file offset at the beginning of particle data
 
-      ExpectFileSize += (long)NParVar*amr->Par->NPar_Active_AllRank*sizeof(real);
+      ExpectFileSize += (long)PAR_NATT_STORED*amr->Par->NPar_Active_AllRank*sizeof(real);
 #     endif
 
 
 //    a. output the information of data format
 //    =================================================================================================
-      const long FormatVersion = 2131;
+      const long FormatVersion = 2203;
       const long CheckCode     = 123456789;
 
       fseek( File, HeaderOffset_Format, SEEK_SET );
@@ -441,11 +448,7 @@ void Output_DumpData_Total( const char *FileName )
       const bool   hll_include_all_waves = false;
 #     endif
 
-#     ifdef WAF_DISSIPATE
-      const bool   waf_dissipate         = true;
-#     else
-      const bool   waf_dissipate         = false;
-#     endif
+      const bool   waf_dissipate_uesless = NULL_BOOL;    // this variable no longer exists
 
 #     ifdef MAX_ERROR
       const double max_error             = MAX_ERROR;
@@ -474,18 +477,18 @@ void Output_DumpData_Total( const char *FileName )
       const int   pot_block_size_z       = NULL_INT;
 #     endif
 
-#     ifdef GRA_BLOCK_SIZE_Z
-      const int   gra_block_size_z       = GRA_BLOCK_SIZE_Z;
+#     ifdef GRA_BLOCK_SIZE
+      const int   gra_block_size         = GRA_BLOCK_SIZE;
 #     else
-      const int   gra_block_size_z       = NULL_INT;
+      const int   gra_block_size         = NULL_INT;
 #     endif
 
 #     ifdef PARTICLE
-      const int    par_nvar              = PAR_NVAR;
-      const int    par_npassive          = PAR_NPASSIVE;
+      const int    par_natt_stored       = PAR_NATT_STORED;
+      const int    par_natt_user         = PAR_NATT_USER;
 #     else
-      const int    par_nvar              = NULL_INT;
-      const int    par_npassive          = NULL_INT;
+      const int    par_natt_stored       = NULL_INT;
+      const int    par_natt_user         = NULL_INT;
 #     endif
 
       fwrite( &ncomp_fluid,               sizeof(int),                     1,             File );
@@ -499,16 +502,16 @@ void Output_DumpData_Total( const char *FileName )
       fwrite( &check_intermediate,        sizeof(int),                     1,             File );
       fwrite( &hll_no_ref_state,          sizeof(bool),                    1,             File );
       fwrite( &hll_include_all_waves,     sizeof(bool),                    1,             File );
-      fwrite( &waf_dissipate,             sizeof(bool),                    1,             File );
+      fwrite( &waf_dissipate_uesless,     sizeof(bool),                    1,             File );
       fwrite( &max_error,                 sizeof(double),                  1,             File );
       fwrite( &flu_block_size_x,          sizeof(int),                     1,             File );
       fwrite( &flu_block_size_y,          sizeof(int),                     1,             File );
       fwrite( &use_psolver_10to14,        sizeof(bool),                    1,             File );
       fwrite( &pot_block_size_x,          sizeof(int),                     1,             File );
       fwrite( &pot_block_size_z,          sizeof(int),                     1,             File );
-      fwrite( &gra_block_size_z,          sizeof(int),                     1,             File );
-      fwrite( &par_nvar,                  sizeof(int),                     1,             File );
-      fwrite( &par_npassive,              sizeof(int),                     1,             File );
+      fwrite( &gra_block_size,            sizeof(int),                     1,             File );
+      fwrite( &par_natt_stored,           sizeof(int),                     1,             File );
+      fwrite( &par_natt_user,             sizeof(int),                     1,             File );
 
 
 //    d. output the simulation parameters recorded in the file "Input__Parameter"
@@ -564,9 +567,11 @@ void Output_DumpData_Total( const char *FileName )
       const double lb_wli_max                = NULL_REAL;
 #     endif
 
+      const double EP_COEFF_useless          = NULL_REAL;   // this variable no longer exists
+      const int    opt__waf_limiter_useless  = NULL_INT;    // this variable no longer exists
+
 #     if ( MODEL == HYDRO )
       const int    opt__lr_limiter           = (int)OPT__LR_LIMITER;
-      const int    opt__waf_limiter          = (int)OPT__WAF_LIMITER;
 
 //    convert OPT__1ST_FLUX_CORR to bool to be consistent with the old format where OPT__1ST_FLUX_CORR is bool instead of int
       const bool   opt__1st_flux_corr        = (bool)OPT__1ST_FLUX_CORR;
@@ -576,9 +581,7 @@ void Output_DumpData_Total( const char *FileName )
       const double GAMMA                     = NULL_REAL;
       const double MOLECULAR_WEIGHT          = NULL_REAL;
       const double MINMOD_COEFF              = NULL_REAL;
-      const double EP_COEFF                  = NULL_REAL;
       const int    opt__lr_limiter           = NULL_INT;
-      const int    opt__waf_limiter          = NULL_INT;
       const bool   opt__1st_flux_corr        = NULL_BOOL;
       const int    opt__1st_flux_corr_scheme = NULL_INT;
 #     endif
@@ -624,9 +627,9 @@ void Output_DumpData_Total( const char *FileName )
       fwrite( &lb_wli_max,                sizeof(double),                  1,             File );
       fwrite( &GAMMA,                     sizeof(double),                  1,             File );
       fwrite( &MINMOD_COEFF,              sizeof(double),                  1,             File );
-      fwrite( &EP_COEFF,                  sizeof(double),                  1,             File );
+      fwrite( &EP_COEFF_useless,          sizeof(double),                  1,             File );
       fwrite( &opt__lr_limiter,           sizeof(int),                     1,             File );
-      fwrite( &opt__waf_limiter,          sizeof(int),                     1,             File );
+      fwrite( &opt__waf_limiter_useless,  sizeof(int),                     1,             File );
       fwrite( &ELBDM_MASS,                sizeof(double),                  1,             File );
       fwrite( &ELBDM_PLANCK_CONST,        sizeof(double),                  1,             File );
       fwrite( &FLU_GPU_NPGROUP,           sizeof(int),                     1,             File );
@@ -879,21 +882,10 @@ void Output_DumpData_Total( const char *FileName )
 // output particle data (one attribute at a time to avoid creating holes in the file)
    const long ParDataSize1v = amr->Par->NPar_Active_AllRank*sizeof(real);
 
-   real *ParData[NParVar];
-   long  NParInBuf, ParID, FileOffset_ThisVar;
-   int   NParThisPatch;
+   long NParInBuf, ParID, FileOffset_ThisVar;
+   int  NParThisPatch;
 
-   ParData[0] = amr->Par->Mass;
-   ParData[1] = amr->Par->PosX;
-   ParData[2] = amr->Par->PosY;
-   ParData[3] = amr->Par->PosZ;
-   ParData[4] = amr->Par->VelX;
-   ParData[5] = amr->Par->VelY;
-   ParData[6] = amr->Par->VelZ;
-
-   for (int v=0; v<PAR_NPASSIVE; v++)  ParData[7+v] = amr->Par->Passive[v];
-
-   for (int v=0; v<NParVar; v++)
+   for (int v=0; v<PAR_NATT_STORED; v++)
    for (int TargetMPIRank=0; TargetMPIRank<MPI_NRank; TargetMPIRank++)
    {
       if ( MPI_Rank == TargetMPIRank )
@@ -929,7 +921,7 @@ void Output_DumpData_Total( const char *FileName )
             {
                ParID = amr->patch[0][lv][PID]->ParList[p];
 
-               ParBuf[ NParInBuf ++ ] = ParData[v][ParID];
+               ParBuf[ NParInBuf ++ ] = amr->Par->Attribute[v][ParID];
             }
 
 //          store particle data from I/O buffer to disk
@@ -945,7 +937,7 @@ void Output_DumpData_Total( const char *FileName )
       } // if ( MPI_Rank == TargetMPIRank )
 
       MPI_Barrier( MPI_COMM_WORLD );
-   } // for (int TargetMPIRank=0; TargetMPIRank<MPI_NRank; TargetMPIRank++), for (int v=0; v<NParVar; v++)
+   } // for (int TargetMPIRank=0; TargetMPIRank<MPI_NRank; TargetMPIRank++), for (int v=0; v<PAR_NATT_STORED; v++)
 
    delete [] ParBuf;
 #  endif // #ifdef PARTICLE

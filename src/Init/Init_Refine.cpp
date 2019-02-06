@@ -70,7 +70,7 @@ void Init_Refine( const int lv )
 
 //          pass particles from father to son
 #           ifdef PARTICLE
-            Par_PassParticle2Son( lv, PID );
+            Par_PassParticle2Son_SinglePatch( lv, PID );
 #           endif
          } // if ( amr->patch[0][lv][PID]->flag )
       } // for (int PID=amr->NPatchComma[lv][s+1]; PID<amr->NPatchComma[lv][s+2]; PID++)

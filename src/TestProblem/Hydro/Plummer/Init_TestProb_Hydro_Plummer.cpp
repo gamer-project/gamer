@@ -15,8 +15,12 @@
        double Plummer_BulkVel[3];   // bulk velocity
        double Plummer_GasMFrac;     // gas mass fraction
        int    Plummer_MassProfNBin; // number of radial bins in the mass profile table
+static bool   Plummer_AddColor;     // assign different colors to different clouds for Plummer_Collision
 
 static double Plummer_FreeT;        // free-fall time at Plummer_R0
+
+static FieldIdx_t Plummer_Idx_Cloud0 = Idx_Undefined;    // field indices for Plummer_AddColor
+static FieldIdx_t Plummer_Idx_Cloud1 = Idx_Undefined;
 // =======================================================================================
 
 // problem-specific function prototypes
@@ -24,7 +28,7 @@ static double Plummer_FreeT;        // free-fall time at Plummer_R0
 void Par_Init_ByFunction_Plummer( const long NPar_ThisRank, const long NPar_AllRank,
                                   real *ParMass, real *ParPosX, real *ParPosY, real *ParPosZ,
                                   real *ParVelX, real *ParVelY, real *ParVelZ, real *ParTime,
-                                  real *ParPassive[PAR_NPASSIVE] );
+                                  real *AllAttribute[PAR_NATT_TOTAL] );
 #endif
 
 
@@ -53,10 +57,6 @@ void Validate()
 
 #  ifndef GRAVITY
    Aux_Error( ERROR_INFO, "GRAVITY must be enabled !!\n" );
-#  endif
-
-#  ifndef PARTICLE
-   Aux_Error( ERROR_INFO, "PARTICLE must be enabled !!\n" );
 #  endif
 
 #  ifdef COMOVING
@@ -135,6 +135,7 @@ void SetParameter()
    ReadPara->Add( "Plummer_BulkVelZ",     &Plummer_BulkVel[2],    0.0,           NoMin_double,     NoMax_double      );
    ReadPara->Add( "Plummer_GasMFrac",     &Plummer_GasMFrac,      0.5,           Eps_double,       1.0               );
    ReadPara->Add( "Plummer_MassProfNBin", &Plummer_MassProfNBin,  1000,          2,                NoMax_int         );
+   ReadPara->Add( "Plummer_AddColor",     &Plummer_AddColor,      false,         Useless_bool,     Useless_bool      );
 
    ReadPara->Read( FileName );
 
@@ -144,8 +145,22 @@ void SetParameter()
    for (int d=0; d<3; d++)
       if ( Plummer_Center[d] == NoDef_double )  Plummer_Center[d] = 0.5*amr->BoxSize[d];
 
-// (1-3) check the runtime parameters
+   if ( !Plummer_Collision  &&  Plummer_AddColor )
+      Aux_Error( ERROR_INFO, "\"Plummer_AddColor\" must work with \"Plummer_Collision\" !!\n" );
 
+// (1-3) check and reset the runtime parameters
+   if ( Plummer_AddColor  &&  NCOMP_PASSIVE_USER != 2 )
+      Aux_Error( ERROR_INFO, "please set NCOMP_PASSIVE_USER to 2 for \"Plummer_AddColor\" !!\n" );
+
+#  ifndef PARTICLE
+   if ( Plummer_GasMFrac != 1.0 )
+   {
+      Plummer_GasMFrac = 1.0;
+
+      if ( MPI_Rank == 0 )
+         Aux_Message( stderr, "WARNING : \"Plummer_GasMFrac\" is reset to 1.0 since PARTICLE is disabled !!\n" );
+   }
+#  endif
 
 // (2) set the problem-specific derived parameters
 #  ifdef GRAVITY
@@ -182,8 +197,9 @@ void SetParameter()
                                                                                      "colliding clouds":"single cloud" );
       for (int d=0; d<3; d++)
       Aux_Message( stdout, "  central coordinate [%d]                   = %14.7e\n", d, Plummer_Center[d] );
-      if ( Plummer_Collision )
+      if ( Plummer_Collision ) {
       Aux_Message( stdout, "  initial distance between two clouds       = %13.7e\n", Plummer_Collision_D );
+      Aux_Message( stdout, "  assign colors to different clouds         = %d\n",     Plummer_AddColor ); }
       for (int d=0; d<3; d++)
       Aux_Message( stdout, "  bulk velocity [%d]                        = %14.7e\n", d, Plummer_BulkVel[d] );
 #     if ( MODEL == HYDRO )
@@ -254,13 +270,8 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
          fluid[ENGY] += (  NEWTON_G*TotM*GasRho0 / ( 6.0*Plummer_R0*CUBE(1.0 + a2) ) + PresBg  ) / ( GAMMA - 1.0 );
 #        endif
 
-#        if ( NCOMP_PASSIVE_USER > 0 )
-#        if ( NCOMP_PASSIVE_USER == 2 )
-         fluid[ (t==-1)?NCOMP_FLUID:NCOMP_FLUID+1 ] = Dens;
-#        else
-#        error : ERROR : please specify how to set the passive scalars here !!
-#        endif
-#        endif // #if ( NCOMP_PASSIVE > 0 )
+         if ( Plummer_AddColor )
+         fluid[ (t==-1)?Plummer_Idx_Cloud0:Plummer_Idx_Cloud1 ] = Dens;
       }
 
       fluid[MOMX]  = fluid[DENS]*Plummer_BulkVel[0];
@@ -289,6 +300,33 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
    } // if ( Plummer_Collision ) ... else ...
 
 } // FUNCTION : SetGridIC
+
+
+
+//-------------------------------------------------------------------------------------------------------
+// Function    :  AddNewField_Plummer
+// Description :  Add the problem-specific fields
+//
+// Note        :  1. Ref: https://github.com/gamer-project/gamer/wiki/Adding-New-Simulations#v-add-problem-specific-grid-fields-and-particle-attributes
+//                2. Invoke AddField() for each of the problem-specific field:
+//                   --> Field label sent to AddField() will be used as the output name of the field
+//                   --> Field index returned by AddField() can be used to access the field data
+//                3. Pre-declared field indices are put in Field.h
+//
+// Parameter   :  None
+//
+// Return      :  None
+//-------------------------------------------------------------------------------------------------------
+void AddNewField_Plummer()
+{
+
+   if ( Plummer_AddColor )
+   {
+      Plummer_Idx_Cloud0 = AddField( "Cloud0", NORMALIZE_YES );
+      Plummer_Idx_Cloud1 = AddField( "Cloud1", NORMALIZE_YES );
+   }
+
+} // FUNCTION : AddNewField_Plummer
 #endif // #if ( MODEL == HYDRO )
 
 
@@ -319,6 +357,7 @@ void Init_TestProb_Hydro_Plummer()
 
 
    Init_Function_User_Ptr   = SetGridIC;
+   Init_Field_User_Ptr      = AddNewField_Plummer;
    Flag_User_Ptr            = NULL;
    Mis_GetTimeStep_User_Ptr = NULL;
    BC_User_Ptr              = NULL;

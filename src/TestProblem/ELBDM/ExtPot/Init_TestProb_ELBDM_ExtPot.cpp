@@ -206,8 +206,7 @@ void BC( real fluid[], const double x, const double y, const double z, const dou
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Init_ExtPot
-// Description :  Set the array "ExtPot_AuxArray" used by the external potential routines
-//                "CUPOT_ExternalPot.cu / CPU_ExternalPot.cpp"
+// Description :  Set ExtPot_AuxArray[] used by the external potential routine ExternalPot()
 //
 // Note        :  1. Linked to the function pointer "Init_ExternalPot_Ptr"
 //                2. Enabled by the runtime option "OPT__EXTERNAL_POT"
