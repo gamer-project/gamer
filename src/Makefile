@@ -61,9 +61,9 @@ SIMU_OPTION += -DFLU_SCHEME=CTU
 # --> useless for RTVD
 SIMU_OPTION += -DLR_SCHEME=PPM
 
-# Riemann solver: EXACT/ROE/HLLE/HLLC
+# Riemann solver: EXACT/ROE/HLLE/HLLC/HLLD
+# --> pure hydro: EXACT/ROE/HLLE/HLLC; MHD: ROE/HLLE/HLLD
 # --> useless for RTVD
-# --> HLLD is only for MHD; EXACT and HLLC are only for pure hydro
 SIMU_OPTION += -DRSOLVER=ROE
 
 # dual energy formalism: DE_ENPY/DE_EINT (evolve entropy or internal energy)

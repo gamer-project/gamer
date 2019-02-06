@@ -755,8 +755,8 @@ void Aux_Check_Parameter()
 #     error : ERROR : unsupported hydro scheme in the makefile (MHM_RP/CTU) !!
 #  endif
 
-#  if ( defined RSOLVER  &&  RSOLVER != ROE  &&  RSOLVER != HLLD )
-#     error : ERROR : unsupported Riemann solver for MHD (ROE/HLLD) !!
+#  if ( defined RSOLVER  &&  RSOLVER != ROE  &&  RSOLVER != HLLE  &&  RSOLVER != HLLD )
+#     error : ERROR : unsupported Riemann solver for MHD (ROE/HLLE/HLLD) !!
 #  endif
 
    if ( OPT__MAG_INT_SCHEME != INT_MINMOD1D  &&  OPT__MAG_INT_SCHEME != INT_VANLEER  &&
