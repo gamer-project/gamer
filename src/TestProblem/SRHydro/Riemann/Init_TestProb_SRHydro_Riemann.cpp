@@ -2,8 +2,6 @@
 #include "TestProb.h"
 
 
-void CPU_Pri2Con( const real In[], real Out[], const real Gamma);
-void CPU_3Velto4Vel( const real In[], real Out[] );
 
 // problem-specific global variables
 // =======================================================================================
@@ -234,8 +232,8 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
    PriVar3L[3]=0.0;
    PriVar3L[4]=Riemann_PreL;
    
-   CPU_3Velto4Vel(PriVar3L, PriVar4L);
-   CPU_Pri2Con(PriVar4L, ConVarL, GAMMA);
+   SRHydro_3Velto4Vel(PriVar3L, PriVar4L);
+   SRHydro_Pri2Con(PriVar4L, ConVarL, GAMMA);
 
 // right-state
    PriVar3R[0]=Riemann_RhoR;
@@ -244,8 +242,8 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
    PriVar3R[3]=0.0;
    PriVar3R[4]=Riemann_PreR;
    
-   CPU_3Velto4Vel(PriVar3R, PriVar4R);
-   CPU_Pri2Con(PriVar4R, ConVarR, GAMMA);
+   SRHydro_3Velto4Vel(PriVar3R, PriVar4R);
+   SRHydro_Pri2Con(PriVar4R, ConVarR, GAMMA);
 
    double r, BoxCen;
    int    TVar[NCOMP_FLUID];

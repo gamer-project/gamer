@@ -947,12 +947,6 @@ void Aux_TakeNote()
                                                                   ( OPT__LR_LIMITER == CONSTANT          ) ? "CONSTANT"   :
                                                                   ( OPT__LR_LIMITER == LR_LIMITER_NONE   ) ? "NONE"       :
                                                                                                              "UNKNOWN" );
-      fprintf( Note, "OPT__WAF_LIMITER                %s\n",      ( OPT__WAF_LIMITER == WAF_SUPERBEE     ) ? "WAF_SUPERBEE":
-                                                                  ( OPT__WAF_LIMITER == WAF_VANLEER      ) ? "WAF_VANLEER" :
-                                                                  ( OPT__WAF_LIMITER == WAF_ALBADA       ) ? "WAF_ALBADA"  :
-                                                                  ( OPT__WAF_LIMITER == WAF_MINBEE       ) ? "WAF_MINBEE"  :
-                                                                  ( OPT__WAF_LIMITER == WAF_LIMITER_NONE ) ? "NONE"        :
-                                                                                                             "UNKNOWN" );
       fprintf( Note, "OPT__1ST_FLUX_CORR              %s\n",      ( OPT__1ST_FLUX_CORR == FIRST_FLUX_CORR_3D   ) ? "3D"   :
                                                                   ( OPT__1ST_FLUX_CORR == FIRST_FLUX_CORR_3D1D ) ? "3D1D" :
                                                                   ( OPT__1ST_FLUX_CORR == FIRST_FLUX_CORR_NONE ) ? "NONE" :

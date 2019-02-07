@@ -1,10 +1,6 @@
 #include "GAMER.h"
 #include "CUFLU.h"
 
-#if ( MODEL == SR_HYDRO )
-bool CPU_CheckUnphysical( const real Con[], const real Pri[], const char s[], const int line, bool show);
-#endif
-
 #ifdef LOAD_BALANCE
 
 void PrepareCData( const int FaLv, const int FaPID, real *const FaData,
@@ -849,7 +845,7 @@ int AllocateSonPatch( const int FaLv, const int *Cr, const int PScale, const int
       {
 	 real Con[NCOMP_FLUID];
 	 for (int v = 0 ; v < NCOMP_FLUID;v++) Con[v] = FData_Flu[v][k][j][i];
-	 CPU_CheckUnphysical(Con, NULL, __FUNCTION__, __LINE__, true);
+	 SRHydro_CheckUnphysical(Con, NULL, const real GAMMA, __FUNCTION__, __LINE__, true);
       }
 #     endif
 

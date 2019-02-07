@@ -1,6 +1,5 @@
 #include "GAMER.h"
 #include "CUFLU.h"
-#include "../../include/CPU_prototypes.h"
 
 #if ( MODEL == ELBDM  &&  defined GAMER_DEBUG )
 void ELBDM_GetPhase_DebugOnly( real *CData, const int CSize );
@@ -513,7 +512,7 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
 	   for (int i=0; i<FSize; i++)
 	   {
 	     for (int v = 0 ; v < NCOMP_FLUID;v++) Con[v] = Flu_FData[v][k][j][i];
-	     if(CPU_CheckUnphysical(Con, NULL, __FUNCTION__, __LINE__, false))
+	     if(SRHydro_CheckUnphysical(Con, NULL, GAMMA, __FUNCTION__, __LINE__, false))
               {
                i = j = k = FSize; // break nested loop
                state = true;
@@ -531,7 +530,7 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
          for (int i=0; i<FSize; i++)
          {
            for (int v=0;v<NCOMP_TOTAL;v++)Con[v] = Flu_FData[v][k][j][i];
-           if(CPU_CheckUnphysical(Con, NULL, __FUNCTION__, __LINE__, true)) exit(EXIT_FAILURE);
+           if(SRHydro_CheckUnphysical(Con, NULL, GAMMA, __FUNCTION__, __LINE__, true)) exit(EXIT_FAILURE);
          }
 #        endif
 #        endif

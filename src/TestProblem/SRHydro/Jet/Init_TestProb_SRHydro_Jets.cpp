@@ -1,7 +1,6 @@
 #include "GAMER.h"
 #include "TestProb.h"
 
-void CPU_Pri2Con( const real In[], real Out[], const real Gamma);
 
 // problem-specific global variables
 // =======================================================================================
@@ -260,7 +259,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 // 4-velocity
    double Pri4Vel[NCOMP_FLUID] = { Jet_BgDens, Jet_BgVel[0], Jet_BgVel[1], Jet_BgVel[2], Jet_BgPres};
 
-   CPU_Pri2Con(Pri4Vel, fluid, GAMMA);
+   SRHydro_Pri2Con(Pri4Vel, fluid, GAMMA);
 
 } // FUNCTION : SetGridIC
 
@@ -378,7 +377,7 @@ bool Flu_ResetByUser_Jets( real fluid[], const double x, const double y, const d
          double Pri4Vel[NCOMP_FLUID]
                = { Jet_SrcDens[n], Jet_SrcVel_xyz[0]*MomSin, Jet_SrcVel_xyz[1]*MomSin, Jet_SrcVel_xyz[2]*MomSin, Jet_SrcPres[n] };
  
-         CPU_Pri2Con(Pri4Vel, fluid, GAMMA);
+         SRHydro_Pri2Con(Pri4Vel, fluid, GAMMA);
 
 //       return immediately since we do NOT allow different jet source to overlap
          return true;

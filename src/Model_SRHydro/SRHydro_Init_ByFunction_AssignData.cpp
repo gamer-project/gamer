@@ -1,6 +1,5 @@
 #include "GAMER.h"
 #include "CUFLU.h"
-#include "../../include/CPU_prototypes.h"
 
 
 // declare as static so that other functions cannot invoke it directly and must use the function pointer
@@ -13,9 +12,6 @@ void (*Init_Function_User_Ptr)( real fluid[], const double x, const double y, co
 
 extern bool (*Flu_ResetByUser_Func_Ptr)( real fluid[], const double x, const double y, const double z, const double Time,
                                          const int lv, double AuxArray[] );
-
-void CPU_Pri2Con( const real In[], real Out[], const real Gamma);
-void CPU_3Velto4Vel( const real In[], real Out[] );
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Init_Function_User
@@ -74,8 +70,8 @@ void Init_Function_User( real fluid[], const double x, const double y, const dou
       Prim1[3] = 0.0;
       Prim1[4] = pres_down;
 
-      CPU_3Velto4Vel (Prim1, Prim2);
-      CPU_Pri2Con (Prim2, fluid, GAMMA);
+      SRHydro_3Velto4Vel (Prim1, Prim2);
+      SRHydro_Pri2Con (Prim2, fluid, GAMMA);
    }else{ // up-stream
       Prim1[0] = dens_up;
       Prim1[1] = Vup*SIN(theta);
@@ -83,8 +79,8 @@ void Init_Function_User( real fluid[], const double x, const double y, const dou
       Prim1[3] = 0.0;
       Prim1[4] = pres_up;
 
-      CPU_3Velto4Vel (Prim1, Prim2);
-      CPU_Pri2Con (Prim2, fluid, GAMMA);
+      SRHydro_3Velto4Vel (Prim1, Prim2);
+      SRHydro_Pri2Con (Prim2, fluid, GAMMA);
    }
 
 
@@ -158,7 +154,7 @@ void SRHydro_Init_ByFunction_AssignData( const int lv )
 
 //       check minimum density and pressure
 #        ifdef CHECK_NEGATIVE_IN_FLUID
-	 if(CPU_CheckUnphysical(fluid, NULL, __FUNCTION__, __LINE__, true)) exit(EXIT_FAILURE);
+	 if(SRHydro_CheckUnphysical(fluid, NULL, GAMMA, __FUNCTION__, __LINE__, true)) exit(EXIT_FAILURE);
 #        endif
 
 
@@ -198,7 +194,7 @@ void SRHydro_Init_ByFunction_AssignData( const int lv )
 
 //       check minimum density and pressure
 #        ifdef CHECK_NEGATIVE_IN_FLUID
-	 if(CPU_CheckUnphysical(fluid, NULL, __FUNCTION__, __LINE__, true)) exit(EXIT_FAILURE);
+	 if(SRHydro_CheckUnphysical(fluid, NULL, GAMMA, __FUNCTION__, __LINE__, true)) exit(EXIT_FAILURE);
 #        endif
 
 

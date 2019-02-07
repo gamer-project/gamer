@@ -15,8 +15,6 @@ static double VelyDown;  // magnitude of 3-velocity in down-stream
 static double PresDown;  // pressure in down-stream
 // =======================================================================================
 
-void CPU_Pri2Con( const real In[], real Out[], const real Gamma);
-void CPU_3Velto4Vel( const real In[], real Out[] );
 
 
 //-------------------------------------------------------------------------------------------------------
@@ -187,8 +185,8 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
       Prim1[3] = 0.0;
       Prim1[4] = PresDown;
 
-      CPU_3Velto4Vel (Prim1, Prim2);
-      CPU_Pri2Con (Prim2, fluid, GAMMA);
+      SRHydro_3Velto4Vel (Prim1, Prim2);
+      SRHydro_Pri2Con (Prim2, fluid, GAMMA);
    }else{ // up-stream
       Prim1[0] = DensUp;
       Prim1[1] = VelyUp_x;
@@ -196,8 +194,8 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
       Prim1[3] = 0.0;
       Prim1[4] = PresUp;
 
-      CPU_3Velto4Vel (Prim1, Prim2);
-      CPU_Pri2Con (Prim2, fluid, GAMMA);
+      SRHydro_3Velto4Vel (Prim1, Prim2);
+      SRHydro_Pri2Con (Prim2, fluid, GAMMA);
    }
 
 } // FUNCTION : SetGridIC

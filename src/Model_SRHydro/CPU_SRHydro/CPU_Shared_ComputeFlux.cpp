@@ -1,130 +1,202 @@
-#include "GAMER.h"
-#include "CUFLU.h"
-#include "../../../include/CPU_prototypes.h"
+#ifndef __CUFLU_COMPUTEFLUX__
+#define __CUFLU_COMPUTEFLUX__
 
-#if ( !defined GPU  &&  MODEL == SR_HYDRO  &&  (FLU_SCHEME == MHM || FLU_SCHEME == MHM_RP) )
+
+
+#include "CUFLU.h"
+
+#if ( MODEL == SR_HYDRO  &&  (FLU_SCHEME == MHM || FLU_SCHEME == MHM_RP) )
+
+
+
+// external functions
+#ifdef __CUDACC__
+
+#if ( RSOLVER == HLLE )
+# include "CUFLU_Shared_RiemannSolver_HLLE.cu"
+#elif ( RSOLVER == HLLC )
+# include "CUFLU_Shared_RiemannSolver_HLLC.cu"
+#endif
+
+#ifdef UNSPLIT_GRAVITY
+# include "../../SelfGravity/GPU_Gravity/CUPOT_ExternalAcc.cu"
+#endif
+
+#else // #ifdef __CUDACC__
+
+#if ( RSOLVER == HLLE )
+void SRHydro_RiemannSolver_HLLE( const int XYZ, real Flux_Out[], const real L_In[], const real R_In[],
+                               const real Gamma, const real MinTemp );
+#elif ( RSOLVER == HLLC )
+void SRHydro_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In[], const real R_In[],
+                               const real Gamma, const real MinTemp );
+#endif
+
+#ifdef UNSPLIT_GRAVITY
+void ExternalAcc( real Acc[], const double x, const double y, const double z, const double Time, const double UserArray[] );
+#endif
+
+#endif // #ifdef __CUDACC__ ... else ...
+
+
+
+
 //-------------------------------------------------------------------------------------------------------
-// Function    :  CPU_ComputeFlux
+// Function    :  SRHydro_ComputeFlux
 // Description :  Compute the face-centered fluxes by Riemann solver
 //
 // Note        :  1. Currently support the exact, HLLC, HLLE, and Roe solvers
-//                2. The size of the input array "FC_Var" is assumed to be N_FC_VAR^3
-//                   --> "N_FC_VAR-1" fluxes will be computed along each direction
+//                2. g_FC_Var[] has the size of N_FC_VAR^3
+//                   --> "N_FC_VAR-1" fluxes will be computed along each normal direction
+//                   --> But "2*Gap" cells will skipped along the transverse direction (Gap cells on each side)
+//                3. g_FC_Flux[] has the size of N_FC_FLUX^3
+//                   --> But (i,j,k) flux will be stored in the "(k*N_FL_FLUX+j)*N_FL_FLUX+i" element in g_FC_Flux[]
+//                       --> We have assumed that N_FL_FLUX <= N_FC_FLUX
+//                   --> (i,j,k) in g_FC_Flux_x is defined on the +x surface of the cell (i,     j+Gap, k+Gap) in g_FC_Var[]
+//                       (i,j,k) in g_FC_Flux_y is defined on the +y surface of the cell (i+Gap, j,     k+Gap) in g_FC_Var[]
+//                       (i,j,k) in g_FC_Flux_z is defined on the +z surface of the cell (i+Gap, j+Gap, k    ) in g_FC_Var[]
+//                4. This function is shared by MHM, MHM_RP, and CTU schemes
+//                5. For the performance consideration, this function will also be responsible for storing the
+//                   inter-patch fluxes
+//                   --> Option "DumpIntFlux"
 //
-// Parameter   : [ 1] FC_Var          : Array storing the input face-centered conserved variables
-//               [ 2] FC_Flux         : Array to store the output face-centered flux
-//               [ 3] NFlux           : Size of the array FC_Flux in each direction (must be >= N_FC_VAR-1)
-//                                      --> The (i,j,k) flux will be stored in the array FC_Flux with
-//                                          the index "(k*NFlux+j)*NFlux+i"
-//                                      --> The (i,j,k) FC_Flux_x/y/z are defined at the +x/+y/+z surfaces of the
-//                                          cell (i,j,k)
-//               [ 4] Gap             : Number of grids to be skipped in the transverse direction
-//                                      --> "(N_FC_VAR-2*Gap)^2" fluxes will be computed on each surface
-//               [ 5] Gamma           : Ratio of specific heats
-//               [ 6] CorrHalfVel     : true --> correcting the half-step velocity by gravity (for UNSPLIT_GRAVITY only)
-//               [ 7] Pot_USG         : Array storing the input potential for CorrHalfVel     (for UNSPLIT_GRAVITY only)
-//                                      --> must have the same size as FC_Var ( (PS2+2)^3 )
-//               [ 8] Corner          : Array storing the physical corner coordinates of each patch group (for UNSPLIT_GRAVITY)
-//               [ 9] dt              : Time interval to advance the full-step solution       (for UNSPLIT_GRAVITY only)
-//               [10] dh              : Grid size                                             (for UNSPLIT_GRAVITY only)
-//               [11] Time            : Current physical time                                 (for UNSPLIT_GRAVITY only)
-//               [12] GravityType     : Types of gravity --> self-gravity, external gravity, both (for UNSPLIT_GRAVITY only)
-//               [13] ExtAcc_AuxArray : Auxiliary array for adding external acceleration          (for UNSPLIT_GRAVITY only)
-//               [14] MinPres         : Minimum allowed pressure
+// Parameter   :  g_FC_Var        : Array storing the input face-centered conserved variables
+//                g_FC_Flux       : Array to store the output face-centered fluxes
+//                Gap             : Number of cells to be skipped in the transverse directions
+//                                  --> "(N_FC_VAR-2*Gap)^2" fluxes will be computed on each surface
+//                Gamma           : Ratio of specific heats
+//                CorrHalfVel     : true --> correct the half-step velocity by gravity        (for UNSPLIT_GRAVITY only)
+//                g_Pot_USG       : Array storing the input potential for CorrHalfVel         (for UNSPLIT_GRAVITY only)
+//                                  --> must have the same size as g_FC_Var[] --> (PS2+2)^3
+//                g_Corner        : Array storing the corner coordinates of each patch group  (for UNSPLIT_GRAVITY only)
+//                dt              : Time interval to advance the full-step solution           (for UNSPLIT_GRAVITY only)
+//                dh              : Cell size                                                 (for UNSPLIT_GRAVITY only)
+//                Time            : Current physical time                                     (for UNSPLIT_GRAVITY only)
+//                GravityType     : Types of gravity --> self-gravity, external gravity, both (for UNSPLIT_GRAVITY only)
+//                ExtAcc_AuxArray : Auxiliary array for external acceleration                 (for UNSPLIT_GRAVITY only)
+//                MinTemp         : Minimum allowed temerature
+//                DumpIntFlux     : true --> store the inter-patch fluxes in g_IntFlux[]
+//                g_IntFlux       : Array for DumpIntFlux
 //-------------------------------------------------------------------------------------------------------
-void
-CPU_ComputeFlux(const real FC_Var[][6][NCOMP_TOTAL],
-		real FC_Flux[][3][NCOMP_TOTAL],
-		const int NFlux,
-		const int Gap,
-		const real Gamma,
-		const bool CorrHalfVel,
-		const real Pot_USG[],
-		const double Corner[],
-		const real dt, const real dh, const double Time,
-		const OptGravityType_t GravityType, const double ExtAcc_AuxArray[], const real MinPres)
+GPU_DEVICE
+void SRHydro_ComputeFlux( const real g_FC_Var [][NCOMP_TOTAL][ CUBE(N_FC_VAR) ],
+                              real g_FC_Flux[][NCOMP_TOTAL][ CUBE(N_FC_FLUX) ],
+                        const int Gap, const real Gamma, const bool CorrHalfVel, const real g_Pot_USG[],
+                        const double g_Corner[], const real dt, const real dh, const double Time,
+                        const OptGravityType_t GravityType, const double ExtAcc_AuxArray[], const real MinTemp,
+                        const bool DumpIntFlux, real g_IntFlux[][NCOMP_TOTAL][ SQR(PS2) ] )
 {
+
 // check
-#ifdef GAMER_DEBUG
-    if (CorrHalfVel)
-	Aux_Error(ERROR_INFO, "CorrHalfVel is NOT supported when UNSPLIT_GRAVITY is off !!\n");
-#endif				// #ifdef GAMER_DEBUG
+#  ifdef GAMER_DEBUG
+   if ( CorrHalfVel )
+      printf( "ERROR : CorrHalfVel is NOT supported when UNSPLIT_GRAVITY is off !!\n" );
+#  endif // #ifdef GAMER_DEBUG
 
-    const int dID2[3] = { 1, N_FC_VAR, N_FC_VAR * N_FC_VAR };
+   const int didx_fc[3] = { 1, N_FC_VAR, N_FC_VAR*N_FC_VAR };
 
-    real ConVar_L[NCOMP_TOTAL], ConVar_R[NCOMP_TOTAL];
-
-/*----- ID1: index of flux
- *----- ID2: index of face-centered variables ------*/
-
-    int ID1, ID2, dL, dR, start2[3] = { 0 }, end1[3] = { 0 };
+   real ConVar_L[NCOMP_TOTAL], ConVar_R[NCOMP_TOTAL], Flux_1Face[NCOMP_TOTAL];
 
 // loop over different spatial directions
-    for (int d = 0; d < 3; d++) {
-	dL = 2 * d;
-	dR = dL + 1;
+   for (int d=0; d<3; d++)
+   {
+      const int faceL = 2*d;
+      const int faceR = faceL+1;
 
-	switch (d) {
-	case 0:
-	    start2[0] = 0;
-	    start2[1] = Gap;
-	    start2[2] = Gap;
-	    end1[0] = N_FC_VAR - 1;
-	    end1[1] = N_FC_VAR - 2 * Gap;
-	    end1[2] = N_FC_VAR - 2 * Gap;
-	    break;
+      int idx_fc_s[3], idx_flux_e[3];
 
-	case 1:
-	    start2[0] = Gap;
-	    start2[1] = 0;
-	    start2[2] = Gap;
-	    end1[0] = N_FC_VAR - 2 * Gap;
-	    end1[1] = N_FC_VAR - 1;
-	    end1[2] = N_FC_VAR - 2 * Gap;
-	    break;
+      switch ( d )
+      {
+         case 0 : idx_fc_s  [0] = 0;              idx_fc_s  [1] = Gap;            idx_fc_s  [2] = Gap;
+                  idx_flux_e[0] = N_FC_VAR-1;     idx_flux_e[1] = N_FC_VAR-2*Gap; idx_flux_e[2] = N_FC_VAR-2*Gap; break;
 
-	case 2:
-	    start2[0] = Gap;
-	    start2[1] = Gap;
-	    start2[2] = 0;
-	    end1[0] = N_FC_VAR - 2 * Gap;
-	    end1[1] = N_FC_VAR - 2 * Gap;
-	    end1[2] = N_FC_VAR - 1;
-	    break;
-	}
+         case 1 : idx_fc_s  [0] = Gap;            idx_fc_s  [1] = 0;              idx_fc_s  [2] = Gap;
+                  idx_flux_e[0] = N_FC_VAR-2*Gap; idx_flux_e[1] = N_FC_VAR-1;     idx_flux_e[2] = N_FC_VAR-2*Gap; break;
 
-	for (int k1 = 0, k2 = start2[2]; k1 < end1[2]; k1++, k2++)
-	    for (int j1 = 0, j2 = start2[1]; j1 < end1[1]; j1++, j2++)
-		for (int i1 = 0, i2 = start2[0]; i1 < end1[0]; i1++, i2++) {
-		    ID1 = (k1 * NFlux + j1) * NFlux + i1; // index of 
-		    ID2 = (k2 * N_FC_VAR + j2) * N_FC_VAR + i2;
+         case 2 : idx_fc_s  [0] = Gap;            idx_fc_s  [1] = Gap;            idx_fc_s  [2] = 0;
+                  idx_flux_e[0] = N_FC_VAR-2*Gap; idx_flux_e[1] = N_FC_VAR-2*Gap; idx_flux_e[2] = N_FC_VAR-1;     break;
+      }
 
-		    for (int v = 0; v < NCOMP_TOTAL; v++) {
-			ConVar_L[v] = FC_Var[ID2][dR][v];
-			ConVar_R[v] = FC_Var[ID2 + dID2[d]][dL][v];
-		    }
+      const int size_ij = idx_flux_e[0]*idx_flux_e[1];
+      CGPU_LOOP( idx, idx_flux_e[0]*idx_flux_e[1]*idx_flux_e[2] )
+      {
+         const int i_flux   = idx % idx_flux_e[0];
+         const int j_flux   = idx % size_ij / idx_flux_e[0];
+         const int k_flux   = idx / size_ij;
+         const int idx_flux = IDX321( i_flux, j_flux, k_flux, N_FL_FLUX, N_FL_FLUX );
 
-#                   ifdef CHECK_MIN_TEMP
-                    ConVar_L[4] = CPU_CheckMinTempInEngy(ConVar_L);
-                    ConVar_R[4] = CPU_CheckMinTempInEngy(ConVar_R);
-#                   endif
+         const int i_fc     = i_flux + idx_fc_s[0];
+         const int j_fc     = j_flux + idx_fc_s[1];
+         const int k_fc     = k_flux + idx_fc_s[2];
+         const int idx_fc   = IDX321( i_fc, j_fc, k_fc, N_FC_VAR, N_FC_VAR );
 
-//                  check before computing flux
-#                   ifdef CHECK_NEGATIVE_IN_FLUID
-		    if(CPU_CheckUnphysical(ConVar_L, NULL, __FUNCTION__, __LINE__, true)
-		    || CPU_CheckUnphysical(ConVar_R, NULL, __FUNCTION__, __LINE__, true)) exit(EXIT_FAILURE);
-#                   endif
+         for (int v=0; v<NCOMP_TOTAL; v++)
+         {
+            ConVar_L[v] = g_FC_Var[faceR][v][ idx_fc            ];
+            ConVar_R[v] = g_FC_Var[faceL][v][ idx_fc+didx_fc[d] ];
+         }
 
-#                   if ( RSOLVER == HLLC )
-		    CPU_RiemannSolver_HLLC(d, FC_Flux[ID1][d], ConVar_L, ConVar_R, Gamma, MinPres);
-#                   elif ( RSOLVER == HLLE )
-		    CPU_RiemannSolver_HLLE(d, FC_Flux[ID1][d], ConVar_L, ConVar_R, Gamma, MinPres);
-#                   else
-#                   error : ERROR : unsupported Riemann solver !!
-#                   endif
-		}// i,j,k
-    }// for (int d=0; d<3; d++)
+#        ifdef CHECK_NEGATIVE_IN_FLUID
+         if( SRHydro_CheckUnphysical( ConVar_L, NULL, Gamma, __FUNCTION__, __LINE__, true )
+          || SRHydro_CheckUnphysical( ConVar_R, NULL, Gamma, __FUNCTION__, __LINE__, true ) )
+         exist(EXIT_FAILURE);
+#        endif
 
-}// FUNCTION : CPU_ComputeFlux
+//       2. invoke Riemann solver
+#        if ( RSOLVER == HLLE )
+         SRHydro_RiemannSolver_HLLE ( d, Flux_1Face, ConVar_L, ConVar_R, Gamma, MinTemp );
+#        elif ( RSOLVER == HLLC )
+         SRHydro_RiemannSolver_HLLC ( d, Flux_1Face, ConVar_L, ConVar_R, Gamma, MinTemp );
+#        else
+#        error : ERROR : unsupported Riemann solver !!
+#        endif
 
-#                   endif// #if ( !defined GPU  &&  MODEL == SR_HYDRO  &&  (FLU_SCHEME == MHM || MHM_RP || CTU) )
+
+//       3. store results
+//       store the fluxes of all cells in g_FC_Flux[]
+         for (int v=0; v<NCOMP_TOTAL; v++)   g_FC_Flux[d][v][idx_flux] = Flux_1Face[v];
+
+//       store the inter-patch fluxes in g_IntFlux[]
+         if ( DumpIntFlux )
+         {
+            int int_face, int_idx;
+
+//          we have assumed N_FC_VAR=PS2+2
+            if      (  d == 0  &&  ( i_flux == 0 || i_flux == PS1 || i_flux == PS2 )  )
+            {
+               int_face = i_flux/PS1;
+               int_idx  = k_flux*PS2 + j_flux;
+               for (int v=0; v<NCOMP_TOTAL; v++)   g_IntFlux[int_face][v][int_idx] = Flux_1Face[v];
+            }
+
+            else if (  d == 1  &&  ( j_flux == 0 || j_flux == PS1 || j_flux == PS2 )  )
+            {
+               int_face = j_flux/PS1 + 3;
+               int_idx  = k_flux*PS2 + i_flux;
+               for (int v=0; v<NCOMP_TOTAL; v++)   g_IntFlux[int_face][v][int_idx] = Flux_1Face[v];
+            }
+
+            else if (  d == 2  &&  ( k_flux == 0 || k_flux == PS1 || k_flux == PS2 )  )
+            {
+               int_face = k_flux/PS1 + 6;
+               int_idx  = j_flux*PS2 + i_flux;
+               for (int v=0; v<NCOMP_TOTAL; v++)   g_IntFlux[int_face][v][int_idx] = Flux_1Face[v];
+            }
+         } // if ( DumpIntFlux )
+      } // i,j,k
+   } // for (int d=0; d<3; d++)
+
+
+#  ifdef __CUDACC__
+   __syncthreads();
+#  endif
+
+} // FUNCTION : SRHydro_ComputeFlux
+
+
+
+#endif // #if ( MODEL == SR_HYDRO  &&  (FLU_SCHEME == MHM || FLU_SCHEME == MHM_RP || FLU_SCHEME == CTU) )
+
+
+
+#endif // #ifndef __CUFLU_COMPUTEFLUX__

@@ -1,6 +1,5 @@
 #include "GAMER.h"
 #include "CUFLU.h"
-#include "../../include/CPU_prototypes.h"
 
 // status of the fluid solver used by AUTO_REDUCE_DT (declared in Flu_AdvanceDt.cpp)
 extern int FluStatus_ThisRank;
@@ -26,15 +25,18 @@ static void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List
 #endif
 static int  Table_01( const int lv, const int PID, const int SibID );
 
+#if ( MODEL == HYDRO )
 extern void Hydro_RiemannSolver_Roe ( const int XYZ, real Flux_Out[], const real L_In[], const real R_In[],
-                                    const real Gamma, const real MinPres );
+                                      const real Gamma, const real MinPres );
 extern void Hydro_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In[], const real R_In[],
-                                    const real Gamma, const real MinPres );
+                                      const real Gamma, const real MinPres );
 extern void Hydro_RiemannSolver_HLLE( const int XYZ, real Flux_Out[], const real L_In[], const real R_In[],
-                                    const real Gamma, const real MinPres );
-#if ( MODEL == SR_HYDRO)
-void Hydro_4Velto3Vel (const real In[], real Out[]);
-void Hydro_Con2Pri (const real In[], real Out[], const real Gamma);
+                                      const real Gamma, const real MinPres );
+#elif ( MODEL == SR_HYDRO )
+extern void SRHydro_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In[], const real R_In[],
+                                        const real Gamma, const real MinTemp );
+extern void SRHydro_RiemannSolver_HLLE( const int XYZ, real Flux_Out[], const real L_In[], const real R_In[],
+                                        const real Gamma, const real MinTemp );
 #endif
 
 
@@ -359,7 +361,7 @@ bool Unphysical( const real Fluid[] )
 // =================================================
 #  elif ( MODEL == SR_HYDRO )
 
-       if(CPU_CheckUnphysical(Fluid, NULL, __FUNCTION__, __LINE__, true)) return true;
+       if(SRHydro_CheckUnphysical(Fluid, NULL, GAMMA, __FUNCTION__, __LINE__, true)) return true;
        else
 
 #  endif
@@ -502,28 +504,39 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
 //             (note that the recalculated flux does NOT include gravity even for UNSPLIT_GRAVITY --> reduce to 1st-order accuracy)
                switch ( OPT__1ST_FLUX_CORR_SCHEME )
                {
-#                 if ( MODEL != SR_HYDRO )
                   case RSOLVER_1ST_ROE:
                      for (int d=0; d<3; d++)
                      {
+#                 if ( MODEL == HYDRO )
                         Hydro_RiemannSolver_Roe( d, FluxL[d], VarL[d], VarC,    GAMMA, MIN_PRES );
                         Hydro_RiemannSolver_Roe( d, FluxR[d], VarC,    VarR[d], GAMMA, MIN_PRES );
+#                 elif ( MODEL == SR_HYDRO )
+#                 endif
                      }
                      break;
-#                 endif
                   case RSOLVER_1ST_HLLC:
                      for (int d=0; d<3; d++)
                      {
+#                 if ( MODEL == HYDRO )
                         Hydro_RiemannSolver_HLLC( d, FluxL[d], VarL[d], VarC,    GAMMA, MIN_PRES );
                         Hydro_RiemannSolver_HLLC( d, FluxR[d], VarC,    VarR[d], GAMMA, MIN_PRES );
+#                 elif ( MODEL == SR_HYDRO )
+                        SRHydro_RiemannSolver_HLLC( d, FluxL[d], VarL[d], VarC,    GAMMA, MIN_TEMP );
+                        SRHydro_RiemannSolver_HLLC( d, FluxR[d], VarC,    VarR[d], GAMMA, MIN_TEMP );
+#                 endif
                      }
                      break;
 
                   case RSOLVER_1ST_HLLE:
                      for (int d=0; d<3; d++)
                      {
+#                 if ( MODEL == HYDRO )
                         Hydro_RiemannSolver_HLLE( d, FluxL[d], VarL[d], VarC,    GAMMA, MIN_PRES );
                         Hydro_RiemannSolver_HLLE( d, FluxR[d], VarC,    VarR[d], GAMMA, MIN_PRES );
+#                 elif ( MODEL == SR_HYDRO )
+                        SRHydro_RiemannSolver_HLLE( d, FluxL[d], VarL[d], VarC,    GAMMA, MIN_TEMP );
+                        SRHydro_RiemannSolver_HLLE( d, FluxR[d], VarC,    VarR[d], GAMMA, MIN_TEMP );
+#                 endif
                      }
                      break;
 
@@ -590,20 +603,31 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
 //                      (note that the recalculated flux does NOT include gravity even for UNSPLIT_GRAVITY --> reduce to 1st-order accuracy)
                         switch ( OPT__1ST_FLUX_CORR_SCHEME )
                         {
-#                          if ( MODEL != SR_HYDRO )
                            case RSOLVER_1ST_ROE:
+#                             if ( MODEL == HYDRO )
                               Hydro_RiemannSolver_Roe ( d, FluxL_1D, Corr1D_InOut_PtrL, Corr1D_InOut_PtrC, GAMMA, MIN_PRES );
                               Hydro_RiemannSolver_Roe ( d, FluxR_1D, Corr1D_InOut_PtrC, Corr1D_InOut_PtrR, GAMMA, MIN_PRES );
+#                             elif ( MODEL == SR_HYDRO )
+#                             endif
                            break;
-#                          endif
                            case RSOLVER_1ST_HLLC:
+#                             if ( MODEL == HYDRO )
                               Hydro_RiemannSolver_HLLC( d, FluxL_1D, Corr1D_InOut_PtrL, Corr1D_InOut_PtrC, GAMMA, MIN_PRES );
                               Hydro_RiemannSolver_HLLC( d, FluxR_1D, Corr1D_InOut_PtrC, Corr1D_InOut_PtrR, GAMMA, MIN_PRES );
+#                             elif ( MODEL == SR_HYDRO )
+                              SRHydro_RiemannSolver_HLLC( d, FluxL_1D, Corr1D_InOut_PtrL, Corr1D_InOut_PtrC, GAMMA, MIN_TEMP );
+                              SRHydro_RiemannSolver_HLLC( d, FluxR_1D, Corr1D_InOut_PtrC, Corr1D_InOut_PtrR, GAMMA, MIN_TEMP );
+#                             endif
                            break;
 
                            case RSOLVER_1ST_HLLE:
+#                             if ( MODEL == HYDRO )
                               Hydro_RiemannSolver_HLLE( d, FluxL_1D, Corr1D_InOut_PtrL, Corr1D_InOut_PtrC, GAMMA, MIN_PRES );
                               Hydro_RiemannSolver_HLLE( d, FluxR_1D, Corr1D_InOut_PtrC, Corr1D_InOut_PtrR, GAMMA, MIN_PRES );
+#                             elif ( MODEL == SR_HYDRO )
+                              SRHydro_RiemannSolver_HLLE( d, FluxL_1D, Corr1D_InOut_PtrL, Corr1D_InOut_PtrC, GAMMA, MIN_TEMP );
+                              SRHydro_RiemannSolver_HLLE( d, FluxR_1D, Corr1D_InOut_PtrC, Corr1D_InOut_PtrR, GAMMA, MIN_TEMP );
+#                             endif
                            break;
 
                            default:
@@ -651,7 +675,7 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
 //          --> do NOT check the minimum pressure here since we want to apply the dual-energy correction first
             if ( !AUTO_REDUCE_DT ) {
                for (int v=0; v<NCOMP_TOTAL; v++)   Update1[v] = Update[v];
-               Update1[DENS] = CPU_CheckMinDens( Update[DENS], (real)MIN_DENS );
+               Update1[DENS] = SRHydro_CheckMinDens( Update[DENS], (real)MIN_DENS );
             }
 
 
@@ -764,8 +788,8 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
                   real Pri4Vel[NCOMP_FLUID];
                   real Pri3Vel[NCOMP_FLUID];
 
-                  CPU_Con2Pri( In, Pri4Vel, (real) GAMMA);
-                  CPU_4Velto3Vel( Pri4Vel, Pri3Vel );
+                  SRHydro_Con2Pri( In, Pri4Vel, (real) GAMMA);
+                  SRHydro_4Velto3Vel( Pri4Vel, Pri3Vel );
 
                   real Usqr = SQR(Pri4Vel[1])+SQR(Pri4Vel[2])+SQR(Pri4Vel[3]);
 
@@ -815,8 +839,8 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
 #                 endif
                          );
 
-                  CPU_Con2Pri( Out, Pri4Vel, (real) GAMMA );
-                  CPU_4Velto3Vel( Pri4Vel, Pri3Vel );
+                  SRHydro_Con2Pri( Out, Pri4Vel, (real) GAMMA );
+                  SRHydro_4Velto3Vel( Pri4Vel, Pri3Vel );
 
                   Usqr = SQR(Pri4Vel[1])+SQR(Pri4Vel[2])+SQR(Pri4Vel[3]);
 
@@ -862,8 +886,8 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
 #                     endif
                                );
 
-		      CPU_Con2Pri( Update, Pri4Vel, (real) GAMMA );
-		      CPU_4Velto3Vel( Pri4Vel, Pri3Vel );
+		      SRHydro_Con2Pri( Update, Pri4Vel, (real) GAMMA );
+		      SRHydro_4Velto3Vel( Pri4Vel, Pri3Vel );
 
 		      Usqr = SQR(Pri4Vel[1])+SQR(Pri4Vel[2])+SQR(Pri4Vel[3]);
 
@@ -896,8 +920,8 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
                            );
 
 
-                  CPU_Con2Pri( Update1, Pri4Vel, (real) GAMMA );
-                  CPU_4Velto3Vel( Pri4Vel, Pri3Vel );
+                  SRHydro_Con2Pri( Update1, Pri4Vel, (real) GAMMA );
+                  SRHydro_4Velto3Vel( Pri4Vel, Pri3Vel );
 
                   Usqr = SQR(Pri4Vel[1])+SQR(Pri4Vel[2])+SQR(Pri4Vel[3]);
 
@@ -928,8 +952,8 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
                            );
 
 
-                  CPU_Con2Pri( Update2, Pri4Vel, (real) GAMMA );
-                  CPU_4Velto3Vel( Pri4Vel, Pri3Vel );
+                  SRHydro_Con2Pri( Update2, Pri4Vel, (real) GAMMA );
+                  SRHydro_4Velto3Vel( Pri4Vel, Pri3Vel );
 
                   Usqr = SQR(Pri4Vel[1])+SQR(Pri4Vel[2])+SQR(Pri4Vel[3]);
 

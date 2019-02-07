@@ -276,9 +276,8 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
 #                    endif
 
 #                    else
-                     Pres[k][j][i] = CPU_GetPressure( Fluid[DENS][k][j][i], Fluid[MOMX][k][j][i], Fluid[MOMY][k][j][i],
-                                                      Fluid[MOMZ][k][j][i], Fluid[ENGY][k][j][i],
-                                                      Gamma_m1, CheckMinPres_Yes, MIN_PRES );
+                     Pres[k][j][i] = SRHydro_GetPressure( Fluid[DENS][k][j][i], Fluid[MOMX][k][j][i], Fluid[MOMY][k][j][i],
+                                                          Fluid[MOMZ][k][j][i], Fluid[ENGY][k][j][i], GAMMA );
 #                    endif // #ifdef DUAL_ENERGY ... else ...
                   } // k,j,i
                } // if ( OPT__FLAG_PRES_GRADIENT )

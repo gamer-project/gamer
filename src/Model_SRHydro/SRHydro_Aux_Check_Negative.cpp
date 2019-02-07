@@ -58,8 +58,7 @@ void SRHydro_Aux_Check_Negative( const int lv, const int Mode, const char *comme
          {
             for (int v=0; v<NCOMP_TOTAL; v++)   Fluid[v] = amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[v][k][j][i];
 
-            Pres = CPU_GetPressure( Fluid[DENS], Fluid[MOMX], Fluid[MOMY], Fluid[MOMZ], Fluid[ENGY],
-                                    Gamma_m1, CheckMinPres_No, NULL_REAL );
+            Pres = SRHydro_GetPressure( Fluid[DENS], Fluid[MOMX], Fluid[MOMY], Fluid[MOMZ], Fluid[ENGY], GAMMA );
 
             if ( Mode == 1  ||  Mode == 4 ) // check negative density
             {

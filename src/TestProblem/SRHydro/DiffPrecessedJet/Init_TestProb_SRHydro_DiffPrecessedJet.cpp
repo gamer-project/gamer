@@ -5,7 +5,6 @@
 #define PI ( 3.14159265359 )
 #endif
 
-void CPU_Pri2Con( const real In[], real Out[], const real Gamma);
 
 // problem-specific global variables
 // =======================================================================================
@@ -223,7 +222,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 // 4-velocity
    double Pri4Vel[NCOMP_FLUID] = { Jet_BgDens, Jet_BgVel[0], Jet_BgVel[1], Jet_BgVel[2], Jet_BgPres };
 
-   CPU_Pri2Con(Pri4Vel, fluid, GAMMA);
+   SRHydro_Pri2Con(Pri4Vel, fluid, GAMMA);
 
 } // FUNCTION : SetGridIC
 
@@ -364,7 +363,7 @@ bool Flu_ResetByUser_DiffPrecessedJet( real fluid[], const double x, const doubl
 //	     Pri4Vel[4] = Jet_BgPres;
 //          }
 
-          CPU_Pri2Con(Pri4Vel, fluid, GAMMA);
+          SRHydro_Pri2Con(Pri4Vel, fluid, GAMMA);
    
           num_shell++;
        } // if (  Jet_dh <= Jet_HalfHeight  &&  Jet_dr <= Jet_Radius )

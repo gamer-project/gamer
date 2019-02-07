@@ -14,12 +14,6 @@ static void GetCompound_Makefile ( hid_t &H5_TypeID );
 static void GetCompound_SymConst ( hid_t &H5_TypeID );
 static void GetCompound_InputPara( hid_t &H5_TypeID );
 
-#if ( MODEL == SR_HYDRO )
-real CPU_GetTemperature( const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy,
-                         const real Gamma_m1, const bool CheckMinPres, const real MinPres );
-bool CPU_CheckUnphysical( const real Con[], const real Pri[], const char s[], const int line, bool show);
-#endif
-
 /*======================================================================================================
 Data structure:
 / -> |
@@ -959,9 +953,9 @@ void Output_DumpData_Total_HDF5( const char *FileName )
 		    Cons[3] = MomZ[PID][i][j][k];
 		    Cons[4] = Engy[PID][i][j][k];
 #                   ifdef CHECK_NEGATIVE_IN_FLUID
-		    if(CPU_CheckUnphysical(Cons, NULL, __FUNCTION__, __LINE__, true)) exit(EXIT_FAILURE);
+		    if(SRHydro_CheckUnphysical(Cons, NULL, GAMMA, __FUNCTION__, __LINE__, true)) exit(EXIT_FAILURE);
 #                   endif
-                    Temp[PID][i][j][k] =  CPU_GetTemperature( Cons[0], Cons[1], Cons[2], Cons[3], Cons[4], NAN , false, NAN );
+                    Temp[PID][i][j][k] =  SRHydro_GetTemperature( Cons[0], Cons[1], Cons[2], Cons[3], Cons[4], GAMMA );
                  }
 
 //  copy conserved data and temperature into FieldData

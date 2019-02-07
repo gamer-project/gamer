@@ -1,5 +1,8 @@
-#include "GAMER.h"
+#ifndef __CUFLU_FLUUTILITY__
+#define __CUFLU_FLUUTILITY__
+
 #include "CUFLU.h"
+
 
 struct Fun_params
 {
@@ -7,18 +10,30 @@ struct Fun_params
   real E_D;
 };
 
-// some functions in this file need to be defined even when using GPU
+#ifdef __CUDACC__
+GPU_DEVICE 
+static real Fun (real Q, void *ptr);   // function to be solved
+GPU_DEVICE 
+static real DFun (real Q, void *ptr);  // the first derivative of above function
+GPU_DEVICE 
+static void Fun_DFun (real Q, void *ptr, real * f, real * df, real Gamma);
+GPU_DEVICE 
+void SRHydro_4Velto3Vel (const real In[], real Out[]);
+GPU_DEVICE 
+real SRHydro_Con2Temperature (const real In[], const real Gamma); 
+GPU_DEVICE 
+static void NewtonRaphsonSolver(void *ptr, real *root, const real guess, const real epsabs, const real epsrel, const real Gamma);
+#else 
+#include "../../include/SRHydroPrototypes.h"
 static real Fun (real Q, void *ptr);   // function to be solved
 static real DFun (real Q, void *ptr);  // the first derivative of above function
-static void Fun_DFun (real Q, void *ptr, real * f, real * df);
-void CPU_4Velto3Vel (const real In[], real Out[]);
-static real CPU_Con2Temperature (const real In[], const real Gamma); 
-bool CPU_CheckUnphysical( const real Con[], const real Pri[], bool show);
-static void NewtonRaphsonSolver(void *ptr, real *root, const real guess, const real epsabs, const real epsrel);
+static void Fun_DFun (real Q, void *ptr, real * f, real * df, real Gamma);
+static void NewtonRaphsonSolver(void *ptr, real *root, const real guess, const real epsabs, const real epsrel, const real Gamma);
+#endif
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  CPU_Rotate3D
+// Function    :  SRHydro_Rotate3D
 // Description :  Rotate the input fluid variables properly to simplify the 3D calculation
 //
 // Note        :  1. x : (0,1,2,3,4) <--> (0,1,2,3,4)
@@ -30,8 +45,8 @@ static void NewtonRaphsonSolver(void *ptr, real *root, const real guess, const r
 //                XYZ      : Target spatial direction : (0/1/2) --> (x/y/z)
 //                Forward  : (true/false) <--> (forward/backward)
 //-------------------------------------------------------------------------------------------------------
-void
-CPU_Rotate3D (real InOut[], const int XYZ, const bool Forward)
+GPU_DEVICE
+void SRHydro_Rotate3D (real InOut[], const int XYZ, const bool Forward)
 {
   if (XYZ == 0)
     return;
@@ -45,15 +60,9 @@ CPU_Rotate3D (real InOut[], const int XYZ, const bool Forward)
       switch (XYZ)
 	{
 	case 1:
-	  InOut[1] = Temp[1];
-	  InOut[2] = Temp[2];
-	  InOut[3] = Temp[0];
-	  break;
+	  InOut[1] = Temp[1]; InOut[2] = Temp[2]; InOut[3] = Temp[0]; break;
 	case 2:
-	  InOut[1] = Temp[2];
-	  InOut[2] = Temp[0];
-	  InOut[3] = Temp[1];
-	  break;
+	  InOut[1] = Temp[2]; InOut[2] = Temp[0]; InOut[3] = Temp[1]; break;
 	}
     }
 
@@ -62,21 +71,15 @@ CPU_Rotate3D (real InOut[], const int XYZ, const bool Forward)
       switch (XYZ)
 	{
 	case 1:
-	  InOut[1] = Temp[2];
-	  InOut[2] = Temp[0];
-	  InOut[3] = Temp[1];
-	  break;
+	  InOut[1] = Temp[2]; InOut[2] = Temp[0]; InOut[3] = Temp[1]; break;
 	case 2:
-	  InOut[1] = Temp[1];
-	  InOut[2] = Temp[2];
-	  InOut[3] = Temp[0];
-	  break;
+	  InOut[1] = Temp[1]; InOut[2] = Temp[2]; InOut[3] = Temp[0]; break;
 	}
     }
-}				// FUNCTION : CPU_Rotate3D
+}				// FUNCTION : SRHydro_Rotate3D
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  CPU_Con2Pri
+// Function    :  SRHydro_Con2Pri
 // Description :  Convert the conserved variables to the primitive variables
 //
 // Note        :  1. This function always check if the pressure to be returned is greater than the
@@ -85,21 +88,20 @@ CPU_Rotate3D (real InOut[], const int XYZ, const bool Forward)
 //                   when NormPassive is on
 //                   --> See the input parameters "NormPassive, NNorm, NormIdx"
 //                   --> But note that here we do NOT ensure "sum(mass fraction) == 1.0"
-//                       --> It is done by calling CPU_NormalizePassive() in CPU_Shared_FullStepUpdate()
+//                       --> It is done by calling SRHydro_NormalizePassive() in SRHydro_Shared_FullStepUpdate()
 //
 // Parameter   :  In                 : Array storing the input conserved variables
 //                Out                : Array to store the output primitive variables
 //                Gamma              : Gamma
-//                MinPres            : Minimum allowed pressure
 //-------------------------------------------------------------------------------------------------------
-void
-CPU_Con2Pri (const real In[], real Out[], const real Gamma)
+GPU_DEVICE
+void SRHydro_Con2Pri (const real In[], real Out[], const real Gamma)
 {
-      real Temp = CPU_GetTemperature (In[0], In[1], In[2], In[3], In[4], NAN, NAN, NAN);
+      real Temp = SRHydro_GetTemperature (In[0], In[1], In[2], In[3], In[4], Gamma );
 #if ( EOS == RELATIVISTIC_IDEAL_GAS )
       real h = 2.5*Temp + SQRT(2.25*Temp*Temp + 1.0);
 #elif ( EOS == IDEAL_GAS ) 
-      real h = 1 + Temp * GAMMA / (GAMMA-1.0);
+      real h = 1 + Temp * Gamma / (Gamma-1.0);
 #else
 #error: unsupported EoS!
 #endif
@@ -112,16 +114,15 @@ CPU_Con2Pri (const real In[], real Out[], const real Gamma)
 
       Out[0] = In[0]/factor1;
       Out[4] = Out[0] * Temp; // P = nkT
-}// FUNCTION : CPU_Con2Pri
+}// FUNCTION : SRHydro_Con2Pri
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  CPU_Con2Temperature
+// Function    :  SRHydro_Con2Temperature
 // Description :  Convert the conserved variables to Q
 //-------------------------------------------------------------------------------------------------------
-
-static real 
-CPU_Con2Temperature (const real In[], const real Gamma)
+GPU_DEVICE
+real SRHydro_Con2Temperature (const real In[], const real Gamma, const real MinTemp)
 {
   real guess, root;
 
@@ -155,7 +156,7 @@ CPU_Con2Temperature (const real In[], const real Gamma)
 	      }
 	    else guess = (Constant - 1.0) * 0.3333333;
 	  }
-    } else return MIN_TEMP;
+    } else return MinTemp;
 # elif ( CONSERVED_ENERGY == 2 )
 /* initial guess  */
    real Constant = E_Dsqr - M_Dsqr + 2 * E_D;
@@ -177,7 +178,7 @@ CPU_Con2Temperature (const real In[], const real Gamma)
 		 }
 	       else guess = Constant * 0.3333333;
 	     }
-    } else return MIN_TEMP;
+    } else return MinTemp;
 # else
 # error: CONSERVED_ENERGY must be 1 or 2!
 # endif
@@ -197,7 +198,7 @@ CPU_Con2Temperature (const real In[], const real Gamma)
 		  guess = -2.0 *  C / ( B + delta);
 		}
 	     else guess = 0.5*Gamma_m1 * ( Constant - 1.0);
-    } else return MIN_TEMP;
+    } else return MinTemp;
 # elif ( CONSERVED_ENERGY == 2 )
     real Constant = E_Dsqr - M_Dsqr + 2 * E_D;
     if ( Constant > 0.0 )
@@ -211,7 +212,7 @@ CPU_Con2Temperature (const real In[], const real Gamma)
 	      guess = -2.0 *  C / ( B + delta);
 	    }
 	  else guess = 0.5*Gamma_m1 * Constant;
-     } else return MIN_TEMP;
+     } else return MinTemp;
 # else
 # error: CONSERVED_ENERGY must be 1 or 2!
 # endif
@@ -228,6 +229,7 @@ CPU_Con2Temperature (const real In[], const real Gamma)
    }
 #endif 
 
+
 #  ifdef FLOAT8
 real epsabs = 0.0;
 real epsrel = 1.0e-15;
@@ -236,12 +238,12 @@ real epsabs = 0.0;
 real epsrel = 1.0e-6;
 #  endif
 
-   NewtonRaphsonSolver(&params ,&root, guess, epsabs, epsrel);
+   NewtonRaphsonSolver(&params ,&root, guess, epsabs, epsrel, Gamma);
    return root;
 }
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  CPU_Pri2Con
+// Function    :  SRHydro_Pri2Con
 // Description :  Convert the primitive variables to the conserved variables
 //
 // Note        :  1. This function does NOT check if the input pressure is greater than the
@@ -254,14 +256,14 @@ real epsrel = 1.0e-6;
 //               [2] Out          : Array to store the output conserved variables
 //               [3] Gamma        : Adiabatic index
 //-------------------------------------------------------------------------------------------------------
-void
-CPU_Pri2Con (const real In[], real Out[], const real Gamma)
+GPU_DEVICE
+void SRHydro_Pri2Con (const real In[], real Out[], const real Gamma)
 {
 #if ( EOS == RELATIVISTIC_IDEAL_GAS )
   real nh = 2.5*In[4] + SQRT(2.25*SQR(In[4]) + SQR(In[0])); // approximate enthalpy * proper number density
 #elif ( EOS == IDEAL_GAS )
   real Gamma_m1 = (real) Gamma - 1.0;
-  real nh = In[0] + ( GAMMA / Gamma_m1) * In[4]; // enthalpy * proper number density
+  real nh = In[0] + ( Gamma / Gamma_m1) * In[4]; // enthalpy * proper number density
 #else
 #error: unsupported EoS!
 #endif
@@ -281,15 +283,14 @@ CPU_Pri2Con (const real In[], real Out[], const real Gamma)
 # else
 # error: CONSERVED_ENERGY must be 1 or 2!
 # endif
-}				// FUNCTION : CPU_Pri2Con
+}				// FUNCTION : SRHydro_Pri2Con
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  CPU_4Velto3Vel
+// Function    :  SRHydro_4Velto3Vel
 // Description :  Convert 4-velocity to 3-velocity
 //-------------------------------------------------------------------------------------------------------
-
-void
-CPU_4Velto3Vel (const real In[], real Out[])
+GPU_DEVICE
+void SRHydro_4Velto3Vel (const real In[], real Out[])
 {
   real Factor = 1 / SQRT (1 + SQR (In[1]) + SQR (In[2]) + SQR (In[3]));
 
@@ -298,15 +299,14 @@ CPU_4Velto3Vel (const real In[], real Out[])
   Out[2] = In[2] * Factor;
   Out[3] = In[3] * Factor;
   Out[4] = In[4];
-}				// FUNCTION : CPU_4Velto3Vel
+}				// FUNCTION : SRHydro_4Velto3Vel
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  CPU_3Velto4Vel
+// Function    :  SRHydro_3Velto4Vel
 // Description :  Convert 3-velocity to 4-velocity
 //-------------------------------------------------------------------------------------------------------
-
-void
-CPU_3Velto4Vel (const real In[], real Out[])
+GPU_DEVICE
+void SRHydro_3Velto4Vel (const real In[], real Out[])
 {
   real Factor = 1 / SQRT (1 - SQR (In[1]) - SQR (In[2]) - SQR (In[3]));
 
@@ -315,20 +315,19 @@ CPU_3Velto4Vel (const real In[], real Out[])
   Out[2] = In[2] * Factor;
   Out[3] = In[3] * Factor;
   Out[4] = In[4];
-}				// FUNCTION : CPU_4Velto3Vel
+}				// FUNCTION : SRHydro_4Velto3Vel
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  CPU_Con2Flux
+// Function    :  SRHydro_Con2Flux
 // Description :  Evaluate the hydrodynamic fluxes by the input conserved variables
 //
 // Parameter   :  XYZ      : Target spatial direction : (0/1/2) --> (x/y/z)
 //                Flux     : Array to store the output fluxes
 //                Input    : Array storing the input conserved variables
-//                Gamma_m1 : Gamma - 1
-//                MinPres  : Minimum allowed pressure
+//                Gamma    : adiabatic index
 //-------------------------------------------------------------------------------------------------------
-void
-CPU_Con2Flux (const int XYZ, real Flux[], const real Input[], const real Gamma_m1, const real MinPres)
+GPU_DEVICE
+void SRHydro_Con2Flux (const int XYZ, real Flux[], const real Input[], const real Gamma )
 {
   const bool CheckMinPres_Yes = true;
   real ConVar[NCOMP_FLUID];	// don't need to include passive scalars since they don't have to be rotated1
@@ -339,11 +338,11 @@ CPU_Con2Flux (const int XYZ, real Flux[], const real Input[], const real Gamma_m
 
   for (int v = 0; v < NCOMP_FLUID; v++)   ConVar[v] = Input[v];
 
-  CPU_Rotate3D (ConVar, XYZ, true);
+  SRHydro_Rotate3D (ConVar, XYZ, true);
 
-  CPU_Con2Pri (ConVar, PriVar4, GAMMA);
+  SRHydro_Con2Pri (ConVar, PriVar4, Gamma);
 
-  CPU_4Velto3Vel (PriVar4, PriVar3);
+  SRHydro_4Velto3Vel (PriVar4, PriVar3);
 
   Vx = PriVar3[1];
   Pres = PriVar3[4];
@@ -360,56 +359,31 @@ CPU_Con2Flux (const int XYZ, real Flux[], const real Input[], const real Gamma_m
 # error: CONSERVED_ENERGY must be 1 or 2!
 # endif
 
-  CPU_Rotate3D (Flux, XYZ, false);
-}				// FUNCTION : CPU_Con2Flux
-
-
+  SRHydro_Rotate3D (Flux, XYZ, false);
+}				// FUNCTION : SRHydro_Con2Flux
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  CPU_CheckMinPres
-// Description :  Check if the input pressure is great than the minimum allowed threshold
-//
-// Note        :  1. This function is used to correct unphysical (usually negative) pressure caused by
-//                   numerical errors
-//                   --> Usually happen in regions with high mach numbers
-//                   --> Currently it simply sets a minimum allowed value for pressure
-//                       --> Please set MIN_PRES in the runtime parameter file "Input__Parameter"
-//                2. We should also support a minimum **temperature** instead of **pressure**
-//                   --> NOT supported yet
-//
-// Parameter   :  InPres  : Input pressure to be corrected
-//                MinPres : Minimum allowed pressure
-//
-// Return      :  max( InPres, MinPres )
+// Function    :  SRHydro_CheckMinDens
 //-------------------------------------------------------------------------------------------------------
-real
-CPU_CheckMinPres (const real InPres, const real MinPres)
-{
-  return FMAX (InPres, MinPres);
-}				// FUNCTION : CPU_CheckMinPres
-
-//-------------------------------------------------------------------------------------------------------
-// Function    :  CPU_CheckMinDens
-//-------------------------------------------------------------------------------------------------------
-real
-CPU_CheckMinDens (const real InDens, const real MinDens)
+GPU_DEVICE
+real SRHydro_CheckMinDens (const real InDens, const real MinDens)
 {
   return FMAX (InDens, MinDens);
-}// FUNCTION : CPU_CheckMinDens
+}// FUNCTION : SRHydro_CheckMinDens
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  CPU_CheckMinDens
+// Function    :  SRHydro_CheckMinTemp
 //-------------------------------------------------------------------------------------------------------
-real
-CPU_CheckMinTemp (const real InTemp, const real MinTemp)
+GPU_DEVICE
+real SRHydro_CheckMinTemp (const real InTemp, const real MinTemp)
 {
   return FMAX (InTemp, MinTemp);
-}// FUNCTION : CPU_CheckMinDens
+}// FUNCTION : SRHydro_CheckMinDens
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  CPU_CheckMinTempInEngy
+// Function    :  SRHydro_CheckMinTempInEngy
 // Description :  Ensure that the Temp in the input total energy is greater than the given threshold
 //
 // Note        :  1. This function is used to correct unphysical (usually negative) temperature caused by
@@ -420,19 +394,18 @@ CPU_CheckMinTemp (const real InTemp, const real MinTemp)
 //                3. One must input conserved variables instead of primitive variables
 //
 // Parameter   :  Cons[]      : D, Mx, My, Mz, E
-//                Gamma_Ratio : Gamma / (Gamma - 1)
 //                MinTemp     : Minimum allowed temperature
+//                Gamma       : adiabatic index
 //
 // Return      :  Total energy with pressure greater than the given threshold
 //-------------------------------------------------------------------------------------------------------
-real
-CPU_CheckMinTempInEngy (const real Cons[])
+GPU_DEVICE
+real SRHydro_CheckMinTempInEngy (const real Cons[], const real MinTemp, const real Gamma )
 {
-  real T_min = MIN_TEMP;
 # if ( EOS == IDEAL_GAS ) 
-  real h_min = 1.0 + GAMMA * T_min / (GAMMA - 1.0);
+  real h_min = 1.0 + Gamma * MinTemp / (Gamma - 1.0);
 # elif ( EOS == RELATIVISTIC_IDEAL_GAS )
-  real h_min = 2.5*T_min + SQRT(2.25*T_min*T_min + 1);
+  real h_min = 2.5*MinTemp + SQRT(2.25*MinTemp*MinTemp + 1);
 # endif
 
   real D  = Cons[0];
@@ -446,9 +419,9 @@ CPU_CheckMinTempInEngy (const real Cons[])
   real factor = SQRT(Dh*Dh + Msqr);
 
 # if ( CONSERVED_ENERGY == 1 )
-  real E_min = factor - D*Dh*T_min / factor;
+  real E_min = factor - D*Dh*MinTemp / factor;
 # elif ( CONSERVED_ENERGY == 2 )
-  real E_min = factor - D*Dh*T_min / factor - D;
+  real E_min = factor - D*Dh*MinTemp / factor - D;
 # endif
 
   if ( Cons[4] >= E_min) return Cons[4];
@@ -458,9 +431,10 @@ CPU_CheckMinTempInEngy (const real Cons[])
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    : CPU_CheckUnphysical
+// Function    : SRHydro_CheckUnphysical
 //-------------------------------------------------------------------------------------------------------
-bool CPU_CheckUnphysical( const real Con[], const real Pri[], const char s[], const int line, bool show )
+GPU_DEVICE
+bool SRHydro_CheckUnphysical( const real Con[], const real Pri[], const real Gamma, const char s[], const int line, bool show )
 {
    real discriminant;
    real Msqr;
@@ -499,7 +473,7 @@ bool CPU_CheckUnphysical( const real Con[], const real Pri[], const char s[], co
 #     error: CONSERVED_ENERGY must be 1 or 2!
 #     endif
 
-      CPU_Con2Pri(ConsVar, Pri4Vel, (real) GAMMA);
+      SRHydro_Con2Pri(ConsVar, Pri4Vel, Gamma);
 
 // check NaN, +inf and -inf
       if (  !Aux_IsFinite(Pri4Vel[0])  
@@ -513,7 +487,7 @@ bool CPU_CheckUnphysical( const real Con[], const real Pri[], const char s[], co
 // check positivity of pressure
       if (Pri4Vel[4] <= (real)0.0)                                            goto UNPHYSICAL;
 // check whether 3-velocity is greater or equal to speed of light
-      CPU_4Velto3Vel(Pri4Vel,Pri3Vel);      
+      SRHydro_4Velto3Vel(Pri4Vel,Pri3Vel);      
       if (SQR(Pri3Vel[1]) + SQR(Pri3Vel[2]) + SQR(Pri3Vel[3]) >= 1.0)         goto UNPHYSICAL;
 
 // pass all checks 
@@ -540,8 +514,8 @@ bool CPU_CheckUnphysical( const real Con[], const real Pri[], const char s[], co
 // check positivity of pressure
       if (Pri4Vel[4] <= (real)0.0)                                                 goto UNPHYSICAL;
 
-      CPU_4Velto3Vel(Pri4Vel,Pri3Vel);
-      CPU_Pri2Con(Pri4Vel, ConsVar, (real) GAMMA);
+      SRHydro_4Velto3Vel(Pri4Vel,Pri3Vel);
+      SRHydro_Pri2Con(Pri4Vel, ConsVar, (real) Gamma);
 
 // check whether 3-velocity is greater or equal to speed of light
       if (SQR(Pri3Vel[1]) + SQR(Pri3Vel[2]) + SQR(Pri3Vel[3]) >= 1.0)              goto UNPHYSICAL;
@@ -573,7 +547,7 @@ bool CPU_CheckUnphysical( const real Con[], const real Pri[], const char s[], co
    }
    else
    {
-    Aux_Error(ERROR_INFO,"One of Con or Pri must be given in CPU_CheckUnphysical!\n");
+    Aux_Error(ERROR_INFO,"One of Con or Pri must be given in SRHydro_CheckUnphysical!\n");
     return true;
    }
 
@@ -599,28 +573,9 @@ bool CPU_CheckUnphysical( const real Con[], const real Pri[], const char s[], co
         return true;
       }
 }
-//-------------------------------------------------------------------------------------------------------
-// Function    :  CPU_CheckNegative
-// Description :  Check whether the input value is <= 0.0 (also check whether it's Inf or NAN)
-//
-// Note        :  Can be used to check whether the values of density and pressure are unphysical
-//
-// Parameter   :  Input : Input value
-//
-// Return      :  true  --> Input <= 0.0  ||  >= __FLT_MAX__  ||  != itself (Nan)
-//                false --> otherwise
-//-------------------------------------------------------------------------------------------------------
-bool
-CPU_CheckNegative (const real Input)
-{
-  if (Input < (real) 0.0 || Input >= HUGE_NUMBER || Input != Input)
-    return true;
-  else
-    return false;
-}				// FUNCTION : CPU_CheckNegative
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  CPU_GetPressure
+// Function    :  SRHydro_GetPressure
 // Description :  Evaluate the fluid pressure
 //
 // Note        :  1. Currently only work with the adiabatic EOS
@@ -631,22 +586,15 @@ CPU_CheckNegative (const real Input)
 // Parameter   :  Dens         : Mass density
 //                MomX/Y/Z     : Momentum density
 //                Engy         : Energy density
-//                Gamma_m1     : Gamma - 1, where Gamma is the adiabatic index
-//                CheckMinPres : Return CPU_CheckMinPres()
-//                               --> In some cases we actually want to check if pressure becomes unphysical,
-//                                   for which we don't want to enable this option
-//                                   --> For example: Flu_FixUp(), Flu_Close(), Hydro_Aux_Check_Negative()
-//                MinPres      : Minimum allowed pressure
+//                Gamma      : Adiabatic index
 //
 // Return      :  Pressure
 //-------------------------------------------------------------------------------------------------------
-real
-CPU_GetPressure (const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy,
-		 const real Gamma_m1, const bool CheckMinPres, const real MinPres)
+GPU_DEVICE
+real SRHydro_GetPressure (const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy, const real Gamma )
 {
   real In[NCOMP_FLUID];
   real Out[NCOMP_FLUID];
-  real Pres;
 
   In[0] = Dens;
   In[1] = MomX;
@@ -654,17 +602,15 @@ CPU_GetPressure (const real Dens, const real MomX, const real MomY, const real M
   In[3] = MomZ;
   In[4] = Engy;
 
-  CPU_Con2Pri (In, Out, GAMMA);
+  SRHydro_Con2Pri (In, Out, Gamma);
 
-  Pres = Out[4];
-
-  return Pres;
-}				// FUNCTION : CPU_GetPressure
+  return Out[4];
+}				// FUNCTION : SRHydro_GetPressure
 
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  CPU_GetTemperature
+// Function    :  SRHydro_GetTemperature
 // Description :  Evaluate the fluid temperature
 //
 // Note        :  1. Currently only work with the adiabatic EOS
@@ -675,127 +621,23 @@ CPU_GetPressure (const real Dens, const real MomX, const real MomY, const real M
 // Parameter   :  Dens         : Mass density
 //                MomX/Y/Z     : Momentum density
 //                Engy         : Energy density
-//                Gamma_m1     : Gamma - 1, where Gamma is the adiabatic index
-//                CheckMinPres : Return CPU_CheckMinPres()
-//                               --> In some cases we actually want to check if pressure becomes unphysical,
-//                                   for which we don't want to enable this option
-//                                   --> For example: Flu_FixUp(), Flu_Close(), Hydro_Aux_Check_Negative()
-//                MinPres      : Minimum allowed pressure
+//                Gamma        : the adiabatic index
 //
 // Return      :  Temperature
 //-------------------------------------------------------------------------------------------------------
-real
-CPU_GetTemperature (const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy,
-                    const real Gamma_m1, const bool CheckMinPres, const real MinPres )
+GPU_DEVICE
+real SRHydro_GetTemperature (const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy, const real Gamma )
 {
       real In[5] = {Dens, MomX, MomY, MomZ, Engy};
-      real Temperature = CPU_Con2Temperature ( In, GAMMA );
+      real Temperature = SRHydro_Con2Temperature ( In, Gamma );
 
  return Temperature;
-}				// FUNCTION : CPU_GetTemperature
+}				// FUNCTION : SRHydro_GetTemperature
 
 
 
-//-------------------------------------------------------------------------------------------------------
-// Function    :  CPU_Temperature2Pressure
-// Description :  Convert gas temperature to pressure
-//
-// Note        :  1. Assume the ideal gas law
-//                   --> P = \rho*K*T / ( mu*m_H )
-//                2. Assume both input and output to be code units
-//                   --> Temperature should be converted to UNIT_E in advance
-//                       --> Example: T_code_unit = T_kelvin * Const_kB / UNIT_E
-//                3. Pressure floor (MinPres) is applied when CheckMinPres == true
-//                4. Currently this function always adopts real precision since
-//                   (1) both Temp and m_H may exhibit extreme values depending on the code units, and
-//                   (2) we don't really care about the performance here since this function is usually
-//                       only used for constructing the initial condition
-//
-// Parameter   :  Dens         : Gas mass density in code units
-//                Temp         : Gas temperature in code units
-//                mu           : Mean molecular weight
-//                m_H          : Atomic hydrogen mass in code units
-//                               --> Sometimes we use the atomic mass unit (Const_amu defined in PhysicalConstant.h)
-//                                   and m_H (Const_mH defined in PhysicalConstant.h) interchangeably since the
-//                                   difference is small (m_H ~ 1.007825 amu)
-//                CheckMinPres : Return CPU_CheckMinPres()
-//                               --> In some cases we actually want to check if pressure becomes unphysical,
-//                                   for which we don't want to enable this option
-//                MinPres      : Minimum allowed pressure
-//
-// Return      :  Gas pressure
-//-------------------------------------------------------------------------------------------------------
-real
-CPU_Temperature2Pressure (const real Dens, const real Temp, const real mu, const real m_H, const bool CheckMinPres, const real MinPres)
-{
-  Aux_Message (stderr,"\n\nWARNING:\nfile: %s\n", __FILE__);
-  Aux_Message (stderr,"\n\nPlease modify %s properly.\n", __FUNCTION__);
-  abort ();
 
-  real Pres;
-
-  return Pres;
-
-}				// FUNCTION : CPU_GetTemperature
-
-
-
-//-------------------------------------------------------------------------------------------------------
-// Function    :  CPU_NormalizePassive
-// Description :  Normalize the target passive scalars so that the sum of their mass density is equal to
-//                the gas mass density
-//
-// Note        :  1. Should be invoked AFTER applying the floor values to passive scalars
-//                2. Invoked by CPU_Shared_FullStepUpdate(), Prepare_PatchData(), Refine(), LB_Refine_AllocateNewPatch(),
-//                   Flu_FixUp(), XXX_Init_ByFunction_AssignData(), Flu_Close()
-//
-// Parameter   :  GasDens : Gas mass density
-//                Passive : Passive scalar array (with the size NCOMP_PASSIVE)
-//                NNorm   : Number of passive scalars to be normalized
-//                          --> Should be set to the global variable "PassiveNorm_NVar"
-//                NormIdx : Target variable indices to be normalized
-//                          --> Should be set to the global variable "PassiveNorm_VarIdx"
-//
-// Return      :  Passive
-//-------------------------------------------------------------------------------------------------------
-void
-CPU_NormalizePassive (const real GasDens, real Passive[], const int NNorm, const int NormIdx[])
-{
-  Aux_Message (stderr,"\n\nWARNING:\nPlease modify %s properly.\n", __FUNCTION__);
-  Aux_Message (stderr,"file: %s\n", __FILE__);
-  Aux_Message (stderr,"line: %d\n", __LINE__);
-  abort();
-
-// validate the target variable indices
-#ifdef GAMER_DEBUG
-  const int MinIdx = 0;
-#ifdef DUAL_ENERGY
-  const int MaxIdx = NCOMP_PASSIVE - 2;
-#else
-  const int MaxIdx = NCOMP_PASSIVE - 1;
-#endif
-
-  for (int v = 0; v < NNorm; v++)
-    {
-      if (NormIdx[v] < MinIdx || NormIdx[v] > MaxIdx)
-	Aux_Error (ERROR_INFO, "NormIdx[%d] = %d is not within the correct range ([%d <= idx <= %d]) !!\n", v, NormIdx[v], MinIdx, MaxIdx);
-    }
-#endif // #ifdef GAMER_DEBUG
-
-
-  real Norm, PassiveDens_Sum = (real) 0.0;
-
-  for (int v = 0; v < NNorm; v++)
-    PassiveDens_Sum += Passive[NormIdx[v]];
-
-  Norm = GasDens / PassiveDens_Sum;
-
-  for (int v = 0; v < NNorm; v++)
-    Passive[NormIdx[v]] *= Norm;
-
-}				// FUNCTION : CPU_NormalizePassive
-
-static void NewtonRaphsonSolver(void *ptr, real *root, const real guess, const real epsabs, const real epsrel)
+static void NewtonRaphsonSolver(void *ptr, real *root, const real guess, const real epsabs, const real epsrel, const real Gamma)
 {
  int iter = 0;
  int max_iter = 20;
@@ -807,7 +649,7 @@ static void NewtonRaphsonSolver(void *ptr, real *root, const real guess, const r
  do
    {
      iter++;
-     Fun_DFun(*root, ptr, &f, &df);
+     Fun_DFun(*root, ptr, &f, &df, Gamma);
 
      if (df == 0.0)                printf("derivative is zero\n");
      if ( Aux_IsFinite(f) == 0 )   printf("function value is not finite\n");
@@ -830,7 +672,7 @@ static void NewtonRaphsonSolver(void *ptr, real *root, const real guess, const r
 //-------------------------------------------------------------------------------------------------------
 
 static void
-Fun_DFun (real Temp, void *ptr, real * f, real * df)
+Fun_DFun (real Temp, void *ptr, real * f, real * df, real Gamma)
 {
   struct Fun_params *params = (struct Fun_params *) ptr;
 
@@ -855,11 +697,11 @@ Fun_DFun (real Temp, void *ptr, real * f, real * df)
   *df = 7*Temp + 1.5 * abc + 13.5 * Tsqr / abc + 2*h*Temp*((h*hsqr + M_Dsqr*h + Temp*dh*M_Dsqr) / SQR( hsqr + M_Dsqr) );
 
 #elif ( EOS == IDEAL_GAS )
-  real zeta = 1.0 / ( GAMMA - 1.0 );
-  real alpha = GAMMA * zeta;
+  real zeta = 1.0 / ( Gamma - 1.0 );
+  real alpha = Gamma * zeta;
   real h = 1 + alpha * Temp;
   real hsqr = SQR(h);
-  real beta = (2 - GAMMA) * zeta * alpha;
+  real beta = (2 - Gamma) * zeta * alpha;
   real theta = 2 * zeta;
 
 #if   (CONSERVED_ENERGY == 1)

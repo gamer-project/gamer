@@ -1,13 +1,26 @@
-#include "GAMER.h"
+#ifndef __CUFLU_RIEMANNSOLVER_HLLE__
+#define __CUFLU_RIEMANNSOLVER_HLLE__
+
+
 #include "CUFLU.h"
-#include "../../../include/CPU_prototypes.h"
+
+// external function
+#ifdef __CUDACC__
+
+#include "CUFLU_Shared_FluUtility.cu"
+
+#else
+
+#include "../../../include/SRHydroPrototypes.h"
+
+#endif
 
 #if ( MODEL == SR_HYDRO )
 
 void QuadraticSolver (real A, real B, real C, real *x_plus, real *x_minus);
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  CPU_RiemannSolver_HLLE
+// Function    :  SRHydro_RiemannSolver_HLLE
 // Description :  Approximate Riemann solver of Harten, Lax, and van Leer.
 //                The wave speed is estimated by the same formula in HLLE solver
 //
@@ -23,10 +36,10 @@ void QuadraticSolver (real A, real B, real C, real *x_plus, real *x_minus);
 //                [3] L_In     : Input left  state (conserved variables)
 //                [4] R_In     : Input right state (conserved variables)
 //                [5] Gamma    : Ratio of specific heats
-//                [6] MinPres  : Minimum allowed pressure
+//                [6] MinTemp  : Minimum allowed temperature
 //-------------------------------------------------------------------------------------------------------
-void CPU_RiemannSolver_HLLE( const int XYZ, real Flux_Out[], const real L_In[], const real R_In[], 
-                             const real Gamma, const real MinPres )
+void SRHydro_RiemannSolver_HLLE( const int XYZ, real Flux_Out[], const real L_In[], const real R_In[], 
+                                 const real Gamma, const real MinTemp )
 {
   real CL[NCOMP_TOTAL], CR[NCOMP_TOTAL]; /* conserved vars. */
   real PL[NCOMP_TOTAL], PR[NCOMP_TOTAL]; /* primitive vars. */
@@ -47,12 +60,12 @@ void CPU_RiemannSolver_HLLE( const int XYZ, real Flux_Out[], const real L_In[], 
        CR[v]=R_In[v];
    }
 
-   CPU_Rotate3D( CL, XYZ, true );
-   CPU_Rotate3D( CR, XYZ, true );
+   SRHydro_Rotate3D( CL, XYZ, true );
+   SRHydro_Rotate3D( CR, XYZ, true );
 
 /* 1. compute primitive vars. from conserved vars. */
-   CPU_Con2Pri (CL, PL, Gamma);
-   CPU_Con2Pri (CR, PR, Gamma);
+   SRHydro_Con2Pri (CL, PL, Gamma);
+   SRHydro_Con2Pri (CR, PR, Gamma);
 
 /* 2. Transform 4-velocity to 3-velocity */
    lFactor=1/SQRT(1+SQR(PL[1])+SQR(PL[2])+SQR(PL[3]));
@@ -122,7 +135,7 @@ void CPU_RiemannSolver_HLLE( const int XYZ, real Flux_Out[], const real L_In[], 
     Flux_Out[4] = Fl[4] - Fl[0];
 #   endif
 
-   CPU_Rotate3D( Flux_Out, XYZ, false );
+   SRHydro_Rotate3D( Flux_Out, XYZ, false );
    return;
   }
   else if( lmdal <= 0.0 && lmdar >= 0.0 ){ /* Fs */
@@ -153,7 +166,7 @@ void CPU_RiemannSolver_HLLE( const int XYZ, real Flux_Out[], const real L_In[], 
     Flux_Out[4] = Fhll[4] - Fhll[0];
 #   endif
 
-   CPU_Rotate3D( Flux_Out, XYZ, false );
+    SRHydro_Rotate3D( Flux_Out, XYZ, false );
     return;
   }
   else{ /* Fr */
@@ -169,11 +182,11 @@ void CPU_RiemannSolver_HLLE( const int XYZ, real Flux_Out[], const real L_In[], 
     Flux_Out[4] = Fr[4] - Fr[0];
 #   endif
 
-   CPU_Rotate3D( Flux_Out, XYZ, false );
+    SRHydro_Rotate3D( Flux_Out, XYZ, false );
     return;
   }
 
-} // FUNCTION : CPU_RiemannSolver_HLLE
+} // FUNCTION : SRHydro_RiemannSolver_HLLE
 
 
 #endif // #if ( MODEL == SR_HYDRO )

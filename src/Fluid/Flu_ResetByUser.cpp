@@ -1,5 +1,4 @@
 #include "GAMER.h"
-#include "../../include/CPU_prototypes.h"
 
 // declare as static so that other functions cannot invoke them directly and must use the function pointers
 static bool Flu_ResetByUser_Func( real fluid[], const double x, const double y, const double z, const double Time,

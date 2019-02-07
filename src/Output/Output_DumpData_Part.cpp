@@ -3,13 +3,6 @@
 static void WriteFile( FILE *File, const int lv, const int PID, const int i, const int j, const int k,
                        const int ii, const int jj, const int kk );
 
-#if (MODEL == SR_HYDRO)
-void CPU_4Velto3Vel( const real In[], real Out[] );
-void CPU_Con2Pri( const real In[], real Out[], const real Gamma );
-#endif
-
-
-
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Output_DumpData_Part
 // Description :  Output part of data in the ASCII form
@@ -244,7 +237,7 @@ void WriteFile( FILE *File, const int lv, const int PID, const int i, const int 
 
 #  if (MODEL == SR_HYDRO)
    real Pri4Vel[NCOMP_FLUID];
-   CPU_Con2Pri(u,Pri4Vel,GAMMA);
+   SRHydro_Con2Pri(u,Pri4Vel,GAMMA);
 
 // output all primitive variables in the sr-fluid array
 #  ifdef FLOAT8
@@ -276,7 +269,7 @@ void WriteFile( FILE *File, const int lv, const int PID, const int i, const int 
 
    real Pri3Vel[NCOMP_FLUID];
 
-   CPU_4Velto3Vel(Pri4Vel,Pri3Vel);
+   SRHydro_4Velto3Vel(Pri4Vel,Pri3Vel);
 
 // output 3-velocity
 #  ifdef FLOAT8

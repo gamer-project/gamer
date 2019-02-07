@@ -4,11 +4,6 @@
 static int Table_01( const int SibID, const int Side, const char dim, const int w01, const int w02,
                      const int w10, const int w11, const int w12, const int w20, const int w21 );
 
-#if (MODEL == SR_HYDRO)
-void CPU_Con2Pri (const real In[], real Out[], const real Gamma);
-bool CPU_CheckUnphysical( const real Con[], const real Pri[], const char s[], const int line, bool show);
-#endif
-
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  InterpolateGhostZone
@@ -470,19 +465,17 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData[], const in
                                           Idx = IDX321( Disp2[0], j2, k2, CSize[0], CSize[1] );
       for (i1=Disp1[0]; i1<Disp1[0]+Loop1[0]; i1++)   {
 
-	 for(int q =0;q<NCOMP_FLUID;q++){
-	   Cons[q]=amr->patch[FluSg][lv][PID]->fluid[q][k1][j1][i1];}
+	 for(int q =0;q<NCOMP_FLUID;q++)  Cons[q]=amr->patch[FluSg][lv][PID]->fluid[q][k1][j1][i1];
 
-	   CPU_Con2Pri(Cons, Prim, (real)GAMMA);
+	   SRHydro_Con2Pri(Cons, Prim, (real)GAMMA);
 
 	   CData_Ptr[Idx] = Prim[0];
 
          if ( FluIntTime ) // temporal interpolation
 	   {
-            for(int q =0;q<NCOMP_FLUID;q++){
-	      Cons[q]=amr->patch[FluSg_IntT][lv][PID]->fluid[q][k1][j1][i1];}
+            for(int q =0;q<NCOMP_FLUID;q++)  Cons[q]=amr->patch[FluSg_IntT][lv][PID]->fluid[q][k1][j1][i1];
 
-	      CPU_Con2Pri(Cons, Prim, (real)GAMMA);
+	      SRHydro_Con2Pri(Cons, Prim, (real)GAMMA);
 
 	      CData_Ptr[Idx] =   FluWeighting     *CData_Ptr[Idx]
 			       + FluWeighting_IntT*Prim[0];
@@ -500,10 +493,9 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData[], const in
                                           Idx = IDX321( Disp2[0], j2, k2, CSize[0], CSize[1] );
       for (i1=Disp1[0]; i1<Disp1[0]+Loop1[0]; i1++)   {
 
-	 for(int q =0;q<NCOMP_FLUID;q++){
-	    Cons[q]=amr->patch[FluSg][lv][PID]->fluid[q][k1][j1][i1];}
+	 for(int q =0;q<NCOMP_FLUID;q++)  Cons[q]=amr->patch[FluSg][lv][PID]->fluid[q][k1][j1][i1];
 
-	    CPU_Con2Pri(Cons, Prim, (real)GAMMA);
+	    SRHydro_Con2Pri(Cons, Prim, (real)GAMMA);
 
 	    CData_Ptr[Idx] = Prim[1];
 
@@ -512,7 +504,7 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData[], const in
             for(int q =0;q<NCOMP_FLUID;q++){
 	      Cons[q]=amr->patch[FluSg_IntT][lv][PID]->fluid[q][k1][j1][i1];}
 
-	      CPU_Con2Pri(Cons, Prim, (real)GAMMA);
+	      SRHydro_Con2Pri(Cons, Prim, (real)GAMMA);
 
 	      CData_Ptr[Idx] =   FluWeighting     *CData_Ptr[Idx]
 			       + FluWeighting_IntT*Prim[1];
@@ -530,19 +522,17 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData[], const in
                                           Idx = IDX321( Disp2[0], j2, k2, CSize[0], CSize[1] );
       for (i1=Disp1[0]; i1<Disp1[0]+Loop1[0]; i1++)   {
 
-	 for(int q =0;q<NCOMP_FLUID;q++){
-	      Cons[q]=amr->patch[FluSg][lv][PID]->fluid[q][k1][j1][i1];}
+	 for(int q =0;q<NCOMP_FLUID;q++)  Cons[q]=amr->patch[FluSg][lv][PID]->fluid[q][k1][j1][i1];
 
-	 CPU_Con2Pri(Cons, Prim, (real)GAMMA);
+	 SRHydro_Con2Pri(Cons, Prim, (real)GAMMA);
 
          CData_Ptr[Idx] = Prim[2];
 
          if ( FluIntTime ) // temporal interpolation
 	   {
-            for(int q =0;q<NCOMP_FLUID;q++){
-	      Cons[q]=amr->patch[FluSg_IntT][lv][PID]->fluid[q][k1][j1][i1];}
+            for(int q =0;q<NCOMP_FLUID;q++)  Cons[q]=amr->patch[FluSg_IntT][lv][PID]->fluid[q][k1][j1][i1];
 
-	      CPU_Con2Pri(Cons, Prim, (real)GAMMA);
+	      SRHydro_Con2Pri(Cons, Prim, (real)GAMMA);
 
 	      CData_Ptr[Idx] =   FluWeighting     *CData_Ptr[Idx]
 			       + FluWeighting_IntT*Prim[2];
@@ -560,19 +550,17 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData[], const in
                                           Idx = IDX321( Disp2[0], j2, k2, CSize[0], CSize[1] );
       for (i1=Disp1[0]; i1<Disp1[0]+Loop1[0]; i1++)   {
 
-	 for(int q =0;q<NCOMP_FLUID;q++){
-	      Cons[q]=amr->patch[FluSg][lv][PID]->fluid[q][k1][j1][i1];}
+	 for(int q =0;q<NCOMP_FLUID;q++) Cons[q]=amr->patch[FluSg][lv][PID]->fluid[q][k1][j1][i1];
 
-	 CPU_Con2Pri(Cons, Prim, (real)GAMMA);
+	 SRHydro_Con2Pri(Cons, Prim, (real)GAMMA);
 
          CData_Ptr[Idx] = Prim[3];
 
          if ( FluIntTime ) // temporal interpolation
 	   {
-            for(int q =0;q<NCOMP_FLUID;q++){
-	      Cons[q]=amr->patch[FluSg_IntT][lv][PID]->fluid[q][k1][j1][i1];}
+            for(int q =0;q<NCOMP_FLUID;q++) Cons[q]=amr->patch[FluSg_IntT][lv][PID]->fluid[q][k1][j1][i1];
 
-	      CPU_Con2Pri(Cons, Prim, (real)GAMMA);
+	      SRHydro_Con2Pri(Cons, Prim, (real)GAMMA);
 
 	      CData_Ptr[Idx] =   FluWeighting     *CData_Ptr[Idx]
 			       + FluWeighting_IntT*Prim[3];
@@ -592,16 +580,14 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData[], const in
 
          for (int v=0; v<NCOMP_FLUID; v++)   Fluid[v] = amr->patch[FluSg][lv][PID]->fluid[v][k1][j1][i1];
 
-         CData_Ptr[Idx] = CPU_GetPressure( Fluid[DENS], Fluid[MOMX], Fluid[MOMY], Fluid[MOMZ], Fluid[ENGY],
-                                           Gamma_m1, CheckMinPres_No, NULL_REAL );
+         CData_Ptr[Idx] = SRHydro_GetPressure( Fluid[DENS], Fluid[MOMX], Fluid[MOMY], Fluid[MOMZ], Fluid[ENGY], GAMMA );
 
          if ( FluIntTime ) // temporal interpolation
          {
             for (int v=0; v<NCOMP_FLUID; v++)   Fluid[v] = amr->patch[FluSg_IntT][lv][PID]->fluid[v][k1][j1][i1];
 
             CData_Ptr[Idx] = FluWeighting     *CData_Ptr[Idx]
-                           + FluWeighting_IntT*CPU_GetPressure( Fluid[DENS], Fluid[MOMX], Fluid[MOMY], Fluid[MOMZ], Fluid[ENGY],
-                                                                Gamma_m1, CheckMinPres_No, NULL_REAL );
+                           + FluWeighting_IntT*SRHydro_GetPressure( Fluid[DENS], Fluid[MOMX], Fluid[MOMY], Fluid[MOMZ], Fluid[ENGY], GAMMA );
          }
 
          Idx ++;
@@ -619,16 +605,14 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData[], const in
 
          for (int v=0; v<NCOMP_FLUID; v++)   Fluid[v] = amr->patch[FluSg][lv][PID]->fluid[v][k1][j1][i1];
 
-         CData_Ptr[Idx] = CPU_GetTemperature( Fluid[DENS], Fluid[MOMX], Fluid[MOMY], Fluid[MOMZ], Fluid[ENGY],
-                                              Gamma_m1, (MinPres>=0.0), MinPres );
+         CData_Ptr[Idx] = SRHydro_GetTemperature( Fluid[DENS], Fluid[MOMX], Fluid[MOMY], Fluid[MOMZ], Fluid[ENGY], GAMMA );
 
          if ( FluIntTime ) // temporal interpolation
          {
             for (int v=0; v<NCOMP_FLUID; v++)   Fluid[v] = amr->patch[FluSg_IntT][lv][PID]->fluid[v][k1][j1][i1];
 
             CData_Ptr[Idx] = FluWeighting     *CData_Ptr[Idx]
-                           + FluWeighting_IntT*CPU_GetTemperature( Fluid[DENS], Fluid[MOMX], Fluid[MOMY], Fluid[MOMZ], Fluid[ENGY],
-                                                                   Gamma_m1, (MinPres>=0.0), MinPres );
+                           + FluWeighting_IntT*SRHydro_GetTemperature( Fluid[DENS], Fluid[MOMX], Fluid[MOMY], Fluid[MOMZ], Fluid[ENGY], GAMMA );
          }
 
          Idx ++;
@@ -843,19 +827,17 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData[], const in
                                                 Idx = IDX321( Disp3[0], j1, k1, CSize[0], CSize[1] );
             for (i2=Disp4[0]; i2<Disp4[0]+Loop2[0]; i2++)   {
 
-	       for(int q =0;q<NCOMP_FLUID;q++){
-		Cons[q]=amr->patch[FluSg][lv][SibPID]->fluid[q][k2][j2][i2];}
+	       for(int q =0;q<NCOMP_FLUID;q++) Cons[q]=amr->patch[FluSg][lv][SibPID]->fluid[q][k2][j2][i2];
 
-		CPU_Con2Pri(Cons, Prim, (real)GAMMA);
+		SRHydro_Con2Pri(Cons, Prim, (real)GAMMA);
 
 		CData_Ptr[Idx] = Prim[0];
 
                if ( FluIntTime ) // temporal interpolation
 		   {
-                    for(int q =0;q<NCOMP_FLUID;q++){
-		      Cons[q]=amr->patch[FluSg_IntT][lv][SibPID]->fluid[q][k2][j2][i2];}
+                    for(int q =0;q<NCOMP_FLUID;q++) Cons[q]=amr->patch[FluSg_IntT][lv][SibPID]->fluid[q][k2][j2][i2];
 
-		      CPU_Con2Pri(Cons, Prim, (real)GAMMA);
+		      SRHydro_Con2Pri(Cons, Prim, (real)GAMMA);
 
 		      CData_Ptr[Idx] =   FluWeighting     *CData_Ptr[Idx]
 				       + FluWeighting_IntT*Prim[0];
@@ -873,19 +855,17 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData[], const in
                                                 Idx = IDX321( Disp3[0], j1, k1, CSize[0], CSize[1] );
             for (i2=Disp4[0]; i2<Disp4[0]+Loop2[0]; i2++)   {
 
-	       for(int q =0;q<NCOMP_FLUID;q++){
-		Cons[q]=amr->patch[FluSg][lv][SibPID]->fluid[q][k2][j2][i2];}
+	       for(int q =0;q<NCOMP_FLUID;q++) Cons[q]=amr->patch[FluSg][lv][SibPID]->fluid[q][k2][j2][i2];
 
-		CPU_Con2Pri(Cons, Prim, (real)GAMMA);
+		SRHydro_Con2Pri(Cons, Prim, (real)GAMMA);
 
 		CData_Ptr[Idx] = Prim[1];
 
                if ( FluIntTime ) // temporal interpolation
 		   {
-                    for(int q =0;q<NCOMP_FLUID;q++){
-		      Cons[q]=amr->patch[FluSg_IntT][lv][SibPID]->fluid[q][k2][j2][i2];}
+                    for(int q =0;q<NCOMP_FLUID;q++) Cons[q]=amr->patch[FluSg_IntT][lv][SibPID]->fluid[q][k2][j2][i2];
 
-		      CPU_Con2Pri(Cons, Prim, (real)GAMMA);
+		      SRHydro_Con2Pri(Cons, Prim, (real)GAMMA);
 
 		      CData_Ptr[Idx] =   FluWeighting     *CData_Ptr[Idx]
 				       + FluWeighting_IntT*Prim[1];
@@ -903,10 +883,9 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData[], const in
                                                 Idx = IDX321( Disp3[0], j1, k1, CSize[0], CSize[1] );
             for (i2=Disp4[0]; i2<Disp4[0]+Loop2[0]; i2++)   {
 
-	       for(int q =0;q<NCOMP_FLUID;q++){
-		Cons[q]=amr->patch[FluSg][lv][SibPID]->fluid[q][k2][j2][i2];}
+	       for(int q =0;q<NCOMP_FLUID;q++) Cons[q]=amr->patch[FluSg][lv][SibPID]->fluid[q][k2][j2][i2];
 
-		CPU_Con2Pri(Cons, Prim, (real)GAMMA);
+		SRHydro_Con2Pri(Cons, Prim, (real)GAMMA);
 
 		CData_Ptr[Idx] = Prim[2];
 
@@ -915,7 +894,7 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData[], const in
                     for(int q =0;q<NCOMP_FLUID;q++){
 		      Cons[q]=amr->patch[FluSg_IntT][lv][SibPID]->fluid[q][k2][j2][i2];}
 
-		      CPU_Con2Pri(Cons, Prim, (real)GAMMA);
+		      SRHydro_Con2Pri(Cons, Prim, (real)GAMMA);
 
 		      CData_Ptr[Idx] =   FluWeighting     *CData_Ptr[Idx]
 				       + FluWeighting_IntT*Prim[2];
@@ -933,10 +912,9 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData[], const in
                                                 Idx = IDX321( Disp3[0], j1, k1, CSize[0], CSize[1] );
             for (i2=Disp4[0]; i2<Disp4[0]+Loop2[0]; i2++)   {
 
-	       for(int q =0;q<NCOMP_FLUID;q++){
-		Cons[q]=amr->patch[FluSg][lv][SibPID]->fluid[q][k2][j2][i2];}
+	       for(int q =0;q<NCOMP_FLUID;q++)	Cons[q]=amr->patch[FluSg][lv][SibPID]->fluid[q][k2][j2][i2];
 
-		CPU_Con2Pri(Cons, Prim, (real)GAMMA);
+		SRHydro_Con2Pri(Cons, Prim, (real)GAMMA);
 
 		CData_Ptr[Idx] = Prim[3];
 
@@ -945,7 +923,7 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData[], const in
                     for(int q =0;q<NCOMP_FLUID;q++){
 		      Cons[q]=amr->patch[FluSg_IntT][lv][SibPID]->fluid[q][k2][j2][i2];}
 
-		      CPU_Con2Pri(Cons, Prim, (real)GAMMA);
+		      SRHydro_Con2Pri(Cons, Prim, (real)GAMMA);
 
 		      CData_Ptr[Idx] =   FluWeighting     *CData_Ptr[Idx]
 				       + FluWeighting_IntT*Prim[3];
@@ -966,16 +944,14 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData[], const in
 
                for (int v=0; v<NCOMP_FLUID; v++)   Fluid[v] = amr->patch[FluSg][lv][SibPID]->fluid[v][k2][j2][i2];
 
-               CData_Ptr[Idx] = CPU_GetPressure( Fluid[DENS], Fluid[MOMX], Fluid[MOMY], Fluid[MOMZ], Fluid[ENGY],
-                                                 Gamma_m1, CheckMinPres_No, NULL_REAL );
+               CData_Ptr[Idx] = SRHydro_GetPressure( Fluid[DENS], Fluid[MOMX], Fluid[MOMY], Fluid[MOMZ], Fluid[ENGY], GAMMA );
 
                if ( FluIntTime ) // temporal interpolation
                {
                   for (int v=0; v<NCOMP_FLUID; v++)   Fluid[v] = amr->patch[FluSg_IntT][lv][SibPID]->fluid[v][k2][j2][i2];
 
                   CData_Ptr[Idx] =  FluWeighting     *CData_Ptr[Idx]
-                                  + FluWeighting_IntT*CPU_GetPressure( Fluid[DENS], Fluid[MOMX], Fluid[MOMY], Fluid[MOMZ], Fluid[ENGY],
-                                                                       Gamma_m1, CheckMinPres_No, NULL_REAL );
+                                  + FluWeighting_IntT*SRHydro_GetPressure( Fluid[DENS], Fluid[MOMX], Fluid[MOMY], Fluid[MOMZ], Fluid[ENGY], GAMMA );
                }
 
                Idx ++;
@@ -993,17 +969,15 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData[], const in
 
                for (int v=0; v<NCOMP_FLUID; v++)   Fluid[v] = amr->patch[FluSg][lv][SibPID]->fluid[v][k2][j2][i2];
 
-               CData_Ptr[Idx] = CPU_GetTemperature( Fluid[DENS], Fluid[MOMX], Fluid[MOMY], Fluid[MOMZ], Fluid[ENGY],
-                                                    Gamma_m1, (MinPres>=0.0), MinPres );
+               CData_Ptr[Idx] = SRHydro_GetTemperature( Fluid[DENS], Fluid[MOMX], Fluid[MOMY], Fluid[MOMZ], Fluid[ENGY], GAMMA );
 
                if ( FluIntTime ) // temporal interpolation
                {
                   for (int v=0; v<NCOMP_FLUID; v++)   Fluid[v] = amr->patch[FluSg_IntT][lv][SibPID]->fluid[v][k2][j2][i2];
 
                   CData_Ptr[Idx] =  FluWeighting     *CData_Ptr[Idx]
-                                  + FluWeighting_IntT*CPU_GetTemperature( Fluid[DENS], Fluid[MOMX], Fluid[MOMY],
-                                                                          Fluid[MOMZ], Fluid[ENGY],
-                                                                          Gamma_m1, (MinPres>=0.0), MinPres );
+                                  + FluWeighting_IntT*SRHydro_GetTemperature( Fluid[DENS], Fluid[MOMX], Fluid[MOMY],
+                                                                          Fluid[MOMZ], Fluid[ENGY], GAMMA );
                }
 
                Idx ++;
@@ -1082,15 +1056,19 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData[], const in
                                                       CSize[0], CSize[1], CSize[2], BC_Idx_Start, BC_Idx_End );
                break;
 
-#              if ( MODEL == HYDRO  ||  MODEL == MHD || MODEL == SR_HYDRO )
                case BC_FLU_REFLECTING:
+#              if ( MODEL == HYDRO )
                   Hydro_BoundaryCondition_Reflecting( CData_Ptr, BC_Face[BC_Sibling], NVar_Flu,          CGhost,
                                                       CSize[0], CSize[1], CSize[2], BC_Idx_Start, BC_Idx_End,
                                                       TFluVarIdxList, NVar_Der, TDerVarList );
+#              elif ( MODEL == SR_HYDRO )
+                  SRHydro_BoundaryCondition_Reflecting( CData_Ptr, BC_Face[BC_Sibling], NVar_Flu,          CGhost,
+                                                        CSize[0], CSize[1], CSize[2], BC_Idx_Start, BC_Idx_End,
+                                                        TFluVarIdxList, NVar_Der, TDerVarList );
+#              endif
                break;
 #              if ( MODEL == MHD )
 #              warning : WAIT MHD !!!
-#              endif
 #              endif
 
                case BC_FLU_USER:
@@ -1295,7 +1273,7 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData[], const in
          {
            for (int v = 0 ; v < NCOMP_FLUID ;v++) Cons[v] = *(IntData+FSize3D*v+i);
 
-           if (CPU_CheckUnphysical(Cons, NULL, __FUNCTION__, __LINE__, false))
+           if (SRHydro_CheckUnphysical(Cons, NULL, GAMMA, __FUNCTION__, __LINE__, false))
             {
                state = true;
                break; 
@@ -1311,14 +1289,14 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData[], const in
      for ( int i = 0 ;i < CSize3D; i++ )
      {
        for (int v = 0 ; v < NCOMP_FLUID ;v++) Cons[v] = *(CData+CSize3D*v+i);
-       if(CPU_CheckUnphysical(Cons, NULL, __FUNCTION__, __LINE__, true)) exit(EXIT_FAILURE);
+       if(SRHydro_CheckUnphysical(Cons, NULL, GAMMA, __FUNCTION__, __LINE__, true)) exit(EXIT_FAILURE);
      }
 
 //   check fine data after interpolation
      for ( int i = 0 ;i < FSize3D; i++ )
      {
        for (int v = 0 ; v < NCOMP_FLUID ;v++) Cons[v] = *(IntData+FSize3D*v+i);
-       if(CPU_CheckUnphysical(Cons, NULL, __FUNCTION__, __LINE__, true)) exit(EXIT_FAILURE);
+       if(SRHydro_CheckUnphysical(Cons, NULL, GAMMA, __FUNCTION__, __LINE__, true)) exit(EXIT_FAILURE);
      }
 #    endif
    }

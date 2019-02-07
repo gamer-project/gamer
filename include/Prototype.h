@@ -66,6 +66,7 @@ void Buf_SortBoundaryPatch( const int NPatch, int *IDList, int *PosList );
 
 
 // Hydrodynamics
+#if ( MODEL == HYDRO )
 void CPU_FluidSolver( real h_Flu_Array_In[][FLU_NIN][ CUBE(FLU_NXT) ],
                       real h_Flu_Array_Out[][FLU_NOUT][ CUBE(PS2) ],
                       char h_DE_Array_Out[][ CUBE(PS2) ],
@@ -79,15 +80,18 @@ void CPU_FluidSolver( real h_Flu_Array_In[][FLU_NIN][ CUBE(FLU_NXT) ],
                       const real MinDens, const real MinPres, const real DualEnergySwitch,
                       const bool NormPassive, const int NNorm, const int NormIdx[],
                       const bool JeansMinPres, const real JeansMinPres_Coeff );
+
 real Hydro_GetPressure( const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy,
-                      const real Gamma_m1, const bool CheckMinPres, const real MinPres );
+                        const real Gamma_m1, const bool CheckMinPres, const real MinPres );
+
 real Hydro_GetTemperature( const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy,
-                         const real Gamma_m1, const bool CheckMinPres, const real MinPres );
+                           const real Gamma_m1, const bool CheckMinPres, const real MinPres );
+
 double Hydro_Temperature2Pressure( const double Dens, const double Temp, const double mu, const double m_H,
-                                 const bool CheckMinPres, const double MinPres );
+                                   const bool CheckMinPres, const double MinPres );
+
 real Hydro_CheckMinPres( const real InPres, const real MinPres );
 real Hydro_CheckMinDens( const real InDens, const real MinDens );
-real Hydro_ModifyEngy (const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy);
 void Hydro_NormalizePassive( const real GasDens, real Passive[], const int NNorm, const int NormIdx[] );
 
 #ifdef DUAL_ENERGY
@@ -101,22 +105,43 @@ real Hydro_DensEntropy2Pres( const real Dens, const real Enpy, const real Gamma_
                              const bool CheckMinPres, const real MinPres );
 #endif
 #endif
-real Hydro_CheckMinPresInEngy( const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy,
-                               const real Gamma_m1, const real _Gamma_m1, const real MinPres );
+#elif ( MODEL == SR_HYDRO )
+void CPU_FluidSolver( real h_Flu_Array_In[][FLU_NIN][ CUBE(FLU_NXT) ],
+                      real h_Flu_Array_Out[][FLU_NOUT][ CUBE(PS2) ],
+                      char h_DE_Array_Out[][ CUBE(PS2) ],
+                      real h_Flux_Array[][9][NFLUX_TOTAL][ SQR(PS2) ],
+                      const double h_Corner_Array[][3],
+                      const real h_Pot_Array_USG[][ CUBE(USG_NXT_F) ],
+                      const int NPatchGroup, const real dt, const real dh, const real Gamma, const bool StoreFlux,
+                      const bool XYZ, const LR_Limiter_t LR_Limiter, const real MinMod_Coeff,
+                      const real ELBDM_Eta, real ELBDM_Taylor3_Coeff, const bool ELBDM_Taylor3_Auto,
+                      const double Time, const OptGravityType_t GravityType,
+                      const real MinDens, const real MinPres, const real DualEnergySwitch,
+                      const bool NormPassive, const int NNorm, const int NormIdx[],
+                      const bool JeansMinPres, const real JeansMinPres_Coeff );
+
+void SRHydro_Con2Pri( const real In[], real Out[], const real Gamma);
+void SRHydro_Pri2Con( const real In[], real Out[], const real Gamma);
+
+void SRHydro_3Velto4Vel( const real In[], real Out[] );
+void SRHydro_4Velto3Vel( const real In[], real Out[] );
+
+real SRHydro_GetPressure( const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy, const real Gamma );
+
+real SRHydro_GetTemperature (const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy, const real Gamma );
+
+real SRHydro_CheckMinDens (const real InDens, const real MinDens);
+
+bool SRHydro_CheckUnphysical( const real Con[], const real Pri[], const real Gamma, const char s[], const int line, bool show);
+#endif
+
 int Flu_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, const double dt, const int SaveSg,
                    const bool OverlapMPI, const bool Overlap_Sync );
 void Flu_AllocateFluxArray( const int lv );
-<<<<<<< HEAD
 
-void Flu_Close( const int lv, const int SaveSg, real h_Flux_Array[][9][NFLUX_TOTAL][4*PATCH_SIZE*PATCH_SIZE],
-                real h_Flu_Array_F_Out[][FLU_NOUT][8*PATCH_SIZE*PATCH_SIZE*PATCH_SIZE],
-                char h_DE_Array_F_Out[][8*PATCH_SIZE*PATCH_SIZE*PATCH_SIZE],
-                const int NPG, const int *PID0_List, const real h_Flu_Array_F_In[][FLU_NIN][FLU_NXT*FLU_NXT*FLU_NXT],
-=======
 void Flu_Close( const int lv, const int SaveSg, real h_Flux_Array[][9][NFLUX_TOTAL][ SQR(PS2) ],
                 real h_Flu_Array_F_Out[][FLU_NOUT][ CUBE(PS2) ], char h_DE_Array_F_Out[][ CUBE(PS2) ],
                 const int NPG, const int *PID0_List, const real h_Flu_Array_F_In[][FLU_NIN][ CUBE(FLU_NXT) ],
->>>>>>> a7f57510c0aa220689aa843fdde36a09dc5d150e
                 const double dt );
 
 void Flu_FixUp( const int lv );
@@ -438,14 +463,13 @@ real   ELBDM_SetTaylor3Coeff( const real dt, const real dh, const real Eta );
 // SR_HYDRO model
 #elif    ( MODEL == SR_HYDRO )
 void SRHydro_Aux_Check_Negative( const int lv, const int Mode, const char *comment );
-void Hydro_GetTimeStep_Gravity( double &dt, double &dTime, int &MinDtLv, real &MinDtVar, const double dt_dTime );
-void Hydro_GetMaxAcc( real MaxAcc[] );
 void SRHydro_Init_ByFunction_AssignData( const int lv );
-void Hydro_BoundaryCondition_Reflecting( real *Array, const int BC_Face, const int NVar_Flu, const int GhostSize,
-                                         const int ArraySizeX, const int ArraySizeY, const int ArraySizeZ,
-                                         const int Idx_Start[], const int Idx_End[], const int TFluVarIdxList[],
-                                         const int NVar_Der, const int TDerVarList[] );
-bool Hydro_Flag_Vorticity( const int i, const int j, const int k, const int lv, const int PID, const double Threshold );
+void SRHydro_BoundaryCondition_Reflecting( real *Array, const int BC_Face, const int NVar_Flu, const int GhostSize,
+                                           const int ArraySizeX, const int ArraySizeY, const int ArraySizeZ,
+                                           const int Idx_Start[], const int Idx_End[], const int TFluVarIdxList[],
+                                           const int NVar_Der, const int TDerVarList[] );
+
+bool SRHydro_Flag_Vorticity( const int i, const int j, const int k, const int lv, const int PID, const double Threshold );
 
 #else
 #error : ERROR : unsupported MODEL !!
