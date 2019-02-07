@@ -79,7 +79,7 @@ bool SRHydro_FullStepUpdate( const real g_Input[][ CUBE(FLU_NXT) ], real g_Outpu
 #     endif
 
 #     ifdef CHECK_NEGATIVE_IN_FLUID
-      if( SRHydro_CheckUnphysical(Output_1Cell, NULL, Gamma, __FUNCTION__, __LINE__, false) ) return true;
+      if( SRHydro_CheckUnphysical(Output_1Cell, NULL, Gamma, MinTemp, __FUNCTION__, __LINE__, false) ) return true;
 #     endif
 
 //    4. store results to the output array

@@ -120,19 +120,19 @@ void CPU_FluidSolver( real h_Flu_Array_In[][FLU_NIN][ CUBE(FLU_NXT) ],
                       const bool NormPassive, const int NNorm, const int NormIdx[],
                       const bool JeansMinPres, const real JeansMinPres_Coeff );
 
-void SRHydro_Con2Pri( const real In[], real Out[], const real Gamma);
+void SRHydro_Con2Pri( const real In[], real Out[], const real Gamma, const real MinTemp);
 void SRHydro_Pri2Con( const real In[], real Out[], const real Gamma);
 
 void SRHydro_3Velto4Vel( const real In[], real Out[] );
 void SRHydro_4Velto3Vel( const real In[], real Out[] );
 
-real SRHydro_GetPressure( const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy, const real Gamma );
+real SRHydro_GetPressure( const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy, const real Gamma, const real MinTemp );
 
-real SRHydro_GetTemperature (const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy, const real Gamma );
+real SRHydro_GetTemperature (const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy, const real Gamma, const real MinTemp );
 
 real SRHydro_CheckMinDens (const real InDens, const real MinDens);
 
-bool SRHydro_CheckUnphysical( const real Con[], const real Pri[], const real Gamma, const char s[], const int line, bool show);
+bool SRHydro_CheckUnphysical( const real Con[], const real Pri[], const real Gamma, const real MinTemp, const char s[], const int line, bool show);
 #endif
 
 int Flu_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, const double dt, const int SaveSg,

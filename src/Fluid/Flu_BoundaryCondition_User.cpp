@@ -168,7 +168,7 @@ void Flu_BoundaryCondition_User( real *Array, const int NVar_Flu, const int Arra
       printf("please modify %s\n", __FUNCTION__);
       abort();
       real Prim4[5], Prim3[5];
-      SRHydro_Con2Pri(BVal,Prim4,(real)GAMMA);
+      SRHydro_Con2Pri(BVal,Prim4,(real)GAMMA, (real) MIN_TEMP );
       SRHydro_4Velto3Vel(Prim4,Prim3);
 
       if ( PrepDens )   Array3D[ v2 ++ ][k][j][i] = Prim3[0];
@@ -176,7 +176,7 @@ void Flu_BoundaryCondition_User( real *Array, const int NVar_Flu, const int Arra
       if ( PrepVy   )   Array3D[ v2 ++ ][k][j][i] = Prim3[2];
       if ( PrepVz   )   Array3D[ v2 ++ ][k][j][i] = Prim3[3];
       if ( PrepPres )   Array3D[ v2 ++ ][k][j][i] = Prim3[4];
-      if ( PrepTemp )   Array3D[ v2 ++ ][k][j][i] = SRHydro_GetTemperature( BVal[DENS], BVal[MOMX], BVal[MOMY], BVal[MOMZ], BVal[ENGY], GAMMA );
+      if ( PrepTemp )   Array3D[ v2 ++ ][k][j][i] = SRHydro_GetTemperature( BVal[DENS], BVal[MOMX], BVal[MOMY], BVal[MOMZ], BVal[ENGY], GAMMA, MIN_TEMP  );
 
 #     elif ( MODEL == ELBDM )
 //    no derived variables yet

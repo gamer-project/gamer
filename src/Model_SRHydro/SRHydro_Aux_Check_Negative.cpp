@@ -1,6 +1,6 @@
 #include "GAMER.h"
 
-#if ( MODEL == HYDRO || MODEL == SR_HYDRO  )
+#if ( MODEL == SR_HYDRO  )
 
 
 // 1: check negative values
@@ -58,7 +58,7 @@ void SRHydro_Aux_Check_Negative( const int lv, const int Mode, const char *comme
          {
             for (int v=0; v<NCOMP_TOTAL; v++)   Fluid[v] = amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[v][k][j][i];
 
-            Pres = SRHydro_GetPressure( Fluid[DENS], Fluid[MOMX], Fluid[MOMY], Fluid[MOMZ], Fluid[ENGY], GAMMA );
+            Pres = SRHydro_GetPressure( Fluid[DENS], Fluid[MOMX], Fluid[MOMY], Fluid[MOMZ], Fluid[ENGY], GAMMA, MIN_TEMP  );
 
             if ( Mode == 1  ||  Mode == 4 ) // check negative density
             {

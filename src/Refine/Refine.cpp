@@ -287,15 +287,19 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
                                                          CSize_Flu, CSize_Flu, CSize_Flu, BC_Idx_Start, BC_Idx_End );
                   break;
 
-#                 if ( MODEL == HYDRO  ||  MODEL == MHD || MODEL == SR_HYDRO )
                   case BC_FLU_REFLECTING:
+#                 if ( MODEL == HYDRO )
                      Hydro_BoundaryCondition_Reflecting( Flu_CData[0][0][0], BC_Face[BC_Sibling], NCOMP_TOTAL, CGhost_Flu,
                                                          CSize_Flu, CSize_Flu, CSize_Flu, BC_Idx_Start, BC_Idx_End,
                                                          FluVarIdxList, NDer, DerVarList );
+#                 elif ( MODEL == SR_HYDRO )
+                     SRHydro_BoundaryCondition_Reflecting( Flu_CData[0][0][0], BC_Face[BC_Sibling], NCOMP_TOTAL, CGhost_Flu,
+                                                           CSize_Flu, CSize_Flu, CSize_Flu, BC_Idx_Start, BC_Idx_End,
+                                                           FluVarIdxList, NDer, DerVarList );
+#                 endif
                   break;
 #                 if ( MODEL == MHD )
 #                 warning : WAIT MHD !!!
-#                 endif
 #                 endif
 
                   case BC_FLU_USER:
@@ -512,7 +516,7 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
 	   for (int i=0; i<FSize; i++)
 	   {
 	     for (int v = 0 ; v < NCOMP_FLUID;v++) Con[v] = Flu_FData[v][k][j][i];
-	     if(SRHydro_CheckUnphysical(Con, NULL, GAMMA, __FUNCTION__, __LINE__, false))
+	     if(SRHydro_CheckUnphysical(Con, NULL, GAMMA, MIN_TEMP, __FUNCTION__, __LINE__, false))
               {
                i = j = k = FSize; // break nested loop
                state = true;
@@ -530,7 +534,7 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
          for (int i=0; i<FSize; i++)
          {
            for (int v=0;v<NCOMP_TOTAL;v++)Con[v] = Flu_FData[v][k][j][i];
-           if(SRHydro_CheckUnphysical(Con, NULL, GAMMA, __FUNCTION__, __LINE__, true)) exit(EXIT_FAILURE);
+           if(SRHydro_CheckUnphysical(Con, NULL, GAMMA, MIN_TEMP, __FUNCTION__, __LINE__, true)) exit(EXIT_FAILURE);
          }
 #        endif
 #        endif

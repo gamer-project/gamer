@@ -220,7 +220,7 @@ void Flu_FixUp( const int lv )
                   if ( CorrVal[DENS] <= MIN_DENS )
 
 #                 elif ( MODEL == SR_HYDRO )
-		  if (SRHydro_CheckUnphysical(CorrVal, NULL, GAMMA, __FUNCTION__, __LINE__, true))
+		  if (SRHydro_CheckUnphysical(CorrVal, NULL, GAMMA, MIN_TEMP, __FUNCTION__, __LINE__, true))
 #                 endif
                      continue;
 

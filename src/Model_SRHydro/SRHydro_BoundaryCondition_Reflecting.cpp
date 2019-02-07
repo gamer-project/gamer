@@ -25,7 +25,7 @@ static void BC_Reflecting_zp( real *Array, const int NVar_Flu, const int TFluVar
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Hydro_BoundaryCondition_Reflecting
+// Function    :  SRHydro_BoundaryCondition_Reflecting
 // Description :  Fill up the ghost-zone values by the reflecting B.C.
 //
 // Note        :  1. Work for the functions "Prepare_PatchData, InterpolateGhostZone, Refine, LB_Refine_AllocateNewPatch"
@@ -44,10 +44,10 @@ static void BC_Reflecting_zp( real *Array, const int NVar_Flu, const int TFluVar
 //
 // Return      :  Array
 //-------------------------------------------------------------------------------------------------------
-void Hydro_BoundaryCondition_Reflecting( real *Array, const int BC_Face, const int NVar_Flu, const int GhostSize,
-                                         const int ArraySizeX, const int ArraySizeY, const int ArraySizeZ,
-                                         const int Idx_Start[], const int Idx_End[], const int TFluVarIdxList[],
-                                         const int NVar_Der, const int TDerVarList[] )
+void SRHydro_BoundaryCondition_Reflecting( real *Array, const int BC_Face, const int NVar_Flu, const int GhostSize,
+                                           const int ArraySizeX, const int ArraySizeY, const int ArraySizeZ,
+                                           const int Idx_Start[], const int Idx_End[], const int TFluVarIdxList[],
+                                           const int NVar_Der, const int TDerVarList[] )
 {
 // check the index range
 #  ifdef GAMER_DEBUG
@@ -112,7 +112,7 @@ void Hydro_BoundaryCondition_Reflecting( real *Array, const int BC_Face, const i
       default: Aux_Error( ERROR_INFO, "incorrect boundary face (%d) !!\n", BC_Face );
    }
 
-} // FUNCTION : Hydro_BoundaryCondition_Reflecting
+} // FUNCTION : SRHydro_BoundaryCondition_Reflecting
 
 
 
@@ -120,7 +120,7 @@ void Hydro_BoundaryCondition_Reflecting( real *Array, const int BC_Face, const i
 // Function    :  BC_Reflecting_xm
 // Description :  Set the reflecting B.C. at the -x boundary
 //
-// Note        :  1. Work for the function "Hydro_BoundaryCondition_Reflecting"
+// Note        :  1. Work for the function "SRHydro_BoundaryCondition_Reflecting"
 //                2. Use the input parameter "NVar_Flu" and "TFluVarIdxList" to control the target fluid variables
 //
 // Parameter   :  Array          : Array to store the prepared data of one patch group (including the ghost-zone data)
@@ -209,7 +209,7 @@ void BC_Reflecting_xm( real *Array, const int NVar_Flu, const int TFluVarIdxList
 // Function    :  BC_Reflecting_xp
 // Description :  Set the reflecting B.C. at the +x boundary
 //
-// Note        :  1. Work for the function "Hydro_BoundaryCondition_Reflecting"
+// Note        :  1. Work for the function "SRHydro_BoundaryCondition_Reflecting"
 //                2. Use the input parameter "NVar_Flu" and "TFluVarIdxList" to control the target fluid variables
 //
 // Parameter   :  Array          : Array to store the prepared data of one patch group (including the ghost-zone data)
@@ -299,7 +299,7 @@ void BC_Reflecting_xp( real *Array, const int NVar_Flu, const int TFluVarIdxList
 // Function    :  BC_Reflecting_ym
 // Description :  Set the reflecting B.C. at the -y boundary
 //
-// Note        :  1. Work for the function "Hydro_BoundaryCondition_Reflecting"
+// Note        :  1. Work for the function "SRHydro_BoundaryCondition_Reflecting"
 //                2. Use the input parameter "NVar_Flu" and "TFluVarIdxList" to control the target fluid variables
 //
 // Parameter   :  Array          : Array to store the prepared data of one patch group (including the ghost-zone data)
@@ -389,7 +389,7 @@ void BC_Reflecting_ym( real *Array, const int NVar_Flu, const int TFluVarIdxList
 // Function    :  BC_Reflecting_yp
 // Description :  Set the reflecting B.C. at the +y boundary
 //
-// Note        :  1. Work for the function "Hydro_BoundaryCondition_Reflecting"
+// Note        :  1. Work for the function "SRHydro_BoundaryCondition_Reflecting"
 //                2. Use the input parameter "NVar_Flu" and "TFluVarIdxList" to control the target fluid variables
 //
 // Parameter   :  Array          : Array to store the prepared data of one patch group (including the ghost-zone data)
@@ -479,7 +479,7 @@ void BC_Reflecting_yp( real *Array, const int NVar_Flu, const int TFluVarIdxList
 // Function    :  BC_Reflecting_zm
 // Description :  Set the reflecting B.C. at the -z boundary
 //
-// Note        :  1. Work for the function "Hydro_BoundaryCondition_Reflecting"
+// Note        :  1. Work for the function "SRHydro_BoundaryCondition_Reflecting"
 //                2. Use the input parameter "NVar_Flu" and "TFluVarIdxList" to control the target fluid variables
 //
 // Parameter   :  Array          : Array to store the prepared data of one patch group (including the ghost-zone data)
@@ -569,7 +569,7 @@ void BC_Reflecting_zm( real *Array, const int NVar_Flu, const int TFluVarIdxList
 // Function    :  BC_Reflecting_zp
 // Description :  Set the reflecting B.C. at the +z boundary
 //
-// Note        :  1. Work for the function "Hydro_BoundaryCondition_Reflecting"
+// Note        :  1. Work for the function "SRHydro_BoundaryCondition_Reflecting"
 //                2. Use the input parameter "NVar_Flu" and "TFluVarIdxList" to control the target fluid variables
 //
 // Parameter   :  Array          : Array to store the prepared data of one patch group (including the ghost-zone data)

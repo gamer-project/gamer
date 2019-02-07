@@ -237,7 +237,7 @@ void WriteFile( FILE *File, const int lv, const int PID, const int i, const int 
 
 #  if (MODEL == SR_HYDRO)
    real Pri4Vel[NCOMP_FLUID];
-   SRHydro_Con2Pri(u,Pri4Vel,GAMMA);
+   SRHydro_Con2Pri(u,Pri4Vel,(real) GAMMA, (real) MIN_TEMP );
 
 // output all primitive variables in the sr-fluid array
 #  ifdef FLOAT8

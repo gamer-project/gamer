@@ -1323,15 +1323,6 @@ void Load_Parameter_After_2000( FILE *File, const int FormatVersion, int &NLv_Re
                       "HLL_INCLUDE_ALL_WAVES", "ON", "OFF" );
 #     endif
 
-#     ifdef WAF_DISSIPATE
-      if ( !waf_dissipate )
-         Aux_Message( stderr, "WARNING : %s : RESTART file (%s) != runtime (%s) !!\n",
-                      "WAF_DISSIPATE", "OFF", "ON" );
-#     else
-      if (  waf_dissipate )
-         Aux_Message( stderr, "WARNING : %s : RESTART file (%s) != runtime (%s) !!\n",
-                      "WAF_DISSIPATE", "ON", "OFF" );
-#     endif
 
 
 
@@ -1511,7 +1502,6 @@ void Load_Parameter_After_2000( FILE *File, const int FormatVersion, int &NLv_Re
       CompareVar( "MINMOD_COEFF",            minmod_coeff,                 MINMOD_COEFF,              NonFatal );
       CompareVar( "EP_COEFF",                ep_coeff,                     EP_COEFF,                  NonFatal );
       CompareVar( "OPT__LR_LIMITER",         opt__lr_limiter,         (int)OPT__LR_LIMITER,           NonFatal );
-      CompareVar( "OPT__WAF_LIMITER",        opt__waf_limiter,        (int)OPT__WAF_LIMITER,          NonFatal );
 
 //    convert OPT__1ST_FLUX_CORR to bool to be consistent with the old format where OPT__1ST_FLUX_CORR is bool instead of int
       CompareVar( "OPT__1ST_FLUX_CORR",        opt__1st_flux_corr,        (bool)OPT__1ST_FLUX_CORR,        NonFatal );

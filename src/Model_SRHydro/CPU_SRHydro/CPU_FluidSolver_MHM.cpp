@@ -190,15 +190,13 @@ void CPU_FluidSolver_MHM(
 
 //             2. evaluate the full-step fluxes
 //                --> check unphysical cells in g_FC_Var_1PG[] before computing flux
-               SRHydro_ComputeFlux( g_FC_Var_1PG, g_FC_Flux_1PG, 1, Gamma, CorrHalfVel_No,
-                                    NULL, NULL,
-                                    NULL_REAL, NULL_REAL, NULL_REAL, GRAVITY_NONE, NULL, MinTemp,
-                                    StoreFlux, g_Flux_Array[P] );
+               SRHydro_ComputeFlux( g_FC_Var_1PG, g_FC_Flux_1PG, 1, Gamma,
+                                    MinTemp, StoreFlux, g_Flux_Array[P] );
 
 
 //             3. full-step evolution
 //                --> check unphysical cells in g_Flu_Array_Out[] after full update
-               state = SRHydro_FullStepUpdate( g_Flu_Array_In[P], g_Flu_Array_Out[P], g_DE_Array_Out[P],
+               state = SRHydro_FullStepUpdate( g_Flu_Array_In[P], g_Flu_Array_Out[P], NULL,
                                        g_FC_Flux_1PG, dt, dh, Gamma, MinDens, MinTemp );
 
                iteration++;
@@ -273,8 +271,8 @@ void SRHydro_RiemannPredict_Flux( const real g_ConVar[][ CUBE(FLU_NXT) ],
 
 //       check unphysical cells before computing flux
 #        ifdef CHECK_NEGATIVE_IN_FLUID
-         if(SRHydro_CheckUnphysical(ConVar_L, NULL, Gamma, __FUNCTION__, __LINE__, true)
-         || SRHydro_CheckUnphysical(ConVar_R, NULL, Gamma, __FUNCTION__, __LINE__, true)) exit(EXIT_FAILURE);
+         if(SRHydro_CheckUnphysical(ConVar_L, NULL, Gamma, MinTemp, __FUNCTION__, __LINE__, true)
+         || SRHydro_CheckUnphysical(ConVar_R, NULL, Gamma, MinTemp, __FUNCTION__, __LINE__, true)) exit(EXIT_FAILURE);
 #        endif
 
 #        ifdef CHECK_MIN_TEMP
@@ -329,7 +327,7 @@ GPU_DEVICE
 void SRHydro_RiemannPredict( const real g_ConVar_In[][ CUBE(FLU_NXT) ],
                              const real g_Half_Flux[][NCOMP_TOTAL][ CUBE(N_FC_FLUX) ],
                                    real g_Half_Var [][ CUBE(FLU_NXT) ],
-                             const real dt, const real dh, const real Gamma, const real MinDens, const real MinTemp );
+                             const real dt, const real dh, const real Gamma, const real MinDens, const real MinTemp )
 {
 
    const int  didx_flux[3] = { 1, N_FC_FLUX, SQR(N_FC_FLUX) };
@@ -359,7 +357,7 @@ void SRHydro_RiemannPredict( const real g_ConVar_In[][ CUBE(FLU_NXT) ],
          out_con[v] = g_ConVar_In[v][idx_in] - dt_dh2*( dflux[0][v] + dflux[1][v] + dflux[2][v] );
 
 #     ifdef CHECK_NEGATIVE_IN_FLUID
-      if(SRHydro_CheckUnphysical(out_con, NULL, Gamma, __FUNCTION__, __LINE__, true)) exit(EXIT_FAILURE);
+      if(SRHydro_CheckUnphysical(out_con, NULL, Gamma, MinTemp, __FUNCTION__, __LINE__, true)) exit(EXIT_FAILURE);
 #     endif
 
 #     ifdef CHECK_MIN_TEMP
@@ -367,7 +365,7 @@ void SRHydro_RiemannPredict( const real g_ConVar_In[][ CUBE(FLU_NXT) ],
 #     endif
 
 //    conserved --> primitive variables
-      SRHydro_Con2Pri( out_con, out_pri, Gamma );
+      SRHydro_Con2Pri( out_con, out_pri, Gamma, MinTemp );
 
 //    store the results to g_Half_Var[]
       for (int v=0; v<NCOMP_TOTAL; v++)   g_Half_Var[v][idx_out] = out_pri[v];

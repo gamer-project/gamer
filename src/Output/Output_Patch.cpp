@@ -181,7 +181,7 @@ void Output_Patch( const int lv, const int PID, const int FluSg, const int PotSg
 
 #        elif   ( MODEL == SR_HYDRO )
          const bool CheckMinPres_No = false;
-         fprintf( File, " %13.6e", SRHydro_GetPressure(u[DENS],u[MOMX],u[MOMY],u[MOMZ],u[ENGY],GAMMA ) );
+         fprintf( File, " %13.6e", SRHydro_GetPressure(u[DENS],u[MOMX],u[MOMY],u[MOMZ],u[ENGY],GAMMA, MIN_TEMP  ) );
          if (M >= u[ENGY]){
            fprintf( File, " %13.6e", M-u[ENGY]);
           }

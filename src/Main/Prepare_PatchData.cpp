@@ -934,7 +934,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
                   Cons[3]=amr->patch[FluSg][lv][PID]->fluid[MOMZ][k][j][i];
                   Cons[4]=amr->patch[FluSg][lv][PID]->fluid[ENGY][k][j][i];
 
-                  SRHydro_Con2Pri(Cons, Prim, (real)GAMMA);
+                  SRHydro_Con2Pri(Cons, Prim, (real)GAMMA, (real) MIN_TEMP );
 
                   Array_Ptr[Idx1] = Prim[0];
 
@@ -946,7 +946,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
 		      Cons[3]=amr->patch[FluSg_IntT][lv][PID]->fluid[MOMZ][k][j][i];
 		      Cons[4]=amr->patch[FluSg_IntT][lv][PID]->fluid[ENGY][k][j][i];
 
-                      SRHydro_Con2Pri(Cons, Prim, (real)GAMMA);
+                      SRHydro_Con2Pri(Cons, Prim, (real)GAMMA, (real) MIN_TEMP );
 
 		      Array_Ptr[Idx1] =   FluWeighting *Array_Ptr[Idx1] + FluWeighting_IntT*Prim[0];
 		    }
@@ -973,7 +973,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
                   Cons[3]=amr->patch[FluSg][lv][PID]->fluid[MOMZ][k][j][i];
                   Cons[4]=amr->patch[FluSg][lv][PID]->fluid[ENGY][k][j][i];
 
-                  SRHydro_Con2Pri(Cons, Prim, (real)GAMMA);
+                  SRHydro_Con2Pri(Cons, Prim, (real)GAMMA, (real) MIN_TEMP );
 
                   Array_Ptr[Idx1] = Prim[1];
 
@@ -985,7 +985,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
 		      Cons[3]=amr->patch[FluSg_IntT][lv][PID]->fluid[MOMZ][k][j][i];
 		      Cons[4]=amr->patch[FluSg_IntT][lv][PID]->fluid[ENGY][k][j][i];
 
-                      SRHydro_Con2Pri(Cons, Prim, (real)GAMMA);
+                      SRHydro_Con2Pri(Cons, Prim, (real)GAMMA, (real) MIN_TEMP );
 
 		      Array_Ptr[Idx1] =   FluWeighting *Array_Ptr[Idx1] + FluWeighting_IntT*Prim[1];
 		    }
@@ -1012,7 +1012,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
                   Cons[3]=amr->patch[FluSg][lv][PID]->fluid[MOMZ][k][j][i];
                   Cons[4]=amr->patch[FluSg][lv][PID]->fluid[ENGY][k][j][i];
 
-                  SRHydro_Con2Pri(Cons, Prim, (real)GAMMA);
+                  SRHydro_Con2Pri(Cons, Prim, (real)GAMMA, (real) MIN_TEMP );
 
                   Array_Ptr[Idx1] = Prim[2];
 
@@ -1024,7 +1024,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
 			  Cons[3]=amr->patch[FluSg_IntT][lv][PID]->fluid[MOMZ][k][j][i];
 			  Cons[4]=amr->patch[FluSg_IntT][lv][PID]->fluid[ENGY][k][j][i];
 
-			  SRHydro_Con2Pri(Cons, Prim, (real)GAMMA);
+			  SRHydro_Con2Pri(Cons, Prim, (real)GAMMA, (real) MIN_TEMP );
 
 			  Array_Ptr[Idx1] =   FluWeighting *Array_Ptr[Idx1] + FluWeighting_IntT*Prim[2];
                        }
@@ -1050,7 +1050,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
                   Cons[3]=amr->patch[FluSg][lv][PID]->fluid[MOMZ][k][j][i];
                   Cons[4]=amr->patch[FluSg][lv][PID]->fluid[ENGY][k][j][i];
 
-                  SRHydro_Con2Pri(Cons, Prim, (real)GAMMA);
+                  SRHydro_Con2Pri(Cons, Prim, (real)GAMMA, (real) MIN_TEMP );
 
 
                   Array_Ptr[Idx1] = Prim[3];
@@ -1063,7 +1063,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
 			  Cons[3]=amr->patch[FluSg_IntT][lv][PID]->fluid[MOMZ][k][j][i];
 			  Cons[4]=amr->patch[FluSg_IntT][lv][PID]->fluid[ENGY][k][j][i];
 
-			  SRHydro_Con2Pri(Cons, Prim, (real)GAMMA);
+			  SRHydro_Con2Pri(Cons, Prim, (real)GAMMA, (real) MIN_TEMP );
 
 			  Array_Ptr[Idx1] =   FluWeighting *Array_Ptr[Idx1] + FluWeighting_IntT*Prim[3];
                        }
@@ -1082,7 +1082,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
 
                   for (int v=0; v<NCOMP_FLUID; v++)   Fluid[v] = amr->patch[FluSg][lv][PID]->fluid[v][k][j][i];
 
-                  Array_Ptr[Idx1] = SRHydro_GetPressure( Fluid[DENS], Fluid[MOMX], Fluid[MOMY], Fluid[MOMZ], Fluid[ENGY], GAMMA );
+                  Array_Ptr[Idx1] = SRHydro_GetPressure( Fluid[DENS], Fluid[MOMX], Fluid[MOMY], Fluid[MOMZ], Fluid[ENGY], GAMMA, MIN_TEMP  );
 
                   if ( FluIntTime ) // temporal interpolation
                   {
@@ -1090,7 +1090,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
 
                      Array_Ptr[Idx1] =   FluWeighting     *Array_Ptr[Idx1]
                                        + FluWeighting_IntT*SRHydro_GetPressure( Fluid[DENS], Fluid[MOMX], Fluid[MOMY],
-                                                                            Fluid[MOMZ], Fluid[ENGY], GAMMA );
+                                                                            Fluid[MOMZ], Fluid[ENGY], GAMMA, MIN_TEMP  );
                   }
 
                   Idx1 ++;
@@ -1108,7 +1108,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
 
                   for (int v=0; v<NCOMP_FLUID; v++)   Fluid[v] = amr->patch[FluSg][lv][PID]->fluid[v][k][j][i];
 
-                  Array_Ptr[Idx1] = SRHydro_GetTemperature( Fluid[DENS], Fluid[MOMX], Fluid[MOMY], Fluid[MOMZ], Fluid[ENGY], GAMMA );
+                  Array_Ptr[Idx1] = SRHydro_GetTemperature( Fluid[DENS], Fluid[MOMX], Fluid[MOMY], Fluid[MOMZ], Fluid[ENGY], GAMMA, MIN_TEMP  );
 
                   if ( FluIntTime ) // temporal interpolation
                   {
@@ -1116,7 +1116,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
 
                      Array_Ptr[Idx1] =   FluWeighting     *Array_Ptr[Idx1]
                                        + FluWeighting_IntT*SRHydro_GetTemperature( Fluid[DENS], Fluid[MOMX], Fluid[MOMY],
-                                                                                   Fluid[MOMZ], Fluid[ENGY], GAMMA );
+                                                                                   Fluid[MOMZ], Fluid[ENGY], GAMMA, MIN_TEMP  );
                   }
 
                   Idx1 ++;
@@ -1348,7 +1348,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
                         Cons[3]=amr->patch[FluSg][lv][SibPID]->fluid[MOMZ][K2][J2][I2];
                         Cons[4]=amr->patch[FluSg][lv][SibPID]->fluid[ENGY][K2][J2][I2];
 
-			SRHydro_Con2Pri(Cons, Prim, (real)GAMMA);
+			SRHydro_Con2Pri(Cons, Prim, (real)GAMMA, (real) MIN_TEMP );
 
                         Array_Ptr[Idx1] = Prim[0];
 
@@ -1360,7 +1360,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
 			      Cons[3]=amr->patch[FluSg_IntT][lv][SibPID]->fluid[MOMZ][K2][J2][I2];
 			      Cons[4]=amr->patch[FluSg_IntT][lv][SibPID]->fluid[ENGY][K2][J2][I2];
 
-			      SRHydro_Con2Pri(Cons, Prim, (real)GAMMA);
+			      SRHydro_Con2Pri(Cons, Prim, (real)GAMMA, (real) MIN_TEMP );
 			      Array_Ptr[Idx1] =   FluWeighting     *Array_Ptr[Idx1]
 						+ FluWeighting_IntT*Prim[0];
 			   }
@@ -1386,7 +1386,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
                         Cons[3]=amr->patch[FluSg][lv][SibPID]->fluid[MOMZ][K2][J2][I2];
                         Cons[4]=amr->patch[FluSg][lv][SibPID]->fluid[ENGY][K2][J2][I2];
 
-			SRHydro_Con2Pri(Cons, Prim, (real)GAMMA);
+			SRHydro_Con2Pri(Cons, Prim, (real)GAMMA, (real) MIN_TEMP );
 
                         Array_Ptr[Idx1] = Prim[1];
 
@@ -1398,7 +1398,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
 			      Cons[3]=amr->patch[FluSg_IntT][lv][SibPID]->fluid[MOMZ][K2][J2][I2];
 			      Cons[4]=amr->patch[FluSg_IntT][lv][SibPID]->fluid[ENGY][K2][J2][I2];
 
-			      SRHydro_Con2Pri(Cons, Prim, (real)GAMMA);
+			      SRHydro_Con2Pri(Cons, Prim, (real)GAMMA, (real) MIN_TEMP );
 			      Array_Ptr[Idx1] =   FluWeighting     *Array_Ptr[Idx1]
 						+ FluWeighting_IntT*Prim[1];
 			   }
@@ -1424,7 +1424,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
                         Cons[3]=amr->patch[FluSg][lv][SibPID]->fluid[MOMZ][K2][J2][I2];
                         Cons[4]=amr->patch[FluSg][lv][SibPID]->fluid[ENGY][K2][J2][I2];
 
-			SRHydro_Con2Pri(Cons, Prim, (real)GAMMA);
+			SRHydro_Con2Pri(Cons, Prim, (real)GAMMA, (real) MIN_TEMP );
 
                         Array_Ptr[Idx1] = Prim[2];
 
@@ -1436,7 +1436,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
 			      Cons[3]=amr->patch[FluSg_IntT][lv][SibPID]->fluid[MOMZ][K2][J2][I2];
 			      Cons[4]=amr->patch[FluSg_IntT][lv][SibPID]->fluid[ENGY][K2][J2][I2];
 
-			      SRHydro_Con2Pri(Cons, Prim, (real)GAMMA);
+			      SRHydro_Con2Pri(Cons, Prim, (real)GAMMA, (real) MIN_TEMP );
 			      Array_Ptr[Idx1] =   FluWeighting     *Array_Ptr[Idx1]
 						+ FluWeighting_IntT*Prim[2];
 			   }
@@ -1462,7 +1462,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
                         Cons[3]=amr->patch[FluSg][lv][SibPID]->fluid[MOMZ][K2][J2][I2];
                         Cons[4]=amr->patch[FluSg][lv][SibPID]->fluid[ENGY][K2][J2][I2];
 
-			SRHydro_Con2Pri(Cons, Prim, (real)GAMMA);
+			SRHydro_Con2Pri(Cons, Prim, (real)GAMMA, (real) MIN_TEMP );
 
                         Array_Ptr[Idx1] = Prim[3];
 
@@ -1474,7 +1474,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
 			      Cons[3]=amr->patch[FluSg_IntT][lv][SibPID]->fluid[MOMZ][K2][J2][I2];
 			      Cons[4]=amr->patch[FluSg_IntT][lv][SibPID]->fluid[ENGY][K2][J2][I2];
 
-			      SRHydro_Con2Pri(Cons, Prim, (real)GAMMA);
+			      SRHydro_Con2Pri(Cons, Prim, (real)GAMMA, (real) MIN_TEMP );
 			      Array_Ptr[Idx1] =   FluWeighting     *Array_Ptr[Idx1]
 						+ FluWeighting_IntT*Prim[3];
 			   }
@@ -1492,7 +1492,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
 
                         for (int v=0; v<NCOMP_FLUID; v++)   Fluid[v] = amr->patch[FluSg][lv][SibPID]->fluid[v][K2][J2][I2];
 
-                        Array_Ptr[Idx1] = SRHydro_GetPressure( Fluid[DENS], Fluid[MOMX], Fluid[MOMY], Fluid[MOMZ], Fluid[ENGY], GAMMA );
+                        Array_Ptr[Idx1] = SRHydro_GetPressure( Fluid[DENS], Fluid[MOMX], Fluid[MOMY], Fluid[MOMZ], Fluid[ENGY], GAMMA, MIN_TEMP  );
 
                         if ( FluIntTime ) // temporal interpolation
                         {
@@ -1500,7 +1500,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
 
                            Array_Ptr[Idx1] =   FluWeighting     *Array_Ptr[Idx1]
                                              + FluWeighting_IntT*SRHydro_GetPressure( Fluid[DENS], Fluid[MOMX], Fluid[MOMY],
-                                                                                  Fluid[MOMZ], Fluid[ENGY], GAMMA );
+                                                                                  Fluid[MOMZ], Fluid[ENGY], GAMMA, MIN_TEMP  );
                         }
 
                         Idx1 ++;
@@ -1518,7 +1518,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
 
                         for (int v=0; v<NCOMP_FLUID; v++)   Fluid[v] = amr->patch[FluSg][lv][SibPID]->fluid[v][K2][J2][I2];
 
-                        Array_Ptr[Idx1] = SRHydro_GetTemperature( Fluid[DENS], Fluid[MOMX], Fluid[MOMY], Fluid[MOMZ], Fluid[ENGY], GAMMA );
+                        Array_Ptr[Idx1] = SRHydro_GetTemperature( Fluid[DENS], Fluid[MOMX], Fluid[MOMY], Fluid[MOMZ], Fluid[ENGY], GAMMA, MIN_TEMP  );
 
                         if ( FluIntTime ) // temporal interpolation
                         {
@@ -1526,7 +1526,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
 
                            Array_Ptr[Idx1] =   FluWeighting     *Array_Ptr[Idx1]
                                              + FluWeighting_IntT*SRHydro_GetTemperature( Fluid[DENS], Fluid[MOMX], Fluid[MOMY],
-                                                                                     Fluid[MOMZ], Fluid[ENGY], GAMMA );
+                                                                                     Fluid[MOMZ], Fluid[ENGY], GAMMA, MIN_TEMP  );
                         }
 
                         Idx1 ++;
@@ -2005,7 +2005,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *h_Input_Array
                   Cons[MOMZ] = ArrayMomZ[t];
                   Cons[ENGY] = ArrayEngy[t];
 
-                  if(SRHydro_CheckUnphysical(Cons, NULL, GAMMA, __FUNCTION__, __LINE__, true)) exit(EXIT_FAILURE);
+                  if(SRHydro_CheckUnphysical(Cons, NULL, GAMMA, MIN_TEMP, __FUNCTION__, __LINE__, true)) exit(EXIT_FAILURE);
                 }
 #              endif
             } // if ( (TVar & _FLUID) == _FLUID )

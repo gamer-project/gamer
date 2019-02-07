@@ -20,11 +20,11 @@ static void Fun_DFun (real Q, void *ptr, real * f, real * df, real Gamma);
 GPU_DEVICE 
 void SRHydro_4Velto3Vel (const real In[], real Out[]);
 GPU_DEVICE 
-real SRHydro_Con2Temperature (const real In[], const real Gamma); 
+real SRHydro_Con2Temperature (const real In[], const real Gamma, const real MinTemp); 
 GPU_DEVICE 
 static void NewtonRaphsonSolver(void *ptr, real *root, const real guess, const real epsabs, const real epsrel, const real Gamma);
 #else 
-#include "../../include/SRHydroPrototypes.h"
+#include "../../../include/SRHydroPrototypes.h"
 static real Fun (real Q, void *ptr);   // function to be solved
 static real DFun (real Q, void *ptr);  // the first derivative of above function
 static void Fun_DFun (real Q, void *ptr, real * f, real * df, real Gamma);
@@ -95,9 +95,9 @@ void SRHydro_Rotate3D (real InOut[], const int XYZ, const bool Forward)
 //                Gamma              : Gamma
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE
-void SRHydro_Con2Pri (const real In[], real Out[], const real Gamma)
+void SRHydro_Con2Pri (const real In[], real Out[], const real Gamma, const real MinTemp)
 {
-      real Temp = SRHydro_GetTemperature (In[0], In[1], In[2], In[3], In[4], Gamma );
+      real Temp = SRHydro_GetTemperature (In[0], In[1], In[2], In[3], In[4], Gamma, MinTemp );
 #if ( EOS == RELATIVISTIC_IDEAL_GAS )
       real h = 2.5*Temp + SQRT(2.25*Temp*Temp + 1.0);
 #elif ( EOS == IDEAL_GAS ) 
@@ -327,7 +327,7 @@ void SRHydro_3Velto4Vel (const real In[], real Out[])
 //                Gamma    : adiabatic index
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE
-void SRHydro_Con2Flux (const int XYZ, real Flux[], const real Input[], const real Gamma )
+void SRHydro_Con2Flux (const int XYZ, real Flux[], const real Input[], const real Gamma, const real MinTemp )
 {
   const bool CheckMinPres_Yes = true;
   real ConVar[NCOMP_FLUID];	// don't need to include passive scalars since they don't have to be rotated1
@@ -340,7 +340,7 @@ void SRHydro_Con2Flux (const int XYZ, real Flux[], const real Input[], const rea
 
   SRHydro_Rotate3D (ConVar, XYZ, true);
 
-  SRHydro_Con2Pri (ConVar, PriVar4, Gamma);
+  SRHydro_Con2Pri (ConVar, PriVar4, Gamma, MinTemp);
 
   SRHydro_4Velto3Vel (PriVar4, PriVar3);
 
@@ -434,7 +434,7 @@ real SRHydro_CheckMinTempInEngy (const real Cons[], const real MinTemp, const re
 // Function    : SRHydro_CheckUnphysical
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE
-bool SRHydro_CheckUnphysical( const real Con[], const real Pri[], const real Gamma, const char s[], const int line, bool show )
+bool SRHydro_CheckUnphysical( const real Con[], const real Pri[], const real Gamma, const real MinTemp, const char s[], const int line, bool show )
 {
    real discriminant;
    real Msqr;
@@ -473,7 +473,7 @@ bool SRHydro_CheckUnphysical( const real Con[], const real Pri[], const real Gam
 #     error: CONSERVED_ENERGY must be 1 or 2!
 #     endif
 
-      SRHydro_Con2Pri(ConsVar, Pri4Vel, Gamma);
+      SRHydro_Con2Pri(ConsVar, Pri4Vel, Gamma, MinTemp);
 
 // check NaN, +inf and -inf
       if (  !Aux_IsFinite(Pri4Vel[0])  
@@ -591,7 +591,8 @@ bool SRHydro_CheckUnphysical( const real Con[], const real Pri[], const real Gam
 // Return      :  Pressure
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE
-real SRHydro_GetPressure (const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy, const real Gamma )
+real SRHydro_GetPressure (const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy, 
+                          const real Gamma, const real MinTemp )
 {
   real In[NCOMP_FLUID];
   real Out[NCOMP_FLUID];
@@ -602,7 +603,7 @@ real SRHydro_GetPressure (const real Dens, const real MomX, const real MomY, con
   In[3] = MomZ;
   In[4] = Engy;
 
-  SRHydro_Con2Pri (In, Out, Gamma);
+  SRHydro_Con2Pri (In, Out, Gamma, MinTemp);
 
   return Out[4];
 }				// FUNCTION : SRHydro_GetPressure
@@ -626,10 +627,11 @@ real SRHydro_GetPressure (const real Dens, const real MomX, const real MomY, con
 // Return      :  Temperature
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE
-real SRHydro_GetTemperature (const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy, const real Gamma )
+real SRHydro_GetTemperature (const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy,
+                             const real Gamma, const real MinTemp )
 {
       real In[5] = {Dens, MomX, MomY, MomZ, Engy};
-      real Temperature = SRHydro_Con2Temperature ( In, Gamma );
+      real Temperature = SRHydro_Con2Temperature ( In, Gamma, MinTemp );
 
  return Temperature;
 }				// FUNCTION : SRHydro_GetTemperature
@@ -717,3 +719,4 @@ Fun_DFun (real Temp, void *ptr, real * f, real * df, real Gamma)
 #error: unsupported EoS!
 #endif // #if ( EOS == RELATIVISTIC_IDEAL_GAS )
 }
+#endif

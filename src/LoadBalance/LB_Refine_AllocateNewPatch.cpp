@@ -845,7 +845,7 @@ int AllocateSonPatch( const int FaLv, const int *Cr, const int PScale, const int
       {
 	 real Con[NCOMP_FLUID];
 	 for (int v = 0 ; v < NCOMP_FLUID;v++) Con[v] = FData_Flu[v][k][j][i];
-	 SRHydro_CheckUnphysical(Con, NULL, const real GAMMA, __FUNCTION__, __LINE__, true);
+	 SRHydro_CheckUnphysical(Con, NULL, GAMMA, MIN_TEMP, __FUNCTION__, __LINE__, true);
       }
 #     endif
 

@@ -64,8 +64,6 @@ static void SRHydro_HancockPredict( real fc[][NCOMP_TOTAL], const real dt, const
 //                g_FC_Var           : Array to store the output face-centered primitive variables
 //                g_Slope_PPM        : Array to store the x/y/z slopes for the PPM reconstruction
 //                                     --> Useless for PLM
-//                Con2Pri            : Convert conserved variables in g_ConVar[] to primitive variables and
-//                                     store the results in g_PriVar[]
 //                NIn                : Size of g_PriVar[] along each direction
 //                                     --> Can be smaller than FLU_NXT
 //                NGhost             : Number of ghost zones
@@ -103,10 +101,10 @@ void SRHydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
          for (int v=0; v<NCOMP_TOTAL; v++)   ConVar_1Cell[v] = g_ConVar[v][idx];
 
 #        ifdef CHECK_NEGATIVE_IN_FLUID
-         if( SRHydro_CheckUnphysical( ConVar_1Cell, NULL, Gamma, __FUNCTION__, __LINE__, true ) ) exit(EXIT_FAILURE);
+         if( SRHydro_CheckUnphysical( ConVar_1Cell, NULL, Gamma, MinTemp, __FUNCTION__, __LINE__, true ) ) exit(EXIT_FAILURE);
 #        endif
 
-         SRHydro_Con2Pri( ConVar_1Cell, PriVar_1Cell, Gamma );
+         SRHydro_Con2Pri( ConVar_1Cell, PriVar_1Cell, Gamma, MinTemp );
 
          for (int v=0; v<NCOMP_TOTAL; v++)   g_PriVar[v][idx] = PriVar_1Cell[v];
       }
@@ -556,7 +554,7 @@ void SRHydro_HancockPredict( real fc[][NCOMP_TOTAL], const real dt, const real d
 // check the negative density and energy
    for (int f=0; f<6; f++)
    {
-      if ( SRHydro_CheckUnphysical( fc[f], NULL, Gamma, __FUNCTION__, __LINE__, false ) )
+      if ( SRHydro_CheckUnphysical( fc[f], NULL, Gamma, MinTemp, __FUNCTION__, __LINE__, false ) )
       {
 //       set to the cell-centered values before update
          for (int f=0; f<6; f++)

@@ -64,8 +64,8 @@ void SRHydro_RiemannSolver_HLLE( const int XYZ, real Flux_Out[], const real L_In
    SRHydro_Rotate3D( CR, XYZ, true );
 
 /* 1. compute primitive vars. from conserved vars. */
-   SRHydro_Con2Pri (CL, PL, Gamma);
-   SRHydro_Con2Pri (CR, PR, Gamma);
+   SRHydro_Con2Pri (CL, PL, Gamma, MinTemp);
+   SRHydro_Con2Pri (CR, PR, Gamma, MinTemp);
 
 /* 2. Transform 4-velocity to 3-velocity */
    lFactor=1/SQRT(1+SQR(PL[1])+SQR(PL[2])+SQR(PL[3]));
@@ -190,3 +190,4 @@ void SRHydro_RiemannSolver_HLLE( const int XYZ, real Flux_Out[], const real L_In
 
 
 #endif // #if ( MODEL == SR_HYDRO )
+#endif

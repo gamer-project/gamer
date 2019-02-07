@@ -580,7 +580,6 @@ void Output_DumpData_Total( const char *FileName )
 #     warning : WAIT MHD !!!
 #     elif ( MODEL == SR_HYDRO )
       const int    opt__lr_limiter           = (int)OPT__LR_LIMITER;
-      const int    opt__waf_limiter          = (int)OPT__WAF_LIMITER;
 
 //    convert OPT__1ST_FLUX_CORR to bool to be consistent with the old format where OPT__1ST_FLUX_CORR is bool instead of int
       const bool   opt__1st_flux_corr        = (bool)OPT__1ST_FLUX_CORR;

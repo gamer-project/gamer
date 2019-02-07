@@ -1359,15 +1359,6 @@ void Load_Parameter_After_1200( FILE *File, const int FormatVersion, int &NLv_Re
                       "HLL_INCLUDE_ALL_WAVES", "ON", "OFF" );
 #     endif
 
-#     ifdef WAF_DISSIPATE
-      if ( !waf_dissipate )
-         Aux_Message( stderr, "WARNING : %s : RESTART file (%s) != runtime (%s) !!\n",
-                      "WAF_DISSIPATE", "OFF", "ON" );
-#     else
-      if (  waf_dissipate )
-         Aux_Message( stderr, "WARNING : %s : RESTART file (%s) != runtime (%s) !!\n",
-                      "WAF_DISSIPATE", "ON", "OFF" );
-#     endif
 
 
 

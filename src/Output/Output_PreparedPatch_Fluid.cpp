@@ -141,7 +141,7 @@ void Output_PreparedPatch_Fluid( const int TLv, const int TPID,
 
 #        elif   ( MODEL == SR_HYDRO )
          const bool CheckMinPres_No = false;
-         fprintf( File, "  %14.7e", SRHydro_GetPressure(u[DENS],u[MOMX],u[MOMY],u[MOMZ],u[ENGY],GAMMA ) );
+         fprintf( File, "  %14.7e", SRHydro_GetPressure(u[DENS],u[MOMX],u[MOMY],u[MOMZ],u[ENGY],GAMMA, MIN_TEMP  ) );
 #        endif // MODEL
 
          fprintf( File, "\n" );

@@ -17,13 +17,13 @@ extern bool (*Flu_ResetByUser_Func_Ptr)( real fluid[], const double x, const dou
 // Function    :  Init_Function_User
 // Description :  Function to initialize the fluid field
 //
-// Note        :  1. Invoked by "Hydro_Init_ByFunction_AssignData" using the function pointer "Init_Function_User_Ptr"
+// Note        :  1. Invoked by "SRHydro_Init_ByFunction_AssignData" using the function pointer "Init_Function_User_Ptr"
 //                   --> The function pointer may be reset by various test problem initializers, in which case
 //                       this funtion will become useless
 //                2. This function will be invoked by multiple OpenMP threads when OPENMP is enabled
 //                   --> Please ensure that everything here is thread-safe
 //                3. Even when DUAL_ENERGY is adopted, one does NOT need to set the dual-energy variable here
-//                   --> It will be set automatically in "Hydro_Init_ByFunction_AssignData()"
+//                   --> It will be set automatically in "SRHydro_Init_ByFunction_AssignData()"
 //
 // Parameter   :  [1] fluid    : Fluid field to be initialized
 //                [2] x/y/z    : Target physical coordinates
@@ -89,7 +89,7 @@ void Init_Function_User( real fluid[], const double x, const double y, const dou
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Hydro_Init_ByFunction_AssignData
+// Function    :  SRHydro_Init_ByFunction_AssignData
 // Description :  Construct the initial condition in SR_HYDRO
 //
 // Note        :  1. Work for the option "OPT__INIT == INIT_BY_FUNCTION"
@@ -154,7 +154,7 @@ void SRHydro_Init_ByFunction_AssignData( const int lv )
 
 //       check minimum density and pressure
 #        ifdef CHECK_NEGATIVE_IN_FLUID
-	 if(SRHydro_CheckUnphysical(fluid, NULL, GAMMA, __FUNCTION__, __LINE__, true)) exit(EXIT_FAILURE);
+	 if(SRHydro_CheckUnphysical(fluid, NULL, GAMMA, MIN_TEMP, __FUNCTION__, __LINE__, true)) exit(EXIT_FAILURE);
 #        endif
 
 
@@ -194,7 +194,7 @@ void SRHydro_Init_ByFunction_AssignData( const int lv )
 
 //       check minimum density and pressure
 #        ifdef CHECK_NEGATIVE_IN_FLUID
-	 if(SRHydro_CheckUnphysical(fluid, NULL, GAMMA, __FUNCTION__, __LINE__, true)) exit(EXIT_FAILURE);
+	 if(SRHydro_CheckUnphysical(fluid, NULL, GAMMA, MIN_TEMP, __FUNCTION__, __LINE__, true)) exit(EXIT_FAILURE);
 #        endif
 
 
@@ -218,4 +218,4 @@ void SRHydro_Init_ByFunction_AssignData( const int lv )
       }}}
    } // if ( NSub > 1 ) ... else ...
 
-} // FUNCTION : Hydro_Init_ByFunction_AssignData
+} // FUNCTION : SRHydro_Init_ByFunction_AssignData

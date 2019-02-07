@@ -102,10 +102,16 @@ bool Flag_Check( const int lv, const int PID, const int i, const int j, const in
 
 // check vorticity
 // ===========================================================================================
-#  if ( MODEL == HYDRO || MODEL == SR_HYDRO )
+#  if ( MODEL == HYDRO )
    if ( OPT__FLAG_VORTICITY )
    {
       Flag |= Hydro_Flag_Vorticity( i, j, k, lv, PID, FlagTable_Vorticity[lv] );
+      if ( Flag )    return Flag;
+   }
+#  elif ( MODEL == SR_HYDRO )
+   if ( OPT__FLAG_VORTICITY )
+   {
+      Flag |= SRHydro_Flag_Vorticity( i, j, k, lv, PID, FlagTable_Vorticity[lv] );
       if ( Flag )    return Flag;
    }
 #  endif

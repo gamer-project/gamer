@@ -68,8 +68,8 @@ void SRHydro_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In
    SRHydro_Rotate3D( CR, XYZ, true );
 
 /* 1. compute primitive vars. from conserved vars. */
-   SRHydro_Con2Pri (CL, PL, Gamma);
-   SRHydro_Con2Pri (CR, PR, Gamma);
+   SRHydro_Con2Pri (CL, PL, Gamma, MinTemp);
+   SRHydro_Con2Pri (CR, PR, Gamma, MinTemp);
 
 /* 2. Transform 4-velocity to 3-velocity */
    lFactor=1/SQRT(1+SQR(PL[1])+SQR(PL[2])+SQR(PL[3]));
@@ -211,7 +211,7 @@ void SRHydro_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In
 # endif
 
 # ifdef CHECK_NEGATIVE_IN_FLUID
-  if( SRHydro_CheckUnphysical(Uhll, NULL, Gamma, __FUNCTION__, __LINE__, true) ) exit(EXIT_FAILURE);
+  if( SRHydro_CheckUnphysical(Uhll, NULL, Gamma, MinTemp, __FUNCTION__, __LINE__, true) ) exit(EXIT_FAILURE);
 # endif
 
 /* 6. Compute contact wave speed using larger root from Mignone Eq 18
@@ -251,7 +251,7 @@ void SRHydro_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In
 #   endif
 
 #   ifdef CHECK_NEGATIVE_IN_FLUID
-    if(SRHydro_CheckUnphysical(Usl, NULL, Gamma, __FUNCTION__, __LINE__, true)) exit(EXIT_FAILURE);
+    if(SRHydro_CheckUnphysical(Usl, NULL, Gamma, MinTemp, __FUNCTION__, __LINE__, true)) exit(EXIT_FAILURE);
 #   endif
 
     /* now calcCLate Fsr using Mignone Eq 14 */
@@ -286,7 +286,7 @@ void SRHydro_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In
     Usr[4] = (( CR[4] + CR[0] ) * factor0 + ps * lmdas - PR[4] * rV1) * den;
 #   endif
 #   ifdef CHECK_NEGATIVE_IN_FLUID
-    if(SRHydro_CheckUnphysical(Usr, NULL, Gamma, __FUNCTION__, __LINE__, true)) exit(EXIT_FAILURE);
+    if(SRHydro_CheckUnphysical(Usr, NULL, Gamma, MinTemp, __FUNCTION__, __LINE__, true)) exit(EXIT_FAILURE);
 #   endif
 
     /* now calcCLate Fsr using Mignone Eq 14 */
@@ -365,3 +365,4 @@ void QuadraticSolver (real A, real B, real C, real *x_plus, real *x_minus)
 }
 
 #endif // #if ( MODEL == SR_HYDRO )
+#endif

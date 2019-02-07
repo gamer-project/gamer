@@ -43,7 +43,7 @@ void CPU_dtSolver_SRHydroCFL  ( real g_dt_Array[], const real g_Flu_Array[][NCOM
    const int p = blockIdx.x;
 #  else
 #  pragma omp parallel for schedule( runtime )
-   for (int p=0; p<8*NPatch; p++)
+   for (int p=0; p<8*NPG; p++)
 #  endif
    {
      g_dt_Array[p] = dhSafety;

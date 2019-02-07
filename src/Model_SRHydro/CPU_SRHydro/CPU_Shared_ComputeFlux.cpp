@@ -65,26 +65,15 @@ void ExternalAcc( real Acc[], const double x, const double y, const double z, co
 //                Gap             : Number of cells to be skipped in the transverse directions
 //                                  --> "(N_FC_VAR-2*Gap)^2" fluxes will be computed on each surface
 //                Gamma           : Ratio of specific heats
-//                CorrHalfVel     : true --> correct the half-step velocity by gravity        (for UNSPLIT_GRAVITY only)
-//                g_Pot_USG       : Array storing the input potential for CorrHalfVel         (for UNSPLIT_GRAVITY only)
-//                                  --> must have the same size as g_FC_Var[] --> (PS2+2)^3
-//                g_Corner        : Array storing the corner coordinates of each patch group  (for UNSPLIT_GRAVITY only)
-//                dt              : Time interval to advance the full-step solution           (for UNSPLIT_GRAVITY only)
-//                dh              : Cell size                                                 (for UNSPLIT_GRAVITY only)
-//                Time            : Current physical time                                     (for UNSPLIT_GRAVITY only)
-//                GravityType     : Types of gravity --> self-gravity, external gravity, both (for UNSPLIT_GRAVITY only)
-//                ExtAcc_AuxArray : Auxiliary array for external acceleration                 (for UNSPLIT_GRAVITY only)
 //                MinTemp         : Minimum allowed temerature
 //                DumpIntFlux     : true --> store the inter-patch fluxes in g_IntFlux[]
 //                g_IntFlux       : Array for DumpIntFlux
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE
 void SRHydro_ComputeFlux( const real g_FC_Var [][NCOMP_TOTAL][ CUBE(N_FC_VAR) ],
-                              real g_FC_Flux[][NCOMP_TOTAL][ CUBE(N_FC_FLUX) ],
-                        const int Gap, const real Gamma, const bool CorrHalfVel, const real g_Pot_USG[],
-                        const double g_Corner[], const real dt, const real dh, const double Time,
-                        const OptGravityType_t GravityType, const double ExtAcc_AuxArray[], const real MinTemp,
-                        const bool DumpIntFlux, real g_IntFlux[][NCOMP_TOTAL][ SQR(PS2) ] )
+                                real g_FC_Flux[][NCOMP_TOTAL][ CUBE(N_FC_FLUX) ],
+                          const int Gap, const real Gamma, const real MinTemp, 
+                          const bool DumpIntFlux, real g_IntFlux[][NCOMP_TOTAL][ SQR(PS2) ] )
 {
 
 // check
@@ -137,8 +126,8 @@ void SRHydro_ComputeFlux( const real g_FC_Var [][NCOMP_TOTAL][ CUBE(N_FC_VAR) ],
          }
 
 #        ifdef CHECK_NEGATIVE_IN_FLUID
-         if( SRHydro_CheckUnphysical( ConVar_L, NULL, Gamma, __FUNCTION__, __LINE__, true )
-          || SRHydro_CheckUnphysical( ConVar_R, NULL, Gamma, __FUNCTION__, __LINE__, true ) )
+         if( SRHydro_CheckUnphysical( ConVar_L, NULL, Gamma, MinTemp, __FUNCTION__, __LINE__, true )
+          || SRHydro_CheckUnphysical( ConVar_R, NULL, Gamma, MinTemp, __FUNCTION__, __LINE__, true ) )
          exist(EXIT_FAILURE);
 #        endif
 

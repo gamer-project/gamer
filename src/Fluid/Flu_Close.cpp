@@ -361,7 +361,7 @@ bool Unphysical( const real Fluid[] )
 // =================================================
 #  elif ( MODEL == SR_HYDRO )
 
-       if(SRHydro_CheckUnphysical(Fluid, NULL, GAMMA, __FUNCTION__, __LINE__, true)) return true;
+       if(SRHydro_CheckUnphysical(Fluid, NULL, GAMMA, MIN_TEMP, __FUNCTION__, __LINE__, true)) return true;
        else
 
 #  endif
@@ -788,7 +788,7 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
                   real Pri4Vel[NCOMP_FLUID];
                   real Pri3Vel[NCOMP_FLUID];
 
-                  SRHydro_Con2Pri( In, Pri4Vel, (real) GAMMA);
+                  SRHydro_Con2Pri( In, Pri4Vel, (real) GAMMA, (real) MIN_TEMP );
                   SRHydro_4Velto3Vel( Pri4Vel, Pri3Vel );
 
                   real Usqr = SQR(Pri4Vel[1])+SQR(Pri4Vel[2])+SQR(Pri4Vel[3]);
@@ -839,7 +839,7 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
 #                 endif
                          );
 
-                  SRHydro_Con2Pri( Out, Pri4Vel, (real) GAMMA );
+                  SRHydro_Con2Pri( Out, Pri4Vel, (real) GAMMA, (real) MIN_TEMP  );
                   SRHydro_4Velto3Vel( Pri4Vel, Pri3Vel );
 
                   Usqr = SQR(Pri4Vel[1])+SQR(Pri4Vel[2])+SQR(Pri4Vel[3]);
@@ -886,7 +886,7 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
 #                     endif
                                );
 
-		      SRHydro_Con2Pri( Update, Pri4Vel, (real) GAMMA );
+		      SRHydro_Con2Pri( Update, Pri4Vel, (real) GAMMA, (real) MIN_TEMP  );
 		      SRHydro_4Velto3Vel( Pri4Vel, Pri3Vel );
 
 		      Usqr = SQR(Pri4Vel[1])+SQR(Pri4Vel[2])+SQR(Pri4Vel[3]);
@@ -920,7 +920,7 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
                            );
 
 
-                  SRHydro_Con2Pri( Update1, Pri4Vel, (real) GAMMA );
+                  SRHydro_Con2Pri( Update1, Pri4Vel, (real) GAMMA, (real) MIN_TEMP  );
                   SRHydro_4Velto3Vel( Pri4Vel, Pri3Vel );
 
                   Usqr = SQR(Pri4Vel[1])+SQR(Pri4Vel[2])+SQR(Pri4Vel[3]);
@@ -952,7 +952,7 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
                            );
 
 
-                  SRHydro_Con2Pri( Update2, Pri4Vel, (real) GAMMA );
+                  SRHydro_Con2Pri( Update2, Pri4Vel, (real) GAMMA, (real) MIN_TEMP  );
                   SRHydro_4Velto3Vel( Pri4Vel, Pri3Vel );
 
                   Usqr = SQR(Pri4Vel[1])+SQR(Pri4Vel[2])+SQR(Pri4Vel[3]);
