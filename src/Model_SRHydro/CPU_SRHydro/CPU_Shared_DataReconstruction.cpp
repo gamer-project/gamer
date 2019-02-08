@@ -541,7 +541,7 @@ void SRHydro_HancockPredict( real fc[][NCOMP_TOTAL], const real dt, const real d
 
 
 // calculate flux
-   for (int f=0; f<6; f++)    SRHydro_Con2Flux( f/2, Flux[f], fc[f], Gamma );
+   for (int f=0; f<6; f++)    SRHydro_Con2Flux( f/2, Flux[f], fc[f], Gamma, MinTemp );
 
 // update the face-centered variables
    for (int v=0; v<NCOMP_TOTAL; v++)
@@ -566,12 +566,12 @@ void SRHydro_HancockPredict( real fc[][NCOMP_TOTAL], const real dt, const real d
    }
 
 // ensure positive density and pressure
+#  ifdef CHECK_NEGATIVE_IN_FLUID
    for (int f=0; f<6; f++)
    {
-      fc[f][0] = FMAX( fc[f][0], MinDens );
-      fc[f][4] = SRHydro_CheckMinTempInEngy( fc[f][0], fc[f][1], fc[f][2], fc[f][3], fc[f][4],
-                                             MinTemp, Gamma );
+     if( SRHydro_CheckUnphysical( fc[f], NULL, Gamma, MinTemp, __FUNCTION__, __LINE__, true ) ) exit(EXIT_FAILURE);
    }
+#  endif
 
 } // FUNCTION : SRHydro_HancockPredict
 #endif // #if ( FLU_SCHEME == MHM )
