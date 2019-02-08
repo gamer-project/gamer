@@ -34,10 +34,14 @@ void Hydro_Con2Flux( const int XYZ, real Flux[], const real Input[], const real 
 GPU_DEVICE
 static void Hydro_LimitSlope( const real L1[], const real C0[], const real R1[], const LR_Limiter_t LR_Limiter,
                               const real MinMod_Coeff, const real Gamma, const int XYZ, real Slope_Limiter[] );
-#if ( FLU_SCHEME == CTU )
-GPU_DEVICE
-static void Hydro_GetEigenSystem( const real CC_Var[], real EigenVal[][NCOMP_FLUID], real LEigenVec[][NCOMP_FLUID],
-                                  real REigenVec[][NCOMP_FLUID], const real Gamma );
+#if (  FLU_SCHEME == CTU  ||  ( defined MHD && defined CHAR_RECONSTRUCTION )  )
+#ifdef MHD
+static void   MHD_GetEigenSystem( const real CC_Var[], real EigenVal[],        real LEigenVec[][NWAVE],
+                                  real REigenVec[][NWAVE], const real Gamma, const int XYZ );
+#else
+static void Hydro_GetEigenSystem( const real CC_Var[], real EigenVal[][NWAVE], real LEigenVec[][NWAVE],
+                                  real REigenVec[][NWAVE], const real Gamma );
+#endif
 #endif
 #if ( FLU_SCHEME == MHM )
 GPU_DEVICE
@@ -916,85 +920,305 @@ void Hydro_Char2Pri( real InOut[], const real Gamma, const real Rho, const real 
 
 
 
-#if ( FLU_SCHEME == CTU )
+#if (  FLU_SCHEME == CTU  ||  ( defined MHD && defined CHAR_RECONSTRUCTION )  )
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Hydro_GetEigenSystem
 // Description :  Evaluate the eigenvalues and left/right eigenvectors
 //
 // Note        :  1. Input data must be primitive variables
 //                2. Constant components of eigenvectors must be set in advance
-//                3. Work for the CTU scheme
+//                3. Work for the CTU scheme and the characteristic data reconstruction in MHD
 //                4. Do not need to consider passive scalars
 //                   --> Their eigenmatrices are just identity matrix
+//                5. For pure hydro, this function computes the eigenvalues and eigenvectors
+//                   along all three spatial directions at once
+//                   --> Because eigenvectors along different directions are the same for pure hydro
+//                   But for MHD, this function only computes the eigenvalues and eigenvectors
+//                   along the spatial direction specified by XYZ
+//                   --> Because eigenvectors along different directions are different for MHD
 //
 // Parameter   :  CC_Var      : Array storing the input cell-centered primitive variables
-//                EigenVal    : Array to store the output eigenvalues (in three spatial directions)
+//                EigenVal    : Array to store the output eigenvalues
+//                              --> Hydro: along all three spatial directions
+//                                  MHD  : only along the target spatial direction
 //                L/REigenVec : Array to store the output left/right eigenvectors
 //                Gamma       : Ratio of specific heats
+//                XYZ         : Target spatial direction (for MHD only)
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE
-void Hydro_GetEigenSystem( const real CC_Var[], real EigenVal[][NCOMP_FLUID], real LEigenVec[][NCOMP_FLUID],
-                           real REigenVec[][NCOMP_FLUID], const real Gamma )
+#ifdef MHD
+void   MHD_GetEigenSystem( const real CC_Var[], real EigenVal[],        real LEigenVec[][NWAVE],
+                           real REigenVec[][NWAVE], const real Gamma, const int XYZ )
+#else
+void Hydro_GetEigenSystem( const real CC_Var[], real EigenVal[][NWAVE], real LEigenVec[][NWAVE],
+                           real REigenVec[][NWAVE], const real Gamma )
+#endif
 {
 
 #  ifdef CHECK_NEGATIVE_IN_FLUID
    if ( Hydro_CheckNegative(CC_Var[4]) )
-      printf( "ERROR : negative pressure (%14.7e) at file <%s>, line <%d>, function <%s>\n",
+      printf( "ERROR : invalid pressure (%14.7e) at file <%s>, line <%d>, function <%s>\n",
               CC_Var[4], __FILE__, __LINE__, __FUNCTION__ );
 
    if ( Hydro_CheckNegative(CC_Var[0]) )
-      printf( "ERROR : negative density (%14.7e) at file <%s>, line <%d>, function <%s>\n",
+      printf( "ERROR : invalid density (%14.7e) at file <%s>, line <%d>, function <%s>\n",
               CC_Var[0], __FILE__, __LINE__, __FUNCTION__ );
 #  endif
 
    const real  Rho = CC_Var[0];
    const real _Rho = (real)1.0/Rho;
-   const real  Vx  = CC_Var[1];
-   const real  Vy  = CC_Var[2];
-   const real  Vz  = CC_Var[3];
-   const real Pres = CC_Var[4];
-   const real  Cs2 = Gamma*Pres*_Rho;
-   const real  Cs  = SQRT( Cs2 );
-   const real _Cs  = (real)1.0/Cs;
-   const real _Cs2 = _Cs*_Cs;
+   const real  a2  = Gamma*CC_Var[4]*_Rho;
+   const real  a   = SQRT( a2 );
+   const real _a   = (real)1.0/a;
+   const real _a2  = _a*_a;
 
-// a. eigenvalues in three spatial directions
-   EigenVal[0][0] = Vx - Cs;
-   EigenVal[0][1] = Vx;
-   EigenVal[0][2] = Vx;
-   EigenVal[0][3] = Vx;
-   EigenVal[0][4] = Vx + Cs;
+// MHD
+#  ifdef MHD
+   real Cf2, Cs2, Cf, Cs;
+   real PriVar[NCOMP_TOTAL_PLUS_MAG];
 
-   EigenVal[1][0] = Vy - Cs;
-   EigenVal[1][1] = Vy;
-   EigenVal[1][2] = Vy;
-   EigenVal[1][3] = Vy;
-   EigenVal[1][4] = Vy + Cs;
+   for (int v=0; v<NCOMP_TOTAL_PLUS_MAG; v++)  PriVar[v] = CC_Var[v];
 
-   EigenVal[2][0] = Vz - Cs;
-   EigenVal[2][1] = Vz;
-   EigenVal[2][2] = Vz;
-   EigenVal[2][3] = Vz;
-   EigenVal[2][4] = Vz + Cs;
+   CPU_Rotate3D( PriVar, XYZ, true );
+
+   const real Bx      = PriVar[ NCOMP_TOTAL + 0 ];
+   const real By      = PriVar[ NCOMP_TOTAL + 1 ];
+   const real Bz      = PriVar[ NCOMP_TOTAL + 2 ];
+   const real Bn2     = SQR( By ) + SQR( Bz );
+   const real Bn      = SQRT( Bn2 );
+   const real Cax2    = SQR( Bx )*_Rho;
+   const real Cax     = SQRT( Cax2 );
+   const real Cat2    = Bn2*_Rho;
+   const real tsum    = Cax2 + Cat2 + a2;                         // Ca^2 + a^2
+   const real tdif    = Cax2 + Cat2 - a2;                         // Ca^2 - a^2
+   const real Cf2mCs2 = SQRT( SQR(tdif) + (real)4.0*a2*Cat2 );    // Cf^2 - Cs^2
+
+// evaluate the fast/slow wave speed (Cf/Cs)
+   if ( Cat2 == (real)0.0 )
+   {
+      if ( Cax2 == a2 ) {
+         Cf2 = a2;
+         Cs2 = a2;
+      }
+      else if( Cax2 > a2 ) {
+         Cf2 = Cax2;
+         Cs2 = a2;
+      }
+      else {
+         Cf2 = a2;
+         Cs2 = Cax2;
+      }
+   }
+
+   else
+   {
+      if ( Cax2 == (real)0.0 ) {
+         Cf2 = a2 + Cat2;
+         Cs2 = (real)0.0;
+      }
+      else {
+         Cf2 = (real)0.5*( tsum + Cf2mCs2 );
+         Cs2 = Cf2 - Cf2mCs2;
+      }
+   } // if ( Cat2 == (real)0.0 ) ... else ...
+
+   Cf = SQRT( Cf2 );
+   Cs = SQRT( Cs2 );
 
 
-// NOTE : the left and right eigenvectors have the same form in different spatial directions
-// b. left eigenvectors (rows of the matrix LEigenVec)
-   LEigenVec[0][1] = -(real)0.5*Rho*_Cs;
-   LEigenVec[0][4] = (real)0.5*_Cs2;
-   LEigenVec[1][4] = -_Cs2;
+// eigenvalues along the target spatial direction
+   EigenVal[0] = PriVar[1] - Cf;
+   EigenVal[1] = PriVar[1] - Cax;
+   EigenVal[2] = PriVar[1] - Cs;
+   EigenVal[3] = PriVar[1];
+   EigenVal[4] = PriVar[1] + Cs;
+   EigenVal[5] = PriVar[1] + Cax;
+   EigenVal[6] = PriVar[1] + Cf;
+
+
+// right eigenvectors (rows instead of columns of the matrix REigenVec for better performance)
+   const real S         = SIGN( Bx );
+   const real sqrt_Rho  = SQRT( Rho );
+   const real _sqrt_Rho = (real)1.0 / sqrt_Rho;
+   const real a2mCs2    = a2 - Cs2;
+   const real Cf2ma2    = Cf2 - a2;
+
+   real beta_y, beta_z, alpha_f, alpha_s;
+
+   if ( Bn == (real)0.0 ) {
+      beta_y = (real)1.0;
+      beta_z = (real)0.0;
+   }
+   else {
+      const real _Bn = (real)1.0 / Bn;
+      beta_y = PriVar[6] * _Bn;
+      beta_z = PriVar[7] * _Bn;
+   }
+
+   if ( Cf2mCs2 == (real)0.0 ) {
+      alpha_f = (real)1.0;
+      alpha_s = (real)0.0;
+   }
+   else if ( a2mCs2 <= (real)0.0 ) {
+      alpha_f = (real)0.0;
+      alpha_s = (real)1.0;
+   }
+   else if ( Cf2ma2 <= (real)0.0 ) {
+      alpha_f = (real)1.0;
+      alpha_s = (real)0.0;
+   }
+   else {
+      const real _Cf2mCs2 = (real)1.0 / Cf2mCs2;
+      alpha_f = SQRT( a2mCs2*_Cf2mCs2 );
+      alpha_s = SQRT( Cf2ma2*_Cf2mCs2 );
+   }
+
+   const real Af         = a * alpha_f * sqrt_Rho;
+   const real As         = a * alpha_s * sqrt_Rho;
+   const real Cff        = Cf * alpha_f;
+   const real Css        = Cs * alpha_s;
+   const real Qf         = Cff * S;
+   const real Qs         = Css * S;
+   const real S_sqrt_Rho = S * sqrt_Rho;
+
+   REigenVec[0][0] =  Rho * alpha_f;
+   REigenVec[0][1] = -Cff;
+   REigenVec[0][2] =  Qs * beta_y;
+   REigenVec[0][3] =  Qs * beta_z;
+   REigenVec[0][4] =  REigenVec[0][0] * a2;
+   REigenVec[0][5] =  As * beta_y;
+   REigenVec[0][6] =  As * beta_z;
+
+   REigenVec[1][2] = -beta_z;
+   REigenVec[1][3] =  beta_y;
+   REigenVec[1][5] = -S_sqrt_Rho * beta_z;
+   REigenVec[1][6] =  S_sqrt_Rho * beta_y;
+
+   REigenVec[2][0] =  Rho * alpha_s;
+   REigenVec[2][1] = -Css;
+   REigenVec[2][2] = -Qf * beta_y;
+   REigenVec[2][3] = -Qf * beta_z;
+   REigenVec[2][4] =  REigenVec[2][0] * a2;
+   REigenVec[2][5] = -Af * beta_y;
+   REigenVec[2][6] = -Af * beta_z;
+
+   REigenVec[4][0] =  REigenVec[2][0];
+   REigenVec[4][1] = -REigenVec[2][1];
+   REigenVec[4][2] = -REigenVec[2][2];
+   REigenVec[4][3] = -REigenVec[2][3];
+   REigenVec[4][4] =  REigenVec[2][4];
+   REigenVec[4][5] =  REigenVec[2][5];
+   REigenVec[4][6] =  REigenVec[2][6];
+
+   REigenVec[5][2] = -REigenVec[1][2];
+   REigenVec[5][3] = -REigenVec[1][3];
+   REigenVec[5][5] =  REigenVec[1][5];
+   REigenVec[5][6] =  REigenVec[1][6];
+
+   REigenVec[6][0] =  REigenVec[0][0];
+   REigenVec[6][1] = -REigenVec[0][1];
+   REigenVec[6][2] = -REigenVec[0][2];
+   REigenVec[6][3] = -REigenVec[0][3];
+   REigenVec[6][4] =  REigenVec[0][4];
+   REigenVec[6][5] =  REigenVec[0][5];
+   REigenVec[6][6] =  REigenVec[0][6];
+
+
+// left eigenvectors (rows of the matrix LEigenVec)
+   const real N         = (real)0.5 * _a2;
+   const real N_By      = N * beta_y;
+   const real N_Bz      = N * beta_z;
+   const real As_Rho    = As * _Rho;
+   const real Af_Rho    = Af * _Rho;
+   const real S_inv_Rho = S * _sqrt_Rho;
+
+   LEigenVec[0][1] = -N * Cff;
+   LEigenVec[0][2] =  N_By * Qs;
+   LEigenVec[0][3] =  N_Bz * Qs;
+   LEigenVec[0][4] =  N * alpha_f * _Rho;
+   LEigenVec[0][5] =  N_By * As_Rho;
+   LEigenVec[0][6] =  N_Bz * As_Rho;
+
+   LEigenVec[1][2] = -(real)0.5 * beta_z;
+   LEigenVec[1][3] =  (real)0.5 * beta_y;
+   LEigenVec[1][5] =  LEigenVec[1][2] * S_inv_Rho;
+   LEigenVec[1][6] =  LEigenVec[1][3] * S_inv_Rho;
+
+   LEigenVec[2][1] = -N * Css;
+   LEigenVec[2][2] = -N_By * Qf;
+   LEigenVec[2][3] = -N_Bz * Qf;
+   LEigenVec[2][4] =  N * alpha_s * _Rho;
+   LEigenVec[2][5] = -N_By * Af_Rho;
+   LEigenVec[2][6] = -N_Bz * Af_Rho;
+
+   LEigenVec[3][4] = -_a2;
+
+   LEigenVec[4][1] = -LEigenVec[2][1];
+   LEigenVec[4][2] = -LEigenVec[2][2];
+   LEigenVec[4][3] = -LEigenVec[2][3];
+   LEigenVec[4][4] =  LEigenVec[2][4];
+   LEigenVec[4][5] =  LEigenVec[2][5];
+   LEigenVec[4][6] =  LEigenVec[2][6];
+
+   LEigenVec[5][2] = -LEigenVec[1][2];
+   LEigenVec[5][3] = -LEigenVec[1][3];
+   LEigenVec[5][5] =  LEigenVec[1][5];
+   LEigenVec[5][6] =  LEigenVec[1][6];
+
+   LEigenVec[6][1] = -LEigenVec[0][1];
+   LEigenVec[6][2] = -LEigenVec[0][2];
+   LEigenVec[6][3] = -LEigenVec[0][3];
+   LEigenVec[6][4] =  LEigenVec[0][4];
+   LEigenVec[6][5] =  LEigenVec[0][5];
+   LEigenVec[6][6] =  LEigenVec[0][6];
+
+
+// pure hydro
+#  else // #ifdef MHD
+
+   const real vx = CC_Var[1];
+   const real vy = CC_Var[2];
+   const real vz = CC_Var[3];
+
+// eigenvalues along all three spatial directions
+   EigenVal[0][0] = vx - a;
+   EigenVal[0][1] = vx;
+   EigenVal[0][2] = vx;
+   EigenVal[0][3] = vx;
+   EigenVal[0][4] = vx + a;
+
+   EigenVal[1][0] = vy - a;
+   EigenVal[1][1] = vy;
+   EigenVal[1][2] = vy;
+   EigenVal[1][3] = vy;
+   EigenVal[1][4] = vy + a;
+
+   EigenVal[2][0] = vz - a;
+   EigenVal[2][1] = vz;
+   EigenVal[2][2] = vz;
+   EigenVal[2][3] = vz;
+   EigenVal[2][4] = vz + a;
+
+
+// NOTE : the left and right eigenvectors have the same form along different spatial directions for hydro
+// left eigenvectors (rows of the matrix LEigenVec)
+   LEigenVec[0][1] = -(real)0.5*Rho*_a;
+   LEigenVec[0][4] = (real)0.5*_a2;
+   LEigenVec[1][4] = -_a2;
    LEigenVec[4][1] = -LEigenVec[0][1];
    LEigenVec[4][4] = +LEigenVec[0][4];
 
 
-// c. right eigenvectors (rows of the matrix REigenVec)
-   REigenVec[0][1] = -Cs*_Rho;
-   REigenVec[0][4] = Cs2;
+// right eigenvectors (rows instead of columns of the matrix REigenVec for better performance)
+   REigenVec[0][1] = -a*_Rho;
+   REigenVec[0][4] = a2;
    REigenVec[4][1] = -REigenVec[0][1];
-   REigenVec[4][4] = Cs2;
+   REigenVec[4][4] = a2;
 
-} // FUNCTION : Hydro_GetEigenSystem
-#endif // #if ( FLU_SCHEME == CTU )
+#  endif // #ifdef MHD ... else ...
+
+} // FUNCTION : Hydro/MHD_GetEigenSystem
+#endif // #if (  FLU_SCHEME == CTU  ||  ( defined MHD && defined CHAR_RECONSTRUCTION )  )
 
 
 

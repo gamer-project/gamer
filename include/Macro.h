@@ -89,12 +89,16 @@
 //                  --> do not include passive components here, which is set by NFLUX_PASSIVE
 // NCOMP_MAGNETIC : number of magnetic fields in each cell (for patch->magnetic[])
 // NELECTRIC      : number of transverse magnetic fields on each cell face (for patch->electric[])
+// NWAVE          : number of characteristic waves in hydro/MHD
 #if   ( MODEL == HYDRO )
 #  define NCOMP_FLUID         5
 #  define NFLUX_FLUID         NCOMP_FLUID
 # ifdef MHD
 #  define NCOMP_MAGNETIC      3
 #  define NELECTRIC           2
+#  define NWAVE               ( NCOMP_FLUID + 2 )
+# else
+#  define NWAVE               NCOMP_FLUID
 # endif
 
 // for ELBDM, we only need the density flux
@@ -130,6 +134,11 @@
 // total number of variables in each cell and in the flux array including both active and passive variables
 #  define NCOMP_TOTAL         ( NCOMP_FLUID + NCOMP_PASSIVE )
 #  define NFLUX_TOTAL         ( NFLUX_FLUID + NFLUX_PASSIVE )
+
+
+// total number of fluid variables including magnetic field
+// --> used by the hydro solver only
+#  define NCOMP_TOTAL_PLUS_MAG   ( NCOMP_TOTAL + NCOMP_MAGNETIC )
 
 
 // number of input/output fluid variables in the fluid solver
