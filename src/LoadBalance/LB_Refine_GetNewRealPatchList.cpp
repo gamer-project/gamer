@@ -521,15 +521,19 @@ void PrepareCData( const int FaLv, const int FaPID, real *const FaData,
                                                    FaSize_Flu, FaSize_Flu, FaSize_Flu, BC_Idx_Start, BC_Idx_End );
             break;
 
-#           if ( MODEL == HYDRO  ||  MODEL == MHD || MODEL == SR_HYDRO )
             case BC_FLU_REFLECTING:
+#           if ( MODEL == HYDRO )
                Hydro_BoundaryCondition_Reflecting( FaData_Flu, BC_Face[BC_Sibling], NCOMP_TOTAL, FaGhost_Flu,
                                                    FaSize_Flu, FaSize_Flu, FaSize_Flu, BC_Idx_Start, BC_Idx_End,
                                                    FluVarIdxList, NDer, DerVarList );
+#           elif ( MODEL == SR_HYDRO )
+               SRHydro_BoundaryCondition_Reflecting( FaData_Flu, BC_Face[BC_Sibling], NCOMP_TOTAL, FaGhost_Flu,
+                                                     FaSize_Flu, FaSize_Flu, FaSize_Flu, BC_Idx_Start, BC_Idx_End,
+                                                     FluVarIdxList, NDer, DerVarList );
+#           endif
             break;
 #           if ( MODEL == MHD )
 #           warning : WAIT MHD !!!
-#           endif
 #           endif
 
             case BC_FLU_USER:
