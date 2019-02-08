@@ -21,8 +21,8 @@ real Hydro_CheckMinPres( const real InPres, const real MinPres );
 void Hydro_Con2Pri( const real In[], real Out[], const real Gamma_m1, const real MinPres,
                     const bool NormPassive, const int NNorm, const int NormIdx[],
                     const bool JeansMinPres, const real JeansMinPres_Coeff );
-void Hydro_Pri2Con( const real In[], real Out[], const real _Gamma_m1,
-                    const bool NormPassive, const int NNorm, const int NormIdx[] );
+void Hydro_Pri2Char( real InOut[], const real Gamma, const real Rho, const real Pres,
+                     const real LEigenVec[][NWAVE], const int XYZ );
 #if ( FLU_SCHEME == MHM )
 void Hydro_Con2Flux( const int XYZ, real Flux[], const real Input[], const real Gamma_m1, const real MinPres );
 #endif
@@ -834,39 +834,66 @@ void Hydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
 //                   --> Their eigenmatrices are just identity matrix
 //                2. Input and output share the same array
 //
-// Parameter   :  InOut : Array storing both the input primitive variables and output characteristic variables
-//                Gamma : Ratio of specific heats
-//                Rho   : Density
-//                Pres  : Pressure
-//                XYZ   : Target spatial direction : (0/1/2) --> (x/y/z)
+// Parameter   :  InOut     : Array storing both the input primitive variables and output characteristic variables
+//                Gamma     : Ratio of specific heats (for pure hydro only)
+//                Rho       : Density                 (for pure hydro only)
+//                Pres      : Pressure                (for pure hydro only)
+//                LEigenVec : Left eigenvector (for MHD only)
+//                XYZ       : Target spatial direction : (0/1/2) --> (x/y/z)
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE
-void Hydro_Pri2Char( real InOut[], const real Gamma, const real Rho, const real Pres, const int XYZ )
+void Hydro_Pri2Char( real InOut[], const real Gamma, const real Rho, const real Pres,
+                     const real LEigenVec[][NWAVE], const int XYZ )
 {
 
 #  ifdef CHECK_NEGATIVE_IN_FLUID
    if ( Hydro_CheckNegative(Pres) )
-      printf( "ERROR : negative pressure (%14.7e) at file <%s>, line <%d>, function <%s>\n",
+      printf( "ERROR : invalid pressure (%14.7e) at file <%s>, line <%d>, function <%s>\n",
               Pres, __FILE__, __LINE__, __FUNCTION__ );
 
    if ( Hydro_CheckNegative(Rho) )
-      printf( "ERROR : negative density (%14.7e) at file <%s>, line <%d>, function <%s>\n",
+      printf( "ERROR : invalid density (%14.7e) at file <%s>, line <%d>, function <%s>\n",
               Rho,  __FILE__, __LINE__, __FUNCTION__ );
 #  endif
 
-   const real _Cs2 = (real)1.0 / ( Gamma*Pres/Rho );
-   const real _Cs  = SQRT( _Cs2 );
-   real Temp[NCOMP_FLUID];
+// back-up the input array and rotate it according to the target direction
+// --> actually it's unnecessary to copy the passive scalars here
+   real Temp[NCOMP_TOTAL_PLUS_MAG];
 
-   for (int v=0; v<NCOMP_FLUID; v++)   Temp[v] = InOut[v];
+   for (int v=0; v<NCOMP_TOTAL_PLUS_MAG; v++)   Temp[v] = InOut[v];
 
    Hydro_Rotate3D( Temp, XYZ, true );
 
-   InOut[0] = -(real)0.5*Rho*_Cs*Temp[1] + (real)0.5*_Cs2*Temp[4];
-   InOut[1] = Temp[0] - _Cs2*Temp[4];
+
+// primitive --> characteristic
+// a. MHD
+#  ifdef MHD
+   const real tmp_f1 = LEigenVec[0][1]*Temp[1] + LEigenVec[0][2]*Temp[2] + LEigenVec[0][3]*Temp[3];
+   const real tmp_b1 = LEigenVec[0][4]*Temp[4] + LEigenVec[0][5]*Temp[6] + LEigenVec[0][6]*Temp[7];
+   const real tmp_f2 = LEigenVec[2][1]*Temp[1] + LEigenVec[2][2]*Temp[2] + LEigenVec[2][3]*Temp[3];
+   const real tmp_b2 = LEigenVec[2][4]*Temp[4] + LEigenVec[2][5]*Temp[6] + LEigenVec[2][6]*Temp[7];
+
+   InOut[NCOMP_TOTAL+0] = (real)0.0;
+   InOut[            3] = Temp[0] + LEigenVec[3][4]*Temp[4];
+   InOut[            1] = LEigenVec[1][2]* Temp[2] + LEigenVec[1][3]*Temp[3] + LEigenVec[1][5]*Temp[6] + LEigenVec[1][6]*Temp[7];
+   InOut[NCOMP_TOTAL+1] = LEigenVec[5][2]* Temp[2] + LEigenVec[5][3]*Temp[3] + LEigenVec[5][5]*Temp[6] + LEigenVec[5][6]*Temp[7];
+   InOut[            0] =  tmp_f1 + tmp_b1;
+   InOut[            2] =  tmp_f2 + tmp_b2;
+   InOut[            4] = -tmp_f2 + tmp_b2;
+   InOut[NCOMP_TOTAL+2] = -tmp_f1 + tmp_b1;
+
+// b. pure hydro
+#  else // #ifdef MHD
+
+   const real _a2 = (real)1.0 / ( Gamma*Pres/Rho );
+   const real _a  = SQRT( _a2 );
+
+   InOut[0] = -(real)0.5*Rho*_a*Temp[1] + (real)0.5*_a2*Temp[4];
+   InOut[1] = Temp[0] - _a2*Temp[4];
    InOut[2] = Temp[2];
    InOut[3] = Temp[3];
-   InOut[4] = +(real)0.5*Rho*_Cs*Temp[1] + (real)0.5*_Cs2*Temp[4];
+   InOut[4] = +(real)0.5*Rho*_a*Temp[1] + (real)0.5*_a2*Temp[4];
+#  endif // #ifdef MHD ... else ...
 
 } // FUNCTION : Hydro_Pri2Char
 
@@ -972,7 +999,7 @@ void Hydro_GetEigenSystem( const real CC_Var[], real EigenVal[][NWAVE], real LEi
    const real _a   = (real)1.0/a;
    const real _a2  = _a*_a;
 
-// MHD
+// a. MHD
 #  ifdef MHD
    real Cf2, Cs2, Cf, Cs;
    real PriVar[NCOMP_TOTAL_PLUS_MAG];
@@ -1173,7 +1200,7 @@ void Hydro_GetEigenSystem( const real CC_Var[], real EigenVal[][NWAVE], real LEi
    LEigenVec[6][6] =  LEigenVec[0][6];
 
 
-// pure hydro
+// b. pure hydro
 #  else // #ifdef MHD
 
    const real vx = CC_Var[1];
