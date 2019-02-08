@@ -2,7 +2,7 @@
 #define __CUFLU_FLUUTILITY__
 
 #include "CUFLU.h"
-
+#include <stdio.h>
 
 struct Fun_params
 {
@@ -10,7 +10,16 @@ struct Fun_params
   real E_D;
 };
 
+#  ifdef FLOAT8
+  const static real UpperBound = __DBL_MAX__;
+#  else
+  const static real UpperBound = __FLT_MAX__;
+#  endif
+
 #ifdef __CUDACC__
+GPU_DEVICE
+real SRHydro_GetTemperature (const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy,
+                             const real Gamma, const real MinTemp );
 GPU_DEVICE 
 static real Fun (real Q, void *ptr);   // function to be solved
 GPU_DEVICE 
@@ -224,8 +233,8 @@ real SRHydro_Con2Temperature (const real In[], const real Gamma, const real MinT
 
 #ifdef CHECK_NEGATIVE_IN_FLUID
    if ( guess <= 0.0 || guess != guess ){ 
-     Aux_Message(stderr, "guess root = %14.7e < 0\n", guess);
-     Aux_Message(stderr, "D=%14.7e, Mx=%14.7e, My=%14.7e, Mz=%14.7e, E=%14.7e\n", In[0], In[1], In[2], In[3], In[4]);
+    printf ("guess root = %14.7e < 0\n", guess);
+    printf ("D=%14.7e, Mx=%14.7e, My=%14.7e, Mz=%14.7e, E=%14.7e\n", In[0], In[1], In[2], In[3], In[4]);
    }
 #endif 
 
@@ -329,12 +338,10 @@ void SRHydro_3Velto4Vel (const real In[], real Out[])
 GPU_DEVICE
 void SRHydro_Con2Flux (const int XYZ, real Flux[], const real Input[], const real Gamma, const real MinTemp )
 {
-  const bool CheckMinPres_Yes = true;
   real ConVar[NCOMP_FLUID];	// don't need to include passive scalars since they don't have to be rotated1
   real PriVar4[NCOMP_FLUID];	// D, Ux, Uy, Uz, P
   real PriVar3[NCOMP_FLUID];	// D, Vx, Vy, Vz, P
   real Pres, Vx;
-  real lFactor;
 
   for (int v = 0; v < NCOMP_FLUID; v++)   ConVar[v] = Input[v];
 
@@ -412,7 +419,6 @@ real SRHydro_CheckMinTempInEngy (const real Cons[], const real MinTemp, const re
   real Mx = Cons[1];
   real My = Cons[2];
   real Mz = Cons[3];
-  real E  = Cons[4];
 
   real Msqr = SQR(Mx) + SQR(My) + SQR(Mz);
   real Dh = D*h_min;
@@ -442,6 +448,7 @@ bool SRHydro_CheckUnphysical( const real Con[], const real Pri[], const real Gam
    real Pri4Vel[NCOMP_FLUID];
    real Pri3Vel[NCOMP_FLUID];
 
+
    for (int i = 0;i < NCOMP_FLUID; i++) { ConsVar[i]=NAN; Pri4Vel[i]=NAN; Pri3Vel[i]=NAN; }
 
 //--------------------------------------------------------------//
@@ -451,12 +458,21 @@ bool SRHydro_CheckUnphysical( const real Con[], const real Pri[], const real Gam
     if ( Con != NULL && Pri == NULL){
       for(int i=0; i< NCOMP_FLUID; i++) ConsVar[i]=Con[i];
 
-// check NaN, +inf and -inf
-      if (  !Aux_IsFinite(ConsVar[DENS])  
-	||  !Aux_IsFinite(ConsVar[MOMX])  
-	||  !Aux_IsFinite(ConsVar[MOMY])  
-	||  !Aux_IsFinite(ConsVar[MOMZ])  
-	||  !Aux_IsFinite(ConsVar[ENGY]) )                                   goto UNPHYSICAL;
+
+// check NaN
+      if (  ConsVar[DENS] != ConsVar[DENS]
+         || ConsVar[MOMX] != ConsVar[MOMX]
+         || ConsVar[MOMY] != ConsVar[MOMY]
+         || ConsVar[MOMZ] != ConsVar[MOMZ]
+         || ConsVar[ENGY] != ConsVar[ENGY]  )                                goto UNPHYSICAL;
+
+// check +inf and -inf
+      if (           0.0 >= ConsVar[DENS] || ConsVar[DENS]  >= UpperBound
+         ||  -UpperBound >= ConsVar[MOMX] || ConsVar[MOMX]  >= UpperBound
+         ||  -UpperBound >= ConsVar[MOMY] || ConsVar[MOMY]  >= UpperBound
+         ||  -UpperBound >= ConsVar[MOMZ] || ConsVar[MOMZ]  >= UpperBound
+         ||  -UpperBound >= ConsVar[ENGY] || ConsVar[ENGY]  >= UpperBound ) goto UNPHYSICAL;
+
 
 // check positivity of number density in inertial frame
       if (ConsVar[DENS] <= 0.0)                                              goto UNPHYSICAL;
@@ -475,12 +491,19 @@ bool SRHydro_CheckUnphysical( const real Con[], const real Pri[], const real Gam
 
       SRHydro_Con2Pri(ConsVar, Pri4Vel, Gamma, MinTemp);
 
-// check NaN, +inf and -inf
-      if (  !Aux_IsFinite(Pri4Vel[0])  
-	||  !Aux_IsFinite(Pri4Vel[1])  
-	||  !Aux_IsFinite(Pri4Vel[2])  
-	||  !Aux_IsFinite(Pri4Vel[3])  
-	||  !Aux_IsFinite(Pri4Vel[4]) )                                       goto UNPHYSICAL;
+// check NaN
+      if (  Pri4Vel[DENS] != Pri4Vel[DENS]
+         || Pri4Vel[MOMX] != Pri4Vel[MOMX]
+         || Pri4Vel[MOMY] != Pri4Vel[MOMY]
+         || Pri4Vel[MOMZ] != Pri4Vel[MOMZ]
+         || Pri4Vel[ENGY] != Pri4Vel[ENGY]  )                                goto UNPHYSICAL;
+
+// check +inf and -inf
+      if (           0.0 >= Pri4Vel[DENS] || Pri4Vel[DENS]  >= UpperBound
+         ||  -UpperBound >= Pri4Vel[MOMX] || Pri4Vel[MOMX]  >= UpperBound
+         ||  -UpperBound >= Pri4Vel[MOMY] || Pri4Vel[MOMY]  >= UpperBound
+         ||  -UpperBound >= Pri4Vel[MOMZ] || Pri4Vel[MOMZ]  >= UpperBound
+         ||  -UpperBound >= Pri4Vel[ENGY] || Pri4Vel[ENGY]  >= UpperBound )    goto UNPHYSICAL;
 
 // check positivity of number density in local rest frame
       if (Pri4Vel[0] <= (real)0.0)                                            goto UNPHYSICAL;
@@ -502,12 +525,19 @@ bool SRHydro_CheckUnphysical( const real Con[], const real Pri[], const real Gam
       for(int i=0; i< NCOMP_FLUID; i++) Pri4Vel[i]=Pri[i];
 
 
-// check NaN, +inf and -inf
-      if (  !Aux_IsFinite(Pri4Vel[0])  
-	||  !Aux_IsFinite(Pri4Vel[1])  
-	||  !Aux_IsFinite(Pri4Vel[2])  
-	||  !Aux_IsFinite(Pri4Vel[3])  
-	||  !Aux_IsFinite(Pri4Vel[4]) )                                            goto UNPHYSICAL;
+// check NaN
+      if (  Pri4Vel[DENS] != Pri4Vel[DENS]
+         || Pri4Vel[MOMX] != Pri4Vel[MOMX]
+         || Pri4Vel[MOMY] != Pri4Vel[MOMY]
+         || Pri4Vel[MOMZ] != Pri4Vel[MOMZ]
+         || Pri4Vel[ENGY] != Pri4Vel[ENGY]  )                                goto UNPHYSICAL;
+
+// check +inf and -inf
+      if (           0.0 >= Pri4Vel[DENS] || Pri4Vel[DENS]  >= UpperBound
+         ||  -UpperBound >= Pri4Vel[MOMX] || Pri4Vel[MOMX]  >= UpperBound
+         ||  -UpperBound >= Pri4Vel[MOMY] || Pri4Vel[MOMY]  >= UpperBound
+         ||  -UpperBound >= Pri4Vel[MOMZ] || Pri4Vel[MOMZ]  >= UpperBound
+         ||  -UpperBound >= Pri4Vel[ENGY] || Pri4Vel[ENGY]  >= UpperBound )       goto UNPHYSICAL;
 
 // check positivity of number density in local rest frame
       if (Pri4Vel[0] <= (real)0.0)                                                 goto UNPHYSICAL;
@@ -520,12 +550,19 @@ bool SRHydro_CheckUnphysical( const real Con[], const real Pri[], const real Gam
 // check whether 3-velocity is greater or equal to speed of light
       if (SQR(Pri3Vel[1]) + SQR(Pri3Vel[2]) + SQR(Pri3Vel[3]) >= 1.0)              goto UNPHYSICAL;
    
-// check NaN, +inf and -inf
-      if (  !Aux_IsFinite(ConsVar[DENS])  
-	||  !Aux_IsFinite(ConsVar[MOMX])  
-	||  !Aux_IsFinite(ConsVar[MOMY])  
-	||  !Aux_IsFinite(ConsVar[MOMZ])  
-	||  !Aux_IsFinite(ConsVar[ENGY]) )                                               goto UNPHYSICAL;
+// check NaN
+      if (  ConsVar[DENS] != ConsVar[DENS]
+         || ConsVar[MOMX] != ConsVar[MOMX]
+         || ConsVar[MOMY] != ConsVar[MOMY]
+         || ConsVar[MOMZ] != ConsVar[MOMZ]
+         || ConsVar[ENGY] != ConsVar[ENGY]  )                                           goto UNPHYSICAL;
+
+// check +inf and -inf
+      if (           0.0 >= ConsVar[DENS] || ConsVar[DENS]  >= UpperBound
+         ||  -UpperBound >= ConsVar[MOMX] || ConsVar[MOMX]  >= UpperBound
+         ||  -UpperBound >= ConsVar[MOMY] || ConsVar[MOMY]  >= UpperBound
+         ||  -UpperBound >= ConsVar[MOMZ] || ConsVar[MOMZ]  >= UpperBound
+         ||  -UpperBound >= ConsVar[ENGY] || ConsVar[ENGY]  >= UpperBound )               goto UNPHYSICAL;
 
 // check positivity of number density in inertial frame
       if (ConsVar[DENS] <= 0.0)                                                          goto UNPHYSICAL;
@@ -545,29 +582,24 @@ bool SRHydro_CheckUnphysical( const real Con[], const real Pri[], const real Gam
 // pass all checks 
       return false;
    }
-   else
-   {
-    Aux_Error(ERROR_INFO,"One of Con or Pri must be given in SRHydro_CheckUnphysical!\n");
-    return true;
-   }
 
 // print all variables if goto UNPHYSICAL
       UNPHYSICAL:
       {
         if ( show ) 
          {
-            Aux_Message(stderr,"\n\nfunction: %s: %d\n", s, line);
+            printf( "\n\nfunction: %s: %d\n", s, line);
  
-            Aux_Message(stderr, "D=%14.7e, Mx=%14.7e, My=%14.7e, Mz=%14.7e, E=%14.7e\n",
+            printf( "D=%14.7e, Mx=%14.7e, My=%14.7e, Mz=%14.7e, E=%14.7e\n",
                                  ConsVar[DENS], ConsVar[MOMX], ConsVar[MOMY], ConsVar[MOMZ], ConsVar[ENGY]);
 #           if ( CONSERVED_ENERGY == 1 )
-            Aux_Message(stderr, "E^2-|M|^2-D^2=%14.7e\n", discriminant );
+            printf( "E^2-|M|^2-D^2=%14.7e\n", discriminant );
 #           elif ( CONSERVED_ENERGY == 2 )
-            Aux_Message(stderr, "E^2+2*E*D-|M|^2=%14.7e\n", discriminant );
+            printf( "E^2+2*E*D-|M|^2=%14.7e\n", discriminant );
 #           endif
-            Aux_Message(stderr, "n=%14.7e, Ux=%14.7e, Uy=%14.7e, Uz=%14.7e, P=%14.7e\n", 
+            printf( "n=%14.7e, Ux=%14.7e, Uy=%14.7e, Uz=%14.7e, P=%14.7e\n", 
                                  Pri4Vel[0], Pri4Vel[1], Pri4Vel[2], Pri4Vel[3], Pri4Vel[4]);
-            Aux_Message(stderr, "Vx=%14.7e, Vy=%14.7e, Vz=%14.7e, |V|=%14.7e\n",
+            printf( "Vx=%14.7e, Vy=%14.7e, Vz=%14.7e, |V|=%14.7e\n",
                                  Pri3Vel[1], Pri3Vel[2], Pri3Vel[3], SQRT(SQR(Pri3Vel[1])+SQR(Pri3Vel[2])+SQR(Pri3Vel[3])));
           }
         return true;
@@ -653,9 +685,9 @@ static void NewtonRaphsonSolver(void *ptr, real *root, const real guess, const r
      iter++;
      Fun_DFun(*root, ptr, &f, &df, Gamma);
 
-     if (df == 0.0)                printf("derivative is zero\n");
-     if ( Aux_IsFinite(f) == 0 )   printf("function value is not finite\n");
-     if ( Aux_IsFinite(df) == 0 )  printf("derivative value not finite\n");
+     if ( df == 0.0 )                printf("derivative is zero\n");
+     if (  f != f  || -UpperBound >= f  || f  >= UpperBound )  printf("function value is not finite\n");
+     if ( df != df || -UpperBound >= df || df >= UpperBound )  printf("derivative value is not finite\n");
      
       root_old = *root;
       *root = *root - ( f / df );

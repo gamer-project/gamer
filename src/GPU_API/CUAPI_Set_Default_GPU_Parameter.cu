@@ -76,6 +76,24 @@ __global__ void CUPOT_dtSolver_HydroGravity( real g_dt_Array[],
 #elif ( MODEL == MHD )
 #warning : WAIT MHD !!!
 
+#elif ( MODEL == SR_HYDRO )
+#if ( FLU_SCHEME == MHM  ||  FLU_SCHEME == MHM_RP )
+__global__
+void CUFLU_FluidSolver_MHM(
+   const real   Flu_Array_In [][NCOMP_TOTAL][ CUBE(FLU_NXT) ],
+         real   Flu_Array_Out[][NCOMP_TOTAL][ CUBE(PS2) ],
+         real   Flux_Array   [][9][NCOMP_TOTAL][ SQR(PS2) ],
+         real   PriVar       [][NCOMP_TOTAL][ CUBE(FLU_NXT) ],
+         real   Slope_PPM    [][3][NCOMP_TOTAL][ CUBE(N_SLOPE_PPM) ],
+         real   FC_Var       [][6][NCOMP_TOTAL][ CUBE(N_FC_VAR) ],
+         real   FC_Flux      [][3][NCOMP_TOTAL][ CUBE(N_FC_FLUX) ],
+   const real dt, const real dh, const real Gamma, const bool StoreFlux,
+   const LR_Limiter_t LR_Limiter, const real MinMod_Coeff,
+   const real MinDens, const real MinTemp );
+#endif // FLU_SCHEME
+__global__ void CUFLU_dtSolver_SRHydroCFL( real g_dt_Array[], const real g_Flu_Array[][NCOMP_FLUID][ CUBE(PS1) ],
+                                           const real dh, const real Safety, const real Gamma, const real MinPres );
+
 #elif ( MODEL == ELBDM )
 __global__ void CUFLU_ELBDMSolver( real g_Fluid_In [][FLU_NIN ][ FLU_NXT*FLU_NXT*FLU_NXT ],
                                    real g_Fluid_Out[][FLU_NOUT][ PS2*PS2*PS2 ],
@@ -199,6 +217,21 @@ void CUAPI_Set_Default_GPU_Parameter( int &GPU_NStream, int &Flu_GPU_NPGroup, in
 #        elif ( MODEL == MHD )
 #        warning :: WAIT MHD !!!
 
+#        elif ( MODEL == SR_HYDRO )
+#           if   ( GPU_ARCH == FERMI )
+            GPU_NStream = 8;
+#           elif ( GPU_ARCH == KEPLER )
+            GPU_NStream = 32;
+#           elif ( GPU_ARCH == MAXWELL )
+            GPU_NStream = 32;
+#           elif ( GPU_ARCH == PASCAL )
+            GPU_NStream = 32;
+#           elif ( GPU_ARCH == VOLTA )
+            GPU_NStream = 32;
+#           else
+#           error : UNKNOWN GPU_ARCH !!
+#           endif
+
 #        elif ( MODEL == ELBDM )
 #           if   ( GPU_ARCH == FERMI )
             GPU_NStream = 8;
@@ -248,6 +281,21 @@ void CUAPI_Set_Default_GPU_Parameter( int &GPU_NStream, int &Flu_GPU_NPGroup, in
 
 #     elif ( MODEL == MHD )
 #        warning :: WAIT MHD !!!
+
+#     elif ( MODEL == SR_HYDRO )
+#        if   ( GPU_ARCH == FERMI )
+         Flu_GPU_NPGroup = 1*GPU_NStream*DeviceProp.multiProcessorCount;
+#        elif ( GPU_ARCH == KEPLER )
+         Flu_GPU_NPGroup = 1*GPU_NStream*DeviceProp.multiProcessorCount;
+#        elif ( GPU_ARCH == MAXWELL )
+         Flu_GPU_NPGroup = 1*GPU_NStream*DeviceProp.multiProcessorCount;
+#        elif ( GPU_ARCH == PASCAL )
+         Flu_GPU_NPGroup = 1*GPU_NStream*DeviceProp.multiProcessorCount;
+#        elif ( GPU_ARCH == VOLTA )
+         Flu_GPU_NPGroup = 1*GPU_NStream*DeviceProp.multiProcessorCount;
+#        else
+#        error : UNKNOWN GPU_ARCH !!
+#        endif
 
 #     elif ( MODEL == ELBDM )
 #        if   ( GPU_ARCH == FERMI )
@@ -340,6 +388,14 @@ void CUAPI_Set_Default_GPU_Parameter( int &GPU_NStream, int &Flu_GPU_NPGroup, in
 
 #  elif ( MODEL == MHD )
 #  warning :: WAIT MHD !!!
+
+#  elif ( MODEL == SR_HYDRO )
+#  if ( FLU_SCHEME == MHM )
+   CUDA_CHECK_ERROR(  cudaFuncSetCacheConfig( CUFLU_FluidSolver_MHM,       cudaFuncCachePreferL1     )  );
+#  elif ( FLU_SCHEME == MHM_RP )
+   CUDA_CHECK_ERROR(  cudaFuncSetCacheConfig( CUFLU_FluidSolver_MHM,       cudaFuncCachePreferL1     )  );
+#  endif
+   CUDA_CHECK_ERROR(  cudaFuncSetCacheConfig( CUFLU_dtSolver_SRHydroCFL,     cudaFuncCachePreferShared )  );
 
 #  elif ( MODEL == ELBDM )
    CUDA_CHECK_ERROR(  cudaFuncSetCacheConfig( CUFLU_ELBDMSolver,      cudaFuncCachePreferShared )  );

@@ -7,16 +7,18 @@
 #ifdef __CUDACC__
 
 #include "CUFLU_Shared_FluUtility.cu"
+GPU_DEVICE
+void QuadraticSolver (real A, real B, real C, real *x_plus, real *x_minus);
 
 #else // #ifdef __CUDACC__
 
 #include "../../../include/SRHydroPrototypes.h"
+void QuadraticSolver (real A, real B, real C, real *x_plus, real *x_minus);
 
 #endif // #ifdef __CUDACC__ ... else ...
 
 #if ( MODEL == SR_HYDRO )
 
-void QuadraticSolver (real A, real B, real C, real *x_plus, real *x_minus);
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  SRHydro_RiemannSolver_HLLC
@@ -41,21 +43,27 @@ GPU_DEVICE
 void SRHydro_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In[], const real R_In[],
                                  const real Gamma, const real MinTemp )
 {
+# if ( EOS ==  IDEAL_GAS)
+  const real Gamma_m1 = Gamma - (real)1.0;
+  real rhl, rhr
+# endif
+
+# ifdef CHECK_NEGATIVE_IN_FLUID
+  real lV2, lV3, rV2, rV3;
+# endif
   real CL[NCOMP_TOTAL], CR[NCOMP_TOTAL]; /* conserved vars. */
   real PL[NCOMP_TOTAL], PR[NCOMP_TOTAL]; /* primitive vars. */
   real Fl[NCOMP_TOTAL], Fr[NCOMP_TOTAL];
   real Fhll[NCOMP_TOTAL], Uhll[NCOMP_TOTAL];
   real Usl[NCOMP_TOTAL], Usr[NCOMP_TOTAL];
-
-  const real Gamma_m1 = Gamma - (real)1.0;
-  real rhl, rhr, cslsq, csrsq, gammasql, gammasqr;
-  real ssl, ssr, radl, radr, lmdapl, lmdapr, lmdaml, lmdamr, lmdatlmda;
+  real cslsq, csrsq, gammasql, gammasqr;
+  real ssl, ssr, lmdapl, lmdapr, lmdaml, lmdamr, lmdatlmda;
   real lmdal,lmdar; /* Left and Right wave speeds */
   real lmdas; /* Contact wave speed */
   real ovlrmll;
-  real a,b,c,quad;
+  real a,b,c;
   real den,ps; /* Pressure in inner region */
-  real lV1, lV2, lV3, rV1, rV2, rV3;
+  real lV1, rV1;
   real lFactor,rFactor; /* Lorentz factor */
 
 /* 0. reorder the input conserved variables for different spatial directions */
@@ -76,14 +84,16 @@ void SRHydro_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In
    rFactor=1/SQRT(1+SQR(PR[1])+SQR(PR[2])+SQR(PR[3]));
 
    lV1=PL[1]*lFactor;
+
+   rV1=PR[1]*rFactor;
+
+#  ifdef CHECK_NEGATIVE_IN_FLUID
    lV2=PL[2]*lFactor;
    lV3=PL[3]*lFactor;
 
-   rV1=PR[1]*rFactor;
    rV2=PR[2]*rFactor;
    rV3=PR[3]*rFactor;
 
-#  ifdef CHECK_NEGATIVE_IN_FLUID
    real lV, rV;
    lV = SQRT(lV1*lV1 + lV2*lV2 + lV3*lV3);
    rV = SQRT(rV1*rV1 + rV2*rV2 + rV3*rV3);

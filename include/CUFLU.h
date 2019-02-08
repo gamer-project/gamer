@@ -150,7 +150,7 @@ struct FluVar5 { real Rho, Px, Py, Pz, Egy; };
 
 
 // size of different arrays
-#if ( FLU_SCHEME == MHM  ||  FLU_SCHEME == MHM_RP  ||  FLU_SCHEME == CTU )
+#if ( FLU_SCHEME == MHM  ||  FLU_SCHEME == MHM_RP )
 
 #  define N_FC_VAR        ( PS2 + 2      )
 #  define N_SLOPE_PPM     ( N_FC_VAR + 2 )
@@ -166,12 +166,6 @@ struct FluVar5 { real Rho, Px, Py, Pz, Egy; };
 #     define N_HF_VAR     ( FLU_NXT - 2  )
 #     define N_HF_FLUX    ( FLU_NXT - 1  )
 #     define N_FC_FLUX    ( N_HF_FLUX    )
-
-#  elif ( FLU_SCHEME == CTU )
-
-#     define N_FL_FLUX    ( N_FC_VAR     )
-#     define N_HF_FLUX    ( N_FC_VAR     )
-#     define N_FC_FLUX    ( N_FC_VAR     )
 
 #  endif
 
@@ -217,14 +211,8 @@ struct FluVar5 { real Rho, Px, Py, Pz, Egy; };
 #endif
 
 
-// use the dissipative structure for the WAF scheme
-#if ( FLU_SCHEME == WAF )
-// #define WAF_DISSIPATE
-#endif
-
-
-// maximum allowed error for the exact Riemann solver and the WAF scheme
-#if ( FLU_SCHEME == WAF  ||  ( FLU_SCHEME != RTVD && RSOLVER == EXACT )  ||  CHECK_INTERMEDIATE == EXACT )
+// maximum allowed error for the exact Riemann solver
+#if ( ( FLU_SCHEME != RTVD && RSOLVER == EXACT )  ||  CHECK_INTERMEDIATE == EXACT )
 #  ifdef FLOAT8
 #     define MAX_ERROR    1.e-15
 #  else

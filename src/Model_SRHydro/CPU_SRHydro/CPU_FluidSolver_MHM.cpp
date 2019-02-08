@@ -104,7 +104,6 @@ void CPU_FluidSolver_MHM(
 #endif // #ifdef __CUDACC__ ... else ...
 {
 
-   const bool CorrHalfVel_No  = false;
    const int Max = 2;
    real Adaptive_MinMod_Coeff;
    int iteration;

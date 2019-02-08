@@ -58,6 +58,22 @@ void CUFLU_FluidSolver_CTU(
 #elif ( MODEL == MHD )
 #warning : WAIT MHD !!!
 
+#elif ( MODEL == SR_HYDRO )
+#if ( FLU_SCHEME == MHM  ||  FLU_SCHEME == MHM_RP )
+__global__
+void CUFLU_FluidSolver_MHM(
+   const real   g_Flu_Array_In [][NCOMP_TOTAL][ CUBE(FLU_NXT) ],
+         real   g_Flu_Array_Out[][NCOMP_TOTAL][ CUBE(PS2) ],
+         real   g_Flux_Array   [][9][NCOMP_TOTAL][ SQR(PS2) ],
+         real   g_PriVar       [][NCOMP_TOTAL][ CUBE(FLU_NXT) ],
+         real   g_Slope_PPM    [][3][NCOMP_TOTAL][ CUBE(N_SLOPE_PPM) ],
+         real   g_FC_Var       [][6][NCOMP_TOTAL][ CUBE(N_FC_VAR) ],
+         real   g_FC_Flux      [][3][NCOMP_TOTAL][ CUBE(N_FC_FLUX) ],
+   const real dt, const real dh, const real Gamma, const bool StoreFlux,
+   const LR_Limiter_t LR_Limiter, const real MinMod_Coeff,
+   const real MinDens, const real MinTemp );
+#endif // FLU_SCHEME
+
 #elif ( MODEL == ELBDM )
 __global__ void CUFLU_ELBDMSolver( real g_Fluid_In [][FLU_NIN ][ FLU_NXT*FLU_NXT*FLU_NXT ],
                                    real g_Fluid_Out[][FLU_NOUT][ PS2*PS2*PS2 ],
@@ -75,7 +91,7 @@ extern real (*d_Flu_Array_F_In )[FLU_NIN ][ CUBE(FLU_NXT) ];
 extern real (*d_Flu_Array_F_Out)[FLU_NOUT][ CUBE(PS2) ];
 extern real (*d_Flux_Array)[9][NFLUX_TOTAL][ SQR(PS2) ];
 extern double (*d_Corner_Array_F)[3];
-#if ( MODEL == HYDRO  ||  MODEL == MHD )
+#if ( MODEL == HYDRO  ||  MODEL == MHD || MODEL == SR_HYDRO )
 #ifdef DUAL_ENERGY
 extern char (*d_DE_Array_F_Out)[ CUBE(PS2) ];
 #else
@@ -83,6 +99,14 @@ static char (*d_DE_Array_F_Out)[ CUBE(PS2) ] = NULL;
 #endif
 #endif
 #if ( MODEL == HYDRO )
+#if ( FLU_SCHEME == MHM  ||  FLU_SCHEME == MHM_RP  ||  FLU_SCHEME == CTU )
+extern real (*d_PriVar)      [NCOMP_TOTAL][ CUBE(FLU_NXT) ];
+extern real (*d_Slope_PPM)[3][NCOMP_TOTAL][ CUBE(N_SLOPE_PPM) ];
+extern real (*d_FC_Var)   [6][NCOMP_TOTAL][ CUBE(N_FC_VAR) ];
+extern real (*d_FC_Flux)  [3][NCOMP_TOTAL][ CUBE(N_FC_FLUX) ];
+#endif // FLU_SCHEME
+#elif ( MODEL == MHD )
+#elif ( MODEL == SR_HYDRO )
 #if ( FLU_SCHEME == MHM  ||  FLU_SCHEME == MHM_RP  ||  FLU_SCHEME == CTU )
 extern real (*d_PriVar)      [NCOMP_TOTAL][ CUBE(FLU_NXT) ];
 extern real (*d_Slope_PPM)[3][NCOMP_TOTAL][ CUBE(N_SLOPE_PPM) ];
@@ -182,6 +206,10 @@ void CUAPI_Asyn_FluidSolver( real h_Flu_Array_In[][FLU_NIN ][ CUBE(FLU_NXT) ],
                              const bool JeansMinPres, const real JeansMinPres_Coeff )
 {
 
+#  if ( MODEL == SR_HYDRO )
+   const real MinTemp = MinPres; 
+#  endif
+
 // check
 #  ifdef GAMER_DEBUG
 #  if   ( MODEL == HYDRO )
@@ -205,6 +233,10 @@ void CUAPI_Asyn_FluidSolver( real h_Flu_Array_In[][FLU_NIN ][ CUBE(FLU_NXT) ],
 
 #  elif ( MODEL == MHD )
 #  warning : WAIT MHD !!!
+#  elif ( MODEL == SR_HYDRO )
+   if ( LR_Limiter != VANLEER  &&  LR_Limiter != GMINMOD  &&  LR_Limiter != ALBADA  &&  LR_Limiter != EXTPRE  &&
+        LR_Limiter != VL_GMINMOD  &&  LR_Limiter != LR_LIMITER_NONE )
+      Aux_Error( ERROR_INFO, "unsupported limiter (%d) !!\n", LR_Limiter );
 
 #  elif ( MODEL == ELBDM )
 
@@ -227,7 +259,7 @@ void CUAPI_Asyn_FluidSolver( real h_Flu_Array_In[][FLU_NIN ][ CUBE(FLU_NXT) ],
 
 #  elif ( MODEL == MHD )
 #  warning : WAIT MHD !!!
-
+#  elif ( MODEL == SR_HYDRO )
 #  elif ( MODEL == ELBDM )
 // evaluate the optimized Taylor expansion coefficient
    if ( ELBDM_Taylor3_Auto )  ELBDM_Taylor3_Coeff = ELBDM_SetTaylor3Coeff( dt, dh, ELBDM_Eta );
@@ -363,6 +395,27 @@ void CUAPI_Asyn_FluidSolver( real h_Flu_Array_In[][FLU_NIN ][ CUBE(FLU_NXT) ],
 #     elif ( MODEL == MHD )
 #     warning :: WAIT MHD !!!
 
+#     elif ( MODEL == SR_HYDRO )
+
+#        if ( FLU_SCHEME == MHM  ||  FLU_SCHEME == MHM_RP )
+
+         CUFLU_FluidSolver_MHM <<< NPatch_per_Stream[s], BlockDim_FluidSolver, 0, Stream[s] >>>
+            ( d_Flu_Array_F_In  + UsedPatch[s],
+              d_Flu_Array_F_Out + UsedPatch[s],
+              d_Flux_Array      + UsedPatch[s],
+              d_PriVar          + UsedPatch[s],
+              d_Slope_PPM       + UsedPatch[s],
+              d_FC_Var          + UsedPatch[s],
+              d_FC_Flux         + UsedPatch[s],
+              dt, dh, Gamma, StoreFlux, LR_Limiter, MinMod_Coeff,
+              MinDens, MinTemp );
+
+#        else
+
+#        error : unsupported GPU hydro scheme
+
+#        endif // FLU_SCHEME
+
 #     elif ( MODEL == ELBDM )
 
          CUFLU_ELBDMSolver <<< NPatch_per_Stream[s], BlockDim_FluidSolver, 0, Stream[s] >>>
@@ -403,6 +456,7 @@ void CUAPI_Asyn_FluidSolver( real h_Flu_Array_In[][FLU_NIN ][ CUBE(FLU_NXT) ],
 
 #     elif ( MODEL == MHD )
 #     warning : WAIT MHD !!!
+#     elif ( MODEL == SR_HYDRO )
 #     endif // MODEL
    } // for (int s=0; s<GPU_NStream; s++)
 

@@ -29,6 +29,14 @@ extern real (*d_FC_Flux)  [3][NCOMP_TOTAL][ CUBE(N_FC_FLUX)   ];
 #elif ( MODEL == MHD )
 #warning : WAIT MHD !!!
 
+#elif ( MODEL == SR_HYDRO )
+#if ( FLU_SCHEME == MHM  ||  FLU_SCHEME == MHM_RP )
+extern real (*d_PriVar)      [NCOMP_TOTAL][ CUBE(FLU_NXT)     ];
+extern real (*d_Slope_PPM)[3][NCOMP_TOTAL][ CUBE(N_SLOPE_PPM) ];
+extern real (*d_FC_Var)   [6][NCOMP_TOTAL][ CUBE(N_FC_VAR)    ];
+extern real (*d_FC_Flux)  [3][NCOMP_TOTAL][ CUBE(N_FC_FLUX)   ];
+#endif // #if ( FLU_SCHEME == MHM  ||  FLU_SCHEME == MHM_RP  ||  FLU_SCHEME == CTU )
+
 #elif ( MODEL != ELBDM )
 #warning : DO YOU WANT TO ADD SOMETHING HERE FOR THE NEW MODEL ??
 #endif // MODEL
@@ -72,6 +80,14 @@ void CUAPI_MemFree_Fluid( const int GPU_NStream )
 
 #  elif ( MODEL == MHD )
 #  warning : WAIT MHD !!!
+
+#  elif ( MODEL == SR_HYDRO )
+#  if ( FLU_SCHEME == MHM  ||  FLU_SCHEME == MHM_RP )
+   if ( d_PriVar    != NULL ) {  CUDA_CHECK_ERROR(  cudaFree( d_PriVar    )  );  d_PriVar    = NULL; }
+   if ( d_Slope_PPM != NULL ) {  CUDA_CHECK_ERROR(  cudaFree( d_Slope_PPM )  );  d_Slope_PPM = NULL; }
+   if ( d_FC_Var    != NULL ) {  CUDA_CHECK_ERROR(  cudaFree( d_FC_Var    )  );  d_FC_Var    = NULL; }
+   if ( d_FC_Flux   != NULL ) {  CUDA_CHECK_ERROR(  cudaFree( d_FC_Flux   )  );  d_FC_Flux   = NULL; }
+#  endif // #if ( FLU_SCHEME == MHM  ||  FLU_SCHEME == MHM_RP  ||  FLU_SCHEME == CTU )
 
 #  elif ( MODEL != ELBDM )
 #  warning : DO YOU WANT TO ADD SOMETHING HERE FOR THE NEW MODEL ??
