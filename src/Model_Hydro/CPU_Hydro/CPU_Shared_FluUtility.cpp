@@ -48,6 +48,13 @@ void Hydro_Rotate3D( real InOut[], const int XYZ, const bool Forward, const int 
    if ( XYZ == 0 )   return;
 
 
+// check
+#  if ( defined GAMER_DEBUG  &&  defined MHD )
+   if ( Mag_Offset < NCOMP_FLUID  ||  Mag_Offset > NCOMP_TOTAL_PLUS_MAG - NCOMP_MAGNETIC )
+      printf( "ERROR : invalid Mag_Offset = %d !!\n", Mag_Offset );
+#  endif
+
+
    real Temp_Flu[3];
    for (int v=0; v<3; v++)    Temp_Flu[v] = InOut[ v + 1 ];
 #  ifdef MHD

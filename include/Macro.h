@@ -96,6 +96,8 @@
 #  define NCOMP_MAGNETIC      3
 #  define NELECTRIC           2
 # else
+#  define NCOMP_MAGNETIC      0
+#  define NELECTRIC           0
 # endif
 
 // for ELBDM, we only need the density flux
