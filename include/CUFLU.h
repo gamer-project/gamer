@@ -53,6 +53,7 @@
 //               --> for the latter two routines, Half_Flux[] is accessed with N_FC_FLUX
 // N_HF_VAR    : for accessing Half_Var[], which is linked to PriVar[] with the size FLU_NXT^3
 //               --> used by MHM_RP only
+// NWAVE       : number of characteristic waves
 
 #  if   ( FLU_SCHEME == MHM )
 
@@ -91,8 +92,10 @@
 #   define N_HF_ELE       ( N_HF_FLUX - 1 )
 #   define N_FL_ELE       ( N_FL_FLUX - 1 )
 #   define N_LC_ELE       ( N_FC_FLUX - 1 )
+#  define NWAVE           ( NCOMP_FLUID + 2 )
 #  else
 #   define N_LC_ELE       0
+#  define NWAVE           NCOMP_FLUID
 #  endif
 
 #endif // #if ( FLU_SCHEME == MHM  ||  FLU_SCHEME == MHM_RP  ||  FLU_SCHEME == CTU )
