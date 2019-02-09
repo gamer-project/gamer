@@ -117,14 +117,14 @@ void SRHydro_Con2Pri (const real In[], real Out[], const real Gamma, const real 
 GPU_DEVICE
 void SRHydro_Pri2Con (const real In[], real Out[], const real Gamma)
 {
-#if ( EOS == RELATIVISTIC_IDEAL_GAS )
+# if ( EOS == RELATIVISTIC_IDEAL_GAS )
   real nh = 2.5*In[4] + SQRT(2.25*SQR(In[4]) + SQR(In[0])); // approximate enthalpy * proper number density
-#elif ( EOS == IDEAL_GAS )
+# elif ( EOS == IDEAL_GAS )
   real Gamma_m1 = (real) Gamma - 1.0;
   real nh = In[0] + ( Gamma / Gamma_m1) * In[4]; // enthalpy * proper number density
-#else
-#error: unsupported EoS!
-#endif
+# else
+# error: unsupported EoS!
+# endif
 
   real Factor0 = 1.0 + SQR (In[1]) + SQR (In[2]) + SQR (In[3]);
   real Factor1 = SQRT(Factor0); // Lorentz factor
