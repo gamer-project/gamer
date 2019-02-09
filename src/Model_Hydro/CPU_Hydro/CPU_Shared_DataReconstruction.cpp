@@ -32,15 +32,19 @@ void Hydro_Con2Flux( const int XYZ, real Flux[], const real Input[], const real 
 
 // internal functions (GPU_DEVICE is defined in CUFLU.h)
 GPU_DEVICE
-static void Hydro_LimitSlope( const real L1[], const real C0[], const real R1[], const LR_Limiter_t LR_Limiter,
-                              const real MinMod_Coeff, const real Gamma, const int XYZ, real Slope_Limiter[] );
+static void Hydro_LimitSlope( const real L[], const real C[], const real R[], const LR_Limiter_t LR_Limiter,
+                              const real MinMod_Coeff, const real Gamma, const int XYZ,
+                              const real LEigenVec[][NWAVE], const real REigenVec[][NWAVE],
+                              real Slope_Limiter[] );
 #if (  FLU_SCHEME == CTU  ||  ( defined MHD && defined CHAR_RECONSTRUCTION )  )
 #ifdef MHD
-static void   MHD_GetEigenSystem( const real CC_Var[], real EigenVal[],        real LEigenVec[][NWAVE],
-                                  real REigenVec[][NWAVE], const real Gamma, const int XYZ );
+static void   MHD_GetEigenSystem( const real CC_Var[], real EigenVal[],
+                                  real LEigenVec[][NWAVE], real REigenVec[][NWAVE],
+                                  const real Gamma, const int XYZ );
 #else
-static void Hydro_GetEigenSystem( const real CC_Var[], real EigenVal[][NWAVE], real LEigenVec[][NWAVE],
-                                  real REigenVec[][NWAVE], const real Gamma );
+static void Hydro_GetEigenSystem( const real CC_Var[], real EigenVal[][NWAVE],
+                                  real LEigenVec[][NWAVE], real REigenVec[][NWAVE],
+                                  const real Gamma );
 #endif
 #endif
 #if ( FLU_SCHEME == MHM )
@@ -1022,11 +1026,13 @@ void Hydro_Char2Pri( real InOut[], const real Gamma, const real Rho, const real 
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE
 #ifdef MHD
-void   MHD_GetEigenSystem( const real CC_Var[], real EigenVal[],        real LEigenVec[][NWAVE],
-                           real REigenVec[][NWAVE], const real Gamma, const int XYZ )
+void   MHD_GetEigenSystem( const real CC_Var[], real EigenVal[],
+                           real LEigenVec[][NWAVE], real REigenVec[][NWAVE],
+                           const real Gamma, const int XYZ )
 #else
-void Hydro_GetEigenSystem( const real CC_Var[], real EigenVal[][NWAVE], real LEigenVec[][NWAVE],
-                           real REigenVec[][NWAVE], const real Gamma )
+void Hydro_GetEigenSystem( const real CC_Var[], real EigenVal[][NWAVE],
+                           real LEigenVec[][NWAVE], real REigenVec[][NWAVE],
+                           const real Gamma )
 #endif
 {
 
@@ -1299,46 +1305,54 @@ void Hydro_GetEigenSystem( const real CC_Var[], real EigenVal[][NWAVE], real LEi
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Hydro_LimitSlope
-// Description :  Evaluate the monotonic slope by applying slope limiters
+// Description :  Evaluate the monotonic slope by slope limiters
 //
-// Note        :  1. The input data should be primitive variables
+// Note        :  1. Input data must be primitive variables
 //
-// Parameter   :  L1            : Element x-1
-//                C0            : Element x
-//                R1            : Element x+1
+// Parameter   :  L             : Element x-1
+//                C             : Element x
+//                R             : Element x+1
 //                LR_Limiter    : Slope limiter for the data reconstruction in the MHM/MHM_RP/CTU schemes
 //                                (0/1/2/3) = (vanLeer/generalized MinMod/vanAlbada/vanLeer+generalized MinMod) limiter
 //                MinMod_Coeff  : Coefficient of the generalized MinMod limiter
 //                Gamma         : Ratio of specific heats
-//                                --> Useful only if the option "CHAR_RECONSTRUCTION" is turned on
+//                                --> For pure hydro + CHAR_RECONSTRUCTION only
 //                XYZ           : Target spatial direction : (0/1/2) --> (x/y/z)
-//                                --> Useful only if the option "CHAR_RECONSTRUCTION" is turned on
+//                                --> For CHAR_RECONSTRUCTION only
+//                L/REigenVec   : Array storing the left/right eigenvectors
+//                                --> For MHD + CHAR_RECONSTRUCTION only
 //                Slope_Limiter : Array to store the output monotonic slope
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE
-void Hydro_LimitSlope( const real L1[], const real C0[], const real R1[], const LR_Limiter_t LR_Limiter,
-                       const real MinMod_Coeff, const real Gamma, const int XYZ, real Slope_Limiter[] )
+void Hydro_LimitSlope( const real L[], const real C[], const real R[], const LR_Limiter_t LR_Limiter,
+                       const real MinMod_Coeff, const real Gamma, const int XYZ,
+                       const real LEigenVec[][NWAVE], const real REigenVec[][NWAVE],
+                       real Slope_Limiter[] )
 {
 
-#  ifdef CHAR_RECONSTRUCTION
-   const real Rho  = C0[0];
-   const real Pres = C0[4];
+// check
+#  ifdef GAMER_DEBUG
+#  if ( defined MHD  &&  defined CHAR_RECONSTRUCTION )
+   if ( LEigenVec == NULL )   printf( "ERROR : LEigenVec == NULL !!\n" );
+   if ( REigenVec == NULL )   printf( "ERROR : REigenVec == NULL !!\n" );
+#  endif
 #  endif
 
-   real Slope_L[NCOMP_TOTAL], Slope_R[NCOMP_TOTAL], Slope_C[NCOMP_TOTAL], Slope_A[NCOMP_TOTAL], Slope_LR;
 
+   real Slope_L[NCOMP_TOTAL_PLUS_MAG], Slope_R[NCOMP_TOTAL_PLUS_MAG], Slope_C[NCOMP_TOTAL_PLUS_MAG];
+   real Slope_A[NCOMP_TOTAL_PLUS_MAG], Slope_LR;
 
 // evaluate different slopes
-   for (int v=0; v<NCOMP_TOTAL; v++)
+   for (int v=0; v<NCOMP_TOTAL_PLUS_MAG; v++)
    {
-      Slope_L[v] = C0[v] - L1[v];
-      Slope_R[v] = R1[v] - C0[v];
+      Slope_L[v] = C[v] - L[v];
+      Slope_R[v] = R[v] - C[v];
       Slope_C[v] = (real)0.5*( Slope_L[v] + Slope_R[v] );
    }
 
    if ( LR_Limiter == VL_GMINMOD )
    {
-      for (int v=0; v<NCOMP_TOTAL; v++)
+      for (int v=0; v<NCOMP_TOTAL_PLUS_MAG; v++)
       {
          if ( Slope_L[v]*Slope_R[v] > (real)0.0 )
             Slope_A[v] = (real)2.0*Slope_L[v]*Slope_R[v]/( Slope_L[v] + Slope_R[v] );
@@ -1350,17 +1364,25 @@ void Hydro_LimitSlope( const real L1[], const real C0[], const real R1[], const 
 
 // primitive variables --> characteristic variables
 #  ifdef CHAR_RECONSTRUCTION
-   Hydro_Pri2Char( Slope_L, Gamma, Rho, Pres, XYZ );
-   Hydro_Pri2Char( Slope_R, Gamma, Rho, Pres, XYZ );
-   Hydro_Pri2Char( Slope_C, Gamma, Rho, Pres, XYZ );
+#  ifdef MHD
+   const real Rho  = NULL_REAL;
+   const real Pres = NULL_REAL;
+#  else
+   const real Rho  = C[0];
+   const real Pres = C[4];
+#  endif
+
+   Hydro_Pri2Char( Slope_L, Gamma, Rho, Pres, LEigenVec, XYZ );
+   Hydro_Pri2Char( Slope_R, Gamma, Rho, Pres, LEigenVec, XYZ );
+   Hydro_Pri2Char( Slope_C, Gamma, Rho, Pres, LEigenVec, XYZ );
 
    if ( LR_Limiter == VL_GMINMOD )
-      Hydro_Pri2Char( Slope_A, Gamma, Rho, Pres, XYZ );
+      Hydro_Pri2Char( Slope_A, Gamma, Rho, Pres, LEigenVec, XYZ );
 #  endif
 
 
 // apply the slope limiter
-   for (int v=0; v<NCOMP_TOTAL; v++)
+   for (int v=0; v<NCOMP_TOTAL_PLUS_MAG; v++)
    {
       Slope_LR = Slope_L[v]*Slope_R[v];
 
@@ -1406,12 +1428,12 @@ void Hydro_LimitSlope( const real L1[], const real C0[], const real R1[], const 
       {
          Slope_Limiter[v] = (real)0.0;
       } // if ( Slope_LR > (real)0.0 ) ... else ...
-   } // for (int v=0; v<NCOMP_TOTAL; v++)
+   } // for (int v=0; v<NCOMP_TOTAL_PLUS_MAG; v++)
 
 
 // characteristic variables --> primitive variables
 #  ifdef CHAR_RECONSTRUCTION
-   Hydro_Char2Pri( Slope_Limiter, Gamma, Rho, Pres, XYZ );
+   Hydro_Char2Pri( Slope_Limiter, Gamma, Rho, Pres, REigenVec, XYZ );
 #  endif
 
 } // FUNCTION : Hydro_LimitSlope

@@ -49,9 +49,11 @@ void Hydro_Rotate3D( real InOut[], const int XYZ, const bool Forward, const int 
 
 
 // check
-#  if ( defined GAMER_DEBUG  &&  defined MHD )
+#  ifdef GAMER_DEBUG
+#  ifdef MHD
    if ( Mag_Offset < NCOMP_FLUID  ||  Mag_Offset > NCOMP_TOTAL_PLUS_MAG - NCOMP_MAGNETIC )
       printf( "ERROR : invalid Mag_Offset = %d !!\n", Mag_Offset );
+#  endif
 #  endif
 
 
