@@ -132,6 +132,7 @@ void Hydro_Rotate3D( real InOut[], const int XYZ, const bool Forward, const int 
 //                   --> But note that here we do NOT ensure "sum(mass fraction) == 1.0"
 //                       --> It is done by calling Hydro_NormalizePassive() in Hydro_Shared_FullStepUpdate()
 //                3. In[] and Out[] must NOT point to the same array
+//                4. In[] and Out[] should have the size of NCOMP_TOTAL_PLUS_MAG
 //
 // Parameter   :  In                 : Input conserved variables
 //                Out                : Output primitive variables
@@ -152,10 +153,12 @@ void Hydro_Con2Pri( const real In[], real Out[], const real Gamma_m1, const real
 {
 
    const bool CheckMinPres_Yes = true;
-   const real _Rho             = (real)1.0 / In[0];
+   const real _Rho             = (real)1.0/In[0];
 #  ifdef MHD
-#  warning : WAIT MHD !!!
-   const real EngyB            = NULL_REAL;
+   const real Bx               = In[ MAG_OFFSET + 0 ];
+   const real By               = In[ MAG_OFFSET + 1 ];
+   const real Bz               = In[ MAG_OFFSET + 2 ];
+   const real EngyB            = (real)0.5*( SQR(Bx) + SQR(By) + SQR(Bz) );
 #  else
    const real EngyB            = NULL_REAL;
 #  endif
@@ -181,6 +184,11 @@ void Hydro_Con2Pri( const real In[], real Out[], const real Gamma_m1, const real
       for (int v=0; v<NNorm; v++)   Out[ NCOMP_FLUID + NormIdx[v] ] *= _Rho;
 #  endif
 
+// B field
+#  ifdef MHD
+   for (int v=NCOMP_TOTAL; v<NCOMP_TOTAL_PLUS_MAG; v++)  Out[v] = In[v];
+#  endif
+
 } // FUNCTION : Hydro_Con2Pri
 
 
@@ -194,6 +202,7 @@ void Hydro_Con2Pri( const real In[], real Out[], const real Gamma_m1, const real
 //                   when NormPassive is on
 //                   --> See the input parameters "NormPassive, NNorm, NormIdx"
 //                3. In[] and Out[] must NOT point to the same array
+//                4. In[] and Out[] should have the size of NCOMP_TOTAL_PLUS_MAG
 //
 // Parameter   :  In          : Array storing the input primitive variables
 //                Out         : Array to store the output conserved variables
@@ -215,6 +224,13 @@ void Hydro_Pri2Con( const real In[], real Out[], const real _Gamma_m1,
    Out[3] = In[0]*In[3];
    Out[4] = In[4]*_Gamma_m1 + (real)0.5*In[0]*( In[1]*In[1] + In[2]*In[2] + In[3]*In[3] );
 
+#  ifdef MHD
+   const real Bx = In[ MAG_OFFSET + 0 ];
+   const real By = In[ MAG_OFFSET + 1 ];
+   const real Bz = In[ MAG_OFFSET + 2 ];
+   Out[4] += (real)0.5*( SQR(Bx) + SQR(By) + SQR(Bz) );
+#  else
+
 // passive scalars
 #  if ( NCOMP_PASSIVE > 0 )
 // copy all passive scalars
@@ -223,6 +239,11 @@ void Hydro_Pri2Con( const real In[], real Out[], const real _Gamma_m1,
 // convert the mass fraction of target passive scalars back to mass density
    if ( NormPassive )
       for (int v=0; v<NNorm; v++)   Out[ NCOMP_FLUID + NormIdx[v] ] *= In[0];
+#  endif
+
+// B field
+#  ifdef MHD
+   for (int v=NCOMP_TOTAL; v<NCOMP_TOTAL_PLUS_MAG; v++)  Out[v] = In[v];
 #  endif
 
 } // FUNCTION : Hydro_Pri2Con
