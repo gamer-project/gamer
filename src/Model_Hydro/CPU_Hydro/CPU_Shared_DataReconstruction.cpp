@@ -16,7 +16,7 @@
 
 #else
 
-void Hydro_Rotate3D( real InOut[], const int XYZ, const bool Forward );
+void Hydro_Rotate3D( real InOut[], const int XYZ, const bool Forward, const int Mag_Offset );
 real Hydro_CheckMinPres( const real InPres, const real MinPres );
 void Hydro_Con2Pri( const real In[], real Out[], const real Gamma_m1, const real MinPres,
                     const bool NormPassive, const int NNorm, const int NormIdx[],
@@ -857,30 +857,40 @@ void Hydro_Pri2Char( real InOut[], const real Gamma, const real Rho, const real 
 #  endif
 
 // back-up the input array and rotate it according to the target direction
-// --> actually it's unnecessary to copy the passive scalars here
-   real Temp[NCOMP_TOTAL_PLUS_MAG];
+// --> it's unnecessary to copy the passive scalars since they will not be modified
+   real Temp[ NCOMP_FLUID + NCOMP_MAGNETIC ];
 
-   for (int v=0; v<NCOMP_TOTAL_PLUS_MAG; v++)   Temp[v] = InOut[v];
+   for (int v=0; v<NCOMP_FLUID; v++)   Temp[v] = InOut[v];
 
-   Hydro_Rotate3D( Temp, XYZ, true );
+#  ifdef MHD
+   for (int v=NCOMP_FLUID; v<NCOMP_FLUID+NCOMP_MAGNETIC; v++)  Temp[v] = InOut[ v - NCOMP_FLUID + MAG_OFFSET ];
+#  endif
+
+   Hydro_Rotate3D( Temp, XYZ, true, NCOMP_FLUID );
+
+// remove the normal B field to be consistent with the eigenvector matrix
+#  ifdef MHD
+   Temp[ NCOMP_FLUID + 0 ] = Temp[ NCOMP_FLUID + 1 ];
+   Temp[ NCOMP_FLUID + 1 ] = Temp[ NCOMP_FLUID + 2 ];
+#  endif
 
 
 // primitive --> characteristic
 // a. MHD
 #  ifdef MHD
    const real tmp_f1 = LEigenVec[0][1]*Temp[1] + LEigenVec[0][2]*Temp[2] + LEigenVec[0][3]*Temp[3];
-   const real tmp_b1 = LEigenVec[0][4]*Temp[4] + LEigenVec[0][5]*Temp[6] + LEigenVec[0][6]*Temp[7];
+   const real tmp_b1 = LEigenVec[0][4]*Temp[4] + LEigenVec[0][5]*Temp[5] + LEigenVec[0][6]*Temp[6];
    const real tmp_f2 = LEigenVec[2][1]*Temp[1] + LEigenVec[2][2]*Temp[2] + LEigenVec[2][3]*Temp[3];
-   const real tmp_b2 = LEigenVec[2][4]*Temp[4] + LEigenVec[2][5]*Temp[6] + LEigenVec[2][6]*Temp[7];
+   const real tmp_b2 = LEigenVec[2][4]*Temp[4] + LEigenVec[2][5]*Temp[5] + LEigenVec[2][6]*Temp[6];
 
-   InOut[NCOMP_TOTAL+0] = (real)0.0;
-   InOut[            3] = Temp[0] + LEigenVec[3][4]*Temp[4];
-   InOut[            1] = LEigenVec[1][2]* Temp[2] + LEigenVec[1][3]*Temp[3] + LEigenVec[1][5]*Temp[6] + LEigenVec[1][6]*Temp[7];
-   InOut[NCOMP_TOTAL+1] = LEigenVec[5][2]* Temp[2] + LEigenVec[5][3]*Temp[3] + LEigenVec[5][5]*Temp[6] + LEigenVec[5][6]*Temp[7];
-   InOut[            0] =  tmp_f1 + tmp_b1;
-   InOut[            2] =  tmp_f2 + tmp_b2;
-   InOut[            4] = -tmp_f2 + tmp_b2;
-   InOut[NCOMP_TOTAL+2] = -tmp_f1 + tmp_b1;
+   InOut[MAG_OFFSET+0] = (real)0.0;
+   InOut[           3] = Temp[0] + LEigenVec[3][4]*Temp[4];
+   InOut[           1] = LEigenVec[1][2]*Temp[2] + LEigenVec[1][3]*Temp[3] + LEigenVec[1][5]*Temp[5] + LEigenVec[1][6]*Temp[6];
+   InOut[MAG_OFFSET+1] = LEigenVec[5][2]*Temp[2] + LEigenVec[5][3]*Temp[3] + LEigenVec[5][5]*Temp[5] + LEigenVec[5][6]*Temp[6];
+   InOut[           0] =  tmp_f1 + tmp_b1;
+   InOut[           2] =  tmp_f2 + tmp_b2;
+   InOut[           4] = -tmp_f2 + tmp_b2;
+   InOut[MAG_OFFSET+2] = -tmp_f1 + tmp_b1;
 
 // b. pure hydro
 #  else // #ifdef MHD
@@ -1008,9 +1018,9 @@ void Hydro_GetEigenSystem( const real CC_Var[], real EigenVal[][NWAVE], real LEi
 
    CPU_Rotate3D( PriVar, XYZ, true );
 
-   const real Bx      = PriVar[ NCOMP_TOTAL + 0 ];
-   const real By      = PriVar[ NCOMP_TOTAL + 1 ];
-   const real Bz      = PriVar[ NCOMP_TOTAL + 2 ];
+   const real Bx      = PriVar[ MAG_OFFSET + 0 ];
+   const real By      = PriVar[ MAG_OFFSET + 1 ];
+   const real Bz      = PriVar[ MAG_OFFSET + 2 ];
    const real Bn2     = SQR( By ) + SQR( Bz );
    const real Bn      = SQRT( Bn2 );
    const real Cax2    = SQR( Bx )*_Rho;
