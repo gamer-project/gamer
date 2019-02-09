@@ -10,11 +10,6 @@ struct Fun_params
   real E_D;
 };
 
-#  ifdef FLOAT8
-   const static real Bound = __DBL_MAX__;
-#  else
-   const static real Bound = __FLT_MAX__;
-#  endif
 
 #ifdef __CUDACC__
 GPU_DEVICE
@@ -326,11 +321,11 @@ bool SRHydro_CheckUnphysical( const real Con[], const real Pri[], const real Gam
          || ConsVar[ENGY] != ConsVar[ENGY]  )                                 goto FAIL;
 
 // check +inf and -inf
-      if (      0.0 >= ConsVar[DENS] || ConsVar[DENS]  >= Bound
-         ||  -Bound >= ConsVar[MOMX] || ConsVar[MOMX]  >= Bound
-         ||  -Bound >= ConsVar[MOMY] || ConsVar[MOMY]  >= Bound
-         ||  -Bound >= ConsVar[MOMZ] || ConsVar[MOMZ]  >= Bound
-         ||  -Bound >= ConsVar[ENGY] || ConsVar[ENGY]  >= Bound )             goto FAIL;
+      if (            0.0 >= ConsVar[DENS] || ConsVar[DENS]  >= HUGE_NUMBER
+         ||  -HUGE_NUMBER >= ConsVar[MOMX] || ConsVar[MOMX]  >= HUGE_NUMBER
+         ||  -HUGE_NUMBER >= ConsVar[MOMY] || ConsVar[MOMY]  >= HUGE_NUMBER
+         ||  -HUGE_NUMBER >= ConsVar[MOMZ] || ConsVar[MOMZ]  >= HUGE_NUMBER
+         ||  -HUGE_NUMBER >= ConsVar[ENGY] || ConsVar[ENGY]  >= HUGE_NUMBER )             goto FAIL;
 
 
 // check positivity of number density in inertial frame
@@ -358,11 +353,11 @@ bool SRHydro_CheckUnphysical( const real Con[], const real Pri[], const real Gam
          || Pri4Vel[ENGY] != Pri4Vel[ENGY]  )                                     goto FAIL;
 
 // check +inf and -inf
-      if (      0.0 >= Pri4Vel[DENS] || Pri4Vel[DENS]  >= Bound
-         ||  -Bound >= Pri4Vel[MOMX] || Pri4Vel[MOMX]  >= Bound
-         ||  -Bound >= Pri4Vel[MOMY] || Pri4Vel[MOMY]  >= Bound
-         ||  -Bound >= Pri4Vel[MOMZ] || Pri4Vel[MOMZ]  >= Bound
-         ||  -Bound >= Pri4Vel[ENGY] || Pri4Vel[ENGY]  >= Bound )             goto FAIL;
+      if (            0.0 >= Pri4Vel[DENS] || Pri4Vel[DENS]  >= HUGE_NUMBER
+         ||  -HUGE_NUMBER >= Pri4Vel[MOMX] || Pri4Vel[MOMX]  >= HUGE_NUMBER
+         ||  -HUGE_NUMBER >= Pri4Vel[MOMY] || Pri4Vel[MOMY]  >= HUGE_NUMBER
+         ||  -HUGE_NUMBER >= Pri4Vel[MOMZ] || Pri4Vel[MOMZ]  >= HUGE_NUMBER
+         ||  -HUGE_NUMBER >= Pri4Vel[ENGY] || Pri4Vel[ENGY]  >= HUGE_NUMBER )             goto FAIL;
 
 // check positivity of number density in local rest frame
       if (Pri4Vel[0] <= (real)0.0)                                            goto FAIL;
@@ -392,11 +387,11 @@ bool SRHydro_CheckUnphysical( const real Con[], const real Pri[], const real Gam
          || Pri4Vel[ENGY] != Pri4Vel[ENGY]  )                                goto FAIL;
 
 // check +inf and -inf
-      if (      0.0 >= Pri4Vel[DENS] || Pri4Vel[DENS]  >= Bound
-         ||  -Bound >= Pri4Vel[MOMX] || Pri4Vel[MOMX]  >= Bound
-         ||  -Bound >= Pri4Vel[MOMY] || Pri4Vel[MOMY]  >= Bound
-         ||  -Bound >= Pri4Vel[MOMZ] || Pri4Vel[MOMZ]  >= Bound
-         ||  -Bound >= Pri4Vel[ENGY] || Pri4Vel[ENGY]  >= Bound )       goto FAIL;
+      if (            0.0 >= Pri4Vel[DENS] || Pri4Vel[DENS]  >= HUGE_NUMBER
+         ||  -HUGE_NUMBER >= Pri4Vel[MOMX] || Pri4Vel[MOMX]  >= HUGE_NUMBER
+         ||  -HUGE_NUMBER >= Pri4Vel[MOMY] || Pri4Vel[MOMY]  >= HUGE_NUMBER
+         ||  -HUGE_NUMBER >= Pri4Vel[MOMZ] || Pri4Vel[MOMZ]  >= HUGE_NUMBER
+         ||  -HUGE_NUMBER >= Pri4Vel[ENGY] || Pri4Vel[ENGY]  >= HUGE_NUMBER )       goto FAIL;
 
 // check positivity of number density in local rest frame
       if (Pri4Vel[0] <= (real)0.0)                                                 goto FAIL;
@@ -417,11 +412,11 @@ bool SRHydro_CheckUnphysical( const real Con[], const real Pri[], const real Gam
          || ConsVar[ENGY] != ConsVar[ENGY]  )                                           goto FAIL;
 
 // check +inf and -inf
-      if (      0.0 >= ConsVar[DENS] || ConsVar[DENS]  >= Bound
-         ||  -Bound >= ConsVar[MOMX] || ConsVar[MOMX]  >= Bound
-         ||  -Bound >= ConsVar[MOMY] || ConsVar[MOMY]  >= Bound
-         ||  -Bound >= ConsVar[MOMZ] || ConsVar[MOMZ]  >= Bound
-         ||  -Bound >= ConsVar[ENGY] || ConsVar[ENGY]  >= Bound )                       goto FAIL;
+      if (            0.0 >= ConsVar[DENS] || ConsVar[DENS]  >= HUGE_NUMBER
+         ||  -HUGE_NUMBER >= ConsVar[MOMX] || ConsVar[MOMX]  >= HUGE_NUMBER
+         ||  -HUGE_NUMBER >= ConsVar[MOMY] || ConsVar[MOMY]  >= HUGE_NUMBER
+         ||  -HUGE_NUMBER >= ConsVar[MOMZ] || ConsVar[MOMZ]  >= HUGE_NUMBER
+         ||  -HUGE_NUMBER >= ConsVar[ENGY] || ConsVar[ENGY]  >= HUGE_NUMBER )                       goto FAIL;
 
 // check positivity of number density in inertial frame
       if (ConsVar[DENS] <= 0.0)                                                          goto FAIL;
@@ -659,9 +654,9 @@ NewtonRaphsonSolver(void *ptr, real *root, const real guess, const real epsabs, 
      iter++;
      Fun_DFun(*root, ptr, &f, &df, Gamma);
 
-     if ( df == 0.0 )                                printf("derivative is zero\n");
-     if (  f != f  || -Bound >= f  || f  >= Bound )  printf("function value is not finite\n");
-     if ( df != df || -Bound >= df || df >= Bound )  printf("derivative value is not finite\n");
+     if ( df == 0.0 )                                            printf("derivative is zero\n");
+     if (  f != f  || -HUGE_NUMBER >= f  || f  >= HUGE_NUMBER )  printf("function value is not finite\n");
+     if ( df != df || -HUGE_NUMBER >= df || df >= HUGE_NUMBER )  printf("derivative value is not finite\n");
      
       root_old = *root;
       *root = *root - ( f / df );
