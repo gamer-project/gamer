@@ -30,31 +30,54 @@ static real Hydro_CheckMinPres( const real InPres, const real MinPres );
 // Function    :  Hydro_Rotate3D
 // Description :  Rotate the input fluid variables properly to simplify the 3D calculation
 //
-// Note        :  1. x : (0,1,2,3,4) <--> (0,1,2,3,4)
-//                   y : (0,1,2,3,4) <--> (0,2,3,1,4)
-//                   z : (0,1,2,3,4) <--> (0,3,1,2,4)
+// Note        :  1. x : (x,y,z) <--> (x,y,z)
+//                   y : (x,y,z) <--> (y,z,x)
+//                   z : (x,y,z) <--> (z,x,y)
 //                2. Work if InOut includes/excludes passive scalars since they are not modified at all
+//                3. For MHD, specify the array offset of magnetic field by Mag_Offset
 //
-// Parameter   :  InOut    : Array storing both the input and output data
-//                XYZ      : Target spatial direction : (0/1/2) --> (x/y/z)
-//                Forward  : (true/false) <--> (forward/backward)
+// Parameter   :  InOut      : Array storing both the input and output data
+//                XYZ        : Target spatial direction : (0/1/2) --> (x/y/z)
+//                Forward    : (true/false) <--> (forward/backward)
+//                Mag_Offset : Array offset of magnetic field (for MHD only)
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE
-void Hydro_Rotate3D( real InOut[], const int XYZ, const bool Forward )
+void Hydro_Rotate3D( real InOut[], const int XYZ, const bool Forward, const int Mag_Offset )
 {
 
    if ( XYZ == 0 )   return;
 
 
-   real Temp[3];
-   for (int v=0; v<3; v++)    Temp[v] = InOut[v+1];
+   real Temp_Flu[3];
+   for (int v=0; v<3; v++)    Temp_Flu[v] = InOut[ v + 1 ];
+#  ifdef MHD
+   real Temp_Mag[3];
+   for (int v=0; v<3; v++)    Temp_Mag[v] = InOut[ v + Mag_Offset ];
+#  endif
 
    if ( Forward )
    {
       switch ( XYZ )
       {
-         case 1 : InOut[1] = Temp[1];  InOut[2] = Temp[2];  InOut[3] = Temp[0];     break;
-         case 2 : InOut[1] = Temp[2];  InOut[2] = Temp[0];  InOut[3] = Temp[1];     break;
+         case 1 : InOut[              1 ] = Temp_Flu[1];
+                  InOut[              2 ] = Temp_Flu[2];
+                  InOut[              3 ] = Temp_Flu[0];
+#                 ifdef MHD
+                  InOut[ Mag_Offset + 0 ] = Temp_Mag[1];
+                  InOut[ Mag_Offset + 1 ] = Temp_Mag[2];
+                  InOut[ Mag_Offset + 2 ] = Temp_Mag[0];
+#                 endif
+                  break;
+
+         case 2 : InOut[              1 ] = Temp_Flu[2];
+                  InOut[              2 ] = Temp_Flu[0];
+                  InOut[              3 ] = Temp_Flu[1];
+#                 ifdef MHD
+                  InOut[ Mag_Offset + 0 ] = Temp_Mag[2];
+                  InOut[ Mag_Offset + 1 ] = Temp_Mag[0];
+                  InOut[ Mag_Offset + 2 ] = Temp_Mag[1];
+#                 endif
+                  break;
       }
    }
 
@@ -62,8 +85,25 @@ void Hydro_Rotate3D( real InOut[], const int XYZ, const bool Forward )
    {
       switch ( XYZ )
       {
-         case 1 : InOut[1] = Temp[2];  InOut[2] = Temp[0];  InOut[3] = Temp[1];     break;
-         case 2 : InOut[1] = Temp[1];  InOut[2] = Temp[2];  InOut[3] = Temp[0];     break;
+         case 1 : InOut[              1 ] = Temp_Flu[2];
+                  InOut[              2 ] = Temp_Flu[0];
+                  InOut[              3 ] = Temp_Flu[1];
+#                 ifdef MHD
+                  InOut[ Mag_Offset + 0 ] = Temp_Mag[2];
+                  InOut[ Mag_Offset + 1 ] = Temp_Mag[0];
+                  InOut[ Mag_Offset + 2 ] = Temp_Mag[1];
+#                 endif
+                  break;
+
+         case 2 : InOut[              1 ] = Temp_Flu[1];
+                  InOut[              2 ] = Temp_Flu[2];
+                  InOut[              3 ] = Temp_Flu[0];
+#                 ifdef MHD
+                  InOut[ Mag_Offset + 0 ] = Temp_Mag[1];
+                  InOut[ Mag_Offset + 1 ] = Temp_Mag[2];
+                  InOut[ Mag_Offset + 2 ] = Temp_Mag[0];
+#                 endif
+                  break;
       }
    }
 
