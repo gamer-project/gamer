@@ -24,7 +24,7 @@ void Hydro_Con2Pri( const real In[], real Out[], const real Gamma_m1, const real
 void Hydro_Pri2Con( const real In[], real Out[], const real _Gamma_m1,
                     const bool NormPassive, const int NNorm, const int NormIdx[] );
 #if ( FLU_SCHEME == MHM )
-void Hydro_Con2Flux( const int XYZ, real Flux[], const real Input[], const real Gamma_m1, const real MinPres );
+void Hydro_Con2Flux( const int XYZ, real Flux[], const real In[], const real Gamma_m1, const real MinPres );
 #endif
 
 #endif // #ifdef __CUDACC__ ... else ...
@@ -839,6 +839,7 @@ void Hydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
 // Note           1. Passive scalars require no conversion
 //                   --> Their eigenmatrices are just identity matrix
 //                2. Input and output share the same array
+//                3. InOut[] should have the size of NCOMP_TOTAL_PLUS_MAG
 //
 // Parameter   :  InOut     : Array storing both the input primitive variables and output characteristic variables
 //                Gamma     : Ratio of specific heats (for pure hydro only)

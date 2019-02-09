@@ -33,8 +33,8 @@ static real Hydro_CheckMinPres( const real InPres, const real MinPres );
 // Note        :  1. x : (x,y,z) <--> (x,y,z)
 //                   y : (x,y,z) <--> (y,z,x)
 //                   z : (x,y,z) <--> (z,x,y)
-//                2. Work if InOut includes/excludes passive scalars since they are not modified at all
-//                3. For MHD, specify the array offset of magnetic field by Mag_Offset
+//                2. Work no matter InOut[] includes passive scalars or not since they are not modified at all
+//                   --> For MHD, specify the array offset of magnetic field by Mag_Offset
 //
 // Parameter   :  InOut      : Array storing both the input and output data
 //                XYZ        : Target spatial direction : (0/1/2) --> (x/y/z)
@@ -252,47 +252,71 @@ void Hydro_Pri2Con( const real In[], real Out[], const real _Gamma_m1,
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Hydro_Con2Flux
-// Description :  Evaluate the hydrodynamic fluxes by the input conserved variables
+// Description :  Evaluate hydrodynamic/MHD fluxes from the input conserved variables
+//
+// Note        :  1. Flux[] and In[] may point to the same array
+//                2. Flux[] and In[] should have the size of NCOMP_TOTAL_PLUS_MAG
 //
 // Parameter   :  XYZ      : Target spatial direction : (0/1/2) --> (x/y/z)
 //                Flux     : Array to store the output fluxes
-//                Input    : Array storing the input conserved variables
+//                In       : Array storing the input conserved variables
 //                Gamma_m1 : Gamma - 1
 //                MinPres  : Minimum allowed pressure
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE
-void Hydro_Con2Flux( const int XYZ, real Flux[], const real Input[], const real Gamma_m1, const real MinPres )
+void Hydro_Con2Flux( const int XYZ, real Flux[], const real In[], const real Gamma_m1, const real MinPres )
 {
 
    const bool CheckMinPres_Yes = true;
-   real Var[NCOMP_FLUID];  // don't need to include passive scalars since they don't have to be rotated
-   real Pres, Vx;
+   real InRot[ NCOMP_FLUID + NCOMP_MAGNETIC ];  // no need to include passive scalars since they don't have to be rotated
 
-   for (int v=0; v<NCOMP_FLUID; v++)   Var[v] = Input[v];
-
-   Hydro_Rotate3D( Var, XYZ, true );
+   for (int v=0; v<NCOMP_FLUID; v++)   InRot[v] = In[v];
 
 #  ifdef MHD
-#  warning : WAIT MHD !!!
-   const real EngyB = NULL_REAL;
+   for (int v=NCOMP_FLUID; v<NCOMP_FLUID+NCOMP_MAGNETIC; v++)  InRot[v] = In[ v - NCOMP_FLUID + MAG_OFFSET ];
+#  endif
+
+   Hydro_Rotate3D( InRot, XYZ, true, NCOMP_FLUID );
+
+#  ifdef MHD
+   const real Bx    = InRot[ NCOMP_FLUID + 0 ];
+   const real By    = InRot[ NCOMP_FLUID + 1 ];
+   const real Bz    = InRot[ NCOMP_FLUID + 2 ];
+   const real EngyB = (real)0.5*( SQR(Bx) + SQR(By) + SQR(Bz) );
 #  else
    const real EngyB = NULL_REAL;
 #  endif
-   Pres = Hydro_GetPressure( Var[0], Var[1], Var[2], Var[3], Var[4], Gamma_m1, CheckMinPres_Yes, MinPres, EngyB );
-   Vx   = Var[1] / Var[0];
+   const real Pres  = Hydro_GetPressure( InRot[0], InRot[1], InRot[2], InRot[3], InRot[4],
+                                         Gamma_m1, CheckMinPres_Yes, MinPres, EngyB );
+   const real _Rho  = (real)1.0 / InRot[0];
+   const real Vx    = _Rho*InRot[1];
 
-   Flux[0] = Var[1];
-   Flux[1] = Vx*Var[1] + Pres;
-   Flux[2] = Vx*Var[2];
-   Flux[3] = Vx*Var[3];
-   Flux[4] = Vx*( Var[4] + Pres );
+   Flux[0] = InRot[1];
+   Flux[1] = Vx*InRot[1] + Pres;
+   Flux[2] = Vx*InRot[2];
+   Flux[3] = Vx*InRot[3];
+   Flux[4] = Vx*( InRot[4] + Pres );
 
 // passive scalars
 #  if ( NCOMP_PASSIVE > 0 )
-   for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)  Flux[v] = Input[v]*Vx;
+   for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)  Flux[v] = In[v]*Vx;
 #  endif
 
-   Hydro_Rotate3D( Flux, XYZ, false );
+// B field
+#  ifdef MHD
+   const real Vy = _Rho*InRot[2];
+   const real Vz = _Rho*InRot[3];
+
+   Flux[              1 ] += EngyB - SQR(Bx);
+   Flux[              2 ] -= Bx*By;
+   Flux[              3 ] -= Bx*Bz;
+   Flux[              4 ] += Vx*EngyB - Bx*( Bx*Vx + By*Vy + Bz*Vz );
+   Flux[ MAG_OFFSET + 0 ]  = (real)0.0;
+   Flux[ MAG_OFFSET + 1 ]  = By*Vx - Bx*Vy;
+   Flux[ MAG_OFFSET + 2 ]  = Bz*Vx - Bx*Vz;
+#  endif
+
+   Hydro_Rotate3D( Flux, XYZ, false, MAG_OFFSET );
 
 } // FUNCTION : Hydro_Con2Flux
 
