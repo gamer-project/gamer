@@ -321,24 +321,21 @@ bool SRHydro_CheckUnphysical( const real Con[], const real Pri[], const real Gam
          || ConsVar[ENGY] != ConsVar[ENGY]  )                                 goto FAIL;
 
 // check +inf and -inf
-      if (            0.0 >= ConsVar[DENS] || ConsVar[DENS]  >= HUGE_NUMBER
+      if (    TINY_NUMBER >= ConsVar[DENS] || ConsVar[DENS]  >= HUGE_NUMBER
          ||  -HUGE_NUMBER >= ConsVar[MOMX] || ConsVar[MOMX]  >= HUGE_NUMBER
          ||  -HUGE_NUMBER >= ConsVar[MOMY] || ConsVar[MOMY]  >= HUGE_NUMBER
          ||  -HUGE_NUMBER >= ConsVar[MOMZ] || ConsVar[MOMZ]  >= HUGE_NUMBER
-         ||  -HUGE_NUMBER >= ConsVar[ENGY] || ConsVar[ENGY]  >= HUGE_NUMBER )             goto FAIL;
+         ||   TINY_NUMBER >= ConsVar[ENGY] || ConsVar[ENGY]  >= HUGE_NUMBER )             goto FAIL;
 
 
-// check positivity of number density in inertial frame
-      if (ConsVar[DENS] <= 0.0)                                                 goto FAIL;
- 
 // check energy
       Msqr = SQR(ConsVar[MOMX]) + SQR(ConsVar[MOMY]) + SQR(ConsVar[MOMZ]);
 #     if ( CONSERVED_ENERGY == 1 )
       discriminant = SQR(ConsVar[ENGY]) - Msqr - SQR(ConsVar[DENS]);
-      if ( discriminant <= 0.0 )                                                 goto FAIL;
+      if ( discriminant <= TINY_NUMBER )                                                 goto FAIL;
 #     elif ( CONSERVED_ENERGY == 2 )
       discriminant = SQR(ConsVar[ENGY]) + 2*ConsVar[ENGY]*ConsVar[DENS] - Msqr;
-      if ( discriminant <= 0.0 )                                                 goto FAIL;
+      if ( discriminant <= TINY_NUMBER )                                                 goto FAIL;
 #     else
 #     error: CONSERVED_ENERGY must be 1 or 2!
 #     endif
@@ -353,16 +350,12 @@ bool SRHydro_CheckUnphysical( const real Con[], const real Pri[], const real Gam
          || Pri4Vel[ENGY] != Pri4Vel[ENGY]  )                                     goto FAIL;
 
 // check +inf and -inf
-      if (            0.0 >= Pri4Vel[DENS] || Pri4Vel[DENS]  >= HUGE_NUMBER
+      if (    TINY_NUMBER >= Pri4Vel[DENS] || Pri4Vel[DENS]  >= HUGE_NUMBER
          ||  -HUGE_NUMBER >= Pri4Vel[MOMX] || Pri4Vel[MOMX]  >= HUGE_NUMBER
          ||  -HUGE_NUMBER >= Pri4Vel[MOMY] || Pri4Vel[MOMY]  >= HUGE_NUMBER
          ||  -HUGE_NUMBER >= Pri4Vel[MOMZ] || Pri4Vel[MOMZ]  >= HUGE_NUMBER
-         ||  -HUGE_NUMBER >= Pri4Vel[ENGY] || Pri4Vel[ENGY]  >= HUGE_NUMBER )             goto FAIL;
+         ||   TINY_NUMBER >= Pri4Vel[ENGY] || Pri4Vel[ENGY]  >= HUGE_NUMBER )             goto FAIL;
 
-// check positivity of number density in local rest frame
-      if (Pri4Vel[0] <= (real)0.0)                                            goto FAIL;
-// check positivity of pressure
-      if (Pri4Vel[4] <= (real)0.0)                                            goto FAIL;
 // check whether 3-velocity is greater or equal to speed of light
       SRHydro_4Velto3Vel(Pri4Vel,Pri3Vel);      
       if (SQR(Pri3Vel[1]) + SQR(Pri3Vel[2]) + SQR(Pri3Vel[3]) >= 1.0)         goto FAIL;
@@ -387,16 +380,12 @@ bool SRHydro_CheckUnphysical( const real Con[], const real Pri[], const real Gam
          || Pri4Vel[ENGY] != Pri4Vel[ENGY]  )                                goto FAIL;
 
 // check +inf and -inf
-      if (            0.0 >= Pri4Vel[DENS] || Pri4Vel[DENS]  >= HUGE_NUMBER
+      if (    TINY_NUMBER >= Pri4Vel[DENS] || Pri4Vel[DENS]  >= HUGE_NUMBER
          ||  -HUGE_NUMBER >= Pri4Vel[MOMX] || Pri4Vel[MOMX]  >= HUGE_NUMBER
          ||  -HUGE_NUMBER >= Pri4Vel[MOMY] || Pri4Vel[MOMY]  >= HUGE_NUMBER
          ||  -HUGE_NUMBER >= Pri4Vel[MOMZ] || Pri4Vel[MOMZ]  >= HUGE_NUMBER
-         ||  -HUGE_NUMBER >= Pri4Vel[ENGY] || Pri4Vel[ENGY]  >= HUGE_NUMBER )       goto FAIL;
+         ||   TINY_NUMBER >= Pri4Vel[ENGY] || Pri4Vel[ENGY]  >= HUGE_NUMBER )       goto FAIL;
 
-// check positivity of number density in local rest frame
-      if (Pri4Vel[0] <= (real)0.0)                                                 goto FAIL;
-// check positivity of pressure
-      if (Pri4Vel[4] <= (real)0.0)                                                 goto FAIL;
 
       SRHydro_4Velto3Vel(Pri4Vel,Pri3Vel);
       SRHydro_Pri2Con(Pri4Vel, ConsVar, (real) Gamma);
@@ -412,23 +401,21 @@ bool SRHydro_CheckUnphysical( const real Con[], const real Pri[], const real Gam
          || ConsVar[ENGY] != ConsVar[ENGY]  )                                           goto FAIL;
 
 // check +inf and -inf
-      if (            0.0 >= ConsVar[DENS] || ConsVar[DENS]  >= HUGE_NUMBER
+      if (    TINY_NUMBER >= ConsVar[DENS] || ConsVar[DENS]  >= HUGE_NUMBER
          ||  -HUGE_NUMBER >= ConsVar[MOMX] || ConsVar[MOMX]  >= HUGE_NUMBER
          ||  -HUGE_NUMBER >= ConsVar[MOMY] || ConsVar[MOMY]  >= HUGE_NUMBER
          ||  -HUGE_NUMBER >= ConsVar[MOMZ] || ConsVar[MOMZ]  >= HUGE_NUMBER
-         ||  -HUGE_NUMBER >= ConsVar[ENGY] || ConsVar[ENGY]  >= HUGE_NUMBER )                       goto FAIL;
+         ||   TINY_NUMBER >= ConsVar[ENGY] || ConsVar[ENGY]  >= HUGE_NUMBER )                       goto FAIL;
 
-// check positivity of number density in inertial frame
-      if (ConsVar[DENS] <= 0.0)                                                          goto FAIL;
 
 // check energy
       Msqr = SQR(ConsVar[MOMX]) + SQR(ConsVar[MOMY]) + SQR(ConsVar[MOMZ]);
 #     if ( CONSERVED_ENERGY == 1 )
       discriminant = SQR(ConsVar[ENGY]) - Msqr - SQR(ConsVar[DENS]);
-      if ( discriminant <= 0.0 )                                                         goto FAIL;
+      if ( discriminant <= TINY_NUMBER )                                                         goto FAIL;
 #     elif ( CONSERVED_ENERGY == 2 )
       discriminant = SQR(ConsVar[ENGY]) + 2*ConsVar[ENGY]*ConsVar[DENS] - Msqr;
-      if ( discriminant <= 0.0 )                                                         goto FAIL;
+      if ( discriminant <= TINY_NUMBER )                                                         goto FAIL;
 #     else
 #     error: CONSERVED_ENERGY must be 1 or 2!
 #     endif      
