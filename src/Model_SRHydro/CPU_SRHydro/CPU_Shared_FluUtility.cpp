@@ -86,11 +86,6 @@ void SRHydro_Rotate3D (real InOut[], const int XYZ, const bool Forward)
 //
 // Note        :  1. This function always check if the pressure to be returned is greater than the
 //                   given minimum threshold
-//                2. For passive scalars, we store their mass fraction as the primitive variables
-//                   when NormPassive is on
-//                   --> See the input parameters "NormPassive, NNorm, NormIdx"
-//                   --> But note that here we do NOT ensure "sum(mass fraction) == 1.0"
-//                       --> It is done by calling SRHydro_NormalizePassive() in SRHydro_Shared_FullStepUpdate()
 //
 // Parameter   :  In                 : Array storing the input conserved variables
 //                Out                : Array to store the output primitive variables
@@ -370,6 +365,7 @@ bool SRHydro_CheckUnphysical( const real Con[], const real Pri[], const real Gam
 //--------------------------------------------------------------//
 
    else if ( Con == NULL && Pri != NULL){
+
       for(int i=0; i< NCOMP_FLUID; i++) Pri4Vel[i]=Pri[i];
 
 
