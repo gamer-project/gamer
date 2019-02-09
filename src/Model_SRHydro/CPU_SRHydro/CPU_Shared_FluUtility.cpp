@@ -357,7 +357,8 @@ bool SRHydro_CheckUnphysical( const real Con[], const real Pri[], const real Gam
          ||   TINY_NUMBER >= Pri4Vel[ENGY] || Pri4Vel[ENGY]  >= HUGE_NUMBER )             goto FAIL;
 
 // check whether 3-velocity is greater or equal to speed of light
-      SRHydro_4Velto3Vel(Pri4Vel,Pri3Vel);      
+      SRHydro_4Velto3Vel(Pri4Vel,Pri3Vel);
+
       if (SQR(Pri3Vel[1]) + SQR(Pri3Vel[2]) + SQR(Pri3Vel[3]) >= 1.0)         goto FAIL;
 
 // pass all checks 
