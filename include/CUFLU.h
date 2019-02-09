@@ -90,17 +90,18 @@
 #  endif // FLU_SCHEME
 
 #  define N_SLOPE_PPM            ( N_FC_VAR + 2 )
+#  define NCOMP_TOTAL_PLUS_MAG   ( NCOMP_TOTAL + NCOMP_MAGNETIC )
 
 #  ifdef MHD
 #   define N_HF_ELE              ( N_HF_FLUX - 1 )
 #   define N_FL_ELE              ( N_FL_FLUX - 1 )
 #   define N_LC_ELE              ( N_FC_FLUX - 1 )
 #   define NWAVE                 ( NCOMP_FLUID + 2 )
-#   define NCOMP_TOTAL_PLUS_MAG  ( NCOMP_TOTAL + NCOMP_MAGNETIC )
 #   define MAG_OFFSET            ( NCOMP_TOTAL )
 #  else
 #   define N_LC_ELE              0
 #   define NWAVE                 ( NCOMP_FLUID )
+#   define MAG_OFFSET            ( NULL_INT )
 #  endif
 
 #endif // #if ( FLU_SCHEME == MHM  ||  FLU_SCHEME == MHM_RP  ||  FLU_SCHEME == CTU )
