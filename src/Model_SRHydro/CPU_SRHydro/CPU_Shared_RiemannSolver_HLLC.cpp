@@ -45,7 +45,7 @@ void SRHydro_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In
 {
 # if ( EOS ==  IDEAL_GAS)
   const real Gamma_m1 = Gamma - (real)1.0;
-  real rhl, rhr
+  real rhl, rhr;
 # endif
 
 # ifdef CHECK_NEGATIVE_IN_FLUID

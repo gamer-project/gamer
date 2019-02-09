@@ -29,8 +29,6 @@ static void Fun_DFun (real Q, void *ptr, real * f, real * df, real Gamma);
 GPU_DEVICE 
 void SRHydro_4Velto3Vel (const real In[], real Out[]);
 GPU_DEVICE 
-real SRHydro_Con2Temperature (const real In[], const real Gamma, const real MinTemp); 
-GPU_DEVICE 
 static void NewtonRaphsonSolver(void *ptr, real *root, const real guess, const real epsabs, const real epsrel, const real Gamma);
 #else 
 #include "../../../include/SRHydroPrototypes.h"
@@ -126,145 +124,6 @@ void SRHydro_Con2Pri (const real In[], real Out[], const real Gamma, const real 
 }// FUNCTION : SRHydro_Con2Pri
 
 
-//-------------------------------------------------------------------------------------------------------
-// Function    :  SRHydro_Con2Temperature
-// Description :  Convert the conserved variables to Q
-//-------------------------------------------------------------------------------------------------------
-GPU_DEVICE
-real SRHydro_Con2Temperature (const real In[], const real Gamma, const real MinTemp)
-{
-  real guess, root;
-
-  real Msqr = SQR (In[1]) + SQR (In[2]) + SQR (In[3]);
-  real M = SQRT (Msqr); // magnitude of momentum
-  real Dsqr = SQR(In[0]);
-  real abc = 1.0 / Dsqr;
-  real E_D = In[4] / In[0];
-  real E_Dsqr = abc * SQR(In[4]);
-  real M_Dsqr = abc * Msqr;
-
-# if ( EOS == RELATIVISTIC_IDEAL_GAS )
-# if   ( CONSERVED_ENERGY == 1 )
-/* initial guess  */
-  real Constant = E_Dsqr - M_Dsqr;
-  if ( Constant > 1.0 )
-   {
-	if ( Dsqr - 0.0625 * Msqr >= 0 )
-	  {
-	    if ( Constant > 2.5 ) 
-	      {
-		 guess = SQRT( 0.1111111 * E_Dsqr - 0.1041667 * M_Dsqr - 0.2222222 );
-	      }
-	    else guess = (Constant - 1.0) * 0.3333333;
-	  }
-	else // 1 - (M/D)**2 < 0
-	  {
-	    if ( Constant >  1.5 + SQRT( 0.0625 * M_Dsqr - 0.75 )) 
-	      {
-		 guess = SQRT( 0.1111111 * E_Dsqr - 0.1041667 * M_Dsqr - 0.2222222 );
-	      }
-	    else guess = (Constant - 1.0) * 0.3333333;
-	  }
-    } else return MinTemp;
-# elif ( CONSERVED_ENERGY == 2 )
-/* initial guess  */
-   real Constant = E_Dsqr - M_Dsqr + 2 * E_D;
-   if ( Constant > 0.0 )
-    {
-	   if ( Dsqr - 0.0625 * Msqr >= 0 )
-	     {
-	       if ( Constant > 1.5 ) 
-		 {
-		    guess = SQRT( 0.1111111 * E_Dsqr + 0.2222222 * E_D - 0.1041667 * M_Dsqr - 0.1111111 );
-		 }
-	       else guess = Constant * 0.3333333;
-	     }
-	   else // 1 - (M/D)**2 < 0
-	     {
-	       if ( Constant >  0.5 + SQRT( 0.0625 * M_Dsqr - 0.75 )) 
-		 {
-		    guess = SQRT( 0.1111111 * E_Dsqr + 0.2222222 * E_D - 0.1041667 * M_Dsqr - 0.1111111 );
-		 }
-	       else guess = Constant * 0.3333333;
-	     }
-    } else return MinTemp;
-# else
-# error: CONSERVED_ENERGY must be 1 or 2!
-# endif
-# elif ( EOS == IDEAL_GAS )
-  real Gamma_m1 = Gamma - (real) 1.0;
-/* initial guess */
-# if   ( CONSERVED_ENERGY == 1 )
-   real Constant = E_Dsqr - M_Dsqr;
-   if ( Constant > 1.0 )
-    {
-	      if ( Constant > 1.0 + 2* (Gamma_m1 / Gamma ) * (M / In[0]) )
-		{
-		  real A = 1.0 / SQR(Gamma_m1);
-		  real B = 2.0 /Gamma_m1;
-		  real C = ((2*Gamma-1.0)/(Gamma*Gamma)) * M_Dsqr - E_Dsqr;
-		  real delta = SQRT( B * B - 4 * A * C );
-		  guess = -2.0 *  C / ( B + delta);
-		}
-	     else guess = 0.5*Gamma_m1 * ( Constant - 1.0);
-    } else return MinTemp;
-# elif ( CONSERVED_ENERGY == 2 )
-    real Constant = E_Dsqr - M_Dsqr + 2 * E_D;
-    if ( Constant > 0.0 )
-     {
-	  if ( Constant > 2* (Gamma_m1 / Gamma ) * (M / In[0]) )
-	    {
-	      real A = 1.0 / SQR(Gamma_m1);
-	      real B = 2.0 /Gamma_m1;
-	      real C = ((2*Gamma-1.0)/(Gamma*Gamma)) * M_Dsqr - E_Dsqr - 2 * E_D;
-	      real delta = SQRT( B * B - 4 * A * C );
-	      guess = -2.0 *  C / ( B + delta);
-	    }
-	  else guess = 0.5*Gamma_m1 * Constant;
-     } else return MinTemp;
-# else
-# error: CONSERVED_ENERGY must be 1 or 2!
-# endif
-#else
-#error: unsupported EoS!
-#endif
-
-   struct Fun_params params = { M_Dsqr, E_D };
-
-#ifdef CHECK_NEGATIVE_IN_FLUID
-   if ( guess <= 0.0 || guess != guess ){ 
-    printf ("guess root = %14.7e < 0\n", guess);
-    printf ("D=%14.7e, Mx=%14.7e, My=%14.7e, Mz=%14.7e, E=%14.7e\n", In[0], In[1], In[2], In[3], In[4]);
-   }
-#endif 
-
-
-#  ifdef FLOAT8
-real epsabs = 0.0;
-real epsrel = 1.0e-15;
-#  else
-real epsabs = 0.0;
-real epsrel = 1.0e-6;
-#  endif
-
-   NewtonRaphsonSolver(&params ,&root, guess, epsabs, epsrel, Gamma);
-   return root;
-}
-
-//-------------------------------------------------------------------------------------------------------
-// Function    :  SRHydro_Pri2Con
-// Description :  Convert the primitive variables to the conserved variables
-//
-// Note        :  1. This function does NOT check if the input pressure is greater than the
-//                   given minimum threshold
-//                2. For passive scalars, we store their mass fraction as the primitive variables
-//                   when NormPassive is on
-//                   --> See the input parameters "NormPassive, NNorm, NormIdx"
-//
-// Parameter   : [1] In           : Array storing the input primitive variables
-//               [2] Out          : Array to store the output conserved variables
-//               [3] Gamma        : Adiabatic index
-//-------------------------------------------------------------------------------------------------------
 GPU_DEVICE
 void SRHydro_Pri2Con (const real In[], real Out[], const real Gamma)
 {
@@ -464,27 +323,27 @@ bool SRHydro_CheckUnphysical( const real Con[], const real Pri[], const real Gam
          || ConsVar[MOMX] != ConsVar[MOMX]
          || ConsVar[MOMY] != ConsVar[MOMY]
          || ConsVar[MOMZ] != ConsVar[MOMZ]
-         || ConsVar[ENGY] != ConsVar[ENGY]  )                                goto UNPHYSICAL;
+         || ConsVar[ENGY] != ConsVar[ENGY]  )                                 goto FAIL;
 
 // check +inf and -inf
-      if (           0.0 >= ConsVar[DENS] || ConsVar[DENS]  >= Bound
+      if (      0.0 >= ConsVar[DENS] || ConsVar[DENS]  >= Bound
          ||  -Bound >= ConsVar[MOMX] || ConsVar[MOMX]  >= Bound
          ||  -Bound >= ConsVar[MOMY] || ConsVar[MOMY]  >= Bound
          ||  -Bound >= ConsVar[MOMZ] || ConsVar[MOMZ]  >= Bound
-         ||  -Bound >= ConsVar[ENGY] || ConsVar[ENGY]  >= Bound ) goto UNPHYSICAL;
+         ||  -Bound >= ConsVar[ENGY] || ConsVar[ENGY]  >= Bound )             goto FAIL;
 
 
 // check positivity of number density in inertial frame
-      if (ConsVar[DENS] <= 0.0)                                              goto UNPHYSICAL;
+      if (ConsVar[DENS] <= 0.0)                                                 goto FAIL;
  
 // check energy
       Msqr = SQR(ConsVar[MOMX]) + SQR(ConsVar[MOMY]) + SQR(ConsVar[MOMZ]);
 #     if ( CONSERVED_ENERGY == 1 )
       discriminant = SQR(ConsVar[ENGY]) - Msqr - SQR(ConsVar[DENS]);
-      if ( discriminant <= 0.0 )                                                 goto UNPHYSICAL;
+      if ( discriminant <= 0.0 )                                                 goto FAIL;
 #     elif ( CONSERVED_ENERGY == 2 )
       discriminant = SQR(ConsVar[ENGY]) + 2*ConsVar[ENGY]*ConsVar[DENS] - Msqr;
-      if ( discriminant <= 0.0 )                                                 goto UNPHYSICAL;
+      if ( discriminant <= 0.0 )                                                 goto FAIL;
 #     else
 #     error: CONSERVED_ENERGY must be 1 or 2!
 #     endif
@@ -496,22 +355,22 @@ bool SRHydro_CheckUnphysical( const real Con[], const real Pri[], const real Gam
          || Pri4Vel[MOMX] != Pri4Vel[MOMX]
          || Pri4Vel[MOMY] != Pri4Vel[MOMY]
          || Pri4Vel[MOMZ] != Pri4Vel[MOMZ]
-         || Pri4Vel[ENGY] != Pri4Vel[ENGY]  )                                goto UNPHYSICAL;
+         || Pri4Vel[ENGY] != Pri4Vel[ENGY]  )                                     goto FAIL;
 
 // check +inf and -inf
-      if (           0.0 >= Pri4Vel[DENS] || Pri4Vel[DENS]  >= Bound
+      if (      0.0 >= Pri4Vel[DENS] || Pri4Vel[DENS]  >= Bound
          ||  -Bound >= Pri4Vel[MOMX] || Pri4Vel[MOMX]  >= Bound
          ||  -Bound >= Pri4Vel[MOMY] || Pri4Vel[MOMY]  >= Bound
          ||  -Bound >= Pri4Vel[MOMZ] || Pri4Vel[MOMZ]  >= Bound
-         ||  -Bound >= Pri4Vel[ENGY] || Pri4Vel[ENGY]  >= Bound )    goto UNPHYSICAL;
+         ||  -Bound >= Pri4Vel[ENGY] || Pri4Vel[ENGY]  >= Bound )             goto FAIL;
 
 // check positivity of number density in local rest frame
-      if (Pri4Vel[0] <= (real)0.0)                                            goto UNPHYSICAL;
+      if (Pri4Vel[0] <= (real)0.0)                                            goto FAIL;
 // check positivity of pressure
-      if (Pri4Vel[4] <= (real)0.0)                                            goto UNPHYSICAL;
+      if (Pri4Vel[4] <= (real)0.0)                                            goto FAIL;
 // check whether 3-velocity is greater or equal to speed of light
       SRHydro_4Velto3Vel(Pri4Vel,Pri3Vel);      
-      if (SQR(Pri3Vel[1]) + SQR(Pri3Vel[2]) + SQR(Pri3Vel[3]) >= 1.0)         goto UNPHYSICAL;
+      if (SQR(Pri3Vel[1]) + SQR(Pri3Vel[2]) + SQR(Pri3Vel[3]) >= 1.0)         goto FAIL;
 
 // pass all checks 
       return false;
@@ -530,51 +389,51 @@ bool SRHydro_CheckUnphysical( const real Con[], const real Pri[], const real Gam
          || Pri4Vel[MOMX] != Pri4Vel[MOMX]
          || Pri4Vel[MOMY] != Pri4Vel[MOMY]
          || Pri4Vel[MOMZ] != Pri4Vel[MOMZ]
-         || Pri4Vel[ENGY] != Pri4Vel[ENGY]  )                                goto UNPHYSICAL;
+         || Pri4Vel[ENGY] != Pri4Vel[ENGY]  )                                goto FAIL;
 
 // check +inf and -inf
-      if (           0.0 >= Pri4Vel[DENS] || Pri4Vel[DENS]  >= Bound
+      if (      0.0 >= Pri4Vel[DENS] || Pri4Vel[DENS]  >= Bound
          ||  -Bound >= Pri4Vel[MOMX] || Pri4Vel[MOMX]  >= Bound
          ||  -Bound >= Pri4Vel[MOMY] || Pri4Vel[MOMY]  >= Bound
          ||  -Bound >= Pri4Vel[MOMZ] || Pri4Vel[MOMZ]  >= Bound
-         ||  -Bound >= Pri4Vel[ENGY] || Pri4Vel[ENGY]  >= Bound )       goto UNPHYSICAL;
+         ||  -Bound >= Pri4Vel[ENGY] || Pri4Vel[ENGY]  >= Bound )       goto FAIL;
 
 // check positivity of number density in local rest frame
-      if (Pri4Vel[0] <= (real)0.0)                                                 goto UNPHYSICAL;
+      if (Pri4Vel[0] <= (real)0.0)                                                 goto FAIL;
 // check positivity of pressure
-      if (Pri4Vel[4] <= (real)0.0)                                                 goto UNPHYSICAL;
+      if (Pri4Vel[4] <= (real)0.0)                                                 goto FAIL;
 
       SRHydro_4Velto3Vel(Pri4Vel,Pri3Vel);
       SRHydro_Pri2Con(Pri4Vel, ConsVar, (real) Gamma);
 
 // check whether 3-velocity is greater or equal to speed of light
-      if (SQR(Pri3Vel[1]) + SQR(Pri3Vel[2]) + SQR(Pri3Vel[3]) >= 1.0)              goto UNPHYSICAL;
+      if (SQR(Pri3Vel[1]) + SQR(Pri3Vel[2]) + SQR(Pri3Vel[3]) >= 1.0)              goto FAIL;
    
 // check NaN
       if (  ConsVar[DENS] != ConsVar[DENS]
          || ConsVar[MOMX] != ConsVar[MOMX]
          || ConsVar[MOMY] != ConsVar[MOMY]
          || ConsVar[MOMZ] != ConsVar[MOMZ]
-         || ConsVar[ENGY] != ConsVar[ENGY]  )                                           goto UNPHYSICAL;
+         || ConsVar[ENGY] != ConsVar[ENGY]  )                                           goto FAIL;
 
 // check +inf and -inf
-      if (           0.0 >= ConsVar[DENS] || ConsVar[DENS]  >= Bound
+      if (      0.0 >= ConsVar[DENS] || ConsVar[DENS]  >= Bound
          ||  -Bound >= ConsVar[MOMX] || ConsVar[MOMX]  >= Bound
          ||  -Bound >= ConsVar[MOMY] || ConsVar[MOMY]  >= Bound
          ||  -Bound >= ConsVar[MOMZ] || ConsVar[MOMZ]  >= Bound
-         ||  -Bound >= ConsVar[ENGY] || ConsVar[ENGY]  >= Bound )               goto UNPHYSICAL;
+         ||  -Bound >= ConsVar[ENGY] || ConsVar[ENGY]  >= Bound )                       goto FAIL;
 
 // check positivity of number density in inertial frame
-      if (ConsVar[DENS] <= 0.0)                                                          goto UNPHYSICAL;
+      if (ConsVar[DENS] <= 0.0)                                                          goto FAIL;
 
 // check energy
       Msqr = SQR(ConsVar[MOMX]) + SQR(ConsVar[MOMY]) + SQR(ConsVar[MOMZ]);
 #     if ( CONSERVED_ENERGY == 1 )
       discriminant = SQR(ConsVar[ENGY]) - Msqr - SQR(ConsVar[DENS]);
-      if ( discriminant <= 0.0 )                                                         goto UNPHYSICAL;
+      if ( discriminant <= 0.0 )                                                         goto FAIL;
 #     elif ( CONSERVED_ENERGY == 2 )
       discriminant = SQR(ConsVar[ENGY]) + 2*ConsVar[ENGY]*ConsVar[DENS] - Msqr;
-      if ( discriminant <= 0.0 )                                                         goto UNPHYSICAL;
+      if ( discriminant <= 0.0 )                                                         goto FAIL;
 #     else
 #     error: CONSERVED_ENERGY must be 1 or 2!
 #     endif      
@@ -583,8 +442,8 @@ bool SRHydro_CheckUnphysical( const real Con[], const real Pri[], const real Gam
       return false;
    }
 
-// print all variables if goto UNPHYSICAL
-      UNPHYSICAL:
+// print all variables if goto FAIL
+      FAIL:
       {
         if ( show ) 
          {
@@ -662,16 +521,131 @@ GPU_DEVICE
 real SRHydro_GetTemperature (const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy,
                              const real Gamma, const real MinTemp )
 {
-      real In[5] = {Dens, MomX, MomY, MomZ, Engy};
-      real Temperature = SRHydro_Con2Temperature ( In, Gamma, MinTemp );
+  real In[5] = {Dens, MomX, MomY, MomZ, Engy};
 
- return Temperature;
+  real guess, root;
+  real Msqr = SQR (In[1]) + SQR (In[2]) + SQR (In[3]);
+  real M = SQRT (Msqr); // magnitude of momentum
+  real Dsqr = SQR(In[0]);
+  real abc = 1.0 / Dsqr;
+  real E_D = In[4] / In[0];
+  real E_Dsqr = abc * SQR(In[4]);
+  real M_Dsqr = abc * Msqr;
+
+# if ( EOS == RELATIVISTIC_IDEAL_GAS )
+# if   ( CONSERVED_ENERGY == 1 )
+/* initial guess  */
+  real Constant = E_Dsqr - M_Dsqr;
+  if ( Constant > 1.0 )
+   {
+	if ( Dsqr - 0.0625 * Msqr >= 0 )
+	  {
+	    if ( Constant > 2.5 ) 
+	      {
+		 guess = SQRT( 0.1111111 * E_Dsqr - 0.1041667 * M_Dsqr - 0.2222222 );
+	      }
+	    else guess = (Constant - 1.0) * 0.3333333;
+	  }
+	else // 1 - (M/D)**2 < 0
+	  {
+	    if ( Constant >  1.5 + SQRT( 0.0625 * M_Dsqr - 0.75 )) 
+	      {
+		 guess = SQRT( 0.1111111 * E_Dsqr - 0.1041667 * M_Dsqr - 0.2222222 );
+	      }
+	    else guess = (Constant - 1.0) * 0.3333333;
+	  }
+    } else return MinTemp;
+# elif ( CONSERVED_ENERGY == 2 )
+/* initial guess  */
+   real Constant = E_Dsqr - M_Dsqr + 2 * E_D;
+   if ( Constant > 0.0 )
+    {
+	   if ( Dsqr - 0.0625 * Msqr >= 0 )
+	     {
+	       if ( Constant > 1.5 ) 
+		 {
+		    guess = SQRT( 0.1111111 * E_Dsqr + 0.2222222 * E_D - 0.1041667 * M_Dsqr - 0.1111111 );
+		 }
+	       else guess = Constant * 0.3333333;
+	     }
+	   else // 1 - (M/D)**2 < 0
+	     {
+	       if ( Constant >  0.5 + SQRT( 0.0625 * M_Dsqr - 0.75 )) 
+		 {
+		    guess = SQRT( 0.1111111 * E_Dsqr + 0.2222222 * E_D - 0.1041667 * M_Dsqr - 0.1111111 );
+		 }
+	       else guess = Constant * 0.3333333;
+	     }
+    } else return MinTemp;
+# else
+# error: CONSERVED_ENERGY must be 1 or 2!
+# endif
+# elif ( EOS == IDEAL_GAS )
+  real Gamma_m1 = Gamma - (real) 1.0;
+/* initial guess */
+# if   ( CONSERVED_ENERGY == 1 )
+   real Constant = E_Dsqr - M_Dsqr;
+   if ( Constant > 1.0 )
+    {
+	      if ( Constant > 1.0 + 2* (Gamma_m1 / Gamma ) * (M / In[0]) )
+		{
+		  real A = 1.0 / SQR(Gamma_m1);
+		  real B = 2.0 /Gamma_m1;
+		  real C = ((2*Gamma-1.0)/(Gamma*Gamma)) * M_Dsqr - E_Dsqr;
+		  real delta = SQRT( B * B - 4 * A * C );
+		  guess = -2.0 *  C / ( B + delta);
+		}
+	     else guess = 0.5*Gamma_m1 * ( Constant - 1.0);
+    } else return MinTemp;
+# elif ( CONSERVED_ENERGY == 2 )
+    real Constant = E_Dsqr - M_Dsqr + 2 * E_D;
+    if ( Constant > 0.0 )
+     {
+	  if ( Constant > 2* (Gamma_m1 / Gamma ) * (M / In[0]) )
+	    {
+	      real A = 1.0 / SQR(Gamma_m1);
+	      real B = 2.0 /Gamma_m1;
+	      real C = ((2*Gamma-1.0)/(Gamma*Gamma)) * M_Dsqr - E_Dsqr - 2 * E_D;
+	      real delta = SQRT( B * B - 4 * A * C );
+	      guess = -2.0 *  C / ( B + delta);
+	    }
+	  else guess = 0.5*Gamma_m1 * Constant;
+     } else return MinTemp;
+# else
+# error: CONSERVED_ENERGY must be 1 or 2!
+# endif
+#else
+#error: unsupported EoS!
+#endif
+
+   struct Fun_params params = { M_Dsqr, E_D };
+
+#ifdef CHECK_NEGATIVE_IN_FLUID
+   if ( guess <= 0.0 || guess != guess ){ 
+    printf ("guess root = %14.7e < 0\n", guess);
+    printf ("D=%14.7e, Mx=%14.7e, My=%14.7e, Mz=%14.7e, E=%14.7e\n", In[0], In[1], In[2], In[3], In[4]);
+   }
+#endif 
+
+
+#  ifdef FLOAT8
+real epsabs = 0.0;
+real epsrel = 1.0e-15;
+#  else
+real epsabs = 0.0;
+real epsrel = 1.0e-6;
+#  endif
+
+   NewtonRaphsonSolver(&params ,&root, guess, epsabs, epsrel, Gamma);
+
+   return root;
 }				// FUNCTION : SRHydro_GetTemperature
 
 
 
 
-static void NewtonRaphsonSolver(void *ptr, real *root, const real guess, const real epsabs, const real epsrel, const real Gamma)
+static void 
+NewtonRaphsonSolver(void *ptr, real *root, const real guess, const real epsabs, const real epsrel, const real Gamma)
 {
  int iter = 0;
  int max_iter = 20;
@@ -685,7 +659,7 @@ static void NewtonRaphsonSolver(void *ptr, real *root, const real guess, const r
      iter++;
      Fun_DFun(*root, ptr, &f, &df, Gamma);
 
-     if ( df == 0.0 )                printf("derivative is zero\n");
+     if ( df == 0.0 )                                printf("derivative is zero\n");
      if (  f != f  || -Bound >= f  || f  >= Bound )  printf("function value is not finite\n");
      if ( df != df || -Bound >= df || df >= Bound )  printf("derivative value is not finite\n");
      

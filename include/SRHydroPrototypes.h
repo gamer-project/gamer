@@ -10,11 +10,11 @@ void SRHydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
                                  const LR_Limiter_t LR_Limiter, const real MinMod_Coeff,
                                  const real dt, const real dh, const real MinDens, const real MinTemp );
 
- void SRHydro_Con2Flux( const int XYZ, real Flux[], const real Input[], const real Gamma, const real MinTemp );
+void SRHydro_Con2Flux( const int XYZ, real Flux[], const real Input[], const real Gamma, const real MinTemp );
 
- void SRHydro_Con2Pri( const real In[], real Out[], const real Gamma, const real MinTemp );
+void SRHydro_Con2Pri( const real In[], real Out[], const real Gamma, const real MinTemp );
 
- void SRHydro_Pri2Con( const real In[], real Out[], const real Gamma);
+void SRHydro_Pri2Con( const real In[], real Out[], const real Gamma);
 
 void SRHydro_ComputeFlux( const real g_FC_Var [][NCOMP_TOTAL][ CUBE(N_FC_VAR) ],
                                 real g_FC_Flux[][NCOMP_TOTAL][ CUBE(N_FC_FLUX) ],
@@ -26,10 +26,10 @@ bool SRHydro_FullStepUpdate( const real g_Input[][ CUBE(FLU_NXT) ], real g_Outpu
                              const real Gamma, const real MinDens, const real MinTemp );
 
 #if ( RSOLVER == HLLE )
- void SRHydro_RiemannSolver_HLLE( const int XYZ, real Flux_Out[], const real L_In[], const real R_In[],
+void SRHydro_RiemannSolver_HLLE( const int XYZ, real Flux_Out[], const real L_In[], const real R_In[],
                                     const real Gamma, const real MinTemp );
 #elif ( RSOLVER == HLLC )
- void SRHydro_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In[], const real R_In[],
+void SRHydro_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In[], const real R_In[],
                                     const real Gamma, const real MinTemp );
 #endif
 
