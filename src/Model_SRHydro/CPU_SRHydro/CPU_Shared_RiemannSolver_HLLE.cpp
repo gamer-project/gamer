@@ -47,12 +47,12 @@ void SRHydro_RiemannSolver_HLLE( const int XYZ, real Flux_Out[], const real L_In
   real Fhll[NCOMP_TOTAL];
   
   const real Gamma_m1 = Gamma - (real)1.0;
-  double rhl, rhr, cslsq, csrsq, vsql, vsqr, gammasql, gammasqr;
-  double ssl, ssr, radl, radr, lmdapl, lmdapr, lmdaml, lmdamr, lmdatlmda;
-  double lmdal,lmdar; /* Left and Right wave speeds */
-  double ovlrmll;
-  double lV1, lV2, lV3, rV1, rV2, rV3;
-  double lFactor,rFactor; /* Lorentz factor */
+  real rhl, rhr, cslsq, csrsq, vsql, vsqr, gammasql, gammasqr;
+  real ssl, ssr, radl, radr, lmdapl, lmdapr, lmdaml, lmdamr, lmdatlmda;
+  real lmdal,lmdar; /* Left and Right wave speeds */
+  real ovlrmll;
+  real lV1, lV2, lV3, rV1, rV2, rV3;
+  real lFactor,rFactor; /* Lorentz factor */
 
 /* 0. reorder the input conserved variables for different spatial directions */
    for(int v=0;v<NCOMP_TOTAL;v++){
