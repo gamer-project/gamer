@@ -133,11 +133,6 @@
 #  define NFLUX_TOTAL         ( NFLUX_FLUID + NFLUX_PASSIVE )
 
 
-// total number of fluid variables including magnetic field
-// --> used by the hydro solver only
-#  define NCOMP_TOTAL_PLUS_MAG   ( NCOMP_TOTAL + NCOMP_MAGNETIC )
-
-
 // number of input/output fluid variables in the fluid solver
 #if   ( MODEL == HYDRO )
 #  define FLU_NIN             NCOMP_TOTAL
