@@ -99,10 +99,10 @@ void SRHydro_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In
    rV = SQRT(rV1*rV1 + rV2*rV2 + rV3*rV3);
   
    if ( lV >= 1.0 || rV >= 1.0 ) {
-     Aux_Message(stderr, "function: %s: %d\n", __FUNCTION__, __LINE__);
-     Aux_Message(stderr, "lV = %20.17e, rV = %20.17e\n", lV, rV);
-     Aux_Message(stderr, "lUx = %20.17e, lUy = %20.17e, lUz = %20.17e\n", PL[1], PL[2], PL[3]);
-     Aux_Message(stderr, "rUx = %20.17e, rUy = %20.17e, rUz = %20.17e\n", PR[1], PR[2], PR[3]);
+     printf( "function: %s: %d\n", __FUNCTION__, __LINE__);
+     printf( "lV = %20.17e, rV = %20.17e\n", lV, rV);
+     printf( "lUx = %20.17e, lUy = %20.17e, lUz = %20.17e\n", PL[1], PL[2], PL[3]);
+     printf( "rUx = %20.17e, rUy = %20.17e, rUz = %20.17e\n", PR[1], PR[2], PR[3]);
      exit(EXIT_FAILURE);
    }
 #  endif
@@ -127,7 +127,7 @@ void SRHydro_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In
 #  ifdef CHECK_NEGATIVE_IN_FLUID
    if ( cslsq >= 1.0 || csrsq >= 1.0  )
    {
-     Aux_Message(stderr, "cslsq=%10.7e, cslrq=%10.7e\n", cslsq, csrsq);
+     printf( "cslsq=%10.7e, cslrq=%10.7e\n", cslsq, csrsq);
      exit(EXIT_FAILURE);
    }
 #  endif
@@ -366,9 +366,9 @@ void QuadraticSolver (real A, real B, real C, real *x_plus, real *x_minus)
      NO_REAL_SOLUTIONS:
      {
 #       ifdef CHECK_NEGATIVE_IN_FLUID
-        Aux_Message(stderr, "No real solution in Quadratic Solver!\n");
-        Aux_Message(stderr, "A=%14.7e, B=%14.7e, C=%14.7e\n", A, B, C);
-        Aux_Message(stderr, "B*B-4*A*C=%14.7e\n", B*B-4*A*C);
+        printf( "No real solution in Quadratic Solver!\n");
+        printf( "A=%14.7e, B=%14.7e, C=%14.7e\n", A, B, C);
+        printf( "B*B-4*A*C=%14.7e\n", B*B-4*A*C);
         exit(EXIT_FAILURE);
 #       endif
      }
