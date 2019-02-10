@@ -532,6 +532,7 @@
 // the size of arrays (in one dimension) sending into GPU
 //###REVISE: support interpolation schemes requiring 2 ghost cells on each side for POT_NXT
 #  define FLU_NXT       ( 2*(PATCH_SIZE+FLU_GHOST_SIZE)   )             // use patch group as the unit
+#  define FLU_NXT_P1    ( FLU_NXT + 1                     )
 #ifdef GRAVITY
 #  define POT_NXT       ( PATCH_SIZE/2 + 2*( (POT_GHOST_SIZE+3)/2 ) )   // assuming interpolation ghost zone == 1
 #  define RHO_NXT       ( PATCH_SIZE   + 2*RHO_GHOST_SIZE )             // POT/RHO/GRA_NXT use patch as the unit
