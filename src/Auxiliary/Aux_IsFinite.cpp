@@ -15,14 +15,23 @@
 // Return      :  1 : finite
 //                0 : not finite
 //-------------------------------------------------------------------------------------------------------
-int Aux_IsFinite( const real x )
+int Aux_IsFinite( const float x )
 {
 
-# ifdef FLOAT8
-   if ( x != x  ||  x < -__DBL_MAX__  ||  x > __DBL_MAX__ )    return 0;
-# else
    if ( x != x  ||  x < -__FLT_MAX__  ||  x > __FLT_MAX__ )    return 0;
-# endif
+   else                                                        return 1;
+
+} // FUNCTION : Aux_IsFinite
+
+
+
+//-------------------------------------------------------------------------------------------------------
+// Function overloading: double precision
+//-------------------------------------------------------------------------------------------------------
+int Aux_IsFinite( const double x )
+{
+
+   if ( x != x  ||  x < -__DBL_MAX__  ||  x > __DBL_MAX__ )    return 0;
    else                                                        return 1;
 
 } // FUNCTION : Aux_IsFinite

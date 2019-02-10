@@ -2,8 +2,6 @@
 #include "TestProb.h"
 
 
-void CPU_Pri2Con( const real In[], real Out[], const real Gamma);
-void CPU_3Velto4Vel( const real In[], real Out[] );
 
 // problem-specific global variables
 // =======================================================================================
@@ -32,6 +30,10 @@ static int       Riemann_XYZ;          // wave propagation direction (0/1/2 --> 
 // =======================================================================================
 
 
+void 
+SRHydro_3Velto4Vel_Double (const double In[], double Out[]);
+void
+SRHydro_Pri2Con_Double (const double In[], double Out[], const double Gamma);
 
 
 //-------------------------------------------------------------------------------------------------------
@@ -220,12 +222,12 @@ void SetParameter()
 void SetGridIC( real fluid[], const double x, const double y, const double z, const double Time,
                 const int lv, double AuxArray[] )
 {
-   real ConVarL[NCOMP_FLUID];
-   real ConVarR[NCOMP_FLUID];
-   real PriVar3L[NCOMP_FLUID]; // 3-velocity is stored
-   real PriVar3R[NCOMP_FLUID];
-   real PriVar4L[NCOMP_FLUID]; // 4-velocity is stored
-   real PriVar4R[NCOMP_FLUID];
+   double ConVarL[NCOMP_FLUID];
+   double ConVarR[NCOMP_FLUID];
+   double PriVar3L[NCOMP_FLUID]; // 3-velocity is stored
+   double PriVar3R[NCOMP_FLUID];
+   double PriVar4L[NCOMP_FLUID]; // 4-velocity is stored
+   double PriVar4R[NCOMP_FLUID];
 
 // left-state
    PriVar3L[0]=Riemann_RhoL;
@@ -234,8 +236,8 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
    PriVar3L[3]=0.0;
    PriVar3L[4]=Riemann_PreL;
    
-   CPU_3Velto4Vel(PriVar3L, PriVar4L);
-   CPU_Pri2Con(PriVar4L, ConVarL, GAMMA);
+   SRHydro_3Velto4Vel_Double(PriVar3L, PriVar4L);
+   SRHydro_Pri2Con_Double(PriVar4L, ConVarL, GAMMA);
 
 // right-state
    PriVar3R[0]=Riemann_RhoR;
@@ -244,8 +246,8 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
    PriVar3R[3]=0.0;
    PriVar3R[4]=Riemann_PreR;
    
-   CPU_3Velto4Vel(PriVar3R, PriVar4R);
-   CPU_Pri2Con(PriVar4R, ConVarR, GAMMA);
+   SRHydro_3Velto4Vel_Double(PriVar3R, PriVar4R);
+   SRHydro_Pri2Con_Double(PriVar4R, ConVarR, GAMMA);
 
    double r, BoxCen;
    int    TVar[NCOMP_FLUID];
@@ -260,20 +262,20 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 
    if (  ( Riemann_LR > 0 && r < BoxCen )  ||  ( Riemann_LR < 0 && r > BoxCen )  )
    {
-      fluid[ TVar[0] ] = ConVarL[0];
-      fluid[ TVar[1] ] = ConVarL[1];
-      fluid[ TVar[2] ] = ConVarL[2];
-      fluid[ TVar[3] ] = ConVarL[3];
-      fluid[ TVar[4] ] = ConVarL[4];
+      fluid[ TVar[0] ] = (real) ConVarL[0];
+      fluid[ TVar[1] ] = (real) ConVarL[1];
+      fluid[ TVar[2] ] = (real) ConVarL[2];
+      fluid[ TVar[3] ] = (real) ConVarL[3];
+      fluid[ TVar[4] ] = (real) ConVarL[4];
    }
 
    else
    {
-      fluid[ TVar[0] ] = ConVarR[0];
-      fluid[ TVar[1] ] = ConVarR[1];
-      fluid[ TVar[2] ] = ConVarR[2];
-      fluid[ TVar[3] ] = ConVarR[3];
-      fluid[ TVar[4] ] = ConVarR[4];
+      fluid[ TVar[0] ] = (real) ConVarR[0];
+      fluid[ TVar[1] ] = (real) ConVarR[1];
+      fluid[ TVar[2] ] = (real) ConVarR[2];
+      fluid[ TVar[3] ] = (real) ConVarR[3];
+      fluid[ TVar[4] ] = (real) ConVarR[4];
    }
 
    if ( Riemann_LR < 0 )
@@ -281,6 +283,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
       fluid[ TVar[1] ] = -fluid[ TVar[1] ];
       fluid[ TVar[2] ] = -fluid[ TVar[2] ];
    }
+
 
 } // FUNCTION : SetGridIC
 #endif // #if ( MODEL == SR_HYDRO )

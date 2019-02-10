@@ -5,7 +5,6 @@
 #define PI ( 3.14159265359 )
 #endif
 
-void CPU_Pri2Con( const real In[], real Out[], const real Gamma);
 
 // problem-specific global variables
 // =======================================================================================
@@ -29,7 +28,8 @@ static double   Jet_Angle;                              // precession angle in d
 // =======================================================================================
 
 
-
+void
+SRHydro_Pri2Con_Double (const double In[], double Out[], const double Gamma);
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Validate
@@ -226,8 +226,18 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 {
 // 4-velocity
    double Pri4Vel[NCOMP_FLUID] = { Jet_BgDens, Jet_BgVel[0], Jet_BgVel[1], Jet_BgVel[2], Jet_BgPres };
+   double Out[NCOMP_FLUID];
 
-   CPU_Pri2Con(Pri4Vel, fluid, GAMMA);
+   SRHydro_Pri2Con_Double (Pri4Vel, Out, GAMMA);
+
+// cast double to real
+#  ifndef FLOAT8
+   fluid [0] = (real) Out[0];
+   fluid [1] = (real) Out[1];
+   fluid [2] = (real) Out[2];
+   fluid [3] = (real) Out[3];
+   fluid [4] = (real) Out[4];
+#  endif
 
 } // FUNCTION : SetGridIC
 
@@ -263,6 +273,7 @@ bool Flu_ResetByUser_PrecessedJet( real fluid[], const double x, const double y,
 {
 
    const double r[3] = { x, y, z };
+   double Out[NCOMP_FLUID];
 
    double Jet_dr, Jet_dh, S, Area;
    double Dis_c2m, Dis_c2v, Dis_v2m, Vec_c2m[3], Vec_v2m[3];
@@ -344,7 +355,16 @@ bool Flu_ResetByUser_PrecessedJet( real fluid[], const double x, const double y,
        double Pri4Vel[NCOMP_FLUID]
              = { Jet_SrcDens, Jet_SrcVel_xyz[0]*MomSin, Jet_SrcVel_xyz[1]*MomSin, Jet_SrcVel_xyz[2]*MomSin, Jet_SrcPres };
  
-       CPU_Pri2Con(Pri4Vel, fluid, GAMMA);
+       SRHydro_Pri2Con_Double(Pri4Vel, Out, GAMMA);
+
+//     cast double to real
+#      ifndef FLOAT8
+       fluid [0] = (real) Out[0];
+       fluid [1] = (real) Out[1];
+       fluid [2] = (real) Out[2];
+       fluid [3] = (real) Out[3];
+       fluid [4] = (real) Out[4];
+#      endif
 
 //     return immediately since we do NOT allow different jet source to overlap
        return true;
