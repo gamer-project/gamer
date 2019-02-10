@@ -171,7 +171,6 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 {
    double Prim1[NCOMP_FLUID]; // store 3-velocity
    double Prim2[NCOMP_FLUID]; // store 4-velocity
-   double Out[NCOMP_FLUID];
 
    double VelyUp_x = VelyUp*SIN(Theta*PI/180.0);
    double VelyUp_y = VelyUp*COS(Theta*PI/180.0);
@@ -187,26 +186,29 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
       Prim1[3] = 0.0;
       Prim1[4] = PresDown;
 
-      SRHydro_3Velto4Vel_Double (Prim1, Prim2);
-      SRHydro_Pri2Con_Double (Prim2, Out, GAMMA);
    }else{ // up-stream
       Prim1[0] = DensUp;
       Prim1[1] = VelyUp_x;
       Prim1[2] = VelyUp_y;
       Prim1[3] = 0.0;
       Prim1[4] = PresUp;
-
-      SRHydro_3Velto4Vel_Double (Prim1, Prim2);
-      SRHydro_Pri2Con_Double (Prim2, Out, GAMMA);
    }
+
+   SRHydro_3Velto4Vel_Double (Prim1, Prim2);
 
 // cast double to real
 #  ifndef FLOAT8
+   double Out[NCOMP_FLUID];
+
+   SRHydro_Pri2Con_Double (Prim2, Out, GAMMA);
+
    fluid [0] = (real) Out[0];
    fluid [1] = (real) Out[1];
    fluid [2] = (real) Out[2];
    fluid [3] = (real) Out[3];
    fluid [4] = (real) Out[4];
+#  else
+   SRHydro_Pri2Con_Double (Prim2, fluid, GAMMA);
 #  endif
 
 } // FUNCTION : SetGridIC
