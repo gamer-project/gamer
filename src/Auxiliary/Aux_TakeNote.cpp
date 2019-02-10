@@ -204,8 +204,6 @@ void Aux_TakeNote()
       fprintf( Note, "FLU_SCHEME                      MHM with Riemann prediction\n" );
 #     elif ( FLU_SCHEME == CTU )
       fprintf( Note, "FLU_SCHEME                      CTU\n" );
-#     elif ( FLU_SCHEME == WAF )
-      fprintf( Note, "FLU_SCHEME                      WAF\n" );
 #     elif ( FLU_SCHEME == NONE )
       fprintf( Note, "FLU_SCHEME                      NONE\n" );
 #     else

@@ -511,8 +511,6 @@
 #elif   ( MODEL == SR_HYDRO )   // hydro
 #  if   ( FLU_SCHEME == RTVD )
 #        define FLU_GHOST_SIZE      3
-#  elif ( FLU_SCHEME == WAF )
-#        define FLU_GHOST_SIZE      2
 #  elif ( FLU_SCHEME == MHM )
 #     if ( LR_SCHEME == PLM )
 #        define FLU_GHOST_SIZE      2

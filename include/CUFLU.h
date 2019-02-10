@@ -404,16 +404,6 @@ struct FluVar5 { real Rho, Px, Py, Pz, Egy; };
 #     define FLU_BLOCK_SIZE_Y       8
 #  endif
 
-#elif ( FLU_SCHEME == WAF )
-
-#     define FLU_BLOCK_SIZE_X       FLU_NXT
-
-#  ifdef FLOAT8
-#     define FLU_BLOCK_SIZE_Y       4
-#  else
-#     define FLU_BLOCK_SIZE_Y       8
-#  endif
-
 #elif ( FLU_SCHEME == MHM  ||  FLU_SCHEME == MHM_RP )
 
 #  if   ( GPU_ARCH == FERMI )

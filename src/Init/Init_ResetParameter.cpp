@@ -76,8 +76,6 @@ void Init_ResetParameter()
 #     elif   ( MODEL == SR_HYDRO )
 #     if   ( FLU_SCHEME == RTVD )
       DT__FLUID = 0.50;
-#     elif ( FLU_SCHEME == WAF )
-      DT__FLUID = 0.50;
 #     elif ( FLU_SCHEME == MHM )
       DT__FLUID = 1.00;
 #     elif ( FLU_SCHEME == MHM_RP )
