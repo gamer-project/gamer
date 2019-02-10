@@ -90,14 +90,18 @@ static void Hydro_Char2Pri( real InOut[], const real Gamma, const real Rho, cons
 //                   defining "CHAR_RECONSTRUCTION" in the header CUFLU.h
 //                7. This function is shared by MHM, MHM_RP, and CTU schemes
 //
-//
 // Parameter   :  g_ConVar           : Array storing the input cell-centered conserved variables
+//                                     --> Should contain NCOMP_TOTAL variables
+//                g_FC_B             : Array storing the input face-centered magnetic field (for MHD only)
+//                                     --> Should contain NCOMP_MAGNETIC variables
 //                g_PriVar           : Array storing/to store the cell-centered primitive variables
+//                                     --> Should contain NCOMP_TOTAL_PLUS_MAG variables
 //                                     --> For MHM, g_ConVar[] and g_PriVar[] must point to different arrays since
 //                                         Hydro_HancockPredict() requires the original g_ConVar[]
 //                g_FC_Var           : Array to store the output face-centered primitive variables
+//                                     --> Should contain NCOMP_TOTAL_PLUS_MAG variables
 //                g_Slope_PPM        : Array to store the x/y/z slopes for the PPM reconstruction
-//                                     --> Useless for PLM
+//                                     --> Should contain NCOMP_TOTAL_PLUS_MAG variables
 //                Con2Pri            : Convert conserved variables in g_ConVar[] to primitive variables and
 //                                     store the results in g_PriVar[]
 //                NIn                : Size of g_PriVar[] along each direction
@@ -124,9 +128,10 @@ static void Hydro_Char2Pri( real InOut[], const real Gamma, const real Rho, cons
 //------------------------------------------------------------------------------------------------------
 GPU_DEVICE
 void Hydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
+                               const real g_FC_B     [][ SQR(FLU_NXT)*FLU_NXT_P1 ],
                                      real g_PriVar   [][ CUBE(FLU_NXT) ],
-                                     real g_FC_Var   [][NCOMP_TOTAL][ CUBE(N_FC_VAR) ],
-                                     real g_Slope_PPM[][NCOMP_TOTAL][ CUBE(N_SLOPE_PPM) ],
+                                     real g_FC_Var   [][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_VAR) ],
+                                     real g_Slope_PPM[][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_SLOPE_PPM) ],
                                const bool Con2Pri, const int NIn, const int NGhost, const real Gamma,
                                const LR_Limiter_t LR_Limiter, const real MinMod_Coeff,
                                const real dt, const real dh, const real MinDens, const real MinPres,
@@ -143,33 +148,76 @@ void Hydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
    const real dt_dh2 = (real)0.5*dt/dh;
 
 // constant components of the left and right eigenvector matrices must be initialized
-   real LEigenVec[NCOMP_FLUID][NCOMP_FLUID] = { { 0.0, NULL_REAL, 0.0, 0.0, NULL_REAL },
-                                                { 1.0,       0.0, 0.0, 0.0, NULL_REAL },
-                                                { 0.0,       0.0, 1.0, 0.0,       0.0 },
-                                                { 0.0,       0.0, 0.0, 1.0,       0.0 },
-                                                { 0.0, NULL_REAL, 0.0, 0.0, NULL_REAL } };
+#  ifdef MHD
+   real REigenVec[NWAVE][NWAVE]= {  { NULL_REAL, NULL_REAL, NULL_REAL, NULL_REAL, NULL_REAL, NULL_REAL, NULL_REAL },
+                                    {       0.0,       0.0, NULL_REAL, NULL_REAL,       0.0, NULL_REAL, NULL_REAL },
+                                    { NULL_REAL, NULL_REAL, NULL_REAL, NULL_REAL, NULL_REAL, NULL_REAL, NULL_REAL },
+                                    {       1.0,       0.0,       0.0,       0.0,       0.0,       0.0,       0.0 },
+                                    { NULL_REAL, NULL_REAL, NULL_REAL, NULL_REAL, NULL_REAL, NULL_REAL, NULL_REAL },
+                                    {       0.0,       0.0, NULL_REAL, NULL_REAL,       0.0, NULL_REAL, NULL_REAL },
+                                    { NULL_REAL, NULL_REAL, NULL_REAL, NULL_REAL, NULL_REAL, NULL_REAL, NULL_REAL } };
+   real LEigenVec[NWAVE][NWAVE]= {  { 0.0, NULL_REAL, NULL_REAL, NULL_REAL, NULL_REAL, NULL_REAL, NULL_REAL },
+                                    { 0.0,       0.0, NULL_REAL, NULL_REAL,       0.0, NULL_REAL, NULL_REAL },
+                                    { 0.0, NULL_REAL, NULL_REAL, NULL_REAL, NULL_REAL, NULL_REAL, NULL_REAL },
+                                    { 1.0,       0.0,       0.0,       0.0, NULL_REAL,       0.0,       0.0 },
+                                    { 0.0, NULL_REAL, NULL_REAL, NULL_REAL, NULL_REAL, NULL_REAL, NULL_REAL },
+                                    { 0.0,       0.0, NULL_REAL, NULL_REAL,       0.0, NULL_REAL, NULL_REAL },
+                                    { 0.0, NULL_REAL, NULL_REAL, NULL_REAL, NULL_REAL, NULL_REAL, NULL_REAL } };
+#  else
+   real LEigenVec[NWAVE][NWAVE] = { { 0.0, NULL_REAL, 0.0, 0.0, NULL_REAL },
+                                    { 1.0,       0.0, 0.0, 0.0, NULL_REAL },
+                                    { 0.0,       0.0, 1.0, 0.0,       0.0 },
+                                    { 0.0,       0.0, 0.0, 1.0,       0.0 },
+                                    { 0.0, NULL_REAL, 0.0, 0.0, NULL_REAL } };
 
-   real REigenVec[NCOMP_FLUID][NCOMP_FLUID] = { { 1.0, NULL_REAL, 0.0, 0.0, NULL_REAL },
-                                                { 1.0,       0.0, 0.0, 0.0,       0.0 },
-                                                { 0.0,       0.0, 1.0, 0.0,       0.0 },
-                                                { 0.0,       0.0, 0.0, 1.0,       0.0 },
-                                                { 1.0, NULL_REAL, 0.0, 0.0, NULL_REAL } };
-#  endif // #if ( FLU_SCHEME ==  CTU )
+   real REigenVec[NWAVE][NWAVE] = { { 1.0, NULL_REAL, 0.0, 0.0, NULL_REAL },
+                                    { 1.0,       0.0, 0.0, 0.0,       0.0 },
+                                    { 0.0,       0.0, 1.0, 0.0,       0.0 },
+                                    { 0.0,       0.0, 0.0, 1.0,       0.0 },
+                                    { 1.0, NULL_REAL, 0.0, 0.0, NULL_REAL } };
+#  endif // #ifdef MHD ... else ...
+
+#  elif ( defined MHD  &&  defined CHAR_RECONSTRUCTION ) // #if ( FLU_SCHEME == CTU )
+   real REigenVec[NWAVE][NWAVE]= {  { NULL_REAL, NULL_REAL, NULL_REAL, NULL_REAL, NULL_REAL, NULL_REAL, NULL_REAL },
+                                    {       0.0,       0.0, NULL_REAL, NULL_REAL,       0.0, NULL_REAL, NULL_REAL },
+                                    { NULL_REAL, NULL_REAL, NULL_REAL, NULL_REAL, NULL_REAL, NULL_REAL, NULL_REAL },
+                                    {       1.0,       0.0,       0.0,       0.0,       0.0,       0.0,       0.0 },
+                                    { NULL_REAL, NULL_REAL, NULL_REAL, NULL_REAL, NULL_REAL, NULL_REAL, NULL_REAL },
+                                    {       0.0,       0.0, NULL_REAL, NULL_REAL,       0.0, NULL_REAL, NULL_REAL },
+                                    { NULL_REAL, NULL_REAL, NULL_REAL, NULL_REAL, NULL_REAL, NULL_REAL, NULL_REAL } };
+   real LEigenVec[NWAVE][NWAVE]= {  { 0.0, NULL_REAL, NULL_REAL, NULL_REAL, NULL_REAL, NULL_REAL, NULL_REAL },
+                                    { 0.0,       0.0, NULL_REAL, NULL_REAL,       0.0, NULL_REAL, NULL_REAL },
+                                    { 0.0, NULL_REAL, NULL_REAL, NULL_REAL, NULL_REAL, NULL_REAL, NULL_REAL },
+                                    { 1.0,       0.0,       0.0,       0.0, NULL_REAL,       0.0,       0.0 },
+                                    { 0.0, NULL_REAL, NULL_REAL, NULL_REAL, NULL_REAL, NULL_REAL, NULL_REAL },
+                                    { 0.0,       0.0, NULL_REAL, NULL_REAL,       0.0, NULL_REAL, NULL_REAL },
+                                    { 0.0, NULL_REAL, NULL_REAL, NULL_REAL, NULL_REAL, NULL_REAL, NULL_REAL } };
+#  endif // #if ( FLU_SCHEME ==  CTU ) ... elif ...
 
 
 // 0. conserved --> primitive variables
    if ( Con2Pri )
    {
-      real ConVar_1Cell[NCOMP_TOTAL], PriVar_1Cell[NCOMP_TOTAL];
+      real ConVar_1Cell[NCOMP_TOTAL_PLUS_MAG], PriVar_1Cell[NCOMP_TOTAL_PLUS_MAG];
 
       CGPU_LOOP( idx, CUBE(NIn) )
       {
          for (int v=0; v<NCOMP_TOTAL; v++)   ConVar_1Cell[v] = g_ConVar[v][idx];
 
+#        ifdef MHD
+//       assuming that g_FC_B[] has the size of NIn*NIn*(NIn+1)
+         const int size_ij = SQR( NIn );
+         const int i       = idx % NIn
+         const int j       = idx % size_ij / NIn;
+         const int k       = idx / size_ij;
+
+         MHD_GetCellCenteredBField( ConVar_1Cell+NCOMP_TOTAL, g_FC_B[0], g_FC_B[1], g_FC_B[2], NIn, i, j, k );
+#        endif
+
          Hydro_Con2Pri( ConVar_1Cell, PriVar_1Cell, Gamma_m1, MinPres, NormPassive, NNorm, NormIdx,
                         JeansMinPres, JeansMinPres_Coeff );
 
-         for (int v=0; v<NCOMP_TOTAL; v++)   g_PriVar[v][idx] = PriVar_1Cell[v];
+         for (int v=0; v<NCOMP_TOTAL_PLUS_MAG; v++)   g_PriVar[v][idx] = PriVar_1Cell[v];
       }
 
 #     ifdef __CUDACC__
