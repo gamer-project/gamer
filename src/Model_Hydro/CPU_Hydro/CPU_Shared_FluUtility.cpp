@@ -606,6 +606,39 @@ void Hydro_NormalizePassive( const real GasDens, real Passive[], const int NNorm
 
 
 
+#ifdef MHD
+//-------------------------------------------------------------------------------------------------------
+// Function    :  MHD_GetCellCenteredB
+// Description :  Calculate the cell-centered magnetic field from the input face-centered values
+//
+// Note        :  1. Use the central average operator
+//                2. Return all three components of the magnetic field
+//                3. Input arrays Bx/y/z_FC[] should have the size of "Width_FC*Width_FC*(Width_FC+1)"
+//
+// Parameter   :  B_CC      : Cell-centered magnetic field to be returned
+//                Bx/y/z_FC : Input face-centered magnetic field
+//                Width_FC  : Width of the input arrays along the transverse direction
+//                i/j/k     : Target indices of the input arrays
+//
+// Return      :  B_CC
+//-------------------------------------------------------------------------------------------------------
+void MHD_GetCellCenteredBField( real B_CC[], const real Bx_FC[], const real By_FC[], const real Bz_FC[],
+                                const int Width_FC, const int i, const int j, const int k )
+{
+
+   const int idx_Bx = IDX321_BX( i, j, k, Width_FC );
+   const int idx_By = IDX321_BY( i, j, k, Width_FC );
+   const int idx_Bz = IDX321_BZ( i, j, k, Width_FC );
+
+   B_CC[0] = (real)0.5*( Bx_FC[idx_Bx] + Bx_FC[ idx_Bx + 1             ] );
+   B_CC[1] = (real)0.5*( By_FC[idx_By] + By_FC[ idx_By + Width_FC      ] );
+   B_CC[2] = (real)0.5*( Bz_FC[idx_Bz] + Bz_FC[ idx_Bz + SQR(Width_FC) ] );
+
+} // FUNCTION : MHD_GetCellCenteredB
+#endif // #ifdef MHD
+
+
+
 #endif // #if ( MODEL == HYDRO )
 
 
