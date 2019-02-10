@@ -12,6 +12,10 @@ static double Blast_Radius;        // explosion radius
 static double Blast_Center[3];     // explosion center
 // =======================================================================================
 
+void 
+SRHydro_3Velto4Vel_Double (const double In[], double Out[]);
+void
+SRHydro_Pri2Con_Double (const double In[], double Out[], const double Gamma);
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Validate
@@ -178,27 +182,27 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
    double Prim_EXP2[5] = {0};                                                                         // store 4-velocity
    double Cons_EXP[5] = {0};
 
-   SRHydro_3Velto4Vel ( Prim_BG1, Prim_BG2);
-   SRHydro_3Velto4Vel ( Prim_EXP1, Prim_EXP2);
+   SRHydro_3Velto4Vel_Double ( Prim_BG1, Prim_BG2);
+   SRHydro_3Velto4Vel_Double ( Prim_EXP1, Prim_EXP2);
 
-   SRHydro_Pri2Con(Prim_BG2, Cons_BG, GAMMA);
-   SRHydro_Pri2Con(Prim_EXP2, Cons_EXP, GAMMA);
+   SRHydro_Pri2Con_Double (Prim_BG2, Cons_BG, GAMMA);
+   SRHydro_Pri2Con_Double (Prim_EXP2, Cons_EXP, GAMMA);
 
    if ( r <= Blast_Radius )
    {
-     fluid[DENS] = Cons_EXP[0];
-     fluid[MOMX] = Cons_EXP[1];
-     fluid[MOMY] = Cons_EXP[2];
-     fluid[MOMZ] = Cons_EXP[3];
-     fluid[ENGY] = Cons_EXP[4];
+     fluid[DENS] = (real) Cons_EXP[0];
+     fluid[MOMX] = (real) Cons_EXP[1];
+     fluid[MOMY] = (real) Cons_EXP[2];
+     fluid[MOMZ] = (real) Cons_EXP[3];
+     fluid[ENGY] = (real) Cons_EXP[4];
    }
    else
    { 
-     fluid[DENS] = Cons_BG[0];
-     fluid[MOMX] = Cons_BG[1];
-     fluid[MOMY] = Cons_BG[2];
-     fluid[MOMZ] = Cons_BG[3];
-     fluid[ENGY] = Cons_BG[4];
+     fluid[DENS] = (real) Cons_BG[0];
+     fluid[MOMX] = (real) Cons_BG[1];
+     fluid[MOMY] = (real) Cons_BG[2];
+     fluid[MOMZ] = (real) Cons_BG[3];
+     fluid[ENGY] = (real) Cons_BG[4];
    }
 
 } // FUNCTION : SetGridIC
@@ -246,4 +250,3 @@ void Init_TestProb_SRHydro_BlastWave()
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", __FUNCTION__ );
 
 } // FUNCTION : Init_TestProb_Hydro_BlastWave
-

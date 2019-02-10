@@ -15,7 +15,8 @@ static double VelyDown;  // magnitude of 3-velocity in down-stream
 static double PresDown;  // pressure in down-stream
 // =======================================================================================
 
-
+void SRHydro_3Velto4Vel_Double (const double In[], double Out[]);
+void SRHydro_Pri2Con_Double (const double In[], double Out[], const double Gamma);
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Validate
@@ -168,8 +169,9 @@ void SetParameter()
 void SetGridIC( real fluid[], const double x, const double y, const double z, const double Time,
                 const int lv, double AuxArray[] )
 {
-   real Prim1[NCOMP_FLUID]; // store 3-velocity
-   real Prim2[NCOMP_FLUID]; // store 4-velocity
+   double Prim1[NCOMP_FLUID]; // store 3-velocity
+   double Prim2[NCOMP_FLUID]; // store 4-velocity
+   double Out[NCOMP_FLUID];
 
    double VelyUp_x = VelyUp*SIN(Theta*PI/180.0);
    double VelyUp_y = VelyUp*COS(Theta*PI/180.0);
@@ -185,8 +187,8 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
       Prim1[3] = 0.0;
       Prim1[4] = PresDown;
 
-      SRHydro_3Velto4Vel (Prim1, Prim2);
-      SRHydro_Pri2Con (Prim2, fluid, GAMMA);
+      SRHydro_3Velto4Vel_Double (Prim1, Prim2);
+      SRHydro_Pri2Con_Double (Prim2, Out, GAMMA);
    }else{ // up-stream
       Prim1[0] = DensUp;
       Prim1[1] = VelyUp_x;
@@ -194,9 +196,18 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
       Prim1[3] = 0.0;
       Prim1[4] = PresUp;
 
-      SRHydro_3Velto4Vel (Prim1, Prim2);
-      SRHydro_Pri2Con (Prim2, fluid, GAMMA);
+      SRHydro_3Velto4Vel_Double (Prim1, Prim2);
+      SRHydro_Pri2Con_Double (Prim2, Out, GAMMA);
    }
+
+// cast double to real
+#  ifndef FLOAT8
+   fluid [0] = (real) Out[0];
+   fluid [1] = (real) Out[1];
+   fluid [2] = (real) Out[2];
+   fluid [3] = (real) Out[3];
+   fluid [4] = (real) Out[4];
+#  endif
 
 } // FUNCTION : SetGridIC
 #endif // #if ( MODEL == SR_HYDRO )
