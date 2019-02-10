@@ -263,15 +263,15 @@ void Output_Patch( const int lv, const int PID, const int FluSg, const int MagSg
          fprintf( File, "(%2d,%2d,%2d)", i, j, k );
 
 //       B_X
-         if ( j < PS1  &&  k < PS1 )   fprintf( File, " %13.6e", magnetic[MAGX][ IDX321_BX(i,j,k) ] );
+         if ( j < PS1  &&  k < PS1 )   fprintf( File, " %13.6e", magnetic[MAGX][ IDX321_BX(i,j,k,PS1) ] );
          else                          fprintf( File, " %13s", "" );
 
 //       B_Y
-         if ( i < PS1  &&  k < PS1 )   fprintf( File, " %13.6e", magnetic[MAGY][ IDX321_BY(i,j,k) ] );
+         if ( i < PS1  &&  k < PS1 )   fprintf( File, " %13.6e", magnetic[MAGY][ IDX321_BY(i,j,k,PS1) ] );
          else                          fprintf( File, " %13s", "" );
 
 //       B_Z
-         if ( i < PS1  &&  j < PS1 )   fprintf( File, " %13.6e", magnetic[MAGZ][ IDX321_BZ(i,j,k) ] );
+         if ( i < PS1  &&  j < PS1 )   fprintf( File, " %13.6e", magnetic[MAGZ][ IDX321_BZ(i,j,k,PS1) ] );
          else                          fprintf( File, " %13s", "" );
 
          fprintf( File, "\n" );
