@@ -64,6 +64,12 @@ static void Hydro_Char2Pri( real InOut[], const real Gamma, const real Rho, cons
 #endif
 
 
+// macro for adding MHD source terms in CTU
+#if ( defined MHD  &&  FLU_SCHEME == CTU )
+#  define MINMOD( a , b )  (  ( (a)*(b)>(real)0.0 ) ? ( SIGN(a)*FMIN(FABS(a),FABS(b)) ) : (real)0.0  )
+#endif
+
+
 
 
 #if ( LR_SCHEME == PLM )
@@ -245,13 +251,25 @@ void Hydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
 
 
 // data reconstruction
-   const int NOut2 = SQR(NOut);
+   const int NOut2  = SQR(NOut);
+#  ifdef MHD
+   const int NIn_p1 = NIn + 1;
+   int idx_B[NCOMP_MAGNETIC];
+#  endif
+
    CGPU_LOOP( idx_fc, CUBE(NOut) )
    {
       const int i_cc   = NGhost + idx_fc%NOut;
       const int j_cc   = NGhost + idx_fc%NOut2/NOut;
       const int k_cc   = NGhost + idx_fc/NOut2;
       const int idx_cc = IDX321( i_cc, j_cc, k_cc, NIn, NIn );
+
+#     ifdef MHD
+//    assuming that g_FC_B[] has the size of NIn*NIn*(NIn+1)
+      idx_B[0] = (k_cc*NIn    + i_cc)*NIn_p1 + i_cc;
+      idx_B[1] = (k_cc*NIn_p1 + i_cc)*NIn    + i_cc;
+      idx_B[2] = (k_cc*NIn    + i_cc)*NIn    + i_cc;
+#     endif
 
 //    cc_C/L/R: cell-centered variables of the Central/Left/Right cells
 //    fc: face-centered variables of the central cell
@@ -446,7 +464,30 @@ void Hydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
 #        endif
 
 
-//       4-2-b4. evaluate the face-centered variables at the half time-step
+//       4-2-b4. add the MHD source terms
+#        ifdef MHD
+         const int t1 = (d+1)%3;    // transverse direction 1
+         const int t2 = (d+2)%3;    // transverse direction 2
+         real dB_n, dB_t1, dB_t2, v_t1, v_t2, src_t1, src_t2;
+
+         dB_n   = g_FC_B[d ][ idx_B[d ] + didx_cc[d ] ] - g_FC_B[d ][ idx_B[d ] ];
+         dB_t1  = g_FC_B[t1][ idx_B[t1] + didx_cc[t1] ] - g_FC_B[t1][ idx_B[t1] ];
+         dB_t2  = g_FC_B[t2][ idx_B[t2] + didx_cc[t2] ] - g_FC_B[t2][ idx_B[t2] ];
+
+         v_t1   = cc_C[ 1 + t1 ];
+         v_t2   = cc_C[ 1 + t2 ];
+
+         src_t1 = dt_dh2*v_t1*MINMOD( dB_n, -dB_t1 );
+         src_t2 = dt_dh2*v_t2*MINMOD( dB_n, -dB_t2 );
+
+         Correct_L[ MAG_OFFSET + 1 ] += src_t1;
+         Correct_R[ MAG_OFFSET + 1 ] += src_t1;
+         Correct_L[ MAG_OFFSET + 2 ] += src_t2;
+         Correct_R[ MAG_OFFSET + 2 ] += src_t2;
+#        endif // #ifdef MHD
+
+
+//       4-2-b5. evaluate the face-centered variables at the half time-step
          Hydro_Rotate3D( Correct_L, d, false, MAG_OFFSET );
          Hydro_Rotate3D( Correct_R, d, false, MAG_OFFSET );
 
@@ -1591,6 +1632,13 @@ void Hydro_HancockPredict( real fc[][NCOMP_TOTAL], const real dt, const real dh,
 
 } // FUNCTION : Hydro_HancockPredict
 #endif // #if ( FLU_SCHEME == MHM )
+
+
+
+// MINMOD macro is only used in this function
+#ifdef MINMOD
+#  undef MINMOD
+#endif
 
 
 
