@@ -69,12 +69,13 @@
 #    ifdef MHD
 #     define N_FC_VAR            ( PS2 + 2 )
 #     define N_FL_FLUX           ( PS2 + 2 )
+#     define N_FC_FLUX           ( FLU_NXT )
 #    else
 #     define N_FC_VAR            ( PS2 + 2 )
 #     define N_FL_FLUX           ( PS2 + 1 )
+#     define N_FC_FLUX           ( FLU_NXT - 1 )
 #    endif
 #     define N_HF_VAR            ( FLU_NXT - 2 )
-#     define N_FC_FLUX           ( FLU_NXT - 1 )
 
 #  elif ( FLU_SCHEME == CTU )
 
@@ -93,7 +94,7 @@
 #  define NCOMP_TOTAL_PLUS_MAG   ( NCOMP_TOTAL + NCOMP_MAGNETIC )
 
 #  ifdef MHD
-#   define N_HF_ELE              ( N_HF_FLUX - 1 )
+#   define N_HF_ELE              ( N_FC_FLUX - 1 )
 #   define N_FL_ELE              ( N_FL_FLUX - 1 )
 #   define N_LC_ELE              ( N_FC_FLUX - 1 )
 #   define NWAVE                 ( NCOMP_FLUID + 2 )

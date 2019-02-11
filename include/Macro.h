@@ -142,16 +142,23 @@
 # ifdef MHD
 #  define MAG_NIN             NCOMP_MAGNETIC
 #  define MAG_NOUT            NCOMP_MAGNETIC
+# else
+#  define MAG_NIN             0
+#  define MAG_NOUT            0
 # endif
 
 // for ELBDM, we do not need to transfer the density component into GPU
 #elif ( MODEL == ELBDM )
 #  define FLU_NIN             ( NCOMP_TOTAL - 1 )
 #  define FLU_NOUT            ( NCOMP_TOTAL - 0 )
+#  define MAG_NIN             0
+#  define MAG_NOUT            0
 
 #elif ( MODEL == PAR_ONLY )
 #  define FLU_NIN             0
 #  define FLU_NOUT            0
+#  define MAG_NIN             0
+#  define MAG_NOUT            0
 
 #else
 #  error : ERROR : unsupported MODEL (please edit FLU_NIN and FLU_NOUT for the new MODEL) !!

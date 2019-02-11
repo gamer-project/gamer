@@ -61,8 +61,8 @@ void ExternalAcc( real Acc[], const double x, const double y, const double z, co
 //                   --> "N_FC_VAR-1" fluxes will be computed along each normal direction
 //                   --> But "2*Gap" cells will skipped along the transverse direction (Gap cells on each side)
 //                3. g_FC_Flux[] has the size of N_FC_FLUX^3
-//                   --> But (i,j,k) flux will be stored in the "(k*N_FL_FLUX+j)*N_FL_FLUX+i" element in g_FC_Flux[]
-//                       --> We have assumed that N_FL_FLUX <= N_FC_FLUX
+//                   --> But (i,j,k) flux will be stored in the "(k*NFlux+j)*NFlux+i" element in g_FC_Flux[]
+//                       --> We have assumed that NFlux <= N_FC_FLUX
 //                   --> (i,j,k) in g_FC_Flux_x is defined on the +x surface of the cell (i,     j+Gap, k+Gap) in g_FC_Var[]
 //                       (i,j,k) in g_FC_Flux_y is defined on the +y surface of the cell (i+Gap, j,     k+Gap) in g_FC_Var[]
 //                       (i,j,k) in g_FC_Flux_z is defined on the +z surface of the cell (i+Gap, j+Gap, k    ) in g_FC_Var[]
@@ -73,6 +73,7 @@ void ExternalAcc( real Acc[], const double x, const double y, const double z, co
 //
 // Parameter   :  g_FC_Var        : Array storing the input face-centered conserved variables
 //                g_FC_Flux       : Array to store the output face-centered fluxes
+//                NFlux           : Stride for accessing g_FC_Flux[]
 //                Gap             : Number of cells to be skipped in the transverse directions
 //                                  --> "(N_FC_VAR-2*Gap)^2" fluxes will be computed on each surface
 //                Gamma           : Ratio of specific heats
@@ -92,7 +93,7 @@ void ExternalAcc( real Acc[], const double x, const double y, const double z, co
 GPU_DEVICE
 void Hydro_ComputeFlux( const real g_FC_Var [][NCOMP_TOTAL][ CUBE(N_FC_VAR) ],
                               real g_FC_Flux[][NCOMP_TOTAL][ CUBE(N_FC_FLUX) ],
-                        const int Gap, const real Gamma, const bool CorrHalfVel, const real g_Pot_USG[],
+                        const int NFlux, const int Gap, const real Gamma, const bool CorrHalfVel, const real g_Pot_USG[],
                         const double g_Corner[], const real dt, const real dh, const double Time,
                         const OptGravityType_t GravityType, const double ExtAcc_AuxArray[], const real MinPres,
                         const bool DumpIntFlux, real g_IntFlux[][NCOMP_TOTAL][ SQR(PS2) ] )
@@ -116,6 +117,9 @@ void Hydro_ComputeFlux( const real g_FC_Var [][NCOMP_TOTAL][ CUBE(N_FC_VAR) ],
    if ( CorrHalfVel )
       printf( "ERROR : CorrHalfVel is NOT supported when UNSPLIT_GRAVITY is off !!\n" );
 #  endif
+
+   if ( NFlux > N_FC_FLUX )
+      printf( "ERROR : NFlux (%d) > N_FC_FLUX (%d) !!\n", NFlux, N_FC_FLUX );
 #  endif // #ifdef GAMER_DEBUG
 
 
@@ -181,7 +185,7 @@ void Hydro_ComputeFlux( const real g_FC_Var [][NCOMP_TOTAL][ CUBE(N_FC_VAR) ],
          const int i_flux   = idx % idx_flux_e[0];
          const int j_flux   = idx % size_ij / idx_flux_e[0];
          const int k_flux   = idx / size_ij;
-         const int idx_flux = IDX321( i_flux, j_flux, k_flux, N_FL_FLUX, N_FL_FLUX );
+         const int idx_flux = IDX321( i_flux, j_flux, k_flux, NFlux, NFlux );
 
          const int i_fc     = i_flux + idx_fc_s[0];
          const int j_fc     = j_flux + idx_fc_s[1];
