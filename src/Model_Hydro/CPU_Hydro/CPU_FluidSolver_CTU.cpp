@@ -16,9 +16,10 @@
 #else // #ifdef __CUDACC__
 
 void Hydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
+                               const real g_FC_B     [][ SQR(FLU_NXT)*FLU_NXT_P1 ],
                                      real g_PriVar   [][ CUBE(FLU_NXT) ],
-                                     real g_FC_Var   [][NCOMP_TOTAL][ CUBE(N_FC_VAR) ],
-                                     real g_Slope_PPM[][NCOMP_TOTAL][ CUBE(N_SLOPE_PPM) ],
+                                     real g_FC_Var   [][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_VAR) ],
+                                     real g_Slope_PPM[][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_SLOPE_PPM) ],
                                const bool Con2Pri, const int NIn, const int NGhost, const real Gamma,
                                const LR_Limiter_t LR_Limiter, const real MinMod_Coeff,
                                const real dt, const real dh, const real MinDens, const real MinPres,
@@ -26,7 +27,7 @@ void Hydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
                                const bool JeansMinPres, const real JeansMinPres_Coeff );
 void Hydro_ComputeFlux( const real g_FC_Var [][NCOMP_TOTAL][ CUBE(N_FC_VAR) ],
                               real g_FC_Flux[][NCOMP_TOTAL][ CUBE(N_FC_FLUX) ],
-                        const int Gap, const real Gamma, const bool CorrHalfVel, const real g_Pot_USG[],
+                        const int NFlux, const int Gap, const real Gamma, const bool CorrHalfVel, const real g_Pot_USG[],
                         const double g_Corner[], const real dt, const real dh, const double Time,
                         const OptGravityType_t GravityType, const double ExtAcc_AuxArray[], const real MinPres,
                         const bool DumpIntFlux, real g_IntFlux[][NCOMP_TOTAL][ SQR(PS2) ] );
@@ -187,14 +188,13 @@ void CPU_FluidSolver_CTU(
 #     endif
       {
 //       1. evaluate the face-centered values at the half time-step
-         Hydro_DataReconstruction( g_Flu_Array_In[P], g_PriVar_1PG, g_FC_Var_1PG, g_Slope_PPM_1PG,
-                                   Con2Pri_Yes, FLU_NXT, FLU_GHOST_SIZE-1,
-                                   Gamma, LR_Limiter, MinMod_Coeff, dt, dh, MinDens, MinPres,
-                                   NormPassive, NNorm, c_NormIdx, JeansMinPres, JeansMinPres_Coeff );
+         Hydro_DataReconstruction( g_Flu_Array_In[P], g_Mag_Array_In[P], g_PriVar_1PG, g_FC_Var_1PG, g_Slope_PPM_1PG,
+                                   Con2Pri_Yes, FLU_NXT, FLU_GHOST_SIZE-1, Gamma, LR_Limiter, MinMod_Coeff, dt, dh,
+                                   MinDens, MinPres, NormPassive, NNorm, c_NormIdx, JeansMinPres, JeansMinPres_Coeff );
 
 
 //       2. evaluate the face-centered half-step fluxes by solving the Riemann problem
-         Hydro_ComputeFlux( g_FC_Var_1PG, g_FC_Flux_1PG, 0, Gamma, CorrHalfVel_No, NULL, NULL,
+         Hydro_ComputeFlux( g_FC_Var_1PG, g_FC_Flux_1PG, N_FC_FLUX, 0, Gamma, CorrHalfVel_No, NULL, NULL,
                             NULL_REAL, NULL_REAL, NULL_REAL, GRAVITY_NONE, NULL, MinPres,
                             StoreFlux_No, NULL );
 
@@ -205,12 +205,12 @@ void CPU_FluidSolver_CTU(
 
 //       4. evaluate the face-centered full-step fluxes by solving the Riemann problem with the corrected data
 #        ifdef UNSPLIT_GRAVITY
-         Hydro_ComputeFlux( g_FC_Var_1PG, g_FC_Flux_1PG, 1, Gamma, CorrHalfVel_Yes,
+         Hydro_ComputeFlux( g_FC_Var_1PG, g_FC_Flux_1PG, N_FL_FLUX, 1, Gamma, CorrHalfVel_Yes,
                             g_Pot_Array_USG[P], g_Corner_Array[P],
                             dt, dh, Time, GravityType, c_ExtAcc_AuxArray, MinPres,
                             StoreFlux, g_Flux_Array[P] );
 #        else
-         Hydro_ComputeFlux( g_FC_Var_1PG, g_FC_Flux_1PG, 1, Gamma, CorrHalfVel_No,
+         Hydro_ComputeFlux( g_FC_Var_1PG, g_FC_Flux_1PG, N_FL_FLUX, 1, Gamma, CorrHalfVel_No,
                             NULL, NULL,
                             NULL_REAL, NULL_REAL, NULL_REAL, GRAVITY_NONE, NULL, MinPres,
                             StoreFlux, g_Flux_Array[P] );
