@@ -26,6 +26,10 @@ void Hydro_Pri2Con( const real In[], real Out[], const real _Gamma_m1,
 #if ( FLU_SCHEME == MHM )
 void Hydro_Con2Flux( const int XYZ, real Flux[], const real In[], const real Gamma_m1, const real MinPres );
 #endif
+#ifdef MHD
+void MHD_GetCellCenteredB( real B_CC[], const real Bx_FC[], const real By_FC[], const real Bz_FC[],
+                           const int Width_FC, const int i, const int j, const int k );
+#endif
 
 #endif // #ifdef __CUDACC__ ... else ...
 
@@ -231,11 +235,11 @@ void Hydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
 #        ifdef MHD
 //       assuming that g_FC_B[] has the size of NIn*NIn*(NIn+1)
          const int size_ij = SQR( NIn );
-         const int i       = idx % NIn
+         const int i       = idx % NIn;
          const int j       = idx % size_ij / NIn;
          const int k       = idx / size_ij;
 
-         MHD_GetCellCenteredBField( ConVar_1Cell+NCOMP_TOTAL, g_FC_B[0], g_FC_B[1], g_FC_B[2], NIn, i, j, k );
+         MHD_GetCellCenteredB( ConVar_1Cell+NCOMP_TOTAL, g_FC_B[0], g_FC_B[1], g_FC_B[2], NIn, i, j, k );
 #        endif
 
          Hydro_Con2Pri( ConVar_1Cell, PriVar_1Cell, Gamma_m1, MinPres, NormPassive, NNorm, NormIdx,
@@ -1174,7 +1178,7 @@ void Hydro_GetEigenSystem( const real CC_Var[], real EigenVal[][NWAVE],
 
    for (int v=0; v<NCOMP_TOTAL_PLUS_MAG; v++)  PriVar[v] = CC_Var[v];
 
-   CPU_Rotate3D( PriVar, XYZ, true );
+   Hydro_Rotate3D( PriVar, XYZ, true, MAG_OFFSET );
 
    const real Bx      = PriVar[ MAG_OFFSET + 0 ];
    const real By      = PriVar[ MAG_OFFSET + 1 ];

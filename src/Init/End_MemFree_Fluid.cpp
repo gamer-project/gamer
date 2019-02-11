@@ -37,6 +37,10 @@ void End_MemFree_Fluid()
 #     ifdef DUAL_ENERGY
       delete [] h_DE_Array_F_Out [t];  h_DE_Array_F_Out [t] = NULL;
 #     endif
+#     ifdef MHD
+      delete [] h_Mag_Array_F_In [t];  h_Mag_Array_F_In [t] = NULL;
+      delete [] h_Mag_Array_F_Out[t];  h_Mag_Array_F_Out[t] = NULL;
+#     endif
    } // for (int t=0; t<2; t++)
 
 #  if ( FLU_SCHEME == MHM  ||  FLU_SCHEME == MHM_RP  ||  FLU_SCHEME == CTU )

@@ -42,14 +42,19 @@ extern void Hydro_RiemannSolver_HLLE( const int XYZ, real Flux_Out[], const real
 //                SaveSg            : Sandglass to store the updated data
 //                h_Flux_Array      : Host array storing the updated flux data
 //                h_Flu_Array_F_Out : Host array storing the updated fluid data
-//                h_DE_Array_F_Out  : Host array storing the dual-energy status
+//                h_Mag_Array_F_Out : Host array storing the updated B field (for MHD only)
+//                h_DE_Array_F_Out  : Host array storing the dual-energy status (for DUAL_ENERGY only)
 //                NPG               : Number of patch groups to be evaluated
 //                PID0_List         : List recording the patch indicies with LocalID==0 to be udpated
 //                dt                : Evolution time-step
 //-------------------------------------------------------------------------------------------------------
-void Flu_Close( const int lv, const int SaveSg, real h_Flux_Array[][9][NFLUX_TOTAL][ SQR(PS2) ],
-                real h_Flu_Array_F_Out[][FLU_NOUT][ CUBE(PS2) ], char h_DE_Array_F_Out[][ CUBE(PS2) ],
-                const int NPG, const int *PID0_List, const real h_Flu_Array_F_In[][FLU_NIN][ CUBE(FLU_NXT) ],
+void Flu_Close( const int lv, const int SaveSg,
+                real h_Flux_Array[][9][NFLUX_TOTAL][ SQR(PS2) ],
+                real h_Flu_Array_F_Out[][FLU_NOUT][ CUBE(PS2) ],
+                real h_Mag_Array_F_Out[][MAG_NOUT][ PS2_P1*SQR(PS2) ],
+                char h_DE_Array_F_Out[][ CUBE(PS2) ],
+                const int NPG, const int *PID0_List,
+                const real h_Flu_Array_F_In[][FLU_NIN][ CUBE(FLU_NXT) ],
                 const double dt )
 {
 

@@ -219,6 +219,10 @@ extern double     (*h_Corner_Array_F [2])[3];
 #ifdef DUAL_ENERGY
 extern char       (*h_DE_Array_F_Out [2])[ CUBE(PS2) ];
 #endif
+#ifdef MHD
+extern real       (*h_Mag_Array_F_In [2])[MAG_NIN ][ FLU_NXT_P1*SQR(FLU_NXT) ];
+extern real       (*h_Mag_Array_F_Out[2])[MAG_NOUT][ PS2_P1*SQR(PS2)         ];
+#endif
 
 #ifdef GRAVITY
 extern real       (*h_Rho_Array_P    [2])[RHO_NXT][RHO_NXT][RHO_NXT];

@@ -273,18 +273,21 @@ void Preparation_Step( const Solver_t TSolver, const int lv, const double TimeNe
 {
 
 #  ifndef UNSPLIT_GRAVITY
-   real (*h_Pot_Array_USG_F[2])[ USG_NXT_F*USG_NXT_F*USG_NXT_F ] = { NULL, NULL };
+   real (*h_Pot_Array_USG_F[2])[ CUBE(USG_NXT_F) ]                  = { NULL, NULL };
+#  endif
+#  ifndef MHD
+   real (*h_Mag_Array_F_In [2])[MAG_NIN][ FLU_NXT_P1*SQR(FLU_NXT) ] = { NULL, NULL };
 #  endif
 #  if ( defined GRAVITY  &&  !defined DUAL_ENERGY )
-   char (*h_DE_Array_G     [2])[PS1][PS1][PS1]                   = { NULL, NULL };
+   char (*h_DE_Array_G     [2])[PS1][PS1][PS1]                      = { NULL, NULL };
 #  endif
 
 
    switch ( TSolver )
    {
       case FLUID_SOLVER :
-         Flu_Prepare( lv, TimeOld, h_Flu_Array_F_In[ArrayID][0][0], h_Pot_Array_USG_F[ArrayID][0],
-                      h_Corner_Array_F[ArrayID], NPG, PID0_List );
+         Flu_Prepare( lv, TimeOld, h_Flu_Array_F_In[ArrayID], h_Mag_Array_F_In[ArrayID],
+                      h_Pot_Array_USG_F[ArrayID], h_Corner_Array_F[ArrayID], NPG, PID0_List );
       break;
 
 #     ifdef GRAVITY
@@ -437,18 +440,23 @@ void Solver( const Solver_t TSolver, const int lv, const double TimeNew, const d
 #  endif
 
 #  ifndef UNSPLIT_GRAVITY
-   real (*h_Pot_Array_USG_F[2])[ CUBE(USG_NXT_F) ]                  = { NULL, NULL };
+   real (*h_Pot_Array_USG_F[2])[ CUBE(USG_NXT_F) ]                   = { NULL, NULL };
 #  ifdef GRAVITY
-   real (*h_Pot_Array_USG_G[2])[USG_NXT_G ][USG_NXT_G ][USG_NXT_G ] = { NULL, NULL };
-   real (*h_Flu_Array_USG_G[2])[GRA_NIN-1][PS1][PS1][PS1]           = { NULL, NULL };
+   real (*h_Pot_Array_USG_G[2])[USG_NXT_G ][USG_NXT_G ][USG_NXT_G ]  = { NULL, NULL };
+   real (*h_Flu_Array_USG_G[2])[GRA_NIN-1][PS1][PS1][PS1]            = { NULL, NULL };
 #  endif
 #  endif
 
 #  ifndef DUAL_ENERGY
-   char (*h_DE_Array_F_Out[2])[ CUBE(PS2) ]                         = { NULL, NULL };
+   char (*h_DE_Array_F_Out[2])[ CUBE(PS2) ]                          = { NULL, NULL };
 #  ifdef GRAVITY
-   char (*h_DE_Array_G    [2])[PS1][PS1][PS1]                       = { NULL, NULL };
+   char (*h_DE_Array_G    [2])[PS1][PS1][PS1]                        = { NULL, NULL };
 #  endif
+#  endif
+
+#  ifndef MHD
+   real (*h_Mag_Array_F_In [2])[MAG_NIN ][ FLU_NXT_P1*SQR(FLU_NXT) ] = { NULL, NULL };
+   real (*h_Mag_Array_F_Out[2])[MAG_NOUT][ PS2_P1*SQR(PS2) ]         = { NULL, NULL };
 #  endif
 
 #  if ( MODEL != HYDRO  &&  MODEL != ELBDM )
@@ -471,15 +479,19 @@ void Solver( const Solver_t TSolver, const int lv, const double TimeNew, const d
       case FLUID_SOLVER :
 
 #        ifdef GPU
-         CUAPI_Asyn_FluidSolver( h_Flu_Array_F_In[ArrayID], h_Flu_Array_F_Out[ArrayID], h_DE_Array_F_Out[ArrayID],
-                                 h_Flux_Array[ArrayID], h_Corner_Array_F[ArrayID], h_Pot_Array_USG_F[ArrayID],
+         CUAPI_Asyn_FluidSolver( h_Flu_Array_F_In[ArrayID], h_Flu_Array_F_Out[ArrayID],
+                                 h_Mag_Array_F_In[ArrayID], h_Mag_Array_F_Out[ArrayID],
+                                 h_DE_Array_F_Out[ArrayID], h_Flux_Array[ArrayID],
+                                 h_Corner_Array_F[ArrayID], h_Pot_Array_USG_F[ArrayID],
                                  NPG, dt, dh, GAMMA, OPT__FIXUP_FLUX, Flu_XYZ, OPT__LR_LIMITER, MINMOD_COEFF,
                                  ELBDM_ETA, ELBDM_TAYLOR3_COEFF, ELBDM_TAYLOR3_AUTO,
                                  TimeOld, OPT__GRAVITY_TYPE, GPU_NSTREAM, MIN_DENS, MIN_PRES, DUAL_ENERGY_SWITCH,
                                  OPT__NORMALIZE_PASSIVE, PassiveNorm_NVar, JEANS_MIN_PRES, JeansMinPres_Coeff );
 #        else
-         CPU_FluidSolver       ( h_Flu_Array_F_In[ArrayID], h_Flu_Array_F_Out[ArrayID], h_DE_Array_F_Out[ArrayID],
-                                 h_Flux_Array[ArrayID], h_Corner_Array_F[ArrayID], h_Pot_Array_USG_F[ArrayID],
+         CPU_FluidSolver       ( h_Flu_Array_F_In[ArrayID], h_Flu_Array_F_Out[ArrayID],
+                                 h_Mag_Array_F_In[ArrayID], h_Mag_Array_F_Out[ArrayID],
+                                 h_DE_Array_F_Out[ArrayID], h_Flux_Array[ArrayID],
+                                 h_Corner_Array_F[ArrayID], h_Pot_Array_USG_F[ArrayID],
                                  NPG, dt, dh, GAMMA, OPT__FIXUP_FLUX, Flu_XYZ, OPT__LR_LIMITER, MINMOD_COEFF,
                                  ELBDM_ETA, ELBDM_TAYLOR3_COEFF, ELBDM_TAYLOR3_AUTO,
                                  TimeOld, OPT__GRAVITY_TYPE, MIN_DENS, MIN_PRES, DUAL_ENERGY_SWITCH,
@@ -644,16 +656,20 @@ void Closing_Step( const Solver_t TSolver, const int lv, const int SaveSg_Flu, c
 {
 
 #  ifndef DUAL_ENERGY
-   char (*h_DE_Array_F_Out[2])[8*PATCH_SIZE*PATCH_SIZE*PATCH_SIZE] = { NULL, NULL };
+   char (*h_DE_Array_F_Out [2])[ CUBE(PS2) ]                 = { NULL, NULL };
+#  endif
+#  ifndef MHD
+   real (*h_Mag_Array_F_Out[2])[MAG_NOUT][ PS2_P1*SQR(PS2) ] = { NULL, NULL };
 #  endif
 #  if ( defined GRAVITY  &&  !defined DUAL_ENERGY )
-   char (*h_DE_Array_G    [2])[PS1][PS1][PS1]                      = { NULL, NULL };
+   char (*h_DE_Array_G     [2])[PS1][PS1][PS1]               = { NULL, NULL };
 #  endif
 
    switch ( TSolver )
    {
       case FLUID_SOLVER :
-         Flu_Close( lv, SaveSg_Flu, h_Flux_Array[ArrayID], h_Flu_Array_F_Out[ArrayID], h_DE_Array_F_Out[ArrayID],
+         Flu_Close( lv, SaveSg_Flu, h_Flux_Array[ArrayID], h_Flu_Array_F_Out[ArrayID],
+                    h_Mag_Array_F_Out[ArrayID], h_DE_Array_F_Out[ArrayID],
                     NPG, PID0_List, h_Flu_Array_F_In[ArrayID], dt );
       break;
 

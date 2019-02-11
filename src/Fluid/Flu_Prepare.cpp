@@ -5,19 +5,23 @@
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Flu_Prepare
-// Description :  Prepare the input array h_Flu_Array_F_In[] for the fluid solver
+// Description :  Prepare input arrays for the fluid solver
 //
 // Note        :  Invoke Prepare_PatchData()
 //
 // Parameter   :  lv                   : Target refinement level
 //                PrepTime             : Target physical time to prepare the coarse-grid data
 //                h_Flu_Array_F_In     : Host array to store the prepared fluid data
+//                h_Mag_Array_F_In     : Host array to store the prepared B field (for MHD onlhy)
 //                h_Pot_Array_USG_F    : Host array to store the prepared potential data (for UNSPLIT_GRAVITY only)
 //                h_Corner_Array_USG_F : Host array to store the prepared corner data (for UNSPLIT_GRAVITY only)
 //                NPG                  : Number of patch groups to be prepared at a time
 //                PID0_List            : List recording the patch indicies with LocalID==0 to be udpated
 //-------------------------------------------------------------------------------------------------------
-void Flu_Prepare( const int lv, const double PrepTime, real h_Flu_Array_F_In[], real h_Pot_Array_USG_F[],
+void Flu_Prepare( const int lv, const double PrepTime,
+                  real h_Flu_Array_F_In[][FLU_NIN][ CUBE(FLU_NXT) ],
+                  real h_Mag_Array_F_In[][MAG_NIN][ FLU_NXT_P1*SQR(FLU_NXT) ],
+                  real h_Pot_Array_USG_F[][ CUBE(USG_NXT_F) ],
                   double h_Corner_Array_F[][3], const int NPG, const int *PID0_List )
 {
 
@@ -51,19 +55,22 @@ void Flu_Prepare( const int lv, const double PrepTime, real h_Flu_Array_F_In[], 
 
 // prepare the fluid array
 #  if ( MODEL == ELBDM )
-   Prepare_PatchData( lv, PrepTime, h_Flu_Array_F_In,  NULL, FLU_GHOST_SIZE, NPG, PID0_List, _REAL|_IMAG|_PASSIVE, _NONE,
+   Prepare_PatchData( lv, PrepTime, h_Flu_Array_F_In[0][0],                   NULL,
+                      FLU_GHOST_SIZE, NPG, PID0_List, _REAL|_IMAG|_PASSIVE, _NONE,
                       OPT__FLU_INT_SCHEME, INT_NONE, UNIT_PATCHGROUP, NSIDE_26, OPT__INT_PHASE,
                       OPT__BC_FLU, BC_POT_NONE, MinDens_No, MinPres_No, DE_Consistency_No );
 #  else
-   Prepare_PatchData( lv, PrepTime, h_Flu_Array_F_In,  NULL, FLU_GHOST_SIZE, NPG, PID0_List, _TOTAL, _NONE,
+   Prepare_PatchData( lv, PrepTime, h_Flu_Array_F_In[0][0], h_Mag_Array_F_In[0][0],
+                      FLU_GHOST_SIZE, NPG, PID0_List, _TOTAL, _MAG,
                       OPT__FLU_INT_SCHEME, INT_NONE, UNIT_PATCHGROUP, NSIDE_26, IntPhase_No,
-                      OPT__BC_FLU, BC_POT_NONE, MinDens, MinPres_No, DE_Consistency );
+                      OPT__BC_FLU, BC_POT_NONE, MinDens,    MinPres_No, DE_Consistency );
 #  endif
 
 #  ifdef UNSPLIT_GRAVITY
 // prepare the potential array
    if ( OPT__GRAVITY_TYPE == GRAVITY_SELF  ||  OPT__GRAVITY_TYPE == GRAVITY_BOTH )
-   Prepare_PatchData( lv, PrepTime, h_Pot_Array_USG_F, NULL, USG_GHOST_SIZE, NPG, PID0_List, _POTE, _NONE,
+   Prepare_PatchData( lv, PrepTime, h_Pot_Array_USG_F[0], NULL,
+                      USG_GHOST_SIZE, NPG, PID0_List, _POTE, _NONE,
                       OPT__GRA_INT_SCHEME, INT_NONE, UNIT_PATCHGROUP, NSIDE_26, IntPhase_No,
                       OPT__BC_FLU, OPT__BC_POT, MinDens_No, MinPres_No, DE_Consistency_No );
 

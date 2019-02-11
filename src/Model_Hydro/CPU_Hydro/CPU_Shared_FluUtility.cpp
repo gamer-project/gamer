@@ -229,7 +229,7 @@ void Hydro_Pri2Con( const real In[], real Out[], const real _Gamma_m1,
    const real By = In[ MAG_OFFSET + 1 ];
    const real Bz = In[ MAG_OFFSET + 2 ];
    Out[4] += (real)0.5*( SQR(Bx) + SQR(By) + SQR(Bz) );
-#  else
+#  endif
 
 // passive scalars
 #  if ( NCOMP_PASSIVE > 0 )
@@ -614,6 +614,8 @@ void Hydro_NormalizePassive( const real GasDens, real Passive[], const int NNorm
 // Note        :  1. Use the central average operator
 //                2. Return all three components of the magnetic field
 //                3. Input arrays Bx/y/z_FC[] should have the size of "Width_FC*Width_FC*(Width_FC+1)"
+//                4. This function is different from MHD_GetCellCenteredBField() defined in
+//                   MHD_GetCellCenteredB.cpp, which is used to access data in the AMR patch structure
 //
 // Parameter   :  B_CC      : Cell-centered magnetic field to be returned
 //                Bx/y/z_FC : Input face-centered magnetic field
@@ -622,8 +624,9 @@ void Hydro_NormalizePassive( const real GasDens, real Passive[], const int NNorm
 //
 // Return      :  B_CC
 //-------------------------------------------------------------------------------------------------------
-void MHD_GetCellCenteredBField( real B_CC[], const real Bx_FC[], const real By_FC[], const real Bz_FC[],
-                                const int Width_FC, const int i, const int j, const int k )
+GPU_DEVICE
+void MHD_GetCellCenteredB( real B_CC[], const real Bx_FC[], const real By_FC[], const real Bz_FC[],
+                           const int Width_FC, const int i, const int j, const int k )
 {
 
    const int idx_Bx = IDX321_BX( i, j, k, Width_FC );
