@@ -25,6 +25,8 @@ void CPU_FluidSolver_RTVD(
 void CPU_FluidSolver_MHM(
    const real   g_Flu_Array_In [][NCOMP_TOTAL][ CUBE(FLU_NXT) ],
          real   g_Flu_Array_Out[][NCOMP_TOTAL][ CUBE(PS2) ],
+   const real   g_Mag_Array_In [][NCOMP_MAGNETIC][ FLU_NXT_P1*SQR(FLU_NXT) ],
+         real   g_Mag_Array_Out[][NCOMP_MAGNETIC][ PS2_P1*SQR(PS2) ],
          char   g_DE_Array_Out [][ CUBE(PS2) ],
          real   g_Flux_Array   [][9][NCOMP_TOTAL][ SQR(PS2) ],
    const double g_Corner_Array [][3],
@@ -43,6 +45,8 @@ void CPU_FluidSolver_MHM(
 void CPU_FluidSolver_CTU(
    const real   g_Flu_Array_In [][NCOMP_TOTAL][ CUBE(FLU_NXT) ],
          real   g_Flu_Array_Out[][NCOMP_TOTAL][ CUBE(PS2) ],
+   const real   g_Mag_Array_In [][NCOMP_MAGNETIC][ FLU_NXT_P1*SQR(FLU_NXT) ],
+         real   g_Mag_Array_Out[][NCOMP_MAGNETIC][ PS2_P1*SQR(PS2) ],
          char   g_DE_Array_Out [][ CUBE(PS2) ],
          real   g_Flux_Array   [][9][NCOMP_TOTAL][ SQR(PS2) ],
    const double g_Corner_Array [][3],
@@ -95,6 +99,8 @@ extern real (*h_FC_Flux)  [3][NCOMP_TOTAL][ CUBE(N_FC_FLUX)   ];
 //
 // Parameter   :  h_Flu_Array_In       : Host array storing the input fluid variables
 //                h_Flu_Array_Out      : Host array to store the output fluid variables
+//                h_Mag_Array_In       : Host array storing the input B field (for MHD only)
+//                h_Mag_Array_Out      : Host array to store the output B field (for MHD only)
 //                h_DE_Array_Out       : Host array to store the dual-energy status
 //                h_Flux_Array         : Host array to store the output fluxes (useful only if StoreFlux == true)
 //                h_Corner_Array       : Host array storing the physical corner coordinates of each patch group
@@ -133,6 +139,8 @@ extern real (*h_FC_Flux)  [3][NCOMP_TOTAL][ CUBE(N_FC_FLUX)   ];
 //-------------------------------------------------------------------------------------------------------
 void CPU_FluidSolver( real h_Flu_Array_In[][FLU_NIN][ CUBE(FLU_NXT) ],
                       real h_Flu_Array_Out[][FLU_NOUT][ CUBE(PS2) ],
+                      real h_Mag_Array_In[][MAG_NIN][ FLU_NXT_P1*SQR(FLU_NXT) ],
+                      real h_Mag_Array_Out[][MAG_NOUT][ PS2_P1*SQR(PS2) ],
                       char h_DE_Array_Out[][ CUBE(PS2) ],
                       real h_Flux_Array[][9][NFLUX_TOTAL][ SQR(PS2) ],
                       const double h_Corner_Array[][3],
@@ -174,19 +182,21 @@ void CPU_FluidSolver( real h_Flu_Array_In[][FLU_NIN][ CUBE(FLU_NXT) ],
 
 #     elif ( FLU_SCHEME == MHM  ||  FLU_SCHEME == MHM_RP )
 
-      CPU_FluidSolver_MHM ( h_Flu_Array_In, h_Flu_Array_Out, h_DE_Array_Out, h_Flux_Array, h_Corner_Array, h_Pot_Array_USG,
+      CPU_FluidSolver_MHM ( h_Flu_Array_In, h_Flu_Array_Out, h_Mag_Array_In, h_Mag_Array_Out,
+                            h_DE_Array_Out, h_Flux_Array, h_Corner_Array, h_Pot_Array_USG,
                             h_PriVar, h_Slope_PPM, h_FC_Var, h_FC_Flux,
                             NPatchGroup, dt, dh, Gamma, StoreFlux, LR_Limiter, MinMod_Coeff, Time,
-                            GravityType, ExtAcc_AuxArray, MinDens, MinPres, DualEnergySwitch, NormPassive, NNorm, NormIdx,
-                            JeansMinPres, JeansMinPres_Coeff );
+                            GravityType, ExtAcc_AuxArray, MinDens, MinPres, DualEnergySwitch,
+                            NormPassive, NNorm, NormIdx, JeansMinPres, JeansMinPres_Coeff );
 
 #     elif ( FLU_SCHEME == CTU )
 
-      CPU_FluidSolver_CTU ( h_Flu_Array_In, h_Flu_Array_Out, h_DE_Array_Out, h_Flux_Array, h_Corner_Array, h_Pot_Array_USG,
+      CPU_FluidSolver_CTU ( h_Flu_Array_In, h_Flu_Array_Out, h_Mag_Array_In, h_Mag_Array_Out,
+                            h_DE_Array_Out, h_Flux_Array, h_Corner_Array, h_Pot_Array_USG,
                             h_PriVar, h_Slope_PPM, h_FC_Var, h_FC_Flux,
                             NPatchGroup, dt, dh, Gamma, StoreFlux, LR_Limiter, MinMod_Coeff, Time,
-                            GravityType, ExtAcc_AuxArray, MinDens, MinPres, DualEnergySwitch, NormPassive, NNorm, NormIdx,
-                            JeansMinPres, JeansMinPres_Coeff );
+                            GravityType, ExtAcc_AuxArray, MinDens, MinPres, DualEnergySwitch,
+                            NormPassive, NNorm, NormIdx, JeansMinPres, JeansMinPres_Coeff );
 
 #     else
 

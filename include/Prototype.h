@@ -68,6 +68,8 @@ void Buf_SortBoundaryPatch( const int NPatch, int *IDList, int *PosList );
 // Hydrodynamics
 void CPU_FluidSolver( real h_Flu_Array_In[][FLU_NIN][ CUBE(FLU_NXT) ],
                       real h_Flu_Array_Out[][FLU_NOUT][ CUBE(PS2) ],
+                      real h_Mag_Array_In[][MAG_NIN][ FLU_NXT_P1*SQR(FLU_NXT) ],
+                      real h_Mag_Array_Out[][MAG_NOUT][ PS2_P1*SQR(PS2) ],
                       char h_DE_Array_Out[][ CUBE(PS2) ],
                       real h_Flux_Array[][9][NFLUX_TOTAL][ SQR(PS2) ],
                       const double h_Corner_Array[][3],
@@ -103,12 +105,19 @@ real Hydro_CheckMinPresInEngy( const real Dens, const real MomX, const real MomY
 int Flu_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, const double dt, const int SaveSg,
                    const bool OverlapMPI, const bool Overlap_Sync );
 void Flu_AllocateFluxArray( const int lv );
-void Flu_Close( const int lv, const int SaveSg, real h_Flux_Array[][9][NFLUX_TOTAL][ SQR(PS2) ],
-                real h_Flu_Array_F_Out[][FLU_NOUT][ CUBE(PS2) ], char h_DE_Array_F_Out[][ CUBE(PS2) ],
-                const int NPG, const int *PID0_List, const real h_Flu_Array_F_In[][FLU_NIN][ CUBE(FLU_NXT) ],
+void Flu_Close( const int lv, const int SaveSg,
+                real h_Flux_Array[][9][NFLUX_TOTAL][ SQR(PS2) ],
+                real h_Flu_Array_F_Out[][FLU_NOUT][ CUBE(PS2) ],
+                real h_Mag_Array_F_Out[][MAG_NOUT][ PS2_P1*SQR(PS2) ],
+                char h_DE_Array_F_Out[][ CUBE(PS2) ],
+                const int NPG, const int *PID0_List,
+                const real h_Flu_Array_F_In[][FLU_NIN][ CUBE(FLU_NXT) ],
                 const double dt );
 void Flu_FixUp( const int lv );
-void Flu_Prepare( const int lv, const double PrepTime, real h_Flu_Array_F_In[], real h_Pot_Array_USG_F[],
+void Flu_Prepare( const int lv, const double PrepTime,
+                  real h_Flu_Array_F_In[][FLU_NIN][ CUBE(FLU_NXT) ],
+                  real h_Mag_Array_F_In[][MAG_NIN][ FLU_NXT_P1*SQR(FLU_NXT) ],
+                  real h_Pot_Array_USG_F[][ CUBE(USG_NXT_F) ],
                   double h_Corner_Array_F[][3], const int NPG, const int *PID0_List );
 void Flu_Restrict( const int FaLv, const int SonFluSg, const int FaFluSg, const int SonPotSg, const int FaPotSg,
                    const int TVar );

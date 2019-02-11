@@ -21,25 +21,22 @@ extern double (*d_Corner_Array_F)[3];
 #ifdef DUAL_ENERGY
 extern char (*d_DE_Array_F_Out)[ CUBE(PS2) ];
 #endif
+#ifdef MHD
+extern real (*d_Mag_Array_F_In )[MAG_NIN ][ FLU_NXT_P1*SQR(FLU_NXT) ];
+extern real (*d_Mag_Array_F_Out)[MAG_NOUT][ PS2_P1*SQR(PS2)         ];
+#endif
 extern real *d_dt_Array_T;
 extern real (*d_Flu_Array_T)[NCOMP_FLUID][ CUBE(PS1) ];
-
-// global memory arrays in different models
-#if   ( MODEL == HYDRO )
 #if ( FLU_SCHEME == MHM  ||  FLU_SCHEME == MHM_RP  ||  FLU_SCHEME == CTU )
 extern real (*d_PriVar)      [NCOMP_TOTAL][ CUBE(FLU_NXT)     ];
 extern real (*d_Slope_PPM)[3][NCOMP_TOTAL][ CUBE(N_SLOPE_PPM) ];
 extern real (*d_FC_Var)   [6][NCOMP_TOTAL][ CUBE(N_FC_VAR)    ];
 extern real (*d_FC_Flux)  [3][NCOMP_TOTAL][ CUBE(N_FC_FLUX)   ];
-#endif // #if ( FLU_SCHEME == MHM  ||  FLU_SCHEME == MHM_RP  ||  FLU_SCHEME == CTU )
-
-#ifdef MHD
-#warning : WAIT MHD !!!
 #endif
 
-#elif ( MODEL != ELBDM )
-#warning : DO YOU WANT TO ADD SOMETHING HERE FOR THE NEW MODEL ??
-#endif // MODEL
+#if ( MODEL != HYDRO  &&  MODEL != ELBDM )
+#  warning : DO YOU WANT TO ADD SOMETHING HERE FOR THE NEW MODEL ??
+#endif
 
 
 
@@ -71,6 +68,10 @@ void CUAPI_MemAllocate_Fluid( const int Flu_NPG, const int Pot_NPG, const int GP
 #  ifdef DUAL_ENERGY
    const long DE_MemSize_F_Out  = sizeof(char  )*Flu_NPG*PS2*PS2*PS2;
 #  endif
+#  ifdef MHD
+   const long Mag_MemSize_F_In  = sizeof(real  )*Flu_NPG*MAG_NIN *FLU_NXT_P1*SQR(FLU_NXT);
+   const long Mag_MemSize_F_Out = sizeof(real  )*Flu_NPG*MAG_NOUT*PS2_P1*SQR(PS2);
+#  endif
 #  ifdef GRAVITY
    const long dt_MemSize_T      = sizeof(real  )*MAX( Flu_NP, Pot_NP ); // dt_Array_T is used for both DT_FLU_SOLVER and DT_GRA_SOLVER
 #  else
@@ -79,7 +80,6 @@ void CUAPI_MemAllocate_Fluid( const int Flu_NPG, const int Pot_NPG, const int GP
    const long Flu_MemSize_T     = sizeof(real  )*Flu_NP*NCOMP_FLUID*CUBE(PS1);
 
 // the size of the global memory arrays in different models
-#  if   ( MODEL == HYDRO )
 #  if ( FLU_SCHEME == MHM  ||  FLU_SCHEME == MHM_RP  ||  FLU_SCHEME == CTU )
    const long PriVar_MemSize    = Flu_MemSize_F_In;
    const long FC_Var_MemSize    = sizeof(real)*Flu_NPG*6*NCOMP_TOTAL*CUBE(N_FC_VAR);
@@ -87,11 +87,11 @@ void CUAPI_MemAllocate_Fluid( const int Flu_NPG, const int Pot_NPG, const int GP
 #  if ( LR_SCHEME == PPM )
    const long Slope_PPM_MemSize = sizeof(real)*Flu_NPG*3*NCOMP_TOTAL*CUBE(N_SLOPE_PPM);
 #  endif
-#  endif // #if ( FLU_SCHEME == MHM  ||  FLU_SCHEME == MHM_RP  ||  FLU_SCHEME == CTU )
+#  endif
 
-#  elif ( MODEL != ELBDM )
-#  warning : DO YOU WANT TO ADD SOMETHING HERE FOR THE NEW MODEL ??
-#  endif // MODEL
+#  if ( MODEL != HYDRO  &&  MODEL != ELBDM )
+#     warning : DO YOU WANT TO ADD SOMETHING HERE FOR THE NEW MODEL ??
+#  endif
 
 
 // output the total memory requirement
@@ -111,24 +111,27 @@ void CUAPI_MemAllocate_Fluid( const int Flu_NPG, const int Pot_NPG, const int GP
    TotalSize += DE_MemSize_F_Out;
 #  endif
 
-#  if   ( MODEL == HYDRO )
+#  ifdef MHD
+   TotalSize += Mag_MemSize_F_In + Mag_MemSize_F_Out;
+#  endif
+
 #  if ( FLU_SCHEME == MHM  ||  FLU_SCHEME == MHM_RP  ||  FLU_SCHEME == CTU )
    TotalSize += PriVar_MemSize + FC_Var_MemSize + FC_Flux_MemSize;
 
 #  if ( LR_SCHEME == PPM )
    TotalSize += Slope_PPM_MemSize;
-#  endif // PPM
+#  endif
 #  endif // MHM/MHM_RP/CTU
 
-#  elif ( MODEL != ELBDM )
-#  warning : DO YOU WANT TO ADD SOMETHING HERE FOR THE NEW MODEL ??
-#  endif // MODEL
+#  if ( MODEL != HYDRO  &&  MODEL != ELBDM )
+#     warning : DO YOU WANT TO ADD SOMETHING HERE FOR THE NEW MODEL ??
+#  endif
 
    if ( MPI_Rank == 0 )
       Aux_Message( stdout, "NOTE : total memory requirement in GPU fluid solver = %ld MB\n", TotalSize/(1<<20) );
 
 
-// allocate the device memory (in all models)
+// allocate the device memory
    CUDA_CHECK_ERROR(  cudaMalloc( (void**) &d_Flu_Array_F_In,        Flu_MemSize_F_In        )  );
    CUDA_CHECK_ERROR(  cudaMalloc( (void**) &d_Flu_Array_F_Out,       Flu_MemSize_F_Out       )  );
 
@@ -142,15 +145,17 @@ void CUAPI_MemAllocate_Fluid( const int Flu_NPG, const int Pot_NPG, const int GP
    CUDA_CHECK_ERROR(  cudaMalloc( (void**) &d_Corner_Array_F,        Corner_MemSize          )  );
 #  endif
 
-   CUDA_CHECK_ERROR(  cudaMalloc( (void**) &d_dt_Array_T,            dt_MemSize_T            )  );
-   CUDA_CHECK_ERROR(  cudaMalloc( (void**) &d_Flu_Array_T,           Flu_MemSize_T           )  );
-
-
-// allocate the device memory (in different models)
-#  if   ( MODEL == HYDRO )
 #  ifdef DUAL_ENERGY
    CUDA_CHECK_ERROR(  cudaMalloc( (void**) &d_DE_Array_F_Out,        DE_MemSize_F_Out        )  );
 #  endif
+
+#  ifdef MHD
+   CUDA_CHECK_ERROR(  cudaMalloc( (void**) &d_Mag_Array_F_In,        Mag_MemSize_F_In        )  );
+   CUDA_CHECK_ERROR(  cudaMalloc( (void**) &d_Mag_Array_F_Out,       Mag_MemSize_F_Out       )  );
+#  endif
+
+   CUDA_CHECK_ERROR(  cudaMalloc( (void**) &d_dt_Array_T,            dt_MemSize_T            )  );
+   CUDA_CHECK_ERROR(  cudaMalloc( (void**) &d_Flu_Array_T,           Flu_MemSize_T           )  );
 
 #  if ( FLU_SCHEME == MHM  ||  FLU_SCHEME == MHM_RP  ||  FLU_SCHEME == CTU )
    CUDA_CHECK_ERROR(  cudaMalloc( (void**) &d_FC_Var,                FC_Var_MemSize          )  );
@@ -164,9 +169,9 @@ void CUAPI_MemAllocate_Fluid( const int Flu_NPG, const int Pot_NPG, const int GP
 #  endif
 #  endif // #if ( FLU_SCHEME == MHM  ||  FLU_SCHEME == MHM_RP  ||  FLU_SCHEME == CTU )
 
-#  elif ( MODEL != ELBDM )
-#  warning : DO YOU WANT TO ADD SOMETHING HERE FOR THE NEW MODEL ??
-#  endif // MODEL
+#  if ( MODEL != HYDRO  &&  MODEL != ELBDM )
+#     warning : DO YOU WANT TO ADD SOMETHING HERE FOR THE NEW MODEL ??
+#  endif
 
 
 // allocate the host memory by CUDA
@@ -187,6 +192,11 @@ void CUAPI_MemAllocate_Fluid( const int Flu_NPG, const int Pot_NPG, const int GP
 
 #     ifdef DUAL_ENERGY
       CUDA_CHECK_ERROR(  cudaMallocHost( (void**) &h_DE_Array_F_Out [t], DE_MemSize_F_Out        )  );
+#     endif
+
+#     ifdef MHD
+      CUDA_CHECK_ERROR(  cudaMallocHost( (void**) &h_Mag_Array_F_In [t], Mag_MemSize_F_In        )  );
+      CUDA_CHECK_ERROR(  cudaMallocHost( (void**) &h_Mag_Array_F_Out[t], Mag_MemSize_F_Out       )  );
 #     endif
 
       CUDA_CHECK_ERROR(  cudaMallocHost( (void**) &h_dt_Array_T     [t], dt_MemSize_T            )  );

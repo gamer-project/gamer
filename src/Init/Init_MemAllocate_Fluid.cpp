@@ -52,6 +52,11 @@ void Init_MemAllocate_Fluid( const int Flu_NPatchGroup, const int Pot_NPatchGrou
 #     ifdef DUAL_ENERGY
       h_DE_Array_F_Out [t] = new char [Flu_NPatchGroup][ CUBE(PS2) ];
 #     endif
+
+#     ifdef MHD
+      h_Mag_Array_F_In [t] = new real [Flu_NPatchGroup][MAG_NIN ][ FLU_NXT_P1*SQR(FLU_NXT) ];
+      h_Mag_Array_F_Out[t] = new real [Flu_NPatchGroup][MAG_NOUT][ PS2_P1*SQR(PS2) ];
+#     endif
    } // for (int t=0; t<2; t++)
 
 
