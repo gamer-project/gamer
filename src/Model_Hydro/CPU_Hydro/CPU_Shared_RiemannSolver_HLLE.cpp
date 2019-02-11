@@ -19,7 +19,7 @@
 
 #else // #ifdef __CUDACC__
 
-void Hydro_Rotate3D( real InOut[], const int XYZ, const bool Forward );
+void Hydro_Rotate3D( real InOut[], const int XYZ, const bool Forward, const int Mag_Offset );
 void Hydro_Con2Flux( const int XYZ, real Flux[], const real In[], const real Gamma_m1, const real MinPres );
 real Hydro_CheckMinPres( const real InPres, const real MinPres );
 
@@ -59,8 +59,8 @@ void Hydro_RiemannSolver_HLLE( const int XYZ, real Flux_Out[], const real L_In[]
       R[v] = R_In[v];
    }
 
-   Hydro_Rotate3D( L, XYZ, true );
-   Hydro_Rotate3D( R, XYZ, true );
+   Hydro_Rotate3D( L, XYZ, true, MAG_OFFSET );
+   Hydro_Rotate3D( R, XYZ, true, MAG_OFFSET );
 
 
 // 2. evaluate the Roe's average values
@@ -179,7 +179,7 @@ void Hydro_RiemannSolver_HLLE( const int XYZ, real Flux_Out[], const real L_In[]
 
 
 // 7. restore the correct order
-   Hydro_Rotate3D( Flux_Out, XYZ, false );
+   Hydro_Rotate3D( Flux_Out, XYZ, false, MAG_OFFSET );
 
 } // FUNCTION : Hydro_RiemannSolver_HLLE
 

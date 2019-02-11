@@ -28,10 +28,10 @@ extern real (*d_Mag_Array_F_Out)[MAG_NOUT][ PS2_P1*SQR(PS2)         ];
 extern real *d_dt_Array_T;
 extern real (*d_Flu_Array_T)[NCOMP_FLUID][ CUBE(PS1) ];
 #if ( FLU_SCHEME == MHM  ||  FLU_SCHEME == MHM_RP  ||  FLU_SCHEME == CTU )
-extern real (*d_PriVar)      [NCOMP_TOTAL][ CUBE(FLU_NXT)     ];
-extern real (*d_Slope_PPM)[3][NCOMP_TOTAL][ CUBE(N_SLOPE_PPM) ];
-extern real (*d_FC_Var)   [6][NCOMP_TOTAL][ CUBE(N_FC_VAR)    ];
-extern real (*d_FC_Flux)  [3][NCOMP_TOTAL][ CUBE(N_FC_FLUX)   ];
+extern real (*d_PriVar)      [NCOMP_TOTAL_PLUS_MAG][ CUBE(FLU_NXT)     ];
+extern real (*d_Slope_PPM)[3][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_SLOPE_PPM) ];
+extern real (*d_FC_Var)   [6][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_VAR)    ];
+extern real (*d_FC_Flux)  [3][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX)   ];
 #endif
 
 #if ( MODEL != HYDRO  &&  MODEL != ELBDM )
@@ -58,15 +58,15 @@ void CUAPI_MemAllocate_Fluid( const int Flu_NPG, const int Pot_NPG, const int GP
 #  ifdef GRAVITY
    const int  Pot_NP            = 8*Pot_NPG;
 #  endif
-   const long Flu_MemSize_F_In  = sizeof(real  )*Flu_NPG*FLU_NIN *FLU_NXT*FLU_NXT*FLU_NXT;
-   const long Flu_MemSize_F_Out = sizeof(real  )*Flu_NPG*FLU_NOUT*PS2*PS2*PS2;
-   const long Flux_MemSize      = sizeof(real  )*Flu_NPG*9*NFLUX_TOTAL*PS2*PS2;
+   const long Flu_MemSize_F_In  = sizeof(real  )*Flu_NPG*FLU_NIN *CUBE(FLU_NXT);
+   const long Flu_MemSize_F_Out = sizeof(real  )*Flu_NPG*FLU_NOUT*CUBE(PS2);
+   const long Flux_MemSize      = sizeof(real  )*Flu_NPG*9*NFLUX_TOTAL*SQR(PS2);
 #  ifdef UNSPLIT_GRAVITY
-   const long Pot_MemSize_USG_F = sizeof(real  )*Flu_NPG*USG_NXT_F*USG_NXT_F*USG_NXT_F;
+   const long Pot_MemSize_USG_F = sizeof(real  )*Flu_NPG*CUBE(USG_NXT_F);
    const long Corner_MemSize    = sizeof(double)*Flu_NPG*3;
 #  endif
 #  ifdef DUAL_ENERGY
-   const long DE_MemSize_F_Out  = sizeof(char  )*Flu_NPG*PS2*PS2*PS2;
+   const long DE_MemSize_F_Out  = sizeof(char  )*Flu_NPG*CUBE(PS2);
 #  endif
 #  ifdef MHD
    const long Mag_MemSize_F_In  = sizeof(real  )*Flu_NPG*MAG_NIN *FLU_NXT_P1*SQR(FLU_NXT);
@@ -81,11 +81,11 @@ void CUAPI_MemAllocate_Fluid( const int Flu_NPG, const int Pot_NPG, const int GP
 
 // the size of the global memory arrays in different models
 #  if ( FLU_SCHEME == MHM  ||  FLU_SCHEME == MHM_RP  ||  FLU_SCHEME == CTU )
-   const long PriVar_MemSize    = Flu_MemSize_F_In;
-   const long FC_Var_MemSize    = sizeof(real)*Flu_NPG*6*NCOMP_TOTAL*CUBE(N_FC_VAR);
-   const long FC_Flux_MemSize   = sizeof(real)*Flu_NPG*3*NCOMP_TOTAL*CUBE(N_FC_FLUX);
+   const long PriVar_MemSize    = sizeof(real  )*Flu_NPG  *NCOMP_TOTAL_PLUS_MAG*CUBE(FLU_NXT);
+   const long FC_Var_MemSize    = sizeof(real  )*Flu_NPG*6*NCOMP_TOTAL_PLUS_MAG*CUBE(N_FC_VAR);
+   const long FC_Flux_MemSize   = sizeof(real  )*Flu_NPG*3*NCOMP_TOTAL_PLUS_MAG*CUBE(N_FC_FLUX);
 #  if ( LR_SCHEME == PPM )
-   const long Slope_PPM_MemSize = sizeof(real)*Flu_NPG*3*NCOMP_TOTAL*CUBE(N_SLOPE_PPM);
+   const long Slope_PPM_MemSize = sizeof(real  )*Flu_NPG*3*NCOMP_TOTAL_PLUS_MAG*CUBE(N_SLOPE_PPM);
 #  endif
 #  endif
 
