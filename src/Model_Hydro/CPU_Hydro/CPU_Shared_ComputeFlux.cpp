@@ -91,8 +91,8 @@ void ExternalAcc( real Acc[], const double x, const double y, const double z, co
 //                g_IntFlux       : Array for DumpIntFlux
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE
-void Hydro_ComputeFlux( const real g_FC_Var [][NCOMP_TOTAL][ CUBE(N_FC_VAR) ],
-                              real g_FC_Flux[][NCOMP_TOTAL][ CUBE(N_FC_FLUX) ],
+void Hydro_ComputeFlux( const real g_FC_Var [][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_VAR) ],
+                              real g_FC_Flux[][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX) ],
                         const int NFlux, const int Gap, const real Gamma, const bool CorrHalfVel, const real g_Pot_USG[],
                         const double g_Corner[], const real dt, const real dh, const double Time,
                         const OptGravityType_t GravityType, const double ExtAcc_AuxArray[], const real MinPres,

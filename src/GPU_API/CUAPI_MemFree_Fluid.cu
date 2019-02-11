@@ -21,10 +21,10 @@ extern real (*d_Mag_Array_F_Out)[MAG_NOUT][ PS2_P1*SQR(PS2)         ];
 extern real *d_dt_Array_T;
 extern real (*d_Flu_Array_T)[NCOMP_FLUID][ CUBE(PS1) ];
 #if ( FLU_SCHEME == MHM  ||  FLU_SCHEME == MHM_RP  ||  FLU_SCHEME == CTU )
-extern real (*d_PriVar)      [NCOMP_TOTAL][ CUBE(FLU_NXT)     ];
-extern real (*d_Slope_PPM)[3][NCOMP_TOTAL][ CUBE(N_SLOPE_PPM) ];
-extern real (*d_FC_Var)   [6][NCOMP_TOTAL][ CUBE(N_FC_VAR)    ];
-extern real (*d_FC_Flux)  [3][NCOMP_TOTAL][ CUBE(N_FC_FLUX)   ];
+extern real (*d_PriVar)      [NCOMP_TOTAL_PLUS_MAG][ CUBE(FLU_NXT)     ];
+extern real (*d_Slope_PPM)[3][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_SLOPE_PPM) ];
+extern real (*d_FC_Var)   [6][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_VAR)    ];
+extern real (*d_FC_Flux)  [3][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX)   ];
 #endif
 
 #if ( MODEL != HYDRO  &&  MODEL != ELBDM )

@@ -53,7 +53,7 @@
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE
 void Hydro_FullStepUpdate( const real g_Input[][ CUBE(FLU_NXT) ], real g_Output[][ CUBE(PS2) ], char g_DE_Status[],
-                           const real g_Flux[][NCOMP_TOTAL][ CUBE(N_FC_FLUX) ], const real dt, const real dh,
+                           const real g_Flux[][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX) ], const real dt, const real dh,
                            const real Gamma, const real MinDens, const real MinPres, const real DualEnergySwitch,
                            const bool NormPassive, const int NNorm, const int NormIdx[] )
 {

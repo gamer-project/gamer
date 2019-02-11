@@ -202,10 +202,10 @@ real (*h_Mag_Array_F_In [2])[MAG_NIN ][ FLU_NXT_P1*SQR(FLU_NXT) ] = { NULL, NULL
 real (*h_Mag_Array_F_Out[2])[MAG_NOUT][ PS2_P1*SQR(PS2)         ] = { NULL, NULL };
 #endif
 #if ( FLU_SCHEME == MHM  ||  FLU_SCHEME == MHM_RP  ||  FLU_SCHEME == CTU )
-real (*h_PriVar)      [NCOMP_TOTAL][ CUBE(FLU_NXT)     ]          = NULL;
-real (*h_Slope_PPM)[3][NCOMP_TOTAL][ CUBE(N_SLOPE_PPM) ]          = NULL;
-real (*h_FC_Var)   [6][NCOMP_TOTAL][ CUBE(N_FC_VAR)    ]          = NULL;
-real (*h_FC_Flux)  [3][NCOMP_TOTAL][ CUBE(N_FC_FLUX)   ]          = NULL;
+real (*h_PriVar)      [NCOMP_TOTAL_PLUS_MAG][ CUBE(FLU_NXT)     ] = NULL;
+real (*h_Slope_PPM)[3][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_SLOPE_PPM) ] = NULL;
+real (*h_FC_Var)   [6][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_VAR)    ] = NULL;
+real (*h_FC_Flux)  [3][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX)   ] = NULL;
 #endif
 
 #ifdef GRAVITY
@@ -254,10 +254,10 @@ double (*d_Corner_Array_F)[3]                                     = NULL;
 char (*d_DE_Array_F_Out)[ PS2*PS2*PS2 ]                           = NULL;
 #endif
 #if ( FLU_SCHEME == MHM  ||  FLU_SCHEME == MHM_RP  ||  FLU_SCHEME == CTU )
-real (*d_PriVar)      [NCOMP_TOTAL][ CUBE(FLU_NXT) ]              = NULL;
-real (*d_Slope_PPM)[3][NCOMP_TOTAL][ CUBE(N_SLOPE_PPM) ]          = NULL;
-real (*d_FC_Var)   [6][NCOMP_TOTAL][ CUBE(N_FC_VAR) ]             = NULL;
-real (*d_FC_Flux)  [3][NCOMP_TOTAL][ CUBE(N_FC_FLUX) ]            = NULL;
+real (*d_PriVar)      [NCOMP_TOTAL_PLUS_MAG][ CUBE(FLU_NXT)     ] = NULL;
+real (*d_Slope_PPM)[3][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_SLOPE_PPM) ] = NULL;
+real (*d_FC_Var)   [6][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_VAR)    ] = NULL;
+real (*d_FC_Flux)  [3][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX)   ] = NULL;
 #endif
 #ifdef MHD
 #warning : WAIT MHD !!!

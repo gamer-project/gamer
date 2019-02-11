@@ -25,14 +25,14 @@ void Hydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
                                const real dt, const real dh, const real MinDens, const real MinPres,
                                const bool NormPassive, const int NNorm, const int NormIdx[],
                                const bool JeansMinPres, const real JeansMinPres_Coeff );
-void Hydro_ComputeFlux( const real g_FC_Var [][NCOMP_TOTAL][ CUBE(N_FC_VAR) ],
-                              real g_FC_Flux[][NCOMP_TOTAL][ CUBE(N_FC_FLUX) ],
+void Hydro_ComputeFlux( const real g_FC_Var [][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_VAR) ],
+                              real g_FC_Flux[][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX) ],
                         const int NFlux, const int Gap, const real Gamma, const bool CorrHalfVel, const real g_Pot_USG[],
                         const double g_Corner[], const real dt, const real dh, const double Time,
                         const OptGravityType_t GravityType, const double ExtAcc_AuxArray[], const real MinPres,
                         const bool DumpIntFlux, real g_IntFlux[][NCOMP_TOTAL][ SQR(PS2) ] );
 void Hydro_FullStepUpdate( const real g_Input[][ CUBE(FLU_NXT) ], real g_Output[][ CUBE(PS2) ], char g_DE_Status[],
-                           const real g_Flux[][NCOMP_TOTAL][ CUBE(N_FC_FLUX) ], const real dt, const real dh,
+                           const real g_Flux[][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX) ], const real dt, const real dh,
                            const real Gamma, const real MinDens, const real MinPres, const real DualEnergySwitch,
                            const bool NormPassive, const int NNorm, const int NormIdx[] );
 real Hydro_CheckMinPresInEngy( const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy,
@@ -43,8 +43,8 @@ real Hydro_CheckMinPresInEngy( const real Dens, const real MomX, const real MomY
 
 // internal functions
 GPU_DEVICE
-static void Hydro_TGradient_Correction(       real g_FC_Var [][NCOMP_TOTAL][ CUBE(N_FC_VAR)  ],
-                                        const real g_FC_Flux[][NCOMP_TOTAL][ CUBE(N_FC_FLUX) ],
+static void Hydro_TGradient_Correction(       real g_FC_Var [][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_VAR)  ],
+                                        const real g_FC_Flux[][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX) ],
                                         const real dt, const real dh, const real Gamma,
                                         const real MinDens, const real MinPres );
 
@@ -114,10 +114,10 @@ void CUFLU_FluidSolver_CTU(
          real   g_Flux_Array   [][9][NCOMP_TOTAL][ SQR(PS2) ],
    const double g_Corner_Array [][3],
    const real   g_Pot_Array_USG[][ CUBE(USG_NXT_F) ],
-         real   g_PriVar       [][NCOMP_TOTAL][ CUBE(FLU_NXT) ],
-         real   g_Slope_PPM    [][3][NCOMP_TOTAL][ CUBE(N_SLOPE_PPM) ],
-         real   g_FC_Var       [][6][NCOMP_TOTAL][ CUBE(N_FC_VAR) ],
-         real   g_FC_Flux      [][3][NCOMP_TOTAL][ CUBE(N_FC_FLUX) ],
+         real   g_PriVar       []   [NCOMP_TOTAL_PLUS_MAG][ CUBE(FLU_NXT) ],
+         real   g_Slope_PPM    [][3][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_SLOPE_PPM) ],
+         real   g_FC_Var       [][6][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_VAR) ],
+         real   g_FC_Flux      [][3][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX) ],
    const real dt, const real dh, const real Gamma, const bool StoreFlux,
    const LR_Limiter_t LR_Limiter, const real MinMod_Coeff,
    const double Time, const OptGravityType_t GravityType,
@@ -134,10 +134,10 @@ void CPU_FluidSolver_CTU(
          real   g_Flux_Array   [][9][NCOMP_TOTAL][ SQR(PS2) ],
    const double g_Corner_Array [][3],
    const real   g_Pot_Array_USG[][ CUBE(USG_NXT_F) ],
-         real   g_PriVar       [][NCOMP_TOTAL][ CUBE(FLU_NXT) ],
-         real   g_Slope_PPM    [][3][NCOMP_TOTAL][ CUBE(N_SLOPE_PPM) ],
-         real   g_FC_Var       [][6][NCOMP_TOTAL][ CUBE(N_FC_VAR) ],
-         real   g_FC_Flux      [][3][NCOMP_TOTAL][ CUBE(N_FC_FLUX) ],
+         real   g_PriVar       []   [NCOMP_TOTAL_PLUS_MAG][ CUBE(FLU_NXT) ],
+         real   g_Slope_PPM    [][3][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_SLOPE_PPM) ],
+         real   g_FC_Var       [][6][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_VAR) ],
+         real   g_FC_Flux      [][3][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX) ],
    const int NPatchGroup, const real dt, const real dh, const real Gamma,
    const bool StoreFlux, const LR_Limiter_t LR_Limiter, const real MinMod_Coeff,
    const double Time, const OptGravityType_t GravityType,
@@ -171,10 +171,10 @@ void CPU_FluidSolver_CTU(
 #     endif
 #     endif // #ifdef __CUDACC__ ... else ...
 
-      real (*const g_FC_Var_1PG   )[NCOMP_TOTAL][ CUBE(N_FC_VAR)    ] = g_FC_Var   [array_idx];
-      real (*const g_FC_Flux_1PG  )[NCOMP_TOTAL][ CUBE(N_FC_FLUX)   ] = g_FC_Flux  [array_idx];
-      real (*const g_PriVar_1PG   )             [ CUBE(FLU_NXT)     ] = g_PriVar   [array_idx];
-      real (*const g_Slope_PPM_1PG)[NCOMP_TOTAL][ CUBE(N_SLOPE_PPM) ] = g_Slope_PPM[array_idx];
+      real (*const g_FC_Var_1PG   )[NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_VAR)    ] = g_FC_Var   [array_idx];
+      real (*const g_FC_Flux_1PG  )[NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX)   ] = g_FC_Flux  [array_idx];
+      real (*const g_PriVar_1PG   )                      [ CUBE(FLU_NXT)     ] = g_PriVar   [array_idx];
+      real (*const g_Slope_PPM_1PG)[NCOMP_TOTAL_PLUS_MAG][ CUBE(N_SLOPE_PPM) ] = g_Slope_PPM[array_idx];
 
 
 //    loop over all patch groups
@@ -244,8 +244,8 @@ void CPU_FluidSolver_CTU(
 //                MinDens/Pres : Minimum allowed density and pressure
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE
-void Hydro_TGradient_Correction(       real g_FC_Var [][NCOMP_TOTAL][ CUBE(N_FC_VAR)  ],
-                                 const real g_FC_Flux[][NCOMP_TOTAL][ CUBE(N_FC_FLUX) ],
+void Hydro_TGradient_Correction(       real g_FC_Var [][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_VAR)  ],
+                                 const real g_FC_Flux[][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX) ],
                                  const real dt, const real dh, const real Gamma,
                                  const real MinDens, const real MinPres )
 {
