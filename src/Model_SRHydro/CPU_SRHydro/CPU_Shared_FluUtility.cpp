@@ -608,11 +608,11 @@ real SRHydro_GetTemperature (const real Dens, const real MomX, const real MomY, 
 
 
 #  ifdef FLOAT8
-real epsabs = 0.0;
-real epsrel = 1.0e-15;
+   real epsabs = 0.0;
+   real epsrel = 1.0e-15;
 #  else
-real epsabs = 0.0;
-real epsrel = 1.0e-6;
+   real epsabs = 0.0;
+   real epsrel = 1.0e-6;
 #  endif
 
    NewtonRaphsonSolver(&params ,&root, guess, epsabs, epsrel, Gamma);
