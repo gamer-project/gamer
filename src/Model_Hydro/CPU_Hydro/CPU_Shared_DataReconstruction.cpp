@@ -480,11 +480,19 @@ void Hydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
 #        ifdef MHD
          const int t1 = (d+1)%3;    // transverse direction 1
          const int t2 = (d+2)%3;    // transverse direction 2
+         real B_nL, B_nR, B_t1L, B_t1R, B_t2L, B_t2R;
          real dB_n, dB_t1, dB_t2, v_t1, v_t2, src_t1, src_t2;
 
-         dB_n   = g_FC_B[d ][ idx_B[d ] + didx_cc[d ] ] - g_FC_B[d ][ idx_B[d ] ];
-         dB_t1  = g_FC_B[t1][ idx_B[t1] + didx_cc[t1] ] - g_FC_B[t1][ idx_B[t1] ];
-         dB_t2  = g_FC_B[t2][ idx_B[t2] + didx_cc[t2] ] - g_FC_B[t2][ idx_B[t2] ];
+         B_nL   = g_FC_B[d ][ idx_B[d ] ];
+         B_t1L  = g_FC_B[t1][ idx_B[t1] ];
+         B_t2L  = g_FC_B[t2][ idx_B[t2] ];
+         B_nR   = g_FC_B[d ][ idx_B[d ] + didx_cc[d ] ];
+         B_t1R  = g_FC_B[t1][ idx_B[t1] + didx_cc[t1] ];
+         B_t2R  = g_FC_B[t2][ idx_B[t2] + didx_cc[t2] ];
+
+         dB_n   = B_nR  - B_nL;
+         dB_t1  = B_t1R - B_t1L;
+         dB_t2  = B_t2R - B_t2L;
 
          v_t1   = cc_C[ 1 + t1 ];
          v_t2   = cc_C[ 1 + t2 ];
@@ -525,7 +533,16 @@ void Hydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
 #        endif // #if ( FLU_SCHEME == CTU )
 
 
-//       5. primitive variables --> conserved variables
+//       5. reset the longitudinal B field to the input face-centered values
+//          --> actually no data reconstruction is required for that
+//###OPTIMIZARION: do not perform data reconstruction for the longitudinal B field
+#        ifdef MHD
+         fc[faceL][ MAG_OFFSET + d ] = B_nL;
+         fc[faceR][ MAG_OFFSET + d ] = B_nR;
+#        endif
+
+
+//       6. primitive variables --> conserved variables
          real tmp[NCOMP_TOTAL_PLUS_MAG];  // input and output arrays must not overlap for Pri2Con()
 
          for (int v=0; v<NCOMP_TOTAL_PLUS_MAG; v++)   tmp[v] = fc[faceL][v];
@@ -538,12 +555,12 @@ void Hydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
 
 
 #     if ( FLU_SCHEME == MHM )
-//    6. advance the face-centered variables by half time-step for the MHM integrator
+//    7. advance the face-centered variables by half time-step for the MHM integrator
       Hydro_HancockPredict( fc, dt, dh, Gamma_m1, _Gamma_m1, g_ConVar, idx_cc, MinDens, MinPres );
 #     endif
 
 
-//    7. store the face-centered values to the output array
+//    8. store the face-centered values to the output array
       for (int f=0; f<6; f++)
       for (int v=0; v<NCOMP_TOTAL_PLUS_MAG; v++)
          g_FC_Var[f][v][idx_fc] = fc[f][v];
