@@ -150,6 +150,14 @@ void Hydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
                                const bool JeansMinPres, const real JeansMinPres_Coeff )
 {
 
+// check
+#  ifdef GAMER_DEBUG
+   if ( NIn - 2*NGhost != N_FC_VAR )
+      printf( "ERROR : NIn - 2*NGhost != N_FC_VAR (NIn %d, NGhost %d, N_FC_VAR %d) !!\n",
+              NIn, NGhost, N_FC_VAR );
+#  endif
+
+
    const int  didx_cc[3] = { 1, NIn, SQR(NIn) };
    const int  NOut       = NIn - 2*NGhost;      // number of output cells
    const real  Gamma_m1  = Gamma - (real)1.0;
@@ -218,8 +226,8 @@ void Hydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
                                     { 0.0, NULL_REAL, NULL_REAL, NULL_REAL, NULL_REAL, NULL_REAL, NULL_REAL } };
 
 #  else // #if ( FLU_SCHEME == CTU ) ... elif ...
-   const real *REigenVec = NULL;
-   const real *LEigenVec = NULL;
+   real (*const REigenVec)[NWAVE] = NULL;
+   real (*const LEigenVec)[NWAVE] = NULL;
 #  endif // #if ( FLU_SCHEME ==  CTU ) ... elif ... else ...
 
 
@@ -573,6 +581,14 @@ void Hydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
                                const bool NormPassive, const int NNorm, const int NormIdx[],
                                const bool JeansMinPres, const real JeansMinPres_Coeff )
 {
+
+// check
+#  ifdef GAMER_DEBUG
+   if ( NIn - 2*NGhost != N_FC_VAR )
+      printf( "ERROR : NIn - 2*NGhost != N_FC_VAR (NIn %d, NGhost %d, N_FC_VAR %d) !!\n",
+              NIn, NGhost, N_FC_VAR );
+#  endif
+
 
    const int  didx_cc   [3] = { 1, NIn, SQR(NIn) };
    const int  didx_slope[3] = { 1, N_SLOPE_PPM, SQR(N_SLOPE_PPM) };

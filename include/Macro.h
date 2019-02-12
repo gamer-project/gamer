@@ -458,11 +458,11 @@
 
 // number of input and output variables in the gravity solver
 #  if   ( MODEL == HYDRO )
-#     define GRA_NIN             NCOMP_FLUID
+#        define GRA_NIN             NCOMP_FLUID
 
 // for ELBDM, we do not need to transfer the density component
 #  elif ( MODEL == ELBDM )
-#     define GRA_NIN             ( NCOMP_FLUID - 1 )
+#        define GRA_NIN             ( NCOMP_FLUID - 1 )
 
 #  else
 #     error Error : unsupported MODEL (please edit GRA_NIN in the new MODEL) !!
@@ -470,30 +470,30 @@
 
 
 // number of potential ghost zones for evaluating potential (maximum=5) ~ Poisson solver
-#     define POT_GHOST_SIZE      5
+#        define POT_GHOST_SIZE      5
 
 
 // number of potential ghost zones for advancing fluid by gravity ~ Gravity solver
 #  if   ( MODEL == HYDRO )
 #     ifdef STORE_POT_GHOST
-#     define GRA_GHOST_SIZE      2
+#        define GRA_GHOST_SIZE      2
 #     else
-#     define GRA_GHOST_SIZE      1
-//#   define GRA_GHOST_SIZE      2
+#        define GRA_GHOST_SIZE      1
+//#      define GRA_GHOST_SIZE      2
 #     endif
 
 #  elif ( MODEL == ELBDM )
 #     ifdef STORE_POT_GHOST
-#     define GRA_GHOST_SIZE      2
+#        define GRA_GHOST_SIZE      2
 #     else
-#     define GRA_GHOST_SIZE      0
+#        define GRA_GHOST_SIZE      0
 #     endif
 
 #  elif ( MODEL == PAR_ONLY )
 #     ifdef STORE_POT_GHOST
-#     define GRA_GHOST_SIZE      2
+#        define GRA_GHOST_SIZE      2
 #     else
-#     define GRA_GHOST_SIZE      0
+#        define GRA_GHOST_SIZE      0
 #     endif
 
 #  else
@@ -503,24 +503,28 @@
 
 // number of potential ghost zones for correcting the half-step velocity if UNSPLIT_GRAVITY is on
 #  ifdef UNSPLIT_GRAVITY
-#  if   ( MODEL == HYDRO )
-#     define USG_GHOST_SIZE      1
-#  elif ( MODEL == ELBDM )
-#     define USG_GHOST_SIZE      0
-#  else
-#     error : ERROR : unsupported MODEL !!
-#  endif // MODEL
+#     if   ( MODEL == HYDRO )
+#       ifdef MHD
+#        define USG_GHOST_SIZE      2
+#       else
+#        define USG_GHOST_SIZE      1
+#       endif
+#     elif ( MODEL == ELBDM )
+#        define USG_GHOST_SIZE      0
+#     else
+#        error : ERROR : unsupported MODEL !!
+#     endif // MODEL
 #  endif // #ifdef UNSPLIT_GRAVITY
 
 
 // number of density ghost zones for storing the temporary particle mass density in rho_ext[]
 #  ifdef PARTICLE
-#     define RHOEXT_GHOST_SIZE   2
+#        define RHOEXT_GHOST_SIZE   2
 #  endif
 
 
 // number of density ghost zones for the Poisson solver
-#     define RHO_GHOST_SIZE      ( POT_GHOST_SIZE-1 )
+#        define RHO_GHOST_SIZE      ( POT_GHOST_SIZE-1 )
 
 #endif // #ifdef GRAVITY
 

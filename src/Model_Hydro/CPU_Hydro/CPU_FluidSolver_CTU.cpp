@@ -27,10 +27,11 @@ void Hydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
                                const bool JeansMinPres, const real JeansMinPres_Coeff );
 void Hydro_ComputeFlux( const real g_FC_Var [][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_VAR) ],
                               real g_FC_Flux[][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX) ],
-                        const int NFlux, const int Gap, const real Gamma, const bool CorrHalfVel, const real g_Pot_USG[],
-                        const double g_Corner[], const real dt, const real dh, const double Time,
-                        const OptGravityType_t GravityType, const double ExtAcc_AuxArray[], const real MinPres,
-                        const bool DumpIntFlux, real g_IntFlux[][NCOMP_TOTAL][ SQR(PS2) ] );
+                        const int NFlux, const int Gap_N, const int Gap_T, const real Gamma,
+                        const bool CorrHalfVel, const real g_Pot_USG[], const double g_Corner[],
+                        const real dt, const real dh, const double Time,
+                        const OptGravityType_t GravityType, const double ExtAcc_AuxArray[],
+                        const real MinPres, const bool DumpIntFlux, real g_IntFlux[][NCOMP_TOTAL][ SQR(PS2) ] );
 void Hydro_FullStepUpdate( const real g_Input[][ CUBE(FLU_NXT) ], real g_Output[][ CUBE(PS2) ], char g_DE_Status[],
                            const real g_Flux[][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX) ], const real dt, const real dh,
                            const real Gamma, const real MinDens, const real MinPres, const real DualEnergySwitch,
@@ -188,13 +189,19 @@ void CPU_FluidSolver_CTU(
 #     endif
       {
 //       1. evaluate the face-centered values at the half time-step
+#        ifdef MHD
+         const int NGhost = FLU_GHOST_SIZE - 2;
+#        else
+         const int NGhost = FLU_GHOST_SIZE - 1;
+#        endif
          Hydro_DataReconstruction( g_Flu_Array_In[P], g_Mag_Array_In[P], g_PriVar_1PG, g_FC_Var_1PG, g_Slope_PPM_1PG,
-                                   Con2Pri_Yes, FLU_NXT, FLU_GHOST_SIZE-1, Gamma, LR_Limiter, MinMod_Coeff, dt, dh,
+                                   Con2Pri_Yes, FLU_NXT, NGhost, Gamma, LR_Limiter, MinMod_Coeff, dt, dh,
                                    MinDens, MinPres, NormPassive, NNorm, c_NormIdx, JeansMinPres, JeansMinPres_Coeff );
 
 
 //       2. evaluate the face-centered half-step fluxes by solving the Riemann problem
-         Hydro_ComputeFlux( g_FC_Var_1PG, g_FC_Flux_1PG, N_FC_FLUX, 0, Gamma, CorrHalfVel_No, NULL, NULL,
+         Hydro_ComputeFlux( g_FC_Var_1PG, g_FC_Flux_1PG, N_FC_FLUX, 0, 0, Gamma,
+                            CorrHalfVel_No, NULL, NULL,
                             NULL_REAL, NULL_REAL, NULL_REAL, GRAVITY_NONE, NULL, MinPres,
                             StoreFlux_No, NULL );
 
@@ -204,14 +211,21 @@ void CPU_FluidSolver_CTU(
 
 
 //       4. evaluate the face-centered full-step fluxes by solving the Riemann problem with the corrected data
+#        ifdef MHD
+         const int Gap_N = 1;
+         const int Gap_T = 1;
+#        else
+         const int Gap_N = 0;
+         const int Gap_T = 1;
+#        endif
 #        ifdef UNSPLIT_GRAVITY
-         Hydro_ComputeFlux( g_FC_Var_1PG, g_FC_Flux_1PG, N_FL_FLUX, 1, Gamma, CorrHalfVel_Yes,
-                            g_Pot_Array_USG[P], g_Corner_Array[P],
+         Hydro_ComputeFlux( g_FC_Var_1PG, g_FC_Flux_1PG, N_FL_FLUX, Gap_N, Gap_T, Gamma,
+                            CorrHalfVel_Yes, g_Pot_Array_USG[P], g_Corner_Array[P],
                             dt, dh, Time, GravityType, c_ExtAcc_AuxArray, MinPres,
                             StoreFlux, g_Flux_Array[P] );
 #        else
-         Hydro_ComputeFlux( g_FC_Var_1PG, g_FC_Flux_1PG, N_FL_FLUX, 1, Gamma, CorrHalfVel_No,
-                            NULL, NULL,
+         Hydro_ComputeFlux( g_FC_Var_1PG, g_FC_Flux_1PG, N_FL_FLUX, Gap_N, Gap_T, Gamma,
+                            CorrHalfVel_No, NULL, NULL,
                             NULL_REAL, NULL_REAL, NULL_REAL, GRAVITY_NONE, NULL, MinPres,
                             StoreFlux, g_Flux_Array[P] );
 #        endif
