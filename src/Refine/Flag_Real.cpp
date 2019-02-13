@@ -92,7 +92,7 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
 #  warning : WAIT MHD !!!
 
 #  elif   ( MODEL == SR_HYDRO )
-   if ( OPT__FLAG_LOHNER_DENS )  {  Lohner_NVar++;   Lohner_TVar |= _PRON;    MinDens = MIN_DENS;  }
+   if ( OPT__FLAG_LOHNER_DENS )  {  Lohner_NVar++;   Lohner_TVar |= _DENS;    MinDens = MIN_DENS;  }
    if ( OPT__FLAG_LOHNER_ENGY )  {  Lohner_NVar++;   Lohner_TVar |= _ENGY;                         }
    if ( OPT__FLAG_LOHNER_PRES )  {  Lohner_NVar++;   Lohner_TVar |= _PRES;    MinPres = MIN_PRES;  }
    if ( OPT__FLAG_LOHNER_TEMP )  {  Lohner_NVar++;   Lohner_TVar |= _TEMP;    MinPres = MIN_PRES;  }
