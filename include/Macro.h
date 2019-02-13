@@ -364,8 +364,7 @@
 #  define _VELZ               ( 1 << (NCOMP_TOTAL+2) ) // 4-velocity in z-direction          000010000000
 #  define _PRES               ( 1 << (NCOMP_TOTAL+3) ) // pressure                           000100000000
 #  define _TEMP               ( 1 << (NCOMP_TOTAL+4) ) // temperature                        001000000000
-#  define _PRON               ( 1 << (NCOMP_TOTAL+5) ) // proper number density              010000000000
-#  define _DERIVED            ( _VELX | _VELY | _VELZ | _PRES | _TEMP | _PRON ) //111111100000
+#  define _DERIVED            ( _VELX | _VELY | _VELZ | _PRES | _TEMP ) //111111100000
 #  define NDERIVE             6
 
 

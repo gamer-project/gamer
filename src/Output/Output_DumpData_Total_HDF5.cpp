@@ -1898,15 +1898,10 @@ void FillIn_InputPara( InputPara_t &InputPara )
    InputPara.Opt__Flag_EngyDensity   = OPT__FLAG_ENGY_DENSITY;
 #  endif
    InputPara.Opt__Flag_LohnerDens    = OPT__FLAG_LOHNER_DENS;
-#  if ( MODEL == HYDRO )
+#  if ( MODEL == HYDRO || MODEL == SR_HYDRO )
    InputPara.Opt__Flag_LohnerEngy    = OPT__FLAG_LOHNER_ENGY;
    InputPara.Opt__Flag_LohnerPres    = OPT__FLAG_LOHNER_PRES;
    InputPara.Opt__Flag_LohnerTemp    = OPT__FLAG_LOHNER_TEMP;
-#  elif ( MODEL == SR_HYDRO )
-   InputPara.Opt__Flag_LohnerEngy    = OPT__FLAG_LOHNER_ENGY;
-   InputPara.Opt__Flag_LohnerPres    = OPT__FLAG_LOHNER_PRES;
-   InputPara.Opt__Flag_LohnerTemp    = OPT__FLAG_LOHNER_TEMP;
-   InputPara.Opt__Flag_LohnerPron    = OPT__FLAG_LOHNER_PRON;
 #  endif
    InputPara.Opt__Flag_LohnerForm    = OPT__FLAG_LOHNER_FORM;
    InputPara.Opt__Flag_User          = OPT__FLAG_USER;
@@ -2121,19 +2116,13 @@ void FillIn_InputPara( InputPara_t &InputPara )
 #  endif
 
 // flag tables
-#  if   ( MODEL == HYDRO  ||  MODEL == MHD )
+#  if   ( MODEL == HYDRO  ||  MODEL == MHD || MODEL == SR_HYDRO )
    const bool Opt__FlagLohner = ( OPT__FLAG_LOHNER_DENS 
                                || OPT__FLAG_LOHNER_ENGY 
                                || OPT__FLAG_LOHNER_PRES 
                                || OPT__FLAG_LOHNER_TEMP );
 #  elif ( MODEL == ELBDM )
    const bool Opt__FlagLohner = OPT__FLAG_LOHNER_DENS;
-#  elif ( MODEL == SR_HYDRO )
-   const bool Opt__FlagLohner = ( OPT__FLAG_LOHNER_DENS 
-                               || OPT__FLAG_LOHNER_ENGY 
-                               || OPT__FLAG_LOHNER_PRES 
-                               || OPT__FLAG_LOHNER_TEMP
-                               || OPT__FLAG_LOHNER_PRON );
 #  endif
 
    for (int lv=0; lv<NLEVEL-1; lv++)

@@ -114,14 +114,11 @@ void Flu_BoundaryCondition_User( real *Array, const int NVar_Flu, const int Arra
 #  warning : WAIT MHD !!
 
 #  elif   ( MODEL == SR_HYDRO )
-   const bool CheckMinPres_Yes = true;
-   const real Gamma_m1         = GAMMA - (real)1.0;
-   const bool PrepVx           = ( TVar & _VELX    ) ? true : false;
+   const bool PrepVx           = ( TVar & _VELX ) ? true : false;
    const bool PrepVy           = ( TVar & _VELY    ) ? true : false;
    const bool PrepVz           = ( TVar & _VELZ    ) ? true : false;
    const bool PrepPres         = ( TVar & _PRES    ) ? true : false;
    const bool PrepTemp         = ( TVar & _TEMP    ) ? true : false;
-   const bool PrepDens         = ( TVar & _PRON    ) ? true : false; // proper number density
 
 #  elif ( MODEL == ELBDM )
 // no derived variables yet
@@ -171,7 +168,6 @@ void Flu_BoundaryCondition_User( real *Array, const int NVar_Flu, const int Arra
       SRHydro_Con2Pri(BVal,Prim4,(real)GAMMA, (real) MIN_TEMP );
       SRHydro_4Velto3Vel(Prim4,Prim3);
 
-      if ( PrepDens )   Array3D[ v2 ++ ][k][j][i] = Prim3[0];
       if ( PrepVx   )   Array3D[ v2 ++ ][k][j][i] = Prim3[1];
       if ( PrepVy   )   Array3D[ v2 ++ ][k][j][i] = Prim3[2];
       if ( PrepVz   )   Array3D[ v2 ++ ][k][j][i] = Prim3[3];

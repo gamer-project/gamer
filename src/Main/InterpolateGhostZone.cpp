@@ -98,10 +98,6 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData[], const in
 #  warning : WAIT MHD !!
 
 #  elif   ( MODEL == SR_HYDRO )
-   const bool CheckMinPres_No = false;    // we check minimum pressure in the end of Prepare_PatchData()
-   const real Gamma_m1        = GAMMA - (real)1.0;
-
-   const bool PrepDens        = ( TVar & _PRON    ) ? true : false; // proper number density
    const bool PrepVx          = ( TVar & _VELX    ) ? true : false; // 4-velocity in x-direction
    const bool PrepVy          = ( TVar & _VELY    ) ? true : false; // 4-velocity in y-direction
    const bool PrepVz          = ( TVar & _VELZ    ) ? true : false; // 4-velocity in z-direction
@@ -458,33 +454,6 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData[], const in
 #  warning : WAIT MHD !!
 
 #  elif   ( MODEL == SR_HYDRO )
-   if ( PrepDens )
-   {
-      for (int k=0; k<Loop1[2]; k++)   {  k1 = k + Disp1[2];   k2 = k + Disp2[2];
-      for (int j=0; j<Loop1[1]; j++)   {  j1 = j + Disp1[1];   j2 = j + Disp2[1];
-                                          Idx = IDX321( Disp2[0], j2, k2, CSize[0], CSize[1] );
-      for (i1=Disp1[0]; i1<Disp1[0]+Loop1[0]; i1++)   {
-
-	 for(int q =0;q<NCOMP_FLUID;q++)  Cons[q]=amr->patch[FluSg][lv][PID]->fluid[q][k1][j1][i1];
-
-	   SRHydro_Con2Pri(Cons, Prim, (real)GAMMA, (real) MIN_TEMP );
-
-	   CData_Ptr[Idx] = Prim[0];
-
-         if ( FluIntTime ) // temporal interpolation
-	   {
-            for(int q =0;q<NCOMP_FLUID;q++)  Cons[q]=amr->patch[FluSg_IntT][lv][PID]->fluid[q][k1][j1][i1];
-
-	      SRHydro_Con2Pri(Cons, Prim, (real)GAMMA, (real) MIN_TEMP );
-
-	      CData_Ptr[Idx] =   FluWeighting     *CData_Ptr[Idx]
-			       + FluWeighting_IntT*Prim[0];
-	   }
-         Idx ++;
-      }}}
-
-      CData_Ptr += CSize3D;
-   }
 
    if ( PrepVx )
    {
@@ -820,33 +789,6 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData[], const in
 #        warning : WAIT MHD !!
 
 #        elif   ( MODEL == SR_HYDRO )
-         if ( PrepDens )
-         {
-            for (int k=0; k<Loop2[2]; k++)   {  k1 = k + Disp3[2];   k2 = k + Disp4[2];
-            for (int j=0; j<Loop2[1]; j++)   {  j1 = j + Disp3[1];   j2 = j + Disp4[1];
-                                                Idx = IDX321( Disp3[0], j1, k1, CSize[0], CSize[1] );
-            for (i2=Disp4[0]; i2<Disp4[0]+Loop2[0]; i2++)   {
-
-	       for(int q =0;q<NCOMP_FLUID;q++) Cons[q]=amr->patch[FluSg][lv][SibPID]->fluid[q][k2][j2][i2];
-
-		SRHydro_Con2Pri(Cons, Prim, (real)GAMMA, (real) MIN_TEMP );
-
-		CData_Ptr[Idx] = Prim[0];
-
-               if ( FluIntTime ) // temporal interpolation
-		   {
-                    for(int q =0;q<NCOMP_FLUID;q++) Cons[q]=amr->patch[FluSg_IntT][lv][SibPID]->fluid[q][k2][j2][i2];
-
-		      SRHydro_Con2Pri(Cons, Prim, (real)GAMMA, (real) MIN_TEMP );
-
-		      CData_Ptr[Idx] =   FluWeighting     *CData_Ptr[Idx]
-				       + FluWeighting_IntT*Prim[0];
-		   }
-               Idx ++;
-            }}}
-
-            CData_Ptr += CSize3D;
-         }
 
          if ( PrepVx )
          {
@@ -1351,12 +1293,6 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData[], const in
 
 #  elif ( MODEL == SR_HYDRO )
 // we now apply monotonic interpolation to ALL fluid variables
-   if ( PrepDens )
-   {
-      Interpolate( CData+CSize3D*NVar_SoFar, CSize, CStart, CRange, IntData+FSize3D*NVar_SoFar, FSize, FStart, 1,
-                   IntScheme, PhaseUnwrapping_No, &EnsureMonotonicity_Yes, IntMonoCoeff  );
-      NVar_SoFar ++;
-   }
 
    if ( PrepVx )
    {

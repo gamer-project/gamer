@@ -200,7 +200,7 @@ SIMU_OPTION += -DTIMING
 #SIMU_OPTION += -DTIMING_SOLVER
 
 # double precision
-SIMU_OPTION += -DFLOAT8
+#SIMU_OPTION += -DFLOAT8
 
 # serial mode (in which no MPI libraries are required)
 # --> must disable LOAD_BALANCE
@@ -346,15 +346,6 @@ SIMU_OPTION += -DRANDOM_NUMBER=RNG_GNU_EXT
 #LIBYT_PATH   := /home/hyschive/project/libyt/libyt.dev/libyt
 
 # NTU-hulk (openmpi-gcc-qlc)
-#FFTW_PATH    := /opt/math/fftw/2.1.5-gcc-openmpi-1.4.3-qlc
-#MPI_PATH     := /usr/mpi/gcc/openmpi-1.4.3-qlc
-#HDF5_PATH    := /usr/local/src/hdf5-1.10.4/hdf5
-#GRACKLE_PATH := 
-#GSL_PATH     := /opt/math/gsl/default
-#LIBYT_PATH   := 
-#CUDA_PATH    := /usr/local/cuda-7.5
-
-# NTU-hulk (openmpi-intel-qlc)
 FFTW_PATH    := /opt/math/fftw/2.1.5-intel-openmpi-1.4.3-qlc
 MPI_PATH     := /usr/mpi/intel/openmpi-1.4.3-qlc
 HDF5_PATH    := /opt/hdf5/default
@@ -363,14 +354,38 @@ GSL_PATH     := /opt/math/gsl/default
 LIBYT_PATH   := 
 CUDA_PATH    := /opt/gpu/cuda/default
 
+# NTU-hulk (openmpi-intel-qlc)
+#FFTW_PATH    := 
+#MPI_PATH     := 
+#HDF5_PATH    := 
+#GRACKLE_PATH := 
+#GSL_PATH     := 
+#LIBYT_PATH   := 
+#CUDA_PATH    := 
+
 # NAOC-laohu (OpenMPI-1.3.2-intel)
 #CUDA_PATH    := $(CUDA_INSTALL_PATH)
 #FFTW_PATH    := /ifs/data/hsiyu/Software/fftw/2.1.5-openmpi-1.3.2-intel
 #MPI_PATH     := /usr/mpi/intel/openmpi-1.3.2-qlc
 #GPUID_PATH   := /ifs/data/hsiyu/Software/gpudevmgr
 
-
-
+# Calab AMD1
+#FFTW_PATH    := 
+#MPI_PATH     := 
+#HDF5_PATH    := /usr/src/hdf5-1.10.4/hdf5
+#GRACKLE_PATH := 
+#GSL_PATH     := 
+#LIBYT_PATH   := 
+#CUDA_PATH    := /usr/local/cuda-10.0
+#
+## Calab AMD2
+#FFTW_PATH    := 
+#MPI_PATH     := 
+#HDF5_PATH    := /usr/local/src/hdf5-1.10.4/hdf5
+#GRACKLE_PATH := 
+#GSL_PATH     := 
+#LIBYT_PATH   := 
+#CUDA_PATH    := /usr/local/cuda-10.0
 
 
 # source files
@@ -482,11 +497,10 @@ CUDA_FILE   += CUFLU_dtSolver_SRHydroCFL.cu    CUFLU_FluidSolver_MHM.cu
 CC_FILE     += CPU_Shared_DataReconstruction.cpp  CPU_Shared_FluUtility.cpp  CPU_Shared_ComputeFlux.cpp \
                CPU_Shared_FullStepUpdate.cpp CPU_FluidSolver_MHM.cpp \
                CPU_Shared_RiemannSolver_HLLC.cpp CPU_Shared_RiemannSolver_HLLE.cpp  \
-               CPU_dtSolver_SRHydroCFL.cpp
+               CPU_dtSolver_SRHydroCFL.cpp SRHydro_Utility.cpp
 
 CC_FILE     += SRHydro_Init_ByFunction_AssignData.cpp  SRHydro_Aux_Check_Negative.cpp \
-               SRHydro_BoundaryCondition_Reflecting.cpp SRHydro_Flag_Vorticity.cpp \
-               SRHydro_Utility.cpp
+               SRHydro_BoundaryCondition_Reflecting.cpp SRHydro_Flag_Vorticity.cpp
 
 vpath %.cu     Model_SRHydro/GPU_SRHydro
 vpath %.cpp    Model_SRHydro/CPU_SRHydro Model_SRHydro
