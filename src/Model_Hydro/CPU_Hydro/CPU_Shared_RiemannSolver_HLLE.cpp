@@ -32,7 +32,7 @@ real Hydro_CheckMinPres( const real InPres, const real MinPres );
 // Description :  Approximate Riemann solver of Harten, Lax, and van Leer.
 //                Estimate the wave speed by Einfeldt et al. (1991).
 //
-// Note        :  1. The input data should be conserved variables
+// Note        :  1. Input data should be conserved variables
 //                2. Ref : a. Riemann Solvers and Numerical Methods for Fluid Dynamics - A Practical Introduction
 //                             ~ by Eleuterio F. Toro
 //                         b. Einfeldt, B., et al. J. 1991, J. Comput. Phys., 92, 273

@@ -36,7 +36,7 @@ GPU_DEVICE static void Set_Flux( real flux[], const real val[], const real Gamma
 // Function    :  Hydro_RiemmanSolver_Exact
 // Description :  Exact Riemann solver
 //
-// Note        :  1. The input data should be primitive variables
+// Note        :  1. Input data should be primitive variables
 //                2. This function is shared by MHM, MHM_RP, and CTU schemes
 //                3. Currently it does NOT check the minimum density and pressure criteria
 //
