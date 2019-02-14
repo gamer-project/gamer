@@ -1233,7 +1233,7 @@ void Hydro_GetEigenSystem( const real CC_Var[], real EigenVal[][NWAVE],
          Cf2 = a2;
          Cs2 = a2;
       }
-      else if( Cax2 > a2 ) {
+      else if ( Cax2 > a2 ) {
          Cf2 = Cax2;
          Cs2 = a2;
       }
