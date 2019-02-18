@@ -361,21 +361,11 @@ bool Flu_ResetByUser_DiffPrecessedJet( real fluid[], const double x, const doubl
          
           double Pri4Vel[NCOMP_FLUID] = {0};
 
-//          if ( num_shell % 2 == 0 )
-//          {
 	     Pri4Vel[0] = Jet_SrcDens;
 	     Pri4Vel[1] = Jet_SrcVel_xyz[0]*MomSin;
 	     Pri4Vel[2] = Jet_SrcVel_xyz[1]*MomSin;
 	     Pri4Vel[3] = Jet_SrcVel_xyz[2]*MomSin;
 	     Pri4Vel[4] = Jet_SrcPres;
-//          }else{
-//	     Pri4Vel[0] = Jet_BgDens; 
-//	     Pri4Vel[1] = Jet_BgVel[0]; 
-//	     Pri4Vel[2] = Jet_BgVel[1];
-//	     Pri4Vel[3] = Jet_BgVel[2];
-//	     Pri4Vel[4] = Jet_BgPres;
-//          }
-
 
 //        cast double to real
 #         ifndef FLOAT8
