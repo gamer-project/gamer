@@ -25,6 +25,12 @@ static double   Jet_WaveK;                              // jet wavenumber used i
 static double   Jet_MaxDis;                             // maximum distance between the cylinder-shape jet source and the jet center
 static double   Jet_Angular_Velocity;                   // precession angular velocity (degree per code_time)
 static double   Jet_Angle;                              // precession angle in degree
+static double   Jet_BurstStartTime;                     // start burst time in jet
+static double   Jet_BurstEndTime;                       // end burst time in jet
+static double   Jet_Burst4Velocity;                     // 4-velocity
+//static double   Jet_Burst4VelovityX                     // 4-velocity in x
+//static double   Jet_Burst4VelovityY                     // 4-velocity in y
+//static double   Jet_Burst4VelovityZ                     // 4-velocity in z
 // =======================================================================================
 
 
@@ -109,37 +115,31 @@ void SetParameter()
 // ReadPara->Add( "KEY_IN_THE_FILE",   &VARIABLE,              DEFAULT,       MIN,              MAX               );
 // ********************************************************************************************************************************
 
-// declare the variables related to jet
-//   double Jet_Radius    ;
-//   double Jet_HalfHeight;
-//   double Jet_SrcVel    ;
-//   double Jet_SrcDens   ;
-//   double Jet_SrcPres   ;
-//   double Jet_Cone_Vec  [3];
-//   double Jet_CenOffset [3];
-//   double Jet_Cen       [3];
-//   double Jet_WaveK     ;
-//   double Jet_MaxDis    ;
+   ReadPara->Add( "Jet_BgDens",             &Jet_BgDens,           -1.0,           Eps_double,          NoMax_double    );
+   ReadPara->Add( "Jet_BgVel_x",            &Jet_BgVel[0],          0.0,           NoMin_double,        NoMax_double    );
+   ReadPara->Add( "Jet_BgVel_y",            &Jet_BgVel[1],          0.0,           NoMin_double,        NoMax_double    );
+   ReadPara->Add( "Jet_BgVel_z",            &Jet_BgVel[2],          0.0,           NoMin_double,        NoMax_double    );
+   ReadPara->Add( "Jet_BgPres",             &Jet_BgPres,           -1.0,           Eps_double,          NoMax_double    );
 
-   ReadPara->Add( "Jet_BgDens",             &Jet_BgDens,           -1.0,           Eps_double,     NoMax_double    );
-   ReadPara->Add( "Jet_BgVel_x",            &Jet_BgVel[0],          0.0,           NoMin_double,   NoMax_double    );
-   ReadPara->Add( "Jet_BgVel_y",            &Jet_BgVel[1],          0.0,           NoMin_double,   NoMax_double    );
-   ReadPara->Add( "Jet_BgVel_z",            &Jet_BgVel[2],          0.0,           NoMin_double,   NoMax_double    );
-   ReadPara->Add( "Jet_BgPres",             &Jet_BgPres,           -1.0,           Eps_double,     NoMax_double    );
-
-   ReadPara->Add( "Jet_Radius",             &Jet_Radius    ,       -1.0,           Eps_double,     NoMax_double    );
-   ReadPara->Add( "Jet_HalfHeight",         &Jet_HalfHeight,       -1.0,           Eps_double,     NoMax_double    );
-   ReadPara->Add( "Jet_SrcVel",             &Jet_SrcVel    ,       -1.0,           Eps_double,     NoMax_double    );
-   ReadPara->Add( "Jet_SrcDens",            &Jet_SrcDens   ,       -1.0,           Eps_double,     NoMax_double    );
-   ReadPara->Add( "Jet_SrcPres",            &Jet_SrcPres   ,       -1.0,           Eps_double,     NoMax_double    );
-   ReadPara->Add( "Jet_Cone_Vec_x",         &Jet_Cone_Vec[0],       NoDef_double,  NoMin_double,   NoMax_double    );
-   ReadPara->Add( "Jet_Cone_Vec_y",         &Jet_Cone_Vec[1],       NoDef_double,  NoMin_double,   NoMax_double    );
-   ReadPara->Add( "Jet_Cone_Vec_z",         &Jet_Cone_Vec[2],       NoDef_double,  NoMin_double,   NoMax_double    );
-   ReadPara->Add( "Jet_CenOffset_x",        &Jet_CenOffset [0],     NoDef_double,  NoMin_double,   NoMax_double    );
-   ReadPara->Add( "Jet_CenOffset_y",        &Jet_CenOffset [1],     NoDef_double,  NoMin_double,   NoMax_double    );
-   ReadPara->Add( "Jet_CenOffset_z",        &Jet_CenOffset [2],     NoDef_double,  NoMin_double,   NoMax_double    );
-   ReadPara->Add( "Jet_Angular_Velocity",   &Jet_Angular_Velocity,  NoDef_double,  NoMin_double,   NoMax_double    );
-   ReadPara->Add( "Jet_Angle",              &Jet_Angle,             NoDef_double,  NoMin_double,   NoMax_double    );
+   ReadPara->Add( "Jet_Radius",             &Jet_Radius    ,       -1.0,           Eps_double,          NoMax_double    );
+   ReadPara->Add( "Jet_HalfHeight",         &Jet_HalfHeight,       -1.0,           Eps_double,          NoMax_double    );
+   ReadPara->Add( "Jet_SrcVel",             &Jet_SrcVel    ,       -1.0,           Eps_double,          NoMax_double    );
+   ReadPara->Add( "Jet_SrcDens",            &Jet_SrcDens   ,       -1.0,           Eps_double,          NoMax_double    );
+   ReadPara->Add( "Jet_SrcPres",            &Jet_SrcPres   ,       -1.0,           Eps_double,          NoMax_double    );
+   ReadPara->Add( "Jet_Cone_Vec_x",         &Jet_Cone_Vec[0],       NoDef_double,  NoMin_double,        NoMax_double    );
+   ReadPara->Add( "Jet_Cone_Vec_y",         &Jet_Cone_Vec[1],       NoDef_double,  NoMin_double,        NoMax_double    );
+   ReadPara->Add( "Jet_Cone_Vec_z",         &Jet_Cone_Vec[2],       NoDef_double,  NoMin_double,        NoMax_double    );
+   ReadPara->Add( "Jet_CenOffset_x",        &Jet_CenOffset [0],     NoDef_double,  NoMin_double,        NoMax_double    );
+   ReadPara->Add( "Jet_CenOffset_y",        &Jet_CenOffset [1],     NoDef_double,  NoMin_double,        NoMax_double    );
+   ReadPara->Add( "Jet_CenOffset_z",        &Jet_CenOffset [2],     NoDef_double,  NoMin_double,        NoMax_double    );
+   ReadPara->Add( "Jet_Angular_Velocity",   &Jet_Angular_Velocity,  NoDef_double,  NoMin_double,        NoMax_double    );
+   ReadPara->Add( "Jet_Angle",              &Jet_Angle,             NoDef_double,  NoMin_double,        NoMax_double    );
+   ReadPara->Add( "Jet_BurstStartTime",     &Jet_BurstStartTime,   -1.0,           Eps_double,          NoMax_double    );
+   ReadPara->Add( "Jet_BurstEndTime",       &Jet_BurstEndTime,     -1.0,           Eps_double,          NoMax_double    );
+   ReadPara->Add( "Jet_Burst4Velocity",     &Jet_Burst4Velocity,   -1.0,           NoMin_double,        NoMax_double    );
+//   ReadPara->Add( "Jet_Burst4VelovityX",    &Jet_Burst4VelovityX,  -1.0,           NoMin_double,        NoMax_double    );
+//   ReadPara->Add( "Jet_Burst4VelovityY",    &Jet_Burst4VelovityY,  -1.0,           NoMin_double,        NoMax_double    );
+//   ReadPara->Add( "Jet_Burst4VelovityZ",    &Jet_Burst4VelovityZ,  -1.0,           NoMin_double,        NoMax_double    );
 
 
    ReadPara->Read( FileName );
@@ -194,6 +194,12 @@ void SetParameter()
       Aux_Message( stdout, "     Jet_CenOffset[z]     = % 14.7e\n",          Jet_CenOffset [2]               );
       Aux_Message( stdout, "     Jet_Angular_Velocity = % 14.7e\n",          Jet_Angular_Velocity            );
       Aux_Message( stdout, "     Jet_Angle            = % 14.7e\n",          Jet_Angle                       );
+      Aux_Message( stdout, "     Jet_BurstStartTime   = % 14.7e\n",          Jet_BurstStartTime              );
+      Aux_Message( stdout, "     Jet_BurstEndTime     = % 14.7e\n",          Jet_BurstEndTime                );
+      Aux_Message( stdout, "     Jet_Burst4Velocity   = % 14.7e\n",          Jet_Burst4Velocity              );
+//      Aux_Message( stdout, "     Jet_Burst4VelovityX  = % 14.7e\n",          Jet_Burst4VelovityX             );
+//      Aux_Message( stdout, "     Jet_Burst4VelovityY  = % 14.7e\n",          Jet_Burst4VelovityY             );
+//      Aux_Message( stdout, "     Jet_Burst4VelovityZ  = % 14.7e\n",          Jet_Burst4VelovityZ             );
       Aux_Message( stdout, "=============================================================================\n" );
    }
 
@@ -280,9 +286,10 @@ bool Flu_ResetByUser_PrecessedJet( real fluid[], const double x, const double y,
 
    double Jet_dr, Jet_dh, S, Area;
    double Dis_c2m, Dis_c2v, Dis_v2m, Vec_c2m[3], Vec_v2m[3];
-   double Jet_SrcVel_xyz[3], Jet_Vec[3], Dis_Cone_Vec, Dis_Cone_Vec_2;
+   double Jet_SrcVel_xyz[3],Jet_BurstVel_xyz[3], Jet_Vec[3], Dis_Cone_Vec, Dis_Cone_Vec_2;
    double Cos_Phi, Sin_Phi, Sin_Angle, Cos_Angle, Sin_Omega, Cos_Omega;
    double Angle, Omega_t;
+   double Pri4Vel[NCOMP_FLUID];
    real   MomSin;
 
 // distance: jet center to mesh
@@ -334,7 +341,11 @@ bool Flu_ResetByUser_PrecessedJet( real fluid[], const double x, const double y,
     Dis_c2v = sqrt( SQR(Jet_Vec[0]) + SQR(Jet_Vec[1]) + SQR(Jet_Vec[2]) );
 
 //  velocity components along different directions
-    for (int d=0; d<3; d++)    Jet_SrcVel_xyz[d] = Jet_SrcVel * Jet_Vec[d] / Dis_c2v;
+    for (int d=0; d<3; d++)
+    {   
+      Jet_SrcVel_xyz[d]   =   Jet_SrcVel       * Jet_Vec[d] / Dis_c2v;
+      Jet_BurstVel_xyz[d] = Jet_Burst4Velocity * Jet_Vec[d] / Dis_c2v;
+    }
 
 
 //  distance: temporary vector to mesh
@@ -355,9 +366,23 @@ bool Flu_ResetByUser_PrecessedJet( real fluid[], const double x, const double y,
        MomSin      = sin( Jet_WaveK*Jet_dh );
        MomSin     *= SIGN( Vec_c2m[0]*Jet_Vec[0] + Vec_c2m[1]*Jet_Vec[1] + Vec_c2m[2]*Jet_Vec[2] );
 
-       double Pri4Vel[NCOMP_FLUID]
-             = { Jet_SrcDens, Jet_SrcVel_xyz[0]*MomSin, Jet_SrcVel_xyz[1]*MomSin, Jet_SrcVel_xyz[2]*MomSin, Jet_SrcPres };
- 
+       if ( Jet_BurstStartTime < Time && Time < Jet_BurstEndTime  )
+         {
+           Pri4Vel[0] = Jet_SrcDens;
+           Pri4Vel[1] = Jet_BurstVel_xyz[0]*MomSin;
+           Pri4Vel[2] = Jet_BurstVel_xyz[1]*MomSin;
+           Pri4Vel[3] = Jet_BurstVel_xyz[2]*MomSin;
+           Pri4Vel[4] = Jet_SrcPres;
+         }
+       else
+         {
+           Pri4Vel[0] = Jet_SrcDens;
+           Pri4Vel[1] = Jet_SrcVel_xyz[0]*MomSin;
+           Pri4Vel[2] = Jet_SrcVel_xyz[1]*MomSin;
+           Pri4Vel[3] = Jet_SrcVel_xyz[2]*MomSin;
+           Pri4Vel[4] = Jet_SrcPres;
+         }
+        
 
 //     cast double to real
 #      ifndef FLOAT8
