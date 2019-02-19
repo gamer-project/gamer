@@ -28,9 +28,6 @@ static double   Jet_Angle;                              // precession angle in d
 static double   Jet_BurstStartTime;                     // start burst time in jet
 static double   Jet_BurstEndTime;                       // end burst time in jet
 static double   Jet_Burst4Velocity;                     // 4-velocity
-//static double   Jet_Burst4VelovityX                     // 4-velocity in x
-//static double   Jet_Burst4VelovityY                     // 4-velocity in y
-//static double   Jet_Burst4VelovityZ                     // 4-velocity in z
 // =======================================================================================
 
 
@@ -137,9 +134,6 @@ void SetParameter()
    ReadPara->Add( "Jet_BurstStartTime",     &Jet_BurstStartTime,   -1.0,           Eps_double,          NoMax_double    );
    ReadPara->Add( "Jet_BurstEndTime",       &Jet_BurstEndTime,     -1.0,           Eps_double,          NoMax_double    );
    ReadPara->Add( "Jet_Burst4Velocity",     &Jet_Burst4Velocity,   -1.0,           NoMin_double,        NoMax_double    );
-//   ReadPara->Add( "Jet_Burst4VelovityX",    &Jet_Burst4VelovityX,  -1.0,           NoMin_double,        NoMax_double    );
-//   ReadPara->Add( "Jet_Burst4VelovityY",    &Jet_Burst4VelovityY,  -1.0,           NoMin_double,        NoMax_double    );
-//   ReadPara->Add( "Jet_Burst4VelovityZ",    &Jet_Burst4VelovityZ,  -1.0,           NoMin_double,        NoMax_double    );
 
 
    ReadPara->Read( FileName );
@@ -197,9 +191,6 @@ void SetParameter()
       Aux_Message( stdout, "     Jet_BurstStartTime   = % 14.7e\n",          Jet_BurstStartTime              );
       Aux_Message( stdout, "     Jet_BurstEndTime     = % 14.7e\n",          Jet_BurstEndTime                );
       Aux_Message( stdout, "     Jet_Burst4Velocity   = % 14.7e\n",          Jet_Burst4Velocity              );
-//      Aux_Message( stdout, "     Jet_Burst4VelovityX  = % 14.7e\n",          Jet_Burst4VelovityX             );
-//      Aux_Message( stdout, "     Jet_Burst4VelovityY  = % 14.7e\n",          Jet_Burst4VelovityY             );
-//      Aux_Message( stdout, "     Jet_Burst4VelovityZ  = % 14.7e\n",          Jet_Burst4VelovityZ             );
       Aux_Message( stdout, "=============================================================================\n" );
    }
 
