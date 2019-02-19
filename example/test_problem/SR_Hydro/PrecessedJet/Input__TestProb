@@ -18,6 +18,14 @@ Jet_CenOffset_y                     +0.0                    # jet central coordi
 Jet_CenOffset_z                     +0.0                    # jet central coordinates offset z
 Jet_Angular_Velocity                +30.0                    # precession angular velocity (degree per code_time)
 Jet_Angle                             30                    # precession angle in degree
-Jet_BurstStartTime
-Jet_BurstEndTime
-Jet_Burst4Velovity
+
+Flag_BurstDens                        0
+Flag_Burst4Vel                        0
+Flag_BurstPres                        0
+
+Jet_BurstDens                         0
+Jet_Burst4Vel                         0
+Jet_BurstPres                         0
+
+Jet_BurstStartTime                    0
+Jet_BurstEndTime                      0
