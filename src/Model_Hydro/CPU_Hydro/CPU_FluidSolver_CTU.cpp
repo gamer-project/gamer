@@ -27,7 +27,7 @@ void Hydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
                                const bool JeansMinPres, const real JeansMinPres_Coeff );
 void Hydro_ComputeFlux( const real g_FC_Var [][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_VAR) ],
                               real g_FC_Flux[][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX) ],
-                        const int NFlux, const int Gap_N, const int Gap_T, const real Gamma,
+                        const int NFlux, const int NSkip_N, const int NSkip_T, const real Gamma,
                         const bool CorrHalfVel, const real g_Pot_USG[], const double g_Corner[],
                         const real dt, const real dh, const double Time,
                         const OptGravityType_t GravityType, const double ExtAcc_AuxArray[],
@@ -212,19 +212,19 @@ void CPU_FluidSolver_CTU(
 
 //       4. evaluate the face-centered full-step fluxes by solving the Riemann problem with the corrected data
 #        ifdef MHD
-         const int Gap_N = 1;
-         const int Gap_T = 1;
+         const int NSkip_N = 1;
+         const int NSkip_T = 1;
 #        else
-         const int Gap_N = 0;
-         const int Gap_T = 1;
+         const int NSkip_N = 0;
+         const int NSkip_T = 1;
 #        endif
 #        ifdef UNSPLIT_GRAVITY
-         Hydro_ComputeFlux( g_FC_Var_1PG, g_FC_Flux_1PG, N_FL_FLUX, Gap_N, Gap_T, Gamma,
+         Hydro_ComputeFlux( g_FC_Var_1PG, g_FC_Flux_1PG, N_FL_FLUX, NSkip_N, NSkip_T, Gamma,
                             CorrHalfVel_Yes, g_Pot_Array_USG[P], g_Corner_Array[P],
                             dt, dh, Time, GravityType, c_ExtAcc_AuxArray, MinPres,
                             StoreFlux, g_Flux_Array[P] );
 #        else
-         Hydro_ComputeFlux( g_FC_Var_1PG, g_FC_Flux_1PG, N_FL_FLUX, Gap_N, Gap_T, Gamma,
+         Hydro_ComputeFlux( g_FC_Var_1PG, g_FC_Flux_1PG, N_FL_FLUX, NSkip_N, NSkip_T, Gamma,
                             CorrHalfVel_No, NULL, NULL,
                             NULL_REAL, NULL_REAL, NULL_REAL, GRAVITY_NONE, NULL, MinPres,
                             StoreFlux, g_Flux_Array[P] );
@@ -279,23 +279,23 @@ void Hydro_TGradient_Correction(       real g_FC_Var [][NCOMP_TOTAL_PLUS_MAG][ C
       const int TDir2 = (d+2)%3;    // transverse direction 2
 
       real fc_var[2][NCOMP_TOTAL];  // 0/1 = left/right faces
-      int  gap[3];
+      int  nskip[3];
 
       switch ( d )
       {
-         case 0 : gap[0] = 0;   gap[1] = 1;   gap[2] = 1;   break;
-         case 1 : gap[0] = 1;   gap[1] = 0;   gap[2] = 1;   break;
-         case 2 : gap[0] = 1;   gap[1] = 1;   gap[2] = 0;   break;
+         case 0 : nskip[0] = 0;  nskip[1] = 1;  nskip[2] = 1;  break;
+         case 1 : nskip[0] = 1;  nskip[1] = 0;  nskip[2] = 1;  break;
+         case 2 : nskip[0] = 1;  nskip[1] = 1;  nskip[2] = 0;  break;
       }
 
-      const int size_i  = ( NCell - 2*gap[0] );
-      const int size_ij = ( NCell - 2*gap[1] )*size_i;
+      const int size_i  = ( NCell - 2*nskip[0] );
+      const int size_ij = ( NCell - 2*nskip[1] )*size_i;
 
       CGPU_LOOP( idx, NCell*SQR(NCell-2) )
       {
-         const int i_var   = gap[0] + idx % size_i;
-         const int j_var   = gap[1] + idx % size_ij / size_i;
-         const int k_var   = gap[2] + idx / size_ij;
+         const int i_var   = nskip[0] + idx % size_i;
+         const int j_var   = nskip[1] + idx % size_ij / size_i;
+         const int k_var   = nskip[2] + idx / size_ij;
          const int idx_var = IDX321( i_var, j_var, k_var, NCell, NCell );
 
          const int idx_fluxR  = idx_var;

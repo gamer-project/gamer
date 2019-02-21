@@ -17,7 +17,7 @@ real Hydro_CheckMinPresInEngy( const real Dens, const real MomX, const real MomY
                                const real Gamma_m1, const real _Gamma_m1, const real MinPres );
 
 static void CPU_AdvanceX( real u[][ FLU_NXT*FLU_NXT*FLU_NXT ], const real dt, const real dx, const real Gamma,
-                          const bool StoreFlux, const int j_gap, const int k_gap, const real MinDens, const real MinPres );
+                          const bool StoreFlux, const int j_skip, const int k_skip, const real MinDens, const real MinPres );
 static void TransposeXY( real u[][ FLU_NXT*FLU_NXT*FLU_NXT ] );
 static void TransposeXZ( real u[][ FLU_NXT*FLU_NXT*FLU_NXT ] );
 
@@ -173,12 +173,12 @@ void CPU_FluidSolver_RTVD(
 //                dx           : Grid size
 //                Gamma        : Ratio of specific heats
 //                StoreFlux    : true --> store the coarse-fine fluxes
-//                j_gap        : Number of cells that can be skipped on each side in the y direction
-//                k_gap        : Number of cells that can be skipped on each side in the z direction
+//                j_skip       : Number of cells that can be skipped on each side in the y direction
+//                k_skip       : Number of cells that can be skipped on each side in the z direction
 //                MinDens/Pres : Minimum allowed density and pressure
 //-------------------------------------------------------------------------------------------------------
 void CPU_AdvanceX( real u[][ CUBE(FLU_NXT) ], const real dt, const real dx, const real Gamma,
-                   const bool StoreFlux, const int j_gap, const int k_gap, const real MinDens, const real MinPres )
+                   const bool StoreFlux, const int j_skip, const int k_skip, const real MinDens, const real MinPres )
 {
 
    const real  Gamma_m1 = Gamma - (real)1.0;    // for evaluating pressure
@@ -186,10 +186,10 @@ void CPU_AdvanceX( real u[][ CUBE(FLU_NXT) ], const real dt, const real dx, cons
    const real _dx       = (real)1.0/dx;         // one over dx
    const real dt_half   = (real)0.5*dt;         // for evaluating u_half
 
-   const int j_start    = j_gap;
-   const int k_start    = k_gap;
-   const int j_end      = FLU_NXT-j_gap;
-   const int k_end      = FLU_NXT-k_gap;
+   const int j_start    = j_skip;
+   const int k_start    = k_skip;
+   const int j_end      = FLU_NXT-j_skip;
+   const int k_end      = FLU_NXT-k_skip;
 
 // set local variables
    real ux     [5][FLU_NXT];              // one column of u in x direction

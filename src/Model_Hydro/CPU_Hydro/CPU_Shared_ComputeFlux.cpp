@@ -58,14 +58,14 @@ void ExternalAcc( real Acc[], const double x, const double y, const double z, co
 //
 // Note        :  1. Currently support the exact, HLLC, HLLE, and Roe solvers
 //                2. g_FC_Var[] has the size of N_FC_VAR^3
-//                   --> (N_FC_VAR-1-2*Gap_N)*(N_FC_VAR-2*Gap_T)^2 fluxes will be computed
-//                   --> See below for the definitions of Gap_N and Gap_T
+//                   --> (N_FC_VAR-1-2*NSkip_N)*(N_FC_VAR-2*NSkip_T)^2 fluxes will be computed
+//                   --> See below for the definitions of NSkip_N and NSkip_T
 //                3. g_FC_Flux[] has the size of N_FC_FLUX^3
 //                   --> But (i,j,k) flux will be stored in the "(k*NFlux+j)*NFlux+i" element in g_FC_Flux[]
 //                       --> We have assumed that NFlux <= N_FC_FLUX
-//                   --> (i,j,k) in g_FC_Flux_x[] is defined on the +x surface of the cell (i+Gap_N, j+Gap_T, k+Gap_T) in g_FC_Var[]
-//                       (i,j,k) in g_FC_Flux_y[] is defined on the +y surface of the cell (i+Gap_T, j+Gap_N, k+Gap_T) in g_FC_Var[]
-//                       (i,j,k) in g_FC_Flux_z[] is defined on the +z surface of the cell (i+Gap_T, j+Gap_T, k+gap_N) in g_FC_Var[]
+//                   --> (i,j,k) in g_FC_Flux_x[] is defined on the +x surface of the cell (i+NSkip_N, j+NSkip_T, k+NSkip_T) in g_FC_Var[]
+//                       (i,j,k) in g_FC_Flux_y[] is defined on the +y surface of the cell (i+NSkip_T, j+NSkip_N, k+NSkip_T) in g_FC_Var[]
+//                       (i,j,k) in g_FC_Flux_z[] is defined on the +z surface of the cell (i+NSkip_T, j+NSkip_T, k+NSkip_N) in g_FC_Var[]
 //                4. This function is shared by MHM, MHM_RP, and CTU schemes
 //                5. For the performance consideration, this function will also be responsible for storing the
 //                   inter-patch fluxes
@@ -74,10 +74,10 @@ void ExternalAcc( real Acc[], const double x, const double y, const double z, co
 // Parameter   :  g_FC_Var        : Array storing the input face-centered conserved variables
 //                g_FC_Flux       : Array to store the output face-centered fluxes
 //                NFlux           : Stride for accessing g_FC_Flux[]
-//                Gap_N           : Number of cells to be skipped in the normal directions
-//                                  --> "(N_FC_VAR-1-2*Gap_N)" fluxes will be computed along the normal direction
-//                Gap_T           : Number of cells to be skipped in the transverse directions
-//                                  --> "(N_FC_VAR-2*Gap_T)^2" fluxes will be computed along the transverse direction
+//                NSkip_N         : Number of cells to be skipped in the normal directions
+//                                  --> "(N_FC_VAR-1-2*NSkip_N)" fluxes will be computed along the normal direction
+//                NSkip_T         : Number of cells to be skipped in the transverse directions
+//                                  --> "(N_FC_VAR-2*NSkip_T)^2" fluxes will be computed along the transverse direction
 //                Gamma           : Ratio of specific heats
 //                CorrHalfVel     : true --> correct the half-step velocity by gravity        (for UNSPLIT_GRAVITY only)
 //                g_Pot_USG       : Array storing the input potential for CorrHalfVel         (for UNSPLIT_GRAVITY only)
@@ -94,7 +94,7 @@ void ExternalAcc( real Acc[], const double x, const double y, const double z, co
 GPU_DEVICE
 void Hydro_ComputeFlux( const real g_FC_Var [][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_VAR) ],
                               real g_FC_Flux[][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX) ],
-                        const int NFlux, const int Gap_N, const int Gap_T, const real Gamma,
+                        const int NFlux, const int NSkip_N, const int NSkip_T, const real Gamma,
                         const bool CorrHalfVel, const real g_Pot_USG[], const double g_Corner[],
                         const real dt, const real dh, const double Time,
                         const OptGravityType_t GravityType, const double ExtAcc_AuxArray[],
@@ -149,14 +149,14 @@ void Hydro_ComputeFlux( const real g_FC_Var [][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_
 #  ifdef GAMER_DEBUG
    if ( CorrHalfVel )
    {
-      if ( idx_fc2usg + Gap_N < 0 )
-         printf( "ERROR : idx_fc2usg (%d) + Gap_N (%d) < 0 (USG_GHOST_SIZE %d, N_FC_VAR %d) !!\n",
-                 idx_fc2usg, Gap_N, USG_GHOST_SIZE, N_FC_VAR );
+      if ( idx_fc2usg + NSkip_N < 0 )
+         printf( "ERROR : idx_fc2usg (%d) + NSkip_N (%d) < 0 (USG_GHOST_SIZE %d, N_FC_VAR %d) !!\n",
+                 idx_fc2usg, NSkip_N, USG_GHOST_SIZE, N_FC_VAR );
 
 //    one additional cell is required to calculate the derivative along the transverse direction
-      if ( idx_fc2usg + Gap_T < 1 )
-         printf( "ERROR : idx_fc2usg (%d) + Gap_T (%d) < 1 (USG_GHOST_SIZE %d, N_FC_VAR %d) !!\n",
-                 idx_fc2usg, Gap_T, USG_GHOST_SIZE, N_FC_VAR );
+      if ( idx_fc2usg + NSkip_T < 1 )
+         printf( "ERROR : idx_fc2usg (%d) + NSkip_T (%d) < 1 (USG_GHOST_SIZE %d, N_FC_VAR %d) !!\n",
+                 idx_fc2usg, NSkip_T, USG_GHOST_SIZE, N_FC_VAR );
    }
 #  endif
 #  endif // #ifdef UNSPLIT_GRAVITY
@@ -183,16 +183,16 @@ void Hydro_ComputeFlux( const real g_FC_Var [][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_
 
       switch ( d )
       {
-         case 0 : idx_fc_s  [0] = Gap_N;              idx_fc_s  [1] = Gap_T;              idx_fc_s  [2] = Gap_T;
-                  idx_flux_e[0] = N_FC_VAR-1-2*Gap_N; idx_flux_e[1] = N_FC_VAR-2*Gap_T;   idx_flux_e[2] = N_FC_VAR-2*Gap_T;
+         case 0 : idx_fc_s  [0] = NSkip_N;              idx_fc_s  [1] = NSkip_T;              idx_fc_s  [2] = NSkip_T;
+                  idx_flux_e[0] = N_FC_VAR-1-2*NSkip_N; idx_flux_e[1] = N_FC_VAR-2*NSkip_T;   idx_flux_e[2] = N_FC_VAR-2*NSkip_T;
                   break;
 
-         case 1 : idx_fc_s  [0] = Gap_T;              idx_fc_s  [1] = Gap_N;              idx_fc_s  [2] = Gap_T;
-                  idx_flux_e[0] = N_FC_VAR-2*Gap_T;   idx_flux_e[1] = N_FC_VAR-1-2*Gap_N; idx_flux_e[2] = N_FC_VAR-2*Gap_T;
+         case 1 : idx_fc_s  [0] = NSkip_T;              idx_fc_s  [1] = NSkip_N;              idx_fc_s  [2] = NSkip_T;
+                  idx_flux_e[0] = N_FC_VAR-2*NSkip_T;   idx_flux_e[1] = N_FC_VAR-1-2*NSkip_N; idx_flux_e[2] = N_FC_VAR-2*NSkip_T;
                   break;
 
-         case 2 : idx_fc_s  [0] = Gap_T;              idx_fc_s  [1] = Gap_T;              idx_fc_s  [2] = Gap_N;
-                  idx_flux_e[0] = N_FC_VAR-2*Gap_T;   idx_flux_e[1] = N_FC_VAR-2*Gap_T;   idx_flux_e[2] = N_FC_VAR-1-2*Gap_N;
+         case 2 : idx_fc_s  [0] = NSkip_T;              idx_fc_s  [1] = NSkip_T;              idx_fc_s  [2] = NSkip_N;
+                  idx_flux_e[0] = N_FC_VAR-2*NSkip_T;   idx_flux_e[1] = N_FC_VAR-2*NSkip_T;   idx_flux_e[2] = N_FC_VAR-1-2*NSkip_N;
                   break;
       }
 
