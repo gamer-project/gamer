@@ -28,9 +28,8 @@ static real dE_Upwind( const real FC_Ele_R, const real FC_Ele_L, const real FC_M
 //                3. g_EC_Ele [] has the size of N_EC_ELE^3  but is accessed with a stride "NEle"
 //                   g_FC_Flux[] has the size of N_FC_FLUX^3 but is accessed with a stride "NFlux"
 //                   g_PriVar [] has the size of FLU_NXT^3   but is accessed with a stride "NPri"
-//                4. EMF-x(i,j,k) is defined at the upper-right edge of g_PriVar( i+OffsetPri+1, j+OffsetPri+0, k+OffsetPri+0 )
-//                   EMF-y(i,j,k) is defined at the upper-right edge of g_PriVar( i+OffsetPri+0, j+OffsetPri+1, k+OffsetPri+0 )
-//                   EMF-z(i,j,k) is defined at the upper-right edge of g_PriVar( i+OffsetPri+0, j+OffsetPri+0, k+OffsetPri+1 )
+//                4. EMF-x/y/z( i, j, k ) are defined at the lower-left edge center of
+//                   g_PriVar( i+OffsetPri+1, j+OffsetPri+1, k+OffsetPri+1 )
 //
 // Parameter   :  g_EC_Ele  : Array to store the output electric field
 //                g_FC_Flux : Array storing the input face-centered fluxes
@@ -52,6 +51,7 @@ void MHD_ComputeElectric(       real g_EC_Ele[][ CUBE(N_EC_ELE) ],
                           const real dt, const real dh )
 {
 
+   const int  NEleM1       = NEle - 1;
    const int  didx_flux[3] = { 1, NFlux, SQR(NFlux) };
    const int  didx_pri [3] = { 1, NPri,  SQR(NPri)  };
    const real dt_dh        = dt / dh;
@@ -67,15 +67,15 @@ void MHD_ComputeElectric(       real g_EC_Ele[][ CUBE(N_EC_ELE) ],
 
       switch ( d )
       {
-         case 0 : idx_ele_e [0] = NEle-1;  idx_ele_e [1] = NEle;    idx_ele_e [2] = NEle;
+         case 0 : idx_ele_e [0] = NEleM1;  idx_ele_e [1] = NEle;    idx_ele_e [2] = NEle;
                   idx_flux_s[0] = 1;       idx_flux_s[1] = 0;       idx_flux_s[2] = 0;
                   break;
 
-         case 1 : idx_ele_e [0] = NEle;    idx_ele_e [1] = NEle-1;  idx_ele_e [2] = NEle;
+         case 1 : idx_ele_e [0] = NEle;    idx_ele_e [1] = NEleM1;  idx_ele_e [2] = NEle;
                   idx_flux_s[0] = 0;       idx_flux_s[1] = 1;       idx_flux_s[2] = 0;
                   break;
 
-         case 2 : idx_ele_e [0] = NEle;    idx_ele_e [1] = NEle;    idx_ele_e [2] = NEle-1;
+         case 2 : idx_ele_e [0] = NEle;    idx_ele_e [1] = NEle;    idx_ele_e [2] = NEleM1;
                   idx_flux_s[0] = 0;       idx_flux_s[1] = 0;       idx_flux_s[2] = 1;
                   break;
       }
@@ -201,6 +201,89 @@ real dE_Upwind( const real FC_Ele_R, const real FC_Ele_L, const real FC_Mom,
    return dE;
 
 } // FUNCTION : dE_Upwind
+
+
+
+//-------------------------------------------------------------------------------------------------------
+// Function    :  CPU_UpdataMagnetic
+// Description :  Update magnetic field with the constrained transport algorithm
+//
+// Note        :  1. This function is shared by MHM_RP and CTU schemes
+//                2. g_FC_Bx/y/z_Out[] are accessed with a stride "NOut"
+//                   g_FC_B_In[] has the size of FLU_NXT_P1^3 and is also accessed with the same stride
+//                   g_EC_Ele[] has the size of N_EC_ELE^3 but is accessed with a stride "NEle"
+//
+// Parameter   :  g_FC_B_Out  : Array to store the output face-centered B field
+//                              --> Separate into three arrays since the array dimension is different
+//                                  during the half- and full-step updates
+//                g_FC_B_In   : Array storing the input face-centered B field
+//                g_EC_Ele    : Array storing the input edge-centered electric field
+//                dt          : Time interval to advance solution
+//                dh          : Cell size
+//                NOut        : Stride for accessing g_FC_Bx/y/z_Out[]
+//                NEle        : Stride for accessing g_EC_Ele[]
+//                Offset_B_In : Offset for accessing g_FC_B_In[]
+//
+// Return      :  g_FC_B_Out[]
+//------------------------------------------------------------------------------------------------------
+GPU_DEVICE
+void CPU_UpdateMagnetic( real *g_FC_Bx_Out, real *g_FC_By_Out, real *g_FC_Bz_Out,
+                         const real g_FC_B_In[][ FLU_NXT_P1*SQR(FLU_NXT) ],
+                         const real g_EC_Ele[][ CUBE(N_EC_ELE) ],
+                         const real dt, const real dh, const int NOut, const int NEle, const int Offset_B_In )
+{
+
+   const int  NOutP1      = NOut + 1;
+   const int  didx_ele[3] = { 1, NEle, SQR(NEle) };
+   const real dt_dh       = dt / dh;
+
+   real *g_FC_B_Out[3] = { g_FC_Bx_Out, g_FC_By_Out, g_FC_Bz_Out };
+   real dE1, dE2;
+
+   for (int d=0; d<3; d++)
+   {
+      const int TDir1 = (d+1)%3;    // transverse direction 1
+      const int TDir2 = (d+2)%3;    // transverse direction 2
+
+      int idx_out_e_i, idx_out_e_j, idx_out_e_k, stride_in_i, stride_in_j;
+
+      switch ( d )
+      {
+         case 0 : idx_out_e_i = NOutP1;      idx_out_e_j = NOut;        idx_out_e_k = NOut;
+                  stride_in_i = FLU_NXT_P1;  stride_in_j = FLU_NXT;
+                  break;
+
+         case 1 : idx_out_e_i = NOut;        idx_out_e_j = NOutP1;      idx_out_e_k = NOut;
+                  stride_in_i = FLU_NXT;     stride_in_j = FLU_NXT_P1;
+                  break;
+
+         case 2 : idx_out_e_i = NOut;        idx_out_e_j = NOut;        idx_out_e_k = NOutP1;
+                  stride_in_i = FLU_NXT;     stride_in_j = FLU_NXT;
+                  break;
+      }
+
+      const int size_ij = idx_out_e_i*idx_out_e_j;
+      CGPU_LOOP( idx_out, idx_out_e_i*idx_out_e_j*idx_out_e_k )
+      {
+         const int i_out   = idx_out % idx_out_e_i;
+         const int j_out   = idx_out % size_ij / idx_out_e_i;
+         const int k_out   = idx_out / size_ij;
+
+         const int idx_ele = IDX321( i_out, j_out, k_out, NEle, NEle );
+
+         const int i_in    = i_out + Offset_B_In;
+         const int j_in    = j_out + Offset_B_In;
+         const int k_in    = k_out + Offset_B_In;
+         const int idx_in  = IDX321( i_in, j_in, k_in, stride_in_i, stride_in_j );
+
+          dE1 = g_EC_Ele[TDir1][ idx_ele + didx_ele[TDir2] ] - g_EC_Ele[TDir1][idx_ele];
+          dE2 = g_EC_Ele[TDir2][ idx_ele + didx_ele[TDir1] ] - g_EC_Ele[TDir2][idx_ele];
+
+          g_FC_B_Out[d][idx_out] = g_FC_B_In[d][idx_in] + dt_dh*( dE1 - dE2 );
+      } // CGPU_LOOP( idx_out, idx_out_e_i*idx_out_e_j*idx_out_e_k )
+   } // for (int d=0; d<3; d++)
+
+} // FUNCTION : CPU_UpdateMagnetic
 
 
 
