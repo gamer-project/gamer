@@ -205,7 +205,7 @@ real dE_Upwind( const real FC_Ele_R, const real FC_Ele_L, const real FC_Mom,
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  CPU_UpdataMagnetic
+// Function    :  MHD_UpdataMagnetic
 // Description :  Update magnetic field with the constrained transport algorithm
 //
 // Note        :  1. This function is shared by MHM_RP and CTU schemes
@@ -227,7 +227,7 @@ real dE_Upwind( const real FC_Ele_R, const real FC_Ele_L, const real FC_Mom,
 // Return      :  g_FC_B_Out[]
 //------------------------------------------------------------------------------------------------------
 GPU_DEVICE
-void CPU_UpdateMagnetic( real *g_FC_Bx_Out, real *g_FC_By_Out, real *g_FC_Bz_Out,
+void MHD_UpdateMagnetic( real *g_FC_Bx_Out, real *g_FC_By_Out, real *g_FC_Bz_Out,
                          const real g_FC_B_In[][ FLU_NXT_P1*SQR(FLU_NXT) ],
                          const real g_EC_Ele[][ CUBE(N_EC_ELE) ],
                          const real dt, const real dh, const int NOut, const int NEle, const int Offset_B_In )
@@ -283,7 +283,7 @@ void CPU_UpdateMagnetic( real *g_FC_Bx_Out, real *g_FC_By_Out, real *g_FC_Bz_Out
       } // CGPU_LOOP( idx_out, idx_out_e_i*idx_out_e_j*idx_out_e_k )
    } // for (int d=0; d<3; d++)
 
-} // FUNCTION : CPU_UpdateMagnetic
+} // FUNCTION : MHD_UpdateMagnetic
 
 
 
