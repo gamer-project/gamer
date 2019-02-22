@@ -96,11 +96,11 @@
 #  ifdef MHD
 #   define N_HF_ELE              ( N_FC_FLUX - 1 )
 #   define N_FL_ELE              ( N_FL_FLUX - 1 )
-#   define N_LC_ELE              ( N_FC_FLUX - 1 )
+#   define N_EC_ELE              ( N_FC_FLUX - 1 )
 #   define NWAVE                 ( NCOMP_FLUID + 2 )
 #   define MAG_OFFSET            ( NCOMP_TOTAL )
 #  else
-#   define N_LC_ELE              0
+#   define N_EC_ELE              0
 #   define NWAVE                 ( NCOMP_FLUID )
 #   define MAG_OFFSET            ( NULL_INT )
 #  endif
