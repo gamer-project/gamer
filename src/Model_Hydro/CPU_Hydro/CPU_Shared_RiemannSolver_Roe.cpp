@@ -508,7 +508,7 @@ void Hydro_RiemannSolver_Roe( const int XYZ, real Flux_Out[], const real L_In[],
    const real REigenVec[NWAVE][NWAVE] =
       {  {   ONE,     ONE, ZERO, ZERO,   ONE },
          {   u-a,       u, ZERO, ZERO,   u+a },
-         {     v,       v,  ONE, ZERO,     v }j
+         {     v,       v,  ONE, ZERO,     v },
          {     w,       w, ZERO,  ONE,     w },
          { H-u*a, _TWO*V2,    v,    w, H+u*a }  };
 #  endif // #ifdef MHD ... else ...
