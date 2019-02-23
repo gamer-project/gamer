@@ -191,7 +191,7 @@ void Hydro_Init_ByFunction_AssignData( const int lv )
 //    1. set the magnetic field
 #     ifdef MHD
 //    loop over B_X/Y/Z
-      for (int v=0; v<NCOMP_MAGNETIC; v++)
+      for (int v=0; v<NCOMP_MAG; v++)
       {
          int    ijk_end[3], sub_end[3], id=0;
          double dxyz0[3];

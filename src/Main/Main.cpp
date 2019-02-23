@@ -189,56 +189,56 @@ double                SF_CREATE_STAR_MAX_STAR_MFRAC;
 // 3. CPU (host) arrays for transferring data between CPU and GPU
 // =======================================================================================================
 // (3-1) fluid solver
-real (*h_Flu_Array_F_In [2])[FLU_NIN ][ CUBE(FLU_NXT) ]           = { NULL, NULL };
-real (*h_Flu_Array_F_Out[2])[FLU_NOUT][ CUBE(PS2) ]               = { NULL, NULL };
-real (*h_Flux_Array[2])[9][NFLUX_TOTAL][ SQR(PS2) ]               = { NULL, NULL };
-double (*h_Corner_Array_F[2])[3]                                  = { NULL, NULL };
+real (*h_Flu_Array_F_In [2])[FLU_NIN ][ CUBE(FLU_NXT) ]            = { NULL, NULL };
+real (*h_Flu_Array_F_Out[2])[FLU_NOUT][ CUBE(PS2) ]                = { NULL, NULL };
+real (*h_Flux_Array[2])[9][NFLUX_TOTAL][ SQR(PS2) ]                = { NULL, NULL };
+double (*h_Corner_Array_F[2])[3]                                   = { NULL, NULL };
 #ifdef DUAL_ENERGY
-char (*h_DE_Array_F_Out[2])[ CUBE(PS2) ]                          = { NULL, NULL };
+char (*h_DE_Array_F_Out[2])[ CUBE(PS2) ]                           = { NULL, NULL };
 #endif
 #ifdef MHD
 #warning : WAIT MHD !!!
-real (*h_Mag_Array_F_In [2])[MAG_NIN ][ FLU_NXT_P1*SQR(FLU_NXT) ] = { NULL, NULL };
-real (*h_Mag_Array_F_Out[2])[MAG_NOUT][ PS2_P1*SQR(PS2)         ] = { NULL, NULL };
+real (*h_Mag_Array_F_In [2])[NCOMP_MAG][ FLU_NXT_P1*SQR(FLU_NXT) ] = { NULL, NULL };
+real (*h_Mag_Array_F_Out[2])[NCOMP_MAG][ PS2_P1*SQR(PS2)         ] = { NULL, NULL };
 #endif
 #if ( FLU_SCHEME == MHM  ||  FLU_SCHEME == MHM_RP  ||  FLU_SCHEME == CTU )
-real (*h_PriVar)      [NCOMP_TOTAL_PLUS_MAG][ CUBE(FLU_NXT)     ] = NULL;
-real (*h_Slope_PPM)[3][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_SLOPE_PPM) ] = NULL;
-real (*h_FC_Var)   [6][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_VAR)    ] = NULL;
-real (*h_FC_Flux)  [3][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX)   ] = NULL;
+real (*h_PriVar)      [NCOMP_TOTAL_PLUS_MAG][ CUBE(FLU_NXT)     ]  = NULL;
+real (*h_Slope_PPM)[3][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_SLOPE_PPM) ]  = NULL;
+real (*h_FC_Var)   [6][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_VAR)    ]  = NULL;
+real (*h_FC_Flux)  [3][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX)   ]  = NULL;
 #endif
 
 #ifdef GRAVITY
 // (3-2) gravity solver
-real (*h_Rho_Array_P    [2])[RHO_NXT][RHO_NXT][RHO_NXT]           = { NULL, NULL };
-real (*h_Pot_Array_P_In [2])[POT_NXT][POT_NXT][POT_NXT]           = { NULL, NULL };
-real (*h_Pot_Array_P_Out[2])[GRA_NXT][GRA_NXT][GRA_NXT]           = { NULL, NULL };
-real (*h_Flu_Array_G    [2])[GRA_NIN][PS1][PS1][PS1]              = { NULL, NULL };
-double (*h_Corner_Array_G[2])[3]                                  = { NULL, NULL };
+real (*h_Rho_Array_P    [2])[RHO_NXT][RHO_NXT][RHO_NXT]            = { NULL, NULL };
+real (*h_Pot_Array_P_In [2])[POT_NXT][POT_NXT][POT_NXT]            = { NULL, NULL };
+real (*h_Pot_Array_P_Out[2])[GRA_NXT][GRA_NXT][GRA_NXT]            = { NULL, NULL };
+real (*h_Flu_Array_G    [2])[GRA_NIN][PS1][PS1][PS1]               = { NULL, NULL };
+double (*h_Corner_Array_G[2])[3]                                   = { NULL, NULL };
 #ifdef DUAL_ENERGY
-char (*h_DE_Array_G    [2])[PS1][PS1][PS1]                        = { NULL, NULL };
+char (*h_DE_Array_G    [2])[PS1][PS1][PS1]                         = { NULL, NULL };
 #endif
 
 // (3-3) unsplit gravity correction
 #ifdef UNSPLIT_GRAVITY
-real (*h_Pot_Array_USG_F[2])[ CUBE(USG_NXT_F) ]                   = { NULL, NULL };
-real (*h_Pot_Array_USG_G[2])[USG_NXT_G][USG_NXT_G][USG_NXT_G]     = { NULL, NULL };
-real (*h_Flu_Array_USG_G[2])[GRA_NIN-1][PS1][PS1][PS1]            = { NULL, NULL };
+real (*h_Pot_Array_USG_F[2])[ CUBE(USG_NXT_F) ]                    = { NULL, NULL };
+real (*h_Pot_Array_USG_G[2])[USG_NXT_G][USG_NXT_G][USG_NXT_G]      = { NULL, NULL };
+real (*h_Flu_Array_USG_G[2])[GRA_NIN-1][PS1][PS1][PS1]             = { NULL, NULL };
 #endif
 #endif
 
 // (3-4) Grackle chemistry
 #ifdef SUPPORT_GRACKLE
-real (*h_Che_Array[2])                                            = { NULL, NULL };
-grackle_field_data *Che_FieldData                                 = NULL;
+real (*h_Che_Array[2])                                             = { NULL, NULL };
+grackle_field_data *Che_FieldData                                  = NULL;
 code_units Che_Units;
 #endif
 
 // (3-5) dt solver
-real  *h_dt_Array_T[2]                                            = { NULL, NULL };
-real (*h_Flu_Array_T[2])[NCOMP_FLUID][ CUBE(PS1) ]                = { NULL, NULL };
+real  *h_dt_Array_T[2]                                             = { NULL, NULL };
+real (*h_Flu_Array_T[2])[NCOMP_FLUID][ CUBE(PS1) ]                 = { NULL, NULL };
 #ifdef GRAVITY
-real (*h_Pot_Array_T[2])[ CUBE(GRA_NXT) ]                         = { NULL, NULL };
+real (*h_Pot_Array_T[2])[ CUBE(GRA_NXT) ]                          = { NULL, NULL };
 #endif
 
 
@@ -261,8 +261,8 @@ real (*d_FC_Flux)  [3][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX)   ] = NULL;
 #endif
 #ifdef MHD
 #warning : WAIT MHD !!!
-real (*d_Mag_Array_F_In )[MAG_NIN ][ FLU_NXT_P1*SQR(FLU_NXT) ]    = NULL;
-real (*d_Mag_Array_F_Out)[MAG_NOUT][ PS2_P1*SQR(PS2)         ]    = NULL;
+real (*d_Mag_Array_F_In )[NCOMP_MAG][ FLU_NXT_P1*SQR(FLU_NXT) ]   = NULL;
+real (*d_Mag_Array_F_Out)[NCOMP_MAG][ PS2_P1*SQR(PS2)         ]   = NULL;
 #endif
 
 #ifdef GRAVITY

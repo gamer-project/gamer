@@ -15,8 +15,8 @@ extern double (*d_Corner_Array_F)[3];
 extern char (*d_DE_Array_F_Out)[ CUBE(PS2) ];
 #endif
 #ifdef MHD
-extern real (*d_Mag_Array_F_In )[MAG_NIN ][ FLU_NXT_P1*SQR(FLU_NXT) ];
-extern real (*d_Mag_Array_F_Out)[MAG_NOUT][ PS2_P1*SQR(PS2)         ];
+extern real (*d_Mag_Array_F_In )[NCOMP_MAG][ FLU_NXT_P1*SQR(FLU_NXT) ];
+extern real (*d_Mag_Array_F_Out)[NCOMP_MAG][ PS2_P1*SQR(PS2)         ];
 #endif
 extern real *d_dt_Array_T;
 extern real (*d_Flu_Array_T)[NCOMP_FLUID][ CUBE(PS1) ];

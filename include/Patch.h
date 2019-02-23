@@ -592,7 +592,7 @@ struct patch_t
 #     endif
 #     endif
 
-      const int Size = ( SibID < 6 ) ? NELECTRIC*PS1_M1*PS1 : PS1;
+      const int Size = ( SibID < 6 ) ? NCOMP_ELE*PS1_M1*PS1 : PS1;
 
       electric      [SibID]  = new real [Size];
       if ( AllocTmp )
@@ -694,7 +694,7 @@ struct patch_t
 
       if ( magnetic == NULL )
       {
-         magnetic = new real [NCOMP_MAGNETIC][PS1_P1*PS1*PS1];
+         magnetic = new real [NCOMP_MAG][PS1_P1*PS1*PS1];
          magnetic[0][0] = (real)-1.0;  // arbitrarily initialized
       }
 

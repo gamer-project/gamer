@@ -103,7 +103,7 @@ static void Hydro_Char2Pri( real InOut[], const real Gamma, const real Rho, cons
 // Parameter   :  g_ConVar           : Array storing the input cell-centered conserved variables
 //                                     --> Should contain NCOMP_TOTAL variables
 //                g_FC_B             : Array storing the input face-centered magnetic field (for MHD only)
-//                                     --> Should contain NCOMP_MAGNETIC variables
+//                                     --> Should contain NCOMP_MAG variables
 //                g_PriVar           : Array storing/to store the cell-centered primitive variables
 //                                     --> Should contain NCOMP_TOTAL_PLUS_MAG variables
 //                                         --> For MHD, this array currently stores the normal B field as well
@@ -266,7 +266,7 @@ void Hydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
    const int NOut2  = SQR(NOut);
 #  ifdef MHD
    const int NIn_p1 = NIn + 1;
-   int idx_B[NCOMP_MAGNETIC];
+   int idx_B[NCOMP_MAG];
 #  endif
 
    CGPU_LOOP( idx_fc, CUBE(NOut) )
@@ -1018,12 +1018,12 @@ void Hydro_Pri2Char( real InOut[], const real Gamma, const real Rho, const real 
 
 // back-up the input array and rotate it according to the target direction
 // --> it's unnecessary to copy the passive scalars since they will not be modified
-   real Temp[ NCOMP_FLUID + NCOMP_MAGNETIC ];
+   real Temp[ NCOMP_FLUID + NCOMP_MAG ];
 
    for (int v=0; v<NCOMP_FLUID; v++)   Temp[v] = InOut[v];
 
 #  ifdef MHD
-   for (int v=NCOMP_FLUID; v<NCOMP_FLUID+NCOMP_MAGNETIC; v++)  Temp[v] = InOut[ v - NCOMP_FLUID + MAG_OFFSET ];
+   for (int v=NCOMP_FLUID; v<NCOMP_FLUID+NCOMP_MAG; v++)    Temp[v] = InOut[ v - NCOMP_FLUID + MAG_OFFSET ];
 #  endif
 
    Hydro_Rotate3D( Temp, XYZ, true, NCOMP_FLUID );
@@ -1103,12 +1103,12 @@ void Hydro_Char2Pri( real InOut[], const real Gamma, const real Rho, const real 
 // back-up the input array and rotate it according to the target direction
 // --> it's unnecessary to copy the passive scalars since they will not be modified
 // --> it's also unnecessary to copy the normal B field (just to be consistent with the eigenvector matrix)
-   real Temp[ NCOMP_FLUID + NCOMP_MAGNETIC - 1 ];
+   real Temp[ NCOMP_FLUID + NCOMP_MAG - 1 ];
 
    for (int v=0; v<NCOMP_FLUID; v++)   Temp[v] = InOut[v];
 
 #  ifdef MHD
-   for (int v=NCOMP_FLUID; v<NCOMP_FLUID+NCOMP_MAGNETIC-1; v++)  Temp[v] = InOut[ v - NCOMP_FLUID + MAG_OFFSET + 1 ];
+   for (int v=NCOMP_FLUID; v<NCOMP_FLUID+NCOMP_MAG-1; v++)  Temp[v] = InOut[ v - NCOMP_FLUID + MAG_OFFSET + 1 ];
 #  endif
 
 
