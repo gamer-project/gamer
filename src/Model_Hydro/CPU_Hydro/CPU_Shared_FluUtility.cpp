@@ -51,7 +51,7 @@ void Hydro_Rotate3D( real InOut[], const int XYZ, const bool Forward, const int 
 // check
 #  ifdef GAMER_DEBUG
 #  ifdef MHD
-   if ( Mag_Offset < NCOMP_FLUID  ||  Mag_Offset > NCOMP_TOTAL_PLUS_MAG - NCOMP_MAGNETIC )
+   if ( Mag_Offset < NCOMP_FLUID  ||  Mag_Offset > NCOMP_TOTAL_PLUS_MAG - NCOMP_MAG )
       printf( "ERROR : invalid Mag_Offset = %d !!\n", Mag_Offset );
 #  endif
 #  endif
@@ -268,12 +268,12 @@ void Hydro_Con2Flux( const int XYZ, real Flux[], const real In[], const real Gam
 {
 
    const bool CheckMinPres_Yes = true;
-   real InRot[ NCOMP_FLUID + NCOMP_MAGNETIC ];  // no need to include passive scalars since they don't have to be rotated
+   real InRot[ NCOMP_FLUID + NCOMP_MAG ];    // no need to include passive scalars since they don't have to be rotated
 
    for (int v=0; v<NCOMP_FLUID; v++)   InRot[v] = In[v];
 
 #  ifdef MHD
-   for (int v=NCOMP_FLUID; v<NCOMP_FLUID+NCOMP_MAGNETIC; v++)  InRot[v] = In[ v - NCOMP_FLUID + MAG_OFFSET ];
+   for (int v=NCOMP_FLUID; v<NCOMP_FLUID+NCOMP_MAG; v++)    InRot[v] = In[ v - NCOMP_FLUID + MAG_OFFSET ];
 #  endif
 
    Hydro_Rotate3D( InRot, XYZ, true, NCOMP_FLUID );

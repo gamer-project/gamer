@@ -72,7 +72,7 @@ void SetTempIntPara( const int lv, const int Sg_Current, const double PrepTime, 
 //                                        must work on all three components at once
 //                NVarFC_Tot        : Total number of face-centered variables to be prepared
 //                TVarFCIdxList     : List recording the target face-centered variable indices
-//                                    ( = [0 ... NCOMP_MAGNETIC-1] )
+//                                    ( = [0 ... NCOMP_MAG-1] )
 //                IntPhase          : true --> Perform interpolation on rho/phase instead of real/imag parts in ELBDM
 //                FluBC             : Fluid boundary condition
 //                PotBC             : Gravity boundary condition (not used currently)
@@ -110,7 +110,7 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
    if ( TVarFC != _NONE )
    {
 #     ifdef MHD
-      if ( TVarFC != _MAG  ||  NVarFC_Tot != NCOMP_MAGNETIC )
+      if ( TVarFC != _MAG  ||  NVarFC_Tot != NCOMP_MAG )
          Aux_Error( ERROR_INFO, "%s must work on all three magnetic components at once !!\n", __FUNCTION__ );
 #     else
       Aux_Error( ERROR_INFO, "currently only MHD supports face-centered variables !!" );

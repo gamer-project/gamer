@@ -178,7 +178,7 @@ void MHD_InterpolateBField( const real **CData, const int CSize[3][3], const int
 
 
 //    3. fill in FData[] using the interpolation polynomial
-      for (int v=0; v<NCOMP_MAGNETIC; v++)
+      for (int v=0; v<NCOMP_MAG; v++)
       {
          const int Offset_F0   = IDX321( i_F[v], j_F[v], k_F[v], FSize[v][0], FSize[v][1] );
          const int Offset_F[4] = { Offset_F0,
@@ -243,7 +243,7 @@ void MHD_InterpolateBField( const real **CData, const int CSize[3][3], const int
                FData[v][ Offset_F[3] + Offset_Normal ] = GetFaceB_C( FaceCoeff[f], p1_4, p1_4 );
             }
          }
-      } // for (int v=0; v<NCOMP_MAGNETIC; v++)
+      } // for (int v=0; v<NCOMP_MAG; v++)
 
    }}} // IJK loop
 

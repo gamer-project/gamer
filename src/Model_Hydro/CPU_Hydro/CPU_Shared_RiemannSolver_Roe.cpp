@@ -559,11 +559,11 @@ void Hydro_RiemannSolver_Roe( const int XYZ, real Flux_Out[], const real L_In[],
 // 8. verify that the density and pressure in the intermediate states are positive
 #  ifdef CHECK_INTERMEDIATE
    const bool CheckMinPres_No = false;
-   real I_Pres, I_States[ NCOMP_FLUID + NCOMP_MAGNETIC ];
+   real I_Pres, I_States[ NCOMP_FLUID + NCOMP_MAG ];
 
    for (int v=0; v<NCOMP_FLUID; v++)      I_States[v] = L[v];
 #  ifdef MHD
-   for (int v=0; v<NCOMP_MAGNETIC; v++)   I_States[ NCOMP_FLUID + v ] = L[ MAG_OFFSET + v ];
+   for (int v=0; v<NCOMP_MAG; v++)  I_States[ NCOMP_FLUID + v ] = L[ MAG_OFFSET + v ];
 #  endif
 
    for (int t=0; t<NWAVE-1; t++)

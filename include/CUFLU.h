@@ -91,7 +91,7 @@
 #  endif // FLU_SCHEME
 
 #  define N_SLOPE_PPM            ( N_FC_VAR + 2 )
-#  define NCOMP_TOTAL_PLUS_MAG   ( NCOMP_TOTAL + NCOMP_MAGNETIC )
+#  define NCOMP_TOTAL_PLUS_MAG   ( NCOMP_TOTAL + NCOMP_MAG )
 
 #  ifdef MHD
 #   define N_HF_ELE              ( N_FC_FLUX - 1 )

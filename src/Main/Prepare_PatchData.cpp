@@ -325,7 +325,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
 
 // TVarCCIdxList_Flu: list recording the target cell-centered fluid and passive variable indices (e.g., [0 ... NCOMP_TOTAL-1] )
 // TVarCCList_Der   : list recording the target cell-centered derived variable (e.g., _VELX, _PRES)
-// TVarFCIdxList    : list recording the target face-centered variable indices (e.g., [0 ... NCOMP_MAGNETIC-1])
+// TVarFCIdxList    : list recording the target face-centered variable indices (e.g., [0 ... NCOMP_MAG-1])
    int NTSib[26], *TSib[26], NVarCC_Flu, NVarCC_Der, NVarCC_Tot, TVarCCIdxList_Flu[NCOMP_TOTAL];
 
 // set up the target sibling indices for InterpolateGhostZone()
@@ -379,9 +379,9 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
 
 #  ifdef MHD
    const bool PrepMag = ( TVarFC & _MAG ) ? true : false;
-   int TVarFCIdxList[NCOMP_MAGNETIC];
+   int TVarFCIdxList[NCOMP_MAG];
 
-   for (int v=0; v<NCOMP_MAGNETIC; v++)
+   for (int v=0; v<NCOMP_MAG; v++)
       if ( TVarFC & (1<<v) )  TVarFCIdxList[ NVarFC_Tot++ ] = v;
 
 #  else

@@ -83,21 +83,21 @@
 #define RNG_CPP11    2
 
 
-// NCOMP_FLUID    : number of active components in each cell (for patch->fluid[])
-//                  --> do not include passive components here, which is set by NCOMP_PASSIVE
-// NFLUX_FLUID    : number of active components in patch->flux[]
-//                  --> do not include passive components here, which is set by NFLUX_PASSIVE
-// NCOMP_MAGNETIC : number of magnetic fields in each cell (for patch->magnetic[])
-// NELECTRIC      : number of transverse magnetic fields on each cell face (for patch->electric[])
+// NCOMP_FLUID : number of active components in each cell (for patch->fluid[])
+//               --> do not include passive components here, which is set by NCOMP_PASSIVE
+// NFLUX_FLUID : number of active components in patch->flux[]
+//               --> do not include passive components here, which is set by NFLUX_PASSIVE
+// NCOMP_MAG   : number of magnetic field components (for patch->magnetic[])
+// NCOMP_ELE   : number of electric field components on each cell face (for patch->electric[])
 #if   ( MODEL == HYDRO )
 #  define NCOMP_FLUID         5
 #  define NFLUX_FLUID         NCOMP_FLUID
 # ifdef MHD
-#  define NCOMP_MAGNETIC      3
-#  define NELECTRIC           2
+#  define NCOMP_MAG           3
+#  define NCOMP_ELE           2
 # else
-#  define NCOMP_MAGNETIC      0
-#  define NELECTRIC           0
+#  define NCOMP_MAG           0
+#  define NCOMP_ELE           0
 # endif
 
 // for ELBDM, we only need the density flux
@@ -139,26 +139,15 @@
 #if   ( MODEL == HYDRO )
 #  define FLU_NIN             NCOMP_TOTAL
 #  define FLU_NOUT            NCOMP_TOTAL
-# ifdef MHD
-#  define MAG_NIN             NCOMP_MAGNETIC
-#  define MAG_NOUT            NCOMP_MAGNETIC
-# else
-#  define MAG_NIN             0
-#  define MAG_NOUT            0
-# endif
 
 // for ELBDM, we do not need to transfer the density component into GPU
 #elif ( MODEL == ELBDM )
 #  define FLU_NIN             ( NCOMP_TOTAL - 1 )
 #  define FLU_NOUT            ( NCOMP_TOTAL - 0 )
-#  define MAG_NIN             0
-#  define MAG_NOUT            0
 
 #elif ( MODEL == PAR_ONLY )
 #  define FLU_NIN             0
 #  define FLU_NOUT            0
-#  define MAG_NIN             0
-#  define MAG_NOUT            0
 
 #else
 #  error : ERROR : unsupported MODEL (please edit FLU_NIN and FLU_NOUT for the new MODEL) !!
@@ -188,7 +177,7 @@
 # endif
 #endif
 
-// field indices of magnetic --> element of [0 ... NCOMP_MAGNETIC-1]
+// field indices of magnetic --> element of [0 ... NCOMP_MAG-1]
 # ifdef MHD
 #  define  MAGX               0
 #  define  MAGY               1
