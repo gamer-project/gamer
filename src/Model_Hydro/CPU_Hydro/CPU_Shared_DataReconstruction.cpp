@@ -1103,12 +1103,12 @@ void Hydro_Char2Pri( real InOut[], const real Gamma, const real Rho, const real 
 // back-up the input array and rotate it according to the target direction
 // --> it's unnecessary to copy the passive scalars since they will not be modified
 // --> it's also unnecessary to copy the normal B field (just to be consistent with the eigenvector matrix)
-   real Temp[ NCOMP_FLUID + NCOMP_MAG - 1 ];
+   real Temp[NWAVE];
 
-   for (int v=0; v<NCOMP_FLUID; v++)   Temp[v] = InOut[v];
+   for (int v=0; v<NCOMP_FLUID; v++)      Temp[v] = InOut[v];
 
 #  ifdef MHD
-   for (int v=NCOMP_FLUID; v<NCOMP_FLUID+NCOMP_MAG-1; v++)  Temp[v] = InOut[ v - NCOMP_FLUID + MAG_OFFSET + 1 ];
+   for (int v=NCOMP_FLUID; v<NWAVE; v++)  Temp[v] = InOut[ v - NCOMP_FLUID + MAG_OFFSET + 1 ];
 #  endif
 
 

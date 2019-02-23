@@ -25,7 +25,11 @@ extern real (*d_PriVar)      [NCOMP_TOTAL_PLUS_MAG][ CUBE(FLU_NXT)     ];
 extern real (*d_Slope_PPM)[3][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_SLOPE_PPM) ];
 extern real (*d_FC_Var)   [6][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_VAR)    ];
 extern real (*d_FC_Flux)  [3][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX)   ];
+#ifdef MHD
+extern real (*d_FC_Mag_Half)[NCOMP_MAG][ FLU_NXT_P1*SQR(FLU_NXT) ];
+extern real (*d_EC_Ele     )[NCOMP_MAG][ CUBE(N_EC_ELE)          ];
 #endif
+#endif // FLU_SCHEME
 
 #if ( MODEL != HYDRO  &&  MODEL != ELBDM )
 #  warning : DO YOU WANT TO ADD SOMETHING HERE FOR THE NEW MODEL ??
@@ -62,11 +66,15 @@ void CUAPI_MemFree_Fluid( const int GPU_NStream )
    if ( d_dt_Array_T      != NULL ) {  CUDA_CHECK_ERROR(  cudaFree( d_dt_Array_T      )  );  d_dt_Array_T      = NULL; }
    if ( d_Flu_Array_T     != NULL ) {  CUDA_CHECK_ERROR(  cudaFree( d_Flu_Array_T     )  );  d_Flu_Array_T     = NULL; }
 #  if ( FLU_SCHEME == MHM  ||  FLU_SCHEME == MHM_RP  ||  FLU_SCHEME == CTU )
-   if ( d_PriVar    != NULL ) {  CUDA_CHECK_ERROR(  cudaFree( d_PriVar    )  );  d_PriVar    = NULL; }
-   if ( d_Slope_PPM != NULL ) {  CUDA_CHECK_ERROR(  cudaFree( d_Slope_PPM )  );  d_Slope_PPM = NULL; }
-   if ( d_FC_Var    != NULL ) {  CUDA_CHECK_ERROR(  cudaFree( d_FC_Var    )  );  d_FC_Var    = NULL; }
-   if ( d_FC_Flux   != NULL ) {  CUDA_CHECK_ERROR(  cudaFree( d_FC_Flux   )  );  d_FC_Flux   = NULL; }
+   if ( d_PriVar      != NULL ) {  CUDA_CHECK_ERROR(  cudaFree( d_PriVar      )  );  d_PriVar      = NULL; }
+   if ( d_Slope_PPM   != NULL ) {  CUDA_CHECK_ERROR(  cudaFree( d_Slope_PPM   )  );  d_Slope_PPM   = NULL; }
+   if ( d_FC_Var      != NULL ) {  CUDA_CHECK_ERROR(  cudaFree( d_FC_Var      )  );  d_FC_Var      = NULL; }
+   if ( d_FC_Flux     != NULL ) {  CUDA_CHECK_ERROR(  cudaFree( d_FC_Flux     )  );  d_FC_Flux     = NULL; }
+#  ifdef MHD
+   if ( d_FC_Mag_Half != NULL ) {  CUDA_CHECK_ERROR(  cudaFree( d_FC_Mag_Half )  );  d_FC_Mag_Half = NULL; }
+   if ( d_EC_Ele      != NULL ) {  CUDA_CHECK_ERROR(  cudaFree( d_EC_Ele      )  );  d_EC_Ele      = NULL; }
 #  endif
+#  endif // FLU_SCHEME
 
 #  if ( MODEL != HYDRO  &&  MODEL != ELBDM )
 #    warning : DO YOU WANT TO ADD SOMETHING HERE FOR THE NEW MODEL ??

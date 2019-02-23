@@ -30,6 +30,8 @@ void CUFLU_FluidSolver_MHM(
          real   g_Slope_PPM    [][3][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_SLOPE_PPM) ],
          real   g_FC_Var       [][6][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_VAR) ],
          real   g_FC_Flux      [][3][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX) ],
+         real   g_FC_Mag_Half  [][NCOMP_MAG][ FLU_NXT_P1*SQR(FLU_NXT) ],
+         real   g_EC_Ele       [][NCOMP_MAG][ CUBE(N_EC_ELE) ],
    const real dt, const real dh, const real Gamma, const bool StoreFlux,
    const LR_Limiter_t LR_Limiter, const real MinMod_Coeff,
    const double Time, const OptGravityType_t GravityType,
@@ -51,6 +53,8 @@ void CUFLU_FluidSolver_CTU(
          real   g_Slope_PPM    [][3][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_SLOPE_PPM) ],
          real   g_FC_Var       [][6][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_VAR) ],
          real   g_FC_Flux      [][3][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX) ],
+         real   g_FC_Mag_Half  [][NCOMP_MAG][ FLU_NXT_P1*SQR(FLU_NXT) ],
+         real   g_EC_Ele       [][NCOMP_MAG][ CUBE(N_EC_ELE) ],
    const real dt, const real dh, const real Gamma, const bool StoreFlux,
    const LR_Limiter_t LR_Limiter, const real MinMod_Coeff,
    const double Time, const OptGravityType_t GravityType,
@@ -82,23 +86,33 @@ extern char (*d_DE_Array_F_Out)[ CUBE(PS2) ];
 #else
 static char (*d_DE_Array_F_Out)[ CUBE(PS2) ] = NULL;
 #endif
+#ifdef MHD
+extern real (*d_Mag_Array_F_In )[NCOMP_MAG][ FLU_NXT_P1*SQR(FLU_NXT) ];
+extern real (*d_Mag_Array_F_Out)[NCOMP_MAG][ PS2_P1*SQR(PS2)         ];
+#else
+static real (*d_Mag_Array_F_In )[NCOMP_MAG][ FLU_NXT_P1*SQR(FLU_NXT) ]   = NULL;
+static real (*d_Mag_Array_F_Out)[NCOMP_MAG][ PS2_P1*SQR(PS2)         ]   = NULL;
+#endif
 #if ( FLU_SCHEME == MHM  ||  FLU_SCHEME == MHM_RP  ||  FLU_SCHEME == CTU )
 extern real (*d_PriVar)      [NCOMP_TOTAL_PLUS_MAG][ CUBE(FLU_NXT)     ];
 extern real (*d_Slope_PPM)[3][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_SLOPE_PPM) ];
 extern real (*d_FC_Var)   [6][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_VAR)    ];
 extern real (*d_FC_Flux)  [3][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX)   ];
-#endif // FLU_SCHEME
 #ifdef MHD
-#warning : WAIT MHD !!!
-#endif
-#endif // MODEL
+extern real (*d_FC_Mag_Half)[NCOMP_MAG][ FLU_NXT_P1*SQR(FLU_NXT) ];
+extern real (*d_EC_Ele     )[NCOMP_MAG][ CUBE(N_EC_ELE)          ];
+#else
+static real (*d_FC_Mag_Half)[NCOMP_MAG][ FLU_NXT_P1*SQR(FLU_NXT) ] = NULL;
+static real (*d_EC_Ele     )[NCOMP_MAG][ CUBE(N_EC_ELE)          ] = NULL;
+#endif // MHD
+#endif // FLU_SCHEME
+#endif // #if ( MODEL == HYDRO )
 
 #ifdef UNSPLIT_GRAVITY
 extern real (*d_Pot_Array_USG_F)[ CUBE(USG_NXT_F) ];
 #else
 static real (*d_Pot_Array_USG_F)[ CUBE(USG_NXT_F) ] = NULL;
 #endif
-#endif // #if ( MODEL == HYDRO )
 
 extern cudaStream_t *Stream;
 
@@ -131,6 +145,8 @@ extern cudaStream_t *Stream;
 //
 // Parameter   :  h_Flu_Array_In       : Host array to store the input fluid variables
 //                h_Flu_Array_Out      : Host array to store the output fluid variables
+//                h_Mag_Array_In       : Host array storing the input B field (for MHD only)
+//                h_Mag_Array_Out      : Host array to store the output B field (for MHD only)
 //                h_DE_Array_Out       : Host array to store the dual-energy status
 //                h_Flux_Array         : Host array to store the output fluxes
 //                h_Corner_Array       : Host array storing the physical corner coordinates of each patch group
@@ -168,6 +184,8 @@ extern cudaStream_t *Stream;
 //-------------------------------------------------------------------------------------------------------
 void CUAPI_Asyn_FluidSolver( real h_Flu_Array_In[][FLU_NIN ][ CUBE(FLU_NXT) ],
                              real h_Flu_Array_Out[][FLU_NOUT][ CUBE(PS2) ],
+                             real h_Mag_Array_In[][NCOMP_MAG][ FLU_NXT_P1*SQR(FLU_NXT) ],
+                             real h_Mag_Array_Out[][NCOMP_MAG][ PS2_P1*SQR(PS2) ],
                              char h_DE_Array_Out[][ CUBE(PS2) ],
                              real h_Flux_Array[][9][NFLUX_TOTAL][ SQR(PS2) ],
                              const double h_Corner_Array[][3],
@@ -318,6 +336,8 @@ void CUAPI_Asyn_FluidSolver( real h_Flu_Array_In[][FLU_NIN ][ CUBE(FLU_NXT) ],
          CUFLU_FluidSolver_MHM <<< NPatch_per_Stream[s], BlockDim_FluidSolver, 0, Stream[s] >>>
             ( d_Flu_Array_F_In  + UsedPatch[s],
               d_Flu_Array_F_Out + UsedPatch[s],
+              d_Mag_Array_F_In  + UsedPatch[s],
+              d_Mag_Array_F_Out + UsedPatch[s],
               d_DE_Array_F_Out  + UsedPatch[s],
               d_Flux_Array      + UsedPatch[s],
               d_Corner_Array_F  + UsedPatch[s],
@@ -326,6 +346,8 @@ void CUAPI_Asyn_FluidSolver( real h_Flu_Array_In[][FLU_NIN ][ CUBE(FLU_NXT) ],
               d_Slope_PPM       + UsedPatch[s],
               d_FC_Var          + UsedPatch[s],
               d_FC_Flux         + UsedPatch[s],
+              d_FC_Mag_Half     + UsedPatch[s],
+              d_EC_Ele          + UsedPatch[s],
               dt, dh, Gamma, StoreFlux, LR_Limiter, MinMod_Coeff,
               Time, GravityType, MinDens, MinPres, DualEnergySwitch, NormPassive, NNorm,
               JeansMinPres, JeansMinPres_Coeff );
@@ -335,6 +357,8 @@ void CUAPI_Asyn_FluidSolver( real h_Flu_Array_In[][FLU_NIN ][ CUBE(FLU_NXT) ],
          CUFLU_FluidSolver_CTU <<< NPatch_per_Stream[s], BlockDim_FluidSolver, 0, Stream[s] >>>
             ( d_Flu_Array_F_In  + UsedPatch[s],
               d_Flu_Array_F_Out + UsedPatch[s],
+              d_Mag_Array_F_In  + UsedPatch[s],
+              d_Mag_Array_F_Out + UsedPatch[s],
               d_DE_Array_F_Out  + UsedPatch[s],
               d_Flux_Array      + UsedPatch[s],
               d_Corner_Array_F  + UsedPatch[s],
@@ -343,6 +367,8 @@ void CUAPI_Asyn_FluidSolver( real h_Flu_Array_In[][FLU_NIN ][ CUBE(FLU_NXT) ],
               d_Slope_PPM       + UsedPatch[s],
               d_FC_Var          + UsedPatch[s],
               d_FC_Flux         + UsedPatch[s],
+              d_FC_Mag_Half     + UsedPatch[s],
+              d_EC_Ele          + UsedPatch[s],
               dt, dh, Gamma, StoreFlux, LR_Limiter, MinMod_Coeff,
               Time, GravityType, MinDens, MinPres, DualEnergySwitch, NormPassive, NNorm,
               JeansMinPres, JeansMinPres_Coeff );
