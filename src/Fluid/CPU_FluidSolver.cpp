@@ -35,6 +35,8 @@ void CPU_FluidSolver_MHM(
          real   g_Slope_PPM    [][3][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_SLOPE_PPM) ],
          real   g_FC_Var       [][6][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_VAR) ],
          real   g_FC_Flux      [][3][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX) ],
+         real   g_FC_Mag_Half  [][NCOMP_MAG][ FLU_NXT_P1*SQR(FLU_NXT) ],
+         real   g_EC_Ele       [][NCOMP_MAG][ CUBE(N_EC_ELE) ],
    const int NPatchGroup, const real dt, const real dh, const real Gamma,
    const bool StoreFlux, const LR_Limiter_t LR_Limiter, const real MinMod_Coeff,
    const double Time, const OptGravityType_t GravityType,
@@ -55,6 +57,8 @@ void CPU_FluidSolver_CTU(
          real   g_Slope_PPM    [][3][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_SLOPE_PPM) ],
          real   g_FC_Var       [][6][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_VAR) ],
          real   g_FC_Flux      [][3][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX) ],
+         real   g_FC_Mag_Half  [][NCOMP_MAG][ FLU_NXT_P1*SQR(FLU_NXT) ],
+         real   g_EC_Ele       [][NCOMP_MAG][ CUBE(N_EC_ELE) ],
    const int NPatchGroup, const real dt, const real dh, const real Gamma,
    const bool StoreFlux, const LR_Limiter_t LR_Limiter, const real MinMod_Coeff,
    const double Time, const OptGravityType_t GravityType,
@@ -80,7 +84,14 @@ extern real (*h_PriVar)      [NCOMP_TOTAL_PLUS_MAG][ CUBE(FLU_NXT)     ];
 extern real (*h_Slope_PPM)[3][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_SLOPE_PPM) ];
 extern real (*h_FC_Var)   [6][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_VAR)    ];
 extern real (*h_FC_Flux)  [3][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX)   ];
+#ifdef MHD
+extern real (*h_FC_Mag_Half)[NCOMP_MAG][ FLU_NXT_P1*SQR(FLU_NXT) ];
+extern real (*h_EC_Ele     )[NCOMP_MAG][ CUBE(N_EC_ELE)          ];
+#else
+static real (*h_FC_Mag_Half)[NCOMP_MAG][ FLU_NXT_P1*SQR(FLU_NXT) ] = NULL;
+static real (*h_EC_Ele     )[NCOMP_MAG][ CUBE(N_EC_ELE)          ] = NULL;
 #endif
+#endif // FLU_SCHEME
 
 
 
@@ -184,7 +195,7 @@ void CPU_FluidSolver( real h_Flu_Array_In[][FLU_NIN][ CUBE(FLU_NXT) ],
 
       CPU_FluidSolver_MHM ( h_Flu_Array_In, h_Flu_Array_Out, h_Mag_Array_In, h_Mag_Array_Out,
                             h_DE_Array_Out, h_Flux_Array, h_Corner_Array, h_Pot_Array_USG,
-                            h_PriVar, h_Slope_PPM, h_FC_Var, h_FC_Flux,
+                            h_PriVar, h_Slope_PPM, h_FC_Var, h_FC_Flux, h_FC_Mag_Half, h_EC_Ele,
                             NPatchGroup, dt, dh, Gamma, StoreFlux, LR_Limiter, MinMod_Coeff, Time,
                             GravityType, ExtAcc_AuxArray, MinDens, MinPres, DualEnergySwitch,
                             NormPassive, NNorm, NormIdx, JeansMinPres, JeansMinPres_Coeff );
@@ -193,7 +204,7 @@ void CPU_FluidSolver( real h_Flu_Array_In[][FLU_NIN][ CUBE(FLU_NXT) ],
 
       CPU_FluidSolver_CTU ( h_Flu_Array_In, h_Flu_Array_Out, h_Mag_Array_In, h_Mag_Array_Out,
                             h_DE_Array_Out, h_Flux_Array, h_Corner_Array, h_Pot_Array_USG,
-                            h_PriVar, h_Slope_PPM, h_FC_Var, h_FC_Flux,
+                            h_PriVar, h_Slope_PPM, h_FC_Var, h_FC_Flux, h_FC_Mag_Half, h_EC_Ele,
                             NPatchGroup, dt, dh, Gamma, StoreFlux, LR_Limiter, MinMod_Coeff, Time,
                             GravityType, ExtAcc_AuxArray, MinDens, MinPres, DualEnergySwitch,
                             NormPassive, NNorm, NormIdx, JeansMinPres, JeansMinPres_Coeff );

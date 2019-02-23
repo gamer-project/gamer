@@ -73,6 +73,8 @@ static void Hydro_TGradient_Correction(       real g_FC_Var [][NCOMP_TOTAL_PLUS_
 //                g_Slope_PPM        : Array to store the slope for the PPM reconstruction
 //                g_FC_Var           : Array to store the half-step variables
 //                g_FC_Flux          : Array to store the face-centered fluxes
+//                g_FC_Mag_Half      : Array to store the half-step B field (for MHD only)
+//                g_EC_Ele           : Array to store the edge-centered electric field (for MHD only)
 //                NPatchGroup        : Number of patch groups to be evaluated
 //                dt                 : Time interval to advance solution
 //                dh                 : Cell size
@@ -119,6 +121,8 @@ void CUFLU_FluidSolver_CTU(
          real   g_Slope_PPM    [][3][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_SLOPE_PPM) ],
          real   g_FC_Var       [][6][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_VAR) ],
          real   g_FC_Flux      [][3][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX) ],
+         real   g_FC_Mag_Half  [][NCOMP_MAG][ FLU_NXT_P1*SQR(FLU_NXT) ],
+         real   g_EC_Ele       [][NCOMP_MAG][ CUBE(N_EC_ELE) ],
    const real dt, const real dh, const real Gamma, const bool StoreFlux,
    const LR_Limiter_t LR_Limiter, const real MinMod_Coeff,
    const double Time, const OptGravityType_t GravityType,
@@ -139,6 +143,8 @@ void CPU_FluidSolver_CTU(
          real   g_Slope_PPM    [][3][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_SLOPE_PPM) ],
          real   g_FC_Var       [][6][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_VAR) ],
          real   g_FC_Flux      [][3][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX) ],
+         real   g_FC_Mag_Half  [][NCOMP_MAG][ FLU_NXT_P1*SQR(FLU_NXT) ],
+         real   g_EC_Ele       [][NCOMP_MAG][ CUBE(N_EC_ELE) ],
    const int NPatchGroup, const real dt, const real dh, const real Gamma,
    const bool StoreFlux, const LR_Limiter_t LR_Limiter, const real MinMod_Coeff,
    const double Time, const OptGravityType_t GravityType,
