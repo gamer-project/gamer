@@ -1020,10 +1020,9 @@ void Hydro_Pri2Char( real InOut[], const real Gamma, const real Rho, const real 
 // --> it's unnecessary to copy the passive scalars since they will not be modified
    real Temp[ NCOMP_FLUID + NCOMP_MAG ];
 
-   for (int v=0; v<NCOMP_FLUID; v++)   Temp[v] = InOut[v];
-
+   for (int v=0; v<NCOMP_FLUID; v++)   Temp[ v ]               = InOut[ v ];
 #  ifdef MHD
-   for (int v=NCOMP_FLUID; v<NCOMP_FLUID+NCOMP_MAG; v++)    Temp[v] = InOut[ v - NCOMP_FLUID + MAG_OFFSET ];
+   for (int v=0; v<NCOMP_MAG;   v++)   Temp[ v + NCOMP_FLUID ] = InOut[ v + MAG_OFFSET ];
 #  endif
 
    Hydro_Rotate3D( Temp, XYZ, true, NCOMP_FLUID );

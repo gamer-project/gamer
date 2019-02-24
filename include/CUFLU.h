@@ -51,8 +51,8 @@
 //                        --> different from N_FC_FLUX in MHM_RP since for which FC_Flux[] is also linked
 //                            to Half_Flux[] used by Hydro_RiemannPredict_Flux() and Hydro_RiemannPredict()
 //                        --> for the latter two routines, Half_Flux[] is accessed with N_FC_FLUX
-// N_HF_VAR             : for accessing Half_Var[], which is linked to PriVar[] with the size FLU_NXT^3
-//                        --> used by MHM_RP only
+// N_HF_VAR             : for accessing PriVar_Half[], which is linked to PriVar[] with the size FLU_NXT^3
+//                        --> also for accessing FC_B_Half[] in MHD
 
 // NWAVE                : number of characteristic waves
 // NCOMP_TOTAL_PLUS_MAG : total number of fluid variables plus magnetic field
@@ -82,6 +82,7 @@
 #    ifdef MHD
 #     define N_FC_VAR            ( PS2 + 4 )
 #     define N_FL_FLUX           ( N_FC_VAR - 2 )
+#     define N_HF_VAR            ( PS2 + 2 )
 #    else
 #     define N_FC_VAR            ( PS2 + 2 )
 #     define N_FL_FLUX           ( N_FC_VAR )
