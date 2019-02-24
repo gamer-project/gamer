@@ -15,6 +15,7 @@
 
 #else // #ifdef __CUDACC__
 
+void Hydro_Rotate3D( real InOut[], const int XYZ, const bool Forward, const int Mag_Offset );
 void Hydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
                                const real g_FC_B     [][ SQR(FLU_NXT)*FLU_NXT_P1 ],
                                      real g_PriVar   [][ CUBE(FLU_NXT) ],
@@ -44,10 +45,14 @@ real Hydro_CheckMinPresInEngy( const real Dens, const real MomX, const real MomY
 
 // internal functions
 GPU_DEVICE
-static void Hydro_TGradient_Correction(       real g_FC_Var [][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_VAR)  ],
-                                        const real g_FC_Flux[][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX) ],
-                                        const real dt, const real dh, const real Gamma,
-                                        const real MinDens, const real MinPres );
+void Hydro_TGradient_Correction(       real g_FC_Var   [][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_VAR)  ],
+                                 const real g_FC_Flux  [][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX) ],
+                                 const real g_FC_B_In  [][ FLU_NXT_P1*SQR(FLU_NXT) ],
+                                 const real g_FC_B_Half[][ FLU_NXT_P1*SQR(FLU_NXT) ],
+                                 const real g_EC_Ele   [][ CUBE(N_EC_ELE) ],
+                                 const real g_PriVar   [][ CUBE(FLU_NXT) ],
+                                 const real dt, const real dh, const real Gamma,
+                                 const real MinDens, const real MinPres );
 
 
 
@@ -56,7 +61,8 @@ static void Hydro_TGradient_Correction(       real g_FC_Var [][NCOMP_TOTAL_PLUS_
 // Function    :  CPU/CUFLU_FluidSolver_CTU
 // Description :  CPU/GPU fluid solver based on the Corner-Transport-Upwind (CTU) scheme
 //
-// Note        :  1. Ref: Stone et al., ApJS, 178, 137 (2008)
+// Note        :  1. Ref: (a) Stone et al., ApJS, 178, 137 (2008)
+//                        (b) Gardiner & Stone, J. Comput. Phys., 227, 4123 (2008)
 //                2. See include/CUFLU.h for the values and description of different symbolic constants
 //                   such as N_FC_VAR, N_FC_FLUX, N_SLOPE_PPM, N_FL_FLUX, N_HF_VAR
 //                3. Arrays with a prefix "g_" are stored in the global memory of GPU
@@ -183,6 +189,10 @@ void CPU_FluidSolver_CTU(
       real (*const g_PriVar_1PG   )                      [ CUBE(FLU_NXT)     ] = g_PriVar   [array_idx];
       real (*const g_Slope_PPM_1PG)[NCOMP_TOTAL_PLUS_MAG][ CUBE(N_SLOPE_PPM) ] = g_Slope_PPM[array_idx];
 
+#     ifdef MHD
+      real (*const g_PriVar_Half_1PG)                    [ CUBE(FLU_NXT)     ] = g_PriVar_1PG;
+#     endif
+
 
 //    loop over all patch groups
 //    --> CPU/GPU solver: use different (OpenMP threads) / (CUDA thread blocks)
@@ -195,13 +205,8 @@ void CPU_FluidSolver_CTU(
 #     endif
       {
 //       1. evaluate the face-centered values at the half time-step
-#        ifdef MHD
-         const int NGhost = FLU_GHOST_SIZE - 2;
-#        else
-         const int NGhost = FLU_GHOST_SIZE - 1;
-#        endif
          Hydro_DataReconstruction( g_Flu_Array_In[P], g_Mag_Array_In[P], g_PriVar_1PG, g_FC_Var_1PG, g_Slope_PPM_1PG,
-                                   Con2Pri_Yes, FLU_NXT, NGhost, Gamma, LR_Limiter, MinMod_Coeff, dt, dh,
+                                   Con2Pri_Yes, FLU_NXT, LR_GHOST_SIZE, Gamma, LR_Limiter, MinMod_Coeff, dt, dh,
                                    MinDens, MinPres, NormPassive, NNorm, c_NormIdx, JeansMinPres, JeansMinPres_Coeff );
 
 
@@ -213,7 +218,7 @@ void CPU_FluidSolver_CTU(
 
 
 //       3. correct the face-centered variables by the transverse flux gradients
-         Hydro_TGradient_Correction( g_FC_Var_1PG, g_FC_Flux_1PG, dt, dh, Gamma, MinDens, MinPres );
+//       Hydro_TGradient_Correction( g_FC_Var_1PG, g_FC_Flux_1PG, dt, dh, Gamma, MinDens, MinPres );
 
 
 //       4. evaluate the face-centered full-step fluxes by solving the Riemann problem with the corrected data
@@ -251,30 +256,50 @@ void CPU_FluidSolver_CTU(
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Hydro_TGradient_Correction
-// Description :  1. Correct the face-centered variables by the transverse flux gradients
+// Description :  Correct the face-centered variables by the transverse flux gradients
+//
+// Note        :  1. Ref: (a) Stone et al., ApJS, 178, 137 (2008)
+//                        (b) Gardiner & Stone, J. Comput. Phys., 227, 4123 (2008)
 //                2. Assuming "N_FC_VAR == N_FC_FLUX"
 //
 // Parameter   :  g_FC_Var     : Array to store the input and output face-centered conserved variables
 //                               --> Accessed with the stride N_FC_VAR
 //                g_FC_Flux    : Array storing the input face-centered fluxes
 //                               --> Accessed with the stride N_FC_FLUX
+//                g_FC_B_In   : Array storing the input initial   face-centered B field
+//                g_FC_B_Half : Array storing the input half-step face-centered B field
+//                g_EC_Ele    : Array storing the input edge-centered electric field
+//                g_PriVar    : Array storing the input cell-centered primitive variables
 //                dt           : Time interval to advance solution
 //                dh           : Cell size
 //                Gamma        : Ratio of specific heats
 //                MinDens/Pres : Minimum allowed density and pressure
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE
-void Hydro_TGradient_Correction(       real g_FC_Var [][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_VAR)  ],
-                                 const real g_FC_Flux[][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX) ],
+void Hydro_TGradient_Correction(       real g_FC_Var   [][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_VAR)  ],
+                                 const real g_FC_Flux  [][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX) ],
+                                 const real g_FC_B_In  [][ FLU_NXT_P1*SQR(FLU_NXT) ],
+                                 const real g_FC_B_Half[][ FLU_NXT_P1*SQR(FLU_NXT) ],
+                                 const real g_EC_Ele   [][ CUBE(N_EC_ELE) ],
+                                 const real g_PriVar   [][ CUBE(FLU_NXT) ],
                                  const real dt, const real dh, const real Gamma,
                                  const real MinDens, const real MinPres )
 {
 
-   const int  NCell     = N_FC_VAR;    // size of g_FC_Var[] and g_FC_Flux[] in each direction
-   const int  didx[3]   = { 1, NCell, SQR(NCell) };
-   const real dt_dh2    = (real)0.5*dt/dh;
-   const real  Gamma_m1 = Gamma - (real)1.0;
-   const real _Gamma_m1 = (real)1.0 / Gamma_m1;
+   const int  didx_flux[3]   = { 1, N_FC_FLUX, SQR(N_FC_FLUX) };
+   const real dt_dh2         = (real)0.5*dt/dh;
+   const real  Gamma_m1      = Gamma - (real)1.0;
+   const real _Gamma_m1      = (real)1.0 / Gamma_m1;
+#  ifdef MHD
+   const int  didx_b_in  [3] = { 1, FLU_NXT,  SQR(FLU_NXT)  };
+   const int  didx_b_half[3] = { 1, N_HF_VAR, SQR(N_HF_VAR) };
+   const int  didx_ele   [3] = { 1, N_HF_ELE, SQR(N_HF_ELE) };
+   const real _dh            = (real)1.0/dh;
+   const real dt_dh4         = (real)0.25*dt*_dh;
+   const real dt_2           = (real)0.5*dt;
+
+   real PriVar_1Cell[NCOMP_FLUID+NCOMP_MAG], B_Face[NCOMP_MAG][2];   // [2]=left/right faces
+#  endif
 
 // loop over different spatial directions
    for (int d=0; d<3; d++)
@@ -284,38 +309,49 @@ void Hydro_TGradient_Correction(       real g_FC_Var [][NCOMP_TOTAL_PLUS_MAG][ C
       const int TDir1 = (d+1)%3;    // transverse direction 1
       const int TDir2 = (d+2)%3;    // transverse direction 2
 
-      real fc_var[2][NCOMP_TOTAL];  // 0/1 = left/right faces
-      int  nskip[3];
+      real fc_var[2][NCOMP_TOTAL_PLUS_MAG];  // [2]=left/right faces
 
+#     ifdef MHD
+      const int nskip[3] = { 1, 1, 1 };
+#     else
+      int nskip[3];
       switch ( d )
       {
          case 0 : nskip[0] = 0;  nskip[1] = 1;  nskip[2] = 1;  break;
          case 1 : nskip[0] = 1;  nskip[1] = 0;  nskip[2] = 1;  break;
          case 2 : nskip[0] = 1;  nskip[1] = 1;  nskip[2] = 0;  break;
       }
+#     endif
 
-      const int size_i  = ( NCell - 2*nskip[0] );
-      const int size_ij = ( NCell - 2*nskip[1] )*size_i;
+      const int size_i  = ( N_FC_VAR - 2*nskip[0] );
+      const int size_j  = ( N_FC_VAR - 2*nskip[1] );
+      const int size_k  = ( N_FC_VAR - 2*nskip[2] );
+      const int size_ij = size_i*size_j;
 
-      CGPU_LOOP( idx, NCell*SQR(NCell-2) )
+      CGPU_LOOP( idx0, size_i*size_j*size_k )
       {
-         const int i_var   = nskip[0] + idx % size_i;
-         const int j_var   = nskip[1] + idx % size_ij / size_i;
-         const int k_var   = nskip[2] + idx / size_ij;
-         const int idx_var = IDX321( i_var, j_var, k_var, NCell, NCell );
+//       i/j/k0 start from zero
+         const int i0         = idx0 % size_i;
+         const int j0         = idx0 % size_ij / size_i;
+         const int k0         = idx0 / size_ij;
 
-         const int idx_fluxR  = idx_var;
-         const int idx_fluxL1 = idx_fluxR - didx[TDir1];
-         const int idx_fluxL2 = idx_fluxR - didx[TDir2];
+         const int i_fc_var   = i0 + nskip[0];
+         const int j_fc_var   = j0 + nskip[1];
+         const int k_fc_var   = k0 + nskip[2];
+         const int idx_fc_var = IDX321( i_fc_var, j_fc_var, k_fc_var, N_FC_VAR, N_FC_VAR );
 
-//       calculate the transverse flux gradients and update the corresponding face-centered variables
+         const int idx_fluxR  = idx_fc_var;  // assuming N_FC_VAR == N_FC_FLUX
+         const int idx_fluxL1 = idx_fluxR - didx_flux[TDir1];
+         const int idx_fluxL2 = idx_fluxR - didx_flux[TDir2];
+
+//       1. calculate the transverse fluid flux gradients and update the corresponding face-centered fluid variables
          for (int v=0; v<NCOMP_TOTAL; v++)
          {
             real Correct, TGrad1, TGrad2;
 
 //          load g_FC_Var[] to a local variable fc[] to reduce the GPU global memory access
-            fc_var[0][v] = g_FC_Var[faceL][v][idx_var];
-            fc_var[1][v] = g_FC_Var[faceR][v][idx_var];
+            fc_var[0][v] = g_FC_Var[faceL][v][idx_fc_var];
+            fc_var[1][v] = g_FC_Var[faceR][v][idx_fc_var];
 
             TGrad1  = g_FC_Flux[TDir1][v][idx_fluxR] - g_FC_Flux[TDir1][v][idx_fluxL1];
             TGrad2  = g_FC_Flux[TDir2][v][idx_fluxR] - g_FC_Flux[TDir2][v][idx_fluxL2];
@@ -325,12 +361,122 @@ void Hydro_TGradient_Correction(       real g_FC_Var [][NCOMP_TOTAL_PLUS_MAG][ C
             fc_var[1][v] += Correct;
          }
 
-//       ensure positive density and pressure
+
+#        ifdef MHD
+//       2. correct the transverse B field
+         const int idx_ele = IDX321( i0, j0, k0, N_HF_ELE, N_HF_ELE );
+
+         for (int v=1; v<NCOMP_MAG; v++)
+         {
+            real Correct, TGrad1, TGrad2, Sign;
+
+            const int TD1 = (d+v)%3;            // transverse direction 1
+            const int TD2 = (d+2*v)%3;          // transverse direction 2
+            const int TB  = TD1 + MAG_OFFSET;   // target transverse B field
+
+            TGrad1  = g_EC_Ele[d][ idx_ele + didx_ele[TD2]                 ] - g_EC_Ele[d][ idx_ele                 ];
+            TGrad2  = g_EC_Ele[d][ idx_ele + didx_ele[TD2] + didx_ele[TD1] ] - g_EC_Ele[d][ idx_ele + didx_ele[TD1] ];
+            Sign    = (real)2.0*v - (real)3.0;  // v=1/2 --> sign=-1/+1
+            Correct = Sign*dt_dh4*( TGrad2 + TGrad1 );
+
+            fc_var[0][TB] += Correct;
+            fc_var[1][TB] += Correct;
+         } // for (int v=1; v<NCOMP_MAG; v++)
+
+
+//       3. add the divergence(B) source terms
+         Hydro_Rotate3D( fc_var[0], d, true, MAG_OFFSET );
+         Hydro_Rotate3D( fc_var[1], d, true, MAG_OFFSET );
+
+//       3-1. get the initial cell-centered primitive variables
+         const int i_pri   = i_fc_var + LR_GHOST_SIZE;
+         const int j_pri   = j_fc_var + LR_GHOST_SIZE;
+         const int k_pri   = k_fc_var + LR_GHOST_SIZE;
+         const int idx_pri = IDX321( i_pri, j_pri, k_pri, FLU_NXT, FLU_NXT );
+
+//       skip passive scalars
+         for (int v=0; v<NCOMP_FLUID; v++)   PriVar_1Cell[ v               ] = g_PriVar[ v              ][idx_pri];
+         for (int v=0; v<NCOMP_MAG;   v++)   PriVar_1Cell[ v + NCOMP_FLUID ] = g_PriVar[ v + MAG_OFFSET ][idx_pri];
+
+         Hydro_Rotate3D( PriVar_1Cell, d, true, NCOMP_FLUID );
+
+//       3-2. get the initial face-centered B field
+         const int idx_b_in[3] = { IDX321( i_pri, j_pri, k_pri, FLU_NXT_P1, FLU_NXT    ),
+                                   IDX321( i_pri, j_pri, k_pri, FLU_NXT,    FLU_NXT_P1 ),
+                                   IDX321( i_pri, j_pri, k_pri, FLU_NXT,    FLU_NXT    ) };
+
+         B_Face[0][0] = g_FC_B_In[  d  ][ idx_b_in[  d  ]                    ];
+         B_Face[0][1] = g_FC_B_In[  d  ][ idx_b_in[  d  ] + didx_b_in[  d  ] ];
+
+         B_Face[1][0] = g_FC_B_In[TDir1][ idx_b_in[TDir1]                    ];
+         B_Face[1][1] = g_FC_B_In[TDir1][ idx_b_in[TDir1] + didx_b_in[TDir1] ];
+
+         B_Face[2][0] = g_FC_B_In[TDir2][ idx_b_in[TDir2]                    ];
+         B_Face[2][1] = g_FC_B_In[TDir2][ idx_b_in[TDir2] + didx_b_in[TDir2] ];
+
+
+//       3-3. add the divergence(B) source term
+         const real Vy = PriVar_1Cell[ 2 ];
+         const real Vz = PriVar_1Cell[ 3 ];
+         const real Bx = PriVar_1Cell[ 0 + NCOMP_FLUID ];
+         const real By = PriVar_1Cell[ 1 + NCOMP_FLUID ];
+         const real Bz = PriVar_1Cell[ 2 + NCOMP_FLUID ];
+
+         real dB[NCOMP_MAG], SrcFlu[NCOMP_FLUID-1], SrcMag[2], Vy_MinModBxz, Vz_MinModBxy;
+
+         for (int v=0; v<NCOMP_MAG; v++)  dB[v] = ( B_Face[v][1] - B_Face[v][0] )*_dh;
+
+#        define MINMOD( a , b )  (  ( (a)*(b)>(real)0.0 ) ? ( SIGN(a)*FMIN(FABS(a),FABS(b)) ) : (real)0.0  )
+         Vy_MinModBxz = Vy*MINMOD( -dB[2], dB[0] );
+         Vz_MinModBxy = Vz*MINMOD( -dB[1], dB[0] );
+#        undef MINMOD
+
+         SrcFlu[0] = dt_2*Bx*dB[0];
+         SrcFlu[1] = dt_2*By*dB[0];
+         SrcFlu[2] = dt_2*Bz*dB[0];
+         SrcFlu[3] = dt_2*( By*Vy_MinModBxz + Bz*Vz_MinModBxy );
+
+         SrcMag[0] = dt_2*Vy_MinModBxz;
+         SrcMag[1] = dt_2*Vz_MinModBxy;
+
+         for (int f=0; f<2; f++)
+         {
+            fc_var[f][ 1 ] += SrcFlu[0];
+            fc_var[f][ 2 ] += SrcFlu[1];
+            fc_var[f][ 3 ] += SrcFlu[2];
+            fc_var[f][ 4 ] += SrcFlu[3];
+
+            fc_var[f][ 1 + MAG_OFFSET ] += SrcMag[0];
+            fc_var[f][ 2 + MAG_OFFSET ] += SrcMag[1];
+         }
+
+
+//       4. set the longitudinal B field to the half-step values updated by MHD_UpdateMagnetic()
+         int idx_b_half;
+
+         switch ( d )
+         {
+            case 0 : idx_b_half = IDX321( i0, j0, k0, N_HF_VAR+1, N_HF_VAR   );  break;
+            case 1 : idx_b_half = IDX321( i0, j0, k0, N_HF_VAR,   N_HF_VAR+1 );  break;
+            case 2 : idx_b_half = IDX321( i0, j0, k0, N_HF_VAR,   N_HF_VAR   );  break;
+         }
+
+         fc_var[0][MAG_OFFSET] = g_FC_B_Half[d][ idx_b_half                  ];
+         fc_var[1][MAG_OFFSET] = g_FC_B_Half[d][ idx_b_half + didx_b_half[d] ];
+
+         Hydro_Rotate3D( fc_var[0], d, false, MAG_OFFSET );
+         Hydro_Rotate3D( fc_var[1], d, false, MAG_OFFSET );
+#        endif // #ifdef MHD
+
+
+//       5. ensure positive density and pressure
          for (int f=0; f<2; f++)
          {
 #           ifdef MHD
-#           warning : WAIT MHD !!!
-            const real EngyB = NULL_REAL;
+            const real Bx   = fc_var[f][ MAG_OFFSET + 0 ];
+            const real By   = fc_var[f][ MAG_OFFSET + 1 ];
+            const real Bz   = fc_var[f][ MAG_OFFSET + 2 ];
+            const real EngyB= (real)0.5*( SQR(Bx) + SQR(By) + SQR(Bz) );
 #           else
             const real EngyB = NULL_REAL;
 #           endif
@@ -344,13 +490,13 @@ void Hydro_TGradient_Correction(       real g_FC_Var [][NCOMP_TOTAL_PLUS_MAG][ C
          }
 
 //       store the results to g_FC_Var[]
-         for (int v=0; v<NCOMP_TOTAL; v++)
+         for (int v=0; v<NCOMP_TOTAL_PLUS_MAG; v++)
          {
-            g_FC_Var[faceL][v][idx_var] = fc_var[0][v];
-            g_FC_Var[faceR][v][idx_var] = fc_var[1][v];
+            g_FC_Var[faceL][v][idx_fc_var] = fc_var[0][v];
+            g_FC_Var[faceR][v][idx_fc_var] = fc_var[1][v];
          }
 
-      } // CGPU_LOOP( idx, NCell*SQR(NCell-2) )
+      } // CGPU_LOOP( idx0, size_i*size_j*size_k )
    } // for (int d=0; d<3; d++)
 
 
@@ -362,4 +508,4 @@ void Hydro_TGradient_Correction(       real g_FC_Var [][NCOMP_TOTAL_PLUS_MAG][ C
 
 
 
-#endif // #if ( !defined GPU  &&  MODEL == HYDRO  &&  FLU_SCHEME == CTU )
+#endif // #if ( MODEL == HYDRO  &&  FLU_SCHEME == CTU )
