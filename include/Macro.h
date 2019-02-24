@@ -400,41 +400,35 @@
 
 // number of fluid ghost zones for the fluid solver
 #if   ( MODEL == HYDRO )   // hydro
+#  if ( FLU_SCHEME == MHM  ||  FLU_SCHEME == MHM_RP  ||  FLU_SCHEME == CTU )
+#    if   ( LR_SCHEME == PLM )
+#     define LR_GHOST_SIZE          1
+#    elif ( LR_SCHEME == PPM )
+#     define LR_GHOST_SIZE          2
+#    else
+#     error : ERROR : unsupported LR_SCHEME !!
+#    endif
+#  endif // MHM/MHM_RP/CTU
+
 #  if   ( FLU_SCHEME == RTVD )
-#        define FLU_GHOST_SIZE      3
+#     define FLU_GHOST_SIZE         3
 #  elif ( FLU_SCHEME == MHM )
-#     if ( LR_SCHEME == PLM )
-#        define FLU_GHOST_SIZE      2
-#     else // PPM
-#        define FLU_GHOST_SIZE      3
-#     endif
+#     define FLU_GHOST_SIZE         ( 1 + LR_GHOST_SIZE )
 #  elif ( FLU_SCHEME == MHM_RP )
-#     if ( LR_SCHEME == PLM )
-#        define FLU_GHOST_SIZE      3
-#     else // PPM
-#        define FLU_GHOST_SIZE      4
-#     endif
+#     define FLU_GHOST_SIZE         ( 2 + LR_GHOST_SIZE )
 #  elif ( FLU_SCHEME == CTU )
-#     if ( LR_SCHEME == PLM )
-#       ifdef MHD
-#        define FLU_GHOST_SIZE      3
-#       else
-#        define FLU_GHOST_SIZE      2
-#       endif
-#     else // PPM
-#       ifdef MHD
-#        define FLU_GHOST_SIZE      4
-#       else
-#        define FLU_GHOST_SIZE      3
-#       endif
-#     endif
-#  endif
+#    ifdef MHD
+#     define FLU_GHOST_SIZE         ( 2 + LR_GHOST_SIZE )
+#    else
+#     define FLU_GHOST_SIZE         ( 1 + LR_GHOST_SIZE )
+#    endif // MHD
+#  endif // FLU_SCHEME
 
 #elif ( MODEL == ELBDM )   // ELBDM
 #  ifdef LAPLACIAN_4TH
-#        define FLU_GHOST_SIZE      6
+#     define FLU_GHOST_SIZE         6
 #  else
-#        define FLU_GHOST_SIZE      3
+#     define FLU_GHOST_SIZE         3
 #  endif
 
 #else

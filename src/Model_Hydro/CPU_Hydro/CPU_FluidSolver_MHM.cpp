@@ -263,7 +263,7 @@ void CPU_FluidSolver_MHM(
 //       1-a-3. evaluate the face-centered values by data reconstruction
 //              --> note that g_Half_Var_1PG[] returned by Hydro_RiemannPredict() stores the primitive variables
          Hydro_DataReconstruction( NULL, g_Half_Var_1PG, g_FC_Var_1PG, g_Slope_PPM_1PG,
-                                   Con2Pri_No, N_HF_VAR, FLU_GHOST_SIZE-2,
+                                   Con2Pri_No, N_HF_VAR, LR_GHOST_SIZE,
                                    Gamma, LR_Limiter, MinMod_Coeff, dt, dh, MinDens, MinPres,
                                    NormPassive, NNorm, c_NormIdx, JeansMinPres, JeansMinPres_Coeff );
 
@@ -273,7 +273,7 @@ void CPU_FluidSolver_MHM(
 
 //       evaluate the face-centered values by data reconstruction
          Hydro_DataReconstruction( g_Flu_Array_In[P], g_PriVar_1PG, g_FC_Var_1PG, g_Slope_PPM_1PG,
-                                   Con2Pri_Yes, FLU_NXT, FLU_GHOST_SIZE-1,
+                                   Con2Pri_Yes, FLU_NXT, LR_GHOST_SIZE,
                                    Gamma, LR_Limiter, MinMod_Coeff, dt, dh, MinDens, MinPres,
                                    NormPassive, NNorm, c_NormIdx, JeansMinPres, JeansMinPres_Coeff );
 #        endif // #if ( FLU_SCHEME == MHM_RP ) ... else ...
