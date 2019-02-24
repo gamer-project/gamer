@@ -79,7 +79,7 @@ static void Hydro_RiemannPredict_Flux( const real g_ConVar[][ CUBE(FLU_NXT) ],
 GPU_DEVICE
 static void Hydro_RiemannPredict( const real g_ConVar_In[][ CUBE(FLU_NXT) ],
                                   const real g_Half_Flux[][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX) ],
-                                        real g_Half_Var [][ CUBE(FLU_NXT) ],
+                                        real g_Half_PriVar[][ CUBE(FLU_NXT) ],
                                   const real dt, const real dh, const real Gamma, const real MinDens, const real MinPres,
                                   const bool NormPassive, const int NNorm, const int NormIdx[],
                                   const bool JeansMinPres, const real JeansMinPres_Coeff );
@@ -232,7 +232,7 @@ void CPU_FluidSolver_MHM(
 
 #     if ( FLU_SCHEME == MHM_RP )
       real (*const g_Half_Flux_1PG)[NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX)   ] = g_FC_Flux_1PG;
-      real (*const g_Half_Var_1PG )                      [ CUBE(FLU_NXT)     ] = g_PriVar_1PG;
+      real (*const g_Half_PriVar_1PG )                   [ CUBE(FLU_NXT)     ] = g_PriVar_1PG;
 #     endif
 
 
@@ -256,13 +256,13 @@ void CPU_FluidSolver_MHM(
 
 
 //       1-a-2. evaluate the half-step solutions
-         Hydro_RiemannPredict( g_Flu_Array_In[P], g_Half_Flux_1PG, g_Half_Var_1PG, dt, dh, Gamma, MinDens, MinPres,
+         Hydro_RiemannPredict( g_Flu_Array_In[P], g_Half_Flux_1PG, g_Half_PriVar_1PG, dt, dh, Gamma, MinDens, MinPres,
                                NormPassive, NNorm, c_NormIdx, JeansMinPres, JeansMinPres_Coeff );
 
 
 //       1-a-3. evaluate the face-centered values by data reconstruction
-//              --> note that g_Half_Var_1PG[] returned by Hydro_RiemannPredict() stores the primitive variables
-         Hydro_DataReconstruction( NULL, g_Half_Var_1PG, g_FC_Var_1PG, g_Slope_PPM_1PG,
+//              --> note that g_Half_PriVar_1PG[] returned by Hydro_RiemannPredict() stores the primitive variables
+         Hydro_DataReconstruction( NULL, g_Half_PriVar_1PG, g_FC_Var_1PG, g_Slope_PPM_1PG,
                                    Con2Pri_No, N_HF_VAR, LR_GHOST_SIZE,
                                    Gamma, LR_Limiter, MinMod_Coeff, dt, dh, MinDens, MinPres,
                                    NormPassive, NNorm, c_NormIdx, JeansMinPres, JeansMinPres_Coeff );
@@ -422,7 +422,7 @@ void Hydro_RiemannPredict_Flux( const real g_ConVar[][ CUBE(FLU_NXT) ],
 // Parameter   :  g_ConVar_In        : Array storing the input conserved variables
 //                g_Half_Flux        : Array storing the input face-centered fluxes
 //                                     --> Accessed with the stride N_FC_FLUX
-//                g_Half_Var         : Array to store the output primitive variables
+//                g_Half_PriVar      : Array to store the output primitive variables
 //                                     --> Accessed with the stride N_HF_VAR
 //                                     --> Although its actually allocated size is FLU_NXT^3 since it points to g_PriVar_1PG[]
 //                dt                 : Time interval to advance solution
@@ -440,7 +440,7 @@ void Hydro_RiemannPredict_Flux( const real g_ConVar[][ CUBE(FLU_NXT) ],
 GPU_DEVICE
 void Hydro_RiemannPredict( const real g_ConVar_In[][ CUBE(FLU_NXT) ],
                            const real g_Half_Flux[][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX) ],
-                                 real g_Half_Var [][ CUBE(FLU_NXT) ],
+                                 real g_Half_PriVar[][ CUBE(FLU_NXT) ],
                            const real dt, const real dh, const real Gamma, const real MinDens, const real MinPres,
                            const bool NormPassive, const int NNorm, const int NormIdx[],
                            const bool JeansMinPres, const real JeansMinPres_Coeff )
@@ -491,8 +491,8 @@ void Hydro_RiemannPredict( const real g_ConVar_In[][ CUBE(FLU_NXT) ],
 //    conserved --> primitive variables
       Hydro_Con2Pri( out_con, out_pri, Gamma_m1, MinPres, NormPassive, NNorm, NormIdx, JeansMinPres, JeansMinPres_Coeff );
 
-//    store the results to g_Half_Var[]
-      for (int v=0; v<NCOMP_TOTAL; v++)   g_Half_Var[v][idx_out] = out_pri[v];
+//    store the results in g_Half_PriVar[]
+      for (int v=0; v<NCOMP_TOTAL; v++)   g_Half_PriVar[v][idx_out] = out_pri[v];
    } // i,j,k
 
 
