@@ -517,8 +517,6 @@
 #define PS1             ( 1*PATCH_SIZE )
 #define PS2             ( 2*PATCH_SIZE )
 #define PS2_P1          ( PS2 + 1 )
-#define PS2_P2          ( PS2 + 2 )
-#define PS2_P3          ( PS2 + 3 )
 #define PS1_M1          ( PS1 - 1 )
 #define PS1_P1          ( PS1 + 1 )
 
