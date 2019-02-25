@@ -4,8 +4,8 @@ static void Preparation_Step( const Solver_t TSolver, const int lv, const double
                               const int *PID0_List, const int ArrayID );
 static void Solver( const Solver_t TSolver, const int lv, const double TimeNew, const double TimeOld,
                     const int NPG, const int ArrayID, const double dt, const double Poi_Coeff );
-static void Closing_Step( const Solver_t TSolver, const int lv, const int SaveSg_Flu, const int SaveSg_Pot, const int NPG,
-                          const int *PID0_List, const int ArrayID, const double dt );
+static void Closing_Step( const Solver_t TSolver, const int lv, const int SaveSg_Flu, const int SaveSg_Mag, const int SaveSg_Pot,
+                          const int NPG, const int *PID0_List, const int ArrayID, const double dt );
 
 extern Timer_t *Timer_Pre         [NLEVEL][NSOLVER];
 extern Timer_t *Timer_Sol         [NLEVEL][NSOLVER];
@@ -53,6 +53,7 @@ extern Timer_t *Timer_Poi_PrePot_F[NLEVEL];
 //                               (can be different from TimeNew-TimeOld if COMOVING is on)
 //                Poi_Coeff    : Coefficient in front of the RHS in the Poisson eq.
 //                SaveSg_Flu   : Sandglass to store the updated fluid data (for the fluid, gravity, and Grackle solvers)
+//                SaveSg_Mag   : Sandglass to store the updated B field (for the fluid solver)
 //                SaveSg_Pot   : Sandglass to store the updated potential data (for the Poisson solver only)
 //                OverlapMPI   : true --> Overlap MPI time with CPU/GPU computation
 //                Overlap_Sync : true  --> Advance the patches which cannot be overlapped with MPI communication
@@ -60,7 +61,7 @@ extern Timer_t *Timer_Poi_PrePot_F[NLEVEL];
 //                               (useful only if "OverlapMPI == true")
 //-------------------------------------------------------------------------------------------------------
 void InvokeSolver( const Solver_t TSolver, const int lv, const double TimeNew, const double TimeOld, const double dt,
-                   const double Poi_Coeff, const int SaveSg_Flu, const int SaveSg_Pot,
+                   const double Poi_Coeff, const int SaveSg_Flu, const int SaveSg_Mag, const int SaveSg_Pot,
                    const bool OverlapMPI, const bool Overlap_Sync )
 {
 
@@ -72,6 +73,15 @@ void InvokeSolver( const Solver_t TSolver, const int lv, const double TimeNew, c
 
    if ( TSolver == FLUID_SOLVER  &&  ( SaveSg_Flu != 0 &&  SaveSg_Flu != 1 )  )
       Aux_Error( ERROR_INFO, "incorrect SaveSg_Flu (%d) !!\n", SaveSg_Flu );
+
+#  ifdef MHD
+   if ( TSolver == FLUID_SOLVER  &&  SaveSg_Mag == amr->MagSg[lv] )
+      Aux_Error( ERROR_INFO, "SaveSg_Mag (%d) == amr->MagSg (%d) in the fluid solver at level %d !!\n",
+                 SaveSg_Mag, amr->MagSg[lv], lv );
+
+   if ( TSolver == FLUID_SOLVER  &&  ( SaveSg_Mag != 0 &&  SaveSg_Mag != 1 )  )
+      Aux_Error( ERROR_INFO, "incorrect SaveSg_Mag (%d) !!\n", SaveSg_Mag );
+#  endif
 
 #  ifdef GRAVITY
    if (  ( TSolver == GRAVITY_SOLVER || TSolver == POISSON_AND_GRAVITY_SOLVER ) && ( SaveSg_Flu != 0 && SaveSg_Flu != 1 )  )
@@ -215,7 +225,8 @@ void InvokeSolver( const Solver_t TSolver, const int lv, const double TimeNew, c
 
 
 //-------------------------------------------------------------------------------------------------------------
-      TIMING_SYNC(   Closing_Step( TSolver, lv, SaveSg_Flu, SaveSg_Pot, NPG[1-ArrayID], PID0_List+Disp-NPG_Max, 1-ArrayID, dt ),
+      TIMING_SYNC(   Closing_Step( TSolver, lv, SaveSg_Flu, SaveSg_Mag, SaveSg_Pot,
+                     NPG[1-ArrayID], PID0_List+Disp-NPG_Max, 1-ArrayID, dt ),
                      Timer_Clo[lv][TSolver]  );
 //-------------------------------------------------------------------------------------------------------------
 
@@ -230,7 +241,8 @@ void InvokeSolver( const Solver_t TSolver, const int lv, const double TimeNew, c
 
 
 //-------------------------------------------------------------------------------------------------------------
-   TIMING_SYNC(   Closing_Step( TSolver, lv, SaveSg_Flu, SaveSg_Pot, NPG[ArrayID], PID0_List+Disp-NPG_Max, ArrayID, dt ),
+   TIMING_SYNC(   Closing_Step( TSolver, lv, SaveSg_Flu, SaveSg_Mag, SaveSg_Pot,
+                  NPG[ArrayID], PID0_List+Disp-NPG_Max, ArrayID, dt ),
                   Timer_Clo[lv][TSolver]  );
 //-------------------------------------------------------------------------------------------------------------
 
@@ -645,14 +657,15 @@ void Solver( const Solver_t TSolver, const int lv, const double TimeNew, const d
 //                                 DT_GRA_SOLVER              : dt solver for gravity
 //                lv         : Target refinement level
 //                SaveSg_Flu : Sandglass to store the updated fluid data (for both the fluid, gravity, and Grackle solvers)
+//                SaveSg_Mag : Sandglass to store the updated B field (for the fluid solver)
 //                SaveSg_Pot : Sandglass to store the updated potential data (for the Poisson solver)
 //                NPG        : Number of patch groups to be evaluated at a time
 //                PID0_List  : List recording the patch indicies with LocalID==0 to be udpated
 //                ArrayID    : Array index to load and store data ( 0 or 1 )
 //                dt         : Time interval to advance solution (for OPT__1ST_FLUX_CORR in Flu_Close())
 //-------------------------------------------------------------------------------------------------------
-void Closing_Step( const Solver_t TSolver, const int lv, const int SaveSg_Flu, const int SaveSg_Pot, const int NPG,
-                   const int *PID0_List, const int ArrayID, const double dt )
+void Closing_Step( const Solver_t TSolver, const int lv, const int SaveSg_Flu, const int SaveSg_Mag, const int SaveSg_Pot,
+                   const int NPG, const int *PID0_List, const int ArrayID, const double dt )
 {
 
 #  ifndef DUAL_ENERGY
@@ -668,7 +681,7 @@ void Closing_Step( const Solver_t TSolver, const int lv, const int SaveSg_Flu, c
    switch ( TSolver )
    {
       case FLUID_SOLVER :
-         Flu_Close( lv, SaveSg_Flu, h_Flux_Array[ArrayID], h_Flu_Array_F_Out[ArrayID],
+         Flu_Close( lv, SaveSg_Flu, SaveSg_Mag, h_Flux_Array[ArrayID], h_Flu_Array_F_Out[ArrayID],
                     h_Mag_Array_F_Out[ArrayID], h_DE_Array_F_Out[ArrayID],
                     NPG, PID0_List, h_Flu_Array_F_In[ArrayID], dt );
       break;

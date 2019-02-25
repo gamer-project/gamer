@@ -102,10 +102,10 @@ real Hydro_DensEntropy2Pres( const real Dens, const real Enpy, const real Gamma_
 #endif
 real Hydro_CheckMinPresInEngy( const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy,
                                const real Gamma_m1, const real _Gamma_m1, const real MinPres, const real EngyB );
-int Flu_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, const double dt, const int SaveSg,
-                   const bool OverlapMPI, const bool Overlap_Sync );
+int Flu_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, const double dt,
+                   const int SaveSg_Flu, const int SaveSg_Mag, const bool OverlapMPI, const bool Overlap_Sync );
 void Flu_AllocateFluxArray( const int lv );
-void Flu_Close( const int lv, const int SaveSg,
+void Flu_Close( const int lv, const int SaveSg_Flu, const int SaveSg_Mag,
                 real h_Flux_Array[][9][NFLUX_TOTAL][ SQR(PS2) ],
                 real h_Flu_Array_F_Out[][FLU_NOUT][ CUBE(PS2) ],
                 real h_Mag_Array_F_Out[][NCOMP_MAG][ PS2_P1*SQR(PS2) ],
@@ -137,7 +137,7 @@ void Flu_AllocateFluxArray_Buffer( const int lv );
 // GAMER
 void EvolveLevel( const int lv, const double dTime_FaLv );
 void InvokeSolver( const Solver_t TSolver, const int lv, const double TimeNew, const double TimeOld, const double dt,
-                   const double Poi_Coeff, const int SaveSg_Flu, const int SaveSg_Pot,
+                   const double Poi_Coeff, const int SaveSg_Flu, const int SaveSg_Mag, const int SaveSg_Pot,
                    const bool OverlapMPI, const bool Overlap_Sync );
 void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, real *OutputFC,
                         const int GhostSize, const int NPG, const int *PID0_List, int TVarCC, int TVarFC,

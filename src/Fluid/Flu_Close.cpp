@@ -39,7 +39,8 @@ extern void Hydro_RiemannSolver_HLLE( const int XYZ, real Flux_Out[], const real
 //                4. Get the minimum time-step information of the fluid solver
 //
 // Parameter   :  lv                : Target refinement level
-//                SaveSg            : Sandglass to store the updated data
+//                SaveSg_Flu        : Sandglass to store the updated fluid data
+//                SaveSg_Mag        : Sandglass to store the updated B field
 //                h_Flux_Array      : Host array storing the updated flux data
 //                h_Flu_Array_F_Out : Host array storing the updated fluid data
 //                h_Mag_Array_F_Out : Host array storing the updated B field (for MHD only)
@@ -48,7 +49,7 @@ extern void Hydro_RiemannSolver_HLLE( const int XYZ, real Flux_Out[], const real
 //                PID0_List         : List recording the patch indicies with LocalID==0 to be udpated
 //                dt                : Evolution time-step
 //-------------------------------------------------------------------------------------------------------
-void Flu_Close( const int lv, const int SaveSg,
+void Flu_Close( const int lv, const int SaveSg_Flu, const int SaveSg_Mag,
                 real h_Flux_Array[][9][NFLUX_TOTAL][ SQR(PS2) ],
                 real h_Flu_Array_F_Out[][FLU_NOUT][ CUBE(PS2) ],
                 real h_Mag_Array_F_Out[][NCOMP_MAG][ PS2_P1*SQR(PS2) ],
@@ -73,17 +74,16 @@ void Flu_Close( const int lv, const int SaveSg,
    if ( OPT__FIXUP_FLUX  &&  lv != 0 )    CorrectFlux( lv, h_Flux_Array, NPG, PID0_List, dt );
 
 
-// copy the updated data from the arrays "h_Flu_Array_F_Out" and "h_DE_Array_F_Out" to each patch pointer
+// copy the updated data from output arrays to the corresponding patch pointers
 #  if ( FLU_NOUT != NCOMP_TOTAL )
 #     error : ERROR : FLU_NOUT != NCOMP_TOTAL (one must specify how to copy data from h_Flu_Array_F_Out to fluid) !!
 #  endif
 
-   int I, J, K, KJI, PID0;
 
-#  pragma omp parallel for private( I, J, K, KJI, PID0 ) schedule( static )
+#  pragma omp parallel for schedule( static )
    for (int TID=0; TID<NPG; TID++)
    {
-      PID0 = PID0_List[TID];
+      const int PID0 = PID0_List[TID];
 
       for (int LocalID=0; LocalID<8; LocalID++)
       {
@@ -92,29 +92,54 @@ void Flu_Close( const int lv, const int SaveSg,
          const int Table_y = TABLE_02( LocalID, 'y', 0, PATCH_SIZE );
          const int Table_z = TABLE_02( LocalID, 'z', 0, PATCH_SIZE );
 
+         int I, J, K, KJI;
+
+//       fluid variables
          for (int v=0; v<FLU_NOUT; v++)      {
          for (int k=0; k<PATCH_SIZE; k++)    {  K = Table_z + k;
          for (int j=0; j<PATCH_SIZE; j++)    {  J = Table_y + j;
          for (int i=0; i<PATCH_SIZE; i++)    {  I = Table_x + i;
 
-            KJI = K*4*PATCH_SIZE*PATCH_SIZE + J*2*PATCH_SIZE + I;
+            KJI = IDX321( I, J, K, PS2, PS2 );
 
-            amr->patch[SaveSg][lv][PID]->fluid[v][k][j][i] = h_Flu_Array_F_Out[TID][v][KJI];
+            amr->patch[SaveSg_Flu][lv][PID]->fluid[v][k][j][i] = h_Flu_Array_F_Out[TID][v][KJI];
 
          }}}}
 
+//       dual-energy status
 #        ifdef DUAL_ENERGY
          for (int k=0; k<PATCH_SIZE; k++)    {  K = Table_z + k;
          for (int j=0; j<PATCH_SIZE; j++)    {  J = Table_y + j;
          for (int i=0; i<PATCH_SIZE; i++)    {  I = Table_x + i;
 
-            KJI = K*4*PATCH_SIZE*PATCH_SIZE + J*2*PATCH_SIZE + I;
+            KJI = IDX321( I, J, K, PS2, PS2 );
 
 //          de_status is always stored in Sg=0
             amr->patch[0][lv][PID]->de_status[k][j][i] = h_DE_Array_F_Out[TID][KJI];
 
          }}}
 #        endif
+
+//       magnetic field
+#        ifdef MHD
+         for (int v=0; v<NCOMP_MAG; v++)
+         {
+            int ijk_end[3], idx=0;
+
+            for (int d=0; d<3; d++)    ijk_end[d] = ( d == v ) ? PS1+1 : PS1;
+
+            for (int k=0; k<ijk_end[2]; k++)    {  K = Table_z + k;
+            for (int j=0; j<ijk_end[1]; j++)    {  J = Table_y + j;
+            for (int i=0; i<ijk_end[0]; i++)    {  I = Table_x + i;
+
+               KJI = IDX321( I, J, K, ijk_end[0]+PS1, ijk_end[1] );
+
+               amr->patch[SaveSg_Mag][lv][PID]->magnetic[v][ idx ++ ] = h_Mag_Array_F_Out[TID][v][KJI];
+
+            }}}
+         } // for (int v=0; v<NCOMP_MAG; v++)
+#        endif // #ifdef MHD
+
       } // for (int LocalID=0; LocalID<8; LocalID++)
    } // for (int TID=0; TID<NPG; TID++)
 
