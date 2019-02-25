@@ -227,11 +227,11 @@ void CPU_AdvanceX( real u[][ CUBE(FLU_NXT) ], const real dt, const real dx, cons
 
 #        ifdef CHECK_NEGATIVE_IN_FLUID
          if ( Hydro_CheckNegative(p) )
-            Aux_Message( stderr, "ERROR : negative pressure (%14.7e) at file <%s>, line <%d>, function <%s>\n",
+            Aux_Message( stderr, "ERROR : invalid pressure (%14.7e) at file <%s>, line <%d>, function <%s>\n",
                          p, __FILE__, __LINE__, __FUNCTION__ );
 
          if ( Hydro_CheckNegative(ux[0][i]) )
-            Aux_Message( stderr, "ERROR : negative density (%14.7e) at file <%s>, line <%d>, function <%s>\n",
+            Aux_Message( stderr, "ERROR : invalid density (%14.7e) at file <%s>, line <%d>, function <%s>\n",
                          ux[0][i], __FILE__, __LINE__, __FUNCTION__ );
 #        endif
 
@@ -294,11 +294,11 @@ void CPU_AdvanceX( real u[][ CUBE(FLU_NXT) ], const real dt, const real dx, cons
 
 #        ifdef CHECK_NEGATIVE_IN_FLUID
          if ( Hydro_CheckNegative(p) )
-            Aux_Message( stderr, "ERROR : negative pressure (%14.7e) at file <%s>, line <%d>, function <%s>\n",
+            Aux_Message( stderr, "ERROR : invalid pressure (%14.7e) at file <%s>, line <%d>, function <%s>\n",
                          p, __FILE__, __LINE__, __FUNCTION__ );
 
          if ( Hydro_CheckNegative(u_half[0][i]) )
-            Aux_Message( stderr, "ERROR : negative density (%14.7e) at file <%s>, line <%d>, function <%s>\n",
+            Aux_Message( stderr, "ERROR : invalid density (%14.7e) at file <%s>, line <%d>, function <%s>\n",
                          u_half[0][i], __FILE__, __LINE__, __FUNCTION__ );
 #        endif
 
@@ -381,11 +381,11 @@ void CPU_AdvanceX( real u[][ CUBE(FLU_NXT) ], const real dt, const real dx, cons
       for (int i=3; i<FLU_NXT-3; i++)
       {
          if ( Hydro_CheckNegative(ux[0][i]) )
-            Aux_Message( stderr, "ERROR : negative density (%14.7e) at file <%s>, line <%d>, function <%s>\n",
+            Aux_Message( stderr, "ERROR : invalid density (%14.7e) at file <%s>, line <%d>, function <%s>\n",
                          ux[0][i], __FILE__, __LINE__, __FUNCTION__ );
 
          if ( Hydro_CheckNegative(ux[4][i]) )
-            Aux_Message( stderr, "ERROR : negative energy (%14.7e) at file <%s>, line <%d>, function <%s>\n",
+            Aux_Message( stderr, "ERROR : invalid energy (%14.7e) at file <%s>, line <%d>, function <%s>\n",
                          ux[4][i], __FILE__, __LINE__, __FUNCTION__ );
       }
 #     endif
