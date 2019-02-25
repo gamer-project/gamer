@@ -1005,7 +1005,7 @@ void Hydro_Pri2Char( real InOut[], const real Gamma, const real Rho, const real 
 {
 
 // check
-#  ifdef CHECK_NEGATIVE_IN_FLUID
+#  if ( defined CHECK_NEGATIVE_IN_FLUID  &&  !defined MHD )
    if ( Hydro_CheckNegative(Pres) )
       printf( "ERROR : invalid pressure (%14.7e) at file <%s>, line <%d>, function <%s>\n",
               Pres, __FILE__, __LINE__, __FUNCTION__ );
