@@ -81,7 +81,7 @@ void Flu_Prepare( const int lv, const double PrepTime,
 
       int PID0;
 
-//#     pragma omp parallel for private(  PID0 ) schedule( runtime )
+//#     pragma omp parallel for private( PID0 ) schedule( runtime )
       for (int TID=0; TID<NPG; TID++)
       {
          PID0 = PID0_List[TID];

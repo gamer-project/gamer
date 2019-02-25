@@ -193,7 +193,7 @@ void Hydro_Init_ByFunction_AssignData( const int lv )
 //    loop over B_X/Y/Z
       for (int v=0; v<NCOMP_MAG; v++)
       {
-         int    ijk_end[3], sub_end[3], id=0;
+         int    ijk_end[3], sub_end[3], idx=0;
          double dxyz0[3];
 
          for (int d=0; d<3; d++)
@@ -217,9 +217,9 @@ void Hydro_Init_ByFunction_AssignData( const int lv )
 
             }}}
 
-            amr->patch[ amr->MagSg[lv] ][lv][PID]->magnetic[v][ id ++ ] = B_sub*_NSub2;
+            amr->patch[ amr->MagSg[lv] ][lv][PID]->magnetic[v][ idx ++ ] = B_sub*_NSub2;
          }}} // i,j,k
-      } // for (int v=0; v<3; v++)
+      } // for (int v=0; v<NCOMP_MAG; v++)
 #     endif // #ifdef MHD
 
 

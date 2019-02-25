@@ -140,6 +140,8 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
       const int SaveSg_Flu = 1 - amr->FluSg[lv];
 #     ifdef MHD
       const int SaveSg_Mag = 1 - amr->MagSg[lv];
+#     else
+      const int SaveSg_Mag = NULL_INT;
 #     endif
 
       if ( OPT__VERBOSE  &&  MPI_Rank == 0 )
@@ -155,7 +157,7 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
 #        endif
 
 //       advance patches needed to be sent
-         TIMING_FUNC(   Flu_AdvanceDt( lv, TimeNew, TimeOld, dt_SubStep, SaveSg_Flu, true, true ),
+         TIMING_FUNC(   Flu_AdvanceDt( lv, TimeNew, TimeOld, dt_SubStep, SaveSg_Flu, SaveSg_Mag, true, true ),
                         Timer_Flu_Advance[lv]   );
 
 #        pragma omp parallel sections num_threads(2)
@@ -176,7 +178,7 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
 #           pragma omp section
             {
 //             advance patches not needed to be sent
-               TIMING_FUNC(   Flu_AdvanceDt( lv, TimeNew, TimeOld, dt_SubStep, SaveSg_Flu, true, false ),
+               TIMING_FUNC(   Flu_AdvanceDt( lv, TimeNew, TimeOld, dt_SubStep, SaveSg_Flu, SaveSg_Mag, true, false ),
                               Timer_Flu_Advance[lv]   );
             }
          } // OpenMP parallel sections
@@ -192,7 +194,7 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
       {
          int FluStatus_AllRank;
 
-         TIMING_FUNC(   FluStatus_AllRank = Flu_AdvanceDt( lv, TimeNew, TimeOld, dt_SubStep, SaveSg_Flu, false, false ),
+         TIMING_FUNC(   FluStatus_AllRank = Flu_AdvanceDt( lv, TimeNew, TimeOld, dt_SubStep, SaveSg_Flu, SaveSg_Mag, false, false ),
                         Timer_Flu_Advance[lv]   );
 
 //       do nothing if AUTO_REDUCE_DT is disabled
