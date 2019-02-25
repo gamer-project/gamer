@@ -8,6 +8,20 @@
 #if ( MODEL == HYDRO  &&  defined MHD )
 
 
+
+// external functions
+#ifdef __CUDACC__
+
+#include "CUFLU_Shared_FluUtility.cu"
+
+#else
+
+void MHD_GetCellCenteredB( real B_CC[], const real Bx_FC[], const real By_FC[], const real Bz_FC[],
+                           const int Width_FC, const int i, const int j, const int k );
+
+#endif // #ifdef __CUDACC__ ... else ...
+
+
 // internal functions
 GPU_DEVICE
 static real dE_Upwind( const real FC_Ele_R, const real FC_Ele_L, const real FC_Mom,
@@ -284,6 +298,103 @@ void MHD_UpdateMagnetic( real *g_FC_Bx_Out, real *g_FC_By_Out, real *g_FC_Bz_Out
    } // for (int d=0; d<3; d++)
 
 } // FUNCTION : MHD_UpdateMagnetic
+
+
+
+//-------------------------------------------------------------------------------------------------------
+// Function    :  MHD_HalfStepPrimitive
+// Description :  Evaluate the half-step cell-centered primitive variables
+//
+// Note        :  1. Used by the CTU scheme
+//                2. Use face-centered fluxes for the conservative update and then convert momentum to velocity
+//                3. Cell-centered B field is simply obtained by averaging the half-step face-centered B field
+//                4. Cell-centered primitive variables are only used for computing the edge-centered
+//                   electric field, which is then used for the full-step CT update
+//                   --> Only need to calculate velocity and B field
+//                   --> Skip energy and passive scalars
+//                       --> No need to apply the dual-energy formalism
+//                5. g_Flu_In[]     has the size of FLU_NXT^3 and is accessed with the same stride
+//                   g_FC_B_Half[]  has the size of FLU_NXT_P1*SQR(FLU_NXT) but is accessed with the dimension
+//                                  (N_HF_VAR+1)*SQR(N_HF_VAR)
+//                   g_PriVar_Out[] has the size of FLU_NXT^3 but is accessed with a stride N_HF_VAR
+//                   g_Flux[]       has the size of N_FC_FLUX^3 and is accessed with the same stride
+//
+// Parameter   :  g_Flu_In     : Array storing the input initial cell-centered fluid data
+//                g_FC_B_Half  : Array storing the input half-step face-centered B field
+//                g_PriVar_Out : Array to store the output half-step primitive variables
+//                g_Flux       : Array storing the input face-centered fluxes
+//                dt           : Full-step time interval
+//                dh           : Cell size
+//                MinDens      : Minimum allowed density
+//
+// Return      :  g_PriVar_Out[]
+//-------------------------------------------------------------------------------------------------------
+GPU_DEVICE
+void MHD_HalfStepPrimitive( const real g_Flu_In[][ CUBE(FLU_NXT) ],
+                            const real g_FC_B_Half[][ FLU_NXT_P1*SQR(FLU_NXT) ],
+                                  real g_PriVar_Out[][ CUBE(FLU_NXT) ],
+                            const real g_Flux[][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX) ],
+                            const real dt, const real dh, const real MinDens )
+{
+
+   const int  didx_flux[3] = { 1, N_FC_FLUX, SQR(N_FC_FLUX) };
+   const real dt_dh2       = (real)0.5*dt/dh;
+   const int  NFluVar      = NCOMP_FLUID - 1;   // density + momentum*3
+
+   real dFlux[3][NFluVar], Output_1Cell[ NFluVar + NCOMP_MAG ];
+
+   const int size_ij = SQR(N_HF_VAR);
+   CGPU_LOOP( idx_out, CUBE(N_HF_VAR) )
+   {
+      const int i_out      = idx_out % N_HF_VAR;
+      const int j_out      = idx_out % size_ij / N_HF_VAR;
+      const int k_out      = idx_out / size_ij;
+      const int idx_flux   = IDX321( i_out, j_out, k_out, N_FC_FLUX, N_FC_FLUX );
+
+      const int i_flu_in   = i_out + FLU_GHOST_SIZE - 1;    // assuming N_HF_VAR = PS2+2
+      const int j_flu_in   = j_out + FLU_GHOST_SIZE - 1;
+      const int k_flu_in   = k_out + FLU_GHOST_SIZE - 1;
+      const int idx_flu_in = IDX321( i_flu_in, j_flu_in, k_flu_in, FLU_NXT, FLU_NXT );
+
+
+//    1. calculate flux difference to update the fluid data by 0.5*dt
+      for (int d=0; d<3; d++)
+      for (int v=0; v<NFluVar; v++)
+         dFlux[d][v] = g_Flux[d][v][ idx_flux + didx_flux[d] ] - g_Flux[d][v][idx_flux];
+
+      for (int v=0; v<NFluVar; v++)
+         Output_1Cell[v] = g_Flu_In[v][idx_flu_in] - dt_dh2*( dFlux[0][v] + dFlux[1][v] + dFlux[2][v] );
+
+//    apply density floor
+      Output_1Cell[DENS] = FMAX( Output_1Cell[DENS], MinDens );
+
+//    check negative density
+#     ifdef CHECK_NEGATIVE_IN_FLUID
+      if ( Hydro_CheckNegative(Output_1Cell[DENS]) )
+         printf( "WARNING : unphysical density (%14.7e) at file <%s>, line <%d>, function <%s>\n",
+                 Output_1Cell[DENS], __FILE__, __LINE__, __FUNCTION__ );
+#     endif
+
+
+//    2. momentum --> velocity
+      const real _Dens = (real)1.0 / Output_1Cell[DENS];
+      for (int v=1; v<NFluVar; v++)    Output_1Cell[v] *= _Dens;
+
+
+//    3. compute the cell-centered half-step B field
+      MHD_GetCellCenteredB( Output_1Cell+NFluVar, g_FC_B_Half[0], g_FC_B_Half[1], g_FC_B_Half[2],
+                            N_HF_VAR, i_out, j_out, k_out );
+
+
+//    4. store results to the output array
+//       --> variable indices in g_PriVar_Out[] remain consistent with other arrays even though
+//           energy and passive scalars have not been skipped here
+      for (int v=0; v<NFluVar; v++)    g_PriVar_Out[ v              ][idx_out] = Output_1Cell[ v           ];
+      for (int v=0; v<NCOMP_MAG; v++)  g_PriVar_Out[ v + MAG_OFFSET ][idx_out] = Output_1Cell[ v + NFluVar ];
+
+   } // CGPU_LOOP( idx_out, CUBE(N_HF_VAR) )
+
+} // FUNCTION : MHD_HalfStepPrimitive
 
 
 

@@ -58,7 +58,7 @@ void Hydro_FullStepUpdate( const real g_Input[][ CUBE(FLU_NXT) ], real g_Output[
                            const bool NormPassive, const int NNorm, const int NormIdx[] )
 {
 
-   const int  didx_flux[3] = { 1, N_FL_FLUX, N_FL_FLUX*N_FL_FLUX };
+   const int  didx_flux[3] = { 1, N_FL_FLUX, SQR(N_FL_FLUX) };
    const real dt_dh        = dt/dh;
 #  ifdef DUAL_ENERGY
    const real  Gamma_m1    = Gamma - (real)1.0;
@@ -85,7 +85,7 @@ void Hydro_FullStepUpdate( const real g_Input[][ CUBE(FLU_NXT) ], real g_Output[
 //    1. calculate flux difference to update the fluid data
       for (int d=0; d<3; d++)
       for (int v=0; v<NCOMP_TOTAL; v++)
-         dFlux[d][v] = g_Flux[d][v][ idx_flux+didx_flux[d] ] - g_Flux[d][v][idx_flux];
+         dFlux[d][v] = g_Flux[d][v][ idx_flux + didx_flux[d] ] - g_Flux[d][v][idx_flux];
 
       for (int v=0; v<NCOMP_TOTAL; v++)
          Output_1Cell[v] = g_Input[v][idx_in] - dt_dh*( dFlux[0][v] + dFlux[1][v] + dFlux[2][v] );
@@ -150,7 +150,7 @@ void Hydro_FullStepUpdate( const real g_Input[][ CUBE(FLU_NXT) ], real g_Output[
                  Output_1Cell[ENGY], __FILE__, __LINE__, __FUNCTION__ );
 #     endif
 
-   } // i,j,k
+   } // CGPU_LOOP( idx_out, CUBE(PS2) )
 
 } // FUNCTION : Hydro_FullStepUpdate
 
