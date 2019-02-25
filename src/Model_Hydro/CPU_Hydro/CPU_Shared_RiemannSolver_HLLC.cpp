@@ -80,11 +80,11 @@ void Hydro_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In[]
 
 #  ifdef CHECK_NEGATIVE_IN_FLUID
    if ( Hydro_CheckNegative(L[0]) )
-      printf( "ERROR : negative density (%14.7e) at file <%s>, line <%d>, function <%s>\n",
+      printf( "ERROR : invalid density (%14.7e) at file <%s>, line <%d>, function <%s>\n",
               L[0], __FILE__, __LINE__, __FUNCTION__ );
 
    if ( Hydro_CheckNegative(R[0]) )
-      printf( "ERROR : negative density (%14.7e) at file <%s>, line <%d>, function <%s>\n",
+      printf( "ERROR : invalid density (%14.7e) at file <%s>, line <%d>, function <%s>\n",
               R[0], __FILE__, __LINE__, __FUNCTION__ );
 #  endif
 
@@ -107,7 +107,7 @@ void Hydro_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In[]
 
 #  ifdef CHECK_NEGATIVE_IN_FLUID
    if ( Hydro_CheckNegative(GammaP_Rho) )
-      printf( "ERROR : negative GammaP_Rho (%14.7e) at file <%s>, line <%d>, function <%s>\n",
+      printf( "ERROR : invalid GammaP_Rho (%14.7e) at file <%s>, line <%d>, function <%s>\n",
               GammaP_Rho, __FILE__, __LINE__, __FUNCTION__ );
 #  endif
 
@@ -123,11 +123,11 @@ void Hydro_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In[]
 
 #  ifdef CHECK_NEGATIVE_IN_FLUID
    if ( Hydro_CheckNegative(P_L) )
-      printf( "ERROR : negative pressure (%14.7e) at file <%s>, line <%d>, function <%s>\n",
+      printf( "ERROR : invalid pressure (%14.7e) at file <%s>, line <%d>, function <%s>\n",
               P_L, __FILE__, __LINE__, __FUNCTION__ );
 
    if ( Hydro_CheckNegative(P_R) )
-      printf( "ERROR : negative pressure (%14.7e) at file <%s>, line <%d>, function <%s>\n",
+      printf( "ERROR : invalid pressure (%14.7e) at file <%s>, line <%d>, function <%s>\n",
               P_R, __FILE__, __LINE__, __FUNCTION__ );
 #  endif
 
