@@ -24,9 +24,10 @@ void MHD_GetCellCenteredB( real B_CC[], const real Bx_FC[], const real By_FC[], 
 
 // internal functions
 GPU_DEVICE
-static real dE_Upwind( const real FC_Ele_R, const real FC_Ele_L, const real FC_Mom,
-                       const real PriVar_R[NCOMP_TOTAL_PLUS_MAG], const real PriVar_L[NCOMP_TOTAL_PLUS_MAG],
-                       const int XYZ, const real dt_dh );
+static real dE_Upwind( const real FC_Ele_L, const real FC_Ele_R, const real FC_Mom, const real D_L, const real D_R,
+                       const real V_L1, const real V_L2, const real V_R1, const real V_R2,
+                       const real B_L1, const real B_L2, const real B_R1, const real B_R2,
+                       const real dt_dh );
 
 
 
@@ -74,8 +75,10 @@ void MHD_ComputeElectric(       real g_EC_Ele[][ CUBE(N_EC_ELE) ],
    {
       const int TDir1 = (d+1)%3;             // transverse direction 1
       const int TDir2 = (d+2)%3;             // transverse direction 2
-      const int TB1   = TDir1 + MAG_OFFSET;  // B flux component along the transverse direction 1
-      const int TB2   = TDir2 + MAG_OFFSET;  // B flux component along the transverse direction 2
+      const int TV1   = TDir1 + 1;           // velocity component along the transverse direction 1
+      const int TV2   = TDir2 + 1;           // velocity component along the transverse direction 2
+      const int TB1   = TDir1 + MAG_OFFSET;  // B flux   component along the transverse direction 1
+      const int TB2   = TDir2 + MAG_OFFSET;  // B flux   component along the transverse direction 2
 
       int idx_ele_e[3], idx_flux_s[3];
 
@@ -111,39 +114,89 @@ void MHD_ComputeElectric(       real g_EC_Ele[][ CUBE(N_EC_ELE) ],
          const int k_pri    = k_flux + OffsetPri;
          const int idx_pri  = IDX321( i_pri, j_pri, k_pri, NPri, NPri );
 
+         real D_L, D_R, V_L1, V_L2, V_R1, V_R2, B_L1, B_L2, B_R1, B_R2;
+         int  idx_L, idx_R;
+
          g_EC_Ele[d][idx_ele] = ( - g_FC_Flux[TDir1][TB2][ idx_flux + didx_flux[TDir2] ]
                                   - g_FC_Flux[TDir1][TB2][ idx_flux                    ]
                                   + g_FC_Flux[TDir2][TB1][ idx_flux + didx_flux[TDir1] ]
                                   + g_FC_Flux[TDir2][TB1][ idx_flux                    ] );
 
-         g_EC_Ele[d][idx_ele] += dE_Upwind( -g_FC_Flux[ idx_flux + didx_flux[TDir2] ][TDir1][TB2],
-                                            -g_FC_Flux[ idx_flux                    ][TDir1][TB2],
-                                             g_FC_Flux[ idx_flux                    ][TDir2][  0],
-                                             g_PriVar[ idx_pri + didx_pri[TDir2] ],
-                                             g_PriVar[ idx_pri                   ],
-                                             d, dt_dh );
+         idx_L = idx_pri;
+         idx_R = idx_L + didx_pri[TDir2];
+         D_L   = g_PriVar[  0][ idx_L ];
+         V_L1  = g_PriVar[TV1][ idx_L ];
+         V_L2  = g_PriVar[TV2][ idx_L ];
+         B_L1  = g_PriVar[TB1][ idx_L ];
+         B_L2  = g_PriVar[TB2][ idx_L ];
+         D_R   = g_PriVar[  0][ idx_R ];
+         V_R1  = g_PriVar[TV1][ idx_R ];
+         V_R2  = g_PriVar[TV2][ idx_R ];
+         B_R1  = g_PriVar[TB1][ idx_R ];
+         B_R2  = g_PriVar[TB2][ idx_R ];
 
-         g_EC_Ele[d][idx_ele] += dE_Upwind( -g_FC_Flux[ idx_flux + didx_flux[TDir2] ][TDir1][TB2],
-                                            -g_FC_Flux[ idx_flux                    ][TDir1][TB2],
-                                             g_FC_Flux[ idx_flux + didx_flux[TDir1] ][TDir2][  0],
-                                             g_PriVar[ idx_pri + didx_pri[TDir1] + didx_pri[TDir2] ],
-                                             g_PriVar[ idx_pri + didx_pri[TDir1]                   ],
-                                             d, dt_dh );
+         g_EC_Ele[d][idx_ele] += dE_Upwind( -g_FC_Flux[TDir1][TB2][ idx_flux                    ],
+                                            -g_FC_Flux[TDir1][TB2][ idx_flux + didx_flux[TDir2] ],
+                                             g_FC_Flux[TDir2][  0][ idx_flux                    ],
+                                             D_L, D_R, V_L1, V_L2, V_R1, V_R2, B_L1, B_L2, B_R1, B_R2,
+                                             dt_dh );
 
+         idx_L = idx_pri + didx_pri[TDir1];
+         idx_R = idx_L   + didx_pri[TDir2];
+         D_L   = g_PriVar[  0][ idx_L ];
+         V_L1  = g_PriVar[TV1][ idx_L ];
+         V_L2  = g_PriVar[TV2][ idx_L ];
+         B_L1  = g_PriVar[TB1][ idx_L ];
+         B_L2  = g_PriVar[TB2][ idx_L ];
+         D_R   = g_PriVar[  0][ idx_R ];
+         V_R1  = g_PriVar[TV1][ idx_R ];
+         V_R2  = g_PriVar[TV2][ idx_R ];
+         B_R1  = g_PriVar[TB1][ idx_R ];
+         B_R2  = g_PriVar[TB2][ idx_R ];
 
-         g_EC_Ele[d][idx_ele] += dE_Upwind( +g_FC_Flux[ idx_flux + didx_flux[TDir1] ][TDir2][TB1],
-                                            +g_FC_Flux[ idx_flux                    ][TDir2][TB1],
-                                             g_FC_Flux[ idx_flux                    ][TDir1][  0],
-                                             g_PriVar[ idx_pri + didx_pri[TDir1] ],
-                                             g_PriVar[ idx_pri                   ],
-                                             d, dt_dh );
+         g_EC_Ele[d][idx_ele] += dE_Upwind( -g_FC_Flux[TDir1][TB2][ idx_flux                    ],
+                                            -g_FC_Flux[TDir1][TB2][ idx_flux + didx_flux[TDir2] ],
+                                             g_FC_Flux[TDir2][  0][ idx_flux + didx_flux[TDir1] ],
+                                             D_L, D_R, V_L1, V_L2, V_R1, V_R2, B_L1, B_L2, B_R1, B_R2,
+                                             dt_dh );
 
-         g_EC_Ele[d][idx_ele] += dE_Upwind( +g_FC_Flux[ idx_flux + didx_flux[TDir1] ][TDir2][TB1],
-                                            +g_FC_Flux[ idx_flux                    ][TDir2][TB1],
-                                             g_FC_Flux[ idx_flux + didx_flux[TDir2] ][TDir1][  0],
-                                             g_PriVar[ idx_pri + didx_pri[TDir2] + didx_pri[TDir1] ],
-                                             g_PriVar[ idx_pri + didx_pri[TDir2]                   ],
-                                             d, dt_dh );
+         idx_L = idx_pri;
+         idx_R = idx_L + didx_pri[TDir1];
+         D_L   = g_PriVar[  0][ idx_L ];
+         V_L1  = g_PriVar[TV1][ idx_L ];
+         V_L2  = g_PriVar[TV2][ idx_L ];
+         B_L1  = g_PriVar[TB1][ idx_L ];
+         B_L2  = g_PriVar[TB2][ idx_L ];
+         D_R   = g_PriVar[  0][ idx_R ];
+         V_R1  = g_PriVar[TV1][ idx_R ];
+         V_R2  = g_PriVar[TV2][ idx_R ];
+         B_R1  = g_PriVar[TB1][ idx_R ];
+         B_R2  = g_PriVar[TB2][ idx_R ];
+
+         g_EC_Ele[d][idx_ele] += dE_Upwind( +g_FC_Flux[TDir2][TB1][ idx_flux                    ],
+                                            +g_FC_Flux[TDir2][TB1][ idx_flux + didx_flux[TDir1] ],
+                                             g_FC_Flux[TDir1][  0][ idx_flux                    ],
+                                             D_L, D_R, V_L1, V_L2, V_R1, V_R2, B_L1, B_L2, B_R1, B_R2,
+                                             dt_dh );
+
+         idx_L = idx_pri + didx_pri[TDir2];
+         idx_R = idx_L   + didx_pri[TDir1];
+         D_L   = g_PriVar[  0][ idx_L ];
+         V_L1  = g_PriVar[TV1][ idx_L ];
+         V_L2  = g_PriVar[TV2][ idx_L ];
+         B_L1  = g_PriVar[TB1][ idx_L ];
+         B_L2  = g_PriVar[TB2][ idx_L ];
+         D_R   = g_PriVar[  0][ idx_R ];
+         V_R1  = g_PriVar[TV1][ idx_R ];
+         V_R2  = g_PriVar[TV2][ idx_R ];
+         B_R1  = g_PriVar[TB1][ idx_R ];
+         B_R2  = g_PriVar[TB2][ idx_R ];
+
+         g_EC_Ele[d][idx_ele] += dE_Upwind( +g_FC_Flux[TDir2][TB1][ idx_flux                    ],
+                                            +g_FC_Flux[TDir2][TB1][ idx_flux + didx_flux[TDir1] ],
+                                             g_FC_Flux[TDir1][  0][ idx_flux + didx_flux[TDir2] ],
+                                             D_L, D_R, V_L1, V_L2, V_R1, V_R2, B_L1, B_L2, B_R1, B_R2,
+                                             dt_dh );
 
          g_EC_Ele[d][idx_ele] *= (real)0.25;
 
@@ -166,49 +219,44 @@ void MHD_ComputeElectric(       real g_EC_Ele[][ CUBE(N_EC_ELE) ],
 // Note        :  1. Ref : Gardiner & Stone, J. Comput. Phys., 227, 4123 (2008)
 //                2. Invoked by MHD_ComputeElectric()
 //
-// Parameter   :  FC_Ele_R/L : Right/left face-centered electric field
+// Parameter   :  FC_Ele_L/R : Left/right face-centered electric field
 //                FC_Mom     : Face-centered momentum for determining the upwind direction
-//                PriVar_R/L : Cell-centered primitive variable for computing the reference electric field
-//                XYZ        : Target spatial direction : (0/1/2) --> (x/y/z)
+//                D_L/R      : Left/right cell-centered density
+//                V_L/R_1/2  : Left/right cell-centered velocity along the transverse direction 1/2
+//                B_L/R_1/2  : Left/right cell-centered B field  along the transverse direction 1/2
 //                dt_dh      : dt/dh --> for normalizing velocity only
 //
-// Return      :  dE/dx
+// Return      :  dE
 //------------------------------------------------------------------------------------------------------
 GPU_DEVICE
-real dE_Upwind( const real FC_Ele_R, const real FC_Ele_L, const real FC_Mom,
-                const real PriVar_R[NCOMP_TOTAL_PLUS_MAG], const real PriVar_L[NCOMP_TOTAL_PLUS_MAG],
-                const int XYZ, const real dt_dh )
+real dE_Upwind( const real FC_Ele_L, const real FC_Ele_R, const real FC_Mom, const real D_L, const real D_R,
+                const real V_L1, const real V_L2, const real V_R1, const real V_R2,
+                const real B_L1, const real B_L2, const real B_R1, const real B_R2,
+                const real dt_dh )
 {
 
-   const int TDir1 = (XYZ+1)%3;           // transverse direction 1
-   const int TDir2 = (XYZ+2)%3;           // transverse direction 2
-   const int TV1   = TDir1 + 1;           // velocity component along the transverse direction 1
-   const int TV2   = TDir2 + 1;           // velocity component along the transverse direction 2
-   const int TB1   = TDir1 + MAG_OFFSET;  // B field  component along the transverse direction 1
-   const int TB2   = TDir2 + MAG_OFFSET;  // B field  component along the transverse direction 2
-
 // convert dimensional momentum to dimensionless velocity to reduce the effect of round-off errors
-   const real FC_Vel = (real)2.0*dt_dh*FC_Mom/( PriVar_R[0] + PriVar_L[0] );
+   const real FC_Vel = (real)2.0*dt_dh*FC_Mom/( D_L + D_R );
 
-   real dE, CC_Ele_R, CC_Ele_L;  // CC_Ele_R/L: right/left cell-centered electric field
+   real dE, CC_Ele_L, CC_Ele_R;  // CC_Ele_L/R: left/right cell-centered electric field
 
 // MAX_ERROR is defined in CUFLU.h
    if ( FABS(FC_Vel) <= MAX_ERROR )
    {
-      CC_Ele_R = PriVar_R[TB1]*PriVar_R[TV2] - PriVar_R[TB2]*PriVar_R[TV1];
-      CC_Ele_L = PriVar_L[TB1]*PriVar_L[TV2] - PriVar_L[TB2]*PriVar_L[TV1];
+      CC_Ele_R = B_R1*V_R2 - B_R2*V_R1;
+      CC_Ele_L = B_L1*V_L2 - B_L2*V_L1;
       dE       = (real)0.5*( FC_Ele_R - CC_Ele_R + FC_Ele_L - CC_Ele_L );
    }
 
    else if ( FC_Vel > (real)0.0 )
    {
-      CC_Ele_L = PriVar_L[TB1]*PriVar_L[TV2] - PriVar_L[TB2]*PriVar_L[TV1];
+      CC_Ele_L = B_L1*V_L2 - B_L2*V_L1;
       dE       = FC_Ele_L - CC_Ele_L;
    }
 
    else
    {
-      CC_Ele_R = PriVar_R[TB1]*PriVar_R[TV2] - PriVar_R[TB2]*PriVar_R[TV1];
+      CC_Ele_R = B_R1*V_R2 - B_R2*V_R1;
       dE       = FC_Ele_R - CC_Ele_R;
    }
 
