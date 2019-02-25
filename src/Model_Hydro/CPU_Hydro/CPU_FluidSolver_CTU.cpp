@@ -12,6 +12,9 @@
 #include "CUFLU_Shared_ComputeFlux.cu"
 #include "CUFLU_Shared_FullStepUpdate.cu"
 #include "CUFLU_SetConstMem_FluidSolver.cu"
+#ifdef MHD
+#include "CPU_Shared_ConstrainedTransport.cu"
+#endif
 
 #else // #ifdef __CUDACC__
 
@@ -39,6 +42,22 @@ void Hydro_FullStepUpdate( const real g_Input[][ CUBE(FLU_NXT) ], real g_Output[
                            const bool NormPassive, const int NNorm, const int NormIdx[] );
 real Hydro_CheckMinPresInEngy( const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy,
                                const real Gamma_m1, const real _Gamma_m1, const real MinPres );
+#ifdef MHD
+void MHD_ComputeElectric(       real g_EC_Ele[][ CUBE(N_EC_ELE) ],
+                          const real g_FC_Flux[][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX) ],
+                          const real g_PriVar[][ CUBE(FLU_NXT) ],
+                          const int NEle, const int NFlux, const int NPri, const int OffsetPri,
+                          const real dt, const real dh );
+void MHD_UpdateMagnetic( real *g_FC_Bx_Out, real *g_FC_By_Out, real *g_FC_Bz_Out,
+                         const real g_FC_B_In[][ FLU_NXT_P1*SQR(FLU_NXT) ],
+                         const real g_EC_Ele[][ CUBE(N_EC_ELE) ],
+                         const real dt, const real dh, const int NOut, const int NEle, const int Offset_B_In );
+void MHD_HalfStepPrimitive( const real g_Flu_In[][ CUBE(FLU_NXT) ],
+                            const real g_FC_B_Half[][ FLU_NXT_P1*SQR(FLU_NXT) ],
+                                  real g_PriVar_Out[][ CUBE(FLU_NXT) ],
+                            const real g_Flux[][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX) ],
+                            const real dt, const real dh, const real MinDens );
+#endif // #ifdef MHD
 
 #endif // #ifdef __CUDACC__ ... else ...
 
@@ -190,7 +209,15 @@ void CPU_FluidSolver_CTU(
       real (*const g_Slope_PPM_1PG)[NCOMP_TOTAL_PLUS_MAG][ CUBE(N_SLOPE_PPM) ] = g_Slope_PPM[array_idx];
 
 #     ifdef MHD
-      real (*const g_PriVar_Half_1PG)                    [ CUBE(FLU_NXT)     ] = g_PriVar_1PG;
+      real (*const g_FC_Mag_Half_1PG)[ FLU_NXT_P1*SQR(FLU_NXT) ] = g_FC_Mag_Half[array_idx];
+      real (*const g_EC_Ele_1PG     )[ CUBE(N_EC_ELE)          ] = g_EC_Ele     [array_idx];
+#     else
+      real (*const g_FC_Mag_Half_1PG)[ FLU_NXT_P1*SQR(FLU_NXT) ] = NULL;
+      real (*const g_EC_Ele_1PG     )[ CUBE(N_EC_ELE)          ] = NULL;
+#     endif
+
+#     ifdef MHD
+      real (*const g_PriVar_Half_1PG)[ CUBE(FLU_NXT) ] = g_PriVar_1PG;
 #     endif
 
 
@@ -217,11 +244,28 @@ void CPU_FluidSolver_CTU(
                             StoreFlux_No, NULL );
 
 
-//       3. correct the face-centered variables by the transverse flux gradients
-//       Hydro_TGradientCorrection( g_FC_Var_1PG, g_FC_Flux_1PG, dt, dh, Gamma, MinDens, MinPres );
+//       3. evaluate electric field and update B field at the half time-step
+#        ifdef MHD
+         MHD_ComputeElectric( g_EC_Ele[P], g_FC_Flux_1PG, g_PriVar_1PG, N_HF_ELE, N_FC_FLUX, FLU_NXT, LR_GHOST_SIZE, dt, dh );
+
+         MHD_UpdateMagnetic( g_FC_Mag_Half_1PG[0], g_FC_Mag_Half_1PG[1], g_FC_Mag_Half_1PG[2], g_Mag_Array_In[P], g_EC_Ele[P],
+                             (real)0.5*dt, dh, N_HF_VAR, N_HF_ELE, FLU_GHOST_SIZE-1 );
+#        endif
 
 
-//       4. evaluate the face-centered full-step fluxes by solving the Riemann problem with the corrected data
+//       4. correct the face-centered variables by the transverse flux gradients
+         Hydro_TGradientCorrection( g_FC_Var_1PG, g_FC_Flux_1PG, g_Mag_Array_In[P], g_FC_Mag_Half_1PG, g_EC_Ele_1PG, g_PriVar_1PG,
+                                    dt, dh, Gamma, MinDens, MinPres );
+
+
+//       5. evaluate the cell-centered primitive variables at the half time-step
+//          --> for computing CT electric field later
+#        ifdef MHD
+         MHD_HalfStepPrimitive( g_Flu_Array_In[P], g_FC_Mag_Half_1PG, g_PriVar_Half_1PG, g_FC_Flux_1PG, dt, dh, MinDens );
+#        endif
+
+
+//       6. evaluate the face-centered full-step fluxes by solving the Riemann problem with the corrected data
 #        ifdef MHD
          const int NSkip_N = 1;
          const int NSkip_T = 1;
@@ -242,10 +286,19 @@ void CPU_FluidSolver_CTU(
 #        endif
 
 
-//       5. full-step evolution
+//       7. full-step evolution of the fluid data
          Hydro_FullStepUpdate( g_Flu_Array_In[P], g_Flu_Array_Out[P], g_DE_Array_Out[P],
                                g_FC_Flux_1PG, dt, dh, Gamma, MinDens, MinPres, DualEnergySwitch,
                                NormPassive, NNorm, c_NormIdx );
+
+
+//       8. evaluate electric field and update B field at the full time-step
+#        ifdef MHD
+         MHD_ComputeElectric( g_EC_Ele[P], g_FC_Flux_1PG, g_PriVar_Half_1PG, N_FL_ELE, N_FL_FLUX, N_HF_VAR, 0, dt, dh );
+
+         MHD_UpdateMagnetic( g_Mag_Array_Out[P][0], g_Mag_Array_Out[P][1], g_Mag_Array_Out[P][2], g_Mag_Array_In[P], g_EC_Ele[P],
+                             dt, dh, PS2, N_FL_ELE, FLU_GHOST_SIZE );
+#        endif
 
       } // loop over all patch groups
    } // OpenMP parallel region
