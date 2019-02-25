@@ -45,14 +45,14 @@ real Hydro_CheckMinPresInEngy( const real Dens, const real MomX, const real MomY
 
 // internal functions
 GPU_DEVICE
-void Hydro_TGradient_Correction(       real g_FC_Var   [][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_VAR)  ],
-                                 const real g_FC_Flux  [][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX) ],
-                                 const real g_FC_B_In  [][ FLU_NXT_P1*SQR(FLU_NXT) ],
-                                 const real g_FC_B_Half[][ FLU_NXT_P1*SQR(FLU_NXT) ],
-                                 const real g_EC_Ele   [][ CUBE(N_EC_ELE) ],
-                                 const real g_PriVar   [][ CUBE(FLU_NXT) ],
-                                 const real dt, const real dh, const real Gamma,
-                                 const real MinDens, const real MinPres );
+void Hydro_TGradientCorrection(      real g_FC_Var   [][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_VAR)  ],
+                                const real g_FC_Flux  [][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX) ],
+                                const real g_FC_B_In  [][ FLU_NXT_P1*SQR(FLU_NXT) ],
+                                const real g_FC_B_Half[][ FLU_NXT_P1*SQR(FLU_NXT) ],
+                                const real g_EC_Ele   [][ CUBE(N_EC_ELE) ],
+                                const real g_PriVar   [][ CUBE(FLU_NXT) ],
+                                const real dt, const real dh, const real Gamma,
+                                const real MinDens, const real MinPres );
 
 
 
@@ -218,7 +218,7 @@ void CPU_FluidSolver_CTU(
 
 
 //       3. correct the face-centered variables by the transverse flux gradients
-//       Hydro_TGradient_Correction( g_FC_Var_1PG, g_FC_Flux_1PG, dt, dh, Gamma, MinDens, MinPres );
+//       Hydro_TGradientCorrection( g_FC_Var_1PG, g_FC_Flux_1PG, dt, dh, Gamma, MinDens, MinPres );
 
 
 //       4. evaluate the face-centered full-step fluxes by solving the Riemann problem with the corrected data
@@ -255,7 +255,7 @@ void CPU_FluidSolver_CTU(
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Hydro_TGradient_Correction
+// Function    :  Hydro_TGradientCorrection
 // Description :  Correct the face-centered variables by the transverse flux gradients
 //
 // Note        :  1. Ref: (a) Stone et al., ApJS, 178, 137 (2008)
@@ -276,14 +276,14 @@ void CPU_FluidSolver_CTU(
 //                MinDens/Pres : Minimum allowed density and pressure
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE
-void Hydro_TGradient_Correction(       real g_FC_Var   [][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_VAR)  ],
-                                 const real g_FC_Flux  [][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX) ],
-                                 const real g_FC_B_In  [][ FLU_NXT_P1*SQR(FLU_NXT) ],
-                                 const real g_FC_B_Half[][ FLU_NXT_P1*SQR(FLU_NXT) ],
-                                 const real g_EC_Ele   [][ CUBE(N_EC_ELE) ],
-                                 const real g_PriVar   [][ CUBE(FLU_NXT) ],
-                                 const real dt, const real dh, const real Gamma,
-                                 const real MinDens, const real MinPres )
+void Hydro_TGradientCorrection(       real g_FC_Var   [][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_VAR)  ],
+                                const real g_FC_Flux  [][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX) ],
+                                const real g_FC_B_In  [][ FLU_NXT_P1*SQR(FLU_NXT) ],
+                                const real g_FC_B_Half[][ FLU_NXT_P1*SQR(FLU_NXT) ],
+                                const real g_EC_Ele   [][ CUBE(N_EC_ELE) ],
+                                const real g_PriVar   [][ CUBE(FLU_NXT) ],
+                                const real dt, const real dh, const real Gamma,
+                                const real MinDens, const real MinPres )
 {
 
    const int  didx_flux[3]   = { 1, N_FC_FLUX, SQR(N_FC_FLUX) };
@@ -504,7 +504,7 @@ void Hydro_TGradient_Correction(       real g_FC_Var   [][NCOMP_TOTAL_PLUS_MAG][
    __syncthreads();
 #  endif
 
-} // FUNCTION : Hydro_TGradient_Correction
+} // FUNCTION : Hydro_TGradientCorrection
 
 
 
