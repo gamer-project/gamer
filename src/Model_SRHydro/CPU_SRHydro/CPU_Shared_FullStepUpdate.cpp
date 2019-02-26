@@ -78,9 +78,8 @@ bool SRHydro_FullStepUpdate( const real g_Input[][ CUBE(FLU_NXT) ], real g_Outpu
       Output_1Cell[ENGY] = SRHydro_CheckMinTempInEngy( Output_1Cell, MinTemp, Gamma );
 #     endif
 
-#     ifdef CHECK_NEGATIVE_IN_FLUID
       if( SRHydro_CheckUnphysical(Output_1Cell, NULL, Gamma, MinTemp, __FUNCTION__, __LINE__, false) ) return true;
-#     endif
+
 
 //    4. store results to the output array
       for (int v=0; v<NCOMP_TOTAL; v++)   g_Output[v][idx_out] = Output_1Cell[v];

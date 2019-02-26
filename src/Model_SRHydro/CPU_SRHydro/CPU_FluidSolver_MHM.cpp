@@ -196,11 +196,11 @@ void CPU_FluidSolver_MHM(
 //             3. full-step evolution
 //                --> check unphysical cells in g_Flu_Array_Out[] after full update
                state = SRHydro_FullStepUpdate( g_Flu_Array_In[P], g_Flu_Array_Out[P], NULL,
-                                       g_FC_Flux_1PG, dt, dh, Gamma, MinDens, MinTemp );
+                                               g_FC_Flux_1PG, dt, dh, Gamma, MinDens, MinTemp );
 
                iteration++;
 
-         } while( state && iteration <= Max );
+            } while( state && iteration <= Max );
 
       } // loop over all patch groups
    } // OpenMP parallel region
