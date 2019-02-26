@@ -176,14 +176,6 @@ void Aux_TakeNote()
       fprintf( Note, "EOS                             RELATIVISTIC_IDEAL_GAS\n" );
 #     endif
 
-#     if ( EXTRAPOLATE == THREE_VELOCITY )
-      fprintf( Note, "EXTRAPOLATE                     THREE_VELOCITY\n" );
-#     elif ( EXTRAPOLATE == FOUR_VELOCITY )
-      fprintf( Note, "EXTRAPOLATE                     FOUR_VELOCITY\n" );
-#     elif ( EXTRAPOLATE == CONSERVED_QUANTITIES )
-      fprintf( Note, "EXTRAPOLATE                     CONSERVED_QUANTITIES\n" );
-#     endif
-
 #     ifdef CHECK_MIN_TEMP
       fprintf( Note, "CHECK_MIN_TEMP                  ON\n" );
 #     else

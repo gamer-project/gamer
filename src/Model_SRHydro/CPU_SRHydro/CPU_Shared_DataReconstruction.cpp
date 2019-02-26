@@ -101,7 +101,7 @@ void SRHydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
          for (int v=0; v<NCOMP_TOTAL; v++)   ConVar_1Cell[v] = g_ConVar[v][idx];
 
 #        ifdef CHECK_NEGATIVE_IN_FLUID
-         if( SRHydro_CheckUnphysical( ConVar_1Cell, NULL, Gamma, MinTemp, __FUNCTION__, __LINE__, true ) ) exit(EXIT_FAILURE);
+         SRHydro_CheckUnphysical( ConVar_1Cell, NULL, Gamma, MinTemp, __FUNCTION__, __LINE__, true );
 #        endif
 
          SRHydro_Con2Pri( ConVar_1Cell, PriVar_1Cell, Gamma, MinTemp );
@@ -569,7 +569,7 @@ void SRHydro_HancockPredict( real fc[][NCOMP_TOTAL], const real dt, const real d
 #  ifdef CHECK_NEGATIVE_IN_FLUID
    for (int f=0; f<6; f++)
    {
-     if( SRHydro_CheckUnphysical( fc[f], NULL, Gamma, MinTemp, __FUNCTION__, __LINE__, true ) ) exit(EXIT_FAILURE);
+    SRHydro_CheckUnphysical( fc[f], NULL, Gamma, MinTemp, __FUNCTION__, __LINE__, true );
    }
 #  endif
 
