@@ -993,10 +993,10 @@ void Hydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
 //                3. InOut[] should have the size of NCOMP_TOTAL_PLUS_MAG
 //
 // Parameter   :  InOut     : Array storing both the input primitive variables and output characteristic variables
-//                Gamma     : Ratio of specific heats (for pure hydro only)
-//                Rho       : Density                 (for pure hydro only)
-//                Pres      : Pressure                (for pure hydro only)
-//                LEigenVec : Left eigenvector        (for MHD only)
+//                Gamma     : Ratio of specific heats
+//                Rho       : Density
+//                Pres      : Pressure
+//                LEigenVec : Left eigenvector (for MHD only)
 //                XYZ       : Target spatial direction : (0/1/2) --> (x/y/z)
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE
@@ -1076,10 +1076,10 @@ void Hydro_Pri2Char( real InOut[], const real Gamma, const real Rho, const real 
 //                2. Input and output share the same array
 //
 // Parameter   :  InOut     : Array storing both the input characteristic variables and output primitive variables
-//                Gamma     : Ratio of specific heats (for pure hydro only)
-//                Rho       : Density                 (for pure hydro only)
-//                Pres      : Pressure                (for pure hydro only)
-//                REigenVec : Right eigenvector       (for MHD only)
+//                Gamma     : Ratio of specific heats
+//                Rho       : Density
+//                Pres      : Pressure
+//                REigenVec : Right eigenvector (for MHD only)
 //                XYZ       : Target spatial direction : (0/1/2) --> (x/y/z)
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE
@@ -1515,13 +1515,8 @@ void Hydro_LimitSlope( const real L[], const real C[], const real R[], const LR_
 
 // primitive variables --> characteristic variables
 #  ifdef CHAR_RECONSTRUCTION
-#  ifdef MHD
-   const real Rho  = NULL_REAL;
-   const real Pres = NULL_REAL;
-#  else
    const real Rho  = C[0];
    const real Pres = C[4];
-#  endif
 
    Hydro_Pri2Char( Slope_L, Gamma, Rho, Pres, LEigenVec, XYZ );
    Hydro_Pri2Char( Slope_R, Gamma, Rho, Pres, LEigenVec, XYZ );

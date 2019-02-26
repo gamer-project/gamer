@@ -238,7 +238,7 @@ void Hydro_ComputeFlux( const real g_FC_Var [][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_
 
                ExternalAcc( Acc, xyz[0], xyz[1], xyz[2], Time, ExtAcc_AuxArray );
 
-               for (int d=0; d<3; d++)    Acc[d] *= dt_half;
+               for (int t=0; t<3; t++)    Acc[t] *= dt_half;
             }
 
 //          self-gravity

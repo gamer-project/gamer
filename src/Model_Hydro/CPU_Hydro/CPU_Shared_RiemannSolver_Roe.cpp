@@ -124,7 +124,8 @@ void Hydro_RiemannSolver_Roe( const int XYZ, real Flux_Out[], const real L_In[],
 // longitudinal B field in the left and right states should be the same
 #  ifdef GAMER_DEBUG
    if ( BxL != BxR )
-      printf( "ERROR : BxL (%24.17e) != BxR (%24.17e) for XYZ %d !!\n", BxL, BxR, XYZ );
+      printf( "ERROR : BxL (%24.17e) != BxR (%24.17e) for XYZ %d at file <%s>, line <%d>, function <%s>!!\n",
+              BxL, BxR, XYZ, __FILE__, __LINE__, __FUNCTION__ );
 #  endif
 #  endif // #ifdef MHD
 
