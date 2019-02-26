@@ -385,7 +385,7 @@ void Hydro_RiemannSolver_Roe( const int XYZ, real Flux_Out[], const real L_In[],
    REigenVec[4][0] = alpha_f*( Hp - u_Cf ) + Qs_v_by_w_bz + As_Bn_b2_Rho;
    REigenVec[4][1] = -( v*beta_z - w*beta_y );
    REigenVec[4][2] = alpha_s*( Hp - u_Cs ) - Qf_v_by_w_bz - Af_Bn_b2_Rho;
-   REigenVec[4][3] = _TWO*V2 + Gamma_m2*X/Gamma_m1;
+   REigenVec[4][3] = _TWO*V2 + X/Gamma_m1;
    REigenVec[4][4] = alpha_s*( Hp + u_Cs ) + Qf_v_by_w_bz - Af_Bn_b2_Rho;
    REigenVec[4][5] = -REigenVec[4][1];
    REigenVec[4][6] = alpha_f*( Hp + u_Cf ) - Qs_v_by_w_bz + As_Bn_b2_Rho;
