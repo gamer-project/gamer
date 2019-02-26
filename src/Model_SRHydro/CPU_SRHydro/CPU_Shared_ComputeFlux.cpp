@@ -126,9 +126,8 @@ void SRHydro_ComputeFlux( const real g_FC_Var [][NCOMP_TOTAL][ CUBE(N_FC_VAR) ],
          }
 
 #        ifdef CHECK_NEGATIVE_IN_FLUID
-         if( SRHydro_CheckUnphysical( ConVar_L, NULL, Gamma, MinTemp, __FUNCTION__, __LINE__, true )
-          || SRHydro_CheckUnphysical( ConVar_R, NULL, Gamma, MinTemp, __FUNCTION__, __LINE__, true ) )
-         assert(0);
+         SRHydro_CheckUnphysical( ConVar_L, NULL, Gamma, MinTemp, __FUNCTION__, __LINE__, true );
+         SRHydro_CheckUnphysical( ConVar_R, NULL, Gamma, MinTemp, __FUNCTION__, __LINE__, true );
 #        endif
 
 //       2. invoke Riemann solver
