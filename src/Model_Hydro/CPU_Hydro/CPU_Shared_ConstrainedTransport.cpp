@@ -41,6 +41,7 @@ static real dE_Upwind( const real FC_Ele_L, const real FC_Ele_R, const real FC_M
 //                         (b) Stone et al., ApJS, 178, 137 (2008)
 //                2. This function is shared by MHM_RP and CTU schemes
 //                3. g_EC_Ele [] has the size of N_EC_ELE^3  but is accessed with a stride "NEle"
+//                   --> But there are only NEle-1 useful elements along x/y/z for Ex/Ey/Ez, respectively
 //                   g_FC_Flux[] has the size of N_FC_FLUX^3 but is accessed with a stride "NFlux"
 //                   g_PriVar [] has the size of FLU_NXT^3   but is accessed with a stride "NPri"
 //                4. EMF-x/y/z( i, j, k ) are defined at the lower-left edge center of
@@ -80,29 +81,30 @@ void MHD_ComputeElectric(       real g_EC_Ele[][ CUBE(N_EC_ELE) ],
       const int TB1   = TDir1 + MAG_OFFSET;  // B flux   component along the transverse direction 1
       const int TB2   = TDir2 + MAG_OFFSET;  // B flux   component along the transverse direction 2
 
-      int idx_ele_e[3], idx_flux_s[3];
+      int idx_ele_e[2], idx_flux_s[3];
 
       switch ( d )
       {
-         case 0 : idx_ele_e [0] = NEleM1;  idx_ele_e [1] = NEle;    idx_ele_e [2] = NEle;
+         case 0 : idx_ele_e [0] = NEleM1;  idx_ele_e [1] = NEle;
                   idx_flux_s[0] = 1;       idx_flux_s[1] = 0;       idx_flux_s[2] = 0;
                   break;
 
-         case 1 : idx_ele_e [0] = NEle;    idx_ele_e [1] = NEleM1;  idx_ele_e [2] = NEle;
+         case 1 : idx_ele_e [0] = NEle;    idx_ele_e [1] = NEleM1;
                   idx_flux_s[0] = 0;       idx_flux_s[1] = 1;       idx_flux_s[2] = 0;
                   break;
 
-         case 2 : idx_ele_e [0] = NEle;    idx_ele_e [1] = NEle;    idx_ele_e [2] = NEleM1;
+         case 2 : idx_ele_e [0] = NEle;    idx_ele_e [1] = NEle;
                   idx_flux_s[0] = 0;       idx_flux_s[1] = 0;       idx_flux_s[2] = 1;
                   break;
       }
 
       const int size_ij = idx_ele_e[0]*idx_ele_e[1];
-      CGPU_LOOP( idx_ele, idx_ele_e[0]*idx_ele_e[1]*idx_ele_e[2] )
+      CGPU_LOOP( idx0, NEleM1*SQR(NEle)  )
       {
-         const int i_ele    = idx_ele % idx_ele_e[0];
-         const int j_ele    = idx_ele % size_ij / idx_ele_e[0];
-         const int k_ele    = idx_ele / size_ij;
+         const int i_ele    = idx0 % idx_ele_e[0];
+         const int j_ele    = idx0 % size_ij / idx_ele_e[0];
+         const int k_ele    = idx0 / size_ij;
+         const int idx_ele  = IDX321( i_ele, j_ele, k_ele, NEle, NEle );
 
          const int i_flux   = i_ele + idx_flux_s[0];
          const int j_flux   = j_ele + idx_flux_s[1];
