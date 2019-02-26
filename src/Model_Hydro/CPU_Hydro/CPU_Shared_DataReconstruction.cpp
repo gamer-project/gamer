@@ -453,7 +453,7 @@ void Hydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
             {
                for (int v=0; v<NWAVE; v++)   Coeff_R += LEigenVec[Mode][v]*dfc[ idx_wave[v] ];
 
-               Coeff_R *= dt_dh2*( EigenVal[d][4] - EigenVal[d][Mode] );
+               Coeff_R *= dt_dh2*( EigenVal[d][ NWAVE-1 ] - EigenVal[d][Mode] );
 
                for (int v=0; v<NWAVE; v++)   Correct_R[ idx_wave[v] ] += Coeff_R*REigenVec[Mode][v];
             }
@@ -859,8 +859,8 @@ void Hydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
 #        else // ( RSOLVER == ROE/EXACT || ifndef HLL_NO_REF_STATE )
 
 //       4-2-b1. evaluate the reference states
-         Coeff_L = -dt_dh2*FMIN( EigenVal[d][0], (real)0.0 );
-         Coeff_R = -dt_dh2*FMAX( EigenVal[d][4], (real)0.0 );
+         Coeff_L = -dt_dh2*FMIN( EigenVal[d][       0 ], (real)0.0 );
+         Coeff_R = -dt_dh2*FMAX( EigenVal[d][ NWAVE-1 ], (real)0.0 );
 
          for (int v=0; v<NCOMP_FLUID; v++)
          {
@@ -891,11 +891,11 @@ void Hydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
 
             if ( EigenVal[d][Mode] >= (real)0.0 )
             {
-               const real Coeff_A = dt_dh2*( EigenVal[d][4] - EigenVal[d][Mode] );
+               const real Coeff_A = dt_dh2*( EigenVal[d][ NWAVE-1 ] - EigenVal[d][Mode] );
 //             write as (a-b)*(a+b) instead of a^2-b^2 to ensure that Coeff_B=0 when Coeff_A=0
-//             Coeff_B = real(4.0/3.0)*dt_dh2*dt_dh2* ( EigenVal[d][   4]*EigenVal[d][   4] -
-//                                                      EigenVal[d][Mode]*EigenVal[d][Mode]   );
-               const real Coeff_B = real(4.0/3.0)*dt_dh2*Coeff_A*( EigenVal[d][4] + EigenVal[d][Mode] );
+//             Coeff_B = real(4.0/3.0)*dt_dh2*dt_dh2* ( EigenVal[d][NWAVE-1]*EigenVal[d][NWAVE-1] -
+//                                                      EigenVal[d][Mode   ]*EigenVal[d][Mode   ]   );
+               const real Coeff_B = real(4.0/3.0)*dt_dh2*Coeff_A*( EigenVal[d][ NWAVE-1 ] + EigenVal[d][Mode] );
 
                for (int v=0; v<NCOMP_FLUID; v++)   Coeff_R += LEigenVec[Mode][v]*(  Coeff_A*( dfc[v] - dfc6[v] ) +
                                                                                     Coeff_B*( dfc6[v]          )   );
