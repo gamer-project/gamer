@@ -397,14 +397,18 @@ void Hydro_TGradientCorrection(       real g_FC_Var   [][NCOMP_TOTAL_PLUS_MAG][ 
          const int idx_fluxL1 = idx_fluxR - didx_flux[TDir1];
          const int idx_fluxL2 = idx_fluxR - didx_flux[TDir2];
 
+//       0. load g_FC_Var[] to the local variable fc[] to reduce the GPU global memory access
+         for (int v=0; v<NCOMP_TOTAL_PLUS_MAG; v++)
+         {
+            fc_var[0][v] = g_FC_Var[faceL][v][idx_fc_var];
+            fc_var[1][v] = g_FC_Var[faceR][v][idx_fc_var];
+         }
+
+
 //       1. calculate the transverse fluid flux gradients and update the corresponding face-centered fluid variables
          for (int v=0; v<NCOMP_TOTAL; v++)
          {
             real Correct, TGrad1, TGrad2;
-
-//          load g_FC_Var[] to a local variable fc[] to reduce the GPU global memory access
-            fc_var[0][v] = g_FC_Var[faceL][v][idx_fc_var];
-            fc_var[1][v] = g_FC_Var[faceR][v][idx_fc_var];
 
             TGrad1  = g_FC_Flux[TDir1][v][idx_fluxR] - g_FC_Flux[TDir1][v][idx_fluxL1];
             TGrad2  = g_FC_Flux[TDir2][v][idx_fluxR] - g_FC_Flux[TDir2][v][idx_fluxL2];
