@@ -347,6 +347,11 @@ void MHD_UpdateMagnetic( real *g_FC_Bx_Out, real *g_FC_By_Out, real *g_FC_Bz_Out
       } // CGPU_LOOP( idx_out, idx_out_e_i*idx_out_e_j*idx_out_e_k )
    } // for (int d=0; d<3; d++)
 
+
+#  ifdef __CUDACC__
+   __syncthreads();
+#  endif
+
 } // FUNCTION : MHD_UpdateMagnetic
 
 
@@ -443,6 +448,11 @@ void MHD_HalfStepPrimitive( const real g_Flu_In[][ CUBE(FLU_NXT) ],
       for (int v=0; v<NCOMP_MAG; v++)  g_PriVar_Out[ v + MAG_OFFSET ][idx_out] = Output_1Cell[ v + NFluVar ];
 
    } // CGPU_LOOP( idx_out, CUBE(N_HF_VAR) )
+
+
+#  ifdef __CUDACC__
+   __syncthreads();
+#  endif
 
 } // FUNCTION : MHD_HalfStepPrimitive
 
