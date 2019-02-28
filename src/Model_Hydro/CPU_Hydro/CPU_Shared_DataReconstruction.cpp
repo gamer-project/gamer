@@ -278,9 +278,9 @@ void Hydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
 
 #     ifdef MHD
 //    assuming that g_FC_B[] has the size of NIn*NIn*(NIn+1)
-      idx_B[0] = (k_cc*NIn    + i_cc)*NIn_p1 + i_cc;
-      idx_B[1] = (k_cc*NIn_p1 + i_cc)*NIn    + i_cc;
-      idx_B[2] = (k_cc*NIn    + i_cc)*NIn    + i_cc;
+      idx_B[0] = IDX321( i_cc, j_cc, k_cc, NIn_p1, NIn    );
+      idx_B[1] = IDX321( i_cc, j_cc, k_cc, NIn,    NIn_p1 );
+      idx_B[2] = IDX321( i_cc, j_cc, k_cc, NIn,    NIn    );
 #     endif
 
 //    cc_C/L/R: cell-centered variables of the Central/Left/Right cells

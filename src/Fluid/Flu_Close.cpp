@@ -132,7 +132,7 @@ void Flu_Close( const int lv, const int SaveSg_Flu, const int SaveSg_Mag,
             for (int j=0; j<ijk_end[1]; j++)    {  J = Table_y + j;
             for (int i=0; i<ijk_end[0]; i++)    {  I = Table_x + i;
 
-               KJI = IDX321( I, J, K, ijk_end[0]+PS1, ijk_end[1] );
+               KJI = IDX321( I, J, K, ijk_end[0]+PS1, ijk_end[1]+PS1 );
 
                amr->patch[SaveSg_Mag][lv][PID]->magnetic[v][ idx ++ ] = h_Mag_Array_F_Out[TID][v][KJI];
 
