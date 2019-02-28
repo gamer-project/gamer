@@ -1213,17 +1213,17 @@ void Hydro_GetEigenSystem( const real CC_Var[], real EigenVal[][NWAVE],
 
    Hydro_Rotate3D( PriVar, XYZ, true, MAG_OFFSET );
 
-   const real Bx      = PriVar[ MAG_OFFSET + 0 ];
-   const real By      = PriVar[ MAG_OFFSET + 1 ];
-   const real Bz      = PriVar[ MAG_OFFSET + 2 ];
-   const real Bn2     = SQR( By ) + SQR( Bz );
-   const real Bn      = SQRT( Bn2 );
-   const real Cax2    = SQR( Bx )*_Rho;
-   const real Cax     = SQRT( Cax2 );
-   const real Cat2    = Bn2*_Rho;
-   const real tsum    = Cax2 + Cat2 + a2;                         // Ca^2 + a^2
-   const real tdif    = Cax2 + Cat2 - a2;                         // Ca^2 - a^2
-   const real Cf2mCs2 = SQRT( SQR(tdif) + (real)4.0*a2*Cat2 );    // Cf^2 - Cs^2
+   const real Bx          = PriVar[ MAG_OFFSET + 0 ];
+   const real By          = PriVar[ MAG_OFFSET + 1 ];
+   const real Bz          = PriVar[ MAG_OFFSET + 2 ];
+   const real Bn2         = SQR( By ) + SQR( Bz );
+   const real Bn          = SQRT( Bn2 );
+   const real Cax2        = SQR( Bx )*_Rho;
+   const real Cax         = SQRT( Cax2 );
+   const real Cat2        = Bn2*_Rho;
+   const real tsum        = Cax2 + Cat2 + a2;                        // Ca^2 + a^2
+   const real tdif        = Cax2 + Cat2 - a2;                        // Ca^2 - a^2
+   const real Cf2_min_Cs2 = SQRT( SQR(tdif) + (real)4.0*a2*Cat2 );   // Cf^2 - Cs^2
 
 // evaluate the fast/slow wave speed (Cf/Cs)
    if ( Cat2 == (real)0.0 )
@@ -1249,8 +1249,9 @@ void Hydro_GetEigenSystem( const real CC_Var[], real EigenVal[][NWAVE],
          Cs2 = (real)0.0;
       }
       else {
-         Cf2 = (real)0.5*( tsum + Cf2mCs2 );
-         Cs2 = Cf2 - Cf2mCs2;
+         Cf2 = (real)0.5*( tsum + Cf2_min_Cs2 );
+         Cs2 = a2*Cax2/Cf2;   // do not use "Cf2 - Cf2_min_Cs2" to avoid negative values caused by round-off errors
+//       Cs2 = Cf2 - Cf2_min_Cs2;
       }
    } // if ( Cat2 == (real)0.0 ) ... else ...
 
@@ -1269,11 +1270,11 @@ void Hydro_GetEigenSystem( const real CC_Var[], real EigenVal[][NWAVE],
 
 
 // right eigenvectors (rows instead of columns of the matrix REigenVec for better performance)
-   const real S         = SIGN( Bx );
-   const real sqrt_Rho  = SQRT( Rho );
-   const real _sqrt_Rho = (real)1.0 / sqrt_Rho;
-   const real a2mCs2    = a2 - Cs2;
-   const real Cf2ma2    = Cf2 - a2;
+   const real S          = SIGN( Bx );
+   const real sqrt_Rho   = SQRT( Rho );
+   const real _sqrt_Rho  = (real)1.0 / sqrt_Rho;
+   const real a2_min_Cs2 = a2 - Cs2;
+   const real Cf2_min_a2 = Cf2 - a2;
 
    real beta_y, beta_z, alpha_f, alpha_s;
 
@@ -1287,22 +1288,32 @@ void Hydro_GetEigenSystem( const real CC_Var[], real EigenVal[][NWAVE],
       beta_z = PriVar[7] * _Bn;
    }
 
-   if ( Cf2mCs2 == (real)0.0 ) {
+   if ( Cf2_min_Cs2 == (real)0.0 ) {
       alpha_f = (real)1.0;
       alpha_s = (real)0.0;
    }
-   else if ( a2mCs2 <= (real)0.0 ) {
+   else if ( a2_min_Cs2 <= (real)0.0 ) {
       alpha_f = (real)0.0;
       alpha_s = (real)1.0;
    }
-   else if ( Cf2ma2 <= (real)0.0 ) {
+   else if ( Cf2_min_a2 <= (real)0.0 ) {
       alpha_f = (real)1.0;
       alpha_s = (real)0.0;
    }
    else {
-      const real _Cf2mCs2 = (real)1.0 / Cf2mCs2;
-      alpha_f = SQRT( a2mCs2*_Cf2mCs2 );
-      alpha_s = SQRT( Cf2ma2*_Cf2mCs2 );
+#     ifdef CHECK_NEGATIVE_IN_FLUID
+      if ( Hydro_CheckNegative(a2_min_Cs2) )
+         printf( "ERROR : invalid a2_min_Cs2 (%14.7e) at file <%s>, line <%d>, function <%s>\n",
+                 a2_min_Cs2, __FILE__, __LINE__, __FUNCTION__ );
+
+      if ( Hydro_CheckNegative(Cf2_min_a2) )
+         printf( "ERROR : invalid Cf2_min_a2 (%14.7e) at file <%s>, line <%d>, function <%s>\n",
+                 Cf2_min_a2, __FILE__, __LINE__, __FUNCTION__ );
+#     endif
+
+      const real _Cf2_min_Cs2 = (real)1.0 / Cf2_min_Cs2;
+      alpha_f = SQRT( a2_min_Cs2*_Cf2_min_Cs2 );
+      alpha_s = SQRT( Cf2_min_a2*_Cf2_min_Cs2 );
    }
 
    const real Af         = a * alpha_f * sqrt_Rho;
