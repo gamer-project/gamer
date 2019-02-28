@@ -174,6 +174,12 @@ void Hydro_RiemannSolver_Roe( const int XYZ, real Flux_Out[], const real L_In[],
    Y        *= Gamma_m2;
    Bn_star   = SQRT( Gamma_m1 - Y )*Bn;
 
+#  ifdef CHECK_NEGATIVE_IN_FLUID
+   if ( Hydro_CheckNegative(Gamma_m1-Y) )
+      printf( "ERROR : invalid Gamma_m1-Y (%14.7e, Gamma_m1 %14.7e, Y %14.7e) at file <%s>, line <%d>, function <%s>\n",
+              Gamma_m1-Y, Gamma_m1, Y, __FILE__, __LINE__, __FUNCTION__ );
+#  endif
+
    if ( Bn == ZERO ) {
       beta_y = ONE;
       beta_z = ZERO;
@@ -203,15 +209,14 @@ void Hydro_RiemannSolver_Roe( const int XYZ, real Flux_Out[], const real L_In[],
 #  endif
    GammaP_Rho = Gamma*_Rho*Hydro_CheckMinPres( GammaP_Rho*Rho/Gamma, MinPres );  // apply pressure floor
 
-#  ifdef CHECK_NEGATIVE_IN_FLUID
-   if ( Hydro_CheckNegative(GammaP_Rho) )
-      printf( "ERROR : invalid GammaP_Rho (%14.7e) at file <%s>, line <%d>, function <%s>\n",
-              GammaP_Rho, __FILE__, __LINE__, __FUNCTION__ );
-#  endif
-
    a2          = GammaP_Rho;
 #  ifdef MHD
    a2         -= X;
+#  endif
+#  ifdef CHECK_NEGATIVE_IN_FLUID
+   if ( Hydro_CheckNegative(a2) )
+      printf( "ERROR : invalid a2 (%14.7e) at file <%s>, line <%d>, function <%s>\n",
+              a2, __FILE__, __LINE__, __FUNCTION__ );
 #  endif
    a           = SQRT( a2 );
 #  ifdef MHD
@@ -247,7 +252,8 @@ void Hydro_RiemannSolver_Roe( const int XYZ, real Flux_Out[], const real L_In[],
       }
       else {
          Cf2 = _TWO*( Ca2_plus_a2 + Cf2_min_Cs2 );
-         Cs2 = Cf2 - Cf2_min_Cs2;
+         Cs2 = a2*Cax2/Cf2;   // do not use "Cf2 - Cf2_min_Cs2" to avoid negative values caused by round-off errors
+//       Cs2 = Cf2 - Cf2_min_Cs2;
       }
    } // if ( Cat2 == ZERO ) ... else ...
 
@@ -270,6 +276,16 @@ void Hydro_RiemannSolver_Roe( const int XYZ, real Flux_Out[], const real L_In[],
       alpha_s = ZERO;
    }
    else {
+#     ifdef CHECK_NEGATIVE_IN_FLUID
+      if ( Hydro_CheckNegative(a2_min_Cs2) )
+         printf( "ERROR : invalid a2_min_Cs2 (%14.7e) at file <%s>, line <%d>, function <%s>\n",
+                 a2_min_Cs2, __FILE__, __LINE__, __FUNCTION__ );
+
+      if ( Hydro_CheckNegative(Cf2_min_a2) )
+         printf( "ERROR : invalid Cf2_min_a2 (%14.7e) at file <%s>, line <%d>, function <%s>\n",
+                 Cf2_min_a2, __FILE__, __LINE__, __FUNCTION__ );
+#     endif
+
       const real _Cf2_min_Cs2 = ONE/Cf2_min_Cs2;
       alpha_f = SQRT( a2_min_Cs2*_Cf2_min_Cs2 );
       alpha_s = SQRT( Cf2_min_a2*_Cf2_min_Cs2 );
