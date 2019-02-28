@@ -246,9 +246,9 @@ void CPU_FluidSolver_CTU(
 
 //       3. evaluate electric field and update B field at the half time-step
 #        ifdef MHD
-         MHD_ComputeElectric( g_EC_Ele[P], g_FC_Flux_1PG, g_PriVar_1PG, N_HF_ELE, N_FC_FLUX, FLU_NXT, LR_GHOST_SIZE, dt, dh );
+         MHD_ComputeElectric( g_EC_Ele_1PG, g_FC_Flux_1PG, g_PriVar_1PG, N_HF_ELE, N_FC_FLUX, FLU_NXT, LR_GHOST_SIZE, dt, dh );
 
-         MHD_UpdateMagnetic( g_FC_Mag_Half_1PG[0], g_FC_Mag_Half_1PG[1], g_FC_Mag_Half_1PG[2], g_Mag_Array_In[P], g_EC_Ele[P],
+         MHD_UpdateMagnetic( g_FC_Mag_Half_1PG[0], g_FC_Mag_Half_1PG[1], g_FC_Mag_Half_1PG[2], g_Mag_Array_In[P], g_EC_Ele_1PG,
                              (real)0.5*dt, dh, N_HF_VAR, N_HF_ELE, FLU_GHOST_SIZE-1 );
 #        endif
 
@@ -294,9 +294,9 @@ void CPU_FluidSolver_CTU(
 
 //       8. evaluate electric field and update B field at the full time-step
 #        ifdef MHD
-         MHD_ComputeElectric( g_EC_Ele[P], g_FC_Flux_1PG, g_PriVar_Half_1PG, N_FL_ELE, N_FL_FLUX, N_HF_VAR, 0, dt, dh );
+         MHD_ComputeElectric( g_EC_Ele_1PG, g_FC_Flux_1PG, g_PriVar_Half_1PG, N_FL_ELE, N_FL_FLUX, N_HF_VAR, 0, dt, dh );
 
-         MHD_UpdateMagnetic( g_Mag_Array_Out[P][0], g_Mag_Array_Out[P][1], g_Mag_Array_Out[P][2], g_Mag_Array_In[P], g_EC_Ele[P],
+         MHD_UpdateMagnetic( g_Mag_Array_Out[P][0], g_Mag_Array_Out[P][1], g_Mag_Array_Out[P][2], g_Mag_Array_In[P], g_EC_Ele_1PG,
                              dt, dh, PS2, N_FL_ELE, FLU_GHOST_SIZE );
 #        endif
 
