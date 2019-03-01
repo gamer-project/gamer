@@ -74,7 +74,18 @@ void Hydro_FullStepUpdate( const real g_Input[][ CUBE(FLU_NXT) ], real g_Output[
       const int i_out    = idx_out % PS2;
       const int j_out    = idx_out % size_ij / PS2;
       const int k_out    = idx_out / size_ij;
-      const int idx_flux = IDX321( i_out, j_out, k_out, N_FL_FLUX, N_FL_FLUX );
+
+//    for MHD, one additional flux is evaluated along each transverse direction for computing the CT electric field
+#     ifdef MHD
+      const int i_flux   = i_out + 1;
+      const int j_flux   = j_out + 1;
+      const int k_flux   = k_out + 1;
+#     else
+      const int i_flux   = i_out;
+      const int j_flux   = j_out;
+      const int k_flux   = k_out;
+#     endif
+      const int idx_flux = IDX321( i_flux, j_flux, k_flux, N_FL_FLUX, N_FL_FLUX );
 
       const int i_in     = i_out + FLU_GHOST_SIZE;
       const int j_in     = j_out + FLU_GHOST_SIZE;
@@ -85,7 +96,13 @@ void Hydro_FullStepUpdate( const real g_Input[][ CUBE(FLU_NXT) ], real g_Output[
 //    1. calculate flux difference to update the fluid data
       for (int d=0; d<3; d++)
       for (int v=0; v<NCOMP_TOTAL; v++)
+      {
+#        ifdef MHD
+         dFlux[d][v] = g_Flux[d][v][idx_flux] - g_Flux[d][v][ idx_flux - didx_flux[d] ];
+#        else
          dFlux[d][v] = g_Flux[d][v][ idx_flux + didx_flux[d] ] - g_Flux[d][v][idx_flux];
+#        endif
+      }
 
       for (int v=0; v<NCOMP_TOTAL; v++)
          Output_1Cell[v] = g_Input[v][idx_in] - dt_dh*( dFlux[0][v] + dFlux[1][v] + dFlux[2][v] );
