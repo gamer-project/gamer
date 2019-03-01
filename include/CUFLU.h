@@ -47,10 +47,12 @@
 // N_SLOPE_PPM          : size of Slope_PPM[]
 // N_FC_VAR             : size of FC_Var[]
 // N_FC_FLUX            : size of FC_Flux[]
-// N_FL_FLUX            : for accessing FC_Flux[] in CPU_Shared_ComputeFlux() and CPU_Shared_FullStepUpdate()
-//                        --> different from N_FC_FLUX in MHM_RP since for which FC_Flux[] is also linked
-//                            to Half_Flux[] used by Hydro_RiemannPredict_Flux() and Hydro_RiemannPredict()
-//                        --> for the latter two routines, Half_Flux[] is accessed with N_FC_FLUX
+// N_FL_FLUX/N_HF_FLUX  : for accessing FC_Flux[]
+//                        --> may be different from N_FC_FLUX
+//                            --> for example, in MHM_RP FC_Flux[] is also linked to Half_Flux[] used by
+//                                Hydro_RiemannPredict_Flux() and Hydro_RiemannPredict()
+//                            --> for the latter two routines, Half_Flux[] is accessed with N_HF_FLUX
+//                                that is smaller than N_FC_FLUX
 // N_HF_VAR             : for accessing PriVar_Half[], which is linked to PriVar[] with the size FLU_NXT^3
 //                        --> also for accessing FC_B_Half[] in MHD
 
@@ -69,12 +71,13 @@
 #    ifdef MHD
 #     define N_FC_VAR            ( PS2 + 2 )
 #     define N_FL_FLUX           ( PS2 + 2 )
-#     define N_FC_FLUX           ( FLU_NXT )
+#     define N_HF_FLUX           ( FLU_NXT )
 #    else
 #     define N_FC_VAR            ( PS2 + 2 )
 #     define N_FL_FLUX           ( PS2 + 1 )
-#     define N_FC_FLUX           ( FLU_NXT - 1 )
+#     define N_HF_FLUX           ( FLU_NXT - 1 )
 #    endif
+#     define N_FC_FLUX           ( N_HF_FLUX )
 #     define N_HF_VAR            ( FLU_NXT - 2 )
 
 #  elif ( FLU_SCHEME == CTU )
@@ -87,7 +90,8 @@
 #     define N_FC_VAR            ( PS2 + 2 )
 #     define N_FL_FLUX           ( N_FC_VAR )
 #    endif
-#     define N_FC_FLUX           ( N_FC_VAR )
+#     define N_HF_FLUX           ( N_FC_VAR )
+#     define N_FC_FLUX           ( N_HF_FLUX )
 
 #  endif // FLU_SCHEME
 

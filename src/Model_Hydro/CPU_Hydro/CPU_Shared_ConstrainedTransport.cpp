@@ -377,7 +377,8 @@ void MHD_UpdateMagnetic( real *g_FC_Bx_Out, real *g_FC_By_Out, real *g_FC_Bz_Out
 //                                  --> Just like the relation between g_Flu_Array_In[] and g_Mag_Array_In[]
 //                                  --> One can invoke MHD_GetCellCenteredB() to compute the cell-centered
 //                                      B field directly
-//                   g_Flux[]       has the size of N_FC_FLUX^3 and is accessed with the same stride
+//                   g_Flux[]       has the size of N_FC_FLUX^3 but is accessed with a stride N_HF_FLUX
+//                                  --> Although currently we have N_FC_FLUX == N_HF_FLUX
 //
 // Parameter   :  g_Flu_In     : Array storing the input initial cell-centered fluid data
 //                g_FC_B_Half  : Array storing the input half-step face-centered B field
@@ -397,7 +398,7 @@ void MHD_HalfStepPrimitive( const real g_Flu_In[][ CUBE(FLU_NXT) ],
                             const real dt, const real dh, const real MinDens )
 {
 
-   const int  didx_flux[3] = { 1, N_FC_FLUX, SQR(N_FC_FLUX) };
+   const int  didx_flux[3] = { 1, N_HF_FLUX, SQR(N_HF_FLUX) };
    const real dt_dh2       = (real)0.5*dt/dh;
    const int  NFluVar      = NCOMP_FLUID - 1;   // density + momentum*3
 
@@ -413,7 +414,7 @@ void MHD_HalfStepPrimitive( const real g_Flu_In[][ CUBE(FLU_NXT) ],
       const int i_flux     = i_out + 1;
       const int j_flux     = j_out + 1;
       const int k_flux     = k_out + 1;
-      const int idx_flux   = IDX321( i_flux, j_flux, k_flux, N_FC_FLUX, N_FC_FLUX );
+      const int idx_flux   = IDX321( i_flux, j_flux, k_flux, N_HF_FLUX, N_HF_FLUX );
 
       const int i_flu_in   = i_out + FLU_GHOST_SIZE - 1;    // assuming N_HF_VAR = PS2+2
       const int j_flu_in   = j_out + FLU_GHOST_SIZE - 1;

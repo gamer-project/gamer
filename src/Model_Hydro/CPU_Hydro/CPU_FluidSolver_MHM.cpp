@@ -319,7 +319,7 @@ void CPU_FluidSolver_MHM(
 //
 // Note        :  1. Work for the MHM_RP scheme
 //                2. Currently support the exact, Roe, HLLE, and HLLC solvers
-//                3. g_Flux_Half[] is accessed with the stride N_FC_FLUX
+//                3. g_Flux_Half[] is accessed with a stride N_HF_FLUX
 //                   --> Fluxes on the **left** face of the (i+1,j+1,k+1) element in g_ConVar[] will
 //                       be stored in the (i,j,k) element of g_Flux_Half[]
 //
@@ -355,15 +355,15 @@ void Hydro_RiemannPredict_Flux( const real g_ConVar[][ CUBE(FLU_NXT) ],
          case 2 : nskip[0] = 1;  nskip[1] = 1;  nskip[2] = 0;  break;
       }
 
-      const int size_i  = ( N_FC_FLUX - nskip[0] );
-      const int size_ij = ( N_FC_FLUX - nskip[1] )*size_i;
+      const int size_i  = ( N_HF_FLUX - nskip[0] );
+      const int size_ij = ( N_HF_FLUX - nskip[1] )*size_i;
 
-      CGPU_LOOP( idx, N_FC_FLUX*SQR(N_FC_FLUX-1) )
+      CGPU_LOOP( idx, N_HF_FLUX*SQR(N_HF_FLUX-1) )
       {
          const int i_flux   = idx % size_i;
          const int j_flux   = idx % size_ij / size_i;
          const int k_flux   = idx / size_ij;
-         const int idx_flux = IDX321( i_flux, j_flux, k_flux, N_FC_FLUX, N_FC_FLUX );
+         const int idx_flux = IDX321( i_flux, j_flux, k_flux, N_HF_FLUX, N_HF_FLUX );
 
          const int i_cvar   = i_flux + nskip[0];
          const int j_cvar   = j_flux + nskip[1];
@@ -398,7 +398,7 @@ void Hydro_RiemannPredict_Flux( const real g_ConVar[][ CUBE(FLU_NXT) ],
 
 //       store the results in g_Flux_Half[]
          for (int v=0; v<NCOMP_TOTAL; v++)   g_Flux_Half[d][v][idx_flux] = Flux_1Face[v];
-      } // CGPU_LOOP( idx, N_FC_FLUX*SQR(N_FC_FLUX-1) )
+      } // CGPU_LOOP( idx, N_HF_FLUX*SQR(N_HF_FLUX-1) )
    } // for (int d=0; d<3; d++)
 
 
@@ -421,7 +421,7 @@ void Hydro_RiemannPredict_Flux( const real g_ConVar[][ CUBE(FLU_NXT) ],
 //
 // Parameter   :  g_ConVar_In        : Array storing the input conserved variables
 //                g_Flux_Half        : Array storing the input face-centered fluxes
-//                                     --> Accessed with the stride N_FC_FLUX
+//                                     --> Accessed with the stride N_HF_FLUX
 //                g_PriVar_Half      : Array to store the output primitive variables
 //                                     --> Accessed with the stride N_HF_VAR
 //                                     --> Although its actually allocated size is FLU_NXT^3 since it points to g_PriVar_1PG[]
@@ -446,7 +446,7 @@ void Hydro_RiemannPredict( const real g_ConVar_In[][ CUBE(FLU_NXT) ],
                            const bool JeansMinPres, const real JeansMinPres_Coeff )
 {
 
-   const int  didx_flux[3] = { 1, N_FC_FLUX, SQR(N_FC_FLUX) };
+   const int  didx_flux[3] = { 1, N_HF_FLUX, SQR(N_HF_FLUX) };
    const real dt_dh2       = (real)0.5*dt/dh;
    const real  Gamma_m1    = Gamma - (real)1.0;
    const real _Gamma_m1    = (real)1.0 / Gamma_m1;
@@ -457,7 +457,7 @@ void Hydro_RiemannPredict( const real g_ConVar_In[][ CUBE(FLU_NXT) ],
       const int i_flux   = idx_out % N_HF_VAR;
       const int j_flux   = idx_out % N_HF_VAR2 / N_HF_VAR;
       const int k_flux   = idx_out / N_HF_VAR2;
-      const int idx_flux = IDX321( i_flux, j_flux, k_flux, N_FC_FLUX, N_FC_FLUX );
+      const int idx_flux = IDX321( i_flux, j_flux, k_flux, N_HF_FLUX, N_HF_FLUX );
 
       const int i_in     = i_flux + 1;
       const int j_in     = j_flux + 1;
