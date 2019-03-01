@@ -238,7 +238,7 @@ void CPU_FluidSolver_CTU(
 
 
 //       2. evaluate the face-centered half-step fluxes by solving the Riemann problem
-         Hydro_ComputeFlux( g_FC_Var_1PG, g_FC_Flux_1PG, N_FC_FLUX, 0, 0, Gamma,
+         Hydro_ComputeFlux( g_FC_Var_1PG, g_FC_Flux_1PG, N_HF_FLUX, 0, 0, Gamma,
                             CorrHalfVel_No, NULL, NULL,
                             NULL_REAL, NULL_REAL, NULL_REAL, GRAVITY_NONE, NULL, MinPres,
                             StoreFlux_No, NULL );
@@ -246,7 +246,7 @@ void CPU_FluidSolver_CTU(
 
 //       3. evaluate electric field and update B field at the half time-step
 #        ifdef MHD
-         MHD_ComputeElectric( g_EC_Ele_1PG, g_FC_Flux_1PG, g_PriVar_1PG, N_HF_ELE, N_FC_FLUX, FLU_NXT, LR_GHOST_SIZE, dt, dh );
+         MHD_ComputeElectric( g_EC_Ele_1PG, g_FC_Flux_1PG, g_PriVar_1PG, N_HF_ELE, N_HF_FLUX, FLU_NXT, LR_GHOST_SIZE, dt, dh );
 
          MHD_UpdateMagnetic( g_FC_Mag_Half_1PG[0], g_FC_Mag_Half_1PG[1], g_FC_Mag_Half_1PG[2], g_Mag_Array_In[P], g_EC_Ele_1PG,
                              (real)0.5*dt, dh, N_HF_VAR, N_HF_ELE, FLU_GHOST_SIZE-1 );
@@ -313,12 +313,12 @@ void CPU_FluidSolver_CTU(
 //
 // Note        :  1. Ref: (a) Stone et al., ApJS, 178, 137 (2008)
 //                        (b) Gardiner & Stone, J. Comput. Phys., 227, 4123 (2008)
-//                2. Assuming "N_FC_VAR == N_FC_FLUX"
+//                2. Assuming "N_FC_VAR == N_HF_FLUX"
 //
 // Parameter   :  g_FC_Var     : Array to store the input and output face-centered conserved variables
 //                               --> Accessed with the stride N_FC_VAR
 //                g_FC_Flux    : Array storing the input face-centered fluxes
-//                               --> Accessed with the stride N_FC_FLUX
+//                               --> Accessed with the stride N_HF_FLUX
 //                g_FC_B_In   : Array storing the input initial   face-centered B field
 //                g_FC_B_Half : Array storing the input half-step face-centered B field
 //                g_EC_Ele    : Array storing the input edge-centered electric field
@@ -339,7 +339,7 @@ void Hydro_TGradientCorrection(       real g_FC_Var   [][NCOMP_TOTAL_PLUS_MAG][ 
                                 const real MinDens, const real MinPres )
 {
 
-   const int  didx_flux[3]   = { 1, N_FC_FLUX, SQR(N_FC_FLUX) };
+   const int  didx_flux[3]   = { 1, N_HF_FLUX, SQR(N_HF_FLUX) };
    const real dt_dh2         = (real)0.5*dt/dh;
    const real  Gamma_m1      = Gamma - (real)1.0;
    const real _Gamma_m1      = (real)1.0 / Gamma_m1;
@@ -393,7 +393,7 @@ void Hydro_TGradientCorrection(       real g_FC_Var   [][NCOMP_TOTAL_PLUS_MAG][ 
          const int k_fc_var   = k0 + nskip[2];
          const int idx_fc_var = IDX321( i_fc_var, j_fc_var, k_fc_var, N_FC_VAR, N_FC_VAR );
 
-         const int idx_fluxR  = idx_fc_var;  // assuming N_FC_VAR == N_FC_FLUX
+         const int idx_fluxR  = idx_fc_var;  // assuming N_FC_VAR == N_HF_FLUX
          const int idx_fluxL1 = idx_fluxR - didx_flux[TDir1];
          const int idx_fluxL2 = idx_fluxR - didx_flux[TDir2];
 
