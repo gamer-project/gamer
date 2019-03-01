@@ -159,7 +159,6 @@ void Hydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
 
 
    const int  didx_cc[3] = { 1, NIn, SQR(NIn) };
-   const int  NOut       = NIn - 2*NGhost;      // number of output cells
    const real  Gamma_m1  = Gamma - (real)1.0;
    const real _Gamma_m1  = (real)1.0 / Gamma_m1;
 
@@ -263,17 +262,17 @@ void Hydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
 
 
 // data reconstruction
-   const int NOut2  = SQR(NOut);
+   const int N_FC_VAR2 = SQR( N_FC_VAR );
 #  ifdef MHD
-   const int NIn_p1 = NIn + 1;
+   const int NIn_p1    = NIn + 1;
    int idx_B[NCOMP_MAG];
 #  endif
 
-   CGPU_LOOP( idx_fc, CUBE(NOut) )
+   CGPU_LOOP( idx_fc, CUBE(N_FC_VAR) )
    {
-      const int i_cc   = NGhost + idx_fc%NOut;
-      const int j_cc   = NGhost + idx_fc%NOut2/NOut;
-      const int k_cc   = NGhost + idx_fc/NOut2;
+      const int i_cc   = NGhost + idx_fc%N_FC_VAR;
+      const int j_cc   = NGhost + idx_fc%N_FC_VAR2/N_FC_VAR;
+      const int k_cc   = NGhost + idx_fc/N_FC_VAR2;
       const int idx_cc = IDX321( i_cc, j_cc, k_cc, NIn, NIn );
 
 #     ifdef MHD
@@ -565,7 +564,7 @@ void Hydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
       for (int v=0; v<NCOMP_TOTAL_PLUS_MAG; v++)
          g_FC_Var[f][v][idx_fc] = fc[f][v];
 
-   } // CGPU_LOOP( idx_fc, CUBE(NOut) )
+   } // CGPU_LOOP( idx_fc, CUBE(N_FC_VAR) )
 
 
 #  ifdef __CUDACC__
@@ -604,13 +603,15 @@ void Hydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
    if ( NIn - 2*NGhost != N_FC_VAR )
       printf( "ERROR : NIn - 2*NGhost != N_FC_VAR (NIn %d, NGhost %d, N_FC_VAR %d) !!\n",
               NIn, NGhost, N_FC_VAR );
+
+#  if ( N_SLOPE_PPM != N_FC_VAR + 2 )
+#     error : ERROR : N_SLOPE_PPM != N_FC_VAR + 2 !!
+#  endif
 #  endif
 
 
    const int  didx_cc   [3] = { 1, NIn, SQR(NIn) };
    const int  didx_slope[3] = { 1, N_SLOPE_PPM, SQR(N_SLOPE_PPM) };
-   const int  NOut       = NIn - 2*NGhost;      // number of output cells
-   const int  NSlope     = N_SLOPE_PPM;         // size of g_Slope_PPM[] (which must be equal to NOut + 2)
    const real  Gamma_m1  = Gamma - (real)1.0;
    const real _Gamma_m1  = (real)1.0 / Gamma_m1;
 
@@ -664,12 +665,12 @@ void Hydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
 
 
 // 1. evaluate the monotonic slope of all cells
-   const int NSlope2 = SQR(NSlope);
-   CGPU_LOOP( idx_slope, CUBE(NSlope) )
+   const int N_SLOPE_PPM2 = SQR( N_SLOPE_PPM );
+   CGPU_LOOP( idx_slope, CUBE(N_SLOPE_PPM) )
    {
-      const int i_cc   = NGhost - 1 + idx_slope%NSlope;
-      const int j_cc   = NGhost - 1 + idx_slope%NSlope2/NSlope;
-      const int k_cc   = NGhost - 1 + idx_slope/NSlope2;
+      const int i_cc   = NGhost - 1 + idx_slope%N_SLOPE_PPM;
+      const int j_cc   = NGhost - 1 + idx_slope%N_SLOPE_PPM2/N_SLOPE_PPM;
+      const int k_cc   = NGhost - 1 + idx_slope/N_SLOPE_PPM2;
       const int idx_cc = IDX321( i_cc, j_cc, k_cc, NIn, NIn );
 
       real cc_C[NCOMP_TOTAL], cc_L[NCOMP_TOTAL], cc_R[NCOMP_TOTAL];  // cell-centered variables of the Central/Left/Right cells
@@ -695,7 +696,7 @@ void Hydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
          for (int v=0; v<NCOMP_TOTAL; v++)   g_Slope_PPM[d][v][idx_slope] = Slope_Limiter[v];
 
       } // for (int d=0; d<3; d++)
-   } // CGPU_LOOP( idx_slope, CUBE(NSlope) )
+   } // CGPU_LOOP( idx_slope, CUBE(N_SLOPE_PPM) )
 
 #  ifdef __CUDACC__
    __syncthreads();
@@ -703,22 +704,22 @@ void Hydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
 
 
 // data reconstruction
-   const int NOut2 = SQR(NOut);
-   CGPU_LOOP( idx_fc, CUBE(NOut) )
+   const int N_FC_VAR2 = SQR( N_FC_VAR );
+   CGPU_LOOP( idx_fc, CUBE(N_FC_VAR) )
    {
-      const int i_fc      = idx_fc%NOut;
-      const int j_fc      = idx_fc%NOut2/NOut;
-      const int k_fc      = idx_fc/NOut2;
+      const int i_fc      = idx_fc%N_FC_VAR;
+      const int j_fc      = idx_fc%N_FC_VAR2/N_FC_VAR;
+      const int k_fc      = idx_fc/N_FC_VAR2;
 
       const int i_cc      = i_fc + NGhost;
       const int j_cc      = j_fc + NGhost;
       const int k_cc      = k_fc + NGhost;
       const int idx_cc    = IDX321( i_cc, j_cc, k_cc, NIn, NIn );
 
-      const int i_slope   = i_fc + 1;   // because NSlope = NOut + 2
+      const int i_slope   = i_fc + 1;   // because N_SLOPE_PPM = N_FC_VAR + 2
       const int j_slope   = j_fc + 1;
       const int k_slope   = k_fc + 1;
-      const int idx_slope = IDX321( i_slope, j_slope, k_slope, NSlope, NSlope );
+      const int idx_slope = IDX321( i_slope, j_slope, k_slope, N_SLOPE_PPM, N_SLOPE_PPM );
 
  //   cc/fc: cell/face-centered variables; _C_ncomp: central cell with all NCOMP_TOTAL variables
       real cc_C_ncomp[NCOMP_TOTAL], fc[6][NCOMP_TOTAL], dfc[NCOMP_TOTAL], dfc6[NCOMP_TOTAL];
@@ -970,7 +971,7 @@ void Hydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
       for (int v=0; v<NCOMP_TOTAL; v++)
          g_FC_Var[f][v][idx_fc] = fc[f][v];
 
-   } // CGPU_LOOP( idx_fc, CUBE(NOut) )
+   } // CGPU_LOOP( idx_fc, CUBE(N_FC_VAR) )
 
 
 #  ifdef __CUDACC__
