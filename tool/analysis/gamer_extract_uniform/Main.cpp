@@ -1822,7 +1822,7 @@ void PreparePatch( const int lv, const int PID, const int Buffer, real FData[], 
 void StoreData( const int lv, const int PID, real FData[], const int Buffer, real *Out )
 {
 
-   const long Size1v    = Idx_MySize[0]*Idx_MySize[1]*Idx_MySize[2];  // total array size of one component
+   const long Size1v    = (long)Idx_MySize[0]*Idx_MySize[1]*Idx_MySize[2]; // total array size of one component
    const int  PatchSize = PATCH_SIZE*( 1<<(TargetLevel-lv) );
    const int  FSize     = PatchSize + 2*Buffer;
    const int  Corner[3] = { amr.patch[lv][PID]->corner[0]/amr.scale[TargetLevel],
@@ -1896,7 +1896,7 @@ void StoreData( const int lv, const int PID, real FData[], const int Buffer, rea
    for (int j=ijk_min[1]; j<=ijk_max[1]; j++)   {  jj  = j - Buffer + Corner[1] - Idx_MyStart[1];
    for (int i=ijk_min[0]; i<=ijk_max[0]; i++)   {  ii  = i - Buffer + Corner[0] - Idx_MyStart[0];
                                                    ID1 = (((long)v*FSize + k)*FSize + j)*FSize + i;
-                                                   ID2 = (long)v*Size1v + kk*Stride[2] + jj*Stride[1] + ii*Stride[0];
+                                                   ID2 = (long)v*Size1v + (long)kk*Stride[2] + jj*Stride[1] + ii*Stride[0];
 
       Out[ID2] += FData[ID1];
 
@@ -2500,7 +2500,7 @@ void Refine2TargetLevel()
    {
       for (int t=0; t<OMP_NThread; t++)
       {
-         for (int i=0; i<OutSize; i++)    OutputArray[i] += OutputArray_OMP[t][i];
+         for (long i=0; i<OutSize; i++)    OutputArray[i] += OutputArray_OMP[t][i];
 
          delete [] OutputArray_OMP[t];
       }
