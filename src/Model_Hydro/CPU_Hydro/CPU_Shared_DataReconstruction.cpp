@@ -99,6 +99,8 @@ static void Hydro_Char2Pri( real InOut[], const real Gamma, const real Rho, cons
 //                6. Data reconstruction can be applied to characteristic variables by
 //                   defining "CHAR_RECONSTRUCTION" in the header CUFLU.h
 //                7. This function is shared by MHM, MHM_RP, and CTU schemes
+//                8. g_FC_B[] has the size of SQR(FLU_NXT)*FLU_NXT_P1 but is accessed with the strides
+//                   NIn/NIn+1 along the transverse/longitudinal directions
 //
 // Parameter   :  g_ConVar           : Array storing the input cell-centered conserved variables
 //                                     --> Should contain NCOMP_TOTAL variables
@@ -240,7 +242,7 @@ void Hydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
          for (int v=0; v<NCOMP_TOTAL; v++)   ConVar_1Cell[v] = g_ConVar[v][idx];
 
 #        ifdef MHD
-//       assuming that g_FC_B[] has the size of NIn*NIn*(NIn+1)
+//       assuming that g_FC_B[] is accessed with the strides NIn/NIn+1 along the transverse/longitudinal directions
          const int size_ij = SQR( NIn );
          const int i       = idx % NIn;
          const int j       = idx % size_ij / NIn;
@@ -276,7 +278,7 @@ void Hydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
       const int idx_cc = IDX321( i_cc, j_cc, k_cc, NIn, NIn );
 
 #     ifdef MHD
-//    assuming that g_FC_B[] has the size of NIn*NIn*(NIn+1)
+//    assuming that g_FC_B[] is accessed with the strides NIn/NIn+1 along the transverse/longitudinal directions
       idx_B[0] = IDX321( i_cc, j_cc, k_cc, NIn_p1, NIn    );
       idx_B[1] = IDX321( i_cc, j_cc, k_cc, NIn,    NIn_p1 );
       idx_B[2] = IDX321( i_cc, j_cc, k_cc, NIn,    NIn    );
@@ -361,9 +363,9 @@ void Hydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
 
 
 //       =====================================================================================
-//       a. for the HLL solvers (HLLE/HLLC)
+//       a. for the HLL solvers (HLLE/HLLC/HLLD)
 //       =====================================================================================
-#        if (  ( RSOLVER == HLLE || RSOLVER == HLLC )  &&  defined HLL_NO_REF_STATE  )
+#        if (  ( RSOLVER == HLLE || RSOLVER == HLLC || RSOLVER == HLLD )  &&  defined HLL_NO_REF_STATE  )
 
 //       4-2-a1. evaluate the corrections to the left and right face-centered variables
 
@@ -458,11 +460,11 @@ void Hydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
             }
          } // for (int Mode=0; Mode<NWAVE; Mode++)
 
-#        endif // if (  ( RSOLVER == HLLE || RSOLVER == HLLC )  &&  defined HLL_NO_REF_STATE  ) ... else ...
+#        endif // if (  ( RSOLVER == HLLE || RSOLVER == HLLC || RSOLVER == HLLD )  &&  defined HLL_NO_REF_STATE  ) ... else ...
 
 
-//       4-2-b3. evaluate the corrections to the left and right face-centered passive scalars
-//               --> passive scalars travel with fluid velocity (i.e., entropy mode)
+//       4-3. evaluate the corrections to the left and right face-centered passive scalars
+//            --> passive scalars travel with fluid velocity (i.e., entropy mode)
 #        if ( NCOMP_PASSIVE > 0 )
          Coeff_L = -dt_dh2*FMIN( EigenVal[d][1], (real)0.0 );
          Coeff_R = -dt_dh2*FMAX( EigenVal[d][1], (real)0.0 );
@@ -475,7 +477,7 @@ void Hydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
 #        endif
 
 
-//       4-2-b4. add the MHD source terms
+//       4-4. add the MHD source terms
 #        ifdef MHD
          const int t1 = (d+1)%3;    // transverse direction 1
          const int t2 = (d+2)%3;    // transverse direction 2
@@ -506,7 +508,7 @@ void Hydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
 #        endif // #ifdef MHD
 
 
-//       4-2-b5. evaluate the face-centered variables at the half time-step
+//       4-5. evaluate the face-centered variables at the half time-step
          Hydro_Rotate3D( Correct_L, d, false, MAG_OFFSET );
          Hydro_Rotate3D( Correct_R, d, false, MAG_OFFSET );
 
@@ -516,7 +518,8 @@ void Hydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
             fc[faceR][v] += Correct_R[v];
          }
 
-//       ensure positive density and pressure
+
+//       4-6. ensure positive density and pressure
          fc[faceL][0] = FMAX( fc[faceL][0], MinDens );
          fc[faceR][0] = FMAX( fc[faceR][0], MinDens );
 
@@ -615,47 +618,106 @@ void Hydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
    const real  Gamma_m1  = Gamma - (real)1.0;
    const real _Gamma_m1  = (real)1.0 / Gamma_m1;
 
-
 #  if ( FLU_SCHEME == CTU )
    const real dt_dh2 = (real)0.5*dt/dh;
 
+// index mapping between arrays with size NWAVE and NCOMP_TOTAL_PLUS_MAG;
+#  ifdef MHD
+   const int idx_wave[NWAVE] = { 0, 1, 2, 3, 4, MAG_OFFSET+1, MAG_OFFSET+2 };
+#  else
+   const int idx_wave[NWAVE] = { 0, 1, 2, 3, 4 };
+#  endif
+
 // include waves both from left and right directions during the data reconstruction, as suggested in ATHENA
-#  if (  ( RSOLVER == HLLE || RSOLVER == HLLC )  &&  defined HLL_NO_REF_STATE  )
+#  if (  ( RSOLVER == HLLE || RSOLVER == HLLC || RSOLVER == HLLD )  &&  defined HLL_NO_REF_STATE  )
 #  ifdef HLL_INCLUDE_ALL_WAVES
    const bool HLL_Include_All_Waves = true;
 #  else
    const bool HLL_Include_All_Waves = false;
 #  endif
-#  endif // if (  ( RSOLVER == HLLE || RSOLVER == HLLC )  &&  defined HLL_NO_REF_STATE  )
-
-// constant components of the left and right eigenvector matrices must be initialized
-   real LEigenVec[NCOMP_FLUID][NCOMP_FLUID] = { { 0.0, NULL_REAL, 0.0, 0.0, NULL_REAL },
-                                                { 1.0,       0.0, 0.0, 0.0, NULL_REAL },
-                                                { 0.0,       0.0, 1.0, 0.0,       0.0 },
-                                                { 0.0,       0.0, 0.0, 1.0,       0.0 },
-                                                { 0.0, NULL_REAL, 0.0, 0.0, NULL_REAL } };
-
-   real REigenVec[NCOMP_FLUID][NCOMP_FLUID] = { { 1.0, NULL_REAL, 0.0, 0.0, NULL_REAL },
-                                                { 1.0,       0.0, 0.0, 0.0,       0.0 },
-                                                { 0.0,       0.0, 1.0, 0.0,       0.0 },
-                                                { 0.0,       0.0, 0.0, 1.0,       0.0 },
-                                                { 1.0, NULL_REAL, 0.0, 0.0, NULL_REAL } };
+#  endif // if (  ( RSOLVER == HLLE || RSOLVER == HLLC || RSOLVER == HLLD )  &&  defined HLL_NO_REF_STATE  )
 #  endif // #if ( FLU_SCHEME == CTU )
+
+// eigenvalues and eigenvectors
+// --> constant components of the left and right eigenvector matrices must be initialized
+#  if ( FLU_SCHEME == CTU )
+   real EigenVal[3][NWAVE];
+#  ifdef MHD
+   real REigenVec[NWAVE][NWAVE] = { { NULL_REAL, NULL_REAL, NULL_REAL, NULL_REAL, NULL_REAL, NULL_REAL, NULL_REAL },
+                                    {       0.0,       0.0, NULL_REAL, NULL_REAL,       0.0, NULL_REAL, NULL_REAL },
+                                    { NULL_REAL, NULL_REAL, NULL_REAL, NULL_REAL, NULL_REAL, NULL_REAL, NULL_REAL },
+                                    {       1.0,       0.0,       0.0,       0.0,       0.0,       0.0,       0.0 },
+                                    { NULL_REAL, NULL_REAL, NULL_REAL, NULL_REAL, NULL_REAL, NULL_REAL, NULL_REAL },
+                                    {       0.0,       0.0, NULL_REAL, NULL_REAL,       0.0, NULL_REAL, NULL_REAL },
+                                    { NULL_REAL, NULL_REAL, NULL_REAL, NULL_REAL, NULL_REAL, NULL_REAL, NULL_REAL } };
+   real LEigenVec[NWAVE][NWAVE] = { { 0.0, NULL_REAL, NULL_REAL, NULL_REAL, NULL_REAL, NULL_REAL, NULL_REAL },
+                                    { 0.0,       0.0, NULL_REAL, NULL_REAL,       0.0, NULL_REAL, NULL_REAL },
+                                    { 0.0, NULL_REAL, NULL_REAL, NULL_REAL, NULL_REAL, NULL_REAL, NULL_REAL },
+                                    { 1.0,       0.0,       0.0,       0.0, NULL_REAL,       0.0,       0.0 },
+                                    { 0.0, NULL_REAL, NULL_REAL, NULL_REAL, NULL_REAL, NULL_REAL, NULL_REAL },
+                                    { 0.0,       0.0, NULL_REAL, NULL_REAL,       0.0, NULL_REAL, NULL_REAL },
+                                    { 0.0, NULL_REAL, NULL_REAL, NULL_REAL, NULL_REAL, NULL_REAL, NULL_REAL } };
+
+#  else
+   real LEigenVec[NWAVE][NWAVE] = { { 0.0, NULL_REAL, 0.0, 0.0, NULL_REAL },
+                                    { 1.0,       0.0, 0.0, 0.0, NULL_REAL },
+                                    { 0.0,       0.0, 1.0, 0.0,       0.0 },
+                                    { 0.0,       0.0, 0.0, 1.0,       0.0 },
+                                    { 0.0, NULL_REAL, 0.0, 0.0, NULL_REAL } };
+
+   real REigenVec[NWAVE][NWAVE] = { { 1.0, NULL_REAL, 0.0, 0.0, NULL_REAL },
+                                    { 1.0,       0.0, 0.0, 0.0,       0.0 },
+                                    { 0.0,       0.0, 1.0, 0.0,       0.0 },
+                                    { 0.0,       0.0, 0.0, 1.0,       0.0 },
+                                    { 1.0, NULL_REAL, 0.0, 0.0, NULL_REAL } };
+#  endif // #ifdef MHD ... else ...
+
+#  elif ( defined MHD  &&  defined CHAR_RECONSTRUCTION ) // #if ( FLU_SCHEME == CTU )
+   real EigenVal[3][NWAVE];
+   real REigenVec[NWAVE][NWAVE] = { { NULL_REAL, NULL_REAL, NULL_REAL, NULL_REAL, NULL_REAL, NULL_REAL, NULL_REAL },
+                                    {       0.0,       0.0, NULL_REAL, NULL_REAL,       0.0, NULL_REAL, NULL_REAL },
+                                    { NULL_REAL, NULL_REAL, NULL_REAL, NULL_REAL, NULL_REAL, NULL_REAL, NULL_REAL },
+                                    {       1.0,       0.0,       0.0,       0.0,       0.0,       0.0,       0.0 },
+                                    { NULL_REAL, NULL_REAL, NULL_REAL, NULL_REAL, NULL_REAL, NULL_REAL, NULL_REAL },
+                                    {       0.0,       0.0, NULL_REAL, NULL_REAL,       0.0, NULL_REAL, NULL_REAL },
+                                    { NULL_REAL, NULL_REAL, NULL_REAL, NULL_REAL, NULL_REAL, NULL_REAL, NULL_REAL } };
+   real LEigenVec[NWAVE][NWAVE] = { { 0.0, NULL_REAL, NULL_REAL, NULL_REAL, NULL_REAL, NULL_REAL, NULL_REAL },
+                                    { 0.0,       0.0, NULL_REAL, NULL_REAL,       0.0, NULL_REAL, NULL_REAL },
+                                    { 0.0, NULL_REAL, NULL_REAL, NULL_REAL, NULL_REAL, NULL_REAL, NULL_REAL },
+                                    { 1.0,       0.0,       0.0,       0.0, NULL_REAL,       0.0,       0.0 },
+                                    { 0.0, NULL_REAL, NULL_REAL, NULL_REAL, NULL_REAL, NULL_REAL, NULL_REAL },
+                                    { 0.0,       0.0, NULL_REAL, NULL_REAL,       0.0, NULL_REAL, NULL_REAL },
+                                    { 0.0, NULL_REAL, NULL_REAL, NULL_REAL, NULL_REAL, NULL_REAL, NULL_REAL } };
+
+#  else // #if ( FLU_SCHEME == CTU ) ... elif ...
+   real (*const REigenVec)[NWAVE] = NULL;
+   real (*const LEigenVec)[NWAVE] = NULL;
+#  endif // #if ( FLU_SCHEME ==  CTU ) ... elif ... else ...
 
 
 // 0. conserved --> primitive variables
    if ( Con2Pri )
    {
-      real ConVar_1Cell[NCOMP_TOTAL], PriVar_1Cell[NCOMP_TOTAL];
+      real ConVar_1Cell[NCOMP_TOTAL_PLUS_MAG], PriVar_1Cell[NCOMP_TOTAL_PLUS_MAG];
 
       CGPU_LOOP( idx, CUBE(NIn) )
       {
          for (int v=0; v<NCOMP_TOTAL; v++)   ConVar_1Cell[v] = g_ConVar[v][idx];
 
+#        ifdef MHD
+//       assuming that g_FC_B[] is accessed with the strides NIn/NIn+1 along the transverse/longitudinal directions
+         const int size_ij = SQR( NIn );
+         const int i       = idx % NIn;
+         const int j       = idx % size_ij / NIn;
+         const int k       = idx / size_ij;
+
+         MHD_GetCellCenteredB( ConVar_1Cell+NCOMP_TOTAL, g_FC_B[0], g_FC_B[1], g_FC_B[2], NIn, i, j, k );
+#        endif
+
          Hydro_Con2Pri( ConVar_1Cell, PriVar_1Cell, Gamma_m1, MinPres, NormPassive, NNorm, NormIdx,
                         JeansMinPres, JeansMinPres_Coeff );
 
-         for (int v=0; v<NCOMP_TOTAL; v++)   g_PriVar[v][idx] = PriVar_1Cell[v];
+         for (int v=0; v<NCOMP_TOTAL_PLUS_MAG; v++)   g_PriVar[v][idx] = PriVar_1Cell[v];
       }
 
 #     ifdef __CUDACC__
@@ -673,10 +735,11 @@ void Hydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
       const int k_cc   = NGhost - 1 + idx_slope/N_SLOPE_PPM2;
       const int idx_cc = IDX321( i_cc, j_cc, k_cc, NIn, NIn );
 
-      real cc_C[NCOMP_TOTAL], cc_L[NCOMP_TOTAL], cc_R[NCOMP_TOTAL];  // cell-centered variables of the Central/Left/Right cells
-      real Slope_Limiter[NCOMP_TOTAL];
+//    cc_C/L/R: cell-centered variables of the Central/Left/Right cells
+      real cc_C[NCOMP_TOTAL_PLUS_MAG], cc_L[NCOMP_TOTAL_PLUS_MAG], cc_R[NCOMP_TOTAL_PLUS_MAG];
+      real Slope_Limiter[NCOMP_TOTAL_PLUS_MAG];
 
-      for (int v=0; v<NCOMP_TOTAL; v++)   cc_C[v] = g_PriVar[v][idx_cc];
+      for (int v=0; v<NCOMP_TOTAL_PLUS_MAG; v++)   cc_C[v] = g_PriVar[v][idx_cc];
 
 //    loop over different spatial directions
       for (int d=0; d<3; d++)
@@ -684,16 +747,21 @@ void Hydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
          const int idx_ccL = idx_cc - didx_cc[d];
          const int idx_ccR = idx_cc + didx_cc[d];
 
-         for (int v=0; v<NCOMP_TOTAL; v++)
+#        if ( defined MHD  &&  defined CHAR_RECONSTRUCTION )
+         MHD_GetEigenSystem( cc_C, EigenVal[d], LEigenVec, REigenVec, Gamma, d );
+#        endif
+
+         for (int v=0; v<NCOMP_TOTAL_PLUS_MAG; v++)
          {
             cc_L[v] = g_PriVar[v][idx_ccL];
             cc_R[v] = g_PriVar[v][idx_ccR];
          }
 
-         Hydro_LimitSlope( cc_L, cc_C, cc_R, LR_Limiter, MinMod_Coeff, Gamma, d, Slope_Limiter );
+         Hydro_LimitSlope( cc_L, cc_C, cc_R, LR_Limiter, MinMod_Coeff, Gamma, d,
+                           LEigenVec, REigenVec, Slope_Limiter );
 
 //       store the results to g_Slope_PPM[]
-         for (int v=0; v<NCOMP_TOTAL; v++)   g_Slope_PPM[d][v][idx_slope] = Slope_Limiter[v];
+         for (int v=0; v<NCOMP_TOTAL_PLUS_MAG; v++)   g_Slope_PPM[d][v][idx_slope] = Slope_Limiter[v];
 
       } // for (int d=0; d<3; d++)
    } // CGPU_LOOP( idx_slope, CUBE(N_SLOPE_PPM) )
@@ -705,6 +773,11 @@ void Hydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
 
 // data reconstruction
    const int N_FC_VAR2 = SQR( N_FC_VAR );
+#  ifdef MHD
+   const int NIn_p1    = NIn + 1;
+   int idx_B[NCOMP_MAG];
+#  endif
+
    CGPU_LOOP( idx_fc, CUBE(N_FC_VAR) )
    {
       const int i_fc      = idx_fc%N_FC_VAR;
@@ -721,26 +794,36 @@ void Hydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
       const int k_slope   = k_fc + 1;
       const int idx_slope = IDX321( i_slope, j_slope, k_slope, N_SLOPE_PPM, N_SLOPE_PPM );
 
- //   cc/fc: cell/face-centered variables; _C_ncomp: central cell with all NCOMP_TOTAL variables
-      real cc_C_ncomp[NCOMP_TOTAL], fc[6][NCOMP_TOTAL], dfc[NCOMP_TOTAL], dfc6[NCOMP_TOTAL];
-#     if ( FLU_SCHEME == CTU )
-      real EigenVal[3][NCOMP_FLUID], Correct_L[NCOMP_TOTAL], Correct_R[NCOMP_TOTAL];
-      real Coeff_L, Coeff_R;
+#     ifdef MHD
+//    assuming that g_FC_B[] is accessed with the strides NIn/NIn+1 along the transverse/longitudinal directions
+      idx_B[0] = IDX321( i_cc, j_cc, k_cc, NIn_p1, NIn    );
+      idx_B[1] = IDX321( i_cc, j_cc, k_cc, NIn,    NIn_p1 );
+      idx_B[2] = IDX321( i_cc, j_cc, k_cc, NIn,    NIn    );
 #     endif
 
-      for (int v=0; v<NCOMP_TOTAL; v++)   cc_C_ncomp[v] = g_PriVar[v][idx_cc];
+ //   cc/fc: cell/face-centered variables; _C_ncomp: central cell with all NCOMP_TOTAL_PLUS_MAG variables
+      real cc_C_ncomp[NCOMP_TOTAL_PLUS_MAG], fc[6][NCOMP_TOTAL_PLUS_MAG];
+      real dfc[NCOMP_TOTAL_PLUS_MAG], dfc6[NCOMP_TOTAL_PLUS_MAG];
+
+      for (int v=0; v<NCOMP_TOTAL_PLUS_MAG; v++)   cc_C_ncomp[v] = g_PriVar[v][idx_cc];
 
 
-//    2. evaluate the eigenvalues and eigenvectors for the CTU integrator
-#     if ( FLU_SCHEME == CTU )
+//    2-a. evaluate the eigenvalues and eigenvectors along all three directions for the pure-hydro CTU integrator
+#     if ( !defined MHD  &&  FLU_SCHEME == CTU )
       Hydro_GetEigenSystem( cc_C_ncomp, EigenVal, LEigenVec, REigenVec, Gamma );
 #     endif
 
 
-//    3. get the face-centered primitive variables
 //    loop over different spatial directions
       for (int d=0; d<3; d++)
       {
+//       2-b. evaluate the eigenvalues and eigenvectors along the target direction for the MHD CTU integrator
+#        if (  defined MHD  &&  ( FLU_SCHEME == CTU || defined CHAR_RECONSTRUCTION )  )
+         MHD_GetEigenSystem( cc_C_ncomp, EigenVal[d], LEigenVec, REigenVec, Gamma, d );
+#        endif
+
+
+//       3. get the face-centered primitive variables
          const int faceL      = 2*d;      // left and right face indices
          const int faceR      = faceL+1;
          const int idx_ccL    = idx_cc - didx_cc[d];
@@ -748,7 +831,7 @@ void Hydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
          const int idx_slopeL = idx_slope - didx_slope[d];
          const int idx_slopeR = idx_slope + didx_slope[d];
 
-         for (int v=0; v<NCOMP_TOTAL; v++)
+         for (int v=0; v<NCOMP_TOTAL_PLUS_MAG; v++)
          {
 //          cc/fc: cell/face-centered variables; _C/L/R: Central/Left/Right cells
             real cc_C, cc_L, cc_R, dcc_L, dcc_R, dcc_C, fc_L, fc_R, Max, Min;
@@ -795,37 +878,39 @@ void Hydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
             fc[faceL][v] = fc_L;
             fc[faceR][v] = fc_R;
 
-         } // for (int v=0; v<NCOMP_TOTAL; v++)
+         } // for (int v=0; v<NCOMP_TOTAL_PLUS_MAG; v++)
 
 
 //       4. advance the face-centered variables by half time-step for the CTU integrator
 #        if ( FLU_SCHEME == CTU )
+         real Coeff_L, Coeff_R;
+         real Correct_L[NCOMP_TOTAL_PLUS_MAG], Correct_R[NCOMP_TOTAL_PLUS_MAG];
 
 //       4-1. compute the PPM coefficient (for the passive scalars as well)
-         for (int v=0; v<NCOMP_TOTAL; v++)
+         for (int v=0; v<NCOMP_TOTAL_PLUS_MAG; v++)
          {
             dfc [v] = fc[faceR][v] - fc[faceL][v];
             dfc6[v] = (real)6.0*(  cc_C_ncomp[v] - (real)0.5*( fc[faceL][v] + fc[faceR][v] )  );
          }
 
 //       4-2. re-order variables for the y/z directions
-         Hydro_Rotate3D( dfc,  d, true );
-         Hydro_Rotate3D( dfc6, d, true );
+         Hydro_Rotate3D( dfc,  d, true, MAG_OFFSET );
+         Hydro_Rotate3D( dfc6, d, true, MAG_OFFSET );
 
 
 //       =====================================================================================
-//       a. for the HLL solvers (HLLE/HLLC)
+//       a. for the HLL solvers (HLLE/HLLC/HLLD)
 //       =====================================================================================
-#        if (  ( RSOLVER == HLLE || RSOLVER == HLLC )  &&  defined HLL_NO_REF_STATE  )
+#        if (  ( RSOLVER == HLLE || RSOLVER == HLLC || RSOLVER == HLLD )  &&  defined HLL_NO_REF_STATE  )
 
 //       4-2-a1. evaluate the corrections to the left and right face-centered variables
-         for (int v=0; v<NCOMP_FLUID; v++)
+         for (int v=0; v<NWAVE; v++)
          {
-            Correct_L[v] = (real)0.0;
-            Correct_R[v] = (real)0.0;
+            Correct_L[ idx_wave[v] ] = (real)0.0;
+            Correct_R[ idx_wave[v] ] = (real)0.0;
          }
 
-         for (int Mode=0; Mode<NCOMP_FLUID; Mode++)
+         for (int Mode=0; Mode<NWAVE; Mode++)
          {
             Coeff_L = (real)0.0;
             Coeff_R = (real)0.0;
@@ -835,10 +920,12 @@ void Hydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
                const real Coeff_C = -dt_dh2*EigenVal[d][Mode];
                const real Coeff_D = real(-4.0/3.0)*SQR(Coeff_C);
 
-               for (int v=0; v<NCOMP_FLUID; v++)   Coeff_L += LEigenVec[Mode][v]*(  Coeff_C*( dfc[v] + dfc6[v] ) +
-                                                                                    Coeff_D*( dfc6[v]          )   );
+               for (int v=0; v<NWAVE; v++)
+                  Coeff_L += LEigenVec[Mode][v]*(  Coeff_C*( dfc[ idx_wave[v] ] + dfc6[ idx_wave[v] ] ) +
+                                                   Coeff_D*( dfc6[ idx_wave[v] ]                      )  );
 
-               for (int v=0; v<NCOMP_FLUID; v++)   Correct_L[v] += Coeff_L*REigenVec[Mode][v];
+               for (int v=0; v<NWAVE; v++)
+                  Correct_L[ idx_wave[v] ] += Coeff_L*REigenVec[Mode][v];
             }
 
             if ( HLL_Include_All_Waves  ||  EigenVal[d][Mode] >= (real)0.0 )
@@ -846,12 +933,14 @@ void Hydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
                const real Coeff_A = -dt_dh2*EigenVal[d][Mode];
                const real Coeff_B = real(-4.0/3.0)*SQR(Coeff_A);
 
-               for (int v=0; v<NCOMP_FLUID; v++)   Coeff_R += LEigenVec[Mode][v]*(  Coeff_A*( dfc[v] - dfc6[v] ) +
-                                                                                    Coeff_B*( dfc6[v]          )   );
+               for (int v=0; v<NWAVE; v++)
+                  Coeff_R += LEigenVec[Mode][v]*(  Coeff_A*( dfc[ idx_wave[v] ] - dfc6[ idx_wave[v] ] ) +
+                                                   Coeff_B*( dfc6[ idx_wave[v] ]                      )  );
 
-               for (int v=0; v<NCOMP_FLUID; v++)   Correct_R[v] += Coeff_R*REigenVec[Mode][v];
+               for (int v=0; v<NWAVE; v++)
+                  Correct_R[ idx_wave[v] ] += Coeff_R*REigenVec[Mode][v];
             }
-         } // for (int Mode=0; Mode<NCOMP_FLUID; Mode++)
+         } // for (int Mode=0; Mode<NWAVE; Mode++)
 
 
 //       =====================================================================================
@@ -863,15 +952,15 @@ void Hydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
          Coeff_L = -dt_dh2*FMIN( EigenVal[d][       0 ], (real)0.0 );
          Coeff_R = -dt_dh2*FMAX( EigenVal[d][ NWAVE-1 ], (real)0.0 );
 
-         for (int v=0; v<NCOMP_FLUID; v++)
+         for (int v=0; v<NWAVE; v++)
          {
-            Correct_L[v] = Coeff_L*(  dfc[v] + ( (real)1.0 - real(4.0/3.0)*Coeff_L )*dfc6[v]  );
-            Correct_R[v] = Coeff_R*(  dfc[v] - ( (real)1.0 + real(4.0/3.0)*Coeff_R )*dfc6[v]  );
+            Correct_L[ idx_wave[v] ] = Coeff_L*(  dfc[ idx_wave[v] ] + ( (real)1.0 - real(4.0/3.0)*Coeff_L )*dfc6[ idx_wave[v] ]  );
+            Correct_R[ idx_wave[v] ] = Coeff_R*(  dfc[ idx_wave[v] ] - ( (real)1.0 + real(4.0/3.0)*Coeff_R )*dfc6[ idx_wave[v] ]  );
          }
 
 
 //       4-2-b2. evaluate the corrections to the left and right face-centered variables
-         for (int Mode=0; Mode<NCOMP_FLUID; Mode++)
+         for (int Mode=0; Mode<NWAVE; Mode++)
          {
             Coeff_L = (real)0.0;
             Coeff_R = (real)0.0;
@@ -884,10 +973,12 @@ void Hydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
 //                                                      EigenVal[d][Mode]*EigenVal[d][Mode]   );
                const real Coeff_D = real(4.0/3.0)*dt_dh2*Coeff_C*( EigenVal[d][0] + EigenVal[d][Mode] );
 
-               for (int v=0; v<NCOMP_FLUID; v++)   Coeff_L += LEigenVec[Mode][v]*(  Coeff_C*( dfc[v] + dfc6[v] ) +
-                                                                                    Coeff_D*( dfc6[v]          )   );
+               for (int v=0; v<NWAVE; v++)
+                  Coeff_L += LEigenVec[Mode][v]*(  Coeff_C*( dfc[ idx_wave[v] ] + dfc6[ idx_wave[v] ] ) +
+                                                   Coeff_D*( dfc6[ idx_wave[v] ]                      )  );
 
-               for (int v=0; v<NCOMP_FLUID; v++)   Correct_L[v] += Coeff_L*REigenVec[Mode][v];
+               for (int v=0; v<NWAVE; v++)
+                  Correct_L[ idx_wave[v] ] += Coeff_L*REigenVec[Mode][v];
             }
 
             if ( EigenVal[d][Mode] >= (real)0.0 )
@@ -898,14 +989,16 @@ void Hydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
 //                                                      EigenVal[d][Mode   ]*EigenVal[d][Mode   ]   );
                const real Coeff_B = real(4.0/3.0)*dt_dh2*Coeff_A*( EigenVal[d][ NWAVE-1 ] + EigenVal[d][Mode] );
 
-               for (int v=0; v<NCOMP_FLUID; v++)   Coeff_R += LEigenVec[Mode][v]*(  Coeff_A*( dfc[v] - dfc6[v] ) +
-                                                                                    Coeff_B*( dfc6[v]          )   );
+               for (int v=0; v<NWAVE; v++)
+                  Coeff_R += LEigenVec[Mode][v]*(  Coeff_A*( dfc[ idx_wave[v] ] - dfc6[ idx_wave[v] ] ) +
+                                                   Coeff_B*( dfc6[ idx_wave[v] ]                      )  );
 
-               for (int v=0; v<NCOMP_FLUID; v++)   Correct_R[v] += Coeff_R*REigenVec[Mode][v];
+               for (int v=0; v<NWAVE; v++)
+                  Correct_R[ idx_wave[v] ] += Coeff_R*REigenVec[Mode][v];
             }
-         } // for (int Mode=0; Mode<NCOMP_FLUID; Mode++)
+         } // for (int Mode=0; Mode<NWAVE; Mode++)
 
-#        endif // if (  ( RSOLVER == HLLE || RSOLVER == HLLC )  &&  defined HLL_NO_REF_STATE  ) ... else ...
+#        endif // if (  ( RSOLVER == HLLE || RSOLVER == HLLC || RSOLVER == HLLD )  &&  defined HLL_NO_REF_STATE  ) ... else ...
 
 
 //       4-3. evaluate the corrections to the left and right face-centered passive scalars
@@ -922,17 +1015,49 @@ void Hydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
 #        endif
 
 
-//       4-4. evaluate the face-centered variables at the half time-step
-         Hydro_Rotate3D( Correct_L, d, false );
-         Hydro_Rotate3D( Correct_R, d, false );
+//       4-4. add the MHD source terms
+#        ifdef MHD
+         const int t1 = (d+1)%3;    // transverse direction 1
+         const int t2 = (d+2)%3;    // transverse direction 2
+         real B_nL, B_nR, B_t1L, B_t1R, B_t2L, B_t2R;
+         real dB_n, dB_t1, dB_t2, v_t1, v_t2, src_t1, src_t2;
 
-         for (int v=0; v<NCOMP_TOTAL; v++)
+         B_nL   = g_FC_B[d ][ idx_B[d ] ];
+         B_t1L  = g_FC_B[t1][ idx_B[t1] ];
+         B_t2L  = g_FC_B[t2][ idx_B[t2] ];
+         B_nR   = g_FC_B[d ][ idx_B[d ] + didx_cc[d ] ];
+         B_t1R  = g_FC_B[t1][ idx_B[t1] + didx_cc[t1] ];
+         B_t2R  = g_FC_B[t2][ idx_B[t2] + didx_cc[t2] ];
+
+         dB_n   = B_nR  - B_nL;
+         dB_t1  = B_t1R - B_t1L;
+         dB_t2  = B_t2R - B_t2L;
+
+         v_t1   = cc_C_ncomp[ 1 + t1 ];
+         v_t2   = cc_C_ncomp[ 1 + t2 ];
+
+         src_t1 = dt_dh2*v_t1*MINMOD( dB_n, -dB_t1 );
+         src_t2 = dt_dh2*v_t2*MINMOD( dB_n, -dB_t2 );
+
+         Correct_L[ MAG_OFFSET + 1 ] += src_t1;
+         Correct_R[ MAG_OFFSET + 1 ] += src_t1;
+         Correct_L[ MAG_OFFSET + 2 ] += src_t2;
+         Correct_R[ MAG_OFFSET + 2 ] += src_t2;
+#        endif // #ifdef MHD
+
+
+//       4-5. evaluate the face-centered variables at the half time-step
+         Hydro_Rotate3D( Correct_L, d, false, MAG_OFFSET );
+         Hydro_Rotate3D( Correct_R, d, false, MAG_OFFSET );
+
+         for (int v=0; v<NCOMP_TOTAL_PLUS_MAG; v++)
          {
             fc[faceL][v] += Correct_L[v];
             fc[faceR][v] += Correct_R[v];
          }
 
-//       ensure positive density and pressure
+
+//       4-6. ensure positive density and pressure
          fc[faceL][0] = FMAX( fc[faceL][0], MinDens );
          fc[faceR][0] = FMAX( fc[faceR][0], MinDens );
 
@@ -948,27 +1073,36 @@ void Hydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
 #        endif // #if ( FLU_SCHEME == CTU )
 
 
-//       5. primitive variables --> conserved variables
-         real tmp[NCOMP_TOTAL];  // input and output arrays must not overlap for Pri2Con()
+//       5. reset the longitudinal B field to the input face-centered values
+//          --> actually no data reconstruction is required for that
+//###OPTIMIZARION: do not perform data reconstruction for the longitudinal B field
+#        ifdef MHD
+         fc[faceL][ MAG_OFFSET + d ] = B_nL;
+         fc[faceR][ MAG_OFFSET + d ] = B_nR;
+#        endif
 
-         for (int v=0; v<NCOMP_TOTAL; v++)   tmp[v] = fc[faceL][v];
+
+//       6. primitive variables --> conserved variables
+         real tmp[NCOMP_TOTAL_PLUS_MAG];  // input and output arrays must not overlap for Pri2Con()
+
+         for (int v=0; v<NCOMP_TOTAL_PLUS_MAG; v++)   tmp[v] = fc[faceL][v];
          Hydro_Pri2Con( tmp, fc[faceL], _Gamma_m1, NormPassive, NNorm, NormIdx );
 
-         for (int v=0; v<NCOMP_TOTAL; v++)   tmp[v] = fc[faceR][v];
+         for (int v=0; v<NCOMP_TOTAL_PLUS_MAG; v++)   tmp[v] = fc[faceR][v];
          Hydro_Pri2Con( tmp, fc[faceR], _Gamma_m1, NormPassive, NNorm, NormIdx );
 
       } // for (int d=0; d<3; d++)
 
 
 #     if ( FLU_SCHEME == MHM )
-//    6. advance the face-centered variables by half time-step for the MHM integrator
+//    7. advance the face-centered variables by half time-step for the MHM integrator
       Hydro_HancockPredict( fc, dt, dh, Gamma_m1, _Gamma_m1, g_ConVar, idx_cc, MinDens, MinPres );
 #     endif
 
 
-//    7. store the face-centered values to the output array
+//    8. store the face-centered values to the output array
       for (int f=0; f<6; f++)
-      for (int v=0; v<NCOMP_TOTAL; v++)
+      for (int v=0; v<NCOMP_TOTAL_PLUS_MAG; v++)
          g_FC_Var[f][v][idx_fc] = fc[f][v];
 
    } // CGPU_LOOP( idx_fc, CUBE(N_FC_VAR) )
