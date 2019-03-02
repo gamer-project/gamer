@@ -124,10 +124,8 @@ void SRHydro_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In
 #  endif
 
 #  ifdef CHECK_NEGATIVE_IN_FLUID
-   if ( cslsq >= 1.0 || csrsq >= 1.0  )
-   {
+   if ( cslsq >= 1.0 || csrsq >= 1.0 || cslsq < 0.0 || csrsq < 0.0 )
      printf( "cslsq=%10.7e, cslrq=%10.7e\n", cslsq, csrsq);
-   }
 #  endif
 
 
@@ -137,6 +135,10 @@ void SRHydro_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In
 
    ssl = cslsq / ( gammasql * (1.0 - cslsq) ); /* Mignone Eq 22.5 */
    ssr = csrsq / ( gammasqr * (1.0 - csrsq) );
+
+#  ifdef CHECK_NEGATIVE_IN_FLUID
+   if ( ( ssl == -1.0 ) || ( ssr == -1.0 ) ) printf("ssl = %14.7e, ssr = %14.7e\n", ssl, ssr);
+#  endif
 
    QuadraticSolver(1.0 + ssl, -2*lV1, lV1*lV1 - ssl, &lmdapl, &lmdaml);
    QuadraticSolver(1.0 + ssr, -2*rV1, rV1*rV1 - ssr, &lmdapr, &lmdamr);
@@ -325,49 +327,54 @@ void QuadraticSolver (real A, real B, real C, real *x_plus, real *x_minus)
 {
   real delta = B*B-4*A*C;
 
-  if (A != 0.0){
-           if ( delta > 0.0 ) {
-
+  if (A != 0.0)
+  {
+       if ( delta > 0.0 )
+       {
            real factor = -0.5*( B + SIGN(B) *  SQRT(delta) );
      
-           if  ( B > 0.0 && C != 0.0 ){
+           if       ( B > 0.0 )
+           {
              *x_plus   = C/factor;
-     	     *x_minus  = factor/A;             return;
-          }else if  ( B < 0.0 && C != 0.0 ){
+     	     *x_minus  = factor/A;      return;
+           }
+           else if  ( B < 0.0 )
+           {
      	     *x_plus   = factor/A;
-     	     *x_minus  = C/factor;             return;
-          }else if ( B == 0.0 && C < 0.0 ){
+     	     *x_minus  = C/factor;      return;
+           }
+           else if ( B == 0.0 )
+           {
              *x_plus = SQRT(-C/A);
-             *x_minus = -SQRT(-C/A);           return;
-          }else if ( B > 0.0 && C == 0.0 ){
-             *x_plus = 0.0;
-             *x_minus = -B/A;                  return;
-          }else if ( B < 0.0 && C == 0.0 ){
-             *x_plus = -B/A;
-             *x_minus = 0.0;                   return;
-          }else if ( B == 0.0 && C == 0.0 ){
-             *x_plus  = 0.0;
-             *x_minus = 0.0;                   return;
-          }else                                goto NO_REAL_SOLUTIONS;
-
-     }else if ( delta == 0.0 ){
+             *x_minus = -*x_plus;       return;
+           }
+       }
+       else if ( delta == 0.0 )
+       {
              *x_plus  = -0.5*B/A;
-             *x_minus = -0.5*B/A;               return;
-     }else                                      goto NO_REAL_SOLUTIONS;
-  }else{ // if ( A == 0.0 )
-        if ( B != 0.0 ){
-	   *x_plus  = -C/B;
-	   *x_minus = -C/B;                     return;
-         }else                                  goto NO_REAL_SOLUTIONS;
+             *x_minus = *x_plus;        return;
+       }
+       else                             goto NO_REAL_SOLUTIONS;
   }
+//  else                                  goto NO_REAL_SOLUTIONS;
+  else
+  { // if ( A == 0.0 )
+      if ( B != 0.0 )
+      {
+        *x_plus  = -C/B;
+        *x_minus = -C/B;                return;
+      }
+      else                              goto NO_REAL_SOLUTIONS;
+  }
+
 
      NO_REAL_SOLUTIONS:
      {
-#       ifdef CHECK_NEGATIVE_IN_FLUID
+#    ifdef CHECK_NEGATIVE_IN_FLUID
         printf( "No real solution in Quadratic Solver!\n");
         printf( "A=%14.7e, B=%14.7e, C=%14.7e\n", A, B, C);
         printf( "B*B-4*A*C=%14.7e\n", B*B-4*A*C);
-#       endif
+#    endif
      }
 }
 

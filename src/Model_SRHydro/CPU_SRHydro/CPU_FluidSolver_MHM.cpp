@@ -270,8 +270,8 @@ void SRHydro_RiemannPredict_Flux( const real g_ConVar[][ CUBE(FLU_NXT) ],
 
 //       check unphysical cells before computing flux
 #        ifdef CHECK_NEGATIVE_IN_FLUID
-         if(SRHydro_CheckUnphysical(ConVar_L, NULL, Gamma, MinTemp, __FUNCTION__, __LINE__, true)
-         || SRHydro_CheckUnphysical(ConVar_R, NULL, Gamma, MinTemp, __FUNCTION__, __LINE__, true)) exit(EXIT_FAILURE);
+         SRHydro_CheckUnphysical(ConVar_L, NULL, Gamma, MinTemp, __FUNCTION__, __LINE__, true);
+         SRHydro_CheckUnphysical(ConVar_R, NULL, Gamma, MinTemp, __FUNCTION__, __LINE__, true);
 #        endif
 
 #        ifdef CHECK_MIN_TEMP
@@ -356,7 +356,7 @@ void SRHydro_RiemannPredict( const real g_ConVar_In[][ CUBE(FLU_NXT) ],
          out_con[v] = g_ConVar_In[v][idx_in] - dt_dh2*( dflux[0][v] + dflux[1][v] + dflux[2][v] );
 
 #     ifdef CHECK_NEGATIVE_IN_FLUID
-      if(SRHydro_CheckUnphysical(out_con, NULL, Gamma, MinTemp, __FUNCTION__, __LINE__, true)) exit(EXIT_FAILURE);
+      SRHydro_CheckUnphysical(out_con, NULL, Gamma, MinTemp, __FUNCTION__, __LINE__, true);
 #     endif
 
 #     ifdef CHECK_MIN_TEMP
