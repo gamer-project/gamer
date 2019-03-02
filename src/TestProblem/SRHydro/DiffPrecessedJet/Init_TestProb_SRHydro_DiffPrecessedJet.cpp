@@ -28,6 +28,17 @@ static double   Jet_Angle;                              // precession angle in d
 
 static    int   Jet_NumShell;                           // number of shells
 static double   BH_Radius;                              // radius of black hole
+
+static double   Jet_BurstStartTime;                     // start burst time in jet
+static double   Jet_BurstEndTime;                       // end burst time in jet
+
+static double   Jet_Burst4Vel;                          // burt 4-velocity
+static double   Jet_BurstDens;                          // burst proper density
+static double   Jet_BurstPres;                          // burst pressure
+
+static bool     Flag_Burst4Vel;
+static bool     Flag_BurstDens;
+static bool     Flag_BurstPres;
 // =======================================================================================
 
 
@@ -134,6 +145,14 @@ void SetParameter()
    ReadPara->Add( "Jet_NumShell",           &Jet_NumShell,          1           ,  NoMin_int,      NoMax_int       );
 
    ReadPara->Add( "BH_Radius",              &BH_Radius,             NoDef_double,  NoMin_double,   NoMax_double    );
+   ReadPara->Add( "Jet_BurstStartTime",     &Jet_BurstStartTime,   -1.0,           Eps_double,          NoMax_double    );
+   ReadPara->Add( "Jet_BurstEndTime",       &Jet_BurstEndTime,     -1.0,           Eps_double,          NoMax_double    );
+   ReadPara->Add( "Jet_Burst4Vel",          &Jet_Burst4Vel,        -1.0,           NoMin_double,        NoMax_double    );
+   ReadPara->Add( "Jet_BurstDens",          &Jet_BurstDens,        -1.0,           Eps_double,          NoMax_double    );
+   ReadPara->Add( "Jet_BurstPres",          &Jet_BurstPres,        -1.0,           Eps_double,          NoMax_double    );
+   ReadPara->Add( "Flag_Burst4Vel",         &Flag_Burst4Vel,        false,         Useless_bool,        Useless_bool    );
+   ReadPara->Add( "Flag_BurstDens"  ,       &Flag_BurstDens,        false,         Useless_bool,        Useless_bool    );
+   ReadPara->Add( "Flag_BurstPres",         &Flag_BurstPres,        false,         Useless_bool,        Useless_bool    );
 
    ReadPara->Read( FileName );
 
@@ -189,6 +208,14 @@ void SetParameter()
       Aux_Message( stdout, "     Jet_Angle            = %14.7e\n",          Jet_Angle                        );
       Aux_Message( stdout, "     Jet_NumShell         = %d\n",              Jet_NumShell                     );
       Aux_Message( stdout, "     BH_Radius            = %14.7e\n",          BH_Radius                        );
+      Aux_Message( stdout, "     Jet_BurstStartTime   = % 14.7e\n",      Jet_BurstStartTime              );
+      Aux_Message( stdout, "     Jet_BurstEndTime     = % 14.7e\n",      Jet_BurstEndTime                );
+      Aux_Message( stdout, "     Jet_Burst4Vel        = % 14.7e\n",      Jet_Burst4Vel                   );
+      Aux_Message( stdout, "     Jet_BurstDens        = % 14.7e\n",      Jet_BurstDens                   );
+      Aux_Message( stdout, "     Jet_BurstPres        = % 14.7e\n",      Jet_BurstPres                   );
+      Aux_Message( stdout, "     Flag_Burst4Vel       = % d\n",          Flag_Burst4Vel                  );
+      Aux_Message( stdout, "     Flag_BurstDens       = % d\n",          Flag_BurstDens                  );
+      Aux_Message( stdout, "     Flag_BurstPres       = % d\n",          Flag_BurstPres                  );
       Aux_Message( stdout, "=============================================================================\n" );
    }
 
@@ -274,10 +301,11 @@ bool Flu_ResetByUser_DiffPrecessedJet( real fluid[], const double x, const doubl
 
    double Jet_dr, Jet_dh, S, Area;
    double Dis_c2m, Dis_c2v, Dis_v2m, Vec_c2m[3], Vec_v2m[3];
-   double Jet_SrcVel_xyz[3], Jet_Vec[3], Dis_Cone_Vec, Dis_Cone_Vec_2;
+   double Jet_SrcVel_xyz[3],Jet_BurstVel_xyz[3], Jet_Vec[3], Dis_Cone_Vec, Dis_Cone_Vec_2;
    double Cos_Phi, Sin_Phi, Sin_Angle, Cos_Angle, Sin_Omega, Cos_Omega;
-   double Angle, Omega_t, ShellOmega, ShellRadius, ShellThick;
+   double Angle, Omega_t, ShellOmega, ShellRadius, ShellThick, Pri4Vel[NCOMP_FLUID];
    real   MomSin;
+   bool BurstDens_Yes, Burst4Vel_Yes, BurstPres_Yes;
    int num_shell = 0;
 
 // distance: jet center to mesh
@@ -338,8 +366,11 @@ bool Flu_ResetByUser_DiffPrecessedJet( real fluid[], const double x, const doubl
        Dis_c2v = sqrt( SQR(Jet_Vec[0]) + SQR(Jet_Vec[1]) + SQR(Jet_Vec[2]) );
 
 //     velocity components along different directions
-       for (int d=0; d<3; d++)    Jet_SrcVel_xyz[d] = Jet_SrcVel * Jet_Vec[d] / Dis_c2v;
-
+       for (int d=0; d<3; d++)
+       {
+         Jet_SrcVel_xyz[d] = Jet_SrcVel * Jet_Vec[d] / Dis_c2v;
+         Jet_BurstVel_xyz[d] = Jet_Burst4Vel * Jet_Vec[d] / Dis_c2v;
+       }
 
 //     distance: temporary vector to mesh
        for (int d=0; d<3; d++)    Vec_v2m[d] = r[d] - Jet_Cen[d] - Jet_Vec[d];
@@ -359,13 +390,15 @@ bool Flu_ResetByUser_DiffPrecessedJet( real fluid[], const double x, const doubl
           MomSin      = sin( Jet_WaveK*Jet_dh );
           MomSin     *= SIGN( Vec_c2m[0]*Jet_Vec[0] + Vec_c2m[1]*Jet_Vec[1] + Vec_c2m[2]*Jet_Vec[2] );
          
-          double Pri4Vel[NCOMP_FLUID] = {0};
+          BurstDens_Yes = ( Flag_BurstDens && Jet_BurstStartTime < Time && Time < Jet_BurstEndTime ) ? true : false;
+          Burst4Vel_Yes = ( Flag_Burst4Vel && Jet_BurstStartTime < Time && Time < Jet_BurstEndTime ) ? true : false;
+          BurstPres_Yes = ( Flag_BurstPres && Jet_BurstStartTime < Time && Time < Jet_BurstEndTime ) ? true : false;
 
-	     Pri4Vel[0] = Jet_SrcDens;
-	     Pri4Vel[1] = Jet_SrcVel_xyz[0]*MomSin;
-	     Pri4Vel[2] = Jet_SrcVel_xyz[1]*MomSin;
-	     Pri4Vel[3] = Jet_SrcVel_xyz[2]*MomSin;
-	     Pri4Vel[4] = Jet_SrcPres;
+          Pri4Vel[0] = BurstDens_Yes ? Jet_BurstDens              : Jet_SrcDens;
+          Pri4Vel[1] = Burst4Vel_Yes ? Jet_BurstVel_xyz[0]*MomSin : Jet_SrcVel_xyz[0]*MomSin;
+          Pri4Vel[2] = Burst4Vel_Yes ? Jet_BurstVel_xyz[1]*MomSin : Jet_SrcVel_xyz[1]*MomSin;
+          Pri4Vel[3] = Burst4Vel_Yes ? Jet_BurstVel_xyz[2]*MomSin : Jet_SrcVel_xyz[2]*MomSin;
+          Pri4Vel[4] = BurstPres_Yes ? Jet_BurstPres              : Jet_SrcPres;
 
 //        cast double to real
 #         ifndef FLOAT8
